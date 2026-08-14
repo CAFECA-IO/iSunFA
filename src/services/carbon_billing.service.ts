@@ -21,10 +21,16 @@ import {
 } from "@/services/spend.service";
 import {
   ensurePersonalCreditCharge,
+  refundPersonalCreditCharge,
   PersonalPaymentRequiredError,
 } from "@/services/personal_credit.service";
-import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
+import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
+
+// Info: (20260814 - Luphia) 與其他計費服務相同的錯誤包裝，錯誤碼統一走字典
+function toApiError(def: IErrorDef): ApiError {
+  return new ApiError(def.code, def.message, def.status);
+}
 
 /**
  * Info: (20260813 - Luphia) 碳盤查計費編排（設計書 §5.5，產品拍板 20260813）。
@@ -147,7 +153,29 @@ export async function runBilledCarbonTask<T>(
       );
     }
 
-    const paidOutcome = await runWithUsageCapture(run);
+    /**
+     * Info: (20260814 - Luphia) 個人路徑是先收款再服務，因此工作失敗必須退款——
+     * 否則鏈上點數已扣、訂單已 COMPLETED、用戶什麼都沒拿到，而且沒有任何補償分錄。
+     * 團隊路徑早就有這段（下方 refundCredits），個人路徑原本沒有。
+     */
+    let paidOutcome: { result: T; usage: ICapturedLlmUsage };
+    try {
+      paidOutcome = await runWithUsageCapture(run);
+    } catch (taskError) {
+      const refund = await refundPersonalCreditCharge({
+        userId,
+        idempotencyKey,
+      });
+      if (refund.owed) {
+        // Info: (20260814 - Luphia) 鑄回失敗：訂單上已標記 refundOwed，這裡再留一筆脈絡
+        logger.error("carbon task failed with unpaid personal refund", {
+          featureCode,
+          idempotencyKey,
+        });
+      }
+      throw taskError;
+    }
+
     return {
       result: paidOutcome.result,
       billing: {
@@ -162,7 +190,7 @@ export async function runBilledCarbonTask<T>(
 
   const teamId = await resolveBillingTeamId(accountBookId, userId);
 
-  await spendCredits({
+  const spend = await spendCredits({
     teamId,
     userId,
     featureCode,
@@ -173,13 +201,34 @@ export async function runBilledCarbonTask<T>(
     allowPartial: true,
   });
 
+  /**
+   * Info: (20260814 - Luphia) 重放（同一把鍵已扣款且未退還）**不重跑工作**。
+   *
+   * 冪等鍵保護的是扣款：早退回傳成功後照常執行，同一把鍵重送 N 次就是
+   * 1 次扣款 + N 次 LLM——匯入一章 5 萬 tokens，這條路徑等於讓額度系統失效。
+   * 前一次失敗而已退款的情況不會走到這裡（spendCredits 會改用重試鍵重新扣款）。
+   */
+  if (spend.replayed) {
+    logger.warn("carbon task replay rejected", {
+      featureCode,
+      idempotencyKey: spend.idempotencyKey,
+    });
+    throw toApiError(API_ERRORS.TW_DUPLICATE_REQUEST);
+  }
+
+  // Info: (20260814 - Luphia) 結算與退款一律用 spendCredits 回傳的鍵（重試時會是衍生鍵）
+  const billingKey = spend.idempotencyKey;
+
   let outcome: { result: T; usage: ICapturedLlmUsage };
   try {
     // Info: (20260813 - Luphia) 整段管線的 LLM 用量由捕捉範圍累加（含 fan-out 的每一次呼叫）
     outcome = await runWithUsageCapture(run);
   } catch (taskError) {
     // Info: (20260813 - Luphia) 工作失敗即全額退還預扣，不留懸帳（設計書 §5.2）
-    await refundCredits({ idempotencyKey, operatorUserId: userId });
+    await refundCredits({
+      idempotencyKey: billingKey,
+      operatorUserId: userId,
+    });
     throw taskError;
   }
 
@@ -190,7 +239,7 @@ export async function runBilledCarbonTask<T>(
   const totalTokens = outcome.usage.totalTokens;
   const actualCredits = settleFaithCredits(totalTokens, billing);
   const settlement = await settleSpend({
-    idempotencyKey,
+    idempotencyKey: billingKey,
     actualCost: actualCredits,
     operatorUserId: userId,
     nowSec,

@@ -2,7 +2,7 @@
 
 > **Date**: August 2026
 > **Author**: Luphia
-> **Version**: 1.17 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`；1.8 新增 §5.4 拆帳與封頂預扣（有餘額就放行、額度用光才扣錢包）；1.9 新增 §5.5 碳盤查計費；1.10 碳盤查四條 LLM 路徑全數接上；1.11 無帳本會話改扣個人鏈上點數（建單 → 402 → 付款 → 重送）；1.12 §5.4 新增逐功能扣款順序，物流碳足跡優先扣分配點數；1.13 新增 §5.6 多團隊成員的支付歸屬；1.14 §5.6 六個付款呼叫點統一至 useAnalysisPayment；1.15 §5.4 訂單類扣款禁用封頂（`allowPartial` 必填），付款前以所選來源的可用額度攔阻並停用支付鈕；1.16 新增 §6.1.1 訂閱／購點的歸屬對象入口，訂單 `teamId` 改為頂層欄位，履行失敗改記 MINT_FAILED；1.17 訂閱改為席次計價、期中加人比例補收
+> **Version**: 1.18 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`；1.8 新增 §5.4 拆帳與封頂預扣（有餘額就放行、額度用光才扣錢包）；1.9 新增 §5.5 碳盤查計費；1.10 碳盤查四條 LLM 路徑全數接上；1.11 無帳本會話改扣個人鏈上點數（建單 → 402 → 付款 → 重送）；1.12 §5.4 新增逐功能扣款順序，物流碳足跡優先扣分配點數；1.13 新增 §5.6 多團隊成員的支付歸屬；1.14 §5.6 六個付款呼叫點統一至 useAnalysisPayment；1.15 §5.4 訂單類扣款禁用封頂（`allowPartial` 必填），付款前以所選來源的可用額度攔阻並停用支付鈕；1.16 新增 §6.1.1 訂閱／購點的歸屬對象入口，訂單 `teamId` 改為頂層欄位，履行失敗改記 MINT_FAILED；1.17 訂閱改為席次計價、期中加人比例補收；1.18 新增 §5.4.1 重放／重試／退款守恆，個人點數路徑補上失敗退款
 > **Status**: Proposed
 > **Branch**: `feature/team_wallet_subscription_quota`
 > **關聯 ADR**: [ADR 015: 離鏈團隊錢包帳本](decisions/015_offchain_team_wallet_ledger.md)
@@ -337,7 +337,7 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
 > | 下限 NT$0.3/點 | NT$1.2 | — | ~31% |
 > | 現行 NT$0.5–1.0/點 | NT$2.0–4.0 | — | 59%–79% |
 >
-> 即：**在定價規則下，維持 `gemini-2.5-pro` 亦有正毛利，模型降級從生存條件變為毛利優化選項**（改 Gemini 2.5 Flash 級成本 ~NT$0.21/輪，毛利可推至 90%+；費思為無記憶 one-shot 常識問答，降級可行性高，列 P3 一併評估）。guardrails（§5.3 四項）仍為計費前提——上表的成本上界依賴 `maxOutputTokens` / `thinkingBudget` 存在。
+> 即：**在定價規則下，維持 `gemini-2.5-pro` 亦有正毛利，模型降級從生存條件變為毛利優化選項**（改 Gemini 2.5 Flash 級成本 ~NT$0.21/輪，毛利可推至 90%+；費思為無記憶 one-shot 常識問答，降級可行性高，列 P3 一併評估）。guardrails（§5.3）仍為計費前提——上表的成本上界依賴 `maxOutputTokens` 存在（thinking token 與輸出共用此額度）。
 >
 > 體感（典型一輪 4 點，對照 §4.1 額度）：free 每週約 10 輪、team 約 190 輪、business 約 1,900 輪。
 >
@@ -367,7 +367,9 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
 
 1. `route.ts` 補 DeWT 認證 + **帳本 context**（`accountBookId` → `AccountBook.teamId`，見上節「使用前提」；未登入或未帶帳本的訪客維持前端試用，不進計費管線、加 server-side IP 限流）。
 2. `direct_chat.ts` 帶 `taskKey`（`LlmTaskKeyEnum` 新增 `FAITH_CHAT`），啟用 `usageMetadata` 記帳，並把每輪用量寫入 `TeamQuotaUsage.featureCode = FEATURE_CODE.FAITH_CHAT`。
-3. 設 `maxOutputTokens = 4096`（含 thinking）+ `thinkingBudget = 2048` + `timeoutMs = 45s`（對齊 `LLM_SYNC_TIMEOUT_MS`）。
+3. 設 `maxOutputTokens = 4096`（含 thinking）+ `timeoutMs = 45s`（對齊 `LLM_SYNC_TIMEOUT_MS`）。
+
+   > Info: (20260814 - Luphia) **`thinkingBudget` 未實作，且不影響成本上界**：thinking token 與正式輸出共用 `maxOutputTokens`（見 `src/constants/llm.ts` 的實測註解），因此單輪成本的天花板由 `maxOutputTokens` 一項就守住了。`thinkingBudget` 只改變「這個額度裡有多少可以拿去思考」，屬品質調校而非計費前提。原文把它列為 guardrail 之一是誤植（PR #6652 review D）。
 4. `chat_input.tsx` 補附件大小上限（現況不擋大檔，圖片 token 由 Gemini 按解析度計，等於敞開的成本口）。
 
 #### 估價依據：多少 tokens 扣一點？
@@ -391,7 +393,7 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
 | **1 點 = 1,000 tokens** | **~NT$0.26–0.32** | **36%–48%**（tier1 達 68%–74%） | **4 點** | ✅ **建議值**：最低階仍有毛利，典型一輪 2–4 點、上限 7 點，與諮詢室 5 點同量級 |
 | 1 點 = 2,000 tokens | ~NT$0.53–0.64 | **負毛利** | 2 點 | ❌ tier5/6 賣一點虧一點 |
 
-> ⚠️ 這張表成立的前提是 guardrails 已上：若不設 `maxOutputTokens` / `thinkingBudget`，實測 thinking 模型單輪輸出可達 8,000+ tokens，成本翻倍、預扣上界不存在，計量計費直接失效。**guardrails 不是優化，是計費的一部分。**
+> ⚠️ 這張表成立的前提是 guardrails 已上：若不設 `maxOutputTokens`，實測 thinking 模型單輪輸出可達 8,000+ tokens，成本翻倍、預扣上界不存在，計量計費直接失效。**guardrails 不是優化，是計費的一部分。**
 
 **換算成用戶體感**（典型一輪 ≈ 3 點，對照 §4.1 額度）：
 
@@ -427,6 +429,20 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
 相對地，前端在**按下支付之前**就要知道付不付得起：`useAnalysisPayment` 回傳所選團隊的可用額度（雙視窗剩餘的較小值 + 分配點數），`PaymentConfirmModal` 依當前來源（團隊／個人）比對金額，不足即顯示「點數不足」並停用支付鈕；個人來源在提示內附加購入口。讓用戶按下去、建了一張單、再收到 402，等於要他自己試錯，還在資料庫留下待處理訂單。
 
 > 純函式層在 `src/lib/quota/spend_split.ts`（`resolveQuotaAvailable` / `splitSpend` / `splitRefund`），不碰 DB 與時鐘，可單測；`ISpendResult` 增列 `quotaAmount` / `allocationAmount` 拆帳明細，`ISettleResult` 增列 `toppedUp`。
+
+#### 5.4.1 重放、重試與退款守恆（2026-08-14，PR #6652 review）
+
+三條規則補在同一處，因為它們是同一個誤解的三種後果：**冪等鍵保護的是「扣款」，不是「工作」**。
+
+| 規則 | 為什麼 |
+|---|---|
+| `ISpendResult.replayed` externalises 重放 | 早退只回傳成功、呼叫端照常跑 LLM，同一把鍵重送 N 次＝1 次扣款 + N 次模型呼叫。碳盤查與費思都改為**重放不重跑**，回 `TW000013` |
+| 已全額退還者視為**重試**，改用 `{原鍵}#retry{n}` 重新扣款 | 沿用原鍵會撞 `createUsage` 的 unique 衝突而被默默吞掉——不扣款卻照跑。重試上限 20 輪 |
+| 退款守恆：只退「尚未退還的部分」 | 結算退差額用 `settle:`、失敗補償用 `refund:`，兩把鍵各自只擋自己重複；先部分退再全額退會憑空多退（預扣 6、已退 2、再退 6 → 淨 −2）。守恆同時實作於 service 與 `team_wallet.repo`（repo 層扣掉既有 REFUND 分錄），因為「記得多讀幾把鍵」下一個呼叫端還是會忘 |
+
+> 結算與退款一律使用 `spendCredits` **回傳的** `idempotencyKey`（重試時是衍生鍵），不能用呼叫端原本那把。
+
+**個人點數路徑的失敗補償**：`runBilledCarbonTask` 的無帳本分支是「先收款再服務」，因此工作失敗時以伺服器代簽鑄回點數（`refundPersonalCreditCharge`）。鑄回失敗不丟錯（原始工作錯誤對用戶更重要），但會在訂單寫下 `refundOwed` 並記錄——讓它成為看得見的欠款，而不是靜靜消失。
 
 ### 5.5 碳盤查（智能碳盤）計費（產品拍板 2026-08-13）
 

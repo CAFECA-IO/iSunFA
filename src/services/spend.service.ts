@@ -137,6 +137,16 @@ interface ISpendRecords {
   quotaHeld: bigint;
   walletHeld: bigint;
   held: bigint;
+  /**
+   * Info: (20260814 - Luphia) 這把鍵**已經退還**的金額（settle: 與 refund: 兩把衍生鍵的合計）。
+   * 沒有這兩個欄位，退款只會檢查「同一把退款鍵是否重複」，而結算退差額用的是
+   * `settle:`、失敗補償用的是 `refund:`——兩把不同的鍵，於是「先部分退、再全額退」
+   * 兩次都會通過，憑空多退出一筆額度。
+   */
+  quotaRefunded: bigint;
+  walletRefunded: bigint;
+  // Info: (20260814 - Luphia) 尚未退還的淨額：<= 0 代表這筆消耗已經全數退乾淨
+  outstanding: bigint;
   // Info: (20260813 - Luphia) 額度用量列的視窗 key：退款與追補必須寫回同一視窗
   windowKey5h: number | null;
   windowKeyWeek: number | null;
@@ -152,18 +162,36 @@ interface ISpendRecords {
 async function readSpendRecords(
   idempotencyKey: string,
 ): Promise<ISpendRecords> {
-  const [usage, ledger] = await Promise.all([
-    teamQuotaUsageRepo.findByIdempotencyKey(idempotencyKey),
-    teamWalletRepo.findLedgerByIdempotencyKey(idempotencyKey),
-  ]);
+  const [usage, ledger, settleUsage, refundUsage, settleLedger, refundLedger] =
+    await Promise.all([
+      teamQuotaUsageRepo.findByIdempotencyKey(idempotencyKey),
+      teamWalletRepo.findLedgerByIdempotencyKey(idempotencyKey),
+      // Info: (20260814 - Luphia) 兩把衍生退款鍵都要讀：結算退差額用 settle:、失敗補償用 refund:
+      teamQuotaUsageRepo.findByIdempotencyKey(`settle:${idempotencyKey}`),
+      teamQuotaUsageRepo.findByIdempotencyKey(`refund:${idempotencyKey}`),
+      teamWalletRepo.findLedgerByIdempotencyKey(`settle:${idempotencyKey}`),
+      teamWalletRepo.findLedgerByIdempotencyKey(`refund:${idempotencyKey}`),
+    ]);
   const quotaHeld =
     usage && usage.amount > BigInt(0) ? usage.amount : BigInt(0);
   const walletHeld =
     ledger && ledger.amount < BigInt(0) ? -ledger.amount : BigInt(0);
+  // Info: (20260814 - Luphia) 額度退款列為負數、錢包退款分錄為正數，取絕對值合計
+  const quotaRefunded = [settleUsage, refundUsage].reduce(
+    (sum, row) => (row && row.amount < BigInt(0) ? sum + -row.amount : sum),
+    BigInt(0),
+  );
+  const walletRefunded = [settleLedger, refundLedger].reduce(
+    (sum, row) => (row && row.amount > BigInt(0) ? sum + row.amount : sum),
+    BigInt(0),
+  );
   return {
     quotaHeld,
     walletHeld,
     held: quotaHeld + walletHeld,
+    quotaRefunded,
+    walletRefunded,
+    outstanding: quotaHeld + walletHeld - quotaRefunded - walletRefunded,
     windowKey5h: usage?.windowKey5h ?? null,
     windowKeyWeek: usage?.windowKeyWeek ?? null,
     // Info: (20260813 - Luphia) Ledger 掛在 teamWalletId 之下、沒有 teamId 欄位，故 teamId 只能取自 usage
@@ -181,6 +209,7 @@ function toSpendResult(
   idempotencyKey: string,
   quotaAmount: bigint,
   allocationAmount: bigint,
+  replayed = false,
 ): ISpendResult {
   const source =
     quotaAmount > BigInt(0) && allocationAmount > BigInt(0)
@@ -194,6 +223,7 @@ function toSpendResult(
     quotaAmount: quotaAmount.toString(),
     allocationAmount: allocationAmount.toString(),
     idempotencyKey,
+    replayed,
   };
 }
 
@@ -259,6 +289,12 @@ export async function resolvePayingTeamId(
   });
 }
 
+/**
+ * Info: (20260814 - Luphia) 同一把鍵最多允許的重試輪數。上界存在的理由是止血：
+ * 正常重試不會逼近它，而無上界的迴圈在資料異常時會一直往下探鍵。
+ */
+const MAX_RETRY_ROUNDS = 20;
+
 export async function spendCredits(
   params: ISpendParams,
 ): Promise<ISpendResult> {
@@ -285,13 +321,33 @@ export async function spendCredits(
      * Info: (20260813 - Luphia) 冪等重放：拆帳後同一把鍵可能同時有額度用量與錢包分錄，
      * 因此兩邊都要看齊再回傳，不能看到其中一筆就早退——早退會讓呼叫端少算另一半的預扣，
      * 結算時把「已扣的錢包點數」當成沒扣過。
+     *
+     * Info: (20260814 - Luphia) 「已全額退還」不算重放，而是**重試**：
+     * 前一次工作失敗、預扣已退乾淨，這次是真的要再做一次工，就該再扣一次款。
+     * 但原鍵的分錄還在（退款是加寫負向分錄，不是刪除），沿用原鍵會被
+     * createUsage 的 unique 衝突默默吞掉——變成不扣款卻照跑 LLM。
+     * 因此改用衍生鍵 `{原鍵}#retry{n}` 記這一次，並把它回傳給呼叫端結算用。
      */
-    const replayed = await readSpendRecords(idempotencyKey);
-    if (replayed.held > BigInt(0)) {
+    let effectiveKey = idempotencyKey;
+    let records = await readSpendRecords(effectiveKey);
+    let retryRound = 0;
+    while (
+      records.held > BigInt(0) &&
+      records.outstanding <= BigInt(0) &&
+      retryRound < MAX_RETRY_ROUNDS
+    ) {
+      retryRound += 1;
+      effectiveKey = `${idempotencyKey}#retry${retryRound}`;
+      records = await readSpendRecords(effectiveKey);
+    }
+
+    if (records.held > BigInt(0)) {
+      // Info: (20260814 - Luphia) 仍有未退還的扣款＝真重放：回報 replayed，由呼叫端決定要不要重跑
       return toSpendResult(
-        idempotencyKey,
-        replayed.quotaHeld,
-        replayed.walletHeld,
+        effectiveKey,
+        records.quotaHeld,
+        records.walletHeld,
+        true,
       );
     }
 
@@ -377,7 +433,7 @@ export async function spendCredits(
         userId,
         amount: split.walletPart,
         featureCode,
-        idempotencyKey,
+        idempotencyKey: effectiveKey,
       });
       if (consumed.outcome === WALLET_OP_OUTCOME.FROZEN) {
         throw toApiError(API_ERRORS.TW_WALLET_FROZEN);
@@ -409,7 +465,7 @@ export async function spendCredits(
           amount: split.quotaPart,
           windowKey5h,
           windowKeyWeek,
-          idempotencyKey,
+          idempotencyKey: effectiveKey,
         });
       } catch (error) {
         /**
@@ -419,7 +475,7 @@ export async function spendCredits(
          */
         if (split.walletPart > BigInt(0)) {
           try {
-            await teamWalletRepo.refundAllocation(idempotencyKey, userId);
+            await teamWalletRepo.refundAllocation(effectiveKey, userId);
           } catch (compensationError) {
             console.error(
               "[spend] failed to compensate wallet after quota write error",
@@ -431,7 +487,7 @@ export async function spendCredits(
       }
     }
 
-    return toSpendResult(idempotencyKey, split.quotaPart, split.walletPart);
+    return toSpendResult(effectiveKey, split.quotaPart, split.walletPart);
   });
 }
 
@@ -452,12 +508,26 @@ export async function refundCredits(
     const records = await readSpendRecords(idempotencyKey);
     if (records.held <= BigInt(0)) return { refunded: false, source: null };
 
-    if (records.quotaHeld > BigInt(0)) {
+    /**
+     * Info: (20260814 - Luphia) 退款守恆：只退「尚未退還的部分」。
+     *
+     * 結算退差額（`settle:`）與失敗補償（`refund:`）是兩把不同的鍵，各自只擋自己重複。
+     * 若在結算之後又走一次補償，補償若照原始預扣全額退，就會退出一筆從未扣過的額度
+     * （預扣 6、實耗 4 已退 2，再退 6 → 淨額 −2）。
+     */
+    const quotaRefundable = records.quotaHeld - records.quotaRefunded;
+    const walletRefundable = records.walletHeld - records.walletRefunded;
+    if (quotaRefundable <= BigInt(0) && walletRefundable <= BigInt(0)) {
+      // Info: (20260814 - Luphia) 已經退乾淨：回報 no-op，不再寫任何分錄
+      return { refunded: false, source: null };
+    }
+
+    if (quotaRefundable > BigInt(0)) {
       await teamQuotaUsageRepo.createUsage({
         teamId: records.teamId as string,
         userId: records.userId as string,
         featureCode: records.featureCode as string,
-        amount: -records.quotaHeld,
+        amount: -quotaRefundable,
         // Info: (20260807 - Luphia) 退款寫回「原視窗」，確保視窗 SUM 與實際用量一致
         windowKey5h: records.windowKey5h as number,
         windowKeyWeek: records.windowKeyWeek as number,
@@ -465,10 +535,11 @@ export async function refundCredits(
       });
     }
 
-    if (records.walletHeld > BigInt(0)) {
+    if (walletRefundable > BigInt(0)) {
       const refunded = await teamWalletRepo.refundAllocation(
         idempotencyKey,
         operatorUserId,
+        walletRefundable,
       );
       if (refunded.outcome === WALLET_OP_OUTCOME.FROZEN) {
         throw toApiError(API_ERRORS.TW_WALLET_FROZEN);
@@ -477,7 +548,7 @@ export async function refundCredits(
 
     return {
       refunded: true,
-      source: resolveSettledSource(records.quotaHeld, records.walletHeld),
+      source: resolveSettledSource(quotaRefundable, walletRefundable),
     };
   });
 }

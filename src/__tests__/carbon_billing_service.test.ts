@@ -12,7 +12,10 @@ import { assertAccountBookMember } from "@/services/account_book_access.guard";
 import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
 import { DEFAULT_FAITH_BILLING } from "@/constants/llm";
 import { recordLlmUsage } from "@/lib/llm/usage_scope";
-import { ensurePersonalCreditCharge } from "@/services/personal_credit.service";
+import {
+  ensurePersonalCreditCharge,
+  refundPersonalCreditCharge,
+} from "@/services/personal_credit.service";
 
 jest.mock("@/repositories/faith_billing_setting.repo", () => ({
   faithBillingSettingRepo: { resolveSetting: jest.fn() },
@@ -41,6 +44,10 @@ jest.mock("@/services/personal_credit.service", () => {
   }
   return {
     ensurePersonalCreditCharge: jest.fn(),
+    refundPersonalCreditCharge: jest.fn(async () => ({
+      refunded: true,
+      owed: false,
+    })),
     PersonalPaymentRequiredError: FakePersonalPaymentRequiredError,
   };
 });
@@ -87,6 +94,7 @@ describe("runBilledCarbonTask", () => {
       quotaAmount: "5",
       allocationAmount: "0",
       idempotencyKey: BASE_PARAMS.idempotencyKey,
+      replayed: false,
     });
     asMock(settleSpend).mockResolvedValue({
       settled: true,
@@ -228,6 +236,55 @@ describe("runBilledCarbonTask", () => {
     expect(outcome.billing.paidBy).toBe("PERSONAL");
     expect(outcome.billing.charged).toBe("6");
     expect(spendCredits).not.toHaveBeenCalled();
+    expect(settleSpend).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260814 - Luphia) 個人路徑是先收款再服務，工作失敗必須退款
+   * （PR #6652 review A-1）。原本這條路徑沒有 try/catch：鏈上點數已扣、
+   * 訂單已 COMPLETED、用戶什麼都沒拿到，而且沒有任何補償分錄。
+   */
+  it("refunds the personal charge when the paid task fails", async () => {
+    asMock(chatroomRepo.findAccountBookIdByChannel).mockResolvedValue(null);
+    asMock(ensurePersonalCreditCharge).mockResolvedValue({
+      paid: true,
+      orderId: "order-1",
+      cost: 6,
+    });
+    const run = jest.fn(async () => {
+      throw new Error("model timeout");
+    });
+
+    await expect(runBilledCarbonTask({ ...BASE_PARAMS, run })).rejects.toThrow(
+      "model timeout",
+    );
+
+    expect(refundPersonalCreditCharge).toHaveBeenCalledWith({
+      userId: BASE_PARAMS.userId,
+      idempotencyKey: BASE_PARAMS.idempotencyKey,
+    });
+  });
+
+  /**
+   * Info: (20260814 - Luphia) 重放不得重跑工作（PR #6652 review A-2）：
+   * 冪等鍵保護的是扣款，照跑等於同一筆錢買到無限次 LLM 呼叫。
+   */
+  it("refuses to redo the work when the spend was a replay", async () => {
+    asMock(spendCredits).mockResolvedValue({
+      source: "SUBSCRIPTION_QUOTA",
+      amount: "5",
+      quotaAmount: "5",
+      allocationAmount: "0",
+      idempotencyKey: BASE_PARAMS.idempotencyKey,
+      replayed: true,
+    });
+    const run = jest.fn(async () => ({ reply: "hi" }));
+
+    await expect(
+      runBilledCarbonTask({ ...BASE_PARAMS, run }),
+    ).rejects.toMatchObject({ code: "TW000013" });
+
+    expect(run).not.toHaveBeenCalled();
     expect(settleSpend).not.toHaveBeenCalled();
   });
 });

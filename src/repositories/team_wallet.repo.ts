@@ -196,11 +196,14 @@ export class TeamWalletRepository {
   async refundAllocation(
     idempotencyKey: string,
     operatorUserId: string,
+    // Info: (20260814 - Luphia) 指定金額（結算已退過一部分時只補其餘）；不給即退可退全額
+    amount?: bigint,
   ): Promise<IWalletOpResult> {
     return this.refundAllocationCore(
       idempotencyKey,
       `refund:${idempotencyKey}`,
       operatorUserId,
+      amount,
     );
   }
 
@@ -255,8 +258,28 @@ export class TeamWalletRepository {
           return { outcome: WALLET_OP_OUTCOME.DUPLICATE, ledger: duplicated };
         }
 
+        /**
+         * Info: (20260814 - Luphia) 可退金額 = 原始消耗 − **已經退掉的部分**（守恆）。
+         *
+         * 結算退差額（`settle:`）與失敗補償（`refund:`）是兩把不同的鍵，各自只擋自己重複；
+         * 只比對原始消耗的話，「先部分退、再全額退」兩次都會通過，錢包會多出一筆
+         * 從未扣過的點數。守恆放在 repo 層，是因為記得「多讀幾把鍵」這種事
+         * 下一個呼叫端還是會忘。
+         */
+        const priorRefunds = await tx.teamWalletLedger.findMany({
+          where: {
+            idempotencyKey: {
+              in: [`settle:${idempotencyKey}`, `refund:${idempotencyKey}`],
+            },
+            entryType: TEAM_WALLET_ENTRY_TYPE.REFUND,
+          },
+        });
+        const alreadyRefunded = priorRefunds.reduce(
+          (sum, entry) => sum + entry.amount,
+          BigInt(0),
+        );
         // Info: (20260807 - Luphia) CONSUME 分錄 amount 為負值，全額退還取其絕對值
-        const maxRefundable = -original.amount;
+        const maxRefundable = -original.amount - alreadyRefunded;
         const refundAmount = amountOverride ?? maxRefundable;
         if (refundAmount <= BigInt(0) || refundAmount > maxRefundable) {
           return { outcome: WALLET_OP_OUTCOME.INSUFFICIENT };

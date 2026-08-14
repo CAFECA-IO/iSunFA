@@ -2,6 +2,9 @@ export const pricing = {
   free_cost: "免费",
   title: "云端服务订阅方案",
   subtitle: "根据团队规模选择最合适的方案",
+  // Info: (20260814 - Luphia) 付費方案以席次計價，單位標明每席
+  per_seat_monthly: "席 / 月",
+  per_seat_yearly: "席 / 年",
   monthly: "月缴",
   yearly: "年缴",
   save_percent: "省下 17%",

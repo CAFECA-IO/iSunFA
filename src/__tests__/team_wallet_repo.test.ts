@@ -22,7 +22,12 @@ jest.mock("@/lib/prisma", () => {
       findUnique: jest.fn(),
       upsert: jest.fn(),
     },
-    teamWalletLedger: { findUnique: jest.fn(), create: jest.fn() },
+    teamWalletLedger: {
+      findUnique: jest.fn(),
+      // Info: (20260814 - Luphia) 退款守恆需查既有 REFUND 分錄（settle: / refund: 兩把衍生鍵）
+      findMany: jest.fn(async () => []),
+      create: jest.fn(),
+    },
   };
   return {
     prisma: {
@@ -55,6 +60,7 @@ interface ITxMock {
   };
   teamWalletLedger: {
     findUnique: ReturnType<typeof jest.fn>;
+    findMany: ReturnType<typeof jest.fn>;
     create: ReturnType<typeof jest.fn>;
   };
 }

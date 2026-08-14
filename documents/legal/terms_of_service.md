@@ -21,8 +21,10 @@
      技術義務與驗收條件見 documents/architecture/ai_and_analytics/faith_personal_memory.md §1 對照表
      與 §9 Release Gate：P1（儲存與方案 gate）、P2（萃取與預扣修正）、P3（到期刪除、提前刪除、稽核）
      全數完成且有測試覆蓋前，本條與方案頁之「專屬記憶」不得對外發布。
-     保留期間 90 天同步定義於 src/constants/llm.ts 的 FAITH_MEMORY_RETENTION_DAYS，
-     修改條款時必須一併調整該常數、《隱私權政策》§5 與方案頁文案（共四處） -->
+     保留期間的真相來源是 **DB 系統設定** SystemSettingKey.FAITH_MEMORY_RETENTION_DAYS
+     （簽章式設定，同 ADR 017；讀取一律經 resolveFaithMemoryRetentionDays()）。
+     src/constants/llm.ts 的 DEFAULT_FAITH_MEMORY_RETENTION_DAYS（90）僅為驗簽失敗時的 fail-safe，
+     DB 有值時改它不會生效。調整保留期間應改後台設定，並同步《隱私權政策》§5 與方案頁文案 -->
 **生效日期：2026年01月15日**
 
 歡迎使用 iSunFA！在使用本服務之前，請仔細閱讀以下服務條款（以下簡稱「本條款」）。

@@ -4,6 +4,9 @@ import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import type { IJSONObject } from "@/validators/common";
+import { logger } from "@/lib/utils/logger";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { issuePurchasedPointsToMember } from "@/services/member.service";
 
 /**
  * Info: (20260813 - Luphia) 個人點數扣款（設計書 §5.5「無帳本會話」，產品拍板 20260813）。
@@ -107,4 +110,80 @@ export async function ensurePersonalCreditCharge(
   });
 
   return { paid: false, orderId: order.id, cost: credits };
+}
+
+/**
+ * Info: (20260814 - Luphia) 工作失敗時退還已扣的個人點數。
+ *
+ * 個人路徑刻意「先收款再服務」（見上），代價是工作失敗時錢已經在鏈上扣掉了。
+ * 沒有這支補償，逾時或模型錯誤就等於收了錢什麼都沒給——而碳盤查的匯入單章
+ * 動輒 5 萬 tokens、結構圖單張推理近一分半，失敗不是理論值。
+ *
+ * 退款是伺服器代簽的鑄回（與購點發放同一條路），不需要用戶再簽一次。
+ * 鑄回失敗不丟錯——此時原始的工作錯誤對用戶更重要——但會在訂單上留下
+ * `refundOwed` 與 log，讓它成為一筆**看得見的欠款**而不是靜靜消失。
+ */
+export async function refundPersonalCreditCharge(params: {
+  userId: string;
+  idempotencyKey: string;
+}): Promise<{ refunded: boolean; owed: boolean }> {
+  const { userId, idempotencyKey } = params;
+
+  const order = await paymentRepo.findOrderByIdempotencyKey(
+    userId,
+    idempotencyKey,
+  );
+  // Info: (20260814 - Luphia) 沒付成的訂單本來就沒扣到錢，不需要退
+  if (!order || order.status !== ORDER_STATUS.COMPLETED) {
+    return { refunded: false, owed: false };
+  }
+
+  const data = (order.data ?? {}) as IJSONObject & {
+    refundedAt?: string;
+    refundOwed?: boolean;
+  };
+  // Info: (20260814 - Luphia) 同一張訂單只退一次：重試會再次走到這裡
+  if (data.refundedAt) return { refunded: true, owed: false };
+
+  const credits = Number(-order.amount);
+  if (!Number.isFinite(credits) || credits <= 0) {
+    return { refunded: false, owed: false };
+  }
+
+  const user = await webAuthnRepo.findUserById(userId);
+  if (!user?.address) {
+    logger.error("personal credit refund owed: user address missing", {
+      orderId: order.id,
+      userId,
+    });
+    await paymentRepo.updateOrderData(order.id, {
+      ...data,
+      refundOwed: true,
+      refundError: "user address missing",
+    });
+    return { refunded: false, owed: true };
+  }
+
+  const mint = await issuePurchasedPointsToMember(user.address, credits);
+  if (!mint.success) {
+    logger.error("personal credit refund owed: mint failed", {
+      orderId: order.id,
+      userId,
+      message: mint.message,
+    });
+    await paymentRepo.updateOrderData(order.id, {
+      ...data,
+      refundOwed: true,
+      refundError: mint.message ?? "mint failed",
+    });
+    return { refunded: false, owed: true };
+  }
+
+  await paymentRepo.updateOrderData(order.id, {
+    ...data,
+    refundedAt: new Date().toISOString(),
+    refundOwed: false,
+  });
+  logger.info("personal credit refunded", { orderId: order.id, credits });
+  return { refunded: true, owed: false };
 }

@@ -2,6 +2,9 @@ export const pricing = {
   free_cost: "無料",
   title: "クラウドサービスサブスクリプションプラン",
   subtitle: "チームの規模に合わせて最適なプランをお選びください",
+  // Info: (20260814 - Luphia) 付費方案以席次計價，單位標明每席
+  per_seat_monthly: "席 / 月",
+  per_seat_yearly: "席 / 年",
   monthly: "月払い",
   yearly: "年払い",
   save_percent: "17% お得",

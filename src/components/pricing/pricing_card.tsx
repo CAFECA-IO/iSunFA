@@ -63,11 +63,24 @@ export default function PricingCard({
           <span className="text-4xl font-bold tracking-tight text-gray-900">
             {price}
           </span>
+          {/**
+           * Info: (20260814 - Luphia) 付費方案的單位是**每席**（規範 §1 拍板、席次計費已實作）：
+           * 只寫「月繳」會讓人把卡片上的數字讀成團隊總額，而實收是這個數字乘上人數。
+           * 免費版不依人數計費，維持原本的月繳／年繳。
+           */}
           <span className="text-sm leading-6 font-semibold text-gray-600">
             /{" "}
-            {billingInterval === "month"
-              ? t("pricing.monthly")
-              : t("pricing.yearly")}
+            {planPriceValue > 0
+              ? t(
+                  billingInterval === "month"
+                    ? "pricing.per_seat_monthly"
+                    : "pricing.per_seat_yearly",
+                )
+              : t(
+                  billingInterval === "month"
+                    ? "pricing.monthly"
+                    : "pricing.yearly",
+                )}
           </span>
         </p>
         {/**

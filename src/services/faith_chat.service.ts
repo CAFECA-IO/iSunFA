@@ -15,7 +15,7 @@ import {
   settleSpend,
   spendCredits,
 } from "@/services/spend.service";
-import { ApiError } from "@/lib/utils/error_dictionary";
+import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 
 /**
  * Info: (20260808 - Luphia) 費思對話計費編排（設計書 §5.3）。
@@ -100,7 +100,7 @@ export async function runFaithBilledChat(
     billing,
   );
 
-  await spendCredits({
+  const spend = await spendCredits({
     teamId,
     userId,
     featureCode: BILLABLE_FEATURE_CODE.FAITH_CHAT,
@@ -110,6 +110,22 @@ export async function runFaithBilledChat(
     // Info: (20260813 - Luphia) 按 token 計量、有結算步驟，餘額不足時封頂放行（設計書 §5.4）
     allowPartial: true,
   });
+
+  /**
+   * Info: (20260814 - Luphia) 重放（同一把鍵已扣款且未退還）不重跑 LLM：
+   * 冪等鍵保護的是扣款，照跑等於同一筆錢買到無限次呼叫。
+   * 前一次失敗而已退款的情況不會走到這裡——spendCredits 會改用重試鍵重新扣款。
+   */
+  if (spend.replayed) {
+    throw new ApiError(
+      API_ERRORS.TW_DUPLICATE_REQUEST.code,
+      API_ERRORS.TW_DUPLICATE_REQUEST.message,
+      API_ERRORS.TW_DUPLICATE_REQUEST.status,
+    );
+  }
+
+  // Info: (20260814 - Luphia) 結算與退款一律用回傳的鍵（重試時會是衍生鍵）
+  const billingKey = spend.idempotencyKey;
 
   // Info: (20260808 - Luphia) 2. 呼叫 LLM；失敗即全額退還預扣，不留懸帳
   let generation: Awaited<ReturnType<ChatService["generateFaithResponse"]>>;
@@ -122,7 +138,10 @@ export async function runFaithBilledChat(
       billing.maxOutputTokens,
     );
   } catch (llmError) {
-    await refundCredits({ idempotencyKey, operatorUserId: userId });
+    await refundCredits({
+      idempotencyKey: billingKey,
+      operatorUserId: userId,
+    });
     throw llmError;
   }
 
@@ -136,7 +155,7 @@ export async function runFaithBilledChat(
    * （設計書 §5.4）：純錢包預扣沒有額度用量列可沿用視窗與 teamId，只能由此注入。
    */
   const settlement = await settleSpend({
-    idempotencyKey,
+    idempotencyKey: billingKey,
     actualCost: actualCredits,
     operatorUserId: userId,
     nowSec: params.nowSec,

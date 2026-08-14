@@ -292,6 +292,55 @@ describe("spendCredits", () => {
   });
 
   /**
+   * Info: (20260814 - Luphia) 重放必須是**呼叫端看得見的狀態**（PR #6652 review A-2）。
+   *
+   * 冪等鍵保護的是扣款，不是工作：早退只回傳成功、呼叫端照常跑 LLM，
+   * 同一把鍵重送 N 次就是 1 次扣款 + N 次模型呼叫，額度系統在這條路徑上等於不存在。
+   */
+  it("marks a replay so the caller can refuse to redo the work", async () => {
+    asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockImplementation(
+      async (key: unknown) =>
+        key === "faith:msg-1" ? ({ amount: BigInt(3) } as unknown) : null,
+    );
+
+    const result = await spendCredits(BASE_PARAMS);
+
+    expect(result.replayed).toBe(true);
+    expect(result.idempotencyKey).toBe("faith:msg-1");
+  });
+
+  // Info: (20260814 - Luphia) 正常扣款不是重放，呼叫端才不會把首次請求誤判成重送
+  it("does not mark a fresh spend as a replay", async () => {
+    const result = await spendCredits(BASE_PARAMS);
+    expect(result.replayed).toBe(false);
+  });
+
+  /**
+   * Info: (20260814 - Luphia) 前一次已全額退還＝重試，不是重放（PR #6652 review A-2）。
+   *
+   * 沿用原鍵會撞上 createUsage 的 unique 衝突而被默默吞掉——變成不扣款卻照跑 LLM。
+   * 因此改用衍生鍵重新扣一次，並把鍵回傳給呼叫端結算用。
+   */
+  it("charges again under a retry key when the previous attempt was fully refunded", async () => {
+    asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockImplementation(
+      async (key: unknown) => {
+        if (key === "faith:msg-1") return { amount: BigInt(3) } as unknown;
+        if (key === "refund:faith:msg-1")
+          return { amount: BigInt(-3) } as unknown;
+        return null;
+      },
+    );
+
+    const result = await spendCredits(BASE_PARAMS);
+
+    expect(result.replayed).toBe(false);
+    expect(result.idempotencyKey).toBe("faith:msg-1#retry1");
+    expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
+      expect.objectContaining({ idempotencyKey: "faith:msg-1#retry1" }),
+    );
+  });
+
+  /**
    * Info: (20260813 - Luphia) 拆帳後的重放必須把兩邊加總回傳：只認其中一筆就早退，
    * 會讓呼叫端把「已扣的錢包點數」當成沒扣過，結算時少退一半。
    */
@@ -486,9 +535,11 @@ describe("refundCredits", () => {
         idempotencyKey: "refund:faith:msg-1",
       }),
     );
+    // Info: (20260814 - Luphia) 退款守恆：明確帶入「尚未退還的金額」，不再默認退全額
     expect(teamWalletRepo.refundAllocation).toHaveBeenCalledWith(
       "faith:msg-1",
       "worker",
+      BigInt(1),
     );
   });
 
@@ -498,6 +549,108 @@ describe("refundCredits", () => {
       operatorUserId: "worker",
     });
     expect(result).toEqual({ refunded: false, source: null });
+  });
+});
+
+/**
+ * Info: (20260814 - Luphia) 退款守恆（PR #6652 review A-3）：
+ * 結算退差額用 `settle:`、失敗補償用 `refund:`，兩把不同的鍵各自只擋自己重複。
+ * 只比對原始預扣的話，「先部分退、再全額退」兩次都會通過，額度會憑空多出一筆。
+ */
+describe("refund conservation", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    asMock(teamQuotaUsageRepo.createUsage).mockResolvedValue({});
+    asMock(teamWalletRepo.refundAllocation).mockResolvedValue({
+      outcome: "OK",
+    });
+  });
+
+  it("only refunds the part that has not been refunded yet", async () => {
+    // Info: (20260814 - Luphia) 預扣 6、結算已退 2 → 補償只能再退 4
+    asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockImplementation(
+      async (key: unknown) => {
+        if (key === "faith:msg-1")
+          return {
+            amount: BigInt(6),
+            teamId: "team-1",
+            userId: "user-1",
+            featureCode: "FAITH_CHAT",
+            windowKey5h: 1,
+            windowKeyWeek: 1,
+          } as unknown;
+        if (key === "settle:faith:msg-1")
+          return { amount: BigInt(-2) } as unknown;
+        return null;
+      },
+    );
+
+    const result = await refundCredits({
+      idempotencyKey: "faith:msg-1",
+      operatorUserId: "worker",
+    });
+
+    expect(result.refunded).toBe(true);
+    expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
+      expect.objectContaining({ amount: BigInt(-4) }),
+    );
+  });
+
+  it("refuses to refund anything once the spend is fully refunded", async () => {
+    asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockImplementation(
+      async (key: unknown) => {
+        if (key === "faith:msg-1")
+          return {
+            amount: BigInt(6),
+            teamId: "team-1",
+            userId: "user-1",
+            featureCode: "FAITH_CHAT",
+            windowKey5h: 1,
+            windowKeyWeek: 1,
+          } as unknown;
+        if (key === "settle:faith:msg-1")
+          return { amount: BigInt(-6) } as unknown;
+        return null;
+      },
+    );
+
+    const result = await refundCredits({
+      idempotencyKey: "faith:msg-1",
+      operatorUserId: "worker",
+    });
+
+    expect(result.refunded).toBe(false);
+    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+    expect(teamWalletRepo.refundAllocation).not.toHaveBeenCalled();
+  });
+
+  // Info: (20260814 - Luphia) 錢包側同理：退款金額明確帶入，不由 repo 預設退全額
+  it("passes the outstanding wallet amount instead of defaulting to the full hold", async () => {
+    asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockResolvedValue(null);
+    asMock(teamWalletRepo.findLedgerByIdempotencyKey).mockImplementation(
+      async (key: unknown) => {
+        if (key === "faith:msg-1")
+          return {
+            amount: BigInt(-5),
+            targetUserId: "user-1",
+            featureCode: "FAITH_CHAT",
+          } as unknown;
+        if (key === "settle:faith:msg-1")
+          return { amount: BigInt(2) } as unknown;
+        return null;
+      },
+    );
+
+    await refundCredits({
+      idempotencyKey: "faith:msg-1",
+      operatorUserId: "worker",
+    });
+
+    expect(teamWalletRepo.refundAllocation).toHaveBeenCalledWith(
+      "faith:msg-1",
+      "worker",
+      BigInt(3),
+    );
   });
 });
 

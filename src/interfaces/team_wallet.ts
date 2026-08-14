@@ -89,7 +89,19 @@ export interface ISpendResult {
   // Info: (20260813 - Luphia) 拆帳明細（設計書 §5.4）：分別記錄兩個來源各扣多少
   quotaAmount: string;
   allocationAmount: string;
+  /**
+   * Info: (20260814 - Luphia) 實際記帳所用的冪等鍵。重試（前一次已全額退還）會改用
+   * 衍生鍵，因此**結算與退款必須用這把回傳的鍵**，不能拿呼叫端原本那把。
+   */
   idempotencyKey: string;
+  /**
+   * Info: (20260814 - Luphia) 這次呼叫命中了尚未退還的既有扣款（冪等重放）。
+   *
+   * 冪等鍵保護的是「扣款」，不是「工作」：早退回傳成功後，呼叫端若照常執行，
+   * 同一把鍵重送 N 次就是 1 次扣款 + N 次 LLM。因此重放必須是呼叫端看得見的狀態，
+   * 由它決定要不要重跑。
+   */
+  replayed: boolean;
 }
 
 /**

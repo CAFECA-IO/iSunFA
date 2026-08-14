@@ -1047,6 +1047,15 @@ export const API_ERRORS = {
     message: "No payment method on record for seat charge",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  /**
+   * Info: (20260814 - Luphia) 同一把冪等鍵的工作已經扣過款且尚未退還（重放）。
+   * 冪等鍵保護的是扣款，不是工作——照跑等於同一筆錢買到無限次 LLM 呼叫。
+   */
+  TW_DUPLICATE_REQUEST: {
+    code: "TW000013",
+    message: "This request was already processed",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
   // Info: (20260814 - Luphia) 席次補收扣款失敗：fail-closed，不建立邀請也不加人
   TW_SEAT_CHARGE_FAILED: {
     code: "TW000012",

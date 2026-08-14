@@ -87,6 +87,11 @@ _追蹤重大架構變更背後的歷史脈絡與取捨：_
 - **[ADR 010: Immutable Pipeline, File-System Queue, and Stateless Workers](architecture/decisions/010_immutable_pipeline_and_stateless_workers.md)**：採用無狀態攤銷、不可變資料管道與 Web3 檔案系統佇列的分散式高可用設計。
 - **[ADR 011: Agentic Reflection and Deterministic Validation](architecture/decisions/011_agentic_reflection_and_deterministic_validation.md)**：AI 反思機制與確定性驗證層，建立 BSI 級別的自評重做與懸記防護網。
 - **[ADR 015: Off-chain Team Wallet Ledger](architecture/decisions/015_offchain_team_wallet_ledger.md)**：團隊錢包與訂閱額度採 C 案混合制——離鏈決定論帳本營運（免逐次簽章、append-only Ledger + 守恆勾稽），每日 merkle root 鏈上錨定；1:1 backing 為金鑰治理到位後的 Phase 2。
+- **[ADR 016: Third-party Login & Custodial Wallet](architecture/decisions/016_third_party_login_and_custodial_wallet.md)**：第三方登入的託管錢包設計——伺服器代簽的邊界與出處驗證，讓沒有 passkey 的用戶也能完成鏈上動作。
+- **[ADR 017: Signed System Settings in Database](architecture/decisions/017_signed_system_settings_in_database.md)**：營運參數（額度、費率、保留天數）改存 DB 並帶簽章，env 只留部署環境差異；驗簽失敗一律退回程式內的 fail-safe 預設。
+- **[ADR 018: HR PII Data Classification](architecture/decisions/018_hr_pii_data_classification.md)**：人事模組 13 張表的個資分級與欄位級加密，說明為何不套用碳盤查的 E2EE、也不沿用帳本的明文。
+- **[ADR 019: Splitting ProcessTask](architecture/decisions/019_hr_process_task_split.md)**：以型別結構取代執行期檢查，讓三種非法的任務歸屬狀態在 schema 層就無法表示。
+- **[ADR 020: Severance Pay Estimation](architecture/decisions/020_severance_pay_estimation.md)**：薪資模組上線前的資遣費試算——系統只算它真的知道的部分（年資、基數、法定上限），平均工資留給人填。
 
 ---
 

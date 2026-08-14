@@ -2,6 +2,9 @@ export const pricing = {
   free_cost: "무료",
   title: "클라우드 서비스 구독 요금제",
   subtitle: "팀 규모에 맞는 최적의 요금제를 선택하세요",
+  // Info: (20260814 - Luphia) 付費方案以席次計價，單位標明每席
+  per_seat_monthly: "석 / 월",
+  per_seat_yearly: "석 / 년",
   monthly: "월 결제",
   yearly: "연 결제",
   save_percent: "17% 절약",

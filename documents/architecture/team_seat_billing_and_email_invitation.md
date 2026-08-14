@@ -74,11 +74,11 @@ periodDays    = round((currentPeriodEnd - currentPeriodStart) / 1 day)
 model TeamSubscription {
   // ...既有欄位
 
-  // Info: 當期席次快照（含 PENDING 邀請），續訂時以此計價
+  // Info: (20260812 - Luphia) 當期席次快照（含 PENDING 邀請），續訂時以此計價
   seats Int @default(1)
 
   /**
-   * Info: 每席單價快照（分為單位的整數，TWD 即元）。
+   * Info: (20260812 - Luphia) 每席單價快照（分為單位的整數，TWD 即元）。
    * 快照而非即時讀方案表：調價不得回溯既有訂閱，且帳單金額要能重算驗證。
    */
   seatUnitPrice   BigInt @map("seat_unit_price")
@@ -92,7 +92,7 @@ model TeamSubscription {
 model TeamSeatChange {
   id           String   @id @default(uuid())
   teamId       String   @map("team_id")
-  // Info: ADD_INVITE | ADD_MEMBER | RELEASE_DECLINED | RELEASE_EXPIRED | RELEASE_REMOVED
+  // Info: (20260812 - Luphia) ADD_INVITE | ADD_MEMBER | RELEASE_DECLINED | RELEASE_EXPIRED | RELEASE_REMOVED
   changeType   String   @map("change_type")
   seatsAfter   Int      @map("seats_after")
   invitationId String?  @map("invitation_id")
@@ -145,16 +145,16 @@ model TeamSeatChange {
 model TeamInvitation {
   // ...既有欄位（inviteeAddress 改為 optional，保留既有 wallet 邀請路徑）
 
-  // Info: 受邀者 email（新路徑的識別鍵；屬個資，隱私政策 §1 已納入收集範圍）
+  // Info: (20260812 - Luphia) 受邀者 email（新路徑的識別鍵；屬個資，隱私政策 §1 已納入收集範圍）
   inviteeEmail String? @map("invitee_email")
 
   /**
-   * Info: 邀請 token 的 SHA-256 雜湊。明文只存在於寄出的那封信裡。
+   * Info: (20260812 - Luphia) 邀請 token 的 SHA-256 雜湊。明文只存在於寄出的那封信裡。
    * 只存雜湊的理由對稱：DB 外洩無法冒用連結，信箱外洩也無法反推 DB 內容。
    */
   tokenHash String? @unique @map("token_hash")
 
-  // Info: 邀請有效期（建議 7 天）。過期即釋出席次，避免長期佔位
+  // Info: (20260812 - Luphia) 邀請有效期（建議 7 天）。過期即釋出席次，避免長期佔位
   expiresAt DateTime? @map("expires_at")
 }
 ```
@@ -215,7 +215,9 @@ model TeamInvitation {
 | 方案頁價格單位 | `NT$840 / 月繳` | `NT$840 / 席 / 月`，並於付款前顯示 `席次 × 單價 = 總額` |
 | 方案頁 `fido_tooltip` | 「根據 fido2 金鑰數量收取訂閱費」 | 改為席次說明（五語系） |
 
-> **產品指示（2026-08-12）：方案頁與條款一併先行改為席次計費**，與費思記憶採同一套「條款與文案先行、實作反推」的節奏。上表六處均已於同日更新（價格單位、`fido_tooltip`、席次說明段落、條款 §3.1 / §3.6、隱私政策 §1）。
+> **產品指示（2026-08-12）：方案頁與條款一併先行改為席次計費**，與費思記憶採同一套「條款與文案先行、實作反推」的節奏。
+>
+> 上表各處的實際落點（2026-08-14 覆核修正）：條款 §3.1 / §3.6、隱私政策 §1、方案頁的席次說明段落（`price_multiply_note`）均已更新；`fido_tooltip` 是**整列刪除**而非改寫（金鑰數量與計費無關，留著只會誤導）；價格單位於 2026-08-14 才實際改為 `/ 席 / 月`（`per_seat_monthly`，付費方案適用，免費版維持月繳）——在此之前卡片仍顯示「月繳」，僅靠下方的席次說明補充。
 >
 > ✅ **落差已於 2026-08-14 消除**：P2（席次乘算、金額由 server 計算、付款前揭露 `席次 × 單價`）與 P3（比例補收純函式 + 邀請 fail-closed）皆已實作，方案頁標示與實收金額一致。
 

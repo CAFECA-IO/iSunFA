@@ -61,12 +61,12 @@
 model FaithMemory {
   id String @id @default(uuid())
 
-  // Info: 記憶的作用範圍：一位成員在一個團隊內一份（見 §3.1）
+  // Info: (20260812 - Luphia) 記憶的作用範圍：一位成員在一個團隊內一份（見 §3.1）
   userId String @map("user_id")
   teamId String @map("team_id")
 
   /**
-   * Info: 記憶項目密文（AES-256-GCM，比照 ADR 018 欄位級加密）。
+   * Info: (20260812 - Luphia) 記憶項目密文（AES-256-GCM，比照 ADR 018 欄位級加密）。
    * 明文結構為 IFaithMemoryItem[]（見 §4.1），整包加密而非逐條加密：
    * 記憶一律整包讀取用於組 prompt，逐條加密只是多存 N 組 IV 與標籤。
    */
@@ -75,11 +75,11 @@ model FaithMemory {
   itemsTag    String @map("items_tag")
   keyVersion  Int    @map("key_version")
 
-  // Info: 條目數（明文計數，供上限判斷與後台觀測，不含任何內容）
+  // Info: (20260812 - Luphia) 條目數（明文計數，供上限判斷與後台觀測，不含任何內容）
   itemCount Int @default(0) @map("item_count")
 
   /**
-   * Info: 到期刪除時點（訂閱終止日 + FAITH_MEMORY_RETENTION_DAYS）。
+   * Info: (20260812 - Luphia) 到期刪除時點（訂閱終止日 + 保留天數系統設定）。
    * null = 訂閱有效中，不排定刪除；恢復訂閱時清回 null（見 §7）。
    * 期限「算好存下來」而非每次推導：推導點一多，條款承諾的日期就會出現兩種算法。
    */
@@ -92,7 +92,7 @@ model FaithMemory {
   team Team @relation(fields: [teamId], references: [id])
 
   @@unique([userId, teamId])
-  // Info: 保留期守護行程的掃描索引（WHERE expires_at <= now）
+  // Info: (20260812 - Luphia) 保留期守護行程的掃描索引（WHERE expires_at <= now）
   @@index([expiresAt])
   @@map("faith_memory")
 }
@@ -217,7 +217,7 @@ inputEstimate = FAITH_PROMPT_OVERHEAD_TOKENS + ceil(messageLength / 3) + (hasIma
 | 層 | 檔案 | 職責 |
 |---|---|---|
 | Constants | `src/constants/faith_memory.ts`（新） | `FaithMemoryCategory`、刪除原因 enum、上限與注入預算 |
-| Constants | `src/constants/llm.ts` | `FAITH_MEMORY_RETENTION_DAYS`（已建立） |
+| Constants | `src/constants/llm.ts` | `DEFAULT_FAITH_MEMORY_RETENTION_DAYS`（fail-safe 預設 90；真相來源為 DB 設定 `SystemSettingKey.FAITH_MEMORY_RETENTION_DAYS`） |
 | Interfaces | `src/interfaces/faith_memory.ts`（新） | `IFaithMemoryItem`、DTO |
 | Validators | `src/validators/faith_memory.ts`（新） | 萃取輸出 schema、刪除請求 schema |
 | Repository | `src/repositories/faith_memory.repo.ts`（新） | 唯一碰 DB 的層；讀寫一律帶 `(userId, teamId)`；加解密於此收斂 |
