@@ -16,9 +16,10 @@ import { assertSchedulableDay } from "@/repositories/attendance_schedule_invaria
  * 它是「同一人同一天只能有一張生效假單」這個保證的全部，不得讓呼叫端自己組
  * —— 種子腳本亦然，請 import `activeKeyOf`。
  *
- * Info: (20260814 - Julian) 本檔不做「該不該做」的判斷，但 `resolveRecall` 是
- * coding_guidelines §1 的 unit-of-work 例外：同意銷假要一次改三張表，少任一步就會留下
- * 永久說謊的中間狀態，而原子性只有 DB 給得起。它保證的不變式列在該方法的註解裡。
+ * Info: (20260814 - Julian) 本檔不做「該不該做」的判斷，但 `resolveRecall` 是**有意識的規範偏離**：
+ * 同意銷假要一次改三張表，少任一步就會留下永久說謊的中間狀態，而原子性只有 DB 給得起——
+ * 把 `$transaction` 拉到 service 會違反優先度更高的「只有 Repository 能碰 Prisma」。
+ * 完整理由與提案條文見 `attendance_demo_plan.md §7.4`（提案狀態，尚未寫入 coding_guidelines）。
  */
 
 const activeKeyOf = (employeeId: string, workDate: string): string =>
@@ -220,7 +221,7 @@ class LeaveRepository implements ILeaveRepository {
   }
 
   /**
-   * Info: (20260813 - Julian) 回應徵詢。coding_guidelines §1 的 unit-of-work 例外，
+   * Info: (20260813 - Julian) 回應徵詢。unit-of-work 方法（見計劃書 §7.4），
    * 保證的不變式有三條，缺任一條都會留下永久說謊的中間狀態：
    *
    * 1. 徵詢變 ACCEPTED 並清空 `pendingLeaveDayId` —— 少了它，同一天還能再開一張徵詢
