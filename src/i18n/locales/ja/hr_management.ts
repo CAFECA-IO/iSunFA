@@ -519,6 +519,16 @@ export const hrManagement = {
     action_submit: "作成して通知",
   },
   attendance: {
+    recall_title: "休暇短縮の打診",
+    recall_from:
+      "{{name}}（{{employeeNo}}）から、{{date}} に「{{shift}}」で出勤できるか打診がありました。",
+    recall_reason_label: "緊急の業務上の必要性",
+    recall_notice:
+      "辞退できます。理由の説明も不要です。承諾して初めて出勤日に戻ります。回答するまでは休暇のままです。",
+    recall_note_placeholder: "辞退する前に一言（任意）",
+    recall_accept: "承諾する",
+    recall_decline: "辞退する",
+    recall_error: "回答を送信できませんでした。しばらくしてお試しください。",
     blocked_out_of_range:
       "{{name}} から {{distance}} m の地点におり、{{radius}} m の打刻範囲外です。現場に近づくとボタンは自動的に有効になります。",
     confirm_title_in: "出勤打刻の確認",
@@ -626,6 +636,26 @@ export const hrManagement = {
     minutes_value: "{{minutes}} 分",
   },
   attendance_presence: {
+    stat_leave: "本日の休暇",
+    stat_leave_hint: "承認済みの休暇。未出勤には数えません",
+    leave_title: "本日の休暇（{{count}} 名）",
+    leave_empty: "本日の休暇はありません",
+    leave_hint:
+      "人手が足りないとき、管理者はこの名簿の人に休暇短縮を打診できます。応じるかどうかは本人が決めます。",
+    leave_recall_action: "復帰を打診",
+    leave_recall_pending: "回答待ち",
+    recall_title: "休暇短縮の打診",
+    recall_desc:
+      "{{name}}（{{employeeNo}}）に {{date}} の出勤が可能か打診します。",
+    recall_shift_label: "復帰するシフト",
+    recall_reason_label: "緊急の業務上の必要性",
+    recall_reason_placeholder:
+      "例：台風後の復旧作業、第一現場で技術者が 2 名不足",
+    recall_notice:
+      "送信してもシフトは変わりません。本人が自分の打刻ページで承諾した場合のみ出勤日に戻ります。辞退した場合、休暇はそのままです。",
+    recall_submit: "打診を送信",
+    recall_cancel: "キャンセル",
+    recall_error: "打診を送信できませんでした。しばらくしてお試しください。",
     title: "現場人数と出勤名簿",
     subtitle:
       "打刻から即時に算出。地図には現場の範囲のみを表示し、個人の位置は一切表示しません",

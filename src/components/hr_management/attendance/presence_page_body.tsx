@@ -1,6 +1,10 @@
 "use client";
 
 import { FC, useEffect, useMemo, useState } from "react";
+import LeaveTodayPanel from "@/components/hr_management/attendance/leave_today_panel";
+import LeaveRecallDialog from "@/components/hr_management/attendance/leave_recall_dialog";
+import { useLeaveToday } from "@/hooks/use_leave_today";
+import { ILeaveTodayEntry } from "@/interfaces/leave";
 import { Download, Loader2, TriangleAlert } from "lucide-react";
 import PresenceMap from "@/components/hr_management/attendance/presence_map";
 import {
@@ -60,6 +64,9 @@ const PresencePageBody: FC = () => {
   const { t } = useTranslation();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [recallTarget, setRecallTarget] = useState<ILeaveTodayEntry | null>(
+    null,
+  );
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -68,6 +75,18 @@ const PresencePageBody: FC = () => {
     selectedLocationId: selectedId,
     fallbackError: t("hr_management.attendance_presence.error_load"),
   });
+
+  const leave = useLeaveToday({
+    apiBase: API_BASE,
+    fallbackError: t("hr_management.attendance_presence.error_load"),
+  });
+
+  /**
+   * Info: (20260814 - Julian) 視野分級（計畫書 §8.5）：名單與人數全開放，
+   * 地圖與匯出只給主管 —— 名單回答「有誰」，地圖回答「在哪」。
+   * 旗標來自 A3 而不是 A11：決定要不要畫地圖的頁面，該問餵地圖的那支端點。
+   */
+  const isSupervisor = feed.summary?.viewerIsSupervisor ?? false;
 
   const locations = useMemo<IPresenceLocationSummary[]>(
     () => feed.summary?.locations ?? [],
@@ -145,19 +164,22 @@ const PresencePageBody: FC = () => {
            * Info: (20260813 - Julian) 全帳本匯出放在最顯眼位置：事故當下沒有人會先想
            * 「是哪一個工區」，先給全部，要縮小範圍再從工區卡片按。
            */}
-          <button
-            type="button"
-            disabled={isExporting}
-            onClick={() => exportRoster()}
-            className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:bg-gray-300"
-          >
-            {isExporting ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Download className="size-4" />
-            )}
-            {t("hr_management.attendance_presence.export_all")}
-          </button>
+          {/* Info: (20260814 - Julian) 匯出只給主管（§8.5）：它是一份帶走的全帳本名單 */}
+          {isSupervisor && (
+            <button
+              type="button"
+              disabled={isExporting}
+              onClick={() => exportRoster()}
+              className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:bg-gray-300"
+            >
+              {isExporting ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Download className="size-4" />
+              )}
+              {t("hr_management.attendance_presence.export_all")}
+            </button>
+          )}
         </div>
 
         {/* Info: (20260813 - Julian) 三個數字回答三個不同的問題，缺一個就會暗示系統其實不知道的事 */}
@@ -182,6 +204,12 @@ const PresencePageBody: FC = () => {
             )}
             tone="bg-orange-100 text-orange-700"
           />
+          <StatCard
+            label={t("hr_management.attendance_presence.stat_leave")}
+            value={leave.view?.entries.length ?? 0}
+            hint={t("hr_management.attendance_presence.stat_leave_hint")}
+            tone="bg-amber-50 text-amber-700"
+          />
         </div>
 
         {feed.error && (
@@ -194,10 +222,19 @@ const PresencePageBody: FC = () => {
           </div>
         )}
 
-        <PresenceMap
-          locations={locations}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
+        {isSupervisor && (
+          <PresenceMap
+            locations={locations}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
+        )}
+
+        <LeaveTodayPanel
+          entries={leave.view?.entries ?? []}
+          canRequestRecall={leave.view?.canRequestRecall ?? false}
+          pendingLeaveDayId={recallTarget?.leaveDayId ?? null}
+          onRequestRecall={setRecallTarget}
         />
 
         <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
@@ -246,7 +283,7 @@ const PresencePageBody: FC = () => {
 
           {/* Info: (20260813 - Julian) 選定工區的到班名單 */}
           <div className="rounded-2xl bg-white ring-1 ring-gray-200">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-t-2xl border-b border-gray-100 bg-orange-100 px-5 py-4">
               <div className="font-medium text-gray-800">
                 {feed.roster?.name ??
                   t("hr_management.attendance_presence.no_location_selected")}
@@ -256,9 +293,9 @@ const PresencePageBody: FC = () => {
                   type="button"
                   disabled={isExporting}
                   onClick={() => exportRoster(feed.roster?.workLocationId)}
-                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-gray-500 transition hover:bg-gray-100 disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-red-500 transition enabled:hover:bg-red-100 disabled:text-gray-500"
                 >
-                  <Download className="size-4" />
+                  <Download className="size-4 shrink-0" />
                   {t("hr_management.attendance_presence.export_location")}
                 </button>
               )}
@@ -317,7 +354,7 @@ const PresencePageBody: FC = () => {
          */}
         {absentees.length > 0 && (
           <div className="rounded-2xl bg-white ring-1 ring-gray-200">
-            <div className="border-b border-gray-100 px-5 py-4">
+            <div className="rounded-t-2xl border-b border-gray-100 bg-orange-100 px-5 py-4">
               <div className="font-medium text-gray-800">
                 {t("hr_management.attendance_presence.expected_absent_title")}
               </div>
@@ -382,6 +419,13 @@ const PresencePageBody: FC = () => {
           </div>
         )}
       </div>
+
+      <LeaveRecallDialog
+        apiBase={API_BASE}
+        entry={recallTarget}
+        onClose={() => setRecallTarget(null)}
+        onSubmitted={leave.refresh}
+      />
     </div>
   );
 };

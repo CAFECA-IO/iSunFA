@@ -19,6 +19,8 @@ import {
 } from "@/lib/attendance_geofence";
 import PunchMap from "@/components/hr_management/attendance/punch_map";
 import ConfirmModal from "@/components/common/confirm_modal";
+import PendingRecallCard from "@/components/hr_management/attendance/pending_recall_card";
+import { usePendingRecalls } from "@/hooks/use_pending_recalls";
 import { useRouter } from "next/navigation";
 import { HR_MANAGEMENT_ROUTE } from "@/constants/hr_management";
 import { useServerClock } from "@/hooks/use_server_clock";
@@ -88,6 +90,9 @@ const PunchPageBody: FC = () => {
    * `today` 每次更新（載入、打卡）都會帶來新的 `serverNowIso`，等於重新校時。
    */
   const { label: serverClock } = useServerClock(today?.serverNowIso ?? null);
+
+  // Info: (20260814 - Julian) 待回應的銷假徵詢；同意後今日班別可能就變了，所以要一起重載
+  const pendingRecalls = usePendingRecalls(API_BASE);
 
   const loadAll = useCallback(async () => {
     setLoadError(null);
@@ -216,6 +221,22 @@ const PunchPageBody: FC = () => {
             </div>
           )}
         </div>
+
+        {/**
+         * Info: (20260814 - Julian) 徵詢卡放在最上面：它是這一頁上唯一「別人在等你回答」的東西。
+         * 排在打卡按鈕之後的話，人會先打完卡就離開，而徵詢會一直掛著。
+         */}
+        {pendingRecalls.recalls.map((recall) => (
+          <PendingRecallCard
+            key={recall.recallId}
+            apiBase={API_BASE}
+            recall={recall}
+            onResponded={() => {
+              pendingRecalls.refresh();
+              loadAll();
+            }}
+          />
+        ))}
 
         {/* Info: (20260813 - Julian) 定位狀態：四種狀態各有各的下一步，不能壓成一個轉圈圈 */}
         <div className="rounded-2xl bg-white p-3 ring-1 ring-gray-200 lg:p-6">

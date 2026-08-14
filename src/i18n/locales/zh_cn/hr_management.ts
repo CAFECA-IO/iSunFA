@@ -512,6 +512,16 @@ export const hrManagement = {
     action_submit: "建立并发送通知",
   },
   attendance: {
+    recall_title: "销假征询",
+    recall_from:
+      "{{name}}（{{employeeNo}}）征询你是否愿意销假，于 {{date}} 回来上「{{shift}}」。",
+    recall_reason_label: "紧急需求说明",
+    recall_notice:
+      "你可以婉拒，也不必说明理由。同意之后该日才会改回上班日；在你回复之前，这一天仍然是假。",
+    recall_note_placeholder: "想说一句话再婉拒（可留空）",
+    recall_accept: "同意销假",
+    recall_decline: "婉拒",
+    recall_error: "回复失败，请稍后再试",
     blocked_out_of_range:
       "你在 {{name}} 外 {{distance}} 米，超出 {{radius}} 米的打卡范围。走近工区后按钮会自动恢复。",
     confirm_title_in: "确认上班打卡",
@@ -616,6 +626,25 @@ export const hrManagement = {
     minutes_value: "{{minutes}} 分",
   },
   attendance_presence: {
+    stat_leave: "今日请假",
+    stat_leave_hint: "已核准的请假，不列入未到工",
+    leave_title: "今日请假（{{count}} 人）",
+    leave_empty: "今天没有人请假",
+    leave_hint:
+      "人手不足时，主管可对这份名单上的人发起销假征询；同意与否由当事人决定。",
+    leave_recall_action: "销假征询",
+    leave_recall_pending: "征询中",
+    recall_title: "发起销假征询",
+    recall_desc:
+      "向 {{name}}（{{employeeNo}}）征询 {{date}} 是否愿意销假回工区。",
+    recall_shift_label: "回来上哪一班",
+    recall_reason_label: "紧急需求说明",
+    recall_reason_placeholder: "例如：台风后抢修，第一工区缺两名工程师",
+    recall_notice:
+      "送出后不会改动班表。对方在自己的打卡页看到征询，按同意才会改回上班日；婉拒则假单原封不动。",
+    recall_submit: "送出征询",
+    recall_cancel: "取消",
+    recall_error: "征询送出失败，请稍后再试",
     title: "现场人数与到班名单",
     subtitle: "打卡实时推导，地图上只有工区范围，没有任何个人位置",
     loading: "载入中…",

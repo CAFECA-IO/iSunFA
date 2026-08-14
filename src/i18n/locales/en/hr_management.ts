@@ -531,6 +531,16 @@ export const hrManagement = {
     action_submit: "Create & Notify",
   },
   attendance: {
+    recall_title: "Request to cut your leave short",
+    recall_from:
+      "{{name}} ({{employeeNo}}) asks whether you are willing to come in on {{date}} for the {{shift}} shift.",
+    recall_reason_label: "Urgent business need",
+    recall_notice:
+      "You may decline, and you do not have to give a reason. The day becomes a work day only after you accept — until you reply, it stays as leave.",
+    recall_note_placeholder: "Add a note before declining (optional)",
+    recall_accept: "Accept",
+    recall_decline: "Decline",
+    recall_error: "Could not send your reply. Please try again later.",
     blocked_out_of_range:
       "You are {{distance}} m from {{name}}, outside the {{radius}} m punch area. The button re-enables once you are closer.",
     confirm_title_in: "Confirm clock in",
@@ -638,6 +648,26 @@ export const hrManagement = {
     minutes_value: "{{minutes}} min",
   },
   attendance_presence: {
+    stat_leave: "On leave today",
+    stat_leave_hint: "Approved leave; not counted as expected-absent",
+    leave_title: "On leave today ({{count}})",
+    leave_empty: "Nobody is on leave today",
+    leave_hint:
+      "When short-staffed, a manager can ask someone on this list to cut their leave short. Whether to accept is the employee's decision.",
+    leave_recall_action: "Ask to return",
+    leave_recall_pending: "Awaiting reply",
+    recall_title: "Ask an employee to cut their leave short",
+    recall_desc:
+      "Asking {{name}} ({{employeeNo}}) whether they are willing to come in on {{date}}.",
+    recall_shift_label: "Which shift to return to",
+    recall_reason_label: "Urgent business need",
+    recall_reason_placeholder:
+      "e.g. post-typhoon repairs; site 1 is two engineers short",
+    recall_notice:
+      "Sending this does NOT change the schedule. The employee sees the request on their own punch page; the day reverts to a work day only if they accept. Declining leaves the request untouched.",
+    recall_submit: "Send request",
+    recall_cancel: "Cancel",
+    recall_error: "Could not send the request. Please try again later.",
     title: "On-site headcount and roster",
     subtitle:
       "Derived from punches on read. The map shows site boundaries only — never an individual's position",
