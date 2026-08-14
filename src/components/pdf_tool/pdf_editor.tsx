@@ -359,6 +359,18 @@ interface IPdfEditorProps {
     }>
   >;
   layout?: "split" | "toggle";
+  /**
+   * Info: (20260812 - Emily) 印在文件第一頁的報告名稱
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * 走**文件外殼**而不是內容裡的 H1：報告名稱是文件的中繼資料，
+   * 而 ADR 014 要求 `content` 逐字照抄原文。留在內容裡的話使用者可以在
+   * 編輯器裡把它刪掉，然後那份文件就沒有名稱了，而沒有人會發現。
+   *
+   * 空字串或省略即**不印**——沒有名稱是一眼看得出來的缺漏，
+   * 而一個猜出來的名稱印在查證文件的封面上會被當成事實。
+   */
+  reportTitle?: string;
   isEmbedded?: boolean;
   value?: string;
   onChange?: (val: string) => void;
@@ -388,12 +400,22 @@ interface IPdfEditorProps {
    * Info: (20260810 - Emily) 轉傳給 MarkdownContent:把段落內的換行還原成硬斷行。
    * 與 serverPrint 一樣是 opt-in —— 只有碳盤查報告的原文行結構被量過。
    */
+  /**
+   * Info: (20260812 - Emily) 渲染時剝掉內容開頭那行文件級 H1
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * 只有碳盤查報告要開:既有草稿的第一行是 `# <會話名>`，而報告名稱已經改走
+   * `reportTitle`（文件外殼）。**選用而非預設** —— `MarkdownContent` 跑在 21 個
+   * 使用端上，一支只對碳報告成立的轉換不該無條件套給全部人（`#6644`）。
+   */
+  stripDocumentTitle?: boolean;
   restoreSourceLineBreaks?: boolean;
 }
 
 export default function PdfEditor({
   setErrorModal,
   layout = "split",
+  reportTitle = "",
   isEmbedded = false,
   value = undefined,
   onChange = undefined,
@@ -404,6 +426,7 @@ export default function PdfEditor({
   onBeforeDownload = undefined,
   splitBreakpoint = "md",
   serverPrint = false,
+  stripDocumentTitle = false,
   restoreSourceLineBreaks = false,
 }: IPdfEditorProps) {
   const { t } = useTranslation();
@@ -719,6 +742,11 @@ export default function PdfEditor({
          * 兩處指的是同一份東西，各寫一份遲早會不一致。
          */
         tocTitle: t("carbon_chatbot.outline_title")!,
+        /*
+         * Info: (20260812 - Emily) 報告名稱。省略時 carbon_report_html 不印
+         * 那個 <h1 class="doc-title">，第一頁就只有品牌橫幅與目錄。
+         */
+        title: reportTitle || undefined,
       },
     });
     saveBlobAs(result.blob, fileName);
@@ -1113,6 +1141,7 @@ export default function PdfEditor({
                         setMarkdownContext(val);
                       }}
                       theme="light"
+                      stripDocumentTitle={stripDocumentTitle}
                       restoreSourceLineBreaks={restoreSourceLineBreaks}
                     />
                   </div>
