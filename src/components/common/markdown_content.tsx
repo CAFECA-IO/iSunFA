@@ -18,6 +18,7 @@ import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_brea
 import dynamic from "next/dynamic";
 import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
 import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
+import { splitInlineListItems } from "@/lib/utils/markdown_list_structure";
 import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
 import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
 import { padAllTableHeaders } from "@/lib/utils/markdown_table_columns";
@@ -238,8 +239,21 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
           ),
         ),
       );
+      /*
+       * Info: (20260814 - Emily) 先補回換行，再把換行標成硬斷行
+       * (`data/issue_drafts/open/26_import_uat.md` 的觀察項)。
+       *
+       * `restoreLineStructure` 只能還原「來源已經有的」換行；而 08-14 新匯入件
+       * 幾乎沒有輸出那些換行（`●` 獨立成行從 54 個掉到 3 個），
+       * 所以要先有 `splitInlineListItems` 把換行補回來，它才有東西可以標。
+       * 反過來的順序沒有意義。
+       *
+       * 掛在 `restoreSourceLineBreaks` 這個開關下面而不是無條件套用：
+       * 兩支解的是同一件事的兩半，而這個元件跑在 21 個使用端上
+       * —— 一支只對碳報告成立的轉換不該無條件套給全部人（#6644）。
+       */
       const structured = restoreSourceLineBreaks
-        ? restoreLineStructure(normalized)
+        ? restoreLineStructure(splitInlineListItems(normalized).markdown)
         : normalized;
       return escapeArithmeticEmphasis(structured);
     },

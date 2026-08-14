@@ -4,6 +4,7 @@ import { stripMarkdownComments } from "@/lib/utils/markdown_comment";
 import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_break";
 import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
 import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
+import { splitInlineListItems } from "@/lib/utils/markdown_list_structure";
 import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
 import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
 import { padAllTableHeaders } from "@/lib/utils/markdown_table_columns";
@@ -633,7 +634,21 @@ export const buildCarbonReportHtml = (
     escapeArithmeticEmphasis(
       padAllTableHeaders(
         convertTimelineBlocksToTables(
-          replaceOfficeSymbolChars(restoreLineStructure(source)),
+          /**
+           * Info: (20260814 - Emily) 先補回換行，再標硬斷行
+           * (`data/issue_drafts/open/26_import_uat.md` 的觀察項)。
+           *
+           * `restoreLineStructure` 還原的是「來源已經有的」換行，而 08-14
+           * 新匯入件幾乎沒有輸出那些換行 —— 整份清單塞在同一行
+           * （最嚴重的是 `3.2.3` 把 (1)~(31) 全放在一行）。
+           * 補換行要排在它前面，它才有東西可以標。
+           *
+           * 這裡不記 log：渲染端每次都重跑，補了什麼不會沉進儲存裡。
+           * 真正要記的是匯入端，而那要等 prompt 一起改（`open/26`）。
+           */
+          replaceOfficeSymbolChars(
+            restoreLineStructure(splitInlineListItems(source).markdown),
+          ),
         ),
       ),
     ),
