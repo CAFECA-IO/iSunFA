@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useCallback, useEffect, useMemo, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -96,6 +96,18 @@ const ResultPageBody: FC = () => {
   const [departmentName, setDepartmentName] = useState<string>(HR_FILTER_ALL);
   const [exception, setException] = useState<string>(HR_FILTER_ALL);
   const [selected, setSelected] = useState<ISelectedCell | null>(null);
+  const detailRef = useRef<HTMLDivElement | null>(null);
+
+  /**
+   * Info: (20260814 - Julian) 點了格子就把明細捲進視野。
+   *
+   * 明細接在方格圖下方，而方格圖橫向捲動、列數又多 —— 點中間那一格時明細在畫面外，
+   * 使用者看到的是「按了沒反應」。排班月曆同樣的問題同樣的解法。
+   */
+  useEffect(() => {
+    if (!selected) return;
+    detailRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [selected]);
 
   const load = useCallback(
     async (month: string) => {
@@ -313,11 +325,13 @@ const ResultPageBody: FC = () => {
         )}
 
         {selected && (
-          <AttendanceDayDetail
-            row={selected.row}
-            day={selected.day}
-            onClose={() => setSelected(null)}
-          />
+          <div ref={detailRef}>
+            <AttendanceDayDetail
+              row={selected.row}
+              day={selected.day}
+              onClose={() => setSelected(null)}
+            />
+          </div>
         )}
 
         {/**

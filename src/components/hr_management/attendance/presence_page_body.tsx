@@ -50,13 +50,15 @@ const StatCard: FC<{
   tone: string;
 }> = ({ label, value, hint, tone }) => (
   <div className="flex-1 rounded-2xl bg-white p-3 ring-1 ring-gray-200 lg:p-5">
-    <div className="text-sm text-gray-500">{label}</div>
-    <div
-      className={`mt-2 inline-flex items-baseline rounded-lg px-3 py-1 text-3xl font-semibold tabular-nums ${tone}`}
-    >
-      {value}
+    <div className="flex flex-row justify-between gap-2 lg:flex-col">
+      <div className="text-sm text-gray-500">{label}</div>
+      <div
+        className={`inline-flex w-fit items-baseline rounded-lg px-3 py-1 text-xl font-semibold tabular-nums lg:text-3xl ${tone}`}
+      >
+        {value}
+      </div>
     </div>
-    <div className="mt-2 text-xs text-gray-400">{hint}</div>
+    <div className="mt-2 text-[10px] text-gray-400 lg:text-xs">{hint}</div>
   </div>
 );
 
@@ -183,7 +185,7 @@ const PresencePageBody: FC = () => {
         </div>
 
         {/* Info: (20260813 - Julian) 三個數字回答三個不同的問題，缺一個就會暗示系統其實不知道的事 */}
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
           <StatCard
             label={t("hr_management.attendance_presence.stat_on_site")}
             value={feed.summary?.onSiteTotal ?? 0}
@@ -239,16 +241,18 @@ const PresencePageBody: FC = () => {
 
         <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
           {/* Info: (20260813 - Julian) 工區卡片。人數為零的工區也要列，否則「沒有人」與「不存在」同形 */}
-          <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {locations.map((location) => (
               <div
                 key={location.workLocationId}
-                className="relative flex w-fit items-center"
+                className="relative flex w-full items-center"
               >
                 <div
                   className={`${
-                    location.workLocationId === selectedId ? "block" : "hidden"
-                  } absolute -right-8 z-10 size-0 rotate-90`}
+                    location.workLocationId === selectedId
+                      ? "visible opacity-100"
+                      : "invisible opacity-0"
+                  } absolute -right-8 z-10 hidden size-0 rotate-90 transition lg:block`}
                   style={{
                     borderLeft: "20px solid transparent",
                     borderRight: "20px solid transparent",
@@ -259,21 +263,21 @@ const PresencePageBody: FC = () => {
                   type="button"
                   aria-label={location.name}
                   onClick={() => setSelectedId(location.workLocationId)}
-                  className={`rounded-2xl bg-white p-4 text-left ring-1 transition ${
+                  className={`flex-1 rounded-2xl bg-white p-3 text-left ring-1 transition lg:p-4 ${
                     location.workLocationId === selectedId
                       ? "ring-2 ring-orange-400"
                       : "ring-gray-200 hover:ring-gray-300"
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium text-gray-800">
+                  <div className="flex flex-col items-center justify-between gap-2 lg:flex-row">
+                    <span className="text-sm font-medium text-gray-800 lg:text-base">
                       {location.name}
                     </span>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-[10px] text-gray-400 lg:text-xs">
                       {location.code}
                     </span>
                   </div>
-                  <div className="mt-2 flex items-center gap-3 text-sm">
+                  <div className="mt-2 flex flex-col items-center gap-3 text-sm lg:flex-row">
                     <span className="rounded-md bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700 tabular-nums">
                       {location.onSiteCount}
                     </span>
@@ -286,7 +290,7 @@ const PresencePageBody: FC = () => {
                     >
                       {location.staleCount}
                     </span>
-                    <span className="ml-auto text-xs text-gray-400">
+                    <span className="text-center text-[10px] text-gray-400 lg:text-right lg:text-xs">
                       {t("hr_management.attendance_presence.radius", {
                         radius: location.radiusMeters,
                       })}
@@ -299,7 +303,7 @@ const PresencePageBody: FC = () => {
 
           {/* Info: (20260813 - Julian) 選定工區的到班名單 */}
           <div className="rounded-2xl bg-white ring-1 ring-gray-200">
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-t-2xl border-b border-gray-100 bg-orange-100 px-5 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-t-2xl border-b border-gray-100 bg-orange-100 p-3 lg:px-5 lg:py-4">
               <div className="font-medium text-gray-800">
                 {feed.roster?.name ??
                   t("hr_management.attendance_presence.no_location_selected")}
@@ -324,23 +328,31 @@ const PresencePageBody: FC = () => {
             ) : (
               <ul className="divide-y divide-gray-100">
                 {entries.map((entry) => (
+                  // Info: (20260814 - Julian) 手機直式堆疊、桌機才對齊成欄；理由同未到工名單
                   <li
                     key={entry.employeeId}
-                    className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm"
+                    className="items-center px-4 py-3 lg:flex lg:flex-wrap lg:gap-3 lg:px-5"
                   >
-                    <span className="w-24 font-medium text-gray-800">
-                      {entry.name}
-                    </span>
-                    <span className="w-20 text-gray-400">
-                      {entry.employeeNo}
-                    </span>
-                    <span className="w-32 text-gray-500">
+                    <div className="flex items-baseline gap-2 lg:w-44">
+                      <span className="text-sm font-medium text-gray-800">
+                        {entry.name}
+                      </span>
+                      <span className="font-mono text-xs text-gray-400">
+                        {entry.employeeNo}
+                      </span>
+                      <span
+                        className={`ml-auto rounded-md px-2 py-0.5 text-xs font-medium lg:hidden ${PRESENCE_STATUS_STYLE[entry.status]}`}
+                      >
+                        {t(PRESENCE_STATUS_I18N_KEY[entry.status])}
+                      </span>
+                    </div>
+
+                    <div className="mt-0.5 text-xs text-gray-500 lg:mt-0 lg:w-72 lg:text-sm">
                       {entry.jobTitle ?? EMPTY_VALUE}
-                    </span>
-                    <span className="w-40 text-gray-500">
-                      {entry.departmentName ?? EMPTY_VALUE}
-                    </span>
-                    <span className="w-32 text-gray-600 tabular-nums">
+                      {entry.departmentName ? `　${entry.departmentName}` : ""}
+                    </div>
+
+                    <div className="mt-0.5 text-xs text-gray-600 tabular-nums lg:mt-0 lg:w-32 lg:text-sm">
                       {/**
                        * Info: (20260813 - Julian) 跨夜班的進場時間屬於昨天，因此連日期一起顯示——
                        * 只印 20:05，凌晨看板前的人會誤以為是今晚。
@@ -351,9 +363,9 @@ const PresencePageBody: FC = () => {
                             t("hr_management.attendance.next_day"),
                           )
                         : isoDateTimeLabel(entry.workDate, entry.sinceMinute)}
-                    </span>
+                    </div>
                     <span
-                      className={`ml-auto rounded-md px-2 py-0.5 text-xs font-medium ${PRESENCE_STATUS_STYLE[entry.status]}`}
+                      className={`ml-auto hidden rounded-md px-2 py-0.5 text-xs font-medium lg:inline ${PRESENCE_STATUS_STYLE[entry.status]}`}
                     >
                       {t(PRESENCE_STATUS_I18N_KEY[entry.status])}
                     </span>
@@ -370,33 +382,44 @@ const PresencePageBody: FC = () => {
          */}
         {absentees.length > 0 && (
           <div className="rounded-2xl bg-white ring-1 ring-gray-200">
-            <div className="rounded-t-2xl border-b border-gray-100 bg-orange-100 px-5 py-4">
+            <div className="rounded-t-2xl border-b border-gray-100 bg-orange-100 p-3 lg:px-5 lg:py-4">
               <div className="font-medium text-gray-800">
                 {t("hr_management.attendance_presence.expected_absent_title")}
               </div>
-              <div className="mt-1 text-xs text-gray-400">
+              <div className="text-[10px] text-gray-400 lg:mt-1 lg:text-xs">
                 {t("hr_management.attendance_presence.expected_absent_note")}
               </div>
             </div>
             <ul className="divide-y divide-gray-100">
               {absentees.map((absentee) => (
+                /**
+                 * Info: (20260814 - Julian) 手機直式堆疊、桌機才排成對齊的欄。
+                 *
+                 * 原本一律用固定寬度（w-24／w-32／w-40）配 flex-wrap —— 在手機上每一欄
+                 * 各自換行、部門名稱又在自己的框裡再折一次，一個人佔掉五行且對不齊。
+                 * 事故當下要用眼睛掃這份名單，掃不動就等於沒有。
+                 */
                 <li
                   key={absentee.employeeId}
-                  className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm"
+                  className="px-4 py-3 lg:flex lg:flex-wrap lg:items-center lg:gap-3 lg:px-5"
                 >
-                  <span className="w-24 font-medium text-gray-800">
-                    {absentee.name}
-                  </span>
-                  <span className="w-20 text-gray-400">
-                    {absentee.employeeNo}
-                  </span>
-                  <span className="w-32 text-gray-500">
+                  <div className="flex items-baseline gap-2 lg:w-44">
+                    <span className="text-sm font-medium text-gray-800">
+                      {absentee.name}
+                    </span>
+                    <span className="font-mono text-xs text-gray-400">
+                      {absentee.employeeNo}
+                    </span>
+                  </div>
+
+                  <div className="mt-0.5 text-xs text-gray-500 lg:mt-0 lg:w-72 lg:text-sm">
                     {absentee.jobTitle ?? EMPTY_VALUE}
-                  </span>
-                  <span className="w-40 text-gray-500">
-                    {absentee.departmentName ?? EMPTY_VALUE}
-                  </span>
-                  <span className="text-gray-500">
+                    {absentee.departmentName
+                      ? `　${absentee.departmentName}`
+                      : ""}
+                  </div>
+
+                  <div className="mt-0.5 text-xs text-gray-500 lg:mt-0 lg:text-sm">
                     {t("hr_management.attendance_presence.expected_by", {
                       shift: absentee.shiftName ?? EMPTY_VALUE,
                       time: formatMinuteOfDay(
@@ -404,7 +427,7 @@ const PresencePageBody: FC = () => {
                         t("hr_management.attendance.next_day"),
                       ),
                     })}
-                  </span>
+                  </div>
                 </li>
               ))}
             </ul>

@@ -59,17 +59,17 @@ export const HR_NAV_ITEMS: IHrNavItem[] = [
     disabled: false,
   },
   {
-    key: "attendance_schedule",
-    href: HR_MANAGEMENT_ROUTE.ATTENDANCE_SCHEDULE,
-    labelKey: "hr_management.nav.attendance_schedule",
-    icon: CalendarDays,
-    disabled: false,
-  },
-  {
     key: "attendance_presence",
     href: HR_MANAGEMENT_ROUTE.ATTENDANCE_PRESENCE,
     labelKey: "hr_management.nav.attendance_presence",
     icon: Radar,
+    disabled: false,
+  },
+  {
+    key: "attendance_schedule",
+    href: HR_MANAGEMENT_ROUTE.ATTENDANCE_SCHEDULE,
+    labelKey: "hr_management.nav.attendance_schedule",
+    icon: CalendarDays,
     disabled: false,
   },
   {
