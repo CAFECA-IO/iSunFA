@@ -18,12 +18,13 @@ import {
   ATTENDANCE_FILTER_EXCEPTION_ONLY,
   AttendanceCellTone,
   AttendanceExceptionType,
+  DEMO_TIME_ZONE,
 } from "@/constants/attendance";
 import { HR_FILTER_ALL } from "@/constants/hr_management";
 import {
   departmentOptionsOf,
   filterResultRows,
-  isoMonthOf,
+  zonedIsoMonth,
   monthRange,
   shiftIsoMonth,
 } from "@/lib/utils/attendance_result_view";
@@ -84,7 +85,7 @@ const ResultPageBody: FC = () => {
   const [isoMonth, setIsoMonth] = useState<string | null>(null);
 
   useEffect(() => {
-    setIsoMonth(isoMonthOf(new Date().toISOString()));
+    setIsoMonth(zonedIsoMonth(new Date(), DEMO_TIME_ZONE));
   }, []);
 
   const [matrix, setMatrix] = useState<IAttendanceResultMatrix | null>(null);

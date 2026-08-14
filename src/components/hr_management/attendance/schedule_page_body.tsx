@@ -6,13 +6,14 @@ import ScheduleCellEditor from "@/components/hr_management/attendance/schedule_c
 import ScheduleGrid from "@/components/hr_management/attendance/schedule_grid";
 import {
   ATTENDANCE_API,
+  DEMO_TIME_ZONE,
   OFF_DAY_TYPE_STYLE,
   WORK_DAY_TYPE_I18N_KEY,
   WorkDayType,
 } from "@/constants/attendance";
 import { HR_FILTER_ALL } from "@/constants/hr_management";
 import {
-  isoMonthOf,
+  zonedIsoMonth,
   monthRange,
   shiftIsoMonth,
 } from "@/lib/utils/attendance_result_view";
@@ -63,7 +64,7 @@ const SchedulePageBody: FC = () => {
   // Info: (20260813 - Julian) 預設月份掛載後才決定，避免伺服器與瀏覽器跨月時的 hydration 不一致
   const [isoMonth, setIsoMonth] = useState<string | null>(null);
   useEffect(() => {
-    setIsoMonth(isoMonthOf(new Date().toISOString()));
+    setIsoMonth(zonedIsoMonth(new Date(), DEMO_TIME_ZONE));
   }, []);
 
   const [calendar, setCalendar] = useState<IScheduleCalendar | null>(null);

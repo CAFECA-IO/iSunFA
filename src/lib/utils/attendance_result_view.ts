@@ -6,6 +6,7 @@ import {
   ATTENDANCE_FILTER_EXCEPTION_ONLY,
 } from "@/constants/attendance";
 import { HR_FILTER_ALL } from "@/constants/hr_management";
+import { toZonedParts } from "@/lib/utils/attendance_time";
 import {
   IAttendanceDayResult,
   IAttendanceExceptionItem,
@@ -203,4 +204,19 @@ export function shiftIsoMonth(isoMonth: string, delta: number): string {
 // Info: (20260813 - Julian) "2026-08-13" → "2026-08"
 export function isoMonthOf(isoDate: string): string {
   return isoDate.slice(0, 7);
+}
+
+/**
+ * Info: (20260814 - Julian) 某個時點在指定時區屬於哪一個月。畫面的預設月份一律用這支。
+ *
+ * 不可寫成 `isoMonthOf(now.toISOString())` —— 那切的是 **UTC** 的日期：
+ * 台北 2026-09-01 07:30 的 UTC 是 `2026-08-31T23:30Z`，切出來是 `"2026-08"`，
+ * 於是出勤總覽與排班月曆都開在上個月，而且「今天」根本不在載入區間裡。
+ * **每個月 1 號的 00:00–07:59 必定重現**，而那正是工地主任早上開頁面查班的時段。
+ *
+ * `now` 由呼叫端傳入而不是在這裡取（同 §2.5 判定引擎的原則）：
+ * 函式裡讀 `new Date()` 的東西只能靠 mock 測，而 mock 掉 `Date` 會連帶影響同檔其他測試。
+ */
+export function zonedIsoMonth(now: Date, timeZone: string): string {
+  return isoMonthOf(toZonedParts(now, timeZone).isoDate);
 }

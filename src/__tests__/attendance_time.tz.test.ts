@@ -6,6 +6,7 @@ import {
   toZonedParts,
 } from "@/lib/utils/attendance_time";
 import { IShiftWindow } from "@/interfaces/attendance";
+import { zonedIsoMonth } from "@/lib/utils/attendance_result_view";
 
 /**
  * Info: (20260813 - Julian) 時區換算。**由 `npm run test:tz` 在 America/New_York 下執行。**
@@ -160,6 +161,43 @@ describe("resolveWorkDate", () => {
     ).toEqual({ workDate: "2026-08-12", minuteOfDay: 1440 + 5 * 60 + 3 });
   });
 
+  /**
+   * Info: (20260814 - Julian) 上一條刻意讓今日沒有班別，歧義從一開始就不存在 ——
+   * 而輪班（昨天夜班、今天早班）才是工地的常態，也是這個函式唯一會判錯的情況。
+   *
+   * 台北 8/13 05:00 在 8/12 夜班是**窗內**（1740），在 8/13 早班靠 450−180 的容差也搆得到。
+   * 取「陣列第一個命中」會判給 8/13，接著 `assertPunchableState` 看 8/13 沒有上班卡，
+   * 這個人的下班卡會被 `VA_PUNCH_INVALID_STATE` 拒絕 —— **他根本下不了班**，
+   * 而 8/12 永遠停在 `MISSING_CLOCK_OUT`。窗內優先於容差就是為了這條。
+   */
+  it("should prefer an exact window hit over another day's tolerance hit", () => {
+    const punchedAt = new Date("2026-08-12T21:00:00Z");
+
+    expect(
+      resolveWorkDate({
+        punchedAt,
+        timeZone: TAIPEI,
+        candidates: candidates(SITE_DAY, SITE_NIGHT),
+        toleranceMinutes: 180,
+      }),
+    ).toEqual({ workDate: "2026-08-12", minuteOfDay: 1440 + 5 * 60 });
+  });
+
+  // Info: (20260814 - Julian) 兩邊都只靠容差搆到時取離窗最近的，不是陣列第一個
+  it("should pick the nearest window when only tolerance hits exist", () => {
+    // Info: (20260814 - Julian) 台北 8/13 03:00：離 8/12 夜班窗迄 1740 有 60 分，離 8/13 早班窗起 450 有 270 分
+    const punchedAt = new Date("2026-08-12T19:00:00Z");
+
+    expect(
+      resolveWorkDate({
+        punchedAt,
+        timeZone: TAIPEI,
+        candidates: candidates(SITE_DAY, SITE_NIGHT),
+        toleranceMinutes: 300,
+      }),
+    ).toEqual({ workDate: "2026-08-12", minuteOfDay: 1440 + 3 * 60 });
+  });
+
   // Info: (20260813 - Julian) 夜班的上班打卡在同一天晚上，仍屬於當天
   it("should assign the evening start of a night shift to that same day", () => {
     const punchedAt = new Date("2026-08-12T12:05:00Z");
@@ -204,5 +242,28 @@ describe("resolveWorkDate", () => {
         toleranceMinutes: 180,
       }),
     ).toEqual({ workDate: "2026-08-13", minuteOfDay: 6 * 60 + 50 });
+  });
+});
+
+/**
+ * Info: (20260814 - Julian) 畫面預設月份的時區正確性。
+ *
+ * 這支測試由 `npm run test:tz` 在 America/New_York 下跑，所以它同時證明兩件事：
+ * 換算結果不依賴行程時區，且不是 UTC。原本的寫法是
+ * `isoMonthOf(new Date().toISOString())` —— 台北 9/1 07:30 會回上個月。
+ */
+describe("zonedIsoMonth", () => {
+  it("台北月初凌晨算的是台北的月份，不是 UTC 的上個月", () => {
+    // Info: (20260814 - Julian) 台北 2026-09-01 07:30 = 2026-08-31T23:30Z
+    expect(zonedIsoMonth(new Date("2026-08-31T23:30:00Z"), TAIPEI)).toBe(
+      "2026-09",
+    );
+  });
+
+  it("台北月底深夜還算在當月", () => {
+    // Info: (20260814 - Julian) 台北 2026-08-31 23:30 = 2026-08-31T15:30Z
+    expect(zonedIsoMonth(new Date("2026-08-31T15:30:00Z"), TAIPEI)).toBe(
+      "2026-08",
+    );
   });
 });
