@@ -568,6 +568,8 @@ export const hrManagement = {
     success_clock_out: "退勤打刻が完了しました",
     rejected_detail:
       "{{name}} から {{distance}} m の地点におり、{{radius}} m の打刻範囲外です。現場に近づいて再度お試しください。",
+    rejected_detail_accuracy:
+      "計測値は {{name}} から {{distance}} m（範囲 {{radius}} m）ですが、この差は測位誤差の範囲内です。測位が不安定なだけの可能性があります。見通しの良い場所で数秒静止してから再度お試しください。",
     summary_in: "出勤",
     summary_out: "退勤",
     summary_none: "本日の打刻記録はありません",

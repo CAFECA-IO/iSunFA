@@ -16,6 +16,7 @@ import type {
  */
 import {
   DEMO_ACCOUNT_BOOK_ID,
+  DEMO_MAX_ACCURACY_METERS,
   PunchType,
   PunchVerification,
   WorkDayType,
@@ -829,11 +830,41 @@ async function seedAccountBook(): Promise<void> {
   });
 }
 
+/**
+ * Info: (20260814 - Julian) 半徑與精度門檻必須一起調。
+ *
+ * `DEMO_MAX_ACCURACY_METERS` 是「精度差到這個程度就拒收」的上限，預設 200。
+ * 演示要示範「走出圍欄被拒」時半徑會縮到 60–80 公尺，此時被放行的最差精度
+ * 仍是 200 —— 一個站在圈內、精度 150 的人，量到的距離可以落在半徑之外，
+ * **人在現場卻打不了卡**（§2.3 明文要避免的那件事）。
+ *
+ * 文件三處都寫了「半徑縮小要同步調降門檻」，但沒有任何東西擋得住忘記。
+ * 這裡擋：門檻不得超過半徑的一半。它與 `assertFencesDoNotOverlap` 同一類 ——
+ * 都是「不擋就會安靜地錯，而且錯在演示當下」。
+ */
+function assertAccuracyThresholdFitsRadius(
+  locations: ReturnType<typeof buildWorkLocations>,
+): void {
+  const demoSite = locations[1];
+  const allowed = Math.floor(demoSite.radiusMeters / 2);
+
+  if (DEMO_MAX_ACCURACY_METERS > allowed) {
+    throw new Error(
+      `精度門檻與圍欄半徑不相稱：DEMO_MAX_ACCURACY_METERS = ${DEMO_MAX_ACCURACY_METERS} m，` +
+        `但 ${demoSite.code} 半徑只有 ${demoSite.radiusMeters} m（門檻需 ≤ ${allowed} m）。` +
+        `站在圈內但精度不佳的人會被判在圈外。請改 src/constants/attendance.ts 的 ` +
+        `DEMO_MAX_ACCURACY_METERS 並重新 build（它是常數不是環境變數），` +
+        `或放大 DEMO_SITE_A_RADIUS —— 見執行手冊 §6。`,
+    );
+  }
+}
+
 async function main(): Promise<void> {
   console.log("🏗️  簽到系統展示資料（工程機關版）");
 
   const locations = buildWorkLocations();
   assertFencesDoNotOverlap(locations);
+  assertAccuracyThresholdFitsRadius(locations);
   console.log(
     `   圍欄檢查通過：LOC-A = ${locations[1].latitude}, ${locations[1].longitude}（半徑 ${locations[1].radiusMeters} m）`,
   );

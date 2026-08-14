@@ -324,11 +324,16 @@ const PunchPageBody: FC = () => {
                 {t("hr_management.attendance.rejected_title")}
               </div>
               <div className="mt-1">
-                {t("hr_management.attendance.rejected_detail", {
-                  name: rejection.nearestLocationName,
-                  distance: rejection.distanceMeters,
-                  radius: rejection.radiusMeters,
-                })}
+                {t(
+                  rejection.withinAccuracyMargin
+                    ? "hr_management.attendance.rejected_detail_accuracy"
+                    : "hr_management.attendance.rejected_detail",
+                  {
+                    name: rejection.nearestLocationName,
+                    distance: rejection.distanceMeters,
+                    radius: rejection.radiusMeters,
+                  },
+                )}
               </div>
             </div>
           )}

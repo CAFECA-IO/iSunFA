@@ -569,6 +569,8 @@ export const hrManagement = {
     success_clock_out: "퇴근 기록이 완료되었습니다",
     rejected_detail:
       "{{name}}에서 {{distance}} m 떨어진 지점에 있어 {{radius}} m 범위를 벗어났습니다. 현장에 가까이 이동한 뒤 다시 시도해 주세요.",
+    rejected_detail_accuracy:
+      "측정값은 {{name}}에서 {{distance}} m({{radius}} m 범위)이지만 이 차이는 위치 오차 범위 안입니다. 위치가 불안정한 것일 수 있으니 트인 곳에서 몇 초 멈춘 뒤 다시 시도해 주세요.",
     summary_in: "출근",
     summary_out: "퇴근",
     summary_none: "오늘 기록이 없습니다",

@@ -97,8 +97,8 @@
 > 2. 打卡鈕的 disable 門檻是「距離 − 精度 > 半徑」，所以實際要走到約 **半徑 + 精度** 之外
 >    按鈕才會變灰 —— 半徑 60、精度 35 時是 95 公尺
 >
-> 定案前，這一格與 `DEMO_GEOFENCE_RADIUS_METERS` 的關係也要一併確認：
-> 後者是全域預設，`LOC-A` 需要單獨給值。
+> 半徑沒有全域預設，每個地點各自帶（`WorkLocation.radiusMeters`），`LOC-A` 由 `DEMO_SITE_A_RADIUS` 給值。
+> **seed 會擋**：`DEMO_MAX_ACCURACY_METERS` 須 ≤ 該工區半徑的一半，否則直接中止。
 
 ### 2.2 ⚠️ 圍欄不可重疊 —— seed 必須驗證
 

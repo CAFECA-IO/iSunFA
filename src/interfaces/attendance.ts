@@ -150,6 +150,14 @@ export interface IOutOfFencePayload {
   nearestLocationName: string;
   distanceMeters: number;
   radiusMeters: number;
+  /**
+   * Info: (20260814 - Julian) 距離扣掉 client 回報的定位誤差之後就落在圈內 ——
+   * 也就是「可能只是定位不準」而不是「這個人不在工區」。
+   *
+   * **只用來決定訊息措辭，不用來放行**：誤差是 client 說了算，拿它放寬圍欄
+   * 等於讓使用者自己決定圍欄多大（護欄 G2）。同 G3 的處置：拒收，但講「請重試」。
+   */
+  withinAccuracyMargin: boolean;
 }
 
 // Info: (20260813 - Julian) 今日狀態（A1 成功後與 A2）

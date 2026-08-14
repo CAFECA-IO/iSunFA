@@ -102,7 +102,7 @@ export class AttendancePunchService {
       request.longitude,
       candidates,
     );
-    this.assertInsideFence(nearest, employee);
+    this.assertInsideFence(nearest, employee, request.accuracyMeters);
 
     const match = nearest as IGeofenceMatch;
     const { workDate, minuteOfDay } = await this.resolvePunchWorkDate(
@@ -179,17 +179,31 @@ export class AttendancePunchService {
   private assertInsideFence(
     nearest: IGeofenceMatch | null,
     employee: Employee,
+    accuracyMeters?: number,
   ): void {
     if (nearest && nearest.inside) return;
     if (!nearest) throw new AppError(API_ERRORS.NF_WORK_LOCATION);
 
+    /**
+     * Info: (20260814 - Julian) 誤差只影響**訊息**，不影響放行。
+     *
+     * 前端的 `isDefinitelyOutside` 會扣掉誤差才 disable 按鈕，於是
+     * `半徑 < 距離 ≤ 半徑 + 誤差` 這一段是「按得下去、但伺服器必拒」。
+     * 那一段照實說是「你不在工區」會冤枉真的站在圈內的人 ——
+     * demo 把半徑縮到 60–80 公尺之後，這一段會很容易命中。
+     */
+    const margin = accuracyMeters && accuracyMeters > 0 ? accuracyMeters : 0;
+    const withinAccuracyMargin =
+      nearest.distanceMeters - margin <= nearest.location.radiusMeters;
+
     logger.warn(
-      `[attendance] ${employee.employeeNo} punched ${nearest.distanceMeters}m from ${nearest.location.name} (radius ${nearest.location.radiusMeters}m) — rejected`,
+      `[attendance] ${employee.employeeNo} punched ${nearest.distanceMeters}m from ${nearest.location.name} (radius ${nearest.location.radiusMeters}m, accuracy ${margin}m) — rejected${withinAccuracyMargin ? " (within accuracy margin)" : ""}`,
     );
     throw new OutOfFenceError({
       nearestLocationName: nearest.location.name,
       distanceMeters: nearest.distanceMeters,
       radiusMeters: nearest.location.radiusMeters,
+      withinAccuracyMargin,
     });
   }
 
