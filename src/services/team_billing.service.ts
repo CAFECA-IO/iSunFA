@@ -98,7 +98,24 @@ export async function chargeOrderWithSavedCard(
   });
   const oenData = await oenRes.json();
 
-  if (oenData.code !== "S0000" && !oenRes.ok) {
+  /**
+   * Info: (20260814 - Luphia) 成功的判準是「HTTP ok **且** 業務碼為 S0000」（PR #6652 第二輪 A-2）。
+   *
+   * 原本寫成 `code !== "S0000" && !oenRes.ok`——要兩個失敗訊號**同時**出現才算失敗。
+   * 金流商以 HTTP 200 回覆業務層失敗（如 `{ code: "E0001" }`）是常見做法，
+   * 那時 `!oenRes.ok` 為 false，整個條件為 false，於是「卡片被拒」會走完成功路徑：
+   * 開收據、訂單 COMPLETED、席次照加、續訂照展延——錢一毛沒收到。
+   *
+   * `code` 缺漏（回應格式不如預期）時一律視為失敗並記錄：無法確認收到錢就不能宣稱收到。
+   */
+  const oenSucceeded = oenRes.ok && oenData.code === "S0000";
+  if (!oenSucceeded) {
+    if (oenRes.ok && oenData.code === undefined) {
+      logger.error("saved card charge: unexpected gateway payload", {
+        orderId,
+        payload: JSON.stringify(oenData).slice(0, 500),
+      });
+    }
     await paymentRepo.failPaymentTransactionAndOrder(
       paymentTransaction.id,
       orderId,

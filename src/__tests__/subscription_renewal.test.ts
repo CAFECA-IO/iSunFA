@@ -27,6 +27,16 @@ jest.mock("@/repositories/payment.repo", () => ({
     updateOrderCompleted: jest.fn(),
   },
 }));
+/**
+ * Info: (20260814 - Luphia) 續訂依「當下人數」重算席次（PR #6652 第二輪 B-5 #2）。
+ *
+ * 先前這支測試沒有 mock team.repo，`countMembers` 會走到真 prisma：
+ * 無 DB 時 query reject 被 catch 吞掉、有 DB 時回 0 再靠 MIN_SEATS 兜回 840——
+ * 兩種都是「靠 fallback 蒙對」，而把 `countMembers` 換成常數 1 不會讓任何測試變紅。
+ */
+jest.mock("@/repositories/team.repo", () => ({
+  teamRepo: { countMembers: jest.fn(async () => 8) },
+}));
 jest.mock("@/repositories/webauthn.repo", () => ({
   webAuthnRepo: { findUserById: jest.fn() },
 }));
@@ -98,7 +108,10 @@ describe("processSubscriptionRenewals", () => {
     expect(generatePaymentOrder).toHaveBeenCalledWith(
       "user-owner",
       expect.objectContaining({
-        amount: 840,
+        // Info: (20260814 - Luphia) 8 人團隊、月繳單價 840 → 實收 6,720（席次乘算）
+        amount: 6720,
+        seats: 8,
+        unitPrice: 840,
         // Info: (20260814 - Luphia) teamId 必須在頂層，履行端才讀得到（見 team_order_payload 測試）
         teamId: "team-1",
         data: expect.objectContaining({ renewal: true }),

@@ -1065,6 +1065,15 @@ export const API_ERRORS = {
     message: "Member has no wallet address for on-chain allocation",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  /**
+   * Info: (20260814 - Luphia) 付費訂閱查無單價（unit_price 為 0）：
+   * 這是資料異常而非零元零頭，放行等於整個週期內加人全部免費且無聲。
+   */
+  TW_SEAT_PRICE_MISSING: {
+    code: "TW000015",
+    message: "Subscription has no unit price on record",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
   // Info: (20260814 - Luphia) 席次補收扣款失敗：fail-closed，不建立邀請也不加人
   TW_SEAT_CHARGE_FAILED: {
     code: "TW000012",

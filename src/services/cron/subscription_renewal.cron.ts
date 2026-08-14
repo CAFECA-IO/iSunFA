@@ -1,9 +1,5 @@
 import { logger } from "@/lib/utils/logger";
-import {
-  CURRENCY_UNIT,
-  SUBSCRIPTION_PLAN_CREDITS,
-  SUBSCRIPTION_PLAN_PRICE,
-} from "@/constants/price";
+import { CURRENCY_UNIT, SUBSCRIPTION_PLAN_PRICE } from "@/constants/price";
 import { ORDER_TYPE } from "@/constants/status";
 import {
   BILLING_INTERVAL,
@@ -142,7 +138,12 @@ async function renewOne(
     userName: user.name ?? null,
     orderId: renewalOrder.orderId,
     amount,
-    credits: SUBSCRIPTION_PLAN_CREDITS[planId],
+    /**
+     * Info: (20260814 - Luphia) 續訂同樣不發點數（PR #6652 第二輪 B-1）。
+     * 這一行漏改，於是收據的 receiptDetails.credits 寫著 1,500 點，
+     * 與同一張訂單的 data.credits = 0 自相矛盾——而收據是對外憑證。
+     */
+    credits: 0,
     orderData,
     paymentMethod: {
       id: paymentMethod.id,

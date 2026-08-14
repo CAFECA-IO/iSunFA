@@ -77,6 +77,26 @@ export async function chargeSeatAddition(
     return { charged: false, amount: 0, seats: 0 };
   }
 
+  /**
+   * Info: (20260814 - Luphia) 付費方案卻沒有單價＝資料異常，必須拒絕（PR #6652 第二輪 A-3）。
+   *
+   * `unit_price` 是新欄位、預設 0，而本專案沒有 migrations 目錄——部署後既有訂閱一律是 0，
+   * 要等下次續訂才寫入真值。若照零元路徑放行，接下來整個計費週期內加人全部免費：
+   * 不建單、不寫 log、`charged: false` 前端也不顯示異常，而年繳戶的曝險窗口接近一年。
+   * 「沒卡不准加人」那道防線在零元分支之後才檢查，也會一併失效。
+   *
+   * 零元的**正當**情形只有期末剩餘時間的零頭（見下方 amount <= 0 分支），
+   * 那時單價本身是正的。兩者必須分開。
+   */
+  if (subscription.unitPrice <= 0) {
+    logger.error("seat addition blocked: paid subscription has no unit price", {
+      teamId,
+      planId: subscription.planId,
+      seats,
+    });
+    throw toApiError(API_ERRORS.TW_SEAT_PRICE_MISSING);
+  }
+
   const amount = resolveSeatProration({
     unitPrice: subscription.unitPrice,
     nowMs,
@@ -86,7 +106,7 @@ export async function chargeSeatAddition(
   });
 
   /**
-   * Info: (20260814 - Luphia) 補收金額為 0（期末剩不到一天的零頭、或單價本身為 0）：
+   * Info: (20260814 - Luphia) 補收金額為 0＝期末剩餘時間的零頭（單價已確認為正）：
    * 席次照加、不建單。為了幾塊錢去打一次金流，失敗率與雜訊都比收到的錢多。
    */
   if (amount <= 0) {

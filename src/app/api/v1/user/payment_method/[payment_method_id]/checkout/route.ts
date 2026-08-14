@@ -131,7 +131,12 @@ export async function POST(
     const oenData = await oenRes.json();
 
     // Info: (20260306 - Tzuhan) 扣款失敗
-    if (oenData.code !== "S0000" && !oenRes.ok) {
+    /**
+     * Info: (20260814 - Luphia) 成功＝HTTP ok **且** 業務碼 S0000（PR #6652 第二輪 A-2）。
+     * 原本的 `&&` 要求兩個失敗訊號同時出現，於是「HTTP 200 + 業務失敗碼」（卡片被拒的
+     * 常見回覆形態）會被當成付款成功——開收據、鑄點、訂單完成，而錢沒收到。
+     */
+    if (!oenRes.ok || oenData.code !== "S0000") {
       await paymentRepo.failPaymentTransactionAndOrder(
         paymentTransaction.id,
         order.id,

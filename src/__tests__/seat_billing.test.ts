@@ -55,6 +55,22 @@ describe("seat proration", () => {
     ).toBe(420);
   });
 
+  /**
+   * Info: (20260814 - Luphia) 這條要能分辨 floor 與 round（PR #6652 第二輪 B-5 #3）：
+   * 原本 10 條斷言的小數部分沒有一條 ≥ 0.5，把 `.floor()` 改成 `.round()` 依然全綠，
+   * 它只擋得住 `.ceil()`。2941 × 15/30 = 1470.5 是那個分界點。
+   */
+  it("rounds down at the .5 boundary instead of rounding to nearest", () => {
+    expect(
+      resolveSeatProration({
+        unitPrice: 2941,
+        nowMs: PERIOD_START + 15 * DAY,
+        periodStartMs: PERIOD_START,
+        periodEndMs: PERIOD_END,
+      }),
+    ).toBe(1470);
+  });
+
   it("rounds down so the remainder goes to the customer", () => {
     // Info: (20260814 - Luphia) 840 × 10/30 = 280；840 × 1/30 = 28；取 7 天 = 196
     expect(
