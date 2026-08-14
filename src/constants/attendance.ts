@@ -119,12 +119,6 @@ export const MINUTES_PER_DAY = 1440;
  */
 
 /**
- * Deprecated: (20260813 - Julian) Demo 期間的圍欄半徑。正式上線前須依母計畫 §D6
- * 實地量測各地點 GPS 漂移範圍；接上 AttendancePolicy 與實測值後移除。
- */
-export const DEMO_GEOFENCE_RADIUS_METERS = 500;
-
-/**
  * Info: (20260813 - Julian) 定位精度上限（護欄 G3）。超過視為證據品質不足，拒收並請重試——
  * 錯誤訊息須是「定位精度不足」而非「你不在現場」，兩者對員工意義不同。
  */

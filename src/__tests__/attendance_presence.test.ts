@@ -3,6 +3,7 @@ import {
   MINUTES_PER_DAY,
   PresenceStatus,
   PunchType,
+  ROSTER_CSV_LABELS_ZH_TW,
 } from "@/constants/attendance";
 import {
   findOpenSession,
@@ -400,5 +401,63 @@ describe("attendance_presence", () => {
       // Info: (20260813 - Julian) 產出時間、產出者、時區、欄位標題，共四行
       expect(lines).toHaveLength(4);
     });
+  });
+});
+
+/**
+ * Info: (20260814 - Julian) CSV formula injection。
+ *
+ * 這份檔案的用途是列印、帶到集合點、貼進事故調查報告 —— 是最不該挾帶可執行內容的產物，
+ * 而工區名稱與姓名都是人打的。加引號**擋不住**：`"=1+1"` 在 Excel 一樣會被求值。
+ */
+describe("點名 CSV 的公式中和", () => {
+  const csvOf = (locationName: string): string =>
+    buildRosterCsv({
+      rosters: [
+        {
+          workLocationId: "loc-x",
+          code: "LOC-X",
+          name: locationName,
+          observedAt: "2026-08-13T06:00:00.000Z",
+          timeZone: "Asia/Taipei",
+          entries: [
+            {
+              employeeId: "emp-1",
+              employeeNo: "EMP001",
+              name: "王小明",
+              departmentName: null,
+              jobTitle: null,
+              workLocationId: "loc-x",
+              workLocationName: locationName,
+              workDate: "2026-08-13",
+              sinceMinute: 480,
+              status: PresenceStatus.ON_SITE,
+            },
+          ],
+        },
+      ],
+      labels: ROSTER_CSV_LABELS_ZH_TW,
+      generatedAt: "2026-08-13 14:00",
+      generatedBy: "張三 (EMP005)",
+      timeZone: "Asia/Taipei",
+    });
+
+  it.each(["=1+1", "+1", "-1", "@SUM(A1)"])(
+    "%s 開頭的工區名稱前面補單引號",
+    (name) => {
+      expect(csvOf(name)).toContain(`'${name}`);
+    },
+  );
+
+  it("加引號擋不住，所以中和必須發生在跳脫之前", () => {
+    // Info: (20260814 - Julian) 含逗號 → 會被加引號；單引號必須在引號**裡面**的最前端
+    expect(csvOf('=HYPERLINK("http://x","點我"),a')).toContain(
+      `"'=HYPERLINK(""http://x"",""點我""),a"`,
+    );
+  });
+
+  it("正常名稱不受影響，不會被加上莫名其妙的單引號", () => {
+    expect(csvOf("大漢溪整治工區")).toContain("大漢溪整治工區");
+    expect(csvOf("大漢溪整治工區")).not.toContain("'大漢溪");
   });
 });

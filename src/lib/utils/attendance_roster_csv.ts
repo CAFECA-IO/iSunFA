@@ -40,11 +40,31 @@ export interface IRosterCsvInput {
 }
 
 /**
+ * Info: (20260814 - Julian) 試算表會把 `=` `+` `-` `@`（及 TAB / CR）開頭的欄位當**公式求值**。
+ * 工區名稱與姓名都是人打的，一個叫 `=HYPERLINK("http://…","點我")` 的工區，
+ * 會讓這份名單在別人的 Excel 裡變成可點的連結。
+ *
+ * **加引號沒有用** —— `"=1+1"` 一樣會被求值；唯一有效的是在前面補一個單引號，
+ * 那是試算表的「這一欄是文字」標記（Excel 內不顯示，純文字編輯器看得到）。
+ *
+ * 這份檔案的用途是列印、帶到集合點、貼進事故調查報告 ——
+ * 是這個系統裡最不該挾帶可執行內容的產物。
+ */
+const FORMULA_TRIGGER = /^[=+\-@\t\r]/;
+
+/**
  * Info: (20260813 - Julian) CSV 欄位跳脫：逗號、雙引號、換行任一出現就整欄加引號，引號本身加倍。
  * 工區名稱是人打的，未跳脫的逗號會讓整份名單欄位錯位，事故現場沒有人會發現。
+ *
+ * Info: (20260814 - Julian) 先中和公式再加引號，順序不可對調：
+ * 對調的話 `=1+1,x` 會變成 `"=1+1,x"`，引號在最前面，`'` 補不到真正的開頭。
  */
-const escapeField = (value: string): string =>
-  /[",\n\r]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+const escapeField = (value: string): string => {
+  const neutralized = FORMULA_TRIGGER.test(value) ? `'${value}` : value;
+  return /[",\n\r]/.test(neutralized)
+    ? `"${neutralized.replace(/"/g, '""')}"`
+    : neutralized;
+};
 
 const toRow = (fields: string[]): string => fields.map(escapeField).join(",");
 

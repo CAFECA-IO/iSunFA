@@ -559,6 +559,8 @@ export const hrManagement = {
     success_clock_out: "已完成下班打卡",
     rejected_detail:
       "您位於 {{name}} 外 {{distance}} 公尺處，超出 {{radius}} 公尺的打卡範圍。請走近工區後再試一次。",
+    rejected_detail_accuracy:
+      "量到的距離是 {{name}} 外 {{distance}} 公尺（範圍 {{radius}} 公尺），但這個差距在定位誤差之內，可能只是定位不準。請在空曠處站定幾秒後再試一次。",
     summary_in: "上班",
     summary_out: "下班",
     summary_none: "今日尚無打卡紀錄",

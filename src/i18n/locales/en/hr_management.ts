@@ -580,6 +580,8 @@ export const hrManagement = {
     success_clock_out: "Clocked out",
     rejected_detail:
       "You are {{distance}} m from {{name}}, outside the {{radius}} m punch area. Move closer to the site and try again.",
+    rejected_detail_accuracy:
+      "You are measured {{distance}} m from {{name}} ({{radius}} m punch area), but that is within your location accuracy — it may just be a poor fix. Stand still for a few seconds in an open spot and try again.",
     summary_in: "In",
     summary_out: "Out",
     summary_none: "No punch recorded today",
