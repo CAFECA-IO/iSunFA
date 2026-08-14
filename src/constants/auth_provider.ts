@@ -33,3 +33,14 @@ export const CUSTODIAL_CREDENTIAL_PREFIX = "custodial-";
 
 // Info: (20260809 - Luphia) OAuth state token 的有效期，與 challenge_token 一致取 5 分鐘
 export const OAUTH_STATE_TTL = "5m";
+
+/**
+ * Info: (20260814 - Julian) Passkey 登入的三段進度，供 UI 顯示現在卡在哪一步。
+ * 定義在這裡而非 `lib/auth/passkey_login.ts`：它會被 `auth_modal` 的
+ * `setLoginStep` 接走，是跨檔比對的狀態值（CLAUDE.md §3.4）。
+ */
+export enum PasskeyLoginStep {
+  FETCHING_CHALLENGE = "FETCHING_CHALLENGE",
+  AUTHENTICATING = "AUTHENTICATING",
+  VERIFYING = "VERIFYING",
+}

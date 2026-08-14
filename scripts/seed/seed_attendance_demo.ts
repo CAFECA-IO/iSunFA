@@ -24,6 +24,7 @@ import { EmployeeStatus, Gender } from "@/constants/hr_management";
 import { LeaveRequestStatus, LeaveType } from "@/constants/leave";
 import { prisma } from "@/lib/prisma";
 import { dbRepo } from "@/repositories/db.repo";
+import { activeKeyOf } from "@/repositories/leave.repo";
 import { encryptPii } from "@/lib/hr_pii_crypto";
 import { HrPiiTable } from "@/constants/hr_pii";
 import { calculateDistanceKm } from "@/lib/utils/geo";
@@ -1052,7 +1053,7 @@ async function main(): Promise<void> {
         days: {
           create: {
             workDate: DEMO_DATE,
-            activeKey: `${employee.id}:${DEMO_DATE}`,
+            activeKey: activeKeyOf(employee.id, DEMO_DATE),
           },
         },
       },

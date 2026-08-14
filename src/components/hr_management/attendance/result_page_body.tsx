@@ -11,13 +11,13 @@ import {
 import AttendanceDayDetail from "@/components/hr_management/attendance/attendance_day_detail";
 import AttendanceResultGrid from "@/components/hr_management/attendance/attendance_result_grid";
 import {
-  AttendanceCellTone,
-  AttendanceExceptionType,
+  ATTENDANCE_API,
   ATTENDANCE_CELL_TONE_I18N_KEY,
   ATTENDANCE_CELL_TONE_STYLE,
   ATTENDANCE_EXCEPTION_I18N_KEY,
   ATTENDANCE_FILTER_EXCEPTION_ONLY,
-  DEMO_ACCOUNT_BOOK_ID,
+  AttendanceCellTone,
+  AttendanceExceptionType,
 } from "@/constants/attendance";
 import { HR_FILTER_ALL } from "@/constants/hr_management";
 import {
@@ -42,8 +42,6 @@ import { useTranslation } from "@/i18n/i18n_context";
  * 判定全部來自 A9 的即時計算（不讀結果表），因此任何一格都可以追問「為什麼」，
  * 答案在明細裡。篩選與排序都在前端做，只有換月份才會重新打 API。
  */
-
-const API_BASE = `/api/v1/user/account_book/${DEMO_ACCOUNT_BOOK_ID}/hr/attendance`;
 
 // Info: (20260813 - Julian) 圖例只列使用者會在格子裡看到的那幾種，順序同嚴重度
 const LEGEND_TONES: AttendanceCellTone[] = [
@@ -123,7 +121,7 @@ const ResultPageBody: FC = () => {
       const { from, to } = monthRange(month);
       try {
         const response = await request<IEnvelopeLike<IAttendanceResultMatrix>>(
-          `${API_BASE}/result`,
+          ATTENDANCE_API.RESULT,
           { query: { from, to } },
         );
         setMatrix(response.payload);

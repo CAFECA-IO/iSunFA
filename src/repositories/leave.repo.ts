@@ -10,10 +10,15 @@ import { WorkDayType } from "@/constants/attendance";
 import { assertSchedulableDay } from "@/repositories/attendance_schedule_invariant";
 
 /**
- * Info: (20260813 - Julian) 假勤資料存取層（唯一碰 Prisma），不含業務判斷。
+ * Info: (20260813 - Julian) 假勤資料存取層（唯一碰 Prisma）。
  *
  * `activeKey` 的組法只存在於這一層（`"<employeeId>:<workDate>"`），
- * 它是「同一人同一天只能有一張生效假單」這個保證的全部，不得讓 service 自己組。
+ * 它是「同一人同一天只能有一張生效假單」這個保證的全部，不得讓呼叫端自己組
+ * —— 種子腳本亦然，請 import `activeKeyOf`。
+ *
+ * Info: (20260814 - Julian) 本檔不做「該不該做」的判斷，但 `resolveRecall` 是
+ * coding_guidelines §1 的 unit-of-work 例外：同意銷假要一次改三張表，少任一步就會留下
+ * 永久說謊的中間狀態，而原子性只有 DB 給得起。它保證的不變式列在該方法的註解裡。
  */
 
 const activeKeyOf = (employeeId: string, workDate: string): string =>
@@ -215,10 +220,14 @@ class LeaveRepository implements ILeaveRepository {
   }
 
   /**
-   * Info: (20260813 - Julian) 回應徵詢。同意時三件事包在同一個交易裡：
-   * 徵詢變 ACCEPTED 並清空 `pendingLeaveDayId`、請假日退出生效（`activeKey = null`），
-   * 排班改回上班日。少了排班那步會變成 `NO_SCHEDULE` 而非 `WORK`；
-   * 少了退出生效那步，同一天會同時「在請假」與「要上班」。
+   * Info: (20260813 - Julian) 回應徵詢。coding_guidelines §1 的 unit-of-work 例外，
+   * 保證的不變式有三條，缺任一條都會留下永久說謊的中間狀態：
+   *
+   * 1. 徵詢變 ACCEPTED 並清空 `pendingLeaveDayId` —— 少了它，同一天還能再開一張徵詢
+   * 2. 請假日退出生效（`activeKey = null`）—— 少了它，同一天會同時「在請假」與「要上班」
+   * 3. 排班改回上班日 —— 少了它，判定引擎看到的是 `NO_SCHEDULE` 而非 `WORK`
+   *
+   * 「該不該同意」不在這裡判（那是 service 的事），這裡只保證「要做就一起做完」。
    *
    * Info: (20260814 - Julian) 狀態轉移用附條件的 `updateMany(where status = PENDING)` 搶，
    * `count === 0` 就是輸給另一個分頁。不能先查再寫：兩個請求會同時看到 PENDING，

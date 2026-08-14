@@ -3,7 +3,8 @@
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Loader2, MapPin, TriangleAlert } from "lucide-react";
 import {
-  DEMO_ACCOUNT_BOOK_ID,
+  ATTENDANCE_API,
+  GeolocationStatus,
   PunchType,
   ShiftPatternKind,
 } from "@/constants/attendance";
@@ -27,7 +28,7 @@ import { useServerClock } from "@/hooks/use_server_clock";
 import { formatMinuteOfDay } from "@/lib/utils/attendance_format";
 import { errorI18nKeyOf } from "@/lib/utils/attendance_error_message";
 import { ApiError, IEnvelopeLike, request } from "@/lib/utils/request";
-import { GeolocationStatus, useGeolocation } from "@/hooks/use_geolocation";
+import { useGeolocation } from "@/hooks/use_geolocation";
 import { useTranslation } from "@/i18n/i18n_context";
 
 /**
@@ -39,8 +40,6 @@ import { useTranslation } from "@/i18n/i18n_context";
  * 手機上打卡鈕吸底、身分列吸頂；打卡前需二次確認，因出勤紀錄是
  * append-only，誤按無法刪除。
  */
-
-const API_BASE = `/api/v1/user/account_book/${DEMO_ACCOUNT_BOOK_ID}/hr/attendance`;
 
 /**
  * Info: (20260813 - Julian) 從 `ApiError` 取出圍欄外的 403 payload。
@@ -90,16 +89,16 @@ const PunchPageBody: FC = () => {
   const { label: serverClock } = useServerClock(today?.serverNowIso ?? null);
 
   // Info: (20260814 - Julian) 待回應的銷假徵詢；同意後今日班別可能就變了，所以要一起重載
-  const pendingRecalls = usePendingRecalls(API_BASE);
+  const pendingRecalls = usePendingRecalls();
 
   const loadAll = useCallback(async () => {
     setLoadError(null);
     try {
       const [locationRes, todayRes] = await Promise.all([
         request<IEnvelopeLike<{ locations: IWorkLocationSummary[] }>>(
-          `${API_BASE}/location`,
+          ATTENDANCE_API.LOCATION,
         ),
-        request<IEnvelopeLike<ITodayStatus>>(`${API_BASE}/today`),
+        request<IEnvelopeLike<ITodayStatus>>(ATTENDANCE_API.TODAY),
       ]);
       setLocations(locationRes.payload?.locations ?? []);
       setToday(todayRes.payload);
@@ -141,7 +140,7 @@ const PunchPageBody: FC = () => {
 
     try {
       const result = await request<IEnvelopeLike<ITodayStatus>>(
-        `${API_BASE}/punch`,
+        ATTENDANCE_API.PUNCH,
         {
           method: "POST",
           body: JSON.stringify({
@@ -231,7 +230,6 @@ const PunchPageBody: FC = () => {
         {pendingRecalls.recalls.map((recall) => (
           <PendingRecallCard
             key={recall.recallId}
-            apiBase={API_BASE}
             recall={recall}
             onResponded={() => {
               pendingRecalls.refresh();
@@ -392,7 +390,10 @@ const LocationStatus: FC<{
 }> = ({ geoStatus, nearest, accuracyMeters, onRetry }) => {
   const { t } = useTranslation();
 
-  if (geoStatus === "locating" || geoStatus === "idle") {
+  if (
+    geoStatus === GeolocationStatus.LOCATING ||
+    geoStatus === GeolocationStatus.IDLE
+  ) {
     return (
       <div className="flex items-center gap-2 text-sm text-gray-500">
         <Loader2 className="size-4 shrink-0 animate-spin" />
@@ -401,17 +402,20 @@ const LocationStatus: FC<{
     );
   }
 
-  if (geoStatus === "denied" || geoStatus === "unavailable") {
+  if (
+    geoStatus === GeolocationStatus.DENIED ||
+    geoStatus === GeolocationStatus.UNAVAILABLE
+  ) {
     return (
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2 text-sm font-medium text-amber-700">
           <TriangleAlert className="size-4 shrink-0" />
-          {geoStatus === "denied"
+          {geoStatus === GeolocationStatus.DENIED
             ? t("hr_management.attendance.geo_denied")
             : t("hr_management.attendance.geo_unavailable")}
         </div>
         <div className="text-xs text-gray-500">
-          {geoStatus === "denied"
+          {geoStatus === GeolocationStatus.DENIED
             ? t("hr_management.attendance.geo_denied_hint")
             : t("hr_management.attendance.geo_unavailable_hint")}
         </div>

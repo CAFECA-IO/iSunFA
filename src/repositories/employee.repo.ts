@@ -34,6 +34,7 @@ export interface IEmployeeRepository {
     emails: string[],
   ): Promise<Employee[]>;
   linkUser(employeeId: string, userId: string): Promise<boolean>;
+  unlinkUser(employeeId: string): Promise<boolean>;
   findRosterInPeriod(params: {
     accountBookId: string;
     from: string;
@@ -92,6 +93,18 @@ class EmployeeRepository implements IEmployeeRepository {
     const result = await prisma.employee.updateMany({
       where: { id: employeeId, userId: null },
       data: { userId },
+    });
+    return result.count === 1;
+  }
+
+  /**
+   * Info: (20260814 - Julian) 解除綁定，同樣是條件式更新：`where` 帶 `userId: { not: null }`，
+   * 回傳 `false` 代表「本來就沒綁」而不是失敗。供人事的 CLI escape hatch 使用（`link_employee_user --unlink`）。
+   */
+  public async unlinkUser(employeeId: string): Promise<boolean> {
+    const result = await prisma.employee.updateMany({
+      where: { id: employeeId, userId: { not: null } },
+      data: { userId: null },
     });
     return result.count === 1;
   }

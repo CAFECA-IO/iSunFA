@@ -167,12 +167,49 @@ export const DEMO_ACCOUNT_BOOK_ID = "demo-book-public-works";
  * Info: (20260813 - Julian) 判定結果查詢的區間上限（日曆日，含頭含尾）。
  * A9 即時計算不落地的前提是成本有界；92 天（一季）取季報粒度，比一個月寬鬆但仍有界。
  */
+/**
+ * Info: (20260814 - Julian) 決定打卡歸屬工作日的容差，不是遲到寬限——只影響這筆算哪一天。
+ * 夜班跨午夜時，凌晨兩點的下班卡仍屬前一個工作日。
+ */
+export const DEMO_WORK_DATE_TOLERANCE_MINUTES = 180;
+
+/**
+ * Info: (20260814 - Julian) 現場看板與待回應徵詢的輪詢節奏。三個 hook 共用同一個數字，
+ * 因為使用者感知到的是「畫面多久更新一次」這一件事，分開設會出現同一頁不同區塊各更新各的。
+ * 與 `use_geolocation` 的 15 秒無關——那是單次定位的逾時。
+ */
+export const DEMO_ATTENDANCE_POLL_INTERVAL_MS = 15_000;
+
 export const DEMO_ATTENDANCE_MAX_RANGE_DAYS = 92;
 
 /**
  * Info: (20260813 - Julian) 出勤總覽格子的配色。只用 50 / 100 / 700 這幾階（同 `EMPLOYEE_STATUS_STYLE`）。
  * `PENDING` 用虛線框而非顏色：表達「還沒有結論」，任何實色都會被讀成一種結論。
  */
+/**
+ * Info: (20260814 - Julian) 瀏覽器定位的五種狀態，各自對應不同的下一步：
+ * 等待、可打卡、去設定改權限、換裝置。`IDLE` 與 `LOCATING` 在畫面上同樣是「等一下」，
+ * 但分開才知道要不要顯示重試鈕。
+ */
+export enum GeolocationStatus {
+  IDLE = "IDLE",
+  LOCATING = "LOCATING",
+  READY = "READY",
+  DENIED = "DENIED",
+  UNAVAILABLE = "UNAVAILABLE",
+}
+
+/**
+ * Info: (20260814 - Julian) 登入方式的可用性偵測。`UNCONFIGURED`（伺服器沒設好 OAuth）
+ * 與 `UNREACHABLE`（探測請求本身失敗）必須分開：前者要找 IT 設定，後者重試就好。
+ */
+export enum AuthProviderStatus {
+  CHECKING = "CHECKING",
+  AVAILABLE = "AVAILABLE",
+  UNCONFIGURED = "UNCONFIGURED",
+  UNREACHABLE = "UNREACHABLE",
+}
+
 export const ATTENDANCE_CELL_TONE_STYLE: Record<AttendanceCellTone, string> = {
   [AttendanceCellTone.NORMAL]: "bg-emerald-50 text-emerald-700",
   [AttendanceCellTone.LATE]: "bg-red-100 text-red-700",
@@ -323,3 +360,33 @@ export const WEEKDAY_I18N_KEY: string[] = [
   "hr_management.attendance_schedule.weekday_fri",
   "hr_management.attendance_schedule.weekday_sat",
 ];
+
+/**
+ * Info: (20260814 - Julian) 簽到 API 的端點集中處，比照 `HR_MANAGEMENT_ROUTE` 的做法。
+ * 原本四個頁面各自組一份相同的 base，子路徑也各寫各的——端點改名時要改幾處全靠記憶。
+ *
+ * ToDo: (20260814 - Julian) demo 綁死 `DEMO_ACCOUNT_BOOK_ID`；正式版帳本可切換時，
+ * 這裡要改成 `attendanceApiOf(accountBookId)`，呼叫端從常數改為函式呼叫。
+ */
+const ATTENDANCE_API_BASE = `/api/v1/user/account_book/${DEMO_ACCOUNT_BOOK_ID}/hr/attendance`;
+
+export const ATTENDANCE_API = {
+  PUNCH: `${ATTENDANCE_API_BASE}/punch`,
+  TODAY: `${ATTENDANCE_API_BASE}/today`,
+  LOCATION: `${ATTENDANCE_API_BASE}/location`,
+  SCHEDULE: `${ATTENDANCE_API_BASE}/schedule`,
+  SHIFT_PATTERN: `${ATTENDANCE_API_BASE}/shift_pattern`,
+  RESULT: `${ATTENDANCE_API_BASE}/result`,
+  PRESENCE: `${ATTENDANCE_API_BASE}/presence`,
+  PRESENCE_ROSTER_EXPORT: `${ATTENDANCE_API_BASE}/presence/roster/export`,
+  LEAVE: `${ATTENDANCE_API_BASE}/leave`,
+  LEAVE_RECALL: `${ATTENDANCE_API_BASE}/leave/recall`,
+  LEAVE_RECALL_PENDING: `${ATTENDANCE_API_BASE}/leave/recall/pending`,
+} as const;
+
+// Info: (20260814 - Julian) 帶路徑參數的端點寫成函式，避免呼叫端自己接字串
+export const presenceLocationApi = (locationId: string): string =>
+  `${ATTENDANCE_API_BASE}/presence/location/${locationId}`;
+
+export const leaveRecallRespondApi = (recallId: string): string =>
+  `${ATTENDANCE_API_BASE}/leave/recall/${recallId}/respond`;

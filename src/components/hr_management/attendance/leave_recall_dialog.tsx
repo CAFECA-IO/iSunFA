@@ -1,5 +1,6 @@
 "use client";
 
+import { ATTENDANCE_API } from "@/constants/attendance";
 import { FC, Fragment, useEffect, useState } from "react";
 import {
   Dialog,
@@ -26,11 +27,10 @@ import { useTranslation } from "@/i18n/i18n_context";
  * 的書面記載，不是備註欄。
  */
 const LeaveRecallDialog: FC<{
-  apiBase: string;
   entry: ILeaveTodayEntry | null;
   onClose: () => void;
   onSubmitted: () => void;
-}> = ({ apiBase, entry, onClose, onSubmitted }) => {
+}> = ({ entry, onClose, onSubmitted }) => {
   const { t } = useTranslation();
 
   const [patterns, setPatterns] = useState<IShiftPatternSummary[]>([]);
@@ -46,7 +46,7 @@ const LeaveRecallDialog: FC<{
     setReason("");
     setError(null);
 
-    request<IEnvelopeLike<IShiftPatternSummary[]>>(`${apiBase}/shift_pattern`)
+    request<IEnvelopeLike<IShiftPatternSummary[]>>(ATTENDANCE_API.SHIFT_PATTERN)
       .then((response) => {
         const list = response.payload ?? [];
         setPatterns(list);
@@ -55,7 +55,7 @@ const LeaveRecallDialog: FC<{
       .catch(() =>
         setError(t("hr_management.attendance_presence.recall_error")),
       );
-  }, [entry, apiBase, t]);
+  }, [entry, t]);
 
   const submit = async () => {
     if (!entry || !shiftPatternId || reason.trim().length === 0) return;
@@ -64,7 +64,7 @@ const LeaveRecallDialog: FC<{
     setError(null);
 
     try {
-      await request(`${apiBase}/leave/recall`, {
+      await request(ATTENDANCE_API.LEAVE_RECALL, {
         method: "POST",
         body: JSON.stringify({
           leaveDayId: entry.leaveDayId,

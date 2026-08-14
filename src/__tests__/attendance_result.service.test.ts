@@ -128,6 +128,7 @@ const buildService = (options: {
     findByUserId: async () => null,
     findByAccountBookAndEmails: async () => [],
     linkUser: async () => false,
+    unlinkUser: async () => false,
     findRosterInPeriod: async () => options.roster ?? [],
     findByIdInAccountBook: async () => null,
     // Info: (20260813 - Julian) 假勤加入的成員；本測試用不到，補樁讓介面完整
