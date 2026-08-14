@@ -191,6 +191,14 @@ const UI_ONLY = [
   "AttendanceDayPhase",
 
   /**
+   * Info: (20260814 - Julian) `GeolocationStatus` 與 `AuthProviderStatus` 是瀏覽器當下的
+   * 環境狀態（有沒有拿到座標、伺服器有沒有設好 OAuth），每次開頁重新偵測。
+   * 存進 schema 的那一刻就已經過期，因此不會搬到 MIRRORED。
+   */
+  "GeolocationStatus",
+  "AuthProviderStatus",
+
+  /**
    * Info: (20260814 - Julian) `LeaveRecallResolutionOutcome` 是一次寫入的結局，
    * 不是被儲存的欄位——結果本身已經記在 `LeaveRecall.status` 上。
    * 它不會搬到 MIRRORED。

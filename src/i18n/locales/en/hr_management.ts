@@ -754,7 +754,7 @@ export const hrManagement = {
       "A passkey account has no e-mail address, so it cannot be matched to an employee record automatically — only accounts HR has linked in advance can get in this way.",
     passkey_unavailable:
       "Passkeys are not available here. They only work over a secure connection (HTTPS or localhost) — open this page at the proper address.",
-    hint: 'The Google account must be a company address that already has an employee record — someone who is not on the roster cannot punch in at this site. If you see "no employee record is linked" after signing in, ask HR to check the address.',
+    hint: 'The Google account must be a company address that already has an employee record. If you see "no employee record is linked" after signing in, ask HR to check the address.',
   },
   // Info: (20260814 - Julian) Leave type labels, keyed by `LEAVE_TYPE_I18N_KEY`
   leave: {

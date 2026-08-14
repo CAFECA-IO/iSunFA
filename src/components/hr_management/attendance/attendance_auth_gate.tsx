@@ -4,7 +4,9 @@ import { FC, ReactNode, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AlertTriangle, Fingerprint, Loader2, LogIn } from "lucide-react";
 import SocialLoginButtons from "@/components/auth/social_login_buttons";
+import { AuthProviderStatus } from "@/constants/attendance";
 import { AuthProvider } from "@/constants/auth_provider";
+import { IAuthProviderState } from "@/interfaces/attendance";
 import { fetchEnabledProviders } from "@/lib/auth/oauth_client";
 import { loginWithPasskey } from "@/lib/auth/passkey_login";
 import { useAuth } from "@/contexts/auth_context";
@@ -22,12 +24,6 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
  * returnTo 導向 /admin/dashboard，因此登入帳號不可以是管理員。
  */
 
-type ProviderState =
-  | { status: "checking" }
-  | { status: "available" }
-  | { status: "unconfigured" }
-  | { status: "unreachable" };
-
 const AttendanceAuthGate: FC<{ children: ReactNode }> = ({ children }) => {
   const { t } = useTranslation();
   const { user, loading, refreshAuth } = useAuth();
@@ -36,8 +32,8 @@ const AttendanceAuthGate: FC<{ children: ReactNode }> = ({ children }) => {
   const [pending, setPending] = useState(false);
   const [passkeyUnavailable, setPasskeyUnavailable] = useState(false);
   const [passkeyRequested, setPasskeyRequested] = useState(false);
-  const [providerState, setProviderState] = useState<ProviderState>({
-    status: "checking",
+  const [providerState, setProviderState] = useState<IAuthProviderState>({
+    status: AuthProviderStatus.CHECKING,
   });
 
   /**
@@ -62,15 +58,15 @@ const AttendanceAuthGate: FC<{ children: ReactNode }> = ({ children }) => {
         if (!active) return;
         setProviderState({
           status: availability.providers.includes(AuthProvider.GOOGLE)
-            ? "available"
-            : "unconfigured",
+            ? AuthProviderStatus.AVAILABLE
+            : AuthProviderStatus.UNCONFIGURED,
         });
       })
       .catch((err: unknown) => {
         if (!active) return;
         // Info: (20260813 - Julian) 保留原始錯誤，設定快照 UNTRUSTED 時只有這裡看得到
         console.warn("Failed to load OAuth providers:", err);
-        setProviderState({ status: "unreachable" });
+        setProviderState({ status: AuthProviderStatus.UNREACHABLE });
       });
 
     return () => {
@@ -118,8 +114,8 @@ const AttendanceAuthGate: FC<{ children: ReactNode }> = ({ children }) => {
   if (user) return <>{children}</>;
 
   const googleUnavailable =
-    providerState.status === "unconfigured" ||
-    providerState.status === "unreachable";
+    providerState.status === AuthProviderStatus.UNCONFIGURED ||
+    providerState.status === AuthProviderStatus.UNREACHABLE;
 
   /**
    * Info: (20260813 - Julian) Google 不可用時備援自動展開，避免使用者要自己
@@ -128,7 +124,7 @@ const AttendanceAuthGate: FC<{ children: ReactNode }> = ({ children }) => {
   const passkeyExpanded = passkeyRequested || googleUnavailable;
 
   const notice =
-    providerState.status === "unconfigured"
+    providerState.status === AuthProviderStatus.UNCONFIGURED
       ? {
           title: t("hr_management.attendance_auth.provider_unconfigured"),
           detail: t("hr_management.attendance_auth.provider_unconfigured_hint"),
@@ -150,7 +146,7 @@ const AttendanceAuthGate: FC<{ children: ReactNode }> = ({ children }) => {
         </p>
 
         <div className="mt-6 space-y-3">
-          {providerState.status === "checking" && (
+          {providerState.status === AuthProviderStatus.CHECKING && (
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <Loader2 className="size-4 animate-spin" />
               {t("hr_management.attendance_auth.provider_checking")}
@@ -161,7 +157,7 @@ const AttendanceAuthGate: FC<{ children: ReactNode }> = ({ children }) => {
            * Info: (20260813 - Julian) `returnTo` 帶當前路徑，登入後回到原頁；
            * `showDivider={false}`：這裡是主要入口，上方無需分隔線。
            */}
-          {providerState.status === "available" && (
+          {providerState.status === AuthProviderStatus.AVAILABLE && (
             <SocialLoginButtons
               returnTo={pathname}
               onError={setError}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { GeolocationStatus } from "@/constants/attendance";
 
 /**
  * Info: (20260813 - Julian) 瀏覽器定位。
@@ -9,13 +10,6 @@ import { useCallback, useEffect, useState } from "react";
  * 各自對應不同的下一步：等待、可打卡、去設定改權限、換裝置。
  * 這裡算出的座標僅供顯示，真正的圍欄判定一律在伺服器（護欄 G2）。
  */
-
-export type GeolocationStatus =
-  | "idle"
-  | "locating"
-  | "ready"
-  | "denied"
-  | "unavailable";
 
 export interface IGeolocationReading {
   latitude: number;
@@ -40,16 +34,18 @@ const GEOLOCATION_OPTIONS: PositionOptions = {
 };
 
 export function useGeolocation(): IUseGeolocation {
-  const [status, setStatus] = useState<GeolocationStatus>("idle");
+  const [status, setStatus] = useState<GeolocationStatus>(
+    GeolocationStatus.IDLE,
+  );
   const [reading, setReading] = useState<IGeolocationReading | null>(null);
 
   const refresh = useCallback(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setStatus("unavailable");
+      setStatus(GeolocationStatus.UNAVAILABLE);
       return;
     }
 
-    setStatus("locating");
+    setStatus(GeolocationStatus.LOCATING);
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setReading({
@@ -57,7 +53,7 @@ export function useGeolocation(): IUseGeolocation {
           longitude: position.coords.longitude,
           accuracyMeters: Math.round(position.coords.accuracy),
         });
-        setStatus("ready");
+        setStatus(GeolocationStatus.READY);
       },
       (error) => {
         /**
@@ -65,7 +61,9 @@ export function useGeolocation(): IUseGeolocation {
          * 其餘一律視為 unavailable。
          */
         setStatus(
-          error.code === error.PERMISSION_DENIED ? "denied" : "unavailable",
+          error.code === error.PERMISSION_DENIED
+            ? GeolocationStatus.DENIED
+            : GeolocationStatus.UNAVAILABLE,
         );
         setReading(null);
       },

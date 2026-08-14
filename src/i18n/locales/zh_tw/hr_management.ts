@@ -722,7 +722,7 @@ export const hrManagement = {
       "Passkey 帳號沒有信箱，無法自動對應到員工檔 —— 只有事先由人事綁定過的帳號能用這個方式進入。",
     passkey_unavailable:
       "這個環境無法使用 Passkey。Passkey 只在 HTTPS（或 localhost）安全連線下運作，請改用正式網址開啟本頁。",
-    hint: "登入的 Google 帳號必須是已建檔的公司信箱 —— 不在名冊上的人打不了這個工地的卡。若登入後顯示「尚未對應到員工檔」，請聯繫人事確認信箱。",
+    hint: "登入的 Google 帳號必須是已建檔的公司信箱。若登入後顯示「尚未對應到員工檔」，請聯繫人事確認信箱。",
   },
   // Info: (20260814 - Julian) 假別名稱，對應 `LEAVE_TYPE_I18N_KEY`。用勞基法的正式用語，不用口語簡稱
   leave: {

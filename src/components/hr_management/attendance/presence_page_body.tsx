@@ -8,7 +8,7 @@ import { ILeaveTodayEntry } from "@/interfaces/leave";
 import { Download, Loader2, TriangleAlert } from "lucide-react";
 import PresenceMap from "@/components/hr_management/attendance/presence_map";
 import {
-  DEMO_ACCOUNT_BOOK_ID,
+  ATTENDANCE_API,
   PRESENCE_STATUS_I18N_KEY,
   PRESENCE_STATUS_STYLE,
 } from "@/constants/attendance";
@@ -37,8 +37,6 @@ import { useTranslation } from "@/i18n/i18n_context";
  * 什麼。「未打下班卡」代表系統不知道這個人在不在，不是「他不在」——
  * 這句話要寫在畫面上，因為看板前的人要據此決定要不要打電話。
  */
-
-const API_BASE = `/api/v1/user/account_book/${DEMO_ACCOUNT_BOOK_ID}/hr/attendance`;
 
 /**
  * Info: (20260813 - Julian) `hint` 必填而非選填：每個數字都需要一句話解釋，
@@ -74,13 +72,11 @@ const PresencePageBody: FC = () => {
   const [exportError, setExportError] = useState<string | null>(null);
 
   const feed = usePresenceFeed({
-    apiBase: API_BASE,
     selectedLocationId: selectedId,
     fallbackError: t("hr_management.attendance_presence.error_load"),
   });
 
   const leave = useLeaveToday({
-    apiBase: API_BASE,
     fallbackError: t("hr_management.attendance_presence.error_load"),
   });
 
@@ -116,7 +112,7 @@ const PresencePageBody: FC = () => {
     setIsExporting(true);
     setExportError(null);
     try {
-      const file = await requestFile(`${API_BASE}/presence/roster/export`, {
+      const file = await requestFile(ATTENDANCE_API.PRESENCE_ROSTER_EXPORT, {
         method: "POST",
         body: JSON.stringify(workLocationId ? { workLocationId } : {}),
       });
@@ -245,7 +241,7 @@ const PresencePageBody: FC = () => {
 
         <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
           {/* Info: (20260813 - Julian) 工區卡片。人數為零的工區也要列，否則「沒有人」與「不存在」同形 */}
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
             {locations.map((location) => (
               <div
                 key={location.workLocationId}
@@ -281,7 +277,7 @@ const PresencePageBody: FC = () => {
                       {location.code}
                     </span>
                   </div>
-                  <div className="mt-2 flex flex-col items-center gap-3 text-sm lg:flex-row">
+                  <div className="mt-2 flex items-center gap-3 text-sm">
                     <span className="rounded-md bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700 tabular-nums">
                       {location.onSiteCount}
                     </span>
@@ -464,7 +460,6 @@ const PresencePageBody: FC = () => {
       </div>
 
       <LeaveRecallDialog
-        apiBase={API_BASE}
         entry={recallTarget}
         onClose={() => setRecallTarget(null)}
         onSubmitted={leave.refresh}

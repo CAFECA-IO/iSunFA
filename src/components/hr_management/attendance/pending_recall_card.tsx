@@ -1,5 +1,6 @@
 "use client";
 
+import { leaveRecallRespondApi } from "@/constants/attendance";
 import { FC, useState } from "react";
 import { Check, Loader2, MailQuestion, X } from "lucide-react";
 import {
@@ -19,10 +20,9 @@ import { useTranslation } from "@/i18n/i18n_context";
  * 同意的那一刻才會改班表；在此之前這一天仍然是假，員工不會被算進未到工。
  */
 const PendingRecallCard: FC<{
-  apiBase: string;
   recall: ILeaveRecallView;
   onResponded: () => void;
-}> = ({ apiBase, recall, onResponded }) => {
+}> = ({ recall, onResponded }) => {
   const { t } = useTranslation();
 
   const [decliningNote, setDecliningNote] = useState<string | null>(null);
@@ -36,7 +36,7 @@ const PendingRecallCard: FC<{
     setError(null);
 
     try {
-      await request(`${apiBase}/leave/recall/${recall.recallId}/respond`, {
+      await request(leaveRecallRespondApi(recall.recallId), {
         method: "POST",
         body: JSON.stringify({
           decision,

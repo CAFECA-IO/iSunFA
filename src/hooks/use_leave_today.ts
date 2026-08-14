@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  ATTENDANCE_API,
+  DEMO_ATTENDANCE_POLL_INTERVAL_MS,
+} from "@/constants/attendance";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, IEnvelopeLike, request } from "@/lib/utils/request";
 import { ILeaveTodayView } from "@/interfaces/leave";
@@ -11,8 +15,6 @@ import { ILeaveTodayView } from "@/interfaces/leave";
  * 兩張清單不同步的話，畫面上會同時「在請假」與「排了班沒到」。
  */
 
-const POLL_INTERVAL_MS = 15_000;
-
 export interface ILeaveTodayFeed {
   view: ILeaveTodayView | null;
   error: string | null;
@@ -20,10 +22,9 @@ export interface ILeaveTodayFeed {
 }
 
 export function useLeaveToday(params: {
-  apiBase: string;
   fallbackError: string;
 }): ILeaveTodayFeed {
-  const { apiBase, fallbackError } = params;
+  const { fallbackError } = params;
 
   const [view, setView] = useState<ILeaveTodayView | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +36,7 @@ export function useLeaveToday(params: {
 
     try {
       const response = await request<IEnvelopeLike<ILeaveTodayView>>(
-        `${apiBase}/leave`,
+        ATTENDANCE_API.LEAVE,
       );
       setView(response.payload);
       setError(null);
@@ -49,7 +50,7 @@ export function useLeaveToday(params: {
     } finally {
       inFlight.current = false;
     }
-  }, [apiBase, fallbackError]);
+  }, [fallbackError]);
 
   useEffect(() => {
     load();
@@ -57,7 +58,7 @@ export function useLeaveToday(params: {
     const timer = setInterval(() => {
       if (typeof document !== "undefined" && document.hidden) return;
       load();
-    }, POLL_INTERVAL_MS);
+    }, DEMO_ATTENDANCE_POLL_INTERVAL_MS);
 
     const onVisible = () => {
       if (!document.hidden) load();

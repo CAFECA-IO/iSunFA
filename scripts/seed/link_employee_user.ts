@@ -1,5 +1,6 @@
 import { DEMO_ACCOUNT_BOOK_ID } from "@/constants/attendance";
 import { prisma } from "@/lib/prisma";
+import { employeeRepo } from "@/repositories/employee.repo";
 import { dbRepo } from "@/repositories/db.repo";
 
 /**
@@ -68,10 +69,7 @@ async function unlink(employeeNo: string, commit: boolean): Promise<void> {
   );
 
   if (commit) {
-    await prisma.employee.update({
-      where: { id: employee.id },
-      data: { userId: null },
-    });
+    await employeeRepo.unlinkUser(employee.id);
   }
 }
 
@@ -123,10 +121,14 @@ async function linkExplicit(
   );
 
   if (commit) {
-    await prisma.employee.update({
-      where: { id: employee.id },
-      data: { userId: user.id },
-    });
+    // Info: (20260814 - Julian) 走 repository：`linkUser` 是附條件更新（`where userId: null`），
+    // 上面的檢查只是為了回一句看得懂的訊息，真正的把關在那裡
+    const linked = await employeeRepo.linkUser(employee.id, user.id);
+    if (!linked) {
+      throw new Error(
+        `${employeeNo} 在這一刻被綁走了（可能是同時登入的另一個分頁）。請重跑一次確認現況`,
+      );
+    }
   }
 }
 
@@ -188,10 +190,11 @@ async function autoLink(commit: boolean): Promise<void> {
     );
 
     if (commit) {
-      await prisma.employee.update({
-        where: { id: employee.id },
-        data: { userId: user.id },
-      });
+      const bound = await employeeRepo.linkUser(employee.id, user.id);
+      if (!bound) {
+        console.log(`⚠️  ${employee.employeeNo}：在這一刻被綁走了，略過`);
+        continue;
+      }
     }
     linked += 1;
   }

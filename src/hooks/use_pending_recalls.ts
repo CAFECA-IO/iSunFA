@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  ATTENDANCE_API,
+  DEMO_ATTENDANCE_POLL_INTERVAL_MS,
+} from "@/constants/attendance";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IEnvelopeLike, request } from "@/lib/utils/request";
 import { ILeaveRecallView } from "@/interfaces/leave";
@@ -12,14 +16,12 @@ import { ILeaveRecallView } from "@/interfaces/leave";
  * 因為那正是「主管講完換我看手機」的那一刻。
  */
 
-const POLL_INTERVAL_MS = 15_000;
-
 export interface IPendingRecallFeed {
   recalls: ILeaveRecallView[];
   refresh: () => void;
 }
 
-export function usePendingRecalls(apiBase: string): IPendingRecallFeed {
+export function usePendingRecalls(): IPendingRecallFeed {
   const [recalls, setRecalls] = useState<ILeaveRecallView[]>([]);
   const inFlight = useRef<boolean>(false);
 
@@ -29,7 +31,7 @@ export function usePendingRecalls(apiBase: string): IPendingRecallFeed {
 
     try {
       const response = await request<IEnvelopeLike<ILeaveRecallView[]>>(
-        `${apiBase}/leave/recall/pending`,
+        ATTENDANCE_API.LEAVE_RECALL_PENDING,
       );
       setRecalls(response.payload ?? []);
     } catch {
@@ -42,7 +44,7 @@ export function usePendingRecalls(apiBase: string): IPendingRecallFeed {
     } finally {
       inFlight.current = false;
     }
-  }, [apiBase]);
+  }, []);
 
   useEffect(() => {
     load();
@@ -50,7 +52,7 @@ export function usePendingRecalls(apiBase: string): IPendingRecallFeed {
     const timer = setInterval(() => {
       if (typeof document !== "undefined" && document.hidden) return;
       load();
-    }, POLL_INTERVAL_MS);
+    }, DEMO_ATTENDANCE_POLL_INTERVAL_MS);
 
     const onVisible = () => {
       if (!document.hidden) load();

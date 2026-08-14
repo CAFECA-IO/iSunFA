@@ -3,6 +3,7 @@ import { Employee, WorkLocation } from "@/generated";
 import {
   DEMO_MAX_ACCURACY_METERS,
   DEMO_TIME_ZONE,
+  DEMO_WORK_DATE_TOLERANCE_MINUTES,
   PunchType,
   PunchVerification,
 } from "@/constants/attendance";
@@ -45,9 +46,6 @@ import {
  * 「拒絕」只適用於圍欄判定本身：精度不足（G3）拒收但訊息是「請重試」，
  * 不得比照瞬移偵測等啟發式一律拒絕，否則會出現「人在現場卻打不了卡」。
  */
-
-// Info: (20260813 - Julian) 決定打卡歸屬工作日的容差，不是遲到寬限——只影響這筆算哪一天
-const WORK_DATE_TOLERANCE_MINUTES = 180;
 
 export class OutOfFenceError extends AppError {
   constructor(public readonly detail: IOutOfFencePayload) {
@@ -238,7 +236,7 @@ export class AttendancePunchService {
     return resolveWorkDate({
       punchedAt,
       timeZone: this.timeZone,
-      toleranceMinutes: WORK_DATE_TOLERANCE_MINUTES,
+      toleranceMinutes: DEMO_WORK_DATE_TOLERANCE_MINUTES,
       candidates: workDates.map((workDate) => {
         const day = days.find((item) => item.workDate === workDate);
         return { workDate, shift: day ? toShiftWindow(day) : null };

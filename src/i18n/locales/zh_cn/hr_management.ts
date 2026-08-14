@@ -722,7 +722,7 @@ export const hrManagement = {
       "Passkey 账号没有邮箱，无法自动对应到员工档 —— 只有事先由人事绑定过的账号能用这个方式进入。",
     passkey_unavailable:
       "这个环境无法使用 Passkey。Passkey 只在 HTTPS（或 localhost）安全连接下运作，请改用正式网址开启本页。",
-    hint: "登录的 Google 账号必须是已建档的公司邮箱 —— 不在名册上的人打不了这个工区的卡。若登录后显示「尚未对应到员工档」，请联系人事确认邮箱。",
+    hint: "登录的 Google 账号必须是已建档的公司邮箱。若登录后显示「尚未对应到员工档」，请联系人事确认邮箱。",
   },
   // Info: (20260814 - Julian) 假别名称，对应 `LEAVE_TYPE_I18N_KEY`
   leave: {

@@ -1,5 +1,6 @@
 "use client";
 
+import { PasskeyLoginStep } from "@/constants/auth_provider";
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
@@ -18,15 +19,10 @@ import {
  * `AuthContext.refreshAuth()` 只讀 localStorage，不讀函式回傳值。
  */
 
-export type PasskeyLoginStep =
-  | "FETCHING_CHALLENGE"
-  | "AUTHENTICATING"
-  | "VERIFYING";
-
 export async function loginWithPasskey(
   onStep?: (step: PasskeyLoginStep) => void,
 ): Promise<ILoginResult> {
-  onStep?.("FETCHING_CHALLENGE");
+  onStep?.(PasskeyLoginStep.FETCHING_CHALLENGE);
   const { challenge, token } = await getLoginOptions();
 
   /**
@@ -35,7 +31,7 @@ export async function loginWithPasskey(
    */
   if (!token) throw new AppError(API_ERRORS.AUTH_LOGIN_FAILED);
 
-  onStep?.("AUTHENTICATING");
+  onStep?.(PasskeyLoginStep.AUTHENTICATING);
   // Info: (20260813 - Julian) 不傳 allowCredentials，走探索模式讓裝置自己列出可用的 passkey
   const authentication = await fido2ClientService.startLogin({
     challenge,
@@ -43,7 +39,7 @@ export async function loginWithPasskey(
     timeout: 60000,
   });
 
-  onStep?.("VERIFYING");
+  onStep?.(PasskeyLoginStep.VERIFYING);
   const payload = await verifyLogin(token, authentication);
 
   localStorage.setItem("dewt", payload.dewt);

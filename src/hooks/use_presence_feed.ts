@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  ATTENDANCE_API,
+  DEMO_ATTENDANCE_POLL_INTERVAL_MS,
+  presenceLocationApi,
+} from "@/constants/attendance";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, IEnvelopeLike, request } from "@/lib/utils/request";
 import { IPresenceRoster, IPresenceSummary } from "@/interfaces/attendance";
@@ -11,8 +16,6 @@ import { IPresenceRoster, IPresenceSummary } from "@/interfaces/attendance";
  * 分頁隱藏時停止輪詢，切回來立刻補一次；用旗標擋掉重疊請求，避免慢速網路下新舊資料互相搶著出現。
  */
 
-const POLL_INTERVAL_MS = 15_000;
-
 export interface IPresenceFeed {
   summary: IPresenceSummary | null;
   roster: IPresenceRoster | null;
@@ -22,11 +25,10 @@ export interface IPresenceFeed {
 }
 
 export function usePresenceFeed(params: {
-  apiBase: string;
   selectedLocationId: string | null;
   fallbackError: string;
 }): IPresenceFeed {
-  const { apiBase, selectedLocationId, fallbackError } = params;
+  const { selectedLocationId, fallbackError } = params;
 
   const [summary, setSummary] = useState<IPresenceSummary | null>(null);
   const [roster, setRoster] = useState<IPresenceRoster | null>(null);
@@ -42,10 +44,10 @@ export function usePresenceFeed(params: {
 
     try {
       const [summaryResponse, rosterResponse] = await Promise.all([
-        request<IEnvelopeLike<IPresenceSummary>>(`${apiBase}/presence`),
+        request<IEnvelopeLike<IPresenceSummary>>(ATTENDANCE_API.PRESENCE),
         selectedLocationId
           ? request<IEnvelopeLike<IPresenceRoster>>(
-              `${apiBase}/presence/location/${selectedLocationId}`,
+              presenceLocationApi(selectedLocationId),
             )
           : Promise.resolve(null),
       ]);
@@ -67,7 +69,7 @@ export function usePresenceFeed(params: {
       inFlight.current = false;
       setIsInitialLoading(false);
     }
-  }, [apiBase, selectedLocationId, fallbackError]);
+  }, [selectedLocationId, fallbackError]);
 
   useEffect(() => {
     load();
@@ -75,7 +77,7 @@ export function usePresenceFeed(params: {
     const timer = setInterval(() => {
       if (typeof document !== "undefined" && document.hidden) return;
       load();
-    }, POLL_INTERVAL_MS);
+    }, DEMO_ATTENDANCE_POLL_INTERVAL_MS);
 
     const onVisible = () => {
       if (!document.hidden) load();

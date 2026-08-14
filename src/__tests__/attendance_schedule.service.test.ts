@@ -90,6 +90,7 @@ const buildService = (options: {
     findByUserId: async () => null,
     findByAccountBookAndEmails: async () => [],
     linkUser: async () => false,
+    unlinkUser: async () => false,
     findRosterInPeriod: async (params) => {
       rosterQueries.push({ departmentId: params.departmentId });
       return options.roster ?? [];

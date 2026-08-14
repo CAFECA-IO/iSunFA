@@ -5,10 +5,10 @@ import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import ScheduleCellEditor from "@/components/hr_management/attendance/schedule_cell_editor";
 import ScheduleGrid from "@/components/hr_management/attendance/schedule_grid";
 import {
-  DEMO_ACCOUNT_BOOK_ID,
+  ATTENDANCE_API,
   OFF_DAY_TYPE_STYLE,
-  WorkDayType,
   WORK_DAY_TYPE_I18N_KEY,
+  WorkDayType,
 } from "@/constants/attendance";
 import { HR_FILTER_ALL } from "@/constants/hr_management";
 import {
@@ -51,8 +51,6 @@ const SAVE_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
  * ToDo: (20260813 - Julian) Demo 沒有權限控制，任何員工都改得了任何人的班；
  * 刻意不做假的唯讀開關，避免造成「有管控」的錯覺。
  */
-
-const API_BASE = `/api/v1/user/account_book/${DEMO_ACCOUNT_BOOK_ID}/hr/attendance`;
 
 interface ISelectedCell {
   row: IScheduleRow;
@@ -100,11 +98,11 @@ const SchedulePageBody: FC = () => {
       const { from, to } = monthRange(month);
       try {
         const [calendarResponse, patternResponse] = await Promise.all([
-          request<IEnvelopeLike<IScheduleCalendar>>(`${API_BASE}/schedule`, {
+          request<IEnvelopeLike<IScheduleCalendar>>(ATTENDANCE_API.SCHEDULE, {
             query: { from, to },
           }),
           request<IEnvelopeLike<IShiftPatternSummary[]>>(
-            `${API_BASE}/shift_pattern`,
+            ATTENDANCE_API.SHIFT_PATTERN,
           ),
         ]);
         setCalendar(calendarResponse.payload);
@@ -151,7 +149,7 @@ const SchedulePageBody: FC = () => {
     setSaveError(null);
     try {
       const response = await request<IEnvelopeLike<IScheduleDayCell>>(
-        `${API_BASE}/schedule`,
+        ATTENDANCE_API.SCHEDULE,
         { method: "PUT", body: JSON.stringify(update) },
       );
       const cell = response.payload;

@@ -198,6 +198,10 @@ class FakeEmployeeRepo implements IEmployeeRepository {
     return true;
   }
 
+  async unlinkUser(): Promise<boolean> {
+    return true;
+  }
+
   async findRosterInPeriod(): Promise<IAttendanceRosterRow[]> {
     return [];
   }

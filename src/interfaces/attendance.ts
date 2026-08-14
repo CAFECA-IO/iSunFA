@@ -2,6 +2,7 @@ import {
   AttendanceDayPhase,
   AttendanceDayStatus,
   AttendanceExceptionType,
+  AuthProviderStatus,
   PresenceStatus,
   PunchType,
   ShiftPatternKind,
@@ -388,3 +389,13 @@ export interface IScheduleCalendar {
   workDates: string[];
   rows: IScheduleRow[];
 }
+
+/**
+ * Info: (20260814 - Julian) 登入方式的偵測結果。用可辨識聯集而非「status + 可空欄位」，
+ * 是為了讓「已可用卻同時帶著錯誤原因」這種狀態寫不出來（ADR 019）。
+ */
+export type IAuthProviderState =
+  | { status: AuthProviderStatus.CHECKING }
+  | { status: AuthProviderStatus.AVAILABLE }
+  | { status: AuthProviderStatus.UNCONFIGURED }
+  | { status: AuthProviderStatus.UNREACHABLE };
