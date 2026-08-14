@@ -13,36 +13,12 @@ import {
 } from "@/repositories/user_identity.repo";
 
 /**
- * Info: (20260813 - Julian) 登入身分與員工檔之間的橋。
+ * Info: (20260813 - Julian) 登入身分（User）與員工檔（Employee）之間的橋。
  *
- * ## 為什麼需要它
- *
- * 登入完成後拿到的是一個 `User`，但打卡、班表、出勤全部掛在 `Employee` 上，
- * 而兩者之間原本沒有任何欄位相連。這支 service 就是那座橋。
- *
- * ## 綁定的兩個階段
- *
- * 1. **首次登入**：以已驗證的信箱比對 `Employee.email`（公司信箱），命中即寫入
- *    `Employee.userId`。
- * 2. **之後每一次**：直接走 `userId` 外鍵，不再碰信箱。
- *
- * ## Passkey 登入者走不到第 1 階段
- *
- * `User` 沒有 email 欄位，passkey 使用者也不會產生 `UserIdentity` ——
- * 候選信箱永遠是空陣列，因此必定落到 `NF_EMPLOYEE_FOR_USER`。
- * **這是正確行為，不是待修的缺口**：passkey 證明的是「你持有註冊時那把金鑰」，
- * 它問不出「你是哪個信箱的主人」。這類帳號的 `Employee.userId` 由人事以
- * `scripts/seed/link_employee_user.ts` 寫入，綁定的判斷責任因此留在人身上。
- *
- * **信箱比對只是首次綁定的引導，綁定本身是那個欄位。** 公司信箱可以變更
- * （改名、部門調動），而打卡歷史不該跟著飄移；把信箱當成長期的連結，
- * 等於讓一次人事異動改寫某人過去的出勤紀錄屬於誰。
- *
- * ## 為什麼只能用公司信箱
- *
- * `Employee.personalEmailCipher` 是密文，DB 端查不了（ADR 018 §7 已知取捨第 2 條）。
- * 用個人 Gmail 登入的人永遠對不上 —— 那是加密的必然結果，不是 bug。
- * Demo 的檢查清單因此要求上台者的 Google 帳號必須就是其公司信箱。
+ * 首次登入以已驗證信箱比對 Employee.email 完成綁定，寫入 Employee.userId；
+ * 之後一律走 userId，不再碰信箱。`Employee.userId` 是綁定本身，信箱只是
+ * 首次綁定的引導。Passkey 帳號沒有信箱，走不到自動綁定，需由人事手動綁定
+ * （scripts/seed/link_employee_user.ts）。個人信箱是密文，只能比對公司信箱。
  */
 export class AttendanceIdentityService {
   constructor(
@@ -53,9 +29,8 @@ export class AttendanceIdentityService {
   /**
    * Info: (20260813 - Julian) 取得登入者在指定帳本下的員工檔，必要時完成首次綁定。
    *
-   * 找不到時一律回 `NF_EMPLOYEE_FOR_USER`(404)，**包含「這個人是別的帳本的員工」
-   * 這種情況** —— 回 403「你是員工但不屬於這個帳本」會洩漏一個不該由未授權者
-   * 得知的事實：這個信箱在系統裡有員工檔。從呼叫端的視角，這個帳本裡就是沒有他。
+   * 找不到一律回 404（NF_EMPLOYEE_FOR_USER），即使是「員工屬於別的帳本」，
+   * 避免回 403 洩漏「這個信箱有員工檔」。
    */
   public async resolveEmployee(
     user: IUser,
@@ -76,10 +51,8 @@ export class AttendanceIdentityService {
   }
 
   /**
-   * Info: (20260813 - Julian) 首次登入的綁定。
-   *
-   * 只採信 `emailVerified` 為真的信箱：未驗證的信箱是使用者在 provider 端自行填寫的字串，
-   * 拿它比對等於讓任何人宣稱自己是任何員工。
+   * Info: (20260813 - Julian) 首次登入的綁定。只採信 emailVerified 為真的信箱，
+   * 避免未驗證信箱被冒用。
    */
   private async linkOnFirstLogin(
     user: IUser,
@@ -100,12 +73,8 @@ export class AttendanceIdentityService {
     }
 
     /**
-     * Info: (20260813 - Julian) 只差大小寫的多筆員工檔 —— 拒絕，不挑一筆。
-     *
-     * `@@unique([accountBookId, email])` 大小寫敏感，因此
-     * `Julian@x.com` 與 `julian@x.com` 可以同時存在。這種狀況下任選一筆綁定，
-     * 就是讓某人以另一個人的身分打卡 —— 而出勤紀錄是法定文件。
-     * 寧可擋住並要求 HR 先清理資料。
+     * Info: (20260813 - Julian) 大小寫不同的多筆員工檔命中時拒絕，不擅自挑一筆——
+     * email 比對大小寫敏感，任選會讓某人冒用他人身分打卡。
      */
     if (candidates.length > 1) {
       logger.error(
@@ -125,11 +94,8 @@ export class AttendanceIdentityService {
     }
 
     /**
-     * Info: (20260813 - Julian) 條件式更新沒有生效，代表在查與寫之間有人先綁走了。
-     *
-     * 兩種可能：另一個分頁的同一人（結果正確，直接回傳），
-     * 或另一個帳號搶到同一筆員工檔（那是衝突）。重讀一次就能分辨 ——
-     * 比照 `oauth.service` 對併發首登的處理：後到者不把錯誤丟給使用者，先確認對方是誰。
+     * Info: (20260813 - Julian) 條件式更新未生效，代表查寫之間已被別人綁走；
+     * 重讀一次：同一 user 的併發首登直接回傳，否則視為衝突。
      */
     const afterRace = await this.employees.findByUserId(user.id);
     if (afterRace) return afterRace;

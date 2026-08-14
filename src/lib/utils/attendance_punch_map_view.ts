@@ -5,26 +5,17 @@ import { circlePolygon } from "@/lib/utils/geo";
 
 /**
  * Info: (20260813 - Julian) 打卡頁地圖的純計算。
- *
- * ## 與現場頁地圖的差別：這張圖上有「我」
- *
- * 現場頁刻意不畫任何一個人的位置（母文件 §D5，而且 API 根本不回傳員工座標）。
- * 打卡頁畫的是**使用者自己**，那條隱私邊界從來不禁止你看見自己。
- *
- * ## 為什麼這一頁需要地圖
- *
- * 「距工區 3.2 公里」是一個數字，「藍點在圓圈外面」是一件看得見的事。
- * 而 demo 的 P2 主張正是「圍欄是到班的定義」—— 圍欄得先看得見才談得上是定義。
+ * 與現場頁不同，這張圖上有「我」：現場頁刻意不畫任何人的位置（母文件 §D5），
+ * 但打卡頁畫的是使用者自己，那條隱私邊界不禁止你看見自己。
  */
 
 // Info: (20260813 - Julian) 緯度一度約 111,320 公尺；換算圍欄半徑用得到
 const METERS_PER_DEGREE = 111_320;
 
 /**
- * Info: (20260813 - Julian) 圍欄多邊形。**用真實座標算，不用螢幕像素半徑。**
- *
- * maplibre 的 circle 圖層半徑單位是像素，縮放時圈的實際涵蓋範圍會跟著變 ——
- * 而這個圓要回答的正是「我站在這裡打不打得到卡」。畫錯大小等於對範圍說謊。
+ * Info: (20260813 - Julian) 圍欄多邊形。**用真實座標算，不用螢幕像素半徑**——
+ * maplibre 的 circle 圖層半徑單位是像素，縮放時圈的實際涵蓋範圍會跟著變，
+ * 而這個圓要回答的正是「我站在這裡打不打得到卡」。
  */
 export function buildPunchGeofenceFeatures(
   locations: IWorkLocationSummary[],
@@ -48,11 +39,8 @@ export function buildPunchGeofenceFeatures(
 }
 
 /**
- * Info: (20260813 - Julian) 定位精度圈。
- *
- * 沒有它，使用者會以為那個藍點是精確的 —— 而 G3 的「定位精度不足，請重試」
- * 就變成一句無法理解的話。精度圈把「系統對你在哪有多大把握」畫出來，
- * 那句話因此變成「這個圈太大了」，而那是看得懂的。
+ * Info: (20260813 - Julian) 定位精度圈：把「系統對你在哪有多大把握」畫出來，
+ * 沒有它使用者會以為藍點是精確的，G3 的「定位精度不足」也就無從理解。
  */
 export function accuracyCircleFeature(
   reading: IGeolocationReading | null,
@@ -78,13 +66,8 @@ export function accuracyCircleFeature(
 }
 
 /**
- * Info: (20260813 - Julian) 地圖視野：**圍欄與使用者必須同時入鏡**。
- *
- * 只框圍欄的話，站在三公里外的人看到的是一張「圈在正中間、自己不在畫面上」的圖 ——
- * 而那正是最需要看清楚的一刻（P2 的演示就靠這一幕）。
- * 只框使用者的話，圍欄不在畫面上，同樣說不出「我在外面」。
- *
- * 框的是圍欄的**外緣**而不是圓心：以圓心入鏡，半徑 500 公尺的圈會有一半在畫面外。
+ * Info: (20260813 - Julian) 地圖視野：**圍欄與使用者必須同時入鏡**，否則說不出「我在外面」。
+ * 框的是圍欄的外緣而非圓心：以圓心入鏡，大半徑的圈會有一半在畫面外。
  */
 export function punchMapBounds(
   location: IWorkLocationSummary | null,
@@ -116,11 +99,7 @@ export function punchMapBounds(
   let minLat = Math.min(...latitudes);
   let maxLat = Math.max(...latitudes);
 
-  /**
-   * Info: (20260813 - Julian) 最小跨距：人就站在圓心上時，框會退化成一個點，
-   * 地圖縮到最大 —— 那時看到的是一張認不出任何地標的圖。
-   * 0.004 度約 440 公尺，足以讓周邊街廓入鏡。
-   */
+  // Info: (20260813 - Julian) 最小跨距：人站在圓心上時避免框退化成一個點（0.004 度約 440 公尺）
   const MIN_SPAN = 0.004;
   if (maxLng - minLng < MIN_SPAN) {
     const pad = (MIN_SPAN - (maxLng - minLng)) / 2;

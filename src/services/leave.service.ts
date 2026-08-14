@@ -29,22 +29,12 @@ import {
 } from "@/interfaces/leave";
 
 /**
- * Info: (20260813 - Julian) 請假可見度與銷假徵詢（A11–A14）。
+ * Info: (20260813 - Julian) 請假可見度與銷假徵詢（A11–A14）。勞基法 §38 III：
+ * 特休期日由勞工排定，銷假因此是三段式：主管發起徵詢 → 員工同意或婉拒 → 同意才改排班。
  *
- * ## 這支 service 的存在理由是一條法律
- *
- * 勞基法 §38 III：特別休假期日**由勞工排定**，雇主僅得基於企業經營上之急迫需求
- * 「與勞工協商調整」。因此銷假在這裡不是一個動作，是三段：
- * 主管發起徵詢（附理由與班別）→ 員工同意或婉拒 → 同意才改排班。
- *
- * **徵詢期間假仍然生效。** 若在發起的當下就把該日改回上班日，員工還沒回應
- * 就已經處在「排了班卻沒到」的狀態，現場頁會把他算進未到工 ——
- * 那是拿系統事實去施壓，正好是那條法律想避免的事。
- *
- * ## 判定引擎完全不知道假單存在
- *
- * 引擎讀的是 `EmployeeShiftDay`。假單核准時投影成 `LEAVE`，銷假成立時投影回
- * `WORK` + 班別。多一個資料來源，就多一組「兩邊說法不一致」的可能（計畫書 §8.2）。
+ * 徵詢期間假仍然生效，不得在發起當下就改排班，否則員工還沒回應就被算進未到工。
+ * 判定引擎只讀 `EmployeeShiftDay`，不知道假單存在——假單核准時投影成 `LEAVE`，
+ * 銷假成立時投影回 `WORK` + 班別。
  */
 export class LeaveService {
   constructor(
@@ -55,17 +45,8 @@ export class LeaveService {
   ) {}
 
   /**
-   * Info: (20260813 - Julian) A11：今日請假名單。
-   *
-   * ## 為什麼這份名單對所有人開放
-   *
-   * 「人手不足要能銷假」的前提是**先看得到誰在放假**（計畫書 §8.6）。
-   * 而在此之前，請假的人在現場頁上完全不存在 —— 既不在班、也不算未到工，
-   * 因為未到工的判定硬性 gate 在 `dayType === WORK`。
-   *
-   * 回傳只帶假別與事由，不帶任何診斷或證明。假別本身已經是個資
-   * （「普通傷病假」透露健康狀況），正式版應依 ADR 018 分級後決定誰看得到 ——
-   * 這裡刻意留成 demo 的已知取捨，而不是假裝它不存在。
+   * Info: (20260813 - Julian) A11：今日請假名單，對所有人開放——銷假前提是先看得到誰在放假。
+   * 只回假別與事由，不帶診斷或證明；假別本身已是個資，正式版應依 ADR 018 分級後決定誰看得到。
    */
   public async listToday(params: {
     accountBookId: string;
@@ -92,9 +73,7 @@ export class LeaveService {
     };
   }
 
-  /**
-   * Info: (20260813 - Julian) A12：發起銷假徵詢。
-   */
+  // Info: (20260813 - Julian) A12：發起銷假徵詢
   public async requestRecall(params: {
     accountBookId: string;
     leaveDayId: string;
@@ -128,26 +107,13 @@ export class LeaveService {
     });
     if (!leaveDay) throw new AppError(API_ERRORS.NF_LEAVE_DAY);
 
-    /**
-     * Info: (20260813 - Julian) 只能往前，不能往後。
-     *
-     * 把已經過去的假日改回上班日，會讓那一天的判定從 OFF_DAY 變成曠職 ——
-     * 一個人的歷史出勤紀錄，因為今天的一次操作而多出一筆異常。
-     * 「今天」的界線用當地日曆日，不是 UTC：跨日的那一小時裡，
-     * 台北的今天與 UTC 的今天是不同的兩天，而排班說的是前者。
-     */
+    // Info: (20260813 - Julian) 只能對今天（含）以後——改寫已過去的假日會把歷史 OFF_DAY 變成曠職；「今天」用當地日曆日，不是 UTC
     const today = toZonedParts(observedAt, this.timeZone).isoDate;
     if (leaveDay.workDate < today) {
       throw new AppError(API_ERRORS.VA_LEAVE_RECALL_PAST);
     }
 
-    /**
-     * Info: (20260813 - Julian) 先查一次待回應的徵詢，只為了回一個看得懂的 409。
-     *
-     * 真正的保證在 `LeaveRecall.pendingLeaveDayId` 的唯一鍵上 ——
-     * 查與寫之間的空窗正是兩個分頁同時按下去時會發生的事，
-     * 而那時擋住它的是資料庫，不是這幾行。
-     */
+    // Info: (20260813 - Julian) 這裡的檢查只為了回一個看得懂的 409，真正的併發保證在 `LeaveRecall.pendingLeaveDayId` 的唯一鍵上
     if (leaveDay.recalls.length > 0) {
       throw new AppError(API_ERRORS.CF_LEAVE_RECALL_PENDING);
     }
@@ -181,9 +147,7 @@ export class LeaveService {
     return recalls.map(toRecallView);
   }
 
-  /**
-   * Info: (20260813 - Julian) A14：回應徵詢。**只有被徵詢的本人能回應。**
-   */
+  // Info: (20260813 - Julian) A14：回應徵詢。只有被徵詢的本人能回應
   public async respondRecall(params: {
     accountBookId: string;
     recallId: string;
@@ -213,12 +177,7 @@ export class LeaveService {
       throw new AppError(API_ERRORS.FO_LEAVE_RECALL_NOT_OWNER);
     }
 
-    /**
-     * Info: (20260813 - Julian) 同意與婉拒都是終局，不可覆寫。
-     *
-     * 允許改答案，等於允許「先同意讓班表改掉，事後再改成婉拒」——
-     * 而那時排班已經動過了，兩邊會永久不一致。
-     */
+    // Info: (20260813 - Julian) 同意與婉拒都是終局，不可覆寫——允許改答案會讓已經動過的排班與答案永久不一致
     if (String(recall.status) !== LeaveRecallStatus.PENDING) {
       throw new AppError(API_ERRORS.CF_LEAVE_RECALL_ANSWERED);
     }

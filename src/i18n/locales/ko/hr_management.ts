@@ -525,9 +525,9 @@ export const hrManagement = {
     confirm_title_in: "출근 기록 확인",
     confirm_title_out: "퇴근 기록 확인",
     confirm_message_in:
-      "현재 위치에서 {{name}} 의 출근 기록을 남깁니다. 시각은 서버가 결정하며 기록 후에는 수정·삭제할 수 없습니다.",
+      "현재 위치에서 {{name}} 의 출근 기록을 남깁니다. 기록 후에는 수정·삭제할 수 없습니다.",
     confirm_message_out:
-      "현재 위치에서 {{name}} 의 퇴근 기록을 남깁니다. 시각은 서버가 결정하며 기록 후에는 수정·삭제할 수 없습니다.",
+      "현재 위치에서 {{name}} 의 퇴근 기록을 남깁니다. 기록 후에는 수정·삭제할 수 없습니다.",
     confirm_cancel: "취소",
     map_unavailable:
       "지도를 표시할 수 없습니다. 기록에는 영향이 없으며 위의 거리와 정확도는 그대로 유효합니다.",

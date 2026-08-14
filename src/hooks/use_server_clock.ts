@@ -6,27 +6,10 @@ import { DEMO_TIME_ZONE } from "@/constants/attendance";
 /**
  * Info: (20260813 - Julian) 與伺服器對時的秒錶。
  *
- * ## 為什麼不能直接用 `new Date()`
- *
- * 打卡頁上的時間要回答的是「我現在按下去，會被記成幾點幾分幾秒」——
- * 而那個時刻由**伺服器**決定（護欄 G1：`punchedAt` 一律由伺服器產生，
- * 請求裡沒有時間欄位）。瀏覽器時鐘可能差好幾分鐘，也可能被使用者調過。
- *
- * 印一個本機時間，等於在畫面上寫一個系統並不採信的數字 ——
- * 而使用者會拿它去對出勤紀錄，然後發現對不上。
- *
- * ## 做法
- *
- * 以伺服器回傳的 `serverNowIso` 算出時鐘差，之後在本地每秒遞增。
- * 誤差只剩下網路來回的一半（區網或隧道上是數十毫秒），在秒的精度下可以忽略。
- * A1（打卡）與 A2（今日狀態）都回傳這個欄位，因此**每打一次卡就重新校時一次**，
- * 長時間停留造成的漂移不會累積。
- *
- * ## 為什麼固定用 `DEMO_TIME_ZONE` 格式化
- *
- * 出勤紀錄的「幾點」是以帳本時區認定的（`minutesFromWorkDateStart`）。
- * 若照裝置時區顯示，一支設定在別的時區的手機會看到一個與紀錄差好幾小時的時間 ——
- * 而它看起來完全正常，因為兩邊都「沒有錯」。
+ * 不可直接用 `new Date()`：`punchedAt` 一律由伺服器決定（護欄 G1），
+ * 本機時鐘可能不準。以 `serverNowIso` 算出時鐘差，之後每秒在本地遞增；
+ * 每次打卡都用新的 `serverNowIso` 重新校時，避免長時間漂移。
+ * 固定用 `DEMO_TIME_ZONE` 格式化，因為出勤紀錄以帳本時區認定，跟裝置時區可能對不上。
  */
 
 const formatter = new Intl.DateTimeFormat("en-GB", {
@@ -43,7 +26,7 @@ export interface IServerClock {
 }
 
 export function useServerClock(serverNowIso: string | null): IServerClock {
-  // Info: (20260813 - Julian) 伺服器時刻減本機時刻。放 ref：它一改變就要立刻生效，但不必觸發 render
+  // Info: (20260813 - Julian) 伺服器時刻減本機時刻；放 ref 是因為改變要立即生效但不必觸發 render
   const offsetRef = useRef<number | null>(null);
   const [label, setLabel] = useState<string | null>(null);
 
@@ -62,10 +45,8 @@ export function useServerClock(serverNowIso: string | null): IServerClock {
 
     tick();
     /**
-     * Info: (20260813 - Julian) 每 250ms 更新而不是每秒。
-     *
-     * 每秒觸發的話，跳秒的時機取決於元件掛載的那一刻，畫面上的秒數
-     * 平均會慢半秒 —— 而這個數字存在的意義正是「與紀錄一致」。
+     * Info: (20260813 - Julian) 每 250ms 更新而非每秒，避免跳秒時機依附在掛載時刻，
+     * 導致畫面秒數平均慢半秒。
      */
     const timer = window.setInterval(tick, 250);
     return () => window.clearInterval(timer);

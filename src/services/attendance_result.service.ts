@@ -52,26 +52,12 @@ import {
 } from "@/repositories/attendance_punch.repo";
 
 /**
- * Info: (20260813 - Julian) 出勤判定結果（A9）。**即時計算，不讀結果表。**
+ * Info: (20260813 - Julian) 出勤判定結果（A9）。即時計算，不讀結果表。
  *
- * ## 為什麼不落地
- *
- * 判定結果是**排班、打卡、政策、規則版本**這四者的純函數。把它存起來，
- * 系統就同時有兩個真相：算出來的，與存下來的。而它們一定會分岔 ——
- * 補登單核准、排班補排、寬限值調整，任何一件事都會讓存下來的那份過期，
- * 卻沒有任何機制通知它。這與 `ProcessTaskType`／`MovementStage`
- * 不入庫是同一條理由（ADR 019）。
- *
- * 代價是每次查詢都要重算。一個月 × 12 人 = 372 次純函數呼叫與兩次查詢 ——
- * 在 demo 規模下這個代價買到的是「永遠不會有第二種真相」。
- * 規模上去之後正解是**快取**（可隨時丟棄、丟了自己會重建），不是落地
- * （丟不掉，且丟不掉的東西就會被當成真相）。
- *
- * ## 判定的「現在」由呼叫端注入
- *
- * `evaluatedAt` 一路傳到引擎，service 內不呼叫 `new Date()`。
- * 整張矩陣共用同一個時間點 —— 逐列各取一次現在，兩位員工的邊界案例
- * （剛好卡在寬限上的那一分鐘）就可能在同一張表裡得到互相矛盾的顏色。
+ * 判定是排班、打卡、政策、規則版本四者的純函數，落地會產生第二份可能過期的
+ * 真相（同 ADR 019 對 `ProcessTaskType`／`MovementStage` 的處理）。
+ * `evaluatedAt` 由呼叫端注入、貫穿整條計算，service 內不呼叫 `new Date()`，
+ * 確保整張矩陣共用同一個時間點。
  */
 
 // Info: (20260813 - Julian) Demo 政策；正式版改讀帳本層級的 `AttendancePolicy`
@@ -81,22 +67,10 @@ const DEMO_POLICY: IAttendancePolicySnapshot = {
   missingClockOutGraceMinutes: DEMO_MISSING_CLOCK_OUT_GRACE_MINUTES,
 };
 
-/**
- * Info: (20260813 - Julian) Prisma 回的是**字面量聯集**，`IPunchSnapshot` 要的是
- * TS string enum（名義型別）—— 值域相同但型別不相容，必須明寫轉換。
- * 值域一致由 `hr_enum_mirror.test.ts` 保證，schema 一改動它就會紅。
- */
+// Info: (20260813 - Julian) Prisma 回字面量聯集，`IPunchSnapshot` 要 TS enum；值域一致由 hr_enum_mirror.test.ts 保證
 const toPunchType = (value: string): PunchType => value as PunchType;
 
-/**
- * Info: (20260813 - Julian) 這一天算完了沒。
- *
- * 邊界取「窗迄 + 漏打下班卡寬限」而不是日曆換日：夜間施工班的 8/12
- * 要到 8/13 清晨才結束，用換日判斷會讓夜班那一列每天早八小時變色。
- *
- * 無班別的日子（休假、無排班）退回以整個日曆日為窗 —— 用的是同一組單位
- * （工作日當地 00:00 起算的分鐘數），因此不需要第二條程式路徑。
- */
+// Info: (20260813 - Julian) 邊界取「窗迄 + 漏打下班卡寬限」而非日曆換日，避免夜班每天早八小時變色；無班別退回整個日曆日
 const resolvePhase = (
   nowMinuteOfDay: number,
   shift: IShiftWindow | null,
@@ -202,13 +176,7 @@ export class AttendanceResultService {
 
     const workDates = enumerateIsoDates(from, to);
 
-    /**
-     * Info: (20260813 - Julian) 指定的員工不在名冊時回**空矩陣**，不是 404。
-     *
-     * 回 404 等於告訴呼叫者「這個 id 在系統裡不存在」，而回空矩陣兩種情況
-     * 長得一樣：id 不存在，或這個人在這段期間還沒到職／已離職。
-     * 前者是不該外洩的事實，後者是正當的查詢結果。
-     */
+    // Info: (20260813 - Julian) 指定的員工不在名冊時回空矩陣，不是 404——避免洩漏「id 是否存在」與「尚未到職/已離職」的區別
     const roster = await this.employees.findRosterInPeriod({
       accountBookId,
       from,
@@ -254,10 +222,7 @@ export class AttendanceResultService {
       (punch) => punch.workDate,
     );
 
-    /**
-     * Info: (20260813 - Julian) 每個工作日的「現在」只算一次，全體員工共用。
-     * 逐格重算會呼叫 372 次 `Intl.DateTimeFormat`，而答案完全相同。
-     */
+    // Info: (20260813 - Julian) 每個工作日的「現在」只算一次，全體員工共用
     const nowByWorkDate = new Map(
       workDates.map((workDate) => [
         workDate,
@@ -298,11 +263,7 @@ export class AttendanceResultService {
       this.evaluateDay({
         workDate,
         nowMinuteOfDay: nowByWorkDate.get(workDate) ?? 0,
-        /**
-         * Info: (20260813 - Julian) 取第一筆即可：`@@unique([accountBookId, employeeId, workDate])`
-         * 保證一人一天最多一筆排班。這條約束是「一天兩份班表」這種
-         * 最常見的匯入錯誤唯一擋得住的地方。
-         */
+        // Info: (20260813 - Julian) 取第一筆即可：`@@unique([accountBookId, employeeId, workDate])` 保證一人一天最多一筆排班
         shiftDay: scheduleByDate?.get(workDate)?.[0],
         punches: punchesByDate?.get(workDate) ?? [],
       }),
@@ -330,12 +291,7 @@ export class AttendanceResultService {
     const shift = shiftDay ? toShiftWindow(shiftDay) : null;
     const schedule = toDaySchedule(shiftDay);
 
-    /**
-     * Info: (20260813 - Julian) 投影成 `IPunchSnapshot`：只留下判定用得到的兩個欄位。
-     *
-     * 經緯度密文、定位精度、地點 id 都在這一步被丟掉，而**丟得越早越好** ——
-     * 它們一旦進入回傳值的組裝範圍，就只差一次順手的物件展開會被送出去。
-     */
+    // Info: (20260813 - Julian) 投影成 IPunchSnapshot，只留判定用得到的欄位——經緯度密文、精度、地點 id 越早丟掉越好，避免被順手帶出回傳值
     const snapshots: IPunchSnapshot[] = punches.map((punch) => ({
       punchType: toPunchType(punch.punchType),
       minuteOfDay: minutesFromWorkDateStart(

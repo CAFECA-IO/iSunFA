@@ -47,24 +47,10 @@ import {
 } from "@/repositories/work_location.repo";
 
 /**
- * Info: (20260813 - Julian) 現場在班狀態（A3 / A4 / A10）。**即時推導，不讀快取表。**
+ * Info: (20260813 - Julian) 現場在班狀態（A3 / A4 / A10）。即時推導，不讀快取表。
  *
- * ## 三個數字回答三個不同的問題
- *
- * 看板上的「在班 / 未打下班卡 / 未到工」不是一組互斥的分類，
- * 而是三個獨立的計數。母文件 §D10.6 要求它們必須同時出現：
- *
- * - **在班**：系統知道他在
- * - **未打下班卡（STALE）**：系統**不知道**他在不在
- * - **未到工**：排了班、時間到了，系統沒有收到任何打卡
- *
- * 一個只顯示「在班 42 人」的看板，會讓人以為現場就是 42 個人。
- * 三個數字並列，才誠實地表達了「系統知道什麼、不知道什麼」。
- *
- * ## 為什麼要撈昨天
- *
- * 夜間施工班的打卡 `workDate` 是昨天。只看今天的話，凌晨的現場看板
- * 會顯示零人，而工地上正有一整班人在灌漿。
+ * 在班／未打下班卡（STALE）／未到工是三個獨立計數，須同時顯示，不是互斥分類。
+ * 撈昨天的資料是因為夜班的 `workDate` 記在昨天，否則凌晨看板會顯示零人。
  */
 
 const asPresencePunch = (
@@ -130,12 +116,7 @@ export class AttendancePresenceService {
       byLocation.set(entry.workLocationId, bucket);
     }
 
-    /**
-     * Info: (20260813 - Julian) 沒有人的地點**也要列出來**，人數印 0。
-     *
-     * 只列有人的地點，會讓「這個工區今天沒有人」與「這個工區不存在」
-     * 在畫面上長得一模一樣 —— 而前者正是工地主任要立刻知道的事。
-     */
+    // Info: (20260813 - Julian) 沒有人的地點也要列出來（人數印 0），否則「無人」與「地點不存在」在畫面上無法區分
     const summaries: IPresenceLocationSummary[] = locations.map((location) => {
       const bucket = byLocation.get(location.id) ?? { onSite: 0, stale: 0 };
       return {
@@ -174,12 +155,7 @@ export class AttendancePresenceService {
     const { accountBookId, workLocationId, observedAt } = params;
 
     const location = await this.locations.findById(workLocationId);
-    /**
-     * Info: (20260813 - Julian) 找不到就 404，不回空名單。
-     *
-     * 一個打錯的地點 id 若回「現場 0 人」，在職安場景下是最危險的一種回應 ——
-     * 它與「這個工區真的沒有人」長得一模一樣，而看的人會相信後者。
-     */
+    // Info: (20260813 - Julian) 找不到就 404，不回空名單——空名單會與「這個工區真的沒有人」混淆
     if (!location || location.accountBookId !== accountBookId) {
       throw new AppError(API_ERRORS.NF_WORK_LOCATION_UNKNOWN);
     }
@@ -201,8 +177,7 @@ export class AttendancePresenceService {
   /**
    * Info: (20260813 - Julian) A10：匯出用的名單。不指定地點時回全帳本每一個地點。
    *
-   * 回傳的是**結構**而不是 CSV 字串：CSV 的欄位標題與狀態文案需要語系，
-   * 而 service 沒有 i18n context。組字串那一步留在 route。
+   * 回傳結構而非 CSV 字串：欄位標題與狀態文案需要 i18n，組字串留在 route。
    */
   public async getExportRosters(params: {
     accountBookId: string;
@@ -232,12 +207,7 @@ export class AttendancePresenceService {
     }));
   }
 
-  /**
-   * Info: (20260813 - Julian) 一次掃出「誰在現場」與「誰該到而未到」。
-   *
-   * 兩者共用同一批查詢：名冊、兩天的排班、兩天的打卡。分成兩支各查一次，
-   * 兩個數字就會來自兩個時間點的資料庫狀態 —— 而它們是要並排顯示的。
-   */
+  // Info: (20260813 - Julian) 一次掃出「誰在現場」與「誰該到而未到」，共用同一批查詢（名冊、兩天排班、兩天打卡），確保兩個數字來自同一時間點的資料
   private async scan(
     accountBookId: string,
     observedAt: Date,
@@ -337,12 +307,7 @@ export class AttendancePresenceService {
           workLocationName:
             locationNames.get(session.workLocationId) ?? session.workLocationId,
         });
-        /**
-         * Info: (20260813 - Julian) 已經在現場的人不再列為未到工。
-         *
-         * 昨晚的夜班還沒收工、今天又排了日班的人會同時符合兩邊，
-         * 而「他在現場」與「他沒來」不能同時印在同一張看板上。
-         */
+        // Info: (20260813 - Julian) 已經在現場的人不再列為未到工，避免同時出現在兩個名單
         continue;
       }
 
@@ -387,6 +352,6 @@ export const attendancePresenceService = new AttendancePresenceService(
   workLocationRepo,
 );
 
-// Info: (20260813 - Julian) 匯出時要記名，而 `Employee` 才有工號 —— 只有姓名在事故調查時不足以指認
+// Info: (20260813 - Julian) 匯出時要記名，`Employee` 才有工號——只有姓名在事故調查時不足以指認
 export const rosterActorLabel = (employee: Employee): string =>
   `${employee.name}（${employee.employeeNo}）`;

@@ -5,44 +5,10 @@ import { dbRepo } from "@/repositories/db.repo";
 /**
  * Info: (20260813 - Julian) 把 passkey 登入帳號綁到 demo 帳本的員工檔。
  *
- * ## 為什麼需要這支腳本
- *
- * `AttendanceIdentityService.linkOnFirstLogin` 的首登綁定，是拿
- * **已驗證的信箱**去比對 `Employee.email`。那條路徑只對 OAuth 身分成立 ——
- * 信箱來自 `UserIdentity.email`，而 `User` 這張表**根本沒有 email 欄位**。
- *
- * 因此 passkey 使用者的候選信箱永遠是空陣列，`resolveEmployee` 必定丟
- * `NF_EMPLOYEE_FOR_USER`。這不是 bug，是 passkey 的本質：它證明的是
- * 「你是註冊時那把金鑰的持有人」，不是「你是哪個信箱的主人」。
- *
- * 缺的那一步只能由**人**來做：確認站在面前的這個人就是 EMP005，然後把
- * `Employee.userId` 寫上去。這支腳本就是那一步，不是自動化那一步。
- *
- * ## 為什麼不做成登入後自助認領
- *
- * 「登入後輸入自己的員工編號即可綁定」少一個前置步驟，代價是**任何知道員工編號
- * 的人都能以該員工的身分打卡**。員工編號印在識別證上，不是秘密。
- * 出勤紀錄是法定文件（勞基法 §30 出勤紀錄保存五年），把它的歸屬交給一個
- * 人人看得到的字串，是把偽造成本降到零。
- *
- * ## 執行
- *
- * ```
- * # 1. 先看現況（唯讀，不寫任何東西）
- * npx tsx scripts/seed/link_employee_user.ts
- *
- * # 2. 依「註冊暱稱 = 員工編號」自動配對並寫入
- * npx tsx scripts/seed/link_employee_user.ts --commit
- *
- * # 3. 暱稱沒填員工編號時，指名綁定
- * npx tsx scripts/seed/link_employee_user.ts --employee-no=EMP005 --address=0x… --commit
- *
- * # 4. 彩排後解除綁定，讓同一台裝置能換人再走一次
- * npx tsx scripts/seed/link_employee_user.ts --unlink --employee-no=EMP005 --commit
- * ```
- *
- * **預設是唯讀的。** 沒有 `--commit` 就只印出打算做什麼 ——
- * 這支腳本會改寫「出勤紀錄屬於誰」，不該有人在還沒看清楚前就按下去。
+ * `User` 表沒有 email 欄位，passkey 使用者走不到 `linkOnFirstLogin` 的自動綁定，
+ * 只能人工核對身分後執行本腳本補上 `Employee.userId`（用法見 parseArgs）。
+ * 預設唯讀、只印出打算做的事，加 `--commit` 才真的寫入 ——
+ * 重跑 `seed_attendance_demo` 會把 `Employee.userId` 一併歸零，需要再執行一次本腳本。
  */
 
 const ACCOUNT_BOOK_ID = DEMO_ACCOUNT_BOOK_ID;
@@ -82,10 +48,8 @@ function parseArgs(argv: string[]): ICliOptions {
 }
 
 /**
- * Info: (20260813 - Julian) 解除綁定。
- *
- * 條件加上 `accountBookId`：這支腳本只該動 demo 帳本，
- * 而 `employeeNo` 在不同帳本之間可以重複。
+ * Info: (20260813 - Julian) 解除綁定；條件加 `accountBookId`
+ * 是因為 `employeeNo` 在不同帳本之間可以重複。
  */
 async function unlink(employeeNo: string, commit: boolean): Promise<void> {
   const employee = await prisma.employee.findFirst({
@@ -114,9 +78,8 @@ async function unlink(employeeNo: string, commit: boolean): Promise<void> {
 /**
  * Info: (20260813 - Julian) 指名綁定：`--employee-no` + `--address`。
  *
- * 用 `address` 而不是 `User.id` 指認登入者：`address` 在登入成功後會被寫進
- * `localStorage.user_address`，是現場唯一「看得到」的識別碼。
- * 要人從 DB 抄一個 uuid 出來，等於在演示前一晚多開一個出錯的機會。
+ * 用 `address`（登入後寫進 `localStorage.user_address`）而非 `User.id` 指認登入者，
+ * 因為 address 是現場唯一看得到的識別碼。
  */
 async function linkExplicit(
   employeeNo: string,
@@ -170,9 +133,8 @@ async function linkExplicit(
 /**
  * Info: (20260813 - Julian) 自動配對：`User.name` 等於 `Employee.employeeNo`。
  *
- * 註冊 passkey 時的暱稱是自由文字，把它填成員工編號只是一個約定 ——
- * 所以這裡**只在完全唯一時才動手**：同名的使用者有兩個以上就跳過並報出來。
- * 猜錯的代價是有人以別人的身分打卡，而那在 DB 裡看起來完全正常。
+ * 只在完全唯一時才動手，同名有兩個以上就跳過並報出來 ——
+ * 猜錯的代價是有人冒名打卡，且在 DB 裡看起來完全正常。
  */
 async function autoLink(commit: boolean): Promise<void> {
   const employees = await prisma.employee.findMany({

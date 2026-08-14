@@ -36,18 +36,10 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 
 /**
- * Info: (20260813 - Julian) 出勤總覽與異常。
+ * Info: (20260813 - Julian) 出勤總覽與異常方格圖。
  *
- * ## 這一頁的主張：不必比對任何報表，系統自己算出來
- *
- * 對工程主管機關而言，這張表回答的是**出工查核** ——「排了班卻沒有打卡紀錄」
- * 就是出工差異。判定全部來自 A9 的即時計算（不讀結果表），
- * 因此畫面上任何一格都可以當場追問「為什麼」，而答案在明細裡。
- *
- * ## 篩選與排序都在前端
- *
- * A9 一次回整個月 × 全體員工（demo 規模 372 格），因此換篩選條件不需要重新請求。
- * 只有**換月份**才會重新打 API —— 那是唯一真正換了一批資料的操作。
+ * 判定全部來自 A9 的即時計算（不讀結果表），因此任何一格都可以追問「為什麼」，
+ * 答案在明細裡。篩選與排序都在前端做，只有換月份才會重新打 API。
  */
 
 const API_BASE = `/api/v1/user/account_book/${DEMO_ACCOUNT_BOOK_ID}/hr/attendance`;
@@ -66,10 +58,8 @@ const LEGEND_TONES: AttendanceCellTone[] = [
 ];
 
 /**
- * Info: (20260813 - Julian) 可篩選的異常型別。
- *
- * **不含 `SUSPICIOUS_JUMP`**：G5 未實作，把它放進選單，選了永遠是空結果，
- * 而空結果會被讀成「沒有這種情況」而不是「這條規則還沒有」。
+ * Info: (20260813 - Julian) 可篩選的異常型別，不含 `SUSPICIOUS_JUMP`——
+ * G5 未實作，選了會永遠是空結果。
  */
 const FILTERABLE_EXCEPTIONS: AttendanceExceptionType[] = [
   AttendanceExceptionType.LATE,
@@ -89,11 +79,8 @@ const ResultPageBody: FC = () => {
   const { t } = useTranslation();
 
   /**
-   * Info: (20260813 - Julian) 預設月份在掛載後才決定。
-   *
-   * 直接在 render 內取 `new Date()`，伺服器與瀏覽器可能算到不同的月份
-   * （跨月的那一瞬間、或兩邊時區不同），React 會報 hydration 不一致 ——
-   * 與員工列表算年資的處置相同。未決定前不發任何請求。
+   * Info: (20260813 - Julian) 預設月份在掛載後才決定：直接在 render 內取
+   * `new Date()` 可能導致伺服器與瀏覽器算出不同月份，造成 hydration 不一致。
    */
   const [isoMonth, setIsoMonth] = useState<string | null>(null);
 
@@ -115,9 +102,8 @@ const ResultPageBody: FC = () => {
       setIsLoading(true);
       setLoadError(null);
       /**
-       * Info: (20260813 - Julian) 換月時先清掉選取的格子。
-       * 留著會讓明細顯示的是上個月的某一天，而標題只寫日期 ——
-       * 那是一個看起來完全正常、卻指向別處的畫面。
+       * Info: (20260813 - Julian) 換月時先清掉選取的格子，否則明細會顯示
+       * 上個月的某一天，畫面看起來正常卻指向別處。
        */
       setSelected(null);
 
@@ -335,22 +321,15 @@ const ResultPageBody: FC = () => {
         )}
 
         {/**
-         * Info: (20260813 - Julian) 產出時間戳。
-         *
-         * 判定會隨時間改變（進行中的日子今天與明天看到的不一樣），
-         * 因此「這份結果是幾點算出來的」與結果本身同等重要 ——
-         * 同 A10 現場名單要求產出時間戳的理由。時區一併印出，
-         * 否則格子裡的 09:47 是哪個時區的 09:47 沒有人答得出來。
+         * Info: (20260813 - Julian) 產出時間戳：判定會隨時間改變，因此「這份
+         * 結果是幾點算出來的」與結果本身同等重要；時區一併印出，否則沒人答得出來。
          */}
         {matrix && (
           <div className="px-1 text-xs text-gray-400">
             {t("hr_management.attendance_result.evaluated_at", {
               /**
-               * Info: (20260813 - Julian) 明確指定時區渲染。
-               *
-               * 不指定就會用瀏覽器的時區，而括號裡寫的是帳本的時區 ——
-               * 兩者不同時（出差、遠端、機器時區沒設對），這一行會變成
-               * 一句自己打自己臉的話：時間是台北時間，但顯示的是別處的。
+               * Info: (20260813 - Julian) 明確指定時區渲染，不指定會用瀏覽器
+               * 時區，與帳本時區不同時（出差、遠端）會顯示錯的時間。
                */
               time: new Date(matrix.evaluatedAt).toLocaleString(undefined, {
                 timeZone: matrix.timeZone,

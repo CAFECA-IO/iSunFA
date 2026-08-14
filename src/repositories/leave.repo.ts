@@ -9,13 +9,10 @@ import { WorkDayType } from "@/constants/attendance";
 import { assertSchedulableDay } from "@/repositories/attendance_schedule_invariant";
 
 /**
- * Info: (20260813 - Julian) 假勤資料存取層（唯一碰 Prisma）；不含任何業務判斷。
+ * Info: (20260813 - Julian) 假勤資料存取層（唯一碰 Prisma），不含業務判斷。
  *
- * ## `activeKey` 的組法只存在於這一層
- *
- * 值是 `"<employeeId>:<workDate>"`，而 `employeeId` 要從 `leaveRequest` 取。
- * 讓 service 自己組，等於把一條唯一鍵的定義散到呼叫端 ——
- * 而那條鍵正是「同一人同一天只能有一張生效假單」這個保證的全部。
+ * `activeKey` 的組法只存在於這一層（`"<employeeId>:<workDate>"`），
+ * 它是「同一人同一天只能有一張生效假單」這個保證的全部，不得讓 service 自己組。
  */
 
 const activeKeyOf = (employeeId: string, workDate: string): string =>
@@ -104,13 +101,7 @@ export interface ILeaveRecallProjection {
 }
 
 class LeaveRepository implements ILeaveRepository {
-  /**
-   * Info: (20260813 - Julian) 某一天生效中的請假。
-   *
-   * 條件是 `activeKey: { not: null }` 而不是 `leaveRequest.status = APPROVED` ——
-   * 兩者在正常情況下等價，但被單日銷假之後只有前者會變。
-   * 用狀態判斷會讓已銷假的那一天繼續出現在請假名單上。
-   */
+  // Info: (20260813 - Julian) 條件用 `activeKey: { not: null }` 而非 `leaveRequest.status = APPROVED`——單日銷假後只有前者會變，用狀態判斷會讓已銷假的那天繼續出現在請假名單上
   public async findActiveLeaveDays(params: {
     accountBookId: string;
     workDate: string;
@@ -146,13 +137,7 @@ class LeaveRepository implements ILeaveRepository {
     });
   }
 
-  /**
-   * Info: (20260813 - Julian) 建立徵詢。`pendingLeaveDayId` 與 `leaveDayId` 同值。
-   *
-   * 那個欄位是 `@unique`，因此「同一天掛兩張待回應徵詢」會在這裡撞唯一鍵，
-   * 而不是靠 service 先查一次再寫 —— 查與寫之間的空窗，正是兩個分頁同時按下去時
-   * 會發生的事。service 仍然先查，是為了回一個看得懂的 409 而不是 P2002。
-   */
+  // Info: (20260813 - Julian) `pendingLeaveDayId` 與 `leaveDayId` 同值且 @unique，同一天掛兩張待回應徵詢會在這裡撞唯一鍵；service 仍先查一次是為了回看得懂的 409 而非 P2002
   public async createRecall(params: {
     leaveDayId: string;
     shiftPatternId: string;
@@ -205,15 +190,10 @@ class LeaveRepository implements ILeaveRepository {
   }
 
   /**
-   * Info: (20260813 - Julian) 回應徵詢。同意時三件事必須一起成立，因此包在交易裡。
-   *
-   * 1. 徵詢變成 ACCEPTED，且 `pendingLeaveDayId` 清空（放行下一張徵詢）
-   * 2. 該請假日退出生效（`activeKey = null`）並記下 `recalledAt`
-   * 3. 排班改回上班日
-   *
-   * 少了第 3 步，那天會變成「沒有排班」而不是「要上班」——
-   * 判定引擎的 `NO_SCHEDULE` 與 `WORK` 是兩件完全不同的事。
-   * 少了第 2 步，同一天會同時「在請假」與「要上班」，那是最惡劣的一種非法狀態。
+   * Info: (20260813 - Julian) 回應徵詢。同意時三件事包在同一個交易裡：
+   * 徵詢變 ACCEPTED 並清空 `pendingLeaveDayId`、請假日退出生效（`activeKey = null`），
+   * 排班改回上班日。少了排班那步會變成 `NO_SCHEDULE` 而非 `WORK`；
+   * 少了退出生效那步，同一天會同時「在請假」與「要上班」。
    */
   public async resolveRecall(params: {
     recallId: string;

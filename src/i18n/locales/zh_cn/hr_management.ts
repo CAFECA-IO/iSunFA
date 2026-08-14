@@ -517,9 +517,9 @@ export const hrManagement = {
     confirm_title_in: "确认上班打卡",
     confirm_title_out: "确认下班打卡",
     confirm_message_in:
-      "将以你当前的位置在 {{name}} 记录一笔上班打卡。时间由服务器决定，记录后不可删改。",
+      "将以你当前的位置在 {{name}} 记录一笔上班打卡，记录后不可删改。",
     confirm_message_out:
-      "将以你当前的位置在 {{name}} 记录一笔下班打卡。时间由服务器决定，记录后不可删改。",
+      "将以你当前的位置在 {{name}} 记录一笔下班打卡，记录后不可删改。",
     confirm_cancel: "取消",
     map_unavailable: "地图无法显示，不影响打卡。上方的距离与精度仍然有效。",
     map_self_label: "你当前的位置",

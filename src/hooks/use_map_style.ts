@@ -3,48 +3,21 @@
 import { useEffect, useState } from "react";
 
 /**
- * Info: (20260813 - Julian) MapTiler 底圖樣式，以及「這把金鑰到底能不能用」。
+ * Info: (20260813 - Julian) MapTiler 底圖樣式，並先確認金鑰是否可用。
  *
- * ## 為什麼要先去問一次
+ * 金鑰錯誤或被網域限制擋住時 style 請求仍可能通過檢查，只是底圖留白，
+ * 而我們自己的 GeoJSON 圖層照常畫出來，看起來像地圖正常運作。
+ * 因此先用一次 `fetch` 問清楚（style.json 很小，代價可忽略），而非只驗有沒有設金鑰。
  *
- * 只檢查「有沒有設定金鑰」不夠 —— **一把錯的、或被網域限制擋住的金鑰會通過那個檢查**，
- * 然後 maplibre 取不到 style，畫面上留下一塊淡色空白：圍欄圈與標記都畫得出來
- * （那些是我們自己的 GeoJSON 圖層），但底下沒有任何街道與路名。
- *
- * 那個畫面最糟的地方不是難看，是**它看起來像一張正常運作的地圖** ——
- * 使用者會以為系統認為這個地區長這樣，而不是「底圖沒載到」。
- * `onError` 不一定救得了：style 請求失敗的時機與形式因瀏覽器而異。
- *
- * 因此先用一次 `fetch` 問清楚。style.json 很小且會被快取，代價可以忽略。
- *
- * ## ⚠️ maplibre-gl 必須停在 v5，不可升到 v6
- *
- * `react-map-gl@8` 對 maplibre v6 需要**額外設定 worker**（v6 起 worker 不再自動綁進
- * bundle，官方文件：「MapLibre GL JS v6 applications that use a bundler must configure
- * the worker before rendering a map」）。沒設定的症狀非常難認：
- *
- * - 底圖只剩樣式的背景色（一片米白），沒有任何道路與路名
- * - **我們自己的 GeoJSON 圖層（圍欄圈、精度圈）也一起消失** —— 因為它們同樣由 worker 解析
- * - 但 `<Marker>` 照常顯示，因為那是 React 的 DOM 元素，只靠 `map.project()` 定位
- *
- * 於是畫面看起來像「一張載入中的地圖」，而其實是 worker 從來沒起來。
- * 2026-08-13 踩過一次，症狀就是上面三行。
- *
- * `package.json` 因此鎖 `maplibre-gl@^5.24.0`。要升 v6 的話，
- * 三個使用者（本模組的兩張地圖 + `src/components/map_viewer.tsx`）都要一起處理 worker。
+ * ⚠️ maplibre-gl 必須停在 v5，不可升到 v6：`react-map-gl@8` 對 v6 需要額外設定 worker，
+ * 沒設定時底圖只剩背景色，連我們自己的 GeoJSON 圖層也一起消失，
+ * 但 `<Marker>` 因為是 DOM 元素照常顯示 —— 症狀極難認。`package.json` 因此鎖 `maplibre-gl@^5.24.0`。
  */
 
 export const MAPTILER_STYLE = {
-  /**
-   * Info: (20260813 - Julian) 街道圖：有路名與 POI。
-   * 打卡頁用這個 —— 使用者要在圖上認出自己站在哪條路上，
-   * 而那正是「我到底在不在工區裡」這個問題的日常版本。
-   */
+  /** Info: (20260813 - Julian) 街道圖：有路名與 POI，打卡頁用這個以便認路。 */
   STREETS: "streets-v2",
-  /**
-   * Info: (20260813 - Julian) 資料視覺化底圖：淡色、極少標註。
-   * 現場頁用這個 —— 它是四個工區圓圈的背景，標註太多會蓋掉主角。
-   */
+  /** Info: (20260813 - Julian) 資料視覺化底圖：淡色、極少標註，現場頁用這個當背景。 */
   DATAVIZ: "dataviz-light",
 } as const;
 

@@ -3,21 +3,16 @@ import { addIsoDays } from "@/lib/utils/attendance_time";
 
 /**
  * Info: (20260813 - Julian) 出勤數值的顯示格式。純函數，不碰任何狀態。
- *
- * 判定引擎與 API 一律以「工作日當地 00:00 起算的分鐘數」表示時刻 ——
- * 那個表示法讓跨夜班不必分成兩個日曆日處理，代價是**它不能直接印給人看**：
- * 印 1743 沒有人看得懂，印 05:03 又會讓人以為是今天早上。
- * 換算集中在這裡，兩個頁面各寫一份的話，遲早有一份會忘記處理 >= 1440 的情況。
+ * 判定引擎與 API 一律以「工作日當地 00:00 起算的分鐘數」表示時刻，換算集中在這裡，
+ * 避免各頁面各寫一份、遲早有一份忘記處理 >= 1440（跨夜）的情況。
  */
 
 // Info: (20260813 - Julian) 無值時回 em dash 而不是空字串：空白會讓人以為是還沒載入
 export const EMPTY_VALUE = "—";
 
 /**
- * Info: (20260813 - Julian) 分鐘數轉 HH:mm；>= 1440 表次日，前綴由呼叫端以 i18n 提供。
- *
- * `nextDayLabel` 由呼叫端傳而不是在這裡查字典：這一層是純函數，
- * 把 i18n context 拉進來會讓它從「可單獨測試的換算」變成「只能在 React 裡跑的東西」。
+ * Info: (20260813 - Julian) 分鐘數轉 HH:mm；>= 1440 表次日，前綴由呼叫端以 i18n 提供
+ * （這一層是純函數，拉進 i18n context 會讓它變成只能在 React 裡跑的東西）。
  */
 export function formatMinuteOfDay(
   minute: number | null,
@@ -51,11 +46,8 @@ export function dayOfIsoDate(isoDate: string): number {
 
 /**
  * Info: (20260813 - Julian) 工作日 + 當日分鐘數 → "YYYY-MM-DD HH:mm"。
- *
- * 與 `formatMinuteOfDay` 的差別是**它把日期算出來**：跨夜班的 1743 分
- * 在畫面上顯示「次日 05:03」就夠了（旁邊有工作日欄），但匯出的 CSV
- * 會被單獨帶走、貼進事故調查報告裡 —— 那份檔案上的每一個時間
- * 都必須自己說得出是哪一天，不能依賴另一欄。
+ * 與 `formatMinuteOfDay` 的差別是它把日期算出來：這是給匯出檔案用的，
+ * 檔案會被單獨帶走，每個時間都必須自己說得出是哪一天，不能依賴另一欄。
  */
 export function isoDateTimeLabel(
   workDate: string,
@@ -71,11 +63,8 @@ export function isoDateTimeLabel(
 }
 
 /**
- * Info: (20260813 - Julian) 日曆日的星期（0 = 週日）。純日曆運算，不牽涉時區。
- *
- * 以 UTC 解析而不是 `new Date("2026-08-13")` 之後取本地星期 ——
- * 後者在 UTC 以西的時區會退一天，於是整張排班表的星期標頭全部錯一格，
- * 而那種錯誤只有在特定時區的機器上才看得到。
+ * Info: (20260813 - Julian) 日曆日的星期（0 = 週日）。以 UTC 解析而非 `new Date(...)` 取本地星期——
+ * 後者在 UTC 以西的時區會退一天，導致排班表星期標頭整排錯一格。
  */
 export function isoWeekday(isoDate: string): number {
   return new Date(`${isoDate}T00:00:00.000Z`).getUTCDay();
