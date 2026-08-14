@@ -120,11 +120,42 @@ describe("analysis payment module", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("covers the six known payment screens", () => {
-    const screens = files.filter((file) =>
-      /useAnalysisPayment\s*\(/.test(readFileSync(file, "utf8")),
+  /**
+   * Info: (20260814 - Luphia) 精確比對而非下限（PR #6652 review B-5）。
+   *
+   * 原本寫 `toBeGreaterThanOrEqual(6)`，而實際命中數就是 6——門檻等於事實時，
+   * 少掉任何一個畫面都會讓它變紅；但若門檻比事實低，移除一個畫面的團隊額度選項
+   * 依然全綠。新增付款畫面時請一併更新這個數字，那正是提醒你「新畫面也要接上」的時機。
+   */
+  it("covers exactly the known payment screens", () => {
+    const screens = files
+      .filter((file) =>
+        /useAnalysisPayment\s*\(/.test(readFileSync(file, "utf8")),
+      )
+      .map((file) => file.slice(process.cwd().length + 1));
+
+    expect(screens.length).toBe(6);
+  });
+
+  /**
+   * Info: (20260814 - Luphia) 上面四條檢查掃的都是**呼叫端**的字面 JSX，
+   * 而那些值全由 `use_analysis_payment` 產生：把 `paymentSourceNode` 改成 `null`、
+   * 或把 `paysWithTeamQuota` 寫死 `false`，六個畫面一個字都不用改、五條檢查全綠——
+   * 而 `paysWithTeamQuota: false` 的後果正是「個人 0 點、團隊有額度」的成員完全付不了款。
+   * 因此把 hook 自身的接線也一併釘住。
+   */
+  it("keeps the entry point actually wired to the selector and the team source", () => {
+    const hook = readFileSync(
+      join(process.cwd(), "src", "hooks", "use_analysis_payment.tsx"),
+      "utf8",
     );
-    // Info: (20260813 - Luphia) 6 個畫面 + hook 自身
-    expect(screens.length).toBeGreaterThanOrEqual(6);
+
+    // Info: (20260814 - Luphia) 選擇器必須是真的元件，不是 null 或佔位
+    expect(hook).toMatch(/paymentSourceNode\s*=\s*\(\s*<PaymentSourceSelector/);
+    // Info: (20260814 - Luphia) 付款來源必須由「有團隊且選了團隊」推導，不能是常數
+    expect(hook).toMatch(/paysWithTeamQuota:\s*useTeamSource/);
+    expect(hook).toMatch(
+      /const\s+useTeamSource\s*=\s*team\.teams\.length\s*>\s*0\s*&&/,
+    );
   });
 });

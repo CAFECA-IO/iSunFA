@@ -2,7 +2,7 @@
 
 > **Date**: August 2026
 > **Author**: Luphia
-> **Version**: 1.18 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`；1.8 新增 §5.4 拆帳與封頂預扣（有餘額就放行、額度用光才扣錢包）；1.9 新增 §5.5 碳盤查計費；1.10 碳盤查四條 LLM 路徑全數接上；1.11 無帳本會話改扣個人鏈上點數（建單 → 402 → 付款 → 重送）；1.12 §5.4 新增逐功能扣款順序，物流碳足跡優先扣分配點數；1.13 新增 §5.6 多團隊成員的支付歸屬；1.14 §5.6 六個付款呼叫點統一至 useAnalysisPayment；1.15 §5.4 訂單類扣款禁用封頂（`allowPartial` 必填），付款前以所選來源的可用額度攔阻並停用支付鈕；1.16 新增 §6.1.1 訂閱／購點的歸屬對象入口，訂單 `teamId` 改為頂層欄位，履行失敗改記 MINT_FAILED；1.17 訂閱改為席次計價、期中加人比例補收；1.18 新增 §5.4.1 重放／重試／退款守恆，個人點數路徑補上失敗退款
+> **Version**: 1.19 (Draft) — 1.1 新增 §5.3 費思計費；1.2–1.4 費率迭代；1.5 拍板費率與點值下限；1.6 拍板 C 案混合制（離鏈營運 + 每日 merkle 鏈上錨定，Phase 2 為 1:1 backing）；1.7 §5.3 拍板「選定帳本後才能使用費思」，計費團隊由 `AccountBook.teamId` 推導，client 不再自報 `teamId`；1.8 新增 §5.4 拆帳與封頂預扣（有餘額就放行、額度用光才扣錢包）；1.9 新增 §5.5 碳盤查計費；1.10 碳盤查四條 LLM 路徑接上（1.19 補上第五條：段落草稿）；1.11 無帳本會話改扣個人鏈上點數（建單 → 402 → 付款 → 重送）；1.12 §5.4 新增逐功能扣款順序，物流碳足跡優先扣分配點數；1.13 新增 §5.6 多團隊成員的支付歸屬；1.14 §5.6 六個付款呼叫點統一至 useAnalysisPayment；1.15 §5.4 訂單類扣款禁用封頂（`allowPartial` 必填），付款前以所選來源的可用額度攔阻並停用支付鈕；1.16 新增 §6.1.1 訂閱／購點的歸屬對象入口，訂單 `teamId` 改為頂層欄位，履行失敗改記 MINT_FAILED；1.17 訂閱改為席次計價、期中加人比例補收；1.18 新增 §5.4.1 重放／重試／退款守恆，個人點數路徑補上失敗退款；1.19 新增 §5.5.1 段落草稿為第五條計費路徑，並加上覆蓋契約測試
 > **Status**: Proposed
 > **Branch**: `feature/team_wallet_subscription_quota`
 > **關聯 ADR**: [ADR 015: 離鏈團隊錢包帳本](decisions/015_offchain_team_wallet_ledger.md)
@@ -429,6 +429,20 @@ spendCredits(identity, teamId, featureCode, cost, idempotencyKey)
 相對地，前端在**按下支付之前**就要知道付不付得起：`useAnalysisPayment` 回傳所選團隊的可用額度（雙視窗剩餘的較小值 + 分配點數），`PaymentConfirmModal` 依當前來源（團隊／個人）比對金額，不足即顯示「點數不足」並停用支付鈕；個人來源在提示內附加購入口。讓用戶按下去、建了一張單、再收到 402，等於要他自己試錯，還在資料庫留下待處理訂單。
 
 > 純函式層在 `src/lib/quota/spend_split.ts`（`resolveQuotaAvailable` / `splitSpend` / `splitRefund`），不碰 DB 與時鐘，可單測；`ISpendResult` 增列 `quotaAmount` / `allocationAmount` 拆帳明細，`ISettleResult` 增列 `toppedUp`。
+
+#### 5.5.1 計費覆蓋：五條 LLM 路徑（2026-08-14 更正）
+
+原文寫「四條 LLM 路徑全數接上」，實際上是**五條**——段落草稿與修訂（`chat/carbon/draft`）漏接了近一個月。它底下確實會呼叫 `recordLlmUsage`，但不在任何 `runWithUsageCapture` 範圍內，用量被 `usage_scope` 的 `if (!scope) return` 吞掉：成本照付、額度不扣，而條款寫的是「各項人工智慧作業均依實際使用量計費」。這是條款層級的不實陳述，不只是漏計費。
+
+| 路徑 | 端點 | 冪等鍵前綴 |
+|---|---|---|
+| 對話 | `chat/carbon` | `carbon-chat:` |
+| 附件萃取 | `chat/carbon`（管線第二段） | `carbon-attachment:` |
+| 報告匯入 | `chat/carbon/import` | `carbon-import:` |
+| 結構圖 | `chat/carbon/diagram` | `carbon-diagram:` |
+| **段落草稿 / 修訂** | `chat/carbon/draft` | `carbon-draft:` |
+
+AsyncLocalStorage 解決的是管線**內部**的傳遞；「把管線包起來」這一步仍然要有人記得做。因此新增 `carbon_billing_coverage.test.ts`：碳盤查端點只要引用了 LLM service 卻沒接 `runBilledCarbonTask` 就會紅，並同時守住「模型呼叫只從 `ChatService` 出去」這條（`business_monitor` 為已知例外，背景監控不計費）。
 
 #### 5.4.1 重放、重試與退款守恆（2026-08-14，PR #6652 review）
 

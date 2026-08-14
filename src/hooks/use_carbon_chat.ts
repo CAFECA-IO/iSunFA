@@ -1659,6 +1659,10 @@ export const useCarbonChat = () => {
           payload: { content: string; citedFacts: string[] } | null;
         }>("/api/v1/chat/carbon/draft", {
           method: "POST",
+          /**
+           * Info: (20260814 - Luphia) 計費上下文（設計書 §5.5）：
+           * channel 供後端推導計費帳本，clientMessageId 讓重試不重複扣點。
+           */
           body: JSON.stringify({
             paragraphId,
             conversationContext: [],
@@ -1666,6 +1670,8 @@ export const useCarbonChat = () => {
             language,
             existingContent: paragraph.content,
             instruction,
+            channel: chatChannel,
+            clientMessageId: crypto.randomUUID(),
           }),
         });
         setDraftNotice(null);
@@ -1693,6 +1699,8 @@ export const useCarbonChat = () => {
       t,
       setDraftNotice,
       dismissDraftNoticeAfter,
+      // Info: (20260814 - Luphia) 計費上下文所需：channel 決定這筆消費記到哪個帳本
+      chatChannel,
     ],
   );
 
@@ -3974,10 +3982,13 @@ export const useCarbonChat = () => {
           "/api/v1/chat/carbon/draft",
           {
             method: "POST",
+            // Info: (20260814 - Luphia) 計費上下文（設計書 §5.5），同段落修訂
             body: JSON.stringify({
               paragraphId,
               conversationContext,
               language,
+              channel: chatChannel,
+              clientMessageId: crypto.randomUUID(),
             }),
           },
         );
@@ -4017,6 +4028,8 @@ export const useCarbonChat = () => {
       t,
       applyDraftToReport,
       jumpToReportParagraph,
+      // Info: (20260814 - Luphia) 計費上下文所需：channel 決定這筆消費記到哪個帳本
+      chatChannel,
     ],
   );
 

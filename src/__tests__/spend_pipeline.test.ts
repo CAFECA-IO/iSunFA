@@ -292,6 +292,33 @@ describe("spendCredits", () => {
   });
 
   /**
+   * Info: (20260814 - Luphia) 逐功能扣款順序的**接線**測試（PR #6652 review B-5 #3）。
+   *
+   * `splitSpend` 的 priority 參數有預設值 `QUOTA_FIRST`，因此把 `resolveSpendPriority(featureCode)`
+   * 這個引數整個刪掉，純函式測試與本檔其餘案例都不會紅——但物流碳足跡會改回吃 5 小時
+   * 視窗額度，正是產品拍板要避免的（幾筆查詢就把同團隊的對話擠掉）。
+   */
+  it("wires the per-feature spend order so logistics spends allocation first", async () => {
+    asMock(teamWalletRepo.getAllocation).mockResolvedValue({
+      balance: BigInt(10),
+    } as unknown);
+
+    const result = await spendCredits({
+      ...BASE_PARAMS,
+      featureCode: BILLABLE_FEATURE_CODE.LOGISTICS_CARBON,
+      idempotencyKey: "logistics:order-1",
+    });
+
+    // Info: (20260814 - Luphia) 額度尚有餘裕，但物流一律先吃分配點數
+    expect(result.allocationAmount).toBe("3");
+    expect(result.quotaAmount).toBe("0");
+    expect(teamWalletRepo.consumeAllocation).toHaveBeenCalledWith(
+      expect.objectContaining({ amount: BigInt(3) }),
+    );
+    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+  });
+
+  /**
    * Info: (20260814 - Luphia) 重放必須是**呼叫端看得見的狀態**（PR #6652 review A-2）。
    *
    * 冪等鍵保護的是扣款，不是工作：早退只回傳成功、呼叫端照常跑 LLM，
@@ -667,6 +694,43 @@ describe("settleSpend", () => {
       outcome: WALLET_OP_OUTCOME.OK,
       ledger: { amount: BigInt(2) },
     } as unknown);
+  });
+
+  /**
+   * Info: (20260814 - Luphia) 純錢包預扣的追補 fallback 測試（PR #6652 review B-5 #2）。
+   *
+   * 額度見底後的預扣完全走錢包，沒有額度用量列可沿用視窗與 teamId，
+   * 全靠呼叫端注入的 `nowSec` / `context`。把那些 `?? context?.` fallback 刪掉，
+   * 差額會永遠走到 console.error 早退、`toppedUp` 恆為 "0"——
+   * 也就是「只剩 1 點的人可以無限發長訊息」，而原本沒有任何測試覆蓋這條。
+   */
+  it("tops up the shortfall of a wallet-only hold using the injected context", async () => {
+    asMock(teamWalletRepo.findLedgerByIdempotencyKey).mockResolvedValue({
+      amount: BigInt(-1),
+      targetUserId: "user-1",
+      featureCode: BILLABLE_FEATURE_CODE.FAITH_CHAT,
+    } as unknown);
+
+    const result = await settleSpend({
+      idempotencyKey: "faith:msg-1",
+      actualCost: BigInt(4),
+      operatorUserId: "worker",
+      nowSec: NOW_SEC,
+      context: {
+        teamId: "team-1",
+        userId: "user-1",
+        featureCode: BILLABLE_FEATURE_CODE.FAITH_CHAT,
+      },
+    });
+
+    expect(result.toppedUp).toBe("3");
+    expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amount: BigInt(3),
+        teamId: "team-1",
+        idempotencyKey: "topup:faith:msg-1",
+      }),
+    );
   });
 
   it("refunds the quota difference into the original windows", async () => {
