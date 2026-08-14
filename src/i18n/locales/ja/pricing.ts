@@ -242,8 +242,11 @@ export const pricing = {
       use_saved_card: "登録済みのカードを使用",
       bind_new_card: "新しいカードを登録",
       agree_tos: "利用規約と返金ポリシーに同意します",
-      subscription_reset_note:
-        "ポイントの有効期限は30日間です、期限内に使用してください。",
+      // Info: (20260814 - Luphia) 訂閱買到的是額度視窗，不是錢包點數（設計書 §7 履行只寫 TeamSubscription）
+      subscription_quota_note:
+        "サブスクリプションではプランの利用枠をご利用いただけます。利用枠は 5 時間ごとおよび毎週リセットされ、翌期への繰り越しやクレジットへの変換はありません。",
+      subscription_activated:
+        "プランが有効になりました。チームの利用枠は直ちに反映されます。",
       selected_modules: "選択したモジュール",
       track_order_btn: "注文追跡",
     },

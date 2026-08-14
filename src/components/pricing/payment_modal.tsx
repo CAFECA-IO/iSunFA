@@ -26,6 +26,10 @@ import {
 } from "@/interfaces/payment";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import { BANK_TRANSFER } from "@/constants/price";
+import {
+  PURCHASE_MODE,
+  resolvePurchaseMode,
+} from "@/lib/purchase/purchase_target";
 import { HTTP_METHOD } from "@/constants/http";
 import { IJSONObject } from "@/validators/common";
 import EditCardModal from "@/components/user/billing/edit_card_modal";
@@ -106,6 +110,14 @@ export default function PaymentModal({
       (planId.startsWith("iso14064") ||
         planId.startsWith("iso14067") ||
         planId.startsWith("carbon_label")));
+
+  /**
+   * Info: (20260814 - Luphia) 訂閱與購點的畫面語意完全不同：訂閱買到的是**額度視窗**
+   * （每 5 小時 / 每週自動重置），不是錢包點數。沿用購點文案會承諾一筆從未發放的點數——
+   * 履行路徑只寫 TeamSubscription，不 mint、不入池（設計書 §7）。
+   */
+  const isTeamSubscription =
+    resolvePurchaseMode(planId, undefined) === PURCHASE_MODE.SUBSCRIPTION;
 
   const orderType =
     planId === "on_premise"
@@ -627,38 +639,39 @@ export default function PaymentModal({
                                     {displayPrice || `$${amount}`}
                                   </span>
                                 </div>
-                                {Number(baseCredits) > 0 && (
-                                  <div className="flex items-start justify-between px-2">
-                                    <span className="pt-1 text-sm font-medium text-gray-500">
-                                      {t(
-                                        "pricing.credits.payment_modal.tokens_to_receive",
-                                      )}
-                                    </span>
-                                    <div className="flex flex-col items-end text-right">
-                                      <span className="text-lg font-bold text-orange-600">
-                                        {Number(baseCredits).toLocaleString()}{" "}
+                                {Number(baseCredits) > 0 &&
+                                  !isTeamSubscription && (
+                                    <div className="flex items-start justify-between px-2">
+                                      <span className="pt-1 text-sm font-medium text-gray-500">
                                         {t(
-                                          "pricing.credits.payment_modal.credits_unit_short",
-                                          { count: "" },
-                                        ).trim()}
+                                          "pricing.credits.payment_modal.tokens_to_receive",
+                                        )}
                                       </span>
-                                      {bonusCredits !== "0" && (
-                                        <span className="mt-1 inline-flex items-center rounded-md bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600 ring-1 ring-orange-600/20 ring-inset">
-                                          +{" "}
+                                      <div className="flex flex-col items-end text-right">
+                                        <span className="text-lg font-bold text-orange-600">
+                                          {Number(baseCredits).toLocaleString()}{" "}
                                           {t(
-                                            "pricing.credits.payment_modal.bonus_points",
-                                            {
-                                              count:
-                                                Number(
-                                                  bonusCredits,
-                                                ).toLocaleString(),
-                                            },
-                                          )}
+                                            "pricing.credits.payment_modal.credits_unit_short",
+                                            { count: "" },
+                                          ).trim()}
                                         </span>
-                                      )}
+                                        {bonusCredits !== "0" && (
+                                          <span className="mt-1 inline-flex items-center rounded-md bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600 ring-1 ring-orange-600/20 ring-inset">
+                                            +{" "}
+                                            {t(
+                                              "pricing.credits.payment_modal.bonus_points",
+                                              {
+                                                count:
+                                                  Number(
+                                                    bonusCredits,
+                                                  ).toLocaleString(),
+                                              },
+                                            )}
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
-                                  </div>
-                                )}
+                                  )}
                                 {details && details.length > 0 && (
                                   <div className="flex flex-col px-2">
                                     <span className="mb-2 text-sm font-medium text-gray-500">
@@ -679,12 +692,11 @@ export default function PaymentModal({
                                     </ul>
                                   </div>
                                 )}
-                                {billingInterval && (
+                                {isTeamSubscription && (
                                   <div className="mt-2 rounded-md bg-orange-50 p-3">
                                     <p className="text-xs font-medium text-orange-800">
                                       {t(
-                                        "pricing.credits.payment_modal.subscription_reset_note",
-                                        { count: baseCredits.toLocaleString() },
+                                        "pricing.credits.payment_modal.subscription_quota_note",
                                       )}
                                     </p>
                                   </div>
@@ -1011,16 +1023,22 @@ export default function PaymentModal({
                               </DialogTitle>
 
                               <div className="mt-4 w-full space-y-3 rounded-md border border-gray-200 bg-gray-50 p-4">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm text-gray-500">
-                                    {t(
-                                      "pricing.credits.payment_modal.original_credits",
-                                    )}
-                                  </span>
-                                  <span className="text-base font-medium text-gray-700">
-                                    {MoneyUtil.format(originalCredits || "0")}
-                                  </span>
-                                </div>
+                                {/**
+                                 * Info: (20260814 - Luphia) 訂閱不動個人點數，也不發錢包點數：
+                                 * 顯示個人餘額前後與「獲得點數 +N」都是與事實相反的數字。
+                                 */}
+                                {!isTeamSubscription && (
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm text-gray-500">
+                                      {t(
+                                        "pricing.credits.payment_modal.original_credits",
+                                      )}
+                                    </span>
+                                    <span className="text-base font-medium text-gray-700">
+                                      {MoneyUtil.format(originalCredits || "0")}
+                                    </span>
+                                  </div>
+                                )}
                                 <div className="flex items-center justify-between border-t border-gray-200 pt-3">
                                   <span className="text-sm text-gray-500">
                                     {t(
@@ -1031,43 +1049,59 @@ export default function PaymentModal({
                                     {displayPrice || `$${amount}`}
                                   </span>
                                 </div>
-                                <div className="flex items-center justify-between border-t border-gray-200 pt-3">
-                                  <span className="text-sm text-gray-500">
-                                    {t(
-                                      "pricing.credits.payment_modal.tokens_received",
-                                    )}
-                                  </span>
-                                  <span className="text-base font-medium text-green-600">
-                                    +{baseCredits.toLocaleString()}{" "}
-                                    {t(
-                                      "pricing.credits.payment_modal.credits_unit_short",
-                                      { count: "" },
-                                    ).trim()}
-                                    {bonusCredits !== "0" && (
-                                      <span className="ml-1 text-sm font-normal">
-                                        (
+                                {!isTeamSubscription && (
+                                  <>
+                                    <div className="flex items-center justify-between border-t border-gray-200 pt-3">
+                                      <span className="text-sm text-gray-500">
                                         {t(
-                                          "pricing.credits.payment_modal.bonus_points",
-                                          {
-                                            count:
-                                              bonusCredits.toLocaleString(),
-                                          },
+                                          "pricing.credits.payment_modal.tokens_received",
                                         )}
-                                        )
                                       </span>
-                                    )}
-                                  </span>
-                                </div>
-                                <div className="flex items-center justify-between border-t border-gray-200 pt-3">
-                                  <span className="text-sm font-medium text-gray-900">
+                                      <span className="text-base font-medium text-green-600">
+                                        +{baseCredits.toLocaleString()}{" "}
+                                        {t(
+                                          "pricing.credits.payment_modal.credits_unit_short",
+                                          { count: "" },
+                                        ).trim()}
+                                        {bonusCredits !== "0" && (
+                                          <span className="ml-1 text-sm font-normal">
+                                            (
+                                            {t(
+                                              "pricing.credits.payment_modal.bonus_points",
+                                              {
+                                                count:
+                                                  bonusCredits.toLocaleString(),
+                                              },
+                                            )}
+                                            )
+                                          </span>
+                                        )}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between border-t border-gray-200 pt-3">
+                                      <span className="text-sm font-medium text-gray-900">
+                                        {t(
+                                          "pricing.credits.payment_modal.current_credits",
+                                        )}
+                                      </span>
+                                      <span className="text-lg font-bold text-gray-900">
+                                        {(user?.credits || 0).toLocaleString()}
+                                      </span>
+                                    </div>
+                                  </>
+                                )}
+
+                                {/**
+                                 * Info: (20260814 - Luphia) 訂閱成功要說的是「方案已啟用、額度即刻生效」，
+                                 * 而不是任何點數數字——這條路徑一點錢包點數都沒有發出去。
+                                 */}
+                                {isTeamSubscription && (
+                                  <div className="border-t border-gray-200 pt-3 text-sm text-gray-600">
                                     {t(
-                                      "pricing.credits.payment_modal.current_credits",
+                                      "pricing.credits.payment_modal.subscription_activated",
                                     )}
-                                  </span>
-                                  <span className="text-lg font-bold text-gray-900">
-                                    {(user?.credits || 0).toLocaleString()}
-                                  </span>
-                                </div>
+                                  </div>
+                                )}
                               </div>
 
                               {txHash && (

@@ -18,6 +18,46 @@ import {
   WALLET_OP_OUTCOME,
 } from "@/constants/subscription_quota";
 
+/**
+ * Info: (20260814 - Luphia) 收據品項描述。
+ *
+ * 原本一律寫 `iSunFA Credits - {credits}`，於是訂閱的收據會寫「Credits - 1500」——
+ * 而訂閱一點錢包點數都沒有發（履行只寫 TeamSubscription）。收據是對外憑證，
+ * 描述必須與實際交付的東西一致：訂閱交付的是方案與席次，不是點數。
+ */
+function buildReceiptItemDescription(
+  orderType: string | null,
+  credits: number,
+  data: {
+    planId?: string;
+    seats?: number;
+    billingInterval?: string;
+    seatAddition?: boolean;
+  } | null,
+): string {
+  /**
+   * Info: (20260814 - Luphia) 綁卡直扣路徑只拿得到 orderData（沒有 order.type），
+   * 以資料形狀回推：訂閱一定同時帶 planId 與 billingInterval，席次補收帶 seatAddition。
+   */
+  const kind =
+    orderType ??
+    (data?.seatAddition
+      ? ORDER_TYPE.BILLING_SEAT_ADDITION
+      : data?.planId && data?.billingInterval
+        ? ORDER_TYPE.BILLING_SUBSCRIBE
+        : ORDER_TYPE.OEN_PAYMENT);
+  if (kind === ORDER_TYPE.BILLING_SUBSCRIBE) {
+    const plan = data?.planId ?? "team";
+    const seats = data?.seats ?? 1;
+    const interval = data?.billingInterval ?? BILLING_INTERVAL.MONTH;
+    return `iSunFA Team Subscription - ${plan} (${interval}) x${seats} seat(s)`;
+  }
+  if (kind === ORDER_TYPE.BILLING_SEAT_ADDITION) {
+    return `iSunFA Team Seat Addition - ${data?.seats ?? 1} seat(s)`;
+  }
+  return `iSunFA Credits - ${credits}`;
+}
+
 export interface IOrderWithUser extends Order {
   user: User | null;
 }
@@ -148,7 +188,15 @@ export class PaymentRepository {
                   transactionTime: new Date().toISOString(),
                   buyerId: order.userId,
                   buyerName: order.user?.name || "Unknown",
-                  itemDescription: `iSunFA Credits - ${_creditsToMint}`,
+                  itemDescription: buildReceiptItemDescription(
+                    order.type,
+                    _creditsToMint,
+                    order.data as {
+                      planId?: string;
+                      seats?: number;
+                      billingInterval?: string;
+                    } | null,
+                  ),
                   gatewayTxId: body.data?.id,
                 },
               } as Prisma.InputJsonObject,
@@ -680,7 +728,16 @@ export class PaymentRepository {
               transactionTime: new Date().toISOString(),
               buyerId: userId,
               buyerName: userName,
-              itemDescription: `iSunFA Credits - ${credits}`,
+              itemDescription: buildReceiptItemDescription(
+                null,
+                credits,
+                orderData as {
+                  planId?: string;
+                  seats?: number;
+                  billingInterval?: string;
+                  seatAddition?: boolean;
+                },
+              ),
               gatewayTxId:
                 (oenData as { data?: { id?: string }; id?: string })?.data
                   ?.id ||

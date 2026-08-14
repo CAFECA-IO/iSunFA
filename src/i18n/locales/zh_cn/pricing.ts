@@ -236,7 +236,10 @@ export const pricing = {
       use_saved_card: "使用已绑定的信用卡",
       bind_new_card: "绑定新信用卡",
       agree_tos: "我同意使用条款 (Terms of Service) 与退费政策 (Refund Policy)",
-      subscription_reset_note: "点数有效时间为 30 日，需在时效内使用完毕",
+      // Info: (20260814 - Luphia) 訂閱買到的是額度視窗，不是錢包點數（設計書 §7 履行只寫 TeamSubscription）
+      subscription_quota_note:
+        "订阅期间依方案额度使用；额度每 5 小时与每周自动重置，不累积至下一期，也不会转为点数。",
+      subscription_activated: "方案已启用，团队额度即刻生效。",
       selected_modules: "已选模块",
       track_order_btn: "订单追踪",
     },

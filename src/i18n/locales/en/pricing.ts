@@ -241,8 +241,11 @@ export const pricing = {
       use_saved_card: "Use Saved Card",
       bind_new_card: "Bind New Card",
       agree_tos: "I agree to the Terms of Service and Refund Policy",
-      subscription_reset_note:
-        "Credits are valid for 30 days and must be used within this period",
+      // Info: (20260814 - Luphia) 訂閱買到的是額度視窗，不是錢包點數（設計書 §7 履行只寫 TeamSubscription）
+      subscription_quota_note:
+        "Your subscription grants plan quota, which resets every 5 hours and every week. Unused quota does not roll over and is not converted into credits.",
+      subscription_activated:
+        "The plan is active. Your team quota takes effect immediately.",
       selected_modules: "Selected Modules",
       track_order_btn: "Track Order",
     },

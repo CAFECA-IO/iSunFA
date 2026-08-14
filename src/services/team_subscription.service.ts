@@ -1,9 +1,5 @@
 import { Order } from "@/generated";
-import {
-  SUBSCRIPTION_PLAN_CREDITS,
-  SUBSCRIPTION_PLAN_PRICE,
-  CURRENCY_UNIT,
-} from "@/constants/price";
+import { SUBSCRIPTION_PLAN_PRICE, CURRENCY_UNIT } from "@/constants/price";
 import { ORDER_TYPE } from "@/constants/status";
 import { TeamRole } from "@/constants/team";
 import {
@@ -211,7 +207,13 @@ export async function changeTeamSubscription(params: {
       type: ORDER_TYPE.BILLING_SUBSCRIBE,
       amount,
       unit: CURRENCY_UNIT.TWD,
-      credits: SUBSCRIPTION_PLAN_CREDITS[planId],
+      /**
+       * Info: (20260814 - Luphia) 訂閱**不發點數**：履行路徑只寫 TeamSubscription，
+       * 不 mint 鏈上點數、也不入團隊池（設計書 §7）。原本帶 SUBSCRIPTION_PLAN_CREDITS
+       * 進來，付款畫面與收據就會承諾一筆從未發放的點數（「獲得 1,500 點」）。
+       * 訂閱買到的是額度視窗，額度不是點數。
+       */
+      credits: 0,
       paymentMethodId,
       title: `iSunFA Team Subscription - ${planId} (${billingInterval}) x${Math.max(1, seats)}`,
       planId,

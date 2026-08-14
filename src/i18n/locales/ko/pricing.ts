@@ -241,8 +241,11 @@ export const pricing = {
       use_saved_card: "기존 카드 사용",
       bind_new_card: "새 카드 등록",
       agree_tos: "서비스 약관 및 환불 정책에 동의합니다",
-      subscription_reset_note:
-        "포인트 유효 기간은 30일이며, 기간 내에 사용해야 합니다.",
+      // Info: (20260814 - Luphia) 訂閱買到的是額度視窗，不是錢包點數（設計書 §7 履行只寫 TeamSubscription）
+      subscription_quota_note:
+        "구독 기간에는 플랜 한도를 사용합니다. 한도는 5시간마다, 그리고 매주 초기화되며 이월되거나 크레딧으로 전환되지 않습니다.",
+      subscription_activated:
+        "플랜이 활성화되었습니다. 팀 한도가 즉시 적용됩니다.",
       selected_modules: "선택된 모듈",
       track_order_btn: "주문 추적",
     },

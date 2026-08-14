@@ -106,7 +106,8 @@ async function renewOne(
     type: ORDER_TYPE.BILLING_SUBSCRIBE,
     amount,
     unit: CURRENCY_UNIT.TWD,
-    credits: SUBSCRIPTION_PLAN_CREDITS[planId],
+    // Info: (20260814 - Luphia) 續訂同樣不發點數（見 changeTeamSubscription 的說明）
+    credits: 0,
     paymentMethodId: paymentMethod.id,
     title: `iSunFA Team Subscription Renewal - ${planId} (${billingInterval})`,
     planId,
@@ -132,7 +133,7 @@ async function renewOne(
     paymentMethodId: paymentMethod.id,
     // Info: (20260807 - Luphia) IOenOrderData.amount 為字串（金額以字串傳輸避免浮點誤差）
     amount: String(amount),
-    credits: SUBSCRIPTION_PLAN_CREDITS[planId],
+    credits: 0,
   };
 
   // Info: (20260814 - Luphia) 扣款流程與席次補收共用（team_billing.service），兩邊不各長一套
