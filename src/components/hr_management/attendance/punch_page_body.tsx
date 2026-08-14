@@ -243,7 +243,7 @@ const PunchPageBody: FC = () => {
           {/* Info: (20260814 - Julian) 伺服器時間 */}
           {serverClock && (
             <div className="shrink-0 py-2 text-center lg:py-0 lg:text-right">
-              <p className="font-mono text-base leading-none font-semibold text-gray-800 tabular-nums lg:text-xl">
+              <p className="font-mono text-lg leading-none font-semibold text-gray-800 tabular-nums lg:text-xl">
                 {serverClock}
               </p>
             </div>

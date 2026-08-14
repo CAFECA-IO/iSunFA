@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useCallback, useEffect, useMemo, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import ScheduleCellEditor from "@/components/hr_management/attendance/schedule_cell_editor";
 import ScheduleGrid from "@/components/hr_management/attendance/schedule_grid";
@@ -66,7 +66,19 @@ const SchedulePageBody: FC = () => {
   const [departmentId, setDepartmentId] = useState<string>(HR_FILTER_ALL);
   const [selected, setSelected] = useState<ISelectedCell | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const editorRef = useRef<HTMLDivElement | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  /**
+   * Info: (20260814 - Julian) 選了格子就把編輯面板捲進視野。
+   *
+   * 面板接在方格圖下方，而方格圖有 21 欄、十幾列 —— 點中間那一格時面板在畫面外，
+   * 使用者看到的是「按了沒反應」。格子上的橘框在方格圖裡，也一樣看不到。
+   */
+  useEffect(() => {
+    if (!selected) return;
+    editorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [selected]);
 
   const load = useCallback(
     async (month: string) => {
@@ -222,11 +234,14 @@ const SchedulePageBody: FC = () => {
           </select>
 
           {/* Info: (20260813 - Julian) 圖例：格子上只有簡稱，全名靠這裡對照 */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-500">
+          <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2 text-[8px] text-gray-500 lg:flex lg:flex-wrap">
             {patterns.map((pattern) => (
-              <span key={pattern.id} className="flex items-center gap-1.5">
+              <span
+                key={pattern.id}
+                className="flex items-center gap-1.5 whitespace-nowrap"
+              >
                 <span
-                  className={`flex size-5 items-center justify-center rounded font-medium ${shiftStyles.get(pattern.id)}`}
+                  className={`flex size-5 shrink-0 items-center justify-center rounded text-[8px] font-medium ${shiftStyles.get(pattern.id)}`}
                 >
                   {shiftLabels.get(pattern.id)}
                 </span>
@@ -298,16 +313,18 @@ const SchedulePageBody: FC = () => {
         )}
 
         {selected && (
-          <ScheduleCellEditor
-            row={selected.row}
-            cell={selected.cell}
-            patterns={patterns}
-            shiftStyles={shiftStyles}
-            isSaving={isSaving}
-            error={saveError}
-            onApply={applyUpdate}
-            onClose={() => setSelected(null)}
-          />
+          <div ref={editorRef}>
+            <ScheduleCellEditor
+              row={selected.row}
+              cell={selected.cell}
+              patterns={patterns}
+              shiftStyles={shiftStyles}
+              isSaving={isSaving}
+              error={saveError}
+              onApply={applyUpdate}
+              onClose={() => setSelected(null)}
+            />
+          </div>
         )}
       </div>
     </div>
