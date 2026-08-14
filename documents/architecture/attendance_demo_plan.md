@@ -419,6 +419,34 @@ Seed 刻意不產生上台兩位的今日打卡。演示開始時他們**已經�
 | 7     | `AttendanceDailyResult` / `AttendancePresence` 落地 + 勾稽 | **在資料量還小的時候補，是最便宜的時機**                                                                                                                                                                                                                                                                             |
 | 8     | 限流、`EMERGENCY_ROSTER` 權限                              | 點名匯出的 `AuditLog` 已實作，缺的是權限與限流                                                                                                                                                                                                                                                                       |
 
+### 7.4 提案（尚未採納）：Repository 的 unit-of-work 例外
+
+> **狀態：提案，未寫入 `coding_guidelines.md`。** 需 Tzuhan（該文件作者）與 Julian 決定是否採納。
+> 在採納之前，`leave.repo.resolveRecall` 是一個**有意識的規範偏離**，理由記在此處與該方法的註解裡。
+
+**問題**：`resolveRecall` 把「同意銷假要一次改哪三張表」整段放進 repository，
+與 CLAUDE.md §1 / coding_guidelines §1「Repository 不處理業務邏輯」字面衝突。
+
+**為什麼不改程式碼**：原子性只有 DB 給得起。把 `$transaction` 拉到 service，
+會違反優先度更高的「只有 Repository 能碰 Prisma」——用一條規則的違反換另一條，而且換到更嚴重的那一條。
+
+**提案條文**（若採納，補在 coding_guidelines §1 Repository 的「禁忌」之後）：
+
+> **例外 —— 跨聚合的原子寫入 (Unit of Work)**：當一次操作必須同時改動多張表、
+> 且「只改成功一半」會產生無法自我修復的不一致時，該筆交易連同它保證的不變式**由 Repository 承載**。
+> 這類方法必須滿足三個條件，否則就是把業務邏輯藏進 Repo：
+>
+> 1. **以領域動詞命名**（`resolveRecall`、`transferStock`），不得叫 `updateXxx`；
+> 2. **檔頭或方法註解逐條列出它保證的不變式**，說明少了哪一步會壞成什麼樣子；
+> 3. **不做選擇性判斷**——「該不該做」仍屬 Service，Repo 只負責「要做就一起做完」。
+>
+> 判準：拿掉交易之後，是否存在一個中間狀態會讓資料**永久**說謊？
+> 是 → 屬於這個例外；否 → 仍應拆回 Service 逐步呼叫。
+
+**採納前要先確認的事**：全 repo 現有 22 處 `$transaction`（`team_wallet`、`payment`、`coupon` 等），
+本次只檢查了 `leave.repo` 一處。條文一旦入規範，那 21 處要嘛符合、要嘛各自需要說明，
+**否則規範上路第一天就有 21 個既有違例**——那會讓這條規則從一開始就沒有約束力。
+
 ---
 
 ## 🆕 8. 追加需求：現場名單全開放 + 銷假（W12–W16）
