@@ -24,6 +24,7 @@ import {
 } from "@/lib/pdf_text_layer";
 import { PdfTextLayerDecisionEnum } from "@/constants/pdf_text_layer";
 import { ensureTableDivider } from "@/lib/utils/markdown_table_divider";
+import { joinWrappedTableRows } from "@/lib/utils/markdown_table_rows";
 import { extractPagesAsPdf } from "@/lib/utils/pdf_page_extract";
 import { CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES } from "@/constants/carbon_chatbot";
 import {
@@ -473,10 +474,24 @@ export class ReportImportService {
     if (input.cacheKey) {
       const cached = sourceDecisionCache.get(input.cacheKey);
       if (cached) {
-        // Info: (20260806 - Tzuhan) 命中也記一行:少了這行就分不清「沒重算」與「沒跑到」
+        /**
+         * Info: (20260806 - Tzuhan) 命中也記一行:少了這行就分不清「沒重算」與「沒跑到」
+         *
+         * Info: (20260814 - Emily) 同一個判準要往下推一層
+         * (`data/issue_drafts/open/29_source_decision_cache_vision_pages.md`)。
+         *
+         * 影像頁的規劃整段住在未命中的分支裡，命中時不會執行也不會記 log。
+         * 08-14 兩趟匯入一趟活動數據 28/28、一趟 0/0，而只印 fileName 與 cacheKey
+         * 的話兩種解釋都說得通：快取帶著影像頁而模型這次沒抽到，
+         * 或快取是影像頁功能上線前寫進去的舊物件、根本沒有 `visionPages`。
+         *
+         * 所以命中時要把「這次到底送了什麼」印出來，而不只是「命中了」。
+         */
         logger.info("report import source decision (cached)", {
           fileName: input.name,
           cacheKey: input.cacheKey,
+          isText: cached.isText,
+          visionPages: cached.visionPages?.pages ?? null,
         });
         return { ...cached, name: input.name, mimeType: input.mimeType };
       }
@@ -935,7 +950,35 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
          * 排在它之後等於補了也沒用。同理也在 `padTableHeaderToWidest` 之前 ——
          * 表被丟掉的話補欄根本沒機會執行。
          */
-        const repaired = candidates.map((table) => {
+        /**
+         * Info: (20260814 - Emily) 先把被折斷的列接回一行
+         * (`data/issue_drafts/open/28_source_table_cell_newline.md`)。
+         *
+         * 模型會把一格的內容折成多行輸出（原文那幾張表的表頭是窄欄多行排版），
+         * 於是一列佔了三四行、每一行都不是完整的 `| ... |`。2026-08-14 的匯入實測，
+         * 表4.4／4.5／4.8 就是這樣整張消失的，其中表4.8 的 `lineCount` 是 1017。
+         *
+         * **必須排在 `ensureTableDivider` 之前**：補分隔列的判準是「連續多列欄數一致」，
+         * 而一列被切成三行之後每一行的 `|` 數量都不一樣，那個判準對它不成立。
+         * 順序是：接回列的邊界 → 補分隔列 → 補欄 → 才裁決。
+         *
+         * ⚠️ 這個缺陷是**偶發**的：同一份原檔、同一個 commit，08-14 一趟丟三張表、
+         * 另一趟零張。所以「重新匯入一次沒有 dropped」不構成驗證通過，
+         * 要連續兩趟才算。
+         */
+        const rejoined = candidates.map((table) => {
+          const fix = joinWrappedTableRows(table.markdown);
+          if (fix.joined === 0) return table;
+          logger.warn("[ReportImportService] source table rows rejoined", {
+            paragraphId,
+            tableNo: table.tableNo,
+            caption: table.caption.slice(0, 40),
+            rows: fix.joined,
+          });
+          return { ...table, markdown: fix.markdown };
+        });
+
+        const repaired = rejoined.map((table) => {
           const fix = ensureTableDivider(table.markdown);
           if (!fix.inserted) return table;
           /*
