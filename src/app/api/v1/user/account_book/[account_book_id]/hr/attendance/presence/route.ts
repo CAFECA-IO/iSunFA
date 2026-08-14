@@ -29,11 +29,18 @@ export async function GET(
     }
 
     const { account_book_id: accountBookId } = await params;
-    await attendanceIdentityService.resolveEmployee(sessionUser, accountBookId);
+    const viewer = await attendanceIdentityService.resolveEmployee(
+      sessionUser,
+      accountBookId,
+    );
 
     return jsonOk(
       // Info: (20260813 - Julian) 「現在」在這一層取一次往下注入；service 不呼叫 new Date()
-      await attendancePresenceService.getSummary(accountBookId, new Date()),
+      await attendancePresenceService.getSummary(
+        accountBookId,
+        new Date(),
+        viewer.id,
+      ),
     );
   } catch (error) {
     if (error instanceof AppError) {

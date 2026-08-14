@@ -315,6 +315,11 @@ export interface IPresenceLocationSummary {
 export interface IPresenceSummary {
   observedAt: string;
   timeZone: string;
+  /**
+   * Info: (20260814 - Julian) 呼叫者是否為部門主管，決定看不看得到地圖與匯出（計畫書 §8.5）。
+   * 未帶呼叫者時一律 false —— 視野分級 fail-closed。
+   */
+  viewerIsSupervisor: boolean;
   /** Info: (20260813 - Julian) 觀測當下的當地日期，未到工以此日的排班認定 */
   workDate: string;
   locations: IPresenceLocationSummary[];

@@ -520,6 +520,16 @@ export const hrManagement = {
     action_submit: "생성 및 통보",
   },
   attendance: {
+    recall_title: "휴가 단축 요청",
+    recall_from:
+      "{{name}}（{{employeeNo}}）님이 {{date}} 에 「{{shift}}」 근무로 출근할 수 있는지 요청했습니다.",
+    recall_reason_label: "긴급한 경영상 필요",
+    recall_notice:
+      "거절할 수 있으며 이유를 설명하지 않아도 됩니다. 동의한 뒤에야 근무일로 바뀌며, 답변하기 전까지는 휴가 그대로입니다.",
+    recall_note_placeholder: "거절 전에 한마디 남기기（선택）",
+    recall_accept: "동의",
+    recall_decline: "거절",
+    recall_error: "답변을 보내지 못했습니다. 잠시 후 다시 시도해 주세요.",
     blocked_out_of_range:
       "{{name}} 에서 {{distance}} m 떨어져 있어 {{radius}} m 기록 범위를 벗어났습니다. 현장에 가까워지면 버튼이 다시 활성화됩니다.",
     confirm_title_in: "출근 기록 확인",
@@ -628,6 +638,26 @@ export const hrManagement = {
     minutes_value: "{{minutes}}분",
   },
   attendance_presence: {
+    stat_leave: "오늘 휴가",
+    stat_leave_hint: "승인된 휴가이며 미출근으로 집계되지 않습니다",
+    leave_title: "오늘 휴가（{{count}}명）",
+    leave_empty: "오늘 휴가자가 없습니다",
+    leave_hint:
+      "인력이 부족할 때 관리자는 이 명단의 직원에게 휴가 단축을 요청할 수 있습니다. 수락 여부는 본인이 결정합니다.",
+    leave_recall_action: "복귀 요청",
+    leave_recall_pending: "응답 대기",
+    recall_title: "휴가 단축 요청",
+    recall_desc:
+      "{{name}}（{{employeeNo}}）님에게 {{date}} 출근이 가능한지 요청합니다.",
+    recall_shift_label: "복귀할 근무 형태",
+    recall_reason_label: "긴급한 경영상 필요",
+    recall_reason_placeholder:
+      "예: 태풍 후 복구 작업, 1공구에 엔지니어 2명 부족",
+    recall_notice:
+      "보내도 근무 일정은 바뀌지 않습니다. 본인이 자신의 기록 페이지에서 동의해야 근무일로 되돌아가며, 거절하면 휴가는 그대로 유지됩니다.",
+    recall_submit: "요청 보내기",
+    recall_cancel: "취소",
+    recall_error: "요청을 보내지 못했습니다. 잠시 후 다시 시도해 주세요.",
     title: "현장 인원과 출근 명단",
     subtitle:
       "기록에서 즉시 산출합니다. 지도에는 현장 범위만 표시하며 개인 위치는 표시하지 않습니다",

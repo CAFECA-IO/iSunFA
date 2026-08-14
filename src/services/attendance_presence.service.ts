@@ -99,10 +99,17 @@ export class AttendancePresenceService {
   public async getSummary(
     accountBookId: string,
     observedAt: Date,
+    viewerEmployeeId?: string,
   ): Promise<IPresenceSummary> {
-    const [scan, locations] = await Promise.all([
+    const [scan, locations, viewerIsSupervisor] = await Promise.all([
       this.scan(accountBookId, observedAt),
       this.locations.findByAccountBook(accountBookId),
+      viewerEmployeeId
+        ? this.employees.isDepartmentManager({
+            accountBookId,
+            employeeId: viewerEmployeeId,
+          })
+        : Promise.resolve(false),
     ]);
 
     const byLocation = new Map<string, { onSite: number; stale: number }>();
@@ -134,6 +141,7 @@ export class AttendancePresenceService {
     return {
       observedAt: observedAt.toISOString(),
       timeZone: this.timeZone,
+      viewerIsSupervisor,
       workDate: scan.workDate,
       locations: summaries,
       onSiteTotal: scan.entries.filter(
