@@ -27,7 +27,8 @@ import {
   monthRange,
   shiftIsoMonth,
 } from "@/lib/utils/attendance_result_view";
-import { ApiError, IEnvelopeLike, request } from "@/lib/utils/request";
+import { errorI18nKeyOf } from "@/lib/utils/attendance_error_message";
+import { IEnvelopeLike, request } from "@/lib/utils/request";
 import {
   IAttendanceDayResult,
   IAttendanceResultMatrix,
@@ -128,9 +129,9 @@ const ResultPageBody: FC = () => {
         setMatrix(response.payload);
       } catch (error) {
         setLoadError(
-          error instanceof ApiError && error.message
-            ? error.message
-            : t("hr_management.attendance_result.error_load"),
+          t(
+            errorI18nKeyOf(error, "hr_management.attendance_result.error_load"),
+          ),
         );
         setMatrix(null);
       } finally {

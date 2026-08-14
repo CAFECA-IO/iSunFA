@@ -695,6 +695,10 @@ export const hrManagement = {
     loading: "読み込み中…",
     error_load: "シフトを読み込めませんでした。しばらくしてお試しください。",
     error_save: "シフトを保存できませんでした。しばらくしてお試しください。",
+    error_save_conflict:
+      "この日は直前に他の担当者が変更しました。再読み込みしてからお試しください。",
+    error_save_invalid_day:
+      "勤務日にはシフトの指定が必要です。休日にはシフトを設定できません。",
     empty: "この部署に今月の従業員はいません",
     saving: "保存中…",
     col_employee: "従業員",
@@ -737,5 +741,15 @@ export const hrManagement = {
     passkey_unavailable:
       "この環境ではパスキーを利用できません。パスキーは HTTPS（または localhost）の安全な接続でのみ動作します。正式なアドレスで開いてください。",
     hint: "ログインする Google アカウントは登録済みの会社メールアドレスである必要があります —— 名簿にない人はこの現場で打刻できません。ログイン後に「従業員情報が見つかりません」と表示される場合は、人事にアドレスをご確認ください。",
+  },
+  // Info: (20260814 - Julian) 休暇種別。`LEAVE_TYPE_I18N_KEY` に対応
+  leave: {
+    type_annual: "年次有給休暇",
+    type_personal: "私用休暇",
+    type_sick: "病気休暇",
+    type_official: "公務休暇",
+    type_marriage: "結婚休暇",
+    type_bereavement: "忌引休暇",
+    type_other: "その他",
   },
 };

@@ -709,6 +709,10 @@ export const hrManagement = {
     loading: "Loading…",
     error_load: "Could not load the schedule. Please try again later.",
     error_save: "Could not save the schedule. Please try again later.",
+    error_save_conflict:
+      "This day was changed by someone else a moment ago. Reload and try again.",
+    error_save_invalid_day:
+      "Work days must have a shift; days off must not have one.",
     empty: "No employee in this department this month",
     saving: "Saving…",
     col_employee: "Employee",
@@ -751,5 +755,15 @@ export const hrManagement = {
     passkey_unavailable:
       "Passkeys are not available here. They only work over a secure connection (HTTPS or localhost) — open this page at the proper address.",
     hint: 'The Google account must be a company address that already has an employee record — someone who is not on the roster cannot punch in at this site. If you see "no employee record is linked" after signing in, ask HR to check the address.',
+  },
+  // Info: (20260814 - Julian) Leave type labels, keyed by `LEAVE_TYPE_I18N_KEY`
+  leave: {
+    type_annual: "Annual leave",
+    type_personal: "Personal leave",
+    type_sick: "Sick leave",
+    type_official: "Official leave",
+    type_marriage: "Marriage leave",
+    type_bereavement: "Bereavement leave",
+    type_other: "Other",
   },
 };

@@ -69,18 +69,6 @@ export const LEAVE_TYPE_I18N_KEY: Record<LeaveType, string> = {
   [LeaveType.OTHER]: "hr_management.leave.type_other",
 };
 
-export const LEAVE_RECALL_STATUS_I18N_KEY: Record<LeaveRecallStatus, string> = {
-  [LeaveRecallStatus.PENDING]: "hr_management.leave.recall_pending",
-  [LeaveRecallStatus.ACCEPTED]: "hr_management.leave.recall_accepted",
-  [LeaveRecallStatus.DECLINED]: "hr_management.leave.recall_declined",
-};
-
-export const LEAVE_RECALL_STATUS_STYLE: Record<LeaveRecallStatus, string> = {
-  [LeaveRecallStatus.PENDING]: "bg-amber-100 text-amber-700",
-  [LeaveRecallStatus.ACCEPTED]: "bg-emerald-100 text-emerald-700",
-  [LeaveRecallStatus.DECLINED]: "bg-gray-200 text-gray-600",
-};
-
 /**
  * Info: (20260813 - Julian) 特別休假的期日由勞工排定（勞基法 §38 III）。目前所有假別銷假皆走同一流程，此集合暫無分歧作用。
  *

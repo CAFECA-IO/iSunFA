@@ -699,6 +699,10 @@ export const hrManagement = {
     loading: "불러오는 중…",
     error_load: "근무 일정을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
     error_save: "근무 일정을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    error_save_conflict:
+      "이 날짜는 방금 다른 사람이 변경했습니다. 새로 고침한 뒤 다시 시도해 주세요.",
+    error_save_invalid_day:
+      "근무일에는 근무 형태를 지정해야 하며, 휴일에는 지정할 수 없습니다.",
     empty: "이 부서에 이번 달 직원이 없습니다",
     saving: "저장 중…",
     col_employee: "직원",
@@ -741,5 +745,15 @@ export const hrManagement = {
     passkey_unavailable:
       "이 환경에서는 패스키를 사용할 수 없습니다. 패스키는 HTTPS（또는 localhost）보안 연결에서만 동작합니다. 정식 주소로 이 페이지를 열어 주세요.",
     hint: "로그인하는 Google 계정은 등록된 회사 이메일이어야 합니다 —— 명단에 없는 사람은 이 현장에서 기록할 수 없습니다. 로그인 후 「직원 정보가 연결되지 않았습니다」가 표시되면 인사팀에 이메일을 확인해 주세요.",
+  },
+  // Info: (20260814 - Julian) 휴가 종류. `LEAVE_TYPE_I18N_KEY`에 대응
+  leave: {
+    type_annual: "연차 휴가",
+    type_personal: "개인 휴가",
+    type_sick: "병가",
+    type_official: "공가",
+    type_marriage: "결혼 휴가",
+    type_bereavement: "경조 휴가",
+    type_other: "기타",
   },
 };
