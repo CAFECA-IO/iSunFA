@@ -30,7 +30,9 @@ import { paymentRepo } from "@/repositories/payment.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { issuePurchasedPointsToMember } from "@/services/member.service";
 import { burn } from "@/services/token.service";
-import { CONTRACT_ADDRESSES } from "@/config/contracts";
+import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
+import { publicClient } from "@/lib/viem_public";
+import { parseEther } from "viem";
 import { logger } from "@/lib/utils/logger";
 
 /**
@@ -303,19 +305,50 @@ export async function manageAllocation(
       throw toApiError(API_ERRORS.TW_ALLOCATION_INSUFFICIENT);
     }
 
+    /**
+     * Info: (20260814 - Luphia) 合約位址未設定就不要往下打：`burn(undefined, ...)` 會在
+     * `getAddress` 內爆掉，然後被包成「分配點數不足」——把設定缺漏講成用戶的餘額問題，
+     * 是最難查的一種錯誤訊息。
+     */
+    if (!CONTRACT_ADDRESSES.CREDIT_POINT) {
+      logger.error("credit point address not configured; cannot revoke", {
+        teamId,
+        targetUserId,
+      });
+      throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
+    }
+
+    /**
+     * Info: (20260814 - Luphia) 先讀成員的鏈上餘額再決定錯誤訊息。
+     *
+     * 沒有這一步，「他已經把點數花掉了」與「RPC 掛了」都會表現成同一個失敗，
+     * 而這兩件事的下一步完全不同（前者無解、後者重試就好）。
+     */
+    const onChainBalance = (await publicClient.readContract({
+      address: CONTRACT_ADDRESSES.CREDIT_POINT,
+      abi: ABIS.CREDIT_POINT,
+      functionName: "balanceOf",
+      args: [target.address as `0x${string}`],
+    })) as bigint;
+    if (onChainBalance < parseEther(amount.toString())) {
+      // Info: (20260814 - Luphia) 成員錢包裡已經不夠——多半是已經用掉了，收不回來
+      throw toApiError(API_ERRORS.TW_ALLOCATION_INSUFFICIENT);
+    }
+
     const burned = await burn(
       CONTRACT_ADDRESSES.CREDIT_POINT,
       target.address,
       Number(amount),
     );
     if (!burned.success) {
+      // Info: (20260814 - Luphia) 餘額夠卻銷毀失敗＝鏈上操作異常，不是用戶的餘額問題
       logger.error("team allocation burn failed", {
         teamId,
         targetUserId,
         amount: amount.toString(),
         message: burned.message,
       });
-      throw toApiError(API_ERRORS.TW_ALLOCATION_INSUFFICIENT);
+      throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
     }
 
     const result = await teamWalletRepo.revoke({

@@ -21,6 +21,7 @@ import { generatePaymentOrder } from "@/services/order.service";
 import { issuePurchasedPointsToMember } from "@/services/member.service";
 import { burn } from "@/services/token.service";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { publicClient } from "@/lib/viem_public";
 import type { Order } from "@/generated";
 
 jest.mock("@/repositories/team.repo", () => ({
@@ -54,6 +55,18 @@ jest.mock("@/services/member.service", () => ({
     message: "ok",
     data: { tx: "0xmint" },
   })),
+}));
+/**
+ * Info: (20260814 - Luphia) 合約位址與鏈上讀取都要替身：CI 沒有
+ * NEXT_PUBLIC_CREDIT_POINT_ADDRESS，真實值是 undefined——這正是 CI 抓到的問題
+ * （斷言收到 undefined 位址）。同時也讓「成員餘額不足」這條分支可被測。
+ */
+jest.mock("@/config/contracts", () => ({
+  CONTRACT_ADDRESSES: { CREDIT_POINT: "0xcreditpoint" },
+  ABIS: { CREDIT_POINT: [] },
+}));
+jest.mock("@/lib/viem_public", () => ({
+  publicClient: { readContract: jest.fn() },
 }));
 jest.mock("@/services/token.service", () => ({
   burn: jest.fn(async () => ({
@@ -238,6 +251,10 @@ describe("manageAllocation", () => {
       message: "ok",
       data: { tx: "0xburn" },
     });
+    // Info: (20260814 - Luphia) 鏈上餘額以 18 位小數計；預設 100 點，足夠收回
+    asMock(publicClient.readContract).mockResolvedValue(
+      BigInt(100) * BigInt(10) ** BigInt(18),
+    );
   });
 
   /**
@@ -312,7 +329,7 @@ describe("manageAllocation", () => {
       direction: ALLOCATION_DIRECTION.REVOKE,
     });
 
-    expect(burn).toHaveBeenCalledWith(expect.anything(), "0xmember", 50);
+    expect(burn).toHaveBeenCalledWith("0xcreditpoint", "0xmember", 50);
     expect(teamWalletRepo.revoke).toHaveBeenCalledWith(
       expect.objectContaining({ txHash: "0xburn" }),
     );
@@ -341,6 +358,43 @@ describe("manageAllocation", () => {
     ).rejects.toMatchObject({ code: "TW000002" });
 
     expect(burn).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260814 - Luphia) 成員已經把點數用掉時，收回必須明說收不回來，
+   * 而不是回一個看起來像系統故障的錯誤。餘額檢查在銷毀之前，因此不會白打一次鏈上交易。
+   */
+  it("reports insufficiency when the member has already spent the points", async () => {
+    asMock(publicClient.readContract).mockResolvedValue(BigInt(0));
+
+    await expect(
+      manageAllocation({
+        teamId: "team-1",
+        operatorUserId: "user-admin",
+        targetUserId: "user-2",
+        amount: BigInt(50),
+        direction: ALLOCATION_DIRECTION.REVOKE,
+      }),
+    ).rejects.toMatchObject({ code: "TW000002" });
+
+    expect(burn).not.toHaveBeenCalled();
+  });
+
+  // Info: (20260814 - Luphia) 鏈上操作失敗＝系統異常（TW000009），不是用戶的餘額問題
+  it("reports an operation failure when the burn itself fails", async () => {
+    asMock(burn).mockResolvedValue({ success: false, message: "rpc down" });
+
+    await expect(
+      manageAllocation({
+        teamId: "team-1",
+        operatorUserId: "user-admin",
+        targetUserId: "user-2",
+        amount: BigInt(50),
+        direction: ALLOCATION_DIRECTION.REVOKE,
+      }),
+    ).rejects.toMatchObject({ code: "TW000009" });
+
+    expect(teamWalletRepo.revoke).not.toHaveBeenCalled();
   });
 
   it("fails fast on non-positive amounts", async () => {
