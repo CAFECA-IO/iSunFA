@@ -12,6 +12,7 @@ import {
 import { X, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth_context";
 import LegalModal from "@/components/common/legal_modal";
 import { MoneyUtil } from "@/lib/utils/money";
@@ -69,6 +70,7 @@ export default function PaymentModal({
   purchaseBlockingMessage = null,
 }: IPaymentModalProps) {
   const { t } = useTranslation();
+  const router = useRouter();
   const { user, refreshAuth, loading: authLoading, sessionExpired } = useAuth();
 
   const [loading, setLoading] = useState(false);
@@ -1375,8 +1377,8 @@ export default function PaymentModal({
                                   type="button"
                                   className="inline-flex w-full justify-center rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:from-orange-500 hover:to-orange-400 hover:shadow-lg sm:w-auto"
                                   onClick={() => {
-                                    window.location.href =
-                                      "/user/billing?tab=orders";
+                                    // Info: (20260814 - Luphia) 站內跳頁走 router，不必整頁重載
+                                    router.push("/user/billing?tab=orders");
                                     handleClose();
                                   }}
                                 >
