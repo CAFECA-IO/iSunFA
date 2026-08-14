@@ -109,7 +109,14 @@ async function renewOne(
     title: `iSunFA Team Subscription Renewal - ${planId} (${billingInterval})`,
     planId,
     billingInterval,
-    data: { teamId: sub.teamId, planId, billingInterval, renewal: true },
+    /**
+     * Info: (20260814 - Luphia) teamId 必須是頂層欄位：generatePaymentOrder 會把
+     * params.data 沉一層到 order.data.data，而履行端讀的是 order.data.teamId。
+     * 續訂雖然由本函式自行套用方案（不靠訂單欄位），但 webhook 若在完成前先到，
+     * 讀不到 teamId 就會把這張單標記為「已扣款未履行」。
+     */
+    teamId: sub.teamId,
+    data: { renewal: true },
   });
   const orderData = {
     teamId: sub.teamId,

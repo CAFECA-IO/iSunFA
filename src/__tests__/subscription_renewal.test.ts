@@ -99,7 +99,9 @@ describe("processSubscriptionRenewals", () => {
       "user-owner",
       expect.objectContaining({
         amount: 840,
-        data: expect.objectContaining({ teamId: "team-1", renewal: true }),
+        // Info: (20260814 - Luphia) teamId 必須在頂層，履行端才讀得到（見 team_order_payload 測試）
+        teamId: "team-1",
+        data: expect.objectContaining({ renewal: true }),
       }),
     );
     expect(paymentRepo.completePaymentTransactionAndOrder).toHaveBeenCalled();
