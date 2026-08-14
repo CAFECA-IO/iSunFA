@@ -7,6 +7,7 @@ import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
 import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
 import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
 import { padAllTableHeaders } from "@/lib/utils/markdown_table_columns";
+import { stripLeadingDocumentTitle } from "@/lib/utils/carbon_report_title";
 import {
   CARBON_PDF_CHART_MAX_HEIGHT_MM,
   CARBON_PDF_FONT_STACK,
@@ -79,21 +80,9 @@ const parseRow = (row: string): IParsedCell[] => {
 /**
  * Info: (20260810 - Emily) 只有第一格有內容的列 = 原文的類別分隔列
  * (「類別二:輸入能源的間接溫室氣體排放量」橫跨整張表的那一條)。
- *
- * Info: (20260813 - Emily) 只認資料列(`td`)—— 表頭列永遠不是分隔列。
- *
- * 少了這一條,`padAllTableHeaders` 補完欄的表頭會落進這個形狀:原文的父標題
- * 橫跨整張表時表頭只有一格(`| 溫室氣體排放量 |`),補到資料列的欄數之後
- * 就變成「第一格有內容、其餘皆空」,於是整個 `<thead>` 被改寫成
- * `<tr class="group"><td colspan="N">` —— 那張表**一個 `<th>` 都不剩**。
- *
- * 文字還看得見,所以它不是內容遺失;但一份要送第三方查證的文件,表格沒有表頭列
- * 對輔助技術與任何依賴 `th` 的處理都等於沒有標頭,而 `tr.group td` 的置中灰底
- * 本來是設計給表身的分類分隔列,套到表頭上也不是它的用途。
  */
 export const isGroupRow = (cells: readonly IParsedCell[]): boolean =>
   cells.length > 1 &&
-  cells.every((cell) => cell.tag === "td") &&
   cells[0].text !== "" &&
   cells.slice(1).every((cell) => cell.text === "");
 
@@ -598,9 +587,21 @@ export const buildCarbonReportHtml = (
    * 既有草稿是在轉義加入之前組成的,內容裡的乘號還是裸的;重新產生一份 46 頁的報告很貴,
    * 所以讀取端也擋一次 —— 函式是冪等的,重複套用無害。
    */
-  const source = stripHtmlLineBreaksOutsideFences(
-    stripMarkdownComments(markdown),
-  );
+  /**
+   * Info: (20260812 - Emily) 順帶剝掉開頭那行文件級 H1
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * 報告名稱已經改走 `shell.title`（文件外殼）。既有草稿的第一行還烤著
+   * `# <會話名>` —— 不剝的話同一份文件的第一頁會出現兩個名稱，
+   * 一個在外殼、一個在內文，而內文那個是舊的。
+   *
+   * 排在 `stripMarkdownComments` 之後：內容前面若有 HTML 註解，
+   * 剝除只看「第一個非空行」，會被那行註解擋住而漏剝。
+   * 預覽端由 `MarkdownContent` 的 `stripDocumentTitle` 做同一件事。
+   */
+  const source = stripLeadingDocumentTitle(
+    stripHtmlLineBreaksOutsideFences(stripMarkdownComments(markdown)),
+  ).body;
   /**
    * Info: (20260811 - Emily) 既有草稿裡的 mermaid timeline 在此轉成表格。
    * 產表端已改成直接輸出表格,但既有草稿的 markdown 裡存著改動前產生的 timeline 區塊,

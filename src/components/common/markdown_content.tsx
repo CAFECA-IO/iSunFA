@@ -21,6 +21,7 @@ import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
 import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
 import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
 import { padAllTableHeaders } from "@/lib/utils/markdown_table_columns";
+import { stripLeadingDocumentTitle } from "@/lib/utils/carbon_report_title";
 
 // Info: (20260720 - Tzuhan) #54 證據鏈元件動態載入:含 RecordTabModal 依賴鏈,不拖累一般 markdown 渲染
 const EvidenceChain = dynamic(
@@ -113,6 +114,14 @@ interface IMarkdownContentProps {
    * 那些內容的斷行慣例未經量測。碳報告的原文行結構有量過(見
    * markdown_line_structure 的說明),其他使用端沒有,不該替它們決定。
    */
+  /**
+   * Info: (20260812 - Emily) 剝掉內容開頭那行文件級 H1（碳盤查報告專用）。
+   *
+   * 既有草稿的第一行是 `# <會話名>`（使用者第一則訊息截斷 24 字），
+   * 而報告名稱已經改走文件外殼。**不動儲存的內容**，只在渲染時拿掉那一行 ——
+   * 與 timeline、私有區符號同一層的讀取端補救。
+   */
+  stripDocumentTitle?: boolean;
   restoreSourceLineBreaks?: boolean;
   theme?: "dark" | "light";
   variant?: MarkdownContentVariant;
@@ -121,6 +130,7 @@ interface IMarkdownContentProps {
 
 const MarkdownContent: FC<IMarkdownContentProps> = ({
   content,
+  stripDocumentTitle = false,
   restoreSourceLineBreaks = false,
   theme = "dark",
   variant = "document",
@@ -213,10 +223,18 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
        * 匯入端只影響新匯入的報告 —— 既有草稿的表頭已經是窄的,
        * 那 261 個被 GFM 丟掉的儲存格要在讀取時補才救得回來。
        */
+      /*
+       * Info: (20260812 - Emily) 先剝文件級 H1，再跑其餘轉換 ——
+       * 剝除只看「第一個非空行是不是單一個 #」，放在前面才不會被其他轉換
+       * 插進來的內容擋住第一行。
+       */
+      const titled = stripDocumentTitle
+        ? stripLeadingDocumentTitle(content).body
+        : content;
       const normalized = padAllTableHeaders(
         convertTimelineBlocksToTables(
           replaceOfficeSymbolChars(
-            stripHtmlLineBreaksOutsideFences(stripMarkdownComments(content)),
+            stripHtmlLineBreaksOutsideFences(stripMarkdownComments(titled)),
           ),
         ),
       );
@@ -225,7 +243,7 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
         : normalized;
       return escapeArithmeticEmphasis(structured);
     },
-    [content, restoreSourceLineBreaks],
+    [content, restoreSourceLineBreaks, stripDocumentTitle],
   );
 
   const components = useMemo(
