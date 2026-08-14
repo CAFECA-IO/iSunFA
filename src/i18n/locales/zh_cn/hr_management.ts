@@ -565,6 +565,8 @@ export const hrManagement = {
     summary_out: "下班",
     summary_none: "今日尚无打卡记录",
     error_load: "无法载入出勤数据，请稍后再试",
+    error_no_employee:
+      "这个账号还没有对应到员工档，因此看不到出勤数据。请联系人事确认建档的公司邮箱。",
     error_punch: "打卡失败，请稍后再试",
   },
   attendance_result: {
@@ -611,6 +613,11 @@ export const hrManagement = {
     day_type_rest_day: "休息日",
     day_type_holiday: "法定假日",
     day_type_leave: "请假",
+    day_type_short_work: "上",
+    day_type_short_regular_off: "例",
+    day_type_short_rest_day: "休",
+    day_type_short_holiday: "法",
+    day_type_short_leave: "假",
     phase_upcoming: "尚未开始",
     phase_in_progress: "进行中",
     phase_concluded: "已结束",

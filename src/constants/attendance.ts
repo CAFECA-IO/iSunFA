@@ -263,6 +263,24 @@ export const ATTENDANCE_EXCEPTION_I18N_KEY: Record<
 export const ATTENDANCE_FILTER_EXCEPTION_ONLY = "__EXCEPTION_ONLY__";
 
 // Info: (20260813 - Julian) 排班日型別的顯示文案，出勤總覽與排班月曆共用
+/**
+ * Info: (20260814 - Julian) 月曆格子用的一字縮寫。**不可從完整名稱取首字**——
+ * 那是同一種錯的第二次：韓文的「휴무일」（休息日）與「휴가」（請假）首字都是「휴」，
+ * 兩種日型別會在格子上長得一模一樣，而畫面看起來完全正常。
+ * 縮寫是每個語系各自的取捨，不是能從全名推導出來的東西（同班別簡稱的處置）。
+ * 五語系各自互不相同由 `attendance_i18n_keys.test.ts` 保證。
+ */
+export const WORK_DAY_TYPE_SHORT_I18N_KEY: Record<WorkDayType, string> = {
+  [WorkDayType.WORK]: "hr_management.attendance_result.day_type_short_work",
+  [WorkDayType.REGULAR_OFF]:
+    "hr_management.attendance_result.day_type_short_regular_off",
+  [WorkDayType.REST_DAY]:
+    "hr_management.attendance_result.day_type_short_rest_day",
+  [WorkDayType.HOLIDAY]:
+    "hr_management.attendance_result.day_type_short_holiday",
+  [WorkDayType.LEAVE]: "hr_management.attendance_result.day_type_short_leave",
+};
+
 export const WORK_DAY_TYPE_I18N_KEY: Record<WorkDayType, string> = {
   [WorkDayType.WORK]: "hr_management.attendance_result.day_type_work",
   [WorkDayType.REGULAR_OFF]:

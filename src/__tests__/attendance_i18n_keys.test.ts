@@ -4,6 +4,10 @@ import { hrManagement as ja } from "@/i18n/locales/ja/hr_management";
 import { hrManagement as ko } from "@/i18n/locales/ko/hr_management";
 import { hrManagement as zhCn } from "@/i18n/locales/zh_cn/hr_management";
 import { hrManagement as zhTw } from "@/i18n/locales/zh_tw/hr_management";
+import {
+  WorkDayType,
+  WORK_DAY_TYPE_SHORT_I18N_KEY,
+} from "@/constants/attendance";
 import { LEAVE_TYPE_I18N_KEY, LeaveType } from "@/constants/leave";
 
 /**
@@ -56,5 +60,24 @@ describe("簽到功能引用的 i18n 路徑", () => {
       .filter((path) => !path.startsWith("hr_management."));
 
     expect(strays).toEqual([]);
+  });
+});
+
+/**
+ * Info: (20260814 - Julian) 月曆格子的一字縮寫在每個語系內必須互不相同。
+ *
+ * 原本是 `t(完整名稱).slice(0, 1)` —— 韓文的「휴무일」（休息日）與「휴가」（請假）
+ * 首字都是「휴」，兩種日型別在格子上長得一模一樣，而畫面看起來完全正常。
+ * 與班別簡稱是同一種錯：**能從全名推導**與**推導得出唯一值**是兩件事。
+ */
+describe("排班月曆的日型別縮寫", () => {
+  it.each(Object.keys(DICTIONARIES))("%s 的五種日型別縮寫互不相同", (lang) => {
+    const dictionary = DICTIONARIES[lang];
+    const labels = Object.values(WorkDayType).map((dayType) =>
+      resolve(dictionary, WORK_DAY_TYPE_SHORT_I18N_KEY[dayType]),
+    );
+
+    expect(labels.every((label) => typeof label === "string")).toBe(true);
+    expect(new Set(labels).size).toBe(labels.length);
   });
 });

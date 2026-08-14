@@ -565,6 +565,8 @@ export const hrManagement = {
     summary_out: "下班",
     summary_none: "今日尚無打卡紀錄",
     error_load: "無法載入出勤資料，請稍後再試",
+    error_no_employee:
+      "這個帳號還沒有對應到員工檔，因此看不到出勤資料。請聯繫人事確認建檔的公司信箱。",
     error_punch: "打卡失敗，請稍後再試",
   },
   attendance_result: {
@@ -611,6 +613,11 @@ export const hrManagement = {
     day_type_rest_day: "休息日",
     day_type_holiday: "國定假日",
     day_type_leave: "請假",
+    day_type_short_work: "上",
+    day_type_short_regular_off: "例",
+    day_type_short_rest_day: "休",
+    day_type_short_holiday: "國",
+    day_type_short_leave: "假",
     phase_upcoming: "尚未開始",
     phase_in_progress: "進行中",
     phase_concluded: "已結束",

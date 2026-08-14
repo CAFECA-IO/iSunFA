@@ -575,6 +575,8 @@ export const hrManagement = {
     summary_none: "本日の打刻記録はありません",
     error_load:
       "勤怠データを読み込めませんでした。しばらくしてお試しください。",
+    error_no_employee:
+      "このアカウントはまだ従業員情報と紐づいていないため、勤怠を表示できません。人事に登録済みの会社メールアドレスをご確認ください。",
     error_punch: "打刻に失敗しました。しばらくしてお試しください。",
   },
   attendance_result: {
@@ -621,6 +623,11 @@ export const hrManagement = {
     day_type_rest_day: "所定休日",
     day_type_holiday: "祝日",
     day_type_leave: "休暇",
+    day_type_short_work: "勤",
+    day_type_short_regular_off: "法",
+    day_type_short_rest_day: "所",
+    day_type_short_holiday: "祝",
+    day_type_short_leave: "休",
     phase_upcoming: "未開始",
     phase_in_progress: "進行中",
     phase_concluded: "終了",

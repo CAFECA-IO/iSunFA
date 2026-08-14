@@ -65,7 +65,25 @@ describe("maplibre-gl 版本護欄", () => {
       "utf8",
     );
 
-    expect(config).toContain('dependency-name: "maplibre-gl"');
-    expect(config).toContain("version-update:semver-major");
+    /**
+     * Info: (20260814 - Julian) 取出 maplibre-gl 那一條的內容再比對，不做兩次獨立的子字串比對 ——
+     * 後者只要檔案裡「任何一處」有 `maplibre-gl`、「另外任何一處」有
+     * `version-update:semver-major` 就通過，即使那條 ignore 掛在別的套件上。
+     * 而這支測試的存在理由正是「規則在、但沒擋住」。
+     *
+     * 手工切段而不用 yaml 套件：它只是傳遞相依，不在 `package.json` 裡 ——
+     * 讓守門測試依賴一個沒人宣告的套件，是把新的碎裂點加進防碎裂的機制本身。
+     */
+    const entries = config
+      .split(/^\s*-\s+dependency-name:/m)
+      .slice(1)
+      .map((chunk) => `dependency-name:${chunk}`);
+
+    const maplibre = entries.find((entry) =>
+      /^dependency-name:\s*"?maplibre-gl"?\s*$/m.test(entry.split("\n")[0]),
+    );
+
+    expect(maplibre).toBeDefined();
+    expect(maplibre).toContain("version-update:semver-major");
   });
 });

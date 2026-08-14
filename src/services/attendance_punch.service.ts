@@ -147,8 +147,9 @@ export class AttendancePunchService {
       piiKeyVersion: latitude.keyVersion,
     });
 
+    // Info: (20260814 - Julian) 同樣不寫距離（見 assertInsideFence 的說明）：工區是公司地點，距離是個人位置
     logger.info(
-      `[attendance] ${employee.employeeNo} ${request.punchType} at ${match.location.name} (${match.distanceMeters}m), workDate=${workDate}, minute=${minuteOfDay}`,
+      `[attendance] ${employee.employeeNo} ${request.punchType} at ${match.location.name}, workDate=${workDate}, minute=${minuteOfDay}`,
     );
 
     return this.buildTodayStatus(employee, workDate);
@@ -196,8 +197,18 @@ export class AttendancePunchService {
     const withinAccuracyMargin =
       nearest.distanceMeters - margin <= nearest.location.radiusMeters;
 
+    /**
+     * Info: (20260814 - Julian) 日誌**不寫距離**。座標雖然加密入庫，但「某工號某時刻
+     * 在某工區外 340 公尺」是等效的位置資訊（一個圓），累積起來就是行蹤 ——
+     * 而應用日誌不在 ADR 018 §3 的防護矩陣涵蓋範圍內。
+     * 這裡只留「哪個工區、是不是誤差範圍內」，夠診斷、不構成軌跡。
+     * 使用者本人仍會在 403 的 payload 裡拿到精確距離（那是他自己的資料）。
+     *
+     * ToDo: (20260814 - Julian) 日誌的個資紅線目前只靠註解。ADR 018 應補一節
+     * 「哪些推導值等同個資、不得寫進日誌」，並納入防護矩陣。
+     */
     logger.warn(
-      `[attendance] ${employee.employeeNo} punched ${nearest.distanceMeters}m from ${nearest.location.name} (radius ${nearest.location.radiusMeters}m, accuracy ${margin}m) — rejected${withinAccuracyMargin ? " (within accuracy margin)" : ""}`,
+      `[attendance] ${employee.employeeNo} punch rejected at ${nearest.location.name}${withinAccuracyMargin ? " (within accuracy margin)" : ""}`,
     );
     throw new OutOfFenceError({
       nearestLocationName: nearest.location.name,
