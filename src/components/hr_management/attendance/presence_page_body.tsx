@@ -54,7 +54,7 @@ const StatCard: FC<{
   hint: string;
   tone: string;
 }> = ({ label, value, hint, tone }) => (
-  <div className="flex-1 rounded-2xl bg-white p-5 ring-1 ring-gray-200">
+  <div className="flex-1 rounded-2xl bg-white p-3 ring-1 ring-gray-200 lg:p-5">
     <div className="text-sm text-gray-500">{label}</div>
     <div
       className={`mt-2 inline-flex items-baseline rounded-lg px-3 py-1 text-3xl font-semibold tabular-nums ${tone}`}
@@ -174,7 +174,7 @@ const PresencePageBody: FC = () => {
         </div>
 
         {/* Info: (20260813 - Julian) 三個數字回答三個不同的問題，缺一個就會暗示系統其實不知道的事 */}
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
           <StatCard
             label={t("hr_management.attendance_presence.stat_on_site")}
             value={feed.summary?.onSiteTotal ?? 0}
