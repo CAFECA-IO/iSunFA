@@ -1,4 +1,5 @@
 import { getAdminCommissionOrdersPaginated } from "@/services/order.service";
+import { parsePositiveInt } from "@/lib/utils/pagination";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { MANAGEMENT_TYPE, ManagementType } from "@/constants/status";
@@ -8,8 +9,13 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const managementType = (searchParams.get("managementType") ||
       MANAGEMENT_TYPE.ALL) as ManagementType;
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "15", 10);
+    const page = parsePositiveInt(searchParams.get("page"), {
+      fallback: 1,
+    });
+    const limit = parsePositiveInt(searchParams.get("limit"), {
+      fallback: 15,
+      max: 100,
+    });
     const search = searchParams.get("search") || "";
     const type = searchParams.get("type") || MANAGEMENT_TYPE.ALL;
     const executionStatus =

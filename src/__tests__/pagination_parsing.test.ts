@@ -1,4 +1,6 @@
 import { describe, it, expect } from "@jest/globals";
+import { readFileSync, readdirSync } from "fs";
+import { join } from "path";
 import { parsePositiveInt } from "@/lib/utils/pagination";
 
 /**
@@ -45,5 +47,37 @@ describe("parsePositiveInt", () => {
     expect(
       parsePositiveInt("99999999999999999999", { fallback: 20, max: 100 }),
     ).toBe(20);
+  });
+});
+
+/**
+ * Info: (20260815 - Luphia) 後台端點不得再手寫 `parseInt(searchParams.get(...))`
+ * 解析分頁（PR #6652 第二輪 C-8）。
+ *
+ * 這個形狀在後台重複了九次，每一次都帶著同一個陷阱：非數字 → NaN → `take: NaN`
+ * → Prisma 500。一支一支修完之後，需要有東西擋住第十次——否則下一個複製貼上的人
+ * 會把它種回來。
+ */
+describe("admin endpoints parse pagination through the shared helper", () => {
+  const ADMIN_API = join(process.cwd(), "src", "app", "api", "v1", "admin");
+
+  function collectRouteFiles(dir: string): string[] {
+    return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) return collectRouteFiles(full);
+      return entry.name === "route.ts" ? [full] : [];
+    });
+  }
+
+  it("has no hand-rolled query-string integer parsing left", () => {
+    const offenders = collectRouteFiles(ADMIN_API)
+      .filter((file) =>
+        /parseInt\(\s*(searchParams|req|request)/.test(
+          readFileSync(file, "utf8"),
+        ),
+      )
+      .map((file) => file.slice(process.cwd().length + 1));
+
+    expect(offenders).toEqual([]);
   });
 });
