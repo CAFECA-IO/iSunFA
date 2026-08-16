@@ -2,8 +2,8 @@
 
 > **Date**: August 2026
 > **Author**: Luphia
-> **Version**: 1.1 (Draft)
-> **Status**: Partially implemented — 產品拍板 2026-08-12；P1–P3 已於 2026-08-14 實作，P4（email 邀請）、P5（席次帳單明細）待排程
+> **Version**: 1.2
+> **Status**: Implemented — 產品拍板 2026-08-12；P1–P3 於 2026-08-14 實作，**P4（email 邀請）於 2026-08-15 實作**；P5（席次帳單明細）待排程
 > **Target**: `src/services/order.service.ts`、`src/services/team_subscription.service.ts`、`src/repositories/team.repo.ts`、`src/app/api/v1/user/team/[team_id]/invitations/`、`src/services/mail.service.ts`（新）
 > **關聯文件**：[團隊錢包與訂閱額度設計書](team_wallet_and_subscription_quota.md)、[費思個人化記憶規範](ai_and_analytics/faith_personal_memory.md)、[ADR 017 簽章式資料庫系統設定](decisions/017_signed_system_settings_in_database.md)
 > **對外文件連動**：服務條款 §3.1 / §3.6、《隱私權政策》§1、訂閱方案頁
@@ -145,6 +145,19 @@ model TeamSeatChange {
 
 ## 5. Email 邀請流程
 
+> **實作對照（2026-08-15）**：本節為規範原文，實作有四處刻意的偏離，均記於此免得日後把偏離當成 bug 修回去。
+>
+> | 規範 | 實作 | 理由 |
+> |---|---|---|
+> | token 用 base64url | 64 字元 hex | 同為 32 bytes 熵；hex 在信件與網址中不會被自動換行或跳脫，也不會出現 `-`/`_` 造成的誤讀 |
+> | `SMTP_FROM_ADDRESS` / `SMTP_FROM_NAME` / `SMTP_SECURE` | `SMTP_FROM`（單一欄，可寫 `名稱 <a@b.c>`）、TLS 模式由連接埠推定（465 → 隱式 TLS） | 三個設定鍵有兩種組合會互相矛盾；由埠推定不會出現「填了 secure 卻連不上」的錯配 |
+> | 寄信失敗保留邀請 + `resend` 端點 | 寄信失敗**刪除邀請**，不另設重寄端點 | 席次現在可重用（見 §7 落差表），刪掉邀請即讓位置空出來，重新邀請同一信箱走同一個冪等鍵、不會二次扣款——`resend` 要處理的情況因此不存在 |
+> | 已登入者 email 與受邀 email 不同時提示確認 | 已登入者一律**手動按下「接受邀請」**才加入，且 API 不回傳受邀 email | 目的（不靜默把不相干的帳號加進團隊）以更少的資訊揭露達成；比對 email 需要把第三人的信箱回給任何持有連結的人 |
+>
+> **未實作**：邀請寄送的 rate limiter bucket（§5.3）。現行的護欄是 OWNER/ADMIN 權限 + 每次邀請的 FIDO2 簽章 + 單期補收上限（`TW000016`），濫用的成本上限已被封住；若日後出現以寄信量為目標的濫用再補。退信（bounce）處理見 §8 開放問題 #6，仍未拍板。
+>
+> **另補**：`DELETE /api/v1/user/team/{team_id}/invitations/{invite_id}` 供 OWNER / ADMIN 撤回尚未接受的邀請。沒有這支，打錯一個字寄出的邀請會佔住一個已付費的席次直到七天後逾期。
+
 ### 5.1 Schema 增量
 
 ```prisma
@@ -241,7 +254,7 @@ model TeamInvitation {
 
 **尚未實作（已知落差）**：
 
-- **邀請被拒或過期不釋出席次**：該席次的補收不退還，但下一次續訂會依實際人數重算，因此最多影響一期。P4 的 token 過期流程會一併處理。
+- ~~**邀請被拒或過期不釋出席次**~~ ——已於 2026-08-15 隨 P4 補齊（產品拍板 20260815）：席次的佔用者改為「成員 + 尚未失效的 PENDING 邀請」（`teamRepo.countPendingInvitations`），`chargeSeatAddition` 只在 `占用數 + 新增數 > 已付席次` 時補收差額，並以 `reusedPaidSeat` 回報。**錢仍然不退**（`subscription.seats` 不減），但空出來的位置可以用於邀請其他人員——「不退費」與「不能再用」是兩件事，後者沒有理由成立。
 - **移除成員不即時減少席次**：同上，續訂時重算。與「剩餘點數不退還」（§6.3）一致，期中不退費。
 - **`TeamSeatChange` 稽核表未建**：目前以 `BILLING_SEAT_ADDITION` 訂單作為席次異動的軌跡；P5 的帳單明細需要更細的紀錄時再補。
 - **資料庫欄位需套用**：本專案無 migrations 目錄（schema 由部署流程套用），`team_subscription` 新增 `seats`、`unit_price` 兩欄需隨部署更新。
@@ -256,7 +269,7 @@ model TeamInvitation {
 | ~~**P1**~~（2026-08-14，部分） | Schema `seats` + 單價快照已完成；`TeamSeatChange` 與邀請 email/token 欄位隨 P4 再補 | 席次可查、可重算；既有 wallet 邀請不受影響 |
 | ~~**P2**~~（2026-08-14） | 訂閱選團隊 + 席次計價 + 金額由 server 計算 | 前端送錯總額不影響實收；付款前揭露 `席次 × 單價` |
 | ~~**P3**~~（2026-08-14） | 比例補收（純函式 + 單測）+ 邀請 fail-closed 順序 | 期末最後一天 / 期間異常 / 零席次的金額皆有測試；扣款失敗不建立邀請 |
-| **P4** | SMTP 設定 + `mail.service` + 邀請信 + `/invite/<token>` 註冊即入團 | 未設定 SMTP 時邀請明確失敗；token 一次性、過期釋出席次；重寄不重複收費 |
+| ~~**P4**~~（2026-08-15） | SMTP 設定 + `mail.service` + 邀請信 + `/invite/<token>` 註冊即入團 | 未設定 SMTP 時邀請明確失敗（TW000018）；token 一次性、過期釋出席次；重新邀請不重複收費（席次沿用） |
 | **P5** | 團隊管理頁席次與帳單明細（誰佔席、何時佔、對應哪筆比例補收） | 管理者可自行核對席次費用，不需客服協助 |
 
 > 與 v0.13.0 的關係：**費思記憶（另一份規範）已定為 v0.13.0 gate**；席次計費與 email 邀請的目標版本尚未拍板，建議至少 P1–P4 同版釋出——只上席次計價而沒有邀請流程，或反之，都會讓「邀請即收費」這條規則落不了地。

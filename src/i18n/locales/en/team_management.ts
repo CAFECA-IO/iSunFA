@@ -7,6 +7,16 @@ export const teamManagement = {
   accepting: "Accepting...",
   no_teams: "No teams available.",
   invite_member: "Invite Member",
+  revoke_invite: "Withdraw",
+  revoke_invite_hint:
+    "Withdraw this pending invitation. The seat fee already charged is not refunded, but the freed seat can be used to invite someone else.",
+  // Info: (20260815 - Luphia) email 邀請（規範 §4 / P4）
+  invite_method: "Invitation method",
+  invite_by_address: "Wallet address",
+  invite_by_email: "Email",
+  email_address: "Email address",
+  invite_email_hint:
+    "We will send an invitation email containing a join link. The link is single-use and valid for 7 days.",
   you: "You",
   pending_invite: "Pending Invite",
   pending: "PENDING",
@@ -45,6 +55,12 @@ export const teamManagement = {
     error_remove: "Failed to remove member",
     invalid_address:
       "Invalid Web3 address. It should start with 0x and be 42 characters long.",
+    invalid_email: "That email address is not valid.",
+    invite_email_sent: "Invitation email sent!",
+    seat_reused: "An already-paid seat was reused; you were not charged again.",
+    revoke_success:
+      "Invitation withdrawn. The seat is now available for another invitation.",
+    error_revoke: "Failed to withdraw the invitation",
   },
   scan_qr_code: "Scan QR Code",
   scanning: "Scanning...",

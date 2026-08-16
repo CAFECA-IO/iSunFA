@@ -13,6 +13,8 @@ export const adminSettings = {
     third_party_login: "第三方登录",
     ai: "AI 集成",
     payment: "支付网关",
+    // Info: (20260815 - Luphia) email 邀請的寄信設定
+    mail: "寄信（Email 邀请）",
   },
   env_only_hint:
     "此项目目前仅存在于环境变量，尚未纳入数据库保管与签章；保存后才会受保护。",

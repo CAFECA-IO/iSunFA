@@ -51,6 +51,8 @@ interface IPendingInvitation {
   inviter: { name: string | null; address: string; imageUrl: string | null };
   role: string;
   inviteeAddress?: string;
+  // Info: (20260815 - Luphia) email 邀請沒有位址，改以信箱識別（規範 §4 / P4）
+  inviteeEmail?: string;
 }
 
 export default function TeamManagementPage() {
@@ -66,6 +68,8 @@ export default function TeamManagementPage() {
     [],
   );
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  // Info: (20260815 - Luphia) 正在撤回的邀請（產品拍板 20260815：撤回不退費，但席次可再用）
+  const [revokingId, setRevokingId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -394,6 +398,35 @@ export default function TeamManagementPage() {
       showAlert(t("team_management.alerts.error_accept"));
     } finally {
       setAcceptingId(null);
+    }
+  };
+
+  /**
+   * Info: (20260815 - Luphia) 撤回尚未接受的邀請（產品拍板 20260815）。
+   * 費用不退，但那一席會立刻空出來給下一次邀請使用——所以提示要講清楚，
+   * 否則管理員會以為自己按下的是「把錢丟掉」。
+   */
+  const handleRevokeInvite = async (inviteId: string) => {
+    if (!selectedTeamId) return;
+    setRevokingId(inviteId);
+    try {
+      const token = localStorage.getItem("dewt");
+      const res = await fetch(
+        `/api/v1/user/team/${selectedTeamId}/invitations/${inviteId}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      const json = await res.json();
+      if (json.success) {
+        fetchSentInvitations(selectedTeamId);
+        showAlert(t("team_management.alerts.revoke_success"));
+      } else showAlert(json.message);
+    } catch {
+      showAlert(t("team_management.alerts.error_revoke"));
+    } finally {
+      setRevokingId(null);
     }
   };
 
@@ -742,13 +775,27 @@ export default function TeamManagementPage() {
                                 {t("team_management.pending_invite")}
                               </h3>
                               <p className="mt-1 w-32 truncate font-mono text-xs break-all text-gray-400">
-                                {inv.inviteeAddress}
+                                {/* Info: (20260815 - Luphia) email 邀請沒有位址，顯示信箱 */}
+                                {inv.inviteeEmail || inv.inviteeAddress}
                               </p>
                             </div>
                           </div>
-                          <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
-                            {t("team_management.pending")}
-                          </span>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
+                              {t("team_management.pending")}
+                            </span>
+                            {isOwnerOrAdmin && (
+                              <button
+                                type="button"
+                                onClick={() => handleRevokeInvite(inv.id)}
+                                disabled={revokingId === inv.id}
+                                title={t("team_management.revoke_invite_hint")}
+                                className="rounded-md px-2 py-0.5 text-[10px] font-semibold text-gray-500 transition-colors hover:bg-white hover:text-red-600 disabled:opacity-50"
+                              >
+                                {t("team_management.revoke_invite")}
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}

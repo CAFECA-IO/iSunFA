@@ -44,7 +44,11 @@ jest.mock("@/repositories/payment.repo", () => ({
  * 不 mock 的話這兩個呼叫會打到真資料庫——測試會因為「本機剛好有 DB 且查無資料」而通過。
  */
 jest.mock("@/repositories/team.repo", () => ({
-  teamRepo: { countMembers: jest.fn(async () => 2) },
+  teamRepo: {
+    countMembers: jest.fn(async () => 2),
+    // Info: (20260815 - Luphia) 席次佔用＝成員 + 未失效的 PENDING 邀請（產品拍板 20260815）
+    countPendingInvitations: jest.fn(async () => 0),
+  },
 }));
 jest.mock("@/services/team_subscription.service", () => ({
   resolveEffectivePlanId: jest.requireActual<
@@ -108,10 +112,14 @@ describe("chargeSeatAddition", () => {
     asMock(paymentRepo.sumSeatAdditionAmount).mockResolvedValue(BigInt(0));
     asMock(paymentRepo.findOrderByIdempotencyKey).mockResolvedValue(null);
     asMock(teamRepo.countMembers).mockResolvedValue(2);
+    asMock(teamRepo.countPendingInvitations).mockResolvedValue(0);
     asMock(resolveFreePlanMaxMembers).mockResolvedValue(5);
   });
 
   it("charges the remaining period for the new seat and records it", async () => {
+    // Info: (20260815 - Luphia) 已付 3 席、已佔滿 3 個位置 → 第 4 個人才需要補收
+    asMock(teamRepo.countMembers).mockResolvedValue(3);
+
     const result = await chargeSeatAddition({
       teamId: "team-1",
       nowMs: MID_PERIOD,
@@ -133,6 +141,63 @@ describe("chargeSeatAddition", () => {
     expect(paymentRepo.updateOrderCompleted).toHaveBeenCalledWith(
       "order-seat-1",
     );
+  });
+
+  /**
+   * Info: (20260815 - Luphia) 「未成功的席次不退費，但可以再用於邀請他人」
+   * （產品拍板 20260815）。
+   *
+   * 席次的佔用者是「成員 + 未失效的 PENDING 邀請」。邀請被拒或逾期時錢不退，
+   * 但位置空出來——下一次邀請直接用它。團隊付的是「同時可以有幾個人」，
+   * 不是「按了幾次邀請」。
+   */
+  it("reuses an already-paid seat left by a failed invitation", async () => {
+    // Info: (20260815 - Luphia) 已付 3 席、2 位成員、0 個有效邀請 → 還有 1 個空位
+    asMock(teamRepo.countMembers).mockResolvedValue(2);
+    asMock(teamRepo.countPendingInvitations).mockResolvedValue(0);
+
+    const result = await chargeSeatAddition({
+      teamId: "team-1",
+      nowMs: MID_PERIOD,
+    });
+
+    expect(result).toMatchObject({ charged: false, reusedPaidSeat: true });
+    expect(chargeOrderWithSavedCard).not.toHaveBeenCalled();
+    // Info: (20260815 - Luphia) 沒有新增席次：那個位置本來就付過了
+    expect(teamSubscriptionRepo.addSeats).not.toHaveBeenCalled();
+  });
+
+  // Info: (20260815 - Luphia) 尚未失效的邀請仍佔著位置，超出才補收
+  it("counts pending invitations as occupied seats", async () => {
+    asMock(teamRepo.countMembers).mockResolvedValue(2);
+    asMock(teamRepo.countPendingInvitations).mockResolvedValue(1);
+
+    const result = await chargeSeatAddition({
+      teamId: "team-1",
+      nowMs: MID_PERIOD,
+    });
+
+    // Info: (20260815 - Luphia) 2 + 1 已佔滿 3 席，第 4 個位置要付錢
+    expect(result).toMatchObject({ charged: true, amount: 420 });
+    expect(teamSubscriptionRepo.addSeats).toHaveBeenCalledWith("team-1", 1);
+  });
+
+  // Info: (20260815 - Luphia) 一次邀多人時，只為超出已付費席次的部分收費
+  it("charges only for the seats beyond what the team already paid for", async () => {
+    asMock(teamRepo.countMembers).mockResolvedValue(2);
+    asMock(teamRepo.countPendingInvitations).mockResolvedValue(0);
+
+    // Info: (20260815 - Luphia) 已付 3 席、佔用 2、一次加 3 人 → 只需補收 2 席
+    const result = await chargeSeatAddition({
+      teamId: "team-1",
+      nowMs: MID_PERIOD,
+      seats: 3,
+    });
+
+    expect(result.charged).toBe(true);
+    // Info: (20260815 - Luphia) 840 × 15/30 × 2 席 = 840
+    expect(result.amount).toBe(840);
+    expect(teamSubscriptionRepo.addSeats).toHaveBeenCalledWith("team-1", 2);
   });
 
   it("never charges a team without a subscription", async () => {
@@ -210,6 +275,8 @@ describe("chargeSeatAddition", () => {
    * 名字說在測什麼，就要真的走到那條路。
    */
   it("adds the seat without an order when the proration rounds down to zero", async () => {
+    // Info: (20260815 - Luphia) 席次已佔滿，這一次才會走到補收路徑
+    asMock(teamRepo.countMembers).mockResolvedValue(3);
     const result = await chargeSeatAddition({
       teamId: "team-1",
       nowMs: PERIOD_END.getTime() - 30 * 60 * 1000,
@@ -227,6 +294,8 @@ describe("chargeSeatAddition", () => {
    * 若照「零元零頭」放行，整個計費週期內加人全部免費且完全無聲。
    */
   it("refuses to add a seat when a paid subscription has no unit price", async () => {
+    // Info: (20260815 - Luphia) 席次已佔滿，這一次才會走到補收路徑
+    asMock(teamRepo.countMembers).mockResolvedValue(3);
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
       ...ACTIVE_SUBSCRIPTION,
       unitPrice: 0,
@@ -245,6 +314,8 @@ describe("chargeSeatAddition", () => {
    * 而且沒有任何後續流程會回頭補收。
    */
   it("refuses to add a seat when no payment method is on record", async () => {
+    // Info: (20260815 - Luphia) 席次已佔滿，這一次才會走到補收路徑
+    asMock(teamRepo.countMembers).mockResolvedValue(3);
     asMock(paymentRepo.getPaymentMethodById).mockResolvedValue(null);
 
     await expect(
@@ -261,6 +332,8 @@ describe("chargeSeatAddition", () => {
    * 就是替 OWNER 的卡刷 50 筆。
    */
   it("refuses to charge beyond the period cap", async () => {
+    // Info: (20260815 - Luphia) 席次已佔滿，這一次才會走到補收路徑
+    asMock(teamRepo.countMembers).mockResolvedValue(3);
     // Info: (20260814 - Luphia) 上限 = 單價 840 × 3 席 × 2 = 5,040；已收 5,000 再收 420 會超過
     asMock(paymentRepo.sumSeatAdditionAmount).mockResolvedValue(BigInt(5000));
 
@@ -281,6 +354,8 @@ describe("chargeSeatAddition", () => {
    * 建立邀請失敗後客戶端重試時，這是唯一擋得住重複扣款的東西。
    */
   it("does not charge twice for the same idempotency key", async () => {
+    // Info: (20260815 - Luphia) 席次已佔滿，這一次才會走到補收路徑
+    asMock(teamRepo.countMembers).mockResolvedValue(3);
     asMock(paymentRepo.findOrderByIdempotencyKey).mockResolvedValue({
       id: "order-seat-1",
       amount: BigInt(-420),
@@ -299,6 +374,8 @@ describe("chargeSeatAddition", () => {
 
   // Info: (20260814 - Luphia) 扣款失敗必須丟錯：呼叫端據此不建立邀請（fail-closed）
   it("fails closed when the card is declined", async () => {
+    // Info: (20260815 - Luphia) 席次已佔滿，這一次才會走到補收路徑
+    asMock(teamRepo.countMembers).mockResolvedValue(3);
     asMock(chargeOrderWithSavedCard).mockResolvedValue({
       ok: false,
       reason: "E1234",

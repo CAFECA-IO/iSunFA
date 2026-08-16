@@ -41,6 +41,7 @@ import { esgVerify } from "@/i18n/locales/zh_tw/esg_verify";
 import { verify } from "@/i18n/locales/zh_tw/verify";
 import { esg } from "@/i18n/locales/zh_tw/esg";
 import { teamManagement } from "@/i18n/locales/zh_tw/team_management";
+import { invitePage } from "@/i18n/locales/zh_tw/invite_page";
 import { esgReport } from "@/i18n/locales/zh_tw/esg_report";
 import { reportView } from "@/i18n/locales/zh_tw/report_view";
 import { cashFlowStatementView } from "@/i18n/locales/zh_tw/cash_flow_statement_view";
@@ -120,6 +121,7 @@ export const zhTw = {
   verify,
   esg,
   team_management: teamManagement,
+  invite_page: invitePage,
   esg_report: esgReport,
   report_view: reportView,
   cash_flow_statement_view: cashFlowStatementView,

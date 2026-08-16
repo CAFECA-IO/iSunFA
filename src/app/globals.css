@@ -2834,6 +2834,15 @@
     );
   }
 
+  /* Info: (20260815 - Luphia) 寄信設定分區的識別色（admin/settings 的 MAIL 群組） */
+  .text-sky-600 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-sky-600)
+    );
+  }
+
   .text-violet-600 {
     color: color-mix(
       in oklab,

@@ -1098,4 +1098,29 @@ export const API_ERRORS = {
     message: "Seat charge failed",
     status: ApiCode.PAYMENT_REQUIRED,
   } as IErrorDef,
+  /**
+   * Info: (20260815 - Luphia) 尚未設定寄信（規範 §4 / P4：email 邀請）。
+   * 屬設定缺漏而非使用者輸入錯誤，因此給 500 而非 400——
+   * 邀請者沒有任何事情做錯，要動的是後台設定。
+   */
+  TW_MAIL_NOT_CONFIGURED: {
+    code: "TW000018",
+    message: "Mail delivery is not configured",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  /**
+   * Info: (20260815 - Luphia) 邀請信寄送失敗：邀請已回滾，席次留給下一次使用。
+   * 與 TW000018 分開是因為處置不同——這個重試可能就會過。
+   */
+  TW_INVITATION_MAIL_FAILED: {
+    code: "TW000019",
+    message: "Failed to deliver the invitation email",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  // Info: (20260815 - Luphia) 邀請信箱格式不正確（規範 §4 / P4）
+  VL_INVALID_EMAIL: {
+    code: "VL000018",
+    message: "Invalid email address",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
 };

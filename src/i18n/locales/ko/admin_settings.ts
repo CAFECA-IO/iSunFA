@@ -14,6 +14,8 @@ export const adminSettings = {
     third_party_login: "제3자 로그인",
     ai: "AI 연동",
     payment: "결제 게이트웨이",
+    // Info: (20260815 - Luphia) email 邀請的寄信設定
+    mail: "메일 발송(초대)",
   },
   env_only_hint:
     "이 항목은 현재 환경 변수에만 존재하며 데이터베이스 보관 및 서명 대상이 아닙니다. 저장하면 보호 대상이 됩니다.",

@@ -39,6 +39,7 @@ import { voucher } from "@/i18n/locales/ko/voucher";
 import { verify } from "@/i18n/locales/ko/verify";
 import { esg } from "@/i18n/locales/ko/esg";
 import { teamManagement } from "@/i18n/locales/ko/team_management";
+import { invitePage } from "@/i18n/locales/ko/invite_page";
 import { esgReport } from "@/i18n/locales/ko/esg_report";
 import { reportView } from "@/i18n/locales/ko/report_view";
 import { cashFlowStatementView } from "@/i18n/locales/ko/cash_flow_statement_view";
@@ -121,6 +122,7 @@ export const ko = {
   verify,
   esg,
   team_management: teamManagement,
+  invite_page: invitePage,
   esg_report: esgReport,
   report_view: reportView,
   cash_flow_statement_view: cashFlowStatementView,

@@ -41,6 +41,7 @@ import { esgTarget } from "@/i18n/locales/en/esg_target";
 import { verify } from "@/i18n/locales/en/verify";
 import { esg } from "@/i18n/locales/en/esg";
 import { teamManagement } from "@/i18n/locales/en/team_management";
+import { invitePage } from "@/i18n/locales/en/invite_page";
 import { esgReport } from "@/i18n/locales/en/esg_report";
 import { reportView } from "@/i18n/locales/en/report_view";
 import { cashFlowStatementView } from "@/i18n/locales/en/cash_flow_statement_view";
@@ -121,6 +122,7 @@ export const en = {
   verify,
   esg,
   team_management: teamManagement,
+  invite_page: invitePage,
   esg_report: esgReport,
   report_view: reportView,
   cash_flow_statement_view: cashFlowStatementView,

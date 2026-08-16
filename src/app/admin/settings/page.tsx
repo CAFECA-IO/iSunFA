@@ -9,6 +9,7 @@ import {
   History,
   KeyRound,
   Loader2,
+  Mail,
   ShieldCheck,
   SlidersHorizontal,
 } from "lucide-react";
@@ -70,6 +71,8 @@ const GROUP_STYLES: Record<
   },
   [SystemSettingGroup.AI]: { icon: Bot, color: "text-blue-600" },
   [SystemSettingGroup.PAYMENT]: { icon: CreditCard, color: "text-emerald-600" },
+  // Info: (20260815 - Luphia) 寄信設定（email 邀請）
+  [SystemSettingGroup.MAIL]: { icon: Mail, color: "text-sky-600" },
 };
 
 interface ITrustState {

@@ -152,11 +152,27 @@ model TeamInvitation {
   team           Team     @relation(fields: [teamId], references: [id])
   inviterId      String   @map("inviter_id")
   inviter        User     @relation("Inviter", fields: [inviterId], references: [id])
-  inviteeAddress String   @map("invitee_address")
+  /**
+   * Info: (20260815 - Luphia) 錢包位址邀請的受邀者。email 邀請時為 null——
+   * 對方還沒註冊，此時不存在位址（接受時才建立成員關係）。
+   */
+  inviteeAddress String?   @map("invitee_address")
+  /**
+   * Info: (20260815 - Luphia) Email 邀請（規範 §4 / P4）。
+   * 屬個資，僅用於寄送本次邀請（《隱私權政策》§1）。
+   */
+  inviteeEmail   String?   @map("invitee_email")
+  /**
+   * Info: (20260815 - Luphia) 邀請 token 的 SHA-256 雜湊。
+   * 明文只存在於寄出的那封信裡：資料庫外洩不等於任何人都能加入團隊。
+   */
+  tokenHash      String?   @unique @map("token_hash")
+  // Info: (20260815 - Luphia) 邀請有效期限；逾期即失效（席次不退費但可再用於邀請他人）
+  expiresAt      DateTime? @map("expires_at")
   role           TeamRole
-  status         String   @default("PENDING") // Info: (20260325 - Tzuhan) PENDING, ACCEPTED, REJECTED
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  status         String    @default("PENDING") // Info: (20260325 - Tzuhan) PENDING, ACCEPTED, REJECTED
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   /**
    * Info: (20260815 - Luphia) 同一團隊對同一位址、同一狀態只能有一列（PR #6652 第二輪 B-3）。
@@ -169,6 +185,12 @@ model TeamInvitation {
    * 而重複接受同一位址的處理見 `acceptInvitation`（先清掉舊的 ACCEPTED 列）。
    */
   @@unique([teamId, inviteeAddress, status])
+  /**
+   * Info: (20260815 - Luphia) email 邀請的同一組約束：同一團隊對同一信箱、
+   * 同一狀態只能有一列，擋的同樣是並發重複邀請。
+   * Postgres 允許多個 NULL，因此位址邀請（email 為 null）不受影響。
+   */
+  @@unique([teamId, inviteeEmail, status])
   @@map("team_invitation")
 }
 

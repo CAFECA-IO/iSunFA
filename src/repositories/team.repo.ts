@@ -38,13 +38,31 @@ export interface ITeamRepository {
     inviteeAddress: string,
     status: string,
   ): Promise<TeamInvitation | null>;
+  getTeamInvitationByEmail(
+    teamId: string,
+    inviteeEmail: string,
+    status: string,
+  ): Promise<TeamInvitation | null>;
   createTeamInvitation(
     data: Prisma.TeamInvitationUncheckedCreateInput,
   ): Promise<TeamInvitation>;
+  deleteInvitation(id: string): Promise<TeamInvitation>;
+  consumeInvitationToken(id: string): Promise<TeamInvitation>;
+  countPendingInvitations(teamId: string, nowMs: number): Promise<number>;
+  findInvitationByTokenHash(
+    tokenHash: string,
+  ): Promise<Prisma.TeamInvitationGetPayload<{
+    include: { team: true };
+  }> | null>;
+  /**
+   * Info: (20260815 - Luphia) 回傳型別刻意不是 `TeamInvitation`：
+   * 這支不吐 `tokenHash`（見實作處說明），型別要照實反映那件事，
+   * 否則下一個人會理所當然地在端點裡引用一個實際上不存在的欄位。
+   */
   listTeamInvitations(
     teamId: string,
     status: string,
-  ): Promise<TeamInvitation[]>;
+  ): Promise<Omit<TeamInvitation, "tokenHash" | "updatedAt">[]>;
   getPendingInvitationsByAddress(address: string): Promise<
     Prisma.TeamInvitationGetPayload<{
       include: {
@@ -182,13 +200,91 @@ export class TeamRepository implements ITeamRepository {
     });
   }
 
+  // Info: (20260815 - Luphia) email 邀請的重複檢查（規範 §4 / P4）
+  async getTeamInvitationByEmail(
+    teamId: string,
+    inviteeEmail: string,
+    status: string,
+  ) {
+    return prisma.teamInvitation.findFirst({
+      where: { teamId, inviteeEmail, status },
+    });
+  }
+
   async createTeamInvitation(data: Prisma.TeamInvitationUncheckedCreateInput) {
     return prisma.teamInvitation.create({ data });
   }
 
+  /**
+   * Info: (20260815 - Luphia) 邀請信寄送失敗時回滾用。
+   *
+   * 刻意用實刪而非改狀態：一封沒寄出去的邀請不是歷史紀錄，
+   * 留著只會佔住 `(teamId, inviteeEmail, status)` 這個唯一鍵，
+   * 讓管理員重試同一個信箱時撞上「已有邀請」。
+   */
+  async deleteInvitation(id: string) {
+    return prisma.teamInvitation.delete({ where: { id } });
+  }
+
+  /**
+   * Info: (20260815 - Luphia) 用掉 token（一次性）：只清雜湊，不動狀態。
+   * 供「已是成員又點了一次連結」這條路徑使用。
+   */
+  async consumeInvitationToken(id: string) {
+    return prisma.teamInvitation.update({
+      where: { id },
+      data: { tokenHash: null },
+    });
+  }
+
+  /**
+   * Info: (20260815 - Luphia) 仍在佔用席次的邀請數（產品拍板 20260815）。
+   *
+   * 席次的佔用者是「成員 + 尚未失效的 PENDING 邀請」。逾期的邀請不算——
+   * 它讓出的位置可以給下一次邀請使用（但當初付的錢不退，見設計書 §5.4.8）。
+   */
+  async countPendingInvitations(teamId: string, nowMs: number) {
+    return prisma.teamInvitation.count({
+      where: {
+        teamId,
+        status: TEAM_INVITATION_STATUS.PENDING,
+        OR: [
+          // Info: (20260815 - Luphia) 舊的位址邀請沒有期限欄位，一律視為仍在佔用
+          { expiresAt: null },
+          { expiresAt: { gt: new Date(nowMs) } },
+        ],
+      },
+    });
+  }
+
+  async findInvitationByTokenHash(tokenHash: string) {
+    return prisma.teamInvitation.findUnique({
+      where: { tokenHash },
+      include: { team: true },
+    });
+  }
+
+  /**
+   * Info: (20260815 - Luphia) 團隊的邀請清單。
+   *
+   * **明列欄位而非整列回傳**：這張表自 2026-08-15 起帶著 `tokenHash`，
+   * 而這支的呼叫端是「團隊任一成員都讀得到」的端點。雜湊本身無法反推回 token，
+   * 但一把鑰匙的指紋沒有任何理由離開伺服器。
+   */
   async listTeamInvitations(teamId: string, status: string) {
     return prisma.teamInvitation.findMany({
       where: { teamId, status },
+      select: {
+        id: true,
+        teamId: true,
+        inviterId: true,
+        inviteeAddress: true,
+        inviteeEmail: true,
+        role: true,
+        status: true,
+        expiresAt: true,
+        createdAt: true,
+      },
       orderBy: { createdAt: "desc" },
     });
   }
@@ -229,7 +325,15 @@ export class TeamRepository implements ITeamRepository {
     const [, newMember] = await prisma.$transaction([
       prisma.teamInvitation.update({
         where: { id: inviteId },
-        data: { status: TEAM_INVITATION_STATUS.ACCEPTED },
+        data: {
+          status: TEAM_INVITATION_STATUS.ACCEPTED,
+          /**
+           * Info: (20260815 - Luphia) 接受後清掉 token 雜湊（一次性連結）。
+           * 狀態改成 ACCEPTED 本身就擋得住重用，清雜湊是第二道：
+           * 邀請信可能被轉寄，過期的連結不該還留著一把對得上的鑰匙。
+           */
+          tokenHash: null,
+        },
       }),
       prisma.teamMember.create({
         data: {

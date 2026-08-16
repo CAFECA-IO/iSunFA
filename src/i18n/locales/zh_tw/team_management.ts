@@ -7,6 +7,16 @@ export const teamManagement = {
   accepting: "處理中...",
   no_teams: "目前沒有任何團隊。",
   invite_member: "邀請成員",
+  revoke_invite: "撤回",
+  revoke_invite_hint:
+    "撤回這封尚未接受的邀請。已收取的席次費用不退還，但釋出的席次可用於邀請其他人員。",
+  // Info: (20260815 - Luphia) email 邀請（規範 §4 / P4）
+  invite_method: "邀請方式",
+  invite_by_address: "錢包地址",
+  invite_by_email: "電子郵件",
+  email_address: "電子郵件",
+  invite_email_hint:
+    "系統會寄出一封含加入連結的邀請信，連結為一次性且 7 天內有效。",
   you: "您",
   pending_invite: "待接受的邀請",
   pending: "等待中",
@@ -44,6 +54,11 @@ export const teamManagement = {
     error_role: "變更角色失敗",
     error_remove: "移除成員失敗",
     invalid_address: "無效的 Web3 錢包地址，格式應為 0x 開頭的 42 位字元。",
+    invalid_email: "電子郵件格式不正確。",
+    invite_email_sent: "邀請信已寄出！",
+    seat_reused: "已使用既有的付費席次，本次未再收費。",
+    revoke_success: "已撤回邀請，該席次可用於邀請其他人員。",
+    error_revoke: "撤回邀請失敗",
   },
   scan_qr_code: "掃描 QR Code",
   scanning: "正在掃描...",

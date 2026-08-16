@@ -7,6 +7,16 @@ export const teamManagement = {
   accepting: "처리 중...",
   no_teams: "팀이 없습니다.",
   invite_member: "멤버 초대",
+  revoke_invite: "철회",
+  revoke_invite_hint:
+    "수락되지 않은 초대를 철회합니다. 이미 청구된 좌석 요금은 환불되지 않지만, 비워진 좌석은 다른 사람을 초대하는 데 사용할 수 있습니다.",
+  // Info: (20260815 - Luphia) email 邀請（規範 §4 / P4）
+  invite_method: "초대 방법",
+  invite_by_address: "지갑 주소",
+  invite_by_email: "이메일",
+  email_address: "이메일 주소",
+  invite_email_hint:
+    "참여 링크가 포함된 초대 메일을 발송합니다. 링크는 일회용이며 7일간 유효합니다.",
   you: "나",
   pending_invite: "대기 중인 초대",
   pending: "대기 중",
@@ -45,6 +55,13 @@ export const teamManagement = {
     error_remove: "멤버 삭제 실패",
     invalid_address:
       "유효하지 않은 Web3 지갑 주소입니다. 0x로 시작하는 42자여야 합니다.",
+    invalid_email: "이메일 주소 형식이 올바르지 않습니다.",
+    invite_email_sent: "초대 메일을 발송했습니다!",
+    seat_reused:
+      "이미 결제된 좌석을 재사용했으므로 추가 요금은 청구되지 않았습니다.",
+    revoke_success:
+      "초대를 철회했습니다. 해당 좌석은 다른 사람을 초대하는 데 사용할 수 있습니다.",
+    error_revoke: "초대 철회에 실패했습니다",
   },
   scan_qr_code: "QR 코드 스캔",
   scanning: "스캔 중...",

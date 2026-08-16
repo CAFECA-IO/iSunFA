@@ -31,16 +31,34 @@ export default function InviteMemberModal({
   const { user } = useAuth();
 
   const [inviteAddress, setInviteAddress] = useState<string>("");
+  const [inviteEmail, setInviteEmail] = useState<string>("");
   const [inviteRole, setInviteRole] = useState<TeamRole>(TeamRole.VIEWER);
   const [inviting, setInviting] = useState<boolean>(false);
   const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
+  /**
+   * Info: (20260815 - Luphia) 兩種邀請方式（規範 §4 / P4）：
+   * 位址適用於「對方已經是本站用戶」，email 適用於「對方還沒有帳號」——
+   * 後者不需要邀請者先問到對方的錢包位址。
+   */
+  const [inviteMode, setInviteMode] = useState<"ADDRESS" | "EMAIL">("ADDRESS");
+
+  const targetValue = inviteMode === "ADDRESS" ? inviteAddress : inviteEmail;
 
   const handleInvite = async (e: FormEvent) => {
     e.preventDefault();
-    if (!selectedTeamId || !inviteAddress.trim() || !user?.address) return;
+    if (!selectedTeamId || !targetValue.trim() || !user?.address) return;
 
-    if (!isAddress(inviteAddress.trim())) {
+    if (inviteMode === "ADDRESS" && !isAddress(inviteAddress.trim())) {
       showAlert(t("team_management.alerts.invalid_address"));
+      return;
+    }
+
+    // Info: (20260815 - Luphia) 前端只擋明顯的格式錯誤，真正的判準在服務端
+    if (
+      inviteMode === "EMAIL" &&
+      !/^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(inviteEmail.trim())
+    ) {
+      showAlert(t("team_management.alerts.invalid_email"));
       return;
     }
 
@@ -53,23 +71,48 @@ export default function InviteMemberModal({
         custody: user.custody,
       });
 
-      const json = await request<{ success: boolean; message?: string }>(
-        `/api/v1/user/team/${selectedTeamId}/invitations`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            address: inviteAddress.trim(),
-            role: inviteRole,
-            authentication,
-          }),
-        },
-      );
+      const endpoint =
+        inviteMode === "ADDRESS"
+          ? `/api/v1/user/team/${selectedTeamId}/invitations`
+          : `/api/v1/user/team/${selectedTeamId}/invitations/email`;
+
+      const payload =
+        inviteMode === "ADDRESS"
+          ? { address: inviteAddress.trim(), role: inviteRole, authentication }
+          : {
+              email: inviteEmail.trim(),
+              role: inviteRole,
+              authentication,
+            };
+
+      const json = await request<{
+        success: boolean;
+        message?: string;
+        payload?: { seatCharge?: { reusedPaidSeat?: boolean } };
+      }>(endpoint, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
 
       if (json.success) {
         setInviteAddress("");
+        setInviteEmail("");
         onClose();
         onSuccess();
-        showAlert(t("team_management.alerts.invite_success"));
+        /**
+         * Info: (20260815 - Luphia) 用到「已付費但空出來的席次」時明講（產品拍板 20260815）。
+         * 前一次邀請被拒或逾期時錢沒有退，這次不再收費——不說的話，
+         * 管理員只會看到帳單上少了一筆而不知道為什麼。
+         */
+        if (json.payload?.seatCharge?.reusedPaidSeat) {
+          showAlert(t("team_management.alerts.seat_reused"));
+        } else {
+          showAlert(
+            inviteMode === "EMAIL"
+              ? t("team_management.alerts.invite_email_sent")
+              : t("team_management.alerts.invite_success"),
+          );
+        }
       }
     } catch (err) {
       console.error(err);
@@ -120,36 +163,88 @@ export default function InviteMemberModal({
               </button>
             </div>
             <form onSubmit={handleInvite} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="invite-address"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
-                  {t("team_management.web3_address")}
-                </label>
-                <div className="flex w-full items-center gap-2">
-                  <input
-                    id="invite-address"
-                    type="text"
-                    required
-                    value={inviteAddress}
-                    onChange={(e) => setInviteAddress(e.target.value)}
-                    disabled={inviting}
-                    aria-label={t("team_management.web3_address")}
-                    className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
-                    placeholder="0x123..."
-                  />
+              {/* Info: (20260815 - Luphia) 邀請方式切換（規範 §4 / P4） */}
+              <div
+                role="tablist"
+                aria-label={t("team_management.invite_method")}
+                className="flex rounded-lg bg-gray-100 p-1"
+              >
+                {(["ADDRESS", "EMAIL"] as const).map((mode) => (
                   <button
+                    key={mode}
                     type="button"
-                    onClick={() => setIsScannerOpen(true)}
+                    role="tab"
+                    aria-selected={inviteMode === mode}
+                    onClick={() => setInviteMode(mode)}
                     disabled={inviting}
-                    className="flex shrink-0 items-center justify-center rounded-lg bg-orange-300 p-2 text-slate-800 transition-colors hover:bg-orange-400 disabled:opacity-50"
-                    title={t("team_management.scan_qr_code")}
+                    className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+                      inviteMode === mode
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
                   >
-                    <ScanQrCode size={24} />
+                    {mode === "ADDRESS"
+                      ? t("team_management.invite_by_address")
+                      : t("team_management.invite_by_email")}
                   </button>
-                </div>
+                ))}
               </div>
+
+              {inviteMode === "ADDRESS" ? (
+                <div>
+                  <label
+                    htmlFor="invite-address"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
+                    {t("team_management.web3_address")}
+                  </label>
+                  <div className="flex w-full items-center gap-2">
+                    <input
+                      id="invite-address"
+                      type="text"
+                      required
+                      value={inviteAddress}
+                      onChange={(e) => setInviteAddress(e.target.value)}
+                      disabled={inviting}
+                      aria-label={t("team_management.web3_address")}
+                      className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
+                      placeholder="0x123..."
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIsScannerOpen(true)}
+                      disabled={inviting}
+                      className="flex shrink-0 items-center justify-center rounded-lg bg-orange-300 p-2 text-slate-800 transition-colors hover:bg-orange-400 disabled:opacity-50"
+                      title={t("team_management.scan_qr_code")}
+                    >
+                      <ScanQrCode size={24} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label
+                    htmlFor="invite-email"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
+                    {t("team_management.email_address")}
+                  </label>
+                  <input
+                    id="invite-email"
+                    type="email"
+                    required
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    disabled={inviting}
+                    aria-label={t("team_management.email_address")}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-orange-500 focus:ring-orange-500 sm:text-sm"
+                    placeholder="name@example.com"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    {t("team_management.invite_email_hint")}
+                  </p>
+                </div>
+              )}
               <QrScannerModal
                 isOpen={isScannerOpen}
                 onClose={() => setIsScannerOpen(false)}
@@ -202,7 +297,7 @@ export default function InviteMemberModal({
                 </button>
                 <button
                   type="submit"
-                  disabled={inviting || !inviteAddress.trim()}
+                  disabled={inviting || !targetValue.trim()}
                   className="inline-flex w-full items-center justify-center rounded-lg bg-orange-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50 sm:w-auto"
                 >
                   {inviting

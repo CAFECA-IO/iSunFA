@@ -1,0 +1,15 @@
+// Info: (20260815 - Luphia) email 邀請的落地頁（規範 §4 / P4）
+export const invitePage = {
+  loading: "读取邀请中…",
+  title: "{{team}} 邀请您加入团队",
+  role_note: "您将以「{{role}}」的身份加入。",
+  accept: "接受邀请并加入",
+  login_to_accept: "登录或注册以加入",
+  login_hint: "还没有账号也没关系，注册完成后会自动加入这个团队。",
+  accept_failed: "接受邀请失败，请稍后再试。",
+  invalid_title: "邀请链接已失效",
+  invalid_description:
+    "这个链接可能已被使用、已过期，或已被撤回。请向邀请您的人索取新的链接。",
+  joined_title: "已加入团队",
+  joined_description: "正在带您前往团队页面…",
+};

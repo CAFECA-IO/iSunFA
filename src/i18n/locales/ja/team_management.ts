@@ -7,6 +7,16 @@ export const teamManagement = {
   accepting: "処理中...",
   no_teams: "チームがありません。",
   invite_member: "メンバーを招待",
+  revoke_invite: "取り消し",
+  revoke_invite_hint:
+    "未承諾の招待を取り消します。すでに請求された席の料金は返金されませんが、空いた席は他の方の招待に利用できます。",
+  // Info: (20260815 - Luphia) email 邀請（規範 §4 / P4）
+  invite_method: "招待方法",
+  invite_by_address: "ウォレットアドレス",
+  invite_by_email: "メール",
+  email_address: "メールアドレス",
+  invite_email_hint:
+    "参加用リンクを含む招待メールを送信します。リンクは一回限りで、7日間有効です。",
   you: "あなた",
   pending_invite: "保留中の招待",
   pending: "保留中",
@@ -45,6 +55,13 @@ export const teamManagement = {
     error_remove: "メンバーの削除に失敗しました",
     invalid_address:
       "無効な Web3 アドレスです。0x で始まる 42 文字である必要があります。",
+    invalid_email: "メールアドレスの形式が正しくありません。",
+    invite_email_sent: "招待メールを送信しました！",
+    seat_reused:
+      "支払い済みの空き席を利用したため、今回は追加料金は発生しません。",
+    revoke_success:
+      "招待を取り消しました。この席は他の方の招待に利用できます。",
+    error_revoke: "招待の取り消しに失敗しました",
   },
   scan_qr_code: "QRコードをスキャン",
   scanning: "スキャン中...",

@@ -52,6 +52,12 @@ export interface ISeatChargeResult {
   amount: number;
   orderId?: string;
   seats: number;
+  /**
+   * Info: (20260815 - Luphia) 這次是用了「已付費但空出來的席次」（產品拍板 20260815）：
+   * 前一次邀請被拒或逾期，錢沒有退，但位置可以再用。前端據此顯示
+   * 「使用既有席次，未再收費」而不是靜靜地不說。
+   */
+  reusedPaidSeat?: boolean;
 }
 
 export interface ISeatChargeParams {
@@ -133,6 +139,35 @@ export async function chargeSeatAddition(
   }
 
   /**
+   * Info: (20260815 - Luphia) 已付費席次若還有空位，就不再收費（產品拍板 20260815）。
+   *
+   * 席次的佔用者是「成員 + 尚未失效的 PENDING 邀請」。邀請被拒絕、撤回或逾期時
+   * **不退費**，但那個位置會空出來——下一次邀請直接用它，不必再付一次。
+   * 這是「未成功的席次不退費、但多出來的席次可以用於邀請其他人」的實作方式：
+   * 團隊付的是「同時可以有幾個人」，不是「按了幾次邀請」。
+   *
+   * 也因此這個檢查必須在補收之前：先看有沒有空位，沒有才談錢。
+   */
+  const occupied =
+    (await teamRepo.countMembers(teamId)) +
+    (await teamRepo.countPendingInvitations(teamId, nowMs));
+  const paidSeats = Math.max(1, subscription.seats);
+  if (occupied + seats <= paidSeats) {
+    logger.info("seat addition covered by an already-paid seat", {
+      teamId,
+      occupied,
+      paidSeats,
+    });
+    return { charged: false, amount: 0, seats, reusedPaidSeat: true };
+  }
+
+  /**
+   * Info: (20260815 - Luphia) 只為「超出已付費席次的部分」補收。
+   * 例：已付 5 席、目前佔用 5、一次邀 2 人 → 只補收 2 席中的 2 席（5+2 > 5，差額 2）。
+   */
+  const seatsToCharge = occupied + seats - paidSeats;
+
+  /**
    * Info: (20260814 - Luphia) 付費方案卻沒有單價＝資料異常，必須拒絕（PR #6652 第二輪 A-3）。
    *
    * `unit_price` 是新欄位、預設 0，而本專案沒有 migrations 目錄——部署後既有訂閱一律是 0，
@@ -157,7 +192,8 @@ export async function chargeSeatAddition(
     nowMs,
     periodStartMs: subscription.currentPeriodStart.getTime(),
     periodEndMs: subscription.currentPeriodEnd.getTime(),
-    seats,
+    // Info: (20260815 - Luphia) 只算超出已付費席次的部分（見上方說明）
+    seats: seatsToCharge,
   });
 
   /**
@@ -165,7 +201,7 @@ export async function chargeSeatAddition(
    * 席次照加、不建單。為了幾塊錢去打一次金流，失敗率與雜訊都比收到的錢多。
    */
   if (amount <= 0) {
-    await teamSubscriptionRepo.addSeats(teamId, seats);
+    await teamSubscriptionRepo.addSeats(teamId, seatsToCharge);
     return { charged: false, amount: 0, seats };
   }
 
@@ -316,7 +352,7 @@ export async function chargeSeatAddition(
     throw toApiError(API_ERRORS.TW_SEAT_CHARGE_FAILED);
   }
 
-  await teamSubscriptionRepo.addSeats(teamId, seats);
+  await teamSubscriptionRepo.addSeats(teamId, seatsToCharge);
   await paymentRepo.updateOrderCompleted(order.orderId);
 
   logger.info("seat addition charged", {

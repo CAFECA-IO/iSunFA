@@ -14,6 +14,8 @@ export const adminSettings = {
     third_party_login: "Third-party Login",
     ai: "AI Integration",
     payment: "Payment Gateway",
+    // Info: (20260815 - Luphia) email 邀請的寄信設定
+    mail: "Email delivery",
   },
   env_only_hint:
     "This value currently lives only in the environment file. It is not yet stored in the database or covered by the signature — save to bring it under protection.",

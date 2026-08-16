@@ -40,6 +40,20 @@ export enum SystemSettingKey {
    * 調整此值必須同步方案頁的標示。
    */
   FREE_PLAN_MAX_MEMBERS = "FREE_PLAN_MAX_MEMBERS",
+  /**
+   * Info: (20260815 - Luphia) 寄信設定（規範 §4 / P4：email 邀請）。
+   *
+   * 存於 DB 而非 env：與其他營運設定同一套（ADR 017），可由後台調整、不需重啟。
+   * 未設定時邀請**明確失敗**而不是靜靜不寄——沒寄出去的邀請等於白收一席的錢。
+   */
+  SMTP_HOST = "SMTP_HOST",
+  SMTP_PORT = "SMTP_PORT",
+  SMTP_USER = "SMTP_USER",
+  SMTP_PASSWORD = "SMTP_PASSWORD",
+  // Info: (20260815 - Luphia) 寄件者顯示名稱與信箱，如 `iSunFA <no-reply@isunfa.com>`
+  SMTP_FROM = "SMTP_FROM",
+  // Info: (20260815 - Luphia) 邀請連結的站台網址（寄出的信裡要放絕對網址）
+  APP_BASE_URL = "APP_BASE_URL",
 }
 
 // Info: (20260809 - Luphia) 設定分組，供設定頁排版
@@ -47,6 +61,8 @@ export enum SystemSettingGroup {
   THIRD_PARTY_LOGIN = "THIRD_PARTY_LOGIN",
   AI = "AI",
   PAYMENT = "PAYMENT",
+  // Info: (20260815 - Luphia) 寄信（email 邀請）
+  MAIL = "MAIL",
 }
 
 // Info: (20260809 - Luphia) 設定頁的分區順序
@@ -54,6 +70,7 @@ export const SYSTEM_SETTING_GROUP_ORDER: SystemSettingGroup[] = [
   SystemSettingGroup.THIRD_PARTY_LOGIN,
   SystemSettingGroup.AI,
   SystemSettingGroup.PAYMENT,
+  SystemSettingGroup.MAIL,
 ];
 
 export interface ISystemSettingDefinition {
@@ -119,6 +136,43 @@ export const SYSTEM_SETTING_DEFINITIONS: Record<
     group: SystemSettingGroup.PAYMENT,
     isSecret: false,
     envKey: "FREE_PLAN_MAX_MEMBERS",
+  },
+  [SystemSettingKey.SMTP_HOST]: {
+    key: SystemSettingKey.SMTP_HOST,
+    group: SystemSettingGroup.MAIL,
+    isSecret: false,
+    envKey: "SMTP_HOST",
+  },
+  [SystemSettingKey.SMTP_PORT]: {
+    key: SystemSettingKey.SMTP_PORT,
+    group: SystemSettingGroup.MAIL,
+    isSecret: false,
+    envKey: "SMTP_PORT",
+  },
+  [SystemSettingKey.SMTP_USER]: {
+    key: SystemSettingKey.SMTP_USER,
+    group: SystemSettingGroup.MAIL,
+    isSecret: false,
+    envKey: "SMTP_USER",
+  },
+  [SystemSettingKey.SMTP_PASSWORD]: {
+    key: SystemSettingKey.SMTP_PASSWORD,
+    group: SystemSettingGroup.MAIL,
+    // Info: (20260815 - Luphia) 密碼屬秘密值：DB 內加密、讀取 API 一律遮蔽
+    isSecret: true,
+    envKey: "SMTP_PASSWORD",
+  },
+  [SystemSettingKey.SMTP_FROM]: {
+    key: SystemSettingKey.SMTP_FROM,
+    group: SystemSettingGroup.MAIL,
+    isSecret: false,
+    envKey: "SMTP_FROM",
+  },
+  [SystemSettingKey.APP_BASE_URL]: {
+    key: SystemSettingKey.APP_BASE_URL,
+    group: SystemSettingGroup.MAIL,
+    isSecret: false,
+    envKey: "APP_BASE_URL",
   },
 };
 

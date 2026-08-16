@@ -52,6 +52,7 @@ NEXT_PUBLIC_CREDIT_POINT_ADDRESS
 |---|---|---|
 | `order` | 新增 `idempotency_key`（唯一，可為 NULL） | 低 |
 | `team_invitation` | 新增唯一約束 `(team_id, invitee_address, status)` | **見 1.1** |
+| `team_invitation` | 新增 `invitee_email`、`token_hash`（唯一）、`expires_at`，以及唯一約束 `(team_id, invitee_email, status)` | 低；既有資料三欄皆為 NULL，Postgres 允許多個 NULL |
 | `team_subscription` | 新增 `seats`（預設 1）、`unit_price`（預設 0） | 低，但**必須接著做 3.1** |
 | `team_wallet_ledger` | 新增 `tx_hash`（可為 NULL） | 低 |
 | `team_quota_usage` | 索引改為 `(team_id, user_id, window_key_5h)` 與 `(team_id, user_id, window_key_week)` | 低；舊索引可留可刪 |
@@ -84,7 +85,22 @@ npx tsx scripts/migrate_allocations_onchain.ts --commit # 實際鑄造並歸零
 
 腳本是**先鑄造成功才歸零**（反過來做，一次 RPC 失敗就是點數憑空消失），冪等鍵為 `migrate-allocation:{teamId}:{userId}`，重跑不會重複鑄造。有任何一筆失敗會以非零碼結束並列出清單，修好 RPC 後重跑即可。
 
-### 3.3 設定免費版人數上限（選做）
+### 3.3 設定寄信與網站網址 — **email 邀請上線前必做**
+
+後台系統設定（ADR 017，可線上調整、不需重啟）：
+
+| 設定鍵 | 說明 |
+|---|---|
+| `SMTP_HOST` / `SMTP_PORT` | 寄信主機；`SMTP_PORT` 未填時預設 587（STARTTLS），填 465 時自動改用隱式 TLS |
+| `SMTP_USER` / `SMTP_PASSWORD` | 認證；`SMTP_PASSWORD` 為 secret，寫入後不再回讀 |
+| `SMTP_FROM` | 寄件者，可填 `iSunFA <no-reply@example.com>` |
+| `APP_BASE_URL` | 邀請信中連結的網域，例如 `https://isunfa.com` |
+
+**未設定的後果是明確的，不是安靜的**：email 邀請會回 `TW000018` 並且**不建立邀請、不扣款**。這是刻意的——反過來（建立邀請、收了席次費，信卻沒寄出）會讓團隊付錢買到一個受邀者永遠不知情的席次。
+
+⚠️ `APP_BASE_URL` 填錯不會有任何錯誤訊息，信會照寄，只是連結點不開。上線後請**實際寄一封給自己**，點開確認落在 `/invite/<token>` 而不是 404。
+
+### 3.4 設定免費版人數上限（選做）
 
 系統設定 `FREE_PLAN_MAX_MEMBERS`，未設定時使用程式內的 fail-safe 預設 **5**。
 
@@ -100,6 +116,9 @@ npx tsx scripts/migrate_allocations_onchain.ts --commit # 實際鑄造並歸零
 - [ ] 收據只取得到自己的訂單（換一個 `order_id` 應回 404）
 - [ ] 後台發放點數連點兩下只入帳一次
 - [ ] 免費版團隊達人數上限時，加人被擋下並顯示原因
+- [ ] 以 email 邀請一位自己收得到的信箱：信有寄到、連結點得開、註冊完成即入團
+- [ ] 撤回該邀請後再邀請另一個人：**不再收費**，且畫面明講「已使用既有席次」
+- [ ] 同一條邀請連結點第二次：回「連結已失效」，不會重複加人
 
 ---
 
@@ -107,8 +126,8 @@ npx tsx scripts/migrate_allocations_onchain.ts --commit # 實際鑄造並歸零
 
 | 項目 | 狀態 |
 |---|---|
-| 邀請被拒 / 過期不釋出席次 | 未實作；下次續訂會依實際人數重算，最多影響一期 |
-| Email 邀請（點連結註冊即入團） | 未實作；現行為以錢包位址邀請 |
+| 邀請寄送未設 rate limit | 護欄為 OWNER/ADMIN 權限 + 每次邀請的 FIDO2 簽章 + 單期補收上限（TW000016）；濫用的金額上限已封住，寄信量未封 |
+| 硬退信（bounce）不自動撤回邀請 | 信箱打錯時，該席次會被一封永遠不會被接受的邀請佔到逾期（7 天）或管理員手動撤回為止 |
 | 費思個人化記憶（條款已載明 90 天保留） | 未實作，v0.13.0 gate |
 | 方案頁承諾值與實際額度的倍數不一致 | free 1.14×、付費 2.14×；刻意保守但倍數不齊，屬定價文案決定 |
 | 結算時的 `burn` 無用戶當下簽章 | 刻意設計（條款 §3.3 / §3.5 已載明），屬信任模型變更 |
