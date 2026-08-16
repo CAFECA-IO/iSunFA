@@ -70,6 +70,8 @@ export default function TeamManagementPage() {
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   // Info: (20260815 - Luphia) 正在撤回的邀請（產品拍板 20260815：撤回不退費，但席次可再用）
   const [revokingId, setRevokingId] = useState<string | null>(null);
+  // Info: (20260816 - Luphia) 正在拒絕的邀請（條款 §3.6：拒絕即釋出席次）
+  const [decliningId, setDecliningId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -402,6 +404,36 @@ export default function TeamManagementPage() {
   };
 
   /**
+   * Info: (20260816 - Luphia) 拒絕收到的邀請（條款 §3.6）。
+   *
+   * 與接受不同，**不要求 FIDO2 簽章**：接受會讓你成為一個握有他人帳務資料的
+   * 團隊成員，拒絕則什麼都不會發生，只是把一個位置還回去。
+   * 為零後果的動作要求簽章，換來的是沒有人會按它。
+   */
+  const handleDeclineInvite = async (inviteId: string) => {
+    setDecliningId(inviteId);
+    try {
+      const token = localStorage.getItem("dewt");
+      const res = await fetch(
+        `/api/v1/user/team/invitations/${inviteId}/decline`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      const json = await res.json();
+      if (json.success) {
+        fetchPendingInvitations();
+        showAlert(t("team_management.alerts.decline_success"));
+      } else showAlert(json.message);
+    } catch {
+      showAlert(t("team_management.alerts.error_decline"));
+    } finally {
+      setDecliningId(null);
+    }
+  };
+
+  /**
    * Info: (20260815 - Luphia) 撤回尚未接受的邀請（產品拍板 20260815）。
    * 費用不退，但那一席會立刻空出來給下一次邀請使用——所以提示要講清楚，
    * 否則管理員會以為自己按下的是「把錢丟掉」。
@@ -560,6 +592,20 @@ export default function TeamManagementPage() {
                     {acceptingId === inv.id
                       ? t("team_management.accepting")
                       : t("team_management.accept_via_fido2")}
+                  </button>
+                  {/**
+                   * Info: (20260816 - Luphia) 拒絕邀請（條款 §3.6）。
+                   * 沒有這顆按鈕，不想加入的人只能放著不理，
+                   * 而那一席會一直算在邀請方的帳上直到下次續訂才重算。
+                   */}
+                  <button
+                    onClick={() => handleDeclineInvite(inv.id)}
+                    disabled={decliningId === inv.id || acceptingId === inv.id}
+                    className="mt-2 w-full rounded-lg py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50"
+                  >
+                    {decliningId === inv.id
+                      ? t("team_management.declining")
+                      : t("team_management.decline_invite")}
                   </button>
                 </div>
               ))}

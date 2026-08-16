@@ -2,7 +2,13 @@
 
 import { use, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, AlertCircle, Users, CheckCircle2 } from "lucide-react";
+import {
+  Loader2,
+  AlertCircle,
+  Users,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
 import AuthModal from "@/components/auth/auth_modal";
@@ -17,7 +23,14 @@ import AuthModal from "@/components/auth/auth_modal";
  * 不必再回頭找那顆按鈕。
  */
 
-type PageStatus = "LOADING" | "READY" | "ACCEPTING" | "ACCEPTED" | "INVALID";
+type PageStatus =
+  | "LOADING"
+  | "READY"
+  | "ACCEPTING"
+  | "ACCEPTED"
+  | "DECLINING"
+  | "DECLINED"
+  | "INVALID";
 
 interface IInviteView {
   teamId: string;
@@ -94,6 +107,33 @@ export default function InvitePage({
   }, [token, router, t]);
 
   /**
+   * Info: (20260816 - Luphia) 拒絕邀請（條款 §3.6）。
+   *
+   * 不需要登入——受邀者多半還沒有帳號，而拒絕不需要知道他是誰。
+   * 這顆按鈕的價值在於**席次當場空出來**：不按的話那一席會佔到七天後逾期，
+   * 而管理員在那之前不知道對方其實沒有要加入。
+   */
+  const decline = useCallback(async () => {
+    setStatus("DECLINING");
+    setError(null);
+    try {
+      const res = await fetch(`/api/v1/invite/${token}/decline`, {
+        method: "POST",
+      });
+      const json = await res.json();
+      if (json.success) {
+        setStatus("DECLINED");
+      } else {
+        setError(json.message || t("invite_page.decline_failed"));
+        setStatus("READY");
+      }
+    } catch {
+      setError(t("invite_page.decline_failed"));
+      setStatus("READY");
+    }
+  }, [token, t]);
+
+  /**
    * Info: (20260815 - Luphia) 只有「在本頁完成登入或註冊」才自動接受（規範 §5.3）。
    *
    * 刻意不寫成「偵測到已登入就自動加入」：邀請信會被轉寄，而轉寄後點開連結的人
@@ -105,7 +145,11 @@ export default function InvitePage({
     accept();
   }, [accept]);
 
-  const isBusy = status === "LOADING" || status === "ACCEPTING" || authLoading;
+  const isBusy =
+    status === "LOADING" ||
+    status === "ACCEPTING" ||
+    status === "DECLINING" ||
+    authLoading;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
@@ -129,6 +173,18 @@ export default function InvitePage({
           </>
         )}
 
+        {status === "DECLINED" && (
+          <>
+            <XCircle className="mx-auto mb-4 h-10 w-10 text-gray-400" />
+            <h1 className="mb-2 text-lg font-semibold text-gray-900">
+              {t("invite_page.declined_title")}
+            </h1>
+            <p className="text-sm text-gray-600">
+              {t("invite_page.declined_description")}
+            </p>
+          </>
+        )}
+
         {status === "ACCEPTED" && (
           <>
             <CheckCircle2 className="mx-auto mb-4 h-10 w-10 text-emerald-500" />
@@ -141,52 +197,72 @@ export default function InvitePage({
           </>
         )}
 
-        {(status === "READY" || status === "ACCEPTING") && invite && (
-          <>
-            <Users className="mx-auto mb-4 h-10 w-10 text-orange-500" />
-            <h1 className="mb-2 text-lg font-semibold text-gray-900">
-              {t("invite_page.title", { team: invite.teamName })}
-            </h1>
-            <p className="mb-6 text-sm text-gray-600">
-              {t("invite_page.role_note", {
-                role: t(`team_management.roles.${invite.role}`),
-              })}
-            </p>
-
-            {error && (
-              <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-                {error}
+        {(status === "READY" ||
+          status === "ACCEPTING" ||
+          status === "DECLINING") &&
+          invite && (
+            <>
+              <Users className="mx-auto mb-4 h-10 w-10 text-orange-500" />
+              <h1 className="mb-2 text-lg font-semibold text-gray-900">
+                {t("invite_page.title", { team: invite.teamName })}
+              </h1>
+              <p className="mb-6 text-sm text-gray-600">
+                {t("invite_page.role_note", {
+                  role: t(`team_management.roles.${invite.role}`),
+                })}
               </p>
-            )}
 
-            {user ? (
-              <button
-                type="button"
-                onClick={accept}
-                disabled={isBusy}
-                className="inline-flex w-full items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50"
-              >
-                {status === "ACCEPTING" && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                {t("invite_page.accept")}
-              </button>
-            ) : (
-              <>
+              {error && (
+                <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                  {error}
+                </p>
+              )}
+
+              {user ? (
                 <button
                   type="button"
-                  onClick={() => setAuthModalOpen(true)}
-                  className="inline-flex w-full items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-orange-700"
+                  onClick={accept}
+                  disabled={isBusy}
+                  className="inline-flex w-full items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50"
                 >
-                  {t("invite_page.login_to_accept")}
+                  {status === "ACCEPTING" && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {t("invite_page.accept")}
                 </button>
-                <p className="mt-3 text-xs text-gray-500">
-                  {t("invite_page.login_hint")}
-                </p>
-              </>
-            )}
-          </>
-        )}
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setAuthModalOpen(true)}
+                    className="inline-flex w-full items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-orange-700"
+                  >
+                    {t("invite_page.login_to_accept")}
+                  </button>
+                  <p className="mt-3 text-xs text-gray-500">
+                    {t("invite_page.login_hint")}
+                  </p>
+                </>
+              )}
+
+              {/**
+               * Info: (20260816 - Luphia) 拒絕不需要登入，因此兩種情況都顯示。
+               * 位置與樣式刻意低調——這是次要動作，但它必須在，
+               * 否則不想加入的人只能關掉分頁，而那一席會佔到七天後逾期。
+               */}
+              <button
+                type="button"
+                onClick={decline}
+                disabled={isBusy}
+                className="mt-4 inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50"
+              >
+                {status === "DECLINING" && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {t("invite_page.decline")}
+              </button>
+            </>
+          )}
       </div>
 
       <AuthModal

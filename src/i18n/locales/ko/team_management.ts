@@ -7,6 +7,8 @@ export const teamManagement = {
   accepting: "처리 중...",
   no_teams: "팀이 없습니다.",
   invite_member: "멤버 초대",
+  decline_invite: "거절",
+  declining: "처리 중...",
   revoke_invite: "철회",
   revoke_invite_hint:
     "수락되지 않은 초대를 철회합니다. 이미 청구된 좌석 요금은 환불되지 않지만, 비워진 좌석은 다른 사람을 초대하는 데 사용할 수 있습니다.",
@@ -62,6 +64,8 @@ export const teamManagement = {
     revoke_success:
       "초대를 철회했습니다. 해당 좌석은 다른 사람을 초대하는 데 사용할 수 있습니다.",
     error_revoke: "초대 철회에 실패했습니다",
+    decline_success: "초대를 거절했습니다.",
+    error_decline: "초대 거절에 실패했습니다",
   },
   scan_qr_code: "QR 코드 스캔",
   scanning: "스캔 중...",

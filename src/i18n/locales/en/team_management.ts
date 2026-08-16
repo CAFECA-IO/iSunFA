@@ -7,6 +7,8 @@ export const teamManagement = {
   accepting: "Accepting...",
   no_teams: "No teams available.",
   invite_member: "Invite Member",
+  decline_invite: "Decline",
+  declining: "Declining…",
   revoke_invite: "Withdraw",
   revoke_invite_hint:
     "Withdraw this pending invitation. The seat fee already charged is not refunded, but the freed seat can be used to invite someone else.",
@@ -61,6 +63,8 @@ export const teamManagement = {
     revoke_success:
       "Invitation withdrawn. The seat is now available for another invitation.",
     error_revoke: "Failed to withdraw the invitation",
+    decline_success: "Invitation declined.",
+    error_decline: "Failed to decline the invitation",
   },
   scan_qr_code: "Scan QR Code",
   scanning: "Scanning...",

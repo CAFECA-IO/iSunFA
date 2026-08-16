@@ -3,6 +3,7 @@ import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
 import {
   acceptInviteByToken,
+  declineInviteByToken,
   inviteMemberByEmail,
   resolveInviteByToken,
 } from "@/services/team_invitation.service";
@@ -30,6 +31,7 @@ jest.mock("@/repositories/team.repo", () => ({
     getTeamInvitationByEmail: jest.fn(async () => null),
     createTeamInvitation: jest.fn(),
     deleteInvitation: jest.fn(),
+    declineInvitation: jest.fn(),
     findInvitationByTokenHash: jest.fn(),
     getTeamMember: jest.fn(async () => null),
     acceptInvitation: jest.fn(),
@@ -95,6 +97,7 @@ beforeEach(() => {
   asMock(teamRepo.acceptInvitation).mockResolvedValue({
     id: "member-1",
   } as unknown as Awaited<ReturnType<typeof teamRepo.acceptInvitation>>);
+  asMock(teamRepo.declineInvitation).mockResolvedValue(true);
 });
 
 const invite = (email = "friend@example.com") =>
@@ -441,3 +444,80 @@ describe("acceptInviteByToken", () => {
 
 // Info: (20260815 - Luphia) 保留 import 以確保型別對得上（未設定寄信的分支由服務層轉譯錯誤碼）
 void MailNotConfiguredError;
+
+/**
+ * Info: (20260816 - Luphia) 拒絕邀請（條款 §3.6「邀請經拒絕…即行釋出席次」）。
+ *
+ * 這條路徑**不需要登入**，因此它的每一道防線都在 token 上：
+ * 只有 PENDING 且未逾期的邀請能被拒絕，而拒絕的寫入本身要擋得住併發。
+ */
+describe("declineInviteByToken", () => {
+  const pending = {
+    id: "inv-1",
+    teamId: TEAM.id,
+    team: TEAM,
+    role: TeamRole.VIEWER,
+    status: TEAM_INVITATION_STATUS.PENDING,
+    expiresAt: new Date(NOW + 1000),
+  };
+
+  it("拒絕後回傳團隊，並交給 repo 改狀態", async () => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue(
+      pending as unknown as Awaited<
+        ReturnType<typeof teamRepo.findInvitationByTokenHash>
+      >,
+    );
+
+    const result = await declineInviteByToken("token", NOW);
+
+    expect(result.teamId).toBe(TEAM.id);
+    expect(asMock(teamRepo.declineInvitation)).toHaveBeenCalledWith("inv-1");
+  });
+
+  it("逾期的連結不能拒絕", async () => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue({
+      ...pending,
+      expiresAt: new Date(NOW - 1),
+    } as unknown as Awaited<
+      ReturnType<typeof teamRepo.findInvitationByTokenHash>
+    >);
+
+    await expect(declineInviteByToken("token", NOW)).rejects.toThrow();
+    expect(asMock(teamRepo.declineInvitation)).not.toHaveBeenCalled();
+  });
+
+  it("已接受的連結不能再拒絕", async () => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue({
+      ...pending,
+      status: TEAM_INVITATION_STATUS.ACCEPTED,
+    } as unknown as Awaited<
+      ReturnType<typeof teamRepo.findInvitationByTokenHash>
+    >);
+
+    await expect(declineInviteByToken("token", NOW)).rejects.toThrow();
+    expect(asMock(teamRepo.declineInvitation)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260816 - Luphia) 併發：讀到 PENDING、寫入前那一列已被接受。
+   * repo 回 false，此時**不能**回報拒絕成功——那會讓一個其實已經
+   * 加入團隊的人以為自己成功退掉了。
+   */
+  it("寫入時發現已不是 PENDING，不回報拒絕成功", async () => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue(
+      pending as unknown as Awaited<
+        ReturnType<typeof teamRepo.findInvitationByTokenHash>
+      >,
+    );
+    asMock(teamRepo.declineInvitation).mockResolvedValue(false);
+
+    await expect(declineInviteByToken("token", NOW)).rejects.toThrow();
+  });
+
+  it("查無此 token 時視為不存在", async () => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue(null);
+
+    await expect(declineInviteByToken("token", NOW)).rejects.toThrow();
+    expect(asMock(teamRepo.declineInvitation)).not.toHaveBeenCalled();
+  });
+});

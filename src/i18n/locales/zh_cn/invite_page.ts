@@ -12,4 +12,9 @@ export const invitePage = {
     "这个链接可能已被使用、已过期，或已被撤回。请向邀请您的人索取新的链接。",
   joined_title: "已加入团队",
   joined_description: "正在带您前往团队页面…",
+  decline: "我不加入这个团队",
+  decline_failed: "拒绝邀请失败，请稍后再试。",
+  declined_title: "已拒绝邀请",
+  declined_description:
+    "您不会被加入这个团队。若是误按，请向邀请您的人索取新的链接。",
 };

@@ -250,6 +250,49 @@ export async function resolveInviteByToken(
   };
 }
 
+/**
+ * Info: (20260816 - Luphia) 以 token 拒絕邀請（條款 §3.6「邀請經拒絕…即行釋出席次」）。
+ *
+ * **不需要登入**，與接受不同。理由是兩者需要的東西不一樣：加入團隊必須知道加的是誰，
+ * 拒絕不需要——沒有任何人被加進任何地方。而受邀者多半還沒有帳號，
+ * 要求他先註冊才能說「不用了」，等於保證沒有人會用這個功能，
+ * 那一席就會佔到七天後逾期為止，而條款寫的是「經拒絕即行釋出」。
+ *
+ * 代價是拿到轉寄連結的人可以替受邀者拒絕。損失有上限且可回復：
+ * 席次當場空出來（本來就不退費），管理員重新邀請不會再收一次錢。
+ * 反過來（讓連結持有者**接受**）才是不可回復的，所以那一邊要登入。
+ */
+export async function declineInviteByToken(
+  token: string,
+  nowMs: number,
+): Promise<{ teamId: string }> {
+  const invitation = await teamRepo.findInvitationByTokenHash(
+    hashInviteToken(token),
+  );
+  if (
+    !invitation ||
+    invitation.status !== TEAM_INVITATION_STATUS.PENDING ||
+    isInviteExpired(invitation.expiresAt, nowMs)
+  ) {
+    throw toApiError(API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO);
+  }
+
+  /**
+   * Info: (20260816 - Luphia) 沒改到任何一列＝這封邀請剛剛被接受或撤回了。
+   * 當成「查無此邀請」，不要回一個「已拒絕」的假象——
+   * 那會讓一個其實已經加入團隊的人以為自己拒絕成功。
+   */
+  const declined = await teamRepo.declineInvitation(invitation.id);
+  if (!declined) throw toApiError(API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO);
+
+  logger.info("invitation declined", {
+    teamId: invitation.teamId,
+    invitationId: invitation.id,
+  });
+
+  return { teamId: invitation.teamId };
+}
+
 export interface IAcceptInviteParams {
   token: string;
   userId: string;

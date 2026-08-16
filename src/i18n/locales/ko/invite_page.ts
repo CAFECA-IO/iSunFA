@@ -13,4 +13,9 @@ export const invitePage = {
     "이미 사용되었거나, 기한이 지났거나, 취소된 링크일 수 있습니다. 초대한 분에게 새 링크를 요청하세요.",
   joined_title: "팀에 참여했습니다",
   joined_description: "팀 페이지로 이동합니다…",
+  decline: "참여하지 않겠습니다",
+  decline_failed: "초대를 거절하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  declined_title: "초대를 거절했습니다",
+  declined_description:
+    "이 팀에 참여하지 않습니다. 잘못 누르셨다면 초대한 분에게 새 링크를 요청하세요.",
 };

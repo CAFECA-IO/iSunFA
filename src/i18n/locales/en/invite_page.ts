@@ -13,4 +13,9 @@ export const invitePage = {
     "It may have already been used, expired, or been withdrawn. Ask whoever invited you for a new link.",
   joined_title: "You have joined the team",
   joined_description: "Taking you to the team page…",
+  decline: "I don't want to join",
+  decline_failed: "Could not decline the invitation. Please try again later.",
+  declined_title: "Invitation declined",
+  declined_description:
+    "You will not be added to this team. If that was a mistake, ask whoever invited you for a new link.",
 };

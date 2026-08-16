@@ -75,6 +75,8 @@ export interface ITeamRepository {
   ): Promise<Prisma.TeamInvitationGetPayload<{
     include: { team: true; inviter: true };
   }> | null>;
+  // Info: (20260816 - Luphia) 回 `false` 代表這封邀請已不是 PENDING
+  declineInvitation(inviteId: string): Promise<boolean>;
   /**
    * Info: (20260816 - Luphia) 回 `null` 代表這封邀請已不是 PENDING（被搶先接受或已撤回）。
    * 型別上就是可空的，呼叫端才不會把「沒搶到」當成「加入成功」。
@@ -306,6 +308,28 @@ export class TeamRepository implements ITeamRepository {
       where: { id: inviteId },
       include: { team: true, inviter: true },
     });
+  }
+
+  /**
+   * Info: (20260816 - Luphia) 拒絕邀請。回 `false` 代表這封邀請已經不是 PENDING。
+   *
+   * 與 `acceptInvitation` 用同一個原子守衛（`updateMany` 帶 `status: PENDING`）：
+   * 「已經被接受的邀請不能再被拒絕」跟「已經被拒絕的邀請不能再被接受」是同一件事，
+   * 而兩者在時間上可以任意接近。
+   *
+   * 一併清空 `tokenHash` 與 `pendingKey`：連結當場失效，席次立刻空出來給下一次邀請
+   * （`countPendingInvitations` 只數 PENDING）。
+   */
+  async declineInvitation(inviteId: string) {
+    const declined = await prisma.teamInvitation.updateMany({
+      where: { id: inviteId, status: TEAM_INVITATION_STATUS.PENDING },
+      data: {
+        status: TEAM_INVITATION_STATUS.REJECTED,
+        tokenHash: null,
+        pendingKey: null,
+      },
+    });
+    return declined.count > 0;
   }
 
   /**

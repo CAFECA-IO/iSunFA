@@ -13,4 +13,10 @@ export const invitePage = {
     "すでに使用済み、有効期限切れ、または取り消された可能性があります。招待した方に新しいリンクを依頼してください。",
   joined_title: "チームに参加しました",
   joined_description: "チームページへ移動します…",
+  decline: "参加しません",
+  decline_failed:
+    "招待を辞退できませんでした。しばらくしてからお試しください。",
+  declined_title: "招待を辞退しました",
+  declined_description:
+    "このチームには参加しません。誤って操作した場合は、招待した方に新しいリンクを依頼してください。",
 };

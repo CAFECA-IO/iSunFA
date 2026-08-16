@@ -7,6 +7,8 @@ export const teamManagement = {
   accepting: "处理中...",
   no_teams: "目前没有任何团队。",
   invite_member: "邀请成员",
+  decline_invite: "拒绝邀请",
+  declining: "处理中...",
   revoke_invite: "撤回",
   revoke_invite_hint:
     "撤回这封尚未接受的邀请。已收取的席位费用不退还，但释出的席位可用于邀请其他人员。",
@@ -59,6 +61,8 @@ export const teamManagement = {
     seat_reused: "已使用既有的付费席位，本次未再收费。",
     revoke_success: "已撤回邀请，该席位可用于邀请其他人员。",
     error_revoke: "撤回邀请失败",
+    decline_success: "已拒绝邀请。",
+    error_decline: "拒绝邀请失败",
   },
   scan_qr_code: "扫描 QR Code",
   scanning: "正在扫描...",

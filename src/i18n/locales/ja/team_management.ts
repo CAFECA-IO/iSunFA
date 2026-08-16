@@ -7,6 +7,8 @@ export const teamManagement = {
   accepting: "処理中...",
   no_teams: "チームがありません。",
   invite_member: "メンバーを招待",
+  decline_invite: "辞退する",
+  declining: "処理中...",
   revoke_invite: "取り消し",
   revoke_invite_hint:
     "未承諾の招待を取り消します。すでに請求された席の料金は返金されませんが、空いた席は他の方の招待に利用できます。",
@@ -62,6 +64,8 @@ export const teamManagement = {
     revoke_success:
       "招待を取り消しました。この席は他の方の招待に利用できます。",
     error_revoke: "招待の取り消しに失敗しました",
+    decline_success: "招待を辞退しました。",
+    error_decline: "招待の辞退に失敗しました",
   },
   scan_qr_code: "QRコードをスキャン",
   scanning: "スキャン中...",
