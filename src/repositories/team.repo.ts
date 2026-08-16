@@ -6,7 +6,10 @@ import {
   TeamInvitation,
   TeamRole,
 } from "@/generated";
-import { TEAM_INVITATION_STATUS } from "@/constants/status";
+import {
+  TEAM_INVITATION_STATUS,
+  type InviteEmailMatch,
+} from "@/constants/status";
 
 /**
  * Info: (20260814 - Luphia) 團隊 + 我在其中的角色（null = 資料異常，查得到團隊卻查不到成員身分）。
@@ -17,6 +20,20 @@ export type ITeamWithRole = Team & {
   // Info: (20260814 - Luphia) 團隊人數＝訂閱席次數：訂閱畫面要先算得出「席次 × 單價」
   memberCount: number;
 };
+
+/**
+ * Info: (20260817 - Luphia) 接受邀請的參數。改成物件而非位置參數：
+ * 加上稽核欄位後有六個，其中三個是 string，位置參數寫錯順序不會被型別擋下來。
+ */
+export interface IAcceptInvitationParams {
+  inviteId: string;
+  teamId: string;
+  userId: string;
+  role: TeamRole;
+  acceptedAt: Date;
+  // Info: (20260817 - Luphia) INVITE_EMAIL_MATCH；位址邀請無受邀信箱可比對，為 null
+  emailMatch?: InviteEmailMatch | null;
+}
 
 export interface ITeamRepository {
   createTeam(data: Prisma.TeamCreateInput): Promise<Team>;
@@ -57,11 +74,28 @@ export interface ITeamRepository {
    * Info: (20260815 - Luphia) 回傳型別刻意不是 `TeamInvitation`：
    * 這支不吐 `tokenHash`（見實作處說明），型別要照實反映那件事，
    * 否則下一個人會理所當然地在端點裡引用一個實際上不存在的欄位。
+   *
+   * Info: (20260817 - Luphia) 改用 `Pick` 而非 `Omit`：每次資料表加一欄，
+   * `Omit` 就會把新欄位默默納入這個型別，而 select 沒有選它——
+   * 型別說有、實際是 undefined，正是這裡最不該發生的事。
    */
   listTeamInvitations(
     teamId: string,
     status: string,
-  ): Promise<Omit<TeamInvitation, "tokenHash" | "pendingKey" | "updatedAt">[]>;
+  ): Promise<
+    Pick<
+      TeamInvitation,
+      | "id"
+      | "teamId"
+      | "inviterId"
+      | "inviteeAddress"
+      | "inviteeEmail"
+      | "role"
+      | "status"
+      | "expiresAt"
+      | "createdAt"
+    >[]
+  >;
   getPendingInvitationsByAddress(address: string): Promise<
     Prisma.TeamInvitationGetPayload<{
       include: {
@@ -81,12 +115,7 @@ export interface ITeamRepository {
    * Info: (20260816 - Luphia) 回 `null` 代表這封邀請已不是 PENDING（被搶先接受或已撤回）。
    * 型別上就是可空的，呼叫端才不會把「沒搶到」當成「加入成功」。
    */
-  acceptInvitation(
-    inviteId: string,
-    teamId: string,
-    userId: string,
-    role: TeamRole,
-  ): Promise<TeamMember | null>;
+  acceptInvitation(params: IAcceptInvitationParams): Promise<TeamMember | null>;
   getTeamMemberById(memberId: string): Promise<TeamMember | null>;
   countTeamMembersByRole(
     teamId: string,
@@ -342,12 +371,8 @@ export class TeamRepository implements ITeamRepository {
    * 就是**一個付費席次進兩個人**。`updateMany` 帶上 `status: PENDING` 之後，
    * 條件比對發生在資料庫的那一列上，第二個請求會拿到 count 0。
    */
-  async acceptInvitation(
-    inviteId: string,
-    teamId: string,
-    userId: string,
-    role: TeamRole,
-  ) {
+  async acceptInvitation(params: IAcceptInvitationParams) {
+    const { inviteId, teamId, userId, role, acceptedAt, emailMatch } = params;
     return prisma.$transaction(async (tx) => {
       const claimed = await tx.teamInvitation.updateMany({
         where: { id: inviteId, status: TEAM_INVITATION_STATUS.PENDING },
@@ -364,6 +389,14 @@ export class TeamRepository implements ITeamRepository {
            * 這個人日後才能再被邀請一次（見 pending_invite_key.ts）。
            */
           pendingKey: null,
+          /**
+           * Info: (20260817 - Luphia) 稽核軌跡：是哪個帳號用掉這封邀請。
+           * 與成員建立寫在**同一個交易**裡——分開寫就會出現
+           * 「成員存在但邀請沒記下接受者」的中間狀態，而那正是要消滅的斷點。
+           */
+          acceptedByUserId: userId,
+          acceptedAt,
+          acceptedEmailMatch: emailMatch ?? null,
         },
       });
 

@@ -27,6 +27,28 @@ export const TEAM_INVITATION_STATUS = {
   REJECTED: "REJECTED",
 } as const;
 
+/**
+ * Info: (20260817 - Luphia) 受邀信箱與接受者已驗證信箱的比對結果。
+ *
+ * 只記錄、不阻擋——工作信箱收到邀請、用個人 Google 帳號登入是正常行為，
+ * 擋下來只會製造客訴。但稽核時「相符」與「查無可比對信箱」是兩件事，
+ * 混成一個布林值就分不出來了。
+ */
+export const INVITE_EMAIL_MATCH = {
+  // Info: (20260817 - Luphia) 接受者的某個已驗證信箱等於受邀信箱
+  MATCHED: "MATCHED",
+  // Info: (20260817 - Luphia) 有已驗證信箱，但沒有一個等於受邀信箱
+  MISMATCHED: "MISMATCHED",
+  /**
+   * Info: (20260817 - Luphia) 接受者沒有任何已驗證信箱可比對。
+   * 這是常態而非異常：passkey 註冊全程不問 email。
+   */
+  UNAVAILABLE: "UNAVAILABLE",
+} as const;
+
+export type InviteEmailMatch =
+  (typeof INVITE_EMAIL_MATCH)[keyof typeof INVITE_EMAIL_MATCH];
+
 export const ORDER_TYPE = {
   OEN_BINDING: "OEN_BINDING",
   OEN_PAYMENT: "OEN_PAYMENT",

@@ -50,6 +50,8 @@ model User {
   journals              Journal[]
   teamMembers           TeamMember[]
   teamInvitations       TeamInvitation[]       @relation("Inviter")
+  // Info: (20260817 - Luphia) 此帳號用掉的邀請（稽核用；見 TeamInvitation.acceptedByUserId）
+  acceptedInvitations   TeamInvitation[]       @relation("InvitationAcceptor")
   auditLogs             AuditLog[]
   vouchers              Voucher[]
   esgRecords            EsgRecord[]
@@ -183,6 +185,29 @@ model TeamInvitation {
   pendingKey     String?   @unique @map("pending_key")
   role           TeamRole
   status         String    @default("PENDING") // Info: (20260325 - Tzuhan) PENDING, ACCEPTED, REJECTED
+  /**
+   * Info: (20260817 - Luphia) 實際用掉這封邀請的帳號。
+   *
+   * 稽核軌跡在此之前是斷的：邀請記的是 email，成員記的是帳號，而兩者之間
+   * 沒有任何欄位相連——「邀請 a@x.com」與「成員 0xAb…」是不是同一個人，
+   * 從資料庫看不出來。這一欄不宣稱那個帳號屬於該信箱（見下方 acceptedEmailMatch），
+   * 只誠實記錄「這封邀請被這個帳號用掉了」。
+   */
+  acceptedByUserId String?  @map("accepted_by_user_id")
+  acceptedBy       User?    @relation("InvitationAcceptor", fields: [acceptedByUserId], references: [id])
+  // Info: (20260817 - Luphia) 接受時點。不靠 updatedAt——那一欄任何後續更新都會動
+  acceptedAt       DateTime? @map("accepted_at")
+  /**
+   * Info: (20260817 - Luphia) 受邀信箱與接受者已驗證信箱的比對結果（INVITE_EMAIL_MATCH）。
+   *
+   * **記錄，不阻擋**：工作信箱收到邀請、用個人 Google 帳號登入是完全正常的行為。
+   * 位址邀請（無 inviteeEmail）為 null——不適用，而不是「比對失敗」。
+   *
+   * `UNAVAILABLE` 是常態而非異常：本站的 passkey 註冊全程不問 email
+   * （`User` 沒有 email 欄位，email 只存在於第三方綁定 `UserIdentity`），
+   * 因此以 FIDO2 註冊的受邀者根本沒有可比對的信箱。
+   */
+  acceptedEmailMatch String? @map("accepted_email_match")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 

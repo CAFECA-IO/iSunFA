@@ -8,11 +8,12 @@ import {
   resolveInviteByToken,
 } from "@/services/team_invitation.service";
 import { teamRepo } from "@/repositories/team.repo";
+import { userIdentityRepo } from "@/repositories/user_identity.repo";
 import { chargeSeatAddition } from "@/services/team_seat.service";
 import { sendMail, MailNotConfiguredError } from "@/services/mail.service";
 import { systemSettingService } from "@/services/system_setting.service";
 import { hashInviteToken } from "@/lib/team/invite_token";
-import { TEAM_INVITATION_STATUS } from "@/constants/status";
+import { INVITE_EMAIL_MATCH, TEAM_INVITATION_STATUS } from "@/constants/status";
 import { TeamRole } from "@/constants/team";
 
 /**
@@ -35,6 +36,12 @@ jest.mock("@/repositories/team.repo", () => ({
     findInvitationByTokenHash: jest.fn(),
     getTeamMember: jest.fn(async () => null),
     acceptInvitation: jest.fn(),
+  },
+}));
+
+jest.mock("@/repositories/user_identity.repo", () => ({
+  userIdentityRepo: {
+    findByUserId: jest.fn(async () => []),
   },
 }));
 
@@ -98,6 +105,8 @@ beforeEach(() => {
     id: "member-1",
   } as unknown as Awaited<ReturnType<typeof teamRepo.acceptInvitation>>);
   asMock(teamRepo.declineInvitation).mockResolvedValue(true);
+  // Info: (20260817 - Luphia) 預設為 passkey 註冊的帳號：沒有任何第三方綁定，也就沒有 email
+  asMock(userIdentityRepo.findByUserId).mockResolvedValue([]);
 });
 
 const invite = (email = "friend@example.com") =>
@@ -330,10 +339,118 @@ describe("acceptInviteByToken", () => {
 
     expect(result.teamId).toBe(TEAM.id);
     expect(asMock(teamRepo.acceptInvitation)).toHaveBeenCalledWith(
-      "inv-1",
-      TEAM.id,
-      "user-2",
-      TeamRole.EDITOR,
+      expect.objectContaining({
+        inviteId: "inv-1",
+        teamId: TEAM.id,
+        userId: "user-2",
+        role: TeamRole.EDITOR,
+      }),
+    );
+  });
+
+  /**
+   * Info: (20260817 - Luphia) 稽核軌跡：邀請記的是 email、成員記的是帳號，
+   * 中間原本沒有任何欄位相連。這一條釘住「是誰用掉了這封邀請」有被寫下來。
+   */
+  it("記下接受者與接受時點", async () => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue(
+      pending as unknown as Awaited<
+        ReturnType<typeof teamRepo.findInvitationByTokenHash>
+      >,
+    );
+
+    await acceptInviteByToken({ token: "token", userId: "user-2", nowMs: NOW });
+
+    const args = asMock(teamRepo.acceptInvitation).mock.calls[0][0];
+    expect(args.userId).toBe("user-2");
+    expect(args.acceptedAt.getTime()).toBe(NOW);
+  });
+
+  /**
+   * Info: (20260817 - Luphia) passkey 註冊的帳號沒有任何 email 可比對
+   * （`User` 沒有 email 欄位）。這是常態，要記成 UNAVAILABLE 而不是「不符」——
+   * 兩者在稽核報告上的意義完全不同。
+   */
+  it("接受者沒有已驗證信箱時記為 UNAVAILABLE", async () => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue({
+      ...pending,
+      inviteeEmail: "friend@example.com",
+    } as unknown as Awaited<
+      ReturnType<typeof teamRepo.findInvitationByTokenHash>
+    >);
+    asMock(userIdentityRepo.findByUserId).mockResolvedValue([]);
+
+    await acceptInviteByToken({ token: "token", userId: "user-2", nowMs: NOW });
+
+    expect(asMock(teamRepo.acceptInvitation).mock.calls[0][0].emailMatch).toBe(
+      INVITE_EMAIL_MATCH.UNAVAILABLE,
+    );
+  });
+
+  it("第三方綁定的已驗證信箱相符時記為 MATCHED", async () => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue({
+      ...pending,
+      inviteeEmail: "friend@example.com",
+    } as unknown as Awaited<
+      ReturnType<typeof teamRepo.findInvitationByTokenHash>
+    >);
+    asMock(userIdentityRepo.findByUserId).mockResolvedValue([
+      { email: "Friend@Example.com", emailVerified: true },
+    ]);
+
+    await acceptInviteByToken({ token: "token", userId: "user-2", nowMs: NOW });
+
+    expect(asMock(teamRepo.acceptInvitation).mock.calls[0][0].emailMatch).toBe(
+      INVITE_EMAIL_MATCH.MATCHED,
+    );
+  });
+
+  /**
+   * Info: (20260817 - Luphia) 用別的信箱登入**不會被擋**——
+   * 工作信箱收到邀請、用個人 Google 帳號登入是正常行為。只記錄。
+   */
+  it("信箱不符時照樣加入，但記為 MISMATCHED", async () => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue({
+      ...pending,
+      inviteeEmail: "friend@example.com",
+    } as unknown as Awaited<
+      ReturnType<typeof teamRepo.findInvitationByTokenHash>
+    >);
+    asMock(userIdentityRepo.findByUserId).mockResolvedValue([
+      { email: "someone.else@example.com", emailVerified: true },
+    ]);
+
+    const result = await acceptInviteByToken({
+      token: "token",
+      userId: "user-2",
+      nowMs: NOW,
+    });
+
+    expect(result.teamId).toBe(TEAM.id);
+    expect(asMock(teamRepo.acceptInvitation).mock.calls[0][0].emailMatch).toBe(
+      INVITE_EMAIL_MATCH.MISMATCHED,
+    );
+  });
+
+  /**
+   * Info: (20260817 - Luphia) 未驗證的 email 是使用者宣稱的字串，
+   * 拿它比出來的「相符」會被當成稽核證據，但它什麼都不保證。
+   */
+  it("未驗證的信箱不列入比對", async () => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue({
+      ...pending,
+      inviteeEmail: "friend@example.com",
+    } as unknown as Awaited<
+      ReturnType<typeof teamRepo.findInvitationByTokenHash>
+    >);
+    asMock(userIdentityRepo.findByUserId).mockResolvedValue([
+      { email: "friend@example.com", emailVerified: false },
+    ]);
+
+    await acceptInviteByToken({ token: "token", userId: "user-2", nowMs: NOW });
+
+    expect(asMock(teamRepo.acceptInvitation).mock.calls[0][0].emailMatch).toBe(
+      INVITE_EMAIL_MATCH.UNAVAILABLE,
     );
   });
 

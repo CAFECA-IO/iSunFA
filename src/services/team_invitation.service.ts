@@ -11,6 +11,8 @@ import {
   INVITE_TOKEN_TTL_DAYS,
 } from "@/lib/team/invite_token";
 import { buildPendingInviteKey } from "@/lib/team/pending_invite_key";
+import { resolveInviteEmailMatch } from "@/lib/team/invite_email_match";
+import { userIdentityRepo } from "@/repositories/user_identity.repo";
 import {
   chargeSeatAddition,
   type ISeatChargeResult,
@@ -338,12 +340,29 @@ export async function acceptInviteByToken(
     return { teamId: invitation.teamId };
   }
 
-  const member = await teamRepo.acceptInvitation(
-    invitation.id,
-    invitation.teamId,
-    userId,
-    invitation.role,
+  /**
+   * Info: (20260817 - Luphia) 稽核用的信箱比對（不影響能否加入）。
+   *
+   * 只在有第三方綁定時才比得出東西；純 passkey 註冊的帳號沒有任何 email
+   * （`User` 沒有 email 欄位），結果會是 `UNAVAILABLE`——那是常態，不是異常。
+   * 邀請信箱是**投遞地址，不是身分斷言**，見 invite_email_match.ts。
+   */
+  const identities = await userIdentityRepo.findByUserId(userId);
+  const emailMatch = resolveInviteEmailMatch(
+    invitation.inviteeEmail,
+    identities
+      .filter((identity) => identity.emailVerified)
+      .map((identity) => identity.email),
   );
+
+  const member = await teamRepo.acceptInvitation({
+    inviteId: invitation.id,
+    teamId: invitation.teamId,
+    userId,
+    role: invitation.role,
+    acceptedAt: new Date(nowMs),
+    emailMatch,
+  });
 
   /**
    * Info: (20260816 - Luphia) `null` = 這一列在我們讀取之後、寫入之前已經不是 PENDING。
