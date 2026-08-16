@@ -240,6 +240,12 @@ export async function runBilledCarbonTask<T>(
   const actualCredits = settleFaithCredits(totalTokens, billing);
   const settlement = await settleSpend({
     idempotencyKey: billingKey,
+    /**
+     * Info: (20260815 - Luphia) 結算當下的時間（PR #6652 第二輪 C-7）：
+     * 匯入單章實測 87 秒、結構圖近 90 秒，跨越 5 小時視窗邊界是常態；
+     * 追補寫回預扣時的視窗等於寫進一個已經過期的桶。
+     */
+    settledAtSec: Math.floor(Date.now() / 1000),
     actualCost: actualCredits,
     operatorUserId: userId,
     nowSec,

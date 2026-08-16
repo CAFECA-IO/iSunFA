@@ -562,6 +562,17 @@ export interface ISettleParams {
    * 時間一律由呼叫端注入，維持視窗數學的決定論。
    */
   nowSec?: number;
+  /**
+   * Info: (20260815 - Luphia) **結算當下**的時間（PR #6652 第二輪 C-7）。
+   *
+   * 追補必須記進「結算當下」的視窗，而不是預扣時的視窗：長時間工作
+   * （匯入實測 87 秒、結構圖近 90 秒）會跨過 5 小時的視窗邊界，
+   * 寫回舊視窗等於寫進一個已經過期的桶——`sumWindowUsage` 只看當前視窗，
+   * 那筆超額於是完全不影響後續額度，追補的防濫用作用歸零。
+   *
+   * 未提供時退回 `nowSec`（行為與改動前相同）。同樣由呼叫端注入以維持決定論。
+   */
+  settledAtSec?: number;
 }
 
 export interface ISettleResult {
@@ -607,8 +618,14 @@ function resolveSettledSource(
 export async function settleSpend(
   params: ISettleParams,
 ): Promise<ISettleResult> {
-  const { idempotencyKey, actualCost, operatorUserId, nowSec, context } =
-    params;
+  const {
+    idempotencyKey,
+    actualCost,
+    operatorUserId,
+    nowSec,
+    settledAtSec,
+    context,
+  } = params;
 
   if (typeof actualCost !== "bigint" || actualCost <= BigInt(0)) {
     throw toApiError(API_ERRORS.TW_INVALID_SPEND_AMOUNT);
@@ -637,9 +654,21 @@ export async function settleSpend(
 
     if (actualCost > held) {
       const shortfall = actualCost - held;
-      const windowKey5h = records.windowKey5h ?? getWindowKey5hOrNull(nowSec);
+      /**
+       * Info: (20260815 - Luphia) 追補記進**結算當下**的視窗（PR #6652 第二輪 C-7）。
+       *
+       * 原本沿用預扣那一列的視窗 key，而長時間工作會跨過 5 小時邊界——
+       * 追補於是寫進一個已經過期的桶，`sumWindowUsage` 只看當前視窗，
+       * 那筆超額完全不影響後續額度，「防止用戶靠只剩 1 點無限發長訊息」的作用歸零。
+       *
+       * 退款（`settle:`）則相反，仍寫回**原視窗**：那是把當初多扣的還回去，
+       * 記在原處才能讓該視窗的 SUM 與實際用量一致。
+       */
+      const settlementSec = settledAtSec ?? nowSec;
+      const windowKey5h =
+        getWindowKey5hOrNull(settlementSec) ?? records.windowKey5h;
       const windowKeyWeek =
-        records.windowKeyWeek ?? getWindowKeyWeekOrNull(nowSec);
+        getWindowKeyWeekOrNull(settlementSec) ?? records.windowKeyWeek;
       const teamId = records.teamId ?? context?.teamId ?? null;
       const userId = records.userId ?? context?.userId ?? null;
       const featureCode = records.featureCode ?? context?.featureCode ?? null;

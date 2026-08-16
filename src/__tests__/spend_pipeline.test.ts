@@ -14,7 +14,12 @@ import {
   SPEND_SOURCE,
   WALLET_OP_OUTCOME,
 } from "@/constants/subscription_quota";
-import { getResetAt5h, getResetAtWeek } from "@/lib/quota/window";
+import {
+  getResetAt5h,
+  getResetAtWeek,
+  getWindowKey5h,
+  getWindowKeyWeek,
+} from "@/lib/quota/window";
 import { teamRepo } from "@/repositories/team.repo";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { teamQuotaUsageRepo } from "@/repositories/team_quota_usage.repo";
@@ -723,6 +728,48 @@ describe("settleSpend", () => {
   });
 
   /**
+   * Info: (20260815 - Luphia) 追補要記進**結算當下**的視窗（PR #6652 第二輪 C-7）。
+   *
+   * 匯入單章實測 87 秒、結構圖近 90 秒，跨過 5 小時視窗邊界是常態。
+   * 沿用預扣時的視窗 key 等於把追補寫進一個已經過期的桶——`sumWindowUsage`
+   * 只看當前視窗，那筆超額於是完全不影響後續額度，追補的防濫用作用歸零。
+   */
+  it("records the top-up in the window the settlement happens in", async () => {
+    asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockResolvedValue({
+      teamId: "team-1",
+      userId: "user-1",
+      featureCode: BILLABLE_FEATURE_CODE.FAITH_CHAT,
+      amount: BigInt(2),
+      // Info: (20260815 - Luphia) 預扣落在上一個 5 小時視窗
+      windowKey5h: getWindowKey5h(NOW_SEC),
+      windowKeyWeek: getWindowKeyWeek(NOW_SEC),
+    } as unknown);
+    asMock(chargeChainCredits).mockResolvedValue({ charged: false });
+
+    // Info: (20260815 - Luphia) 結算發生在 5 小時之後——已經是下一個視窗
+    const settledAtSec = NOW_SEC + 5 * 60 * 60;
+
+    const result = await settleSpend({
+      idempotencyKey: "faith:msg-1",
+      actualCost: BigInt(6),
+      operatorUserId: "worker",
+      nowSec: NOW_SEC,
+      settledAtSec,
+    });
+
+    expect(result.toppedUp).toBe("4");
+    expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        idempotencyKey: "topup:faith:msg-1",
+        windowKey5h: getWindowKey5h(settledAtSec),
+        windowKeyWeek: getWindowKeyWeek(settledAtSec),
+      }),
+    );
+    // Info: (20260815 - Luphia) 確認真的換了視窗，否則這條測試等於沒測
+    expect(getWindowKey5h(settledAtSec)).not.toBe(getWindowKey5h(NOW_SEC));
+  });
+
+  /**
    * Info: (20260814 - Luphia) 結算差額優先向成員的鏈上點數收取（PR #6652 第二輪 A-1）。
    * 預扣被額度封頂時，超出的部分本來就是團隊額度之外的用量。
    */
@@ -785,6 +832,37 @@ describe("settleSpend", () => {
       expect.objectContaining({
         amount: BigInt(4),
         idempotencyKey: "topup:faith:msg-1",
+      }),
+    );
+  });
+
+  /**
+   * Info: (20260815 - Luphia) 退款與追補的方向相反（PR #6652 第二輪 C-7）：
+   * 退款是把當初多扣的還回去，記在**原視窗**才能讓該視窗的 SUM 與實際用量一致。
+   */
+  it("keeps refunds in the window the hold was recorded in", async () => {
+    asMock(teamQuotaUsageRepo.findByIdempotencyKey).mockResolvedValue({
+      teamId: "team-1",
+      userId: "user-1",
+      featureCode: BILLABLE_FEATURE_CODE.FAITH_CHAT,
+      amount: BigInt(6),
+      windowKey5h: 111,
+      windowKeyWeek: 222,
+    } as unknown);
+
+    await settleSpend({
+      idempotencyKey: "faith:msg-1",
+      actualCost: BigInt(4),
+      operatorUserId: "worker",
+      nowSec: NOW_SEC,
+      settledAtSec: NOW_SEC + 5 * 60 * 60,
+    });
+
+    expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        idempotencyKey: "settle:faith:msg-1",
+        windowKey5h: 111,
+        windowKeyWeek: 222,
       }),
     );
   });

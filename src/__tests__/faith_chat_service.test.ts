@@ -137,6 +137,12 @@ describe("runFaithBilledChat", () => {
       actualCost: BigInt(4),
       operatorUserId: "user-1",
       nowSec: NOW_SEC,
+      /**
+       * Info: (20260815 - Luphia) 追補要記進結算當下的視窗（PR #6652 第二輪 C-7），
+       * 因此結算時間另外注入；長訊息跨過 5 小時邊界時，寫回請求開始的視窗
+       * 等於寫進一個已經過期的桶。
+       */
+      settledAtSec: expect.any(Number),
       context: {
         teamId: "team-1",
         userId: "user-1",

@@ -156,6 +156,12 @@ export async function runFaithBilledChat(
    */
   const settlement = await settleSpend({
     idempotencyKey: billingKey,
+    /**
+     * Info: (20260815 - Luphia) 結算當下的時間（PR #6652 第二輪 C-7）：
+     * 追補要記進此刻的視窗，而不是請求開始時的——長訊息跨過 5 小時邊界時，
+     * 寫回舊視窗等於寫進一個已經過期的桶。
+     */
+    settledAtSec: Math.floor(Date.now() / 1000),
     actualCost: actualCredits,
     operatorUserId: userId,
     nowSec: params.nowSec,
