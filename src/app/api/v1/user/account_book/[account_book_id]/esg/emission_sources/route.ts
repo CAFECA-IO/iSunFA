@@ -1,4 +1,5 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { parsePositiveInt } from "@/lib/utils/pagination";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { accountBookRepo } from "@/repositories/account_book.repo";
@@ -35,8 +36,13 @@ export async function GET(
     // Info: (20260420 - Julian) 解析 Query Parameters
     const { searchParams } = new URL(request.url);
     const keyword = searchParams.get("keyword")?.toLowerCase() || "";
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const pageSize = parseInt(searchParams.get("pageSize") || "10", 10);
+    const page = parsePositiveInt(searchParams.get("page"), {
+      fallback: 1,
+    });
+    const pageSize = parsePositiveInt(searchParams.get("pageSize"), {
+      fallback: 10,
+      max: 100,
+    });
 
     // Info: (20260421 - Julian) 取得排放源清單
     const { data, meta } = await esgRepo.getEsgEmissionSources(

@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { parsePositiveInt } from "@/lib/utils/pagination";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { businessMonitorService } from "@/services/business_monitor.service";
@@ -14,8 +15,13 @@ export async function GET(req: NextRequest) {
     const company = searchParams.get("company") || undefined;
     const industry = searchParams.get("industry") || undefined;
     const year = searchParams.get("year") || undefined;
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const pageSize = parseInt(searchParams.get("pageSize") || "4", 10);
+    const page = parsePositiveInt(searchParams.get("page"), {
+      fallback: 1,
+    });
+    const pageSize = parsePositiveInt(searchParams.get("pageSize"), {
+      fallback: 4,
+      max: 100,
+    });
 
     const result = await businessMonitorService.getReports({
       query,

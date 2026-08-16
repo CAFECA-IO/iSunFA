@@ -36,3 +36,31 @@ export function parsePositiveInt(
   if (!Number.isSafeInteger(parsed) || parsed <= 0) return clamp(fallback);
   return clamp(parsed);
 }
+
+/**
+ * Info: (20260815 - Luphia) 選填版：未提供或格式不合法時回 `undefined`（PR #6652 第二輪 C-8）。
+ *
+ * 有些端點的分頁預設值在下游的 service 裡，因此參數本身是可選的
+ * （`searchParams.get("page") ? parseInt(...) : undefined`）。
+ * 那個寫法的問題只在「有值但不是數字」——`parseInt("abc")` 回 NaN 並一路傳到 Prisma。
+ * 回 `undefined` 讓下游套用它自己的預設值，行為與「沒帶這個參數」一致。
+ *
+ * 刻意不設上限：這些端點的頁面大小由下游決定，在這裡夾一個數字會悄悄改變
+ * 既有呼叫端拿得到的筆數。這支函式只負責「不要讓 NaN 流出去」。
+ */
+export function parseOptionalPositiveInt(
+  raw: string | null | undefined,
+  options: { min?: number; max?: number } = {},
+): number | undefined {
+  if (raw === null || raw === undefined) return undefined;
+  const trimmed = raw.trim();
+  if (!/^\d+$/.test(trimmed)) return undefined;
+
+  const parsed = Number(trimmed);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) return undefined;
+
+  const { min, max } = options;
+  if (typeof min === "number" && parsed < min) return min;
+  if (typeof max === "number" && parsed > max) return max;
+  return parsed;
+}
