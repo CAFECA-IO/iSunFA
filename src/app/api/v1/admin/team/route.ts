@@ -1,4 +1,5 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { parsePositiveInt } from "@/lib/utils/pagination";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { Role, TeamRole } from "@/generated";
@@ -27,10 +28,14 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const search = (searchParams.get("search") || "").trim();
     const userId = searchParams.get("userId") || "";
-    const limit = Math.min(
-      Math.max(parseInt(searchParams.get("limit") || "20", 10), 1),
-      100,
-    );
+    /**
+     * Info: (20260815 - Luphia) `?limit=abc` 原本會變成 NaN 一路傳到 Prisma 的 take
+     * 而回 500（PR #6652 第二輪 C-8）。使用者打錯一個字元不該讓端點爆炸。
+     */
+    const limit = parsePositiveInt(searchParams.get("limit"), {
+      fallback: 20,
+      max: 100,
+    });
 
     const teams = await prisma.team.findMany({
       where: {

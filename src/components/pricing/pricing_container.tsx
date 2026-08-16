@@ -8,10 +8,7 @@ import { MoneyUtil } from "@/lib/utils/money";
 import { CREDIT_PLANS } from "@/config/credit_plans";
 import { PaymentStep } from "@/interfaces/payment";
 import { PendingBillingIntervalType } from "@/types/pricing";
-import {
-  SUBSCRIPTION_PLAN_CREDITS,
-  SUBSCRIPTION_PLAN_PRICE,
-} from "@/constants/price";
+import { SUBSCRIPTION_PLAN_PRICE } from "@/constants/price";
 
 import ConfirmModal from "@/components/common/confirm_modal";
 import AuthModal from "@/components/auth/auth_modal";
@@ -107,14 +104,17 @@ export default function PricingContainer({
       SUBSCRIPTION_PLAN_PRICE[planKey as keyof typeof SUBSCRIPTION_PLAN_PRICE][
         billingInterval === "month" ? "monthly" : "yearly"
       ].toString();
-    const credits =
-      SUBSCRIPTION_PLAN_CREDITS[
-        planKey as keyof typeof SUBSCRIPTION_PLAN_CREDITS
-      ].toString();
-
+    /**
+     * Info: (20260815 - Luphia) 訂閱不帶點數（PR #6652 第二輪 D）。
+     *
+     * `SUBSCRIPTION_PLAN_CREDITS` 是**對外承諾的保守值**，只用於方案頁把額度換算成
+     * 「每月最多諮詢 N 個問題」（見 constants/price.ts 的說明）。先前把它灌進 modal
+     * 的 credits state，靠 modal 內三道 `isTeamSubscription` 判斷才不會顯示出來——
+     * 不變式應該放在資料來源，而不是散在呈現層的三個條件裡。
+     */
     setPendingAmount(amount);
-    setPendingCredits(credits);
-    setPendingBaseCredits(credits);
+    setPendingCredits("0");
+    setPendingBaseCredits("0");
     setPendingBonusCredits("0");
     setPendingDisplayPrice(`NT$ ${Number(amount).toLocaleString()}`);
     setPendingTitle(title);

@@ -201,7 +201,14 @@ export async function chargeSeatAddition(
     ? await paymentRepo.getPaymentMethodById(paymentMethodId)
     : null;
 
-  if (!lastOrder || !paymentMethod?.token) {
+  /**
+   * Info: (20260815 - Luphia) 只判斷 `paymentMethod?.token`（PR #6652 第二輪 D）。
+   *
+   * `lastOrder` 為 null 時 `paymentMethodId` 必為 undefined，`paymentMethod` 也必為 null——
+   * 原本的 `!lastOrder ||` 永遠不會是那個為真的一半，而對應測試也只 mock 了後者，
+   * 刪掉前半段不會有任何測試變紅。留著會讓讀者以為存在一條需要它的路徑。
+   */
+  if (!paymentMethod?.token || !lastOrder) {
     /**
      * Info: (20260814 - Luphia) 沒有可扣款的卡就不能加人：放行等於送出一個免費席次，
      * 而且沒有任何後續流程會回頭補收。請團隊先更新付款方式。

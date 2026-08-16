@@ -170,6 +170,17 @@ export class TeamSubscriptionRepository {
         planId: TEAM_PLAN.FREE,
         status: TEAM_SUBSCRIPTION_STATUS.ACTIVE,
         autoRenew: false,
+        /**
+         * Info: (20260815 - Luphia) 降級時一併把單價歸零（PR #6652 第二輪 D）。
+         *
+         * 不歸零的話，降級後 `unitPrice` 仍是 840，而「免費方案不補收」全靠
+         * `resolveEffectivePlanId` 那一層擋著——防線只剩一道，且是遠處的一道。
+         * 資料本身就該說實話：免費方案沒有單價。
+         *
+         * `seats` 保留：那是團隊實際人數的快照，與收不收費無關，
+         * 而免費版的人數上限另有把關（`FREE_PLAN_MAX_MEMBERS`）。
+         */
+        unitPrice: 0,
       },
       create: {
         teamId,
@@ -178,6 +189,7 @@ export class TeamSubscriptionRepository {
         currentPeriodStart: new Date(nowMs),
         currentPeriodEnd: new Date(nowMs),
         autoRenew: false,
+        unitPrice: 0,
       },
     });
   }

@@ -78,10 +78,16 @@ model TeamSubscription {
   seats Int @default(1)
 
   /**
-   * Info: (20260812 - Luphia) 每席單價快照（分為單位的整數，TWD 即元）。
+   * Info: (20260812 - Luphia) 每席單價快照（**元**為單位的整數，TWD）。
    * 快照而非即時讀方案表：調價不得回溯既有訂閱，且帳單金額要能重算驗證。
+   *
+   * Info: (20260815 - Luphia) 實作為 `unitPrice Int @map("unit_price")`（PR #6652 第二輪 D）。
+   * 草案原寫 `seatUnitPrice BigInt @map("seat_unit_price")`（分），與實作不符已更正：
+   * 目前所有方案價格都是整數元，Int 不掉精度；若日後出現非整數元的定價，
+   * 這裡與 `Order.amount`（BigInt）之間的型別落差要一併重新檢視。
    */
-  seatUnitPrice   BigInt @map("seat_unit_price")
+  unitPrice       Int    @map("unit_price")
+  // Info: (20260815 - Luphia) 實作**未**建此欄：計費週期取自最後一張訂單的 data.billingInterval
   billingInterval String @map("billing_interval") // BILLING_INTERVAL 常數
 }
 ```
