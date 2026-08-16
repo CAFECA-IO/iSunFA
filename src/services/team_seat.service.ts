@@ -31,6 +31,18 @@ function toApiError(def: IErrorDef): ApiError {
   return new ApiError(def.code, def.message, def.status);
 }
 
+/**
+ * Info: (20260815 - Luphia) Prisma 的唯一鍵衝突（P2002）。
+ * 在冪等的建單路徑上，這不是錯誤而是「另一個請求已經做過了」。
+ */
+function isUniqueKeyConflict(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as { code?: string }).code === "P2002"
+  );
+}
+
 // Info: (20260814 - Luphia) 席次補收為 merchant-initiated 交易，無 FIDO 簽章；此標記寫入訂單供稽核
 const SEAT_AUTH_MARKER = JSON.stringify({ verifiedVia: "seat_addition" });
 
@@ -221,25 +233,45 @@ export async function chargeSeatAddition(
   }
 
   const user = await webAuthnRepo.findUserById(lastOrder.userId);
-  const order = await generatePaymentOrder(lastOrder.userId, {
-    type: ORDER_TYPE.BILLING_SEAT_ADDITION,
-    amount,
-    unit: CURRENCY_UNIT.TWD,
-    // Info: (20260814 - Luphia) 席次補收不發點數，只是把新席次的期中費用收齊
-    credits: 0,
-    paymentMethodId: paymentMethod.id,
-    title: `iSunFA Team Seat Addition - ${subscription.planId} x${seats}`,
-    teamId,
-    seats,
-    unitPrice: subscription.unitPrice,
-    data: {
-      seatAddition: true,
-      // Info: (20260814 - Luphia) 冪等鍵與發起者寫進訂單：重試不重扣、事後查得出是誰發動的
-      idempotencyKey: idempotencyKey ?? null,
-      operatorUserId: operatorUserId ?? null,
+  /**
+   * Info: (20260815 - Luphia) 建單失敗且是唯一鍵衝突＝另一個並發請求已經扣過（第二輪 B-3）。
+   *
+   * 上方的「先查有沒有」擋得住循序重試，擋不住同時抵達的兩個請求——
+   * 兩邊都查不到就都會往下走。真正的防線是資料庫的唯一約束，這裡把它翻譯成「重放」。
+   */
+  let order;
+  try {
+    order = await generatePaymentOrder(lastOrder.userId, {
+      type: ORDER_TYPE.BILLING_SEAT_ADDITION,
+      amount,
+      unit: CURRENCY_UNIT.TWD,
+      // Info: (20260814 - Luphia) 席次補收不發點數，只是把新席次的期中費用收齊
+      credits: 0,
+      paymentMethodId: paymentMethod.id,
+      title: `iSunFA Team Seat Addition - ${subscription.planId} x${seats}`,
       teamId,
-    },
-  });
+      seats,
+      unitPrice: subscription.unitPrice,
+      // Info: (20260815 - Luphia) 由 DB 的唯一約束擋下並發的重複建單（第二輪 B-3）
+      idempotencyKey,
+      data: {
+        seatAddition: true,
+        // Info: (20260814 - Luphia) 發起者寫進訂單：事後查得出是誰發動的
+        idempotencyKey: idempotencyKey ?? null,
+        operatorUserId: operatorUserId ?? null,
+        teamId,
+      },
+    });
+  } catch (error) {
+    if (isUniqueKeyConflict(error)) {
+      logger.info("seat addition raced; charge skipped", {
+        teamId,
+        idempotencyKey: idempotencyKey ?? "(none)",
+      });
+      return { charged: false, amount: 0, seats };
+    }
+    throw error;
+  }
 
   const orderData = {
     teamId,

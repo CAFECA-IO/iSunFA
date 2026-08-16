@@ -35,6 +35,75 @@ function isUniqueConstraintError(error: unknown): boolean {
 }
 
 export class TeamQuotaUsageRepository {
+  /**
+   * Info: (20260815 - Luphia) 以 advisory lock 序列化同一成員的額度讀寫（PR #6652 第二輪 C-6）。
+   *
+   * 「先 SUM 再寫入」中間沒有任何互斥：併發的 N 個請求會讀到同一個 used，
+   * 各自判斷「還有額度」，然後各寫一筆——超額幅度是 **併發數 × 單筆**，
+   * 而 §5.1 容許的是「最後一筆超額」，指的是一筆。
+   *
+   * 用 Postgres 的交易級 advisory lock（`pg_advisory_xact_lock`）而非資料列鎖：
+   * 要鎖的是「這個成員在這個視窗的用量總和」，那不是任何一列，沒有列可以鎖。
+   * 鎖在交易結束時自動釋放，不需要善後，也不會因為程式提早 return 而外洩。
+   *
+   * 鎖的粒度是 (teamId, userId)：不同成員互不阻塞，而同一成員的併發請求本來就
+   * 只有一個能贏——這正是我們要的。
+   */
+  async withMemberQuotaLock<T>(
+    teamId: string,
+    userId: string,
+    operation: (tx: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
+    return prisma.$transaction(async (tx) => {
+      /**
+       * Info: (20260815 - Luphia) hashtext 把字串壓成 int4，兩層 hash 湊成 lock 的 (int, int)。
+       * 碰撞的後果只是「兩個不相干的成員偶爾互相等一下」，不影響正確性。
+       */
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${teamId}), hashtext(${userId}))`;
+      return operation(tx);
+    });
+  }
+
+  /**
+   * Info: (20260815 - Luphia) 交易內的用量聚合，與 `sumWindowUsage` 同一套條件。
+   * 供 `withMemberQuotaLock` 內使用——鎖與讀取必須在同一個交易裡，否則鎖等於沒鎖。
+   */
+  async sumWindowUsageInTx(
+    tx: Prisma.TransactionClient,
+    teamId: string,
+    userId: string,
+    windowKey5h: number,
+    windowKeyWeek: number,
+  ): Promise<IWindowUsageSum> {
+    const [sum5h, sumWeek] = await Promise.all([
+      tx.teamQuotaUsage.aggregate({
+        where: { teamId, userId, windowKey5h },
+        _sum: { amount: true },
+      }),
+      tx.teamQuotaUsage.aggregate({
+        where: { teamId, userId, windowKeyWeek },
+        _sum: { amount: true },
+      }),
+    ]);
+    return {
+      used5h: sum5h._sum.amount ?? BigInt(0),
+      usedWeek: sumWeek._sum.amount ?? BigInt(0),
+    };
+  }
+
+  // Info: (20260815 - Luphia) 交易內的用量寫入，與 createUsage 同語意（冪等由 unique 保證）
+  async createUsageInTx(
+    tx: Prisma.TransactionClient,
+    input: ICreateUsageInput,
+  ): Promise<void> {
+    try {
+      await tx.teamQuotaUsage.create({ data: input });
+    } catch (error) {
+      // Info: (20260815 - Luphia) 冪等重放：同一把鍵已入帳，視為成功
+      if (!isUniqueConstraintError(error)) throw error;
+    }
+  }
+
   async findByIdempotencyKey(
     idempotencyKey: string,
   ): Promise<TeamQuotaUsage | null> {

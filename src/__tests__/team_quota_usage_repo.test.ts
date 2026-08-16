@@ -16,15 +16,39 @@ import { prisma } from "@/lib/prisma";
  * 這支測試補的就是那個缺口：驗的是真正送進 Prisma 的查詢條件。
  */
 
-jest.mock("@/lib/prisma", () => ({
-  prisma: {
+jest.mock("@/lib/prisma", () => {
+  const tx = {
+    $executeRaw: jest.fn(),
     teamQuotaUsage: {
       aggregate: jest.fn(async () => ({ _sum: { amount: BigInt(0) } })),
-      findUnique: jest.fn(),
       create: jest.fn(),
     },
-  },
-}));
+  };
+  return {
+    prisma: {
+      teamQuotaUsage: {
+        aggregate: jest.fn(async () => ({ _sum: { amount: BigInt(0) } })),
+        findUnique: jest.fn(),
+        create: jest.fn(),
+      },
+      $transaction: jest.fn(async (fn: (arg: unknown) => Promise<unknown>) =>
+        fn(tx),
+      ),
+    },
+    txMock: tx,
+  };
+});
+
+interface ITxMock {
+  $executeRaw: ReturnType<typeof jest.fn>;
+  teamQuotaUsage: {
+    aggregate: ReturnType<typeof jest.fn>;
+    create: ReturnType<typeof jest.fn>;
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { txMock } = require("@/lib/prisma") as { txMock: ITxMock };
 
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
 
@@ -77,5 +101,72 @@ describe("teamQuotaUsageRepo.sumWindowUsage", () => {
     );
 
     expect(usage).toEqual({ used5h: BigInt(0), usedWeek: BigInt(0) });
+  });
+});
+
+/**
+ * Info: (20260815 - Luphia) 額度的讀與寫必須在同一把鎖內（PR #6652 第二輪 C-6）。
+ *
+ * 「先 SUM 再寫入」中間沒有互斥時，併發的 N 個請求會讀到同一個 used、
+ * 各自判斷「還有額度」、各寫一筆——超額幅度是併發數 × 單筆。
+ * §5.1 容許的是「最後一筆超額」，指的是一筆。
+ */
+describe("teamQuotaUsageRepo.withMemberQuotaLock", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("takes an advisory lock before running the operation", async () => {
+    const order: string[] = [];
+    txMock.$executeRaw.mockImplementation(async () => {
+      order.push("lock");
+      return 1;
+    });
+
+    await teamQuotaUsageRepo.withMemberQuotaLock(
+      "team-1",
+      "user-1",
+      async () => {
+        order.push("operation");
+        return null;
+      },
+    );
+
+    // Info: (20260815 - Luphia) 鎖必須先於操作——反過來就等於沒有鎖
+    expect(order).toEqual(["lock", "operation"]);
+  });
+
+  it("scopes the lock to the member, not just the team", async () => {
+    await teamQuotaUsageRepo.withMemberQuotaLock(
+      "team-1",
+      "user-1",
+      async () => null,
+    );
+
+    /**
+     * Info: (20260815 - Luphia) 鎖必須同時吃到 teamId 與 userId：
+     * 只鎖團隊會讓不同成員互相阻塞，只鎖成員則跨團隊的同一人會互相阻塞。
+     */
+    const call = txMock.$executeRaw.mock.calls[0];
+    expect(JSON.stringify(call)).toContain("team-1");
+    expect(JSON.stringify(call)).toContain("user-1");
+  });
+
+  it("aggregates inside the locked transaction", async () => {
+    txMock.teamQuotaUsage.aggregate.mockResolvedValue({
+      _sum: { amount: BigInt(4) },
+    });
+
+    const usage = await teamQuotaUsageRepo.withMemberQuotaLock(
+      "team-1",
+      "user-1",
+      (tx) =>
+        teamQuotaUsageRepo.sumWindowUsageInTx(tx, "team-1", "user-1", 1, 2),
+    );
+
+    expect(usage).toEqual({ used5h: BigInt(4), usedWeek: BigInt(4) });
+    // Info: (20260815 - Luphia) 讀取要走交易的 client，不能繞回全域 prisma
+    expect(txMock.teamQuotaUsage.aggregate).toHaveBeenCalled();
+    expect(prisma.teamQuotaUsage.aggregate).not.toHaveBeenCalled();
   });
 });

@@ -36,6 +36,19 @@ jest.mock("@/repositories/team_quota_usage.repo", () => ({
     findByIdempotencyKey: jest.fn(),
     sumWindowUsage: jest.fn(),
     createUsage: jest.fn(),
+    /**
+     * Info: (20260815 - Luphia) 額度讀寫改為在 advisory lock 的交易內進行
+     * （PR #6652 第二輪 C-6）。替身直接執行 operation，交易語意由 repo 測試涵蓋。
+     */
+    withMemberQuotaLock: jest.fn(
+      async (
+        _teamId: unknown,
+        _userId: unknown,
+        operation: (tx: unknown) => Promise<unknown>,
+      ) => operation({}),
+    ),
+    sumWindowUsageInTx: jest.fn(),
+    createUsageInTx: jest.fn(),
   },
 }));
 jest.mock("@/repositories/subscription_plan_quota.repo", () => ({
@@ -111,7 +124,7 @@ describe("spendCredits", () => {
           ? { per5h: 10, perWeek: 40 }
           : { per5h: 100, perWeek: 750 },
     );
-    asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
+    asMock(teamQuotaUsageRepo.sumWindowUsageInTx).mockResolvedValue({
       used5h: BigInt(0),
       usedWeek: BigInt(0),
     });
@@ -141,15 +154,17 @@ describe("spendCredits", () => {
     await expect(spendCredits(BASE_PARAMS)).rejects.toMatchObject({
       code: "TW000008",
     });
-    expect(teamQuotaUsageRepo.sumWindowUsage).not.toHaveBeenCalled();
-    expect(teamWalletRepo.consumeAllocation).not.toHaveBeenCalled();
+    // Info: (20260815 - Luphia) 非成員連鎖都不該拿到，遑論讀寫用量
+    expect(teamQuotaUsageRepo.withMemberQuotaLock).not.toHaveBeenCalled();
+    expect(teamQuotaUsageRepo.sumWindowUsageInTx).not.toHaveBeenCalled();
   });
 
   it("consumes subscription quota first when both windows can absorb the cost", async () => {
     const result = await spendCredits(BASE_PARAMS);
     expect(result.source).toBe(SPEND_SOURCE.SUBSCRIPTION_QUOTA);
     expect(result.amount).toBe("3");
-    expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
+    expect(teamQuotaUsageRepo.createUsageInTx).toHaveBeenCalledWith(
+      expect.anything(),
       expect.objectContaining({
         teamId: "team-1",
         amount: BigInt(3),
@@ -164,7 +179,7 @@ describe("spendCredits", () => {
    * 預扣封頂，而不是整筆擋下。這是本次改動的核心——舊行為讓剩 1 點的用戶完全無法送出訊息。
    */
   it("caps the hold at the available balance instead of blocking", async () => {
-    asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
+    asMock(teamQuotaUsageRepo.sumWindowUsageInTx).mockResolvedValue({
       used5h: BigInt(99),
       usedWeek: BigInt(10),
     });
@@ -181,7 +196,7 @@ describe("spendCredits", () => {
    * 那是帳務上的漏，不是體貼。因此 allowPartial: false 時餘額不足即整筆擋下。
    */
   it("rejects a capped hold when the caller forbids partial payment", async () => {
-    asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
+    asMock(teamQuotaUsageRepo.sumWindowUsageInTx).mockResolvedValue({
       used5h: BigInt(99),
       usedWeek: BigInt(10),
     });
@@ -192,7 +207,7 @@ describe("spendCredits", () => {
     }).catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(QuotaExceededError);
-    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+    expect(teamQuotaUsageRepo.createUsageInTx).not.toHaveBeenCalled();
     expect(teamWalletRepo.consumeAllocation).not.toHaveBeenCalled();
   });
 
@@ -207,7 +222,7 @@ describe("spendCredits", () => {
    * 只要還有 1 點就會放行，因此本測試把兩邊都設為 0。
    */
   it("throws QuotaExceededError with full payload when every source is exhausted", async () => {
-    asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
+    asMock(teamQuotaUsageRepo.sumWindowUsageInTx).mockResolvedValue({
       used5h: BigInt(100),
       usedWeek: BigInt(10),
     });
@@ -235,7 +250,7 @@ describe("spendCredits", () => {
    * 要報 PER_WEEK，否則用戶等 5 小時後回來仍然被擋。
    */
   it("reports PER_WEEK when the weekly window is the binding one", async () => {
-    asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
+    asMock(teamQuotaUsageRepo.sumWindowUsageInTx).mockResolvedValue({
       used5h: BigInt(0),
       usedWeek: BigInt(750),
     });
@@ -252,7 +267,7 @@ describe("spendCredits", () => {
     } as unknown);
     const result = await spendCredits(BASE_PARAMS);
     expect(result.source).toBe(SPEND_SOURCE.SUBSCRIPTION_QUOTA);
-    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+    expect(teamQuotaUsageRepo.createUsageInTx).not.toHaveBeenCalled();
     expect(teamWalletRepo.consumeAllocation).not.toHaveBeenCalled();
   });
 
@@ -274,7 +289,7 @@ describe("spendCredits", () => {
    * 這條測試釘住的就是那個判斷有沒有看向正確的地方。
    */
   it("lets the member's own chain credits keep the request flowing", async () => {
-    asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
+    asMock(teamQuotaUsageRepo.sumWindowUsageInTx).mockResolvedValue({
       used5h: BigInt(100),
       usedWeek: BigInt(10),
     });
@@ -284,12 +299,12 @@ describe("spendCredits", () => {
 
     // Info: (20260814 - Luphia) 額度已用罄：預扣為 0，用量由結算時向鏈上點數收取
     expect(result.quotaAmount).toBe("0");
-    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+    expect(teamQuotaUsageRepo.createUsageInTx).not.toHaveBeenCalled();
   });
 
   // Info: (20260814 - Luphia) 額度與鏈上點數同時見底才是真的用盡
   it("throws when both the quota and the member credits are empty", async () => {
-    asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
+    asMock(teamQuotaUsageRepo.sumWindowUsageInTx).mockResolvedValue({
       used5h: BigInt(100),
       usedWeek: BigInt(10),
     });
@@ -302,7 +317,7 @@ describe("spendCredits", () => {
   });
 
   it("reports the member's chain balance in the 402 payload", async () => {
-    asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
+    asMock(teamQuotaUsageRepo.sumWindowUsageInTx).mockResolvedValue({
       used5h: BigInt(100),
       usedWeek: BigInt(10),
     });
@@ -329,7 +344,8 @@ describe("spendCredits", () => {
   it("counts quota usage per member, not per team", async () => {
     await spendCredits(BASE_PARAMS);
 
-    expect(teamQuotaUsageRepo.sumWindowUsage).toHaveBeenCalledWith(
+    expect(teamQuotaUsageRepo.sumWindowUsageInTx).toHaveBeenCalledWith(
+      expect.anything(),
       "team-1",
       "user-1",
       expect.any(Number),
@@ -381,7 +397,8 @@ describe("spendCredits", () => {
 
     expect(result.replayed).toBe(false);
     expect(result.idempotencyKey).toBe("faith:msg-1#retry1");
-    expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
+    expect(teamQuotaUsageRepo.createUsageInTx).toHaveBeenCalledWith(
+      expect.anything(),
       expect.objectContaining({ idempotencyKey: "faith:msg-1#retry1" }),
     );
   });
@@ -401,7 +418,7 @@ describe("spendCredits", () => {
     const result = await spendCredits(BASE_PARAMS);
     expect(result.source).toBe(SPEND_SOURCE.MIXED);
     expect(result.amount).toBe("3");
-    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+    expect(teamQuotaUsageRepo.createUsageInTx).not.toHaveBeenCalled();
     expect(teamWalletRepo.consumeAllocation).not.toHaveBeenCalled();
   });
 
@@ -413,19 +430,20 @@ describe("spendCredits", () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
       planId: "enterprise-typo",
     } as unknown);
-    asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
+    asMock(teamQuotaUsageRepo.sumWindowUsageInTx).mockResolvedValue({
       used5h: BigInt(8),
       usedWeek: BigInt(8),
     });
     const result = await spendCredits(BASE_PARAMS);
     expect(result.quotaAmount).toBe("2");
-    expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
+    expect(teamQuotaUsageRepo.createUsageInTx).toHaveBeenCalledWith(
+      expect.anything(),
       expect.objectContaining({ amount: BigInt(2) }),
     );
   });
 
   it("wraps unexpected repository errors instead of leaking them", async () => {
-    asMock(teamQuotaUsageRepo.sumWindowUsage).mockRejectedValue(
+    asMock(teamQuotaUsageRepo.sumWindowUsageInTx).mockRejectedValue(
       new Error("prisma exploded"),
     );
     await expect(spendCredits(BASE_PARAMS)).rejects.toMatchObject({
@@ -615,7 +633,7 @@ describe("refund conservation", () => {
     });
 
     expect(result.refunded).toBe(false);
-    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+    expect(teamQuotaUsageRepo.createUsageInTx).not.toHaveBeenCalled();
     expect(teamWalletRepo.refundAllocation).not.toHaveBeenCalled();
   });
 
@@ -733,7 +751,7 @@ describe("settleSpend", () => {
     expect(result.chainCharged).toBe("4");
     expect(result.toppedUp).toBe("0");
     // Info: (20260814 - Luphia) 成員自己付了差額，就不該再追補到訂閱額度
-    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+    expect(teamQuotaUsageRepo.createUsageInTx).not.toHaveBeenCalled();
   });
 
   /**
@@ -820,7 +838,7 @@ describe("settleSpend", () => {
       operatorUserId: "user-1",
     });
     expect(result.refunded).toBe("0");
-    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+    expect(teamQuotaUsageRepo.createUsageInTx).not.toHaveBeenCalled();
   });
 
   /**
@@ -888,7 +906,7 @@ describe("settleSpend", () => {
       BigInt(3),
       "user-1",
     );
-    expect(teamQuotaUsageRepo.createUsage).not.toHaveBeenCalled();
+    expect(teamQuotaUsageRepo.createUsageInTx).not.toHaveBeenCalled();
   });
 
   it("spills the remainder of a refund into the quota once the wallet leg is fully returned", async () => {
@@ -1012,7 +1030,7 @@ describe("resolveEffectivePlanId (fail-closed)", () => {
       currentPeriodEnd: PAST,
     } as unknown);
     // Info: (20260807 - Luphia) free per5h = 10：8 + 3 > 10 → 過期方案不得再享 team 額度
-    asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
+    asMock(teamQuotaUsageRepo.sumWindowUsageInTx).mockResolvedValue({
       used5h: BigInt(8),
       usedWeek: BigInt(8),
     });
@@ -1026,7 +1044,8 @@ describe("resolveEffectivePlanId (fail-closed)", () => {
     const result = await spendCredits(BASE_PARAMS);
     // Info: (20260813 - Luphia) free per5h = 10、已用 8 → 只剩 2 點；若誤享 team 額度會放行整筆 3 點
     expect(result.amount).toBe("2");
-    expect(teamQuotaUsageRepo.createUsage).toHaveBeenCalledWith(
+    expect(teamQuotaUsageRepo.createUsageInTx).toHaveBeenCalledWith(
+      expect.anything(),
       expect.objectContaining({ amount: BigInt(2) }),
     );
   });

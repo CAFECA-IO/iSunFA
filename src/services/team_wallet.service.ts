@@ -456,34 +456,81 @@ export async function issueTeamCreditsByAdmin(params: {
   teamId: string;
   credits: bigint;
   operatorUserId: string;
+  /**
+   * Info: (20260815 - Luphia) 冪等鍵（PR #6652 第二輪 C-9）。
+   *
+   * 原本的鍵是 `admin-issue:{order.id}`，而 order 是**這一次剛建的**——
+   * 對「管理員連點兩下」提供的保護是 0：建兩張單、入帳兩次。發點等同發錢。
+   * 呼叫端未提供時以「操作者 + 團隊 + 金額 + 分鐘級時間桶」推導，
+   * 讓同一分鐘內的重複點擊落在同一把鍵上。
+   */
+  idempotencyKey?: string;
+  nowMs?: number;
 }): Promise<{ orderId: string; credits: string }> {
-  const { teamId, credits, operatorUserId } = params;
+  const { teamId, credits, operatorUserId, nowMs = Date.now() } = params;
 
   // Info: (20260813 - Luphia) Fail Fast：非正整數的發放金額直接凍結
   if (typeof credits !== "bigint" || credits <= BigInt(0)) {
     throw toApiError(API_ERRORS.TW_INVALID_SPEND_AMOUNT);
   }
 
+  /**
+   * Info: (20260815 - Luphia) 未指定時以分鐘級時間桶推導鍵（第二輪 C-9）。
+   * 連點兩下必然落在同一分鐘、同一操作者、同一團隊、同一金額——因此撞同一把鍵。
+   * 真正想發兩次相同金額的管理員，等一分鐘或由呼叫端帶入不同的鍵即可。
+   */
+  const minuteBucket = Math.floor(nowMs / 60_000);
+  const idempotencyKey =
+    params.idempotencyKey ??
+    `admin-issue:${operatorUserId}:${teamId}:${credits.toString()}:${minuteBucket}`;
+
   return guarded(async () => {
     const team = await teamRepo.getTeamById(teamId);
     if (!team) throw toApiError(API_ERRORS.NF_TEAM);
 
-    const order = await paymentRepo.createOrder({
-      userId: operatorUserId,
-      type: ORDER_TYPE.ADMIN_ISSUED,
-      amount: credits,
-      unit: CURRENCY_UNIT.ICP,
-      status: ORDER_STATUS.COMPLETED,
-      challenge: "admin_distribute_team",
-      data: { adminIssued: true, issuedBy: operatorUserId, teamId },
-    });
+    /**
+     * Info: (20260815 - Luphia) 同一把鍵已經發過就直接回既有訂單，不再建單也不再入帳。
+     * 資料庫層的唯一約束是最後一道防線（下方 catch），這裡先擋掉循序的重複點擊。
+     */
+    const existing = await paymentRepo.findOrderByIdempotencyKey(
+      operatorUserId,
+      idempotencyKey,
+    );
+    if (existing) {
+      return { orderId: existing.id, credits: credits.toString() };
+    }
+
+    let order;
+    try {
+      order = await paymentRepo.createOrder({
+        userId: operatorUserId,
+        type: ORDER_TYPE.ADMIN_ISSUED,
+        amount: credits,
+        unit: CURRENCY_UNIT.ICP,
+        status: ORDER_STATUS.COMPLETED,
+        challenge: "admin_distribute_team",
+        idempotencyKey,
+        data: { adminIssued: true, issuedBy: operatorUserId, teamId },
+      });
+    } catch (error) {
+      // Info: (20260815 - Luphia) 並發下的第二筆會在唯一約束上失敗＝已經發過了
+      if ((error as { code?: string })?.code === "P2002") {
+        const raced = await paymentRepo.findOrderByIdempotencyKey(
+          operatorUserId,
+          idempotencyKey,
+        );
+        if (raced) return { orderId: raced.id, credits: credits.toString() };
+      }
+      throw error;
+    }
 
     const credited = await teamWalletRepo.creditPool({
       teamId,
       credits,
       orderId: order.id,
       operatorUserId,
-      idempotencyKey: `admin-issue:${order.id}`,
+      // Info: (20260815 - Luphia) 入帳的鍵與訂單同源，兩層防護指向同一件事
+      idempotencyKey,
     });
     if (
       credited.outcome !== WALLET_OP_OUTCOME.OK &&

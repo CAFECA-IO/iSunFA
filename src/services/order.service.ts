@@ -83,6 +83,11 @@ export interface IPaymentOrderParams {
    */
   teamId?: string;
   /**
+   * Info: (20260815 - Luphia) 冪等鍵（第二輪 B-3 / C-9）：寫入帶唯一約束的欄位，
+   * 由資料庫擋下並發的重複建單。不需要冪等保護的訂單不必帶。
+   */
+  idempotencyKey?: string;
+  /**
    * Info: (20260814 - Luphia) 訂閱的席次數與單價快照（同樣必須是頂層欄位）。
    * 履行時寫進 TeamSubscription：續訂要依此重算，期中加人要依此比例補收。
    */
@@ -223,6 +228,8 @@ export async function generatePaymentOrder(
     data: orderData,
     status: ORDER_STATUS.PENDING,
     challenge: challenge,
+    // Info: (20260815 - Luphia) 有帶鍵就寫進唯一欄位；並發的第二筆會在 DB 層失敗
+    idempotencyKey: params.idempotencyKey ?? null,
   });
 
   return {

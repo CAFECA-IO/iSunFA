@@ -402,6 +402,17 @@ export class PaymentRepository {
    * 而不是每次重試都建一張新的待付訂單。
    */
   async findOrderByIdempotencyKey(userId: string, idempotencyKey: string) {
+    /**
+     * Info: (20260815 - Luphia) 先查真欄位，查不到再回頭找 JSON path（第二輪 B-3）。
+     *
+     * 冪等鍵已升格為帶唯一約束的欄位，但改版前建立的訂單只有 `data.idempotencyKey`；
+     * 兩邊都查才不會讓舊訂單在重試時被當成「沒扣過」而再扣一次。
+     */
+    const byColumn = await prisma.order.findUnique({
+      where: { idempotencyKey },
+    });
+    if (byColumn && byColumn.userId === userId) return byColumn;
+
     return prisma.order.findFirst({
       where: {
         userId,

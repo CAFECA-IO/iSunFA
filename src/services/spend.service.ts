@@ -363,31 +363,21 @@ export async function spendCredits(
     );
     const windowKey5h = getWindowKey5h(nowSec);
     const windowKeyWeek = getWindowKeyWeek(nowSec);
-    // Info: (20260814 - Luphia) 額度逐成員計算：用量只算這個人自己的（一人一池）
-    const { used5h, usedWeek } = await teamQuotaUsageRepo.sumWindowUsage(
-      teamId,
-      userId,
-      windowKey5h,
-      windowKeyWeek,
-    );
     const limit5h = BigInt(quota.per5h);
     const limitWeek = BigInt(quota.perWeek);
 
-    const quotaAvailable = resolveQuotaAvailable({
-      limit5h,
-      used5h,
-      limitWeek,
-      usedWeek,
-    });
     /**
-     * Info: (20260814 - Luphia) 第二層改讀**成員自己的鏈上點數**（PR #6652 第二輪 A-1）。
+     * Info: (20260814 - Luphia) 第二層讀**成員自己的鏈上點數**（PR #6652 第二輪 A-1）。
      *
      * 團隊分配已改為鑄到成員錢包（ADR 015 修訂），離鏈的 `TeamWalletAllocation`
      * 對新資料永遠是 0——再讀它就會出現「成員手上有 1,000 點、系統說他有 0 點」。
      *
      * 但**預扣仍只從訂閱額度扣**：鏈上餘額只參與「放不放行」的判斷，
-     * 真正的扣款留到結算時一次burn（見 settleSpend）。理由是每筆預扣—結算若都動鏈，
+     * 真正的扣款留到結算時一次 burn（見 settleSpend）。理由是每筆預扣—結算若都動鏈，
      * 一則訊息就要兩筆交易；改成結算時一次扣清，溢出消費最多一筆。
+     *
+     * 這一段刻意放在鎖**之外**：它是一次鏈上 RPC，握著鎖去等網路會把
+     * 同一成員的其他請求一起拖住。
      */
     const spender = await webAuthnRepo.findUserById(userId);
     const chainCredits = spender?.address
@@ -395,66 +385,96 @@ export async function spendCredits(
       : BigInt(0);
 
     /**
-     * Info: (20260813 - Luphia) 預扣封頂（設計書 §5.4）：只要還有可用量就放行，
-     * 不再因為「預扣上界塞不進剩餘額度」而把有餘額的用戶整筆擋死。
-     */
-    const split = splitSpend(cost, quotaAvailable, BigInt(0));
-    const available = quotaAvailable + chainCredits;
-
-    /**
-     * Info: (20260813 - Luphia) 固定價格的消費不接受封頂（allowPartial = false）：
-     * 沒有結算步驟就沒有人補收差額，放行等於少收。此時與「完全無餘額」同樣回 402，
-     * 前端據此提示不足並停用支付按鈕。
-     */
-    if (!allowPartial && quotaAvailable < cost) {
-      throw new QuotaExceededError(
-        API_ERRORS.TW_QUOTA_EXCEEDED,
-        buildQuotaExceededPayload({
-          nowSec,
-          limit5h,
-          used5h,
-          limitWeek,
-          usedWeek,
-          walletBalance: chainCredits,
-        }),
-      );
-    }
-
-    if (available <= BigInt(0)) {
-      // Info: (20260814 - Luphia) 訂閱額度與個人鏈上點數同時見底才是真的用盡 → 402
-      throw new QuotaExceededError(
-        API_ERRORS.TW_QUOTA_EXCEEDED,
-        buildQuotaExceededPayload({
-          nowSec,
-          limit5h,
-          used5h,
-          limitWeek,
-          usedWeek,
-          walletBalance: chainCredits,
-        }),
-      );
-    }
-
-    /**
-     * Info: (20260814 - Luphia) 預扣只寫訂閱額度。
+     * Info: (20260815 - Luphia) 額度的讀與寫必須在同一把鎖內（PR #6652 第二輪 C-6）。
      *
-     * 改制前這裡還有一段「先扣離鏈分配點數、失敗再沖銷」的流程；分配改上鏈之後
-     * 那一層不存在了（見上方說明），差額改由結算時自成員錢包一次扣清。
-     * 少了跨系統的兩段式扣款，這裡也就不需要補償路徑。
+     * 「先 SUM 再寫入」中間沒有互斥時，併發的 N 個請求會讀到同一個 used、
+     * 各自判斷「還有額度」、各寫一筆——超額幅度是併發數 × 單筆，
+     * 而 §5.1 容許的是「最後一筆超額」，指的是一筆。
      */
-    if (split.quotaPart > BigInt(0)) {
-      await teamQuotaUsageRepo.createUsage({
-        teamId,
-        userId,
-        featureCode,
-        amount: split.quotaPart,
-        windowKey5h,
-        windowKeyWeek,
-        idempotencyKey: effectiveKey,
-      });
-    }
+    return teamQuotaUsageRepo.withMemberQuotaLock(
+      teamId,
+      userId,
+      async (tx) => {
+        // Info: (20260814 - Luphia) 額度逐成員計算：用量只算這個人自己的（一人一池）
+        const { used5h, usedWeek } =
+          await teamQuotaUsageRepo.sumWindowUsageInTx(
+            tx,
+            teamId,
+            userId,
+            windowKey5h,
+            windowKeyWeek,
+          );
 
-    return toSpendResult(effectiveKey, split.quotaPart, BigInt(0));
+        const quotaAvailable = resolveQuotaAvailable({
+          limit5h,
+          used5h,
+          limitWeek,
+          usedWeek,
+        });
+
+        /**
+         * Info: (20260813 - Luphia) 預扣封頂（設計書 §5.4）：只要還有可用量就放行，
+         * 不再因為「預扣上界塞不進剩餘額度」而把有餘額的用戶整筆擋死。
+         */
+        const split = splitSpend(cost, quotaAvailable, BigInt(0));
+        const available = quotaAvailable + chainCredits;
+
+        /**
+         * Info: (20260813 - Luphia) 固定價格的消費不接受封頂（allowPartial = false）：
+         * 沒有結算步驟就沒有人補收差額，放行等於少收。此時與「完全無餘額」同樣回 402，
+         * 前端據此提示不足並停用支付按鈕。
+         */
+        if (!allowPartial && quotaAvailable < cost) {
+          throw new QuotaExceededError(
+            API_ERRORS.TW_QUOTA_EXCEEDED,
+            buildQuotaExceededPayload({
+              nowSec,
+              limit5h,
+              used5h,
+              limitWeek,
+              usedWeek,
+              walletBalance: chainCredits,
+            }),
+          );
+        }
+
+        if (available <= BigInt(0)) {
+          // Info: (20260814 - Luphia) 訂閱額度與個人鏈上點數同時見底才是真的用盡 → 402
+          throw new QuotaExceededError(
+            API_ERRORS.TW_QUOTA_EXCEEDED,
+            buildQuotaExceededPayload({
+              nowSec,
+              limit5h,
+              used5h,
+              limitWeek,
+              usedWeek,
+              walletBalance: chainCredits,
+            }),
+          );
+        }
+
+        /**
+         * Info: (20260814 - Luphia) 預扣只寫訂閱額度。
+         *
+         * 改制前這裡還有一段「先扣離鏈分配點數、失敗再沖銷」的流程；分配改上鏈之後
+         * 那一層不存在了（見上方說明），差額改由結算時自成員錢包一次扣清。
+         * 少了跨系統的兩段式扣款，這裡也就不需要補償路徑。
+         */
+        if (split.quotaPart > BigInt(0)) {
+          await teamQuotaUsageRepo.createUsageInTx(tx, {
+            teamId,
+            userId,
+            featureCode,
+            amount: split.quotaPart,
+            windowKey5h,
+            windowKeyWeek,
+            idempotencyKey: effectiveKey,
+          });
+        }
+
+        return toSpendResult(effectiveKey, split.quotaPart, BigInt(0));
+      },
+    );
   });
 }
 

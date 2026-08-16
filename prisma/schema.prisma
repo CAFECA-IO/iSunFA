@@ -158,6 +158,17 @@ model TeamInvitation {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
+  /**
+   * Info: (20260815 - Luphia) 同一團隊對同一位址、同一狀態只能有一列（PR #6652 第二輪 B-3）。
+   *
+   * 擋的是並發：兩位管理員同時邀請同一個位址時，「是否已有 PENDING 邀請」的檢查
+   * 兩邊都會通過，於是各建一列、各扣一次席次費用。
+   *
+   * 帶上 status 而非只用 (teamId, inviteeAddress)，是因為受邀者被移出團隊後
+   * 應該可以再次被邀請——舊列是 ACCEPTED、新列是 PENDING，兩者並存才合法。
+   * 而重複接受同一位址的處理見 `acceptInvitation`（先清掉舊的 ACCEPTED 列）。
+   */
+  @@unique([teamId, inviteeAddress, status])
   @@map("team_invitation")
 }
 
@@ -371,6 +382,18 @@ model Order {
   transactionHash String?  @map("transaction_hash")
   mission         String?
   tokens          Int?     @default(0)
+  /**
+   * Info: (20260815 - Luphia) 冪等鍵升格為真欄位並加上唯一約束（PR #6652 第二輪 B-3 / C-9）。
+   *
+   * 原本只寫在 `data.idempotencyKey`（JSON path），資料庫層擋不住任何東西：
+   * 「先查有沒有、沒有就建一張」在並發下兩邊都會通過——兩位管理員同時邀請同一個位址
+   * 就是扣兩次款，後台連點發放點數也是同樣的形狀。
+   * 唯一約束讓第二筆在 DB 層直接失敗（P2002），由呼叫端當成重放處理。
+   *
+   * 可為 null：不需要冪等保護的訂單（一般購點、分析報告）不帶鍵，
+   * 而 Postgres 的唯一約束允許多個 null。
+   */
+  idempotencyKey  String?  @unique @map("idempotency_key")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 

@@ -14,7 +14,11 @@ jest.mock("@/repositories/team_wallet.repo", () => ({
   teamWalletRepo: { creditPool: jest.fn() },
 }));
 jest.mock("@/repositories/payment.repo", () => ({
-  paymentRepo: { createOrder: jest.fn() },
+  paymentRepo: {
+    createOrder: jest.fn(),
+    // Info: (20260815 - Luphia) 冪等查詢（PR #6652 第二輪 C-9）
+    findOrderByIdempotencyKey: jest.fn(async () => null),
+  },
 }));
 
 /**
@@ -29,6 +33,7 @@ describe("issueTeamCreditsByAdmin", () => {
     jest.clearAllMocks();
     asMock(teamRepo.getTeamById).mockResolvedValue({ id: "team-1" });
     asMock(paymentRepo.createOrder).mockResolvedValue({ id: "order-1" });
+    asMock(paymentRepo.findOrderByIdempotencyKey).mockResolvedValue(null);
     asMock(teamWalletRepo.creditPool).mockResolvedValue({
       outcome: WALLET_OP_OUTCOME.OK,
     });
@@ -55,7 +60,8 @@ describe("issueTeamCreditsByAdmin", () => {
         teamId: "team-1",
         credits: BigInt(500),
         orderId: "order-1",
-        idempotencyKey: "admin-issue:order-1",
+        // Info: (20260815 - Luphia) 鍵改由操作者 + 團隊 + 金額 + 分鐘桶推導（第二輪 C-9）
+        idempotencyKey: expect.stringContaining("admin-issue:admin-1:team-1:"),
       }),
     );
     expect(result).toEqual({ orderId: "order-1", credits: "500" });
@@ -99,5 +105,51 @@ describe("issueTeamCreditsByAdmin", () => {
         operatorUserId: "admin-1",
       }),
     ).rejects.toMatchObject({ code: "TW000005" });
+  });
+
+  /**
+   * Info: (20260815 - Luphia) 連點兩下不該發兩次（PR #6652 第二輪 C-9）。
+   *
+   * 原本的冪等鍵是 `admin-issue:{order.id}`，而 order 是這一次剛建的——
+   * 對重複點擊提供的保護是 0：建兩張單、入帳兩次。而發點等同發錢。
+   */
+  it("does not issue twice for a repeated click", async () => {
+    asMock(paymentRepo.findOrderByIdempotencyKey).mockResolvedValue({
+      id: "order-existing",
+    });
+
+    const result = await issueTeamCreditsByAdmin({
+      teamId: "team-1",
+      credits: BigInt(500),
+      operatorUserId: "admin-1",
+      nowMs: 1_760_000_000_000,
+    });
+
+    expect(result.orderId).toBe("order-existing");
+    expect(paymentRepo.createOrder).not.toHaveBeenCalled();
+    expect(teamWalletRepo.creditPool).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260815 - Luphia) 鍵由「操作者 + 團隊 + 金額 + 分鐘桶」推導，
+   * 且訂單與入帳共用同一把——兩層防護指向同一件事，不會各擋各的。
+   */
+  it("derives a stable key from the operator, team, amount and minute", async () => {
+    await issueTeamCreditsByAdmin({
+      teamId: "team-1",
+      credits: BigInt(500),
+      operatorUserId: "admin-1",
+      nowMs: 1_760_000_000_000,
+    });
+
+    const expectedKey = `admin-issue:admin-1:team-1:500:${Math.floor(
+      1_760_000_000_000 / 60_000,
+    )}`;
+    expect(paymentRepo.createOrder).toHaveBeenCalledWith(
+      expect.objectContaining({ idempotencyKey: expectedKey }),
+    );
+    expect(teamWalletRepo.creditPool).toHaveBeenCalledWith(
+      expect.objectContaining({ idempotencyKey: expectedKey }),
+    );
   });
 });
