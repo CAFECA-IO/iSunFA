@@ -16,6 +16,10 @@ export const chat = {
     window_5h: "近 5 小時",
     window_week: "本週",
     reset_hint: "將於 {{countdown}} 後（{{resetAt}}）恢復可用。",
+    // Info: (20260815 - Luphia) 單筆超過視窗上限：等重置不會好（第二輪 C-5）
+    over_window_limit_title: "本次操作超過方案的單次上限",
+    over_window_limit_hint:
+      "這筆操作需要的點數高於方案在單一時段的額度上限（{{limit}} 點），等待重置也無法完成。請改用個人點數支付，或升級方案。",
     reset_ready_title: "額度已重置，可以繼續對話",
     meter_5h: "近 5 小時剩餘額度",
     meter_week: "本週剩餘額度",

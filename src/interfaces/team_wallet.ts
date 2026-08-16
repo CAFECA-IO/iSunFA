@@ -114,6 +114,17 @@ export interface IQuotaExceededPayload {
   quotaWeek: IQuotaWindowStatus;
   allocationBalance: string;
   options: QuotaExceededOption[];
+  /**
+   * Info: (20260815 - Luphia) 本筆金額**超過整個視窗上限**（PR #6652 第二輪 C-5）。
+   *
+   * 固定價格的消費（分析報告、物流查詢）失敗時，原因常常不是「這段時間用得太多」，
+   * 而是「這張單本來就比整個視窗的額度貴」——免費版每 5 小時 10 點，而一張分析報告
+   * 要 50 點。這種情況等重置永遠不會好，畫面卻顯示「將於 X 重置」，
+   * 等於請用戶去等一件不會發生的事。
+   *
+   * 為 true 時 `options` 不含 `WAIT_RESET`。
+   */
+  exceedsWindowLimit: boolean;
 }
 
 export interface ILedgerAnchorView {

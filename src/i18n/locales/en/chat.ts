@@ -19,6 +19,10 @@ export const chat = {
     window_5h: "5-hour",
     window_week: "weekly",
     reset_hint: "Available again in {{countdown}} (at {{resetAt}}).",
+    // Info: (20260815 - Luphia) 單筆超過視窗上限：等重置不會好（第二輪 C-5）
+    over_window_limit_title: "This action exceeds your plan's per-window limit",
+    over_window_limit_hint:
+      "This action costs more than your plan allows in a single window ({{limit}} credits), so waiting for the reset will not help. Pay with your own credits, or upgrade the plan.",
     reset_ready_title: "Your quota has reset — you can keep chatting",
     meter_5h: "5-hour quota remaining",
     meter_week: "Weekly quota remaining",

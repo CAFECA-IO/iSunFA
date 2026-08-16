@@ -19,6 +19,10 @@ export const chat = {
     window_5h: "直近 5 時間",
     window_week: "今週",
     reset_hint: "{{countdown}} 後（{{resetAt}}）に再度ご利用いただけます。",
+    // Info: (20260815 - Luphia) 單筆超過視窗上限：等重置不會好（第二輪 C-5）
+    over_window_limit_title: "この操作はプランの単一枠の上限を超えています",
+    over_window_limit_hint:
+      "この操作に必要なポイントは、プランの単一枠の上限（{{limit}} ポイント）を超えています。リセットを待っても実行できません。個人のクレジットでお支払いいただくか、プランをアップグレードしてください。",
     reset_ready_title: "枠がリセットされました。対話を続けられます",
     meter_5h: "直近 5 時間の残り枠",
     meter_week: "今週の残り枠",

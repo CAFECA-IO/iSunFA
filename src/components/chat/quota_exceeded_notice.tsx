@@ -103,15 +103,34 @@ export default function QuotaExceededNotice({
         )}
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-amber-900">
-            {countdown.expired
-              ? t("chat.quota_exceeded.reset_ready_title")
-              : t("chat.quota_exceeded.title", { window: windowLabel })}
+            {/**
+             * Info: (20260815 - Luphia) 單筆超過整個視窗上限時要換一套說法（第二輪 C-5）：
+             * 那不是「這段時間用太多」，而是「這張單本來就比整個視窗的額度貴」——
+             * 等重置永遠不會好，標題與倒數都不該暗示等一下就能用。
+             */}
+            {payload.exceedsWindowLimit
+              ? t("chat.quota_exceeded.over_window_limit_title")
+              : countdown.expired
+                ? t("chat.quota_exceeded.reset_ready_title")
+                : t("chat.quota_exceeded.title", { window: windowLabel })}
           </p>
           {/**
            * Info: (20260812 - Luphia) 已恢復時只留標題與導購按鈕：
            * 倒數與「不想等？」的勸誘在額度回來之後都已失去意義。
            */}
-          {!countdown.expired && (
+          {/**
+           * Info: (20260815 - Luphia) 超過視窗上限：說明原因與可行的出路，
+           * 不顯示倒數（第二輪 C-5）。
+           */}
+          {payload.exceedsWindowLimit && (
+            <p className="mt-1 text-xs text-amber-800">
+              {t("chat.quota_exceeded.over_window_limit_hint", {
+                limit: payload.quota5h.limit,
+              })}
+            </p>
+          )}
+
+          {!payload.exceedsWindowLimit && !countdown.expired && (
             <>
               <p className="mt-1 text-xs text-amber-800">
                 {t("chat.quota_exceeded.reset_hint", {

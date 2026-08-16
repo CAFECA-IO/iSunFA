@@ -244,10 +244,24 @@ function buildQuotaExceededPayload(input: {
   limitWeek: bigint;
   usedWeek: bigint;
   walletBalance: bigint;
+  /**
+   * Info: (20260815 - Luphia) 本次操作的金額（PR #6652 第二輪 C-5）：
+   * 用來判斷「等重置會不會有幫助」。不提供時視為 0（等重置一定有幫助）。
+   */
+  cost?: bigint;
 }): IQuotaExceededPayload {
   const { nowSec, limit5h, used5h, limitWeek, usedWeek, walletBalance } = input;
+  const cost = input.cost ?? BigInt(0);
   const remaining5h = limit5h - used5h;
   const remainingWeek = limitWeek - usedWeek;
+  /**
+   * Info: (20260815 - Luphia) 單筆金額超過整個視窗上限時，等重置永遠不會好（第二輪 C-5）。
+   *
+   * 免費版每 5 小時 10 點，而一張 AI 分析報告要 50 點——這種失敗與「這段時間用太多」
+   * 是兩回事，卻共用同一個 402。顯示「將於 X 重置」等於請用戶去等一件不會發生的事。
+   */
+  const exceedsWindowLimit =
+    cost > BigInt(0) && (cost > limit5h || cost > limitWeek);
   return {
     exceeded:
       remaining5h <= remainingWeek
@@ -264,10 +278,20 @@ function buildQuotaExceededPayload(input: {
       resetAt: getResetAtWeek(nowSec),
     },
     allocationBalance: walletBalance.toString(),
-    options: [
-      QUOTA_EXCEEDED_OPTION.WAIT_RESET,
-      QUOTA_EXCEEDED_OPTION.USE_PERSONAL_WALLET,
-    ],
+    exceedsWindowLimit,
+    /**
+     * Info: (20260815 - Luphia) 出路要與事實一致：等重置不會好的情況就不要列它，
+     * 改列「升級方案」——那才是把單筆上限拉高的唯一辦法。
+     */
+    options: exceedsWindowLimit
+      ? [
+          QUOTA_EXCEEDED_OPTION.USE_PERSONAL_WALLET,
+          QUOTA_EXCEEDED_OPTION.UPGRADE_PLAN,
+        ]
+      : [
+          QUOTA_EXCEEDED_OPTION.WAIT_RESET,
+          QUOTA_EXCEEDED_OPTION.USE_PERSONAL_WALLET,
+        ],
   };
 }
 

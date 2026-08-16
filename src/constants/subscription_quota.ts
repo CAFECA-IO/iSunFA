@@ -36,6 +36,11 @@ export const QUOTA_EXCEEDED_OPTION = {
   WAIT_RESET: "WAIT_RESET",
   USE_ALLOCATION: "USE_ALLOCATION",
   USE_PERSONAL_WALLET: "USE_PERSONAL_WALLET",
+  /**
+   * Info: (20260815 - Luphia) 單筆金額超過整個視窗上限時的出路（PR #6652 第二輪 C-5）：
+   * 等重置永遠不會有幫助，只能改用個人點數或升級方案。
+   */
+  UPGRADE_PLAN: "UPGRADE_PLAN",
 } as const;
 
 export type QuotaExceededOption =

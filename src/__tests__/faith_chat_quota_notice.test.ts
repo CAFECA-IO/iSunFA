@@ -31,6 +31,8 @@ const payload = (
   quota5h: { limit: "100", used: "100", resetAt: NOW_SEC + FIVE_HOURS_SEC },
   quotaWeek: { limit: "750", used: "312", resetAt: NOW_SEC + 3 * 86400 },
   allocationBalance: "0",
+  // Info: (20260815 - Luphia) 一般的額度用罄：等重置就會好（第二輪 C-5）
+  exceedsWindowLimit: false,
   options: [
     QUOTA_EXCEEDED_OPTION.WAIT_RESET,
     QUOTA_EXCEEDED_OPTION.USE_PERSONAL_WALLET,
@@ -236,5 +238,17 @@ describe("parsePersonalPaymentRequired", () => {
       });
       expect(parsePersonalPaymentRequired(error)).toBeNull();
     }
+  });
+
+  /**
+   * Info: (20260815 - Luphia) 缺少 `exceedsWindowLimit` 的 payload 一律不採信（第二輪 C-5）。
+   * 這個旗標決定畫面要不要顯示倒數；缺了它而預設「等重置就會好」，
+   * 正是這條 finding 要修掉的誤導。
+   */
+  it("rejects a payload without the window-limit flag", () => {
+    const incomplete = payload();
+    delete (incomplete as Partial<IQuotaExceededPayload>).exceedsWindowLimit;
+
+    expect(isQuotaExceededPayload(incomplete)).toBe(false);
   });
 });

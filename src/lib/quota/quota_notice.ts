@@ -46,6 +46,8 @@ export function isQuotaExceededPayload(
     isQuotaWindowStatus(payload.quota5h) &&
     isQuotaWindowStatus(payload.quotaWeek) &&
     typeof payload.allocationBalance === "string" &&
+    // Info: (20260815 - Luphia) 單筆超過視窗上限的旗標（第二輪 C-5）
+    typeof payload.exceedsWindowLimit === "boolean" &&
     Array.isArray(payload.options) &&
     payload.options.every(
       (option): option is QuotaExceededOption =>

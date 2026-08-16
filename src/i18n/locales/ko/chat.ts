@@ -18,6 +18,10 @@ export const chat = {
     window_5h: "최근 5시간",
     window_week: "이번 주",
     reset_hint: "{{countdown}} 후({{resetAt}})에 다시 사용할 수 있습니다.",
+    // Info: (20260815 - Luphia) 單筆超過視窗上限：等重置不會好（第二輪 C-5）
+    over_window_limit_title: "이 작업은 플랜의 단일 구간 한도를 초과합니다",
+    over_window_limit_hint:
+      "이 작업에 필요한 크레딧이 플랜의 단일 구간 한도({{limit}} 크레딧)를 초과합니다. 초기화를 기다려도 실행할 수 없습니다. 개인 크레딧으로 결제하거나 플랜을 업그레이드하세요.",
     reset_ready_title: "한도가 초기화되었습니다. 대화를 계속할 수 있습니다",
     meter_5h: "최근 5시간 남은 한도",
     meter_week: "이번 주 남은 한도",

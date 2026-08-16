@@ -20,6 +20,23 @@ const OEN_BASE_URL = isProduction()
   ? "https://payment-api.oen.tw"
   : "https://payment-api.testing.oen.tw";
 
+/**
+ * Info: (20260815 - Luphia) 可由用戶在此端點互動付款的訂單型別（第二輪 C-10）。
+ *
+ * 新增型別時必須明確歸類：能讓用戶自己付款的列進來，
+ * 伺服器自行發起的（席次補收、自動續訂）不要——它們沒有付款步驟，
+ * 落到這裡只會走到結尾的個人鑄點 fallback。
+ */
+const CHECKOUT_PAYABLE_ORDER_TYPES: ReadonlySet<string> = new Set([
+  ORDER_TYPE.OEN_PAYMENT,
+  ORDER_TYPE.BILLING_POINT,
+  ORDER_TYPE.BILLING_TEAM_POINT,
+  ORDER_TYPE.BILLING_SUBSCRIBE,
+  ORDER_TYPE.BILLING_ON_PREMISE,
+  ORDER_TYPE.BILLING_SOLUTION,
+  ORDER_TYPE.ANALYSIS,
+]);
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ payment_method_id: string }> },
@@ -66,6 +83,25 @@ export async function POST(
       order.userId !== user.id ||
       order.status !== ORDER_STATUS.PENDING
     ) {
+      return jsonFail(API_ERRORS.VA_INVALID_OR_EXPIRED_ORDER);
+    }
+
+    /**
+     * Info: (20260815 - Luphia) 只有「本來就由用戶互動付款」的訂單能走這條路
+     * （PR #6652 第二輪 C-10）。
+     *
+     * 改用白名單而非逐一排除：這支端點的結尾是「鑄造個人點數」的 fallback，
+     * 任何沒被前面分流攔下的型別都會落到那裡——席次補收失敗留下的 PENDING 訂單
+     * 就是這樣被使用者拿 orderId 打進來，再刷一次卡、鑄 0 點、席次也不會增加。
+     *
+     * 名單之外的型別多半是伺服器自行發起的扣款（席次補收、續訂），
+     * 它們沒有「讓用戶付款」這個步驟，出現在這裡就是異常。
+     */
+    if (!CHECKOUT_PAYABLE_ORDER_TYPES.has(order.type)) {
+      console.error("[checkout] order type is not payable here", {
+        orderId: order.id,
+        type: order.type,
+      });
       return jsonFail(API_ERRORS.VA_INVALID_OR_EXPIRED_ORDER);
     }
 
