@@ -110,6 +110,9 @@ export async function POST(
       teamId,
       seats: 1,
       nowMs: Date.now(),
+      // Info: (20260814 - Luphia) 記下發起者與冪等鍵，與邀請路徑同一套護欄（第二輪 B-2 / B-3）
+      operatorUserId: sessionUser.id,
+      idempotencyKey: `add-member:${teamId}:${targetUser.id}`,
     });
 
     const newMember = await teamRepo.createTeamMember({

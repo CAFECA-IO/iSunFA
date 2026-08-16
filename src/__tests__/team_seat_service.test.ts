@@ -6,6 +6,8 @@ import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { generatePaymentOrder } from "@/services/order.service";
 import { chargeOrderWithSavedCard } from "@/services/team_billing.service";
+import { teamRepo } from "@/repositories/team.repo";
+import { resolveFreePlanMaxMembers } from "@/services/team_subscription.service";
 import { ORDER_TYPE } from "@/constants/status";
 import {
   TEAM_PLAN,
@@ -31,9 +33,25 @@ jest.mock("@/repositories/payment.repo", () => ({
     getOrderById: jest.fn(),
     getPaymentMethodById: jest.fn(),
     updateOrderCompleted: jest.fn(),
+    // Info: (20260814 - Luphia) 單期補收上限與冪等（PR #6652 第二輪 B-2 / B-3）
+    sumSeatAdditionAmount: jest.fn(async () => BigInt(0)),
+    findOrderByIdempotencyKey: jest.fn(async () => null),
   },
 }));
 
+/**
+ * Info: (20260814 - Luphia) 免費版人數上限需要團隊人數與設定值（PR #6652 第二輪 B-4）。
+ * 不 mock 的話這兩個呼叫會打到真資料庫——測試會因為「本機剛好有 DB 且查無資料」而通過。
+ */
+jest.mock("@/repositories/team.repo", () => ({
+  teamRepo: { countMembers: jest.fn(async () => 2) },
+}));
+jest.mock("@/services/team_subscription.service", () => ({
+  resolveEffectivePlanId: jest.requireActual<
+    typeof import("@/services/spend.service")
+  >("@/services/spend.service").resolveEffectivePlanId,
+  resolveFreePlanMaxMembers: jest.fn(async () => 5),
+}));
 jest.mock("@/repositories/webauthn.repo", () => ({
   webAuthnRepo: { findUserById: jest.fn(async () => ({ name: "Owner" })) },
 }));
@@ -87,6 +105,10 @@ describe("chargeSeatAddition", () => {
       data: {},
     });
     asMock(chargeOrderWithSavedCard).mockResolvedValue({ ok: true });
+    asMock(paymentRepo.sumSeatAdditionAmount).mockResolvedValue(BigInt(0));
+    asMock(paymentRepo.findOrderByIdempotencyKey).mockResolvedValue(null);
+    asMock(teamRepo.countMembers).mockResolvedValue(2);
+    asMock(resolveFreePlanMaxMembers).mockResolvedValue(5);
   });
 
   it("charges the remaining period for the new seat and records it", async () => {
@@ -141,6 +163,24 @@ describe("chargeSeatAddition", () => {
 
     expect(result.charged).toBe(false);
     expect(chargeOrderWithSavedCard).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260814 - Luphia) 免費版沒有「席次 × 單價」的自然封頂（PR #6652 第二輪 B-4）：
+   * 單價 0 乘上任何人數都是 0，而每個成員各自享有一份額度——
+   * 20 人的免費團隊就是每週 800 點的模型用量、月費零。人數上限就是它的封頂。
+   */
+  it("blocks a free team from growing past the member cap", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+      ...ACTIVE_SUBSCRIPTION,
+      planId: TEAM_PLAN.FREE,
+      unitPrice: 0,
+    });
+    asMock(teamRepo.countMembers).mockResolvedValue(5);
+
+    await expect(
+      chargeSeatAddition({ teamId: "team-1", nowMs: MID_PERIOD }),
+    ).rejects.toMatchObject({ code: "TW000017" });
   });
 
   /**
@@ -210,6 +250,50 @@ describe("chargeSeatAddition", () => {
     await expect(
       chargeSeatAddition({ teamId: "team-1", nowMs: MID_PERIOD }),
     ).rejects.toMatchObject({ code: "TW000011" });
+    expect(teamSubscriptionRepo.addSeats).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260814 - Luphia) 單期補收總額上限（PR #6652 第二輪 B-2）。
+   *
+   * 邀請開放 OWNER / ADMIN，但補收扣的是訂閱那張卡（持卡人是 OWNER），
+   * 且沒有持卡人當下的授權。沒有上限，一位 ADMIN 連續邀請 50 個位址
+   * 就是替 OWNER 的卡刷 50 筆。
+   */
+  it("refuses to charge beyond the period cap", async () => {
+    // Info: (20260814 - Luphia) 上限 = 單價 840 × 3 席 × 2 = 5,040；已收 5,000 再收 420 會超過
+    asMock(paymentRepo.sumSeatAdditionAmount).mockResolvedValue(BigInt(5000));
+
+    await expect(
+      chargeSeatAddition({
+        teamId: "team-1",
+        nowMs: MID_PERIOD,
+        operatorUserId: "user-admin",
+      }),
+    ).rejects.toMatchObject({ code: "TW000016" });
+
+    expect(chargeOrderWithSavedCard).not.toHaveBeenCalled();
+    expect(teamSubscriptionRepo.addSeats).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260814 - Luphia) 冪等：同一把鍵已經扣過就不再扣（第二輪 B-3）。
+   * 建立邀請失敗後客戶端重試時，這是唯一擋得住重複扣款的東西。
+   */
+  it("does not charge twice for the same idempotency key", async () => {
+    asMock(paymentRepo.findOrderByIdempotencyKey).mockResolvedValue({
+      id: "order-seat-1",
+      amount: BigInt(-420),
+    });
+
+    const result = await chargeSeatAddition({
+      teamId: "team-1",
+      nowMs: MID_PERIOD,
+      idempotencyKey: "invite:team-1:0xabc",
+    });
+
+    expect(result).toMatchObject({ charged: false, amount: 420 });
+    expect(chargeOrderWithSavedCard).not.toHaveBeenCalled();
     expect(teamSubscriptionRepo.addSeats).not.toHaveBeenCalled();
   });
 

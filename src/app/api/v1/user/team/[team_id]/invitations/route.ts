@@ -9,7 +9,10 @@ import { webAuthnService } from "@/services/webauthn.service";
 import { bundlerService } from "@/services/bundler.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { TEAM_INVITATION_STATUS } from "@/constants/status";
+import { isAddress } from "viem";
 import { chargeSeatAddition } from "@/services/team_seat.service";
+import { paymentRepo } from "@/repositories/payment.repo";
+import type { IOenCallbackData } from "@/interfaces/payment";
 
 export async function POST(
   request: NextRequest,
@@ -34,7 +37,13 @@ export async function POST(
     const body = await request.json();
     const { address, role, authentication } = body;
 
-    if (!address || typeof address !== "string") {
+    /**
+     * Info: (20260814 - Luphia) 位址要驗格式（PR #6652 第二輪 B-2）。
+     *
+     * 原本只驗 `typeof === "string"`，於是任意字串都能成為一次邀請——而付費團隊的
+     * 每一次邀請都會向訂閱那張卡補收席次費用。不驗格式等於允許用亂數字串連續扣款。
+     */
+    if (!address || typeof address !== "string" || !isAddress(address)) {
       return jsonFail(API_ERRORS.VL_INVALID_ADDRESS);
     }
 
@@ -133,16 +142,46 @@ export async function POST(
       teamId,
       seats: 1,
       nowMs: Date.now(),
+      // Info: (20260814 - Luphia) 扣的是訂閱那張卡，記下是誰發動的（第二輪 B-2）
+      operatorUserId: sessionUser.id,
+      /**
+       * Info: (20260814 - Luphia) 以「團隊 + 受邀位址」為冪等鍵（第二輪 B-3）：
+       * 建立邀請失敗後客戶端重試同一位址時，不會再扣一次款。
+       */
+      idempotencyKey: `invite:${teamId}:${address.toLowerCase()}`,
     });
 
     // Info: (20260325 - Tzuhan) Create the TeamInvitation
-    const newInvitation = await teamRepo.createTeamInvitation({
-      teamId,
-      inviterId: sessionUser.id,
-      inviteeAddress: address,
-      role: assignedRole,
-      status: TEAM_INVITATION_STATUS.PENDING,
-    });
+    let newInvitation;
+    try {
+      newInvitation = await teamRepo.createTeamInvitation({
+        teamId,
+        inviterId: sessionUser.id,
+        inviteeAddress: address,
+        role: assignedRole,
+        status: TEAM_INVITATION_STATUS.PENDING,
+      });
+    } catch (createError) {
+      /**
+       * Info: (20260814 - Luphia) 已扣款卻建不出邀請＝已收款未履行（第二輪 B-3）。
+       *
+       * 不標記的話這筆會停在 COMPLETED、席次也加了，而邀請不存在——沒有任何查詢
+       * 篩得出它。這正是本分支花了不少篇幅消滅的靜默模式，席次路徑不能是例外。
+       */
+      if (seatCharge.orderId) {
+        await paymentRepo.updateOrderMintFailed(
+          seatCharge.orderId,
+          { teamId, inviteeAddress: address },
+          {} as IOenCallbackData,
+          `invitation creation failed: ${
+            createError instanceof Error
+              ? createError.message
+              : String(createError)
+          }`,
+        );
+      }
+      throw createError;
+    }
 
     // Info: (20260814 - Luphia) 一併回報補收結果，前端才說得出「已補收 N 元」
     return jsonOk({ ...newInvitation, seatCharge });

@@ -12,6 +12,7 @@
  */
 
 import { DEFAULT_FAITH_MEMORY_RETENTION_DAYS } from "@/constants/llm";
+import { DEFAULT_FREE_PLAN_MAX_MEMBERS } from "@/constants/subscription_quota";
 export enum SystemSettingKey {
   GOOGLE_OAUTH_CLIENT_ID = "GOOGLE_OAUTH_CLIENT_ID",
   GOOGLE_OAUTH_CLIENT_SECRET = "GOOGLE_OAUTH_CLIENT_SECRET",
@@ -28,6 +29,17 @@ export enum SystemSettingKey {
    * 均載明相同天數，改設定時必須同步修訂該三處文字。
    */
   FAITH_MEMORY_RETENTION_DAYS = "FAITH_MEMORY_RETENTION_DAYS",
+  /**
+   * Info: (20260814 - Luphia) 免費版團隊的人數上限（PR #6652 第二輪 B-4）。
+   *
+   * 額度改為逐成員計算後，免費版的席次單價是 0，乘上任何人數都是 0——
+   * 一個 20 人的免費團隊等於每週 800 點的模型用量而月費為零。
+   * 訂閱方案以「席次 × 單價」自然封頂，免費版只能靠人數上限。
+   *
+   * ⚠️ 服務條款 §3.1 載明「免費版團隊人數上限以方案頁標示為準」，
+   * 調整此值必須同步方案頁的標示。
+   */
+  FREE_PLAN_MAX_MEMBERS = "FREE_PLAN_MAX_MEMBERS",
 }
 
 // Info: (20260809 - Luphia) 設定分組，供設定頁排版
@@ -102,6 +114,12 @@ export const SYSTEM_SETTING_DEFINITIONS: Record<
     isSecret: false,
     envKey: "FAITH_MEMORY_RETENTION_DAYS",
   },
+  [SystemSettingKey.FREE_PLAN_MAX_MEMBERS]: {
+    key: SystemSettingKey.FREE_PLAN_MAX_MEMBERS,
+    group: SystemSettingGroup.PAYMENT,
+    isSecret: false,
+    envKey: "FREE_PLAN_MAX_MEMBERS",
+  },
 };
 
 /**
@@ -116,6 +134,10 @@ export const SYSTEM_SETTING_FALLBACKS: Partial<
   // Info: (20260812 - Luphia) 保底值與 DEFAULT_FAITH_MEMORY_RETENTION_DAYS 同源，見 src/constants/llm.ts
   [SystemSettingKey.FAITH_MEMORY_RETENTION_DAYS]: String(
     DEFAULT_FAITH_MEMORY_RETENTION_DAYS,
+  ),
+  // Info: (20260814 - Luphia) 免費版人數上限的保底值，與 DEFAULT_FREE_PLAN_MAX_MEMBERS 同源
+  [SystemSettingKey.FREE_PLAN_MAX_MEMBERS]: String(
+    DEFAULT_FREE_PLAN_MAX_MEMBERS,
   ),
 };
 

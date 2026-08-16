@@ -3,6 +3,7 @@ import { SUBSCRIPTION_PLAN_PRICE, CURRENCY_UNIT } from "@/constants/price";
 import { ORDER_TYPE } from "@/constants/status";
 import { TeamRole } from "@/constants/team";
 import {
+  DEFAULT_FREE_PLAN_MAX_MEMBERS,
   BILLING_INTERVAL,
   BillingInterval,
   TEAM_PLAN,
@@ -34,6 +35,8 @@ import {
 } from "@/services/account_book_access.guard";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { teamRepo } from "@/repositories/team.repo";
+import { SystemSettingKey } from "@/constants/system_setting";
+import { systemSettingService } from "@/services/system_setting.service";
 import { resolveSubscriptionAmount } from "@/lib/billing/seat_billing";
 import { teamQuotaUsageRepo } from "@/repositories/team_quota_usage.repo";
 import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
@@ -172,6 +175,32 @@ export async function getAccountBookQuotaView(params: {
  * 付費方案建立 BILLING_SUBSCRIBE 訂單（data 帶 teamId），付款成功後由
  * processOenPayment / checkout 履行路徑套用訂閱。
  */
+/**
+ * Info: (20260814 - Luphia) 生效中的免費版人數上限（PR #6652 第二輪 B-4）。
+ *
+ * 與記憶保留天數同一套作法：正式值存於 DB 的系統設定（ADR 017，可後台調整），
+ * 讀不到或值不合法時退回程式內的 fail-safe 預設。所有需要這個數字的地方
+ * 都必須經過這裡，不得直接引用常數——否則後台調整後，擋人的地方與方案頁的標示
+ * 會各用一個數字。
+ */
+export async function resolveFreePlanMaxMembers(): Promise<number> {
+  try {
+    const raw = await systemSettingService.get(
+      SystemSettingKey.FREE_PLAN_MAX_MEMBERS,
+    );
+    const parsed = /^\d+$/.test((raw ?? "").trim())
+      ? Number((raw ?? "").trim())
+      : NaN;
+    // Info: (20260814 - Luphia) 0 或負數等於「免費版不能有任何成員」，那不是合理設定
+    return Number.isInteger(parsed) && parsed > 0
+      ? parsed
+      : DEFAULT_FREE_PLAN_MAX_MEMBERS;
+  } catch (error) {
+    console.error("Failed to resolve free plan member cap:", error);
+    return DEFAULT_FREE_PLAN_MAX_MEMBERS;
+  }
+}
+
 export async function changeTeamSubscription(params: {
   userId: string;
   teamId: string;

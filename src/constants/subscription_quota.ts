@@ -74,6 +74,15 @@ export const DEFAULT_SUBSCRIPTION_QUOTA_BY_PLAN: Record<
   [TEAM_PLAN.BUSINESS]: { per5h: 1000, perWeek: 7500 },
 };
 
+/**
+ * Info: (20260814 - Luphia) 免費版團隊的人數上限預設值（PR #6652 第二輪 B-4）。
+ *
+ * 額度逐成員計算後，付費方案以「席次 × 單價」自然封頂，免費版沒有這個機制——
+ * 席次單價是 0，人數再多帳單都是 0，而每個人各自享有一份額度。
+ * 這個上限就是免費版的封頂。正式值為系統設定（可後台調整），此為 fail-safe 預設。
+ */
+export const DEFAULT_FREE_PLAN_MAX_MEMBERS = 5;
+
 export const TEAM_SUBSCRIPTION_STATUS = {
   ACTIVE: "ACTIVE",
   PAST_DUE: "PAST_DUE",
@@ -129,7 +138,7 @@ export const BILLABLE_FEATURE_CODE = {
   FAITH_CHAT: "FAITH_CHAT",
   AI_ANALYSIS: "AI_ANALYSIS",
   CARBON_CHAT: "CARBON_CHAT",
-  // Info: (20260813 - Luphia) 物流碳足跡查詢：扣款順序與其他功能相反，見 FEATURE_SPEND_PRIORITY
+  // Info: (20260813 - Luphia) 物流碳足跡查詢：以專屬代碼記帳，才分得出與對話類的用量
   LOGISTICS_CARBON: "LOGISTICS_CARBON",
   // Info: (20260807 - Luphia) 團隊解散歸零分錄專用（設計書 §6.3），非可消費功能
   TEAM_DISSOLVED: "TEAM_DISSOLVED",
@@ -153,26 +162,16 @@ export type SpendPriority =
   (typeof SPEND_PRIORITY)[keyof typeof SPEND_PRIORITY];
 
 /**
- * Info: (20260813 - Luphia) 逐功能的扣款順序（產品拍板 20260813）。
+ * Info: (20260814 - Luphia) 逐功能的扣款順序（`FEATURE_SPEND_PRIORITY` / `resolveSpendPriority`）
+ * 已於 2026-08-14 移除（PR #6652 第二輪 A-1）。
  *
- * 物流碳足跡**優先扣團隊分配給該成員的點數**，把訂閱額度留給對話類功能：
- * 物流查詢是低頻、單價固定（5 點）的重查詢，而對話類是高頻且吃 5 小時視窗；
- * 讓物流去吃視窗額度，會讓同一團隊的對話在尖峰時段被幾筆查詢擠掉。
+ * 它排序的是「訂閱額度」與「團隊分配給成員的離鏈點數」。分配改為鑄到成員自己的錢包後，
+ * 第二層變成**成員的個人資產**，而順序就固定了：一律先用團隊買的額度，
+ * 不足才動用他自己的點數——先花成員的錢再用團隊額度，沒有任何情境說得通。
  *
- * 未列出的功能一律 QUOTA_FIRST——新增功能時預設沿用對用戶有利的順序，
- * 要改成 ALLOCATION_FIRST 必須在此明寫，避免「悄悄多花用戶的錢」。
+ * 純函式 `splitSpend` 仍保留 priority 參數（已有單測涵蓋），供日後真的出現
+ * 兩個對等來源時使用。
  */
-export const FEATURE_SPEND_PRIORITY: Partial<
-  Record<BillableFeatureCode, SpendPriority>
-> = {
-  [BILLABLE_FEATURE_CODE.LOGISTICS_CARBON]: SPEND_PRIORITY.ALLOCATION_FIRST,
-};
-
-export function resolveSpendPriority(
-  featureCode: BillableFeatureCode,
-): SpendPriority {
-  return FEATURE_SPEND_PRIORITY[featureCode] ?? SPEND_PRIORITY.QUOTA_FIRST;
-}
 
 // Info: (20260807 - Luphia) 訂閱計費週期（對齊既有 Order.data.billingInterval 慣例）
 export const BILLING_INTERVAL = {

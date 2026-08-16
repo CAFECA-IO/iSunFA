@@ -411,6 +411,26 @@ export class PaymentRepository {
     });
   }
 
+  /**
+   * Info: (20260814 - Luphia) 本期已補收的席次費用合計（PR #6652 第二輪 B-2）。
+   *
+   * 用於「單期補收總額上限」：邀請開放 OWNER / ADMIN，但扣的是訂閱那張卡，
+   * 沒有上限就等於允許一位管理員替擁有者的卡連刷。
+   * 只算已完成的訂單——失敗或待付的不佔額度。
+   */
+  async sumSeatAdditionAmount(teamId: string, since: Date): Promise<bigint> {
+    const orders = await prisma.order.findMany({
+      where: {
+        type: ORDER_TYPE.BILLING_SEAT_ADDITION,
+        status: ORDER_STATUS.COMPLETED,
+        createdAt: { gte: since },
+        data: { path: ["teamId"], equals: teamId },
+      },
+      select: { amount: true },
+    });
+    return orders.reduce((sum, order) => sum + order.amount, BigInt(0));
+  }
+
   async getOrderById(orderId: string) {
     return prisma.order.findUnique({ where: { id: orderId } });
   }

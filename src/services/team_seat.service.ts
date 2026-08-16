@@ -9,6 +9,8 @@ import { chargeOrderWithSavedCard } from "@/services/team_billing.service";
 import { resolveEffectivePlanId } from "@/services/spend.service";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
+import { teamRepo } from "@/repositories/team.repo";
+import { resolveFreePlanMaxMembers } from "@/services/team_subscription.service";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 
 /**
@@ -45,7 +47,30 @@ export interface ISeatChargeParams {
   // Info: (20260814 - Luphia) 一次增加的席次數，預設 1
   seats?: number;
   nowMs: number;
+  /**
+   * Info: (20260814 - Luphia) 發起這次加席的操作者（PR #6652 第二輪 B-2）。
+   * 扣的是訂閱那張卡（持卡人是 OWNER），因此每一筆都要記得下是誰發動的。
+   */
+  operatorUserId?: string;
+  /**
+   * Info: (20260814 - Luphia) 冪等鍵：同一次邀請重試不重複扣款。
+   * 沒有它時，建立邀請失敗後客戶端重試就會再扣一次（第二輪 B-3）。
+   */
+  idempotencyKey?: string;
 }
+
+/**
+ * Info: (20260814 - Luphia) 單一計費週期內的補收總額上限（PR #6652 第二輪 B-2）。
+ *
+ * 邀請開放 OWNER / ADMIN，但補收扣的是訂閱那張卡（持卡人是 OWNER），
+ * 且屬 merchant-initiated、沒有持卡人當下的授權。沒有上限的話，一位 ADMIN
+ * 連續邀請 50 個位址就是替 OWNER 的卡刷 50 筆——那不該是系統允許發生的事。
+ *
+ * 上限取「當期訂閱費的 2 倍」：正常的期中擴編（加幾席）遠低於它，
+ * 而異常的批次邀請會撞上。撞到上限不是拒絕擴編，是要求改由續訂時一次計費
+ * （或先聯繫客服），把異常拉回人的視線內。
+ */
+const SEAT_CHARGE_PERIOD_MULTIPLIER = 2;
 
 interface ISubscriptionOrderData {
   paymentMethodId?: string;
@@ -59,7 +84,7 @@ interface ISubscriptionOrderData {
 export async function chargeSeatAddition(
   params: ISeatChargeParams,
 ): Promise<ISeatChargeResult> {
-  const { teamId, seats = 1, nowMs } = params;
+  const { teamId, seats = 1, nowMs, operatorUserId, idempotencyKey } = params;
   const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
 
   if (!subscription) return { charged: false, amount: 0, seats: 0 };
@@ -74,6 +99,24 @@ export async function chargeSeatAddition(
     nowSec,
   );
   if (effectivePlanId === TEAM_PLAN.FREE) {
+    /**
+     * Info: (20260814 - Luphia) 免費版不收費，但要擋人數（PR #6652 第二輪 B-4）。
+     *
+     * 額度改為逐成員計算後，付費方案以「席次 × 單價」自然封頂，免費版沒有這個機制：
+     * 席次單價是 0，人數再多帳單都是 0，而每個人各自享有一份額度——
+     * 20 人的免費團隊就是每週 800 點的模型用量、月費零。
+     * 上限為系統設定（可後台調整），對應服務條款 §3.1「以方案頁標示為準」。
+     */
+    const maxMembers = await resolveFreePlanMaxMembers();
+    const memberCount = await teamRepo.countMembers(teamId);
+    if (memberCount + seats > maxMembers) {
+      logger.info("free plan member cap reached", {
+        teamId,
+        memberCount,
+        maxMembers,
+      });
+      throw toApiError(API_ERRORS.TW_FREE_PLAN_MEMBER_LIMIT);
+    }
     return { charged: false, amount: 0, seats: 0 };
   }
 
@@ -114,6 +157,29 @@ export async function chargeSeatAddition(
     return { charged: false, amount: 0, seats };
   }
 
+  /**
+   * Info: (20260814 - Luphia) 當期補收總額的上限檢查（PR #6652 第二輪 B-2）。
+   * 以本期已補收的席次訂單合計判斷，超過即拒絕並記錄——這是防「替他人的卡連刷」的護欄。
+   */
+  const chargedThisPeriod = await paymentRepo.sumSeatAdditionAmount(
+    teamId,
+    subscription.currentPeriodStart,
+  );
+  const periodCap =
+    BigInt(subscription.unitPrice) *
+    BigInt(Math.max(1, subscription.seats)) *
+    BigInt(SEAT_CHARGE_PERIOD_MULTIPLIER);
+  if (chargedThisPeriod + BigInt(amount) > periodCap) {
+    logger.error("seat addition blocked: period charge cap exceeded", {
+      teamId,
+      operatorUserId: operatorUserId ?? "(unknown)",
+      chargedThisPeriod: chargedThisPeriod.toString(),
+      attempted: amount,
+      cap: periodCap.toString(),
+    });
+    throw toApiError(API_ERRORS.TW_SEAT_CHARGE_CAP_EXCEEDED);
+  }
+
   const lastOrder = subscription.latestOrderId
     ? await paymentRepo.getOrderById(subscription.latestOrderId)
     : null;
@@ -131,6 +197,29 @@ export async function chargeSeatAddition(
     throw toApiError(API_ERRORS.TW_SEAT_PAYMENT_METHOD_MISSING);
   }
 
+  /**
+   * Info: (20260814 - Luphia) 冪等：同一把鍵已經扣過就不再扣第二次（第二輪 B-3）。
+   * 建立邀請失敗後客戶端重試時，這道檢查是唯一擋得住重複扣款的東西。
+   */
+  if (idempotencyKey) {
+    const existing = await paymentRepo.findOrderByIdempotencyKey(
+      lastOrder.userId,
+      idempotencyKey,
+    );
+    if (existing) {
+      logger.info("seat addition replayed; charge skipped", {
+        teamId,
+        orderId: existing.id,
+      });
+      return {
+        charged: false,
+        amount: Number(-existing.amount),
+        orderId: existing.id,
+        seats,
+      };
+    }
+  }
+
   const user = await webAuthnRepo.findUserById(lastOrder.userId);
   const order = await generatePaymentOrder(lastOrder.userId, {
     type: ORDER_TYPE.BILLING_SEAT_ADDITION,
@@ -143,7 +232,13 @@ export async function chargeSeatAddition(
     teamId,
     seats,
     unitPrice: subscription.unitPrice,
-    data: { seatAddition: true },
+    data: {
+      seatAddition: true,
+      // Info: (20260814 - Luphia) 冪等鍵與發起者寫進訂單：重試不重扣、事後查得出是誰發動的
+      idempotencyKey: idempotencyKey ?? null,
+      operatorUserId: operatorUserId ?? null,
+      teamId,
+    },
   });
 
   const orderData = {

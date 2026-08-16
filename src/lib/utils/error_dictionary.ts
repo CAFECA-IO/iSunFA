@@ -1074,6 +1074,24 @@ export const API_ERRORS = {
     message: "Subscription has no unit price on record",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+  /**
+   * Info: (20260814 - Luphia) 單期席次補收總額超過上限（PR #6652 第二輪 B-2）：
+   * 扣的是訂閱那張卡而發起者可能是 ADMIN，上限是防「替他人的卡連刷」的護欄。
+   */
+  TW_SEAT_CHARGE_CAP_EXCEEDED: {
+    code: "TW000016",
+    message: "Seat charges for this period exceeded the allowed cap",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  /**
+   * Info: (20260814 - Luphia) 免費版團隊人數已達上限（PR #6652 第二輪 B-4）：
+   * 免費版沒有「席次 × 單價」的自然封頂，人數上限就是它的封頂。
+   */
+  TW_FREE_PLAN_MEMBER_LIMIT: {
+    code: "TW000017",
+    message: "Free plan team has reached its member limit",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
   // Info: (20260814 - Luphia) 席次補收扣款失敗：fail-closed，不建立邀請也不加人
   TW_SEAT_CHARGE_FAILED: {
     code: "TW000012",
