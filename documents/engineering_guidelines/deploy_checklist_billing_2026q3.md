@@ -20,19 +20,23 @@
 
 ## 1. 部署前（可在上線前完成）
 
-### 1.1 檢查唯一約束是否與既有資料衝突 ⚠️
+### 1.1 檢查重複的待接受邀請 ⚠️
 
-新增的兩個唯一約束在既有資料違反時**會套用失敗**，讓整個 schema 套用中止：
+邀請的唯一約束改成單欄的 `pending_key`（**只在 PENDING 期間有值**，接受後設回 NULL）。
+新欄位在既有列上是 NULL，所以 schema 套用本身不會失敗；真正會失敗的是接下來的回填（3.3）：
 
 ```sql
--- Info: 同一團隊、同一位址、同一狀態的重複邀請（新約束會擋）
-SELECT team_id, invitee_address, status, COUNT(*)
+-- Info: 同一團隊、同一對象的重複待接受邀請（回填時會撞 pending_key 唯一鍵）
+SELECT team_id, COALESCE(invitee_email, LOWER(invitee_address)) AS target, COUNT(*)
 FROM team_invitation
-GROUP BY team_id, invitee_address, status
+WHERE status = 'PENDING'
+GROUP BY team_id, target
 HAVING COUNT(*) > 1;
 ```
 
-有結果就必須先處理（保留最新一列、其餘刪除或改狀態）。**這正是本 PR 修掉的並發 bug 留下的痕跡**，所以production 有殘留是合理的預期，不是異常。
+有結果就必須先處理（保留最新一列、其餘撤回）。**這正是本 PR 修掉的並發 bug 留下的痕跡**，所以 production 有殘留是合理的預期，不是異常。回填腳本會自行偵測並列出這些列、以非零碼結束，不會寫到一半才中斷。
+
+> 為什麼不用 partial unique index（`WHERE status = 'PENDING'`）——那是 Postgres 的正解，但 Prisma schema 表達不出來，而本專案的 schema 以 `prisma db push` 套用，手動建的索引會在下一次 push 被 drift 掉（ADR 019 已踩過）。可為 NULL 的單欄唯一鍵是同一件事的等價寫法，而且寫在 schema 裡看得見。
 
 `order.idempotency_key` 的唯一約束沒有這個風險：既有資料該欄為 NULL，而 Postgres 允許多個 NULL。
 
@@ -51,8 +55,9 @@ NEXT_PUBLIC_CREDIT_POINT_ADDRESS
 | 資料表 | 變更 | 風險 |
 |---|---|---|
 | `order` | 新增 `idempotency_key`（唯一，可為 NULL） | 低 |
-| `team_invitation` | 新增唯一約束 `(team_id, invitee_address, status)` | **見 1.1** |
-| `team_invitation` | 新增 `invitee_email`、`token_hash`（唯一）、`expires_at`，以及唯一約束 `(team_id, invitee_email, status)` | 低；既有資料三欄皆為 NULL，Postgres 允許多個 NULL |
+| `team_invitation` | 新增 `invitee_email`、`token_hash`（唯一）、`expires_at`、`pending_key`（唯一） | 低；既有資料四欄皆為 NULL，Postgres 允許多個 NULL |
+| `team_invitation` | `invitee_address` 改為可為 NULL（email 邀請時對方還沒有位址） | 低；放寬約束不會與既有資料衝突 |
+| `team_invitation` | **移除**舊的複合唯一鍵 `(team_id, invitee_*, status)`，改為 `@@index([team_id, status])` | 低；但移除後到 3.3 回填完成前，既有待接受邀請暫時沒有 DB 層併發防護 |
 | `team_subscription` | 新增 `seats`（預設 1）、`unit_price`（預設 0） | 低，但**必須接著做 3.1** |
 | `team_wallet_ledger` | 新增 `tx_hash`（可為 NULL） | 低 |
 | `team_quota_usage` | 索引改為 `(team_id, user_id, window_key_5h)` 與 `(team_id, user_id, window_key_week)` | 低；舊索引可留可刪 |
@@ -85,7 +90,18 @@ npx tsx scripts/migrate_allocations_onchain.ts --commit # 實際鑄造並歸零
 
 腳本是**先鑄造成功才歸零**（反過來做，一次 RPC 失敗就是點數憑空消失），冪等鍵為 `migrate-allocation:{teamId}:{userId}`，重跑不會重複鑄造。有任何一筆失敗會以非零碼結束並列出清單，修好 RPC 後重跑即可。
 
-### 3.3 設定寄信與網站網址 — **email 邀請上線前必做**
+### 3.3 回填邀請的 `pending_key` — **必做，且要快**
+
+```bash
+npx tsx scripts/backfill_pending_invite_key.ts          # 預演（含重複偵測）
+npx tsx scripts/backfill_pending_invite_key.ts --commit # 實際寫入
+```
+
+**不跑的後果**：舊的複合唯一鍵已被移除，而新的 `pending_key` 在既有列上是 NULL，於是**既有的待接受邀請暫時沒有 DB 層的併發防護**——兩位管理員同時邀請同一個對象時，應用層的「是否已有 PENDING 邀請」兩邊都會通過，各建一列、各扣一次席次費用。
+
+腳本只碰 `status = 'PENDING'` 且 `pending_key IS NULL` 的列。**非 PENDING 的列刻意保持 NULL**，那正是這次改動的重點：歷史列不該被唯一鍵約束，否則「離職後再邀請同一個人」會在接受的那一刻撞鍵、永遠加不進來，而席次費已經扣了。
+
+### 3.4 設定寄信與網站網址 — **email 邀請上線前必做**
 
 後台系統設定（ADR 017，可線上調整、不需重啟）：
 
@@ -100,7 +116,7 @@ npx tsx scripts/migrate_allocations_onchain.ts --commit # 實際鑄造並歸零
 
 ⚠️ `APP_BASE_URL` 填錯不會有任何錯誤訊息，信會照寄，只是連結點不開。上線後請**實際寄一封給自己**，點開確認落在 `/invite/<token>` 而不是 404。
 
-### 3.4 設定免費版人數上限（選做）
+### 3.5 設定免費版人數上限（選做）
 
 系統設定 `FREE_PLAN_MAX_MEMBERS`，未設定時使用程式內的 fail-safe 預設 **5**。
 
@@ -119,6 +135,8 @@ npx tsx scripts/migrate_allocations_onchain.ts --commit # 實際鑄造並歸零
 - [ ] 以 email 邀請一位自己收得到的信箱：信有寄到、連結點得開、註冊完成即入團
 - [ ] 撤回該邀請後再邀請另一個人：**不再收費**，且畫面明講「已使用既有席次」
 - [ ] 同一條邀請連結點第二次：回「連結已失效」，不會重複加人
+- [ ] 邀請一個人 → 接受 → 移除該成員 → **再邀請同一個信箱** → 可以接受成功（舊版會永遠失敗）
+- [ ] 同一條連結在兩個瀏覽器同時接受：只有一個人進團隊，另一個看到「連結已失效」
 
 ---
 

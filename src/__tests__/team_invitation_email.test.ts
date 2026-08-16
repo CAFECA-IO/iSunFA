@@ -30,7 +30,6 @@ jest.mock("@/repositories/team.repo", () => ({
     getTeamInvitationByEmail: jest.fn(async () => null),
     createTeamInvitation: jest.fn(),
     deleteInvitation: jest.fn(),
-    consumeInvitationToken: jest.fn(),
     findInvitationByTokenHash: jest.fn(),
     getTeamMember: jest.fn(async () => null),
     acceptInvitation: jest.fn(),
@@ -89,6 +88,13 @@ beforeEach(() => {
   });
   asMock(sendMail).mockResolvedValue(undefined);
   asMock(systemSettingService.get).mockResolvedValue("https://isunfa.com");
+  /**
+   * Info: (20260816 - Luphia) acceptInvitation 回 null 代表「沒搶到那一列」，
+   * 因此預設要回一個成員物件，否則每個測試都會走進併發的分支。
+   */
+  asMock(teamRepo.acceptInvitation).mockResolvedValue({
+    id: "member-1",
+  } as unknown as Awaited<ReturnType<typeof teamRepo.acceptInvitation>>);
 });
 
 const invite = (email = "friend@example.com") =>
@@ -183,6 +189,33 @@ describe("inviteMemberByEmail", () => {
 
     await expect(invite()).resolves.toBeDefined();
     expect(asMock(sendMail)).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * Info: (20260816 - Luphia) 逾期的舊列狀態仍是 PENDING，還握著 `pendingKey`。
+   * 不先刪掉，重邀同一個信箱會撞唯一鍵，而使用者只會看到「邀請失敗」。
+   */
+  it("重邀前會刪掉逾期的舊邀請，否則唯一鍵會擋住", async () => {
+    asMock(teamRepo.getTeamInvitationByEmail).mockResolvedValue({
+      id: "inv-old",
+      expiresAt: new Date(NOW - 1000),
+    } as unknown as Awaited<
+      ReturnType<typeof teamRepo.getTeamInvitationByEmail>
+    >);
+
+    await invite();
+
+    expect(asMock(teamRepo.deleteInvitation)).toHaveBeenCalledWith("inv-old");
+  });
+
+  /**
+   * Info: (20260816 - Luphia) 併發防護：兩位管理員同時邀請同一個信箱時，
+   * 應用層的「是否已有 PENDING」檢查兩邊都會通過，擋下第二筆的是這個唯一鍵。
+   */
+  it("建立邀請時帶上 pendingKey，且信箱經過正規化", async () => {
+    await invite("Friend@Example.COM");
+    const created = asMock(teamRepo.createTeamInvitation).mock.calls[0][0];
+    expect(created.pendingKey).toBe("team-1:mail:friend@example.com");
   });
 
   /**
@@ -301,6 +334,52 @@ describe("acceptInviteByToken", () => {
     );
   });
 
+  /**
+   * Info: (20260816 - Luphia) 併發：轉寄出去的連結被兩個人同時點開。
+   *
+   * `acceptInvitation` 回 null 代表這一列在讀取之後已被搶走。此時**不能**當成成功——
+   * 一個付費席次只能進一個人，而搶輸的那位並沒有加入任何團隊。
+   */
+  it("同一條連結被搶先接受時，後到的請求不會加入團隊", async () => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue(
+      pending as unknown as Awaited<
+        ReturnType<typeof teamRepo.findInvitationByTokenHash>
+      >,
+    );
+    asMock(teamRepo.acceptInvitation).mockResolvedValue(null);
+    // Info: (20260816 - Luphia) 搶輸的人不是成員（第一次檢查、事後重查都不是）
+    asMock(teamRepo.getTeamMember).mockResolvedValue(null);
+
+    await expect(
+      acceptInviteByToken({ token: "token", userId: "user-3", nowMs: NOW }),
+    ).rejects.toThrow();
+  });
+
+  /**
+   * Info: (20260816 - Luphia) 同一個人連點兩下：第二次同樣拿到 null，
+   * 但他確實已經加入了。回錯誤只會讓一個已經成功的人以為自己失敗。
+   */
+  it("同一個人連點兩下，第二次視為已完成而非失敗", async () => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue(
+      pending as unknown as Awaited<
+        ReturnType<typeof teamRepo.findInvitationByTokenHash>
+      >,
+    );
+    asMock(teamRepo.acceptInvitation).mockResolvedValue(null);
+    asMock(teamRepo.getTeamMember)
+      // Info: (20260816 - Luphia) 進入時還不是成員，第一次的寫入在這中間完成
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: "member-1" });
+
+    const result = await acceptInviteByToken({
+      token: "token",
+      userId: "user-2",
+      nowMs: NOW,
+    });
+
+    expect(result.teamId).toBe(TEAM.id);
+  });
+
   it("逾期的連結不能加入", async () => {
     asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue({
       ...pending,
@@ -352,9 +431,11 @@ describe("acceptInviteByToken", () => {
 
     expect(result.teamId).toBe(TEAM.id);
     expect(asMock(teamRepo.acceptInvitation)).not.toHaveBeenCalled();
-    expect(asMock(teamRepo.consumeInvitationToken)).toHaveBeenCalledWith(
-      "inv-1",
-    );
+    /**
+     * Info: (20260816 - Luphia) 而且**不碰那封邀請**：點連結的人不見得是收件者
+     * （信會被轉寄）。把 token 作廢等於替受邀者銷毀他還沒用過的連結。
+     */
+    expect(asMock(teamRepo.deleteInvitation)).not.toHaveBeenCalled();
   });
 });
 

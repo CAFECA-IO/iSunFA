@@ -47,7 +47,6 @@ export interface ITeamRepository {
     data: Prisma.TeamInvitationUncheckedCreateInput,
   ): Promise<TeamInvitation>;
   deleteInvitation(id: string): Promise<TeamInvitation>;
-  consumeInvitationToken(id: string): Promise<TeamInvitation>;
   countPendingInvitations(teamId: string, nowMs: number): Promise<number>;
   findInvitationByTokenHash(
     tokenHash: string,
@@ -62,7 +61,7 @@ export interface ITeamRepository {
   listTeamInvitations(
     teamId: string,
     status: string,
-  ): Promise<Omit<TeamInvitation, "tokenHash" | "updatedAt">[]>;
+  ): Promise<Omit<TeamInvitation, "tokenHash" | "pendingKey" | "updatedAt">[]>;
   getPendingInvitationsByAddress(address: string): Promise<
     Prisma.TeamInvitationGetPayload<{
       include: {
@@ -76,12 +75,16 @@ export interface ITeamRepository {
   ): Promise<Prisma.TeamInvitationGetPayload<{
     include: { team: true; inviter: true };
   }> | null>;
+  /**
+   * Info: (20260816 - Luphia) 回 `null` 代表這封邀請已不是 PENDING（被搶先接受或已撤回）。
+   * 型別上就是可空的，呼叫端才不會把「沒搶到」當成「加入成功」。
+   */
   acceptInvitation(
     inviteId: string,
     teamId: string,
     userId: string,
     role: TeamRole,
-  ): Promise<TeamMember>;
+  ): Promise<TeamMember | null>;
   getTeamMemberById(memberId: string): Promise<TeamMember | null>;
   countTeamMembersByRole(
     teamId: string,
@@ -219,22 +222,11 @@ export class TeamRepository implements ITeamRepository {
    * Info: (20260815 - Luphia) 邀請信寄送失敗時回滾用。
    *
    * 刻意用實刪而非改狀態：一封沒寄出去的邀請不是歷史紀錄，
-   * 留著只會佔住 `(teamId, inviteeEmail, status)` 這個唯一鍵，
+   * 留著只會佔住 `pendingKey` 這個唯一鍵，
    * 讓管理員重試同一個信箱時撞上「已有邀請」。
    */
   async deleteInvitation(id: string) {
     return prisma.teamInvitation.delete({ where: { id } });
-  }
-
-  /**
-   * Info: (20260815 - Luphia) 用掉 token（一次性）：只清雜湊，不動狀態。
-   * 供「已是成員又點了一次連結」這條路徑使用。
-   */
-  async consumeInvitationToken(id: string) {
-    return prisma.teamInvitation.update({
-      where: { id },
-      data: { tokenHash: null },
-    });
   }
 
   /**
@@ -316,15 +308,25 @@ export class TeamRepository implements ITeamRepository {
     });
   }
 
+  /**
+   * Info: (20260816 - Luphia) 接受邀請。回 `null` 代表這封邀請已經不是 PENDING
+   * （被人搶先接受、已撤回、或同一個人連點兩次的第二次）。
+   *
+   * **PENDING → ACCEPTED 的判斷與寫入必須是同一個原子操作**。原本的寫法是
+   * 呼叫端先查、判斷 status，再由這裡無條件 update；兩個請求可以同時通過那個判斷，
+   * 於是各自建立一筆 TeamMember——一封轉寄出去的邀請信被兩個人同時點開，
+   * 就是**一個付費席次進兩個人**。`updateMany` 帶上 `status: PENDING` 之後，
+   * 條件比對發生在資料庫的那一列上，第二個請求會拿到 count 0。
+   */
   async acceptInvitation(
     inviteId: string,
     teamId: string,
     userId: string,
     role: TeamRole,
   ) {
-    const [, newMember] = await prisma.$transaction([
-      prisma.teamInvitation.update({
-        where: { id: inviteId },
+    return prisma.$transaction(async (tx) => {
+      const claimed = await tx.teamInvitation.updateMany({
+        where: { id: inviteId, status: TEAM_INVITATION_STATUS.PENDING },
         data: {
           status: TEAM_INVITATION_STATUS.ACCEPTED,
           /**
@@ -333,17 +335,25 @@ export class TeamRepository implements ITeamRepository {
            * 邀請信可能被轉寄，過期的連結不該還留著一把對得上的鑰匙。
            */
           tokenHash: null,
+          /**
+           * Info: (20260816 - Luphia) 離開 PENDING 即釋放唯一鍵，
+           * 這個人日後才能再被邀請一次（見 pending_invite_key.ts）。
+           */
+          pendingKey: null,
         },
-      }),
-      prisma.teamMember.create({
+      });
+
+      // Info: (20260816 - Luphia) 沒搶到那一列就什麼都不做，交易照樣提交（沒有副作用要回滾）
+      if (claimed.count === 0) return null;
+
+      return tx.teamMember.create({
         data: {
           teamId,
           userId,
           role,
         },
-      }),
-    ]);
-    return newMember;
+      });
+    });
   }
 
   async getTeamMemberById(memberId: string) {

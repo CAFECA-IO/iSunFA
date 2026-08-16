@@ -65,6 +65,15 @@ export async function POST(
       invitation.role,
     );
 
+    /**
+     * Info: (20260816 - Luphia) `null` = 這封邀請在上面那次讀取之後已經不是 PENDING
+     * （連點兩次的第二次，或已被撤回）。當成「查無此邀請」回覆，
+     * 而不是繼續往下送一筆鏈上訊息、回傳一個不存在的成員。
+     */
+    if (!newMember) {
+      return jsonFail(API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO);
+    }
+
     const inviterName = invitation.inviter.name || invitation.inviter.address;
     const inviteeName = sessionUser.name || sessionUser.address;
     const teamName = invitation.team.name;

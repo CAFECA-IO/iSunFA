@@ -157,6 +157,8 @@ model TeamSeatChange {
 > **未實作**：邀請寄送的 rate limiter bucket（§5.3）。現行的護欄是 OWNER/ADMIN 權限 + 每次邀請的 FIDO2 簽章 + 單期補收上限（`TW000016`），濫用的成本上限已被封住；若日後出現以寄信量為目標的濫用再補。退信（bounce）處理見 §8 開放問題 #6，仍未拍板。
 >
 > **另補**：`DELETE /api/v1/user/team/{team_id}/invitations/{invite_id}` 供 OWNER / ADMIN 撤回尚未接受的邀請。沒有這支，打錯一個字寄出的邀請會佔住一個已付費的席次直到七天後逾期。
+>
+> **尚缺「拒絕」**：`TEAM_INVITATION_STATUS.REJECTED` 在應用程式碼中無任何使用處（位址邀請也一樣），受邀者沒有主動讓出席次的方法。條款 §3.6「邀請經拒絕、撤回或逾有效期間者，該席次即行釋出」目前只有後兩者成立。
 
 ### 5.1 Schema 增量
 

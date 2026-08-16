@@ -10,6 +10,7 @@ import {
   isInviteExpired,
   INVITE_TOKEN_TTL_DAYS,
 } from "@/lib/team/invite_token";
+import { buildPendingInviteKey } from "@/lib/team/pending_invite_key";
 import {
   chargeSeatAddition,
   type ISeatChargeResult,
@@ -91,6 +92,18 @@ export async function inviteMemberByEmail(
   }
 
   /**
+   * Info: (20260816 - Luphia) 逾期的舊邀請要先清掉才能重邀同一個信箱。
+   *
+   * 它的狀態仍是 PENDING，因此還握著 `pendingKey` 這個唯一鍵——留著的話，
+   * 下面那行 create 會撞 P2002，而使用者看到的是「邀請失敗」卻說不出原因。
+   * 實刪而非留存：一封逾期且從未被接受的邀請不是有用的歷史，
+   * 而扣款的軌跡在 Order 那邊，不會因為刪掉這一列而消失。
+   */
+  if (existing) {
+    await teamRepo.deleteInvitation(existing.id);
+  }
+
+  /**
    * Info: (20260815 - Luphia) 席次：先看有沒有已付費的空位，沒有才補收。
    * 冪等鍵以信箱為準，重試同一封邀請不會扣第二次。
    */
@@ -112,6 +125,15 @@ export async function inviteMemberByEmail(
     expiresAt,
     role,
     status: TEAM_INVITATION_STATUS.PENDING,
+    /**
+     * Info: (20260816 - Luphia) 併發防護：兩位管理員同時邀請同一個信箱時，
+     * 上面的「是否已有 PENDING」檢查兩邊都會通過，於是各建一列、各扣一次席次費用。
+     * 唯一鍵讓第二筆在資料庫層失敗（見 pending_invite_key.ts）。
+     */
+    pendingKey: buildPendingInviteKey({
+      teamId,
+      inviteeEmail: normalizedEmail,
+    }),
   });
 
   try {
@@ -257,21 +279,42 @@ export async function acceptInviteByToken(
     throw toApiError(API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO);
   }
 
-  // Info: (20260815 - Luphia) 已經是成員就當成功處理：重複點連結不該看到錯誤
+  /**
+   * Info: (20260815 - Luphia) 已經是成員就當成功處理：重複點連結不該看到錯誤。
+   *
+   * Info: (20260816 - Luphia) 但**不動這封邀請**。原本這裡會把 token 作廢，
+   * 那在「已是成員的人開了一封轉寄來的信」時，等於替受邀者把他的連結銷毀——
+   * 而受邀者本人還沒用過它。點連結的人是不是收件者，我們無從得知，
+   * 所以唯一安全的動作是什麼都不做：他已經在團隊裡了，回成功即可。
+   */
   const existingMember = await teamRepo.getTeamMember(
     userId,
     invitation.teamId,
   );
   if (existingMember) {
-    await teamRepo.consumeInvitationToken(invitation.id);
     return { teamId: invitation.teamId };
   }
 
-  await teamRepo.acceptInvitation(
+  const member = await teamRepo.acceptInvitation(
     invitation.id,
     invitation.teamId,
     userId,
     invitation.role,
   );
+
+  /**
+   * Info: (20260816 - Luphia) `null` = 這一列在我們讀取之後、寫入之前已經不是 PENDING。
+   *
+   * 兩種情境：轉寄出去的連結被另一個人搶先接受，或同一個人連點兩下。
+   * 前者必須擋（一個付費席次只能進一個人），後者的第二次點擊本來就該安靜地
+   * 視為已完成——所以這裡重查一次成員資格再決定回什麼，
+   * 而不是一律報錯讓真的已經加入的人看到失敗。
+   */
+  if (!member) {
+    const joined = await teamRepo.getTeamMember(userId, invitation.teamId);
+    if (joined) return { teamId: invitation.teamId };
+    throw toApiError(API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO);
+  }
+
   return { teamId: invitation.teamId };
 }

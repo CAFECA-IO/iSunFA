@@ -10,6 +10,7 @@ import { bundlerService } from "@/services/bundler.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { TEAM_INVITATION_STATUS } from "@/constants/status";
 import { isAddress } from "viem";
+import { buildPendingInviteKey } from "@/lib/team/pending_invite_key";
 import { chargeSeatAddition } from "@/services/team_seat.service";
 import { paymentRepo } from "@/repositories/payment.repo";
 import type { IOenCallbackData } from "@/interfaces/payment";
@@ -160,6 +161,12 @@ export async function POST(
         inviteeAddress: address,
         role: assignedRole,
         status: TEAM_INVITATION_STATUS.PENDING,
+        /**
+         * Info: (20260816 - Luphia) 併發防護，取代原本的 `@@unique([teamId, inviteeAddress, status])`。
+         * 舊的複合鍵連 ACCEPTED 的歷史列一起約束，於是「移出團隊後再邀請同一個人」
+         * 會在接受的那一刻撞鍵、永遠加不進來（見 pending_invite_key.ts）。
+         */
+        pendingKey: buildPendingInviteKey({ teamId, inviteeAddress: address }),
       });
     } catch (createError) {
       /**

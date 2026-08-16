@@ -169,28 +169,25 @@ model TeamInvitation {
   tokenHash      String?   @unique @map("token_hash")
   // Info: (20260815 - Luphia) 邀請有效期限；逾期即失效（席次不退費但可再用於邀請他人）
   expiresAt      DateTime? @map("expires_at")
+  /**
+   * Info: (20260816 - Luphia) 「同一團隊、同一對象，同時只能有一封待接受邀請」的唯一鍵。
+   *
+   * 值由 `buildPendingInviteKey` 產生（`{teamId}:mail:{email}` 或 `{teamId}:addr:{address}`），
+   * **僅在 PENDING 期間有值**，接受後設回 NULL。Postgres 允許多個 NULL，
+   * 因此效果等同 partial unique index，而它寫在 schema 裡、`prisma db push` 帶得走。
+   *
+   * 取代原本的 `@@unique([teamId, inviteeEmail, status])`：把 status 放進鍵裡
+   * 會連歷史列一起約束，於是「離職後再邀請同一個人」在**接受的那一刻**撞上
+   * 舊的 ACCEPTED 列，永遠加不進來，而席次費已經扣了。詳見 pending_invite_key.ts。
+   */
+  pendingKey     String?   @unique @map("pending_key")
   role           TeamRole
   status         String    @default("PENDING") // Info: (20260325 - Tzuhan) PENDING, ACCEPTED, REJECTED
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  /**
-   * Info: (20260815 - Luphia) 同一團隊對同一位址、同一狀態只能有一列（PR #6652 第二輪 B-3）。
-   *
-   * 擋的是並發：兩位管理員同時邀請同一個位址時，「是否已有 PENDING 邀請」的檢查
-   * 兩邊都會通過，於是各建一列、各扣一次席次費用。
-   *
-   * 帶上 status 而非只用 (teamId, inviteeAddress)，是因為受邀者被移出團隊後
-   * 應該可以再次被邀請——舊列是 ACCEPTED、新列是 PENDING，兩者並存才合法。
-   * 而重複接受同一位址的處理見 `acceptInvitation`（先清掉舊的 ACCEPTED 列）。
-   */
-  @@unique([teamId, inviteeAddress, status])
-  /**
-   * Info: (20260815 - Luphia) email 邀請的同一組約束：同一團隊對同一信箱、
-   * 同一狀態只能有一列，擋的同樣是並發重複邀請。
-   * Postgres 允許多個 NULL，因此位址邀請（email 為 null）不受影響。
-   */
-  @@unique([teamId, inviteeEmail, status])
+  // Info: (20260816 - Luphia) 席次占用數的查詢條件（teamId + status + expiresAt），取代舊複合唯一鍵留下的索引
+  @@index([teamId, status])
   @@map("team_invitation")
 }
 
