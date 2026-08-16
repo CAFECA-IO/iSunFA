@@ -88,6 +88,10 @@ export const pricing = {
       name: "무료 버전",
       desc: "개인 사용자용",
       features: {
+        // Info: (20260815 - Luphia) 免費版人數上限（條款 §3.1 指向此標示）
+        member_limit: "팀 인원 최대 {{count}}명",
+        member_limit_tooltip:
+          "무료 플랜의 한도는 멤버별로 계산되므로 인원에 상한이 있습니다. 더 많은 멤버가 필요하면 팀 또는 기업 플랜으로 업그레이드하세요.",
         storage: "저장 공간 {{gb}} GB",
         consults: "월 최대 {{amount}} 회 질문",
         consults_tooltip: "질문당 {{price}} 크레딧",

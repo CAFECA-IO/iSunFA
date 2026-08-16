@@ -21,12 +21,19 @@ interface ISubscriptionContentProps {
    * 方案頁仍顯示舊天數，而條款與實際刪除行為卻已改變。
    */
   faithMemoryRetentionDays: number;
+  /**
+   * Info: (20260815 - Luphia) 免費版人數上限（PR #6652 第二輪 B-4）：同為 DB 系統設定，
+   * 由 server 端讀妥傳入。服務條款 §3.1 寫的是「以方案頁標示為準」——
+   * 這個數字就是那個標示，因此不得在此寫死或改引用程式常數。
+   */
+  freePlanMaxMembers: number;
 }
 
 export default function SubscriptionContent({
   teamQuotaMultiple,
   businessQuotaMultiple,
   faithMemoryRetentionDays,
+  freePlanMaxMembers,
 }: ISubscriptionContentProps) {
   const { onSelectSubscription, setAuthModalOpen, setConfirmModal } =
     usePricing();
@@ -181,6 +188,21 @@ export default function SubscriptionContent({
               t("pricing.plans.free.features.storage", {
                 gb: CARBON_STORAGE_QUOTA_GB_BY_PLAN.free,
               }),
+              {
+                /**
+                 * Info: (20260815 - Luphia) 免費版的人數上限（PR #6652 第二輪 B-4）。
+                 *
+                 * 額度改為逐成員計算後，付費方案以「席次 × 單價」自然封頂，
+                 * 免費版沒有這個機制——人數上限就是它的封頂，因此必須標示出來，
+                 * 服務條款 §3.1 也是指向這裡。
+                 */
+                text: t("pricing.plans.free.features.member_limit", {
+                  count: freePlanMaxMembers,
+                }),
+                tooltip: t("pricing.plans.free.features.member_limit_tooltip", {
+                  count: freePlanMaxMembers,
+                }),
+              },
             ]}
             onSelect={showComingSoon}
           />
