@@ -31,27 +31,56 @@ export interface IOpenSession {
 }
 
 /**
+ * Info: (20260817 - Luphia) 「他現在在不在現場」的**唯一**判斷點。
+ *
+ * 依時序逐筆走：CLOCK_IN 開一段、CLOCK_OUT 關掉；走完仍開著的那一筆就是他現在
+ * 所在的那一段（一天多次進出時自然取到最後一次進場）。
+ *
+ * ## 為什麼不能用「上班卡數 > 下班卡數」
+ *
+ * 那是這個問題的第二個答案，而兩個答案在 `[IN, IN, OUT]` 上不一致：
+ * 計數說還在班（2 > 1），時序說已離場（最後一筆是 OUT）。走 API 的正常路徑
+ * 產不出這種序列（重複上班卡會被 `assertPunchableState` 擋掉），但打卡是
+ * 先查後改、且 `AttendancePunch` 沒有唯一鍵，兩台裝置同時送就會寫進兩筆。
+ * 屆時「今日狀態」與「現場名單」會對同一個人給出相反的答案（檢查清單 §2.1）。
+ *
+ * 取時序而非計數，是因為它對這種序列仍然給得出**唯一且正確**的答案：
+ * 那個人確實已經打過下班卡了。
+ *
+ * `chronologyOf` 必填而不是假設呼叫端已排序：時序是這個函式的全部依據，
+ * 而「傳進來的陣列剛好是排好的」是一個不會報錯的前提。
+ */
+export function resolveOpenPunch<T extends { punchType: string }>(
+  punches: T[],
+  chronologyOf: (punch: T) => number,
+): T | null {
+  return [...punches]
+    .sort((left, right) => chronologyOf(left) - chronologyOf(right))
+    .reduce<T | null>(
+      (open, punch) => (punch.punchType === PunchType.CLOCK_IN ? punch : null),
+      null,
+    );
+}
+
+// Info: (20260817 - Luphia) 只要布林值時用它，不要自己再數一次卡（見 `resolveOpenPunch`）
+export const isOnSite = <T extends { punchType: string }>(
+  punches: T[],
+  chronologyOf: (punch: T) => number,
+): boolean => resolveOpenPunch(punches, chronologyOf) !== null;
+
+/**
  * Info: (20260813 - Julian) 這一天結束時，是否還有一段沒有關掉的上班。
- * 依時刻排序逐筆走：CLOCK_IN 開一段、CLOCK_OUT 關掉；走完仍開著的就是在班中的那一段。
  * 一天多次進出時取最後一次進場的時刻與地點。
  */
 export function findOpenSession(
   punches: IPresencePunch[],
 ): { sinceMinute: number; workLocationId: string } | null {
-  const ordered = [...punches].sort((a, b) => a.minuteOfDay - b.minuteOfDay);
-
-  let open: { sinceMinute: number; workLocationId: string } | null = null;
-  for (const punch of ordered) {
-    if (punch.punchType === PunchType.CLOCK_IN) {
-      open = {
-        sinceMinute: punch.minuteOfDay,
-        workLocationId: punch.workLocationId,
-      };
-    } else {
-      open = null;
-    }
-  }
-  return open;
+  const open = resolveOpenPunch(punches, (punch) => punch.minuteOfDay);
+  if (!open) return null;
+  return {
+    sinceMinute: open.minuteOfDay,
+    workLocationId: open.workLocationId,
+  };
 }
 
 /**

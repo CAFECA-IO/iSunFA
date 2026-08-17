@@ -13,6 +13,7 @@ import {
 import { PunchType, PunchVerification } from "@/constants/attendance";
 import { HR_PII_KEY_BYTES, HrPiiTable } from "@/constants/hr_pii";
 import { decryptPii } from "@/lib/hr_pii_crypto";
+import { findOpenSession } from "@/lib/attendance_presence";
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
@@ -317,6 +318,68 @@ describe("AttendancePunchService 狀態機", () => {
     const { service, written } = buildService({
       shiftDay,
       existing: [madeClockIn(shiftDay.workDate)],
+    });
+
+    await service.punch(
+      employee,
+      punchAt(SITE_A.latitude, PunchType.CLOCK_OUT),
+    );
+
+    expect(written[0].punchType).toBe(PunchType.CLOCK_OUT);
+  });
+
+  /**
+   * Info: (20260817 - Luphia) 「在不在現場」只能有一個答案（檢查清單 §2.1）。
+   *
+   * `[IN, IN, OUT]` 走 API 的正常路徑產不出來（第二張上班卡會被擋），但打卡是
+   * 先查後改、`AttendancePunch` 沒有可用的唯一鍵，兩台裝置同時送就寫得進去。
+   * 舊的 `上班卡數 > 下班卡數` 在這個序列上說「還在班」（2 > 1），
+   * 而現場名單的時序判斷說「已離場」（最後一筆是 OUT）——
+   * 同一個人在兩個畫面上狀態相反，而兩邊都沒有錯誤。
+   *
+   * 收斂到 `isOnSite` 之後兩邊都答「已離場」。這條測試守的是那個一致性，
+   * 不是「競態已被消除」（它沒有，見 service 的 ToDo）。
+   */
+  const punchRow = (punchType: PunchType, isoTime: string): AttendancePunch =>
+    ({
+      id: `punch-${isoTime}`,
+      punchType,
+      punchedAt: new Date(isoTime),
+      workDate: "2026-08-13",
+      workLocationId: SITE_A.id,
+    }) as AttendancePunch;
+
+  it("競態寫入的重複上班卡：時序判斷勝過計數，兩邊都說已離場", async () => {
+    const raced = [
+      punchRow(PunchType.CLOCK_IN, "2026-08-13T00:30:00.000Z"),
+      punchRow(PunchType.CLOCK_IN, "2026-08-13T00:30:01.000Z"),
+      punchRow(PunchType.CLOCK_OUT, "2026-08-13T09:00:00.000Z"),
+    ];
+
+    const { service } = buildService({ shiftDay, existing: raced });
+    const status = await service.getTodayStatus(employee);
+
+    // Info: (20260817 - Luphia) 計數會回 true（2 > 1）；時序回 false
+    expect(status.onSite).toBe(false);
+    // Info: (20260817 - Luphia) 與現場名單同源：對同一組打卡，findOpenSession 也回 null
+    expect(
+      findOpenSession(
+        raced.map((punch) => ({
+          punchType: punch.punchType as PunchType,
+          minuteOfDay: punch.punchedAt.getTime() / 60_000,
+          workLocationId: punch.workLocationId,
+        })),
+      ),
+    ).toBeNull();
+  });
+
+  it("競態寫入之後仍然打得下班卡（狀態機不會把人鎖在班上）", async () => {
+    const { service, written } = buildService({
+      shiftDay,
+      existing: [
+        punchRow(PunchType.CLOCK_IN, "2026-08-13T00:30:00.000Z"),
+        punchRow(PunchType.CLOCK_IN, "2026-08-13T00:30:01.000Z"),
+      ],
     });
 
     await service.punch(
