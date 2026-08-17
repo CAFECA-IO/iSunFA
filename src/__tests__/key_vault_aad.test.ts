@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "@jest/globals";
+import { describe, it, expect, afterEach, beforeEach } from "@jest/globals";
 import { openSecret, sealSecret, VaultPurpose } from "@/lib/auth/key_vault";
 
 /**
@@ -12,9 +12,28 @@ import { openSecret, sealSecret, VaultPurpose } from "@/lib/auth/key_vault";
  * 規範 §6.2 與 ADR 018 都宣稱「密文與列綁定」，而在此之前並沒有。
  */
 
+/**
+ * Info: (20260818 - Luphia) 主密鑰的環境變數名是 `SECRET_VAULT_MASTER_KEY`。
+ *
+ * 原本這裡設的是 `VAULT_MASTER_KEY`——一個不存在的名字。本機仍然全綠，
+ * 因為 `.env` 裡有真的那一個；CI 沒有 `.env`，於是五條全部以
+ * 「Server configuration missing」失敗。**測試自己準備的前提要真的生效**，
+ * 否則綠燈只是說明「這台機器剛好有那個值」。
+ */
+const ORIGINAL_MASTER_KEY = process.env.SECRET_VAULT_MASTER_KEY;
+
 beforeEach(() => {
-  // Info: (20260818 - Luphia) 派生金鑰需要主密鑰；測試用固定值即可
-  process.env.VAULT_MASTER_KEY = "a".repeat(64);
+  // Info: (20260818 - Luphia) 派生金鑰需要主密鑰；測試用固定值即可（長度須 >= 32）
+  process.env.SECRET_VAULT_MASTER_KEY = "a".repeat(64);
+});
+
+// Info: (20260818 - Luphia) 還原，避免影響同一個 worker 內的其他測試
+afterEach(() => {
+  if (ORIGINAL_MASTER_KEY === undefined) {
+    delete process.env.SECRET_VAULT_MASTER_KEY;
+  } else {
+    process.env.SECRET_VAULT_MASTER_KEY = ORIGINAL_MASTER_KEY;
+  }
 });
 
 const AAD_A = "faith-memory:user-a:team-1";
