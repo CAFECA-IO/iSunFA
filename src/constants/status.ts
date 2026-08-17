@@ -25,6 +25,14 @@ export const TEAM_INVITATION_STATUS = {
   PENDING: "PENDING",
   ACCEPTED: "ACCEPTED",
   REJECTED: "REJECTED",
+  /**
+   * Info: (20260818 - Luphia) 由管理者撤回（第三輪 D）。
+   *
+   * 與 `REJECTED` 分開：那是**受邀者**說不用了，這是**團隊**收回邀請。
+   * 兩者對席次的效果相同（都不再佔用），但在稽核上是完全不同的事件——
+   * 混成一個狀態就答不出「這封邀請是對方拒絕的，還是我們自己撤掉的」。
+   */
+  REVOKED: "REVOKED",
 } as const;
 
 /**

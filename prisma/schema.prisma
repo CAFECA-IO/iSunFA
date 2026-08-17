@@ -52,6 +52,8 @@ model User {
   teamInvitations       TeamInvitation[]       @relation("Inviter")
   // Info: (20260817 - Luphia) 此帳號用掉的邀請（稽核用；見 TeamInvitation.acceptedByUserId）
   acceptedInvitations   TeamInvitation[]       @relation("InvitationAcceptor")
+  // Info: (20260818 - Luphia) 由此帳號撤回的邀請（稽核用；見 TeamInvitation.revokedByUserId）
+  revokedInvitations    TeamInvitation[]       @relation("InvitationRevoker")
   // Info: (20260817 - Luphia) 費思長期記憶（一個團隊一份，見 FaithMemory）
   faithMemories         FaithMemory[]
   auditLogs             AuditLog[]
@@ -264,7 +266,8 @@ model TeamInvitation {
    */
   pendingKey     String?   @unique @map("pending_key")
   role           TeamRole
-  status         String    @default("PENDING") // Info: (20260325 - Tzuhan) PENDING, ACCEPTED, REJECTED
+  // Info: (20260818 - Luphia) TEAM_INVITATION_STATUS：PENDING / ACCEPTED / REJECTED / REVOKED
+  status         String    @default("PENDING")
   /**
    * Info: (20260817 - Luphia) 實際用掉這封邀請的帳號。
    *
@@ -288,6 +291,19 @@ model TeamInvitation {
    * 因此以 FIDO2 註冊的受邀者根本沒有可比對的信箱。
    */
   acceptedEmailMatch String? @map("accepted_email_match")
+  /**
+   * Info: (20260818 - Luphia) 撤回邀請的稽核（第三輪 D）。
+   *
+   * 撤回原本是**實刪除**，於是「曾經邀請過誰、由誰撤回」在撤回之後查不到——
+   * 而同一條路徑上的「拒絕」是改狀態，兩者的稽核強度不一致。
+   * 邀請一個人是會動到信用卡並對外寄信的動作，它的撤回不該無痕。
+   *
+   * 唯一仍該實刪的是**信寄不出去時的回滾**（見 `deleteInvitation`）：
+   * 一封沒寄出去的邀請不是歷史紀錄，留著只會佔住 `pendingKey`。
+   */
+  revokedByUserId String?   @map("revoked_by_user_id")
+  revokedBy       User?     @relation("InvitationRevoker", fields: [revokedByUserId], references: [id])
+  revokedAt       DateTime? @map("revoked_at")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 

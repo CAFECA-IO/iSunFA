@@ -113,6 +113,11 @@ export interface ITeamRepository {
   }> | null>;
   // Info: (20260816 - Luphia) 回 `false` 代表這封邀請已不是 PENDING
   declineInvitation(inviteId: string): Promise<boolean>;
+  // Info: (20260818 - Luphia) 撤回：同上，但另記撤回者（第三輪 D）
+  revokeInvitationById(
+    inviteId: string,
+    revokedByUserId: string,
+  ): Promise<boolean>;
   /**
    * Info: (20260816 - Luphia) 回 `null` 代表這封邀請已不是 PENDING（被搶先接受或已撤回）。
    * 型別上就是可空的，呼叫端才不會把「沒搶到」當成「加入成功」。
@@ -374,6 +379,32 @@ export class TeamRepository implements ITeamRepository {
    * 一併清空 `tokenHash` 與 `pendingKey`：連結當場失效，席次立刻空出來給下一次邀請
    * （`countPendingInvitations` 只數 PENDING）。
    */
+  /**
+   * Info: (20260818 - Luphia) 管理者撤回邀請：改狀態並記下是誰撤的（第三輪 D）。
+   *
+   * 原本是 `deleteInvitation`（實刪除），於是撤回之後「曾經邀請過誰、由誰撤回」
+   * 全部消失——而同一條路徑上的「拒絕」是改狀態，兩者的稽核強度不一致。
+   *
+   * `tokenHash` 與 `pendingKey` 一併設回 NULL：前者讓那條連結立即失效，
+   * 後者把唯一鍵讓出來，管理員才能重新邀請同一個信箱。
+   *
+   * 回 `false` 代表這封邀請已不是 PENDING（剛被接受或已撤回）——
+   * 條件比對與寫入在同一個 `updateMany` 裡，因此併發下只有一方會成功。
+   */
+  async revokeInvitationById(inviteId: string, revokedByUserId: string) {
+    const revoked = await prisma.teamInvitation.updateMany({
+      where: { id: inviteId, status: TEAM_INVITATION_STATUS.PENDING },
+      data: {
+        status: TEAM_INVITATION_STATUS.REVOKED,
+        tokenHash: null,
+        pendingKey: null,
+        revokedByUserId,
+        revokedAt: new Date(),
+      },
+    });
+    return revoked.count > 0;
+  }
+
   async declineInvitation(inviteId: string) {
     const declined = await prisma.teamInvitation.updateMany({
       where: { id: inviteId, status: TEAM_INVITATION_STATUS.PENDING },
