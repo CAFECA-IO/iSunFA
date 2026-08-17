@@ -1,6 +1,6 @@
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
-import { revokeAllocationOnMemberRemoval } from "@/services/team_wallet.service";
+import { writeOffAllocationOnMemberRemoval } from "@/services/team_wallet.service";
 import { deleteFaithMemoryOnMemberRemoval } from "@/services/faith_memory.service";
 import { stringToHex } from "viem";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
@@ -198,10 +198,14 @@ export async function DELETE(
     }
 
     /**
-     * Info: (20260807 - Luphia) 成員移除前先全額收回其團隊分配點數（設計書 §6.2）。
+     * Info: (20260818 - Luphia) 成員移除前**沖銷**其團隊分配餘額（產品決定 20260818）。
+     *
+     * 沖銷＝分配歸零但**不回池**：點數早已鑄進成員自己的鏈上錢包，收不回來
+     * （合約沒有可由平台呼叫的 burn）。加回池會讓團隊得以再分配同一筆價值。
+     *
      * 錢包凍結時丟錯中止移除（守恆優先）；冪等鍵綁 memberId，重試安全。
      */
-    await revokeAllocationOnMemberRemoval({
+    await writeOffAllocationOnMemberRemoval({
       teamId,
       targetUserId: targetMember.userId,
       operatorUserId: sessionUser.id,

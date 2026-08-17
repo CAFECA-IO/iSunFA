@@ -474,10 +474,27 @@ export class TeamWalletRepository {
   }
 
   /**
-   * Info: (20260807 - Luphia) 成員移除時全額收回其分配（設計書 §6.2）。
-   * 查無分配或餘額為零回 NOT_FOUND（呼叫端視為 no-op）；FROZEN 擋下（守恆優先，移除流程須中止）。
+   * Info: (20260818 - Luphia) 成員移除時**沖銷**其分配餘額（產品決定 20260818）。
+   *
+   * 原本這支是「全額收回」：分配歸零，並把金額**加回團隊未分配池**。
+   * 那在分配改為鏈上鑄造之後就不成立了——點數早已鑄進成員自己的錢包，
+   * 而 `CreditPoint` 只有 `burnAndUnlock(uint256)`（燒 `msg.sender` 自己的餘額），
+   * 平台無權銷毀成員錢包裡的代幣。加回池等於**同一筆價值存在兩份**：
+   * 成員錢包裡的鏈上點數，加上池子裡可以再分配（再鑄一次）的額度。
+   *
+   * 現在的行為是沖銷：分配歸零，**池不變**。帳本因此如實反映事實——
+   * 那筆錢不再屬於這位成員的分配額度，但團隊也拿不回來。
+   *
+   * 分錄型別用 `ADJUST` 而非 `REVOKE`：
+   * `REVOKE` 在守恆恆等式裡被排除，因為它只是在池與分配之間搬動（淨額為零）；
+   * 這裡的價值是**離開團隊帳本**，必須進恆等式的左側，否則
+   * `Σ(PURCHASE + ADJUST + CONSUME + REFUND) = 池餘額 + Σ 分配餘額`
+   * 會在下一輪勾稽被判為違反守恆而凍結錢包。
+   *
+   * 查無分配或餘額為零回 NOT_FOUND（呼叫端視為 no-op）；
+   * FROZEN 擋下（守恆優先，移除流程須中止）。
    */
-  async revokeAllForUser(
+  async writeOffAllocationForUser(
     input: Omit<IAllocationOpInput, "amount">,
   ): Promise<IWalletOpResult> {
     const { teamId, targetUserId, operatorUserId, idempotencyKey } = input;
@@ -512,17 +529,17 @@ export class TeamWalletRepository {
           return { outcome: WALLET_OP_OUTCOME.INSUFFICIENT };
         }
 
-        const walletAfter = await tx.teamWallet.update({
-          where: { id: wallet.id },
-          data: { unallocatedBalance: { increment: amount } },
-        });
-
+        /**
+         * Info: (20260818 - Luphia) **不動池餘額**：那筆點數已經在成員的鏈上錢包裡，
+         * 收不回來。把它加回池子會讓團隊得以再分配一次同一筆價值。
+         * `poolBalanceAfter` 記的是未變動的池餘額，讓分錄仍能對帳。
+         */
         const ledger = await tx.teamWalletLedger.create({
           data: {
             teamWalletId: wallet.id,
-            entryType: TEAM_WALLET_ENTRY_TYPE.REVOKE,
+            entryType: TEAM_WALLET_ENTRY_TYPE.ADJUST,
             amount: -amount,
-            poolBalanceAfter: walletAfter.unallocatedBalance,
+            poolBalanceAfter: wallet.unallocatedBalance,
             allocationBalanceAfter: BigInt(0),
             targetUserId,
             operatorUserId,

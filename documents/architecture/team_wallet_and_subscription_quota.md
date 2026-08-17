@@ -699,7 +699,7 @@ payload 因此新增 `exceedsWindowLimit`（`cost > limit5h || cost > limitWeek`
 >
 > - **ALLOCATE**：池條件扣款（DB）→ 鑄到成員位址（鏈上）→ 回填 `txHash`；鑄造明確失敗即寫反向 `ADJUST` 補回池。成員沒有錢包位址時當場拒絕（`TW000014`），不會出現「扣了池卻沒人收到」。
 > - **REVOKE**：銷毀成員錢包中的點數（鏈上）→ 回補池。**上限為 `Σ ALLOCATE − Σ REVOKE`**——鏈上分不出哪些是團隊給的、哪些是成員自費買的，沒有這道上限就等於允許團隊銷毀他人資產。成員已花掉的部分收不回來。
-> - **成員移除**：不再自動收回（點數已是成員資產）；舊的離鏈餘額仍照原規則回池。
+> - **成員移除**：**沖銷**分配餘額（2026-08-18 修訂）——歸零但**不回池**，分錄為負的 `ADJUST`。收回在合約層面做不到，而加回池等於同一筆價值存在兩份（成員錢包裡的鏈上點數 + 團隊可再鑄一次的額度）。舊的離鏈餘額走同一條路。
 > - **消費路徑不變**：仍然完全離鏈。上鏈的只有分配 / 收回這兩個低頻的管理操作。
 >
 > 遷移：`scripts/migrate_allocations_onchain.ts`（鑄造成功才歸零，冪等，預設預演）。
@@ -781,7 +781,7 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 |---|---|---|
 | **P0** | Prisma migration（5 個新 model + TeamMember unique）、constants、interfaces、`window.ts` 純函式 | migration 可重放；視窗函式單測（含視窗邊界、週錨點、閏秒無關性） |
 | **P1** | Repos + `spendCredits()` 管線 + 402 錯誤碼 + `httpStatusOf()` 修補 | 併發 100 req 壓測無負餘額；冪等重試不重複扣款 |
-| **P2** | 錢包購買（OEN 分流）、分配 / 收回 API、成員移除自動 REVOKE | E2E：購買 → 入池 → 分配 → 消耗 → 收回，Ledger 守恆式成立（E2E 帳本用 `e2e-book-` 前綴） |
+| **P2** | 錢包購買（OEN 分流）、分配 API（收回已停用，見 §條款 3.5）、成員移除自動沖銷 | E2E：購買 → 入池 → 分配 → 消耗 → 移除成員沖銷，Ledger 守恆式成立（E2E 帳本用 `e2e-book-` 前綴） |
 | **P3** | 計費功能接入管線（AI 分析先行，**費思對話含 §5.3 四項 guardrails** 次之，碳盤查對話再次之）、402 fallback 到既有個人錢包簽章流程 | 額度內操作零簽章；用罄後三條出路皆可走通；費思結算誤差 = 0（settle 以 `usageMetadata` 為準） |
 | **P4** | 前端（額度儀表、重置倒數、錢包管理頁、分配 UI、**訂閱方案頁標註費思費率**）、勾稽 / 續訂 Workers、**C 案 Phase 1 merkle 錨定**（`ledger_anchor.sol` 部署 + Worker 錨定步驟） | 勾稽 Worker 對壞帳注入測試能凍結錢包並告警；定價頁費率數字與 env 同源；**任一日的 Ledger 可由 DB 重算 root 並與鏈上 event 比對一致** |
 | **P4 進度**（2026-08-07，全數交付 ✅） | WalletGuardian（守恆勾稽 + 凍結告警 + merkle 錨定，壞帳不上鏈）、SubscriptionExpiry + SubscriptionRenewal（到期降級、autoRenew 以綁定卡自動扣款續訂、逾 3 天寬限降級 free）、`ledger_anchor.sol` + deploy_contract 部署整合、`resolveEffectivePlanId` fail-closed 防線、團隊管理頁錢包面板（額度百分比儀表 + 成員卡片分配/收回 + 導購連結）。營運前置：跑 `npm run deploy_contract` 產出 `NEXT_PUBLIC_LEDGER_ANCHOR_ADDRESS`（未配置時錨定留 FAILED 自動重試，不阻斷營運） | — |

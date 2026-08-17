@@ -6,7 +6,7 @@ import {
   fulfillTeamPointPurchase,
   getTeamWalletView,
   manageAllocation,
-  revokeAllocationOnMemberRemoval,
+  writeOffAllocationOnMemberRemoval,
 } from "@/services/team_wallet.service";
 import {
   ALLOCATION_DIRECTION,
@@ -35,7 +35,7 @@ jest.mock("@/repositories/team_wallet.repo", () => ({
     listLedger: jest.fn(),
     allocate: jest.fn(),
     revoke: jest.fn(),
-    revokeAllForUser: jest.fn(),
+    writeOffAllocationForUser: jest.fn(),
     creditPool: jest.fn(),
     // Info: (20260814 - Luphia) 分配上鏈後新增：回填交易雜湊、鑄造失敗補償、淨分配上限
     setLedgerTxHash: jest.fn(),
@@ -502,47 +502,51 @@ describe("getTeamWalletView", () => {
   });
 });
 
-describe("revokeAllocationOnMemberRemoval", () => {
+/**
+ * Info: (20260818 - Luphia) 成員移除時沖銷分配（產品決定 20260818）：
+ * 歸零但不回池——收回在合約層面做不到，加回池會讓同一筆價值存在兩份。
+ */
+describe("writeOffAllocationOnMemberRemoval", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it("revokes everything with a memberId-bound idempotency key", async () => {
-    asMock(teamWalletRepo.revokeAllForUser).mockResolvedValue({
+  it("以綁 memberId 的冪等鍵沖銷全額", async () => {
+    asMock(teamWalletRepo.writeOffAllocationForUser).mockResolvedValue({
       outcome: WALLET_OP_OUTCOME.OK,
       ledger: LEDGER_ROW,
     });
-    const result = await revokeAllocationOnMemberRemoval({
+    const result = await writeOffAllocationOnMemberRemoval({
       teamId: "team-1",
       targetUserId: "user-2",
       operatorUserId: "user-admin",
       memberId: "member-9",
     });
-    expect(result).toEqual({ revoked: true });
-    expect(teamWalletRepo.revokeAllForUser).toHaveBeenCalledWith(
-      expect.objectContaining({ idempotencyKey: "revoke-all:member-9" }),
+    expect(result).toEqual({ writtenOff: true });
+    expect(teamWalletRepo.writeOffAllocationForUser).toHaveBeenCalledWith(
+      expect.objectContaining({ idempotencyKey: "write-off:member-9" }),
     );
   });
 
   it("is a no-op when the member holds nothing", async () => {
-    asMock(teamWalletRepo.revokeAllForUser).mockResolvedValue({
+    asMock(teamWalletRepo.writeOffAllocationForUser).mockResolvedValue({
       outcome: WALLET_OP_OUTCOME.NOT_FOUND,
     });
-    const result = await revokeAllocationOnMemberRemoval({
+    const result = await writeOffAllocationOnMemberRemoval({
       teamId: "team-1",
       targetUserId: "user-2",
       operatorUserId: "user-admin",
       memberId: "member-9",
     });
-    expect(result).toEqual({ revoked: false });
+    expect(result).toEqual({ writtenOff: false });
   });
 
   it("aborts member removal when the wallet is frozen", async () => {
-    asMock(teamWalletRepo.revokeAllForUser).mockResolvedValue({
+    asMock(teamWalletRepo.writeOffAllocationForUser).mockResolvedValue({
       outcome: WALLET_OP_OUTCOME.FROZEN,
     });
     await expect(
-      revokeAllocationOnMemberRemoval({
+      writeOffAllocationOnMemberRemoval({
         teamId: "team-1",
         targetUserId: "user-2",
         operatorUserId: "user-admin",

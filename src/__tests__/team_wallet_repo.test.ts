@@ -130,6 +130,7 @@ describe("TeamWalletRepository.consumeAllocation", () => {
   it("returns FROZEN without touching the allocation when the wallet is frozen", async () => {
     txMock.teamWallet.findUnique.mockResolvedValue({
       ...ACTIVE_WALLET,
+      unallocatedBalance: BigInt(700),
       status: "FROZEN",
     } as unknown);
     const result = await teamWalletRepo.consumeAllocation(CONSUME_INPUT);
@@ -413,12 +414,19 @@ describe("TeamWalletRepository.allocate / revoke", () => {
   });
 });
 
-describe("TeamWalletRepository.revokeAllForUser", () => {
-  const REVOKE_ALL_INPUT = {
+/**
+ * Info: (20260818 - Luphia) 成員移除時沖銷分配餘額（產品決定 20260818）。
+ *
+ * 這一組原本測的是「收回到池」，而那個行為會**造出點數**：分配當下已經鑄進
+ * 成員自己的鏈上錢包，收不回來（合約只有 `burnAndUnlock(uint256)`），
+ * 池子卻又拿回可以再鑄一次的額度。
+ */
+describe("TeamWalletRepository.writeOffAllocationForUser", () => {
+  const WRITE_OFF_INPUT = {
     teamId: "team-1",
     targetUserId: "user-2",
     operatorUserId: "user-admin",
-    idempotencyKey: "revoke-all:member-1",
+    idempotencyKey: "write-off:member-1",
   };
 
   beforeEach(() => {
@@ -426,36 +434,82 @@ describe("TeamWalletRepository.revokeAllForUser", () => {
     txMock.teamWalletAllocation.findUnique.mockResolvedValue({
       balance: BigInt(30),
     } as unknown);
-    txMock.teamWallet.findUnique.mockResolvedValue(ACTIVE_WALLET as unknown);
+    // Info: (20260818 - Luphia) 池餘額給明確值，分錄才驗得出「池沒有變」
+    txMock.teamWallet.findUnique.mockResolvedValue({
+      ...ACTIVE_WALLET,
+      unallocatedBalance: BigInt(700),
+    } as unknown);
     txMock.teamWalletLedger.findUnique.mockResolvedValue(null);
     txMock.teamWalletAllocation.updateMany.mockResolvedValue({
       count: 1,
     } as unknown);
-    txMock.teamWallet.update.mockResolvedValue({
-      ...ACTIVE_WALLET,
-      unallocatedBalance: BigInt(730),
-    } as unknown);
     txMock.teamWalletLedger.create.mockResolvedValue({
-      id: "ledger-revoke-all",
+      id: "ledger-write-off",
     } as unknown);
   });
 
-  it("revokes the full remaining balance back to the pool", async () => {
-    const result = await teamWalletRepo.revokeAllForUser(REVOKE_ALL_INPUT);
+  it("歸零分配並寫一筆負的 ADJUST 分錄", async () => {
+    const result =
+      await teamWalletRepo.writeOffAllocationForUser(WRITE_OFF_INPUT);
     expect(result.outcome).toBe(WALLET_OP_OUTCOME.OK);
+    expect(txMock.teamWalletAllocation.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { balance: { decrement: BigInt(30) } },
+      }),
+    );
     expect(txMock.teamWalletLedger.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        entryType: TEAM_WALLET_ENTRY_TYPE.REVOKE,
+        /**
+         * Info: (20260818 - Luphia) 型別必須是 ADJUST 而不是 REVOKE：
+         * `REVOKE` 在守恆恆等式裡被排除（它只是池與分配之間的搬動，淨額為零），
+         * 而這裡的價值是離開帳本。記成 REVOKE 會讓
+         * `Σ(PURCHASE + ADJUST + CONSUME + REFUND) = 池 + Σ分配` 的左側不動、
+         * 右側少了這一筆，下一輪勾稽就會判為違反守恆並**凍結錢包**。
+         */
+        entryType: TEAM_WALLET_ENTRY_TYPE.ADJUST,
         amount: BigInt(-30),
         allocationBalanceAfter: BigInt(0),
-        idempotencyKey: "revoke-all:member-1",
+        idempotencyKey: "write-off:member-1",
       }),
     });
   });
 
+  /**
+   * Info: (20260818 - Luphia) 本組最重要的一條：**池餘額不變**。
+   *
+   * 加回池等於同一筆價值存在兩份——成員錢包裡的鏈上點數，
+   * 加上團隊可以再分配（再鑄一次）的額度。
+   */
+  it("不把金額加回未分配池", async () => {
+    await teamWalletRepo.writeOffAllocationForUser(WRITE_OFF_INPUT);
+    expect(txMock.teamWallet.update).not.toHaveBeenCalled();
+  });
+
+  // Info: (20260818 - Luphia) 分錄仍記下當下的池餘額（未變動），對帳才有得比
+  it("分錄記的是未變動的池餘額", async () => {
+    await teamWalletRepo.writeOffAllocationForUser(WRITE_OFF_INPUT);
+    expect(txMock.teamWalletLedger.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        poolBalanceAfter: BigInt(700),
+      }),
+    });
+  });
+
+  // Info: (20260818 - Luphia) 重試安全：同一個 memberId 只會沖銷一次
+  it("同一個冪等鍵只沖銷一次", async () => {
+    txMock.teamWalletLedger.findUnique.mockResolvedValue({
+      id: "ledger-write-off",
+    } as unknown);
+    const result =
+      await teamWalletRepo.writeOffAllocationForUser(WRITE_OFF_INPUT);
+    expect(result.outcome).toBe(WALLET_OP_OUTCOME.DUPLICATE);
+    expect(txMock.teamWalletAllocation.updateMany).not.toHaveBeenCalled();
+  });
+
   it("is a no-op (NOT_FOUND) when the member has no allocation", async () => {
     txMock.teamWalletAllocation.findUnique.mockResolvedValue(null);
-    const result = await teamWalletRepo.revokeAllForUser(REVOKE_ALL_INPUT);
+    const result =
+      await teamWalletRepo.writeOffAllocationForUser(WRITE_OFF_INPUT);
     expect(result.outcome).toBe(WALLET_OP_OUTCOME.NOT_FOUND);
     expect(txMock.teamWalletAllocation.updateMany).not.toHaveBeenCalled();
   });
@@ -465,7 +519,8 @@ describe("TeamWalletRepository.revokeAllForUser", () => {
       ...ACTIVE_WALLET,
       status: "FROZEN",
     } as unknown);
-    const result = await teamWalletRepo.revokeAllForUser(REVOKE_ALL_INPUT);
+    const result =
+      await teamWalletRepo.writeOffAllocationForUser(WRITE_OFF_INPUT);
     expect(result.outcome).toBe(WALLET_OP_OUTCOME.FROZEN);
     expect(txMock.teamWalletAllocation.updateMany).not.toHaveBeenCalled();
   });

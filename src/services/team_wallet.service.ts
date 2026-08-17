@@ -418,48 +418,49 @@ export async function listTeamWalletLedger(params: {
 }
 
 /**
- * Info: (20260807 - Luphia) 成員移除自動收回（設計書 §6.2）：
+ * Info: (20260818 - Luphia) 成員移除時**沖銷**其分配餘額（產品決定 20260818）。
+ *
  * 於移除流程「刪除成員之前」呼叫；FROZEN 時丟錯中止移除（守恆優先）；
  * 冪等鍵綁 memberId，重試安全。
+ *
+ * 沖銷不是收回。收回**在合約層面做不到**：分配當下就把點數鑄進成員自己的
+ * 鏈上錢包，而 `CreditPoint` 只有 `burnAndUnlock(uint256)`（燒 `msg.sender`
+ * 自己的餘額），沒有可由平台呼叫的 `burn(address, uint256)`。條款 §3.5 因此
+ * 寫的是「分配後不可收回」。
+ *
+ * 而這條路徑原本仍在「收回」：分配歸零並把金額加回未分配池——於是同一筆價值
+ * 存在兩份（成員錢包裡的鏈上點數，加上池子裡可以再鑄一次的額度）。
+ * 現在改為只歸零、**不回池**：帳本如實記載那筆錢已經離開團隊。
+ *
+ * 舊的離鏈分配餘額（遷移前的資料）走同一條路：它們同樣不該回池，
+ * 因為分不出哪些已經鑄上鏈；而少算池餘額的方向不會多發點數給任何人。
  */
-/**
- * Info: (20260814 - Luphia) 成員移除時的收回**只處理舊的離鏈分配餘額**（ADR 015 修訂）。
- *
- * 分配改為鑄到成員自己的錢包之後，那些點數就是他的個人資產、能在團隊之外使用，
- * 移除成員時自動銷毀等於沒收別人的東西。
- *
- * Info: (20260818 - Luphia) 原本這裡寫「要收回請在移除前明確執行 REVOKE」，
- * 而那條路徑**在合約層面做不到**：CreditPoint 只有 `burnAndUnlock(uint256)`，
- * 燒的是呼叫者自己的餘額，沒有可由平台呼叫的 `burn(address, uint256)`。
- * 條款 §3.5 已改為「分配後不可收回」，此處不再指向那條路徑。
- *
- * 遷移完成後這條路徑對新資料會一律回 NOT_FOUND（no-op），舊餘額則照原規則回池。
- */
-export async function revokeAllocationOnMemberRemoval(params: {
+export async function writeOffAllocationOnMemberRemoval(params: {
   teamId: string;
   targetUserId: string;
   operatorUserId: string;
   memberId: string;
-}): Promise<{ revoked: boolean }> {
+}): Promise<{ writtenOff: boolean }> {
   const { teamId, targetUserId, operatorUserId, memberId } = params;
   return guarded(async () => {
-    const result = await teamWalletRepo.revokeAllForUser({
+    const result = await teamWalletRepo.writeOffAllocationForUser({
       teamId,
       targetUserId,
       operatorUserId,
-      idempotencyKey: `revoke-all:${memberId}`,
+      // Info: (20260818 - Luphia) 鍵與舊的 `revoke-all:` 分開：語意不同的兩種分錄不共用冪等鍵
+      idempotencyKey: `write-off:${memberId}`,
     });
     if (
       result.outcome === WALLET_OP_OUTCOME.OK ||
       result.outcome === WALLET_OP_OUTCOME.DUPLICATE
     ) {
-      return { revoked: true };
+      return { writtenOff: true };
     }
     if (result.outcome === WALLET_OP_OUTCOME.FROZEN) {
       throw toApiError(API_ERRORS.TW_WALLET_FROZEN);
     }
-    // Info: (20260807 - Luphia) NOT_FOUND / NO_WALLET：無分配可收，no-op
-    return { revoked: false };
+    // Info: (20260807 - Luphia) NOT_FOUND / NO_WALLET：無分配可沖銷，no-op
+    return { writtenOff: false };
   });
 }
 
