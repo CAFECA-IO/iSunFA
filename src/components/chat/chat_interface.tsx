@@ -77,6 +77,18 @@ export default function ChatInterface({
       mimeType: file?.type,
       tags,
     };
+    /**
+     * Info: (20260817 - Luphia) 任務短期記憶（第一輪 C-2）：把這一輪之前的對話一起送上去。
+     *
+     * server 讀不到前文——費思不寫 DB，聊天室訊息又是端對端加密——所以持有明文的
+     * 只有這個分頁。取 `messages` 的當下快照（不含剛剛加入的這一則，它會以 `message` 送出），
+     * 實際截斷由 server 的 `buildShortTermHistory` 負責，這裡不重複實作上界。
+     */
+    const historyForRequest = messages.map((item) => ({
+      role: item.role,
+      content: item.content,
+    }));
+
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
     // Info: (20260812 - Luphia) 重新送出即撤掉上一輪的額度卡片，避免舊倒數殘留在畫面上
@@ -118,6 +130,8 @@ export default function ChatInterface({
              * 同一則訊息重送不會重複扣點。
              */
             clientMessageId: crypto.randomUUID(),
+            // Info: (20260817 - Luphia) 任務短期記憶（第一輪 C-2）
+            history: historyForRequest,
           }),
         },
       );

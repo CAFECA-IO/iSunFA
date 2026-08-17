@@ -35,6 +35,7 @@ import { logger } from "@/lib/utils/logger";
 import { recordLlmUsage } from "@/lib/llm/usage_scope";
 import { SystemSettingKey } from "@/constants/system_setting";
 import { systemSettingService } from "@/services/system_setting.service";
+import type { IFaithHistoryTurn } from "@/lib/faith_memory/short_term";
 
 // Info: (20260714 - Tzuhan) 結構化聊天回覆: readyParagraphId 已通過白名單裁決(非法/none 一律為 null)
 // Info: (20260716 - Tzuhan) #6518:extraction 為已裁決的事實萃取(壞欄位逐筆丟棄),null = 本輪無可萃取
@@ -658,6 +659,12 @@ export class ChatService {
     mimeType?: string,
     // Info: (20260809 - Luphia) 成本上界源自 DB 的費思計費設定，由 service 層注入
     maxOutputTokens?: number,
+    /**
+     * Info: (20260817 - Luphia) 任務短期記憶：同一段對話的前文（第一輪 C-2）。
+     * 在此之前費思是 one-shot——方案頁與條款都寫著「所有方案皆具備任務短期記憶」，
+     * 而這個函式從來沒有收過任何歷史參數。
+     */
+    history: IFaithHistoryTurn[] = [],
   ): Promise<{ text: string; usage: ILlmUsage }> {
     const skill = new DirectChatSkill();
     return skill.executeWithUsage(
@@ -667,6 +674,7 @@ export class ChatService {
       mimeType,
       this,
       maxOutputTokens,
+      history,
     );
   }
 

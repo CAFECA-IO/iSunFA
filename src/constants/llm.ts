@@ -177,6 +177,20 @@ export const FAITH_PROMPT_OVERHEAD_TOKENS = 600;
 export const FAITH_INPUT_CHARS_PER_TOKEN = 3;
 
 /**
+ * Info: (20260817 - Luphia) 任務短期記憶的上界（條款 §3.7「所有方案皆具備」）。
+ *
+ * 對話前文由 client 傳上來（費思不寫 DB，聊天室訊息又是端對端加密，
+ * server 讀不到前文），因此必須有一個硬上界——它同時是 prompt 長度的上界
+ * 與預扣估算的依據。沒有上界的話，呼叫端送多長的歷史就扣多少點，
+ * 而預扣是「成本上界」這個不變式會直接失效。
+ *
+ * 10 輪 / 4,000 字元約當 1,333 tokens，以 1 點 = 1,000 tokens 計，
+ * 最多讓每則訊息多扣約 2 點。
+ */
+export const FAITH_HISTORY_MAX_TURNS = 10;
+export const FAITH_HISTORY_MAX_CHARS = 4000;
+
+/**
  * Info: (20260812 - Luphia) 費思個人化記憶於「付費訂閱終止後」保留天數的**預設值**。
  *
  * 正式值為系統設定，保存於 DB（`SystemSettingKey.FAITH_MEMORY_RETENTION_DAYS`，同 ADR 017

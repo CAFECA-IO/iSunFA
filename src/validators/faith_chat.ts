@@ -16,4 +16,23 @@ export const faithChatSchema = z.object({
   mimeType: z.string().optional(),
   accountBookId: z.string().min(1).optional(),
   clientMessageId: z.string().min(1).max(128).optional(),
+  /**
+   * Info: (20260817 - Luphia) 任務短期記憶：同一段對話的前文（第一輪 C-2）。
+   *
+   * 這裡刻意只做**形狀**與粗上界的驗證，真正的截斷在
+   * `buildShortTermHistory`（輪數、字元數）——因為那個上界同時是預扣估算的依據，
+   * 兩處分開設限就會出現「驗證放行、估算沒算到」的縫。
+   *
+   * 上界訂得比實際截斷寬鬆：多送的部分會被安靜丟掉，而不是整個請求被打回。
+   * 使用者的分頁裡有多少歷史不該決定他這則訊息送不送得出去。
+   */
+  history: z
+    .array(
+      z.object({
+        role: z.enum(["user", "model"]),
+        content: z.string().max(20_000),
+      }),
+    )
+    .max(100)
+    .optional(),
 });

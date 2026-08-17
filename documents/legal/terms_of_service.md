@@ -53,7 +53,13 @@
      法務須確認：既有用戶之分配點數於改制後性質變更（自團隊資產轉為個人資產），
      是否需個別通知或取得同意，以及改制前後之權利義務銜接。
      實作對照見 architecture/decisions/015_offchain_team_wallet_ledger.md（2026-08-14 修訂段） -->
-<!-- ToDo: (20260812 - Luphia) §3.7 費思個人化記憶為「先寫條款、再依承諾反推實作」之條文，
+<!-- Info: (20260817 - Luphia) §3.7 之「任務短期記憶」已於 2026-08-17 實作
+     （對話前文注入 prompt，上界 10 輪 / 4,000 字元，並計入預扣）。
+     該層記憶由使用者的瀏覽器隨請求送出、不落地儲存，與條文「任務結束即不再保留」一致
+     ——實際上 server 也無從儲存：費思對話不寫入資料庫，聊天室訊息為端對端加密。
+     實作對照見 documents/architecture/ai_and_analytics/faith_personal_memory.md §2.1。
+     **長期記憶與回饋學習仍未實作**，見下方 ToDo。 -->
+<!-- ToDo: (20260812 - Luphia) §3.7 費思**長期**記憶為「先寫條款、再依承諾反推實作」之條文，
      記憶儲存與刪除機制須於 **v0.13.0 釋出前**完成（目前 v0.12.0）。
      技術義務與驗收條件見 documents/architecture/ai_and_analytics/faith_personal_memory.md §1 對照表
      與 §9 Release Gate：P1（儲存與方案 gate）、P2（萃取與預扣修正）、P3（到期刪除、提前刪除、稽核）

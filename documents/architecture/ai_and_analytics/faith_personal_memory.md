@@ -35,11 +35,33 @@
 
 | # | 事實 | 對本規範的影響 |
 |---|---|---|
-| 1 | 費思目前是**無記憶 one-shot**：`ChatService.generateFaithResponse()` 不帶歷史、不帶 RAG（設計書 §5.3 估價依據即以此為前提） | 記憶是全新資料流，非改寫既有流程。⚠️ 注意**連任務短期記憶（多輪上下文）都還沒有**——方案頁與條款已載明各方案皆具備短期記憶，故 v0.13.0 前須連同短期記憶一併實作，否則免費版的說明同樣不實。短期記憶為請求期間的上下文，不落地儲存，因此不進 §7 的保留與刪除機制 |
+| 1 | ~~費思目前是**無記憶 one-shot**~~ ——**任務短期記憶已於 2026-08-17 實作**（`generateFaithResponse` 第六個參數 `history`）。長期記憶仍未實作，是全新資料流 | 短期記憶為請求期間的上下文，不落地儲存，因此不進 §7 的保留與刪除機制。實作細節見下方 §2.1 |
 | 2 | 費思已綁帳本：`POST /api/v1/chat` 收 `accountBookId`，扣費團隊由 `AccountBook.teamId` 推導（設計書 §5.3「使用前提」） | 記憶的 `teamId` 與計費同源，無需另建推導規則 |
 | 3 | 計費為**預扣—結算**，`estimateFaithHoldCredits()` 的 hold 必須是成本上界（只退不補） | 記憶注入會增加 input tokens，**預扣公式必須加計**，否則不變式破裂（見 §5） |
 | 4 | 訂閱狀態已有決定論來源：`TeamSubscription.currentPeriodEnd` + `resolveEffectivePlanId()`；到期降級由 `subscription_expiry.cron.ts` 執行 | 90 天起算點掛在既有到期流程上，不另建訂閱狀態機 |
 | 5 | 已有欄位級加密樣板：ADR 018（AES-256-GCM、版本化金鑰、密文與列綁定） | 記憶加密沿用同一套，不重造 |
+
+### 2.1 任務短期記憶的實作（2026-08-17）
+
+規範原本假設短期記憶只是「把前幾輪帶進 prompt」，實作時遇到一個規範沒有預期的限制：
+
+> **server 讀不到前文。** 費思的對話**不寫入資料庫**（`runFaithBilledChat` 全程沒有任何 chatroom 寫入），而 `ChatroomMessage.encryptedContent` 是 ECIES 端對端加密——server 手上只有密文。持有明文的只有使用者的瀏覽器。
+
+因此前文由 **client 隨請求送上**（`faithChatSchema.history`），server 只負責設上界與注入。這反而更貼近條款寫的「任務短期記憶**不予儲存**、任務結束即不再保留」——它活在使用者的分頁裡，關掉就沒了。
+
+| 項目 | 值 | 位置 |
+|---|---|---|
+| 輪數上限 | `FAITH_HISTORY_MAX_TURNS` = 10 | `src/constants/llm.ts` |
+| 字元上限 | `FAITH_HISTORY_MAX_CHARS` = 4,000 | 同上 |
+| 截斷規則 | 由新到舊取，超出即停；**不做部分截斷** | `src/lib/faith_memory/short_term.ts` |
+| 預扣加計 | `estimateFaithHoldCredits(..., historyChars)` | `src/lib/faith_billing.ts` |
+
+兩個刻意的取捨：
+
+1. **上界是硬的，且與預扣同源**。截斷後的字元數由 `buildShortTermHistory` 一併回傳，估算與注入用的必須是同一份——分開算就會出現「估的是 A、送的是 B」，而 hold 一旦小於實耗，`settleSpend` 的「只退不補」前提就破了（§2 事實 3 對長期記憶提出的同一個修正，短期記憶同樣適用）。以 4,000 字元計，每則訊息最多多扣約 2 點。
+2. **內容不驗證，只設上界**。歷史是呼叫端自報的，但那是使用者自己說過的話——他本來就能在 `message` 裡打任何東西，所以這裡沒有新的注入面。真正需要防的是成本：沒有上界的話，送多長的歷史就扣多少點。
+
+**未涵蓋**：訪客試用路徑（未登入或未選帳本）不注入前文——它走的是 `generateResponse`，不進計費管線，也沒有帳本情境。
 
 ---
 

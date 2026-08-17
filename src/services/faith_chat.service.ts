@@ -16,6 +16,7 @@ import {
   spendCredits,
 } from "@/services/spend.service";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
+import { buildShortTermHistory } from "@/lib/faith_memory/short_term";
 
 /**
  * Info: (20260808 - Luphia) 費思對話計費編排（設計書 §5.3）。
@@ -35,6 +36,12 @@ export interface IFaithBilledChatParams {
   file?: string;
   mimeType?: string;
   clientMessageId?: string;
+  /**
+   * Info: (20260817 - Luphia) 任務短期記憶：同一段對話的前文（第一輪 C-2）。
+   * 由 client 傳上來——費思不寫 DB，聊天室訊息又是端對端加密，
+   * server 沒有任何管道讀得到前文（見 lib/faith_memory/short_term.ts）。
+   */
+  history?: unknown;
   nowSec: number;
 }
 
@@ -85,6 +92,13 @@ export async function runFaithBilledChat(
     clientMessageId,
   } = params;
 
+  /**
+   * Info: (20260817 - Luphia) 先截到上界，之後的估算與注入都用這一份（第一輪 C-2）。
+   * 估算與實際送出的內容必須同源，否則 hold 會小於實耗，
+   * 而「hold 是成本上界」正是 settleSpend 只退不補的前提。
+   */
+  const history = buildShortTermHistory(params.history);
+
   const teamId = await resolveBillingTeamId(accountBookId, userId);
 
   // Info: (20260809 - Luphia) 計費設定為系統設定，自 DB 取得（查無設定列時 fail-safe 回預設值）
@@ -98,6 +112,8 @@ export async function runFaithBilledChat(
     message.length,
     Boolean(file),
     billing,
+    // Info: (20260817 - Luphia) 注入的前文一併計入預扣（第一輪 C-2）
+    history.totalChars,
   );
 
   const spend = await spendCredits({
@@ -136,6 +152,7 @@ export async function runFaithBilledChat(
       file,
       mimeType,
       billing.maxOutputTokens,
+      history.turns,
     );
   } catch (llmError) {
     await refundCredits({

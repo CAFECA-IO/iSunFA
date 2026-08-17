@@ -1,9 +1,20 @@
 import { ChatService, ILlmUsage } from "@/services/chat.service";
 import { LLM_SYNC_TIMEOUT_MS, LlmTaskKeyEnum } from "@/constants/llm";
+import {
+  renderShortTermHistory,
+  type IFaithHistoryTurn,
+} from "@/lib/faith_memory/short_term";
 
 export class DirectChatSkill {
-  private getPrompt(message: string, tags: string[] = []): string {
+  private getPrompt(
+    message: string,
+    tags: string[] = [],
+    // Info: (20260817 - Luphia) 任務短期記憶：同一段對話的前文（條款 §3.7）
+    history: IFaithHistoryTurn[] = [],
+  ): string {
+    const historyBlock = renderShortTermHistory(history);
     const basePrompt = `
+      ${historyBlock}
       User Input: "${message}"
       Selected Tags: ${tags.join(", ") || "None"}
       
@@ -132,9 +143,15 @@ export class DirectChatSkill {
     chatService?: ChatService,
     // Info: (20260809 - Luphia) 成本上界由呼叫端自 DB 設定注入（FaithBillingSetting）
     maxOutputTokens?: number,
+    /**
+     * Info: (20260817 - Luphia) 任務短期記憶（第一輪 C-2）。
+     * 已由 `buildShortTermHistory` 截到上界，這裡直接注入即可——
+     * 呼叫端送進來的長度必須與預扣估算用的是同一份。
+     */
+    history: IFaithHistoryTurn[] = [],
   ): Promise<{ text: string; usage: ILlmUsage }> {
     if (!chatService) throw new Error("ChatService required");
-    const prompt = this.getPrompt(message, tags);
+    const prompt = this.getPrompt(message, tags, history);
     const images = file
       ? [{ data: file, mimeType: mimeType || "image/jpeg" }]
       : [];

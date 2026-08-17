@@ -22,8 +22,15 @@ export async function POST(request: NextRequest) {
   try {
     const parsed = faithChatSchema.safeParse(await request.json());
     if (!parsed.success) return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
-    const { message, tags, file, mimeType, accountBookId, clientMessageId } =
-      parsed.data;
+    const {
+      message,
+      tags,
+      file,
+      mimeType,
+      accountBookId,
+      clientMessageId,
+      history,
+    } = parsed.data;
 
     const authHeader = request.headers.get("Authorization");
     const user = await getIdentityFromDeWT(authHeader);
@@ -58,6 +65,8 @@ export async function POST(request: NextRequest) {
       file,
       mimeType,
       clientMessageId,
+      // Info: (20260817 - Luphia) 任務短期記憶（第一輪 C-2）：service 會截到上界後才注入
+      history,
       nowSec: Math.floor(Date.now() / 1000),
     });
     return jsonOk(result);

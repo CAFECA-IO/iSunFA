@@ -101,6 +101,83 @@ describe("runFaithBilledChat", () => {
   });
 
   /**
+   * Info: (20260817 - Luphia) 任務短期記憶（第一輪 C-2）。
+   *
+   * 條款 §3.7 與方案頁都寫著「所有方案皆具備任務短期記憶」，
+   * 而在此之前 `generateFaithResponse` 根本不收歷史參數，費思是 one-shot。
+   */
+  describe("short-term memory", () => {
+    const HISTORY = [
+      { role: "user" as const, content: "折舊怎麼算" },
+      { role: "model" as const, content: "直線法" },
+    ];
+
+    it("passes the conversation history to the model", async () => {
+      const chatStub = makeChatStub(3150);
+      await runFaithBilledChat({ ...BASE_PARAMS, history: HISTORY }, chatStub);
+
+      const args = asMock(chatStub.generateFaithResponse).mock.calls[0];
+      expect(args[5]).toEqual(HISTORY);
+    });
+
+    /**
+     * Info: (20260817 - Luphia) 注入的前文必須計入預扣：hold 一旦不是成本上界，
+     * settleSpend 的「只退不補」就會變成系統默默吸收差額。
+     */
+    it("charges for the injected history", async () => {
+      await runFaithBilledChat(
+        // Info: (20260817 - Luphia) 3,000 字元前文 ≈ 1,000 tokens ≈ 多 1 點
+        {
+          ...BASE_PARAMS,
+          history: [{ role: "user", content: "x".repeat(3000) }],
+        },
+        makeChatStub(3150),
+      );
+
+      expect(spendCredits).toHaveBeenCalledWith(
+        expect.objectContaining({ cost: BigInt(7) }),
+      );
+    });
+
+    /**
+     * Info: (20260817 - Luphia) 歷史是呼叫端自報的，因此上界由 server 決定：
+     * 送一份超長的歷史不該讓預扣跟著無限膨脹（也不該讓請求失敗）。
+     */
+    it("caps what an over-long history can cost", async () => {
+      await runFaithBilledChat(
+        {
+          ...BASE_PARAMS,
+          history: Array.from({ length: 50 }, () => ({
+            role: "user" as const,
+            content: "y".repeat(1000),
+          })),
+        },
+        makeChatStub(3150),
+      );
+
+      /**
+       * Info: (20260817 - Luphia) 50,000 字元的歷史若照單全收約 16,667 tokens，
+       * 預扣會膨脹到 22 點；截到上界 4,000 字元（1,334 tokens）後是 7 點。
+       */
+      expect(spendCredits).toHaveBeenCalledWith(
+        expect.objectContaining({ cost: BigInt(7) }),
+      );
+    });
+
+    it("still works with no history at all", async () => {
+      const chatStub = makeChatStub(3150);
+      await runFaithBilledChat(BASE_PARAMS, chatStub);
+
+      expect(asMock(chatStub.generateFaithResponse).mock.calls[0][5]).toEqual(
+        [],
+      );
+      expect(spendCredits).toHaveBeenCalledWith(
+        expect.objectContaining({ cost: BigInt(6) }),
+      );
+    });
+  });
+
+  /**
    * Info: (20260812 - Luphia) 扣費團隊來自帳本（設計書 §5.3「使用前提」），
    * 不來自呼叫端參數——這是「計費主體不可由 client 自報」的實作面斷言。
    */
