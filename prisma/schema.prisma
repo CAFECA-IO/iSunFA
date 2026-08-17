@@ -52,6 +52,8 @@ model User {
   teamInvitations       TeamInvitation[]       @relation("Inviter")
   // Info: (20260817 - Luphia) 此帳號用掉的邀請（稽核用；見 TeamInvitation.acceptedByUserId）
   acceptedInvitations   TeamInvitation[]       @relation("InvitationAcceptor")
+  // Info: (20260817 - Luphia) 費思長期記憶（一個團隊一份，見 FaithMemory）
+  faithMemories         FaithMemory[]
   auditLogs             AuditLog[]
   vouchers              Voucher[]
   esgRecords            EsgRecord[]
@@ -130,6 +132,8 @@ model Team {
   teamWallet            TeamWallet?
   teamWalletAllocations TeamWalletAllocation[]
   teamQuotaUsages       TeamQuotaUsage[]
+  // Info: (20260817 - Luphia) 團隊內各成員的費思長期記憶（見 FaithMemory）
+  faithMemories         FaithMemory[]
 
   @@map("team")
 }
@@ -146,6 +150,70 @@ model TeamMember {
 
   @@unique([teamId, userId])
   @@map("team_member")
+}
+
+/**
+ * Info: (20260817 - Luphia) 費思個人化長期記憶（規範 ai_and_analytics/faith_personal_memory.md）。
+ *
+ * 作用範圍是 `(userId, teamId)` 而非純 per-user，理由是刪除觸發必須與作用範圍同鍵：
+ * 90 天的起算點是「**團隊的**付費訂閱終止」，若記憶為全域 per-user，
+ * 一位同時屬於 A（仍在訂閱）與 B（剛終止）兩個團隊的成員，「該不該刪」就沒有
+ * 決定論答案。另一個理由是隔離：事務所的一位成員常同時服務多家客戶，
+ * 把 A 客戶的科目慣例帶進 B 客戶的對話是實質的資訊外洩（規範 §3.1）。
+ */
+model FaithMemory {
+  id String @id @default(uuid())
+
+  userId String @map("user_id")
+  teamId String @map("team_id")
+
+  /**
+   * Info: (20260817 - Luphia) 記憶項目密文（AES-256-GCM，沿用 key_vault 的 FAITH_MEMORY 子金鑰）。
+   * 明文結構為 IFaithMemoryItem[]，**整包加密**而非逐條：記憶一律整包讀取用於組 prompt，
+   * 逐條加密只是多存 N 組 IV 與標籤。
+   */
+  itemsCipher String @map("items_cipher") @db.Text
+  itemsIv     String @map("items_iv")
+  itemsTag    String @map("items_tag")
+  keyVersion  Int    @map("key_version")
+
+  // Info: (20260817 - Luphia) 條目數（明文計數，供上限判斷與觀測，不含任何內容）
+  itemCount Int @default(0) @map("item_count")
+
+  /**
+   * Info: (20260817 - Luphia) 到期刪除時點（訂閱終止日 + 保留天數設定）。
+   * null = 訂閱有效中，不排定刪除；恢復訂閱時清回 null。
+   * 期限**算好存下來**而非每次推導：推導點一多，條款承諾的日期就會出現兩種算法。
+   */
+  expiresAt DateTime? @map("expires_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+  team Team @relation(fields: [teamId], references: [id])
+
+  @@unique([userId, teamId])
+  // Info: (20260817 - Luphia) 保留期守護行程的掃描索引（WHERE expires_at <= now）
+  @@index([expiresAt])
+  @@map("faith_memory")
+}
+
+/**
+ * Info: (20260817 - Luphia) 記憶刪除的稽核列。
+ * **不得含記憶內容**——否則「刪除」等於搬家（規範 §3.2）。
+ */
+model FaithMemoryDeletionLog {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  teamId    String   @map("team_id")
+  itemCount Int      @map("item_count")
+  // Info: (20260817 - Luphia) FAITH_MEMORY_DELETION_REASON（src/constants/faith_memory.ts）
+  reason    String
+  deletedAt DateTime @default(now()) @map("deleted_at")
+
+  @@index([userId, teamId])
+  @@map("faith_memory_deletion_log")
 }
 
 model TeamInvitation {

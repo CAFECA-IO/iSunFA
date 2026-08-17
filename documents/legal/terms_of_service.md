@@ -59,11 +59,19 @@
      ——實際上 server 也無從儲存：費思對話不寫入資料庫，聊天室訊息為端對端加密。
      實作對照見 documents/architecture/ai_and_analytics/faith_personal_memory.md §2.1。
      **長期記憶與回饋學習仍未實作**，見下方 ToDo。 -->
-<!-- ToDo: (20260812 - Luphia) §3.7 費思**長期**記憶為「先寫條款、再依承諾反推實作」之條文，
-     記憶儲存與刪除機制須於 **v0.13.0 釋出前**完成（目前 v0.12.0）。
-     技術義務與驗收條件見 documents/architecture/ai_and_analytics/faith_personal_memory.md §1 對照表
-     與 §9 Release Gate：P1（儲存與方案 gate）、P2（萃取與預扣修正）、P3（到期刪除、提前刪除、稽核）
-     全數完成且有測試覆蓋前，本條與方案頁之「專屬記憶」不得對外發布。
+<!-- Info: (20260817 - Luphia) §3.7 費思**長期**記憶已於 2026-08-17 以最小方案實作，
+     本條不再為承諾先行。條文承諾的三件事均已成立：
+     (1) 存在：記憶以 (userId, teamId) 為範圍儲存，欄位級 AES-256-GCM 加密；
+     (2) 依方案提供：讀寫兩側均以有效方案判定，免費版不讀也不寫（fail-closed）；
+     (3) 90 天後刪除：守護行程每 6 小時對帳與硬刪除，並寫不含內容的稽核列；
+         使用者亦可隨時要求立即刪除（DELETE /api/v1/user/team/{id}/faith_memory）。
+     ⚠️ 法務須留意兩點差異，見 faith_personal_memory.md §2.2：
+     (a) 90 天的起算點為「系統發現訂閱已終止之日」而非「訂閱終止日」，
+         因此實際保留期可能略長於 90 天（只會更長、不會更短）；
+     (b) 團隊解散與帳戶終止時的**即時**硬刪除尚未實作，目前一律依 90 天到期處理，
+         與條款 §3.7「與帳戶終止之關係」所述之「以較早屆至者為準」尚有落差。
+     尚未實作：規範 §8 之後台觀測介面。 -->
+<!-- ToDo: (20260812 - Luphia) §3.7 之保留期間設定與文案同步（長期記憶已實作，本項仍有效）。
      保留期間的真相來源是 **DB 系統設定** SystemSettingKey.FAITH_MEMORY_RETENTION_DAYS
      （簽章式設定，同 ADR 017；讀取一律經 resolveFaithMemoryRetentionDays()）。
      src/constants/llm.ts 的 DEFAULT_FAITH_MEMORY_RETENTION_DAYS（90）僅為驗簽失敗時的 fail-safe，

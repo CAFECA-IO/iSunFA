@@ -59,6 +59,8 @@ NEXT_PUBLIC_CREDIT_POINT_ADDRESS
 | `team_invitation` | `invitee_address` 改為可為 NULL（email 邀請時對方還沒有位址） | 低；放寬約束不會與既有資料衝突 |
 | `team_invitation` | **移除**舊的複合唯一鍵 `(team_id, invitee_*, status)`，改為 `@@index([team_id, status])` | 低；但移除後到 3.3 回填完成前，既有待接受邀請暫時沒有 DB 層併發防護 |
 | `team_invitation` | 新增 `accepted_by_user_id`（FK → user）、`accepted_at`、`accepted_email_match` | 低；既有列皆為 NULL，**無回填需求**（歷史邀請無從得知接受者，留 NULL 比猜一個值誠實） |
+| `faith_memory`（新表） | 費思長期記憶：密文欄位、`expires_at`、`(user_id, team_id)` 唯一鍵 | 低；新表無既有資料 |
+| `faith_memory_deletion_log`（新表） | 記憶刪除的稽核列（不含內容） | 低；新表無既有資料 |
 | `team_subscription` | 新增 `seats`（預設 1）、`unit_price`（預設 0） | 低，但**必須接著做 3.1** |
 | `team_wallet_ledger` | 新增 `tx_hash`（可為 NULL） | 低 |
 | `team_quota_usage` | 索引改為 `(team_id, user_id, window_key_5h)` 與 `(team_id, user_id, window_key_week)` | 低；舊索引可留可刪 |
@@ -139,6 +141,9 @@ npx tsx scripts/backfill_pending_invite_key.ts --commit # 實際寫入
 - [ ] 邀請一個人 → 接受 → 移除該成員 → **再邀請同一個信箱** → 可以接受成功（舊版會永遠失敗）
 - [ ] 同一條連結在兩個瀏覽器同時接受：只有一個人進團隊，另一個看到「連結已失效」
 - [ ] 在邀請頁按「我不加入這個團隊」（**不登入**）：連結當場失效，且該席次可立刻用於邀請他人
+- [ ] 費思連續問兩句有前後關係的話：第二句答得出上文（任務短期記憶）
+- [ ] 付費團隊對話中明示一個偏好 → 下一輪費思沿用；降級為免費版後**不再沿用**
+- [ ] Worker 的 `FaithMemoryRetention` 有啟動且 log 無 `failed`
 
 ---
 
@@ -148,7 +153,8 @@ npx tsx scripts/backfill_pending_invite_key.ts --commit # 實際寫入
 |---|---|
 | 邀請寄送未設 rate limit | 護欄為 OWNER/ADMIN 權限 + 每次邀請的 FIDO2 簽章 + 單期補收上限（TW000016）；濫用的金額上限已封住，寄信量未封 |
 | 硬退信（bounce）不自動撤回邀請 | 信箱打錯時，該席次會被一封永遠不會被接受的邀請佔到逾期（7 天）或管理員手動撤回為止 |
-| 費思個人化記憶（條款已載明 90 天保留） | 未實作，v0.13.0 gate |
+| 費思記憶：團隊解散 / 帳戶終止時的**即時**硬刪除 | 未實作，目前一律依 90 天到期處理；條款 §3.7「以較早屆至者為準」尚有落差 |
+| 費思記憶：90 天起算點為「系統發現終止之日」而非終止日 | 刻意的保守偏差，保留期只會更長不會更短（規範 §2.2） |
 | 方案頁承諾值與實際額度的倍數不一致 | free 1.14×、付費 2.14×；刻意保守但倍數不齊，屬定價文案決定 |
 | 結算時的 `burn` 無用戶當下簽章 | 刻意設計（條款 §3.3 / §3.5 已載明），屬信任模型變更 |
 

@@ -17,6 +17,8 @@ import {
 } from "@/services/spend.service";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { buildShortTermHistory } from "@/lib/faith_memory/short_term";
+import { loadFaithMemoryForPrompt } from "@/services/faith_memory.service";
+import { extractAndRecordFaithMemory } from "@/services/faith_memory_extraction.service";
 
 /**
  * Info: (20260808 - Luphia) 費思對話計費編排（設計書 §5.3）。
@@ -100,6 +102,15 @@ export async function runFaithBilledChat(
   const history = buildShortTermHistory(params.history);
 
   const teamId = await resolveBillingTeamId(accountBookId, userId);
+  /**
+   * Info: (20260817 - Luphia) 長期記憶（第一輪 C-1）：付費方案專屬，讀取側 fail-closed。
+   * 必須在預扣之前載入——注入的內容要計入 hold，理由同短期記憶。
+   */
+  const memory = await loadFaithMemoryForPrompt({
+    userId,
+    teamId,
+    nowSec: params.nowSec,
+  });
 
   // Info: (20260809 - Luphia) 計費設定為系統設定，自 DB 取得（查無設定列時 fail-safe 回預設值）
   const billing = await faithBillingSettingRepo.resolveSetting();
@@ -112,8 +123,8 @@ export async function runFaithBilledChat(
     message.length,
     Boolean(file),
     billing,
-    // Info: (20260817 - Luphia) 注入的前文一併計入預扣（第一輪 C-2）
-    history.totalChars,
+    // Info: (20260817 - Luphia) 注入的前文與長期記憶一併計入預扣（第一輪 C-1 / C-2）
+    history.totalChars + memory.totalChars,
   );
 
   const spend = await spendCredits({
@@ -153,6 +164,7 @@ export async function runFaithBilledChat(
       mimeType,
       billing.maxOutputTokens,
       history.turns,
+      memory.text,
     );
   } catch (llmError) {
     await refundCredits({
@@ -187,6 +199,21 @@ export async function runFaithBilledChat(
       userId,
       featureCode: BILLABLE_FEATURE_CODE.FAITH_CHAT,
     },
+  });
+
+  /**
+   * Info: (20260817 - Luphia) 萃取長期記憶（第一輪 C-1）。
+   *
+   * 在**回覆已經產生之後**執行，且 `extractAndRecordFaithMemory` 永不拋錯：
+   * 「記憶沒寫成功」不該讓使用者看不到答案，也不該讓已經結算的這一輪失敗
+   * （規範 §4.2 末條）。方案 gate 在 service 內側再判一次。
+   */
+  await extractAndRecordFaithMemory({
+    userId,
+    teamId,
+    userMessage: message,
+    assistantReply: generation.text,
+    nowSec: params.nowSec,
   });
 
   return {

@@ -11,6 +11,8 @@ import { DEFAULT_FAITH_BILLING } from "@/constants/llm";
 import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
 import { assertAccountBookMember } from "@/services/account_book_access.guard";
 import type { ChatService } from "@/services/chat.service";
+import { loadFaithMemoryForPrompt } from "@/services/faith_memory.service";
+import { extractAndRecordFaithMemory } from "@/services/faith_memory_extraction.service";
 
 jest.mock("@/repositories/faith_billing_setting.repo", () => ({
   faithBillingSettingRepo: { resolveSetting: jest.fn() },
@@ -27,6 +29,20 @@ jest.mock("@/services/account_book_access.guard", () => ({
     message: "Account book not found",
     status: 404,
   })),
+}));
+
+/**
+ * Info: (20260817 - Luphia) 長期記憶（第一輪 C-1）：必須 mock。
+ *
+ * 不 mock 的話這支測試會真的去打 DB（方案 gate）與 LLM（萃取），
+ * 而兩者的失敗都被 try/catch 吃掉——於是測試「通過」的原因是每一次都失敗了。
+ * 這正是本 repo 先前踩過的「因錯誤的理由而綠」。
+ */
+jest.mock("@/services/faith_memory.service", () => ({
+  loadFaithMemoryForPrompt: jest.fn(async () => ({ text: "", totalChars: 0 })),
+}));
+jest.mock("@/services/faith_memory_extraction.service", () => ({
+  extractAndRecordFaithMemory: jest.fn(async () => []),
 }));
 
 /**
@@ -67,6 +83,11 @@ const BASE_PARAMS = {
 describe("runFaithBilledChat", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    asMock(loadFaithMemoryForPrompt).mockResolvedValue({
+      text: "",
+      totalChars: 0,
+    });
+    asMock(extractAndRecordFaithMemory).mockResolvedValue([]);
     asMock(assertAccountBookMember).mockResolvedValue({
       id: "book-1",
       teamId: "team-1",
@@ -174,6 +195,68 @@ describe("runFaithBilledChat", () => {
       expect(spendCredits).toHaveBeenCalledWith(
         expect.objectContaining({ cost: BigInt(6) }),
       );
+    });
+  });
+
+  /**
+   * Info: (20260817 - Luphia) 長期記憶（第一輪 C-1）的編排面。
+   * 記憶本身的規則（方案 gate、去重、淘汰）在 faith_long_term_memory.test.ts。
+   */
+  describe("long-term memory", () => {
+    it("injects the memory block into the prompt", async () => {
+      asMock(loadFaithMemoryForPrompt).mockResolvedValue({
+        text: "Known preferences",
+        totalChars: 17,
+      });
+      const chatStub = makeChatStub(3150);
+
+      await runFaithBilledChat(BASE_PARAMS, chatStub);
+
+      expect(asMock(chatStub.generateFaithResponse).mock.calls[0][6]).toBe(
+        "Known preferences",
+      );
+    });
+
+    /**
+     * Info: (20260817 - Luphia) 注入的記憶必須計入預扣（規範 §5 明列的必改項）：
+     * 不計入的話 hold 不再是成本上界，settleSpend 的「只退不補」會變成系統吸收差額。
+     */
+    it("charges for the injected memory", async () => {
+      asMock(loadFaithMemoryForPrompt).mockResolvedValue({
+        text: "m".repeat(3000),
+        totalChars: 3000,
+      });
+
+      await runFaithBilledChat(BASE_PARAMS, makeChatStub(3150));
+
+      expect(spendCredits).toHaveBeenCalledWith(
+        expect.objectContaining({ cost: BigInt(7) }),
+      );
+    });
+
+    // Info: (20260817 - Luphia) 萃取在回覆之後，且拿得到這一輪的問與答
+    it("extracts memory from the completed turn", async () => {
+      await runFaithBilledChat(BASE_PARAMS, makeChatStub(3150));
+
+      expect(extractAndRecordFaithMemory).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: "user-1",
+          teamId: "team-1",
+          userMessage: BASE_PARAMS.message,
+          assistantReply: "faith reply",
+        }),
+      );
+    });
+
+    /**
+     * Info: (20260817 - Luphia) LLM 失敗時已全額退款，不該再去萃取一個不存在的回覆。
+     */
+    it("does not extract when the model call failed", async () => {
+      await expect(
+        runFaithBilledChat(BASE_PARAMS, makeChatStub(0, true)),
+      ).rejects.toThrow();
+
+      expect(extractAndRecordFaithMemory).not.toHaveBeenCalled();
     });
   });
 

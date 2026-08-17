@@ -665,6 +665,11 @@ export class ChatService {
      * 而這個函式從來沒有收過任何歷史參數。
      */
     history: IFaithHistoryTurn[] = [],
+    /**
+     * Info: (20260817 - Luphia) 長期記憶區塊（第一輪 C-1）。
+     * 已由 `renderMemoryForPrompt` 截到字元預算內，此處直接注入。
+     */
+    memory = "",
   ): Promise<{ text: string; usage: ILlmUsage }> {
     const skill = new DirectChatSkill();
     return skill.executeWithUsage(
@@ -675,6 +680,7 @@ export class ChatService {
       this,
       maxOutputTokens,
       history,
+      memory,
     );
   }
 

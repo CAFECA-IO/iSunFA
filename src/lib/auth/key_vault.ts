@@ -56,6 +56,13 @@ export enum VaultPurpose {
    * 落在同一個信任邊界內 —— 而它們的外洩後果完全不同。
    */
   CUSTODIAL_PRF = "custodial-prf",
+  /**
+   * Info: (20260817 - Luphia) 費思長期記憶的欄位級加密（規範 §6.2）。
+   *
+   * 獨立的子金鑰：記憶是使用者的對話偏好，與簽章私鑰、系統設定的外洩後果都不同，
+   * 共用一把會把三種資產綁進同一個信任邊界。
+   */
+  FAITH_MEMORY = "faith-memory",
 }
 
 export interface ISealedSecret {

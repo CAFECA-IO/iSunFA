@@ -11,9 +11,12 @@ export class DirectChatSkill {
     tags: string[] = [],
     // Info: (20260817 - Luphia) 任務短期記憶：同一段對話的前文（條款 §3.7）
     history: IFaithHistoryTurn[] = [],
+    // Info: (20260817 - Luphia) 長期記憶區塊（第一輪 C-1），已截到字元預算內
+    memory = "",
   ): string {
     const historyBlock = renderShortTermHistory(history);
     const basePrompt = `
+      ${memory}
       ${historyBlock}
       User Input: "${message}"
       Selected Tags: ${tags.join(", ") || "None"}
@@ -149,9 +152,11 @@ export class DirectChatSkill {
      * 呼叫端送進來的長度必須與預扣估算用的是同一份。
      */
     history: IFaithHistoryTurn[] = [],
+    // Info: (20260817 - Luphia) 長期記憶區塊（第一輪 C-1）
+    memory = "",
   ): Promise<{ text: string; usage: ILlmUsage }> {
     if (!chatService) throw new Error("ChatService required");
-    const prompt = this.getPrompt(message, tags, history);
+    const prompt = this.getPrompt(message, tags, history, memory);
     const images = file
       ? [{ data: file, mimeType: mimeType || "image/jpeg" }]
       : [];
