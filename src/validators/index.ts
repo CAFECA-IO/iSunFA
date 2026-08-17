@@ -24,3 +24,5 @@ export * from "@/validators/faith_chat";
 // Info: (20260813 - Julian) 簽到系統
 export * from "@/validators/attendance";
 export * from "@/validators/leave";
+// Info: (20260817 - Julian) 假勤模組
+export * from "@/validators/leave_request";

@@ -880,8 +880,16 @@ model LeaveApprovalRule {
   minDays Decimal  @map("min_days")
   maxDays Decimal? @map("max_days")
 
-  // Info: (20260817 - Julian) 同一區間有多條規則時的取用順序（數字小者優先）
-  priority Int @default(0)
+  /**
+   * Info: (20260817 - Julian) **刻意沒有 `priority` 欄位。**
+   *
+   * 第一版有。實作 `assertRuleRangesDisjoint` 時發現它永遠不會被讀到：
+   * 不變式要求區間不重疊**且**完整覆蓋 `[0, ∞)`，於是任何一個天數
+   * 恰好命中一條規則 —— 沒有「同一區間有多條」這種情形可供排序。
+   *
+   * 一個永遠不影響結果的欄位，遲早會有人相信它有效
+   * （判準同 `ShiftPattern` 拒絕 `shiftType`）。
+   */
 
   steps LeaveApprovalRuleStep[]
 
@@ -1502,13 +1510,15 @@ DRAFT ──────▶ PENDING ──(每個節點依序)──▶ APPROVED
 | `VA_OVERTIME_EXCEEDS_MONTHLY_LIMIT` | `VA000052` | `VALIDATION_ERROR` | 逾單月 46／54 小時 |
 | `VA_OVERTIME_EXCEEDS_QUARTERLY_LIMIT` | `VA000053` | `VALIDATION_ERROR` | 逾三個月 138 小時 |
 | `VA_OVERTIME_FILING_TYPE_MISMATCH` | `VA000054` | `VALIDATION_ERROR` | 事前／事後與時序不符（D10） |
-| `FO_SELF_APPROVAL_FORBIDDEN` | 既有 | `FORBIDDEN` | 不得自我核准（沿用出勤模組） |
-| `FO_NOT_AUTHORIZED_REVIEWER` | 既有 | `FORBIDDEN` | 非簽核鏈上的節點 |
+| `VA_LEAVE_ON_NON_WORKING_DAY` | `VA000055` | `VALIDATION_ERROR` | 在沒有上班班別的日子請假：會扣額度卻不產生任何效果 |
+| `FO_SELF_APPROVAL_FORBIDDEN` | `FO000014` | `FORBIDDEN` | 不得自我核准。**新增** —— 見下方說明 |
+| `FO_NOT_AUTHORIZED_REVIEWER` | `FO000015` | `FORBIDDEN` | 非當前簽核節點不得代簽。**新增** |
 | `FO_LEAVE_CALENDAR_SCOPE` | `FO000012` | `FORBIDDEN` | 逾越可見範圍（§9.2） |
 | `FO_OVERTIME_ON_REGULAR_OFF` | `FO000013` | `FORBIDDEN` | 例假日加班須依 §40 程序（§8.1 #3） |
 | `NF_LEAVE_POLICY` | `NF000024` | `NOT_FOUND` | 假別不存在或已停用 |
 | `NF_LEAVE_GRANT` | `NF000025` | `NOT_FOUND` | 額度批次不存在 |
 | `NF_OVERTIME_REQUEST` | `NF000026` | `NOT_FOUND` | 加班單不存在 |
+| `NF_LEAVE_REQUEST` | `NF000027` | `NOT_FOUND` | 假單不存在或不屬於本帳本 |
 | `CF_LEAVE_APPROVAL_CHAIN_UNRESOLVED` | `CF000009` | `CONFLICT` | 簽核鏈展開為空（D7） |
 | `CF_LEAVE_DAY_ALREADY_ACTIVE` | `CF000010` | `CONFLICT` | 同人同日已有生效假單（`activeKey` 撞擊） |
 | `CF_LEAVE_CONCURRENCY_EXCEEDED` | `CF000011` | `CONFLICT` | 併休超限且該假別可硬擋（D14） |
@@ -1595,9 +1605,9 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 | # | 內容 | 交付判準 |
 |---|---|---|
 | **1** | 資料模型與設定 | `LeavePolicy` / `LeaveAccrualTier` 落地；seed 產出勞基法內建假別（僅 §3.1 已查證者）並通過 T23；`leave_policy_no_code_branching.test.ts`（T19）先於任何規則引擎程式碼存在；`WorkDayType.SUSPENDED` 補上；L1–L6 可用 |
-| **2** | 額度引擎與帳本 | `leave_entitlement_rules.ts` 純函數 + 單元測試；`LeaveGrant` / `LeaveLedgerEntry` / `LeaveBalance` 落地；每日勾稽 Worker；L7–L9 可用 |
-| **3** | 請假與簽核 | 簽核鏈快照、SoD、`activeKey` 投影；L10–L17 可用；A11 進入相容期 |
-| **4** | 加班 | `overtime_rules.ts` 純函數 + 上限護欄；補休分批入帳；L24–L30 可用 |
+| **2** | 額度引擎與帳本 | `leave_entitlement_rules.ts` 純函數 + 單元測試；`assertLeavePolicyUnit` / `assertGrantSource` 擋在 repository（T24、T25）；`LeaveGrant` / `LeaveLedgerEntry` / `LeaveBalance` 落地；每日勾稽 Worker；L7–L9 可用 |
+| **3** | 請假與簽核 | 簽核鏈快照、SoD、`activeKey` 投影；`assertRuleRangesDisjoint`（T27）；`LeaveRequestService` 與 unit-of-work repository（T8、T28）；L10–L17 可用；A11 進入相容期 |
+| **4** | 加班 | `overtime_rules.ts` 純函數 + 上限護欄；`assertOvertimeFilingType`（T26）；補休分批入帳；L24–L30 可用 |
 | **5** | 行事曆與併休 | L18–L20；可見範圍分級；移除 `leaveType` 相容欄位 |
 | **6** | 折現與交棒 | `LeaveCashOutEvent`；年度終結 Worker；§6.6 的 115-01-01 輸出；L21–L23 |
 | **7** | 法務複核與收斂 | §3.2 所有 ⚠️ 逐項結案；`ToDo:` 清空（CLAUDE.md §4：Release 前必須全數清空） |
@@ -1633,6 +1643,12 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 | T21 | `leave_i18n_keys.test.ts` | 五語系（en/ja/ko/zh_cn/zh_tw）key 齊備；比照 `attendance_i18n_keys.test.ts` |
 | T22 | `leave_cash_out.test.ts` | 年度終結、遞延屆期、補休屆期、契約終止四條路徑；事件無金額欄位；`cashOutOnExpiry` 為真時必先產事件再 `EXPIRE`（ADR 022 §8.5） |
 | T23 | `leave_seed_integrity.test.ts` | 每個帳本都有完整的內建假別；`isSystemDefined` 者不可刪除；seed 只落地 §3.1 已查證的數字（ADR 021 §5） |
+| T24 | `leave_policy_invariant.test.ts` | `assertLeavePolicyUnit`：單位基準與分鐘數的雙向約束、能否整除 60、年資級距不得帶固定日數、不限額度不得標折現、自我併計 |
+| T25 | `leave_grant_invariant.test.ts` | `assertGrantSource`：來源與 `overtimeSegmentId` 雙向、§32-1 的 1:1、`grantedMinutes` 可驗算、到期日不得早於週期結束 |
+| T26 | `overtime_request_invariant.test.ts` | `assertOvertimeFilingType`：事前／事後與送出時點、已核准必須說得出分鐘數、認列不得超過核准 |
+| T27 | `leave_approval_rule_invariant.test.ts` | `assertRuleRangesDisjoint`：自 0 起、首尾相接、末段無上界；錯誤訊息分得出「重疊」與「有洞」 |
+| T28 | `leave_request_service.test.ts` | 送出→簽核→扣額度的編排：試算與送出算出同一組數字、不預扣、四條 SoD、中間節點不扣額度、最後一關前置檢查、`BALANCE_RACE` 與 `ALREADY_REVIEWED` 分流 |
+| T29 | `leave_error_codes.test.ts` | 模組引用的 21 個錯誤碼皆存在、家族正確、代碼全域不重複。**在 `tsc --noEmit` 跑不動的期間補位**（schema 未套用前整包型別檢查起不來，而那正是漏掉不存在常數的窗口） |
 
 **T6 與 T19 是本模組的兩條紅線**：前者保證帳本沒有說謊，後者保證假別真的可設定而不是假裝可設定。
 
@@ -1940,8 +1956,16 @@ export enum HrPiiTable {
   } as IErrorDef,
 ```
 
-**沿用既有、不新增**：`FO_SELF_APPROVAL_FORBIDDEN`、`FO_NOT_AUTHORIZED_REVIEWER`、
-`NF_EMPLOYEE`、`NF_SHIFT_PATTERN`、`VA_INVALID_INPUT_DATA`、`IS_DB_FAILED`。
+**沿用既有、不新增**：`NF_EMPLOYEE`、`NF_SHIFT_PATTERN`、`VA_INVALID_INPUT_DATA`、`IS_DB_FAILED`。
+
+> **更正（2026-08-17）**：本節第一版把 `FO_SELF_APPROVAL_FORBIDDEN` 與
+> `FO_NOT_AUTHORIZED_REVIEWER` 列為「沿用既有」。**錯的。** 它們被出勤模組
+> 計畫書 §D9 點名過，但補登單從未實作，因此從來沒有被建立。
+> `API_ERRORS.FO_SELF_APPROVAL_FORBIDDEN` 是 `undefined`，
+> `new AppError(undefined)` 丟出來的是 `TypeError` 而非 `AppError` ——
+> 呼叫端拿到 500，而真正的原因是一個不存在的常數。
+> 現已新增為 `FO000014` / `FO000015`，並由 `leave_error_codes.test.ts`（T29）
+> 釘住「模組引用的每一個錯誤碼都真的存在」。
 
 ---
 

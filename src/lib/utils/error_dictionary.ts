@@ -1207,6 +1207,184 @@ export const API_ERRORS = {
   } as IErrorDef,
 
   // Info: (20260813 - Julian) 只有主管（任一部門的 managerId）能發起徵詢或看地圖
+  // Info: (20260817 - Julian) ===== 假勤模組（計畫書 §11）=====
+
+  // Info: (20260817 - Julian) 額度不足。送出時即回饋，但**不預扣**——扣減發生在最後一關通過的交易內（ADR 023 §6）
+  VA_LEAVE_INSUFFICIENT_BALANCE: {
+    code: "VA000047",
+    message: "Insufficient leave balance",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 請假時間不符該假別的最小單位（半小時／半天／整天）
+  VA_LEAVE_UNIT_NOT_ALIGNED: {
+    code: "VA000048",
+    message: "Leave duration does not align with the minimum unit",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 該簽核節點已被決定。同 VA_REQUEST_ALREADY_REVIEWED 的語意，對象換成假單
+  VA_LEAVE_ALREADY_REVIEWED: {
+    code: "VA000049",
+    message: "This approval step has already been decided",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 曆年制給假低於週年制同期應有（ADR 021 §3.1）。
+   * 這條護欄的性質與財務的 A = L + E 相同：越過它代表設定有錯，不是需要人判斷的警示。
+   */
+  VA_LEAVE_CYCLE_DISADVANTAGEOUS: {
+    code: "VA000050",
+    message: "Calendar-year accrual grants fewer days than the anniversary basis",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 逾單日 12 小時（勞動基準法 §32 II）
+  VA_OVERTIME_EXCEEDS_DAILY_LIMIT: {
+    code: "VA000051",
+    message: "Overtime exceeds the statutory 12-hour daily total",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 逾單月 46 小時；帳本已記載工會或勞資會議同意者為 54 小時（§32 II、III）
+  VA_OVERTIME_EXCEEDS_MONTHLY_LIMIT: {
+    code: "VA000052",
+    message: "Overtime exceeds the statutory monthly limit",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 逾三個月 138 小時（§32 III）。區間定義暫採滾動三個月（較嚴）
+  VA_OVERTIME_EXCEEDS_QUARTERLY_LIMIT: {
+    code: "VA000053",
+    message: "Overtime exceeds the statutory three-month limit",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 事前／事後與時序不符。「事前申請卻在下班後才送出」不是一種可選的填法，是一個謊
+  VA_OVERTIME_FILING_TYPE_MISMATCH: {
+    code: "VA000054",
+    message: "Filing type contradicts the submission time",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 在非上班日請假。
+   * 判定引擎看非 WORK 就回 OFF_DAY，因此這種假單不會產生任何效果，
+   * 卻會扣掉額度 —— 使用者付出了代價卻什麼也沒換到。
+   */
+  VA_LEAVE_ON_NON_WORKING_DAY: {
+    code: "VA000055",
+    message: "Leave cannot be taken on a day without a working shift",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 逾越行事曆的可見範圍（計畫書 §9.2）
+  FO_LEAVE_CALENDAR_SCOPE: {
+    code: "FO000012",
+    message: "You may not view this scope of the leave calendar",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 例假日加班須依勞動基準法 §40 程序（天災事變或突發事件、
+   * 24 小時內通報主管機關、事後補假）。系統尚未實作通報與補假，故一律擋下 ——
+   * 放行會讓一個違法的排班看起來像一筆正常的加班（ADR 024 §4.5）。
+   */
+  FO_OVERTIME_ON_REGULAR_OFF: {
+    code: "FO000013",
+    message: "Overtime on a statutory rest day requires the Article 40 procedure",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 不得自我核准（職責分離第 1 條，ADR 023 §5）。
+   *
+   * 出勤模組計畫書 §D9 早就點名這個代碼，但補登單未實作，因此它從未被建立 ——
+   * 假勤模組是第一個真的需要它的地方。
+   *
+   * 與 `escalatedReason` 的自動上升是同一件事的兩面：本條擋的是
+   * 「繞過鏈去簽自己的單」，上升處理的是「鏈本身正當地指向了自己」。
+   * 混為一談會得到「老闆不能請假」這個荒謬的結果。
+   */
+  FO_SELF_APPROVAL_FORBIDDEN: {
+    code: "FO000014",
+    message: "You may not approve your own request",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 非當前簽核節點不得代簽（職責分離第 2 條）。
+   *
+   * 訊息刻意說「你不是目前這一關的簽核者」而不是「你沒有權限」——
+   * 後者會讓一個排在第二關的主管以為自己被排除在流程外。
+   */
+  FO_NOT_AUTHORIZED_REVIEWER: {
+    code: "FO000015",
+    message: "You are not the current approver for this request",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 假別不存在或已停用
+  NF_LEAVE_POLICY: {
+    code: "NF000024",
+    message: "Leave policy not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 額度批次不存在
+  NF_LEAVE_GRANT: {
+    code: "NF000025",
+    message: "Leave grant not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 加班單不存在
+  NF_OVERTIME_REQUEST: {
+    code: "NF000026",
+    message: "Overtime request not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 假單不存在（或不屬於本帳本）
+  NF_LEAVE_REQUEST: {
+    code: "NF000027",
+    message: "Leave request not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 簽核鏈展開為空（ADR 023 §3）。
+   * **不自動核准** —— 那會讓一個設定缺口靜默地變成一張看起來正常的生效假單。
+   * 訊息須指出缺什麼（沒有主管／部門沒有經理／帳本沒有 HR），因為解法在 HR 手上不在員工手上。
+   */
+  CF_LEAVE_APPROVAL_CHAIN_UNRESOLVED: {
+    code: "CF000009",
+    message: "No approver could be resolved for this request",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 同人同日已有生效假單（LeaveDay.activeKey 撞擊）
+  CF_LEAVE_DAY_ALREADY_ACTIVE: {
+    code: "CF000010",
+    message: "An active leave already exists for this employee on this date",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 併休超限且該假別可硬擋（employerMayReject = true）。特休永遠走不到這裡
+  CF_LEAVE_CONCURRENCY_EXCEEDED: {
+    code: "CF000011",
+    message: "Too many concurrent leaves in this department",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 核准當下額度被他單先扣（ADR 023 §6.4 的 updateMany count === 0）
+  CF_LEAVE_BALANCE_RACE: {
+    code: "CF000012",
+    message: "Leave balance was consumed by another request",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
   FO_ATTENDANCE_SUPERVISOR_ONLY: {
     code: "FO000011",
     message: "This action is limited to department managers",
