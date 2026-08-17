@@ -35,10 +35,23 @@ const CATEGORIES = new Set<string>(Object.values(FAITH_MEMORY_CATEGORY));
  */
 const NUMERIC_PATTERN = /\d/;
 
+/**
+ * Info: (20260818 - Luphia) 換行是 prompt 注入的載具（第三輪 B-4）。
+ *
+ * 記憶以 `- [CATEGORY] ${statement}` 的形式注入，statement 帶換行就能自己
+ * 長出新的區塊——例如偽造一段 `Output Guidelines:` 覆蓋掉人設與安全指令。
+ *
+ * 範圍限縮：記憶鍵是 `(userId, teamId)` 且注入時 userId 來自 session，
+ * 因此**影響不到其他使用者**。但它是自我注入 + 跨 session 持久化：
+ * 講一次就寫進記憶，之後每一輪都會重新注入，而費思是會計場景的顧問。
+ */
+const LINE_BREAK_PATTERN = /[\n\r\u2028\u2029]/;
+
 export function isStorableStatement(statement: string): boolean {
   const trimmed = statement.trim();
   if (!trimmed) return false;
   if (trimmed.length > FAITH_MEMORY_STATEMENT_MAX_CHARS) return false;
+  if (LINE_BREAK_PATTERN.test(trimmed)) return false;
   // Info: (20260817 - Luphia) 含任何數字一律不收——寧可少記，不可記錯數字
   return !NUMERIC_PATTERN.test(trimmed);
 }
@@ -152,7 +165,14 @@ export function renderMemoryForPrompt(items: readonly IFaithMemoryItem[]): {
   let used = 0;
 
   for (const item of ordered) {
-    const line = `- [${item.category}] ${item.statement}`;
+    /**
+     * Info: (20260818 - Luphia) 注入時再壓一次單行（第三輪 B-4）。
+     *
+     * 寫入側已經拒收換行，但這道檢查是 2026-08-18 才加的——在那之前寫進去的
+     * 條目仍可能帶換行。防注入的規則要放在**輸出**這一側才涵蓋得到既有資料。
+     */
+    const statement = item.statement.replace(/\s+/g, " ").trim();
+    const line = `- [${item.category}] ${statement}`;
     if (used + line.length > FAITH_MEMORY_PROMPT_MAX_CHARS) break;
     lines.push(line);
     used += line.length;
