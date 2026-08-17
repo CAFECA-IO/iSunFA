@@ -31,15 +31,32 @@ describe("buildShortTermHistory", () => {
     expect(result.turns.map((t) => t.content)).toEqual(["一", "二", "三"]);
   });
 
-  it("totalChars 等於實際注入內容的長度", () => {
+  /**
+   * Info: (20260818 - Luphia) totalChars 必須等於**渲染後**的長度（第三輪 D）。
+   *
+   * 這個數字唯一的用途是預扣估算，而預扣要蓋住的是真正送進 prompt 的字串：
+   * 兩行標頭加上每輪的 `User: ` / `Assistant: ` 前綴。只加總內容長度會少算，
+   * 而少算的方向會讓 hold 小於實耗——`settleSpend` 只退不補的前提就破了。
+   */
+  it("totalChars 等於實際注入字串的長度", () => {
     const result = buildShortTermHistory([
       turn("user", "abc"),
       turn("model", "de"),
     ]);
-    expect(result.totalChars).toBe(5);
-    expect(result.turns.reduce((sum, t) => sum + t.content.length, 0)).toBe(
-      result.totalChars,
+    expect(result.totalChars).toBe(renderShortTermHistory(result.turns).length);
+  });
+
+  // Info: (20260818 - Luphia) 標頭與前綴確實被算進去了：一定大於內容長度之和
+  it("totalChars 大於內容長度之和（標頭與前綴要算進去）", () => {
+    const result = buildShortTermHistory([
+      turn("user", "abc"),
+      turn("model", "de"),
+    ]);
+    const contentOnly = result.turns.reduce(
+      (sum, t) => sum + t.content.length,
+      0,
     );
+    expect(result.totalChars).toBeGreaterThan(contentOnly);
   });
 
   /**
@@ -67,7 +84,15 @@ describe("buildShortTermHistory", () => {
     ]);
 
     expect(result.turns).toHaveLength(1);
-    expect(result.totalChars).toBeLessThanOrEqual(FAITH_HISTORY_MAX_CHARS);
+    /**
+     * Info: (20260818 - Luphia) 預算限的是**內容**長度；`totalChars` 是注入長度，
+     * 因此會比預算略高（標頭與前綴）。這裡驗的是預算那一側。
+     */
+    const contentChars = result.turns.reduce(
+      (sum, t) => sum + t.content.length,
+      0,
+    );
+    expect(contentChars).toBeLessThanOrEqual(FAITH_HISTORY_MAX_CHARS);
   });
 
   /**

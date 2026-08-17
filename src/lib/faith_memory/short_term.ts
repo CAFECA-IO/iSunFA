@@ -32,6 +32,14 @@ export interface IShortTermHistory {
    * 由這裡回傳而不是讓呼叫端自己數：估算與實際注入的必須是同一份內容，
    * 分開算就會出現「估的是 A、送的是 B」，而 hold 一旦小於實耗，
    * `settleSpend` 的「只退不補」前提就破了（設計書 §5.3）。
+   *
+   * Info: (20260818 - Luphia) 這個數字是**渲染後**的長度（第三輪 D）。
+   *
+   * 先前它只加總各則訊息的內容長度，而實際注入的是
+   * `renderShortTermHistory()` 的輸出——多了兩行標頭與每輪的
+   * `User: ` / `Assistant: ` 前綴，十輪滿載約差 180 字元。
+   * `FAITH_PROMPT_OVERHEAD_TOKENS` 大概吸收得掉，但那是巧合，
+   * 而規範 §2.1 要求的正是「估算與注入用的必須是同一份」。
    */
   totalChars: number;
 }
@@ -78,7 +86,16 @@ export function buildShortTermHistory(raw: unknown): IShortTermHistory {
   }
 
   if (picked.length === 0) return EMPTY;
-  return { turns: picked.reverse(), totalChars };
+
+  const turns = picked.reverse();
+  /**
+   * Info: (20260818 - Luphia) 內容長度是**截斷預算**，回傳的是**注入長度**（第三輪 D）。
+   *
+   * 兩者刻意分開：預算限的是使用者的內容（`FAITH_HISTORY_MAX_CHARS`），
+   * 而 hold 要蓋住的是真正送進 prompt 的字串。少算的方向會讓 hold 小於實耗。
+   * 直接呼叫渲染函式本身，才不會出現「第三個地方也在數字元」。
+   */
+  return { turns, totalChars: renderShortTermHistory(turns).length };
 }
 
 /**
