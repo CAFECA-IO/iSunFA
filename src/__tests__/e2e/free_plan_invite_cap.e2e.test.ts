@@ -20,6 +20,19 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
  * 真的寄出一封信給真實信箱，而測試不該有那種副作用。
  */
 
+/**
+ * Info: (20260818 - Luphia) 🛑 正式機實體隔離（第四輪 B-4，與 core_pipeline.e2e 同一道閘）。
+ *
+ * 這支會**真的建立與刪除** User / Team / TeamMember。`jest.config.mjs` 沒有排除
+ * e2e，因此 `npm test` 會跑到它——在錯誤的環境跑就是動到真實資料。
+ * 缺這道閘是本檔上一版的疏失。
+ */
+if (process.env.NODE_ENV === "production") {
+  throw new Error(
+    "🚨 [FATAL] 嚴禁在正式機 (Production) 環境執行 E2E 測試，以免污染真實團隊與席次資料！",
+  );
+}
+
 const TEAM_NAME = `e2e-free-cap-${Date.now()}`;
 let teamId = "";
 let userId = "";
