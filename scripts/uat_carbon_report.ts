@@ -60,6 +60,45 @@ const reportRadicals = (found: readonly string[]): void => {
   );
 };
 
+/**
+ * Info: (20260817 - Emily) 「這份 PDF 是不是本系統產出的報告」。
+ *
+ * 判準用大綱節數的命中數,而不是品牌字串或頁尾文案 ——
+ * 那些是 i18n、由用戶端帶上來,換一個語言或換一個客戶就對不上。
+ * 大綱是硬編常數(`CARBON_REPORT_OUTLINE`),我們產出的每一份都會有它。
+ *
+ * 門檻取 8（33 節的四分之一）的理由:
+ * - 我們的產出實測**三趟都是 33/33**
+ * - 客戶原檔實測 **0**（它自己的節標題是「本公司簡介」「組織邊界」，
+ *   而我們的是「公司簡介與財務報告邊界」「組織邊界設定方法」，壓掉空白後不互相包含）
+ *
+ * 兩者差距是 33 vs 0,所以門檻放在很低的地方就夠 ——
+ * 它只負責擋「拿錯檔案」,**不負責擋真缺陷**。真的只落地 5 節時,
+ * 應該由「大綱有節沒出現」那一條報 ✗,而不是被這個守衛吃掉。
+ */
+const OUR_REPORT_MIN_OUTLINE_HITS = 8;
+
+const assertOurReport = (text: string): boolean => {
+  const squeeze = (value: string): string =>
+    value.normalize("NFKC").replace(/\s+/g, "");
+  const squeezed = squeeze(text);
+  const hits = CARBON_REPORT_OUTLINE.filter((section) =>
+    squeezed.includes(squeeze(section.title)),
+  ).length;
+  snapshot.大綱命中數 = hits;
+
+  if (hits >= OUR_REPORT_MIN_OUTLINE_HITS) return true;
+
+  record(
+    "fail",
+    "這份 PDF 不像本系統的產出",
+    `33 節大綱只命中 ${hits} 節（門檻 ${OUR_REPORT_MIN_OUTLINE_HITS}）—— ` +
+      `本腳本驗的是我們產出的 Carbon_Report_Draft_*.pdf,不是客戶的原檔。` +
+      `原檔請不要餵進來:它沒有我們的大綱與目錄格式,每一項都會回報假的 ✗`,
+  );
+  return false;
+};
+
 const arg = (flag: string): string | undefined => {
   const index = process.argv.indexOf(flag);
   return index >= 0 ? process.argv[index + 1] : undefined;
@@ -140,6 +179,21 @@ const main = async (): Promise<void> => {
   snapshot.pages = extracted.pages;
   snapshot.chars = text.length;
   record("pass", "頁數／字元數", `${extracted.pages} 頁 / ${text.length} 字元`);
+
+  /**
+   * Info: (20260817 - Emily) 先確認這是**本系統產出的報告**,再開始判定。
+   *
+   * 08-17 實際發生:把腳本指到客戶的原檔
+   * (`高興昌鋼鐵股份有限公司溫室氣體盤查報告書.pdf`)而不是我們產出的
+   * `Carbon_Report_Draft_*.pdf`。那會讓 12 項判定全部回報 ✗ ——
+   * 而每一個 ✗ 都是假的,真正的問題只有一句「拿錯檔案」。
+   *
+   * **一支會亂叫的驗收腳本,沒有人會再看它。** 擋掉錯的輸入比多報幾個缺陷重要。
+   */
+  if (!assertOurReport(text)) {
+    report(2);
+    return;
+  }
 
   // Info: (20260814 - Emily) ── 靜默失敗:沒有錯誤訊息、版面正常、內容是錯的 ──
   expectZero("私有區符號", [...raw].filter(isPrivateUse));
@@ -598,7 +652,12 @@ const checkPageSlices = (log: string): void => {
 /**
  * Info: (20260814 - Emily) 輸出。任何一項 fail 就 exit 1 —— 這支要能掛在 CI 上。
  */
-const report = (): void => {
+/**
+ * Info: (20260817 - Emily) `forcedExit` 用來區分兩種非零結束:
+ * - 1 = 報告有缺陷（CI 該紅）
+ * - 2 = 輸入不對（拿錯檔案／缺參數）—— 那不是產品的問題,不該跟缺陷混在同一個碼
+ */
+const report = (forcedExit?: number): void => {
   const icon: Record<Level, string> = { pass: "✓", fail: "✗", warn: "⚠" };
   checks.forEach((check) => {
     process.stdout.write(
@@ -640,7 +699,7 @@ const report = (): void => {
     );
   }
 
-  process.exit(failed > 0 ? 1 : 0);
+  process.exit(forcedExit ?? (failed > 0 ? 1 : 0));
 };
 
 main().catch((error: unknown) => {
