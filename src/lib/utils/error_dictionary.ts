@@ -1066,13 +1066,6 @@ export const API_ERRORS = {
   } as IErrorDef,
 
   /**
-   * Info: (20260813 - Julian) 同一帳本內有多筆員工檔的公司信箱只差大小寫。
-   *
-   * `@@unique([accountBookId, email])` 大小寫敏感，因此這種資料寫得進去。
-   * 此時任選一筆綁定，就是讓某人以另一個人的身分打卡 —— 而出勤紀錄是法定文件，
-   * 所以擋住並要求 HR 先清理，不猜。
-   */
-  /**
    * Info: (20260813 - Julian) 判定結果的查詢區間超過上限。
    *
    * 訊息帶出上限值，因為收到它的人下一步就是把區間改小 ——
@@ -1130,6 +1123,13 @@ export const API_ERRORS = {
     status: ApiCode.NOT_FOUND,
   } as IErrorDef,
 
+  /**
+   * Info: (20260813 - Julian) 同一帳本內有多筆員工檔的公司信箱只差大小寫。
+   *
+   * `@@unique([accountBookId, email])` 大小寫敏感，因此這種資料寫得進去。
+   * 此時任選一筆綁定，就是讓某人以另一個人的身分打卡 —— 而出勤紀錄是法定文件，
+   * 所以擋住並要求 HR 先清理，不猜。
+   */
   CF_EMPLOYEE_EMAIL_AMBIGUOUS: {
     code: "CF000005",
     message:

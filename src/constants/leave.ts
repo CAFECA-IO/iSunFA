@@ -70,10 +70,11 @@ export const LEAVE_TYPE_I18N_KEY: Record<LeaveType, string> = {
 };
 
 /**
- * Info: (20260813 - Julian) 特別休假的期日由勞工排定（勞基法 §38 III）。目前所有假別銷假皆走同一流程，此集合暫無分歧作用。
+ * Info: (20260817 - Luphia) 這裡曾有一個 `EMPLOYEE_SCHEDULED_LEAVE_TYPES = [ANNUAL]`，
+ * 已移除：全樹零引用，且它自己的註解就寫著「此集合暫無分歧作用」——
+ * 目前所有假別的銷假都走同一條三段式流程，沒有任何程式碼需要區分。
  *
- * ToDo: (20260813 - Julian) 假別設定表做出來後，「可否單方銷假」應改為該表的一個欄位，而非寫死於此。
+ * 留著的害處不是佔空間，是它看起來像一條**生效中**的規則
+ * （「只有特休能銷假」），而讀到它的人會以為某處有在讀它。
+ * 假別設定表做出來時，「可否單方銷假」是那張表的一個欄位，不是這裡的一個陣列。
  */
-export const EMPLOYEE_SCHEDULED_LEAVE_TYPES: readonly LeaveType[] = [
-  LeaveType.ANNUAL,
-];

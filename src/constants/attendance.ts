@@ -64,10 +64,6 @@ export enum ShiftPatternKind {
 }
 
 /**
- * Info: (20260813 - Julian) 現場在班狀態。**計算值，demo 版不落地。**
- * `STALE` 的語意是「不知道他在不在」而不是「他不在」，因此不從現場名單移除。
- */
-/**
  * Info: (20260813 - Julian) 一個工作日相對於「現在」的階段。**沒有 schema 對應物。**
  *
  * 判定引擎的 `NORMAL` 只代表「目前查不到異常」，對還沒開始的工作日也會回 `NORMAL`——
@@ -101,6 +97,10 @@ export enum AttendanceCellTone {
   PENDING = "PENDING",
 }
 
+/**
+ * Info: (20260813 - Julian) 現場在班狀態。**計算值，demo 版不落地。**
+ * `STALE` 的語意是「不知道他在不在」而不是「他不在」，因此不從現場名單移除。
+ */
 export enum PresenceStatus {
   ON_SITE = "ON_SITE",
   STALE = "STALE",
@@ -158,10 +158,6 @@ export const DEMO_TIME_ZONE = "Asia/Taipei";
 export const DEMO_ACCOUNT_BOOK_ID = "demo-book-public-works";
 
 /**
- * Info: (20260813 - Julian) 判定結果查詢的區間上限（日曆日，含頭含尾）。
- * A9 即時計算不落地的前提是成本有界；92 天（一季）取季報粒度，比一個月寬鬆但仍有界。
- */
-/**
  * Info: (20260814 - Julian) 決定打卡歸屬工作日的容差，不是遲到寬限——只影響這筆算哪一天。
  * 夜班跨午夜時，凌晨兩點的下班卡仍屬前一個工作日。
  */
@@ -174,12 +170,12 @@ export const DEMO_WORK_DATE_TOLERANCE_MINUTES = 180;
  */
 export const DEMO_ATTENDANCE_POLL_INTERVAL_MS = 15_000;
 
+/**
+ * Info: (20260813 - Julian) 判定結果查詢的區間上限（日曆日，含頭含尾）。
+ * A9 即時計算不落地的前提是成本有界；92 天（一季）取季報粒度，比一個月寬鬆但仍有界。
+ */
 export const DEMO_ATTENDANCE_MAX_RANGE_DAYS = 92;
 
-/**
- * Info: (20260813 - Julian) 出勤總覽格子的配色。只用 50 / 100 / 700 這幾階（同 `EMPLOYEE_STATUS_STYLE`）。
- * `PENDING` 用虛線框而非顏色：表達「還沒有結論」，任何實色都會被讀成一種結論。
- */
 /**
  * Info: (20260814 - Julian) 瀏覽器定位的五種狀態，各自對應不同的下一步：
  * 等待、可打卡、去設定改權限、換裝置。`IDLE` 與 `LOCATING` 在畫面上同樣是「等一下」，
@@ -204,6 +200,10 @@ export enum AuthProviderStatus {
   UNREACHABLE = "UNREACHABLE",
 }
 
+/**
+ * Info: (20260813 - Julian) 出勤總覽格子的配色。只用 50 / 100 / 700 這幾階（同 `EMPLOYEE_STATUS_STYLE`）。
+ * `PENDING` 用虛線框而非顏色：表達「還沒有結論」，任何實色都會被讀成一種結論。
+ */
 export const ATTENDANCE_CELL_TONE_STYLE: Record<AttendanceCellTone, string> = {
   [AttendanceCellTone.NORMAL]: "bg-emerald-50 text-emerald-700",
   [AttendanceCellTone.LATE]: "bg-red-100 text-red-700",
@@ -262,7 +262,6 @@ export const ATTENDANCE_EXCEPTION_I18N_KEY: Record<
  */
 export const ATTENDANCE_FILTER_EXCEPTION_ONLY = "__EXCEPTION_ONLY__";
 
-// Info: (20260813 - Julian) 排班日型別的顯示文案，出勤總覽與排班月曆共用
 /**
  * Info: (20260814 - Julian) 月曆格子用的一字縮寫。**不可從完整名稱取首字**——
  * 那是同一種錯的第二次：韓文的「휴무일」（休息日）與「휴가」（請假）首字都是「휴」，
@@ -281,6 +280,7 @@ export const WORK_DAY_TYPE_SHORT_I18N_KEY: Record<WorkDayType, string> = {
   [WorkDayType.LEAVE]: "hr_management.attendance_result.day_type_short_leave",
 };
 
+// Info: (20260813 - Julian) 排班日型別的顯示文案，出勤總覽與排班月曆共用
 export const WORK_DAY_TYPE_I18N_KEY: Record<WorkDayType, string> = {
   [WorkDayType.WORK]: "hr_management.attendance_result.day_type_work",
   [WorkDayType.REGULAR_OFF]:
