@@ -2046,18 +2046,13 @@ export const useCarbonChat = () => {
           ),
           fromPage: range?.fromPage ?? "(full text)",
           /**
-           * Info: (20260817 - Emily) 原本印 `"(to end)"`,而那是**假的**。
+           * Info: (20260817 - Emily) `"(to end)"` 現在是實話了。
            *
-           * 伺服端要求 fromPage 與 toPage 皆非 null 才切片,只有下界時
-           * 整份文件都會送出去(連 fromPage 之前的頁),而不是「送到文末」。
-           * 這個字面讓看 log 的人以為切成功了 ——
-           * 修行為之前先把話說對(`open/42`)。
+           * 08-17 之前伺服端要求上下界皆非 null 才切片,只有下界時整份送 ——
+           * 那時這個字面是假的,而實測 14 次呼叫有 7 次走這條(`open/42`)。
+           * Fix 1 之後「只有下界」會真的切到文末,字面與行為一致。
            */
-          toPage:
-            range?.toPage ??
-            (range
-              ? "(NO UPPER BOUND: server sends FULL text)"
-              : "(full text)"),
+          toPage: range ? (range.toPage ?? "(to end)") : "(full text)",
         });
         if (range) {
           formData.append("fromPage", String(range.fromPage));
@@ -2132,7 +2127,7 @@ export const useCarbonChat = () => {
         unmapped.push(...chunk.unmapped);
         /**
          * Info: (20260817 - Emily) 累加而不是覆蓋
-         * (`data/issue_drafts/open/41_activity_extraction_zero.md`)。
+         * (`data/issue_drafts/open/46_activity_extraction_zero.md`)。
          *
          * 原本是 `activities = chunk.activities` —— 賦值。
          * 排放章(ch3)六節會被切成兩個工作單元,兩次呼叫各自回一份,

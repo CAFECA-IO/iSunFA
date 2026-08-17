@@ -581,7 +581,8 @@ export class ReportImportService {
   async scopeSourceToPages(
     source: IReportImportSource,
     fromPage: number,
-    toPage: number,
+    // Info: (20260817 - Emily) null = 沒有上界,取到文末(見 slicePagesForRange 的註解)
+    toPage: number | null,
     /**
      * Info: (20260817 - Emily) 這次切的是哪一章／哪幾節。
      *
@@ -1064,6 +1065,25 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
                 .slice(0, 3)
                 .map((line) => line.slice(0, 120)),
               lineCount: table.markdown.split("\n").length,
+              /**
+               * Info: (20260817 - Emily) 被拒的**完整** markdown（上限 2000 字）。
+               *
+               * 08-17 那趟丟了 表2.1（三次）與 表2.2，`head[0]` 看起來是
+               * 「整張表擠成一行、列與列之間用相鄰的 `||` 分隔」——
+               * 但 `| a || b |` 在 GFM 裡是合法的空儲存格，
+               * 光憑一行被截斷到 120 字的開頭**設計不出安全的分割規則**：
+               * 那會變成又一次對著一份樣本調門檻。
+               *
+               * 修這一族之前需要的是可重現的輸入，不是更多推測。
+               * 這一欄就是為了讓下一趟直接把它交出來，
+               * 然後寫成單元測試的 fixture（`open/47`）。
+               *
+               * 2000 字是折衷：`lineCount` 曾經出現 1017（表4.8 那次），
+               * 但那是被折斷成多行；擠成一行的情況整張通常在 2000 字內。
+               * 截斷了也看得出來 —— `fullLength` 會比 `full` 長。
+               */
+              full: table.markdown.slice(0, 2000),
+              fullLength: table.markdown.length,
             });
           }
           return check.isValid;
@@ -1152,7 +1172,7 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
     });
     /**
      * Info: (20260817 - Emily) 這行必須**無條件印**,而且要帶得出成因
-     * (`data/issue_drafts/open/41_activity_extraction_zero.md`)。
+     * (`data/issue_drafts/open/46_activity_extraction_zero.md`)。
      *
      * 原本 `received: 0` 把四種完全不同的上游狀態塌成同一個數字:
      *

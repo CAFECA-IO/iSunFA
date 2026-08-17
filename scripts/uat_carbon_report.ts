@@ -223,7 +223,8 @@ const main = async (): Promise<void> => {
   checkLineStructure(text);
 
   const logPath = arg("--log");
-  if (logPath) checkLog(fs.readFileSync(logPath, "utf-8"));
+  // Info: (20260817 - Emily) 把紙上的文字一起交給 log 側 —— 交叉比對需要兩邊
+  if (logPath) checkLog(fs.readFileSync(logPath, "utf-8"), text);
 
   report();
 };
@@ -369,7 +370,7 @@ const checkLineStructure = (text: string): void => {
  * Info: (20260814 - Emily) log 側。PDF 看不出來的都在這裡:
  * 丟了幾張表、影像頁送到哪幾章、活動數據抽到幾筆、圖為什麼沒畫。
  */
-const checkLog = (log: string): void => {
+const checkLog = (log: string, text?: string): void => {
   const count = (pattern: RegExp): number => (log.match(pattern) ?? []).length;
 
   const dropped = [
@@ -384,6 +385,40 @@ const checkLog = (log: string): void => {
       "log:原文表格被丟",
       `${dropped.length} 張:${dropped.join("、")}`,
     );
+  }
+
+  /**
+   * Info: (20260817 - Emily) 丟表要跟紙上交叉比對 —— 這是 08-17 抓到的驗收破洞。
+   *
+   * 那一趟 log 說丟了 表2.1（三次）與 表2.2，而 PDF 側的
+   * 「內文引用的表都存在」卻是 ✓「引用 17 個、落地 17 個」——
+   * **因為內文的引用也一起消失了**。兩邊各自自洽，而中間少了 4 張表。
+   *
+   * 內部一致性檢查有一個盲點:當缺漏兩邊同時發生時它看不見。
+   * 所以「原文本來有幾張」這個外部事實只能從 log 來，
+   * 而它必須跟紙上的表號取聯集才問得出「到底少了誰」。
+   */
+  if (text !== undefined) {
+    const droppedNos = new Set(dropped.map((no) => no.replace(/^表/, "")));
+    const onPaper = new Set(
+      [...text.matchAll(TABLE_CAPTION)].map((match) => match[1]),
+    );
+    const missingFromPaper = [...droppedNos].filter((no) => !onPaper.has(no));
+    snapshot.丟表且紙上也沒有 = missingFromPaper;
+    if (missingFromPaper.length > 0) {
+      record(
+        "fail",
+        "log 說丟了、紙上也真的沒有",
+        `${missingFromPaper.map((no) => `表${no}`).join("、")} —— 原文有、報告沒有。` +
+          `內文引用也一起不見了，所以「引用的表都存在」那一條看不出來`,
+      );
+    } else if (droppedNos.size > 0) {
+      record(
+        "warn",
+        "log 說丟了、但紙上有",
+        `${[...droppedNos].map((no) => `表${no}`).join("、")} —— 可能由後續重試救回`,
+      );
+    }
   }
 
   snapshot.log_補分隔列 = count(/source table divider inserted/g);

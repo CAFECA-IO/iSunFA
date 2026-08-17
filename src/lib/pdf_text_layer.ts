@@ -209,21 +209,46 @@ export interface IPageSliceResult {
 export function slicePagesForRange(
   text: string,
   fromPage: number,
-  toPage: number,
+  /**
+   * Info: (20260817 - Emily) `null` = 沒有上界,取到文末
+   * (`data/issue_drafts/open/42_page_slice_falls_back.md`)。
+   *
+   * `carbon_page_slice.ts` 早就寫著「未知即不帶上界,後端送到文末」,
+   * 但這支原本要求 `toPage` 是有限數,而 route 更進一步要求它非 null ——
+   * 於是那條路實際上是**整份送**,連 `fromPage` 之前的頁一起。
+   *
+   * 08-17 實測 14 次呼叫:5 次切成功、**7 次走這條**、2 次完全沒索引。
+   * 那 7 次全都**有**索引(ch5=59、ch7/ch8/ch9=60、ch11=62),
+   * 只是後段章節擠在同一頁,`resolveUnitPageRange` 因此只回下界。
+   * 換句話說:浪費的 9 次裡有 7 次的成因是這一行,不是索引不全。
+   * 每次多花約 41.7k token,合計約 29 萬。
+   */
+  toPage: number | null,
 ): IPageSliceResult {
   const pages = splitTextByPages(text);
   if (pages.length <= 1) {
     return { text, range: null, fellBack: true };
   }
-  if (!Number.isFinite(fromPage) || !Number.isFinite(toPage)) {
+  if (!Number.isFinite(fromPage)) {
+    return { text, range: null, fellBack: true };
+  }
+  if (toPage !== null && !Number.isFinite(toPage)) {
     return { text, range: null, fellBack: true };
   }
 
   const from = Math.max(1, Math.floor(fromPage) - PDF_TEXT_PAGE_SLICE_PADDING);
-  const to = Math.min(
-    pages.length,
-    Math.ceil(toPage) + PDF_TEXT_PAGE_SLICE_PADDING,
-  );
+  /**
+   * Info: (20260817 - Emily) 沒有上界時取到文末。
+   *
+   * 這**不是**新的資料遺失風險:`from` 的推導與有上界那條路完全一樣,
+   * 而上界取文末是最寬的可能值 —— 比現在整份送少的只有 `from` 之前那幾頁,
+   * 而依大綱單調性,本單元各節的內容不可能起始於本單元第一節的起始頁之前。
+   * 那正是有上界那條路**已經接受**的同一類風險。
+   */
+  const to =
+    toPage === null
+      ? pages.length
+      : Math.min(pages.length, Math.ceil(toPage) + PDF_TEXT_PAGE_SLICE_PADDING);
   if (from > to) {
     return { text, range: null, fellBack: true };
   }
