@@ -31,6 +31,36 @@ describe("resolveInviteEmailMatch", () => {
     ).toBe(INVITE_EMAIL_MATCH.MATCHED);
   });
 
+  /**
+   * Info: (20260818 - Luphia) 同一個收件匣算相符（第四輪 B-4）。
+   *
+   * 邀請寄到 `alice+isunfa@gmail.com`、本人以已驗證的 `alice@gmail.com` 登入，
+   * 是完全正常的行為。判成 MISMATCHED 會讓 C-2 剛接上人的視線的那個訊號誤報，
+   * 而**會誤報的稽核訊號比沒有訊號更糟**。
+   */
+  it("子地址與 Gmail 點號視為同一個收件匣", () => {
+    expect(
+      resolveInviteEmailMatch("alice+isunfa@gmail.com", ["alice@gmail.com"]),
+    ).toBe(INVITE_EMAIL_MATCH.MATCHED);
+    expect(
+      resolveInviteEmailMatch("a.l.i.c.e@gmail.com", ["alice@gmail.com"]),
+    ).toBe(INVITE_EMAIL_MATCH.MATCHED);
+    // Info: (20260818 - Luphia) 子地址是 RFC 5233 的慣例，非 Gmail 網域同樣適用
+    expect(
+      resolveInviteEmailMatch("bob+team@example.com", ["bob@example.com"]),
+    ).toBe(INVITE_EMAIL_MATCH.MATCHED);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 但點號規則**只**套用在會忽略點號的網域。
+   * 對其他網域拿掉點號會把兩個不同的人判成相符，那比誤報更糟。
+   */
+  it("非 Gmail 網域的點號仍是不同的人", () => {
+    expect(
+      resolveInviteEmailMatch("a.lice@example.com", ["alice@example.com"]),
+    ).toBe(INVITE_EMAIL_MATCH.MISMATCHED);
+  });
+
   it("有信箱但都不相符時回 MISMATCHED", () => {
     expect(
       resolveInviteEmailMatch("friend@example.com", ["other@example.com"]),

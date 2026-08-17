@@ -1,4 +1,5 @@
 import { INVITE_EMAIL_MATCH, type InviteEmailMatch } from "@/constants/status";
+import { canonicalizeEmailForKey } from "@/lib/team/email_identity";
 
 /**
  * Info: (20260817 - Luphia) 受邀信箱與接受者信箱的比對（稽核用，不影響能否加入）。
@@ -27,17 +28,33 @@ export function resolveInviteEmailMatch(
   inviteeEmail: string | null | undefined,
   verifiedEmails: readonly (string | null | undefined)[],
 ): InviteEmailMatch | null {
-  const invited = inviteeEmail?.trim().toLowerCase();
+  const invited = inviteeEmail?.trim();
 
   // Info: (20260817 - Luphia) 位址邀請沒有受邀信箱：不適用，而不是「比對失敗」
   if (!invited) return null;
 
+  /**
+   * Info: (20260818 - Luphia) 以「同一個收件匣」比對，不做字面比對（第四輪 B-4）。
+   *
+   * 原本是 `trim().toLowerCase()` 精確比對，於是把邀請寄到
+   * `alice+isunfa@gmail.com`、本人以已驗證的 `alice@gmail.com` 接受，
+   * 會被判成 `MISMATCHED`——而 C-2 剛把這個訊號接到告警與成員卡片上，
+   * 第一批被看見的就會是誤報。**會誤報的稽核訊號比沒有訊號更糟**：
+   * 看過幾次之後沒有人會再認真看它。
+   *
+   * 用的是與 `pendingKey`／冪等鍵同一支 `canonicalizeEmailForKey`
+   * （去子地址、Gmail 系列去點號）。判定「是不是同一個人」這件事
+   * 只能有一個答案處，否則唯一鍵說是同一個人、稽核說不是。
+   */
+  const invitedKey = canonicalizeEmailForKey(invited);
+
   const candidates = verifiedEmails
-    .map((email) => email?.trim().toLowerCase())
-    .filter((email): email is string => Boolean(email));
+    .map((email) => email?.trim())
+    .filter((email): email is string => Boolean(email))
+    .map(canonicalizeEmailForKey);
 
   if (candidates.length === 0) return INVITE_EMAIL_MATCH.UNAVAILABLE;
-  return candidates.includes(invited)
+  return candidates.includes(invitedKey)
     ? INVITE_EMAIL_MATCH.MATCHED
     : INVITE_EMAIL_MATCH.MISMATCHED;
 }
