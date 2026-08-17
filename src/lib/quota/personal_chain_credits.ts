@@ -38,6 +38,42 @@ export function isChainCreditConfigured(): boolean {
  * **恢復前必須先做完 A-1**：扣款要先寫一筆 DB 分錄再 burn、成功回填 txHash、
  * 失敗寫反向分錄（照 `allocate()` 已經做對的那條路），並帶冪等鍵。
  * 目前的 `chargeChainCredits` 兩者都沒有——重試就會再燒一次，而且帳上查不到。
+ *
+ * ---
+ *
+ * ## 這個旗標為 false 時，同時失效的行為（第四輪 B-2）
+ *
+ * 這一段是**集中標記**：扣費管線裡有一批程式碼目前走不到，而「走不到」有三種
+ * 不同的原因，混在一起看就會有人把還需要的路徑當成死碼刪掉。
+ * 以下每一條都有測試釘住（`spend_second_layer_inert.test.ts`），
+ * 因此這份清單不會默默過期——它與程式碼不一致時會紅。
+ *
+ * ### A. 因為這個旗標而不可達（旗標翻回 true 就恢復）
+ *
+ * - `chargeChainCredits()`：`settleSpend` 的溢出路徑，`spender` 為 null 而不呼叫。
+ * - `SPEND_SOURCE.MIXED` 的結算回傳，以及 `chainCharged` / `chainTxHash` 兩個欄位
+ *   （只在 `chainCharge.charged` 為 true 時出現）。
+ * - 402 payload 的 `QUOTA_EXCEEDED_OPTION.USE_PERSONAL_WALLET`
+ *   （見 `buildQuotaExceededOptions`）。
+ *
+ * ### B. 因為 2026-08-14 分配上鏈（ADR 015）而不可達，與這個旗標無關
+ *
+ * - `splitSpend()` 的第三個參數與 wallet 腳：`spendCredits` 硬傳 `BigInt(0)`。
+ * - `teamWalletRepo.consumeAllocation()`：全 repo 已無生產呼叫端
+ *   （離鏈分配餘額不再是消費來源）。
+ * - `resolveSpendPriority` / `FEATURE_SPEND_PRIORITY` 已於 2026-08-14 移除。
+ *   因此 **20260813 的產品拍板「物流碳足跡優先扣分配點數」自那天起就不成立**——
+ *   原因是分配變成成員的個人資產、那個排序失去意義，**不是**因為第二層停用。
+ *   翻回這個旗標不會讓那個拍板復活；要它復活得重新設計逐功能的扣款順序。
+ *
+ * ### C. 看起來是死碼，但**不可刪**：舊資料的退款路徑
+ *
+ * - `records.walletHeld` / `records.walletRefunded`、`splitRefund()`、
+ *   `teamWalletRepo.refundAllocationPartial()`、`SPEND_SOURCE.TEAM_ALLOCATION`。
+ *
+ * 這些讀的是**既有的** Ledger 列。改制前完成預扣、尚未結算的冪等鍵仍然需要退款，
+ * 而新的鍵不會再產生 `walletHeld > 0`。刪掉它們不會有任何測試變紅，
+ * 但會讓那些舊鍵永遠退不了款——那是真實的錢。
  */
 export function isChainCreditSpendable(): boolean {
   return false;

@@ -172,6 +172,8 @@ npx tsx scripts/backfill_pending_invite_key.ts --commit # 實際寫入
 | **收回分配點數在合約層面做不到** | `CreditPoint` 只有 `burnAndUnlock(uint256)`（燒 `msg.sender` 自己的餘額），沒有可由平台呼叫的 `burn(address, uint256)`。條款 §3.5 已於 2026-08-18 改為「分配後不可收回」、UI 入口已移除；**API 仍在但已明確停用**（回 `TW000020`，擋在動任何餘額之前），要恢復須改合約並重新部署。**成員移除**因此改為沖銷（歸零不回池、負的 `ADJUST` 分錄）：原本它會把餘額加回池，而那筆錢已經在成員的鏈上錢包裡，等於同一筆價值存在兩份 |
 | **扣費第二層（成員個人鏈上點數）已停用** | 合約缺 `burn(address,uint256)` → 扣款必定失敗。先前是 fail-**open**（餘額算進放行、扣款失敗、成本追補到團隊額度），已於 2026-08-18 改為 fail-closed：不計入放行、不嘗試扣款、402 也不再顯示那筆餘額。**後果：成員自購或團隊分配的鏈上點數目前無法用於超額消費**，額度用罄即 402 |
 | 恢復第二層的前置條件 | 先改合約加 `burn(address,uint256)` 並重新部署；再依 A-1 補上「先寫 DB 分錄 → burn → 回填 txHash → 失敗寫反向分錄」與冪等鍵（照 `allocate()` 已做對的那條路）。`isChainCreditSpendable()` 是唯一的開關 |
+| **第二層停用期間一併失效的行為** | 集中列在 `isChainCreditSpendable()` 的註解裡（2026-08-18 補，第四輪 B-2），並由 `spend_second_layer_inert.test.ts` 釘住，清單與程式碼不一致時會紅。分三類：**A** 因旗標而不可達（`chargeChainCredits`、`SPEND_SOURCE.MIXED` 的結算回傳、402 的 `USE_PERSONAL_WALLET` 選項）；**B** 因 2026-08-14 分配上鏈而不可達、與旗標無關（`splitSpend` 的 wallet 腳、`consumeAllocation`）；**C** 看似死碼但**不可刪**——舊預扣的退款路徑（`splitRefund`、`refundAllocationPartial`、`records.walletHeld/walletRefunded`）。C 類刪掉不會有任何測試變紅，但會讓改制前尚未結算的冪等鍵永遠退不了款 |
+| **20260813「物流碳足跡優先扣分配點數」的拍板已不成立** | 逐功能扣款順序（`FEATURE_SPEND_PRIORITY` / `resolveSpendPriority`）於 **2026-08-14 分配上鏈時移除**——分配變成成員的個人資產之後，「先扣分配、後扣額度」這個排序失去意義（先花成員的錢再用團隊額度，沒有情境說得通）。**這與第二層停用無關**：翻回 `isChainCreditSpendable()` 不會讓那個拍板復活，要它復活得重新設計逐功能的扣款順序。產品端需知道該決定目前沒有生效 |
 | 十餘處鏈上操作仍未確認 `receipt.status` | 集中在 setup、issue、mission、bundler、amortization——不在本 PR 範圍。金流路徑（鑄造、銷毀）已修，其餘以測試的例外清單管理，清單只能變短 |
 | `ABIS.CREDIT_POINT` 與部署的合約不一致 | ABI 宣告了 `burn(address,uint256)`、`forcedTransfer`、`freezePartialTokens`、`setAddressFrozen` 等，合約裡一個都沒有。目前只有 burn 這條路徑實際被呼叫（且已知會失敗），其餘未使用 |
 
