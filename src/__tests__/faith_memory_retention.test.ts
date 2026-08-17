@@ -190,6 +190,52 @@ describe("runFaithMemoryRetention", () => {
   });
 
   /**
+   * Info: (20260818 - Luphia) 部分失敗時要**在毒資料那一批**停下（第四輪 B-4）。
+   *
+   * 停止條件原本比對累計 `failed` 與本批長度，而先前只餵「單列、單批、全失敗」
+   * ——那剛好是累計等於本批的唯一一格，於是那個 bug 全綠。
+   *
+   * 這裡餵混合批：第一批 2 列（1 成功 1 毒），第二批只剩那列毒資料。
+   * 正確行為是第二批 `batchFailed === expired.length` 成立即停，總共撈 2 次；
+   * 用累計值比對則是 `1 === 2` 不成立而繼續，之後永遠不相等，
+   * 一路轉到每輪總量上限（約 4,750 次無用迴圈、約 9,500 筆 error log），
+   * 而失敗吃掉刪除預算，本輪其餘到期的列一列都刪不到。
+   */
+  it("部分失敗後在毒資料那一批停下，不是累計比對", async () => {
+    const BAD = { id: "bad", userId: "u2", teamId: "t2", itemCount: 1 };
+    let fetches = 0;
+    /**
+     * Info: (20260818 - Luphia) mock 自己當上界：撈超過 2 次就丟錯。
+     *
+     * 不這樣做的話，壞掉的版本會安靜地轉到每輪總量上限（10,000）才結束——
+     * 測試最後仍會紅，但要跑上兩分鐘。讓多餘的那一次呼叫當場失敗，
+     * 迴圈沒停的症狀就變成一個立即、訊息明確的失敗。
+     */
+    asMock(faithMemoryRepo.listExpired).mockImplementation(async () => {
+      fetches += 1;
+      if (fetches > 2) {
+        throw new Error("listExpired 被撈第三次：毒資料批沒有讓迴圈停下");
+      }
+      return fetches === 1
+        ? [{ id: "ok", userId: "u1", teamId: "t1", itemCount: 1 }, BAD]
+        : [BAD];
+    });
+    asMock(faithMemoryRepo.deleteWithLog).mockImplementation(
+      async (params: unknown) => {
+        const { id } = params as { id: string };
+        if (id === "bad") throw new Error("poison row");
+        return undefined;
+      },
+    );
+
+    const result = await runFaithMemoryRetention(NOW_MS);
+
+    expect(result.deleted).toBe(1);
+    expect(result.failed).toBe(2);
+    expect(fetches).toBe(2);
+  });
+
+  /**
    * Info: (20260818 - Luphia) 整批都失敗就停止，不要無限迴圈。
    * `listExpired` 的條件沒有改變，再撈一次會拿到同一批列。
    */

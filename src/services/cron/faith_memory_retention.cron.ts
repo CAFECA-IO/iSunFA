@@ -112,6 +112,18 @@ export async function runFaithMemoryRetention(
     );
     if (expired.length === 0) break;
 
+    /**
+     * Info: (20260818 - Luphia) 失敗數要**逐批**計（第四輪 B-4）。
+     *
+     * 原本停止條件比對的是累計 `failed`：500 筆裡 2 筆毒資料時
+     * `500 === 2` 不成立，於是再撈一次——而 `listExpired` 的條件沒有改變、
+     * 也沒有 `orderBy`，拿回來的就是同樣那 2 列。此後 `failed` 每輪 +2 而
+     * 本批長度固定 2，兩者永遠不相等，一路轉到 `MAX_DELETES_PER_RUN`：
+     * 約 4,750 次無用迴圈、約 9,500 筆 error log，而失敗吃掉刪除預算，
+     * 本輪其餘到期的列一列都刪不到。
+     */
+    let batchFailed = 0;
+
     for (const row of expired) {
       try {
         await faithMemoryRepo.deleteWithLog({
@@ -129,6 +141,7 @@ export async function runFaithMemoryRetention(
          * （`expiresAt` 還在，這支天然可重入）。
          */
         failed += 1;
+        batchFailed += 1;
         logger.error("faith memory deletion failed", {
           userId: row.userId,
           teamId: row.teamId,
@@ -141,7 +154,7 @@ export async function runFaithMemoryRetention(
      * Info: (20260818 - Luphia) 整批都失敗就停：`listExpired` 的條件沒有改變，
      * 再撈一次會拿到同一批列而無限迴圈。下一輪會再試。
      */
-    if (expired.length === failed) break;
+    if (batchFailed === expired.length) break;
   }
 
   if (scheduled || cancelled || deleted || failed) {
