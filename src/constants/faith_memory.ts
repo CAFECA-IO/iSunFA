@@ -45,6 +45,18 @@ export const FAITH_MEMORY_DELETION_REASON = {
    * 為什麼不該留——留著只是一份沒有主人的偏好資料。
    */
   MEMBER_REMOVED: "MEMBER_REMOVED",
+  /**
+   * Info: (20260818 - Luphia) 密文讀不出來，內容被新的寫入取代（第四輪 B-4）。
+   *
+   * 不是使用者或系統決定要刪，而是**已經讀不到了**——最常見的成因是遷移
+   * （AAD 綁定之前封裝的密文，以新的 AAD 解必定失敗），其次是金鑰輪替失誤
+   * 或密文毀損。
+   *
+   * 之所以要有這個 reason：解不開時回空記憶，下一次寫入就會把空的合併結果
+   * 蓋上去。那實際上是一次刪除，而規範 §6.2 要求刪除必寫稽核。
+   * 沒有它的話，那批偏好會在沒有任何紀錄的情況下消失。
+   */
+  CIPHERTEXT_UNREADABLE: "CIPHERTEXT_UNREADABLE",
 } as const;
 
 export type FaithMemoryDeletionReason =

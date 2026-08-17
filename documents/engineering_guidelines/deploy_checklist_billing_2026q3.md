@@ -104,6 +104,30 @@ npx tsx scripts/backfill_pending_invite_key.ts --commit # 實際寫入
 
 腳本只碰 `status = 'PENDING'` 且 `pending_key IS NULL` 的列。**非 PENDING 的列刻意保持 NULL**，那正是這次改動的重點：歷史列不該被唯一鍵約束，否則「離職後再邀請同一個人」會在接受的那一刻撞鍵、永遠加不進來，而席次費已經扣了。
 
+### 3.3b 重新封裝費思記憶的密文（AAD） — **有既有記憶列的環境必做，且要在開放對話之前**
+
+```bash
+npx tsx scripts/backfill_faith_memory_aad.ts          # 預演，只統計不寫入
+npx tsx scripts/backfill_faith_memory_aad.ts --commit # 實際重新封裝
+```
+
+**不跑的後果**：AAD 綁定（PR #6652 第三輪 C-5）之後，讀取會帶 `faith-memory:{userId}:{teamId}` 當 AAD，而**在那之前封裝的密文沒有 AAD**——GCM 驗證必定失敗。症狀不是報錯，是安靜的資料遺失：
+
+```
+解不開 → 回 items: [] → 使用者下一句話 → 合併結果只有新條目 → upsert 覆寫
+```
+
+也就是每一位在改動前累積過偏好的使用者，都會在**他下一次對話時**失去那些偏好。因此這支的執行時機是「schema 套用之後、開放使用者對話之前」——晚跑一步，已經對話過的那些人救不回來（重新封裝需要明文，而明文已經被覆蓋掉了）。
+
+程式端另有一道防線但**不能取代這支**：覆寫讀不出來的密文時會寫入 `FaithMemoryDeletionLog`（`reason = CIPHERTEXT_UNREADABLE`）並 `logger.warn`。那是「記錄損失」，不是「避免損失」。
+
+先跑預演看 `resealed` 的數字：
+
+- `resealed = 0`、`already = 0`、`total = 0` → 這個環境沒有記憶列，不必做（本機與正式環境目前皆如此）。
+- `unreadable` 非空 → **停下來看**。兩種方式都解不開代表問題不在 AAD，先確認 `SECRET_VAULT_MASTER_KEY` 是不是這個環境當初封裝時用的那一把。腳本刻意不動這些列。
+
+腳本冪等：已是 AAD 版本的列算進 `already` 並跳過。正確性由 `src/__tests__/e2e/faith_memory_aad_backfill.e2e.test.ts` 對真資料庫驗證（建一列舊格式 → 預演不寫入 → `--commit` → 讀回原本的偏好 → 重跑為 `already`）。
+
 ### 3.4 設定寄信與網站網址 — **email 邀請上線前必做**
 
 後台系統設定（ADR 017，可線上調整、不需重啟）：

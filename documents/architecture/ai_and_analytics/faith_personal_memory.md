@@ -155,6 +155,8 @@ model FaithMemory {
 }
 ```
 
+> **AAD 遷移（2026-08-18，第四輪 B-4）**：密文改為綁定 `(userId, teamId)` 之後，**在那之前封裝的列以新 AAD 解必定失敗**。因此有既有記憶列的環境必須在開放對話之前跑 `scripts/backfill_faith_memory_aad.ts`（解舊格式 → 以 AAD 重新封裝，冪等、預設預演）。晚跑一步，已經對話過的使用者就失去了那些偏好，而重新封裝救不回被覆寫的列——明文已經沒有了。程式端的 `CIPHERTEXT_UNREADABLE` 稽核是「記錄損失」，不是「避免損失」。
+
 刪除稽核另存一列，且**不得含記憶內容**（否則「刪除」等於搬家）：
 
 ```prisma
@@ -163,7 +165,7 @@ model FaithMemoryDeletionLog {
   userId    String   @map("user_id")
   teamId    String   @map("team_id")
   itemCount Int      @map("item_count")
-  reason    String   // RETENTION_EXPIRED | USER_REQUEST | MEMBER_REMOVED | ACCOUNT_TERMINATED | TEAM_DISSOLVED
+  reason    String   // RETENTION_EXPIRED | USER_REQUEST | MEMBER_REMOVED | CIPHERTEXT_UNREADABLE | ACCOUNT_TERMINATED | TEAM_DISSOLVED
   deletedAt DateTime @default(now()) @map("deleted_at")
 
   @@index([userId, teamId])
@@ -256,6 +258,7 @@ inputEstimate = FAITH_PROMPT_OVERHEAD_TOKENS + ceil(messageLength / 3) + (hasIma
 | 帳戶終止 | 依條款 §9 之 30 天寬限期辦理；與 90 天並存時以**較早屆至者**為準 |
 | 成員被移出團隊 | 立即硬刪（`reason = MEMBER_REMOVED`）——他不會再在這個團隊裡對話，而**不刪就等於永久留存**：團隊仍在訂閱，對帳每輪把 `expiresAt` 清回 null，到期刪除永遠不會發生 |
 | 用戶主動要求 | 立即硬刪（`reason = USER_REQUEST`） |
+| **密文讀不出來而被新的寫入取代** | 記一筆 `reason = CIPHERTEXT_UNREADABLE`（含筆數）並 `logger.warn`。不是誰決定要刪，而是**已經讀不到了**——最常見的成因是 AAD 遷移（見下），其次是金鑰輪替失誤或密文毀損。解不開時回空記憶，下一次寫入就會把空的合併結果蓋上去，那實際上是一次刪除，因此必須留稽核 |
 
 ### 7.2 刪除守護行程
 

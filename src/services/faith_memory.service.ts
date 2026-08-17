@@ -126,6 +126,34 @@ export async function recordFaithMemoryItems(params: {
 
   const existing = await faithMemoryRepo.get(userId, teamId);
   const merged = mergeMemoryItems(existing?.items ?? [], items);
+
+  /**
+   * Info: (20260818 - Luphia) 覆寫讀不出來的密文時要留稽核（第四輪 B-4）。
+   *
+   * 解不開的列會回 `items: []`，於是合併結果只有這一輪的新條目——舊偏好在
+   * 這一次寫入中消失。那實際上是一次刪除，而規範 §6.2 要求刪除必寫稽核。
+   *
+   * 最常見的成因是遷移（AAD 綁定前封裝的密文）。正解是先跑
+   * `scripts/backfill_faith_memory_aad.ts` 重新封裝，讓這條路根本不會走到；
+   * 這裡是那支沒跑到的情況下的最後一道——**不阻止寫入**（否則使用者的記憶
+   * 從此無法更新），但不讓它靜悄悄。
+   */
+  if (existing?.unreadable) {
+    await faithMemoryRepo.upsertWithDeletionLog({
+      userId,
+      teamId,
+      items: merged,
+      removedCount: existing.lostItemCount ?? 0,
+      reason: FAITH_MEMORY_DELETION_REASON.CIPHERTEXT_UNREADABLE,
+    });
+    logger.warn("faith memory replaced unreadable ciphertext", {
+      userId,
+      teamId,
+      lostItemCount: existing.lostItemCount ?? 0,
+    });
+    return;
+  }
+
   await faithMemoryRepo.upsert(userId, teamId, merged);
 }
 

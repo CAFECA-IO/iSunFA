@@ -20,6 +20,18 @@ import { logger } from "@/lib/utils/logger";
 export interface IFaithMemoryRecord {
   items: IFaithMemoryItem[];
   expiresAt: Date | null;
+  /**
+   * Info: (20260818 - Luphia) 這一列存在、但**解不開**（第四輪 B-4）。
+   *
+   * 解不開時回空記憶是刻意的（記憶是加分項，不是對話的前提），但呼叫端必須
+   * 分得出「沒有記憶」與「有記憶而讀不到」——否則下一次寫入會把空的合併結果
+   * 蓋上去，那些偏好就永久消失，而且不留任何紀錄。
+   *
+   * `lostItemCount` 取自未加密的 `itemCount` 欄位：內容讀不到，但筆數還在，
+   * 而稽核需要的正是筆數（規範 §6.2「刪除必寫稽核」）。
+   */
+  unreadable?: boolean;
+  lostItemCount?: number;
 }
 
 /**
@@ -104,12 +116,30 @@ class FaithMemoryRepository {
         expiresAt: row.expiresAt,
       };
     } catch (error) {
+      /**
+       * Info: (20260818 - Luphia) 解不開要**說出來**（第四輪 B-4）。
+       *
+       * 先前只回 `{ items: [] }`，於是呼叫端把它當成「這個人還沒有記憶」，
+       * 下一句話就以空集合為基礎合併並覆寫——舊偏好永久消失，
+       * 沒有稽核列、沒有告警，而規範 §6.2 要求「刪除必寫稽核」。
+       *
+       * 最常見的成因是**遷移**：AAD 綁定（第三輪 C-5）之前封裝的密文，
+       * 以新的 AAD 解必定失敗。那批列要嘛先跑
+       * `scripts/backfill_faith_memory_aad.ts` 重新封裝，
+       * 要嘛在被覆寫時留下一筆紀錄。這裡負責後者。
+       */
       logger.error("faith memory decrypt failed", {
         userId,
         teamId,
+        itemCount: row.itemCount,
         message: error instanceof Error ? error.message : String(error),
       });
-      return { items: [], expiresAt: row.expiresAt };
+      return {
+        items: [],
+        expiresAt: row.expiresAt,
+        unreadable: true,
+        lostItemCount: row.itemCount,
+      };
     }
   }
 

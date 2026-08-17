@@ -12,7 +12,10 @@ import {
 import { faithMemoryRepo } from "@/repositories/faith_memory.repo";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { TEAM_PLAN } from "@/constants/subscription_quota";
-import { FAITH_MEMORY_CATEGORY } from "@/constants/faith_memory";
+import {
+  FAITH_MEMORY_CATEGORY,
+  FAITH_MEMORY_DELETION_REASON,
+} from "@/constants/faith_memory";
 
 /**
  * Info: (20260817 - Luphia) 方案 Gate 與過期守衛（第一輪 C-1、規範 §6.3 / §7.2）。
@@ -193,6 +196,82 @@ describe("recordFaithMemoryItems", () => {
     });
 
     expect(faithMemoryRepo.upsert).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 覆寫**讀不出來**的密文要留稽核（第四輪 B-4）。
+   *
+   * 解不開的列回 `items: []`，於是合併結果只有這一輪的新條目——舊偏好在這一次
+   * 寫入中消失。那實際上是一次刪除，而規範 §6.2 要求刪除必寫稽核。
+   * 先前是靜悄悄地覆寫：沒有稽核列、沒有告警、也沒有回填腳本。
+   */
+  it("覆寫讀不出來的密文時寫入稽核並帶筆數", async () => {
+    asMock(faithMemoryRepo.get).mockResolvedValue({
+      items: [],
+      expiresAt: null,
+      unreadable: true,
+      lostItemCount: 7,
+    });
+
+    await recordFaithMemoryItems({
+      userId: "u1",
+      teamId: "t1",
+      items: [ITEM],
+      nowSec: NOW_SEC,
+    });
+
+    expect(faithMemoryRepo.upsertWithDeletionLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: "u1",
+        teamId: "t1",
+        removedCount: 7,
+        reason: FAITH_MEMORY_DELETION_REASON.CIPHERTEXT_UNREADABLE,
+      }),
+    );
+    // Info: (20260818 - Luphia) 不走無稽核的那條路
+    expect(faithMemoryRepo.upsert).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 但**不阻止寫入**：擋下來會讓使用者的記憶從此無法更新。
+   * 這一條釘住「記錄損失、但照樣往前走」。
+   */
+  it("讀不出來時新的條目仍然寫得進去", async () => {
+    asMock(faithMemoryRepo.get).mockResolvedValue({
+      items: [],
+      expiresAt: null,
+      unreadable: true,
+      lostItemCount: 2,
+    });
+
+    await recordFaithMemoryItems({
+      userId: "u1",
+      teamId: "t1",
+      items: [ITEM],
+      nowSec: NOW_SEC,
+    });
+
+    const call = asMock(faithMemoryRepo.upsertWithDeletionLog).mock
+      .calls[0][0] as { items: unknown[] };
+    expect(call.items).toHaveLength(1);
+  });
+
+  // Info: (20260818 - Luphia) 讀得到的正常情況維持原本的路徑（不寫刪除稽核）
+  it("正常讀得到時不寫刪除稽核", async () => {
+    asMock(faithMemoryRepo.get).mockResolvedValue({
+      items: [],
+      expiresAt: null,
+    });
+
+    await recordFaithMemoryItems({
+      userId: "u1",
+      teamId: "t1",
+      items: [ITEM],
+      nowSec: NOW_SEC,
+    });
+
+    expect(faithMemoryRepo.upsert).toHaveBeenCalled();
+    expect(faithMemoryRepo.upsertWithDeletionLog).not.toHaveBeenCalled();
   });
 
   it("沒有項目時不做任何事", async () => {
