@@ -105,11 +105,24 @@ export async function chargeSeatAddition(
   const { teamId, seats = 1, nowMs, operatorUserId, idempotencyKey } = params;
   const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
 
-  if (!subscription) return { charged: false, amount: 0, seats: 0 };
-
+  /**
+   * Info: (20260818 - Luphia) **查無訂閱列＝免費版**，不是「跳過所有檢查」。
+   *
+   * 原本這裡是 `if (!subscription) return { charged: false, ... }` 直接早退，
+   * 而新建的團隊根本沒有 `TeamSubscription` 列（建團隊只寫 Team + TeamMember，
+   * 訂閱列是訂閱時才建的）。也就是說**每一個免費團隊都走這條早退**，
+   * 底下那段免費版人數上限一次都沒有執行過。
+   *
+   * 症狀不只是「上限失效」：邀請照樣寄出、席次照樣佔住，而受邀者點開連結時
+   * 會撞上接受端的第二道防線（`assertFreePlanCapacityOnAccept`，那支對 null
+   * 訂閱是正確判成免費版的）——邀請寄得出去、但永遠加不進來。
+   *
+   * `resolveEffectivePlanId(null)` 已經回 FREE，因此把 null 交給它即可，
+   * 讓「什麼是免費版」只有一個判斷點。
+   */
   const nowSec = Math.floor(nowMs / 1000);
   const effectivePlanId = resolveEffectivePlanId(
-    {
+    subscription && {
       planId: subscription.planId,
       status: subscription.status,
       currentPeriodEnd: subscription.currentPeriodEnd,
@@ -152,6 +165,13 @@ export async function chargeSeatAddition(
     }
     return { charged: false, amount: 0, seats: 0 };
   }
+
+  /**
+   * Info: (20260818 - Luphia) 到這裡必有訂閱列：`resolveEffectivePlanId(null)` 回 FREE，
+   * 上面那個分支已經處理掉。留這道 fail-fast 是為了讓型別窄化有依據，
+   * 而不是用 `!` 假裝它一定存在——若哪天判定邏輯改了，這裡會明確地失敗。
+   */
+  if (!subscription) throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
 
   /**
    * Info: (20260815 - Luphia) 已付費席次若還有空位，就不再收費（產品拍板 20260815）。

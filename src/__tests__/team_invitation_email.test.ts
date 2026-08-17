@@ -20,6 +20,7 @@ import { hashInviteToken } from "@/lib/team/invite_token";
 import { INVITE_EMAIL_MATCH, TEAM_INVITATION_STATUS } from "@/constants/status";
 import { logger } from "@/lib/utils/logger";
 import { TeamRole } from "@/constants/team";
+import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 
 /**
  * Info: (20260815 - Luphia) Email 邀請（規範 §4 / P4）。
@@ -209,6 +210,27 @@ describe("inviteMemberByEmail", () => {
    * 不回滾的話，那一席被一封沒寄出去的邀請永久佔住，
    * 而管理員從畫面上看不出任何異常。
    */
+  /**
+   * Info: (20260818 - Luphia) 席次擋下時**信不會寄出**（回報 20260818）。
+   *
+   * 免費團隊撞到人數上限時，`chargeSeatAddition` 丟錯，而它排在建立邀請與寄信
+   * 之前——因此不會出現「信寄了、席次佔了、對方永遠加不進來」。
+   * 順序本身就是這條保證，這一條把它釘住。
+   */
+  it("席次擋下時不建立邀請也不寄信", async () => {
+    asMock(chargeSeatAddition).mockRejectedValue(
+      new ApiError(
+        API_ERRORS.TW_FREE_PLAN_MEMBER_LIMIT.code,
+        API_ERRORS.TW_FREE_PLAN_MEMBER_LIMIT.message,
+        API_ERRORS.TW_FREE_PLAN_MEMBER_LIMIT.status,
+      ),
+    );
+
+    await expect(invite()).rejects.toMatchObject({ code: "TW000017" });
+    expect(asMock(teamRepo.createTeamInvitation)).not.toHaveBeenCalled();
+    expect(asMock(sendMail)).not.toHaveBeenCalled();
+  });
+
   it("寄信失敗時刪除邀請，讓席次空出來給下一次使用", async () => {
     asMock(sendMail).mockRejectedValue(new Error("smtp down"));
 

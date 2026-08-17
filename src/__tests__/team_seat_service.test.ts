@@ -203,6 +203,8 @@ describe("chargeSeatAddition", () => {
 
   it("never charges a team without a subscription", async () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(null);
+    // Info: (20260818 - Luphia) 給足額度，這一條驗的是「不收費」而不是上限
+    asMock(resolveFreePlanMaxMembers).mockResolvedValue(5);
 
     const result = await chargeSeatAddition({
       teamId: "team-1",
@@ -212,6 +214,55 @@ describe("chargeSeatAddition", () => {
     expect(result.charged).toBe(false);
     expect(chargeOrderWithSavedCard).not.toHaveBeenCalled();
     expect(teamSubscriptionRepo.addSeats).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260818 - Luphia) **查無訂閱列＝免費版**（回報 20260818）。
+   *
+   * 這是本檔最重要的一條：新建的團隊根本沒有 `TeamSubscription` 列
+   * （建團隊只寫 Team + TeamMember），而原本的 `if (!subscription) return`
+   * 早退讓**每一個免費團隊**都跳過人數上限。上限本身寫對了，卻一次都沒執行過。
+   *
+   * 而且症狀比「上限失效」更糟：邀請寄得出去、席次被佔住，受邀者點連結時
+   * 撞上接受端的第二道防線（那支對 null 訂閱判得對）——信寄了，人永遠加不進來。
+   *
+   * 先前的測試全部餵一個 FREE 的訂閱列，因此這條路徑無人走過。
+   */
+  it("applies the free member cap to a team with no subscription row", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(null);
+    asMock(resolveFreePlanMaxMembers).mockResolvedValue(1);
+    asMock(teamRepo.countMembers).mockResolvedValue(1);
+
+    await expect(
+      chargeSeatAddition({ teamId: "team-1", nowMs: MID_PERIOD }),
+    ).rejects.toMatchObject({ code: "TW000017" });
+  });
+
+  // Info: (20260818 - Luphia) 沒有訂閱列時，PENDING 邀請同樣算進佔用（否則連送 N 封即繞過）
+  it("counts pending invitations for a team with no subscription row", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(null);
+    asMock(resolveFreePlanMaxMembers).mockResolvedValue(3);
+    asMock(teamRepo.countMembers).mockResolvedValue(1);
+    asMock(teamRepo.countPendingInvitations).mockResolvedValue(2);
+
+    await expect(
+      chargeSeatAddition({ teamId: "team-1", nowMs: MID_PERIOD }),
+    ).rejects.toMatchObject({ code: "TW000017" });
+  });
+
+  // Info: (20260818 - Luphia) 未達上限時照樣放行，且不產生任何金流
+  it("lets a team with no subscription row invite while under the cap", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(null);
+    asMock(resolveFreePlanMaxMembers).mockResolvedValue(3);
+    asMock(teamRepo.countMembers).mockResolvedValue(1);
+
+    const result = await chargeSeatAddition({
+      teamId: "team-1",
+      nowMs: MID_PERIOD,
+    });
+
+    expect(result).toEqual({ charged: false, amount: 0, seats: 0 });
+    expect(chargeOrderWithSavedCard).not.toHaveBeenCalled();
   });
 
   // Info: (20260814 - Luphia) 免費方案的人數不影響帳單，加人不該產生任何金流

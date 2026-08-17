@@ -186,6 +186,14 @@ model TeamInvitation {
 
 `status` 實作為 `PENDING` / `ACCEPTED` / `REJECTED` / `REVOKED`（`TEAM_INVITATION_STATUS` 常數）。逾期不另設狀態——以 `expiresAt` 判定，避免「該轉狀態的背景任務沒跑」變成第二種真相。
 
+> **修正（2026-08-18）：查無訂閱列＝免費版，不是「跳過檢查」。**
+>
+> `chargeSeatAddition` 原本第一行是 `if (!subscription) return { charged: false, … }`，而**新建的團隊沒有 `TeamSubscription` 列**（建團隊只寫 `Team` + `TeamMember`，訂閱列是訂閱時才建的）。也就是說每一個免費團隊都走這條早退，底下的免費版人數上限一次都沒有執行過。
+>
+> 症狀不只是「上限失效」：邀請照樣寄出、席次照樣佔住，而受邀者點連結時會撞上接受端的第二道防線（`assertFreePlanCapacityOnAccept`，那支對 null 訂閱是正確判成免費版的）——**信寄得出去，人永遠加不進來**。
+>
+> 現在把 null 交給 `resolveEffectivePlanId`（它已經回 `FREE`），讓「什麼是免費版」只有一個判斷點；付費路徑之前留一道 fail-fast 讓型別窄化有依據，而不是用 `!` 假裝訂閱列一定存在。
+
 ### 5.2 Token 與連結
 
 - token = 32 bytes 密碼學隨機 → base64url（`crypto.randomBytes`，不用 `Math.random`）。
