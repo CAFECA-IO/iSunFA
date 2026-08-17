@@ -14,6 +14,8 @@ import {
   resolveLeaveMinutes,
 } from "@/lib/leave_entitlement_rules";
 import { resolveApprovalChain } from "@/lib/leave_approval_chain";
+import { leaveRequestRepo } from "@/repositories/leave_request.repo";
+import { leaveRequestContextRepo } from "@/repositories/leave_request_context.repo";
 import {
   IApprovalChainResolution,
   ILeaveDayPlan,
@@ -21,7 +23,9 @@ import {
   ILeaveRequestInput,
   ILeaveRequestPreview,
   ILeaveRequestRecord,
+  ILeaveRequestListQuery,
   ILeaveRequestRepository,
+  ILeaveRequestSummary,
   LeaveApprovalOutcome,
 } from "@/interfaces/leave_request";
 
@@ -46,6 +50,112 @@ export class LeaveRequestService {
     private readonly requests: ILeaveRequestRepository,
     private readonly context: ILeaveRequestContext,
   ) {}
+
+  /**
+   * Info: (20260817 - Julian) L10 假單清單。
+   *
+   * ## 可見範圍
+   *
+   * 未指定 `employeeId` 即為自己。指定他人時**必須是該員工假單的簽核者** ——
+   * 而「是不是簽核者」要逐張單判斷，不是一個部門層級的權限。
+   * 因此這裡的做法是：先取回那個人的清單，再濾掉自己不在鏈上的單。
+   *
+   * 這比「先判權限再查」慢，但正確：一個主管在 8 月調離某部門後，
+   * 他仍然應該看得到 7 月那幾張自己簽過的單，而部門層級的權限判斷會把它們藏起來。
+   *
+   * ToDo: (20260817 - Julian) HR 應可見全部，但帳本層級的 HR 角色來源尚未決定
+   * （ADR 023 §8.3）。在它決定之前，HR 只看得到自己簽過的單。
+   */
+  public async list(params: {
+    accountBookId: string;
+    actorEmployeeId: string;
+    query: ILeaveRequestListQuery;
+  }): Promise<ILeaveRequestSummary[]> {
+    const targetEmployeeId = params.query.employeeId ?? params.actorEmployeeId;
+    const rows = await this.requests.listByEmployee({
+      accountBookId: params.accountBookId,
+      employeeId: targetEmployeeId,
+      from: params.query.from,
+      to: params.query.to,
+    });
+
+    if (targetEmployeeId === params.actorEmployeeId) return rows;
+
+    const visible: ILeaveRequestSummary[] = [];
+    for (const row of rows) {
+      if (await this.isOnChain(params.accountBookId, row.id, params.actorEmployeeId)) {
+        visible.push(row);
+      }
+    }
+    /**
+     * Info: (20260817 - Julian) 一張都看不到時擋下，而不是回空陣列。
+     *
+     * 空陣列是對資料的陳述（「他沒有請過假」），被擋是對請求的陳述
+     * （「你不能看他的假單」）—— 兩者混在一起會讓人以為同事從不請假
+     * （同 `attendanceResultQuerySchema` 對 `from > to` 的處置理由）。
+     */
+    if (visible.length === 0) {
+      throw new AppError(API_ERRORS.FO_LEAVE_REQUEST_SCOPE);
+    }
+    return visible;
+  }
+
+  /**
+   * Info: (20260817 - Julian) L16 待我簽核。
+   *
+   * 只回「當前待簽」的那一關是我的單 —— 排在第二關的人在第一關通過之前
+   * 不該看到它出現在待辦清單裡，否則他會去簽一張還沒輪到他的單，
+   * 然後收到一個他看不懂的 403。
+   */
+  public async listPending(params: {
+    accountBookId: string;
+    actorEmployeeId: string;
+  }): Promise<ILeaveRequestSummary[]> {
+    return this.requests.listPendingForApprover({
+      accountBookId: params.accountBookId,
+      approverEmployeeId: params.actorEmployeeId,
+    });
+  }
+
+  /**
+   * Info: (20260817 - Julian) L12 假單明細。
+   *
+   * 可見者：申請人本人，或**鏈上任何一個節點**（不限當前待簽）——
+   * 簽過的人有權回看自己簽了什麼，那是他的責任的一部分。
+   */
+  public async get(params: {
+    accountBookId: string;
+    requestId: string;
+    actorEmployeeId: string;
+  }): Promise<{
+    summary: ILeaveRequestSummary;
+    record: ILeaveRequestRecord;
+  }> {
+    const record = await this.requireRequest(params);
+    const allowed =
+      record.employeeId === params.actorEmployeeId ||
+      record.steps.some(
+        (step) => step.approverEmployeeId === params.actorEmployeeId,
+      );
+    if (!allowed) throw new AppError(API_ERRORS.FO_LEAVE_REQUEST_SCOPE);
+
+    const summary = await this.requests.findSummaryById(params);
+    if (summary === null) throw new AppError(API_ERRORS.NF_LEAVE_REQUEST);
+    return { summary, record };
+  }
+
+  // Info: (20260817 - Julian) 呼叫者是否出現在該單的簽核鏈上（不限當前待簽）
+  private async isOnChain(
+    accountBookId: string,
+    requestId: string,
+    actorEmployeeId: string,
+  ): Promise<boolean> {
+    const record = await this.requests.findById({ accountBookId, requestId });
+    return (
+      record !== null &&
+      record.steps.some((step) => step.approverEmployeeId === actorEmployeeId)
+    );
+  }
 
   /**
    * Info: (20260817 - Julian) L17 試算。**純計算、不寫入、不預扣。**
@@ -476,3 +586,12 @@ export class LeaveRequestService {
  */
 const toTotalDays = (plan: readonly ILeaveDayPlan[]): number =>
   plan.reduce((sum, day) => sum + day.minutes / day.dayEquivalentMinutes, 0);
+
+/**
+ * Info: (20260817 - Julian) 單例。route 只認這一個實例，
+ * 依賴注入的形狀留給測試（`leave_request_service.test.ts` 以假 repository 驗編排）。
+ */
+export const leaveRequestService = new LeaveRequestService(
+  leaveRequestRepo,
+  leaveRequestContextRepo,
+);

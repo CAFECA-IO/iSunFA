@@ -1279,6 +1279,23 @@ export const API_ERRORS = {
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
 
+  /**
+   * Info: (20260817 - Julian) 逾越假單的可見範圍：想看的不是自己的單，
+   * 而呼叫者也不在那張單的簽核鏈上。
+   *
+   * 與 `FO_LEAVE_CALENDAR_SCOPE` 分開：行事曆的範圍是「哪個部門、哪段期間」，
+   * 這裡是「這張單是不是你的事」，兩者的訊息與修法都不同。
+   *
+   * 刻意回 403 而不是 404：「這不是你的」正是呼叫者需要知道的事
+   * （取捨同 `FO_LEAVE_RECALL_NOT_OWNER`，與 `NF_EMPLOYEE_FOR_USER` 相反）。
+   */
+  FO_LEAVE_REQUEST_SCOPE: {
+    code: "FO000016",
+    message:
+      "This leave request is not yours and you are not on its approval chain",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
   // Info: (20260817 - Julian) 逾越行事曆的可見範圍（計畫書 §9.2）
   FO_LEAVE_CALENDAR_SCOPE: {
     code: "FO000012",

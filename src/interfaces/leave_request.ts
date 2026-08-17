@@ -280,6 +280,26 @@ export interface ILeaveRequestRepository {
     accountBookId: string;
     requestId: string;
   }): Promise<ILeaveRequestRecord | null>;
+  findSummaryById(params: {
+    accountBookId: string;
+    requestId: string;
+  }): Promise<ILeaveRequestSummary | null>;
+  /**
+   * Info: (20260817 - Julian) 依員工列出假單。可見範圍由 service 決定，
+   * repository 只照著 `employeeId` 查 —— 把授權判斷放進查詢條件，
+   * 就會有一天有人寫出一個「忘了帶那個條件」的新查詢。
+   */
+  listByEmployee(params: {
+    accountBookId: string;
+    employeeId: string;
+    from?: string;
+    to?: string;
+  }): Promise<ILeaveRequestSummary[]>;
+  /** Info: (20260817 - Julian) 待我簽核：`pendingKey` 非 null 且簽核者是我 */
+  listPendingForApprover(params: {
+    accountBookId: string;
+    approverEmployeeId: string;
+  }): Promise<ILeaveRequestSummary[]>;
   createWithChain(params: {
     accountBookId: string;
     employeeId: string;
@@ -328,4 +348,38 @@ export interface ILeaveRequestRepository {
     requestId: string;
     decidedAt: Date;
   }): Promise<LeaveApprovalOutcome>;
+}
+
+// Info: (20260817 - Julian) ===== 清單與明細 =====
+
+/**
+ * Info: (20260817 - Julian) 假單清單的一列。扁平 DTO，不是 Prisma 實體 ——
+ * 直接回實體等於讓 API 形狀跟著資料表漂移（同 `IAttendanceRosterRow` 的理由）。
+ */
+export interface ILeaveRequestSummary {
+  id: string;
+  employeeId: string;
+  employeeNo: string;
+  employeeName: string;
+  leavePolicyId: string;
+  leavePolicyCode: string;
+  leavePolicyName: string;
+  status: LeaveRequestStatus;
+  totalMinutes: number;
+  totalDays: number;
+  /** Info: (20260817 - Julian) 逐日展開的第一天與最後一天，供清單顯示區間 */
+  firstWorkDate: string;
+  lastWorkDate: string;
+  /** Info: (20260817 - Julian) 目前卡在第幾關（0 起算）。已決之單為 null */
+  pendingStepOrder: number | null;
+  pendingApproverName: string | null;
+  totalSteps: number;
+  createdAt: string;
+}
+
+export interface ILeaveRequestListQuery {
+  from?: string;
+  to?: string;
+  /** Info: (20260817 - Julian) 未指定即為自己。指定他人須為該單的簽核者，否則擋下 */
+  employeeId?: string;
 }

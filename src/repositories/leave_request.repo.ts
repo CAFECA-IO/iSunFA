@@ -13,6 +13,7 @@ import {
   ILeaveApprovalStepRecord,
   ILeaveRequestRecord,
   ILeaveRequestRepository,
+  ILeaveRequestSummary,
   LeaveApprovalOutcome,
 } from "@/interfaces/leave_request";
 
@@ -53,6 +54,20 @@ const STEP_SELECT = {
 const REQUEST_INCLUDE = {
   days: { select: { id: true, workDate: true, minutes: true } },
   approvalSteps: { select: STEP_SELECT, orderBy: { order: "asc" } },
+} as const;
+
+/**
+ * Info: (20260817 - Julian) 清單所需的關聯。比 `REQUEST_INCLUDE` 多帶員工與假別的顯示欄位，
+ * 少帶逐日明細以外的東西 —— 清單一次回幾十列，帶不必要的關聯會讓它變成 N+1 的溫床。
+ */
+const SUMMARY_INCLUDE = {
+  employee: { select: { employeeNo: true, name: true } },
+  leavePolicy: { select: { code: true, name: true } },
+  days: { select: { workDate: true }, orderBy: { workDate: "asc" } },
+  approvalSteps: {
+    select: { order: true, approverName: true, pendingKey: true },
+    orderBy: { order: "asc" },
+  },
 } as const;
 
 /**
@@ -112,6 +127,84 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
       include: REQUEST_INCLUDE,
     });
     return found === null ? null : toRecord(found);
+  }
+
+  public async findSummaryById(params: {
+    accountBookId: string;
+    requestId: string;
+  }): Promise<ILeaveRequestSummary | null> {
+    const found = await prisma.leaveRequest.findFirst({
+      where: { id: params.requestId, accountBookId: params.accountBookId },
+      include: SUMMARY_INCLUDE,
+    });
+    return found === null ? null : toSummary(found);
+  }
+
+  /**
+   * Info: (20260817 - Julian) 依員工列出假單。
+   *
+   * `from` / `to` 篩的是**逐日**而不是假單的建立時間：使用者問的是
+   * 「八月我請了哪些假」，而一張跨月的假單在兩個月都應該出現。
+   *
+   * **可見範圍不在這裡判**。授權是 service 的事 —— 把它寫進查詢條件，
+   * 就會有一天有人寫出一個「忘了帶那個條件」的新查詢，而那種漏洞
+   * 在 code review 時看起來只是少了一行。
+   */
+  public async listByEmployee(params: {
+    accountBookId: string;
+    employeeId: string;
+    from?: string;
+    to?: string;
+  }): Promise<ILeaveRequestSummary[]> {
+    const rows = await prisma.leaveRequest.findMany({
+      where: {
+        accountBookId: params.accountBookId,
+        employeeId: params.employeeId,
+        ...(params.from !== undefined || params.to !== undefined
+          ? {
+              days: {
+                some: {
+                  workDate: {
+                    ...(params.from !== undefined ? { gte: params.from } : {}),
+                    ...(params.to !== undefined ? { lte: params.to } : {}),
+                  },
+                },
+              },
+            }
+          : {}),
+      },
+      include: SUMMARY_INCLUDE,
+      orderBy: { createdAt: "desc" },
+    });
+    return rows.map(toSummary);
+  }
+
+  /**
+   * Info: (20260817 - Julian) 待我簽核：`pendingKey` 非 null 且簽核者是我。
+   *
+   * 用 `pendingKey` 而不是 `status = PENDING`：後者會把排在第二關、
+   * 尚未輪到的節點也撈進來 —— 那個人會去簽一張還沒輪到他的單，
+   * 然後收到一個他看不懂的 403。`pendingKey` 有唯一約束保護，
+   * 是「當前待簽」這件事唯一可信的來源。
+   */
+  public async listPendingForApprover(params: {
+    accountBookId: string;
+    approverEmployeeId: string;
+  }): Promise<ILeaveRequestSummary[]> {
+    const rows = await prisma.leaveRequest.findMany({
+      where: {
+        accountBookId: params.accountBookId,
+        approvalSteps: {
+          some: {
+            approverEmployeeId: params.approverEmployeeId,
+            pendingKey: { not: null },
+          },
+        },
+      },
+      include: SUMMARY_INCLUDE,
+      orderBy: { createdAt: "asc" },
+    });
+    return rows.map(toSummary);
   }
 
   /**
@@ -442,3 +535,48 @@ const toRecord = (row: {
 });
 
 export const leaveRequestRepo = new LeaveRequestRepository();
+
+/**
+ * Info: (20260817 - Julian) 攤平成清單 DTO。
+ *
+ * `pendingStepOrder` 由 `pendingKey` 推出而非另存 —— 理由同 `isPending`：
+ * 兩者可以互相矛盾，而 `pendingKey` 是有唯一約束保護的那一個。
+ */
+const toSummary = (row: {
+  id: string;
+  employeeId: string;
+  leavePolicyId: string;
+  status: string;
+  totalMinutes: number;
+  totalDays: unknown;
+  createdAt: Date;
+  employee: { employeeNo: string; name: string };
+  leavePolicy: { code: string; name: string };
+  days: { workDate: string }[];
+  approvalSteps: {
+    order: number;
+    approverName: string;
+    pendingKey: string | null;
+  }[];
+}): ILeaveRequestSummary => {
+  const pending = row.approvalSteps.find((step) => step.pendingKey !== null);
+  return {
+    id: row.id,
+    employeeId: row.employeeId,
+    employeeNo: row.employee.employeeNo,
+    employeeName: row.employee.name,
+    leavePolicyId: row.leavePolicyId,
+    leavePolicyCode: row.leavePolicy.code,
+    leavePolicyName: row.leavePolicy.name,
+    status: row.status as ILeaveRequestSummary["status"],
+    totalMinutes: row.totalMinutes,
+    totalDays: Number(row.totalDays),
+    // Info: (20260817 - Julian) days 已依 workDate 排序，取頭尾即為區間
+    firstWorkDate: row.days[0]?.workDate ?? "",
+    lastWorkDate: row.days[row.days.length - 1]?.workDate ?? "",
+    pendingStepOrder: pending?.order ?? null,
+    pendingApproverName: pending?.approverName ?? null,
+    totalSteps: row.approvalSteps.length,
+    createdAt: row.createdAt.toISOString(),
+  };
+};

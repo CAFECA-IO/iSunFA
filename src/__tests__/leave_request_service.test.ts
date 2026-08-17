@@ -21,6 +21,7 @@ import {
   ILeaveRequestContext,
   ILeaveRequestRecord,
   ILeaveRequestRepository,
+  ILeaveRequestSummary,
   LeaveApprovalOutcome,
 } from "@/interfaces/leave_request";
 import { IConsumableGrant } from "@/interfaces/leave_entitlement";
@@ -28,7 +29,7 @@ import { IConsumableGrant } from "@/interfaces/leave_entitlement";
 /**
  * Info: (20260817 - Julian) 送出 → 簽核 → 扣額度的編排測試。
  *
- * 用假的 repository 而不是真資料庫：這裡驗的是**編排**——
+ * 用假的 repository 而不是真資料庫：這裡驗的是「編排」——
  * 誰能簽、什麼時候扣、扣多少、失敗時是哪一種失敗。
  * 「有沒有寫進去」是 repository 的事，那需要整合測試（本專案的既有慣例是
  * `src/tests/integration/`，不在單元測試裡 mock Prisma）。
@@ -148,7 +149,9 @@ class FakeRepository implements ILeaveRequestRepository {
   async findById() {
     return this.record;
   }
-  async createWithChain(params: Parameters<ILeaveRequestRepository["createWithChain"]>[0]) {
+  async createWithChain(
+    params: Parameters<ILeaveRequestRepository["createWithChain"]>[0],
+  ) {
     this.created = params;
     return {
       id: "req-1",
@@ -189,6 +192,20 @@ class FakeRepository implements ILeaveRequestRepository {
   }
   async withdraw() {
     return this.nextOutcome ?? LeaveApprovalOutcome.COMPLETED;
+  }
+
+  // Info: (20260817 - Julian) 清單與明細
+  public summaries: ILeaveRequestSummary[] = [];
+  public pending: ILeaveRequestSummary[] = [];
+
+  async findSummaryById() {
+    return this.summaries[0] ?? null;
+  }
+  async listByEmployee() {
+    return this.summaries;
+  }
+  async listPendingForApprover() {
+    return this.pending;
   }
 }
 
@@ -454,7 +471,9 @@ describe("submit — 送出", () => {
 });
 
 describe("approve — 職責分離", () => {
-  const pendingRequest = (overrides: Partial<ILeaveRequestRecord> = {}): ILeaveRequestRecord => ({
+  const pendingRequest = (
+    overrides: Partial<ILeaveRequestRecord> = {},
+  ): ILeaveRequestRecord => ({
     id: "req-1",
     accountBookId: "book-1",
     employeeId: "emp-staff",
@@ -758,5 +777,137 @@ describe("reject / withdraw", () => {
         observedAt: AT,
       }),
     ).rejects.toMatchObject({ apiCode: "VA000049" });
+  });
+});
+
+describe("list / listPending / get — 可見範圍", () => {
+  const summary = (id: string, employeeId: string): ILeaveRequestSummary => ({
+    id,
+    employeeId,
+    employeeNo: "EMP001",
+    employeeName: "王小明",
+    leavePolicyId: "policy-annual",
+    leavePolicyCode: "ANNUAL",
+    leavePolicyName: "特別休假",
+    status: LeaveRequestStatus.PENDING,
+    totalMinutes: 480,
+    totalDays: 1,
+    firstWorkDate: "2026-08-18",
+    lastWorkDate: "2026-08-18",
+    pendingStepOrder: 0,
+    pendingApproverName: "李組長",
+    totalSteps: 1,
+    createdAt: "2026-08-17T00:00:00.000Z",
+  });
+
+  const recordFor = (
+    employeeId: string,
+    approverId: string,
+  ): ILeaveRequestRecord => ({
+    id: "req-1",
+    accountBookId: "book-1",
+    employeeId,
+    leavePolicyId: "policy-annual",
+    status: LeaveRequestStatus.PENDING,
+    totalMinutes: 480,
+    totalDays: 1,
+    days: [{ id: "day-0", workDate: "2026-08-18", minutes: 480 }],
+    steps: [
+      {
+        id: "step-0",
+        order: 0,
+        nodeKind: LeaveApprovalNodeKind.DIRECT_MANAGER,
+        approverEmployeeId: approverId,
+        approverEmployeeNo: "EMP002",
+        approverName: "李組長",
+        status: LeaveApprovalStepStatus.PENDING,
+        isPending: true,
+      },
+    ],
+  });
+
+  it("未指定員工即為自己，直接回傳", async () => {
+    repo.summaries = [summary("req-1", "emp-staff")];
+    const rows = await service.list({
+      accountBookId: "book-1",
+      actorEmployeeId: "emp-staff",
+      query: {},
+    });
+    expect(rows).toHaveLength(1);
+  });
+
+  it("看他人的假單：自己在鏈上才看得到", async () => {
+    repo.summaries = [summary("req-1", "emp-staff")];
+    repo.record = recordFor("emp-staff", "emp-lead");
+    const rows = await service.list({
+      accountBookId: "book-1",
+      actorEmployeeId: "emp-lead",
+      query: { employeeId: "emp-staff" },
+    });
+    expect(rows).toHaveLength(1);
+  });
+
+  /**
+   * Info: (20260817 - Julian) 一張都看不到時擋下，而不是回空陣列 ——
+   * 空陣列是對資料的陳述（「他沒請過假」），被擋是對請求的陳述
+   * （「你不能看他的假單」）。混在一起會讓人以為同事從不請假。
+   */
+  it("看他人的假單且完全不在鏈上：擋下而不是回空陣列", async () => {
+    repo.summaries = [summary("req-1", "emp-staff")];
+    repo.record = recordFor("emp-staff", "emp-lead");
+    await expect(
+      service.list({
+        accountBookId: "book-1",
+        actorEmployeeId: "emp-hr",
+        query: { employeeId: "emp-staff" },
+      }),
+    ).rejects.toMatchObject({ apiCode: "FO000016" });
+  });
+
+  it("待我簽核直接由 repository 依 pendingKey 篩選", async () => {
+    repo.pending = [summary("req-9", "emp-staff")];
+    const rows = await service.listPending({
+      accountBookId: "book-1",
+      actorEmployeeId: "emp-lead",
+    });
+    expect(rows.map((row) => row.id)).toEqual(["req-9"]);
+  });
+
+  it("明細：申請人本人看得到", async () => {
+    repo.record = recordFor("emp-staff", "emp-lead");
+    repo.summaries = [summary("req-1", "emp-staff")];
+    const result = await service.get({
+      accountBookId: "book-1",
+      requestId: "req-1",
+      actorEmployeeId: "emp-staff",
+    });
+    expect(result.record.id).toBe("req-1");
+  });
+
+  it("明細：簽過的人仍看得到（不限當前待簽）", async () => {
+    const record = recordFor("emp-staff", "emp-lead");
+    record.steps[0].isPending = false;
+    record.steps[0].status = LeaveApprovalStepStatus.APPROVED;
+    repo.record = record;
+    repo.summaries = [summary("req-1", "emp-staff")];
+    await expect(
+      service.get({
+        accountBookId: "book-1",
+        requestId: "req-1",
+        actorEmployeeId: "emp-lead",
+      }),
+    ).resolves.toBeDefined();
+  });
+
+  it("明細：不是本人也不在鏈上就擋下", async () => {
+    repo.record = recordFor("emp-staff", "emp-lead");
+    repo.summaries = [summary("req-1", "emp-staff")];
+    await expect(
+      service.get({
+        accountBookId: "book-1",
+        requestId: "req-1",
+        actorEmployeeId: "emp-hr",
+      }),
+    ).rejects.toMatchObject({ apiCode: "FO000016" });
   });
 });
