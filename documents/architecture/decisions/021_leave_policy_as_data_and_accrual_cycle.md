@@ -172,7 +172,8 @@ export enum LeaveUnitBasis {
 
 ## 🚧 6. 後果與待辦
 
-1. **`enum LeaveType` 降為 seed 資料**：Prisma enum 與 `src/constants/leave.ts` 的 `LeaveType` 移除；7 個值成為 `LeavePolicy.code` 的初始列。相容期處置見計畫書 §14.3。
-2. **`EMPLOYEE_SCHEDULED_LEAVE_TYPES` 刪除**：改讀 `LeavePolicy.recallable`。該常數自己的 ToDo 已預告此事。
+1. **`enum LeaveType` 降為 seed 資料**（✅ 2026-08-17 完成）：Prisma enum 與 `src/constants/leave.ts` 的 `LeaveType` 已移除；7 個值擴充為 `LEAVE_POLICY_CODE` 的 13 個初始列。
+   **沒有相容期** —— 原訂的計畫書 §14.3 分階段處置未採用：enum 一從 schema 移除，所有引用點就同時編譯失敗，留著它等於同時存在兩套假別來源。實際引用點只有 8 處，清單與連帶決定見計畫書 §19.5。
+2. **`EMPLOYEE_SCHEDULED_LEAVE_TYPES` 刪除**（✅ 2026-08-17 完成）：改讀 `LeavePolicy.recallable`。該常數自己的 ToDo 已預告此事。
 3. **⚠️ 待法務複核**（計畫書 §3.2）：施行細則 §24 的條號、特休比例給假「不得低於週年制」的函釋字號、§38 I ⑥「每一年加給一日」自滿 10 年當年或次年起算（差一日）。
 4. **`leave_policy_no_code_branching.test.ts` 必須在里程碑 1 就存在**，不能等到有人違反。牆要在人進來之前蓋好。

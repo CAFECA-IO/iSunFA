@@ -640,7 +640,9 @@ model LeavePolicy {
   // Info: (20260817 - Julian) --- 工資與證明 ---
   // Info: (20260817 - Julian) 給薪比例（工資照給 = 1、折半發給 = 0.5、不給工資 = 0）。
   // Info: (20260817 - Julian) 本模組不算金額，此欄位供薪資模組與畫面提示使用
-  paidRatio          Decimal               @default(1) @map("paid_ratio")
+  // Info: (20260817 - Julian) Nullable 且無預設值：產假的工資取決於年資（§50 II），
+  // Info: (20260817 - Julian) 不是能寫在假別上的常數。預設 1 會把「要看年資」記成「工資照給」
+  paidRatio          Decimal?              @map("paid_ratio")
   proofRequirement   LeaveProofRequirement @default(NONE) @map("proof_requirement")
   proofThresholdDays Decimal?              @map("proof_threshold_days")
 
@@ -1724,7 +1726,7 @@ const CONSTANT_MODULES: Record<string, Record<string, unknown>> = {
 };
 ```
 
-#### 19.1.2 `MIRRORED` 增補（16 個）
+#### 19.1.2 `MIRRORED` 增補（18 個）
 
 ```typescript
   // Info: (20260817 - Julian) 假勤：假別設定與額度帳本
@@ -1764,7 +1766,11 @@ const CONSTANT_MODULES: Record<string, Record<string, unknown>> = {
 
 > **同步移除**：`enum LeaveType` 依 ADR 021 降為 seed 資料後，
 > `MIRRORED` 的 `LeaveType` 一併移除（`LeaveRequestStatus` / `LeaveRecallStatus` 保留）。
-> 移除時機為計畫書 §14.3 的里程碑 5。
+>
+> **實際執行時機提前到套用 schema 的當下**（2026-08-17），不是原訂的里程碑 5。
+> 理由是它不可分割：`enum LeaveType` 一旦從 schema 移除，所有引用它的 TS 就全部
+> 編譯失敗；留著它到里程碑 5 則等於同時存在兩套假別來源，而 §19.5 的清單顯示
+> 引用點只有 8 處 —— 分兩次做的成本高於一次做完。
 
 ---
 
@@ -1983,6 +1989,52 @@ export enum HrPiiTable {
 > **步驟 6 之前先確認**：`LeaveRequest` / `LeaveDay` 的重新設計會**丟失 Demo 資料**。
 > 依計畫書 §14.2「不遷移，重種」—— 現存假勤資料只在 Demo 帳本
 > `demo-book-public-works`，由 `seed_attendance_demo.ts` 重種即可，不寫資料遷移。
+
+---
+
+### 19.5 實際套用紀錄（2026-08-17）
+
+schema 已套用並通過 `@prisma/prisma-schema-wasm` 的 `validate()`
+（42 enum / 98 model）。**§19.1–§19.3 三個增補之外，還有 8 處程式碼被連帶影響** ——
+它們不在原本的套用步驟裡，因為當時只盤點了「新增什麼」而沒有盤點
+「移除 `enum LeaveType` 會打到誰」。列在這裡，是為了讓下一次移除 enum 時
+知道要往哪些方向找。
+
+| # | 檔案 | 改動 | 找到它的方式 |
+|---|---|---|---|
+| 1 | `src/constants/leave.ts` | 移除 `LeaveType`、`LEAVE_TYPE_I18N_KEY`、`EMPLOYEE_SCHEDULED_LEAVE_TYPES` | grep |
+| 2 | `src/constants/attendance.ts` | `WorkDayType += SUSPENDED`，並補上三處 `Record<WorkDayType, …>` 的窮舉 | **tsc**（三個 exhaustive record 直接紅） |
+| 3 | `src/interfaces/leave.ts` | `ILeaveTodayEntry` 的 `leaveType`/`reason` → `onLeave: true`；`ILeaveRecallView.leaveType` → `leavePolicyCode` + `leavePolicyName` | 設計決定（見下） |
+| 4 | `src/repositories/leave.repo.ts` | 兩個 include 加上 `leavePolicy: { select: { code, name } }` | tsc |
+| 5 | `src/services/leave.service.ts` | `toTodayEntry` / `toRecallView` 兩個投影函式 | tsc |
+| 6 | `src/components/…/leave_today_panel.tsx` | 不再顯示假別 | tsc |
+| 7 | `src/i18n/locales/{5 語系}/hr_management.ts` | `type_*`（7 個）→ `policy_*`（13 個）；新增 `day_type_suspended` 與其縮寫、`leave_on_leave` | `attendance_i18n_keys.test.ts` |
+| 8 | `scripts/seed/seed_attendance_demo.ts` | 先種 13 個 `LeavePolicy`；假單改掛 policy、事由密文入庫、逐日固化總量、簽核以 `LeaveApprovalStep` 落地；停工日改用 `SUSPENDED` | tsc |
+
+**三件由這次連帶改動觸發、且不是機械替換的決定：**
+
+1. **`ILeaveTodayEntry` 不再回傳假別與事由。** A11「今日請假名單」對全體員工開放，
+   而病假、生理假、產假、家庭照顧假會直接揭露健康與生育狀況（ADR 018 Tier 2）。
+   這支端點要回答的是「這週人手夠不夠」，那個問題只需要「他不在」。
+   附帶好處是這條路徑從此不需要解密 `reasonCipher`。
+   主管在銷假徵詢畫面（A12）仍看得到假別 —— 那是他要做判斷的依據。
+2. **`LeavePolicy.paidRatio` 改為 nullable**（§5.2 已更新）。`DEFAULT_LEAVE_POLICY_SEED`
+   的產假 `paidRatio` 是 `null`（受僱滿六個月與否給付不同），而原本的欄位是
+   `NOT NULL @default(1)` —— seed 會把「要看年資」靜默寫成「工資照給」。
+   這是**種子資料與 schema 對不起來**，不是格式問題：一個偏向雇主的預設值。
+3. **`WorkDayType.SUSPENDED` 補進排班面板的可選項。** `OFF_DAY_TYPES` 是手寫陣列，
+   型別 `Exclude<WorkDayType, WORK>` 少一個成員不會被編譯器擋下來；不補的話
+   SUSPENDED 只有種子腳本進得去。（批次套用整個工地仍是待辦。）
+
+**四個 `hr_enum_mirror.test.ts` 的收穫**：它擋下了 `WorkDayType` 鏡像漏掉
+`SUSPENDED`（原本只會在演示當天看到方格圖才發現）；也逼出一個判準修正 ——
+`LEAVE_POLICY_CODE` 滿足 `key === value` 而被誤判成鏡像，現以命名慣例
+（SCREAMING_SNAKE 不可能是 Prisma enum 的鏡像）排除，而不是再開一張登記表。
+
+> **尚未完成**：`npx prisma generate` 與 `npx prisma migrate dev` 需在 macOS 端執行
+> （本機環境的 `binaries.prisma.sh` 被封鎖）。在 generate 之前
+> `tsc --noEmit` 有 42 個錯誤，**全部**是「新 model / 新 enum 成員不存在於
+> `src/generated`」這一類，generate 後應歸零。
 
 ---
 

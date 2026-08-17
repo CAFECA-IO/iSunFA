@@ -188,6 +188,31 @@ if (updated.count === 0) throw new AppError(API_ERRORS.CF_LEAVE_BALANCE_RACE);
 
 1. **`LeaveRequest.decidedByEmployeeId` / `decidedAt` 移除**：其職責由 `LeaveApprovalStep` 承接。Demo 版的該欄位註解自己預告了這件事。
 2. **代理人機制未做**（計畫書 §17 缺口 4）：主管出差時簽核會卡住。暫以 `SPECIFIC_EMPLOYEE` 節點手動繞行，里程碑 3 後評估是否需要 `LeaveApprovalDelegation` 表。若要做，快照必須同時記「原節點」與「代理人」—— 只記代理人會讓路徑看起來像設定錯誤。
-3. **`HR` 節點的角色來源待定**：目前沒有帳本層級的 HR 角色定義。⚠️ 需與既有 `teamRepo.getTeamMember` 的角色體系對齊，不新造一套權限。里程碑 3 前必須決定。
+3. **`HR` 節點的角色來源待定**：目前沒有帳本層級的 HR 角色定義。里程碑 3 前必須決定。
+
+   > **修訂（2026-08-17）**：本條原文寫「需與既有 `teamRepo.getTeamMember` 的角色體系對齊，不新造一套權限」——
+   > **那個判斷是錯的，已作廢。** 系統裡有三條互不相干的軸線：
+   >
+   > | | 是什麼 | 掛在哪 |
+   > |---|---|---|
+   > | `Role`（USER/ADMIN/SUPER_ADMIN） | 平台身分 | `User` |
+   > | `TeamRole`（OWNER/ADMIN/EDITOR/VIEWER） | 帳本存取權 | `TeamMember` |
+   > | HR 職能（HR／薪資／稽核…） | **無來源** | 應在 `Employee` |
+   >
+   > 平台管理員不是 HR，財務的帳本 `ADMIN` 也不是 HR。而 `Employee.userId` 是
+   > **nullable** —— 工地的人可能沒有平台帳號，卻仍須能出現在簽核鏈上；
+   > 反過來，帳本的 `OWNER` 可能完全不是這家公司的員工。硬套會同時產生兩種錯誤。
+   >
+   > **正解是在 `Employee` 上另立一個 HR 職能 enum**，與 `Role` / `TeamRole` 並存而非取代。
+   > 「避免新造一套權限」的顧慮仍然成立，但它的正確落點是**授權檢查的執行路徑**
+   > （不要再寫第二套 guard），不是**角色的資料來源**。
+   >
+   > 兩個仍未決定的子問題：一人可否同時具備多個職能（陣列欄位 vs. 指派表），
+   > 以及指派本身要不要留軌跡。後者會直接決定選哪一種。
+   >
+   > ⚠️ **不可以把「直屬主管」與「部門主管」也做成角色列** —— 它們已經有來源
+   > （`Employee.managerId` / `Department.managerId`），再存一份就是第二種真相（ADR 019 判準）。
+   >
+   > 相關風險與接線守則見 [簽到模組仍是 Demo，但它已經是上游](../../engineering_guidelines/known_issues/attendance_demo_as_upstream.md) §3.5。
 4. **通知與簽核解耦**：`LeaveApprovalStep` 進入 `PENDING` 時發通知，但**通知失敗不得阻斷簽核**。失敗進既有重試機制，達上限落 DLQ（CLAUDE.md §6 第 3 條）。
 5. **`assertRuleRangesDisjoint` 必須同時檢查「完整覆蓋」**：只檢查不重疊而漏掉覆蓋，會讓某個天數區間展開出空鏈，然後撞上 §3 的拒絕送出 —— 那時錯誤訊息會指向員工的主管設定，而真正的原因在規則表。以 `leave_approval_chain.test.ts` 釘住。

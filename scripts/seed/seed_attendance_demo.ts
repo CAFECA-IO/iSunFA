@@ -22,7 +22,16 @@ import {
   WorkDayType,
 } from "@/constants/attendance";
 import { EmployeeStatus, Gender } from "@/constants/hr_management";
-import { LeaveRequestStatus, LeaveType } from "@/constants/leave";
+import { LeaveRequestStatus } from "@/constants/leave";
+import {
+  DEFAULT_LEAVE_POLICY_SEED,
+  LEAVE_POLICY_CODE,
+  LEAVE_POLICY_I18N_KEY,
+  LeaveApprovalNodeKind,
+  LeaveApprovalStepStatus,
+  LeaveDaySegment,
+  LeavePolicyCode,
+} from "@/constants/leave_policy";
 import { prisma } from "@/lib/prisma";
 import { dbRepo } from "@/repositories/db.repo";
 import { activeKeyOf } from "@/repositories/leave.repo";
@@ -33,6 +42,8 @@ import { evaluateAttendanceDay } from "@/lib/attendance_rules";
 import { IShiftWindow } from "@/interfaces/attendance";
 import { attendancePunchRepo } from "@/repositories/attendance_punch.repo";
 import { assertSchedulableDay } from "@/repositories/attendance_schedule_invariant";
+import { assertLeavePolicyUnit } from "@/repositories/leave_policy_invariant";
+import { hrManagement as hrManagementZhTw } from "@/i18n/locales/zh_tw/hr_management";
 
 /**
  * Info: (20260813 - Julian) 工程機關版簽到系統展示資料。
@@ -483,11 +494,15 @@ const SCRIPTED_PUNCHES: IScriptedPunch[] = [
  */
 const TODAY_LEAVE: {
   no: string;
-  leaveType: LeaveType;
+  policyCode: LeavePolicyCode;
   reason: string;
 }[] = [
-  { no: "EMP007", leaveType: LeaveType.PERSONAL, reason: "家中臨時有事" },
-  { no: "EMP008", leaveType: LeaveType.ANNUAL, reason: "家庭旅遊" },
+  {
+    no: "EMP007",
+    policyCode: LEAVE_POLICY_CODE.PERSONAL,
+    reason: "家中臨時有事",
+  },
+  { no: "EMP008", policyCode: LEAVE_POLICY_CODE.ANNUAL, reason: "家庭旅遊" },
 ];
 const TODAY_LEAVE_NOS = TODAY_LEAVE.map((leave) => leave.no);
 
@@ -780,6 +795,15 @@ async function clearDemoData(): Promise<void> {
   await prisma.leaveRequest.deleteMany({
     where: { accountBookId: ACCOUNT_BOOK_ID },
   });
+  /**
+   * Info: (20260817 - Julian) 假別本身也是這個帳本的資料（ADR 021：假別是資料不是型別），
+   * 因此重跑時一併清掉。`LeaveAccrualTier` 掛 Cascade 會跟著走；
+   * `mergesIntoPolicyId` 是自關聯 SetNull，同一批刪除不會擋。
+   * 必須排在 `leaveRequest` 之後 —— `LeaveRequest.leavePolicy` 是 Restrict。
+   */
+  await prisma.leavePolicy.deleteMany({
+    where: { accountBookId: ACCOUNT_BOOK_ID },
+  });
 
   await prisma.attendancePunch.deleteMany({
     where: { accountBookId: ACCOUNT_BOOK_ID },
@@ -807,6 +831,123 @@ async function clearDemoData(): Promise<void> {
   await prisma.workLocation.deleteMany({
     where: { accountBookId: ACCOUNT_BOOK_ID },
   });
+}
+
+/**
+ * Info: (20260817 - Julian) 內建假別落地時要填的 `name`。
+ *
+ * 取自繁中字典而不是在本腳本再抄一份：抄第二份的那天起，
+ * 「畫面上叫普通傷病假、資料庫裡叫病假」就成了一個沒有人會發現的分歧。
+ * 其他語系不落地 —— 前端查 `LEAVE_POLICY_I18N_KEY`，租戶自訂假別才顯示 `name`。
+ *
+ * 查不到就中止：一個叫做 `hr_management.leave.policy_sick` 的假別
+ * 會一路長到報表上，而那時已經沒有人記得它本來該叫什麼。
+ */
+function policyNameZhTw(code: LeavePolicyCode): string {
+  const path = LEAVE_POLICY_I18N_KEY[code];
+  const name = path
+    .split(".")
+    .slice(1)
+    .reduce<unknown>(
+      (value, segment) =>
+        typeof value === "object" && value !== null
+          ? (value as Record<string, unknown>)[segment]
+          : undefined,
+      hrManagementZhTw as unknown as Record<string, unknown>,
+    );
+
+  if (typeof name !== "string" || name.length === 0) {
+    throw new Error(
+      `假別 ${code} 在繁中字典缺少 ${path} —— 請先補字典再種資料。`,
+    );
+  }
+  return name;
+}
+
+/**
+ * Info: (20260817 - Julian) 建立本帳本的內建假別。
+ *
+ * 依 ADR 021，假別是**資料**不是型別 —— 沒有這一步，任何一張假單都建不起來
+ * （`LeaveRequest.leavePolicyId` 是必填且 Restrict）。內容一律取
+ * `DEFAULT_LEAVE_POLICY_SEED`，本腳本不自己寫一份：那會變成第二套法規常數，
+ * 而兩份法規常數遲早會有一份沒跟上修法。
+ *
+ * 分兩趟：先全部建立，再回填 `mergesIntoPolicyId`（家庭照顧假併入事假，
+ * 性平法 §20）—— 自關聯要求被指向的那一列先存在。
+ *
+ * `assertLeavePolicyUnit` 在此自行補上，理由同 `assertSchedulableDay`：
+ * 種子腳本直接進 Prisma，繞過了 repository 這道關卡。
+ */
+async function seedLeavePolicies(): Promise<Map<string, string>> {
+  const idByCode = new Map<string, string>();
+
+  for (const seed of DEFAULT_LEAVE_POLICY_SEED) {
+    /**
+     * Info: (20260817 - Julian) 傳整個 seed 而不是只挑兩個欄位。
+     *
+     * 不變式檢查的不只是「單位」——它同時擋自我併計與其他組合。
+     * 只餵它需要的欄位，等於預先替它決定它該看什麼，而那個決定會在
+     * 不變式新增規則的那天靜默失效。`mergesIntoPolicyId` 此刻必為
+     * undefined：併計關係在第二趟才回填。
+     */
+    assertLeavePolicyUnit({
+      accrualMethod: seed.accrualMethod,
+      quotaMode: seed.quotaMode,
+      unitBasis: seed.unitBasis,
+      minimumUnitMinutes: seed.minimumUnitMinutes,
+      annualDays: seed.annualDays,
+      cashOutOnExpiry: seed.cashOutOnExpiry,
+      mergesIntoPolicyId: null,
+    });
+
+    const policy = await prisma.leavePolicy.create({
+      data: {
+        accountBookId: ACCOUNT_BOOK_ID,
+        code: seed.code,
+        // Info: (20260817 - Julian) 落地的是繁中正式名稱；其他語系由前端查 LEAVE_POLICY_I18N_KEY
+        name: policyNameZhTw(seed.code),
+        accrualMethod: seed.accrualMethod,
+        cycleBasis: seed.cycleBasis,
+        quotaMode: seed.quotaMode,
+        annualDays: seed.annualDays,
+        unitBasis: seed.unitBasis,
+        minimumUnitMinutes: seed.minimumUnitMinutes,
+        carryForwardMonths: seed.carryForwardMonths,
+        cashOutOnExpiry: seed.cashOutOnExpiry,
+        // Info: (20260817 - Julian) 產假為 null（受僱滿六個月與否給付不同），不可填成 1
+        paidRatio: seed.paidRatio,
+        proofRequirement: seed.proofRequirement,
+        employerMayReject: seed.employerMayReject,
+        recallable: seed.recallable,
+        legalBasis: seed.legalBasis,
+        isSystemDefined: true,
+        tiers: seed.tiers
+          ? {
+              create: seed.tiers.map((tier) => ({
+                minSeniorityMonths: tier.minSeniorityMonths,
+                days: tier.days,
+                incrementDaysPerYear: tier.incrementDaysPerYear,
+                maxDays: tier.maxDays,
+              })),
+            }
+          : undefined,
+      },
+    });
+    idByCode.set(seed.code, policy.id);
+  }
+
+  for (const seed of DEFAULT_LEAVE_POLICY_SEED) {
+    if (seed.mergesIntoCode === null) continue;
+    await prisma.leavePolicy.update({
+      where: { id: idByCode.get(seed.code)! },
+      data: { mergesIntoPolicyId: idByCode.get(seed.mergesIntoCode)! },
+    });
+  }
+
+  console.log(
+    `   假別：${idByCode.size} 種（內建，來自 DEFAULT_LEAVE_POLICY_SEED）`,
+  );
+  return idByCode;
 }
 
 async function seedAccountBook(): Promise<void> {
@@ -871,6 +1012,9 @@ async function main(): Promise<void> {
 
   await seedAccountBook();
   await clearDemoData();
+
+  // Info: (20260817 - Julian) --- 假別 ---：假單掛在它上面，必須先於員工與假單建立
+  const leavePolicyIdByCode = await seedLeavePolicies();
 
   // Info: (20260813 - Julian) --- 地點 / 職稱 / 班別 ---
   await prisma.workLocation.createMany({
@@ -1021,12 +1165,18 @@ async function main(): Promise<void> {
       if (weekday === 6) dayType = WorkDayType.REST_DAY;
       else if (weekday === 0) dayType = WorkDayType.REGULAR_OFF;
 
-      // Info: (20260813 - Julian) 例外一：因雨停工，只影響三個工務所的現場人員
+      /**
+       * Info: (20260813 - Julian) 例外一：因雨停工，只影響三個工務所的現場人員。
+       *
+       * Info: (20260817 - Julian) 改用 `SUSPENDED`，不再暫借 `HOLIDAY` ——
+       * 借用會讓「今年停工幾天」與「今年國定假日幾天」在同一個值裡混成一團，
+       * 而前者是工期展延與契約計價的依據。
+       */
       if (
         workDate === SUSPENDED_DATE &&
         onSiteEmployeeNos.includes(person.no)
       ) {
-        dayType = WorkDayType.HOLIDAY;
+        dayType = WorkDayType.SUSPENDED;
       }
 
       // Info: (20260814 - Julian) 例外三：今日請假。假單是來源，這一格是它的投影
@@ -1069,22 +1219,81 @@ async function main(): Promise<void> {
    *
    * `activeKey` 是「同一人同一天只能有一張生效假單」的唯一保證，
    * 組法（`employeeId:workDate`）與 `leave.repo` 必須一致。
+   *
+   * Info: (20260817 - Julian) 假單改掛 `LeavePolicy`（ADR 021），且四件事跟著變：
+   *
+   * 1. **id 由應用層產生** —— `reasonCipher` 的 AAD 綁定 `表名:列id:欄位名:代次`，
+   *    加密發生在 insert 之前，不能等 `@default(uuid())`（同 `Employee.phoneCipher`）。
+   * 2. **事由密文入庫**（ADR 018 Tier 2）—— 事由會寫進病名與家屬狀況。
+   * 3. **總量逐日固化**（ADR 022 §3.2）—— `dayEquivalentMinutes` 取該員當日班別的
+   *    `requiredWorkMinutes`，不是一個全域的 480。這裡的兩人分別是辦公室班（450 分）
+   *    與現場班（480 分），寫死任何一個都會讓其中一人的「一天」少算或多算。
+   * 4. **簽核以節點落地** —— 取代 Demo 版的 `decidedByEmployeeId`。核准者的
+   *    工號姓名在此固化，離職後那張單仍答得出「誰批的」。
    */
   for (const leave of TODAY_LEAVE) {
     const employee = employeeByNo.get(leave.no)!;
+    const person = EMPLOYEES.find((item) => item.no === leave.no)!;
+    const dayEquivalentMinutes = shiftByCode.get(
+      person.shift,
+    )!.requiredWorkMinutes;
+
+    const requestId = randomUUID();
+    const reason = encryptPii(leave.reason, {
+      table: HrPiiTable.LEAVE_REQUEST,
+      recordId: requestId,
+      field: "reasonCipher",
+    });
+
+    const approver = employeeByNo.get("EMP005")!;
+    const approverPerson = EMPLOYEES.find((item) => item.no === "EMP005")!;
+
     await prisma.leaveRequest.create({
       data: {
+        id: requestId,
         accountBookId: ACCOUNT_BOOK_ID,
         employeeId: employee.id,
-        leaveType: leave.leaveType,
-        reason: leave.reason,
+        leavePolicyId: leavePolicyIdByCode.get(leave.policyCode)!,
         status: LeaveRequestStatus.APPROVED,
-        decidedByEmployeeId: employeeByNo.get("EMP005")!.id,
-        decidedAt: at(DEMO_DATE, 8, 0),
+
+        reasonCipher: reason.cipher,
+        piiAlgorithm: reason.algorithm,
+        piiKeyVersion: reason.keyVersion,
+
+        // Info: (20260817 - Julian) 整日假：分鐘數即當日應工作分鐘數，換算成 1 天
+        totalMinutes: dayEquivalentMinutes,
+        totalDays: 1,
+
         days: {
           create: {
             workDate: DEMO_DATE,
+            segment: LeaveDaySegment.FULL,
+            minutes: dayEquivalentMinutes,
+            dayEquivalentMinutes,
             activeKey: activeKeyOf(employee.id, DEMO_DATE),
+          },
+        },
+
+        /**
+         * Info: (20260817 - Julian) 單一節點：直屬主管。EMP005 是這兩位的部門主管，
+         * 相鄰去重後「直屬主管」與「部門經理」本來就會併成一關（計畫書 §7.3），
+         * 因此 `mergedFromKinds` 記下被併掉的那一個 ——
+         * 否則這張單看起來像少簽了一關。
+         *
+         * `pendingKey` 留空：它是「同一人同一時間只有一個待簽節點」的唯一保證，
+         * 只有 PENDING 的節點才填。這張單已核准。
+         */
+        approvalSteps: {
+          create: {
+            order: 1,
+            nodeKind: LeaveApprovalNodeKind.DIRECT_MANAGER,
+            approverEmployeeId: approver.id,
+            approverEmployeeNo: approverPerson.no,
+            approverName: approverPerson.name,
+            approverJobTitle: jobTitleByCode.get(approverPerson.title)!.title,
+            status: LeaveApprovalStepStatus.APPROVED,
+            mergedFromKinds: [LeaveApprovalNodeKind.DEPARTMENT_MANAGER],
+            decidedAt: at(DEMO_DATE, 8, 0),
           },
         },
       },

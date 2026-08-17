@@ -38,6 +38,13 @@ _尚未修復、但會影響開發判斷的系統性缺陷；動到相關區域�
   > `dockerfiles/osrm/Dockerfile` 只載入 `taiwan-latest.osm.pbf`，非臺灣的陸運段一律落到 `直線距離 × 1.2` 並標記 `est.`。報告已揭露推估段數與其排放占比（實測 R02 為 2/3 段、占 0.07%），**但若業務要處理境外陸運為主的路線，推估誤差會直接進入申報數值**，屆時需擴充覆蓋或改用外部路徑服務。
 - ⚠️ **[`/admin/settings` 的輪替與撤銷對 MissionExecutor 無效](engineering_guidelines/known_issues/executor_settings_isolation.md)**：無主資料庫權限的節點認的是部署環境裡的金鑰，撤銷後背景任務仍可能繼續呼叫 LLM —— 設計取捨（隔離是防提示詞注入的基礎），但與管理員的預期相反。
 
+- 🔴 **[簽到模組仍是 Demo，但它已經是上游](engineering_guidelines/known_issues/attendance_demo_as_upstream.md)**
+  > 簽到模組是有意識地做成 demo 的（三張判定結果表不建、無權限矩陣、政策參數是常數而非表），**但假勤已接了上去，薪資與工程計價之後也會接**，而「它是 demo」沒有寫在任何一支 API 的簽名上。文件列出十項不可依賴的東西與各自的處置、七項可放心依賴的東西，以及依「不補會怎樣」分級的待辦。**任何模組接簽到之前必讀。**
+  > 其中 §3.5 的 `Employee` 角色缺口成因不同——它是整個 HR 模組共用的地基，簽到只是第一個繞過它的模組。
+
+- 🔴 **[整合測試指南所描述的 harness 已不在 repo 中](engineering_guidelines/known_issues/integration_test_harness_missing.md)**
+  > `integration_test_guide.md` 描述的 `APITestHelper` / `TestClient` / `test_data_factory` / 整個 `src/tests/` 目錄在 `3b40b6ae1`（歷史重寫）被一次移除，`supertest` 也不在依賴裡。`npm test` 帶著 `--passWithNoTests`，所以「一支整合測試都沒有」不會讓 CI 變紅——**缺口是無聲的**。復原 / 改寫成 App Router 版 / 併入 bot 腳本三案未決。
+
 - ⚠️ **[列印環境缺少中文字型導致 PDF 中文變空心方框](engineering_guidelines/known_issues/pdf_cjk_font_missing.md)**（已解決，但維運前置條件持續有效）
   > 主機未安裝 CJK 字型時，Chrome 對所有中文字使用 `.notdef`，報告地點名稱全數變方框而流程回報成功。程式碼側有 `IS000022` fail fast，**但每台產出 PDF 的主機仍須 `apt install fonts-noto-cjk` 並重啟**，否則匯出會失敗而非產出破圖。文件內另更正了「中文是 Type 3 點陣字」這個既有的錯誤陳述（實測為向量），並記錄 Type 3 造成的約 128 KB 體積成本。
 
@@ -114,8 +121,9 @@ _追蹤重大架構變更背後的歷史脈絡與取捨：_
 
 - 💥 **[端到端測試與稽核管線指南 (E2E Testing & Audit Pipeline Guide)](testing_and_qa/e2e_audit_pipeline_guide.md)**
   > 包含 E2E 測試架構、執行步驟、時序逆推分析、CBAM 碳追溯生成架構、選樣策略與交叉驗證指標。
-- 🧪 **[整合測試與 Cookie/Session 管理指南 (Integration Test & Cookie Session Guide)](testing_and_qa/integration_test_guide.md)**
+- 🧪 **[整合測試與 Cookie/Session 管理指南 (Integration Test & Cookie Session Guide)](testing_and_qa/integration_test_guide.md)** 🔴 **描述的框架已不存在**
   > 指引如何使用 Supertest 對 API 進行整合測試，以及在測試環境中管理 Cookie 與 Session 的原理與最佳實踐。
+  > ⚠️ **在處置方案決定之前不可當成可執行的指引** —— 它引用的每一個 helper 都已不在 repo 中，見[已知缺陷](engineering_guidelines/known_issues/integration_test_harness_missing.md)。
 
 ---
 
