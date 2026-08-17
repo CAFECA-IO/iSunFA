@@ -986,7 +986,7 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
          */
         /**
          * Info: (20260814 - Emily) 缺分隔列的表先補一條，再交給裁決
-         * (`data/issue_drafts/open/27_source_table_missing_divider.md`)。
+         * (`data/issue_drafts/open/47_source_table_dropped.md`)。
          *
          * 2026-08-14 匯入實測：表3.1／3.2／3.4／4.1 被 `not_a_table` 整張丟掉，
          * 而表3.1 與表3.4 **被內文引用** —— 產出的報告留著「如表 3.1，…」
@@ -1002,7 +1002,7 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
          */
         /**
          * Info: (20260814 - Emily) 先把被折斷的列接回一行
-         * (`data/issue_drafts/open/28_source_table_cell_newline.md`)。
+         * (`data/issue_drafts/open/47_source_table_dropped.md`)。
          *
          * 模型會把一格的內容折成多行輸出（原文那幾張表的表頭是窄欄多行排版），
          * 於是一列佔了三四行、每一行都不是完整的 `| ... |`。2026-08-14 的匯入實測，
@@ -1172,7 +1172,7 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
     });
     /**
      * Info: (20260817 - Emily) 這行必須**無條件印**,而且要帶得出成因
-     * (`data/issue_drafts/open/46_activity_extraction_zero.md`)。
+     * (`data/issue_drafts/open/46_activity_data_traceability.md`)。
      *
      * 原本 `received: 0` 把四種完全不同的上游狀態塌成同一個數字:
      *

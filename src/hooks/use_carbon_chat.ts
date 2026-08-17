@@ -2127,7 +2127,7 @@ export const useCarbonChat = () => {
         unmapped.push(...chunk.unmapped);
         /**
          * Info: (20260817 - Emily) 累加而不是覆蓋
-         * (`data/issue_drafts/open/46_activity_extraction_zero.md`)。
+         * (`data/issue_drafts/open/46_activity_data_traceability.md`)。
          *
          * 原本是 `activities = chunk.activities` —— 賦值。
          * 排放章(ch3)六節會被切成兩個工作單元,兩次呼叫各自回一份,
