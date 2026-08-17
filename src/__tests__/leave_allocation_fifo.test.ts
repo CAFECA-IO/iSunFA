@@ -133,8 +133,8 @@ describe("allocateConsumption — 跨批次與不足", () => {
   });
 
   it("負數需求是呼叫端的錯誤，擋下", () => {
-    expect(() =>
-      allocateConsumption({ grants, requiredMinutes: -1 }),
-    ).toThrow(LeaveRuleError);
+    expect(() => allocateConsumption({ grants, requiredMinutes: -1 })).toThrow(
+      LeaveRuleError,
+    );
   });
 });

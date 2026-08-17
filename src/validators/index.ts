@@ -26,3 +26,5 @@ export * from "@/validators/attendance";
 export * from "@/validators/leave";
 // Info: (20260817 - Julian) 假勤模組
 export * from "@/validators/leave_request";
+export * from "@/validators/leave_approval_rule";
+export * from "@/validators/leave_balance";

@@ -8,6 +8,7 @@ import {
 } from "@/constants/leave";
 import { WorkDayType } from "@/constants/attendance";
 import { assertSchedulableDay } from "@/repositories/attendance_schedule_invariant";
+import { writeRestoreForDay } from "@/repositories/leave_ledger";
 
 /**
  * Info: (20260813 - Julian) 假勤資料存取層（唯一碰 Prisma）。
@@ -40,7 +41,8 @@ const LEAVE_DAY_INCLUDE = {
       },
       // Info: (20260817 - Julian) 假別改為關聯（ADR 021）。這裡帶出來供徵詢畫面顯示，
       // Info: (20260817 - Julian) 今日請假名單本身不顯示假別（計畫書 §9.2）
-      leavePolicy: { select: { code: true, name: true } },
+      // Info: (20260817 - Julian) `recallable` 供 service 判斷該假別可否被徵詢（§38 III 只給特休）
+      leavePolicy: { select: { code: true, name: true, recallable: true } },
     },
   },
   recalls: { where: { status: LeaveRecallStatus.PENDING } },
@@ -133,6 +135,13 @@ export interface ILeaveRecallProjection {
   employeeId: string;
   workDate: string;
   shiftPatternId: string;
+  /**
+   * Info: (20260817 - Julian) 回補額度時要知道退回哪一個假別的餘額快取。
+   *
+   * 帳本那一側靠 `leaveDayId` 就找得到批次（分錄指向 `LeaveDay`），
+   * 但 `LeaveBalance` 的唯一鍵是「員工 × 假別」—— 那個假別得由呼叫端帶進來。
+   */
+  leavePolicyId: string;
 }
 
 class LeaveRepository implements ILeaveRepository {
@@ -293,6 +302,44 @@ class LeaveRepository implements ILeaveRepository {
         data: { activeKey: null, recalledAt: respondedAt },
       });
 
+      /**
+       * Info: (20260817 - Julian) 額度回補（甲-4）。
+       *
+       * 在此之前這一步**完全不存在** —— 員工同意銷假回來上班，
+       * 那一天的特休仍然被扣著。他為公司的急迫需求回來，代價自己付。
+       * `LeaveLedgerEntryType.RESTORE` 的定義從第一天就寫著「銷假退回」，
+       * 只是沒有任何寫入端。
+       *
+       * 照著那一天的 CONSUME 原路退回，不重新分配（見 `writeRestoreForDay`）。
+       * 與銷假本身在同一個交易內：帳本異動必須與來源單據同生共死
+       * （ADR 022 §4 第一條）。
+       */
+      const restored = await writeRestoreForDay(tx, {
+        leaveDayId: projection.leaveDayId,
+        actorEmployeeId: projection.employeeId,
+        reason: `銷假徵詢同意（recall ${recallId}）`,
+      });
+
+      /**
+       * Info: (20260817 - Julian) 餘額快取跟著加回去。
+       *
+       * 加的是**實際回補的分鐘數**而不是那一天的請假分鐘數 ——
+       * 額度帳本上線前核准的舊假單沒有 CONSUME 可退，
+       * 加一個「應該」會讓快取憑空長出額度，而它要到下次勾稽才會被發現。
+       *
+       * 無條件更新（不像扣減那樣附條件）：回補只會讓餘額變多，
+       * 沒有「不夠」這種失敗模式。
+       */
+      if (restored > 0) {
+        await tx.leaveBalance.updateMany({
+          where: {
+            employeeId: projection.employeeId,
+            leavePolicyId: projection.leavePolicyId,
+          },
+          data: { remainingMinutes: { increment: restored } },
+        });
+      }
+
       await tx.employeeShiftDay.upsert({
         where: {
           accountBookId_employeeId_workDate: {
@@ -311,6 +358,15 @@ class LeaveRepository implements ILeaveRepository {
         update: {
           dayType: WorkDayType.WORK,
           shiftPatternId: projection.shiftPatternId,
+          /**
+           * Info: (20260817 - Julian) 清掉請假時留下的快照。
+           *
+           * 投影回上班日之後，班別回來了 ——
+           * `ShiftPattern.requiredWorkMinutes` 重新成為唯一來源。
+           * 不清掉的話，之後有人改了班別，那份快照就開始說謊，
+           * 而它看起來仍然像一個有效的設定值。`assertSchedulableDay` 會擋。
+           */
+          plannedWorkMinutes: null,
         },
       });
 

@@ -32,6 +32,7 @@ import {
   LeaveDaySegment,
   LeavePolicyCode,
 } from "@/constants/leave_policy";
+import { Prisma } from "@/generated";
 import { prisma } from "@/lib/prisma";
 import { dbRepo } from "@/repositories/db.repo";
 import { activeKeyOf } from "@/repositories/leave.repo";
@@ -43,6 +44,10 @@ import { IShiftWindow } from "@/interfaces/attendance";
 import { attendancePunchRepo } from "@/repositories/attendance_punch.repo";
 import { assertSchedulableDay } from "@/repositories/attendance_schedule_invariant";
 import { assertLeavePolicyUnit } from "@/repositories/leave_policy_invariant";
+import { leaveApprovalRuleRepo } from "@/repositories/leave_approval_rule.repo";
+import { leaveAccrualContextRepo } from "@/repositories/leave_accrual_context.repo";
+import { leaveBalanceService } from "@/services/leave_balance.service";
+import { LEAVE_ENTITLEMENT_ENGINE_VERSION } from "@/lib/leave_entitlement_rules";
 import { hrManagement as hrManagementZhTw } from "@/i18n/locales/zh_tw/hr_management";
 
 /**
@@ -58,7 +63,12 @@ import { hrManagement as hrManagementZhTw } from "@/i18n/locales/zh_tw/hr_manage
  *   npx tsx scripts/seed/seed_attendance_demo.ts
  * ```
  *
- * ## 三個會讓腳本直接中止的前提
+ * ## 四個會讓腳本直接中止的前提
+ *
+ * 0. **schema 未同步** —— 產生的 client 若比 `schema.prisma` 舊，寫入會以
+ *    `Unknown argument` 失敗，而 Prisma 會把整個 data 陣列印進錯誤訊息，
+ *    真正的原因被推到兩千行之後。`assertSchemaIsCurrent()` 在寫入任何東西
+ *    之前就擋下來，並直接說出要跑什麼指令。
  *
  * 1. **`HR_PII_KEY_V1` 未設定** —— 員工的 `phoneCipher` 與打卡座標都要加密，
  *    沒有金鑰 `encryptPii()` 會拋 `HrPiiKeyError`。
@@ -801,6 +811,30 @@ async function clearDemoData(): Promise<void> {
    * `mergesIntoPolicyId` 是自關聯 SetNull，同一批刪除不會擋。
    * 必須排在 `leaveRequest` 之後 —— `LeaveRequest.leavePolicy` 是 Restrict。
    */
+  /**
+   * Info: (20260817 - Julian) 額度帳本：分錄 → 批次 → 餘額快取，由子而父。
+   *
+   * `LeaveLedgerEntry.leaveGrant` 是 Restrict（帳不可在有分錄時被刪），
+   * 所以分錄必須先走。`LeaveDay` 那一側是 SetNull，不影響順序。
+   */
+  await prisma.leaveLedgerEntry.deleteMany({
+    where: { leaveGrant: { accountBookId: ACCOUNT_BOOK_ID } },
+  });
+  await prisma.leaveGrant.deleteMany({
+    where: { accountBookId: ACCOUNT_BOOK_ID },
+  });
+  await prisma.leaveBalance.deleteMany({
+    where: { accountBookId: ACCOUNT_BOOK_ID },
+  });
+
+  /**
+   * Info: (20260817 - Julian) 簽核規則排在假別**之前**刪：
+   * `LeaveApprovalRule.leavePolicy` 是 Cascade，但通則那幾條的
+   * `leavePolicyId` 是 null，不會被任何 cascade 帶走。
+   */
+  await prisma.leaveApprovalRule.deleteMany({
+    where: { accountBookId: ACCOUNT_BOOK_ID },
+  });
   await prisma.leavePolicy.deleteMany({
     where: { accountBookId: ACCOUNT_BOOK_ID },
   });
@@ -983,6 +1017,89 @@ async function seedLeavePolicies(): Promise<Map<string, string>> {
   return idByCode;
 }
 
+/**
+ * Info: (20260817 - Julian) 建立本帳本的簽核規則（通則）。
+ *
+ * 沒有這一步，**任何一張假單都送不出去** —— `resolveApprovalChain` 的
+ * `selectRule` 回 null，`submit` 丟 `CF_LEAVE_APPROVAL_CHAIN_UNRESOLVED`，
+ * 而錯誤訊息會指向「您尚未設定直屬主管」（那是空鏈最常見的成因，
+ * 不是這裡的成因）。
+ *
+ * ## 為什麼是這兩條
+ *
+ * 需求原文：「請假 3 天內直屬主管核准，3 天以上需簽至部門經理或 HR」。
+ * 邊界定為左閉右開，即**恰好 3 天走長假規則**
+ * （`leave_approval_rule_invariant.ts` 檔頭已把這個選擇寫成比較運算子）。
+ *
+ * ## 為什麼長假那條沒有 HR 節點
+ *
+ * ⚠️ `buildOrgSnapshot` 的 `hrEmployeeIds` 目前一律回空陣列 ——
+ * 帳本層級的 HR 角色沒有來源（`Employee` 上沒有角色欄位）。
+ * 種一條含 HR 的規則，效果是所有三天以上的假單都以 `NO_HR` 送不出去。
+ *
+ * 種「跑得動的」而不是「規劃中的」：demo 要能演，而缺口記在
+ * 假勤接線守則 §3.5.1 與待辦甲-1，不是靠一條種不起來的規則提醒人。
+ * ToDo: (20260817 - Julian) 甲-1 完成後把 HR 節點加回長假規則。
+ */
+async function seedApprovalRules(): Promise<void> {
+  await leaveApprovalRuleRepo.replaceScope({
+    accountBookId: ACCOUNT_BOOK_ID,
+    // Info: (20260817 - Julian) null = 通則，適用所有沒有專屬規則的假別
+    scope: { leavePolicyId: null },
+    rules: [
+      {
+        // Info: (20260817 - Julian) 未滿 3 天：直屬主管一關
+        minDays: 0,
+        maxDays: 3,
+        steps: [{ nodeKind: LeaveApprovalNodeKind.DIRECT_MANAGER }],
+      },
+      {
+        // Info: (20260817 - Julian) 3 天以上：直屬主管 → 部門經理
+        minDays: 3,
+        maxDays: null,
+        steps: [
+          { nodeKind: LeaveApprovalNodeKind.DIRECT_MANAGER },
+          { nodeKind: LeaveApprovalNodeKind.DEPARTMENT_MANAGER },
+        ],
+      },
+    ],
+  });
+  console.log("   簽核規則：通則 2 條（<3 天一關、>=3 天兩關）");
+}
+
+/**
+ * Info: (20260817 - Julian) 授予全體員工的額度，補到演示日為止。
+ *
+ * 沒有這一步，**每個人的餘額都是零** —— 簽核鏈解得出來也沒用，
+ * 任何 QUOTA 假別（特休、事假、病假…）都會死在
+ * `VA_LEAVE_INSUFFICIENT_BALANCE`。
+ *
+ * 這一支呼叫的是**正式版同一條路徑**（`leaveBalanceService.accrueForEmployee`），
+ * 不是 seed 自己另寫一份授予邏輯。理由與假別名稱取自字典相同：
+ * 第二份實作遲早會與第一份分歧，而分歧的症狀是
+ * 「demo 的額度是對的、正式環境的不是」。
+ *
+ * 冪等：重跑不會多給（比對既有批次 + 冪等鍵）。
+ */
+async function seedLeaveGrants(): Promise<void> {
+  const employeeIds =
+    await leaveAccrualContextRepo.listAccruableEmployeeIds(ACCOUNT_BOOK_ID);
+
+  let issued = 0;
+  for (const employeeId of employeeIds) {
+    issued += await leaveBalanceService.accrueForEmployee({
+      accountBookId: ACCOUNT_BOOK_ID,
+      employeeId,
+      asOfDate: DEMO_DATE,
+      // Info: (20260817 - Julian) 系統排程產生，非某個人的動作
+      actorEmployeeId: null,
+    });
+  }
+  console.log(
+    `   額度授予：${employeeIds.length} 人、共 ${issued} 批（截至 ${DEMO_DATE}）`,
+  );
+}
+
 async function seedAccountBook(): Promise<void> {
   await prisma.team.upsert({
     where: { id: TEAM_ID },
@@ -1033,8 +1150,92 @@ function assertAccuracyThresholdFitsRadius(
   }
 }
 
+/**
+ * Info: (20260817 - Julian) 產生的 client 必須跟得上 `schema.prisma`。
+ *
+ * ## 為什麼需要這個檢查
+ *
+ * schema 改了卻沒跑 `prisma db push`，第一個症狀是 `Unknown argument X` ——
+ * 而 Prisma 會把**整個 data 陣列**印進 `error.message`（本腳本一次寫入
+ * 數百列排班，實測是 2017 行），真正的那一句被推到最後。
+ * 實際代價：同一個「schema 沒同步」的錯誤來回問了三輪才定位。
+ *
+ * ## 為什麼查 DMMF 而不是查資料庫
+ *
+ * `Prisma.dmmf` 是**產生 client 當下**的 schema 快照，而失敗的正是 client ——
+ * 查資料庫會答對一個沒有人問的問題（欄位在 DB 裡、client 卻不知道它，
+ * 正是這次的情形）。
+ *
+ * ## 維護方式
+ *
+ * 只列**本腳本實際寫入**的欄位，不是全部欄位 —— 這裡不是 schema 的副本，
+ * 是「這支腳本依賴哪些東西」的清單。新增寫入欄位時一併登記，
+ * 忘了登記的代價只是回到舊行為（錯誤訊息變難讀），不會產生錯誤資料。
+ */
+const REQUIRED_SCHEMA_FIELDS: Readonly<Record<string, readonly string[]>> = {
+  EmployeeShiftDay: ["plannedWorkMinutes"],
+  LeavePolicy: ["paidRatio", "proofThresholdDays", "recallable"],
+  LeaveRequest: [
+    "leavePolicyId",
+    "reasonCipher",
+    "piiAlgorithm",
+    "piiKeyVersion",
+    "totalMinutes",
+    "totalDays",
+  ],
+  LeaveDay: [
+    "segment",
+    "minutes",
+    "dayEquivalentMinutes",
+    "entitlementEngineVersion",
+  ],
+  LeaveApprovalStep: ["approverEmployeeNo", "approverName", "mergedFromKinds"],
+  LeaveApprovalRule: ["minDays", "maxDays"],
+  LeaveGrant: ["grantedDays", "grantedMinutes", "expiresOn", "source"],
+  LeaveLedgerEntry: [
+    "entryType",
+    "deltaMinutes",
+    "idempotencyKey",
+    "leaveDayId",
+  ],
+  LeaveBalance: ["remainingMinutes", "reconciledAt"],
+};
+
+function assertSchemaIsCurrent(): void {
+  const byModel = new Map(
+    Prisma.dmmf.datamodel.models.map((model) => [
+      model.name,
+      new Set(model.fields.map((field) => field.name)),
+    ]),
+  );
+
+  const missing: string[] = [];
+  for (const [model, fields] of Object.entries(REQUIRED_SCHEMA_FIELDS)) {
+    const known = byModel.get(model);
+    if (!known) {
+      missing.push(`model ${model}（整個 model 都不存在）`);
+      continue;
+    }
+    for (const field of fields) {
+      if (!known.has(field)) missing.push(`${model}.${field}`);
+    }
+  }
+
+  if (missing.length > 0) {
+    throw new Error(
+      `產生的 Prisma client 比 schema.prisma 舊，缺少以下欄位：\n` +
+        missing.map((item) => `     - ${item}`).join("\n") +
+        `\n\n   請先同步 schema：\n     npx prisma db push\n\n` +
+        `   （不是資料庫缺欄位就是 client 沒重新產生；db push 兩者都會處理）`,
+    );
+  }
+}
+
 async function main(): Promise<void> {
   console.log("🏗️  簽到系統展示資料（工程機關版）");
+
+  // Info: (20260817 - Julian) 前提 0：在寫入任何東西之前先確認 client 跟得上 schema
+  assertSchemaIsCurrent();
 
   const locations = buildWorkLocations();
   assertFencesDoNotOverlap(locations);
@@ -1048,6 +1249,9 @@ async function main(): Promise<void> {
 
   // Info: (20260817 - Julian) --- 假別 ---：假單掛在它上面，必須先於員工與假單建立
   const leavePolicyIdByCode = await seedLeavePolicies();
+
+  // Info: (20260817 - Julian) --- 簽核規則 ---：沒有它，任何假單都送不出去
+  await seedApprovalRules();
 
   // Info: (20260813 - Julian) --- 地點 / 職稱 / 班別 ---
   await prisma.workLocation.createMany({
@@ -1188,6 +1392,7 @@ async function main(): Promise<void> {
     workDate: string;
     dayType: WorkDayType;
     shiftPatternId: string | null;
+    plannedWorkMinutes: number | null;
   }[] = [];
 
   for (const person of EMPLOYEES) {
@@ -1221,6 +1426,22 @@ async function main(): Promise<void> {
         dayType === WorkDayType.WORK ? shiftByCode.get(person.shift)!.id : null;
 
       /**
+       * Info: (20260817 - Julian) 「這天本來要上幾分鐘」的快照。
+       *
+       * 只有**本來就要上班、後來被轉掉**的日子有值 —— `LEAVE`（請假）
+       * 與 `SUSPENDED`（停工）。例假、休息日、國定假日本來就不是上班日，
+       * 沒有「本來要上幾分鐘」這件事，留 null。
+       *
+       * 上班日也留 null：班別還在，`ShiftPattern.requiredWorkMinutes`
+       * 才是唯一來源，存第二份只會多一個可以說謊的地方
+       * （`assertSchedulableDay` 會擋）。
+       */
+      const plannedWorkMinutes =
+        dayType === WorkDayType.LEAVE || dayType === WorkDayType.SUSPENDED
+          ? shiftByCode.get(person.shift)!.requiredWorkMinutes
+          : null;
+
+      /**
        * Info: (20260813 - Julian) 種子腳本也走不變式。
        *
        * `assertSchedulableDay` 的檔頭點名的威脅正是「繞過 service 的寫入 ——
@@ -1231,6 +1452,7 @@ async function main(): Promise<void> {
       assertSchedulableDay({
         dayType,
         shiftPatternId,
+        plannedWorkMinutes,
       });
 
       shiftDays.push({
@@ -1239,10 +1461,19 @@ async function main(): Promise<void> {
         workDate,
         dayType,
         shiftPatternId,
+        plannedWorkMinutes,
       });
     }
   }
   await prisma.employeeShiftDay.createMany({ data: shiftDays });
+
+  /**
+   * Info: (20260817 - Julian) --- 額度授予 ---
+   *
+   * 位置有講究：必須在**排班之後**（`findEmployeeForAccrual` 要靠排班
+   * 反推「一天是幾分鐘」），且在**假單之前**（假單核准會扣帳）。
+   */
+  await seedLeaveGrants();
 
   /**
    * Info: (20260814 - Julian) --- 今日請假的假單 ---
@@ -1303,6 +1534,8 @@ async function main(): Promise<void> {
             segment: LeaveDaySegment.FULL,
             minutes: dayEquivalentMinutes,
             dayEquivalentMinutes,
+            // Info: (20260817 - Julian) 固化數值就要固化它的依據（接線守則 §3.1）
+            entitlementEngineVersion: LEAVE_ENTITLEMENT_ENGINE_VERSION,
             activeKey: activeKeyOf(employee.id, DEMO_DATE),
           },
         },
@@ -1525,11 +1758,44 @@ async function main(): Promise<void> {
   console.log("✅ 完成");
 }
 
+/**
+ * Info: (20260817 - Julian) 把 Prisma 錯誤裡真正有用的那幾行挑出來。
+ *
+ * `createMany` 失敗時 Prisma 會把**整個 data 陣列**印進 `error.message` ——
+ * 本腳本一次寫入數百列排班，於是真正的原因（`Unknown argument`、
+ * `Argument X is missing`）被推到數百行之後，複製貼上時第一個被截掉的就是它。
+ *
+ * 實際代價：同一個「欄位沒同步」的錯誤來回問了兩輪才定位。
+ * 這裡把訊息切成三段 —— 開頭（哪一個呼叫）、**結尾（原因）**、以及
+ * Prisma 的錯誤碼 —— 中間那坨資料傾印直接丟掉。
+ */
+const explainPrismaError = (error: unknown): string => {
+  if (!(error instanceof Error)) return String(error);
+
+  const lines = error.message.split("\n").filter((line) => line.trim() !== "");
+  if (lines.length <= 12) return error.message;
+
+  const code = (error as { code?: string }).code;
+  return [
+    ...lines.slice(0, 3),
+    `   … 略過 ${lines.length - 9} 行資料傾印 …`,
+    ...lines.slice(-6),
+    code ? `\n   Prisma code: ${code}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+};
+
 main()
   .catch((error) => {
+    console.error("❌ seed 失敗：\n" + explainPrismaError(error));
+    /**
+     * Info: (20260817 - Julian) 最常見的成因擺在最後一行，因為那是唯一
+     * 一定看得到的地方。schema 改了卻沒 `db push`，錯誤會長得像欄位不存在。
+     */
     console.error(
-      "❌ seed 失敗：",
-      error instanceof Error ? error.message : error,
+      "\n   若訊息提到某個欄位不存在或缺少參數，先確認 schema 已同步：" +
+        "\n     npx prisma db push",
     );
     process.exitCode = 1;
   })

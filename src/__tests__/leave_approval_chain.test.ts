@@ -41,21 +41,42 @@ const rules: IApprovalRuleWithSteps[] = [
     leavePolicyId: null,
     minDays: 0,
     maxDays: 3,
-    steps: [{ order: 0, nodeKind: LeaveApprovalNodeKind.DIRECT_MANAGER, specificEmployeeId: null }],
+    steps: [
+      {
+        order: 0,
+        nodeKind: LeaveApprovalNodeKind.DIRECT_MANAGER,
+        specificEmployeeId: null,
+      },
+    ],
   },
   {
     leavePolicyId: null,
     minDays: 3,
     maxDays: null,
     steps: [
-      { order: 0, nodeKind: LeaveApprovalNodeKind.DIRECT_MANAGER, specificEmployeeId: null },
-      { order: 1, nodeKind: LeaveApprovalNodeKind.DEPARTMENT_MANAGER, specificEmployeeId: null },
-      { order: 2, nodeKind: LeaveApprovalNodeKind.HR, specificEmployeeId: null },
+      {
+        order: 0,
+        nodeKind: LeaveApprovalNodeKind.DIRECT_MANAGER,
+        specificEmployeeId: null,
+      },
+      {
+        order: 1,
+        nodeKind: LeaveApprovalNodeKind.DEPARTMENT_MANAGER,
+        specificEmployeeId: null,
+      },
+      {
+        order: 2,
+        nodeKind: LeaveApprovalNodeKind.HR,
+        specificEmployeeId: null,
+      },
     ],
   },
 ];
 
-const resolve = (totalDays: number, overrides: Partial<IApprovalOrgSnapshot> = {}) =>
+const resolve = (
+  totalDays: number,
+  overrides: Partial<IApprovalOrgSnapshot> = {},
+) =>
   resolveApprovalChain({
     leavePolicyId: "policy-annual",
     totalDays,
@@ -116,7 +137,11 @@ describe("resolveApprovalChain — 規則命中", () => {
           minDays: 0,
           maxDays: null,
           steps: [
-            { order: 0, nodeKind: LeaveApprovalNodeKind.HR, specificEmployeeId: null },
+            {
+              order: 0,
+              nodeKind: LeaveApprovalNodeKind.HR,
+              specificEmployeeId: null,
+            },
           ],
         },
       ],
@@ -132,7 +157,14 @@ describe("resolveApprovalChain — 規則命中", () => {
     const result = resolveApprovalChain({
       leavePolicyId: "policy-annual",
       totalDays: 1,
-      rules: [{ leavePolicyId: null, minDays: 5, maxDays: null, steps: rules[0].steps }],
+      rules: [
+        {
+          leavePolicyId: null,
+          minDays: 5,
+          maxDays: null,
+          steps: rules[0].steps,
+        },
+      ],
       org,
     });
     expect(result.ok).toBe(false);
@@ -192,9 +224,21 @@ describe("resolveApprovalChain — 相鄰去重", () => {
           minDays: 0,
           maxDays: null,
           steps: [
-            { order: 0, nodeKind: LeaveApprovalNodeKind.SPECIFIC_EMPLOYEE, specificEmployeeId: "emp-lead" },
-            { order: 1, nodeKind: LeaveApprovalNodeKind.DEPARTMENT_MANAGER, specificEmployeeId: null },
-            { order: 2, nodeKind: LeaveApprovalNodeKind.SPECIFIC_EMPLOYEE, specificEmployeeId: "emp-lead" },
+            {
+              order: 0,
+              nodeKind: LeaveApprovalNodeKind.SPECIFIC_EMPLOYEE,
+              specificEmployeeId: "emp-lead",
+            },
+            {
+              order: 1,
+              nodeKind: LeaveApprovalNodeKind.DEPARTMENT_MANAGER,
+              specificEmployeeId: null,
+            },
+            {
+              order: 2,
+              nodeKind: LeaveApprovalNodeKind.SPECIFIC_EMPLOYEE,
+              specificEmployeeId: "emp-lead",
+            },
           ],
         },
       ],
@@ -247,7 +291,13 @@ describe("resolveApprovalChain — 自我核准的上升", () => {
           leavePolicyId: null,
           minDays: 0,
           maxDays: null,
-          steps: [{ order: 0, nodeKind: LeaveApprovalNodeKind.HR, specificEmployeeId: null }],
+          steps: [
+            {
+              order: 0,
+              nodeKind: LeaveApprovalNodeKind.HR,
+              specificEmployeeId: null,
+            },
+          ],
         },
       ],
       org: hrOrg,
@@ -266,7 +316,13 @@ describe("resolveApprovalChain — 自我核准的上升", () => {
           leavePolicyId: null,
           minDays: 0,
           maxDays: null,
-          steps: [{ order: 0, nodeKind: LeaveApprovalNodeKind.HR, specificEmployeeId: null }],
+          steps: [
+            {
+              order: 0,
+              nodeKind: LeaveApprovalNodeKind.HR,
+              specificEmployeeId: null,
+            },
+          ],
         },
       ],
       org: {

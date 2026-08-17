@@ -1,4 +1,6 @@
-import { describe, it, expect, beforeEach } from "@jest/globals";
+import { randomBytes } from "crypto";
+import { HR_PII_KEY_BYTES } from "@/constants/hr_pii";
+import { describe, it, expect, beforeEach, beforeAll } from "@jest/globals";
 import { LeaveRequestService } from "@/services/leave_request.service";
 import { AppError } from "@/lib/utils/error";
 import { WorkDayType } from "@/constants/attendance";
@@ -29,7 +31,7 @@ import { IConsumableGrant } from "@/interfaces/leave_entitlement";
 /**
  * Info: (20260817 - Julian) 送出 → 簽核 → 扣額度的編排測試。
  *
- * 用假的 repository 而不是真資料庫：這裡驗的是「編排」——
+ * 用假的 repository 而不是真資料庫：這裡驗的是**編排**——
  * 誰能簽、什麼時候扣、扣多少、失敗時是哪一種失敗。
  * 「有沒有寫進去」是 repository 的事，那需要整合測試（本專案的既有慣例是
  * `src/tests/integration/`，不在單元測試裡 mock Prisma）。
@@ -242,6 +244,15 @@ const submitInput = (days: string[], segment = LeaveDaySegment.FULL) => ({
   leavePolicyId: "policy-annual",
   reason: "家中有事",
   days: days.map((workDate) => ({ workDate, segment })),
+});
+
+/**
+ * Info: (20260817 - Julian) 送出假單會加密事由（ADR 018 Tier 2），因此測試需要一把金鑰。
+ * 沿用 `attendance_punch.service.test.ts` 的作法：每次跑產生一把隨機金鑰，
+ * 不共用固定值 —— 一個寫死在測試裡的金鑰遲早會被複製到別的地方。
+ */
+beforeAll(() => {
+  process.env.HR_PII_KEY_V1 = randomBytes(HR_PII_KEY_BYTES).toString("base64");
 });
 
 describe("preview — 試算不寫入、不預扣", () => {

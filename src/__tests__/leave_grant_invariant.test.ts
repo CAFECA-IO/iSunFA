@@ -169,7 +169,10 @@ describe("assertGrantSource — 人工調整與期間", () => {
       LeaveGrantInvariantError,
     );
     expect(() =>
-      assertGrantSource({ ...manual, reason: "系統遷移補發 2026 年度未休特休" }),
+      assertGrantSource({
+        ...manual,
+        reason: "系統遷移補發 2026 年度未休特休",
+      }),
     ).not.toThrow();
   });
 

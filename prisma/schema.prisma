@@ -2431,6 +2431,25 @@ model EmployeeShiftDay {
   workDate String      @map("work_date")
   dayType  WorkDayType @map("day_type")
 
+  /**
+   * Info: (20260817 - Julian) 這天**本來**要上幾分鐘。投影成非上班日之後仍然查得到。
+   *
+   * 為什麼需要它：`assertSchedulableDay` 要求非 `WORK` 必無班別（那條規則是對的 ——
+   * 休假日掛著班別，排班月曆會畫出一個不存在於任何判定的班次），
+   * 於是一旦投影成 `LEAVE` / `HOLIDAY` / `SUSPENDED`，
+   * 「這天的應工作分鐘數」在資料庫裡就消失了。
+   *
+   * 而那個數字是下游三件事的依據：半天假怎麼換算、額度扣幾分鐘、銷假退幾分鐘。
+   * 假勤模組原本靠 `LeaveDay.dayEquivalentMinutes` 在送出當下自己抄一份，
+   * 但那只涵蓋走過假勤流程的日子 —— 種子腳本與批次匯入寫成 `LEAVE` 的日子沒有。
+   *
+   * Nullable：`WORK` 日不需要它（讀 `shiftPattern.requiredWorkMinutes` 即可，
+   * 那才是唯一來源）；投影當下才由投影者填入。
+   * ToDo: (20260817 - Julian) 既有資料為 null。回填需要「當時的班別」，而那正是
+   * 已經遺失的東西 —— demo 資料重種即可，正式資料須由 HR 逐筆確認。
+   */
+  plannedWorkMinutes Int? @map("planned_work_minutes")
+
   // Info: (20260813 - Julian) dayType = WORK 時必填，其餘必為 null（assertSchedulableDay）
   // Info: (20260813 - Julian) Restrict：班別被刪不可讓歷史排班的班別靜默變成 null
   shiftPatternId String?       @map("shift_pattern_id")
@@ -2634,6 +2653,19 @@ model LeaveDay {
   // Info: (20260817 - Julian) 換算依據取自該日排班的 ShiftPattern.requiredWorkMinutes，不是一個全域參數
   minutes              Int @map("minutes")
   dayEquivalentMinutes Int @map("day_equivalent_minutes")
+
+  /**
+   * Info: (20260817 - Julian) 換算當下的 `LEAVE_ENTITLEMENT_ENGINE_VERSION`。
+   *
+   * 固化了數值卻沒固化版本，等於固化了一個答案卻丟掉它的依據 ——
+   * 引擎改版之後，一筆看起來不對的分鐘數分不出是「當初算錯」還是「規則改了」，
+   * 而這兩者的處置完全相反（前者要補償，後者不能動）。
+   *
+   * 語意同 `AttendancePunch` 之於判定引擎、`OvertimeSegment.engineVersion`。
+   * 這條規則寫在假勤接線守則 §3.1，而假勤自己是第一個違反它的 ——
+   * 補上之後它才是那條規則的範例而不是反例。
+   */
+  entitlementEngineVersion Int @map("entitlement_engine_version")
 
   // Info: (20260813 - Julian) 生效中才有值（見上方說明）
   activeKey String? @unique @map("active_key")

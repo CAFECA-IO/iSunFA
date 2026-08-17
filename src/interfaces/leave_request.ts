@@ -301,10 +301,19 @@ export interface ILeaveRequestRepository {
     approverEmployeeId: string;
   }): Promise<ILeaveRequestSummary[]>;
   createWithChain(params: {
+    /**
+     * Info: (20260817 - Julian) 由 service 產生，不是 `@default(uuid())`。
+     * `reasonCipher` 的 AAD 綁定 `LeaveRequest:{id}:reasonCipher:{keyVersion}`，
+     * 因此加密（也就是 id）必須先於 insert（ADR 018 §3）。
+     */
+    id: string;
     accountBookId: string;
     employeeId: string;
     leavePolicyId: string;
-    reason: string;
+    // Info: (20260817 - Julian) 事由密文入庫（ADR 018 Tier 2）：病名、家屬狀況、司法事由都寫在這裡
+    reasonCipher: string;
+    piiAlgorithm: string;
+    piiKeyVersion: number;
     totalMinutes: number;
     totalDays: number;
     days: readonly ILeaveDayPlan[];

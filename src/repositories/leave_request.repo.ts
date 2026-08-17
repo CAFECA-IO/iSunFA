@@ -1,15 +1,16 @@
-import { randomUUID } from "crypto";
-import { Prisma } from "@/generated";
 import { prisma } from "@/lib/prisma";
 import { WorkDayType } from "@/constants/attendance";
 import { LeaveRequestStatus } from "@/constants/leave";
+import { LeaveApprovalStepStatus } from "@/constants/leave_policy";
 import {
-  LeaveApprovalStepStatus,
-  LeaveLedgerEntryType,
-} from "@/constants/leave_policy";
-import { allocateConsumption } from "@/lib/leave_entitlement_rules";
+  readGrantBalances,
+  writeConsumeForDays,
+} from "@/repositories/leave_ledger";
 import { activeKeyOf } from "@/repositories/leave.repo";
 import { assertSchedulableDay } from "@/repositories/attendance_schedule_invariant";
+import { assertStorablePii } from "@/repositories/hr_pii_invariant";
+import { HrPiiTable } from "@/constants/hr_pii";
+import { LEAVE_ENTITLEMENT_ENGINE_VERSION } from "@/lib/leave_entitlement_rules";
 import {
   ILeaveApprovalStepRecord,
   ILeaveRequestRecord,
@@ -81,42 +82,6 @@ const SUMMARY_INCLUDE = {
  * 為 `LeaveGrant` 加一個**遵守同樣三規矩**的 `remainingMinutes` 快取
  * （同交易更新、可重建、每日勾稽），而不是把它變成一個沒有勾稽的欄位。
  */
-const readGrantBalances = async (
-  tx: Prisma.TransactionClient,
-  params: { accountBookId: string; employeeId: string; leavePolicyId: string },
-) => {
-  const grants = await tx.leaveGrant.findMany({
-    where: {
-      accountBookId: params.accountBookId,
-      employeeId: params.employeeId,
-      leavePolicyId: params.leavePolicyId,
-    },
-    select: {
-      id: true,
-      grantedMinutes: true,
-      expiresOn: true,
-      createdAt: true,
-    },
-  });
-  if (grants.length === 0) return [];
-
-  const consumed = await tx.leaveLedgerEntry.groupBy({
-    by: ["leaveGrantId"],
-    where: { leaveGrantId: { in: grants.map((grant) => grant.id) } },
-    _sum: { deltaMinutes: true },
-  });
-  const deltaByGrant = new Map(
-    consumed.map((row) => [row.leaveGrantId, row._sum.deltaMinutes ?? 0]),
-  );
-
-  return grants.map((grant) => ({
-    grantId: grant.id,
-    // Info: (20260817 - Julian) GRANT 本身也是一筆正的異動，故直接取異動總和即為餘額
-    remainingMinutes: deltaByGrant.get(grant.id) ?? 0,
-    expiresOn: grant.expiresOn,
-    createdAt: grant.createdAt.toISOString(),
-  }));
-};
 
 export class LeaveRequestRepository implements ILeaveRequestRepository {
   public async findById(params: {
@@ -215,14 +180,30 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
    * 尚未生效。兩張待簽的假單可以涵蓋同一天，衝突要到核准時才成立
    * （對應 service 端「不預扣」的設計）。
    *
-   * `id` 由應用層 `randomUUID()` 產生而非 `@default(uuid())`：
+   * `id` 由**呼叫端**產生並連同密文一起傳進來，不是在這裡 `randomUUID()`：
    * `reasonCipher` 的 AAD 綁定 `LeaveRequest:{id}:reasonCipher:{keyVersion}`，
-   * 加密時就必須知道 id（ADR 018 §7 對 AttendancePunch 的同一處置）。
+   * 加密必須在 insert 之前完成，而加密發生在 service
+   * （與 `attendance_punch.service` 對 `latitudeCipher` 的處置相同，ADR 018 §3）。
+   *
+   * Info: (20260817 - Julian) 第一版在這裡寫 `reason: params.reason` —— 明文，
+   * 而且欄位在 ADR 018 之後已經不存在了。上面那段註解當時就寫著 AAD 怎麼綁，
+   * **但沒有任何一行實作它**。與 `completeApproval` 漏掉 `assertSchedulableDay`
+   * 是同一種錯：把「為什麼要這樣做」寫下來，然後沒有做。
    */
   public async createWithChain(
     params: Parameters<ILeaveRequestRepository["createWithChain"]>[0],
   ): Promise<ILeaveRequestRecord> {
-    const requestId = randomUUID();
+    const requestId = params.id;
+
+    /**
+     * Info: (20260817 - Julian) repository 是唯一的 DB 閘口，因此不變式擋在這裡 ——
+     * 種子腳本、資料遷移、金鑰輪替都繞不過去（`hr_pii_invariant.ts` 檔頭的理由）。
+     */
+    assertStorablePii(HrPiiTable.LEAVE_REQUEST, {
+      ciphers: { reasonCipher: params.reasonCipher },
+      keyVersion: params.piiKeyVersion,
+      algorithm: params.piiAlgorithm,
+    });
 
     const created = await prisma.$transaction(async (tx) => {
       await tx.leaveRequest.create({
@@ -231,7 +212,9 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
           accountBookId: params.accountBookId,
           employeeId: params.employeeId,
           leavePolicyId: params.leavePolicyId,
-          reason: params.reason,
+          reasonCipher: params.reasonCipher,
+          piiAlgorithm: params.piiAlgorithm,
+          piiKeyVersion: params.piiKeyVersion,
           status: LeaveRequestStatus.PENDING,
           totalMinutes: params.totalMinutes,
           totalDays: params.totalDays,
@@ -244,6 +227,8 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
               endMinute: day.endMinute,
               minutes: day.minutes,
               dayEquivalentMinutes: day.dayEquivalentMinutes,
+              // Info: (20260817 - Julian) 固化數值就要固化它的依據（接線守則 §3.1）
+              entitlementEngineVersion: LEAVE_ENTITLEMENT_ENGINE_VERSION,
             })),
           },
           approvalSteps: {
@@ -346,34 +331,55 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
       });
       if (claimed.count === 0) return LeaveApprovalOutcome.ALREADY_REVIEWED;
 
+      /**
+       * Info: (20260817 - Julian) 先取得逐日明細再扣帳 —— 扣帳需要 `leaveDayId`。
+       *
+       * 狀態一併改成 `APPROVED`：若把它留到最後，中途 return
+       * `BALANCE_RACE` 時交易會整個回捲，兩者的最終結果相同，
+       * 但放在這裡讀起來是「這一關過了，接著結帳」，
+       * 而那正是這段程式在做的事。
+       */
+      const request = await tx.leaveRequest.update({
+        where: { id: params.requestId },
+        data: { status: LeaveRequestStatus.APPROVED },
+        // Info: (20260817 - Julian) 帶出 dayEquivalentMinutes：投影時要把它抄進 plannedWorkMinutes
+        include: {
+          days: {
+            select: {
+              id: true,
+              workDate: true,
+              minutes: true,
+              dayEquivalentMinutes: true,
+            },
+          },
+        },
+      });
+
       if (params.totalMinutes > 0) {
         const balances = await readGrantBalances(tx, {
           accountBookId: params.accountBookId,
           employeeId: params.employeeId,
           leavePolicyId: params.leavePolicyId,
         });
-        const allocation = allocateConsumption({
-          grants: balances,
-          requiredMinutes: params.totalMinutes,
+
+        /**
+         * Info: (20260817 - Julian) **逐日扣帳**，不是按整張單扣。
+         *
+         * 第一版按單彙總（`consume:<requestId>:<grantId>`）。扣的時候沒問題，
+         * 銷假的時候就回不去了 —— 銷假是逐日的，而按單彙總之後沒有任何
+         * 資訊能算出「8/14 那一天用掉了哪幾批的多少分鐘」。
+         * 總分配結果與按單扣相同（先到期先扣的貪婪演算法），差別只在粒度。
+         */
+        const consumed = await writeConsumeForDays(tx, {
+          balances,
+          days: request.days.map((day) => ({
+            leaveDayId: day.id,
+            minutes: day.minutes,
+          })),
+          actorEmployeeId: params.actorEmployeeId,
         });
         // Info: (20260817 - Julian) 交易內才發現不足 —— 另一張單先扣走了
-        if (allocation.shortfallMinutes > 0) {
-          return LeaveApprovalOutcome.BALANCE_RACE;
-        }
-
-        for (const item of allocation.allocations) {
-          await tx.leaveLedgerEntry.create({
-            data: {
-              leaveGrantId: item.grantId,
-              entryType: LeaveLedgerEntryType.CONSUME,
-              deltaMinutes: -item.minutes,
-              grantBalanceAfterMinutes: item.grantBalanceAfterMinutes,
-              actorEmployeeId: params.actorEmployeeId,
-              // Info: (20260817 - Julian) 冪等鍵：同一張單同一批只能扣一次
-              idempotencyKey: `consume:${params.requestId}:${item.grantId}`,
-            },
-          });
-        }
+        if (!consumed) return LeaveApprovalOutcome.BALANCE_RACE;
 
         /**
          * Info: (20260817 - Julian) 餘額快取以附條件更新，`count === 0` 即判輸。
@@ -389,12 +395,6 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
         });
         if (deducted.count === 0) return LeaveApprovalOutcome.BALANCE_RACE;
       }
-
-      const request = await tx.leaveRequest.update({
-        where: { id: params.requestId },
-        data: { status: LeaveRequestStatus.APPROVED },
-        include: { days: { select: { id: true, workDate: true } } },
-      });
 
       for (const day of request.days) {
         await tx.leaveDay.update({
@@ -426,7 +426,19 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
               workDate: day.workDate,
             },
           },
-          data: { dayType: WorkDayType.LEAVE, shiftPatternId: null },
+          data: {
+            dayType: WorkDayType.LEAVE,
+            shiftPatternId: null,
+            /**
+             * Info: (20260817 - Julian) 投影是單向有損的 —— 班別一設成 null，
+             * 「這天本來要上幾分鐘」就查不到了。投影者負責在丟掉之前留一份。
+             *
+             * 值取自 `LeaveDay.dayEquivalentMinutes`，而那一份是送出當下
+             * 從該日 `ShiftPattern.requiredWorkMinutes` 抄來的 —— 同一個數字，
+             * 不是第二個來源。
+             */
+            plannedWorkMinutes: day.dayEquivalentMinutes,
+          },
         });
       }
 

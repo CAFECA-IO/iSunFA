@@ -1,3 +1,6 @@
+import { randomUUID } from "crypto";
+import { encryptPii } from "@/lib/hr_pii_crypto";
+import { HrPiiTable } from "@/constants/hr_pii";
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
@@ -83,7 +86,13 @@ export class LeaveRequestService {
 
     const visible: ILeaveRequestSummary[] = [];
     for (const row of rows) {
-      if (await this.isOnChain(params.accountBookId, row.id, params.actorEmployeeId)) {
+      if (
+        await this.isOnChain(
+          params.accountBookId,
+          row.id,
+          params.actorEmployeeId,
+        )
+      ) {
         visible.push(row);
       }
     }
@@ -255,17 +264,36 @@ export class LeaveRequestService {
      */
     const blocking = concurrency.some(
       (item) =>
-        item.action === LeaveConcurrencyAction.BLOCK && policy.employerMayReject,
+        item.action === LeaveConcurrencyAction.BLOCK &&
+        policy.employerMayReject,
     );
     if (blocking) {
       throw new AppError(API_ERRORS.CF_LEAVE_CONCURRENCY_EXCEEDED);
     }
 
+    /**
+     * Info: (20260817 - Julian) id 先產生，因為它是加密 AAD 的一部分，
+     * 加密必須在 insert 之前完成（ADR 018 §3；與 `attendance_punch.service`
+     * 對 `latitudeCipher` 的處置相同）。
+     *
+     * 事由是 Tier 2 個資：「回診複檢」「父喪」「出庭」都寫在這一欄，
+     * 而假單清單是主管日常會開的畫面 —— 明文入庫等於讓每一次查詢都攤開它。
+     */
+    const requestId = randomUUID();
+    const reason = encryptPii(params.input.reason, {
+      table: HrPiiTable.LEAVE_REQUEST,
+      field: "reasonCipher",
+      recordId: requestId,
+    });
+
     const created = await this.requests.createWithChain({
+      id: requestId,
       accountBookId: params.accountBookId,
       employeeId: params.employeeId,
       leavePolicyId: policy.id,
-      reason: params.input.reason,
+      reasonCipher: reason.cipher,
+      piiAlgorithm: reason.algorithm,
+      piiKeyVersion: reason.keyVersion,
       totalMinutes,
       totalDays,
       days: plan,
@@ -412,10 +440,7 @@ export class LeaveRequestService {
       throw new AppError(API_ERRORS.VA_INVALID_INPUT_DATA);
     }
 
-    const policy = await this.requirePolicy(
-      accountBookId,
-      input.leavePolicyId,
-    );
+    const policy = await this.requirePolicy(accountBookId, input.leavePolicyId);
     const workDates = input.days.map((day) => day.workDate);
     const schedules = await this.context.findSchedules({
       accountBookId,

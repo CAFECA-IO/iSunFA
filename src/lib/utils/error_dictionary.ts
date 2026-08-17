@@ -1236,7 +1236,8 @@ export const API_ERRORS = {
    */
   VA_LEAVE_CYCLE_DISADVANTAGEOUS: {
     code: "VA000050",
-    message: "Calendar-year accrual grants fewer days than the anniversary basis",
+    message:
+      "Calendar-year accrual grants fewer days than the anniversary basis",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
 
@@ -1280,6 +1281,62 @@ export const API_ERRORS = {
   } as IErrorDef,
 
   /**
+   * Info: (20260817 - Julian) 該假別不適用銷假徵詢。
+   *
+   * §38 III 的「雇主基於企業經營上急迫需求得與勞工協商調整」只寫在特休，
+   * 因此 `LeavePolicy.recallable` 只有特休為 true。第一版沒有讀這個欄位 ——
+   * 主管可以對產假、病假、生理假發起徵詢，而那不只是沒有法源。
+   *
+   * 歸類為 VALIDATION 而不是 FORBIDDEN：擋下來的不是「這個人不能做」，
+   * 是「這個假別不能被這樣對待」—— 換一個主管來也一樣不行。
+   */
+  VA_LEAVE_NOT_RECALLABLE: {
+    code: "VA000056",
+    message: "This leave type cannot be subject to a recall request",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 簽核規則整組不合法（區間有洞／重疊／最後一條有上界／空鏈）。
+   *
+   * `message` 會被 service 以不變式的原文覆寫 —— 「區間有洞 [3, 5)」與
+   * 「最後一條不得有上界」是兩個不同的修法，共用一句泛用訊息等於
+   * 只告訴使用者「存不進去」。
+   */
+  VA_LEAVE_APPROVAL_RULE_INVALID: {
+    code: "VA000057",
+    message: "The approval rule set is not a valid partition of [0, ∞)",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 通則不得為空。
+   *
+   * 假別專屬規則清空是合法的（退回走通則），但通則清空的效果是
+   * **這個帳本從此沒有任何假單送得出去** —— 而那要到有人請假時才顯現，
+   * 屆時錯誤訊息會指向「您尚未設定直屬主管」（同 ADR 023 §3 拒絕空鏈的理由）。
+   */
+  VA_LEAVE_GENERAL_RULE_REQUIRED: {
+    code: "VA000058",
+    message: "The general approval rule set cannot be empty",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 授予額度時找不到這名員工的班別。
+   *
+   * 「一天是幾分鐘」沒有預設值 —— 引擎明確拒絕猜（`dayEquivalentMinutes <= 0`
+   * 直接丟）。猜錯的後果是每一批額度的面額都錯，而且錯得看不出來：
+   * 餘額畫面會顯示一個看起來正常的數字。
+   */
+  VA_LEAVE_NO_SHIFT_FOR_ACCRUAL: {
+    code: "VA000059",
+    message:
+      "Cannot accrue leave for an employee with no scheduled shift; the day-equivalent minutes are unknown",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
    * Info: (20260817 - Julian) 逾越假單的可見範圍：想看的不是自己的單，
    * 而呼叫者也不在那張單的簽核鏈上。
    *
@@ -1310,7 +1367,8 @@ export const API_ERRORS = {
    */
   FO_OVERTIME_ON_REGULAR_OFF: {
     code: "FO000013",
-    message: "Overtime on a statutory rest day requires the Article 40 procedure",
+    message:
+      "Overtime on a statutory rest day requires the Article 40 procedure",
     status: ApiCode.FORBIDDEN,
   } as IErrorDef,
 
@@ -1339,6 +1397,23 @@ export const API_ERRORS = {
   FO_NOT_AUTHORIZED_REVIEWER: {
     code: "FO000015",
     message: "You are not the current approver for this request",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 銷假徵詢的對象不在該主管的部門範圍內。
+   *
+   * 與 `FO_ATTENDANCE_SUPERVISOR_ONLY` 是兩件事：那個說「你不是主管」，
+   * 這個說「你是主管，但這個人不歸你管」。第一版把兩者混在同一個檢查裡
+   * （`isDepartmentManager` 只問「有沒有管任何部門」），結果是第一工務段的
+   * 主管可以對第五工務段的員工發起徵詢。
+   *
+   * 回 403 而不是把它偽裝成 404：今日請假名單（A11）本來就對全體員工開放，
+   * 「這一天有人請假」不是秘密，藏起來只會讓主管看不懂為什麼按鈕沒有反應。
+   */
+  FO_LEAVE_RECALL_SCOPE: {
+    code: "FO000017",
+    message: "This employee is not in your department scope",
     status: ApiCode.FORBIDDEN,
   } as IErrorDef,
 
