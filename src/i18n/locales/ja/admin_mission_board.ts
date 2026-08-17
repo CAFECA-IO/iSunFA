@@ -54,6 +54,10 @@ export const adminMissionBoard = {
     toast_draft_saved: "下書きが手動で保存されました",
     toast_report_inserted: "レポートの生成と挿入が成功しました！",
     toast_share_link_failed: "共有リンクの生成に失敗しました",
+    toast_toc_pages_missing:
+      "レポートをダウンロードしましたが、目次にページ番号が入りませんでした",
+    toast_charts_missing:
+      "レポートをダウンロードしましたが、一部の図を描画できませんでした",
     edit_markdown: "マークダウンを編集",
     preview_pdf: "PDFをプレビュー",
     download_pdf: "PDF をダウンロード",

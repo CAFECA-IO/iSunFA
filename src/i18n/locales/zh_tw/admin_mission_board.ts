@@ -52,6 +52,8 @@ export const adminMissionBoard = {
     toast_draft_saved: "草稿已手動儲存",
     toast_report_inserted: "報告生成並插入成功！",
     toast_share_link_failed: "生成分享連結失敗",
+    toast_toc_pages_missing: "報告已下載，但目錄頁碼未能填入",
+    toast_charts_missing: "報告已下載，但部分圖表未能繪製",
     edit_markdown: "編輯 Markdown",
     preview_pdf: "預覽 PDF",
     download_pdf: "下載 PDF",

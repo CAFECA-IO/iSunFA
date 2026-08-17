@@ -49,6 +49,11 @@ import {
   validateSourceTables,
   type ICarbonSourceTable,
 } from "@/lib/carbon_source_table.builder";
+import {
+  replaceOfficeSymbolChars,
+  unmappedPrivateUseChars,
+} from "@/lib/utils/office_symbol_chars";
+import { padTableHeaderToWidest } from "@/lib/utils/markdown_table_columns";
 import { logger } from "@/lib/utils/logger";
 import { IActivityRecord } from "@/types/carbon_chatbot.types";
 
@@ -632,6 +637,17 @@ T3. **「NA」「NS」「-」等非數值標記必須原樣保留,嚴禁改成 0
 T4. 跨頁的同一張表合併為一張,sourcePages 給起訖兩頁;不同表號絕不合併。
 T5. tableNo 照抄原文表號(如「表3.8」);找不到表號的表格整張省略,不要自己編號。
 T6. 只收錄真正是表格的內容;條列式文字不要當成表格。
+T7. **每一列的欄數必須與表頭一致。** markdown 沒有跨欄/跨列,原文的合併儲存格要照下面兩條轉寫;
+    欄數對不上時多出來的欄會被整個丟掉(連內容一起),而且不會有任何錯誤。
+T8. **兩層表頭**(父標題橫跨數欄、子標題在下一列):表頭列寫父標題,父標題所涵蓋的每一欄各佔一格
+    (第二格起留空),下一列再寫子標題。例:
+      | 設施/活動 | 溫室氣體源 | 可能產生溫室氣體種類 | | | | | | | 備註 |
+      | | | CO2 | CH4 | N2O | HFCs | PFCs | NF3 | SF6 | (類別) |
+    —— 不要把父標題那一列寫成 4 欄了事,那會讓後面六欄的資料全部消失。
+T9. **跨欄的分隔列**(整列只有一個置中標題,如「類別二:輸入能源的間接溫室氣體排放量」)
+    獨立成一列:第一格寫該標題,同列其餘儲存格全部留空。
+    不要把它填進它所涵蓋的每一列的第一欄,也不要因此把原本的第一欄擠到第二欄去。
+    **縱向合併的儲存格**只在該範圍的第一列寫值,其餘列的該格留空,不要逐列重複。
 
 【標準大綱】
 ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
@@ -723,13 +739,48 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
         accepted: validSegments.length,
       });
     }
+    /**
+     * Info: (20260811 - Emily) Word 私有區符號要在落地前換成真的 Unicode
+     * (issue_drafts/open/20 第 1 張票)。
+     *
+     * 原文的項目符號是 Wingdings 的實心圓,Word 存成 PDF 時寫的是私有使用區
+     * 的 U+F06C;抽取文字層時那個碼位原樣進來,而私有區沒有任何字型有字形 ——
+     * 預覽與 PDF 都是一個空心方框。實測那份 UAT 報告 57 個。
+     *
+     * 修在匯入落地這一層:預覽與下載的 PDF 讀同一份內容,修在渲染層只會讓兩邊分歧。
+     * 換不掉的私有區字元記 log —— 每一個都會在報告上留一個方框,不能靜默通過。
+     */
+    const normalizeSymbols = (text: string, paragraphId: string): string => {
+      const stray = unmappedPrivateUseChars(text);
+      if (stray.length > 0) {
+        /**
+         * Info: (20260812 - Emily) 訊息不再斷言「每一個都會是方框」。
+         *
+         * 掃描範圍是整個 BMP 私有區(U+E000–U+F8FF),而 Big5 造字區與 HKSCS 的
+         * 罕用漢字(人名用字)也落在裡面 —— 在繁中報告裡不算罕見,而它們在
+         * 裝好字型的環境是**正常顯示**的。原訊息會讓維運把那些當成缺陷去追。
+         * 真正需要處理的是 Word 符號字型的 U+F020–U+F0FF 區段。
+         */
+        logger.warn("[ReportImportService] unmapped private-use chars", {
+          note: "U+F020–U+F0FF 多為 Word 符號字型；其餘可能是造字區漢字，裝好字型即正常",
+          paragraphId,
+          chars: stray.map(
+            (char) =>
+              `U+${char.codePointAt(0)?.toString(16).toUpperCase() ?? "?"}`,
+          ),
+        });
+      }
+      return replaceOfficeSymbolChars(text);
+    };
+
     validSegments.forEach((segment) => {
+      const content = normalizeSymbols(segment.content, segment.paragraphId);
       if (!scopedIds.has(segment.paragraphId)) {
-        unmapped.push(segment.content);
+        unmapped.push(content);
         return;
       }
       const bucket = contentById.get(segment.paragraphId) ?? [];
-      bucket.push(segment.content);
+      bucket.push(content);
       contentById.set(segment.paragraphId, bucket);
 
       /**
@@ -762,7 +813,12 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
           });
           return;
         }
-        accepted.push(table.data);
+        // Info: (20260811 - Emily) 表格儲存格裡也可能有私有區符號,同樣換掉
+        accepted.push({
+          ...table.data,
+          markdown: normalizeSymbols(table.data.markdown, segment.paragraphId),
+          caption: normalizeSymbols(table.data.caption, segment.paragraphId),
+        });
       });
       if (accepted.length > 0) tablesById.set(segment.paragraphId, accepted);
     });
@@ -807,20 +863,54 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
           }
           return check.isValid;
         });
+        /**
+         * Info: (20260811 - Emily) 表頭比資料列窄的表要先把欄數補齊
+         * (issue_drafts/open/19 第 3 張票)。
+         *
+         * GFM 會把超出表頭欄數的儲存格**靜默丟棄**。原文的兩層表頭
+         * (父標題橫跨數欄、子標題在下一列)在 markdown 沒有 colspan 可用,
+         * 模型只能把父標題那列寫成較少的欄 —— 於是表3.1 宣告 4 欄、資料列有 10 欄,
+         * 七種溫室氣體裡的五種連同「(類別)」欄一起消失,而且沒有任何錯誤訊息。
+         *
+         * 實測那份 UAT 報告:4 張表共 261 個非空儲存格就這樣不見了。
+         * 補欄只在表頭尾端加空欄,不動任何一格既有內容;多出來的格全是空的
+         * (行尾多打一個 `|`)時不補,免得憑空多一條空欄。
+         *
+         * 修在匯入落地這一層而不是渲染層:預覽與下載的 PDF 讀的是同一份 markdown,
+         * 修在渲染層只會讓兩邊再度分歧。
+         */
+        const widened = shaped.map((table) => {
+          const fix = padTableHeaderToWidest(table.markdown);
+          if (fix.recoveredCells === 0) return table;
+          logger.warn("[ReportImportService] source table header widened", {
+            paragraphId,
+            tableNo: table.tableNo,
+            headerColumns: fix.headerColumns,
+            widestColumns: fix.widestColumns,
+            recoveredCells: fix.recoveredCells,
+            /**
+             * Info: (20260812 - Emily) 第二層表頭:那種表的欄位標籤與資料欄
+             * 不對應,而補欄不修那件事(見 markdown_table_columns 檔頭)。
+             * 需要人工對照原文,所以要記得出來。
+             */
+            hasSecondHeaderLevel: fix.hasSecondHeaderLevel,
+          });
+          return { ...table, markdown: fix.markdown };
+        });
         // Info: (20260802 - Tzuhan) 逐張過關後仍要驗數量上限(單張檢查看不到總數)
-        const withinLimit = validateSourceTables(shaped);
+        const withinLimit = validateSourceTables(widened);
         if (!withinLimit.isValid) {
           logger.warn("[ReportImportService] source tables dropped", {
             paragraphId,
             reason: withinLimit.reason ?? null,
-            count: shaped.length,
+            count: widened.length,
           });
         }
         return {
           paragraphId,
           title: section ? `${section.code} ${section.title}` : paragraphId,
           content: parts.join("\n\n").trim(),
-          sourceTables: withinLimit.isValid ? shaped : [],
+          sourceTables: withinLimit.isValid ? widened : [],
         };
       },
     );

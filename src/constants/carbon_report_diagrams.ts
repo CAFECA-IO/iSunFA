@@ -130,3 +130,33 @@ export const CARBON_TIMELINE_MIN_DATED_EVENTS = 3;
  * 那用一句話講完即可,不需要一張圖。與 timeline 的下限同一個理由。
  */
 export const CARBON_DIAGRAM_MIN_NODES = 3;
+
+/**
+ * Info: (20260812 - Emily) 里程碑表的兩個表頭 —— **唯一來源**。
+ *
+ * 這兩個字串原本各自寫死在三個地方:產生器的預設 labels、產生器的 `?? "時間"`
+ * fallback、以及讀取端 `markdown_timeline_table` 的轉換。三份副本靠註解
+ * 「與 CARBON_DIAGRAM_DEFAULT_LABELS 一致」維持,而它們是**同一份契約的兩端**:
+ * 產生器寫出表頭、讀取端把既有草稿的 timeline 轉成同樣的表頭。
+ *
+ * 產生器端原本還允許用 labels 覆寫這兩個值,那會讓同一份報告出現兩種表頭 ——
+ * 讀取端是純文字轉換,拿不到 labels,不可能跟著改。已移除那兩個覆寫欄位:
+ * **一個無法在兩端同時兌現的選項,不該提供。** 日後真要 i18n,兩端都得吃同一組。
+ */
+export const MILESTONE_TABLE_HEADERS = {
+  period: "時間",
+  event: "事件",
+} as const;
+
+/**
+ * Info: (20260812 - Emily) 「只有時間、沒有事件」那一列的事件欄內容。
+ *
+ * **不能是空字串。** 留空的話這一列與 `section` 產生的列形狀完全相同
+ * (第一格有內容、其餘皆空),而 `carbon_report_html` 的 `isGroupRow` 正是這個判準 ——
+ * 於是它被渲染成橫跨整表的章節分隔列,**一個資料點被畫成一個章節標題**。
+ * 破折號讓它留在資料列的形狀裡,同時誠實表達「原文這一項只有時間、沒有事件」。
+ *
+ * 與 `MILESTONE_TABLE_HEADERS` 放在一起的理由相同:它是里程碑表**形狀契約**的一部分,
+ * 而那份契約有產生端與讀取端兩邊。放在讀取端的檔案裡等於再種一顆會分岔的副本。
+ */
+export const MILESTONE_EMPTY_EVENT = "—";

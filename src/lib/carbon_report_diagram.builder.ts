@@ -4,13 +4,14 @@
 // Info: (20260730 - Tzuhan) LLM 只回結構化欄位,mermaid 由本模組組出,且每個節點文字都要能在原文找到才畫。
 
 import {
-  CarbonDiagramRendererEnum,
-  CarbonDiagramTemplateEnum,
-  CARBON_DIAGRAM_TEMPLATES,
   CARBON_DIAGRAM_MAX_LABEL_CHARS,
   CARBON_DIAGRAM_MAX_OVERLONG_SHARE,
   CARBON_DIAGRAM_MIN_NODES,
+  CARBON_DIAGRAM_TEMPLATES,
   CARBON_TIMELINE_MIN_DATED_EVENTS,
+  CarbonDiagramRendererEnum,
+  CarbonDiagramTemplateEnum,
+  MILESTONE_TABLE_HEADERS,
   buildDiagramAnchorEnd,
   buildDiagramAnchorStart,
 } from "@/constants/carbon_report_diagrams";
@@ -285,16 +286,47 @@ const TIMELINE_UNDATED_LABEL = "未標註時間";
 const escapeLabel = (label: string): string =>
   label.trim().replace(/"/g, "").replace(/\s+/g, " ");
 
-// Info: (20260730 - Tzuhan) timeline 以冒號分隔時間與事件,label 內的冒號必須換掉否則整列語意錯位
-const escapeTimelineLabel = (label: string): string =>
-  escapeLabel(label).replace(/[:：]/g, "-");
+/**
+ * Info: (20260811 - Emily) 里程碑改成表格之後,要換掉的不再是冒號而是**直線**。
+ * timeline 用冒號分隔時間與事件,表格用 `|` 分隔儲存格 ——
+ * 事件文字裡的 `|` 若不逸出會多切出一欄,整列跟著錯位。
+ * 冒號在表格裡沒有語意,不必再動它(原文的「品管分等檢驗甲等」帶冒號的句子因此保持原樣)。
+ */
+const escapeTableCell = (label: string): string =>
+  escapeLabel(label).replace(/\|/g, "\\|");
 
 /**
- * Info: (20260730 - Tzuhan) mermaid timeline:`時間標籤 : 事件 : 事件`。
- * 同一時間標籤的多個事件併為一列,無時間標籤者集中於「未標註時間」之後——
- * 不猜時間、也不丟掉事件。時間順序沿用模型回傳的順序(原文本身即依時序書寫)。
+ * Info: (20260811 - Emily) 里程碑改為**表格**而不是 mermaid timeline
+ * (data/issue_drafts/open/20 第 2 張票)。
+ *
+ * mermaid 的 timeline 是「一個時間點一欄」,欄寬固定,而中文事件說明約 20 字。
+ * 實測高興昌那份的 15 條沿革:SVG 內在寬度 3,559px,排到橫式頁寬 993px 是**縮到 28%**,
+ * 事件字級 4.5px —— 正文是 14px。使用者看到的「字疊在一起」是文字在那個尺寸下溢出各自的方塊。
+ *
+ * 量過三種做法:
+ *   現況一條軸    3559px → 28%   4.5px
+ *   拆成三段      最差 1744px → 57%   9.1px
+ *   表格          688px  → 不縮放     11.3px(與其他表格同級)
+ * 拆段要到不縮放得拆成五張圖,15 條沿革拆五張圖不合理。
+ * mermaid timeline 也沒有交錯排列的選項:同一時間點的事件只會在那一欄往下疊。
+ *
+ * 客戶原始報告這一段本來就是條列敘述而不是圖表,表格同時更接近原文。
+ *
+ * 同一時間點的多個事件各佔一列,時間只寫在該段的第一列 ——
+ * 與原文照錄表格的縱向合併慣例一致(見 carbon_source_table 的 T9),
+ * 也讓 annotateTable 的欄寬判斷把寬度讓給事件欄。
+ *
+ * 註:template 的 renderer 仍叫 TIMELINE。那個列舉標的是「這個模板要呈現時序」,
+ * 不是「一定要用 mermaid 畫成軸」;呈現方式改變不需要改模板的語意。
  */
-function buildTimeline(nodes: ICarbonDiagramNode[]): string {
+/*
+ * Info: (20260812 - Emily) 不再收 labels。
+ *
+ * 表頭移到 `MILESTONE_TABLE_HEADERS`（唯一來源）之後這個參數就沒有用了 ——
+ * 而它是本檔私有函式、只有一個呼叫端，留著一個「傳進來但不看」的參數
+ * 會讓下一個人以為里程碑表還有 i18n 的餘地。沒有，兩端得吃同一組。
+ */
+function buildMilestoneTable(nodes: ICarbonDiagramNode[]): string {
   const eventsByPeriod = new Map<string, string[]>();
   const undated: string[] = [];
   /**
@@ -303,37 +335,51 @@ function buildTimeline(nodes: ICarbonDiagramNode[]): string {
    * `未標註時間 : 1966年01月 : 1968年06月 : …` —— 那是把時間軸自己再列一次。
    *
    * 本檔開頭寫過「不丟壞節點、只留好節點」,理由是少了中間層會呈現原文不存在的層級。
-   * 那條理由對 timeline 不成立:時間軸沒有層級,丟掉一個與軸重複的項目
-   * 不可能捏造出結構。這裡丟掉的不是事件,是軸的複本。
+   * 那條理由對里程碑不成立:它沒有層級,丟掉一個與時間欄重複的項目
+   * 不可能捏造出結構。這裡丟掉的不是事件,是時間欄的複本。
    */
   const periods = new Set(
     nodes
       .map((node) => node.parent)
       .filter((parent): parent is string => parent !== undefined)
-      .map(escapeTimelineLabel),
+      .map(escapeTableCell),
   );
   nodes.forEach((node) => {
-    const label = escapeTimelineLabel(node.label);
+    const label = escapeTableCell(node.label);
     if (node.parent === undefined) {
-      // Info: (20260803 - Tzuhan) 無時間標籤且文字本身就是某個時間標籤 → 軸的複本,不是事件
+      // Info: (20260803 - Tzuhan) 無時間標籤且文字本身就是某個時間標籤 → 複本,不是事件
       if (periods.has(label)) return;
       undated.push(label);
       return;
     }
-    const period = escapeTimelineLabel(node.parent);
+    const period = escapeTableCell(node.parent);
     const bucket = eventsByPeriod.get(period) ?? [];
     bucket.push(label);
     eventsByPeriod.set(period, bucket);
   });
 
-  const rows = Array.from(eventsByPeriod.entries()).map(
-    ([period, events]) => `    ${period} : ${events.join(" : ")}`,
-  );
+  const rows: string[] = [];
+  eventsByPeriod.forEach((events, period) => {
+    events.forEach((event, index) => {
+      // Info: (20260811 - Emily) 時間只寫在該段第一列,續列留空(縱向合併的表達方式)
+      rows.push(`| ${index === 0 ? period : ""} | ${event} |`);
+    });
+  });
   // Info: (20260730 - Tzuhan) 沒有時間標籤的事件不丟棄,列於末尾並明示其未標註時間
-  if (undated.length > 0) {
-    rows.push(`    ${TIMELINE_UNDATED_LABEL} : ${undated.join(" : ")}`);
-  }
-  return ["```mermaid", "timeline", ...rows, "```"].join("\n");
+  undated.forEach((event, index) => {
+    rows.push(`| ${index === 0 ? TIMELINE_UNDATED_LABEL : ""} | ${event} |`);
+  });
+
+  /**
+   * Info: (20260812 - Emily) 表頭取自 MILESTONE_TABLE_HEADERS（唯一來源）。
+   * 原本是 `labels.milestonePeriodHeader ?? "時間"` —— 可覆寫,而讀取端的
+   * timeline 轉換是純文字函式拿不到 labels,覆寫會讓同一份報告出現兩種表頭。
+   */
+  return [
+    `| ${MILESTONE_TABLE_HEADERS.period} | ${MILESTONE_TABLE_HEADERS.event} |`,
+    "| --- | --- |",
+    ...rows,
+  ].join("\n");
 }
 
 /**
@@ -382,7 +428,7 @@ export function buildCarbonDiagramBlock(
 
   const template = CARBON_DIAGRAM_TEMPLATES[templateId];
   if (template.renderer === CarbonDiagramRendererEnum.TIMELINE) {
-    return wrap(noteSkipped(buildTimeline(drawn)));
+    return wrap(noteSkipped(buildMilestoneTable(drawn)));
   }
 
   /**

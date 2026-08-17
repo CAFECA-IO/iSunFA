@@ -11,6 +11,25 @@ import { CARBON_PDF_MAX_MARKDOWN_BYTES } from "@/constants/carbon_pdf";
 const markdownByteLength = (value: string): number =>
   Buffer.byteLength(value, "utf8");
 
+/**
+ * Info: (20260811 - Emily) 文件外殼的文案由用戶端帶上來。
+ *
+ * 那組字是 i18n(`admin_mission_board.pdf_editor.*`),而伺服端沒有使用者的語言與地區設定;
+ * 在伺服端另寫一份等於同一份文件的頁首有兩處來源,遲早一邊改一邊沒改。
+ * 長度上限只為擋住異常載荷 —— 內容逸出在 builder(`escapeHtml`)。
+ * logo 走 data URL:列印時 sealNetwork 會擋掉所有非 data/about/blob 的請求。
+ */
+const CarbonReportShellSchema = z.object({
+  brand: z.string().min(1).max(80),
+  internalDocument: z.string().min(1).max(80),
+  systemReport: z.string().min(1).max(80),
+  issuedAt: z.string().min(1).max(40),
+  footerTitle: z.string().min(1).max(120),
+  footerText: z.string().min(1).max(300),
+  title: z.string().max(200).optional(),
+  tocTitle: z.string().max(80).optional(),
+});
+
 export const CarbonReportPdfRequestSchema = z.object({
   markdown: z
     .string()
@@ -21,6 +40,7 @@ export const CarbonReportPdfRequestSchema = z.object({
     ),
   fileName: z.string().min(1).max(160),
   title: z.string().max(200).optional(),
+  shell: CarbonReportShellSchema.optional(),
 });
 
 export type ICarbonReportPdfRequest = z.infer<

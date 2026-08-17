@@ -339,6 +339,12 @@ export default function CarbonReportPreview({
              * 文件工具與公開分享頁維持原路徑(後者沒有登入,打不到這條端點)。
              */
             serverPrint
+            /*
+             * Info: (20260810 - Emily) 還原原文的段落斷行 —— 盤查報告的敘述
+             * 逐條編號本來就分行寫，被 markdown 的軟斷行收成一整片文字牆
+             * （最長一段 6,212 字）。預覽與列印要看到同一份。
+             */
+            restoreSourceLineBreaks
           />
         </div>
       </div>
