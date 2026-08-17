@@ -158,7 +158,9 @@ model TeamSeatChange {
 >
 > **另補**：`DELETE /api/v1/user/team/{team_id}/invitations/{invite_id}` 供 OWNER / ADMIN 撤回尚未接受的邀請。沒有這支，打錯一個字寄出的邀請會佔住一個已付費的席次直到七天後逾期。
 >
-> **拒絕**（2026-08-16 補齊）：`POST /api/v1/invite/{token}/decline`（**免登入**）與 `POST /api/v1/user/team/invitations/{invite_id}/decline`（位址邀請，需登入且限受邀者本人）。狀態改 `REJECTED`、清空 `tokenHash` 與 `pendingKey`，席次當場釋出。
+> **撤回留痕**（2026-08-18，第三輪 D）：狀態改 `REVOKED` 並記下 `revokedByUserId` / `revokedAt`，不再實刪除。原本實刪之後「曾經邀請過誰、由誰撤回」全部消失，而同一條路徑上的「拒絕」是改狀態——同一件事的兩個方向，稽核強度不該不一樣。`tokenHash` 與 `pendingKey` 一併清空（連結立即失效、唯一鍵讓出來以便重新邀請）。唯一仍該實刪的是**信寄不出去時的回滾**：一封沒寄出去的邀請不是歷史紀錄。
+>
+> **拒絕**（2026-08-16 補齊）：`POST /api/v1/invite/decline`（**免登入**，token 置於請求本文）與 `POST /api/v1/user/team/invitations/{invite_id}/decline`（位址邀請，需登入且限受邀者本人）。狀態改 `REJECTED`、清空 `tokenHash` 與 `pendingKey`，席次當場釋出。
 >
 > 兩處刻意的不對稱：**拒絕免登入而接受要登入**——加入團隊必須知道加的是誰，拒絕不需要，而受邀者多半還沒有帳號；要求他先註冊才能說「不用了」等於保證沒有人會用，那一席就佔到逾期為止。**拒絕不要求 FIDO2 而接受要**——接受會讓你成為握有他人帳務資料的成員，拒絕只是把位置還回去。代價是連結持有者可以替受邀者拒絕，但損失有上限且可回復（席次空出來、重邀不再收費）；反方向才是不可回復的。
 
@@ -182,19 +184,37 @@ model TeamInvitation {
 }
 ```
 
-`status` 增加 `EXPIRED` / `REVOKED`（`TEAM_INVITATION_STATUS` 常數）。
+`status` 實作為 `PENDING` / `ACCEPTED` / `REJECTED` / `REVOKED`（`TEAM_INVITATION_STATUS` 常數）。逾期不另設狀態——以 `expiresAt` 判定，避免「該轉狀態的背景任務沒跑」變成第二種真相。
 
 ### 5.2 Token 與連結
 
 - token = 32 bytes 密碼學隨機 → base64url（`crypto.randomBytes`，不用 `Math.random`）。
-- 連結：`https://<host>/invite/<token>`。
+- 連結：`https://<host>/invite#<token>`（2026-08-18 修訂，見下）。
 - **一次性**：接受後即標記 `ACCEPTED` 並讓 `tokenHash` 失效；重放同一連結回明確錯誤。
 - 過期或狀態非 PENDING → 一律拒絕，不透露團隊名稱等資訊（避免 token 猜測探測團隊存在）。
+
+> **修訂（2026-08-18，第三輪 D）：token 放在 URL fragment，不放在 path。**
+>
+> 原本是 `/invite/<token>`，也就是把一把有效七天的鑰匙放進 URL。URL 會進三個我們控制不到的地方：**access log**（伺服器與反向代理，通常保留數週、常被集中收容，而讀 log 的人遠多於能讀 DB 的人）、**瀏覽器歷史**、以及落地頁若有任何外連或第三方資源時的 **`Referer`** 標頭。
+>
+> `#` 之後的內容不會送給伺服器，因此前者與後者都消失；瀏覽器歷史仍會留，那是「信裡一條連結」的必然代價，且僅限收件者自己的機器。落地頁讀 `location.hash` 取出 token 後**立即以 `history.replaceState` 抹掉**，並把 token 放進 POST body 送回後端。
+>
+> API 因此改為三支固定路徑、token 由 body 帶入（`inviteTokenBodySchema` 驗長度與字元集）：
+>
+> | 端點 | 登入 | 限流維度 |
+> |---|---|---|
+> | `POST /api/v1/invite/resolve` | 免 | 來源 IP |
+> | `POST /api/v1/invite/accept` | 需 | address |
+> | `POST /api/v1/invite/decline` | 免 | 來源 IP |
+>
+> `resolve` 語意上該是 GET，這裡刻意用 POST：在「語意正確」與「秘密不落地」之間選後者。
+>
+> **限流**（`RateLimitBucketEnum.INVITE_TOKEN`，20/分、200/日，可由 `INVITE_RL_PER_MINUTE` / `INVITE_RL_PER_DAY` 覆寫）。要防的不是猜 token（256-bit、DB 只存雜湊、失效與逾期回同一個 404，無 oracle），而是**免登入的 `decline`**：一次成功呼叫就讓一封邀請作廢、席次當場釋出。`decline` 另記呼叫者 IP 與 UA——那是這條路徑上唯一的線索，兩者都是用戶端可控的值，因此只記錄、不用於任何判斷。
 
 ### 5.3 註冊即入團
 
 ```
-點擊連結 → /invite/<token>
+點擊連結 → /invite#<token>
   ├─ token 無效 / 過期 / 已使用 → 錯誤頁（不揭露團隊資訊）
   ├─ 未登入且未註冊 → 註冊流程（建立 passkey；**註冊不問 email**，見下方更正）
   │     └─ 註冊成功 → 以 token 建立 TeamMember（角色取邀請時指定）→ 進入團隊
@@ -285,7 +305,7 @@ model TeamInvitation {
 | ~~**P1**~~（2026-08-14，部分） | Schema `seats` + 單價快照已完成；`TeamSeatChange` 與邀請 email/token 欄位隨 P4 再補 | 席次可查、可重算；既有 wallet 邀請不受影響 |
 | ~~**P2**~~（2026-08-14） | 訂閱選團隊 + 席次計價 + 金額由 server 計算 | 前端送錯總額不影響實收；付款前揭露 `席次 × 單價` |
 | ~~**P3**~~（2026-08-14） | 比例補收（純函式 + 單測）+ 邀請 fail-closed 順序 | 期末最後一天 / 期間異常 / 零席次的金額皆有測試；扣款失敗不建立邀請 |
-| ~~**P4**~~（2026-08-15） | SMTP 設定 + `mail.service` + 邀請信 + `/invite/<token>` 註冊即入團 | 未設定 SMTP 時邀請明確失敗（TW000018）；token 一次性、過期釋出席次；重新邀請不重複收費（席次沿用） |
+| ~~**P4**~~（2026-08-15） | SMTP 設定 + `mail.service` + 邀請信 + `/invite#<token>` 註冊即入團 | 未設定 SMTP 時邀請明確失敗（TW000018）；token 一次性、過期釋出席次；重新邀請不重複收費（席次沿用） |
 | **P5** | 團隊管理頁席次與帳單明細（誰佔席、何時佔、對應哪筆比例補收） | 管理者可自行核對席次費用，不需客服協助 |
 
 > 與 v0.13.0 的關係：**費思記憶（另一份規範）已定為 v0.13.0 gate**；席次計費與 email 邀請的目標版本尚未拍板，建議至少 P1–P4 同版釋出——只上席次計價而沒有邀請流程，或反之，都會讓「邀請即收費」這條規則落不了地。

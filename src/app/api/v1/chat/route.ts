@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { jsonOk, jsonFail, jsonFailWithPayload } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
+import { enforceRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { faithChatSchema } from "@/validators";
 import { ChatService } from "@/services/chat.service";
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
         user?.address ??
         request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
         "unknown";
-      const limited = enforceCarbonRateLimit(
+      const limited = enforceRateLimit(
         identity,
         RateLimitBucketEnum.FAITH_GUEST,
       );

@@ -38,6 +38,22 @@ export enum RateLimitBucketEnum {
    * 「偷到一枚 DeWT 就批次撈秘密」的成本不該是零。
    */
   PRF = "PRF",
+
+  /**
+   * Info: (20260818 - Luphia) 邀請連結的三支端點（PR #6652 第三輪 D）。
+   *
+   * token 是 256-bit CSPRNG、DB 只存 SHA-256，且失效／逾期／已接受一律回同一個
+   * 404（無 oracle），所以暴力猜測本來就不可行——限流要防的不是猜 token。
+   *
+   * 防的是**未登入的 `decline` 沒有任何節流**：拿到一批轉寄出去的連結（或只是
+   * 反覆打同一個），可以無成本地把邀請一封封拒掉，而被拒的邀請當場釋出席次、
+   * 管理員只看到「對方拒絕了」。維度只能是 IP（這兩支端點刻意不要求登入，
+   * 受邀者多半還沒有帳號）。
+   *
+   * 尺寸放寬：正常使用者在這頁的操作是「開連結、按一顆按鈕」，
+   * 而誤限流會讓一個人加不進團隊——那是可用性事故。
+   */
+  INVITE_TOKEN = "INVITE_TOKEN",
 }
 
 export interface IRateLimitWindow {
@@ -80,6 +96,10 @@ export const RATE_LIMIT_RULES: Record<RateLimitBucketEnum, IRateLimitWindow[]> =
     [RateLimitBucketEnum.SIGNING]: [
       { windowMs: MINUTE_MS, max: envInt("SIGNING_RL_PER_MINUTE", 5) },
       { windowMs: DAY_MS, max: envInt("SIGNING_RL_PER_DAY", 50) },
+    ],
+    [RateLimitBucketEnum.INVITE_TOKEN]: [
+      { windowMs: MINUTE_MS, max: envInt("INVITE_RL_PER_MINUTE", 20) },
+      { windowMs: DAY_MS, max: envInt("INVITE_RL_PER_DAY", 200) },
     ],
     [RateLimitBucketEnum.PRF]: [
       { windowMs: MINUTE_MS, max: envInt("PRF_RL_PER_MINUTE", 20) },

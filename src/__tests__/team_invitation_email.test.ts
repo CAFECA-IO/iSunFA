@@ -38,6 +38,8 @@ jest.mock("@/repositories/team.repo", () => ({
     createTeamInvitation: jest.fn(),
     deleteInvitation: jest.fn(),
     declineInvitation: jest.fn(),
+    // Info: (20260818 - Luphia) 撤回改為改狀態並記撤回者（第三輪 D）
+    revokeInvitationById: jest.fn(async () => true),
     getInvitationByIdWithDetails: jest.fn(),
     findInvitationByTokenHash: jest.fn(),
     getTeamMember: jest.fn(async () => null),
@@ -149,6 +151,7 @@ beforeEach(() => {
     currentPeriodEnd: new Date((NOW + 86_400_000) as number),
   });
   asMock(teamRepo.declineInvitation).mockResolvedValue(true);
+  asMock(teamRepo.revokeInvitationById).mockResolvedValue(true);
   // Info: (20260817 - Luphia) 預設為 passkey 註冊的帳號：沒有任何第三方綁定，也就沒有 email
   asMock(userIdentityRepo.findByUserId).mockResolvedValue([]);
 });
@@ -182,7 +185,8 @@ describe("inviteMemberByEmail", () => {
     const mail = asMock(sendMail).mock.calls[0][0];
 
     expect(created.tokenHash).toMatch(/^[0-9a-f]{64}$/);
-    const plaintext = mail.text.match(/\/invite\/([0-9a-f]{64})/)?.[1];
+    // Info: (20260818 - Luphia) 連結格式改為 `/invite#<token>`（第三輪 D）
+    const plaintext = mail.text.match(/\/invite#([0-9a-f]{64})/)?.[1];
     expect(plaintext).toBeDefined();
     expect(created.tokenHash).not.toBe(plaintext);
     expect(created.tokenHash).toBe(hashInviteToken(plaintext as string));
@@ -690,6 +694,56 @@ describe("declineInviteByToken", () => {
     expect(asMock(teamRepo.declineInvitation)).toHaveBeenCalledWith("inv-1");
   });
 
+  /**
+   * Info: (20260818 - Luphia) 未登入端點要留下呼叫者線索（第三輪 D）。
+   *
+   * 一次成功的拒絕就讓邀請作廢、席次當場釋出，而管理員只看到「對方拒絕了」。
+   * 連結被轉寄出去、被別人按掉時，IP／UA 是唯一能事後追的東西。
+   */
+  it("把呼叫者的 IP 與 UA 記入稽核", async () => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue(
+      pending as unknown as Awaited<
+        ReturnType<typeof teamRepo.findInvitationByTokenHash>
+      >,
+    );
+
+    await declineInviteByToken("token", NOW, {
+      ip: "203.0.113.7",
+      userAgent: "Mozilla/5.0",
+    });
+
+    const [, context] = asMock(logger.info).mock.calls[0] as [
+      string,
+      Record<string, unknown>,
+    ];
+    expect(context).toEqual({
+      teamId: TEAM.id,
+      invitationId: "inv-1",
+      ip: "203.0.113.7",
+      userAgent: "Mozilla/5.0",
+    });
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 沒有呼叫者資訊時記 "unknown"，而不是留下空欄位。
+   * 「查不到」與「沒有這個欄位」在稽核上是兩件事。
+   */
+  it("沒有呼叫者資訊時記 unknown", async () => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue(
+      pending as unknown as Awaited<
+        ReturnType<typeof teamRepo.findInvitationByTokenHash>
+      >,
+    );
+
+    await declineInviteByToken("token", NOW);
+
+    const [, context] = asMock(logger.info).mock.calls[0] as [
+      string,
+      Record<string, unknown>,
+    ];
+    expect(context).toMatchObject({ ip: "unknown", userAgent: "unknown" });
+  });
+
   it("逾期的連結不能拒絕", async () => {
     asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue({
       ...pending,
@@ -768,7 +822,33 @@ describe("revokeInvitation", () => {
       seatReleased: true,
       refunded: false,
     });
-    expect(asMock(teamRepo.deleteInvitation)).toHaveBeenCalledWith("inv-1");
+    /**
+     * Info: (20260818 - Luphia) 改狀態而非實刪（第三輪 D）：
+     * 撤回是動過信用卡、對外寄過信的動作，它不該無痕。
+     * 同時記下撤回者——「由誰撤回」正是原本查不到的那一半。
+     */
+    expect(asMock(teamRepo.revokeInvitationById)).toHaveBeenCalledWith(
+      "inv-1",
+      "user-1",
+    );
+    expect(asMock(teamRepo.deleteInvitation)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 併發：更新落空代表這封邀請剛剛被接受或已被撤回。
+   * 此時不能回「撤回成功」——那會讓管理員以為席次空出來了，
+   * 而對方其實已經在團隊裡。
+   */
+  it("更新落空時不回報成功", async () => {
+    asMock(teamRepo.revokeInvitationById).mockResolvedValue(false);
+
+    await expect(
+      revokeInvitation({
+        teamId: TEAM.id,
+        inviteId: "inv-1",
+        operatorUserId: "user-1",
+      }),
+    ).rejects.toThrow();
   });
 
   it("一般成員不能撤回", async () => {
@@ -781,7 +861,7 @@ describe("revokeInvitation", () => {
         operatorUserId: "user-1",
       }),
     ).rejects.toThrow();
-    expect(asMock(teamRepo.deleteInvitation)).not.toHaveBeenCalled();
+    expect(asMock(teamRepo.revokeInvitationById)).not.toHaveBeenCalled();
   });
 
   /**
@@ -802,7 +882,7 @@ describe("revokeInvitation", () => {
         operatorUserId: "user-1",
       }),
     ).rejects.toThrow();
-    expect(asMock(teamRepo.deleteInvitation)).not.toHaveBeenCalled();
+    expect(asMock(teamRepo.revokeInvitationById)).not.toHaveBeenCalled();
   });
 
   it("已接受的邀請不能撤回", async () => {

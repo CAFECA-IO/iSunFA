@@ -4,7 +4,7 @@
 import { NextRequest } from "next/server";
 import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
+import { enforceRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Info: (20260716 - Tzuhan) 限流(#6516):DeWT 驗證後、業務邏輯前 Fail Fast
-    const limited = enforceCarbonRateLimit(
+    const limited = enforceRateLimit(
       sessionUser.address,
       RateLimitBucketEnum.READ,
     );
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
-    const limited = enforceCarbonRateLimit(
+    const limited = enforceRateLimit(
       sessionUser.address,
       RateLimitBucketEnum.SAVE,
     );
@@ -161,7 +161,7 @@ async function setSessionArchived(request: NextRequest, archived: boolean) {
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
-    const limited = enforceCarbonRateLimit(
+    const limited = enforceRateLimit(
       sessionUser.address,
       RateLimitBucketEnum.SAVE,
     );

@@ -70,17 +70,33 @@ describe("invite token", () => {
     });
   });
 
+  /**
+   * Info: (20260818 - Luphia) token 放在 **fragment**，不放在 path（第三輪 D）。
+   *
+   * `#` 之後的內容不會送給伺服器：不進 access log、不進反向代理的紀錄、
+   * 也不會出現在 `Referer` 裡。放在 path 上等於把一把有效七天的鑰匙
+   * 交給每一層看得到 URL 的基礎設施，而讀 log 的人遠多於能讀 DB 的人。
+   */
   describe("buildInviteUrl", () => {
-    it("組出絕對網址", () => {
+    it("token 放在 fragment 而不是 path", () => {
       expect(buildInviteUrl("https://isunfa.com", "abc")).toBe(
-        "https://isunfa.com/invite/abc",
+        "https://isunfa.com/invite#abc",
       );
     });
 
-    // Info: (20260815 - Luphia) 設定值結尾多打斜線不該變成 //invite/
+    // Info: (20260818 - Luphia) path 上不得出現 token：這是本組唯一真正要守的性質
+    it("path 上不含 token", () => {
+      const url = new URL(buildInviteUrl("https://isunfa.com", "abc"));
+      expect(url.pathname).toBe("/invite");
+      expect(url.pathname).not.toContain("abc");
+      expect(url.search).toBe("");
+      expect(url.hash).toBe("#abc");
+    });
+
+    // Info: (20260815 - Luphia) 設定值結尾多打斜線不該變成 //invite
     it("base URL 結尾的斜線不會產生重複斜線", () => {
       expect(buildInviteUrl("https://isunfa.com///", "abc")).toBe(
-        "https://isunfa.com/invite/abc",
+        "https://isunfa.com/invite#abc",
       );
     });
   });

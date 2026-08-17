@@ -9,7 +9,7 @@ import { logger } from "@/lib/utils/logger";
 import { runBilledCarbonTask } from "@/services/carbon_billing.service";
 import { toBillingFailureEnvelope } from "@/lib/utils/billing_response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
+import { enforceRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { ok, fail, jsonFail } from "@/lib/utils/response";
 import { streamingJson } from "@/lib/utils/streaming_response";
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Info: (20260716 - Tzuhan) LLM bucket:匯入為昂貴推論呼叫,與 chat/draft 共用額度
-    const limited = enforceCarbonRateLimit(
+    const limited = enforceRateLimit(
       sessionUser.address,
       RateLimitBucketEnum.LLM,
     );

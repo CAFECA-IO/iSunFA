@@ -106,23 +106,31 @@ export class SlidingWindowRateLimiter {
   }
 }
 
-// Info: (20260716 - Emily) carbon 路由共用單例(Next.js route handler 同 process 共享)
-const carbonRateLimiter = new SlidingWindowRateLimiter();
+// Info: (20260716 - Emily) 路由共用單例(Next.js route handler 同 process 共享)
+const routeRateLimiter = new SlidingWindowRateLimiter();
 
 /**
  * Info: (20260716 - Emily) route 專用防線:超限時回傳現成的 429 Response(含 Retry-After),
  * 未超限回 null。route 只需一行 if,維持「純端口」職責。
+ *
+ * Info: (20260818 - Luphia) 改名為 `enforceRateLimit`（原 `enforceRateLimit`）。
+ * 它從一開始就與 carbon 無關——桶與身分都由呼叫端決定——而現在託管代簽、
+ * PRF、費思訪客與邀請連結都在用它。掛著 carbon 的名字會讓下一個人以為
+ * 非 carbon 的端點需要另寫一支。
+ *
+ * `identity` 是限流維度：登入端點傳 address，未登入端點傳來源 IP
+ * （見 `resolveClientIp`——那個值用戶端可偽造，因此只作為限流維度，不作授權）。
  */
-export const enforceCarbonRateLimit = (
-  address: string,
+export const enforceRateLimit = (
+  identity: string,
   bucket: RateLimitBucketEnum,
 ): NextResponse | null => {
-  const decision = carbonRateLimiter.check(bucket, address);
+  const decision = routeRateLimiter.check(bucket, identity);
   if (decision.allowed) return null;
   // Info: (20260716 - Emily) 429 log 供上線觀測調參(初期閾值放寬,觀測一週後收緊)
-  logger.warn("carbon rate limit exceeded", {
+  logger.warn("rate limit exceeded", {
     bucket,
-    address,
+    identity,
     retryAfterSeconds: decision.retryAfterSeconds,
   });
   return jsonFail(API_ERRORS.IS_RATE_LIMITED, {

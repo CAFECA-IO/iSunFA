@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Loader2,
@@ -21,6 +21,16 @@ import AuthModal from "@/components/auth/auth_modal";
  *
  * 登入狀態改變時自動接受：使用者在本頁完成註冊或登入後，
  * 不必再回頭找那顆按鈕。
+ *
+ * Info: (20260818 - Luphia) token 由 **URL fragment** 取得（第三輪 D）。
+ *
+ * `#` 之後的內容不會送給伺服器，因此那把有效七天的鑰匙不會進 access log，
+ * 也不會出現在 `Referer` 裡（理由詳見 `buildInviteUrl`）。代價是它只在
+ * 瀏覽器裡拿得到，所以本頁必須是 client component（本來就是），
+ * 而 token 是靠 `location.hash` 讀出來、放進 POST body 送回去的。
+ *
+ * 讀出來之後立刻把 hash 從網址上抹掉：留著它，使用者按上一頁或分享網址時
+ * 又會把 token 帶出去，而該做的事此時已經做完了。
  */
 
 type PageStatus =
@@ -39,27 +49,42 @@ interface IInviteView {
   expiresAt: string | null;
 }
 
-export default function InvitePage({
-  params,
-}: {
-  params: Promise<{ token: string }>;
-}) {
-  const { token } = use(params);
+export default function InvitePage() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
+  const [token, setToken] = useState<string | null>(null);
   const [status, setStatus] = useState<PageStatus>("LOADING");
   const [invite, setInvite] = useState<IInviteView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
+  /**
+   * Info: (20260818 - Luphia) 先把 token 從 fragment 取出來，並抹掉網址上的 hash。
+   * `history.replaceState` 不會觸發導航，因此不會重跑這支 effect。
+   */
   useEffect(() => {
+    const fromHash = window.location.hash.replace(/^#/, "").trim();
+    if (!fromHash) {
+      setStatus("INVALID");
+      return;
+    }
+    setToken(fromHash);
+    window.history.replaceState(null, "", window.location.pathname);
+  }, []);
+
+  useEffect(() => {
+    if (!token) return;
     let cancelled = false;
 
     const load = async () => {
       try {
-        const res = await fetch(`/api/v1/invite/${token}`);
+        const res = await fetch("/api/v1/invite/resolve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
         const json = await res.json();
         if (cancelled) return;
         if (json.success && json.payload) {
@@ -80,16 +105,19 @@ export default function InvitePage({
   }, [token]);
 
   const accept = useCallback(async () => {
+    // Info: (20260818 - Luphia) 沒有 token 就沒有可接受的邀請（hash 被清掉或直接開網址）
+    if (!token) return;
     setStatus("ACCEPTING");
     setError(null);
     try {
       const dewt = localStorage.getItem("dewt");
-      const res = await fetch(`/api/v1/invite/${token}/accept`, {
+      const res = await fetch("/api/v1/invite/accept", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${dewt}`,
         },
+        body: JSON.stringify({ token }),
       });
       const json = await res.json();
       if (json.success) {
@@ -114,11 +142,14 @@ export default function InvitePage({
    * 而管理員在那之前不知道對方其實沒有要加入。
    */
   const decline = useCallback(async () => {
+    if (!token) return;
     setStatus("DECLINING");
     setError(null);
     try {
-      const res = await fetch(`/api/v1/invite/${token}/decline`, {
+      const res = await fetch("/api/v1/invite/decline", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
       });
       const json = await res.json();
       if (json.success) {

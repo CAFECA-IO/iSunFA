@@ -369,6 +369,16 @@ export async function resolveInviteByToken(
 export async function declineInviteByToken(
   token: string,
   nowMs: number,
+  /**
+   * Info: (20260818 - Luphia) 呼叫者資訊（第三輪 D）。
+   *
+   * 這支**不要求登入**，所以除此之外沒有任何線索留下來：
+   * 一封邀請被拒絕就當場釋出席次，而管理員只看到「對方拒絕了」。
+   * 連結被轉寄出去、被別人按掉時，IP／UA 是唯一能事後追的東西。
+   *
+   * 兩者都是用戶端可控的值，因此只記錄、不用於任何判斷。
+   */
+  caller?: { ip?: string; userAgent?: string | null },
 ): Promise<{ teamId: string }> {
   const invitation = await teamRepo.findInvitationByTokenHash(
     hashInviteToken(token),
@@ -392,6 +402,9 @@ export async function declineInviteByToken(
   logger.info("invitation declined", {
     teamId: invitation.teamId,
     invitationId: invitation.id,
+    // Info: (20260818 - Luphia) 未登入端點的唯一線索（第三輪 D）；不作判斷用
+    ip: caller?.ip ?? "unknown",
+    userAgent: caller?.userAgent ?? "unknown",
   });
 
   return { teamId: invitation.teamId };
@@ -578,7 +591,25 @@ export async function revokeInvitation(
     throw toApiError(API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO);
   }
 
-  await teamRepo.deleteInvitation(inviteId);
+  /**
+   * Info: (20260818 - Luphia) 改狀態而非實刪除（第三輪 D）。
+   *
+   * 撤回是團隊主動收回一封已經寄出、且已經收過席次費的邀請。實刪除之後
+   * 「曾經邀請過誰、由誰撤回」查不到，而同一條路徑上的「拒絕」留著紀錄——
+   * 同一件事的兩個方向，稽核強度不該不一樣。
+   *
+   * 回 false 代表這封邀請剛剛被接受或已被別人撤回。此時不能回「撤回成功」：
+   * 那會讓管理員以為席次空出來了，而對方其實已經在團隊裡。
+   */
+  const revoked = await teamRepo.revokeInvitationById(inviteId, operatorUserId);
+  if (!revoked) throw toApiError(API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO);
+
+  logger.info("invitation revoked", {
+    teamId,
+    invitationId: inviteId,
+    revokedByUserId: operatorUserId,
+  });
+
   // Info: (20260817 - Luphia) 明講「席次已釋出、費用不退」，前端才說得出這件事
   return { id: inviteId, seatReleased: true, refunded: false };
 }
