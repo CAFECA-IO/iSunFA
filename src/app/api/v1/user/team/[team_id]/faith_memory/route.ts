@@ -3,7 +3,48 @@ import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
-import { deleteFaithMemoryByRequest } from "@/services/faith_memory.service";
+import {
+  deleteFaithMemoryByRequest,
+  listFaithMemory,
+} from "@/services/faith_memory.service";
+
+/**
+ * Info: (20260817 - Luphia) 檢視自己的費思記憶（「文件與記憶」頁）。
+ *
+ * 與 DELETE 同一條規則：對象一律是 `sessionUser.id`，不接受指定他人的參數。
+ * 管理者的團隊權限不延伸到成員的對話偏好（規範 §6.1）。
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ team_id: string }> },
+) {
+  try {
+    const authHeader = request.headers.get("Authorization");
+    const sessionUser = await getIdentityFromDeWT(authHeader);
+    if (!sessionUser) return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
+
+    const { team_id: teamId } = await params;
+    const member = await teamRepo.getTeamMember(sessionUser.id, teamId);
+    if (!member) return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
+
+    const result = await listFaithMemory({
+      userId: sessionUser.id,
+      teamId,
+      nowSec: Math.floor(Date.now() / 1000),
+    });
+    return jsonOk(result);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return jsonFail({
+        code: error.code,
+        message: error.message,
+        status: error.status,
+      });
+    }
+    console.error("[API] /team/[team_id]/faith_memory GET error:", error);
+    return jsonFail(API_ERRORS.IS_UNKNOWN);
+  }
+}
 
 /**
  * Info: (20260817 - Luphia) 刪除自己的費思記憶（條款 §3.7、隱私政策 §6「被遺忘權」）。

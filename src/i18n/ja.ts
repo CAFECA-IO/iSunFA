@@ -40,6 +40,7 @@ import { verify } from "@/i18n/locales/ja/verify";
 import { esg } from "@/i18n/locales/ja/esg";
 import { teamManagement } from "@/i18n/locales/ja/team_management";
 import { invitePage } from "@/i18n/locales/ja/invite_page";
+import { documentsMemory } from "@/i18n/locales/ja/documents_memory";
 import { esgReport } from "@/i18n/locales/ja/esg_report";
 import { reportView } from "@/i18n/locales/ja/report_view";
 import { cashFlowStatementView } from "@/i18n/locales/ja/cash_flow_statement_view";
@@ -123,6 +124,7 @@ export const ja = {
   esg,
   team_management: teamManagement,
   invite_page: invitePage,
+  documents_memory: documentsMemory,
   esg_report: esgReport,
   report_view: reportView,
   cash_flow_statement_view: cashFlowStatementView,

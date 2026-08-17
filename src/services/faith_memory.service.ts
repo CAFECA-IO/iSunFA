@@ -3,7 +3,9 @@ import { FAITH_MEMORY_DELETION_REASON } from "@/constants/faith_memory";
 import { TEAM_PLAN } from "@/constants/subscription_quota";
 import { resolveEffectivePlanId } from "@/services/spend.service";
 import {
+  memoryItemId,
   mergeMemoryItems,
+  removeMemoryItem,
   renderMemoryForPrompt,
   type IFaithMemoryItem,
 } from "@/lib/faith_memory/items";
@@ -156,4 +158,89 @@ export async function deleteFaithMemoryByRequest(
     teamId,
     FAITH_MEMORY_DELETION_REASON.USER_REQUEST,
   );
+}
+
+export interface IFaithMemoryView {
+  id: string;
+  category: string;
+  statement: string;
+  updatedAt: number;
+}
+
+/**
+ * Info: (20260817 - Luphia) 檢視自己的記憶（「文件與記憶」頁）。
+ *
+ * 條款沒有承諾這個介面，但使用者一定會問「它到底記了我什麼」——
+ * 而在此之前唯一的答案是「只能整包刪掉」。看得見才談得上是自己的資料。
+ *
+ * 方案 gate 照樣適用：免費版沒有長期記憶，也就沒有東西可看。
+ * 已過期未刪的一樣不顯示，與注入側同一條規則。
+ */
+export async function listFaithMemory(params: {
+  userId: string;
+  teamId: string;
+  nowSec: number;
+}): Promise<{ enabled: boolean; items: IFaithMemoryView[] }> {
+  const { userId, teamId, nowSec } = params;
+
+  if (!(await isFaithMemoryEnabled(teamId, nowSec))) {
+    return { enabled: false, items: [] };
+  }
+
+  const record = await faithMemoryRepo.get(userId, teamId);
+  if (!record) return { enabled: true, items: [] };
+  if (record.expiresAt && record.expiresAt.getTime() <= nowSec * 1000) {
+    return { enabled: true, items: [] };
+  }
+
+  const items = [...record.items]
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .map((item) => ({
+      id: memoryItemId(item),
+      category: item.category,
+      statement: item.statement,
+      updatedAt: item.updatedAt,
+    }));
+
+  return { enabled: true, items };
+}
+
+/**
+ * Info: (20260817 - Luphia) 刪除單一條目（「文件與記憶」頁）。
+ *
+ * 整包刪除是條款承諾的「被遺忘權」，逐條刪除是它的實用版本：
+ * 費思記錯一件事時，使用者要的是把那一條拿掉，而不是把累積的偏好全部丟掉。
+ *
+ * **不判方案**：免費版（可能是降級後）同樣有權刪掉自己的資料——
+ * gate 管的是「能不能用」，不是「能不能刪」。
+ */
+export async function deleteFaithMemoryItem(params: {
+  userId: string;
+  teamId: string;
+  itemId: string;
+}): Promise<boolean> {
+  const { userId, teamId, itemId } = params;
+
+  const record = await faithMemoryRepo.get(userId, teamId);
+  if (!record) return false;
+
+  const { items, removed } = removeMemoryItem(record.items, itemId);
+  if (!removed) return false;
+
+  /**
+   * Info: (20260817 - Luphia) 刪到一條不剩就整列刪掉並寫稽核，
+   * 不要留一列空記憶——那既佔著 `expiresAt` 的排程，
+   * 也讓「使用者還有沒有記憶」這個問題多一種答案。
+   */
+  if (items.length === 0) {
+    await faithMemoryRepo.deleteByScope(
+      userId,
+      teamId,
+      FAITH_MEMORY_DELETION_REASON.USER_REQUEST,
+    );
+    return true;
+  }
+
+  await faithMemoryRepo.upsert(userId, teamId, items);
+  return true;
 }

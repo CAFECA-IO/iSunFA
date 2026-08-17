@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import {
   FAITH_MEMORY_CATEGORY,
   FAITH_MEMORY_MAX_ITEMS,
@@ -54,6 +55,36 @@ function normalize(statement: string): string {
 
 function dedupeKey(item: IFaithMemoryItem): string {
   return `${item.category}::${normalize(item.statement)}`;
+}
+
+/**
+ * Info: (20260817 - Luphia) 條目的穩定識別碼（供「文件與記憶」頁逐條刪除）。
+ *
+ * 由 `(category, 正規化後的 statement)` 推導，**不另存欄位**：
+ * 那組值本來就是去重鍵，而去重時保留原本的文字、只更新時間，
+ * 因此同一條記憶的 id 在合併之間不會變。存一個 uuid 反而要處理
+ * 「既有資料沒有 id」的相容問題，而它換不到任何東西。
+ *
+ * 截短到 16 個十六進位字元：這不是安全邊界（刪除的授權來自
+ * `(userId, teamId)`，見 API），只是一個夠穩定、夠短的識別碼。
+ */
+export function memoryItemId(item: IFaithMemoryItem): string {
+  return createHash("sha256")
+    .update(dedupeKey(item))
+    .digest("hex")
+    .slice(0, 16);
+}
+
+/**
+ * Info: (20260817 - Luphia) 移除指定的條目。回傳新陣列與是否真的移除了。
+ * 找不到就回原陣列與 false——「已經不在了」不是錯誤（重複點刪除是常見操作）。
+ */
+export function removeMemoryItem(
+  items: readonly IFaithMemoryItem[],
+  itemId: string,
+): { items: IFaithMemoryItem[]; removed: boolean } {
+  const kept = items.filter((item) => memoryItemId(item) !== itemId);
+  return { items: kept, removed: kept.length !== items.length };
 }
 
 /**
