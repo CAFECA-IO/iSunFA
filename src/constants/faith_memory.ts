@@ -37,6 +37,14 @@ export const FAITH_MEMORY_DELETION_REASON = {
   USER_REQUEST: "USER_REQUEST",
   ACCOUNT_TERMINATED: "ACCOUNT_TERMINATED",
   TEAM_DISSOLVED: "TEAM_DISSOLVED",
+  /**
+   * Info: (20260818 - Luphia) 成員被移出團隊（第三輪 C-8）。
+   *
+   * 離開之後那份記憶沒有任何用途：他不會再在這個團隊裡對話，
+   * 而規範 §3.1 的隔離理由（事務所成員同時服務多家客戶）正好反過來說明
+   * 為什麼不該留——留著只是一份沒有主人的偏好資料。
+   */
+  MEMBER_REMOVED: "MEMBER_REMOVED",
 } as const;
 
 export type FaithMemoryDeletionReason =

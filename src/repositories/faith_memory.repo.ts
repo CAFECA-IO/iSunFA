@@ -162,19 +162,34 @@ class FaithMemoryRepository {
    * Info: (20260817 - Luphia) 排定刪除時點（訂閱終止）。
    * 只動尚未排定的列：重複執行降級流程不該把期限一路往後推。
    */
-  async setExpiry(teamId: string, expiresAt: Date): Promise<number> {
+  async setExpiry(
+    teamId: string,
+    expiresAt: Date,
+    reason: FaithMemoryDeletionReason,
+  ): Promise<number> {
     const result = await prisma.faithMemory.updateMany({
       where: { teamId, expiresAt: null },
-      data: { expiresAt },
+      data: { expiresAt, expiryReason: reason },
     });
     return result.count;
   }
 
-  // Info: (20260817 - Luphia) 恢復訂閱：取消排定的刪除，記憶延續
-  async clearExpiry(teamId: string): Promise<number> {
+  /**
+   * Info: (20260817 - Luphia) 恢復訂閱：取消排定的刪除，記憶延續。
+   *
+   * Info: (20260818 - Luphia) **只清自己排的那一種**（第三輪 C-8）。
+   *
+   * 少了 `expiryReason` 的條件，對帳每 6 小時就會把別人排的期限一起清掉——
+   * 例如帳戶終止的 30 天寬限期：團隊仍在訂閱時，那個期限每輪被清一次，
+   * 記憶永遠不會被刪，而條款 §3.7 寫的是「以較早屆至者為準」。
+   */
+  async clearExpiry(
+    teamId: string,
+    reason: FaithMemoryDeletionReason,
+  ): Promise<number> {
     const result = await prisma.faithMemory.updateMany({
-      where: { teamId, expiresAt: { not: null } },
-      data: { expiresAt: null },
+      where: { teamId, expiresAt: { not: null }, expiryReason: reason },
+      data: { expiresAt: null, expiryReason: null },
     });
     return result.count;
   }

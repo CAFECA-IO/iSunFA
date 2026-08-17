@@ -80,9 +80,12 @@
 | §7.2 刪除守護行程 | ✅ 硬刪除 + 稽核列，每 6 小時 | 失敗計數並告警，天然可重入 |
 | §7.2 守護行程的規模 | ✅ 2026-08-18：訂閱批次載入（原本每團隊一趟、完全序列）、一輪內分批清空到期列（原本每日上限 2,000 筆，大批同期到期會逐日落後而資料留庫超過條款期間） |
 | §8 後台觀測介面 | ❌ 未實作 | |
-| 團隊解散 / 帳戶終止的即時硬刪 | ❌ 未實作 | 目前依賴 90 天到期；`TEAM_DISSOLVED` / `ACCOUNT_TERMINATED` 兩個 reason 已定義但無呼叫端 |
+| 成員被移出團隊的即時硬刪 | ✅ 已實作（2026-08-18） | `deleteFaithMemoryOnMemberRemoval`，掛在移除成員端點；**永不拋錯**，記憶刪不掉不該讓踢人失敗 |
+| 團隊解散 / 帳戶終止的即時硬刪 | ❌ 未實作 | 產品裡還沒有這兩個流程（`deleteTeam` 無呼叫端、無帳戶終止路徑），`TEAM_DISSOLVED` / `ACCOUNT_TERMINATED` 因此仍無呼叫端 |
 
 **§7.1 為什麼改成對帳**：規範原本要求「降級流程同步寫入 `expiresAt`」，但 `expireOverdue` 是一次 `updateMany`、只回筆數，拿不到受影響的 teamId。更根本的問題是掛事件會漏——降級路徑不只一條，而這個功能上線前就已經降級的團隊根本沒有事件可掛。改成守護行程每輪比對「現在是不是付費方案」與「有沒有排定刪除」，不一致就補上或取消：天然冪等、可自癒，而且對既有資料同樣有效。
+
+**§7.1 對帳只管自己排的期限**（2026-08-18）：對帳的取消動作限定 `expiryReason = RETENTION_EXPIRED`。它每 6 小時跑一次，若不限定來源就會把其他來源排定的期限一併清掉——例如帳戶終止的 30 天寬限期：團隊只要持續付費，那個期限每輪被清一次，記憶永遠不會被刪，而條款寫的是「以較早屆至者為準」。
 
 代價是**起算點改為「守護行程發現當日」而非「訂閱終止日」**，因此保留期可能比 90 天略長（最多多出一輪的間隔）。這個方向是刻意選的：它只會讓資料留得更久，不會更短——而「提早刪掉使用者的資料」是這兩個方向裡不可回復的那一個。若日後要精確對齊終止日，正解是讓 `expireOverdue` 回傳 teamId 清單。
 
@@ -130,6 +133,13 @@ model FaithMemory {
    */
   expiresAt DateTime? @map("expires_at")
 
+  /**
+   * Info: (20260818 - Luphia) 這個期限是「誰排的」（第三輪 C-8）。
+   * 對帳只能清掉自己排的那一種——少了這一欄，每 6 小時一次的對帳會把
+   * 帳戶終止寬限期之類的期限一起清掉，那份記憶就永遠不會到期。
+   */
+  expiryReason String? @map("expiry_reason")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -151,7 +161,7 @@ model FaithMemoryDeletionLog {
   userId    String   @map("user_id")
   teamId    String   @map("team_id")
   itemCount Int      @map("item_count")
-  reason    String   // RETENTION_EXPIRED | USER_REQUEST | ACCOUNT_TERMINATED | TEAM_DISSOLVED
+  reason    String   // RETENTION_EXPIRED | USER_REQUEST | MEMBER_REMOVED | ACCOUNT_TERMINATED | TEAM_DISSOLVED
   deletedAt DateTime @default(now()) @map("deleted_at")
 
   @@index([userId, teamId])
@@ -242,6 +252,7 @@ inputEstimate = FAITH_PROMPT_OVERHEAD_TOKENS + ceil(messageLength / 3) + (hasIma
 | 90 天內恢復付費訂閱 | `expiresAt = null`，記憶延續 |
 | 團隊解散 | 立即硬刪（`reason = TEAM_DISSOLVED`），不等 90 天——團隊已不存在，保留無正當目的 |
 | 帳戶終止 | 依條款 §9 之 30 天寬限期辦理；與 90 天並存時以**較早屆至者**為準 |
+| 成員被移出團隊 | 立即硬刪（`reason = MEMBER_REMOVED`）——他不會再在這個團隊裡對話，而**不刪就等於永久留存**：團隊仍在訂閱，對帳每輪把 `expiresAt` 清回 null，到期刪除永遠不會發生 |
 | 用戶主動要求 | 立即硬刪（`reason = USER_REQUEST`） |
 
 ### 7.2 刪除守護行程

@@ -1,6 +1,7 @@
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { revokeAllocationOnMemberRemoval } from "@/services/team_wallet.service";
+import { deleteFaithMemoryOnMemberRemoval } from "@/services/faith_memory.service";
 import { stringToHex } from "viem";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
@@ -205,6 +206,20 @@ export async function DELETE(
       targetUserId: targetMember.userId,
       operatorUserId: sessionUser.id,
       memberId,
+    });
+
+    /**
+     * Info: (20260818 - Luphia) 一併刪除他在這個團隊的費思記憶（第三輪 C-8）。
+     *
+     * 不刪的話會永久留存：團隊仍在訂閱，於是保留期對帳每 6 小時把 `expiresAt`
+     * 清成 null，到期刪除永遠不會發生——一份沒有主人的偏好資料。
+     *
+     * 放在移除**之前**：移除成功後才刪會多一個「成員沒了、記憶還在」的窗口，
+     * 而這支永不拋錯，所以不會因此擋住移除。
+     */
+    await deleteFaithMemoryOnMemberRemoval({
+      userId: targetMember.userId,
+      teamId,
     });
 
     const deletedMember = await teamRepo.deleteTeamMember(memberId);

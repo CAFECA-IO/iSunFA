@@ -147,12 +147,20 @@ export async function scheduleFaithMemoryExpiry(
    * 條款承諾的那個日期就會出現兩種算法」。它自己就是第二種。
    */
   const expiresAt = resolveMemoryExpiresAt(terminatedAtMs, days);
-  return faithMemoryRepo.setExpiry(teamId, expiresAt);
+  return faithMemoryRepo.setExpiry(
+    teamId,
+    expiresAt,
+    // Info: (20260818 - Luphia) 標明是對帳排的，對帳才清得掉、也才只清得掉這一種
+    FAITH_MEMORY_DELETION_REASON.RETENTION_EXPIRED,
+  );
 }
 
 // Info: (20260817 - Luphia) 恢復訂閱：取消排定的刪除，記憶延續（規範 §7.1）
 export async function cancelFaithMemoryExpiry(teamId: string): Promise<number> {
-  return faithMemoryRepo.clearExpiry(teamId);
+  return faithMemoryRepo.clearExpiry(
+    teamId,
+    FAITH_MEMORY_DELETION_REASON.RETENTION_EXPIRED,
+  );
 }
 
 /**
@@ -265,4 +273,36 @@ export async function deleteFaithMemoryItem(params: {
     reason: FAITH_MEMORY_DELETION_REASON.USER_REQUEST,
   });
   return true;
+}
+
+/**
+ * Info: (20260818 - Luphia) 成員被移出團隊時刪除他在該團隊的記憶（第三輪 C-8）。
+ *
+ * 離開之後那份記憶沒有任何用途：他不會再在這個團隊裡對話。而在此之前它會
+ * **永久留存**——團隊仍在訂閱，於是對帳每 6 小時把 `expiresAt` 清成 null，
+ * 到期刪除永遠不會發生。這正是 reviewer 指出的形狀，而且是今天就走得到的路徑
+ * （帳戶終止與團隊解散在產品裡還不存在，那兩個 reason 因此仍無呼叫端）。
+ *
+ * **永不拋錯**：移除成員是使用者要做的事，記憶刪不掉不該讓它失敗。
+ * 對帳仍是最後一道——成員不在了，團隊降級時那份記憶照樣會被排入刪除。
+ */
+export async function deleteFaithMemoryOnMemberRemoval(params: {
+  userId: string;
+  teamId: string;
+}): Promise<boolean> {
+  const { userId, teamId } = params;
+  try {
+    return await faithMemoryRepo.deleteByScope(
+      userId,
+      teamId,
+      FAITH_MEMORY_DELETION_REASON.MEMBER_REMOVED,
+    );
+  } catch (error) {
+    logger.error("faith memory cleanup on member removal failed", {
+      userId,
+      teamId,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return false;
+  }
 }

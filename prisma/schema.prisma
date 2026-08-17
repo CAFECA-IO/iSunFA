@@ -187,6 +187,18 @@ model FaithMemory {
    */
   expiresAt DateTime? @map("expires_at")
 
+  /**
+   * Info: (20260818 - Luphia) 這個期限是**誰排的**（第三輪 C-8）。
+   *
+   * 保留期守護行程每 6 小時對帳一次，付費團隊即清掉 `expiresAt`。少了這一欄，
+   * 它會把**別人排的**期限一起清掉——例如帳戶終止的 30 天寬限期：
+   * 團隊仍在訂閱時，那個期限每 6 小時被清一次，記憶永遠不會被刪，
+   * 而條款 §3.7 寫的是「與第 9 條期間並存時以較早屆至者為準」。
+   *
+   * 值為 FAITH_MEMORY_DELETION_REASON；對帳只設定與清除自己那一種。
+   */
+  expiryReason String? @map("expiry_reason")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
