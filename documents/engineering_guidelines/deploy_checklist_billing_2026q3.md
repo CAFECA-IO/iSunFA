@@ -123,7 +123,7 @@ npx tsx scripts/backfill_faith_memory_aad.ts --commit # 實際重新封裝
 
 先跑預演看 `resealed` 的數字：
 
-- `resealed = 0`、`already = 0`、`total = 0` → 這個環境沒有記憶列，不必做（本機與正式環境目前皆如此）。
+- `resealed = 0`、`already = 0`、`total = 0` → 這個環境沒有記憶列，不必做（**本機開發環境實測為 0**；其他環境請各自跑一次預演確認，不要沿用這個結論）。
 - `unreadable` 非空 → **停下來看**。兩種方式都解不開代表問題不在 AAD，先確認 `SECRET_VAULT_MASTER_KEY` 是不是這個環境當初封裝時用的那一把。腳本刻意不動這些列。
 
 腳本冪等：已是 AAD 版本的列算進 `already` 並跳過。正確性由 `src/__tests__/e2e/faith_memory_aad_backfill.e2e.test.ts` 對真資料庫驗證（建一列舊格式 → 預演不寫入 → `--commit` → 讀回原本的偏好 → 重跑為 `already`）。

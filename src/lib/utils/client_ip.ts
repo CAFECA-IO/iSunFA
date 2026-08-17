@@ -13,6 +13,16 @@ import { NextRequest } from "next/server";
  * 因此它的定位是「盡力而為的維度」，不是身分斷言：
  * 拿它做限流可以擋掉沒有動機換 IP 的雜訊流量，但不該用它做授權判斷。
  */
+/**
+ * Info: (20260818 - Luphia) 取不到來源 IP 時的哨符（第四輪自審）。
+ *
+ * 呼叫端需要分得出「這是某個 IP」與「不知道是誰」——限流會據此換用寬鬆的桶。
+ * 因此這個值必須是共用常數而不是各處手寫的 `"unknown"`：
+ * 兩邊各寫一次字串，改其中一邊就會讓那個判斷永遠不成立，而症狀是限流變嚴
+ * （所有人共用小桶）——一個安靜的可用性問題。
+ */
+export const UNIDENTIFIED_CLIENT_IP = "unknown";
+
 export function resolveClientIp(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-for");
   const first = forwarded?.split(",")[0]?.trim();
@@ -21,6 +31,6 @@ export function resolveClientIp(request: NextRequest): string {
   const realIp = request.headers.get("x-real-ip")?.trim();
   if (realIp) return realIp;
 
-  // Info: (20260818 - Luphia) 取不到時回固定字串：全部歸到同一個桶，寧可過嚴也不要無限制
-  return "unknown";
+  // Info: (20260818 - Luphia) 取不到時回固定哨符：可辨識、可被限流換桶，不會每次都不同
+  return UNIDENTIFIED_CLIENT_IP;
 }

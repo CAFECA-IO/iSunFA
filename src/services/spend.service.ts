@@ -307,14 +307,32 @@ function buildQuotaExceededPayload(input: {
 export function buildQuotaExceededOptions(
   exceedsWindowLimit: boolean,
 ): QuotaExceededOption[] {
-  const base = exceedsWindowLimit
-    ? [QUOTA_EXCEEDED_OPTION.UPGRADE_PLAN]
-    : [QUOTA_EXCEEDED_OPTION.WAIT_RESET];
+  /**
+   * Info: (20260818 - Luphia) 順序照原本的兩種排法，**不要統一**（第四輪自審）。
+   *
+   * 前端依序呈現這些出路，而兩種情境的第一順位刻意不同：
+   * 單筆超過視窗上限時「等重置」不會好，最該先講的是自己的點數；
+   * 一般的額度用罄則是「等一下就好」為主。抽成函式時順手把兩者統一成
+   * 「個人點數優先」會靜悄悄改掉一般情境的引導順序——那不是這次要改的事。
+   */
+  const spendable = isChainCreditSpendable();
+
+  if (exceedsWindowLimit) {
+    return spendable
+      ? [
+          QUOTA_EXCEEDED_OPTION.USE_PERSONAL_WALLET,
+          QUOTA_EXCEEDED_OPTION.UPGRADE_PLAN,
+        ]
+      : [QUOTA_EXCEEDED_OPTION.UPGRADE_PLAN];
+  }
 
   // Info: (20260818 - Luphia) 第二層不可用時不列它：那是一顆不會有反應的按鈕
-  return isChainCreditSpendable()
-    ? [QUOTA_EXCEEDED_OPTION.USE_PERSONAL_WALLET, ...base]
-    : base;
+  return spendable
+    ? [
+        QUOTA_EXCEEDED_OPTION.WAIT_RESET,
+        QUOTA_EXCEEDED_OPTION.USE_PERSONAL_WALLET,
+      ]
+    : [QUOTA_EXCEEDED_OPTION.WAIT_RESET];
 }
 
 /**

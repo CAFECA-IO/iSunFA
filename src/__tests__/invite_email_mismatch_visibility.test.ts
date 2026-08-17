@@ -46,6 +46,11 @@ describe("listMismatchedAcceptorIds", () => {
     expect(args.where).toEqual({
       teamId: "team-1",
       acceptedByUserId: { not: null },
+      /**
+       * Info: (20260818 - Luphia) `acceptedAt` 非 null 是排序正確的前提（第四輪自審）：
+       * Postgres 的 DESC 把 NULL 排最前面，缺時間的異常列會被當成最新那一筆。
+       */
+      acceptedAt: { not: null },
     });
     /**
      * Info: (20260818 - Luphia) 排序是「取每人最新一筆」的依據（第四輪 B-4）。

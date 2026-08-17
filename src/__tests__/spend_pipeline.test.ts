@@ -277,11 +277,18 @@ describe("spendCredits", () => {
    * 而恢復條件（合約補上銷毀函式）只需要翻 `isChainCreditSpendable()`。
    */
   describe("buildQuotaExceededOptions", () => {
-    it("第二層可用時列出個人點數", () => {
+    /**
+     * Info: (20260818 - Luphia) 順序要與停用前一致（第四輪自審）。
+     *
+     * 兩種情境的第一順位刻意不同：單筆超過視窗上限時「等重置」不會好，
+     * 最該先講的是自己的點數；一般的額度用罄則以「等一下就好」為主。
+     * 抽成函式時若順手把兩者統一，會靜悄悄改掉一般情境的引導順序。
+     */
+    it("第二層可用時列出個人點數，且維持原本的順序", () => {
       asMock(isChainCreditSpendable).mockReturnValue(true);
       expect(buildQuotaExceededOptions(false)).toEqual([
-        "USE_PERSONAL_WALLET",
         "WAIT_RESET",
+        "USE_PERSONAL_WALLET",
       ]);
       expect(buildQuotaExceededOptions(true)).toEqual([
         "USE_PERSONAL_WALLET",

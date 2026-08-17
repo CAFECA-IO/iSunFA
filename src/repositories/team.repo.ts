@@ -323,7 +323,19 @@ export class TeamRepository implements ITeamRepository {
      * 用 `acceptedAt` 而非 `updatedAt`：後者任何後續更新都會動。
      */
     const rows = await prisma.teamInvitation.findMany({
-      where: { teamId, acceptedByUserId: { not: null } },
+      /**
+       * Info: (20260818 - Luphia) `acceptedAt` 也要非 null（第四輪自審）。
+       *
+       * Postgres 的 `ORDER BY ... DESC` 預設把 NULL 排在**最前面**，因此一列
+       * 「有接受者但沒有接受時間」的異常資料會被當成最新的那一筆，
+       * 決定這個人要不要被標記。兩個欄位是一起寫入的，缺一即為異常資料，
+       * 排除它比讓它排第一名安全。
+       */
+      where: {
+        teamId,
+        acceptedByUserId: { not: null },
+        acceptedAt: { not: null },
+      },
       select: {
         acceptedByUserId: true,
         acceptedEmailMatch: true,

@@ -19,8 +19,12 @@ import { openSecret, sealSecret, VaultPurpose } from "@/lib/auth/key_vault";
  * 已經對話過的那些人就已經失去偏好了，而重新封裝救不回被覆寫的列。
  *
  * 執行方式：
- *   npx tsx scripts/backfill_faith_memory_aad.ts          # 預演，只統計不寫入
- *   npx tsx scripts/backfill_faith_memory_aad.ts --commit # 實際重新封裝
+ *   npx tsx scripts/backfill_faith_memory_aad.ts                    # 預演，只統計不寫入
+ *   npx tsx scripts/backfill_faith_memory_aad.ts --commit           # 實際重新封裝
+ *   npx tsx scripts/backfill_faith_memory_aad.ts --user <userId>    # 只處理某一位（可與 --commit 併用）
+ *
+ * `--user` 供逐位重跑：全域跑完之後若有列落在 `unreadable`，修好主密鑰設定
+ * （或確認那批列該刪）之後可以只重跑那一位，不必再掃全表。
  *
  * 冪等：已經是 AAD 版本的列會被判為 `already`（以新 AAD 解得開）而跳過，
  * 重跑不會改動它們，也不會二次封裝。
@@ -51,8 +55,13 @@ function memoryAad(userId: string, teamId: string): string {
  * Info: (20260818 - Luphia) 匯出供 e2e 呼叫（`free_plan_invite_cap` 同一個作法）。
  * 回填腳本的正確性只能對真資料驗——而「遷移沒跑對」的後果是使用者的偏好消失。
  */
-export async function run(commit: boolean): Promise<IBackfillSummary> {
+export async function run(
+  commit: boolean,
+  options: { userId?: string } = {},
+): Promise<IBackfillSummary> {
   const rows = await prisma.faithMemory.findMany({
+    // Info: (20260818 - Luphia) 未指定 userId 即全表；指定時只處理那一位的列
+    where: options.userId ? { userId: options.userId } : undefined,
     select: {
       id: true,
       userId: true,
@@ -118,10 +127,19 @@ export async function run(commit: boolean): Promise<IBackfillSummary> {
 
 async function main(): Promise<void> {
   const commit = process.argv.includes("--commit");
-  const summary = await run(commit);
+  const userFlag = process.argv.indexOf("--user");
+  const userId = userFlag === -1 ? undefined : process.argv[userFlag + 1];
+  if (userFlag !== -1 && !userId) {
+    console.error("[backfill_faith_memory_aad] --user 後面要接 userId");
+    process.exitCode = 1;
+    return;
+  }
+
+  const summary = await run(commit, { userId });
 
   console.log(
     `[backfill_faith_memory_aad] ${commit ? "COMMIT" : "DRY-RUN"} ` +
+      `${userId ? `user=${userId} ` : ""}` +
       `total=${summary.total} resealed=${summary.resealed} ` +
       `already=${summary.already} unreadable=${summary.unreadable.length}`,
   );

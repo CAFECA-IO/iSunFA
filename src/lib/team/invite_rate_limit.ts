@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { enforceRateLimit } from "@/lib/rate_limiter";
-import { resolveClientIp } from "@/lib/utils/client_ip";
+import { resolveClientIp, UNIDENTIFIED_CLIENT_IP } from "@/lib/utils/client_ip";
 
 /**
  * Info: (20260818 - Luphia) 免登入邀請端點的限流（PR #6652 第四輪 B-4）。
@@ -27,7 +27,7 @@ export function enforceInviteRateLimit(
   request: NextRequest,
 ): NextResponse | null {
   const ip = resolveClientIp(request);
-  const identified = ip !== "unknown";
+  const identified = ip !== UNIDENTIFIED_CLIENT_IP;
 
   return enforceRateLimit(
     ip,
