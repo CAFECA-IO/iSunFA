@@ -59,6 +59,10 @@ export const teamManagement = {
       "Invalid Web3 address. It should start with 0x and be 42 characters long.",
     invalid_email: "That email address is not valid.",
     invite_email_sent: "Invitation email sent!",
+    free_plan_limit_title: "The Free plan is for the owner only",
+    free_plan_limit_hint:
+      "Upgrade to Team or Enterprise to invite members. Subscriptions are billed per seat, and every member you invite gets their own full quota.",
+    free_plan_limit_cta: "See plans",
     seat_reused: "An already-paid seat was reused; you were not charged again.",
     revoke_success:
       "Invitation withdrawn. The seat is now available for another invitation.",

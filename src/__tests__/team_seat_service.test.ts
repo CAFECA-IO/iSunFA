@@ -10,6 +10,7 @@ import { teamRepo } from "@/repositories/team.repo";
 import { resolveFreePlanMaxMembers } from "@/services/team_subscription.service";
 import { ORDER_TYPE } from "@/constants/status";
 import {
+  DEFAULT_FREE_PLAN_MAX_MEMBERS,
   TEAM_PLAN,
   TEAM_SUBSCRIPTION_STATUS,
 } from "@/constants/subscription_quota";
@@ -255,6 +256,16 @@ describe("chargeSeatAddition", () => {
    * 每一次檢查都是 `1 + 1 <= 5`，全部通過；30 人接受後團隊有 31 名成員。
    * 上限剛加上就被繞過，而它防的正是「20 人的免費團隊、每週 800 點、月費零」。
    */
+  /**
+   * Info: (20260818 - Luphia) 免費版上限為 1，即「僅擁有者本人」（產品決定 20260818）。
+   *
+   * 要加第二個人就代表這是團隊在用，而團隊用量該由席次計費承擔。
+   * 這個值同時決定方案頁的標示與加人時的擋門，改它等於改對外的方案定位。
+   */
+  it("defaults the free plan to the owner alone", () => {
+    expect(DEFAULT_FREE_PLAN_MAX_MEMBERS).toBe(1);
+  });
+
   it("counts pending invitations toward the free member cap", async () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
       ...ACTIVE_SUBSCRIPTION,

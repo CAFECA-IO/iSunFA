@@ -59,6 +59,10 @@ export const teamManagement = {
       "無効な Web3 アドレスです。0x で始まる 42 文字である必要があります。",
     invalid_email: "メールアドレスの形式が正しくありません。",
     invite_email_sent: "招待メールを送信しました！",
+    free_plan_limit_title: "無料版はオーナー 1 名のみご利用いただけます",
+    free_plan_limit_hint:
+      "メンバーを招待するにはチーム版または企業版へのアップグレードが必要です。料金は席数に応じて計算され、招待した各メンバーがそれぞれ利用枠を持ちます。",
+    free_plan_limit_cta: "プランを見る",
     seat_reused:
       "支払い済みの空き席を利用したため、今回は追加料金は発生しません。",
     revoke_success:

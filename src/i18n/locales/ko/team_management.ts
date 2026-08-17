@@ -59,6 +59,10 @@ export const teamManagement = {
       "유효하지 않은 Web3 지갑 주소입니다. 0x로 시작하는 42자여야 합니다.",
     invalid_email: "이메일 주소 형식이 올바르지 않습니다.",
     invite_email_sent: "초대 메일을 발송했습니다!",
+    free_plan_limit_title: "무료 버전은 소유자 1인만 사용할 수 있습니다",
+    free_plan_limit_hint:
+      "구성원을 초대하려면 팀 버전 또는 기업 버전으로 업그레이드하세요. 요금은 좌석 수에 따라 청구되며, 초대한 구성원은 각자 전체 한도를 갖습니다.",
+    free_plan_limit_cta: "요금제 보기",
     seat_reused:
       "이미 결제된 좌석을 재사용했으므로 추가 요금은 청구되지 않았습니다.",
     revoke_success:

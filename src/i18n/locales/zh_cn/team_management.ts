@@ -58,6 +58,10 @@ export const teamManagement = {
     invalid_address: "无效的 Web3 钱包地址，格式应为 0x 开头的 42 位字符。",
     invalid_email: "电子邮件格式不正确。",
     invite_email_sent: "邀请信已寄出！",
+    free_plan_limit_title: "免费版仅供拥有者一人使用",
+    free_plan_limit_hint:
+      "要邀请成员请升级为团队版或企业版；订阅后依实际人数计费，邀请的成员各自享有完整额度。",
+    free_plan_limit_cta: "查看方案",
     seat_reused: "已使用既有的付费席位，本次未再收费。",
     revoke_success: "已撤回邀请，该席位可用于邀请其他人员。",
     error_revoke: "撤回邀请失败",

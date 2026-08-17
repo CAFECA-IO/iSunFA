@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { Dialog } from "@headlessui/react";
+import Link from "next/link";
 import { X, ScanQrCode } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
@@ -11,6 +12,20 @@ import { request, ApiError } from "@/lib/utils/request";
 import { TeamRole } from "@/constants/team";
 import QrScannerModal from "@/components/common/qr_scanner_modal";
 import { isAddress } from "viem";
+
+/**
+ * Info: (20260818 - Luphia) 免費版人數上限的錯誤（TW000017）。
+ *
+ * 讀 `errorCode` 而不是比對訊息字串：訊息會隨語系與文案調整而變，
+ * 錯誤碼不會。
+ */
+function isFreePlanLimitError(err: ApiError): boolean {
+  const data = err.data as { errorCode?: string } | undefined;
+  return data?.errorCode === TW_FREE_PLAN_MEMBER_LIMIT_CODE;
+}
+
+// Info: (20260818 - Luphia) 與 API_ERRORS.TW_FREE_PLAN_MEMBER_LIMIT 同一個碼
+const TW_FREE_PLAN_MEMBER_LIMIT_CODE = "TW000017";
 
 interface IInviteMemberModalProps {
   isOpen: boolean;
@@ -41,6 +56,8 @@ export default function InviteMemberModal({
    * 後者不需要邀請者先問到對方的錢包位址。
    */
   const [inviteMode, setInviteMode] = useState<"ADDRESS" | "EMAIL">("ADDRESS");
+  // Info: (20260818 - Luphia) 免費版人數已滿：改顯示升級導引而不是一句英文錯誤
+  const [upgradeNeeded, setUpgradeNeeded] = useState(false);
 
   const targetValue = inviteMode === "ADDRESS" ? inviteAddress : inviteEmail;
 
@@ -63,6 +80,7 @@ export default function InviteMemberModal({
     }
 
     setInviting(true);
+    setUpgradeNeeded(false);
     try {
       const { challenge } = await getLoginOptions(user.address);
       // Info: (20260811 - Luphia) 走 requestAssertion，託管帳號才不會卡在永遠不會成功的系統對話框
@@ -116,6 +134,18 @@ export default function InviteMemberModal({
       }
     } catch (err) {
       console.error(err);
+      /**
+       * Info: (20260818 - Luphia) 免費版人數已滿要說得出**下一步**（產品決定 20260818）。
+       *
+       * 後端回的是英文的 `Free plan team has reached its member limit`——
+       * 直接顯示它，使用者只知道被擋下來，不知道那是方案的界線、更不知道
+       * 升級就能解決。免費版上限是 1（僅擁有者），所以任何一次邀請都會撞到，
+       * 這是新團隊最容易遇到的第一個阻礙。
+       */
+      if (err instanceof ApiError && isFreePlanLimitError(err)) {
+        setUpgradeNeeded(true);
+        return;
+      }
       if (err instanceof ApiError) {
         showAlert(err.message);
       } else {
@@ -278,6 +308,30 @@ export default function InviteMemberModal({
                   </option>
                 </select>
               </div>
+              {/**
+               * Info: (20260818 - Luphia) 免費版人數已滿的升級導引（產品決定 20260818）。
+               *
+               * 免費版上限是 1（僅擁有者），因此新團隊的第一次邀請就會撞到這裡。
+               * 只說「已達上限」等於把人留在原地——要說得出下一步是什麼，
+               * 而且連結帶上 `?team=`，訂閱才會套到眼前這個團隊。
+               */}
+              {upgradeNeeded && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                  <p className="text-xs font-semibold text-amber-900">
+                    {t("team_management.alerts.free_plan_limit_title")}
+                  </p>
+                  <p className="mt-1 text-xs text-amber-800">
+                    {t("team_management.alerts.free_plan_limit_hint")}
+                  </p>
+                  <Link
+                    href={`/pricing/subscription?team=${selectedTeamId}`}
+                    className="mt-2 inline-flex rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-700"
+                  >
+                    {t("team_management.alerts.free_plan_limit_cta")}
+                  </Link>
+                </div>
+              )}
+
               <div className="mt-2 flex items-start rounded-lg border border-orange-100 bg-orange-50 p-3">
                 <div className="text-xs text-orange-800">
                   <span className="mb-1 block font-semibold">

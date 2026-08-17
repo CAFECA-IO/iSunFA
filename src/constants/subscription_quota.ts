@@ -85,8 +85,15 @@ export const DEFAULT_SUBSCRIPTION_QUOTA_BY_PLAN: Record<
  * 額度逐成員計算後，付費方案以「席次 × 單價」自然封頂，免費版沒有這個機制——
  * 席次單價是 0，人數再多帳單都是 0，而每個人各自享有一份額度。
  * 這個上限就是免費版的封頂。正式值為系統設定（可後台調整），此為 fail-safe 預設。
+ *
+ * Info: (20260818 - Luphia) 上限定為 **1（僅擁有者本人）**（產品決定 20260818）。
+ *
+ * 免費版是給個人或試用的：要加第二個人就代表這是團隊在用，而團隊用量該由
+ * 席次計費承擔。訂為 1 也讓「上限」與「方案的定位」是同一件事——
+ * 先前的 5 是一個沒有依據的中間值，既擋不住小型團隊白用，又讓人以為
+ * 免費版本來就支援多人協作。
  */
-export const DEFAULT_FREE_PLAN_MAX_MEMBERS = 5;
+export const DEFAULT_FREE_PLAN_MAX_MEMBERS = 1;
 
 export const TEAM_SUBSCRIPTION_STATUS = {
   ACTIVE: "ACTIVE",
