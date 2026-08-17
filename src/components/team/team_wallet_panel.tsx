@@ -33,9 +33,11 @@ interface ISubscriptionView {
   // Info: (20260817 - Luphia) 觀看者本人的額度（一人一池）
   quota: { quota5h: IQuotaWindow; quotaWeek: IQuotaWindow };
   /**
-   * Info: (20260817 - Luphia) 全隊合計（PR #6652 第二輪 C-1）。
-   * 選填是為了相容尚未更新的後端回應——沒有這段就只顯示個人額度，
-   * 而不是讓整個面板壞掉。
+   * Info: (20260818 - Luphia) 全隊合計（PR #6652 第二輪 C-1）。
+   *
+   * 選填有兩個理由：**非 OWNER 的回應本來就不含這一段**（產品決定 20260818，
+   * 授權在 server 端判定，前端不重複一套角色判斷），
+   * 以及相容尚未更新的後端回應——兩種情況都只顯示個人額度，而不是讓面板壞掉。
    */
   teamTotals?: {
     memberCount: number;

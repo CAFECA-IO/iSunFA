@@ -51,8 +51,12 @@ export interface ITeamSubscriptionView {
   autoRenew: boolean;
   // Info: (20260817 - Luphia) 觀看者本人的額度（一人一池）
   quota: IQuotaStatus;
-  // Info: (20260817 - Luphia) 全隊合計（第二輪 C-1）；付費者看得到團隊實際消耗
-  teamTotals: ITeamQuotaTotals;
+  /**
+   * Info: (20260818 - Luphia) 全隊合計（第二輪 C-1）；**僅 OWNER 可見**（產品決定 20260818）。
+   * 非 OWNER 的回應不含此欄——付錢的人才需要這個數字，
+   * 而它加上人數就能推估同事的平均用量。
+   */
+  teamTotals?: ITeamQuotaTotals;
   // Info: (20260807 - Luphia) 定價揭露（設計書 §5.3）：費思費率與 env 同源，前端插值渲染
   faithTokensPerCredit: number;
 }

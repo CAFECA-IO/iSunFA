@@ -102,7 +102,16 @@ describe("getTeamSubscriptionView", () => {
    * 而團隊實際消耗多少，系統中沒有任何介面說得出來。
    * 合計的分母是「每人上限 × 人數」——寫成每人上限就會讓 5 人團隊看到 310%。
    */
+  /**
+   * Info: (20260818 - Luphia) 全隊合計僅 OWNER 可見（產品決定 20260818）。
+   * 這個數字回答的是「我付的錢被用掉多少」，而付錢的是 OWNER；
+   * 對其他成員它沒有對應的問題，卻能加上人數推估同事的平均用量。
+   */
   describe("team totals", () => {
+    beforeEach(() => {
+      mockMembers({ "user-1": "OWNER" });
+    });
+
     it("multiplies the per-member limit by the member count", async () => {
       const view = await getTeamSubscriptionView({
         userId: "user-1",
@@ -110,13 +119,13 @@ describe("getTeamSubscriptionView", () => {
         nowSec: NOW_SEC,
       });
 
-      expect(view.teamTotals.memberCount).toBe(5);
+      expect(view.teamTotals!.memberCount).toBe(5);
       // Info: (20260817 - Luphia) free 方案每人 10 / 40，五個人即 50 / 200
-      expect(view.teamTotals.quota5h).toMatchObject({
+      expect(view.teamTotals!.quota5h).toMatchObject({
         limit: "50",
         used: "31",
       });
-      expect(view.teamTotals.quotaWeek).toMatchObject({
+      expect(view.teamTotals!.quotaWeek).toMatchObject({
         limit: "200",
         used: "150",
       });
@@ -131,7 +140,39 @@ describe("getTeamSubscriptionView", () => {
       });
 
       expect(asMock(teamQuotaUsageRepo.sumTeamWindowUsage)).toHaveBeenCalled();
-      expect(view.teamTotals.quota5h.used).not.toBe(view.quota.quota5h.used);
+      expect(view.teamTotals!.quota5h.used).not.toBe(view.quota.quota5h.used);
+    });
+
+    it("非 OWNER 看不到全隊合計，也不會去查", async () => {
+      mockMembers({ "user-1": "ADMIN" });
+
+      const view = await getTeamSubscriptionView({
+        userId: "user-1",
+        teamId: "team-1",
+        nowSec: NOW_SEC,
+      });
+
+      expect(view.teamTotals).toBeUndefined();
+      /**
+       * Info: (20260818 - Luphia) 不是「查了再丟掉」：查了再丟掉的版本，
+       * 下一個人在別處重用這個函式時就會把它一起回出去。
+       */
+      expect(
+        asMock(teamQuotaUsageRepo.sumTeamWindowUsage),
+      ).not.toHaveBeenCalled();
+    });
+
+    // Info: (20260818 - Luphia) 個人額度不受影響，每個成員都看得到自己的
+    it("非 OWNER 仍看得到自己的額度", async () => {
+      mockMembers({ "user-1": "VIEWER" });
+
+      const view = await getTeamSubscriptionView({
+        userId: "user-1",
+        teamId: "team-1",
+        nowSec: NOW_SEC,
+      });
+
+      expect(view.quota.quota5h).toMatchObject({ limit: "10", used: "3" });
     });
 
     /**
@@ -147,8 +188,8 @@ describe("getTeamSubscriptionView", () => {
         nowSec: NOW_SEC,
       });
 
-      expect(view.teamTotals.memberCount).toBe(0);
-      expect(view.teamTotals.quota5h.limit).toBe("10");
+      expect(view.teamTotals!.memberCount).toBe(0);
+      expect(view.teamTotals!.quota5h.limit).toBe("10");
     });
   });
 

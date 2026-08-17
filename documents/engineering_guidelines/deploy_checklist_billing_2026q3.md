@@ -144,6 +144,7 @@ npx tsx scripts/backfill_pending_invite_key.ts --commit # 實際寫入
 - [ ] 費思連續問兩句有前後關係的話：第二句答得出上文（任務短期記憶）
 - [ ] 付費團隊對話中明示一個偏好 → 下一輪費思沿用；降級為免費版後**不再沿用**
 - [ ] Worker 的 `FaithMemoryRetention` 有啟動且 log 無 `failed`
+- [ ] 團隊頁的「全隊合計」只有 OWNER 看得到；ADMIN 與一般成員只看得到自己的額度
 
 ---
 
