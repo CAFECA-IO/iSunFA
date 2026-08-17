@@ -94,6 +94,8 @@ export const teamManagement = {
     amount_label: "Amount",
     amount_limit: "Available: {{max}} credits",
     allocate: "Allocate",
+    allocate_member: "Allocate to",
+    allocate_hint: "Give unallocated credits to a team member",
     revoke: "Revoke",
     // Info: (20260814 - Luphia) 分配即鑄到成員的鏈上錢包（ADR 015 修訂）
     allocate_onchain_note:

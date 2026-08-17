@@ -90,6 +90,8 @@ export const teamManagement = {
     amount_label: "點數",
     amount_limit: "可用上限 {{max}} 點",
     allocate: "分配",
+    allocate_member: "分配對象",
+    allocate_hint: "把未分配的點數分給團隊成員",
     revoke: "收回",
     // Info: (20260814 - Luphia) 分配即鑄到成員的鏈上錢包（ADR 015 修訂）
     allocate_onchain_note:

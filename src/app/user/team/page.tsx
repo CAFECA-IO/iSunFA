@@ -15,7 +15,6 @@ import {
   Book,
   Coins,
   PlusCircle,
-  MinusCircle,
 } from "lucide-react";
 import { Dialog } from "@headlessui/react";
 import { getLoginOptions } from "@/lib/auth/fido2_client";
@@ -86,7 +85,8 @@ export default function TeamManagementPage() {
   const [walletStatus, setWalletStatus] =
     useState<TeamWalletFetchStatus>("loading");
   const [allocationModal, setAllocationModal] = useState<{
-    member: ITeamMember;
+    // Info: (20260818 - Luphia) 由錢包面板開啟時對象未定，於視窗內選（產品需求 20260818）
+    member: ITeamMember | null;
     direction: AllocationDirection;
   } | null>(null);
   const [allocating, setAllocating] = useState(false);
@@ -268,8 +268,14 @@ export default function TeamManagementPage() {
     (isOwnerOrAdmin || userId === currentUserMember?.userId);
   const allocationOf = (userId: string) => allocationByUserId[userId] ?? "0";
 
-  const handleAllocationConfirm = async (amount: string) => {
+  const handleAllocationConfirm = async (amount: string, pickedId?: string) => {
     if (!allocationModal || !selectedTeamId) return;
+    /**
+     * Info: (20260818 - Luphia) 對象可能來自成員卡片（已決定）或視窗內的下拉（現選）。
+     * 兩者都沒有就不送——沒有對象的分配沒有意義，而後端會回一個難解讀的錯誤。
+     */
+    const targetUserId = allocationModal.member?.userId ?? pickedId;
+    if (!targetUserId) return;
     if (!/^\d+$/.test(amount) || amount === "0") {
       showAlert(t("team_management.wallet.invalid_amount"));
       return;
@@ -286,10 +292,10 @@ export default function TeamManagementPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            userId: allocationModal.member.userId,
+            userId: targetUserId,
             amount,
             direction: allocationModal.direction,
-            idempotencyKey: `ui:${selectedTeamId}:${allocationModal.member.userId}:${allocationModal.direction}:${amount}:${Date.now()}`,
+            idempotencyKey: `ui:${selectedTeamId}:${targetUserId}:${allocationModal.direction}:${amount}:${Date.now()}`,
           }),
         },
       );
@@ -761,35 +767,27 @@ export default function TeamManagementPage() {
                               </span>
                             )}
                             <div className="flex items-center space-x-1">
-                              {/* Info: (20260809 - Luphia) 分配 / 收回入口移至成員卡片（產品調整 20260809），開啟輸入點數的確認視窗 */}
+                              {/**
+                               * Info: (20260809 - Luphia) 分配入口移至成員卡片（產品調整 20260809），
+                               * 開啟輸入點數的確認視窗。
+                               *
+                               * Info: (20260818 - Luphia) **收回按鈕已移除**（產品決定 20260818）：
+                               * 分配即撥入成員自己的區塊鏈錢包，點數一旦入袋就收不回來了。
+                               * 留一顆按不動的按鈕，比沒有那顆按鈕更糟。
+                               */}
                               {isOwnerOrAdmin && (
-                                <>
-                                  <button
-                                    onClick={() =>
-                                      setAllocationModal({
-                                        member,
-                                        direction:
-                                          ALLOCATION_DIRECTION.ALLOCATE,
-                                      })
-                                    }
-                                    className="p-1 text-gray-400 transition-colors hover:text-orange-600"
-                                    title={t("team_management.wallet.allocate")}
-                                  >
-                                    <PlusCircle className="size-3.5 shrink-0" />
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      setAllocationModal({
-                                        member,
-                                        direction: ALLOCATION_DIRECTION.REVOKE,
-                                      })
-                                    }
-                                    className="p-1 text-gray-400 transition-colors hover:text-orange-600"
-                                    title={t("team_management.wallet.revoke")}
-                                  >
-                                    <MinusCircle className="size-3.5 shrink-0" />
-                                  </button>
-                                </>
+                                <button
+                                  onClick={() =>
+                                    setAllocationModal({
+                                      member,
+                                      direction: ALLOCATION_DIRECTION.ALLOCATE,
+                                    })
+                                  }
+                                  className="p-1 text-gray-400 transition-colors hover:text-orange-600"
+                                  title={t("team_management.wallet.allocate")}
+                                >
+                                  <PlusCircle className="size-3.5 shrink-0" />
+                                </button>
                               )}
                               {(isOwner ||
                                 member.user?.address === user?.address) && (
@@ -886,6 +884,15 @@ export default function TeamManagementPage() {
                   walletStatus={walletStatus}
                   isManager={isOwnerOrAdmin}
                   onRetryWallet={retryTeamWallet}
+                  onAllocateClick={
+                    isOwnerOrAdmin
+                      ? () =>
+                          setAllocationModal({
+                            member: null,
+                            direction: ALLOCATION_DIRECTION.ALLOCATE,
+                          })
+                      : undefined
+                  }
                 />
               </div>
             </div>
@@ -898,14 +905,34 @@ export default function TeamManagementPage() {
           isOpen
           direction={allocationModal.direction}
           memberName={
-            allocationModal.member.user?.name ||
-            allocationModal.member.user?.address ||
-            allocationModal.member.userId
+            allocationModal.member
+              ? allocationModal.member.user?.name ||
+                allocationModal.member.user?.address ||
+                allocationModal.member.userId
+              : undefined
           }
+          // Info: (20260818 - Luphia) 對象未定時才給清單，視窗據此決定要不要顯示下拉
+          candidates={
+            allocationModal.member
+              ? undefined
+              : members.map((member) => ({
+                  userId: member.userId,
+                  name:
+                    member.user?.name || member.user?.address || member.userId,
+                }))
+          }
+          /**
+           * Info: (20260818 - Luphia) 分配的上限一律是團隊未分配餘額。
+           *
+           * 收回的入口已於 20260818 移除（分配即撥入成員自己的區塊鏈錢包，
+           * 收不回來），但 REVOKE 這個方向仍留在常數與 API 上，
+           * 因此上限的算法照舊分開——哪天要恢復，這裡不需要重想一次。
+           */
           max={
-            allocationModal.direction === ALLOCATION_DIRECTION.ALLOCATE
-              ? (teamWallet?.unallocatedBalance ?? "0")
-              : allocationOf(allocationModal.member.userId)
+            allocationModal.member &&
+            allocationModal.direction === ALLOCATION_DIRECTION.REVOKE
+              ? allocationOf(allocationModal.member.userId)
+              : (teamWallet?.unallocatedBalance ?? "0")
           }
           submitting={allocating}
           onClose={() => setAllocationModal(null)}

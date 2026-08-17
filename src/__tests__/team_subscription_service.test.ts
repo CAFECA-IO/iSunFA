@@ -143,8 +143,24 @@ describe("getTeamSubscriptionView", () => {
       expect(view.teamTotals!.quota5h.used).not.toBe(view.quota.quota5h.used);
     });
 
-    it("非 OWNER 看不到全隊合計，也不會去查", async () => {
+    /**
+     * Info: (20260818 - Luphia) ADMIN 也看得到（產品決定 20260818）：
+     * ADMIN 動用得了團隊錢包，就該看得到團隊消耗了多少。
+     */
+    it("ADMIN 也看得到全隊合計", async () => {
       mockMembers({ "user-1": "ADMIN" });
+
+      const view = await getTeamSubscriptionView({
+        userId: "user-1",
+        teamId: "team-1",
+        nowSec: NOW_SEC,
+      });
+
+      expect(view.teamTotals?.memberCount).toBe(5);
+    });
+
+    it("一般成員看不到全隊合計，也不會去查", async () => {
+      mockMembers({ "user-1": "VIEWER" });
 
       const view = await getTeamSubscriptionView({
         userId: "user-1",
@@ -163,7 +179,7 @@ describe("getTeamSubscriptionView", () => {
     });
 
     // Info: (20260818 - Luphia) 個人額度不受影響，每個成員都看得到自己的
-    it("非 OWNER 仍看得到自己的額度", async () => {
+    it("一般成員仍看得到自己的額度", async () => {
       mockMembers({ "user-1": "VIEWER" });
 
       const view = await getTeamSubscriptionView({

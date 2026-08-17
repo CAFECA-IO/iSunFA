@@ -95,6 +95,8 @@ export const teamManagement = {
     amount_label: "포인트",
     amount_limit: "사용 가능: {{max}} 포인트",
     allocate: "배분",
+    allocate_member: "배정 대상",
+    allocate_hint: "미배정 포인트를 팀원에게 배정합니다",
     revoke: "회수",
     // Info: (20260814 - Luphia) 分配即鑄到成員的鏈上錢包（ADR 015 修訂）
     allocate_onchain_note:

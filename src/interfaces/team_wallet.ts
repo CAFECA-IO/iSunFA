@@ -52,8 +52,8 @@ export interface ITeamSubscriptionView {
   // Info: (20260817 - Luphia) 觀看者本人的額度（一人一池）
   quota: IQuotaStatus;
   /**
-   * Info: (20260818 - Luphia) 全隊合計（第二輪 C-1）；**僅 OWNER 可見**（產品決定 20260818）。
-   * 非 OWNER 的回應不含此欄——付錢的人才需要這個數字，
+   * Info: (20260818 - Luphia) 全隊合計（第二輪 C-1）；**限管理職**（OWNER / ADMIN，產品決定 20260818）。
+   * 一般成員的回應不含此欄——動用團隊錢包的人才需要這個數字，
    * 而它加上人數就能推估同事的平均用量。
    */
   teamTotals?: ITeamQuotaTotals;

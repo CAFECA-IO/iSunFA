@@ -60,6 +60,14 @@ interface ITeamWalletPanelProps {
   walletStatus: TeamWalletFetchStatus;
   isManager: boolean;
   onRetryWallet: () => void;
+  /**
+   * Info: (20260818 - Luphia) 分配點數入口（產品需求 20260818）。
+   *
+   * 只發出「使用者按了」這個事件，視窗與送出流程留在團隊頁——
+   * 那裡已經有成員清單、分配的 handler 與冪等鍵的組法，
+   * 在這裡再實作一次只會多一份會漂移的相同邏輯。
+   */
+  onAllocateClick?: () => void;
 }
 
 /**
@@ -127,6 +135,7 @@ export default function TeamWalletPanel({
   walletStatus,
   isManager,
   onRetryWallet,
+  onAllocateClick = undefined,
 }: ITeamWalletPanelProps) {
   const { t } = useTranslation();
 
@@ -290,6 +299,25 @@ export default function TeamWalletPanel({
              * 並以 `?team=` 帶上本團隊——從這裡出發的人要買的就是這個團隊的點數，
              * 到了定價頁還要再選一次是多餘的，而且選錯會買到別的團隊帳上。
              */}
+            {/**
+             * Info: (20260818 - Luphia) 分配點數入口（產品需求 20260818）。
+             * 放在餘額下方：看到「未分配餘額」之後最自然的下一個動作就是把它分出去。
+             */}
+            {onAllocateClick && (
+              <div className="mt-4 flex items-center justify-between gap-2 border-t border-gray-100 pt-4">
+                <p className="text-xs text-gray-500">
+                  {t("team_management.wallet.allocate_hint")}
+                </p>
+                <button
+                  type="button"
+                  onClick={onAllocateClick}
+                  className="shrink-0 rounded-lg border border-orange-600 px-3 py-1.5 text-sm font-semibold text-orange-600 transition-colors hover:bg-orange-50"
+                >
+                  {t("team_management.wallet.allocate")}
+                </button>
+              </div>
+            )}
+
             <div className="mt-4 flex items-center justify-between gap-2 border-t border-gray-100 pt-4">
               <p className="text-xs text-gray-500">
                 {t("team_management.wallet.buy_credits_hint")}

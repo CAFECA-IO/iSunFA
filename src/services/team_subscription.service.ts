@@ -153,19 +153,22 @@ export async function getTeamSubscriptionView(params: {
     const quota = await buildQuotaStatus(teamId, userId, planId, nowSec);
 
     /**
-     * Info: (20260818 - Luphia) 全隊合計**僅 OWNER 可見**（產品決定 20260818）。
+     * Info: (20260818 - Luphia) 全隊合計**限管理職**（OWNER / ADMIN，產品決定 20260818）。
      *
-     * 這個數字回答的是「我付的錢被用掉多少」，而付錢的是 OWNER。
-     * 對其他成員來說它沒有對應的問題，卻會透露團隊整體的使用強度——
+     * 這個數字回答的是「團隊買的額度被用掉多少」，而動用團隊錢包的是管理職——
+     * ADMIN 花得到團隊的錢，就該看得到團隊消耗了多少。
+     *
+     * 一般成員看不到：對他們沒有對應的問題，卻會透露團隊整體的使用強度——
      * 額度是一人一池，總和加上人數就能推估同事的平均用量。
      *
-     * 非 OWNER 直接**不查**而不是查了再丟掉：查了再丟掉的版本，
+     * 非管理職直接**不查**而不是查了再丟掉：查了再丟掉的版本，
      * 下一個人在別處重用這個函式時就會把它一起回出去。
      */
-    const teamTotals =
-      member.role === TeamRole.OWNER
-        ? await buildTeamQuotaTotals(teamId, planId, nowSec)
-        : undefined;
+    const isManager =
+      member.role === TeamRole.OWNER || member.role === TeamRole.ADMIN;
+    const teamTotals = isManager
+      ? await buildTeamQuotaTotals(teamId, planId, nowSec)
+      : undefined;
     // Info: (20260809 - Luphia) 費率為系統設定，自 DB 取得
     const billing = await faithBillingSettingRepo.resolveSetting();
 
