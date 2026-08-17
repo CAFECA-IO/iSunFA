@@ -33,6 +33,7 @@ import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { logger } from "@/lib/utils/logger";
 import {
   chargeChainCredits,
+  isChainCreditSpendable,
   readChainCredits,
 } from "@/lib/quota/personal_chain_credits";
 import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
@@ -404,9 +405,21 @@ export async function spendCredits(
      * 同一成員的其他請求一起拖住。
      */
     const spender = await webAuthnRepo.findUserById(userId);
-    const chainCredits = spender?.address
-      ? await readChainCredits(spender.address)
-      : BigInt(0);
+    /**
+     * Info: (20260818 - Luphia) 不可扣款時一律視為 0（第三輪，fail-closed）。
+     *
+     * 合約沒有可由平台呼叫的 `burn(address, uint256)`，因此這筆餘額**扣不動**。
+     * 先前把它加進 `available` 當放行依據，而扣款必定失敗、餘額永遠不減少——
+     * 一個持有 ≥1 點的成員可以無上限消費，成本全部追補到**團隊額度**上。
+     *
+     * 讀成 0 而不是「讀出來但不採用」：這個值同時餵給 402 的
+     * `walletBalance`，而那個欄位驅動的是「可改用個人點數繼續」的提示。
+     * 顯示一個用不了的餘額，等於叫使用者去按一顆不會有反應的按鈕。
+     */
+    const chainCredits =
+      spender?.address && isChainCreditSpendable()
+        ? await readChainCredits(spender.address)
+        : BigInt(0);
 
     /**
      * Info: (20260815 - Luphia) 額度的讀與寫必須在同一把鎖內（PR #6652 第二輪 C-6）。
@@ -484,6 +497,22 @@ export async function spendCredits(
          * 那一層不存在了（見上方說明），差額改由結算時自成員錢包一次扣清。
          * 少了跨系統的兩段式扣款，這裡也就不需要補償路徑。
          */
+        /**
+         * Info: (20260818 - Luphia) 放行就一定要留下用量列（第三輪 A-1(c)）。
+         *
+         * 重放偵測的判準是 `records.held > 0`，而 `held` 是用量列的總和。
+         * 先前鏈上餘額能讓 `quotaAvailable = 0` 的請求通過，於是這一段不執行、
+         * 沒有任何列 → `held = 0` → 重放偵測永遠不觸發 → 同一個 clientMessageId
+         * 重送 N 次就扣 N 次，而 `faithChatSchema` 承諾的是「重送不重複扣款」。
+         *
+         * 改為 fail-closed 之後，能走到這裡就代表 `quotaAvailable > 0`，
+         * `quotaPart` 必然為正。這道檢查把那個前提從「碰巧成立」變成「寫下來」：
+         * 哪天有人再讓第二層參與放行，這裡會當場炸開，而不是安靜地失去冪等。
+         */
+        if (split.quotaPart <= BigInt(0)) {
+          throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
+        }
+
         if (split.quotaPart > BigInt(0)) {
           await teamQuotaUsageRepo.createUsageInTx(tx, {
             teamId,
@@ -733,10 +762,22 @@ export async function settleSpend(
        * 追補到訂閱額度（該期額度呈現超用）。少收比服務中斷好，而追補是防濫用的關鍵——
        * 不記這筆，用戶就能靠「只剩 1 點」無限發長訊息。
        */
-      const spender = await webAuthnRepo.findUserById(userId);
+      /**
+       * Info: (20260818 - Luphia) 目前一律扣不到（第三輪）：合約沒有可由平台呼叫的
+       * `burn(address, uint256)`。連查都不查，因為放行側已經不把鏈上餘額算進 `available`
+       * （見 spendCredits），這裡的溢出只會來自「額度封頂」那條路——
+       * 而那條路的差額本來就該追補到訂閱額度，與條款 §3.3 一致。
+       *
+       * **恢復前必須先做完 A-1**：先寫 DB 分錄再 burn、成功回填 txHash、失敗寫反向分錄，
+       * 並帶冪等鍵。現在這支兩者都沒有——重試會再燒一次，而且帳上完全查不到
+       * （`chainCharged` / `chainTxHash` 只出現在回傳物件與 log 裡）。
+       */
+      const spender = isChainCreditSpendable()
+        ? await webAuthnRepo.findUserById(userId)
+        : null;
       const chainCharge = spender?.address
         ? await chargeChainCredits(spender.address, shortfall)
-        : { charged: false, reason: "no address" };
+        : { charged: false, reason: "not-spendable" };
 
       if (chainCharge.charged) {
         logger.info("settlement shortfall charged to member credits", {
