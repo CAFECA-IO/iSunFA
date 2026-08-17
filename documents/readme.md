@@ -26,7 +26,7 @@
 4. 🎯 **[數值精度處理規範](engineering_guidelines/numerical_precision_guideline.md)**
    > 說明為何我們在財務與碳排計算中全面棄用原生 `number`，並強制使用 `Prisma.Decimal` 與 `BigInt`。
 5. 🔍 **[Code Review 檢查清單](engineering_guidelines/code_review_checklist.md)**
-   > 由 PR #6652 三輪 review 的**實際失效樣本**整理而成：假綠的六種形狀（掃描根等於被修的檔案、整包 mock 只證明編排、測試自己的前提沒生效、fixture 不是真實資料的形狀…）、空值語意、帳本恆等式、秘密不進 URL。核心一句：**綠燈不是證據，是尚未被反駁**。
+   > 由 PR #6652 三輪 review 的**實際失效樣本**整理而成：假綠的六種形狀（掃描根等於被修的檔案、整包 mock 只證明編排、測試自己的前提沒生效、fixture 不是真實資料的形狀…）、空值語意、帳本恆等式、秘密不進 URL。核心一句：**綠燈不是證據，是尚未被反駁**。§7.1 是推送前一定要跑的三個指令，含 `npm run test:no-dotenv`（在「沒有 .env」的條件下重跑一次，形狀與 CI 相同）。
 6. 🚀 **[部署檢查表：計費子系統](engineering_guidelines/deploy_checklist_billing_2026q3.md)**
    > 席次計費與分配點數上鏈的部署順序。本專案沒有 migrations 目錄，欄位新增與資料回填是分開的兩件事，而順序做錯不會噴錯——只會安靜地讓功能停擺或讓點數暫時消失在畫面上。
 
