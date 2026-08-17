@@ -1882,6 +1882,18 @@ export const useCarbonChat = () => {
         console.info("[carbon-chat] page index", {
           resolved: index.size,
           total: CARBON_REPORT_OUTLINE.length,
+          /**
+           * Info: (20260817 - Emily) 缺了**哪幾節**,不只缺幾節
+           * (`data/issue_drafts/open/42_page_slice_falls_back.md`)。
+           *
+           * 原本只印 `resolved: 21, total: 33` —— 看得到「12 節沒索引」,
+           * 看不出是哪 12 節,於是也推不出哪些工作單元會退回送全文。
+           * 而退回與否是這一趟成本的分水嶺(實測 14 次有 8 次退回、
+           * 每次多花約 41.6k token)。
+           */
+          missing: CARBON_REPORT_OUTLINE.filter(
+            (section) => !index.has(section.id),
+          ).map((section) => section.id),
           isValid: validation.isValid,
           reason: validation.reason,
           offending: validation.offending,
@@ -2029,8 +2041,23 @@ export const useCarbonChat = () => {
           chapterId: chapter.id,
           part: `${unit.partIndex}/${unit.partTotal}`,
           sections: unit.sectionIds,
+          sectionsMissingIndex: unit.sectionIds.filter(
+            (id) => !pageIndex?.get(id),
+          ),
           fromPage: range?.fromPage ?? "(full text)",
-          toPage: range?.toPage ?? "(to end)",
+          /**
+           * Info: (20260817 - Emily) 原本印 `"(to end)"`,而那是**假的**。
+           *
+           * 伺服端要求 fromPage 與 toPage 皆非 null 才切片,只有下界時
+           * 整份文件都會送出去(連 fromPage 之前的頁),而不是「送到文末」。
+           * 這個字面讓看 log 的人以為切成功了 ——
+           * 修行為之前先把話說對(`open/42`)。
+           */
+          toPage:
+            range?.toPage ??
+            (range
+              ? "(NO UPPER BOUND: server sends FULL text)"
+              : "(full text)"),
         });
         if (range) {
           formData.append("fromPage", String(range.fromPage));
@@ -2103,8 +2130,17 @@ export const useCarbonChat = () => {
           segmentsById.set(segment.paragraphId, bucket);
         });
         unmapped.push(...chunk.unmapped);
+        /**
+         * Info: (20260817 - Emily) 累加而不是覆蓋
+         * (`data/issue_drafts/open/41_activity_extraction_zero.md`)。
+         *
+         * 原本是 `activities = chunk.activities` —— 賦值。
+         * 排放章(ch3)六節會被切成兩個工作單元,兩次呼叫各自回一份,
+         * **後回來的那份整批蓋掉前一份**。就算兩次都抽到,也只留下一半,
+         * 而現場看到的只是一個偏低的數字,沒有任何跡象顯示發生過覆蓋。
+         */
         if (chunk.activities && chunk.activities.length > 0) {
-          activities = chunk.activities;
+          activities = [...activities, ...chunk.activities];
         }
       });
 

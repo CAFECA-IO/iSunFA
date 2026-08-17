@@ -582,11 +582,20 @@ export class ReportImportService {
     source: IReportImportSource,
     fromPage: number,
     toPage: number,
+    /**
+     * Info: (20260817 - Emily) 這次切的是哪一章／哪幾節。
+     *
+     * 原本這行只印 `fileName`,於是 `fellBack: true` **無法歸屬到節** ——
+     * 一趟 14 次呼叫裡有 8 次退回送全文,而看 log 的人分不出是哪 8 次,
+     * 也就推不出成因(索引缺項?切出來太短?)。
+     */
+    scope?: string,
   ): Promise<IReportImportSource> {
     if (!source.isText) return source;
     const slice = slicePagesForRange(source.data, fromPage, toPage);
     logger.info("report import page slice", {
       fileName: source.name,
+      scope: scope ?? "(unknown)",
       requested: { fromPage, toPage },
       applied: slice.range,
       fellBack: slice.fellBack,
@@ -1125,7 +1134,13 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
       if (record.success) return [{ ...record.data, source: source.name }];
       const rejected = item as Record<string, unknown>;
       logger.warn("[ReportImportService] activity record rejected", {
-        name: String(rejected?.name ?? "").slice(0, 40),
+        /**
+         * Info: (20260817 - Emily) 欄位名是 `sourceName` 不是 `name`
+         * (`src/validators/carbon_inventory.ts` 的 `CarbonActivityRecordShape`)。
+         * 原本印 `rejected?.name`,於是這一欄**永遠是空字串** ——
+         * 這行 log 存在的唯一理由就是說出「被拒的是哪一筆」,而它從來沒說出來過。
+         */
+        sourceName: String(rejected?.sourceName ?? "").slice(0, 40),
         unit: String(rejected?.unit ?? "").slice(0, 20),
         quantity: String(rejected?.quantity ?? "").slice(0, 20),
         issues: record.error.issues
@@ -1135,12 +1150,32 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
       });
       return [];
     });
-    if (withActivities) {
-      logger.info("[ReportImportService] activity extraction result", {
-        received: rawActivities.length,
-        accepted: activities.length,
-      });
-    }
+    /**
+     * Info: (20260817 - Emily) 這行必須**無條件印**,而且要帶得出成因
+     * (`data/issue_drafts/open/41_activity_extraction_zero.md`)。
+     *
+     * 原本 `received: 0` 把四種完全不同的上游狀態塌成同一個數字:
+     *
+     *   (a) 模型根本沒回 `activities` 這個鍵 —— 合法,因為 responseSchema 的
+     *       `required` 沒列它,外層 Zod 也是 `.optional()`,而 `?? []` 把
+     *       「缺鍵」與「空陣列」在上面那一行永久抹平
+     *   (b) 模型回 `activities: []`
+     *   (c) 這次呼叫其實沒帶 `withActivities` —— 原本的 `if` 守衛讓這行**根本不印**,
+     *       而驗收腳本對「零筆匹配」算出來也是 0/0:
+     *       「這行從沒印過」與「印了 0」在現場是同一句話
+     *   (d) 回超過 50 筆 → 外層整批 throw → 該單元 500(這個看 `issues`)
+     *
+     * `received: 0` 只證明了不是「回了但逐筆被擋掉」那一種。
+     * 加上 `withActivities` / `hasKey` / `rawSample` 之後,四種就分得開了。
+     */
+    logger.info("[ReportImportService] activity extraction result", {
+      withActivities,
+      scope: options?.sectionIds?.join(",") ?? options?.chapterId ?? "all",
+      hasKey: Object.prototype.hasOwnProperty.call(parsed, "activities"),
+      received: rawActivities.length,
+      accepted: activities.length,
+      rawSample: JSON.stringify(parsed.activities ?? null).slice(0, 200),
+    });
 
     return { segments, unmapped, activities };
   }

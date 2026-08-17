@@ -395,20 +395,8 @@ const checkLog = (log: string): void => {
     `補分隔列 ${snapshot.log_補分隔列}、接回折斷列 ${snapshot.log_接回折斷列}、補欄 ${snapshot.log_補欄}`,
   );
 
-  const activity = [
-    ...log.matchAll(
-      /activity extraction result.*?"received":(\d+),"accepted":(\d+)/g,
-    ),
-  ];
-  const received = activity.reduce((sum, m) => sum + Number(m[1]), 0);
-  const accepted = activity.reduce((sum, m) => sum + Number(m[2]), 0);
-  snapshot.log_活動數據_received = received;
-  snapshot.log_活動數據_accepted = accepted;
-  if (accepted > 0) {
-    record("pass", "log:活動數據", `抽到 ${received} 筆、採用 ${accepted} 筆`);
-  } else {
-    record("fail", "log:活動數據", `${received}/${accepted} —— 一筆都沒抽到`);
-  }
+  checkActivities(log);
+  checkPageSlices(log);
 
   const rejected = [
     ...log.matchAll(
@@ -472,6 +460,104 @@ const checkLog = (log: string): void => {
     "log:成本",
     `${snapshot.log_llm_呼叫次數} 次呼叫、input 約 ${Math.round(tokens / 1000)}k token`,
   );
+};
+
+/**
+ * Info: (20260817 - Emily) 活動數據。
+ *
+ * 判準的重點是**「這行從沒印過」與「印了 0」必須分得開**。
+ * 第一版把兩者 `reduce` 成同一個 `0/0`,於是
+ * 「沒帶 withActivities 旗標」與「模型一筆都沒回」在驗收報告上是同一句話,
+ * 而它們的修法完全不同(前者改前端旗標,後者改 prompt)。
+ */
+const checkActivities = (log: string): void => {
+  const lines = [...log.matchAll(/activity extraction result[^\n]*/g)].map(
+    (match) => match[0],
+  );
+  snapshot.log_活動數據_呼叫次數 = lines.length;
+  if (lines.length === 0) {
+    record(
+      "fail",
+      "log:活動數據",
+      "這行從沒印過 —— 不是抽到 0 筆,是這段路沒跑到(先確認 withActivities 旗標)",
+    );
+    return;
+  }
+
+  const num = (line: string, key: string): number =>
+    Number(new RegExp(`"${key}":(\\d+)`).exec(line)?.[1] ?? 0);
+  const received = lines.reduce((sum, line) => sum + num(line, "received"), 0);
+  const accepted = lines.reduce((sum, line) => sum + num(line, "accepted"), 0);
+  const asked = lines.filter((line) => line.includes('"withActivities":true'));
+  const hasKey = lines.filter((line) => line.includes('"hasKey":true'));
+  snapshot.log_活動數據_received = received;
+  snapshot.log_活動數據_accepted = accepted;
+  snapshot.log_活動數據_有要求的呼叫 = asked.length;
+  snapshot.log_活動數據_模型有回這個鍵 = hasKey.length;
+
+  if (accepted > 0) {
+    record(
+      "pass",
+      "log:活動數據",
+      `${lines.length} 次呼叫、${asked.length} 次有要求,抽到 ${received} 筆、採用 ${accepted} 筆`,
+    );
+    return;
+  }
+  /**
+   * Info: (20260817 - Emily) 0 的時候要指名是哪一種 0,否則這條 ✗ 沒有行動價值。
+   */
+  const cause =
+    asked.length === 0
+      ? "沒有任何一次呼叫帶 withActivities:true(前端旗標問題,不是 prompt)"
+      : hasKey.length === 0
+        ? `${asked.length} 次有要求,但模型每次都沒回 activities 這個鍵(prompt / required 問題)`
+        : `模型有回這個鍵但內容是空的(看 rawSample)`;
+  record("fail", "log:活動數據", `0 筆 —— ${cause}`);
+};
+
+/**
+ * Info: (20260817 - Emily) 頁碼切片。這裡量的是**成本的分水嶺**:
+ * 一趟 14 次呼叫有幾次真的切到片、幾次退回送全文。
+ *
+ * 三條路徑要分開數,因為修法不同:
+ * - `page slice` + `fellBack:false`  → 切成功
+ * - `page slice` + `fellBack:true`   → 切了但退回(範圍無效或太短)
+ * - `page slice skipped`             → 根本沒切(只有下界,伺服端整份送)
+ */
+const checkPageSlices = (log: string): void => {
+  const slices = [...log.matchAll(/report import page slice[^\n]*/g)].map(
+    (match) => match[0],
+  );
+  const skipped = slices.filter((line) => line.includes("slice skipped"));
+  const applied = slices.filter((line) => !line.includes("slice skipped"));
+  const fellBack = applied.filter((line) => line.includes('"fellBack":true'));
+
+  snapshot.log_切片_切成功 = applied.length - fellBack.length;
+  snapshot.log_切片_切了但退回 = fellBack.length;
+  snapshot.log_切片_根本沒切 = skipped.length;
+
+  const wasted = fellBack.length + skipped.length;
+  const detail = `切成功 ${applied.length - fellBack.length} 次、退回 ${fellBack.length} 次、沒切 ${skipped.length} 次`;
+  record(wasted > 0 ? "warn" : "pass", "log:頁碼切片", detail);
+
+  // Info: (20260817 - Emily) 索引缺哪幾節 —— 退回的成因幾乎都在這裡
+  const missing = /"missing":\[([^\]]*)\]/.exec(log);
+  if (missing) {
+    const ids = missing[1]
+      .split(",")
+      .map((id) => id.trim().replace(/^"|"$/g, ""))
+      .filter((id) => id !== "");
+    snapshot.log_索引缺的節 = ids;
+    if (ids.length > 0) {
+      record(
+        "warn",
+        "log:頁碼索引缺項",
+        `${ids.length} 節沒索引:${ids.slice(0, 8).join(" ")}${ids.length > 8 ? " …" : ""}`,
+      );
+    } else {
+      record("pass", "log:頁碼索引", "33 節全部有索引");
+    }
+  }
 };
 
 /**
