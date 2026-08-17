@@ -107,11 +107,11 @@ export class SlidingWindowRateLimiter {
 }
 
 /**
- * Info: (20260716 - Emily) 全站路由共用單例(Next.js route handler 同 process 共享)。
+ * Info: (20260716 - Emily) carbon 路由共用單例(Next.js route handler 同 process 共享)
  *
- * Info: (20260817 - Luphia) 一個實例服務所有 bucket，因為 `check()` 的 key 是
- * `bucket:identity` —— 不同 bucket 之間本來就不共用計數，開第二個實例只會讓
- * 記憶體上限（`RATE_LIMIT_MAX_TRACKED_KEYS`）與清掃節奏各算一份。
+ * Info: (20260817 - Luphia) 現在是**全站**共用，不只 carbon：一個實例服務所有 bucket，
+ * 因為 `check()` 的 key 是 `bucket:identity` —— 不同 bucket 之間本來就不共用計數，
+ * 開第二個實例只會讓記憶體上限（`RATE_LIMIT_MAX_TRACKED_KEYS`）與清掃節奏各算一份。
  */
 const rateLimiter = new SlidingWindowRateLimiter();
 
