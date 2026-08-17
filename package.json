@@ -25,7 +25,8 @@
     "build_contract": "npx hardhat compile",
     "deploy_contract": "npx hardhat run scripts/deploy_contract.ts",
     "version": "npx tsx scripts/bump_version.ts",
-    "initial_lance_db": "npx tsx scripts/init_lance_db.ts"
+    "initial_lance_db": "npx tsx scripts/init_lance_db.ts",
+    "uat:carbon": "npx tsx scripts/uat_carbon_report.ts"
   },
   "dependencies": {
     "@erc3643org/erc-3643": "^4.1.3",

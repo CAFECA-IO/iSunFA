@@ -28,6 +28,22 @@ const CarbonReportShellSchema = z.object({
   footerText: z.string().min(1).max(300),
   title: z.string().max(200).optional(),
   tocTitle: z.string().max(80).optional(),
+  /**
+   * Info: (20260817 - Emily) 查證識別四欄。
+   *
+   * 上限寫 8 而不是 4：欄位數由 `CARBON_REPORT_IDENTITY_FIELDS` 決定，
+   * 這裡只負責擋住失控的輸入。寫死 4 的話，下一次加一欄
+   * 會在這裡靜靜地排掉 —— 而那正是這一條一開始出問題的方式。
+   */
+  identity: z
+    .array(
+      z.object({
+        label: z.string().min(1).max(40),
+        value: z.string().max(120),
+      }),
+    )
+    .max(8)
+    .optional(),
 });
 
 export const CarbonReportPdfRequestSchema = z.object({

@@ -66,6 +66,17 @@ export interface ICarbonPdfShell {
   footerText: string;
   title?: string;
   tocTitle?: string;
+  /**
+   * Info: (20260817 - Emily) 查證識別四欄
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * 這一行本來就該在這裡。沒有它的後果不是型別錯誤而已：
+   * `pdf_editor` 有傳 `identity`，但伺服端的 Zod schema 沒有這一項，
+   * 而 `z.object` 預設會**默默剔掉未知欄位** ——
+   * 於是填寫面板、工具列徽記、HTML 渲染都做了，
+   * 而四欄從來沒有印在紙上。修正端≠生效端，本週第五次。
+   */
+  identity?: ReadonlyArray<{ label: string; value: string }>;
 }
 
 export const requestCarbonReportPdf = async (params: {

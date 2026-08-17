@@ -26,7 +26,10 @@ import { PdfTextLayerDecisionEnum } from "@/constants/pdf_text_layer";
 import { ensureTableDivider } from "@/lib/utils/markdown_table_divider";
 import { joinWrappedTableRows } from "@/lib/utils/markdown_table_rows";
 import { extractPagesAsPdf } from "@/lib/utils/pdf_page_extract";
-import { narrowVisionPagesToRange } from "@/lib/utils/pdf_vision_scope";
+import {
+  narrowVisionPagesToRange,
+  type IVisionPages,
+} from "@/lib/utils/pdf_vision_scope";
 import { CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES } from "@/constants/carbon_chatbot";
 import {
   LLM_REPORT_IMPORT_TIMEOUT_MS,
@@ -313,7 +316,7 @@ export interface IReportImportSource {
    * 與 `data` 併送而不是取代它：那幾頁的**上下文**仍在文字層裡，
    * 只送圖的話模型不知道它屬於哪一節。
    */
-  visionPages?: { data: string; mimeType: string; pages: number[] };
+  visionPages?: IVisionPages;
 }
 
 /**
@@ -492,7 +495,9 @@ export class ReportImportService {
           fileName: input.name,
           cacheKey: input.cacheKey,
           isText: cached.isText,
-          visionPages: cached.visionPages?.pages ?? null,
+          visionPages: cached.visionPages
+            ? [...cached.visionPages.pages]
+            : null,
         });
         return { ...cached, name: input.name, mimeType: input.mimeType };
       }
@@ -616,8 +621,8 @@ export class ReportImportService {
         fileName: source.name,
         applied: slice.range,
         decision: narrowed.decision,
-        had: narrowed.had,
-        kept: narrowed.visionPages?.pages ?? [],
+        had: [...narrowed.had],
+        kept: [...(narrowed.visionPages?.pages ?? [])],
       });
     }
     return narrowed.visionPages
