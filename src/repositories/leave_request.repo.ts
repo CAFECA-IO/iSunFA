@@ -9,6 +9,7 @@ import {
 } from "@/constants/leave_policy";
 import { allocateConsumption } from "@/lib/leave_entitlement_rules";
 import { activeKeyOf } from "@/repositories/leave.repo";
+import { assertSchedulableDay } from "@/repositories/attendance_schedule_invariant";
 import {
   ILeaveApprovalStepRecord,
   ILeaveRequestRecord,
@@ -404,7 +405,19 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
          * Info: (20260817 - Julian) 投影成 `LEAVE`，**不帶班別** ——
          * `assertSchedulableDay` 要求非上班日不得掛班別。
          * 判定引擎只讀 `EmployeeShiftDay`，不知道假單存在（單向依賴鐵律）。
+         *
+         * Info: (20260817 - Julian) 真的呼叫那個不變式，而不是只在註解裡引述它。
+         * 這裡是 `EmployeeShiftDay` 的第三個寫入點（另兩個是
+         * `attendance_schedule.repo.upsertShiftDay` 與 `leave.repo.resolveRecall`），
+         * 而前兩個都過閘口。第一版只寫了上面那段註解 —— 目前寫死 `LEAVE` + `null`
+         * 碰巧合法，但那是**這一行現在長這樣**，不是一個保證：
+         * 哪天有人把它改成帶班別（例如半天假想保留班別），沒有任何東西擋得住。
+         * 註解攔不下 refactor，斷言可以。
          */
+        assertSchedulableDay({
+          dayType: WorkDayType.LEAVE,
+          shiftPatternId: null,
+        });
         await tx.employeeShiftDay.update({
           where: {
             accountBookId_employeeId_workDate: {

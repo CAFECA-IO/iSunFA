@@ -2,7 +2,6 @@
 
 import { FC } from "react";
 import { CalendarOff, Loader2, Send } from "lucide-react";
-import { LEAVE_TYPE_I18N_KEY } from "@/constants/leave";
 import { ILeaveTodayEntry } from "@/interfaces/leave";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -13,6 +12,11 @@ import { useTranslation } from "@/i18n/i18n_context";
  * 硬性 gate 在 `dayType === WORK`。人手不足要能銷假，前提是先看得到誰在放假。
  *
  * 名單對所有員工開放；徵詢入口只給主管（計畫書 §8.5）。
+ *
+ * Info: (20260817 - Julian) **不再顯示假別。** 這一頁對全體員工開放，
+ * 而病假、生理假、產假、家庭照顧假會直接揭露健康與生育狀況（ADR 018 Tier 2）。
+ * 這一區要回答的是「今天人手夠不夠」，那個問題只需要知道誰不在。
+ * 主管在銷假徵詢的畫面上仍看得到假別 —— 那是他要做判斷的依據。
  */
 const LeaveTodayPanel: FC<{
   entries: ILeaveTodayEntry[];
@@ -50,7 +54,7 @@ const LeaveTodayPanel: FC<{
                   </span>
                 </div>
                 <div className="mt-0.5 truncate text-xs text-gray-500">
-                  {t(LEAVE_TYPE_I18N_KEY[entry.leaveType])}
+                  {t("hr_management.attendance_presence.leave_on_leave")}
                   {entry.jobTitle ? `　${entry.jobTitle}` : ""}
                   {entry.departmentName ? `　${entry.departmentName}` : ""}
                 </div>
@@ -87,8 +91,8 @@ const LeaveTodayPanel: FC<{
       )}
 
       {/**
-       * Info: (20260814 - Julian) 假別本身是個資（「普通傷病假」透露健康狀況）。
-       * Demo 全開放是已知取捨，正式版應依 ADR 018 分級後決定誰看得到。
+       * Info: (20260817 - Julian) 提示文案改為說明「這裡刻意看不到假別」——
+       * 看得到名字卻看不到原因，若不說明，使用者只會以為是壞掉了。
        */}
       <p className="mt-3 border-t border-gray-100 pt-3 text-xs text-gray-400">
         {t("hr_management.attendance_presence.leave_hint")}

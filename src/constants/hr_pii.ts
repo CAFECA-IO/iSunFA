@@ -76,6 +76,12 @@ export const HR_PII_FIELD_TIER = {
   // Info: (20260811 - Julian) EmergencyContact
   altPhoneCipher: PiiTier.CONFIDENTIAL,
   /**
+   * Info: (20260817 - Julian) LeaveRequest —— 請假事由。
+   * AAD 綁定 `LeaveRequest:{id}:reasonCipher:{keyVersion}`，因此 `LeaveRequest.id`
+   * 必須由應用層 `randomUUID()` 產生（同 AttendancePunch 的處置）。
+   */
+  reasonCipher: PiiTier.CONFIDENTIAL,
+  /**
    * Info: (20260813 - Julian) AttendancePunch —— 打卡當下的座標。行蹤資料，
    * 敏感度不低於通訊地址：住址是靜態的一個點，座標序列是動態的行蹤。
    *
@@ -102,4 +108,13 @@ export enum HrPiiTable {
   EMERGENCY_CONTACT = "EmergencyContact",
   // Info: (20260813 - Julian) 簽到系統的打卡紀錄，持有加密的經緯度
   ATTENDANCE_PUNCH = "AttendancePunch",
+  /**
+   * Info: (20260817 - Julian) 假單的請假事由。病名、家屬狀況、司法事由都寫在這裡，
+   * 敏感度與 `EmergencyContact.altPhoneCipher` 同級（ADR 018 Tier 2）。
+   *
+   * 假別本身（`leavePolicyId`）**不加密** —— 它是行事曆與統計的查詢維度，
+   * 加密後兩者都查不了。改以可見範圍控管（假勤計畫書 §9.2）：
+   * 同部門同事只看得到「已排休」。取捨同 `Employee.email`「為複合唯一鍵成員，不加密」。
+   */
+  LEAVE_REQUEST = "LeaveRequest",
 }

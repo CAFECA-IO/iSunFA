@@ -24,11 +24,21 @@ import { useTranslation } from "@/i18n/i18n_context";
  * 面板也能把班別全名與時間窗一起寫出來。不做拖拉排班。
  */
 
+/**
+ * Info: (20260817 - Julian) 補上 `SUSPENDED`。
+ *
+ * 型別是 `Exclude<WorkDayType, WORK>`，所以少一個成員不會被編譯器擋下來 ——
+ * 但少了它，停工日在畫面上就無法設定，SUSPENDED 只有種子腳本進得去。
+ *
+ * ToDo: (20260817 - Julian) 停工是機關對**整個工地**的單方決定，逐格點選一個人一天
+ * 是能表達但不合用的做法。批次套用（選工地 + 日期區間）屬於排班頁的功能，不在本面板。
+ */
 const OFF_DAY_TYPES: Exclude<WorkDayType, WorkDayType.WORK>[] = [
   WorkDayType.REGULAR_OFF,
   WorkDayType.REST_DAY,
   WorkDayType.HOLIDAY,
   WorkDayType.LEAVE,
+  WorkDayType.SUSPENDED,
 ];
 
 const ScheduleCellEditor: FC<{

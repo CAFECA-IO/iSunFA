@@ -38,6 +38,9 @@ const LEAVE_DAY_INCLUDE = {
           jobTitle: { select: { title: true } },
         },
       },
+      // Info: (20260817 - Julian) 假別改為關聯（ADR 021）。這裡帶出來供徵詢畫面顯示，
+      // Info: (20260817 - Julian) 今日請假名單本身不顯示假別（計畫書 §9.2）
+      leavePolicy: { select: { code: true, name: true } },
     },
   },
   recalls: { where: { status: LeaveRecallStatus.PENDING } },
@@ -51,6 +54,7 @@ const RECALL_INCLUDE = {
       leaveRequest: {
         include: {
           employee: { select: { id: true, employeeNo: true, name: true } },
+          leavePolicy: { select: { code: true, name: true } },
         },
       },
     },

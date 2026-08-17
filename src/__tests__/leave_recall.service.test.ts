@@ -4,8 +4,8 @@ import {
   LeaveRecallDecision,
   LeaveRecallResolutionOutcome,
   LeaveRecallStatus,
-  LeaveType,
 } from "@/constants/leave";
+import { LEAVE_POLICY_CODE } from "@/constants/leave_policy";
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { LeaveService } from "@/services/leave.service";
@@ -68,11 +68,13 @@ const leaveDay = (
       id: "req-1",
       accountBookId: ACCOUNT_BOOK_ID,
       employeeId: "emp-006",
-      leaveType: LeaveType.ANNUAL,
-      reason: "家庭旅遊",
+      leavePolicy: {
+        code: LEAVE_POLICY_CODE.ANNUAL,
+        name: "特別休假",
+      },
+      // Info: (20260817 - Julian) 事由已改為密文欄位，且銷假路徑從不解密它
+      reasonCipher: "cipher:家庭旅遊",
       status: "APPROVED",
-      decidedByEmployeeId: "emp-005",
-      decidedAt: NOW,
       createdAt: NOW,
       updatedAt: NOW,
       employee: {
@@ -107,7 +109,10 @@ const recallRecord = (
       workDate: "2026-08-14",
       leaveRequest: {
         employeeId: overrides.employeeId ?? "emp-006",
-        leaveType: LeaveType.ANNUAL,
+        leavePolicy: {
+          code: LEAVE_POLICY_CODE.ANNUAL,
+          name: "特別休假",
+        },
         employee: { id: "emp-006", employeeNo: "EMP006", name: "李冠廷" },
       },
     },

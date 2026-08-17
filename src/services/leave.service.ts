@@ -7,7 +7,6 @@ import {
   LeaveRecallDecision,
   LeaveRecallResolutionOutcome,
   LeaveRecallStatus,
-  LeaveType,
 } from "@/constants/leave";
 import { toZonedParts } from "@/lib/utils/attendance_time";
 import {
@@ -250,8 +249,8 @@ const toTodayEntry = (day: ILeaveDayRecord): ILeaveTodayEntry => ({
   name: day.leaveRequest.employee.name,
   departmentName: day.leaveRequest.employee.department?.name ?? null,
   jobTitle: day.leaveRequest.employee.jobTitle?.title ?? null,
-  leaveType: day.leaveRequest.leaveType as LeaveType,
-  reason: day.leaveRequest.reason,
+  // Info: (20260817 - Julian) 不回傳假別與事由：對全體開放的端點只需回答「他不在」（計畫書 §9.2）
+  onLeave: true,
   hasPendingRecall: day.recalls.length > 0,
 });
 
@@ -267,7 +266,8 @@ const toRecallView = (recall: ILeaveRecallRecord): ILeaveRecallView => ({
   employeeId: recall.leaveDay.leaveRequest.employee.id,
   employeeNo: recall.leaveDay.leaveRequest.employee.employeeNo,
   employeeName: recall.leaveDay.leaveRequest.employee.name,
-  leaveType: recall.leaveDay.leaveRequest.leaveType as LeaveType,
+  leavePolicyCode: recall.leaveDay.leaveRequest.leavePolicy.code,
+  leavePolicyName: recall.leaveDay.leaveRequest.leavePolicy.name,
   requestedByEmployeeNo: recall.requestedBy.employeeNo,
   requestedByName: recall.requestedBy.name,
   shiftPatternId: recall.shiftPatternId,

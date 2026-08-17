@@ -24,6 +24,7 @@
 
 import {
   LeaveAccrualMethod,
+  LeaveProofRequirement,
   LeaveQuotaMode,
   LeaveUnitBasis,
 } from "@/constants/leave_policy";
@@ -48,6 +49,8 @@ export interface IStorableLeavePolicy {
   annualDays: number | null | undefined;
   cashOutOnExpiry: boolean;
   mergesIntoPolicyId: string | null | undefined;
+  proofRequirement: LeaveProofRequirement;
+  proofThresholdDays: number | null | undefined;
 }
 
 /**
@@ -55,6 +58,10 @@ export interface IStorableLeavePolicy {
  * `VA_INVALID_INPUT_DATA`。丟具名型別的理由同 `assertStorablePii`：
  * service 一律把 catch 到的東西包成 `IS_DB_FAILED`(500)，而這個守衛觸發時
  * DB 完全正常，呼叫端會收到一個與成因無關的 500。
+ *
+ * ToDo: (20260817 - Julian) 函式名已經比它做的事窄 —— 它現在檢查單位、級距、
+ * 折現、併計、證明五組互斥組合。改名為 `assertStorableLeavePolicy` 較貼切，
+ * 但那會動到 seed 與測試的呼叫點，留待下一次進到這個檔案時一併處理。
  */
 export function assertLeavePolicyUnit(params: IStorableLeavePolicy): void {
   const hasUnitMinutes =
@@ -144,6 +151,68 @@ export function assertLeavePolicyUnit(params: IStorableLeavePolicy): void {
     throw new LeavePolicyInvariantError(
       "a leave type cannot merge into itself; consumption would be deducted twice",
       `id=${params.id}, mergesIntoPolicyId=${params.mergesIntoPolicyId}`,
+    );
+  }
+
+  assertProofRequirement(params);
+}
+
+/**
+ * Info: (20260817 - Julian) 「超過門檻要證明」必須有門檻。
+ *
+ * ## 為什麼要單獨擋
+ *
+ * 第一版的 `DEFAULT_LEAVE_POLICY_SEED` 有五個假別標了
+ * `REQUIRED_OVER_THRESHOLD`，而 `ILeavePolicySeed` 根本沒有門檻欄位 ——
+ * 五列全部帶著 `proofThresholdDays = null` 落地。
+ *
+ * 那不會報錯，這正是問題：一個「超過 null 日要證明」的假別，
+ * 將來寫檢查的人有兩種寫法，`days > null` 恆為 false（永遠不要求證明）
+ * 或當場丟例外，而**兩種都不是設定它的人想要的**。
+ * 形狀與上面 `FIXED_MINUTES ⇒ minimumUnitMinutes` 那條完全相同。
+ */
+function assertProofRequirement(params: IStorableLeavePolicy): void {
+  const hasThreshold =
+    params.proofThresholdDays !== null &&
+    params.proofThresholdDays !== undefined;
+
+  if (
+    params.proofRequirement === LeaveProofRequirement.REQUIRED_OVER_THRESHOLD
+  ) {
+    if (!hasThreshold) {
+      throw new LeavePolicyInvariantError(
+        "proofRequirement is REQUIRED_OVER_THRESHOLD but no proofThresholdDays was given; the check would silently never fire",
+        `proofRequirement=${params.proofRequirement}, proofThresholdDays=${params.proofThresholdDays}`,
+      );
+    }
+    /**
+     * Info: (20260817 - Julian) 門檻必須 > 0，**刻意不接受 0**。
+     *
+     * `threshold = 0` 讀起來是「超過 0 日就要證明」＝ 一律要證明。
+     * 那個語意是真實存在的需求（公傷病假要職災認定文件、產假要診斷證明，
+     * 都與日數無關），但 `LeaveProofRequirement` **沒有表達它的成員** ——
+     * 只有 NONE / OPTIONAL / REQUIRED_OVER_THRESHOLD。
+     *
+     * 放行 0 等於讓人用門檻欄位偷渡一個缺失的 enum 值，而那個缺口從此
+     * 不會有人再提。擋下來，讓它以「需要新增 `REQUIRED`」的形式浮出水面。
+     * ToDo: (20260817 - Julian) 補 `LeaveProofRequirement.REQUIRED`（計畫書 §17）。
+     */
+    const days = params.proofThresholdDays as number;
+    if (!(days > 0)) {
+      throw new LeavePolicyInvariantError(
+        "proofThresholdDays must be greater than 0; a zero threshold means 'always required', which this enum cannot express yet",
+        `proofThresholdDays=${days}`,
+      );
+    }
+  } else if (hasThreshold) {
+    /**
+     * Info: (20260817 - Julian) 反方向同樣擋，理由同 `minimumUnitMinutes`：
+     * 一個 `proofRequirement = OPTIONAL` 卻存著 `proofThresholdDays = 3` 的假別，
+     * 在設定畫面上看起來就是「超過三天要證明」，而它什麼也不做。
+     */
+    throw new LeavePolicyInvariantError(
+      "proofThresholdDays is only meaningful for REQUIRED_OVER_THRESHOLD; a leftover value reads as a rule that does nothing",
+      `proofRequirement=${params.proofRequirement}, proofThresholdDays=${params.proofThresholdDays}`,
     );
   }
 }

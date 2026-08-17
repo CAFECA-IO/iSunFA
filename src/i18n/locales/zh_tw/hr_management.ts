@@ -613,11 +613,13 @@ export const hrManagement = {
     day_type_rest_day: "休息日",
     day_type_holiday: "國定假日",
     day_type_leave: "請假",
+    day_type_suspended: "停工",
     day_type_short_work: "上",
     day_type_short_regular_off: "例",
     day_type_short_rest_day: "休",
     day_type_short_holiday: "國",
     day_type_short_leave: "假",
+    day_type_short_suspended: "停",
     phase_upcoming: "尚未開始",
     phase_in_progress: "進行中",
     phase_concluded: "已結束",
@@ -637,10 +639,11 @@ export const hrManagement = {
   attendance_presence: {
     stat_leave: "今日請假",
     stat_leave_hint: "已核准的請假，不列入未到工",
+    leave_on_leave: "已排休",
     leave_title: "今日請假（{{count}} 人）",
     leave_empty: "今天沒有人請假",
     leave_hint:
-      "人手不足時，主管可對這份名單上的人發起銷假徵詢；同意與否由當事人決定。",
+      "人手不足時，主管可對這份名單上的人發起銷假徵詢；同意與否由當事人決定。\n這份名單刻意不顯示假別 —— 病假、生理假等會揭露健康狀況。",
     leave_recall_action: "銷假徵詢",
     leave_recall_pending: "徵詢中",
     recall_title: "發起銷假徵詢",
@@ -733,14 +736,26 @@ export const hrManagement = {
       "這個環境無法使用 Passkey。Passkey 只在 HTTPS（或 localhost）安全連線下運作，請改用正式網址開啟本頁。",
     hint: "登入的 Google 帳號必須是已建檔的公司信箱。若登入後顯示「尚未對應到員工檔」，請聯繫人事確認信箱。",
   },
-  // Info: (20260814 - Julian) 假別名稱，對應 `LEAVE_TYPE_I18N_KEY`。用勞基法的正式用語，不用口語簡稱
+  /**
+   * Info: (20260817 - Julian) 內建假別名稱，對應 `LEAVE_POLICY_I18N_KEY`。
+   * 用勞基法的正式用語，不用口語簡稱。
+   *
+   * 沒有 `policy_other`：假別已是資料（ADR 021），租戶自訂的假別查無對照時
+   * 回退顯示 `LeavePolicy.name`，而不是被歸進一個叫「其他」的桶子。
+   */
   leave: {
-    type_annual: "特別休假",
-    type_personal: "事假",
-    type_sick: "病假",
-    type_official: "公假",
-    type_marriage: "婚假",
-    type_bereavement: "喪假",
-    type_other: "其他",
+    policy_annual: "特別休假",
+    policy_personal: "事假",
+    policy_sick: "普通傷病假",
+    policy_occupational_injury: "公傷病假",
+    policy_official: "公假",
+    policy_marriage: "婚假",
+    policy_bereavement: "喪假",
+    policy_menstrual: "生理假",
+    policy_maternity: "產假",
+    policy_prenatal_checkup: "產檢假",
+    policy_paternity: "陪產檢及陪產假",
+    policy_family_care: "家庭照顧假",
+    policy_compensatory: "補休",
   },
 };

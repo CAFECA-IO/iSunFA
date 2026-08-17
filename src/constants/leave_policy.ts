@@ -237,7 +237,12 @@ export interface ILeaveAccrualTierSeed {
 
 export const ANNUAL_LEAVE_TIER_SEED: readonly ILeaveAccrualTierSeed[] = [
   { minSeniorityMonths: 6, days: 3, incrementDaysPerYear: null, maxDays: null },
-  { minSeniorityMonths: 12, days: 7, incrementDaysPerYear: null, maxDays: null },
+  {
+    minSeniorityMonths: 12,
+    days: 7,
+    incrementDaysPerYear: null,
+    maxDays: null,
+  },
   {
     minSeniorityMonths: 24,
     days: 10,
@@ -295,6 +300,15 @@ export interface ILeavePolicySeed {
   /** Info: (20260817 - Julian) 工資照給 = 1、折半發給 = 0.5、不給工資 = 0；條件式給付者為 null */
   readonly paidRatio: number | null;
   readonly proofRequirement: LeaveProofRequirement;
+  /**
+   * Info: (20260817 - Julian) 僅 `REQUIRED_OVER_THRESHOLD` 有意義，其餘必須為 null
+   * （`assertLeavePolicyUnit` 兩個方向都擋）。
+   *
+   * **這是公司政策，不是法定數字** —— 勞工請假規則 §10 只說「雇主得要求勞工
+   * 提出有關證明文件」，沒有訂日數門檻。因此內建 seed 一律為 null，
+   * 由各租戶在假別設定畫面自行填寫。
+   */
+  readonly proofThresholdDays: number | null;
   readonly employerMayReject: boolean;
   readonly recallable: boolean;
   readonly mergesIntoCode: LeavePolicyCode | null;
@@ -317,6 +331,7 @@ export const DEFAULT_LEAVE_POLICY_SEED: readonly ILeavePolicySeed[] = [
     cashOutOnExpiry: true,
     paidRatio: 1,
     proofRequirement: LeaveProofRequirement.NONE,
+    proofThresholdDays: null,
     employerMayReject: false,
     // Info: (20260817 - Julian) §38 III：雇主基於企業經營上急迫需求得與勞工協商調整
     recallable: true,
@@ -337,6 +352,7 @@ export const DEFAULT_LEAVE_POLICY_SEED: readonly ILeavePolicySeed[] = [
     cashOutOnExpiry: false,
     paidRatio: 0,
     proofRequirement: LeaveProofRequirement.NONE,
+    proofThresholdDays: null,
     employerMayReject: true,
     recallable: false,
     mergesIntoCode: null,
@@ -364,7 +380,16 @@ export const DEFAULT_LEAVE_POLICY_SEED: readonly ILeavePolicySeed[] = [
     carryForwardMonths: 0,
     cashOutOnExpiry: false,
     paidRatio: 0.5,
-    proofRequirement: LeaveProofRequirement.REQUIRED_OVER_THRESHOLD,
+    /**
+     * ToDo: (20260817 - Julian) 原為 `REQUIRED_OVER_THRESHOLD`，暫降為 `OPTIONAL`。
+     * 普通傷病假的診斷證明門檻由各公司自訂；
+     * 而本表沒有門檻可填（`proofThresholdDays` 是公司政策不是法定數字），
+     * 帶著 null 門檻的 `REQUIRED_OVER_THRESHOLD` 現已被
+     * `assertLeavePolicyUnit` 擋下。降級是為了不在法規欄位上寫一個猜的數字，
+     * **不是**主張證明可有可無。缺口記於計畫書 §17。
+     */
+    proofRequirement: LeaveProofRequirement.OPTIONAL,
+    proofThresholdDays: null,
     employerMayReject: true,
     recallable: false,
     mergesIntoCode: null,
@@ -383,7 +408,16 @@ export const DEFAULT_LEAVE_POLICY_SEED: readonly ILeavePolicySeed[] = [
     carryForwardMonths: 0,
     cashOutOnExpiry: false,
     paidRatio: 1,
-    proofRequirement: LeaveProofRequirement.REQUIRED_OVER_THRESHOLD,
+    /**
+     * ToDo: (20260817 - Julian) 原為 `REQUIRED_OVER_THRESHOLD`，暫降為 `OPTIONAL`。
+     * 公傷病假需要職災認定文件，且與日數無關 —— 那是 `REQUIRED` 而不是門檻式；
+     * 而本表沒有門檻可填（`proofThresholdDays` 是公司政策不是法定數字），
+     * 帶著 null 門檻的 `REQUIRED_OVER_THRESHOLD` 現已被
+     * `assertLeavePolicyUnit` 擋下。降級是為了不在法規欄位上寫一個猜的數字，
+     * **不是**主張證明可有可無。缺口記於計畫書 §17。
+     */
+    proofRequirement: LeaveProofRequirement.OPTIONAL,
+    proofThresholdDays: null,
     employerMayReject: false,
     recallable: false,
     mergesIntoCode: null,
@@ -403,6 +437,7 @@ export const DEFAULT_LEAVE_POLICY_SEED: readonly ILeavePolicySeed[] = [
     cashOutOnExpiry: false,
     paidRatio: 1,
     proofRequirement: LeaveProofRequirement.OPTIONAL,
+    proofThresholdDays: null,
     employerMayReject: true,
     recallable: false,
     mergesIntoCode: null,
@@ -422,7 +457,16 @@ export const DEFAULT_LEAVE_POLICY_SEED: readonly ILeavePolicySeed[] = [
     carryForwardMonths: 0,
     cashOutOnExpiry: false,
     paidRatio: 1,
-    proofRequirement: LeaveProofRequirement.REQUIRED_OVER_THRESHOLD,
+    /**
+     * ToDo: (20260817 - Julian) 原為 `REQUIRED_OVER_THRESHOLD`，暫降為 `OPTIONAL`。
+     * 結婚證書與日數無關 —— 同樣是 `REQUIRED` 而不是門檻式；
+     * 而本表沒有門檻可填（`proofThresholdDays` 是公司政策不是法定數字），
+     * 帶著 null 門檻的 `REQUIRED_OVER_THRESHOLD` 現已被
+     * `assertLeavePolicyUnit` 擋下。降級是為了不在法規欄位上寫一個猜的數字，
+     * **不是**主張證明可有可無。缺口記於計畫書 §17。
+     */
+    proofRequirement: LeaveProofRequirement.OPTIONAL,
+    proofThresholdDays: null,
     employerMayReject: true,
     recallable: false,
     mergesIntoCode: null,
@@ -447,7 +491,16 @@ export const DEFAULT_LEAVE_POLICY_SEED: readonly ILeavePolicySeed[] = [
     carryForwardMonths: 0,
     cashOutOnExpiry: false,
     paidRatio: 1,
-    proofRequirement: LeaveProofRequirement.REQUIRED_OVER_THRESHOLD,
+    /**
+     * ToDo: (20260817 - Julian) 原為 `REQUIRED_OVER_THRESHOLD`，暫降為 `OPTIONAL`。
+     * 訃聞或死亡證明與日數無關 —— 同樣是 `REQUIRED` 而不是門檻式；
+     * 而本表沒有門檻可填（`proofThresholdDays` 是公司政策不是法定數字），
+     * 帶著 null 門檻的 `REQUIRED_OVER_THRESHOLD` 現已被
+     * `assertLeavePolicyUnit` 擋下。降級是為了不在法規欄位上寫一個猜的數字，
+     * **不是**主張證明可有可無。缺口記於計畫書 §17。
+     */
+    proofRequirement: LeaveProofRequirement.OPTIONAL,
+    proofThresholdDays: null,
     employerMayReject: true,
     recallable: false,
     mergesIntoCode: null,
@@ -477,6 +530,7 @@ export const DEFAULT_LEAVE_POLICY_SEED: readonly ILeavePolicySeed[] = [
     cashOutOnExpiry: false,
     paidRatio: 0.5,
     proofRequirement: LeaveProofRequirement.NONE,
+    proofThresholdDays: null,
     employerMayReject: false,
     recallable: false,
     mergesIntoCode: null,
@@ -503,7 +557,16 @@ export const DEFAULT_LEAVE_POLICY_SEED: readonly ILeavePolicySeed[] = [
     carryForwardMonths: 0,
     cashOutOnExpiry: false,
     paidRatio: null,
-    proofRequirement: LeaveProofRequirement.REQUIRED_OVER_THRESHOLD,
+    /**
+     * ToDo: (20260817 - Julian) 原為 `REQUIRED_OVER_THRESHOLD`，暫降為 `OPTIONAL`。
+     * 診斷證明與日數無關 —— 同樣是 `REQUIRED` 而不是門檻式；
+     * 而本表沒有門檻可填（`proofThresholdDays` 是公司政策不是法定數字），
+     * 帶著 null 門檻的 `REQUIRED_OVER_THRESHOLD` 現已被
+     * `assertLeavePolicyUnit` 擋下。降級是為了不在法規欄位上寫一個猜的數字，
+     * **不是**主張證明可有可無。缺口記於計畫書 §17。
+     */
+    proofRequirement: LeaveProofRequirement.OPTIONAL,
+    proofThresholdDays: null,
     employerMayReject: false,
     recallable: false,
     mergesIntoCode: null,
@@ -523,6 +586,7 @@ export const DEFAULT_LEAVE_POLICY_SEED: readonly ILeavePolicySeed[] = [
     cashOutOnExpiry: false,
     paidRatio: 1,
     proofRequirement: LeaveProofRequirement.OPTIONAL,
+    proofThresholdDays: null,
     employerMayReject: false,
     recallable: false,
     mergesIntoCode: null,
@@ -542,6 +606,7 @@ export const DEFAULT_LEAVE_POLICY_SEED: readonly ILeavePolicySeed[] = [
     cashOutOnExpiry: false,
     paidRatio: 1,
     proofRequirement: LeaveProofRequirement.OPTIONAL,
+    proofThresholdDays: null,
     employerMayReject: false,
     recallable: false,
     mergesIntoCode: null,
@@ -561,6 +626,7 @@ export const DEFAULT_LEAVE_POLICY_SEED: readonly ILeavePolicySeed[] = [
     cashOutOnExpiry: false,
     paidRatio: 0,
     proofRequirement: LeaveProofRequirement.NONE,
+    proofThresholdDays: null,
     employerMayReject: true,
     recallable: false,
     mergesIntoCode: LEAVE_POLICY_CODE.PERSONAL,
@@ -591,6 +657,7 @@ export const DEFAULT_LEAVE_POLICY_SEED: readonly ILeavePolicySeed[] = [
     cashOutOnExpiry: true,
     paidRatio: 1,
     proofRequirement: LeaveProofRequirement.NONE,
+    proofThresholdDays: null,
     employerMayReject: true,
     recallable: false,
     mergesIntoCode: null,

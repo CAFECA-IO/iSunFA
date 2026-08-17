@@ -5,7 +5,9 @@ import {
   IStorableLeavePolicy,
 } from "@/repositories/leave_policy_invariant";
 import {
+  DEFAULT_LEAVE_POLICY_SEED,
   LeaveAccrualMethod,
+  LeaveProofRequirement,
   LeaveQuotaMode,
   LeaveUnitBasis,
 } from "@/constants/leave_policy";
@@ -26,6 +28,8 @@ const valid: IStorableLeavePolicy = {
   annualDays: null,
   cashOutOnExpiry: true,
   mergesIntoPolicyId: null,
+  proofRequirement: LeaveProofRequirement.NONE,
+  proofThresholdDays: null,
 };
 
 describe("assertLeavePolicyUnit — 最小單位", () => {
@@ -176,5 +180,125 @@ describe("錯誤訊息", () => {
       expect((error as Error).message).toContain("LeavePolicy:");
       expect((error as Error).message).toContain("minimumUnitMinutes=7");
     }
+  });
+});
+
+/**
+ * Info: (20260817 - Julian) 證明門檻。
+ *
+ * 這條是後來補的，成因值得留下：`DEFAULT_LEAVE_POLICY_SEED` 有五個假別標了
+ * `REQUIRED_OVER_THRESHOLD`，而 `ILeavePolicySeed` 當時**根本沒有門檻欄位** ——
+ * 五列全部帶著 null 門檻落地，而且不會報錯。
+ *
+ * 這種「一個 enum 值宣告了一條規則，而它的參數不存在」的組合，
+ * 與 `FIXED_MINUTES ⇒ minimumUnitMinutes` 是同一個形狀。
+ */
+describe("assertLeavePolicyUnit — 證明門檻", () => {
+  const threshold = (
+    proofRequirement: LeaveProofRequirement,
+    proofThresholdDays: number | null,
+  ): IStorableLeavePolicy => ({
+    ...valid,
+    proofRequirement,
+    proofThresholdDays,
+  });
+
+  it("NONE 且無門檻通過", () => {
+    expect(() =>
+      assertLeavePolicyUnit(threshold(LeaveProofRequirement.NONE, null)),
+    ).not.toThrow();
+  });
+
+  it("OPTIONAL 且無門檻通過", () => {
+    expect(() =>
+      assertLeavePolicyUnit(threshold(LeaveProofRequirement.OPTIONAL, null)),
+    ).not.toThrow();
+  });
+
+  it("REQUIRED_OVER_THRESHOLD 帶正數門檻通過", () => {
+    expect(() =>
+      assertLeavePolicyUnit(
+        threshold(LeaveProofRequirement.REQUIRED_OVER_THRESHOLD, 3),
+      ),
+    ).not.toThrow();
+  });
+
+  // Info: (20260817 - Julian) 半天的門檻是合理的（請半天以上就要證明），故接受小數
+  it("門檻可以是小數", () => {
+    expect(() =>
+      assertLeavePolicyUnit(
+        threshold(LeaveProofRequirement.REQUIRED_OVER_THRESHOLD, 0.5),
+      ),
+    ).not.toThrow();
+  });
+
+  it("REQUIRED_OVER_THRESHOLD 但門檻為 null 時擋下", () => {
+    expect(() =>
+      assertLeavePolicyUnit(
+        threshold(LeaveProofRequirement.REQUIRED_OVER_THRESHOLD, null),
+      ),
+    ).toThrow(LeavePolicyInvariantError);
+  });
+
+  it("REQUIRED_OVER_THRESHOLD 但門檻為 undefined 時擋下", () => {
+    expect(() =>
+      assertLeavePolicyUnit({
+        ...valid,
+        proofRequirement: LeaveProofRequirement.REQUIRED_OVER_THRESHOLD,
+        proofThresholdDays: undefined,
+      }),
+    ).toThrow(LeavePolicyInvariantError);
+  });
+
+  /**
+   * Info: (20260817 - Julian) 0 讀起來是「超過 0 日就要證明」＝ 一律要證明。
+   * 那個語意真實存在（職災認定、診斷證明都與日數無關），但 enum 沒有成員
+   * 表達它 —— 放行 0 等於用門檻欄位偷渡一個缺失的 enum 值，
+   * 而那個缺口從此不會有人再提。
+   */
+  it.each([0, -1])(
+    "門檻為 %i 時擋下：那是缺一個 REQUIRED，不是一個門檻",
+    (days) => {
+      expect(() =>
+        assertLeavePolicyUnit(
+          threshold(LeaveProofRequirement.REQUIRED_OVER_THRESHOLD, days),
+        ),
+      ).toThrow(LeavePolicyInvariantError);
+    },
+  );
+
+  it.each([LeaveProofRequirement.NONE, LeaveProofRequirement.OPTIONAL])(
+    "%s 帶著殘留門檻時擋下（它看起來像設定，實際什麼也不做）",
+    (requirement) => {
+      expect(() => assertLeavePolicyUnit(threshold(requirement, 3))).toThrow(
+        LeavePolicyInvariantError,
+      );
+    },
+  );
+});
+
+/**
+ * Info: (20260817 - Julian) 內建假別的 seed 必須自己通過不變式。
+ *
+ * seed 是假別設定風險最高的寫入路徑（ADR 021 §5：「seed 成為正確性的一部分」），
+ * 而它繞過所有 service。這一條讓「seed 與不變式不一致」在單元測試就爆，
+ * 而不是等到有人跑 `npx tsx scripts/seed/...` 才發現 —— 那正是這次的實際經過。
+ */
+describe("DEFAULT_LEAVE_POLICY_SEED", () => {
+  // Info: (20260817 - Julian) 傳物件而非 tuple：tuple 會讓 TS 把元素型別放寬成聯集
+  it.each(DEFAULT_LEAVE_POLICY_SEED)("$code 通過不變式", (seed) => {
+    expect(() =>
+      assertLeavePolicyUnit({
+        accrualMethod: seed.accrualMethod,
+        quotaMode: seed.quotaMode,
+        unitBasis: seed.unitBasis,
+        minimumUnitMinutes: seed.minimumUnitMinutes,
+        annualDays: seed.annualDays,
+        cashOutOnExpiry: seed.cashOutOnExpiry,
+        mergesIntoPolicyId: null,
+        proofRequirement: seed.proofRequirement,
+        proofThresholdDays: seed.proofThresholdDays,
+      }),
+    ).not.toThrow();
   });
 });

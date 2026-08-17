@@ -4,6 +4,8 @@ import { join } from "path";
 import * as HrConstants from "@/constants/hr_management";
 import * as AttendanceConstants from "@/constants/attendance";
 import * as LeaveConstants from "@/constants/leave";
+import * as LeavePolicyConstants from "@/constants/leave_policy";
+import * as OvertimeConstants from "@/constants/overtime";
 
 /**
  * Info: (20260811 - Julian) 把「前端 enum 鏡像與 Prisma schema 同步」這件事機械化。
@@ -79,6 +81,8 @@ const CONSTANT_MODULES: Record<string, Record<string, unknown>> = {
   "hr_management.ts": HrConstants,
   "attendance.ts": AttendanceConstants,
   "leave.ts": LeaveConstants,
+  "leave_policy.ts": LeavePolicyConstants,
+  "overtime.ts": OvertimeConstants,
 };
 
 // Info: (20260811 - Julian) 需與 Prisma schema 保持一致的鏡像。新增鏡像時必須在此登記
@@ -95,10 +99,38 @@ const MIRRORED: Record<string, Record<string, string>> = {
   PunchVerification: AttendanceConstants.PunchVerification,
   WorkDayType: AttendanceConstants.WorkDayType,
 
-  // Info: (20260813 - Julian) 假勤
-  LeaveType: LeaveConstants.LeaveType,
+  /**
+   * Info: (20260813 - Julian) 假勤
+   *
+   * Info: (20260817 - Julian) `LeaveType` 已於本次移除。依 ADR 021，假別是**資料**
+   * 而不是型別 —— 它降級為 `LeavePolicy.code` 的 seed 初始列（`LEAVE_POLICY_CODE`）。
+   * 那不是字串 enum（值是中文代碼常數而非鍵名），所以它不屬於這裡，
+   * 而是由 `leave_seed_integrity.test.ts` 驗證其與 seed 的一致性。
+   */
   LeaveRequestStatus: LeaveConstants.LeaveRequestStatus,
   LeaveRecallStatus: LeaveConstants.LeaveRecallStatus,
+
+  // Info: (20260817 - Julian) 假別規則與額度帳（假勤計畫書 §5.1）
+  LeaveAccrualMethod: LeavePolicyConstants.LeaveAccrualMethod,
+  LeaveCycleBasis: LeavePolicyConstants.LeaveCycleBasis,
+  LeaveUnitBasis: LeavePolicyConstants.LeaveUnitBasis,
+  LeaveRoundingMode: LeavePolicyConstants.LeaveRoundingMode,
+  LeaveQuotaMode: LeavePolicyConstants.LeaveQuotaMode,
+  LeaveProofRequirement: LeavePolicyConstants.LeaveProofRequirement,
+  LeaveGrantSource: LeavePolicyConstants.LeaveGrantSource,
+  LeaveLedgerEntryType: LeavePolicyConstants.LeaveLedgerEntryType,
+  LeaveApprovalNodeKind: LeavePolicyConstants.LeaveApprovalNodeKind,
+  LeaveApprovalStepStatus: LeavePolicyConstants.LeaveApprovalStepStatus,
+  LeaveDaySegment: LeavePolicyConstants.LeaveDaySegment,
+  LeaveCashOutReason: LeavePolicyConstants.LeaveCashOutReason,
+  LeaveConcurrencyAction: LeavePolicyConstants.LeaveConcurrencyAction,
+
+  // Info: (20260817 - Julian) 加班（假勤計畫書 §5.1）
+  OvertimeFilingType: OvertimeConstants.OvertimeFilingType,
+  OvertimeCompensationMode: OvertimeConstants.OvertimeCompensationMode,
+  OvertimeEvidenceBasis: OvertimeConstants.OvertimeEvidenceBasis,
+  OvertimePremiumTier: OvertimeConstants.OvertimePremiumTier,
+  OvertimeRequestStatus: OvertimeConstants.OvertimeRequestStatus,
 };
 
 /**
@@ -223,7 +255,31 @@ const UI_ONLY = [
    * 把「他按了哪個鍵」與「結果是什麼」都存一份，就是第二種真相。
    */
   "LeaveRecallDecision",
+
+  /**
+   * Info: (20260817 - Julian) `LeaveBalanceHealth` 是三色燈號，由「剩餘額度 ÷ 距到期天數」
+   * 當場算出來的顯示語意；`OvertimeExceptionType` 是把 `evaluateOvertimeLimits`
+   * 的超限結果翻成畫面上的一列。兩者都是**推導結果**，與 `MovementAlertLevel` 同類：
+   * 存回 DB 唯一能做的事就是在額度變動後說謊。它們不會搬到 MIRRORED。
+   */
+  "LeaveBalanceHealth",
+  "OvertimeExceptionType",
 ];
+
+/**
+ * Info: (20260817 - Julian) 依命名慣例排除常數表。
+ *
+ * `LEAVE_POLICY_CODE` 是 `{ ANNUAL: "ANNUAL", ... }` —— 它滿足 key === value，
+ * 於是被下面的 `isStringEnum` 判成鏡像，但它不是：依 ADR 021，假別是**資料**，
+ * 這份常數是 `LevePolicy.code` 的 seed 初始列，schema 那邊沒有、也不該有對應 enum。
+ *
+ * 判準取名稱而不是再加一張登記表：Prisma 的 enum 名一律 PascalCase，
+ * 帶底線的 SCREAMING_SNAKE 匯出**在型別上不可能**是任何 Prisma enum 的鏡像。
+ * 反過來說，這條規則不會放過任何真正該登記的東西 —— 它只擋掉不可能的那一類。
+ *
+ * 它與 seed 的一致性由 `leave_seed_integrity.test.ts` 負責，不在本檔的職責內。
+ */
+const isConstantTableName = (name: string): boolean => name.includes("_");
 
 /**
  * Info: (20260811 - Julian) 判斷一個 export 是不是 TS 字串 enum：每個值都等於它的鍵。
@@ -252,6 +308,7 @@ const isStringEnum = (value: unknown): value is Record<string, string> => {
 const exportedEnumNames = (): string[] =>
   Object.values(CONSTANT_MODULES).flatMap((constants) =>
     Object.entries(constants)
+      .filter(([name]) => !isConstantTableName(name))
       .filter(([, value]) => isStringEnum(value))
       .map(([name]) => name),
   );

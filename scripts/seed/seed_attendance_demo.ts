@@ -834,6 +834,35 @@ async function clearDemoData(): Promise<void> {
 }
 
 /**
+ * Info: (20260817 - Julian) Decimal 欄位一律以字串落地。
+ *
+ * `src/lib/prisma.ts` 的邊界防護會從 DMMF 解析出所有 Decimal/BigInt 欄位，
+ * 擋下原生 JS number 寫入（CLAUDE.md §2），而且**會遞迴進巢狀 create** ——
+ * `tiers: { create: [...] }` 那一層同樣受檢。
+ *
+ * 那不是形式檢查：`paidRatio` 會直接乘上工資，`days` 會變成特休日數。
+ * float64 存不下 0.1，而一個少算半天的特休不會有人發現。
+ *
+ * **常數檔那邊維持 `number` 是刻意的**，不是還沒改：
+ * `leave_entitlement_rules` 的級距計算（`matched.days + extraYears * increment`、
+ * 比例給假的乘除、`Math.min` 夾上限）需要算術；而把 `Prisma.Decimal` 放進
+ * `src/constants/*` 會把 Node 端相依拉進 client component 的 bundle
+ * （理由同 `hr_enum_mirror.test.ts` 檔頭）。
+ *
+ * 所以轉換的正確位置就是這裡：**領域值是數字、落地值是字串，一個邊界轉一次。**
+ */
+function decimal(value: number): string {
+  // Info: (20260817 - Julian) 常數檔的值都是字面量，但若哪天改成算出來的，NaN/Infinity 要當場炸
+  if (!Number.isFinite(value)) {
+    throw new Error(`Decimal 欄位收到非有限數值：${value}`);
+  }
+  return String(value);
+}
+
+const decimalOrNull = (value: number | null): string | null =>
+  value === null ? null : decimal(value);
+
+/**
  * Info: (20260817 - Julian) 內建假別落地時要填的 `name`。
  *
  * 取自繁中字典而不是在本腳本再抄一份：抄第二份的那天起，
@@ -898,6 +927,8 @@ async function seedLeavePolicies(): Promise<Map<string, string>> {
       annualDays: seed.annualDays,
       cashOutOnExpiry: seed.cashOutOnExpiry,
       mergesIntoPolicyId: null,
+      proofRequirement: seed.proofRequirement,
+      proofThresholdDays: seed.proofThresholdDays,
     });
 
     const policy = await prisma.leavePolicy.create({
@@ -909,14 +940,16 @@ async function seedLeavePolicies(): Promise<Map<string, string>> {
         accrualMethod: seed.accrualMethod,
         cycleBasis: seed.cycleBasis,
         quotaMode: seed.quotaMode,
-        annualDays: seed.annualDays,
+        annualDays: decimalOrNull(seed.annualDays),
         unitBasis: seed.unitBasis,
         minimumUnitMinutes: seed.minimumUnitMinutes,
         carryForwardMonths: seed.carryForwardMonths,
         cashOutOnExpiry: seed.cashOutOnExpiry,
         // Info: (20260817 - Julian) 產假為 null（受僱滿六個月與否給付不同），不可填成 1
-        paidRatio: seed.paidRatio,
+        paidRatio: decimalOrNull(seed.paidRatio),
         proofRequirement: seed.proofRequirement,
+        // Info: (20260817 - Julian) 內建假別一律為 null：門檻是公司政策不是法定數字
+        proofThresholdDays: decimalOrNull(seed.proofThresholdDays),
         employerMayReject: seed.employerMayReject,
         recallable: seed.recallable,
         legalBasis: seed.legalBasis,
@@ -925,9 +958,9 @@ async function seedLeavePolicies(): Promise<Map<string, string>> {
           ? {
               create: seed.tiers.map((tier) => ({
                 minSeniorityMonths: tier.minSeniorityMonths,
-                days: tier.days,
-                incrementDaysPerYear: tier.incrementDaysPerYear,
-                maxDays: tier.maxDays,
+                days: decimal(tier.days),
+                incrementDaysPerYear: decimalOrNull(tier.incrementDaysPerYear),
+                maxDays: decimalOrNull(tier.maxDays),
               })),
             }
           : undefined,
@@ -1262,7 +1295,7 @@ async function main(): Promise<void> {
 
         // Info: (20260817 - Julian) 整日假：分鐘數即當日應工作分鐘數，換算成 1 天
         totalMinutes: dayEquivalentMinutes,
-        totalDays: 1,
+        totalDays: decimal(1),
 
         days: {
           create: {
