@@ -109,12 +109,27 @@ function getSubKey(purpose: VaultPurpose): Buffer {
   return key;
 }
 
+/**
+ * Info: (20260818 - Luphia) `aad`：把密文綁在**它該屬於的那一列**上（第三輪 C-5）。
+ *
+ * GCM 的 authTag 保證「密文沒被竄改」，但不保證「這份密文屬於這一列」。
+ * 沒有 AAD 時，有 DB 寫入權的人可以把 A 的四個欄位整組複製到 B 的列上，
+ * B 下次讀取就解出 A 的明文——而 authTag 完全不會察覺，因為密文本身是完整的。
+ *
+ * 對費思記憶而言那代表 A 的對話偏好會被注入 B 的 prompt。
+ *
+ * **選填**是刻意的：既有的託管金鑰與系統設定密文是在沒有 AAD 的情況下封裝的，
+ * 加上必填參數會讓它們全部解不開。呼叫端要不要綁、綁什麼，由該資料的
+ * 作用範圍決定（記憶綁 `userId:teamId`）。
+ */
 export function sealSecret(
   plaintext: string,
   purpose: VaultPurpose,
+  aad?: string,
 ): ISealedSecret {
   const iv = randomBytes(IV_LENGTH);
   const cipher = createCipheriv(ALGORITHM, getSubKey(purpose), iv);
+  if (aad) cipher.setAAD(Buffer.from(aad, "utf8"));
 
   const ciphertext = Buffer.concat([
     cipher.update(plaintext, "utf8"),
@@ -129,15 +144,21 @@ export function sealSecret(
   };
 }
 
+/**
+ * Info: (20260818 - Luphia) `aad` 必須與封裝時**完全一致**，否則 `final()` 會丟錯。
+ * 那正是這道防護的作用：把密文搬到別人的列上，解開時就會失敗。
+ */
 export function openSecret(
   sealed: ISealedSecret,
   purpose: VaultPurpose,
+  aad?: string,
 ): string {
   const decipher = createDecipheriv(
     ALGORITHM,
     getSubKey(purpose),
     Buffer.from(sealed.iv, "base64"),
   );
+  if (aad) decipher.setAAD(Buffer.from(aad, "utf8"));
   decipher.setAuthTag(Buffer.from(sealed.authTag, "base64"));
 
   // Info: (20260809 - Luphia) authTag 不符時 final() 會 throw，等同偵測到密文被竄改

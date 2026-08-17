@@ -3,9 +3,11 @@ import { faithMemoryRepo } from "@/repositories/faith_memory.repo";
 import { FAITH_MEMORY_DELETION_REASON } from "@/constants/faith_memory";
 import {
   cancelFaithMemoryExpiry,
-  isFaithMemoryEnabled,
   scheduleFaithMemoryExpiry,
 } from "@/services/faith_memory.service";
+import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
+import { resolveEffectivePlanId } from "@/services/spend.service";
+import { TEAM_PLAN } from "@/constants/subscription_quota";
 
 /**
  * Info: (20260817 - Luphia) 費思記憶的保留期守護行程（規範 §7.2）。
@@ -28,8 +30,16 @@ import {
  * fail-closed 的順序永遠是先停止使用，再實際刪除。
  */
 
-// Info: (20260817 - Luphia) 單輪刪除量上限：避免一次交易掃過整張表
+// Info: (20260817 - Luphia) 單批刪除量：避免一次撈過整張表
 const DELETE_BATCH_SIZE = 500;
+
+/**
+ * Info: (20260818 - Luphia) 單次執行的總量上界（第三輪 C-10）。
+ *
+ * 一輪內會分批清到沒有為止，但仍需要一個天花板——否則一次異常的大量到期
+ * 會讓這支跑到下一輪都還沒結束。10,000 筆已遠超正常的每日到期量。
+ */
+const MAX_DELETES_PER_RUN = 10_000;
 
 export interface IFaithMemoryRetentionResult {
   scheduled: number;
@@ -45,10 +55,32 @@ export async function runFaithMemoryRetention(
   let scheduled = 0;
   let cancelled = 0;
 
-  // Info: (20260817 - Luphia) 1. 對帳：訂閱狀態與刪除排程是否一致
+  /**
+   * Info: (20260818 - Luphia) 1. 對帳：訂閱狀態與刪除排程是否一致。
+   *
+   * 訂閱**一次批次載入**（第三輪 C-10）：原本每個團隊打一趟 `getByTeamId`
+   * 且完全序列，一萬個有記憶的團隊就是一萬趟往返。這支跑得越久，
+   * 落後的刪除就越多——而落後期間資料仍留在庫裡超過條款承諾的期間。
+   */
   const teams = await faithMemoryRepo.listTeamRetentionState();
+  const subscriptions = await teamSubscriptionRepo.listByTeamIds(
+    teams.map((team) => team.teamId),
+  );
+  const planByTeam = new Map(
+    subscriptions.map((subscription) => [
+      subscription.teamId,
+      resolveEffectivePlanId(subscription, nowSec),
+    ]),
+  );
+
   for (const team of teams) {
-    const paid = await isFaithMemoryEnabled(team.teamId, nowSec);
+    /**
+     * Info: (20260818 - Luphia) 查無訂閱＝免費版（fail-closed，與
+     * `isFaithMemoryEnabled` 同一條規則）。這裡不再逐團隊呼叫那支函式，
+     * 因為它每次都會自己去查一次訂閱——那正是 N+1 的來源。
+     */
+    const paid =
+      (planByTeam.get(team.teamId) ?? TEAM_PLAN.FREE) !== TEAM_PLAN.FREE;
     if (paid) {
       cancelled += await cancelFaithMemoryExpiry(team.teamId);
     } else {
@@ -62,37 +94,54 @@ export async function runFaithMemoryRetention(
     }
   }
 
-  // Info: (20260817 - Luphia) 2. 刪除到期者
-  const expired = await faithMemoryRepo.listExpired(
-    new Date(nowMs),
-    DELETE_BATCH_SIZE,
-  );
-
+  /**
+   * Info: (20260818 - Luphia) 2. 刪除到期者——一輪內清到沒有為止（第三輪 C-10）。
+   *
+   * 原本是「每輪 500 筆、每 6 小時一次」＝每日上限 2,000 筆。大批同期到期
+   * （例如一次促銷的訂閱同時到期）會逐日落後，而落後期間資料仍留在庫裡
+   * 超過條款承諾的期間。改為在一輪內分批清空，並保留一個總量上界
+   * 以免單次執行無限延長。
+   */
   let deleted = 0;
   let failed = 0;
-  for (const row of expired) {
-    try {
-      await faithMemoryRepo.deleteWithLog({
-        id: row.id,
-        userId: row.userId,
-        teamId: row.teamId,
-        itemCount: row.itemCount,
-        reason: FAITH_MEMORY_DELETION_REASON.RETENTION_EXPIRED,
-      });
-      deleted += 1;
-    } catch (error) {
-      /**
-       * Info: (20260817 - Luphia) 單筆失敗不中斷整批——一筆壞資料不該讓
-       * 其他所有到期的記憶都留下來。但失敗要記，而且下一輪會再試
-       * （`expiresAt` 還在，這支天然可重入）。
-       */
-      failed += 1;
-      logger.error("faith memory deletion failed", {
-        userId: row.userId,
-        teamId: row.teamId,
-        message: error instanceof Error ? error.message : String(error),
-      });
+
+  while (deleted + failed < MAX_DELETES_PER_RUN) {
+    const expired = await faithMemoryRepo.listExpired(
+      new Date(nowMs),
+      DELETE_BATCH_SIZE,
+    );
+    if (expired.length === 0) break;
+
+    for (const row of expired) {
+      try {
+        await faithMemoryRepo.deleteWithLog({
+          id: row.id,
+          userId: row.userId,
+          teamId: row.teamId,
+          itemCount: row.itemCount,
+          reason: FAITH_MEMORY_DELETION_REASON.RETENTION_EXPIRED,
+        });
+        deleted += 1;
+      } catch (error) {
+        /**
+         * Info: (20260817 - Luphia) 單筆失敗不中斷整批——一筆壞資料不該讓
+         * 其他所有到期的記憶都留下來。但失敗要記，而且下一輪會再試
+         * （`expiresAt` 還在，這支天然可重入）。
+         */
+        failed += 1;
+        logger.error("faith memory deletion failed", {
+          userId: row.userId,
+          teamId: row.teamId,
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
     }
+
+    /**
+     * Info: (20260818 - Luphia) 整批都失敗就停：`listExpired` 的條件沒有改變，
+     * 再撈一次會拿到同一批列而無限迴圈。下一輪會再試。
+     */
+    if (expired.length === failed) break;
   }
 
   if (scheduled || cancelled || deleted || failed) {

@@ -22,8 +22,26 @@ export interface IFaithMemoryRecord {
   expiresAt: Date | null;
 }
 
-function seal(items: IFaithMemoryItem[]) {
-  const sealed = sealSecret(JSON.stringify(items), VaultPurpose.FAITH_MEMORY);
+/**
+ * Info: (20260818 - Luphia) 密文綁在 `(userId, teamId)` 上（第三輪 C-5）。
+ *
+ * 規範 §6.2 與 ADR 018 都宣稱「密文與列綁定」，但先前只傳了 purpose——
+ * GCM 的 authTag 保證密文沒被竄改，不保證它屬於這一列。有 DB 寫入權的人
+ * 把 A 的四個欄位複製到 B 的列，B 下次對話就解出 A 的偏好並注入 B 的 prompt，
+ * 而 authTag 完全不會察覺。
+ *
+ * 綁定值就是這份記憶的作用範圍本身——與 `@@unique([userId, teamId])` 同一組鍵。
+ */
+function memoryAad(userId: string, teamId: string): string {
+  return `faith-memory:${userId}:${teamId}`;
+}
+
+function seal(items: IFaithMemoryItem[], userId: string, teamId: string) {
+  const sealed = sealSecret(
+    JSON.stringify(items),
+    VaultPurpose.FAITH_MEMORY,
+    memoryAad(userId, teamId),
+  );
   return {
     itemsCipher: sealed.ciphertext,
     itemsIv: sealed.iv,
@@ -78,6 +96,7 @@ class FaithMemoryRepository {
           keyVersion: row.keyVersion,
         },
         VaultPurpose.FAITH_MEMORY,
+        memoryAad(userId, teamId),
       );
       const parsed: unknown = JSON.parse(plaintext);
       return {
@@ -99,7 +118,7 @@ class FaithMemoryRepository {
     teamId: string,
     items: IFaithMemoryItem[],
   ): Promise<void> {
-    const payload = seal(items);
+    const payload = seal(items, userId, teamId);
     await prisma.faithMemory.upsert({
       where: { userId_teamId: { userId, teamId } },
       create: { userId, teamId, ...payload },
@@ -126,7 +145,7 @@ class FaithMemoryRepository {
     reason: FaithMemoryDeletionReason;
   }): Promise<void> {
     const { userId, teamId, items, removedCount, reason } = params;
-    const payload = seal(items);
+    const payload = seal(items, userId, teamId);
     await prisma.$transaction([
       prisma.faithMemory.update({
         where: { userId_teamId: { userId, teamId } },

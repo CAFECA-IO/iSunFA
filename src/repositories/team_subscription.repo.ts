@@ -75,6 +75,20 @@ export class TeamSubscriptionRepository {
     return prisma.teamSubscription.findUnique({ where: { teamId } });
   }
 
+  /**
+   * Info: (20260818 - Luphia) 一次取多個團隊的訂閱（第三輪 C-10）。
+   *
+   * 保留期守護行程原本每個團隊打一趟 `getByTeamId`，而且完全序列——
+   * 一萬個有記憶的團隊就是一萬趟往返。對帳本身是每 6 小時一次的背景工作，
+   * 但那個形狀會隨團隊數線性惡化，而它跑得越久，落後的刪除就越多。
+   */
+  async listByTeamIds(teamIds: string[]): Promise<TeamSubscription[]> {
+    if (teamIds.length === 0) return [];
+    return prisma.teamSubscription.findMany({
+      where: { teamId: { in: teamIds } },
+    });
+  }
+
   async create(
     data: Prisma.TeamSubscriptionUncheckedCreateInput,
   ): Promise<TeamSubscription> {

@@ -5,9 +5,9 @@ import { runFaithMemoryRetention } from "@/services/cron/faith_memory_retention.
 import { faithMemoryRepo } from "@/repositories/faith_memory.repo";
 import {
   cancelFaithMemoryExpiry,
-  isFaithMemoryEnabled,
   scheduleFaithMemoryExpiry,
 } from "@/services/faith_memory.service";
+import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { FAITH_MEMORY_DELETION_REASON } from "@/constants/faith_memory";
 
 /**
@@ -26,9 +26,15 @@ jest.mock("@/repositories/faith_memory.repo", () => ({
 }));
 
 jest.mock("@/services/faith_memory.service", () => ({
-  isFaithMemoryEnabled: jest.fn(async () => true),
   scheduleFaithMemoryExpiry: jest.fn(async () => 1),
   cancelFaithMemoryExpiry: jest.fn(async () => 1),
+}));
+/**
+ * Info: (20260818 - Luphia) 訂閱改為批次載入（第三輪 C-10）：對帳不再逐團隊
+ * 呼叫 `isFaithMemoryEnabled`（那支每次都會自己查一次訂閱，正是 N+1 的來源）。
+ */
+jest.mock("@/repositories/team_subscription.repo", () => ({
+  teamSubscriptionRepo: { listByTeamIds: jest.fn(async () => []) },
 }));
 
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
@@ -38,7 +44,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   asMock(faithMemoryRepo.listTeamRetentionState).mockResolvedValue([]);
   asMock(faithMemoryRepo.listExpired).mockResolvedValue([]);
-  asMock(isFaithMemoryEnabled).mockResolvedValue(true);
+  asMock(teamSubscriptionRepo.listByTeamIds).mockResolvedValue([]);
   asMock(scheduleFaithMemoryExpiry).mockResolvedValue(1);
   asMock(cancelFaithMemoryExpiry).mockResolvedValue(1);
 });
@@ -52,7 +58,8 @@ describe("runFaithMemoryRetention", () => {
     asMock(faithMemoryRepo.listTeamRetentionState).mockResolvedValue([
       { teamId: "team-free", _count: { _all: 3 } },
     ]);
-    asMock(isFaithMemoryEnabled).mockResolvedValue(false);
+    // Info: (20260818 - Luphia) 查無訂閱＝免費版（fail-closed）
+    asMock(teamSubscriptionRepo.listByTeamIds).mockResolvedValue([]);
 
     const result = await runFaithMemoryRetention(NOW_MS);
 
@@ -65,7 +72,14 @@ describe("runFaithMemoryRetention", () => {
     asMock(faithMemoryRepo.listTeamRetentionState).mockResolvedValue([
       { teamId: "team-paid", _count: { _all: 2 } },
     ]);
-    asMock(isFaithMemoryEnabled).mockResolvedValue(true);
+    asMock(teamSubscriptionRepo.listByTeamIds).mockResolvedValue([
+      {
+        teamId: "team-paid",
+        planId: "team",
+        status: "ACTIVE",
+        currentPeriodEnd: new Date(NOW_MS + 86_400_000),
+      },
+    ]);
 
     const result = await runFaithMemoryRetention(NOW_MS);
 
@@ -79,9 +93,12 @@ describe("runFaithMemoryRetention", () => {
    * 條款承諾的是「刪除」，留一筆 deletedAt 不算刪除。
    */
   it("刪除到期的記憶並標明原因", async () => {
-    asMock(faithMemoryRepo.listExpired).mockResolvedValue([
-      { id: "m1", userId: "u1", teamId: "t1", itemCount: 4 },
-    ]);
+    // Info: (20260818 - Luphia) 一輪內會分批清到沒有為止，第二批回空表示清完
+    asMock(faithMemoryRepo.listExpired)
+      .mockResolvedValueOnce([
+        { id: "m1", userId: "u1", teamId: "t1", itemCount: 4 },
+      ])
+      .mockResolvedValueOnce([]);
 
     const result = await runFaithMemoryRetention(NOW_MS);
 
@@ -100,10 +117,12 @@ describe("runFaithMemoryRetention", () => {
    * 那是「該刪的沒刪」，屬合規風險。失敗要計數，且下一輪會再試。
    */
   it("單筆刪除失敗不中斷整批", async () => {
-    asMock(faithMemoryRepo.listExpired).mockResolvedValue([
-      { id: "m1", userId: "u1", teamId: "t1", itemCount: 1 },
-      { id: "m2", userId: "u2", teamId: "t2", itemCount: 2 },
-    ]);
+    asMock(faithMemoryRepo.listExpired)
+      .mockResolvedValueOnce([
+        { id: "m1", userId: "u1", teamId: "t1", itemCount: 1 },
+        { id: "m2", userId: "u2", teamId: "t2", itemCount: 2 },
+      ])
+      .mockResolvedValueOnce([]);
     asMock(faithMemoryRepo.deleteWithLog)
       .mockRejectedValueOnce(new Error("db down"))
       .mockResolvedValueOnce(undefined);
@@ -122,5 +141,70 @@ describe("runFaithMemoryRetention", () => {
       deleted: 0,
       failed: 0,
     });
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 訂閱一次批次載入（第三輪 C-10）。
+   *
+   * 原本每個團隊打一趟 `getByTeamId` 且完全序列——一萬個有記憶的團隊就是
+   * 一萬趟往返。這支跑得越久，落後的刪除就越多，而落後期間資料仍留在庫裡
+   * 超過條款承諾的期間。
+   */
+  it("對帳只查一次訂閱，不是每個團隊一次", async () => {
+    asMock(faithMemoryRepo.listTeamRetentionState).mockResolvedValue([
+      { teamId: "t1", _count: { _all: 1 } },
+      { teamId: "t2", _count: { _all: 1 } },
+      { teamId: "t3", _count: { _all: 1 } },
+    ]);
+
+    await runFaithMemoryRetention(NOW_MS);
+
+    expect(teamSubscriptionRepo.listByTeamIds).toHaveBeenCalledTimes(1);
+    expect(teamSubscriptionRepo.listByTeamIds).toHaveBeenCalledWith([
+      "t1",
+      "t2",
+      "t3",
+    ]);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 一輪內清到沒有為止（第三輪 C-10）。
+   *
+   * 原本是「每輪 500 筆、每 6 小時一次」＝每日上限 2,000 筆。大批同期到期
+   * 會逐日落後，而落後期間資料留庫超過條款期間。
+   */
+  it("一輪內分批清空，不是只清一批", async () => {
+    asMock(faithMemoryRepo.listExpired)
+      .mockResolvedValueOnce([
+        { id: "m1", userId: "u1", teamId: "t1", itemCount: 1 },
+      ])
+      .mockResolvedValueOnce([
+        { id: "m2", userId: "u2", teamId: "t2", itemCount: 1 },
+      ])
+      .mockResolvedValueOnce([]);
+
+    const result = await runFaithMemoryRetention(NOW_MS);
+
+    expect(result.deleted).toBe(2);
+    expect(asMock(faithMemoryRepo.listExpired).mock.calls).toHaveLength(3);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 整批都失敗就停止，不要無限迴圈。
+   * `listExpired` 的條件沒有改變，再撈一次會拿到同一批列。
+   */
+  it("整批失敗時停止而不是無限重撈", async () => {
+    asMock(faithMemoryRepo.listExpired).mockResolvedValue([
+      { id: "m1", userId: "u1", teamId: "t1", itemCount: 1 },
+    ]);
+    asMock(faithMemoryRepo.deleteWithLog).mockRejectedValue(
+      new Error("db down"),
+    );
+
+    const result = await runFaithMemoryRetention(NOW_MS);
+
+    expect(result.failed).toBe(1);
+    expect(result.deleted).toBe(0);
+    expect(asMock(faithMemoryRepo.listExpired).mock.calls).toHaveLength(1);
   });
 });
