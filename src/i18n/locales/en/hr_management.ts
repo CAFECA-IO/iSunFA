@@ -590,6 +590,15 @@ export const hrManagement = {
       "This account is not linked to an employee record yet, so attendance cannot be shown. Ask HR to check the company e-mail on file.",
     error_punch: "Punch failed. Please try again later.",
   },
+  /**
+   * Info: (20260817 - Luphia) Errors any attendance endpoint can return.
+   * Kept in one namespace because the copy is shared, not per-page.
+   */
+  attendance_common: {
+    error_rate_limited:
+      "Too many requests in a short time. Please wait a moment and try again.",
+    error_supervisor_only: "Only a department manager can perform this action.",
+  },
   attendance_result: {
     title: "Attendance overview and exceptions",
     subtitle:
