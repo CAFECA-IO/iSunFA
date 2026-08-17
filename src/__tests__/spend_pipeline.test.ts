@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "@jest/globals";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
 import {
+  buildQuotaExceededOptions,
   QuotaExceededError,
   refundCredits,
   resolveEffectivePlanId,
@@ -260,6 +261,40 @@ describe("spendCredits", () => {
     expect(quotaError.data.quotaWeek.resetAt).toBe(getResetAtWeek(NOW_SEC));
     expect(quotaError.data.allocationBalance).toBe("0");
     expect(quotaError.data.options).toContain("WAIT_RESET");
+    /**
+     * Info: (20260818 - Luphia) 第二層停用期間不得列「改用個人點數」（第四輪 B-1）。
+     *
+     * `allocationBalance` 已誠實讀成 0，而這個選項留著就是 API 契約在說謊：
+     * 它告訴使用者一條系統自己知道不存在的出路（合約沒有可由平台呼叫的 burn）。
+     */
+    expect(quotaError.data.options).not.toContain("USE_PERSONAL_WALLET");
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 出路清單的單一判斷點（第四輪 B-1）。
+   *
+   * 直接測 `buildQuotaExceededOptions`：它是「哪些出路真的存在」的唯一答案處，
+   * 而恢復條件（合約補上銷毀函式）只需要翻 `isChainCreditSpendable()`。
+   */
+  describe("buildQuotaExceededOptions", () => {
+    it("第二層可用時列出個人點數", () => {
+      asMock(isChainCreditSpendable).mockReturnValue(true);
+      expect(buildQuotaExceededOptions(false)).toEqual([
+        "USE_PERSONAL_WALLET",
+        "WAIT_RESET",
+      ]);
+      expect(buildQuotaExceededOptions(true)).toEqual([
+        "USE_PERSONAL_WALLET",
+        "UPGRADE_PLAN",
+      ]);
+    });
+
+    it("第二層停用時只留真的存在的出路", () => {
+      asMock(isChainCreditSpendable).mockReturnValue(false);
+      expect(buildQuotaExceededOptions(false)).toEqual(["WAIT_RESET"]);
+      // Info: (20260818 - Luphia) 單筆超過視窗上限時等重置不會好，只有升級有用
+      expect(buildQuotaExceededOptions(true)).toEqual(["UPGRADE_PLAN"]);
+    });
   });
 
   /**

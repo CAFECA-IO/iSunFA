@@ -2,6 +2,7 @@ import {
   BillableFeatureCode,
   type SpendSource,
   QUOTA_EXCEEDED_OPTION,
+  type QuotaExceededOption,
   QUOTA_WINDOW,
   SPEND_SOURCE,
   TEAM_PLAN,
@@ -283,17 +284,37 @@ function buildQuotaExceededPayload(input: {
     /**
      * Info: (20260815 - Luphia) 出路要與事實一致：等重置不會好的情況就不要列它，
      * 改列「升級方案」——那才是把單筆上限拉高的唯一辦法。
+     *
+     * Info: (20260818 - Luphia) 同一條規則也適用於個人點數（第四輪 B-1）。
+     *
+     * 第二層停用之後（`isChainCreditSpendable()` 回 false，因為合約沒有可由
+     * 平台呼叫的 `burn(address, uint256)`），「改用個人點數」是一條**可證明
+     * 不存在**的出路。同一批修改已經把 `allocationBalance` 誠實讀成 0，
+     * 卻把這個選項留在 payload 裡——畫面沒壞（提示只有兩個連結），
+     * 但 payload 是 API 契約的一部分，而它在說謊。
+     *
+     * 恢復方式：合約補上銷毀函式、`isChainCreditSpendable()` 回 true，
+     * 這個選項就會自動回來，不需要改這裡。
      */
-    options: exceedsWindowLimit
-      ? [
-          QUOTA_EXCEEDED_OPTION.USE_PERSONAL_WALLET,
-          QUOTA_EXCEEDED_OPTION.UPGRADE_PLAN,
-        ]
-      : [
-          QUOTA_EXCEEDED_OPTION.WAIT_RESET,
-          QUOTA_EXCEEDED_OPTION.USE_PERSONAL_WALLET,
-        ],
+    options: buildQuotaExceededOptions(exceedsWindowLimit),
   };
+}
+
+/**
+ * Info: (20260818 - Luphia) 402 的「出路」清單（第四輪 B-1）。
+ * 抽成函式是為了讓「哪些出路真的存在」有單一判斷點，並且測得到。
+ */
+export function buildQuotaExceededOptions(
+  exceedsWindowLimit: boolean,
+): QuotaExceededOption[] {
+  const base = exceedsWindowLimit
+    ? [QUOTA_EXCEEDED_OPTION.UPGRADE_PLAN]
+    : [QUOTA_EXCEEDED_OPTION.WAIT_RESET];
+
+  // Info: (20260818 - Luphia) 第二層不可用時不列它：那是一顆不會有反應的按鈕
+  return isChainCreditSpendable()
+    ? [QUOTA_EXCEEDED_OPTION.USE_PERSONAL_WALLET, ...base]
+    : base;
 }
 
 /**
@@ -513,17 +534,20 @@ export async function spendCredits(
           throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
         }
 
-        if (split.quotaPart > BigInt(0)) {
-          await teamQuotaUsageRepo.createUsageInTx(tx, {
-            teamId,
-            userId,
-            featureCode,
-            amount: split.quotaPart,
-            windowKey5h,
-            windowKeyWeek,
-            idempotencyKey: effectiveKey,
-          });
-        }
+        /**
+         * Info: (20260818 - Luphia) 上面已經擋掉非正數，這裡不再重複判斷（第四輪 B-3）。
+         * 原本緊接著一個 `if (split.quotaPart > 0)`，在 throw 之後恆為真——
+         * 留著會讓下一個讀者以為還有第三種情形。
+         */
+        await teamQuotaUsageRepo.createUsageInTx(tx, {
+          teamId,
+          userId,
+          featureCode,
+          amount: split.quotaPart,
+          windowKey5h,
+          windowKeyWeek,
+          idempotencyKey: effectiveKey,
+        });
 
         return toSpendResult(effectiveKey, split.quotaPart, BigInt(0));
       },
