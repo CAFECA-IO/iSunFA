@@ -25,6 +25,13 @@
    > 說明 AI 在系統中的定位。絕對禁止讓 AI 算數學、做業務邏輯判斷，並規範了「混合決策管線 (Hybrid Pipeline)」與「English-First Prompting」。
 4. 🎯 **[數值精度處理規範](engineering_guidelines/numerical_precision_guideline.md)**
    > 說明為何我們在財務與碳排計算中全面棄用原生 `number`，並強制使用 `Prisma.Decimal` 與 `BigInt`。
+5. 🕘 **[部署檢查表：簽到系統](engineering_guidelines/deploy_checklist_attendance_2026q3.md)**
+   > 7 張新表 + `Employee.user_id` 的套用順序、為何**不需要**回填（空值是正確的初始狀態，不是待填），以及四種做錯順序的症狀 —— 其中最難查的一種完全不報錯：座標用地圖標註值而非實測值，seed 會成功，而主角站在現場打不了卡。
+
+> ℹ️ **Info: (20260817 - Luphia)** 本次新增的程式碼註解多處引用「Code Review 檢查清單 §X」。
+> 那份文件（`engineering_guidelines/code_review_checklist.md`）隨
+> `feature/faith_chat_quota_exhausted_notice` 進 develop，在它合併之前這個分支上查不到。
+> 它整理的是 PR #6652 三輪 review 的實際失效樣本，核心一句：**綠燈不是證據，是尚未被反駁。**
 
 ### 🐛 已知缺陷 (Known Issues)
 

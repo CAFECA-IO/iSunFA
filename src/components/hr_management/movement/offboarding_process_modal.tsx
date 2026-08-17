@@ -215,47 +215,46 @@ const OffboardingProcessModal: FC<IOffboardingProcessModalProps> = ({
           </div>
         )}
 
-        <fieldset
-          disabled={isReadOnly}
-          className="min-w-0 flex-1 overflow-y-auto border-0 px-5 py-5 disabled:opacity-75"
-        >
-          {activeTab === OffboardingModalTab.APPLICATION && (
-            <OffboardingApplicationTab
-              offboardingCase={offboardingCase}
-              form={form}
-              notice={notice}
-              onChange={onChange}
-            />
-          )}
+        <fieldset disabled={isReadOnly} className="flex-1 disabled:opacity-75">
+          <div className="max-h-[60vh] min-w-0 overflow-y-auto border-0 p-4">
+            {activeTab === OffboardingModalTab.APPLICATION && (
+              <OffboardingApplicationTab
+                offboardingCase={offboardingCase}
+                form={form}
+                notice={notice}
+                onChange={onChange}
+              />
+            )}
 
-          {activeTab === OffboardingModalTab.HANDOVER && (
-            <OffboardingHandoverTab
-              form={form}
-              candidates={candidates}
-              onChange={onChange}
-              onToggleTask={onToggleTask}
-              onApprove={onApprove}
-              onRevokeApproval={onRevokeApproval}
-            />
-          )}
+            {activeTab === OffboardingModalTab.HANDOVER && (
+              <OffboardingHandoverTab
+                form={form}
+                candidates={candidates}
+                onChange={onChange}
+                onToggleTask={onToggleTask}
+                onApprove={onApprove}
+                onRevokeApproval={onRevokeApproval}
+              />
+            )}
 
-          {activeTab === OffboardingModalTab.ASSET && (
-            <OffboardingAssetTab
-              form={form}
-              onChange={onChange}
-              onToggleTask={onToggleTask}
-              todayIso={todayIso}
-            />
-          )}
+            {activeTab === OffboardingModalTab.ASSET && (
+              <OffboardingAssetTab
+                form={form}
+                onChange={onChange}
+                onToggleTask={onToggleTask}
+                todayIso={todayIso}
+              />
+            )}
 
-          {activeTab === OffboardingModalTab.FINALIZATION && (
-            <OffboardingFinalizationTab
-              form={form}
-              employeeEmail={offboardingCase.email}
-              onChange={onChange}
-              onToggleTask={onToggleTask}
-            />
-          )}
+            {activeTab === OffboardingModalTab.FINALIZATION && (
+              <OffboardingFinalizationTab
+                form={form}
+                employeeEmail={offboardingCase.email}
+                onChange={onChange}
+                onToggleTask={onToggleTask}
+              />
+            )}
+          </div>
         </fieldset>
 
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-5 py-4">

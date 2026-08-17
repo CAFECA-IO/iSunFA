@@ -177,6 +177,7 @@ const tslintConfigs = [
   {
     files: [
       'src/lib/auth/assertion_client.ts',
+      'src/lib/auth/passkey_login.ts',
       'src/components/auth/auth_modal.tsx',
       'src/services/registration.service.ts',
       'src/components/admin/setup/**/*.{ts,tsx}',

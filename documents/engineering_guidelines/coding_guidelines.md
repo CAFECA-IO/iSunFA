@@ -20,6 +20,43 @@
    - **邊界防護**：進入 Repository 前的 Payload 必須經過 Schema 驗證（如 Zod 或 Prisma 內建型別），阻擋髒資料污染資料庫。
    - **禁忌**：不處理任何業務邏輯。
 
+### 1.1 唯一的例外：unit-of-work 方法
+
+> **狀態**：✅ 已採納（2026-08-17，Luphia 裁定；源自 PR #6651 的 `attendance_demo_plan.md §7.4` 提案）。
+> **待確認**：措辭請 @Tzuhan（本文件作者）複核。
+
+Repository 可以持有 `$transaction` 的**回呼形式**（`$transaction(async (tx) => …)`），**條件是那個交易保護的是一組「少做任一步就會留下永久說謊的中間狀態」的跨表寫入**。
+
+> **與陣列形式無關**：`$transaction([queryA, queryB])` 把多個**讀取**批次送出（例如分頁資料 + 總數，見 `talk.repo.listThreadsWithCounts`）不屬於本例外、也不需要它 —— 那只是批次查詢，沒有跨表寫入的不變式要守。本節談的只有回呼形式。
+
+判準三條，**必須同時成立**：
+
+1. **原子性只有資料庫給得起。** 把 `$transaction` 拉到 Service 會迫使 Service 拿到 Prisma 的 `tx` 物件 —— 那違反優先度更高的「只有 Repository 能碰 Prisma」。兩條規則衝突時，守住「唯一 DB 出入口」。
+2. **中間狀態不可自我修復。** 少寫其中一張表之後，系統不會在下一次操作時自己回到一致 —— 它會安靜地維持一個矛盾的事實。
+3. **方法本身不做「該不該做」的判斷。** 業務決策留在 Service；Repository 只保證「要做就一起做完」。方法命名要讓這件事看得出來（`resolveRecall` 而非 `acceptRecall`）。
+
+**現存的唯一實例**：`src/repositories/leave.repo.ts` 的 `resolveRecall()` —— 同意銷假要一次改三張表（徵詢狀態、請假日退出生效、排班改回上班日），少任一步就會出現「這個人同時在請假又要上班」或「假被銷了但判定引擎看不到班」。
+
+**不適用的情況**（看起來像但不是）：
+
+- 「Service 覺得寫在一起比較方便」→ 方便不是判準。若少寫一步只會導致下次操作失敗（而不是留下說謊的資料），拆開兩次呼叫。
+- 「想在 Repository 裡順手做業務判斷」→ 不變式與業務判斷是兩件事：`assertSchedulableDay` / `assertStorablePii` 是「這個組合寫進去就是壞資料」，可以留在 Repository；「這個人有沒有權限做這件事」不行。
+
+### 1.2 這條例外上路時的既有狀態（2026-08-17 實測）
+
+§7.4 的提案要求先確認一件事才可入規範：**條文一旦生效，既有程式碼會不會當天就有一批違例？**
+不確認就寫進來，規則從第一天起就沒有約束力。
+
+實測結果：**全 repo 的 `$transaction` 共 11 個檔案，全部已在 `src/repositories/` 底下，Service 層一處都沒有。**
+其中唯一的讀取型用法是 `talk.repo.listThreadsWithCounts` 的陣列形式（分頁 + 總數），依上面的界定不受本節約束。
+
+也就是說**這條例外描述的是既有實踐，不是新開的口子** —— 它把已經在做的事寫成有判準的規則。
+
+> ToDo: (20260817 - Luphia) 尚未逐一核對那 11 檔是否都滿足上面三條判準（尤其是
+> 「以領域動詞命名」與「註解列出所保證的不變式」）。已知 `payment.repo` 的
+> `createPaymentTransactionAndUpdateOrder` 這類 `AAndB` 命名不符第 1 條的精神。
+> 那是命名整理，不是行為變更，另案處理；本節不因此延後採納。
+
 ---
 
 ## 🛡️ 2. TypeScript 與型別安全 (Strict Type Safety)

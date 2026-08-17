@@ -1,4 +1,5 @@
 import { ApiCode } from "@/lib/utils/status";
+import { DEMO_ATTENDANCE_MAX_RANGE_DAYS } from "@/constants/attendance";
 
 export interface IErrorDef {
   code: string;
@@ -1000,5 +1001,215 @@ export const API_ERRORS = {
     code: "TW000010",
     message: "Unknown credit plan id",
     status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260813 - Julian) ===== 簽到系統 (Time & Attendance) =====
+
+  /**
+   * Info: (20260813 - Julian) 登入的 Google 帳號對不到任何員工檔。
+   *
+   * 「這個人是別的帳本的員工」也回這一個，而不是 403 —— 回「你是員工但不屬於
+   * 這個帳本」會洩漏一個不該由未授權者得知的事實：這個信箱在系統裡有員工檔。
+   */
+  NF_EMPLOYEE_FOR_USER: {
+    code: "NF000017",
+    message: "No employee record is linked to this account",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  // Info: (20260813 - Julian) 該員工檔已綁給另一個系統帳號
+  CF_EMPLOYEE_ALREADY_LINKED: {
+    code: "CF000004",
+    message: "This employee record is already linked to another account",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260813 - Julian) 定位精度不足以判定。
+   *
+   * 訊息刻意寫成「請重試」而不是「你不在現場」：這是**證據品質不足**
+   * （還無法判定他到了），不是**判他沒到**。對站在工地上打不了卡的人，
+   * 這兩句話的意思完全不同。
+   */
+  VA_PUNCH_LOW_ACCURACY: {
+    code: "VA000042",
+    message: "Location accuracy is too low, please try again",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260813 - Julian) 重複上班卡，或未上班就先下班
+  VA_PUNCH_INVALID_STATE: {
+    code: "VA000043",
+    message: "Punch does not match the current attendance state",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260813 - Julian) 不在任何打卡地點的圍欄內。
+   *
+   * 圍欄是「到班」這個事實的定義本身 —— 人不在登記的地點，
+   * 不是「到班了但有疑慮」，是到班這件事沒有發生。
+   * 回應以 `jsonFailWithPayload` 帶上最近地點與距離：收到這個 403 的人
+   * 正站在某處試圖上班，「離工區 340 公尺」比「不能打卡」有用得多。
+   */
+  FO_PUNCH_OUT_OF_FENCE: {
+    code: "FO000009",
+    message: "You are outside every registered work location",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  // Info: (20260813 - Julian) 帳本尚未設定任何打卡地點：設定問題，不是位置問題
+  NF_WORK_LOCATION: {
+    code: "NF000018",
+    message: "No work location is configured for this account book",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260813 - Julian) 判定結果的查詢區間超過上限。
+   *
+   * 訊息帶出上限值，因為收到它的人下一步就是把區間改小 ——
+   * 一句「區間太大」會讓他要嘗試幾次才知道界線在哪。
+   */
+  VA_ATTENDANCE_RANGE_TOO_LARGE: {
+    code: "VA000044",
+    message: `Attendance query range exceeds ${DEMO_ATTENDANCE_MAX_RANGE_DAYS} days`,
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260813 - Julian) 指定的打卡地點不存在，或不屬於這個帳本。
+   *
+   * 與 `NF_WORK_LOCATION`（帳本一個地點都沒設定）分開：後者是設定問題。
+   * 這一條刻意**不回空名單** —— 一個打錯的地點 id 若回「現場 0 人」，
+   * 在職安場景下與「這個工區真的沒有人」長得一模一樣，而看的人會相信後者。
+   */
+  NF_WORK_LOCATION_UNKNOWN: {
+    code: "NF000019",
+    message: "No such work location in this account book",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260813 - Julian) 排班日的型別與班別不一致（不變式轉譯）。
+   *
+   * 走 API 的正常路徑到不了這裡 —— zod 的可辨識聯集已讓非法組合送不進來
+   * （ADR 019：能讓它不可表示，就不要退而求其次讓它可被拒絕）。
+   * 這個碼服務的是**繞過 API 的寫入**：種子腳本、資料遷移、排班表匯入。
+   * 沒有它，那些路徑違反不變式時會得到一個與成因無關的 500。
+   */
+  VA_SCHEDULE_DAY_INVALID: {
+    code: "VA000045",
+    message: "Work days must carry a shift pattern; other day types must not",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260813 - Julian) 指定的員工不存在，或不屬於這個帳本
+  NF_EMPLOYEE: {
+    code: "NF000020",
+    message: "No such employee in this account book",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260813 - Julian) 指定的班別不存在，或不屬於這個帳本。
+   *
+   * 跨帳本那一半不是理論顧慮：`EmployeeShiftDay.shiftPatternId` 在資料庫層
+   * 沒有任何跨帳本約束，光靠 id 查得到就寫下去，等於租戶隔離破了一個洞。
+   */
+  NF_SHIFT_PATTERN: {
+    code: "NF000021",
+    message: "No such shift pattern in this account book",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260813 - Julian) 同一帳本內有多筆員工檔的公司信箱只差大小寫。
+   *
+   * `@@unique([accountBookId, email])` 大小寫敏感，因此這種資料寫得進去。
+   * 此時任選一筆綁定，就是讓某人以另一個人的身分打卡 —— 而出勤紀錄是法定文件，
+   * 所以擋住並要求 HR 先清理，不猜。
+   */
+  CF_EMPLOYEE_EMAIL_AMBIGUOUS: {
+    code: "CF000005",
+    message:
+      "Multiple employee records share this e-mail; resolve before linking",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  // Info: (20260813 - Julian) 假勤（銷假徵詢）
+
+  // Info: (20260813 - Julian) 指定的請假日不存在、不在生效中，或不屬於這個帳本
+  NF_LEAVE_DAY: {
+    code: "NF000022",
+    message: "No such active leave day in this account book",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  NF_LEAVE_RECALL: {
+    code: "NF000023",
+    message: "No such leave recall request",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260813 - Julian) 已過去的請假日不得徵詢銷假。
+   *
+   * 把過去的假日改回上班日，會讓那一天的判定從 OFF_DAY 變成曠職 ——
+   * 一個人的歷史出勤紀錄因為今天的一次操作而多出一筆異常。
+   * 這是計畫書 §7.3 第 3 順位那個洞（排班異動會無聲改寫歷史判定）
+   * 從「理論上的」變成「每天在用的」的最短路徑，因此擋在 validator 之後、service 之內。
+   */
+  VA_LEAVE_RECALL_PAST: {
+    code: "VA000046",
+    message: "A leave day in the past cannot be recalled",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260813 - Julian) 同一個請假日已經有一張待回應的徵詢
+  CF_LEAVE_RECALL_PENDING: {
+    code: "CF000006",
+    message: "This leave day already has a pending recall request",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  // Info: (20260813 - Julian) 徵詢已被回應過；同意與婉拒都是終局，不可覆寫
+  CF_LEAVE_RECALL_ANSWERED: {
+    code: "CF000007",
+    message: "This recall request has already been answered",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260813 - Julian) 只有被徵詢的本人能回應。
+   *
+   * 回 403 而不是 404：這裡不必隱藏徵詢的存在 —— 呼叫者手上就有 id，
+   * 而「這不是你的」正是他需要知道的事。與 NF_EMPLOYEE_FOR_USER 的取捨不同，
+   * 因為那一個洩漏的是「這個信箱在系統裡有員工檔」，這一個沒有等價的洩漏。
+   */
+  FO_LEAVE_RECALL_NOT_OWNER: {
+    code: "FO000010",
+    message: "Only the employee on leave can answer this recall request",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260814 - Julian) 同一人同一天的排班被並行寫入。
+   *
+   * `EmployeeShiftDay` 的 `@@unique([accountBookId, employeeId, workDate])` 在
+   * Prisma upsert 的競態下會撞 P2002。回 409 讓呼叫端知道「重試一次就好」——
+   * 轉成 500 會讓人以為資料庫壞了。
+   */
+  CF_SCHEDULE_DAY_CONFLICT: {
+    code: "CF000008",
+    message: "This schedule day was modified concurrently; retry",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  // Info: (20260813 - Julian) 只有主管（任一部門的 managerId）能發起徵詢或看地圖
+  FO_ATTENDANCE_SUPERVISOR_ONLY: {
+    code: "FO000011",
+    message: "This action is limited to department managers",
+    status: ApiCode.FORBIDDEN,
   } as IErrorDef,
 };

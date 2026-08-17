@@ -33,7 +33,7 @@
 | 級別 | 定義 | 欄位 | 加密 | 預設遮罩 | 讀取稽核 |
 |---|---|---|---|---|---|
 | **Tier 1 · RESTRICTED** | 單獨即可用於冒用身分或盜用金流 | `Employee.nationalId`、`Dependent.nationalId`、`BankAccount.accountNumber`、`BankAccount.accountHolder` | ✅ | ✅ | ✅ |
-| **Tier 2 · CONFIDENTIAL** | 可識別特定自然人，單獨不足以冒用 | `Employee.birthday` / `address` / `phone` / `personalEmail`、`Dependent.birthday`、`EmergencyContact.phone` / `altPhone` | ✅ | ✅ | ➖ |
+| **Tier 2 · CONFIDENTIAL** | 可識別特定自然人，單獨不足以冒用 | `Employee.birthday` / `address` / `phone` / `personalEmail`、`Dependent.birthday`、`EmergencyContact.phone` / `altPhone`、**`AttendancePunch.latitude` / `longitude`**（見下方 2026-08-14 補充決策）| ✅ | ✅ | ➖ |
 | **Tier 3 · INTERNAL** | 業務識別資訊，本就需要在畫面與查詢中直接使用 | `employeeNo`、`email`、`name`、`englishName`、`gender`、`hireDate`、`bankCode` / `bankName` / `branchCode` / `branchName` | ➖ | ➖ | ➖ |
 
 ### 逐項說明 Tier 3 為何不加密
@@ -47,6 +47,46 @@
 - **`gender` / `hireDate` / `status`**：統計與流程判斷的依據，且不具唯一識別性。
 - **`bankCode` / `bankName` / `branchCode` / `branchName`**：公開的金融機構字典值，不是個資。金融風險集中在帳號與戶名，那兩個已在 Tier 1。
 - **`Dependent.name` / `relationship`、`EmergencyContact.name` / `relationship`**：需在畫面直接顯示；姓名與關係單獨不足以冒用，且遮罩後這份名單就失去了它存在的目的（緊急時要能立刻認出打給誰）。
+
+### 補充決策（2026-08-14 review）：打卡座標列入 Tier 2，持有密文的表由 4 張增為 5 張
+
+簽到模組（`AttendancePunch`）是本 ADR 訂立後第一張新增的持有密文的表。
+
+**為什麼是個資**：「某人某時在某座標」是**行蹤資料**，敏感度不低於通訊地址 ——
+住址是靜態的一個點，打卡座標序列是動態的行蹤，可還原出居住地、就醫、參與集會等原欄位本身不揭露的事實。
+
+**為什麼是 Tier 2 而不是 Tier 1**：Tier 1 的定義是「單獨即可用於冒用身分或盜用金流」，座標做不到。
+更關鍵的是分級的**副作用**：Tier 1 會強制每次讀取完整值就寫一筆 `AuditLog`，
+而現場人數看板每 15 秒輪詢一次全帳本在班名單 —— 那會把 `AuditLog` 沖爆，
+**正是 §6 拒絕「每次讀 Journal 都留痕」時點名要避免的失敗模式**。
+把行蹤放進 Tier 1 不會讓它更安全，只會讓稽核表失去可讀性，連 Tier 1 原本該被看見的存取一起淹掉。
+
+**因此改用「不讓它被大量讀取」取代「每次讀取都留痕」**：
+
+- 對外查詢（現場看板、判定矩陣、名單匯出）一律讀非敏感的 `workLocationId` ——
+  那指向**公司登記的地點**，不是個人座標；
+- 完整明文只在兩個時點解密：員工看自己的紀錄、HR 調閱單筆爭議紀錄；
+- `distanceMeters` 與 `accuracyMeters` 明文入庫（它們是「離圍欄中心多遠」與「定位品質」，不含位置本身）。
+
+**沿用本 ADR 既有的兩條**：
+
+- **GCM AAD**（2026-08-12 補充決策）：`AttendancePunch.id` 刻意**沒有** `@default(uuid())`，
+  因為 id 是 AAD 的一部分而加密發生在 insert 之前，等資料庫產生就來不及了。必須由應用層 `randomUUID()`。
+- **`piiKeyVersion` NOT NULL**（2026-08-12 補充決策第 1 條）：本表兩個密文欄位皆必填，代次必然存在，
+  故由資料庫直接擋，不只靠 `assertStorablePii`。
+
+**金鑰輪替的巡覽清單因此由 4 張增為 5 張**（`HrPiiTable`）：
+`Employee`、`Dependent`、`BankAccount`、`EmergencyContact`、`AttendancePunch`。
+輪替時漏掉一張，該表資料會在舊金鑰退役後永遠解不開。
+
+**尚未解決 —— 保存期限**：本 ADR 為 `personalEmail` 討論過「用途會結束」與清除排程，
+但**行蹤資料沒有對應的規定**。出勤紀錄本身有法定保存年限（勞基法 §30 V：出勤紀錄保存五年），
+而那條要求的是「出勤事實」，不必然涵蓋「精確座標」。
+兩者可以分開：到期後清除 `latitudeCipher` / `longitudeCipher`，保留 `workLocationId` 與時間。
+**這是法遵會直接問的一題，目前沒有答案。**
+
+> ToDo: (20260814 - Julian) 訂出打卡座標的保存期限與清除機制，並決定是否與出勤紀錄本體分開計算。
+> 需法遵確認勞基法 §30 V 的「出勤紀錄」是否涵蓋座標精度。
 
 ---
 
