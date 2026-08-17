@@ -78,13 +78,27 @@ export const CARBON_DIAGRAM_TEMPLATES: Record<
     direction: "LR",
     maxNodes: 10,
   },
-  // Info: (20260730 - Tzuhan) 沿革條目多(實測那份有 23 個里程碑),上限放寬到 30;
-  // Info: (20260730 - Tzuhan) 節點只存事件,年月放 parent(時間標籤),故節點數 = 事件數而非兩倍
+  /**
+   * Info: (20260730 - Tzuhan) 沿革條目多(實測那份有 23 個里程碑),上限放寬到 30;
+   * Info: (20260730 - Tzuhan) 節點只存事件,年月放 parent(時間標籤),故節點數 = 事件數而非兩倍
+   *
+   * Info: (20260814 - Emily) 30 → 40。與 GOVERNANCE_TREE 同一個原因，但它是**回歸**：
+   * 萃取 prompt 原本要求「超過上限請只保留最上層與次層」，模型會自己截到 30，表就畫出來。
+   * 那條指示今天被移除（它讓驗證器看不到原文本來有幾個），於是模型照實回報 31 個
+   * —— 而 31 > 30，那張沿革表就整張不畫了。
+   *
+   * 實測那份的沿革是 28 條里程碑（1966~2013），模型回 31 個節點。
+   * 40 是「28 再加餘裕」：沿革長度由公司歷史長度決定，一家 60 年的公司多幾條是常態。
+   *
+   * 這也是為什麼上限一放寬就必須同時把 `CarbonDiagramNodesLlmOutputSchema` 的 60 放寬 ——
+   * schema 的上限若只比這裡高一點，它會先攔到本該由 builder 說明的情況，
+   * 而它攔下來的結果是 0 個節點，訊息就變成「素材不足」，與事實相反。
+   */
   [CarbonDiagramTemplateEnum.MILESTONE_TIMELINE]: {
     paragraphId: "ch1-1",
     renderer: CarbonDiagramRendererEnum.TIMELINE,
     direction: "TD",
-    maxNodes: 30,
+    maxNodes: 40,
   },
   [CarbonDiagramTemplateEnum.BOUNDARY_MAP]: {
     paragraphId: "ch1-5",

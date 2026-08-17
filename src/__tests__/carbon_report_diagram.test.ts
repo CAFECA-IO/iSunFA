@@ -877,3 +877,74 @@ describe("節點數上限與不畫的原因", () => {
     expect(block).toContain("無法回溯");
   });
 });
+
+/**
+ * Info: (20260814 - Emily) 沿革時間軸的上限（issue 34 的回歸）。
+ *
+ * 這一組守的是一個**我自己造成的回歸**：移除 prompt 的「超過請只保留最上層與次層」
+ * 之後，模型照實回報 31 個節點，而上限是 30 —— 那張沿革表就整張不畫了。
+ * 之前它畫得出來，是因為模型先幫我們截到 30。
+ */
+describe("沿革時間軸的節點上限（實測回歸）", () => {
+  const milestoneNodes = (count: number): ICarbonDiagramNode[] =>
+    Array.from({ length: count }, (unused, index) => ({
+      label: `事件${index}`,
+      parent: `${1966 + index} 年 01 月`,
+    }));
+  const milestoneSource = (count: number): string =>
+    milestoneNodes(count)
+      .map((node) => `${node.parent} ${node.label}`)
+      .join(" ");
+
+  it("31 條里程碑要畫得出來（上限 30 時整張不畫）", () => {
+    // Info: (20260814 - Emily) 實測那份沿革有 28 條，模型回 31 個節點
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      milestoneNodes(31),
+      milestoneSource(31),
+    );
+
+    expect(result.isValid).toBe(true);
+  });
+
+  it("超過上限時說的是「太多」而不是「素材不足」", () => {
+    /**
+     * Info: (20260814 - Emily) 實測那份報告印出的是「(本節內容不足以繪製結構圖)」，
+     * 而那一節有 28 條里程碑 —— 與事實完全相反。
+     * 真正的成因是 LLM 輸出 schema 的 60 先攔到，把 31 個變成 0 個，
+     * 於是走了 `no_nodes` 那條分支。本條釘住 builder 這一端的正確行為。
+     */
+    const max = CARBON_DIAGRAM_TEMPLATES.MILESTONE_TIMELINE.maxNodes;
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      milestoneNodes(max + 1),
+      milestoneSource(max + 1),
+    );
+
+    expect(block).not.toContain("內容不足");
+    expect(block).toContain(String(max + 1));
+    expect(block).toContain(String(max));
+  });
+
+  it("LLM 輸出 schema 的上限必須高過所有模板的上限，否則它會先攔到", () => {
+    /**
+     * Info: (20260814 - Emily) 這條守的是兩道閘門的職責分工，不是某個數字。
+     *
+     * schema 想擋「模型失控」，builder 想擋「畫不下」。schema 的上限若沒有明顯高過
+     * builder 的最寬上限，它就會先攔到本該由 builder 說明的情況 —— 而它攔下來的
+     * 結果是 0 個節點，訊息因此變成「素材不足」，與事實相反。
+     *
+     * 數字寫死在這裡是刻意的：改任何一邊的上限都會讓這條紅，而那正是要提醒的時機。
+     */
+    const widest = Math.max(
+      ...Object.values(CARBON_DIAGRAM_TEMPLATES).map(
+        (template) => template.maxNodes,
+      ),
+    );
+    const SCHEMA_MAX_NODES = 150;
+
+    expect(widest).toBeLessThan(SCHEMA_MAX_NODES);
+    // Info: (20260814 - Emily) 要「明顯」高過，不是差一點 —— 差一點就是 08-14 那個 bug
+    expect(SCHEMA_MAX_NODES).toBeGreaterThanOrEqual(widest * 2);
+  });
+});

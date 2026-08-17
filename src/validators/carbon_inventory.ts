@@ -324,8 +324,30 @@ export const CarbonDiagramNodesLlmOutputSchema = z.object({
         parent: z.string().min(1).max(120).optional(),
       }),
     )
-    // Info: (20260730 - Tzuhan) 上限取最寬的模板(沿革時間軸 30)再留餘裕;逐模板的實際上限由 builder 裁決
-    .max(60),
+    /**
+     * Info: (20260730 - Tzuhan) 上限取最寬的模板(沿革時間軸 30)再留餘裕;逐模板的實際上限由 builder 裁決
+     *
+     * Info: (20260814 - Emily) 60 → 150。這個 schema 不能成為實際的閘門
+     * (`data/issue_drafts/open/34_diagram_overflow_clips_nodes.md`)。
+     *
+     * 2026-08-14 實測：模型回 31 個節點（沿革有 28 條里程碑），第一次被 builder 以
+     * `too_many_nodes` 擋下並附上「31 個超過上限 30」的說明 —— 那是對的。
+     * 但重試那次回超過 60 個，撞到這裡的 schema，整批 `ZodError` 被拒 → `nodes` 變成空陣列
+     * → builder 收到 0 個節點 → 判成 `no_nodes` → 報告上印
+     * 「(本節內容不足以繪製結構圖)」。
+     *
+     * **那句話與事實完全相反**：那一節有 28 條里程碑，是內容太多而不是不足。
+     * 而使用者看到的只有這句話。
+     *
+     * 根因是兩道閘門的職責重疊：schema 想擋「模型跑掉」，builder 想擋「畫不下」，
+     * 而 schema 的上限比 builder 的上限只高一倍，於是它會先攔到本該由 builder
+     * 說明的情況 —— 然後把「31 個」變成「0 個」，訊息也就跟著錯。
+     *
+     * 150 讓兩道閘門的角色分開：builder 的逐模板上限（目前最寬 40）永遠先觸發，
+     * 說得出「幾個超過幾個」；schema 只留著擋真正的失控輸出（回幾百個節點），
+     * 而那時整批拒絕是對的處置。
+     */
+    .max(150),
 });
 export type CarbonDiagramNodesLlmOutput = z.infer<
   typeof CarbonDiagramNodesLlmOutputSchema
