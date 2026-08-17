@@ -5,7 +5,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
-import { TeamRole } from "@/constants/team";
+import { canGrantRole, TeamRole } from "@/constants/team";
 import { inviteMemberByEmail } from "@/services/team_invitation.service";
 
 /**
@@ -60,6 +60,17 @@ export async function POST(
     const assignedRole = ["OWNER", "ADMIN", "EDITOR", "VIEWER"].includes(role)
       ? (role as TeamRole)
       : ("VIEWER" as TeamRole);
+
+    /**
+     * Info: (20260818 - Luphia) 只有 OWNER 能授予 OWNER（第三輪 B-3）。
+     *
+     * 上面的權限閘是 OWNER || ADMIN，對「授予什麼角色」原本毫無檢查——
+     * ADMIN 送 `role: "OWNER"` 邀請自己的第二個帳號，接受後團隊就多一位 OWNER。
+     * 變更**既有**成員角色的端點早就有這道檢查，邀請這條路漏了。
+     */
+    if (!canGrantRole(operator.role, assignedRole)) {
+      return jsonFail(API_ERRORS.FO_PERMISSION_DENIED_ONLY_OWN);
+    }
 
     const result = await inviteMemberByEmail({
       teamId,

@@ -249,6 +249,42 @@ describe("chargeSeatAddition", () => {
   });
 
   /**
+   * Info: (20260818 - Luphia) 上限的佔用量要含**尚未接受的邀請**（第三輪 B-1）。
+   *
+   * 只數成員的話，上限可以整批繞過：只有 OWNER 一人的免費團隊連送 30 封邀請，
+   * 每一次檢查都是 `1 + 1 <= 5`，全部通過；30 人接受後團隊有 31 名成員。
+   * 上限剛加上就被繞過，而它防的正是「20 人的免費團隊、每週 800 點、月費零」。
+   */
+  it("counts pending invitations toward the free member cap", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+      ...ACTIVE_SUBSCRIPTION,
+      planId: TEAM_PLAN.FREE,
+      unitPrice: 0,
+    });
+    // Info: (20260818 - Luphia) 1 位成員 + 4 封待接受 = 5，再加一位就超過上限
+    asMock(teamRepo.countMembers).mockResolvedValue(1);
+    asMock(teamRepo.countPendingInvitations).mockResolvedValue(4);
+
+    await expect(
+      chargeSeatAddition({ teamId: "team-1", nowMs: MID_PERIOD }),
+    ).rejects.toMatchObject({ code: "TW000017" });
+  });
+
+  it("still lets a free team invite while under the cap", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+      ...ACTIVE_SUBSCRIPTION,
+      planId: TEAM_PLAN.FREE,
+      unitPrice: 0,
+    });
+    asMock(teamRepo.countMembers).mockResolvedValue(1);
+    asMock(teamRepo.countPendingInvitations).mockResolvedValue(2);
+
+    await expect(
+      chargeSeatAddition({ teamId: "team-1", nowMs: MID_PERIOD }),
+    ).resolves.toMatchObject({ charged: false });
+  });
+
+  /**
    * Info: (20260814 - Luphia) 訂閱已過期（PAST_DUE / 期末已過）時視同免費方案：
    * 這一期已經沒有在收費，補收沒有依據。
    */

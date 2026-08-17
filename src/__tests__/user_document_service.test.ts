@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
+import { readFileSync } from "fs";
+import { join } from "path";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
 import { listUserDocuments } from "@/services/user_document.service";
@@ -228,5 +230,48 @@ describe("removeMemoryItem", () => {
     const result = removeMemoryItem([a, b], "notexist");
     expect(result.removed).toBe(false);
     expect(result.items).toHaveLength(2);
+  });
+});
+
+/**
+ * Info: (20260818 - Luphia) 三種來源的歸屬條件（第三輪 B-5）。
+ *
+ * 上面的測試把 `user_document.repo` 整包 mock 掉，因此把
+ * `where: { createdById: userId }` 改成 `where: {}` 仍然全綠——
+ * 而那個改動的效果是**全站所有人的文件列給任何登入者**。
+ *
+ * 歸屬條件是這個功能唯一的授權邊界（沒有第二道 guard），
+ * 而它在被 mock 的那一層裡，所以只能以原始碼比對釘住。
+ */
+describe("文件來源的歸屬條件", () => {
+  const repo = readFileSync(
+    join(process.cwd(), "src", "repositories", "user_document.repo.ts"),
+    "utf8",
+  );
+
+  it("PDF 編輯器文件以 createdById 歸屬", () => {
+    expect(repo).toMatch(/where:\s*\{\s*createdById:\s*userId\s*\}/);
+  });
+
+  it("憑證檔案經 Journal / Voucher 的 userId 反查", () => {
+    expect(repo).toMatch(
+      /prisma\.journal\.findMany\(\{\s*\n?\s*where:\s*\{\s*userId/,
+    );
+    expect(repo).toMatch(
+      /prisma\.voucher\.findMany\(\{\s*\n?\s*where:\s*\{\s*userId/,
+    );
+  });
+
+  it("碳盤查草稿以聊天室的 ownerPublicKey 歸屬", () => {
+    expect(repo).toMatch(/chatroom:\s*\{\s*ownerPublicKey/);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 沒有任何一支查詢可以是無條件的。
+   * Prisma 對 `where: {}`（或條件為 undefined）會靜默列出全表——
+   * 而這裡列出的是別人的文件。
+   */
+  it("沒有無條件的查詢", () => {
+    expect(repo).not.toMatch(/where:\s*\{\s*\}/);
   });
 });

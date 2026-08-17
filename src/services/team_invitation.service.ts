@@ -20,6 +20,10 @@ import {
 import { sendMail, MailNotConfiguredError } from "@/services/mail.service";
 import { systemSettingService } from "@/services/system_setting.service";
 import { teamRepo } from "@/repositories/team.repo";
+import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
+import { resolveEffectivePlanId } from "@/services/spend.service";
+import { resolveFreePlanMaxMembers } from "@/services/team_subscription.service";
+import { TEAM_PLAN } from "@/constants/subscription_quota";
 
 /**
  * Info: (20260815 - Luphia) Email 邀請（規範 §4 / P4）。
@@ -295,6 +299,34 @@ export async function declineInviteByToken(
   return { teamId: invitation.teamId };
 }
 
+/**
+ * Info: (20260818 - Luphia) 免費團隊的人數上限在接受時的第二道防線（第三輪 B-1）。
+ *
+ * 這裡數的是**成員**而非佔用量：受邀者正要從「待接受」變成「成員」，
+ * 把他自己那封 PENDING 邀請算進來會重複計數。
+ */
+async function assertFreePlanCapacityOnAccept(
+  teamId: string,
+  nowMs: number,
+): Promise<void> {
+  const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
+  const planId = resolveEffectivePlanId(subscription, Math.floor(nowMs / 1000));
+  if (planId !== TEAM_PLAN.FREE) return;
+
+  const [maxMembers, memberCount] = await Promise.all([
+    resolveFreePlanMaxMembers(),
+    teamRepo.countMembers(teamId),
+  ]);
+  if (memberCount + 1 > maxMembers) {
+    logger.info("free plan member cap reached on accept", {
+      teamId,
+      memberCount,
+      maxMembers,
+    });
+    throw toApiError(API_ERRORS.TW_FREE_PLAN_MEMBER_LIMIT);
+  }
+}
+
 export interface IAcceptInviteParams {
   token: string;
   userId: string;
@@ -354,6 +386,17 @@ export async function acceptInviteByToken(
       .filter((identity) => identity.emailVerified)
       .map((identity) => identity.email),
   );
+
+  /**
+   * Info: (20260818 - Luphia) 接受時**再檢查一次免費版人數上限**（第三輪 B-1）。
+   *
+   * 邀請端的檢查是第一道，但邀請與接受之間可能隔好幾天：這期間其他人接受了、
+   * 團隊從付費降級成免費、或上限被後台調低，都會讓當初通過的那封邀請
+   * 在此刻不再合法。沒有這一道，「上限」就只是寄信當下的一個快照。
+   *
+   * 只擋免費版：付費方案的人數由「席次 × 單價」自然封頂，而那筆錢已經收過了。
+   */
+  await assertFreePlanCapacityOnAccept(invitation.teamId, nowMs);
 
   const member = await teamRepo.acceptInvitation({
     inviteId: invitation.id,

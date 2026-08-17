@@ -126,11 +126,26 @@ export async function chargeSeatAddition(
      * 上限為系統設定（可後台調整），對應服務條款 §3.1「以方案頁標示為準」。
      */
     const maxMembers = await resolveFreePlanMaxMembers();
-    const memberCount = await teamRepo.countMembers(teamId);
-    if (memberCount + seats > maxMembers) {
+    /**
+     * Info: (20260818 - Luphia) 佔用量要含**尚未接受的邀請**（第三輪 B-1）。
+     *
+     * 原本只數成員，於是上限可以整批繞過：只有 OWNER 一人的免費團隊連送 30 封邀請，
+     * 每一次檢查都是 `1 + 1 <= 5`，全部通過；30 人接受後團隊有 31 名成員。
+     * 上限剛加上就被繞過，而它防的正是「20 人的免費團隊、每週 800 點、月費零」。
+     *
+     * 與付費路徑同一個佔用定義（成員 + 未失效的 PENDING 邀請），
+     * 兩條路的人數才會是同一件事。
+     */
+    const [memberCount, pendingCount] = await Promise.all([
+      teamRepo.countMembers(teamId),
+      teamRepo.countPendingInvitations(teamId, nowMs),
+    ]);
+    const occupied = memberCount + pendingCount;
+    if (occupied + seats > maxMembers) {
       logger.info("free plan member cap reached", {
         teamId,
         memberCount,
+        pendingCount,
         maxMembers,
       });
       throw toApiError(API_ERRORS.TW_FREE_PLAN_MEMBER_LIMIT);

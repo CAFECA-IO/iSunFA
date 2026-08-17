@@ -1,4 +1,6 @@
 import { describe, it, expect } from "@jest/globals";
+import { readFileSync } from "fs";
+import { join } from "path";
 import {
   buildInviteUrl,
   createInviteToken,
@@ -101,5 +103,53 @@ describe("invite token", () => {
         "https://isunfa.com/invite/abc",
       );
     });
+  });
+});
+
+/**
+ * Info: (20260818 - Luphia) token 必須不可預測（第三輪 B-5）。
+ *
+ * 這個檔案原本四條測試沒有一條釘住這件事——把 `randomBytes(32)` 換成
+ * `sha256(nowMs + Math.random())` 全部保持全綠，而那是整個機制最關鍵的性質：
+ * token 是唯一的授權，猜得到就等於能加入任何團隊。
+ *
+ * 統計性質測不出「密碼學安全」，所以兩邊一起釘：行為上不可重現，
+ * 且來源必須是 CSPRNG。
+ */
+describe("token 的不可預測性", () => {
+  it("大量產生互不重複", () => {
+    const seen = new Set<string>();
+    for (let i = 0; i < 500; i += 1) {
+      // Info: (20260818 - Luphia) 固定同一個時間戳：時間不該是熵的來源
+      seen.add(createInviteToken(1_760_000_000_000).token);
+    }
+    expect(seen.size).toBe(500);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 熵不得來自時間或 `Math.random()`。
+   * 前者可推測、後者非密碼學安全——兩者都能讓「猜出別人的邀請連結」
+   * 從不可行變成可行，而行為測試看不出差別。
+   */
+  it("熵來自 CSPRNG，不是時間或 Math.random", () => {
+    const source = readFileSync(
+      join(process.cwd(), "src", "lib", "team", "invite_token.ts"),
+      "utf8",
+    );
+    const code = source
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => !line.startsWith("*") && !line.startsWith("//"))
+      .join("\n");
+
+    expect(code).toMatch(/randomBytes\(TOKEN_BYTES\)/);
+    expect(code).not.toMatch(/Math\.random/);
+    // Info: (20260818 - Luphia) nowMs 只用來算到期日，不得參與 token 的產生
+    expect(code).not.toMatch(/randomBytes\([^)]*nowMs/);
+  });
+
+  // Info: (20260818 - Luphia) 32 bytes = 256 bits；改小了就該紅
+  it("熵長度為 32 bytes", () => {
+    expect(createInviteToken(1).token).toHaveLength(64);
   });
 });

@@ -3,6 +3,7 @@ import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
 import {
   isFaithMemoryEnabled,
+  listFaithMemory,
   loadFaithMemoryForPrompt,
   recordFaithMemoryItems,
 } from "@/services/faith_memory.service";
@@ -198,5 +199,57 @@ describe("recordFaithMemoryItems", () => {
     });
     expect(faithMemoryRepo.upsert).not.toHaveBeenCalled();
     expect(teamSubscriptionRepo.getByTeamId).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Info: (20260818 - Luphia) 檢視也要 gate（第三輪 B-5）。
+ *
+ * 這個檔案原本完全沒碰 `listFaithMemory`，於是拿掉那支函式裡的方案判定
+ * 仍然全綠——效果是**降級後的免費版成員讀得到付費期間累積的全部記憶**，
+ * 正是本檔開頭宣稱要防的事。
+ */
+describe("listFaithMemory", () => {
+  it("付費方案讀得到條目", async () => {
+    const view = await listFaithMemory({
+      userId: "u1",
+      teamId: "t1",
+      nowSec: NOW_SEC,
+    });
+
+    expect(view.enabled).toBe(true);
+    expect(view.items).toHaveLength(1);
+    expect(view.items[0].statement).toBe("回答請簡短");
+    // Info: (20260818 - Luphia) 逐條刪除靠這個 id，不能沒有
+    expect(view.items[0].id).toMatch(/^[0-9a-f]{16}$/);
+  });
+
+  it("免費版讀不到，也不碰資料庫", async () => {
+    mockPlan(TEAM_PLAN.FREE);
+
+    const view = await listFaithMemory({
+      userId: "u1",
+      teamId: "t1",
+      nowSec: NOW_SEC,
+    });
+
+    expect(view).toEqual({ enabled: false, items: [] });
+    expect(faithMemoryRepo.get).not.toHaveBeenCalled();
+  });
+
+  // Info: (20260818 - Luphia) 已過期未刪的記憶同樣不該出現在檢視裡
+  it("已過期的記憶不列出", async () => {
+    asMock(faithMemoryRepo.get).mockResolvedValue({
+      items: [ITEM],
+      expiresAt: new Date((NOW_SEC - 1) * 1000),
+    });
+
+    const view = await listFaithMemory({
+      userId: "u1",
+      teamId: "t1",
+      nowSec: NOW_SEC,
+    });
+
+    expect(view.items).toEqual([]);
   });
 });

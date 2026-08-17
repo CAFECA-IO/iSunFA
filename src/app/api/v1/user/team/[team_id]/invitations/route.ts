@@ -11,6 +11,7 @@ import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { TEAM_INVITATION_STATUS } from "@/constants/status";
 import { isAddress } from "viem";
 import { buildPendingInviteKey } from "@/lib/team/pending_invite_key";
+import { canGrantRole, TeamRole } from "@/constants/team";
 import { chargeSeatAddition } from "@/services/team_seat.service";
 import { paymentRepo } from "@/repositories/payment.repo";
 import type { IOenCallbackData } from "@/interfaces/payment";
@@ -71,6 +72,14 @@ export async function POST(
     const assignedRole = ["OWNER", "ADMIN", "EDITOR", "VIEWER"].includes(role)
       ? role
       : "VIEWER";
+
+    /**
+     * Info: (20260818 - Luphia) 只有 OWNER 能授予 OWNER（第三輪 B-3）。
+     * 與 email 邀請同一條規則；變更既有成員角色的端點早就有這道檢查。
+     */
+    if (!canGrantRole(operator.role, assignedRole as TeamRole)) {
+      return jsonFail(API_ERRORS.FO_PERMISSION_DENIED_ONLY_OWN);
+    }
 
     // Info: (20260325 - Tzuhan) Validate if the address is already a member
     const targetUser = await webAuthnRepo.findUserByAddress(address);

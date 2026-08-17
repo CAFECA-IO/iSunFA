@@ -12,7 +12,10 @@ import {
 import { faithMemoryRepo } from "@/repositories/faith_memory.repo";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { logger } from "@/lib/utils/logger";
-import { parseRetentionDays } from "@/lib/faith_memory/retention";
+import {
+  parseRetentionDays,
+  resolveMemoryExpiresAt,
+} from "@/lib/faith_memory/retention";
 import { DEFAULT_FAITH_MEMORY_RETENTION_DAYS } from "@/constants/llm";
 import { systemSettingService } from "@/services/system_setting.service";
 
@@ -136,7 +139,14 @@ export async function scheduleFaithMemoryExpiry(
   terminatedAtMs: number,
 ): Promise<number> {
   const days = await resolveFaithMemoryRetentionDays();
-  const expiresAt = new Date(terminatedAtMs + days * 86_400_000);
+  /**
+   * Info: (20260818 - Luphia) 用 `resolveMemoryExpiresAt` 而不是自己再算一次（第三輪 B-5）。
+   *
+   * 原本這裡寫的是 `new Date(terminatedAtMs + days * 86_400_000)`——與
+   * `retention.ts` 的實作重複，而那支函式的註解正好寫著「推導點一多，
+   * 條款承諾的那個日期就會出現兩種算法」。它自己就是第二種。
+   */
+  const expiresAt = resolveMemoryExpiresAt(terminatedAtMs, days);
   return faithMemoryRepo.setExpiry(teamId, expiresAt);
 }
 

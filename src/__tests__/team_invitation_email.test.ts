@@ -10,6 +10,7 @@ import {
   revokeInvitation,
 } from "@/services/team_invitation.service";
 import { teamRepo } from "@/repositories/team.repo";
+import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { userIdentityRepo } from "@/repositories/user_identity.repo";
 import { chargeSeatAddition } from "@/services/team_seat.service";
 import { sendMail, MailNotConfiguredError } from "@/services/mail.service";
@@ -39,6 +40,8 @@ jest.mock("@/repositories/team.repo", () => ({
     findInvitationByTokenHash: jest.fn(),
     getTeamMember: jest.fn(async () => null),
     acceptInvitation: jest.fn(),
+    // Info: (20260818 - Luphia) 接受時的免費版人數上限第二道防線（第三輪 B-1）
+    countMembers: jest.fn(async () => 1),
   },
 }));
 
@@ -46,6 +49,13 @@ jest.mock("@/repositories/user_identity.repo", () => ({
   userIdentityRepo: {
     findByUserId: jest.fn(async () => []),
   },
+}));
+
+jest.mock("@/repositories/team_subscription.repo", () => ({
+  teamSubscriptionRepo: { getByTeamId: jest.fn() },
+}));
+jest.mock("@/services/team_subscription.service", () => ({
+  resolveFreePlanMaxMembers: jest.fn(async () => 5),
 }));
 
 jest.mock("@/services/team_seat.service", () => ({
@@ -107,6 +117,16 @@ beforeEach(() => {
   asMock(teamRepo.acceptInvitation).mockResolvedValue({
     id: "member-1",
   } as unknown as Awaited<ReturnType<typeof teamRepo.acceptInvitation>>);
+  asMock(teamRepo.countMembers).mockResolvedValue(1);
+  /**
+   * Info: (20260818 - Luphia) 預設付費方案：接受時的免費版人數檢查提早返回。
+   * 個別測試要驗那道防線時再改成 free（第三輪 B-1）。
+   */
+  asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+    planId: "team",
+    status: "ACTIVE",
+    currentPeriodEnd: new Date((NOW + 86_400_000) as number),
+  });
   asMock(teamRepo.declineInvitation).mockResolvedValue(true);
   // Info: (20260817 - Luphia) 預設為 passkey 註冊的帳號：沒有任何第三方綁定，也就沒有 email
   asMock(userIdentityRepo.findByUserId).mockResolvedValue([]);
@@ -773,5 +793,114 @@ describe("declineInvitationByMember", () => {
         address: "0xabc",
       }),
     ).rejects.toThrow();
+  });
+});
+
+/**
+ * Info: (20260818 - Luphia) fail-closed 的**順序**（第三輪 B-5）。
+ *
+ * 這個檔案的十幾條測試沒有一條釘住它：把 `chargeSeatAddition` 整段移到寄信之後，
+ * 全部保持全綠——而「先扣款、成功才建立邀請」是這整個服務的設計主張，
+ * 反過來就是「人已經進來、錢沒收到」，那筆錢沒有任何流程會回頭補。
+ *
+ * 用呼叫順序而不是原始碼比對：這裡測得到真正的行為（誰先被呼叫），
+ * 比字串比對精確，而且重構搬動程式碼時不會誤報。
+ */
+describe("邀請的 fail-closed 順序", () => {
+  it("扣款成功才建立邀請、才寄信", async () => {
+    const order: string[] = [];
+    asMock(chargeSeatAddition).mockImplementation(async () => {
+      order.push("charge");
+      return { charged: true, amount: 100, seats: 1, orderId: "order-1" };
+    });
+    asMock(teamRepo.createTeamInvitation).mockImplementation(async () => {
+      order.push("create");
+      return { id: "inv-1" };
+    });
+    asMock(sendMail).mockImplementation(async () => {
+      order.push("mail");
+    });
+
+    await invite();
+
+    expect(order).toEqual(["charge", "create", "mail"]);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 扣款失敗即中止：不建立邀請、不寄信。
+   * 這是「先付費、再開門」的另一半——沒有它，前一條只是巧合。
+   */
+  it("扣款失敗時不建立邀請也不寄信", async () => {
+    asMock(chargeSeatAddition).mockRejectedValue(new Error("card declined"));
+
+    await expect(invite()).rejects.toThrow();
+
+    expect(asMock(teamRepo.createTeamInvitation)).not.toHaveBeenCalled();
+    expect(asMock(sendMail)).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Info: (20260818 - Luphia) 免費版人數上限的第二道防線（第三輪 B-1）。
+ *
+ * 邀請端的檢查是第一道，但邀請與接受之間可能隔好幾天：這期間其他人接受了、
+ * 團隊從付費降級成免費、或上限被後台調低，都會讓當初通過的那封邀請
+ * 在此刻不再合法。沒有這一道，「上限」就只是寄信當下的一個快照。
+ */
+describe("接受時的免費版人數上限", () => {
+  const pending = {
+    id: "inv-1",
+    teamId: TEAM.id,
+    team: TEAM,
+    role: TeamRole.VIEWER,
+    status: TEAM_INVITATION_STATUS.PENDING,
+    expiresAt: new Date(NOW + 1000),
+  };
+
+  const mockFreePlan = () =>
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+      planId: "free",
+      status: "ACTIVE",
+      currentPeriodEnd: new Date(NOW + 86_400_000),
+    });
+
+  beforeEach(() => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue(
+      pending as unknown as Awaited<
+        ReturnType<typeof teamRepo.findInvitationByTokenHash>
+      >,
+    );
+  });
+
+  it("免費團隊已滿時擋下接受", async () => {
+    mockFreePlan();
+    // Info: (20260818 - Luphia) 上限 5，已有 5 位成員，再加一位就超過
+    asMock(teamRepo.countMembers).mockResolvedValue(5);
+
+    await expect(
+      acceptInviteByToken({ token: "token", userId: "user-2", nowMs: NOW }),
+    ).rejects.toThrow();
+    expect(asMock(teamRepo.acceptInvitation)).not.toHaveBeenCalled();
+  });
+
+  it("免費團隊未滿時照常接受", async () => {
+    mockFreePlan();
+    asMock(teamRepo.countMembers).mockResolvedValue(3);
+
+    await expect(
+      acceptInviteByToken({ token: "token", userId: "user-2", nowMs: NOW }),
+    ).resolves.toBeDefined();
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 付費方案不受此限：人數由「席次 × 單價」自然封頂，
+   * 而那筆錢已經收過了。
+   */
+  it("付費團隊不受人數上限限制", async () => {
+    asMock(teamRepo.countMembers).mockResolvedValue(999);
+
+    await expect(
+      acceptInviteByToken({ token: "token", userId: "user-2", nowMs: NOW }),
+    ).resolves.toBeDefined();
   });
 });
