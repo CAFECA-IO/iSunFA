@@ -4,6 +4,7 @@ import { join } from "path";
 import { NextRequest } from "next/server";
 import { resolveClientIp } from "@/lib/utils/client_ip";
 import { RATE_LIMIT_RULES, RateLimitBucketEnum } from "@/constants/rate_limit";
+import { enforceInviteRateLimit } from "@/lib/team/invite_rate_limit";
 
 /**
  * Info: (20260818 - Luphia) 邀請連結三支端點的節流與紀錄（PR #6652 第三輪 D）。
@@ -96,22 +97,92 @@ describe("INVITE_TOKEN 限流桶", () => {
  * `@/app/api/...`），因此以原始碼比對釘住。掃描根**明列這三支**：
  * 它不是「找全域違規」的測試，而是「這三個檔案必須各有一道閘」。
  */
-describe("三支邀請端點都掛上限流", () => {
-  it("每一支都呼叫 enforceRateLimit 並使用 INVITE_TOKEN 桶", () => {
-    for (const relative of Object.values(ROUTES)) {
-      const code = codeOf(relative);
-      expect(code).toMatch(/enforceRateLimit\(/);
-      expect(code).toMatch(/RateLimitBucketEnum\.INVITE_TOKEN/);
+/**
+ * Info: (20260818 - Luphia) 限流改成**行為**斷言（第四輪 C 段建議）。
+ *
+ * 原本這一組是文字比對（「檔案裡有沒有出現 enforceRateLimit」），
+ * 那種斷言在邏輯被抽成函式、或桶名改掉之後仍然是綠的。
+ * 現在直接呼叫 `enforceInviteRateLimit`，讓它真的把第 21 次擋下來。
+ */
+describe("enforceInviteRateLimit", () => {
+  const withIp = (ip: string) =>
+    new NextRequest("https://isunfa.com/api/v1/invite/resolve", {
+      headers: { "x-forwarded-for": ip },
+    });
+
+  const PER_MINUTE = RATE_LIMIT_RULES[RateLimitBucketEnum.INVITE_TOKEN][0].max;
+
+  it("有 IP 時，超過每分鐘上限即擋下", () => {
+    // Info: (20260818 - Luphia) 限流器是模組單例，每個測試用獨立 IP 以免互相干擾
+    const ip = "203.0.113.21";
+
+    for (let i = 0; i < PER_MINUTE; i += 1) {
+      expect(enforceInviteRateLimit(withIp(ip))).toBeNull();
+    }
+
+    const blocked = enforceInviteRateLimit(withIp(ip));
+    expect(blocked).not.toBeNull();
+    // Info: (20260818 - Luphia) Retry-After 是「何時可以再試」的唯一線索
+    expect(blocked?.headers.get("Retry-After")).toBeTruthy();
+  });
+
+  it("不同 IP 各自計數，不會互相拖累", () => {
+    for (let i = 0; i < PER_MINUTE; i += 1) {
+      enforceInviteRateLimit(withIp("203.0.113.22"));
+    }
+
+    expect(enforceInviteRateLimit(withIp("203.0.113.23"))).toBeNull();
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 本組最重要的一條：取不到 IP 時**不共用那個小桶**。
+   *
+   * 所有無 `x-forwarded-for` 的流量都是同一個維度（"unknown"）。若沿用
+   * 20/分 的尺寸，全站受邀者每分鐘合計 20 次，第 21 位打開落地頁就是 429——
+   * 而那個桶的註解自己寫著「誤限流在這條路徑上就是可用性事故」。
+   */
+  it("取不到 IP 時用寬鬆的共用桶，不是 20/分", () => {
+    const noIp = () =>
+      new NextRequest("https://isunfa.com/api/v1/invite/resolve");
+
+    for (let i = 0; i < PER_MINUTE + 1; i += 1) {
+      expect(enforceInviteRateLimit(noIp())).toBeNull();
     }
   });
 
   /**
-   * Info: (20260818 - Luphia) 閘要在**做事之前**。
-   * 擋在後面等於「先把邀請作廢，再告訴他太頻繁」。
+   * Info: (20260818 - Luphia) 但仍然**不 fail-open**：寬鬆桶也有上限。
+   * 無法識別呼叫者不等於不限流，只是限得鬆。
    */
+  it("寬鬆桶仍有上限，只是比較寬", () => {
+    const unidentified =
+      RATE_LIMIT_RULES[RateLimitBucketEnum.INVITE_TOKEN_UNIDENTIFIED][0].max;
+    expect(unidentified).toBeGreaterThan(PER_MINUTE);
+    expect(Number.isFinite(unidentified)).toBe(true);
+  });
+});
+
+/**
+ * Info: (20260818 - Luphia) 三支端點都要真的掛上，且閘要在**做事之前**。
+ *
+ * 「有沒有掛上」與「順序」無法在沒有 route handler 測試環境的情況下行為驗證
+ * （`src/__tests__` 裡沒有任何一支匯入 `@/app/api/...`），因此這一組仍是原始碼
+ * 順序比對——但限流**本身**的行為已由上一組真的跑過。
+ */
+describe("三支邀請端點都掛上限流", () => {
+  it("免登入的兩支走共用的邀請限流，accept 以 address 為維度", () => {
+    for (const relative of [ROUTES.resolve, ROUTES.decline]) {
+      expect(codeOf(relative)).toMatch(/enforceInviteRateLimit\(request\)/);
+    }
+    expect(codeOf(ROUTES.accept)).toMatch(
+      /enforceRateLimit\(\s*sessionUser\.address/,
+    );
+    expect(codeOf(ROUTES.accept)).toMatch(/RateLimitBucketEnum\.INVITE_TOKEN/);
+  });
+
   it("decline 的閘排在拒絕邀請之前", () => {
     const code = codeOf(ROUTES.decline);
-    const gate = code.indexOf("enforceRateLimit(");
+    const gate = code.indexOf("enforceInviteRateLimit(");
     const action = code.indexOf("await declineInviteByToken(");
     expect(gate).toBeGreaterThan(-1);
     expect(action).toBeGreaterThan(gate);
@@ -119,22 +190,10 @@ describe("三支邀請端點都掛上限流", () => {
 
   it("resolve 的閘排在查詢邀請之前", () => {
     const code = codeOf(ROUTES.resolve);
-    const gate = code.indexOf("enforceRateLimit(");
+    const gate = code.indexOf("enforceInviteRateLimit(");
     const action = code.indexOf("await resolveInviteByToken(");
     expect(gate).toBeGreaterThan(-1);
     expect(action).toBeGreaterThan(gate);
-  });
-
-  /**
-   * Info: (20260818 - Luphia) 未登入的兩支以 IP 為維度；accept 有身分就用身分
-   * （IP 是整間辦公室共用的，拿它限一個已登入的使用者會誤傷同事）。
-   */
-  it("未登入的兩支用 IP、accept 用 address", () => {
-    expect(codeOf(ROUTES.resolve)).toMatch(/resolveClientIp\(request\)/);
-    expect(codeOf(ROUTES.decline)).toMatch(/resolveClientIp\(request\)/);
-    expect(codeOf(ROUTES.accept)).toMatch(
-      /enforceRateLimit\(\s*sessionUser\.address/,
-    );
   });
 
   // Info: (20260818 - Luphia) 未登入的拒絕要留下呼叫者線索（IP / UA）

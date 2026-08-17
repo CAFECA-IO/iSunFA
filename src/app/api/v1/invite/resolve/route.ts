@@ -3,9 +3,7 @@ import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { resolveInviteByToken } from "@/services/team_invitation.service";
 import { inviteTokenBodySchema } from "@/validators";
-import { enforceRateLimit } from "@/lib/rate_limiter";
-import { RateLimitBucketEnum } from "@/constants/rate_limit";
-import { resolveClientIp } from "@/lib/utils/client_ip";
+import { enforceInviteRateLimit } from "@/lib/team/invite_rate_limit";
 
 /**
  * Info: (20260815 - Luphia) 邀請連結的公開查詢（規範 §4 / P4）。
@@ -28,10 +26,7 @@ import { resolveClientIp } from "@/lib/utils/client_ip";
  */
 export async function POST(request: NextRequest) {
   try {
-    const limited = enforceRateLimit(
-      resolveClientIp(request),
-      RateLimitBucketEnum.INVITE_TOKEN,
-    );
+    const limited = enforceInviteRateLimit(request);
     if (limited) return limited;
 
     const parsed = inviteTokenBodySchema.safeParse(await request.json());

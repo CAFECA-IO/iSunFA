@@ -54,6 +54,18 @@ export enum RateLimitBucketEnum {
    * 而誤限流會讓一個人加不進團隊——那是可用性事故。
    */
   INVITE_TOKEN = "INVITE_TOKEN",
+
+  /**
+   * Info: (20260818 - Luphia) 取不到來源 IP 時的共用桶（第四輪 B-4）。
+   *
+   * `resolveClientIp` 回 `"unknown"` 時所有流量落在同一個維度上。用
+   * `INVITE_TOKEN` 的尺寸（20/分）等於「全站受邀者每分鐘合計 20 次」，
+   * 第 21 位打開落地頁就是 429——而誤限流在這條路徑上就是可用性事故。
+   *
+   * 這個桶只擋失控流量的絕對上限，不假裝能區分使用者（那個狀態下確實區分不了）。
+   * 仍然不 fail-open：無法識別呼叫者不等於不限流，只是限得鬆。
+   */
+  INVITE_TOKEN_UNIDENTIFIED = "INVITE_TOKEN_UNIDENTIFIED",
 }
 
 export interface IRateLimitWindow {
@@ -100,6 +112,16 @@ export const RATE_LIMIT_RULES: Record<RateLimitBucketEnum, IRateLimitWindow[]> =
     [RateLimitBucketEnum.INVITE_TOKEN]: [
       { windowMs: MINUTE_MS, max: envInt("INVITE_RL_PER_MINUTE", 20) },
       { windowMs: DAY_MS, max: envInt("INVITE_RL_PER_DAY", 200) },
+    ],
+    [RateLimitBucketEnum.INVITE_TOKEN_UNIDENTIFIED]: [
+      {
+        windowMs: MINUTE_MS,
+        max: envInt("INVITE_RL_UNIDENTIFIED_PER_MINUTE", 300),
+      },
+      {
+        windowMs: DAY_MS,
+        max: envInt("INVITE_RL_UNIDENTIFIED_PER_DAY", 5_000),
+      },
     ],
     [RateLimitBucketEnum.PRF]: [
       { windowMs: MINUTE_MS, max: envInt("PRF_RL_PER_MINUTE", 20) },

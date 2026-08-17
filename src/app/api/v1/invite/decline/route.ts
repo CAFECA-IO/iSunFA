@@ -3,8 +3,7 @@ import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { declineInviteByToken } from "@/services/team_invitation.service";
 import { inviteTokenBodySchema } from "@/validators";
-import { enforceRateLimit } from "@/lib/rate_limiter";
-import { RateLimitBucketEnum } from "@/constants/rate_limit";
+import { enforceInviteRateLimit } from "@/lib/team/invite_rate_limit";
 import { resolveClientIp } from "@/lib/utils/client_ip";
 
 /**
@@ -26,8 +25,7 @@ export async function POST(request: NextRequest) {
      * 不要求登入，而一次成功的呼叫就讓一封邀請作廢、席次當場釋出。
      * 拿到一批轉寄出去的連結可以無成本地一封封拒掉。
      */
-    const ip = resolveClientIp(request);
-    const limited = enforceRateLimit(ip, RateLimitBucketEnum.INVITE_TOKEN);
+    const limited = enforceInviteRateLimit(request);
     if (limited) return limited;
 
     const parsed = inviteTokenBodySchema.safeParse(await request.json());
@@ -36,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await declineInviteByToken(parsed.data.token, Date.now(), {
-      ip,
+      ip: resolveClientIp(request),
       userAgent: request.headers.get("user-agent"),
     });
     return jsonOk(result);
