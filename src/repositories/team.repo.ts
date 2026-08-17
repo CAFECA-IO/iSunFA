@@ -311,17 +311,40 @@ export class TeamRepository implements ITeamRepository {
    * 而邀請列裡有受邀者的信箱，那不該為了畫一個標記就一併吐出去。
    */
   async listMismatchedAcceptorIds(teamId: string): Promise<string[]> {
+    /**
+     * Info: (20260818 - Luphia) 只看**每個人最近一次**加入（第四輪 B-4）。
+     *
+     * 原本查的是該團隊歷來所有 `MISMATCHED` 的邀請列，於是一月以不符的信箱
+     * 加入、被移出、二月以正確信箱重新加入並記為 `MATCHED` 的人，
+     * 清單上仍然掛著標記——而且沒有任何操作能清掉它。
+     * 一個清不掉的警示等於一個永久的誤報。
+     *
+     * 因此取全部已接受的邀請（含比對結果），在程式裡挑每人最新的那一筆。
+     * 用 `acceptedAt` 而非 `updatedAt`：後者任何後續更新都會動。
+     */
     const rows = await prisma.teamInvitation.findMany({
-      where: {
-        teamId,
-        acceptedEmailMatch: INVITE_EMAIL_MATCH.MISMATCHED,
-        acceptedByUserId: { not: null },
+      where: { teamId, acceptedByUserId: { not: null } },
+      select: {
+        acceptedByUserId: true,
+        acceptedEmailMatch: true,
+        acceptedAt: true,
       },
-      select: { acceptedByUserId: true },
+      orderBy: { acceptedAt: "desc" },
     });
-    return rows
-      .map((row) => row.acceptedByUserId)
-      .filter((id): id is string => Boolean(id));
+
+    const latestByUser = new Map<string, string | null>();
+    for (const row of rows) {
+      const userId = row.acceptedByUserId;
+      if (!userId) continue;
+      // Info: (20260818 - Luphia) 已按 acceptedAt 遞減排序，先看到的就是最新的那一筆
+      if (!latestByUser.has(userId)) {
+        latestByUser.set(userId, row.acceptedEmailMatch);
+      }
+    }
+
+    return [...latestByUser.entries()]
+      .filter(([, match]) => match === INVITE_EMAIL_MATCH.MISMATCHED)
+      .map(([userId]) => userId);
   }
 
   async listTeamInvitations(teamId: string, status: string) {

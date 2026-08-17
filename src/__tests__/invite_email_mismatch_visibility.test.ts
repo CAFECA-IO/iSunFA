@@ -36,39 +36,58 @@ const MEMBERS = [
 ];
 
 describe("listMismatchedAcceptorIds", () => {
-  it("只查這個團隊、且只查不符的已接受邀請", async () => {
+  it("只查這個團隊已接受的邀請，並依接受時間遞減", async () => {
     await teamRepo.listMismatchedAcceptorIds("team-1");
 
     const args = findManyMock.mock.calls[0][0] as {
       where: Record<string, unknown>;
-      select: Record<string, unknown>;
+      orderBy: Record<string, unknown>;
     };
     expect(args.where).toEqual({
       teamId: "team-1",
-      acceptedEmailMatch: INVITE_EMAIL_MATCH.MISMATCHED,
       acceptedByUserId: { not: null },
     });
+    /**
+     * Info: (20260818 - Luphia) 排序是「取每人最新一筆」的依據（第四輪 B-4）。
+     * 少了它，挑到的是資料庫回傳順序裡的任意一筆。
+     */
+    expect(args.orderBy).toEqual({ acceptedAt: "desc" });
   });
 
   /**
-   * Info: (20260818 - Luphia) 只取 `acceptedByUserId`。
+   * Info: (20260818 - Luphia) 只取判定需要的三欄。
    *
    * 邀請列裡有受邀者的信箱，而呼叫端要的只是「這個人要不要標一下」——
    * 為了畫一個標記而把別人的信箱一併撈出來，是不必要的暴露。
    */
-  it("只取接受者的 userId，不撈邀請的其他欄位", async () => {
+  it("只取判定所需的欄位，不撈受邀者的信箱", async () => {
     await teamRepo.listMismatchedAcceptorIds("team-1");
 
     const args = findManyMock.mock.calls[0][0] as {
       select: Record<string, unknown>;
     };
-    expect(args.select).toEqual({ acceptedByUserId: true });
+    expect(args.select).toEqual({
+      acceptedByUserId: true,
+      acceptedEmailMatch: true,
+      acceptedAt: true,
+    });
   });
 
-  it("回傳接受者的 userId 清單", async () => {
+  const accepted = (
+    userId: string | null,
+    match: string | null,
+    acceptedAt: string,
+  ) => ({
+    acceptedByUserId: userId,
+    acceptedEmailMatch: match,
+    acceptedAt: new Date(acceptedAt),
+  });
+
+  it("回傳不符者的 userId 清單", async () => {
     findManyMock.mockResolvedValue([
-      { acceptedByUserId: "u1" },
-      { acceptedByUserId: "u9" },
+      accepted("u1", INVITE_EMAIL_MATCH.MISMATCHED, "2026-08-10"),
+      accepted("u2", INVITE_EMAIL_MATCH.MATCHED, "2026-08-09"),
+      accepted("u9", INVITE_EMAIL_MATCH.MISMATCHED, "2026-08-08"),
     ]);
 
     expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual([
@@ -77,11 +96,46 @@ describe("listMismatchedAcceptorIds", () => {
     ]);
   });
 
+  /**
+   * Info: (20260818 - Luphia) 本組最重要的一條：**只看最近一次加入**（第四輪 B-4）。
+   *
+   * 一月以不符的信箱加入、被移出、二月以正確信箱重新加入並記為 MATCHED——
+   * 舊寫法會永遠掛著標記，而且沒有任何操作能清掉它。
+   */
+  it("重新加入且相符時不再標記", async () => {
+    findManyMock.mockResolvedValue([
+      accepted("u1", INVITE_EMAIL_MATCH.MATCHED, "2026-02-01"),
+      accepted("u1", INVITE_EMAIL_MATCH.MISMATCHED, "2026-01-01"),
+    ]);
+
+    expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual([]);
+  });
+
+  // Info: (20260818 - Luphia) 反向也要成立：最近一次不符就要標，即使先前相符過
+  it("最近一次不符時仍要標記", async () => {
+    findManyMock.mockResolvedValue([
+      accepted("u1", INVITE_EMAIL_MATCH.MISMATCHED, "2026-02-01"),
+      accepted("u1", INVITE_EMAIL_MATCH.MATCHED, "2026-01-01"),
+    ]);
+
+    expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual(["u1"]);
+  });
+
+  // Info: (20260818 - Luphia) 位址邀請沒有可比對的信箱（null），不是「不符」
+  it("比對結果為 null 或 UNAVAILABLE 都不標記", async () => {
+    findManyMock.mockResolvedValue([
+      accepted("u1", null, "2026-08-10"),
+      accepted("u2", INVITE_EMAIL_MATCH.UNAVAILABLE, "2026-08-10"),
+    ]);
+
+    expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual([]);
+  });
+
   // Info: (20260818 - Luphia) 併發下可能讀到尚未寫入接受者的列；null 不該變成 "null" 字串
   it("濾掉沒有接受者的列", async () => {
     findManyMock.mockResolvedValue([
-      { acceptedByUserId: null },
-      { acceptedByUserId: "u1" },
+      accepted(null, INVITE_EMAIL_MATCH.MISMATCHED, "2026-08-10"),
+      accepted("u1", INVITE_EMAIL_MATCH.MISMATCHED, "2026-08-09"),
     ]);
 
     expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual(["u1"]);
