@@ -22,3 +22,18 @@ export function canGrantRole(
   if (targetRole !== TeamRole.OWNER) return true;
   return operatorRole === TeamRole.OWNER;
 }
+
+/**
+ * Info: (20260818 - Luphia) 管理職＝OWNER 或 ADMIN。
+ *
+ * 這個組合原本以字面字串散落在各端點（`role !== "OWNER" && role !== "ADMIN"`），
+ * 每一處都是一次拼錯的機會，而拼錯的方向是「權限放寬」。
+ */
+export const TEAM_MANAGER_ROLES: readonly TeamRole[] = [
+  TeamRole.OWNER,
+  TeamRole.ADMIN,
+];
+
+export function isTeamManagerRole(role: string | null | undefined): boolean {
+  return TEAM_MANAGER_ROLES.includes(role as TeamRole);
+}

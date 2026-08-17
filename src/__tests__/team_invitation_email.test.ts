@@ -18,6 +18,7 @@ import { sendMail, MailNotConfiguredError } from "@/services/mail.service";
 import { systemSettingService } from "@/services/system_setting.service";
 import { hashInviteToken } from "@/lib/team/invite_token";
 import { INVITE_EMAIL_MATCH, TEAM_INVITATION_STATUS } from "@/constants/status";
+import { logger } from "@/lib/utils/logger";
 import { TeamRole } from "@/constants/team";
 
 /**
@@ -80,6 +81,19 @@ jest.mock("@/services/mail.service", () => {
     MailNotConfiguredError: MailNotConfiguredErrorMock,
   };
 });
+
+/**
+ * Info: (20260818 - Luphia) 信箱不符要**當下就可觀測**（第三輪 C-2）：
+ * 成員清單上的標記是事後查核，告警紀錄才能接上監控。
+ */
+jest.mock("@/lib/utils/logger", () => ({
+  logger: {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
 
 jest.mock("@/services/system_setting.service", () => ({
   systemSettingService: {
@@ -460,6 +474,61 @@ describe("acceptInviteByToken", () => {
     expect(asMock(teamRepo.acceptInvitation).mock.calls[0][0].emailMatch).toBe(
       INVITE_EMAIL_MATCH.MISMATCHED,
     );
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 不符要留下**可接上監控**的紀錄（第三輪 C-2）。
+   *
+   * 只寫進 `acceptedEmailMatch` 欄位的話，要發現「連結被轉寄出去、被別人用掉」
+   * 得有人主動去翻那張表。這條保證它同時進 log。
+   */
+  it("信箱不符時留下告警紀錄", async () => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue({
+      ...pending,
+      inviteeEmail: "friend@example.com",
+    } as unknown as Awaited<
+      ReturnType<typeof teamRepo.findInvitationByTokenHash>
+    >);
+    asMock(userIdentityRepo.findByUserId).mockResolvedValue([
+      { email: "someone.else@example.com", emailVerified: true },
+    ]);
+
+    await acceptInviteByToken({ token: "token", userId: "user-2", nowMs: NOW });
+
+    expect(asMock(logger.warn)).toHaveBeenCalledTimes(1);
+    const [, context] = asMock(logger.warn).mock.calls[0] as [
+      string,
+      Record<string, unknown>,
+    ];
+    expect(context).toEqual({
+      teamId: TEAM.id,
+      invitationId: pending.id,
+      acceptedByUserId: "user-2",
+    });
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 相符與「沒有可比對的信箱」都不該告警。
+   * passkey 註冊的帳號永遠沒有信箱可比，那是本站的主要註冊方式——
+   * 對它告警等於讓這個訊號變成噪音，而噪音等於沒有訊號。
+   */
+  it("相符或無信箱可比時不留告警", async () => {
+    asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue({
+      ...pending,
+      inviteeEmail: "friend@example.com",
+    } as unknown as Awaited<
+      ReturnType<typeof teamRepo.findInvitationByTokenHash>
+    >);
+    asMock(userIdentityRepo.findByUserId).mockResolvedValue([
+      { email: "friend@example.com", emailVerified: true },
+    ]);
+    await acceptInviteByToken({ token: "token", userId: "user-2", nowMs: NOW });
+
+    // Info: (20260818 - Luphia) 沒有任何第三方綁定＝UNAVAILABLE
+    asMock(userIdentityRepo.findByUserId).mockResolvedValue([]);
+    await acceptInviteByToken({ token: "token", userId: "user-3", nowMs: NOW });
+
+    expect(asMock(logger.warn)).not.toHaveBeenCalled();
   });
 
   /**

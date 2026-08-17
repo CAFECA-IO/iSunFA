@@ -35,6 +35,10 @@ export const teamManagement = {
     "You will be asked to authenticate via Passkey to sign this transaction on-chain.",
   signing: "Signing...",
   invite_via_fido2: "Invite via FIDO2",
+  // Info: (20260818 - Luphia) 以「信箱不符」之邀請加入的成員標記（第三輪 C-2），僅管理職可見
+  email_mismatch: "email mismatch",
+  email_mismatch_hint:
+    "The account that accepted this invitation has a verified email different from the invited one. They may have signed in with another email, or the invitation link was forwarded.",
   roles: {
     OWNER: "Owner",
     ADMIN: "Admin",

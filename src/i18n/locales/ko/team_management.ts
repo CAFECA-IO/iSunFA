@@ -35,6 +35,10 @@ export const teamManagement = {
     "이 트랜잭션을 온체인에서 서명하려면 Passkey를 통한 인증이 필요합니다.",
   signing: "서명 중...",
   invite_via_fido2: "FIDO2로 초대",
+  // Info: (20260818 - Luphia) 以「信箱不符」之邀請加入的成員標記（第三輪 C-2），僅管理職可見
+  email_mismatch: "이메일 불일치",
+  email_mismatch_hint:
+    "초대를 수락한 계정의 인증된 이메일이 초대한 이메일과 다릅니다. 본인이 다른 이메일로 로그인했을 수도 있고, 초대 링크가 전달되었을 수도 있습니다.",
   roles: {
     OWNER: "소유자",
     ADMIN: "관리자",

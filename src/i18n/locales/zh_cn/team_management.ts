@@ -35,6 +35,10 @@ export const teamManagement = {
     "您需要通过通行密钥 (Passkey) 进行验证并在链上签署此交易。",
   signing: "签署中...",
   invite_via_fido2: "使用 FIDO2 发送邀请",
+  // Info: (20260818 - Luphia) 以「信箱不符」之邀請加入的成員標記（第三輪 C-2），僅管理職可見
+  email_mismatch: "邮箱不符",
+  email_mismatch_hint:
+    "接受邀请的账号，其已验证邮箱与受邀邮箱不同。可能是本人改用其他邮箱登录，也可能是邀请链接被转发出去。",
   roles: {
     OWNER: "拥有者",
     ADMIN: "管理员",

@@ -1,5 +1,5 @@
 import { logger } from "@/lib/utils/logger";
-import { TEAM_INVITATION_STATUS } from "@/constants/status";
+import { INVITE_EMAIL_MATCH, TEAM_INVITATION_STATUS } from "@/constants/status";
 import { TeamRole } from "@/constants/team";
 import { SystemSettingKey } from "@/constants/system_setting";
 import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
@@ -495,6 +495,24 @@ export async function acceptInviteByToken(
    * 只擋免費版：付費方案的人數由「席次 × 單價」自然封頂，而那筆錢已經收過了。
    */
   await assertFreePlanCapacityOnAccept(invitation.teamId, nowMs);
+
+  /**
+   * Info: (20260818 - Luphia) 信箱不符時**當場告警**（第三輪 C-2）。
+   *
+   * 這個欄位先前是純寫入：DB 老實記下 `MISMATCHED`，而沒有任何查詢、
+   * API 或畫面讀它——稽核價值等於零。既然接受邀請不綁身分是刻意的
+   * （模型是 bearer token），這個訊號就更需要被看見。
+   *
+   * 兩層：這裡記 warn（立即可觀測、可接到告警系統），
+   * 另一層在成員清單上標給管理職看（見 members 端點）。
+   */
+  if (emailMatch === INVITE_EMAIL_MATCH.MISMATCHED) {
+    logger.warn("invitation accepted by a different verified email", {
+      teamId: invitation.teamId,
+      invitationId: invitation.id,
+      acceptedByUserId: userId,
+    });
+  }
 
   const member = await teamRepo.acceptInvitation({
     inviteId: invitation.id,

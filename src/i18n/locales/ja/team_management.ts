@@ -35,6 +35,10 @@ export const teamManagement = {
     "このトランザクションをオンチェーンで署名するには、Passkeyでの認証が必要です。",
   signing: "署名中...",
   invite_via_fido2: "FIDO2を使って招待",
+  // Info: (20260818 - Luphia) 以「信箱不符」之邀請加入的成員標記（第三輪 C-2），僅管理職可見
+  email_mismatch: "メール不一致",
+  email_mismatch_hint:
+    "招待を承諾したアカウントの確認済みメールが、招待したメールと異なります。本人が別のメールでログインした可能性も、招待リンクが転送された可能性もあります。",
   roles: {
     OWNER: "オーナー",
     ADMIN: "管理者",

@@ -1,0 +1,134 @@
+import { describe, it, expect, beforeEach } from "@jest/globals";
+import type { jest as JestType } from "@jest/globals";
+declare const jest: typeof JestType;
+import { attachEmailMismatch } from "@/lib/team/member_visibility";
+import { teamRepo } from "@/repositories/team.repo";
+import { TeamRole } from "@/constants/team";
+import { INVITE_EMAIL_MATCH } from "@/constants/status";
+import { prisma } from "@/lib/prisma";
+
+/**
+ * Info: (20260818 - Luphia) 信箱不符必須被看見（PR #6652 第三輪 C-2）。
+ *
+ * `acceptedEmailMatch` 先前是純寫入欄位——寫得很認真，沒有任何讀者。
+ * 稽核欄位沒有讀者等於沒有稽核：連結被轉寄出去、被別人用掉，
+ * 資料庫裡留了痕跡而沒有人會看到。
+ *
+ * 這一檔釘住兩件事：查得出來（repo），以及只給有權處置的人看（可見性規則）。
+ */
+
+jest.mock("@/lib/prisma", () => ({
+  prisma: { teamInvitation: { findMany: jest.fn(async () => []) } },
+}));
+
+const findManyMock = prisma.teamInvitation.findMany as unknown as ReturnType<
+  typeof jest.fn
+>;
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  findManyMock.mockResolvedValue([]);
+});
+
+const MEMBERS = [
+  { id: "m1", userId: "u1", role: TeamRole.EDITOR },
+  { id: "m2", userId: "u2", role: TeamRole.VIEWER },
+];
+
+describe("listMismatchedAcceptorIds", () => {
+  it("只查這個團隊、且只查不符的已接受邀請", async () => {
+    await teamRepo.listMismatchedAcceptorIds("team-1");
+
+    const args = findManyMock.mock.calls[0][0] as {
+      where: Record<string, unknown>;
+      select: Record<string, unknown>;
+    };
+    expect(args.where).toEqual({
+      teamId: "team-1",
+      acceptedEmailMatch: INVITE_EMAIL_MATCH.MISMATCHED,
+      acceptedByUserId: { not: null },
+    });
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 只取 `acceptedByUserId`。
+   *
+   * 邀請列裡有受邀者的信箱，而呼叫端要的只是「這個人要不要標一下」——
+   * 為了畫一個標記而把別人的信箱一併撈出來，是不必要的暴露。
+   */
+  it("只取接受者的 userId，不撈邀請的其他欄位", async () => {
+    await teamRepo.listMismatchedAcceptorIds("team-1");
+
+    const args = findManyMock.mock.calls[0][0] as {
+      select: Record<string, unknown>;
+    };
+    expect(args.select).toEqual({ acceptedByUserId: true });
+  });
+
+  it("回傳接受者的 userId 清單", async () => {
+    findManyMock.mockResolvedValue([
+      { acceptedByUserId: "u1" },
+      { acceptedByUserId: "u9" },
+    ]);
+
+    expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual([
+      "u1",
+      "u9",
+    ]);
+  });
+
+  // Info: (20260818 - Luphia) 併發下可能讀到尚未寫入接受者的列；null 不該變成 "null" 字串
+  it("濾掉沒有接受者的列", async () => {
+    findManyMock.mockResolvedValue([
+      { acceptedByUserId: null },
+      { acceptedByUserId: "u1" },
+    ]);
+
+    expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual(["u1"]);
+  });
+});
+
+describe("attachEmailMismatch", () => {
+  it("管理職看得到標記，且只標在對應的那位成員上", () => {
+    const result = attachEmailMismatch(MEMBERS, TeamRole.OWNER, ["u2"]);
+
+    expect(result).toEqual([
+      { id: "m1", userId: "u1", role: TeamRole.EDITOR, emailMismatch: false },
+      { id: "m2", userId: "u2", role: TeamRole.VIEWER, emailMismatch: true },
+    ]);
+  });
+
+  // Info: (20260818 - Luphia) ADMIN 同樣有處置成員的權限，因此同樣看得到（產品決定 20260817）
+  it("ADMIN 也看得到", () => {
+    const result = attachEmailMismatch(MEMBERS, TeamRole.ADMIN, ["u1"]);
+    expect(result[0]).toHaveProperty("emailMismatch", true);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 本檔最重要的一條：非管理職拿到的是**原樣的清單**。
+   *
+   * 刻意不給 `emailMismatch: false`——一個恆為 false 的欄位會讓前端
+   * 把「沒有標記」讀成「已驗證相符」，而一般成員根本沒有這項資訊。
+   */
+  it("非管理職完全不會拿到這個欄位", () => {
+    for (const role of [TeamRole.EDITOR, TeamRole.VIEWER, null, undefined]) {
+      const result = attachEmailMismatch(MEMBERS, role, ["u1", "u2"]);
+      for (const member of result) {
+        expect(member).not.toHaveProperty("emailMismatch");
+      }
+    }
+  });
+
+  it("不改動傳進來的陣列", () => {
+    const input = [{ id: "m1", userId: "u1" }];
+    attachEmailMismatch(input, TeamRole.OWNER, ["u1"]);
+    expect(input[0]).not.toHaveProperty("emailMismatch");
+  });
+
+  it("沒有不符的成員時，每個人都是 false", () => {
+    const result = attachEmailMismatch(MEMBERS, TeamRole.OWNER, []);
+    expect(result.every((m) => "emailMismatch" in m && !m.emailMismatch)).toBe(
+      true,
+    );
+  });
+});

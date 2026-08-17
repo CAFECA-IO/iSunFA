@@ -43,6 +43,11 @@ interface ITeamMember {
   userId: string;
   role: string;
   user?: { address: string; name: string | null; imageUrl: string | null };
+  /**
+   * Info: (20260818 - Luphia) 這位成員是以「信箱不符」的邀請加入的（第三輪 C-2）。
+   * 後端只對管理職回傳此欄位，因此對一般成員恆為 undefined。
+   */
+  emailMismatch?: boolean;
 }
 interface IPendingInvitation {
   id: string;
@@ -764,6 +769,21 @@ export default function TeamManagementPage() {
                             ) : (
                               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
                                 {t("team_management.roles." + member.role)}
+                              </span>
+                            )}
+                            {/**
+                             * Info: (20260818 - Luphia) 信箱不符的標記（第三輪 C-2）。
+                             *
+                             * 接受邀請不綁身分是刻意的，所以這件事本身不是錯誤，
+                             * 也不該擋人加入——但管理職有權知道「這個人是這樣進來的」。
+                             * 用中性的黃色與說明文字，而不是紅色的錯誤樣式。
+                             */}
+                            {member.emailMismatch && (
+                              <span
+                                className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700"
+                                title={t("team_management.email_mismatch_hint")}
+                              >
+                                {t("team_management.email_mismatch")}
                               </span>
                             )}
                             <div className="flex items-center space-x-1">

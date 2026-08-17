@@ -213,6 +213,8 @@ model TeamInvitation {
 > 因此實際成立的只有 **token 持有**。信寄到哪個信箱，與最後是誰拿著連結完成註冊，中間沒有任何系統性的連結；轉寄一封信就足以讓另一個人加入。這是這條路徑的信任模型，不是缺陷清單上的一項——要更強的保證，唯一的辦法是回到位址邀請（身分綁在錢包上）。
 >
 > 已做的是**如實記錄**（2026-08-17）：`TeamInvitation.acceptedByUserId` / `acceptedAt` 記下是哪個帳號用掉了這封邀請，`acceptedEmailMatch` 記下比對結果（`MATCHED` / `MISMATCHED` / `UNAVAILABLE`，位址邀請為 null）。**記錄不阻擋**——工作信箱收到邀請、用個人 Google 帳號登入是完全正常的行為。`UNAVAILABLE` 是常態而非異常，因為 passkey 帳號本來就沒有信箱。
+>
+> **而記錄要有讀者**（2026-08-18）：`acceptedEmailMatch` 原本是純寫入欄位——沒有任何查詢、API 或畫面讀它，稽核價值等於零。現在有兩個讀者：接受時 `MISMATCHED` 會寫一筆 `logger.warn`（可接上監控），以及成員清單對**管理職**（OWNER / ADMIN）附上 `emailMismatch` 旗標並在成員卡片上標示。非管理職拿到的清單完全沒有這個欄位——不是 `false`，而是沒有這一欄：一個恆為 false 的欄位會讓前端把「沒有標記」讀成「已驗證相符」。
 
 安全與濫用防護：
 

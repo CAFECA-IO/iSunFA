@@ -7,6 +7,7 @@ import {
   TeamRole,
 } from "@/generated";
 import {
+  INVITE_EMAIL_MATCH,
   TEAM_INVITATION_STATUS,
   type InviteEmailMatch,
 } from "@/constants/status";
@@ -79,6 +80,7 @@ export interface ITeamRepository {
    * `Omit` 就會把新欄位默默納入這個型別，而 select 沒有選它——
    * 型別說有、實際是 undefined，正是這裡最不該發生的事。
    */
+  listMismatchedAcceptorIds(teamId: string): Promise<string[]>;
   listTeamInvitations(
     teamId: string,
     status: string,
@@ -294,6 +296,29 @@ export class TeamRepository implements ITeamRepository {
    * 而這支的呼叫端是「團隊任一成員都讀得到」的端點。雜湊本身無法反推回 token，
    * 但一把鑰匙的指紋沒有任何理由離開伺服器。
    */
+  /**
+   * Info: (20260818 - Luphia) 以「信箱不符」之邀請加入的成員（第三輪 C-2）。
+   *
+   * `acceptedEmailMatch` 先前是純寫入欄位——DB 老實記下 `MISMATCHED`，
+   * 而沒有任何查詢、API 或畫面讀它，稽核價值等於零。
+   *
+   * 回 userId 集合而不是整列：呼叫端要的只是「這個人要不要標一下」，
+   * 而邀請列裡有受邀者的信箱，那不該為了畫一個標記就一併吐出去。
+   */
+  async listMismatchedAcceptorIds(teamId: string): Promise<string[]> {
+    const rows = await prisma.teamInvitation.findMany({
+      where: {
+        teamId,
+        acceptedEmailMatch: INVITE_EMAIL_MATCH.MISMATCHED,
+        acceptedByUserId: { not: null },
+      },
+      select: { acceptedByUserId: true },
+    });
+    return rows
+      .map((row) => row.acceptedByUserId)
+      .filter((id): id is string => Boolean(id));
+  }
+
   async listTeamInvitations(teamId: string, status: string) {
     return prisma.teamInvitation.findMany({
       where: { teamId, status },

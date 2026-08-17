@@ -6,7 +6,8 @@ import { teamRepo } from "@/repositories/team.repo";
 import { chargeSeatAddition } from "@/services/team_seat.service";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
-import { TeamRole } from "@/constants/team";
+import { TeamRole, isTeamManagerRole } from "@/constants/team";
+import { attachEmailMismatch } from "@/lib/team/member_visibility";
 
 export async function GET(
   request: NextRequest,
@@ -29,7 +30,21 @@ export async function GET(
     }
 
     const members = await teamRepo.listTeamMember(teamId);
-    return jsonOk(members);
+
+    /**
+     * Info: (20260818 - Luphia) 標出「以信箱不符的邀請加入」的成員（第三輪 C-2）。
+     *
+     * 接受邀請不綁身分是刻意的（`User` 沒有 email 欄位，模型是 bearer token），
+     * 所以這個訊號更需要被看見：轉寄出去的連結被外人用掉時，DB 會記下
+     * `MISMATCHED`，而在此之前沒有任何地方讀它。
+     *
+     * **只給管理職**：這是關於「某位成員怎麼進來的」的資訊，
+     * 一般成員沒有對應的問題，也沒有處置的權限。
+     */
+    const mismatched = isTeamManagerRole(member.role)
+      ? await teamRepo.listMismatchedAcceptorIds(teamId)
+      : [];
+    return jsonOk(attachEmailMismatch(members, member.role, mismatched));
   } catch (error) {
     console.error("[API] /team/[team_id]/members GET error:", error);
     return jsonFail(API_ERRORS.IS_UNKNOWN);
