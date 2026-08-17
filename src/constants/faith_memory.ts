@@ -70,3 +70,15 @@ export const FAITH_MEMORY_EXTRACTION_MAX_OUTPUT_TOKENS = 512;
 
 // Info: (20260818 - Luphia) 萃取 prompt 的固定開銷（指令與分隔符），估算用
 export const FAITH_MEMORY_EXTRACTION_OVERHEAD_TOKENS = 300;
+
+/**
+ * Info: (20260818 - Luphia) 萃取的逾時上限（第三輪 C-11）。
+ *
+ * 萃取跑在回覆之後、且被 `await`，因此它的耗時會**整段加進使用者感受到的延遲**。
+ * 規範 §4.2 說它是「背景任務」，實際上是同步阻塞——真正的背景化需要一個工作佇列
+ * （而且會讓它脫離本輪的計費範圍，那是 A-3 剛修好的東西）。
+ *
+ * 折衷是把最壞情況縮小：對話用的 45 秒是為了長回覆，而萃取的輸出上限只有
+ * 512 tokens，用不到那麼久。逾時即放棄——萃取失敗本來就不影響回覆。
+ */
+export const FAITH_MEMORY_EXTRACTION_TIMEOUT_MS = 10_000;

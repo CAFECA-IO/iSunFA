@@ -11,6 +11,7 @@ import {
 } from "@/services/team_invitation.service";
 import { teamRepo } from "@/repositories/team.repo";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
+import { paymentRepo } from "@/repositories/payment.repo";
 import { userIdentityRepo } from "@/repositories/user_identity.repo";
 import { chargeSeatAddition } from "@/services/team_seat.service";
 import { sendMail, MailNotConfiguredError } from "@/services/mail.service";
@@ -47,10 +48,15 @@ jest.mock("@/repositories/team.repo", () => ({
 
 jest.mock("@/repositories/user_identity.repo", () => ({
   userIdentityRepo: {
+    // Info: (20260818 - Luphia) 邀請前確認對方是否已是成員（第三輪 C-4）
+    findByEmail: jest.fn(async () => []),
     findByUserId: jest.fn(async () => []),
   },
 }));
 
+jest.mock("@/repositories/payment.repo", () => ({
+  paymentRepo: { updateOrderMintFailed: jest.fn() },
+}));
 jest.mock("@/repositories/team_subscription.repo", () => ({
   teamSubscriptionRepo: { getByTeamId: jest.fn() },
 }));
@@ -118,6 +124,7 @@ beforeEach(() => {
     id: "member-1",
   } as unknown as Awaited<ReturnType<typeof teamRepo.acceptInvitation>>);
   asMock(teamRepo.countMembers).mockResolvedValue(1);
+  asMock(userIdentityRepo.findByEmail).mockResolvedValue([]);
   /**
    * Info: (20260818 - Luphia) 預設付費方案：接受時的免費版人數檢查提早返回。
    * 個別測試要驗那道防線時再改成 free（第三輪 B-1）。
@@ -902,5 +909,68 @@ describe("接受時的免費版人數上限", () => {
     await expect(
       acceptInviteByToken({ token: "token", userId: "user-2", nowMs: NOW }),
     ).resolves.toBeDefined();
+  });
+});
+
+/**
+ * Info: (20260818 - Luphia) 邀請前的兩道檢查與建單失敗的處置（第三輪 C-3 / C-4）。
+ */
+describe("邀請的前置檢查與失敗處置", () => {
+  /**
+   * Info: (20260818 - Luphia) C-4：已經是成員就不該再收一次席次費、再寄一封信。
+   * 位址路徑早就有這道檢查，email 路徑漏了——結果是那封 PENDING 邀請
+   * 佔住一席直到七天後逾期，而畫面顯示「邀請成功」。
+   */
+  it("對方已是成員時不扣款也不寄信", async () => {
+    asMock(userIdentityRepo.findByEmail).mockResolvedValue([
+      { userId: "user-9" },
+    ]);
+    asMock(teamRepo.getTeamMember).mockResolvedValue({ id: "member-9" });
+
+    await expect(invite()).rejects.toThrow();
+
+    expect(asMock(chargeSeatAddition)).not.toHaveBeenCalled();
+    expect(asMock(sendMail)).not.toHaveBeenCalled();
+  });
+
+  // Info: (20260818 - Luphia) 查不到綁定（passkey 註冊者）時照常往下走
+  it("查不到對應帳號時照常邀請", async () => {
+    asMock(userIdentityRepo.findByEmail).mockResolvedValue([]);
+
+    await expect(invite()).resolves.toBeDefined();
+  });
+
+  /**
+   * Info: (20260818 - Luphia) C-3：`pendingKey` 的唯一鍵在並發時**預期**會丟 P2002。
+   * 那是這條路徑上唯一被設計成「一定會發生」的錯誤，先前卻是唯一沒被處理的，
+   * 會一路落到 IS_UNKNOWN 500。
+   */
+  it("並發撞唯一鍵時回「已有待處理的邀請」而不是 500", async () => {
+    asMock(teamRepo.createTeamInvitation).mockRejectedValue(
+      Object.assign(new Error("unique"), { code: "P2002" }),
+    );
+
+    const error = await invite().catch((e: unknown) => e);
+    // Info: (20260818 - Luphia) VA000033 = VA_AN_INVITATION_IS_ALREADY_PE
+    expect(error).toMatchObject({ code: "VA000033" });
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 其餘的建單失敗＝已收款未履行，要把訂單標記出來。
+   * 不標的話這筆會停在 COMPLETED、席次也加了，而邀請不存在——沒有任何查詢篩得出它。
+   */
+  it("建立邀請失敗時把已扣款的訂單標為未履行", async () => {
+    asMock(teamRepo.createTeamInvitation).mockRejectedValue(
+      new Error("db down"),
+    );
+
+    await expect(invite()).rejects.toThrow();
+
+    expect(asMock(paymentRepo.updateOrderMintFailed)).toHaveBeenCalledWith(
+      "order-1",
+      expect.objectContaining({ teamId: TEAM.id }),
+      expect.anything(),
+      expect.stringContaining("invitation creation failed"),
+    );
   });
 });

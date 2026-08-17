@@ -81,6 +81,7 @@ export const teamManagement = {
     retry: "重试",
     quota_5h: "每 5 小时额度",
     quota_week: "每周额度",
+    documents_memory_link: "文件与记忆",
     balance_title: "团队钱包",
     pool_balance: "未分配点数",
     frozen_warning: "团队钱包已冻结（守恒核对异常），请联系客服处理。",

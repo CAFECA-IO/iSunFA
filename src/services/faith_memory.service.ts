@@ -251,6 +251,18 @@ export async function deleteFaithMemoryItem(params: {
     return true;
   }
 
-  await faithMemoryRepo.upsert(userId, teamId, items);
+  /**
+   * Info: (20260818 - Luphia) 刪一條也要寫稽核（第三輪 C-6）。
+   *
+   * 規範 §6.2 的分級規則是「刪除必寫稽核」。先前只有刪到一條不剩才留紀錄——
+   * 刪掉 49/50 條，稽核表一列都沒有，而那與「整包刪除」在資料上的差別只有一條。
+   */
+  await faithMemoryRepo.upsertWithDeletionLog({
+    userId,
+    teamId,
+    items,
+    removedCount: record.items.length - items.length,
+    reason: FAITH_MEMORY_DELETION_REASON.USER_REQUEST,
+  });
   return true;
 }

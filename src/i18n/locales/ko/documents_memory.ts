@@ -11,6 +11,11 @@ export const documentsMemory = {
   memory_free_plan:
     "장기 기억은 팀 버전과 기업 버전의 혜택입니다. 무료 버전에서도 페이스는 작업 단기 기억(같은 대화 내 맥락)을 갖습니다.",
   memory_delete: "이 기억 삭제",
+  memory_clear: "기억 전체 삭제",
+  memory_clear_hint:
+    "삭제하면 페이스가 기록한 모든 선호를 잊습니다. 되돌릴 수 없습니다.",
+  memory_clear_confirm: "삭제하기",
+  memory_clear_cancel: "취소",
   memory_note:
     "페이스는 명시적으로 밝히신 선호만 기록하며, 금액·세율 등 숫자는 일절 기록하지 않습니다. 구독 종료 후 90일간 보관하고 기간이 지나면 삭제합니다.",
   encrypted: "종단 간 암호화",

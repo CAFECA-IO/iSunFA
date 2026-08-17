@@ -84,6 +84,7 @@ export const teamManagement = {
     retry: "再試行",
     quota_5h: "5 時間ごとの枠",
     quota_week: "週間枠",
+    documents_memory_link: "ドキュメントと記憶",
     balance_title: "チームウォレット",
     pool_balance: "未割り当てポイント",
     frozen_warning:

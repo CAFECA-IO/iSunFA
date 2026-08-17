@@ -33,7 +33,40 @@ const CATEGORIES = new Set<string>(Object.values(FAITH_MEMORY_CATEGORY));
  *
  * 以確定性規則攔截，不靠 prompt 自律：prompt 只是請求，這裡是門。
  */
-const NUMERIC_PATTERN = /\d/;
+/**
+ * Info: (20260818 - Luphia) 攔的是**金額與比率**，不是所有數字（第三輪 D）。
+ *
+ * 原本是 `/\d/`——任何數字一律丟棄，於是「使用 IFRS16」「報表用 A4」
+ * 這些正當的偏好也被擋掉（測試甚至把 `使用 IFRS16` 當成應拒的正例）。
+ * 規範 §4.2 要防的是「LLM 當事實資料庫、在數字變動後持續複述舊值」，
+ * 而那指的是金額、餘額、稅率、係數。
+ *
+ * 三類特徵：帶貨幣符號或金額單位、帶百分比、以及三位數以上的裸數字
+ * （足以涵蓋金額，而 `IFRS16`、`A4`、`ISO14064` 這類編號都是兩位數以內）。
+ */
+/**
+ * Info: (20260818 - Luphia) 先把「識別碼」拿掉，再看剩下的有沒有金額特徵。
+ *
+ * `IFRS16`、`ISO14064`、`A4` 的數字是編號的一部分，緊貼著字母；
+ * 金額與比率則是獨立出現的數。先剝掉前者，後面的規則才不會誤傷。
+ */
+const IDENTIFIER_TOKEN = /[A-Za-z]+[-_]?\d+[A-Za-z0-9]*/g;
+
+const MONETARY_PATTERNS = [
+  // Info: (20260818 - Luphia) 貨幣符號或單位：$1,000、NT$500、300 元、5 萬
+  /[$€£¥]|NT\$|\d\s*(元|塊|萬|億|千元|美元|台幣)/,
+  // Info: (20260818 - Luphia) 比率：5%、5 %、百分之五
+  /\d\s*%|百分之/,
+  // Info: (20260818 - Luphia) 小數一律視為金額或係數（編號不會有小數點）
+  /\d+\.\d+/,
+  // Info: (20260818 - Luphia) 三位數以上的裸數字（含千分位）
+  /\d[\d,]{2,}/,
+];
+
+function looksMonetary(statement: string): boolean {
+  const withoutIdentifiers = statement.replace(IDENTIFIER_TOKEN, " ");
+  return MONETARY_PATTERNS.some((pattern) => pattern.test(withoutIdentifiers));
+}
 
 /**
  * Info: (20260818 - Luphia) 換行是 prompt 注入的載具（第三輪 B-4）。
@@ -52,8 +85,8 @@ export function isStorableStatement(statement: string): boolean {
   if (!trimmed) return false;
   if (trimmed.length > FAITH_MEMORY_STATEMENT_MAX_CHARS) return false;
   if (LINE_BREAK_PATTERN.test(trimmed)) return false;
-  // Info: (20260817 - Luphia) 含任何數字一律不收——寧可少記，不可記錯數字
-  return !NUMERIC_PATTERN.test(trimmed);
+  // Info: (20260817 - Luphia) 金額與比率一律不收——寧可少記，不可記錯數字
+  return !looksMonetary(trimmed);
 }
 
 /**

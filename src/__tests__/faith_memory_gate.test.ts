@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
+import { memoryItemId } from "@/lib/faith_memory/items";
 import {
+  deleteFaithMemoryItem,
   isFaithMemoryEnabled,
   listFaithMemory,
   loadFaithMemoryForPrompt,
@@ -27,6 +29,9 @@ jest.mock("@/repositories/faith_memory.repo", () => ({
   faithMemoryRepo: {
     get: jest.fn(),
     upsert: jest.fn(),
+    // Info: (20260818 - Luphia) 逐條刪除也要寫稽核（第三輪 C-6）
+    upsertWithDeletionLog: jest.fn(),
+    deleteByScope: jest.fn(),
   },
 }));
 jest.mock("@/repositories/team_subscription.repo", () => ({
@@ -251,5 +256,68 @@ describe("listFaithMemory", () => {
     });
 
     expect(view.items).toEqual([]);
+  });
+});
+
+/**
+ * Info: (20260818 - Luphia) 刪除必寫稽核，逐條也一樣（第三輪 C-6）。
+ *
+ * 規範 §6.2 的分級規則是「刪除必寫稽核」。先前只有刪到一條不剩才留紀錄——
+ * 刪掉 49/50 條，稽核表一列都沒有，而那與整包刪除在資料上的差別只有一條。
+ */
+describe("deleteFaithMemoryItem", () => {
+  const OTHER = {
+    category: FAITH_MEMORY_CATEGORY.TERMINOLOGY,
+    statement: "稱我為林會計",
+    updatedAt: NOW_SEC,
+  };
+
+  beforeEach(() => {
+    asMock(faithMemoryRepo.get).mockResolvedValue({
+      items: [ITEM, OTHER],
+      expiresAt: null,
+    });
+  });
+
+  it("還有剩餘條目時，更新內容並寫稽核", async () => {
+    const removed = await deleteFaithMemoryItem({
+      userId: "u1",
+      teamId: "t1",
+      itemId: memoryItemId(ITEM),
+    });
+
+    expect(removed).toBe(true);
+    expect(faithMemoryRepo.upsertWithDeletionLog).toHaveBeenCalledWith(
+      expect.objectContaining({ removedCount: 1 }),
+    );
+    // Info: (20260818 - Luphia) 不可以走不寫稽核的那條路
+    expect(faithMemoryRepo.upsert).not.toHaveBeenCalled();
+  });
+
+  // Info: (20260818 - Luphia) 刪到一條不剩就整列刪除，同樣寫稽核
+  it("刪到空時整列刪除", async () => {
+    asMock(faithMemoryRepo.get).mockResolvedValue({
+      items: [ITEM],
+      expiresAt: null,
+    });
+
+    await deleteFaithMemoryItem({
+      userId: "u1",
+      teamId: "t1",
+      itemId: memoryItemId(ITEM),
+    });
+
+    expect(faithMemoryRepo.deleteByScope).toHaveBeenCalled();
+  });
+
+  it("找不到條目時什麼都不做", async () => {
+    const removed = await deleteFaithMemoryItem({
+      userId: "u1",
+      teamId: "t1",
+      itemId: "notexist",
+    });
+
+    expect(removed).toBe(false);
+    expect(faithMemoryRepo.upsertWithDeletionLog).not.toHaveBeenCalled();
   });
 });

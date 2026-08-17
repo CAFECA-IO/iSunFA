@@ -6,7 +6,6 @@ import {
   createInviteToken,
   hashInviteToken,
   isInviteExpired,
-  matchesInviteToken,
   INVITE_TOKEN_TTL_DAYS,
 } from "@/lib/team/invite_token";
 
@@ -45,25 +44,6 @@ describe("invite token", () => {
   it("到期時間為建立後 7 天", () => {
     const { expiresAt } = createInviteToken(NOW);
     expect(expiresAt.getTime()).toBe(NOW + INVITE_TOKEN_TTL_DAYS * 86_400_000);
-  });
-
-  describe("matchesInviteToken", () => {
-    it("對得上的 token 回 true", () => {
-      const { token, tokenHash } = createInviteToken(NOW);
-      expect(matchesInviteToken(token, tokenHash)).toBe(true);
-    });
-
-    it("對不上的 token 回 false", () => {
-      const { tokenHash } = createInviteToken(NOW);
-      const other = createInviteToken(NOW);
-      expect(matchesInviteToken(other.token, tokenHash)).toBe(false);
-    });
-
-    // Info: (20260815 - Luphia) 長度不符時要回 false 而不是讓 timingSafeEqual 丟錯
-    it("長度不符的雜湊回 false 而不拋錯", () => {
-      const { token } = createInviteToken(NOW);
-      expect(matchesInviteToken(token, "abcd")).toBe(false);
-    });
   });
 
   describe("isInviteExpired", () => {

@@ -83,6 +83,7 @@ export const teamManagement = {
     retry: "Retry",
     quota_5h: "Per 5-hour quota",
     quota_week: "Weekly quota",
+    documents_memory_link: "Documents & Memory",
     balance_title: "Team Wallet",
     pool_balance: "Unallocated credits",
     frozen_warning:

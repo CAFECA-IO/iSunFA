@@ -84,6 +84,7 @@ export const teamManagement = {
     retry: "다시 시도",
     quota_5h: "5시간 한도",
     quota_week: "주간 한도",
+    documents_memory_link: "문서와 기억",
     balance_title: "팀 지갑",
     pool_balance: "미배분 포인트",
     frozen_warning:

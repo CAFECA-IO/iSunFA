@@ -66,6 +66,9 @@ export default function DocumentsAndMemoryPage() {
   const [memoryEnabled, setMemoryEnabled] = useState(true);
   const [memoryLoading, setMemoryLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  // Info: (20260818 - Luphia) 一鍵清除（第三輪 C-9）：不可逆，因此要二次確認
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -118,6 +121,29 @@ export default function DocumentsAndMemoryPage() {
   useEffect(() => {
     if (selectedTeamId) loadMemory(selectedTeamId);
   }, [selectedTeamId, loadMemory]);
+
+  /**
+   * Info: (20260818 - Luphia) 一鍵清除（第三輪 C-9）。
+   *
+   * 逐條刪除是實用功能，但條款 §3.7 與隱私政策 §6 的「被遺忘權」對應的是
+   * **整包刪除**那支端點，而規範 §9 的 P4 判準寫的也是「記憶檢視**與一鍵清除**」。
+   * 只有逐條刪除等於要使用者按五十次才能行使一次權利。
+   */
+  const clearAll = async () => {
+    if (!selectedTeamId) return;
+    setClearing(true);
+    try {
+      await request(`/api/v1/user/team/${selectedTeamId}/faith_memory`, {
+        method: HTTP_METHOD.DELETE,
+      });
+      setMemory([]);
+    } catch {
+      loadMemory(selectedTeamId);
+    } finally {
+      setClearing(false);
+      setConfirmClear(false);
+    }
+  };
 
   const deleteItem = async (itemId: string) => {
     if (!selectedTeamId) return;
@@ -267,6 +293,46 @@ export default function DocumentsAndMemoryPage() {
               </li>
             ))}
           </ul>
+        )}
+
+        {/**
+         * Info: (20260818 - Luphia) 一鍵清除（第三輪 C-9）：條款承諾的「被遺忘權」
+         * 對應的是整包刪除。不可逆，所以要二次確認——但確認的成本要低，
+         * 否則等於沒有提供。
+         */}
+        {memoryEnabled && memory.length > 0 && (
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-gray-200 p-4">
+            <p className="text-xs text-gray-600">
+              {t("documents_memory.memory_clear_hint")}
+            </p>
+            {confirmClear ? (
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmClear(false)}
+                  className="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                >
+                  {t("documents_memory.memory_clear_cancel")}
+                </button>
+                <button
+                  type="button"
+                  onClick={clearAll}
+                  disabled={clearing}
+                  className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  {t("documents_memory.memory_clear_confirm")}
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmClear(true)}
+                className="shrink-0 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50"
+              >
+                {t("documents_memory.memory_clear")}
+              </button>
+            )}
+          </div>
         )}
 
         <p className="mt-4 text-xs text-gray-500">

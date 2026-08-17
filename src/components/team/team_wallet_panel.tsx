@@ -257,6 +257,22 @@ export default function TeamWalletPanel({
               )}
 
               {/**
+               * Info: (20260818 - Luphia) 「文件與記憶」的入口（第三輪 C-9）。
+               *
+               * 那一頁在此之前**沒有任何連結指向它**——而條款 §3.7 與隱私政策 §6
+               * 的「隨時要求刪除」就靠它。做得到但點不到，等於沒有提供。
+               *
+               * 放在額度卡片內：使用者看到自己的費思用量之後，
+               * 最自然的下一個問題就是「它記得我什麼」。
+               */}
+              <Link
+                href="/user/documents"
+                className="inline-flex text-xs font-medium text-orange-600 hover:text-orange-500"
+              >
+                {t("team_management.wallet.documents_memory_link")}
+              </Link>
+
+              {/**
                * Info: (20260814 - Luphia) 訂閱入口（管理職可見）：額度不夠時，
                * 「升級方案」與「買點數」是兩條不同的路，畫面上都要找得到。
                * 同樣以 `?team=` 指定本團隊，訂閱才不會套到別的團隊。

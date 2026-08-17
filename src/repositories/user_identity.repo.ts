@@ -10,6 +10,7 @@ export interface IUserIdentityRepository {
     providerUserId: string,
   ): Promise<UserIdentity | null>;
   findByUserId(userId: string): Promise<UserIdentity[]>;
+  findByEmail(email: string): Promise<UserIdentity[]>;
   create(
     userId: string,
     profile: IOAuthProfile,
@@ -34,6 +35,18 @@ class UserIdentityRepository implements IUserIdentityRepository {
 
   public async findByUserId(userId: string): Promise<UserIdentity[]> {
     return prisma.userIdentity.findMany({ where: { userId } });
+  }
+
+  /**
+   * Info: (20260818 - Luphia) 以信箱反查綁定（第三輪 C-4：邀請前確認對方是否已是成員）。
+   *
+   * **只回已驗證的**：未驗證的 email 是使用者宣稱的字串，拿它判定
+   * 「這個人已經在團隊裡」會讓任何人只要宣稱某個信箱就能擋掉對他的邀請。
+   */
+  public async findByEmail(email: string): Promise<UserIdentity[]> {
+    return prisma.userIdentity.findMany({
+      where: { email: email.trim().toLowerCase(), emailVerified: true },
+    });
   }
 
   public async create(

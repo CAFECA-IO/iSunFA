@@ -11,6 +11,10 @@ export const documentsMemory = {
   memory_free_plan:
     "長期記憶為團隊版與企業版的權益。免費版的費思仍具備任務短期記憶（同一段對話中記得前後文）。",
   memory_delete: "刪除這則記憶",
+  memory_clear: "清除全部記憶",
+  memory_clear_hint: "清除後費思會忘記您所有的偏好，此動作無法復原。",
+  memory_clear_confirm: "確定清除",
+  memory_clear_cancel: "取消",
   memory_note:
     "費思只記錄您在對話中明確表達的偏好，不會記錄任何金額、稅率或其他數字。訂閱終止後保留 90 天，屆滿刪除。",
   encrypted: "端對端加密",

@@ -17,6 +17,11 @@ import { INVITE_EMAIL_MATCH, type InviteEmailMatch } from "@/constants/status";
  *
  * 未驗證的 email 是使用者宣稱的字串，拿它比對出來的「相符」不比沒比對可靠多少，
  * 而它會出現在稽核報告上被當成一項證據。寧可回 UNAVAILABLE（誠實的「不知道」）。
+ *
+ * Info: (20260818 - Luphia) 責任歸屬（第三輪 D）：**過濾在呼叫端**。
+ * 這支函式收到什麼就比什麼——它不知道也不該知道 `emailVerified` 長什麼樣。
+ * 先前檔頭寫得像是這裡會判驗證狀態，那與實作不符，容易讓下一個人
+ * 以為傳未驗證的信箱進來也安全。參數名已改為 `verifiedEmails` 以示其約定。
  */
 export function resolveInviteEmailMatch(
   inviteeEmail: string | null | undefined,

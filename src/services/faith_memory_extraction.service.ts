@@ -1,13 +1,10 @@
 import { ChatService } from "@/services/chat.service";
-import {
-  LLM_SYNC_TIMEOUT_MS,
-  LLM_TEMPERATURE,
-  LlmTaskKeyEnum,
-} from "@/constants/llm";
+import { LLM_TEMPERATURE, LlmTaskKeyEnum } from "@/constants/llm";
 import type { Schema } from "@google/generative-ai";
 import {
   FAITH_MEMORY_CATEGORY,
   FAITH_MEMORY_EXTRACTION_MAX_OUTPUT_TOKENS,
+  FAITH_MEMORY_EXTRACTION_TIMEOUT_MS,
 } from "@/constants/faith_memory";
 import {
   parseExtractedItems,
@@ -122,7 +119,11 @@ export async function extractAndRecordFaithMemory(params: {
          */
         maxOutputTokens: FAITH_MEMORY_EXTRACTION_MAX_OUTPUT_TOKENS,
         taskKey: LlmTaskKeyEnum.FAITH_CHAT,
-        timeoutMs: LLM_SYNC_TIMEOUT_MS,
+        /**
+         * Info: (20260818 - Luphia) 比對話短（第三輪 C-11）：萃取被 await，
+         * 它的耗時會整段加進使用者感受到的延遲，而它的輸出只有 512 tokens。
+         */
+        timeoutMs: FAITH_MEMORY_EXTRACTION_TIMEOUT_MS,
       },
     );
 

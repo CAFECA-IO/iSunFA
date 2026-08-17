@@ -44,9 +44,29 @@ class FaithMemoryRepository {
     userId: string,
     teamId: string,
   ): Promise<IFaithMemoryRecord | null> {
-    const row = await prisma.faithMemory.findUnique({
-      where: { userId_teamId: { userId, teamId } },
-    });
+    /**
+     * Info: (20260818 - Luphia) 查詢失敗也回 null，不往外拋（第三輪 C-7）。
+     *
+     * 先前 try/catch 只包解密，`findUnique` 的錯誤會一路拋到
+     * `faith_chat.service` 的載入處——而那在 `spendCredits` **之前**，
+     * 整個請求 500。`faith_memory` 表短暫不可用時，**所有付費用戶的費思全掛，
+     * 免費用戶正常**（免費版根本不讀這張表）。
+     *
+     * 與本檔開頭「記憶是加分項，不是對話的前提」一致：讀不到就當作沒有記憶。
+     */
+    let row;
+    try {
+      row = await prisma.faithMemory.findUnique({
+        where: { userId_teamId: { userId, teamId } },
+      });
+    } catch (error) {
+      logger.error("faith memory read failed", {
+        userId,
+        teamId,
+        message: error instanceof Error ? error.message : String(error),
+      });
+      return null;
+    }
     if (!row) return null;
 
     try {
@@ -90,6 +110,33 @@ class FaithMemoryRepository {
        */
       update: payload,
     });
+  }
+
+  /**
+   * Info: (20260818 - Luphia) 逐條刪除：更新內容並寫稽核，**同一個交易**（第三輪 C-6）。
+   *
+   * 分開寫會出現「刪了但沒有紀錄」或「有紀錄但沒刪」，兩者在合規上都說不過去。
+   * 與整包刪除（`deleteWithLog`）用同一條規則，差別只在這裡是更新而非刪列。
+   */
+  async upsertWithDeletionLog(params: {
+    userId: string;
+    teamId: string;
+    items: IFaithMemoryItem[];
+    removedCount: number;
+    reason: FaithMemoryDeletionReason;
+  }): Promise<void> {
+    const { userId, teamId, items, removedCount, reason } = params;
+    const payload = seal(items);
+    await prisma.$transaction([
+      prisma.faithMemory.update({
+        where: { userId_teamId: { userId, teamId } },
+        data: payload,
+      }),
+      prisma.faithMemoryDeletionLog.create({
+        // Info: (20260818 - Luphia) 記的是「刪掉幾條」，不是剩下幾條
+        data: { userId, teamId, itemCount: removedCount, reason },
+      }),
+    ]);
   }
 
   /**

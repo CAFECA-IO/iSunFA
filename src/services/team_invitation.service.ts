@@ -10,6 +10,7 @@ import {
   isInviteExpired,
   INVITE_TOKEN_TTL_DAYS,
 } from "@/lib/team/invite_token";
+import { canonicalizeEmailForKey } from "@/lib/team/email_identity";
 import { buildPendingInviteKey } from "@/lib/team/pending_invite_key";
 import { resolveInviteEmailMatch } from "@/lib/team/invite_email_match";
 import { userIdentityRepo } from "@/repositories/user_identity.repo";
@@ -20,6 +21,8 @@ import {
 import { sendMail, MailNotConfiguredError } from "@/services/mail.service";
 import { systemSettingService } from "@/services/system_setting.service";
 import { teamRepo } from "@/repositories/team.repo";
+import { paymentRepo } from "@/repositories/payment.repo";
+import type { IOenCallbackData } from "@/interfaces/payment";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { resolveEffectivePlanId } from "@/services/spend.service";
 import { resolveFreePlanMaxMembers } from "@/services/team_subscription.service";
@@ -70,6 +73,76 @@ export interface IInviteByEmailResult {
   seatCharge: ISeatChargeResult;
 }
 
+/**
+ * Info: (20260818 - Luphia) 以第三方綁定的信箱反查團隊成員（第三輪 C-4）。
+ *
+ * `User` 沒有 email 欄位，唯一的對應是第三方登入的綁定（`UserIdentity`）。
+ * 因此這支只找得到「用該信箱做過第三方登入」的人——以 passkey 註冊的成員
+ * 查不到。這是能力的上限，不是實作的疏漏，呼叫端要據此理解它的保證強度。
+ */
+async function findTeamMemberByEmail(
+  teamId: string,
+  email: string,
+): Promise<string | null> {
+  const identities = await userIdentityRepo.findByEmail(email);
+  for (const identity of identities) {
+    const member = await teamRepo.getTeamMember(identity.userId, teamId);
+    if (member) return member.id;
+  }
+  return null;
+}
+
+/**
+ * Info: (20260818 - Luphia) 建立邀請失敗時的處置（第三輪 C-3）。
+ *
+ * 位址路徑有這一段（失敗即把訂單標成 MINT_FAILED，註解還寫著
+ * 「席次路徑不能是例外」），email 路徑漏了。而 `pendingKey` 的唯一鍵在並發時
+ * **預期**會丟 P2002——那是這條路徑上唯一被設計成「一定會發生」的錯誤，
+ * 卻是唯一沒被處理的，會一路落到 `IS_UNKNOWN` 500。
+ */
+async function createInvitationOrCompensate(
+  data: Parameters<typeof teamRepo.createTeamInvitation>[0],
+  seatCharge: ISeatChargeResult,
+) {
+  try {
+    return await teamRepo.createTeamInvitation(data);
+  } catch (error) {
+    /**
+     * Info: (20260818 - Luphia) P2002 = 並發下有人搶先建立了同一封邀請。
+     * 這不是系統錯誤，而是「已有待處理的邀請」，回對應的錯誤碼。
+     */
+    if (isUniqueConstraintError(error)) {
+      throw toApiError(API_ERRORS.VA_AN_INVITATION_IS_ALREADY_PE);
+    }
+
+    /**
+     * Info: (20260818 - Luphia) 已扣款卻建不出邀請＝已收款未履行。
+     * 不標記的話這筆會停在 COMPLETED、席次也加了，而邀請不存在——
+     * 沒有任何查詢篩得出它。
+     */
+    if (seatCharge.orderId) {
+      await paymentRepo.updateOrderMintFailed(
+        seatCharge.orderId,
+        { teamId: data.teamId, inviteeEmail: data.inviteeEmail },
+        {} as IOenCallbackData,
+        `invitation creation failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+    throw error;
+  }
+}
+
+// Info: (20260818 - Luphia) Prisma 的唯一鍵衝突（不依賴訊息字串）
+function isUniqueConstraintError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as { code?: string }).code === "P2002"
+  );
+}
+
 export async function inviteMemberByEmail(
   params: IInviteByEmailParams,
 ): Promise<IInviteByEmailResult> {
@@ -82,6 +155,22 @@ export async function inviteMemberByEmail(
 
   const team = await teamRepo.getTeamById(teamId);
   if (!team) throw toApiError(API_ERRORS.NF_TEAM);
+
+  /**
+   * Info: (20260818 - Luphia) 已經是成員就不要再邀請一次（第三輪 C-4）。
+   *
+   * 位址路徑早就有這道檢查，email 路徑漏了。少了它：照收席次費、照寄信，
+   * 而對方點連結後 `acceptInviteByToken` 發現他已是成員、回成功且刻意不動那封邀請
+   * ——於是那封 PENDING 邀請佔住一席直到七天後逾期，而畫面顯示「邀請成功」。
+   *
+   * 以第三方綁定的信箱比對：那是唯一能把 email 對應到帳號的資料
+   * （`User` 沒有 email 欄位）。比不到的情況很常見（passkey 註冊），
+   * 那時只能讓它往下走——這道檢查能擋的是「找得到的重複」，不是全部。
+   */
+  const existingMemberId = await findTeamMemberByEmail(teamId, normalizedEmail);
+  if (existingMemberId) {
+    throw toApiError(API_ERRORS.VA_USER_IS_ALREADY_A_MEMBER_OF);
+  }
 
   /**
    * Info: (20260815 - Luphia) 已有未失效的邀請就不再送第二封：
@@ -118,29 +207,38 @@ export async function inviteMemberByEmail(
     seats: 1,
     nowMs,
     operatorUserId,
-    idempotencyKey: `invite-email:${teamId}:${normalizedEmail}`,
+    /**
+     * Info: (20260818 - Luphia) 冪等鍵以「同一個收件匣」為準（第三輪 C-1）：
+     * 否則同一個人的 plus/點號變體每一封都會真的刷一次 OWNER 的卡。
+     */
+    idempotencyKey: `invite-email:${teamId}:${canonicalizeEmailForKey(
+      normalizedEmail,
+    )}`,
   });
 
   const { token, tokenHash, expiresAt } = createInviteToken(nowMs);
 
-  const invitation = await teamRepo.createTeamInvitation({
-    teamId,
-    inviterId: operatorUserId,
-    inviteeEmail: normalizedEmail,
-    tokenHash,
-    expiresAt,
-    role,
-    status: TEAM_INVITATION_STATUS.PENDING,
-    /**
-     * Info: (20260816 - Luphia) 併發防護：兩位管理員同時邀請同一個信箱時，
-     * 上面的「是否已有 PENDING」檢查兩邊都會通過，於是各建一列、各扣一次席次費用。
-     * 唯一鍵讓第二筆在資料庫層失敗（見 pending_invite_key.ts）。
-     */
-    pendingKey: buildPendingInviteKey({
+  const invitation = await createInvitationOrCompensate(
+    {
       teamId,
+      inviterId: operatorUserId,
       inviteeEmail: normalizedEmail,
-    }),
-  });
+      tokenHash,
+      expiresAt,
+      role,
+      status: TEAM_INVITATION_STATUS.PENDING,
+      /**
+       * Info: (20260816 - Luphia) 併發防護：兩位管理員同時邀請同一個信箱時，
+       * 上面的「是否已有 PENDING」檢查兩邊都會通過，於是各建一列、各扣一次席次費用。
+       * 唯一鍵讓第二筆在資料庫層失敗（見 pending_invite_key.ts）。
+       */
+      pendingKey: buildPendingInviteKey({
+        teamId,
+        inviteeEmail: normalizedEmail,
+      }),
+    },
+    seatCharge,
+  );
 
   try {
     const baseUrl = await systemSettingService.get(

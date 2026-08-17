@@ -11,6 +11,11 @@ export const documentsMemory = {
   memory_free_plan:
     "Long-term memory is a Team and Enterprise benefit. On the Free plan Faith still keeps task short-term memory — it remembers earlier turns within the same conversation.",
   memory_delete: "Delete this memory",
+  memory_clear: "Clear all memory",
+  memory_clear_hint:
+    "Faith will forget every preference it has recorded. This cannot be undone.",
+  memory_clear_confirm: "Yes, clear it",
+  memory_clear_cancel: "Cancel",
   memory_note:
     "Faith only records preferences you state explicitly. It never records amounts, tax rates, or any other numbers. Memory is kept for 90 days after a subscription ends, then deleted.",
   encrypted: "End-to-end encrypted",

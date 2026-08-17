@@ -1,3 +1,4 @@
+import { canonicalizeEmailForKey } from "@/lib/team/email_identity";
 /**
  * Info: (20260816 - Luphia) 「同一團隊、同一對象、同時只能有一封待接受邀請」的唯一鍵。
  *
@@ -29,7 +30,14 @@ export function buildPendingInviteKey(params: {
 }): string | null {
   const { teamId, inviteeAddress, inviteeEmail } = params;
 
-  const email = inviteeEmail?.trim().toLowerCase();
+  /**
+   * Info: (20260818 - Luphia) 以「同一個收件匣」為準，不是以字面為準（第三輪 C-1）。
+   * `victim+1@gmail.com` 與 `v.ictim@gmail.com` 投遞到同一處，
+   * 只做 trim/lowercase 會讓它們各佔一把鍵、各刷一次卡。
+   */
+  const email = inviteeEmail?.trim()
+    ? canonicalizeEmailForKey(inviteeEmail)
+    : "";
   if (email) return `${teamId}:mail:${email}`;
 
   /**

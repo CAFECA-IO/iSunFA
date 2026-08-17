@@ -11,6 +11,11 @@ export const documentsMemory = {
   memory_free_plan:
     "長期記憶はチーム版・企業版の特典です。無料版でも費思はタスク短期記憶（同じ会話の前後関係）を備えています。",
   memory_delete: "この記憶を削除",
+  memory_clear: "記憶をすべて削除",
+  memory_clear_hint:
+    "削除すると費思は記録したすべての好みを忘れます。元に戻せません。",
+  memory_clear_confirm: "削除する",
+  memory_clear_cancel: "キャンセル",
   memory_note:
     "費思が記録するのは、あなたが明示した好みだけです。金額・税率などの数値は一切記録しません。サブスクリプション終了後 90 日間保持し、期間満了後に削除します。",
   encrypted: "エンドツーエンド暗号化",

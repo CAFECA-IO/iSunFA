@@ -1,5 +1,6 @@
 import { describe, it, expect } from "@jest/globals";
 import { buildPendingInviteKey } from "@/lib/team/pending_invite_key";
+import { canonicalizeEmailForKey } from "@/lib/team/email_identity";
 
 /**
  * Info: (20260816 - Luphia) 「同時只能有一封待接受邀請」這條約束的全部內容
@@ -81,5 +82,66 @@ describe("buildPendingInviteKey", () => {
         inviteeAddress: "0xabc",
       }),
     ).toBe("team-1:mail:a@x.com");
+  });
+});
+
+/**
+ * Info: (20260818 - Luphia) 「同一個收件匣」的判定（第三輪 C-1）。
+ *
+ * `victim@gmail.com`、`victim+1@gmail.com`、`v.ictim@gmail.com` 投遞到同一處，
+ * 但先前只做 trim/lowercase，於是三者各佔一把鍵、各刷一次 OWNER 的卡。
+ */
+describe("canonicalizeEmailForKey", () => {
+  it("去除子地址（plus addressing）", () => {
+    expect(canonicalizeEmailForKey("victim+1@example.com")).toBe(
+      "victim@example.com",
+    );
+    expect(canonicalizeEmailForKey("victim+a+b@example.com")).toBe(
+      "victim@example.com",
+    );
+  });
+
+  it("Gmail 的點號視為同一個信箱", () => {
+    expect(canonicalizeEmailForKey("v.ic.tim@gmail.com")).toBe(
+      "victim@gmail.com",
+    );
+    expect(canonicalizeEmailForKey("v.ictim+x@googlemail.com")).toBe(
+      "victim@googlemail.com",
+    );
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 其他網域的點號**不能**拿掉：
+   * 只有 Google 系列忽略它。對其他網域一併處理，會把兩個不同的人判成同一個，
+   * 而受害者是「被誤判、因此邀請不出去」的無辜使用者——那比漏擋更糟。
+   */
+  it("非 Gmail 的點號保留", () => {
+    expect(canonicalizeEmailForKey("v.ictim@example.com")).toBe(
+      "v.ictim@example.com",
+    );
+  });
+
+  it("大小寫與空白正規化", () => {
+    expect(canonicalizeEmailForKey("  Victim@Example.COM ")).toBe(
+      "victim@example.com",
+    );
+  });
+
+  // Info: (20260818 - Luphia) 格式驗證是別人的職責，這裡不丟錯
+  it("格式不合法時原樣回傳", () => {
+    expect(canonicalizeEmailForKey("not-an-email")).toBe("not-an-email");
+  });
+
+  it("同一個收件匣的各種寫法產生同一把 pendingKey", () => {
+    const keys = [
+      "victim@gmail.com",
+      "victim+1@gmail.com",
+      "v.ic.tim@gmail.com",
+      "  VICTIM@Gmail.com  ",
+    ].map((email) =>
+      buildPendingInviteKey({ teamId: "t1", inviteeEmail: email }),
+    );
+
+    expect(new Set(keys).size).toBe(1);
   });
 });

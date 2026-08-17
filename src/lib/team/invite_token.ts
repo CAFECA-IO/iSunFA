@@ -1,4 +1,4 @@
-import { createHash, randomBytes, timingSafeEqual } from "crypto";
+import { createHash, randomBytes } from "crypto";
 
 /**
  * Info: (20260815 - Luphia) 邀請 token 的產生與驗證（規範 §4 / P4）。
@@ -40,20 +40,6 @@ export function createInviteToken(nowMs: number): IInviteToken {
     tokenHash: hashInviteToken(token),
     expiresAt: new Date(nowMs + INVITE_TOKEN_TTL_DAYS * DAY_MS),
   };
-}
-
-/**
- * Info: (20260815 - Luphia) 比對雜湊時走等長時間比較。
- *
- * 一般的字串比較會在第一個不同的字元就返回，理論上可由回應時間反推雜湊。
- * 這條路徑的實際風險很低（還要先猜中 32 bytes 的亂數），但比較函式的成本是零，
- * 沒有理由留一個「原則上可測時間」的比較在驗證身分的路徑上。
- */
-export function matchesInviteToken(token: string, tokenHash: string): boolean {
-  const candidate = Buffer.from(hashInviteToken(token), "hex");
-  const expected = Buffer.from(tokenHash, "hex");
-  if (candidate.length !== expected.length) return false;
-  return timingSafeEqual(candidate, expected);
 }
 
 export function isInviteExpired(

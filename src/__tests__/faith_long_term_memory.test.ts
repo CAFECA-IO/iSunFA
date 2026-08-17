@@ -43,10 +43,22 @@ describe("isStorableStatement", () => {
    * Info: (20260817 - Luphia) 本檔最重要的一條（規範 §4.2）。
    * 以確定性規則攔截，不靠 prompt 自律——prompt 只是請求，這裡是門。
    */
-  it("拒絕任何含數字的陳述", () => {
+  it("拒絕金額與比率", () => {
     expect(isStorableStatement("公司資本額為 100 萬")).toBe(false);
     expect(isStorableStatement("稅率 5%")).toBe(false);
-    expect(isStorableStatement("使用 IFRS16")).toBe(false);
+    expect(isStorableStatement("預算 $1,000")).toBe(false);
+    expect(isStorableStatement("排放係數 2.68")).toBe(false);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 但**不是所有數字**（第三輪 D）。
+   * 原本的 `/\d/` 把「使用 IFRS16」「報表用 A4」這些正當偏好也擋掉了，
+   * 而規範要防的是「在數字變動後持續複述舊值」——那指的是金額與比率。
+   */
+  it("接受含編號的正當偏好", () => {
+    expect(isStorableStatement("使用 IFRS16")).toBe(true);
+    expect(isStorableStatement("報表用 A4")).toBe(true);
+    expect(isStorableStatement("依 ISO14064 編製")).toBe(true);
   });
 
   it("拒絕空白與超長的陳述", () => {
@@ -190,7 +202,7 @@ describe("parseExtractedItems", () => {
         { category: "INVENTED", statement: "亂分類" },
         {
           category: FAITH_MEMORY_CATEGORY.ANSWER_STYLE,
-          statement: "上限 3 點",
+          statement: "上限 3,000 元",
         },
         { category: FAITH_MEMORY_CATEGORY.ANSWER_STYLE, statement: 42 },
         null,

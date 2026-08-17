@@ -73,6 +73,15 @@ class UserDocumentRepository {
    * 否則使用者會以為系統看得到而我們選擇不顯示。
    */
   async listCarbonDrafts(ownerPublicKey: string, limit: number) {
+    /**
+     * Info: (20260818 - Luphia) 空值即回空，不進 Prisma（第三輪 D）。
+     *
+     * Prisma 對 `undefined` 的條件會**靜默忽略**——`where: { ownerPublicKey: undefined }`
+     * 等於沒有條件，會列出全站的碳盤查草稿。型別目前擋得住，
+     * 但那是唯一的防線，而它擋不住 `as` 或未來的簽章變動。
+     */
+    if (!ownerPublicKey) return [];
+
     return prisma.carbonReportDraft.findMany({
       where: { chatroom: { ownerPublicKey, archivedAt: null } },
       select: {

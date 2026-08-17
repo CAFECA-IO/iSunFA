@@ -275,3 +275,35 @@ describe("文件來源的歸屬條件", () => {
     expect(repo).not.toMatch(/where:\s*\{\s*\}/);
   });
 });
+
+/**
+ * Info: (20260818 - Luphia) 「文件與記憶」必須點得到、且提供一鍵清除（第三輪 C-9）。
+ *
+ * 條款 §3.7 與隱私政策 §6 的「隨時要求刪除」就靠這一頁，而規範 §9 的 P4
+ * 判準寫的是「記憶檢視**與一鍵清除**」。先前全 repo 沒有任何連結指向它，
+ * 頁面上也只有逐條刪除——做得到但點不到、或要按五十次，都等於沒有提供。
+ */
+describe("文件與記憶的可達性", () => {
+  const read = (...parts: string[]) =>
+    readFileSync(join(process.cwd(), ...parts), "utf8");
+
+  it("有連結指向該頁", () => {
+    const panel = read("src", "components", "team", "team_wallet_panel.tsx");
+    expect(panel).toMatch(/href="\/user\/documents"/);
+  });
+
+  it("頁面提供整包刪除，而不只是逐條", () => {
+    const page = read("src", "app", "user", "documents", "page.tsx");
+    // Info: (20260818 - Luphia) 整包刪除打的是不帶 item id 的那支端點
+    expect(page).toMatch(
+      /`\/api\/v1\/user\/team\/\$\{selectedTeamId\}\/faith_memory`/,
+    );
+    expect(page).toMatch(/HTTP_METHOD\.DELETE/);
+  });
+
+  // Info: (20260818 - Luphia) 不可逆的動作要二次確認，但確認成本要低
+  it("整包刪除需要二次確認", () => {
+    const page = read("src", "app", "user", "documents", "page.tsx");
+    expect(page).toMatch(/confirmClear/);
+  });
+});
