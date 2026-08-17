@@ -70,10 +70,19 @@ const rosterRow = (
   jobTitle: { title: "工地工程師" },
 });
 
+/**
+ * Info: (20260817 - Luphia) 操作者與被排班者刻意用不同 id：主管閘問的必須是
+ * **操作者**是不是主管，而不是被改的那個人。兩者同值的 fixture 會讓
+ * 「問錯人」這個錯誤通過測試。
+ */
+const ACTOR_MANAGER_ID = "emp-1";
+const TARGET_EMPLOYEE_ID = "emp-2";
+
 interface IHarness {
   service: AttendanceScheduleService;
   written: IShiftDayInput[];
   rosterQueries: { departmentId?: string }[];
+  managerQueries: string[];
 }
 
 const buildService = (options: {
@@ -82,9 +91,12 @@ const buildService = (options: {
   patterns?: ShiftPattern[];
   employeeInBook?: boolean;
   upsertThrows?: Error;
+  /** Info: (20260817 - Luphia) 操作者是不是部門主管；預設是，未指定時測的不是這道閘 */
+  actorIsManager?: boolean;
 }): IHarness => {
   const written: IShiftDayInput[] = [];
   const rosterQueries: { departmentId?: string }[] = [];
+  const managerQueries: string[] = [];
 
   const employees: IEmployeeRepository = {
     findByUserId: async () => null,
@@ -98,9 +110,11 @@ const buildService = (options: {
     findByIdInAccountBook: async () =>
       options.employeeInBook === false
         ? null
-        : ({ id: "emp-2", employeeNo: "EMP002" } as Employee),
-    // Info: (20260813 - Julian) 假勤加入的成員；本測試用不到，補樁讓介面完整
-    isDepartmentManager: async () => false,
+        : ({ id: TARGET_EMPLOYEE_ID, employeeNo: "EMP002" } as Employee),
+    isDepartmentManager: async (params) => {
+      managerQueries.push(params.employeeId);
+      return options.actorIsManager ?? true;
+    },
   };
 
   const schedule: IAttendanceScheduleRepository = {
@@ -130,6 +144,7 @@ const buildService = (options: {
     service: new AttendanceScheduleService(employees, schedule, patterns),
     written,
     rosterQueries,
+    managerQueries,
   };
 };
 
@@ -229,6 +244,91 @@ describe("AttendanceScheduleService", () => {
     });
   });
 
+  /**
+   * Info: (20260817 - Luphia) 排班寫入的主管閘。
+   *
+   * 守的是一件無法事後復原的事：判定即時算、不落地，所以改一格排班就是改那一天的
+   * 歷史判定（把上班日改成休假，曠職當場消失），而全系統只留一行日誌。
+   * 讀取端仍是全帳本可見（計畫書 §7.3 第 1 順位的權限矩陣要處理的範圍），
+   * 這三條只管寫入。
+   */
+  describe("A8 排班寫入限主管", () => {
+    it("非主管改排班回 403，且一個字都沒有寫進去", async () => {
+      const { service, written } = buildService({
+        patterns: [SITE_DAY],
+        actorIsManager: false,
+      });
+
+      await expect(
+        service.updateScheduleDay({
+          accountBookId: ACCOUNT_BOOK_ID,
+          input: {
+            employeeId: TARGET_EMPLOYEE_ID,
+            workDate: "2026-08-14",
+            dayType: WorkDayType.WORK,
+            shiftPatternId: SITE_DAY.id,
+          },
+          actorEmployeeId: ACTOR_MANAGER_ID,
+          actorEmployeeNo: "EMP001",
+        }),
+      ).rejects.toMatchObject({
+        apiCode: API_ERRORS.FO_ATTENDANCE_SUPERVISOR_ONLY.code,
+      });
+      expect(written).toEqual([]);
+    });
+
+    /**
+     * Info: (20260817 - Luphia) 閘要問的是**操作者**。問成被改的那個人，
+     * 效果是「只要對主管排班就都放行」—— 完全反過來，而回應碼一模一樣。
+     */
+    it("閘問的是操作者，不是被改的那個人", async () => {
+      const { service, managerQueries } = buildService({
+        patterns: [SITE_DAY],
+      });
+
+      await service.updateScheduleDay({
+        accountBookId: ACCOUNT_BOOK_ID,
+        input: {
+          employeeId: TARGET_EMPLOYEE_ID,
+          workDate: "2026-08-14",
+          dayType: WorkDayType.WORK,
+          shiftPatternId: SITE_DAY.id,
+        },
+        actorEmployeeId: ACTOR_MANAGER_ID,
+        actorEmployeeNo: "EMP001",
+      });
+
+      expect(managerQueries).toEqual([ACTOR_MANAGER_ID]);
+    });
+
+    /**
+     * Info: (20260817 - Luphia) 閘排在租戶檢查**之前**：非主管不該從錯誤碼分辨
+     * 「這個員工 id 存不存在於本帳本」。403 與 404 的順序本身就是一個探測管道。
+     */
+    it("非主管拿別家帳本的員工 id 來試，得到 403 而不是 404", async () => {
+      const { service } = buildService({
+        employeeInBook: false,
+        actorIsManager: false,
+      });
+
+      await expect(
+        service.updateScheduleDay({
+          accountBookId: ACCOUNT_BOOK_ID,
+          input: {
+            employeeId: "emp-from-another-book",
+            workDate: "2026-08-14",
+            dayType: WorkDayType.REGULAR_OFF,
+            shiftPatternId: null,
+          },
+          actorEmployeeId: ACTOR_MANAGER_ID,
+          actorEmployeeNo: "EMP001",
+        }),
+      ).rejects.toMatchObject({
+        apiCode: API_ERRORS.FO_ATTENDANCE_SUPERVISOR_ONLY.code,
+      });
+    });
+  });
+
   describe("A8 改單日排班", () => {
     it("改成上班日會帶上班別", async () => {
       const { service, written } = buildService({
@@ -243,6 +343,7 @@ describe("AttendanceScheduleService", () => {
           dayType: WorkDayType.WORK,
           shiftPatternId: SITE_DAY.id,
         },
+        actorEmployeeId: ACTOR_MANAGER_ID,
         actorEmployeeNo: "EMP001",
       });
 
@@ -266,6 +367,7 @@ describe("AttendanceScheduleService", () => {
           dayType: WorkDayType.REGULAR_OFF,
           shiftPatternId: null,
         },
+        actorEmployeeId: ACTOR_MANAGER_ID,
         actorEmployeeNo: "EMP001",
       });
 
@@ -285,6 +387,7 @@ describe("AttendanceScheduleService", () => {
             dayType: WorkDayType.REGULAR_OFF,
             shiftPatternId: null,
           },
+          actorEmployeeId: ACTOR_MANAGER_ID,
           actorEmployeeNo: "EMP001",
         }),
       ).rejects.toMatchObject({ apiCode: API_ERRORS.NF_EMPLOYEE.code });
@@ -303,6 +406,7 @@ describe("AttendanceScheduleService", () => {
             dayType: WorkDayType.WORK,
             shiftPatternId: "shift-from-another-book",
           },
+          actorEmployeeId: ACTOR_MANAGER_ID,
           actorEmployeeNo: "EMP001",
         }),
       ).rejects.toMatchObject({ apiCode: API_ERRORS.NF_SHIFT_PATTERN.code });
@@ -338,6 +442,7 @@ describe("AttendanceScheduleService", () => {
             dayType: WorkDayType.WORK,
             shiftPatternId: SITE_DAY.id,
           },
+          actorEmployeeId: ACTOR_MANAGER_ID,
           actorEmployeeNo: "EMP001",
         }),
       ).rejects.toMatchObject({
@@ -359,6 +464,7 @@ describe("AttendanceScheduleService", () => {
             dayType: WorkDayType.REGULAR_OFF,
             shiftPatternId: null,
           },
+          actorEmployeeId: ACTOR_MANAGER_ID,
           actorEmployeeNo: "EMP001",
         }),
       ).rejects.not.toBeInstanceOf(AppError);

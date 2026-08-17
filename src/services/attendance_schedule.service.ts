@@ -156,9 +156,31 @@ export class AttendanceScheduleService {
   public async updateScheduleDay(params: {
     accountBookId: string;
     input: IAttendanceScheduleUpdate;
+    actorEmployeeId: string;
     actorEmployeeNo: string;
   }): Promise<IScheduleDayCell> {
-    const { accountBookId, input, actorEmployeeNo } = params;
+    const { accountBookId, input, actorEmployeeId, actorEmployeeNo } = params;
+
+    /**
+     * Info: (20260817 - Luphia) 排班寫入限主管。**這不是計畫書 §7.3 第 1 順位的權限矩陣**，
+     * 是在那份矩陣做出來之前把最大的洞收窄。
+     *
+     * 為什麼不能等：排班是判定的**比較基準**，而判定即時算不落地 ——
+     * 改一格排班就是改一天的歷史判定，且全系統只留一行日誌。
+     * 讀取端（月曆 GET、判定矩陣 A9）維持全帳本可見（那是 §7.3 第 1 順位要處理的），
+     * 這裡只擋**寫入**：能看到別人的班表是隱私問題，能改別人的班表是稽核問題，
+     * 而後者無法事後復原。
+     *
+     * 沿用 `isDepartmentManager`（與銷假徵詢同一個判斷點），不另建第二套角色判定 ——
+     * 同一個問題有兩個答案處，兩者遲早分岔（檢查清單 §2.1）。
+     */
+    const isManager = await this.employees.isDepartmentManager({
+      accountBookId,
+      employeeId: actorEmployeeId,
+    });
+    if (!isManager) {
+      throw new AppError(API_ERRORS.FO_ATTENDANCE_SUPERVISOR_ONLY);
+    }
 
     const employee = await this.employees.findByIdInAccountBook(
       accountBookId,

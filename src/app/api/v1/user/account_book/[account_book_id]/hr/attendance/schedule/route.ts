@@ -23,9 +23,12 @@ import { attendanceScheduleService } from "@/services/attendance_schedule.servic
  * 排班畫面必須能在判定之外獨立存在 —— 下個月的班表現在就排得出來，
  * 而那時還沒有任何打卡可判。
  *
- * ToDo: (20260813 - Julian) Demo 沒有權限控制：任何員工都改得了任何人的班。
- * 正式版排班是 HR／主管的動作，且**必須留下異動軌跡** ——
- * 改排班等於改判定的比較基準，見 service 的說明。
+ * Info: (20260817 - Luphia) PUT 限部門主管（service 層的 `isDepartmentManager` 閘）。
+ * GET 維持全帳本可見 —— 讀取範圍屬計畫書 §7.3 第 1 順位的權限矩陣，尚未實作。
+ *
+ * ToDo: (20260817 - Luphia) 主管閘只是收窄，不是權限矩陣：HR 承辦不是任何部門的
+ * `managerId`，正式版會被這道閘擋住，屆時由權限矩陣取代而不是疊在它上面。
+ * 且**仍然沒有異動軌跡** —— 改排班等於改判定的比較基準，見 service 的說明。
  */
 export async function GET(
   request: NextRequest,
@@ -104,6 +107,7 @@ export async function PUT(
       await attendanceScheduleService.updateScheduleDay({
         accountBookId,
         input: parsed.data,
+        actorEmployeeId: actor.id,
         actorEmployeeNo: actor.employeeNo,
       }),
     );
