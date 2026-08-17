@@ -94,6 +94,30 @@ async function markFulfillmentFailedInTx(
   });
 }
 
+/**
+ * Info: (20260818 - Luphia) 哪些訂單狀態算「已經扣過款」（第三輪 A-2）。
+ *
+ * 判準是「這筆錢是否可能已經或即將離開用戶的帳戶」：
+ * - `PENDING` / `PAYING`：扣款在路上，重複建單會變成扣兩次
+ * - `PAID` / `EXECUTING` / `COMPLETED`：錢收到了
+ * - `MINT_FAILED`：**錢收到了**，只是後續履行失敗——那要走補償，不是重收一次
+ *
+ * 不在此列的 `PAYMENT_FAILED` / `FAILED` / `CANCEL` 一律視為沒扣過，
+ * 重試會真的再扣一次款。
+ */
+const REPLAYABLE_ORDER_STATUSES = [
+  ORDER_STATUS.PENDING,
+  ORDER_STATUS.PAYING,
+  ORDER_STATUS.PAID,
+  ORDER_STATUS.EXECUTING,
+  ORDER_STATUS.COMPLETED,
+  ORDER_STATUS.MINT_FAILED,
+] as const;
+
+function isChargeableOrderStatus(status: string): boolean {
+  return (REPLAYABLE_ORDER_STATUSES as readonly string[]).includes(status);
+}
+
 export class PaymentRepository {
   async getOrderWithUser(orderId: string): Promise<IOrderWithUser | null> {
     return prisma.order.findUnique({
@@ -407,16 +431,31 @@ export class PaymentRepository {
      *
      * 冪等鍵已升格為帶唯一約束的欄位，但改版前建立的訂單只有 `data.idempotencyKey`；
      * 兩邊都查才不會讓舊訂單在重試時被當成「沒扣過」而再扣一次。
+     *
+     * Info: (20260818 - Luphia) **只有「錢真的在路上或已經到」的訂單算重放**（第三輪 A-2）。
+     *
+     * 原本不看 `status`，而扣款失敗只把訂單改成 `PAYMENT_FAILED`、`idempotencyKey`
+     * 這個唯一欄位原封留著。於是管理員在畫面上重按一次邀請，就會找到那張失敗的訂單、
+     * 走進重放分支——不扣款、不加席次，卻照樣建立邀請並寄信。**一個沒付錢的席次。**
+     *
+     * 失敗與取消的訂單必須被視為「沒扣過」，重試才會真的再扣一次款。
      */
     const byColumn = await prisma.order.findUnique({
       where: { idempotencyKey },
     });
-    if (byColumn && byColumn.userId === userId) return byColumn;
+    if (
+      byColumn &&
+      byColumn.userId === userId &&
+      isChargeableOrderStatus(byColumn.status)
+    ) {
+      return byColumn;
+    }
 
     return prisma.order.findFirst({
       where: {
         userId,
         data: { path: ["idempotencyKey"], equals: idempotencyKey },
+        status: { in: [...REPLAYABLE_ORDER_STATUSES] },
       },
       orderBy: { createdAt: "desc" },
     });

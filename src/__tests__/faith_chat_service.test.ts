@@ -11,7 +11,10 @@ import { DEFAULT_FAITH_BILLING } from "@/constants/llm";
 import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
 import { assertAccountBookMember } from "@/services/account_book_access.guard";
 import type { ChatService } from "@/services/chat.service";
-import { loadFaithMemoryForPrompt } from "@/services/faith_memory.service";
+import {
+  isFaithMemoryEnabled,
+  loadFaithMemoryForPrompt,
+} from "@/services/faith_memory.service";
 import { extractAndRecordFaithMemory } from "@/services/faith_memory_extraction.service";
 
 jest.mock("@/repositories/faith_billing_setting.repo", () => ({
@@ -39,6 +42,8 @@ jest.mock("@/services/account_book_access.guard", () => ({
  * 這正是本 repo 先前踩過的「因錯誤的理由而綠」。
  */
 jest.mock("@/services/faith_memory.service", () => ({
+  // Info: (20260818 - Luphia) 方案 gate 提前到預扣之前（第三輪 A-3），需一併 mock
+  isFaithMemoryEnabled: jest.fn(async () => false),
   loadFaithMemoryForPrompt: jest.fn(async () => ({ text: "", totalChars: 0 })),
 }));
 jest.mock("@/services/faith_memory_extraction.service", () => ({
@@ -83,6 +88,8 @@ const BASE_PARAMS = {
 describe("runFaithBilledChat", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Info: (20260818 - Luphia) 預設免費版：不注入記憶、不跑萃取，預扣不含萃取
+    asMock(isFaithMemoryEnabled).mockResolvedValue(false);
     asMock(loadFaithMemoryForPrompt).mockResolvedValue({
       text: "",
       totalChars: 0,
@@ -203,6 +210,11 @@ describe("runFaithBilledChat", () => {
    * 記憶本身的規則（方案 gate、去重、淘汰）在 faith_long_term_memory.test.ts。
    */
   describe("long-term memory", () => {
+    // Info: (20260818 - Luphia) 長期記憶是付費方案專屬；gate 決定注入與萃取兩件事
+    beforeEach(() => {
+      asMock(isFaithMemoryEnabled).mockResolvedValue(true);
+    });
+
     it("injects the memory block into the prompt", async () => {
       asMock(loadFaithMemoryForPrompt).mockResolvedValue({
         text: "Known preferences",
@@ -221,7 +233,11 @@ describe("runFaithBilledChat", () => {
      * Info: (20260817 - Luphia) 注入的記憶必須計入預扣（規範 §5 明列的必改項）：
      * 不計入的話 hold 不再是成本上界，settleSpend 的「只退不補」會變成系統吸收差額。
      */
-    it("charges for the injected memory", async () => {
+    /**
+     * Info: (20260818 - Luphia) 預扣要涵蓋兩件事（第三輪 A-3）：注入的記憶，
+     * 以及**萃取那次呼叫**——萃取是第二次 LLM 呼叫，原本完全沒人付錢。
+     */
+    it("charges for the injected memory and for the extraction call", async () => {
       asMock(loadFaithMemoryForPrompt).mockResolvedValue({
         text: "m".repeat(3000),
         totalChars: 3000,
@@ -229,9 +245,26 @@ describe("runFaithBilledChat", () => {
 
       await runFaithBilledChat(BASE_PARAMS, makeChatStub(3150));
 
+      /**
+       * Info: (20260818 - Luphia) 600 + 334（訊息）+ 1,000（記憶）= 1,934 輸入，
+       * 加 4,096 輸出；萃取再加 300 + 334 + 4,096 + 512 = 5,242。
+       * 合計 11,272 tokens → 12 點。
+       */
       expect(spendCredits).toHaveBeenCalledWith(
-        expect.objectContaining({ cost: BigInt(7) }),
+        expect.objectContaining({ cost: BigInt(12) }),
       );
+    });
+
+    // Info: (20260818 - Luphia) 免費版不跑萃取，預扣不該含那一段
+    it("does not charge for extraction on the free plan", async () => {
+      asMock(isFaithMemoryEnabled).mockResolvedValue(false);
+
+      await runFaithBilledChat(BASE_PARAMS, makeChatStub(3150));
+
+      expect(spendCredits).toHaveBeenCalledWith(
+        expect.objectContaining({ cost: BigInt(6) }),
+      );
+      expect(extractAndRecordFaithMemory).not.toHaveBeenCalled();
     });
 
     // Info: (20260817 - Luphia) 萃取在回覆之後，且拿得到這一輪的問與答

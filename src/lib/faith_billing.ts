@@ -1,4 +1,8 @@
 import {
+  FAITH_MEMORY_EXTRACTION_MAX_OUTPUT_TOKENS,
+  FAITH_MEMORY_EXTRACTION_OVERHEAD_TOKENS,
+} from "@/constants/faith_memory";
+import {
   FAITH_INPUT_CHARS_PER_TOKEN,
   FAITH_PROMPT_OVERHEAD_TOKENS,
   IFaithBillingSetting,
@@ -28,13 +32,35 @@ export function estimateFaithHoldCredits(
   hasImage: boolean,
   setting: IFaithBillingSetting,
   historyChars = 0,
+  /**
+   * Info: (20260818 - Luphia) 這一輪是否會跑記憶萃取（第三輪 A-3）。
+   *
+   * 萃取是**第二次 LLM 呼叫**，內容是本輪的提問加回覆。原本它完全不計費，
+   * 等於每輪費思對話都多燒一次同量級的呼叫而沒有人付錢。
+   *
+   * 要計費就得先算得出上界，否則 hold 不再是成本上界、
+   * `settleSpend` 的「只退不補」前提就破了——而那是這條管線的核心不變式。
+   * 萃取的輸入上界是「指令 + 提問 + 回覆」，回覆的 token 數又以
+   * `maxOutputTokens` 封頂，因此整條算得出來。
+   */
+  includesExtraction = false,
 ): bigint {
   const inputEstimate =
     FAITH_PROMPT_OVERHEAD_TOKENS +
     Math.ceil(messageLength / FAITH_INPUT_CHARS_PER_TOKEN) +
     Math.ceil(Math.max(0, historyChars) / FAITH_INPUT_CHARS_PER_TOKEN) +
     (hasImage ? setting.imageInputTokenEstimate : 0);
-  const worstCaseTokens = inputEstimate + setting.maxOutputTokens;
+
+  const extractionTokens = includesExtraction
+    ? FAITH_MEMORY_EXTRACTION_OVERHEAD_TOKENS +
+      Math.ceil(messageLength / FAITH_INPUT_CHARS_PER_TOKEN) +
+      // Info: (20260818 - Luphia) 回覆會整段進萃取的 prompt，其上界就是本輪的輸出上界
+      setting.maxOutputTokens +
+      FAITH_MEMORY_EXTRACTION_MAX_OUTPUT_TOKENS
+    : 0;
+
+  const worstCaseTokens =
+    inputEstimate + setting.maxOutputTokens + extractionTokens;
   const credits = Math.ceil(worstCaseTokens / setting.tokensPerCredit);
   return BigInt(Math.max(1, credits));
 }

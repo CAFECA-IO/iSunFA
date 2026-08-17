@@ -17,7 +17,11 @@ import {
 } from "@/services/spend.service";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { buildShortTermHistory } from "@/lib/faith_memory/short_term";
-import { loadFaithMemoryForPrompt } from "@/services/faith_memory.service";
+import {
+  isFaithMemoryEnabled,
+  loadFaithMemoryForPrompt,
+} from "@/services/faith_memory.service";
+import { runWithUsageCapture } from "@/lib/llm/usage_scope";
 import { extractAndRecordFaithMemory } from "@/services/faith_memory_extraction.service";
 
 /**
@@ -105,12 +109,15 @@ export async function runFaithBilledChat(
   /**
    * Info: (20260817 - Luphia) 長期記憶（第一輪 C-1）：付費方案專屬，讀取側 fail-closed。
    * 必須在預扣之前載入——注入的內容要計入 hold，理由同短期記憶。
+   *
+   * Info: (20260818 - Luphia) 方案判定提前並在此處取得一次（第三輪 A-3）：
+   * 它同時決定「要不要注入記憶」與「這一輪會不會跑萃取」，
+   * 而後者要計入預扣——萃取是第二次 LLM 呼叫，原本完全沒人付錢。
    */
-  const memory = await loadFaithMemoryForPrompt({
-    userId,
-    teamId,
-    nowSec: params.nowSec,
-  });
+  const memoryEnabled = await isFaithMemoryEnabled(teamId, params.nowSec);
+  const memory = memoryEnabled
+    ? await loadFaithMemoryForPrompt({ userId, teamId, nowSec: params.nowSec })
+    : { text: "", totalChars: 0 };
 
   // Info: (20260809 - Luphia) 計費設定為系統設定，自 DB 取得（查無設定列時 fail-safe 回預設值）
   const billing = await faithBillingSettingRepo.resolveSetting();
@@ -125,6 +132,8 @@ export async function runFaithBilledChat(
     billing,
     // Info: (20260817 - Luphia) 注入的前文與長期記憶一併計入預扣（第一輪 C-1 / C-2）
     history.totalChars + memory.totalChars,
+    // Info: (20260818 - Luphia) 會跑萃取就要把那次呼叫也算進上界（第三輪 A-3）
+    memoryEnabled,
   );
 
   const spend = await spendCredits({
@@ -156,16 +165,52 @@ export async function runFaithBilledChat(
 
   // Info: (20260808 - Luphia) 2. 呼叫 LLM；失敗即全額退還預扣，不留懸帳
   let generation: Awaited<ReturnType<ChatService["generateFaithResponse"]>>;
+  let capturedTotalTokens = 0;
   try {
-    generation = await chatService.generateFaithResponse(
-      message,
-      tags,
-      file,
-      mimeType,
-      billing.maxOutputTokens,
-      history.turns,
-      memory.text,
-    );
+    /**
+     * Info: (20260818 - Luphia) 把回覆與萃取一起框進用量捕捉範圍（第三輪 A-3）。
+     *
+     * 萃取原本完全在計費之外：`recordLlmUsage` 有被呼叫，但不在任何範圍內，
+     * `usage_scope.ts:47` 的 `if (!scope) return` 會把它整包丟掉——
+     * 與第一輪抓到的段落草稿漏計是同一個形狀。
+     *
+     * 兩次呼叫都在同一個範圍裡，因此下面的結算是這一輪的**總**用量，
+     * 而預扣也已把萃取的上界算進去（見 estimateFaithHoldCredits）。
+     */
+    const captured = await runWithUsageCapture(async () => {
+      const reply = await chatService.generateFaithResponse(
+        message,
+        tags,
+        file,
+        mimeType,
+        billing.maxOutputTokens,
+        history.turns,
+        memory.text,
+      );
+
+      /**
+       * Info: (20260817 - Luphia) 萃取長期記憶（第一輪 C-1）。
+       *
+       * 在**回覆已經產生之後**執行，且 `extractAndRecordFaithMemory` 永不拋錯：
+       * 「記憶沒寫成功」不該讓使用者看不到答案（規範 §4.2 末條）。
+       *
+       * Info: (20260818 - Luphia) 移進捕捉範圍內、且在結算之前（第三輪 A-3）：
+       * 它燒掉的 tokens 要算進這一輪的帳。
+       */
+      if (memoryEnabled) {
+        await extractAndRecordFaithMemory({
+          userId,
+          teamId,
+          userMessage: message,
+          assistantReply: reply.text,
+          nowSec: params.nowSec,
+        });
+      }
+
+      return reply;
+    });
+    generation = captured.result;
+    capturedTotalTokens = captured.usage.totalTokens;
   } catch (llmError) {
     await refundCredits({
       idempotencyKey: billingKey,
@@ -175,8 +220,13 @@ export async function runFaithBilledChat(
   }
 
   // Info: (20260808 - Luphia) 3. 結算：以 SDK usageMetadata 為準，無條件進位、最低 1 點
+  /**
+   * Info: (20260818 - Luphia) 以**捕捉到的總用量**結算（第三輪 A-3）：
+   * 回覆 + 萃取兩次呼叫。捕捉不到（範圍為 0）時退回 SDK 回報的單次用量，
+   * 不要因為觀測缺失而少收——但也不會多收，因為預扣已是上界。
+   */
   const actualCredits = settleFaithCredits(
-    generation.usage.totalTokens,
+    Math.max(capturedTotalTokens, generation.usage.totalTokens),
     billing,
   );
   /**
@@ -199,21 +249,6 @@ export async function runFaithBilledChat(
       userId,
       featureCode: BILLABLE_FEATURE_CODE.FAITH_CHAT,
     },
-  });
-
-  /**
-   * Info: (20260817 - Luphia) 萃取長期記憶（第一輪 C-1）。
-   *
-   * 在**回覆已經產生之後**執行，且 `extractAndRecordFaithMemory` 永不拋錯：
-   * 「記憶沒寫成功」不該讓使用者看不到答案，也不該讓已經結算的這一輪失敗
-   * （規範 §4.2 末條）。方案 gate 在 service 內側再判一次。
-   */
-  await extractAndRecordFaithMemory({
-    userId,
-    teamId,
-    userMessage: message,
-    assistantReply: generation.text,
-    nowSec: params.nowSec,
   });
 
   return {

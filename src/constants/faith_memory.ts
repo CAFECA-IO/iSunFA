@@ -59,3 +59,14 @@ export const FAITH_MEMORY_STATEMENT_MAX_CHARS = 200;
  * 「只退不補」的不變式維持成立。1,200 字元 ≈ 400 tokens。
  */
 export const FAITH_MEMORY_PROMPT_MAX_CHARS = 1200;
+
+/**
+ * Info: (20260818 - Luphia) 萃取呼叫的輸出上界（第三輪 A-3）。
+ *
+ * 萃取要計費，而計費的前提是預扣算得出上界；輸出沒有上界就估不出來。
+ * 一輪對話能明示的偏好本來就不多，512 tokens 綽綽有餘。
+ */
+export const FAITH_MEMORY_EXTRACTION_MAX_OUTPUT_TOKENS = 512;
+
+// Info: (20260818 - Luphia) 萃取 prompt 的固定開銷（指令與分隔符），估算用
+export const FAITH_MEMORY_EXTRACTION_OVERHEAD_TOKENS = 300;

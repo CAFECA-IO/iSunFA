@@ -5,12 +5,18 @@ import {
   LlmTaskKeyEnum,
 } from "@/constants/llm";
 import type { Schema } from "@google/generative-ai";
-import { FAITH_MEMORY_CATEGORY } from "@/constants/faith_memory";
+import {
+  FAITH_MEMORY_CATEGORY,
+  FAITH_MEMORY_EXTRACTION_MAX_OUTPUT_TOKENS,
+} from "@/constants/faith_memory";
 import {
   parseExtractedItems,
   type IFaithMemoryItem,
 } from "@/lib/faith_memory/items";
-import { recordFaithMemoryItems } from "@/services/faith_memory.service";
+import {
+  isFaithMemoryEnabled,
+  recordFaithMemoryItems,
+} from "@/services/faith_memory.service";
 import { logger } from "@/lib/utils/logger";
 
 /**
@@ -89,6 +95,18 @@ export async function extractAndRecordFaithMemory(params: {
 }): Promise<IFaithMemoryItem[]> {
   const { userId, teamId, userMessage, assistantReply, nowSec } = params;
 
+  /**
+   * Info: (20260818 - Luphia) **方案 gate 必須在呼叫 LLM 之前**（第三輪 A-3）。
+   *
+   * 原本先萃取、再由 `recordFaithMemoryItems` 判方案，於是免費團隊也照跑這次呼叫：
+   * 把使用者的對話送去做偏好萃取，然後把結果丟掉。而 ToS §3.7 明載免費版
+   * 「不提供長期記憶與回饋學習機制，故不保留您的偏好紀錄」——
+   * 那是一次**無對價、無條款依據的個資處理**，而且送給了第三方 LLM。
+   *
+   * 成本面同理：不 gate 等於每輪費思對話都多燒一次同量級的呼叫。
+   */
+  if (!(await isFaithMemoryEnabled(teamId, nowSec))) return [];
+
   try {
     const chatService = params.chatService ?? new ChatService();
     const raw = await chatService.generateRaw(
@@ -98,6 +116,11 @@ export async function extractAndRecordFaithMemory(params: {
         // Info: (20260817 - Luphia) 萃取任務一律 temperature 0（CLAUDE.md §7）
         temperature: LLM_TEMPERATURE.EXTRACTION,
         isJson: true,
+        /**
+         * Info: (20260818 - Luphia) 輸出上界（第三輪 A-3）：萃取現在要計費，
+         * 而預扣得算得出上界；不封頂就估不出來。
+         */
+        maxOutputTokens: FAITH_MEMORY_EXTRACTION_MAX_OUTPUT_TOKENS,
         taskKey: LlmTaskKeyEnum.FAITH_CHAT,
         timeoutMs: LLM_SYNC_TIMEOUT_MS,
       },

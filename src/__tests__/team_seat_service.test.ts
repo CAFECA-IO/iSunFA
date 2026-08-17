@@ -358,7 +358,7 @@ describe("chargeSeatAddition", () => {
     asMock(teamRepo.countMembers).mockResolvedValue(3);
     asMock(paymentRepo.findOrderByIdempotencyKey).mockResolvedValue({
       id: "order-seat-1",
-      amount: BigInt(-420),
+      amount: BigInt(420),
     });
 
     const result = await chargeSeatAddition({
@@ -367,9 +367,30 @@ describe("chargeSeatAddition", () => {
       idempotencyKey: "invite:team-1:0xabc",
     });
 
+    // Info: (20260818 - Luphia) 回原本的金額；先前回的是負數（第三輪 D）
     expect(result).toMatchObject({ charged: false, amount: 420 });
     expect(chargeOrderWithSavedCard).not.toHaveBeenCalled();
     expect(teamSubscriptionRepo.addSeats).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 冪等鍵必須綁計費週期（第三輪 A-2）。
+   *
+   * 不綁的話，每一個「曾經被收過費的信箱／位址」都是一張**永久免費席次券**：
+   * 成員離職移出、半年後再邀請回來，會找到當初那張 COMPLETED 訂單而跳過扣款。
+   */
+  it("scopes the idempotency key to the billing period", async () => {
+    asMock(teamRepo.countMembers).mockResolvedValue(3);
+
+    await chargeSeatAddition({
+      teamId: "team-1",
+      nowMs: MID_PERIOD,
+      idempotencyKey: "invite:team-1:0xabc",
+    });
+
+    const lookupKey = asMock(paymentRepo.findOrderByIdempotencyKey).mock
+      .calls[0][1];
+    expect(lookupKey).toBe(`invite:team-1:0xabc#p${PERIOD_START.getTime()}`);
   });
 
   // Info: (20260814 - Luphia) 扣款失敗必須丟錯：呼叫端據此不建立邀請（fail-closed）

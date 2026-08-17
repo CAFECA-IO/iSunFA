@@ -255,11 +255,24 @@ export async function chargeSeatAddition(
   /**
    * Info: (20260814 - Luphia) 冪等：同一把鍵已經扣過就不再扣第二次（第二輪 B-3）。
    * 建立邀請失敗後客戶端重試時，這道檢查是唯一擋得住重複扣款的東西。
+   *
+   * Info: (20260818 - Luphia) **鍵要綁計費週期**（第三輪 A-2）。
+   *
+   * 呼叫端給的是「團隊 + 對象」這種業務鍵，不含時間。於是每一個
+   * 「曾經被收過費的信箱／位址」都成了一張**永久免費席次券**：成員離職移出、
+   * 半年後再邀請回來，會找到當初那張 COMPLETED 訂單而跳過扣款。
+   *
+   * 由這裡補上週期而不是要求呼叫端自己帶：週期只有這裡知道
+   * （呼叫端沒有 subscription），而「忘記帶」的後果是安靜地不收錢。
    */
-  if (idempotencyKey) {
+  const scopedKey = idempotencyKey
+    ? `${idempotencyKey}#p${subscription.currentPeriodStart.getTime()}`
+    : undefined;
+
+  if (scopedKey) {
     const existing = await paymentRepo.findOrderByIdempotencyKey(
       lastOrder.userId,
-      idempotencyKey,
+      scopedKey,
     );
     if (existing) {
       logger.info("seat addition replayed; charge skipped", {
@@ -268,7 +281,12 @@ export async function chargeSeatAddition(
       });
       return {
         charged: false,
-        amount: Number(-existing.amount),
+        /**
+         * Info: (20260818 - Luphia) 回原本的金額（第三輪 D）。
+         * 先前寫 `Number(-existing.amount)`，回的是負數——前端只讀
+         * `reusedPaidSeat` 所以看不出來，但值是錯的。
+         */
+        amount: Number(existing.amount),
         orderId: existing.id,
         seats,
       };
@@ -296,11 +314,11 @@ export async function chargeSeatAddition(
       seats,
       unitPrice: subscription.unitPrice,
       // Info: (20260815 - Luphia) 由 DB 的唯一約束擋下並發的重複建單（第二輪 B-3）
-      idempotencyKey,
+      idempotencyKey: scopedKey,
       data: {
         seatAddition: true,
         // Info: (20260814 - Luphia) 發起者寫進訂單：事後查得出是誰發動的
-        idempotencyKey: idempotencyKey ?? null,
+        idempotencyKey: scopedKey ?? null,
         operatorUserId: operatorUserId ?? null,
         teamId,
       },
@@ -309,7 +327,7 @@ export async function chargeSeatAddition(
     if (isUniqueKeyConflict(error)) {
       logger.info("seat addition raced; charge skipped", {
         teamId,
-        idempotencyKey: idempotencyKey ?? "(none)",
+        idempotencyKey: scopedKey ?? "(none)",
       });
       return { charged: false, amount: 0, seats };
     }
