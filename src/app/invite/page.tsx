@@ -33,6 +33,12 @@ import AuthModal from "@/components/auth/auth_modal";
  * 又會把 token 帶出去，而該做的事此時已經做完了。
  */
 
+/**
+ * Info: (20260818 - Luphia) 本分頁內的 token 備援鍵（第四輪 B-4）。
+ * 只在這個分頁存活，接受或拒絕成功後立即清除。
+ */
+const INVITE_TOKEN_STORAGE_KEY = "isunfa.invite.token";
+
 type PageStatus =
   | "LOADING"
   | "READY"
@@ -61,17 +67,40 @@ export default function InvitePage() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
   /**
-   * Info: (20260818 - Luphia) 先把 token 從 fragment 取出來，並抹掉網址上的 hash。
+   * Info: (20260818 - Luphia) 從 fragment 取出 token，抹掉網址上的 hash，
+   * 並在**本分頁**內留一份備援。
+   *
    * `history.replaceState` 不會觸發導航，因此不會重跑這支 effect。
+   *
+   * Info: (20260818 - Luphia) 備援是必要的（第四輪 B-4）。
+   *
+   * 只抹掉 hash 而不留備援的話，按 F5、或在 passkey 對話框按取消之後重來，
+   * token 就消失了——畫面直接變成「連結無效」，使用者得回信箱重點一次連結。
+   * 那是這次修改自己引入的體感回歸。
+   *
+   * 用 `sessionStorage` 而不是 `localStorage`：它只活在這個分頁，關掉即消失，
+   * 而且完成（接受或拒絕）之後立即清掉。這仍然守住原本的目的——
+   * token 不進 access log、不進 `Referer`、不留在可分享的網址裡。
    */
   useEffect(() => {
     const fromHash = window.location.hash.replace(/^#/, "").trim();
-    if (!fromHash) {
-      setStatus("INVALID");
+    if (fromHash) {
+      setToken(fromHash);
+      window.sessionStorage.setItem(INVITE_TOKEN_STORAGE_KEY, fromHash);
+      window.history.replaceState(null, "", window.location.pathname);
       return;
     }
-    setToken(fromHash);
-    window.history.replaceState(null, "", window.location.pathname);
+
+    // Info: (20260818 - Luphia) 沒有 hash：可能是重新整理，看看本分頁有沒有備援
+    const stored = window.sessionStorage
+      .getItem(INVITE_TOKEN_STORAGE_KEY)
+      ?.trim();
+    if (stored) {
+      setToken(stored);
+      return;
+    }
+
+    setStatus("INVALID");
   }, []);
 
   useEffect(() => {
@@ -121,6 +150,8 @@ export default function InvitePage() {
       });
       const json = await res.json();
       if (json.success) {
+        // Info: (20260818 - Luphia) 用掉了就清掉備援（第四輪 B-4）
+        window.sessionStorage.removeItem(INVITE_TOKEN_STORAGE_KEY);
         setStatus("ACCEPTED");
         // Info: (20260815 - Luphia) 讓成功畫面停留一下再導頁，否則會像什麼都沒發生
         setTimeout(() => router.push("/user/team"), 1200);
@@ -153,6 +184,7 @@ export default function InvitePage() {
       });
       const json = await res.json();
       if (json.success) {
+        window.sessionStorage.removeItem(INVITE_TOKEN_STORAGE_KEY);
         setStatus("DECLINED");
       } else {
         setError(json.message || t("invite_page.decline_failed"));
