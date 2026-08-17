@@ -69,13 +69,24 @@ export function filterEligibleTeams<T extends { role: string | null }>(
 export function resolveBlockingReason(params: {
   mode: PurchaseMode;
   usesTeam: boolean;
-  eligibleTeamCount: number;
+  /**
+   * Info: (20260817 - Luphia) 改收 id 清單而非只收數量（PR #6652 第二輪 C-3）。
+   *
+   * 原本只判斷 `!selectedTeamId`，於是「選了 T3 買點數 → 切到訂閱（T3 不合格）」
+   * 之後，殘留的 T3 仍讓送出鈕保持啟用，而下拉框是空白的、金額退回單席價。
+   * 光靠呼叫端在切換時清掉選擇是不夠的——那是一個容易漏掉的 effect，
+   * 而這個函式是送出鈕的唯一守門員，它自己就該確認選中的團隊還在名單上。
+   */
+  eligibleTeamIds: readonly string[];
   selectedTeamId: string | null;
 }): BlockingReason | null {
-  const { mode, usesTeam, eligibleTeamCount, selectedTeamId } = params;
+  const { mode, usesTeam, eligibleTeamIds, selectedTeamId } = params;
   if (mode === PURCHASE_MODE.NONE) return null;
   if (!usesTeam) return null;
-  if (eligibleTeamCount === 0) return BLOCKING_REASON.NO_ELIGIBLE_TEAM;
-  if (!selectedTeamId) return BLOCKING_REASON.TEAM_NOT_SELECTED;
+  if (eligibleTeamIds.length === 0) return BLOCKING_REASON.NO_ELIGIBLE_TEAM;
+  // Info: (20260817 - Luphia) 選了但已不合格，與「還沒選」是同一件事
+  if (!selectedTeamId || !eligibleTeamIds.includes(selectedTeamId)) {
+    return BLOCKING_REASON.TEAM_NOT_SELECTED;
+  }
   return null;
 }

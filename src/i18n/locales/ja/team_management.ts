@@ -74,6 +74,8 @@ export const teamManagement = {
   wallet: {
     title: "チームウォレットとサブスクリプション枠",
     quota_title: "サブスクリプション枠",
+    my_quota_title: "あなたの利用枠",
+    team_total_title: "チーム合計（{{count}} 名）",
     load_failed: "読み込めませんでした。しばらくしてからお試しください。",
     retry: "再試行",
     quota_5h: "5 時間ごとの枠",

@@ -248,8 +248,12 @@ export const pricing = {
       // Info: (20260814 - Luphia) 訂閱買到的是額度視窗，不是錢包點數（設計書 §7 履行只寫 TeamSubscription）
       subscription_quota_note:
         "Your subscription grants plan quota, which resets every 5 hours and every week. Unused quota does not roll over and is not converted into credits.",
+      amount_changed_title: "The amount has changed",
+      amount_changed_hint:
+        "Your team size changed while this page was open. It showed {{shown}}; the actual charge is {{actual}}. Nothing has been charged yet — you will only be charged after you confirm.",
+      amount_changed_confirm: "Confirm and pay the new amount",
       subscription_activated:
-        "The plan is active. Your team quota takes effect immediately.",
+        "The plan is active. Each member's quota takes effect immediately.",
       selected_modules: "Selected Modules",
       track_order_btn: "Track Order",
     },

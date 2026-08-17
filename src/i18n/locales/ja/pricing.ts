@@ -249,8 +249,12 @@ export const pricing = {
       // Info: (20260814 - Luphia) 訂閱買到的是額度視窗，不是錢包點數（設計書 §7 履行只寫 TeamSubscription）
       subscription_quota_note:
         "サブスクリプションではプランの利用枠をご利用いただけます。利用枠は 5 時間ごとおよび毎週リセットされ、翌期への繰り越しやクレジットへの変換はありません。",
+      amount_changed_title: "金額が変更されました",
+      amount_changed_hint:
+        "このページを開いている間にチームの人数が変わりました。表示は {{shown}} でしたが、実際のお支払いは {{actual}} です。まだ請求されていません。確認後にお支払いとなります。",
+      amount_changed_confirm: "確認して新しい金額で支払う",
       subscription_activated:
-        "プランが有効になりました。チームの利用枠は直ちに反映されます。",
+        "プランが有効になりました。各メンバーの利用枠が直ちに反映されます。",
       selected_modules: "選択したモジュール",
       track_order_btn: "注文追跡",
     },

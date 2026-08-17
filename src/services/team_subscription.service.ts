@@ -21,6 +21,7 @@ import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import type {
   IAccountBookQuotaView,
   IQuotaStatus,
+  ITeamQuotaTotals,
   ITeamSubscriptionView,
 } from "@/interfaces/team_wallet";
 import {
@@ -95,6 +96,47 @@ async function buildQuotaStatus(
   };
 }
 
+/**
+ * Info: (20260817 - Luphia) 全隊用量合計（PR #6652 第二輪 C-1）。
+ *
+ * `limit` 是「每人上限 × 目前人數」：額度一人一池，團隊買到的總量就是這個乘積。
+ * 用當下人數而非 `subscription.seats`——後者是唯寫欄位（第二輪 C-7），對不了帳。
+ *
+ * 只回合計，不回逐人明細（產品決定 20260817）。
+ */
+async function buildTeamQuotaTotals(
+  teamId: string,
+  planId: TeamPlanId,
+  nowSec: number,
+): Promise<ITeamQuotaTotals> {
+  const [quota, memberCount, usage] = await Promise.all([
+    subscriptionPlanQuotaRepo.resolveQuota(planId),
+    teamRepo.countMembers(teamId),
+    teamQuotaUsageRepo.sumTeamWindowUsage(
+      teamId,
+      getWindowKey5h(nowSec),
+      getWindowKeyWeek(nowSec),
+    ),
+  ]);
+
+  // Info: (20260817 - Luphia) 至少 1：人數為 0 時分母不能是 0，否則進度條會變成 NaN
+  const seats = Math.max(1, memberCount);
+
+  return {
+    memberCount,
+    quota5h: {
+      limit: String(BigInt(quota.per5h) * BigInt(seats)),
+      used: usage.used5h.toString(),
+      resetAt: getResetAt5h(nowSec),
+    },
+    quotaWeek: {
+      limit: String(BigInt(quota.perWeek) * BigInt(seats)),
+      used: usage.usedWeek.toString(),
+      resetAt: getResetAtWeek(nowSec),
+    },
+  };
+}
+
 export async function getTeamSubscriptionView(params: {
   userId: string;
   teamId: string;
@@ -109,6 +151,8 @@ export async function getTeamSubscriptionView(params: {
     // Info: (20260807 - Luphia) 顯示「有效」方案：過期或非 ACTIVE 一律呈現 free，與扣費側一致
     const planId = resolveEffectivePlanId(subscription, nowSec);
     const quota = await buildQuotaStatus(teamId, userId, planId, nowSec);
+    // Info: (20260817 - Luphia) 全隊合計（第二輪 C-1）：付費者看得到團隊實際消耗
+    const teamTotals = await buildTeamQuotaTotals(teamId, planId, nowSec);
     // Info: (20260809 - Luphia) 費率為系統設定，自 DB 取得
     const billing = await faithBillingSettingRepo.resolveSetting();
 
@@ -125,6 +169,7 @@ export async function getTeamSubscriptionView(params: {
         : 0,
       autoRenew: subscription?.autoRenew ?? false,
       quota,
+      teamTotals,
       faithTokensPerCredit: billing.tokensPerCredit,
     };
   });

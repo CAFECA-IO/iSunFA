@@ -75,6 +75,16 @@ export default function PaymentModal({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /**
+   * Info: (20260817 - Luphia) 建單金額與畫面不符時暫存的那張訂單（第二輪 C-4）。
+   * 訂單已經以正確金額建立，只是還沒扣款；使用者確認後沿用同一張，
+   * 不重新建單——否則每按一次就多一張孤兒 PENDING 訂單。
+   */
+  const [pendingTeamOrder, setPendingTeamOrder] = useState<{
+    orderId: string;
+    challenge: string;
+    cost?: number;
+  } | null>(null);
   const [step, setStep] = useState<PaymentStep>(
     initialStep || PaymentStep.confirm,
   );
@@ -470,6 +480,26 @@ export default function PaymentModal({
        */
       if (orderCreator) {
         const teamOrder = await orderCreator(selectedPaymentMethodId);
+
+        /**
+         * Info: (20260817 - Luphia) 建單金額與畫面上的金額不一致就先停下（第二輪 C-4）。
+         *
+         * 席次金額是前端用**頁面載入時**的團隊人數算的，實收由 server 建單當下
+         * 重算。停留期間另一位管理員加了人，使用者看到 4,200、卡被扣 5,040——
+         * 價目與實收不一致是最不能出現在結帳畫面上的東西。
+         *
+         * 停下來而不是靜靜改數字：訂單已經以正確金額建立，這裡只是不扣款，
+         * 使用者確認後沿用**同一張訂單**（不重建，否則會留下一堆孤兒 PENDING 單）。
+         */
+        if (
+          typeof teamOrder.cost === "number" &&
+          String(teamOrder.cost) !== String(amount)
+        ) {
+          setPendingTeamOrder(teamOrder);
+          setLoading(false);
+          return;
+        }
+
         await completeCheckout(teamOrder.orderId, teamOrder.challenge);
         return;
       }
@@ -971,6 +1001,58 @@ export default function PaymentModal({
                                   <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
                                     {purchaseBlockingMessage}
                                   </p>
+                                )}
+                                {/**
+                                 * Info: (20260817 - Luphia) 建單金額與畫面不符（第二輪 C-4）。
+                                 * 停留期間團隊人數變了，實收會是這裡的數字。
+                                 * 沒有按下確認之前不扣款，按下之後沿用同一張訂單。
+                                 */}
+                                {pendingTeamOrder && (
+                                  <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900">
+                                    <p className="font-semibold">
+                                      {t(
+                                        "pricing.credits.payment_modal.amount_changed_title",
+                                      )}
+                                    </p>
+                                    <p className="mt-1">
+                                      {t(
+                                        "pricing.credits.payment_modal.amount_changed_hint",
+                                        {
+                                          shown: `NT$ ${Number(amount).toLocaleString()}`,
+                                          actual: `NT$ ${Number(
+                                            pendingTeamOrder.cost ?? 0,
+                                          ).toLocaleString()}`,
+                                        },
+                                      )}
+                                    </p>
+                                    <button
+                                      type="button"
+                                      disabled={loading}
+                                      onClick={async () => {
+                                        const order = pendingTeamOrder;
+                                        setPendingTeamOrder(null);
+                                        setLoading(true);
+                                        try {
+                                          await completeCheckout(
+                                            order.orderId,
+                                            order.challenge,
+                                          );
+                                        } catch (err) {
+                                          setError(
+                                            err instanceof Error
+                                              ? err.message
+                                              : String(err),
+                                          );
+                                          setLoading(false);
+                                        }
+                                      }}
+                                      className="mt-2 inline-flex items-center justify-center rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+                                    >
+                                      {t(
+                                        "pricing.credits.payment_modal.amount_changed_confirm",
+                                      )}
+                                    </button>
+                                  </div>
                                 )}
                                 <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-4">
                                   <button

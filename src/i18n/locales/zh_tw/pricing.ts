@@ -244,7 +244,11 @@ export const pricing = {
       // Info: (20260814 - Luphia) 訂閱買到的是額度視窗，不是錢包點數（設計書 §7 履行只寫 TeamSubscription）
       subscription_quota_note:
         "訂閱期間依方案額度使用；額度每 5 小時與每週自動重置，不累積至下一期，也不會轉為點數。",
-      subscription_activated: "方案已啟用，團隊額度即刻生效。",
+      amount_changed_title: "金額已更新",
+      amount_changed_hint:
+        "您停留期間團隊人數有變動。畫面原本顯示 {{shown}}，實際應付為 {{actual}}。尚未扣款，確認後才會付款。",
+      amount_changed_confirm: "確認並以新金額付款",
+      subscription_activated: "方案已啟用，每位成員的額度即刻生效。",
       selected_modules: "已選模組",
     },
     tracking: {

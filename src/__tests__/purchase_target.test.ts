@@ -76,7 +76,7 @@ describe("blocking reason", () => {
       resolveBlockingReason({
         mode: PURCHASE_MODE.SUBSCRIPTION,
         usesTeam: true,
-        eligibleTeamCount: 3,
+        eligibleTeamIds: ["t1", "t2", "t3"],
         selectedTeamId: null,
       }),
     ).toBe(BLOCKING_REASON.TEAM_NOT_SELECTED);
@@ -87,7 +87,7 @@ describe("blocking reason", () => {
       resolveBlockingReason({
         mode: PURCHASE_MODE.SUBSCRIPTION,
         usesTeam: true,
-        eligibleTeamCount: 0,
+        eligibleTeamIds: [],
         selectedTeamId: null,
       }),
     ).toBe(BLOCKING_REASON.NO_ELIGIBLE_TEAM);
@@ -98,7 +98,7 @@ describe("blocking reason", () => {
       resolveBlockingReason({
         mode: PURCHASE_MODE.CREDIT_PACK,
         usesTeam: false,
-        eligibleTeamCount: 0,
+        eligibleTeamIds: [],
         selectedTeamId: null,
       }),
     ).toBeNull();
@@ -110,7 +110,7 @@ describe("blocking reason", () => {
       resolveBlockingReason({
         mode: PURCHASE_MODE.NONE,
         usesTeam: true,
-        eligibleTeamCount: 0,
+        eligibleTeamIds: [],
         selectedTeamId: null,
       }),
     ).toBeNull();
@@ -121,10 +121,28 @@ describe("blocking reason", () => {
       resolveBlockingReason({
         mode: PURCHASE_MODE.CREDIT_PACK,
         usesTeam: true,
-        eligibleTeamCount: 2,
+        eligibleTeamIds: ["t1", "t2"],
         selectedTeamId: "t1",
       }),
     ).toBeNull();
+  });
+
+  /**
+   * Info: (20260817 - Luphia) 切換購買模式後殘留的選擇（PR #6652 第二輪 C-3）。
+   *
+   * 買點數時 ADMIN 也能代表團隊付款，訂閱只有 OWNER 可以。先選了以 ADMIN
+   * 身分合格的 T3、再切到訂閱，那個 id 會留在 state 裡——原本只檢查
+   * 「有沒有選」的版本會放行，而下拉框是空白的、金額退回單席價。
+   */
+  it("blocks when the selected team is no longer eligible", () => {
+    expect(
+      resolveBlockingReason({
+        mode: PURCHASE_MODE.SUBSCRIPTION,
+        usesTeam: true,
+        eligibleTeamIds: ["t1", "t2"],
+        selectedTeamId: "t3",
+      }),
+    ).toBe(BLOCKING_REASON.TEAM_NOT_SELECTED);
   });
 });
 
@@ -180,5 +198,41 @@ describe("team purchase entry points", () => {
     );
     expect(modal).toMatch(/if\s*\(orderCreator\)\s*\{/);
     expect(modal).toMatch(/await orderCreator\(selectedPaymentMethodId\)/);
+  });
+
+  /**
+   * Info: (20260817 - Luphia) 建單金額與畫面不符時必須先停下（PR #6652 第二輪 C-4）。
+   *
+   * 席次金額由前端用**頁面載入時**的人數算，實收由 server 建單當下重算；
+   * 停留期間有人加入，使用者看到 4,200、卡被扣 5,040。
+   *
+   * 這裡以原始碼比對而非行為測試，與同層那條同樣的理由：這段邏輯在 React 元件裡，
+   * 而要測的是「比對存在且發生在扣款之前」這個順序——順序一旦被改掉，
+   * 症狀是使用者被扣了他沒看過的金額，那不該只靠 code review 擋。
+   */
+  it("checks the server amount before charging the card", () => {
+    const modal = readFileSync(
+      join(process.cwd(), "src", "components", "pricing", "payment_modal.tsx"),
+      "utf8",
+    );
+
+    const creatorAt = modal.indexOf(
+      "await orderCreator(selectedPaymentMethodId)",
+    );
+    const compareAt = modal.indexOf(
+      "String(teamOrder.cost) !== String(amount)",
+    );
+    const checkoutAt = modal.indexOf(
+      "await completeCheckout(teamOrder.orderId, teamOrder.challenge)",
+    );
+
+    expect(compareAt).toBeGreaterThan(-1);
+    // Info: (20260817 - Luphia) 建單之後、扣款之前
+    expect(compareAt).toBeGreaterThan(creatorAt);
+    expect(checkoutAt).toBeGreaterThan(compareAt);
+    // Info: (20260817 - Luphia) 不符時是 return，不是繼續往下扣款
+    expect(modal).toMatch(
+      /setPendingTeamOrder\(teamOrder\);[\s\S]{0,120}?return;/,
+    );
   });
 });

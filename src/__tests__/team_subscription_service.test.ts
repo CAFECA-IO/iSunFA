@@ -32,7 +32,10 @@ jest.mock("@/repositories/subscription_plan_quota.repo", () => ({
   subscriptionPlanQuotaRepo: { resolveQuota: jest.fn() },
 }));
 jest.mock("@/repositories/team_quota_usage.repo", () => ({
-  teamQuotaUsageRepo: { sumWindowUsage: jest.fn() },
+  teamQuotaUsageRepo: {
+    sumWindowUsage: jest.fn(),
+    sumTeamWindowUsage: jest.fn(),
+  },
 }));
 jest.mock("@/repositories/faith_billing_setting.repo", () => ({
   faithBillingSettingRepo: { resolveSetting: jest.fn() },
@@ -84,6 +87,68 @@ describe("getTeamSubscriptionView", () => {
     asMock(teamQuotaUsageRepo.sumWindowUsage).mockResolvedValue({
       used5h: BigInt(3),
       usedWeek: BigInt(12),
+    });
+    // Info: (20260817 - Luphia) 全隊合計（第二輪 C-1）：五個人加起來的用量
+    asMock(teamQuotaUsageRepo.sumTeamWindowUsage).mockResolvedValue({
+      used5h: BigInt(31),
+      usedWeek: BigInt(150),
+    });
+  });
+
+  /**
+   * Info: (20260817 - Luphia) 全隊合計（PR #6652 第二輪 C-1）。
+   *
+   * 額度改成一人一池之後，付費者在這個頁面只看得到自己的進度條，
+   * 而團隊實際消耗多少，系統中沒有任何介面說得出來。
+   * 合計的分母是「每人上限 × 人數」——寫成每人上限就會讓 5 人團隊看到 310%。
+   */
+  describe("team totals", () => {
+    it("multiplies the per-member limit by the member count", async () => {
+      const view = await getTeamSubscriptionView({
+        userId: "user-1",
+        teamId: "team-1",
+        nowSec: NOW_SEC,
+      });
+
+      expect(view.teamTotals.memberCount).toBe(5);
+      // Info: (20260817 - Luphia) free 方案每人 10 / 40，五個人即 50 / 200
+      expect(view.teamTotals.quota5h).toMatchObject({
+        limit: "50",
+        used: "31",
+      });
+      expect(view.teamTotals.quotaWeek).toMatchObject({
+        limit: "200",
+        used: "150",
+      });
+    });
+
+    // Info: (20260817 - Luphia) 合計用的是全隊查詢，不是把個人用量拿來充數
+    it("reads the team-wide aggregate rather than the viewer's own usage", async () => {
+      const view = await getTeamSubscriptionView({
+        userId: "user-1",
+        teamId: "team-1",
+        nowSec: NOW_SEC,
+      });
+
+      expect(asMock(teamQuotaUsageRepo.sumTeamWindowUsage)).toHaveBeenCalled();
+      expect(view.teamTotals.quota5h.used).not.toBe(view.quota.quota5h.used);
+    });
+
+    /**
+     * Info: (20260817 - Luphia) 人數 0（資料異常）時分母不能是 0，
+     * 否則進度條會拿到 NaN，畫面比沒有數字更難懂。
+     */
+    it("never divides by zero when the team has no members", async () => {
+      asMock(teamRepo.countMembers).mockResolvedValue(0);
+
+      const view = await getTeamSubscriptionView({
+        userId: "user-1",
+        teamId: "team-1",
+        nowSec: NOW_SEC,
+      });
+
+      expect(view.teamTotals.memberCount).toBe(0);
+      expect(view.teamTotals.quota5h.limit).toBe("10");
     });
   });
 

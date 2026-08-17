@@ -27,6 +27,21 @@ export interface IQuotaStatus {
   quotaWeek: IQuotaWindowStatus;
 }
 
+/**
+ * Info: (20260817 - Luphia) 全隊用量合計（PR #6652 第二輪 C-1）。
+ *
+ * 額度是一人一池，因此 `limit` 是「每人上限 × 目前人數」——它回答的是
+ * 「這個團隊這一期買到的總量用掉多少」，而不是任何一個人的進度。
+ *
+ * **刻意沒有逐人明細**：成員各自用了多少 AI 是相當個人的資料，
+ * 而付費者要問的問題用一個總和就回答得了（產品決定 20260817）。
+ */
+export interface ITeamQuotaTotals {
+  memberCount: number;
+  quota5h: IQuotaWindowStatus;
+  quotaWeek: IQuotaWindowStatus;
+}
+
 export interface ITeamSubscriptionView {
   teamId: string;
   planId: TeamPlanId;
@@ -34,7 +49,10 @@ export interface ITeamSubscriptionView {
   currentPeriodStart: number;
   currentPeriodEnd: number;
   autoRenew: boolean;
+  // Info: (20260817 - Luphia) 觀看者本人的額度（一人一池）
   quota: IQuotaStatus;
+  // Info: (20260817 - Luphia) 全隊合計（第二輪 C-1）；付費者看得到團隊實際消耗
+  teamTotals: ITeamQuotaTotals;
   // Info: (20260807 - Luphia) 定價揭露（設計書 §5.3）：費思費率與 env 同源，前端插值渲染
   faithTokensPerCredit: number;
 }

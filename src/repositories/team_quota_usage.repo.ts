@@ -141,6 +141,38 @@ export class TeamQuotaUsageRepository {
   }
 
   /**
+   * Info: (20260817 - Luphia) 全隊用量合計（PR #6652 第二輪 C-1）。
+   *
+   * 額度改成一人一池之後，`src` 裡就沒有任何 team-wide 的讀取路徑了：
+   * 五席團隊的 OWNER 每月付 4,200，畫面上卻只看得到**他自己**的進度條，
+   * 而其他四人用掉多少，系統中不存在任何介面說得出來。
+   *
+   * **只回合計，不回逐人明細**（產品決定 20260817）。成員各自用了多少 AI，
+   * 是相當個人的資料；付費者需要知道的是「這個團隊消耗了多少」，
+   * 那個問題用一個總和就回答得了。
+   */
+  async sumTeamWindowUsage(
+    teamId: string,
+    windowKey5h: number,
+    windowKeyWeek: number,
+  ): Promise<IWindowUsageSum> {
+    const [sum5h, sumWeek] = await Promise.all([
+      prisma.teamQuotaUsage.aggregate({
+        where: { teamId, windowKey5h },
+        _sum: { amount: true },
+      }),
+      prisma.teamQuotaUsage.aggregate({
+        where: { teamId, windowKeyWeek },
+        _sum: { amount: true },
+      }),
+    ]);
+    return {
+      used5h: sum5h._sum.amount ?? BigInt(0),
+      usedWeek: sumWeek._sum.amount ?? BigInt(0),
+    };
+  }
+
+  /**
    * Info: (20260807 - Luphia) 寫入一筆用量（消耗為正、退款為負）。
    * 冪等：同 idempotencyKey 重試回傳既有列並標記 created = false，不重複扣額度。
    */

@@ -248,8 +248,12 @@ export const pricing = {
       // Info: (20260814 - Luphia) 訂閱買到的是額度視窗，不是錢包點數（設計書 §7 履行只寫 TeamSubscription）
       subscription_quota_note:
         "구독 기간에는 플랜 한도를 사용합니다. 한도는 5시간마다, 그리고 매주 초기화되며 이월되거나 크레딧으로 전환되지 않습니다.",
+      amount_changed_title: "금액이 변경되었습니다",
+      amount_changed_hint:
+        "페이지를 열어 둔 사이에 팀 인원이 변경되었습니다. 화면에는 {{shown}}으로 표시되었으나 실제 결제 금액은 {{actual}}입니다. 아직 결제되지 않았으며, 확인하신 후에 결제됩니다.",
+      amount_changed_confirm: "확인하고 새 금액으로 결제",
       subscription_activated:
-        "플랜이 활성화되었습니다. 팀 한도가 즉시 적용됩니다.",
+        "플랜이 활성화되었습니다. 각 구성원의 한도가 즉시 적용됩니다.",
       selected_modules: "선택된 모듈",
       track_order_btn: "주문 추적",
     },

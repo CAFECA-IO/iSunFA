@@ -71,6 +71,8 @@ export const teamManagement = {
   wallet: {
     title: "團隊錢包與訂閱額度",
     quota_title: "訂閱額度",
+    my_quota_title: "您的額度",
+    team_total_title: "全隊合計（{{count}} 位成員）",
     load_failed: "無法載入，請稍後再試。",
     retry: "重試",
     quota_5h: "每 5 小時額度",

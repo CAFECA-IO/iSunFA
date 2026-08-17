@@ -30,7 +30,18 @@ interface IQuotaWindow {
 
 interface ISubscriptionView {
   planId: string;
+  // Info: (20260817 - Luphia) 觀看者本人的額度（一人一池）
   quota: { quota5h: IQuotaWindow; quotaWeek: IQuotaWindow };
+  /**
+   * Info: (20260817 - Luphia) 全隊合計（PR #6652 第二輪 C-1）。
+   * 選填是為了相容尚未更新的後端回應——沒有這段就只顯示個人額度，
+   * 而不是讓整個面板壞掉。
+   */
+  teamTotals?: {
+    memberCount: number;
+    quota5h: IQuotaWindow;
+    quotaWeek: IQuotaWindow;
+  };
 }
 
 export interface ITeamWalletInfo {
@@ -186,6 +197,13 @@ export default function TeamWalletPanel({
         >
           {subscription && (
             <div className="space-y-4">
+              {/**
+               * Info: (20260817 - Luphia) 明標「您的」（PR #6652 第二輪 C-1）：
+               * 額度改成一人一池之後，沒有標示的「訂閱額度」會被讀成團隊的數字。
+               */}
+              <p className="text-xs font-medium text-gray-500">
+                {t("team_management.wallet.my_quota_title")}
+              </p>
               <QuotaMeter
                 label={t("team_management.wallet.quota_5h")}
                 limit={subscription.quota.quota5h.limit}
@@ -196,6 +214,36 @@ export default function TeamWalletPanel({
                 limit={subscription.quota.quotaWeek.limit}
                 used={subscription.quota.quotaWeek.used}
               />
+
+              {/**
+               * Info: (20260817 - Luphia) 全隊合計（PR #6652 第二輪 C-1）。
+               *
+               * 上面兩條是**觀看者自己**的額度（額度一人一池）。付錢的是 OWNER，
+               * 而他先前在這個頁面只看得到自己的進度條——五個人的團隊消耗了多少，
+               * 系統中原本沒有任何介面說得出來。
+               *
+               * 只給總和，不給逐人明細：成員各自用了多少 AI 是相當個人的資料，
+               * 而付費者要問的問題用一個總和就回答得了（產品決定 20260817）。
+               */}
+              {subscription.teamTotals && (
+                <div className="space-y-4 border-t border-gray-100 pt-4">
+                  <p className="text-xs font-medium text-gray-500">
+                    {t("team_management.wallet.team_total_title", {
+                      count: subscription.teamTotals.memberCount,
+                    })}
+                  </p>
+                  <QuotaMeter
+                    label={t("team_management.wallet.quota_5h")}
+                    limit={subscription.teamTotals.quota5h.limit}
+                    used={subscription.teamTotals.quota5h.used}
+                  />
+                  <QuotaMeter
+                    label={t("team_management.wallet.quota_week")}
+                    limit={subscription.teamTotals.quotaWeek.limit}
+                    used={subscription.teamTotals.quotaWeek.used}
+                  />
+                </div>
+              )}
 
               {/**
                * Info: (20260814 - Luphia) 訂閱入口（管理職可見）：額度不夠時，

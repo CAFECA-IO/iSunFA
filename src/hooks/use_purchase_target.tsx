@@ -45,6 +45,15 @@ export interface IPurchaseContext {
 export interface IPurchaseOrderResult {
   orderId: string;
   challenge: string;
+  /**
+   * Info: (20260817 - Luphia) server 實際建單的金額（PR #6652 第二輪 C-4）。
+   *
+   * 付款畫面顯示的席次金額是前端用**頁面載入時**的人數算的，實收由建單當下的
+   * `countMembers()` 重算——中間有人加入，使用者看到 4,200、卡被扣 5,040。
+   * `generatePaymentOrder` 一直都有回這個值，是前端把它丟掉了；接住它，
+   * 金額不符時就先停下來讓人看清楚，而不是在刷完卡之後才發現。
+   */
+  cost?: number;
 }
 
 interface ITeamListItem {
@@ -133,6 +142,22 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
     if (eligibleTeams.length === 1) setSelectedTeamId(eligibleTeams[0].id);
   }, [eligibleTeams]);
 
+  /**
+   * Info: (20260817 - Luphia) 合格名單變動後，清掉已不合格的選擇（PR #6652 第二輪 C-3）。
+   *
+   * 買點數時選了以 ADMIN 身分合格的 T3，切到訂閱（只有 OWNER 合格）之後，
+   * 那個 id 會留在 state 裡：下拉框找不到對應選項而顯示空白，
+   * `selectedTeam` 為 null 讓席次金額退回單席價，而送出鈕看起來是啟用的。
+   *
+   * 送出鈕本身另有 `resolveBlockingReason` 把關（它也會檢查合格性），
+   * 這個 effect 負責的是**畫面**：不要留一個選不到、也看不出來的選擇在那裡。
+   */
+  useEffect(() => {
+    if (!selectedTeamId) return;
+    if (eligibleTeams.some((team) => team.id === selectedTeamId)) return;
+    setSelectedTeamId(null);
+  }, [eligibleTeams, selectedTeamId]);
+
   useEffect(() => {
     /**
      * Info: (20260814 - Luphia) 網址指定的團隊只在「確實有資格」時採用：
@@ -176,25 +201,23 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
    * Info: (20260814 - Luphia) 尚未備妥就不讓送出：訂閱沒選團隊而放行，
    * 等於製造一張沒有歸屬的訂單——那正是這次要消滅的東西。
    */
+  const eligibleTeamIds = useMemo(
+    () => eligibleTeams.map((team) => team.id),
+    [eligibleTeams],
+  );
+
   const blockingMessage = useMemo(() => {
     const reason = resolveBlockingReason({
       mode,
       usesTeam,
-      eligibleTeamCount: eligibleTeams.length,
+      eligibleTeamIds,
       selectedTeamId,
     });
     if (!reason) return null;
     return reason === BLOCKING_REASON.NO_ELIGIBLE_TEAM
       ? unavailableHint
       : t("purchase_target.team_required");
-  }, [
-    mode,
-    usesTeam,
-    eligibleTeams.length,
-    selectedTeamId,
-    unavailableHint,
-    t,
-  ]);
+  }, [mode, usesTeam, eligibleTeamIds, selectedTeamId, unavailableHint, t]);
 
   /**
    * Info: (20260814 - Luphia) 團隊歸屬時改由 team-scoped 端點建單（回傳同樣的

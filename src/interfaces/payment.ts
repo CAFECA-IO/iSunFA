@@ -94,7 +94,7 @@ export interface IPaymentModalProps {
    */
   orderCreator?: (
     paymentMethodId: string,
-  ) => Promise<{ orderId: string; challenge: string }>;
+  ) => Promise<{ orderId: string; challenge: string; cost?: number }>;
   // Info: (20260814 - Luphia) 歸屬對象未備妥（未選團隊 / 權限不足）時的阻擋訊息
   purchaseBlockingMessage?: string | null;
 }
