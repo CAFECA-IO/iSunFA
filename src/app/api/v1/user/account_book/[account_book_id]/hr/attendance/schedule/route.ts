@@ -28,9 +28,11 @@ import { attendanceScheduleService } from "@/services/attendance_schedule.servic
  * Info: (20260817 - Luphia) PUT 限部門主管（service 層的 `isDepartmentManager` 閘）。
  * GET 維持全帳本可見 —— 讀取範圍屬計畫書 §7.3 第 1 順位的權限矩陣，尚未實作。
  *
+ * 每一次成功的異動寫一筆 `EMPLOYEE_PII` / `UPDATE` 稽核（`dataId` 是被改的員工），
+ * 因為改排班等於改判定的比較基準 —— 詳見 service 的說明。
+ *
  * ToDo: (20260817 - Luphia) 主管閘只是收窄，不是權限矩陣：HR 承辦不是任何部門的
  * `managerId`，正式版會被這道閘擋住，屆時由權限矩陣取代而不是疊在它上面。
- * 且**仍然沒有異動軌跡** —— 改排班等於改判定的比較基準，見 service 的說明。
  */
 export async function GET(
   request: NextRequest,
@@ -125,6 +127,8 @@ export async function PUT(
         input: parsed.data,
         actorEmployeeId: actor.id,
         actorEmployeeNo: actor.employeeNo,
+        // Info: (20260817 - Luphia) 稽核記的是操作者的 User，dataId 記被改的員工
+        actorUserId: sessionUser.id,
       }),
     );
   } catch (error) {

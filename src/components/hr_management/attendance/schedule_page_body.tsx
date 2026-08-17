@@ -54,8 +54,9 @@ const SAVE_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
  * 而依前端猜測隱藏功能會讓「為什麼我沒有這個按鈕」變成無法自己排解的問題 ——
  * 且前端的判斷從來不是那道閘（護欄 G2 的同一個道理）。
  *
- * ToDo: (20260817 - Luphia) 讀取仍是全帳本可見，且排班異動沒有軌跡。
- * 兩者都屬計畫書 §7.3 第 1、3 順位。
+ * ToDo: (20260817 - Luphia) 讀取仍是全帳本可見（計畫書 §7.3 第 1 順位）。
+ * 異動軌跡已補（`EMPLOYEE_PII` / `UPDATE`），但畫面上還看不到它 ——
+ * 「這格是誰改的」目前只能查 `AuditLog`，而有處置權的人不會去翻資料庫。
  */
 
 interface ISelectedCell {
