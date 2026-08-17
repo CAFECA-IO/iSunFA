@@ -1,3 +1,6 @@
+import { encryptPii } from "@/lib/hr_pii_crypto";
+import { HrPiiTable } from "@/constants/hr_pii";
+import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
 import { randomBytes } from "crypto";
 import { HR_PII_KEY_BYTES } from "@/constants/hr_pii";
 import { describe, it, expect, beforeEach, beforeAll } from "@jest/globals";
@@ -209,7 +212,31 @@ class FakeRepository implements ILeaveRequestRepository {
   async listPendingForApprover() {
     return this.pending;
   }
+
+  public detail: unknown = null;
+
+  async findDetailById() {
+    return this.detail as never;
+  }
 }
+
+/**
+ * Info: (20260817 - Julian) 個資讀取軌跡的假物件。
+ *
+ * 第一版是靠一個容器專用的替身檔攔截 `auditLogRepo` 單例 ——
+ * 而那個檔案不進 repo，於是這支測試在別人的機器上直接跑不起來。
+ * service 改為注入之後，測試帶自己的就好。
+ */
+class FakeAuditTrail {
+  public writes: Record<string, unknown>[] = [];
+
+  async createAuditLog(data: Record<string, unknown>) {
+    this.writes.push(data);
+    return data;
+  }
+}
+
+let audit: FakeAuditTrail;
 
 const grant = (
   grantId: string,
@@ -237,7 +264,8 @@ beforeEach(() => {
     "2026-08-20": WORK_DAY,
   };
   context.grants = [grant("g1", "2027-12-31", 4800)];
-  service = new LeaveRequestService(repo, context);
+  audit = new FakeAuditTrail();
+  service = new LeaveRequestService(repo, context, audit);
 });
 
 const submitInput = (days: string[], segment = LeaveDaySegment.FULL) => ({
@@ -884,41 +912,153 @@ describe("list / listPending / get — 可見範圍", () => {
     expect(rows.map((row) => row.id)).toEqual(["req-9"]);
   });
 
-  it("明細：申請人本人看得到", async () => {
-    repo.record = recordFor("emp-staff", "emp-lead");
+  /**
+   * Info: (20260817 - Julian) 明細列的假資料。
+   *
+   * 事由用**真的** `encryptPii` 加密，AAD 綁著同一個 `recordId` ——
+   * 塞一個假字串進去，`decryptReason` 的 catch 分支會吞掉它然後回 null，
+   * 而測試會「通過」。那樣就等於沒有測到解密。
+   */
+  const detailRow = (
+    requestId = "req-1",
+    applicantId = "emp-staff",
+    reason = "回診複檢",
+  ) => {
+    const cipher = encryptPii(reason, {
+      table: HrPiiTable.LEAVE_REQUEST,
+      field: "reasonCipher",
+      recordId: requestId,
+    });
+    return {
+      id: requestId,
+      employeeId: applicantId,
+      reasonCipher: cipher.cipher,
+      piiKeyVersion: cipher.keyVersion,
+      concurrencyWarned: false,
+      days: [
+        {
+          workDate: "2026-08-20",
+          segment: LeaveDaySegment.FULL,
+          startMinute: null,
+          endMinute: null,
+          minutes: 480,
+          dayEquivalentMinutes: 480,
+          recalledAt: null,
+        },
+      ],
+      approvalSteps: [
+        {
+          order: 1,
+          nodeKind: LeaveApprovalNodeKind.DIRECT_MANAGER,
+          approverEmployeeId: "emp-lead",
+          approverEmployeeNo: "EMP005",
+          approverName: "張文彬",
+          approverJobTitle: "工地主任",
+          status: LeaveApprovalStepStatus.PENDING,
+          mergedFromKinds: [],
+          escalatedReason: null,
+          decidedAt: null,
+          comment: null,
+          pendingKey: "emp-lead:req-1",
+        },
+      ],
+    };
+  };
+
+  it("明細：申請人本人看得到，事由解得開", async () => {
+    repo.detail = detailRow();
     repo.summaries = [summary("req-1", "emp-staff")];
+
     const result = await service.get({
       accountBookId: "book-1",
       requestId: "req-1",
       actorEmployeeId: "emp-staff",
+      actorUserId: "user-staff",
     });
-    expect(result.record.id).toBe("req-1");
+
+    expect(result.reason).toBe("回診複檢");
+    expect(result.summary.id).toBe("req-1");
+    expect(result.viewerIsCurrentApprover).toBe(false);
   });
 
-  it("明細：簽過的人仍看得到（不限當前待簽）", async () => {
-    const record = recordFor("emp-staff", "emp-lead");
-    record.steps[0].isPending = false;
-    record.steps[0].status = LeaveApprovalStepStatus.APPROVED;
-    repo.record = record;
+  /**
+   * Info: (20260817 - Julian) 「個資被看過本身就是事件」的前提是**被看的與看的
+   * 不是同一個人**。本人看自己的也記，軌跡會被自己的瀏覽紀錄淹沒，
+   * 而「誰看過我的病假事由」這個唯一重要的問題反而查不出來。
+   */
+  it("明細：本人看自己的不留個資軌跡", async () => {
+    repo.detail = detailRow();
     repo.summaries = [summary("req-1", "emp-staff")];
-    await expect(
-      service.get({
+
+    await service.get({
+      accountBookId: "book-1",
+      requestId: "req-1",
+      actorEmployeeId: "emp-staff",
+      actorUserId: "user-staff",
+    });
+
+    expect(audit.writes).toEqual([]);
+  });
+
+  it("明細：簽核者看得到，且留下個資軌跡", async () => {
+    repo.detail = detailRow();
+    repo.summaries = [summary("req-1", "emp-staff")];
+
+    const result = await service.get({
+      accountBookId: "book-1",
+      requestId: "req-1",
+      actorEmployeeId: "emp-lead",
+      actorUserId: "user-lead",
+    });
+
+    expect(result.reason).toBe("回診複檢");
+    // Info: (20260817 - Julian) 待簽者要看得到簽核鈕
+    expect(result.viewerIsCurrentApprover).toBe(true);
+    // Info: (20260817 - Julian) dataId 是**申請人**，不是假單 —— 調查軸線是「哪些人受影響」
+    expect(audit.writes).toEqual([
+      {
+        userId: "user-lead",
         accountBookId: "book-1",
-        requestId: "req-1",
-        actorEmployeeId: "emp-lead",
-      }),
-    ).resolves.toBeDefined();
+        dataType: AuditLogDataType.EMPLOYEE_PII,
+        dataId: "emp-staff",
+        action: AuditLogAction.READ,
+      },
+    ]);
   });
 
   it("明細：不是本人也不在鏈上就擋下", async () => {
-    repo.record = recordFor("emp-staff", "emp-lead");
+    repo.detail = detailRow();
     repo.summaries = [summary("req-1", "emp-staff")];
     await expect(
       service.get({
         accountBookId: "book-1",
         requestId: "req-1",
         actorEmployeeId: "emp-hr",
+        actorUserId: "user-hr",
       }),
     ).rejects.toMatchObject({ apiCode: "FO000016" });
+  });
+
+  /**
+   * Info: (20260817 - Julian) 解不開時整頁不該 500。
+   *
+   * 金鑰輪替出問題時，這張單的其他資訊（誰、什麼假、幾天、簽到哪）仍然有用；
+   * 把一個欄位的故障放大成整頁失敗，只會讓維運同時失去問題與線索。
+   */
+  it("明細：事由解不開時回 null，其餘欄位照常", async () => {
+    const row = detailRow();
+    repo.detail = { ...row, reasonCipher: "bm90LWEtcmVhbC1jaXBoZXI=" };
+    repo.summaries = [summary("req-1", "emp-staff")];
+
+    const result = await service.get({
+      accountBookId: "book-1",
+      requestId: "req-1",
+      actorEmployeeId: "emp-staff",
+      actorUserId: "user-staff",
+    });
+
+    expect(result.reason).toBeNull();
+    expect(result.days).toHaveLength(1);
+    expect(result.steps).toHaveLength(1);
   });
 });

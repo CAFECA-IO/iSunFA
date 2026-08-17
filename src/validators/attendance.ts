@@ -100,11 +100,24 @@ export const attendanceScheduleUpdateSchema = z.intersection(
       shiftPatternId: z.string().min(1),
     }),
     z.object({
+      /**
+       * Info: (20260817 - Julian) 這份清單必須涵蓋 `Exclude<WorkDayType, WORK>` 的全部。
+       *
+       * 少一個的症狀是**畫面選得到、送不出去**：`SUSPENDED` 加進
+       * `OFF_DAY_TYPES`（排班面板）之後，這裡沒補，於是型別在
+       * `schedule_cell_editor` 的 `onApply` 那一行就對不上 ——
+       * 而在型別擋下它之前，那條路徑是「按了沒反應」。
+       *
+       * ToDo: (20260817 - Julian) 用 `z.nativeEnum` + `refine` 排除 WORK 會更難漏，
+       * 但那會讓錯誤訊息從「不是這五個之一」退化成「不符合條件」。
+       * 現階段維持列舉，靠 tsc 在呼叫端把漏掉的抓出來。
+       */
       dayType: z.enum([
         WorkDayType.REGULAR_OFF,
         WorkDayType.REST_DAY,
         WorkDayType.HOLIDAY,
         WorkDayType.LEAVE,
+        WorkDayType.SUSPENDED,
       ]),
       shiftPatternId: z.null(),
     }),

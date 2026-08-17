@@ -1,5 +1,6 @@
 import {
   Building2,
+  CalendarOff,
   FileText,
   LayoutDashboard,
   ClipboardList,
@@ -9,6 +10,7 @@ import {
   Radar,
   Repeat,
   Settings,
+  Stamp,
   Users,
 } from "lucide-react";
 import { HR_MANAGEMENT_ROUTE } from "@/constants/hr_management";
@@ -77,6 +79,20 @@ export const HR_NAV_ITEMS: IHrNavItem[] = [
     href: HR_MANAGEMENT_ROUTE.ATTENDANCE_RESULT,
     labelKey: "hr_management.nav.attendance_result",
     icon: ClipboardList,
+    disabled: false,
+  },
+  {
+    key: "leave",
+    href: HR_MANAGEMENT_ROUTE.LEAVE,
+    labelKey: "hr_management.nav.leave",
+    icon: CalendarOff,
+    disabled: false,
+  },
+  {
+    key: "leave_approval",
+    href: HR_MANAGEMENT_ROUTE.LEAVE_APPROVAL,
+    labelKey: "hr_management.nav.leave_approval",
+    icon: Stamp,
     disabled: false,
   },
   {

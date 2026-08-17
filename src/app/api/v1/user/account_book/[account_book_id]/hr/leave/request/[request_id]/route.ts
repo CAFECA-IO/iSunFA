@@ -40,6 +40,8 @@ export async function GET(
         accountBookId,
         requestId,
         actorEmployeeId: actor.id,
+        // Info: (20260817 - Julian) 讀他人事由要留個資軌跡，而軌跡記的是平台身分
+        actorUserId: sessionUser.id,
       }),
     );
   } catch (error) {

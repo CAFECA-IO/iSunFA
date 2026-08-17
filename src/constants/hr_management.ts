@@ -13,9 +13,16 @@ export const HR_MANAGEMENT_ROUTE = {
   ATTENDANCE_SCHEDULE: "/hr_management/attendance/schedule",
   ATTENDANCE_PRESENCE: "/hr_management/attendance/presence",
   ATTENDANCE_RESULT: "/hr_management/attendance/result",
+  // Info: (20260817 - Julian) 假勤：員工端與簽核端。假別／簽核規則設定待甲-1
+  LEAVE: "/hr_management/leave",
+  LEAVE_APPROVAL: "/hr_management/leave/approval",
   DOCUMENT: "/hr_management/document",
   SETTING: "/hr_management/setting",
 } as const;
+
+// Info: (20260817 - Julian) 帶路徑參數的頁面寫成函式，避免呼叫端自己接字串
+export const leaveRequestDetailRoute = (requestId: string): string =>
+  `${HR_MANAGEMENT_ROUTE.LEAVE}/request/${requestId}`;
 
 // Info: (20260810 - Julian) 員工在職狀態，對齊 Prisma enum EmployeeStatus
 export enum EmployeeStatus {

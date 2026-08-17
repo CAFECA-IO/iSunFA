@@ -300,6 +300,11 @@ export interface ILeaveRequestRepository {
     accountBookId: string;
     approverEmployeeId: string;
   }): Promise<ILeaveRequestSummary[]>;
+  /** Info: (20260817 - Julian) L12 明細的原始列，含密文。解密由 service 負責 */
+  findDetailById(params: {
+    accountBookId: string;
+    requestId: string;
+  }): Promise<ILeaveRequestDetailRow | null>;
   createWithChain(params: {
     /**
      * Info: (20260817 - Julian) 由 service 產生，不是 `@default(uuid())`。
@@ -384,6 +389,104 @@ export interface ILeaveRequestSummary {
   pendingApproverName: string | null;
   totalSteps: number;
   createdAt: string;
+}
+
+/**
+ * Info: (20260817 - Julian) L12 明細的原始列 —— repository 交出來的東西，**含密文**。
+ *
+ * 手寫而不是用 `Prisma.LeaveRequestGetPayload<>` 推導：第一版是後者，
+ * 結果是 `interfaces/` 反向匯入 `repositories/`，把 Prisma 的產生型別
+ * 拉進了本該與資料庫無關的一層 —— 而那一層是測試唯一需要理解的契約。
+ * 這個 repo 其他地方（`ILeaveRequestRecord`、`ILeaveRequestSummary`）
+ * 也都是手寫的，第一版是我偏離了。
+ */
+export interface ILeaveRequestDetailRow {
+  id: string;
+  employeeId: string;
+  reasonCipher: string;
+  piiKeyVersion: number;
+  concurrencyWarned: boolean;
+  days: readonly {
+    workDate: string;
+    segment: string;
+    startMinute: number | null;
+    endMinute: number | null;
+    minutes: number;
+    dayEquivalentMinutes: number;
+    recalledAt: Date | null;
+  }[];
+  approvalSteps: readonly {
+    order: number;
+    nodeKind: string;
+    approverEmployeeId: string | null;
+    approverEmployeeNo: string;
+    approverName: string;
+    approverJobTitle: string | null;
+    status: string;
+    mergedFromKinds: string[];
+    escalatedReason: string | null;
+    decidedAt: Date | null;
+    comment: string | null;
+    /** Info: (20260817 - Julian) 非 null 即為「當前待簽」（partial unique 的語意） */
+    pendingKey: string | null;
+  }[];
+}
+
+/**
+ * Info: (20260817 - Julian) L12 明細所需的一列，比 `ILeaveApprovalStepRecord` 多帶
+ * 三樣**只有明細頁需要**的東西：職稱、被併掉的節點、決行時間與意見。
+ *
+ * 不塞進 `ILeaveApprovalStepRecord`：那一份是簽核流程自己在用的（判斷輪到誰、
+ * 能不能簽），每多一個欄位就是每一次核准都要多撈的東西。
+ */
+export interface ILeaveApprovalStepDetail {
+  order: number;
+  nodeKind: LeaveApprovalNodeKind;
+  approverEmployeeNo: string;
+  approverName: string;
+  approverJobTitle: string | null;
+  status: LeaveApprovalStepStatus;
+  mergedFromKinds: LeaveApprovalNodeKind[];
+  escalatedReason: string | null;
+  decidedAt: string | null;
+  comment: string | null;
+}
+
+export interface ILeaveRequestDayDetail {
+  workDate: string;
+  segment: LeaveDaySegment;
+  startMinute: number | null;
+  endMinute: number | null;
+  minutes: number;
+  dayEquivalentMinutes: number;
+  /** Info: (20260817 - Julian) 已被銷假的那一天。null 表未被銷 */
+  recalledAt: string | null;
+}
+
+/**
+ * Info: (20260817 - Julian) L12 假單明細。
+ *
+ * ## `reason` 是解密後的明文
+ *
+ * 它在資料庫裡是 `reasonCipher`（ADR 018 Tier 2）。解密只發生在這一支，
+ * 而且只給有權看的人 —— 申請人本人與鏈上的節點。清單端點一律不帶它：
+ * 清單是會被投影在會議室螢幕上的畫面。
+ *
+ * ## 為什麼解不開時是 null 而不是丟例外
+ *
+ * 金鑰輪替出問題時，整張單的其他資訊（誰、什麼假、幾天、簽到哪）仍然有用 ——
+ * 讓明細頁整頁 500 只是把一個欄位的故障放大成全部。
+ * 前端據此顯示「事由無法解密」，那對維運是一條明確的線索。
+ */
+export interface ILeaveRequestDetail {
+  summary: ILeaveRequestSummary;
+  reason: string | null;
+  days: ILeaveRequestDayDetail[];
+  steps: ILeaveApprovalStepDetail[];
+  /** Info: (20260817 - Julian) 送出當下有無併休超限警示（計畫書 §D14） */
+  concurrencyWarned: boolean;
+  /** Info: (20260817 - Julian) 呼叫者是不是這張單目前待簽的那個人 —— 決定畫面顯不顯示簽核鈕 */
+  viewerIsCurrentApprover: boolean;
 }
 
 export interface ILeaveRequestListQuery {

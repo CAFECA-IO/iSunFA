@@ -13,6 +13,7 @@ import { HrPiiTable } from "@/constants/hr_pii";
 import { LEAVE_ENTITLEMENT_ENGINE_VERSION } from "@/lib/leave_entitlement_rules";
 import {
   ILeaveApprovalStepRecord,
+  ILeaveRequestDetailRow,
   ILeaveRequestRecord,
   ILeaveRequestRepository,
   ILeaveRequestSummary,
@@ -56,6 +57,45 @@ const STEP_SELECT = {
 const REQUEST_INCLUDE = {
   days: { select: { id: true, workDate: true, minutes: true } },
   approvalSteps: { select: STEP_SELECT, orderBy: { order: "asc" } },
+} as const;
+
+/**
+ * Info: (20260817 - Julian) 明細所需的關聯（L12）。
+ *
+ * 比 `REQUEST_INCLUDE` 多帶職稱、合併節點、決行時間與意見，以及密文三件套。
+ * 分開一份而不是把欄位加進去：`REQUEST_INCLUDE` 是每一次核准都會撈的，
+ * 而明細一次只撈一張單 —— 兩者的成本模型完全不同。
+ */
+const DETAIL_INCLUDE = {
+  days: {
+    select: {
+      workDate: true,
+      segment: true,
+      startMinute: true,
+      endMinute: true,
+      minutes: true,
+      dayEquivalentMinutes: true,
+      recalledAt: true,
+    },
+    orderBy: { workDate: "asc" },
+  },
+  approvalSteps: {
+    select: {
+      order: true,
+      nodeKind: true,
+      approverEmployeeId: true,
+      approverEmployeeNo: true,
+      approverName: true,
+      approverJobTitle: true,
+      status: true,
+      mergedFromKinds: true,
+      escalatedReason: true,
+      decidedAt: true,
+      comment: true,
+      pendingKey: true,
+    },
+    orderBy: { order: "asc" },
+  },
 } as const;
 
 /**
@@ -190,6 +230,30 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
    * **但沒有任何一行實作它**。與 `completeApproval` 漏掉 `assertSchedulableDay`
    * 是同一種錯：把「為什麼要這樣做」寫下來，然後沒有做。
    */
+  /**
+   * Info: (20260817 - Julian) L12 明細的原始列，**含密文**。
+   *
+   * 解密不在這一層：repository 不做業務判斷，而「這個人有沒有權看事由」
+   * 正是一個業務判斷。這裡只負責把密文與它的代次一起交出去 ——
+   * 兩者必須成對（`assertStorablePii` 在寫入端守的是同一件事）。
+   */
+  public async findDetailById(params: {
+    accountBookId: string;
+    requestId: string;
+  }): Promise<ILeaveRequestDetailRow | null> {
+    return prisma.leaveRequest.findFirst({
+      where: { id: params.requestId, accountBookId: params.accountBookId },
+      select: {
+        id: true,
+        employeeId: true,
+        reasonCipher: true,
+        piiKeyVersion: true,
+        concurrencyWarned: true,
+        ...DETAIL_INCLUDE,
+      },
+    });
+  }
+
   public async createWithChain(
     params: Parameters<ILeaveRequestRepository["createWithChain"]>[0],
   ): Promise<ILeaveRequestRecord> {

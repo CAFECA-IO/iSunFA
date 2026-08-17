@@ -5,6 +5,8 @@ export const hrManagement = {
   user_menu_aria: "ユーザーメニュー",
   open_menu_aria: "メニューを開く",
   nav: {
+    leave: "休暇申請",
+    leave_approval: "承認待ち",
     dashboard: "ダッシュボード",
     organization: "組織図",
     employee: "従業員管理",
@@ -756,6 +758,89 @@ export const hrManagement = {
   },
   // Info: (20260817 - Julian) 組込み休暇種別。`LEAVE_POLICY_I18N_KEY` に対応。テナント独自の休暇は `LeavePolicy.name` を表示
   leave: {
+    detail_title: "申請の詳細",
+    detail_reason: "休暇理由",
+    detail_reason_undecryptable:
+      "理由を復号できません（鍵の異常）。管理者にご連絡ください。",
+    detail_reason_audited:
+      "理由は暗号化して保存され、本人以外の閲覧はすべて記録されます",
+    detail_days: "取得日の内訳",
+    detail_day_recalled: "休暇取消済み",
+    detail_chain: "承認経路",
+    detail_concurrency_warned:
+      "申請時点で同期間に他の同僚の休暇があり、申請者には通知済みです",
+    segment_custom: "時間指定",
+    action_detail: "詳細",
+    action_back: "戻る",
+    title: "休暇申請",
+    approval_page_title: "承認待ち",
+    loading: "読み込み中…",
+    unit_day: "日",
+    unit_minute: "分",
+
+    balance_title: "私の残日数",
+    balance_empty:
+      "付与された休暇がありません。入社日と勤続年数に基づき一括付与されます。空のままの場合は人事へご連絡ください。",
+    balance_unlimited: "上限なし",
+    balance_next_expiry: "直近の失効日：{{date}}",
+    balance_never_reconciled: "台帳と未照合",
+
+    form_title: "申請の作成",
+    field_policy: "休暇種別",
+    field_segment: "時間帯",
+    field_dates: "取得日",
+    field_reason: "理由",
+    field_reason_placeholder: "例：通院、家庭の事情",
+    field_reason_encrypted:
+      "理由は暗号化して保存され、詳細画面で承認者のみ閲覧できます",
+    segment_full: "終日",
+    segment_morning: "午前",
+    segment_afternoon: "午後",
+    action_add_date: "＋ 日付を追加",
+    action_remove_date: "削除",
+    action_submit: "申請する",
+
+    preview_total: "合計 {{days}} 日（{{minutes}} 分）",
+    preview_after: "申請後の残り {{minutes}} 分",
+    preview_shortfall: "残日数が {{minutes}} 分不足しており申請できません",
+    preview_chain: "承認 {{count}} 段階",
+    preview_chain_unresolved:
+      "承認経路を展開できません（{{reason}}）。承認ルールと組織設定を人事にご確認ください。",
+    preview_concurrency_warn:
+      "{{date}} は既に {{count}} 名が休暇です（推奨上限 {{limit}}）。申請は可能ですが、管理者から調整の相談があるかもしれません。",
+    preview_concurrency_blocked:
+      "{{date}} は既に {{count}} 名が休暇で、上限 {{limit}} を超えるため申請できません。",
+
+    my_requests_title: "私の申請",
+    my_requests_empty: "まだ申請はありません",
+    list_step_progress: "{{current}}/{{total}} 段階目、{{approver}} の承認待ち",
+    list_step_self: "あなたは {{current}}/{{total}} 段階目です",
+    status_pending: "承認中",
+    status_approved: "承認済み",
+    status_rejected: "却下",
+    status_withdrawn: "取下げ",
+    action_withdraw: "取下げ",
+
+    approval_title: "承認待ち（{{count}} 件）",
+    approval_empty: "承認待ちの申請はありません",
+    action_approve: "承認",
+    action_reject: "却下",
+    action_reject_confirm: "却下を確定",
+    field_reject_reason: "却下理由（必須）",
+    field_reject_placeholder: "申請者にこの文面が表示されます",
+
+    node_direct: "直属の上長",
+    node_department: "部門長",
+    node_hr: "人事",
+    node_specific: "指名承認者",
+    chain_empty: "承認経路がありません",
+    chain_escalated: "自動的に上位へ：{{reason}}",
+
+    error_load: "読み込みに失敗しました",
+    error_preview: "試算に失敗しました",
+    error_submit: "申請に失敗しました",
+    error_withdraw: "取下げに失敗しました",
+    error_decide: "承認処理に失敗しました",
     policy_annual: "年次有給休暇",
     policy_personal: "私用休暇",
     policy_sick: "私傷病休暇",

@@ -2802,6 +2802,22 @@
     );
   }
 
+  .text-rose-800 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-rose-800)
+    );
+  }
+
+  .text-sky-600 {
+    color: color-mix(
+      in oklab,
+      white var(--t-hue-text-lift),
+      var(--color-sky-600)
+    );
+  }
+
   .text-sky-700 {
     color: color-mix(
       in oklab,
@@ -2980,6 +2996,14 @@
         in oklab,
         white var(--t-hue-text-lift),
         var(--color-red-600)
+      );
+    }
+
+    .hover\:text-sky-700:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-sky-700)
       );
     }
 

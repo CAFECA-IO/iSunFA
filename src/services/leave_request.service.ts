@@ -1,16 +1,38 @@
+import { decryptPii } from "@/lib/hr_pii_crypto";
+import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
+import { auditLogRepo } from "@/repositories/audit_log.repo";
+
+/**
+ * Info: (20260817 - Julian) 個資讀取軌跡的最小介面。
+ *
+ * 只宣告 `createAuditLog`，不引用整個 `IAuditLogRepository` ——
+ * service 用不到的方法不該出現在它的相依裡，而測試更不該為了
+ * 建構一個 service 去假造整組稽核查詢。
+ */
+export interface ILeaveAuditTrail {
+  createAuditLog(data: {
+    userId: string;
+    accountBookId: string;
+    dataType: AuditLogDataType;
+    dataId: string;
+    action: AuditLogAction;
+  }): Promise<unknown>;
+}
 import { randomUUID } from "crypto";
 import { encryptPii } from "@/lib/hr_pii_crypto";
-import { HrPiiTable } from "@/constants/hr_pii";
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
 import { WorkDayType } from "@/constants/attendance";
 import { LeaveRequestStatus } from "@/constants/leave";
 import {
+  LeaveApprovalNodeKind,
+  LeaveApprovalStepStatus,
   LeaveConcurrencyAction,
   LeaveDaySegment,
   LeaveQuotaMode,
 } from "@/constants/leave_policy";
+import { HrPiiTable } from "@/constants/hr_pii";
 import {
   LeaveRuleError,
   allocateConsumption,
@@ -24,6 +46,7 @@ import {
   ILeaveDayPlan,
   ILeaveRequestContext,
   ILeaveRequestInput,
+  ILeaveRequestDetail,
   ILeaveRequestPreview,
   ILeaveRequestRecord,
   ILeaveRequestListQuery,
@@ -52,6 +75,14 @@ export class LeaveRequestService {
   constructor(
     private readonly requests: ILeaveRequestRepository,
     private readonly context: ILeaveRequestContext,
+    /**
+     * Info: (20260817 - Julian) 注入而不是 import 單例。
+     *
+     * 第一版直接 import `auditLogRepo`，測試因此只能靠一個容器專用的替身
+     * 去攔截它 —— 而那個替身檔不進 repo，於是**測試在別人的機器上跑不起來**。
+     * 注入之後，測試傳自己的假物件，不必知道生產環境用的是哪一個。
+     */
+    private readonly audit: ILeaveAuditTrail = auditLogRepo,
   ) {}
 
   /**
@@ -136,21 +167,105 @@ export class LeaveRequestService {
     accountBookId: string;
     requestId: string;
     actorEmployeeId: string;
-  }): Promise<{
-    summary: ILeaveRequestSummary;
-    record: ILeaveRequestRecord;
-  }> {
-    const record = await this.requireRequest(params);
-    const allowed =
-      record.employeeId === params.actorEmployeeId ||
-      record.steps.some(
-        (step) => step.approverEmployeeId === params.actorEmployeeId,
-      );
-    if (!allowed) throw new AppError(API_ERRORS.FO_LEAVE_REQUEST_SCOPE);
+    /** Info: (20260817 - Julian) 寫個資讀取軌跡需要平台身分，不是員工 id */
+    actorUserId: string;
+  }): Promise<ILeaveRequestDetail> {
+    const row = await this.requests.findDetailById(params);
+    if (row === null) throw new AppError(API_ERRORS.NF_LEAVE_REQUEST);
+
+    const isApplicant = row.employeeId === params.actorEmployeeId;
+    const onChain = row.approvalSteps.some(
+      (step) => step.approverEmployeeId === params.actorEmployeeId,
+    );
+    if (!isApplicant && !onChain) {
+      throw new AppError(API_ERRORS.FO_LEAVE_REQUEST_SCOPE);
+    }
 
     const summary = await this.requests.findSummaryById(params);
     if (summary === null) throw new AppError(API_ERRORS.NF_LEAVE_REQUEST);
-    return { summary, record };
+
+    /**
+     * Info: (20260817 - Julian) 別人看你的事由要留痕，自己看自己的不用。
+     *
+     * `AuditLogAction.READ` 的存在理由是「個資被看過本身就是事件」，
+     * 而那句話的前提是**被看的人與看的人不是同一個** ——
+     * 把本人的每一次開啟也記上，軌跡會被自己的瀏覽紀錄淹沒，
+     * 而「誰看過我的病假事由」這個唯一重要的問題反而查不出來。
+     *
+     * `dataId` 填申請人的 `Employee.id` 而不是假單 id：
+     * 個資調查的軸線是「哪些人受影響」（`AuditLogDataType.EMPLOYEE_PII` 的契約）。
+     */
+    if (!isApplicant) {
+      await this.audit.createAuditLog({
+        userId: params.actorUserId,
+        accountBookId: params.accountBookId,
+        dataType: AuditLogDataType.EMPLOYEE_PII,
+        dataId: row.employeeId,
+        action: AuditLogAction.READ,
+      });
+    }
+
+    return {
+      summary,
+      reason: this.decryptReason(row),
+      days: row.days.map((day) => ({
+        workDate: day.workDate,
+        segment: day.segment as LeaveDaySegment,
+        startMinute: day.startMinute,
+        endMinute: day.endMinute,
+        minutes: day.minutes,
+        dayEquivalentMinutes: day.dayEquivalentMinutes,
+        recalledAt: day.recalledAt ? day.recalledAt.toISOString() : null,
+      })),
+      steps: row.approvalSteps.map((step) => ({
+        order: step.order,
+        nodeKind: step.nodeKind as LeaveApprovalNodeKind,
+        approverEmployeeNo: step.approverEmployeeNo,
+        approverName: step.approverName,
+        approverJobTitle: step.approverJobTitle,
+        status: step.status as LeaveApprovalStepStatus,
+        mergedFromKinds: step.mergedFromKinds as LeaveApprovalNodeKind[],
+        escalatedReason: step.escalatedReason,
+        decidedAt: step.decidedAt ? step.decidedAt.toISOString() : null,
+        comment: step.comment,
+      })),
+      concurrencyWarned: row.concurrencyWarned,
+      viewerIsCurrentApprover: row.approvalSteps.some(
+        (step) =>
+          step.pendingKey !== null &&
+          step.approverEmployeeId === params.actorEmployeeId,
+      ),
+    };
+  }
+
+  /**
+   * Info: (20260817 - Julian) 解事由。解不開時回 null，不讓整頁 500。
+   *
+   * 金鑰輪替出問題時，這張單的其他資訊（誰、什麼假、幾天、簽到哪）仍然有用 ——
+   * 把一個欄位的故障放大成整頁失敗，只會讓維運同時失去問題與線索。
+   * 記 warn 而不是 error：它不是這次請求的失敗，是一個需要有人去查的狀態。
+   */
+  private decryptReason(row: {
+    id: string;
+    reasonCipher: string;
+    piiKeyVersion: number;
+  }): string | null {
+    try {
+      return decryptPii(
+        row.reasonCipher,
+        {
+          table: HrPiiTable.LEAVE_REQUEST,
+          field: "reasonCipher",
+          recordId: row.id,
+        },
+        row.piiKeyVersion,
+      );
+    } catch (error) {
+      logger.warn(
+        `[leave] reason decrypt failed: request=${row.id} keyVersion=${row.piiKeyVersion} (${(error as Error).message})`,
+      );
+      return null;
+    }
   }
 
   // Info: (20260817 - Julian) 呼叫者是否出現在該單的簽核鏈上（不限當前待簽）

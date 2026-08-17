@@ -133,6 +133,8 @@ const buildService = (options: {
     findByIdInAccountBook: async () => null,
     // Info: (20260813 - Julian) 假勤加入的成員；本測試用不到，補樁讓介面完整
     isDepartmentManager: async () => false,
+    // Info: (20260817 - Julian) 授權用的範圍判斷（甲-5）。本檔不測它，回 false 即可
+    managesEmployee: async () => false,
   };
 
   const schedule: IAttendanceScheduleRepository = {

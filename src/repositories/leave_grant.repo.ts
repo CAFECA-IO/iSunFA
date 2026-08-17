@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import {
   LeaveGrantSource,
   LeaveLedgerEntryType,
+  LeaveQuotaMode,
   buildLeaveGrantIdempotencyKey,
 } from "@/constants/leave_policy";
 import { IPlannedGrant } from "@/interfaces/leave_entitlement";
@@ -175,7 +176,14 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
           accountBookId: params.accountBookId,
           employeeId: params.employeeId,
           leavePolicyId: params.leavePolicyId,
-          source: LeaveGrantSource.ACCRUAL,
+          /**
+           * Info: (20260817 - Julian) `deriveGrantSchedule` 產出的批次一律是
+           * `SENIORITY_ACCRUAL`（引擎唯一會給的 source）。這裡比對它而不是
+           * 「非手動」的否定式：手動調整與補休換算都不建 `LeaveGrant`
+           * （前者掛在既有批次上、後者由加班模組產生），
+           * 用否定式會在它們哪天開始建批次時安靜地把它們算成已授予。
+           */
+          source: LeaveGrantSource.SENIORITY_ACCRUAL,
         },
         select: { cycleStartDate: true },
       });
@@ -350,7 +358,8 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
       leavePolicyId: balance.leavePolicyId,
       leavePolicyCode: balance.leavePolicy.code,
       leavePolicyName: balance.leavePolicy.name,
-      quotaMode: balance.leavePolicy.quotaMode,
+      // Info: (20260817 - Julian) Prisma 回的是字面量聯集，顯式轉回鏡像 enum（同 findSchedules 的處置）
+      quotaMode: balance.leavePolicy.quotaMode as LeaveQuotaMode,
       remainingMinutes: balance.remainingMinutes,
       expiringSoonMinutes: balance.expiringSoonMinutes,
       nextExpiresOn: nextExpiry.get(balance.leavePolicyId) ?? null,
@@ -394,7 +403,7 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
 
     return rows.map((row) => ({
       id: row.id,
-      entryType: row.entryType,
+      entryType: row.entryType as LeaveLedgerEntryType,
       deltaMinutes: row.deltaMinutes,
       grantBalanceAfterMinutes: row.grantBalanceAfterMinutes,
       leavePolicyId: row.leaveGrant.leavePolicyId,

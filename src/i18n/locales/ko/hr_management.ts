@@ -5,6 +5,8 @@ export const hrManagement = {
   user_menu_aria: "사용자 메뉴",
   open_menu_aria: "메뉴 열기",
   nav: {
+    leave: "휴가 신청",
+    leave_approval: "결재 대기",
     dashboard: "대시보드",
     organization: "조직도",
     employee: "직원 관리",
@@ -760,6 +762,89 @@ export const hrManagement = {
   },
   // Info: (20260817 - Julian) 기본 휴가 종류. `LEAVE_POLICY_I18N_KEY`에 대응. 테넌트가 정의한 휴가는 `LeavePolicy.name`으로 표시
   leave: {
+    detail_title: "신청 상세",
+    detail_reason: "휴가 사유",
+    detail_reason_undecryptable:
+      "사유를 복호화할 수 없습니다(키 오류). 관리자에게 문의하세요.",
+    detail_reason_audited:
+      "사유는 암호화 저장되며, 본인 외의 열람은 모두 기록됩니다",
+    detail_days: "사용일 내역",
+    detail_day_recalled: "휴가 철회됨",
+    detail_chain: "결재선",
+    detail_concurrency_warned:
+      "신청 시점에 같은 기간 다른 동료의 휴가가 있었고 신청자에게 안내되었습니다",
+    segment_custom: "시간 지정",
+    action_detail: "상세",
+    action_back: "뒤로",
+    title: "휴가 신청",
+    approval_page_title: "결재 대기",
+    loading: "불러오는 중…",
+    unit_day: "일",
+    unit_minute: "분",
+
+    balance_title: "내 잔여 휴가",
+    balance_empty:
+      "부여된 휴가가 없습니다. 입사일과 근속 연수에 따라 일괄 부여됩니다. 계속 비어 있으면 인사팀에 문의하세요.",
+    balance_unlimited: "한도 없음",
+    balance_next_expiry: "가장 빠른 소멸일: {{date}}",
+    balance_never_reconciled: "원장과 대사한 적 없음",
+
+    form_title: "신청서 작성",
+    field_policy: "휴가 종류",
+    field_segment: "시간대",
+    field_dates: "사용일",
+    field_reason: "사유",
+    field_reason_placeholder: "예: 재진, 집안 사정",
+    field_reason_encrypted:
+      "사유는 암호화되어 저장되며 상세 화면에서 결재자만 볼 수 있습니다",
+    segment_full: "종일",
+    segment_morning: "오전",
+    segment_afternoon: "오후",
+    action_add_date: "＋ 날짜 추가",
+    action_remove_date: "삭제",
+    action_submit: "신청하기",
+
+    preview_total: "총 {{days}}일 ({{minutes}}분)",
+    preview_after: "신청 후 잔여 {{minutes}}분",
+    preview_shortfall: "{{minutes}}분 부족하여 신청할 수 없습니다",
+    preview_chain: "결재 {{count}}단계",
+    preview_chain_unresolved:
+      "결재선을 만들 수 없습니다({{reason}}). 인사팀에 결재 규칙과 조직 설정을 확인해 주세요.",
+    preview_concurrency_warn:
+      "{{date}}에 이미 {{count}}명이 휴가입니다(권장 한도 {{limit}}). 신청은 가능하지만 관리자가 조정을 요청할 수 있습니다.",
+    preview_concurrency_blocked:
+      "{{date}}에 이미 {{count}}명이 휴가로 한도 {{limit}}을 초과하여 신청할 수 없습니다.",
+
+    my_requests_title: "내 신청 내역",
+    my_requests_empty: "아직 신청한 내역이 없습니다",
+    list_step_progress: "{{current}}/{{total}}단계, {{approver}} 결재 대기",
+    list_step_self: "당신은 {{current}}/{{total}}단계입니다",
+    status_pending: "결재 중",
+    status_approved: "승인됨",
+    status_rejected: "반려됨",
+    status_withdrawn: "철회됨",
+    action_withdraw: "철회",
+
+    approval_title: "결재 대기 ({{count}}건)",
+    approval_empty: "결재할 신청이 없습니다",
+    action_approve: "승인",
+    action_reject: "반려",
+    action_reject_confirm: "반려 확정",
+    field_reject_reason: "반려 사유(필수)",
+    field_reject_placeholder: "신청자에게 이 내용이 표시됩니다",
+
+    node_direct: "직속 상사",
+    node_department: "부서장",
+    node_hr: "인사",
+    node_specific: "지정 결재자",
+    chain_empty: "결재선이 없습니다",
+    chain_escalated: "자동 상신: {{reason}}",
+
+    error_load: "불러오지 못했습니다",
+    error_preview: "미리 계산에 실패했습니다",
+    error_submit: "신청에 실패했습니다",
+    error_withdraw: "철회에 실패했습니다",
+    error_decide: "결재 처리에 실패했습니다",
     policy_annual: "연차 휴가",
     policy_personal: "개인 휴가",
     policy_sick: "일반 상병 휴가",

@@ -5,6 +5,8 @@ export const hrManagement = {
   user_menu_aria: "User menu",
   open_menu_aria: "Open menu",
   nav: {
+    leave: "My leave",
+    leave_approval: "Approvals",
     dashboard: "Dashboard",
     organization: "Organization",
     employee: "Employees",
@@ -771,6 +773,89 @@ export const hrManagement = {
   },
   // Info: (20260817 - Julian) Built-in leave policy labels, keyed by `LEAVE_POLICY_I18N_KEY`. Tenant-defined policies fall back to `LeavePolicy.name`
   leave: {
+    detail_title: "Request detail",
+    detail_reason: "Reason",
+    detail_reason_undecryptable:
+      "The reason could not be decrypted (key problem). Please contact an administrator.",
+    detail_reason_audited:
+      "Stored encrypted; every view by someone other than the requester is logged",
+    detail_days: "Days",
+    detail_day_recalled: "Recalled",
+    detail_chain: "Approval chain",
+    detail_concurrency_warned:
+      "Others were already on leave during this period when the request was submitted; the requester was warned",
+    segment_custom: "Custom hours",
+    action_detail: "Detail",
+    action_back: "Back",
+    title: "My leave",
+    approval_page_title: "Approvals",
+    loading: "Loading…",
+    unit_day: "d",
+    unit_minute: "min",
+
+    balance_title: "My balances",
+    balance_empty:
+      "No leave balance yet. Balances are granted in batches from your hire date and seniority; contact HR if this stays empty.",
+    balance_unlimited: "No quota limit",
+    balance_next_expiry: "Next expiry: {{date}}",
+    balance_never_reconciled: "Never reconciled against the ledger",
+
+    form_title: "New request",
+    field_policy: "Leave type",
+    field_segment: "Segment",
+    field_dates: "Dates",
+    field_reason: "Reason",
+    field_reason_placeholder: "e.g. follow-up appointment, family matter",
+    field_reason_encrypted:
+      "Stored encrypted; visible only to approvers on the detail page",
+    segment_full: "Full day",
+    segment_morning: "Morning",
+    segment_afternoon: "Afternoon",
+    action_add_date: "+ Add a day",
+    action_remove_date: "Remove",
+    action_submit: "Submit request",
+
+    preview_total: "{{days}} day(s) total ({{minutes}} min)",
+    preview_after: "{{minutes}} min remaining after this",
+    preview_shortfall: "Short by {{minutes}} min; cannot submit",
+    preview_chain: "{{count}} approval step(s)",
+    preview_chain_unresolved:
+      "The approval chain cannot be resolved ({{reason}}). Ask HR to check the approval rules and org settings.",
+    preview_concurrency_warn:
+      "{{count}} people are already on leave on {{date}} (suggested limit {{limit}}). You can still submit; your manager may ask to reschedule.",
+    preview_concurrency_blocked:
+      "{{count}} people are already on leave on {{date}}, over the limit of {{limit}}. Cannot submit.",
+
+    my_requests_title: "My requests",
+    my_requests_empty: "No requests submitted yet",
+    list_step_progress: "Step {{current}}/{{total}}, waiting on {{approver}}",
+    list_step_self: "You are step {{current}}/{{total}}",
+    status_pending: "In review",
+    status_approved: "Approved",
+    status_rejected: "Rejected",
+    status_withdrawn: "Withdrawn",
+    action_withdraw: "Withdraw",
+
+    approval_title: "Waiting on you ({{count}})",
+    approval_empty: "Nothing is waiting for your approval",
+    action_approve: "Approve",
+    action_reject: "Reject",
+    action_reject_confirm: "Confirm rejection",
+    field_reject_reason: "Reason for rejection (required)",
+    field_reject_placeholder: "The requester will see this text",
+
+    node_direct: "Direct manager",
+    node_department: "Department manager",
+    node_hr: "HR",
+    node_specific: "Named approver",
+    chain_empty: "No approval chain",
+    chain_escalated: "Escalated automatically: {{reason}}",
+
+    error_load: "Failed to load",
+    error_preview: "Preview failed",
+    error_submit: "Submit failed",
+    error_withdraw: "Withdraw failed",
+    error_decide: "Decision failed",
     policy_annual: "Annual leave",
     policy_personal: "Personal leave",
     policy_sick: "Sick leave",
