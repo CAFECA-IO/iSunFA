@@ -4,6 +4,8 @@ import { AppError } from "@/lib/utils/error";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { RateLimitBucketEnum } from "@/constants/rate_limit";
+import { enforceRateLimit } from "@/lib/rate_limiter";
 import { attendanceIdentityService } from "@/services/attendance_identity.service";
 import { attendancePresenceService } from "@/services/attendance_presence.service";
 
@@ -34,6 +36,13 @@ export async function GET(
     if (!sessionUser) {
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
+
+    // Info: (20260817 - Luphia) DeWT 驗證之後、業務邏輯之前（限流規範 §2）
+    const limited = enforceRateLimit(
+      sessionUser.address,
+      RateLimitBucketEnum.READ,
+    );
+    if (limited) return limited;
 
     const { account_book_id: accountBookId, location_id: workLocationId } =
       await params;

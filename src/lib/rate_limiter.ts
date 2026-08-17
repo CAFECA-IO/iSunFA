@@ -106,26 +106,47 @@ export class SlidingWindowRateLimiter {
   }
 }
 
-// Info: (20260716 - Emily) carbon 路由共用單例(Next.js route handler 同 process 共享)
-const carbonRateLimiter = new SlidingWindowRateLimiter();
+/**
+ * Info: (20260716 - Emily) 全站路由共用單例(Next.js route handler 同 process 共享)。
+ *
+ * Info: (20260817 - Luphia) 一個實例服務所有 bucket，因為 `check()` 的 key 是
+ * `bucket:identity` —— 不同 bucket 之間本來就不共用計數，開第二個實例只會讓
+ * 記憶體上限（`RATE_LIMIT_MAX_TRACKED_KEYS`）與清掃節奏各算一份。
+ */
+const rateLimiter = new SlidingWindowRateLimiter();
 
 /**
  * Info: (20260716 - Emily) route 專用防線:超限時回傳現成的 429 Response(含 Retry-After),
  * 未超限回 null。route 只需一行 if,維持「純端口」職責。
+ *
+ * Info: (20260817 - Luphia) 由 `enforceCarbonRateLimit` 改名而來 —— 它從第一天起就
+ * 與 carbon 無關（維度是身分 × bucket），而名字裡的 `Carbon` 會讓下一個要為新模組
+ * 加限流的人以為得再寫一支。**呼叫時機的規則沒變**：DeWT 驗證之後、業務邏輯之前，
+ * 否則「失敗的嘗試也計入」不會成立（見 `ATTENDANCE_PUNCH` 的說明）。
  */
-export const enforceCarbonRateLimit = (
-  address: string,
+export const enforceRateLimit = (
+  identity: string,
   bucket: RateLimitBucketEnum,
 ): NextResponse | null => {
-  const decision = carbonRateLimiter.check(bucket, address);
+  const decision = rateLimiter.check(bucket, identity);
   if (decision.allowed) return null;
   // Info: (20260716 - Emily) 429 log 供上線觀測調參(初期閾值放寬,觀測一週後收緊)
-  logger.warn("carbon rate limit exceeded", {
+  logger.warn("rate limit exceeded", {
     bucket,
-    address,
+    identity,
     retryAfterSeconds: decision.retryAfterSeconds,
   });
   return jsonFail(API_ERRORS.IS_RATE_LIMITED, {
     headers: { "Retry-After": String(decision.retryAfterSeconds) },
   });
 };
+
+/**
+ * Deprecated: (20260817 - Luphia) 舊名，供 16 支既有 carbon route 沿用。
+ * 行為與 `enforceRateLimit` 完全相同（同一個 limiter 實例、同一組計數）。
+ *
+ * ToDo: (20260817 - Luphia) 把那 16 支改呼叫 `enforceRateLimit` 後移除本別名。
+ * 刻意不在這一輪一起改：那是 16 個檔案的機械改動，混進出勤模組的 review 裡
+ * 只會讓兩件事都更難看清楚。
+ */
+export const enforceCarbonRateLimit = enforceRateLimit;
