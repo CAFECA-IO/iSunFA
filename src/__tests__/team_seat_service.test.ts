@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
+import { readFileSync } from "fs";
+import { join } from "path";
 import { chargeSeatAddition } from "@/services/team_seat.service";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
@@ -315,6 +317,22 @@ describe("chargeSeatAddition", () => {
    */
   it("defaults the free plan to the owner alone", () => {
     expect(DEFAULT_FREE_PLAN_MAX_MEMBERS).toBe(1);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 條款引用了這個預設值，兩邊必須一致（第四輪 B-4）。
+   *
+   * 條款 §3.1 的說明段落寫著「預設 N」，而改常數的那個 commit 沒有改條款——
+   * 於是條款寫 5、擋門是 1，而**使用者看到的是條款**。
+   * 這條把那個同步變成一個會紅的步驟。
+   */
+  it("條款引用的預設值與常數一致", () => {
+    const terms = readFileSync(
+      join(process.cwd(), "documents", "legal", "terms_of_service.md"),
+      "utf8",
+    );
+    const quoted = terms.match(/FREE_PLAN_MAX_MEMBERS`（\*\*預設 (\d+)/);
+    expect(quoted?.[1]).toBe(String(DEFAULT_FREE_PLAN_MAX_MEMBERS));
   });
 
   it("counts pending invitations toward the free member cap", async () => {
