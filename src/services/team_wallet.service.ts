@@ -222,6 +222,23 @@ export async function manageAllocation(
     throw toApiError(API_ERRORS.TW_INVALID_SPEND_AMOUNT);
   }
 
+  /**
+   * Info: (20260818 - Luphia) 收回已停用（產品決定 20260818，條款 §3.5 同步改寫）。
+   *
+   * 原因是合約層面做不到：`CreditPoint` 只有 `burnAndUnlock(uint256)`，
+   * 燒的是呼叫者自己的餘額，平台的代理帳號無權銷毀成員錢包裡的代幣。
+   *
+   * **在最前面就擋下**，而不是讓它一路走到鏈上失敗：走到底會先讀淨分配量、
+   * 再讀鏈上餘額，然後在 `burn` 那裡回一個通用的「操作失敗」——
+   * 那個訊息會讓客服以為是餘額問題或暫時性故障而不斷重試。
+   *
+   * 保留 API 而不是刪掉：既有呼叫端（含客服流程）拿到的應該是一個說得清楚的
+   * 「此功能已停用」，而不是 404 或 schema 錯誤。
+   */
+  if (direction === ALLOCATION_DIRECTION.REVOKE) {
+    throw toApiError(API_ERRORS.TW_ALLOCATION_REVOKE_DISABLED);
+  }
+
   return guarded(async () => {
     await assertWalletManager(operatorUserId, teamId);
 

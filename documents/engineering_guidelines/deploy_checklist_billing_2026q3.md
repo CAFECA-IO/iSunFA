@@ -158,7 +158,7 @@ npx tsx scripts/backfill_pending_invite_key.ts --commit # 實際寫入
 | 費思記憶：90 天起算點為「系統發現終止之日」而非終止日 | 刻意的保守偏差，保留期只會更長不會更短（規範 §2.2） |
 | 方案頁承諾值與實際額度的倍數不一致 | free 1.14×、付費 2.14×；刻意保守但倍數不齊，屬定價文案決定 |
 | 結算時的 `burn` 無用戶當下簽章 | 刻意設計（條款 §3.3 / §3.5 已載明），屬信任模型變更 |
-| **收回分配點數在合約層面做不到** | `CreditPoint` 只有 `burnAndUnlock(uint256)`（燒 `msg.sender` 自己的餘額），沒有可由平台呼叫的 `burn(address, uint256)`。條款 §3.5 已於 2026-08-18 改為「分配後不可收回」、UI 入口已移除；**API 仍在但呼叫必定失敗**，要恢復須改合約並重新部署 |
+| **收回分配點數在合約層面做不到** | `CreditPoint` 只有 `burnAndUnlock(uint256)`（燒 `msg.sender` 自己的餘額），沒有可由平台呼叫的 `burn(address, uint256)`。條款 §3.5 已於 2026-08-18 改為「分配後不可收回」、UI 入口已移除；**API 仍在但已明確停用**（回 `TW000020`，擋在動任何餘額之前），要恢復須改合約並重新部署 |
 | `ABIS.CREDIT_POINT` 與部署的合約不一致 | ABI 宣告了 `burn(address,uint256)`、`forcedTransfer`、`freezePartialTokens`、`setAddressFrozen` 等，合約裡一個都沒有。目前只有 burn 這條路徑實際被呼叫（且已知會失敗），其餘未使用 |
 
 ---

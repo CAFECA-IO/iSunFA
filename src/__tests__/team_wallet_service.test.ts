@@ -319,33 +319,17 @@ describe("manageAllocation", () => {
     expect(teamWalletRepo.allocate).not.toHaveBeenCalled();
   });
 
-  // Info: (20260814 - Luphia) 收回＝銷毀成員鏈上點數，再回補池
-  it("burns the member's points when revoking", async () => {
-    await manageAllocation({
-      teamId: "team-1",
-      operatorUserId: "user-admin",
-      targetUserId: "user-2",
-      amount: BigInt(50),
-      direction: ALLOCATION_DIRECTION.REVOKE,
-    });
-
-    expect(burn).toHaveBeenCalledWith("0xcreditpoint", "0xmember", 50);
-    expect(teamWalletRepo.revoke).toHaveBeenCalledWith(
-      expect.objectContaining({ txHash: "0xburn" }),
-    );
-  });
-
   /**
-   * Info: (20260814 - Luphia) 收回上限＝團隊淨分配量。
+   * Info: (20260818 - Luphia) 收回已停用（產品決定 20260818）。
    *
-   * 點數進了成員錢包後，與他自費購買的混在同一個餘額裡、鏈上分不出來；
-   * 沒有這道上限，團隊就能銷毀成員自己買的點數——那是別人的資產。
+   * 原因是合約層面做不到：`CreditPoint` 只有 `burnAndUnlock(uint256)`，
+   * 燒的是呼叫者自己的餘額，平台的代理帳號無權銷毀成員錢包裡的代幣。
+   * 條款 §3.5 已改為「分配後不可收回」。
+   *
+   * 這裡原本有四條測試描述收回的行為（上限為淨分配量、已花掉即收不回、
+   * 鏈上失敗回 TW000009…），那些路徑現在都到不了，留著只會讓人以為功能還在。
    */
-  it("never burns more than the team actually allocated", async () => {
-    asMock(teamWalletRepo.sumNetAllocatedToMember).mockResolvedValue(
-      BigInt(20),
-    );
-
+  it("rejects revoking with an explicit disabled error", async () => {
     await expect(
       manageAllocation({
         teamId: "team-1",
@@ -354,19 +338,15 @@ describe("manageAllocation", () => {
         amount: BigInt(50),
         direction: ALLOCATION_DIRECTION.REVOKE,
       }),
-      // Info: (20260814 - Luphia) TW000002 = TW_ALLOCATION_INSUFFICIENT
-    ).rejects.toMatchObject({ code: "TW000002" });
-
-    expect(burn).not.toHaveBeenCalled();
+      // Info: (20260818 - Luphia) TW000020 = TW_ALLOCATION_REVOKE_DISABLED
+    ).rejects.toMatchObject({ code: "TW000020" });
   });
 
   /**
-   * Info: (20260814 - Luphia) 成員已經把點數用掉時，收回必須明說收不回來，
-   * 而不是回一個看起來像系統故障的錯誤。餘額檢查在銷毀之前，因此不會白打一次鏈上交易。
+   * Info: (20260818 - Luphia) 擋在動任何餘額之前：走到底會先讀淨分配量、
+   * 再讀鏈上餘額，中間任何一步的錯誤都會蓋掉「已停用」這個真正的原因。
    */
-  it("reports insufficiency when the member has already spent the points", async () => {
-    asMock(publicClient.readContract).mockResolvedValue(BigInt(0));
-
+  it("does not touch balances or the chain when revoking", async () => {
     await expect(
       manageAllocation({
         teamId: "team-1",
@@ -375,25 +355,10 @@ describe("manageAllocation", () => {
         amount: BigInt(50),
         direction: ALLOCATION_DIRECTION.REVOKE,
       }),
-    ).rejects.toMatchObject({ code: "TW000002" });
+    ).rejects.toThrow();
 
+    expect(teamWalletRepo.sumNetAllocatedToMember).not.toHaveBeenCalled();
     expect(burn).not.toHaveBeenCalled();
-  });
-
-  // Info: (20260814 - Luphia) 鏈上操作失敗＝系統異常（TW000009），不是用戶的餘額問題
-  it("reports an operation failure when the burn itself fails", async () => {
-    asMock(burn).mockResolvedValue({ success: false, message: "rpc down" });
-
-    await expect(
-      manageAllocation({
-        teamId: "team-1",
-        operatorUserId: "user-admin",
-        targetUserId: "user-2",
-        amount: BigInt(50),
-        direction: ALLOCATION_DIRECTION.REVOKE,
-      }),
-    ).rejects.toMatchObject({ code: "TW000009" });
-
     expect(teamWalletRepo.revoke).not.toHaveBeenCalled();
   });
 
@@ -468,21 +433,6 @@ describe("manageAllocation", () => {
         direction: ALLOCATION_DIRECTION.ALLOCATE,
       }),
     ).rejects.toMatchObject({ code: "TW000003" });
-  });
-
-  it("maps member shortage to TW_ALLOCATION_INSUFFICIENT on REVOKE", async () => {
-    asMock(teamWalletRepo.revoke).mockResolvedValue({
-      outcome: WALLET_OP_OUTCOME.INSUFFICIENT,
-    });
-    await expect(
-      manageAllocation({
-        teamId: "team-1",
-        operatorUserId: "user-admin",
-        targetUserId: "user-2",
-        amount: BigInt(50),
-        direction: ALLOCATION_DIRECTION.REVOKE,
-      }),
-    ).rejects.toMatchObject({ code: "TW000002" });
   });
 
   it("surfaces a frozen wallet", async () => {

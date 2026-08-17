@@ -83,3 +83,32 @@ describe("CreditPoint 合約與 ABI 的落差", () => {
     expect(contract).toMatch(/_burn\(msg\.sender,/);
   });
 });
+
+/**
+ * Info: (20260818 - Luphia) 收回已停用，且要**明確地**停用（產品決定 20260818）。
+ *
+ * 讓它一路走到鏈上失敗會回一個通用的「操作失敗」，而那個訊息會讓客服以為是
+ * 餘額問題或暫時性故障而不斷重試——這件事重試一百次也一樣。
+ */
+describe("收回分配點數已停用", () => {
+  const service = readFileSync(
+    join(process.cwd(), "src", "services", "team_wallet.service.ts"),
+    "utf8",
+  );
+
+  it("以專屬錯誤碼擋下，而不是走到鏈上才失敗", () => {
+    expect(service).toMatch(/TW_ALLOCATION_REVOKE_DISABLED/);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 必須擋在**動任何餘額之前**：
+   * 走到底會先讀淨分配量、再讀鏈上餘額，中間任何一步的錯誤訊息
+   * 都會蓋掉「這個功能已停用」這個真正的原因。
+   */
+  it("擋在讀取餘額之前", () => {
+    const guard = service.indexOf("TW_ALLOCATION_REVOKE_DISABLED");
+    const netAllocated = service.indexOf("sumNetAllocatedToMember");
+    expect(guard).toBeGreaterThan(-1);
+    expect(netAllocated).toBeGreaterThan(guard);
+  });
+});

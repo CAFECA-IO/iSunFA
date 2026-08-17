@@ -1117,6 +1117,21 @@ export const API_ERRORS = {
     message: "Failed to deliver the invitation email",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+  /**
+   * Info: (20260818 - Luphia) 收回分配點數已停用（調查 20260818）。
+   *
+   * `CreditPoint` 合約只有 `burnAndUnlock(uint256)`，燒的是呼叫者自己的餘額；
+   * 沒有可由平台呼叫的 `burn(address, uint256)`，代理帳號無權銷毀成員錢包裡的代幣。
+   * 條款 §3.5 已改為「分配後不可收回」。
+   *
+   * 給一個**專屬的錯誤碼**而不是讓它走到鏈上失敗回 `TW000010`：
+   * 通用的「操作失敗」會讓客服以為重試就好，而這件事重試一百次也一樣。
+   */
+  TW_ALLOCATION_REVOKE_DISABLED: {
+    code: "TW000020",
+    message: "Revoking allocated credits is no longer supported",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
   // Info: (20260815 - Luphia) 邀請信箱格式不正確（規範 §4 / P4）
   VL_INVALID_EMAIL: {
     code: "VL000018",
