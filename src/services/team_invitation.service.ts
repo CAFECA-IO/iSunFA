@@ -380,3 +380,82 @@ export async function acceptInviteByToken(
 
   return { teamId: invitation.teamId };
 }
+
+export interface IRevokeInviteParams {
+  teamId: string;
+  inviteId: string;
+  operatorUserId: string;
+}
+
+/**
+ * Info: (20260817 - Luphia) 撤回尚未接受的邀請（產品拍板 20260815）。
+ *
+ * 由 route 搬進 service（CLAUDE.md §1）：這裡有三條業務規則——操作者的權限、
+ * 邀請必須屬於路徑上的團隊、且必須仍是 PENDING——而規則放在端口裡就沒辦法
+ * 單獨測試，也很容易在下一支類似的端點裡被漏抄一條。
+ *
+ * 撤回**不退費**（`subscription.seats` 不減），但空出來的位置可以立刻再用。
+ */
+export async function revokeInvitation(
+  params: IRevokeInviteParams,
+): Promise<{ id: string; seatReleased: boolean; refunded: boolean }> {
+  const { teamId, inviteId, operatorUserId } = params;
+
+  const operator = await teamRepo.getTeamMember(operatorUserId, teamId);
+  if (!operator || (operator.role !== "OWNER" && operator.role !== "ADMIN")) {
+    throw toApiError(API_ERRORS.FO_PERMISSION_DENIED_ONLY_OWN);
+  }
+
+  const invitation = await teamRepo.getInvitationByIdWithDetails(inviteId);
+  /**
+   * Info: (20260817 - Luphia) 邀請必須屬於路徑上的團隊。少了這一行，
+   * 任何團隊的管理員都能刪掉別的團隊的邀請——上面驗的是「他對 teamId 的權限」，
+   * 而不是「他對這筆邀請的權限」。
+   */
+  if (!invitation || invitation.teamId !== teamId) {
+    throw toApiError(API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO);
+  }
+  if (invitation.status !== TEAM_INVITATION_STATUS.PENDING) {
+    throw toApiError(API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO);
+  }
+
+  await teamRepo.deleteInvitation(inviteId);
+  // Info: (20260817 - Luphia) 明講「席次已釋出、費用不退」，前端才說得出這件事
+  return { id: inviteId, seatReleased: true, refunded: false };
+}
+
+export interface IDeclineByMemberParams {
+  inviteId: string;
+  userId: string;
+  address: string;
+}
+
+/**
+ * Info: (20260817 - Luphia) 受邀者拒絕以錢包位址寄出的邀請（條款 §3.6）。
+ *
+ * 同樣由 route 搬進 service（CLAUDE.md §1）。與 token 路徑的差別只在身分來源：
+ * 位址邀請的受邀者一定已經有帳號，因此可以、也應該驗「是不是本人」。
+ */
+export async function declineInvitationByMember(
+  params: IDeclineByMemberParams,
+): Promise<{ id: string; teamId: string }> {
+  const { inviteId, address } = params;
+
+  const invitation = await teamRepo.getInvitationByIdWithDetails(inviteId);
+  if (!invitation || invitation.status !== TEAM_INVITATION_STATUS.PENDING) {
+    throw toApiError(API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO);
+  }
+  if (invitation.inviteeAddress !== address) {
+    throw toApiError(API_ERRORS.FO_YOU_ARE_NOT_THE_INTENDED_RE);
+  }
+
+  /**
+   * Info: (20260817 - Luphia) `false` = 這封邀請在讀取之後已經不是 PENDING。
+   * 當成查無此邀請，不要回一個「已拒絕」的假象——那會讓一個其實已經
+   * 加入團隊的人以為自己退掉了。
+   */
+  const declined = await teamRepo.declineInvitation(inviteId);
+  if (!declined) throw toApiError(API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO);
+
+  return { id: inviteId, teamId: invitation.teamId };
+}

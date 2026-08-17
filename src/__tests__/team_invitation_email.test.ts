@@ -3,9 +3,11 @@ import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
 import {
   acceptInviteByToken,
+  declineInvitationByMember,
   declineInviteByToken,
   inviteMemberByEmail,
   resolveInviteByToken,
+  revokeInvitation,
 } from "@/services/team_invitation.service";
 import { teamRepo } from "@/repositories/team.repo";
 import { userIdentityRepo } from "@/repositories/user_identity.repo";
@@ -33,6 +35,7 @@ jest.mock("@/repositories/team.repo", () => ({
     createTeamInvitation: jest.fn(),
     deleteInvitation: jest.fn(),
     declineInvitation: jest.fn(),
+    getInvitationByIdWithDetails: jest.fn(),
     findInvitationByTokenHash: jest.fn(),
     getTeamMember: jest.fn(async () => null),
     acceptInvitation: jest.fn(),
@@ -636,5 +639,139 @@ describe("declineInviteByToken", () => {
 
     await expect(declineInviteByToken("token", NOW)).rejects.toThrow();
     expect(asMock(teamRepo.declineInvitation)).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Info: (20260817 - Luphia) 撤回與位址拒絕的業務規則（自我 review：由 route 搬進 service）。
+ *
+ * 規則放在端口裡沒辦法單獨測試，也很容易在下一支類似的端點裡被漏抄一條——
+ * 而這裡漏掉的那一條會讓別的團隊的管理員刪得掉你的邀請。
+ */
+describe("revokeInvitation", () => {
+  const pending = {
+    id: "inv-1",
+    teamId: TEAM.id,
+    status: TEAM_INVITATION_STATUS.PENDING,
+  };
+
+  beforeEach(() => {
+    asMock(teamRepo.getTeamMember).mockResolvedValue({ role: "ADMIN" });
+    asMock(teamRepo.getInvitationByIdWithDetails).mockResolvedValue(pending);
+  });
+
+  it("OWNER / ADMIN 可以撤回，且回報席次已釋出但不退費", async () => {
+    const result = await revokeInvitation({
+      teamId: TEAM.id,
+      inviteId: "inv-1",
+      operatorUserId: "user-1",
+    });
+
+    expect(result).toEqual({
+      id: "inv-1",
+      seatReleased: true,
+      refunded: false,
+    });
+    expect(asMock(teamRepo.deleteInvitation)).toHaveBeenCalledWith("inv-1");
+  });
+
+  it("一般成員不能撤回", async () => {
+    asMock(teamRepo.getTeamMember).mockResolvedValue({ role: "VIEWER" });
+
+    await expect(
+      revokeInvitation({
+        teamId: TEAM.id,
+        inviteId: "inv-1",
+        operatorUserId: "user-1",
+      }),
+    ).rejects.toThrow();
+    expect(asMock(teamRepo.deleteInvitation)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260817 - Luphia) 權限驗的是「他對 teamId 的權限」，
+   * 不是「他對這筆邀請的權限」——少了歸屬檢查，任何團隊的管理員
+   * 都能刪掉別的團隊的邀請。
+   */
+  it("不能撤回別的團隊的邀請", async () => {
+    asMock(teamRepo.getInvitationByIdWithDetails).mockResolvedValue({
+      ...pending,
+      teamId: "other-team",
+    });
+
+    await expect(
+      revokeInvitation({
+        teamId: TEAM.id,
+        inviteId: "inv-1",
+        operatorUserId: "user-1",
+      }),
+    ).rejects.toThrow();
+    expect(asMock(teamRepo.deleteInvitation)).not.toHaveBeenCalled();
+  });
+
+  it("已接受的邀請不能撤回", async () => {
+    asMock(teamRepo.getInvitationByIdWithDetails).mockResolvedValue({
+      ...pending,
+      status: TEAM_INVITATION_STATUS.ACCEPTED,
+    });
+
+    await expect(
+      revokeInvitation({
+        teamId: TEAM.id,
+        inviteId: "inv-1",
+        operatorUserId: "user-1",
+      }),
+    ).rejects.toThrow();
+  });
+});
+
+describe("declineInvitationByMember", () => {
+  const pending = {
+    id: "inv-1",
+    teamId: TEAM.id,
+    status: TEAM_INVITATION_STATUS.PENDING,
+    inviteeAddress: "0xabc",
+  };
+
+  beforeEach(() => {
+    asMock(teamRepo.getInvitationByIdWithDetails).mockResolvedValue(pending);
+    asMock(teamRepo.declineInvitation).mockResolvedValue(true);
+  });
+
+  it("受邀者本人可以拒絕", async () => {
+    const result = await declineInvitationByMember({
+      inviteId: "inv-1",
+      userId: "user-2",
+      address: "0xabc",
+    });
+    expect(result.teamId).toBe(TEAM.id);
+  });
+
+  // Info: (20260817 - Luphia) 不是收件者就不能替人拒絕
+  it("非受邀者不能拒絕", async () => {
+    await expect(
+      declineInvitationByMember({
+        inviteId: "inv-1",
+        userId: "user-3",
+        address: "0xdef",
+      }),
+    ).rejects.toThrow();
+    expect(asMock(teamRepo.declineInvitation)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260817 - Luphia) 寫入時才發現已不是 PENDING：不能回「已拒絕」的假象，
+   * 那會讓一個其實已經加入團隊的人以為自己退掉了。
+   */
+  it("寫入時發現已不是 PENDING 即視為查無", async () => {
+    asMock(teamRepo.declineInvitation).mockResolvedValue(false);
+
+    await expect(
+      declineInvitationByMember({
+        inviteId: "inv-1",
+        userId: "user-2",
+        address: "0xabc",
+      }),
+    ).rejects.toThrow();
   });
 });
