@@ -791,6 +791,10 @@ export const hrManagement = {
     detail_concurrency_warned:
       "신청 시점에 같은 기간 다른 동료의 휴가가 있었고 신청자에게 안내되었습니다",
     segment_custom: "시간 지정",
+    field_custom_range: "시작·종료 시각",
+    unit_hint: "최소 단위는 {{minutes}}분이며, 미만은 1단위로 계산됩니다",
+    preview_rounded:
+      "선택한 시간은 {{raw}}분이지만 최소 단위에 따라 {{minutes}}분으로 계산됩니다",
     action_detail: "상세",
     action_back: "뒤로",
     title: "휴가 신청",

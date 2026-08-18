@@ -802,6 +802,11 @@ export const hrManagement = {
     detail_concurrency_warned:
       "Others were already on leave during this period when the request was submitted; the requester was warned",
     segment_custom: "Custom hours",
+    field_custom_range: "Start / end time",
+    unit_hint:
+      "Minimum unit {{minutes}} min; anything shorter counts as one full unit.",
+    preview_rounded:
+      "You selected {{raw}} min; it counts as {{minutes}} min after rounding to the minimum unit.",
     action_detail: "Detail",
     action_back: "Back",
     title: "My leave",

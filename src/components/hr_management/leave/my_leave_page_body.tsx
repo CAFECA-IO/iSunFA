@@ -37,8 +37,32 @@ import { useTranslation } from "@/i18n/i18n_context";
  * 開著表單不送出，不會佔住任何人的額度。
  */
 
+/**
+ * Info: (20260818 - Julian) 表單裡的一天。
+ *
+ * 起訖時刻**逐日各自持有**，而不是整張假單共用一組 —— `LeaveDay` 本來就是
+ * 逐日落地的（`startMinute` / `endMinute` 在每一列上）。共用一組會讓
+ * 「週一請上午兩小時、週三請下午一小時」這種再普通不過的組合表達不出來，
+ * 而那正是小時制假別最常見的用法。
+ */
+interface ILeaveDayDraft {
+  workDate: string;
+  /** Info: (20260818 - Julian) "HH:MM"，只在 CUSTOM 有意義 */
+  startTime: string;
+  endTime: string;
+}
+
 /** Info: (20260817 - Julian) 送出後回到乾淨表單，但保留假別 —— 通常會連續請同一種 */
-const emptyDays = (): string[] => [""];
+const emptyDays = (): ILeaveDayDraft[] => [
+  { workDate: "", startTime: "09:00", endTime: "12:00" },
+];
+
+/** Info: (20260818 - Julian) "HH:MM" → 當日 00:00 起算的分鐘數 */
+const toMinuteOfDay = (value: string): number | null => {
+  const matched = /^(\d{2}):(\d{2})$/.exec(value);
+  if (matched === null) return null;
+  return Number(matched[1]) * 60 + Number(matched[2]);
+};
 
 /**
  * Info: (20260818 - Julian) 試算用的事由佔位字串。
@@ -57,7 +81,7 @@ const MyLeavePageBody: FC = () => {
 
   const [policyId, setPolicyId] = useState<string>("");
   const [segment, setSegment] = useState<LeaveDaySegment>(LeaveDaySegment.FULL);
-  const [workDates, setWorkDates] = useState<string[]>(emptyDays());
+  const [days, setDays] = useState<ILeaveDayDraft[]>(emptyDays());
   const [reason, setReason] = useState("");
 
   const [preview, setPreview] = useState<ILeaveRequestPreview | null>(null);
@@ -131,9 +155,47 @@ const MyLeavePageBody: FC = () => {
     void reload();
   }, [reload]);
 
-  const filledDates = useMemo(
-    () => workDates.filter((date) => date !== ""),
-    [workDates],
+  /**
+   * Info: (20260818 - Julian) 只有「自訂時段」需要起訖，而它只在最小單位是
+   * 固定分鐘的假別上開放（見 `mayPickCustom`）。
+   */
+  const isCustom = segment === LeaveDaySegment.CUSTOM;
+
+  /**
+   * Info: (20260818 - Julian) 送出與試算共用同一份 payload。
+   *
+   * 兩者若各組一次，遲早會有一邊漏帶 `startMinute` —— 而那個 bug 的症狀是
+   * 「試算顯示 2 小時，送出卻扣了一整天」，比沒有試算更糟
+   * （同 `leaveRequestCreateSchema` 與試算共用 schema 的理由）。
+   */
+  const payloadDays = useMemo(
+    () =>
+      days
+        .filter((day) => day.workDate !== "")
+        .map((day) => {
+          if (!isCustom) return { workDate: day.workDate, segment };
+          const startMinute = toMinuteOfDay(day.startTime);
+          const endMinute = toMinuteOfDay(day.endTime);
+          return startMinute === null || endMinute === null
+            ? null
+            : { workDate: day.workDate, segment, startMinute, endMinute };
+        })
+        // Info: (20260818 - Julian) 時刻沒填完的列不送，也不試算 —— 送了必定被 validator 擋
+        .filter((day): day is NonNullable<typeof day> => day !== null),
+    [days, segment, isCustom],
+  );
+
+  /** Info: (20260818 - Julian) 使用者實際選了幾分鐘（未進位），用來說明進位差額 */
+  const rawSelectedMinutes = useMemo(
+    () =>
+      !isCustom
+        ? null
+        : payloadDays.reduce((sum, day) => {
+            const start = (day as { startMinute?: number }).startMinute ?? 0;
+            const end = (day as { endMinute?: number }).endMinute ?? 0;
+            return sum + Math.max(0, end - start);
+          }, 0),
+    [payloadDays, isCustom],
   );
 
   /**
@@ -143,7 +205,7 @@ const MyLeavePageBody: FC = () => {
    * 不像文字輸入會逐字打。加 debounce 只會讓結果晚一點出現。
    */
   useEffect(() => {
-    if (!policyId || filledDates.length === 0) {
+    if (!policyId || payloadDays.length === 0) {
       setPreview(null);
       setPreviewError(null);
       return;
@@ -163,7 +225,7 @@ const MyLeavePageBody: FC = () => {
          * 順帶一提：事由是 Tier 2 個資，沒有必要在還沒送出前就一路送上伺服器。
          */
         reason: PREVIEW_REASON_PLACEHOLDER,
-        days: filledDates.map((workDate) => ({ workDate, segment })),
+        days: payloadDays,
       }),
     })
       .then((response) => {
@@ -201,7 +263,7 @@ const MyLeavePageBody: FC = () => {
     return () => {
       active = false;
     };
-  }, [policyId, segment, filledDates, t]);
+  }, [policyId, payloadDays, t]);
 
   const submit = async () => {
     setSubmitting(true);
@@ -212,10 +274,10 @@ const MyLeavePageBody: FC = () => {
         body: JSON.stringify({
           leavePolicyId: policyId,
           reason,
-          days: filledDates.map((workDate) => ({ workDate, segment })),
+          days: payloadDays,
         }),
       });
-      setWorkDates(emptyDays());
+      setDays(emptyDays());
       setReason("");
       setPreview(null);
       // Info: (20260818 - Julian) 送出成功就收起抽屜，讓底下剛更新的「我的假單」露出來
@@ -243,6 +305,31 @@ const MyLeavePageBody: FC = () => {
    * （`LeaveRequest.reasonCipher` 欄位註解）。前端擋是為了少一次往返，
    * 真正的把關在 validator。
    */
+  /**
+   * Info: (20260818 - Julian) 只有最小單位是**固定分鐘**的假別可以選自訂時段。
+   *
+   * 半天制的假別（婚假、喪假、生理假…）技術上也算得出來，但結果會被進位
+   * 到半天 —— 給一個時刻選擇器、卻無論選幾分鐘都扣半天，是靜默升級。
+   * 那正是 `assertHalfDaySelectable` 拒絕「整天制假別選半天」的同一個理由：
+   * 「靜默升級會讓一個人以為自己請了半天，月底看到扣一天才發現。」
+   *
+   * ToDo: (20260818 - Julian) 哪些假別可以用小時計是**法規問題**（生理假、
+   * 產檢假、陪產假各有函釋）。要放寬請改 `DEFAULT_LEAVE_POLICY_SEED` 的
+   * `unitBasis`，而不是放寬這裡 —— 這裡只是忠實反映那份設定。
+   */
+  const mayPickCustom =
+    selectedPolicy?.unitBasis === LeaveUnitBasis.FIXED_MINUTES;
+
+  /**
+   * Info: (20260818 - Julian) 換到不支援自訂時段的假別時退回整天。
+   * 留著一個選不到的值，送出時才被引擎擋下，使用者會看不懂自己改了什麼。
+   */
+  useEffect(() => {
+    if (!mayPickCustom && segment === LeaveDaySegment.CUSTOM) {
+      setSegment(LeaveDaySegment.FULL);
+    }
+  }, [mayPickCustom, segment]);
+
   const blockingWarning = preview?.concurrencyWarnings.some(
     (warning) => warning.blocking,
   );
@@ -335,6 +422,16 @@ const MyLeavePageBody: FC = () => {
                   </option>
                 </>
               )}
+              {/**
+               * Info: (20260818 - Julian) 小時制的入口。引擎與資料早就支援
+               * （特休／事假／病假／公假的最小單位是 60 分鐘、補休 30 分鐘），
+               * 缺的一直只是這一個選項。
+               */}
+              {mayPickCustom && (
+                <option value={LeaveDaySegment.CUSTOM}>
+                  {t("hr_management.leave.segment_custom")}
+                </option>
+              )}
             </select>
           </label>
         </div>
@@ -343,38 +440,85 @@ const MyLeavePageBody: FC = () => {
           <span className="text-xs text-gray-600">
             {t("hr_management.leave.field_dates")}
           </span>
-          {workDates.map((date, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <input
-                type="date"
-                value={date}
-                onChange={(event) => {
-                  const next = [...workDates];
-                  next[index] = event.target.value;
-                  setWorkDates(next);
-                }}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
-              />
-              {workDates.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setWorkDates(workDates.filter((_, i) => i !== index))
-                  }
-                  className="text-xs text-gray-400 hover:text-rose-500"
-                >
-                  {t("hr_management.leave.action_remove_date")}
-                </button>
-              )}
-            </div>
-          ))}
+          {days.map((day, index) => {
+            const patch = (changes: Partial<ILeaveDayDraft>) =>
+              setDays(
+                days.map((item, i) =>
+                  i === index ? { ...item, ...changes } : item,
+                ),
+              );
+
+            return (
+              <div key={index} className="flex flex-wrap items-center gap-2">
+                <input
+                  type="date"
+                  value={day.workDate}
+                  onChange={(event) => patch({ workDate: event.target.value })}
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
+                />
+
+                {/**
+                 * Info: (20260818 - Julian) 起訖逐日各自填。整張單共用一組時刻
+                 * 表達不了「週一請上午兩小時、週三請下午一小時」，
+                 * 而那是小時制假別最常見的用法。
+                 */}
+                {isCustom && (
+                  <span
+                    className="flex items-center gap-1.5"
+                    aria-label={t("hr_management.leave.field_custom_range")}
+                  >
+                    <input
+                      type="time"
+                      value={day.startTime}
+                      onChange={(event) =>
+                        patch({ startTime: event.target.value })
+                      }
+                      className="rounded-lg border border-gray-300 px-2 py-2 text-sm text-gray-800"
+                    />
+                    <span className="text-xs text-gray-400">–</span>
+                    <input
+                      type="time"
+                      value={day.endTime}
+                      onChange={(event) =>
+                        patch({ endTime: event.target.value })
+                      }
+                      className="rounded-lg border border-gray-300 px-2 py-2 text-sm text-gray-800"
+                    />
+                  </span>
+                )}
+
+                {days.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setDays(days.filter((_, i) => i !== index))}
+                    className="text-xs text-gray-400 hover:text-rose-500"
+                  >
+                    {t("hr_management.leave.action_remove_date")}
+                  </button>
+                )}
+              </div>
+            );
+          })}
           <button
             type="button"
-            onClick={() => setWorkDates([...workDates, ""])}
+            onClick={() => setDays([...days, ...emptyDays()])}
             className="self-start text-xs font-medium text-sky-600 hover:text-sky-700"
           >
             {t("hr_management.leave.action_add_date")}
           </button>
+
+          {/**
+           * Info: (20260818 - Julian) 最小單位要在填之前就說，不是等試算才顯示。
+           * 「不足一單位以一單位計」是對勞工不利的預設，必須載明於工作規則
+           * （`LeaveRoundingMode` 的既有說明）—— 畫面上也該說。
+           */}
+          {isCustom && selectedPolicy?.minimumUnitMinutes && (
+            <p className="text-xs text-gray-400">
+              {t("hr_management.leave.unit_hint", {
+                minutes: selectedPolicy.minimumUnitMinutes,
+              })}
+            </p>
+          )}
         </div>
 
         <label className="mt-3 flex flex-col gap-1 text-xs text-gray-600">
@@ -419,6 +563,21 @@ const MyLeavePageBody: FC = () => {
                 </span>
               )}
             </div>
+
+            {/**
+             * Info: (20260818 - Julian) 進位吃掉的分鐘要說出來。
+             * 選 90 分鐘卻扣 120 分鐘，不講的話那 30 分鐘是無聲消失的。
+             */}
+            {rawSelectedMinutes !== null &&
+              rawSelectedMinutes > 0 &&
+              preview.totalMinutes !== rawSelectedMinutes && (
+                <p className="text-sm text-amber-700">
+                  {t("hr_management.leave.preview_rounded", {
+                    raw: rawSelectedMinutes,
+                    minutes: preview.totalMinutes,
+                  })}
+                </p>
+              )}
 
             {preview.shortfallMinutes > 0 && (
               <p className="flex items-center gap-1.5 text-sm text-rose-700">

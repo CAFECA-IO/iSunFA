@@ -787,6 +787,11 @@ export const hrManagement = {
     detail_concurrency_warned:
       "申請時点で同期間に他の同僚の休暇があり、申請者には通知済みです",
     segment_custom: "時間指定",
+    field_custom_range: "開始・終了時刻",
+    unit_hint:
+      "最小単位は {{minutes}} 分です。満たない場合は 1 単位として計算されます",
+    preview_rounded:
+      "選択は {{raw}} 分ですが、最小単位により {{minutes}} 分として計算されます",
     action_detail: "詳細",
     action_back: "戻る",
     title: "休暇申請",
