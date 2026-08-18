@@ -12,6 +12,7 @@ import { extractPdfTextLayer } from "@/lib/pdf_text_layer";
 import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
 import {
   isCompatibilityCode,
+  mapCompatibilityRadical,
   parseCMapEntries,
 } from "@/lib/utils/pdf_tounicode_repair";
 
@@ -172,6 +173,8 @@ const checkCMaps = async (bytes: Buffer): Promise<void> => {
   const illegal: string[] = [];
   const sourceCompat: string[] = [];
   const destinationCompat: string[] = [];
+  // Info: (20260817 - Luphia) 相容區但無對照可用 —— 是「表要長大」的清單，不是修補失效
+  const destinationUnmapped: string[] = [];
 
   document.context.enumerateIndirectObjects().forEach(([, object]) => {
     if (!(object instanceof PDFRawStream)) return;
@@ -200,9 +203,24 @@ const checkCMaps = async (bytes: Buffer): Promise<void> => {
       entry.destinations.forEach((token) => {
         if (token.hex.length !== 4) return;
         const code = parseInt(token.hex, 16);
-        if (isCompatibilityCode(code)) {
-          destinationCompat.push(`U+${token.hex.toUpperCase()}`);
+        if (!isCompatibilityCode(code)) return;
+        /**
+         * Info: (20260817 - Luphia) 依「有沒有對照可用」分流（PR review 的追加項）。
+         *
+         * `repairPdfToUnicode` 刻意不碰沒有對照的碼位（U+2EA1 那種變體部首，
+         * 猜錯是把字改成別的字，比搜不到更糟）。那些碼位因此會留在成品裡 ——
+         * 把它們算進「修補確實生效」那一項，會讓一份**修補完全正常**的報告被判 ✗，
+         * 而診斷指向錯的方向：該做的是確認字形後把它加進 `SUPPLEMENT_MAP`，
+         * 不是去查修補為什麼沒生效。
+         *
+         * 分流之後兩邊的下一步各自明確，也不會讓這支開始亂叫 ——
+         * 手法與上面來源側的 warn/fail 分流相同。
+         */
+        if (mapCompatibilityRadical(code) === null) {
+          destinationUnmapped.push(`U+${token.hex.toUpperCase()}`);
+          return;
         }
+        destinationCompat.push(`U+${token.hex.toUpperCase()}`);
       });
     });
   });
@@ -229,7 +247,22 @@ const checkCMaps = async (bytes: Buffer): Promise<void> => {
   );
 
   expectZero("CMap 非法區間(lo>hi)", illegal);
+  // Info: (20260817 - Luphia) 有對照卻還留在相容區 = 修補真的沒生效,這一項維持 fail
   expectZero("CMap 目標側落在相容區", destinationCompat);
+
+  snapshot["CMap 目標側無對照"] = destinationUnmapped.length;
+  if (destinationUnmapped.length === 0) {
+    record("pass", "CMap 目標側無對照", "0");
+  } else {
+    record(
+      "warn",
+      "CMap 目標側無對照",
+      `${destinationUnmapped.length} 處(${[...new Set(destinationUnmapped)]
+        .slice(0, 5)
+        .join(" ")})—— 這些字沒有對照可用,` +
+        "確認字形相同後加進 SUPPLEMENT_MAP;修補本身是正常的",
+    );
+  }
 
   snapshot["CMap 來源側落在相容區"] = sourceCompat.length;
   if (sourceCompat.length === 0) {
