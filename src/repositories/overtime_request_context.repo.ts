@@ -70,6 +70,16 @@ export interface IOvertimeRequestContext {
     /** Info: (20260818 - Julian) 累計時要把本張單自己排除，否則它會把自己算進上限 */
     excludeRequestId: string;
   }): Promise<IOvertimeApprovalContext>;
+  /**
+   * Info: (20260818 - Julian) 指定員工集合的待簽加班單。
+   *
+   * 收 id 清單而不是主管 id：「誰歸我管」是 `employee.repo` 的職責，
+   * 這裡只照著清單查（同 `listByEmployee` 不自己判斷可見範圍的理由）。
+   */
+  listPendingForApprover(params: {
+    accountBookId: string;
+    employeeIds: readonly string[];
+  }): Promise<IOvertimeRequestSummary[]>;
   findEmployeeRef(params: {
     accountBookId: string;
     employeeId: string;
@@ -313,6 +323,26 @@ class OvertimeRequestContextRepository implements IOvertimeRequestContext {
       select: { shiftPattern: { select: { requiredWorkMinutes: true } } },
     });
     return row?.shiftPattern?.requiredWorkMinutes ?? null;
+  }
+
+  public async listPendingForApprover(params: {
+    accountBookId: string;
+    employeeIds: readonly string[];
+  }): Promise<IOvertimeRequestSummary[]> {
+    // Info: (20260818 - Julian) 空清單代表「他沒有管任何人」，不是「查全部」
+    if (params.employeeIds.length === 0) return [];
+
+    const rows = await prisma.overtimeRequest.findMany({
+      where: {
+        accountBookId: params.accountBookId,
+        employeeId: { in: [...params.employeeIds] },
+        status: OvertimeRequestStatus.PENDING,
+      },
+      select: SUMMARY_SELECT,
+      // Info: (20260818 - Julian) 舊的排前面：等最久的單子最該先被處理
+      orderBy: [{ workDate: "asc" }, { createdAt: "asc" }],
+    });
+    return rows.map(toSummary);
   }
 
   public async findEmployeeRef(params: {

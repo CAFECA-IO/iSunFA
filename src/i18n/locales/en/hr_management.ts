@@ -7,6 +7,8 @@ export const hrManagement = {
   nav: {
     leave: "My leave",
     leave_approval: "Approvals",
+    overtime: "My overtime",
+    overtime_approval: "Overtime approvals",
     dashboard: "Dashboard",
     organization: "Organization",
     employee: "Employees",
@@ -906,5 +908,107 @@ export const hrManagement = {
     policy_paternity: "Paternity and check-up accompaniment leave",
     policy_family_care: "Family care leave",
     policy_compensatory: "Compensatory leave",
+  },
+  // Info: (20260818 - Julian) Overtime module (L24-L30). Tier labels are keyed by `OvertimePremiumTier`
+  overtime: {
+    title: "My overtime",
+    approval_page_title: "Overtime approvals",
+    loading: "Loading…",
+    unit_minute: "min",
+    unit_hour: "h",
+    summary_title: "This month",
+    summary_monthly: "Recognised this month",
+    summary_quarterly: "Rolling three months",
+    summary_limit: "Limit {{hours}} h",
+    summary_remaining: "{{hours}} h left",
+    summary_over_limit: "Over the limit",
+    summary_quarterly_none:
+      "No three-month cap applies without an agreed extension",
+    summary_punch_backed: "Backed by punch records",
+    summary_declared: "Self-declared",
+    summary_evidence_hint:
+      "Split on purpose: an inspection asks how much overtime has no attendance record behind it.",
+    summary_by_tier: "By premium tier",
+    summary_empty: "No approved overtime this month",
+    tier_weekday_first_2h: "Weekday, first 2 h",
+    tier_weekday_beyond_2h: "Weekday, beyond 2 h",
+    tier_rest_day_first_2h: "Rest day, first 2 h",
+    tier_rest_day_beyond_2h: "Rest day, beyond 2 h",
+    tier_holiday_double: "Holiday (double pay)",
+    tier_emergency_double: "Emergency (double pay)",
+    form_title: "New overtime request",
+    field_date: "Work date",
+    field_start: "From",
+    field_end: "To",
+    field_time_hint:
+      "If the end time is earlier than the start, it is read as the next day.",
+    field_filing: "Filing",
+    filing_advance: "In advance",
+    filing_post_hoc: "After the fact",
+    filing_hint:
+      "An advance filing must be submitted before that day's shift window opens.",
+    field_compensation: "Compensation",
+    compensation_payment: "Overtime pay",
+    compensation_leave: "Compensatory leave",
+    compensation_hint:
+      "Compensatory leave converts hour for hour; the premium multiplier applies at cash-out, not at conversion.",
+    field_reason: "Reason",
+    field_reason_placeholder: "e.g. concrete pour had to finish the same day",
+    field_emergency: "Emergency (Article 32 IV, already reported)",
+    field_emergency_hint:
+      "Only tick this once it has actually been reported: it moves the whole period to double pay and bypasses the statutory rest-day gate.",
+    action_submit: "Submit",
+    my_requests_title: "My requests",
+    my_requests_empty: "No overtime requests yet",
+    list_requested: "Requested {{minutes}} min",
+    list_recognized: "Recognised {{minutes}} min",
+    list_declared_badge: "Self-declared",
+    list_emergency_badge: "Emergency",
+    status_pending: "In review",
+    status_approved: "Approved",
+    status_rejected: "Rejected",
+    status_withdrawn: "Withdrawn",
+    approval_title: "Waiting on you ({{count}})",
+    approval_empty: "Nothing is waiting for your approval",
+    field_approved_minutes: "Approved minutes",
+    field_approved_minutes_hint:
+      "May be less than requested. What gets recognised is min(approved, actual time on site).",
+    action_approve: "Approve",
+    action_reject: "Reject",
+    decided_recognized: "Approved — {{minutes}} min recognised",
+    decided_unapproved:
+      "{{minutes}} min beyond what you approved is listed under unapproved time",
+    decided_granted: "{{count}} compensatory leave batch(es) granted",
+    unapproved_title: "Unapproved time",
+    unapproved_empty: "Nothing outside approved overtime",
+    unapproved_hint:
+      "Time on site that no request covers. It might be a missing filing, or just someone staying a while — you decide.",
+    unapproved_from: "From",
+    unapproved_range_days: "Last {{days}} days",
+    exception_unapproved_overtime: "On site, not approved",
+    exception_missing_punch_evidence: "Approved without a punch record",
+    select_employee: "Employee",
+    error_load: "Failed to load",
+    error_submit: "Submit failed",
+    error_decide: "Decision failed",
+    error_exceeds_daily:
+      "Normal hours plus overtime would exceed the statutory 12 hours in one day. Shorten it or move part of it.",
+    error_exceeds_monthly:
+      "This would exceed the monthly overtime limit. Check the summary for how much is left.",
+    error_exceeds_quarterly:
+      "This would exceed the three-month overtime limit.",
+    error_filing_mismatch:
+      "The filing type does not match when this was submitted. An advance filing has to be sent before the shift starts.",
+    error_regular_off:
+      "Working on a statutory rest day needs the Article 40 procedure. Ask HR to handle it.",
+    error_already_reviewed:
+      "This request has already been decided. Reload to see the result.",
+    error_comp_expiry_unset:
+      "The company has not agreed a compensatory-leave period yet, so overtime cannot be converted. Pick overtime pay, or ask HR to set it.",
+    error_day_not_scheduled:
+      "That date has no shift scheduled, so no statutory premium applies. Ask HR to add it to the roster.",
+    error_premium_undefined:
+      "The premium for that kind of day is not settled yet (suspended or leave days). Ask HR.",
+    error_not_found: "This overtime request no longer exists.",
   },
 };

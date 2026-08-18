@@ -171,6 +171,31 @@ export class OvertimeRequestService {
   }
 
   /**
+   * Info: (20260818 - Julian) 待我簽核的加班單。
+   *
+   * 計畫書 §10 沒有為它編號 —— 但 L26／L27 沒有它就沒有入口：主管無法
+   * 得知有誰送了單，而一張沒有人知道它存在的加班單，等於沒有送出。
+   * （假單那邊是 L16 `request/pending`，加班漏了對應的一支。）
+   *
+   * 範圍是「我管得到的人」，與 `assertMayDecide` 的授權判斷同源 ——
+   * 看得到的與簽得動的必須是同一群人，否則清單上會出現按下去被擋的單子。
+   */
+  public async listPending(params: {
+    accountBookId: string;
+    actorEmployeeId: string;
+  }): Promise<IOvertimeRequestSummary[]> {
+    const employeeIds = await employeeRepo.listManagedEmployeeIds({
+      accountBookId: params.accountBookId,
+      managerEmployeeId: params.actorEmployeeId,
+    });
+
+    return this.context.listPendingForApprover({
+      accountBookId: params.accountBookId,
+      employeeIds,
+    });
+  }
+
+  /**
    * Info: (20260818 - Julian) L26：核准。**同時決定認列分鐘與分段**（計畫書 §10）。
    *
    * 上限護欄排在最前面：越過 §32 II／III 的輸入不是「需要人判斷的例外」，

@@ -192,3 +192,25 @@ export const overtimeLimitsOf = (
     ? OVERTIME_QUARTERLY_EXTENDED_LIMIT_MINUTES
     : null,
 });
+
+/**
+ * Info: (20260818 - Julian) 加成級距的 i18n key。
+ *
+ * 與 `LEAVE_POLICY_I18N_KEY` 同型：級距是 enum（六個法定值，不會由租戶新增），
+ * 因此可以寫死對照而不必像假別那樣回退到資料庫的名稱。
+ * 新增成員時五個語系都要補，由 `attendance_i18n_keys.test.ts` 掃描守著。
+ */
+export const OVERTIME_TIER_I18N_KEY: Record<OvertimePremiumTier, string> = {
+  [OvertimePremiumTier.WEEKDAY_FIRST_2H]:
+    "hr_management.overtime.tier_weekday_first_2h",
+  [OvertimePremiumTier.WEEKDAY_BEYOND_2H]:
+    "hr_management.overtime.tier_weekday_beyond_2h",
+  [OvertimePremiumTier.REST_DAY_FIRST_2H]:
+    "hr_management.overtime.tier_rest_day_first_2h",
+  [OvertimePremiumTier.REST_DAY_BEYOND_2H]:
+    "hr_management.overtime.tier_rest_day_beyond_2h",
+  [OvertimePremiumTier.HOLIDAY_DOUBLE]:
+    "hr_management.overtime.tier_holiday_double",
+  [OvertimePremiumTier.EMERGENCY_DOUBLE]:
+    "hr_management.overtime.tier_emergency_double",
+};

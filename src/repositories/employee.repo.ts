@@ -282,6 +282,57 @@ class EmployeeRepository implements IEmployeeRepository {
       target.departmentId,
     );
   }
+
+  /**
+   * Info: (20260818 - Julian) 我管得到的所有員工 id（不含自己）。**這是授權判斷的複數版。**
+   *
+   * ## 為什麼需要一個複數版
+   *
+   * `managesEmployee` 答的是「這個人歸不歸我管」，一次一個。主管要看
+   * 「有誰送了加班單等我簽」時，問的是反方向：先有範圍，才有清單。
+   * 拿單數版去對全帳本每個人跑一次，是 N 次部門樹走訪。
+   *
+   * ## 為什麼不是兩套邏輯
+   *
+   * 兩者都走同一條路：`Department.managerId` 找到我管的部門 →
+   * `collectDepartmentScope` 展開子樹 → 取該子樹裡的員工。若哪天放寬成
+   * 一人可管多部門（待辦乙-4），兩支要一起改 —— 而它們現在讀起來就是同一件事。
+   *
+   * 不含自己：職責分離的第一條（ADR 023 §5）—— 自己的單子不會出現在
+   * 自己的待簽清單裡。
+   */
+  public async listManagedEmployeeIds(params: {
+    accountBookId: string;
+    managerEmployeeId: string;
+  }): Promise<string[]> {
+    const managed = await prisma.department.findFirst({
+      where: {
+        accountBookId: params.accountBookId,
+        managerId: params.managerEmployeeId,
+      },
+      select: { id: true },
+    });
+    if (!managed) return [];
+
+    const departments = await prisma.department.findMany({
+      where: { accountBookId: params.accountBookId },
+      select: { id: true, parentId: true },
+    });
+    const scope = collectDepartmentScope(
+      departments as IDepartment[],
+      managed.id,
+    );
+
+    const employees = await prisma.employee.findMany({
+      where: {
+        accountBookId: params.accountBookId,
+        departmentId: { in: [...scope] },
+        id: { not: params.managerEmployeeId },
+      },
+      select: { id: true },
+    });
+    return employees.map((employee) => employee.id);
+  }
 }
 
 export const employeeRepo = new EmployeeRepository();

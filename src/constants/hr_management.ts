@@ -16,6 +16,9 @@ export const HR_MANAGEMENT_ROUTE = {
   // Info: (20260817 - Julian) 假勤：員工端與簽核端。假別／簽核規則設定待甲-1
   LEAVE: "/hr_management/leave",
   LEAVE_APPROVAL: "/hr_management/leave/approval",
+  // Info: (20260818 - Julian) 加班：員工端與簽核端（簽核端另含未核准時段）
+  OVERTIME: "/hr_management/overtime",
+  OVERTIME_APPROVAL: "/hr_management/overtime/approval",
   DOCUMENT: "/hr_management/document",
   SETTING: "/hr_management/setting",
 } as const;
@@ -25,7 +28,7 @@ export const leaveRequestDetailRoute = (requestId: string): string =>
   `${HR_MANAGEMENT_ROUTE.LEAVE}/request/${requestId}`;
 
 /**
- * Info: (20260818 - Julian) 「我的請假」的請假表單改以下方抽屜呈現的斷點。
+ * Info: (20260818 - Julian) 人事模組的表單改以下方抽屜呈現的斷點（`HrFormSheet`）。
  *
  * 值必須與畫面上那串 `lg:` 覆蓋講同一件事（Tailwind 的 `lg` 是 1024px）。
  * 需要一個 JS 端的副本是因為**捲動鎖定關不掉 CSS**：抽屜在桌機被 `lg:` 收回
@@ -35,7 +38,7 @@ export const leaveRequestDetailRoute = (requestId: string): string =>
  * 放在常數檔而不是元件裡：它是「同一個斷點的兩種表達」的單一來源，
  * 兩邊各寫一次就會有一天只改到一邊。
  */
-export const HR_LEAVE_FORM_DRAWER_MEDIA_QUERY = "(max-width: 1023.98px)";
+export const HR_FORM_SHEET_MEDIA_QUERY = "(max-width: 1023.98px)";
 
 // Info: (20260810 - Julian) 員工在職狀態，對齊 Prisma enum EmployeeStatus
 export enum EmployeeStatus {

@@ -1,6 +1,8 @@
 import {
   Building2,
   CalendarOff,
+  ClipboardCheck,
+  Clock4,
   FileText,
   LayoutDashboard,
   ClipboardList,
@@ -93,6 +95,20 @@ export const HR_NAV_ITEMS: IHrNavItem[] = [
     href: HR_MANAGEMENT_ROUTE.LEAVE_APPROVAL,
     labelKey: "hr_management.nav.leave_approval",
     icon: Stamp,
+    disabled: false,
+  },
+  {
+    key: "overtime",
+    href: HR_MANAGEMENT_ROUTE.OVERTIME,
+    labelKey: "hr_management.nav.overtime",
+    icon: Clock4,
+    disabled: false,
+  },
+  {
+    key: "overtime_approval",
+    href: HR_MANAGEMENT_ROUTE.OVERTIME_APPROVAL,
+    labelKey: "hr_management.nav.overtime_approval",
+    icon: ClipboardCheck,
     disabled: false,
   },
   {

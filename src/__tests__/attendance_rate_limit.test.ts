@@ -126,6 +126,7 @@ const EXPECTED_BUCKET: Record<string, Record<string, RateLimitBucketEnum>> = {
     GET: RateLimitBucketEnum.READ,
     POST: RateLimitBucketEnum.LEAVE_WRITE,
   },
+  "overtime/request/pending/route.ts": { GET: RateLimitBucketEnum.READ },
   "overtime/summary/route.ts": { GET: RateLimitBucketEnum.READ },
   "overtime/unapproved/route.ts": { GET: RateLimitBucketEnum.READ },
   "overtime/policy/route.ts": {
