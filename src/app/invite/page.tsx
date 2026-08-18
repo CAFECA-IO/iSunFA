@@ -12,6 +12,11 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
 import AuthModal from "@/components/auth/auth_modal";
+import {
+  forgetInviteToken,
+  rememberInviteToken,
+  resolveInviteToken,
+} from "@/lib/team/invite_token_storage";
 
 /**
  * Info: (20260815 - Luphia) email 邀請的落地頁（規範 §4 / P4）。
@@ -32,12 +37,6 @@ import AuthModal from "@/components/auth/auth_modal";
  * 讀出來之後立刻把 hash 從網址上抹掉：留著它，使用者按上一頁或分享網址時
  * 又會把 token 帶出去，而該做的事此時已經做完了。
  */
-
-/**
- * Info: (20260818 - Luphia) 本分頁內的 token 備援鍵（第四輪 B-4）。
- * 只在這個分頁存活，接受或拒絕成功後立即清除。
- */
-const INVITE_TOKEN_STORAGE_KEY = "isunfa.invite.token";
 
 type PageStatus =
   | "LOADING"
@@ -83,24 +82,25 @@ export default function InvitePage() {
    * token 不進 access log、不進 `Referer`、不留在可分享的網址裡。
    */
   useEffect(() => {
-    const fromHash = window.location.hash.replace(/^#/, "").trim();
-    if (fromHash) {
-      setToken(fromHash);
-      window.sessionStorage.setItem(INVITE_TOKEN_STORAGE_KEY, fromHash);
+    /**
+     * Info: (20260818 - Luphia) 取得規則抽到 `invite_token_storage`（第五輪 T-9）。
+     * 這裡只剩「把瀏覽器的東西接進來」與副作用；規則本身有純函式測試。
+     */
+    const { token: resolved, source } = resolveInviteToken(
+      window.location.hash,
+      window.sessionStorage,
+    );
+
+    if (!resolved) {
+      setStatus("INVALID");
+      return;
+    }
+
+    setToken(resolved);
+    if (source === "hash") {
+      rememberInviteToken(window.sessionStorage, resolved);
       window.history.replaceState(null, "", window.location.pathname);
-      return;
     }
-
-    // Info: (20260818 - Luphia) 沒有 hash：可能是重新整理，看看本分頁有沒有備援
-    const stored = window.sessionStorage
-      .getItem(INVITE_TOKEN_STORAGE_KEY)
-      ?.trim();
-    if (stored) {
-      setToken(stored);
-      return;
-    }
-
-    setStatus("INVALID");
   }, []);
 
   /**
@@ -117,7 +117,7 @@ export default function InvitePage() {
    */
   useEffect(() => {
     if (status === "INVALID") {
-      window.sessionStorage.removeItem(INVITE_TOKEN_STORAGE_KEY);
+      forgetInviteToken(window.sessionStorage);
     }
   }, [status]);
 
@@ -169,7 +169,7 @@ export default function InvitePage() {
       const json = await res.json();
       if (json.success) {
         // Info: (20260818 - Luphia) 用掉了就清掉備援（第四輪 B-4）
-        window.sessionStorage.removeItem(INVITE_TOKEN_STORAGE_KEY);
+        forgetInviteToken(window.sessionStorage);
         setStatus("ACCEPTED");
         // Info: (20260815 - Luphia) 讓成功畫面停留一下再導頁，否則會像什麼都沒發生
         setTimeout(() => router.push("/user/team"), 1200);
@@ -202,7 +202,7 @@ export default function InvitePage() {
       });
       const json = await res.json();
       if (json.success) {
-        window.sessionStorage.removeItem(INVITE_TOKEN_STORAGE_KEY);
+        forgetInviteToken(window.sessionStorage);
         setStatus("DECLINED");
       } else {
         setError(json.message || t("invite_page.decline_failed"));

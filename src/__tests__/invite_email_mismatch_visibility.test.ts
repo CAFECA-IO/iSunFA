@@ -53,45 +53,32 @@ const MEMBERS = [
 ];
 
 describe("listMismatchedAcceptorIds", () => {
-  it("只查這個團隊已接受的邀請，並依接受時間遞減", async () => {
-    await teamRepo.listMismatchedAcceptorIds("team-1");
-
-    const args = findManyMock.mock.calls[0][0] as {
-      where: Record<string, unknown>;
-      orderBy: Record<string, unknown>;
-    };
-    expect(args.where).toEqual({
-      teamId: "team-1",
-      acceptedByUserId: { not: null },
-      /**
-       * Info: (20260818 - Luphia) `acceptedAt` 非 null 是排序正確的前提（第四輪自審）：
-       * Postgres 的 DESC 把 NULL 排最前面，缺時間的異常列會被當成最新那一筆。
-       */
-      acceptedAt: { not: null },
-    });
-    /**
-     * Info: (20260818 - Luphia) 排序是「取每人最新一筆」的依據（第四輪 B-4）。
-     * 少了它，挑到的是資料庫回傳順序裡的任意一筆。
-     */
-    expect(args.orderBy).toEqual({ acceptedAt: "desc" });
-  });
-
   /**
-   * Info: (20260818 - Luphia) 只取判定需要的三欄。
+   * Info: (20260818 - Luphia) **整組**比對查詢參數（第五輪 T-3）。
    *
-   * 邀請列裡有受邀者的信箱，而呼叫端要的只是「這個人要不要標一下」——
-   * 為了畫一個標記而把別人的信箱一併撈出來，是不必要的暴露。
+   * 原本是 `where` / `select` / `orderBy` 三條逐欄斷言，於是多加一個
+   * `take: 1` 不會被任何一條發現——而那會讓整個團隊只檢查最新的一封邀請，
+   * 幾乎所有 MISMATCHED 標記都消失（一個安靜的「保護還在、但沒在保護」）。
+   *
+   * `acceptedAt: { not: null }` 是排序正確的前提（Postgres 的 DESC 把 NULL 排最
+   * 前面，缺時間的異常列會被當成最新那一筆）；`orderBy` 是「取每人最新一筆」
+   * 的依據，少了它挑到的是資料庫回傳順序裡的任意一筆。
    */
-  it("只取判定所需的欄位，不撈受邀者的信箱", async () => {
+  it("查詢參數完全符合預期（不多也不少）", async () => {
     await teamRepo.listMismatchedAcceptorIds("team-1");
 
-    const args = findManyMock.mock.calls[0][0] as {
-      select: Record<string, unknown>;
-    };
-    expect(args.select).toEqual({
-      acceptedByUserId: true,
-      acceptedEmailMatch: true,
-      acceptedAt: true,
+    expect(findManyMock.mock.calls[0][0]).toEqual({
+      where: {
+        teamId: "team-1",
+        acceptedByUserId: { not: null },
+        acceptedAt: { not: null },
+      },
+      select: {
+        acceptedByUserId: true,
+        acceptedEmailMatch: true,
+        acceptedAt: true,
+      },
+      orderBy: { acceptedAt: "desc" },
     });
   });
 

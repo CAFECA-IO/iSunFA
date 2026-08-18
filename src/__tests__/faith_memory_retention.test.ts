@@ -190,40 +190,40 @@ describe("runFaithMemoryRetention", () => {
   });
 
   /**
-   * Info: (20260818 - Luphia) 部分失敗時要**在毒資料那一批**停下（第四輪 B-4）。
+   * Info: (20260818 - Luphia) 毒資料只失敗一次，不會被反覆撈回來（第五輪 T-6 修訂）。
    *
-   * 停止條件原本比對累計 `failed` 與本批長度，而先前只餵「單列、單批、全失敗」
-   * ——那剛好是累計等於本批的唯一一格，於是那個 bug 全綠。
-   *
-   * 這裡餵混合批：第一批 2 列（1 成功 1 毒），第二批只剩那列毒資料。
-   * 正確行為是第二批 `batchFailed === expired.length` 成立即停，總共撈 2 次；
-   * 用累計值比對則是 `1 === 2` 不成立而繼續，之後永遠不相等，
-   * 一路轉到每輪總量上限（約 4,750 次無用迴圈、約 9,500 筆 error log），
-   * 而失敗吃掉刪除預算，本輪其餘到期的列一列都刪不到。
+   * 原本這一條測的是「整批都失敗就停」。加上排除機制（第五輪 C-3）之後，那個
+   * 停止條件不但多餘、而且有害：一批剛好全是毒資料就讓整輪結束，後面刪得掉的
+   * 列一列都輪不到（批次越小越容易踩到）。現在改測真正該成立的性質——
+   * 失敗過的列不會再出現在下一批。
    */
-  it("部分失敗後在毒資料那一批停下，不是累計比對", async () => {
+  it("毒資料只失敗一次，不會被反覆撈回來", async () => {
     const BAD = { id: "bad", userId: "u2", teamId: "t2", itemCount: 1 };
+    const OK = { id: "ok", userId: "u1", teamId: "t1", itemCount: 1 };
+    // Info: (20260818 - Luphia) 模擬真實資料庫：刪掉的列不會再被查到
+    let remaining = [OK, BAD];
     let fetches = 0;
+
     /**
-     * Info: (20260818 - Luphia) mock 自己當上界：撈超過 2 次就丟錯。
-     *
-     * 不這樣做的話，壞掉的版本會安靜地轉到每輪總量上限（10,000）才結束——
-     * 測試最後仍會紅，但要跑上兩分鐘。讓多餘的那一次呼叫當場失敗，
-     * 迴圈沒停的症狀就變成一個立即、訊息明確的失敗。
+     * Info: (20260818 - Luphia) mock 自己當上界：撈超過 3 次就丟錯。
+     * 壞掉的版本會安靜地一直重撈同一列、最後靠總量上界才停——測試會紅，
+     * 但要跑很久。讓多餘的那一次呼叫當場失敗，症狀就變成立即而明確的失敗。
      */
-    asMock(faithMemoryRepo.listExpired).mockImplementation(async () => {
-      fetches += 1;
-      if (fetches > 2) {
-        throw new Error("listExpired 被撈第三次：毒資料批沒有讓迴圈停下");
-      }
-      return fetches === 1
-        ? [{ id: "ok", userId: "u1", teamId: "t1", itemCount: 1 }, BAD]
-        : [BAD];
-    });
+    asMock(faithMemoryRepo.listExpired).mockImplementation(
+      async (_now: unknown, _limit: unknown, excludeIds: unknown) => {
+        fetches += 1;
+        if (fetches > 3) {
+          throw new Error("listExpired 被撈第四次：失敗的列沒有被排除");
+        }
+        const excluded = (excludeIds as string[]) ?? [];
+        return remaining.filter((row) => !excluded.includes(row.id));
+      },
+    );
     asMock(faithMemoryRepo.deleteWithLog).mockImplementation(
       async (params: unknown) => {
         const { id } = params as { id: string };
-        if (id === "bad") throw new Error("poison row");
+        if (id === BAD.id) throw new Error("poison row");
+        remaining = remaining.filter((row) => row.id !== id);
         return undefined;
       },
     );
@@ -231,8 +231,7 @@ describe("runFaithMemoryRetention", () => {
     const result = await runFaithMemoryRetention(NOW_MS);
 
     expect(result.deleted).toBe(1);
-    expect(result.failed).toBe(2);
-    expect(fetches).toBe(2);
+    expect(result.failed).toBe(1);
   });
 
   /**
@@ -283,10 +282,59 @@ describe("runFaithMemoryRetention", () => {
   });
 
   /**
-   * Info: (20260818 - Luphia) 整批都失敗就停止，不要無限迴圈。
-   * `listExpired` 的條件沒有改變，再撈一次會拿到同一批列。
+   * Info: (20260818 - Luphia) 上界只算**成功刪除**（第五輪 T-6）。
+   *
+   * 這個性質先前沒有任何測試釘得住：常數是 10,000，測試撞不到它，於是把條件
+   * 改回 `deleted + failed` 全部照樣綠——而那正是 C-3 修掉的缺陷本身
+   * （499 筆毒資料時 20 批就把預算用完，真正該刪的一列都輪不到）。
+   *
+   * 現在把上界壓到 2、**每批只取一列**（`batchSize: 1`）——上界是在批與批之間
+   * 才檢查的，整批一次處理完的話兩種寫法的結果一樣，測不出差別。
+   * 逐列之後：失敗那列若算進預算，第三列就撈不到（deleted 只會是 1）。
    */
-  it("整批失敗時停止而不是無限重撈", async () => {
+  it("上界只算成功刪除，失敗不佔預算", async () => {
+    const rows = [
+      { id: "bad", userId: "u9", teamId: "t9", itemCount: 1 },
+      { id: "ok-1", userId: "u1", teamId: "t1", itemCount: 1 },
+      { id: "ok-2", userId: "u2", teamId: "t2", itemCount: 1 },
+    ];
+    asMock(faithMemoryRepo.listExpired).mockImplementation(
+      async (_now: unknown, limit: unknown, excludeIds: unknown) => {
+        const excluded = (excludeIds as string[]) ?? [];
+        // Info: (20260818 - Luphia) 要照 limit 切，否則「每批一列」測不出批與批之間的判斷
+        return rows
+          .filter((row) => !excluded.includes(row.id))
+          .slice(0, limit as number);
+      },
+    );
+    asMock(faithMemoryRepo.deleteWithLog).mockImplementation(
+      async (params: unknown) => {
+        if ((params as { id: string }).id === "bad") throw new Error("poison");
+        return undefined;
+      },
+    );
+
+    const result = await runFaithMemoryRetention(NOW_MS, {
+      maxDeletes: 2,
+      batchSize: 1,
+    });
+
+    // Info: (20260818 - Luphia) 兩筆都刪到了：失敗那筆沒有佔掉其中一格
+    expect(result.deleted).toBe(2);
+    expect(result.failed).toBe(1);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 失敗次數有自己的上界（第五輪 T-6）。
+   *
+   * 排除機制讓候選集合每輪嚴格變小，因此迴圈本來就會結束；這個上界是另一層
+   * 保險：DB 整個掛掉時，不要在同一輪裡試上萬次、寫上萬筆 error log——
+   * 那既幫不上忙，也會把真正有用的日誌淹掉。
+   *
+   * 這裡的 mock **不理會排除清單**（模擬「每次都查得到列、但每一列都刪不掉」），
+   * 確認它停在上界。
+   */
+  it("失敗次數達到上界就停", async () => {
     asMock(faithMemoryRepo.listExpired).mockResolvedValue([
       { id: "m1", userId: "u1", teamId: "t1", itemCount: 1 },
     ]);
@@ -294,10 +342,9 @@ describe("runFaithMemoryRetention", () => {
       new Error("db down"),
     );
 
-    const result = await runFaithMemoryRetention(NOW_MS);
+    const result = await runFaithMemoryRetention(NOW_MS, { maxFailures: 3 });
 
-    expect(result.failed).toBe(1);
     expect(result.deleted).toBe(0);
-    expect(asMock(faithMemoryRepo.listExpired).mock.calls).toHaveLength(1);
+    expect(result.failed).toBe(3);
   });
 });

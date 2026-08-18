@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "@jest/globals";
+import { describe, it, expect, afterAll, beforeEach } from "@jest/globals";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
 import { faithMemoryRepo } from "@/repositories/faith_memory.repo";
@@ -39,11 +39,27 @@ const findMany = prisma.faithMemory.findMany as unknown as ReturnType<
 
 const EXPIRES_AT = new Date(1_760_000_000_000);
 
+/**
+ * Info: (20260818 - Luphia) 自己備好主密鑰（CI 沒有 `.env`，見 checklist §1.3）。
+ * 這一檔有一組測試會真的走解密路徑。
+ */
+const TEST_MASTER_KEY = "c".repeat(64);
+const ORIGINAL_MASTER_KEY = process.env.SECRET_VAULT_MASTER_KEY;
+
 beforeEach(() => {
+  process.env.SECRET_VAULT_MASTER_KEY = TEST_MASTER_KEY;
   jest.clearAllMocks();
   updateMany.mockResolvedValue({ count: 0 });
   findUnique.mockResolvedValue(null);
   findMany.mockResolvedValue([]);
+});
+
+afterAll(() => {
+  if (ORIGINAL_MASTER_KEY === undefined) {
+    delete process.env.SECRET_VAULT_MASTER_KEY;
+  } else {
+    process.env.SECRET_VAULT_MASTER_KEY = ORIGINAL_MASTER_KEY;
+  }
 });
 
 function argsOf(call: number) {
@@ -204,5 +220,47 @@ describe("listExpired", () => {
       teamId: true,
       itemCount: true,
     });
+  });
+});
+
+/**
+ * Info: (20260818 - Luphia) 解不開的密文要**誠實回報**（第五輪 T-5）。
+ *
+ * 這個性質先前只有 e2e 守著（`faith_memory_aad_backfill`），而 e2e 已被移出
+ * `npm test`（第五輪 C-4）。於是把 repo 的 catch 改回 `return { items: [] }`
+ * ——也就是安靜覆寫那個原始缺陷——三條相關的單元測試全綠，因為它們把 repo
+ * 整包 mock 掉了（checklist §1.2 的形狀）。
+ *
+ * 這裡用真的 repo：prisma 回一列壞掉的密文，斷言 `unreadable` 與 `lostItemCount`。
+ */
+describe("get 對解不開的密文", () => {
+  const brokenRow = {
+    itemsCipher: "not-a-valid-ciphertext",
+    itemsIv: "0".repeat(24),
+    itemsTag: "0".repeat(32),
+    keyVersion: 1,
+    itemCount: 7,
+    expiresAt: null,
+  };
+
+  it("回報 unreadable 並帶出筆數，而不是假裝沒有記憶", async () => {
+    findUnique.mockResolvedValue(brokenRow);
+
+    const record = await faithMemoryRepo.get("u1", "t1");
+
+    expect(record?.items).toEqual([]);
+    /**
+     * Info: (20260818 - Luphia) 這兩個欄位是「覆寫時寫稽核」的唯一依據：
+     * 少了它們，service 會把解不開的列當成「還沒有記憶」而安靜蓋掉。
+     */
+    expect(record?.unreadable).toBe(true);
+    expect(record?.lostItemCount).toBe(7);
+  });
+
+  // Info: (20260818 - Luphia) 對照組：查無資料回 null，不是「解不開」
+  it("查無資料時回 null", async () => {
+    findUnique.mockResolvedValue(null);
+
+    expect(await faithMemoryRepo.get("u1", "t1")).toBeNull();
   });
 });

@@ -260,14 +260,18 @@ describe("spendCredits", () => {
     });
     expect(quotaError.data.quotaWeek.resetAt).toBe(getResetAtWeek(NOW_SEC));
     expect(quotaError.data.allocationBalance).toBe("0");
-    expect(quotaError.data.options).toContain("WAIT_RESET");
     /**
-     * Info: (20260818 - Luphia) 第二層停用期間不得列「改用個人點數」（第四輪 B-1）。
+     * Info: (20260818 - Luphia) 整組比對，含**順序**（第五輪 T-2）。
      *
-     * `allocationBalance` 已誠實讀成 0，而這個選項留著就是 API 契約在說謊：
-     * 它告訴使用者一條系統自己知道不存在的出路（合約沒有可由平台呼叫的 burn）。
+     * 原本是兩條 `toContain` / `not.toContain`，於是把 payload 的 options
+     * 反轉（`[...].reverse()`）不會被任何測試發現——而前端依序呈現這些出路，
+     * 順序就是引導順序。第四輪特地保留了兩種情境各自的排法，卻沒有在
+     * payload 這一側釘住它。
+     *
+     * 同時涵蓋「第二層停用期間不得列 USE_PERSONAL_WALLET」（第四輪 B-1）：
+     * `allocationBalance` 已誠實讀成 0，選項留著就是 API 契約在說謊。
      */
-    expect(quotaError.data.options).not.toContain("USE_PERSONAL_WALLET");
+    expect(quotaError.data.options).toEqual(["WAIT_RESET"]);
   });
 
   /**
@@ -302,6 +306,35 @@ describe("spendCredits", () => {
       // Info: (20260818 - Luphia) 單筆超過視窗上限時等重置不會好，只有升級有用
       expect(buildQuotaExceededOptions(true)).toEqual(["UPGRADE_PLAN"]);
     });
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 第二層可用時，payload 的 options **順序**要與 builder 一致
+   * （第五輪 T-2）。
+   *
+   * 停用期間每個分支都只有一個選項，因此把陣列反轉在 payload 上看不出差別——
+   * 那條 mutation 今天無害，但第二層恢復的當下就會靜悄悄改掉前端的引導順序。
+   * 這裡把旗標打開來測，讓那個性質現在就被釘住。
+   */
+  it("第二層可用時 payload 保留 builder 的出路順序", async () => {
+    asMock(isChainCreditSpendable).mockReturnValue(true);
+    asMock(teamQuotaUsageRepo.sumWindowUsageInTx).mockResolvedValue({
+      used5h: BigInt(100),
+      usedWeek: BigInt(10),
+    });
+    asMock(teamWalletRepo.getAllocation).mockResolvedValue({
+      balance: BigInt(0),
+    } as unknown);
+    // Info: (20260818 - Luphia) 鏈上餘額仍為 0，否則請求會被放行而不是回 402
+    asMock(readChainCredits).mockResolvedValue(BigInt(0));
+
+    const error = await spendCredits(BASE_PARAMS).catch((e: unknown) => e);
+    const quotaError = error as QuotaExceededError;
+
+    expect(quotaError.data.options).toEqual([
+      "WAIT_RESET",
+      "USE_PERSONAL_WALLET",
+    ]);
   });
 
   /**
