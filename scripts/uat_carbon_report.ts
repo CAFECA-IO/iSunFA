@@ -10,6 +10,18 @@ import zlib from "node:zlib";
 import { PDFDocument, PDFName, PDFRawStream } from "pdf-lib";
 import { extractPdfTextLayer } from "@/lib/pdf_text_layer";
 import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
+/**
+ * Info: (20260818 - Emily) 兩個片語 import 自產生端的常數,不在這裡重打一份正規表示式。
+ * 重打的話,文案改了而這支腳本照舊回報 ✓ —— 而它是上線判準的量尺。
+ */
+import {
+  DIAGRAM_CAP_EXCEEDED_PHRASE,
+  DIAGRAM_DEGRADED_TO_TABLE_PHRASE,
+} from "@/constants/carbon_report_diagrams";
+import {
+  BASELINE_THRESHOLD_LIMITS,
+  classifyKey,
+} from "@/constants/carbon_uat_baseline";
 import {
   isCompatibilityCode,
   mapCompatibilityRadical,
@@ -321,12 +333,107 @@ const MERMAID_LEAK = /(sankey-beta|graph (TD|LR)\b|flowchart (TD|LR)\b|%%\{)/g;
 const TABLE_REFERENCE = /表\s?(\d+\.\d+)(?![\d.])/g;
 /** Info: (20260814 - Emily) 表的標題行:行首的 `表3.1 <標題>` */
 const TABLE_CAPTION = /^\s*表(\d+\.\d+)\s+\S/gm;
-/** Info: (20260814 - Emily) 圖表未繪製的三種說明,要分得開 */
-const DIAGRAM_NOTES: ReadonlyArray<{ pattern: RegExp; meaning: string }> = [
-  { pattern: /本節內容不足以繪製結構圖/g, meaning: "素材不足" },
-  { pattern: /超過本圖的繪製上限/g, meaning: "節點太多" },
-  { pattern: /無法回溯至本節原文/g, meaning: "無法回溯原文(疑似模型編造)" },
+/**
+ * Info: (20260814 - Emily) 圖表未繪製的說明,三種原因要分得開。
+ *
+ * Info: (20260818 - Emily) 08-18 起「節點太多」不再是未繪製,而是**退化成表格**
+ * （`data/issue_drafts/open/48_diagram_silent_failure.md`）。所以這裡分成兩件事:
+ *
+ * - `未繪製` 那句話再出現就是 **fail** —— 退化沒接上,而內容在紙上不見了
+ * - `改以表格呈現` 是退化生效的痕跡,計數但不算缺陷（它是這張票的驗收憑證）
+ *
+ * 判準寫成兩條而不是把舊那條的 level 改掉,是因為兩者要能在同一份報告上分辨:
+ * 只看「超過本圖的繪製上限」出現幾次的話,退化成功與整張消失是同一個數字。
+ */
+const DIAGRAM_NOTES: ReadonlyArray<{
+  pattern: RegExp;
+  meaning: string;
+  level: Level;
+}> = [
+  { pattern: /本節內容不足以繪製結構圖/g, meaning: "素材不足", level: "warn" },
+  {
+    pattern: /無法回溯至本節原文/g,
+    meaning: "無法回溯原文(疑似模型編造)",
+    level: "warn",
+  },
+  {
+    pattern: new RegExp(`${DIAGRAM_CAP_EXCEEDED_PHRASE}[^)）]*未繪製`, "g"),
+    meaning: "節點太多且整張消失",
+    level: "fail",
+  },
 ];
+
+/** Info: (20260818 - Emily) 退化成表格的痕跡 —— 出現代表 open/48 的修正在這一趟生效了 */
+const DIAGRAM_DEGRADED = new RegExp(
+  `${DIAGRAM_CAP_EXCEEDED_PHRASE}[^)）]*${DIAGRAM_DEGRADED_TO_TABLE_PHRASE}`,
+  "g",
+);
+
+/**
+ * Info: (20260818 - Emily) 分類表的守門:快照有鍵沒被分類就 fail。
+ *
+ * 這一週三次「清單短了」的共同成因是**清單沒有被機械化**
+ * (`44` 說 8 條實際 16 處、`48` 漏了排序那個洞、B2 說三端實際四端)。
+ * 一張手寫的分類表會用完全一樣的方式過期:有人加了一個快照鍵,而它悄悄落進
+ * 「沒有人在判」的縫裡。這條讓那件事變成紅的。
+ */
+const checkSnapshotClassification = (): void => {
+  const unclassified = Object.keys(snapshot).filter(
+    (key) => classifyKey(key) === undefined,
+  );
+  if (unclassified.length === 0) {
+    record(
+      "pass",
+      "快照鍵全部已分類",
+      `${Object.keys(snapshot).length} 個鍵,三層分類無遺漏`,
+    );
+    return;
+  }
+  record(
+    "fail",
+    "快照有未分類的鍵",
+    `${unclassified.join("、")} —— 加進 BASELINE_TIERS 並決定它屬於哪一層`,
+  );
+};
+
+/**
+ * Info: (20260818 - Emily) B4:每一趟各自過閾值,不要求兩趟相同。
+ * 三段判定(pass / warn / fail)的理由見 `BASELINE_THRESHOLD_LIMITS` 的註解 ——
+ * 把 fail 線畫在票自己允許的區間中間,會讓正常的一趟被判 fail。
+ */
+const checkThresholds = (): void => {
+  BASELINE_THRESHOLD_LIMITS.forEach(
+    ({ key, passAtOrBelow, failAbove, unit }) => {
+      const value = snapshot[key];
+      if (typeof value !== "number") {
+        // Info: (20260818 - Emily) 沒給 --log 就沒有這些鍵。不算過,也不算不過 —— 要說出來
+        record("warn", `B4 閾值:${key}`, "本趟沒有 log,這一層沒判");
+        return;
+      }
+      if (value <= passAtOrBelow) {
+        record(
+          "pass",
+          `B4 閾值:${key}`,
+          `${value} ${unit}(目標 ≤ ${passAtOrBelow}）`,
+        );
+        return;
+      }
+      if (value <= failAbove) {
+        record(
+          "warn",
+          `B4 閾值:${key}`,
+          `${value} ${unit} —— 超過目標 ${passAtOrBelow} 但在容許上限 ${failAbove} 內,能定價,記一筆`,
+        );
+        return;
+      }
+      record(
+        "fail",
+        `B4 閾值:${key}`,
+        `${value} ${unit} —— 超過容許上限 ${failAbove}`,
+      );
+    },
+  );
+};
 
 const main = async (): Promise<void> => {
   const pdfPath = arg("--pdf");
@@ -394,16 +501,37 @@ const main = async (): Promise<void> => {
   expectZero("資料不足佔位符", text.match(/資料不足/g) ?? []);
 
   // Info: (20260814 - Emily) ── 圖表沒畫要指名是哪一節,而且三種原因要分開 ──
-  DIAGRAM_NOTES.forEach(({ pattern, meaning }) => {
+  DIAGRAM_NOTES.forEach(({ pattern, meaning, level }) => {
     const hits = text.match(pattern) ?? [];
     snapshot[`圖表未繪製_${meaning}`] = hits.length;
-    if (hits.length === 0) return;
+    if (hits.length === 0) {
+      // Info: (20260818 - Emily) fail 級的那條要正面報 ✓,不然「沒出現」在輸出上看不見
+      if (level === "fail") record("pass", `圖表未繪製(${meaning})`, "0");
+      return;
+    }
     record(
-      "warn",
+      level,
       `圖表未繪製(${meaning})`,
-      `${hits.length} 處 —— 需確認那一節是否真的該有圖`,
+      level === "fail"
+        ? `${hits.length} 處 —— 退化成表格沒有生效,那幾節的內容在紙上不見了`
+        : `${hits.length} 處 —— 需確認那一節是否真的該有圖`,
     );
   });
+
+  /**
+   * Info: (20260818 - Emily) 退化計數。它不是缺陷,而是 `open/48` 的驗收憑證:
+   * 08-17 那一趟有 2 節整張消失（沿革 62 個、委員會 21 個）,
+   * 修好之後同樣的輸入應該變成 2 次退化 + 0 次消失。
+   */
+  const degraded = text.match(DIAGRAM_DEGRADED) ?? [];
+  snapshot.圖表退化成表格 = degraded.length;
+  record(
+    "pass",
+    "圖表退化成表格",
+    degraded.length === 0
+      ? "0 —— 這一趟沒有任何一節超過繪製上限"
+      : `${degraded.length} 處 —— 超過上限但內容以表格保留在紙上(補而不丟)`,
+  );
 
   // Info: (20260814 - Emily) ── 內文引用的表都要存在(實際發生過:內文寫「如表 3.1」而表被丟掉) ──
   const referenced = new Set(
@@ -840,6 +968,67 @@ const checkPageSlices = (log: string): void => {
 };
 
 /**
+ * Info: (20260814 - Emily) 與上一趟比對 —— 這是抓**非決定性缺陷**的唯一辦法。
+ * 那類缺陷的特徵就是「這次好、下次壞」,而 diff 正是為此存在。
+ */
+/**
+ * Info: (20260818 - Emily) 08-18 起**分層比對**(見 `BASELINE_TIERS`)。
+ *
+ * 原本是「任何一項不同就印出來」,而印出來之後沒有人判 ——
+ * 於是 B3 的完成定義實際上是「有人看過那份 diff 並覺得可以」。
+ * 現在 `must_match` 那一層的差異會 `record("fail")`,直接讓離開碼變 1。
+ *
+ * 回傳字串而不是直接印:呼叫端要先把 `record()` 的結果算進總數,再印明細。
+ */
+const compareBaseline = (): string | undefined => {
+  const baselinePath = arg("--baseline");
+  if (!baselinePath) return undefined;
+  if (!fs.existsSync(baselinePath)) {
+    record("fail", "基準線檔案不存在", baselinePath);
+    return undefined;
+  }
+  const baseline: Record<string, unknown> = JSON.parse(
+    fs.readFileSync(baselinePath, "utf-8"),
+  );
+  const changed = Object.keys(snapshot).filter(
+    (key) => JSON.stringify(baseline[key]) !== JSON.stringify(snapshot[key]),
+  );
+  const line = (key: string): string =>
+    `  ${key}: ${JSON.stringify(baseline[key])} → ${JSON.stringify(snapshot[key])}`;
+
+  const broke = changed.filter((key) => classifyKey(key) === "must_match");
+  const drifted = changed.filter((key) => classifyKey(key) !== "must_match");
+
+  if (broke.length === 0) {
+    record(
+      "pass",
+      "B3 兩趟一致(must_match 層)",
+      `${drifted.length} 項在允許變動的層,0 項在必須相同的層`,
+    );
+  } else {
+    record(
+      "fail",
+      "B3 兩趟不一致(must_match 層)",
+      `${broke.join("、")} —— 這幾個非零就是缺陷,不是統計波動`,
+    );
+  }
+
+  const sections: string[] = [];
+  if (broke.length > 0) {
+    sections.push(
+      `\n✗ 必須相同卻變了(${broke.length} 項):\n${broke.map(line).join("\n")}`,
+    );
+  }
+  if (drifted.length > 0) {
+    sections.push(
+      `\n⚠ 允許變動(${drifted.length} 項,僅記錄):\n${drifted.map(line).join("\n")}`,
+    );
+  }
+  if (sections.length === 0) sections.push("\n與基準線完全相同");
+  return `${sections.join("\n")}\n`;
+};
+
+/**
  * Info: (20260814 - Emily) 輸出。任何一項 fail 就 exit 1 —— 這支要能掛在 CI 上。
  */
 /**
@@ -848,6 +1037,19 @@ const checkPageSlices = (log: string): void => {
  * - 2 = 輸入不對（拿錯檔案／缺參數）—— 那不是產品的問題,不該跟缺陷混在同一個碼
  */
 const report = (forcedExit?: number): void => {
+  /**
+   * Info: (20260818 - Emily) 這三步要在算 `failed` **之前**跑,因為它們會 `record()`,
+   * 而它們的結果必須影響離開碼 —— B3/B4 是閘門,不是附註。
+   *
+   * `forcedExit` 有值代表**輸入不對**(拿錯檔案、抽不出文字層),那時快照幾乎是空的:
+   * 跑這三步只會印出一串與產品無關的 ⚠。沿用本檔既有的那條分野 ——
+   * exit 2 是「輸入不對」,不該跟產品缺陷混在同一份輸出裡。
+   */
+  const baselineReport =
+    forcedExit === undefined
+      ? (checkSnapshotClassification(), checkThresholds(), compareBaseline())
+      : undefined;
+
   const icon: Record<Level, string> = { pass: "✓", fail: "✗", warn: "⚠" };
   checks.forEach((check) => {
     process.stdout.write(
@@ -867,27 +1069,7 @@ const report = (forcedExit?: number): void => {
     process.stdout.write(`快照已寫入 ${out}\n`);
   }
 
-  /**
-   * Info: (20260814 - Emily) 與上一趟比對 —— 這是抓**非決定性缺陷**的唯一辦法。
-   * 那類缺陷的特徵就是「這次好、下次壞」,而 diff 正是為此存在。
-   */
-  const baselinePath = arg("--baseline");
-  if (baselinePath && fs.existsSync(baselinePath)) {
-    const baseline = JSON.parse(fs.readFileSync(baselinePath, "utf-8"));
-    const changed = Object.keys(snapshot).filter(
-      (key) => JSON.stringify(baseline[key]) !== JSON.stringify(snapshot[key]),
-    );
-    process.stdout.write(
-      changed.length === 0
-        ? "\n與基準線完全相同\n"
-        : `\n與基準線有 ${changed.length} 項不同:\n${changed
-            .map(
-              (key) =>
-                `  ${key}: ${JSON.stringify(baseline[key])} → ${JSON.stringify(snapshot[key])}`,
-            )
-            .join("\n")}\n`,
-    );
-  }
+  if (baselineReport) process.stdout.write(baselineReport);
 
   process.exit(forcedExit ?? (failed > 0 ? 1 : 0));
 };

@@ -30,7 +30,7 @@ export const solutions = {
   deliverables_title: "四大核心交付成果",
   deliverables_subtitle: "不仅是报告，更是引领企业减碳的导航图。",
   iso_report: "组织碳盘查报告",
-  iso_report_desc: "符合 IFRS S1/S2 标准的组织碳盘查报告书。",
+  iso_report_desc: "符合 ISO 14064-1 标准的组织碳盘查报告书。",
   inventory: "温室气体排放清单",
   inventory_desc: "详细记录所有排放源与数据轨迹，便于后续追踪。",
   health_check: "专业碳健检报告",

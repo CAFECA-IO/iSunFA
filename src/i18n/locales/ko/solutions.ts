@@ -31,7 +31,7 @@ export const solutions = {
   deliverables_subtitle:
     "단순한 보고서를 넘어 기업의 탄소 감축을 이끄는 내비게이션 맵입니다.",
   iso_report: "조직 탄소 배출량 조사 보고서",
-  iso_report_desc: "IFRS S1/S2 기준을 준수하는 조직 탄소 배출량 조사 보고서.",
+  iso_report_desc: "ISO 14064-1을 준수하는 조직 탄소 배출량 조사 보고서.",
   inventory: "온실가스 배출 인벤토리",
   inventory_desc:
     "모든 배출원과 데이터 이력을 상세히 기록하여 지속적인 추적을 용이하게 합니다.",
