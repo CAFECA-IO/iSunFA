@@ -3,8 +3,10 @@
 import { FC } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HR_NAV_ITEMS } from "@/components/hr_management/hr_nav_items";
-import { HR_MANAGEMENT_ROUTE } from "@/constants/hr_management";
+import {
+  activeHrNavKeyOf,
+  HR_NAV_ITEMS,
+} from "@/components/hr_management/hr_nav_items";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IHrSidebarProps {
@@ -21,18 +23,17 @@ const HrSidebar: FC<IHrSidebarProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
   const pathname = usePathname();
 
+  /**
+   * Info: (20260818 - Julian) 選中哪一項由 `activeHrNavKeyOf` 一次決定，
+   * 不在這裡逐項比對前綴 —— 逐項比對的版本讓巢狀路由同時亮兩項（見該函式的說明）。
+   */
+  const activeKey = activeHrNavKeyOf(pathname);
+
   const navList = (
     <nav className="flex flex-col gap-1 p-3">
       {HR_NAV_ITEMS.map((item) => {
         const Icon = item.icon;
-        /**
-         * Info: (20260810 - Julian) 儀表板是所有子路徑的前綴，用 startsWith 會讓它
-         * 在任何子頁都亮著，因此只有它比對全等，其餘比對前綴（詳情頁仍要亮著列表）。
-         */
-        const isActive =
-          item.href === HR_MANAGEMENT_ROUTE.DASHBOARD
-            ? pathname === item.href
-            : pathname.startsWith(item.href);
+        const isActive = item.key === activeKey;
 
         if (item.disabled) {
           return (

@@ -199,7 +199,7 @@ return count > 0;
 | 4 | 主管關係的**變更歷程** | `onDelete: SetNull`，連 log 都沒有 | 簽核鏈要能容忍它突然變 null |
 | 5 | 窗外工時、假日到工工時 | `clampToWindow` + `OFF_DAY` 短路 | 另寫推導，或改用自陳 + 核准 |
 | 6 | 外勤／圍欄外的到工事實 | 403 不入庫，補登單未實作 | 只能自陳 |
-| 7 | 任何 HR 職能角色 | 沒有來源（§3.5.1） | 擋下來，不要猜 |
+| 7 | HR 職能的**指派** | 角色本身已有來源（`EmployeeHrFunctionAssignment`，2026-08-18），但**誰有權指派尚未決定**，因此沒有指派 API | 讀取可依賴；需要指派時走 seed 或資料遷移，不要自己開端點 |
 | 8 | 「一人兼管多部門」的可表示性 | `Department.managerId` 是 `@unique` | 資料上做不到，別假設 |
 | 9 | `isDepartmentManager()` 當授權用 | 它只答「是不是主管」，跨部門會放行（§3.5.3）；上游的排班閘刻意沿用它 | 授權一律改用 `managesEmployee()` |
 | 10 | 政策參數的**租戶隔離** | 8 個 `DEMO_*` 全域常數，無 `AttendancePolicy` 表 | 見下 |
@@ -284,14 +284,30 @@ return count > 0;
 
 | # | 項目 | 規模 | 備註 |
 |---|---|---|---|
-| 甲-1 | **`Employee` 層級的角色 enum** | 大 | ⚠️ 成因不是簽到。**不可套用 `Role` 或 `TeamRole`**（§3.5.1）。需另立 enum；「是否允許一人多職能」與「是否需要指派軌跡」尚未決定。ADR 023 §8.3 的原判斷已作廢 |
+| 甲-1 | **`Employee` 層級的角色 enum** | 大（**主體已完成 2026-08-18**） | `EmployeeHrFunction`（`HR_ADMIN` / `TIMEKEEPER`）+ `EmployeeHrFunctionAssignment` 指派表，撤銷不刪列。三個接點已收：`hrEmployeeIds`、簽核規則設定、排班寫入閘。**仍缺**：誰有權指派（因此沒有指派 API，只有 seed 與 repository 方法）、以及 L2–L6 假別設定要不要掛同一道閘。決定與理由見 ADR 023 §8.3 |
 | 甲-2 | **`AttendancePolicy` 帳本層級政策表** | **中**（不是小） | 至少要有時區，而時區有前端使用點，需新開一條送到 client 的路徑（§4.1） |
 | ~~甲-3~~ | ~~**非上班日的「應工作分鐘數」持久來源**~~ | ✅ 完成 | `EmployeeShiftDay.plannedWorkMinutes` 已加，投影成非 WORK 時固化、銷假回補時清回 null，並由 `assertSchedulableDay` 雙向守著（WORK 日不得帶快照） |
 | ~~甲-4~~ | ~~**銷假接回額度帳本 + 檢查 `LeavePolicy.recallable`**~~ | ✅ 完成 | `resolveRecall` 走 `writeRestoreForDay()`（**退回原始的那幾批**，不重新配置 —— 這個差異對總量守恆不可見），`recallable` 由 `VA_LEAVE_NOT_RECALLABLE` 擋住 |
-| 甲-5 | **收斂主管判斷** | 小（剩下半條） | 銷假徵詢已改走 `managesEmployee()`（部門子樹）。**未完**：上游 2026-08-18 新增的排班寫入閘刻意沿用粗的 `isDepartmentManager`，所以任一部門主管仍改得動全帳本任何人的排班。兩者要在甲-1 一起收，不是各自補（§3.5.3） |
+| ~~甲-5~~ | ~~**收斂主管判斷**~~ | ✅ 完成 | 銷假徵詢走 `managesEmployee()`；排班寫入閘改為「具 HR 職能者跨部門 → 否則須是部門主管且該員在其子樹內」，兩個碼分開（`FO_ATTENDANCE_SUPERVISOR_ONLY` / `FO_ATTENDANCE_SCHEDULE_SCOPE`）。`isDepartmentManager` 保留為顯示用 |
 | ~~甲-6~~ | ~~**快照要記引擎版本**~~ | ✅ 完成（一半） | `LeaveDay.entitlementEngineVersion` 已加且有寫入端，§3.1 那條規則現在有正確範例可抄。**仍缺**：`OvertimeSegment.engineVersion` 有欄位、無寫入端（等 L24–L30 加班管理） |
 | ~~甲-7~~ | ~~**額度帳本的生產者**~~ | ✅ 完成 | 見 §4.2。**仍缺** `EXPIRE` / `CASH_OUT` 的寫入端，兩者都等排程 Worker |
-| 甲-8 | **上游硬化後補上的兩件事** | 小 | ① 假勤 12 支端點的限流（已補，`LEAVE_WRITE`）；② 假勤畫面改走 `errorI18nKeyOf`（已補）。列在這裡是因為它們的成因是「上游立了規範而下游沒跟上」，而那類缺口每次接線都會再出現一次 |
+| 甲-8 | **上游硬化後補上的三件事** | 小 | ① 假勤 12 支端點的限流（已補，`LEAVE_WRITE`）；② 假勤畫面改走 `errorI18nKeyOf`（已補）；③ **假勤畫面漏拆回應信封**（2026-08-18 補，見下）。列在這裡是因為它們的成因是「上游立了規範而下游沒跟上」，而那類缺口每次接線都會再出現一次 |
+
+#### 甲-8 ③：`request()` 的型別參數是斷言，不是保證
+
+`src/lib/utils/request.ts` 的 `request<T>()` **不拆信封** —— 它最後一行是 `return data as T`，而 API 端一律經 `jsonOk()` 包成 `{ powerby, success, code, message, payload }`。
+少接一層 `.payload` 編譯器不會有意見，因為那個 `as` 讓型別參數變成一句沒有人查證的宣告。
+
+簽到四頁從一開始就寫成 `request<IEnvelopeLike<T>>(…)` 再讀 `.payload`；假勤三個 page body 的六個呼叫點**全數沿用了錯的那一版**，`src/components/hr_management/leave/` 底下 `IEnvelopeLike` 與 `.payload` 的出現次數是 0。
+
+症狀難查的地方有三層：
+
+- `tsc` 與 `next build` 全綠 —— 斷言不會被反駁，`.next` 產出的 chunk 清單與簽到逐行對齊。
+- 失敗發生在 render（`policies.map is not a function`），而全樹沒有任何 `error.tsx`，於是整頁換成 Next.js 內建的錯誤邊界（`This page couldn't load`），畫面上不留任何線索。
+- **它只在 API 成功時發生**。API 失敗會被 `catch` 接住顯示紅字橫幅 —— 也就是說「後端修好了」才是觸發條件。
+
+結構性的部分尚未處理：`request()` 的簽名本身在邀請這個錯誤。可能的收斂方向是讓一般端點改走 `requestEnvelope()`（它已存在，目前只服務保活式串流端點），或讓 `request()` 的回傳型別直接是 `IApiResponse<T>` 而非 `T`，讓「忘了拆」變成編譯錯誤而不是執行期空白畫面。
+**在收斂之前，任何新接線的畫面都必須自己記得寫 `IEnvelopeLike<T>` + `.payload`。**
 
 ### 乙. 可降級 —— 取決於下游模組的範圍
 
@@ -314,6 +330,6 @@ return count > 0;
 
 甲-1 到甲-8 全部完成，且 §4 的十四項各自有了可依賴的替代來源時。屆時本文件併入 `time_attendance_module_plan.md`，`attendance_demo_plan.md` §7.3 一併結案。
 
-**2026-08-18 進度**：甲-3、甲-4、甲-6（一半）、甲-7、甲-8 完成；甲-5 剩排班閘那半條；**甲-1（`Employee` 層級的角色）與甲-2（`AttendancePolicy`）未動，而它們是剩餘工作的絕大部分**。§4 十四項中第 14 項已解除，第 3、9 項的敘述改變但仍不可依賴。
+**2026-08-18 進度**：甲-3、甲-4、甲-5、甲-6（一半）、甲-7、甲-8（含當日新增的第 ③ 項）完成，甲-1 的主體完成（剩「誰有權指派」）。**只剩甲-2（`AttendancePolicy` 帳本層級政策表，含時區）是未動的大項。** §4 十四項中第 14 項已解除，第 7、9 項因甲-1 而改變（HR 職能現在有來源了，但「誰指派」仍無），第 3 項的敘述改變但仍不可依賴。
 
 在那之前：**接線可以做，但 §4 的每一項都必須在接線的模組裡有對應的處置，而不是假設它會被補上。**

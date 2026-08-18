@@ -1,7 +1,11 @@
 "use client";
 
 import { FC } from "react";
-import { AlertTriangle, Infinity as InfinityIcon } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronRight,
+  Infinity as InfinityIcon,
+} from "lucide-react";
 import { LeaveQuotaMode } from "@/constants/leave_policy";
 import { IEmployeeGrantSummary } from "@/interfaces/leave_balance";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -44,7 +48,7 @@ const LeaveBalanceCards: FC<{
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
       {balances.map((balance) => {
         const unlimited = balance.quotaMode === LeaveQuotaMode.UNLIMITED;
         const days =
@@ -65,8 +69,19 @@ const LeaveBalanceCards: FC<{
                 : "ring-gray-200 hover:ring-gray-300"
             } ${onSelect ? "cursor-pointer" : "cursor-default"}`}
           >
-            <div className="text-sm font-semibold text-gray-800">
-              {balance.leavePolicyName}
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold text-gray-800">
+                {balance.leavePolicyName}
+              </span>
+
+              {/**
+               * Info: (20260818 - Julian) 手機版點卡片會從下方彈出請假表單，
+               * 而小尺寸沒有 hover 可以暗示「這張卡片可以點」—— 用箭頭說出來。
+               * 桌機的卡片只是選取（表單一直在旁邊），沒有東西會彈出，故不顯示。
+               */}
+              {onSelect && (
+                <ChevronRight className="size-4 shrink-0 text-gray-300 lg:hidden" />
+              )}
             </div>
 
             {unlimited ? (

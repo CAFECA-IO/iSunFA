@@ -1411,6 +1411,41 @@ export const API_ERRORS = {
    * 回 403 而不是把它偽裝成 404：今日請假名單（A11）本來就對全體員工開放，
    * 「這一天有人請假」不是秘密，藏起來只會讓主管看不懂為什麼按鈕沒有反應。
    */
+  /**
+   * Info: (20260818 - Julian) 這個動作需要 HR 職能，而呼叫者沒有（甲-1）。
+   *
+   * 與 `FO_ATTENDANCE_SUPERVISOR_ONLY` 是不同的軸線：那個問「你是不是主管」
+   * （組織關係），這個問「你有沒有被指派人事職能」（`EmployeeHrFunctionAssignment`）。
+   * 一位工務段主管兩者兼具，一位人資承辦則只有後者 —— 合成同一個碼會讓
+   * 「我明明是主管為什麼不行」變成一個無法自己排解的問題。
+   *
+   * 訊息不列出缺哪一個職能：職能清單本身是組織內部資訊，而呼叫者的下一步
+   * 一律是「找人資要權限」，知道是 `HR_ADMIN` 還是 `TIMEKEEPER` 不改變那一步。
+   */
+  /**
+   * Info: (20260818 - Julian) 你是主管，但這個人不歸你管（排班寫入）。
+   *
+   * 與 `FO_ATTENDANCE_SUPERVISOR_ONLY` 分開的理由，同 `FO_LEAVE_RECALL_SCOPE`
+   * 與它分開的理由：那個說「你不是主管」，這個說「你是主管，但範圍不對」。
+   * 混為一談會讓一位工務段主管看著「這個動作只有部門主管可以執行」百思不解。
+   *
+   * 一個刻意的後果：`managesEmployee()` 對「管自己」回 false，所以**主管改不了
+   * 自己的排班**，會落到這個碼。那是對的 —— 排班是判定的比較基準，
+   * 自己改自己的基準正是職責分離要防的那件事（ADR 023 §5）。
+   * 需要改時由具 `HR_ADMIN` / `TIMEKEEPER` 職能的人代為處理。
+   */
+  FO_ATTENDANCE_SCHEDULE_SCOPE: {
+    code: "FO000019",
+    message: "This employee is not in your department scope",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  FO_HR_FUNCTION_REQUIRED: {
+    code: "FO000018",
+    message: "This action requires an HR function assignment",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
   FO_LEAVE_RECALL_SCOPE: {
     code: "FO000017",
     message: "This employee is not in your department scope",

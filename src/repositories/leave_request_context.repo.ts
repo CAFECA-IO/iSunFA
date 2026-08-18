@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { WorkDayType } from "@/constants/attendance";
+import { EmployeeHrFunction } from "@/constants/hr_management";
 import { LeaveRequestStatus } from "@/constants/leave";
+import { employeeHrFunctionRepo } from "@/repositories/employee_hr_function.repo";
 import { LeaveConcurrencyAction } from "@/constants/leave_policy";
 import { IConsumableGrant } from "@/interfaces/leave_entitlement";
 import {
@@ -68,7 +70,8 @@ export class LeaveRequestContextRepository implements ILeaveRequestContext {
       maxDays: rule.maxDays === null ? null : Number(rule.maxDays),
       steps: rule.steps.map((step) => ({
         order: step.order,
-        nodeKind: step.nodeKind as IApprovalRuleWithSteps["steps"][number]["nodeKind"],
+        nodeKind:
+          step.nodeKind as IApprovalRuleWithSteps["steps"][number]["nodeKind"],
         specificEmployeeId: step.specificEmployeeId,
       })),
     }));
@@ -81,11 +84,12 @@ export class LeaveRequestContextRepository implements ILeaveRequestContext {
    * 沒有自己的經理，直接回 null 會讓每一張長假都送不出去。向上找是實務，
    * 不是寬鬆：那個人確實是這位員工的部門主管。
    *
-   * ToDo: (20260817 - Julian) `hrEmployeeIds` 目前一律為空。
-   * 帳本層級的 HR 角色來源尚未決定（ADR 023 §8.3：須與既有
-   * `teamRepo.getTeamMember` 的角色體系對齊，不新造一套權限）。
-   * **在它決定之前，任何含 HR 節點的規則都會以 `NO_HR` 送不出去** ——
-   * 這是刻意的：靜默挑一個人去簽，比擋下來難處理得多。
+   * Info: (20260818 - Julian) `hrEmployeeIds` 取自 `EmployeeHrFunctionAssignment`
+   * 中仍生效的 `HR_ADMIN`（甲-1）。**不是 `Role`、不是 `TeamRole`** ——
+   * 三條軸線的區別見 ADR 023 §8.3 的修訂。
+   *
+   * 帳本一個 `HR_ADMIN` 都沒有時仍然回空陣列，含 HR 節點的規則因此以
+   * `NO_HR` 擋下。**那是刻意的**：靜默挑一個人去簽，比擋下來難處理得多。
    */
   public async buildOrgSnapshot(params: {
     accountBookId: string;
@@ -104,7 +108,10 @@ export class LeaveRequestContextRepository implements ILeaveRequestContext {
       applicant.departmentId,
     );
 
-    const hrEmployeeIds: string[] = [];
+    const hrEmployeeIds = await employeeHrFunctionRepo.listHolderIds({
+      accountBookId: params.accountBookId,
+      hrFunction: EmployeeHrFunction.HR_ADMIN,
+    });
 
     const ids = [
       applicant.id,

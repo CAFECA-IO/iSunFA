@@ -24,12 +24,44 @@ export const HR_MANAGEMENT_ROUTE = {
 export const leaveRequestDetailRoute = (requestId: string): string =>
   `${HR_MANAGEMENT_ROUTE.LEAVE}/request/${requestId}`;
 
+/**
+ * Info: (20260818 - Julian) 「我的請假」的請假表單改以下方抽屜呈現的斷點。
+ *
+ * 值必須與畫面上那串 `lg:` 覆蓋講同一件事（Tailwind 的 `lg` 是 1024px）。
+ * 需要一個 JS 端的副本是因為**捲動鎖定關不掉 CSS**：抽屜在桌機被 `lg:` 收回
+ * static，但 `useScrollLock` 不看螢幕寬度，照樣會鎖住桌機的頁面 ——
+ * 而那個症狀（捲不動、畫面上卻沒有任何遮罩）查起來完全沒有線索。
+ *
+ * 放在常數檔而不是元件裡：它是「同一個斷點的兩種表達」的單一來源，
+ * 兩邊各寫一次就會有一天只改到一邊。
+ */
+export const HR_LEAVE_FORM_DRAWER_MEDIA_QUERY = "(max-width: 1023.98px)";
+
 // Info: (20260810 - Julian) 員工在職狀態，對齊 Prisma enum EmployeeStatus
 export enum EmployeeStatus {
   ACTIVE = "ACTIVE",
   PROBATION = "PROBATION",
   LEAVE_WITHOUT_PAY = "LEAVE_WITHOUT_PAY",
   RESIGNED = "RESIGNED",
+}
+
+/**
+ * Info: (20260818 - Julian) 員工的 HR 職能，對齊 Prisma enum EmployeeHrFunction。
+ *
+ * **這是第三條角色軸線** —— 不是 `Role`（平台身分，掛 `User`），
+ * 也不是 `TeamRole`（帳本存取權，掛 `TeamMember`）。三者並存而非取代：
+ * 平台管理員不是人資，財務的帳本 `ADMIN` 也不是人資，而工地的員工可能
+ * 連平台帳號都沒有（`Employee.userId` 可空）卻仍須出現在簽核鏈上。
+ * 完整理由見 ADR 023 §8.3 的修訂與 schema 上該 enum 的說明。
+ *
+ * ⚠️ **直屬主管與部門主管不在這裡** —— 它們已經有來源
+ * （`Employee.managerId` / `Department.managerId`），再存一份就是第二種真相。
+ */
+export enum EmployeeHrFunction {
+  // Info: (20260818 - Julian) 人資承辦：簽核鏈的 HR 節點、簽核規則設定、跨部門排班寫入
+  HR_ADMIN = "HR_ADMIN",
+  // Info: (20260818 - Julian) 出勤管理員：只能跨部門排班，看不到個資也簽不了假
+  TIMEKEEPER = "TIMEKEEPER",
 }
 
 // Info: (20260810 - Julian) 性別，對齊 Prisma enum Gender

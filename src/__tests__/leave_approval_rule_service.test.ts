@@ -9,6 +9,8 @@ import {
   IStorableApprovalRule,
 } from "@/interfaces/leave_approval_rule";
 import { ILeaveApprovalRuleRepository } from "@/repositories/leave_approval_rule.repo";
+import { IEmployeeHrFunctionRepository } from "@/repositories/employee_hr_function.repo";
+import { EmployeeHrFunction } from "@/constants/hr_management";
 import {
   IApprovalRuleRange,
   assertRuleRangesDisjoint,
@@ -98,9 +100,46 @@ const replace = (
     rules,
   });
 
+/**
+ * Info: (20260818 - Julian) HR 職能的假物件。`isHr` 預設 true —— 這支測試的主題是
+ * 規則的形狀，不是授權；預設 false 會讓下面每一條都在閘門就結束，
+ * 測到的東西與它宣稱的不同。授權本身由最後一個 describe 專門測。
+ */
+class FakeHrFunctionRepo implements IEmployeeHrFunctionRepository {
+  public isHr = true;
+  public queries: { employeeId: string; hrFunctions: string[] }[] = [];
+
+  async listHolderIds(): Promise<string[]> {
+    return [];
+  }
+
+  async hasAnyFunction(params: {
+    accountBookId: string;
+    employeeId: string;
+    hrFunctions: readonly EmployeeHrFunction[];
+  }): Promise<boolean> {
+    this.queries.push({
+      employeeId: params.employeeId,
+      hrFunctions: [...params.hrFunctions],
+    });
+    return this.isHr;
+  }
+
+  async grant(): Promise<void> {
+    return undefined;
+  }
+
+  async revoke(): Promise<boolean> {
+    return false;
+  }
+}
+
+let hrFunctions: FakeHrFunctionRepo;
+
 beforeEach(() => {
   repo = new FakeRuleRepo();
-  service = new LeaveApprovalRuleService(repo);
+  hrFunctions = new FakeHrFunctionRepo();
+  service = new LeaveApprovalRuleService(repo, hrFunctions);
 });
 
 describe("L32 — 整組取代", () => {
@@ -278,5 +317,52 @@ describe("L31 — 依 scope 分組", () => {
     const view = await service.list(ACCOUNT_BOOK_ID);
     expect(view.general).toEqual([]);
     expect(view.byPolicy).toEqual({});
+  });
+});
+
+/**
+ * Info: (20260818 - Julian) 誰改得動簽核規則（甲-1）。
+ *
+ * 這道閘在甲-1 之前只檢查「actorEmployeeId 是不是空字串」—— 也就是
+ * **任何員工都改得動全帳本的簽核規則**，而改簽核規則等於改「誰能核准誰的假」。
+ * 讓部門主管改得動它，等於讓他自己決定自己要不要被別人簽核，
+ * 那是職責分離（ADR 023 §5）在設定層面的同一個洞。
+ */
+describe("L32 — 設定權限", () => {
+  it("沒有 HR_ADMIN 職能者一律擋下，且一列都沒有寫進去", async () => {
+    hrFunctions.isHr = false;
+
+    await expect(replace(SEED_RULES)).rejects.toMatchObject({
+      apiCode: API_ERRORS.FO_HR_FUNCTION_REQUIRED.code,
+    });
+    expect(repo.stored).toHaveLength(0);
+  });
+
+  /**
+   * Info: (20260818 - Julian) 問的必須是**操作者**，而且問的是 `HR_ADMIN`。
+   * 問成 `TIMEKEEPER` 會讓工地文書改得動簽核規則 —— 他排得了班，
+   * 但「誰核准誰的假」不是排班的一部分。
+   */
+  it("問的是操作者的 HR_ADMIN 職能", async () => {
+    await replace(SEED_RULES);
+
+    expect(hrFunctions.queries).toEqual([
+      {
+        employeeId: ACTOR,
+        hrFunctions: [EmployeeHrFunction.HR_ADMIN],
+      },
+    ]);
+  });
+
+  // Info: (20260818 - Julian) 空身分仍走原本那條，不因為新增職能檢查而變成 500
+  it("空的 actorEmployeeId 仍回權限錯誤", async () => {
+    await expect(
+      service.replaceScope({
+        accountBookId: ACCOUNT_BOOK_ID,
+        actorEmployeeId: "",
+        leavePolicyId: null,
+        rules: SEED_RULES,
+      }),
+    ).rejects.toBeInstanceOf(AppError);
   });
 });

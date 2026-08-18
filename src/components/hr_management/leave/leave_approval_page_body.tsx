@@ -10,7 +10,7 @@ import {
 import { ILeaveRequestSummary } from "@/interfaces/leave_request";
 import { errorI18nKeyOf } from "@/lib/utils/attendance_error_message";
 import { LEAVE_ERROR_I18N_KEY } from "@/lib/utils/leave_error_message";
-import { request } from "@/lib/utils/request";
+import { IEnvelopeLike, request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 
 /**
@@ -45,9 +45,11 @@ const LeaveApprovalPageBody: FC = () => {
     setLoading(true);
     setLoadError(null);
     try {
-      setPending(
-        await request<ILeaveRequestSummary[]>(LEAVE_API.REQUEST_PENDING),
+      // Info: (20260818 - Julian) 端點回信封，`request()` 不拆（理由見 `my_leave_page_body.tsx`）
+      const response = await request<IEnvelopeLike<ILeaveRequestSummary[]>>(
+        LEAVE_API.REQUEST_PENDING,
       );
+      setPending(response.payload ?? []);
     } catch (error) {
       setLoadError(
         t(

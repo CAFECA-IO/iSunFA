@@ -110,3 +110,40 @@ export const HR_NAV_ITEMS: IHrNavItem[] = [
     disabled: true,
   },
 ];
+
+/**
+ * Info: (20260818 - Julian) 目前選中哪一項：**最長的那一個前綴，只有一項**。
+ *
+ * ## 為什麼不是每一項各自比對
+ *
+ * 前一版由側邊選單各自算 `pathname.startsWith(item.href)`，只有儀表板特判全等。
+ * 那個寫法在巢狀路由上必然多亮：`/hr_management/attendance/presence` 會讓
+ * 「出勤打卡」與「現場狀態」同時亮，`/hr_management/leave/approval` 會讓
+ * 「我的請假」與「待我簽核」同時亮 —— 而每加一層子路由就會再犯一次。
+ *
+ * 選中是一個**全域**的決定（十二項裡挑一項），不是十二個各自獨立的布林值。
+ * 寫成回傳單一 key，「同時亮兩項」在型別上就不再表示得出來。
+ * 改成最長匹配之後儀表板也不必再特判：`/hr_management` 是所有頁的前綴，
+ * 但任何子頁都存在更長的匹配。
+ *
+ * ## 為什麼比對到路徑段為止
+ *
+ * `href` 或 `href/…`，不是裸的 `startsWith` —— 否則日後出現
+ * `/hr_management/leave_policy` 會被 `/hr_management/leave` 吃掉。
+ *
+ * 沒有自己選單項的頁面（如 `/hr_management/leave/request/:id`）會落在它的列表上，
+ * 那是刻意的：詳情頁仍要亮著帶它進來的那一項。
+ */
+export const activeHrNavKeyOf = (pathname: string): string | null => {
+  let matched: IHrNavItem | null = null;
+
+  for (const item of HR_NAV_ITEMS) {
+    const hit = pathname === item.href || pathname.startsWith(`${item.href}/`);
+    if (!hit) continue;
+    if (matched === null || item.href.length > matched.href.length) {
+      matched = item;
+    }
+  }
+
+  return matched === null ? null : matched.key;
+};

@@ -38,6 +38,8 @@ import { dbRepo } from "@/repositories/db.repo";
 import { activeKeyOf } from "@/repositories/leave.repo";
 import { encryptPii } from "@/lib/hr_pii_crypto";
 import { HrPiiTable } from "@/constants/hr_pii";
+import { EmployeeHrFunction } from "@/constants/hr_management";
+import { employeeHrFunctionRepo } from "@/repositories/employee_hr_function.repo";
 import { calculateDistanceKm } from "@/lib/utils/geo";
 import { evaluateAttendanceDay } from "@/lib/attendance_rules";
 import { IShiftWindow } from "@/interfaces/attendance";
@@ -839,6 +841,15 @@ async function clearDemoData(): Promise<void> {
     where: { accountBookId: ACCOUNT_BOOK_ID },
   });
 
+  /**
+   * Info: (20260818 - Julian) HR 職能指派。掛 `Employee` 的是 Cascade，會跟著員工走，
+   * 但這裡仍明確刪一次：`activeKey` 是全域唯一，殘留一列生效中的指派會讓重跑
+   * 在 `grant()` 撞上唯一鍵 —— 而那個錯誤訊息完全看不出成因。
+   */
+  await prisma.employeeHrFunctionAssignment.deleteMany({
+    where: { accountBookId: ACCOUNT_BOOK_ID },
+  });
+
   await prisma.attendancePunch.deleteMany({
     where: { accountBookId: ACCOUNT_BOOK_ID },
   });
@@ -1374,6 +1385,32 @@ async function main(): Promise<void> {
       data: { managerId: employeeByNo.get(employeeNo)!.id },
     });
   }
+
+  /**
+   * Info: (20260818 - Julian) --- HR 職能（甲-1）---
+   *
+   * Demo 的簽核規則沒有 `HR` 節點，所以這一步不是「讓假單送得出去」的前提。
+   * 它存在的理由是**打破指派的死結**：`replaceScope`（L32）現在要求 `HR_ADMIN`，
+   * 而指派 API 尚未做（誰有權指派還沒決定，見 schema 上該 model 的 ToDo）——
+   * 沒有這一步，演示環境裡沒有任何人改得動簽核規則。
+   *
+   * 林淑芬（EMP002，工程處本部行政）是這個組織裡最像人資的人；
+   * 指派者記處長陳志明（EMP001），因為指派權責在他那裡。
+   *
+   * 沒有 `TIMEKEEPER` 的持有者是刻意的：demo 裡的排班寫入由各工務段主管
+   * 在自己的範圍內完成，那條路本來就走得通。憑空指派一個沒有情境的職能，
+   * 只會讓讀 seed 的人以為那是必要設定。
+   */
+  await employeeHrFunctionRepo.grant({
+    accountBookId: ACCOUNT_BOOK_ID,
+    employeeId: employeeByNo.get("EMP002")!.id,
+    hrFunction: EmployeeHrFunction.HR_ADMIN,
+    grantedByEmployeeId: employeeByNo.get("EMP001")!.id,
+    grantedByEmployeeNo: "EMP001",
+    grantedByName: employeeByNo.get("EMP001")!.name,
+    grantReason: "Demo 種子：人事承辦",
+  });
+  console.log("   HR 職能：EMP002 林淑芬 → HR_ADMIN（指派者 EMP001）");
 
   /**
    * Info: (20260813 - Julian) --- 排班：先產生週期規則，再套用兩處例外 ---

@@ -93,6 +93,8 @@ const MIRRORED: Record<string, Record<string, string>> = {
   DocumentCategory: HrConstants.DocumentCategory,
   ProbationResult: HrConstants.ProbationResult,
   ResignationType: HrConstants.ResignationType,
+  // Info: (20260818 - Julian) HR 職能（第三條角色軸線，見 ADR 023 §8.3）
+  EmployeeHrFunction: HrConstants.EmployeeHrFunction,
 
   // Info: (20260813 - Julian) 簽到系統
   PunchType: AttendanceConstants.PunchType,

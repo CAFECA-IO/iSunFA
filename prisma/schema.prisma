@@ -634,6 +634,8 @@ model AccountBook {
   probationReviews     ProbationReview[]
   offboardingProcesses OffboardingProcess[]
   employeeDocuments    EmployeeDocument[]
+  // Info: (20260818 - Julian) HR 職能的指派紀錄（第三條角色軸線，見該 model 的說明）
+  hrFunctionAssignments EmployeeHrFunctionAssignment[]
 
   // Info: (20260813 - Julian) 帳本對應的簽到 (Time & Attendance) 資料
   workLocations     WorkLocation[]
@@ -1819,6 +1821,11 @@ model Employee {
   leaveRequests  LeaveRequest[] @relation("LeaveRequestEmployee")
   leaveRecalls   LeaveRecall[]  @relation("LeaveRecallRequester")
 
+  // Info: (20260818 - Julian) HR 職能的指派紀錄（見 `EmployeeHrFunctionAssignment`）
+  hrFunctions        EmployeeHrFunctionAssignment[] @relation("HrFunctionHolder")
+  grantedHrFunctions EmployeeHrFunctionAssignment[] @relation("HrFunctionGrantedBy")
+  revokedHrFunctions EmployeeHrFunctionAssignment[] @relation("HrFunctionRevokedBy")
+
   // Info: (20260817 - Julian) 假勤：額度、簽核、加班、折現
   leaveGrants              LeaveGrant[]              @relation("LeaveGrantEmployee")
   leaveBalances            LeaveBalance[]            @relation("LeaveBalanceEmployee")
@@ -1841,6 +1848,109 @@ model Employee {
   @@index([jobTitleId])
   @@index([managerId])
   @@map("employee")
+}
+
+/**
+ * Info: (20260818 - Julian) 員工的 HR 職能。**這是第三條軸線，不是 `Role` 也不是 `TeamRole`。**
+ *
+ * | | 是什麼 | 掛在哪 |
+ * |---|---|---|
+ * | `Role`（USER/ADMIN/SUPER_ADMIN） | 平台身分 | `User` |
+ * | `TeamRole`（OWNER/ADMIN/EDITOR/VIEWER） | 帳本存取權 | `TeamMember` |
+ * | `EmployeeHrFunction` | **公司內的人事職能** | `Employee` |
+ *
+ * 平台管理員不是人資，財務的帳本 `ADMIN` 也不是人資。反過來，`Employee.userId`
+ * 是可空的 —— 工地的人可能沒有平台帳號，卻仍須出現在簽核鏈上；而帳本的 `OWNER`
+ * 可能根本不是這家公司的員工。硬套任一條軸線會同時產生兩種錯誤（ADR 023 §8.3 修訂）。
+ *
+ * ## 只有兩個值，因為只有兩個消費者
+ *
+ * 每個值都對應一段今天真的會執行的判斷。憑空多列 `PAYROLL` / `AUDITOR`
+ * 會讓它看起來像一條生效中的規則，而讀到的人會以為某處在讀它
+ * （同 `EMPLOYEE_SCHEDULED_LEAVE_TYPES` 被移除的理由）。
+ *
+ * ToDo: (20260818 - Julian) 薪資、教育訓練、稽核等職能等各自的模組要用時再加，
+ * 屆時加的是 enum 值與它的消費者，不是這張表的結構。
+ */
+enum EmployeeHrFunction {
+  /**
+   * Info: (20260818 - Julian) 人資承辦。三個消費者：
+   * 簽核鏈的 `HR` 節點、簽核規則設定（L32）、跨部門的排班寫入。
+   */
+  HR_ADMIN
+  /**
+   * Info: (20260818 - Julian) 出勤管理員。只有一個消費者：跨部門的排班寫入。
+   * 與 `HR_ADMIN` 分開，是因為工程公司的工地文書排得了班，
+   * 卻不該看得到全公司的個資、也不該簽得掉別人的假。
+   */
+  TIMEKEEPER
+}
+
+/**
+ * Info: (20260818 - Julian) HR 職能的指派。**一列一次指派，撤銷不刪列。**
+ *
+ * ## 為什麼是一張表而不是 `Employee` 上的一個 enum 陣列
+ *
+ * HR 職能等於「看得到全體個資 + 簽得掉別人的假」。勞動檢查與資安複核問的不是
+ * 「現在誰是人資」，而是**「四月那張單被簽核時，誰有這個權限」** —— 一個會被
+ * 就地覆寫的欄位答不出那個問題，而 `AuditLog` 只記「誰改過誰」、不記舊值。
+ *
+ * 撤銷寫 `revokedAt` 而不是刪列，理由同上：刪掉之後，那段期間的權限狀態就消失了。
+ *
+ * ## `activeKey` 的部分唯一索引
+ *
+ * 同一人同一職能不得同時有兩列生效。手法比照 `LeaveDay.activeKey`：
+ * 生效中填 `employeeId:function`，撤銷時填回 null，讓資料庫來擋而不是靠應用層先查後寫。
+ *
+ * ## 為什麼指派者要存快照
+ *
+ * `grantedByEmployeeId` 是 `SetNull` —— 指派者離職後外鍵會變 null，
+ * 而那正是 ADR 023 §1 第 2 點抱怨的失敗模式（一筆沒有人指派過的權限）。
+ * 因此另存當下的工號與姓名，比照 `LeaveApprovalStep` 的處置。
+ *
+ * ToDo: (20260818 - Julian) 誰有權指派，尚未決定，因此**目前沒有指派 API**，
+ * 只有 seed 與 repository 方法。不能讓 `HR_ADMIN` 自己指派 `HR_ADMIN`
+ * （那是一條自我擴權的路），也不能讓它空著（那樣第一個人永遠拿不到職能）。
+ * 目前傾向由帳本所屬 team 的 `OWNER` / `ADMIN` 指派 —— 那條軸線問的正是
+ * 「誰管理這個租戶」。決定後補上 L34 端點與畫面。
+ */
+model EmployeeHrFunctionAssignment {
+  id String @id @default(uuid())
+
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  employeeId String   @map("employee_id")
+  employee   Employee @relation("HrFunctionHolder", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  function EmployeeHrFunction
+
+  // Info: (20260818 - Julian) 指派者。外鍵可空（離職 SetNull），但工號與姓名是不可變的當下快照
+  grantedByEmployeeId String?   @map("granted_by_employee_id")
+  grantedBy           Employee? @relation("HrFunctionGrantedBy", fields: [grantedByEmployeeId], references: [id], onDelete: SetNull)
+  grantedByEmployeeNo String    @map("granted_by_employee_no")
+  grantedByName       String    @map("granted_by_name")
+  grantedAt           DateTime  @default(now()) @map("granted_at")
+
+  // Info: (20260818 - Julian) 撤銷者。null 表示仍生效 —— 與 `revokedAt` 必須同時有值或同時為 null
+  revokedByEmployeeId String?   @map("revoked_by_employee_id")
+  revokedBy           Employee? @relation("HrFunctionRevokedBy", fields: [revokedByEmployeeId], references: [id], onDelete: SetNull)
+  revokedByEmployeeNo String?   @map("revoked_by_employee_no")
+  revokedByName       String?   @map("revoked_by_name")
+  revokedAt           DateTime? @map("revoked_at")
+
+  // Info: (20260818 - Julian) 指派與撤銷都要說明理由：一筆沒有理由的權限異動，事後沒有人判斷得了它合不合理
+  grantReason  String? @map("grant_reason")
+  revokeReason String? @map("revoke_reason")
+
+  // Info: (20260818 - Julian) 生效中才有值：`employeeId:function`（見上方說明）
+  activeKey String? @unique @map("active_key")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([accountBookId, function])
+  @@index([employeeId])
+  @@map("employee_hr_function_assignment")
 }
 
 // Info: (20260810 - Julian) ========== 員工詳細資料 ==========

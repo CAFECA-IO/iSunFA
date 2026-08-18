@@ -6,6 +6,11 @@ import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
 import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
+import { EmployeeHrFunction } from "@/constants/hr_management";
+import {
+  employeeHrFunctionRepo,
+  IEmployeeHrFunctionRepository,
+} from "@/repositories/employee_hr_function.repo";
 import { PRISMA_ERROR, rethrowAsAppError } from "@/lib/utils/prisma_error";
 import { deriveShiftPatternKind } from "@/lib/attendance_rules";
 import { toShiftWindow } from "@/lib/attendance_schedule_view";
@@ -77,6 +82,7 @@ export class AttendanceScheduleService {
     private readonly schedule: IAttendanceScheduleRepository,
     private readonly patterns: IShiftPatternRepository,
     private readonly audits: IAuditLogWriter,
+    private readonly hrFunctions: IEmployeeHrFunctionRepository,
   ) {}
 
   // Info: (20260813 - Julian) A6：班別清單。`kind`（固定／彈性）由六個欄位衍生，不是資料庫欄位——存判別欄位只會在有人改時間忘了同步改它時開始說謊
@@ -203,15 +209,45 @@ export class AttendanceScheduleService {
      * 這裡只擋**寫入**：能看到別人的班表是隱私問題，能改別人的班表是稽核問題，
      * 而後者無法事後復原。
      *
-     * 沿用 `isDepartmentManager`（與銷假徵詢同一個判斷點），不另建第二套角色判定 ——
-     * 同一個問題有兩個答案處，兩者遲早分岔（檢查清單 §2.1）。
+     * Info: (20260818 - Julian) 甲-1 之後這道閘收斂成兩條路，順序有意義：
+     *
+     * 1. **具 `HR_ADMIN` / `TIMEKEEPER` 職能者**：跨部門通行。工地文書要排得了
+     *    全工地的班，而他不是任何部門的 `managerId`；原本的粗判斷會把他擋在外面。
+     * 2. **部門主管**：先問「你是不是主管」（不是就回 `SUPERVISOR_ONLY`，
+     *    而且問得到答案之前不碰任何單據，見下面第三段），再問「這個人歸不歸你管」
+     *    （不歸就回 `SCHEDULE_SCOPE`）。
+     *
+     * 原本只有 `isDepartmentManager` 一條，而它問的是「你有沒有管**任何**部門」——
+     * 第一工務段的主管因此改得動第五工務段的班表。上游把它記為有意識的暫時取捨
+     * （`attendance_demo_plan.md` §7.3 第 1 順位的修訂），這裡把它收掉。
+     *
+     * 兩個碼分開的理由同 `FO_LEAVE_RECALL_SCOPE`：「你不是主管」與
+     * 「你是主管但範圍不對」的下一步完全不同。而兩者都排在租戶檢查之前 ——
+     * 403 與 404 的先後本身就是一個探測管道。
      */
-    const isManager = await this.employees.isDepartmentManager({
+    const hasHrFunction = await this.hrFunctions.hasAnyFunction({
       accountBookId,
       employeeId: actorEmployeeId,
+      hrFunctions: [EmployeeHrFunction.HR_ADMIN, EmployeeHrFunction.TIMEKEEPER],
     });
-    if (!isManager) {
-      throw new AppError(API_ERRORS.FO_ATTENDANCE_SUPERVISOR_ONLY);
+
+    if (!hasHrFunction) {
+      const isManager = await this.employees.isDepartmentManager({
+        accountBookId,
+        employeeId: actorEmployeeId,
+      });
+      if (!isManager) {
+        throw new AppError(API_ERRORS.FO_ATTENDANCE_SUPERVISOR_ONLY);
+      }
+
+      const managesTarget = await this.employees.managesEmployee({
+        accountBookId,
+        managerEmployeeId: actorEmployeeId,
+        targetEmployeeId: input.employeeId,
+      });
+      if (!managesTarget) {
+        throw new AppError(API_ERRORS.FO_ATTENDANCE_SCHEDULE_SCOPE);
+      }
     }
 
     const employee = await this.employees.findByIdInAccountBook(
@@ -271,4 +307,5 @@ export const attendanceScheduleService = new AttendanceScheduleService(
   attendanceScheduleRepo,
   shiftPatternRepo,
   auditLogRepo,
+  employeeHrFunctionRepo,
 );

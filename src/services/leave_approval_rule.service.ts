@@ -12,6 +12,11 @@ import {
   leaveApprovalRuleRepo,
 } from "@/repositories/leave_approval_rule.repo";
 import { LeaveApprovalRuleInvariantError } from "@/repositories/leave_approval_rule_invariant";
+import { EmployeeHrFunction } from "@/constants/hr_management";
+import {
+  employeeHrFunctionRepo,
+  IEmployeeHrFunctionRepository,
+} from "@/repositories/employee_hr_function.repo";
 
 /**
  * Info: (20260817 - Julian) 簽核規則設定（L31 / L32）。
@@ -30,24 +35,46 @@ import { LeaveApprovalRuleInvariantError } from "@/repositories/leave_approval_r
  * 缺口記於計畫書 §17，端點編為 L31 / L32 而不是重排既有編號。
  */
 export class LeaveApprovalRuleService {
-  public constructor(private readonly rules: ILeaveApprovalRuleRepository) {}
+  public constructor(
+    private readonly rules: ILeaveApprovalRuleRepository,
+    private readonly hrFunctions: IEmployeeHrFunctionRepository,
+  ) {}
 
   /**
-   * Info: (20260817 - Julian) 誰可以改簽核規則 —— **目前只驗身分**。
+   * Info: (20260818 - Julian) 誰可以改簽核規則 —— 具 `HR_ADMIN` 職能者。
    *
-   * ⚠️ 這是一個已知缺口的單一插入點，不是一個決定。帳本層級的 HR 角色
-   * 尚無來源（`Employee` 上沒有角色欄位，`HrDashboardRole` 只是畫面上的
-   * 切換器），見假勤接線守則 §3.5.1 與 ADR 023 §8.3。
+   * ## 為什麼是 HR 而不是主管
    *
-   * 沿用既有設定端點的作法（排班、班別、地點目前也只驗身分），
-   * 但**集中在這一個方法裡** —— 角色模型補上時只有這裡要改，
-   * 而不是散在每一支 route 的開頭。
+   * 簽核規則決定的是**誰能核准誰的假**。讓部門主管改得動它，等於讓他自己
+   * 決定自己要不要被別人簽核 —— 那是職責分離（ADR 023 §5）在設定層面的同一個洞。
    *
-   * ToDo: (20260817 - Julian) 甲-1 完成後改為檢查 HR 職能。
+   * ## 為什麼集中在這一個方法
+   *
+   * 角色模型補上時只有這裡要改，而不是散在每一支 route 的開頭。
+   * 這個方法先前只檢查「actorEmployeeId 非空字串」，也就是**任何員工都改得動**；
+   * 甲-1 之後它成為真的閘門。
+   *
+   * ToDo: (20260818 - Julian) **只有寫入（L32）過這道閘，讀取（L31）沒有。**
+   * 簽核規則不是個資（它描述的是流程不是人），所以先不擋；但「誰能看到
+   * 全帳本的簽核設定」屬於權限矩陣（計畫書 §7.3 第 1 順位）要一併決定的事，
+   * 不要因為這裡沒擋就當成已經決定過了。
    */
-  private assertMayConfigure(actorEmployeeId: string): void {
-    if (!actorEmployeeId) {
+  private async assertMayConfigure(params: {
+    accountBookId: string;
+    actorEmployeeId: string;
+  }): Promise<void> {
+    if (!params.actorEmployeeId) {
       throw new AppError(API_ERRORS.FO_NO_PERMISSION_TO_VIEW_THIS);
+    }
+
+    const isHr = await this.hrFunctions.hasAnyFunction({
+      accountBookId: params.accountBookId,
+      employeeId: params.actorEmployeeId,
+      hrFunctions: [EmployeeHrFunction.HR_ADMIN],
+    });
+
+    if (!isHr) {
+      throw new AppError(API_ERRORS.FO_HR_FUNCTION_REQUIRED);
     }
   }
 
@@ -85,7 +112,10 @@ export class LeaveApprovalRuleService {
     leavePolicyId: string | null;
     rules: readonly IStorableApprovalRule[];
   }): Promise<IApprovalRuleListView> {
-    this.assertMayConfigure(params.actorEmployeeId);
+    await this.assertMayConfigure({
+      accountBookId: params.accountBookId,
+      actorEmployeeId: params.actorEmployeeId,
+    });
 
     if (params.leavePolicyId === null && params.rules.length === 0) {
       throw new AppError(API_ERRORS.VA_LEAVE_GENERAL_RULE_REQUIRED);
@@ -159,4 +189,5 @@ export class LeaveApprovalRuleService {
 
 export const leaveApprovalRuleService = new LeaveApprovalRuleService(
   leaveApprovalRuleRepo,
+  employeeHrFunctionRepo,
 );

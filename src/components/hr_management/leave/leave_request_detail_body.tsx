@@ -22,7 +22,7 @@ import { ILeaveRequestDetail } from "@/interfaces/leave_request";
 import ApprovalChainView from "@/components/hr_management/leave/approval_chain_view";
 import { errorI18nKeyOf } from "@/lib/utils/attendance_error_message";
 import { LEAVE_ERROR_I18N_KEY } from "@/lib/utils/leave_error_message";
-import { request } from "@/lib/utils/request";
+import { IEnvelopeLike, request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 
 const SEGMENT_I18N_KEY: Readonly<Record<string, string>> = {
@@ -64,7 +64,12 @@ const LeaveRequestDetailBody: FC<{ requestId: string }> = ({ requestId }) => {
     setLoading(true);
     setLoadError(null);
     try {
-      setDetail(await request<ILeaveRequestDetail>(leaveRequestApi(requestId)));
+      // Info: (20260818 - Julian) 端點回信封，`request()` 不拆（理由見 `my_leave_page_body.tsx`）
+      const response = await request<IEnvelopeLike<ILeaveRequestDetail>>(
+        leaveRequestApi(requestId),
+      );
+      // Info: (20260818 - Julian) payload 為 null 時交給下方的 `detail === null` 分支顯示載入失敗
+      setDetail(response.payload);
     } catch (error) {
       setLoadError(
         t(
