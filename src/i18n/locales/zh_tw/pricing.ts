@@ -87,9 +87,9 @@ export const pricing = {
       desc: "適合個人使用者",
       features: {
         // Info: (20260815 - Luphia) 免費版人數上限（條款 §3.1 指向此標示）
-        member_limit: "團隊人數上限 {{count}} 人",
+        member_limit: "團隊人數不限",
         member_limit_tooltip:
-          "免費版的額度依成員各自計算，因此設有人數上限；需要更多成員請升級為團隊版或企業版。",
+          "免費版的額度為**全團隊共用一份**（不隨人數增加），因此不限成員人數；需要每位成員各自擁有額度請升級為團隊版或企業版。",
         storage: "儲存空間 {{gb}} GB",
         consults: "每月最多諮詢 {{amount}} 個問題",
         consults_tooltip: "每個問題 {{price}} 點數",

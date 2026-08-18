@@ -38,6 +38,7 @@ import {
   readChainCredits,
 } from "@/lib/quota/personal_chain_credits";
 import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
+import type { Prisma } from "@/generated";
 
 /**
  * Info: (20260807 - Luphia) 扣費管線（設計書 §5）——所有計費功能的單一入口。
@@ -468,13 +469,44 @@ export async function spendCredits(
      * 各自判斷「還有額度」、各寫一筆——超額幅度是併發數 × 單筆，
      * 而 §5.1 容許的是「最後一筆超額」，指的是一筆。
      */
-    return teamQuotaUsageRepo.withMemberQuotaLock(
-      teamId,
-      userId,
-      async (tx) => {
-        // Info: (20260814 - Luphia) 額度逐成員計算：用量只算這個人自己的（一人一池）
-        const { used5h, usedWeek } =
-          await teamQuotaUsageRepo.sumWindowUsageInTx(
+    /**
+     * Info: (20260819 - Luphia) 免費方案的額度是**全隊共用一份**（產品決定 20260819）。
+     *
+     * 一人一池的對價是席次費（設計書 §5.4.2：「席次費買到的就是這個人自己的額度」）。
+     * 免費方案沒有席次費，因此沒有對價依據——而一人一池正是「20 人的免費團隊
+     * ＝每週 800 點的模型用量、月費零」這個洞的來源。改為共用之後，加人不再產生額度，
+     * 免費版的人數上限也就不再需要（同一輪已移除）。
+     *
+     * 兩件事必須一起換，否則等於沒換：
+     * 1. **用量的聚合範圍**：全隊，而不是這個成員自己；
+     * 2. **鎖的粒度**：團隊，而不是 (團隊, 成員)。兩位成員各持自己的鎖時會同時讀到
+     *    同一個 used、各自放行，超額幅度變成併發數 × 單筆。
+     *
+     * 付費方案完全不變（一人一池、成員之間互不阻塞）。
+     */
+    const isSharedQuota =
+      resolveEffectivePlanId(subscription, nowSec) === TEAM_PLAN.FREE;
+
+    const runWithQuotaLock = <T>(
+      operation: (tx: Prisma.TransactionClient) => Promise<T>,
+    ): Promise<T> =>
+      isSharedQuota
+        ? teamQuotaUsageRepo.withTeamQuotaLock(teamId, operation)
+        : teamQuotaUsageRepo.withMemberQuotaLock(teamId, userId, operation);
+
+    return runWithQuotaLock(async (tx) => {
+      /**
+       * Info: (20260814 - Luphia) 額度逐成員計算：用量只算這個人自己的（一人一池）。
+       * Info: (20260819 - Luphia) 免費方案例外：聚合整個團隊（見上方說明）。
+       */
+      const { used5h, usedWeek } = isSharedQuota
+        ? await teamQuotaUsageRepo.sumTeamWindowUsageInTx(
+            tx,
+            teamId,
+            windowKey5h,
+            windowKeyWeek,
+          )
+        : await teamQuotaUsageRepo.sumWindowUsageInTx(
             tx,
             teamId,
             userId,
@@ -482,95 +514,94 @@ export async function spendCredits(
             windowKeyWeek,
           );
 
-        const quotaAvailable = resolveQuotaAvailable({
-          limit5h,
-          used5h,
-          limitWeek,
-          usedWeek,
-        });
+      const quotaAvailable = resolveQuotaAvailable({
+        limit5h,
+        used5h,
+        limitWeek,
+        usedWeek,
+      });
 
-        /**
-         * Info: (20260813 - Luphia) 預扣封頂（設計書 §5.4）：只要還有可用量就放行，
-         * 不再因為「預扣上界塞不進剩餘額度」而把有餘額的用戶整筆擋死。
-         */
-        const split = splitSpend(cost, quotaAvailable, BigInt(0));
-        const available = quotaAvailable + chainCredits;
+      /**
+       * Info: (20260813 - Luphia) 預扣封頂（設計書 §5.4）：只要還有可用量就放行，
+       * 不再因為「預扣上界塞不進剩餘額度」而把有餘額的用戶整筆擋死。
+       */
+      const split = splitSpend(cost, quotaAvailable, BigInt(0));
+      const available = quotaAvailable + chainCredits;
 
-        /**
-         * Info: (20260813 - Luphia) 固定價格的消費不接受封頂（allowPartial = false）：
-         * 沒有結算步驟就沒有人補收差額，放行等於少收。此時與「完全無餘額」同樣回 402，
-         * 前端據此提示不足並停用支付按鈕。
-         */
-        if (!allowPartial && quotaAvailable < cost) {
-          throw new QuotaExceededError(
-            API_ERRORS.TW_QUOTA_EXCEEDED,
-            buildQuotaExceededPayload({
-              nowSec,
-              limit5h,
-              used5h,
-              limitWeek,
-              usedWeek,
-              walletBalance: chainCredits,
-            }),
-          );
-        }
+      /**
+       * Info: (20260813 - Luphia) 固定價格的消費不接受封頂（allowPartial = false）：
+       * 沒有結算步驟就沒有人補收差額，放行等於少收。此時與「完全無餘額」同樣回 402，
+       * 前端據此提示不足並停用支付按鈕。
+       */
+      if (!allowPartial && quotaAvailable < cost) {
+        throw new QuotaExceededError(
+          API_ERRORS.TW_QUOTA_EXCEEDED,
+          buildQuotaExceededPayload({
+            nowSec,
+            limit5h,
+            used5h,
+            limitWeek,
+            usedWeek,
+            walletBalance: chainCredits,
+          }),
+        );
+      }
 
-        if (available <= BigInt(0)) {
-          // Info: (20260814 - Luphia) 訂閱額度與個人鏈上點數同時見底才是真的用盡 → 402
-          throw new QuotaExceededError(
-            API_ERRORS.TW_QUOTA_EXCEEDED,
-            buildQuotaExceededPayload({
-              nowSec,
-              limit5h,
-              used5h,
-              limitWeek,
-              usedWeek,
-              walletBalance: chainCredits,
-            }),
-          );
-        }
+      if (available <= BigInt(0)) {
+        // Info: (20260814 - Luphia) 訂閱額度與個人鏈上點數同時見底才是真的用盡 → 402
+        throw new QuotaExceededError(
+          API_ERRORS.TW_QUOTA_EXCEEDED,
+          buildQuotaExceededPayload({
+            nowSec,
+            limit5h,
+            used5h,
+            limitWeek,
+            usedWeek,
+            walletBalance: chainCredits,
+          }),
+        );
+      }
 
-        /**
-         * Info: (20260814 - Luphia) 預扣只寫訂閱額度。
-         *
-         * 改制前這裡還有一段「先扣離鏈分配點數、失敗再沖銷」的流程；分配改上鏈之後
-         * 那一層不存在了（見上方說明），差額改由結算時自成員錢包一次扣清。
-         * 少了跨系統的兩段式扣款，這裡也就不需要補償路徑。
-         */
-        /**
-         * Info: (20260818 - Luphia) 放行就一定要留下用量列（第三輪 A-1(c)）。
-         *
-         * 重放偵測的判準是 `records.held > 0`，而 `held` 是用量列的總和。
-         * 先前鏈上餘額能讓 `quotaAvailable = 0` 的請求通過，於是這一段不執行、
-         * 沒有任何列 → `held = 0` → 重放偵測永遠不觸發 → 同一個 clientMessageId
-         * 重送 N 次就扣 N 次，而 `faithChatSchema` 承諾的是「重送不重複扣款」。
-         *
-         * 改為 fail-closed 之後，能走到這裡就代表 `quotaAvailable > 0`，
-         * `quotaPart` 必然為正。這道檢查把那個前提從「碰巧成立」變成「寫下來」：
-         * 哪天有人再讓第二層參與放行，這裡會當場炸開，而不是安靜地失去冪等。
-         */
-        if (split.quotaPart <= BigInt(0)) {
-          throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
-        }
+      /**
+       * Info: (20260814 - Luphia) 預扣只寫訂閱額度。
+       *
+       * 改制前這裡還有一段「先扣離鏈分配點數、失敗再沖銷」的流程；分配改上鏈之後
+       * 那一層不存在了（見上方說明），差額改由結算時自成員錢包一次扣清。
+       * 少了跨系統的兩段式扣款，這裡也就不需要補償路徑。
+       */
+      /**
+       * Info: (20260818 - Luphia) 放行就一定要留下用量列（第三輪 A-1(c)）。
+       *
+       * 重放偵測的判準是 `records.held > 0`，而 `held` 是用量列的總和。
+       * 先前鏈上餘額能讓 `quotaAvailable = 0` 的請求通過，於是這一段不執行、
+       * 沒有任何列 → `held = 0` → 重放偵測永遠不觸發 → 同一個 clientMessageId
+       * 重送 N 次就扣 N 次，而 `faithChatSchema` 承諾的是「重送不重複扣款」。
+       *
+       * 改為 fail-closed 之後，能走到這裡就代表 `quotaAvailable > 0`，
+       * `quotaPart` 必然為正。這道檢查把那個前提從「碰巧成立」變成「寫下來」：
+       * 哪天有人再讓第二層參與放行，這裡會當場炸開，而不是安靜地失去冪等。
+       */
+      if (split.quotaPart <= BigInt(0)) {
+        throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
+      }
 
-        /**
-         * Info: (20260818 - Luphia) 上面已經擋掉非正數，這裡不再重複判斷（第四輪 B-3）。
-         * 原本緊接著一個 `if (split.quotaPart > 0)`，在 throw 之後恆為真——
-         * 留著會讓下一個讀者以為還有第三種情形。
-         */
-        await teamQuotaUsageRepo.createUsageInTx(tx, {
-          teamId,
-          userId,
-          featureCode,
-          amount: split.quotaPart,
-          windowKey5h,
-          windowKeyWeek,
-          idempotencyKey: effectiveKey,
-        });
+      /**
+       * Info: (20260818 - Luphia) 上面已經擋掉非正數，這裡不再重複判斷（第四輪 B-3）。
+       * 原本緊接著一個 `if (split.quotaPart > 0)`，在 throw 之後恆為真——
+       * 留著會讓下一個讀者以為還有第三種情形。
+       */
+      await teamQuotaUsageRepo.createUsageInTx(tx, {
+        teamId,
+        userId,
+        featureCode,
+        amount: split.quotaPart,
+        windowKey5h,
+        windowKeyWeek,
+        idempotencyKey: effectiveKey,
+      });
 
-        return toSpendResult(effectiveKey, split.quotaPart, BigInt(0));
-      },
-    );
+      return toSpendResult(effectiveKey, split.quotaPart, BigInt(0));
+    });
   });
 }
 

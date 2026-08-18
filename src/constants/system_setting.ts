@@ -12,7 +12,6 @@
  */
 
 import { DEFAULT_FAITH_MEMORY_RETENTION_DAYS } from "@/constants/llm";
-import { DEFAULT_FREE_PLAN_MAX_MEMBERS } from "@/constants/subscription_quota";
 export enum SystemSettingKey {
   GOOGLE_OAUTH_CLIENT_ID = "GOOGLE_OAUTH_CLIENT_ID",
   GOOGLE_OAUTH_CLIENT_SECRET = "GOOGLE_OAUTH_CLIENT_SECRET",
@@ -30,6 +29,21 @@ export enum SystemSettingKey {
    */
   FAITH_MEMORY_RETENTION_DAYS = "FAITH_MEMORY_RETENTION_DAYS",
   /**
+   * Deprecated: (20260819 - Luphia) [start] 免費版人數上限已於 2026-08-19 移除
+   * （免費方案的額度改為全隊共用一份，加人不再產生額度）。**程式碼已無任何讀者。**
+   *
+   * 這個鍵**刻意保留**：`loadSnapshot` 遇到 `SYSTEM_SETTING_DEFINITIONS` 裡沒有的
+   * DB 列會把整組設定判為 UNTRUSTED，而該狀態下 `get()` 對**每一個**設定丟錯——
+   * OAuth、LLM、SMTP 會一起停掉。也就是說「直接刪定義」會讓任何曾經設過這個值的
+   * 環境在部署當下全站失能。
+   *
+   * 移除的前置條件（見部署檢查表 §3.5）：先由後台設定頁移除該列（走 `applySigned`
+   * 才會重新簽章；直接用 SQL 刪會讓 digest 失配，症狀與上面一樣），確認所有環境
+   * 都沒有這一列之後，才能刪掉這個鍵與下方的 fallback。
+   */
+  FREE_PLAN_MAX_MEMBERS = "FREE_PLAN_MAX_MEMBERS",
+  // Deprecated: (20260819 - Luphia) [end]
+  /**
    * Info: (20260814 - Luphia) 免費版團隊的人數上限（PR #6652 第二輪 B-4）。
    *
    * 額度改為逐成員計算後，免費版的席次單價是 0，乘上任何人數都是 0——
@@ -39,7 +53,6 @@ export enum SystemSettingKey {
    * ⚠️ 服務條款 §3.1 載明「免費版團隊人數上限以方案頁標示為準」，
    * 調整此值必須同步方案頁的標示。
    */
-  FREE_PLAN_MAX_MEMBERS = "FREE_PLAN_MAX_MEMBERS",
   /**
    * Info: (20260815 - Luphia) 寄信設定（規範 §4 / P4：email 邀請）。
    *
@@ -131,12 +144,14 @@ export const SYSTEM_SETTING_DEFINITIONS: Record<
     isSecret: false,
     envKey: "FAITH_MEMORY_RETENTION_DAYS",
   },
+  // Deprecated: (20260819 - Luphia) [start] 見 SystemSettingKey.FREE_PLAN_MAX_MEMBERS 的說明
   [SystemSettingKey.FREE_PLAN_MAX_MEMBERS]: {
     key: SystemSettingKey.FREE_PLAN_MAX_MEMBERS,
     group: SystemSettingGroup.PAYMENT,
     isSecret: false,
     envKey: "FREE_PLAN_MAX_MEMBERS",
   },
+  // Deprecated: (20260819 - Luphia) [end]
   [SystemSettingKey.SMTP_HOST]: {
     key: SystemSettingKey.SMTP_HOST,
     group: SystemSettingGroup.MAIL,
@@ -188,10 +203,6 @@ export const SYSTEM_SETTING_FALLBACKS: Partial<
   // Info: (20260812 - Luphia) 保底值與 DEFAULT_FAITH_MEMORY_RETENTION_DAYS 同源，見 src/constants/llm.ts
   [SystemSettingKey.FAITH_MEMORY_RETENTION_DAYS]: String(
     DEFAULT_FAITH_MEMORY_RETENTION_DAYS,
-  ),
-  // Info: (20260814 - Luphia) 免費版人數上限的保底值，與 DEFAULT_FREE_PLAN_MAX_MEMBERS 同源
-  [SystemSettingKey.FREE_PLAN_MAX_MEMBERS]: String(
-    DEFAULT_FREE_PLAN_MAX_MEMBERS,
   ),
 };
 
