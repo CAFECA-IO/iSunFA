@@ -232,7 +232,7 @@ develop 已併入 attendance/HR 模組（PR #6651，37 個 commit），**8 個�
 | **20260813「物流碳足跡優先扣分配點數」的拍板已不成立** | 逐功能扣款順序（`FEATURE_SPEND_PRIORITY` / `resolveSpendPriority`）於 **2026-08-14 分配上鏈時移除**——分配變成成員的個人資產之後，「先扣分配、後扣額度」這個排序失去意義（先花成員的錢再用團隊額度，沒有情境說得通）。**這與第二層停用無關**：翻回 `isChainCreditSpendable()` 不會讓那個拍板復活，要它復活得重新設計逐功能的扣款順序。產品端需知道該決定目前沒有生效 |
 | ~~遷移腳本是否曾在收據未確認的期間跑過~~ | **已於 2026-08-18 確認沒有殘留資料**（維護者查證），且收據確認已補上，日後不再重現。此列保留為紀錄 |
 | 十餘處鏈上操作仍未確認 `receipt.status` | 集中在 setup、issue、mission、bundler、amortization——不在本 PR 範圍。金流路徑（鑄造、銷毀）已修，其餘以測試的例外清單管理，清單只能變短 |
-| `ABIS.CREDIT_POINT` 與部署的合約不一致 | ABI 宣告了 `burn(address,uint256)`、`forcedTransfer`、`freezePartialTokens`、`setAddressFrozen` 等，合約裡一個都沒有。目前只有 burn 這條路徑實際被呼叫（且已知會失敗），其餘未使用。**這份 ABI 是整條彎路的起點**：它讓「平台可以直接扣成員錢包」看起來成立，於是第二層沒去用旁邊那條已經在跑的持有人簽章路徑。**已於 2026-08-18 加上比對測試**（`abi_contract_parity.test.ts`）：把 `src/config/contracts.ts` 每個 ABI 的函式宣告比對對應的 `contracts/*.sol`（含繼承鏈與 `public` 狀態變數 getter），已知落差登記在 `KNOWN_GAPS` 且清單只能變短。目前登記 16 條落差：CREDIT_POINT 13、SCW 1（`isValidSignature`，Fido2Account 沒實作 ERC-1271）、SCW_FACTORY 2（公司帳戶尚未上鏈）。**修 ABI 本身是另一件事**——刪掉宣告會讓 `token.service` 的 `forcedTransfer()`（無呼叫端）與 `burn()`（已被旗標擋住）失去型別依據，屬清理範圍 |
+| ~~`ABIS.CREDIT_POINT` 與部署的合約不一致~~ | **已於 2026-08-18 修正**（另開 PR，見下）。先前 ABI 宣告了 `burn(address,uint256)`、`forcedTransfer`、`freezePartialTokens`、`setAddressFrozen`、`pause` 等合約一個都沒有的函式；`mint` 也不存在（實際是需要 ISC 抵押的 `collateralizedMint`）。**這份 ABI 是整條彎路的起點**：它讓「平台可以直接扣成員錢包」看起來成立，於是第二層沒去用旁邊那條已經在跑的持有人簽章路徑。現在由 `abi_contract_parity.test.ts` 比對 `src/config/contracts.ts` 與`contracts/*.sol`（含繼承鏈與 `public` 狀態變數 getter，函式與 event 都比），16 條落差已刪除、登記清單為空且只能變長時才需登記。**`token.service` 裡以 inline `parseAbi` 重新宣告那些函式的六支服務函式尚未清理**（`forcedTransfer` / `burn` / `freeze` / `unfreeze` / `pause` / `unpause`，其中五支無呼叫端），列為後續 |
 
 ---
 
