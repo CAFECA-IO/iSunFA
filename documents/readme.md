@@ -26,7 +26,7 @@
 4. 🎯 **[數值精度處理規範](engineering_guidelines/numerical_precision_guideline.md)**
    > 說明為何我們在財務與碳排計算中全面棄用原生 `number`，並強制使用 `Prisma.Decimal` 與 `BigInt`。
 5. 🔍 **[Code Review 檢查清單](engineering_guidelines/code_review_checklist.md)**
-   > 由 PR #6652 五輪 review 的**實際失效樣本**整理而成：假綠的七種形狀（掃描根等於被修的檔案、整包 mock 只證明編排、測試自己的前提沒生效、fixture 不是真實資料的形狀、行為斷言測到函式卻沒測到接線…）、空值語意、帳本恆等式、秘密不進 URL。核心一句：**綠燈不是證據，是尚未被反駁**。§7.1 是推送前一定要跑的三個指令，含 `npm run test:no-dotenv`（在「沒有 .env」的條件下重跑一次，形狀與 CI 相同）；§6.1 是跨 PR 的共用檔案要對照 base 三方比對。
+   > 由 PR #6652 五輪 review 的**實際失效樣本**整理而成：假綠的八種形狀（掃描根等於被修的檔案、整包 mock 只證明編排、測試自己的前提沒生效、fixture 不是真實資料的形狀、行為斷言測到函式卻沒測到接線、mock 沒有照實模擬被 mock 的東西…）、空值語意、帳本恆等式、秘密不進 URL。核心一句：**綠燈不是證據，是尚未被反駁**。§7.1 是推送前一定要跑的三個指令，含 `npm run test:no-dotenv`（在「沒有 .env」的條件下重跑一次，形狀與 CI 相同）；§6.1 是跨 PR 的共用檔案要對照 base 三方比對。
 6. 🕘 **[部署檢查表：簽到系統](engineering_guidelines/deploy_checklist_attendance_2026q3.md)**
    > 7 張新表 + `Employee.user_id` 的套用順序、為何**不需要**回填（空值是正確的初始狀態，不是待填），以及四種做錯順序的症狀 —— 其中最難查的一種完全不報錯：座標用地圖標註值而非實測值，seed 會成功，而主角站在現場打不了卡。
 7. 🚀 **[部署檢查表：計費子系統](engineering_guidelines/deploy_checklist_billing_2026q3.md)**
