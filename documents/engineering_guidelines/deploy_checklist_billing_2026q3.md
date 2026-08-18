@@ -183,6 +183,19 @@ npx tsx scripts/backfill_faith_memory_aad.ts --commit # 實際重新封裝
 
 ---
 
+## 4.9 與 develop 合併時（第五輪 B 段）
+
+develop 已併入 attendance/HR 模組（PR #6651，37 個 commit），**8 個檔案雙方都改到**。合併前後各要處理一件事：
+
+| 項目 | 處置 |
+|---|---|
+| **錯誤碼撞號** | 本分支的 `NF_TEAM` 原為 `NF000017`，與 develop 的 `NF_EMPLOYEE_FOR_USER` 相同——後者刻意不回 403 以免洩漏「這個信箱在系統裡有員工檔」，若前端把它映射成「團隊不存在」，那個保護就失效。**已於本分支改為 `NF000024`**。另有三組是本分支自己的重複（`VA000041`／`TW000010`／`TW000011`），一併改掉；`error_dictionary_codes.test.ts` 從此擋住同檔重複 |
+| **`enforceCarbonRateLimit` 別名** | develop 保留別名 + 16 支呼叫端；本分支已全數遷移並刪除別名。**合併取本分支這一側**——那正是 develop 那條 ToDo 要做的事。已逐檔確認 develop 引用舊名的檔案在此都已遷移 |
+| **`RATE_LIMIT_RULES`** | 是 total `Record`：develop 加 `ATTENDANCE_*`、本分支加 `INVITE_TOKEN*`，**名稱無碰撞但兩邊的項目都要保留**，只收一半 `tsc` 會報缺鍵（會爆、不會靜默） |
+| **schema** | 雙方各加 model（develop 6 個 + 6 enum、本分支 `FaithMemory` / `FaithMemoryDeletionLog`），無同名衝突，但 `prisma db push` 會**一次套用兩個模組**。本檔第 3 節的回填順序與 `deploy_checklist_attendance_2026q3.md`（develop）的步驟屬同一次部署，兩份都要跑；**合併後請在對方那份補上指回本檔的連結**（本分支看不到那個檔案，只能單邊指過去） |
+
+---
+
 ## 5. 已知落差（上線後仍存在，非本次可解）
 
 | 項目 | 狀態 |

@@ -86,7 +86,8 @@ describe("issueTeamCreditsByAdmin", () => {
         credits: BigInt(10),
         operatorUserId: "admin-1",
       }),
-    ).rejects.toMatchObject({ code: "NF000017" });
+      // Info: (20260818 - Luphia) NF_TEAM 的碼由 NF000017 改為 NF000024（第五輪 B-1）
+    ).rejects.toMatchObject({ code: "NF000024" });
     expect(teamWalletRepo.creditPool).not.toHaveBeenCalled();
   });
 

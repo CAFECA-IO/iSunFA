@@ -436,7 +436,8 @@ describe("chargeSeatAddition", () => {
 
     await expect(
       chargeSeatAddition({ teamId: "team-1", nowMs: MID_PERIOD }),
-    ).rejects.toMatchObject({ code: "TW000011" });
+      // Info: (20260818 - Luphia) TW_SEAT_PAYMENT_METHOD_MISSING 由 TW000011 改為 TW000022（第五輪自查）
+    ).rejects.toMatchObject({ code: "TW000022" });
     expect(teamSubscriptionRepo.addSeats).not.toHaveBeenCalled();
   });
 

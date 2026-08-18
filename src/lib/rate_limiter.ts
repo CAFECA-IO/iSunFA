@@ -113,10 +113,19 @@ const routeRateLimiter = new SlidingWindowRateLimiter();
  * Info: (20260716 - Emily) route 專用防線:超限時回傳現成的 429 Response(含 Retry-After),
  * 未超限回 null。route 只需一行 if,維持「純端口」職責。
  *
- * Info: (20260818 - Luphia) 改名為 `enforceRateLimit`（原 `enforceRateLimit`）。
+ * Info: (20260818 - Luphia) 改名為 `enforceRateLimit`（原名 `enforceCarbonRateLimit`）。
  * 它從一開始就與 carbon 無關——桶與身分都由呼叫端決定——而現在託管代簽、
  * PRF、費思訪客與邀請連結都在用它。掛著 carbon 的名字會讓下一個人以為
  * 非 carbon 的端點需要另寫一支。
+ *
+ * **與 develop 合併時**（第五輪 B-2）：develop 在 PR #6651 做了同一個改名，
+ * 但保留了 `export const enforceCarbonRateLimit = enforceRateLimit;` 這個別名，
+ * 附註「ToDo：把那 16 支改呼叫 `enforceRateLimit` 後移除本別名」。
+ *
+ * **這條分支已經把那 16 支全部改完**（18 個檔案，含 `rate_limiter.test.ts`），
+ * 因此合併時取本分支這一側、讓別名消失，正是完成對方那條 ToDo——
+ * 而不是把它撤銷。已逐檔確認 develop 中所有引用舊名的檔案在此都已遷移，
+ * 合併後不會有任何呼叫端指向不存在的名字。
  *
  * `identity` 是限流維度：登入端點傳 address，未登入端點傳來源 IP
  * （見 `resolveClientIp`——那個值用戶端可偽造，因此只作為限流維度，不作授權）。

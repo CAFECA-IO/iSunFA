@@ -768,9 +768,22 @@ export const API_ERRORS = {
     message: "Carbon session not found",
     status: ApiCode.NOT_FOUND,
   } as IErrorDef,
-  // Info: (20260813 - Luphia) 團隊不存在（後台發放點數等以 teamId 定址的操作）
+  /**
+   * Info: (20260813 - Luphia) 團隊不存在（後台發放點數等以 teamId 定址的操作）。
+   *
+   * Info: (20260818 - Luphia) 由 `NF000017` 改為 `NF000024`（第五輪 B-1）。
+   *
+   * develop 在 PR #6651 以同一個碼定義了 `NF_EMPLOYEE_FOR_USER`（「這個人不是這個
+   * 帳本的員工」，刻意不回 403 以免洩漏「這個信箱在系統裡有員工檔」）。
+   * `API_ERRORS` 以**鍵**索引，兩個鍵並存不會有型別錯誤——只有 code 字串撞號，
+   * 而任何依 `errorCode` 分流的前端文案、i18n 映射與支援文件都分不出這兩件事。
+   * 對方那條的存在理由正是「不要洩漏」，被映射成「團隊不存在」等於保護失效。
+   *
+   * 兩邊都是新增的碼，改動哪一邊都行；改這邊是因為 develop 已經合併、
+   * 而這條分支還沒有。
+   */
   NF_TEAM: {
-    code: "NF000017",
+    code: "NF000024",
     message: "Team not found",
     status: ApiCode.NOT_FOUND,
   } as IErrorDef,
@@ -779,8 +792,16 @@ export const API_ERRORS = {
    * 沒有帳本就沒有計費團隊，扣不了額度；此時 fail closed 而非放行不計費，
    * 並以專屬錯誤碼讓前端能引導用戶把會話綁到帳本，而不是丟一句「系統錯誤」。
    */
+  /**
+   * Info: (20260818 - Luphia) 由 `VA000041` 改為 `VA000047`（第五輪自查）。
+   *
+   * 這個碼在**同一個檔案**裡已經被 `VA_FILE_TOO_LARGE`（既有）用掉了——
+   * 本 PR 新增這一條時沿用了一個已在使用中的號碼。不是跨分支的問題，
+   * 是這條分支自己的重複，而在此之前沒有任何機制會發現
+   * （見 `error_dictionary_codes.test.ts`）。
+   */
   VA_CARBON_SESSION_NOT_BOUND: {
-    code: "VA000041",
+    code: "VA000047",
     message: "Carbon session is not bound to an account book",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
@@ -1003,8 +1024,15 @@ export const API_ERRORS = {
     message: "Multiple teams available; specify which team pays",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  /**
+   * Info: (20260818 - Luphia) 由 `TW000010` 改為 `TW000021`（第五輪自查）。
+   *
+   * 同上：`TW_INVALID_CREDIT_PLAN`（既有）已經使用 `TW000010`。
+   * 這一條是 402 的付款要求，前端會依它切換到「以個人點數支付」的流程；
+   * 與「方案代碼無效」共用同一個字串，前端只能靠其他欄位猜。
+   */
   TW_PERSONAL_PAYMENT_REQUIRED: {
-    code: "TW000010",
+    code: "TW000021",
     message: "Personal credit payment required",
     status: ApiCode.PAYMENT_REQUIRED,
   } as IErrorDef,
@@ -1042,8 +1070,15 @@ export const API_ERRORS = {
    * Info: (20260814 - Luphia) 付費團隊加人需先補收席次費用（規範 P3）：
    * 找不到可扣款的卡就不能加人——否則等於免費加席，帳永遠補不回來。
    */
+  /**
+   * Info: (20260818 - Luphia) 由 `TW000011` 改為 `TW000022`（第五輪自查）。
+   *
+   * `TW_TEAM_AMBIGUOUS`（同一位使用者屬於多個團隊、無法決定由誰付款）已經用了
+   * `TW000011`。兩者都由本 PR 新增，而且**兩邊各有一條測試斷言 `TW000011`**
+   * ——它們之所以同時通過，正是因為撞號。
+   */
   TW_SEAT_PAYMENT_METHOD_MISSING: {
-    code: "TW000011",
+    code: "TW000022",
     message: "No payment method on record for seat charge",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
