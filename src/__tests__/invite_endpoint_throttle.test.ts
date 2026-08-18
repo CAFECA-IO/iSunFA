@@ -38,19 +38,62 @@ function request(headers: Record<string, string>): NextRequest {
 
 describe("resolveClientIp", () => {
   /**
-   * Info: (20260818 - Luphia) 取 `x-forwarded-for` 的**第一個**值。
-   * 後面幾個是經手的代理各自附加的，其中包含用戶端自己送上來的那一段——
-   * 取最後一個等於讓呼叫者自選限流維度。
+   * Info: (20260818 - Luphia) 取**由右往左數第 `TRUSTED_PROXY_DEPTH` 段**（第六輪第 8 條）。
+   *
+   * `x-forwarded-for` 由左往右附加：最左邊可能是呼叫端自己送的（完全不可信），
+   * 最右邊那段是**我們自己的代理**寫上去的對端位址。先前固定取最左邊——
+   * 在「代理會覆寫」的部署下兩者相同（本專案目前如此），但若改成附加，
+   * 呼叫端就能輪替左邊那段換取無限多個限流桶，而格式驗證擋不到。
    */
-  it("取 x-forwarded-for 的第一個值", () => {
+  it("預設信任一層代理：取最右邊那一段", () => {
     expect(
-      resolveClientIp(request({ "x-forwarded-for": "203.0.113.7, 10.0.0.1" })),
+      resolveClientIp(request({ "x-forwarded-for": "1.2.3.4, 203.0.113.7" })),
     ).toBe("203.0.113.7");
+  });
+
+  it("只有一段時就取那一段（覆寫式部署）", () => {
+    expect(resolveClientIp(request({ "x-forwarded-for": "203.0.113.7" }))).toBe(
+      "203.0.113.7",
+    );
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 前面多一層 CDN 時，把深度設成 2：
+   * 最右邊是 CDN 的位址，再往左一段才是真正的呼叫端。
+   */
+  it("深度 2 時取右邊數第二段", () => {
+    const original = process.env.TRUSTED_PROXY_DEPTH;
+    process.env.TRUSTED_PROXY_DEPTH = "2";
+    try {
+      expect(
+        resolveClientIp(
+          request({ "x-forwarded-for": "1.2.3.4, 203.0.113.7, 10.0.0.1" }),
+        ),
+      ).toBe("203.0.113.7");
+    } finally {
+      if (original === undefined) delete process.env.TRUSTED_PROXY_DEPTH;
+      else process.env.TRUSTED_PROXY_DEPTH = original;
+    }
+  });
+
+  // Info: (20260818 - Luphia) 設錯（0、負數、非數字）一律退回預設，不讓限流失去維度
+  it("深度設錯時退回預設", () => {
+    const original = process.env.TRUSTED_PROXY_DEPTH;
+    for (const bad of ["0", "-1", "abc", ""]) {
+      process.env.TRUSTED_PROXY_DEPTH = bad;
+      expect(
+        resolveClientIp(request({ "x-forwarded-for": "1.2.3.4, 203.0.113.7" })),
+      ).toBe("203.0.113.7");
+    }
+    if (original === undefined) delete process.env.TRUSTED_PROXY_DEPTH;
+    else process.env.TRUSTED_PROXY_DEPTH = original;
   });
 
   it("去掉空白", () => {
     expect(
-      resolveClientIp(request({ "x-forwarded-for": "  203.0.113.7 " })),
+      resolveClientIp(
+        request({ "x-forwarded-for": " 1.2.3.4 ,  203.0.113.7 " }),
+      ),
     ).toBe("203.0.113.7");
   });
 

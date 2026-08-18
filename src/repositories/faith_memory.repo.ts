@@ -240,29 +240,51 @@ class FaithMemoryRepository {
 
   /**
    * Info: (20260817 - Luphia) 到期的記憶（供守護行程）。
-   * **只取識別欄位與計數，不取密文**——刪除不需要看見內容。
+   * **只取識別欄位、計數與期限，不取密文**——刪除不需要看見內容。
+   *
+   * Info: (20260818 - Luphia) 游標式分頁：回傳排在 `after` 之後的下一批（第六輪第 6 條）。
+   *
+   * 先前是「排除本輪失敗過的 id」（`NOT IN`）。那解決了「毒資料被一再撈回來」，
+   * 但清單會長大：資料庫整體故障時每批 500 筆全部失敗，清單會一路長到失敗上界
+   * （預設 10,000），之後每次查詢都帶一萬個 bind parameter——沒有超過 Postgres
+   * 的上限，但查詢計畫會退化，而那正發生在資料庫已經出問題的時候。
+   *
+   * 游標沒有這個成長，而且保證更強：以 `(expiresAt, id)` 這個**全序**往前推進，
+   * 同一輪內每一列最多被看到一次（不只是失敗的那些）。
+   *
+   * 排序同時是決定論的（最久到期優先、`id` 打破平手）：沒有 `orderBy` 時
+   * Postgres 的回傳順序不保證穩定，某些到期列可能整輪排不進 `take`（starvation），
+   * 而且除錯時重現不出來。
    */
-  async listExpired(now: Date, limit: number, excludeIds: string[] = []) {
+  async listExpired(
+    now: Date,
+    limit: number,
+    after?: { expiresAt: Date; id: string },
+  ) {
     return prisma.faithMemory.findMany({
       where: {
         expiresAt: { lte: now },
         /**
-         * Info: (20260818 - Luphia) 排除本輪已經失敗過的列（第五輪 C-3）。
-         *
-         * 失敗的列 `expiresAt` 沒有變，下一批照樣會撈到它們。499 筆毒資料時
-         * 每批只刪得掉 1 筆、其餘 499 筆重複失敗，20 批就把整輪的總量上界用完，
-         * 而真正該刪的列一列都輪不到。排除之後，同一輪內每筆最多失敗一次。
+         * Info: (20260818 - Luphia) 「排在游標之後」＝期限更晚，或期限相同而 id 更大。
+         * 兩者缺一都會漏列或重複：只比 `expiresAt` 會跳過同一毫秒的其他列，
+         * 只比 `id` 則與排序不一致。
          */
-        ...(excludeIds.length > 0 ? { id: { notIn: excludeIds } } : {}),
+        ...(after
+          ? {
+              OR: [
+                { expiresAt: { gt: after.expiresAt } },
+                { expiresAt: after.expiresAt, id: { gt: after.id } },
+              ],
+            }
+          : {}),
       },
-      select: { id: true, userId: true, teamId: true, itemCount: true },
-      /**
-       * Info: (20260818 - Luphia) 決定論排序（第五輪 C-2）。
-       *
-       * 沒有 `orderBy` 時 Postgres 的回傳順序不保證穩定：同一輪內可能反覆拿到
-       * 同一批列，也可能讓某些到期列整輪都排不進 `take`（starvation），
-       * 而且除錯時重現不出來。**最久到期的先刪**，並以 `id` 打破平手。
-       */
+      select: {
+        id: true,
+        userId: true,
+        teamId: true,
+        itemCount: true,
+        expiresAt: true,
+      },
       orderBy: [{ expiresAt: "asc" }, { id: "asc" }],
       take: limit,
     });

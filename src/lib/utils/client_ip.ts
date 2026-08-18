@@ -59,13 +59,45 @@ function asIpAddress(value: string | null | undefined): string | null {
   return isIP(candidate) === 0 ? null : candidate;
 }
 
+/**
+ * Info: (20260818 - Luphia) 信任幾層反向代理（第六輪第 8 條）。
+ *
+ * `x-forwarded-for` 是**由左往右附加**的：最左邊是最早的一段（可能由呼叫端自己
+ * 送出、完全不可信），最右邊那一段是**我們自己的代理**寫上去的對端位址。
+ *
+ * 因此該取的是**右邊數第 N 段**，N = 我們前面有幾層自己的代理：
+ *
+ * - 只有一層 nginx（不論它是覆寫還是用 `$proxy_add_x_forwarded_for` 附加）→ 1
+ * - 前面還有一層 CDN → 2（最右邊是 CDN 的位址，再往左一段才是真正的呼叫端）
+ *
+ * 先前是固定取**最左邊**那一段。在「代理會覆寫」的部署下兩者相同，所以目前沒有
+ * 症狀（維護者已確認本專案的部署會覆寫）；但若哪天改成附加，最左邊就是呼叫端
+ * 自己送的值——輪替 `1.2.3.x` 即可取得無限多個限流桶，而格式驗證擋不到。
+ * 把「取第幾段」變成設定，這個前提就不再只是一句註解。
+ */
+const DEFAULT_TRUSTED_PROXY_DEPTH = 1;
+
+function resolveTrustedProxyDepth(): number {
+  const raw = process.env.TRUSTED_PROXY_DEPTH?.trim();
+  if (!raw) return DEFAULT_TRUSTED_PROXY_DEPTH;
+  const parsed = Number.parseInt(raw, 10);
+  // Info: (20260818 - Luphia) 非正整數一律退回預設：設錯不該讓限流失去維度
+  return Number.isInteger(parsed) && parsed > 0
+    ? parsed
+    : DEFAULT_TRUSTED_PROXY_DEPTH;
+}
+
 export function resolveClientIp(request: NextRequest): string {
-  /**
-   * Info: (20260818 - Luphia) 取第一段：後面幾段是經手的代理各自附加的，
-   * 其中包含用戶端自己送上來的那一段——取最後一個等於讓呼叫者自選限流維度。
-   */
   const forwardedRaw = request.headers.get("x-forwarded-for");
-  const forwarded = asIpAddress(forwardedRaw?.split(",")[0]);
+  const segments = forwardedRaw?.split(",") ?? [];
+  /**
+   * Info: (20260818 - Luphia) 由右往左數第 `depth` 段。
+   * 段數不足時取最左邊那一段——那是這串裡最舊的資訊，
+   * 而「不足」本身代表部署形態與設定不一致，另有 `logger.warn` 會看到。
+   */
+  const depth = resolveTrustedProxyDepth();
+  const picked = segments[Math.max(segments.length - depth, 0)];
+  const forwarded = asIpAddress(picked);
   if (forwarded) return forwarded;
 
   const realIpRaw = request.headers.get("x-real-ip");

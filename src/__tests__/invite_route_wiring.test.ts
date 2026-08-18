@@ -2,12 +2,15 @@ import { describe, it, expect, beforeEach } from "@jest/globals";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
 import { NextRequest } from "next/server";
+import { POST as acceptRoute } from "@/app/api/v1/invite/accept/route";
 import { POST as declineRoute } from "@/app/api/v1/invite/decline/route";
 import { POST as resolveRoute } from "@/app/api/v1/invite/resolve/route";
 import {
+  acceptInviteByToken,
   declineInviteByToken,
   resolveInviteByToken,
 } from "@/services/team_invitation.service";
+import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { RATE_LIMIT_RULES, RateLimitBucketEnum } from "@/constants/rate_limit";
 
 /**
@@ -35,6 +38,18 @@ jest.mock("@/services/team_invitation.service", () => ({
     expiresAt: null,
   })),
   declineInviteByToken: jest.fn(async () => ({ teamId: "team-1" })),
+  acceptInviteByToken: jest.fn(async () => ({ teamId: "team-1" })),
+}));
+
+/**
+ * Info: (20260818 - Luphia) accept 要登入，因此連 DeWT 一起 mock。
+ * 它的限流維度是 address（不是 IP）——有身分就用身分，IP 是整間辦公室共用的。
+ */
+jest.mock("@/lib/auth/dewt", () => ({
+  getIdentityFromDeWT: jest.fn(async () => ({
+    id: "user-1",
+    address: "0xaccept",
+  })),
 }));
 
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
@@ -42,6 +57,18 @@ const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
 // Info: (20260818 - Luphia) 固定長度的合法 token，讓 validator 不會先擋下來
 const TOKEN = "a".repeat(64);
 const PER_MINUTE = RATE_LIMIT_RULES[RateLimitBucketEnum.INVITE_TOKEN][0].max;
+
+function acceptRequest(address: string): NextRequest {
+  asMock(getIdentityFromDeWT).mockResolvedValue({ id: "user-1", address });
+  return new NextRequest("https://isunfa.com/api/v1/invite/accept", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: "Bearer dewt",
+    },
+    body: JSON.stringify({ token: TOKEN }),
+  });
+}
 
 function requestFrom(ip: string, path: string): NextRequest {
   return new NextRequest(`https://isunfa.com/api/v1/invite/${path}`, {
@@ -95,6 +122,45 @@ describe("邀請端點的限流真的擋在路徑上", () => {
 
     expect(blocked.status).toBe(429);
     expect(asMock(resolveInviteByToken)).toHaveBeenCalledTimes(PER_MINUTE);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) accept 也要驗（第六輪第 2 條）。
+   *
+   * 前一版只匯入 decline 與 resolve，於是把 accept 裡的
+   * `if (limited) return limited;` 刪掉、`enforceRateLimit` 那行留著，
+   * 限流完全失效而所有測試照樣綠——而 accept 是三支裡**唯一會消耗付費席次**的。
+   */
+  it("accept：超限之後不再進入 service，且回 429", async () => {
+    const address = "0xaccept-limit";
+
+    for (let i = 0; i < PER_MINUTE; i += 1) {
+      const ok = await acceptRoute(acceptRequest(address));
+      expect(ok.status).toBe(200);
+    }
+    expect(asMock(acceptInviteByToken)).toHaveBeenCalledTimes(PER_MINUTE);
+
+    const blocked = await acceptRoute(acceptRequest(address));
+
+    expect(blocked.status).toBe(429);
+    expect(asMock(acceptInviteByToken)).toHaveBeenCalledTimes(PER_MINUTE);
+    expect(blocked.headers.get("Retry-After")).toBeTruthy();
+  });
+
+  // Info: (20260818 - Luphia) 未登入時不得走到 service（限流之外的另一道）
+  it("accept：沒有身分就不進入 service", async () => {
+    asMock(getIdentityFromDeWT).mockResolvedValue(null);
+
+    const response = await acceptRoute(
+      new NextRequest("https://isunfa.com/api/v1/invite/accept", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token: TOKEN }),
+      }),
+    );
+
+    expect(response.status).not.toBe(200);
+    expect(asMock(acceptInviteByToken)).not.toHaveBeenCalled();
   });
 
   /**

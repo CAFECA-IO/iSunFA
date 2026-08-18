@@ -11,6 +11,11 @@ export const invitePage = {
   invalid_title: "この招待リンクは無効です",
   invalid_description:
     "すでに使用済み、有効期限切れ、または取り消された可能性があります。招待した方に新しいリンクを依頼してください。",
+  // Info: (20260818 - Luphia) 暫時性失敗（429／5xx／網路）與「確定失效」分開（第六輪第 3 條）
+  retryable_title: "招待を読み込めませんでした",
+  retryable_description:
+    "ネットワークの不調、または短時間に試行が多すぎた可能性があります。この招待は有効ですので、しばらくしてからお試しください。",
+  retry: "再試行",
   joined_title: "チームに参加しました",
   joined_description: "チームページへ移動します…",
   decline: "参加しません",

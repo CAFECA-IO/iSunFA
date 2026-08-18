@@ -10,6 +10,11 @@ export const invitePage = {
   invalid_title: "邀請連結已失效",
   invalid_description:
     "這個連結可能已被使用、已逾期，或已被撤回。請向邀請您的人索取新的連結。",
+  // Info: (20260818 - Luphia) 暫時性失敗（429／5xx／網路）與「確定失效」分開（第六輪第 3 條）
+  retryable_title: "暫時無法讀取邀請",
+  retryable_description:
+    "可能是網路不穩或短時間內嘗試太多次。這封邀請仍然有效，請稍後再試。",
+  retry: "重試",
   joined_title: "已加入團隊",
   joined_description: "正在帶您前往團隊頁面…",
   decline: "我不加入這個團隊",

@@ -186,7 +186,7 @@ describe("listExpired", () => {
     expect(args.orderBy).toEqual([{ expiresAt: "asc" }, { id: "asc" }]);
   });
 
-  it("沒有排除清單時不加多餘的條件", async () => {
+  it("沒有游標時不加多餘的條件", async () => {
     await faithMemoryRepo.listExpired(EXPIRES_AT, 500);
 
     const args = findMany.mock.calls[0][0] as {
@@ -195,19 +195,31 @@ describe("listExpired", () => {
     expect(args.where).toEqual({ expiresAt: { lte: EXPIRES_AT } });
   });
 
-  it("有排除清單時排除那些 id", async () => {
-    await faithMemoryRepo.listExpired(EXPIRES_AT, 500, ["a", "b"]);
+  /**
+   * Info: (20260818 - Luphia) 游標條件要**兩個分支都在**（第六輪第 6 條）。
+   *
+   * 只比 `expiresAt` 會跳過同一毫秒的其他列（漏刪）；只比 `id` 則與排序不一致
+   * （可能重複或倒退）。這也是為什麼不用會膨脹的 `NOT IN`：
+   * 資料庫整體故障時那個清單會長到上萬個參數。
+   */
+  it("有游標時以 (expiresAt, id) 的全序往前推進", async () => {
+    const after = { expiresAt: new Date(1_700_000_000_000), id: "row-1" };
+
+    await faithMemoryRepo.listExpired(EXPIRES_AT, 500, after);
 
     const args = findMany.mock.calls[0][0] as {
       where: Record<string, unknown>;
     };
     expect(args.where).toEqual({
       expiresAt: { lte: EXPIRES_AT },
-      id: { notIn: ["a", "b"] },
+      OR: [
+        { expiresAt: { gt: after.expiresAt } },
+        { expiresAt: after.expiresAt, id: { gt: after.id } },
+      ],
     });
   });
 
-  // Info: (20260818 - Luphia) 刪除不需要看見內容，只取識別欄位與筆數
+  // Info: (20260818 - Luphia) 刪除不需要看見內容：只取識別欄位、筆數與游標需要的期限
   it("不讀密文", async () => {
     await faithMemoryRepo.listExpired(EXPIRES_AT, 500);
 
@@ -219,6 +231,7 @@ describe("listExpired", () => {
       userId: true,
       teamId: true,
       itemCount: true,
+      expiresAt: true,
     });
   });
 });

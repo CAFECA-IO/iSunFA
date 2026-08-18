@@ -15,8 +15,12 @@ import { resolveInviteEmailMatch } from "@/lib/team/invite_email_match";
  * 這次沒有——同一個 PR 裡兩種待遇。這支補上後者。
  *
  * 執行方式：
- *   npx tsx scripts/backfill_invite_email_match.ts          # 預演，只統計不寫入
- *   npx tsx scripts/backfill_invite_email_match.ts --commit # 實際更新
+ *   npx tsx scripts/backfill_invite_email_match.ts                 # 預演，只統計不寫入
+ *   npx tsx scripts/backfill_invite_email_match.ts --commit        # 實際更新
+ *   npx tsx scripts/backfill_invite_email_match.ts --team <teamId> # 只處理某一個團隊
+ *
+ * `--team` 供逐團隊處理（例如先在一個團隊上確認結果），也讓測試不必改寫整個
+ * 資料庫——e2e 只跑自己建的那一團（第六輪第 5 條）。
  *
  * **只往「誤報 → 相符」一個方向改**（`MISMATCHED` → `MATCHED`）：
  *
@@ -38,9 +42,14 @@ export interface IMatchBackfillSummary {
   unchanged: number;
 }
 
-export async function run(commit: boolean): Promise<IMatchBackfillSummary> {
+export async function run(
+  commit: boolean,
+  options: { teamId?: string } = {},
+): Promise<IMatchBackfillSummary> {
   const rows = await prisma.teamInvitation.findMany({
     where: {
+      // Info: (20260818 - Luphia) 未指定即全庫；指定時只處理那一個團隊
+      ...(options.teamId ? { teamId: options.teamId } : {}),
       acceptedEmailMatch: INVITE_EMAIL_MATCH.MISMATCHED,
       acceptedByUserId: { not: null },
       inviteeEmail: { not: null },
@@ -89,10 +98,19 @@ export async function run(commit: boolean): Promise<IMatchBackfillSummary> {
 
 async function main(): Promise<void> {
   const commit = process.argv.includes("--commit");
-  const summary = await run(commit);
+  const teamFlag = process.argv.indexOf("--team");
+  const teamId = teamFlag === -1 ? undefined : process.argv[teamFlag + 1];
+  if (teamFlag !== -1 && !teamId) {
+    console.error("[backfill_invite_email_match] --team 後面要接 teamId");
+    process.exitCode = 1;
+    return;
+  }
+
+  const summary = await run(commit, { teamId });
 
   console.log(
     `[backfill_invite_email_match] ${commit ? "COMMIT" : "DRY-RUN"} ` +
+      `${teamId ? `team=${teamId} ` : ""}` +
       `examined=${summary.examined} corrected=${summary.corrected} ` +
       `unchanged=${summary.unchanged}`,
   );

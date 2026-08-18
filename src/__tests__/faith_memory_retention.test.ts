@@ -40,6 +40,43 @@ jest.mock("@/repositories/team_subscription.repo", () => ({
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
 const NOW_MS = 1_760_000_000_000;
 
+/**
+ * Info: (20260818 - Luphia) 到期時間：`n` 越小代表**越早到期**，因此排序上越前面
+ * （守護行程是「最久到期優先」）。寫成減去 `(10 - n)` 天而不是減 `n` 天，
+ * 是為了讓測試裡的 `T(1), T(2), T(3)` 讀起來就是處理順序。
+ */
+const T = (n: number) => new Date(NOW_MS - 86_400_000 * (10 - n));
+
+interface IRow {
+  id: string;
+  userId: string;
+  teamId: string;
+  itemCount: number;
+  expiresAt: Date;
+}
+type Cursor = { expiresAt: Date; id: string } | undefined;
+
+/**
+ * Info: (20260818 - Luphia) 照實模擬 `listExpired` 的游標語意（checklist §1.8）：
+ * 以 `(expiresAt, id)` 排序、只回排在游標之後的列、照 limit 切。
+ * mock 少了任何一項，測到的就是一個不存在的資料庫。
+ */
+function nextPage(rows: IRow[], limit: number, after: Cursor): IRow[] {
+  const sorted = [...rows].sort(
+    (a, b) =>
+      a.expiresAt.getTime() - b.expiresAt.getTime() || a.id.localeCompare(b.id),
+  );
+  const remaining = after
+    ? sorted.filter(
+        (row) =>
+          row.expiresAt.getTime() > after.expiresAt.getTime() ||
+          (row.expiresAt.getTime() === after.expiresAt.getTime() &&
+            row.id > after.id),
+      )
+    : sorted;
+  return remaining.slice(0, limit);
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   asMock(faithMemoryRepo.listTeamRetentionState).mockResolvedValue([]);
@@ -190,126 +227,84 @@ describe("runFaithMemoryRetention", () => {
   });
 
   /**
-   * Info: (20260818 - Luphia) 毒資料只失敗一次，不會被反覆撈回來（第五輪 T-6 修訂）。
+   * Info: (20260818 - Luphia) 同一輪內每一列最多被看到一次（第五輪 T-6、第六輪第 6 條）。
    *
-   * 原本這一條測的是「整批都失敗就停」。加上排除機制（第五輪 C-3）之後，那個
-   * 停止條件不但多餘、而且有害：一批剛好全是毒資料就讓整輪結束，後面刪得掉的
-   * 列一列都輪不到（批次越小越容易踩到）。現在改測真正該成立的性質——
-   * 失敗過的列不會再出現在下一批。
+   * 先前靠「排除失敗過的 id」達成，而那個清單在資料庫整體故障時會長到上萬個
+   * 參數。改成游標之後，保證更強也更便宜：`(expiresAt, id)` 全序往前推進。
+   *
+   * mock 照實模擬游標語意（checklist §1.8）：回傳「排在游標之後」的列、
+   * 照 limit 切、刪掉的列不再出現。少了任何一項，這條測的就是一個
+   * 不存在的資料庫。
    */
   it("毒資料只失敗一次，不會被反覆撈回來", async () => {
-    const BAD = { id: "bad", userId: "u2", teamId: "t2", itemCount: 1 };
-    const OK = { id: "ok", userId: "u1", teamId: "t1", itemCount: 1 };
-    // Info: (20260818 - Luphia) 模擬真實資料庫：刪掉的列不會再被查到
-    let remaining = [OK, BAD];
+    const rows = [
+      { id: "a-ok", userId: "u1", teamId: "t1", itemCount: 1, expiresAt: T(1) },
+      {
+        id: "b-bad",
+        userId: "u2",
+        teamId: "t2",
+        itemCount: 1,
+        expiresAt: T(2),
+      },
+      { id: "c-ok", userId: "u3", teamId: "t3", itemCount: 1, expiresAt: T(3) },
+    ];
+    let remaining = [...rows];
     let fetches = 0;
 
-    /**
-     * Info: (20260818 - Luphia) mock 自己當上界：撈超過 3 次就丟錯。
-     * 壞掉的版本會安靜地一直重撈同一列、最後靠總量上界才停——測試會紅，
-     * 但要跑很久。讓多餘的那一次呼叫當場失敗，症狀就變成立即而明確的失敗。
-     */
     asMock(faithMemoryRepo.listExpired).mockImplementation(
-      async (_now: unknown, _limit: unknown, excludeIds: unknown) => {
+      async (_now: unknown, limit: unknown, after: unknown) => {
         fetches += 1;
-        if (fetches > 3) {
-          throw new Error("listExpired 被撈第四次：失敗的列沒有被排除");
+        if (fetches > 4) {
+          throw new Error("撈第五次：游標沒有往前推進");
         }
-        const excluded = (excludeIds as string[]) ?? [];
-        return remaining.filter((row) => !excluded.includes(row.id));
+        return nextPage(remaining, limit as number, after as Cursor);
       },
     );
     asMock(faithMemoryRepo.deleteWithLog).mockImplementation(
       async (params: unknown) => {
         const { id } = params as { id: string };
-        if (id === BAD.id) throw new Error("poison row");
+        if (id === "b-bad") throw new Error("poison row");
         remaining = remaining.filter((row) => row.id !== id);
         return undefined;
       },
     );
 
-    const result = await runFaithMemoryRetention(NOW_MS);
+    const result = await runFaithMemoryRetention(NOW_MS, { batchSize: 1 });
 
-    expect(result.deleted).toBe(1);
-    expect(result.failed).toBe(1);
-  });
-
-  /**
-   * Info: (20260818 - Luphia) 失敗不得吃掉刪除預算（第五輪 C-3）。
-   *
-   * 上界原本是 `deleted + failed`：499 筆毒資料時每批只刪得掉 1 筆，
-   * 20 批就把 10,000 的上界用完，而真正該刪的列一列都輪不到。
-   * 上界的用意是「單次執行不要無限延長」，那該由**做成的事**來計量。
-   */
-  it("失敗的列會被排除，且不佔用刪除預算", async () => {
-    const BAD = { id: "bad", userId: "u9", teamId: "t9", itemCount: 1 };
-    const OK = (n: number) => ({
-      id: `ok-${n}`,
-      userId: "u1",
-      teamId: "t1",
-      itemCount: 1,
-    });
-    let fetches = 0;
-
-    asMock(faithMemoryRepo.listExpired).mockImplementation(
-      async (_now: unknown, _limit: unknown, excludeIds: unknown) => {
-        fetches += 1;
-        const excluded = (excludeIds as string[]) ?? [];
-        // Info: (20260818 - Luphia) 毒資料只在還沒被排除時出現，模擬真實查詢
-        const poison = excluded.includes(BAD.id) ? [] : [BAD];
-        if (fetches === 1) return [...poison, OK(1)];
-        if (fetches === 2) return [...poison, OK(2)];
-        return [];
-      },
-    );
-    asMock(faithMemoryRepo.deleteWithLog).mockImplementation(
-      async (params: unknown) => {
-        if ((params as { id: string }).id === BAD.id) {
-          throw new Error("poison row");
-        }
-        return undefined;
-      },
-    );
-
-    const result = await runFaithMemoryRetention(NOW_MS);
-
-    // Info: (20260818 - Luphia) 毒資料只失敗一次，第二批不再撈到它
-    expect(result.failed).toBe(1);
     expect(result.deleted).toBe(2);
-
-    const secondCall = asMock(faithMemoryRepo.listExpired).mock.calls[1];
-    expect(secondCall[2]).toEqual([BAD.id]);
+    expect(result.failed).toBe(1);
   });
 
   /**
    * Info: (20260818 - Luphia) 上界只算**成功刪除**（第五輪 T-6）。
    *
-   * 這個性質先前沒有任何測試釘得住：常數是 10,000，測試撞不到它，於是把條件
-   * 改回 `deleted + failed` 全部照樣綠——而那正是 C-3 修掉的缺陷本身
-   * （499 筆毒資料時 20 批就把預算用完，真正該刪的一列都輪不到）。
-   *
-   * 現在把上界壓到 2、**每批只取一列**（`batchSize: 1`）——上界是在批與批之間
-   * 才檢查的，整批一次處理完的話兩種寫法的結果一樣，測不出差別。
-   * 逐列之後：失敗那列若算進預算，第三列就撈不到（deleted 只會是 1）。
+   * 常數是 10,000，測試撞不到，於是把條件改回 `deleted + failed` 全部照樣綠——
+   * 而那正是先前的缺陷（毒資料多時預算被失敗吃光，真正該刪的一列都輪不到）。
+   * 這裡把上界壓到 2 並逐列處理：失敗那列若算進預算，第三列就撈不到。
    */
   it("上界只算成功刪除，失敗不佔預算", async () => {
     const rows = [
-      { id: "bad", userId: "u9", teamId: "t9", itemCount: 1 },
-      { id: "ok-1", userId: "u1", teamId: "t1", itemCount: 1 },
-      { id: "ok-2", userId: "u2", teamId: "t2", itemCount: 1 },
-    ];
-    asMock(faithMemoryRepo.listExpired).mockImplementation(
-      async (_now: unknown, limit: unknown, excludeIds: unknown) => {
-        const excluded = (excludeIds as string[]) ?? [];
-        // Info: (20260818 - Luphia) 要照 limit 切，否則「每批一列」測不出批與批之間的判斷
-        return rows
-          .filter((row) => !excluded.includes(row.id))
-          .slice(0, limit as number);
+      {
+        id: "a-bad",
+        userId: "u9",
+        teamId: "t9",
+        itemCount: 1,
+        expiresAt: T(1),
       },
+      { id: "b-ok", userId: "u1", teamId: "t1", itemCount: 1, expiresAt: T(2) },
+      { id: "c-ok", userId: "u2", teamId: "t2", itemCount: 1, expiresAt: T(3) },
+    ];
+    let remaining = [...rows];
+
+    asMock(faithMemoryRepo.listExpired).mockImplementation(
+      async (_now: unknown, limit: unknown, after: unknown) =>
+        nextPage(remaining, limit as number, after as Cursor),
     );
     asMock(faithMemoryRepo.deleteWithLog).mockImplementation(
       async (params: unknown) => {
-        if ((params as { id: string }).id === "bad") throw new Error("poison");
+        const { id } = params as { id: string };
+        if (id === "a-bad") throw new Error("poison");
+        remaining = remaining.filter((row) => row.id !== id);
         return undefined;
       },
     );
@@ -319,7 +314,6 @@ describe("runFaithMemoryRetention", () => {
       batchSize: 1,
     });
 
-    // Info: (20260818 - Luphia) 兩筆都刪到了：失敗那筆沒有佔掉其中一格
     expect(result.deleted).toBe(2);
     expect(result.failed).toBe(1);
   });
@@ -327,16 +321,15 @@ describe("runFaithMemoryRetention", () => {
   /**
    * Info: (20260818 - Luphia) 失敗次數有自己的上界（第五輪 T-6）。
    *
-   * 排除機制讓候選集合每輪嚴格變小，因此迴圈本來就會結束；這個上界是另一層
-   * 保險：DB 整個掛掉時，不要在同一輪裡試上萬次、寫上萬筆 error log——
-   * 那既幫不上忙，也會把真正有用的日誌淹掉。
+   * 游標讓候選集合單調往前，因此迴圈本來就會結束；這個上界是另一層保險：
+   * DB 整個掛掉時不要在同一輪試上萬次、寫上萬筆 error log。
    *
-   * 這裡的 mock **不理會排除清單**（模擬「每次都查得到列、但每一列都刪不掉」），
+   * 這裡的 mock **不理會游標**（模擬「每次都查得到列、但每一列都刪不掉」），
    * 確認它停在上界。
    */
   it("失敗次數達到上界就停", async () => {
     asMock(faithMemoryRepo.listExpired).mockResolvedValue([
-      { id: "m1", userId: "u1", teamId: "t1", itemCount: 1 },
+      { id: "m1", userId: "u1", teamId: "t1", itemCount: 1, expiresAt: T(1) },
     ]);
     asMock(faithMemoryRepo.deleteWithLog).mockRejectedValue(
       new Error("db down"),

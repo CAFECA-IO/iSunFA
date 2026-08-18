@@ -35,19 +35,28 @@ function listE2eFiles(dir: string = E2E_DIR): string[] {
 }
 
 /**
- * Info: (20260818 - Luphia) 註解裡的字串不算數（第五輪 C-6）。
+ * Info: (20260818 - Luphia) 註解裡的字串不算數（第五輪 C-6、第六輪第 4 條）。
  *
  * 純文字比對會把「說明這道閘的註解」當成閘本身——那正是這一檔要防的
  * 「看起來有、其實沒有」。
+ *
+ * 第一版只丟掉「整行以 `*` 或 `//` 開頭」的行，於是這兩種寫法都還被當成有閘：
+ *
+ *     /* if (process.env.NODE_ENV === "production") { throw new Error("x"); } *\/
+ *     const a = 1; // if (process.env.NODE_ENV === "production") { throw new Error(
+ *
+ * 現在先移除區塊註解（含單行的 `/* … *\/`）與行尾 `//`，再比對。
+ * 這不是完整的 JS 剖析器——字串字面裡的 `//` 會被誤刪——但方向是**保守的**：
+ * 誤刪只會讓「有閘」被判成「沒閘」而變紅，不會讓沒閘的檔案過關。
  */
 function codeWithoutComments(file: string): string {
-  return readFileSync(file, "utf8")
-    .split("\n")
-    .filter((line) => {
-      const trimmed = line.trim();
-      return !trimmed.startsWith("*") && !trimmed.startsWith("//");
-    })
-    .join("\n");
+  return (
+    readFileSync(file, "utf8")
+      // Info: (20260818 - Luphia) 先吃掉區塊註解（跨行與單行都算）
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      // Info: (20260818 - Luphia) 再吃掉行尾註解
+      .replace(/\/\/.*$/gm, "")
+  );
 }
 
 describe("e2e 測試的正式機隔離", () => {

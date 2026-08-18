@@ -12,6 +12,12 @@ import { TeamRole } from "@/constants/team";
  *
  * 對真資料庫跑：重算要真的讀 `UserIdentity` 的已驗證信箱、真的套用
  * `canonicalizeEmailForKey`，而那正是 mock 掉之後就不再被證明的部分。
+ *
+ * Info: (20260818 - Luphia) **一律帶 `teamId`**（第六輪第 5 條）。
+ *
+ * 先前呼叫 `run(true)` 而那支查詢沒有範圍，於是 `npm run test:e2e` 一跑就會
+ * 實際改寫該資料庫**所有團隊**的稽核欄位——其他 e2e 的破壞力限於自建 fixture，
+ * 這支不是。腳本因此加了 `--team`（ops 也用得到：先在一個團隊上確認結果）。
  */
 
 // Info: (20260818 - Luphia) 🛑 正式機實體隔離（與同層 e2e 一致）
@@ -122,11 +128,13 @@ describe("既有 MISMATCHED 的重算（真資料庫）", () => {
    * 這是「預演 → 實際執行 → 冪等」的順序，拆開會讓後面幾條依賴前面留下的狀態。
    */
   it("預演不寫入 → commit 修正誤報 → 真正不符的不動 → 重跑冪等", async () => {
-    const dryRun = await run(false);
-    expect(dryRun.corrected).toBeGreaterThanOrEqual(1);
+    const dryRun = await run(false, { teamId });
+    // Info: (20260818 - Luphia) 限定範圍後數字是確定的：本團隊剛好一筆誤報
+    expect(dryRun.examined).toBe(2);
+    expect(dryRun.corrected).toBe(1);
     expect(await matchOf(plusInviteId)).toBe(INVITE_EMAIL_MATCH.MISMATCHED);
 
-    await run(true);
+    await run(true, { teamId });
     // Info: (20260818 - Luphia) 子地址誤報被修正
     expect(await matchOf(plusInviteId)).toBe(INVITE_EMAIL_MATCH.MATCHED);
     /**
@@ -136,7 +144,7 @@ describe("既有 MISMATCHED 的重算（真資料庫）", () => {
     expect(await matchOf(otherInviteId)).toBe(INVITE_EMAIL_MATCH.MISMATCHED);
 
     // Info: (20260818 - Luphia) 已修正的列不再進入查詢範圍
-    const rerun = await run(true);
+    const rerun = await run(true, { teamId });
     expect(
       rerun.corrected === 0 || (await matchOf(plusInviteId)) === "MATCHED",
     ).toBe(true);

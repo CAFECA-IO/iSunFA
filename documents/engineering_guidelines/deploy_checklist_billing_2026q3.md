@@ -163,7 +163,8 @@ npx tsx scripts/backfill_invite_email_match.ts --commit # 實際更新
 
 1. **舊格式的邀請連結會失效**。連結由 `/invite/<token>` 改為 `/invite#<token>`，且三支 API 改為 `POST /api/v1/invite/{resolve,accept,decline}`（token 置於請求本文）。測試環境若已寄出舊格式的信，那些連結會 404，需重新邀請。正式環境尚未上線此功能，無既有連結。
 2. **schema 新增 `team_invitation.revoked_by_user_id` / `revoked_at`**，`status` 新增 `REVOKED`。撤回改為改狀態，仍會清空 `token_hash` 與 `pending_key`（連結失效、唯一鍵讓出）。
-3. **限流新增 `INVITE_TOKEN` 桶**（20/分、200/日）。可用 `INVITE_RL_PER_MINUTE` / `INVITE_RL_PER_DAY` 覆寫，**不要寫進 `.env.example`**——那個檔案裡的每一個鍵都被視為必填，加進去會讓既有部署下次重啟掉進「尚未初始化」狀態（見 `env_example_contract.test.ts`）。
+3. **`TRUSTED_PROXY_DEPTH`（選填，預設 1）**：`x-forwarded-for` 由左往右附加，因此取的是**由右往左數第 N 段**，N = 我們自己前面有幾層代理。只有一層 nginx → 1（預設）；前面還有 CDN → 2。設錯（0／負數／非數字）會退回預設。**若哪天前面多一層代理而沒調這個值，限流會以上游的位址為維度**——所有流量看起來像同一個來源。
+4. **限流新增 `INVITE_TOKEN` 桶**（20/分、200/日）。可用 `INVITE_RL_PER_MINUTE` / `INVITE_RL_PER_DAY` 覆寫，**不要寫進 `.env.example`**——那個檔案裡的每一個鍵都被視為必填，加進去會讓既有部署下次重啟掉進「尚未初始化」狀態（見 `env_example_contract.test.ts`）。
 
 ⚠️ `APP_BASE_URL` 填錯不會有任何錯誤訊息，信會照寄，只是連結點不開。上線後請**實際寄一封給自己**，點開確認落在 `/invite#<token>` 而不是 404（2026-08-18 起 token 放在 fragment，見邀請設計書 §5.2）。
 

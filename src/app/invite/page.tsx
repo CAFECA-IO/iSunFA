@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/auth_context";
 import AuthModal from "@/components/auth/auth_modal";
 import {
   forgetInviteToken,
+  isInviteDefinitelyInvalid,
   rememberInviteToken,
   resolveInviteToken,
 } from "@/lib/team/invite_token_storage";
@@ -45,6 +46,14 @@ type PageStatus =
   | "ACCEPTED"
   | "DECLINING"
   | "DECLINED"
+  /**
+   * Info: (20260818 - Luphia) 暫時性失敗，與「確定失效」分開（第六輪第 3 條）。
+   *
+   * 429（多人共用同一個對外 IP、該分鐘配額用完）、5xx、網路瞬斷都不代表這封
+   * 邀請沒用了。混成 `INVALID` 的後果是備援被清掉、網址也已經沒有 token，
+   * 一封仍然有效的邀請就此永久失效。
+   */
+  | "RETRYABLE"
   | "INVALID";
 
 interface IInviteView {
@@ -64,6 +73,8 @@ export default function InvitePage() {
   const [invite, setInvite] = useState<IInviteView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  // Info: (20260818 - Luphia) 重試的觸發器：改變它就讓載入的 effect 再跑一次
+  const [retryCount, setRetryCount] = useState(0);
 
   /**
    * Info: (20260818 - Luphia) 從 fragment 取出 token，抹掉網址上的 hash，
@@ -104,6 +115,16 @@ export default function InvitePage() {
   }, []);
 
   /**
+   * Info: (20260818 - Luphia) 重試：狀態回到 LOADING，讓上面那支 effect 再跑一次。
+   * token 仍在（備援沒有被清掉），因此不需要回信箱重點連結。
+   */
+  const retry = useCallback(() => {
+    setError(null);
+    setStatus("LOADING");
+    setRetryCount((count) => count + 1);
+  }, []);
+
+  /**
    * Info: (20260818 - Luphia) 連結失效時也要清掉備援（第五輪低）。
    *
    * 原本只在接受／拒絕成功時清除，於是一封失效的邀請會把 token 留在
@@ -137,11 +158,18 @@ export default function InvitePage() {
         if (json.success && json.payload) {
           setInvite(json.payload);
           setStatus("READY");
-        } else {
-          setStatus("INVALID");
+          return;
         }
+        /**
+         * Info: (20260818 - Luphia) 只有後端明確說「這封邀請不存在／已失效」
+         * 才算確定（第六輪第 3 條）；其餘都留給使用者重試。
+         */
+        setStatus(
+          isInviteDefinitelyInvalid(json.errorCode) ? "INVALID" : "RETRYABLE",
+        );
       } catch {
-        if (!cancelled) setStatus("INVALID");
+        // Info: (20260818 - Luphia) 網路層的失敗永遠是暫時的
+        if (!cancelled) setStatus("RETRYABLE");
       }
     };
 
@@ -149,7 +177,7 @@ export default function InvitePage() {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [token, retryCount]);
 
   const accept = useCallback(async () => {
     // Info: (20260818 - Luphia) 沒有 token 就沒有可接受的邀請（hash 被清掉或直接開網址）
@@ -239,6 +267,25 @@ export default function InvitePage() {
           <>
             <Loader2 className="mx-auto mb-4 h-10 w-10 animate-spin text-orange-500" />
             <p className="text-gray-600">{t("invite_page.loading")}</p>
+          </>
+        )}
+
+        {status === "RETRYABLE" && (
+          <>
+            <AlertCircle className="mx-auto mb-4 h-10 w-10 text-amber-500" />
+            <h1 className="mb-2 text-lg font-semibold text-gray-900">
+              {t("invite_page.retryable_title")}
+            </h1>
+            <p className="mb-6 text-sm text-gray-600">
+              {t("invite_page.retryable_description")}
+            </p>
+            <button
+              type="button"
+              onClick={retry}
+              className="inline-flex w-full items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-orange-700"
+            >
+              {t("invite_page.retry")}
+            </button>
           </>
         )}
 

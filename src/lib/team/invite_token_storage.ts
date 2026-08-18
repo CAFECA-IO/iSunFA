@@ -72,3 +72,27 @@ export function rememberInviteToken(
 export function forgetInviteToken(storage: ITokenStorage): void {
   storage.removeItem(INVITE_TOKEN_STORAGE_KEY);
 }
+
+/**
+ * Info: (20260818 - Luphia) 這個失敗是「連結真的失效」還是「暫時性」（第六輪第 3 條）。
+ *
+ * 落地頁先前把**任何**不成功都判成連結失效，並清掉 sessionStorage 裡唯一那份
+ * token 備份——而網址上的 hash 早已被抹掉。於是 429（多人共用同一個對外 IP、
+ * 該分鐘配額用完）、5xx、網路瞬斷都會讓一封仍然有效的邀請**永久失效**，
+ * 連 F5 都救不回來，只能回信箱重點連結。
+ *
+ * 只有後端明確說「這封邀請不存在／已失效」才算確定：其餘一律當可重試。
+ * 判斷依錯誤碼而不是 HTTP 狀態——限流那條目前回的狀態碼在本專案有已知落差
+ * （`api_http_status_dual_mapping`），而錯誤碼是穩定的契約。
+ */
+export function isInviteDefinitelyInvalid(errorCode: unknown): boolean {
+  return errorCode === INVITE_NOT_FOUND_ERROR_CODE;
+}
+
+/**
+ * Info: (20260818 - Luphia) 與 `API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO.code` 同一個值。
+ * 這個模組刻意不從 `error_dictionary` 匯入——它是落地頁（client component）的
+ * 相依，而那份字典會把整個 server 端錯誤表帶進 client bundle。
+ * 因此在此重述並由 `invite_token_storage.test.ts` 釘住兩者一致。
+ */
+export const INVITE_NOT_FOUND_ERROR_CODE = "NO000003";

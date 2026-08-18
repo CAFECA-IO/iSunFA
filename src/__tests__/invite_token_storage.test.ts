@@ -3,11 +3,14 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import {
   forgetInviteToken,
+  INVITE_NOT_FOUND_ERROR_CODE,
   INVITE_TOKEN_STORAGE_KEY,
+  isInviteDefinitelyInvalid,
   rememberInviteToken,
   resolveInviteToken,
   type ITokenStorage,
 } from "@/lib/team/invite_token_storage";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 
 /**
  * Info: (20260818 - Luphia) 落地頁取得 token 的規則（PR #6652 第五輪 T-9）。
@@ -121,6 +124,42 @@ describe("rememberInviteToken / forgetInviteToken", () => {
 });
 
 /**
+ * Info: (20260818 - Luphia) 暫時性失敗不得毀掉連結（第六輪第 3 條）。
+ *
+ * 落地頁先前把**任何**不成功都判成連結失效，並清掉唯一那份 token 備援
+ * （網址上的 hash 早已抹掉）。於是 429（多人共用同一個對外 IP、該分鐘配額用完）、
+ * 5xx、網路瞬斷都會讓一封**仍然有效**的邀請永久失效，連 F5 都救不回來。
+ */
+describe("isInviteDefinitelyInvalid", () => {
+  it("只有「邀請不存在／已失效」才算確定", () => {
+    expect(isInviteDefinitelyInvalid(INVITE_NOT_FOUND_ERROR_CODE)).toBe(true);
+  });
+
+  it("限流、伺服器錯誤、沒有錯誤碼都算暫時性", () => {
+    for (const code of [
+      API_ERRORS.IS_RATE_LIMITED.code,
+      API_ERRORS.IS_UNKNOWN.code,
+      undefined,
+      null,
+      "",
+    ]) {
+      expect(isInviteDefinitelyInvalid(code)).toBe(false);
+    }
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 這個模組刻意不從 `error_dictionary` 匯入那個碼——
+   * 它是 client component 的相依，而整份錯誤字典不該進 client bundle。
+   * 代價是同一個值寫在兩處，因此這一條把它們釘在一起。
+   */
+  it("重述的錯誤碼與字典一致", () => {
+    expect(INVITE_NOT_FOUND_ERROR_CODE).toBe(
+      API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO.code,
+    );
+  });
+});
+
+/**
  * Info: (20260818 - Luphia) 頁面要真的用這些函式（第五輪 T-9）。
  *
  * 規則有測試了，但頁面仍可能繞過它們自己讀 `sessionStorage`——那就回到原點。
@@ -141,5 +180,16 @@ describe("落地頁只透過這個模組取得 token", () => {
     expect(page).toMatch(/rememberInviteToken\(/);
     expect(page).toMatch(/forgetInviteToken\(/);
     expect(page).not.toMatch(/sessionStorage\.(setItem|removeItem|getItem)/);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 失敗的分類要走 `isInviteDefinitelyInvalid`（第六輪第 3 條）。
+   * 頁面若自己判斷（例如看 HTTP 狀態），就又回到「暫時性失敗毀掉連結」那條路。
+   */
+  it("失敗分類走這個模組，且有可重試的狀態", () => {
+    expect(page).toMatch(/isInviteDefinitelyInvalid\(/);
+    expect(page).toMatch(/"RETRYABLE"/);
+    // Info: (20260818 - Luphia) 清備援只發生在 INVALID，不在 RETRYABLE
+    expect(page).toMatch(/status === "INVALID"[\s\S]{0,120}forgetInviteToken/);
   });
 });

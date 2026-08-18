@@ -135,13 +135,16 @@ export async function runFaithMemoryRetention(
   let deleted = 0;
   let failed = 0;
   /**
-   * Info: (20260818 - Luphia) 本輪失敗過的列（第五輪 C-3）。
+   * Info: (20260818 - Luphia) 游標：本輪已經看過的最後一列（第六輪第 6 條）。
    *
-   * 失敗不改 `expiresAt`，因此下一批會再撈到同一批毒資料。把它們排除之後，
-   * 同一輪內每一列最多失敗一次，其餘到期的列才輪得到。下一輪（6 小時後）
-   * 會重新嘗試——這支天然可重入，該修的資料修好之前不會被遺忘。
+   * 先前是把失敗過的 id 收成清單、以 `NOT IN` 排除。那擋住了「毒資料被一再撈
+   * 回來」，但清單會長大——資料庫整體故障時每批全失敗，它會長到失敗上界
+   * （預設 10,000），之後每次查詢都帶一萬個參數。
+   *
+   * 游標沒有這個成長，而且提供更強的保證：同一輪內每一列最多被看到一次
+   * （不只是失敗的那些）。下一輪從頭開始，因此失敗的列不會被遺忘。
    */
-  const failedIds: string[] = [];
+  let cursor: { expiresAt: Date; id: string } | undefined;
 
   /**
    * Info: (20260818 - Luphia) 上界只算**成功刪除**的數量（第五輪 C-3）。
@@ -149,27 +152,23 @@ export async function runFaithMemoryRetention(
    * 原本是 `deleted + failed`，於是失敗會吃掉刪除預算：499 筆毒資料時，
    * 20 批就把 10,000 的上界用光，而本輪真正刪掉的只有約 20 列。
    * 上界的用意是「單次執行不要無限延長」，那應該由做成的事來計量。
-   * 失敗本身另有兩道界線：排除清單（每列最多失敗一次）與整批失敗即停。
+   * 失敗本身另有兩道界線：游標（每列最多被看到一次）與失敗次數上界。
    */
   while (deleted < maxDeletes && failed < maxFailures) {
     const expired = await faithMemoryRepo.listExpired(
       new Date(nowMs),
       batchSize,
-      failedIds,
+      cursor,
     );
     if (expired.length === 0) break;
 
     /**
-     * Info: (20260818 - Luphia) 失敗數要**逐批**計（第四輪 B-4）。
-     *
-     * 原本停止條件比對的是累計 `failed`：500 筆裡 2 筆毒資料時
-     * `500 === 2` 不成立，於是再撈一次——而 `listExpired` 的條件沒有改變、
-     * 也沒有 `orderBy`，拿回來的就是同樣那 2 列。此後 `failed` 每輪 +2 而
-     * 本批長度固定 2，兩者永遠不相等，一路轉到 `MAX_DELETES_PER_RUN`：
-     * 約 4,750 次無用迴圈、約 9,500 筆 error log，而失敗吃掉刪除預算，
-     * 本輪其餘到期的列一列都刪不到。
+     * Info: (20260818 - Luphia) 游標推到本批最後一列（不論成功或失敗）。
+     * 排序是 `(expiresAt, id)` 的全序，因此下一批必定是嚴格更後面的列——
+     * 迴圈因此單調前進，不需要任何「整批失敗就停」的特例。
      */
-    let batchFailed = 0;
+    const last = expired[expired.length - 1];
+    cursor = { expiresAt: last.expiresAt as Date, id: last.id };
 
     for (const row of expired) {
       try {
@@ -188,8 +187,6 @@ export async function runFaithMemoryRetention(
          * （`expiresAt` 還在，這支天然可重入）。
          */
         failed += 1;
-        batchFailed += 1;
-        failedIds.push(row.id);
         logger.error("faith memory deletion failed", {
           userId: row.userId,
           teamId: row.teamId,
@@ -197,19 +194,6 @@ export async function runFaithMemoryRetention(
         });
       }
     }
-
-    /**
-     * Info: (20260818 - Luphia) 這裡**不再**因為「整批都失敗」而停（第五輪 T-6）。
-     *
-     * 那道 break 是排除機制（`failedIds`）之前的產物：當時失敗的列會被一再撈回來，
-     * 不停就會無限迴圈。加上排除之後它變成有害的——一批剛好全是毒資料就讓整輪
-     * 結束，而後面還有大量刪得掉的列。批次越小越容易踩到（極端情況：每批一列，
-     * 第一列是毒資料就整輪什麼都不刪）。
-     *
-     * 現在的終止條件有三個，每一個都是單調的：候選集合因排除而嚴格變小、
-     * 成功刪除有上界、失敗次數有上界。
-     */
-    void batchFailed;
   }
 
   if (scheduled || cancelled || deleted || failed) {
