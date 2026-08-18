@@ -57,6 +57,12 @@ export const BASELINE_TIERS: ReadonlyArray<{
       "引用但不存在的表",
       "丟表且紙上也沒有",
       "log_丟表",
+      /**
+       * Info: (20260818 - Emily) 整段的表被丟(`validateSourceTables` 的數量上限那條路)。
+       * 與 `log_丟表` 同一層:非空就是一整段的表不見了。
+       * 它沒有 `tableNo` 可回溯,所以分開記 —— 理由見 uat 腳本裡那段註解。
+       */
+      "log_丟整批表",
       // Info: (20260818 - Emily) 完整性:33 節與目錄不是統計量,是齊或不齊
       "大綱節數",
       "未出現的節",
@@ -172,6 +178,87 @@ export const classifyKey = (key: string): BaselineTier | undefined =>
  *
  * 數字寫在這裡而不是文件裡,因為文件不會在超標時變紅。
  */
+/**
+ * Info: (20260818 - Emily) 活動數據 0 筆時的層級 —— **三種 0 不是同一件事。**
+ *
+ * ## 為什麼要降級
+ *
+ * B1（活動數據進帳本）**於 2026-08-17 從上線閘門移除**：
+ * `data/issue_drafts/open/_INDEX.md` 的 P0 清單只有 `44`／`47`／`48`／`42`，
+ * 而 `open/46`（活動數據可追溯鏈）被列在 **P1**，理由是「高興昌沒提供，是下一份客戶的需求」——
+ * 那份報告的 `表3.4` 是活動數據的**種類**而不是**數量**，所以抽不到數量是**正確行為**。
+ *
+ * 但這支腳本仍把它記成 `fail`。08-18 實跑兩趟因此各出現一個 ✗，exit 1 ——
+ * **判準留在原地，而它要守的東西搬走了。** 一支會為了已撤銷的判準而紅的驗收腳本，
+ * 下一次真的紅的時候沒有人會相信它。
+ *
+ * ## 為什麼不是整條降成 warn
+ *
+ * 三種 0 的成因完全不同，只有第三種是「來源沒有」：
+ *
+ * | 情形 | 意思 | 層級 |
+ * | --- | --- | --- |
+ * | `asked === 0` | 沒有任何呼叫帶 `withActivities:true` | **fail** —— 前端旗標沒送，管線斷了 |
+ * | `hasKey === 0` | 有要求，但模型每次都不回 `activities` 這個鍵 | **fail** —— prompt / required 壞了 |
+ * | 其餘 | 模型有回這個鍵，內容是空陣列 | **warn** —— 08-17 決議的那一種：來源沒有數量 |
+ *
+ * 這個切法順便提供了退化防線：哪天它從「回了空陣列」掉成「根本不回這個鍵」，
+ * 層級會自己從 warn 變回 fail —— **不需要另外加一條判準去守它。**
+ *
+ * 08-18 兩趟實測都是第三種（asked 2、hasKey 1、accepted 0）。
+ */
+export const activityDataLevel = (counts: {
+  readonly asked: number;
+  readonly hasKey: number;
+  readonly accepted: number;
+}): "pass" | "warn" | "fail" => {
+  if (counts.accepted > 0) return "pass";
+  if (counts.asked === 0) return "fail";
+  if (counts.hasKey === 0) return "fail";
+  return "warn";
+};
+
+/**
+ * Info: (20260818 - Emily) log 格式正規化 —— **這是一個會靜默說謊的陷阱。**
+ *
+ * 驗收腳本的判準寫的是終端那種格式:
+ *
+ * ```
+ * [INFO] [ReportImportService] source table dropped (…) {"tableNo":"表2.1",…}
+ * ```
+ *
+ * 而 Next.js 16 另外寫一份 `.next/dev/logs/next-development.log`,格式是 JSON-lines,
+ * 訊息在 `message` 欄位裡,**裡面的引號是轉義的**:
+ *
+ * ```
+ * {"timestamp":"00:11:09","level":"INFO","message":"[INFO] … {\"tableNo\":\"表2.1\"}"}
+ * ```
+ *
+ * 於是 `"tableNo":` 這種帶引號的正規表示式**一條都不會中**（實測 5 條全部 0 次）。
+ * 而後果不是報錯,是 `log_丟表 = []` → 回報「log:原文表格被丟 0 張」→ ✓。
+ * **把 `--log` 指到 Next 那份檔案,會得到一份看起來完美的驗收報告。**
+ *
+ * 08-18 那兩趟就是這樣差點被誤讀的（那份 log 是唯一存在的紀錄,因為當時沒有 tee）。
+ * 所以這裡自動辨識:能解析成帶 `message` 的 JSON 就取出 `message`,否則原樣返回。
+ * 兩種格式都吃,而且不必要求任何人記得先轉檔 —— **要求人記得的護欄等於沒有護欄。**
+ */
+export const normalizeUatLog = (raw: string): string =>
+  raw
+    .split("\n")
+    .map((line) => {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("{")) return line;
+      try {
+        const parsed: unknown = JSON.parse(trimmed);
+        const message = (parsed as { message?: unknown }).message;
+        return typeof message === "string" ? message : line;
+      } catch {
+        // Info: (20260818 - Emily) 不是 JSON 就當終端格式,原樣交出去(不猜、不丟)
+        return line;
+      }
+    })
+    .join("\n");
+
 /**
  * Info: (20260818 - Emily) 沒量到閾值時該報 warn 還是 fail。
  *

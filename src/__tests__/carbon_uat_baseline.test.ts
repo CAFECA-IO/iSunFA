@@ -19,7 +19,9 @@ import path from "node:path";
 import {
   BASELINE_THRESHOLD_LIMITS,
   BASELINE_TIERS,
+  activityDataLevel,
   classifyKey,
+  normalizeUatLog,
   unmeasuredThresholdLevel,
 } from "@/constants/carbon_uat_baseline";
 
@@ -224,5 +226,153 @@ describe("量不到 B4 閾值時的層級", () => {
     expect(
       unmeasuredThresholdLevel({ hasBaseline: true, hasLog: false }),
     ).toEqual(unmeasuredThresholdLevel({ hasBaseline: true, hasLog: true }));
+  });
+});
+
+/**
+ * Info: (20260818 - Emily) 每一條「丟掉資料」的 log,驗收腳本都必須讀得到。
+ *
+ * ## 為什麼有這一組
+ *
+ * 08-18 發現 `report_import.service.ts` 有**兩條**丟表的 log,而驗收腳本只解析一條:
+ *
+ * | 行 | 訊息 | 有 tableNo | 腳本原本 |
+ * | --- | --- | --- | --- |
+ * | 1057 | `source table dropped`（單數） | ✅ | 讀得到 |
+ * | 1128 | `source tables dropped`（複數,數量上限） | ❌ | **讀不到** |
+ *
+ * 於是複數那條一旦觸發,一整段的表會消失,而腳本回報「log:原文表格被丟 0 張」。
+ * **一個永遠不會紅的 fail 級判準,比沒有那個判準更糟** —— 它會讓人以為查過了。
+ *
+ * ## 為什麼不是列一張清單
+ *
+ * 列清單就是這一週失效四次的那個做法（`44` 說 8 條、`48` 漏了排序、B2 說三端、
+ * 這次丟表說一條）。所以這一組**從服務的原始碼抽出所有「dropped」的 log 訊息**,
+ * 再要求每一條都出現在驗收腳本裡。日後有人新增第三條丟表的 log,這裡會紅。
+ *
+ * 它驗的是「腳本有沒有在看」,不是「正規表示式寫對了」—— 後者只有真的丟表的那一趟能證明。
+ * 但「有沒有在看」正是這次漏掉的那一層。
+ */
+describe("服務端每一條丟資料的 log,驗收腳本都在看", () => {
+  const IMPORT_SERVICE = path.join(
+    process.cwd(),
+    "src/services/report_import.service.ts",
+  );
+
+  it("report_import.service 的每一條 dropped log 都被驗收腳本解析", () => {
+    const service = fs.readFileSync(IMPORT_SERVICE, "utf-8");
+    const uat = fs.readFileSync(UAT_SCRIPT, "utf-8");
+
+    /**
+     * Info: (20260818 - Emily) 抓 `logger.warn("…dropped…"` 的訊息字串。
+     * 只看 `dropped` 這一類:它們的共同語意是「原文有、產出沒有」,
+     * 而那正是這支驗收腳本存在的理由(紙上看不出來的靜默失敗)。
+     */
+    const messages = [
+      ...service.matchAll(
+        /logger\.(?:warn|error|info)\(\s*"([^"]*dropped[^"]*)"/g,
+      ),
+    ].map((match) => match[1]);
+
+    // Info: (20260818 - Emily) 抽取器自己要先抓到東西,否則這條測試會空過
+    expect(messages.length).toBeGreaterThanOrEqual(2);
+
+    const unwatched = messages.filter((message) => {
+      // Info: (20260818 - Emily) 腳本比對的是去掉 [ReportImportService] 前綴的訊息本體
+      const core = message.replace(/^\[[^\]]+\]\s*/, "");
+      return !uat.includes(core);
+    });
+    expect(unwatched).toEqual([]);
+  });
+});
+
+/**
+ * Info: (20260818 - Emily) log 格式正規化（會靜默說謊的那個陷阱)。
+ *
+ * `--log` 指到 Next.js 16 的 `.next/dev/logs/next-development.log` 時,
+ * 帶引號的判準一條都不會中 —— 而後果不是報錯,是 `log_丟表 = []` 然後回報 ✓。
+ * 實測那份 log 上 `"inputTokens":`、`"fellBack":true`、`"tableNo":` 全部 0 次。
+ */
+describe("log 格式正規化", () => {
+  /** Info: (20260818 - Emily) 取自 08-18 那份 Next dev log 的真實一行(縮短) */
+  const NEXT_JSON_LINE = JSON.stringify({
+    timestamp: "00:11:09.666",
+    source: "Server",
+    level: "INFO",
+    message:
+      '[INFO] [ReportImportService] source table dropped (service=X) {"tableNo":"表2.1","reason":"not_a_table"}',
+  });
+
+  it("JSON-lines 取出 message,轉義的引號還原成判準讀得到的樣子", () => {
+    const out = normalizeUatLog(NEXT_JSON_LINE);
+
+    expect(out).toContain('"tableNo":"表2.1"');
+    expect(out).not.toContain("timestamp");
+    // Info: (20260818 - Emily) 這正是原本讀不到的原因:轉義後的 \" 不符合判準的 "
+    expect(NEXT_JSON_LINE).not.toContain('"tableNo":"表2.1"');
+  });
+
+  it("終端格式原樣通過(不能把本來讀得到的弄壞)", () => {
+    const plain =
+      '[INFO] [ReportImportService] source table dropped {"tableNo":"表3.8"}';
+
+    expect(normalizeUatLog(plain)).toBe(plain);
+  });
+
+  it("壞掉的 JSON 與沒有 message 欄位的 JSON 都原樣保留(不猜、不丟)", () => {
+    expect(normalizeUatLog('{"broken":')).toBe('{"broken":');
+    expect(normalizeUatLog('{"level":"INFO"}')).toBe('{"level":"INFO"}');
+  });
+
+  it("多行混合格式逐行處理,行數不變", () => {
+    const mixed = [NEXT_JSON_LINE, "plain line", '{"nope":1}'].join("\n");
+    const out = normalizeUatLog(mixed);
+
+    expect(out.split("\n")).toHaveLength(3);
+    expect(out.split("\n")[1]).toBe("plain line");
+  });
+});
+
+/**
+ * Info: (20260818 - Emily) 活動數據 0 筆的三種成因,層級不同。
+ *
+ * B1 於 08-17 從閘門移除,而這支腳本原本仍記 fail —— 08-18 兩趟因此各出現一個 ✗、exit 1。
+ * **判準留在原地而它要守的東西搬走了**,而一支會為已撤銷判準而紅的驗收腳本,
+ * 下一次真的紅的時候沒有人會相信它。
+ *
+ * 但只降「模型有回鍵但空」那一種:另外兩種是管線斷了,不是來源沒有。
+ */
+describe("活動數據 0 筆的層級", () => {
+  it("有採用到筆數就是 pass", () => {
+    expect(activityDataLevel({ asked: 2, hasKey: 2, accepted: 5 })).toBe(
+      "pass",
+    );
+  });
+
+  /**
+   * Info: (20260818 - Emily) 08-18 兩趟的實際數字:14 次呼叫、2 次帶 withActivities、
+   * 其中 1 次 hasKey:true 而 rawSample 是 "[]"。這是「來源沒有數量」那一種。
+   */
+  it("模型有回鍵但內容空 → warn（08-17 決議:來源沒有數量）", () => {
+    expect(activityDataLevel({ asked: 2, hasKey: 1, accepted: 0 })).toBe(
+      "warn",
+    );
+  });
+
+  /**
+   * Info: (20260818 - Emily) 這兩條是降級之後的退化防線。
+   * 哪天它從「回了空陣列」掉成「根本不回這個鍵」或「旗標沒送」,
+   * 層級會自己變回 fail —— 不需要另外加判準去守它。
+   */
+  it("沒有任何呼叫帶 withActivities → fail（前端旗標,管線斷了）", () => {
+    expect(activityDataLevel({ asked: 0, hasKey: 0, accepted: 0 })).toBe(
+      "fail",
+    );
+  });
+
+  it("有要求但模型從不回這個鍵 → fail（prompt / required 壞了）", () => {
+    expect(activityDataLevel({ asked: 2, hasKey: 0, accepted: 0 })).toBe(
+      "fail",
+    );
   });
 });

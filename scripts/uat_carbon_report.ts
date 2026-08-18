@@ -20,7 +20,9 @@ import {
 } from "@/constants/carbon_report_diagrams";
 import {
   BASELINE_THRESHOLD_LIMITS,
+  activityDataLevel,
   classifyKey,
+  normalizeUatLog,
   unmeasuredThresholdLevel,
 } from "@/constants/carbon_uat_baseline";
 import {
@@ -609,7 +611,14 @@ const main = async (): Promise<void> => {
 
   const logPath = arg("--log");
   // Info: (20260817 - Emily) 把紙上的文字一起交給 log 側 —— 交叉比對需要兩邊
-  if (logPath) checkLog(fs.readFileSync(logPath, "utf-8"), text);
+  /**
+   * Info: (20260818 - Emily) 先正規化格式。Next.js 16 的 `.next/dev/logs/next-development.log`
+   * 是 JSON-lines 且引號轉義,直接餵進來會讓每一條帶引號的判準靜默回 0
+   * （理由見 `normalizeUatLog`）。
+   */
+  if (logPath) {
+    checkLog(normalizeUatLog(fs.readFileSync(logPath, "utf-8")), text);
+  }
 
   report();
 };
@@ -773,6 +782,42 @@ const checkLog = (log: string, text?: string): void => {
   }
 
   /**
+   * Info: (20260818 - Emily) **整批被丟**的那條路徑,原本這支腳本讀不到。
+   *
+   * `report_import.service.ts` 有兩條丟表的 log:
+   *
+   * | 行 | 訊息 | 內容 | 這支腳本 |
+   * | --- | --- | --- | --- |
+   * | 1057 | `source table dropped`（**單數**） | 逐張被拒,有 `tableNo` | ✅ 上面那段 |
+   * | 1128 | `source table`**s**` dropped`（**複數**） | `validateSourceTables` 的數量上限,整段的表一起丟,**沒有 tableNo** | ❌ 讀不到 |
+   *
+   * 複數那條的註解寫著「逐張過關後仍要驗數量上限(單張檢查看不到總數)」——
+   * 也就是說它是**每張表自己都合格、但總數過多**時才會走的路。
+   * 那條路一旦觸發,一整段的表會消失,而 `log_丟表` 仍然是 `[]`,
+   * 這支腳本會回報「log:原文表格被丟 0 張」。
+   *
+   * **一個永遠不會紅的 fail 級判準,比沒有那個判準更糟** —— 它會讓人以為查過了。
+   * 08-18 兩趟實測兩條都沒出現（真的 0 張),所以那兩趟的結論不受影響;
+   * 但下一次若走了複數那條路,舊版腳本會靜默放行。
+   *
+   * 沒有 `tableNo` 就無法跟紙上的表號交叉比對,所以另記一個鍵而不是併進 `log_丟表` ——
+   * 兩者的可追溯程度不同,混在一起會讓「知道少了哪幾張」與「只知道少了一批」看起來一樣。
+   */
+  const droppedBatches = [
+    ...log.matchAll(
+      /source tables dropped.*?"paragraphId":"([^"]+)".*?"count":(\d+)/g,
+    ),
+  ].map((match) => `${match[1]}(${match[2]} 張)`);
+  snapshot.log_丟整批表 = droppedBatches;
+  record(
+    droppedBatches.length === 0 ? "pass" : "fail",
+    "log:整段的表被丟",
+    droppedBatches.length === 0
+      ? "0 段"
+      : `${droppedBatches.length} 段:${droppedBatches.join("、")} —— 每張都合格但總數超過上限,無 tableNo 可回溯`,
+  );
+
+  /**
    * Info: (20260817 - Emily) 丟表要跟紙上交叉比對 —— 這是 08-17 抓到的驗收破洞。
    *
    * 那一趟 log 說丟了 表2.1（三次）與 表2.2，而 PDF 側的
@@ -925,14 +970,26 @@ const checkActivities = (log: string): void => {
   }
   /**
    * Info: (20260817 - Emily) 0 的時候要指名是哪一種 0,否則這條 ✗ 沒有行動價值。
+   *
+   * Info: (20260818 - Emily) 層級改由 `activityDataLevel` 決定 —— **三種 0 不是同一件事**,
+   * 而 B1 已於 08-17 從閘門移除(見那個函式的註解)。
+   * 只有「模型有回鍵但內容是空的」降成 warn;前兩種是管線斷了,仍然 fail。
    */
   const cause =
     asked.length === 0
       ? "沒有任何一次呼叫帶 withActivities:true(前端旗標問題,不是 prompt)"
       : hasKey.length === 0
         ? `${asked.length} 次有要求,但模型每次都沒回 activities 這個鍵(prompt / required 問題)`
-        : `模型有回這個鍵但內容是空的(看 rawSample)`;
-  record("fail", "log:活動數據", `0 筆 —— ${cause}`);
+        : `模型有回這個鍵但內容是空的(rawSample "[]") —— 高興昌的表3.4 是活動數據的種類不是數量,見 open/46(P1,已於 08-17 移出上線閘門)`;
+  record(
+    activityDataLevel({
+      asked: asked.length,
+      hasKey: hasKey.length,
+      accepted,
+    }),
+    "log:活動數據",
+    `0 筆 —— ${cause}`,
+  );
 };
 
 /**
