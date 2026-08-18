@@ -123,6 +123,16 @@ const rateLimiter = new SlidingWindowRateLimiter();
  * 與 carbon 無關（維度是身分 × bucket），而名字裡的 `Carbon` 會讓下一個要為新模組
  * 加限流的人以為得再寫一支。**呼叫時機的規則沒變**：DeWT 驗證之後、業務邏輯之前，
  * 否則「失敗的嘗試也計入」不會成立（見 `ATTENDANCE_PUNCH` 的說明）。
+ *
+ * Info: (20260818 - Luphia) 舊名的別名已於合併時移除（PR #6652 第五輪 B-2）。
+ *
+ * develop 保留 `export const enforceCarbonRateLimit = enforceRateLimit;` 並附註
+ * 「ToDo：把那 16 支改呼叫 `enforceRateLimit` 後移除本別名」，而 PR #6652 已經
+ * 把那 16 支全部改完（18 個檔案，含 `rate_limiter.test.ts`）。因此合併時讓別名
+ * 消失，正是完成那條 ToDo，而不是撤銷它——合併後全庫已無任何呼叫端使用舊名。
+ *
+ * `identity` 是限流維度：登入端點傳 address，未登入端點傳來源 IP
+ * （見 `resolveClientIp`——那個值用戶端可偽造，因此只作為限流維度，不作授權）。
  */
 export const enforceRateLimit = (
   identity: string,
@@ -140,13 +150,3 @@ export const enforceRateLimit = (
     headers: { "Retry-After": String(decision.retryAfterSeconds) },
   });
 };
-
-/**
- * Deprecated: (20260817 - Luphia) 舊名，供 16 支既有 carbon route 沿用。
- * 行為與 `enforceRateLimit` 完全相同（同一個 limiter 實例、同一組計數）。
- *
- * ToDo: (20260817 - Luphia) 把那 16 支改呼叫 `enforceRateLimit` 後移除本別名。
- * 刻意不在這一輪一起改：那是 16 個檔案的機械改動，混進出勤模組的 review 裡
- * 只會讓兩件事都更難看清楚。
- */
-export const enforceCarbonRateLimit = enforceRateLimit;

@@ -1,0 +1,21 @@
+export const purchaseTarget = {
+  subscription_title: "訂閱給哪個團隊",
+  credits_title: "點數存入哪裡",
+  seat_breakdown: "{{seats}} 席 × NT$ {{unit}} ＝ NT$ {{total}}",
+  seat_note: "席次以團隊目前人數計算；實際收費金額以結帳當下的人數為準。",
+  // Info: (20260814 - Luphia) 沒有團隊可選時要說出是哪一種沒有（載入中／失敗／過期／無權限）
+  session_expired: "登入已過期，請重新登入後再選擇團隊。",
+  teams_loading: "正在載入你的團隊⋯⋯",
+  teams_failed: "team 清單載入失敗，請重試。",
+  team: "團隊",
+  personal: "個人",
+  select_team: "請選擇團隊",
+  single_team: "將套用於「{{team}}」",
+  multi_team_hint: "你隸屬多個團隊，請選擇這筆消費要記在哪一個團隊。",
+  team_required: "請先選擇團隊，再進行付款。",
+  personal_hint: "點數存入你的個人帳戶，可用於任何未綁定團隊的功能。",
+  no_owner_team:
+    "訂閱需由團隊擁有者操作。你目前不是任何團隊的擁有者，請改請擁有者訂閱，或先建立團隊。",
+  no_manager_team:
+    "購買團隊點數需要團隊擁有者或管理員權限。你目前沒有可管理的團隊，可改為購買個人點數。",
+};

@@ -15,11 +15,25 @@ interface ISubscriptionContentProps {
   // Info: (20260809 - Luphia) 額度倍數由 server 端計算後傳入（見 page.tsx 的 hydration 說明）
   teamQuotaMultiple: number;
   businessQuotaMultiple: number;
+  /**
+   * Info: (20260812 - Luphia) 費思記憶保留天數同為 DB 系統設定，由 server 端讀妥傳入；
+   * 嚴禁在此直接引用 DEFAULT_FAITH_MEMORY_RETENTION_DAYS，那會讓後台調整後
+   * 方案頁仍顯示舊天數，而條款與實際刪除行為卻已改變。
+   */
+  faithMemoryRetentionDays: number;
+  /**
+   * Info: (20260815 - Luphia) 免費版人數上限（PR #6652 第二輪 B-4）：同為 DB 系統設定，
+   * 由 server 端讀妥傳入。服務條款 §3.1 寫的是「以方案頁標示為準」——
+   * 這個數字就是那個標示，因此不得在此寫死或改引用程式常數。
+   */
+  freePlanMaxMembers: number;
 }
 
 export default function SubscriptionContent({
   teamQuotaMultiple,
   businessQuotaMultiple,
+  faithMemoryRetentionDays,
+  freePlanMaxMembers,
 }: ISubscriptionContentProps) {
   const { onSelectSubscription, setAuthModalOpen, setConfirmModal } =
     usePricing();
@@ -32,8 +46,22 @@ export default function SubscriptionContent({
   /**
    * Info: (20260809 - Luphia) 方案功能列僅列出「費思人工智能代理人」（產品調整 20260809）：
    * 不再於此揭露計費費率與 token 計算方式，費率揭露改以服務條款 §3.4 為準。
+   *
+   * Info: (20260812 - Luphia) 記憶分兩層（服務條款 §3.7）：任務短期記憶各方案皆具備，
+   * 長期記憶與回饋學習為付費訂閱權益。故免費版 tooltip 只述短期記憶，
+   * 團隊版 / 企業版列「（專屬記憶）」並述兩層記憶；細節與保留天數由方案格下方段落承載
+   * （天數自 server 傳入的系統設定值插值，見 props，與條款同源）。
    */
-  const faithAgentFeature = t("pricing.faith_agent");
+  const faithAgentFeature = {
+    text: t("pricing.faith_agent"),
+    tooltip: t("pricing.faith_agent_free_tooltip"),
+  };
+  const faithAgentMemoryFeature = {
+    text: t("pricing.faith_agent_memory"),
+    tooltip: t("pricing.faith_agent_memory_tooltip", {
+      days: faithMemoryRetentionDays,
+    }),
+  };
 
   const currentPlan = user
     ? user.plan === "personal" || !user.plan
@@ -113,7 +141,6 @@ export default function SubscriptionContent({
             billingInterval={billingInterval}
             currentPlan={currentPlan}
             features={[
-              t("pricing.plans.free.features.fido"),
               {
                 text: t("pricing.plans.free.features.consults", {
                   amount: Math.floor(
@@ -161,6 +188,21 @@ export default function SubscriptionContent({
               t("pricing.plans.free.features.storage", {
                 gb: CARBON_STORAGE_QUOTA_GB_BY_PLAN.free,
               }),
+              {
+                /**
+                 * Info: (20260815 - Luphia) 免費版的人數上限（PR #6652 第二輪 B-4）。
+                 *
+                 * 額度改為逐成員計算後，付費方案以「席次 × 單價」自然封頂，
+                 * 免費版沒有這個機制——人數上限就是它的封頂，因此必須標示出來，
+                 * 服務條款 §3.1 也是指向這裡。
+                 */
+                text: t("pricing.plans.free.features.member_limit", {
+                  count: freePlanMaxMembers,
+                }),
+                tooltip: t("pricing.plans.free.features.member_limit_tooltip", {
+                  count: freePlanMaxMembers,
+                }),
+              },
             ]}
             onSelect={showComingSoon}
           />
@@ -177,10 +219,6 @@ export default function SubscriptionContent({
               )
             }
             features={[
-              {
-                text: t("pricing.plans.team.features.fido"),
-                tooltip: t("pricing.plans.team.features.fido_tooltip"),
-              },
               t("pricing.plans.team.features.quota_multiple", {
                 multiple: teamQuotaMultiple,
               }),
@@ -227,7 +265,7 @@ export default function SubscriptionContent({
                 }),
                 tooltip: t("pricing.plans.team.features.ai_overage_tooltip"),
               },
-              faithAgentFeature,
+              faithAgentMemoryFeature,
               t("pricing.plans.team.features.analytics"),
               t("pricing.plans.team.features.support"),
               t("pricing.plans.team.features.storage", {
@@ -247,10 +285,6 @@ export default function SubscriptionContent({
               )
             }
             features={[
-              {
-                text: t("pricing.plans.business.features.fido"),
-                tooltip: t("pricing.plans.business.features.fido_tooltip"),
-              },
               t("pricing.plans.business.features.quota_multiple", {
                 multiple: businessQuotaMultiple,
               }),
@@ -302,7 +336,7 @@ export default function SubscriptionContent({
                   "pricing.plans.business.features.ai_overage_tooltip",
                 ),
               },
-              faithAgentFeature,
+              faithAgentMemoryFeature,
               t("pricing.plans.business.features.analytics"),
               t("pricing.plans.business.features.support"),
               {
@@ -321,6 +355,42 @@ export default function SubscriptionContent({
             ]}
           />
         </div>
+
+        {/**
+         * Info: (20260812 - Luphia) 席次計費的補充說明（服務條款 §3.1 / §3.6，規範
+         * team_seat_billing_and_email_invitation.md）：卡片上的數字是每席單價，
+         * 「總額怎麼算」與「期中加人怎麼收」都影響購買決策，必須在價目牌旁講清楚。
+         */}
+        <section className="mx-auto mt-16 max-w-3xl rounded-2xl bg-gray-50 p-6 ring-1 ring-gray-200 sm:p-8">
+          <h3 className="text-base font-semibold text-gray-900">
+            {t("pricing.seat_billing_note_title")}
+          </h3>
+          <p className="mt-3 text-sm leading-6 text-gray-600">
+            {t("pricing.seat_billing_note")}
+          </p>
+          <p className="mt-3 text-sm leading-6 text-gray-600">
+            {t("pricing.seat_billing_note_change")}
+          </p>
+        </section>
+
+        {/**
+         * Info: (20260812 - Luphia) 費思專屬記憶的補充說明（服務條款 §3.7、隱私權政策 §5）：
+         * 「記憶會累積」與「停止訂閱後會刪除」都影響購買決策，卡片的 tooltip 容不下，
+         * 故於方案格下方以完整段落說明，並回指條款供查證。
+         */}
+        <section className="mx-auto mt-8 max-w-3xl rounded-2xl bg-gray-50 p-6 ring-1 ring-gray-200 sm:p-8">
+          <h3 className="text-base font-semibold text-gray-900">
+            {t("pricing.faith_memory_note_title")}
+          </h3>
+          <p className="mt-3 text-sm leading-6 text-gray-600">
+            {t("pricing.faith_memory_note")}
+          </p>
+          <p className="mt-3 text-sm leading-6 text-gray-600">
+            {t("pricing.faith_memory_note_retention", {
+              days: faithMemoryRetentionDays,
+            })}
+          </p>
+        </section>
       </div>
     </>
   );

@@ -50,6 +50,12 @@ model User {
   journals              Journal[]
   teamMembers           TeamMember[]
   teamInvitations       TeamInvitation[]       @relation("Inviter")
+  // Info: (20260817 - Luphia) 此帳號用掉的邀請（稽核用；見 TeamInvitation.acceptedByUserId）
+  acceptedInvitations   TeamInvitation[]       @relation("InvitationAcceptor")
+  // Info: (20260818 - Luphia) 由此帳號撤回的邀請（稽核用；見 TeamInvitation.revokedByUserId）
+  revokedInvitations    TeamInvitation[]       @relation("InvitationRevoker")
+  // Info: (20260817 - Luphia) 費思長期記憶（一個團隊一份，見 FaithMemory）
+  faithMemories         FaithMemory[]
   auditLogs             AuditLog[]
   vouchers              Voucher[]
   esgRecords            EsgRecord[]
@@ -130,6 +136,8 @@ model Team {
   teamWallet            TeamWallet?
   teamWalletAllocations TeamWalletAllocation[]
   teamQuotaUsages       TeamQuotaUsage[]
+  // Info: (20260817 - Luphia) 團隊內各成員的費思長期記憶（見 FaithMemory）
+  faithMemories         FaithMemory[]
 
   @@map("team")
 }
@@ -141,11 +149,111 @@ model TeamMember {
   userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id])
   role      TeamRole
+  /**
+   * Info: (20260818 - Luphia) 這段成員資格由哪一封邀請而來（第六輪第 1 條）。
+   *
+   * 為什麼需要它：`TeamInvitation.acceptedEmailMatch` 記下「接受者的已驗證信箱與
+   * 受邀信箱是否相符」，而成員清單要據此對管理職顯示標記。問題是「這個標記描述的
+   * 是不是**現在**這段成員資格」——同一個人可能被移出再加回，舊邀請的紀錄不該
+   * 掛在新的成員資格上。
+   *
+   * 先前用時間戳推論（邀請的 `acceptedAt` 對成員的 `createdAt`），而那兩個值來自
+   * **兩個時鐘**：`acceptedAt` 是 app 在 route 一開始取的 `Date.now()`，
+   * `createdAt` 的預設是資料庫的 `CURRENT_TIMESTAMP`。實測差 +19ms（中間隔著五次
+   * 以上查詢），於是比較永遠不成立、標記永遠不顯示；而在 app 與 DB 時鐘有偏移的
+   * 部署上它又會零星地出現——比永遠不出現更難查。
+   *
+   * 這一欄把那個**關聯**直接寫下來：一次外鍵比對，不看任何時鐘。
+   *
+   * NULL 的語意是「這段成員資格不是邀請來的」——以錢包位址直接加入、後台加入、
+   * seed 建立的成員都是 NULL，而他們本來就沒有信箱可比對。歷史資料同樣留 NULL
+   * （猜一封邀請比留空更糟），因此不需要回填。
+   */
+  joinedByInvitationId String?         @map("joined_by_invitation_id")
+  joinedByInvitation   TeamInvitation? @relation("MembershipOrigin", fields: [joinedByInvitationId], references: [id])
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([teamId, userId])
+  // Info: (20260818 - Luphia) 標記查詢以 (team_id, joined_by_invitation_id) 撈本團隊的成員
+  @@index([teamId, joinedByInvitationId])
   @@map("team_member")
+}
+
+/**
+ * Info: (20260817 - Luphia) 費思個人化長期記憶（規範 ai_and_analytics/faith_personal_memory.md）。
+ *
+ * 作用範圍是 `(userId, teamId)` 而非純 per-user，理由是刪除觸發必須與作用範圍同鍵：
+ * 90 天的起算點是「**團隊的**付費訂閱終止」，若記憶為全域 per-user，
+ * 一位同時屬於 A（仍在訂閱）與 B（剛終止）兩個團隊的成員，「該不該刪」就沒有
+ * 決定論答案。另一個理由是隔離：事務所的一位成員常同時服務多家客戶，
+ * 把 A 客戶的科目慣例帶進 B 客戶的對話是實質的資訊外洩（規範 §3.1）。
+ */
+model FaithMemory {
+  id String @id @default(uuid())
+
+  userId String @map("user_id")
+  teamId String @map("team_id")
+
+  /**
+   * Info: (20260817 - Luphia) 記憶項目密文（AES-256-GCM，沿用 key_vault 的 FAITH_MEMORY 子金鑰）。
+   * 明文結構為 IFaithMemoryItem[]，**整包加密**而非逐條：記憶一律整包讀取用於組 prompt，
+   * 逐條加密只是多存 N 組 IV 與標籤。
+   */
+  itemsCipher String @map("items_cipher") @db.Text
+  itemsIv     String @map("items_iv")
+  itemsTag    String @map("items_tag")
+  keyVersion  Int    @map("key_version")
+
+  // Info: (20260817 - Luphia) 條目數（明文計數，供上限判斷與觀測，不含任何內容）
+  itemCount Int @default(0) @map("item_count")
+
+  /**
+   * Info: (20260817 - Luphia) 到期刪除時點（訂閱終止日 + 保留天數設定）。
+   * null = 訂閱有效中，不排定刪除；恢復訂閱時清回 null。
+   * 期限**算好存下來**而非每次推導：推導點一多，條款承諾的日期就會出現兩種算法。
+   */
+  expiresAt DateTime? @map("expires_at")
+
+  /**
+   * Info: (20260818 - Luphia) 這個期限是**誰排的**（第三輪 C-8）。
+   *
+   * 保留期守護行程每 6 小時對帳一次，付費團隊即清掉 `expiresAt`。少了這一欄，
+   * 它會把**別人排的**期限一起清掉——例如帳戶終止的 30 天寬限期：
+   * 團隊仍在訂閱時，那個期限每 6 小時被清一次，記憶永遠不會被刪，
+   * 而條款 §3.7 寫的是「與第 9 條期間並存時以較早屆至者為準」。
+   *
+   * 值為 FAITH_MEMORY_DELETION_REASON；對帳只設定與清除自己那一種。
+   */
+  expiryReason String? @map("expiry_reason")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+  team Team @relation(fields: [teamId], references: [id])
+
+  @@unique([userId, teamId])
+  // Info: (20260817 - Luphia) 保留期守護行程的掃描索引（WHERE expires_at <= now）
+  @@index([expiresAt])
+  @@map("faith_memory")
+}
+
+/**
+ * Info: (20260817 - Luphia) 記憶刪除的稽核列。
+ * **不得含記憶內容**——否則「刪除」等於搬家（規範 §3.2）。
+ */
+model FaithMemoryDeletionLog {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  teamId    String   @map("team_id")
+  itemCount Int      @map("item_count")
+  // Info: (20260817 - Luphia) FAITH_MEMORY_DELETION_REASON（src/constants/faith_memory.ts）
+  reason    String
+  deletedAt DateTime @default(now()) @map("deleted_at")
+
+  @@index([userId, teamId])
+  @@map("faith_memory_deletion_log")
 }
 
 model TeamInvitation {
@@ -154,12 +262,81 @@ model TeamInvitation {
   team           Team     @relation(fields: [teamId], references: [id])
   inviterId      String   @map("inviter_id")
   inviter        User     @relation("Inviter", fields: [inviterId], references: [id])
-  inviteeAddress String   @map("invitee_address")
+  /**
+   * Info: (20260815 - Luphia) 錢包位址邀請的受邀者。email 邀請時為 null——
+   * 對方還沒註冊，此時不存在位址（接受時才建立成員關係）。
+   */
+  inviteeAddress String?   @map("invitee_address")
+  /**
+   * Info: (20260815 - Luphia) Email 邀請（規範 §4 / P4）。
+   * 屬個資，僅用於寄送本次邀請（《隱私權政策》§1）。
+   */
+  inviteeEmail   String?   @map("invitee_email")
+  /**
+   * Info: (20260815 - Luphia) 邀請 token 的 SHA-256 雜湊。
+   * 明文只存在於寄出的那封信裡：資料庫外洩不等於任何人都能加入團隊。
+   */
+  tokenHash      String?   @unique @map("token_hash")
+  // Info: (20260815 - Luphia) 邀請有效期限；逾期即失效（席次不退費但可再用於邀請他人）
+  expiresAt      DateTime? @map("expires_at")
+  /**
+   * Info: (20260816 - Luphia) 「同一團隊、同一對象，同時只能有一封待接受邀請」的唯一鍵。
+   *
+   * 值由 `buildPendingInviteKey` 產生（`{teamId}:mail:{email}` 或 `{teamId}:addr:{address}`），
+   * **僅在 PENDING 期間有值**，接受後設回 NULL。Postgres 允許多個 NULL，
+   * 因此效果等同 partial unique index，而它寫在 schema 裡、`prisma db push` 帶得走。
+   *
+   * 取代原本的 `@@unique([teamId, inviteeEmail, status])`：把 status 放進鍵裡
+   * 會連歷史列一起約束，於是「離職後再邀請同一個人」在**接受的那一刻**撞上
+   * 舊的 ACCEPTED 列，永遠加不進來，而席次費已經扣了。詳見 pending_invite_key.ts。
+   */
+  pendingKey     String?   @unique @map("pending_key")
   role           TeamRole
-  status         String   @default("PENDING") // Info: (20260325 - Tzuhan) PENDING, ACCEPTED, REJECTED
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  // Info: (20260818 - Luphia) TEAM_INVITATION_STATUS：PENDING / ACCEPTED / REJECTED / REVOKED
+  status         String    @default("PENDING")
+  /**
+   * Info: (20260817 - Luphia) 實際用掉這封邀請的帳號。
+   *
+   * 稽核軌跡在此之前是斷的：邀請記的是 email，成員記的是帳號，而兩者之間
+   * 沒有任何欄位相連——「邀請 a@x.com」與「成員 0xAb…」是不是同一個人，
+   * 從資料庫看不出來。這一欄不宣稱那個帳號屬於該信箱（見下方 acceptedEmailMatch），
+   * 只誠實記錄「這封邀請被這個帳號用掉了」。
+   */
+  acceptedByUserId String?  @map("accepted_by_user_id")
+  acceptedBy       User?    @relation("InvitationAcceptor", fields: [acceptedByUserId], references: [id])
+  // Info: (20260817 - Luphia) 接受時點。不靠 updatedAt——那一欄任何後續更新都會動
+  acceptedAt       DateTime? @map("accepted_at")
+  /**
+   * Info: (20260817 - Luphia) 受邀信箱與接受者已驗證信箱的比對結果（INVITE_EMAIL_MATCH）。
+   *
+   * **記錄，不阻擋**：工作信箱收到邀請、用個人 Google 帳號登入是完全正常的行為。
+   * 位址邀請（無 inviteeEmail）為 null——不適用，而不是「比對失敗」。
+   *
+   * `UNAVAILABLE` 是常態而非異常：本站的 passkey 註冊全程不問 email
+   * （`User` 沒有 email 欄位，email 只存在於第三方綁定 `UserIdentity`），
+   * 因此以 FIDO2 註冊的受邀者根本沒有可比對的信箱。
+   */
+  acceptedEmailMatch String? @map("accepted_email_match")
+  /**
+   * Info: (20260818 - Luphia) 撤回邀請的稽核（第三輪 D）。
+   *
+   * 撤回原本是**實刪除**，於是「曾經邀請過誰、由誰撤回」在撤回之後查不到——
+   * 而同一條路徑上的「拒絕」是改狀態，兩者的稽核強度不一致。
+   * 邀請一個人是會動到信用卡並對外寄信的動作，它的撤回不該無痕。
+   *
+   * 唯一仍該實刪的是**信寄不出去時的回滾**（見 `deleteInvitation`）：
+   * 一封沒寄出去的邀請不是歷史紀錄，留著只會佔住 `pendingKey`。
+   */
+  // Info: (20260818 - Luphia) 由這封邀請開始的成員資格（第六輪第 1 條，通常 0 或 1 段）
+  joinedMembers   TeamMember[] @relation("MembershipOrigin")
+  revokedByUserId String?   @map("revoked_by_user_id")
+  revokedBy       User?     @relation("InvitationRevoker", fields: [revokedByUserId], references: [id])
+  revokedAt       DateTime? @map("revoked_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
+  // Info: (20260816 - Luphia) 席次占用數的查詢條件（teamId + status + expiresAt），取代舊複合唯一鍵留下的索引
+  @@index([teamId, status])
   @@map("team_invitation")
 }
 
@@ -179,6 +356,14 @@ model TeamSubscription {
   currentPeriodEnd   DateTime @map("current_period_end")
   autoRenew          Boolean  @default(true) @map("auto_renew")
   latestOrderId      String?  @map("latest_order_id")
+  // Info: (20260814 - Luphia) 已付費席次數：訂閱以「席次 × 單價」計費，續訂時依當下成員數重算
+  seats              Int      @default(1)
+  /**
+   * Info: (20260814 - Luphia) 本期單價快照（TWD 整數，單一席次）。
+   * 快照而非即時查表：期中加人要按「當初買的價格」比例補收，
+   * 若期間調過價，用新價補收等於偷偷改了這一期的合約。
+   */
+  unitPrice          Int      @default(0) @map("unit_price")
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
@@ -224,6 +409,8 @@ model TeamWalletLedger {
   operatorUserId         String     @map("operator_user_id")
   orderId                String?    @map("order_id")
   featureCode            String?    @map("feature_code") // Info: (20260807 - Luphia) BILLABLE_FEATURE_CODE 常數
+  // Info: (20260814 - Luphia) 分配／收回改為鏈上鑄造與銷毀（ADR 015 修訂），此欄記錄該筆鏈上交易
+  txHash                 String?    @map("tx_hash")
   idempotencyKey         String     @unique @map("idempotency_key")
   createdAt              DateTime   @default(now()) @map("created_at")
 
@@ -244,8 +431,9 @@ model TeamQuotaUsage {
   idempotencyKey String   @unique @map("idempotency_key")
   createdAt      DateTime @default(now()) @map("created_at")
 
-  @@index([teamId, windowKey5h])
-  @@index([teamId, windowKeyWeek])
+  // Info: (20260814 - Luphia) 額度為逐成員計算（一人一池），聚合條件含 userId
+  @@index([teamId, userId, windowKey5h])
+  @@index([teamId, userId, windowKeyWeek])
   @@map("team_quota_usage")
 }
 
@@ -362,6 +550,18 @@ model Order {
   transactionHash String?  @map("transaction_hash")
   mission         String?
   tokens          Int?     @default(0)
+  /**
+   * Info: (20260815 - Luphia) 冪等鍵升格為真欄位並加上唯一約束（PR #6652 第二輪 B-3 / C-9）。
+   *
+   * 原本只寫在 `data.idempotencyKey`（JSON path），資料庫層擋不住任何東西：
+   * 「先查有沒有、沒有就建一張」在並發下兩邊都會通過——兩位管理員同時邀請同一個位址
+   * 就是扣兩次款，後台連點發放點數也是同樣的形狀。
+   * 唯一約束讓第二筆在 DB 層直接失敗（P2002），由呼叫端當成重放處理。
+   *
+   * 可為 null：不需要冪等保護的訂單（一般購點、分析報告）不帶鍵，
+   * 而 Postgres 的唯一約束允許多個 null。
+   */
+  idempotencyKey  String?  @unique @map("idempotency_key")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 

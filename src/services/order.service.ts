@@ -75,6 +75,24 @@ export interface IPaymentOrderParams {
   title?: string;
   planId?: string;
   billingInterval?: "month" | "year";
+  /**
+   * Info: (20260814 - Luphia) 團隊訂單（購點、訂閱）的歸屬團隊，**必須是頂層欄位**。
+   * generatePaymentOrder 把 params 整包展開成 order.data，放進 params.data 的東西
+   * 會落在 order.data.data 底下，而履行端讀的是 order.data.teamId——
+   * 埋在巢狀裡等於沒帶，訂單付得掉卻履行不了。
+   */
+  teamId?: string;
+  /**
+   * Info: (20260815 - Luphia) 冪等鍵（第二輪 B-3 / C-9）：寫入帶唯一約束的欄位，
+   * 由資料庫擋下並發的重複建單。不需要冪等保護的訂單不必帶。
+   */
+  idempotencyKey?: string;
+  /**
+   * Info: (20260814 - Luphia) 訂閱的席次數與單價快照（同樣必須是頂層欄位）。
+   * 履行時寫進 TeamSubscription：續訂要依此重算，期中加人要依此比例補收。
+   */
+  seats?: number;
+  unitPrice?: number;
   baseCredits?: string;
   bonusCredits?: string;
   items?: IJSONObject[];
@@ -210,6 +228,8 @@ export async function generatePaymentOrder(
     data: orderData,
     status: ORDER_STATUS.PENDING,
     challenge: challenge,
+    // Info: (20260815 - Luphia) 有帶鍵就寫進唯一欄位；並發的第二筆會在 DB 層失敗
+    idempotencyKey: params.idempotencyKey ?? null,
   });
 
   return {

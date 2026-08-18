@@ -12,6 +12,7 @@ import {
 import { X, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth_context";
 import LegalModal from "@/components/common/legal_modal";
 import { MoneyUtil } from "@/lib/utils/money";
@@ -26,6 +27,10 @@ import {
 } from "@/interfaces/payment";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import { BANK_TRANSFER } from "@/constants/price";
+import {
+  PURCHASE_MODE,
+  resolvePurchaseMode,
+} from "@/lib/purchase/purchase_target";
 import { HTTP_METHOD } from "@/constants/http";
 import { IJSONObject } from "@/validators/common";
 import EditCardModal from "@/components/user/billing/edit_card_modal";
@@ -60,12 +65,26 @@ export default function PaymentModal({
   planId,
   billingInterval,
   details,
+  targetSelector = undefined,
+  orderCreator = undefined,
+  purchaseBlockingMessage = null,
 }: IPaymentModalProps) {
   const { t } = useTranslation();
-  const { user, refreshAuth, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const { user, refreshAuth, loading: authLoading, sessionExpired } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /**
+   * Info: (20260817 - Luphia) 建單金額與畫面不符時暫存的那張訂單（第二輪 C-4）。
+   * 訂單已經以正確金額建立，只是還沒扣款；使用者確認後沿用同一張，
+   * 不重新建單——否則每按一次就多一張孤兒 PENDING 訂單。
+   */
+  const [pendingTeamOrder, setPendingTeamOrder] = useState<{
+    orderId: string;
+    challenge: string;
+    cost?: number;
+  } | null>(null);
   const [step, setStep] = useState<PaymentStep>(
     initialStep || PaymentStep.confirm,
   );
@@ -103,6 +122,14 @@ export default function PaymentModal({
       (planId.startsWith("iso14064") ||
         planId.startsWith("iso14067") ||
         planId.startsWith("carbon_label")));
+
+  /**
+   * Info: (20260814 - Luphia) 訂閱與購點的畫面語意完全不同：訂閱買到的是**額度視窗**
+   * （每 5 小時 / 每週自動重置），不是錢包點數。沿用購點文案會承諾一筆從未發放的點數——
+   * 履行路徑只寫 TeamSubscription，不 mint、不入池（設計書 §7）。
+   */
+  const isTeamSubscription =
+    resolvePurchaseMode(planId, undefined) === PURCHASE_MODE.SUBSCRIPTION;
 
   const orderType =
     planId === "on_premise"
@@ -289,6 +316,65 @@ export default function PaymentModal({
     }
   };
 
+  /**
+   * Info: (20260814 - Luphia) 簽章 + 扣款：兩條建單路徑（通用建單、團隊建單）共用。
+   * 抽出來是因為團隊路徑必須走完全一樣的後續流程——不共用就會有一條分支慢慢長歪。
+   */
+  const completeCheckout = async (orderId: string, challenge: string) => {
+    // Info: (20260306 - Tzuhan) 2. FIDO Signature
+    if (!user?.pubKeyX || !user?.pubKeyY) {
+      throw new Error("Missing public keys. Please re-login.");
+    }
+
+    /**
+     * Info: (20260811 - Luphia) 走 requestAssertion，託管帳號才不會卡在永遠不會成功的系統對話框。
+     * 這裡簽的是訂單自己的 challenge（伺服器產生的 sha256），
+     * 託管路徑會以「這張訂單屬於本人且尚未付款」作為代簽的出處驗證。
+     */
+    const transferAuth = await requestAssertion({
+      challenge,
+      custody: user.custody,
+      passkeyOptions: { allowCredentials: [] },
+    });
+
+    const encodedSignature = encodeWebAuthnSignature(
+      transferAuth,
+      BigInt(user.pubKeyX),
+      BigInt(user.pubKeyY),
+    );
+
+    // Info: (20260306 - Tzuhan) 3. Submit Checkout
+    const response = await request<{
+      message?: string;
+      payload?: IOenCheckoutResponse;
+    }>(`/api/v1/user/payment_method/${selectedPaymentMethodId}/checkout`, {
+      method: HTTP_METHOD.POST,
+      body: JSON.stringify({
+        orderId,
+        authentication: {
+          ...transferAuth,
+          signature: encodedSignature,
+        },
+      }),
+    });
+
+    /**
+     * Info: (20260814 - Luphia) 成功的判準不能只看 txHash：團隊訂閱與團隊購點是**離鏈履行**
+     * （套用方案、點數入池），本來就沒有鏈上交易。只認 txHash 會把成功的團隊付款
+     * 判成失敗，讓用戶在已扣款的情況下看到錯誤畫面。
+     */
+    const payload = response.payload;
+    const fulfilled = Boolean(payload && !payload.requireBinding);
+    if (!fulfilled || (!payload?.txHash && !payload?.success)) {
+      throw new Error(response.message || "Payment failed");
+    }
+
+    await refreshAuth();
+    setTxHash(payload.txHash ?? "");
+    setStep(PaymentStep.success);
+    onSuccess(payload.txHash ?? "");
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -387,7 +473,37 @@ export default function PaymentModal({
         }
       }
 
-      // Info: (20260306 - Tzuhan) 1. Request Payment Order to get challenge
+      /**
+       * Info: (20260814 - Luphia) 1. 建立訂單取得 challenge。
+       * 歸屬團隊時由 orderCreator 走 team-scoped 端點建單（訂單帶 teamId，
+       * 履行路徑才套得到方案 / 入得了池）；個人歸屬維持原本的通用建單。
+       */
+      if (orderCreator) {
+        const teamOrder = await orderCreator(selectedPaymentMethodId);
+
+        /**
+         * Info: (20260817 - Luphia) 建單金額與畫面上的金額不一致就先停下（第二輪 C-4）。
+         *
+         * 席次金額是前端用**頁面載入時**的團隊人數算的，實收由 server 建單當下
+         * 重算。停留期間另一位管理員加了人，使用者看到 4,200、卡被扣 5,040——
+         * 價目與實收不一致是最不能出現在結帳畫面上的東西。
+         *
+         * 停下來而不是靜靜改數字：訂單已經以正確金額建立，這裡只是不扣款，
+         * 使用者確認後沿用**同一張訂單**（不重建，否則會留下一堆孤兒 PENDING 單）。
+         */
+        if (
+          typeof teamOrder.cost === "number" &&
+          String(teamOrder.cost) !== String(amount)
+        ) {
+          setPendingTeamOrder(teamOrder);
+          setLoading(false);
+          return;
+        }
+
+        await completeCheckout(teamOrder.orderId, teamOrder.challenge);
+        return;
+      }
+
       const orderRes = await request<{
         payload: { orderId: string; challenge: string };
       }>("/api/v1/user/order", {
@@ -437,54 +553,7 @@ export default function PaymentModal({
 
       if (!orderRes?.payload) throw new Error("Failed to create payment order");
       const { orderId, challenge } = orderRes.payload;
-
-      // Info: (20260306 - Tzuhan) 2. FIDO Signature
-      if (!user?.pubKeyX || !user?.pubKeyY) {
-        throw new Error("Missing public keys. Please re-login.");
-      }
-
-      /**
-       * Info: (20260811 - Luphia) 走 requestAssertion，託管帳號才不會卡在永遠不會成功的系統對話框。
-       * 這裡簽的是訂單自己的 challenge（伺服器產生的 sha256），
-       * 託管路徑會以「這張訂單屬於本人且尚未付款」作為代簽的出處驗證。
-       */
-      const transferAuth = await requestAssertion({
-        challenge,
-        custody: user.custody,
-        passkeyOptions: { allowCredentials: [] },
-      });
-
-      const encodedSignature = encodeWebAuthnSignature(
-        transferAuth,
-        BigInt(user.pubKeyX),
-        BigInt(user.pubKeyY),
-      );
-
-      // Info: (20260306 - Tzuhan) 3. Submit Checkout
-      const response = await request<{
-        message?: string;
-        payload?: IOenCheckoutResponse;
-      }>(`/api/v1/user/payment_method/${selectedPaymentMethodId}/checkout`, {
-        method: HTTP_METHOD.POST,
-        body: JSON.stringify({
-          orderId,
-          authentication: {
-            ...transferAuth,
-            signature: encodedSignature,
-          },
-        }),
-      });
-      console.log(`[PaymentModal] handleBindNewCard response:`, response);
-
-      if (!response.payload?.requireBinding && response.payload?.txHash) {
-        // Info: (20260303 - Tzuhan) [流程 2-3b: 直接扣款成功] 若選擇使用已綁定的卡片，後端會直接發動扣款並鑄造代幣。前端取得成功的 txHash 後更新畫面為「付款成功」
-        await refreshAuth();
-        setTxHash(response.payload.txHash);
-        setStep(PaymentStep.success);
-        onSuccess(response.payload.txHash);
-      } else {
-        throw new Error(response.message || "Payment failed");
-      }
+      await completeCheckout(orderId, challenge);
     } catch (err) {
       // Info: (20260303 - Tzuhan) [流程 2-3c: 捕捉錯誤] 若扣款 API 發生異常，顯示失敗畫面
       console.error(
@@ -602,38 +671,39 @@ export default function PaymentModal({
                                     {displayPrice || `$${amount}`}
                                   </span>
                                 </div>
-                                {Number(baseCredits) > 0 && (
-                                  <div className="flex items-start justify-between px-2">
-                                    <span className="pt-1 text-sm font-medium text-gray-500">
-                                      {t(
-                                        "pricing.credits.payment_modal.tokens_to_receive",
-                                      )}
-                                    </span>
-                                    <div className="flex flex-col items-end text-right">
-                                      <span className="text-lg font-bold text-orange-600">
-                                        {Number(baseCredits).toLocaleString()}{" "}
+                                {Number(baseCredits) > 0 &&
+                                  !isTeamSubscription && (
+                                    <div className="flex items-start justify-between px-2">
+                                      <span className="pt-1 text-sm font-medium text-gray-500">
                                         {t(
-                                          "pricing.credits.payment_modal.credits_unit_short",
-                                          { count: "" },
-                                        ).trim()}
+                                          "pricing.credits.payment_modal.tokens_to_receive",
+                                        )}
                                       </span>
-                                      {bonusCredits !== "0" && (
-                                        <span className="mt-1 inline-flex items-center rounded-md bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600 ring-1 ring-orange-600/20 ring-inset">
-                                          +{" "}
+                                      <div className="flex flex-col items-end text-right">
+                                        <span className="text-lg font-bold text-orange-600">
+                                          {Number(baseCredits).toLocaleString()}{" "}
                                           {t(
-                                            "pricing.credits.payment_modal.bonus_points",
-                                            {
-                                              count:
-                                                Number(
-                                                  bonusCredits,
-                                                ).toLocaleString(),
-                                            },
-                                          )}
+                                            "pricing.credits.payment_modal.credits_unit_short",
+                                            { count: "" },
+                                          ).trim()}
                                         </span>
-                                      )}
+                                        {bonusCredits !== "0" && (
+                                          <span className="mt-1 inline-flex items-center rounded-md bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600 ring-1 ring-orange-600/20 ring-inset">
+                                            +{" "}
+                                            {t(
+                                              "pricing.credits.payment_modal.bonus_points",
+                                              {
+                                                count:
+                                                  Number(
+                                                    bonusCredits,
+                                                  ).toLocaleString(),
+                                              },
+                                            )}
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
-                                  </div>
-                                )}
+                                  )}
                                 {details && details.length > 0 && (
                                   <div className="flex flex-col px-2">
                                     <span className="mb-2 text-sm font-medium text-gray-500">
@@ -654,17 +724,27 @@ export default function PaymentModal({
                                     </ul>
                                   </div>
                                 )}
-                                {billingInterval && (
+                                {isTeamSubscription && (
                                   <div className="mt-2 rounded-md bg-orange-50 p-3">
                                     <p className="text-xs font-medium text-orange-800">
                                       {t(
-                                        "pricing.credits.payment_modal.subscription_reset_note",
-                                        { count: baseCredits.toLocaleString() },
+                                        "pricing.credits.payment_modal.subscription_quota_note",
                                       )}
                                     </p>
                                   </div>
                                 )}
                               </div>
+
+                              {/**
+                               * Info: (20260814 - Luphia) 歸屬對象放在付款方式之前：
+                               * 「買給誰」決定了這筆訂單的性質（團隊方案 / 團隊點數 / 個人點數），
+                               * 是比「用哪張卡」更前面的決定。
+                               */}
+                              {user &&
+                                !isBankTransferPlan &&
+                                targetSelector && (
+                                  <div className="mt-6">{targetSelector}</div>
+                                )}
 
                               {user && !isBankTransferPlan && (
                                 <div className="mt-6 space-y-3">
@@ -908,12 +988,81 @@ export default function PaymentModal({
                                 onSubmit={handleSubmit}
                                 className="mt-6 space-y-4"
                               >
+                                {/**
+                                 * Info: (20260814 - Luphia) 登入過期就不要讓他按下去：
+                                 * 按了只會拿到 401，而錯誤訊息長得像系統故障。
+                                 */}
+                                {sessionExpired && (
+                                  <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
+                                    {t("auth_modal.session_expired")}
+                                  </p>
+                                )}
+                                {purchaseBlockingMessage && (
+                                  <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
+                                    {purchaseBlockingMessage}
+                                  </p>
+                                )}
+                                {/**
+                                 * Info: (20260817 - Luphia) 建單金額與畫面不符（第二輪 C-4）。
+                                 * 停留期間團隊人數變了，實收會是這裡的數字。
+                                 * 沒有按下確認之前不扣款，按下之後沿用同一張訂單。
+                                 */}
+                                {pendingTeamOrder && (
+                                  <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900">
+                                    <p className="font-semibold">
+                                      {t(
+                                        "pricing.credits.payment_modal.amount_changed_title",
+                                      )}
+                                    </p>
+                                    <p className="mt-1">
+                                      {t(
+                                        "pricing.credits.payment_modal.amount_changed_hint",
+                                        {
+                                          shown: `NT$ ${Number(amount).toLocaleString()}`,
+                                          actual: `NT$ ${Number(
+                                            pendingTeamOrder.cost ?? 0,
+                                          ).toLocaleString()}`,
+                                        },
+                                      )}
+                                    </p>
+                                    <button
+                                      type="button"
+                                      disabled={loading}
+                                      onClick={async () => {
+                                        const order = pendingTeamOrder;
+                                        setPendingTeamOrder(null);
+                                        setLoading(true);
+                                        try {
+                                          await completeCheckout(
+                                            order.orderId,
+                                            order.challenge,
+                                          );
+                                        } catch (err) {
+                                          setError(
+                                            err instanceof Error
+                                              ? err.message
+                                              : String(err),
+                                          );
+                                          setLoading(false);
+                                        }
+                                      }}
+                                      className="mt-2 inline-flex items-center justify-center rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+                                    >
+                                      {t(
+                                        "pricing.credits.payment_modal.amount_changed_confirm",
+                                      )}
+                                    </button>
+                                  </div>
+                                )}
                                 <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-4">
                                   <button
                                     type="submit"
                                     disabled={
                                       loading ||
                                       !agreedToTerms ||
+                                      // Info: (20260814 - Luphia) 登入過期／歸屬對象未備妥都不讓送出
+                                      sessionExpired ||
+                                      Boolean(purchaseBlockingMessage) ||
                                       (!isBankTransferPlan &&
                                         paymentMethods.length <= 0)
                                     }
@@ -968,16 +1117,22 @@ export default function PaymentModal({
                               </DialogTitle>
 
                               <div className="mt-4 w-full space-y-3 rounded-md border border-gray-200 bg-gray-50 p-4">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm text-gray-500">
-                                    {t(
-                                      "pricing.credits.payment_modal.original_credits",
-                                    )}
-                                  </span>
-                                  <span className="text-base font-medium text-gray-700">
-                                    {MoneyUtil.format(originalCredits || "0")}
-                                  </span>
-                                </div>
+                                {/**
+                                 * Info: (20260814 - Luphia) 訂閱不動個人點數，也不發錢包點數：
+                                 * 顯示個人餘額前後與「獲得點數 +N」都是與事實相反的數字。
+                                 */}
+                                {!isTeamSubscription && (
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm text-gray-500">
+                                      {t(
+                                        "pricing.credits.payment_modal.original_credits",
+                                      )}
+                                    </span>
+                                    <span className="text-base font-medium text-gray-700">
+                                      {MoneyUtil.format(originalCredits || "0")}
+                                    </span>
+                                  </div>
+                                )}
                                 <div className="flex items-center justify-between border-t border-gray-200 pt-3">
                                   <span className="text-sm text-gray-500">
                                     {t(
@@ -988,43 +1143,59 @@ export default function PaymentModal({
                                     {displayPrice || `$${amount}`}
                                   </span>
                                 </div>
-                                <div className="flex items-center justify-between border-t border-gray-200 pt-3">
-                                  <span className="text-sm text-gray-500">
-                                    {t(
-                                      "pricing.credits.payment_modal.tokens_received",
-                                    )}
-                                  </span>
-                                  <span className="text-base font-medium text-green-600">
-                                    +{baseCredits.toLocaleString()}{" "}
-                                    {t(
-                                      "pricing.credits.payment_modal.credits_unit_short",
-                                      { count: "" },
-                                    ).trim()}
-                                    {bonusCredits !== "0" && (
-                                      <span className="ml-1 text-sm font-normal">
-                                        (
+                                {!isTeamSubscription && (
+                                  <>
+                                    <div className="flex items-center justify-between border-t border-gray-200 pt-3">
+                                      <span className="text-sm text-gray-500">
                                         {t(
-                                          "pricing.credits.payment_modal.bonus_points",
-                                          {
-                                            count:
-                                              bonusCredits.toLocaleString(),
-                                          },
+                                          "pricing.credits.payment_modal.tokens_received",
                                         )}
-                                        )
                                       </span>
-                                    )}
-                                  </span>
-                                </div>
-                                <div className="flex items-center justify-between border-t border-gray-200 pt-3">
-                                  <span className="text-sm font-medium text-gray-900">
+                                      <span className="text-base font-medium text-green-600">
+                                        +{baseCredits.toLocaleString()}{" "}
+                                        {t(
+                                          "pricing.credits.payment_modal.credits_unit_short",
+                                          { count: "" },
+                                        ).trim()}
+                                        {bonusCredits !== "0" && (
+                                          <span className="ml-1 text-sm font-normal">
+                                            (
+                                            {t(
+                                              "pricing.credits.payment_modal.bonus_points",
+                                              {
+                                                count:
+                                                  bonusCredits.toLocaleString(),
+                                              },
+                                            )}
+                                            )
+                                          </span>
+                                        )}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between border-t border-gray-200 pt-3">
+                                      <span className="text-sm font-medium text-gray-900">
+                                        {t(
+                                          "pricing.credits.payment_modal.current_credits",
+                                        )}
+                                      </span>
+                                      <span className="text-lg font-bold text-gray-900">
+                                        {(user?.credits || 0).toLocaleString()}
+                                      </span>
+                                    </div>
+                                  </>
+                                )}
+
+                                {/**
+                                 * Info: (20260814 - Luphia) 訂閱成功要說的是「方案已啟用、額度即刻生效」，
+                                 * 而不是任何點數數字——這條路徑一點錢包點數都沒有發出去。
+                                 */}
+                                {isTeamSubscription && (
+                                  <div className="border-t border-gray-200 pt-3 text-sm text-gray-600">
                                     {t(
-                                      "pricing.credits.payment_modal.current_credits",
+                                      "pricing.credits.payment_modal.subscription_activated",
                                     )}
-                                  </span>
-                                  <span className="text-lg font-bold text-gray-900">
-                                    {(user?.credits || 0).toLocaleString()}
-                                  </span>
-                                </div>
+                                  </div>
+                                )}
                               </div>
 
                               {txHash && (
@@ -1288,8 +1459,8 @@ export default function PaymentModal({
                                   type="button"
                                   className="inline-flex w-full justify-center rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:from-orange-500 hover:to-orange-400 hover:shadow-lg sm:w-auto"
                                   onClick={() => {
-                                    window.location.href =
-                                      "/user/billing?tab=orders";
+                                    // Info: (20260814 - Luphia) 站內跳頁走 router，不必整頁重載
+                                    router.push("/user/billing?tab=orders");
                                     handleClose();
                                   }}
                                 >

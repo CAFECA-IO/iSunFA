@@ -2,11 +2,38 @@ export const pricing = {
   free_cost: "無料",
   title: "クラウドサービスサブスクリプションプラン",
   subtitle: "チームの規模に合わせて最適なプランをお選びください",
+  // Info: (20260814 - Luphia) 付費方案以席次計價，單位標明每席
+  per_seat_monthly: "席 / 月",
+  per_seat_yearly: "席 / 年",
   monthly: "月払い",
   yearly: "年払い",
   save_percent: "17% お得",
   // Info: (20260807 - Luphia) 費思費率標註（設計書 §5.3 定價揭露），數字由 API 插值、嚴禁寫死
   faith_agent: "Faith AI エージェント",
+  /**
+   * Info: (20260812 - Luphia) 費思個人化記憶文案（服務條款 §3.7、隱私權政策 §5）。
+   * 保留天數由 FAITH_MEMORY_RETENTION_DAYS 插值，不寫死數字，避免與條款不一致。
+   */
+  faith_agent_free_tooltip: "タスクの短期記憶を備えています",
+  faith_agent_memory: "Faith AI エージェント（専用メモリ）",
+  faith_agent_memory_tooltip:
+    "タスクの短期記憶、長期記憶とフィードバック学習機構を備えています",
+  faith_memory_note_title: "Faith の専用メモリについて",
+  faith_memory_note:
+    "Faith の記憶は 2 層構成です。タスクの短期記憶は同じタスクの進行中に文脈を保持するもので、すべてのプランに備わっています。長期記憶とフィードバック学習はクラウド版のチームプラン・ビジネスプラン限定で、メンバーごとに独立した Faith AI エージェントが、対話の中でいただいたフィードバックや好み（よく使う勘定科目、帳票の見せ方、回答の詳しさなど）を記録し、使うほどご要望を覚えて、お客様の進め方に沿った回答に近づけていきます。この記憶はお客様ご自身の利用体験の改善にのみ用いられ、他のメンバーや他のお客様と共有されることはなく、共有 AI モデルの学習にも使用しません。",
+  faith_memory_note_retention:
+    "サブスクリプションを停止された場合、この記憶を {{days}} 日間保持します。その期間内に再開されれば記憶は引き継がれます。{{days}} 日を過ぎると、プライバシー保護のため Faith が記憶した内容を削除します。期間の満了を待たず、いつでも削除をご依頼いただけます。無料プランに専用メモリはありません。詳細は利用規約第 3.7 条およびプライバシーポリシー第 5 条をご覧ください。",
+  /**
+   * Info: (20260812 - Luphia) 席数課金の文案（利用規約 §3.1 / §3.6）。
+   * 表示価格は「1 席あたり」の単価であり、チーム合計額ではない。
+   */
+  price_multiply_note:
+    "メンバー 1 名あたりの料金です。お支払額はチームのメンバー数を掛けた金額となります",
+  seat_billing_note_title: "席数課金について",
+  seat_billing_note:
+    "チームプランとビジネスプランは席数課金です。メンバー 1 名が 1 席を使用し、お支払額は「席数 × 1 席あたりの料金」となります。上記の価格は 1 席あたりの単価で、実際の金額はチームを選択後に計算し、お支払いの前に「席数 × 1 席あたりの料金 = お支払総額」を表示します。無料プランに席数料金はかかりません。",
+  seat_billing_note_change:
+    "請求期間の途中で新しいメンバーを招待した場合、その席は招待の送信時点から使用され、当期の残日数に応じて按分した料金を追加請求します（端数は切り捨て、計算結果が 0 の場合は無料）。招待が辞退・取り消し・期限切れとなった場合、その席は解放されます。メンバーの退出・削除があった場合、当期の返金は行わず、次の請求期間から新しい席数で計算します。詳細は利用規約第 3.1 条および第 3.6 条をご覧ください。",
   currency_prefix: "NT$ ",
 
   cta: "始める",
@@ -48,7 +75,6 @@ export const pricing = {
       name: "フリープラン",
       desc: "個人ユーザー向け",
       features: {
-        fido: "FIDO2 キー 1個",
         vouchers: "月 {{amount}} 件の証憑",
         vouchers_overage_tooltip: "{{price}} pt/件",
         logistics: "月 {{amount}} 件の物流カーボンフットプリント",
@@ -61,8 +87,11 @@ export const pricing = {
       name: "フリープラン",
       desc: "個人ユーザー向け",
       features: {
+        // Info: (20260815 - Luphia) 免費版人數上限（條款 §3.1 指向此標示）
+        member_limit: "チームメンバー上限 {{count}} 名",
+        member_limit_tooltip:
+          "無料版の利用枠はメンバーごとに計算されるため、人数に上限があります。より多くのメンバーが必要な場合はチーム版または企業版へアップグレードしてください。",
         storage: "ストレージ {{gb}} GB",
-        fido: "FIDO2 キー 1個",
         consults: "月間最大 {{amount}} 回の質問",
         consults_tooltip: "1 質問につき {{price}} pt",
         vouchers: "月間最大 {{amount}} 件の証憑分析",
@@ -78,9 +107,6 @@ export const pricing = {
       desc: "成長中のチーム向け",
       features: {
         storage: "ストレージ {{gb}} GB",
-        fido: "無制限の FIDO2 キー",
-        fido_tooltip:
-          "FIDO2 キーの数に基づいてサブスクリプション料金が請求されます",
         quota_multiple: "無料版の {{multiple}} 倍のトークン枠",
         consults: "月間最大 {{amount}} 回の質問",
         consults_tooltip: "1 質問につき {{price}} pt",
@@ -99,9 +125,6 @@ export const pricing = {
       desc: "大規模な組織向け",
       features: {
         storage: "ストレージ {{gb}} GB",
-        fido: "無制限の FIDO2 キー",
-        fido_tooltip:
-          "FIDO2 キーの数に基づいてサブスクリプション料金が請求されます",
         quota_multiple: "チーム版の {{multiple}} 倍のトークン枠",
         consults: "月間最大 {{amount}} 回の質問",
         consults_tooltip: "1 質問につき {{price}} pt",
@@ -118,7 +141,7 @@ export const pricing = {
           "データの年数とレコード数に基づいて追加料金が発生します",
         custom_tools: "カスタム機能モジュール",
         custom_tools_tooltip:
-          "要件に応じたカスタム機能開発、追加の開発費用が必要、ローンチ後に利益分配が可能",
+          "要件に応じたカスタム機能開発、追加の開発費用が必要",
       },
     },
   },
@@ -223,8 +246,15 @@ export const pricing = {
       use_saved_card: "登録済みのカードを使用",
       bind_new_card: "新しいカードを登録",
       agree_tos: "利用規約と返金ポリシーに同意します",
-      subscription_reset_note:
-        "ポイントの有効期限は30日間です、期限内に使用してください。",
+      // Info: (20260814 - Luphia) 訂閱買到的是額度視窗，不是錢包點數（設計書 §7 履行只寫 TeamSubscription）
+      subscription_quota_note:
+        "サブスクリプションではプランの利用枠をご利用いただけます。利用枠は 5 時間ごとおよび毎週リセットされ、翌期への繰り越しやクレジットへの変換はありません。",
+      amount_changed_title: "金額が変更されました",
+      amount_changed_hint:
+        "このページを開いている間にチームの人数が変わりました。表示は {{shown}} でしたが、実際のお支払いは {{actual}} です。まだ請求されていません。確認後にお支払いとなります。",
+      amount_changed_confirm: "確認して新しい金額で支払う",
+      subscription_activated:
+        "プランが有効になりました。各メンバーの利用枠が直ちに反映されます。",
       selected_modules: "選択したモジュール",
       track_order_btn: "注文追跡",
     },

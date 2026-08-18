@@ -2,11 +2,38 @@ export const pricing = {
   free_cost: "Free",
   title: "Cloud Service Subscription Plans",
   subtitle: "Choose the most suitable plan based on your team size",
+  // Info: (20260814 - Luphia) 付費方案以席次計價，單位標明每席
+  per_seat_monthly: "seat / month",
+  per_seat_yearly: "seat / year",
   monthly: "Monthly",
   yearly: "Yearly",
   save_percent: "Save 17%",
   // Info: (20260807 - Luphia) 費思費率標註（設計書 §5.3 定價揭露），數字由 API 插值、嚴禁寫死
   faith_agent: "Faith AI Agent",
+  /**
+   * Info: (20260812 - Luphia) 費思個人化記憶文案（服務條款 §3.7、隱私權政策 §5）。
+   * 保留天數由 FAITH_MEMORY_RETENTION_DAYS 插值，不寫死數字，避免與條款不一致。
+   */
+  faith_agent_free_tooltip: "Short-term task memory",
+  faith_agent_memory: "Faith AI Agent (with personal memory)",
+  faith_agent_memory_tooltip:
+    "Short-term task memory, long-term memory and feedback learning",
+  faith_memory_note_title: "About Faith's personal memory",
+  faith_memory_note:
+    "Faith's memory comes in two layers. Short-term task memory lets it follow the context while a task is under way, and every plan has it. Long-term memory and feedback learning are exclusive to the cloud Team and Business plans: every member gets their own Faith AI agent, which records the feedback and preferences you give it while chatting — the accounts you use most, how you like reports presented, how much detail you want — and gradually learns your needs so its answers fit your way of working. This memory is used only to improve your own experience: it is never shared with other members or other customers, and never used to train shared AI models.",
+  faith_memory_note_retention:
+    "If you stop subscribing, we keep that memory for {{days}} days — resubscribe within that window and it carries on. After {{days}} days we delete what Faith remembers about you to protect your privacy. You can also ask us to delete it at any time without waiting. The Free plan has no personal memory. See Terms of Service §3.7 and Privacy Policy §5.",
+  /**
+   * Info: (20260812 - Luphia) Seat-based pricing copy (Terms §3.1 / §3.6).
+   * The headline price is the per-seat rate, not the team total.
+   */
+  price_multiply_note:
+    "This is the price per member; multiply it by your team size for the amount due",
+  seat_billing_note_title: "About seat-based pricing",
+  seat_billing_note:
+    'The Team and Business plans are priced per seat: each team member takes one seat, and the amount due is seats × per-seat price. The price above is the per-seat rate; the actual amount is calculated once you pick a team, and we show "seats × per-seat price = total due" before you pay. The Free plan has no seat charge.',
+  seat_billing_note_change:
+    "When you invite a new member mid-cycle, the seat is taken from the moment the invitation is sent and we charge that seat pro rata for the days remaining in the current cycle (fractions rounded down; nothing is charged if the result is zero). If the invitation is declined, withdrawn or expires, the seat is released. When a member leaves or is removed, the current cycle is not refunded and the new seat count applies from the next cycle. See Terms of Service §3.1 and §3.6.",
   currency_prefix: "NT$ ",
   cta: "Get Started",
   features: "Features",
@@ -48,7 +75,6 @@ export const pricing = {
       name: "Free",
       desc: "Perfect for individuals",
       features: {
-        fido: "1 FIDO2 Key",
         vouchers: "{{amount}} Vouchers / Month",
         vouchers_overage_tooltip: "{{price}} Credits / Voucher",
         logistics: "{{amount}} Logistics Carbon Footprints / Month",
@@ -61,8 +87,11 @@ export const pricing = {
       name: "Free",
       desc: "Perfect for individuals",
       features: {
+        // Info: (20260815 - Luphia) 免費版人數上限（條款 §3.1 指向此標示）
+        member_limit: "Up to {{count}} team members",
+        member_limit_tooltip:
+          "Free plan quota is counted per member, so the team size is capped. Upgrade to Team or Business for more members.",
         storage: "{{gb}} GB storage",
-        fido: "1 FIDO2 Key",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",
         vouchers: "Max {{amount}} Vouchers / Month",
@@ -78,9 +107,6 @@ export const pricing = {
       desc: "For growing teams",
       features: {
         storage: "{{gb}} GB storage",
-        fido: "Unlimited FIDO2 Keys",
-        fido_tooltip:
-          "Subscription fee charged based on the number of FIDO2 keys",
         quota_multiple: "{{multiple}}x the token quota of the Free plan",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",
@@ -99,9 +125,6 @@ export const pricing = {
       desc: "For large scale operations",
       features: {
         storage: "{{gb}} GB storage",
-        fido: "Unlimited FIDO2 Keys",
-        fido_tooltip:
-          "Subscription fee charged based on the number of FIDO2 keys",
         quota_multiple: "{{multiple}}x the token quota of the Team plan",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",
@@ -118,7 +141,7 @@ export const pricing = {
           "Additional fee based on data years and record count",
         custom_tools: "Custom Feature Modules",
         custom_tools_tooltip:
-          "Customized feature development based on requirements, additional development fees apply, profit sharing available after launch",
+          "Customized feature development based on requirements, additional development fees apply",
       },
     },
   },
@@ -222,8 +245,15 @@ export const pricing = {
       use_saved_card: "Use Saved Card",
       bind_new_card: "Bind New Card",
       agree_tos: "I agree to the Terms of Service and Refund Policy",
-      subscription_reset_note:
-        "Credits are valid for 30 days and must be used within this period",
+      // Info: (20260814 - Luphia) 訂閱買到的是額度視窗，不是錢包點數（設計書 §7 履行只寫 TeamSubscription）
+      subscription_quota_note:
+        "Your subscription grants plan quota, which resets every 5 hours and every week. Unused quota does not roll over and is not converted into credits.",
+      amount_changed_title: "The amount has changed",
+      amount_changed_hint:
+        "Your team size changed while this page was open. It showed {{shown}}; the actual charge is {{actual}}. Nothing has been charged yet — you will only be charged after you confirm.",
+      amount_changed_confirm: "Confirm and pay the new amount",
+      subscription_activated:
+        "The plan is active. Each member's quota takes effect immediately.",
       selected_modules: "Selected Modules",
       track_order_btn: "Track Order",
     },

@@ -15,7 +15,6 @@ import {
   Book,
   Coins,
   PlusCircle,
-  MinusCircle,
 } from "lucide-react";
 import { Dialog } from "@headlessui/react";
 import { getLoginOptions } from "@/lib/auth/fido2_client";
@@ -44,6 +43,11 @@ interface ITeamMember {
   userId: string;
   role: string;
   user?: { address: string; name: string | null; imageUrl: string | null };
+  /**
+   * Info: (20260818 - Luphia) 這位成員是以「信箱不符」的邀請加入的（第三輪 C-2）。
+   * 後端只對管理職回傳此欄位，因此對一般成員恆為 undefined。
+   */
+  emailMismatch?: boolean;
 }
 interface IPendingInvitation {
   id: string;
@@ -51,6 +55,8 @@ interface IPendingInvitation {
   inviter: { name: string | null; address: string; imageUrl: string | null };
   role: string;
   inviteeAddress?: string;
+  // Info: (20260815 - Luphia) email 邀請沒有位址，改以信箱識別（規範 §4 / P4）
+  inviteeEmail?: string;
 }
 
 export default function TeamManagementPage() {
@@ -66,6 +72,10 @@ export default function TeamManagementPage() {
     [],
   );
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  // Info: (20260815 - Luphia) 正在撤回的邀請（產品拍板 20260815：撤回不退費，但席次可再用）
+  const [revokingId, setRevokingId] = useState<string | null>(null);
+  // Info: (20260816 - Luphia) 正在拒絕的邀請（條款 §3.6：拒絕即釋出席次）
+  const [decliningId, setDecliningId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -80,7 +90,8 @@ export default function TeamManagementPage() {
   const [walletStatus, setWalletStatus] =
     useState<TeamWalletFetchStatus>("loading");
   const [allocationModal, setAllocationModal] = useState<{
-    member: ITeamMember;
+    // Info: (20260818 - Luphia) 由錢包面板開啟時對象未定，於視窗內選（產品需求 20260818）
+    member: ITeamMember | null;
     direction: AllocationDirection;
   } | null>(null);
   const [allocating, setAllocating] = useState(false);
@@ -262,8 +273,14 @@ export default function TeamManagementPage() {
     (isOwnerOrAdmin || userId === currentUserMember?.userId);
   const allocationOf = (userId: string) => allocationByUserId[userId] ?? "0";
 
-  const handleAllocationConfirm = async (amount: string) => {
+  const handleAllocationConfirm = async (amount: string, pickedId?: string) => {
     if (!allocationModal || !selectedTeamId) return;
+    /**
+     * Info: (20260818 - Luphia) 對象可能來自成員卡片（已決定）或視窗內的下拉（現選）。
+     * 兩者都沒有就不送——沒有對象的分配沒有意義，而後端會回一個難解讀的錯誤。
+     */
+    const targetUserId = allocationModal.member?.userId ?? pickedId;
+    if (!targetUserId) return;
     if (!/^\d+$/.test(amount) || amount === "0") {
       showAlert(t("team_management.wallet.invalid_amount"));
       return;
@@ -280,10 +297,10 @@ export default function TeamManagementPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            userId: allocationModal.member.userId,
+            userId: targetUserId,
             amount,
             direction: allocationModal.direction,
-            idempotencyKey: `ui:${selectedTeamId}:${allocationModal.member.userId}:${allocationModal.direction}:${amount}:${Date.now()}`,
+            idempotencyKey: `ui:${selectedTeamId}:${targetUserId}:${allocationModal.direction}:${amount}:${Date.now()}`,
           }),
         },
       );
@@ -394,6 +411,65 @@ export default function TeamManagementPage() {
       showAlert(t("team_management.alerts.error_accept"));
     } finally {
       setAcceptingId(null);
+    }
+  };
+
+  /**
+   * Info: (20260816 - Luphia) 拒絕收到的邀請（條款 §3.6）。
+   *
+   * 與接受不同，**不要求 FIDO2 簽章**：接受會讓你成為一個握有他人帳務資料的
+   * 團隊成員，拒絕則什麼都不會發生，只是把一個位置還回去。
+   * 為零後果的動作要求簽章，換來的是沒有人會按它。
+   */
+  const handleDeclineInvite = async (inviteId: string) => {
+    setDecliningId(inviteId);
+    try {
+      const token = localStorage.getItem("dewt");
+      const res = await fetch(
+        `/api/v1/user/team/invitations/${inviteId}/decline`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      const json = await res.json();
+      if (json.success) {
+        fetchPendingInvitations();
+        showAlert(t("team_management.alerts.decline_success"));
+      } else showAlert(json.message);
+    } catch {
+      showAlert(t("team_management.alerts.error_decline"));
+    } finally {
+      setDecliningId(null);
+    }
+  };
+
+  /**
+   * Info: (20260815 - Luphia) 撤回尚未接受的邀請（產品拍板 20260815）。
+   * 費用不退，但那一席會立刻空出來給下一次邀請使用——所以提示要講清楚，
+   * 否則管理員會以為自己按下的是「把錢丟掉」。
+   */
+  const handleRevokeInvite = async (inviteId: string) => {
+    if (!selectedTeamId) return;
+    setRevokingId(inviteId);
+    try {
+      const token = localStorage.getItem("dewt");
+      const res = await fetch(
+        `/api/v1/user/team/${selectedTeamId}/invitations/${inviteId}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      const json = await res.json();
+      if (json.success) {
+        fetchSentInvitations(selectedTeamId);
+        showAlert(t("team_management.alerts.revoke_success"));
+      } else showAlert(json.message);
+    } catch {
+      showAlert(t("team_management.alerts.error_revoke"));
+    } finally {
+      setRevokingId(null);
     }
   };
 
@@ -527,6 +603,20 @@ export default function TeamManagementPage() {
                     {acceptingId === inv.id
                       ? t("team_management.accepting")
                       : t("team_management.accept_via_fido2")}
+                  </button>
+                  {/**
+                   * Info: (20260816 - Luphia) 拒絕邀請（條款 §3.6）。
+                   * 沒有這顆按鈕，不想加入的人只能放著不理，
+                   * 而那一席會一直算在邀請方的帳上直到下次續訂才重算。
+                   */}
+                  <button
+                    onClick={() => handleDeclineInvite(inv.id)}
+                    disabled={decliningId === inv.id || acceptingId === inv.id}
+                    className="mt-2 w-full rounded-lg py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50"
+                  >
+                    {decliningId === inv.id
+                      ? t("team_management.declining")
+                      : t("team_management.decline_invite")}
                   </button>
                 </div>
               ))}
@@ -681,36 +771,43 @@ export default function TeamManagementPage() {
                                 {t("team_management.roles." + member.role)}
                               </span>
                             )}
+                            {/**
+                             * Info: (20260818 - Luphia) 信箱不符的標記（第三輪 C-2）。
+                             *
+                             * 接受邀請不綁身分是刻意的，所以這件事本身不是錯誤，
+                             * 也不該擋人加入——但管理職有權知道「這個人是這樣進來的」。
+                             * 用中性的黃色與說明文字，而不是紅色的錯誤樣式。
+                             */}
+                            {member.emailMismatch && (
+                              <span
+                                className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700"
+                                title={t("team_management.email_mismatch_hint")}
+                              >
+                                {t("team_management.email_mismatch")}
+                              </span>
+                            )}
                             <div className="flex items-center space-x-1">
-                              {/* Info: (20260809 - Luphia) 分配 / 收回入口移至成員卡片（產品調整 20260809），開啟輸入點數的確認視窗 */}
+                              {/**
+                               * Info: (20260809 - Luphia) 分配入口移至成員卡片（產品調整 20260809），
+                               * 開啟輸入點數的確認視窗。
+                               *
+                               * Info: (20260818 - Luphia) **收回按鈕已移除**（產品決定 20260818）：
+                               * 分配即撥入成員自己的區塊鏈錢包，點數一旦入袋就收不回來了。
+                               * 留一顆按不動的按鈕，比沒有那顆按鈕更糟。
+                               */}
                               {isOwnerOrAdmin && (
-                                <>
-                                  <button
-                                    onClick={() =>
-                                      setAllocationModal({
-                                        member,
-                                        direction:
-                                          ALLOCATION_DIRECTION.ALLOCATE,
-                                      })
-                                    }
-                                    className="p-1 text-gray-400 transition-colors hover:text-orange-600"
-                                    title={t("team_management.wallet.allocate")}
-                                  >
-                                    <PlusCircle className="size-3.5 shrink-0" />
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      setAllocationModal({
-                                        member,
-                                        direction: ALLOCATION_DIRECTION.REVOKE,
-                                      })
-                                    }
-                                    className="p-1 text-gray-400 transition-colors hover:text-orange-600"
-                                    title={t("team_management.wallet.revoke")}
-                                  >
-                                    <MinusCircle className="size-3.5 shrink-0" />
-                                  </button>
-                                </>
+                                <button
+                                  onClick={() =>
+                                    setAllocationModal({
+                                      member,
+                                      direction: ALLOCATION_DIRECTION.ALLOCATE,
+                                    })
+                                  }
+                                  className="p-1 text-gray-400 transition-colors hover:text-orange-600"
+                                  title={t("team_management.wallet.allocate")}
+                                >
+                                  <PlusCircle className="size-3.5 shrink-0" />
+                                </button>
                               )}
                               {(isOwner ||
                                 member.user?.address === user?.address) && (
@@ -742,13 +839,27 @@ export default function TeamManagementPage() {
                                 {t("team_management.pending_invite")}
                               </h3>
                               <p className="mt-1 w-32 truncate font-mono text-xs break-all text-gray-400">
-                                {inv.inviteeAddress}
+                                {/* Info: (20260815 - Luphia) email 邀請沒有位址，顯示信箱 */}
+                                {inv.inviteeEmail || inv.inviteeAddress}
                               </p>
                             </div>
                           </div>
-                          <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
-                            {t("team_management.pending")}
-                          </span>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
+                              {t("team_management.pending")}
+                            </span>
+                            {isOwnerOrAdmin && (
+                              <button
+                                type="button"
+                                onClick={() => handleRevokeInvite(inv.id)}
+                                disabled={revokingId === inv.id}
+                                title={t("team_management.revoke_invite_hint")}
+                                className="rounded-md px-2 py-0.5 text-[10px] font-semibold text-gray-500 transition-colors hover:bg-white hover:text-red-600 disabled:opacity-50"
+                              >
+                                {t("team_management.revoke_invite")}
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -793,6 +904,15 @@ export default function TeamManagementPage() {
                   walletStatus={walletStatus}
                   isManager={isOwnerOrAdmin}
                   onRetryWallet={retryTeamWallet}
+                  onAllocateClick={
+                    isOwnerOrAdmin
+                      ? () =>
+                          setAllocationModal({
+                            member: null,
+                            direction: ALLOCATION_DIRECTION.ALLOCATE,
+                          })
+                      : undefined
+                  }
                 />
               </div>
             </div>
@@ -805,14 +925,34 @@ export default function TeamManagementPage() {
           isOpen
           direction={allocationModal.direction}
           memberName={
-            allocationModal.member.user?.name ||
-            allocationModal.member.user?.address ||
-            allocationModal.member.userId
+            allocationModal.member
+              ? allocationModal.member.user?.name ||
+                allocationModal.member.user?.address ||
+                allocationModal.member.userId
+              : undefined
           }
+          // Info: (20260818 - Luphia) 對象未定時才給清單，視窗據此決定要不要顯示下拉
+          candidates={
+            allocationModal.member
+              ? undefined
+              : members.map((member) => ({
+                  userId: member.userId,
+                  name:
+                    member.user?.name || member.user?.address || member.userId,
+                }))
+          }
+          /**
+           * Info: (20260818 - Luphia) 分配的上限一律是團隊未分配餘額。
+           *
+           * 收回的入口已於 20260818 移除（分配即撥入成員自己的區塊鏈錢包，
+           * 收不回來），但 REVOKE 這個方向仍留在常數與 API 上，
+           * 因此上限的算法照舊分開——哪天要恢復，這裡不需要重想一次。
+           */
           max={
-            allocationModal.direction === ALLOCATION_DIRECTION.ALLOCATE
-              ? (teamWallet?.unallocatedBalance ?? "0")
-              : allocationOf(allocationModal.member.userId)
+            allocationModal.member &&
+            allocationModal.direction === ALLOCATION_DIRECTION.REVOKE
+              ? allocationOf(allocationModal.member.userId)
+              : (teamWallet?.unallocatedBalance ?? "0")
           }
           submitting={allocating}
           onClose={() => setAllocationModal(null)}

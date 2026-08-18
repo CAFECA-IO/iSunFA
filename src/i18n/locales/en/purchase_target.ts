@@ -1,0 +1,24 @@
+export const purchaseTarget = {
+  subscription_title: "Which team is this subscription for?",
+  credits_title: "Where should the credits go?",
+  seat_breakdown: "{{seats}} seats × NT$ {{unit}} = NT$ {{total}}",
+  seat_note:
+    "Seats are counted from your team's current size; the amount charged reflects the size at checkout.",
+  // Info: (20260814 - Luphia) 沒有團隊可選時要說出是哪一種沒有（載入中／失敗／過期／無權限）
+  session_expired: "Your session has expired. Sign in again to choose a team.",
+  teams_loading: "Loading your teams…",
+  teams_failed: "Could not load your teams. Please retry.",
+  team: "Team",
+  personal: "Personal",
+  select_team: "Select a team",
+  single_team: 'Will apply to "{{team}}"',
+  multi_team_hint:
+    "You belong to more than one team. Choose which team this purchase belongs to.",
+  team_required: "Select a team before paying.",
+  personal_hint:
+    "Credits go to your personal account and can be used for anything not tied to a team.",
+  no_owner_team:
+    "Only a team owner can subscribe. You do not own any team yet — ask the owner to subscribe, or create a team first.",
+  no_manager_team:
+    "Buying team credits requires owner or admin rights. You have no team to manage right now; you can buy personal credits instead.",
+};

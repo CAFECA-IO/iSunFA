@@ -33,7 +33,12 @@ export const teamWalletLedgerQuerySchema = z.object({
 
 // Info: (20260807 - Luphia) 團隊額度付款（POST /order/[order_id]/team_quota_payment）
 export const teamQuotaPaymentSchema = z.object({
-  teamId: z.string().min(1),
+  /**
+   * Info: (20260813 - Luphia) 選填（設計書 §5.6）：AI 分析與物流查詢沒有帳本情境，
+   * 付款團隊只能來自用戶。只屬一個團隊時由 server 自動解析，不必詢問；
+   * 屬多個團隊而未指定即回 TW_TEAM_AMBIGUOUS，讓前端出選單而非隨便挑一個。
+   */
+  teamId: z.string().min(1).optional(),
 });
 
 // Info: (20260807 - Luphia) PUT /subscription（OWNER 專屬）：free 免付款直接降級，付費方案需綁卡

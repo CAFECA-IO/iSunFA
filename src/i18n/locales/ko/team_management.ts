@@ -7,6 +7,18 @@ export const teamManagement = {
   accepting: "처리 중...",
   no_teams: "팀이 없습니다.",
   invite_member: "멤버 초대",
+  decline_invite: "거절",
+  declining: "처리 중...",
+  revoke_invite: "철회",
+  revoke_invite_hint:
+    "수락되지 않은 초대를 철회합니다. 이미 청구된 좌석 요금은 환불되지 않지만, 비워진 좌석은 다른 사람을 초대하는 데 사용할 수 있습니다.",
+  // Info: (20260815 - Luphia) email 邀請（規範 §4 / P4）
+  invite_method: "초대 방법",
+  invite_by_address: "지갑 주소",
+  invite_by_email: "이메일",
+  email_address: "이메일 주소",
+  invite_email_hint:
+    "참여 링크가 포함된 초대 메일을 발송합니다. 링크는 일회용이며 7일간 유효합니다.",
   you: "나",
   pending_invite: "대기 중인 초대",
   pending: "대기 중",
@@ -23,6 +35,10 @@ export const teamManagement = {
     "이 트랜잭션을 온체인에서 서명하려면 Passkey를 통한 인증이 필요합니다.",
   signing: "서명 중...",
   invite_via_fido2: "FIDO2로 초대",
+  // Info: (20260818 - Luphia) 以「信箱不符」之邀請加入的成員標記（第三輪 C-2），僅管理職可見
+  email_mismatch: "이메일 불일치",
+  email_mismatch_hint:
+    "초대를 수락한 계정의 인증된 이메일이 초대한 이메일과 다릅니다. 본인이 다른 이메일로 로그인했을 수도 있고, 초대 링크가 전달되었을 수도 있습니다.",
   roles: {
     OWNER: "소유자",
     ADMIN: "관리자",
@@ -45,6 +61,19 @@ export const teamManagement = {
     error_remove: "멤버 삭제 실패",
     invalid_address:
       "유효하지 않은 Web3 지갑 주소입니다. 0x로 시작하는 42자여야 합니다.",
+    invalid_email: "이메일 주소 형식이 올바르지 않습니다.",
+    invite_email_sent: "초대 메일을 발송했습니다!",
+    free_plan_limit_title: "무료 버전은 소유자 1인만 사용할 수 있습니다",
+    free_plan_limit_hint:
+      "구성원을 초대하려면 팀 버전 또는 기업 버전으로 업그레이드하세요. 요금은 좌석 수에 따라 청구되며, 초대한 구성원은 각자 전체 한도를 갖습니다.",
+    free_plan_limit_cta: "요금제 보기",
+    seat_reused:
+      "이미 결제된 좌석을 재사용했으므로 추가 요금은 청구되지 않았습니다.",
+    revoke_success:
+      "초대를 철회했습니다. 해당 좌석은 다른 사람을 초대하는 데 사용할 수 있습니다.",
+    error_revoke: "초대 철회에 실패했습니다",
+    decline_success: "초대를 거절했습니다.",
+    error_decline: "초대 거절에 실패했습니다",
   },
   scan_qr_code: "QR 코드 스캔",
   scanning: "스캔 중...",
@@ -53,15 +82,20 @@ export const teamManagement = {
   wallet: {
     title: "팀 지갑 및 구독 한도",
     quota_title: "구독 한도",
+    my_quota_title: "내 한도",
+    team_total_title: "팀 합계({{count}}명)",
     load_failed: "불러올 수 없습니다. 잠시 후 다시 시도해 주세요.",
     retry: "다시 시도",
     quota_5h: "5시간 한도",
     quota_week: "주간 한도",
+    documents_memory_link: "문서와 기억",
     balance_title: "팀 지갑",
     pool_balance: "미배분 포인트",
     frozen_warning:
       "팀 지갑이 동결되었습니다(보존 감사 이상). 고객 지원에 문의해 주세요.",
     buy_credits: "포인트 구매하기",
+    manage_plan: "플랜 관리",
+    manage_plan_hint: "한도가 부족하면 플랜을 업그레이드하세요",
     buy_credits_hint:
       "구매한 포인트는 팀 지갑에 적립되어 관리자가 배분할 수 있습니다.",
     allocated_points: "배분 포인트",
@@ -70,7 +104,14 @@ export const teamManagement = {
     amount_label: "포인트",
     amount_limit: "사용 가능: {{max}} 포인트",
     allocate: "배분",
+    allocate_member: "배정 대상",
+    allocate_hint: "미배정 포인트를 팀원에게 배정합니다",
     revoke: "회수",
+    // Info: (20260814 - Luphia) 分配即鑄到成員的鏈上錢包（ADR 015 修訂）
+    allocate_onchain_note:
+      "배정한 포인트는 해당 구성원 본인의 지갑(블록체인 주소)으로 바로 전송됩니다. 이 팀 외부에서도 사용할 수 있으며, 배정 후에는 팀에서 회수할 수 없습니다.",
+    revoke_onchain_note:
+      "회수는 멤버 지갑의 크레딧을 소각하며 한도는 이 팀이 배정한 누적 금액입니다. 이미 사용한 부분은 회수할 수 없습니다.",
     allocation_success: "완료되었습니다.",
     allocation_failed:
       "작업에 실패했습니다. 잔액을 확인한 후 다시 시도해 주세요.",

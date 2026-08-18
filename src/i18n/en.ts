@@ -41,6 +41,8 @@ import { esgTarget } from "@/i18n/locales/en/esg_target";
 import { verify } from "@/i18n/locales/en/verify";
 import { esg } from "@/i18n/locales/en/esg";
 import { teamManagement } from "@/i18n/locales/en/team_management";
+import { invitePage } from "@/i18n/locales/en/invite_page";
+import { documentsMemory } from "@/i18n/locales/en/documents_memory";
 import { esgReport } from "@/i18n/locales/en/esg_report";
 import { reportView } from "@/i18n/locales/en/report_view";
 import { cashFlowStatementView } from "@/i18n/locales/en/cash_flow_statement_view";
@@ -70,8 +72,12 @@ import { applicationManagement } from "@/i18n/locales/en/application_management"
 import type { BaseTranslation } from "@/i18n/zh_tw";
 import { carbonChatbot } from "@/i18n/locales/en/carbon_chatbot";
 import { hrManagement } from "@/i18n/locales/en/hr_management";
+import { paymentSource } from "@/i18n/locales/en/payment_source";
+import { purchaseTarget } from "@/i18n/locales/en/purchase_target";
 
 export const en = {
+  payment_source: paymentSource,
+  purchase_target: purchaseTarget,
   digital_product_passport: digitalProductPassport,
   logistics,
   dpp_urban_mining: dppUrbanMining,
@@ -117,6 +123,8 @@ export const en = {
   verify,
   esg,
   team_management: teamManagement,
+  invite_page: invitePage,
+  documents_memory: documentsMemory,
   esg_report: esgReport,
   report_view: reportView,
   cash_flow_statement_view: cashFlowStatementView,

@@ -9,6 +9,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import "@/app/globals.css";
 import { I18nProvider } from "@/i18n/i18n_context";
 import { AuthProvider } from "@/contexts/auth_context";
+import SessionExpiredNotice from "@/components/auth/session_expired_notice";
 import { AiContextProvider } from "@/contexts/ai_context";
 import CookieConsent from "@/components/common/cookie_consent";
 import TestingEnvBanner from "@/components/common/testing_env_banner";
@@ -89,6 +90,8 @@ export default async function RootLayout({
         <I18nProvider>
           {!isProduction() && <TestingEnvBanner />}
           <AuthProvider>
+            {/* Info: (20260814 - Luphia) 登入過期的全域提示：401 不再無聲 */}
+            <SessionExpiredNotice />
             <AiContextProvider>
               {children}
               <CookieConsent privacyPolicyContent={privacyPolicyContent} />

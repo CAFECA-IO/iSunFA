@@ -4,9 +4,12 @@
 // Info: (20260806 - Tzuhan) 三個 LLM 模式(INDEX/DRAFT/VERBATIM)走保活式串流(見下方註解與 @/lib/utils/streaming_response)
 
 import { NextRequest } from "next/server";
+import { randomUUID } from "crypto";
 import { logger } from "@/lib/utils/logger";
+import { runBilledCarbonTask } from "@/services/carbon_billing.service";
+import { toBillingFailureEnvelope } from "@/lib/utils/billing_response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
+import { enforceRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { ok, fail, jsonFail } from "@/lib/utils/response";
 import { streamingJson } from "@/lib/utils/streaming_response";
@@ -49,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Info: (20260716 - Tzuhan) LLM bucket:匯入為昂貴推論呼叫,與 chat/draft 共用額度
-    const limited = enforceCarbonRateLimit(
+    const limited = enforceRateLimit(
       sessionUser.address,
       RateLimitBucketEnum.LLM,
     );
@@ -71,6 +74,15 @@ export async function POST(request: NextRequest) {
       return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
     }
     const extractActivities = formData.get("extractActivities") !== "false";
+    /**
+     * Info: (20260813 - Luphia) 計費上下文（設計書 §5.5）：帳本由 channel 推導；
+     * 冪等鍵讓前端逐章迴圈中的重試不會重複扣點（匯入單章實測達 5 萬 tokens）。
+     */
+    const channelRaw = formData.get("channel");
+    const channel = typeof channelRaw === "string" ? channelRaw : undefined;
+    const clientMessageIdRaw = formData.get("clientMessageId");
+    const clientMessageId =
+      typeof clientMessageIdRaw === "string" ? clientMessageIdRaw : undefined;
     // Info: (20260727 - Tzuhan) #57 草稿補齊模式:mode=draft + sectionIds(JSON 陣列,白名單複驗於此與服務層)
     // Info: (20260730 - Tzuhan) 三種模式:逐字匯入 / 草稿補齊 / 頁碼索引(兩階段第一階段);
     // Info: (20260730 - Tzuhan) 值取自 enum(API 契約兩端共用),不在此以字面值比對
@@ -275,18 +287,19 @@ export async function POST(request: NextRequest) {
      */
     return streamingJson(
       async () => {
-        try {
+        // Info: (20260813 - Luphia) 三模式的實際工作抽為區域函式，供上方計費包裝呼叫
+        const runImportMode = async () => {
           // Info: (20260730 - Tzuhan) 兩階段第一階段:只問頁碼,輸出極小;失敗時服務層回空索引,前端據此退回送全文
           if (mode === CarbonReportImportModeEnum.INDEX) {
             const index = await service.buildSectionPageIndex(
               source,
               typeof language === "string" ? language : undefined,
             );
-            return ok({
+            return {
               index: Array.from(index.entries()).map(
                 ([paragraphId, startPage]) => ({ paragraphId, startPage }),
               ),
-            });
+            };
           }
 
           // Info: (20260727 - Tzuhan) #57 草稿補齊:回傳形狀與匯入一致(unmapped/activities 恆空),前端共用合併邏輯
@@ -296,16 +309,38 @@ export async function POST(request: NextRequest) {
               draftSectionIds,
               typeof language === "string" ? language : undefined,
             );
-            return ok({ segments, unmapped: [], activities: [] });
+            return { segments, unmapped: [], activities: [] };
           }
 
-          const result = await service.importReport(
+          return service.importReport(
             scopedSource,
             typeof language === "string" ? language : undefined,
             { chapterId, extractActivities, sectionIds: verbatimSectionIds },
           );
-          return ok(result);
+        };
+
+        try {
+          /**
+           * Info: (20260813 - Luphia) 三種匯入模式共用一次計費（設計書 §5.5）：
+           * 它們是同一條路徑的三個階段，且都會 fan-out 到多次 LLM 呼叫
+           * （逐章逐節），用量由捕捉範圍自動累加。預扣以來源文字長度估算。
+           */
+          const billedImport = await runBilledCarbonTask({
+            userId: sessionUser.id,
+            channel,
+            idempotencyKey: clientMessageId
+              ? `carbon-import:${sessionUser.id}:${clientMessageId}`
+              : `carbon-import:${randomUUID()}`,
+            inputChars: buffer.byteLength,
+            hasAttachment: true,
+            nowSec: Math.floor(Date.now() / 1000),
+            run: async () => runImportMode(),
+          });
+          return ok(billedImport.result);
         } catch (error) {
+          // Info: (20260813 - Luphia) 計費失敗要帶 payload（額度 resetAt / 待付 orderId），見 §5.5
+          const billingFailure = toBillingFailureEnvelope(error);
+          if (billingFailure) return billingFailure;
           if (error instanceof ApiError) {
             return fail({
               code: error.code,

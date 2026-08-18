@@ -1,12 +1,18 @@
 import { jsonOk, jsonFail } from "@/lib/utils/response";
+import { parsePositiveInt } from "@/lib/utils/pagination";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { couponService } from "@/services/coupon.service";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "15", 10);
+    const page = parsePositiveInt(searchParams.get("page"), {
+      fallback: 1,
+    });
+    const limit = parsePositiveInt(searchParams.get("limit"), {
+      fallback: 15,
+      max: 100,
+    });
     const result = await couponService.getCampaigns(page, limit);
 
     return jsonOk(result);

@@ -10,6 +10,9 @@
  *
  * 新增設定時只要在這裡多一筆定義，設定頁、簽章與讀取邏輯都會自動涵蓋。
  */
+
+import { DEFAULT_FAITH_MEMORY_RETENTION_DAYS } from "@/constants/llm";
+import { DEFAULT_FREE_PLAN_MAX_MEMBERS } from "@/constants/subscription_quota";
 export enum SystemSettingKey {
   GOOGLE_OAUTH_CLIENT_ID = "GOOGLE_OAUTH_CLIENT_ID",
   GOOGLE_OAUTH_CLIENT_SECRET = "GOOGLE_OAUTH_CLIENT_SECRET",
@@ -18,6 +21,39 @@ export enum SystemSettingKey {
   LLM_MODEL = "LLM_MODEL",
   OEN_ACCESS_TOKEN = "OEN_ACCESS_TOKEN",
   OEN_MERCHANT_ID = "OEN_MERCHANT_ID",
+  /**
+   * Info: (20260812 - Luphia) 費思個人化記憶於付費訂閱終止後的保留天數（見
+   * documents/architecture/ai_and_analytics/faith_personal_memory.md §7）。
+   *
+   * ⚠️ 調整此值等於變更對外承諾：服務條款 §3.7、《隱私權政策》§5 與訂閱方案頁
+   * 均載明相同天數，改設定時必須同步修訂該三處文字。
+   */
+  FAITH_MEMORY_RETENTION_DAYS = "FAITH_MEMORY_RETENTION_DAYS",
+  /**
+   * Info: (20260814 - Luphia) 免費版團隊的人數上限（PR #6652 第二輪 B-4）。
+   *
+   * 額度改為逐成員計算後，免費版的席次單價是 0，乘上任何人數都是 0——
+   * 一個 20 人的免費團隊等於每週 800 點的模型用量而月費為零。
+   * 訂閱方案以「席次 × 單價」自然封頂，免費版只能靠人數上限。
+   *
+   * ⚠️ 服務條款 §3.1 載明「免費版團隊人數上限以方案頁標示為準」，
+   * 調整此值必須同步方案頁的標示。
+   */
+  FREE_PLAN_MAX_MEMBERS = "FREE_PLAN_MAX_MEMBERS",
+  /**
+   * Info: (20260815 - Luphia) 寄信設定（規範 §4 / P4：email 邀請）。
+   *
+   * 存於 DB 而非 env：與其他營運設定同一套（ADR 017），可由後台調整、不需重啟。
+   * 未設定時邀請**明確失敗**而不是靜靜不寄——沒寄出去的邀請等於白收一席的錢。
+   */
+  SMTP_HOST = "SMTP_HOST",
+  SMTP_PORT = "SMTP_PORT",
+  SMTP_USER = "SMTP_USER",
+  SMTP_PASSWORD = "SMTP_PASSWORD",
+  // Info: (20260815 - Luphia) 寄件者顯示名稱與信箱，如 `iSunFA <no-reply@isunfa.com>`
+  SMTP_FROM = "SMTP_FROM",
+  // Info: (20260815 - Luphia) 邀請連結的站台網址（寄出的信裡要放絕對網址）
+  APP_BASE_URL = "APP_BASE_URL",
 }
 
 // Info: (20260809 - Luphia) 設定分組，供設定頁排版
@@ -25,6 +61,8 @@ export enum SystemSettingGroup {
   THIRD_PARTY_LOGIN = "THIRD_PARTY_LOGIN",
   AI = "AI",
   PAYMENT = "PAYMENT",
+  // Info: (20260815 - Luphia) 寄信（email 邀請）
+  MAIL = "MAIL",
 }
 
 // Info: (20260809 - Luphia) 設定頁的分區順序
@@ -32,6 +70,7 @@ export const SYSTEM_SETTING_GROUP_ORDER: SystemSettingGroup[] = [
   SystemSettingGroup.THIRD_PARTY_LOGIN,
   SystemSettingGroup.AI,
   SystemSettingGroup.PAYMENT,
+  SystemSettingGroup.MAIL,
 ];
 
 export interface ISystemSettingDefinition {
@@ -86,6 +125,55 @@ export const SYSTEM_SETTING_DEFINITIONS: Record<
     isSecret: false,
     envKey: "OEN_MERCHANT_ID",
   },
+  [SystemSettingKey.FAITH_MEMORY_RETENTION_DAYS]: {
+    key: SystemSettingKey.FAITH_MEMORY_RETENTION_DAYS,
+    group: SystemSettingGroup.AI,
+    isSecret: false,
+    envKey: "FAITH_MEMORY_RETENTION_DAYS",
+  },
+  [SystemSettingKey.FREE_PLAN_MAX_MEMBERS]: {
+    key: SystemSettingKey.FREE_PLAN_MAX_MEMBERS,
+    group: SystemSettingGroup.PAYMENT,
+    isSecret: false,
+    envKey: "FREE_PLAN_MAX_MEMBERS",
+  },
+  [SystemSettingKey.SMTP_HOST]: {
+    key: SystemSettingKey.SMTP_HOST,
+    group: SystemSettingGroup.MAIL,
+    isSecret: false,
+    envKey: "SMTP_HOST",
+  },
+  [SystemSettingKey.SMTP_PORT]: {
+    key: SystemSettingKey.SMTP_PORT,
+    group: SystemSettingGroup.MAIL,
+    isSecret: false,
+    envKey: "SMTP_PORT",
+  },
+  [SystemSettingKey.SMTP_USER]: {
+    key: SystemSettingKey.SMTP_USER,
+    group: SystemSettingGroup.MAIL,
+    isSecret: false,
+    envKey: "SMTP_USER",
+  },
+  [SystemSettingKey.SMTP_PASSWORD]: {
+    key: SystemSettingKey.SMTP_PASSWORD,
+    group: SystemSettingGroup.MAIL,
+    // Info: (20260815 - Luphia) 密碼屬秘密值：DB 內加密、讀取 API 一律遮蔽
+    isSecret: true,
+    envKey: "SMTP_PASSWORD",
+  },
+  [SystemSettingKey.SMTP_FROM]: {
+    key: SystemSettingKey.SMTP_FROM,
+    group: SystemSettingGroup.MAIL,
+    isSecret: false,
+    envKey: "SMTP_FROM",
+  },
+  [SystemSettingKey.APP_BASE_URL]: {
+    key: SystemSettingKey.APP_BASE_URL,
+    group: SystemSettingGroup.MAIL,
+    isSecret: false,
+    envKey: "APP_BASE_URL",
+  },
 };
 
 /**
@@ -97,6 +185,14 @@ export const SYSTEM_SETTING_FALLBACKS: Partial<
   Record<SystemSettingKey, string>
 > = {
   [SystemSettingKey.OEN_MERCHANT_ID]: "mermer",
+  // Info: (20260812 - Luphia) 保底值與 DEFAULT_FAITH_MEMORY_RETENTION_DAYS 同源，見 src/constants/llm.ts
+  [SystemSettingKey.FAITH_MEMORY_RETENTION_DAYS]: String(
+    DEFAULT_FAITH_MEMORY_RETENTION_DAYS,
+  ),
+  // Info: (20260814 - Luphia) 免費版人數上限的保底值，與 DEFAULT_FREE_PLAN_MAX_MEMBERS 同源
+  [SystemSettingKey.FREE_PLAN_MAX_MEMBERS]: String(
+    DEFAULT_FREE_PLAN_MAX_MEMBERS,
+  ),
 };
 
 export const SYSTEM_SETTING_KEYS = Object.keys(

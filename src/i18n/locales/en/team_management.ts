@@ -7,6 +7,18 @@ export const teamManagement = {
   accepting: "Accepting...",
   no_teams: "No teams available.",
   invite_member: "Invite Member",
+  decline_invite: "Decline",
+  declining: "Declining…",
+  revoke_invite: "Withdraw",
+  revoke_invite_hint:
+    "Withdraw this pending invitation. The seat fee already charged is not refunded, but the freed seat can be used to invite someone else.",
+  // Info: (20260815 - Luphia) email 邀請（規範 §4 / P4）
+  invite_method: "Invitation method",
+  invite_by_address: "Wallet address",
+  invite_by_email: "Email",
+  email_address: "Email address",
+  invite_email_hint:
+    "We will send an invitation email containing a join link. The link is single-use and valid for 7 days.",
   you: "You",
   pending_invite: "Pending Invite",
   pending: "PENDING",
@@ -23,6 +35,10 @@ export const teamManagement = {
     "You will be asked to authenticate via Passkey to sign this transaction on-chain.",
   signing: "Signing...",
   invite_via_fido2: "Invite via FIDO2",
+  // Info: (20260818 - Luphia) 以「信箱不符」之邀請加入的成員標記（第三輪 C-2），僅管理職可見
+  email_mismatch: "email mismatch",
+  email_mismatch_hint:
+    "The account that accepted this invitation has a verified email different from the invited one. They may have signed in with another email, or the invitation link was forwarded.",
   roles: {
     OWNER: "Owner",
     ADMIN: "Admin",
@@ -45,6 +61,18 @@ export const teamManagement = {
     error_remove: "Failed to remove member",
     invalid_address:
       "Invalid Web3 address. It should start with 0x and be 42 characters long.",
+    invalid_email: "That email address is not valid.",
+    invite_email_sent: "Invitation email sent!",
+    free_plan_limit_title: "The Free plan is for the owner only",
+    free_plan_limit_hint:
+      "Upgrade to Team or Enterprise to invite members. Subscriptions are billed per seat, and every member you invite gets their own full quota.",
+    free_plan_limit_cta: "See plans",
+    seat_reused: "An already-paid seat was reused; you were not charged again.",
+    revoke_success:
+      "Invitation withdrawn. The seat is now available for another invitation.",
+    error_revoke: "Failed to withdraw the invitation",
+    decline_success: "Invitation declined.",
+    error_decline: "Failed to decline the invitation",
   },
   scan_qr_code: "Scan QR Code",
   scanning: "Scanning...",
@@ -53,15 +81,20 @@ export const teamManagement = {
   wallet: {
     title: "Team Wallet & Subscription Quota",
     quota_title: "Subscription Quota",
+    my_quota_title: "Your quota",
+    team_total_title: "Team total ({{count}} members)",
     load_failed: "Unable to load. Please try again.",
     retry: "Retry",
     quota_5h: "Per 5-hour quota",
     quota_week: "Weekly quota",
+    documents_memory_link: "Documents & Memory",
     balance_title: "Team Wallet",
     pool_balance: "Unallocated credits",
     frozen_warning:
       "The team wallet is frozen (conservation audit failure). Please contact support.",
     buy_credits: "Buy Credits",
+    manage_plan: "Manage plan",
+    manage_plan_hint: "Upgrade the plan when the quota runs short",
     buy_credits_hint:
       "Purchased credits go into the team wallet for managers to allocate.",
     allocated_points: "Allocated credits",
@@ -70,7 +103,14 @@ export const teamManagement = {
     amount_label: "Amount",
     amount_limit: "Available: {{max}} credits",
     allocate: "Allocate",
+    allocate_member: "Allocate to",
+    allocate_hint: "Give unallocated credits to a team member",
     revoke: "Revoke",
+    // Info: (20260814 - Luphia) 分配即鑄到成員的鏈上錢包（ADR 015 修訂）
+    allocate_onchain_note:
+      "Allocated credits go straight to the member's own wallet (their blockchain address). They can use them anywhere, not just in this team, and the team cannot take them back afterwards.",
+    revoke_onchain_note:
+      "Revoking burns credits from the member's wallet, up to what this team has allocated to them. Anything they have already spent cannot be reclaimed.",
     allocation_success: "Done.",
     allocation_failed: "Operation failed. Please check the balance and retry.",
     invalid_amount: "Please enter a positive integer amount.",

@@ -6,7 +6,7 @@ import { jsonOk, jsonFail } from "@/lib/utils/response";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ analysisId: string; token: string }> },
+  { params }: { params: Promise<{ analysis_id: string; token: string }> },
 ) {
   try {
     const authHeader = request.headers.get("Authorization");
@@ -16,7 +16,8 @@ export async function PATCH(
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
-    const { analysisId, token } = await params;
+    // Info: (20260813 - Luphia) 路由參數為 analysis_id；取錯名字會讓 where 少掉這道過濾
+    const { analysis_id: analysisId, token } = await params;
 
     const updated = await shareRepo.updateToken({
       where: {

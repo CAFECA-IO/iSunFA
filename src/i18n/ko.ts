@@ -39,6 +39,8 @@ import { voucher } from "@/i18n/locales/ko/voucher";
 import { verify } from "@/i18n/locales/ko/verify";
 import { esg } from "@/i18n/locales/ko/esg";
 import { teamManagement } from "@/i18n/locales/ko/team_management";
+import { invitePage } from "@/i18n/locales/ko/invite_page";
+import { documentsMemory } from "@/i18n/locales/ko/documents_memory";
 import { esgReport } from "@/i18n/locales/ko/esg_report";
 import { reportView } from "@/i18n/locales/ko/report_view";
 import { cashFlowStatementView } from "@/i18n/locales/ko/cash_flow_statement_view";
@@ -70,8 +72,12 @@ import { applicationManagement } from "@/i18n/locales/ko/application_management"
 import type { BaseTranslation } from "@/i18n/zh_tw";
 import { carbonChatbot } from "@/i18n/locales/ko/carbon_chatbot";
 import { hrManagement } from "@/i18n/locales/ko/hr_management";
+import { paymentSource } from "@/i18n/locales/ko/payment_source";
+import { purchaseTarget } from "@/i18n/locales/ko/purchase_target";
 
 export const ko = {
+  payment_source: paymentSource,
+  purchase_target: purchaseTarget,
   digital_product_passport: digitalProductPassport,
   logistics,
   dpp_urban_mining: dppUrbanMining,
@@ -117,6 +123,8 @@ export const ko = {
   verify,
   esg,
   team_management: teamManagement,
+  invite_page: invitePage,
+  documents_memory: documentsMemory,
   esg_report: esgReport,
   report_view: reportView,
   cash_flow_statement_view: cashFlowStatementView,

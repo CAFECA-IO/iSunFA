@@ -17,6 +17,35 @@ export const WEEK_SEC = 7 * 24 * 60 * 60;
  */
 export const WEEK_ANCHOR_EPOCH_SEC = 1767542400;
 
+/**
+ * Info: (20260812 - Luphia) 雙視窗識別碼（402 payload 的 `exceeded`）。
+ * 原先以字面字串散落於 spend.service 與前端判斷，違反 CLAUDE.md §3「拒絕魔法字串」，
+ * 收斂至此作為唯一來源；前端據此決定倒數要讀哪一個視窗的 resetAt。
+ */
+export const QUOTA_WINDOW = {
+  PER_5H: "PER_5H",
+  PER_WEEK: "PER_WEEK",
+} as const;
+
+export type QuotaWindow = (typeof QUOTA_WINDOW)[keyof typeof QUOTA_WINDOW];
+
+/**
+ * Info: (20260812 - Luphia) 額度用罄時 402 payload 揭露的出路（設計書 §5 三條出路）。
+ */
+export const QUOTA_EXCEEDED_OPTION = {
+  WAIT_RESET: "WAIT_RESET",
+  USE_ALLOCATION: "USE_ALLOCATION",
+  USE_PERSONAL_WALLET: "USE_PERSONAL_WALLET",
+  /**
+   * Info: (20260815 - Luphia) 單筆金額超過整個視窗上限時的出路（PR #6652 第二輪 C-5）：
+   * 等重置永遠不會有幫助，只能改用個人點數或升級方案。
+   */
+  UPGRADE_PLAN: "UPGRADE_PLAN",
+} as const;
+
+export type QuotaExceededOption =
+  (typeof QUOTA_EXCEEDED_OPTION)[keyof typeof QUOTA_EXCEEDED_OPTION];
+
 // Info: (20260807 - Luphia) 訂閱方案僅適用團隊三階（PLAN.PERSONAL 不參與團隊訂閱）
 export const TEAM_PLAN = {
   FREE: PLAN.FREE,
@@ -49,6 +78,22 @@ export const DEFAULT_SUBSCRIPTION_QUOTA_BY_PLAN: Record<
   [TEAM_PLAN.TEAM]: { per5h: 100, perWeek: 750 },
   [TEAM_PLAN.BUSINESS]: { per5h: 1000, perWeek: 7500 },
 };
+
+/**
+ * Info: (20260814 - Luphia) 免費版團隊的人數上限預設值（PR #6652 第二輪 B-4）。
+ *
+ * 額度逐成員計算後，付費方案以「席次 × 單價」自然封頂，免費版沒有這個機制——
+ * 席次單價是 0，人數再多帳單都是 0，而每個人各自享有一份額度。
+ * 這個上限就是免費版的封頂。正式值為系統設定（可後台調整），此為 fail-safe 預設。
+ *
+ * Info: (20260818 - Luphia) 上限定為 **1（僅擁有者本人）**（產品決定 20260818）。
+ *
+ * 免費版是給個人或試用的：要加第二個人就代表這是團隊在用，而團隊用量該由
+ * 席次計費承擔。訂為 1 也讓「上限」與「方案的定位」是同一件事——
+ * 先前的 5 是一個沒有依據的中間值，既擋不住小型團隊白用，又讓人以為
+ * 免費版本來就支援多人協作。
+ */
+export const DEFAULT_FREE_PLAN_MAX_MEMBERS = 1;
 
 export const TEAM_SUBSCRIPTION_STATUS = {
   ACTIVE: "ACTIVE",
@@ -91,6 +136,11 @@ export const SPEND_SOURCE = {
   SUBSCRIPTION_QUOTA: "SUBSCRIPTION_QUOTA",
   TEAM_ALLOCATION: "TEAM_ALLOCATION",
   PERSONAL_WALLET: "PERSONAL_WALLET",
+  /**
+   * Info: (20260813 - Luphia) 拆帳（設計書 §5.4）：同一筆消費同時扣了訂閱額度與分配點數。
+   * 額度剩餘不足全額時不再整筆改扣錢包，而是「額度用光、差額扣錢包」，故需要第四種來源。
+   */
+  MIXED: "MIXED",
 } as const;
 
 export type SpendSource = (typeof SPEND_SOURCE)[keyof typeof SPEND_SOURCE];
@@ -100,12 +150,40 @@ export const BILLABLE_FEATURE_CODE = {
   FAITH_CHAT: "FAITH_CHAT",
   AI_ANALYSIS: "AI_ANALYSIS",
   CARBON_CHAT: "CARBON_CHAT",
+  // Info: (20260813 - Luphia) 物流碳足跡查詢：以專屬代碼記帳，才分得出與對話類的用量
+  LOGISTICS_CARBON: "LOGISTICS_CARBON",
   // Info: (20260807 - Luphia) 團隊解散歸零分錄專用（設計書 §6.3），非可消費功能
   TEAM_DISSOLVED: "TEAM_DISSOLVED",
 } as const;
 
 export type BillableFeatureCode =
   (typeof BILLABLE_FEATURE_CODE)[keyof typeof BILLABLE_FEATURE_CODE];
+
+/**
+ * Info: (20260813 - Luphia) 扣款來源的優先順序（設計書 §5.4）。
+ *
+ * 預設 QUOTA_FIRST：訂閱額度會週期性重置歸零，錢包點數是買來的資產，
+ * 先用會過期的那一份對用戶有利。
+ */
+export const SPEND_PRIORITY = {
+  QUOTA_FIRST: "QUOTA_FIRST",
+  ALLOCATION_FIRST: "ALLOCATION_FIRST",
+} as const;
+
+export type SpendPriority =
+  (typeof SPEND_PRIORITY)[keyof typeof SPEND_PRIORITY];
+
+/**
+ * Info: (20260814 - Luphia) 逐功能的扣款順序（`FEATURE_SPEND_PRIORITY` / `resolveSpendPriority`）
+ * 已於 2026-08-14 移除（PR #6652 第二輪 A-1）。
+ *
+ * 它排序的是「訂閱額度」與「團隊分配給成員的離鏈點數」。分配改為鑄到成員自己的錢包後，
+ * 第二層變成**成員的個人資產**，而順序就固定了：一律先用團隊買的額度，
+ * 不足才動用他自己的點數——先花成員的錢再用團隊額度，沒有任何情境說得通。
+ *
+ * 純函式 `splitSpend` 仍保留 priority 參數（已有單測涵蓋），供日後真的出現
+ * 兩個對等來源時使用。
+ */
 
 // Info: (20260807 - Luphia) 訂閱計費週期（對齊既有 Order.data.billingInterval 慣例）
 export const BILLING_INTERVAL = {

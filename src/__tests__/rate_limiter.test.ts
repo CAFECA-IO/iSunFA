@@ -1,10 +1,7 @@
 // Info: (20260716 - Emily) 限流器測試(#6516):窗口滑動、雙窗口、bucket/身份隔離、Retry-After、清掃
 
 import { describe, it, expect } from "@jest/globals";
-import {
-  SlidingWindowRateLimiter,
-  enforceCarbonRateLimit,
-} from "@/lib/rate_limiter";
+import { SlidingWindowRateLimiter, enforceRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum, RATE_LIMIT_RULES } from "@/constants/rate_limit";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 
@@ -216,14 +213,14 @@ describe("PRF bucket honours its configured windows", () => {
  * 偽裝成迴歸。這裡斷言**現在真正的契約**，並把落差寫在這裡 ——
  * 等 `httpStatusOf()` 補上那個 case，改這支測試就是那次修正的一部分。
  */
-describe("enforceCarbonRateLimit response", () => {
+describe("enforceRateLimit response", () => {
   it("should carry the rate-limit error code and a Retry-After header", async () => {
     // Info: (20260812 - Luphia) 用獨立身份，避免與其他測試共用 module 層級的 limiter 計數
     const identity = "0xPRF_ENFORCE";
 
-    let limited = null as ReturnType<typeof enforceCarbonRateLimit>;
+    let limited = null as ReturnType<typeof enforceRateLimit>;
     for (let i = 0; i <= 20 && limited === null; i += 1) {
-      limited = enforceCarbonRateLimit(identity, RateLimitBucketEnum.PRF);
+      limited = enforceRateLimit(identity, RateLimitBucketEnum.PRF);
     }
 
     expect(limited).not.toBeNull();

@@ -58,12 +58,28 @@ export async function POST(
     await webAuthnRepo.clearChallenge(sessionUser.id);
 
     // Info: (20260326 - Tzuhan) Accept invitation inside a transaction
-    const newMember = await teamRepo.acceptInvitation(
+    const newMember = await teamRepo.acceptInvitation({
       inviteId,
-      invitation.teamId,
-      sessionUser.id,
-      invitation.role,
-    );
+      teamId: invitation.teamId,
+      userId: sessionUser.id,
+      role: invitation.role,
+      acceptedAt: new Date(),
+      /**
+       * Info: (20260817 - Luphia) 位址邀請沒有受邀信箱，因此比對不適用（null）。
+       * 這條路徑的身分本來就綁在位址上——上面已經驗過
+       * `invitation.inviteeAddress === sessionUser.address`，比 email 強得多。
+       */
+      emailMatch: null,
+    });
+
+    /**
+     * Info: (20260816 - Luphia) `null` = 這封邀請在上面那次讀取之後已經不是 PENDING
+     * （連點兩次的第二次，或已被撤回）。當成「查無此邀請」回覆，
+     * 而不是繼續往下送一筆鏈上訊息、回傳一個不存在的成員。
+     */
+    if (!newMember) {
+      return jsonFail(API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO);
+    }
 
     const inviterName = invitation.inviter.name || invitation.inviter.address;
     const inviteeName = sessionUser.name || sessionUser.address;

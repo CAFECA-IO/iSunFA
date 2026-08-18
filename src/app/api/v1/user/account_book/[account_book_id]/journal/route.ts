@@ -1,4 +1,5 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { parseOptionalPositiveInt } from "@/lib/utils/pagination";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -103,12 +104,8 @@ export async function GET(
     const verifyStatus = searchParams.get("verifyStatus");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
-    const page = searchParams.get("page")
-      ? parseInt(searchParams.get("page")!)
-      : undefined;
-    const pageSize = searchParams.get("pageSize")
-      ? parseInt(searchParams.get("pageSize")!)
-      : undefined;
+    const page = parseOptionalPositiveInt(searchParams.get("page"));
+    const pageSize = parseOptionalPositiveInt(searchParams.get("pageSize"));
     const sort = searchParams.get("sort") === "asc" ? "asc" : "desc";
 
     // Info: (20260327 - Luphia) 乾淨且安全地組裝查詢條件 (Where)

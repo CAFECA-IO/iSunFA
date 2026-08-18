@@ -11,6 +11,7 @@ import { processAmortization } from "@/services/cron/amortization.worker.service
 import { runWalletGuardian } from "@/services/cron/wallet_audit.cron";
 import { expireOverdueTeamSubscriptions } from "@/services/cron/subscription_expiry.cron";
 import { processSubscriptionRenewals } from "@/services/cron/subscription_renewal.cron";
+import { runFaithMemoryRetention } from "@/services/cron/faith_memory_retention.cron";
 import {
   installWorkerShutdownHandlers,
   isShuttingDown,
@@ -86,6 +87,15 @@ async function runWorker() {
       "SubscriptionRenewal",
       () => processSubscriptionRenewals(),
       60 * 60 * 1000,
+    ),
+    /**
+     * Info: (20260817 - Luphia) 費思記憶的 90 天保留與刪除（條款 §3.7、隱私政策 §5）。
+     * 每 6 小時對帳一次即足夠——承諾的粒度是「天」，而它天然冪等、可重入。
+     */
+    startServiceLoop(
+      "FaithMemoryRetention",
+      () => runFaithMemoryRetention(),
+      6 * 60 * 60 * 1000,
     ),
   ]);
 

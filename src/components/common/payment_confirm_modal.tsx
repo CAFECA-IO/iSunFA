@@ -9,7 +9,15 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { Coins, X, Loader2, Copy, Check, CheckCircle2 } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  CheckCircle2,
+  Coins,
+  Copy,
+  Loader2,
+  X,
+} from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
 import { useRouter } from "next/navigation";
@@ -43,6 +51,21 @@ interface IPaymentConfirmModalProps {
   errorMessage?: string;
   txHash?: string;
   extraContent?: ReactNode;
+  /**
+   * Info: (20260813 - Luphia) 付款來源為團隊額度時的兩項差異（設計書 §5.6）：
+   * 1. 不顯示個人餘額的試算——團隊額度扣的不是個人點數，那行數字是錯的資訊；
+   * 2. 不以個人餘額擋下確認——個人點數為 0 但團隊有額度的人本來付得起，
+   *    卻會被「點數不足」的提示攔住，那是功能性的封鎖而不只是顯示問題。
+   * 預設 false：其他付款情境行為完全不變。
+   */
+  paidByTeamQuota?: boolean;
+  /**
+   * Info: (20260813 - Luphia) 團隊來源的可用額度（雙視窗剩餘較小值 + 分配點數）。
+   * 有值時據此判斷夠不夠付：固定價格的訂單不接受封頂扣款（設計書 §5.4），
+   * 不足就該在按下去之前擋住，而不是送出後拿一個 402 回來。
+   * null / undefined 代表尚未選定團隊或取不到餘額——此時不做判斷，交由 server 裁決。
+   */
+  teamAvailableCredits?: string | null;
 }
 
 const EMPTY_ITEMS: IPaymentDetailItem[] = [];
@@ -61,6 +84,8 @@ export default function PaymentConfirmModal({
   errorMessage = undefined,
   txHash = undefined,
   extraContent = undefined,
+  paidByTeamQuota = false,
+  teamAvailableCredits = null,
 }: IPaymentConfirmModalProps) {
   const { t } = useTranslation();
   const { user, refreshAuth } = useAuth();
@@ -94,6 +119,19 @@ export default function PaymentConfirmModal({
 
   const balance = MoneyUtil.subtract(currentCredits, cost);
   const isBalanceNegative = MoneyUtil.isNegative(balance);
+
+  /**
+   * Info: (20260813 - Luphia) 以「當前來源」判斷點數是否足夠：
+   * 團隊來源看團隊可用額度，個人來源看個人餘額。
+   * 團隊餘額尚未取得時不判斷——寧可讓 server 回 402，也不要憑不完整的資料誤擋。
+   */
+  const availableForSource = paidByTeamQuota
+    ? teamAvailableCredits
+    : currentCredits;
+  const isInsufficient =
+    availableForSource !== null &&
+    availableForSource !== undefined &&
+    MoneyUtil.toDecimal(availableForSource).lt(cost);
 
   return (
     <>
@@ -251,21 +289,66 @@ export default function PaymentConfirmModal({
                           <div className="mt-4">{extraContent}</div>
                         )}
 
-                        <div className="mt-4 flex items-center justify-end gap-1 text-right text-xs text-gray-400">
-                          <p>{t("analysis.confirm_balance")}:</p>
-                          <p className="font-medium">
-                            {currentCredits} - {cost} ={" "}
-                            <span
-                              className={
-                                isBalanceNegative
-                                  ? "font-bold text-red-500"
-                                  : ""
-                              }
-                            >
-                              {balance}
-                            </span>
-                          </p>
-                        </div>
+                        {/**
+                         * Info: (20260813 - Luphia) 點數不足就明說並停用支付鈕：
+                         * 讓按鈕可按、按了才回一句失敗，等於要用戶自己試錯；
+                         * 而固定價格的訂單在不足時連部分扣款都不該發生。
+                         */}
+                        {isInsufficient && (
+                          <div className="mt-4 flex items-start gap-2 rounded-lg bg-red-50 p-3 text-xs text-red-700">
+                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                            <div className="space-y-1">
+                              <p>
+                                {paidByTeamQuota
+                                  ? t("payment_source.team_insufficient", {
+                                      available: availableForSource ?? "0",
+                                      cost,
+                                    })
+                                  : t("payment_source.personal_insufficient", {
+                                      available: availableForSource ?? "0",
+                                      cost,
+                                    })}
+                              </p>
+                              {/**
+                               * Info: (20260813 - Luphia) 停用支付鈕會連帶關掉原本
+                               * 「按下去才彈出的加購點數提示」，因此把加購入口挪到這裡。
+                               * 擋住用戶又不給出路，比讓他按下去失敗更糟。
+                               */}
+                              {!paidByTeamQuota && (
+                                <button
+                                  type="button"
+                                  className="cursor-pointer font-semibold underline"
+                                  onClick={() => setShowInsufficient(true)}
+                                >
+                                  {t("analysis.insufficient_credits.buy_btn")}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/**
+                         * Info: (20260813 - Luphia) 個人餘額試算只在扣個人點數時顯示：
+                         * 團隊額度付款不動個人餘額，這行會變成一個與事實相反的數字
+                         * （團隊那側的剩餘量由來源選擇器的額度儀表呈現）。
+                         */}
+                        {!paidByTeamQuota && (
+                          <div className="mt-4 flex items-center justify-end gap-1 text-right text-xs text-gray-400">
+                            <p>{t("analysis.confirm_balance")}:</p>
+                            <p className="font-medium">
+                              {currentCredits} - {cost} ={" "}
+                              <span
+                                className={
+                                  isBalanceNegative
+                                    ? "font-bold text-red-500"
+                                    : ""
+                                }
+                              >
+                                {balance}
+                              </span>
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -286,17 +369,18 @@ export default function PaymentConfirmModal({
                         ) : (
                           <button
                             type="button"
-                            disabled={isLoading}
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:cursor-wait disabled:opacity-70 sm:col-start-2"
-                            onClick={() => {
-                              if (
-                                MoneyUtil.toDecimal(currentCredits).lt(cost)
-                              ) {
-                                setShowInsufficient(true);
-                              } else {
-                                onConfirm();
-                              }
-                            }}
+                            disabled={isLoading || isInsufficient}
+                            className={`inline-flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-70 sm:col-start-2 ${
+                              isInsufficient
+                                ? "disabled:cursor-not-allowed"
+                                : "disabled:cursor-wait"
+                            }`}
+                            /**
+                             * Info: (20260813 - Luphia) 這裡不再重複判斷餘額：
+                             * 不足時按鈕已停用（isInsufficient），加購入口移到上方提示。
+                             * 判斷只留一處，才不會出現「擋法不一致」的兩套規則。
+                             */
+                            onClick={onConfirm}
                           >
                             {isLoading && (
                               <Loader2 className="h-4 w-4 animate-spin" />

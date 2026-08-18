@@ -73,6 +73,42 @@ export const useOrderTransaction = () => {
       if (!orderRes?.payload) throw new Error("Failed to create order");
       const { orderId } = orderRes.payload;
 
+      return await runPayment(orderId, calculatedCost, onPaymentSuccess);
+    } catch (error) {
+      console.error("Analysis/Transaction failed:", error);
+      const err = error as Error;
+      setErrorMessage(err.message || "Payment or Analysis failed");
+      setWorkflowStatus("error");
+      return false;
+    } finally {
+      executingFlagRef.current = false;
+    }
+  };
+
+  /**
+   * Info: (20260813 - Luphia) 付款流程本體（自 executeOrderTransaction 抽出，行為不變）。
+   *
+   * 抽出的理由：碳盤查的無帳本會話由**伺服器**以冪等鍵先建好訂單（設計書 §5.5），
+   * 前端只需付那一張，不能再自行建單——另建一張會讓伺服器那張永遠停在待付，
+   * 而重送時仍找不到已付訖的訂單。
+   */
+  const runPayment = async (
+    orderId: string,
+    calculatedCost: number,
+    onPaymentSuccess: (
+      authData: {
+        orderId: string;
+        transactionHash: string;
+        reportId?: string;
+      } & AuthenticationJSON,
+    ) => Promise<void> | void,
+  ) => {
+    if (!user?.address || !user?.pubKeyX || !user?.pubKeyY) {
+      setErrorMessage("請重新登入以獲取付款金鑰");
+      setWorkflowStatus("error");
+      return false;
+    }
+    try {
       // Info: (20260209 - Tzuhan) 2. 準備轉帳 UserOp
       const prepRes = await prepareTransferUserOp(
         user.address,
@@ -157,8 +193,33 @@ export const useOrderTransaction = () => {
       const err = error as Error;
       setErrorMessage(err.message || "Payment or Analysis failed");
       setWorkflowStatus("error");
-      executingFlagRef.current = false;
       return false;
+    }
+  };
+
+  /**
+   * Info: (20260813 - Luphia) 付一張**已存在**的訂單（碳盤查無帳本會話，設計書 §5.5）。
+   * 與 executeOrderTransaction 共用同一條付款流程，故託管代簽與 passkey 兩條路徑一致。
+   */
+  const payExistingOrder = async (
+    orderId: string,
+    calculatedCost: number,
+    onPaymentSuccess: (
+      authData: {
+        orderId: string;
+        transactionHash: string;
+        reportId?: string;
+      } & AuthenticationJSON,
+    ) => Promise<void> | void,
+  ) => {
+    if (executingFlagRef.current) return false;
+    executingFlagRef.current = true;
+    setWorkflowStatus("preparing");
+    setErrorMessage("");
+    // Info: (20260419 - Luphia) 同 executeOrderTransaction：先同步待付點數，避免餘額顯示錯誤
+    await refreshAuth();
+    try {
+      return await runPayment(orderId, calculatedCost, onPaymentSuccess);
     } finally {
       executingFlagRef.current = false;
     }
@@ -170,6 +231,7 @@ export const useOrderTransaction = () => {
     txHash,
     resetTransaction,
     executeOrderTransaction,
+    payExistingOrder,
     setWorkflowStatus,
     setErrorMessage,
     setTxHash,

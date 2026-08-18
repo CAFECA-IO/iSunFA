@@ -40,6 +40,34 @@ export enum RateLimitBucketEnum {
   PRF = "PRF",
 
   /**
+   * Info: (20260818 - Luphia) 邀請連結的三支端點（PR #6652 第三輪 D）。
+   *
+   * token 是 256-bit CSPRNG、DB 只存 SHA-256，且失效／逾期／已接受一律回同一個
+   * 404（無 oracle），所以暴力猜測本來就不可行——限流要防的不是猜 token。
+   *
+   * 防的是**未登入的 `decline` 沒有任何節流**：拿到一批轉寄出去的連結（或只是
+   * 反覆打同一個），可以無成本地把邀請一封封拒掉，而被拒的邀請當場釋出席次、
+   * 管理員只看到「對方拒絕了」。維度只能是 IP（這兩支端點刻意不要求登入，
+   * 受邀者多半還沒有帳號）。
+   *
+   * 尺寸放寬：正常使用者在這頁的操作是「開連結、按一顆按鈕」，
+   * 而誤限流會讓一個人加不進團隊——那是可用性事故。
+   */
+  INVITE_TOKEN = "INVITE_TOKEN",
+
+  /**
+   * Info: (20260818 - Luphia) 取不到來源 IP 時的共用桶（第四輪 B-4）。
+   *
+   * `resolveClientIp` 回 `"unknown"` 時所有流量落在同一個維度上。用
+   * `INVITE_TOKEN` 的尺寸（20/分）等於「全站受邀者每分鐘合計 20 次」，
+   * 第 21 位打開落地頁就是 429——而誤限流在這條路徑上就是可用性事故。
+   *
+   * 這個桶只擋失控流量的絕對上限，不假裝能區分使用者（那個狀態下確實區分不了）。
+   * 仍然不 fail-open：無法識別呼叫者不等於不限流，只是限得鬆。
+   */
+  INVITE_TOKEN_UNIDENTIFIED = "INVITE_TOKEN_UNIDENTIFIED",
+
+  /**
    * Info: (20260817 - Luphia) 打卡（time_attendance_module_plan §10.3 的護欄 G6）。
    *
    * 正常人一天打 2–4 次卡。上限壓低是為了讓腳本刷卡在造成資料污染前先撞牆並留下告警 ——
@@ -115,6 +143,20 @@ export const RATE_LIMIT_RULES: Record<RateLimitBucketEnum, IRateLimitWindow[]> =
     [RateLimitBucketEnum.SIGNING]: [
       { windowMs: MINUTE_MS, max: envInt("SIGNING_RL_PER_MINUTE", 5) },
       { windowMs: DAY_MS, max: envInt("SIGNING_RL_PER_DAY", 50) },
+    ],
+    [RateLimitBucketEnum.INVITE_TOKEN]: [
+      { windowMs: MINUTE_MS, max: envInt("INVITE_RL_PER_MINUTE", 20) },
+      { windowMs: DAY_MS, max: envInt("INVITE_RL_PER_DAY", 200) },
+    ],
+    [RateLimitBucketEnum.INVITE_TOKEN_UNIDENTIFIED]: [
+      {
+        windowMs: MINUTE_MS,
+        max: envInt("INVITE_RL_UNIDENTIFIED_PER_MINUTE", 300),
+      },
+      {
+        windowMs: DAY_MS,
+        max: envInt("INVITE_RL_UNIDENTIFIED_PER_DAY", 5_000),
+      },
     ],
     [RateLimitBucketEnum.PRF]: [
       { windowMs: MINUTE_MS, max: envInt("PRF_RL_PER_MINUTE", 20) },

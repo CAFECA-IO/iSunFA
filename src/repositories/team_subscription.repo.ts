@@ -18,6 +18,9 @@ export interface IApplyTeamSubscriptionInput {
   billingInterval: BillingInterval;
   orderId: string | null;
   nowMs: number;
+  // Info: (20260814 - Luphia) 本期付費席次與單價快照（規範 P2）；缺省維持既有值不動
+  seats?: number;
+  unitPrice?: number;
 }
 
 const DAY_MS = 86_400_000;
@@ -31,7 +34,8 @@ export async function applyTeamSubscriptionInTx(
   tx: Prisma.TransactionClient,
   input: IApplyTeamSubscriptionInput,
 ): Promise<TeamSubscription> {
-  const { teamId, planId, billingInterval, orderId, nowMs } = input;
+  const { teamId, planId, billingInterval, orderId, nowMs, seats, unitPrice } =
+    input;
   const periodDays = billingInterval === BILLING_INTERVAL.YEAR ? 365 : 30;
   const currentPeriodStart = new Date(nowMs);
   const currentPeriodEnd = new Date(nowMs + periodDays * DAY_MS);
@@ -45,6 +49,12 @@ export async function applyTeamSubscriptionInTx(
       currentPeriodEnd,
       autoRenew: true,
       latestOrderId: orderId,
+      /**
+       * Info: (20260814 - Luphia) 席次與單價缺省時不覆寫：期中加人只動 seats，
+       * 續訂或改方案才會連同單價一起換新。用 undefined 讓 Prisma 略過該欄位。
+       */
+      seats,
+      unitPrice,
     },
     create: {
       teamId,
@@ -54,6 +64,8 @@ export async function applyTeamSubscriptionInTx(
       currentPeriodEnd,
       autoRenew: true,
       latestOrderId: orderId,
+      seats: seats ?? 1,
+      unitPrice: unitPrice ?? 0,
     },
   });
 }
@@ -63,10 +75,36 @@ export class TeamSubscriptionRepository {
     return prisma.teamSubscription.findUnique({ where: { teamId } });
   }
 
+  /**
+   * Info: (20260818 - Luphia) 一次取多個團隊的訂閱（第三輪 C-10）。
+   *
+   * 保留期守護行程原本每個團隊打一趟 `getByTeamId`，而且完全序列——
+   * 一萬個有記憶的團隊就是一萬趟往返。對帳本身是每 6 小時一次的背景工作，
+   * 但那個形狀會隨團隊數線性惡化，而它跑得越久，落後的刪除就越多。
+   */
+  async listByTeamIds(teamIds: string[]): Promise<TeamSubscription[]> {
+    if (teamIds.length === 0) return [];
+    return prisma.teamSubscription.findMany({
+      where: { teamId: { in: teamIds } },
+    });
+  }
+
   async create(
     data: Prisma.TeamSubscriptionUncheckedCreateInput,
   ): Promise<TeamSubscription> {
     return prisma.teamSubscription.create({ data });
+  }
+
+  /**
+   * Info: (20260814 - Luphia) 期中增加席次（規範 P3）：只動 seats，不碰週期與單價。
+   * 用 increment 而非讀後寫，兩個管理者同時邀請時才不會有人的席次被蓋掉。
+   */
+  async addSeats(teamId: string, seats: number): Promise<void> {
+    if (seats <= 0) return;
+    await prisma.teamSubscription.update({
+      where: { teamId },
+      data: { seats: { increment: seats } },
+    });
   }
 
   async update(
@@ -146,6 +184,17 @@ export class TeamSubscriptionRepository {
         planId: TEAM_PLAN.FREE,
         status: TEAM_SUBSCRIPTION_STATUS.ACTIVE,
         autoRenew: false,
+        /**
+         * Info: (20260815 - Luphia) 降級時一併把單價歸零（PR #6652 第二輪 D）。
+         *
+         * 不歸零的話，降級後 `unitPrice` 仍是 840，而「免費方案不補收」全靠
+         * `resolveEffectivePlanId` 那一層擋著——防線只剩一道，且是遠處的一道。
+         * 資料本身就該說實話：免費方案沒有單價。
+         *
+         * `seats` 保留：那是團隊實際人數的快照，與收不收費無關，
+         * 而免費版的人數上限另有把關（`FREE_PLAN_MAX_MEMBERS`）。
+         */
+        unitPrice: 0,
       },
       create: {
         teamId,
@@ -154,6 +203,7 @@ export class TeamSubscriptionRepository {
         currentPeriodStart: new Date(nowMs),
         currentPeriodEnd: new Date(nowMs),
         autoRenew: false,
+        unitPrice: 0,
       },
     });
   }

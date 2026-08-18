@@ -4,7 +4,7 @@ import { AppError } from "@/lib/utils/error";
 import { logger } from "@/lib/utils/logger";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
+import { enforceRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { custodialPrfSchema } from "@/validators";
 import { custodialPrfService } from "@/services/custodial_prf.service";
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
      * 這是每次進聊天室都會走一次的例行操作,共用資金授權的尺寸會讓
      * 「重載五次就解鎖失敗」與「聊天擠掉當天的付款簽章額度」同時發生。
      */
-    const limited = enforceCarbonRateLimit(user.id, RateLimitBucketEnum.PRF);
+    const limited = enforceRateLimit(user.id, RateLimitBucketEnum.PRF);
     if (limited) return limited;
 
     const body = await request.json();

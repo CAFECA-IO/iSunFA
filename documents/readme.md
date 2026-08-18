@@ -25,13 +25,12 @@
    > 說明 AI 在系統中的定位。絕對禁止讓 AI 算數學、做業務邏輯判斷，並規範了「混合決策管線 (Hybrid Pipeline)」與「English-First Prompting」。
 4. 🎯 **[數值精度處理規範](engineering_guidelines/numerical_precision_guideline.md)**
    > 說明為何我們在財務與碳排計算中全面棄用原生 `number`，並強制使用 `Prisma.Decimal` 與 `BigInt`。
-5. 🕘 **[部署檢查表：簽到系統](engineering_guidelines/deploy_checklist_attendance_2026q3.md)**
+5. 🔍 **[Code Review 檢查清單](engineering_guidelines/code_review_checklist.md)**
+   > 由 PR #6652 五輪 review 的**實際失效樣本**整理而成：假綠的八種形狀（掃描根等於被修的檔案、整包 mock 只證明編排、測試自己的前提沒生效、fixture 不是真實資料的形狀、行為斷言測到函式卻沒測到接線、mock 沒有照實模擬被 mock 的東西…）、空值語意、帳本恆等式、秘密不進 URL。核心一句：**綠燈不是證據，是尚未被反駁**。§7.1 是推送前一定要跑的三個指令，含 `npm run test:no-dotenv`（在「沒有 .env」的條件下重跑一次，形狀與 CI 相同）；§6.1 是跨 PR 的共用檔案要對照 base 三方比對。
+6. 🕘 **[部署檢查表：簽到系統](engineering_guidelines/deploy_checklist_attendance_2026q3.md)**
    > 7 張新表 + `Employee.user_id` 的套用順序、為何**不需要**回填（空值是正確的初始狀態，不是待填），以及四種做錯順序的症狀 —— 其中最難查的一種完全不報錯：座標用地圖標註值而非實測值，seed 會成功，而主角站在現場打不了卡。
-
-> ℹ️ **Info: (20260817 - Luphia)** 本次新增的程式碼註解多處引用「Code Review 檢查清單 §X」。
-> 那份文件（`engineering_guidelines/code_review_checklist.md`）隨
-> `feature/faith_chat_quota_exhausted_notice` 進 develop，在它合併之前這個分支上查不到。
-> 它整理的是 PR #6652 三輪 review 的實際失效樣本，核心一句：**綠燈不是證據，是尚未被反駁。**
+7. 🚀 **[部署檢查表：計費子系統](engineering_guidelines/deploy_checklist_billing_2026q3.md)**
+   > 席次計費與分配點數上鏈的部署順序。本專案沒有 migrations 目錄，欄位新增與資料回填是分開的兩件事，而順序做錯不會噴錯——只會安靜地讓功能停擺或讓點數暫時消失在畫面上。**兩份檢查表屬同一次部署**，見該檔 §4.9。
 
 ### 🐛 已知缺陷 (Known Issues)
 
@@ -75,6 +74,8 @@ _聚焦於四大會計師級別的底層財報與內控實務：_
 
 - **[分類帳與試算表整合施行計劃 (Ledger & Trial Balance Integration Plan)](architecture/ledger_and_trial_balance_integration_plan.md)**：於既有報表引擎慣例上新增兩支唯讀報表（樹狀溯源 + MoneyUtil + 懸記納入）。
 - **[團隊錢包與訂閱額度消耗系統 (Team Wallet & Subscription Quota)](architecture/team_wallet_and_subscription_quota.md)**：團隊為計費主體、5 小時 / 週雙視窗訂閱額度、免簽章扣費管線與管理者點數分配。
+- **[團隊席次計費與 Email 邀請 (Team Seat Billing & Email Invitation)](architecture/team_seat_billing_and_email_invitation.md)**：訂閱主體為團隊、依席次計費、期中加人按剩餘天數比例補收（先扣款才寄邀請），以及 email 邀請 → 註冊即入團的流程與 SMTP 設定。
+- **[費思個人化記憶 (Faith Personal Memory)](architecture/ai_and_analytics/faith_personal_memory.md)**：付費訂閱的每位成員專屬記憶——`(userId, teamId)` 隔離、LLM 只做萃取、欄位級加密，以及停止訂閱 90 天後刪除的保留機制。**須於 v0.13.0 釋出前完成**，條款已先行載明。
 
 ### 📌 4. 架構決策紀錄 (Architecture Decision Records, ADRs)
 
@@ -92,6 +93,11 @@ _追蹤重大架構變更背後的歷史脈絡與取捨：_
 - **[ADR 010: Immutable Pipeline, File-System Queue, and Stateless Workers](architecture/decisions/010_immutable_pipeline_and_stateless_workers.md)**：採用無狀態攤銷、不可變資料管道與 Web3 檔案系統佇列的分散式高可用設計。
 - **[ADR 011: Agentic Reflection and Deterministic Validation](architecture/decisions/011_agentic_reflection_and_deterministic_validation.md)**：AI 反思機制與確定性驗證層，建立 BSI 級別的自評重做與懸記防護網。
 - **[ADR 015: Off-chain Team Wallet Ledger](architecture/decisions/015_offchain_team_wallet_ledger.md)**：團隊錢包與訂閱額度採 C 案混合制——離鏈決定論帳本營運（免逐次簽章、append-only Ledger + 守恆勾稽），每日 merkle root 鏈上錨定；1:1 backing 為金鑰治理到位後的 Phase 2。
+- **[ADR 016: Third-party Login & Custodial Wallet](architecture/decisions/016_third_party_login_and_custodial_wallet.md)**：第三方登入的託管錢包設計——伺服器代簽的邊界與出處驗證，讓沒有 passkey 的用戶也能完成鏈上動作。
+- **[ADR 017: Signed System Settings in Database](architecture/decisions/017_signed_system_settings_in_database.md)**：營運參數（額度、費率、保留天數）改存 DB 並帶簽章，env 只留部署環境差異；驗簽失敗一律退回程式內的 fail-safe 預設。
+- **[ADR 018: HR PII Data Classification](architecture/decisions/018_hr_pii_data_classification.md)**：人事模組 13 張表的個資分級與欄位級加密，說明為何不套用碳盤查的 E2EE、也不沿用帳本的明文。
+- **[ADR 019: Splitting ProcessTask](architecture/decisions/019_hr_process_task_split.md)**：以型別結構取代執行期檢查，讓三種非法的任務歸屬狀態在 schema 層就無法表示。
+- **[ADR 020: Severance Pay Estimation](architecture/decisions/020_severance_pay_estimation.md)**：薪資模組上線前的資遣費試算——系統只算它真的知道的部分（年資、基數、法定上限），平均工資留給人填。
 
 ---
 

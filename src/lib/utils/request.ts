@@ -1,3 +1,25 @@
+// Info: (20260814 - Luphia) 登入過期的集中通報：由 AuthProvider 註冊處理函式
+const UNAUTHORIZED_STATUS = 401;
+
+type UnauthorizedHandler = () => void;
+let unauthorizedHandler: UnauthorizedHandler | null = null;
+
+/**
+ * Info: (20260814 - Luphia) 註冊 401 處理函式（回傳解除註冊）。
+ * 刻意只允許一個處理函式：這是應用層唯一的「你被登出了」出口，
+ * 多個訂閱者會讓提示重複跳出。
+ */
+export function onUnauthorized(handler: UnauthorizedHandler): () => void {
+  unauthorizedHandler = handler;
+  return () => {
+    if (unauthorizedHandler === handler) unauthorizedHandler = null;
+  };
+}
+
+function notifyUnauthorized(): void {
+  unauthorizedHandler?.();
+}
+
 export class ApiError extends Error {
   public status: number;
   public data: unknown;
@@ -87,6 +109,15 @@ export async function request<T = unknown>(
     const data = (await response.json().catch(() => ({}))) as unknown;
 
     if (!response.ok) {
+      /**
+       * Info: (20260814 - Luphia) 401 一律往上通報一次（設計書：登入過期的可見性）。
+       *
+       * 過期本身不可避免，真正的問題是它**無聲**：每個呼叫端各自 catch，
+       * 於是「登入過期」在畫面上一律退化成「你沒有資料」——團隊選單變成空的、
+       * 按鈕靜靜停用、點了沒反應，而使用者完全不知道自己已經被登出。
+       * 這裡集中通報，由 AuthProvider 統一清狀態並提示重新登入。
+       */
+      if (response.status === UNAUTHORIZED_STATUS) notifyUnauthorized();
       const errorData = data as { message?: string } | undefined;
       throw new ApiError(
         errorData?.message || response.statusText || "Request failed",

@@ -32,8 +32,10 @@ import { MeasurementUnit } from "@/constants/enums";
 import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
 import { IInventoryExtraction } from "@/types/carbon_chatbot.types";
 import { logger } from "@/lib/utils/logger";
+import { recordLlmUsage } from "@/lib/llm/usage_scope";
 import { SystemSettingKey } from "@/constants/system_setting";
 import { systemSettingService } from "@/services/system_setting.service";
+import type { IFaithHistoryTurn } from "@/lib/faith_memory/short_term";
 
 // Info: (20260714 - Tzuhan) 結構化聊天回覆: readyParagraphId 已通過白名單裁決(非法/none 一律為 null)
 // Info: (20260716 - Tzuhan) #6518:extraction 為已裁決的事實萃取(壞欄位逐筆丟棄),null = 本輪無可萃取
@@ -48,6 +50,12 @@ export interface ICarbonChatStructuredReply {
     templateId: CarbonChartTemplateEnum;
     paragraphId: string;
   } | null;
+  /**
+   * Info: (20260813 - Luphia) 碳盤查計費（設計書 §5.5）的結算依據：SDK 回報的 token 用量。
+   * 與費思同一套「預扣—結算」，故此處必須把用量原封帶出，不在服務層自行估算。
+   * SDK 未回報時為 null，呼叫端據此收斂為最低扣點而非憑空推估。
+   */
+  usage: ILlmUsage | null;
 }
 
 // Info: (20260714 - Tzuhan) readyParagraphId 的無段落標記(LLM enum 選項之一)
@@ -261,6 +269,27 @@ export interface ILlmUsage {
   totalTokens: number;
 }
 
+/**
+ * Info: (20260813 - Luphia) 自 SDK 回應取出用量摘要；缺欄位一律以 0 補齊
+ * （計費側會把 0 收斂為最低 1 點，絕不憑空放大）。
+ */
+export function toLlmUsage(
+  usageMetadata:
+    | {
+        promptTokenCount?: number;
+        candidatesTokenCount?: number;
+        totalTokenCount?: number;
+      }
+    | undefined,
+): ILlmUsage | null {
+  if (!usageMetadata) return null;
+  return {
+    inputTokens: usageMetadata.promptTokenCount ?? 0,
+    outputTokens: usageMetadata.candidatesTokenCount ?? 0,
+    totalTokens: usageMetadata.totalTokenCount ?? 0,
+  };
+}
+
 export interface IChatGenerationOptions {
   modelName?: string;
   temperature?: number;
@@ -467,6 +496,16 @@ export class ChatService {
 
     try {
       const result = await race();
+      /**
+       * Info: (20260813 - Luphia) 用量一律回報給捕捉範圍（設計書 §5.5），與 taskKey 無關：
+       * taskKey 決定「要不要寫 log」，計費則不能挑呼叫點——漏一個就是一次不計費的用量。
+       * 不在捕捉範圍內時 recordLlmUsage 是 no-op，executor 與既有呼叫端零影響。
+       */
+      recordLlmUsage({
+        inputTokens: result.response.usageMetadata?.promptTokenCount ?? 0,
+        outputTokens: result.response.usageMetadata?.candidatesTokenCount ?? 0,
+        totalTokens: result.response.usageMetadata?.totalTokenCount ?? 0,
+      });
       if (taskKey) {
         const usage = result.response.usageMetadata;
         logger.info("llm sync usage", {
@@ -620,6 +659,17 @@ export class ChatService {
     mimeType?: string,
     // Info: (20260809 - Luphia) 成本上界源自 DB 的費思計費設定，由 service 層注入
     maxOutputTokens?: number,
+    /**
+     * Info: (20260817 - Luphia) 任務短期記憶：同一段對話的前文（第一輪 C-2）。
+     * 在此之前費思是 one-shot——方案頁與條款都寫著「所有方案皆具備任務短期記憶」，
+     * 而這個函式從來沒有收過任何歷史參數。
+     */
+    history: IFaithHistoryTurn[] = [],
+    /**
+     * Info: (20260817 - Luphia) 長期記憶區塊（第一輪 C-1）。
+     * 已由 `renderMemoryForPrompt` 截到字元預算內，此處直接注入。
+     */
+    memory = "",
   ): Promise<{ text: string; usage: ILlmUsage }> {
     const skill = new DirectChatSkill();
     return skill.executeWithUsage(
@@ -629,6 +679,8 @@ export class ChatService {
       mimeType,
       this,
       maxOutputTokens,
+      history,
+      memory,
     );
   }
 
@@ -757,6 +809,8 @@ ${outlineCatalog}${langInstruction}`;
       },
     );
     const raw = response.response.text();
+    // Info: (20260813 - Luphia) 用量與解析結果無關：即使 JSON 解析失敗降級，這一輪的 tokens 一樣付了
+    const usage = toLlmUsage(response.response.usageMetadata);
 
     // Info: (20260714 - Tzuhan) 永不直接採信 LLM 輸出，JSON + Zod 護欄；解析失敗降級為純文字回覆(不中斷對話)
     try {
@@ -800,6 +854,7 @@ ${outlineCatalog}${langInstruction}`;
         extraction,
         revisionParagraphId,
         chartRequest,
+        usage,
       };
     } catch {
       return {
@@ -808,6 +863,7 @@ ${outlineCatalog}${langInstruction}`;
         extraction: null,
         revisionParagraphId: null,
         chartRequest: null,
+        usage,
       };
     }
   }

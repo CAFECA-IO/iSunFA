@@ -7,6 +7,18 @@ export const teamManagement = {
   accepting: "處理中...",
   no_teams: "目前沒有任何團隊。",
   invite_member: "邀請成員",
+  decline_invite: "拒絕邀請",
+  declining: "處理中...",
+  revoke_invite: "撤回",
+  revoke_invite_hint:
+    "撤回這封尚未接受的邀請。已收取的席次費用不退還，但釋出的席次可用於邀請其他人員。",
+  // Info: (20260815 - Luphia) email 邀請（規範 §4 / P4）
+  invite_method: "邀請方式",
+  invite_by_address: "錢包地址",
+  invite_by_email: "電子郵件",
+  email_address: "電子郵件",
+  invite_email_hint:
+    "系統會寄出一封含加入連結的邀請信，連結為一次性且 7 天內有效。",
   you: "您",
   pending_invite: "待接受的邀請",
   pending: "等待中",
@@ -23,6 +35,10 @@ export const teamManagement = {
     "您需要透過通行密鑰 (Passkey) 進行驗證並在鏈上簽署此交易。",
   signing: "簽署中...",
   invite_via_fido2: "使用 FIDO2 寄送邀請",
+  // Info: (20260818 - Luphia) 以「信箱不符」之邀請加入的成員標記（第三輪 C-2），僅管理職可見
+  email_mismatch: "信箱不符",
+  email_mismatch_hint:
+    "接受邀請的帳號，其已驗證信箱與受邀信箱不同。可能是本人改用其他信箱登入，也可能是邀請連結被轉寄出去。",
   roles: {
     OWNER: "擁有者",
     ADMIN: "管理員",
@@ -44,6 +60,17 @@ export const teamManagement = {
     error_role: "變更角色失敗",
     error_remove: "移除成員失敗",
     invalid_address: "無效的 Web3 錢包地址，格式應為 0x 開頭的 42 位字元。",
+    invalid_email: "電子郵件格式不正確。",
+    invite_email_sent: "邀請信已寄出！",
+    free_plan_limit_title: "免費版僅供擁有者一人使用",
+    free_plan_limit_hint:
+      "要邀請成員請升級為團隊版或企業版；訂閱後依實際人數計費，邀請的成員各自享有完整額度。",
+    free_plan_limit_cta: "查看方案",
+    seat_reused: "已使用既有的付費席次，本次未再收費。",
+    revoke_success: "已撤回邀請，該席次可用於邀請其他人員。",
+    error_revoke: "撤回邀請失敗",
+    decline_success: "已拒絕邀請。",
+    error_decline: "拒絕邀請失敗",
   },
   scan_qr_code: "掃描 QR Code",
   scanning: "正在掃描...",
@@ -52,14 +79,19 @@ export const teamManagement = {
   wallet: {
     title: "團隊錢包與訂閱額度",
     quota_title: "訂閱額度",
+    my_quota_title: "您的額度",
+    team_total_title: "全隊合計（{{count}} 位成員）",
     load_failed: "無法載入，請稍後再試。",
     retry: "重試",
     quota_5h: "每 5 小時額度",
     quota_week: "每週額度",
+    documents_memory_link: "文件與記憶",
     balance_title: "團隊錢包",
     pool_balance: "未分配點數",
     frozen_warning: "團隊錢包已凍結（守恆勾稽異常），請聯繫客服處理。",
     buy_credits: "前往購買點數",
+    manage_plan: "管理方案",
+    manage_plan_hint: "額度不足時可升級方案",
     buy_credits_hint: "購買的點數將存入團隊錢包，供管理者分配。",
     allocated_points: "分配點數",
     allocate_to: "分配點數給 {{name}}",
@@ -67,7 +99,14 @@ export const teamManagement = {
     amount_label: "點數",
     amount_limit: "可用上限 {{max}} 點",
     allocate: "分配",
+    allocate_member: "分配對象",
+    allocate_hint: "把未分配的點數分給團隊成員",
     revoke: "收回",
+    // Info: (20260814 - Luphia) 分配即鑄到成員的鏈上錢包（ADR 015 修訂）
+    allocate_onchain_note:
+      "分配的點數會直接進入該成員的個人錢包（區塊鏈位址），成員在任何情境都能使用，不限於本團隊，且分配後團隊無法收回。",
+    revoke_onchain_note:
+      "收回會銷毀該成員錢包中的點數，上限為本團隊累計分配給他的數量；他已經使用掉的部分無法收回。",
     allocation_success: "操作成功。",
     allocation_failed: "操作失敗，請確認餘額後再試。",
     invalid_amount: "請輸入正整數點數。",

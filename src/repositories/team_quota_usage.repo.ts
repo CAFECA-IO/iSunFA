@@ -35,13 +35,123 @@ function isUniqueConstraintError(error: unknown): boolean {
 }
 
 export class TeamQuotaUsageRepository {
+  /**
+   * Info: (20260815 - Luphia) 以 advisory lock 序列化同一成員的額度讀寫（PR #6652 第二輪 C-6）。
+   *
+   * 「先 SUM 再寫入」中間沒有任何互斥：併發的 N 個請求會讀到同一個 used，
+   * 各自判斷「還有額度」，然後各寫一筆——超額幅度是 **併發數 × 單筆**，
+   * 而 §5.1 容許的是「最後一筆超額」，指的是一筆。
+   *
+   * 用 Postgres 的交易級 advisory lock（`pg_advisory_xact_lock`）而非資料列鎖：
+   * 要鎖的是「這個成員在這個視窗的用量總和」，那不是任何一列，沒有列可以鎖。
+   * 鎖在交易結束時自動釋放，不需要善後，也不會因為程式提早 return 而外洩。
+   *
+   * 鎖的粒度是 (teamId, userId)：不同成員互不阻塞，而同一成員的併發請求本來就
+   * 只有一個能贏——這正是我們要的。
+   */
+  async withMemberQuotaLock<T>(
+    teamId: string,
+    userId: string,
+    operation: (tx: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
+    return prisma.$transaction(async (tx) => {
+      /**
+       * Info: (20260815 - Luphia) hashtext 把字串壓成 int4，兩層 hash 湊成 lock 的 (int, int)。
+       * 碰撞的後果只是「兩個不相干的成員偶爾互相等一下」，不影響正確性。
+       */
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${teamId}), hashtext(${userId}))`;
+      return operation(tx);
+    });
+  }
+
+  /**
+   * Info: (20260815 - Luphia) 交易內的用量聚合，與 `sumWindowUsage` 同一套條件。
+   * 供 `withMemberQuotaLock` 內使用——鎖與讀取必須在同一個交易裡，否則鎖等於沒鎖。
+   */
+  async sumWindowUsageInTx(
+    tx: Prisma.TransactionClient,
+    teamId: string,
+    userId: string,
+    windowKey5h: number,
+    windowKeyWeek: number,
+  ): Promise<IWindowUsageSum> {
+    const [sum5h, sumWeek] = await Promise.all([
+      tx.teamQuotaUsage.aggregate({
+        where: { teamId, userId, windowKey5h },
+        _sum: { amount: true },
+      }),
+      tx.teamQuotaUsage.aggregate({
+        where: { teamId, userId, windowKeyWeek },
+        _sum: { amount: true },
+      }),
+    ]);
+    return {
+      used5h: sum5h._sum.amount ?? BigInt(0),
+      usedWeek: sumWeek._sum.amount ?? BigInt(0),
+    };
+  }
+
+  // Info: (20260815 - Luphia) 交易內的用量寫入，與 createUsage 同語意（冪等由 unique 保證）
+  async createUsageInTx(
+    tx: Prisma.TransactionClient,
+    input: ICreateUsageInput,
+  ): Promise<void> {
+    try {
+      await tx.teamQuotaUsage.create({ data: input });
+    } catch (error) {
+      // Info: (20260815 - Luphia) 冪等重放：同一把鍵已入帳，視為成功
+      if (!isUniqueConstraintError(error)) throw error;
+    }
+  }
+
   async findByIdempotencyKey(
     idempotencyKey: string,
   ): Promise<TeamQuotaUsage | null> {
     return prisma.teamQuotaUsage.findUnique({ where: { idempotencyKey } });
   }
 
+  /**
+   * Info: (20260814 - Luphia) 額度視窗用量**逐成員**聚合（產品拍板 20260814）。
+   *
+   * 原本只以 teamId 聚合，等於全隊共用一池、先用先得——一個人可以在一個視窗內
+   * 把整隊的額度用光，其他人直到重置前一律 402。改為一人一池後，
+   * 席次費買到的就是「這個人的額度」，價格隨人數增加、額度也隨之增加，
+   * 每點成本不再隨團隊規模惡化。
+   */
   async sumWindowUsage(
+    teamId: string,
+    userId: string,
+    windowKey5h: number,
+    windowKeyWeek: number,
+  ): Promise<IWindowUsageSum> {
+    const [sum5h, sumWeek] = await Promise.all([
+      prisma.teamQuotaUsage.aggregate({
+        where: { teamId, userId, windowKey5h },
+        _sum: { amount: true },
+      }),
+      prisma.teamQuotaUsage.aggregate({
+        where: { teamId, userId, windowKeyWeek },
+        _sum: { amount: true },
+      }),
+    ]);
+    return {
+      used5h: sum5h._sum.amount ?? BigInt(0),
+      usedWeek: sumWeek._sum.amount ?? BigInt(0),
+    };
+  }
+
+  /**
+   * Info: (20260817 - Luphia) 全隊用量合計（PR #6652 第二輪 C-1）。
+   *
+   * 額度改成一人一池之後，`src` 裡就沒有任何 team-wide 的讀取路徑了：
+   * 五席團隊的 OWNER 每月付 4,200，畫面上卻只看得到**他自己**的進度條，
+   * 而其他四人用掉多少，系統中不存在任何介面說得出來。
+   *
+   * **只回合計，不回逐人明細**（產品決定 20260817）。成員各自用了多少 AI，
+   * 是相當個人的資料；付費者需要知道的是「這個團隊消耗了多少」，
+   * 那個問題用一個總和就回答得了。
+   */
+  async sumTeamWindowUsage(
     teamId: string,
     windowKey5h: number,
     windowKeyWeek: number,
