@@ -24,6 +24,10 @@ const SUPPLEMENT_UNLISTED = 0x2ea1;
 const HAN_SCRIPT = 0x6587;
 const HAN_TALL = 0x9ad8;
 const HAN_CIVILIAN = 0x6c11;
+const KANGXI_ONE = 0x2f00; // Info: (20260817 - Emily) 康熙部首區的第一個,對應 U+4E00
+const KANGXI_LAST = 0x2fd5; // Info: (20260817 - Emily) 康熙部首區的最後一個
+const HAN_ONE = 0x4e00;
+const HAN_TWO = 0x4e8c;
 
 const hex = (codePoint: number): string =>
   codePoint.toString(16).toUpperCase().padStart(4, "0");
@@ -39,6 +43,45 @@ const cmap = (targets: readonly number[]): string =>
     "endbfchar",
     "endcmap",
   ].join("\n");
+
+/**
+ * Info: (20260817 - Emily) 來源側可以自己指定的 fixture（PR review A1）。
+ *
+ * 原本的 `cmap()` 來源碼一律是 `hex(index + 3)`，永遠遠離相容區 ——
+ * 於是「來源側被改寫」這個缺陷**在測試裡看不見**。
+ * 這一組 helper 的存在就是為了把來源側放進相容區。
+ */
+const bfchar = (entries: ReadonlyArray<readonly [number, number]>): string =>
+  [
+    "/CIDInit /ProcSet findresource begin",
+    `${entries.length} beginbfchar`,
+    ...entries.map(([src, dst]) => `<${hex(src)}> <${hex(dst)}>`),
+    "endbfchar",
+    "endcmap",
+  ].join("\n");
+
+const bfrange = (
+  entries: ReadonlyArray<{
+    lo: number;
+    hi: number;
+    dst: number | readonly number[];
+  }>,
+): string =>
+  [
+    "/CIDInit /ProcSet findresource begin",
+    `${entries.length} beginbfrange`,
+    ...entries.map(({ lo, hi, dst }) =>
+      Array.isArray(dst)
+        ? `<${hex(lo)}> <${hex(hi)}> [${dst.map((d) => `<${hex(d)}>`).join(" ")}]`
+        : `<${hex(lo)}> <${hex(hi)}> <${hex(dst as number)}>`,
+    ),
+    "endbfrange",
+    "endcmap",
+  ].join("\n");
+
+/** Info: (20260817 - Emily) 從輸出反解出來源側,用來斷言它沒被動過 */
+const sourcesOf = (text: string): number[] =>
+  [...text.matchAll(/^<([0-9A-Fa-f]{4})>/gm)].map((m) => parseInt(m[1], 16));
 
 describe("mapCompatibilityRadical", () => {
   it("maps Kangxi radicals to their ideograph via NFKC", () => {
@@ -199,6 +242,32 @@ describe("repairPdfToUnicode", () => {
   });
 
   /**
+   * Info: (20260817 - Emily) 「沒改到任何碼位」的兩種成因要分得開（PR review B2）。
+   *
+   * 這一份**只有**沒對照的相容區碼位:一個都沒改,但它**不乾淨** ——
+   * 紙上那個字仍然搜不到,只是我們還沒有它的對照。
+   * 兩者若共用 `clean`，現場會把它當成「這份本來就沒問題」然後跳過,
+   * 而 `unmapped` 這份清單正是下一次擴 `SUPPLEMENT_MAP` 的依據。
+   */
+  it("says no_mapping — not clean — when every compatibility code lacks a mapping", async () => {
+    const pdf = await buildPdf(cmap([SUPPLEMENT_UNLISTED]));
+    const result = await repairPdfToUnicode(pdf);
+    expect(result.decision).toBe("no_mapping");
+    expect(result.replaced).toBe(0);
+    expect(result.unmapped).toEqual([`U+${hex(SUPPLEMENT_UNLISTED)}`]);
+    // Info: (20260817 - Emily) 沒改就不重存 —— 與 clean 同一條契約
+    expect(result.bytes).toBe(pdf);
+  });
+
+  // Info: (20260817 - Emily) 反面:真的乾淨時不得回 no_mapping
+  it("keeps clean for a CMap with no compatibility codes at all", async () => {
+    const pdf = await buildPdf(cmap([HAN_SCRIPT]));
+    const result = await repairPdfToUnicode(pdf);
+    expect(result.decision).toBe("clean");
+    expect(result.unmapped).toEqual([]);
+  });
+
+  /**
    * Info: (20260817 - Emily) 與 `narrowVisionPagesToRange` 同一條契約：
    * 補完整性的功能不該讓主流程失敗。壞掉的輸入要回原樣 + `failed`，不能 throw。
    */
@@ -208,5 +277,96 @@ describe("repairPdfToUnicode", () => {
     expect(result.decision).toBe("failed");
     expect(result.bytes).toBe(broken);
     expect(result.replaced).toBe(0);
+  });
+});
+
+/**
+ * Info: (20260817 - Emily) PR review A1：來源側（glyph id / CID）不得被改寫。
+ *
+ * 這一組是第一版完全沒有的。第一版的 fixture 剛好避開了會出事的輸入，
+ * 而「修完抽回來相容區部首 0 個」那個實測憑證**與缺陷相容** ——
+ * 來源側被改壞之後那些 entry 不再指向相容區，所以「0 個」照樣成立。
+ */
+describe("rewriteCMapText 的來源側保護", () => {
+  it("bfchar 的來源 CID 落在相容區時原封不動", () => {
+    const source = bfchar([[KANGXI_SCRIPT, HAN_TALL]]);
+    const result = rewriteCMapText(source);
+    expect(result.replaced).toBe(0);
+    expect(sourcesOf(result.text)).toEqual([KANGXI_SCRIPT]);
+    expect(result.text).toBe(source);
+  });
+
+  it("來源在相容區、目標也在相容區時,只改目標", () => {
+    const result = rewriteCMapText(bfchar([[KANGXI_SCRIPT, KANGXI_TALL]]));
+    expect(result.replaced).toBe(1);
+    expect(sourcesOf(result.text)).toEqual([KANGXI_SCRIPT]);
+    expect(result.text).toContain(`<${hex(HAN_TALL)}>`);
+  });
+
+  /**
+   * Info: (20260817 - Emily) 這一條擋的是最嚴重的那種：
+   * 區間端點被改寫會產生 `lo > hi` 的非法區間,壞掉的不是一個字,
+   * 是那個字型的整張對照表（讀取器可能整張拒收）。
+   */
+  it("bfrange 的區間端點永遠不被改寫,lo <= hi 仍成立", () => {
+    const source = bfrange([{ lo: KANGXI_ONE, hi: KANGXI_LAST, dst: HAN_ONE }]);
+    const result = rewriteCMapText(source);
+    expect(result.replaced).toBe(0);
+    expect(result.text).toBe(source);
+
+    const pairs = [
+      ...result.text.matchAll(/<([0-9A-Fa-f]{4})>\s*<([0-9A-Fa-f]{4})>\s*</g),
+    ];
+    pairs.forEach(([, lo, hi]) => {
+      expect(parseInt(lo, 16)).toBeLessThanOrEqual(parseInt(hi, 16));
+    });
+  });
+
+  it("bfrange 只改目標,端點留著", () => {
+    const result = rewriteCMapText(
+      bfrange([{ lo: 0x0003, hi: 0x0005, dst: KANGXI_SCRIPT }]),
+    );
+    expect(result.replaced).toBe(1);
+    expect(result.text).toContain(`<0003> <0005> <${hex(HAN_SCRIPT)}>`);
+  });
+
+  /**
+   * Info: (20260817 - Emily) 陣列形式：`<lo> <hi> [<d1> <d2> …]`。
+   * 第一版連這個都會把兩個端點一起改掉。
+   */
+  it("bfrange 的陣列形式:端點不動,陣列每一項都改", () => {
+    const result = rewriteCMapText(
+      bfrange([
+        {
+          lo: KANGXI_SCRIPT,
+          hi: KANGXI_TALL,
+          dst: [KANGXI_ONE, HAN_TWO, SUPPLEMENT_CIVILIAN],
+        },
+      ]),
+    );
+    expect(result.replaced).toBe(2);
+    expect(sourcesOf(result.text)).toEqual([KANGXI_SCRIPT]);
+    expect(result.text).toContain(
+      `<${hex(KANGXI_SCRIPT)}> <${hex(KANGXI_TALL)}> [`,
+    );
+    expect(result.text).toContain(`<${hex(HAN_ONE)}>`);
+    expect(result.text).toContain(`<${hex(HAN_CIVILIAN)}>`);
+  });
+
+  /** Info: (20260817 - Emily) 區塊之外的 token 一律不動（codespacerange 的端點也在相容區時） */
+  it("bfchar/bfrange 區塊之外的碼位不動", () => {
+    const source = [
+      "1 begincodespacerange",
+      `<${hex(KANGXI_SCRIPT)}> <${hex(KANGXI_TALL)}>`,
+      "endcodespacerange",
+      "1 beginbfchar",
+      `<0003> <${hex(KANGXI_ONE)}>`,
+      "endbfchar",
+    ].join("\n");
+    const result = rewriteCMapText(source);
+    expect(result.replaced).toBe(1);
+    expect(result.text).toContain(
+      `<${hex(KANGXI_SCRIPT)}> <${hex(KANGXI_TALL)}>\nendcodespacerange`,
+    );
   });
 });

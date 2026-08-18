@@ -318,8 +318,10 @@ describe("buildCarbonReportHtml 的識別欄位", () => {
       identity: [],
     });
 
-    // Info: (20260814 - Emily) 比對元素而不是字串:`.doc-identity` 的樣式一直在
-    // <style> 裡（樣式表是靜態的），拿整份 HTML 找 "doc-identity" 會永遠命中
+    /**
+     * Info: (20260814 - Emily) 比對元素而不是字串:`.doc-identity` 的樣式一直在
+     * `<style>` 裡（樣式表是靜態的），拿整份 HTML 找 "doc-identity" 會永遠命中。
+     */
     expect(absent).not.toContain('<dl class="doc-identity">');
     expect(empty).not.toContain('<dl class="doc-identity">');
   });

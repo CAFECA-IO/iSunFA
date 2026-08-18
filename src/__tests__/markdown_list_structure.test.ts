@@ -248,8 +248,10 @@ describe("splitInlineListItems 的重複標籤族", () => {
   });
 
   it("should ignore a label repeated only twice", () => {
-    // Info: (20260814 - Emily) 標籤要 2 字以上才算 —— 用「註」會因為長度不足而
-    // 根本不進判準，那條測試就會為了錯的理由通過（本檔第一版正是如此）
+    /**
+     * Info: (20260814 - Emily) 標籤要 2 字以上才算 —— 用「註」會因為長度不足而
+     * 根本不進判準，那條測試就會為了錯的理由通過（本檔第一版正是如此）。
+     */
     const source = "備註: 第一點說明 備註: 第二點說明";
 
     expect(splitInlineListItems(source)).toEqual({
@@ -259,8 +261,10 @@ describe("splitInlineListItems 的重複標籤族", () => {
   });
 
   it("should not treat a single character label as a marker", () => {
-    // Info: (20260814 - Emily) 一個字加冒號太容易誤中（「註:」「例:」「甲:」），
-    // 所以標籤下限是 2 字。這條把那個下限釘住。
+    /**
+     * Info: (20260814 - Emily) 一個字加冒號太容易誤中（「註:」「例:」「甲:」），
+     * 所以標籤下限是 2 字。這條把那個下限釘住。
+     */
     const source = "註: 甲 註: 乙 註: 丙";
 
     expect(splitInlineListItems(source)).toEqual({

@@ -316,6 +316,15 @@ export type CarbonReportImportLlmOutput = z.infer<
  * LLM 只回「節點文字 + 父節點文字」,mermaid 語法由 carbon_report_diagram.builder 組出;
  * 節點文字是否真的出現在該段原文,由 builder 的 validateDiagramNodes 複驗(找不到就整張不畫)。
  */
+/**
+ * Info: (20260817 - Emily) LLM 結構圖節點的 schema 上限。
+ *
+ * 它**不是**實際的閘門 —— 逐模板的上限在 `CARBON_DIAGRAM_TEMPLATES`,由 builder 裁決。
+ * 這個值只負責擋「模型完全跑掉」（回幾百個節點）,所以必須明顯高過最寬的模板上限。
+ * 匯出是為了讓測試讀它而不是自己寫一份（見 carbon_report_diagram.test.ts 的分工測試）。
+ */
+export const CARBON_DIAGRAM_LLM_MAX_NODES = 150;
+
 export const CarbonDiagramNodesLlmOutputSchema = z.object({
   nodes: z
     .array(
@@ -346,8 +355,13 @@ export const CarbonDiagramNodesLlmOutputSchema = z.object({
      * 150 讓兩道閘門的角色分開：builder 的逐模板上限（目前最寬 40）永遠先觸發，
      * 說得出「幾個超過幾個」；schema 只留著擋真正的失控輸出（回幾百個節點），
      * 而那時整批拒絕是對的處置。
+     *
+     * Info: (20260817 - Emily) 抽成匯出常數（PR review A2）。
+     * 原本測試檔自己寫了一個 `const SCHEMA_MAX_NODES = 150`,於是它比較的是
+     * 「40 < 150」而 150 是它自己寫的 —— **那條測試不可能為了它存在的理由而失敗**。
+     * 實測：把這裡改回 `.max(60)`（就是造成 08-14 回歸的那個值）,全套仍然 53 passed。
      */
-    .max(150),
+    .max(CARBON_DIAGRAM_LLM_MAX_NODES),
 });
 export type CarbonDiagramNodesLlmOutput = z.infer<
   typeof CarbonDiagramNodesLlmOutputSchema

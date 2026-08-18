@@ -6,8 +6,14 @@
 // Info: (20260814 - Emily) 判準一律是**內部一致性**而不是比對某一份報告的形狀,否則換一份客戶報告就全部失效。
 
 import fs from "node:fs";
+import zlib from "node:zlib";
+import { PDFDocument, PDFName, PDFRawStream } from "pdf-lib";
 import { extractPdfTextLayer } from "@/lib/pdf_text_layer";
 import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
+import {
+  isCompatibilityCode,
+  parseCMapEntries,
+} from "@/lib/utils/pdf_tounicode_repair";
 
 type Level = "pass" | "fail" | "warn";
 
@@ -99,6 +105,151 @@ const assertOurReport = (text: string): boolean => {
   return false;
 };
 
+/**
+ * Info: (20260817 - Emily) ToUnicode CMap 的**結構**檢查（PR review A1 的驗收判準）。
+ *
+ * ## 為什麼文字層的檢查不夠
+ *
+ * 「相容區部首 0 個」是從**抽回來的文字**判的,而它與「來源側被改壞」是相容的:
+ * `repairPdfToUnicode` 的第一版把 `<2F42> <6587>` 改成 `<6587> <6587>`,
+ * 那條 entry 從此不指向相容區 —— 文字層看到的部首因此也是 0,
+ * 而 glyph 2F42 的對照**整條消失**（那個字變成抽不出來,比抽出錯字更糟）。
+ *
+ * 也就是說:上面那一條 ✓ 沒有能力區分「修好了」與「改壞了」。
+ * 這一段補的就是那個能力 —— 直接讀 CMap,查三個結構不變量。
+ *
+ * ## 三個判準
+ *
+ * 1. **`low <= high`**（fail）—— 端點被改寫的簽名。非法區間可能讓讀取器整張拒收,
+ *    那壞掉的不是一個字,是那個字型的整張對照表。
+ * 2. **目標側落在相容區 = 0**（fail）—— 修補確實生效。這一項與文字層那條互相印證:
+ *    數字對不上就是其中一支壞了（實測 08-17:log 說 `replaced: 143`,
+ *    修復前的 PDF 目標側相容區 143、修復後 0 —— 三個數字咬得起來）。
+ * 3. **來源側落在相容區 = 0**（warn，不是 fail）—— 這一項不是缺陷,是**前提失效的警報**。
+ *    Chrome/Skia 目前對 subset 字型重新編號成小 CID（實測兩份真報告的來源側最大
+ *    CID 都是 0x85B = 2139，整個 0x2E80–0x2FDF 窗口在 CID 範圍之外），
+ *    所以來源側今天不可能被誤判成相容區碼位。哪天這個數字不是 0,
+ *    表示換了字型嵌入方式（例如 Identity-H 保留原 glyph id），
+ *    「只改目標側」的保證必須重新實測 —— 那時要有人看到這行,而不是等使用者回報。
+ *
+ * 讀的是 `parseCMapEntries` —— 產品自己在改寫時用的那一支 parser,不是另寫一份。
+ * 自己另寫的那一版在 08-17 回報過「25 個非法區間」的**假警報**（regex 跨 entry 配對），
+ * 而真正的答案是 0。驗證的工具自己壞掉時，它會很有說服力地指著錯的地方。
+ */
+const CMAP_HINTS = ["beginbfchar", "beginbfrange"] as const;
+
+const decodeStream = (stream: PDFRawStream): string | null => {
+  const filter = stream.dict.get(PDFName.of("Filter"));
+  try {
+    const raw = Buffer.from(stream.contents);
+    const bytes =
+      filter !== undefined && String(filter).includes("FlateDecode")
+        ? zlib.inflateSync(raw)
+        : raw;
+    return bytes.toString("latin1");
+  } catch {
+    // Info: (20260817 - Emily) 解不開的串流不是缺陷（影像、字型檔都在這裡），跳過
+    return null;
+  }
+};
+
+const checkCMaps = async (bytes: Buffer): Promise<void> => {
+  let document: PDFDocument;
+  try {
+    document = await PDFDocument.load(bytes);
+  } catch (error) {
+    record(
+      "warn",
+      "ToUnicode CMap 結構",
+      `讀不開這份 PDF 的物件表(${error instanceof Error ? error.message : "未知"}) —— 這一項略過,文字層的判定不受影響`,
+    );
+    return;
+  }
+
+  let streams = 0;
+  let entries = 0;
+  let sourceMax = -1;
+  const illegal: string[] = [];
+  const sourceCompat: string[] = [];
+  const destinationCompat: string[] = [];
+
+  document.context.enumerateIndirectObjects().forEach(([, object]) => {
+    if (!(object instanceof PDFRawStream)) return;
+    const text = decodeStream(object);
+    if (text === null) return;
+    if (!CMAP_HINTS.some((hint) => text.includes(hint))) return;
+    streams += 1;
+
+    parseCMapEntries(text).forEach((entry) => {
+      entries += 1;
+      const sources =
+        entry.kind === "bfchar" ? [entry.source] : [entry.low, entry.high];
+      sources.forEach((code) => {
+        sourceMax = Math.max(sourceMax, code);
+        if (isCompatibilityCode(code)) {
+          sourceCompat.push(`U+${code.toString(16).toUpperCase()}`);
+        }
+      });
+      if (entry.kind === "bfrange" && entry.low > entry.high) {
+        illegal.push(
+          `<${entry.low.toString(16).toUpperCase()}> > <${entry.high
+            .toString(16)
+            .toUpperCase()}>`,
+        );
+      }
+      entry.destinations.forEach((token) => {
+        if (token.hex.length !== 4) return;
+        const code = parseInt(token.hex, 16);
+        if (isCompatibilityCode(code)) {
+          destinationCompat.push(`U+${token.hex.toUpperCase()}`);
+        }
+      });
+    });
+  });
+
+  snapshot.CMap串流數 = streams;
+  snapshot.CMap條目數 = entries;
+  snapshot.CMap來源側最大碼 = sourceMax;
+
+  if (streams === 0) {
+    record(
+      "warn",
+      "ToUnicode CMap 結構",
+      "找不到任何 CMap 串流 —— 若文字層抽得出中文,表示這支的解碼漏了某種串流形式,要查",
+    );
+    return;
+  }
+
+  record(
+    "pass",
+    "ToUnicode CMap 讀取",
+    `${streams} 個串流、${entries} 筆條目,來源側最大碼 0x${sourceMax
+      .toString(16)
+      .toUpperCase()}`,
+  );
+
+  expectZero("CMap 非法區間(lo>hi)", illegal);
+  expectZero("CMap 目標側落在相容區", destinationCompat);
+
+  snapshot["CMap 來源側落在相容區"] = sourceCompat.length;
+  if (sourceCompat.length === 0) {
+    record(
+      "pass",
+      "CMap 來源側落在相容區",
+      "0 —— 來源側是 subset CID,與相容區窗口不重疊,「只改目標側」的前提成立",
+    );
+  } else {
+    record(
+      "warn",
+      "CMap 來源側落在相容區",
+      `${sourceCompat.length} 筆(${[...new Set(sourceCompat)]
+        .slice(0, 5)
+        .join(" ")})—— 字型嵌入方式變了,` +
+        "repairPdfToUnicode 只改目標側的保證要重新實測,不能沿用 08-17 的結論",
+    );
+  }
+};
+
 const arg = (flag: string): string | undefined => {
   const index = process.argv.indexOf(flag);
   return index >= 0 ? process.argv[index + 1] : undefined;
@@ -157,7 +308,8 @@ const main = async (): Promise<void> => {
    * Info: (20260814 - Emily) 用產品自己的抽取器,不另接一支。
    * 兩支抽取器遲早會分岔,而分岔的那天驗收會說「沒問題」而使用者看到問題。
    */
-  const extracted = await extractPdfTextLayer(fs.readFileSync(pdfPath));
+  const bytes = fs.readFileSync(pdfPath);
+  const extracted = await extractPdfTextLayer(bytes);
   if (!extracted) {
     record("fail", "文字層", "抽不出文字層 —— 這份 PDF 不可搜尋");
     report();
@@ -198,6 +350,11 @@ const main = async (): Promise<void> => {
   // Info: (20260814 - Emily) ── 靜默失敗:沒有錯誤訊息、版面正常、內容是錯的 ──
   expectZero("私有區符號", [...raw].filter(isPrivateUse));
   reportRadicals([...raw].filter(isCompatibilityRadical));
+  /**
+   * Info: (20260817 - Emily) 上一行判的是抽回來的**文字**,這一行判 CMap 的**結構**。
+   * 兩者不可互相取代:文字層那條沒有能力區分「修好了」與「來源側被改壞了」。
+   */
+  await checkCMaps(bytes);
   expectZero("反斜線逸出外洩", text.match(ESCAPE_LEAK) ?? []);
   expectZero("mermaid 語法外洩", text.match(MERMAID_LEAK) ?? []);
   expectZero("待補佔位符", text.match(/待補/g) ?? []);

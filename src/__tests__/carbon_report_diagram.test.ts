@@ -14,6 +14,10 @@ import {
   CarbonDiagramTemplateEnum,
   CARBON_DIAGRAM_TEMPLATES,
 } from "@/constants/carbon_report_diagrams";
+import {
+  CARBON_DIAGRAM_LLM_MAX_NODES,
+  CarbonDiagramNodesLlmOutputSchema,
+} from "@/validators/carbon_inventory";
 import { detectChartType } from "@/lib/utils/mermaid_helpers";
 import { MermaidChartType } from "@/constants/mermaid_chart";
 
@@ -926,25 +930,99 @@ describe("沿革時間軸的節點上限（實測回歸）", () => {
     expect(block).toContain(String(max));
   });
 
-  it("LLM 輸出 schema 的上限必須高過所有模板的上限，否則它會先攔到", () => {
-    /**
-     * Info: (20260814 - Emily) 這條守的是兩道閘門的職責分工，不是某個數字。
-     *
-     * schema 想擋「模型失控」，builder 想擋「畫不下」。schema 的上限若沒有明顯高過
-     * builder 的最寬上限，它就會先攔到本該由 builder 說明的情況 —— 而它攔下來的
-     * 結果是 0 個節點，訊息因此變成「素材不足」，與事實相反。
-     *
-     * 數字寫死在這裡是刻意的：改任何一邊的上限都會讓這條紅，而那正是要提醒的時機。
-     */
+  /**
+   * Info: (20260817 - Emily) 兩道閘門的職責分工（PR review A2 重寫）。
+   *
+   * schema 想擋「模型失控」，builder 想擋「畫不下」。schema 的上限若沒有明顯高過
+   * builder 的最寬上限，它就會先攔到本該由 builder 說明的情況 —— 而它攔下來的
+   * 結果是 0 個節點，訊息因此變成「素材不足」，與事實相反（08-14 那個回歸）。
+   *
+   * ## 這一段為什麼重寫
+   *
+   * 原本這裡只有一條測試，而它自己寫了 `const SCHEMA_MAX_NODES = 150`，
+   * 於是它比較的是「40 < 150」而 150 是它自己寫的常數 ——
+   * **它不可能為了它存在的理由而失敗**。review 實測把 validator 的
+   * `.max(150)` 改回 `.max(60)`（造成 08-14 回歸的那個值），全套仍然 53 passed。
+   *
+   * 所以改成餵真的節點給真的 schema，斷言它的**行為**：
+   * 「builder 的最寬上限 +1 個節點，schema 要放過」——
+   * 那正是 08-14 現場發生的事（31 個節點該由 builder 說「超過 30」）。
+   */
+  describe("LLM 輸出 schema 與 builder 的職責分工", () => {
     const widest = Math.max(
       ...Object.values(CARBON_DIAGRAM_TEMPLATES).map(
         (template) => template.maxNodes,
       ),
     );
-    const SCHEMA_MAX_NODES = 150;
 
-    expect(widest).toBeLessThan(SCHEMA_MAX_NODES);
-    // Info: (20260814 - Emily) 要「明顯」高過，不是差一點 —— 差一點就是 08-14 那個 bug
-    expect(SCHEMA_MAX_NODES).toBeGreaterThanOrEqual(widest * 2);
+    // Info: (20260817 - Emily) schema 只看數量與字數，label 內容在這裡無關（原文複驗是 builder 的事）
+    const nodes = (count: number): { label: string }[] =>
+      Array.from({ length: count }, (_unused, index) => ({
+        label: `節點${index + 1}`,
+      }));
+
+    it("最寬模板上限 +1 個節點，schema 必須放過（讓 builder 去說「超過幾個」）", () => {
+      const parsed = CarbonDiagramNodesLlmOutputSchema.safeParse({
+        nodes: nodes(widest + 1),
+      });
+
+      expect(parsed.success).toBe(true);
+    });
+
+    /**
+     * Info: (20260817 - Emily) 上一條若只是「schema 上限比 builder 大一點」也會綠，
+     * 所以再釘一條餘裕：模型回到最寬上限的兩倍時仍然要放過。
+     * 08-14 的 60 正好落在 40 與 80 之間 —— 這條會抓到它。
+     */
+    it("最寬模板上限的兩倍，schema 仍然要放過", () => {
+      const parsed = CarbonDiagramNodesLlmOutputSchema.safeParse({
+        nodes: nodes(widest * 2),
+      });
+
+      expect(parsed.success).toBe(true);
+    });
+
+    // Info: (20260817 - Emily) 另一邊也要守：schema 仍然是「模型完全跑掉」的閘門，不是拿掉上限
+    it("模型回幾百個節點時，schema 要拒絕", () => {
+      const parsed = CarbonDiagramNodesLlmOutputSchema.safeParse({
+        nodes: nodes(500),
+      });
+
+      expect(parsed.success).toBe(false);
+    });
+
+    /**
+     * Info: (20260817 - Emily) 上面三條釘特定數量的行為，這一條釘「兩個上限的關係」。
+     *
+     * 它量的是 schema **實際**放過幾個，不是讀 `CARBON_DIAGRAM_LLM_MAX_NODES`。
+     * 差別在於：有人把 `.max(CARBON_DIAGRAM_LLM_MAX_NODES)` 改成字面值（例如
+     * `.max(60)`）的時候，讀常數的版本仍然是綠的 —— 那正是這一段原本的毛病。
+     */
+    const measureSchemaLimit = (): number => {
+      let limit = 0;
+      for (
+        let count = 1;
+        count <= CARBON_DIAGRAM_LLM_MAX_NODES * 4;
+        count += 1
+      ) {
+        if (
+          !CarbonDiagramNodesLlmOutputSchema.safeParse({ nodes: nodes(count) })
+            .success
+        ) {
+          break;
+        }
+        limit = count;
+      }
+      return limit;
+    };
+
+    it("schema 實際放過的節點數明顯高過所有模板的上限", () => {
+      const limit = measureSchemaLimit();
+
+      expect(limit).toBe(CARBON_DIAGRAM_LLM_MAX_NODES);
+      expect(widest).toBeLessThan(limit);
+      // Info: (20260817 - Emily) 要「明顯」高過，不是差一點 —— 差一點就是 08-14 那個 bug
+      expect(limit).toBeGreaterThanOrEqual(widest * 2);
+    });
   });
 });

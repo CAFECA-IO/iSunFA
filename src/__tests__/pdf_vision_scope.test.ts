@@ -61,8 +61,10 @@ describe("narrowVisionPagesToRange", () => {
 
     expect(result.decision).toBe("narrowed");
     expect(result.visionPages?.pages).toEqual([8]);
-    // Info: (20260814 - Emily) 光過濾頁碼清單不夠 —— 附帶的 PDF 本身也要只剩那一頁，
-    // 否則模型會收到一張沒有被提及的圖，那比提到範圍外的頁更糟
+    /**
+     * Info: (20260814 - Emily) 光過濾頁碼清單不夠 —— 附帶的 PDF 本身也要只剩那一頁，
+     * 否則模型會收到一張沒有被提及的圖，那比提到範圍外的頁更糟。
+     */
     expect(await pageTexts(result.visionPages!.data)).toBe(1);
   });
 
@@ -77,8 +79,10 @@ describe("narrowVisionPagesToRange", () => {
   });
 
   it("should keep everything when the slice fell back to the whole document", async () => {
-    // Info: (20260814 - Emily) range 為 null 即 slicePagesForRange 的 fellBack:
-    // 送的是全文，那影像也全部都在範圍內
+    /**
+     * Info: (20260814 - Emily) range 為 null 即 slicePagesForRange 的 fellBack:
+     * 送的是全文，那影像也全部都在範圍內。
+     */
     const vision = await buildVisionPages();
 
     const result = await narrowVisionPagesToRange(vision, null);

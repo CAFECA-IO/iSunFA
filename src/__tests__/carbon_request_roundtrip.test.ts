@@ -1,4 +1,8 @@
-import { CarbonReportPdfRequestSchema } from "@/validators/carbon_report_pdf";
+import {
+  CARBON_REPORT_IDENTITY_MAX_ROWS,
+  CarbonReportPdfRequestSchema,
+} from "@/validators/carbon_report_pdf";
+import { CARBON_REPORT_IDENTITY_FIELDS } from "@/lib/utils/carbon_report_identity";
 
 /**
  * Info: (20260817 - Emily) 請求 schema 的往返測試
@@ -91,6 +95,46 @@ describe("CarbonReportPdfRequestSchema 往返", () => {
     };
     const parsed = CarbonReportPdfRequestSchema.parse(extended);
     expect(parsed.shell?.identity).toHaveLength(6);
+  });
+
+  /**
+   * Info: (20260817 - Emily) schema 上限與實際欄位數的關係（PR review B1）。
+   *
+   * 與 A2 同一個形狀:上限與「實際有幾欄」是兩件事,schema 只擋失控輸入。
+   * 差別在失效模式 —— 這裡寫太小的話 Zod 會硬性失敗（400），現場看得到,
+   * 不像 `identity` 沒宣告那次被 `z.object` 靜靜 strip 掉。所以這一條是對稱性,不是閘門。
+   *
+   * 讀的是 validator 匯出的常數與實際的欄位陣列,兩邊都不是測試自己寫的數字。
+   */
+  it("keeps the schema ceiling clear of today's field count", () => {
+    expect(CARBON_REPORT_IDENTITY_FIELDS.length).toBeLessThan(
+      CARBON_REPORT_IDENTITY_MAX_ROWS,
+    );
+  });
+
+  /**
+   * Info: (20260817 - Emily) 行為面:目前的欄位數要放過,失控的量要拒絕。
+   * 只斷言兩個數字的關係不夠 —— 有人把 `.max(...)` 改成字面值時那條仍然綠。
+   */
+  it("accepts one row per identity field, and rejects a runaway count", () => {
+    const rows = (count: number): { label: string; value: string }[] =>
+      Array.from({ length: count }, (_unused, index) => ({
+        label: `欄位${index + 1}`,
+        value: `值${index + 1}`,
+      }));
+    const withRows = (count: number): unknown => ({
+      ...FULL_REQUEST,
+      shell: { ...FULL_REQUEST.shell, identity: rows(count) },
+    });
+
+    expect(
+      CarbonReportPdfRequestSchema.safeParse(
+        withRows(CARBON_REPORT_IDENTITY_FIELDS.length),
+      ).success,
+    ).toBe(true);
+    expect(CarbonReportPdfRequestSchema.safeParse(withRows(100)).success).toBe(
+      false,
+    );
   });
 
   /**
