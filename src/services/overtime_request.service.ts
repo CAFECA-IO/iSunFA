@@ -36,6 +36,7 @@ import {
   IOvertimeRequestRepository,
   overtimeRequestRepo,
 } from "@/repositories/overtime_request.repo";
+import { OvertimeRequestInvariantError } from "@/repositories/overtime_request_invariant";
 import {
   IOvertimeRequestCreatePayload,
   IOvertimeRequestListQuery,
@@ -112,7 +113,7 @@ export class OvertimeRequestService {
     const referenceMinute =
       scheduled.windowStartMinute ?? input.requestedStartMinute;
 
-    const requestId = await this.requests.create({
+    const requestId = await this.createOrTranslate({
       accountBookId: params.accountBookId,
       employeeId: params.employeeId,
       workDate: input.workDate,
@@ -141,6 +142,38 @@ export class OvertimeRequestService {
     });
 
     return this.mustFindSummary(params.accountBookId, requestId);
+  }
+
+  /**
+   * Info: (20260818 - Julian) 把 `assertOvertimeFilingType` 的拒絕轉成 4xx。
+   *
+   * ## 為什麼一定要轉
+   *
+   * `OvertimeRequestInvariantError` 不是 `AppError`，route 的 catch 會把它
+   * 收斂成 `IS_DB_FAILED` —— 於是「事前申請不能在班別開始後才送出」這件
+   * 使用者看得懂、也改得動的事，在畫面上長得像伺服器壞了。
+   *
+   * `VA_OVERTIME_FILING_TYPE_MISMATCH` 與它的 i18n 字串本來就存在
+   * （`OVERTIME_ERROR_I18N_KEY` 已經登記），只是**沒有任何地方丟出它** ——
+   * 兩端都備好了，中間少一段接線。
+   *
+   * ## 為什麼只包送出、不包核准
+   *
+   * 送出時這條不變式擋的是**使用者填的東西**（時序對不上）。核准時它擋的是
+   * 認列與核准分鐘的內部一致性 —— 那是程式的錯，不是使用者的錯，
+   * 轉成 4xx 會讓一個該被修的 bug 看起來像一次正常的拒絕。
+   */
+  private async createOrTranslate(
+    params: Parameters<IOvertimeRequestRepository["create"]>[0],
+  ): Promise<string> {
+    try {
+      return await this.requests.create(params);
+    } catch (error) {
+      if (error instanceof OvertimeRequestInvariantError) {
+        throw new AppError(API_ERRORS.VA_OVERTIME_FILING_TYPE_MISMATCH);
+      }
+      throw error;
+    }
   }
 
   /**

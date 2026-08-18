@@ -39,6 +39,20 @@ import { useTranslation } from "@/i18n/i18n_context";
 const localIsoDate = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
+/**
+ * Info: (20260818 - Julian) 事前／事後**不是偏好，是事實**，因此由日期推出來當預設。
+ *
+ * 舊的預設一律 `ADVANCE`，而 `workDate` 預設是今天 —— 於是早上七點半班別窗
+ * 一開，任何人照預設值送出都必定被 `assertOvertimeFilingType` 擋下
+ * （那條不變式擋的是「事後補的單被標成事前申請」，因為事後補單在勞動檢查時
+ * 證據力較低，謊報對填單的人有利）。規則是對的，預設值是錯的。
+ *
+ * 今天算事後：班別窗多半已經開了。真的在上班前就先報備的人可以自己改回來，
+ * 而那個選擇仍然會被伺服器端的不變式驗一次 —— 這裡只負責不要引導人去撞牆。
+ */
+const filingTypeFor = (workDate: string, today: string): OvertimeFilingType =>
+  workDate > today ? OvertimeFilingType.ADVANCE : OvertimeFilingType.POST_HOC;
+
 /** Info: (20260818 - Julian) "HH:MM" → 當日 00:00 起算的分鐘數 */
 const toMinuteOfDay = (value: string): number | null => {
   const matched = /^(\d{2}):(\d{2})$/.exec(value);
@@ -67,8 +81,8 @@ const MyOvertimePageBody: FC = () => {
   const [workDate, setWorkDate] = useState(() => localIsoDate(new Date()));
   const [startTime, setStartTime] = useState("18:00");
   const [endTime, setEndTime] = useState("20:00");
-  const [filingType, setFilingType] = useState<OvertimeFilingType>(
-    OvertimeFilingType.ADVANCE,
+  const [filingType, setFilingType] = useState<OvertimeFilingType>(() =>
+    filingTypeFor(localIsoDate(new Date()), localIsoDate(new Date())),
   );
   const [compensationMode, setCompensationMode] =
     useState<OvertimeCompensationMode>(OvertimeCompensationMode.PAYMENT);
@@ -107,6 +121,14 @@ const MyOvertimePageBody: FC = () => {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  /**
+   * Info: (20260818 - Julian) 改日期就重推申請時序 —— 它是那個日期的事實，
+   * 不是使用者上一次的選擇。改完仍可手動改回來（見 `filingTypeFor`）。
+   */
+  useEffect(() => {
+    setFilingType(filingTypeFor(workDate, localIsoDate(new Date())));
+  }, [workDate]);
 
   const submit = async () => {
     const startMinute = toMinuteOfDay(startTime);
@@ -154,7 +176,22 @@ const MyOvertimePageBody: FC = () => {
     }
   };
 
-  const canSubmit = !submitting && reason.trim().length > 0;
+  /**
+   * Info: (20260818 - Julian) 使用者手動選了一個與日期矛盾的時序。
+   * 只看得出「必定錯」的兩種組合；今天這一格由班別窗決定，前端不知道窗在哪。
+   */
+  const filingMismatch =
+    (filingType === OvertimeFilingType.ADVANCE &&
+      workDate < localIsoDate(new Date())) ||
+    (filingType === OvertimeFilingType.POST_HOC &&
+      workDate > localIsoDate(new Date()));
+
+  // Info: (20260818 - Julian) 時刻空白時 `toMinuteOfDay` 會回 null，送出鈕會變成按了沒反應
+  const canSubmit =
+    !submitting &&
+    reason.trim().length > 0 &&
+    startTime !== "" &&
+    endTime !== "";
 
   if (loading) {
     return (
@@ -285,7 +322,18 @@ const MyOvertimePageBody: FC = () => {
           </label>
         </div>
 
-        <p className="mt-1 text-xs leading-relaxed text-gray-400">
+        {/**
+         * Info: (20260818 - Julian) 同一句規則，在選擇必定被擋時改成琥珀色。
+         *
+         * 不另外寫一句警告文案：要說的話與 `filing_hint` 完全相同，
+         * 差別只在「這是規則」與「你現在違反了它」—— 那個差別用顏色說得完，
+         * 而多一個 i18n key 就多五個語系要跟著改。
+         */}
+        <p
+          className={`mt-1 text-xs leading-relaxed ${
+            filingMismatch ? "text-amber-600" : "text-gray-400"
+          }`}
+        >
           {t("hr_management.overtime.filing_hint")}
         </p>
         {compensationMode === OvertimeCompensationMode.COMPENSATORY_LEAVE && (
@@ -336,7 +384,7 @@ const MyOvertimePageBody: FC = () => {
           type="button"
           disabled={!canSubmit}
           onClick={submit}
-          className="mt-4 flex items-center gap-1.5 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+          className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-gray-300 sm:w-fit"
         >
           {submitting ? (
             <Loader2 className="size-4 animate-spin" />
