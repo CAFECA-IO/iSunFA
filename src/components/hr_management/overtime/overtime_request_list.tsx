@@ -1,7 +1,7 @@
 "use client";
 
 import { FC, useState } from "react";
-import { Check, Loader2, Siren, X } from "lucide-react";
+import { Check, FileWarning, Loader2, Siren, X } from "lucide-react";
 import {
   OVERTIME_TIER_I18N_KEY,
   OvertimeEvidenceBasis,
@@ -15,7 +15,11 @@ import {
   overtimeRequestApproveApi,
   overtimeRequestRejectApi,
 } from "@/constants/overtime_api";
-import { errorI18nKeyOf } from "@/lib/utils/attendance_error_message";
+import {
+  errorCodeOf,
+  errorI18nKeyOf,
+} from "@/lib/utils/attendance_error_message";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { OVERTIME_ERROR_I18N_KEY } from "@/lib/utils/overtime_error_message";
 import { formatMinuteOfDay } from "@/lib/utils/attendance_format";
 import { IEnvelopeLike, request } from "@/lib/utils/request";
@@ -59,12 +63,27 @@ const OvertimeRequestList: FC<{
   const { t } = useTranslation();
   const [actingId, setActingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Info: (20260818 - Julian) 錯誤碼另外留一份：訊息是給人看的，碼是給程式判斷的
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [approvedMinutes, setApprovedMinutes] = useState<
     Record<string, number>
   >({});
 
   const nextDay = t("hr_management.attendance.next_day");
+
+  /**
+   * Info: (20260818 - Julian) 被法定上限擋下的三個碼。
+   *
+   * 單獨認出它們，是因為它們與其他錯誤的**下一步不同**：其他的是「這張單填錯了」
+   * 或「你不能簽」，而這三個是「這段工時已經發生，但它超過法定上限」——
+   * 那不是改一改欄位就能解決的事。
+   */
+  const LIMIT_ERROR_CODES: readonly string[] = [
+    API_ERRORS.VA_OVERTIME_EXCEEDS_DAILY_LIMIT.code,
+    API_ERRORS.VA_OVERTIME_EXCEEDS_MONTHLY_LIMIT.code,
+    API_ERRORS.VA_OVERTIME_EXCEEDS_QUARTERLY_LIMIT.code,
+  ];
 
   const decide = async (
     item: IOvertimeRequestSummary,
@@ -73,6 +92,7 @@ const OvertimeRequestList: FC<{
   ) => {
     setActingId(item.id);
     setError(null);
+    setErrorCode(null);
     setNotice(null);
     try {
       const response = await request<IEnvelopeLike<IOvertimeApprovalResult>>(
@@ -114,6 +134,7 @@ const OvertimeRequestList: FC<{
 
       await onChanged?.();
     } catch (caught) {
+      setErrorCode(errorCodeOf(caught));
       setError(
         t(
           errorI18nKeyOf(
@@ -135,9 +156,42 @@ const OvertimeRequestList: FC<{
   return (
     <div className="flex flex-col gap-2">
       {error && (
-        <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
-          {error}
-        </p>
+        <div className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
+          <p>{error}</p>
+
+          {/**
+           * Info: (20260818 - Julian) 超過法定上限時的下一步入口，**目前停用**。
+           *
+           * ## 為什麼按鈕在這裡、卻按不下去
+           *
+           * 需求是「超時改為提示、不阻擋，並提供填寫報告書的選項」。但「不擋」
+           * 與「合法」是兩件事，而它們的資料模型不同：報告書若是 §32 IV 天災
+           * 事變的法定通報，它是一個**合法性依據**；若只是主管的例外核准說明，
+           * 它是一筆**違規紀錄**。把後者當成前者，等於讓系統對勞動檢查宣稱
+           * 一件不成立的合法性。
+           *
+           * 那個決定尚未做出，法源（§32 IV 的通報時限、受理機關、法定書表欄位）
+           * 也還沒回原文核對 —— 因此這裡只放出入口，不改變阻擋行為。
+           * 完整說明見計畫書 §8.3。
+           */}
+          {errorCode !== null && LIMIT_ERROR_CODES.includes(errorCode) && (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                disabled
+                aria-disabled="true"
+                title={t("hr_management.overtime.report_disabled_hint")}
+                className="flex cursor-not-allowed items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-gray-400 ring-1 ring-gray-200"
+              >
+                <FileWarning className="size-3.5 shrink-0" />
+                {t("hr_management.overtime.action_write_report")}
+              </button>
+              <span className="text-xs text-rose-600/80">
+                {t("hr_management.overtime.report_disabled_hint")}
+              </span>
+            </div>
+          )}
+        </div>
       )}
       {notice && (
         <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800">

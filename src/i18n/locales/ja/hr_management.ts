@@ -787,7 +787,8 @@ export const hrManagement = {
     detail_concurrency_warned:
       "申請時点で同期間に他の同僚の休暇があり、申請者には通知済みです",
     segment_custom: "時間指定",
-    field_custom_range: "開始・終了時刻",
+    field_custom_start: "開始",
+    field_custom_end: "終了",
     unit_hint:
       "最小単位は {{minutes}} 分です。満たない場合は 1 単位として計算されます",
     preview_rounded:
@@ -968,6 +969,9 @@ export const hrManagement = {
     action_approve: "承認",
     action_reject: "却下",
     decided_recognized: "承認しました（認定 {{minutes}} 分）",
+    action_write_report: "時間外労働報告書を作成",
+    report_disabled_hint:
+      "未開放：根拠法令と書式の項目が法務確認待ちです（計画書 §8.3）",
     decided_unapproved:
       "承認範囲を超えた {{minutes}} 分は未承認時間帯に計上されました",
     decided_granted: "代休を {{count}} 件付与しました",

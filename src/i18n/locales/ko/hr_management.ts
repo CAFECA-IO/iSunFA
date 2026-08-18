@@ -791,7 +791,8 @@ export const hrManagement = {
     detail_concurrency_warned:
       "신청 시점에 같은 기간 다른 동료의 휴가가 있었고 신청자에게 안내되었습니다",
     segment_custom: "시간 지정",
-    field_custom_range: "시작·종료 시각",
+    field_custom_start: "시작",
+    field_custom_end: "종료",
     unit_hint: "최소 단위는 {{minutes}}분이며, 미만은 1단위로 계산됩니다",
     preview_rounded:
       "선택한 시간은 {{raw}}분이지만 최소 단위에 따라 {{minutes}}분으로 계산됩니다",
@@ -971,6 +972,9 @@ export const hrManagement = {
     action_approve: "승인",
     action_reject: "반려",
     decided_recognized: "승인했습니다(인정 {{minutes}}분)",
+    action_write_report: "연장근로 보고서 작성",
+    report_disabled_hint:
+      "아직 제공되지 않습니다: 법적 근거와 서식 항목이 법무 검토 대기 중입니다(계획서 §8.3)",
     decided_unapproved:
       "승인 범위를 넘은 {{minutes}}분은 미승인 시간대에 집계되었습니다",
     decided_granted: "보상휴가 {{count}}건을 부여했습니다",

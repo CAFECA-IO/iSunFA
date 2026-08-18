@@ -37,25 +37,15 @@ import { useTranslation } from "@/i18n/i18n_context";
  * 開著表單不送出，不會佔住任何人的額度。
  */
 
-/**
- * Info: (20260818 - Julian) 表單裡的一天。
- *
- * 起訖時刻**逐日各自持有**，而不是整張假單共用一組 —— `LeaveDay` 本來就是
- * 逐日落地的（`startMinute` / `endMinute` 在每一列上）。共用一組會讓
- * 「週一請上午兩小時、週三請下午一小時」這種再普通不過的組合表達不出來，
- * 而那正是小時制假別最常見的用法。
- */
-interface ILeaveDayDraft {
-  workDate: string;
-  /** Info: (20260818 - Julian) "HH:MM"，只在 CUSTOM 有意義 */
-  startTime: string;
-  endTime: string;
-}
-
 /** Info: (20260817 - Julian) 送出後回到乾淨表單，但保留假別 —— 通常會連續請同一種 */
-const emptyDays = (): ILeaveDayDraft[] => [
-  { workDate: "", startTime: "09:00", endTime: "12:00" },
-];
+const emptyDays = (): string[] => [""];
+
+/**
+ * Info: (20260818 - Julian) 自訂時段的預設起訖。與加班單同一種形狀：
+ * **整張單一組起訖**，不是逐日各填一組。
+ */
+const DEFAULT_CUSTOM_START = "09:00";
+const DEFAULT_CUSTOM_END = "12:00";
 
 /** Info: (20260818 - Julian) "HH:MM" → 當日 00:00 起算的分鐘數 */
 const toMinuteOfDay = (value: string): number | null => {
@@ -81,7 +71,9 @@ const MyLeavePageBody: FC = () => {
 
   const [policyId, setPolicyId] = useState<string>("");
   const [segment, setSegment] = useState<LeaveDaySegment>(LeaveDaySegment.FULL);
-  const [days, setDays] = useState<ILeaveDayDraft[]>(emptyDays());
+  const [workDates, setWorkDates] = useState<string[]>(emptyDays());
+  const [customStart, setCustomStart] = useState(DEFAULT_CUSTOM_START);
+  const [customEnd, setCustomEnd] = useState(DEFAULT_CUSTOM_END);
   const [reason, setReason] = useState("");
 
   const [preview, setPreview] = useState<ILeaveRequestPreview | null>(null);
@@ -168,35 +160,41 @@ const MyLeavePageBody: FC = () => {
    * 「試算顯示 2 小時，送出卻扣了一整天」，比沒有試算更糟
    * （同 `leaveRequestCreateSchema` 與試算共用 schema 的理由）。
    */
-  const payloadDays = useMemo(
-    () =>
-      days
-        .filter((day) => day.workDate !== "")
-        .map((day) => {
-          if (!isCustom) return { workDate: day.workDate, segment };
-          const startMinute = toMinuteOfDay(day.startTime);
-          const endMinute = toMinuteOfDay(day.endTime);
-          return startMinute === null || endMinute === null
-            ? null
-            : { workDate: day.workDate, segment, startMinute, endMinute };
-        })
-        // Info: (20260818 - Julian) 時刻沒填完的列不送，也不試算 —— 送了必定被 validator 擋
-        .filter((day): day is NonNullable<typeof day> => day !== null),
-    [days, segment, isCustom],
-  );
+  const payloadDays = useMemo(() => {
+    const dates = workDates.filter((workDate) => workDate !== "");
+    if (!isCustom) return dates.map((workDate) => ({ workDate, segment }));
 
-  /** Info: (20260818 - Julian) 使用者實際選了幾分鐘（未進位），用來說明進位差額 */
-  const rawSelectedMinutes = useMemo(
-    () =>
-      !isCustom
-        ? null
-        : payloadDays.reduce((sum, day) => {
-            const start = (day as { startMinute?: number }).startMinute ?? 0;
-            const end = (day as { endMinute?: number }).endMinute ?? 0;
-            return sum + Math.max(0, end - start);
-          }, 0),
-    [payloadDays, isCustom],
-  );
+    const startMinute = toMinuteOfDay(customStart);
+    const endMinute = toMinuteOfDay(customEnd);
+    // Info: (20260818 - Julian) 時刻沒填完就不送、也不試算 —— 送了必定被 validator 擋
+    if (startMinute === null || endMinute === null) return [];
+
+    /**
+     * Info: (20260818 - Julian) 同一組起訖套用到每一天。
+     *
+     * `LeaveDay` 仍是逐日落地的（每一列各有 `startMinute` / `endMinute`），
+     * 只是表單不讓使用者逐日填不同的時刻 —— 與加班單同一種形狀。
+     * 「連續三天，每天請 09:00–12:00」是實務上壓倒性多數的用法。
+     */
+    return dates.map((workDate) => ({
+      workDate,
+      segment,
+      startMinute,
+      endMinute,
+    }));
+  }, [workDates, segment, isCustom, customStart, customEnd]);
+
+  /**
+   * Info: (20260818 - Julian) 使用者實際選了幾分鐘（未進位），用來說明進位差額。
+   * 一組起訖 × 天數 —— 表單只收一組（見下方起訖選擇器的說明）。
+   */
+  const rawSelectedMinutes = useMemo(() => {
+    if (!isCustom) return null;
+    const startMinute = toMinuteOfDay(customStart);
+    const endMinute = toMinuteOfDay(customEnd);
+    if (startMinute === null || endMinute === null) return null;
+    return Math.max(0, endMinute - startMinute) * payloadDays.length;
+  }, [isCustom, customStart, customEnd, payloadDays.length]);
 
   /**
    * Info: (20260817 - Julian) 日期或假別一改就重新試算。
@@ -277,7 +275,7 @@ const MyLeavePageBody: FC = () => {
           days: payloadDays,
         }),
       });
-      setDays(emptyDays());
+      setWorkDates(emptyDays());
       setReason("");
       setPreview(null);
       // Info: (20260818 - Julian) 送出成功就收起抽屜，讓底下剛更新的「我的假單」露出來
@@ -440,72 +438,72 @@ const MyLeavePageBody: FC = () => {
           <span className="text-xs text-gray-600">
             {t("hr_management.leave.field_dates")}
           </span>
-          {days.map((day, index) => {
-            const patch = (changes: Partial<ILeaveDayDraft>) =>
-              setDays(
-                days.map((item, i) =>
-                  i === index ? { ...item, ...changes } : item,
-                ),
-              );
-
-            return (
-              <div key={index} className="flex flex-wrap items-center gap-2">
-                <input
-                  type="date"
-                  value={day.workDate}
-                  onChange={(event) => patch({ workDate: event.target.value })}
-                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
-                />
-
-                {/**
-                 * Info: (20260818 - Julian) 起訖逐日各自填。整張單共用一組時刻
-                 * 表達不了「週一請上午兩小時、週三請下午一小時」，
-                 * 而那是小時制假別最常見的用法。
-                 */}
-                {isCustom && (
-                  <span
-                    className="flex items-center gap-1.5"
-                    aria-label={t("hr_management.leave.field_custom_range")}
-                  >
-                    <input
-                      type="time"
-                      value={day.startTime}
-                      onChange={(event) =>
-                        patch({ startTime: event.target.value })
-                      }
-                      className="rounded-lg border border-gray-300 px-2 py-2 text-sm text-gray-800"
-                    />
-                    <span className="text-xs text-gray-400">–</span>
-                    <input
-                      type="time"
-                      value={day.endTime}
-                      onChange={(event) =>
-                        patch({ endTime: event.target.value })
-                      }
-                      className="rounded-lg border border-gray-300 px-2 py-2 text-sm text-gray-800"
-                    />
-                  </span>
-                )}
-
-                {days.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setDays(days.filter((_, i) => i !== index))}
-                    className="text-xs text-gray-400 hover:text-rose-500"
-                  >
-                    {t("hr_management.leave.action_remove_date")}
-                  </button>
-                )}
-              </div>
-            );
-          })}
+          {workDates.map((workDate, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <input
+                type="date"
+                value={workDate}
+                onChange={(event) =>
+                  setWorkDates(
+                    workDates.map((item, i) =>
+                      i === index ? event.target.value : item,
+                    ),
+                  )
+                }
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
+              />
+              {workDates.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setWorkDates(workDates.filter((_, i) => i !== index))
+                  }
+                  className="text-xs text-gray-400 hover:text-rose-500"
+                >
+                  {t("hr_management.leave.action_remove_date")}
+                </button>
+              )}
+            </div>
+          ))}
           <button
             type="button"
-            onClick={() => setDays([...days, ...emptyDays()])}
+            onClick={() => setWorkDates([...workDates, ""])}
             className="self-start text-xs font-medium text-sky-600 hover:text-sky-700"
           >
             {t("hr_management.leave.action_add_date")}
           </button>
+
+          {/**
+           * Info: (20260818 - Julian) 起訖時刻**整張單一組**，與加班單同一種形狀。
+           *
+           * 第一版做成逐日各填一組，理由是 `LeaveDay` 本來就逐日落地、
+           * 表達得了「週一上午兩小時、週三下午一小時」。但那個彈性的代價是
+           * 每多一天就多兩個輸入框，而它服務的是極少數的情況 ——
+           * 絕大多數是「連續幾天，每天同一個時段」。落地仍然是逐日的，
+           * 只有填法收斂成一組。
+           */}
+          {isCustom && (
+            <div className="flex flex-wrap items-end gap-2">
+              <label className="flex flex-col gap-1 text-xs text-gray-600">
+                {t("hr_management.leave.field_custom_start")}
+                <input
+                  type="time"
+                  value={customStart}
+                  onChange={(event) => setCustomStart(event.target.value)}
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-xs text-gray-600">
+                {t("hr_management.leave.field_custom_end")}
+                <input
+                  type="time"
+                  value={customEnd}
+                  onChange={(event) => setCustomEnd(event.target.value)}
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
+                />
+              </label>
+            </div>
+          )}
 
           {/**
            * Info: (20260818 - Julian) 最小單位要在填之前就說，不是等試算才顯示。

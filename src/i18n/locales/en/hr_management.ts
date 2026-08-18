@@ -802,7 +802,8 @@ export const hrManagement = {
     detail_concurrency_warned:
       "Others were already on leave during this period when the request was submitted; the requester was warned",
     segment_custom: "Custom hours",
-    field_custom_range: "Start / end time",
+    field_custom_start: "From",
+    field_custom_end: "To",
     unit_hint:
       "Minimum unit {{minutes}} min; anything shorter counts as one full unit.",
     preview_rounded:
@@ -987,6 +988,9 @@ export const hrManagement = {
     action_approve: "Approve",
     action_reject: "Reject",
     decided_recognized: "Approved — {{minutes}} min recognised",
+    action_write_report: "Fill in overtime report",
+    report_disabled_hint:
+      "Not available yet — the statutory basis and form fields are still pending legal review (plan §8.3).",
     decided_unapproved:
       "{{minutes}} min beyond what you approved is listed under unapproved time",
     decided_granted: "{{count}} compensatory leave batch(es) granted",
