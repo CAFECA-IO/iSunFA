@@ -69,6 +69,16 @@ export const adminMissionBoard = {
     brand: "iSunFAスマート会計",
     internal_document: "内部文書",
     system_report: "システムレポート",
+    report_identity: {
+      title: "検証識別情報",
+      inventory_year: "算定年度",
+      prepared_by: "作成部署",
+      verified_by: "検証機関",
+      issued_on: "更新日",
+      unfilled: "未記入",
+      name_suffix: "温室効果ガス算定報告書",
+      hint: "検証機関は報告内容から導出できないため、手入力が必要です",
+    },
     footer_title: "AIによる炭素会計の再構築",
     footer_text:
       "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.",

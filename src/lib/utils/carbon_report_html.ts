@@ -4,9 +4,11 @@ import { stripMarkdownComments } from "@/lib/utils/markdown_comment";
 import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_break";
 import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
 import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
+import { splitInlineListItems } from "@/lib/utils/markdown_list_structure";
 import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
 import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
 import { padAllTableHeaders } from "@/lib/utils/markdown_table_columns";
+import { stripLeadingDocumentTitle } from "@/lib/utils/carbon_report_title";
 import {
   CARBON_PDF_CHART_MAX_HEIGHT_MM,
   CARBON_PDF_FONT_STACK,
@@ -79,21 +81,9 @@ const parseRow = (row: string): IParsedCell[] => {
 /**
  * Info: (20260810 - Emily) 只有第一格有內容的列 = 原文的類別分隔列
  * (「類別二:輸入能源的間接溫室氣體排放量」橫跨整張表的那一條)。
- *
- * Info: (20260813 - Emily) 只認資料列(`td`)—— 表頭列永遠不是分隔列。
- *
- * 少了這一條,`padAllTableHeaders` 補完欄的表頭會落進這個形狀:原文的父標題
- * 橫跨整張表時表頭只有一格(`| 溫室氣體排放量 |`),補到資料列的欄數之後
- * 就變成「第一格有內容、其餘皆空」,於是整個 `<thead>` 被改寫成
- * `<tr class="group"><td colspan="N">` —— 那張表**一個 `<th>` 都不剩**。
- *
- * 文字還看得見,所以它不是內容遺失;但一份要送第三方查證的文件,表格沒有表頭列
- * 對輔助技術與任何依賴 `th` 的處理都等於沒有標頭,而 `tr.group td` 的置中灰底
- * 本來是設計給表身的分類分隔列,套到表頭上也不是它的用途。
  */
 export const isGroupRow = (cells: readonly IParsedCell[]): boolean =>
   cells.length > 1 &&
-  cells.every((cell) => cell.tag === "td") &&
   cells[0].text !== "" &&
   cells.slice(1).every((cell) => cell.text === "");
 
@@ -358,6 +348,20 @@ const printStyle = (): string => {
   }
   .doc-shell-meta .dot { color: rgb(209, 213, 219); }
   .doc-shell-meta .doc-title { margin: 4mm 0 0; font-size: 16pt; }
+  /*
+   * Info: (20260814 - Emily) 識別欄位(issue 24)。兩欄自動排,四項就是 2x2;
+   * 欄數用 auto-fit 而不是寫死 2,因為省略某一項時剩三項也要排得好看。
+   * break-inside 讓這塊不會被分頁切開 —— 識別資訊斷成兩頁沒有意義。
+   */
+  .doc-identity {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(60mm, 1fr));
+    gap: 2mm 6mm; margin: 5mm 0 0; font-size: 9pt;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .doc-identity dt {
+    color: rgb(107, 114, 128); font-size: 8pt; margin: 0 0 0.5mm;
+  }
+  .doc-identity dd { margin: 0; color: rgb(15, 23, 42); font-weight: 600; }
 
   /*
    * Info: (20260812 - Emily) 目錄。整塊自成一頁：目錄橫跨兩頁而中間夾著正文
@@ -433,6 +437,28 @@ export interface ICarbonReportShell {
   logoDataUrl?: string;
   /** Info: (20260811 - Emily) 報告標題;省略即不印(內容自己的 h1 已足夠) */
   title?: string;
+  /**
+   * Info: (20260814 - Emily) 查證用的識別欄位
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * 盤查年度／製作單位／查證單位／更新日期 —— 原始報告都有，我們都沒有。
+   * 其中查證單位**無法從內容推導**，盤查年度雖然推得出來但抽錯的代價是封面寫錯年度。
+   *
+   * ## 為什麼是 label/value 陣列而不是四個具名欄位
+   *
+   * 文案與「沒填要印什麼」都由呼叫端決定,與本檔既有的 brand／systemReport
+   * 同一個立場(見檔頭:文案由呼叫端傳入而不是在這裡寫死)。
+   * 這支不知道使用者的語言,也不該替它決定「未填寫」三個字怎麼寫。
+   *
+   * ## 為什麼沒填的欄位也要印
+   *
+   * 藏起來的話,「這一項不適用」與「我們忘了填」在紙上完全同形 ——
+   * 而讀這份文件的是查證單位。空著但看得見,才會有人去填它。
+   * 這與目錄頁碼找不到就留白、圖畫不出來也要說是同一個判準。
+   *
+   * 省略整個欄位即不印這一區(例如公開分享頁那種不需要識別資訊的場合)。
+   */
+  identity?: ReadonlyArray<{ readonly label: string; readonly value: string }>;
   /** Info: (20260812 - Emily) 目錄抬頭;省略即不印目錄 */
   tocTitle?: string;
 }
@@ -546,6 +572,28 @@ const tocSection = (
         "</nav>",
       ].join("");
 
+/**
+ * Info: (20260814 - Emily) 識別欄位那一小塊(issue 24)。
+ *
+ * 刻意**不做整頁封面**:導覽已由目錄涵蓋、識別由這塊橫幅涵蓋,
+ * 再加一頁是多一頁不是多一份資訊(票上已判定)。
+ *
+ * 用 `dl` 而不是表格:這是四組「名稱 → 值」,不是資料表。
+ * 表格會帶進框線與表頭樣式,而這裡要的是一塊安靜的識別資訊。
+ */
+const shellIdentity = (identity: ICarbonReportShell["identity"]): string =>
+  identity === undefined || identity.length === 0
+    ? ""
+    : [
+        '<dl class="doc-identity">',
+        ...identity.map(
+          (field) =>
+            `<div><dt>${escapeHtml(field.label)}</dt>` +
+            `<dd>${escapeHtml(field.value)}</dd></div>`,
+        ),
+        "</dl>",
+      ].join("");
+
 const shellHeader = (shell: ICarbonReportShell): string =>
   [
     '<header class="doc-shell-header">',
@@ -561,6 +609,7 @@ const shellHeader = (shell: ICarbonReportShell): string =>
     `<span class="tag">${escapeHtml(shell.systemReport)}</span>`,
     `<p class="line">${escapeHtml(SHELL_VENDOR)} <span class="dot">•</span> ${escapeHtml(shell.issuedAt)}</p>`,
     shell.title ? `<h1 class="doc-title">${escapeHtml(shell.title)}</h1>` : "",
+    shellIdentity(shell.identity),
     "</section>",
   ].join("");
 
@@ -598,9 +647,21 @@ export const buildCarbonReportHtml = (
    * 既有草稿是在轉義加入之前組成的,內容裡的乘號還是裸的;重新產生一份 46 頁的報告很貴,
    * 所以讀取端也擋一次 —— 函式是冪等的,重複套用無害。
    */
-  const source = stripHtmlLineBreaksOutsideFences(
-    stripMarkdownComments(markdown),
-  );
+  /**
+   * Info: (20260812 - Emily) 順帶剝掉開頭那行文件級 H1
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * 報告名稱已經改走 `shell.title`（文件外殼）。既有草稿的第一行還烤著
+   * `# <會話名>` —— 不剝的話同一份文件的第一頁會出現兩個名稱，
+   * 一個在外殼、一個在內文，而內文那個是舊的。
+   *
+   * 排在 `stripMarkdownComments` 之後：內容前面若有 HTML 註解，
+   * 剝除只看「第一個非空行」，會被那行註解擋住而漏剝。
+   * 預覽端由 `MarkdownContent` 的 `stripDocumentTitle` 做同一件事。
+   */
+  const source = stripLeadingDocumentTitle(
+    stripHtmlLineBreaksOutsideFences(stripMarkdownComments(markdown)),
+  ).body;
   /**
    * Info: (20260811 - Emily) 既有草稿裡的 mermaid timeline 在此轉成表格。
    * 產表端已改成直接輸出表格,但既有草稿的 markdown 裡存著改動前產生的 timeline 區塊,
@@ -632,7 +693,21 @@ export const buildCarbonReportHtml = (
     escapeArithmeticEmphasis(
       padAllTableHeaders(
         convertTimelineBlocksToTables(
-          replaceOfficeSymbolChars(restoreLineStructure(source)),
+          /**
+           * Info: (20260814 - Emily) 先補回換行，再標硬斷行
+           * (`data/issue_drafts/open/26_import_uat.md` 的觀察項)。
+           *
+           * `restoreLineStructure` 還原的是「來源已經有的」換行，而 08-14
+           * 新匯入件幾乎沒有輸出那些換行 —— 整份清單塞在同一行
+           * （最嚴重的是 `3.2.3` 把 (1)~(31) 全放在一行）。
+           * 補換行要排在它前面，它才有東西可以標。
+           *
+           * 這裡不記 log：渲染端每次都重跑，補了什麼不會沉進儲存裡。
+           * 真正要記的是匯入端，而那要等 prompt 一起改（`open/26`）。
+           */
+          replaceOfficeSymbolChars(
+            restoreLineStructure(splitInlineListItems(source).markdown),
+          ),
         ),
       ),
     ),

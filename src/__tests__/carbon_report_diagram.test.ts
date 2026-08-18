@@ -14,6 +14,10 @@ import {
   CarbonDiagramTemplateEnum,
   CARBON_DIAGRAM_TEMPLATES,
 } from "@/constants/carbon_report_diagrams";
+import {
+  CARBON_DIAGRAM_LLM_MAX_NODES,
+  CarbonDiagramNodesLlmOutputSchema,
+} from "@/validators/carbon_inventory";
 import { detectChartType } from "@/lib/utils/mermaid_helpers";
 import { MermaidChartType } from "@/constants/mermaid_chart";
 
@@ -754,5 +758,271 @@ describe("產出的圖表可被前端型別偵測接受", () => {
     expect(detectChartType(extractMermaidChart(block))).toBe(
       MermaidChartType.FLOWCHART,
     );
+  });
+});
+
+/**
+ * Info: (20260814 - Emily) 節點數上限（issue 34）。
+ *
+ * 這一組守的是一件比「有沒有畫出圖」更重要的事：**不畫的時候要說對原因**。
+ * 「節點太多」與「節點無法回溯原文」是完全不同的兩件事 ——
+ * 前者是版面容不下、內容可信；後者是懷疑模型編造。對一份送查證的文件，
+ * 說錯會把讀者導向錯誤的結論。
+ */
+describe("節點數上限與不畫的原因", () => {
+  /**
+   * Info: (20260814 - Emily) 高興昌那份 1.4 節的真實規模：
+   * 1 個根 + 4 位幹部 + 11 個部門委員 = 16 個節點。
+   * 上限是 12 的時候它畫不完，而模型被 prompt 要求「超過請只保留最上層與次層」，
+   * 於是交回 12 個、圖看起來完整，而品管部／鋼管廠／冷軋廠／屏南廠四個部門不見了。
+   */
+  const COMMITTEE_UNITS = [
+    "人事部",
+    "會計部",
+    "總務部",
+    "工安部",
+    "採購部",
+    "業務部",
+    "生管部",
+    "品管部",
+    "鋼管廠",
+    "冷軋廠",
+    "屏南廠",
+  ];
+  const committeeNodes = (): ICarbonDiagramNode[] => [
+    { label: "溫室氣體盤查推行委員會" },
+    { label: "主任委員", parent: "溫室氣體盤查推行委員會" },
+    { label: "副主任委員", parent: "溫室氣體盤查推行委員會" },
+    { label: "管理代表", parent: "溫室氣體盤查推行委員會" },
+    { label: "執行秘書", parent: "溫室氣體盤查推行委員會" },
+    ...COMMITTEE_UNITS.map((unit) => ({
+      label: unit,
+      parent: "溫室氣體盤查推行委員會",
+    })),
+  ];
+  const committeeSource = [
+    "溫室氣體盤查推行委員會",
+    "主任委員",
+    "副主任委員",
+    "管理代表",
+    "執行秘書",
+    ...COMMITTEE_UNITS,
+  ].join(" ");
+
+  it("16 個節點的委員會要畫得完（上限 12 時畫不完，四個部門會不見）", () => {
+    expect(committeeNodes()).toHaveLength(16);
+
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      committeeNodes(),
+      committeeSource,
+    );
+
+    expect(result.isValid).toBe(true);
+  });
+
+  it("每一個部門都要出現在圖裡，一個都不能少", () => {
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      committeeNodes(),
+      committeeSource,
+    );
+    const chart = extractMermaidChart(block);
+
+    // Info: (20260814 - Emily) 本檔最重要的一條:少一個部門的圖看起來是對的
+    COMMITTEE_UNITS.forEach((unit) => expect(chart).toContain(unit));
+  });
+
+  it("超過上限時要說「幾個超過幾個」，而不是說節點無法回溯原文", () => {
+    const max = CARBON_DIAGRAM_TEMPLATES.GOVERNANCE_TREE.maxNodes;
+    const nodes: ICarbonDiagramNode[] = Array.from(
+      { length: max + 3 },
+      (unused, index) => ({ label: `單位${index}` }),
+    );
+    const source = nodes.map((node) => node.label).join(" ");
+
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      nodes,
+      source,
+    );
+
+    expect(block).toContain(String(max + 3));
+    expect(block).toContain(String(max));
+    // Info: (20260814 - Emily) 這些節點全部通過原文回溯 —— 不可以說它們無法回溯
+    expect(block).not.toContain("無法回溯");
+  });
+
+  it("超過上限仍回報實際節點數，供判斷是差一點還是差很多", () => {
+    const max = CARBON_DIAGRAM_TEMPLATES.GOVERNANCE_TREE.maxNodes;
+    const nodes: ICarbonDiagramNode[] = Array.from(
+      { length: max + 1 },
+      (unused, index) => ({ label: `單位${index}` }),
+    );
+
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      nodes,
+      nodes.map((node) => node.label).join(" "),
+    );
+
+    expect(result.reason).toBe(DiagramRejectReasonEnum.TOO_MANY_NODES);
+    expect(result.nodeCount).toBe(max + 1);
+    expect(result.maxNodes).toBe(max);
+  });
+
+  it("節點無法回溯原文時仍然說「無法回溯」，不與數量問題混用", () => {
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      [{ label: "原文裡沒有這個單位" }, { label: "也沒有這個" }],
+      "本節原文完全沒有提到上面那兩個名稱",
+    );
+
+    expect(block).toContain("無法回溯");
+  });
+});
+
+/**
+ * Info: (20260814 - Emily) 沿革時間軸的上限（issue 34 的回歸）。
+ *
+ * 這一組守的是一個**我自己造成的回歸**：移除 prompt 的「超過請只保留最上層與次層」
+ * 之後，模型照實回報 31 個節點，而上限是 30 —— 那張沿革表就整張不畫了。
+ * 之前它畫得出來，是因為模型先幫我們截到 30。
+ */
+describe("沿革時間軸的節點上限（實測回歸）", () => {
+  const milestoneNodes = (count: number): ICarbonDiagramNode[] =>
+    Array.from({ length: count }, (unused, index) => ({
+      label: `事件${index}`,
+      parent: `${1966 + index} 年 01 月`,
+    }));
+  const milestoneSource = (count: number): string =>
+    milestoneNodes(count)
+      .map((node) => `${node.parent} ${node.label}`)
+      .join(" ");
+
+  it("31 條里程碑要畫得出來（上限 30 時整張不畫）", () => {
+    // Info: (20260814 - Emily) 實測那份沿革有 28 條，模型回 31 個節點
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      milestoneNodes(31),
+      milestoneSource(31),
+    );
+
+    expect(result.isValid).toBe(true);
+  });
+
+  it("超過上限時說的是「太多」而不是「素材不足」", () => {
+    /**
+     * Info: (20260814 - Emily) 實測那份報告印出的是「(本節內容不足以繪製結構圖)」，
+     * 而那一節有 28 條里程碑 —— 與事實完全相反。
+     * 真正的成因是 LLM 輸出 schema 的 60 先攔到，把 31 個變成 0 個，
+     * 於是走了 `no_nodes` 那條分支。本條釘住 builder 這一端的正確行為。
+     */
+    const max = CARBON_DIAGRAM_TEMPLATES.MILESTONE_TIMELINE.maxNodes;
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      milestoneNodes(max + 1),
+      milestoneSource(max + 1),
+    );
+
+    expect(block).not.toContain("內容不足");
+    expect(block).toContain(String(max + 1));
+    expect(block).toContain(String(max));
+  });
+
+  /**
+   * Info: (20260817 - Emily) 兩道閘門的職責分工（PR review A2 重寫）。
+   *
+   * schema 想擋「模型失控」，builder 想擋「畫不下」。schema 的上限若沒有明顯高過
+   * builder 的最寬上限，它就會先攔到本該由 builder 說明的情況 —— 而它攔下來的
+   * 結果是 0 個節點，訊息因此變成「素材不足」，與事實相反（08-14 那個回歸）。
+   *
+   * ## 這一段為什麼重寫
+   *
+   * 原本這裡只有一條測試，而它自己寫了 `const SCHEMA_MAX_NODES = 150`，
+   * 於是它比較的是「40 < 150」而 150 是它自己寫的常數 ——
+   * **它不可能為了它存在的理由而失敗**。review 實測把 validator 的
+   * `.max(150)` 改回 `.max(60)`（造成 08-14 回歸的那個值），全套仍然 53 passed。
+   *
+   * 所以改成餵真的節點給真的 schema，斷言它的**行為**：
+   * 「builder 的最寬上限 +1 個節點，schema 要放過」——
+   * 那正是 08-14 現場發生的事（31 個節點該由 builder 說「超過 30」）。
+   */
+  describe("LLM 輸出 schema 與 builder 的職責分工", () => {
+    const widest = Math.max(
+      ...Object.values(CARBON_DIAGRAM_TEMPLATES).map(
+        (template) => template.maxNodes,
+      ),
+    );
+
+    // Info: (20260817 - Emily) schema 只看數量與字數，label 內容在這裡無關（原文複驗是 builder 的事）
+    const nodes = (count: number): { label: string }[] =>
+      Array.from({ length: count }, (_unused, index) => ({
+        label: `節點${index + 1}`,
+      }));
+
+    it("最寬模板上限 +1 個節點，schema 必須放過（讓 builder 去說「超過幾個」）", () => {
+      const parsed = CarbonDiagramNodesLlmOutputSchema.safeParse({
+        nodes: nodes(widest + 1),
+      });
+
+      expect(parsed.success).toBe(true);
+    });
+
+    /**
+     * Info: (20260817 - Emily) 上一條若只是「schema 上限比 builder 大一點」也會綠，
+     * 所以再釘一條餘裕：模型回到最寬上限的兩倍時仍然要放過。
+     * 08-14 的 60 正好落在 40 與 80 之間 —— 這條會抓到它。
+     */
+    it("最寬模板上限的兩倍，schema 仍然要放過", () => {
+      const parsed = CarbonDiagramNodesLlmOutputSchema.safeParse({
+        nodes: nodes(widest * 2),
+      });
+
+      expect(parsed.success).toBe(true);
+    });
+
+    // Info: (20260817 - Emily) 另一邊也要守：schema 仍然是「模型完全跑掉」的閘門，不是拿掉上限
+    it("模型回幾百個節點時，schema 要拒絕", () => {
+      const parsed = CarbonDiagramNodesLlmOutputSchema.safeParse({
+        nodes: nodes(500),
+      });
+
+      expect(parsed.success).toBe(false);
+    });
+
+    /**
+     * Info: (20260817 - Emily) 上面三條釘特定數量的行為，這一條釘「兩個上限的關係」。
+     *
+     * 它量的是 schema **實際**放過幾個，不是讀 `CARBON_DIAGRAM_LLM_MAX_NODES`。
+     * 差別在於：有人把 `.max(CARBON_DIAGRAM_LLM_MAX_NODES)` 改成字面值（例如
+     * `.max(60)`）的時候，讀常數的版本仍然是綠的 —— 那正是這一段原本的毛病。
+     */
+    const measureSchemaLimit = (): number => {
+      let limit = 0;
+      for (
+        let count = 1;
+        count <= CARBON_DIAGRAM_LLM_MAX_NODES * 4;
+        count += 1
+      ) {
+        if (
+          !CarbonDiagramNodesLlmOutputSchema.safeParse({ nodes: nodes(count) })
+            .success
+        ) {
+          break;
+        }
+        limit = count;
+      }
+      return limit;
+    };
+
+    it("schema 實際放過的節點數明顯高過所有模板的上限", () => {
+      const limit = measureSchemaLimit();
+
+      expect(limit).toBe(CARBON_DIAGRAM_LLM_MAX_NODES);
+      expect(widest).toBeLessThan(limit);
+      // Info: (20260817 - Emily) 要「明顯」高過，不是差一點 —— 差一點就是 08-14 那個 bug
+      expect(limit).toBeGreaterThanOrEqual(widest * 2);
+    });
   });
 });

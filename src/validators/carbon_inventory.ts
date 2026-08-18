@@ -316,6 +316,15 @@ export type CarbonReportImportLlmOutput = z.infer<
  * LLM 只回「節點文字 + 父節點文字」,mermaid 語法由 carbon_report_diagram.builder 組出;
  * 節點文字是否真的出現在該段原文,由 builder 的 validateDiagramNodes 複驗(找不到就整張不畫)。
  */
+/**
+ * Info: (20260817 - Emily) LLM 結構圖節點的 schema 上限。
+ *
+ * 它**不是**實際的閘門 —— 逐模板的上限在 `CARBON_DIAGRAM_TEMPLATES`,由 builder 裁決。
+ * 這個值只負責擋「模型完全跑掉」（回幾百個節點）,所以必須明顯高過最寬的模板上限。
+ * 匯出是為了讓測試讀它而不是自己寫一份（見 carbon_report_diagram.test.ts 的分工測試）。
+ */
+export const CARBON_DIAGRAM_LLM_MAX_NODES = 150;
+
 export const CarbonDiagramNodesLlmOutputSchema = z.object({
   nodes: z
     .array(
@@ -324,8 +333,35 @@ export const CarbonDiagramNodesLlmOutputSchema = z.object({
         parent: z.string().min(1).max(120).optional(),
       }),
     )
-    // Info: (20260730 - Tzuhan) 上限取最寬的模板(沿革時間軸 30)再留餘裕;逐模板的實際上限由 builder 裁決
-    .max(60),
+    /**
+     * Info: (20260730 - Tzuhan) 上限取最寬的模板(沿革時間軸 30)再留餘裕;逐模板的實際上限由 builder 裁決
+     *
+     * Info: (20260814 - Emily) 60 → 150。這個 schema 不能成為實際的閘門
+     * (`data/issue_drafts/open/34_diagram_overflow_clips_nodes.md`)。
+     *
+     * 2026-08-14 實測：模型回 31 個節點（沿革有 28 條里程碑），第一次被 builder 以
+     * `too_many_nodes` 擋下並附上「31 個超過上限 30」的說明 —— 那是對的。
+     * 但重試那次回超過 60 個，撞到這裡的 schema，整批 `ZodError` 被拒 → `nodes` 變成空陣列
+     * → builder 收到 0 個節點 → 判成 `no_nodes` → 報告上印
+     * 「(本節內容不足以繪製結構圖)」。
+     *
+     * **那句話與事實完全相反**：那一節有 28 條里程碑，是內容太多而不是不足。
+     * 而使用者看到的只有這句話。
+     *
+     * 根因是兩道閘門的職責重疊：schema 想擋「模型跑掉」，builder 想擋「畫不下」，
+     * 而 schema 的上限比 builder 的上限只高一倍，於是它會先攔到本該由 builder
+     * 說明的情況 —— 然後把「31 個」變成「0 個」，訊息也就跟著錯。
+     *
+     * 150 讓兩道閘門的角色分開：builder 的逐模板上限（目前最寬 40）永遠先觸發，
+     * 說得出「幾個超過幾個」；schema 只留著擋真正的失控輸出（回幾百個節點），
+     * 而那時整批拒絕是對的處置。
+     *
+     * Info: (20260817 - Emily) 抽成匯出常數（PR review A2）。
+     * 原本測試檔自己寫了一個 `const SCHEMA_MAX_NODES = 150`,於是它比較的是
+     * 「40 < 150」而 150 是它自己寫的 —— **那條測試不可能為了它存在的理由而失敗**。
+     * 實測：把這裡改回 `.max(60)`（就是造成 08-14 回歸的那個值）,全套仍然 53 passed。
+     */
+    .max(CARBON_DIAGRAM_LLM_MAX_NODES),
 });
 export type CarbonDiagramNodesLlmOutput = z.infer<
   typeof CarbonDiagramNodesLlmOutputSchema

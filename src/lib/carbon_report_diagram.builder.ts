@@ -33,12 +33,26 @@ export interface ICarbonDiagramLabels {
    * 略過而不說等於靜默少了原文的一條 —— 這個專案一貫的做法是「沒畫出來的必須說出來」。
    */
   skippedTooLong?: string;
+  /**
+   * Info: (20260814 - Emily) 節點數超過上限時的說明
+   * (`data/issue_drafts/open/34_diagram_overflow_clips_nodes.md`)。
+   *
+   * 原本 `TOO_MANY_NODES` 與「無法回溯原文」共用 `unverifiable` 那句文案,
+   * 而那句話說的是「節點是模型編的」—— 對這個情況是**錯的**:
+   * 節點全部通過原文回溯,只是數量超過版面能承受的。
+   * 讀的人看到「無法回溯」會以為系統在防幻覺,而實際上是它畫不下。
+   *
+   * `{{count}}` 與 `{{max}}` 由本檔代入。
+   */
+  tooMany?: string;
 }
 
 export const CARBON_DIAGRAM_DEFAULT_LABELS: ICarbonDiagramLabels = {
   unverifiable: "(圖表節點無法回溯至本節原文,已略過不繪製)",
   insufficient: "(本節內容不足以繪製結構圖)",
   skippedTooLong: "以下項目文字過長,未畫進圖中(內容仍在本節原文)",
+  tooMany:
+    "(本節的結構共 {{count}} 個項目,超過本圖的繪製上限 {{max}} 個,未繪製;完整內容見本節文字)",
 };
 
 export enum DiagramRejectReasonEnum {
@@ -67,6 +81,15 @@ export interface IDiagramValidation {
    * 而它們的處置正好相反 —— 一個要整張作廢,一個只是少畫一項並說出來。
    */
   skippedLabels?: string[];
+  /**
+   * Info: (20260814 - Emily) 超過上限時的實際節點數與上限,供文案代入
+   * (`data/issue_drafts/open/34_diagram_overflow_clips_nodes.md`)。
+   *
+   * 只說「節點太多」而不說幾個,讀的人沒辦法判斷是差一點還是差很多 ——
+   * 差一點值得放寬上限,差很多代表這一節本來就不該畫成圖。
+   */
+  nodeCount?: number;
+  maxNodes?: number;
 }
 
 /**
@@ -126,7 +149,12 @@ export function validateDiagramNodes(
   }
   const template = CARBON_DIAGRAM_TEMPLATES[templateId];
   if (nodes.length > template.maxNodes) {
-    return { isValid: false, reason: DiagramRejectReasonEnum.TOO_MANY_NODES };
+    return {
+      isValid: false,
+      reason: DiagramRejectReasonEnum.TOO_MANY_NODES,
+      nodeCount: nodes.length,
+      maxNodes: template.maxNodes,
+    };
   }
 
   /**
@@ -386,6 +414,40 @@ function buildMilestoneTable(nodes: ICarbonDiagramNode[]): string {
  * Info: (20260730 - Tzuhan) 產出結構圖區塊(錨點包夾,與數據圖表同一套替換機制)。
  * 驗證未過時不畫圖,但輸出說明文字——沉默地少一張圖,查核者不會知道發生過什麼。
  */
+/**
+ * Info: (20260814 - Emily) 不畫的原因要說對,而不只是「說了」
+ * (`data/issue_drafts/open/34_diagram_overflow_clips_nodes.md`)。
+ *
+ * 原本只分兩路:素材不足用 `insufficient`,其餘一律 `unverifiable`。
+ * 於是「節點太多」會印成「節點無法回溯至本節原文」—— 那句話說的是模型編造,
+ * 而這個情況恰恰相反:每個節點都通過了原文回溯,只是畫不下。
+ *
+ * 對一份要送查證的文件,這兩句話的差別很大:一句是「系統攔下了不可信的內容」,
+ * 另一句是「內容可信但版面容不下」。前者讓人懷疑資料,後者讓人去看正文。
+ * 說錯的代價不是措辭問題,是把讀者導向錯誤的結論。
+ */
+function rejectionNote(
+  validation: IDiagramValidation,
+  labels: ICarbonDiagramLabels,
+): string {
+  if (
+    validation.reason === DiagramRejectReasonEnum.NO_NODES ||
+    validation.reason === DiagramRejectReasonEnum.TOO_FEW_DATED_EVENTS ||
+    validation.reason === DiagramRejectReasonEnum.TOO_FEW_NODES
+  ) {
+    return labels.insufficient;
+  }
+  if (
+    validation.reason === DiagramRejectReasonEnum.TOO_MANY_NODES &&
+    labels.tooMany
+  ) {
+    return labels.tooMany
+      .replace("{{count}}", String(validation.nodeCount ?? 0))
+      .replace("{{max}}", String(validation.maxNodes ?? 0));
+  }
+  return labels.unverifiable;
+}
+
 export function buildCarbonDiagramBlock(
   templateId: CarbonDiagramTemplateEnum,
   nodes: ICarbonDiagramNode[],
@@ -397,15 +459,7 @@ export function buildCarbonDiagramBlock(
 
   const validation = validateDiagramNodes(templateId, nodes, sourceText);
   if (!validation.isValid) {
-    return wrap(
-      `> _${
-        validation.reason === DiagramRejectReasonEnum.NO_NODES ||
-        validation.reason === DiagramRejectReasonEnum.TOO_FEW_DATED_EVENTS ||
-        validation.reason === DiagramRejectReasonEnum.TOO_FEW_NODES
-          ? labels.insufficient
-          : labels.unverifiable
-      }_`,
-    );
+    return wrap(`> _${rejectionNote(validation, labels)}_`);
   }
 
   /**

@@ -58,6 +58,7 @@ export default function CarbonChatbotPage() {
     saveStatus,
     renameSession,
     renameReportDocument,
+    updateReportIdentity,
     inputValue,
     setInputValue,
     isTyping,
@@ -206,6 +207,7 @@ export default function CarbonChatbotPage() {
             readOnly={!activeSessionAccess.canEdit}
             onImportReport={importReportFile}
             onRenameDocument={renameReportDocument}
+            onUpdateIdentity={updateReportIdentity}
             dataBadgeState={dataBadgeState}
           />
         ) : (

@@ -221,10 +221,41 @@ export async function POST(request: NextRequest) {
 
     // Info: (20260730 - Tzuhan) 兩階段第二階段:依頁碼範圍切片,把輸入從整份文件縮成該章對應頁。
     // Info: (20260730 - Tzuhan) 實測 64 頁報告一次匯入原本耗掉約 44 萬 input token,後段章節因額度耗盡連請求都發不出去。
+    const importScope = verbatimSectionIds?.join(",") ?? chapterId ?? "all";
+    /**
+     * Info: (20260817 - Emily) 只要有下界就切,上界可以是 null
+     * (`data/issue_drafts/open/42_page_slice_falls_back.md`)。
+     *
+     * 原本要求兩者皆非 null,而 08-17 實測 14 次呼叫有 **7 次只有下界** ——
+     * 那 7 次全部整份送,合計多花約 29 萬 token(佔整趟 477k 的 61%)。
+     */
     const scopedSource =
-      fromPage !== null && toPage !== null
-        ? service.scopeSourceToPages(source, fromPage, toPage)
+      fromPage !== null
+        ? await service.scopeSourceToPages(
+            source,
+            fromPage,
+            toPage,
+            importScope,
+          )
         : source;
+    /**
+     * Info: (20260817 - Emily) 「有下界但沒有上界」這條路目前**完全無聲**
+     * (`data/issue_drafts/open/42_page_slice_falls_back.md`)。
+     *
+     * `carbon_page_slice` 的契約寫「未知即不帶上界,後端送到文末」,
+     * 但上面這個三元要求兩者皆非 null,於是實際行為是**整份送**
+     * —— 連 `fromPage` 之前的頁一起 —— 而 `scopeSourceToPages` 沒被呼叫,
+     * `report import page slice` 那行也就不會出現。
+     *
+     * 同時客戶端還印著 `toPage: "(to end)"`,看起來像切成功了。
+     * 修行為之前先讓它發得出聲音:一趟到底有幾次走這條,現在數得出來。
+     */
+    if (fromPage === null) {
+      logger.info("report import page slice skipped", {
+        scope: importScope,
+        reason: "no_page_index_full_text_sent",
+      });
+    }
 
     /**
      * Info: (20260806 - Tzuhan) 三個 LLM 模式從這裡開始走保活式串流。

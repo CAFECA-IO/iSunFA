@@ -14,6 +14,7 @@ import {
 import { CARBON_TOC_PAGE_HEADING_HITS } from "@/constants/carbon_pdf";
 import { extractPdfTextLayer, splitTextByPages } from "@/lib/pdf_text_layer";
 import { assertCjkRenderable } from "@/lib/utils/pdf_font_guard";
+import { repairPdfToUnicode } from "@/lib/utils/pdf_tounicode_repair";
 import {
   dropPrintBrowser,
   getPrintBrowser,
@@ -301,6 +302,32 @@ export class CarbonReportPdfService {
         // Info: (20260812 - Emily) 有填到東西才值得再印一次
         if (toc.filled > 0) buffer = await printPdf();
 
+        /**
+         * Info: (20260817 - Emily) 修 ToUnicode 對照表
+         * (`data/issue_drafts/open/38_pdf_tounicode_radicals.md`)。
+         *
+         * Chrome 把部分漢字的文字層寫成**康熙部首**的碼位
+         * （`文` 寫成 U+2F42）—— 紙上看不出來，但 Ctrl+F 搜不到、複製出去是錯字。
+         * 實測那份 57 頁報告：2,560 個字、44 種，含「高」「文」「工」「行」。
+         *
+         * 必須在**兩趡列印都跑完之後**才修：第二趡會重新產生整份 PDF，
+         * 先修的話整個被覆蓋掉。fillTocPageNumbers 讀的是文字層，
+         * 而它自己用 squeezeForTocMatch 比對，不受部首影響（實測 33/33 都對）。
+         *
+         * 修不動不讓列印失敗 —— 一份「可以看但搜不到」的報告，
+         * 仍然遠好過一份沒有產出的報告。但**不修得靜悄悄**：
+         * 沒有這行 log，「這份本來就乾淨」與「修補整個沒接上」在現場分不出來。
+         */
+        const repair = await repairPdfToUnicode(new Uint8Array(buffer));
+        if (repair.decision === "repaired") buffer = Buffer.from(repair.bytes);
+        logger.info("[CarbonReportPdfService] tounicode repaired", {
+          fileName: input.fileName,
+          decision: repair.decision,
+          streams: repair.streams,
+          replaced: repair.replaced,
+          unmapped: [...repair.unmapped],
+        });
+
         logger.info("[CarbonReportPdfService] rendered", {
           fileName: input.fileName,
           ms: Date.now() - started,
@@ -314,6 +341,7 @@ export class CarbonReportPdfService {
           chartsFailed: charts.failed,
           tocFilled: toc.filled,
           tocMissing: toc.missing,
+          toUnicodeReplaced: repair.replaced,
         });
 
         return {

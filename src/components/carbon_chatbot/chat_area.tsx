@@ -66,11 +66,21 @@ export function ChatArea({
     target?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [focusedMessageId]);
 
+  /**
+   * Info: (20260814 - Emily) 拿掉寫死的 `pb-32`。
+   *
+   * 那 8rem 是替絕對定位的輸入區留的位置，但輸入區的高度會隨著提示卡數量變 ——
+   * 留固定值就等於賭它不會長高，而它一長高就蓋住最後幾則訊息（見 `chat_input` 檔內說明）。
+   * `ChatInput` 已改排進文檔流，位置由 flex 分配，這裡不需要也不該再猜。
+   *
+   * `min-h-0`：flex 子項的 `min-height` 預設是 auto，內容一多會撐開父容器而不是自己捲動 ——
+   * 帶 `overflow-y-auto` 的 flex 子項一律要配它。
+   */
   return (
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      className="flex-1 space-y-8 overflow-y-auto bg-white px-6 py-8 pb-32"
+      className="min-h-0 flex-1 space-y-8 overflow-y-auto bg-white px-6 py-8"
     >
       {isLoadingMore && (
         <div className="flex items-center justify-center py-2 text-xs text-gray-400">

@@ -1,6 +1,6 @@
 {
   "name": "isunfa",
-  "version": "0.12.0+212",
+  "version": "0.12.0+213",
   "private": true,
   "type": "module",
   "engines": {
@@ -13,7 +13,8 @@
     "start": "npm run build && next start",
     "seed": "npx tsx scripts/seed/seed.ts",
     "lint": "eslint",
-    "test": "npm run lint && jest --passWithNoTests && npm run test:tz",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck && npm run lint && jest --passWithNoTests && npm run test:tz",
     "test:tz": "node scripts/jest_tz.mjs",
     "swarm": "npm run build && next start -p 10020",
     "worker": "npx tsx scripts/run_worker.ts",
@@ -25,7 +26,8 @@
     "build_contract": "npx hardhat compile",
     "deploy_contract": "npx hardhat run scripts/deploy_contract.ts",
     "version": "npx tsx scripts/bump_version.ts",
-    "initial_lance_db": "npx tsx scripts/init_lance_db.ts"
+    "initial_lance_db": "npx tsx scripts/init_lance_db.ts",
+    "uat:carbon": "npx tsx scripts/uat_carbon_report.ts"
   },
   "dependencies": {
     "@erc3643org/erc-3643": "^4.1.3",

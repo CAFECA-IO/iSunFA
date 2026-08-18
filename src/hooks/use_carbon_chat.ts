@@ -174,6 +174,7 @@ import {
   CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS,
   CARBON_DRAFT_NOTICE_DISMISS_MS,
 } from "@/constants/carbon_chatbot";
+import type { ICarbonReportIdentity } from "@/lib/utils/carbon_report_identity";
 
 // Info: (20260714 - Tzuhan) 報告草稿保存狀態(工具列顯示;null = 尚無變更;error = 保存失敗/版本衝突)
 // Info: (20260716 - Tzuhan) #50 新增 local:未解鎖/未還原前內容僅落本機安全快取,解鎖後自動推入 DB
@@ -1780,6 +1781,37 @@ export const useCarbonChat = () => {
     [activeSessionId],
   );
 
+  /**
+   * Info: (20260814 - Emily) 查證識別欄位逐格寫回
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * 收 patch 而不是整包:四個輸入框各自 onChange,整包覆蓋的話
+   * 連續改兩格時後寫的那次會拿著舊的 state 蓋掉前一次（React 的更新是非同步的）。
+   *
+   * 不 trim、不驗格式:這幾格的內容要逐字印在查證文件上,而
+   * 「2023」與「2023 年度」都是合法的寫法。空字串照存 —— 使用者清空一格
+   * 就是要清空它,不是要退回上一個值（列印端會印「未填寫」,見 buildIdentityRows）。
+   */
+  const updateReportIdentity = useCallback(
+    (patch: ICarbonReportIdentity) => {
+      setSessionsData((prev) => {
+        const session = prev[activeSessionId];
+        if (!session?.reportData) return prev;
+        return {
+          ...prev,
+          [activeSessionId]: {
+            ...session,
+            reportData: {
+              ...session.reportData,
+              identity: { ...session.reportData.identity, ...patch },
+            },
+          },
+        };
+      });
+    },
+    [activeSessionId],
+  );
+
   // Info: (20260714 - Tzuhan) 新增對話:建立空白 session 並切換;channel 隨 id 變更,歷史/草稿各自獨立
   // Info: (20260716 - Tzuhan) #52 可選綁定帳本:綁定後報告歸屬帳本(明文模式),不綁為個人會話(E2EE)
   const createNewSession = useCallback(
@@ -1850,6 +1882,18 @@ export const useCarbonChat = () => {
         console.info("[carbon-chat] page index", {
           resolved: index.size,
           total: CARBON_REPORT_OUTLINE.length,
+          /**
+           * Info: (20260817 - Emily) 缺了**哪幾節**,不只缺幾節
+           * (`data/issue_drafts/open/42_page_slice_falls_back.md`)。
+           *
+           * 原本只印 `resolved: 21, total: 33` —— 看得到「12 節沒索引」,
+           * 看不出是哪 12 節,於是也推不出哪些工作單元會退回送全文。
+           * 而退回與否是這一趟成本的分水嶺(實測 14 次有 8 次退回、
+           * 每次多花約 41.6k token)。
+           */
+          missing: CARBON_REPORT_OUTLINE.filter(
+            (section) => !index.has(section.id),
+          ).map((section) => section.id),
           isValid: validation.isValid,
           reason: validation.reason,
           offending: validation.offending,
@@ -1997,8 +2041,18 @@ export const useCarbonChat = () => {
           chapterId: chapter.id,
           part: `${unit.partIndex}/${unit.partTotal}`,
           sections: unit.sectionIds,
+          sectionsMissingIndex: unit.sectionIds.filter(
+            (id) => !pageIndex?.get(id),
+          ),
           fromPage: range?.fromPage ?? "(full text)",
-          toPage: range?.toPage ?? "(to end)",
+          /**
+           * Info: (20260817 - Emily) `"(to end)"` 現在是實話了。
+           *
+           * 08-17 之前伺服端要求上下界皆非 null 才切片,只有下界時整份送 ——
+           * 那時這個字面是假的,而實測 14 次呼叫有 7 次走這條(`open/42`)。
+           * Fix 1 之後「只有下界」會真的切到文末,字面與行為一致。
+           */
+          toPage: range ? (range.toPage ?? "(to end)") : "(full text)",
         });
         if (range) {
           formData.append("fromPage", String(range.fromPage));
@@ -2071,8 +2125,17 @@ export const useCarbonChat = () => {
           segmentsById.set(segment.paragraphId, bucket);
         });
         unmapped.push(...chunk.unmapped);
+        /**
+         * Info: (20260817 - Emily) 累加而不是覆蓋
+         * (`data/issue_drafts/open/46_activity_data_traceability.md`)。
+         *
+         * 原本是 `activities = chunk.activities` —— 賦值。
+         * 排放章(ch3)六節會被切成兩個工作單元,兩次呼叫各自回一份,
+         * **後回來的那份整批蓋掉前一份**。就算兩次都抽到,也只留下一半,
+         * 而現場看到的只是一個偏低的數字,沒有任何跡象顯示發生過覆蓋。
+         */
         if (chunk.activities && chunk.activities.length > 0) {
-          activities = chunk.activities;
+          activities = [...activities, ...chunk.activities];
         }
       });
 
@@ -4861,6 +4924,7 @@ export const useCarbonChat = () => {
     // Info: (20260716 - Tzuhan) 命名:對話改名 + 報告檔名改名
     renameSession,
     renameReportDocument,
+    updateReportIdentity,
     inputValue,
     setInputValue,
     isTyping,
