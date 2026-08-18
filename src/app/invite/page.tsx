@@ -103,6 +103,24 @@ export default function InvitePage() {
     setStatus("INVALID");
   }, []);
 
+  /**
+   * Info: (20260818 - Luphia) 連結失效時也要清掉備援（第五輪低）。
+   *
+   * 原本只在接受／拒絕成功時清除，於是一封失效的邀請會把 token 留在
+   * `sessionStorage` 裡；使用者按上一頁回到已被 `replaceState` 抹成 `/invite`
+   * 的歷史項時，又會拿它重試一次同一封失效的邀請。
+   *
+   * 殘留的情形（誠實記下）：**未處理**的邀請仍會留著備援，因此在同一個分頁裡
+   * 先開 A 再開 B、之後回到沒有 hash 的 `/invite`，看到的是 B。
+   * 那是「續作最後一封未處理的邀請」，我認為比「一律失效」合理；
+   * 而以 token 雜湊當鍵解不了這件事——沒有 hash 時根本不知道要找哪一把。
+   */
+  useEffect(() => {
+    if (status === "INVALID") {
+      window.sessionStorage.removeItem(INVITE_TOKEN_STORAGE_KEY);
+    }
+  }, [status]);
+
   useEffect(() => {
     if (!token) return;
     let cancelled = false;

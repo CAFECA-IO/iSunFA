@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
-import { readFileSync } from "fs";
+import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import { chargeSeatAddition } from "@/services/team_seat.service";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
@@ -320,19 +320,53 @@ describe("chargeSeatAddition", () => {
   });
 
   /**
-   * Info: (20260818 - Luphia) 條款引用了這個預設值，兩邊必須一致（第四輪 B-4）。
+   * Info: (20260818 - Luphia) 文件引用了這個預設值，全部必須一致（第四輪 B-4 / 第五輪低）。
    *
    * 條款 §3.1 的說明段落寫著「預設 N」，而改常數的那個 commit 沒有改條款——
    * 於是條款寫 5、擋門是 1，而**使用者看到的是條款**。
-   * 這條把那個同步變成一個會紅的步驟。
+   *
+   * 第一版只讀 `terms_of_service.md`，於是同一個不一致在架構設計書裡
+   * 原封不動——**掃描根等於被修的那個檔案**，本 repo 的 checklist §1.1 第四次。
+   * 改成掃整個 `documents`：凡是提到 `FREE_PLAN_MAX_MEMBERS` 又寫了「預設 N」
+   * 的地方都要對得上。
    */
-  it("條款引用的預設值與常數一致", () => {
+  it("文件裡引用的預設值都與常數一致", () => {
+    const expected = String(DEFAULT_FREE_PLAN_MAX_MEMBERS);
+    const docs = join(process.cwd(), "documents");
+
+    const walk = (dir: string): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) return walk(full);
+        return entry.name.endsWith(".md") ? [full] : [];
+      });
+
+    const mismatched: string[] = [];
+    for (const file of walk(docs)) {
+      const text = readFileSync(file, "utf8");
+      // Info: (20260818 - Luphia) 只看與該常數同一段的「預設 N」，避免掃到別的數字
+      const quoted = text.matchAll(
+        /FREE_PLAN_MAX_MEMBERS`[^）)]*?預設 \*{0,2}(\d+)/g,
+      );
+      for (const match of quoted) {
+        if (match[1] !== expected) {
+          mismatched.push(
+            `${file.slice(process.cwd().length + 1)}: ${match[1]}`,
+          );
+        }
+      }
+    }
+
+    expect(mismatched).toEqual([]);
+  });
+
+  // Info: (20260818 - Luphia) 掃描根真的掃到了東西：否則上一條會空過
+  it("文件裡確實有引用該常數的段落", () => {
     const terms = readFileSync(
       join(process.cwd(), "documents", "legal", "terms_of_service.md"),
       "utf8",
     );
-    const quoted = terms.match(/FREE_PLAN_MAX_MEMBERS`（\*\*預設 (\d+)/);
-    expect(quoted?.[1]).toBe(String(DEFAULT_FREE_PLAN_MAX_MEMBERS));
+    expect(terms).toMatch(/FREE_PLAN_MAX_MEMBERS/);
   });
 
   it("counts pending invitations toward the free member cap", async () => {
