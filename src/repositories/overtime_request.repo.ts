@@ -56,6 +56,13 @@ export interface IOvertimeApprovalWrite {
   actorEmployeeId: string;
   approvedMinutes: number;
   recognizedMinutes: number;
+  /**
+   * Info: (20260818 - Julian) 佐證來源在**核准當下**才定得了 —— 送出時還不知道
+   * 那一天有沒有打卡。由 service 依實際打卡判定後傳進來，與狀態同一次更新落地：
+   * 停在送出時填的 `PUNCH_RECORD`，會讓一筆完全沒有出勤紀錄的認列
+   * 在 L28 的佐證來源欄裡混進「有打卡佐證」那一格（ADR 024 §2.2）。
+   */
+  evidenceBasis: OvertimeEvidenceBasis;
   segments: readonly IOvertimeSegment[];
   engineVersion: number;
   /** Info: (20260818 - Julian) 由 service 組好，repository 只負責在寫入前擋一次 */
@@ -153,6 +160,7 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
           status: OvertimeRequestStatus.APPROVED,
           approvedMinutes: params.approvedMinutes,
           recognizedMinutes: params.recognizedMinutes,
+          evidenceBasis: params.evidenceBasis,
         },
       });
       if (moved.count === 0) {

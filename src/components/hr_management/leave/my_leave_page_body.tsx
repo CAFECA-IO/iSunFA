@@ -40,6 +40,12 @@ import { useTranslation } from "@/i18n/i18n_context";
 /** Info: (20260817 - Julian) 送出後回到乾淨表單，但保留假別 —— 通常會連續請同一種 */
 const emptyDays = (): string[] => [""];
 
+/**
+ * Info: (20260818 - Julian) 試算用的事由佔位字串。
+ * validator 要求非空白，而試算不寫入任何東西，因此填什麼都不影響結果。
+ */
+const PREVIEW_REASON_PLACEHOLDER = "—";
+
 const MyLeavePageBody: FC = () => {
   const { t } = useTranslation();
 
@@ -148,8 +154,15 @@ const MyLeavePageBody: FC = () => {
       method: "POST",
       body: JSON.stringify({
         leavePolicyId: policyId,
-        // Info: (20260817 - Julian) 試算不寫入，事由填佔位字串即可（送出時才用真的）
-        reason: reason || "—",
+        /**
+         * Info: (20260818 - Julian) 事由固定送佔位字串，**不送使用者打的那一份**。
+         *
+         * 試算的結果與事由無關（`buildPlan` 根本沒讀它），但只要把 `reason`
+         * 接進這個 effect 的相依，打字就會逐字觸發一次 POST ——
+         * 一句十個字的事由等於十次試算，而 `READ` 桶一分鐘只有 120 次。
+         * 順帶一提：事由是 Tier 2 個資，沒有必要在還沒送出前就一路送上伺服器。
+         */
+        reason: PREVIEW_REASON_PLACEHOLDER,
         days: filledDates.map((workDate) => ({ workDate, segment })),
       }),
     })
@@ -188,7 +201,7 @@ const MyLeavePageBody: FC = () => {
     return () => {
       active = false;
     };
-  }, [policyId, segment, filledDates, reason, t]);
+  }, [policyId, segment, filledDates, t]);
 
   const submit = async () => {
     setSubmitting(true);
@@ -480,14 +493,14 @@ const MyLeavePageBody: FC = () => {
           type="button"
           disabled={!canSubmit}
           onClick={submit}
-          className="mt-4 flex items-center gap-1.5 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+          className="mt-4 flex w-full items-center justify-center gap-1 gap-1.5 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-gray-300 sm:w-fit"
         >
           {submitting ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (
             <Send className="size-4" />
           )}
-          {t("hr_management.leave.action_submit")}
+          <p>{t("hr_management.leave.action_submit")}</p>
         </button>
       </HrFormSheet>
 

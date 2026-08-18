@@ -26,7 +26,14 @@ import { useTranslation } from "@/i18n/i18n_context";
  */
 const LeaveBalanceCards: FC<{
   balances: IEmployeeGrantSummary[];
-  /** Info: (20260817 - Julian) 每日應工作分鐘數，用於把分鐘換算成天 */
+  /**
+   * Info: (20260818 - Julian) 換算依據的**後備值**，不是主要來源。
+   *
+   * 主要來源是每一張餘額自己帶的 `dayEquivalentMinutes`（該假別最新一批的
+   * 固化值）—— 那個值一進畫面就有，不必等試算。這個 prop 只在餘額沒有任何
+   * 批次時派上用場（例如剛建好、還沒授予過的自訂假別），
+   * 而呼叫端手上剛好有一份試算結果時可以補上。
+   */
   dayEquivalentMinutes: number;
   selectedPolicyId: string | null;
   onSelect?: (leavePolicyId: string) => void;
@@ -51,10 +58,10 @@ const LeaveBalanceCards: FC<{
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
       {balances.map((balance) => {
         const unlimited = balance.quotaMode === LeaveQuotaMode.UNLIMITED;
+        const perDayMinutes =
+          balance.dayEquivalentMinutes ?? dayEquivalentMinutes;
         const days =
-          dayEquivalentMinutes > 0
-            ? balance.remainingMinutes / dayEquivalentMinutes
-            : null;
+          perDayMinutes > 0 ? balance.remainingMinutes / perDayMinutes : null;
         const selected = balance.leavePolicyId === selectedPolicyId;
 
         return (

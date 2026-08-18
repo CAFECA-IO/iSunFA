@@ -281,7 +281,18 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
           piiKeyVersion: params.piiKeyVersion,
           status: LeaveRequestStatus.PENDING,
           totalMinutes: params.totalMinutes,
-          totalDays: params.totalDays,
+          /**
+           * Info: (20260818 - Julian) Decimal 以字串落地（邊界防護，CLAUDE.md §2）。
+           *
+           * `src/lib/prisma.ts` 會從 DMMF 解析出所有 Decimal 欄位，擋下原生 JS number
+           * 寫入 —— 而 `totalDays` 是由 `toTotalDays()` 算出來的 number。少了這一層轉換，
+           * **每一張假單都送不出去**：錯誤不是 AppError，被 route 收斂成 `IS_DB_FAILED`，
+           * 於是畫面上只看得到一句通用的紅字，而真正的原因在伺服器 log 裡。
+           *
+           * 同一個轉換在 `leave_grant.repo` 的 `grantedDays`、
+           * `leave_approval_rule.repo` 的 `minDays` 都做過了 —— 這裡是唯一漏掉的一處。
+           */
+          totalDays: String(params.totalDays),
           concurrencyWarned: params.concurrencyWarned,
           days: {
             create: params.days.map((day) => ({

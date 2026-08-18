@@ -71,15 +71,9 @@ const HrSidebar: FC<IHrSidebarProps> = ({ isOpen, onClose }) => {
     );
   };
 
-  /**
-   * Info: (20260818 - Julian) 分組之間用間距分隔，不用分隔線。
-   *
-   * 四個群組再加分隔線，畫面上就有八條水平線在爭注意力 ——
-   * 而標題本身已經說明了分界。不分組的區塊（儀表板、系統設定）
-   * 沒有標題，靠同一份間距與其他群組拉開。
-   */
+  /* Info: (20260818 - Julian) 分組選項 */
   const navList = (
-    <nav className="flex flex-col gap-4 p-3">
+    <nav className="flex h-full flex-col gap-4 overflow-auto p-3">
       {HR_NAV_SECTIONS.map((section) => (
         <div key={section.key} className="flex flex-col gap-1">
           {section.labelKey !== null && (

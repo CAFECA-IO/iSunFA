@@ -275,6 +275,14 @@ export class OvertimeRequestService {
       actorEmployeeId: params.actorEmployeeId,
       approvedMinutes,
       recognizedMinutes,
+      /**
+       * Info: (20260818 - Julian) 送出時填的是 `PUNCH_RECORD`（那時還不知道有沒有打卡），
+       * 到這裡才定得下來。不回寫的話 L28 的「自陳」欄永遠是 0，
+       * 而勞動檢查問的正是那一欄。
+       */
+      evidenceBasis: declared
+        ? OvertimeEvidenceBasis.MANUAL_DECLARATION
+        : OvertimeEvidenceBasis.PUNCH_RECORD,
       segments,
       engineVersion: OVERTIME_ENGINE_VERSION,
       invariant: {

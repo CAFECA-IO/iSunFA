@@ -19,6 +19,14 @@ export interface IEmployeeGrantSummary {
   /** Info: (20260817 - Julian) 最近一批的到期日；沒有任何批次時為 null */
   nextExpiresOn: string | null;
   /**
+   * Info: (20260818 - Julian) 該假別最新一批的日約當分鐘，供畫面把分鐘換算成天。
+   *
+   * 這不違反上面那條「一律以分鐘往外送」—— 送出去的仍是分鐘，這一欄是
+   * **換算依據**本身。不給它的話，畫面只能等 L17 試算才知道一天是幾分鐘，
+   * 而使用者在選日期之前就想看到自己還有幾天。沒有任何批次時為 null。
+   */
+  dayEquivalentMinutes: number | null;
+  /**
    * Info: (20260817 - Julian) 最後一次與帳本勾稽的時間。
    * null 表示「從未勾稽過」 —— 那與「勾稽過且相符」是兩件事
    * （`LeaveBalanceHealth.STALE` 與 `OK` 刻意分開的同一個理由）。

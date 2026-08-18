@@ -344,13 +344,40 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
         accountBookId: params.accountBookId,
         employeeId: params.employeeId,
       },
-      select: { leavePolicyId: true, expiresOn: true },
+      select: {
+        leavePolicyId: true,
+        expiresOn: true,
+        cycleStartDate: true,
+        dayEquivalentMinutes: true,
+      },
       orderBy: { expiresOn: "asc" },
     });
     const nextExpiry = new Map<string, string>();
+    /**
+     * Info: (20260818 - Julian) 該假別「一天是幾分鐘」，取**最新一批**的換算依據。
+     *
+     * API 一律以分鐘往外送（ADR 022 §2），換算成天是畫面的事 —— 但畫面手上
+     * 必須有這個數字才換算得了。先前它只能從 L17 試算的結果拿，於是
+     * **使用者要先選一個請假日期，額度卡上的「天」才會出現**，
+     * 在那之前一律顯示「—— 天」：一個看起來像壞掉的畫面。
+     *
+     * 取最新一批而不是取平均：批次是逐日固化的，週期中途由現場調辦公室
+     * （480 → 450）時，新的批次才是這個人現在的一天有多長。
+     */
+    const dayEquivalent = new Map<
+      string,
+      { cycleStartDate: string; minutes: number }
+    >();
     for (const grant of grants) {
       if (!nextExpiry.has(grant.leavePolicyId)) {
         nextExpiry.set(grant.leavePolicyId, grant.expiresOn);
+      }
+      const seen = dayEquivalent.get(grant.leavePolicyId);
+      if (seen === undefined || grant.cycleStartDate > seen.cycleStartDate) {
+        dayEquivalent.set(grant.leavePolicyId, {
+          cycleStartDate: grant.cycleStartDate,
+          minutes: grant.dayEquivalentMinutes,
+        });
       }
     }
 
@@ -363,6 +390,9 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
       remainingMinutes: balance.remainingMinutes,
       expiringSoonMinutes: balance.expiringSoonMinutes,
       nextExpiresOn: nextExpiry.get(balance.leavePolicyId) ?? null,
+      // Info: (20260818 - Julian) 沒有任何批次時為 null（UNLIMITED 假別即是如此）
+      dayEquivalentMinutes:
+        dayEquivalent.get(balance.leavePolicyId)?.minutes ?? null,
       reconciledAt: balance.reconciledAt
         ? balance.reconciledAt.toISOString()
         : null,
