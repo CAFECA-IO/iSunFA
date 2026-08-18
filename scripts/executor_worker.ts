@@ -3,13 +3,26 @@ import dotenvExpand from "dotenv-expand";
 import path from "path";
 import fs from "fs";
 
-// Info: (20260521 - Luphia) Load env variables from the project root .env first
+/**
+ * Info: (20260812 - Luphia) 讀 `.env.worker`，不是系統的 `.env`。
+ *
+ * 這支是外部運算節點的單一 Executor 入口（由 `run_executor.ts` 併發啟動多份），
+ * 與 `run_compute_node.ts` 屬同一類節點，設定來源必須一致 ——
+ * 系統 `.env` 裡有 `DATABASE_URL`、`SECRET_VAULT_MASTER_KEY`、`SUPER_ADMIN_*`，
+ * 一個處理使用者上傳內容的節點不該看得到那些。
+ *
+ * 保留 dotenv-expand:這支原本就支援 `${VAR}` 展開，換檔案不該順手改掉那個語意。
+ */
 const projectRoot = process.cwd();
-const srcEnv = path.join(projectRoot, ".env");
+const workerEnv = path.join(projectRoot, ".env.worker");
 
-if (fs.existsSync(srcEnv)) {
-  const defaultEnv = dotenv.config({ path: srcEnv });
-  dotenvExpand.expand(defaultEnv);
+if (fs.existsSync(workerEnv)) {
+  const loaded = dotenv.config({ path: workerEnv });
+  dotenvExpand.expand(loaded);
+} else {
+  console.error(
+    `[Executor Worker] No configuration at ${workerEnv}. This node does not fall back to the system .env.`,
+  );
 }
 
 // Info: (20260521 - Luphia) Import service, ensuring they are resolved using the project root paths

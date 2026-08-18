@@ -1,4 +1,5 @@
-import { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
+// Info: (20260812 - Luphia) `import type` —— 只用到型別；理由同 voucher.pipeline.orchestrator
+import type { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
 import { UniversalAccountTag, CountryCode } from "@/constants/enums";
 import { MoneyUtil } from "@/lib/utils/money";
 

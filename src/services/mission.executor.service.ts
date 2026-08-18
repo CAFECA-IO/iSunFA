@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { ENV_PATH, loadEnvConfig } from "@/services/env.service";
+import { loadWorkerEnvConfig } from "@/services/env.service";
 import { ChatService } from "@/services/chat.service";
 import { EsgGenerationSource, CountryCode } from "@/constants/enums";
 import { CurrencyCode } from "@/constants/exchange_rate";
@@ -27,25 +27,24 @@ export async function processNext() {
   console.log("[MissionExecutor] Scanning MISSION_DIR for tasks to execute...");
 
   /**
-   * Info: (20260812 - Luphia) 這個節點的設定只有**一個**來源:`.env` 檔案。
+   * Info: (20260812 - Luphia) 這個節點的設定只有**一個**來源:`.env.worker`。
    *
-   * 專案規則:一個設定只存在 `.env` 或資料庫其中一處,不從多處查找;
-   * `.env` 只保管最低限度(部署環境差異),其餘一律進資料庫。
+   * 專案規則:一個設定只存在一處,不從多處查找;`.env` 只保管最低限度。
+   * 而 worker 更進一步 —— 它有**自己的**設定檔,既不吃系統的 `.env` 也不讀資料庫。
    *
-   * 對這個節點而言,「用哪把 LLM 金鑰」正是部署環境差異 —— 它依
-   * `async_workers/00_async_worker_overview.md` 沒有主資料庫權限,
-   * 所以資料庫那條路對它不存在,`.env` 就是它的單一來源(不是 fallback)。
+   * 為什麼不共用系統 `.env`:那份裡有 `DATABASE_URL`、`SECRET_VAULT_MASTER_KEY`、
+   * `SUPER_ADMIN_*`。`MissionExecutor` 處理的是使用者上傳的憑證內容,
+   * 依 `async_workers/00_async_worker_overview.md` 它連資料庫都不該連得到 ——
+   * 讓它持有信任根,等於把那道隔離的意義抵銷掉。
    *
-   * 刻意不用 `getPriorityEnvConfig()`:那支是「`.env.setup` 優先,否則 `.env`」——
-   * 兩個來源。而 `.env.setup` 是部署精靈的暫存區,簽章後會被清空
-   * (`setup.system_setting` 的 STAGED_KEYS),拿它當來源會在遷移前後給出不同答案。
+   * 為什麼不讀資料庫:同上,那是隔離本身。`allowSystemSettings: false` 讓它成為結構
+   * 而不是「env 剛好有值時才成立」的巧合。
    *
-   * 也刻意不讀 `process.env`:worker 由 `npx tsx scripts/run_worker.ts` 啟動,
-   * 沒有任何地方把 `.env` 載進 `process.env`(`ecosystem.config.json` 只給
-   * `NODE_ENV`),所以那條路在這個節點上幾乎永遠是空的 —— 留著只會讓
-   * 「到底讀到哪一份」變成要試才知道。
+   * 也刻意不讀 `process.env` 之外的檔案（`.env.setup` 是精靈暫存區,簽章後會被清空）——
+   * `run_worker` 啟動時已把 `.env.worker` 載進 `process.env`,這裡直接讀檔是為了讓
+   * 「這個值來自哪個檔案」在這一行就看得出來,不必回頭追進程的啟動流程。
    */
-  const nodeEnv = await loadEnvConfig(ENV_PATH);
+  const nodeEnv = await loadWorkerEnvConfig();
   const missionDirBase = nodeEnv.MISSION_DIR || "missions";
   const missionDirPath = path.join(process.cwd(), missionDirBase);
 
@@ -62,7 +61,7 @@ export async function processNext() {
   const apiKey = nodeEnv.GEMINI_API_KEY;
   if (!apiKey) {
     console.warn(
-      "[MissionExecutor] No LLM API key in this node's environment. Missions that need the LLM will fail loudly; /admin/settings does not reach this node.",
+      "[MissionExecutor] No GEMINI_API_KEY in .env.worker. Missions that need the LLM will fail loudly; this node reads neither the system .env nor the database.",
     );
   }
   /**
