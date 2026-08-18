@@ -21,6 +21,7 @@ import {
 import {
   BASELINE_THRESHOLD_LIMITS,
   classifyKey,
+  unmeasuredThresholdLevel,
 } from "@/constants/carbon_uat_baseline";
 import {
   isCompatibilityCode,
@@ -406,8 +407,20 @@ const checkThresholds = (): void => {
     ({ key, passAtOrBelow, failAbove, unit }) => {
       const value = snapshot[key];
       if (typeof value !== "number") {
-        // Info: (20260818 - Emily) 沒給 --log 就沒有這些鍵。不算過,也不算不過 —— 要說出來
-        record("warn", `B4 閾值:${key}`, "本趟沒有 log,這一層沒判");
+        /**
+         * Info: (20260818 - Emily) 量不到就不能算過。而**有 `--baseline` 代表這是驗收趟**,
+         * 那時沒判 B4 就是 fail —— 08-18 實跑那兩趟 exit 0 而 B4 兩個門檻都沒判,
+         * 綠燈蓋住了兩個沒被檢查的閘門項目(理由見 `unmeasuredThresholdLevel`)。
+         */
+        const hasLog = arg("--log") !== undefined;
+        const hasBaseline = arg("--baseline") !== undefined;
+        record(
+          unmeasuredThresholdLevel({ hasBaseline, hasLog }),
+          `B4 閾值:${key}`,
+          hasLog
+            ? `log 裡沒有 ${key} —— ${hasBaseline ? "驗收趟必須判 B4,請確認這份 log 涵蓋整趟匯入" : "這一層沒判"}`
+            : `本趟沒有 --log${hasBaseline ? " —— 有 --baseline 代表這是驗收趟,B4 必須判" : ",這一層沒判"}`,
+        );
         return;
       }
       if (value <= passAtOrBelow) {

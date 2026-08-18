@@ -20,6 +20,7 @@ import {
   BASELINE_THRESHOLD_LIMITS,
   BASELINE_TIERS,
   classifyKey,
+  unmeasuredThresholdLevel,
 } from "@/constants/carbon_uat_baseline";
 
 const UAT_SCRIPT = path.join(process.cwd(), "scripts/uat_carbon_report.ts");
@@ -178,5 +179,50 @@ describe("分層本身的一致性", () => {
       // Info: (20260818 - Emily) failAbove 不得小於 passAtOrBelow,否則 warn 帶是負的
       expect(limit.failAbove).toBeGreaterThanOrEqual(limit.passAtOrBelow);
     });
+  });
+});
+
+/**
+ * Info: (20260818 - Emily) 量不到閾值時的層級（B4 的閘門不得被綠燈蓋住）。
+ *
+ * 08-18 實跑兩份報告的結果是「20 通過 / 0 失敗 / 2 警告」、exit 0 ——
+ * **而 B4 的兩個門檻根本沒判**,因為那一趟沒帶 `--log`。
+ * 掛到 CI 上就是綠燈,而兩個閘門項目沒有被檢查。
+ *
+ * 那是這一週同一個形狀的又一次,只是方向相反:前幾次判準比要守的東西**窄**（會漏報）,
+ * 這次比要守的東西**寬**（會誤放）。兩種都讓判準失去意義。
+ */
+describe("量不到 B4 閾值時的層級", () => {
+  /**
+   * Info: (20260818 - Emily) 判準是「有 `--baseline` 就是驗收趟」。
+   * 不另外加旗標:拿基準線來比,正好是「我在做驗收」最可靠的訊號 ——
+   * 探索性地看一份 PDF 不會比基準線,而 B3 的定義本身就是兩趟比對。
+   */
+  it.each([
+    { hasBaseline: true, hasLog: false, expected: "fail" },
+    { hasBaseline: true, hasLog: true, expected: "fail" },
+    { hasBaseline: false, hasLog: false, expected: "warn" },
+    { hasBaseline: false, hasLog: true, expected: "warn" },
+  ])(
+    "baseline=$hasBaseline log=$hasLog → $expected",
+    ({ hasBaseline, hasLog, expected }) => {
+      expect(unmeasuredThresholdLevel({ hasBaseline, hasLog })).toBe(expected);
+    },
+  );
+
+  /**
+   * Info: (20260818 - Emily) `hasLog` 刻意不影響層級。
+   *
+   * 帶了 `--log` 但 log 裡沒有那些鍵（截斷、或那一趟根本沒觸發匯入),結果一樣是**沒判**。
+   * 門檻的意義是「量到而且過關」,量不到不能算過 —— 那個參數只用來決定訊息怎麼寫。
+   * 這一條釘住那個決定:哪天有人讓「帶了 log 就算過」,它會紅。
+   */
+  it("帶了 log 但鍵缺席,在驗收趟仍然是 fail", () => {
+    expect(unmeasuredThresholdLevel({ hasBaseline: true, hasLog: true })).toBe(
+      "fail",
+    );
+    expect(
+      unmeasuredThresholdLevel({ hasBaseline: true, hasLog: false }),
+    ).toEqual(unmeasuredThresholdLevel({ hasBaseline: true, hasLog: true }));
   });
 });

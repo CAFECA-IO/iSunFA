@@ -172,6 +172,32 @@ export const classifyKey = (key: string): BaselineTier | undefined =>
  *
  * 數字寫在這裡而不是文件裡,因為文件不會在超標時變紅。
  */
+/**
+ * Info: (20260818 - Emily) 沒量到閾值時該報 warn 還是 fail。
+ *
+ * ## 為什麼要分
+ *
+ * 08-18 實跑兩份報告:20 通過 / 0 失敗 / 2 警告,exit 0 —— **而 B4 的兩個門檻根本沒判**,
+ * 因為那一趟沒帶 `--log`。掛到 CI 上就是綠燈,而兩個閘門項目沒有被檢查。
+ * 那是判準蓋不住它要守的東西,只是這次方向是「寬」而不是「窄」。
+ *
+ * ## 判準:有 `--baseline` 就是驗收趟
+ *
+ * 不另外加旗標。**「我拿了一份基準線來比」正好是「我在做驗收」最可靠的訊號** ——
+ * 探索性地看一份 PDF 不會去比基準線,而驗收一定會(B3 的定義就是兩趟比對)。
+ * 多一個 `--strict` 只會多一個沒人記得帶的參數。
+ *
+ * ## 為什麼 `hasLog` 不影響層級
+ *
+ * 帶了 `--log` 但 log 裡沒有那些鍵(例如 log 被截斷、或那一趟根本沒觸發匯入),
+ * 結果一樣是**沒判**。門檻的意義是「量到而且過關」,量不到就不能算過 ——
+ * 這個參數只用來決定訊息要說「沒有 log」還是「log 裡沒有這些鍵」。
+ */
+export const unmeasuredThresholdLevel = (context: {
+  readonly hasBaseline: boolean;
+  readonly hasLog: boolean;
+}): "warn" | "fail" => (context.hasBaseline ? "fail" : "warn");
+
 export const BASELINE_THRESHOLD_LIMITS: ReadonlyArray<{
   readonly key: string;
   /** Info: (20260818 - Emily) 小於等於此值 → pass */
