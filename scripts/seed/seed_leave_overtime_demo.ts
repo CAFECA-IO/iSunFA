@@ -107,6 +107,13 @@ const OT_DECLARED_DAY = "2026-08-15";
 const OT_PENDING_DAY = "2026-08-17";
 // Info: (20260818 - Julian) 週二．待簽核的**事前**申請放這裡（送出時點在前一天傍晚）
 const OT_ADVANCE_DAY = "2026-08-18";
+/**
+ * Info: (20260818 - Julian) 超時情境用的日子：週五、上班日、**該員當天無打卡**。
+ *
+ * 與 `OT_WEEKDAY` 同一天，但那天補打卡的是 EMP006 與 EMP008；EMP007 沒有，
+ * 因此她那張單走自陳、認列等於核准，才踩得到上限。
+ */
+const OT_OVER_LIMIT_DAY = OT_WEEKDAY;
 
 // Info: (20260818 - Julian) 本腳本負責的假單日期。與加班的待簽日刻意錯開，避免同一人同一天兩件事
 const LEAVE_CASE_DATES = [
@@ -149,10 +156,10 @@ interface IOvertimeCase {
 }
 
 /**
- * Info: (20260818 - Julian) 加班的八個案例。
+ * Info: (20260818 - Julian) 加班的九個案例。
  *
  * 排列的原則與既有 seed 的「刻意佈置的異常」相同：**一片乾淨的資料什麼也證明不了。**
- * 這八筆刻意覆蓋八條不同的路徑，每一條在畫面上長得不一樣：
+ * 這九筆刻意覆蓋九條不同的路徑，每一條在畫面上長得不一樣：
  *
  * - 休息日加班費，跨前 2 小時與逾 2 小時兩個級距（OT-1）
  * - 申請 10 小時但打卡只到 9 小時 → 認列 9 小時（OT-1，ADR 024 §2）
@@ -161,6 +168,7 @@ interface IOvertimeCase {
  * - 全日無打卡的自陳 → L28 的「自陳」欄不再是 0（OT-4）
  * - 被駁回的單 → 駁回後不得留著核准分鐘（OT-5）
  * - 待簽核的事後補單 ×2（OT-6／OT-7）與事前申請 ×1（OT-8）→ 加班簽核頁有東西可按
+ * - 一張**核准時會被單日上限擋下**的單（OT-9）→ 超時的紅字與報告書入口有東西可演
  *
  * 刻意**沒有**放進來的一條：EMP005 在 08-08 也有假日打卡（既有 seed 的
  * 「颱風後搶修」），而他沒有任何一張加班單。那 540 分鐘會原封不動出現在
@@ -281,6 +289,32 @@ const OVERTIME_CASES: IOvertimeCase[] = [
     submittedAt: at(OT_PENDING_DAY, 19, 50),
     decidedBy: null,
     note: "待簽核（事後補單，選擇換補休）",
+  },
+  {
+    label: "OT-9",
+    employeeNo: "EMP007",
+    workDate: OT_OVER_LIMIT_DAY,
+    filingType: OvertimeFilingType.POST_HOC,
+    compensationMode: OvertimeCompensationMode.PAYMENT,
+    /**
+     * Info: (20260818 - Julian) 17:00–22:00，五個小時。
+     *
+     * 工地日班的應工作分鐘是 480，480 + 300 = 780 > 720 —— **核准時必定撞上
+     * §32 II 的「單日正常工時與延長工時合計不得超過 12 小時」**。
+     *
+     * 這一張是**刻意留著撞牆**的：上限是硬擋，而硬擋沒有東西可以演的話，
+     * 看起來就像沒做。挑單日而不是單月，是因為單月要先累積到 54 小時才踩得到，
+     * 而 480 + 300 觀眾可以自己心算。
+     *
+     * 選在 08-14 是因為那天 EMP007 **沒有任何打卡** —— 有打卡的話認列會被
+     * `min(核准, 事實)` 壓到十幾分鐘，上限就踩不到了，這張單會安靜地核准成功。
+     */
+    requestedStartMinute: 1020,
+    requestedEndMinute: 1320,
+    reason: "邊坡擋土牆灌漿作業不可中斷，需連續施作至完成",
+    submittedAt: at(OT_OVER_LIMIT_DAY, 22, 20),
+    decidedBy: null,
+    note: "待簽核，**核准時會被單日上限擋下**（480 + 300 = 780 > 720）—— 超時情境的演示素材",
   },
   {
     label: "OT-8",
@@ -786,7 +820,15 @@ function printRunbook(): void {
   console.log(
     "   3. 以 EMP005（張文彬）登入 → /hr_management/overtime/approval",
   );
-  console.log("      三張待簽核（兩張事後補單、一張事前申請），當場核准一張。");
+  console.log(
+    "      四張待簽核（兩張事後補單、一張事前申請、一張會超時），當場核准一張。",
+  );
+  console.log(
+    "      壓軸按 OT-9（EMP007 王雅琪 08-14 17:00–22:00）：480 + 300 = 780 分鐘，",
+  );
+  console.log(
+    "      超過 §32 II 單日 12 小時上限 → 紅字擋下，旁邊是尚未開放的「填寫加班報告書」。",
+  );
   console.log(
     "      同一頁的「未核准時段」會列出 08-08 他自己的假日出勤 540 分鐘 ——",
   );
