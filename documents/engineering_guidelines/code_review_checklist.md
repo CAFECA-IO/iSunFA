@@ -232,7 +232,7 @@ PDF 的文字層修補（把 Chrome 寫成康熙部首的碼位改回漢字）�
 `waitForTransactionReceipt` 對 revert 的交易一樣正常回傳收據，只有逾時才拋。因此**每一處都要檢查 `receipt.status`**，並收斂到單一確認函式。
 
 - 更根本的一條：**ABI 宣告的函式不代表部署的合約有**。本 PR 的 `ABIS.CREDIT_POINT` 宣告了 `burn(address, uint256)`，而合約只有 `burnAndUnlock(uint256)`（燒 `msg.sender` 自己的餘額）——那個「收回」從來沒有成功過，而 `receipt.status` 沒被檢查，reverted 交易被回報成成功。
-- 涉及鏈上能力的功能，去讀 `contracts/*.sol`，不要只讀 ABI。
+- 涉及鏈上能力的功能，去讀 `contracts/*.sol`，不要只讀 ABI。這件事現在有測試守著（`abi_contract_parity.test.ts`：每個 ABI 的函式宣告比對合約原始碼**含繼承鏈**，已知落差登記成只能變短的清單）——寫的時候先確認一件事：**繼承來的函式要解析得到**，否則 `balanceOf` / `transfer` 會被誤判成落差，而「修法」看起來就是把它們一起登記進例外清單，那份清單就成了謊言。
 - 外部呼叫失敗時的補償路徑，要確認它**真的會被觸發**（把成功誤判成功，補償永遠不會執行）。
 
 ### 5.2 系統設定：DB + 簽章
