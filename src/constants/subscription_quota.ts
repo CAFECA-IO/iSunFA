@@ -131,6 +131,28 @@ export const TEAM_WALLET_ENTRY_TYPE = {
 export type TeamWalletEntryType =
   (typeof TEAM_WALLET_ENTRY_TYPE)[keyof typeof TEAM_WALLET_ENTRY_TYPE];
 
+/**
+ * Info: (20260818 - Luphia) 分配的「價值離開離鏈帳本」那一筆負 ADJUST 的標記。
+ *
+ * 分配改為鑄到成員自己的鏈上錢包之後（ADR 015 修訂），池減少但沒有任何分配列承接，
+ * 因此每筆 ALLOCATE 都要配一筆負的 ADJUST，否則守恆勾稽會判為違反並凍結錢包
+ * （見 `teamWalletRepo.allocate`）。
+ *
+ * 冪等鍵前綴讓那一筆與原分錄成對、可查、也不會與 `allocate-failed:` 的補償撞鍵；
+ * `featureCode` 讓帳本畫面與修復腳本認得出它是哪一種 ADJUST。
+ */
+export const ALLOCATE_OFFCHAIN_EXIT_PREFIX = "allocate-offchain-exit:";
+export const ALLOCATE_OFFCHAIN_EXIT_FEATURE_CODE = "allocate-offchain-exit";
+
+/**
+ * Info: (20260818 - Luphia) 守恆差額的一次性修復分錄標記（`scripts/repair_wallet_conservation.ts`）。
+ *
+ * 修復在 2026-08-18 修法之前累積的差額：那些 ALLOCATE 沒有配對的負 ADJUST，
+ * 而帳本 append-only，所以補一筆而不是回頭改。每個錢包只補一次。
+ */
+export const CONSERVATION_REPAIR_PREFIX = "conservation-repair:";
+export const CONSERVATION_REPAIR_FEATURE_CODE = "conservation-repair";
+
 // Info: (20260807 - Luphia) 扣費管線的扣款來源（設計書 §5 三層順序）
 export const SPEND_SOURCE = {
   SUBSCRIPTION_QUOTA: "SUBSCRIPTION_QUOTA",
