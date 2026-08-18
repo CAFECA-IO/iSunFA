@@ -2,7 +2,11 @@ import { describe, it, expect } from "@jest/globals";
 import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
 import { NextRequest } from "next/server";
-import { resolveClientIp } from "@/lib/utils/client_ip";
+import {
+  MALFORMED_CLIENT_IP,
+  resolveClientIp,
+  UNIDENTIFIED_CLIENT_IP,
+} from "@/lib/utils/client_ip";
 import { RATE_LIMIT_RULES, RateLimitBucketEnum } from "@/constants/rate_limit";
 import { enforceInviteRateLimit } from "@/lib/team/invite_rate_limit";
 
@@ -68,6 +72,86 @@ describe("resolveClientIp", () => {
     expect(
       resolveClientIp(request({ "x-forwarded-for": "", "x-real-ip": "" })),
     ).toBe("unknown");
+  });
+});
+
+describe("x-forwarded-for 的值必須是 IP（第五輪 C 高）", () => {
+  /**
+   * Info: (20260818 - Luphia) 這一組守的是「呼叫端不能自選限流桶」。
+   *
+   * 哨符本身是字串 `"unknown"`，而原本的實作「第一段非空就回傳」——送
+   * `x-forwarded-for: unknown` 就會被判成無法識別，改用 300/min 的寬鬆桶。
+   * `unknown` 也不只是刻意攻擊：Apache mod_proxy 與舊 squid 真的會這樣寫。
+   */
+  it("送 unknown 不會被當成 IP，也不會換到寬鬆桶的哨符", () => {
+    expect(resolveClientIp(request({ "x-forwarded-for": "unknown" }))).toBe(
+      MALFORMED_CLIENT_IP,
+    );
+  });
+
+  // Info: (20260818 - Luphia) 全部收斂到同一個哨符：輪替垃圾值換不到更多桶
+  it("任意垃圾值都收斂到同一個嚴格的維度", () => {
+    for (const junk of ["abc", "1.2.3", "999.1.1.1", "::gg", "10.0.0.1:8080"]) {
+      expect(resolveClientIp(request({ "x-forwarded-for": junk }))).toBe(
+        MALFORMED_CLIENT_IP,
+      );
+    }
+  });
+
+  it("IPv4 與 IPv6 都認得", () => {
+    expect(resolveClientIp(request({ "x-forwarded-for": "203.0.113.7" }))).toBe(
+      "203.0.113.7",
+    );
+    expect(resolveClientIp(request({ "x-forwarded-for": "2001:db8::1" }))).toBe(
+      "2001:db8::1",
+    );
+  });
+
+  // Info: (20260818 - Luphia) XFF 是垃圾時仍要試 x-real-ip，而不是直接放棄
+  it("XFF 不合法時退回 x-real-ip", () => {
+    expect(
+      resolveClientIp(
+        request({ "x-forwarded-for": "unknown", "x-real-ip": "203.0.113.9" }),
+      ),
+    ).toBe("203.0.113.9");
+  });
+
+  it("兩個標頭都有值但都不合法時，走嚴格的維度", () => {
+    expect(
+      resolveClientIp(
+        request({ "x-forwarded-for": "unknown", "x-real-ip": "nope" }),
+      ),
+    ).toBe(MALFORMED_CLIENT_IP);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 對照組：**完全沒有標頭**才是寬鬆桶。
+   * 兩者分開正是這條 finding 的重點——責任歸屬不同。
+   */
+  it("完全沒有來源標頭才回無法識別的哨符", () => {
+    expect(resolveClientIp(request({}))).toBe(UNIDENTIFIED_CLIENT_IP);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 最終效果：送 `unknown` **不會**換到寬鬆桶。
+   * 這是這條 finding 的實質——一道 defence-in-depth 不能由被限的那方關掉。
+   */
+  it("送 unknown 仍落在嚴格的桶（20/min），換不到 300/min", () => {
+    const spoofed = () =>
+      new NextRequest("https://isunfa.com/api/v1/invite/resolve", {
+        headers: { "x-forwarded-for": "unknown" },
+      });
+    const strict = RATE_LIMIT_RULES[RateLimitBucketEnum.INVITE_TOKEN][0].max;
+
+    let blocked = false;
+    // Info: (20260818 - Luphia) 只多打幾次：若換到寬鬆桶，這個次數遠不足以撞牆
+    for (let i = 0; i <= strict; i += 1) {
+      if (enforceInviteRateLimit(spoofed())) {
+        blocked = true;
+        break;
+      }
+    }
+    expect(blocked).toBe(true);
   });
 });
 
