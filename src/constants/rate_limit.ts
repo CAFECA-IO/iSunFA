@@ -73,6 +73,22 @@ export enum RateLimitBucketEnum {
    * 且「哪一份是最新的」不該用猜），但不足以當成輪詢端點用。
    */
   ATTENDANCE_EXPORT = "ATTENDANCE_EXPORT",
+
+  /**
+   * Info: (20260818 - Julian) 假勤的狀態變更（送出／撤回假單、核准、駁回、
+   * 簽核規則改寫、額度調整、補授予）。
+   *
+   * **不與 `ATTENDANCE_WRITE` 共用，理由是每日額度會互相擠壓。** 那個桶的
+   * 500/day 是為排班寫入訂的，而排班是唯一會被批次操作的動作（一位主管替
+   * 一個工務段排下個月的班，一次就是數百格）。共用的後果是：主管排完班之後，
+   * 同一個人當天送不出自己的假單 —— 兩件事的成本屬性無關，卻共享一個預算
+   * （同 `PRF` 不與 `SIGNING` 共用的理由）。
+   *
+   * 讀取（額度、假單清單、明細、簽核規則）與試算沿用既有的 `READ`：
+   * 試算雖然是 POST，但它不寫任何東西，且畫面上每改一次日期就會呼叫一次 ——
+   * 掛在寫入桶會讓即時預覽在正常填單過程中就撞牆。
+   */
+  LEAVE_WRITE = "LEAVE_WRITE",
 }
 
 export interface IRateLimitWindow {
@@ -134,6 +150,14 @@ export const RATE_LIMIT_RULES: Record<RateLimitBucketEnum, IRateLimitWindow[]> =
         max: envInt("ATTENDANCE_RL_WRITE_PER_MINUTE", 30),
       },
       { windowMs: DAY_MS, max: envInt("ATTENDANCE_RL_WRITE_PER_DAY", 500) },
+    ],
+    /**
+     * Info: (20260818 - Julian) 尺寸沿用 `ATTENDANCE_WRITE`（都是人按一下的低頻動作），
+     * 但**額度是分開的** —— 見 enum 上的說明。
+     */
+    [RateLimitBucketEnum.LEAVE_WRITE]: [
+      { windowMs: MINUTE_MS, max: envInt("LEAVE_RL_WRITE_PER_MINUTE", 30) },
+      { windowMs: DAY_MS, max: envInt("LEAVE_RL_WRITE_PER_DAY", 500) },
     ],
     [RateLimitBucketEnum.ATTENDANCE_EXPORT]: [
       {

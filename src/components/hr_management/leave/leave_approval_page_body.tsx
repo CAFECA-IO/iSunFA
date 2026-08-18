@@ -8,7 +8,9 @@ import {
   leaveRequestRejectApi,
 } from "@/constants/leave_api";
 import { ILeaveRequestSummary } from "@/interfaces/leave_request";
-import { ApiError, request } from "@/lib/utils/request";
+import { errorI18nKeyOf } from "@/lib/utils/attendance_error_message";
+import { LEAVE_ERROR_I18N_KEY } from "@/lib/utils/leave_error_message";
+import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 
 /**
@@ -48,9 +50,13 @@ const LeaveApprovalPageBody: FC = () => {
       );
     } catch (error) {
       setLoadError(
-        error instanceof ApiError
-          ? error.message
-          : t("hr_management.leave.error_load"),
+        t(
+          errorI18nKeyOf(
+            error,
+            "hr_management.leave.error_load",
+            LEAVE_ERROR_I18N_KEY,
+          ),
+        ),
       );
     } finally {
       setLoading(false);
@@ -75,9 +81,13 @@ const LeaveApprovalPageBody: FC = () => {
       await reload();
     } catch (error) {
       setActionError(
-        error instanceof ApiError
-          ? error.message
-          : t("hr_management.leave.error_decide"),
+        t(
+          errorI18nKeyOf(
+            error,
+            "hr_management.leave.error_decide",
+            LEAVE_ERROR_I18N_KEY,
+          ),
+        ),
       );
     } finally {
       setActingId(null);

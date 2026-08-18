@@ -865,6 +865,34 @@ export const hrManagement = {
     error_submit: "Submit failed",
     error_withdraw: "Withdraw failed",
     error_decide: "Decision failed",
+    /**
+     * Info: (20260818 - Julian) Per-code copy (the lookup table lives in
+     * `leave_error_message.ts`). Each line must answer "what do I do next" —
+     * collapsing them into one "operation failed" throws the diagnosis away.
+     */
+    error_insufficient_balance:
+      "Not enough balance. Shorten the request or pick another leave type.",
+    error_unit_not_aligned:
+      "The duration does not match this leave type's minimum unit. Adjust the segment.",
+    error_non_working_day:
+      "That date is not a working day, so no leave is needed (nothing would be deducted).",
+    error_chain_unresolved:
+      "The approval chain could not be resolved. Ask HR to check your manager and the approval rules.",
+    error_day_already_active: "An active leave already exists on that date.",
+    error_concurrency_exceeded:
+      "Too many people in your department are already on leave then. Agree on a new date with your manager.",
+    error_policy_not_found:
+      "That leave type no longer exists or has been disabled. Pick another one.",
+    error_self_approval: "You may not approve your own request.",
+    error_not_reviewer:
+      "You are not the current approver for this request; the previous step has to finish first.",
+    error_already_reviewed:
+      "This step has already been decided. Reload to see the current status.",
+    error_balance_race:
+      "The balance was just consumed by another request. Reload and try again.",
+    error_request_scope:
+      "This request is not yours and you are not on its approval chain.",
+    error_request_not_found: "This leave request no longer exists.",
     policy_annual: "Annual leave",
     policy_personal: "Personal leave",
     policy_sick: "Sick leave",

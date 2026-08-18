@@ -854,6 +854,33 @@ export const hrManagement = {
     error_submit: "신청에 실패했습니다",
     error_withdraw: "철회에 실패했습니다",
     error_decide: "결재 처리에 실패했습니다",
+    /**
+     * Info: (20260818 - Julian) 오류 코드별 문구(대조표는 `leave_error_message.ts`).
+     * 각 문장은 "다음에 무엇을 해야 하는지"에 답해야 함 —— 하나의 "처리 실패"로 묶으면 진단 정보가 사라진다.
+     */
+    error_insufficient_balance:
+      "잔여 일수가 부족합니다. 일수를 줄이거나 다른 휴가 종류를 선택하세요",
+    error_unit_not_aligned:
+      "이 휴가 종류의 최소 단위와 맞지 않습니다. 시간대를 조정하세요",
+    error_non_working_day:
+      "선택한 날짜는 근무일이 아니므로 휴가가 필요하지 않습니다(잔여 일수도 차감되지 않습니다)",
+    error_chain_unresolved:
+      "결재선을 만들 수 없습니다. 직속 상급자와 결재 규칙 설정을 인사팀에 확인하세요",
+    error_day_already_active: "해당 날짜에 이미 유효한 휴가 신청이 있습니다",
+    error_concurrency_exceeded:
+      "그 기간에 같은 부서의 휴가자가 상한에 도달했습니다. 상급자와 협의해 일정을 조정하세요",
+    error_policy_not_found:
+      "이 휴가 종류는 존재하지 않거나 비활성화되었습니다. 다시 선택하세요",
+    error_self_approval: "본인이 제출한 신청은 결재할 수 없습니다",
+    error_not_reviewer:
+      "이 신청의 현재 결재자가 아닙니다. 이전 단계가 끝날 때까지 기다리세요",
+    error_already_reviewed:
+      "이 단계는 이미 결정되었습니다. 새로 고침하여 최신 상태를 확인하세요",
+    error_balance_race:
+      "잔여 일수가 방금 다른 신청에 사용되었습니다. 새로 고침 후 다시 시도하세요",
+    error_request_scope:
+      "이 신청은 본인의 것이 아니며 결재선에도 포함되어 있지 않습니다",
+    error_request_not_found: "이 휴가 신청을 찾을 수 없습니다",
     policy_annual: "연차 휴가",
     policy_personal: "개인 휴가",
     policy_sick: "일반 상병 휴가",

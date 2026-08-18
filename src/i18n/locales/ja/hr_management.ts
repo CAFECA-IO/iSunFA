@@ -850,6 +850,33 @@ export const hrManagement = {
     error_submit: "申請に失敗しました",
     error_withdraw: "取下げに失敗しました",
     error_decide: "承認処理に失敗しました",
+    /**
+     * Info: (20260818 - Julian) エラーコード別の文言（対応表は `leave_error_message.ts`）。
+     * 各文は「次に何をすべきか」に答えること —— 一律「操作に失敗しました」にまとめると診断情報が失われる。
+     */
+    error_insufficient_balance:
+      "残日数が足りません。日数を減らすか、別の休暇種別を選んでください",
+    error_unit_not_aligned:
+      "この休暇種別の最小単位に合っていません。時間帯を調整してください",
+    error_non_working_day:
+      "選択した日は出勤日ではないため、申請の必要はありません（残日数も減りません）",
+    error_chain_unresolved:
+      "承認ルートを展開できません。直属の上長と承認ルールの設定を人事にご確認ください",
+    error_day_already_active: "この日には有効な休暇申請がすでにあります",
+    error_concurrency_exceeded:
+      "その期間は同じ部署の休暇取得者が上限に達しています。上長と相談のうえ日程を変更してください",
+    error_policy_not_found:
+      "この休暇種別は存在しないか、無効化されています。選び直してください",
+    error_self_approval: "自分が提出した申請は承認できません",
+    error_not_reviewer:
+      "この申請の現在の承認者ではありません。前の段階の完了をお待ちください",
+    error_already_reviewed:
+      "この段階はすでに決裁済みです。再読み込みして最新の状態をご確認ください",
+    error_balance_race:
+      "残日数が別の申請に先に消費されました。再読み込みしてやり直してください",
+    error_request_scope:
+      "この申請はあなたのものではなく、承認ルートにも含まれていません",
+    error_request_not_found: "この休暇申請は見つかりません",
     policy_annual: "年次有給休暇",
     policy_personal: "私用休暇",
     policy_sick: "私傷病休暇",

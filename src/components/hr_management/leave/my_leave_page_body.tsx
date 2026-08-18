@@ -14,7 +14,9 @@ import {
 import LeaveBalanceCards from "@/components/hr_management/leave/leave_balance_cards";
 import ApprovalChainView from "@/components/hr_management/leave/approval_chain_view";
 import LeaveRequestList from "@/components/hr_management/leave/leave_request_list";
-import { ApiError, request } from "@/lib/utils/request";
+import { errorI18nKeyOf } from "@/lib/utils/attendance_error_message";
+import { LEAVE_ERROR_I18N_KEY } from "@/lib/utils/leave_error_message";
+import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 
 /**
@@ -86,9 +88,13 @@ const MyLeavePageBody: FC = () => {
         setPolicyId((current) => current || policyList[0].id);
     } catch (error) {
       setLoadError(
-        error instanceof ApiError
-          ? error.message
-          : t("hr_management.leave.error_load"),
+        t(
+          errorI18nKeyOf(
+            error,
+            "hr_management.leave.error_load",
+            LEAVE_ERROR_I18N_KEY,
+          ),
+        ),
       );
     } finally {
       setLoading(false);
@@ -136,9 +142,13 @@ const MyLeavePageBody: FC = () => {
         if (!active) return;
         setPreview(null);
         setPreviewError(
-          error instanceof ApiError
-            ? error.message
-            : t("hr_management.leave.error_preview"),
+          t(
+            errorI18nKeyOf(
+              error,
+              "hr_management.leave.error_preview",
+              LEAVE_ERROR_I18N_KEY,
+            ),
+          ),
         );
       });
 
@@ -165,9 +175,13 @@ const MyLeavePageBody: FC = () => {
       await reload();
     } catch (error) {
       setSubmitError(
-        error instanceof ApiError
-          ? error.message
-          : t("hr_management.leave.error_submit"),
+        t(
+          errorI18nKeyOf(
+            error,
+            "hr_management.leave.error_submit",
+            LEAVE_ERROR_I18N_KEY,
+          ),
+        ),
       );
     } finally {
       setSubmitting(false);

@@ -833,6 +833,25 @@ export const hrManagement = {
     error_submit: "送出失敗",
     error_withdraw: "撤回失敗",
     error_decide: "簽核失敗",
+    /**
+     * Info: (20260818 - Julian) 錯誤碼專屬文案（對照表在 `leave_error_message.ts`）。
+     * 每一句都要答得出「下一步做什麼」—— 折成同一句「操作失敗」等於把診斷丟掉。
+     */
+    error_insufficient_balance: "額度不足，請減少天數或改用其他假別",
+    error_unit_not_aligned: "請假時間不符合這個假別的最小單位，請調整時段",
+    error_non_working_day: "所選日期不是上班日，不需要請假（送出也不會扣額度）",
+    error_chain_unresolved:
+      "簽核流程展不開，請聯繫人事確認你的直屬主管與簽核規則設定",
+    error_day_already_active: "這一天已經有一張生效中的假單",
+    error_concurrency_exceeded:
+      "該期間同部門請假人數已達上限，請與主管協商後改期",
+    error_policy_not_found: "這個假別不存在或已停用，請重新選擇",
+    error_self_approval: "不能簽核自己送出的假單",
+    error_not_reviewer: "你不是這張單目前這一關的簽核者，請等上一關完成",
+    error_already_reviewed: "這一關已經被決定了，請重新整理後查看最新狀態",
+    error_balance_race: "額度剛被另一張假單扣走，請重新整理後再試",
+    error_request_scope: "這張假單不是你的，你也不在它的簽核鏈上",
+    error_request_not_found: "找不到這張假單",
     policy_annual: "特別休假",
     policy_personal: "事假",
     policy_sick: "普通傷病假",

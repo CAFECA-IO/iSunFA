@@ -20,7 +20,9 @@ import { HR_MANAGEMENT_ROUTE } from "@/constants/hr_management";
 import { LeaveDaySegment } from "@/constants/leave_policy";
 import { ILeaveRequestDetail } from "@/interfaces/leave_request";
 import ApprovalChainView from "@/components/hr_management/leave/approval_chain_view";
-import { ApiError, request } from "@/lib/utils/request";
+import { errorI18nKeyOf } from "@/lib/utils/attendance_error_message";
+import { LEAVE_ERROR_I18N_KEY } from "@/lib/utils/leave_error_message";
+import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 
 const SEGMENT_I18N_KEY: Readonly<Record<string, string>> = {
@@ -65,9 +67,13 @@ const LeaveRequestDetailBody: FC<{ requestId: string }> = ({ requestId }) => {
       setDetail(await request<ILeaveRequestDetail>(leaveRequestApi(requestId)));
     } catch (error) {
       setLoadError(
-        error instanceof ApiError
-          ? error.message
-          : t("hr_management.leave.error_load"),
+        t(
+          errorI18nKeyOf(
+            error,
+            "hr_management.leave.error_load",
+            LEAVE_ERROR_I18N_KEY,
+          ),
+        ),
       );
     } finally {
       setLoading(false);
@@ -88,9 +94,13 @@ const LeaveRequestDetailBody: FC<{ requestId: string }> = ({ requestId }) => {
       await reload();
     } catch (error) {
       setActionError(
-        error instanceof ApiError
-          ? error.message
-          : t("hr_management.leave.error_decide"),
+        t(
+          errorI18nKeyOf(
+            error,
+            "hr_management.leave.error_decide",
+            LEAVE_ERROR_I18N_KEY,
+          ),
+        ),
       );
     } finally {
       setActing(false);

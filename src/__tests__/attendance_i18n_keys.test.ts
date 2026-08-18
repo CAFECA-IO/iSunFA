@@ -16,8 +16,9 @@ import { ATTENDANCE_SUMMARY_COLUMNS } from "@/lib/utils/attendance_result_view";
  * Info: (20260814 - Julian) 常數裡的 i18n 路徑必須真的存在。
  *
  * `i18n_context` 的 `getNestedValue` 找不到就回傳 key 本身，所以缺字典不會報錯，
- * 而是把 `hr_management.leave.type_annual` 這串字直接畫在畫面上 —— 沒有錯誤訊息、
- * 沒有 console 警告，只有使用者看得到。`LEAVE_TYPE_I18N_KEY` 就這樣壞了一整個開發週期。
+ * 而是把那串路徑直接畫在畫面上 —— 沒有錯誤訊息、沒有 console 警告，只有使用者看得到。
+ * 當年的假別對照表就這樣壞了一整個開發週期
+ * （那張表是 `LEAVE_TYPE_I18N_KEY`，已隨 `enum LeaveType` 於 ADR 021 移除）。
  *
  * Info: (20260817 - Luphia) 掃描根改為**整個 `src`**（檢查清單 §一.1）。
  *
@@ -28,6 +29,20 @@ import { ATTENDANCE_SUMMARY_COLUMNS } from "@/lib/utils/attendance_result_view";
  *
  * **掃描型測試的價值等於它的掃描根。** 現在掃全 `src` 的字串常值，
  * 因此不管新的鍵寫在 constants、util、還是元件裡，漏掉字典都會紅。
+ *
+ * Info: (20260818 - Julian) 掃描前先去掉註解。
+ *
+ * 上一版沒有去，而它**自己的檔頭註解**裡就引用了一個鍵當例子
+ * （`` `hr_management.leave.type_annual` `` —— 反引號包住，`STATIC_KEY_RE` 照抓）。
+ * 那個鍵當時剛好存在，所以測試是綠的；`LEAVE_TYPE_I18N_KEY` 隨 ADR 021 被移除之後，
+ * 這支測試就開始拿**文件本身**當違規來源，要求五個語系去補一個誰都不會顯示的鍵。
+ *
+ * 也就是說「掃描根 = 整個 src」這個改動同時把註解拉進了掃描範圍，
+ * 而註解裡引用鍵名是說明清楚的正常寫法。下面的 `isFileReference` 是同一個問題的
+ * 局部處置（濾掉註解裡提到的檔名），去註解則是從源頭解決。
+ * 做法比照 `theme_css_blocks.test.ts` 的 `stripComments`，成因與代價相同。
+ *
+ * 實測代價：全 `src` 掃出 768 個鍵，去註解後 767 個 —— 少的正是上面那一個。
  */
 
 const SRC_DIR = join(process.cwd(), "src");
@@ -92,12 +107,21 @@ const DYNAMIC_KEY_RE = /`(hr_management\.[^`]*\$\{[^`]*)`/g;
  */
 const isFileReference = (key: string): boolean => /\.tsx?$/.test(key);
 
+/**
+ * Info: (20260818 - Julian) 去掉註解。`//` 只在行首（允許前置空白）才算註解 ——
+ * 不限位置的雙斜線規則會把 `"https://..."` 之後的整行吞掉，連同同一行的鍵。
+ * 這個方向會漏掉行尾註解，但那只會多掃到不該掃的內容（看得見的假性失敗），
+ * 不會漏掉真的缺漏（同 `theme_css_blocks.test.ts` 的取捨）。
+ */
+const stripComments = (source: string): string =>
+  source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^[ \t]*\/\/[^\n]*/gm, "");
+
 const collectKeys = (): { statics: string[]; dynamics: string[] } => {
   const statics = new Set<string>();
   const dynamics = new Set<string>();
 
   for (const file of SOURCE_FILES) {
-    const source = readFileSync(file, "utf8");
+    const source = stripComments(readFileSync(file, "utf8"));
     for (const match of source.matchAll(STATIC_KEY_RE)) {
       if (!isFileReference(match[1])) statics.add(match[1]);
     }

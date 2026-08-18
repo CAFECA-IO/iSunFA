@@ -69,6 +69,41 @@ const EXPECTED_BUCKET: Record<string, Record<string, RateLimitBucketEnum>> = {
   "attendance/leave/recall/[recall_id]/respond/route.ts": {
     POST: RateLimitBucketEnum.ATTENDANCE_WRITE,
   },
+
+  /**
+   * Info: (20260818 - Julian) 假勤模組（計畫書 §10 的 L1–L33）。
+   *
+   * 寫入走 `LEAVE_WRITE` 而不是 `ATTENDANCE_WRITE`：兩者尺寸相同但額度分開，
+   * 否則主管排完一個月的班之後，同一個人當天送不出自己的假單（見該 enum 的說明）。
+   *
+   * 試算（`request/preview`）是 POST 卻歸 `READ`：它不寫任何東西，
+   * 而畫面上每改一次日期就呼叫一次 —— 掛在寫入桶會讓即時預覽在正常填單時就撞牆。
+   */
+  "leave/policy/route.ts": { GET: RateLimitBucketEnum.READ },
+  "leave/approval_rule/route.ts": {
+    GET: RateLimitBucketEnum.READ,
+    PUT: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "leave/balance/route.ts": { GET: RateLimitBucketEnum.READ },
+  "leave/balance/ledger/route.ts": { GET: RateLimitBucketEnum.READ },
+  "leave/balance/adjust/route.ts": { POST: RateLimitBucketEnum.LEAVE_WRITE },
+  "leave/balance/accrue/route.ts": { POST: RateLimitBucketEnum.LEAVE_WRITE },
+  "leave/request/route.ts": {
+    GET: RateLimitBucketEnum.READ,
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "leave/request/pending/route.ts": { GET: RateLimitBucketEnum.READ },
+  "leave/request/preview/route.ts": { POST: RateLimitBucketEnum.READ },
+  "leave/request/[request_id]/route.ts": {
+    GET: RateLimitBucketEnum.READ,
+    DELETE: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "leave/request/[request_id]/approve/route.ts": {
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "leave/request/[request_id]/reject/route.ts": {
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
 };
 
 const listRouteFiles = (dir: string, prefix = ""): string[] =>
@@ -179,7 +214,7 @@ describe("HR 端點的限流覆蓋率", () => {
   });
 });
 
-describe("出勤 bucket 的窗口設定", () => {
+describe("出勤與假勤 bucket 的窗口設定", () => {
   /**
    * Info: (20260817 - Luphia) 精確值而非門檻（檢查清單 §一.6）。
    * 這些數字取自母計畫 §10.3；**改動請連同該節一起改**，否則文件與程式碼會分岔。
@@ -188,6 +223,8 @@ describe("出勤 bucket 的窗口設定", () => {
     [RateLimitBucketEnum.ATTENDANCE_PUNCH, 5, 40],
     [RateLimitBucketEnum.ATTENDANCE_WRITE, 30, 500],
     [RateLimitBucketEnum.ATTENDANCE_EXPORT, 6, 60],
+    // Info: (20260818 - Julian) 與 `ATTENDANCE_WRITE` 同尺寸，但額度分開（見該 enum）
+    [RateLimitBucketEnum.LEAVE_WRITE, 30, 500],
   ])("%s 的分鐘與每日上限是 %i / %i", (bucket, perMinute, perDay) => {
     const windows = RATE_LIMIT_RULES[bucket as RateLimitBucketEnum];
 
@@ -204,14 +241,16 @@ describe("出勤 bucket 的窗口設定", () => {
    * 法定文件或個資稽核軌跡，那種節奏一天就能塞進五萬列。
    * 讀取類沿用 `READ`（只有分鐘窗）是刻意的 —— 它不寫入任何東西。
    */
-  it("三個出勤桶都有每日窗", () => {
-    const attendanceBuckets = [
+  it("四個人事寫入桶都有每日窗", () => {
+    const hrBuckets = [
       RateLimitBucketEnum.ATTENDANCE_PUNCH,
       RateLimitBucketEnum.ATTENDANCE_WRITE,
       RateLimitBucketEnum.ATTENDANCE_EXPORT,
+      // Info: (20260818 - Julian) 假單與額度帳同樣是「寫進去就要留著」的資料
+      RateLimitBucketEnum.LEAVE_WRITE,
     ];
 
-    const withoutDailyWindow = attendanceBuckets.filter(
+    const withoutDailyWindow = hrBuckets.filter(
       (bucket) =>
         !RATE_LIMIT_RULES[bucket].some(
           (window) => window.windowMs === 86_400_000,

@@ -7,7 +7,9 @@ import { LeaveRequestStatus } from "@/constants/leave";
 import { ILeaveRequestSummary } from "@/interfaces/leave_request";
 import { leaveRequestApi } from "@/constants/leave_api";
 import { leaveRequestDetailRoute } from "@/constants/hr_management";
-import { ApiError, request } from "@/lib/utils/request";
+import { errorI18nKeyOf } from "@/lib/utils/attendance_error_message";
+import { LEAVE_ERROR_I18N_KEY } from "@/lib/utils/leave_error_message";
+import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 
 const STATUS_STYLE: Readonly<Record<string, string>> = {
@@ -64,9 +66,13 @@ const LeaveRequestList: FC<{
       await onChanged();
     } catch (caught) {
       setError(
-        caught instanceof ApiError
-          ? caught.message
-          : t("hr_management.leave.error_withdraw"),
+        t(
+          errorI18nKeyOf(
+            caught,
+            "hr_management.leave.error_withdraw",
+            LEAVE_ERROR_I18N_KEY,
+          ),
+        ),
       );
     } finally {
       setPendingId(null);
