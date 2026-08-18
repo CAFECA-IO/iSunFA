@@ -22,22 +22,38 @@ export function isChainCreditConfigured(): boolean {
 }
 
 /**
- * Info: (20260818 - Luphia) 個人鏈上點數目前**不可扣款**（第三輪，調查 20260818）。
+ * Info: (20260818 - Luphia) 這一層**以現在的做法**不可扣款（第三輪，調查 20260818）。
  *
- * `CreditPoint` 合約只有 `burnAndUnlock(uint256)`，燒的是呼叫者自己的餘額；
- * **沒有可由平台呼叫的 `burn(address, uint256)`**，代理帳號無權銷毀成員錢包裡的代幣。
- * 也就是說這一層的扣款從來沒有成功過。
+ * `chargeChainCredits` 走的是平台側 burn：代理帳號直接呼叫合約把成員錢包裡的代幣
+ * 銷毀。`CreditPoint` 沒有那個函式（只有 `burnAndUnlock(uint256)`，燒 `msg.sender`
+ * 自己的餘額），而 `ABIS.CREDIT_POINT` 卻宣告了它——所以這條扣款從來沒有成功過。
  *
  * 在此之前的行為是 fail-**open**：`spendCredits` 把鏈上餘額加進 `available` 當作
  * 放行依據，而扣款必定失敗、餘額永遠不會減少——於是一個持有 ≥1 點的成員可以
  * 無上限消費，成本全部由 `settleSpend` 的追補記到**團隊額度**上。
  * 「因為他有點數所以放行，然後叫團隊付」。
  *
- * 因此在合約補上之前，這一層一律視為不存在：不計入放行、不嘗試扣款。
+ * 因此這一層目前一律視為不存在：不計入放行、不嘗試扣款。
  *
- * **恢復前必須先做完 A-1**：扣款要先寫一筆 DB 分錄再 burn、成功回填 txHash、
- * 失敗寫反向分錄（照 `allocate()` 已經做對的那條路），並帶冪等鍵。
- * 目前的 `chargeChainCredits` 兩者都沒有——重試就會再燒一次，而且帳上查不到。
+ * ## 恢復的方向不是改合約（20260818 更正）
+ *
+ * 先前這裡寫的是「要恢復須改合約加 `burn(address, uint256)` 並重新部署」。**那是錯的
+ * 補救方向**，而且是最糟的一種：它會讓平台能在持有人沒有授權的情況下銷毀他錢包裡的
+ * 資產，與條款 §3.3 明文承諾的「該項扣除需經您以帳戶憑證簽章確認」相反。
+ *
+ * 扣成員個人點數這件事**本來就做得到**，而且產品裡已經在做——用的是持有人簽章而非
+ * 平台權限：`ensurePersonalCreditCharge()` 建待付訂單 → 402 → 前端 `useOrderTransaction`
+ * 走 `prepareTransferUserOp`，由成員的智慧錢包把點數 `transfer` 給 `MEMBERSHIP_SYSTEM`
+ * （託管帳戶由 `custodialWalletService` 代簽，體感是直接扣）→ 重送同一則（冪等鍵不變）
+ * 即放行。顧問分析（`bot.analysis.service`）、上傳（`bot.upload.service`）、
+ * 以及**無帳本的碳盤查／費思會話**（`carbon_billing.service`）都走這條，合約不必動。
+ *
+ * 也就是說缺的不是鏈上能力，是**這一層沒有接上那條既有路徑**。要恢復請改用它，
+ * 不要改合約；連帶會拿到它已經做對的部分（訂單即 DB 分錄、冪等鍵、失敗鑄回退款）。
+ *
+ * 剩下的是產品決定而非工程限制：團隊路徑是**實耗結算**（跑完才知道金額），訂單路徑
+ * 必須**先收款**。無帳本那條的解法是保守預估一次收足、不退差額；額度不足的差額要照抄
+ * 那個模型（超出剩餘額度時整則走個人點數），或另外設計，得先拍板。
  *
  * ---
  *
@@ -122,9 +138,12 @@ export interface IChainChargeResult {
 /**
  * Info: (20260814 - Luphia) 自成員錢包銷毀點數作為消費扣款。
  *
- * 由伺服器代為執行（agent 權限），不需要用戶逐次簽章——這是「額度用完仍能無縫使用」
- * 的代價，也是必須寫進條款的信任模型變更：系統能在沒有用戶當下授權的情況下
- * 銷毀他錢包裡的點數。範圍限於「已經發生的用量」，且每一筆都有 txHash 可查。
+ * Info: (20260818 - Luphia) 這支的**前提就是錯的**，留著只為了說明錯在哪（見
+ * `isChainCreditSpendable` 的更正段）。它假設「由伺服器代為執行、不需要用戶逐次簽章」
+ * 是可以用信任模型變更換來的無縫體驗——但條款 §3.3 承諾的正好相反（扣除需經持有人
+ * 簽章確認），而部署的合約也沒有給平台那個權限。
+ *
+ * 要接第二層請改走 `ensurePersonalCreditCharge()` 那條持有人簽章的路，不要沿用這支。
  */
 export async function chargeChainCredits(
   address: string,
@@ -133,10 +152,8 @@ export async function chargeChainCredits(
   if (points <= BigInt(0)) return { charged: false, reason: "non-positive" };
 
   /**
-   * Info: (20260818 - Luphia) 合約沒有可由平台呼叫的 burn（見 isChainCreditSpendable）。
-   *
-   * 擋在這裡而不是讓它走到 `burn()`：走到底會送出一筆必定 revert 的交易，
-   * 而在 `receipt.status` 的檢查補上之前，那筆 revert 還會被回報成成功。
+   * Info: (20260818 - Luphia) 擋在這裡而不是讓它走到 `burn()`：走到底會送出一筆必定
+   * revert 的交易，而在 `receipt.status` 的檢查補上之前，那筆 revert 還會被回報成成功。
    */
   if (!isChainCreditSpendable()) {
     return { charged: false, reason: "not-spendable" };

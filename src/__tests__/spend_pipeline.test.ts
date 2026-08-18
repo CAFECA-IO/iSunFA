@@ -278,7 +278,7 @@ describe("spendCredits", () => {
    * Info: (20260818 - Luphia) 出路清單的單一判斷點（第四輪 B-1）。
    *
    * 直接測 `buildQuotaExceededOptions`：它是「哪些出路真的存在」的唯一答案處，
-   * 而恢復條件（合約補上銷毀函式）只需要翻 `isChainCreditSpendable()`。
+   * 而恢復（把這一層改接持有人簽章的兩段式訂單）只需要翻 `isChainCreditSpendable()`。
    */
   describe("buildQuotaExceededOptions", () => {
     /**

@@ -287,14 +287,15 @@ function buildQuotaExceededPayload(input: {
      *
      * Info: (20260818 - Luphia) 同一條規則也適用於個人點數（第四輪 B-1）。
      *
-     * 第二層停用之後（`isChainCreditSpendable()` 回 false，因為合約沒有可由
-     * 平台呼叫的 `burn(address, uint256)`），「改用個人點數」是一條**可證明
-     * 不存在**的出路。同一批修改已經把 `allocationBalance` 誠實讀成 0，
-     * 卻把這個選項留在 payload 裡——畫面沒壞（提示只有兩個連結），
+     * 第二層停用之後（`isChainCreditSpendable()` 回 false），「改用個人點數」在
+     * **這條路徑上**是一條可證明不存在的出路。同一批修改已經把 `allocationBalance`
+     * 誠實讀成 0，卻把這個選項留在 payload 裡——畫面沒壞（提示只有兩個連結），
      * 但 payload 是 API 契約的一部分，而它在說謊。
      *
-     * 恢復方式：合約補上銷毀函式、`isChainCreditSpendable()` 回 true，
-     * 這個選項就會自動回來，不需要改這裡。
+     * Info: (20260818 - Luphia) 停用的原因是**這一層用錯了扣款機制**（平台側 burn，
+     * 合約沒有那個函式），不是「個人點數不能用」——其他功能以持有人簽章扣款，
+     * 一直在運作（見 `isChainCreditSpendable` 的更正段）。這一層改接那條路之後，
+     * `isChainCreditSpendable()` 回 true，這個選項就會自動回來，不需要改這裡。
      */
     options: buildQuotaExceededOptions(exceedsWindowLimit),
   };

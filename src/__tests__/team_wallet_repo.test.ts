@@ -418,7 +418,7 @@ describe("TeamWalletRepository.allocate / revoke", () => {
  * Info: (20260818 - Luphia) 成員移除時沖銷分配餘額（產品決定 20260818）。
  *
  * 這一組原本測的是「收回到池」，而那個行為會**造出點數**：分配當下已經鑄進
- * 成員自己的鏈上錢包，收不回來（合約只有 `burnAndUnlock(uint256)`），
+ * 成員自己的鏈上錢包，而移出那個錢包需要持有人簽章（被移除的成員不會去簽），
  * 池子卻又拿回可以再鑄一次的額度。
  */
 describe("TeamWalletRepository.writeOffAllocationForUser", () => {

@@ -132,14 +132,16 @@ describe("收回分配點數已停用", () => {
 });
 
 /**
- * Info: (20260818 - Luphia) 收回在合約層面做不到（調查 20260818）。
+ * Info: (20260818 - Luphia) 平台無權單方面銷毀成員錢包裡的代幣（調查 20260818）。
  *
  * `CreditPoint` 只有 `burnAndUnlock(uint256)`，燒的是 `msg.sender` 自己的餘額；
- * 沒有 `burn(address, uint256)`，平台的代理帳號無權銷毀成員錢包裡的代幣。
- * 而 `ABIS.CREDIT_POINT` 卻宣告了那個函式——ABI 與部署的合約不一致。
+ * 沒有 `burn(address, uint256)`，而 `ABIS.CREDIT_POINT` 卻宣告了那個函式——
+ * ABI 與部署的合約不一致，那正是 `chargeChainCredits` 當初看起來合理的原因。
  *
- * 這一條把事實釘住：哪天有人補了合約函式，這裡會紅，
- * 而條款 §3.5「分配後不可收回」也就該跟著重新檢視。
+ * 這一條釘住的是**平台權限的邊界**，不是「扣個人點數做不到」：扣款由持有人簽章
+ * 就做得到，產品裡已經在用（`ensurePersonalCreditCharge` 的兩段式訂單 → 成員錢包
+ * `transfer` 給 `MEMBERSHIP_SYSTEM`）。哪天有人往合約補了平台可呼叫的 burn，
+ * 這裡會紅——而那應該引發一次討論（它與條款 §3.3 的簽章承諾相反），不是直接接上去。
  */
 describe("CreditPoint 合約與 ABI 的落差", () => {
   const contract = readFileSync(
