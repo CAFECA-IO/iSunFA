@@ -189,3 +189,52 @@ export function resolveWorkDate(params: {
     minuteOfDay: minutesFromWorkDateStart(punchedAt, fallback, timeZone),
   };
 }
+
+/**
+ * Info: (20260818 - Julian) ISO 日期加減月份。月底以該月最後一日夾住。
+ *
+ * 需要它的是加班：滾動三個月的上限窗（§32 III）與補休的到期日（§32-1）
+ * 都以「月」為單位，而「三個月前」用 90 天近似會在有 31 日的月份差一到兩天 ——
+ * 那一兩天決定了一張加班單過不過得了上限檢查。
+ *
+ * 1/31 加一個月得 2/28（或 2/29），不是 3/3：跨過月底再溢出到下個月，
+ * 會讓「到期日」落在一個當事人沒有同意過的月份。
+ */
+export function addIsoMonths(isoDate: string, delta: number): string {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  const target = new Date(Date.UTC(year, month - 1 + delta, 1));
+  const lastDay = new Date(
+    Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  const clamped = Math.min(day, lastDay);
+  return `${target.getUTCFullYear()}-${String(target.getUTCMonth() + 1).padStart(2, "0")}-${String(clamped).padStart(2, "0")}`;
+}
+
+/**
+ * Info: (20260818 - Julian) `minutesFromWorkDateStart` 的反向：某工作日的第 N 分鐘
+ * 在指定時區對應的絕對時點。
+ *
+ * 需要它的是加班的事前／事後判定（ADR 024 §3）——`assertOvertimeFilingType`
+ * 比較的是兩個 epoch 毫秒（送出時刻 vs 班別窗起），而班別窗起在資料庫裡
+ * 只是一個「當地分鐘數」，要先變回時間點才能比。
+ *
+ * 用「先猜再修」而不是查偏移表：偏移不是常數（日光節約、歷史調整），而
+ * `toZonedParts` 是本檔唯一知道偏移的地方。修兩次是為了日光節約切換的那一天 ——
+ * 第一次修正會落在偏移剛好改變的區間裡，第二次把它推回去。
+ */
+export function instantOfWorkDateMinute(
+  workDate: string,
+  minuteOfDay: number,
+  timeZone: string,
+): Date {
+  const [year, month, day] = workDate.split("-").map(Number);
+  let guess = new Date(Date.UTC(year, month - 1, day) + minuteOfDay * 60_000);
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const drift =
+      minuteOfDay - minutesFromWorkDateStart(guess, workDate, timeZone);
+    if (drift === 0) break;
+    guess = new Date(guess.getTime() + drift * 60_000);
+  }
+  return guess;
+}

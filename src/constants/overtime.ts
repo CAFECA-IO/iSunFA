@@ -154,3 +154,20 @@ export const OVERTIME_QUARTERLY_WINDOW_IS_ROLLING = true;
 
 // Info: (20260817 - Julian) 加班事由長度上限。與 LEAVE_REASON_MAX_LENGTH 對齊
 export const OVERTIME_REASON_MAX_LENGTH = 200;
+
+/**
+ * Info: (20260818 - Julian) 補休批次的冪等鍵格式（§32-1 一段一批）。
+ *
+ * 以分段 id 組鍵：一個 `OvertimeSegment` 最多換出一筆補休批次，
+ * 而 `LeaveGrant.overtimeSegmentId` 本身就是 `@unique` —— 這條鍵是帳本那一側的
+ * 同一個保證，讓重送的核准撞在唯一鍵而不是安靜地多記一筆額度。
+ */
+export const buildOvertimeGrantIdempotencyKey = (
+  overtimeSegmentId: string,
+): string => `overtime-grant:${overtimeSegmentId}`;
+
+/**
+ * Info: (20260818 - Julian) 滾動三個月窗的月數。與 `OVERTIME_QUARTERLY_WINDOW_IS_ROLLING`
+ * 是同一個決定的兩面：那個布林說「用滾動的」，這個數字說「滾多長」。
+ */
+export const OVERTIME_QUARTERLY_WINDOW_MONTHS = 3;

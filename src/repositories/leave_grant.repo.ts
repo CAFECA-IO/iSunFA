@@ -81,7 +81,7 @@ export interface ILeaveGrantRepository {
  * 所以不需要另外記「授予了多少」。這也是 `readGrantBalances` 的作法，
  * 兩邊必須一致，否則勾稽會把自己的算法差異報成資料錯誤。
  */
-const sumLedgerMinutes = async (
+export const sumLedgerMinutes = async (
   tx: Prisma.TransactionClient,
   params: { accountBookId: string; employeeId: string; leavePolicyId: string },
 ): Promise<number> => {
@@ -108,7 +108,7 @@ const sumLedgerMinutes = async (
  * （`count === 0` 不是錯誤）—— 那會讓第一批額度授予完成、餘額卻仍是零，
  * 而扣減端的附條件更新會把它讀成「額度不足」。
  */
-const writeBalance = async (
+export const writeBalance = async (
   tx: Prisma.TransactionClient,
   params: {
     accountBookId: string;

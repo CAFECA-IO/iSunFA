@@ -86,7 +86,6 @@ const HrHeader: FC<IHrHeaderProps> = ({ onToggleSidebar }) => {
             type="button"
             aria-label={t("hr_management.user_menu_aria")}
             title={t("hr_management.value.feature_pending")}
-            disabled
             className={`flex items-center gap-2 rounded-xl p-1.5 transition-colors hover:bg-gray-100 ${HR_PENDING_ACTION_CLASS}`}
           >
             <UserCircle2 className="h-7 w-7 text-gray-400" />

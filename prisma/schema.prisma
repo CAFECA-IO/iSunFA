@@ -3680,6 +3680,19 @@ model OvertimePolicy {
   agreementRecordUrl  String?   @map("agreement_record_url")
   agreedAt            DateTime? @map("agreed_at")
 
+  /**
+   * Info: (20260818 - Julian) 補休的有效期限（月）。
+   *
+   * §32-1 只說「期限由勞雇雙方協商」，**沒有法定日數**，所以這一欄可空而且
+   * 沒有預設值 —— 理由同 `LeavePolicy.proofThresholdDays` 一律留 null：
+   * 填一個猜來的月數，會讓補休在一個沒有人同意過的日期失效，
+   * 而失效的補休依 §32-1 要折現成錢。猜錯的方向是少給。
+   *
+   * 未設定時，`compensationMode = COMPENSATORY_LEAVE` 的加班申請一律擋下
+   * （`VA_OVERTIME_COMP_EXPIRY_UNSET`）；選 `PAYMENT` 不受影響。
+   */
+  compensatoryExpiryMonths Int? @map("compensatory_expiry_months")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

@@ -1,4 +1,4 @@
-import { WorkDayType } from "@/constants/attendance";
+import { PunchType, WorkDayType } from "@/constants/attendance";
 import {
   OVERTIME_DAILY_TOTAL_LIMIT_MINUTES,
   OVERTIME_MONTHLY_EXTENDED_LIMIT_MINUTES,
@@ -8,6 +8,7 @@ import {
   OvertimePremiumTier,
 } from "@/constants/overtime";
 import {
+  IMinuteInterval,
   IOvertimeLimitInput,
   IOvertimeLimitResult,
   IOvertimeLimitViolation,
@@ -246,4 +247,175 @@ export function reconcileOvertimeMinutes(input: {
     recognizedMinutes: Math.min(approvedMinutes, actualMinutes),
     unapprovedMinutes: Math.max(0, actualMinutes - approvedMinutes),
   };
+}
+
+/**
+ * Info: (20260818 - Julian) 打卡在場區間與加班區間的交集分鐘 —— D9 公式的另一半。
+ *
+ * ## 為什麼要先合併重疊
+ *
+ * 一天可能有多對打卡（外出、回工地、再打一次），而 `resolveOpenPunch` 對
+ * `[IN, IN, OUT]` 這種漏刷序列會給出一個仍然合理的答案。若不先合併就逐段
+ * 相加，重疊的兩段會被算兩次 —— 而多算出來的分鐘會被當成加班事實，
+ * 那正是「零捏造」要擋的方向。
+ *
+ * ## 右端不含
+ *
+ * 18:00–20:00 是 120 分鐘，不是 121。與 `ShiftPattern` 的窗界一致。
+ */
+export function sumWindowOverlapMinutes(
+  intervals: readonly IMinuteInterval[],
+  windowStartMinute: number,
+  windowEndMinute: number,
+): number {
+  if (windowEndMinute <= windowStartMinute) {
+    throw new OvertimeRuleError(
+      OvertimeRuleErrorReason.INVALID_MINUTES,
+      `overtime window must be non-empty: start=${windowStartMinute}, end=${windowEndMinute}`,
+    );
+  }
+
+  const clipped = intervals
+    .map((interval) => ({
+      startMinute: Math.max(interval.startMinute, windowStartMinute),
+      endMinute: Math.min(interval.endMinute, windowEndMinute),
+    }))
+    .filter((interval) => interval.endMinute > interval.startMinute)
+    .sort((left, right) => left.startMinute - right.startMinute);
+
+  let total = 0;
+  let cursor = -1;
+  for (const interval of clipped) {
+    const from = Math.max(interval.startMinute, cursor);
+    if (interval.endMinute > from) {
+      total += interval.endMinute - from;
+      cursor = interval.endMinute;
+    }
+  }
+  return total;
+}
+
+/**
+ * Info: (20260818 - Julian) 補休批次的 `grantedDays`（§32-1 的 1:1 在「日」這一欄的樣子）。
+ *
+ * ## 為什麼需要一個函式
+ *
+ * `LeaveGrant` 的不變式要求 `grantedMinutes === Math.ceil(grantedDays × dayEquivalentMinutes)`
+ * （`assertGrantSource`）。補休的方向與年資給假相反 —— 分鐘是既定的（等於該分段的
+ * 加班分鐘），日數是推導出來的。直接寫 `minutes / dayEquivalentMinutes` 會踩到浮點：
+ * `100 / 480 × 480 === 100.00000000000001`，`Math.ceil` 後變 101，不變式當場失敗。
+ *
+ * 因此先無條件**捨去**到 10 位小數，再逐格退到 `Math.ceil` 剛好回到 minutes
+ * 為止（乘法自己也會產生誤差，見下方）。捨去而非四捨五入：往上捨會直接讓
+ * 不變式失敗，而失敗的方向不對稱 —— 這裡寧可讓「日」少個 10⁻¹⁰，
+ * 也不能讓「分鐘」多一分。
+ *
+ * 真正的量是分鐘（ADR 022 §2：帳本單位為分鐘，「日」只出現在授予與折現兩個端點）。
+ */
+export function deriveCompensatoryGrantDays(params: {
+  minutes: number;
+  dayEquivalentMinutes: number;
+}): number {
+  const { minutes, dayEquivalentMinutes } = params;
+
+  if (!Number.isInteger(minutes) || minutes <= 0) {
+    throw new OvertimeRuleError(
+      OvertimeRuleErrorReason.INVALID_MINUTES,
+      `compensatory minutes must be a positive integer, got ${minutes}`,
+    );
+  }
+  if (!Number.isInteger(dayEquivalentMinutes) || dayEquivalentMinutes <= 0) {
+    throw new OvertimeRuleError(
+      OvertimeRuleErrorReason.INVALID_MINUTES,
+      `dayEquivalentMinutes must be a positive integer, got ${dayEquivalentMinutes}`,
+    );
+  }
+
+  /**
+   * Info: (20260818 - Julian) 先捨去到 10 位小數，再逐格退到乘得回來為止。
+   *
+   * 只捨去不夠：捨去後的日數乘回去**仍可能略微超過**。實測
+   * `231 / 420 === 0.55`（十進位下是精確值），而 `0.55 * 420 === 231.00000000000003`
+   * —— `Math.ceil` 之後變 232，不變式當場失敗。誤差來自乘法本身，
+   * 不是來自捨去，所以要退一格（約 10⁻¹⁰ × 班長 ≈ 7×10⁻⁸ 分鐘）把它壓回去。
+   *
+   * 迴圈必然終止且實測最多退一格：每退一格讓乘積下降遠大於浮點誤差、
+   * 又遠小於一分鐘，因此不可能退過頭而讓 `ceil` 掉到 minutes 以下。
+   */
+  let scaled = Math.floor(
+    (minutes / dayEquivalentMinutes) * COMPENSATORY_DAYS_SCALE,
+  );
+  while (
+    scaled > 0 &&
+    Math.ceil((scaled / COMPENSATORY_DAYS_SCALE) * dayEquivalentMinutes) >
+      minutes
+  ) {
+    scaled -= 1;
+  }
+  const days = scaled / COMPENSATORY_DAYS_SCALE;
+
+  /**
+   * Info: (20260818 - Julian) 自己驗一次而不是相信上面的推導。
+   *
+   * 這個函式存在的唯一理由就是餵飽 `assertGrantSource` 的那條等式；
+   * 若哪天有人改了小數位數或換了捨入方向，這裡要當場說出來，
+   * 而不是留給 repository 在一筆真實的補休入帳時丟不變式錯誤。
+   */
+  if (Math.ceil(days * dayEquivalentMinutes) !== minutes) {
+    throw new OvertimeRuleError(
+      OvertimeRuleErrorReason.INVALID_MINUTES,
+      `grantedDays does not round-trip: minutes=${minutes}, dayEquivalentMinutes=${dayEquivalentMinutes}, days=${days}`,
+    );
+  }
+  return days;
+}
+
+/**
+ * Info: (20260818 - Julian) `grantedDays` 的小數位數。
+ * 10 位讓乘回去的誤差遠小於一分鐘（10⁻¹⁰ × 1440 ≈ 1.4×10⁻⁷），
+ * 又遠大於雙精度浮點自身的相對誤差，兩邊都有餘裕。
+ */
+const COMPENSATORY_DAYS_SCALE = 1e10;
+
+/**
+ * Info: (20260818 - Julian) 把成對打卡還原成「在場區間」。
+ *
+ * ## 它不取代 `resolveOpenPunch`
+ *
+ * `resolveOpenPunch` 答的是「他**現在**在不在現場」，是那個問題的唯一判斷點
+ * （接線守則 §5 第 8 項）。這裡答的是另一個問題：「他**待了哪幾段**」——
+ * 加班認列要的是後者，而把它塞回前者會讓一個已經被釘住的函式多一種語意。
+ *
+ * ## 漏刷怎麼辦
+ *
+ * 連續兩個 `CLOCK_IN` 只採信第一個（後者是重複刷），沒有配對到 `CLOCK_OUT`
+ * 的最後一個 `CLOCK_IN` **整段捨棄** —— 不猜一個下班時刻。捨棄的方向是少算，
+ * 而少算的加班會出現在 L29 的未核准清單裡被人看到；猜一個下班時刻則是
+ * 憑空生出一段沒有證據的在場事實。
+ */
+export function derivePunchIntervals(
+  punches: readonly { punchType: string; minuteOfDay: number }[],
+): IMinuteInterval[] {
+  const ordered = [...punches].sort(
+    (left, right) => left.minuteOfDay - right.minuteOfDay,
+  );
+
+  const intervals: IMinuteInterval[] = [];
+  let openAt: number | null = null;
+
+  for (const punch of ordered) {
+    if (punch.punchType === PunchType.CLOCK_IN) {
+      // Info: (20260818 - Julian) 已經開著就不重開：重複刷卡不該把區間截短
+      if (openAt === null) openAt = punch.minuteOfDay;
+      continue;
+    }
+    if (punch.punchType !== PunchType.CLOCK_OUT) continue;
+    if (openAt === null) continue;
+    if (punch.minuteOfDay > openAt) {
+      intervals.push({ startMinute: openAt, endMinute: punch.minuteOfDay });
+    }
+    openAt = null;
+  }
+
+  return intervals;
 }

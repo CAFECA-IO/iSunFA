@@ -1270,6 +1270,60 @@ export const API_ERRORS = {
   } as IErrorDef,
 
   /**
+   * Info: (20260818 - Julian) 這張加班單已經被決行過。
+   *
+   * 與假單的 `VA_LEAVE_ALREADY_REVIEWED` 分開一個碼：加班單是單關決行，
+   * 兩者的下一步不同 —— 假單要看鏈上現在輪到誰，加班單重新整理就看得到結果。
+   */
+  VA_OVERTIME_ALREADY_REVIEWED: {
+    code: "VA000060",
+    message: "This overtime request has already been decided",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 帳本尚未協商補休期限，因此換不了補休。
+   *
+   * §32-1 只說「期限由勞雇雙方協商」，沒有法定日數，系統不預設一個數字
+   * （同 `proofThresholdDays` 留 null 的理由）。猜一個月數的後果是補休在一個
+   * 沒有人同意過的日期失效，而失效的補休要折現成錢。
+   * 這條只擋 `COMPENSATORY_LEAVE`，選 `PAYMENT` 的加班單不受影響。
+   */
+  VA_OVERTIME_COMP_EXPIRY_UNSET: {
+    code: "VA000061",
+    message:
+      "The account book has not agreed a compensatory-leave expiry period (Article 32-1)",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 那一天沒有排班，因此定不出加成標準。
+   *
+   * 與 `VA_OVERTIME_PREMIUM_UNDEFINED` 分開：這一個的解法在人資手上
+   * （把那天排進班表），另一個要等法源核對。折成同一句話會讓使用者
+   * 對著一個他自己補得起來的缺口乾等。
+   */
+  VA_OVERTIME_DAY_NOT_SCHEDULED: {
+    code: "VA000062",
+    message: "That work date has no schedule, so no statutory premium applies",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 該日別的加成標準尚未定義（請假日、停工日）。
+   *
+   * 停工日（因雨／颱風／災害）在工程業是常態不是例外，而它既不是例假、
+   * 不是休息日、也不是國定假日 —— 加成標準待法源核對（計畫書 §8.1 #8）。
+   * 在核對完成前擋下而不猜一個級距：猜錯的方向是少付工資。
+   */
+  VA_OVERTIME_PREMIUM_UNDEFINED: {
+    code: "VA000063",
+    message:
+      "No statutory overtime premium is defined for that day type yet (pending legal review)",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
    * Info: (20260817 - Julian) 在非上班日請假。
    * 判定引擎看非 WORK 就回 OFF_DAY，因此這種假單不會產生任何效果，
    * 卻會扣掉額度 —— 使用者付出了代價卻什麼也沒換到。

@@ -28,3 +28,5 @@ export * from "@/validators/leave";
 export * from "@/validators/leave_request";
 export * from "@/validators/leave_approval_rule";
 export * from "@/validators/leave_balance";
+// Info: (20260818 - Julian) 加班模組（L24–L30）
+export * from "@/validators/overtime";

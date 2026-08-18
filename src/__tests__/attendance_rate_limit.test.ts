@@ -104,6 +104,19 @@ const EXPECTED_BUCKET: Record<string, Record<string, RateLimitBucketEnum>> = {
   "leave/request/[request_id]/reject/route.ts": {
     POST: RateLimitBucketEnum.LEAVE_WRITE,
   },
+
+  /**
+   * Info: (20260818 - Julian) 加班（L24–L30）。同屬假勤模組，沿用 `LEAVE_WRITE`：
+   * 額度與假單共用一個桶是刻意的 —— 一個人一天送幾張加班單與幾張假單，
+   * 加起來才是他對這個模組的寫入節奏。
+   */
+  "overtime/request/route.ts": { POST: RateLimitBucketEnum.LEAVE_WRITE },
+  "overtime/request/[request_id]/approve/route.ts": {
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "overtime/request/[request_id]/reject/route.ts": {
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
 };
 
 const listRouteFiles = (dir: string, prefix = ""): string[] =>
