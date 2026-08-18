@@ -115,6 +115,23 @@ export const BASELINE_TIERS: ReadonlyArray<{
       "CMap串流數",
       "CMap條目數",
       "CMap來源側最大碼",
+      /**
+       * Info: (20260818 - Emily) 08-17 Luphia 在 PR review 追加的分流所產生的鍵
+       * (`scripts/uat_carbon_report.ts` 的 `destinationUnmapped`)。
+       *
+       * `repairPdfToUnicode` 刻意不碰**沒有對照可用**的碼位(U+2EA1 那種變體部首,
+       * 猜錯是把字改成別的字,比搜不到更糟)。所以這個數字不是「修補失效」,
+       * 而是「`SUPPLEMENT_MAP` 該長大」的清單 —— 它在腳本裡本來就是 warn。
+       *
+       * 放 record_only 而不是 must_match 有兩個理由:
+       *
+       * 1. 它隨**內容**變動:用到哪些字取決於那一趟產出的文字
+       *    (08-18 兩趟字元數 60,747 vs 61,551),所以要求兩趟相同會製造假失敗。
+       * 2. **使用者看得到的那一端已經有 must_match 守著了** —— `相容區部首`
+       *    量的是抽回來的**文字層**,而那正是 Ctrl+F 搜不到的直接症狀,它在必須相同的層且必須是 0。
+       *    這個鍵量的是 CMap 的**結構**,是同一件事的上游;下游守住了,上游只需要記錄。
+       */
+      "CMap 目標側無對照",
       // Info: (20260818 - Emily) B1 已於 08-17 從閘門移除,這幾個先只記錄
       "log_活動數據_received",
       "log_活動數據_accepted",
