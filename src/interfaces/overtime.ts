@@ -2,6 +2,7 @@ import { WorkDayType } from "@/constants/attendance";
 import {
   OvertimeCompensationMode,
   OvertimeEvidenceBasis,
+  OvertimeExceptionType,
   OvertimeFilingType,
   OvertimePremiumTier,
   OvertimeRequestStatus,
@@ -203,4 +204,97 @@ export interface IOvertimeApprovalResult {
 export enum OvertimeDecisionOutcome {
   DECIDED = "DECIDED",
   ALREADY_REVIEWED = "ALREADY_REVIEWED",
+}
+
+// Info: (20260818 - Julian) ===== 查詢類端點的 DTO（L24 / L28 / L29 / L30）=====
+
+/** Info: (20260818 - Julian) 報表一律帶工號與姓名：只有 id 的一份報表，主管看不懂 */
+export interface IOvertimeEmployeeRef {
+  employeeId: string;
+  employeeNo: string;
+  employeeName: string;
+}
+
+export interface IOvertimeTierTotal {
+  tier: OvertimePremiumTier;
+  minutes: number;
+}
+
+/**
+ * Info: (20260818 - Julian) L28：加班時數統計（月／季，含上限使用率）。
+ *
+ * ## 為什麼回分鐘與上限，而不回一個「使用率」
+ *
+ * 使用率是 `minutes / limit`，一個浮點數。在 API 折成比例會丟掉兩件事：
+ * 分母是 46 還是 54 小時（取決於有沒有記載的同意），以及還剩幾分鐘 ——
+ * 而主管要回答的問題是「這個月還能讓他加幾小時」。理由同 ADR 022 §2
+ * 不在 API 把分鐘折成天。
+ *
+ * ## 為什麼佐證來源要分開統計
+ *
+ * 勞動檢查會問「你們有多少加班是沒有出勤紀錄佐證的」，
+ * 而一個答不出這題的系統，等於默認全部都是（ADR 024 §2.2）。
+ */
+export interface IOvertimeSummaryView extends IOvertimeEmployeeRef {
+  /** Info: (20260818 - Julian) "YYYY-MM" */
+  month: string;
+  monthlyMinutes: number;
+  monthlyLimitMinutes: number;
+  /** Info: (20260818 - Julian) 滾動三個月窗的兩端，讓「這一季」是可驗算的而不是一個說法 */
+  quarterFrom: string;
+  quarterTo: string;
+  quarterlyMinutes: number;
+  /**
+   * Info: (20260818 - Julian) 未經同意放寬時為 null —— 那不是「上限無限大」，
+   * 而是這條線根本不適用（每月 46 小時本身就讓三個月不可能超過 138）。
+   * 回 0 或回 138 都會讓畫面說出一個法律上不存在的限制。
+   */
+  quarterlyLimitMinutes: number | null;
+  extendedLimitAgreed: boolean;
+  /** Info: (20260818 - Julian) 有打卡佐證的認列分鐘 */
+  punchBackedMinutes: number;
+  /** Info: (20260818 - Julian) 自陳（無打卡）的認列分鐘 */
+  declaredMinutes: number;
+  byTier: IOvertimeTierTotal[];
+}
+
+/**
+ * Info: (20260818 - Julian) L29：有打卡但無核准加班單的時段。
+ *
+ * **不落地**（ADR 024 §9.5）：它由 `AttendancePunch` 與加班單即時推導，
+ * 不是一張表。因此它永遠反映當下的事實 —— 補了核准之後它就會消失，
+ * 而那正是它存在的目的。
+ */
+export interface IOvertimeExceptionView {
+  workDate: string;
+  type: OvertimeExceptionType;
+  minutes: number;
+  /** Info: (20260818 - Julian) `UNAPPROVED_OVERTIME` 才有值；自陳缺佐證時為空陣列 */
+  intervals: IMinuteInterval[];
+  /** Info: (20260818 - Julian) `MISSING_PUNCH_EVIDENCE` 指向那張自陳的單 */
+  overtimeRequestId: string | null;
+}
+
+export interface IOvertimeExceptionReport extends IOvertimeEmployeeRef {
+  from: string;
+  to: string;
+  exceptions: IOvertimeExceptionView[];
+}
+
+/**
+ * Info: (20260818 - Julian) L30：加班政策。
+ *
+ * 三條上限一併回出去（法定的那條不可設定，另兩條取決於 `extendedLimitAgreed`）——
+ * 設定畫面上「我改了這個開關會發生什麼」必須當場看得到，
+ * 否則使用者得自己去記 46／54／138 這三個數字。
+ */
+export interface IOvertimePolicyView {
+  extendedLimitAgreed: boolean;
+  agreementRecordUrl: string | null;
+  /** Info: (20260818 - Julian) ISO 字串。null 表尚未記載 */
+  agreedAt: string | null;
+  compensatoryExpiryMonths: number | null;
+  dailyTotalLimitMinutes: number;
+  monthlyLimitMinutes: number;
+  quarterlyLimitMinutes: number | null;
 }

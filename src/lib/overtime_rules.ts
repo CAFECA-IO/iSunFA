@@ -275,24 +275,100 @@ export function sumWindowOverlapMinutes(
     );
   }
 
-  const clipped = intervals
-    .map((interval) => ({
+  const clipped = mergeIntervals(
+    intervals.map((interval) => ({
       startMinute: Math.max(interval.startMinute, windowStartMinute),
       endMinute: Math.min(interval.endMinute, windowEndMinute),
-    }))
+    })),
+  );
+
+  return clipped.reduce(
+    (total, interval) => total + (interval.endMinute - interval.startMinute),
+    0,
+  );
+}
+
+/**
+ * Info: (20260818 - Julian) 合併重疊與相鄰的區間，並依起點排序。
+ *
+ * 相鄰也合併（`endMinute === startMinute`）：18:00–19:00 與 19:00–20:00
+ * 是連續在場的兩小時，拆成兩段會讓下游把它讀成「中間離開過」。
+ */
+export function mergeIntervals(
+  intervals: readonly IMinuteInterval[],
+): IMinuteInterval[] {
+  const sorted = intervals
     .filter((interval) => interval.endMinute > interval.startMinute)
+    .slice()
     .sort((left, right) => left.startMinute - right.startMinute);
 
-  let total = 0;
-  let cursor = -1;
-  for (const interval of clipped) {
-    const from = Math.max(interval.startMinute, cursor);
-    if (interval.endMinute > from) {
-      total += interval.endMinute - from;
-      cursor = interval.endMinute;
+  const merged: IMinuteInterval[] = [];
+  for (const interval of sorted) {
+    const last = merged[merged.length - 1];
+    if (last !== undefined && interval.startMinute <= last.endMinute) {
+      last.endMinute = Math.max(last.endMinute, interval.endMinute);
+      continue;
     }
+    merged.push({ ...interval });
   }
-  return total;
+  return merged;
+}
+
+/**
+ * Info: (20260818 - Julian) 從一組區間裡挖掉另一組區間（L29 的核心）。
+ *
+ * 「有打卡但無核准加班單的時段」= 在場區間 − 班別窗 − 已核准的加班區間。
+ * 剩下的那些分鐘是**事實**：他人在現場，而沒有任何一張單涵蓋它。
+ *
+ * ## 這裡不做結論
+ *
+ * 剩下的時段可能是加班漏了申請，也可能只是下班後在休息室多待了半小時。
+ * 系統的責任是讓它浮出來，由主管決定要補核准、要說明、還是要制止
+ * （ADR 024 §2.1）—— 所以這支函式只回時段，不回任何判斷。
+ */
+export function subtractIntervals(
+  base: readonly IMinuteInterval[],
+  cuts: readonly IMinuteInterval[],
+): IMinuteInterval[] {
+  const holes = mergeIntervals(cuts);
+
+  return mergeIntervals(base).flatMap((interval) => {
+    let remaining: IMinuteInterval[] = [{ ...interval }];
+
+    for (const hole of holes) {
+      remaining = remaining.flatMap((piece) => {
+        // Info: (20260818 - Julian) 完全不相交就原樣留著
+        if (hole.endMinute <= piece.startMinute) return [piece];
+        if (hole.startMinute >= piece.endMinute) return [piece];
+
+        const pieces: IMinuteInterval[] = [];
+        if (hole.startMinute > piece.startMinute) {
+          pieces.push({
+            startMinute: piece.startMinute,
+            endMinute: hole.startMinute,
+          });
+        }
+        if (hole.endMinute < piece.endMinute) {
+          pieces.push({
+            startMinute: hole.endMinute,
+            endMinute: piece.endMinute,
+          });
+        }
+        return pieces;
+      });
+    }
+    return remaining;
+  });
+}
+
+// Info: (20260818 - Julian) 區間總長。呼叫端十之八九接著就要加總，寫在這裡免得每處各寫一次
+export function totalIntervalMinutes(
+  intervals: readonly IMinuteInterval[],
+): number {
+  return intervals.reduce(
+    (total, interval) => total + (interval.endMinute - interval.startMinute),
+    0,
+  );
 }
 
 /**

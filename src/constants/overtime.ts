@@ -171,3 +171,24 @@ export const buildOvertimeGrantIdempotencyKey = (
  * 是同一個決定的兩面：那個布林說「用滾動的」，這個數字說「滾多長」。
  */
 export const OVERTIME_QUARTERLY_WINDOW_MONTHS = 3;
+
+/**
+ * Info: (20260818 - Julian) 依「有無記載的同意」算出兩條可設定的上限（§32 II、III）。
+ *
+ * 放在常數檔而不是某一支 service：統計端點、政策端點與引擎都要回答
+ * 「這個帳本的上限是幾小時」，各自寫一次 `agreed ? 54 : 46` 就會有一天
+ * 只改到其中一處，而症狀是同一個帳本在兩個畫面上有兩條不同的線。
+ *
+ * 未同意時三個月的上限回 `null` —— 那不是「無限大」，是這條線不適用：
+ * 每月 46 小時本身就讓三個月不可能超過 138 小時。
+ */
+export const overtimeLimitsOf = (
+  extendedLimitAgreed: boolean,
+): { monthlyMinutes: number; quarterlyMinutes: number | null } => ({
+  monthlyMinutes: extendedLimitAgreed
+    ? OVERTIME_MONTHLY_EXTENDED_LIMIT_MINUTES
+    : OVERTIME_MONTHLY_LIMIT_MINUTES,
+  quarterlyMinutes: extendedLimitAgreed
+    ? OVERTIME_QUARTERLY_EXTENDED_LIMIT_MINUTES
+    : null,
+});

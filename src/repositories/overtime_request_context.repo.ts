@@ -10,7 +10,9 @@ import {
   OvertimeRequestStatus,
 } from "@/constants/overtime";
 import {
+  IMinuteInterval,
   IOvertimeApprovalContext,
+  IOvertimeEmployeeRef,
   IOvertimeRequestSummary,
 } from "@/interfaces/overtime";
 import { derivePunchIntervals } from "@/lib/overtime_rules";
@@ -68,6 +70,57 @@ export interface IOvertimeRequestContext {
     /** Info: (20260818 - Julian) 累計時要把本張單自己排除，否則它會把自己算進上限 */
     excludeRequestId: string;
   }): Promise<IOvertimeApprovalContext>;
+  findEmployeeRef(params: {
+    accountBookId: string;
+    employeeId: string;
+  }): Promise<IOvertimeEmployeeRef | null>;
+  /** Info: (20260818 - Julian) 期間內已核准的加班單，含分段。L28 與 L29 共用 */
+  findApprovedInRange(params: {
+    accountBookId: string;
+    employeeId: string;
+    from: string;
+    to: string;
+  }): Promise<IApprovedOvertimeRow[]>;
+  /** Info: (20260818 - Julian) 期間內逐日的在場區間。沒有成對打卡的日子不會出現在結果裡 */
+  findPunchIntervalsByDate(params: {
+    accountBookId: string;
+    employeeId: string;
+    from: string;
+    to: string;
+  }): Promise<Record<string, IMinuteInterval[]>>;
+  /** Info: (20260818 - Julian) 期間內逐日的班別窗。非上班日無班別，窗為 null */
+  findShiftWindowsByDate(params: {
+    accountBookId: string;
+    employeeId: string;
+    from: string;
+    to: string;
+  }): Promise<Record<string, IScheduledWindow | undefined>>;
+  findPolicy(accountBookId: string): Promise<IOvertimePolicyRow | null>;
+}
+
+/** Info: (20260818 - Julian) 已核准加班單的原始列。認列分鐘在核准時就固化了，這裡照抄 */
+export interface IApprovedOvertimeRow {
+  id: string;
+  workDate: string;
+  requestedStartMinute: number;
+  requestedEndMinute: number;
+  recognizedMinutes: number;
+  evidenceBasis: OvertimeEvidenceBasis;
+  segments: { tier: OvertimePremiumTier; minutes: number }[];
+}
+
+export interface IScheduledWindow {
+  dayType: WorkDayType;
+  /** Info: (20260818 - Julian) 非上班日為 null —— 那一天沒有「窗」可言 */
+  windowStartMinute: number | null;
+  windowEndMinute: number | null;
+}
+
+export interface IOvertimePolicyRow {
+  extendedLimitAgreed: boolean;
+  agreementRecordUrl: string | null;
+  agreedAt: Date | null;
+  compensatoryExpiryMonths: number | null;
 }
 
 /** Info: (20260818 - Julian) Prisma 回的是字面量聯集，顯式轉回鏡像 enum（同 `findSchedules` 的處置） */
@@ -260,6 +313,155 @@ class OvertimeRequestContextRepository implements IOvertimeRequestContext {
       select: { shiftPattern: { select: { requiredWorkMinutes: true } } },
     });
     return row?.shiftPattern?.requiredWorkMinutes ?? null;
+  }
+
+  public async findEmployeeRef(params: {
+    accountBookId: string;
+    employeeId: string;
+  }): Promise<IOvertimeEmployeeRef | null> {
+    const row = await prisma.employee.findFirst({
+      where: { id: params.employeeId, accountBookId: params.accountBookId },
+      select: { id: true, employeeNo: true, name: true },
+    });
+    return row === null
+      ? null
+      : {
+          employeeId: row.id,
+          employeeNo: row.employeeNo,
+          employeeName: row.name,
+        };
+  }
+
+  public async findApprovedInRange(params: {
+    accountBookId: string;
+    employeeId: string;
+    from: string;
+    to: string;
+  }): Promise<IApprovedOvertimeRow[]> {
+    const rows = await prisma.overtimeRequest.findMany({
+      where: {
+        accountBookId: params.accountBookId,
+        employeeId: params.employeeId,
+        status: OvertimeRequestStatus.APPROVED,
+        workDate: { gte: params.from, lte: params.to },
+      },
+      select: {
+        id: true,
+        workDate: true,
+        requestedStartMinute: true,
+        requestedEndMinute: true,
+        recognizedMinutes: true,
+        evidenceBasis: true,
+        segments: { select: { tier: true, minutes: true } },
+      },
+      orderBy: [{ workDate: "asc" }, { requestedStartMinute: "asc" }],
+    });
+
+    return rows.map((row) => ({
+      id: row.id,
+      workDate: row.workDate,
+      requestedStartMinute: row.requestedStartMinute,
+      requestedEndMinute: row.requestedEndMinute,
+      /**
+       * Info: (20260818 - Julian) 已核准者必有認列分鐘（`assertOvertimeFilingType` 擋著）。
+       * `?? 0` 是型別上的收尾，不是對缺值的容忍 —— 真的缺了，統計會少算而不是崩掉，
+       * 而那筆單子本身已經違反不變式，該由勾稽去抓。
+       */
+      recognizedMinutes: row.recognizedMinutes ?? 0,
+      evidenceBasis: row.evidenceBasis as OvertimeEvidenceBasis,
+      segments: row.segments.map((segment) => ({
+        tier: segment.tier as OvertimePremiumTier,
+        minutes: segment.minutes,
+      })),
+    }));
+  }
+
+  public async findPunchIntervalsByDate(params: {
+    accountBookId: string;
+    employeeId: string;
+    from: string;
+    to: string;
+  }): Promise<Record<string, IMinuteInterval[]>> {
+    const punches = await prisma.attendancePunch.findMany({
+      where: {
+        accountBookId: params.accountBookId,
+        employeeId: params.employeeId,
+        workDate: { gte: params.from, lte: params.to },
+      },
+      select: { workDate: true, punchType: true, punchedAt: true },
+      orderBy: { punchedAt: "asc" },
+    });
+
+    const byDate = new Map<
+      string,
+      { punchType: PunchType; minuteOfDay: number }[]
+    >();
+    for (const punch of punches) {
+      const bucket = byDate.get(punch.workDate) ?? [];
+      bucket.push({
+        punchType: punch.punchType as PunchType,
+        minuteOfDay: minutesFromWorkDateStart(
+          punch.punchedAt,
+          punch.workDate,
+          DEMO_TIME_ZONE,
+        ),
+      });
+      byDate.set(punch.workDate, bucket);
+    }
+
+    return Object.fromEntries(
+      [...byDate.entries()].map(([workDate, bucket]) => [
+        workDate,
+        derivePunchIntervals(bucket),
+      ]),
+    );
+  }
+
+  public async findShiftWindowsByDate(params: {
+    accountBookId: string;
+    employeeId: string;
+    from: string;
+    to: string;
+  }): Promise<Record<string, IScheduledWindow | undefined>> {
+    const rows = await prisma.employeeShiftDay.findMany({
+      where: {
+        accountBookId: params.accountBookId,
+        employeeId: params.employeeId,
+        workDate: { gte: params.from, lte: params.to },
+      },
+      select: {
+        workDate: true,
+        dayType: true,
+        shiftPattern: {
+          select: { windowStartMinute: true, windowEndMinute: true },
+        },
+      },
+    });
+
+    return Object.fromEntries(
+      rows.map((row) => [
+        row.workDate,
+        {
+          dayType: row.dayType as WorkDayType,
+          windowStartMinute: row.shiftPattern?.windowStartMinute ?? null,
+          windowEndMinute: row.shiftPattern?.windowEndMinute ?? null,
+        },
+      ]),
+    );
+  }
+
+  public async findPolicy(
+    accountBookId: string,
+  ): Promise<IOvertimePolicyRow | null> {
+    return prisma.overtimePolicy.findUnique({
+      where: { accountBookId },
+      select: {
+        extendedLimitAgreed: true,
+        agreementRecordUrl: true,
+        agreedAt: true,
+        compensatoryExpiryMonths: true,
+      },
+    });
   }
 
   public async buildApprovalContext(params: {

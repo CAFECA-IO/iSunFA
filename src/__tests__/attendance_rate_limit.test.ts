@@ -110,7 +110,16 @@ const EXPECTED_BUCKET: Record<string, Record<string, RateLimitBucketEnum>> = {
    * 額度與假單共用一個桶是刻意的 —— 一個人一天送幾張加班單與幾張假單，
    * 加起來才是他對這個模組的寫入節奏。
    */
-  "overtime/request/route.ts": { POST: RateLimitBucketEnum.LEAVE_WRITE },
+  "overtime/request/route.ts": {
+    GET: RateLimitBucketEnum.READ,
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "overtime/summary/route.ts": { GET: RateLimitBucketEnum.READ },
+  "overtime/unapproved/route.ts": { GET: RateLimitBucketEnum.READ },
+  "overtime/policy/route.ts": {
+    GET: RateLimitBucketEnum.READ,
+    PUT: RateLimitBucketEnum.LEAVE_WRITE,
+  },
   "overtime/request/[request_id]/approve/route.ts": {
     POST: RateLimitBucketEnum.LEAVE_WRITE,
   },

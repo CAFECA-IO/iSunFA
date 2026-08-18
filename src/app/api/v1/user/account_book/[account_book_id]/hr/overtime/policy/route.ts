@@ -6,20 +6,19 @@ import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { enforceRateLimit } from "@/lib/rate_limiter";
-import {
-  overtimeRequestCreateSchema,
-  overtimeRequestListQuerySchema,
-} from "@/validators";
+import { overtimePolicyUpdateSchema } from "@/validators";
 import { attendanceIdentityService } from "@/services/attendance_identity.service";
-import { overtimeRequestService } from "@/services/overtime_request.service";
+import { overtimePolicyService } from "@/services/overtime_policy.service";
 
 /**
- * Info: (20260818 - Julian) L24：加班單清單。
- * GET .../hr/overtime/request[?from=&to=&employeeId=]
+ * Info: (20260818 - Julian) 加班政策的讀取。
+ * GET .../hr/overtime/policy
  *
- * 未指定 `employeeId` 即為自己。指定他人時必須管得到他或具 `HR_ADMIN` 職能，
- * 否則回 403 —— **不是回空陣列**：空陣列是對資料的陳述（「他沒加過班」），
- * 被擋是對請求的陳述。
+ * 計畫書 §10 只編了 L30（PUT）。讀取一併做在這裡，理由與 L31／L32 相同：
+ * 改不了自己看不到的東西，而設定畫面第一件事就是把現值載出來。
+ *
+ * 全體員工可讀 —— 「這個帳本的加班上限是幾小時」不是機密，
+ * 藏起來的效果是員工不知道自己這個月還能加幾小時。
  */
 export async function GET(
   request: NextRequest,
@@ -37,27 +36,10 @@ export async function GET(
     );
     if (limited) return limited;
 
-    const { searchParams } = new URL(request.url);
-    const parsed = overtimeRequestListQuerySchema.safeParse({
-      from: searchParams.get("from") ?? undefined,
-      to: searchParams.get("to") ?? undefined,
-      employeeId: searchParams.get("employeeId") ?? undefined,
-    });
-    if (!parsed.success) return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
-
     const { account_book_id: accountBookId } = await params;
-    const actor = await attendanceIdentityService.resolveEmployee(
-      sessionUser,
-      accountBookId,
-    );
+    await attendanceIdentityService.resolveEmployee(sessionUser, accountBookId);
 
-    return jsonOk(
-      await overtimeRequestService.list({
-        accountBookId,
-        actorEmployeeId: actor.id,
-        query: parsed.data,
-      }),
-    );
+    return jsonOk(await overtimePolicyService.read(accountBookId));
   } catch (error) {
     if (error instanceof AppError) {
       return jsonFail({
@@ -66,7 +48,7 @@ export async function GET(
         status: error.code,
       });
     }
-    logger.error("[API] overtime request list failed", {
+    logger.error("[API] overtime policy read failed", {
       message: (error as Error).message,
     });
     return jsonFail(API_ERRORS.IS_DB_FAILED);
@@ -74,25 +56,25 @@ export async function GET(
 }
 
 /**
- * Info: (20260818 - Julian) L25：送出加班單（事前或事後）。
- * POST .../hr/overtime/request
- *      body：`{ workDate, filingType, compensationMode, requestedStartMinute,
- *               requestedEndMinute, reason, isEmergency? }`
+ * Info: (20260818 - Julian) L30：設定加班政策。
+ * PUT .../hr/overtime/policy
+ *      body：`{ extendedLimitAgreed, agreementRecordUrl, agreedAt, compensatoryExpiryMonths }`
  *
- * ## 事前／事後不是自由欄位
+ * ## 全量取代，不是差異更新
  *
- * `ADVANCE` 必須在該日班別窗起之前送出，`POST_HOC` 反之，由
- * `assertOvertimeFilingType` 在 repository 擋（唯一 DB 閘口）。
- * 「事前申請卻在下班後才送出」不是一種可選的填法，是一個謊 ——
- * 而且是有動機的謊：事後補單在勞動檢查時的證據力較低。
+ * 送上來的是一份完整的政策。把「沒送的欄位就不動」當成語意，
+ * 會讓「取消同意」變成一個沒有辦法表達的動作（同 `/admin/settings` 的既有處置）。
  *
- * ## 例假日一律擋下
+ * ## 放寬到 54 小時必須有記載
  *
- * §40 原則上不得使人於例假工作，僅限天災、事變或突發事件，且須於 24 小時內
- * 通報主管機關並事後補假。系統尚未實作通報與補假，故回 `FO_OVERTIME_ON_REGULAR_OFF`
- * —— 放行會讓一個違法的排班看起來像一筆正常的加班（ADR 024 §4.5）。
+ * `extendedLimitAgreed` 為真時 `agreementRecordUrl` 與 `agreedAt` 必填，
+ * 由 `assertOvertimePolicy` 在 repository 擋 —— **一個沒有記載的「已同意」
+ * 等於沒有同意，而系統會據此多放 8 小時**（ADR 024 §6.1）。
+ *
+ * 需 `HR_ADMIN` 職能：財務的帳本 `ADMIN` 不是人資，而把這個開關交給他，
+ * 等於讓一個看不懂 §32 III 的人去按它（ADR 023 §8.3）。
  */
-export async function POST(
+export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ account_book_id: string }> },
 ) {
@@ -109,7 +91,7 @@ export async function POST(
     if (limited) return limited;
 
     const body = await request.json();
-    const parsed = overtimeRequestCreateSchema.safeParse(body);
+    const parsed = overtimePolicyUpdateSchema.safeParse(body);
     if (!parsed.success) return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
 
     const { account_book_id: accountBookId } = await params;
@@ -119,11 +101,10 @@ export async function POST(
     );
 
     return jsonOk(
-      await overtimeRequestService.submit({
+      await overtimePolicyService.update({
         accountBookId,
-        employeeId: actor.id,
+        actorEmployeeId: actor.id,
         input: parsed.data,
-        observedAt: new Date(),
       }),
     );
   } catch (error) {
@@ -134,7 +115,7 @@ export async function POST(
         status: error.code,
       });
     }
-    logger.error("[API] overtime request submit failed", {
+    logger.error("[API] overtime policy update failed", {
       message: (error as Error).message,
     });
     return jsonFail(API_ERRORS.IS_DB_FAILED);

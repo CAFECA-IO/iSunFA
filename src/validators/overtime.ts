@@ -76,3 +76,75 @@ export type IOvertimeRequestCreatePayload = z.infer<
   typeof overtimeRequestCreateSchema
 >;
 export type IOvertimeApprovalPayload = z.infer<typeof overtimeApprovalSchema>;
+
+/**
+ * Info: (20260818 - Julian) 加班單清單查詢（L24）。
+ *
+ * 區間上限不在這裡擋：它需要專屬錯誤碼與日期運算，屬 service 的判斷
+ * （同 `leaveRequestListQuerySchema` 的既有處置）。
+ */
+export const overtimeRequestListQuerySchema = z
+  .object({
+    from: isoDateSchema.optional(),
+    to: isoDateSchema.optional(),
+    employeeId: z.string().min(1).optional(),
+  })
+  .refine(
+    (value) =>
+      value.from === undefined ||
+      value.to === undefined ||
+      value.from <= value.to,
+    { message: "from must not be after to", path: ["from"] },
+  );
+
+/**
+ * Info: (20260818 - Julian) 月份統計查詢（L28）。
+ *
+ * 用 "YYYY-MM" 而不是起訖日：§32 II 的上限是**曆月**的，
+ * 讓呼叫端自己給區間會讓「這個月加了幾小時」變成一個各處算法不同的問題。
+ */
+export const overtimeSummaryQuerySchema = z.object({
+  month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
+  employeeId: z.string().min(1).optional(),
+});
+
+// Info: (20260818 - Julian) 未核准時段查詢（L29）。起訖必填：它是一份要人去看的清單，不是全歷史
+export const overtimeUnapprovedQuerySchema = z
+  .object({
+    from: isoDateSchema,
+    to: isoDateSchema,
+    employeeId: z.string().min(1).optional(),
+  })
+  .refine((value) => value.from <= value.to, {
+    message: "from must not be later than to",
+    path: ["from"],
+  });
+
+/**
+ * Info: (20260818 - Julian) 加班政策（L30）。
+ *
+ * 全量取代：送上來的是一份完整的政策。把「沒送的欄位就不動」當成語意，
+ * 會讓「取消同意」變成沒有辦法表達的動作。
+ *
+ * `agreementRecordUrl` 與 `agreedAt` 的必填關係不在這裡擋 —— 那是
+ * `assertOvertimePolicy` 的職責，而它必須守住 seed 與資料遷移這些
+ * 不經過 validator 的路徑。
+ */
+export const overtimePolicyUpdateSchema = z.object({
+  extendedLimitAgreed: z.boolean(),
+  agreementRecordUrl: z.string().trim().url().nullable().default(null),
+  agreedAt: z.string().datetime().nullable().default(null),
+  /** Info: (20260818 - Julian) §32-1 無法定日數，null 表尚未協商 —— 那時換不了補休 */
+  compensatoryExpiryMonths: z.number().int().min(1).nullable().default(null),
+});
+
+export type IOvertimeRequestListQuery = z.infer<
+  typeof overtimeRequestListQuerySchema
+>;
+export type IOvertimeSummaryQuery = z.infer<typeof overtimeSummaryQuerySchema>;
+export type IOvertimeUnapprovedQuery = z.infer<
+  typeof overtimeUnapprovedQuerySchema
+>;
+export type IOvertimePolicyUpdatePayload = z.infer<
+  typeof overtimePolicyUpdateSchema
+>;

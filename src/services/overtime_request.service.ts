@@ -36,7 +36,11 @@ import {
   IOvertimeRequestRepository,
   overtimeRequestRepo,
 } from "@/repositories/overtime_request.repo";
-import { IOvertimeRequestCreatePayload } from "@/validators/overtime";
+import {
+  IOvertimeRequestCreatePayload,
+  IOvertimeRequestListQuery,
+} from "@/validators/overtime";
+import { assertMayViewOvertimeOf } from "@/services/overtime_visibility";
 
 /**
  * Info: (20260818 - Julian) 加班單的送出與決行（L25 / L26 / L27）。
@@ -137,6 +141,33 @@ export class OvertimeRequestService {
     });
 
     return this.mustFindSummary(params.accountBookId, requestId);
+  }
+
+  /**
+   * Info: (20260818 - Julian) L24：加班單清單。
+   *
+   * 未指定 `employeeId` 即為自己。指定他人時可見範圍由
+   * `assertMayViewOvertimeOf` 判斷，擋下時回 403 而不是空陣列 ——
+   * 空陣列是對資料的陳述（「他沒有加過班」），被擋是對請求的陳述。
+   */
+  public async list(params: {
+    accountBookId: string;
+    actorEmployeeId: string;
+    query: IOvertimeRequestListQuery;
+  }): Promise<IOvertimeRequestSummary[]> {
+    const employeeId = params.query.employeeId ?? params.actorEmployeeId;
+    await assertMayViewOvertimeOf({
+      accountBookId: params.accountBookId,
+      actorEmployeeId: params.actorEmployeeId,
+      targetEmployeeId: employeeId,
+    });
+
+    return this.context.listByEmployee({
+      accountBookId: params.accountBookId,
+      employeeId,
+      from: params.query.from,
+      to: params.query.to,
+    });
   }
 
   /**
