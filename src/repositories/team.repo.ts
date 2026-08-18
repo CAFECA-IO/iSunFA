@@ -268,6 +268,24 @@ export class TeamRepository implements ITeamRepository {
   }
 
   /**
+   * Info: (20260819 - Luphia) 某個時間點之後這個團隊建立過幾封邀請（產品決定 20260819）。
+   *
+   * 用於「每日寄送數」上限。計數以**邀請列的建立時間**為準，而且**不看狀態**：
+   * 撤回、被拒絕、已逾期的都算——信已經寄出去了，而這道上限管的是寄信量，
+   * 不是目前還有效的邀請數（那是 `countPendingInvitations` 的事）。
+   *
+   * 因此不需要另外一張計數表：邀請列本身就是寄送紀錄。
+   */
+  async countInvitationsCreatedSince(
+    teamId: string,
+    since: Date,
+  ): Promise<number> {
+    return prisma.teamInvitation.count({
+      where: { teamId, createdAt: { gte: since } },
+    });
+  }
+
+  /**
    * Info: (20260815 - Luphia) 仍在佔用席次的邀請數（產品拍板 20260815）。
    *
    * 席次的佔用者是「成員 + 尚未失效的 PENDING 邀請」。逾期的邀請不算——

@@ -45,8 +45,14 @@ jest.mock("@/repositories/team.repo", () => ({
     findInvitationByTokenHash: jest.fn(),
     getTeamMember: jest.fn(async () => null),
     acceptInvitation: jest.fn(),
-    // Info: (20260818 - Luphia) 接受時的免費版人數上限第二道防線（第三輪 B-1）
     countMembers: jest.fn(async () => 1),
+    /**
+     * Info: (20260819 - Luphia) 邀請量的兩道團隊層上限（`assertInviteVolumeWithinLimits`）。
+     * 替身要有這兩支，否則所有邀請測試都會以「不是函式」失敗——而那不是被測行為錯，
+     * 是替身沒有照實模擬（checklist §1.8）。預設回 0：正常情況遠低於上限。
+     */
+    countPendingInvitations: jest.fn(async () => 0),
+    countInvitationsCreatedSince: jest.fn(async () => 0),
   },
 }));
 

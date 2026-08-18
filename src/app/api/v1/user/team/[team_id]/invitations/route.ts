@@ -3,6 +3,8 @@ import { NextRequest } from "next/server";
 import { stringToHex } from "viem";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { enforceRateLimit } from "@/lib/rate_limiter";
+import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { teamRepo } from "@/repositories/team.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
@@ -13,6 +15,7 @@ import { isAddress } from "viem";
 import { buildPendingInviteKey } from "@/lib/team/pending_invite_key";
 import { canGrantRole, TeamRole } from "@/constants/team";
 import { chargeSeatAddition } from "@/services/team_seat.service";
+import { assertInviteVolumeWithinLimits } from "@/services/team_invitation.service";
 import { paymentRepo } from "@/repositories/payment.repo";
 import type { IOenCallbackData } from "@/interfaces/payment";
 
@@ -29,6 +32,23 @@ export async function POST(
     }
 
     const { team_id: teamId } = await params;
+
+    /**
+     * Info: (20260819 - Luphia) 寄送端的限流（產品決定 20260819）。
+     *
+     * 免費版人數上限移除之後，寄信量沒有任何界線。這一層依**操作者**擋單人狂點
+     * （10/分、100/日）；整團的總量另有兩道團隊層上限
+     * （`assertInviteVolumeWithinLimits`）——多位管理員各自在限流額度內，
+     * 仍然能疊出大量寄信，所以兩層都要。
+     *
+     * 維度用 `sessionUser.address` 而不是 IP：同一間辦公室的兩位管理員不該互相
+     * 排擠，而同一個人換 IP 也不該重新計數。
+     */
+    const limited = enforceRateLimit(
+      sessionUser.address,
+      RateLimitBucketEnum.TEAM_INVITE_SEND,
+    );
+    if (limited) return limited;
 
     // Info: (20260325 - Tzuhan) Check permission (OWNER or ADMIN)
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
@@ -158,6 +178,12 @@ export async function POST(
         e,
       );
     }
+
+    /**
+     * Info: (20260819 - Luphia) 量控在扣款之前：擋下來時不產生金流、不留邀請列。
+     * 與 email 邀請共用同一支閘，兩條路的上限才會是同一件事。
+     */
+    await assertInviteVolumeWithinLimits(teamId, Date.now());
 
     /**
      * Info: (20260814 - Luphia) 付費團隊加人先補收席次費用（規範 §4「邀請即收費」、P3）。

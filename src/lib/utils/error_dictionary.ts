@@ -1162,6 +1162,30 @@ export const API_ERRORS = {
    * 通用的「操作失敗」會讓客服以為重試就好，而這件事重試一百次也一樣。
    */
   /**
+   * Info: (20260819 - Luphia) 同時未接受的邀請數已達上限（產品決定 20260819）。
+   *
+   * 免費版人數上限移除之後，這是「一次撒出幾百封」的煞車。訊息刻意說得出**下一步**
+   * （撤回或等對方回應），因為使用者能自己解決——不像額度用罄只能等重置。
+   */
+  TW_PENDING_INVITE_LIMIT: {
+    code: "TW000023",
+    message:
+      "Too many invitations are waiting to be accepted; revoke some or wait for a response",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  /**
+   * Info: (20260819 - Luphia) 今日寄出的邀請數已達上限（產品決定 20260819）。
+   *
+   * 與上一條分工：這條擋的是「撤回再邀、撤回再邀」的迴圈——只看同時未接受數的話，
+   * 那個迴圈可以無限寄信而同時數永遠是 1。計數以**已建立的邀請列**為準，
+   * 撤回或被拒絕的仍然算（信已經寄出去了）。
+   */
+  TW_INVITE_DAILY_LIMIT: {
+    code: "TW000024",
+    message: "Daily invitation limit reached for this team; try again tomorrow",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  /**
    * Info: (20260819 - Luphia) 送出時帶的試算金額與服務端重算的結果不符（review #6682 高）。
    *
    * 試算是在對話框開啟時算的，送出是在使用者填完欄位、走完 FIDO2 簽章之後——

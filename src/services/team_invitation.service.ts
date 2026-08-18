@@ -2,6 +2,10 @@ import { logger } from "@/lib/utils/logger";
 import { INVITE_EMAIL_MATCH, TEAM_INVITATION_STATUS } from "@/constants/status";
 import { TeamRole } from "@/constants/team";
 import { SystemSettingKey } from "@/constants/system_setting";
+import {
+  DEFAULT_TEAM_INVITE_DAILY_LIMIT,
+  DEFAULT_TEAM_PENDING_INVITE_LIMIT,
+} from "@/constants/subscription_quota";
 import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import {
   buildInviteUrl,
@@ -53,6 +57,95 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
 
 export function isValidInviteEmail(email: string): boolean {
   return email.length <= 254 && EMAIL_PATTERN.test(email);
+}
+
+/**
+ * Info: (20260819 - Luphia) 兩道上限的設定解析（正式值為 DB 系統設定，ADR 017）。
+ *
+ * 讀不到或驗簽失敗一律退回程式內的保底值，理由與 `resolveFaithMemoryRetentionDays`
+ * 同一套：這兩個值不是憑證、也不授權任何事，而退回保底值是**較嚴格**的方向
+ * （被竄改成 999999 也不會讓上限失效）。
+ */
+const DAY_MS = 86_400_000;
+
+async function resolveNumericSetting(
+  key: SystemSettingKey,
+  fallback: number,
+): Promise<number> {
+  try {
+    const raw = await systemSettingService.get(key);
+    const parsed = Number(raw);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+  } catch (error) {
+    logger.warn("failed to resolve invite limit setting; using fallback", {
+      key,
+      fallback,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return fallback;
+  }
+}
+
+const resolveTeamPendingInviteLimit = (): Promise<number> =>
+  resolveNumericSetting(
+    SystemSettingKey.TEAM_PENDING_INVITE_LIMIT,
+    DEFAULT_TEAM_PENDING_INVITE_LIMIT,
+  );
+
+const resolveTeamInviteDailyLimit = (): Promise<number> =>
+  resolveNumericSetting(
+    SystemSettingKey.TEAM_INVITE_DAILY_LIMIT,
+    DEFAULT_TEAM_INVITE_DAILY_LIMIT,
+  );
+
+/**
+ * Info: (20260819 - Luphia) 邀請量的兩道團隊層上限（產品決定 20260819）。
+ *
+ * 免費版人數上限移除之後（額度改為全隊共用一份），寄信量失去所有界線：免費團隊
+ * 不收席次費，而每一封 email 邀請都是真的寄出去的信。人數不再是煞車，這裡就是。
+ *
+ * 兩道分工不同，缺一不可：
+ *
+ * 1. **同時未接受數**：擋「一次撒出幾百封」。
+ * 2. **每日寄送數**：擋「撤回再邀、撤回再邀」的迴圈——只看第 1 道的話，
+ *    那個迴圈可以無限寄信而同時數永遠是 1。計數以已建立的邀請列為準，
+ *    撤回或被拒絕的仍然算（信已經寄出去了）。
+ *
+ * 位置在**扣款與建立邀請之前**：擋下來時不該產生任何金流，也不該留下邀請列。
+ * 另有一層依操作者的限流（`RateLimitBucketEnum.TEAM_INVITE_SEND`）擋單人狂點，
+ * 而這裡擋的是整團的總量——多位管理員各自在限流額度內，仍然能疊出大量寄信。
+ */
+export async function assertInviteVolumeWithinLimits(
+  teamId: string,
+  nowMs: number,
+): Promise<void> {
+  const [pendingLimit, dailyLimit] = await Promise.all([
+    resolveTeamPendingInviteLimit(),
+    resolveTeamInviteDailyLimit(),
+  ]);
+
+  const [pendingCount, sentToday] = await Promise.all([
+    teamRepo.countPendingInvitations(teamId, nowMs),
+    teamRepo.countInvitationsCreatedSince(teamId, new Date(nowMs - DAY_MS)),
+  ]);
+
+  if (pendingCount >= pendingLimit) {
+    logger.info("pending invitation limit reached", {
+      teamId,
+      pendingCount,
+      pendingLimit,
+    });
+    throw toApiError(API_ERRORS.TW_PENDING_INVITE_LIMIT);
+  }
+
+  if (sentToday >= dailyLimit) {
+    logger.info("daily invitation limit reached", {
+      teamId,
+      sentToday,
+      dailyLimit,
+    });
+    throw toApiError(API_ERRORS.TW_INVITE_DAILY_LIMIT);
+  }
 }
 
 export interface IInviteByEmailParams {
@@ -198,6 +291,11 @@ export async function inviteMemberByEmail(
   if (existing) {
     await teamRepo.deleteInvitation(existing.id);
   }
+
+  /**
+   * Info: (20260819 - Luphia) 量控在扣款之前：擋下來時不產生金流、不留邀請列。
+   */
+  await assertInviteVolumeWithinLimits(teamId, nowMs);
 
   /**
    * Info: (20260815 - Luphia) 席次：先看有沒有已付費的空位，沒有才補收。
