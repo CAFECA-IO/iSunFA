@@ -4,6 +4,8 @@ import { AppError } from "@/lib/utils/error";
 import { fileOk, jsonFail } from "@/lib/utils/response";
 import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { RateLimitBucketEnum } from "@/constants/rate_limit";
+import { enforceRateLimit } from "@/lib/rate_limiter";
 import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
 import {
   DEMO_TIME_ZONE,
@@ -44,6 +46,13 @@ export async function POST(
     if (!sessionUser) {
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
+
+    // Info: (20260817 - Luphia) DeWT 驗證之後、業務邏輯之前（限流規範 §2）
+    const limited = enforceRateLimit(
+      sessionUser.address,
+      RateLimitBucketEnum.ATTENDANCE_EXPORT,
+    );
+    if (limited) return limited;
 
     // Info: (20260813 - Julian) 空 body 也算合法（全帳本匯出），因此解析失敗即視為沒帶條件
     const body = await request.json().catch(() => ({}));

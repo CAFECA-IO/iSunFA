@@ -1,5 +1,5 @@
 import { describe, it, expect } from "@jest/globals";
-import { Employee, ShiftPattern } from "@/generated";
+import { AuditLog, Employee, ShiftPattern } from "@/generated";
 import { ShiftPatternKind, WorkDayType } from "@/constants/attendance";
 import { AttendanceScheduleService } from "@/services/attendance_schedule.service";
 import { AppError } from "@/lib/utils/error";
@@ -19,6 +19,8 @@ import {
 } from "@/repositories/attendance_schedule.repo";
 import { IShiftPatternRepository } from "@/repositories/shift_pattern.repo";
 import { assertSchedulableDay } from "@/repositories/attendance_schedule_invariant";
+import { ICreateAuditLogInput } from "@/repositories/audit_log.repo";
+import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
 
 /**
  * Info: (20260813 - Julian) 班別與排班寫入。
@@ -70,10 +72,22 @@ const rosterRow = (
   jobTitle: { title: "工地工程師" },
 });
 
+/**
+ * Info: (20260817 - Luphia) 操作者與被排班者刻意用不同 id：主管閘問的必須是
+ * **操作者**是不是主管，而不是被改的那個人。兩者同值的 fixture 會讓
+ * 「問錯人」這個錯誤通過測試。
+ */
+const ACTOR_MANAGER_ID = "emp-1";
+// Info: (20260817 - Luphia) 稽核的 userId 是操作者的 User，與他的 Employee id 不同
+const ACTOR_USER_ID = "user-1";
+const TARGET_EMPLOYEE_ID = "emp-2";
+
 interface IHarness {
   service: AttendanceScheduleService;
   written: IShiftDayInput[];
   rosterQueries: { departmentId?: string }[];
+  managerQueries: string[];
+  auditLogs: ICreateAuditLogInput[];
 }
 
 const buildService = (options: {
@@ -82,9 +96,13 @@ const buildService = (options: {
   patterns?: ShiftPattern[];
   employeeInBook?: boolean;
   upsertThrows?: Error;
+  /** Info: (20260817 - Luphia) 操作者是不是部門主管；預設是，未指定時測的不是這道閘 */
+  actorIsManager?: boolean;
 }): IHarness => {
   const written: IShiftDayInput[] = [];
   const rosterQueries: { departmentId?: string }[] = [];
+  const managerQueries: string[] = [];
+  const auditLogs: ICreateAuditLogInput[] = [];
 
   const employees: IEmployeeRepository = {
     findByUserId: async () => null,
@@ -98,9 +116,11 @@ const buildService = (options: {
     findByIdInAccountBook: async () =>
       options.employeeInBook === false
         ? null
-        : ({ id: "emp-2", employeeNo: "EMP002" } as Employee),
-    // Info: (20260813 - Julian) 假勤加入的成員；本測試用不到，補樁讓介面完整
-    isDepartmentManager: async () => false,
+        : ({ id: TARGET_EMPLOYEE_ID, employeeNo: "EMP002" } as Employee),
+    isDepartmentManager: async (params) => {
+      managerQueries.push(params.employeeId);
+      return options.actorIsManager ?? true;
+    },
     // Info: (20260817 - Julian) 授權用的範圍判斷（甲-5）。本檔不測它，回 false 即可
     managesEmployee: async () => false,
   };
@@ -122,6 +142,17 @@ const buildService = (options: {
     },
   };
 
+  /**
+   * Info: (20260817 - Luphia) 稽核只收不查（service 拿到的是 `Pick<…, "createAuditLog">`），
+   * 所以假物件只有一個方法 —— 那正是把介面收窄的目的。
+   */
+  const audits = {
+    createAuditLog: async (input: ICreateAuditLogInput) => {
+      auditLogs.push(input);
+      return {} as AuditLog;
+    },
+  };
+
   const patterns: IShiftPatternRepository = {
     findByAccountBook: async () => options.patterns ?? [],
     findByIdInAccountBook: async (accountBookId, id) =>
@@ -129,9 +160,16 @@ const buildService = (options: {
   };
 
   return {
-    service: new AttendanceScheduleService(employees, schedule, patterns),
+    service: new AttendanceScheduleService(
+      employees,
+      schedule,
+      patterns,
+      audits,
+    ),
     written,
     rosterQueries,
+    managerQueries,
+    auditLogs,
   };
 };
 
@@ -231,6 +269,184 @@ describe("AttendanceScheduleService", () => {
     });
   });
 
+  /**
+   * Info: (20260817 - Luphia) 排班寫入的主管閘。
+   *
+   * 守的是一件無法事後復原的事：判定即時算、不落地，所以改一格排班就是改那一天的
+   * 歷史判定（把上班日改成休假，曠職當場消失），而全系統只留一行日誌。
+   * 讀取端仍是全帳本可見（計畫書 §7.3 第 1 順位的權限矩陣要處理的範圍），
+   * 這三條只管寫入。
+   */
+  describe("A8 排班寫入限主管", () => {
+    it("非主管改排班回 403，且一個字都沒有寫進去", async () => {
+      const { service, written } = buildService({
+        patterns: [SITE_DAY],
+        actorIsManager: false,
+      });
+
+      await expect(
+        service.updateScheduleDay({
+          accountBookId: ACCOUNT_BOOK_ID,
+          input: {
+            employeeId: TARGET_EMPLOYEE_ID,
+            workDate: "2026-08-14",
+            dayType: WorkDayType.WORK,
+            shiftPatternId: SITE_DAY.id,
+          },
+          actorEmployeeId: ACTOR_MANAGER_ID,
+          actorEmployeeNo: "EMP001",
+          actorUserId: ACTOR_USER_ID,
+        }),
+      ).rejects.toMatchObject({
+        apiCode: API_ERRORS.FO_ATTENDANCE_SUPERVISOR_ONLY.code,
+      });
+      expect(written).toEqual([]);
+    });
+
+    /**
+     * Info: (20260817 - Luphia) 閘要問的是**操作者**。問成被改的那個人，
+     * 效果是「只要對主管排班就都放行」—— 完全反過來，而回應碼一模一樣。
+     */
+    it("閘問的是操作者，不是被改的那個人", async () => {
+      const { service, managerQueries } = buildService({
+        patterns: [SITE_DAY],
+      });
+
+      await service.updateScheduleDay({
+        accountBookId: ACCOUNT_BOOK_ID,
+        input: {
+          employeeId: TARGET_EMPLOYEE_ID,
+          workDate: "2026-08-14",
+          dayType: WorkDayType.WORK,
+          shiftPatternId: SITE_DAY.id,
+        },
+        actorEmployeeId: ACTOR_MANAGER_ID,
+        actorEmployeeNo: "EMP001",
+        actorUserId: ACTOR_USER_ID,
+      });
+
+      expect(managerQueries).toEqual([ACTOR_MANAGER_ID]);
+    });
+
+    /**
+     * Info: (20260817 - Luphia) 閘排在租戶檢查**之前**：非主管不該從錯誤碼分辨
+     * 「這個員工 id 存不存在於本帳本」。403 與 404 的順序本身就是一個探測管道。
+     */
+    it("非主管拿別家帳本的員工 id 來試，得到 403 而不是 404", async () => {
+      const { service } = buildService({
+        employeeInBook: false,
+        actorIsManager: false,
+      });
+
+      await expect(
+        service.updateScheduleDay({
+          accountBookId: ACCOUNT_BOOK_ID,
+          input: {
+            employeeId: "emp-from-another-book",
+            workDate: "2026-08-14",
+            dayType: WorkDayType.REGULAR_OFF,
+            shiftPatternId: null,
+          },
+          actorEmployeeId: ACTOR_MANAGER_ID,
+          actorEmployeeNo: "EMP001",
+          actorUserId: ACTOR_USER_ID,
+        }),
+      ).rejects.toMatchObject({
+        apiCode: API_ERRORS.FO_ATTENDANCE_SUPERVISOR_ONLY.code,
+      });
+    });
+  });
+
+  /**
+   * Info: (20260817 - Luphia) 排班異動的稽核軌跡（母計畫 §7.3 第 3 順位、§10.1）。
+   *
+   * 判定即時算不落地，所以改一格排班就是改那一天的歷史判定 ——
+   * 把上班日改成休假，曠職當場消失。少了這筆軌跡，沒有任何地方記得誰改的。
+   */
+  describe("A8 排班異動留下稽核軌跡", () => {
+    it("成功的異動寫一筆 EMPLOYEE_PII / UPDATE", async () => {
+      const { service, auditLogs } = buildService({ patterns: [SITE_DAY] });
+
+      await service.updateScheduleDay({
+        accountBookId: ACCOUNT_BOOK_ID,
+        input: {
+          employeeId: TARGET_EMPLOYEE_ID,
+          workDate: "2026-08-14",
+          dayType: WorkDayType.WORK,
+          shiftPatternId: SITE_DAY.id,
+        },
+        actorEmployeeId: ACTOR_MANAGER_ID,
+        actorEmployeeNo: "EMP001",
+        actorUserId: ACTOR_USER_ID,
+      });
+
+      expect(auditLogs).toEqual([
+        {
+          userId: ACTOR_USER_ID,
+          accountBookId: ACCOUNT_BOOK_ID,
+          dataType: AuditLogDataType.EMPLOYEE_PII,
+          // Info: (20260817 - Luphia) 被改的那位員工，不是操作者（ADR 018 §6：軸線是「哪些人受影響」）
+          dataId: TARGET_EMPLOYEE_ID,
+          action: AuditLogAction.UPDATE,
+        },
+      ]);
+    });
+
+    /**
+     * Info: (20260817 - Luphia) 被擋下的請求**不得**留下軌跡。
+     * 稽核紀錄的用途是回答「這格是誰改的」，把沒有發生的異動也記一筆，
+     * 會讓調查時分不出「他改了」與「他試著改但被擋」。
+     */
+    it("非主管被 403 擋下時不寫稽核", async () => {
+      const { service, auditLogs } = buildService({
+        patterns: [SITE_DAY],
+        actorIsManager: false,
+      });
+
+      await expect(
+        service.updateScheduleDay({
+          accountBookId: ACCOUNT_BOOK_ID,
+          input: {
+            employeeId: TARGET_EMPLOYEE_ID,
+            workDate: "2026-08-14",
+            dayType: WorkDayType.WORK,
+            shiftPatternId: SITE_DAY.id,
+          },
+          actorEmployeeId: ACTOR_MANAGER_ID,
+          actorEmployeeNo: "EMP001",
+          actorUserId: ACTOR_USER_ID,
+        }),
+      ).rejects.toBeInstanceOf(AppError);
+
+      expect(auditLogs).toEqual([]);
+    });
+
+    // Info: (20260817 - Luphia) 寫入本身失敗（併發撞唯一鍵）同理：沒有異動就沒有軌跡
+    it("upsert 失敗時不寫稽核", async () => {
+      const { service, auditLogs } = buildService({
+        patterns: [SITE_DAY],
+        upsertThrows: Object.assign(new Error("conflict"), { code: "P2002" }),
+      });
+
+      await expect(
+        service.updateScheduleDay({
+          accountBookId: ACCOUNT_BOOK_ID,
+          input: {
+            employeeId: TARGET_EMPLOYEE_ID,
+            workDate: "2026-08-14",
+            dayType: WorkDayType.WORK,
+            shiftPatternId: SITE_DAY.id,
+          },
+          actorEmployeeId: ACTOR_MANAGER_ID,
+          actorEmployeeNo: "EMP001",
+          actorUserId: ACTOR_USER_ID,
+        }),
+      ).rejects.toBeInstanceOf(AppError);
+
+      expect(auditLogs).toEqual([]);
+    });
+  });
+
   describe("A8 改單日排班", () => {
     it("改成上班日會帶上班別", async () => {
       const { service, written } = buildService({
@@ -245,7 +461,9 @@ describe("AttendanceScheduleService", () => {
           dayType: WorkDayType.WORK,
           shiftPatternId: SITE_DAY.id,
         },
+        actorEmployeeId: ACTOR_MANAGER_ID,
         actorEmployeeNo: "EMP001",
+        actorUserId: ACTOR_USER_ID,
       });
 
       expect(written).toHaveLength(1);
@@ -268,7 +486,9 @@ describe("AttendanceScheduleService", () => {
           dayType: WorkDayType.REGULAR_OFF,
           shiftPatternId: null,
         },
+        actorEmployeeId: ACTOR_MANAGER_ID,
         actorEmployeeNo: "EMP001",
+        actorUserId: ACTOR_USER_ID,
       });
 
       expect(written[0].shiftPatternId).toBeNull();
@@ -287,7 +507,9 @@ describe("AttendanceScheduleService", () => {
             dayType: WorkDayType.REGULAR_OFF,
             shiftPatternId: null,
           },
+          actorEmployeeId: ACTOR_MANAGER_ID,
           actorEmployeeNo: "EMP001",
+          actorUserId: ACTOR_USER_ID,
         }),
       ).rejects.toMatchObject({ apiCode: API_ERRORS.NF_EMPLOYEE.code });
       expect(written).toEqual([]);
@@ -305,7 +527,9 @@ describe("AttendanceScheduleService", () => {
             dayType: WorkDayType.WORK,
             shiftPatternId: "shift-from-another-book",
           },
+          actorEmployeeId: ACTOR_MANAGER_ID,
           actorEmployeeNo: "EMP001",
+          actorUserId: ACTOR_USER_ID,
         }),
       ).rejects.toMatchObject({ apiCode: API_ERRORS.NF_SHIFT_PATTERN.code });
       expect(written).toEqual([]);
@@ -340,7 +564,9 @@ describe("AttendanceScheduleService", () => {
             dayType: WorkDayType.WORK,
             shiftPatternId: SITE_DAY.id,
           },
+          actorEmployeeId: ACTOR_MANAGER_ID,
           actorEmployeeNo: "EMP001",
+          actorUserId: ACTOR_USER_ID,
         }),
       ).rejects.toMatchObject({
         apiCode: API_ERRORS.VA_SCHEDULE_DAY_INVALID.code,
@@ -361,7 +587,9 @@ describe("AttendanceScheduleService", () => {
             dayType: WorkDayType.REGULAR_OFF,
             shiftPatternId: null,
           },
+          actorEmployeeId: ACTOR_MANAGER_ID,
           actorEmployeeNo: "EMP001",
+          actorUserId: ACTOR_USER_ID,
         }),
       ).rejects.not.toBeInstanceOf(AppError);
     });

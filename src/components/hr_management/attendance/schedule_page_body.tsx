@@ -49,8 +49,14 @@ const SAVE_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
  * 判定存在。部門篩選在前端做：A7 雖支援 `departmentId`，但推到伺服器後
  * 選過的部門會從下拉選單消失，使用者切不回去。
  *
- * ToDo: (20260813 - Julian) Demo 沒有權限控制，任何員工都改得了任何人的班；
- * 刻意不做假的唯讀開關，避免造成「有管控」的錯覺。
+ * Info: (20260817 - Luphia) 寫入限部門主管（伺服器端 `isDepartmentManager` 閘）。
+ * 前端**刻意不預先 disable 格子**：非主管按下去會拿到 403 並看到訊息，
+ * 而依前端猜測隱藏功能會讓「為什麼我沒有這個按鈕」變成無法自己排解的問題 ——
+ * 且前端的判斷從來不是那道閘（護欄 G2 的同一個道理）。
+ *
+ * ToDo: (20260817 - Luphia) 讀取仍是全帳本可見（計畫書 §7.3 第 1 順位）。
+ * 異動軌跡已補（`EMPLOYEE_PII` / `UPDATE`），但畫面上還看不到它 ——
+ * 「這格是誰改的」目前只能查 `AuditLog`，而有處置權的人不會去翻資料庫。
  */
 
 interface ISelectedCell {

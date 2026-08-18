@@ -582,6 +582,15 @@ export const hrManagement = {
       "이 계정은 아직 직원 정보와 연결되지 않아 근태를 표시할 수 없습니다. 인사팀에 등록된 회사 이메일을 확인해 주세요.",
     error_punch: "기록에 실패했습니다. 잠시 후 다시 시도해 주세요.",
   },
+  /**
+   * Info: (20260817 - Luphia) 모든 근태 엔드포인트가 반환할 수 있는 오류.
+   * 페이지별이 아니라 공용 문구이므로 하나의 네임스페이스에 둔다.
+   */
+  attendance_common: {
+    error_rate_limited:
+      "짧은 시간에 요청이 너무 많았습니다. 잠시 후 다시 시도해 주세요.",
+    error_supervisor_only: "이 작업은 부서 관리자만 할 수 있습니다.",
+  },
   attendance_result: {
     title: "근태 현황과 이상",
     subtitle: "근무 배정과 기록을 실시간으로 대조한 결과입니다",

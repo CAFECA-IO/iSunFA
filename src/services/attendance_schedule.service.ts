@@ -5,6 +5,7 @@ import {
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
+import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
 import { PRISMA_ERROR, rethrowAsAppError } from "@/lib/utils/prisma_error";
 import { deriveShiftPatternKind } from "@/lib/attendance_rules";
 import { toShiftWindow } from "@/lib/attendance_schedule_view";
@@ -33,6 +34,10 @@ import {
   shiftPatternRepo,
 } from "@/repositories/shift_pattern.repo";
 import { AttendanceScheduleInvariantError } from "@/repositories/attendance_schedule_invariant";
+import {
+  auditLogRepo,
+  IAuditLogRepository,
+} from "@/repositories/audit_log.repo";
 
 /**
  * Info: (20260813 - Julian) 班別與排班（A6 / A7 / A8）。排班是判定矩陣（A9）的輸入之一，
@@ -58,11 +63,20 @@ const toCell = (
   };
 };
 
+/**
+ * Info: (20260817 - Luphia) 只取 `createAuditLog` 而不是整個 `IAuditLogRepository`：
+ * 這支 service 只寫不讀稽核，而讓它拿到查詢方法會讓測試的假物件必須實作
+ * 四個方法（含一個複雜的 Prisma payload 型別）才編得過 —— 那種成本會誘使下一個人
+ * 改用 `as unknown as` 繞過去，而那就繞掉了型別檢查本身。
+ */
+type IAuditLogWriter = Pick<IAuditLogRepository, "createAuditLog">;
+
 export class AttendanceScheduleService {
   constructor(
     private readonly employees: IEmployeeRepository,
     private readonly schedule: IAttendanceScheduleRepository,
     private readonly patterns: IShiftPatternRepository,
+    private readonly audits: IAuditLogWriter,
   ) {}
 
   // Info: (20260813 - Julian) A6：班別清單。`kind`（固定／彈性）由六個欄位衍生，不是資料庫欄位——存判別欄位只會在有人改時間忘了同步改它時開始說謊
@@ -146,19 +160,59 @@ export class AttendanceScheduleService {
   /**
    * Info: (20260813 - Julian) A8：改單日排班。
    *
-   * ToDo: (20260813 - Julian) 這個動作沒有留下任何軌跡，而它會改寫歷史判定——
-   * 判定結果即時算（A9 不讀結果表），把 8/12 從上班日改成休假，那天的曠職
-   * 就當場消失，沒有任何地方記得「誰在什麼時候改的、原本是什麼」。
-   * 正式版需要排班異動軌跡：排班改成 append-only 加生效版本（貴，但能重建
-   * 任一時點的班表），或新增 `AuditLogDataType` 的排班類別（便宜，足以回答
-   * 「誰改的」）。Demo 階段只留這行日誌。
+   * Info: (20260817 - Luphia) 這個動作會**改寫歷史判定**：判定即時算不落地（A9 不讀結果表），
+   * 把 8/12 從上班日改成休假，那天的曠職就當場消失。因此它必須留痕。
+   *
+   * 取母計畫 §10.1 已規劃的做法（`EMPLOYEE_PII` / `UPDATE`）而不是新增
+   * `AuditLogDataType`：ADR 018 §6 把個資軌跡的調查軸線定為 `Employee.id`，
+   * 而「誰的班表被誰改過」正是同一條軸線上的問題。另立型別只會讓
+   * 「這名員工的資料被誰動過」需要查兩種 dataType。
+   *
+   * `dataId` 填**被改的那位員工**（不是操作者）—— 同 §10.1 對逐人動作的處置，
+   * 也同 ADR 018 §6 的理由：調查問的是「哪些人受影響」。操作者記在 `userId`。
+   *
+   * ToDo: (20260817 - Luphia) 稽核寫在 upsert **之後**，兩者不在同一個交易裡：
+   * 排班寫成功而稽核寫失敗時，會留下一筆沒有軌跡的變更（呼叫端會收到 500，
+   * 但改動已經生效）。要讓它原子化，得走 `coding_guidelines.md` §1.1 的
+   * unit-of-work（把兩張表的寫入放進 repository 的同一個交易）——
+   * 那是正式版連同「排班 append-only 加生效版本」一起評估的事，
+   * 因為真正要重建的是「任一時點的班表長什麼樣」，而不只是「誰改的」。
    */
   public async updateScheduleDay(params: {
     accountBookId: string;
     input: IAttendanceScheduleUpdate;
+    actorEmployeeId: string;
     actorEmployeeNo: string;
+    actorUserId: string;
   }): Promise<IScheduleDayCell> {
-    const { accountBookId, input, actorEmployeeNo } = params;
+    const {
+      accountBookId,
+      input,
+      actorEmployeeId,
+      actorEmployeeNo,
+      actorUserId,
+    } = params;
+
+    /**
+     * Info: (20260817 - Luphia) 排班寫入限主管。**這不是計畫書 §7.3 第 1 順位的權限矩陣**，
+     * 是在那份矩陣做出來之前把最大的洞收窄。
+     *
+     * 為什麼不能等：排班是判定的**比較基準**，而判定即時算不落地 ——
+     * 改一格排班就是改一天的歷史判定，且全系統只留一行日誌。
+     * 讀取端（月曆 GET、判定矩陣 A9）維持全帳本可見（那是 §7.3 第 1 順位要處理的），
+     * 這裡只擋**寫入**：能看到別人的班表是隱私問題，能改別人的班表是稽核問題，
+     * 而後者無法事後復原。
+     *
+     * 沿用 `isDepartmentManager`（與銷假徵詢同一個判斷點），不另建第二套角色判定 ——
+     * 同一個問題有兩個答案處，兩者遲早分岔（檢查清單 §2.1）。
+     */
+    const isManager = await this.employees.isDepartmentManager({
+      accountBookId,
+      employeeId: actorEmployeeId,
+    });
+    if (!isManager) {
+      throw new AppError(API_ERRORS.FO_ATTENDANCE_SUPERVISOR_ONLY);
+    }
 
     const employee = await this.employees.findByIdInAccountBook(
       accountBookId,
@@ -182,6 +236,14 @@ export class AttendanceScheduleService {
         workDate: input.workDate,
         dayType: input.dayType,
         shiftPatternId: input.shiftPatternId,
+      });
+
+      await this.audits.createAuditLog({
+        userId: actorUserId,
+        accountBookId,
+        dataType: AuditLogDataType.EMPLOYEE_PII,
+        dataId: input.employeeId,
+        action: AuditLogAction.UPDATE,
       });
 
       logger.info(
@@ -208,4 +270,5 @@ export const attendanceScheduleService = new AttendanceScheduleService(
   employeeRepo,
   attendanceScheduleRepo,
   shiftPatternRepo,
+  auditLogRepo,
 );

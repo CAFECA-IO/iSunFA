@@ -13,6 +13,7 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
 import { encryptPii } from "@/lib/hr_pii_crypto";
 import { deriveShiftPatternKind } from "@/lib/attendance_rules";
+import { isOnSite } from "@/lib/attendance_presence";
 import { findNearestGeofence, IGeofenceMatch } from "@/lib/attendance_geofence";
 import { toShiftWindow } from "@/lib/attendance_schedule_view";
 import {
@@ -223,18 +224,23 @@ export class AttendancePunchService {
    *
    * `existing` 的 `punchType` 刻意寫成 `string` 而非 `PunchType`：Prisma 回字面量聯集，
    * `@/constants/attendance` 是 TS enum，enum 是名義型別、無法反向賦值，用 `string` 接才能兩邊互通。
+   *
+   * Info: (20260817 - Luphia) 「在不在現場」一律問 `isOnSite`，不在這裡自己數卡 ——
+   * 原本的 `上班卡數 > 下班卡數` 是同一個問題的第二個答案，而它與現場名單所用的
+   * 時序判斷在 `[IN, IN, OUT]` 上結論相反（檢查清單 §2.1）。
+   *
+   * ToDo: (20260817 - Luphia) 這裡仍然是「先查後改」：查到寫入之間沒有鎖，
+   * 而 `AttendancePunch` 是 append-only、沒有可用的唯一鍵（一天多次進出是合法的），
+   * 所以兩台裝置同時送同一種卡仍會寫進兩筆。收斂判斷點只讓**後果**一致，沒有消除競態。
+   * 真正的解法是把狀態檢查與寫入放進同一個 serializable 交易，或另存一張
+   * 「當前工作階段」表由它的唯一鍵擋 —— 兩者都屬正式版範圍（母計畫 §12.3）。
+   * 限流（`ATTENDANCE_PUNCH`，5/min）把這件事的可觸發次數壓到很低，但那是緩解不是修復。
    */
   private assertPunchableState(
     punchType: PunchType,
-    existing: { punchType: string }[],
+    existing: { punchType: string; punchedAt: Date }[],
   ): void {
-    const ins = existing.filter(
-      (punch) => punch.punchType === PunchType.CLOCK_IN,
-    ).length;
-    const outs = existing.filter(
-      (punch) => punch.punchType === PunchType.CLOCK_OUT,
-    ).length;
-    const onSite = ins > outs;
+    const onSite = isOnSite(existing, (punch) => punch.punchedAt.getTime());
 
     if (punchType === PunchType.CLOCK_IN && onSite) {
       throw new AppError(API_ERRORS.VA_PUNCH_INVALID_STATE);
@@ -307,7 +313,8 @@ export class AttendancePunchService {
       shift,
       shiftName: day?.shiftPattern?.name ?? null,
       shiftKind: shift ? deriveShiftPatternKind(shift) : null,
-      onSite: ins.length > outs.length,
+      // Info: (20260817 - Luphia) 與 `assertPunchableState`、現場名單同一個判斷點
+      onSite: isOnSite(punches, (punch) => punch.punchedAt.getTime()),
       firstInMinute:
         ins.length > 0
           ? Math.min(...ins.map((p) => toMinute(p.punchedAt)))

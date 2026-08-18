@@ -4,6 +4,8 @@ import { AppError } from "@/lib/utils/error";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { RateLimitBucketEnum } from "@/constants/rate_limit";
+import { enforceRateLimit } from "@/lib/rate_limiter";
 import {
   attendanceScheduleQuerySchema,
   attendanceScheduleUpdateSchema,
@@ -23,9 +25,14 @@ import { attendanceScheduleService } from "@/services/attendance_schedule.servic
  * 排班畫面必須能在判定之外獨立存在 —— 下個月的班表現在就排得出來，
  * 而那時還沒有任何打卡可判。
  *
- * ToDo: (20260813 - Julian) Demo 沒有權限控制：任何員工都改得了任何人的班。
- * 正式版排班是 HR／主管的動作，且**必須留下異動軌跡** ——
- * 改排班等於改判定的比較基準，見 service 的說明。
+ * Info: (20260817 - Luphia) PUT 限部門主管（service 層的 `isDepartmentManager` 閘）。
+ * GET 維持全帳本可見 —— 讀取範圍屬計畫書 §7.3 第 1 順位的權限矩陣，尚未實作。
+ *
+ * 每一次成功的異動寫一筆 `EMPLOYEE_PII` / `UPDATE` 稽核（`dataId` 是被改的員工），
+ * 因為改排班等於改判定的比較基準 —— 詳見 service 的說明。
+ *
+ * ToDo: (20260817 - Luphia) 主管閘只是收窄，不是權限矩陣：HR 承辦不是任何部門的
+ * `managerId`，正式版會被這道閘擋住，屆時由權限矩陣取代而不是疊在它上面。
  */
 export async function GET(
   request: NextRequest,
@@ -37,6 +44,13 @@ export async function GET(
     if (!sessionUser) {
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
+
+    // Info: (20260817 - Luphia) DeWT 驗證之後、業務邏輯之前（限流規範 §2）
+    const limited = enforceRateLimit(
+      sessionUser.address,
+      RateLimitBucketEnum.READ,
+    );
+    if (limited) return limited;
 
     const { searchParams } = new URL(request.url);
     const parsed = attendanceScheduleQuerySchema.safeParse({
@@ -83,6 +97,13 @@ export async function PUT(
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
+    // Info: (20260817 - Luphia) DeWT 驗證之後、業務邏輯之前（限流規範 §2）
+    const limited = enforceRateLimit(
+      sessionUser.address,
+      RateLimitBucketEnum.ATTENDANCE_WRITE,
+    );
+    if (limited) return limited;
+
     const body = await request.json();
     /**
      * Info: (20260813 - Julian) 這一支 schema 是可辨識聯集：
@@ -104,7 +125,10 @@ export async function PUT(
       await attendanceScheduleService.updateScheduleDay({
         accountBookId,
         input: parsed.data,
+        actorEmployeeId: actor.id,
         actorEmployeeNo: actor.employeeNo,
+        // Info: (20260817 - Luphia) 稽核記的是操作者的 User，dataId 記被改的員工
+        actorUserId: sessionUser.id,
       }),
     );
   } catch (error) {

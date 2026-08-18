@@ -571,6 +571,14 @@ export const hrManagement = {
       "这个账号还没有对应到员工档，因此看不到出勤数据。请联系人事确认建档的公司邮箱。",
     error_punch: "打卡失败，请稍后再试",
   },
+  /**
+   * Info: (20260817 - Luphia) 任何一支考勤端点都可能返回的错误。
+   * 文案是共用的、不属于某一页，因此收在同一个命名空间。
+   */
+  attendance_common: {
+    error_rate_limited: "短时间内操作过于频繁，请稍等一下再试。",
+    error_supervisor_only: "这个操作只有部门主管可以执行。",
+  },
   attendance_result: {
     title: "出勤总览与异常",
     subtitle: "排班与打卡的实时比对结果，不必比对任何报表",
