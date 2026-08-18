@@ -312,87 +312,32 @@ export class TeamRepository implements ITeamRepository {
    */
   async listMismatchedAcceptorIds(teamId: string): Promise<string[]> {
     /**
-     * Info: (20260818 - Luphia) 只看**每個人最近一次**加入（第四輪 B-4）。
+     * Info: (20260818 - Luphia) 以**來源邀請的外鍵**判斷，不比對任何時間戳（第六輪第 1 條）。
      *
-     * 原本查的是該團隊歷來所有 `MISMATCHED` 的邀請列，於是一月以不符的信箱
-     * 加入、被移出、二月以正確信箱重新加入並記為 `MATCHED` 的人，
-     * 清單上仍然掛著標記——而且沒有任何操作能清掉它。
-     * 一個清不掉的警示等於一個永久的誤報。
+     * 先前的寫法是「取每人最新一筆已接受的邀請，再比對成員資格的建立時間」，
+     * 而那兩個時間來自兩個時鐘：邀請的 `acceptedAt` 是 app 在 route 一開始取的
+     * `Date.now()`，成員的 `createdAt` 預設是資料庫的 `CURRENT_TIMESTAMP`。
+     * 實測相差 +19ms（中間隔著五次以上查詢），於是條件永遠不成立、**標記永遠
+     * 不顯示**；而在 app 與 DB 時鐘有偏移的部署上又會零星出現，更難查。
      *
-     * 因此取全部已接受的邀請（含比對結果），在程式裡挑每人最新的那一筆。
-     * 用 `acceptedAt` 而非 `updatedAt`：後者任何後續更新都會動。
+     * 現在從**成員**這一側查：每一段成員資格都記著自己的來源邀請
+     * （`joinedByInvitationId`，非邀請途徑為 NULL）。因此
+     *
+     * - 「是不是現任成員」由 `TeamMember` 列的存在本身保證，不必另外交集；
+     * - 「是不是這一段成員資格」由外鍵保證，重新加入會是新的一列、新的外鍵；
+     * - 位址直接加入的成員 NULL，天然不在結果裡（他們也沒有信箱可比對）。
      */
-    const rows = await prisma.teamInvitation.findMany({
-      /**
-       * Info: (20260818 - Luphia) `acceptedAt` 也要非 null（第四輪自審）。
-       *
-       * Postgres 的 `ORDER BY ... DESC` 預設把 NULL 排在**最前面**，因此一列
-       * 「有接受者但沒有接受時間」的異常資料會被當成最新的那一筆，
-       * 決定這個人要不要被標記。兩個欄位是一起寫入的，缺一即為異常資料，
-       * 排除它比讓它排第一名安全。
-       */
+    const members = await prisma.teamMember.findMany({
       where: {
         teamId,
-        acceptedByUserId: { not: null },
-        acceptedAt: { not: null },
+        joinedByInvitation: {
+          acceptedEmailMatch: INVITE_EMAIL_MATCH.MISMATCHED,
+        },
       },
-      select: {
-        acceptedByUserId: true,
-        acceptedEmailMatch: true,
-        acceptedAt: true,
-      },
-      orderBy: { acceptedAt: "desc" },
+      select: { userId: true },
     });
 
-    const latest = new Map<string, { match: string | null; at: Date }>();
-    for (const row of rows) {
-      const userId = row.acceptedByUserId;
-      if (!userId || !row.acceptedAt) continue;
-      // Info: (20260818 - Luphia) 已按 acceptedAt 遞減排序，先看到的就是最新的那一筆
-      if (!latest.has(userId)) {
-        latest.set(userId, {
-          match: row.acceptedEmailMatch,
-          at: row.acceptedAt,
-        });
-      }
-    }
-
-    const mismatched = [...latest.entries()].filter(
-      ([, value]) => value.match === INVITE_EMAIL_MATCH.MISMATCHED,
-    );
-    if (mismatched.length === 0) return [];
-
-    /**
-     * Info: (20260818 - Luphia) 標記不得比它描述的那段成員資格活得久（第五輪 C-1）。
-     *
-     * 只看「最近一次已接受的邀請」還不夠：**以錢包位址直接加人**（POST members）
-     * 完全不建立 `TeamInvitation` 列。因此
-     *
-     *   一月以不符的信箱受邀加入 → 被移出 → 二月由 ADMIN 以位址直接加回
-     *
-     * 之後，最新的一筆已接受邀請仍然是一月那筆 `MISMATCHED`，於是標記永久掛著
-     * 且無法清除——與原本的缺陷同形，只是換了一條路徑。
-     *
-     * 因此再比一次**現任成員資格的建立時間**：那筆邀請要晚於（或等於）
-     * 這個人現在這段成員資格的起點，標記才成立。早於它的，描述的是上一段
-     * 已經結束的關係。
-     */
-    const memberships = await prisma.teamMember.findMany({
-      where: { teamId, userId: { in: mismatched.map(([userId]) => userId) } },
-      select: { userId: true, createdAt: true },
-    });
-    const joinedAt = new Map(
-      memberships.map((member) => [member.userId, member.createdAt]),
-    );
-
-    return mismatched
-      .filter(([userId, value]) => {
-        const since = joinedAt.get(userId);
-        // Info: (20260818 - Luphia) 已不是成員：呼叫端會交集成員清單，這裡不標也無妨
-        if (!since) return false;
-        return value.at.getTime() >= since.getTime();
-      })
-      .map(([userId]) => userId);
+    return members.map((member) => member.userId);
   }
 
   async listTeamInvitations(teamId: string, status: string) {
@@ -535,6 +480,14 @@ export class TeamRepository implements ITeamRepository {
           teamId,
           userId,
           role,
+          /**
+           * Info: (20260818 - Luphia) 記下這段成員資格由哪一封邀請而來（第六輪第 1 條）。
+           *
+           * 與認領那封邀請在**同一個交易**裡：兩者要嘛一起成立、要嘛都不成立。
+           * 成員清單的「信箱不符」標記據此判斷「這個紀錄描述的是不是現在這段
+           * 成員資格」——先前是拿兩個時鐘的時間戳去推論，而那個比較永遠不成立。
+           */
+          joinedByInvitationId: inviteId,
         },
       });
     });

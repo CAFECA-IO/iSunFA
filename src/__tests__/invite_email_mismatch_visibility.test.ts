@@ -17,34 +17,21 @@ import { prisma } from "@/lib/prisma";
  * 這一檔釘住兩件事：查得出來（repo），以及只給有權處置的人看（可見性規則）。
  */
 
+/**
+ * Info: (20260818 - Luphia) 標記改以**來源邀請的外鍵**查詢（第六輪第 1 條）：
+ * 從成員那一側查，因此只需要 mock `teamMember.findMany`。
+ */
 jest.mock("@/lib/prisma", () => ({
-  prisma: {
-    teamInvitation: { findMany: jest.fn(async () => []) },
-    // Info: (20260818 - Luphia) 標記要與現任成員資格的起點比對（第五輪 C-1）
-    teamMember: { findMany: jest.fn(async () => []) },
-  },
+  prisma: { teamMember: { findMany: jest.fn(async () => []) } },
 }));
 
-const findManyMock = prisma.teamInvitation.findMany as unknown as ReturnType<
-  typeof jest.fn
->;
 const memberMock = prisma.teamMember.findMany as unknown as ReturnType<
   typeof jest.fn
 >;
 
-// Info: (20260818 - Luphia) 預設：這些人都是在很久以前加入且仍在團隊裡
-const JOINED_LONG_AGO = new Date("2020-01-01");
-
 beforeEach(() => {
   jest.clearAllMocks();
-  findManyMock.mockResolvedValue([]);
-  memberMock.mockImplementation(async (args: unknown) => {
-    const { where } = args as { where: { userId: { in: string[] } } };
-    return where.userId.in.map((userId) => ({
-      userId,
-      createdAt: JOINED_LONG_AGO,
-    }));
-  });
+  memberMock.mockResolvedValue([]);
 });
 
 const MEMBERS = [
@@ -54,50 +41,33 @@ const MEMBERS = [
 
 describe("listMismatchedAcceptorIds", () => {
   /**
-   * Info: (20260818 - Luphia) **整組**比對查詢參數（第五輪 T-3）。
+   * Info: (20260818 - Luphia) **整組**比對查詢參數（第五輪 T-3 的理由不變）。
    *
-   * 原本是 `where` / `select` / `orderBy` 三條逐欄斷言，於是多加一個
-   * `take: 1` 不會被任何一條發現——而那會讓整個團隊只檢查最新的一封邀請，
-   * 幾乎所有 MISMATCHED 標記都消失（一個安靜的「保護還在、但沒在保護」）。
-   *
-   * `acceptedAt: { not: null }` 是排序正確的前提（Postgres 的 DESC 把 NULL 排最
-   * 前面，缺時間的異常列會被當成最新那一筆）；`orderBy` 是「取每人最新一筆」
-   * 的依據，少了它挑到的是資料庫回傳順序裡的任意一筆。
+   * 逐欄斷言擋不住「多一個鍵」——例如 `take: 1` 會讓整個團隊只檢查一位成員，
+   * 而幾乎所有標記都會消失（一個安靜的「保護還在、但沒在保護」）。
    */
   it("查詢參數完全符合預期（不多也不少）", async () => {
     await teamRepo.listMismatchedAcceptorIds("team-1");
 
-    expect(findManyMock.mock.calls[0][0]).toEqual({
+    expect(memberMock.mock.calls[0][0]).toEqual({
+      /**
+       * Info: (20260818 - Luphia) 三個條件各自對應一句話：
+       * 這個團隊的（teamId）、現任成員（`TeamMember` 列存在本身）、
+       * 且**這一段**成員資格的來源邀請記為不符（外鍵 + 巢狀條件）。
+       */
       where: {
         teamId: "team-1",
-        acceptedByUserId: { not: null },
-        acceptedAt: { not: null },
+        joinedByInvitation: {
+          acceptedEmailMatch: INVITE_EMAIL_MATCH.MISMATCHED,
+        },
       },
-      select: {
-        acceptedByUserId: true,
-        acceptedEmailMatch: true,
-        acceptedAt: true,
-      },
-      orderBy: { acceptedAt: "desc" },
+      // Info: (20260818 - Luphia) 只要 userId：不為了畫一個標記把別人的信箱撈出來
+      select: { userId: true },
     });
   });
 
-  const accepted = (
-    userId: string | null,
-    match: string | null,
-    acceptedAt: string,
-  ) => ({
-    acceptedByUserId: userId,
-    acceptedEmailMatch: match,
-    acceptedAt: new Date(acceptedAt),
-  });
-
   it("回傳不符者的 userId 清單", async () => {
-    findManyMock.mockResolvedValue([
-      accepted("u1", INVITE_EMAIL_MATCH.MISMATCHED, "2026-08-10"),
-      accepted("u2", INVITE_EMAIL_MATCH.MATCHED, "2026-08-09"),
-      accepted("u9", INVITE_EMAIL_MATCH.MISMATCHED, "2026-08-08"),
-    ]);
+    memberMock.mockResolvedValue([{ userId: "u1" }, { userId: "u9" }]);
 
     expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual([
       "u1",
@@ -105,90 +75,18 @@ describe("listMismatchedAcceptorIds", () => {
     ]);
   });
 
-  /**
-   * Info: (20260818 - Luphia) 本組最重要的一條：**只看最近一次加入**（第四輪 B-4）。
-   *
-   * 一月以不符的信箱加入、被移出、二月以正確信箱重新加入並記為 MATCHED——
-   * 舊寫法會永遠掛著標記，而且沒有任何操作能清掉它。
-   */
-  it("重新加入且相符時不再標記", async () => {
-    findManyMock.mockResolvedValue([
-      accepted("u1", INVITE_EMAIL_MATCH.MATCHED, "2026-02-01"),
-      accepted("u1", INVITE_EMAIL_MATCH.MISMATCHED, "2026-01-01"),
-    ]);
-
-    expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual([]);
-  });
-
-  // Info: (20260818 - Luphia) 反向也要成立：最近一次不符就要標，即使先前相符過
-  it("最近一次不符時仍要標記", async () => {
-    findManyMock.mockResolvedValue([
-      accepted("u1", INVITE_EMAIL_MATCH.MISMATCHED, "2026-02-01"),
-      accepted("u1", INVITE_EMAIL_MATCH.MATCHED, "2026-01-01"),
-    ]);
-
-    expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual(["u1"]);
-  });
-
-  /**
-   * Info: (20260818 - Luphia) 標記不得比它描述的那段成員資格活得久（第五輪 C-1）。
-   *
-   * 以錢包位址直接加人（POST members）**不建立任何邀請列**，因此
-   * 「一月不符信箱受邀加入 → 被移出 → 二月以位址直接加回」之後，最新的一筆
-   * 已接受邀請仍是一月那筆 MISMATCHED——標記永久掛著且無法清除。
-   */
-  it("成員是在那封邀請之後才重新加入時不標記", async () => {
-    findManyMock.mockResolvedValue([
-      accepted("u1", INVITE_EMAIL_MATCH.MISMATCHED, "2026-01-10"),
-    ]);
-    memberMock.mockResolvedValue([
-      { userId: "u1", createdAt: new Date("2026-02-01") },
-    ]);
-
-    expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual([]);
-  });
-
-  // Info: (20260818 - Luphia) 反向：邀請就是這段成員資格的起點時，標記成立
-  it("那封邀請就是目前這段成員資格的起點時仍要標記", async () => {
-    findManyMock.mockResolvedValue([
-      accepted("u1", INVITE_EMAIL_MATCH.MISMATCHED, "2026-02-01"),
-    ]);
-    memberMock.mockResolvedValue([
-      { userId: "u1", createdAt: new Date("2026-02-01") },
-    ]);
-
-    expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual(["u1"]);
-  });
-
-  // Info: (20260818 - Luphia) 已不是成員就不必標（呼叫端也會交集成員清單）
-  it("已離開團隊的人不標記", async () => {
-    findManyMock.mockResolvedValue([
-      accepted("u1", INVITE_EMAIL_MATCH.MISMATCHED, "2026-02-01"),
-    ]);
+  it("沒有人不符時回空陣列", async () => {
     memberMock.mockResolvedValue([]);
 
     expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual([]);
   });
 
-  // Info: (20260818 - Luphia) 位址邀請沒有可比對的信箱（null），不是「不符」
-  it("比對結果為 null 或 UNAVAILABLE 都不標記", async () => {
-    findManyMock.mockResolvedValue([
-      accepted("u1", null, "2026-08-10"),
-      accepted("u2", INVITE_EMAIL_MATCH.UNAVAILABLE, "2026-08-10"),
-    ]);
-
-    expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual([]);
-  });
-
-  // Info: (20260818 - Luphia) 併發下可能讀到尚未寫入接受者的列；null 不該變成 "null" 字串
-  it("濾掉沒有接受者的列", async () => {
-    findManyMock.mockResolvedValue([
-      accepted(null, INVITE_EMAIL_MATCH.MISMATCHED, "2026-08-10"),
-      accepted("u1", INVITE_EMAIL_MATCH.MISMATCHED, "2026-08-09"),
-    ]);
-
-    expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual(["u1"]);
-  });
+  /**
+   * Info: (20260818 - Luphia) 「只看現在這段成員資格」與「只看現任成員」這兩件事
+   * 現在都由查詢本身保證，因此不再有對應的單元測試——
+   * 它們不是程式裡的判斷，而是資料模型的性質（外鍵 + 列的存在）。
+   * 真實流程的驗證在 `src/__tests__/e2e/invite_mismatch_badge.e2e.test.ts`。
+   */
 });
 
 describe("attachEmailMismatch", () => {

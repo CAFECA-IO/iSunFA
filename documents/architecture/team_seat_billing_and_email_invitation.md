@@ -244,6 +244,8 @@ model TeamInvitation {
 >
 > 已做的是**如實記錄**（2026-08-17）：`TeamInvitation.acceptedByUserId` / `acceptedAt` 記下是哪個帳號用掉了這封邀請，`acceptedEmailMatch` 記下比對結果（`MATCHED` / `MISMATCHED` / `UNAVAILABLE`，位址邀請為 null）。**記錄不阻擋**——工作信箱收到邀請、用個人 Google 帳號登入是完全正常的行為。`UNAVAILABLE` 是常態而非異常，因為 passkey 帳號本來就沒有信箱。
 >
+> **判斷「是不是現在這段成員資格」用外鍵，不用時間戳**（2026-08-18 修正，第六輪）：`TeamMember.joinedByInvitationId` 記下這段成員資格的來源邀請，標記查詢因此是一次 join。先前以「邀請的 `acceptedAt` 不早於成員的 `createdAt`」推論，而那兩個值來自**兩個時鐘**——`acceptedAt` 是 app 在 route 一開始取的 `Date.now()`，`createdAt` 的預設是資料庫的 `CURRENT_TIMESTAMP`，中間隔著五次以上查詢（實測 +19ms）。結果是條件永遠不成立、**標記永遠不顯示**；而在 app 與 DB 時鐘有偏移的部署上又會零星出現，比永遠不出現更難查。
+>
 > **而記錄要有讀者**（2026-08-18）：`acceptedEmailMatch` 原本是純寫入欄位——沒有任何查詢、API 或畫面讀它，稽核價值等於零。現在有兩個讀者：接受時 `MISMATCHED` 會寫一筆 `logger.warn`（可接上監控），以及成員清單對**管理職**（OWNER / ADMIN）附上 `emailMismatch` 旗標並在成員卡片上標示。非管理職拿到的清單完全沒有這個欄位——不是 `false`，而是沒有這一欄：一個恆為 false 的欄位會讓前端把「沒有標記」讀成「已驗證相符」。
 
 安全與濫用防護：

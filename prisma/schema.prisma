@@ -149,10 +149,34 @@ model TeamMember {
   userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id])
   role      TeamRole
+  /**
+   * Info: (20260818 - Luphia) 這段成員資格由哪一封邀請而來（第六輪第 1 條）。
+   *
+   * 為什麼需要它：`TeamInvitation.acceptedEmailMatch` 記下「接受者的已驗證信箱與
+   * 受邀信箱是否相符」，而成員清單要據此對管理職顯示標記。問題是「這個標記描述的
+   * 是不是**現在**這段成員資格」——同一個人可能被移出再加回，舊邀請的紀錄不該
+   * 掛在新的成員資格上。
+   *
+   * 先前用時間戳推論（邀請的 `acceptedAt` 對成員的 `createdAt`），而那兩個值來自
+   * **兩個時鐘**：`acceptedAt` 是 app 在 route 一開始取的 `Date.now()`，
+   * `createdAt` 的預設是資料庫的 `CURRENT_TIMESTAMP`。實測差 +19ms（中間隔著五次
+   * 以上查詢），於是比較永遠不成立、標記永遠不顯示；而在 app 與 DB 時鐘有偏移的
+   * 部署上它又會零星地出現——比永遠不出現更難查。
+   *
+   * 這一欄把那個**關聯**直接寫下來：一次外鍵比對，不看任何時鐘。
+   *
+   * NULL 的語意是「這段成員資格不是邀請來的」——以錢包位址直接加入、後台加入、
+   * seed 建立的成員都是 NULL，而他們本來就沒有信箱可比對。歷史資料同樣留 NULL
+   * （猜一封邀請比留空更糟），因此不需要回填。
+   */
+  joinedByInvitationId String?         @map("joined_by_invitation_id")
+  joinedByInvitation   TeamInvitation? @relation("MembershipOrigin", fields: [joinedByInvitationId], references: [id])
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([teamId, userId])
+  // Info: (20260818 - Luphia) 標記查詢以 (team_id, joined_by_invitation_id) 撈本團隊的成員
+  @@index([teamId, joinedByInvitationId])
   @@map("team_member")
 }
 
@@ -303,6 +327,8 @@ model TeamInvitation {
    * 唯一仍該實刪的是**信寄不出去時的回滾**（見 `deleteInvitation`）：
    * 一封沒寄出去的邀請不是歷史紀錄，留著只會佔住 `pendingKey`。
    */
+  // Info: (20260818 - Luphia) 由這封邀請開始的成員資格（第六輪第 1 條，通常 0 或 1 段）
+  joinedMembers   TeamMember[] @relation("MembershipOrigin")
   revokedByUserId String?   @map("revoked_by_user_id")
   revokedBy       User?     @relation("InvitationRevoker", fields: [revokedByUserId], references: [id])
   revokedAt       DateTime? @map("revoked_at")

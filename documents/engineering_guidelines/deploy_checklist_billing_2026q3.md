@@ -59,6 +59,7 @@ NEXT_PUBLIC_CREDIT_POINT_ADDRESS
 | `team_invitation` | `invitee_address` 改為可為 NULL（email 邀請時對方還沒有位址） | 低；放寬約束不會與既有資料衝突 |
 | `team_invitation` | **移除**舊的複合唯一鍵 `(team_id, invitee_*, status)`，改為 `@@index([team_id, status])` | 低；但移除後到 3.3 回填完成前，既有待接受邀請暫時沒有 DB 層併發防護 |
 | `team_invitation` | 新增 `accepted_by_user_id`（FK → user）、`accepted_at`、`accepted_email_match` | 低；既有列皆為 NULL，**無回填需求**（歷史邀請無從得知接受者，留 NULL 比猜一個值誠實） |
+| `team_member` | 新增 `joined_by_invitation_id`（FK → team_invitation，`ON DELETE SET NULL`）＋ `@@index([team_id, joined_by_invitation_id])` | 低；既有列為 NULL，**刻意不回填**——NULL 的語意是「這段成員資格不是邀請來的」，而歷史列無從得知是哪一封（猜一封比留空更糟）。代價是舊成員不顯示「信箱不符」標記，而他們現在也不顯示 |
 | `faith_memory`（新表） | 費思長期記憶：密文欄位、`expires_at`、`(user_id, team_id)` 唯一鍵 | 低；新表無既有資料 |
 | `faith_memory_deletion_log`（新表） | 記憶刪除的稽核列（不含內容） | 低；新表無既有資料 |
 | `team_subscription` | 新增 `seats`（預設 1）、`unit_price`（預設 0） | 低，但**必須接著做 3.1** |
