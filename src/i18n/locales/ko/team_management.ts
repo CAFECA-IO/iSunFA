@@ -6,6 +6,22 @@ export const teamManagement = {
   accept_via_fido2: "FIDO2로 수락",
   accepting: "처리 중...",
   no_teams: "팀이 없습니다.",
+  // Info: (20260818 - Luphia) 좌석 추가 비용의 사전 안내（사용자 제보 20260818）
+  seat_charge: {
+    loading: "요금을 계산하고 있습니다…",
+    charge_title: "전송하면 {{amount}}이 즉시 청구됩니다",
+    charge_detail:
+      "{{seats}}석을 추가하며, 이번 기간의 남은 {{days}}일에 대해 일할 계산한 금액을 팀 구독의 결제 수단으로 청구합니다.",
+    reuse: "이번에는 이미 결제된 빈 좌석을 사용하므로 추가 청구가 없습니다.",
+    period_end:
+      "이번 기간이 곧 종료되므로 청구되지 않으며, 좌석은 즉시 적용됩니다.",
+    free_plan: "무료 플랜에는 좌석 비용이 없습니다.",
+    blocked_title: "지금은 멤버를 추가할 수 없습니다",
+    quote_failed:
+      "요금 계산에 실패했습니다. 금액을 모르는 상태로 청구되지 않도록 다시 계산해 주세요.",
+    retry: "다시 계산",
+    submit_with_amount: "확인 후 {{amount}} 결제",
+  },
   invite_member: "멤버 초대",
   decline_invite: "거절",
   declining: "처리 중...",

@@ -6,6 +6,21 @@ export const teamManagement = {
   accept_via_fido2: "使用 FIDO2 接受邀请",
   accepting: "处理中...",
   no_teams: "目前没有任何团队。",
+  // Info: (20260818 - Luphia) 加席费用的事前披露（产品反馈 20260818）
+  seat_charge: {
+    loading: "正在试算费用…",
+    charge_title: "提交后将立即收取 {{amount}}",
+    charge_detail:
+      "新增 {{seats}} 个席位，按本期剩余 {{days}} 天比例计算，向团队订阅的付款方式收取。",
+    reuse: "本次使用已付费但空出的席位，不会再次收费。",
+    period_end: "本期即将结束，本次不收费，席位仍会立即生效。",
+    free_plan: "免费方案不收席位费用。",
+    blocked_title: "当前无法新增成员",
+    quote_failed:
+      "费用试算失败。为避免在不知道金额的情况下扣款，请先重新试算。",
+    retry: "重新试算",
+    submit_with_amount: "确认并支付 {{amount}}",
+  },
   invite_member: "邀请成员",
   decline_invite: "拒绝邀请",
   declining: "处理中...",
