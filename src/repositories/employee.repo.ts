@@ -48,6 +48,19 @@ export interface IEmployeeRepository {
     accountBookId: string,
     employeeId: string,
   ): Promise<Employee | null>;
+  /**
+   * Info: (20260818 - Julian) 顯示用的員工檔：工號、姓名、職稱、部門名稱。
+   *
+   * 只有 Tier 1 欄位（同事之間本來就看得到的）。電話與信箱不在這裡 ——
+   * 那些是 Tier 2，要走專屬端點並留下 `AuditLog`（ADR 018 §6）。
+   */
+  findProfile(params: { accountBookId: string; employeeId: string }): Promise<{
+    employeeNo: string;
+    name: string;
+    jobTitle: string | null;
+    departmentName: string | null;
+  } | null>;
+
   // Info: (20260817 - Julian) 「他是不是主管」——顯示用；授權請用 managesEmployee
   isDepartmentManager(params: {
     accountBookId: string;
@@ -206,6 +219,35 @@ class EmployeeRepository implements IEmployeeRepository {
    * 兩個都留著是刻意的：顯示按鈕與允許動作是兩個不同的問題，
    * 用同一個答案回答它們，正是這次那個缺口的成因。
    */
+  public async findProfile(params: {
+    accountBookId: string;
+    employeeId: string;
+  }): Promise<{
+    employeeNo: string;
+    name: string;
+    jobTitle: string | null;
+    departmentName: string | null;
+  } | null> {
+    const row = await prisma.employee.findFirst({
+      where: { id: params.employeeId, accountBookId: params.accountBookId },
+      select: {
+        employeeNo: true,
+        name: true,
+        // Info: (20260818 - Julian) 兩個外鍵都是 SetNull，因此都要能是 null
+        jobTitle: { select: { title: true } },
+        department: { select: { name: true } },
+      },
+    });
+    if (row === null) return null;
+
+    return {
+      employeeNo: row.employeeNo,
+      name: row.name,
+      jobTitle: row.jobTitle?.title ?? null,
+      departmentName: row.department?.name ?? null,
+    };
+  }
+
   public async isDepartmentManager(params: {
     accountBookId: string;
     employeeId: string;

@@ -127,6 +127,8 @@ const buildService = (options: {
       options.employeeInBook === false
         ? null
         : ({ id: TARGET_EMPLOYEE_ID, employeeNo: "EMP002" } as Employee),
+    // Info: (20260818 - Julian) 顯示用的員工檔（hr/me）；本檔不測它，補樁讓介面完整
+    findProfile: async () => null,
     isDepartmentManager: async (params) => {
       managerQueries.push(params.employeeId);
       return options.actorIsManager ?? true;
@@ -168,6 +170,8 @@ const buildService = (options: {
    */
   const hrFunctions: IEmployeeHrFunctionRepository = {
     listHolderIds: async () => [],
+    // Info: (20260818 - Julian) 顯示用的職能清單（hr/me）；本檔不測它
+    listFunctionsOf: async () => [],
     hasAnyFunction: async () => options.actorHasHrFunction ?? false,
     grant: async () => undefined,
     revoke: async () => false,

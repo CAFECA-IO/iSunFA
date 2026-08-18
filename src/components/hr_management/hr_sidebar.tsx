@@ -1,6 +1,6 @@
 "use client";
 
-import { FC } from "react";
+import { FC, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -8,9 +8,34 @@ import {
   HR_NAV_SECTIONS,
   IHrNavItem,
 } from "@/components/hr_management/hr_nav_items";
+import { EmployeeHrFunction } from "@/constants/hr_management";
+import { LEAVE_API } from "@/constants/leave_api";
+import { OVERTIME_API } from "@/constants/overtime_api";
+import { IHrIdentityView } from "@/interfaces/hr_identity";
+import { IEnvelopeLike, request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 
+/**
+ * Info: (20260818 - Julian) 兩個簽核頁的待簽筆數，用來在選單上印徽章。`null` = 還不知道。
+ *
+ * 它**不再決定要不要顯示** —— 那由 `hr/me` 的身分決定。以存量代替身分會把
+ * 剛升上來、還沒有人送單的主管擋在門外，正是 `overtime_approval_page_body`
+ * 檔頭說「不用 403 表達『你沒有要簽的單』」要避免的那件事。
+ */
+interface IApprovalInbox {
+  leave: number | null;
+  overtime: number | null;
+}
+
+const NAV_KEY_LEAVE_APPROVAL = "leave_approval";
+const NAV_KEY_OVERTIME_APPROVAL = "overtime_approval";
+
 interface IHrSidebarProps {
+  /**
+   * Info: (20260818 - Julian) 由 layout 取得並下傳。`null` = 還不知道（含未登入、
+   * 未綁定員工檔、端點掛掉）—— 一律當成「顯示」，理由見 layout 的說明。
+   */
+  identity: IHrIdentityView | null;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -24,9 +49,61 @@ interface IHrSidebarProps {
  * 加上兩個不分組的區塊）。項目長到 14 個之後，「排班月曆在哪」變成一件要從頭
  * 掃到尾的事 —— 分組把掃描範圍從 14 個縮到幾個標題。
  */
-const HrSidebar: FC<IHrSidebarProps> = ({ isOpen, onClose }) => {
+const HrSidebar: FC<IHrSidebarProps> = ({ identity, isOpen, onClose }) => {
   const { t } = useTranslation();
   const pathname = usePathname();
+
+  const [inbox, setInbox] = useState<IApprovalInbox>({
+    leave: null,
+    overtime: null,
+  });
+
+  /**
+   * Info: (20260818 - Julian) 誰看得到簽核入口：部門主管，或具 `HR_ADMIN` 職能的人資。
+   *
+   * 這是**顯示**判準不是授權判準 —— 每一支端點自己仍會擋（假單比對簽核鏈上的
+   * `approverEmployeeId`，加班比對 `listManagedEmployeeIds` 的子樹）。
+   * 藏起來只是為了不讓一個按下去必定是空的入口佔著位置。
+   */
+  const canApprove =
+    identity === null ||
+    identity.isDepartmentManager ||
+    identity.hrFunctions.includes(EmployeeHrFunction.HR_ADMIN);
+
+  useEffect(() => {
+    // Info: (20260818 - Julian) 看不到入口的人不必查筆數，省兩支請求
+    if (!canApprove) return undefined;
+
+    let active = true;
+    /**
+     * Info: (20260818 - Julian) 兩支各自成敗，用 `allSettled` 而不是 `all` ——
+     * 加班那支掛掉不該讓假單那個徽章也跟著消失。
+     */
+    void Promise.allSettled([
+      request<IEnvelopeLike<unknown[]>>(LEAVE_API.REQUEST_PENDING),
+      request<IEnvelopeLike<unknown[]>>(OVERTIME_API.REQUEST_PENDING),
+    ]).then(([leave, overtime]) => {
+      if (!active) return;
+      const countOf = (
+        settled: PromiseSettledResult<IEnvelopeLike<unknown[]>>,
+      ): number | null =>
+        settled.status === "fulfilled" && Array.isArray(settled.value.payload)
+          ? settled.value.payload.length
+          : null;
+      setInbox({ leave: countOf(leave), overtime: countOf(overtime) });
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [canApprove]);
+
+  const pendingCountOf = (key: string): number | null =>
+    key === NAV_KEY_LEAVE_APPROVAL
+      ? inbox.leave
+      : key === NAV_KEY_OVERTIME_APPROVAL
+        ? inbox.overtime
+        : null;
 
   /**
    * Info: (20260818 - Julian) 選中哪一項由 `activeHrNavKeyOf` 一次決定，
@@ -37,6 +114,16 @@ const HrSidebar: FC<IHrSidebarProps> = ({ isOpen, onClose }) => {
   const renderItem = (item: IHrNavItem) => {
     const Icon = item.icon;
     const isActive = item.key === activeKey;
+    const pendingCount = pendingCountOf(item.key);
+    const isApprovalItem =
+      item.key === NAV_KEY_LEAVE_APPROVAL ||
+      item.key === NAV_KEY_OVERTIME_APPROVAL;
+
+    /**
+     * Info: (20260818 - Julian) 簽核不到任何人就不佔一格。
+     * 但**正在看那一頁時不藏** —— 選單項目在腳下消失，會讓人以為自己按錯了。
+     */
+    if (isApprovalItem && !canApprove && !isActive) return null;
 
     if (item.disabled) {
       return (
@@ -66,7 +153,16 @@ const HrSidebar: FC<IHrSidebarProps> = ({ isOpen, onClose }) => {
         <Icon
           className={`size-5 shrink-0 ${isActive ? "text-orange-500" : "text-gray-400"}`}
         />
-        {t(item.labelKey)}
+        <span className="min-w-0 flex-1 truncate">{t(item.labelKey)}</span>
+        {/**
+         * Info: (20260818 - Julian) 既然為了藏空選單已經查了筆數，就把它印出來：
+         * 主管最想知道的是「有幾張等我」，而那個數字現在是免費的。
+         */}
+        {pendingCount !== null && pendingCount > 0 && (
+          <span className="shrink-0 rounded-full bg-orange-500 px-1.5 py-0.5 text-xs font-semibold text-white tabular-nums">
+            {pendingCount}
+          </span>
+        )}
       </Link>
     );
   };

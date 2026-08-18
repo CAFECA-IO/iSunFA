@@ -46,6 +46,8 @@ const EXPECTED_BUCKET: Record<string, Record<string, RateLimitBucketEnum>> = {
     POST: RateLimitBucketEnum.ATTENDANCE_PUNCH,
   },
   "attendance/today/route.ts": { GET: RateLimitBucketEnum.READ },
+  // Info: (20260818 - Julian) 身分查詢：純讀，走 READ
+  "me/route.ts": { GET: RateLimitBucketEnum.READ },
   "attendance/location/route.ts": { GET: RateLimitBucketEnum.READ },
   "attendance/result/route.ts": { GET: RateLimitBucketEnum.READ },
   "attendance/schedule/route.ts": {

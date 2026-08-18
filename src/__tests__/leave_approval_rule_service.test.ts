@@ -113,6 +113,11 @@ class FakeHrFunctionRepo implements IEmployeeHrFunctionRepository {
     return [];
   }
 
+  // Info: (20260818 - Julian) 顯示用的職能清單（hr/me）；本檔不測它
+  async listFunctionsOf(): Promise<EmployeeHrFunction[]> {
+    return [];
+  }
+
   async hasAnyFunction(params: {
     accountBookId: string;
     employeeId: string;

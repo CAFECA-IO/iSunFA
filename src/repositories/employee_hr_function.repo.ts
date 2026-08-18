@@ -28,6 +28,12 @@ export interface IEmployeeHrFunctionRepository {
     hrFunction: EmployeeHrFunction;
   }): Promise<string[]>;
 
+  /** Info: (20260818 - Julian) 這個人仍生效的所有職能（顯示用；授權請用 `hasAnyFunction`） */
+  listFunctionsOf(params: {
+    accountBookId: string;
+    employeeId: string;
+  }): Promise<EmployeeHrFunction[]>;
+
   /** Info: (20260818 - Julian) 這個人是否具備清單中的**任一**職能（授權判斷用） */
   hasAnyFunction(params: {
     accountBookId: string;
@@ -75,6 +81,24 @@ class EmployeeHrFunctionRepository implements IEmployeeHrFunctionRepository {
 
     // Info: (20260818 - Julian) 去重：同一人同一職能被 activeKey 擋住了，但跨職能查詢時仍可能重複
     return [...new Set(rows.map((row) => row.employeeId))];
+  }
+
+  public async listFunctionsOf(params: {
+    accountBookId: string;
+    employeeId: string;
+  }): Promise<EmployeeHrFunction[]> {
+    const rows = await prisma.employeeHrFunctionAssignment.findMany({
+      where: {
+        accountBookId: params.accountBookId,
+        employeeId: params.employeeId,
+        revokedAt: null,
+      },
+      select: { function: true },
+      // Info: (20260818 - Julian) 排序後回傳以保決定性（同 `listHolderIds`）
+      orderBy: { function: "asc" },
+    });
+
+    return [...new Set(rows.map((row) => row.function as EmployeeHrFunction))];
   }
 
   public async hasAnyFunction(params: {

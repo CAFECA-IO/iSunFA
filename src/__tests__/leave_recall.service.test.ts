@@ -214,6 +214,16 @@ class FakeEmployeeRepo implements IEmployeeRepository {
     return null;
   }
 
+  // Info: (20260818 - Julian) 顯示用的員工檔（hr/me）；本檔不測它，補樁讓介面完整
+  async findProfile(): Promise<{
+    employeeNo: string;
+    name: string;
+    jobTitle: string | null;
+    departmentName: string | null;
+  } | null> {
+    return null;
+  }
+
   async findByAccountBookAndEmails(): Promise<Employee[]> {
     return [];
   }

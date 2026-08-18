@@ -16,20 +16,37 @@ import {
   HR_MANAGEMENT_ROUTE,
   HR_PENDING_ACTION_CLASS,
 } from "@/constants/hr_management";
+import { IHrIdentityView } from "@/interfaces/hr_identity";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IHrHeaderProps {
+  /** Info: (20260818 - Julian) 由 layout 取得並下傳；`null` = 還不知道或未綁定 */
+  identity: IHrIdentityView | null;
   onToggleSidebar: () => void;
 }
 
 /**
  * Info: (20260810 - Julian) 人事管理系統的頂部列：Logo、系統名、全域搜尋、通知、使用者。
  */
-const HrHeader: FC<IHrHeaderProps> = ({ onToggleSidebar }) => {
+const HrHeader: FC<IHrHeaderProps> = ({ identity, onToggleSidebar }) => {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
 
-  const displayName = user?.name ?? "";
+  /**
+   * Info: (20260818 - Julian) 優先顯示**員工檔**的姓名，退回登入帳號的名字。
+   *
+   * `useAuth()` 給的是 `User.name` —— Google 帳號的顯示名稱，與人事系統裡的
+   * 身分未必相同（共用平板、passkey 帳號、演示時切換身分）。而這一頁上
+   * 每一個數字都是**員工檔**的數字：他的額度、他的加班、他要簽的單。
+   * 兩者不一致時顯示前者，會讓人對著別人的資料以為是自己的。
+   */
+  const displayName = identity?.name ?? user?.name ?? "";
+
+  /** Info: (20260818 - Julian) 「工地主任・第一工務所」；兩個外鍵都可能是 null */
+  const displayRole =
+    identity === null
+      ? ""
+      : [identity.jobTitle, identity.departmentName].filter(Boolean).join("・");
 
   return (
     <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur">
@@ -102,8 +119,17 @@ const HrHeader: FC<IHrHeaderProps> = ({ onToggleSidebar }) => {
             >
               <UserCircle2 className="h-7 w-7 text-gray-400" />
               {displayName && (
-                <span className="hidden max-w-[10rem] truncate text-sm font-medium text-gray-700 lg:inline">
-                  {displayName}
+                <span className="hidden max-w-[12rem] flex-col items-start lg:flex">
+                  <span className="max-w-full truncate text-sm font-medium text-gray-700">
+                    {identity === null
+                      ? displayName
+                      : `${displayName}（${identity.employeeNo}）`}
+                  </span>
+                  {displayRole && (
+                    <span className="max-w-full truncate text-xs text-gray-400">
+                      {displayRole}
+                    </span>
+                  )}
                 </span>
               )}
             </MenuButton>
@@ -115,8 +141,17 @@ const HrHeader: FC<IHrHeaderProps> = ({ onToggleSidebar }) => {
                * 必須在按下登出之前就看得到。
                */}
               {displayName && (
-                <div className="truncate px-3 py-2 text-xs text-gray-400 lg:hidden">
-                  {displayName}
+                <div className="px-3 py-2 lg:hidden">
+                  <div className="truncate text-sm font-medium text-gray-700">
+                    {identity === null
+                      ? displayName
+                      : `${displayName}（${identity.employeeNo}）`}
+                  </div>
+                  {displayRole && (
+                    <div className="truncate text-xs text-gray-400">
+                      {displayRole}
+                    </div>
+                  )}
                 </div>
               )}
 
