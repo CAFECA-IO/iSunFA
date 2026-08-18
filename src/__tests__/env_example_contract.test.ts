@@ -34,10 +34,62 @@ import {
  */
 const HR_PII_KEYS = ["HR_PII_KEY_V1", "HR_PII_BLIND_INDEX_PEPPER"];
 
+/**
+ * Info: (20260814 - Julian) 簽到 Demo 的 seed 輸入參數也納入這條契約。
+ *
+ * 它們與上面兩類的共同點只有一個：**對整個系統是選填的**。
+ * 差別在於它們連執行期都不參與 —— 只有 `seed_attendance_demo.ts` 會讀，跑完就用完了。
+ * 但「寫成鍵值就會讓既有部署掉進未初始化狀態」這個後果一模一樣，所以同樣只能寫在註解裡。
+ */
+const ATTENDANCE_DEMO_KEYS = [
+  "DEMO_SITE_A_LAT",
+  "DEMO_SITE_A_LNG",
+  "DEMO_SITE_A_RADIUS",
+  "DEMO_EMAIL_EMP005",
+  "DEMO_EMAIL_EMP006",
+];
+
+/**
+ * Info: (20260817 - Luphia) 限流閾值也納入這條契約。
+ *
+ * 它們是**部署時調參用的旋鈕**：未設定時生效值來自 `src/constants/rate_limit.ts`
+ * 的程式內預設（`envInt(name, fallback)`），因此對整個系統是選填的 ——
+ * 與上面三類的共同點就是這個，而寫成鍵值的後果一模一樣。
+ *
+ * 這一組原本不在清單裡（`CARBON_RL_*` 從 #6516 起就沒有被守住），
+ * 風險與其他選填 env 完全相同，只是少了機制。一次補齊而不只補新加的那六個：
+ * 只補自己這一批，等於留下一份「看起來完整」的清單。
+ *
+ * ToDo: (20260817 - Luphia) 這份清單是手抄的，`envInt()` 的鍵名寫在呼叫處的字串裡，
+ * 兩邊會分岔。理想做法是讓 `rate_limit.ts` 匯出一份 env 鍵名清單，由本測試讀取。
+ */
+const RATE_LIMIT_KEYS = [
+  "CARBON_RL_LLM_PER_MINUTE",
+  "CARBON_RL_LLM_PER_DAY",
+  "CARBON_RL_UPLOAD_PER_HOUR",
+  "CARBON_RL_UPLOAD_PER_DAY",
+  "CARBON_RL_READ_PER_MINUTE",
+  "CARBON_RL_SAVE_PER_MINUTE",
+  "FAITH_RL_GUEST_PER_MINUTE",
+  "FAITH_RL_GUEST_PER_DAY",
+  "SIGNING_RL_PER_MINUTE",
+  "SIGNING_RL_PER_DAY",
+  "PRF_RL_PER_MINUTE",
+  "PRF_RL_PER_DAY",
+  "ATTENDANCE_RL_PUNCH_PER_MINUTE",
+  "ATTENDANCE_RL_PUNCH_PER_DAY",
+  "ATTENDANCE_RL_WRITE_PER_MINUTE",
+  "ATTENDANCE_RL_WRITE_PER_DAY",
+  "ATTENDANCE_RL_EXPORT_PER_MINUTE",
+  "ATTENDANCE_RL_EXPORT_PER_DAY",
+];
+
 const OPTIONAL_KEYS = [
   ...SYSTEM_SETTING_KEYS.map((key) => SYSTEM_SETTING_DEFINITIONS[key].envKey),
   "SECRET_VAULT_MASTER_KEY",
   ...HR_PII_KEYS,
+  ...ATTENDANCE_DEMO_KEYS,
+  ...RATE_LIMIT_KEYS,
 ];
 
 describe(".env.example contract", () => {

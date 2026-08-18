@@ -95,7 +95,7 @@ const DashboardPageBody: FC = () => {
           </div>
 
           <div
-            className="flex shrink-0 gap-1 rounded-xl bg-gray-100 p-1"
+            className="flex w-fit shrink-0 gap-1 rounded-xl bg-gray-100 p-1"
             aria-label={t("hr_management.dashboard.role_aria")}
           >
             {HR_DASHBOARD_ROLES.map((item) => (

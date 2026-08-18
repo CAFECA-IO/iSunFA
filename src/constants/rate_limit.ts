@@ -66,6 +66,41 @@ export enum RateLimitBucketEnum {
    * 仍然不 fail-open：無法識別呼叫者不等於不限流，只是限得鬆。
    */
   INVITE_TOKEN_UNIDENTIFIED = "INVITE_TOKEN_UNIDENTIFIED",
+
+  /**
+   * Info: (20260817 - Luphia) 打卡（time_attendance_module_plan §10.3 的護欄 G6）。
+   *
+   * 正常人一天打 2–4 次卡。上限壓低是為了讓腳本刷卡在造成資料污染前先撞牆並留下告警 ——
+   * 而這裡的「資料污染」是**寫進法定文件的出勤事實**（勞基法 §30 要保存五年），
+   * 不像聊天訊息可以刪掉重來。
+   *
+   * **失敗的嘗試也計入**：`enforceRateLimit` 排在圍欄判定之前，所以圍欄外被 403 的
+   * 那些次數一樣算。若只對成功的打卡限流，「用不同座標反覆試到過關」這條路完全暢通。
+   */
+  ATTENDANCE_PUNCH = "ATTENDANCE_PUNCH",
+
+  /**
+   * Info: (20260817 - Luphia) 出勤的狀態變更（排班寫入、發起銷假徵詢、回應徵詢）。
+   *
+   * 不與 carbon 的 `SAVE` 共用：那個桶的尺寸是為報表 autosave（debounce 2s ≈ 30/min）
+   * 訂的，而這三個動作都是人按一下的低頻操作。共用的後果是兩邊互相擠壓同一個預算，
+   * 而它們的成本屬性毫無關係（同 `PRF` 不與 `SIGNING` 共用的理由）。
+   *
+   * 這些動作已各有權限閘，限流擋的是另一件事：**閘後的濫用**（有權限的人腳本化改班表）。
+   */
+  ATTENDANCE_WRITE = "ATTENDANCE_WRITE",
+
+  /**
+   * Info: (20260817 - Luphia) 緊急點名匯出。**這個桶的理由是 AuditLog 放大，不是 CPU。**
+   *
+   * 一次匯出對名單上的**每一個人**寫一筆 `AuditLogAction.READ`（500 人的帳本 = 500 列）。
+   * 而 ADR 018 §6 把 `READ` 限定在 `EMPLOYEE_PII` 的理由正是「這張表會被沖爆，
+   * 真正該被看見的個資存取反而被淹沒」—— 一支能被連打的放大器會親手造成那件事。
+   *
+   * 上限訂得夠寬鬆以支撐真實的疏散情境（事故現場會連續匯出好幾份，
+   * 且「哪一份是最新的」不該用猜），但不足以當成輪詢端點用。
+   */
+  ATTENDANCE_EXPORT = "ATTENDANCE_EXPORT",
 }
 
 export interface IRateLimitWindow {
@@ -126,6 +161,28 @@ export const RATE_LIMIT_RULES: Record<RateLimitBucketEnum, IRateLimitWindow[]> =
     [RateLimitBucketEnum.PRF]: [
       { windowMs: MINUTE_MS, max: envInt("PRF_RL_PER_MINUTE", 20) },
       { windowMs: DAY_MS, max: envInt("PRF_RL_PER_DAY", 200) },
+    ],
+    // Info: (20260817 - Luphia) 數值取自 time_attendance_module_plan §10.3，不是重新發明的
+    [RateLimitBucketEnum.ATTENDANCE_PUNCH]: [
+      {
+        windowMs: MINUTE_MS,
+        max: envInt("ATTENDANCE_RL_PUNCH_PER_MINUTE", 5),
+      },
+      { windowMs: DAY_MS, max: envInt("ATTENDANCE_RL_PUNCH_PER_DAY", 40) },
+    ],
+    [RateLimitBucketEnum.ATTENDANCE_WRITE]: [
+      {
+        windowMs: MINUTE_MS,
+        max: envInt("ATTENDANCE_RL_WRITE_PER_MINUTE", 30),
+      },
+      { windowMs: DAY_MS, max: envInt("ATTENDANCE_RL_WRITE_PER_DAY", 500) },
+    ],
+    [RateLimitBucketEnum.ATTENDANCE_EXPORT]: [
+      {
+        windowMs: MINUTE_MS,
+        max: envInt("ATTENDANCE_RL_EXPORT_PER_MINUTE", 6),
+      },
+      { windowMs: DAY_MS, max: envInt("ATTENDANCE_RL_EXPORT_PER_DAY", 60) },
     ],
   };
 

@@ -168,3 +168,86 @@ export async function requestEnvelope<T = unknown>(
   const envelope = await request<IEnvelopeLike<T>>(url, options);
   return unwrapEnvelope(envelope);
 }
+
+export interface IDownloadedFile {
+  blob: Blob;
+  /** Info: (20260813 - Julian) 取自 `Content-Disposition`；伺服器沒給時為 null */
+  filename: string | null;
+}
+
+/**
+ * Info: (20260813 - Julian) 下載檔案型端點（`fileOk`）。
+ *
+ * ## 為什麼不能用 `request()`
+ *
+ * `request()` 一律 `response.json()`，而這些端點回的是 CSV／PDF ——
+ * 解析必然失敗，然後被 `.catch(() => ({}))` 吞成一個空物件，
+ * 呼叫端拿到「成功但沒有內容」。那是最難查的一種失敗。
+ *
+ * ## 檔名以伺服器為準
+ *
+ * 檔名由伺服器決定（點名單的檔名帶產出時刻），前端只是照抄。
+ * 兩邊各組一次，遲早會出現「下載下來的檔名與稽核紀錄裡的對不起來」。
+ */
+export async function requestFile(
+  url: string,
+  options: IRequestOptions = {},
+): Promise<IDownloadedFile> {
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("dewt") : null;
+
+  const { query, headers = {}, ...rest } = options;
+  let finalUrl = url;
+  if (query) {
+    const queryString = Object.entries(query)
+      .filter(([, value]) => value !== undefined)
+      .map(
+        ([key, value]) =>
+          `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
+      )
+      .join("&");
+    if (queryString) finalUrl += `?${queryString}`;
+  }
+
+  const response = await fetch(finalUrl, {
+    ...rest,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(options.body instanceof FormData
+        ? {}
+        : { "Content-Type": "application/json" }),
+      ...(headers as Record<string, string>),
+    },
+  });
+
+  if (!response.ok) {
+    /**
+     * Info: (20260813 - Julian) 失敗時伺服器回的是 JSON 信封（`jsonFail`），不是檔案。
+     * 讀出來組成 `ApiError`，讓呼叫端的錯誤處理與其他端點一致。
+     */
+    const data = (await response.json().catch(() => ({}))) as
+      | { message?: string }
+      | undefined;
+    throw new ApiError(
+      data?.message || response.statusText || "Download failed",
+      response.status,
+      data,
+    );
+  }
+
+  return {
+    blob: await response.blob(),
+    filename: parseContentDispositionFilename(
+      response.headers.get("Content-Disposition"),
+    ),
+  };
+}
+
+// Info: (20260813 - Julian) 只解析 `filename="..."`，這是本專案 `fileOk` 唯一產生的形式
+export function parseContentDispositionFilename(
+  header: string | null,
+): string | null {
+  if (!header) return null;
+  const matched = /filename="([^"]+)"/.exec(header);
+  return matched ? matched[1] : null;
+}

@@ -75,6 +75,15 @@ export const HR_PII_FIELD_TIER = {
   accountHolderCipher: PiiTier.RESTRICTED,
   // Info: (20260811 - Julian) EmergencyContact
   altPhoneCipher: PiiTier.CONFIDENTIAL,
+  /**
+   * Info: (20260813 - Julian) AttendancePunch —— 打卡當下的座標。行蹤資料，
+   * 敏感度不低於通訊地址：住址是靜態的一個點，座標序列是動態的行蹤。
+   *
+   * 分級理由、緩解手段與尚未解決的保存期限問題見
+   * ADR 018 的「補充決策（2026-08-14 review）」，不要只依賴這裡的摘要。
+   */
+  latitudeCipher: PiiTier.CONFIDENTIAL,
+  longitudeCipher: PiiTier.CONFIDENTIAL,
 } as const satisfies Record<string, PiiTier>;
 
 export type HrPiiCipherField = keyof typeof HR_PII_FIELD_TIER;
@@ -91,4 +100,6 @@ export enum HrPiiTable {
   DEPENDENT = "Dependent",
   BANK_ACCOUNT = "BankAccount",
   EMERGENCY_CONTACT = "EmergencyContact",
+  // Info: (20260813 - Julian) 簽到系統的打卡紀錄，持有加密的經緯度
+  ATTENDANCE_PUNCH = "AttendancePunch",
 }
