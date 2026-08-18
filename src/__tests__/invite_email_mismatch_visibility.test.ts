@@ -18,16 +18,33 @@ import { prisma } from "@/lib/prisma";
  */
 
 jest.mock("@/lib/prisma", () => ({
-  prisma: { teamInvitation: { findMany: jest.fn(async () => []) } },
+  prisma: {
+    teamInvitation: { findMany: jest.fn(async () => []) },
+    // Info: (20260818 - Luphia) 標記要與現任成員資格的起點比對（第五輪 C-1）
+    teamMember: { findMany: jest.fn(async () => []) },
+  },
 }));
 
 const findManyMock = prisma.teamInvitation.findMany as unknown as ReturnType<
   typeof jest.fn
 >;
+const memberMock = prisma.teamMember.findMany as unknown as ReturnType<
+  typeof jest.fn
+>;
+
+// Info: (20260818 - Luphia) 預設：這些人都是在很久以前加入且仍在團隊裡
+const JOINED_LONG_AGO = new Date("2020-01-01");
 
 beforeEach(() => {
   jest.clearAllMocks();
   findManyMock.mockResolvedValue([]);
+  memberMock.mockImplementation(async (args: unknown) => {
+    const { where } = args as { where: { userId: { in: string[] } } };
+    return where.userId.in.map((userId) => ({
+      userId,
+      createdAt: JOINED_LONG_AGO,
+    }));
+  });
 });
 
 const MEMBERS = [
@@ -124,6 +141,46 @@ describe("listMismatchedAcceptorIds", () => {
     ]);
 
     expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual(["u1"]);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 標記不得比它描述的那段成員資格活得久（第五輪 C-1）。
+   *
+   * 以錢包位址直接加人（POST members）**不建立任何邀請列**，因此
+   * 「一月不符信箱受邀加入 → 被移出 → 二月以位址直接加回」之後，最新的一筆
+   * 已接受邀請仍是一月那筆 MISMATCHED——標記永久掛著且無法清除。
+   */
+  it("成員是在那封邀請之後才重新加入時不標記", async () => {
+    findManyMock.mockResolvedValue([
+      accepted("u1", INVITE_EMAIL_MATCH.MISMATCHED, "2026-01-10"),
+    ]);
+    memberMock.mockResolvedValue([
+      { userId: "u1", createdAt: new Date("2026-02-01") },
+    ]);
+
+    expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual([]);
+  });
+
+  // Info: (20260818 - Luphia) 反向：邀請就是這段成員資格的起點時，標記成立
+  it("那封邀請就是目前這段成員資格的起點時仍要標記", async () => {
+    findManyMock.mockResolvedValue([
+      accepted("u1", INVITE_EMAIL_MATCH.MISMATCHED, "2026-02-01"),
+    ]);
+    memberMock.mockResolvedValue([
+      { userId: "u1", createdAt: new Date("2026-02-01") },
+    ]);
+
+    expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual(["u1"]);
+  });
+
+  // Info: (20260818 - Luphia) 已不是成員就不必標（呼叫端也會交集成員清單）
+  it("已離開團隊的人不標記", async () => {
+    findManyMock.mockResolvedValue([
+      accepted("u1", INVITE_EMAIL_MATCH.MISMATCHED, "2026-02-01"),
+    ]);
+    memberMock.mockResolvedValue([]);
+
+    expect(await teamRepo.listMismatchedAcceptorIds("team-1")).toEqual([]);
   });
 
   // Info: (20260818 - Luphia) 位址邀請沒有可比對的信箱（null），不是「不符」

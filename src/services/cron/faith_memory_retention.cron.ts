@@ -104,11 +104,28 @@ export async function runFaithMemoryRetention(
    */
   let deleted = 0;
   let failed = 0;
+  /**
+   * Info: (20260818 - Luphia) 本輪失敗過的列（第五輪 C-3）。
+   *
+   * 失敗不改 `expiresAt`，因此下一批會再撈到同一批毒資料。把它們排除之後，
+   * 同一輪內每一列最多失敗一次，其餘到期的列才輪得到。下一輪（6 小時後）
+   * 會重新嘗試——這支天然可重入，該修的資料修好之前不會被遺忘。
+   */
+  const failedIds: string[] = [];
 
-  while (deleted + failed < MAX_DELETES_PER_RUN) {
+  /**
+   * Info: (20260818 - Luphia) 上界只算**成功刪除**的數量（第五輪 C-3）。
+   *
+   * 原本是 `deleted + failed`，於是失敗會吃掉刪除預算：499 筆毒資料時，
+   * 20 批就把 10,000 的上界用光，而本輪真正刪掉的只有約 20 列。
+   * 上界的用意是「單次執行不要無限延長」，那應該由做成的事來計量。
+   * 失敗本身另有兩道界線：排除清單（每列最多失敗一次）與整批失敗即停。
+   */
+  while (deleted < MAX_DELETES_PER_RUN) {
     const expired = await faithMemoryRepo.listExpired(
       new Date(nowMs),
       DELETE_BATCH_SIZE,
+      failedIds,
     );
     if (expired.length === 0) break;
 
@@ -142,6 +159,7 @@ export async function runFaithMemoryRetention(
          */
         failed += 1;
         batchFailed += 1;
+        failedIds.push(row.id);
         logger.error("faith memory deletion failed", {
           userId: row.userId,
           teamId: row.teamId,

@@ -73,5 +73,15 @@ jobs:
           # The database URL to connect to the PostgreSQL database
           DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
 
+      # Info: (20260818 - Luphia) e2e 會真的建立與刪除資料列，因此自 PR #6652 起
+      # Info: (20260818 - Luphia) 不再跟著 `npm test` 一起跑（開發者的 DATABASE_URL
+      # Info: (20260818 - Luphia) 可能指向共用或 staging 庫，而唯一的閘只擋
+      # Info: (20260818 - Luphia) NODE_ENV=production）。CI 用的是本 job 自建的
+      # Info: (20260818 - Luphia) postgres service，資料是拋棄式的，因此明確跑這一步。
+      - name: Run e2e tests (disposable database)
+        run: npm run test:e2e
+        env:
+          DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
+
       - name: Build next.js service
         run: npm run build

@@ -16,6 +16,7 @@
     "test": "npm run lint && jest --passWithNoTests && npm run test:tz",
     "test:tz": "node scripts/jest_tz.mjs",
     "test:no-dotenv": "node scripts/jest_without_dotenv.mjs",
+    "test:e2e": "jest --testMatch \"**/*.e2e.test.ts\" --testPathIgnorePatterns \"/node_modules/\" --runInBand",
     "swarm": "npm run build && next start -p 10020",
     "worker": "npx tsx scripts/run_worker.ts",
     "executor": "npx tsx scripts/run_executor.ts",

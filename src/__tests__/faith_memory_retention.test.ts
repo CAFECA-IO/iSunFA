@@ -236,6 +236,53 @@ describe("runFaithMemoryRetention", () => {
   });
 
   /**
+   * Info: (20260818 - Luphia) 失敗不得吃掉刪除預算（第五輪 C-3）。
+   *
+   * 上界原本是 `deleted + failed`：499 筆毒資料時每批只刪得掉 1 筆，
+   * 20 批就把 10,000 的上界用完，而真正該刪的列一列都輪不到。
+   * 上界的用意是「單次執行不要無限延長」，那該由**做成的事**來計量。
+   */
+  it("失敗的列會被排除，且不佔用刪除預算", async () => {
+    const BAD = { id: "bad", userId: "u9", teamId: "t9", itemCount: 1 };
+    const OK = (n: number) => ({
+      id: `ok-${n}`,
+      userId: "u1",
+      teamId: "t1",
+      itemCount: 1,
+    });
+    let fetches = 0;
+
+    asMock(faithMemoryRepo.listExpired).mockImplementation(
+      async (_now: unknown, _limit: unknown, excludeIds: unknown) => {
+        fetches += 1;
+        const excluded = (excludeIds as string[]) ?? [];
+        // Info: (20260818 - Luphia) 毒資料只在還沒被排除時出現，模擬真實查詢
+        const poison = excluded.includes(BAD.id) ? [] : [BAD];
+        if (fetches === 1) return [...poison, OK(1)];
+        if (fetches === 2) return [...poison, OK(2)];
+        return [];
+      },
+    );
+    asMock(faithMemoryRepo.deleteWithLog).mockImplementation(
+      async (params: unknown) => {
+        if ((params as { id: string }).id === BAD.id) {
+          throw new Error("poison row");
+        }
+        return undefined;
+      },
+    );
+
+    const result = await runFaithMemoryRetention(NOW_MS);
+
+    // Info: (20260818 - Luphia) 毒資料只失敗一次，第二批不再撈到它
+    expect(result.failed).toBe(1);
+    expect(result.deleted).toBe(2);
+
+    const secondCall = asMock(faithMemoryRepo.listExpired).mock.calls[1];
+    expect(secondCall[2]).toEqual([BAD.id]);
+  });
+
+  /**
    * Info: (20260818 - Luphia) 整批都失敗就停止，不要無限迴圈。
    * `listExpired` 的條件沒有改變，再撈一次會拿到同一批列。
    */

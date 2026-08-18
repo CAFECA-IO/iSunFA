@@ -22,6 +22,7 @@ jest.mock("@/lib/prisma", () => ({
     faithMemory: {
       updateMany: jest.fn(async () => ({ count: 0 })),
       findUnique: jest.fn(async () => null),
+      findMany: jest.fn(async () => []),
     },
   },
 }));
@@ -32,6 +33,9 @@ const updateMany = prisma.faithMemory.updateMany as unknown as ReturnType<
 const findUnique = prisma.faithMemory.findUnique as unknown as ReturnType<
   typeof jest.fn
 >;
+const findMany = prisma.faithMemory.findMany as unknown as ReturnType<
+  typeof jest.fn
+>;
 
 const EXPIRES_AT = new Date(1_760_000_000_000);
 
@@ -39,6 +43,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   updateMany.mockResolvedValue({ count: 0 });
   findUnique.mockResolvedValue(null);
+  findMany.mockResolvedValue([]);
 });
 
 function argsOf(call: number) {
@@ -147,5 +152,57 @@ describe("deleteByScope", () => {
       select: Record<string, unknown>;
     };
     expect(args.select).toEqual({ id: true, itemCount: true });
+  });
+});
+
+/**
+ * Info: (20260818 - Luphia) 到期清單的查詢條件（第五輪 C-2 / C-3）。
+ *
+ * 這支是刪除路徑的入口，而它的兩個性質都會**安靜地**出問題：
+ * 沒有排序時某些列可能整輪排不進 `take`（starvation，且重現不出來）；
+ * 不能排除已失敗的列時，同一批毒資料會被反覆撈回來。
+ */
+describe("listExpired", () => {
+  it("以最久到期優先排序，並以 id 打破平手", async () => {
+    await faithMemoryRepo.listExpired(EXPIRES_AT, 500);
+
+    const args = findMany.mock.calls[0][0] as { orderBy: unknown };
+    expect(args.orderBy).toEqual([{ expiresAt: "asc" }, { id: "asc" }]);
+  });
+
+  it("沒有排除清單時不加多餘的條件", async () => {
+    await faithMemoryRepo.listExpired(EXPIRES_AT, 500);
+
+    const args = findMany.mock.calls[0][0] as {
+      where: Record<string, unknown>;
+    };
+    expect(args.where).toEqual({ expiresAt: { lte: EXPIRES_AT } });
+  });
+
+  it("有排除清單時排除那些 id", async () => {
+    await faithMemoryRepo.listExpired(EXPIRES_AT, 500, ["a", "b"]);
+
+    const args = findMany.mock.calls[0][0] as {
+      where: Record<string, unknown>;
+    };
+    expect(args.where).toEqual({
+      expiresAt: { lte: EXPIRES_AT },
+      id: { notIn: ["a", "b"] },
+    });
+  });
+
+  // Info: (20260818 - Luphia) 刪除不需要看見內容，只取識別欄位與筆數
+  it("不讀密文", async () => {
+    await faithMemoryRepo.listExpired(EXPIRES_AT, 500);
+
+    const args = findMany.mock.calls[0][0] as {
+      select: Record<string, unknown>;
+    };
+    expect(args.select).toEqual({
+      id: true,
+      userId: true,
+      teamId: true,
+      itemCount: true,
+    });
   });
 });

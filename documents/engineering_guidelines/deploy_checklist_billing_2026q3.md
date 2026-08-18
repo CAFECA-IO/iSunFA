@@ -128,6 +128,19 @@ npx tsx scripts/backfill_faith_memory_aad.ts --commit # 實際重新封裝
 
 腳本冪等：已是 AAD 版本的列算進 `already` 並跳過。正確性由 `src/__tests__/e2e/faith_memory_aad_backfill.e2e.test.ts` 對真資料庫驗證（建一列舊格式 → 預演不寫入 → `--commit` → 讀回原本的偏好 → 重跑為 `already`）。
 
+### 3.3c 重算既有的信箱比對結果 — **有既有邀請紀錄的環境建議做**
+
+```bash
+npx tsx scripts/backfill_invite_email_match.ts          # 預演，只統計不寫入
+npx tsx scripts/backfill_invite_email_match.ts --commit # 實際更新
+```
+
+**為什麼**：比對規則於 2026-08-18 改為「同一個收件匣」（去子地址、Gmail 系列去點號）。在那之前，邀請寄到 `alice+isunfa@gmail.com`、本人以已驗證的 `alice@gmail.com` 接受，會被記成 `MISMATCHED`——而那個訊號現在會出現在告警與成員卡片上。**會誤報的稽核訊號比沒有訊號更糟**：看過幾次之後沒有人會再認真看它。
+
+**只往一個方向改**（`MISMATCHED` → `MATCHED`）：重算用的是**現在**的第三方綁定，而使用者可能在加入之後才綁定或解除某個信箱。把當時記為 `MATCHED` 的列改成 `MISMATCHED` 等於憑今天的狀態否定一筆當時可能正確的紀錄。
+
+不跑的後果只是誤報留著，不影響任何功能——因此列為「建議」而非「必做」。
+
 ### 3.4 設定寄信與網站網址 — **email 邀請上線前必做**
 
 後台系統設定（ADR 017，可線上調整、不需重啟）：

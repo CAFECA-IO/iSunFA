@@ -242,10 +242,28 @@ class FaithMemoryRepository {
    * Info: (20260817 - Luphia) 到期的記憶（供守護行程）。
    * **只取識別欄位與計數，不取密文**——刪除不需要看見內容。
    */
-  async listExpired(now: Date, limit: number) {
+  async listExpired(now: Date, limit: number, excludeIds: string[] = []) {
     return prisma.faithMemory.findMany({
-      where: { expiresAt: { lte: now } },
+      where: {
+        expiresAt: { lte: now },
+        /**
+         * Info: (20260818 - Luphia) 排除本輪已經失敗過的列（第五輪 C-3）。
+         *
+         * 失敗的列 `expiresAt` 沒有變，下一批照樣會撈到它們。499 筆毒資料時
+         * 每批只刪得掉 1 筆、其餘 499 筆重複失敗，20 批就把整輪的總量上界用完，
+         * 而真正該刪的列一列都輪不到。排除之後，同一輪內每筆最多失敗一次。
+         */
+        ...(excludeIds.length > 0 ? { id: { notIn: excludeIds } } : {}),
+      },
       select: { id: true, userId: true, teamId: true, itemCount: true },
+      /**
+       * Info: (20260818 - Luphia) 決定論排序（第五輪 C-2）。
+       *
+       * 沒有 `orderBy` 時 Postgres 的回傳順序不保證穩定：同一輪內可能反覆拿到
+       * 同一批列，也可能讓某些到期列整輪都排不進 `take`（starvation），
+       * 而且除錯時重現不出來。**最久到期的先刪**，並以 `id` 打破平手。
+       */
+      orderBy: [{ expiresAt: "asc" }, { id: "asc" }],
       take: limit,
     });
   }

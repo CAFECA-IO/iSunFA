@@ -344,18 +344,54 @@ export class TeamRepository implements ITeamRepository {
       orderBy: { acceptedAt: "desc" },
     });
 
-    const latestByUser = new Map<string, string | null>();
+    const latest = new Map<string, { match: string | null; at: Date }>();
     for (const row of rows) {
       const userId = row.acceptedByUserId;
-      if (!userId) continue;
+      if (!userId || !row.acceptedAt) continue;
       // Info: (20260818 - Luphia) 已按 acceptedAt 遞減排序，先看到的就是最新的那一筆
-      if (!latestByUser.has(userId)) {
-        latestByUser.set(userId, row.acceptedEmailMatch);
+      if (!latest.has(userId)) {
+        latest.set(userId, {
+          match: row.acceptedEmailMatch,
+          at: row.acceptedAt,
+        });
       }
     }
 
-    return [...latestByUser.entries()]
-      .filter(([, match]) => match === INVITE_EMAIL_MATCH.MISMATCHED)
+    const mismatched = [...latest.entries()].filter(
+      ([, value]) => value.match === INVITE_EMAIL_MATCH.MISMATCHED,
+    );
+    if (mismatched.length === 0) return [];
+
+    /**
+     * Info: (20260818 - Luphia) 標記不得比它描述的那段成員資格活得久（第五輪 C-1）。
+     *
+     * 只看「最近一次已接受的邀請」還不夠：**以錢包位址直接加人**（POST members）
+     * 完全不建立 `TeamInvitation` 列。因此
+     *
+     *   一月以不符的信箱受邀加入 → 被移出 → 二月由 ADMIN 以位址直接加回
+     *
+     * 之後，最新的一筆已接受邀請仍然是一月那筆 `MISMATCHED`，於是標記永久掛著
+     * 且無法清除——與原本的缺陷同形，只是換了一條路徑。
+     *
+     * 因此再比一次**現任成員資格的建立時間**：那筆邀請要晚於（或等於）
+     * 這個人現在這段成員資格的起點，標記才成立。早於它的，描述的是上一段
+     * 已經結束的關係。
+     */
+    const memberships = await prisma.teamMember.findMany({
+      where: { teamId, userId: { in: mismatched.map(([userId]) => userId) } },
+      select: { userId: true, createdAt: true },
+    });
+    const joinedAt = new Map(
+      memberships.map((member) => [member.userId, member.createdAt]),
+    );
+
+    return mismatched
+      .filter(([userId, value]) => {
+        const since = joinedAt.get(userId);
+        // Info: (20260818 - Luphia) 已不是成員：呼叫端會交集成員清單，這裡不標也無妨
+        if (!since) return false;
+        return value.at.getTime() >= since.getTime();
+      })
       .map(([userId]) => userId);
   }
 

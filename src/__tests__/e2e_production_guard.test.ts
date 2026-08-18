@@ -18,10 +18,36 @@ import { join } from "path";
 
 const E2E_DIR = join(process.cwd(), "src", "__tests__", "e2e");
 
-function listE2eFiles(): string[] {
-  return readdirSync(E2E_DIR, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".ts"))
-    .map((entry) => entry.name);
+/**
+ * Info: (20260818 - Luphia) **遞迴**掃描，且只認 `*.e2e.test.ts`（第五輪 C-6）。
+ *
+ * 上一版只讀第一層目錄，於是 `src/__tests__/e2e/billing/x.e2e.test.ts` 完全掃不到
+ * ——「把它變成機制」的那個機制自己有一個逃逸口。副檔名也從 `.ts` 收緊為
+ * `.e2e.test.ts`：那正是 `jest.config.mjs` 與 `npm run test:e2e` 認的樣式，
+ * 三者用同一個判準才不會出現「掃描認得、執行不到」或反過來的縫。
+ */
+function listE2eFiles(dir: string = E2E_DIR): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) return listE2eFiles(full);
+    return entry.name.endsWith(".e2e.test.ts") ? [full] : [];
+  });
+}
+
+/**
+ * Info: (20260818 - Luphia) 註解裡的字串不算數（第五輪 C-6）。
+ *
+ * 純文字比對會把「說明這道閘的註解」當成閘本身——那正是這一檔要防的
+ * 「看起來有、其實沒有」。
+ */
+function codeWithoutComments(file: string): string {
+  return readFileSync(file, "utf8")
+    .split("\n")
+    .filter((line) => {
+      const trimmed = line.trim();
+      return !trimmed.startsWith("*") && !trimmed.startsWith("//");
+    })
+    .join("\n");
 }
 
 describe("e2e 測試的正式機隔離", () => {
@@ -34,14 +60,47 @@ describe("e2e 測試的正式機隔離", () => {
    * 靜靜跳過在錯誤環境下看起來也是綠的，而那正是假綠。
    */
   it("每一支都在 production 環境丟錯", () => {
-    const missing = listE2eFiles().filter((name) => {
-      const code = readFileSync(join(E2E_DIR, name), "utf8");
-      return !(
-        /process\.env\.NODE_ENV === "production"/.test(code) &&
-        /throw new Error\(/.test(code)
-      );
-    });
+    const missing = listE2eFiles()
+      .filter((file) => {
+        const code = codeWithoutComments(file);
+        /**
+         * Info: (20260818 - Luphia) 要求「同一段」判斷與拋錯，而不是各自出現：
+         * 檔案裡別處有 `throw new Error(` 不代表這道閘存在。
+         */
+        return !/if \(process\.env\.NODE_ENV === "production"\)\s*\{[^}]*throw new Error\(/s.test(
+          code,
+        );
+      })
+      .map((file) => file.slice(process.cwd().length + 1));
 
     expect(missing).toEqual([]);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 掃描認得的樣式要與**實際執行**的樣式一致（第五輪 C-6）。
+   *
+   * `jest.config.mjs` 以 `\.e2e\.test\.ts$` 把它們排除在預設執行之外、
+   * `npm run test:e2e` 以同一個副檔名樣式把它們找回來。若這個目錄裡出現
+   * 其他副檔名的測試檔，它會**不被本掃描檢查、也不被 test:e2e 執行**——
+   * 兩頭落空是最難發現的那種。
+   */
+  it("目錄裡沒有不符合 *.e2e.test.ts 的測試檔", () => {
+    const stray: string[] = [];
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walk(full);
+          continue;
+        }
+        if (entry.name.endsWith(".e2e.test.ts")) continue;
+        if (entry.name.endsWith(".test.ts") || entry.name.endsWith(".ts")) {
+          stray.push(full.slice(process.cwd().length + 1));
+        }
+      }
+    };
+    walk(E2E_DIR);
+
+    expect(stray).toEqual([]);
   });
 });
