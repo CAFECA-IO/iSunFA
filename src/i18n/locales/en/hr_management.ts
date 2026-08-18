@@ -4,6 +4,12 @@ export const hrManagement = {
   notification_aria: "Notifications",
   user_menu_aria: "User menu",
   open_menu_aria: "Open menu",
+  // Info: (20260818 - Julian) 側邊選單的分組標題。不分組的項目（儀表板、系統設定）沒有對應鍵
+  nav_group: {
+    people: "People",
+    attendance: "Attendance",
+    leave: "Leave & overtime",
+  },
   nav: {
     leave: "My leave",
     leave_approval: "Approvals",
@@ -983,11 +989,9 @@ export const hrManagement = {
     unapproved_empty: "Nothing outside approved overtime",
     unapproved_hint:
       "Time on site that no request covers. It might be a missing filing, or just someone staying a while — you decide.",
-    unapproved_from: "From",
     unapproved_range_days: "Last {{days}} days",
     exception_unapproved_overtime: "On site, not approved",
     exception_missing_punch_evidence: "Approved without a punch record",
-    select_employee: "Employee",
     error_load: "Failed to load",
     error_submit: "Submit failed",
     error_decide: "Decision failed",

@@ -2,11 +2,11 @@ import {
   Building2,
   CalendarOff,
   ClipboardCheck,
+  ClipboardList,
   Clock4,
+  CalendarDays,
   FileText,
   LayoutDashboard,
-  ClipboardList,
-  CalendarDays,
   LucideIcon,
   MapPin,
   Radar,
@@ -25,107 +25,178 @@ export interface IHrNavItem {
   disabled: boolean; // Info: (20260810 - Julian) 尚未開發的頁面先標記為 disabled
 }
 
-// Info: (20260810 - Julian) 側邊選單項目
-export const HR_NAV_ITEMS: IHrNavItem[] = [
+/**
+ * Info: (20260818 - Julian) 側邊選單的分組。
+ *
+ * ## 為什麼分組
+ *
+ * 項目長到 14 個之後，「排班月曆在哪」變成一件要從頭掃到尾的事。
+ * 分組把掃描範圍從 14 個縮到 4 個群組標題。
+ *
+ * ## 為什麼群組直接持有項目，而不是持有 key 再去查表
+ *
+ * 查表的版本會有兩種漂移：群組裡列了一個不存在的 key，或某個項目
+ * 不屬於任何群組 —— 前者渲染出空白，後者讓一整頁從選單上消失，
+ * **兩者都不會報錯**。讓群組持有項目、扁平清單由它推導出來，
+ * 這兩種狀態在型別上就表示不出來。
+ *
+ * ## 為什麼沒有收合
+ *
+ * 分組標題本身就解決了掃描問題，而收合會多一個要記住的狀態
+ * （記在哪？換頁後還記得嗎？）。需要時再加。
+ */
+export interface IHrNavSection {
+  key: string;
+  /** Info: (20260818 - Julian) null 表不分組 —— 項目直接列出，沒有標題 */
+  labelKey: string | null;
+  items: IHrNavItem[];
+}
+
+export const HR_NAV_SECTIONS: IHrNavSection[] = [
   {
-    key: "dashboard",
-    href: HR_MANAGEMENT_ROUTE.DASHBOARD,
-    labelKey: "hr_management.nav.dashboard",
-    icon: LayoutDashboard,
-    disabled: false,
+    /**
+     * Info: (20260818 - Julian) 儀表板不屬於任何群組：它是模組首頁，
+     * 收進「人事管理」會讓「回到總覽」變成一個要先找到群組的動作。
+     */
+    key: "overview",
+    labelKey: null,
+    items: [
+      {
+        key: "dashboard",
+        href: HR_MANAGEMENT_ROUTE.DASHBOARD,
+        labelKey: "hr_management.nav.dashboard",
+        icon: LayoutDashboard,
+        disabled: false,
+      },
+    ],
   },
   {
-    key: "organization",
-    href: HR_MANAGEMENT_ROUTE.ORGANIZATION,
-    labelKey: "hr_management.nav.organization",
-    icon: Building2,
-    disabled: false,
-  },
-  {
-    key: "employee",
-    href: HR_MANAGEMENT_ROUTE.EMPLOYEE,
-    labelKey: "hr_management.nav.employee",
-    icon: Users,
-    disabled: false,
-  },
-  {
-    key: "movement",
-    href: HR_MANAGEMENT_ROUTE.MOVEMENT,
-    labelKey: "hr_management.nav.movement",
-    icon: Repeat,
-    disabled: false,
+    key: "people",
+    labelKey: "hr_management.nav_group.people",
+    items: [
+      {
+        key: "organization",
+        href: HR_MANAGEMENT_ROUTE.ORGANIZATION,
+        labelKey: "hr_management.nav.organization",
+        icon: Building2,
+        disabled: false,
+      },
+      {
+        key: "employee",
+        href: HR_MANAGEMENT_ROUTE.EMPLOYEE,
+        labelKey: "hr_management.nav.employee",
+        icon: Users,
+        disabled: false,
+      },
+      {
+        key: "movement",
+        href: HR_MANAGEMENT_ROUTE.MOVEMENT,
+        labelKey: "hr_management.nav.movement",
+        icon: Repeat,
+        disabled: false,
+      },
+      {
+        key: "document",
+        href: HR_MANAGEMENT_ROUTE.DOCUMENT,
+        labelKey: "hr_management.nav.document",
+        icon: FileText,
+        disabled: true,
+      },
+    ],
   },
   {
     key: "attendance",
-    href: HR_MANAGEMENT_ROUTE.ATTENDANCE,
-    labelKey: "hr_management.nav.attendance",
-    icon: MapPin,
-    disabled: false,
-  },
-  {
-    key: "attendance_presence",
-    href: HR_MANAGEMENT_ROUTE.ATTENDANCE_PRESENCE,
-    labelKey: "hr_management.nav.attendance_presence",
-    icon: Radar,
-    disabled: false,
-  },
-  {
-    key: "attendance_schedule",
-    href: HR_MANAGEMENT_ROUTE.ATTENDANCE_SCHEDULE,
-    labelKey: "hr_management.nav.attendance_schedule",
-    icon: CalendarDays,
-    disabled: false,
-  },
-  {
-    key: "attendance_result",
-    href: HR_MANAGEMENT_ROUTE.ATTENDANCE_RESULT,
-    labelKey: "hr_management.nav.attendance_result",
-    icon: ClipboardList,
-    disabled: false,
+    labelKey: "hr_management.nav_group.attendance",
+    items: [
+      {
+        key: "attendance",
+        href: HR_MANAGEMENT_ROUTE.ATTENDANCE,
+        labelKey: "hr_management.nav.attendance",
+        icon: MapPin,
+        disabled: false,
+      },
+      {
+        key: "attendance_presence",
+        href: HR_MANAGEMENT_ROUTE.ATTENDANCE_PRESENCE,
+        labelKey: "hr_management.nav.attendance_presence",
+        icon: Radar,
+        disabled: false,
+      },
+      {
+        key: "attendance_schedule",
+        href: HR_MANAGEMENT_ROUTE.ATTENDANCE_SCHEDULE,
+        labelKey: "hr_management.nav.attendance_schedule",
+        icon: CalendarDays,
+        disabled: false,
+      },
+      {
+        key: "attendance_result",
+        href: HR_MANAGEMENT_ROUTE.ATTENDANCE_RESULT,
+        labelKey: "hr_management.nav.attendance_result",
+        icon: ClipboardList,
+        disabled: false,
+      },
+    ],
   },
   {
     key: "leave",
-    href: HR_MANAGEMENT_ROUTE.LEAVE,
-    labelKey: "hr_management.nav.leave",
-    icon: CalendarOff,
-    disabled: false,
+    labelKey: "hr_management.nav_group.leave",
+    items: [
+      {
+        key: "leave",
+        href: HR_MANAGEMENT_ROUTE.LEAVE,
+        labelKey: "hr_management.nav.leave",
+        icon: CalendarOff,
+        disabled: false,
+      },
+      {
+        key: "leave_approval",
+        href: HR_MANAGEMENT_ROUTE.LEAVE_APPROVAL,
+        labelKey: "hr_management.nav.leave_approval",
+        icon: Stamp,
+        disabled: false,
+      },
+      {
+        key: "overtime",
+        href: HR_MANAGEMENT_ROUTE.OVERTIME,
+        labelKey: "hr_management.nav.overtime",
+        icon: Clock4,
+        disabled: false,
+      },
+      {
+        key: "overtime_approval",
+        href: HR_MANAGEMENT_ROUTE.OVERTIME_APPROVAL,
+        labelKey: "hr_management.nav.overtime_approval",
+        icon: ClipboardCheck,
+        disabled: false,
+      },
+    ],
   },
   {
-    key: "leave_approval",
-    href: HR_MANAGEMENT_ROUTE.LEAVE_APPROVAL,
-    labelKey: "hr_management.nav.leave_approval",
-    icon: Stamp,
-    disabled: false,
-  },
-  {
-    key: "overtime",
-    href: HR_MANAGEMENT_ROUTE.OVERTIME,
-    labelKey: "hr_management.nav.overtime",
-    icon: Clock4,
-    disabled: false,
-  },
-  {
-    key: "overtime_approval",
-    href: HR_MANAGEMENT_ROUTE.OVERTIME_APPROVAL,
-    labelKey: "hr_management.nav.overtime_approval",
-    icon: ClipboardCheck,
-    disabled: false,
-  },
-  {
-    key: "document",
-    href: HR_MANAGEMENT_ROUTE.DOCUMENT,
-    labelKey: "hr_management.nav.document",
-    icon: FileText,
-    disabled: true,
-  },
-  {
-    key: "setting",
-    href: HR_MANAGEMENT_ROUTE.SETTING,
-    labelKey: "hr_management.nav.setting",
-    icon: Settings,
-    disabled: true,
+    // Info: (20260818 - Julian) 系統設定不分組：它不屬於任何一個業務領域
+    key: "system",
+    labelKey: null,
+    items: [
+      {
+        key: "setting",
+        href: HR_MANAGEMENT_ROUTE.SETTING,
+        labelKey: "hr_management.nav.setting",
+        icon: Settings,
+        disabled: true,
+      },
+    ],
   },
 ];
+
+/**
+ * Info: (20260810 - Julian) 側邊選單項目的扁平清單。
+ *
+ * Info: (20260818 - Julian) 由分組推導而來，不是另外維護的第二份 ——
+ * 兩份清單會有一天對不起來，而症狀是某一頁的選單項永遠不亮。
+ */
+export const HR_NAV_ITEMS: IHrNavItem[] = HR_NAV_SECTIONS.flatMap(
+  (section) => section.items,
+);
 
 /**
  * Info: (20260818 - Julian) 目前選中哪一項：**最長的那一個前綴，只有一項**。
@@ -137,7 +208,7 @@ export const HR_NAV_ITEMS: IHrNavItem[] = [
  * 「出勤打卡」與「現場狀態」同時亮，`/hr_management/leave/approval` 會讓
  * 「我的請假」與「待我簽核」同時亮 —— 而每加一層子路由就會再犯一次。
  *
- * 選中是一個**全域**的決定（十二項裡挑一項），不是十二個各自獨立的布林值。
+ * 選中是一個**全域**的決定（十四項裡挑一項），不是十四個各自獨立的布林值。
  * 寫成回傳單一 key，「同時亮兩項」在型別上就不再表示得出來。
  * 改成最長匹配之後儀表板也不必再特判：`/hr_management` 是所有頁的前綴，
  * 但任何子頁都存在更長的匹配。

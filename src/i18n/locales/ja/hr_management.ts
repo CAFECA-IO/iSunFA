@@ -4,6 +4,12 @@ export const hrManagement = {
   notification_aria: "通知",
   user_menu_aria: "ユーザーメニュー",
   open_menu_aria: "メニューを開く",
+  // Info: (20260818 - Julian) 側邊選單的分組標題。不分組的項目（儀表板、系統設定）沒有對應鍵
+  nav_group: {
+    people: "人事管理",
+    attendance: "勤怠システム",
+    leave: "休暇・残業",
+  },
   nav: {
     leave: "休暇申請",
     leave_approval: "承認待ち",
@@ -964,11 +970,9 @@ export const hrManagement = {
     unapproved_empty: "承認済み以外の在場時間はありません",
     unapproved_hint:
       "どの申請にも含まれない在場時間です。申請漏れかもしれませんし、単に少し残っていただけかもしれません —— 判断はあなたに委ねられます。",
-    unapproved_from: "開始",
     unapproved_range_days: "直近 {{days}} 日",
     exception_unapproved_overtime: "打刻あり・未承認",
     exception_missing_punch_evidence: "承認済みだが打刻記録なし",
-    select_employee: "従業員",
     error_load: "読み込みに失敗しました",
     error_submit: "申請に失敗しました",
     error_decide: "処理に失敗しました",

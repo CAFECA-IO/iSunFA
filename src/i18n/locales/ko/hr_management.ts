@@ -4,6 +4,12 @@ export const hrManagement = {
   notification_aria: "알림",
   user_menu_aria: "사용자 메뉴",
   open_menu_aria: "메뉴 열기",
+  // Info: (20260818 - Julian) 側邊選單的分組標題。不分組的項目（儀表板、系統設定）沒有對應鍵
+  nav_group: {
+    people: "인사 관리",
+    attendance: "출퇴근 시스템",
+    leave: "휴가·초과근무",
+  },
   nav: {
     leave: "휴가 신청",
     leave_approval: "결재 대기",
@@ -968,11 +974,9 @@ export const hrManagement = {
     unapproved_empty: "승인 범위 밖의 체류 시간이 없습니다",
     unapproved_hint:
       "어떤 신청에도 포함되지 않은 체류 시간입니다. 신청 누락일 수도, 그저 조금 더 머문 것일 수도 있습니다 —— 판단은 관리자의 몫입니다.",
-    unapproved_from: "시작",
     unapproved_range_days: "최근 {{days}}일",
     exception_unapproved_overtime: "기록 있음·미승인",
     exception_missing_punch_evidence: "승인됐지만 기록 없음",
-    select_employee: "직원",
     error_load: "불러오지 못했습니다",
     error_submit: "신청에 실패했습니다",
     error_decide: "처리에 실패했습니다",

@@ -4,6 +4,12 @@ export const hrManagement = {
   notification_aria: "通知",
   user_menu_aria: "使用者選單",
   open_menu_aria: "開啟選單",
+  // Info: (20260818 - Julian) 側邊選單的分組標題。不分組的項目（儀表板、系統設定）沒有對應鍵
+  nav_group: {
+    people: "人事管理",
+    attendance: "簽到系統",
+    leave: "假勤管理",
+  },
   nav: {
     leave: "我的請假",
     leave_approval: "待我簽核",
@@ -938,11 +944,9 @@ export const hrManagement = {
     unapproved_empty: "沒有落在核准範圍外的在場時間",
     unapproved_hint:
       "在場但沒有任何一張單涵蓋的時段。可能是漏了申請，也可能只是多待了一會兒 —— 由你判斷。",
-    unapproved_from: "起",
     unapproved_range_days: "近 {{days}} 天",
     exception_unapproved_overtime: "有打卡、無核准",
     exception_missing_punch_evidence: "已核准但無打卡佐證",
-    select_employee: "員工",
     error_load: "載入失敗",
     error_submit: "送出失敗",
     error_decide: "決行失敗",

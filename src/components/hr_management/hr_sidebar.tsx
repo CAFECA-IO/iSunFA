@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   activeHrNavKeyOf,
-  HR_NAV_ITEMS,
+  HR_NAV_SECTIONS,
+  IHrNavItem,
 } from "@/components/hr_management/hr_nav_items";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -17,7 +18,11 @@ interface IHrSidebarProps {
 /**
  * Info: (20260810 - Julian) 左側主選單。
  * 桌機固定在版面左側，行動版改為覆蓋式抽屜（`isOpen` 控制）。
- * 兩者共用同一份 `HR_NAV_ITEMS`，避免選單項目在兩處各寫一次而漂移。
+ * 兩者共用同一份 `HR_NAV_SECTIONS`，避免選單項目在兩處各寫一次而漂移。
+ *
+ * Info: (20260818 - Julian) 改為兩段式：四個群組（人事管理／簽到系統／假勤管理／
+ * 加上兩個不分組的區塊）。項目長到 14 個之後，「排班月曆在哪」變成一件要從頭
+ * 掃到尾的事 —— 分組把掃描範圍從 14 個縮到幾個標題。
  */
 const HrSidebar: FC<IHrSidebarProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
@@ -29,44 +34,62 @@ const HrSidebar: FC<IHrSidebarProps> = ({ isOpen, onClose }) => {
    */
   const activeKey = activeHrNavKeyOf(pathname);
 
+  const renderItem = (item: IHrNavItem) => {
+    const Icon = item.icon;
+    const isActive = item.key === activeKey;
+
+    if (item.disabled) {
+      return (
+        <span
+          key={item.key}
+          aria-disabled="true"
+          className="flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-300 select-none"
+        >
+          <Icon className="size-5 shrink-0" />
+          {t(item.labelKey)}
+        </span>
+      );
+    }
+
+    return (
+      <Link
+        key={item.key}
+        href={item.href}
+        onClick={onClose}
+        aria-current={isActive ? "page" : undefined}
+        className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+          isActive
+            ? "bg-orange-50 text-orange-600"
+            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+        }`}
+      >
+        <Icon
+          className={`size-5 shrink-0 ${isActive ? "text-orange-500" : "text-gray-400"}`}
+        />
+        {t(item.labelKey)}
+      </Link>
+    );
+  };
+
+  /**
+   * Info: (20260818 - Julian) 分組之間用間距分隔，不用分隔線。
+   *
+   * 四個群組再加分隔線，畫面上就有八條水平線在爭注意力 ——
+   * 而標題本身已經說明了分界。不分組的區塊（儀表板、系統設定）
+   * 沒有標題，靠同一份間距與其他群組拉開。
+   */
   const navList = (
-    <nav className="flex flex-col gap-1 p-3">
-      {HR_NAV_ITEMS.map((item) => {
-        const Icon = item.icon;
-        const isActive = item.key === activeKey;
-
-        if (item.disabled) {
-          return (
-            <span
-              key={item.key}
-              aria-disabled="true"
-              className="flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-300 select-none"
-            >
-              <Icon className="size-5 shrink-0" />
-              {t(item.labelKey)}
-            </span>
-          );
-        }
-
-        return (
-          <Link
-            key={item.key}
-            href={item.href}
-            onClick={onClose}
-            aria-current={isActive ? "page" : undefined}
-            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-              isActive
-                ? "bg-orange-50 text-orange-600"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-            }`}
-          >
-            <Icon
-              className={`size-5 shrink-0 ${isActive ? "text-orange-500" : "text-gray-400"}`}
-            />
-            {t(item.labelKey)}
-          </Link>
-        );
-      })}
+    <nav className="flex flex-col gap-4 p-3">
+      {HR_NAV_SECTIONS.map((section) => (
+        <div key={section.key} className="flex flex-col gap-1">
+          {section.labelKey !== null && (
+            <div className="px-3 pb-1 text-xs font-semibold tracking-wide text-gray-400">
+              {t(section.labelKey)}
+            </div>
+          )}
+          {section.items.map(renderItem)}
+        </div>
+      ))}
     </nav>
   );
 
