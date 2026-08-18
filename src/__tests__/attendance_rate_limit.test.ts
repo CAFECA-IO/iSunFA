@@ -79,7 +79,19 @@ const EXPECTED_BUCKET: Record<string, Record<string, RateLimitBucketEnum>> = {
    * 試算（`request/preview`）是 POST 卻歸 `READ`：它不寫任何東西，
    * 而畫面上每改一次日期就呼叫一次 —— 掛在寫入桶會讓即時預覽在正常填單時就撞牆。
    */
-  "leave/policy/route.ts": { GET: RateLimitBucketEnum.READ },
+  "leave/policy/route.ts": {
+    GET: RateLimitBucketEnum.READ,
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "leave/policy/[policy_id]/route.ts": {
+    GET: RateLimitBucketEnum.READ,
+    PUT: RateLimitBucketEnum.LEAVE_WRITE,
+    DELETE: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "leave/policy/[policy_id]/tier/route.ts": {
+    GET: RateLimitBucketEnum.READ,
+    PUT: RateLimitBucketEnum.LEAVE_WRITE,
+  },
   "leave/approval_rule/route.ts": {
     GET: RateLimitBucketEnum.READ,
     PUT: RateLimitBucketEnum.LEAVE_WRITE,

@@ -12,7 +12,7 @@ import { overtimeReportService } from "@/services/overtime_report.service";
 
 /**
  * Info: (20260818 - Julian) L28：加班時數統計（月／季，含上限使用率）。
- * GET .../hr/overtime/summary?month=YYYY-MM[&employeeId=]
+ * GET /api/v1/user/account_book/[account_book_id]/hr/overtime/summary?month=YYYY-MM[&employeeId=]
  *
  * ## 兩個分開的數字
  *

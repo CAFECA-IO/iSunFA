@@ -12,7 +12,7 @@ import { leaveRequestService } from "@/services/leave_request.service";
 
 /**
  * Info: (20260817 - Julian) L17：送出前試算。
- * POST .../hr/leave/request/preview
+ * POST /api/v1/user/account_book/[account_book_id]/hr/leave/request/preview
  *      body 與 L11 完全相同
  *
  * ## 為什麼是 POST 而不是 GET

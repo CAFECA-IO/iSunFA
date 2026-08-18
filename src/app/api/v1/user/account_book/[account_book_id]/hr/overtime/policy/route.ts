@@ -12,7 +12,7 @@ import { overtimePolicyService } from "@/services/overtime_policy.service";
 
 /**
  * Info: (20260818 - Julian) 加班政策的讀取。
- * GET .../hr/overtime/policy
+ * GET /api/v1/user/account_book/[account_book_id]/hr/overtime/policy
  *
  * 計畫書 §10 只編了 L30（PUT）。讀取一併做在這裡，理由與 L31／L32 相同：
  * 改不了自己看不到的東西，而設定畫面第一件事就是把現值載出來。
@@ -57,7 +57,7 @@ export async function GET(
 
 /**
  * Info: (20260818 - Julian) L30：設定加班政策。
- * PUT .../hr/overtime/policy
+ * PUT /api/v1/user/account_book/[account_book_id]/hr/overtime/policy
  *      body：`{ extendedLimitAgreed, agreementRecordUrl, agreedAt, compensatoryExpiryMonths }`
  *
  * ## 全量取代，不是差異更新

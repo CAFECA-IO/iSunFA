@@ -11,7 +11,7 @@ import { leaveRequestService } from "@/services/leave_request.service";
 
 /**
  * Info: (20260817 - Julian) L12：假單明細（含簽核鏈快照）。
- * GET .../hr/leave/request/:request_id
+ * GET /api/v1/user/account_book/[account_book_id]/hr/leave/request/:request_id
  *
  * 可見者：申請人本人，或**鏈上任何一個節點**（不限當前待簽）——
  * 簽過的人有權回看自己簽了什麼，那是他的責任的一部分。
@@ -70,7 +70,7 @@ export async function GET(
 
 /**
  * Info: (20260817 - Julian) L13：撤回假單。
- * DELETE .../hr/leave/request/:request_id
+ * DELETE /api/v1/user/account_book/[account_book_id]/hr/leave/request/:request_id
  *
  * **只有申請人自己、且只在尚未有任何決定之前。** 已被駁回或已核准的單
  * 不能撤回 —— 那不是撤回，是要求別人改變已經做過的決定。

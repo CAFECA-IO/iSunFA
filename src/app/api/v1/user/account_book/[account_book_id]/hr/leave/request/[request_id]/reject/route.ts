@@ -12,7 +12,7 @@ import { leaveRequestService } from "@/services/leave_request.service";
 
 /**
  * Info: (20260817 - Julian) L15：駁回。
- * POST .../hr/leave/request/:request_id/reject
+ * POST /api/v1/user/account_book/[account_book_id]/hr/leave/request/:request_id/reject
  *      body：`{ comment? }`
  *
  * **任一節點駁回即整張單駁回，額度完全不動** —— 因為送出時本來就沒預扣

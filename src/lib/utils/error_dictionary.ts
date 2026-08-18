@@ -1324,6 +1324,63 @@ export const API_ERRORS = {
   } as IErrorDef,
 
   /**
+   * Info: (20260818 - Julian) 內建假別的法定欄位不可修改，也不可停用。
+   *
+   * 內建的十三種假別由 seed 產生，它們的給假方式、工資比例、雇主有無准駁權
+   * 都直接來自勞基法與性平法（ADR 021 §5：「seed 成為正確性的一部分」）。
+   * 開放修改的效果不是彈性，是讓一個違法的設定看起來像一筆正常的假別 ——
+   * 而受影響的人要到請假被扣錯天數時才會發現。
+   *
+   * 可改的只有公司政策欄位：名稱、最小請假單位、證明文件要求與門檻、遞延月數。
+   */
+  VA_LEAVE_POLICY_LOCKED_FIELD: {
+    code: "VA000064",
+    message:
+      "This field of a system-defined leave type is fixed by statute and cannot be changed",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 併計關係成環。
+   *
+   * 家庭照顧假併入事假（性平法 §20）是一個有向關係。A→B→A 會讓
+   * `allocateConsumption` 沿著環一直扣下去 —— 請一天假扣掉兩個假別各一天，
+   * 而兩邊的餘額都對不上。自指由 `assertLeavePolicyUnit` 擋，更長的環擋在這裡。
+   */
+  VA_LEAVE_POLICY_MERGE_CYCLE: {
+    code: "VA000065",
+    message: "Merging into that leave type would form a cycle",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 年資級距表不合法。
+   *
+   * 級距表是特休日數的唯一來源（§38 I）。一張有洞、重疊或日數倒退的表，
+   * 會讓某個年資區間查不到日數或查到比前一級少的日數 ——
+   * 前者是錯誤，後者是「做越久假越少」，而兩者都不會報錯。
+   */
+  VA_LEAVE_TIER_TABLE_INVALID: {
+    code: "VA000066",
+    message: "The seniority tier table is not a valid ladder",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 這個假別不吃級距表。
+   *
+   * 與 `VA_LEAVE_TIER_TABLE_INVALID` 分開：那一個是表本身寫錯（改表就好），
+   * 這一個是假別的給假方式不是 `SENIORITY_TIER`（要先改給假方式）。
+   * 存進去的效果是一張永遠不會被讀到的表，而看設定的人會以為它生效了。
+   */
+  VA_LEAVE_TIER_NOT_APPLICABLE: {
+    code: "VA000067",
+    message:
+      "Only a SENIORITY_TIER leave type reads a tier table; storing one here would do nothing",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
    * Info: (20260817 - Julian) 在非上班日請假。
    * 判定引擎看非 WORK 就回 OFF_DAY，因此這種假單不會產生任何效果，
    * 卻會扣掉額度 —— 使用者付出了代價卻什麼也沒換到。
@@ -1563,6 +1620,19 @@ export const API_ERRORS = {
   CF_LEAVE_BALANCE_RACE: {
     code: "CF000012",
     message: "Leave balance was consumed by another request",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 假別代號在這個帳本已經有人用了。
+   *
+   * `@@unique([accountBookId, code])` 是最終防線，但撞上它會丟 P2002 ——
+   * 那讀起來像故障。代號重複是使用者的輸入問題，不是資料庫的問題
+   * （coding_guidelines §5.2：不讓原始的 Prisma 錯誤噴到前端）。
+   */
+  CF_LEAVE_POLICY_CODE_TAKEN: {
+    code: "CF000013",
+    message: "That leave type code is already used in this account book",
     status: ApiCode.CONFLICT,
   } as IErrorDef,
 

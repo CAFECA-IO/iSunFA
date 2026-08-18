@@ -12,7 +12,7 @@ import { overtimeRequestService } from "@/services/overtime_request.service";
 
 /**
  * Info: (20260818 - Julian) L26：核准加班單，**同時決定認列分鐘與分段**。
- * POST .../hr/overtime/request/:request_id/approve
+ * POST /api/v1/user/account_book/[account_book_id]/hr/overtime/request/:request_id/approve
  *      body：`{ approvedMinutes? }`（省略即照申請的整段核准）
  *
  * ## 這一支是加班模組風險最高的端點

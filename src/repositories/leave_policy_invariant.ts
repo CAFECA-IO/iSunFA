@@ -140,8 +140,8 @@ export function assertLeavePolicyUnit(params: IStorableLeavePolicy): void {
    *
    * 家庭照顧假併入事假（性平法 §20）是一個有向關係；指向自己會讓
    * `allocateConsumption` 在同一個假別上扣兩次 —— 請一天家庭照顧假扣兩天。
-   * 更長的環（A→B→A）這裡擋不到，需要在 service 走一次可達性檢查。
-   * ToDo: (20260817 - Julian) 併計成環的偵測留在 service，本檔只擋最常見的自指。
+   * 更長的環（A→B→A）這裡擋不到 —— 它需要整個帳本的併計關係圖，
+   * 見本檔下方的 `assertNoMergeCycle`（2026-08-18 補）。
    */
   if (
     params.id !== null &&
@@ -214,5 +214,51 @@ function assertProofRequirement(params: IStorableLeavePolicy): void {
       "proofThresholdDays is only meaningful for REQUIRED_OVER_THRESHOLD; a leftover value reads as a rule that does nothing",
       `proofRequirement=${params.proofRequirement}, proofThresholdDays=${params.proofThresholdDays}`,
     );
+  }
+}
+
+/**
+ * Info: (20260818 - Julian) 併計關係不得成環。
+ *
+ * ## 為什麼自指擋不夠
+ *
+ * `assertLeavePolicyUnit` 只看得到被寫入的那一列，因此只擋得住 A→A。
+ * 但 A→B→A 的效果一樣壞：`allocateConsumption` 沿著併計鏈往下扣，
+ * 環會讓它一直走 —— 請一天家庭照顧假，事假與家庭照顧假各扣一天，
+ * 而兩邊的餘額都對不上帳本。
+ *
+ * ## 為什麼參數是整張圖
+ *
+ * 走訪需要「這個帳本每個假別併到哪裡」，那要查 DB，屬 repository 的職責。
+ * 函式本身只走訪不查詢 —— 理由同 `deriveOvertimeSegments` 收 `priorRecognizedMinutes`：
+ * 一個會自己查資料的守衛，其結果無法在測試裡完整重現。
+ *
+ * `edges` 是既有的關係（不含這次要寫入的那一筆），`from` 與 `to` 是這次的異動。
+ * 分開傳而不是要呼叫端先把圖改好：那會讓「檢查之前先改壞資料」變成必要步驟。
+ */
+export function assertNoMergeCycle(params: {
+  edges: Readonly<Record<string, string | null>>;
+  from: string;
+  to: string | null;
+}): void {
+  if (params.to === null) return;
+
+  // Info: (20260818 - Julian) 自指由 `assertLeavePolicyUnit` 擋，這裡一併涵蓋，兩處都擋不算重複
+  const visited = new Set<string>([params.from]);
+  let cursor: string | null = params.to;
+
+  while (cursor !== null) {
+    if (visited.has(cursor)) {
+      throw new LeavePolicyInvariantError(
+        "merging into that leave type closes a cycle; consumption would be deducted around the loop",
+        `from=${params.from}, to=${params.to}, revisited=${cursor}`,
+      );
+    }
+    visited.add(cursor);
+    /**
+     * Info: (20260818 - Julian) 走到圖外（被停用或已刪的假別）就停，不當成環。
+     * `mergesIntoPolicyId` 是 `onDelete: SetNull`，所以斷鏈是正常狀態。
+     */
+    cursor = params.edges[cursor] ?? null;
   }
 }

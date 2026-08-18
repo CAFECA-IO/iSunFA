@@ -12,7 +12,7 @@ import { leaveRequestService } from "@/services/leave_request.service";
 
 /**
  * Info: (20260817 - Julian) L10：假單清單。
- * GET .../hr/leave/request[?from=&to=&employeeId=]
+ * GET /api/v1/user/account_book/[account_book_id]/hr/leave/request[?from=&to=&employeeId=]
  *
  * 未指定 `employeeId` 即為自己。指定他人時必須是該單的簽核者，
  * 否則回 `FO_LEAVE_REQUEST_SCOPE` —— **不是回空陣列**：
@@ -72,7 +72,7 @@ export async function GET(
 
 /**
  * Info: (20260817 - Julian) L11：送出假單。
- * POST .../hr/leave/request
+ * POST /api/v1/user/account_book/[account_book_id]/hr/leave/request
  *      body：`{ leavePolicyId, reason, days: [{ workDate, segment, startMinute?, endMinute? }] }`
  *
  * **不預扣額度** —— 扣減發生在最後一個簽核節點通過的那個交易內（ADR 023 §6）。

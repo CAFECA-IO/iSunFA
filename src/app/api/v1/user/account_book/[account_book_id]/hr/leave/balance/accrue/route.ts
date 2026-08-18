@@ -14,7 +14,7 @@ import { leaveBalanceService } from "@/services/leave_balance.service";
 
 /**
  * Info: (20260817 - Julian) L33：把額度補到某一天為止。
- * POST .../hr/leave/balance/accrue
+ * POST /api/v1/user/account_book/[account_book_id]/hr/leave/balance/accrue
  *      body：`{ employeeId?, asOfDate? }`（皆可省略：自己、今天）
  *
  * **可以隨便重跑。** `deriveGrantSchedule` 回的是「應該有哪些批次」，

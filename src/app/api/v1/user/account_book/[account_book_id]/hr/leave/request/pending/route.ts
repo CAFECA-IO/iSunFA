@@ -11,7 +11,7 @@ import { leaveRequestService } from "@/services/leave_request.service";
 
 /**
  * Info: (20260817 - Julian) L16：待我簽核。
- * GET .../hr/leave/request/pending
+ * GET /api/v1/user/account_book/[account_book_id]/hr/leave/request/pending
  *
  * 只回「當前待簽的那一關是我」的單。排在第二關的人在第一關通過之前
  * 不該看到它 —— 否則他會去簽一張還沒輪到他的單，然後收到一個

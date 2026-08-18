@@ -1,6 +1,9 @@
 import {
+  LeaveAccrualMethod,
+  LeaveCycleBasis,
   LeaveProofRequirement,
   LeaveQuotaMode,
+  LeaveRoundingMode,
   LeaveUnitBasis,
 } from "@/constants/leave_policy";
 
@@ -28,3 +31,56 @@ export interface ILeavePolicyOption {
   employerMayReject: boolean;
   legalBasis: string | null;
 }
+
+/**
+ * Info: (20260818 - Julian) 假別設定畫面看到的完整一列（L3 / L5）。
+ *
+ * 與 `ILeavePolicyOption` 分開：那一份是**請假的人**需要知道的（叫什麼、
+ * 最小單位多大、要不要附證明），這一份是**設定的人**需要知道的。
+ * 合成一個會讓 `paidRatio` 流到請假表單，而那是薪資模組的事。
+ */
+export interface ILeaveAccrualTierView {
+  /** Info: (20260818 - Julian) 年資下界（含），以月為單位 */
+  minSeniorityMonths: number;
+  days: number;
+  /** Info: (20260818 - Julian) §38 I ⑥「每一年加給一日」。只有最後一級可以有值 */
+  incrementDaysPerYear: number | null;
+  maxDays: number | null;
+}
+
+export interface ILeavePolicyDetail {
+  id: string;
+  code: string;
+  name: string;
+  accrualMethod: LeaveAccrualMethod;
+  cycleBasis: LeaveCycleBasis;
+  quotaMode: LeaveQuotaMode;
+  /** Info: (20260818 - Julian) `SENIORITY_TIER` 者必為 null —— 日數來自級距表 */
+  annualDays: number | null;
+  unitBasis: LeaveUnitBasis;
+  minimumUnitMinutes: number | null;
+  roundingMode: LeaveRoundingMode;
+  proratedRoundingScale: number;
+  carryForwardMonths: number;
+  cashOutOnExpiry: boolean;
+  /** Info: (20260818 - Julian) 條件式給付者為 null（產假依年資而異） */
+  paidRatio: number | null;
+  proofRequirement: LeaveProofRequirement;
+  proofThresholdDays: number | null;
+  employerMayReject: boolean;
+  recallable: boolean;
+  mergesIntoPolicyId: string | null;
+  legalBasis: string | null;
+  /**
+   * Info: (20260818 - Julian) 內建假別（seed 產生）。法定欄位鎖住、不可停用 ——
+   * 畫面必須看得到這個旗標，否則使用者會對著一個灰掉的欄位找原因。
+   */
+  isSystemDefined: boolean;
+  isActive: boolean;
+}
+
+/** Info: (20260818 - Julian) 新增／修改時可寫的欄位。`isSystemDefined` 與 `isActive` 不在其中 */
+export type ILeavePolicyWritable = Omit<
+  ILeavePolicyDetail,
+  "id" | "isSystemDefined" | "isActive"
+>;

@@ -12,7 +12,7 @@ import { leaveRequestService } from "@/services/leave_request.service";
 
 /**
  * Info: (20260817 - Julian) L14：核准當前節點。
- * POST .../hr/leave/request/:request_id/approve
+ * POST /api/v1/user/account_book/[account_book_id]/hr/leave/request/:request_id/approve
  *      body：`{ comment? }`
  *
  * ## 這一支是本模組風險最高的端點

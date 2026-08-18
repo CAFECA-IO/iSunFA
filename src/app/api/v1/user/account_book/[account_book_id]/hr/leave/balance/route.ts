@@ -14,7 +14,7 @@ import { leaveBalanceService } from "@/services/leave_balance.service";
 
 /**
  * Info: (20260817 - Julian) L7：各假別餘額。
- * GET .../hr/leave/balance[?employeeId=&asOfDate=]
+ * GET /api/v1/user/account_book/[account_book_id]/hr/leave/balance[?employeeId=&asOfDate=]
  *
  * 未指定 `employeeId` 即為自己。
  *

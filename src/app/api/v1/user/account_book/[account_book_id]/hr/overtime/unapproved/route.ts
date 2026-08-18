@@ -12,7 +12,7 @@ import { overtimeReportService } from "@/services/overtime_report.service";
 
 /**
  * Info: (20260818 - Julian) L29：有打卡但無核准加班單的時段。
- * GET .../hr/overtime/unapproved?from=&to=[&employeeId=]
+ * GET /api/v1/user/account_book/[account_book_id]/hr/overtime/unapproved?from=&to=[&employeeId=]
  *
  * ## 這一支不下結論
  *

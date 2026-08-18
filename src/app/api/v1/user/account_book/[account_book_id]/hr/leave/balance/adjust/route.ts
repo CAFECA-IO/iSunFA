@@ -17,7 +17,7 @@ import { leaveBalanceService } from "@/services/leave_balance.service";
 
 /**
  * Info: (20260817 - Julian) L9：人工調整額度。
- * POST .../hr/leave/balance/adjust?employeeId=...
+ * POST /api/v1/user/account_book/[account_book_id]/hr/leave/balance/adjust?employeeId=...
  *      body：`{ leavePolicyId, deltaMinutes, reason }`
  *
  * 正負皆可。用途是補一個系統算不出來的量 —— 前公司年資、協商遞延

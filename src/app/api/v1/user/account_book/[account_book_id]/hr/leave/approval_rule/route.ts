@@ -12,7 +12,7 @@ import { leaveApprovalRuleService } from "@/services/leave_approval_rule.service
 
 /**
  * Info: (20260817 - Julian) L31：簽核規則清單。
- * GET .../hr/leave/approval_rule
+ * GET /api/v1/user/account_book/[account_book_id]/hr/leave/approval_rule
  *
  * 回應分成 `general`（通則）與 `byPolicy`（假別專屬）兩組，
  * 而不是一個扁平陣列 —— 前端要呈現的是「這個假別走哪一套」，
@@ -57,7 +57,7 @@ export async function GET(
 
 /**
  * Info: (20260817 - Julian) L32：整組取代某個 scope 的簽核規則。
- * PUT .../hr/leave/approval_rule
+ * PUT /api/v1/user/account_book/[account_book_id]/hr/leave/approval_rule
  *     body：`{ leavePolicyId: string | null, rules: [{ minDays, maxDays, steps }] }`
  *
  * **PUT 而不是 POST/PATCH**：規則的正確性是集合層級的（必須是 `[0, ∞)` 的

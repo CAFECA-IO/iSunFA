@@ -11,7 +11,7 @@ import { overtimeRequestService } from "@/services/overtime_request.service";
 
 /**
  * Info: (20260818 - Julian) L27：駁回加班單。
- * POST .../hr/overtime/request/:request_id/reject
+ * POST /api/v1/user/account_book/[account_book_id]/hr/overtime/request/:request_id/reject
  *
  * 沒有 body：與假單的駁回不同，這裡不強制填理由。加班單被駁回的常見原因是
  * 「這個時段不需要人留下來」，那是排程決定而不是對申請人的評價 ——

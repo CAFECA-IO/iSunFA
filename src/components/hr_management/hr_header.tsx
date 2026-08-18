@@ -2,7 +2,14 @@
 
 import { FC } from "react";
 import Link from "next/link";
-import { Bell, Menu, Search, UserCircle2 } from "lucide-react";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import {
+  Bell,
+  LogOut,
+  Menu as MenuIcon,
+  Search,
+  UserCircle2,
+} from "lucide-react";
 import BrandLogoImage from "@/components/common/brand_logo_image";
 import { useAuth } from "@/contexts/auth_context";
 import {
@@ -20,7 +27,7 @@ interface IHrHeaderProps {
  */
 const HrHeader: FC<IHrHeaderProps> = ({ onToggleSidebar }) => {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const displayName = user?.name ?? "";
 
@@ -34,7 +41,7 @@ const HrHeader: FC<IHrHeaderProps> = ({ onToggleSidebar }) => {
           onClick={onToggleSidebar}
           className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 lg:hidden"
         >
-          <Menu className="size-5 shrink-0" />
+          <MenuIcon className="size-5 shrink-0" />
         </button>
 
         <Link
@@ -51,7 +58,7 @@ const HrHeader: FC<IHrHeaderProps> = ({ onToggleSidebar }) => {
         {/* Info: (20260810 - Julian) 全域搜尋 */}
         <div className="ml-auto hidden max-w-md flex-1 md:block">
           <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 shrink-0 -translate-y-1/2 text-gray-400" />
             <input
               type="search"
               aria-label={t("hr_management.global_search_placeholder")}
@@ -82,19 +89,49 @@ const HrHeader: FC<IHrHeaderProps> = ({ onToggleSidebar }) => {
             <Bell className="size-5 shrink-0" />
           </button>
 
-          <button
-            type="button"
-            aria-label={t("hr_management.user_menu_aria")}
-            title={t("hr_management.value.feature_pending")}
-            className={`flex items-center gap-2 rounded-xl p-1.5 transition-colors hover:bg-gray-100 ${HR_PENDING_ACTION_CLASS}`}
-          >
-            <UserCircle2 className="h-7 w-7 text-gray-400" />
-            {displayName && (
-              <span className="hidden max-w-[10rem] truncate text-sm font-medium text-gray-700 lg:inline">
-                {displayName}
-              </span>
-            )}
-          </button>
+          {/**
+           * Info: (20260818 - Julian) 使用者選單。
+           *
+           * 這顆按鈕不再標 `feature_pending` —— 它現在真的做得到一件事。
+           * 留著那個灰掉的樣式會讓使用者不去點它，而登出就在裡面。
+           */}
+          <Menu as="div" className="relative">
+            <MenuButton
+              aria-label={t("hr_management.user_menu_aria")}
+              className="flex items-center gap-2 rounded-xl p-1.5 transition-colors hover:bg-gray-100"
+            >
+              <UserCircle2 className="h-7 w-7 text-gray-400" />
+              {displayName && (
+                <span className="hidden max-w-[10rem] truncate text-sm font-medium text-gray-700 lg:inline">
+                  {displayName}
+                </span>
+              )}
+            </MenuButton>
+
+            <MenuItems className="absolute right-0 z-40 mt-2 w-52 origin-top-right rounded-xl bg-white p-1 shadow-lg ring-1 ring-gray-200 focus:outline-none">
+              {/**
+               * Info: (20260818 - Julian) 小尺寸的按鈕上放不下姓名（`lg:inline`），
+               * 所以在選單裡補一次。共用平板換人時，「現在登入的是誰」
+               * 必須在按下登出之前就看得到。
+               */}
+              {displayName && (
+                <div className="truncate px-3 py-2 text-xs text-gray-400 lg:hidden">
+                  {displayName}
+                </div>
+              )}
+
+              <MenuItem>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 focus:bg-rose-50 focus:outline-none"
+                >
+                  <LogOut className="size-4 shrink-0" />
+                  {t("header.logout")}
+                </button>
+              </MenuItem>
+            </MenuItems>
+          </Menu>
         </div>
       </div>
     </header>

@@ -12,7 +12,7 @@ import { leaveBalanceService } from "@/services/leave_balance.service";
 
 /**
  * Info: (20260817 - Julian) L8：額度異動明細（帳本）。
- * GET .../hr/leave/balance/ledger[?employeeId=&leavePolicyId=&limit=]
+ * GET /api/v1/user/account_book/[account_book_id]/hr/leave/balance/ledger[?employeeId=&leavePolicyId=&limit=]
  *
  * 這是餘額的**依據**，不是它的另一種顯示。餘額快取與帳本不一致時
  * 帳本是對的那一個（ADR 022 §4），所以這支端點是對帳的入口 ——
