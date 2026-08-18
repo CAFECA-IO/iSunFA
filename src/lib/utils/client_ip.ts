@@ -43,6 +43,12 @@ export const UNIDENTIFIED_CLIENT_IP = "unknown";
  * 那種部署下所有流量會落在這個嚴格的共用桶裡——症狀是邀請落地頁大量 429。
  * 我們無法從請求上分辨「代理寫的 unknown」與「呼叫端送的 unknown」，
  * 因此選擇保守的一側，並在下方留一筆 `logger.warn` 讓維運看得見。
+ *
+ * Info: (20260818 - Luphia) **本專案的部署已確認會恆定覆寫 `x-forwarded-for`**
+ * （維護者於 2026-08-18 確認）。因此上面那個取捨在目前的部署形態下是理論上的：
+ * 解析不出 IP 的值必然來自呼叫端，而「完全不送標頭」也到不了應用層。
+ * 這一行是給**未來換部署形態的人**看的——若哪天前面多一層不覆寫 XFF 的 CDN，
+ * 這個判斷的前提就沒了，`logger.warn` 的量會先告訴你。
  */
 export const MALFORMED_CLIENT_IP = "malformed";
 
