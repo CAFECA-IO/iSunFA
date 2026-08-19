@@ -342,6 +342,15 @@ interface ILeaveCase {
   policyCode: LeavePolicyCode;
   workDates: string[];
   reason: string;
+  /**
+   * Info: (20260818 - Julian) 有值即為**自訂時段**（`CUSTOM`），否則整天（`FULL`）。
+   *
+   * 兩者都要有：請假表單現在一律填起訖，但**既有資料仍是整天**，
+   * 而假單明細頁對兩種都要顯示得出來。只種其中一種，就會有一半的路徑
+   * 從來沒有被人看過。當日 00:00 起算的分鐘數。
+   */
+  startMinute?: number;
+  endMinute?: number;
   submittedAt: Date;
   /**
    * Info: (20260818 - Julian) 有值即由這位當場駁回；未給則留在待簽核。
@@ -358,7 +367,7 @@ interface ILeaveCase {
 }
 
 /**
- * Info: (20260818 - Julian) 假單。三張待簽核、一張已駁回。
+ * Info: (20260818 - Julian) 假單。四張待簽核、一張已駁回。
  *
  * 既有 seed 只建**已核准**的假單（演示當日那兩張），因此「待我簽核」是空的，
  * 而申請人自己的「我的假單」只有一種狀態。這四張補的正是這兩個空白：
@@ -366,6 +375,7 @@ interface ILeaveCase {
  * - 一天與三天各有 —— 通則規定未滿 3 天一關、3 天以上兩關，
  *   而那條規則若沒有一張三天的假單，畫面上永遠看不出來。
  * - 一張已駁回 —— 一份每一列都長一樣的清單，看不出它有狀態這件事。
+ * - 一張**以小時請**的（LV-5）—— 其餘都是整天，而整天看不出最小單位與進位。
  *
  * **刻意沒有預先種「已核准」**：核准要扣帳、填 `activeKey`、把排班投影成
  * `LEAVE`，那三件事該在演示現場當場發生（EMP005 按下去、額度隨即少一天），
@@ -398,6 +408,27 @@ const LEAVE_CASES: ILeaveCase[] = [
     reason: "返鄉參加婚宴",
     submittedAt: at(OT_PENDING_DAY, 13, 15),
     note: "特休 3 天 → 兩關（相鄰同一人時會併關，`mergedFromKinds` 記錄被併掉的那一關）",
+  },
+  {
+    label: "LV-5",
+    employeeNo: "EMP007",
+    policyCode: LEAVE_POLICY_CODE.ANNUAL,
+    workDates: ["2026-08-19"],
+    /**
+     * Info: (20260818 - Julian) 09:00–10:30，**一個半小時**。
+     *
+     * 刻意挑一個不整除的長度：特休的最小單位是 60 分鐘、捨入方向是 UP，
+     * 於是 90 分鐘會被計成 **120 分鐘**（0.25 天）。那 30 分鐘的差額是
+     * 「不足一單位以一單位計」這條對勞工不利的預設在畫面上唯一看得見的地方
+     * （`LeaveRoundingMode` 的說明要求它必須載明於工作規則）。
+     *
+     * 選 90 而不是 120，就是為了讓那一行橘字有東西可說。
+     */
+    startMinute: 540,
+    endMinute: 630,
+    reason: "上午回診複檢",
+    submittedAt: at(OT_ADVANCE_DAY, 15, 10),
+    note: "小時制請假：實際 90 分鐘 → 依最小單位計為 120 分鐘（0.25 天）",
   },
   {
     label: "LV-4",
@@ -764,10 +795,17 @@ async function seedLeaveCases(): Promise<void> {
       input: {
         leavePolicyId: policy.id,
         reason: leaveCase.reason,
-        days: leaveCase.workDates.map((workDate) => ({
-          workDate,
-          segment: LeaveDaySegment.FULL,
-        })),
+        days: leaveCase.workDates.map((workDate) =>
+          leaveCase.startMinute === undefined ||
+          leaveCase.endMinute === undefined
+            ? { workDate, segment: LeaveDaySegment.FULL }
+            : {
+                workDate,
+                segment: LeaveDaySegment.CUSTOM,
+                startMinute: leaveCase.startMinute,
+                endMinute: leaveCase.endMinute,
+              },
+        ),
       },
       observedAt: leaveCase.submittedAt,
     });
@@ -834,7 +872,11 @@ function printRunbook(): void {
   );
   console.log("      有打卡事實、沒有任何一張單涵蓋它，系統只負責讓它浮出來。");
   console.log("   4. 同一位 → /hr_management/leave/approval");
-  console.log("      三張待簽核假單，其中 LV-3 是三天 → 走兩關的那條規則。");
+  console.log("      四張待簽核假單，其中 LV-3 是三天 → 走兩關的那條規則；");
+  console.log(
+    "      LV-5 是 EMP007 王雅琪 08-19 上午 09:00–10:30 —— 實際 90 分鐘、計 120 分鐘，",
+  );
+  console.log("      那 30 分鐘的差額就是「不足一單位以一單位計」。");
   console.log(
     "      當場核准 LV-1，再切回 EMP006 的「我的請假」—— 特休額度會少一天，",
   );

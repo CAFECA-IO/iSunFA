@@ -810,7 +810,6 @@ export const hrManagement = {
 
     form_title: "申請の作成",
     field_policy: "休暇種別",
-    field_segment: "時間帯",
     field_dates: "取得日",
     field_reason: "理由",
     field_reason_placeholder: "例：通院、家庭の事情",

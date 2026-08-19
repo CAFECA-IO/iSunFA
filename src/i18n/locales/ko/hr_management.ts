@@ -813,7 +813,6 @@ export const hrManagement = {
 
     form_title: "신청서 작성",
     field_policy: "휴가 종류",
-    field_segment: "시간대",
     field_dates: "사용일",
     field_reason: "사유",
     field_reason_placeholder: "예: 재진, 집안 사정",

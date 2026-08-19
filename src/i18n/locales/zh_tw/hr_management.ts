@@ -792,7 +792,6 @@ export const hrManagement = {
 
     form_title: "填寫假單",
     field_policy: "假別",
-    field_segment: "時段",
     field_dates: "請假日期",
     field_reason: "事由",
     field_reason_placeholder: "例：回診複檢、家中臨時有事",

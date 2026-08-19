@@ -3,7 +3,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { CalendarPlus, Loader2, Send, TriangleAlert } from "lucide-react";
 import { LEAVE_API } from "@/constants/leave_api";
-import { LeaveDaySegment, LeaveUnitBasis } from "@/constants/leave_policy";
+import { LeaveDaySegment } from "@/constants/leave_policy";
 import { LeaveRequestStatus } from "@/constants/leave";
 import { ILeavePolicyOption } from "@/interfaces/leave_policy_option";
 import { ILeaveBalanceView } from "@/interfaces/leave_balance";
@@ -70,7 +70,6 @@ const MyLeavePageBody: FC = () => {
   const [loading, setLoading] = useState(true);
 
   const [policyId, setPolicyId] = useState<string>("");
-  const [segment, setSegment] = useState<LeaveDaySegment>(LeaveDaySegment.FULL);
   const [workDates, setWorkDates] = useState<string[]>(emptyDays());
   const [customStart, setCustomStart] = useState(DEFAULT_CUSTOM_START);
   const [customEnd, setCustomEnd] = useState(DEFAULT_CUSTOM_END);
@@ -148,10 +147,30 @@ const MyLeavePageBody: FC = () => {
   }, [reload]);
 
   /**
-   * Info: (20260818 - Julian) 只有「自訂時段」需要起訖，而它只在最小單位是
-   * 固定分鐘的假別上開放（見 `mayPickCustom`）。
+   * Info: (20260818 - Julian) **一律以起訖時刻表達**，不再有整天／上下半天的選項。
+   *
+   * ## 為什麼
+   *
+   * 本系統的使用者是工地人員，每個人的班別與上下班時刻都不一樣。「上半天」
+   * 對他們不是一個直覺的量 —— 那是辦公室的說法。直接給起訖，他們填的就是
+   * 自己實際的時刻，不必先在心裡把它換算成某個時段名稱。
+   *
+   * ## 為什麼可以這樣做
+   *
+   * `LeaveDaySegment` 的四個值仍然存在、既有資料仍然讀得出來（假單明細頁
+   * 照樣顯示「上半天」），只是**新的單一律送 `CUSTOM`**。至於扣幾分鐘，
+   * 由引擎依該假別的 `unitBasis` 與 `minimumUnitMinutes` 進位 ——
+   * 半天制的假別會進位回半天、整天制的會進位回整天，而進位的差額由下方
+   * 的橘字明白說出來。使用者的填法與制度的計算方式因此分開了。
+   *
+   * ## 「半天制」目前沒有法源
+   *
+   * 計畫書 §3.1 已查證的是各假別的**日數上限**，最小請假單位不在其中，
+   * §3.2 待核對也沒有列它 —— 那六種 `HALF_WORKDAY` 是 seed 的一個假設。
+   * 已補進 §3.2（2026-08-18）。在它結案之前，UI 不該替那個假設加上護欄。
    */
-  const isCustom = segment === LeaveDaySegment.CUSTOM;
+  const isCustom = true;
+  const segment = LeaveDaySegment.CUSTOM;
 
   /**
    * Info: (20260818 - Julian) 送出與試算共用同一份 payload。
@@ -315,19 +334,6 @@ const MyLeavePageBody: FC = () => {
    * 產檢假、陪產假各有函釋）。要放寬請改 `DEFAULT_LEAVE_POLICY_SEED` 的
    * `unitBasis`，而不是放寬這裡 —— 這裡只是忠實反映那份設定。
    */
-  const mayPickCustom =
-    selectedPolicy?.unitBasis === LeaveUnitBasis.FIXED_MINUTES;
-
-  /**
-   * Info: (20260818 - Julian) 換到不支援自訂時段的假別時退回整天。
-   * 留著一個選不到的值，送出時才被引擎擋下，使用者會看不懂自己改了什麼。
-   */
-  useEffect(() => {
-    if (!mayPickCustom && segment === LeaveDaySegment.CUSTOM) {
-      setSegment(LeaveDaySegment.FULL);
-    }
-  }, [mayPickCustom, segment]);
-
   const blockingWarning = preview?.concurrencyWarnings.some(
     (warning) => warning.blocking,
   );
@@ -377,7 +383,7 @@ const MyLeavePageBody: FC = () => {
         title={t("hr_management.leave.form_title")}
         icon={<CalendarPlus className="size-4 text-sky-500" />}
       >
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <div className="mt-3 flex flex-col gap-3">
           <label className="flex flex-col gap-1 text-xs text-gray-600">
             {t("hr_management.leave.field_policy")}
             <select
@@ -390,46 +396,6 @@ const MyLeavePageBody: FC = () => {
                   {policy.name}
                 </option>
               ))}
-            </select>
-          </label>
-
-          <label className="flex flex-col gap-1 text-xs text-gray-600">
-            {t("hr_management.leave.field_segment")}
-            <select
-              value={segment}
-              onChange={(event) =>
-                setSegment(event.target.value as LeaveDaySegment)
-              }
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
-            >
-              <option value={LeaveDaySegment.FULL}>
-                {t("hr_management.leave.segment_full")}
-              </option>
-              {/**
-               * Info: (20260817 - Julian) 半天只在假別允許時才給選。
-               * `FULL_WORKDAY` 的假別（產假、公傷病假）請半天沒有意義，
-               * 引擎會直接丟 —— 而讓使用者選一個必定失敗的選項是壞的。
-               */}
-              {selectedPolicy?.unitBasis !== LeaveUnitBasis.FULL_WORKDAY && (
-                <>
-                  <option value={LeaveDaySegment.MORNING}>
-                    {t("hr_management.leave.segment_morning")}
-                  </option>
-                  <option value={LeaveDaySegment.AFTERNOON}>
-                    {t("hr_management.leave.segment_afternoon")}
-                  </option>
-                </>
-              )}
-              {/**
-               * Info: (20260818 - Julian) 小時制的入口。引擎與資料早就支援
-               * （特休／事假／病假／公假的最小單位是 60 分鐘、補休 30 分鐘），
-               * 缺的一直只是這一個選項。
-               */}
-              {mayPickCustom && (
-                <option value={LeaveDaySegment.CUSTOM}>
-                  {t("hr_management.leave.segment_custom")}
-                </option>
-              )}
             </select>
           </label>
         </div>
@@ -474,36 +440,33 @@ const MyLeavePageBody: FC = () => {
           </button>
 
           {/**
-           * Info: (20260818 - Julian) 起訖時刻**整張單一組**，與加班單同一種形狀。
+           * Info: (20260818 - Julian) 第二排：起／迄，與加班單同一個順序與版型。
            *
-           * 第一版做成逐日各填一組，理由是 `LeaveDay` 本來就逐日落地、
-           * 表達得了「週一上午兩小時、週三下午一小時」。但那個彈性的代價是
-           * 每多一天就多兩個輸入框，而它服務的是極少數的情況 ——
-           * 絕大多數是「連續幾天，每天同一個時段」。落地仍然是逐日的，
-           * 只有填法收斂成一組。
+           * 沒有「整天」捷徑：工地人員每個人的班別不同，整天對他們就是
+           * 「07:30 到 17:00」這組他們每天打卡的數字，而不是一個要另外學的選項。
+           * 想請整天就填自己的上下班時刻，引擎會把它夾到當日應工作分鐘為止
+           * （`resolveLeaveMinutes` 的 `Math.min(netSpan, dayEquivalentMinutes)`）。
            */}
-          {isCustom && (
-            <div className="flex flex-wrap items-end gap-2">
-              <label className="flex flex-col gap-1 text-xs text-gray-600">
-                {t("hr_management.leave.field_custom_start")}
-                <input
-                  type="time"
-                  value={customStart}
-                  onChange={(event) => setCustomStart(event.target.value)}
-                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-xs text-gray-600">
-                {t("hr_management.leave.field_custom_end")}
-                <input
-                  type="time"
-                  value={customEnd}
-                  onChange={(event) => setCustomEnd(event.target.value)}
-                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
-                />
-              </label>
-            </div>
-          )}
+          <div className="flex items-end gap-2">
+            <label className="flex flex-1 flex-col gap-1 text-xs text-gray-600">
+              {t("hr_management.leave.field_custom_start")}
+              <input
+                type="time"
+                value={customStart}
+                onChange={(event) => setCustomStart(event.target.value)}
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
+              />
+            </label>
+            <label className="flex flex-1 flex-col gap-1 text-xs text-gray-600">
+              {t("hr_management.leave.field_custom_end")}
+              <input
+                type="time"
+                value={customEnd}
+                onChange={(event) => setCustomEnd(event.target.value)}
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
+              />
+            </label>
+          </div>
 
           {/**
            * Info: (20260818 - Julian) 最小單位要在填之前就說，不是等試算才顯示。

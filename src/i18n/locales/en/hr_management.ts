@@ -825,7 +825,6 @@ export const hrManagement = {
 
     form_title: "New request",
     field_policy: "Leave type",
-    field_segment: "Segment",
     field_dates: "Dates",
     field_reason: "Reason",
     field_reason_placeholder: "e.g. follow-up appointment, family matter",

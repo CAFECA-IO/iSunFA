@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import HrHeader from "@/components/hr_management/hr_header";
 import HrSidebar from "@/components/hr_management/hr_sidebar";
 import { HR_IDENTITY_API } from "@/constants/hr_identity_api";
@@ -16,6 +17,25 @@ export default function HrManagementLayout({
   children: ReactNode;
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const pathname = usePathname();
+
+  /**
+   * Info: (20260818 - Julian) 換頁就回到最上方。
+   *
+   * ## 為什麼要自己做
+   *
+   * 這一層是 App Router 的共用 layout，切換子路由時 `<main>` 換了內容、
+   * 外層的捲動容器卻沒有換 —— 於是捲軸停在原處。在桌機上頂多是小瑕疵，
+   * 在手機上是**新頁面一進來就從中段開始**：使用者從「我的請假」捲到底
+   * 點進「我的加班」，看到的是統計卡以下的某個位置，而畫面上沒有任何
+   * 東西暗示上面還有內容。
+   *
+   * 不分裝置一律執行：桌機本來多半就在頂端，再捲一次沒有代價，
+   * 而用 `matchMedia` 分流會多出一條只在某個寬度成立的路徑。
+   */
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   /**
    * Info: (20260818 - Julian) 身分在**外框**取一次，兩個子元件共用。
