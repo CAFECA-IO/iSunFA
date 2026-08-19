@@ -1,6 +1,49 @@
 import { userRepo } from "@/repositories/user.repo";
 import { teamRepo } from "@/repositories/team.repo";
 import { TeamRole } from "@/constants/team";
+import { TEAM_PLAN } from "@/constants/subscription_quota";
+import { resolveEffectivePlanId } from "@/services/spend.service";
+import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
+import { logger } from "@/lib/utils/logger";
+
+/**
+ * Info: (20260819 - Luphia) 一個人只能**擁有**一個免費團隊（產品決定 20260819）。
+ *
+ * 邀請量的兩道上限（同時未接受數、每日寄送數）是 per-team 的，而建立團隊先前
+ * 沒有數量上限也沒有限流——一個帳號建 10 個免費團隊就有 10 份額度，兩道上限
+ * 一次都不會觸發（review #6684 中）。
+ *
+ * 只算 **OWNER**：被別人邀請加入的團隊不是他能開的量，算進去等於因為別人的行為
+ * 擋住他建立自己的團隊。
+ *
+ * 付費團隊不受限——那些團隊每一席都在收費，本來就有經濟上的煞車。
+ *
+ * 「什麼是免費方案」交給 `resolveEffectivePlanId`（唯一判斷點）：過期或非 ACTIVE
+ * 的訂閱一律視為免費，否則「訂閱過期的團隊」會變成繞過這道上限的方法。
+ */
+export async function assertCanOwnAnotherFreeTeam(
+  userId: string,
+  nowSec: number,
+): Promise<void> {
+  const owned = await teamRepo.listOwnedTeamsWithSubscription(userId);
+  const freeTeams = owned.filter(
+    (team) =>
+      resolveEffectivePlanId(team.subscription, nowSec) === TEAM_PLAN.FREE,
+  );
+
+  if (freeTeams.length > 0) {
+    logger.info("free team limit reached", {
+      userId,
+      ownedTeams: owned.length,
+      freeTeams: freeTeams.length,
+    });
+    throw new ApiError(
+      API_ERRORS.TW_FREE_TEAM_LIMIT.code,
+      API_ERRORS.TW_FREE_TEAM_LIMIT.message,
+      API_ERRORS.TW_FREE_TEAM_LIMIT.status,
+    );
+  }
+}
 
 // Info: (20260308 - Luphia) 找出所有沒團隊的使用者，使用 getOrCreateUserTeam 為他建立一個
 export const createTeamForUsersWithoutTeam = async () => {
