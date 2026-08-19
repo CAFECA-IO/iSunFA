@@ -364,6 +364,22 @@ model TeamSubscription {
    * 若期間調過價，用新價補收等於偷偷改了這一期的合約。
    */
   unitPrice          Int      @default(0) @map("unit_price")
+  /**
+   * Info: (20260819 - Luphia) 鏈上訂閱會員卡（DynamicKYCMembership ERC721）的同步狀態。
+   * 卡片是訂閱的鏡像：權益判斷一律讀本表其他欄位，不讀鏈（見 constants/subscription_nft）。
+   * `nftSyncedAt` 為 NULL 就是「待同步」，也就是 worker 的工作佇列，
+   * 因此既有列不需要回填——它們天生就在佇列裡。
+   * tokenId 以字串存：uint256 放不進 Int，也不需要做算術。
+   */
+  nftTokenId         String?   @map("nft_token_id")
+  // Info: (20260819 - Luphia) 卡片鑄給誰（當時的 OWNER 地址）；換 OWNER 不搬卡，留著才查得出來
+  nftOwnerAddress    String?   @map("nft_owner_address")
+  // Info: (20260819 - Luphia) 上次成功寫上鏈的內容指紋（plan:periodEnd:seats），冪等判斷用
+  nftFingerprint     String?   @map("nft_fingerprint")
+  nftSyncedAt        DateTime? @map("nft_synced_at")
+  // Info: (20260819 - Luphia) 連續失敗次數與最後一次錯誤：達上限即停手等人介入（CLAUDE.md §6）
+  nftSyncAttempts    Int       @default(0) @map("nft_sync_attempts")
+  nftSyncError       String?   @map("nft_sync_error")
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 

@@ -7,6 +7,11 @@ import { MODULES } from "@/constants/modules";
 import { publicClient } from "@/lib/viem_public";
 import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
 import { formatUnits } from "viem";
+import {
+  getUserPlanSnapshot,
+  type IUserPlanSnapshot,
+} from "@/services/team_subscription.service";
+import { TEAM_PLAN } from "@/constants/subscription_quota";
 
 export async function GET(request: NextRequest) {
   try {
@@ -76,6 +81,39 @@ export async function GET(request: NextRequest) {
      */
     const custody = await resolveCustodyType(user.id);
 
+    /**
+     * Info: (20260819 - Luphia) 方案由**訂閱資料**決定（修正 20260819）。
+     *
+     * 這支端點原本一個 plan 欄位都沒回（上面那段被註解掉的鏈上讀取是唯一的痕跡），
+     * 於是前端 `user.plan` 永遠 undefined，徽章與方案頁一律 fallback 成免費版——
+     * 付了訂閱費、`TeamSubscription` 也寫進去了，畫面卻還說你是免費版。
+     *
+     * 判斷收斂在 service（`getUserPlanSnapshot`）：route 只呼叫與回傳，
+     * 「什麼是有效方案」不在這裡各判一次。
+     */
+    /**
+     * Info: (20260819 - Luphia) 方案查不到不該讓登入失敗。
+     *
+     * 這支端點是前端所有畫面的前置條件（`refreshAuth` 拿不到 payload 就等於未登入）。
+     * 方案只是徽章上的一行字，讓它的查詢錯誤把整個 session 拖下去，
+     * 代價與收益完全不成比例——退成免費版顯示，並留下 log。
+     */
+    let planSnapshot: IUserPlanSnapshot = {
+      plan: TEAM_PLAN.FREE,
+      ownedPlans: [],
+    };
+    try {
+      planSnapshot = await getUserPlanSnapshot({
+        userId: user.id,
+        nowSec: Math.floor(Date.now() / 1000),
+      });
+    } catch (err) {
+      console.warn(
+        `[API] /auth/me failed to resolve plan for ${user.id}:`,
+        err,
+      );
+    }
+
     return jsonOk({
       ...user,
       custody,
@@ -84,6 +122,8 @@ export async function GET(request: NextRequest) {
       isAdmin: user.role === "ADMIN",
       identityAddress: user.identityAddress,
       pendingCredits,
+      plan: planSnapshot.plan,
+      ownedPlans: planSnapshot.ownedPlans,
     });
   } catch (error) {
     console.error(

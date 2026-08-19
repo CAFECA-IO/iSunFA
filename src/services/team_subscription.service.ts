@@ -36,6 +36,7 @@ import {
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { teamRepo } from "@/repositories/team.repo";
 import { resolveSubscriptionAmount } from "@/lib/billing/seat_billing";
+import { resolveHighestPlan } from "@/lib/subscription/user_plan";
 import { teamQuotaUsageRepo } from "@/repositories/team_quota_usage.repo";
 import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
 import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
@@ -204,6 +205,46 @@ export async function getTeamSubscriptionView(params: {
       faithTokensPerCredit: billing.tokensPerCredit,
     };
   });
+}
+
+export interface IUserPlanSnapshot {
+  // Info: (20260819 - Luphia) 徽章顯示用：擁有的團隊中最高的有效方案
+  plan: TeamPlanId;
+  /**
+   * Info: (20260819 - Luphia) 這個人**擁有**的每個團隊的有效方案（一團一筆）。
+   *
+   * 回事實而不是只回一個結論：方案頁的「目前方案」標記會停用購買鈕，它需要的是
+   * 「是否全部一致」（`resolveUnanimousPlan`），而徽章需要的是最高——同一份事實
+   * 兩種讀法。只回結論的話，其中一邊遲早會拿另一邊的結論去用。
+   */
+  ownedPlans: TeamPlanId[];
+}
+
+/**
+ * Info: (20260819 - Luphia) 這個人的方案快照（`GET /auth/me` 用）。
+ *
+ * 在此之前 `/auth/me` **完全沒有回 plan**，於是前端的 `user.plan` 永遠是
+ * undefined，畫面一律 fallback 到免費版——訂閱付了款、DB 也寫進去了，
+ * 而右上角徽章與方案頁的「目前方案」都還停在免費版（回報 20260819）。
+ *
+ * 範圍是**擁有**（OWNER）的團隊，不是所有參與的團隊：訂閱只有 OWNER 能買
+ * （見 `usePurchaseTarget`），所以「我的方案」問的是「我付費買到什麼」。
+ * 若改採所有參與的團隊，一位免費戶只要被邀進別人的團隊版就會看到自己是團隊版，
+ * 而方案頁那一格的購買鈕會因此被停用——他反而買不了。
+ *
+ * 有效方案一律經 `resolveEffectivePlanId`：過期、PAST_DUE 都折算成 free，
+ * 與扣費側同一個判準，畫面上的方案與實際拿到的額度才不會互相矛盾。
+ */
+export async function getUserPlanSnapshot(params: {
+  userId: string;
+  nowSec: number;
+}): Promise<IUserPlanSnapshot> {
+  const { userId, nowSec } = params;
+  const owned = await teamRepo.listOwnedTeamsWithSubscription(userId);
+  const ownedPlans = owned.map((team) =>
+    resolveEffectivePlanId(team.subscription, nowSec),
+  );
+  return { plan: resolveHighestPlan(ownedPlans), ownedPlans };
 }
 
 /**

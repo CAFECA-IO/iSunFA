@@ -57,6 +57,17 @@ export const ABIS = {
     "function getPointsLimit(address user) external view returns (uint256)",
     "function mintCard(address to, string memory uri) external returns (uint256)",
     "function updateExperience(uint256 tokenId, uint256 addedExp) external",
+    /**
+     * Info: (20260819 - Luphia) 訂閱會員卡的續期／改方案走換 URI，不重鑄
+     * （重鑄會讓同一個訂閱在鏈上留下兩張都看起來有效的卡）。
+     */
+    "function setTokenURI(uint256 tokenId, string memory uri) external",
+    /**
+     * Info: (20260819 - Luphia) 鑄造後從收據回讀 tokenId 用。
+     * `mintCard` 的回傳值拿不到——`writeContract` 只給交易哈希，
+     * 而 `simulateContract` 給的是「模擬當下」的號碼，中間有人鑄一張就對不上。
+     */
+    "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
   ]),
 
   // Info: (20251230 - Tzuhan) Credit Point Token

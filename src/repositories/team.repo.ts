@@ -273,6 +273,26 @@ export class TeamRepository implements ITeamRepository {
     return prisma.team.findUnique({ where: { id } });
   }
 
+  /**
+   * Info: (20260819 - Luphia) 團隊的 OWNER 與其鏈上地址（訂閱會員卡鑄給誰）。
+   *
+   * OWNER 是持卡人（付訂閱費的那個人），因此卡片鑄給他。取**最早加入**的那一位：
+   * 團隊理論上只有一位 OWNER，但「最後一位 OWNER」的保護是在應用層而不是資料庫,
+   * 所以這裡不假設唯一——固定取最早的一位，讓同步結果與呼叫次序無關
+   * （否則資料庫回傳順序一變，卡片就會鑄給另一個人）。
+   */
+  async findTeamOwner(
+    teamId: string,
+  ): Promise<{ userId: string; address: string } | null> {
+    const owner = await prisma.teamMember.findFirst({
+      where: { teamId, role: TeamRole.OWNER },
+      orderBy: { createdAt: "asc" },
+      select: { userId: true, user: { select: { address: true } } },
+    });
+    if (!owner) return null;
+    return { userId: owner.userId, address: owner.user.address };
+  }
+
   async getTeamInvitation(
     teamId: string,
     inviteeAddress: string,

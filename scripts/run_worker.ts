@@ -12,6 +12,8 @@ import { runWalletGuardian } from "@/services/cron/wallet_audit.cron";
 import { expireOverdueTeamSubscriptions } from "@/services/cron/subscription_expiry.cron";
 import { processSubscriptionRenewals } from "@/services/cron/subscription_renewal.cron";
 import { runFaithMemoryRetention } from "@/services/cron/faith_memory_retention.cron";
+import { syncPendingSubscriptionCards } from "@/services/subscription_nft.service";
+import { SUBSCRIPTION_CARD_SYNC_INTERVAL_MS } from "@/constants/subscription_nft";
 import {
   installWorkerShutdownHandlers,
   isShuttingDown,
@@ -96,6 +98,18 @@ async function runWorker() {
       "FaithMemoryRetention",
       () => runFaithMemoryRetention(),
       6 * 60 * 60 * 1000,
+    ),
+    /**
+     * Info: (20260819 - Luphia) 訂閱會員卡（鏈上 NFT）同步。
+     *
+     * 鑄卡不放在付款履行路徑裡：那條路徑在交易內完成，鏈上寫入失敗會讓
+     * 已收款的訂閱回報失敗，成功也要讓使用者多等數秒（見 subscription_nft.service）。
+     * 訂閱一變更就在 DB 留待辦，這裡每分鐘補上。
+     */
+    startServiceLoop(
+      "SubscriptionCardSync",
+      () => syncPendingSubscriptionCards(Date.now()),
+      SUBSCRIPTION_CARD_SYNC_INTERVAL_MS,
     ),
   ]);
 

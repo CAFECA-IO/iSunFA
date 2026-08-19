@@ -63,6 +63,7 @@ NEXT_PUBLIC_CREDIT_POINT_ADDRESS
 | `faith_memory`（新表） | 費思長期記憶：密文欄位、`expires_at`、`(user_id, team_id)` 唯一鍵 | 低；新表無既有資料 |
 | `faith_memory_deletion_log`（新表） | 記憶刪除的稽核列（不含內容） | 低；新表無既有資料 |
 | `team_subscription` | 新增 `seats`（預設 1）、`unit_price`（預設 0） | 低，但**必須接著做 3.1** |
+| `team_subscription` | 新增 `nft_token_id`、`nft_owner_address`、`nft_fingerprint`、`nft_synced_at`、`nft_sync_attempts`（預設 0）、`nft_sync_error`（2026-08-19，訂閱會員卡） | 低；既有列 `nft_synced_at` 為 NULL，而 NULL 的語意正是「待同步」——**因此不需要回填**，worker 會自己補上（見 3.6） |
 | `team_wallet_ledger` | 新增 `tx_hash`（可為 NULL） | 低 |
 | `team_quota_usage` | 索引改為 `(team_id, user_id, window_key_5h)` 與 `(team_id, user_id, window_key_week)` | 低；舊索引可留可刪 |
 
@@ -216,6 +217,22 @@ npx tsx scripts/backfill_invite_email_match.ts --commit # 實際更新
 
 ---
 
+### 3.6 訂閱會員卡的首次同步（2026-08-19）— **不需要回填，但要確認 worker 在跑**
+
+既有付費訂閱在 schema 套用後 `nft_synced_at` 皆為 NULL，也就是全部處於「待同步」。`SubscriptionCardSync` 迴圈（`scripts/run_worker.ts`，每分鐘一輪、每輪 20 個團隊）會依序為它們鑄卡，因此**沒有回填腳本，也不該有**——鑄卡是鏈上寫入，需要重試、需要冪等，那正是 worker 的形狀。
+
+上線後要確認的三件事：
+
+- [ ] **worker 有在跑**：`npx tsx scripts/run_worker.ts` 的 log 應出現 `SubscriptionCardSync` 與「訂閱卡同步完成」，且 `remaining` 逐輪下降。
+- [ ] **合約位址已設定**：`NEXT_PUBLIC_DYNAMIC_KYC_MEMBERSHIP_ADDRESS`。沒設定時 worker 會每輪印一行「鏈上環境未備妥，本輪不同步訂閱卡」並**整輪跳過**（不會燒掉任何團隊的重試額度），但卡片永遠不會出現。
+- [ ] **管理員錢包有 `DEFAULT_ADMIN_ROLE`**：`mintCard` / `setTokenURI` 都是該角色專屬。缺角色的症狀是每個團隊各失敗 5 次後停手，`team_subscription.nft_sync_error` 會留下 revert 原因。
+
+積壓與放棄的觀察點（都在同一行 log 裡）：`givenUp > 0` 表示有團隊已達重試上限，需要人看 `nft_sync_error`；修好原因（解黑名單、補角色）後把該列的 `nft_sync_attempts` 歸零即可自動接續。
+
+**降級與續期不需要任何動作**：訂閱資料的每一條變更路徑都會把 `nft_synced_at` 設回 NULL，worker 下一輪就換 URI。
+
+---
+
 
 ## 4. 部署後驗證
 
@@ -223,6 +240,8 @@ npx tsx scripts/backfill_invite_email_match.ts --commit # 實際更新
 - [ ] 成員的個人點數餘額顯示正確（遷移後應等於原分配餘額 + 原有個人點數）
 - [ ] 額度用盡時的 402 提示：一般情況顯示倒數；單筆超過視窗上限時**不顯示倒數**、改提示升級或改用個人點數
 - [ ] 收據只取得到自己的訂單（換一個 `order_id` 應回 404）
+- [ ] 付費團隊的 OWNER 登入後，右上角徽章顯示團隊版／企業版（不是免費版），且方案頁的「目前方案」標在對應那一格
+- [ ] 該 OWNER 的錢包在一分鐘內出現一張訂閱會員卡 NFT，`team_subscription.nft_token_id` 有值
 - [ ] 後台發放點數連點兩下只入帳一次
 - [ ] 免費版團隊可以邀請成員（不再有人數上限），且方案頁顯示「團隊人數不限」
 - [ ] 同一位管理員連續邀請超過 10 次／分鐘時回 429；團隊累積 20 封未接受邀請時回 TW000023

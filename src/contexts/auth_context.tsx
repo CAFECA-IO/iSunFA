@@ -21,6 +21,14 @@ interface IAuthUser {
   name: string | null;
   role: string | null;
   plan?: string;
+  /**
+   * Info: (20260819 - Luphia) 這個人**擁有**的每個團隊的有效方案（`/auth/me` 提供）。
+   *
+   * 方案頁的「目前方案」標記需要的是「是否全部一致」而不是最高
+   * （見 `lib/subscription/user_plan`）：那個標記會停用購買鈕，
+   * 照最高標會讓同時擁有免費團隊與團隊版團隊的人再也買不了團隊版。
+   */
+  ownedPlans?: string[];
   credits?: string;
   pendingCredits?: string;
   isAdmin?: boolean;

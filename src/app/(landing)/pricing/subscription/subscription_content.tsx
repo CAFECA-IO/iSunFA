@@ -7,6 +7,10 @@ import {
   SUBSCRIPTION_PLAN_CREDITS,
 } from "@/constants/price";
 import { CARBON_STORAGE_QUOTA_GB_BY_PLAN } from "@/constants/carbon_chatbot";
+import {
+  isTeamPlanId,
+  resolveUnanimousPlan,
+} from "@/lib/subscription/user_plan";
 import { usePricing } from "@/contexts/pricing_context";
 import { useAuth } from "@/contexts/auth_context";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -61,11 +65,21 @@ export default function SubscriptionContent({
     }),
   };
 
-  const currentPlan = user
-    ? user.plan === "personal" || !user.plan
-      ? "free"
-      : user.plan
-    : undefined;
+  /**
+   * Info: (20260819 - Luphia) 「目前方案」標記改由**擁有的團隊**決定（修正 20260819）。
+   *
+   * 原本讀 `user.plan`，而 `/auth/me` 從來沒回過那個欄位：於是它永遠是 undefined，
+   * 三格裡永遠是免費版被標成「目前方案」——付了團隊版的人打開方案頁，
+   * 看到的仍然是「免費版 = 目前方案」。
+   *
+   * 規則是**全體一致才標**（`resolveUnanimousPlan`），不是取最高：這個標記會停用
+   * 購買鈕，若某人擁有一個免費團隊與一個團隊版團隊而標成團隊版，
+   * 他就再也無法為那個免費團隊訂閱團隊版。方案不一致時不標任何一格，
+   * 三個鈕都可用，實際買給哪個團隊由付款畫面的歸屬選擇決定。
+   */
+  const currentPlan = resolveUnanimousPlan(
+    (user?.ownedPlans ?? []).filter(isTeamPlanId),
+  );
 
   const showComingSoon = () => {
     if (!user) {
