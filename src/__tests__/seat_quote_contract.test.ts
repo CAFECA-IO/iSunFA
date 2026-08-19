@@ -193,11 +193,53 @@ describe("quoteSeatAddition", () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(null);
     asMock(teamRepo.countMembers).mockResolvedValue(50);
     asMock(teamRepo.countPendingInvitations).mockResolvedValue(30);
-  
+
     const quote = await quoteSeatAddition(PARAMS);
 
     expect(quote.kind).toBe(SEAT_QUOTE_KIND.FREE_PLAN);
     expect(quote.amount).toBe(0);
+  });
+
+  /**
+   * Info: (20260819 - Luphia) 送出時帶的金額與重算的結果不符 → 擋下（review #6682 高）。
+   *
+   * 這一組守的是「畫面說 A、卡被刷 B」不可能發生。試算與送出之間隔著填表與
+   * FIDO2 簽章，而試算的兩個輸入在那段時間都會變（席次佔用、計費週期）。
+   */
+  it("送出的金額與重算不符時擋下，且不建單不扣款", async () => {
+    await expect(
+      chargeSeatAddition({ ...PARAMS, expectedAmount: 999 }),
+    ).rejects.toMatchObject({ code: "TW000025" });
+
+    expect(generatePaymentOrder).not.toHaveBeenCalled();
+    expect(chargeOrderWithSavedCard).not.toHaveBeenCalled();
+    expect(teamSubscriptionRepo.addSeats).not.toHaveBeenCalled();
+  });
+
+  it("送出的金額與重算相同時照常扣款", async () => {
+    const quote = await quoteSeatAddition(PARAMS);
+
+    const charged = await chargeSeatAddition({
+      ...PARAMS,
+      expectedAmount: quote.amount,
+    });
+
+    expect(charged).toMatchObject({ charged: true, amount: quote.amount });
+  });
+
+  /**
+   * Info: (20260819 - Luphia) 最糟的分岔是**方向**變了，不是金額變了。
+   *
+   * 畫面顯示「使用已付費的空席，不會再收費」（`expectedAmount = 0`），而送出時
+   * 另一位管理者剛好用掉那個空席 → 變成要收費。使用者從頭到尾看到的是
+   * 「不會收費」，卡卻被刷。因此 0 與「要收費」同樣視為過期。
+   */
+  it("顯示為不收費、送出時卻要收費 → 擋下", async () => {
+    await expect(
+      chargeSeatAddition({ ...PARAMS, expectedAmount: 0 }),
+    ).rejects.toMatchObject({ code: "TW000025" });
+
+    expect(chargeOrderWithSavedCard).not.toHaveBeenCalled();
   });
 
   /**

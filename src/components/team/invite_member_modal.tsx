@@ -148,19 +148,44 @@ export default function InviteMemberModal({
           ? `/api/v1/user/team/${selectedTeamId}/invitations`
           : `/api/v1/user/team/${selectedTeamId}/invitations/email`;
 
+      /**
+       * Info: (20260819 - Luphia) 把**畫面上顯示過的金額**一起送出（review #6682 高）。
+       *
+       * 試算是在對話框開啟時算的，而這裡已經隔了填表與一次 FIDO2 簽章。中間席次
+       * 佔用可能被別人用掉、計費週期也可能滾動——服務端會以新的時間重算，於是
+       * 「顯示不收費、實際被刷 420」是做得到的事，而且事後看不出來。
+       *
+       * 服務端拿這個值比對，不符就擋下並要求重新試算（`TW000025`）。
+       * `?? -1` 是刻意的：沒有試算結果時送一個必然不符的值，讓服務端擋下來，
+       * 而不是靜靜地以「沒帶」通過（送出按鈕本來就 disabled，這是第二道）。
+       */
+      const expectedAmount = quote ? quote.amount : -1;
+
       const payload =
         inviteMode === "ADDRESS"
-          ? { address: inviteAddress.trim(), role: inviteRole, authentication }
+          ? {
+              address: inviteAddress.trim(),
+              role: inviteRole,
+              authentication,
+              expectedAmount,
+            }
           : {
               email: inviteEmail.trim(),
               role: inviteRole,
               authentication,
+              expectedAmount,
             };
 
       const json = await request<{
         success: boolean;
         message?: string;
-        payload?: { seatCharge?: { reusedPaidSeat?: boolean } };
+        payload?: {
+          seatCharge?: {
+            reusedPaidSeat?: boolean;
+            charged?: boolean;
+            amount?: number;
+          };
+        };
       }>(endpoint, {
         method: "POST",
         body: JSON.stringify(payload),
@@ -176,8 +201,22 @@ export default function InviteMemberModal({
          * 前一次邀請被拒或逾期時錢沒有退，這次不再收費——不說的話，
          * 管理員只會看到帳單上少了一筆而不知道為什麼。
          */
-        if (json.payload?.seatCharge?.reusedPaidSeat) {
+        /**
+         * Info: (20260819 - Luphia) 真的收費時，把金額講出來（review #6682 高）。
+         *
+         * 先前這裡只讀 `reusedPaidSeat`，於是「實際扣了多少」在整個流程裡
+         * **從頭到尾沒有出現過**——事前只有試算、事後一句「已送出邀請」，
+         * 分岔（若發生）只會在下期帳單被發現。
+         */
+        const charge = json.payload?.seatCharge;
+        if (charge?.reusedPaidSeat) {
           showAlert(t("team_management.alerts.seat_reused"));
+        } else if (charge?.charged && charge.amount) {
+          showAlert(
+            t("team_management.alerts.seat_charged", {
+              amount: `TWD ${charge.amount.toLocaleString()}`,
+            }),
+          );
         } else {
           showAlert(
             inviteMode === "EMAIL"
@@ -414,15 +453,15 @@ export default function InviteMemberModal({
                * 因此這裡不再需要把它排除掉。
                */}
               {!quoteLoading && quote?.kind === "BLOCKED" && (
-                  <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                    <p className="text-xs font-semibold text-red-900">
-                      {t("team_management.seat_charge.blocked_title")}
-                    </p>
-                    <p className="mt-1 text-xs text-red-800">
-                      {quote.blocked?.message}
-                    </p>
-                  </div>
-                )}
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                  <p className="text-xs font-semibold text-red-900">
+                    {t("team_management.seat_charge.blocked_title")}
+                  </p>
+                  <p className="mt-1 text-xs text-red-800">
+                    {quote.blocked?.message}
+                  </p>
+                </div>
+              )}
 
               <div className="mt-2 flex items-start rounded-lg border border-orange-100 bg-orange-50 p-3">
                 <div className="text-xs text-orange-800">

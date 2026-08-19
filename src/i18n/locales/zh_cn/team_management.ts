@@ -81,6 +81,7 @@ export const teamManagement = {
     free_plan_limit_hint:
       "要邀请成员请升级为团队版或企业版；订阅后依实际人数计费，邀请的成员各自享有完整额度。",
     free_plan_limit_cta: "查看方案",
+    seat_charged: "邀请已发送，并已向团队的付款方式收取 {{amount}}。",
     seat_reused: "已使用既有的付费席位，本次未再收费。",
     revoke_success: "已撤回邀请，该席位可用于邀请其他人员。",
     error_revoke: "撤回邀请失败",

@@ -34,13 +34,31 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { email, role, authentication } = body;
+    const { email, role, authentication, expectedAmount } = body;
 
     if (!email || typeof email !== "string") {
       return jsonFail(API_ERRORS.VL_INVALID_EMAIL);
     }
     if (!authentication) {
       return jsonFail(API_ERRORS.VL_MISSING_FIDO2);
+    }
+
+    /**
+     * Info: (20260819 - Luphia) `expectedAmount` 必填（review #6682）。
+     *
+     * 「試算失敗就不能送出」先前只活在前端送出按鈕的 disabled 陣列裡，服務端對
+     * 「有沒有先試算過」毫無要求——刪掉前端那一行，行為就精準退回這個 PR 要修的
+     * 事：試算掛掉照樣刷卡、事前事後都沒有金額。這裡把要求移到服務端。
+     *
+     * 值為 0 也是有效的（「不會收費」也是一種顯示過的答案，而它變成收費正是
+     * 最糟的那種分岔），因此判斷的是型別與非負，不是真值。
+     */
+    if (
+      typeof expectedAmount !== "number" ||
+      !Number.isInteger(expectedAmount) ||
+      expectedAmount < 0
+    ) {
+      return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
     }
 
     const operatorUser = await webAuthnRepo.findUserById(sessionUser.id);
@@ -74,6 +92,8 @@ export async function POST(
 
     const result = await inviteMemberByEmail({
       teamId,
+      // Info: (20260819 - Luphia) 畫面上顯示過的金額，扣款前比對（review #6682 高）
+      expectedAmount,
       operatorUserId: sessionUser.id,
       email,
       role: assignedRole,

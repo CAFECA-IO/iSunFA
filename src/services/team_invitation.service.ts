@@ -61,6 +61,11 @@ export interface IInviteByEmailParams {
   email: string;
   role: TeamRole;
   nowMs: number;
+  /**
+   * Info: (20260819 - Luphia) 畫面上顯示過的席次費用，扣款前比對（review #6682 高）。
+   * 不符即 `TW_SEAT_QUOTE_STALE`，要求重新試算——不照新價扣款。
+   */
+  expectedAmount?: number;
 }
 
 export interface IInviteByEmailResult {
@@ -142,7 +147,7 @@ function isUniqueConstraintError(error: unknown): boolean {
 export async function inviteMemberByEmail(
   params: IInviteByEmailParams,
 ): Promise<IInviteByEmailResult> {
-  const { teamId, operatorUserId, email, role, nowMs } = params;
+  const { teamId, operatorUserId, email, role, nowMs, expectedAmount } = params;
   const normalizedEmail = email.trim().toLowerCase();
 
   if (!isValidInviteEmail(normalizedEmail)) {
@@ -203,6 +208,8 @@ export async function inviteMemberByEmail(
     seats: 1,
     nowMs,
     operatorUserId,
+    // Info: (20260819 - Luphia) 畫面上顯示過的金額，扣款前比對（review #6682 高）
+    expectedAmount,
     /**
      * Info: (20260818 - Luphia) 冪等鍵以「同一個收件匣」為準（第三輪 C-1）：
      * 否則同一個人的 plus/點號變體每一封都會真的刷一次 OWNER 的卡。

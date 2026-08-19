@@ -83,6 +83,8 @@ export const teamManagement = {
     free_plan_limit_hint:
       "メンバーを招待するにはチーム版または企業版へのアップグレードが必要です。料金は席数に応じて計算され、招待した各メンバーがそれぞれ利用枠を持ちます。",
     free_plan_limit_cta: "プランを見る",
+    seat_charged:
+      "招待を送信し、チームの支払い方法に {{amount}} を請求しました。",
     seat_reused:
       "支払い済みの空き席を利用したため、今回は追加料金は発生しません。",
     revoke_success:

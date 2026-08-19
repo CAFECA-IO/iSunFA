@@ -93,6 +93,18 @@ export interface ISeatChargeParams {
    * 沒有它時，建立邀請失敗後客戶端重試就會再扣一次（第二輪 B-3）。
    */
   idempotencyKey?: string;
+  /**
+   * Info: (20260819 - Luphia) 呼叫端**在畫面上顯示過**的金額（review #6682 高）。
+   *
+   * 試算與送出之間隔著填表與 FIDO2 簽章，而試算的兩個輸入在那段時間都會變
+   * （席次佔用、計費週期）。給了這個值就會在扣款前比對一次，不符即擋下
+   * （`TW_SEAT_QUOTE_STALE`）並要求重新試算——「畫面說 0、卡被刷 840」
+   * 不能是可能發生的事。
+   *
+   * 型別上**選填**：直接加人（`members` 端點）目前沒有試算畫面，那條路徑維持原狀。
+   * 但兩支邀請端點的 validator 要求必填，所以使用者走得到的路徑一定會比對。
+   */
+  expectedAmount?: number;
 }
 
 /**
@@ -423,6 +435,13 @@ export async function chargeSeatAddition(
     throw toApiError(def ?? API_ERRORS.TW_OPERATION_FAILED);
   }
 
+  /**
+   * Info: (20260819 - Luphia) 「不收費」的三種結果也要比對（review #6682 高的另一半）。
+   *
+   * 最糟的情境不是金額變了，是**方向**變了：畫面顯示「使用已付費的空席，不會再收費」，
+   * 而送出時另一位管理者剛好用掉那個空席 → 變成 CHARGE。使用者從頭到尾看到的是
+   * 「不會收費」，卡卻被刷。因此 `expectedAmount = 0` 與實際要收費同樣視為過期。
+   */
   if (quote.kind === SEAT_QUOTE_KIND.FREE_PLAN) {
     return { charged: false, amount: 0, seats: 0 };
   }
@@ -445,7 +464,26 @@ export async function chargeSeatAddition(
     return { charged: false, amount: 0, seats };
   }
 
-  // Info: (20260818 - Luphia) 到這裡是 CHARGE：以下必要的資料重讀一次（試算刻意不回傳卡）
+  /**
+   * Info: (20260819 - Luphia) 到這裡是 CHARGE：先比對「畫面上顯示過的金額」（review #6682 高）。
+   *
+   * 比對放在**建單與扣款之前**：擋下來時不該產生任何金流，也不該留下待付訂單。
+   * 不比對就照新價扣款的話，使用者看到的與被扣的可以是兩個數字，而事後提示
+   * 也不顯示金額——分岔完全隱形，只會在下期帳單出現。
+   */
+  if (
+    params.expectedAmount !== undefined &&
+    params.expectedAmount !== quote.amount
+  ) {
+    logger.info("seat charge rejected: quote is stale", {
+      teamId,
+      expected: params.expectedAmount,
+      actual: quote.amount,
+    });
+    throw toApiError(API_ERRORS.TW_SEAT_QUOTE_STALE);
+  }
+
+  // Info: (20260818 - Luphia) 以下必要的資料重讀一次（試算刻意不回傳卡）
   const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
   if (!subscription) throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
   const lastOrder = subscription.latestOrderId

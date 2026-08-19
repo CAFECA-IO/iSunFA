@@ -83,6 +83,8 @@ export const teamManagement = {
     free_plan_limit_hint:
       "Upgrade to Team or Enterprise to invite members. Subscriptions are billed per seat, and every member you invite gets their own full quota.",
     free_plan_limit_cta: "See plans",
+    seat_charged:
+      "Invitation sent. {{amount}} was charged to the team's payment method.",
     seat_reused: "An already-paid seat was reused; you were not charged again.",
     revoke_success:
       "Invitation withdrawn. The seat is now available for another invitation.",

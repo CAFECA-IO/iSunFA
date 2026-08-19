@@ -83,6 +83,8 @@ export const teamManagement = {
     free_plan_limit_hint:
       "구성원을 초대하려면 팀 버전 또는 기업 버전으로 업그레이드하세요. 요금은 좌석 수에 따라 청구되며, 초대한 구성원은 각자 전체 한도를 갖습니다.",
     free_plan_limit_cta: "요금제 보기",
+    seat_charged:
+      "초대를 보냈으며 팀의 결제 수단으로 {{amount}}을 청구했습니다.",
     seat_reused:
       "이미 결제된 좌석을 재사용했으므로 추가 요금은 청구되지 않았습니다.",
     revoke_success:

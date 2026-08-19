@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach } from "@jest/globals";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
 import { NextRequest } from "next/server";
+import { readFileSync } from "fs";
+import { join } from "path";
 import * as seatQuoteRoute from "@/app/api/v1/user/team/[team_id]/seat_quote/route";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
@@ -150,5 +152,35 @@ describe("GET /api/v1/user/team/[team_id]/seat_quote", () => {
    */
   it("只提供 GET，沒有任何寫入的 handler", () => {
     expect(Object.keys(seatQuoteRoute).sort()).toEqual(["GET"]);
+  });
+});
+
+/**
+ * Info: (20260819 - Luphia) 「沒有先試算過就不能送出」必須由**服務端**要求（review #6682 中）。
+ *
+ * 先前這條只活在送出按鈕的 `disabled` 陣列裡：把 `quoteFailed ||` 刪掉，行為就精準
+ * 退回這個 PR 要修的事——試算掛掉照樣刷卡、事前事後都沒有金額，而服務端與 route
+ * 層的測試一條都不會紅（全庫也沒有任何 modal 測試）。
+ *
+ * 這一組因此掃兩支邀請端點的原始碼，釘住「`expectedAmount` 是必填、而且被傳進扣款」。
+ * 掃描而非行為斷言，是因為要證明的是**接線存在**，而那兩支端點的行為測試
+ * 另有其檔（`invite_send_wiring.test.ts`）。
+ */
+describe("邀請端點要求 expectedAmount", () => {
+  const ROUTES = [
+    "src/app/api/v1/user/team/[team_id]/invitations/route.ts",
+    "src/app/api/v1/user/team/[team_id]/invitations/email/route.ts",
+  ];
+
+  it.each(ROUTES)("%s 驗證並傳遞 expectedAmount", (relative) => {
+    const source = readFileSync(join(process.cwd(), relative), "utf8");
+
+    // Info: (20260819 - Luphia) 從 body 取出
+    expect(source).toMatch(/expectedAmount\s*\}\s*=\s*body/);
+    // Info: (20260819 - Luphia) 型別與非負的驗證（值為 0 也有效）
+    expect(source).toMatch(/typeof expectedAmount !== "number"/);
+    expect(source).toMatch(/expectedAmount < 0/);
+    // Info: (20260819 - Luphia) 真的往下傳（只驗不傳＝驗完就丟掉）
+    expect(source).toMatch(/expectedAmount,/);
   });
 });
