@@ -9,7 +9,10 @@ import fs from "node:fs";
 import zlib from "node:zlib";
 import { PDFDocument, PDFName, PDFRawStream } from "pdf-lib";
 import { extractPdfTextLayer } from "@/lib/pdf_text_layer";
-import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
+import {
+  CARBON_REPORT_CHAPTERS,
+  CARBON_REPORT_OUTLINE,
+} from "@/constants/carbon_report_outline";
 /**
  * Info: (20260818 - Emily) 兩個片語 import 自產生端的常數,不在這裡重打一份正規表示式。
  * 重打的話,文案改了而這支腳本照舊回報 ✓ —— 而它是上線判準的量尺。
@@ -600,6 +603,56 @@ const main = async (): Promise<void> => {
       "fail",
       "大綱有節沒出現",
       `${absentSections.length} 節:${absentSections.slice(0, 3).join(" / ")}`,
+    );
+  }
+
+  // Info: (20260819 - Emily) ── 標題不能被印兩次 ──
+  /**
+   * Info: (20260819 - Emily) 08-19 在兩份實跑報告上量到:第五、第六章的標題連續印了
+   * 兩行完全相同的字,而第七章 run1 正常、run2 重複 —— 兩趟不一致,
+   * 而 `compareBaseline` 報「must_match 差異 0 項」。
+   *
+   * 判準蓋不住它要守的東西:上面「大綱的每一節都要有標題出現在紙上」擋得住**少印**,
+   * 擋不住**多印**。這是本週第六處靜默給綠燈。
+   *
+   * 只認兩件事,兩邊都是為了不讓判準比它要守的東西寬:
+   * 1. 只認**大綱與章的標題**字串 —— 表格列本來就可能出現相同內容,
+   *    用「任何連續重複的行」會把它們一起抓進來。
+   * 2. 只認**緊鄰**的重複 —— 目錄那一條和正文那一條本來就會是同一串字,
+   *    用全文計數會把目錄算成缺陷。
+   */
+  const headingStrings = new Set<string>([
+    ...CARBON_REPORT_CHAPTERS.map((chapter) => squeeze(chapter.title)),
+    ...CARBON_REPORT_OUTLINE.map((section) =>
+      squeeze(`${section.code} ${section.title}`),
+    ),
+  ]);
+  const nonEmptyLines = text
+    .split("\n")
+    .map((line) => squeeze(line))
+    .filter((line) => line.length > 0);
+  const repeatedHeadings = [
+    ...new Set(
+      nonEmptyLines.filter(
+        (line, index) =>
+          index > 0 &&
+          line === nonEmptyLines[index - 1] &&
+          headingStrings.has(line),
+      ),
+    ),
+  ];
+  snapshot.重複的標題 = repeatedHeadings;
+  if (repeatedHeadings.length === 0) {
+    record(
+      "pass",
+      "標題沒有被印兩次",
+      `${headingStrings.size} 個標題字串都只印一次`,
+    );
+  } else {
+    record(
+      "fail",
+      "標題被印兩次",
+      `${repeatedHeadings.length} 處:${repeatedHeadings.slice(0, 3).join(" / ")}`,
     );
   }
 

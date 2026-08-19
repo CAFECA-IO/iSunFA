@@ -34,6 +34,7 @@ import { solutions as solutionsJa } from "@/i18n/locales/ja/solutions";
 import { solutions as solutionsKo } from "@/i18n/locales/ko/solutions";
 import { solutions as solutionsZhCn } from "@/i18n/locales/zh_cn/solutions";
 import { solutions as solutionsZhTw } from "@/i18n/locales/zh_tw/solutions";
+import { CARBON_REPORT_GUIDANCE_IFRS } from "@/constants/carbon_report_outline_ifrs";
 import { Iso14064Category, IsoCategoryDetails } from "@/constants/esg";
 
 /**
@@ -61,7 +62,7 @@ const FORBIDDEN_STANDARDS: ReadonlyArray<{
 ];
 
 /**
- * Info: (20260818 - Emily) 這份報告不問的題目 —— 全部是 TCFD / IFRS S2 式的氣候財務揭露。
+ * Info: (20260818 - Emily) 這一份**盤查報告**不問的題目 —— 氣候財務揭露(IFRS S2 / TCFD)式的題目。
  *
  * `FORBIDDEN_STANDARDS` 擋的是**標準名稱**,這裡擋的是**題目**。兩者要分開:
  * `ch6` 原本問實體風險與轉型風險、`ch7` 問氣候情境分析,兩條都沒有寫到 IFRS 三個字母,
@@ -70,13 +71,42 @@ const FORBIDDEN_STANDARDS: ReadonlyArray<{
  * 下面「對得上自己的標題」那一組是正面判準(要提到自己的題目),
  * 這一組是負面判準(不准提到別人的題目)。正面的擋得住寫錯的那一節,
  * 負面的擋得住**同一個錯搬到別的一節** —— 而那才是它會復發的方式。
+ *
+ * ⚠ 層次不要讀反了:這些題目**不是**「不該存在於產品」的題目。
+ * IFRS S1/S2 是法規強制的揭露框架(金管會分梯適用),ISO 14064-1 是它底下的盤查/查證標準。
+ * 實體風險、轉型風險、情境分析在 IFRS S2 的章節裡是**必要內容**;
+ * 它們錯的地方只是被塞進標題在問「盤查作業」與「內部查證」的兩節。
+ *
+ * 因此判準的範圍必須跟著標題走,不能是全域黑名單 —— 全域黑名單會讓
+ * 「未來新增 IFRS S2 揭露章節」這件事被這條測試擋住,而擋住的理由是錯的。
+ * `DISCLOSURE_CHAPTER_IDS` 列出允許問這些題目的章節;新增揭露章節時把 id 加進來,
+ * 而不是把上面那份清單刪掉。
  */
 const OFF_TOPIC_SUBJECTS: ReadonlyArray<string> = [
   "實體風險",
   "轉型風險",
   "情境分析",
   "Climate Scenario",
+  // Info: (20260819 - Emily) 08-19 補上的四項。原本的清單只列風險與情境,
+  // 於是 `ch5` 的 guidance 用「轉型計畫」而不是「轉型風險」,整條判準從旁邊繞過去了
+  // —— 判準比它要守的東西窄,本週第六次同一個形狀。
+  //
+  // 「碳權」刻意不列:ISO 14064-1 的減量措施一節本來就可能談抵換,
+  // 把它列進來會讓判準比它要守的東西寬(另一個方向的同一個錯)。
+  "轉型計畫",
+  "Transition Plan",
+  "SBTi",
+  "財務資源",
 ];
+
+/**
+ * Info: (20260818 - Emily) 允許問氣候財務揭露題目的章節 id。
+ *
+ * 目前是空的 —— 這份大綱只有盤查報告的章節,**一節都沒有**在做 IFRS S2 揭露。
+ * 那是既有的缺口(不是 08-18 拿掉的;`ch6`/`ch7` 的標題一直都是盤查與查證),
+ * 但在 IFRS S1/S2 分梯強制上路之後,它是一個要進票的產品缺口。
+ */
+const DISCLOSURE_CHAPTER_IDS: ReadonlyArray<string> = [];
 
 const guidanceOf = (id: string): string => {
   const section = CARBON_REPORT_OUTLINE.find((item) => item.id === id);
@@ -200,12 +230,14 @@ describe("CARBON_REPORT_OUTLINE 的標準一致性", () => {
     expect(guidanceOf(id)).toContain(keyword);
   });
 
-  // Info: (20260818 - Emily) 負面判準:別人的題目不准出現在任何一節(見 OFF_TOPIC_SUBJECTS)
+  // Info: (20260818 - Emily) 負面判準:揭露題目只准出現在揭露章節(見 OFF_TOPIC_SUBJECTS)
   it.each(OFF_TOPIC_SUBJECTS)(
-    "沒有任何一節在問「%s」（那是 TCFD/IFRS 的題目,不是 ISO 盤查報告的）",
+    "「%s」沒有出現在盤查章節裡（它屬於 IFRS S2 揭露章節，不屬於盤查報告的章節）",
     (subject) => {
-      const offenders = CARBON_REPORT_OUTLINE.filter((section) =>
-        (section.guidance ?? "").includes(subject),
+      const offenders = CARBON_REPORT_OUTLINE.filter(
+        (section) =>
+          !DISCLOSURE_CHAPTER_IDS.includes(section.chapterId) &&
+          (section.guidance ?? "").includes(subject),
       ).map((section) => `${section.id}(${section.code})`);
 
       expect(offenders).toEqual([]);
@@ -407,7 +439,19 @@ describe("指名這份大綱或這份報告的檔案,不得宣告 IFRS（機械�
    * Info: (20260818 - Emily) 唯一的例外:掃描器自己。
    * 本檔的 `FORBIDDEN_STANDARDS` 裡有 `/IFRS/` 這個 pattern,而那是程式碼不是註解。
    */
-  const ALLOWLIST = ["src/__tests__/carbon_report_outline.test.ts"];
+  const ALLOWLIST = [
+    "src/__tests__/carbon_report_outline.test.ts",
+    /**
+     * Info: (20260819 - Emily) IFRS 揭露版的 guidance。裡面的 IFRS 字樣是**內容**,
+     * 不是誤植 —— 那份檔案存在的理由就是保存 IFRS S1/S2 那一套指引。
+     *
+     * 08-19 發現它原本**不會**被這個掃描器抓到:判準是「檔案內容提到
+     * carbon_report_outline 或 盤查報告書」,而它只在註解裡提到,註解會被剝掉。
+     * 所以把判準補上檔名(見 `namesThisReport`),讓這條例外變成承重的 ——
+     * 判準蓋不住它要守的東西時,靜默放過比誤報危險。
+     */
+    "src/constants/carbon_report_outline_ifrs.ts",
+  ];
 
   const stripComments = (text: string, isMarkdown: boolean): string =>
     isMarkdown
@@ -447,8 +491,8 @@ describe("指名這份大綱或這份報告的檔案,不得宣告 IFRS（機械�
         fs.readFileSync(full, "utf-8"),
         relative.endsWith(".md"),
       );
-      const namesThisReport = NAMES_THIS_REPORT.some((name) =>
-        code.includes(name),
+      const namesThisReport = NAMES_THIS_REPORT.some(
+        (name) => code.includes(name) || relative.includes(name),
       );
       if (namesThisReport && code.includes("IFRS")) offenders.push(relative);
     });
@@ -488,5 +532,40 @@ describe("指名這份大綱或這份報告的檔案,不得宣告 IFRS（機械�
     const { offenders } = scanOnce();
 
     expect(offenders).toEqual([]);
+  });
+});
+
+/**
+ * Info: (20260819 - Emily) 兩套 guidance 必須節節對得上。
+ *
+ * 08-19 之後的核心風險:大綱有兩套撰寫指引(ISO 與 IFRS 揭露版),而它們是兩個檔案。
+ * 任何一邊新增或刪節,另一邊沒跟上就會在產出時少一節或多一節 ——
+ * 而且是**選了那個框架的客戶**才踩得到,平常跑驗收看不出來
+ * (現行預設是 ISO 那一套)。所以判準是集合相等,不是「IFRS 版有就好」。
+ */
+describe("兩套 guidance 的一致性", () => {
+  it("IFRS 揭露版的鍵與大綱的節 id 完全相同", () => {
+    const outlineIds = CARBON_REPORT_OUTLINE.map(
+      (section) => section.id,
+    ).sort();
+    const ifrsIds = Object.keys(CARBON_REPORT_GUIDANCE_IFRS).sort();
+
+    expect(ifrsIds).toEqual(outlineIds);
+  });
+
+  it("IFRS 揭露版沒有空白的指引", () => {
+    expect(
+      Object.entries(CARBON_REPORT_GUIDANCE_IFRS)
+        .filter(([, guidance]) => guidance.trim().length === 0)
+        .map(([id]) => id),
+    ).toEqual([]);
+  });
+
+  /**
+   * Info: (20260819 - Emily) 反向判準:IFRS 版**應該**留著 IFRS 字樣。
+   * 若有人再拿 08-18 那套「把 IFRS 換成 ISO」的做法掃過這份檔案,這條會紅。
+   */
+  it("IFRS 揭露版仍保有 IFRS S1/S2 的宣告", () => {
+    expect(CARBON_REPORT_GUIDANCE_IFRS["ch1-intro"]).toContain("IFRS S1/S2");
   });
 });

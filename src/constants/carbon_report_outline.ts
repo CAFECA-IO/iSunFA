@@ -77,7 +77,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "1.1",
     title: "公司簡介與財務報告邊界",
     guidance:
-      "填寫公司基礎營運資訊,並說明與財務報表申報主體(Reporting Entity)的一致性。",
+      "填寫公司基礎營運資訊:法人名稱、營運據點、產業別、主要產品與活動,並說明本報告的報告組織範圍與其法人身分一致。",
     isDataDriven: false,
   },
   {
@@ -86,7 +86,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "1.2",
     title: "報告目的與主要使用者",
     guidance:
-      "明確定義報告旨在提供給股東、投資人與債權人等財務市場參與者,作為評估企業核心價值的依據。",
+      "明確定義報告的目的與預期使用者:內部管理階層、第三方查證機構,以及依規定取得本報告的外部關係人,並說明報告的預期用途(供查證、供管理決策與減量規劃參考)。",
     isDataDriven: false,
   },
   {
@@ -122,7 +122,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "1.6",
     title: "報告涵蓋期間與重大財務連結",
     guidance:
-      "明訂報告時間必須與財務報表期間一致(通常為會計年度)。揭露資訊的發布必須與財務報告同步。",
+      "明訂報告涵蓋的盤查期間(起訖日,通常為一個完整年度),並說明與前一年度盤查結果的銜接方式。",
     isDataDriven: false,
   },
   {
@@ -131,7 +131,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "第二章",
     title: "報告邊界(導論)",
     guidance:
-      "說明如何將氣候風險與商業策略結合,據以界定價值鏈中應納入盤查的重大碳排放項目。",
+      "說明報告邊界的設定邏輯:組織邊界與報告邊界的關係、如何鑑別應納入的間接排放(含上游與下游),以及顯著性判定所依據的準則。",
     isDataDriven: false,
   },
   {
@@ -167,7 +167,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "3.1",
     title: "溫室氣體排放量計算說明(含導論)",
     guidance:
-      "聲明本章數據為企業氣候風險量化之基礎,用以評估碳定價或法規轉型帶來的潛在財務衝擊。列出完整排放源矩陣圖,盤點並確認所有活動均涵蓋京都議定書之七大溫室氣體(CO2, CH4, N2O, HFCs, PFCs, SF6, NF3)。",
+      "說明本章排放量的量化基礎、涵蓋範圍與資料來源層級。列出完整排放源矩陣圖,盤點並確認所有活動均涵蓋京都議定書之七大溫室氣體(CO2, CH4, N2O, HFCs, PFCs, SF6, NF3)。",
     isDataDriven: false,
   },
   {
@@ -247,7 +247,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "第五章",
     title: "溫室氣體減量措施及內部績效追蹤",
     guidance:
-      "轉型計畫(Transition Plan):說明公司如何透過營運優化或低碳投資來實現減碳,並說明所需的財務資源預算規劃。減量目標(Targets):揭露企業設定的氣候目標(如 2030 減碳 50%、2050 淨零),寫明是絕對目標或強度目標、是否通過科學基礎減量目標(SBTi)驗證、以及碳權(Carbon Offsets)預計使用的比例。",
+      "說明節約能源與溫室氣體排放的減量具體措施,以及內部績效追蹤的做法:原文列出的承諾事項、短期/中期/長期的減量或節能目標(照原文的數值與期程照實寫,例如年節電率),以及環境管理方案與後續環境監督與量測的安排。只寫原文有的,原文沒有的不要補也不要放佔位符。",
     isDataDriven: false,
   },
   {
@@ -274,7 +274,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "第八章",
     title: "溫室氣體盤查資訊管理及記錄保存",
     guidance:
-      "說明碳管理如何與財務會計檔案、內部控制流程實質整合,並規範相關憑證(如水電費單據、生產報表、合約)的數位化與法定保存年限。",
+      "說明盤查資訊與紀錄如何與公司既有的文件管理及內部控制流程整合,並規範相關憑證(如水電費單據、生產報表、合約)的數位化與法定保存年限。",
     isDataDriven: false,
   },
   {
@@ -283,7 +283,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "第九章",
     title: "查證(導論)",
     guidance:
-      "說明為滿足財務市場與法規對於永續資訊「可信度」的要求,所安排的第三方獨立確信作業。",
+      "說明為提高盤查資訊的可信度、並符合查證要求所安排的第三方獨立查證作業。",
     isDataDriven: false,
   },
   {
@@ -292,7 +292,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "9.1",
     title: "確信/查證範圍",
     guidance:
-      "界定外部查證機構查驗的邊界,是否與本報告書及財務合併報表邊界完全重疊。",
+      "界定外部查證機構查驗的邊界,以及該邊界是否與本報告書的組織邊界及報告邊界完全重疊;若不重疊,逐項敘明差異。",
     isDataDriven: false,
   },
   {
@@ -310,7 +310,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "9.3",
     title: "實質性門檻",
     guidance:
-      "界定外部查證容許的量化誤差門檻(如 5%),並揭露對財務投資人決策具有重大影響的「定性重大性」標準。",
+      "界定外部查證容許的量化誤差門檻(如 5%),並說明定性重大性的判定標準 —— 哪些性質的錯誤、遺漏或分類錯置視為重大。",
     isDataDriven: false,
   },
   {
@@ -336,7 +336,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "10.1",
     title: "財務報導之呈現格式",
     guidance:
-      "說明本碳盤查報告如何與年報、永續報告或財務報告書進行跨內容的相互索引,確保資訊透明且便於投資人查閱。",
+      "說明本報告書的編排與呈現格式,以及與公司其他對外文件相互索引的方式,確保讀者可追溯到原始資料。",
     isDataDriven: false,
   },
   {
@@ -345,7 +345,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "10.2",
     title: "資訊公開與傳播途徑",
     guidance:
-      "明列報告在公開資訊觀測站、公司官網、或是提交至國際評比平台(如 CDP)的取得管道與利害關係人諮詢窗口。",
+      "明列報告的公開途徑與取得管道(如公司官網、依規定公開之平台),以及利害關係人的諮詢窗口。",
     isDataDriven: false,
   },
   {
