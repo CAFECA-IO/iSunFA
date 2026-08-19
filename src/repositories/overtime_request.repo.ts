@@ -107,6 +107,16 @@ export interface IOvertimeRequestRepository {
     accountBookId: string;
     requestId: string;
   }): Promise<OvertimeDecisionOutcome>;
+  /**
+   * Info: (20260818 - Julian) 申請人撤回。與 `reject` 同樣是附條件更新 ——
+   * 差別在於它同時把撤回的時點與理由固化下來。
+   */
+  withdraw(params: {
+    accountBookId: string;
+    requestId: string;
+    withdrawnAt: Date;
+    withdrawReason: string | null;
+  }): Promise<OvertimeDecisionOutcome>;
 }
 
 class OvertimeRequestRepository implements IOvertimeRequestRepository {
@@ -300,6 +310,36 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
         cashOutEventIds,
       };
     });
+  }
+
+  public async withdraw(params: {
+    accountBookId: string;
+    requestId: string;
+    withdrawnAt: Date;
+    withdrawReason: string | null;
+  }): Promise<OvertimeDecisionOutcome> {
+    /**
+     * Info: (20260818 - Julian) `status: PENDING` 是更新條件本身，不是先查再寫。
+     *
+     * 申請人在手機上按撤回、主管同一刻在電腦上按核准 —— 先讀再寫會兩邊都通過，
+     * 於是一張單同時是「已撤回」與「已核准」，而補休批次已經入帳了
+     * （同 `approve` 與 `reject` 的既有處置）。
+     */
+    const moved = await prisma.overtimeRequest.updateMany({
+      where: {
+        id: params.requestId,
+        accountBookId: params.accountBookId,
+        status: OvertimeRequestStatus.PENDING,
+      },
+      data: {
+        status: OvertimeRequestStatus.WITHDRAWN,
+        withdrawnAt: params.withdrawnAt,
+        withdrawReason: params.withdrawReason,
+      },
+    });
+    return moved.count === 0
+      ? OvertimeDecisionOutcome.ALREADY_REVIEWED
+      : OvertimeDecisionOutcome.DECIDED;
   }
 
   public async reject(params: {

@@ -3620,6 +3620,24 @@ model OvertimeRequest {
   // Info: (20260817 - Julian) §32 IV 天災事變等情形，經報備者適用加倍發給
   isEmergency Boolean @default(false) @map("is_emergency")
 
+  // Info: (20260818 - Julian) 撤回的時點與理由。只有 status = WITHDRAWN 時有值
+  withdrawnAt DateTime? @map("withdrawn_at")
+
+  /**
+   * Info: (20260818 - Julian) 撤回理由。**事後補單撤回時必填**，事前申請可為 null。
+   *
+   * 兩者的方向不同：撤回一張事前申請是取消一個還沒發生的計畫；撤回一張
+   * 事後補單，是收回「我那天加過班」這句對**已發生事實**的陳述 —— 而那個
+   * 方向對雇主有利、對勞工不利（同 `assertOvertimeFilingType` 檔頭所說的
+   * 「有動機」的地形）。一筆沒有理由的撤回，事後沒有人判斷得出它是自願的
+   * 還是被要求的。
+   *
+   * 撤回不會湮滅事實：打卡仍在 `AttendancePunch` 裡，那段時間會立刻回到
+   * L29 的「未核准時段」（ADR 024 §2.1）。這一欄記的是「為什麼收回這張單」，
+   * 不是「那段時間不存在」。
+   */
+  withdrawReason String? @map("withdraw_reason")
+
   segments OvertimeSegment[]
 
   createdAt DateTime @default(now()) @map("created_at")

@@ -4,6 +4,7 @@ import { DEMO_TIME_ZONE, WorkDayType } from "@/constants/attendance";
 import {
   OvertimeCompensationMode,
   OvertimeEvidenceBasis,
+  OvertimeFilingType,
   OvertimeRequestStatus,
 } from "@/constants/overtime";
 import {
@@ -373,6 +374,65 @@ export class OvertimeRequestService {
     const outcome = await this.requests.reject({
       accountBookId: params.accountBookId,
       requestId: request.id,
+    });
+    if (outcome === OvertimeDecisionOutcome.ALREADY_REVIEWED) {
+      throw new AppError(API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED);
+    }
+    return this.mustFindSummary(params.accountBookId, request.id);
+  }
+
+  /**
+   * Info: (20260818 - Julian) 申請人撤回自己尚未決行的加班單。
+   *
+   * ## 為什麼不沿用假單的撤回
+   *
+   * 假單撤回是取消一個**還沒發生**的計畫，方向對勞工有利。加班單要分兩種：
+   * 事前申請同假單；**事後補單則是收回一句對已發生事實的陳述**，而那個方向
+   * 對雇主有利、對勞工不利 —— 與 `assertOvertimeFilingType` 擋下的
+   * 「事後補的單被標成事前申請」是同一種動機。因此事後補單的撤回必須說明理由。
+   *
+   * ## 撤回不會湮滅事實
+   *
+   * 打卡仍在 `AttendancePunch` 裡。這張單一消失，那段時間會立刻回到 L29 的
+   * 「未核准時段」（ADR 024 §2.1）—— 撤回改變的是「有沒有人主張過這段加班」，
+   * 不是「這段時間存不存在」。
+   *
+   * ## 為什麼只有申請人
+   *
+   * 主管想讓一張單消失，正確的動作是**駁回** —— 那會留下他的名字與時點。
+   * 開放主管撤回等於給一條不留痕的路徑，而那正是這個模組處處在防的事。
+   */
+  public async withdraw(params: {
+    accountBookId: string;
+    requestId: string;
+    actorEmployeeId: string;
+    reason?: string;
+    observedAt: Date;
+  }): Promise<IOvertimeRequestSummary> {
+    const request = await this.mustFindSummary(
+      params.accountBookId,
+      params.requestId,
+    );
+
+    if (request.employeeId !== params.actorEmployeeId) {
+      throw new AppError(API_ERRORS.FO_OVERTIME_NOT_APPLICANT);
+    }
+    this.assertPending(request);
+
+    const reason = params.reason?.trim() ?? "";
+    if (
+      request.filingType === OvertimeFilingType.POST_HOC &&
+      reason.length === 0
+    ) {
+      throw new AppError(API_ERRORS.VA_OVERTIME_WITHDRAW_REASON_REQUIRED);
+    }
+
+    const outcome = await this.requests.withdraw({
+      accountBookId: params.accountBookId,
+      requestId: request.id,
+      withdrawnAt: params.observedAt,
+      // Info: (20260818 - Julian) 事前申請沒填就是 null，不塞一個空字串冒充「有填」
+      withdrawReason: reason.length === 0 ? null : reason,
     });
     if (outcome === OvertimeDecisionOutcome.ALREADY_REVIEWED) {
       throw new AppError(API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED);

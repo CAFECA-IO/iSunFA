@@ -1282,6 +1282,21 @@ export const API_ERRORS = {
   } as IErrorDef,
 
   /**
+   * Info: (20260818 - Julian) 撤回事後補單卻沒填理由。
+   *
+   * 事前申請的撤回不必填 —— 那是取消一個還沒發生的計畫。事後補單不同：
+   * 它是對**已經發生的事實**的陳述，而收回它的方向對雇主有利、對勞工不利
+   * （同 `assertOvertimeFilingType` 檔頭所說的那種「有動機」的地形）。
+   * 一筆沒有理由的撤回，事後沒有人判斷得出它是自願的還是被要求的。
+   */
+  VA_OVERTIME_WITHDRAW_REASON_REQUIRED: {
+    code: "VA000068",
+    message:
+      "Withdrawing an after-the-fact overtime request requires a reason; the record must show whether it was voluntary",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
    * Info: (20260818 - Julian) 帳本尚未協商補休期限，因此換不了補休。
    *
    * §32-1 只說「期限由勞雇雙方協商」，沒有法定日數，系統不預設一個數字
@@ -1508,6 +1523,20 @@ export const API_ERRORS = {
   FO_NOT_AUTHORIZED_REVIEWER: {
     code: "FO000015",
     message: "You are not the current approver for this request",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 撤回加班單的人不是申請人本人。
+   *
+   * 刻意不沿用 `FO_NOT_AUTHORIZED_REVIEWER`（假單撤回目前借用它）——
+   * 那句話是「你不是這一關的簽核者」，而使用者當下正在撤回**自己的**單，
+   * 收到那個訊息只會更困惑。主管想讓一張單消失，正確的動作是駁回，
+   * 那會留下他的名字。
+   */
+  FO_OVERTIME_NOT_APPLICANT: {
+    code: "FO000020",
+    message: "Only the applicant may withdraw an overtime request",
     status: ApiCode.FORBIDDEN,
   } as IErrorDef,
 

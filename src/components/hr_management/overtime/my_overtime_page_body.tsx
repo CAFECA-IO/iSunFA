@@ -402,6 +402,8 @@ const MyOvertimePageBody: FC = () => {
         <OvertimeRequestList
           requests={requests}
           emptyKey="hr_management.overtime.my_requests_empty"
+          withdrawable
+          onChanged={reload}
         />
       </section>
     </div>

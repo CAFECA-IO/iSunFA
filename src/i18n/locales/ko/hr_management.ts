@@ -971,6 +971,16 @@ export const hrManagement = {
     action_approve: "승인",
     action_reject: "반려",
     decided_recognized: "승인했습니다(인정 {{minutes}}분)",
+    action_withdraw: "철회",
+    action_withdraw_hint:
+      "철회해도 출퇴근 기록은 지워지지 않습니다. 해당 시간은 다른 신청이 포함할 때까지 「미승인 연장근로」로 되돌아갑니다.",
+    field_withdraw_reason: "철회 사유",
+    field_withdraw_reason_placeholder: "예: 날짜 오기재, 다른 신청으로 처리됨",
+    error_withdraw: "철회에 실패했습니다",
+    error_not_applicant:
+      "신청한 본인만 철회할 수 있습니다. 관리자는 반려를 사용하세요 — 결정자가 기록됩니다.",
+    error_withdraw_reason_required:
+      "사후 신청의 철회에는 사유가 필요합니다. 자발적 철회인지 기록에 남아야 합니다.",
     action_write_report: "연장근로 보고서 작성",
     report_disabled_hint:
       "아직 제공되지 않습니다: 법적 근거와 서식 항목이 법무 검토 대기 중입니다(계획서 §8.3)",

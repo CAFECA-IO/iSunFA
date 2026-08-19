@@ -968,6 +968,16 @@ export const hrManagement = {
     action_approve: "承認",
     action_reject: "却下",
     decided_recognized: "承認しました（認定 {{minutes}} 分）",
+    action_withdraw: "取り下げ",
+    action_withdraw_hint:
+      "取り下げても打刻記録は消えません。その時間は別の申請が覆うまで「未承認の時間外労働」に戻ります。",
+    field_withdraw_reason: "取り下げ理由",
+    field_withdraw_reason_placeholder: "例：日付の誤り、別の申請で対応済み",
+    error_withdraw: "取り下げに失敗しました",
+    error_not_applicant:
+      "取り下げできるのは申請者本人のみです。上長は却下をご利用ください（決定者が記録されます）。",
+    error_withdraw_reason_required:
+      "事後申請の取り下げには理由が必要です。自発的な取り下げかどうかが記録に残る必要があります。",
     action_write_report: "時間外労働報告書を作成",
     report_disabled_hint:
       "未開放：根拠法令と書式の項目が法務確認待ちです（計画書 §8.3）",

@@ -935,6 +935,16 @@ export const hrManagement = {
     action_approve: "核准",
     action_reject: "驳回",
     decided_recognized: "已核准，认列 {{minutes}} 分钟",
+    action_withdraw: "撤回",
+    action_withdraw_hint:
+      "撤回不会删掉打卡记录：那段时间会回到「未核准的加班」，直到有另一张单涵盖它。",
+    field_withdraw_reason: "撤回理由",
+    field_withdraw_reason_placeholder: "例：报错日期、该时段已由另一张单涵盖",
+    error_withdraw: "撤回失败",
+    error_not_applicant:
+      "只有送出这张单的人可以撤回。主管请改用驳回，那会记下是谁决定的。",
+    error_withdraw_reason_required:
+      "事后补单的撤回必须填理由 —— 记录上要看得出它是不是自愿的。",
     action_write_report: "填写加班报告书",
     report_disabled_hint: "尚未开放：法源与表单栏位仍待法务复核（计划书 §8.3）",
     decided_unapproved: "另有 {{minutes}} 分钟超出核准范围，已列入未核准时段",

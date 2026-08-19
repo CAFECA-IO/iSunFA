@@ -987,6 +987,17 @@ export const hrManagement = {
     action_approve: "Approve",
     action_reject: "Reject",
     decided_recognized: "Approved — {{minutes}} min recognised",
+    action_withdraw: "Withdraw",
+    action_withdraw_hint:
+      'Withdrawing does not erase the punch record — the hours reappear under "unapproved overtime" until another request covers them.',
+    field_withdraw_reason: "Reason for withdrawing",
+    field_withdraw_reason_placeholder:
+      "e.g. filed on the wrong date; the work was covered by another request",
+    error_withdraw: "Withdrawal failed",
+    error_not_applicant:
+      "Only the person who filed this request may withdraw it. A manager should reject it instead, which records who decided.",
+    error_withdraw_reason_required:
+      "Withdrawing an after-the-fact request requires a reason — the record has to show whether it was voluntary.",
     action_write_report: "Fill in overtime report",
     report_disabled_hint:
       "Not available yet — the statutory basis and form fields are still pending legal review (plan §8.3).",

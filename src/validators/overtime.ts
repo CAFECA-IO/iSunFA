@@ -148,3 +148,16 @@ export type IOvertimeUnapprovedQuery = z.infer<
 export type IOvertimePolicyUpdatePayload = z.infer<
   typeof overtimePolicyUpdateSchema
 >;
+
+/**
+ * Info: (20260818 - Julian) 撤回加班單。
+ *
+ * `reason` 在這一層是選填 —— 「事後補單必須填」需要知道這張單的 `filingType`，
+ * 而那要查資料庫，是 service 的判斷（同 `leaveRequestListQuerySchema` 把區間
+ * 上限留給 service 的既有處置）。這一層只擋型別與長度。
+ */
+export const overtimeWithdrawSchema = z.object({
+  reason: z.string().trim().max(OVERTIME_REASON_MAX_LENGTH).optional(),
+});
+
+export type IOvertimeWithdrawPayload = z.infer<typeof overtimeWithdrawSchema>;

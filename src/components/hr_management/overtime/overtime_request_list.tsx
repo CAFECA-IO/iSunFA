@@ -1,10 +1,12 @@
 "use client";
 
 import { FC, useState } from "react";
-import { Check, FileWarning, Loader2, Siren, X } from "lucide-react";
+import { Check, FileWarning, Loader2, Siren, Undo2, X } from "lucide-react";
 import {
+  OVERTIME_REASON_MAX_LENGTH,
   OVERTIME_TIER_I18N_KEY,
   OvertimeEvidenceBasis,
+  OvertimeFilingType,
   OvertimeRequestStatus,
 } from "@/constants/overtime";
 import {
@@ -14,6 +16,7 @@ import {
 import {
   overtimeRequestApproveApi,
   overtimeRequestRejectApi,
+  overtimeRequestWithdrawApi,
 } from "@/constants/overtime_api";
 import {
   errorCodeOf,
@@ -58,8 +61,21 @@ const OvertimeRequestList: FC<{
   emptyKey: string;
   /** Info: (20260818 - Julian) 給值才顯示簽核區（待簽清單用，我的加班不給） */
   decidable?: boolean;
+  /**
+   * Info: (20260818 - Julian) 給值才顯示撤回鈕（我的加班用，待簽清單不給）。
+   *
+   * 與 `decidable` 互斥不是巧合：**撤回只有申請人做得到，簽核只有主管做得到**。
+   * 主管想讓一張單消失，正確的動作是駁回 —— 那會留下他的名字。
+   */
+  withdrawable?: boolean;
   onChanged?: () => void | Promise<void>;
-}> = ({ requests, emptyKey, decidable = false, onChanged = undefined }) => {
+}> = ({
+  requests,
+  emptyKey,
+  decidable = false,
+  withdrawable = false,
+  onChanged = undefined,
+}) => {
   const { t } = useTranslation();
   const [actingId, setActingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +85,9 @@ const OvertimeRequestList: FC<{
   const [approvedMinutes, setApprovedMinutes] = useState<
     Record<string, number>
   >({});
+  const [withdrawReason, setWithdrawReason] = useState<Record<string, string>>(
+    {},
+  );
 
   const nextDay = t("hr_management.attendance.next_day");
 
@@ -88,7 +107,12 @@ const OvertimeRequestList: FC<{
   const decide = async (
     item: IOvertimeRequestSummary,
     url: string,
-    body: Record<string, number> | null,
+    body: Record<string, number | string> | null,
+    /**
+     * Info: (20260818 - Julian) 未登記錯誤碼時要退回哪一句。核准／駁回與撤回
+     * 是不同的動作，共用「簽核失敗」會讓撤回失敗時的訊息指錯方向。
+     */
+    fallbackKey = "hr_management.overtime.error_decide",
   ) => {
     setActingId(item.id);
     setError(null);
@@ -108,8 +132,17 @@ const OvertimeRequestList: FC<{
        * 超出核准的有多少（已列入未核准時段）、換出幾批補休。
        * 前兩者是同一個決定的兩面，只說一半會讓主管以為超出的部分消失了。
        */
+      /**
+       * Info: (20260818 - Julian) 只有核准會回認列／未核准／補休三個數字。
+       * 駁回與撤回回的是單子本身，沒有這些欄位 —— 不檢查就會印出
+       * 「認列 undefined 分」那種訊息。
+       */
       const result = response.payload;
-      if (result !== null && result !== undefined) {
+      if (
+        result !== null &&
+        result !== undefined &&
+        typeof result.recognizedMinutes === "number"
+      ) {
         const parts = [
           t("hr_management.overtime.decided_recognized", {
             minutes: result.recognizedMinutes,
@@ -135,15 +168,7 @@ const OvertimeRequestList: FC<{
       await onChanged?.();
     } catch (caught) {
       setErrorCode(errorCodeOf(caught));
-      setError(
-        t(
-          errorI18nKeyOf(
-            caught,
-            "hr_management.overtime.error_decide",
-            OVERTIME_ERROR_I18N_KEY,
-          ),
-        ),
-      );
+      setError(t(errorI18nKeyOf(caught, fallbackKey, OVERTIME_ERROR_I18N_KEY)));
     } finally {
       setActingId(null);
     }
@@ -340,6 +365,67 @@ const OvertimeRequestList: FC<{
 
                 <p className="basis-full text-xs leading-relaxed text-gray-400">
                   {t("hr_management.overtime.field_approved_minutes_hint")}
+                </p>
+              </div>
+            )}
+
+            {/**
+             * Info: (20260818 - Julian) 撤回區：只有申請人自己、只在待簽核。
+             *
+             * 事後補單要填理由才送得出去 —— 那是收回一句對已發生事實的陳述，
+             * 方向對雇主有利、對勞工不利，一筆沒有理由的撤回事後判斷不出
+             * 它是自願的還是被要求的。事前申請不必填。
+             */}
+            {withdrawable && item.status === OvertimeRequestStatus.PENDING && (
+              <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-gray-100 pt-3">
+                {item.filingType === OvertimeFilingType.POST_HOC && (
+                  <label className="flex flex-1 flex-col gap-1 text-xs text-gray-600">
+                    {t("hr_management.overtime.field_withdraw_reason")}
+                    <input
+                      type="text"
+                      value={withdrawReason[item.id] ?? ""}
+                      maxLength={OVERTIME_REASON_MAX_LENGTH}
+                      onChange={(event) =>
+                        setWithdrawReason((current) => ({
+                          ...current,
+                          [item.id]: event.target.value,
+                        }))
+                      }
+                      placeholder={t(
+                        "hr_management.overtime.field_withdraw_reason_placeholder",
+                      )}
+                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
+                    />
+                  </label>
+                )}
+
+                <button
+                  type="button"
+                  disabled={
+                    actingId === item.id ||
+                    (item.filingType === OvertimeFilingType.POST_HOC &&
+                      (withdrawReason[item.id] ?? "").trim().length === 0)
+                  }
+                  onClick={() =>
+                    decide(
+                      item,
+                      overtimeRequestWithdrawApi(item.id),
+                      { reason: (withdrawReason[item.id] ?? "").trim() },
+                      "hr_management.overtime.error_withdraw",
+                    )
+                  }
+                  className="flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold text-gray-600 ring-1 ring-gray-300 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {actingId === item.id ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Undo2 className="size-3.5" />
+                  )}
+                  {t("hr_management.overtime.action_withdraw")}
+                </button>
+
+                <p className="basis-full text-xs leading-relaxed text-gray-400">
+                  {t("hr_management.overtime.action_withdraw_hint")}
                 </p>
               </div>
             )}

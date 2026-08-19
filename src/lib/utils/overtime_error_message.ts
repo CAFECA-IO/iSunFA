@@ -41,6 +41,12 @@ export const OVERTIME_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
   [API_ERRORS.VA_OVERTIME_COMP_EXPIRY_UNSET.code]:
     "hr_management.overtime.error_comp_expiry_unset",
 
+  // Info: (20260818 - Julian) 撤回（只有申請人、只在待簽核）
+  [API_ERRORS.FO_OVERTIME_NOT_APPLICANT.code]:
+    "hr_management.overtime.error_not_applicant",
+  [API_ERRORS.VA_OVERTIME_WITHDRAW_REASON_REQUIRED.code]:
+    "hr_management.overtime.error_withdraw_reason_required",
+
   // Info: (20260818 - Julian) 明細與可見範圍
   [API_ERRORS.NF_OVERTIME_REQUEST.code]:
     "hr_management.overtime.error_not_found",

@@ -29,5 +29,8 @@ export const OVERTIME_API = {
 export const overtimeRequestApproveApi = (requestId: string): string =>
   `${OVERTIME_API_BASE}/request/${requestId}/approve`;
 
+export const overtimeRequestWithdrawApi = (requestId: string): string =>
+  `${OVERTIME_API_BASE}/request/${requestId}/withdraw`;
+
 export const overtimeRequestRejectApi = (requestId: string): string =>
   `${OVERTIME_API_BASE}/request/${requestId}/reject`;
