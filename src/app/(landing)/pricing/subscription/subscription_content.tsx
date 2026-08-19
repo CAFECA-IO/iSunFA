@@ -26,14 +26,12 @@ interface ISubscriptionContentProps {
    * 由 server 端讀妥傳入。服務條款 §3.1 寫的是「以方案頁標示為準」——
    * 這個數字就是那個標示，因此不得在此寫死或改引用程式常數。
    */
-  freePlanMaxMembers: number;
 }
 
 export default function SubscriptionContent({
   teamQuotaMultiple,
   businessQuotaMultiple,
   faithMemoryRetentionDays,
-  freePlanMaxMembers,
 }: ISubscriptionContentProps) {
   const { onSelectSubscription, setAuthModalOpen, setConfirmModal } =
     usePricing();
@@ -190,18 +188,15 @@ export default function SubscriptionContent({
               }),
               {
                 /**
-                 * Info: (20260815 - Luphia) 免費版的人數上限（PR #6652 第二輪 B-4）。
+                 * Info: (20260819 - Luphia) 免費版**不限人數**（產品決定 20260819）。
                  *
-                 * 額度改為逐成員計算後，付費方案以「席次 × 單價」自然封頂，
-                 * 免費版沒有這個機制——人數上限就是它的封頂，因此必須標示出來，
-                 * 服務條款 §3.1 也是指向這裡。
+                 * 原本這裡標示的是人數上限，而上限存在的理由是「額度依成員各自計算」。
+                 * 免費版的額度已改為**全隊共用一份**，加人不再產生額度，上限因此移除。
+                 * 這一格改成講清楚那件事——不標示的話，使用者會以為免費版的額度
+                 * 也隨人數增加。
                  */
-                text: t("pricing.plans.free.features.member_limit", {
-                  count: freePlanMaxMembers,
-                }),
-                tooltip: t("pricing.plans.free.features.member_limit_tooltip", {
-                  count: freePlanMaxMembers,
-                }),
+                text: t("pricing.plans.free.features.member_limit"),
+                tooltip: t("pricing.plans.free.features.member_limit_tooltip"),
               },
             ]}
             onSelect={showComingSoon}

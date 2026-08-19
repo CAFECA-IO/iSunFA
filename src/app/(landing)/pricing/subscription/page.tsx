@@ -8,7 +8,6 @@ import {
 } from "@/constants/subscription_quota";
 import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
 import { resolveFaithMemoryRetentionDays } from "@/services/faith_memory.service";
-import { resolveFreePlanMaxMembers } from "@/services/team_subscription.service";
 
 export const metadata: Metadata = {
   title: "iSunFA 訂閱方案 | AI 財務助理、自動化會計與碳足跡計算",
@@ -47,13 +46,10 @@ export default async function SubscriptionPricingPage() {
    * 傳入 client component：client 無從查詢 DB，於此取值可確保 SSR 與水合結果一致，
    * 且後台調整設定後方案頁自動同步（見下方 quotaMultiple 的說明）。
    */
-  const [quotas, faithMemoryRetentionDays, freePlanMaxMembers] =
-    await Promise.all([
-      subscriptionPlanQuotaRepo.resolveAllQuotas(),
-      resolveFaithMemoryRetentionDays(),
-      // Info: (20260815 - Luphia) 免費版人數上限亦為 DB 系統設定（PR #6652 第二輪 B-4）
-      resolveFreePlanMaxMembers(),
-    ]);
+  const [quotas, faithMemoryRetentionDays] = await Promise.all([
+    subscriptionPlanQuotaRepo.resolveAllQuotas(),
+    resolveFaithMemoryRetentionDays(),
+  ]);
   return (
     <PricingContainer activeTab="subscription">
       <SubscriptionContent
@@ -68,7 +64,6 @@ export default async function SubscriptionPricingPage() {
           TEAM_PLAN.TEAM,
         )}
         faithMemoryRetentionDays={faithMemoryRetentionDays}
-        freePlanMaxMembers={freePlanMaxMembers}
       />
     </PricingContainer>
   );

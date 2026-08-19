@@ -220,13 +220,18 @@ describe("inviteMemberByEmail", () => {
   it("席次擋下時不建立邀請也不寄信", async () => {
     asMock(chargeSeatAddition).mockRejectedValue(
       new ApiError(
-        API_ERRORS.TW_FREE_PLAN_MEMBER_LIMIT.code,
-        API_ERRORS.TW_FREE_PLAN_MEMBER_LIMIT.message,
-        API_ERRORS.TW_FREE_PLAN_MEMBER_LIMIT.status,
+        /**
+         * Info: (20260819 - Luphia) 用「沒有可扣款的卡」當代表：免費版人數上限
+         * （TW000017）已於 2026-08-19 移除，而這條測的是「席次被擋下時不建立邀請、
+         * 不寄信」，與擋下的原因無關。
+         */
+        API_ERRORS.TW_SEAT_PAYMENT_METHOD_MISSING.code,
+        API_ERRORS.TW_SEAT_PAYMENT_METHOD_MISSING.message,
+        API_ERRORS.TW_SEAT_PAYMENT_METHOD_MISSING.status,
       ),
     );
 
-    await expect(invite()).rejects.toMatchObject({ code: "TW000017" });
+    await expect(invite()).rejects.toMatchObject({ code: "TW000022" });
     expect(asMock(teamRepo.createTeamInvitation)).not.toHaveBeenCalled();
     expect(asMock(sendMail)).not.toHaveBeenCalled();
   });
@@ -1020,13 +1025,15 @@ describe("邀請的 fail-closed 順序", () => {
 });
 
 /**
- * Info: (20260818 - Luphia) 免費版人數上限的第二道防線（第三輪 B-1）。
+ * Info: (20260819 - Luphia) 免費版人數上限已移除（產品決定 20260819）。
  *
- * 邀請端的檢查是第一道，但邀請與接受之間可能隔好幾天：這期間其他人接受了、
- * 團隊從付費降級成免費、或上限被後台調低，都會讓當初通過的那封邀請
- * 在此刻不再合法。沒有這一道，「上限」就只是寄信當下的一個快照。
+ * 原本這裡有一組「接受時的第二道防線」測試（免費團隊已滿時擋下接受）。上限存在的
+ * 理由不是人數，是免費額度逐成員各一份；同一輪把免費方案的額度改成**全隊共用一份**
+ * 之後，加人不再產生額度，兩道防線一起移除。
+ *
+ * 這一組取代它：不論人數多少、免費或付費，接受都不得因為「人數」被擋。
  */
-describe("接受時的免費版人數上限", () => {
+describe("接受邀請不再受人數限制", () => {
   const pending = {
     id: "inv-1",
     teamId: TEAM.id,
@@ -1036,13 +1043,6 @@ describe("接受時的免費版人數上限", () => {
     expiresAt: new Date(NOW + 1000),
   };
 
-  const mockFreePlan = () =>
-    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
-      planId: "free",
-      status: "ACTIVE",
-      currentPeriodEnd: new Date(NOW + 86_400_000),
-    });
-
   beforeEach(() => {
     asMock(teamRepo.findInvitationByTokenHash).mockResolvedValue(
       pending as unknown as Awaited<
@@ -1051,31 +1051,15 @@ describe("接受時的免費版人數上限", () => {
     );
   });
 
-  it("免費團隊已滿時擋下接受", async () => {
-    mockFreePlan();
-    // Info: (20260818 - Luphia) 上限 5，已有 5 位成員，再加一位就超過
-    asMock(teamRepo.countMembers).mockResolvedValue(5);
-
-    await expect(
-      acceptInviteByToken({ token: "token", userId: "user-2", nowMs: NOW }),
-    ).rejects.toThrow();
-    expect(asMock(teamRepo.acceptInvitation)).not.toHaveBeenCalled();
-  });
-
-  it("免費團隊未滿時照常接受", async () => {
-    mockFreePlan();
-    asMock(teamRepo.countMembers).mockResolvedValue(3);
-
-    await expect(
-      acceptInviteByToken({ token: "token", userId: "user-2", nowMs: NOW }),
-    ).resolves.toBeDefined();
-  });
-
-  /**
-   * Info: (20260818 - Luphia) 付費方案不受此限：人數由「席次 × 單價」自然封頂，
-   * 而那筆錢已經收過了。
-   */
-  it("付費團隊不受人數上限限制", async () => {
+  it.each([
+    ["免費團隊", { planId: "free", status: "ACTIVE" }],
+    ["付費團隊", { planId: "team", status: "ACTIVE" }],
+  ])("%s 人數再多也照樣接受", async (_label, sub) => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+      ...sub,
+      currentPeriodEnd: new Date(NOW + 86_400_000),
+    });
+    // Info: (20260819 - Luphia) 999 位成員：舊上限（1）會擋，現在不擋
     asMock(teamRepo.countMembers).mockResolvedValue(999);
 
     await expect(

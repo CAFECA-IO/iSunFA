@@ -65,6 +65,63 @@ export class TeamQuotaUsageRepository {
   }
 
   /**
+   * Info: (20260819 - Luphia) 免費方案改為**全隊共用一份額度**（產品決定 20260819）。
+   *
+   * 額度一人一池的理由是「席次費買到的就是這個人自己的額度」（設計書 §5.4.2）。
+   * 免費方案沒有席次費，一人一池因此沒有對價依據——而它正是「20 人的免費團隊
+   * ＝每週 800 點的模型用量、月費零」這個洞的來源。改為全隊共用之後，
+   * 加人不再產生額度，免費版的人數上限也就不需要存在。
+   *
+   * 鎖的粒度必須跟著換成**團隊**：兩位成員各自持有自己的鎖時，會同時讀到同一個
+   * used、各自判斷「還有額度」、各寫一筆——超額幅度變成併發數 × 單筆，
+   * 而設計書 §5.1 容許的是「最後一筆超額」，指的是一筆。
+   *
+   * 第二個 hash 參數固定為 teamId（而不是 userId），因此同一團隊的所有成員
+   * 共用同一把鎖。付費方案仍走 `withMemberQuotaLock`，成員之間互不阻塞。
+   *
+   * ⚠️ 方案在視窗中途變更（升級生效、訂閱到期）時，同一團隊可能同時存在
+   * 「持團隊鎖」與「持成員鎖」的請求，那個瞬間最壞情況是一筆超額——
+   * 與 §5.1 已經容忍的「最後一筆超額」同級，刻意不為它加第二把鎖。
+   */
+  async withTeamQuotaLock<T>(
+    teamId: string,
+    operation: (tx: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
+    return prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${teamId}), hashtext(${teamId}))`;
+      return operation(tx);
+    });
+  }
+
+  /**
+   * Info: (20260819 - Luphia) 交易內的**全隊**用量聚合（免費方案的共用額度）。
+   *
+   * 與 `sumTeamWindowUsage` 同一套條件，差別只在它跑在交易內——鎖與讀取必須在
+   * 同一個交易裡，否則鎖等於沒鎖（與 `sumWindowUsageInTx` 同一個理由）。
+   */
+  async sumTeamWindowUsageInTx(
+    tx: Prisma.TransactionClient,
+    teamId: string,
+    windowKey5h: number,
+    windowKeyWeek: number,
+  ): Promise<IWindowUsageSum> {
+    const [sum5h, sumWeek] = await Promise.all([
+      tx.teamQuotaUsage.aggregate({
+        where: { teamId, windowKey5h },
+        _sum: { amount: true },
+      }),
+      tx.teamQuotaUsage.aggregate({
+        where: { teamId, windowKeyWeek },
+        _sum: { amount: true },
+      }),
+    ]);
+    return {
+      used5h: sum5h._sum.amount ?? BigInt(0),
+      usedWeek: sumWeek._sum.amount ?? BigInt(0),
+    };
+  }
+
+  /**
    * Info: (20260815 - Luphia) 交易內的用量聚合，與 `sumWindowUsage` 同一套條件。
    * 供 `withMemberQuotaLock` 內使用——鎖與讀取必須在同一個交易裡，否則鎖等於沒鎖。
    */

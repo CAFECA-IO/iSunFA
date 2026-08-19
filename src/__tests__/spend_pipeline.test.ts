@@ -55,6 +55,16 @@ jest.mock("@/repositories/team_quota_usage.repo", () => ({
       ) => operation({}),
     ),
     sumWindowUsageInTx: jest.fn(),
+    /**
+     * Info: (20260819 - Luphia) 免費方案改為全隊共用一份額度（產品決定 20260819）：
+     * 鎖的粒度變成團隊、用量聚合整個團隊。替身要有這兩支，否則走到免費方案的
+     * 測試會以「不是函式」失敗——而那不是被測行為錯，是替身沒有照實模擬（§1.8）。
+     */
+    withTeamQuotaLock: jest.fn(
+      async (_teamId: unknown, operation: (tx: unknown) => Promise<unknown>) =>
+        operation({}),
+    ),
+    sumTeamWindowUsageInTx: jest.fn(),
     createUsageInTx: jest.fn(),
   },
 }));
@@ -146,6 +156,11 @@ describe("spendCredits", () => {
       used5h: BigInt(0),
       usedWeek: BigInt(0),
     });
+    // Info: (20260819 - Luphia) 免費方案走全隊聚合（見上方 mock 說明）
+    asMock(teamQuotaUsageRepo.sumTeamWindowUsageInTx).mockResolvedValue({
+      used5h: BigInt(0),
+      usedWeek: BigInt(0),
+    });
     asMock(teamQuotaUsageRepo.createUsage).mockResolvedValue({
       created: true,
       usage: { amount: BigInt(3) },
@@ -175,6 +190,40 @@ describe("spendCredits", () => {
     // Info: (20260815 - Luphia) 非成員連鎖都不該拿到，遑論讀寫用量
     expect(teamQuotaUsageRepo.withMemberQuotaLock).not.toHaveBeenCalled();
     expect(teamQuotaUsageRepo.sumWindowUsageInTx).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260819 - Luphia) 鎖的粒度要跟著額度的範圍換（產品決定 20260819）。
+   *
+   * 免費方案改為全隊共用一份額度之後，若聚合換成全隊而鎖還是 (團隊, 成員)，
+   * 兩位成員的併發請求會各持自己的鎖、同時讀到同一個 used、各自放行——
+   * 超額幅度變成併發數 × 單筆，而 §5.1 容許的是一筆。
+   *
+   * 這一條是**確定性**的接線斷言（哪一把鎖被拿）；併發下的實際結果另有一支
+   * 對真資料庫的 e2e（`free_plan_shared_quota_concurrency.e2e.test.ts`）。
+   * 兩者缺一：只有 e2e 會偶爾漏抓（兩個請求剛好錯開就都對），
+   * 只有這一條則證明不了鎖真的有序列化的效果。
+   */
+  it.each([
+    ["免費方案", null, "withTeamQuotaLock", "withMemberQuotaLock"],
+    [
+      "付費方案",
+      { planId: "team", status: "ACTIVE" },
+      "withMemberQuotaLock",
+      "withTeamQuotaLock",
+    ],
+  ])("%s 拿的是 %s，不是 %s", async (_label, sub, expected, notExpected) => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      sub
+        ? { ...sub, currentPeriodEnd: new Date((NOW_SEC + 86400) * 1000) }
+        : null,
+    );
+
+    await spendCredits(BASE_PARAMS);
+
+    const repo = teamQuotaUsageRepo as unknown as Record<string, unknown>;
+    expect(asMock(repo[expected])).toHaveBeenCalled();
+    expect(asMock(repo[notExpected])).not.toHaveBeenCalled();
   });
 
   it("consumes subscription quota first when both windows can absorb the cost", async () => {
@@ -589,7 +638,12 @@ describe("spendCredits", () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
       planId: "enterprise-typo",
     } as unknown);
-    asMock(teamQuotaUsageRepo.sumWindowUsageInTx).mockResolvedValue({
+    /**
+     * Info: (20260819 - Luphia) fail-closed 之後是**免費方案**，而免費方案的額度改為
+     * 全隊共用（產品決定 20260819）——因此用量要安排在**全隊**聚合上，
+     * 不是逐成員那一支。安排錯邊的症狀是「以為擋住了、其實讀到 0」。
+     */
+    asMock(teamQuotaUsageRepo.sumTeamWindowUsageInTx).mockResolvedValue({
       used5h: BigInt(8),
       usedWeek: BigInt(8),
     });
@@ -1263,8 +1317,12 @@ describe("resolveEffectivePlanId (fail-closed)", () => {
       status: "ACTIVE",
       currentPeriodEnd: PAST,
     } as unknown);
-    // Info: (20260807 - Luphia) free per5h = 10：8 + 3 > 10 → 過期方案不得再享 team 額度
-    asMock(teamQuotaUsageRepo.sumWindowUsageInTx).mockResolvedValue({
+    /**
+     * Info: (20260807 - Luphia) free per5h = 10：8 + 3 > 10 → 過期方案不得再享 team 額度。
+     * Info: (20260819 - Luphia) 過期即免費方案，而免費方案的額度是全隊共用的，
+     * 因此用量安排在全隊聚合上。
+     */
+    asMock(teamQuotaUsageRepo.sumTeamWindowUsageInTx).mockResolvedValue({
       used5h: BigInt(8),
       usedWeek: BigInt(8),
     });

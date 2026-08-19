@@ -10,7 +10,6 @@ import { resolveEffectivePlanId } from "@/services/spend.service";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { teamRepo } from "@/repositories/team.repo";
-import { resolveFreePlanMaxMembers } from "@/services/team_subscription.service";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 
 /**
@@ -131,38 +130,15 @@ export async function chargeSeatAddition(
   );
   if (effectivePlanId === TEAM_PLAN.FREE) {
     /**
-     * Info: (20260814 - Luphia) 免費版不收費，但要擋人數（PR #6652 第二輪 B-4）。
+     * Info: (20260819 - Luphia) 免費方案不收席次費，**也不再限制人數**（產品決定 20260819）。
      *
-     * 額度改為逐成員計算後，付費方案以「席次 × 單價」自然封頂，免費版沒有這個機制：
-     * 席次單價是 0，人數再多帳單都是 0，而每個人各自享有一份額度——
-     * 20 人的免費團隊就是每週 800 點的模型用量、月費零。
-     * 上限為系統設定（可後台調整），對應服務條款 §3.1「以方案頁標示為準」。
+     * 原本這裡有一道人數上限，理由不是人數而是**免費額度**：額度逐成員計算、
+     * 每位成員各自一份，於是 20 人的免費團隊就是每週 800 點的模型用量、月費零。
+     * 同一輪已把免費方案的額度改為**全隊共用一份**（見 `spendCredits`）——
+     * 加人不再產生任何額度，上限失去存在的理由，連同接受端的第二道防線一併移除。
+     *
+     * 付費方案的人數仍由「席次 × 單價」自然封頂，那條路徑完全沒有變。
      */
-    const maxMembers = await resolveFreePlanMaxMembers();
-    /**
-     * Info: (20260818 - Luphia) 佔用量要含**尚未接受的邀請**（第三輪 B-1）。
-     *
-     * 原本只數成員，於是上限可以整批繞過：只有 OWNER 一人的免費團隊連送 30 封邀請，
-     * 每一次檢查都是 `1 + 1 <= 5`，全部通過；30 人接受後團隊有 31 名成員。
-     * 上限剛加上就被繞過，而它防的正是「20 人的免費團隊、每週 800 點、月費零」。
-     *
-     * 與付費路徑同一個佔用定義（成員 + 未失效的 PENDING 邀請），
-     * 兩條路的人數才會是同一件事。
-     */
-    const [memberCount, pendingCount] = await Promise.all([
-      teamRepo.countMembers(teamId),
-      teamRepo.countPendingInvitations(teamId, nowMs),
-    ]);
-    const occupied = memberCount + pendingCount;
-    if (occupied + seats > maxMembers) {
-      logger.info("free plan member cap reached", {
-        teamId,
-        memberCount,
-        pendingCount,
-        maxMembers,
-      });
-      throw toApiError(API_ERRORS.TW_FREE_PLAN_MEMBER_LIMIT);
-    }
     return { charged: false, amount: 0, seats: 0 };
   }
 

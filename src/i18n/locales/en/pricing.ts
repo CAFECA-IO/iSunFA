@@ -88,9 +88,9 @@ export const pricing = {
       desc: "Perfect for individuals",
       features: {
         // Info: (20260815 - Luphia) 免費版人數上限（條款 §3.1 指向此標示）
-        member_limit: "Up to {{count}} team members",
+        member_limit: "Unlimited team members",
         member_limit_tooltip:
-          "Free plan quota is counted per member, so the team size is capped. Upgrade to Team or Business for more members.",
+          "The free plan's quota is a single allowance shared by the whole team (it does not grow with headcount), so team size is not capped. Upgrade to Team or Business to give every member their own quota.",
         storage: "{{gb}} GB storage",
         consults: "Max {{amount}} Consults / Month",
         consults_tooltip: "{{price}} Credits / Consult",
