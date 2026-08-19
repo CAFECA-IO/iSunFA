@@ -104,6 +104,12 @@ export const BASELINE_TIERS: ReadonlyArray<{
       // Info: (20260818 - Emily) 轉換外洩:出現就代表某一層沒吃掉它
       "反斜線逸出外洩",
       "mermaid 語法外洩",
+      /**
+       * Info: (20260819 - Emily) markdown 表格語法外洩。與 mermaid 那條同一層:
+       * 出現就代表某一張表沒被渲染成表,紙上是 `|---|---|`。
+       * 08-19 run2 實測 19 條分隔列,另外三趟都是 0 —— 非決定性,所以必須完全相同。
+       */
+      "markdown 表格語法外洩",
       "待補佔位符",
       "資料不足佔位符",
       // Info: (20260818 - Emily) open/48 的驗收:退化的次數可以變,整張消失不可以
@@ -143,6 +149,7 @@ export const BASELINE_TIERS: ReadonlyArray<{
       "log_索引缺的節",
       "log_接回折斷列",
       "log_補分隔列",
+      "log_分隔列放棄補",
       "log_補欄",
       "log_tounicode_decision",
       "log_tounicode_replaced",

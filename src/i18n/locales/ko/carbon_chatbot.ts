@@ -293,6 +293,8 @@ export const carbonChatbot = {
   // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層(屏東佔 97%,同圖畫不出比重);廠址改列小計
   chart_imported_sankey_site_totals: "사업장별 소계 (tCO2e/년, 전사 대비 비중)",
   chart_imported_sankey_ghg_mapping: "하위 코드와 GHG Protocol 범주 대조",
+  chart_imported_sankey_iso_mapping:
+    "그림의 분류 계층은 GHG 프로토콜 스코프로 표시되어 있습니다. ISO 14064-1 대응: 스코프1＝범주1, 스코프2＝범주2, 스코프3＝범주3~6. 본 보고서의 서술은 ISO 14064-1 범주 체계를 따르며, 양쪽은 동일한 배출원을 가리킵니다.",
   chart_imported_sankey_below_threshold: "비중이 작아 미표시(tCO2e/년)",
   chart_imported_sankey_organization: "전사",
   book_bind_pending_unlock:

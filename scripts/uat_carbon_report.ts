@@ -13,7 +13,7 @@ import {
   CARBON_REPORT_CHAPTERS,
   CARBON_REPORT_OUTLINE,
 } from "@/constants/carbon_report_outline";
-import { CARBON_CHART_DEFAULT_LABELS } from "@/lib/carbon_report_chart.builder";
+import { carbonChatbot as carbonChatbotZhTw } from "@/i18n/locales/zh_tw/carbon_chatbot";
 /**
  * Info: (20260818 - Emily) 兩個片語 import 自產生端的常數,不在這裡重打一份正規表示式。
  * 重打的話,文案改了而這支腳本照舊回報 ✓ —— 而它是上線判準的量尺。
@@ -332,6 +332,20 @@ const ESCAPE_LEAK = /\\[\\`*_[\]#|]/g;
 // Info: (20260814 - Emily) mermaid 語法印成文字 = 圖沒被渲染,而版面看起來還算正常
 const MERMAID_LEAK = /(sankey-beta|graph (TD|LR)\b|flowchart (TD|LR)\b|%%\{)/g;
 /**
+ * Info: (20260819 - Emily) markdown 表格語法印成文字 = 表沒被渲染成表。
+ *
+ * 與 `MERMAID_LEAK` 同一族:版面看起來還算正常,但紙上出現 `|---|---|`
+ * 與成串的管線符號。08-19 run2 實測 **1273 個管線、19 條分隔列**;
+ * 同一份輸入的另外三趟(08-18 兩趟 + 08-19 run1)都是 **0**。
+ *
+ * 這正是 `open/47` 記著「第三種異常形狀(整張表擠成一行)兩趟都沒出現,
+ * 判準因此還設計不出來」的那一種 —— 它出現了,所以判準現在設計得出來。
+ *
+ * 為什麼不抓單一個管線:客戶原文的儲存格內容本來就可能含管線,
+ * 抓單一個字元會比它要守的東西寬。分隔列與「連三個管線」是 markdown 表格才有的形狀。
+ */
+const MARKDOWN_TABLE_LEAK = /(\|\s*-{3,}\s*\||\|\s*\|\s*\|)/g;
+/**
  * Info: (20260814 - Emily) 內文引用表號:`如表 3.1`、`見表3.1`、`表 3.1 所示`。
  *
  * 後面不得再接數字或點 —— 否則「排放係數管理表 6.0.4 版」會被當成「表6.0」,
@@ -516,6 +530,7 @@ const main = async (): Promise<void> => {
   await checkCMaps(bytes);
   expectZero("反斜線逸出外洩", text.match(ESCAPE_LEAK) ?? []);
   expectZero("mermaid 語法外洩", text.match(MERMAID_LEAK) ?? []);
+  expectZero("markdown 表格語法外洩", text.match(MARKDOWN_TABLE_LEAK) ?? []);
   expectZero("待補佔位符", text.match(/待補/g) ?? []);
   expectZero("資料不足佔位符", text.match(/資料不足/g) ?? []);
 
@@ -750,18 +765,22 @@ const main = async (): Promise<void> => {
 
   // Info: (20260819 - Emily) ── 桑基圖要嘛在紙上,要嘛紙上說明它為什麼不在 ──
   /**
-   * Info: (20260819 - Emily) 判準讀 `CARBON_CHART_DEFAULT_LABELS` 而不是自己寫字串。
+   * Info: (20260819 - Emily) 判準讀 i18n 的既有文案而不是自己寫字串。
    * 自己寫一份的話,哪天有人改了圖說,這條會繼續綠著而紙上已經不同了(本尊,不是替身)。
    *
    * 「有圖」或「有說明為什麼沒圖」二者之一即可 —— 帳本沒有可用數據時
    * 圖畫不出來是正確行為,但**不能無聲**。與 `open/48` 的退化判準同一個原則:
    * 失敗要留下痕跡。兩者都沒有才是缺陷。
    */
+  /**
+   * Info: (20260819 - Emily) 同上,讀 i18n 那一端 —— 紙上印的是它。
+   * 這兩條先前讀預設文案卻過了,是因為兩份剛好同字,不是判準對。
+   */
   const sankeyTitle = squeeze(
-    CARBON_CHART_DEFAULT_LABELS.importedSankeyTitle ?? "",
+    carbonChatbotZhTw.chart_imported_sankey_title ?? "",
   );
   const sankeyNoLedger = squeeze(
-    CARBON_CHART_DEFAULT_LABELS.importedSankeyNoLedger ?? "",
+    carbonChatbotZhTw.chart_imported_sankey_no_ledger ?? "",
   );
   const sankeyPresent =
     sankeyTitle.length > 0 && squeezed.includes(sankeyTitle);
@@ -786,8 +805,19 @@ const main = async (): Promise<void> => {
    *
    * `open/53` 真修之後這條要改成「不得出現範疇」。
    */
+  /**
+   * Info: (20260819 - Emily) 判準讀 **i18n** 而不是 builder 的預設文案。
+   *
+   * 08-19 第一版讀了 `CARBON_CHART_DEFAULT_LABELS`,兩趟都紅 ——
+   * 因為 `use_carbon_chat.ts` 的 `chartLabels` 是完整的物件字面值,
+   * 沒有 spread 預設,紙上印的是 i18n 那一份。判準讀錯了那一端,
+   * 就會在「文案有印」與「文案沒印」兩種情況下都紅,分不出是哪一種。
+   *
+   * 這與 `importedSankeyTitle` 那條的差別:標題的 i18n 與預設剛好同字,
+   * 所以那條沒被抓到 —— 那是巧合,不是判準對。
+   */
   const isoMappingNote = squeeze(
-    CARBON_CHART_DEFAULT_LABELS.importedSankeyIsoMapping ?? "",
+    carbonChatbotZhTw.chart_imported_sankey_iso_mapping ?? "",
   );
   const scopeWordAppears = squeezed.includes("範疇");
   expectZero(
@@ -1047,6 +1077,13 @@ const checkLog = (log: string, text?: string): void => {
   }
 
   snapshot.log_補分隔列 = count(/source table divider inserted/g);
+  /**
+   * Info: (20260819 - Emily) 補分隔列**沒有**補的次數(一致列上面還有表格列)。
+   *
+   * 非零代表有原文表格因為表頭形狀壞掉而被刻意放棄修補 —— 那一張接下來會被
+   * 驗證器擋掉,所以 `log_丟表` 也會非零。兩條一起看才知道「為什麼少一張表」。
+   */
+  snapshot.log_分隔列放棄補 = count(/source table divider skipped/g);
   snapshot.log_接回折斷列 = count(/source table rows rejoined/g);
   snapshot.log_補欄 = count(/source table header widened/g);
   record(
