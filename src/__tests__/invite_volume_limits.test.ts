@@ -8,6 +8,11 @@ import {
 } from "@/services/team_invitation.service";
 import { teamRepo } from "@/repositories/team.repo";
 import { systemSettingService } from "@/services/system_setting.service";
+import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
+import {
+  TEAM_PLAN,
+  TEAM_SUBSCRIPTION_STATUS,
+} from "@/constants/subscription_quota";
 import { SystemSettingKey } from "@/constants/system_setting";
 import {
   DEFAULT_TEAM_INVITE_DAILY_LIMIT,
@@ -37,6 +42,14 @@ jest.mock("@/services/system_setting.service", () => ({
   systemSettingService: { get: jest.fn(async () => undefined) },
 }));
 
+/**
+ * Info: (20260819 - Luphia) 冷卻只對免費方案生效（產品決定 20260819），
+ * 因此閘門會讀訂閱。預設查無訂閱＝免費方案。
+ */
+jest.mock("@/repositories/team_subscription.repo", () => ({
+  teamSubscriptionRepo: { getByTeamId: jest.fn(async () => null) },
+}));
+
 jest.mock("@/lib/utils/logger", () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
@@ -53,6 +66,7 @@ beforeEach(() => {
   asMock(teamRepo.countInvitationsCreatedSince).mockResolvedValue(0);
   asMock(teamRepo.findLastInvitationSentAt).mockResolvedValue(null);
   asMock(systemSettingService.get).mockResolvedValue(undefined);
+  asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(null);
 });
 
 describe("assertInviteVolumeWithinLimits", () => {
@@ -254,5 +268,83 @@ describe("getInviteLimits", () => {
       sentToday: 7,
       dailyLimit: DEFAULT_TEAM_INVITE_DAILY_LIMIT,
     });
+  });
+});
+
+/**
+ * Info: (20260819 - Luphia) 冷卻**只對免費方案**（產品決定 20260819）。
+ *
+ * 三道量控的理由是「免費團隊不收席次費，寄信量沒有經濟上的煞車」。而冷卻是三道裡
+ * 對付費團隊最痛的一道：60 席的公司一次邀 60 人，每分鐘一封就是**花一小時**，
+ * 而那些席次的錢已經付了。
+ *
+ * 兩道總量上限**維持一律套用**——帳號被盜時付費團隊反而是更好的跳板（有卡、
+ * 有信譽），不該完全沒有上界。因此這一組同時驗「冷卻免除」與「總量仍在」。
+ */
+describe("冷卻只對免費方案", () => {
+  const JUST_SENT = new Date(NOW_MS - 1_000);
+  const ACTIVE_PAID = {
+    planId: TEAM_PLAN.TEAM,
+    status: TEAM_SUBSCRIPTION_STATUS.ACTIVE,
+    currentPeriodEnd: new Date(NOW_MS + 86_400_000),
+  };
+
+  it("付費團隊剛寄過也不受冷卻", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(ACTIVE_PAID);
+    asMock(teamRepo.findLastInvitationSentAt).mockResolvedValue(JUST_SENT);
+
+    await expect(
+      assertInviteVolumeWithinLimits("team-1", NOW_MS),
+    ).resolves.toBeUndefined();
+  });
+
+  // Info: (20260819 - Luphia) 付費團隊連查都不查——那筆查詢只有免費方案需要
+  it("付費團隊不查最近一封的時間", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(ACTIVE_PAID);
+
+    await assertInviteVolumeWithinLimits("team-1", NOW_MS);
+
+    expect(asMock(teamRepo.findLastInvitationSentAt)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260819 - Luphia) 免除的只有冷卻。兩道總量上限對付費團隊照樣成立——
+   * 這一條與上面那條合起來才說得完整：放寬的是哪一道、沒放寬的是哪兩道。
+   */
+  it("付費團隊仍受兩道總量上限", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(ACTIVE_PAID);
+    asMock(teamRepo.countPendingInvitations).mockResolvedValue(
+      DEFAULT_TEAM_PENDING_INVITE_LIMIT,
+    );
+
+    await expect(
+      assertInviteVolumeWithinLimits("team-1", NOW_MS),
+    ).rejects.toMatchObject({ code: "TW000023" });
+  });
+
+  /**
+   * Info: (20260819 - Luphia) 訂閱過期＝免費方案，冷卻回來。
+   * 否則「讓訂閱過期」就成了免除冷卻的方法。
+   */
+  it("訂閱已過期的團隊仍受冷卻", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+      ...ACTIVE_PAID,
+      currentPeriodEnd: new Date(NOW_MS - 86_400_000),
+    });
+    asMock(teamRepo.findLastInvitationSentAt).mockResolvedValue(JUST_SENT);
+
+    await expect(
+      assertInviteVolumeWithinLimits("team-1", NOW_MS),
+    ).rejects.toMatchObject({ code: "TW000027" });
+  });
+
+  // Info: (20260819 - Luphia) 畫面也不該對付費團隊顯示倒數
+  it("付費團隊的 invite_limits 不回冷卻", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(ACTIVE_PAID);
+    asMock(teamRepo.findLastInvitationSentAt).mockResolvedValue(JUST_SENT);
+
+    const view = await getInviteLimits("team-1", NOW_MS);
+
+    expect(view.cooldownSecondsRemaining).toBe(0);
   });
 });
