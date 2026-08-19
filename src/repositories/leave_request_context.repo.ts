@@ -189,7 +189,13 @@ export class LeaveRequestContextRepository implements ILeaveRequestContext {
         workDate: true,
         dayType: true,
         shiftPattern: {
-          select: { requiredWorkMinutes: true, breakMinutes: true },
+          select: {
+            requiredWorkMinutes: true,
+            breakMinutes: true,
+            // Info: (20260819 - Julian) 連續時段的首末日要靠它切區間（見 `leave_span.ts`）
+            coreStartMinute: true,
+            coreEndMinute: true,
+          },
         },
       },
     });
@@ -206,6 +212,13 @@ export class LeaveRequestContextRepository implements ILeaveRequestContext {
               : {
                   requiredWorkMinutes: row.shiftPattern.requiredWorkMinutes,
                   breakMinutes: row.shiftPattern.breakMinutes,
+                },
+          core:
+            row.shiftPattern === null
+              ? null
+              : {
+                  startMinute: row.shiftPattern.coreStartMinute,
+                  endMinute: row.shiftPattern.coreEndMinute,
                 },
         },
       ]),

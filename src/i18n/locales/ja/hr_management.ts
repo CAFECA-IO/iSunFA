@@ -775,6 +775,10 @@ export const hrManagement = {
   },
   // Info: (20260817 - Julian) 組込み休暇種別。`LEAVE_POLICY_I18N_KEY` に対応。テナント独自の休暇は `LeavePolicy.name` を表示
   leave: {
+    field_start_at: "開始（日付と時刻）",
+    field_end_at: "終了（日付と時刻）",
+    span_selected:
+      "計 {{hours}} 時間（休憩・非勤務日を除く前の値。実際の控除は下の試算をご確認ください）",
     detail_title: "申請の詳細",
     detail_reason: "休暇理由",
     detail_reason_undecryptable:
@@ -787,8 +791,6 @@ export const hrManagement = {
     detail_concurrency_warned:
       "申請時点で同期間に他の同僚の休暇があり、申請者には通知済みです",
     segment_custom: "時間指定",
-    field_custom_start: "開始",
-    field_custom_end: "終了",
     unit_hint:
       "最小単位は {{minutes}} 分です。満たない場合は 1 単位として計算されます",
     preview_rounded:
@@ -810,7 +812,6 @@ export const hrManagement = {
 
     form_title: "申請の作成",
     field_policy: "休暇種別",
-    field_dates: "取得日",
     field_reason: "理由",
     field_reason_placeholder: "例：通院、家庭の事情",
     field_reason_encrypted:
@@ -818,8 +819,6 @@ export const hrManagement = {
     segment_full: "終日",
     segment_morning: "午前",
     segment_afternoon: "午後",
-    action_add_date: "＋ 日付を追加",
-    action_remove_date: "削除",
     action_submit: "申請する",
 
     preview_total: "合計 {{days}} 日（{{minutes}} 分）",
@@ -872,7 +871,7 @@ export const hrManagement = {
     error_unit_not_aligned:
       "この休暇種別の最小単位に合っていません。時間帯を調整してください",
     error_non_working_day:
-      "選択した日は出勤日ではないため、申請の必要はありません（残日数も減りません）",
+      "選択した期間に対象となる勤務時間がありません（出勤日でない、または勤務時間外）。申請の必要はなく、残日数も減りません",
     error_chain_unresolved:
       "承認ルートを展開できません。直属の上長と承認ルールの設定を人事にご確認ください",
     error_day_already_active: "この日には有効な休暇申請がすでにあります",
@@ -906,6 +905,9 @@ export const hrManagement = {
   },
   // Info: (20260818 - Julian) 残業モジュール（L24–L30）。区分ラベルは `OvertimePremiumTier` をキーとします
   overtime: {
+    field_start_at: "開始（日付と時刻）",
+    field_end_at: "終了（日付と時刻）",
+    span_selected: "計 {{hours}} 時間（実際の認定は打刻記録に基づきます）",
     title: "自分の残業",
     approval_page_title: "残業承認",
     loading: "読み込み中…",
@@ -931,10 +933,6 @@ export const hrManagement = {
     tier_holiday_double: "休日（倍額支給）",
     tier_emergency_double: "天災事変（倍額支給）",
     form_title: "残業申請の作成",
-    field_date: "対象日",
-    field_start: "開始",
-    field_end: "終了",
-    field_time_hint: "終了時刻が開始時刻より前の場合は翌日として扱います。",
     field_filing: "申請区分",
     filing_advance: "事前申請",
     filing_post_hoc: "事後申請",

@@ -1,8 +1,6 @@
 import { z } from "zod";
 import { isoDateSchema } from "@/validators/attendance";
-import { LeaveDaySegment } from "@/constants/leave_policy";
 import { LEAVE_REASON_MAX_LENGTH } from "@/constants/leave_policy";
-import { MINUTES_PER_DAY } from "@/constants/attendance";
 
 /**
  * Info: (20260817 - Julian) 請假送出、試算與簽核的 Payload 驗證。
@@ -15,67 +13,21 @@ import { MINUTES_PER_DAY } from "@/constants/attendance";
  */
 
 /**
- * Info: (20260817 - Julian) 當日 00:00 起算的分鐘數，>= 1440 表次日。
- * 上界取兩日：跨夜班的下班時刻最多落在次日，與 `ShiftPattern` 同型別同語意。
- */
-const minuteOfDaySchema = z
-  .number()
-  .int()
-  .min(0)
-  .max(MINUTES_PER_DAY * 2 - 1);
-
-/**
- * Info: (20260817 - Julian) 一天的請假。
+ * Info: (20260819 - Julian) 「日期＋時刻」的牆上時鐘表示：`"2026-08-19T08:00"`。
  *
- * `startMinute` / `endMinute` **只在 CUSTOM 有意義**，用 superRefine 表達
- * 而非做成兩個 schema 的聯集：後者會讓錯誤訊息指向「沒有符合任何一種形狀」，
- * 而使用者要的是「你選了自訂時段但沒填起訖」。
+ * 用正則而不是 `z.string().datetime()`：後者要求帶時區的完整 ISO 8601，
+ * 而這一欄刻意**不帶時區**（見下方 `startAt` 的說明）。
+ * 字串比較即時序比較 —— 這也是 `.refine(endAt > startAt)` 成立的理由。
+ *
+ * Info: (20260819 - Julian) 它取代的是 `leaveDayInputSchema`（已移除）。
+ * 那一支驗的是**逐日**的請假輸入，而那個形狀不再由前端送上來 ——
+ * 現在收的是一段連續時段，逐日由 `expandLeaveSpan` 在 service 展開。
+ * 留著一支沒有任何 payload 會經過的 schema，讀的人會以為那條路還在
+ * （同 review B8 的教訓：宣稱守著某件事的東西，必須真的守著）。
  */
-export const leaveDayInputSchema = z
-  .object({
-    workDate: isoDateSchema,
-    segment: z.enum([
-      LeaveDaySegment.FULL,
-      LeaveDaySegment.MORNING,
-      LeaveDaySegment.AFTERNOON,
-      LeaveDaySegment.CUSTOM,
-    ]),
-    startMinute: minuteOfDaySchema.optional(),
-    endMinute: minuteOfDaySchema.optional(),
-  })
-  .superRefine((value, ctx) => {
-    const isCustom = value.segment === LeaveDaySegment.CUSTOM;
-    const hasRange =
-      value.startMinute !== undefined && value.endMinute !== undefined;
-
-    if (isCustom && !hasRange) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "CUSTOM segment requires startMinute and endMinute",
-        path: ["startMinute"],
-      });
-      return;
-    }
-    // Info: (20260817 - Julian) 反方向也擋：留著一組不會被讀的起訖，看起來像設定卻沒有效果
-    if (!isCustom && (value.startMinute !== undefined || value.endMinute !== undefined)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "startMinute and endMinute are only meaningful for CUSTOM",
-        path: ["startMinute"],
-      });
-      return;
-    }
-    if (
-      hasRange &&
-      (value.endMinute as number) <= (value.startMinute as number)
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "endMinute must be after startMinute",
-        path: ["endMinute"],
-      });
-    }
-  });
+export const localDateTimeSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d$/);
 
 /**
  * Info: (20260817 - Julian) 送出／試算共用同一個輸入形狀。
@@ -86,16 +38,38 @@ export const leaveDayInputSchema = z
  * `reason` 去除空白後仍須有內容：一張沒有理由的假單，事後沒有人能判斷
  * 它合不合理（同 `LeaveRequest.reason` 非空的既有理由）。
  */
-export const leaveRequestCreateSchema = z.object({
-  leavePolicyId: z.string().min(1),
-  reason: z.string().trim().min(1).max(LEAVE_REASON_MAX_LENGTH),
-  /**
-   * Info: (20260817 - Julian) 逐日展開由前端送上來，而不是送起迄由後端展開：
-   * 一趟請假中間可能夾著例假日與國定假日，哪幾天要請是使用者的決定，
-   * 不是一段區間能表達的（同 `LeaveDay` 拆成逐日的既有理由）。
-   */
-  days: z.array(leaveDayInputSchema).min(1).max(62),
-});
+export const leaveRequestCreateSchema = z
+  .object({
+    leavePolicyId: z.string().min(1),
+    reason: z.string().trim().min(1).max(LEAVE_REASON_MAX_LENGTH),
+    /**
+     * Info: (20260819 - Julian) 起訖各是一個「日期＋時刻」（`"2026-08-19T08:00"`）。
+     *
+     * ## 為什麼改掉逐日展開
+     *
+     * 原本這裡收的是 `days: [{ workDate, segment, startMinute, endMinute }]`，
+     * 註解寫著「逐日展開由前端送上來…哪幾天要請是使用者的決定」。
+     * 那在「每天都請上午半天」的用法下成立，但這套系統服務的是**工地**：
+     * 每個人的工時不同、上下班時間不同，而「我從 8/19 早上八點走到 8/21 下午五點」
+     * 是一段**連續**的時間，不是三個各自獨立的半天。
+     *
+     * 改成起訖之後，展開必須在伺服器做 —— 首日要請到當天班別結束為止，
+     * 而前端不知道那個人那一天的班到幾點。硬讓它猜，症狀是首日多扣或少扣
+     * 半小時，而畫面上看起來完全正常（見 `leave_span.ts`）。
+     *
+     * ## 為什麼不收帶時區的 ISO 8601
+     *
+     * 使用者填的是**牆上時鐘**。收 `2026-08-19T08:00:00+08:00` 會讓
+     * 「時區換算」這件事出現在一個它沒有意義的地方 —— 政策時區由伺服器決定
+     * （`DEMO_TIME_ZONE`），而不是由送單的裝置決定。
+     */
+    startAt: localDateTimeSchema,
+    endAt: localDateTimeSchema,
+  })
+  .refine((value) => value.endAt > value.startAt, {
+    message: "endAt must be after startAt",
+    path: ["endAt"],
+  });
 
 // Info: (20260817 - Julian) 簽核與駁回。`comment` 對駁回特別有意義，但不強制——強制填理由才能駁回，本身就是一種壓力
 export const leaveDecisionSchema = z.object({
@@ -121,7 +95,6 @@ export const leaveRequestListQuerySchema = z
     { message: "from must not be after to", path: ["from"] },
   );
 
-export type ILeaveDayInputPayload = z.infer<typeof leaveDayInputSchema>;
 export type ILeaveRequestCreatePayload = z.infer<
   typeof leaveRequestCreateSchema
 >;

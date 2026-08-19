@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useCallback, useEffect, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { Clock4, Loader2, Plus, Send } from "lucide-react";
 import {
   OvertimeCompensationMode,
@@ -8,6 +8,13 @@ import {
   OVERTIME_REASON_MAX_LENGTH,
 } from "@/constants/overtime";
 import { OVERTIME_API } from "@/constants/overtime_api";
+import { MINUTES_PER_DAY } from "@/constants/attendance";
+import {
+  DEFAULT_SPAN_MINUTES,
+  daysBetweenIso,
+  parseLocalDateTime,
+  shiftLocalDateTime,
+} from "@/lib/leave_span";
 import {
   IOvertimeRequestSummary,
   IOvertimeSummaryView,
@@ -54,11 +61,6 @@ const filingTypeFor = (workDate: string, today: string): OvertimeFilingType =>
   workDate > today ? OvertimeFilingType.ADVANCE : OvertimeFilingType.POST_HOC;
 
 /** Info: (20260818 - Julian) "HH:MM" → 當日 00:00 起算的分鐘數 */
-const toMinuteOfDay = (value: string): number | null => {
-  const matched = /^(\d{2}):(\d{2})$/.exec(value);
-  if (matched === null) return null;
-  return Number(matched[1]) * 60 + Number(matched[2]);
-};
 
 const MyOvertimePageBody: FC = () => {
   const { t } = useTranslation();
@@ -78,9 +80,54 @@ const MyOvertimePageBody: FC = () => {
   );
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [workDate, setWorkDate] = useState(() => localIsoDate(new Date()));
-  const [startTime, setStartTime] = useState("18:00");
-  const [endTime, setEndTime] = useState("20:00");
+  /**
+   * Info: (20260819 - Julian) 起訖各是一個「日期＋時刻」。
+   *
+   * 先前是「一個日期 + 兩個時刻」，跨夜靠「結束早於開始即視為隔日」這條
+   * 隱含規則 —— 使用者要在心裡完成那個推論，而工地的夜間搶修就是跨夜的。
+   * 現在把日期直接寫在兩端：`18:00 → 隔天 02:00` 是兩個看得見的日期，
+   * 不是一條要記住的規則。
+   *
+   * 落庫的形狀沒有變（`workDate` + 兩個分鐘數、>= 1440 表次日），
+   * 換算在 `payload` 那裡做一次。
+   */
+  const [startAt, setStartAt] = useState(
+    () => `${localIsoDate(new Date())}T18:00`,
+  );
+  const [endAt, setEndAt] = useState(
+    () => `${localIsoDate(new Date())}T20:00`,
+  );
+
+  /**
+   * Info: (20260819 - Julian) 「起」不設上界，「迄」的下界跟著「起」走。
+   *
+   * ## 為什麼「起」不限制
+   *
+   * 兩邊都限制的話，使用者不小心把日期選錯（例如選到下個月），就必須
+   * **把兩個 picker 都清掉**才能重選 —— 「起」被「迄」擋在上界之前、
+   * 「迄」被「起」擋在下界之後，兩個互相咬住。那是一個為了防止一種錯誤，
+   * 而製造出另一種更難脫身的錯誤。
+   *
+   * 「起」可以自由改，因此它每改一次就把「迄」帶到一小時後 ——
+   * 使用者重選日期時不必再回頭修「迄」，而那個值本來就已經被上一次的
+   * 選擇弄成不合理的了。
+   *
+   * ## 為什麼「迄」仍然限制
+   *
+   * 它只有下界（`min = 起`），而下界不會把人咬住：使用者永遠可以先改「起」
+   * 把下界移開。單向的約束沒有死結。
+   *
+   * ## 送出端仍然擋
+   *
+   * `min` 只約束選單，部分瀏覽器允許直接鍵入超出範圍的值 ——
+   * `span === null` 時送出鈕按不下去。**護欄與提示是兩件事**，
+   * 畫面上不提示不等於放行。
+   */
+  const pickStart = (value: string): void => {
+    setStartAt(value);
+    setEndAt(shiftLocalDateTime(value, DEFAULT_SPAN_MINUTES) ?? "");
+  };
+
   const [filingType, setFilingType] = useState<OvertimeFilingType>(() =>
     filingTypeFor(localIsoDate(new Date()), localIsoDate(new Date())),
   );
@@ -125,14 +172,39 @@ const MyOvertimePageBody: FC = () => {
    * Info: (20260818 - Julian) 改日期就重推申請時序 —— 它是那個日期的事實，
    * 不是使用者上一次的選擇。改完仍可手動改回來（見 `filingTypeFor`）。
    */
+  // Info: (20260819 - Julian) 工作日就是**起**的那一天；跨夜的加班仍屬起始日
+  const workDate = startAt.slice(0, 10);
+
   useEffect(() => {
     setFilingType(filingTypeFor(workDate, localIsoDate(new Date())));
   }, [workDate]);
 
+  /**
+   * Info: (20260819 - Julian) 兩個 datetime 換算成落庫的形狀。
+   *
+   * `requestedEndMinute >= 1440` 表次日 —— 跨越幾天就加幾個 1440，
+   * 與 `ShiftPattern` 同型別同語意。使用者填的永遠是牆上時鐘。
+   */
+  const span = useMemo(() => {
+    const start = parseLocalDateTime(startAt);
+    const end = parseLocalDateTime(endAt);
+    if (start === null || end === null) return null;
+
+    const dayOffset = daysBetweenIso(start.workDate, end.workDate);
+    if (dayOffset === null || dayOffset < 0) return null;
+
+    const requestedEndMinute = dayOffset * MINUTES_PER_DAY + end.minuteOfDay;
+    if (requestedEndMinute <= start.minuteOfDay) return null;
+
+    return {
+      workDate: start.workDate,
+      requestedStartMinute: start.minuteOfDay,
+      requestedEndMinute,
+    };
+  }, [startAt, endAt]);
+
   const submit = async () => {
-    const startMinute = toMinuteOfDay(startTime);
-    const endMinute = toMinuteOfDay(endTime);
-    if (startMinute === null || endMinute === null) return;
+    if (span === null) return;
 
     setSubmitting(true);
     setSubmitError(null);
@@ -140,17 +212,9 @@ const MyOvertimePageBody: FC = () => {
       await request(OVERTIME_API.REQUEST, {
         method: "POST",
         body: JSON.stringify({
-          workDate,
+          ...span,
           filingType,
           compensationMode,
-          requestedStartMinute: startMinute,
-          /**
-           * Info: (20260818 - Julian) 結束早於（或等於）開始即視為隔日。
-           * 分鐘數 >= 1440 表次日，與 `ShiftPattern` 同型別同語意 ——
-           * 換算在這裡做一次，使用者填的永遠是牆上時鐘。
-           */
-          requestedEndMinute:
-            endMinute <= startMinute ? endMinute + 1440 : endMinute,
           reason,
         }),
       });
@@ -183,12 +247,11 @@ const MyOvertimePageBody: FC = () => {
     (filingType === OvertimeFilingType.POST_HOC &&
       workDate > localIsoDate(new Date()));
 
-  // Info: (20260818 - Julian) 時刻空白時 `toMinuteOfDay` 會回 null，送出鈕會變成按了沒反應
-  const canSubmit =
-    !submitting &&
-    reason.trim().length > 0 &&
-    startTime !== "" &&
-    endTime !== "";
+  /**
+   * Info: (20260819 - Julian) 起訖填不完整或迄不晚於起時 `span` 為 null，
+   * 送出鈕就按不下去 —— 送了必定被 validator 或不變式擋。
+   */
+  const canSubmit = !submitting && reason.trim().length > 0 && span !== null;
 
   if (loading) {
     return (
@@ -242,42 +305,51 @@ const MyOvertimePageBody: FC = () => {
         title={t("hr_management.overtime.form_title")}
         icon={<Clock4 className="size-4 text-sky-500" />}
       >
+        {/**
+         * Info: (20260819 - Julian) 起／迄各一個「日期＋時刻」。
+         *
+         * 跨夜不再靠「結束早於開始即視為隔日」這條隱含規則 ——
+         * 18:00 → 隔天 02:00 是兩個看得見的日期。工地的夜間搶修就是跨夜的，
+         * 而要使用者在心裡完成那個推論，是把系統的方便當成他的責任。
+         */}
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-xs text-gray-600">
-            {t("hr_management.overtime.field_date")}
+            {t("hr_management.overtime.field_start_at")}
             <input
-              type="date"
-              value={workDate}
-              onChange={(event) => setWorkDate(event.target.value)}
+              type="datetime-local"
+              value={startAt}
+              onChange={(event) => pickStart(event.target.value)}
               className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
             />
           </label>
-
-          <div className="flex items-end gap-2">
-            <label className="flex flex-1 flex-col gap-1 text-xs text-gray-600">
-              {t("hr_management.overtime.field_start")}
-              <input
-                type="time"
-                value={startTime}
-                onChange={(event) => setStartTime(event.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
-              />
-            </label>
-            <label className="flex flex-1 flex-col gap-1 text-xs text-gray-600">
-              {t("hr_management.overtime.field_end")}
-              <input
-                type="time"
-                value={endTime}
-                onChange={(event) => setEndTime(event.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
-              />
-            </label>
-          </div>
+          <label className="flex flex-col gap-1 text-xs text-gray-600">
+            {t("hr_management.overtime.field_end_at")}
+            <input
+              type="datetime-local"
+              value={endAt}
+              min={startAt === "" ? undefined : startAt}
+              onChange={(event) => setEndAt(event.target.value)}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
+            />
+          </label>
         </div>
 
-        <p className="mt-1 text-xs text-gray-400">
-          {t("hr_management.overtime.field_time_hint")}
-        </p>
+        {/**
+         * Info: (20260819 - Julian) 選了多長，當場說出來。
+         *
+         * 這是申請的時數，不是**認列**的 —— 認列是 `min(核准, 打卡事實)`，
+         * 核准當下才定得下來。先講這一個，是因為它是使用者唯一能直接驗算的數字。
+         */}
+        {span !== null && (
+          <p className="mt-1 text-xs text-gray-500">
+            {t("hr_management.overtime.span_selected", {
+              hours: (
+                (span.requestedEndMinute - span.requestedStartMinute) /
+                60
+              ).toFixed(1),
+            })}
+          </p>
+        )}
 
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-xs text-gray-600">

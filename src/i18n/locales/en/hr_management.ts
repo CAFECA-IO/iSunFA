@@ -790,6 +790,9 @@ export const hrManagement = {
   },
   // Info: (20260817 - Julian) Built-in leave policy labels, keyed by `LEAVE_POLICY_I18N_KEY`. Tenant-defined policies fall back to `LeavePolicy.name`
   leave: {
+    field_start_at: "From (date and time)",
+    field_end_at: "To (date and time)",
+    span_selected: "{{hours}} hours selected (before breaks and non-working days; see the preview below for what is actually deducted)",
     detail_title: "Request detail",
     detail_reason: "Reason",
     detail_reason_undecryptable:
@@ -802,8 +805,6 @@ export const hrManagement = {
     detail_concurrency_warned:
       "Others were already on leave during this period when the request was submitted; the requester was warned",
     segment_custom: "Custom hours",
-    field_custom_start: "From",
-    field_custom_end: "To",
     unit_hint:
       "Minimum unit {{minutes}} min; anything shorter counts as one full unit.",
     preview_rounded:
@@ -825,7 +826,6 @@ export const hrManagement = {
 
     form_title: "New request",
     field_policy: "Leave type",
-    field_dates: "Dates",
     field_reason: "Reason",
     field_reason_placeholder: "e.g. follow-up appointment, family matter",
     field_reason_encrypted:
@@ -833,8 +833,6 @@ export const hrManagement = {
     segment_full: "Full day",
     segment_morning: "Morning",
     segment_afternoon: "Afternoon",
-    action_add_date: "+ Add a day",
-    action_remove_date: "Remove",
     action_submit: "Submit request",
 
     preview_total: "{{days}} day(s) total ({{minutes}} min)",
@@ -888,7 +886,7 @@ export const hrManagement = {
     error_unit_not_aligned:
       "The duration does not match this leave type's minimum unit. Adjust the segment.",
     error_non_working_day:
-      "That date is not a working day, so no leave is needed (nothing would be deducted).",
+      "The selected period contains no working time (not a working day, or outside shift hours), so no leave is needed and nothing would be deducted.",
     error_chain_unresolved:
       "The approval chain could not be resolved. Ask HR to check your manager and the approval rules.",
     error_day_already_active: "An active leave already exists on that date.",
@@ -922,6 +920,9 @@ export const hrManagement = {
   },
   // Info: (20260818 - Julian) Overtime module (L24-L30). Tier labels are keyed by `OvertimePremiumTier`
   overtime: {
+    field_start_at: "From (date and time)",
+    field_end_at: "To (date and time)",
+    span_selected: "{{hours}} hours requested (recognition follows the punch record)",
     title: "My overtime",
     approval_page_title: "Overtime approvals",
     loading: "Loading…",
@@ -948,11 +949,6 @@ export const hrManagement = {
     tier_holiday_double: "Holiday (double pay)",
     tier_emergency_double: "Emergency (double pay)",
     form_title: "New overtime request",
-    field_date: "Work date",
-    field_start: "From",
-    field_end: "To",
-    field_time_hint:
-      "If the end time is earlier than the start, it is read as the next day.",
     field_filing: "Filing",
     filing_advance: "In advance",
     filing_post_hoc: "After the fact",

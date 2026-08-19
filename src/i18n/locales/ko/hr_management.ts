@@ -779,6 +779,10 @@ export const hrManagement = {
   },
   // Info: (20260817 - Julian) 기본 휴가 종류. `LEAVE_POLICY_I18N_KEY`에 대응. 테넌트가 정의한 휴가는 `LeavePolicy.name`으로 표시
   leave: {
+    field_start_at: "시작(날짜 및 시각)",
+    field_end_at: "종료(날짜 및 시각)",
+    span_selected:
+      "총 {{hours}}시간(휴게·비근무일 제외 전 값. 실제 차감은 아래 시산 참고)",
     detail_title: "신청 상세",
     detail_reason: "휴가 사유",
     detail_reason_undecryptable:
@@ -791,8 +795,6 @@ export const hrManagement = {
     detail_concurrency_warned:
       "신청 시점에 같은 기간 다른 동료의 휴가가 있었고 신청자에게 안내되었습니다",
     segment_custom: "시간 지정",
-    field_custom_start: "시작",
-    field_custom_end: "종료",
     unit_hint: "최소 단위는 {{minutes}}분이며, 미만은 1단위로 계산됩니다",
     preview_rounded:
       "선택한 시간은 {{raw}}분이지만 최소 단위에 따라 {{minutes}}분으로 계산됩니다",
@@ -813,7 +815,6 @@ export const hrManagement = {
 
     form_title: "신청서 작성",
     field_policy: "휴가 종류",
-    field_dates: "사용일",
     field_reason: "사유",
     field_reason_placeholder: "예: 재진, 집안 사정",
     field_reason_encrypted:
@@ -821,8 +822,6 @@ export const hrManagement = {
     segment_full: "종일",
     segment_morning: "오전",
     segment_afternoon: "오후",
-    action_add_date: "＋ 날짜 추가",
-    action_remove_date: "삭제",
     action_submit: "신청하기",
 
     preview_total: "총 {{days}}일 ({{minutes}}분)",
@@ -875,7 +874,7 @@ export const hrManagement = {
     error_unit_not_aligned:
       "이 휴가 종류의 최소 단위와 맞지 않습니다. 시간대를 조정하세요",
     error_non_working_day:
-      "선택한 날짜는 근무일이 아니므로 휴가가 필요하지 않습니다(잔여 일수도 차감되지 않습니다)",
+      "선택한 기간에 해당하는 근무 시간이 없습니다(근무일이 아니거나 근무 시간 외). 휴가가 필요하지 않으며 잔여 일수도 차감되지 않습니다",
     error_chain_unresolved:
       "결재선을 만들 수 없습니다. 직속 상급자와 결재 규칙 설정을 인사팀에 확인하세요",
     error_day_already_active: "해당 날짜에 이미 유효한 휴가 신청이 있습니다",
@@ -909,6 +908,9 @@ export const hrManagement = {
   },
   // Info: (20260818 - Julian) 초과근무 모듈(L24–L30). 구간 라벨은 `OvertimePremiumTier`를 키로 사용합니다
   overtime: {
+    field_start_at: "시작(날짜 및 시각)",
+    field_end_at: "종료(날짜 및 시각)",
+    span_selected: "총 {{hours}}시간(실제 인정은 출퇴근 기록 기준)",
     title: "내 초과근무",
     approval_page_title: "초과근무 승인",
     loading: "불러오는 중…",
@@ -934,10 +936,6 @@ export const hrManagement = {
     tier_holiday_double: "휴일(2배 지급)",
     tier_emergency_double: "천재지변(2배 지급)",
     form_title: "초과근무 신청",
-    field_date: "근무일",
-    field_start: "시작",
-    field_end: "종료",
-    field_time_hint: "종료 시각이 시작 시각보다 이르면 다음 날로 처리합니다.",
     field_filing: "신청 시점",
     filing_advance: "사전 신청",
     filing_post_hoc: "사후 신청",

@@ -21,6 +21,12 @@ export interface ILeaveAuditTrail {
 import { randomUUID } from "crypto";
 import { encryptPii } from "@/lib/hr_pii_crypto";
 import { AppError } from "@/lib/utils/error";
+import {
+  datesBetween,
+  expandLeaveSpan,
+  LeaveSpanError,
+  mustParseLocalDateTime,
+} from "@/lib/leave_span";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
 import { WorkDayType } from "@/constants/attendance";
@@ -47,7 +53,9 @@ import { leaveRequestRepo } from "@/repositories/leave_request.repo";
 import { leaveRequestContextRepo } from "@/repositories/leave_request_context.repo";
 import {
   IApprovalChainResolution,
+  ILeaveDayInput,
   ILeaveDayPlan,
+  ILeaveDaySchedule,
   ILeaveRequestContext,
   ILeaveRequestInput,
   ILeaveRequestDetail,
@@ -587,33 +595,92 @@ export class LeaveRequestService {
   }) {
     const { accountBookId, employeeId, input } = params;
 
-    if (input.days.length === 0) {
+    const policy = await this.requirePolicy(accountBookId, input.leavePolicyId);
+
+    /**
+     * Info: (20260819 - Julian) 連續時段的展開在**這裡**，不在前端。
+     *
+     * 需求是「起 8/19 08:00、迄 8/21 17:00」這樣一段連續時間，而首日要請到
+     * 當天班別結束為止 —— 前端不知道那個人那一天的班到幾點。因此先撈班表，
+     * 再把區間切成逐日（`expandLeaveSpan`）。
+     *
+     * 兩趟查詢是刻意的：日期範圍由起訖字串就算得出來（不需要班表），
+     * 而切區間需要班表。合成一趟會讓 `expandLeaveSpan` 變成一支會查 DB 的
+     * 函式，那就沒有辦法在測試裡完整重現它（同引擎不查 DB 的既有邊界）。
+     */
+    let spanDates: string[];
+    try {
+      spanDates = datesBetween(
+        mustParseLocalDateTime(input.startAt).workDate,
+        mustParseLocalDateTime(input.endAt).workDate,
+      );
+    } catch {
       throw new AppError(API_ERRORS.VA_INVALID_INPUT_DATA);
     }
 
-    const policy = await this.requirePolicy(accountBookId, input.leavePolicyId);
-    const workDates = input.days.map((day) => day.workDate);
     const schedules = await this.context.findSchedules({
       accountBookId,
       employeeId,
-      workDates,
+      workDates: spanDates,
     });
 
-    const plan: ILeaveDayPlan[] = input.days.map((day) => {
-      const schedule = schedules[day.workDate];
-      /**
-       * Info: (20260817 - Julian) 沒有排班或不是上班日的日子不能請假。
-       *
-       * 在例假日請假不會產生任何效果（判定引擎看非 WORK 就回 OFF_DAY），
-       * 但它會扣掉額度 —— 使用者付出了代價卻什麼也沒換到。
-       */
-      if (
-        schedule === undefined ||
-        schedule.dayType !== WorkDayType.WORK ||
-        schedule.shift === null
-      ) {
-        throw new AppError(API_ERRORS.VA_LEAVE_ON_NON_WORKING_DAY);
+    let spanDays: ILeaveDayInput[];
+    try {
+      spanDays = expandLeaveSpan({
+        startAt: input.startAt,
+        endAt: input.endAt,
+        shiftOf: (workDate) => schedules[workDate]?.core ?? null,
+      });
+    } catch (error) {
+      if (error instanceof LeaveSpanError) {
+        throw new AppError(API_ERRORS.VA_INVALID_INPUT_DATA);
       }
+      throw error;
+    }
+
+    /**
+     * Info: (20260819 - Julian) 區間裡的**非上班日直接跳過**，不是擋下整張單。
+     *
+     * ## 為什麼從「擋下」改成「跳過」
+     *
+     * 原本的規則是「沒有排班或不是上班日的日子不能請假」，理由是：在例假日
+     * 請假不會產生任何效果，卻會扣掉額度 —— 使用者付出了代價卻什麼也沒換到。
+     * 那個理由在**使用者逐日勾選**的時候成立：他點到週日，那多半是誤點。
+     *
+     * 改成連續時段之後就不成立了。「我 8/20 到 8/28 不在」是一句話，
+     * 中間夾著的週六週日**不是他選的**，是區間推導出來的。為此擋下整張單，
+     * 等於要求使用者自己把一段連續的假拆成好幾張避開假日 ——
+     * 而那正是這次改成起訖要消除的手工。
+     *
+     * ## 跳過不等於算少
+     *
+     * 那幾天本來就沒有工時可扣。額度以**分鐘**為單位（ADR 022 §2），
+     * 跳過一個沒有班的日子，扣減的分鐘數一分不差。
+     *
+     * ## 全部跳完才是錯
+     *
+     * 整段區間一天工時都沒有（整段落在連假裡、或下班後才起算），
+     * 那時才回「非上班日」—— 使用者填的格式完全正確，
+     * 是那段時間他本來就不在班上。
+     */
+    const workingDays = spanDays.filter((day) => {
+      const schedule = schedules[day.workDate];
+      return (
+        schedule !== undefined &&
+        schedule.dayType === WorkDayType.WORK &&
+        schedule.shift !== null
+      );
+    });
+
+    if (workingDays.length === 0) {
+      throw new AppError(API_ERRORS.VA_LEAVE_ON_NON_WORKING_DAY);
+    }
+
+    const plan: ILeaveDayPlan[] = workingDays.map((day) => {
+      // Info: (20260819 - Julian) 上面的 filter 已保證這三者都在
+      const schedule = schedules[day.workDate] as ILeaveDaySchedule & {
+        shift: NonNullable<ILeaveDaySchedule["shift"]>;
+      };
       try {
         const resolved = resolveLeaveMinutes({
           policy: {
@@ -664,14 +731,21 @@ export class LeaveRequestService {
             accountBookId,
             employeeId,
             leavePolicyId: policy.id,
-            asOfDate: workDates[0],
+            /**
+             * Info: (20260819 - Julian) 以**起始日**判斷哪些批次還沒過期。
+             * 取**實際請假的第一天**而不是區間的第一天：區間可能從週六起算，
+             * 而那一天已經被跳過。用它去問「哪些批次還沒過期」會早一到兩天，
+             * 剛好在批次到期日前後產生一個對不起來的答案。
+             */
+            asOfDate: workingDays[0].workDate,
           })
         : Promise.resolve([]),
       this.context.findConcurrencyStatus({
         accountBookId,
         employeeId,
         leavePolicyId: policy.id,
-        workDates,
+        // Info: (20260819 - Julian) 同上：併休人數只問真的會請假的那幾天
+        workDates: workingDays.map((day) => day.workDate),
       }),
     ]);
 

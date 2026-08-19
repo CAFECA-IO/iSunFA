@@ -50,7 +50,6 @@ declare const jest: typeof JestType;
 
 import { NextRequest } from "next/server";
 import { RateLimitBucketEnum, RATE_LIMIT_RULES } from "@/constants/rate_limit";
-import { LeaveDaySegment } from "@/constants/leave_policy";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { HTTP_MAP } from "@/lib/utils/status";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
@@ -114,7 +113,9 @@ const perMinuteLimit = (bucket: RateLimitBucketEnum): number => {
 const leaveBody = {
   leavePolicyId: "policy-annual",
   reason: "家中有事",
-  days: [{ workDate: "2026-08-20", segment: LeaveDaySegment.FULL }],
+  // Info: (20260819 - Julian) 連續時段的「日期＋時刻」，逐日展開在 service
+  startAt: "2026-08-20T08:00",
+  endAt: "2026-08-20T17:00",
 };
 
 const overtimeBody = {
@@ -243,12 +244,15 @@ describe("裝配：限流真的擋得住（不是只有那兩行的順序對）"
 describe("裝配：validator 也真的接上了", () => {
   /**
    * Info: (20260819 - Julian) validator 同樣只有「有寫」沒有「有接上」的證據。
-   * 空的 `days` 必須在 400 就停住 —— 讓它進到 service，
-   * 簽核鏈會對著一張零天的假單展開。
+   * 倒序的區間必須在 400 就停住 —— 讓它進到 service，
+   * `expandLeaveSpan` 會對著一段負長度的時間展開。
    */
-  it("days 為空時回 400，service 不被呼叫", async () => {
+  it("迄早於起時回 400，service 不被呼叫", async () => {
     const response = await leaveSubmit(
-      post({ ...leaveBody, days: [] }, "0xprobe-invalid"),
+      post(
+        { ...leaveBody, startAt: "2026-08-20T17:00", endAt: "2026-08-20T08:00" },
+        "0xprobe-invalid",
+      ),
       { params: params() },
     );
     expect(response.status).toBe(httpOf(API_ERRORS.VA_INVALID_INPUT_DATA));

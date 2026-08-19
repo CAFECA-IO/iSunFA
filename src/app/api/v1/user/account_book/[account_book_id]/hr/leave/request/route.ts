@@ -73,7 +73,11 @@ export async function GET(
 /**
  * Info: (20260817 - Julian) L11：送出假單。
  * POST /api/v1/user/account_book/[account_book_id]/hr/leave/request
- *      body：`{ leavePolicyId, reason, days: [{ workDate, segment, startMinute?, endMinute? }] }`
+ *      body：`{ leavePolicyId, reason, startAt, endAt }`
+ *
+ * Info: (20260819 - Julian) 起訖各是一個「日期＋時刻」（`"2026-08-19T08:00"`），
+ * 是一段**連續**時間。逐日展開在 service（`expandLeaveSpan`）——
+ * 首日要請到當天班別結束為止，而前端不知道那個人那一天的班到幾點。
  *
  * **不預扣額度** —— 扣減發生在最後一個簽核節點通過的那個交易內（ADR 023 §6）。
  * 簽核鏈展不開時拒絕送出而不是自動核准：自動核准會讓一個設定缺口

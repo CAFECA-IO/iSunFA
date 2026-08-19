@@ -756,6 +756,9 @@ export const hrManagement = {
   },
   // Info: (20260817 - Julian) 内建假别名称，对应 `LEAVE_POLICY_I18N_KEY`。租户自订假别回退显示 `LeavePolicy.name`
   leave: {
+    field_start_at: "起（日期与时间）",
+    field_end_at: "迄（日期与时间）",
+    span_selected: "选取区间共 {{hours}} 小时（未扣休息与非上班日，实际扣抵见下方试算）",
     detail_title: "假单明细",
     detail_reason: "请假事由",
     detail_reason_undecryptable: "事由无法解密（密钥异常），请联系系统管理员",
@@ -765,8 +768,6 @@ export const hrManagement = {
     detail_chain: "签核链",
     detail_concurrency_warned: "送出时该期间已有其他同仁请假，申请人已收到提醒",
     segment_custom: "自订时段",
-    field_custom_start: "起",
-    field_custom_end: "迄",
     unit_hint: "最小单位 {{minutes}} 分钟，不足一单位者以一单位计",
     preview_rounded: "实际选取 {{raw}} 分钟，按最小单位计为 {{minutes}} 分钟",
     action_detail: "明细",
@@ -786,15 +787,12 @@ export const hrManagement = {
 
     form_title: "填写假单",
     field_policy: "假别",
-    field_dates: "请假日期",
     field_reason: "事由",
     field_reason_placeholder: "例：回诊复检、家中临时有事",
     field_reason_encrypted: "事由会加密储存，仅签核者于明细页可见",
     segment_full: "整天",
     segment_morning: "上半天",
     segment_afternoon: "下半天",
-    action_add_date: "＋ 增加一天",
-    action_remove_date: "移除",
     action_submit: "送出假单",
 
     preview_total: "本次共 {{days}} 天（{{minutes}} 分钟）",
@@ -844,7 +842,8 @@ export const hrManagement = {
      */
     error_insufficient_balance: "额度不足，请减少天数或改用其他假别",
     error_unit_not_aligned: "请假时间不符合这个假别的最小单位，请调整时段",
-    error_non_working_day: "所选日期不是上班日，不需要请假（送出也不会扣额度）",
+    error_non_working_day:
+      "所选时段没有需要请假的工时（不是上班日，或落在上下班时间之外），送出也不会扣额度",
     error_chain_unresolved:
       "签核流程展不开，请联系人事确认你的直属主管与签核规则设定",
     error_day_already_active: "这一天已经有一张生效中的假单",
@@ -873,6 +872,9 @@ export const hrManagement = {
   },
   // Info: (20260818 - Julian) 加班模块（L24–L30）。级距标签以 `OvertimePremiumTier` 为键
   overtime: {
+    field_start_at: "起（日期与时间）",
+    field_end_at: "迄（日期与时间）",
+    span_selected: "申请时数共 {{hours}} 小时（实际认列以打卡事实为准）",
     title: "我的加班",
     approval_page_title: "加班签核",
     loading: "载入中…",
@@ -898,10 +900,6 @@ export const hrManagement = {
     tier_holiday_double: "休假日（加倍发给）",
     tier_emergency_double: "天灾事变（加倍发给）",
     form_title: "新增加班单",
-    field_date: "加班日期",
-    field_start: "起",
-    field_end: "迄",
-    field_time_hint: "结束时刻早于开始时刻时，视为隔日。",
     field_filing: "申请时序",
     filing_advance: "事前申请",
     filing_post_hoc: "事后补单",

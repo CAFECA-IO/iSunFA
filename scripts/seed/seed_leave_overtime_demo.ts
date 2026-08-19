@@ -8,7 +8,6 @@ import { HrPiiTable } from "@/constants/hr_pii";
 import {
   LEAVE_POLICY_CODE,
   LeaveCashOutReason,
-  LeaveDaySegment,
   LeaveGrantSource,
   LeavePolicyCode,
 } from "@/constants/leave_policy";
@@ -395,6 +394,10 @@ const OVERTIME_CASES: IOvertimeCase[] = [
     note: "§32 IV 天災事變（EMP002 登記報備、EMP005 核准）→ 整段 EMERGENCY_DOUBLE，標記點得進報備紀錄",
   },
 ];
+
+/** Info: (20260819 - Julian) 當日 00:00 起算的分鐘數 → `"HH:MM"` */
+const minuteToClock = (minute: number): string =>
+  `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
 
 interface ILeaveCase {
   label: string;
@@ -875,20 +878,18 @@ async function seedLeaveCases(): Promise<void> {
     const created = await leaveRequestService.submit({
       accountBookId: ACCOUNT_BOOK_ID,
       employeeId,
+      /**
+       * Info: (20260819 - Julian) payload 改成連續時段的「日期＋時刻」。
+       *
+       * 逐日展開移到 service（`expandLeaveSpan`）。沒有指定時刻的案例
+       * 一律以班別核心區間 08:00–17:00 表達整天 —— 引擎會把它夾到
+       * 當日應工作分鐘為止，結果與先前的 `FULL` 相同。
+       */
       input: {
         leavePolicyId: policy.id,
         reason: leaveCase.reason,
-        days: leaveCase.workDates.map((workDate) =>
-          leaveCase.startMinute === undefined ||
-          leaveCase.endMinute === undefined
-            ? { workDate, segment: LeaveDaySegment.FULL }
-            : {
-                workDate,
-                segment: LeaveDaySegment.CUSTOM,
-                startMinute: leaveCase.startMinute,
-                endMinute: leaveCase.endMinute,
-              },
-        ),
+        startAt: `${leaveCase.workDates[0]}T${minuteToClock(leaveCase.startMinute ?? 8 * 60)}`,
+        endAt: `${leaveCase.workDates[leaveCase.workDates.length - 1]}T${minuteToClock(leaveCase.endMinute ?? 17 * 60)}`,
       },
       observedAt: leaveCase.submittedAt,
     });

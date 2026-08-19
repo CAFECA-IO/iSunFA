@@ -762,6 +762,10 @@ export const hrManagement = {
    * 回退顯示 `LeavePolicy.name`，而不是被歸進一個叫「其他」的桶子。
    */
   leave: {
+    field_start_at: "起（日期與時間）",
+    field_end_at: "迄（日期與時間）",
+    span_selected:
+      "共 {{hours}} 小時（未扣休息與非上班日，實際扣抵見下方試算）",
     detail_title: "假單明細",
     detail_reason: "請假事由",
     detail_reason_undecryptable: "事由無法解密（金鑰異常），請聯繫系統管理員",
@@ -771,8 +775,6 @@ export const hrManagement = {
     detail_chain: "簽核鏈",
     detail_concurrency_warned: "送出時該期間已有其他同仁請假，申請人已收到提醒",
     segment_custom: "自訂時段",
-    field_custom_start: "起",
-    field_custom_end: "迄",
     unit_hint: "最小單位 {{minutes}} 分鐘，不足一單位者以一單位計",
     preview_rounded: "實際選取 {{raw}} 分鐘，依最小單位計為 {{minutes}} 分鐘",
     action_detail: "明細",
@@ -792,15 +794,12 @@ export const hrManagement = {
 
     form_title: "填寫假單",
     field_policy: "假別",
-    field_dates: "請假日期",
     field_reason: "事由",
     field_reason_placeholder: "例：回診複檢、家中臨時有事",
     field_reason_encrypted: "事由會加密儲存，僅簽核者於明細頁可見",
     segment_full: "整天",
     segment_morning: "上半天",
     segment_afternoon: "下半天",
-    action_add_date: "＋ 增加一天",
-    action_remove_date: "移除",
     action_submit: "送出假單",
 
     preview_total: "本次共 {{days}} 天（{{minutes}} 分鐘）",
@@ -850,7 +849,8 @@ export const hrManagement = {
      */
     error_insufficient_balance: "額度不足，請減少天數或改用其他假別",
     error_unit_not_aligned: "請假時間不符合這個假別的最小單位，請調整時段",
-    error_non_working_day: "所選日期不是上班日，不需要請假（送出也不會扣額度）",
+    error_non_working_day:
+      "所選時段沒有需要請假的工時（不是上班日，或落在上下班時間之外），送出也不會扣額度",
     error_chain_unresolved:
       "簽核流程展不開，請聯繫人事確認你的直屬主管與簽核規則設定",
     error_day_already_active: "這一天已經有一張生效中的假單",
@@ -879,6 +879,9 @@ export const hrManagement = {
   },
   // Info: (20260818 - Julian) 加班模組（L24–L30）。級距標籤以 `OvertimePremiumTier` 為鍵
   overtime: {
+    field_start_at: "起（日期與時間）",
+    field_end_at: "迄（日期與時間）",
+    span_selected: "共 {{hours}} 小時（實際認列以打卡事實為準）",
     title: "我的加班",
     approval_page_title: "加班簽核",
     loading: "載入中…",
@@ -904,10 +907,6 @@ export const hrManagement = {
     tier_holiday_double: "休假日（加倍發給）",
     tier_emergency_double: "天災事變（加倍發給）",
     form_title: "新增加班單",
-    field_date: "加班日期",
-    field_start: "起",
-    field_end: "迄",
-    field_time_hint: "結束時刻早於開始時刻時，視為隔日。",
     field_filing: "申請時序",
     filing_advance: "事前申請",
     filing_post_hoc: "事後補單",
@@ -923,7 +922,8 @@ export const hrManagement = {
     field_emergency_hint:
       "限人資管理員登記，且僅限待簽核的單。登記後主管才會看到「天災事變」標記再決定核不核；它會讓整段加班跳到加倍發給。例假日不適用（§40 須另報主管機關核備）。",
     action_declare_emergency: "登記天災事變",
-    error_declare_emergency: "認定失敗，請確認你具備人資管理員職能且此單仍待簽核。",
+    error_declare_emergency:
+      "認定失敗，請確認你具備人資管理員職能且此單仍待簽核。",
     field_emergency_report: "報備紀錄連結",
     field_emergency_reported_at: "報備時點",
     field_emergency_moved_hint:

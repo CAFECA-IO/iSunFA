@@ -134,7 +134,13 @@ export interface ILeaveDayInput {
 export interface ILeaveRequestInput {
   leavePolicyId: string;
   reason: string;
-  days: readonly ILeaveDayInput[];
+  /**
+   * Info: (20260819 - Julian) 「日期＋時刻」的牆上時鐘字串（`"2026-08-19T08:00"`）。
+   * 逐日的 `ILeaveDayInput` 仍然存在，但它現在是**內部表示**——
+   * 由 `expandLeaveSpan` 在 service 裡展開，不再由前端送上來。
+   */
+  startAt: string;
+  endAt: string;
 }
 
 /** Info: (20260817 - Julian) 逐日的換算結果，會被固化在 `LeaveDay` 上 */
@@ -192,6 +198,14 @@ export interface ILeaveDaySchedule {
   dayType: WorkDayType;
   /** Info: (20260817 - Julian) 非上班日為 null */
   shift: ILeaveShiftLength | null;
+  /**
+   * Info: (20260819 - Julian) 班別的核心區間（遲到／早退的判定基準）。
+   *
+   * 展開連續時段時，首日請到 `coreEndMinute`、末日從 `coreStartMinute` 起算。
+   * 取核心而不是 `windowStart/End`：後者涵蓋提早到與加班留守，
+   * 而請假要對的是**應該在場的那一段**。非上班日為 null。
+   */
+  core: { startMinute: number; endMinute: number } | null;
 }
 
 export interface ILeaveConcurrencyStatus {

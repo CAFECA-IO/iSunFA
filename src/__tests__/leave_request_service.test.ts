@@ -61,6 +61,8 @@ const PERSONAL: ILeavePolicySnapshot = {
 const WORK_DAY: ILeaveDaySchedule = {
   dayType: WorkDayType.WORK,
   shift: { requiredWorkMinutes: 480, breakMinutes: 60 },
+  // Info: (20260819 - Julian) 08:00–17:00。連續時段的首末日靠它切區間
+  core: { startMinute: 8 * 60, endMinute: 17 * 60 },
 };
 
 const identity = (id: string, no: string, name: string) => ({
@@ -274,11 +276,26 @@ beforeEach(() => {
   service = new LeaveRequestService(repo, context, audit);
 });
 
-const submitInput = (days: string[], segment = LeaveDaySegment.FULL) => ({
+/**
+ * Info: (20260819 - Julian) payload 改成「日期＋時刻」的連續時段。
+ *
+ * 逐日展開移到 service（`expandLeaveSpan`）——「起 8/18 08:00、迄 8/19 17:00」
+ * 展開成兩個 `CUSTOM`，各自被夾到當日應工作分鐘（480），總計仍是 960。
+ * 也就是說下面那些期望值**沒有變**，變的只是使用者怎麼表達同一件事。
+ *
+ * 半天用 `08:00–12:00`：240 分鐘，與原本的 `MORNING` 等值。工地人員本來
+ * 就是這樣說的 —— 他們不說「上半天」，他們說「我中午前不在」。
+ */
+const spanInput = (startAt: string, endAt: string) => ({
   leavePolicyId: "policy-annual",
   reason: "家中有事",
-  days: days.map((workDate) => ({ workDate, segment })),
+  startAt,
+  endAt,
 });
+
+/** Info: (20260819 - Julian) 整天：以班別核心區間 08:00–17:00 表達 */
+const submitInput = (days: string[]) =>
+  spanInput(`${days[0]}T08:00`, `${days[days.length - 1]}T17:00`);
 
 /**
  * Info: (20260817 - Julian) 送出假單會加密事由（ADR 018 Tier 2），因此測試需要一把金鑰。
@@ -311,7 +328,7 @@ describe("preview — 試算不寫入、不預扣", () => {
     const preview = await service.preview({
       accountBookId: "book-1",
       employeeId: "emp-staff",
-      input: submitInput(["2026-08-18"], LeaveDaySegment.MORNING),
+      input: spanInput("2026-08-18T08:00", "2026-08-18T12:00"),
       observedAt: AT,
     });
     expect(preview.totalMinutes).toBe(240);
@@ -441,7 +458,7 @@ describe("submit — 送出", () => {
 
   it("非上班日請假擋下（會扣額度卻不產生任何效果）", async () => {
     context.schedules = {
-      "2026-08-18": { dayType: WorkDayType.REST_DAY, shift: null },
+      "2026-08-18": { dayType: WorkDayType.REST_DAY, shift: null, core: null },
     };
     await expect(
       service.submit({

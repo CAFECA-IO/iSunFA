@@ -3,7 +3,11 @@
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { CalendarPlus, Loader2, Send, TriangleAlert } from "lucide-react";
 import { LEAVE_API } from "@/constants/leave_api";
-import { LeaveDaySegment } from "@/constants/leave_policy";
+import {
+  DEFAULT_SPAN_MINUTES,
+  rawSpanMinutes,
+  shiftLocalDateTime,
+} from "@/lib/leave_span";
 import { LeaveRequestStatus } from "@/constants/leave";
 import { ILeavePolicyOption } from "@/interfaces/leave_policy_option";
 import { ILeaveBalanceView } from "@/interfaces/leave_balance";
@@ -37,22 +41,6 @@ import { useTranslation } from "@/i18n/i18n_context";
  * 開著表單不送出，不會佔住任何人的額度。
  */
 
-/** Info: (20260817 - Julian) 送出後回到乾淨表單，但保留假別 —— 通常會連續請同一種 */
-const emptyDays = (): string[] => [""];
-
-/**
- * Info: (20260818 - Julian) 自訂時段的預設起訖。與加班單同一種形狀：
- * **整張單一組起訖**，不是逐日各填一組。
- */
-const DEFAULT_CUSTOM_START = "09:00";
-const DEFAULT_CUSTOM_END = "12:00";
-
-/** Info: (20260818 - Julian) "HH:MM" → 當日 00:00 起算的分鐘數 */
-const toMinuteOfDay = (value: string): number | null => {
-  const matched = /^(\d{2}):(\d{2})$/.exec(value);
-  if (matched === null) return null;
-  return Number(matched[1]) * 60 + Number(matched[2]);
-};
 
 /**
  * Info: (20260818 - Julian) 試算用的事由佔位字串。
@@ -70,9 +58,49 @@ const MyLeavePageBody: FC = () => {
   const [loading, setLoading] = useState(true);
 
   const [policyId, setPolicyId] = useState<string>("");
-  const [workDates, setWorkDates] = useState<string[]>(emptyDays());
-  const [customStart, setCustomStart] = useState(DEFAULT_CUSTOM_START);
-  const [customEnd, setCustomEnd] = useState(DEFAULT_CUSTOM_END);
+  /**
+   * Info: (20260819 - Julian) 起訖各是一個「日期＋時刻」（`<input type="datetime-local">`）。
+   *
+   * 先前是「一組日期清單 + 一組共用的起訖時刻」，也就是「這幾天，每天都請
+   * 09:00–12:00」。改成連續時段之後，「我從 8/19 早上八點走到 8/21 下午五點」
+   * 是一句話而不是三筆設定 —— 而那正是工地的說法。
+   *
+   * 逐日的展開移到伺服器（`expandLeaveSpan`）：首日要請到當天班別結束為止，
+   * 而前端不知道那個人那一天的班到幾點。
+   */
+  const [startAt, setStartAt] = useState("");
+  const [endAt, setEndAt] = useState("");
+
+  /**
+   * Info: (20260819 - Julian) 「起」不設上界，「迄」的下界跟著「起」走。
+   *
+   * ## 為什麼「起」不限制
+   *
+   * 兩邊都限制的話，使用者不小心把日期選錯（例如選到下個月），就必須
+   * **把兩個 picker 都清掉**才能重選 —— 「起」被「迄」擋在上界之前、
+   * 「迄」被「起」擋在下界之後，兩個互相咬住。那是一個為了防止一種錯誤，
+   * 而製造出另一種更難脫身的錯誤。
+   *
+   * 「起」可以自由改，因此它每改一次就把「迄」帶到一小時後 ——
+   * 使用者重選日期時不必再回頭修「迄」，而那個值本來就已經被上一次的
+   * 選擇弄成不合理的了。
+   *
+   * ## 為什麼「迄」仍然限制
+   *
+   * 它只有下界（`min = 起`），而下界不會把人咬住：使用者永遠可以先改「起」
+   * 把下界移開。單向的約束沒有死結。
+   *
+   * ## 送出端仍然擋
+   *
+   * `min` 只約束選單，部分瀏覽器允許直接鍵入超出範圍的值 ——
+   * `span === null` 時送出鈕按不下去。**護欄與提示是兩件事**，
+   * 畫面上不提示不等於放行。
+   */
+  const pickStart = (value: string): void => {
+    setStartAt(value);
+    setEndAt(shiftLocalDateTime(value, DEFAULT_SPAN_MINUTES) ?? "");
+  };
+
   const [reason, setReason] = useState("");
 
   const [preview, setPreview] = useState<ILeaveRequestPreview | null>(null);
@@ -169,8 +197,10 @@ const MyLeavePageBody: FC = () => {
    * §3.2 待核對也沒有列它 —— 那六種 `HALF_WORKDAY` 是 seed 的一個假設。
    * 已補進 §3.2（2026-08-18）。在它結案之前，UI 不該替那個假設加上護欄。
    */
-  const isCustom = true;
-  const segment = LeaveDaySegment.CUSTOM;
+  /**
+   * Info: (20260819 - Julian) 展開後首末日仍是 `CUSTOM`、中間日是 `FULL`，
+   * 但那是**伺服器**決定的（`expandLeaveSpan`），前端不再送 segment。
+   */
 
   /**
    * Info: (20260818 - Julian) 送出與試算共用同一份 payload。
@@ -179,41 +209,37 @@ const MyLeavePageBody: FC = () => {
    * 「試算顯示 2 小時，送出卻扣了一整天」，比沒有試算更糟
    * （同 `leaveRequestCreateSchema` 與試算共用 schema 的理由）。
    */
-  const payloadDays = useMemo(() => {
-    const dates = workDates.filter((workDate) => workDate !== "");
-    if (!isCustom) return dates.map((workDate) => ({ workDate, segment }));
-
-    const startMinute = toMinuteOfDay(customStart);
-    const endMinute = toMinuteOfDay(customEnd);
-    // Info: (20260818 - Julian) 時刻沒填完就不送、也不試算 —— 送了必定被 validator 擋
-    if (startMinute === null || endMinute === null) return [];
-
-    /**
-     * Info: (20260818 - Julian) 同一組起訖套用到每一天。
-     *
-     * `LeaveDay` 仍是逐日落地的（每一列各有 `startMinute` / `endMinute`），
-     * 只是表單不讓使用者逐日填不同的時刻 —— 與加班單同一種形狀。
-     * 「連續三天，每天請 09:00–12:00」是實務上壓倒性多數的用法。
-     */
-    return dates.map((workDate) => ({
-      workDate,
-      segment,
-      startMinute,
-      endMinute,
-    }));
-  }, [workDates, segment, isCustom, customStart, customEnd]);
+  /**
+   * Info: (20260819 - Julian) 送出與試算共用同一份 payload。
+   *
+   * 兩者若各組一次，遲早會有一邊漏帶欄位 —— 而那個 bug 的症狀是
+   * 「試算顯示 2 小時，送出卻扣了一整天」，比沒有試算更糟
+   * （同 `leaveRequestCreateSchema` 與試算共用 schema 的理由）。
+   *
+   * 起訖沒填完就回 null：不送、也不試算，送了必定被 validator 擋。
+   */
+  const span = useMemo(() => {
+    if (startAt === "" || endAt === "") return null;
+    if (endAt <= startAt) return null;
+    return { startAt, endAt };
+  }, [startAt, endAt]);
 
   /**
    * Info: (20260818 - Julian) 使用者實際選了幾分鐘（未進位），用來說明進位差額。
    * 一組起訖 × 天數 —— 表單只收一組（見下方起訖選擇器的說明）。
    */
-  const rawSelectedMinutes = useMemo(() => {
-    if (!isCustom) return null;
-    const startMinute = toMinuteOfDay(customStart);
-    const endMinute = toMinuteOfDay(customEnd);
-    if (startMinute === null || endMinute === null) return null;
-    return Math.max(0, endMinute - startMinute) * payloadDays.length;
-  }, [isCustom, customStart, customEnd, payloadDays.length]);
+  /**
+   * Info: (20260819 - Julian) 使用者實際選了多長的一段（**牆上時鐘的差**，未扣休息、
+   * 未剔除非上班日、未進位）。用來與試算回來的認列分鐘對照，說明差額從哪來。
+   *
+   * 它刻意不等於認列分鐘：中間夾著週日、跨日的夜間不算工時、最小單位要進位 ——
+   * 三者都會讓兩個數字不同。把它顯示出來，是為了讓「為什麼我選了三天卻只扣兩天」
+   * 有一個看得見的起點。
+   */
+  const rawSelectedMinutes = useMemo(
+    () => (span === null ? null : rawSpanMinutes(span.startAt, span.endAt)),
+    [span],
+  );
 
   /**
    * Info: (20260817 - Julian) 日期或假別一改就重新試算。
@@ -222,7 +248,7 @@ const MyLeavePageBody: FC = () => {
    * 不像文字輸入會逐字打。加 debounce 只會讓結果晚一點出現。
    */
   useEffect(() => {
-    if (!policyId || payloadDays.length === 0) {
+    if (!policyId || span === null) {
       setPreview(null);
       setPreviewError(null);
       return;
@@ -242,7 +268,7 @@ const MyLeavePageBody: FC = () => {
          * 順帶一提：事由是 Tier 2 個資，沒有必要在還沒送出前就一路送上伺服器。
          */
         reason: PREVIEW_REASON_PLACEHOLDER,
-        days: payloadDays,
+        ...span,
       }),
     })
       .then((response) => {
@@ -280,7 +306,7 @@ const MyLeavePageBody: FC = () => {
     return () => {
       active = false;
     };
-  }, [policyId, payloadDays, t]);
+  }, [policyId, span, t]);
 
   const submit = async () => {
     setSubmitting(true);
@@ -291,10 +317,14 @@ const MyLeavePageBody: FC = () => {
         body: JSON.stringify({
           leavePolicyId: policyId,
           reason,
-          days: payloadDays,
+          ...span,
         }),
       });
-      setWorkDates(emptyDays());
+      /**
+       * Info: (20260819 - Julian) 起訖清空、假別保留 —— 通常會連續請同一種。
+       */
+      setStartAt("");
+      setEndAt("");
       setReason("");
       setPreview(null);
       // Info: (20260818 - Julian) 送出成功就收起抽屜，讓底下剛更新的「我的假單」露出來
@@ -401,79 +431,64 @@ const MyLeavePageBody: FC = () => {
         </div>
 
         <div className="mt-3 flex flex-col gap-2">
-          <span className="text-xs text-gray-600">
-            {t("hr_management.leave.field_dates")}
-          </span>
-          {workDates.map((workDate, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <input
-                type="date"
-                value={workDate}
-                onChange={(event) =>
-                  setWorkDates(
-                    workDates.map((item, i) =>
-                      i === index ? event.target.value : item,
-                    ),
-                  )
-                }
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
-              />
-              {workDates.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setWorkDates(workDates.filter((_, i) => i !== index))
-                  }
-                  className="text-xs text-gray-400 hover:text-rose-500"
-                >
-                  {t("hr_management.leave.action_remove_date")}
-                </button>
-              )}
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={() => setWorkDates([...workDates, ""])}
-            className="self-start text-xs font-medium text-sky-600 hover:text-sky-700"
-          >
-            {t("hr_management.leave.action_add_date")}
-          </button>
-
           {/**
-           * Info: (20260818 - Julian) 第二排：起／迄，與加班單同一個順序與版型。
+           * Info: (20260819 - Julian) 起／迄各一個「日期＋時刻」。
            *
-           * 沒有「整天」捷徑：工地人員每個人的班別不同，整天對他們就是
+           * 先前是「一列一列加日期，再共用一組起訖時刻」——「這幾天，每天都請
+           * 09:00–12:00」。工地的說法是「我從 8/19 早上八點走到 8/21 下午五點」，
+           * 那是一段連續時間，不是三筆各自獨立的設定。
+           *
+           * 沒有「整天」捷徑：每個人的班別不同，整天對他們就是
            * 「07:30 到 17:00」這組他們每天打卡的數字，而不是一個要另外學的選項。
            * 想請整天就填自己的上下班時刻，引擎會把它夾到當日應工作分鐘為止
            * （`resolveLeaveMinutes` 的 `Math.min(netSpan, dayEquivalentMinutes)`）。
+           *
+           * 跨日的中間幾天由伺服器補成整天，首末日切到班別的核心區間 ——
+           * 前端不知道那個人那一天的班到幾點，猜的話會差半小時而看不出來。
            */}
-          <div className="flex items-end gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <label className="flex flex-1 flex-col gap-1 text-xs text-gray-600">
-              {t("hr_management.leave.field_custom_start")}
+              {t("hr_management.leave.field_start_at")}
               <input
-                type="time"
-                value={customStart}
-                onChange={(event) => setCustomStart(event.target.value)}
+                type="datetime-local"
+                value={startAt}
+                onChange={(event) => pickStart(event.target.value)}
                 className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
               />
             </label>
             <label className="flex flex-1 flex-col gap-1 text-xs text-gray-600">
-              {t("hr_management.leave.field_custom_end")}
+              {t("hr_management.leave.field_end_at")}
               <input
-                type="time"
-                value={customEnd}
-                onChange={(event) => setCustomEnd(event.target.value)}
+                type="datetime-local"
+                value={endAt}
+                min={startAt === "" ? undefined : startAt}
+                onChange={(event) => setEndAt(event.target.value)}
                 className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
               />
             </label>
           </div>
 
           {/**
+           * Info: (20260819 - Julian) 選了多長，當場說出來。
+           *
+           * 這是**牆上時鐘的差**，不是認列時數 —— 中間夾著週日、跨日的夜間
+           * 不算工時、最小單位要進位，三者都會讓兩個數字不同。先講這一個，
+           * 是因為它是使用者唯一能直接驗算的數字；認列由下方的試算回答。
+           */}
+          {rawSelectedMinutes !== null && rawSelectedMinutes > 0 && (
+            <p className="text-xs text-gray-500">
+              {t("hr_management.leave.span_selected", {
+                hours: (rawSelectedMinutes / 60).toFixed(1),
+              })}
+            </p>
+          )}
+
+          {/**
            * Info: (20260818 - Julian) 最小單位要在填之前就說，不是等試算才顯示。
            * 「不足一單位以一單位計」是對勞工不利的預設，必須載明於工作規則
            * （`LeaveRoundingMode` 的既有說明）—— 畫面上也該說。
            */}
-          {isCustom && selectedPolicy?.minimumUnitMinutes && (
+          {selectedPolicy?.minimumUnitMinutes && (
             <p className="text-xs text-gray-400">
               {t("hr_management.leave.unit_hint", {
                 minutes: selectedPolicy.minimumUnitMinutes,
