@@ -1,0 +1,500 @@
+import { describe, it, expect, beforeEach, afterAll, jest } from "@jest/globals";
+import { OvertimeRequestService } from "@/services/overtime_request.service";
+import { AppError } from "@/lib/utils/error";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { WorkDayType } from "@/constants/attendance";
+import {
+  OVERTIME_DAILY_TOTAL_LIMIT_MINUTES,
+  OVERTIME_MONTHLY_EXTENDED_LIMIT_MINUTES,
+  OVERTIME_MONTHLY_LIMIT_MINUTES,
+  OVERTIME_QUARTERLY_EXTENDED_LIMIT_MINUTES,
+  OvertimeCompensationMode,
+  OvertimeEvidenceBasis,
+  OvertimeFilingType,
+  OvertimePremiumTier,
+  OvertimeRequestStatus,
+} from "@/constants/overtime";
+import {
+  IOvertimeApprovalContext,
+  IOvertimeRequestSummary,
+  OvertimeDecisionOutcome,
+} from "@/interfaces/overtime";
+import { employeeRepo } from "@/repositories/employee.repo";
+import {
+  IOvertimeApprovalWrite,
+  IOvertimeApprovalWriteResult,
+  IOvertimeRequestRepository,
+} from "@/repositories/overtime_request.repo";
+import { IOvertimeRequestContext } from "@/repositories/overtime_request_context.repo";
+import { assertOvertimeFilingType } from "@/repositories/overtime_request_invariant";
+
+/**
+ * Info: (20260819 - Julian) 加班單編排（L25 / L26 / L27）——**這支先前不存在**（review B9）。
+ *
+ * ## 沒有它的時候，什麼東西沒有證據
+ *
+ * `overtime_request.service.ts` 有 633 行，而它守著四道**法定**護欄
+ * （§32 II／III 的單日 12 小時、單月 46／54 小時、三個月 138 小時）
+ * 與兩條職責分離（不得自我核准、非管轄範圍不得代簽）。假單那一側有測，
+ * 加班這一側一條都沒有。
+ *
+ * review B9 點名的 mutation：把 `assertWithinStatutoryLimits` 裡的
+ * `if (violations.length === 0) return;` 改成無條件 `return;` ——
+ * 四道全失效，而全套測試不變。下面每一條上限都各有一組
+ * 「剛好在線上放行 / 多一分鐘擋下」，那個 mutation 過不了任何一組。
+ *
+ * ## 形狀
+ *
+ * 比照 `leave_approval_rule_service.test.ts`：建構子注入兩個假 repository，
+ * 而**不變式用真的**（`assertOvertimeFilingType` 直接呼叫真的那一支）——
+ * 假的不變式只會證明假的不變式有被呼叫。
+ *
+ * 授權那兩條走 `employeeRepo.managesEmployee`，它是模組層單例，
+ * 因此以 `jest.spyOn` 換掉（理由同 `leave_balance_service.test.ts`：
+ * `next/jest`(SWC) 下具名 import 的 `jest.mock` 工廠不會被提升）。
+ */
+
+const BOOK = "book-1";
+const APPLICANT = "emp-006";
+const MANAGER = "emp-005";
+const OUTSIDER = "emp-009";
+const WORK_DATE = "2026-08-14";
+
+const HOUR = 60;
+
+const summaryOf = (
+  overrides: Partial<IOvertimeRequestSummary> = {},
+): IOvertimeRequestSummary => ({
+  id: "ot-1",
+  employeeId: APPLICANT,
+  employeeNo: "EMP006",
+  employeeName: "李冠廷",
+  workDate: WORK_DATE,
+  filingType: OvertimeFilingType.POST_HOC,
+  compensationMode: OvertimeCompensationMode.PAYMENT,
+  evidenceBasis: OvertimeEvidenceBasis.PUNCH_RECORD,
+  requestedStartMinute: 1020,
+  requestedEndMinute: 1140,
+  approvedMinutes: null,
+  recognizedMinutes: null,
+  reason: "趕工期",
+  status: OvertimeRequestStatus.PENDING,
+  isEmergency: false,
+  emergencyReportUrl: null,
+  emergencyReportedAt: null,
+  segments: [],
+  createdAt: "2026-08-14T12:00:00.000Z",
+  ...overrides,
+});
+
+const contextOf = (
+  overrides: Partial<IOvertimeApprovalContext> = {},
+): IOvertimeApprovalContext => ({
+  workDayType: WorkDayType.WORK,
+  regularWorkMinutes: 8 * HOUR,
+  compensatoryDayEquivalentMinutes: 8 * HOUR,
+  // Info: (20260819 - Julian) 空陣列 = 當日無成對打卡 → 自陳，認列等於核准
+  punchIntervals: [],
+  priorRecognizedMinutes: 0,
+  priorMonthlyMinutes: 0,
+  priorQuarterlyMinutes: 0,
+  extendedLimitAgreed: false,
+  compensatoryPolicyId: "policy-comp",
+  compensatoryExpiryMonths: 6,
+  ...overrides,
+});
+
+class FakeContext implements Partial<IOvertimeRequestContext> {
+  public summary: IOvertimeRequestSummary | null = summaryOf();
+
+  public approval: IOvertimeApprovalContext = contextOf();
+
+  async findSummaryById(): Promise<IOvertimeRequestSummary | null> {
+    return this.summary;
+  }
+
+  async buildApprovalContext(): Promise<IOvertimeApprovalContext> {
+    return this.approval;
+  }
+}
+
+class FakeRepo implements Partial<IOvertimeRequestRepository> {
+  public written: IOvertimeApprovalWrite | null = null;
+
+  async approve(
+    params: IOvertimeApprovalWrite,
+  ): Promise<IOvertimeApprovalWriteResult> {
+    /**
+     * Info: (20260819 - Julian) 假 repository 也要跑**真的**不變式。
+     *
+     * 它是 service 與資料庫之間的最後一道，而 service 的責任之一就是
+     * 交出一組過得了它的參數。假物件替 service 跳過那一步，
+     * 等於把「送進去的東西合法嗎」這個問題從測試裡刪掉。
+     */
+    assertOvertimeFilingType(params.invariant);
+    this.written = params;
+    return {
+      outcome: OvertimeDecisionOutcome.DECIDED,
+      grantCount: 0,
+      cashOutEventIds: [],
+    };
+  }
+}
+
+let context: FakeContext;
+let repo: FakeRepo;
+let service: OvertimeRequestService;
+
+const managesSpy = jest.spyOn(employeeRepo, "managesEmployee");
+
+afterAll(() => {
+  jest.restoreAllMocks();
+});
+
+beforeEach(() => {
+  context = new FakeContext();
+  repo = new FakeRepo();
+  service = new OvertimeRequestService(
+    context as unknown as IOvertimeRequestContext,
+    repo as unknown as IOvertimeRequestRepository,
+  );
+  managesSpy.mockReset();
+  managesSpy.mockResolvedValue(true);
+});
+
+const approve = (overrides: { actorEmployeeId?: string; approvedMinutes?: number } = {}) =>
+  service.approve({
+    accountBookId: BOOK,
+    requestId: "ot-1",
+    actorEmployeeId: overrides.actorEmployeeId ?? MANAGER,
+    approvedMinutes: overrides.approvedMinutes,
+    observedAt: new Date("2026-08-15T02:00:00.000Z"),
+  });
+
+const codeOf = async (run: () => Promise<unknown>): Promise<string> => {
+  try {
+    await run();
+  } catch (error) {
+    if (error instanceof AppError) return error.apiCode;
+    throw error;
+  }
+  throw new Error("預期會丟 AppError，但它成功了");
+};
+
+/**
+ * Info: (20260819 - Julian) 把申請區間設成剛好 `minutes` 分鐘。
+ * 上限測的是「認列多少」，不是「申請的時段長什麼樣」。
+ */
+const requestOf = (minutes: number): IOvertimeRequestSummary =>
+  summaryOf({ requestedStartMinute: 1020, requestedEndMinute: 1020 + minutes });
+
+describe("四道法定上限：剛好在線上放行，多一分鐘擋下（§32 II／III）", () => {
+  /**
+   * Info: (20260819 - Julian) 每一條都成對。
+   *
+   * 只測「超過會擋」的話，一個無條件 `throw` 的實作會通過；
+   * 只測「不超過會過」的話，review B9 點名的那個 mutation
+   * （`if (violations.length === 0) return;` → 無條件 `return;`）會通過。
+   * 成對才把那條線釘在正確的位置上。
+   */
+  it("單日：正常工時 + 延長 = 12 小時放行，多一分鐘擋下", async () => {
+    const room = OVERTIME_DAILY_TOTAL_LIMIT_MINUTES - 8 * HOUR;
+
+    context.summary = requestOf(room);
+    await expect(approve()).resolves.toBeDefined();
+
+    context.summary = requestOf(room + 1);
+    repo.written = null;
+    expect(await codeOf(approve)).toBe(
+      API_ERRORS.VA_OVERTIME_EXCEEDS_DAILY_LIMIT.code,
+    );
+    expect(repo.written).toBeNull();
+  });
+
+  it("單日：當日先前已認列的分鐘也算進來", async () => {
+    context.approval = contextOf({ priorRecognizedMinutes: 3 * HOUR });
+    const room = OVERTIME_DAILY_TOTAL_LIMIT_MINUTES - 8 * HOUR - 3 * HOUR;
+
+    context.summary = requestOf(room);
+    await expect(approve()).resolves.toBeDefined();
+
+    context.summary = requestOf(room + 1);
+    expect(await codeOf(approve)).toBe(
+      API_ERRORS.VA_OVERTIME_EXCEEDS_DAILY_LIMIT.code,
+    );
+  });
+
+  it("單月 46 小時（未經同意放寬）", async () => {
+    const prior = OVERTIME_MONTHLY_LIMIT_MINUTES - 60;
+    context.approval = contextOf({ priorMonthlyMinutes: prior });
+
+    context.summary = requestOf(60);
+    await expect(approve()).resolves.toBeDefined();
+
+    context.summary = requestOf(61);
+    expect(await codeOf(approve)).toBe(
+      API_ERRORS.VA_OVERTIME_EXCEEDS_MONTHLY_LIMIT.code,
+    );
+  });
+
+  /**
+   * Info: (20260819 - Julian) 放寬到 54 小時的前提是**經工會或勞資會議同意**
+   * 且有記載（`assertOvertimePolicy`）。這一條驗的是那個旗標真的改變上限 ——
+   * 不改的話「同意」這件事在系統裡沒有任何效果，而 HR 會以為它有。
+   */
+  it("單月 54 小時（extendedLimitAgreed 為真）", async () => {
+    const prior = OVERTIME_MONTHLY_EXTENDED_LIMIT_MINUTES - 60;
+    context.approval = contextOf({
+      extendedLimitAgreed: true,
+      priorMonthlyMinutes: prior,
+    });
+
+    context.summary = requestOf(60);
+    await expect(approve()).resolves.toBeDefined();
+
+    context.summary = requestOf(61);
+    expect(await codeOf(approve)).toBe(
+      API_ERRORS.VA_OVERTIME_EXCEEDS_MONTHLY_LIMIT.code,
+    );
+  });
+
+  it("未同意放寬時，46 小時之後就擋（不會偷偷用 54）", async () => {
+    context.approval = contextOf({
+      extendedLimitAgreed: false,
+      priorMonthlyMinutes: OVERTIME_MONTHLY_LIMIT_MINUTES,
+    });
+    context.summary = requestOf(1);
+    expect(await codeOf(approve)).toBe(
+      API_ERRORS.VA_OVERTIME_EXCEEDS_MONTHLY_LIMIT.code,
+    );
+  });
+
+  it("三個月 138 小時（僅在同意放寬時適用）", async () => {
+    const prior = OVERTIME_QUARTERLY_EXTENDED_LIMIT_MINUTES - 60;
+    context.approval = contextOf({
+      extendedLimitAgreed: true,
+      priorQuarterlyMinutes: prior,
+    });
+
+    context.summary = requestOf(60);
+    await expect(approve()).resolves.toBeDefined();
+
+    context.summary = requestOf(61);
+    expect(await codeOf(approve)).toBe(
+      API_ERRORS.VA_OVERTIME_EXCEEDS_QUARTERLY_LIMIT.code,
+    );
+  });
+
+  /**
+   * Info: (20260819 - Julian) 一次破三條時回**最嚴**的那一條。
+   *
+   * 順序是日 → 月 → 季，理由在 service 的註解裡：使用者能立刻理解的是
+   * 「今天太長了」，而「這一季超過 138 小時」要看統計才懂。
+   */
+  it("同時破三條時回單日那一條", async () => {
+    context.approval = contextOf({
+      extendedLimitAgreed: true,
+      priorMonthlyMinutes: OVERTIME_MONTHLY_EXTENDED_LIMIT_MINUTES,
+      priorQuarterlyMinutes: OVERTIME_QUARTERLY_EXTENDED_LIMIT_MINUTES,
+    });
+    context.summary = requestOf(8 * HOUR);
+    expect(await codeOf(approve)).toBe(
+      API_ERRORS.VA_OVERTIME_EXCEEDS_DAILY_LIMIT.code,
+    );
+  });
+});
+
+describe("兩條職責分離（加班側）", () => {
+  /**
+   * Info: (20260819 - Julian) 自我核准。
+   *
+   * 主管自己送的加班單由他自己按核准，是最容易發生也最難事後追究的那一種 ——
+   * 而它在畫面上看起來與任何一張正常核准的單子完全相同。
+   */
+  it("不得自我核准", async () => {
+    context.summary = summaryOf({ employeeId: MANAGER });
+    expect(await codeOf(() => approve({ actorEmployeeId: MANAGER }))).toBe(
+      API_ERRORS.FO_SELF_APPROVAL_FORBIDDEN.code,
+    );
+  });
+
+  /**
+   * Info: (20260819 - Julian) 非管轄範圍不得代簽。
+   *
+   * 判準是 `managesEmployee()`（部門子樹）而不是「你是不是某個部門的主管」——
+   * 後者會讓第一工務段的主管簽得動第五工務段的人。
+   */
+  it("管不到這個人時不得代簽", async () => {
+    managesSpy.mockResolvedValue(false);
+    expect(await codeOf(() => approve({ actorEmployeeId: OUTSIDER }))).toBe(
+      API_ERRORS.FO_NOT_AUTHORIZED_REVIEWER.code,
+    );
+  });
+
+  it("兩條都通過時才進得到業務邏輯", async () => {
+    managesSpy.mockResolvedValue(true);
+    await expect(approve()).resolves.toBeDefined();
+    expect(managesSpy).toHaveBeenCalledWith({
+      accountBookId: BOOK,
+      managerEmployeeId: MANAGER,
+      targetEmployeeId: APPLICANT,
+    });
+  });
+
+  /**
+   * Info: (20260819 - Julian) 自我核准擋在管轄判斷**之前**。
+   *
+   * 順序反過來的話，一個管得到自己的人（小部門裡主管的 `managerId`
+   * 指向自己）會通過 —— 而那正是自我核准最常見的組態。
+   */
+  it("自我核准的判斷不依賴管轄查詢", async () => {
+    context.summary = summaryOf({ employeeId: MANAGER });
+    managesSpy.mockResolvedValue(true);
+    expect(await codeOf(() => approve({ actorEmployeeId: MANAGER }))).toBe(
+      API_ERRORS.FO_SELF_APPROVAL_FORBIDDEN.code,
+    );
+  });
+});
+
+describe("認列 = min(核准, 事實)，且超出的部分要交出去", () => {
+  /**
+   * Info: (20260819 - Julian) `unapprovedMinutes` 是**事實超出核准**的那一段，
+   * 不是「核准超出事實」的那一段。
+   *
+   * 兩者的方向完全相反，而只有前者需要被交出去：他人在工地待了 3 小時、
+   * 主管只核 1 小時，那 2 小時的**事實**仍然存在於 `AttendancePunch` 裡，
+   * 勞動檢查看得見（ADR 024 §2.1）。反過來（核准 2 小時但只待了 1 小時）
+   * 沒有任何多出來的事實要交代 —— 少的那一段本來就不該被認列。
+   *
+   * 這一條是寫錯過的：第一版拿「核准 120、打卡 60」去期待
+   * `unapprovedMinutes === 60`，而正確答案是 0。留著兩個方向各一條，
+   * 免得下一個人把它讀成「核准與事實的差」。
+   */
+  it("打卡少於核准：認列打卡，未核准為 0（沒有多出來的事實）", async () => {
+    context.summary = requestOf(120);
+    context.approval = contextOf({
+      // Info: (20260819 - Julian) 17:00–18:00，與申請的 17:00–19:00 交集 60 分
+      punchIntervals: [{ startMinute: 1020, endMinute: 1080 }],
+    });
+
+    const result = await approve();
+    expect(result.recognizedMinutes).toBe(60);
+    expect(result.unapprovedMinutes).toBe(0);
+    expect(repo.written?.evidenceBasis).toBe(
+      OvertimeEvidenceBasis.PUNCH_RECORD,
+    );
+  });
+
+  /**
+   * Info: (20260819 - Julian) 核准少於打卡 → 超出的那一段被交出去。
+   *
+   * 申請並待滿 120 分、主管只核 60 分：認列 60，而另外 60 分是
+   * **有打卡事實、沒有人核准**的加班。它不會被靜默丟棄，
+   * 也會出現在 L29 的「未核准時段」。這是 seed 的 OT-3 演的那條路。
+   */
+  it("核准少於打卡：超出的事實被交出去，不是靜默丟棄", async () => {
+    context.summary = requestOf(120);
+    context.approval = contextOf({
+      // Info: (20260819 - Julian) 17:00–19:00，與申請完全重合 → 事實 120 分
+      punchIntervals: [{ startMinute: 1020, endMinute: 1140 }],
+    });
+
+    const result = await approve({ approvedMinutes: 60 });
+    expect(result.recognizedMinutes).toBe(60);
+    expect(result.unapprovedMinutes).toBe(60);
+  });
+
+  /**
+   * Info: (20260819 - Julian) 全日無打卡 → 自陳。
+   *
+   * 仍然認列，但佐證來源標成 `MANUAL_DECLARATION` —— 勞動檢查會問
+   * 「你們有多少加班沒有出勤紀錄佐證」，而一個答不出這題的系統
+   * 等於默認全部都是。
+   */
+  it("全日無打卡時走自陳，且認列等於核准", async () => {
+    context.summary = requestOf(120);
+    context.approval = contextOf({ punchIntervals: [] });
+
+    const result = await approve();
+    expect(result.recognizedMinutes).toBe(120);
+    // Info: (20260819 - Julian) 沒有打卡就沒有「超出核准的事實」可言
+    expect(result.unapprovedMinutes).toBe(0);
+    expect(repo.written?.evidenceBasis).toBe(
+      OvertimeEvidenceBasis.MANUAL_DECLARATION,
+    );
+  });
+
+  it("核准多於申請時擋下（沒有人申請過那個時段）", async () => {
+    context.summary = requestOf(120);
+    expect(await codeOf(() => approve({ approvedMinutes: 121 }))).toBe(
+      API_ERRORS.VA_INVALID_INPUT_DATA.code,
+    );
+  });
+});
+
+describe("日別把關（review B7 的迴歸）", () => {
+  /**
+   * Info: (20260819 - Julian) 例假日一律擋下，`isEmergency` **不是通行證**。
+   *
+   * §32 IV 是「報主管機關**備查**」，§40 是「報主管機關**核備**」，
+   * 法律效果不同。這一條把 B7 的修正接到編排層 ——
+   * 引擎那一側由 `overtime_rules.test.ts` 守著。
+   */
+  it.each([false, true])(
+    "例假日核准擋下（isEmergency=%p）",
+    async (isEmergency) => {
+      context.summary = summaryOf({ isEmergency });
+      context.approval = contextOf({ workDayType: WorkDayType.REGULAR_OFF });
+      expect(await codeOf(approve)).toBe(
+        API_ERRORS.FO_OVERTIME_ON_REGULAR_OFF.code,
+      );
+    },
+  );
+
+  it("沒有排班時回「該日未排班」而不是加成未定義", async () => {
+    context.approval = contextOf({ workDayType: null });
+    expect(await codeOf(approve)).toBe(
+      API_ERRORS.VA_OVERTIME_DAY_NOT_SCHEDULED.code,
+    );
+  });
+
+  it("停工與請假日回加成未定義（法源待核對）", async () => {
+    context.approval = contextOf({ workDayType: WorkDayType.SUSPENDED });
+    expect(await codeOf(approve)).toBe(
+      API_ERRORS.VA_OVERTIME_PREMIUM_UNDEFINED.code,
+    );
+  });
+
+  /**
+   * Info: (20260819 - Julian) 已認定的天災事變在**非**例假日仍然生效：
+   * 整段跳到 `EMERGENCY_DOUBLE`，不切級距。
+   */
+  it("平日的天災事變整段加倍發給", async () => {
+    context.summary = summaryOf({
+      isEmergency: true,
+      requestedStartMinute: 1020,
+      requestedEndMinute: 1020 + 3 * HOUR,
+    });
+    await approve();
+    expect(repo.written?.segments).toEqual([
+      {
+        order: 0,
+        tier: OvertimePremiumTier.EMERGENCY_DOUBLE,
+        minutes: 3 * HOUR,
+      },
+    ]);
+  });
+});
+
+describe("已決行的單子不得再決行", () => {
+  it.each([
+    OvertimeRequestStatus.APPROVED,
+    OvertimeRequestStatus.REJECTED,
+    OvertimeRequestStatus.WITHDRAWN,
+  ])("狀態為 %s 時擋下", async (status) => {
+    context.summary = summaryOf({ status });
+    expect(await codeOf(approve)).toBe(
+      API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED.code,
+    );
+  });
+});

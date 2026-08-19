@@ -19,21 +19,60 @@ import { employeeHrFunctionRepo } from "@/repositories/employee_hr_function.repo
  * `OvertimeRequest` 列入 `HrPiiTable`），但「誰在加班」仍是一份可以拿來
  * 推論的資料。可見範圍分級（§9.2）在里程碑 5 才收斂，屆時這支要一併對齊。
  */
-export async function assertMayViewOvertimeOf(params: {
-  accountBookId: string;
-  actorEmployeeId: string;
-  targetEmployeeId: string;
-}): Promise<void> {
+/**
+ * Info: (20260819 - Julian) 相依以參數注入，預設綁模組層單例（review B9）。
+ *
+ * 先前這支直接呼叫 `employeeRepo` 與 `employeeHrFunctionRepo` 兩個單例，
+ * 於是**它是三支端點的唯一授權點，卻沒有辦法在不 `jest.mock` 整個
+ * repository 模組的情況下測**。而 `next/jest`(SWC) 下具名 import 的
+ * `jest.mock` 工廠不會被提升，那條路本身就是一個已知的坑
+ * （見 `carbon_access.test.ts` 檔頭）。
+ *
+ * 預設值讓 12 個既有呼叫端一行都不必改；測試傳自己的兩支進來。
+ * 這不是為了測試而扭曲設計 —— 一個「可見範圍」的判斷本來就只依賴
+ * 「他管不管得到」與「他是不是 HR」這兩個問題的答案，
+ * 而不依賴那兩個答案是從哪個單例來的。
+ */
+export interface IOvertimeVisibilityDeps {
+  managesEmployee(params: {
+    accountBookId: string;
+    managerEmployeeId: string;
+    targetEmployeeId: string;
+  }): Promise<boolean>;
+  hasAnyFunction(params: {
+    accountBookId: string;
+    employeeId: string;
+    hrFunctions: readonly EmployeeHrFunction[];
+  }): Promise<boolean>;
+}
+
+const defaultDeps: IOvertimeVisibilityDeps = {
+  managesEmployee: (params) => employeeRepo.managesEmployee(params),
+  hasAnyFunction: (params) =>
+    employeeHrFunctionRepo.hasAnyFunction({
+      ...params,
+      hrFunctions: [...params.hrFunctions],
+    }),
+};
+
+export async function assertMayViewOvertimeOf(
+  params: {
+    accountBookId: string;
+    actorEmployeeId: string;
+    targetEmployeeId: string;
+  },
+  deps: IOvertimeVisibilityDeps = defaultDeps,
+): Promise<void> {
   if (params.actorEmployeeId === params.targetEmployeeId) return;
 
-  const manages = await employeeRepo.managesEmployee({
+  const manages = await deps.managesEmployee({
     accountBookId: params.accountBookId,
     managerEmployeeId: params.actorEmployeeId,
     targetEmployeeId: params.targetEmployeeId,
   });
   if (manages) return;
 
-  const isHr = await employeeHrFunctionRepo.hasAnyFunction({
+  const isHr = await deps.hasAnyFunction({
     accountBookId: params.accountBookId,
     employeeId: params.actorEmployeeId,
     hrFunctions: [EmployeeHrFunction.HR_ADMIN],

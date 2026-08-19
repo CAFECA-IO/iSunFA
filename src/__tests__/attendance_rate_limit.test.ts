@@ -235,6 +235,16 @@ describe("HR 端點的限流覆蓋率", () => {
    *
    * 以 `resolveEmployee` 當業務邏輯的起點：每一支都靠它把登入身分換成員工檔，
    * 而打卡的圍欄判定在它之後。限流的位置若跑到它後面，圍欄外的失敗就不再計入。
+   *
+   * Info: (20260819 - Julian) **這一條守的是那兩行的順序，不是「限流真的會擋」**
+   * （review B9）。刪掉 `if (limited) return limited;`、留著上一行的呼叫，
+   * 限流完全失效而本檔照樣全綠 —— `enforceRateLimit(` 仍然在，位置也仍然在前面。
+   * 行為那一側由 `leave_route_wiring.test.ts` 打真的 handler 補上：
+   * 斷言成對（回應是 429 **且** service 沒有被多呼叫一次）。
+   *
+   * 兩支不重疊也不互相取代：本檔的價值在於**每一支 route 都掃得到**
+   * （24 支全覆蓋，新增一支忘了接限流會在這裡紅），而裝配測試只打其中幾支
+   * 但驗的是真的行為。掃描保廣度，裝配保深度。
    */
   it("enforceRateLimit 排在 resolveEmployee 之前", () => {
     const late = listHandlers().flatMap((handler) => {
