@@ -87,7 +87,6 @@ const MyOvertimePageBody: FC = () => {
   const [compensationMode, setCompensationMode] =
     useState<OvertimeCompensationMode>(OvertimeCompensationMode.PAYMENT);
   const [reason, setReason] = useState("");
-  const [isEmergency, setIsEmergency] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -153,12 +152,10 @@ const MyOvertimePageBody: FC = () => {
           requestedEndMinute:
             endMinute <= startMinute ? endMinute + 1440 : endMinute,
           reason,
-          isEmergency,
         }),
       });
 
       setReason("");
-      setIsEmergency(false);
       setSheetOpen(false);
       await reload();
     } catch (error) {
@@ -355,24 +352,20 @@ const MyOvertimePageBody: FC = () => {
         </label>
 
         {/**
-         * Info: (20260818 - Julian) 天災事變預設不勾。
-         * 它會讓整段跳到加倍發給並繞過例假日的 §40 閘門 ——
-         * 那不是一個可以靠忘記填就成立的狀態，所以提示寫在勾選框旁邊。
+         * Info: (20260819 - Julian) 天災事變的勾選框**拿掉了**（review B7）。
+         *
+         * §32 IV 的構成要件是「天災、事變或突發事件」**且**已依法報備 ——
+         * 而後者是一件對外發生的事（通知工會，或報當地主管機關備查），
+         * 不是申請單上的一個勾選框。它原本由申請人自填，卻會讓整段加班
+         * 跳到加倍發給並繞過例假日的閘門，系統裡沒有任何地方記載那次報備。
+         *
+         * 認定改由具 `HR_ADMIN` 職能者在核准當下給出，並強制附上報備紀錄。
+         * 這裡留一句說明而不是留一個 disabled 的勾選框：一個永遠按不下去的
+         * 勾選框，看的人只會以為功能壞了。
          */}
-        <label className="mt-3 flex items-start gap-2 text-xs text-gray-600">
-          <input
-            type="checkbox"
-            checked={isEmergency}
-            onChange={(event) => setIsEmergency(event.target.checked)}
-            className="mt-0.5 size-4 shrink-0 rounded border-gray-300"
-          />
-          <span>
-            {t("hr_management.overtime.field_emergency")}
-            <span className="mt-0.5 block leading-relaxed text-gray-400">
-              {t("hr_management.overtime.field_emergency_hint")}
-            </span>
-          </span>
-        </label>
+        <p className="mt-3 rounded-xl bg-gray-50 px-3 py-2 text-xs leading-relaxed text-gray-500">
+          {t("hr_management.overtime.field_emergency_moved_hint")}
+        </p>
 
         {submitError && (
           <p className="mt-3 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">

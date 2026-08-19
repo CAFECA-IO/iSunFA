@@ -2,6 +2,7 @@ import { z } from "zod";
 import { isoDateSchema } from "@/validators/attendance";
 import { MINUTES_PER_DAY } from "@/constants/attendance";
 import {
+  OVERTIME_EMERGENCY_REPORT_URL_MAX_LENGTH,
   OVERTIME_REASON_MAX_LENGTH,
   OvertimeCompensationMode,
   OvertimeFilingType,
@@ -50,11 +51,18 @@ export const overtimeRequestCreateSchema = z
     requestedEndMinute: minuteOfDaySchema,
     reason: z.string().trim().min(1).max(OVERTIME_REASON_MAX_LENGTH),
     /**
-     * Info: (20260818 - Julian) §32 IV 天災事變等情形且**已報備**。
-     * 預設 false：它會讓整段加班跳到加倍發給並繞過例假的 §40 閘門，
-     * 那不是一個可以靠忘記填就成立的狀態。
+     * Info: (20260819 - Julian) `isEmergency` **不在這裡**（review B7）。
+     *
+     * 它原本是申請人自填的一個布林值，而它的兩個後果都對填單的人有利：
+     * 整段加班跳到 `EMERGENCY_DOUBLE`（加倍發給），且它曾經還會繞過
+     * 例假日的閘門 —— 沒有佐證欄位、沒有 HR 覆核、沒有主管機關報備紀錄。
+     * §32 IV 的構成要件是「天災、事變或突發事件」**且**已依法報備，
+     * 而後者是一件對外發生的事，不是申請單上的一個勾選框。
+     *
+     * 現在由具 `HR_ADMIN` 職能者在核准當下認定，並強制附上報備紀錄
+     * （見 `overtimeApprovalSchema` 的 `emergency`）。標準與 §32 III
+     * 54 小時放寬一致：一個沒有記載的「已報備」等於沒有報備。
      */
-    isEmergency: z.boolean().default(false),
   })
   .refine((value) => value.requestedEndMinute > value.requestedStartMinute, {
     message: "requestedEndMinute must be after requestedStartMinute",
@@ -70,6 +78,27 @@ export const overtimeRequestCreateSchema = z
  */
 export const overtimeApprovalSchema = z.object({
   approvedMinutes: z.number().int().min(0).optional(),
+  /**
+   * Info: (20260819 - Julian) §32 IV 天災事變的認定（review B7）。
+   *
+   * 省略即非天災事變 —— 這一段是「有沒有這回事」的認定，不是一個可以
+   * 靠預設值成立的狀態。填了就必須同時給出報備紀錄與報備時點，
+   * 兩者缺一不可（repository 端由 `assertOvertimeEmergencyRecord` 再擋一次，
+   * 因為 seed 與資料遷移不會經過這個 schema）。
+   *
+   * `reportedAt` 收 ISO 8601 字串而不是 epoch：這一欄會被人讀、被貼進
+   * 報備公文，一個看不出時區的數字沒有辦法拿去對。
+   */
+  emergency: z
+    .object({
+      reportUrl: z
+        .string()
+        .trim()
+        .min(1)
+        .max(OVERTIME_EMERGENCY_REPORT_URL_MAX_LENGTH),
+      reportedAt: z.string().datetime({ offset: true }),
+    })
+    .optional(),
 });
 
 export type IOvertimeRequestCreatePayload = z.infer<

@@ -62,6 +62,13 @@ const OvertimeRequestList: FC<{
   /** Info: (20260818 - Julian) 給值才顯示簽核區（待簽清單用，我的加班不給） */
   decidable?: boolean;
   /**
+   * Info: (20260819 - Julian) 決行者具 `HR_ADMIN` 職能時，才看得到
+   * §32 IV 天災事變的認定區（review B7）。藏不藏都不影響安全 ——
+   * `resolveEmergencyDeclaration` 自己會擋 —— 但把一個按下去必定被拒的
+   * 表單放在主管面前，只會讓他以為系統壞了。
+   */
+  mayDeclareEmergency?: boolean;
+  /**
    * Info: (20260818 - Julian) 給值才顯示撤回鈕（我的加班用，待簽清單不給）。
    *
    * 與 `decidable` 互斥不是巧合：**撤回只有申請人做得到，簽核只有主管做得到**。
@@ -73,6 +80,7 @@ const OvertimeRequestList: FC<{
   requests,
   emptyKey,
   decidable = false,
+  mayDeclareEmergency = false,
   withdrawable = false,
   onChanged = undefined,
 }) => {
@@ -85,6 +93,9 @@ const OvertimeRequestList: FC<{
   const [approvedMinutes, setApprovedMinutes] = useState<
     Record<string, number>
   >({});
+  const [emergencyOn, setEmergencyOn] = useState<Record<string, boolean>>({});
+  const [emergencyUrl, setEmergencyUrl] = useState<Record<string, string>>({});
+  const [emergencyAt, setEmergencyAt] = useState<Record<string, string>>({});
   const [withdrawReason, setWithdrawReason] = useState<Record<string, string>>(
     {},
   );
@@ -107,7 +118,7 @@ const OvertimeRequestList: FC<{
   const decide = async (
     item: IOvertimeRequestSummary,
     url: string,
-    body: Record<string, number | string> | null,
+    body: Record<string, unknown> | null,
     /**
      * Info: (20260818 - Julian) 未登記錯誤碼時要退回哪一句。核准／駁回與撤回
      * 是不同的動作，共用「簽核失敗」會讓撤回失敗時的訊息指錯方向。
@@ -196,12 +207,17 @@ const OvertimeRequestList: FC<{
            *
            * 需求是「超時改為提示、不阻擋，並提供填寫報告書的選項」。但「不擋」
            * 與「合法」是兩件事，而它們的資料模型不同：報告書若是 §32 IV 天災
-           * 事變的法定通報，它是一個**合法性依據**；若只是主管的例外核准說明，
+           * 事變的法定報備，它是一個**合法性依據**；若只是主管的例外核准說明，
            * 它是一筆**違規紀錄**。把後者當成前者，等於讓系統對勞動檢查宣稱
            * 一件不成立的合法性。
            *
-           * 那個決定尚未做出，法源（§32 IV 的通報時限、受理機關、法定書表欄位）
-           * 也還沒回原文核對 —— 因此這裡只放出入口，不改變阻擋行為。
+           * Info: (20260819 - Julian) §32 IV 那一側現在有落腳處了（review B7）：
+           * 認定由 `HR_ADMIN` 在上面的核准區給出，並強制附報備紀錄與報備時點。
+           * 但**這顆按鈕仍然按不下去** —— 它要處理的是超限那一種，而
+           * 「超限但有報備」與「超限就是違法」該落成哪一種紀錄，還沒有決定。
+           *
+           * 尚未回原文核對的是 §32 IV 的法定書表格式與必填欄位（報備時限與
+           * 受理機關已在條文層面確認）。因此這裡只放出入口，不改變阻擋行為。
            * 完整說明見計畫書 §8.3。
            */}
           {errorCode !== null && LIMIT_ERROR_CODES.includes(errorCode) && (
@@ -248,12 +264,29 @@ const OvertimeRequestList: FC<{
                     {formatMinuteOfDay(item.requestedStartMinute, nextDay)}–
                     {formatMinuteOfDay(item.requestedEndMinute, nextDay)}
                   </span>
-                  {item.isEmergency && (
-                    <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-700">
-                      <Siren className="size-3" />
-                      {t("hr_management.overtime.list_emergency_badge")}
-                    </span>
-                  )}
+                  {/**
+                   * Info: (20260819 - Julian) 標記連到報備紀錄（review B7）。
+                   * 一個寫著「天災事變·加倍發給」卻點不進去的標記，
+                   * 看的人沒有辦法判斷它是不是真的報備過 —— 而那正是
+                   * 這一欄從自填布林值改成強制記載的理由。
+                   */}
+                  {item.isEmergency &&
+                    (item.emergencyReportUrl === null ? (
+                      <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-700">
+                        <Siren className="size-3" />
+                        {t("hr_management.overtime.list_emergency_badge")}
+                      </span>
+                    ) : (
+                      <a
+                        href={item.emergencyReportUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-700 underline decoration-orange-300 underline-offset-2 hover:bg-orange-200"
+                      >
+                        <Siren className="size-3" />
+                        {t("hr_management.overtime.list_emergency_badge")}
+                      </a>
+                    ))}
                   {item.evidenceBasis ===
                     OvertimeEvidenceBasis.MANUAL_DECLARATION && (
                     <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
@@ -339,11 +372,36 @@ const OvertimeRequestList: FC<{
 
                 <button
                   type="button"
-                  disabled={actingId === item.id}
+                  /**
+                   * Info: (20260819 - Julian) 勾了天災事變卻沒填完報備紀錄時
+                   * 不給按（review B7）—— 讓它送出去被 400 擋掉，
+                   * 使用者只會看到一句「輸入有誤」而不知道少了哪一格。
+                   */
+                  disabled={
+                    actingId === item.id ||
+                    (emergencyOn[item.id] === true &&
+                      ((emergencyUrl[item.id] ?? "").trim() === "" ||
+                        (emergencyAt[item.id] ?? "") === ""))
+                  }
                   onClick={() =>
                     decide(item, overtimeRequestApproveApi(item.id), {
                       approvedMinutes:
                         approvedMinutes[item.id] ?? requestedMinutes,
+                      /**
+                       * Info: (20260819 - Julian) 沒勾就整個不送這個鍵 ——
+                       * 送一個空的 `emergency` 物件會被 validator 擋下，
+                       * 而使用者只會看到「輸入有誤」卻不知道是哪一格。
+                       */
+                      ...(emergencyOn[item.id] === true
+                        ? {
+                            emergency: {
+                              reportUrl: emergencyUrl[item.id] ?? "",
+                              reportedAt: new Date(
+                                emergencyAt[item.id] ?? "",
+                              ).toISOString(),
+                            },
+                          }
+                        : {}),
                     })
                   }
                   className="flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
@@ -367,6 +425,73 @@ const OvertimeRequestList: FC<{
                   <X className="size-3.5" />
                   {t("hr_management.overtime.action_reject")}
                 </button>
+
+                {/**
+                 * Info: (20260819 - Julian) §32 IV 天災事變的認定（review B7）。
+                 *
+                 * 兩格都必填，因為那正是這次修正的重點：認定的後果是整段工資
+                 * 跳到加倍發給，而「已報備」是一件對外發生的事。沒有紀錄就
+                 * 沒有認定 —— repository 端的 `assertOvertimeEmergencyRecord`
+                 * 會再擋一次，這裡只是讓人不必按下去才知道。
+                 */}
+                {mayDeclareEmergency && (
+                  <div className="w-full">
+                    <label className="flex items-start gap-2 text-xs text-gray-600">
+                      <input
+                        type="checkbox"
+                        checked={emergencyOn[item.id] ?? false}
+                        onChange={(event) =>
+                          setEmergencyOn((current) => ({
+                            ...current,
+                            [item.id]: event.target.checked,
+                          }))
+                        }
+                        className="mt-0.5 size-4 shrink-0 rounded border-gray-300"
+                      />
+                      <span>
+                        {t("hr_management.overtime.field_emergency")}
+                        <span className="mt-0.5 block leading-relaxed text-gray-400">
+                          {t("hr_management.overtime.field_emergency_hint")}
+                        </span>
+                      </span>
+                    </label>
+
+                    {emergencyOn[item.id] === true && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <label className="flex min-w-56 flex-1 flex-col gap-1 text-xs text-gray-600">
+                          {t("hr_management.overtime.field_emergency_report")}
+                          <input
+                            type="url"
+                            value={emergencyUrl[item.id] ?? ""}
+                            onChange={(event) =>
+                              setEmergencyUrl((current) => ({
+                                ...current,
+                                [item.id]: event.target.value,
+                              }))
+                            }
+                            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1 text-xs text-gray-600">
+                          {t(
+                            "hr_management.overtime.field_emergency_reported_at",
+                          )}
+                          <input
+                            type="datetime-local"
+                            value={emergencyAt[item.id] ?? ""}
+                            onChange={(event) =>
+                              setEmergencyAt((current) => ({
+                                ...current,
+                                [item.id]: event.target.value,
+                              }))
+                            }
+                            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 tabular-nums"
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 

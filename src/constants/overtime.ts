@@ -156,6 +156,17 @@ export const OVERTIME_QUARTERLY_WINDOW_IS_ROLLING = true;
 export const OVERTIME_REASON_MAX_LENGTH = 200;
 
 /**
+ * Info: (20260819 - Julian) §32 IV 報備紀錄連結的長度上限（review B7）。
+ *
+ * 收「連結」而不是「文號」：報備的形式各家不同（工會的簽收回條、
+ * 主管機關的線上申辦收件編號、掃描的公文 PDF），要求一個固定格式的文號
+ * 會逼出一堆填 `N/A` 的紀錄 —— 而一個填了 `N/A` 的必填欄位，
+ * 比沒有這個欄位更糟：它看起來像有記載。
+ * ToDo: (20260819 - Julian) 檔案上傳接上之後，這一欄應可指向站內的附件。
+ */
+export const OVERTIME_EMERGENCY_REPORT_URL_MAX_LENGTH = 500;
+
+/**
  * Info: (20260818 - Julian) 補休批次的冪等鍵格式（§32-1 一段一批）。
  *
  * 以分段 id 組鍵：一個 `OvertimeSegment` 最多換出一筆補休批次，

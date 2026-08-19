@@ -950,8 +950,12 @@ export const hrManagement = {
     field_reason: "초과근무 사유",
     field_reason_placeholder: "예: 콘크리트 타설을 당일 내 완료해야 함",
     field_emergency: "천재지변(§32 IV, 신고 완료)",
+    field_emergency_report: "신고 기록 링크",
+    field_emergency_reported_at: "신고 시각",
+    field_emergency_moved_hint:
+      "천재지변(§32 IV) 인정은 인사 관리자가 승인 시점에 하며 신고 기록을 첨부해야 하므로 이 신청서에는 없습니다.",
     field_emergency_hint:
-      "실제로 신고한 경우에만 선택하세요: 전 구간이 2배 지급이 되고 법정휴일 제한도 통과합니다.",
+      "인사 관리자만 인정할 수 있습니다. 선택하면 신고 기록과 신고 시각을 반드시 첨부해야 합니다: 전 구간이 2배 지급이 됩니다. 법정휴일에는 적용되지 않습니다(§40 은 별도로 관할 관청 신고가 필요).",
     action_submit: "신청하기",
     my_requests_title: "내 신청 내역",
     my_requests_empty: "제출한 초과근무 신청이 없습니다",

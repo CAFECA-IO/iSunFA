@@ -1,6 +1,7 @@
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { DEMO_TIME_ZONE, WorkDayType } from "@/constants/attendance";
+import { EmployeeHrFunction } from "@/constants/hr_management";
 import {
   OvertimeCompensationMode,
   OvertimeEvidenceBasis,
@@ -29,6 +30,7 @@ import {
   instantOfWorkDateMinute,
 } from "@/lib/utils/attendance_time";
 import { employeeRepo } from "@/repositories/employee.repo";
+import { employeeHrFunctionRepo } from "@/repositories/employee_hr_function.repo";
 import {
   IOvertimeRequestContext,
   overtimeRequestContextRepo,
@@ -101,7 +103,7 @@ export class OvertimeRequestService {
     if (scheduled === null) {
       throw new AppError(API_ERRORS.VA_OVERTIME_DAY_NOT_SCHEDULED);
     }
-    this.assertDayTypeAllowed(scheduled.dayType, input.isEmergency);
+    this.assertDayTypeAllowed(scheduled.dayType);
 
     /**
      * Info: (20260818 - Julian) 事前／事後的比較基準。
@@ -125,7 +127,16 @@ export class OvertimeRequestService {
       requestedStartMinute: input.requestedStartMinute,
       requestedEndMinute: input.requestedEndMinute,
       reason: input.reason,
-      isEmergency: input.isEmergency,
+      /**
+       * Info: (20260819 - Julian) 送出時一律 false（review B7）。
+       * §32 IV 的認定與報備紀錄在核准當下由 `HR_ADMIN` 給出 ——
+       * 申請人自己勾一個布林值就跳到加倍發給，那個旗標是一句
+       * 沒有證據的宣稱（計畫書 §8.3）。
+       */
+      isEmergency: false,
+      emergencyReportUrl: null,
+      emergencyReportedAt: null,
+      emergencyDeclaredByEmployeeId: null,
       invariant: {
         filingType: input.filingType,
         status: OvertimeRequestStatus.PENDING,
@@ -241,6 +252,11 @@ export class OvertimeRequestService {
     actorEmployeeId: string;
     /** Info: (20260818 - Julian) 未指定即照申請的整段核准 */
     approvedMinutes?: number;
+    /**
+     * Info: (20260819 - Julian) §32 IV 天災事變的認定（review B7）。
+     * 省略即非天災事變；填了則限具 `HR_ADMIN` 職能者，且必須帶報備紀錄。
+     */
+    emergency?: { reportUrl: string; reportedAt: string };
     observedAt: Date;
   }): Promise<IOvertimeApprovalResult> {
     const request = await this.mustFindSummary(
@@ -270,7 +286,24 @@ export class OvertimeRequestService {
     if (context.workDayType === null) {
       throw new AppError(API_ERRORS.VA_OVERTIME_DAY_NOT_SCHEDULED);
     }
-    this.assertDayTypeAllowed(context.workDayType, request.isEmergency);
+    /**
+     * Info: (20260819 - Julian) 天災事變的認定在這裡發生，不在送出時（review B7）。
+     *
+     * `request.isEmergency` 進到這裡永遠是 false —— 送出的 payload 已經
+     * 沒有那個欄位。認定與它的報備紀錄一起由決行者給出，並在下面
+     * 與狀態同一次寫入落地，讓 repository 的不變式擋得到它。
+     */
+    const emergency = await this.resolveEmergencyDeclaration({
+      accountBookId: params.accountBookId,
+      actorEmployeeId: params.actorEmployeeId,
+      input: params.emergency,
+    });
+
+    /**
+     * Info: (20260819 - Julian) 日別把關**不**看 `isEmergency`（review B7）。
+     * §32 IV 的備查不是 §40 的核備，例假日一律擋下（ADR 024 §4.5）。
+     */
+    this.assertDayTypeAllowed(context.workDayType);
 
     /**
      * Info: (20260818 - Julian) 沒有任何成對打卡就是自陳（ADR 024 §2.2）。
@@ -299,7 +332,7 @@ export class OvertimeRequestService {
     const segments =
       recognizedMinutes === 0
         ? []
-        : this.deriveSegments(context, request.isEmergency, recognizedMinutes);
+        : this.deriveSegments(context, emergency !== null, recognizedMinutes);
 
     const written = await this.requests.approve({
       accountBookId: params.accountBookId,
@@ -319,6 +352,10 @@ export class OvertimeRequestService {
         : OvertimeEvidenceBasis.PUNCH_RECORD,
       segments,
       engineVersion: OVERTIME_ENGINE_VERSION,
+      isEmergency: emergency !== null,
+      emergencyReportUrl: emergency?.reportUrl ?? null,
+      emergencyReportedAt: emergency?.reportedAt ?? null,
+      emergencyDeclaredByEmployeeId: emergency?.declaredByEmployeeId ?? null,
       invariant: {
         filingType: request.filingType,
         status: OvertimeRequestStatus.APPROVED,
@@ -485,17 +522,74 @@ export class OvertimeRequestService {
   }
 
   /**
-   * Info: (20260818 - Julian) 日別的把關，順序與引擎的判定表一致。
+   * Info: (20260819 - Julian) §32 IV 天災事變的認定（review B7）。
    *
-   * `isEmergency` 優先於一切日別（§32 IV），所以它必須排在例假之前 ——
-   * 順序反過來會讓天災事變的緊急出勤被 §40 擋掉，而 §40 允許的正是這種情形。
+   * ## 為什麼限 HR_ADMIN 而不是決行的主管
+   *
+   * 認定的後果是**整段工資的計算標準**跳到加倍發給，而報備是一件對外
+   * 發生的事（通知工會，或報當地主管機關備查）。一線主管簽得動加班，
+   * 但他不是那個去報備的人 —— 讓他認定，等於讓一個沒有辦法查證那份紀錄
+   * 的人替公司作證。標準與 §32 III 54 小時放寬一致（`assertOvertimePolicy`）。
+   *
+   * ## 為什麼不在這裡驗 24 小時
+   *
+   * §32 IV 要求延長開始後 24 小時內報備。逾期是另一個違章，**不會**讓
+   * 天災事變這個事實消失 —— 擋下只會逼出一個把 `reportedAt` 往前填的動作，
+   * 而那比逾期本身更難查。時點照實記下，逾期的統計留給 L28。
+   *
+   * 回 null 代表「不是天災事變」，不是「認定失敗」——
+   * 失敗的路徑一律用丟的（缺紀錄、沒有職能），不會靜默降級成普通加班。
    */
-  private assertDayTypeAllowed(
-    dayType: WorkDayType,
-    isEmergency: boolean,
-  ): void {
-    if (isEmergency) return;
+  private async resolveEmergencyDeclaration(params: {
+    accountBookId: string;
+    actorEmployeeId: string;
+    input: { reportUrl: string; reportedAt: string } | undefined;
+  }): Promise<{
+    reportUrl: string;
+    reportedAt: Date;
+    declaredByEmployeeId: string;
+  } | null> {
+    if (params.input === undefined) return null;
 
+    const isHr = await employeeHrFunctionRepo.hasAnyFunction({
+      accountBookId: params.accountBookId,
+      employeeId: params.actorEmployeeId,
+      hrFunctions: [EmployeeHrFunction.HR_ADMIN],
+    });
+    if (!isHr) {
+      throw new AppError(API_ERRORS.FO_HR_FUNCTION_REQUIRED);
+    }
+
+    const reportedAt = new Date(params.input.reportedAt);
+    if (Number.isNaN(reportedAt.getTime())) {
+      throw new AppError(API_ERRORS.VA_INVALID_INPUT_DATA);
+    }
+
+    return {
+      reportUrl: params.input.reportUrl,
+      reportedAt,
+      declaredByEmployeeId: params.actorEmployeeId,
+    };
+  }
+
+  /**
+   * Info: (20260819 - Julian) 日別的把關，順序與引擎的判定表一致。
+   *
+   * ## 為什麼不再收 `isEmergency`（review B7）
+   *
+   * 這裡原本第一行是 `if (isEmergency) return;` —— 申請人在送出的 payload 裡
+   * 勾一個布林值，就繞過了整個日別把關。§32 IV 與 §40 都以天災事變為前提，
+   * 但**程序不同**：前者是「通知工會／報主管機關**備查**」，後者是
+   * 「報主管機關**核備**」，法律效果不同。拿 §32 IV 的認定去放行例假日出勤，
+   * 是用一份不對的文件當通行證。
+   *
+   * §40 核備的記載模型尚未建立，因此例假日沒有可以放行的路徑 ——
+   * ADR 024 §4.5 明訂「在補齊之前，例假日的加班申請**一律**擋下」。
+   * ToDo: (20260819 - Julian) 補上 §40 核備紀錄（文號、核備日、事後補假的日期）
+   * 之後，這裡才會有第二條路徑，且必須與 `assertOvertimeEmergencyRecord`
+   * 同型：沒有記載就沒有核備。
+   */
+  private assertDayTypeAllowed(dayType: WorkDayType): void {
     if (dayType === WorkDayType.REGULAR_OFF) {
       throw new AppError(API_ERRORS.FO_OVERTIME_ON_REGULAR_OFF);
     }

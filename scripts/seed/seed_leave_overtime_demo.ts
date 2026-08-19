@@ -714,7 +714,6 @@ async function submitOvertime(
       requestedStartMinute: overtimeCase.requestedStartMinute,
       requestedEndMinute: overtimeCase.requestedEndMinute,
       reason: overtimeCase.reason,
-      isEmergency: false,
     },
     observedAt: overtimeCase.submittedAt,
   });

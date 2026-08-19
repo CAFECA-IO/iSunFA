@@ -37,7 +37,7 @@ export const OVERTIME_ENGINE_VERSION = 1;
  * Info: (20260817 - Julian) 結構性錯誤：這一天的加成標準未定義，不是使用者輸入錯。
  *
  * 帶 `reason` 讓 service 能對應到不同的錯誤碼 —— 例假日要回
- * `FO_OVERTIME_ON_REGULAR_OFF`（403，須依 §40 程序），
+ * `FO_OVERTIME_ON_REGULAR_OFF`（403，須依 §40 核備程序），
  * 停工日則是一個尚未核對法源的空白（計畫書 §8.1 #8）。
  */
 export class OvertimeRuleError extends Error {
@@ -52,9 +52,16 @@ export class OvertimeRuleError extends Error {
 
 export enum OvertimeRuleErrorReason {
   /**
-   * Info: (20260817 - Julian) 例假日出勤依 §40 原則上不得為之，僅限天災、事變或突發事件，
-   * 且須於 24 小時內通報主管機關並事後補假。系統尚未實作通報與補假，故一律擋下 ——
-   * 放行會讓一個違法的排班在系統裡看起來像一筆正常的加班。
+   * Info: (20260819 - Julian) 例假日出勤依 §40 原則上不得為之，僅限天災、事變或
+   * 突發事件，且「應**報當地主管機關核備**」並事後補假休息。系統尚未實作核備
+   * 與補假的記載，故**一律**擋下 —— 放行會讓一個違法的排班在系統裡
+   * 看起來像一筆正常的加班（ADR 024 §4.5）。
+   *
+   * Info: (20260819 - Julian) §32 IV 的 `isEmergency` **擋不掉這一條**（review B7）。
+   * 兩者都以天災事變為前提，但程序不同：§32 IV 是「通知工會／報主管機關
+   * **備查**」，§40 是「報主管機關**核備**」，法律效果不同（備查是報請存查，
+   * 核備須經主管機關認可）。拿前者的記載去放行後者，等於用一份不對的文件
+   * 當通行證。核備的記載模型建立之前，例假日沒有可以放行的路徑。
    */
   REGULAR_OFF_REQUIRES_ARTICLE_40 = "REGULAR_OFF_REQUIRES_ARTICLE_40",
   // Info: (20260817 - Julian) 停工日與請假日的加成標準未定義（法源待核對）
@@ -67,11 +74,16 @@ export enum OvertimeRuleErrorReason {
  * Info: (20260817 - Julian) 把一段加班切成數個加成級距（計畫書 §8.1）。
  *
  * 判定順序由上而下，第一個命中即決定該段級距：
- *   1. `isEmergency`（§32 IV 天災事變經報備）→ EMERGENCY_DOUBLE
- *   2. HOLIDAY（休假日經同意出勤，§39）      → HOLIDAY_DOUBLE
- *   3. REGULAR_OFF（例假）                    → 擋下，須依 §40 程序
+ *   1. REGULAR_OFF（例假）                        → 擋下，須依 §40 核備程序
+ *   2. `isEmergency`（§32 IV 天災事變經報備查）   → EMERGENCY_DOUBLE
+ *   3. HOLIDAY（休假日經同意出勤，§39）           → HOLIDAY_DOUBLE
  *   4. REST_DAY  →  前 2 小時 / 2 小時後
  *   5. WORK      →  前 2 小時 / 2 小時後
+ *
+ * Info: (20260819 - Julian) #1 與 #2 的順序是**被修正過**的（review B7）。
+ * 原本 `isEmergency` 排在最前面，於是申請人只要自己勾一個布林值，
+ * 就同時跳到加倍級距並繞過 §40 —— 而系統裡沒有任何地方記載那次報備。
+ * 例假日現在排在最前面且沒有旁路。
  *
  * 跨越 120 分鐘邊界時**切成兩段**，各自成為一筆 `OvertimeSegment` ——
  * 合併成一筆的那一刻級距資訊就被銷毀，而 §32-1 的補休屆期折現要求
@@ -95,22 +107,25 @@ export function deriveOvertimeSegments(
     );
   }
 
-  // Info: (20260817 - Julian) 判定表 #1：天災事變優先於一切日別
+  /**
+   * Info: (20260819 - Julian) 判定表 #1：例假日 —— 擋下而非給一個級距。
+   * 排在 `isEmergency` **之前**：§32 IV 的備查不是 §40 的核備（review B7）。
+   */
+  if (workDayType === WorkDayType.REGULAR_OFF) {
+    throw new OvertimeRuleError(
+      OvertimeRuleErrorReason.REGULAR_OFF_REQUIRES_ARTICLE_40,
+      "Overtime on a statutory rest day requires the Article 40 filing, which this system does not yet record",
+    );
+  }
+
+  // Info: (20260819 - Julian) 判定表 #2：天災事變（§32 IV 經報備查）優先於其餘日別
   if (isEmergency) {
     return [{ order: 0, tier: OvertimePremiumTier.EMERGENCY_DOUBLE, minutes }];
   }
 
-  // Info: (20260817 - Julian) 判定表 #2：休假日（國定假日）經同意出勤，工資加倍發給
+  // Info: (20260817 - Julian) 判定表 #3：休假日（國定假日）經同意出勤，工資加倍發給
   if (workDayType === WorkDayType.HOLIDAY) {
     return [{ order: 0, tier: OvertimePremiumTier.HOLIDAY_DOUBLE, minutes }];
-  }
-
-  // Info: (20260817 - Julian) 判定表 #3：例假日 —— 擋下而非給一個級距（見 OvertimeRuleErrorReason）
-  if (workDayType === WorkDayType.REGULAR_OFF) {
-    throw new OvertimeRuleError(
-      OvertimeRuleErrorReason.REGULAR_OFF_REQUIRES_ARTICLE_40,
-      "Overtime on a statutory rest day requires the Article 40 procedure",
-    );
   }
 
   const tiers = premiumTiersFor(workDayType);

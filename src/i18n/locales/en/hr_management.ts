@@ -965,9 +965,13 @@ export const hrManagement = {
       "Compensatory leave converts hour for hour; the premium multiplier applies at cash-out, not at conversion.",
     field_reason: "Reason",
     field_reason_placeholder: "e.g. concrete pour had to finish the same day",
-    field_emergency: "Emergency (Article 32 IV, already reported)",
+    field_emergency: "Emergency (Article 32 IV, filing made)",
     field_emergency_hint:
-      "Only tick this once it has actually been reported: it moves the whole period to double pay and bypasses the statutory rest-day gate.",
+      "HR administrators only. Ticking this requires the filing record and the moment it was made: it moves the whole period to double pay. It does not apply to statutory rest days, which need the separate Article 40 filing.",
+    field_emergency_report: "Filing record (URL)",
+    field_emergency_reported_at: "Filed at",
+    field_emergency_moved_hint:
+      "An Article 32 IV emergency is determined by an HR administrator at approval time and must carry the filing record, so it is not on this form.",
     action_submit: "Submit",
     my_requests_title: "My requests",
     my_requests_empty: "No overtime requests yet",

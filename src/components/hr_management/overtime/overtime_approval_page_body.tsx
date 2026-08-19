@@ -3,6 +3,9 @@
 import { FC, useCallback, useEffect, useState } from "react";
 import { Loader2, Stamp } from "lucide-react";
 import { DEMO_ATTENDANCE_MAX_RANGE_DAYS } from "@/constants/attendance";
+import { EmployeeHrFunction } from "@/constants/hr_management";
+import { HR_IDENTITY_API } from "@/constants/hr_identity_api";
+import { IHrIdentityView } from "@/interfaces/hr_identity";
 import { OVERTIME_API } from "@/constants/overtime_api";
 import {
   IOvertimeExceptionReport,
@@ -41,6 +44,11 @@ const OvertimeApprovalPageBody: FC = () => {
   const { t } = useTranslation();
 
   const [pending, setPending] = useState<IOvertimeRequestSummary[]>([]);
+  /**
+   * Info: (20260819 - Julian) §32 IV 的認定限 `HR_ADMIN`（review B7）。
+   * 這只決定看不看得到那一區 —— 授權在 service 端。
+   */
+  const [mayDeclareEmergency, setMayDeclareEmergency] = useState(false);
   const [report, setReport] = useState<IOvertimeExceptionReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -59,7 +67,7 @@ const OvertimeApprovalPageBody: FC = () => {
     const to = localIsoDate(new Date());
 
     try {
-      const [pendingRes, reportRes] = await Promise.all([
+      const [pendingRes, reportRes, meRes] = await Promise.all([
         request<IEnvelopeLike<IOvertimeRequestSummary[]>>(
           OVERTIME_API.REQUEST_PENDING,
         ),
@@ -67,9 +75,14 @@ const OvertimeApprovalPageBody: FC = () => {
           OVERTIME_API.UNAPPROVED,
           { query: { from: addIsoDays(to, -(days - 1)), to } },
         ),
+        request<IEnvelopeLike<IHrIdentityView>>(HR_IDENTITY_API.ME),
       ]);
       setPending(pendingRes.payload ?? []);
       setReport(reportRes.payload);
+      setMayDeclareEmergency(
+        meRes.payload?.hrFunctions?.includes(EmployeeHrFunction.HR_ADMIN) ??
+          false,
+      );
     } catch (error) {
       setLoadError(
         t(
@@ -118,6 +131,7 @@ const OvertimeApprovalPageBody: FC = () => {
           requests={pending}
           emptyKey="hr_management.overtime.approval_empty"
           decidable
+          mayDeclareEmergency={mayDeclareEmergency}
           onChanged={reload}
         />
       </section>

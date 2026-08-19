@@ -115,7 +115,7 @@ describe("deriveOvertimeSegments — 加倍發給的兩種情形", () => {
     ]);
   });
 
-  it("天災事變優先於一切日別（§32 IV）", () => {
+  it("天災事變優先於例假以外的一切日別（§32 IV）", () => {
     expect(
       deriveOvertimeSegments({
         workDayType: WorkDayType.WORK,
@@ -126,13 +126,43 @@ describe("deriveOvertimeSegments — 加倍發給的兩種情形", () => {
     ).toEqual([
       { order: 0, tier: OvertimePremiumTier.EMERGENCY_DOUBLE, minutes: 300 },
     ]);
+    // Info: (20260819 - Julian) 休息日、國定假日一樣被它蓋過去
+    expect(
+      deriveOvertimeSegments({
+        workDayType: WorkDayType.HOLIDAY,
+        isEmergency: true,
+        minutes: 60,
+        priorRecognizedMinutes: 0,
+      })[0].tier,
+    ).toBe(OvertimePremiumTier.EMERGENCY_DOUBLE);
+  });
+
+  /**
+   * Info: (20260819 - Julian) 這一條原本不存在，而它缺席的代價是 review B7：
+   * `isEmergency` 排在判定表第一列「任意日別」，於是它同時跳到加倍級距
+   * **並繞過例假日**。§32 IV 是「報主管機關**備查**」，§40 是「報主管機關
+   * **核備**」，法律效果不同 —— 前者的記載不能拿來放行後者。
+   */
+  it("天災事變**不得**繞過例假（§32 IV 的備查不是 §40 的核備）", () => {
+    expect(() =>
+      deriveOvertimeSegments({
+        workDayType: WorkDayType.REGULAR_OFF,
+        isEmergency: true,
+        minutes: 60,
+        priorRecognizedMinutes: 0,
+      }),
+    ).toThrow(
+      expect.objectContaining({
+        reason: OvertimeRuleErrorReason.REGULAR_OFF_REQUIRES_ARTICLE_40,
+      }) as unknown as Error,
+    );
   });
 });
 
 describe("deriveOvertimeSegments — 擋下而非猜測", () => {
   /**
-   * Info: (20260817 - Julian) 例假日出勤依 §40 原則上不得為之，僅限天災、事變或突發事件，
-   * 且須於 24 小時內通報主管機關並事後補假。系統尚未實作通報與補假，故一律擋下 ——
+   * Info: (20260819 - Julian) 例假日出勤依 §40 原則上不得為之，僅限天災、事變或突發事件，
+   * 且應報當地主管機關**核備**並事後補假休息。系統尚未實作核備與補假，故一律擋下 ——
    * 放行會讓一個違法的排班在系統裡看起來像一筆正常的加班。
    */
   it("例假日加班擋下，並指出須依 §40 程序", () => {

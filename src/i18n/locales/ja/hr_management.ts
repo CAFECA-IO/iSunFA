@@ -947,8 +947,12 @@ export const hrManagement = {
     field_reason: "残業理由",
     field_reason_placeholder: "例：コンクリート打設を当日中に完了させるため",
     field_emergency: "天災事変（§32 IV、届出済み）",
+    field_emergency_report: "届出記録のリンク",
+    field_emergency_reported_at: "届出日時",
+    field_emergency_moved_hint:
+      "天災事変（§32 IV）の認定は人事管理者が承認時に行い、届出記録の添付が必要なため、この申請書には含まれません。",
     field_emergency_hint:
-      "実際に届出済みの場合のみ選択してください：全区間が倍額支給となり、法定休日のゲートも通過します。",
+      "人事管理者のみが認定できます。選択する場合は届出記録と届出日時の添付が必須です：全区間が倍額支給となります。法定休日には適用されません（§40 は別途、所轄官庁への届出が必要）。",
     action_submit: "申請する",
     my_requests_title: "自分の申請",
     my_requests_empty: "残業申請はまだありません",

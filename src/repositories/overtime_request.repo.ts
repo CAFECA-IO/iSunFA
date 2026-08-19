@@ -22,6 +22,7 @@ import {
 } from "@/repositories/leave_grant.repo";
 import { assertGrantSource } from "@/repositories/leave_grant_invariant";
 import {
+  assertOvertimeEmergencyRecord,
   assertOvertimeFilingType,
   IStorableOvertimeRequest,
 } from "@/repositories/overtime_request_invariant";
@@ -63,6 +64,17 @@ export interface IOvertimeApprovalWrite {
    * 在 L28 的佐證來源欄裡混進「有打卡佐證」那一格（ADR 024 §2.2）。
    */
   evidenceBasis: OvertimeEvidenceBasis;
+  /**
+   * Info: (20260819 - Julian) §32 IV 的認定與它的報備紀錄（review B7）。
+   *
+   * 與狀態**同一次更新**落地：分兩次寫會出現一個短暫的中間狀態，
+   * 那裡有一張已核准、已加倍、但還沒有報備紀錄的單子 ——
+   * 而 `assertOvertimeEmergencyRecord` 正是要讓那個狀態不存在。
+   */
+  isEmergency: boolean;
+  emergencyReportUrl: string | null;
+  emergencyReportedAt: Date | null;
+  emergencyDeclaredByEmployeeId: string | null;
   segments: readonly IOvertimeSegment[];
   engineVersion: number;
   /** Info: (20260818 - Julian) 由 service 組好，repository 只負責在寫入前擋一次 */
@@ -98,6 +110,9 @@ export interface IOvertimeRequestRepository {
     requestedEndMinute: number;
     reason: string;
     isEmergency: boolean;
+    emergencyReportUrl: string | null;
+    emergencyReportedAt: Date | null;
+    emergencyDeclaredByEmployeeId: string | null;
     invariant: IStorableOvertimeRequest;
   }): Promise<string>;
   approve(
@@ -131,9 +146,13 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
     requestedEndMinute: number;
     reason: string;
     isEmergency: boolean;
+    emergencyReportUrl: string | null;
+    emergencyReportedAt: Date | null;
+    emergencyDeclaredByEmployeeId: string | null;
     invariant: IStorableOvertimeRequest;
   }): Promise<string> {
     assertOvertimeFilingType(params.invariant);
+    assertOvertimeEmergencyRecord(params);
 
     const created = await prisma.overtimeRequest.create({
       data: {
@@ -147,6 +166,9 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
         requestedEndMinute: params.requestedEndMinute,
         reason: params.reason,
         isEmergency: params.isEmergency,
+        emergencyReportUrl: params.emergencyReportUrl,
+        emergencyReportedAt: params.emergencyReportedAt,
+        emergencyDeclaredByEmployeeId: params.emergencyDeclaredByEmployeeId,
         status: OvertimeRequestStatus.PENDING,
       },
       select: { id: true },
@@ -158,6 +180,7 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
     params: IOvertimeApprovalWrite,
   ): Promise<IOvertimeApprovalWriteResult> {
     assertOvertimeFilingType(params.invariant);
+    assertOvertimeEmergencyRecord(params);
 
     return prisma.$transaction(async (tx) => {
       const moved = await tx.overtimeRequest.updateMany({
@@ -171,6 +194,10 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
           approvedMinutes: params.approvedMinutes,
           recognizedMinutes: params.recognizedMinutes,
           evidenceBasis: params.evidenceBasis,
+          isEmergency: params.isEmergency,
+          emergencyReportUrl: params.emergencyReportUrl,
+          emergencyReportedAt: params.emergencyReportedAt,
+          emergencyDeclaredByEmployeeId: params.emergencyDeclaredByEmployeeId,
         },
       });
       if (moved.count === 0) {

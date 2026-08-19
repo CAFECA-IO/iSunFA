@@ -77,7 +77,11 @@ export async function GET(
  * Info: (20260818 - Julian) L25：送出加班單（事前或事後）。
  * POST /api/v1/user/account_book/[account_book_id]/hr/overtime/request
  *      body：`{ workDate, filingType, compensationMode, requestedStartMinute,
- *               requestedEndMinute, reason, isEmergency? }`
+ *               requestedEndMinute, reason }`
+ *
+ * Info: (20260819 - Julian) `isEmergency` **不在這個 payload 裡**（review B7）。
+ * §32 IV 的認定由具 `HR_ADMIN` 職能者在核准端點給出，並強制附上報備紀錄 ——
+ * 讓申請人自己勾一個布林值就跳到加倍發給，那個旗標是一句沒有證據的宣稱。
  *
  * ## 事前／事後不是自由欄位
  *
@@ -88,8 +92,8 @@ export async function GET(
  *
  * ## 例假日一律擋下
  *
- * §40 原則上不得使人於例假工作，僅限天災、事變或突發事件，且須於 24 小時內
- * 通報主管機關並事後補假。系統尚未實作通報與補假，故回 `FO_OVERTIME_ON_REGULAR_OFF`
+ * §40 原則上不得使人於例假工作，僅限天災、事變或突發事件，且應報當地主管機關
+ * **核備**並事後補假休息。系統尚未實作核備與補假，故回 `FO_OVERTIME_ON_REGULAR_OFF`
  * —— 放行會讓一個違法的排班看起來像一筆正常的加班（ADR 024 §4.5）。
  */
 export async function POST(

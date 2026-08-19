@@ -919,9 +919,13 @@ export const hrManagement = {
       "補休依實際加班時數 1:1 換算，不乘加成倍率；倍率在屆期折現時才回來。",
     field_reason: "加班事由",
     field_reason_placeholder: "例：混凝土澆置必須當日完成",
-    field_emergency: "天災事變（§32 IV，已報備）",
+    field_emergency: "天災事變（§32 IV，已報備查）",
     field_emergency_hint:
-      "確實已報備才勾：它會讓整段跳到加倍發給，並繞過例假日的閘門。",
+      "限人資管理員認定。勾選後必須附上報備紀錄與報備時點：它會讓整段加班跳到加倍發給。例假日不適用（§40 須另報主管機關核備）。",
+    field_emergency_report: "報備紀錄連結",
+    field_emergency_reported_at: "報備時點",
+    field_emergency_moved_hint:
+      "天災事變（§32 IV）的認定由人資管理員在核准時做，並須附報備紀錄，因此不在這張申請單上。",
     action_submit: "送出加班單",
     my_requests_title: "我的加班單",
     my_requests_empty: "尚未送出任何加班單",

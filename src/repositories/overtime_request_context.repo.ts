@@ -148,6 +148,8 @@ const toSummary = (row: {
   reason: string;
   status: string;
   isEmergency: boolean;
+  emergencyReportUrl: string | null;
+  emergencyReportedAt: Date | null;
   createdAt: Date;
   employee: { employeeNo: string; name: string };
   segments: { order: number; tier: string; minutes: number }[];
@@ -167,6 +169,15 @@ const toSummary = (row: {
   reason: row.reason,
   status: row.status as OvertimeRequestStatus,
   isEmergency: row.isEmergency,
+  /**
+   * Info: (20260819 - Julian) 報備紀錄一併帶出來（review B7）。
+   * 只給「有沒有」不夠 —— 畫面上一個寫著「天災事變·加倍發給」的標記，
+   * 若點不進那份紀錄，看的人沒有辦法判斷它是不是真的報備過。
+   * 認定者（`emergencyDeclaredByEmployeeId`）不外拋：它是內部稽核用的，
+   * 而清單是同事之間看得到的（可見範圍分級見 `overtime_visibility.ts`）。
+   */
+  emergencyReportUrl: row.emergencyReportUrl,
+  emergencyReportedAt: row.emergencyReportedAt?.toISOString() ?? null,
   segments: row.segments
     .slice()
     .sort((left, right) => left.order - right.order)
@@ -192,6 +203,8 @@ const SUMMARY_SELECT = {
   reason: true,
   status: true,
   isEmergency: true,
+  emergencyReportUrl: true,
+  emergencyReportedAt: true,
   createdAt: true,
   employee: { select: { employeeNo: true, name: true } },
   segments: { select: { order: true, tier: true, minutes: true } },

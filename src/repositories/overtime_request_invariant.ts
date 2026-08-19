@@ -35,6 +35,13 @@ export class OvertimeRequestInvariantError extends Error {
   }
 }
 
+export interface IStorableOvertimeEmergency {
+  isEmergency: boolean;
+  emergencyReportUrl: string | null | undefined;
+  emergencyReportedAt: Date | null | undefined;
+  emergencyDeclaredByEmployeeId: string | null | undefined;
+}
+
 export interface IStorableOvertimeRequest {
   filingType: OvertimeFilingType;
   status: OvertimeRequestStatus;
@@ -145,6 +152,72 @@ export function assertOvertimeFilingType(
     throw new OvertimeRequestInvariantError(
       "recognizedMinutes must not be negative",
       `recognizedMinutes=${params.recognizedMinutes}`,
+    );
+  }
+}
+
+/**
+ * Info: (20260819 - Julian) §32 IV 的「經報備」必須有記載（review B7）。
+ *
+ * ## 為什麼這一欄不能只靠自律
+ *
+ * `isEmergency` 為真的後果有兩個，而兩個都對填單的人有利：整段加班跳到
+ * `EMERGENCY_DOUBLE`（加倍發給），且它曾經還會繞過例假日的閘門。
+ * 原本它是**申請人在送出時自填的一個布林值** —— 沒有佐證欄位、
+ * 沒有 HR 覆核、沒有主管機關報備紀錄。計畫書 §8.3 自己寫下了這件事：
+ * 「程式已經假設報備發生過，但系統裡沒有任何地方記錄它。」
+ *
+ * ## 標準與 54 小時放寬一致
+ *
+ * `assertOvertimePolicy` 對 §32 III 立的標準是「**一個沒有記載的『已同意』
+ * 等於沒有同意**，而系統會據此多放 8 小時」。這裡的結構完全相同，
+ * 代價更大：放寬是多 8 小時的額度，加倍發給是整段工資的計算標準。
+ * 兩者用同一把尺，否則先鬆的那一邊會被當成先例。
+ *
+ * ## 為什麼反方向也要擋
+ *
+ * 一筆帶著報備紀錄卻沒有 `isEmergency` 的單子，事後分不出來是
+ * 「認定被撤回了」還是「認定漏掉了」—— 而前者應該留下撤回的痕跡，
+ * 不是把旗標翻回去就算了。留著半套資料等於留下一個講兩種故事的紀錄。
+ */
+export function assertOvertimeEmergencyRecord(
+  params: IStorableOvertimeEmergency,
+): void {
+  const url = params.emergencyReportUrl;
+  const reportedAt = params.emergencyReportedAt;
+  const declaredBy = params.emergencyDeclaredByEmployeeId;
+
+  const hasUrl = url !== null && url !== undefined && url.trim() !== "";
+  const hasReportedAt = reportedAt !== null && reportedAt !== undefined;
+  const hasDeclaredBy =
+    declaredBy !== null && declaredBy !== undefined && declaredBy.trim() !== "";
+
+  if (params.isEmergency) {
+    if (!hasUrl) {
+      throw new OvertimeRequestInvariantError(
+        "an emergency overtime (Article 32 IV) requires a recorded filing with the union or the local authority; an unrecorded claim doubles the entire premium on nobody's authority",
+        `emergencyReportUrl=${url}`,
+      );
+    }
+    if (!hasReportedAt) {
+      throw new OvertimeRequestInvariantError(
+        "the emergency filing must carry the moment it was made; Article 32 IV allows twenty-four hours and an inspection asks for that timestamp",
+        `emergencyReportedAt=${String(reportedAt)}`,
+      );
+    }
+    if (!hasDeclaredBy) {
+      throw new OvertimeRequestInvariantError(
+        "the emergency determination must name the HR administrator who made it; the applicant may not certify their own premium",
+        `emergencyDeclaredByEmployeeId=${declaredBy}`,
+      );
+    }
+    return;
+  }
+
+  if (hasUrl || hasReportedAt || hasDeclaredBy) {
+    throw new OvertimeRequestInvariantError(
+      "a request that is not an emergency must not carry an emergency filing; half a record cannot be read as either withdrawn or forgotten",
+      `emergencyReportUrl=${url}, emergencyReportedAt=${String(reportedAt)}, emergencyDeclaredByEmployeeId=${declaredBy}`,
     );
   }
 }

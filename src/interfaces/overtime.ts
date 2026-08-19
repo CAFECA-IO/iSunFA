@@ -22,7 +22,11 @@ import {
 export interface IOvertimeSegmentInput {
   /** Info: (20260817 - Julian) 當日排班的性質。決定走平日、休息日或休假日的加成 */
   workDayType: WorkDayType;
-  /** Info: (20260817 - Julian) §32 IV 天災事變等情形且已報備。優先於其他所有判定 */
+  /**
+   * Info: (20260819 - Julian) §32 IV 天災事變等情形且已報備查。
+   * 優先於**例假日以外**的所有判定 —— 例假日走 §40 的核備，是另一套程序
+   * 且尚未實作，因此排在它之前擋下（review B7）。
+   */
   isEmergency: boolean;
   /** Info: (20260817 - Julian) 本次要切段的認列分鐘（已是 min(核准, 事實) 的結果） */
   minutes: number;
@@ -167,7 +171,15 @@ export interface IOvertimeRequestSummary {
   recognizedMinutes: number | null;
   reason: string;
   status: OvertimeRequestStatus;
+  /**
+   * Info: (20260819 - Julian) §32 IV 的認定，由 `HR_ADMIN` 在核准當下給出。
+   * 為真時 `emergencyReportUrl` / `emergencyReportedAt` 必有值 ——
+   * 由 `assertOvertimeEmergencyRecord` 雙向保證（review B7）。
+   */
   isEmergency: boolean;
+  emergencyReportUrl: string | null;
+  /** Info: (20260819 - Julian) ISO 8601 字串 */
+  emergencyReportedAt: string | null;
   segments: IOvertimeSegmentView[];
   createdAt: string;
 }
