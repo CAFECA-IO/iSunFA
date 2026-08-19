@@ -37,7 +37,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { address, role, authentication } = body;
+    const { address, role, authentication, expectedAmount } = body;
 
     /**
      * Info: (20260814 - Luphia) 位址要驗格式（PR #6652 第二輪 B-2）。
@@ -51,6 +51,24 @@ export async function POST(
 
     if (!authentication) {
       return jsonFail(API_ERRORS.VL_MISSING_FIDO2);
+    }
+
+    /**
+     * Info: (20260819 - Luphia) `expectedAmount` 必填（review #6682）。
+     *
+     * 「試算失敗就不能送出」先前只活在前端送出按鈕的 disabled 陣列裡，服務端對
+     * 「有沒有先試算過」毫無要求——刪掉前端那一行，行為就精準退回這個 PR 要修的
+     * 事：試算掛掉照樣刷卡、事前事後都沒有金額。這裡把要求移到服務端。
+     *
+     * 值為 0 也是有效的（「不會收費」也是一種顯示過的答案，而它變成收費正是
+     * 最糟的那種分岔），因此判斷的是型別與非負，不是真值。
+     */
+    if (
+      typeof expectedAmount !== "number" ||
+      !Number.isInteger(expectedAmount) ||
+      expectedAmount < 0
+    ) {
+      return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
     }
 
     // Info: (20260325 - Tzuhan) Fetch operator's current challenge
@@ -152,6 +170,8 @@ export async function POST(
       teamId,
       seats: 1,
       nowMs: Date.now(),
+      // Info: (20260819 - Luphia) 畫面上顯示過的金額，扣款前比對（review #6682 高）
+      expectedAmount,
       // Info: (20260814 - Luphia) 扣的是訂閱那張卡，記下是誰發動的（第二輪 B-2）
       operatorUserId: sessionUser.id,
       /**

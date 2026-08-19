@@ -1161,6 +1161,28 @@ export const API_ERRORS = {
    * 給一個**專屬的錯誤碼**而不是讓它走到鏈上失敗回 `TW000010`：
    * 通用的「操作失敗」會讓客服以為重試就好，而這件事重試一百次也一樣。
    */
+  /**
+   * Info: (20260819 - Luphia) 送出時帶的試算金額與服務端重算的結果不符（review #6682 高）。
+   *
+   * 試算是在對話框開啟時算的，送出是在使用者填完欄位、走完 FIDO2 簽章之後——
+   * 中間的兩個輸入都會變：席次佔用（另一位管理者同時邀了人）、以及計費週期
+   * （8/31 23:58 試算「本期即將結束、不收費」，00:02 完成簽章時已是新週期，
+   * 比例計價回近乎全額）。同一支實作在兩個時點給出不同答案，而先前沒有任何
+   * 一端再確認一次——畫面說 0、卡被刷 840，且事後提示只讀 `reusedPaidSeat`，
+   * 使用者完全看不出來。
+   *
+   * 因此金額不符時**擋下並要求重新試算**，而不是照新價扣款。
+   *
+   * 號碼跳過 23 / 24：那兩個號碼由邀請量上限那條分支（#6684）先取用，
+   * 而兩條分支是兄弟。跨 PR 撞號會讓對外的錯誤碼契約在合併後才爆
+   * （見 `error_dictionary_codes.test.ts` 的由來）。
+   */
+  TW_SEAT_QUOTE_STALE: {
+    code: "TW000025",
+    message:
+      "The seat charge changed since it was shown; please review it again",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
   TW_ALLOCATION_REVOKE_DISABLED: {
     code: "TW000020",
     message: "Revoking allocated credits is no longer supported",

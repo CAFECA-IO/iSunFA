@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useCallback, useEffect, useState, FormEvent } from "react";
 import { Dialog } from "@headlessui/react";
 import { X, ScanQrCode } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -17,6 +17,32 @@ import { isAddress } from "viem";
  * 因此這裡不再需要「已達上限 → 升級導引」那一段：那個錯誤碼不會再被丟出。
  * 免費方案的額度改為全隊共用一份，加人不再產生額度。
  */
+
+/**
+ * Info: (20260818 - Luphia) 加席試算（`GET .../seat_quote`，產品回報 20260818）。
+ *
+ * 在此之前，付費團隊按下「邀請」的那一刻就會以 merchant-initiated 交易刷訂閱那張卡，
+ * 而畫面事前沒有揭露任何金額——使用者的原話是「我在邀請時完全不知道會被加收多少錢」。
+ *
+ * 這裡的型別刻意與服務端的 `ISeatQuote` 對齊（同一組 `kind`），
+ * 而金額由服務端算，前端**不自己算**：算兩次就會有兩個答案。
+ */
+type SeatQuoteKind =
+  | "FREE_PLAN"
+  | "REUSE_PAID_SEAT"
+  | "NO_CHARGE_PERIOD_END"
+  | "CHARGE"
+  | "BLOCKED";
+
+interface ISeatQuote {
+  kind: SeatQuoteKind;
+  amount: number;
+  currency: string;
+  seats: number;
+  seatsToCharge: number;
+  remainingDays?: number;
+  blocked?: { code: string; message: string };
+}
 
 interface IInviteMemberModalProps {
   isOpen: boolean;
@@ -47,6 +73,46 @@ export default function InviteMemberModal({
    * 後者不需要邀請者先問到對方的錢包位址。
    */
   const [inviteMode, setInviteMode] = useState<"ADDRESS" | "EMAIL">("ADDRESS");
+  // Info: (20260818 - Luphia) 加席費用的事前揭露（見上方 ISeatQuote）
+  const [quote, setQuote] = useState<ISeatQuote | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteFailed, setQuoteFailed] = useState(false);
+
+  const loadQuote = useCallback(async () => {
+    if (!selectedTeamId) return;
+    setQuoteLoading(true);
+    setQuoteFailed(false);
+    try {
+      const json = await request<{ success: boolean; payload?: ISeatQuote }>(
+        `/api/v1/user/team/${selectedTeamId}/seat_quote?seats=1`,
+      );
+      if (json.success && json.payload) {
+        setQuote(json.payload);
+      } else {
+        setQuoteFailed(true);
+      }
+    } catch {
+      /**
+       * Info: (20260818 - Luphia) 試算失敗就**不讓送出**（下方按鈕的 disabled 條件）。
+       *
+       * 「試算掛了但照樣可以邀請」等於回到原本的行為：在沒有揭露金額的情況下扣款。
+       * 寧可讓使用者按一次「重新試算」，也不要讓他在不知道金額的情況下付錢。
+       */
+      setQuoteFailed(true);
+    } finally {
+      setQuoteLoading(false);
+    }
+  }, [selectedTeamId]);
+
+  // Info: (20260818 - Luphia) 開啟時試算一次；關閉時清掉，避免下次開啟閃到上一團的金額
+  useEffect(() => {
+    if (!isOpen) {
+      setQuote(null);
+      setQuoteFailed(false);
+      return;
+    }
+    void loadQuote();
+  }, [isOpen, loadQuote]);
 
   const targetValue = inviteMode === "ADDRESS" ? inviteAddress : inviteEmail;
 
@@ -82,19 +148,44 @@ export default function InviteMemberModal({
           ? `/api/v1/user/team/${selectedTeamId}/invitations`
           : `/api/v1/user/team/${selectedTeamId}/invitations/email`;
 
+      /**
+       * Info: (20260819 - Luphia) 把**畫面上顯示過的金額**一起送出（review #6682 高）。
+       *
+       * 試算是在對話框開啟時算的，而這裡已經隔了填表與一次 FIDO2 簽章。中間席次
+       * 佔用可能被別人用掉、計費週期也可能滾動——服務端會以新的時間重算，於是
+       * 「顯示不收費、實際被刷 420」是做得到的事，而且事後看不出來。
+       *
+       * 服務端拿這個值比對，不符就擋下並要求重新試算（`TW000025`）。
+       * `?? -1` 是刻意的：沒有試算結果時送一個必然不符的值，讓服務端擋下來，
+       * 而不是靜靜地以「沒帶」通過（送出按鈕本來就 disabled，這是第二道）。
+       */
+      const expectedAmount = quote ? quote.amount : -1;
+
       const payload =
         inviteMode === "ADDRESS"
-          ? { address: inviteAddress.trim(), role: inviteRole, authentication }
+          ? {
+              address: inviteAddress.trim(),
+              role: inviteRole,
+              authentication,
+              expectedAmount,
+            }
           : {
               email: inviteEmail.trim(),
               role: inviteRole,
               authentication,
+              expectedAmount,
             };
 
       const json = await request<{
         success: boolean;
         message?: string;
-        payload?: { seatCharge?: { reusedPaidSeat?: boolean } };
+        payload?: {
+          seatCharge?: {
+            reusedPaidSeat?: boolean;
+            charged?: boolean;
+            amount?: number;
+          };
+        };
       }>(endpoint, {
         method: "POST",
         body: JSON.stringify(payload),
@@ -110,8 +201,22 @@ export default function InviteMemberModal({
          * 前一次邀請被拒或逾期時錢沒有退，這次不再收費——不說的話，
          * 管理員只會看到帳單上少了一筆而不知道為什麼。
          */
-        if (json.payload?.seatCharge?.reusedPaidSeat) {
+        /**
+         * Info: (20260819 - Luphia) 真的收費時，把金額講出來（review #6682 高）。
+         *
+         * 先前這裡只讀 `reusedPaidSeat`，於是「實際扣了多少」在整個流程裡
+         * **從頭到尾沒有出現過**——事前只有試算、事後一句「已送出邀請」，
+         * 分岔（若發生）只會在下期帳單被發現。
+         */
+        const charge = json.payload?.seatCharge;
+        if (charge?.reusedPaidSeat) {
           showAlert(t("team_management.alerts.seat_reused"));
+        } else if (charge?.charged && charge.amount) {
+          showAlert(
+            t("team_management.alerts.seat_charged", {
+              amount: `TWD ${charge.amount.toLocaleString()}`,
+            }),
+          );
         } else {
           showAlert(
             inviteMode === "EMAIL"
@@ -285,6 +390,79 @@ export default function InviteMemberModal({
                 </select>
               </div>
 
+              {/**
+               * Info: (20260818 - Luphia) 加席費用的**事前**揭露（產品回報 20260818）。
+               *
+               * 付費團隊每邀請一人就會立刻向訂閱那張卡補收期中費用，而在此之前畫面
+               * 事前不說、事後也只說「用了空席」。使用者的原話是「我在邀請時完全不
+               * 知道會被加收多少錢」。金額一律由服務端試算（同一支 `quoteSeatAddition`
+               * 也負責真正的扣款），前端不自己算。
+               */}
+              {quoteLoading && (
+                <p className="text-xs text-gray-500">
+                  {t("team_management.seat_charge.loading")}
+                </p>
+              )}
+              {quoteFailed && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                  <p className="text-xs text-red-800">
+                    {t("team_management.seat_charge.quote_failed")}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void loadQuote()}
+                    className="mt-2 inline-flex rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
+                  >
+                    {t("team_management.seat_charge.retry")}
+                  </button>
+                </div>
+              )}
+              {!quoteLoading && quote?.kind === "CHARGE" && (
+                <div className="rounded-lg border border-orange-200 bg-orange-50 p-3">
+                  <p className="text-xs font-semibold text-orange-900">
+                    {t("team_management.seat_charge.charge_title", {
+                      amount: `${quote.currency} ${quote.amount.toLocaleString()}`,
+                    })}
+                  </p>
+                  <p className="mt-1 text-xs text-orange-800">
+                    {t("team_management.seat_charge.charge_detail", {
+                      seats: String(quote.seatsToCharge),
+                      days: String(quote.remainingDays ?? 0),
+                    })}
+                  </p>
+                </div>
+              )}
+              {!quoteLoading && quote?.kind === "REUSE_PAID_SEAT" && (
+                <p className="text-xs text-gray-600">
+                  {t("team_management.seat_charge.reuse")}
+                </p>
+              )}
+              {!quoteLoading && quote?.kind === "NO_CHARGE_PERIOD_END" && (
+                <p className="text-xs text-gray-600">
+                  {t("team_management.seat_charge.period_end")}
+                </p>
+              )}
+              {!quoteLoading && quote?.kind === "FREE_PLAN" && (
+                <p className="text-xs text-gray-600">
+                  {t("team_management.seat_charge.free_plan")}
+                </p>
+              )}
+              {/**
+               * Info: (20260819 - Luphia) 擋下的原因（沒有可扣款的卡、單價缺失、
+               * 當期補收已達上限）。免費版人數上限那一條已於同日移除，
+               * 因此這裡不再需要把它排除掉。
+               */}
+              {!quoteLoading && quote?.kind === "BLOCKED" && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                  <p className="text-xs font-semibold text-red-900">
+                    {t("team_management.seat_charge.blocked_title")}
+                  </p>
+                  <p className="mt-1 text-xs text-red-800">
+                    {quote.blocked?.message}
+                  </p>
+                </div>
+              )}
+
               <div className="mt-2 flex items-start rounded-lg border border-orange-100 bg-orange-50 p-3">
                 <div className="text-xs text-orange-800">
                   <span className="mb-1 block font-semibold">
@@ -302,14 +480,32 @@ export default function InviteMemberModal({
                 >
                   {t("team_management.cancel")}
                 </button>
+                {/**
+                 * Info: (20260818 - Luphia) 金額寫在按鈕上，並且**沒有揭露就不能送出**。
+                 *
+                 * 三種情形 disabled：正在試算、試算失敗（改按「重新試算」）、
+                 * 試算判定現在不能加人。少了這幾條，使用者仍然可能在不知道金額的
+                 * 情況下完成一次扣款——那正是這次要修的事。
+                 */}
                 <button
                   type="submit"
-                  disabled={inviting || !targetValue.trim()}
+                  disabled={
+                    inviting ||
+                    !targetValue.trim() ||
+                    quoteLoading ||
+                    quoteFailed ||
+                    !quote ||
+                    quote.kind === "BLOCKED"
+                  }
                   className="inline-flex w-full items-center justify-center rounded-lg bg-orange-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50 sm:w-auto"
                 >
                   {inviting
                     ? t("team_management.signing")
-                    : t("team_management.invite_via_fido2")}
+                    : quote?.kind === "CHARGE"
+                      ? t("team_management.seat_charge.submit_with_amount", {
+                          amount: `${quote.currency} ${quote.amount.toLocaleString()}`,
+                        })
+                      : t("team_management.invite_via_fido2")}
                 </button>
               </div>
             </form>

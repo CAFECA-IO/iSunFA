@@ -6,6 +6,22 @@ export const teamManagement = {
   accept_via_fido2: "Accept via FIDO2",
   accepting: "Accepting...",
   no_teams: "No teams available.",
+  // Info: (20260818 - Luphia) Up-front disclosure of the seat charge (user report 20260818)
+  seat_charge: {
+    loading: "Calculating the charge…",
+    charge_title: "You will be charged {{amount}} immediately",
+    charge_detail:
+      "Adding {{seats}} seat(s), prorated over the {{days}} day(s) left in this billing period, on the team's subscription payment method.",
+    reuse: "This uses a seat you have already paid for. No new charge.",
+    period_end:
+      "This billing period is ending, so there is no charge. The seat takes effect immediately.",
+    free_plan: "The free plan has no seat charges.",
+    blocked_title: "Cannot add a member right now",
+    quote_failed:
+      "We could not calculate the charge. To avoid charging you an unknown amount, please retry before inviting.",
+    retry: "Retry",
+    submit_with_amount: "Confirm and pay {{amount}}",
+  },
   invite_member: "Invite Member",
   decline_invite: "Decline",
   declining: "Declining…",
@@ -67,6 +83,8 @@ export const teamManagement = {
     free_plan_limit_hint:
       "Upgrade to Team or Enterprise to invite members. Subscriptions are billed per seat, and every member you invite gets their own full quota.",
     free_plan_limit_cta: "See plans",
+    seat_charged:
+      "Invitation sent. {{amount}} was charged to the team's payment method.",
     seat_reused: "An already-paid seat was reused; you were not charged again.",
     revoke_success:
       "Invitation withdrawn. The seat is now available for another invitation.",
