@@ -412,7 +412,7 @@ describe("submit — 送出", () => {
         input: submitInput(["2026-08-18"]),
         observedAt: AT,
       }),
-    ).rejects.toMatchObject({ apiCode: "VA000047" });
+    ).rejects.toMatchObject({ apiCode: "VA000069" });
   });
 
   /**
@@ -467,7 +467,7 @@ describe("submit — 送出", () => {
         input: submitInput(["2026-08-18"]),
         observedAt: AT,
       }),
-    ).rejects.toMatchObject({ apiCode: "NF000024" });
+    ).rejects.toMatchObject({ apiCode: "NF000028" });
   });
 
   it("雇主有准駁權的假別，併休超限時擋下", async () => {
@@ -697,7 +697,7 @@ describe("approve — 扣額度只發生在最後一關", () => {
         actorEmployeeId: "emp-dept",
         observedAt: AT,
       }),
-    ).rejects.toMatchObject({ apiCode: "VA000047" });
+    ).rejects.toMatchObject({ apiCode: "VA000069" });
     expect(repo.completed).toBeNull();
   });
 

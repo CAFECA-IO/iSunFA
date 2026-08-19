@@ -1211,7 +1211,7 @@ export const API_ERRORS = {
 
   // Info: (20260817 - Julian) 額度不足。送出時即回饋，但**不預扣**——扣減發生在最後一關通過的交易內（ADR 023 §6）
   VA_LEAVE_INSUFFICIENT_BALANCE: {
-    code: "VA000047",
+    code: "VA000069",
     message: "Insufficient leave balance",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
@@ -1594,7 +1594,7 @@ export const API_ERRORS = {
 
   // Info: (20260817 - Julian) 假別不存在或已停用
   NF_LEAVE_POLICY: {
-    code: "NF000024",
+    code: "NF000028",
     message: "Leave policy not found",
     status: ApiCode.NOT_FOUND,
   } as IErrorDef,

@@ -1533,7 +1533,7 @@ DRAFT ──────▶ PENDING ──(每個節點依序)──▶ APPROVED
 
 | 常數 | 碼 | `ApiCode` | 語意 |
 |---|---|---|---|
-| `VA_LEAVE_INSUFFICIENT_BALANCE` | `VA000047` | `VALIDATION_ERROR` | 額度不足 |
+| `VA_LEAVE_INSUFFICIENT_BALANCE` | `VA000069` | `VALIDATION_ERROR` | 額度不足 |
 | `VA_LEAVE_UNIT_NOT_ALIGNED` | `VA000048` | `VALIDATION_ERROR` | 請假時間不符最小單位 |
 | `VA_LEAVE_ALREADY_REVIEWED` | `VA000049` | `VALIDATION_ERROR` | 該節點已簽核 |
 | `VA_LEAVE_CYCLE_DISADVANTAGEOUS` | `VA000050` | `VALIDATION_ERROR` | 曆年制給假低於週年制（D4 護欄） |
@@ -1546,7 +1546,7 @@ DRAFT ──────▶ PENDING ──(每個節點依序)──▶ APPROVED
 | `FO_NOT_AUTHORIZED_REVIEWER` | `FO000015` | `FORBIDDEN` | 非當前簽核節點不得代簽。**新增** |
 | `FO_LEAVE_CALENDAR_SCOPE` | `FO000012` | `FORBIDDEN` | 逾越可見範圍（§9.2） |
 | `FO_OVERTIME_ON_REGULAR_OFF` | `FO000013` | `FORBIDDEN` | 例假日加班須依 §40 程序（§8.1 #3） |
-| `NF_LEAVE_POLICY` | `NF000024` | `NOT_FOUND` | 假別不存在或已停用 |
+| `NF_LEAVE_POLICY` | `NF000028` | `NOT_FOUND` | 假別不存在或已停用 |
 | `NF_LEAVE_GRANT` | `NF000025` | `NOT_FOUND` | 額度批次不存在 |
 | `NF_OVERTIME_REQUEST` | `NF000026` | `NOT_FOUND` | 加班單不存在 |
 | `NF_LEAVE_REQUEST` | `NF000027` | `NOT_FOUND` | 假單不存在或不屬於本帳本 |
@@ -1863,7 +1863,7 @@ export enum HrPiiTable {
 
   // Info: (20260817 - Julian) 額度不足。送出時即回饋，但**不預扣**——扣減發生在最後一關通過的交易內（ADR 023 §6）
   VA_LEAVE_INSUFFICIENT_BALANCE: {
-    code: "VA000047",
+    code: "VA000069",
     message: "Insufficient leave balance",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
@@ -1941,7 +1941,7 @@ export enum HrPiiTable {
 
   // Info: (20260817 - Julian) 假別不存在或已停用
   NF_LEAVE_POLICY: {
-    code: "NF000024",
+    code: "NF000028",
     message: "Leave policy not found",
     status: ApiCode.NOT_FOUND,
   } as IErrorDef,
