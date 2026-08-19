@@ -13,6 +13,7 @@ import {
   CARBON_REPORT_CHAPTERS,
   CARBON_REPORT_OUTLINE,
 } from "@/constants/carbon_report_outline";
+import { CARBON_CHART_DEFAULT_LABELS } from "@/lib/carbon_report_chart.builder";
 /**
  * Info: (20260818 - Emily) 兩個片語 import 自產生端的常數,不在這裡重打一份正規表示式。
  * 重打的話,文案改了而這支腳本照舊回報 ✓ —— 而它是上線判準的量尺。
@@ -745,6 +746,56 @@ const main = async (): Promise<void> => {
   expectZero(
     "紙上宣告別的揭露框架",
     FOREIGN_FRAMEWORKS.filter((name) => squeezed.includes(name)),
+  );
+
+  // Info: (20260819 - Emily) ── 桑基圖要嘛在紙上,要嘛紙上說明它為什麼不在 ──
+  /**
+   * Info: (20260819 - Emily) 判準讀 `CARBON_CHART_DEFAULT_LABELS` 而不是自己寫字串。
+   * 自己寫一份的話,哪天有人改了圖說,這條會繼續綠著而紙上已經不同了(本尊,不是替身)。
+   *
+   * 「有圖」或「有說明為什麼沒圖」二者之一即可 —— 帳本沒有可用數據時
+   * 圖畫不出來是正確行為,但**不能無聲**。與 `open/48` 的退化判準同一個原則:
+   * 失敗要留下痕跡。兩者都沒有才是缺陷。
+   */
+  const sankeyTitle = squeeze(
+    CARBON_CHART_DEFAULT_LABELS.importedSankeyTitle ?? "",
+  );
+  const sankeyNoLedger = squeeze(
+    CARBON_CHART_DEFAULT_LABELS.importedSankeyNoLedger ?? "",
+  );
+  const sankeyPresent =
+    sankeyTitle.length > 0 && squeezed.includes(sankeyTitle);
+  const sankeyExplained =
+    sankeyNoLedger.length > 0 && squeezed.includes(sankeyNoLedger);
+  expectZero(
+    "桑基圖既不在紙上也沒說明",
+    sankeyPresent || sankeyExplained
+      ? []
+      : ["排放流向圖與其缺席說明都不在紙上"],
+  );
+
+  // Info: (20260819 - Emily) ── 紙上出現「範疇」就必須有範疇↔類別的對照說明 ──
+  /**
+   * Info: (20260819 - Emily) `open/53`。敘述採 ISO 類別制而系統圖表標範疇制,
+   * 兩邊各自都對、中間對不上。08-19 量到一份宣告依 ISO 14064-1 編製的報告裡
+   * 「範疇」出現 77 次,其中至少 72 次是系統自己印的(客戶原文全文只有 5 次)。
+   *
+   * 判準不是「不准出現範疇」—— 那會要求把圖表改成類別制,而那要改分組鍵
+   * (多個 GHG 類別對到同一個 ISO 類別),不是這一版的範圍。
+   * 判準是**出現就要有對照說明**:隱藏的分類判斷等於沒有依據。
+   *
+   * `open/53` 真修之後這條要改成「不得出現範疇」。
+   */
+  const isoMappingNote = squeeze(
+    CARBON_CHART_DEFAULT_LABELS.importedSankeyIsoMapping ?? "",
+  );
+  const scopeWordAppears = squeezed.includes("範疇");
+  expectZero(
+    "紙上有範疇卻沒有類別對照說明",
+    scopeWordAppears &&
+      !(isoMappingNote.length > 0 && squeezed.includes(isoMappingNote))
+      ? ["缺少範疇↔類別對照說明"]
+      : [],
   );
 
   // Info: (20260814 - Emily) ── 目錄的每一條要對得上實體頁(頁碼是量測出來的,所以可以反查) ──

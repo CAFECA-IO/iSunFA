@@ -74,6 +74,25 @@ export interface ICarbonChartLabels {
    * 那個映射是 1:1 所以不畫成一層,但它是一個分類判斷,必須說出來。
    */
   importedSankeyGhgMapping?: string;
+  /**
+   * Info: (20260819 - Emily) 範疇制與 ISO 類別制的對照說明(`open/53`)。
+   *
+   * 圖上的分類層印的是 GHG Protocol 的範疇一/二/三,而本報告的敘述採 ISO 14064-1
+   * 類別一~六 —— 兩邊各自都對,中間對不上,而**紙上沒有一句話說它們是同一批排放源**。
+   * 08-19 量到:一份宣告依 ISO 14064-1 編製的報告裡,「範疇」出現 77 次,
+   * 其中至少 72 次是系統自己印上去的(客戶原文全文只有 5 次)。
+   *
+   * 與上面 `importedSankeyGhgMapping` 同一個理由:隱藏的分類判斷等於沒有依據,
+   * 查核者無法質疑他看不到的東西。所以不是把「範疇」藏起來,是把對照說出來。
+   *
+   * 這是固定文字而不是交給模型寫的原因:模型不知道系統圖表印了什麼標籤,
+   * 叫它寫這一句就是叫它猜;而固定文字驗得起來(驗收腳本可以要求它與「範疇」同時出現)。
+   *
+   * 真修是把圖表改成類別制(`open/53`),但那要改**分組鍵**不只是換標籤 ——
+   * 多個 GHG 類別對到同一個 ISO 類別(Cat 1/2/3/5/8 → 類別四),
+   * 只換標籤會得到好幾列「類別四」各自小計,比現在更糟。
+   */
+  importedSankeyIsoMapping?: string;
   /** Info: (20260806 - Tzuhan) 排放去向圖的標題(前 N 大 + 其他) */
   importedTopItemsTitle?: string;
   /**
@@ -129,6 +148,8 @@ export const CARBON_CHART_DEFAULT_LABELS: ICarbonChartLabels = {
   importedSankeyCollapsed: "節點過多,已降為一層(全公司 → 範疇)",
   importedSankeySiteTotals: "各廠址小計(公噸 CO2e/年,占全公司比)",
   importedSankeyGhgMapping: "子代碼與 GHG Protocol 類別的對照",
+  importedSankeyIsoMapping:
+    "圖上的分類層依 GHG Protocol 範疇標示;對照 ISO 14064-1 為:範疇一=類別一、範疇二=類別二、範疇三=類別三至類別六。本報告敘述採 ISO 14064-1 類別制,兩者指同一批排放源。",
   importedTopItemsTitle:
     "排放去向:全公司 → 前九大排放項目與其他(原文照錄,所在地基準,公噸 CO2e/年)",
   importedSankeyOther: "其他",
@@ -690,6 +711,13 @@ const buildImportedSankey = (
          */
         lines.push(`- ${subCategory} → ${ghgCategory}`);
       });
+  }
+  /**
+   * Info: (20260819 - Emily) 對照說明不綁 `ghgBySubCategory` 是否為空 ——
+   * 圖上的範疇標籤在任何情況下都印得出來,說明就得跟著在。
+   */
+  if (labels.importedSankeyIsoMapping) {
+    lines.push("", `> _${labels.importedSankeyIsoMapping}_`);
   }
   return lines.join("\n");
 };
