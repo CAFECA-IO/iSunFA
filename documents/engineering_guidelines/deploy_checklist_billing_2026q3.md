@@ -148,16 +148,31 @@ npx tsx scripts/backfill_invite_email_match.ts --commit # 實際更新
 
 ### 3.4c 團隊 ADMIN 角色取消的回填（2026-08-19，**有 ADMIN 成員的環境必做**）
 
+**順序：先部署程式，再跑回填。** 這一點有實質差別 ——
+
+| 順序 | 結果 |
+|---|---|
+| 部署 → 回填 | 新程式已不可能再產生 ADMIN，回填一次就收斂 |
+| 回填 → 部署 | 舊碼的閘還是 `OWNER \|\| ADMIN`、可授予角色的陣列還含 ADMIN，兩者之間任何一次邀請或改角色都能**再造出 ADMIN 列**，而不會有人再跑一次回填 |
+
 ```bash
+# 1. 程式部署完成之後才跑
 npx tsx scripts/backfill_remove_team_admin.ts          # 預演，只列出不寫入
-npx tsx scripts/backfill_remove_team_admin.ts --commit # 成員與邀請一併降為 EDITOR
+npx tsx scripts/backfill_remove_team_admin.ts --commit # 成員與 PENDING 邀請降為 EDITOR
+
+# 2. 跑完再驗一次：兩個數字都必須是 0
+npx tsx scripts/backfill_remove_team_admin.ts
 ```
+
+第 2 步不是多餘的：`--commit` 的輸出只說「已更新 N 筆」，而「還剩幾筆」要再跑一次預演才看得到。若不是 0，代表回填與部署之間又長出了新的 ADMIN 列（見上表）。
+
+**只改 PENDING 的邀請列**：已接受／已拒絕／已撤回的歷史列保持原樣。那是「這個人當初以什麼身分加入」的唯一紀錄（`TeamMember.joinedByInvitationId` 指向它），改掉之後 OWNER 事後查不出該補權限給誰 —— 而下面那句「由 OWNER 個別調整」正是依賴這個資訊。這與 §3.3／§3.3c 對歷史列的原則一致。
 
 **不跑的後果不是報錯，是「角色對不上」**：`role` 是字串欄位，殘留的 `"ADMIN"` 列不會讓任何查詢失敗——權限判斷一律 false（fail-closed，安全），但畫面上那個成員的角色標籤是空的，管理者看不出他是什麼。**尚未接受的邀請**若指定 ADMIN 角色也要一起改，否則它被接受時會照著寫回一個沒有角色的成員。
 
 **降為 EDITOR 而不是 OWNER**：OWNER 是持卡人，升級等於在沒有人同意的情況下多發一位可以動錢的人，而且「最後一位 OWNER」的保護會讓事後降級更麻煩。降級的錯是權限不夠，由 OWNER 個別補回即可。
 
-⚠️ 這些成員會**失去管理權**（邀請、成員管理、錢包與訂閱操作）。上線前應通知各團隊的 OWNER。本機開發環境實測為 0 筆；其他環境請各自跑一次預演確認。
+⚠️ 這些成員會**失去管理權**：邀請、成員管理、錢包與訂閱操作，**以及碳盤查會話的封存權**（`DELETE_CAPABLE_ROLES` 由 `["OWNER","ADMIN"]` 改為 `["OWNER"]`）。最後那一項容易被漏掉 —— 前 ADMIN 封存過的會話，事後只有 OWNER 或建立者救得回來。上線前應通知各團隊的 OWNER。本機開發環境實測為 0 筆；其他環境請各自跑一次預演確認。
 
 ### 3.4 設定寄信與網站網址 — **email 邀請上線前必做**
 

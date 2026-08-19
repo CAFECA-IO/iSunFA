@@ -134,6 +134,69 @@ describe("resolveCarbonAccess", () => {
   });
 });
 
+/**
+ * Info: (20260819 - Luphia) 封存權（DELETE）的角色清單（review #6685 中-4）。
+ *
+ * `DELETE_CAPABLE_ROLES` 由 `["OWNER","ADMIN"]` 改為 `["OWNER"]`，而本檔原本
+ * **沒有任何 `CarbonAccessLevelEnum.DELETE` 的案例**——只測 VIEW / EDIT 與
+ * `canBindAccountBook`。因此把清單改成 `["OWNER","EDITOR"]` 也會全綠，
+ * 而那意味著每個 EDITOR（含被降級的前 ADMIN）都能封存**別人建立**的碳盤查會話，
+ * 把整份報告連活動數據帳本從清單收掉。
+ *
+ * 這一組同時釘住兩件事：誰能封存、以及**會話擁有者自己一定收得掉**
+ * （那條直通在 role 檢查之前，改動 DELETE 清單時很容易一起弄壞）。
+ */
+describe("resolveCarbonAccess：封存權（DELETE）", () => {
+  beforeEach(() => {
+    mockFindAccountBookId.mockResolvedValue("book-1");
+  });
+
+  it("OWNER 可以封存別人建立的會話", async () => {
+    mockGetRole.mockResolvedValue("OWNER");
+
+    const decision = await resolveCarbonAccess(
+      OWNER_ADDRESS,
+      OTHERS_CHANNEL,
+      CarbonAccessLevelEnum.DELETE,
+    );
+
+    expect(decision.allowed).toBe(true);
+  });
+
+  /**
+   * Info: (20260819 - Luphia) EDITOR **不得**封存別人的會話。
+   * 這是本組最重要的一條：它是 `DELETE_CAPABLE_ROLES` 的實際邊界，
+   * 而先前沒有任何測試釘住它。
+   */
+  it.each(["EDITOR", "VIEWER", "ADMIN"])(
+    "%s 不得封存別人建立的會話",
+    async (role) => {
+      mockGetRole.mockResolvedValue(role);
+
+      const decision = await resolveCarbonAccess(
+        OWNER_ADDRESS,
+        OTHERS_CHANNEL,
+        CarbonAccessLevelEnum.DELETE,
+      );
+
+      expect(decision.allowed).toBe(false);
+    },
+  );
+
+  // Info: (20260819 - Luphia) 自己建的會話自己收得掉（role 檢查之前的直通路徑）
+  it("會話擁有者不受角色限制，收得掉自己建的", async () => {
+    mockGetRole.mockResolvedValue("VIEWER");
+
+    const decision = await resolveCarbonAccess(
+      OWNER_ADDRESS,
+      OWN_CHANNEL,
+      CarbonAccessLevelEnum.DELETE,
+    );
+
+    expect(decision.allowed).toBe(true);
+  });
+});
+
 describe("canBindAccountBook", () => {
   beforeEach(() => {
     mockGetRole.mockReset();

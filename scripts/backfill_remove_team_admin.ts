@@ -18,6 +18,10 @@
  * 尚未接受的**邀請**若指定 ADMIN 角色，一併降為 EDITOR：那封邀請被接受時
  * 會照著寫進 `TeamMember`，等於從後門造出一個沒有角色的成員。
  *
+ * **只改 PENDING**：已接受／已拒絕／已撤回的歷史列保持原樣——那是「這個人當初
+ * 以什麼身分加入」的唯一紀錄，改掉之後 OWNER 事後查不出該補權限給誰
+ * （見 `PENDING_ONLY` 的說明）。
+ *
  * 用法（預設預演，不寫入）：
  *
  *     npx tsx scripts/backfill_remove_team_admin.ts
@@ -26,15 +30,46 @@
  */
 import { prisma } from "@/lib/prisma";
 import { TeamRole } from "@/constants/team";
+import { TEAM_INVITATION_STATUS } from "@/constants/status";
 
 // Info: (20260819 - Luphia) 已移除的角色字串。列在這裡而不是引用列舉——它已經不在列舉裡了
 const REMOVED_ROLE = "ADMIN";
+
+/**
+ * Info: (20260819 - Luphia) 邀請列**只改 PENDING**（review #6685 高-1）。
+ *
+ * 第一版的 `where` 沒有限制 status，於是連 `ACCEPTED` 的歷史列一起改寫——
+ * 而那些列是 `TeamMember.joinedByInvitationId` 指向的來源。改完之後，
+ * **資料庫裡再也沒有任何一列記得這個人是以 ADMIN 加入的**。
+ *
+ * 那正好打掉補救計畫依賴的資訊：部署檢查表寫的是「降級的錯是權限不夠，由 OWNER
+ * 個別補回」，而 OWNER 事後查不出該補給誰、原本是什麼——唯一的紀錄是 stdout，
+ * 沒有落地。
+ *
+ * 同一份檢查表對歷史列一向採相反原則（§3.3「非 PENDING 的列刻意保持 NULL」、
+ * §3.3c「只往一個方向改」）。這裡跟上。
+ *
+ * `TeamMember` 那半**不受此限**：那是活的權限，必須改。
+ */
+const PENDING_ONLY = TEAM_INVITATION_STATUS.PENDING;
 
 async function main(): Promise<void> {
   const argv = process.argv;
   const commit = argv.includes("--commit");
   const teamIndex = argv.indexOf("--team");
   const teamId = teamIndex >= 0 ? argv[teamIndex + 1] : undefined;
+
+  /**
+   * Info: (20260819 - Luphia) `--team` 少帶值時**不要靜默變成全域**（review #6685 低）。
+   *
+   * `--team` 後面漏了值時 `teamId` 是 undefined，而 `{}` 的語意是「全部團隊」——
+   * 使用者以為自己限定了範圍，實際上跑的是全庫。預演看得出來，但那要靠人看。
+   */
+  if (teamIndex >= 0 && !teamId) {
+    process.stderr.write("--team 後面必須帶 teamId\n");
+    process.exitCode = 1;
+    return;
+  }
   const scope = teamId ? { teamId } : {};
 
   const out = (line: string): void => {
@@ -53,7 +88,7 @@ async function main(): Promise<void> {
       select: { id: true, teamId: true, userId: true },
     }),
     prisma.teamInvitation.findMany({
-      where: { ...scope, role: REMOVED_ROLE },
+      where: { ...scope, role: REMOVED_ROLE, status: PENDING_ONLY },
       select: { id: true, teamId: true, status: true },
     }),
   ]);
@@ -93,7 +128,7 @@ async function main(): Promise<void> {
       data: { role: TeamRole.EDITOR },
     }),
     prisma.teamInvitation.updateMany({
-      where: { ...scope, role: REMOVED_ROLE },
+      where: { ...scope, role: REMOVED_ROLE, status: PENDING_ONLY },
       data: { role: TeamRole.EDITOR },
     }),
   ]);
