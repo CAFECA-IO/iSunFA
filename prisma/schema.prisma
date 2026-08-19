@@ -1701,7 +1701,21 @@ model JobTitle {
 
 // Info: (20260810 - Julian) 員工基本資料
 model Employee {
-  id          String         @id @default(uuid())
+  /**
+   * Info: (20260819 - Julian) **刻意沒有 `@default(uuid())`**（review B11）。
+   *
+   * 這張表的 id 是 PII 加密 AAD 的一部分
+   * （`hr_pii_crypto.ts`：`${table}:${recordId}:${field}:${keyVersion}`），
+   * 因此 id 必須由應用層 `randomUUID()` 先產生、再拿去加密、最後與密文
+   * 一起寫入。留著 default 的話，任何**不走 service** 的插入路徑
+   * （seed、資料遷移、金鑰輪替、未來的端點）都會寫出一列 AAD 與 id 不符的密文。
+   *
+   * 那筆資料寫得進去，**讀的時候驗章失敗並拋 `HrPiiDecryptError`，
+   * 表現與「密文損毀」完全相同 —— 而它的明文只存在於那一列裡，無法重建。**
+   *
+   * 由 `hr_pii_id_no_default.test.ts` 對 `HrPiiTable` 全表掃描釘住。
+   */
+  id String @id
   employeeNo  String         @map("employee_no") // Info: (20260810 - Julian) 工號 (例: EMP001)，唯一性以帳本為範圍
   name        String // Info: (20260810 - Julian) 姓名
   englishName String?        @map("english_name") // Info: (20260810 - Julian) 英文名
@@ -2005,7 +2019,21 @@ model EmployeeExperience {
 
 // Info: (20260810 - Julian) 緊急聯絡人
 model EmergencyContact {
-  id         String   @id @default(uuid())
+  /**
+   * Info: (20260819 - Julian) **刻意沒有 `@default(uuid())`**（review B11）。
+   *
+   * 這張表的 id 是 PII 加密 AAD 的一部分
+   * （`hr_pii_crypto.ts`：`${table}:${recordId}:${field}:${keyVersion}`），
+   * 因此 id 必須由應用層 `randomUUID()` 先產生、再拿去加密、最後與密文
+   * 一起寫入。留著 default 的話，任何**不走 service** 的插入路徑
+   * （seed、資料遷移、金鑰輪替、未來的端點）都會寫出一列 AAD 與 id 不符的密文。
+   *
+   * 那筆資料寫得進去，**讀的時候驗章失敗並拋 `HrPiiDecryptError`，
+   * 表現與「密文損毀」完全相同 —— 而它的明文只存在於那一列裡，無法重建。**
+   *
+   * 由 `hr_pii_id_no_default.test.ts` 對 `HrPiiTable` 全表掃描釘住。
+   */
+  id String @id
   employeeId String   @map("employee_id")
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
@@ -2041,7 +2069,21 @@ model EmergencyContact {
 
 // Info: (20260810 - Julian) 眷屬資料 (健保投保 / 報稅扶養)
 model Dependent {
-  id         String   @id @default(uuid())
+  /**
+   * Info: (20260819 - Julian) **刻意沒有 `@default(uuid())`**（review B11）。
+   *
+   * 這張表的 id 是 PII 加密 AAD 的一部分
+   * （`hr_pii_crypto.ts`：`${table}:${recordId}:${field}:${keyVersion}`），
+   * 因此 id 必須由應用層 `randomUUID()` 先產生、再拿去加密、最後與密文
+   * 一起寫入。留著 default 的話，任何**不走 service** 的插入路徑
+   * （seed、資料遷移、金鑰輪替、未來的端點）都會寫出一列 AAD 與 id 不符的密文。
+   *
+   * 那筆資料寫得進去，**讀的時候驗章失敗並拋 `HrPiiDecryptError`，
+   * 表現與「密文損毀」完全相同 —— 而它的明文只存在於那一列裡，無法重建。**
+   *
+   * 由 `hr_pii_id_no_default.test.ts` 對 `HrPiiTable` 全表掃描釘住。
+   */
+  id String @id
   employeeId String   @map("employee_id")
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
@@ -2074,7 +2116,21 @@ model Dependent {
 
 // Info: (20260810 - Julian) 薪轉銀行帳戶
 model BankAccount {
-  id         String   @id @default(uuid())
+  /**
+   * Info: (20260819 - Julian) **刻意沒有 `@default(uuid())`**（review B11）。
+   *
+   * 這張表的 id 是 PII 加密 AAD 的一部分
+   * （`hr_pii_crypto.ts`：`${table}:${recordId}:${field}:${keyVersion}`），
+   * 因此 id 必須由應用層 `randomUUID()` 先產生、再拿去加密、最後與密文
+   * 一起寫入。留著 default 的話，任何**不走 service** 的插入路徑
+   * （seed、資料遷移、金鑰輪替、未來的端點）都會寫出一列 AAD 與 id 不符的密文。
+   *
+   * 那筆資料寫得進去，**讀的時候驗章失敗並拋 `HrPiiDecryptError`，
+   * 表現與「密文損毀」完全相同 —— 而它的明文只存在於那一列裡，無法重建。**
+   *
+   * 由 `hr_pii_id_no_default.test.ts` 對 `HrPiiTable` 全表掃描釘住。
+   */
+  id String @id
   employeeId String   @map("employee_id")
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
@@ -2680,7 +2736,21 @@ enum LeaveRecallStatus {
  * 多一個資料來源，就多一組「兩邊說法不一致」的可能。
  */
 model LeaveRequest {
-  id String @id @default(uuid())
+  /**
+   * Info: (20260819 - Julian) **刻意沒有 `@default(uuid())`**（review B11）。
+   *
+   * 這張表的 id 是 PII 加密 AAD 的一部分
+   * （`hr_pii_crypto.ts`：`${table}:${recordId}:${field}:${keyVersion}`），
+   * 因此 id 必須由應用層 `randomUUID()` 先產生、再拿去加密、最後與密文
+   * 一起寫入。留著 default 的話，任何**不走 service** 的插入路徑
+   * （seed、資料遷移、金鑰輪替、未來的端點）都會寫出一列 AAD 與 id 不符的密文。
+   *
+   * 那筆資料寫得進去，**讀的時候驗章失敗並拋 `HrPiiDecryptError`，
+   * 表現與「密文損毀」完全相同 —— 而它的明文只存在於那一列裡，無法重建。**
+   *
+   * 由 `hr_pii_id_no_default.test.ts` 對 `HrPiiTable` 全表掃描釘住。
+   */
+  id String @id
 
   accountBookId String      @map("account_book_id")
   accountBook   AccountBook @relation(fields: [accountBookId], references: [id])

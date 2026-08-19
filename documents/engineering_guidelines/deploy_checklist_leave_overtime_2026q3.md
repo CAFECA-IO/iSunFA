@@ -57,6 +57,20 @@
 | `leave_day` | — | `minutes`、`day_equivalent_minutes`、`entitlement_engine_version` | `segment`（default `FULL`）、`start_minute`／`end_minute`（可空） |
 | `employee_shift_day` 的 `WorkDayType` | — | — | 新增列舉值 `SUSPENDED` |
 
+### 移除五張表 `id` 的 `@default(uuid())` ⚠️ 不影響資料庫
+
+`Employee`、`Dependent`、`BankAccount`、`EmergencyContact`、`LeaveRequest` ——
+它們都在 `HrPiiTable` 名單上，而那些表的 id 是 PII 加密 AAD 的一部分
+（`${table}:${recordId}:${field}:${keyVersion}`），必須由應用層 `randomUUID()`
+先產生（review B11，慣例見 `deploy_checklist_attendance_2026q3.md` §3）。
+
+**這一項不需要任何資料庫動作**：`@default(uuid())` 是 Prisma **在客戶端**填的值，
+不是資料庫的 DEFAULT 約束。移除它只改變「Prisma 會不會替你填 id」，
+既有列與資料庫結構完全不動。
+
+**但它會改變型別**：`prisma generate` 之後，這五張表的 `create` 會要求你自己給 `id`。
+漏給的地方在 `tsc --noEmit` 就會紅，不會留到執行期。
+
 **必填且無 default 的欄位合計 8 個**（計畫書 §19.4 曾寫「七個」，已於 2026-08-19 更正）。
 這 8 個就是下面第二節「做錯順序的症狀」的全部來源：它們碰到既有列一定會中止。
 

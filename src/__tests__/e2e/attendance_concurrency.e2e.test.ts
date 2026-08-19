@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { describe, it, expect, beforeAll, afterAll } from "@jest/globals";
 import { Prisma } from "@/generated";
 import { prisma } from "@/lib/prisma";
@@ -91,6 +92,13 @@ const makeEmployee = async (params: {
 }): Promise<string> => {
   const employee = await prisma.employee.create({
     data: {
+      /**
+       * Info: (20260819 - Julian) id 自己產（review B11）。
+       *
+       * `Employee` 在 `HrPiiTable` 名單上，而那張表的 id 是加密 AAD 的一部分，
+       * 因此 schema 刻意沒有 `@default(uuid())` —— 由應用層產生是唯一的路徑。
+       */
+      id: randomUUID(),
       employeeNo: params.employeeNo,
       name: params.name,
       gender: Gender.MALE,
@@ -111,6 +119,8 @@ const makeEmployee = async (params: {
 const makePendingRecall = async (workDate: string): Promise<string> => {
   const request = await prisma.leaveRequest.create({
     data: {
+      // Info: (20260819 - Julian) 同上：`LeaveRequest` 也在 PII 名單上（review B11）
+      id: randomUUID(),
       accountBookId: BOOK_ID,
       employeeId,
       leavePolicyId,
