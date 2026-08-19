@@ -37,6 +37,10 @@ import {
   LeaveRuleError,
   allocateConsumption,
   resolveLeaveMinutes,
+  totalDaysOf,
+  exactDaysToNumber,
+  exactDaysToDecimalString,
+  IExactDays,
 } from "@/lib/leave_entitlement_rules";
 import { resolveApprovalChain } from "@/lib/leave_approval_chain";
 import { leaveRequestRepo } from "@/repositories/leave_request.repo";
@@ -315,7 +319,8 @@ export class LeaveRequestService {
     return {
       days: plan,
       totalMinutes,
-      totalDays,
+      // Info: (20260819 - Julian) 對外是顯示用的近似值；規則命中已在 chain 內以精確值判定
+      totalDays: exactDaysToNumber(totalDays),
       remainingMinutesBefore: remainingBefore,
       remainingMinutesAfter:
         remainingBefore === null
@@ -415,14 +420,22 @@ export class LeaveRequestService {
       piiAlgorithm: reason.algorithm,
       piiKeyVersion: reason.keyVersion,
       totalMinutes,
-      totalDays,
+      /**
+       * Info: (20260819 - Julian) 傳**精確的十進位字串**（review B5）。
+       *
+       * `LeaveRequest.totalDays` 是 Decimal 欄位，而先前傳的是由 double 累加
+       * 出來的 number，再由 repository 用 `String()` 洗成字串騙過邊界防護 ——
+       * 洗掉的是一個已經算壞的值。CLAUDE.md §2 要的是運算用精確型別，
+       * 不是把 `2.9999999999999996` 存成字串。
+       */
+      totalDays: exactDaysToDecimalString(totalDays),
       days: plan,
       steps: chain.steps,
       concurrencyWarned: concurrency.length > 0,
     });
 
     logger.info(
-      `[leave] request submitted: employee=${params.employeeId} policy=${policy.code} days=${totalDays} steps=${chain.steps.length}`,
+      `[leave] request submitted: employee=${params.employeeId} policy=${policy.code} days=${exactDaysToDecimalString(totalDays)} steps=${chain.steps.length}`,
     );
     return created;
   }
@@ -468,12 +481,29 @@ export class LeaveRequestService {
      * 在另一張單先扣走之後就是舊的。前置檢查的價值是：在開交易之前
      * 就給出「額度不足」這個較友善的失敗，而不是讓它變成一個 409 競態。
      */
+    /**
+     * Info: (20260819 - Julian) 到期判斷的基準日 —— 前置檢查與交易內的 FIFO
+     * 共用同一個值，兩邊才會挑到同一批（review B4）。
+     *
+     * **不用 `?? ""` 兜底。** `expiresOn: { gte: "" }` 會比對到每一列，
+     * 到期過濾就此靜默失效，而查詢仍然「成功」—— 沒有任何症狀。
+     * 一張沒有任何請假日的假單是不變式層級的錯誤（validator 要求至少一天），
+     * 不是一個需要預設值的情境。
+     */
+    const firstWorkDate = request.days[0]?.workDate;
+    if (firstWorkDate === undefined) {
+      logger.error(
+        `[leave] request ${request.id} has no leave day; cannot determine expiry cut-off`,
+      );
+      throw new AppError(API_ERRORS.IS_DB_FAILED);
+    }
+
     if (policy.quotaMode === LeaveQuotaMode.QUOTA) {
       const grants = await this.context.findConsumableGrants({
         accountBookId: params.accountBookId,
         employeeId: request.employeeId,
         leavePolicyId: request.leavePolicyId,
-        asOfDate: request.days[0]?.workDate ?? "",
+        asOfDate: firstWorkDate,
       });
       const { shortfallMinutes } = allocateConsumption({
         grants,
@@ -494,6 +524,7 @@ export class LeaveRequestService {
         comment: params.comment,
         employeeId: request.employeeId,
         leavePolicyId: request.leavePolicyId,
+        asOfDate: firstWorkDate,
         totalMinutes: request.totalMinutes,
       }),
     );
@@ -729,8 +760,17 @@ export class LeaveRequestService {
  * 是不同的分鐘數 —— 這正是逐日固化 `dayEquivalentMinutes` 的用途
  * （計畫書 §D3）。總日數只用於命中簽核規則區間與顯示，帳本記的仍是分鐘。
  */
-const toTotalDays = (plan: readonly ILeaveDayPlan[]): number =>
-  plan.reduce((sum, day) => sum + day.minutes / day.dayEquivalentMinutes, 0);
+/**
+ * Info: (20260819 - Julian) 總日數改由 `totalDaysOf` 精確計算（review B5）。
+ *
+ * 原本是 `plan.reduce((sum, day) => sum + day.minutes / day.dayEquivalentMinutes, 0)`，
+ * 而那個 double 在「恰好整數天」的形狀上會掉到整數下方
+ * （420 分班 × 7 天 × 180 分 → `2.9999999999999996`），
+ * 於是恰好 3 天的假單掉進 `[0, 3)` 的短假規則、少簽一關。
+ * 保留這個薄包裝只是為了讓三個呼叫點不必各自 import。
+ */
+const toTotalDays = (plan: readonly ILeaveDayPlan[]): IExactDays =>
+  totalDaysOf(plan);
 
 /**
  * Info: (20260817 - Julian) 單例。route 只認這一個實例，

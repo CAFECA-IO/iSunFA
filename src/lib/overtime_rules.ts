@@ -1,4 +1,5 @@
 import { PunchType, WorkDayType } from "@/constants/attendance";
+import { grantedMinutesOf } from "@/lib/leave_entitlement_rules";
 import {
   OVERTIME_DAILY_TOTAL_LIMIT_MINUTES,
   OVERTIME_MONTHLY_EXTENDED_LIMIT_MINUTES,
@@ -376,15 +377,21 @@ export function totalIntervalMinutes(
  *
  * ## 為什麼需要一個函式
  *
- * `LeaveGrant` 的不變式要求 `grantedMinutes === Math.ceil(grantedDays × dayEquivalentMinutes)`
- * （`assertGrantSource`）。補休的方向與年資給假相反 —— 分鐘是既定的（等於該分段的
- * 加班分鐘），日數是推導出來的。直接寫 `minutes / dayEquivalentMinutes` 會踩到浮點：
- * `100 / 480 × 480 === 100.00000000000001`，`Math.ceil` 後變 101，不變式當場失敗。
+ * `LeaveGrant` 的不變式要求 `grantedMinutes` 恰為 `grantedDays × dayEquivalentMinutes`
+ * 的無條件進位（`assertGrantSource`）。補休的方向與年資給假相反 —— 分鐘是既定的
+ * （等於該分段的加班分鐘），日數是推導出來的。直接寫 `minutes / dayEquivalentMinutes`
+ * 會踩到浮點：`100 / 480 × 480 === 100.00000000000001`，進位後變 101，不變式當場失敗。
  *
- * 因此先無條件**捨去**到 10 位小數，再逐格退到 `Math.ceil` 剛好回到 minutes
- * 為止（乘法自己也會產生誤差，見下方）。捨去而非四捨五入：往上捨會直接讓
- * 不變式失敗，而失敗的方向不對稱 —— 這裡寧可讓「日」少個 10⁻¹⁰，
- * 也不能讓「分鐘」多一分。
+ * ## 作法：整數除法取商，不碰浮點（review B6）
+ *
+ * `scaled = floor(minutes × 10¹⁰ ÷ dayEquivalentMinutes)`，全程 `bigint`。
+ * 取商（而不是四捨五入）的理由不變且不對稱：往上捨會讓「分鐘」多一分，
+ * 而這裡寧可讓「日」少個 10⁻¹⁰。
+ *
+ * 先前這裡是「浮點捨去後逐格退位」的迴圈 —— 那個迴圈是在補償
+ * `Math.ceil(days × eq)` 的乘法誤差（註解舉的 `0.55 × 420 === 231.00000000000003`
+ * 正是 B6 的同一個陷阱）。誤差的源頭已由 `grantedMinutesOf` 移除，
+ * 退位迴圈連同它要補償的東西一起不見了。
  *
  * 真正的量是分鐘（ADR 022 §2：帳本單位為分鐘，「日」只出現在授予與折現兩個端點）。
  */
@@ -407,28 +414,10 @@ export function deriveCompensatoryGrantDays(params: {
     );
   }
 
-  /**
-   * Info: (20260818 - Julian) 先捨去到 10 位小數，再逐格退到乘得回來為止。
-   *
-   * 只捨去不夠：捨去後的日數乘回去**仍可能略微超過**。實測
-   * `231 / 420 === 0.55`（十進位下是精確值），而 `0.55 * 420 === 231.00000000000003`
-   * —— `Math.ceil` 之後變 232，不變式當場失敗。誤差來自乘法本身，
-   * 不是來自捨去，所以要退一格（約 10⁻¹⁰ × 班長 ≈ 7×10⁻⁸ 分鐘）把它壓回去。
-   *
-   * 迴圈必然終止且實測最多退一格：每退一格讓乘積下降遠大於浮點誤差、
-   * 又遠小於一分鐘，因此不可能退過頭而讓 `ceil` 掉到 minutes 以下。
-   */
-  let scaled = Math.floor(
-    (minutes / dayEquivalentMinutes) * COMPENSATORY_DAYS_SCALE,
-  );
-  while (
-    scaled > 0 &&
-    Math.ceil((scaled / COMPENSATORY_DAYS_SCALE) * dayEquivalentMinutes) >
-      minutes
-  ) {
-    scaled -= 1;
-  }
-  const days = scaled / COMPENSATORY_DAYS_SCALE;
+  // Info: (20260819 - Julian) 整數除法取商：沒有浮點，因此沒有要補償的誤差
+  const scaled =
+    (BigInt(minutes) * COMPENSATORY_DAYS_SCALE) / BigInt(dayEquivalentMinutes);
+  const days = Number(scaled) / Number(COMPENSATORY_DAYS_SCALE);
 
   /**
    * Info: (20260818 - Julian) 自己驗一次而不是相信上面的推導。
@@ -436,8 +425,11 @@ export function deriveCompensatoryGrantDays(params: {
    * 這個函式存在的唯一理由就是餵飽 `assertGrantSource` 的那條等式；
    * 若哪天有人改了小數位數或換了捨入方向，這裡要當場說出來，
    * 而不是留給 repository 在一筆真實的補休入帳時丟不變式錯誤。
+   *
+   * Info: (20260819 - Julian) 驗算走 `grantedMinutesOf`（額度引擎那一支唯一的
+   * 換算實作），順帶把 `Number(scaled) / 10¹⁰` 這一步的十進位字串還原也一併驗掉。
    */
-  if (Math.ceil(days * dayEquivalentMinutes) !== minutes) {
+  if (grantedMinutesOf(days, dayEquivalentMinutes) !== minutes) {
     throw new OvertimeRuleError(
       OvertimeRuleErrorReason.INVALID_MINUTES,
       `grantedDays does not round-trip: minutes=${minutes}, dayEquivalentMinutes=${dayEquivalentMinutes}, days=${days}`,
@@ -447,11 +439,14 @@ export function deriveCompensatoryGrantDays(params: {
 }
 
 /**
- * Info: (20260818 - Julian) `grantedDays` 的小數位數。
- * 10 位讓乘回去的誤差遠小於一分鐘（10⁻¹⁰ × 1440 ≈ 1.4×10⁻⁷），
- * 又遠大於雙精度浮點自身的相對誤差，兩邊都有餘裕。
+ * Info: (20260819 - Julian) `grantedDays` 的小數位數（`bigint`，因為它是除數）。
+ *
+ * 10 位讓捨去的殘量遠小於一分鐘（10⁻¹⁰ × 1440 ≈ 1.4×10⁻⁷）。上限也有意義：
+ * `1440 × 10¹⁰ = 1.44×10¹³` 落在雙精度可精確表示的整數範圍內，
+ * 因此 `Number(scaled) / 10¹⁰` 的十進位字串就是 `scaled` 本身，
+ * 交給 `grantedMinutesOf` 還原成分數時不會失真（該處由驗算把關）。
  */
-const COMPENSATORY_DAYS_SCALE = 1e10;
+const COMPENSATORY_DAYS_SCALE = 10_000_000_000n;
 
 /**
  * Info: (20260818 - Julian) 把成對打卡還原成「在場區間」。

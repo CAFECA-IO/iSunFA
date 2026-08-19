@@ -32,22 +32,71 @@ import { IConsumableGrant } from "@/interfaces/leave_entitlement";
  * 差別只在帳本留下的粒度，而那個粒度正是銷假需要的。
  */
 
-/** Info: (20260817 - Julian) 交易內讀出某員工某假別的每一批餘額 */
-export const readGrantBalances = async (
-  tx: Prisma.TransactionClient,
-  params: { accountBookId: string; employeeId: string; leavePolicyId: string },
+/**
+ * Info: (20260819 - Julian) 「哪些批次可以扣」的**唯一**定義（review B4）。
+ *
+ * ## 為什麼要抽出來
+ *
+ * 先前有兩個答案：試算與送出前置檢查（`findConsumableGrants`）帶
+ * `expiresOn >= asOfDate` 並濾掉餘額為 0 的批次；而交易內實際扣減的
+ * `readGrantBalances` **兩個條件都沒有**。`allocateConsumption` 依 `expiresOn`
+ * 由早至晚排序，於是**已過期的批次會排在最前面被優先扣光**。
+ *
+ * 這不是邊界情形而是穩定狀態：寫 `EXPIRE` 分錄的每日 Worker 還不存在
+ * （`leave_balance.service.ts` 的 ToDo），因此過期批次會永久帶著正的餘額。
+ * 症狀是「試算說扣本年度、帳本扣的是去年已過期那批」—— 畫面與帳本各說各話，
+ * 而 §38 IV 對過期額度應折現的處置被靜默吃掉。
+ *
+ * checklist §2.1：同一個問題只能有一個判斷點。這裡就是那個點。
+ */
+export const consumableGrantWhere = (params: {
+  accountBookId: string;
+  employeeId: string;
+  leavePolicyId: string;
+  /** Info: (20260819 - Julian) 以哪一天為準判斷「還沒過期」。必填，見下方的 fail fast */
+  asOfDate: string;
+}): Prisma.LeaveGrantWhereInput => {
+  /**
+   * Info: (20260819 - Julian) 空字串會讓 `expiresOn: { gte: "" }` 比對到
+   * 每一列 —— 到期過濾靜默失效，而查詢仍然「成功」。這種形狀不能放行。
+   */
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(params.asOfDate)) {
+    throw new Error(
+      `consumableGrantWhere: asOfDate must be YYYY-MM-DD, got ${JSON.stringify(params.asOfDate)}`,
+    );
+  }
+
+  return {
+    accountBookId: params.accountBookId,
+    employeeId: params.employeeId,
+    leavePolicyId: params.leavePolicyId,
+    expiresOn: { gte: params.asOfDate },
+  };
+};
+
+/**
+ * Info: (20260819 - Julian) 依上面那組條件讀出逐批餘額，濾掉沒有餘額的批次。
+ *
+ * `client` 收 `Prisma.TransactionClient` 或 `PrismaClient` —— 交易內的實際扣減
+ * 與交易外的試算走的是**同一支**，這樣「試算說會扣哪幾批」與「實際扣了哪幾批」
+ * 才不會有第二種答案（checklist §1.10：驗收與產品要讀同一支實作）。
+ */
+export const readConsumableGrants = async (
+  client: Prisma.TransactionClient,
+  params: {
+    accountBookId: string;
+    employeeId: string;
+    leavePolicyId: string;
+    asOfDate: string;
+  },
 ): Promise<IConsumableGrant[]> => {
-  const grants = await tx.leaveGrant.findMany({
-    where: {
-      accountBookId: params.accountBookId,
-      employeeId: params.employeeId,
-      leavePolicyId: params.leavePolicyId,
-    },
+  const grants = await client.leaveGrant.findMany({
+    where: consumableGrantWhere(params),
     select: { id: true, expiresOn: true, createdAt: true },
   });
   if (grants.length === 0) return [];
 
-  const sums = await tx.leaveLedgerEntry.groupBy({
+  const sums = await client.leaveLedgerEntry.groupBy({
     by: ["leaveGrantId"],
     where: { leaveGrantId: { in: grants.map((grant) => grant.id) } },
     _sum: { deltaMinutes: true },
@@ -56,13 +105,18 @@ export const readGrantBalances = async (
     sums.map((row) => [row.leaveGrantId, row._sum.deltaMinutes ?? 0]),
   );
 
-  return grants.map((grant) => ({
-    grantId: grant.id,
-    // Info: (20260817 - Julian) GRANT 本身也是一筆正的異動，故異動總和即為餘額
-    remainingMinutes: deltaByGrant.get(grant.id) ?? 0,
-    expiresOn: grant.expiresOn,
-    createdAt: grant.createdAt.toISOString(),
-  }));
+  return (
+    grants
+      .map((grant) => ({
+        grantId: grant.id,
+        // Info: (20260817 - Julian) GRANT 本身也是一筆正的異動，故異動總和即為餘額
+        remainingMinutes: deltaByGrant.get(grant.id) ?? 0,
+        expiresOn: grant.expiresOn,
+        createdAt: grant.createdAt.toISOString(),
+      }))
+      // Info: (20260819 - Julian) 餘額為 0（或被回補成負）的批次不參與 FIFO
+      .filter((grant) => grant.remainingMinutes > 0)
+  );
 };
 
 export interface ILeaveDayConsumption {

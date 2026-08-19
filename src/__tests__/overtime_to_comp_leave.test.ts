@@ -6,6 +6,7 @@ import {
   deriveCompensatoryGrantDays,
   deriveOvertimeSegments,
 } from "@/lib/overtime_rules";
+import { grantedMinutesOf } from "@/lib/leave_entitlement_rules";
 import {
   assertGrantSource,
   LeaveGrantInvariantError,
@@ -143,11 +144,18 @@ describe("來源與分段的雙向綁定", () => {
 
 describe("grantedDays 的可驗算性", () => {
   /**
-   * Info: (20260818 - Julian) `assertGrantSource` 用
-   * `Math.ceil(grantedDays × dayEquivalentMinutes)` 重算分鐘數。
-   * 直接寫 `minutes / dayEquivalentMinutes` 會踩到浮點：
-   * `100 / 480 × 480 === 100.00000000000001`，`Math.ceil` 之後變 101。
+   * Info: (20260819 - Julian) 補休的方向與年資給假相反：分鐘既定、日數推導，
+   * 而日數必須能把分鐘算回來（`assertGrantSource`）。直接寫
+   * `minutes / dayEquivalentMinutes` 會踩到浮點：
+   * `100 / 480 × 480 === 100.00000000000001`。
    * 這一組把所有 1..720 分鐘、三種班長都跑一次，確保換算永遠回得來。
+   *
+   * Info: (20260819 - Julian) 斷言改用 `grantedMinutesOf` 而不是
+   * `Math.ceil(grantedDays × dayEquivalentMinutes)`（review B6）——
+   * 後者正是被修掉的那個錯式子，拿它當斷言等於要求實作繼續錯下去
+   * （實測 450 分班有 16 個分鐘數過不了它，因為 `0.14 × 450` 是
+   * `63.00000000000001`）。精度本身的紅燈在
+   * `leave_granted_minutes_precision.test.ts`。
    */
   it.each([450, 480, 720])(
     "日約當 %i 分鐘時，任何分鐘數都能被重算回來",
@@ -157,7 +165,9 @@ describe("grantedDays 的可驗算性", () => {
           minutes,
           dayEquivalentMinutes,
         });
-        expect(Math.ceil(grantedDays * dayEquivalentMinutes)).toBe(minutes);
+        expect(grantedMinutesOf(grantedDays, dayEquivalentMinutes)).toBe(
+          minutes,
+        );
       }
     },
   );

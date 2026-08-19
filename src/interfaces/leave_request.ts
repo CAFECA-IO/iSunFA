@@ -1,3 +1,4 @@
+import { IExactDays } from "@/lib/leave_entitlement_rules";
 import { WorkDayType } from "@/constants/attendance";
 import {
   LeaveApprovalNodeKind,
@@ -61,8 +62,14 @@ export interface IApprovalOrgSnapshot {
 
 export interface IApprovalChainInput {
   leavePolicyId: string;
-  /** Info: (20260817 - Julian) 本張假單的總日數，用於命中規則區間（左閉右開） */
-  totalDays: number;
+  /**
+   * Info: (20260817 - Julian) 本張假單的總日數，用於命中規則區間（左閉右開）。
+   *
+   * Info: (20260819 - Julian) 型別是精確有理數不是 number（review B5）：
+   * `Σ 分鐘/日約當` 用 double 累加會讓「恰好 3 天」變成 2.9999999999999996，
+   * 於是掉進短假規則、少簽一關。這一格是職責分離的判準，不能有 epsilon。
+   */
+  totalDays: IExactDays;
   rules: readonly IApprovalRuleWithSteps[];
   org: IApprovalOrgSnapshot;
 }
@@ -320,7 +327,12 @@ export interface ILeaveRequestRepository {
     piiAlgorithm: string;
     piiKeyVersion: number;
     totalMinutes: number;
-    totalDays: number;
+    /**
+     * Info: (20260819 - Julian) 精確的十進位字串（review B5）。
+     * 型別是 string 不是 number，因為 `LeaveRequest.totalDays` 是 Decimal，
+     * 而 double 累加的總日數會在「恰好整數天」上少一個 epsilon。
+     */
+    totalDays: string;
     days: readonly ILeaveDayPlan[];
     steps: readonly IResolvedApprovalStep[];
     concurrencyWarned: boolean;
@@ -341,6 +353,15 @@ export interface ILeaveRequestRepository {
     comment?: string;
     employeeId: string;
     leavePolicyId: string;
+    /**
+     * Info: (20260819 - Julian) 以哪一天為準判斷批次「還沒過期」（review B4）。
+     *
+     * 交易內的 FIFO 與試算走同一組條件（`consumableGrantWhere`），而那組條件
+     * 需要一個基準日。取這張單的第一個請假日 —— 與送出前置檢查取的是同一個值，
+     * 兩邊才會挑到同一批。**不可為空字串**：`expiresOn: { gte: "" }` 會比對到
+     * 每一列，到期過濾靜默失效而查詢仍然「成功」。
+     */
+    asOfDate: string;
     /**
      * Info: (20260817 - Julian) 只傳總量，**不傳分配結果**。
      *

@@ -165,7 +165,13 @@ class FakeRepository implements ILeaveRequestRepository {
       leavePolicyId: params.leavePolicyId,
       status: LeaveRequestStatus.PENDING,
       totalMinutes: params.totalMinutes,
-      totalDays: params.totalDays,
+      /**
+       * Info: (20260819 - Julian) 落地參數是精確十進位**字串**，讀回來的
+       * record 仍是 number（review B5）。這裡照真的 repository 一樣做一次
+       * `Number()` —— 假物件若自己省掉這一步，就會替 service 掩蓋掉
+       * 「寫進去的型別和讀出來的型別不同」這件事。
+       */
+      totalDays: Number(params.totalDays),
       days: params.days.map((day, index) => ({
         id: `day-${index}`,
         workDate: day.workDate,
@@ -382,9 +388,10 @@ describe("submit — 送出", () => {
       input: submitInput(["2026-08-18", "2026-08-19"]),
       observedAt: AT,
     });
+    // Info: (20260819 - Julian) `"2"` 而不是 `2`：落地的是精確十進位字串（review B5）
     expect(repo.created).toMatchObject({
       totalMinutes: 960,
-      totalDays: 2,
+      totalDays: "2",
       leavePolicyId: "policy-annual",
     });
   });

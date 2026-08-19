@@ -1,6 +1,7 @@
 import { describe, it, expect } from "@jest/globals";
 import { resolveApprovalChain } from "@/lib/leave_approval_chain";
 import { LeaveApprovalNodeKind } from "@/constants/leave_policy";
+import { IExactDays, totalDaysOf } from "@/lib/leave_entitlement_rules";
 import {
   IApprovalOrgSnapshot,
   IApprovalRuleWithSteps,
@@ -73,13 +74,23 @@ const rules: IApprovalRuleWithSteps[] = [
   },
 ];
 
+/**
+ * Info: (20260819 - Julian) 天數是精確有理數而不是 double（review B5）。
+ *
+ * 這裡不自己組 `IExactDays` 字面值，一律走 production 的 `totalDaysOf` ——
+ * 手寫分子分母測到的是測試自己發明的值，而不是實際會拿去比對規則的那一個。
+ * 以 480 分班表示：`daysOf(2.5)` 就是 1200 分 ÷ 480 分。
+ */
+const daysOf = (value: number): IExactDays =>
+  totalDaysOf([{ minutes: value * 480, dayEquivalentMinutes: 480 }]);
+
 const resolve = (
   totalDays: number,
   overrides: Partial<IApprovalOrgSnapshot> = {},
 ) =>
   resolveApprovalChain({
     leavePolicyId: "policy-annual",
-    totalDays,
+    totalDays: daysOf(totalDays),
     rules,
     org: { ...org, ...overrides },
   });
@@ -115,6 +126,30 @@ describe("resolveApprovalChain — 規則命中", () => {
     expect(result.steps).toHaveLength(3);
   });
 
+  /**
+   * Info: (20260819 - Julian) 上一條的 3 是一個可精確表示的字面值，
+   * 因此它在 B5 缺陷存在時**照樣會通過**。真正會踩到的是累加出來的 3：
+   * 420 分班請 7 天、每天 180 分，數學上正好 3 天，但 double 累加得
+   * `2.9999999999999996` —— 於是掉進 `[0, 3)` 的短假規則，部門經理與 HR
+   * 那兩關從此不存在。這條就是那個降級的紅燈。
+   */
+  it("由 7 天 × 180 分（420 分班）累加出的恰好 3 天仍走長假規則（review B5）", () => {
+    const result = resolveApprovalChain({
+      leavePolicyId: "policy-annual",
+      totalDays: totalDaysOf(
+        Array.from({ length: 7 }, () => ({
+          minutes: 180,
+          dayEquivalentMinutes: 420,
+        })),
+      ),
+      rules,
+      org,
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.steps).toHaveLength(3);
+  });
+
   it("2.5 天仍走短假規則", () => {
     const result = resolve(2.5);
     expect(result.ok).toBe(true);
@@ -129,7 +164,7 @@ describe("resolveApprovalChain — 規則命中", () => {
   it("假別專屬規則完全取代通則", () => {
     const result = resolveApprovalChain({
       leavePolicyId: "policy-annual",
-      totalDays: 10,
+      totalDays: daysOf(10),
       rules: [
         ...rules,
         {
@@ -156,7 +191,7 @@ describe("resolveApprovalChain — 規則命中", () => {
   it("沒有規則涵蓋這個天數時回報 NO_MATCHING_RULE", () => {
     const result = resolveApprovalChain({
       leavePolicyId: "policy-annual",
-      totalDays: 1,
+      totalDays: daysOf(1),
       rules: [
         {
           leavePolicyId: null,
@@ -217,7 +252,7 @@ describe("resolveApprovalChain — 相鄰去重", () => {
   it("只去重相鄰的：A → B → A 的複核鏈保留", () => {
     const result = resolveApprovalChain({
       leavePolicyId: "policy-annual",
-      totalDays: 1,
+      totalDays: daysOf(1),
       rules: [
         {
           leavePolicyId: null,
@@ -285,7 +320,7 @@ describe("resolveApprovalChain — 自我核准的上升", () => {
     };
     const result = resolveApprovalChain({
       leavePolicyId: "policy-annual",
-      totalDays: 1,
+      totalDays: daysOf(1),
       rules: [
         {
           leavePolicyId: null,
@@ -310,7 +345,7 @@ describe("resolveApprovalChain — 自我核准的上升", () => {
   it("唯一的 HR 自己請假且無其他人可簽時回報 NO_OTHER_HR", () => {
     const result = resolveApprovalChain({
       leavePolicyId: "policy-annual",
-      totalDays: 1,
+      totalDays: daysOf(1),
       rules: [
         {
           leavePolicyId: null,
@@ -367,7 +402,7 @@ describe("resolveApprovalChain — 展不開時要指出缺什麼", () => {
   it("命中的規則沒有任何節點時擋下，而不是視為自動核准", () => {
     const result = resolveApprovalChain({
       leavePolicyId: "policy-annual",
-      totalDays: 1,
+      totalDays: daysOf(1),
       rules: [{ leavePolicyId: null, minDays: 0, maxDays: null, steps: [] }],
       org,
     });

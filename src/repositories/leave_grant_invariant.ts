@@ -103,12 +103,32 @@ export function assertGrantSource(params: IStorableLeaveGrant): void {
   }
 
   /**
-   * Info: (20260817 - Julian) 分鐘數必須能由法定面額與換算依據重算出來。
+   * Info: (20260819 - Julian) 分鐘數必須能由法定面額與換算依據重算出來。
    *
-   * 運算式與 `deriveGrantSchedule` 完全相同（`Math.ceil(days × dayEquivalent)`）——
-   * 刻意用同一個式子而不是「差一分鐘以內就算對」：容忍值一旦引入，
+   * 零容忍不變：不接受「差一分鐘以內就算對」。容忍值一旦引入，
    * 就會有人靠它塞進一個算錯但差不多的數字，而 ADR 022 §3.1
    * 對守恆式的整個論證建立在「零誤差」之上。
+   *
+   * ## 為什麼這裡不呼叫 `grantedMinutesOf`（review B6）
+   *
+   * 這條原本重算的是**與 `deriveGrantSchedule` 完全相同的式子**
+   * （`Math.ceil(days × dayEquivalent)`），當時的理由是「同一個式子才沒有容忍值」。
+   * 那個理由把兩件事混為一談：零容忍談的是**判準的鬆緊**，
+   * 而重算同一個式子談的是**判準的獨立性**。式子本身錯了的時候
+   * （浮點乘積外溢一個 epsilon，`1.1 × 420 = 462.00000000000006` → 463），
+   * 判準與缺陷完全相容，於是 181 組多算一分鐘的批次全部通過檢查 ——
+   * checklist §1.9「衍生值救不了衍生值」。
+   *
+   * 所以這裡改成驗**定義**而不是驗實作。`grantedMinutes` 依定義是
+   * 「不小於 `grantedDays × dayEquivalentMinutes` 的最小整數」，等價於
+   *
+   * ```
+   * (m - 1) × den  <  num × eq  ≤  m × den        （grantedDays = num / den）
+   * ```
+   *
+   * 全程整數、沒有乘完再取整、也沒有除法，因此它對「乘法怎麼實作」
+   * 一無所知 —— 換掉引擎那一支的實作，這條照樣有效；引擎那一支算錯，
+   * 這條會當場說出來。
    */
   if (params.dayEquivalentMinutes <= 0) {
     throw new LeaveGrantInvariantError(
@@ -116,13 +136,17 @@ export function assertGrantSource(params: IStorableLeaveGrant): void {
       `dayEquivalentMinutes=${params.dayEquivalentMinutes}`,
     );
   }
-  const recomputed = Math.ceil(params.grantedDays * params.dayEquivalentMinutes);
-  if (params.grantedMinutes !== recomputed) {
+  if (!Number.isInteger(params.grantedMinutes) || params.grantedMinutes < 0) {
     throw new LeaveGrantInvariantError(
-      "grantedMinutes does not follow from grantedDays x dayEquivalentMinutes; the audit trail would not reconcile",
-      `grantedDays=${params.grantedDays}, dayEquivalentMinutes=${params.dayEquivalentMinutes}, grantedMinutes=${params.grantedMinutes}, expected=${recomputed}`,
+      "grantedMinutes must be a non-negative integer; the ledger only knows whole minutes",
+      `grantedMinutes=${params.grantedMinutes}`,
     );
   }
+  assertCeilingOfProduct(
+    params.grantedMinutes,
+    params.grantedDays,
+    params.dayEquivalentMinutes,
+  );
 
   /**
    * Info: (20260817 - Julian) 人工調整必須說明理由。
@@ -162,6 +186,61 @@ export function assertGrantSource(params: IStorableLeaveGrant): void {
     throw new LeaveGrantInvariantError(
       "expiresOn precedes the end of its own cycle; FIFO would consume this batch before batches that expire earlier in reality",
       `cycleEndDate=${params.cycleEndDate}, expiresOn=${params.expiresOn}`,
+    );
+  }
+}
+
+/**
+ * Info: (20260819 - Julian) `minutes === ceil(days × dayEquivalentMinutes)`，
+ * 但用**定義**驗而不是重算（review B6）。
+ *
+ * 把 `days` 由它的十進位字串還原成 `num / den`（`String(1.1)` 是 `"1.1"`，
+ * 不是 `1.100000000000000088…`，所以這一步沒有誤差），然後檢查
+ *
+ * ```
+ * (minutes - 1) × den  <  num × eq  ≤  minutes × den
+ * ```
+ *
+ * 兩側都是 `bigint` 的乘法與比較，沒有除法、沒有取整、沒有浮點。
+ * 上界擋「給多了」（`1.1 日 × 420 分` 寫成 463），下界擋「給少了」
+ * （寫成 461），而 462 是唯一同時滿足兩者的整數。
+ *
+ * 刻意寫在這個檔案裡而不是 import 引擎的換算函式：不變式一旦與被驗的
+ * 實作共用程式碼，它驗的就是「這支函式跟自己一致」。
+ */
+function assertCeilingOfProduct(
+  minutes: number,
+  days: number,
+  dayEquivalentMinutes: number,
+): void {
+  if (!Number.isFinite(days) || days < 0) {
+    throw new LeaveGrantInvariantError(
+      "grantedDays must be a non-negative finite number",
+      `grantedDays=${days}`,
+    );
+  }
+
+  const text = String(days);
+  if (text.includes("e") || text.includes("E")) {
+    throw new LeaveGrantInvariantError(
+      "grantedDays must be a plain decimal; exponential notation cannot be reconciled by hand",
+      `grantedDays=${text}`,
+    );
+  }
+  const dot = text.indexOf(".");
+  const scale = dot === -1 ? 0 : text.length - dot - 1;
+  const numerator = BigInt(text.replace(".", ""));
+  const denominator = 10n ** BigInt(scale);
+
+  const product = numerator * BigInt(dayEquivalentMinutes);
+  const granted = BigInt(minutes);
+  const withinUpperBound = product <= granted * denominator;
+  const withinLowerBound = (granted - 1n) * denominator < product;
+
+  if (!withinUpperBound || !withinLowerBound) {
+    throw new LeaveGrantInvariantError(
+      "grantedMinutes does not follow from grantedDays x dayEquivalentMinutes; the audit trail would not reconcile",
+      `grantedDays=${text}, dayEquivalentMinutes=${dayEquivalentMinutes}, grantedMinutes=${minutes}, ${withinUpperBound ? "granted too few" : "granted one minute too many"}`,
     );
   }
 }

@@ -3,7 +3,7 @@ import { WorkDayType } from "@/constants/attendance";
 import { LeaveRequestStatus } from "@/constants/leave";
 import { LeaveApprovalStepStatus } from "@/constants/leave_policy";
 import {
-  readGrantBalances,
+  readConsumableGrants,
   writeConsumeForDays,
 } from "@/repositories/leave_ledger";
 import { activeKeyOf } from "@/repositories/leave.repo";
@@ -122,6 +122,27 @@ const SUMMARY_INCLUDE = {
  * 為 `LeaveGrant` 加一個**遵守同樣三規矩**的 `remainingMinutes` 快取
  * （同交易更新、可重建、每日勾稽），而不是把它變成一個沒有勾稽的欄位。
  */
+
+/**
+ * Info: (20260819 - Julian) 交易內判定「額度被別人先扣走」的哨兵（review B4）。
+ *
+ * ## 為什麼是 throw 而不是 return
+ *
+ * `prisma.$transaction(async (tx) => ...)` 的語意是：**callback 正常回傳就 commit**，
+ * 只有丟例外才回捲。先前這裡是 `return LeaveApprovalOutcome.BALANCE_RACE`，
+ * 而它上面已經把 `LeaveRequest.status` 改成 `APPROVED`、把簽核節點結案了 ——
+ * 那些寫入會**跟著 commit**。結果是一張標著已核准、卻一分鐘都沒扣帳的假單，
+ * 而使用者只看到一句「額度剛被扣走」。
+ *
+ * 檔案裡原本的註解寫著「中途 return BALANCE_RACE 時交易會整個回捲」——
+ * 那句話對 Prisma 的互動式交易不成立，這個哨兵是為了讓它成立。
+ */
+class BalanceRaceError extends Error {
+  constructor() {
+    super("leave balance was consumed by a concurrent approval");
+    this.name = "BalanceRaceError";
+  }
+}
 
 export class LeaveRequestRepository implements ILeaveRequestRepository {
   public async findById(params: {
@@ -282,17 +303,16 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
           status: LeaveRequestStatus.PENDING,
           totalMinutes: params.totalMinutes,
           /**
-           * Info: (20260818 - Julian) Decimal 以字串落地（邊界防護，CLAUDE.md §2）。
+           * Info: (20260819 - Julian) 已經是**精確的十進位字串**（review B5）。
            *
-           * `src/lib/prisma.ts` 會從 DMMF 解析出所有 Decimal 欄位，擋下原生 JS number
-           * 寫入 —— 而 `totalDays` 是由 `toTotalDays()` 算出來的 number。少了這一層轉換，
-           * **每一張假單都送不出去**：錯誤不是 AppError，被 route 收斂成 `IS_DB_FAILED`，
-           * 於是畫面上只看得到一句通用的紅字，而真正的原因在伺服器 log 裡。
-           *
-           * 同一個轉換在 `leave_grant.repo` 的 `grantedDays`、
-           * `leave_approval_rule.repo` 的 `minDays` 都做過了 —— 這裡是唯一漏掉的一處。
+           * 先前這裡是 `String(params.totalDays)`，而 `params.totalDays` 是由
+           * `Σ 分鐘/日約當` 用 double 累加出來的 number —— `String()` 讓
+           * `[Database Boundary Guard]` 看不到它是 number，但洗掉的是一個
+           * 已經算壞的值（`2.9999999999999996`）。CLAUDE.md §2 要的是運算用
+           * 精確型別，不是把算壞的 double 轉成字串再存。
+           * 現在由 `exactDaysToDecimalString()` 在 service 端算好傳進來。
            */
-          totalDays: String(params.totalDays),
+          totalDays: params.totalDays,
           concurrencyWarned: params.concurrencyWarned,
           days: {
             create: params.days.map((day) => ({
@@ -390,135 +410,169 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
   public async completeApproval(
     params: Parameters<ILeaveRequestRepository["completeApproval"]>[0],
   ): Promise<LeaveApprovalOutcome> {
-    return prisma.$transaction(async (tx) => {
-      const claimed = await tx.leaveApprovalStep.updateMany({
-        where: {
-          id: params.stepId,
-          status: LeaveApprovalStepStatus.PENDING,
-          pendingKey: { not: null },
-        },
-        data: {
-          status: LeaveApprovalStepStatus.APPROVED,
-          decidedAt: params.decidedAt,
-          comment: params.comment ?? null,
-          pendingKey: null,
-        },
-      });
-      if (claimed.count === 0) return LeaveApprovalOutcome.ALREADY_REVIEWED;
-
-      /**
-       * Info: (20260817 - Julian) 先取得逐日明細再扣帳 —— 扣帳需要 `leaveDayId`。
-       *
-       * 狀態一併改成 `APPROVED`：若把它留到最後，中途 return
-       * `BALANCE_RACE` 時交易會整個回捲，兩者的最終結果相同，
-       * 但放在這裡讀起來是「這一關過了，接著結帳」，
-       * 而那正是這段程式在做的事。
-       */
-      const request = await tx.leaveRequest.update({
-        where: { id: params.requestId },
-        data: { status: LeaveRequestStatus.APPROVED },
-        // Info: (20260817 - Julian) 帶出 dayEquivalentMinutes：投影時要把它抄進 plannedWorkMinutes
-        include: {
-          days: {
-            select: {
-              id: true,
-              workDate: true,
-              minutes: true,
-              dayEquivalentMinutes: true,
-            },
-          },
-        },
-      });
-
-      if (params.totalMinutes > 0) {
-        const balances = await readGrantBalances(tx, {
-          accountBookId: params.accountBookId,
-          employeeId: params.employeeId,
-          leavePolicyId: params.leavePolicyId,
-        });
-
-        /**
-         * Info: (20260817 - Julian) **逐日扣帳**，不是按整張單扣。
-         *
-         * 第一版按單彙總（`consume:<requestId>:<grantId>`）。扣的時候沒問題，
-         * 銷假的時候就回不去了 —— 銷假是逐日的，而按單彙總之後沒有任何
-         * 資訊能算出「8/14 那一天用掉了哪幾批的多少分鐘」。
-         * 總分配結果與按單扣相同（先到期先扣的貪婪演算法），差別只在粒度。
-         */
-        const consumed = await writeConsumeForDays(tx, {
-          balances,
-          days: request.days.map((day) => ({
-            leaveDayId: day.id,
-            minutes: day.minutes,
-          })),
-          actorEmployeeId: params.actorEmployeeId,
-        });
-        // Info: (20260817 - Julian) 交易內才發現不足 —— 另一張單先扣走了
-        if (!consumed) return LeaveApprovalOutcome.BALANCE_RACE;
-
-        /**
-         * Info: (20260817 - Julian) 餘額快取以附條件更新，`count === 0` 即判輸。
-         * 這是併發下唯一有效的判準 —— 讀後寫會讓兩張單都過（ADR 023 §6.4）。
-         */
-        const deducted = await tx.leaveBalance.updateMany({
+    /**
+     * Info: (20260819 - Julian) 哨兵在交易**外**接住，因為它的用途就是回捲。
+     * 轉回 `BALANCE_RACE` 之後呼叫端的處置不變（service 轉成
+     * `CF_LEAVE_BALANCE_RACE`），差別只在：現在真的一列都沒落地。
+     */
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const claimed = await tx.leaveApprovalStep.updateMany({
           where: {
-            employeeId: params.employeeId,
-            leavePolicyId: params.leavePolicyId,
-            remainingMinutes: { gte: params.totalMinutes },
-          },
-          data: { remainingMinutes: { decrement: params.totalMinutes } },
-        });
-        if (deducted.count === 0) return LeaveApprovalOutcome.BALANCE_RACE;
-      }
-
-      for (const day of request.days) {
-        await tx.leaveDay.update({
-          where: { id: day.id },
-          data: { activeKey: activeKeyOf(params.employeeId, day.workDate) },
-        });
-        /**
-         * Info: (20260817 - Julian) 投影成 `LEAVE`，**不帶班別** ——
-         * `assertSchedulableDay` 要求非上班日不得掛班別。
-         * 判定引擎只讀 `EmployeeShiftDay`，不知道假單存在（單向依賴鐵律）。
-         *
-         * Info: (20260817 - Julian) 真的呼叫那個不變式，而不是只在註解裡引述它。
-         * 這裡是 `EmployeeShiftDay` 的第三個寫入點（另兩個是
-         * `attendance_schedule.repo.upsertShiftDay` 與 `leave.repo.resolveRecall`），
-         * 而前兩個都過閘口。第一版只寫了上面那段註解 —— 目前寫死 `LEAVE` + `null`
-         * 碰巧合法，但那是**這一行現在長這樣**，不是一個保證：
-         * 哪天有人把它改成帶班別（例如半天假想保留班別），沒有任何東西擋得住。
-         * 註解攔不下 refactor，斷言可以。
-         */
-        assertSchedulableDay({
-          dayType: WorkDayType.LEAVE,
-          shiftPatternId: null,
-        });
-        await tx.employeeShiftDay.update({
-          where: {
-            accountBookId_employeeId_workDate: {
-              accountBookId: params.accountBookId,
-              employeeId: params.employeeId,
-              workDate: day.workDate,
-            },
+            id: params.stepId,
+            status: LeaveApprovalStepStatus.PENDING,
+            pendingKey: { not: null },
           },
           data: {
-            dayType: WorkDayType.LEAVE,
-            shiftPatternId: null,
-            /**
-             * Info: (20260817 - Julian) 投影是單向有損的 —— 班別一設成 null，
-             * 「這天本來要上幾分鐘」就查不到了。投影者負責在丟掉之前留一份。
-             *
-             * 值取自 `LeaveDay.dayEquivalentMinutes`，而那一份是送出當下
-             * 從該日 `ShiftPattern.requiredWorkMinutes` 抄來的 —— 同一個數字，
-             * 不是第二個來源。
-             */
-            plannedWorkMinutes: day.dayEquivalentMinutes,
+            status: LeaveApprovalStepStatus.APPROVED,
+            decidedAt: params.decidedAt,
+            comment: params.comment ?? null,
+            pendingKey: null,
           },
         });
-      }
+        if (claimed.count === 0) return LeaveApprovalOutcome.ALREADY_REVIEWED;
 
-      return LeaveApprovalOutcome.COMPLETED;
-    });
+        /**
+         * Info: (20260817 - Julian) 先取得逐日明細再扣帳 —— 扣帳需要 `leaveDayId`。
+         *
+         * 狀態一併改成 `APPROVED`：若把它留到最後，中途 return
+         * `BALANCE_RACE` 時交易會整個回捲，兩者的最終結果相同，
+         * 但放在這裡讀起來是「這一關過了，接著結帳」，
+         * 而那正是這段程式在做的事。
+         */
+        const request = await tx.leaveRequest.update({
+          where: { id: params.requestId },
+          data: { status: LeaveRequestStatus.APPROVED },
+          // Info: (20260817 - Julian) 帶出 dayEquivalentMinutes：投影時要把它抄進 plannedWorkMinutes
+          include: {
+            days: {
+              select: {
+                id: true,
+                workDate: true,
+                minutes: true,
+                dayEquivalentMinutes: true,
+              },
+            },
+          },
+        });
+
+        if (params.totalMinutes > 0) {
+          /**
+           * Info: (20260819 - Julian) **附條件扣總量排在讀逐批餘額之前**（review B4）。
+           *
+           * 順序是這段程式的正確性本身，不是風格：
+           *
+           * 這一句 `UPDATE ... WHERE remainingMinutes >= n` 會在 `LeaveBalance`
+           * 那一列上取得列鎖。第二個併發交易執行同一句時**會阻塞到第一個 commit**，
+           * 之後才重新評估條件、才往下讀逐批餘額 —— 而那時它已經看得到
+           * 第一個交易寫下的 `CONSUME` 分錄。
+           *
+           * 先前的順序（先無鎖讀逐批 → 算 FIFO → 寫分錄 → 最後才扣總量）
+           * 讓附條件更新只保護了**總量**：兩張各 480 分鐘的單同時核准、
+           * 兩邊都讀到「批次 A 還有 480」，於是兩筆 `CONSUME` 都寫在 A 上，
+           * A 的帳面變成 −480，而兩筆分錄都聲稱 `grantBalanceAfterMinutes = 0`。
+           * 冪等鍵是 `consume:<leaveDayId>:<grantId>`，`leaveDayId` 不同，擋不住。
+           * ADR 022 §2.2：守恆式必須**逐 LeaveGrant** 成立，不能只在總量上成立。
+           */
+          const deducted = await tx.leaveBalance.updateMany({
+            where: {
+              employeeId: params.employeeId,
+              leavePolicyId: params.leavePolicyId,
+              remainingMinutes: { gte: params.totalMinutes },
+            },
+            data: { remainingMinutes: { decrement: params.totalMinutes } },
+          });
+          if (deducted.count === 0) throw new BalanceRaceError();
+
+          /**
+           * Info: (20260819 - Julian) 與試算／送出前置檢查共用同一支
+           * （`readConsumableGrants`）：已過期與餘額為 0 的批次都不參與 FIFO。
+           * `asOfDate` 由呼叫端給，缺就丟 —— 見 `consumableGrantWhere`。
+           */
+          const balances = await readConsumableGrants(tx, {
+            accountBookId: params.accountBookId,
+            employeeId: params.employeeId,
+            leavePolicyId: params.leavePolicyId,
+            asOfDate: params.asOfDate,
+          });
+
+          /**
+           * Info: (20260817 - Julian) **逐日扣帳**，不是按整張單扣。
+           *
+           * 第一版按單彙總（`consume:<requestId>:<grantId>`）。扣的時候沒問題，
+           * 銷假的時候就回不去了 —— 銷假是逐日的，而按單彙總之後沒有任何
+           * 資訊能算出「8/14 那一天用掉了哪幾批的多少分鐘」。
+           * 總分配結果與按單扣相同（先到期先扣的貪婪演算法），差別只在粒度。
+           */
+          const consumed = await writeConsumeForDays(tx, {
+            balances,
+            days: request.days.map((day) => ({
+              leaveDayId: day.id,
+              minutes: day.minutes,
+            })),
+            actorEmployeeId: params.actorEmployeeId,
+          });
+          /**
+           * Info: (20260819 - Julian) 逐批不足 —— 總量過了但攤不到批次上。
+           * 丟哨兵而不是 return：回傳會 commit 掉上面那些寫入（見 `BalanceRaceError`）。
+           */
+          if (!consumed) throw new BalanceRaceError();
+        }
+
+        for (const day of request.days) {
+          await tx.leaveDay.update({
+            where: { id: day.id },
+            data: { activeKey: activeKeyOf(params.employeeId, day.workDate) },
+          });
+          /**
+           * Info: (20260817 - Julian) 投影成 `LEAVE`，**不帶班別** ——
+           * `assertSchedulableDay` 要求非上班日不得掛班別。
+           * 判定引擎只讀 `EmployeeShiftDay`，不知道假單存在（單向依賴鐵律）。
+           *
+           * Info: (20260817 - Julian) 真的呼叫那個不變式，而不是只在註解裡引述它。
+           * 這裡是 `EmployeeShiftDay` 的第三個寫入點（另兩個是
+           * `attendance_schedule.repo.upsertShiftDay` 與 `leave.repo.resolveRecall`），
+           * 而前兩個都過閘口。第一版只寫了上面那段註解 —— 目前寫死 `LEAVE` + `null`
+           * 碰巧合法，但那是**這一行現在長這樣**，不是一個保證：
+           * 哪天有人把它改成帶班別（例如半天假想保留班別），沒有任何東西擋得住。
+           * 註解攔不下 refactor，斷言可以。
+           */
+          assertSchedulableDay({
+            dayType: WorkDayType.LEAVE,
+            shiftPatternId: null,
+          });
+          await tx.employeeShiftDay.update({
+            where: {
+              accountBookId_employeeId_workDate: {
+                accountBookId: params.accountBookId,
+                employeeId: params.employeeId,
+                workDate: day.workDate,
+              },
+            },
+            data: {
+              dayType: WorkDayType.LEAVE,
+              shiftPatternId: null,
+              /**
+               * Info: (20260817 - Julian) 投影是單向有損的 —— 班別一設成 null，
+               * 「這天本來要上幾分鐘」就查不到了。投影者負責在丟掉之前留一份。
+               *
+               * 值取自 `LeaveDay.dayEquivalentMinutes`，而那一份是送出當下
+               * 從該日 `ShiftPattern.requiredWorkMinutes` 抄來的 —— 同一個數字，
+               * 不是第二個來源。
+               */
+              plannedWorkMinutes: day.dayEquivalentMinutes,
+            },
+          });
+        }
+
+        return LeaveApprovalOutcome.COMPLETED;
+      });
+    } catch (error) {
+      if (error instanceof BalanceRaceError) {
+        return LeaveApprovalOutcome.BALANCE_RACE;
+      }
+      throw error;
+    }
   }
 
   /**

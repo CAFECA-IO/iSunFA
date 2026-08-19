@@ -1,3 +1,8 @@
+import {
+  compareDaysTo,
+  exactDaysToDecimalString,
+  IExactDays,
+} from "@/lib/leave_entitlement_rules";
 import { LeaveApprovalNodeKind } from "@/constants/leave_policy";
 import {
   IApprovalChainInput,
@@ -44,7 +49,7 @@ export function resolveApprovalChain(
     return {
       ok: false,
       reason: LeaveApprovalUnresolvedReason.NO_MATCHING_RULE,
-      detail: `no rule covers ${input.totalDays} day(s) for policy ${input.leavePolicyId}`,
+      detail: `no rule covers ${exactDaysToDecimalString(input.totalDays)} day(s) for policy ${input.leavePolicyId}`,
     };
   }
   if (rule.steps.length === 0) {
@@ -59,7 +64,11 @@ export function resolveApprovalChain(
   const orderedSteps = [...rule.steps].sort((a, b) => a.order - b.order);
 
   for (const step of orderedSteps) {
-    const outcome = resolveNode(step.nodeKind, step.specificEmployeeId, input.org);
+    const outcome = resolveNode(
+      step.nodeKind,
+      step.specificEmployeeId,
+      input.org,
+    );
     if (!outcome.ok) return outcome;
     resolved.push({
       order: resolved.length,
@@ -86,14 +95,19 @@ export function resolveApprovalChain(
 const selectRule = (
   rules: readonly IApprovalRuleWithSteps[],
   leavePolicyId: string,
-  totalDays: number,
+  totalDays: IExactDays,
 ): IApprovalRuleWithSteps | null => {
   const specific = rules.filter((r) => r.leavePolicyId === leavePolicyId);
-  const scope = specific.length > 0 ? specific : rules.filter((r) => r.leavePolicyId === null);
+  const scope =
+    specific.length > 0
+      ? specific
+      : rules.filter((r) => r.leavePolicyId === null);
   return (
     scope.find(
       (r) =>
-        totalDays >= r.minDays && (r.maxDays === null || totalDays < r.maxDays),
+        // Info: (20260819 - Julian) 左閉右開，且比較必須精確（review B5、ADR 023 §2.2）
+        compareDaysTo(totalDays, r.minDays) >= 0 &&
+        (r.maxDays === null || compareDaysTo(totalDays, r.maxDays) < 0),
     ) ?? null
   );
 };

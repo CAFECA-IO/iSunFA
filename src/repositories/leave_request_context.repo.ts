@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { readConsumableGrants } from "@/repositories/leave_ledger";
 import { WorkDayType } from "@/constants/attendance";
 import { EmployeeHrFunction } from "@/constants/hr_management";
 import { LeaveRequestStatus } from "@/constants/leave";
@@ -214,12 +215,16 @@ export class LeaveRequestContextRepository implements ILeaveRequestContext {
   /**
    * Info: (20260817 - Julian) 可扣減的批次。
    *
-   * 餘額由帳本推導（`Σ deltaMinutes`），不另存欄位 —— 理由同
-   * `leave_request.repo.ts` 的 `readGrantBalances`：那會是第三份真相。
+   * 餘額由帳本推導（`Σ deltaMinutes`），不另存欄位。
    *
    * 已過期的批次不回：`expiresOn < asOfDate` 的額度即使帳面還有分鐘，
    * 也不該被這一次請假扣到。過期本身由每日 Worker 寫 `EXPIRE` 分錄結清，
    * 這裡的過濾是為了「Worker 還沒跑到」的那段空窗。
+   *
+   * Info: (20260819 - Julian) 條件與實際扣減**共用同一支**
+   * （`readConsumableGrants`，review B4）。先前這裡與交易內的
+   * `readGrantBalances` 各有一份，而兩份不一樣：那一份沒有到期過濾，
+   * 於是試算說扣本年度、帳本卻先扣光已過期的批次。
    */
   public async findConsumableGrants(params: {
     accountBookId: string;
@@ -227,34 +232,7 @@ export class LeaveRequestContextRepository implements ILeaveRequestContext {
     leavePolicyId: string;
     asOfDate: string;
   }): Promise<IConsumableGrant[]> {
-    const grants = await prisma.leaveGrant.findMany({
-      where: {
-        accountBookId: params.accountBookId,
-        employeeId: params.employeeId,
-        leavePolicyId: params.leavePolicyId,
-        expiresOn: { gte: params.asOfDate },
-      },
-      select: { id: true, expiresOn: true, createdAt: true },
-    });
-    if (grants.length === 0) return [];
-
-    const sums = await prisma.leaveLedgerEntry.groupBy({
-      by: ["leaveGrantId"],
-      where: { leaveGrantId: { in: grants.map((grant) => grant.id) } },
-      _sum: { deltaMinutes: true },
-    });
-    const remainingByGrant = new Map(
-      sums.map((row) => [row.leaveGrantId, row._sum.deltaMinutes ?? 0]),
-    );
-
-    return grants
-      .map((grant) => ({
-        grantId: grant.id,
-        remainingMinutes: remainingByGrant.get(grant.id) ?? 0,
-        expiresOn: grant.expiresOn,
-        createdAt: grant.createdAt.toISOString(),
-      }))
-      .filter((grant) => grant.remainingMinutes > 0);
+    return readConsumableGrants(prisma, params);
   }
 
   /**

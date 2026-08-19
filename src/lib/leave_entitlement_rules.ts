@@ -434,8 +434,12 @@ const buildGrant = (
       : addMonths(cycleEndDate, carryForwardMonths),
   grantedDays,
   dayEquivalentMinutes,
-  // Info: (20260817 - Julian) 進位而非四捨五入：比例給假的餘數不該由勞工承擔
-  grantedMinutes: Math.ceil(grantedDays * dayEquivalentMinutes),
+  /**
+   * Info: (20260819 - Julian) 進位而非四捨五入：比例給假的餘數不該由勞工承擔。
+   * 換算走 `grantedMinutesOf`（全整數）而不是 `Math.ceil(a * b)` ——
+   * 後者在 `1.1 × 420` 這種形狀上會多給一分鐘（review B6）。
+   */
+  grantedMinutes: grantedMinutesOf(grantedDays, dayEquivalentMinutes),
   isProrated,
 });
 
@@ -781,3 +785,225 @@ export function allocateConsumption(
 
   return { allocations, shortfallMinutes: outstanding };
 }
+
+/**
+ * Info: (20260819 - Julian) 總日數的**精確**表示（review B5）。
+ *
+ * ## 為什麼不能用 double 累加
+ *
+ * `Σ minutes_i / dayEquivalent_i` 用 JS number 累加，在「恰好整數天」的
+ * 形狀上會掉到整數下方：
+ *
+ * | 班別 | 形狀 | 數學值 | 浮點值 |
+ * |---|---|---|---|
+ * | 420 分 | 7 天 × 180 分 | 3 | `2.9999999999999996` |
+ * | 420 分 | 21 天 × 60 分 | 3 | `2.999999999999999` |
+ * | 450 分 | 10 天 × 135 分 | 3 | `2.9999999999999996` |
+ * | 480 分 | 10 天 × 144 分 | 3 | `2.9999999999999996` |
+ *
+ * 而這個值同時決定**簽核規則命中**。ADR 023 §2.2 明訂區間為右開
+ * （`[0, 3)` 與 `[3, ∞)`，恰好 3 天走長假規則），於是上面每一列都會掉進
+ * 短假規則 —— 只簽直屬主管一關，部門經理那一關從此不存在。
+ * 那是一次**職責分離的降級**，而事後查那張單看起來完全正常。
+ *
+ * ## 為什麼不是改用 Decimal 累加
+ *
+ * `Decimal` 只是把 epsilon 換個位置：`180/420` 是無限循環小數，
+ * 除法一樣要在某一位截斷，7 個截斷值相加仍然不保證等於 3。
+ * 這裡要的是**精確**而不是「更多位數」。
+ *
+ * ## 作法：通分成整數
+ *
+ * 以所有 `dayEquivalentMinutes` 的最小公倍數為分母，分子全程是整數
+ * （用 `bigint`，因為 62 天 × 1440 分的通分結果可以很大）。
+ * 比較與落地都由這個有理數推導，兩者因此不可能不一致。
+ */
+export interface IExactDays {
+  numerator: bigint;
+  /** Info: (20260819 - Julian) 恆為正 */
+  denominator: bigint;
+}
+
+const bigGcd = (a: bigint, b: bigint): bigint => {
+  let x = a < 0n ? -a : a;
+  let y = b < 0n ? -b : b;
+  while (y !== 0n) [x, y] = [y, x % y];
+  return x;
+};
+
+const bigLcm = (a: bigint, b: bigint): bigint => (a / bigGcd(a, b)) * b;
+
+/** Info: (20260819 - Julian) 總日數 = Σ(該日分鐘 ÷ 該日日約當分鐘)，精確 */
+export const totalDaysOf = (
+  plan: readonly { minutes: number; dayEquivalentMinutes: number }[],
+): IExactDays => {
+  if (plan.length === 0) return { numerator: 0n, denominator: 1n };
+
+  for (const day of plan) {
+    if (
+      !Number.isInteger(day.dayEquivalentMinutes) ||
+      day.dayEquivalentMinutes <= 0
+    ) {
+      throw new LeaveRuleError(
+        `dayEquivalentMinutes must be a positive integer, got ${day.dayEquivalentMinutes}`,
+      );
+    }
+    if (!Number.isInteger(day.minutes)) {
+      throw new LeaveRuleError(
+        `minutes must be an integer, got ${day.minutes}`,
+      );
+    }
+  }
+
+  const denominator = plan.reduce(
+    (acc, day) => bigLcm(acc, BigInt(day.dayEquivalentMinutes)),
+    1n,
+  );
+  const numerator = plan.reduce(
+    (acc, day) =>
+      acc +
+      BigInt(day.minutes) * (denominator / BigInt(day.dayEquivalentMinutes)),
+    0n,
+  );
+  const divisor = bigGcd(numerator, denominator) || 1n;
+  return { numerator: numerator / divisor, denominator: denominator / divisor };
+};
+
+/**
+ * Info: (20260819 - Julian) 把一個十進位數值轉成精確有理數。
+ *
+ * 給簽核規則的 `minDays` / `maxDays`、以及額度的 `grantedDays` 用 ——
+ * 它們在 DB 是 `Decimal`，經 `Number()` 之後是 `3`、`0.5`、`1.1` 這種
+ * 十進位下位數有限的值，由**字串**還原回分數不會有誤差
+ * （`String(1.1)` 給的是 `"1.1"`，不是 `1.100000000000000088…`）。
+ */
+export const exactRationalOf = (value: number): IExactDays => {
+  if (!Number.isFinite(value)) {
+    throw new LeaveRuleError(`threshold must be finite, got ${value}`);
+  }
+  const text = String(value);
+  /**
+   * Info: (20260819 - Julian) JS 對 `1e-7`、`1e21` 這類值給的是指數字串，
+   * `BigInt()` 會直接丟一個看不出來由的 SyntaxError。擋在這裡並說清楚 ——
+   * 額度的日數與簽核門檻都不該落在那個範圍，落到了就是上游算壞了。
+   */
+  if (text.includes("e") || text.includes("E")) {
+    throw new LeaveRuleError(
+      `value must be a plain decimal, got exponential notation: ${text}`,
+    );
+  }
+  const dot = text.indexOf(".");
+  if (dot === -1) return { numerator: BigInt(text), denominator: 1n };
+  const scale = text.length - dot - 1;
+  return {
+    numerator: BigInt(text.replace(".", "")),
+    denominator: 10n ** BigInt(scale),
+  };
+};
+
+/** Info: (20260819 - Julian) 精確比較：回 -1 / 0 / 1（days 相對於 threshold） */
+export const compareDaysTo = (days: IExactDays, threshold: number): number => {
+  const other = exactRationalOf(threshold);
+  const left = days.numerator * other.denominator;
+  const right = other.numerator * days.denominator;
+  if (left < right) return -1;
+  return left > right ? 1 : 0;
+};
+
+/**
+ * Info: (20260819 - Julian) 顯示用的近似值。**不可用於規則比對** ——
+ * 它就是造成 B5 的那個 double，只是這次它的用途僅止於印在畫面上。
+ */
+export const exactDaysToNumber = (days: IExactDays): number =>
+  Number(days.numerator) / Number(days.denominator);
+
+/**
+ * Info: (20260819 - Julian) 落地用的十進位字串（`LeaveRequest.totalDays` 是 Decimal）。
+ *
+ * 整除時給出 `"3"` 而不是 `"2.9999999999"`；除不盡時取到 `scale` 位四捨五入。
+ * 傳字串而不是 number，是因為 `src/lib/prisma.ts` 的邊界防護會擋下
+ * 原生 number 寫入 Decimal 欄位 —— 而**先前那層 `String()` 轉換洗掉的是一個
+ * 已經算壞的 double**，不是這個問題的解法（CLAUDE.md §2 要的是運算用精確型別）。
+ */
+export const exactDaysToDecimalString = (
+  days: IExactDays,
+  scale = 10,
+): string => {
+  const negative = days.numerator < 0n;
+  const numerator = negative ? -days.numerator : days.numerator;
+  const whole = numerator / days.denominator;
+  const remainder = numerator % days.denominator;
+  if (remainder === 0n) return `${negative ? "-" : ""}${whole}`;
+
+  const factor = 10n ** BigInt(scale);
+  // Info: (20260819 - Julian) 四捨五入到第 scale 位
+  const scaled =
+    (remainder * factor * 2n + days.denominator) / (days.denominator * 2n);
+  let fraction = scaled.toString().padStart(scale, "0");
+  fraction = fraction.replace(/0+$/, "");
+  const carried = fraction.length > scale;
+  if (carried) return `${negative ? "-" : ""}${whole + 1n}`;
+  return fraction === ""
+    ? `${negative ? "-" : ""}${whole}`
+    : `${negative ? "-" : ""}${whole}.${fraction}`;
+};
+
+/**
+ * Info: (20260819 - Julian) 「日數 × 日約當 → 分鐘」的**唯一**一支實作（review B6）。
+ *
+ * ## 為什麼 `Math.ceil(days * dayEquivalentMinutes)` 不能用
+ *
+ * 乘積落在整數上方一個 epsilon，`ceil` 就多給一分鐘：
+ *
+ * | 日數 | 日約當 | 浮點乘積 | `Math.ceil` | 正解 |
+ * |---|---|---|---|---|
+ * | 1.1 | 420 | `462.00000000000006` | 463 | 462 |
+ * | 1.1 | 450 | `495.00000000000006` | 496 | 495 |
+ * | 2.2 | 465 | `1023.0000000000001` | 1024 | 1023 |
+ * | 8.3 | 480 | `3984.0000000000005` | 3985 | 3984 |
+ *
+ * 一位小數的日數（比例給假的 `proratedRoundingScale` 常設值）配上常見班別，
+ * 實測 31 組會多一分鐘；把班別放寬到 240–600 分則是 435 組。
+ * 多給一分鐘不是「對勞工有利所以無所謂」—— ADR 022 §3.2 承諾的是
+ * 「任何人事後都能驗算這 3360 分鐘的來歷」，而稽核員按計算機得到 462、
+ * DB 裡寫的是 463，那個承諾就不成立了。
+ *
+ * ## 作法
+ *
+ * 日數由**十進位字串**還原成分數（`exactRationalOf`），再全程用 `bigint`
+ * 做「乘完再向上取整」：`ceil(num × eq ÷ den)`。過程中沒有任何浮點乘法，
+ * 因此沒有 epsilon 可以外溢。
+ *
+ * 進位而非四捨五入的理由不變（比例給假的餘數不該由勞工承擔），
+ * 這裡改掉的只是「怎麼算」，不是「往哪邊捨入」。
+ *
+ * ## 這支函式的呼叫者
+ *
+ * `buildGrant`（年資／比例授予）、`deriveCompensatoryGrantDays`（補休換算的
+ * 自我驗算）。`assertGrantSource` **刻意不呼叫它** —— 不變式若重算同一個
+ * 式子，判準就與缺陷相容（checklist §1.9「衍生值救不了衍生值」）。
+ */
+export const grantedMinutesOf = (
+  grantedDays: number,
+  dayEquivalentMinutes: number,
+): number => {
+  if (
+    !Number.isInteger(dayEquivalentMinutes) ||
+    dayEquivalentMinutes <= 0
+  ) {
+    throw new LeaveRuleError(
+      `dayEquivalentMinutes must be a positive integer, got ${dayEquivalentMinutes}`,
+    );
+  }
+  if (!Number.isFinite(grantedDays) || grantedDays < 0) {
+    throw new LeaveRuleError(
+      `grantedDays must be a non-negative finite number, got ${grantedDays}`,
+    );
+  }
+
+  const days = exactRationalOf(grantedDays);
+  const product = days.numerator * BigInt(dayEquivalentMinutes);
+  const quotient = product / days.denominator;
+  const exact = quotient * days.denominator === product;
+  return Number(exact ? quotient : quotient + 1n);
+};
