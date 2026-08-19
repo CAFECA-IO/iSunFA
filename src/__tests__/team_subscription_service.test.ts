@@ -144,10 +144,11 @@ describe("getTeamSubscriptionView", () => {
     });
 
     /**
-     * Info: (20260818 - Luphia) ADMIN 也看得到（產品決定 20260818）：
-     * ADMIN 動用得了團隊錢包，就該看得到團隊消耗了多少。
+     * Info: (20260819 - Luphia) 團隊 ADMIN 已取消（產品決定 20260819）：
+     * 殘留的 `"ADMIN"` 字串**看不到**全隊合計——那是給有處置權的人看的，
+     * 而處置權現在只有 OWNER。
      */
-    it("ADMIN 也看得到全隊合計", async () => {
+    it("殘留的 ADMIN 字串看不到全隊合計", async () => {
       mockMembers({ "user-1": "ADMIN" });
 
       const view = await getTeamSubscriptionView({
@@ -156,7 +157,7 @@ describe("getTeamSubscriptionView", () => {
         nowSec: NOW_SEC,
       });
 
-      expect(view.teamTotals?.memberCount).toBe(5);
+      expect(view.teamTotals).toBeUndefined();
     });
 
     it("一般成員看不到全隊合計，也不會去查", async () => {
@@ -257,6 +258,7 @@ describe("getTeamSubscriptionView", () => {
 describe("changeTeamSubscription", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Info: (20260819 - Luphia) `user-admin` 現在是殘留的 ADMIN 字串（角色已取消）
     mockMembers({ "user-owner": "OWNER", "user-admin": "ADMIN" });
     asMock(generatePaymentOrder).mockResolvedValue({
       orderId: "order-1",
@@ -265,7 +267,7 @@ describe("changeTeamSubscription", () => {
     });
   });
 
-  it("is owner-only (even ADMIN is rejected)", async () => {
+  it("is owner-only (a leftover ADMIN string is rejected too)", async () => {
     await expect(
       changeTeamSubscription({
         userId: "user-admin",

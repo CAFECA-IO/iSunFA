@@ -164,8 +164,7 @@ export async function getTeamSubscriptionView(params: {
      * 非管理職直接**不查**而不是查了再丟掉：查了再丟掉的版本，
      * 下一個人在別處重用這個函式時就會把它一起回出去。
      */
-    const isManager =
-      member.role === TeamRole.OWNER || member.role === TeamRole.ADMIN;
+    const isManager = member.role === TeamRole.OWNER;
     const teamTotals = isManager
       ? await buildTeamQuotaTotals(teamId, planId, nowSec)
       : undefined;

@@ -113,7 +113,8 @@ function mockMembers(roles: Record<string, string | null>) {
 describe("createTeamPointPurchaseOrder", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockMembers({ "user-admin": "ADMIN", "user-viewer": "VIEWER" });
+    // Info: (20260819 - Luphia) 團隊 ADMIN 已取消：管理職的代表改用 OWNER
+    mockMembers({ "user-admin": "OWNER", "user-viewer": "VIEWER" });
     asMock(generatePaymentOrder).mockResolvedValue({
       orderId: "order-1",
       challenge: "c",
@@ -217,7 +218,8 @@ describe("manageAllocation", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockMembers({
-      "user-admin": "ADMIN",
+      // Info: (20260819 - Luphia) 團隊 ADMIN 已取消，管理職只剩 OWNER
+      "user-admin": "OWNER",
       "user-viewer": "VIEWER",
       "user-2": "EDITOR",
     });
@@ -454,7 +456,8 @@ describe("manageAllocation", () => {
 describe("getTeamWalletView", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockMembers({ "user-admin": "ADMIN", "user-viewer": "VIEWER" });
+    // Info: (20260819 - Luphia) 團隊 ADMIN 已取消：管理職的代表改用 OWNER
+    mockMembers({ "user-admin": "OWNER", "user-viewer": "VIEWER" });
     asMock(teamWalletRepo.getWalletByTeamId).mockResolvedValue({
       id: "wallet-1",
       status: "ACTIVE",

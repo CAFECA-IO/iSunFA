@@ -67,9 +67,9 @@ export async function POST(
     // Info: (20260813 - Luphia) 使權限檢查退化成「屬於任一團隊即通過」，且建立成員時必然拋錯
     const { team_id: teamId } = await params;
 
-    // Info: (20260325 - Tzuhan) Check permission (OWNER or ADMIN)
+    // Info: (20260819 - Luphia) 權限閘：管理職（ADMIN 取消後只剩 OWNER）
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
-    if (!operator || (operator.role !== "OWNER" && operator.role !== "ADMIN")) {
+    if (!isTeamManagerRole(operator?.role)) {
       return jsonFail(API_ERRORS.FO_PERMISSION_DENIED_ONLY_OWN);
     }
 
@@ -100,10 +100,9 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Clear challenge to prevent replay
     await webAuthnRepo.clearChallenge(sessionUser.id);
 
+    // Info: (20260819 - Luphia) 團隊 ADMIN 已取消（產品決定 20260819）
     const assignedRole: TeamRole =
-      role === "ADMIN" || role === "EDITOR" || role === "VIEWER"
-        ? role
-        : TeamRole.VIEWER;
+      role === "EDITOR" || role === "VIEWER" ? role : TeamRole.VIEWER;
 
     // Info: (20260325 - Tzuhan) Find the target user by address
     const targetUser = await webAuthnRepo.findUserByAddress(address);

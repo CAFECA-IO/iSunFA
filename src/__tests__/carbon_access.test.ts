@@ -93,8 +93,8 @@ describe("resolveCarbonAccess", () => {
     );
     expect(viewerEdit.allowed).toBe(false);
 
-    // Info: (20260716 - Tzuhan) EDITOR/ADMIN/OWNER 皆可編輯
-    await ["EDITOR", "ADMIN", "OWNER"].reduce(async (previous, role) => {
+    // Info: (20260819 - Luphia) EDITOR / OWNER 皆可編輯（團隊 ADMIN 已取消）
+    await ["EDITOR", "OWNER"].reduce(async (previous, role) => {
       await previous;
       mockGetRole.mockResolvedValue(role);
       const decision = await resolveCarbonAccess(
