@@ -204,6 +204,12 @@ describe("inviteMemberByEmail", () => {
       "TW000024",
     ],
   ])("%s 時擋下，且不扣款、不建列、不寄信", async (_label, arrange, code) => {
+    /**
+     * Info: (20260819 - Luphia) 三道量控**只對免費方案**（產品決定 20260819），
+     * 而本檔的預設訂閱是付費方案（那是大多數案例要的前提）。因此這兩條要自己
+     * 把團隊設成免費——不設的話它們會通過，而「通過」正是付費團隊的正確行為。
+     */
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(null);
     arrange();
 
     await expect(invite()).rejects.toMatchObject({ code });

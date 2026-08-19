@@ -264,24 +264,25 @@ describe("getInviteLimits", () => {
     await expect(getInviteLimits("team-1", NOW_MS)).resolves.toEqual({
       cooldownSecondsRemaining: 50,
       pendingCount: 3,
-      pendingLimit: DEFAULT_TEAM_PENDING_INVITE_LIMIT,
       sentToday: 7,
+      pendingLimit: DEFAULT_TEAM_PENDING_INVITE_LIMIT,
       dailyLimit: DEFAULT_TEAM_INVITE_DAILY_LIMIT,
     });
   });
 });
 
 /**
- * Info: (20260819 - Luphia) 冷卻**只對免費方案**（產品決定 20260819）。
+ * Info: (20260819 - Luphia) **三道量控只對免費方案**（產品決定 20260819）。
  *
- * 三道量控的理由是「免費團隊不收席次費，寄信量沒有經濟上的煞車」。而冷卻是三道裡
- * 對付費團隊最痛的一道：60 席的公司一次邀 60 人，每分鐘一封就是**花一小時**，
- * 而那些席次的錢已經付了。
+ * 三道存在的理由是「免費團隊不收席次費，寄信量沒有經濟上的煞車」。付費團隊每加
+ * 一席都在付錢，那本身就是煞車——而三道對他們的代價是實際的：60 席的公司一次邀
+ * 60 位員工，會在第 21 封撞到同時未接受數，每分鐘一封更要花一小時。
  *
- * 兩道總量上限**維持一律套用**——帳號被盜時付費團隊反而是更好的跳板（有卡、
- * 有信譽），不該完全沒有上界。因此這一組同時驗「冷卻免除」與「總量仍在」。
+ * 付費團隊剩下的界線是每操作者的限流（10/分、100/日）。那一層擋得住「一個人狂點」，
+ * 擋不住「總量」——這是這個決定明知而為的取捨，因此下面刻意有一條**驗證總量確實
+ * 不再擋**，而不是讓它變成一個沒有人記得的行為。
  */
-describe("冷卻只對免費方案", () => {
+describe("三道量控只對免費方案", () => {
   const JUST_SENT = new Date(NOW_MS - 1_000);
   const ACTIVE_PAID = {
     planId: TEAM_PLAN.TEAM,
@@ -308,11 +309,32 @@ describe("冷卻只對免費方案", () => {
   });
 
   /**
-   * Info: (20260819 - Luphia) 免除的只有冷卻。兩道總量上限對付費團隊照樣成立——
-   * 這一條與上面那條合起來才說得完整：放寬的是哪一道、沒放寬的是哪兩道。
+   * Info: (20260819 - Luphia) 兩道總量上限對付費團隊**也不套用**（產品決定 20260819）。
+   *
+   * 這一條是刻意寫下來的：它記錄的是一個放寬，而放寬最容易在日後被當成 bug 修掉。
+   * 60 席的公司一次邀 60 人不該在第 21 封被擋——那些席次的錢已經付了。
    */
-  it("付費團隊仍受兩道總量上限", async () => {
+  it.each([
+    [
+      "同時未接受數",
+      () => asMock(teamRepo.countPendingInvitations).mockResolvedValue(999),
+    ],
+    [
+      "今日寄送數",
+      () =>
+        asMock(teamRepo.countInvitationsCreatedSince).mockResolvedValue(999),
+    ],
+  ])("付費團隊不受%s的上限", async (_label, arrange) => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(ACTIVE_PAID);
+    arrange();
+
+    await expect(
+      assertInviteVolumeWithinLimits("team-1", NOW_MS),
+    ).resolves.toBeUndefined();
+  });
+
+  // Info: (20260819 - Luphia) 免費方案完全不受影響：三道都還在
+  it("免費方案仍受兩道總量上限", async () => {
     asMock(teamRepo.countPendingInvitations).mockResolvedValue(
       DEFAULT_TEAM_PENDING_INVITE_LIMIT,
     );
@@ -338,13 +360,24 @@ describe("冷卻只對免費方案", () => {
     ).rejects.toMatchObject({ code: "TW000027" });
   });
 
-  // Info: (20260819 - Luphia) 畫面也不該對付費團隊顯示倒數
-  it("付費團隊的 invite_limits 不回冷卻", async () => {
+  /**
+   * Info: (20260819 - Luphia) 畫面不該對付費團隊顯示倒數，**上限也要回 null**。
+   *
+   * `null` 是「不適用」，與「上限很高」是兩件事——回一個假的大數字，某天就會被
+   * 當成真的上限顯示出去。
+   */
+  it("付費團隊的 invite_limits 不回冷卻，上限為 null", async () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(ACTIVE_PAID);
     asMock(teamRepo.findLastInvitationSentAt).mockResolvedValue(JUST_SENT);
+    asMock(teamRepo.countPendingInvitations).mockResolvedValue(30);
 
     const view = await getInviteLimits("team-1", NOW_MS);
 
-    expect(view.cooldownSecondsRemaining).toBe(0);
+    expect(view).toMatchObject({
+      cooldownSecondsRemaining: 0,
+      pendingCount: 30,
+      pendingLimit: null,
+      dailyLimit: null,
+    });
   });
 });

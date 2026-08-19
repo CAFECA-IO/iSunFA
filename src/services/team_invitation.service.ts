@@ -159,9 +159,15 @@ export interface IInviteLimitsView {
   /** Info: (20260819 - Luphia) 還要等幾秒才能再寄；0 代表現在就可以 */
   cooldownSecondsRemaining: number;
   pendingCount: number;
-  pendingLimit: number;
   sentToday: number;
-  dailyLimit: number;
+  /**
+   * Info: (20260819 - Luphia) 上限；**`null` 代表這個方案不適用**（付費團隊）。
+   *
+   * 回 `null` 而不是一個很大的數字：畫面要說得出「不限」與「上限很高」的差別，
+   * 而一個假的大數字會在某天被當成真的上限顯示出去。
+   */
+  pendingLimit: number | null;
+  dailyLimit: number | null;
 }
 
 /**
@@ -180,7 +186,10 @@ export async function getInviteLimits(
     resolveTeamInviteDailyLimit(),
     resolveTeamInviteCooldownSeconds(),
   ]);
-  // Info: (20260819 - Luphia) 付費團隊沒有冷卻，那筆查詢也跟著省下來
+  /**
+   * Info: (20260819 - Luphia) 付費團隊不套用這三道（見 `assertInviteVolumeWithinLimits`）：
+   * 不查冷卻、上限回 `null`。用量仍然回傳——那是有用的資訊，只是沒有上界。
+   */
   const freePlan = await isFreePlanTeam(teamId, nowMs);
   const [pendingCount, sentToday, lastSentAt] = await Promise.all([
     teamRepo.countPendingInvitations(teamId, nowMs),
@@ -197,9 +206,9 @@ export async function getInviteLimits(
       cooldownSeconds,
     ),
     pendingCount,
-    pendingLimit,
     sentToday,
-    dailyLimit,
+    pendingLimit: freePlan ? pendingLimit : null,
+    dailyLimit: freePlan ? dailyLimit : null,
   };
 }
 
@@ -241,13 +250,26 @@ export async function assertInviteVolumeWithinLimits(
   teamId: string,
   nowMs: number,
 ): Promise<void> {
+  /**
+   * Info: (20260819 - Luphia) **三道量控只對免費方案生效**（產品決定 20260819）。
+   *
+   * 這三道存在的理由是「免費團隊不收席次費，寄信量沒有經濟上的煞車」。付費團隊
+   * 每加一席都在付錢，那本身就是煞車——而三道限制對他們的代價是實際的：
+   * 60 席的公司一次邀 60 位員工，會在第 21 封撞到同時未接受數，而每分鐘一封
+   * 更要花一小時。那些席次的錢已經付了，而錯誤訊息還把責任推給管理員。
+   *
+   * 付費團隊剩下的界線是**每操作者的限流**（10/分、100/日，`TEAM_INVITE_SEND`）。
+   * 那一層是 process 記憶體的實作：多實例各自計數、重啟歸零，因此它擋得住
+   * 「一個人狂點」，擋不住「總量」。這是這個決定明知而為的取捨——
+   * 付費團隊的濫用成本由席次費與金流紀錄承擔，不由這三道承擔。
+   */
+  const freePlan = await isFreePlanTeam(teamId, nowMs);
+  if (!freePlan) return;
+
   const [pendingLimit, dailyLimit] = await Promise.all([
     resolveTeamPendingInviteLimit(),
     resolveTeamInviteDailyLimit(),
   ]);
-
-  // Info: (20260819 - Luphia) 冷卻只對免費方案（見 `isFreePlanTeam`）
-  const freePlan = await isFreePlanTeam(teamId, nowMs);
   const [pendingCount, sentToday, lastSentAt] = await Promise.all([
     teamRepo.countPendingInvitations(teamId, nowMs),
     teamRepo.countInvitationsCreatedSince(teamId, new Date(nowMs - DAY_MS)),
