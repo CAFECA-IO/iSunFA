@@ -1,18 +1,14 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
-import { readdirSync, readFileSync } from "fs";
-import { join } from "path";
 import { chargeSeatAddition } from "@/services/team_seat.service";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { generatePaymentOrder } from "@/services/order.service";
 import { chargeOrderWithSavedCard } from "@/services/team_billing.service";
 import { teamRepo } from "@/repositories/team.repo";
-import { resolveFreePlanMaxMembers } from "@/services/team_subscription.service";
 import { ORDER_TYPE } from "@/constants/status";
 import {
-  DEFAULT_FREE_PLAN_MAX_MEMBERS,
   TEAM_PLAN,
   TEAM_SUBSCRIPTION_STATUS,
 } from "@/constants/subscription_quota";
@@ -52,12 +48,6 @@ jest.mock("@/repositories/team.repo", () => ({
     // Info: (20260815 - Luphia) 席次佔用＝成員 + 未失效的 PENDING 邀請（產品拍板 20260815）
     countPendingInvitations: jest.fn(async () => 0),
   },
-}));
-jest.mock("@/services/team_subscription.service", () => ({
-  resolveEffectivePlanId: jest.requireActual<
-    typeof import("@/services/spend.service")
-  >("@/services/spend.service").resolveEffectivePlanId,
-  resolveFreePlanMaxMembers: jest.fn(async () => 5),
 }));
 jest.mock("@/repositories/webauthn.repo", () => ({
   webAuthnRepo: { findUserById: jest.fn(async () => ({ name: "Owner" })) },
@@ -116,7 +106,6 @@ describe("chargeSeatAddition", () => {
     asMock(paymentRepo.findOrderByIdempotencyKey).mockResolvedValue(null);
     asMock(teamRepo.countMembers).mockResolvedValue(2);
     asMock(teamRepo.countPendingInvitations).mockResolvedValue(0);
-    asMock(resolveFreePlanMaxMembers).mockResolvedValue(5);
   });
 
   it("charges the remaining period for the new seat and records it", async () => {
@@ -206,7 +195,6 @@ describe("chargeSeatAddition", () => {
   it("never charges a team without a subscription", async () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(null);
     // Info: (20260818 - Luphia) 給足額度，這一條驗的是「不收費」而不是上限
-    asMock(resolveFreePlanMaxMembers).mockResolvedValue(5);
 
     const result = await chargeSeatAddition({
       teamId: "team-1",
@@ -218,44 +206,9 @@ describe("chargeSeatAddition", () => {
     expect(teamSubscriptionRepo.addSeats).not.toHaveBeenCalled();
   });
 
-  /**
-   * Info: (20260818 - Luphia) **查無訂閱列＝免費版**（回報 20260818）。
-   *
-   * 這是本檔最重要的一條：新建的團隊根本沒有 `TeamSubscription` 列
-   * （建團隊只寫 Team + TeamMember），而原本的 `if (!subscription) return`
-   * 早退讓**每一個免費團隊**都跳過人數上限。上限本身寫對了，卻一次都沒執行過。
-   *
-   * 而且症狀比「上限失效」更糟：邀請寄得出去、席次被佔住，受邀者點連結時
-   * 撞上接受端的第二道防線（那支對 null 訂閱判得對）——信寄了，人永遠加不進來。
-   *
-   * 先前的測試全部餵一個 FREE 的訂閱列，因此這條路徑無人走過。
-   */
-  it("applies the free member cap to a team with no subscription row", async () => {
-    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(null);
-    asMock(resolveFreePlanMaxMembers).mockResolvedValue(1);
-    asMock(teamRepo.countMembers).mockResolvedValue(1);
-
-    await expect(
-      chargeSeatAddition({ teamId: "team-1", nowMs: MID_PERIOD }),
-    ).rejects.toMatchObject({ code: "TW000017" });
-  });
-
-  // Info: (20260818 - Luphia) 沒有訂閱列時，PENDING 邀請同樣算進佔用（否則連送 N 封即繞過）
-  it("counts pending invitations for a team with no subscription row", async () => {
-    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(null);
-    asMock(resolveFreePlanMaxMembers).mockResolvedValue(3);
-    asMock(teamRepo.countMembers).mockResolvedValue(1);
-    asMock(teamRepo.countPendingInvitations).mockResolvedValue(2);
-
-    await expect(
-      chargeSeatAddition({ teamId: "team-1", nowMs: MID_PERIOD }),
-    ).rejects.toMatchObject({ code: "TW000017" });
-  });
-
   // Info: (20260818 - Luphia) 未達上限時照樣放行，且不產生任何金流
   it("lets a team with no subscription row invite while under the cap", async () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(null);
-    asMock(resolveFreePlanMaxMembers).mockResolvedValue(3);
     asMock(teamRepo.countMembers).mockResolvedValue(1);
 
     const result = await chargeSeatAddition({
@@ -285,103 +238,32 @@ describe("chargeSeatAddition", () => {
   });
 
   /**
-   * Info: (20260814 - Luphia) 免費版沒有「席次 × 單價」的自然封頂（PR #6652 第二輪 B-4）：
-   * 單價 0 乘上任何人數都是 0，而每個成員各自享有一份額度——
-   * 20 人的免費團隊就是每週 800 點的模型用量、月費零。人數上限就是它的封頂。
-   */
-  it("blocks a free team from growing past the member cap", async () => {
-    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
-      ...ACTIVE_SUBSCRIPTION,
-      planId: TEAM_PLAN.FREE,
-      unitPrice: 0,
-    });
-    asMock(teamRepo.countMembers).mockResolvedValue(5);
-
-    await expect(
-      chargeSeatAddition({ teamId: "team-1", nowMs: MID_PERIOD }),
-    ).rejects.toMatchObject({ code: "TW000017" });
-  });
-
-  /**
-   * Info: (20260818 - Luphia) 上限的佔用量要含**尚未接受的邀請**（第三輪 B-1）。
+   * Info: (20260819 - Luphia) 免費方案**不再限制人數**（產品決定 20260819）。
    *
-   * 只數成員的話，上限可以整批繞過：只有 OWNER 一人的免費團隊連送 30 封邀請，
-   * 每一次檢查都是 `1 + 1 <= 5`，全部通過；30 人接受後團隊有 31 名成員。
-   * 上限剛加上就被繞過，而它防的正是「20 人的免費團隊、每週 800 點、月費零」。
+   * 上限存在的理由是免費額度逐成員各一份（20 人 ＝ 每週 800 點、月費零）。
+   * 同一輪把免費方案的額度改成全隊共用一份之後，加人不再產生任何額度，
+   * 上限失去存在的理由。這兩條取代了原本四條「撞上限就丟 TW000017」的測試。
    */
-  /**
-   * Info: (20260818 - Luphia) 免費版上限為 1，即「僅擁有者本人」（產品決定 20260818）。
-   *
-   * 要加第二個人就代表這是團隊在用，而團隊用量該由席次計費承擔。
-   * 這個值同時決定方案頁的標示與加人時的擋門，改它等於改對外的方案定位。
-   */
-  it("defaults the free plan to the owner alone", () => {
-    expect(DEFAULT_FREE_PLAN_MAX_MEMBERS).toBe(1);
-  });
-
-  /**
-   * Info: (20260818 - Luphia) 文件引用了這個預設值，全部必須一致（第四輪 B-4 / 第五輪低）。
-   *
-   * 條款 §3.1 的說明段落寫著「預設 N」，而改常數的那個 commit 沒有改條款——
-   * 於是條款寫 5、擋門是 1，而**使用者看到的是條款**。
-   *
-   * 第一版只讀 `terms_of_service.md`，於是同一個不一致在架構設計書裡
-   * 原封不動——**掃描根等於被修的那個檔案**，本 repo 的 checklist §1.1 第四次。
-   * 改成掃整個 `documents`：凡是提到 `FREE_PLAN_MAX_MEMBERS` 又寫了「預設 N」
-   * 的地方都要對得上。
-   */
-  it("文件裡引用的預設值都與常數一致", () => {
-    const expected = String(DEFAULT_FREE_PLAN_MAX_MEMBERS);
-    const docs = join(process.cwd(), "documents");
-
-    const walk = (dir: string): string[] =>
-      readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-        const full = join(dir, entry.name);
-        if (entry.isDirectory()) return walk(full);
-        return entry.name.endsWith(".md") ? [full] : [];
-      });
-
-    const mismatched: string[] = [];
-    for (const file of walk(docs)) {
-      const text = readFileSync(file, "utf8");
-      // Info: (20260818 - Luphia) 只看與該常數同一段的「預設 N」，避免掃到別的數字
-      const quoted = text.matchAll(
-        /FREE_PLAN_MAX_MEMBERS`[^）)]*?預設 \*{0,2}(\d+)/g,
-      );
-      for (const match of quoted) {
-        if (match[1] !== expected) {
-          mismatched.push(
-            `${file.slice(process.cwd().length + 1)}: ${match[1]}`,
-          );
-        }
-      }
-    }
-
-    expect(mismatched).toEqual([]);
-  });
-
-  // Info: (20260818 - Luphia) 掃描根真的掃到了東西：否則上一條會空過
-  it("文件裡確實有引用該常數的段落", () => {
-    const terms = readFileSync(
-      join(process.cwd(), "documents", "legal", "terms_of_service.md"),
-      "utf8",
+  it.each([
+    ["有訂閱列的免費團隊", { planId: TEAM_PLAN.FREE, unitPrice: 0 }],
+    ["沒有訂閱列的免費團隊（新建團隊）", null],
+  ])("%s 人數再多也照樣可以邀請，且不產生任何金流", async (_label, sub) => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      sub ? { ...ACTIVE_SUBSCRIPTION, ...sub } : null,
     );
-    expect(terms).toMatch(/FREE_PLAN_MAX_MEMBERS/);
-  });
+    // Info: (20260819 - Luphia) 50 位成員 + 30 封待接受：舊上限（1）會擋，現在不擋
+    asMock(teamRepo.countMembers).mockResolvedValue(50);
+    asMock(teamRepo.countPendingInvitations).mockResolvedValue(30);
 
-  it("counts pending invitations toward the free member cap", async () => {
-    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
-      ...ACTIVE_SUBSCRIPTION,
-      planId: TEAM_PLAN.FREE,
-      unitPrice: 0,
+    const result = await chargeSeatAddition({
+      teamId: "team-1",
+      nowMs: MID_PERIOD,
     });
-    // Info: (20260818 - Luphia) 1 位成員 + 4 封待接受 = 5，再加一位就超過上限
-    asMock(teamRepo.countMembers).mockResolvedValue(1);
-    asMock(teamRepo.countPendingInvitations).mockResolvedValue(4);
 
-    await expect(
-      chargeSeatAddition({ teamId: "team-1", nowMs: MID_PERIOD }),
-    ).rejects.toMatchObject({ code: "TW000017" });
+    expect(result).toMatchObject({ charged: false, amount: 0, seats: 0 });
+    expect(chargeOrderWithSavedCard).not.toHaveBeenCalled();
+    expect(generatePaymentOrder).not.toHaveBeenCalled();
+    expect(teamSubscriptionRepo.addSeats).not.toHaveBeenCalled();
   });
 
   it("still lets a free team invite while under the cap", async () => {

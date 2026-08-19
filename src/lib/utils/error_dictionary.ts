@@ -1120,14 +1120,12 @@ export const API_ERRORS = {
     status: ApiCode.FORBIDDEN,
   } as IErrorDef,
   /**
-   * Info: (20260814 - Luphia) 免費版團隊人數已達上限（PR #6652 第二輪 B-4）：
-   * 免費版沒有「席次 × 單價」的自然封頂，人數上限就是它的封頂。
+   * Info: (20260819 - Luphia) `TW_FREE_PLAN_MEMBER_LIMIT`（TW000017）已移除。
+   *
+   * 免費版人數上限於 2026-08-19 取消：上限存在的理由是免費額度逐成員各一份，
+   * 而免費方案的額度已改為**全隊共用一份**，加人不再產生額度。
+   * 這個碼因此不再有任何丟出點；號碼不重用（對外契約的碼一旦用過就不再回收）。
    */
-  TW_FREE_PLAN_MEMBER_LIMIT: {
-    code: "TW000017",
-    message: "Free plan team has reached its member limit",
-    status: ApiCode.FORBIDDEN,
-  } as IErrorDef,
   // Info: (20260814 - Luphia) 席次補收扣款失敗：fail-closed，不建立邀請也不加人
   TW_SEAT_CHARGE_FAILED: {
     code: "TW000012",
