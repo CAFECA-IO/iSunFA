@@ -38,6 +38,8 @@ jest.mock("@/repositories/team.repo", () => ({
     countPendingInvitations: jest.fn(async () => 0),
     countInvitationsCreatedSince: jest.fn(async () => 0),
     getUserByAddress: jest.fn(async () => null),
+    // Info: (20260819 - Luphia) 位址邀請會取團隊名稱寫進鏈上通知
+    getTeamById: jest.fn(async () => ({ id: "team-1", name: "E2E Team" })),
   },
 }));
 
@@ -47,6 +49,8 @@ jest.mock("@/repositories/webauthn.repo", () => ({
       id: "user-1",
       currentChallenge: "challenge",
     })),
+    // Info: (20260819 - Luphia) 位址邀請會查受邀者是否已有帳號（回 null＝還沒有）
+    findUserByAddress: jest.fn(async () => null),
     clearChallenge: jest.fn(),
   },
 }));
@@ -64,9 +68,33 @@ jest.mock("@/services/team_seat.service", () => ({
   })),
 }));
 
-jest.mock("@/services/team_invitation.service", () => ({
-  inviteMemberByEmail: jest.fn(async () => ({ invitationId: "inv-1" })),
-  assertInviteVolumeWithinLimits: jest.fn(async () => undefined),
+/**
+ * Info: (20260819 - Luphia) `assertInviteVolumeWithinLimits` 用**真的**（review #6684 高）。
+ *
+ * 前一版把它 mock 成 no-op，而全檔沒有一條斷言它被呼叫過——於是刪掉任一呼叫端
+ * （位址路由或 email service），第 2、3 層完全失效而測試全綠。三層裡唯一被接線
+ * 測試釘住的是最弱的那一層（per-operator 限流），而 commit 訊息宣稱「缺一就有繞法」
+ * 的那兩道整團總量上限，在 CI 上是不設防的。
+ *
+ * 因此只 stub `inviteMemberByEmail`（它會碰 DB 與寄信），閘門本身走真的實作，
+ * 由下面的 repo 替身餵它數字。
+ */
+jest.mock("@/services/team_invitation.service", () => {
+  const actual = jest.requireActual<
+    typeof import("@/services/team_invitation.service")
+  >("@/services/team_invitation.service");
+  return {
+    inviteMemberByEmail: jest.fn(async () => ({ invitationId: "inv-1" })),
+    assertInviteVolumeWithinLimits: actual.assertInviteVolumeWithinLimits,
+  };
+});
+
+/**
+ * Info: (20260819 - Luphia) 兩道上限的值來自系統設定（ADR 017）。不 mock 會打到真資料庫，
+ * 而「本機剛好查無設定列 → 退回保底值 → 測試碰巧通過」正是 checklist §1.3 的形狀。
+ */
+jest.mock("@/services/system_setting.service", () => ({
+  systemSettingService: { get: jest.fn(async () => undefined) },
 }));
 
 jest.mock("@/services/bundler.service", () => ({
@@ -102,6 +130,32 @@ function emailRequest(): {
   };
 }
 
+/**
+ * Info: (20260819 - Luphia) 每條測試用**獨立的操作者位址**：限流器是模組單例，
+ * 共用位址會讓前面測試打滿的桶滲進後面的案例（那種耦合正是這一檔要避免的東西）。
+ */
+function useOperator(address: string): void {
+  asMock(getIdentityFromDeWT).mockResolvedValue({ id: "user-1", address });
+}
+
+function addressRequest(): NextRequest {
+  return new NextRequest(
+    "https://isunfa.com/api/v1/user/team/team-1/invitations",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Bearer dewt",
+      },
+      body: JSON.stringify({
+        address: `0x${"1".repeat(40)}`,
+        role: "VIEWER",
+        authentication: { id: "cred" },
+      }),
+    },
+  );
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   asMock(getIdentityFromDeWT).mockResolvedValue({
@@ -110,6 +164,8 @@ beforeEach(() => {
   });
   asMock(teamRepo.getTeamMember).mockResolvedValue({ role: "OWNER" });
   asMock(webAuthnService.verifySignature).mockResolvedValue(true);
+  asMock(teamRepo.countPendingInvitations).mockResolvedValue(0);
+  asMock(teamRepo.countInvitationsCreatedSince).mockResolvedValue(0);
 });
 
 describe("邀請寄送端的量控接線", () => {
@@ -170,6 +226,53 @@ describe("邀請寄送端的量控接線", () => {
 
     expect(blocked.status).toBe(429);
     expect(asMock(chargeSeatAddition)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260819 - Luphia) 第 2、3 層真的擋在**位址邀請**的路徑上（review #6684 高）。
+   *
+   * 這兩條是前一版缺的：閘門被 mock 成 no-op，於是刪掉 route 裡那一行呼叫，
+   * 位址邀請就完全失去整團總量的上限，而測試全綠。
+   *
+   * 斷言成對：回應不是 200 **且** `chargeSeatAddition` 沒有被呼叫——後者才證明
+   * 「擋在扣款之前」，不是「擋了但錢已經刷了」。
+   */
+  it.each([
+    [
+      "同時未接受數達上限",
+      () => asMock(teamRepo.countPendingInvitations).mockResolvedValue(20),
+      "TW000023",
+    ],
+    [
+      "今日寄送數達上限",
+      () => asMock(teamRepo.countInvitationsCreatedSince).mockResolvedValue(50),
+      "TW000024",
+    ],
+  ])("位址邀請：%s 時擋下，且不進入扣款", async (_label, arrange, code) => {
+    useOperator(`0xvolume-${code}`);
+    arrange();
+
+    const response = await addressInvite(addressRequest(), {
+      params: Promise.resolve({ team_id: "team-1" }),
+    });
+    const json = (await response.json()) as { errorCode?: string };
+
+    expect(response.status).not.toBe(200);
+    // Info: (20260819 - Luphia) 前端讀的是 errorCode（`code` 是 HTTP 層的分類）
+    expect(json.errorCode).toBe(code);
+    expect(asMock(chargeSeatAddition)).not.toHaveBeenCalled();
+    expect(asMock(teamRepo.createTeamInvitation)).not.toHaveBeenCalled();
+  });
+
+  // Info: (20260819 - Luphia) 另一半：量都在上限內時照常走到扣款（否則「一律擋」也會通過）
+  it("位址邀請：量在上限內時照常進入扣款", async () => {
+    useOperator("0xvolume-ok");
+    const response = await addressInvite(addressRequest(), {
+      params: Promise.resolve({ team_id: "team-1" }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(asMock(chargeSeatAddition)).toHaveBeenCalledTimes(1);
   });
 
   // Info: (20260819 - Luphia) 未登入時連限流都不該記帳（記了就是替匿名流量佔用某個維度）

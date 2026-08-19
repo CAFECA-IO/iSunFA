@@ -293,7 +293,26 @@ export async function GET(
 
     return jsonOk(invitations);
   } catch (error) {
-    console.error("[API] /team/[team_id]/invitations GET error:", error);
+    /**
+     * Info: (20260819 - Luphia) `ApiError` 要原樣回，不能吞成 `IS_UNKNOWN`。
+     *
+     * 這裡原本一律回 `IS_UNKNOWN`（500），於是這條路徑上**每一個說得清楚的錯誤**
+     * 都變成一句「未知錯誤」：沒有可扣款的卡（TW000018）、付費方案缺單價（TW000015）、
+     * 當期補收已達上限（TW000016）、扣款失敗（TW000021），以及本輪新增的兩道
+     * 邀請量上限（TW000023 / TW000024）。使用者看到 500，畫面說不出下一步是什麼，
+     * 而客服也查不到原因——因為那些錯誤本來都帶著明確的處置。
+     *
+     * 同層的 email 邀請一直是這樣做的（見 `invitations/email/route.ts`），
+     * 這裡補齊，兩條路徑的錯誤契約才一致。
+     */
+    if (error instanceof ApiError) {
+      return jsonFail({
+        code: error.code,
+        message: error.message,
+        status: error.status,
+      });
+    }
+    console.error("[API] /team/[team_id]/invitations POST error:", error);
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

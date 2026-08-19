@@ -138,6 +138,13 @@ beforeEach(() => {
     orderId: "order-1",
   });
   asMock(sendMail).mockResolvedValue(undefined);
+  /**
+   * Info: (20260819 - Luphia) 兩支計數每輪都要重設。
+   * `clearAllMocks()` 清呼叫紀錄但**不還原 `mockResolvedValue`**，
+   * 因此上限測試設的 20 / 50 會滲進後面每一條案例（本檔實際發生過）。
+   */
+  asMock(teamRepo.countPendingInvitations).mockResolvedValue(0);
+  asMock(teamRepo.countInvitationsCreatedSince).mockResolvedValue(0);
   asMock(systemSettingService.get).mockResolvedValue("https://isunfa.com");
   /**
    * Info: (20260816 - Luphia) acceptInvitation 回 null 代表「沒搶到那一列」，
@@ -173,6 +180,36 @@ const invite = (email = "friend@example.com") =>
   });
 
 describe("inviteMemberByEmail", () => {
+  /**
+   * Info: (20260819 - Luphia) 兩道團隊層上限真的擋在**email 邀請**的路徑上（review #6684 高）。
+   *
+   * 這條路徑才是真的會寄信的那一條，而先前完全沒有接線測試：`assertInviteVolumeWithinLimits`
+   * 的呼叫刪掉之後，email 邀請完全失去整團總量的上限，而所有測試照樣綠。
+   *
+   * 三個斷言成組：擋下的錯誤碼、**沒有扣款**、**沒有建立邀請列也沒有寄信**——
+   * 只驗第一個的話，「擋了但信已經寄出去」也會通過。
+   */
+  it.each([
+    [
+      "同時未接受數達上限",
+      () => asMock(teamRepo.countPendingInvitations).mockResolvedValue(20),
+      "TW000023",
+    ],
+    [
+      "今日寄送數達上限",
+      () => asMock(teamRepo.countInvitationsCreatedSince).mockResolvedValue(50),
+      "TW000024",
+    ],
+  ])("%s 時擋下，且不扣款、不建列、不寄信", async (_label, arrange, code) => {
+    arrange();
+
+    await expect(invite()).rejects.toMatchObject({ code });
+
+    expect(asMock(chargeSeatAddition)).not.toHaveBeenCalled();
+    expect(asMock(teamRepo.createTeamInvitation)).not.toHaveBeenCalled();
+    expect(asMock(sendMail)).not.toHaveBeenCalled();
+  });
+
   it("建立邀請並寄出信件", async () => {
     const result = await invite();
 
