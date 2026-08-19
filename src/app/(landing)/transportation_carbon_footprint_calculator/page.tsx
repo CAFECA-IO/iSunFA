@@ -44,6 +44,7 @@ import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import { useAuth } from "@/contexts/auth_context";
 import AuthPlaceholder from "@/components/common/auth_placeholder";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
+import { useAnalysisPayment } from "@/hooks/use_analysis_payment";
 import { BatchExportRenderer } from "@/components/transportation_carbon_footprint_calculator/batch_export_renderer";
 import {
   ExportOptionsModal,
@@ -78,10 +79,7 @@ import {
   buildPlanFromLegacyBatchItem,
   type ILegacyBatchItem,
 } from "@/lib/utils/logistics_report";
-import {
-  useOrderTransaction,
-  IOrderPayload,
-} from "@/hooks/use_order_transaction";
+import { IOrderPayload } from "@/hooks/use_order_transaction";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import {
   TRANSPORT_CALCULATOR_QUERY_PARAM,
@@ -124,8 +122,18 @@ export default function ReportPage() {
 function ReportPageContent() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { workflowStatus, resetTransaction, executeOrderTransaction } =
-    useOrderTransaction();
+  /**
+   * Info: (20260813 - Luphia) 統一付款入口（設計書 §5.6）：團隊額度與個人點數的分流、
+   * 來源選擇器與餘額顯示都收在 useAnalysisPayment 裡，本頁不再自己接一次。
+   */
+  const {
+    workflowStatus,
+    reset: resetPayment,
+    pay,
+    paymentSourceNode,
+    paysWithTeamQuota,
+    teamAvailableCredits,
+  } = useAnalysisPayment();
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -423,7 +431,7 @@ function ReportPageContent() {
     }
 
     setIsPaymentModalOpen(true);
-    resetTransaction();
+    resetPayment();
   };
 
   const handlePaymentConfirm = async () => {
@@ -446,14 +454,16 @@ function ReportPageContent() {
       ],
     };
 
-    await executeOrderTransaction(
+    const onPaid = async () => {
+      await calculateFootprint();
+      setIsPaymentModalOpen(false);
+      setActiveTab("history");
+    };
+
+    await pay(
       orderPayload,
       ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT,
-      async () => {
-        await calculateFootprint();
-        setIsPaymentModalOpen(false);
-        setActiveTab("history");
-      },
+      onPaid,
     );
   };
 
@@ -1445,13 +1455,16 @@ function ReportPageContent() {
             workflowStatus === "error" ||
             workflowStatus === "payment_success"
           ) {
-            resetTransaction();
+            resetPayment();
             setIsPaymentModalOpen(false);
           } else if (workflowStatus === "idle") {
             setIsPaymentModalOpen(false);
           }
         }}
         onConfirm={handlePaymentConfirm}
+        extraContent={paymentSourceNode}
+        paidByTeamQuota={paysWithTeamQuota}
+        teamAvailableCredits={teamAvailableCredits}
         cost={ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT}
         items={[
           {

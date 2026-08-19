@@ -84,6 +84,10 @@ export const carbonChatbot = {
   restore_session: "还原此对话",
   system_error: "【系统错误】抱歉，连线到碳会计师服务时发生问题，请稍后再试。",
   system_unavailable: "抱歉，系统目前无法回应。",
+  team_quota_exceeded:
+    "团队的 AI 额度与分配点数都已用完，请等待额度重置，或加购点数／升级方案后再试。",
+  session_not_bound:
+    "此盘查会话尚未绑定账本，无法计算额度。请先于会话设置中选择要归属的账本。",
   ai_quota_exceeded:
     "【AI 额度已达上限】短时间内请求过多，请稍候一分钟后再试。",
   rate_limited: "【操作过于频繁】已达使用频率上限，请稍候片刻再试。",

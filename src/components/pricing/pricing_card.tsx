@@ -63,13 +63,36 @@ export default function PricingCard({
           <span className="text-4xl font-bold tracking-tight text-gray-900">
             {price}
           </span>
+          {/**
+           * Info: (20260814 - Luphia) 付費方案的單位是**每席**（規範 §1 拍板、席次計費已實作）：
+           * 只寫「月繳」會讓人把卡片上的數字讀成團隊總額，而實收是這個數字乘上人數。
+           * 免費版不依人數計費，維持原本的月繳／年繳。
+           */}
           <span className="text-sm leading-6 font-semibold text-gray-600">
             /{" "}
-            {billingInterval === "month"
-              ? t("pricing.monthly")
-              : t("pricing.yearly")}
+            {planPriceValue > 0
+              ? t(
+                  billingInterval === "month"
+                    ? "pricing.per_seat_monthly"
+                    : "pricing.per_seat_yearly",
+                )
+              : t(
+                  billingInterval === "month"
+                    ? "pricing.monthly"
+                    : "pricing.yearly",
+                )}
           </span>
         </p>
+        {/**
+         * Info: (20260812 - Luphia) 付費方案於價格下方明示要乘上團隊成員數（產品拍板 20260812，
+         * 規範 team_seat_billing_and_email_invitation.md §1）：卡片上的數字是**每位成員**的費用，
+         * 不是團隊總額。免費版不依人數計費，故不顯示此行。
+         */}
+        {planPriceValue > 0 && (
+          <p className="mt-2 text-xs leading-5 text-gray-500">
+            {t("pricing.price_multiply_note")}
+          </p>
+        )}
         <ul className="mt-8 space-y-3 text-sm leading-6 text-gray-600">
           {features.map((feature, index) => {
             const isObject = typeof feature === "object";

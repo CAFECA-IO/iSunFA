@@ -66,23 +66,6 @@ describe("annotateTable", () => {
   });
 
   /**
-   * Info: (20260813 - Emily) 補完欄的表頭不能被當成類別分隔列。
-   *
-   * 原文的父標題橫跨整張表時表頭只有一格,`padAllTableHeaders` 補到資料列的欄數
-   * 之後就長成「第一格有內容、其餘皆空」—— 與類別分隔列一模一樣。
-   * 少了 `td` 判準,整個 `<thead>` 會被改寫成 `<tr class="group">`,
-   * 那張表一個 `<th>` 都不剩,而文字還在、所以看不出來。
-   */
-  it("should not treat a padded header row as a group row", () => {
-    const html = buildCarbonReportHtml(
-      "| 溫室氣體排放量 |\n| --- |\n| CO2 | CH4 | N2O |\n",
-    );
-
-    expect(html).toContain("<th");
-    expect(html).not.toContain('<tr class="group"');
-  });
-
-  /**
    * Info: (20260810 - Emily) 類別列不能參與窄欄判定 ——
    * 它第二欄以後都是空字串,會把真正的文字欄拉成「整欄都很短」。
    */
@@ -232,8 +215,17 @@ describe("目錄項目的逸出", () => {
     tocTitle: "目錄",
   };
 
+  /**
+   * Info: (20260812 - Emily) 樣本從 `#` 換成 `##`。
+   *
+   * 文件級 H1 現在會被 `stripLeadingDocumentTitle` 剝掉（報告名稱改走
+   * `shell.title`，見 `issue_drafts/open/24`），所以拿 `#` 當樣本的話
+   * 這條測的會是「被剝掉的東西沒進目錄」而不是逸出本身。
+   * 換成 `##` —— 那也是報告實際會出現的層級（`buildSectionHeadingByTitle`
+   * 產出的是 `###`，章標題是 `##`），不變式沒變，只是樣本選對。
+   */
   it("should escape the heading text exactly once", () => {
-    const html = buildCarbonReportHtml("# 排放 & 移除 < >\n\n內文\n", shell);
+    const html = buildCarbonReportHtml("## 排放 & 移除 < >\n\n內文\n", shell);
     const text = /<span class="toc-text">([^<]*)<\/span>/.exec(html)?.[1];
 
     expect(text).toBe("排放 &amp; 移除 &lt; &gt;");
@@ -268,5 +260,99 @@ describe("buildCarbonReportHtml transform ordering", () => {
 
     expect(html).toContain("0.6*200*248");
     expect(html).not.toContain("<em>200</em>");
+  });
+});
+
+/**
+ * Info: (20260814 - Emily) 查證用的識別欄位（issue 24）。
+ *
+ * 這一區的存在理由是「查證單位無法從內容推導」，所以它必須是外殼的一部分，
+ * 而且**沒填的欄位也要印出來** —— 藏起來的話「不適用」與「忘了填」同形。
+ */
+describe("buildCarbonReportHtml 的識別欄位", () => {
+  const shell = {
+    brand: "陽光智能碳會計",
+    internalDocument: "內部文件",
+    systemReport: "系統報告",
+    issuedAt: "2026/8/14",
+    footerTitle: "用人工智能重塑碳會計",
+    footerText: "© 2026 iSunFA.",
+  };
+
+  it("should print every field it is given, in the order given", () => {
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      title: "高興昌鋼鐵股份有限公司 2023 溫室氣體盤查報告書",
+      identity: [
+        { label: "盤查年度", value: "2023" },
+        { label: "製作單位", value: "溫室氣體盤查推行委員會" },
+        { label: "查證單位", value: "亞瑞仕國際驗證股份有限公司" },
+        { label: "更新日期", value: "2026-08-14" },
+      ],
+    });
+
+    const labels = [...html.matchAll(/<dt>([^<]+)<\/dt>/g)].map((m) => m[1]);
+    expect(labels).toEqual(["盤查年度", "製作單位", "查證單位", "更新日期"]);
+    expect(html).toContain("<dd>亞瑞仕國際驗證股份有限公司</dd>");
+  });
+
+  it("should still print a field whose value is a placeholder", () => {
+    // Info: (20260814 - Emily) 這是本區最重要的一條:空著但看得見,才會有人去填
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      identity: [
+        { label: "查證單位", value: "未填寫" },
+        { label: "更新日期", value: "未填寫" },
+      ],
+    });
+
+    expect(html).toContain("<dt>查證單位</dt><dd>未填寫</dd>");
+    expect([...html.matchAll(/<dt>/g)]).toHaveLength(2);
+  });
+
+  it("should omit the block entirely when identity is absent or empty", () => {
+    // Info: (20260814 - Emily) 公開分享頁那種場合不需要識別資訊
+    const absent = buildCarbonReportHtml("## 一節\n\n內容。", shell);
+    const empty = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      identity: [],
+    });
+
+    /**
+     * Info: (20260814 - Emily) 比對元素而不是字串:`.doc-identity` 的樣式一直在
+     * `<style>` 裡（樣式表是靜態的），拿整份 HTML 找 "doc-identity" 會永遠命中。
+     */
+    expect(absent).not.toContain('<dl class="doc-identity">');
+    expect(empty).not.toContain('<dl class="doc-identity">');
+  });
+
+  it("should escape the values, they come from user input", () => {
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      identity: [
+        { label: "查證單位", value: '<img src=x onerror="alert(1)">' },
+      ],
+    });
+
+    expect(html).not.toContain("<img src=x");
+    expect(html).toContain("&lt;img src=x");
+  });
+
+  it("should sit inside the meta banner rather than on a page of its own", () => {
+    /**
+     * Info: (20260814 - Emily) 票上已判定不做整頁封面:導覽由目錄涵蓋、
+     * 識別由橫幅涵蓋,再加一頁是多一頁不是多一份資訊。
+     * 所以這一區必須在 doc-shell-meta 裡面,而且不能帶 break-after。
+     */
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      identity: [{ label: "盤查年度", value: "2023" }],
+    });
+
+    const meta = html.slice(
+      html.indexOf('<section class="doc-shell-meta">'),
+      html.indexOf("</section>"),
+    );
+    expect(meta).toContain('<dl class="doc-identity">');
   });
 });

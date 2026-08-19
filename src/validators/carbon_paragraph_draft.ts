@@ -37,6 +37,13 @@ export const CarbonParagraphDraftRequestSchema = z.object({
   // Info: (20260716 - Tzuhan) #55 修訂模式:兩者皆有 = 修訂既有段落(僅依指示與事實修改,其餘保留原文)
   existingContent: z.string().min(1).max(20_000).optional(),
   instruction: z.string().min(1).max(2_000).optional(),
+  /**
+   * Info: (20260814 - Luphia) 計費上下文（設計書 §5.5）：
+   * channel 供後端推導計費帳本，clientMessageId 讓重試不重複扣點。
+   * 段落草稿與修訂同為 LLM 推論，與對話 / 附件 / 匯入 / 結構圖同一套計費規則。
+   */
+  channel: z.string().min(1).max(200).optional(),
+  clientMessageId: z.string().min(1).max(200).optional(),
 });
 
 export type CarbonParagraphDraftRequestPayload = z.infer<
@@ -56,6 +63,9 @@ export const CarbonDiagramRequestSchema = z.object({
     }),
   content: z.string().min(1).max(50_000),
   language: z.string().max(10).optional(),
+  // Info: (20260813 - Luphia) 計費上下文（設計書 §5.5）：帳本由 channel 推導，冪等鍵防重試重複扣點
+  channel: z.string().max(200).optional(),
+  clientMessageId: z.string().min(1).max(128).optional(),
 });
 export type CarbonDiagramRequest = z.infer<typeof CarbonDiagramRequestSchema>;
 

@@ -19,6 +19,7 @@ export const adminMember = {
     unnamed_user: "未命名用户",
     refresh_balance_aria: "刷新余额",
     issue_points_btn: "发放点数",
+    issue_team_points_btn: "发放点数给团队",
     role_super_admin: "超级管理员",
     role_admin: "管理员",
     role_user: "一般用户",
@@ -26,6 +27,21 @@ export const adminMember = {
     mint: "增发",
   },
 
+  modal_issue_team: {
+    title: "发放点数给团队",
+    description:
+      "团队点数为离链账本，将直接入该团队钱包的未分配池，再由该团队管理者分配给成员；与发放给个人的链上点数不同。",
+    search_placeholder: "搜索团队名称或拥有者",
+    scoped_hint: "仅列出「{{user}}」所属的团队",
+    no_result: "找不到符合的团队",
+    confirm_target: "将发放给：{{team}}",
+    target_team: "目标团队",
+    select_team: "请选择团队",
+    team_summary: "成员 {{members}} 人・钱包未分配余额 {{balance}} 点",
+    success_msg: "已入账至团队钱包",
+    err_no_team: "请先选择要发放的团队",
+    err_load_teams: "团队列表加载失败",
+  },
   modal_issue: {
     title: "发放系统点数",
     target_user: "目标用户",
@@ -37,6 +53,7 @@ export const adminMember = {
     err_msg: "发放失败",
     processing: "处理中...",
     issued: "已发放",
+    cancel_btn: "取消",
     confirm_btn: "确认发放",
   },
 };

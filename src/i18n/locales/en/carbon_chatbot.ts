@@ -88,6 +88,10 @@ export const carbonChatbot = {
   system_error:
     "[System Error] Sorry, there was a problem connecting to the Carbon Accountant service. Please try again later.",
   system_unavailable: "Sorry, the system is currently unavailable to respond.",
+  team_quota_exceeded:
+    "Your team has run out of both AI quota and allocated credits. Wait for the quota to reset, or buy credits / upgrade your plan.",
+  session_not_bound:
+    "This inventory session is not bound to an account book, so quota cannot be applied. Pick the account book it belongs to in the session settings first.",
   ai_quota_exceeded:
     "[AI quota reached] Too many requests in a short time; please wait a minute and try again.",
   ai_timeout: "[AI timeout] The request took too long; please try again.",

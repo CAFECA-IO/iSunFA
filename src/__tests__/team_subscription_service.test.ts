@@ -19,7 +19,7 @@ import { generatePaymentOrder } from "@/services/order.service";
 import type { Order } from "@/generated";
 
 jest.mock("@/repositories/team.repo", () => ({
-  teamRepo: { getTeamMember: jest.fn() },
+  teamRepo: { getTeamMember: jest.fn(), countMembers: jest.fn() },
 }));
 jest.mock("@/repositories/team_subscription.repo", () => ({
   teamSubscriptionRepo: {
@@ -32,7 +32,10 @@ jest.mock("@/repositories/subscription_plan_quota.repo", () => ({
   subscriptionPlanQuotaRepo: { resolveQuota: jest.fn() },
 }));
 jest.mock("@/repositories/team_quota_usage.repo", () => ({
-  teamQuotaUsageRepo: { sumWindowUsage: jest.fn() },
+  teamQuotaUsageRepo: {
+    sumWindowUsage: jest.fn(),
+    sumTeamWindowUsage: jest.fn(),
+  },
 }));
 jest.mock("@/repositories/faith_billing_setting.repo", () => ({
   faithBillingSettingRepo: { resolveSetting: jest.fn() },
@@ -62,6 +65,8 @@ function mockMembers(roles: Record<string, string | null>) {
     if (!role) return null;
     return { id: `member-${userId}`, role };
   });
+  // Info: (20260814 - Luphia) 席次數預設 5 人，驗證金額確實乘上人數（規範 P2）
+  asMock(teamRepo.countMembers).mockResolvedValue(5);
 }
 
 describe("getTeamSubscriptionView", () => {
@@ -83,6 +88,181 @@ describe("getTeamSubscriptionView", () => {
       used5h: BigInt(3),
       usedWeek: BigInt(12),
     });
+    // Info: (20260817 - Luphia) 全隊合計（第二輪 C-1）：五個人加起來的用量
+    asMock(teamQuotaUsageRepo.sumTeamWindowUsage).mockResolvedValue({
+      used5h: BigInt(31),
+      usedWeek: BigInt(150),
+    });
+  });
+
+  /**
+   * Info: (20260817 - Luphia) 全隊合計（PR #6652 第二輪 C-1）。
+   *
+   * 額度改成一人一池之後，付費者在這個頁面只看得到自己的進度條，
+   * 而團隊實際消耗多少，系統中沒有任何介面說得出來。
+   * 合計的分母是「每人上限 × 人數」——寫成每人上限就會讓 5 人團隊看到 310%。
+   */
+  /**
+   * Info: (20260818 - Luphia) 全隊合計僅 OWNER 可見（產品決定 20260818）。
+   * 這個數字回答的是「我付的錢被用掉多少」，而付錢的是 OWNER；
+   * 對其他成員它沒有對應的問題，卻能加上人數推估同事的平均用量。
+   */
+  describe("team totals", () => {
+    beforeEach(() => {
+      mockMembers({ "user-1": "OWNER" });
+    });
+
+    it("multiplies the per-member limit by the member count", async () => {
+      // Info: (20260819 - Luphia) 乘人數只適用**付費**方案（免費方案改為全隊共用一份）
+      asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+        planId: TEAM_PLAN.BUSINESS,
+        status: "ACTIVE",
+        currentPeriodStart: new Date((NOW_SEC - 86400) * 1000),
+        currentPeriodEnd: new Date((NOW_SEC + 86400) * 1000),
+        autoRenew: true,
+      } as unknown);
+
+      const view = await getTeamSubscriptionView({
+        userId: "user-1",
+        teamId: "team-1",
+        nowSec: NOW_SEC,
+      });
+
+      expect(view.teamTotals!.memberCount).toBe(5);
+      // Info: (20260819 - Luphia) business 方案每人 1000 / 7500，五個人即 5000 / 37500
+      expect(view.teamTotals!.quota5h).toMatchObject({
+        limit: "5000",
+        used: "31",
+      });
+      expect(view.teamTotals!.quotaWeek).toMatchObject({
+        limit: "37500",
+        used: "150",
+      });
+    });
+
+    /**
+     * Info: (20260819 - Luphia) 免費方案**不乘人數**（產品決定 20260819）。
+     *
+     * 那一份額度是全隊共用的。乘上人數會憑空放大成 N 倍，而扣費端只認一份——
+     * 畫面上就會出現「還有 80%」卻已經 402 的矛盾。
+     */
+    it("免費方案的全隊合計不乘人數", async () => {
+      asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(null);
+
+      const view = await getTeamSubscriptionView({
+        userId: "user-1",
+        teamId: "team-1",
+        nowSec: NOW_SEC,
+      });
+
+      expect(view.planId).toBe(TEAM_PLAN.FREE);
+      expect(view.teamTotals!.memberCount).toBe(5);
+      // Info: (20260819 - Luphia) 五個人共用一份 10 / 40，不是 50 / 200
+      expect(view.teamTotals!.quota5h.limit).toBe("10");
+      expect(view.teamTotals!.quotaWeek.limit).toBe("40");
+    });
+
+    // Info: (20260817 - Luphia) 合計用的是全隊查詢，不是把個人用量拿來充數
+    it("reads the team-wide aggregate rather than the viewer's own usage", async () => {
+      // Info: (20260819 - Luphia) 乘人數只適用**付費**方案（免費方案改為全隊共用一份）
+      asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+        planId: TEAM_PLAN.BUSINESS,
+        status: "ACTIVE",
+        currentPeriodStart: new Date((NOW_SEC - 86400) * 1000),
+        currentPeriodEnd: new Date((NOW_SEC + 86400) * 1000),
+        autoRenew: true,
+      } as unknown);
+
+      const view = await getTeamSubscriptionView({
+        userId: "user-1",
+        teamId: "team-1",
+        nowSec: NOW_SEC,
+      });
+
+      expect(asMock(teamQuotaUsageRepo.sumTeamWindowUsage)).toHaveBeenCalled();
+      expect(view.teamTotals!.quota5h.used).not.toBe(view.quota.quota5h.used);
+    });
+
+    /**
+     * Info: (20260818 - Luphia) ADMIN 也看得到（產品決定 20260818）：
+     * ADMIN 動用得了團隊錢包，就該看得到團隊消耗了多少。
+     */
+    it("ADMIN 也看得到全隊合計", async () => {
+      mockMembers({ "user-1": "ADMIN" });
+
+      const view = await getTeamSubscriptionView({
+        userId: "user-1",
+        teamId: "team-1",
+        nowSec: NOW_SEC,
+      });
+
+      expect(view.teamTotals?.memberCount).toBe(5);
+    });
+
+    it("一般成員看不到全隊合計，也不會去查", async () => {
+      mockMembers({ "user-1": "VIEWER" });
+      // Info: (20260819 - Luphia) 乘人數只適用**付費**方案（免費方案改為全隊共用一份）
+      asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+        planId: TEAM_PLAN.BUSINESS,
+        status: "ACTIVE",
+        currentPeriodStart: new Date((NOW_SEC - 86400) * 1000),
+        currentPeriodEnd: new Date((NOW_SEC + 86400) * 1000),
+        autoRenew: true,
+      } as unknown);
+
+      const view = await getTeamSubscriptionView({
+        userId: "user-1",
+        teamId: "team-1",
+        nowSec: NOW_SEC,
+      });
+
+      expect(view.teamTotals).toBeUndefined();
+      /**
+       * Info: (20260818 - Luphia) 不是「查了再丟掉」：查了再丟掉的版本，
+       * 下一個人在別處重用這個函式時就會把它一起回出去。
+       */
+      expect(
+        asMock(teamQuotaUsageRepo.sumTeamWindowUsage),
+      ).not.toHaveBeenCalled();
+    });
+
+    // Info: (20260818 - Luphia) 個人額度不受影響，每個成員都看得到自己的
+    it("一般成員仍看得到自己的額度", async () => {
+      mockMembers({ "user-1": "VIEWER" });
+      // Info: (20260819 - Luphia) 乘人數只適用**付費**方案（免費方案改為全隊共用一份）
+      asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+        planId: TEAM_PLAN.BUSINESS,
+        status: "ACTIVE",
+        currentPeriodStart: new Date((NOW_SEC - 86400) * 1000),
+        currentPeriodEnd: new Date((NOW_SEC + 86400) * 1000),
+        autoRenew: true,
+      } as unknown);
+
+      const view = await getTeamSubscriptionView({
+        userId: "user-1",
+        teamId: "team-1",
+        nowSec: NOW_SEC,
+      });
+
+      expect(view.quota.quota5h).toMatchObject({ limit: "1000", used: "3" });
+    });
+
+    /**
+     * Info: (20260817 - Luphia) 人數 0（資料異常）時分母不能是 0，
+     * 否則進度條會拿到 NaN，畫面比沒有數字更難懂。
+     */
+    it("never divides by zero when the team has no members", async () => {
+      asMock(teamRepo.countMembers).mockResolvedValue(0);
+
+      const view = await getTeamSubscriptionView({
+        userId: "user-1",
+        teamId: "team-1",
+        nowSec: NOW_SEC,
+      });
+
+      expect(view.teamTotals!.memberCount).toBe(0);
+      expect(view.teamTotals!.quota5h.limit).toBe("10");
+    });
   });
 
   it("defaults to the free plan with quota status and the faith rate", async () => {
@@ -92,8 +272,13 @@ describe("getTeamSubscriptionView", () => {
       nowSec: NOW_SEC,
     });
     expect(view.planId).toBe(TEAM_PLAN.FREE);
-    expect(view.quota.quota5h).toMatchObject({ limit: "10", used: "3" });
-    expect(view.quota.quotaWeek).toMatchObject({ limit: "40", used: "12" });
+    /**
+     * Info: (20260819 - Luphia) 免費方案的「我的額度」用量是**全隊**的（31 / 150），
+     * 不是這個成員自己的（3 / 12）——額度全隊共用，畫面必須與扣費端同一個判準，
+     * 否則會說「你還有 40 點」而送出訊息時被同事已用掉的量擋下來。
+     */
+    expect(view.quota.quota5h).toMatchObject({ limit: "10", used: "31" });
+    expect(view.quota.quotaWeek).toMatchObject({ limit: "40", used: "150" });
     expect(view.quota.quota5h.resetAt).toBeGreaterThan(NOW_SEC);
     expect(view.faithTokensPerCredit).toBe(
       DEFAULT_FAITH_BILLING.tokensPerCredit,
@@ -183,12 +368,13 @@ describe("changeTeamSubscription", () => {
       "user-owner",
       expect.objectContaining({
         type: ORDER_TYPE.BILLING_SUBSCRIBE,
-        amount: 8400,
-        data: {
-          teamId: "team-1",
-          planId: TEAM_PLAN.TEAM,
-          billingInterval: BILLING_INTERVAL.YEAR,
-        },
+        // Info: (20260814 - Luphia) 5 人團隊、年繳單價 8,400 → 實收 42,000（規範 P2 席次乘算）
+        amount: 42000,
+        seats: 5,
+        unitPrice: 8400,
+        teamId: "team-1",
+        planId: TEAM_PLAN.TEAM,
+        billingInterval: BILLING_INTERVAL.YEAR,
       }),
     );
   });

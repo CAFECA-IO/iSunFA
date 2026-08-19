@@ -1,9 +1,35 @@
 import { ChatService, ILlmUsage } from "@/services/chat.service";
 import { LLM_SYNC_TIMEOUT_MS, LlmTaskKeyEnum } from "@/constants/llm";
+import {
+  renderShortTermHistory,
+  type IFaithHistoryTurn,
+} from "@/lib/faith_memory/short_term";
 
 export class DirectChatSkill {
-  private getPrompt(message: string, tags: string[] = []): string {
+  /**
+   * Info: (20260818 - Luphia) 長期記憶接在**人設與 Task 指令之後**（第三輪 B-4）。
+   *
+   * 先前它排在 `basePrompt` 的最前面，也就是在 `User Input` 與
+   * `Output Guidelines` 之前。記憶的內容來自使用者自己的陳述，
+   * 擺在指令前面等於讓那段文字有機會改寫後面的規則。
+   *
+   * 換行已在寫入與輸出兩側都擋掉（見 items.ts），這是第三道：
+   * 就算某天前兩道被繞過，記憶也只是**附加在指令之後的參考資料**，
+   * 而不是排在最前面的一段疑似系統指令。
+   */
+  private getPrompt(
+    message: string,
+    tags: string[] = [],
+    // Info: (20260817 - Luphia) 任務短期記憶：同一段對話的前文（條款 §3.7）
+    history: IFaithHistoryTurn[] = [],
+    // Info: (20260817 - Luphia) 長期記憶區塊（第一輪 C-1），已截到字元預算內
+    memory = "",
+  ): string {
+    const withMemory = (prompt: string) =>
+      memory ? `${prompt}\n\n${memory}` : prompt;
+    const historyBlock = renderShortTermHistory(history);
     const basePrompt = `
+      ${historyBlock}
       User Input: "${message}"
       Selected Tags: ${tags.join(", ") || "None"}
       
@@ -14,7 +40,7 @@ export class DirectChatSkill {
 
     // Info: (20260105 - Luphia) Tax Consultant
     if (tags.includes("tax")) {
-      return `
+      return withMemory(`
         You are an expert tax consultant specializing in Taiwan tax laws and regulations.
         ${basePrompt}
         Task:
@@ -22,12 +48,12 @@ export class DirectChatSkill {
         2. Analyze the specific tax implications (VAT, Corporate Income Tax, Withholding Tax).
         3. Explain relevant tax filing requirements or deadlines.
         4. Suggest appropriate accounting entries with tax codes.
-      `;
+      `);
     }
 
     // Info: (20260105 - Luphia) Financial Analyst
     if (tags.includes("financial_report") || tags.includes("analysis")) {
-      return `
+      return withMemory(`
         You are a senior financial analyst.
         ${basePrompt}
         Task:
@@ -35,7 +61,7 @@ export class DirectChatSkill {
         2. Provide insights on financial health, profitability, and liquidity.
         3. Create forecasts or trend analysis based on provided data.
         4. Suggest strategic financial improvements.
-      `;
+      `);
     }
 
     // Info: (20260105 - Luphia) Operational Accountant (Bookkeeping)
@@ -45,7 +71,7 @@ export class DirectChatSkill {
       tags.includes("salary") ||
       tags.includes("cashier")
     ) {
-      return `
+      return withMemory(`
         You are a meticulous operational accountant.
         ${basePrompt}
         
@@ -74,12 +100,12 @@ export class DirectChatSkill {
         | | | ... | | $... | ... |
         
         Finally, verify supporting documents and suggest any necessary adjustments.
-      `;
+      `);
     }
 
     // Info: (20260105 - Luphia) Commercial/Company Registration (Legacy/Other)
     if (tags.includes("commercial") || tags.includes("other")) {
-      return `
+      return withMemory(`
         You are an expert in Taiwan Company Application and Commercial Law.
         ${basePrompt}
         Task:
@@ -87,11 +113,11 @@ export class DirectChatSkill {
         2. Explain capital requirements and shareholding structures.
         3. Clarify rights and obligations under the Company Act.
         4. Outline the steps for business setup or modification.
-      `;
+      `);
     }
 
     // Info: (20260105 - Luphia) Default IFRS Accountant
-    return `
+    return withMemory(`
       You are an expert accountant specializing in IFRS (International Financial Reporting Standards).
       ${basePrompt}
       Task:
@@ -99,7 +125,7 @@ export class DirectChatSkill {
       2. Analyze the content based on IFRS standards.
       3. Suggest appropriate accounting entries (Debit/Credit).
       4. If user asks a generic question, answer it as an accountant.
-    `;
+    `);
   }
 
   async execute(
@@ -132,9 +158,17 @@ export class DirectChatSkill {
     chatService?: ChatService,
     // Info: (20260809 - Luphia) 成本上界由呼叫端自 DB 設定注入（FaithBillingSetting）
     maxOutputTokens?: number,
+    /**
+     * Info: (20260817 - Luphia) 任務短期記憶（第一輪 C-2）。
+     * 已由 `buildShortTermHistory` 截到上界，這裡直接注入即可——
+     * 呼叫端送進來的長度必須與預扣估算用的是同一份。
+     */
+    history: IFaithHistoryTurn[] = [],
+    // Info: (20260817 - Luphia) 長期記憶區塊（第一輪 C-1）
+    memory = "",
   ): Promise<{ text: string; usage: ILlmUsage }> {
     if (!chatService) throw new Error("ChatService required");
-    const prompt = this.getPrompt(message, tags);
+    const prompt = this.getPrompt(message, tags, history, memory);
     const images = file
       ? [{ data: file, mimeType: mimeType || "image/jpeg" }]
       : [];

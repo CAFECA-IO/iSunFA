@@ -41,6 +41,8 @@ import { esgVerify } from "@/i18n/locales/zh_tw/esg_verify";
 import { verify } from "@/i18n/locales/zh_tw/verify";
 import { esg } from "@/i18n/locales/zh_tw/esg";
 import { teamManagement } from "@/i18n/locales/zh_tw/team_management";
+import { invitePage } from "@/i18n/locales/zh_tw/invite_page";
+import { documentsMemory } from "@/i18n/locales/zh_tw/documents_memory";
 import { esgReport } from "@/i18n/locales/zh_tw/esg_report";
 import { reportView } from "@/i18n/locales/zh_tw/report_view";
 import { cashFlowStatementView } from "@/i18n/locales/zh_tw/cash_flow_statement_view";
@@ -69,8 +71,12 @@ import { solutions } from "@/i18n/locales/zh_tw/solutions";
 import { applicationManagement } from "@/i18n/locales/zh_tw/application_management";
 import { carbonChatbot } from "@/i18n/locales/zh_tw/carbon_chatbot";
 import { hrManagement } from "@/i18n/locales/zh_tw/hr_management";
+import { paymentSource } from "@/i18n/locales/zh_tw/payment_source";
+import { purchaseTarget } from "@/i18n/locales/zh_tw/purchase_target";
 
 export const zhTw = {
+  payment_source: paymentSource,
+  purchase_target: purchaseTarget,
   digital_product_passport: digitalProductPassport,
   logistics,
   dpp_urban_mining: dppUrbanMining,
@@ -116,6 +122,8 @@ export const zhTw = {
   verify,
   esg,
   team_management: teamManagement,
+  invite_page: invitePage,
+  documents_memory: documentsMemory,
   esg_report: esgReport,
   report_view: reportView,
   cash_flow_statement_view: cashFlowStatementView,

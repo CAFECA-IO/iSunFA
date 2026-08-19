@@ -9,7 +9,13 @@ import {
 } from "@/services/spend.service";
 import { DEFAULT_FAITH_BILLING } from "@/constants/llm";
 import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
+import { assertAccountBookMember } from "@/services/account_book_access.guard";
 import type { ChatService } from "@/services/chat.service";
+import {
+  isFaithMemoryEnabled,
+  loadFaithMemoryForPrompt,
+} from "@/services/faith_memory.service";
+import { extractAndRecordFaithMemory } from "@/services/faith_memory_extraction.service";
 
 jest.mock("@/repositories/faith_billing_setting.repo", () => ({
   faithBillingSettingRepo: { resolveSetting: jest.fn() },
@@ -19,11 +25,38 @@ jest.mock("@/services/spend.service", () => ({
   refundCredits: jest.fn(),
   settleSpend: jest.fn(),
 }));
+jest.mock("@/services/account_book_access.guard", () => ({
+  assertAccountBookMember: jest.fn(),
+  mapServiceError: jest.fn(() => ({
+    code: "NF000001",
+    message: "Account book not found",
+    status: 404,
+  })),
+}));
+
+/**
+ * Info: (20260817 - Luphia) 長期記憶（第一輪 C-1）：必須 mock。
+ *
+ * 不 mock 的話這支測試會真的去打 DB（方案 gate）與 LLM（萃取），
+ * 而兩者的失敗都被 try/catch 吃掉——於是測試「通過」的原因是每一次都失敗了。
+ * 這正是本 repo 先前踩過的「因錯誤的理由而綠」。
+ */
+jest.mock("@/services/faith_memory.service", () => ({
+  // Info: (20260818 - Luphia) 方案 gate 提前到預扣之前（第三輪 A-3），需一併 mock
+  isFaithMemoryEnabled: jest.fn(async () => false),
+  loadFaithMemoryForPrompt: jest.fn(async () => ({ text: "", totalChars: 0 })),
+}));
+jest.mock("@/services/faith_memory_extraction.service", () => ({
+  extractAndRecordFaithMemory: jest.fn(async () => []),
+}));
 
 /**
  * Info: (20260808 - Luphia) 費思計費編排單測（設計書 §5.3）。
  * 覆蓋：預扣金額與冪等鍵、成功結算（以 usageMetadata 為準）、
  * LLM 失敗全額退還。ChatService 以注入替身隔離，spend 管線以模組 mock 隔離。
+ *
+ * Info: (20260812 - Luphia) 新增覆蓋「扣費團隊由帳本推導」（設計書 §5.3「使用前提」）：
+ * 帳本驗權不通過即不得呼叫 LLM、不得扣點。
  */
 
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
@@ -45,7 +78,7 @@ function makeChatStub(totalTokens: number, shouldFail = false) {
 
 const BASE_PARAMS = {
   userId: "user-1",
-  teamId: "team-1",
+  accountBookId: "book-1",
   message: "x".repeat(1000),
   tags: [],
   clientMessageId: "msg-9",
@@ -55,6 +88,17 @@ const BASE_PARAMS = {
 describe("runFaithBilledChat", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Info: (20260818 - Luphia) 預設免費版：不注入記憶、不跑萃取，預扣不含萃取
+    asMock(isFaithMemoryEnabled).mockResolvedValue(false);
+    asMock(loadFaithMemoryForPrompt).mockResolvedValue({
+      text: "",
+      totalChars: 0,
+    });
+    asMock(extractAndRecordFaithMemory).mockResolvedValue([]);
+    asMock(assertAccountBookMember).mockResolvedValue({
+      id: "book-1",
+      teamId: "team-1",
+    });
     asMock(spendCredits).mockResolvedValue({
       source: "SUBSCRIPTION_QUOTA",
       amount: "6",
@@ -84,13 +128,219 @@ describe("runFaithBilledChat", () => {
     );
   });
 
+  /**
+   * Info: (20260817 - Luphia) 任務短期記憶（第一輪 C-2）。
+   *
+   * 條款 §3.7 與方案頁都寫著「所有方案皆具備任務短期記憶」，
+   * 而在此之前 `generateFaithResponse` 根本不收歷史參數，費思是 one-shot。
+   */
+  describe("short-term memory", () => {
+    const HISTORY = [
+      { role: "user" as const, content: "折舊怎麼算" },
+      { role: "model" as const, content: "直線法" },
+    ];
+
+    it("passes the conversation history to the model", async () => {
+      const chatStub = makeChatStub(3150);
+      await runFaithBilledChat({ ...BASE_PARAMS, history: HISTORY }, chatStub);
+
+      const args = asMock(chatStub.generateFaithResponse).mock.calls[0];
+      expect(args[5]).toEqual(HISTORY);
+    });
+
+    /**
+     * Info: (20260817 - Luphia) 注入的前文必須計入預扣：hold 一旦不是成本上界，
+     * settleSpend 的「只退不補」就會變成系統默默吸收差額。
+     */
+    it("charges for the injected history", async () => {
+      await runFaithBilledChat(
+        // Info: (20260817 - Luphia) 3,000 字元前文 ≈ 1,000 tokens ≈ 多 1 點
+        {
+          ...BASE_PARAMS,
+          history: [{ role: "user", content: "x".repeat(3000) }],
+        },
+        makeChatStub(3150),
+      );
+
+      expect(spendCredits).toHaveBeenCalledWith(
+        expect.objectContaining({ cost: BigInt(7) }),
+      );
+    });
+
+    /**
+     * Info: (20260817 - Luphia) 歷史是呼叫端自報的，因此上界由 server 決定：
+     * 送一份超長的歷史不該讓預扣跟著無限膨脹（也不該讓請求失敗）。
+     */
+    it("caps what an over-long history can cost", async () => {
+      await runFaithBilledChat(
+        {
+          ...BASE_PARAMS,
+          history: Array.from({ length: 50 }, () => ({
+            role: "user" as const,
+            content: "y".repeat(1000),
+          })),
+        },
+        makeChatStub(3150),
+      );
+
+      /**
+       * Info: (20260817 - Luphia) 50,000 字元的歷史若照單全收約 16,667 tokens，
+       * 預扣會膨脹到 22 點；截到上界 4,000 字元（1,334 tokens）後是 7 點。
+       */
+      expect(spendCredits).toHaveBeenCalledWith(
+        expect.objectContaining({ cost: BigInt(7) }),
+      );
+    });
+
+    it("still works with no history at all", async () => {
+      const chatStub = makeChatStub(3150);
+      await runFaithBilledChat(BASE_PARAMS, chatStub);
+
+      expect(asMock(chatStub.generateFaithResponse).mock.calls[0][5]).toEqual(
+        [],
+      );
+      expect(spendCredits).toHaveBeenCalledWith(
+        expect.objectContaining({ cost: BigInt(6) }),
+      );
+    });
+  });
+
+  /**
+   * Info: (20260817 - Luphia) 長期記憶（第一輪 C-1）的編排面。
+   * 記憶本身的規則（方案 gate、去重、淘汰）在 faith_long_term_memory.test.ts。
+   */
+  describe("long-term memory", () => {
+    // Info: (20260818 - Luphia) 長期記憶是付費方案專屬；gate 決定注入與萃取兩件事
+    beforeEach(() => {
+      asMock(isFaithMemoryEnabled).mockResolvedValue(true);
+    });
+
+    it("injects the memory block into the prompt", async () => {
+      asMock(loadFaithMemoryForPrompt).mockResolvedValue({
+        text: "Known preferences",
+        totalChars: 17,
+      });
+      const chatStub = makeChatStub(3150);
+
+      await runFaithBilledChat(BASE_PARAMS, chatStub);
+
+      expect(asMock(chatStub.generateFaithResponse).mock.calls[0][6]).toBe(
+        "Known preferences",
+      );
+    });
+
+    /**
+     * Info: (20260817 - Luphia) 注入的記憶必須計入預扣（規範 §5 明列的必改項）：
+     * 不計入的話 hold 不再是成本上界，settleSpend 的「只退不補」會變成系統吸收差額。
+     */
+    /**
+     * Info: (20260818 - Luphia) 預扣要涵蓋兩件事（第三輪 A-3）：注入的記憶，
+     * 以及**萃取那次呼叫**——萃取是第二次 LLM 呼叫，原本完全沒人付錢。
+     */
+    it("charges for the injected memory and for the extraction call", async () => {
+      asMock(loadFaithMemoryForPrompt).mockResolvedValue({
+        text: "m".repeat(3000),
+        totalChars: 3000,
+      });
+
+      await runFaithBilledChat(BASE_PARAMS, makeChatStub(3150));
+
+      /**
+       * Info: (20260818 - Luphia) 600 + 334（訊息）+ 1,000（記憶）= 1,934 輸入，
+       * 加 4,096 輸出；萃取再加 300 + 334 + 4,096 + 512 = 5,242。
+       * 合計 11,272 tokens → 12 點。
+       */
+      expect(spendCredits).toHaveBeenCalledWith(
+        expect.objectContaining({ cost: BigInt(12) }),
+      );
+    });
+
+    // Info: (20260818 - Luphia) 免費版不跑萃取，預扣不該含那一段
+    it("does not charge for extraction on the free plan", async () => {
+      asMock(isFaithMemoryEnabled).mockResolvedValue(false);
+
+      await runFaithBilledChat(BASE_PARAMS, makeChatStub(3150));
+
+      expect(spendCredits).toHaveBeenCalledWith(
+        expect.objectContaining({ cost: BigInt(6) }),
+      );
+      expect(extractAndRecordFaithMemory).not.toHaveBeenCalled();
+    });
+
+    // Info: (20260817 - Luphia) 萃取在回覆之後，且拿得到這一輪的問與答
+    it("extracts memory from the completed turn", async () => {
+      await runFaithBilledChat(BASE_PARAMS, makeChatStub(3150));
+
+      expect(extractAndRecordFaithMemory).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: "user-1",
+          teamId: "team-1",
+          userMessage: BASE_PARAMS.message,
+          assistantReply: "faith reply",
+        }),
+      );
+    });
+
+    /**
+     * Info: (20260817 - Luphia) LLM 失敗時已全額退款，不該再去萃取一個不存在的回覆。
+     */
+    it("does not extract when the model call failed", async () => {
+      await expect(
+        runFaithBilledChat(BASE_PARAMS, makeChatStub(0, true)),
+      ).rejects.toThrow();
+
+      expect(extractAndRecordFaithMemory).not.toHaveBeenCalled();
+    });
+  });
+
+  /**
+   * Info: (20260812 - Luphia) 扣費團隊來自帳本（設計書 §5.3「使用前提」），
+   * 不來自呼叫端參數——這是「計費主體不可由 client 自報」的實作面斷言。
+   */
+  it("bills the team that owns the account book", async () => {
+    await runFaithBilledChat(BASE_PARAMS, makeChatStub(3150));
+    expect(assertAccountBookMember).toHaveBeenCalledWith("book-1", "user-1");
+    expect(spendCredits).toHaveBeenCalledWith(
+      expect.objectContaining({ teamId: "team-1" }),
+    );
+  });
+
+  it("refuses to spend or call the LLM when the account book check fails", async () => {
+    asMock(assertAccountBookMember).mockRejectedValue(
+      new Error("NF_ACCOUNT_BOOK"),
+    );
+    const chatStub = makeChatStub(3150);
+
+    await expect(runFaithBilledChat(BASE_PARAMS, chatStub)).rejects.toThrow(
+      "Account book not found",
+    );
+    expect(spendCredits).not.toHaveBeenCalled();
+    expect(chatStub.generateFaithResponse).not.toHaveBeenCalled();
+  });
+
   it("settles by the SDK-reported total tokens and returns the billing detail", async () => {
     const result = await runFaithBilledChat(BASE_PARAMS, makeChatStub(3150));
     // Info: (20260808 - Luphia) 3150 tokens → 實耗 4 點（進位）
+    /**
+     * Info: (20260813 - Luphia) nowSec 與 context 為追補差額所需（設計書 §5.4）：
+     * 純錢包預扣沒有額度用量列可沿用視窗與 teamId，缺這兩者就記不了封頂造成的差額。
+     */
     expect(settleSpend).toHaveBeenCalledWith({
       idempotencyKey: "faith:user-1:msg-9",
       actualCost: BigInt(4),
       operatorUserId: "user-1",
+      nowSec: NOW_SEC,
+      /**
+       * Info: (20260815 - Luphia) 追補要記進結算當下的視窗（PR #6652 第二輪 C-7），
+       * 因此結算時間另外注入；長訊息跨過 5 小時邊界時，寫回請求開始的視窗
+       * 等於寫進一個已經過期的桶。
+       */
+      settledAtSec: expect.any(Number),
+      context: {
+        teamId: "team-1",
+        userId: "user-1",
+        featureCode: "FAITH_CHAT",
+      },
     });
     expect(result.reply).toBe("faith reply");
     expect(result.billing).toMatchObject({

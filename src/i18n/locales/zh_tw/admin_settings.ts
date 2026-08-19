@@ -13,6 +13,8 @@ export const adminSettings = {
     third_party_login: "第三方登入",
     ai: "AI 整合",
     payment: "金流閘道",
+    // Info: (20260815 - Luphia) email 邀請的寄信設定
+    mail: "寄信（Email 邀請）",
   },
   env_only_hint:
     "此項目目前僅存在於環境變數，尚未納入資料庫保管與簽章；儲存後才會受保護。",

@@ -6,7 +6,41 @@ export const teamManagement = {
   accept_via_fido2: "FIDO2を使って受け入れる",
   accepting: "処理中...",
   no_teams: "チームがありません。",
+  // Info: (20260818 - Luphia) 席数追加費用の事前開示（ユーザー報告 20260818）
+  // Info: (20260819 - Luphia) 招待送信のクールダウン（製品判断 20260819）
+  invite_cooldown: {
+    notice:
+      "招待を送信したばかりです。次の送信まで {{seconds}} 秒お待ちください。",
+    button: "{{seconds}} 秒お待ちください",
+  },
+  seat_charge: {
+    loading: "料金を計算しています…",
+    charge_title: "送信すると {{amount}} が即時請求されます",
+    charge_detail:
+      "{{seats}} 席を追加し、当期の残り {{days}} 日で日割り計算した金額を、チームのサブスクリプションの支払い方法に請求します。",
+    reuse: "今回は既に支払い済みの空き席を使用するため、追加請求はありません。",
+    period_end:
+      "当期は間もなく終了するため今回は請求されません。席数は即時反映されます。",
+    free_plan: "無料プランでは席数費用は発生しません。",
+    blocked_title: "現在メンバーを追加できません",
+    quote_failed:
+      "料金の計算に失敗しました。金額が分からないまま請求されるのを避けるため、再計算してください。",
+    retry: "再計算",
+    submit_with_amount: "確認して {{amount}} を支払う",
+  },
   invite_member: "メンバーを招待",
+  decline_invite: "辞退する",
+  declining: "処理中...",
+  revoke_invite: "取り消し",
+  revoke_invite_hint:
+    "未承諾の招待を取り消します。すでに請求された席の料金は返金されませんが、空いた席は他の方の招待に利用できます。",
+  // Info: (20260815 - Luphia) email 邀請（規範 §4 / P4）
+  invite_method: "招待方法",
+  invite_by_address: "ウォレットアドレス",
+  invite_by_email: "メール",
+  email_address: "メールアドレス",
+  invite_email_hint:
+    "参加用リンクを含む招待メールを送信します。リンクは一回限りで、7日間有効です。",
   you: "あなた",
   pending_invite: "保留中の招待",
   pending: "保留中",
@@ -23,6 +57,10 @@ export const teamManagement = {
     "このトランザクションをオンチェーンで署名するには、Passkeyでの認証が必要です。",
   signing: "署名中...",
   invite_via_fido2: "FIDO2を使って招待",
+  // Info: (20260818 - Luphia) 以「信箱不符」之邀請加入的成員標記（第三輪 C-2），僅管理職可見
+  email_mismatch: "メール不一致",
+  email_mismatch_hint:
+    "招待を承諾したアカウントの確認済みメールが、招待したメールと異なります。本人が別のメールでログインした可能性も、招待リンクが転送された可能性もあります。",
   roles: {
     OWNER: "オーナー",
     ADMIN: "管理者",
@@ -45,6 +83,21 @@ export const teamManagement = {
     error_remove: "メンバーの削除に失敗しました",
     invalid_address:
       "無効な Web3 アドレスです。0x で始まる 42 文字である必要があります。",
+    invalid_email: "メールアドレスの形式が正しくありません。",
+    invite_email_sent: "招待メールを送信しました！",
+    free_plan_limit_title: "無料版はオーナー 1 名のみご利用いただけます",
+    free_plan_limit_hint:
+      "メンバーを招待するにはチーム版または企業版へのアップグレードが必要です。料金は席数に応じて計算され、招待した各メンバーがそれぞれ利用枠を持ちます。",
+    free_plan_limit_cta: "プランを見る",
+    seat_charged:
+      "招待を送信し、チームの支払い方法に {{amount}} を請求しました。",
+    seat_reused:
+      "支払い済みの空き席を利用したため、今回は追加料金は発生しません。",
+    revoke_success:
+      "招待を取り消しました。この席は他の方の招待に利用できます。",
+    error_revoke: "招待の取り消しに失敗しました",
+    decline_success: "招待を辞退しました。",
+    error_decline: "招待の辞退に失敗しました",
   },
   scan_qr_code: "QRコードをスキャン",
   scanning: "スキャン中...",
@@ -53,15 +106,20 @@ export const teamManagement = {
   wallet: {
     title: "チームウォレットとサブスクリプション枠",
     quota_title: "サブスクリプション枠",
+    my_quota_title: "あなたの利用枠",
+    team_total_title: "チーム合計（{{count}} 名）",
     load_failed: "読み込めませんでした。しばらくしてからお試しください。",
     retry: "再試行",
     quota_5h: "5 時間ごとの枠",
     quota_week: "週間枠",
+    documents_memory_link: "ドキュメントと記憶",
     balance_title: "チームウォレット",
     pool_balance: "未割り当てポイント",
     frozen_warning:
       "チームウォレットは凍結中です（保存則監査の異常）。サポートにお問い合わせください。",
     buy_credits: "ポイントを購入",
+    manage_plan: "プランを管理",
+    manage_plan_hint: "枠が足りない場合はプランをアップグレードできます",
     buy_credits_hint:
       "購入したポイントはチームウォレットに入り、管理者が割り当てできます。",
     allocated_points: "割り当てポイント",
@@ -70,7 +128,14 @@ export const teamManagement = {
     amount_label: "ポイント数",
     amount_limit: "利用可能：{{max}} ポイント",
     allocate: "割り当て",
+    allocate_member: "配布先",
+    allocate_hint: "未配布のポイントをメンバーに配布します",
     revoke: "回収",
+    // Info: (20260814 - Luphia) 分配即鑄到成員的鏈上錢包（ADR 015 修訂）
+    allocate_onchain_note:
+      "配布したポイントはメンバー本人のウォレット（ブロックチェーンアドレス）に直接送られます。このチーム以外でも利用でき、配布後にチーム側から回収することはできません。",
+    revoke_onchain_note:
+      "取り消しはメンバーのウォレットからクレジットを焼却します。上限は当チームが割り当てた累計額で、すでに使用された分は取り戻せません。",
     allocation_success: "完了しました。",
     allocation_failed: "操作に失敗しました。残高を確認して再試行してください。",
     invalid_amount: "正の整数を入力してください。",

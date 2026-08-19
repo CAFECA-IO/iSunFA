@@ -22,8 +22,19 @@ import {
   buildSectionHeadingByTitle,
   stripLeadingSectionHeading,
 } from "@/constants/carbon_report_outline";
+import {
+  buildIdentityRows,
+  missingIdentityFields,
+  type ICarbonReportIdentity,
+} from "@/lib/utils/carbon_report_identity";
+import {
+  buildDefaultReportName,
+  resolveReportName,
+  stripLeadingDocumentTitle,
+} from "@/lib/utils/carbon_report_title";
 import { CarbonDataBadgeStateEnum } from "@/lib/carbon_report_table.builder";
 import { ReportToolbar } from "@/components/carbon_chatbot/report_toolbar";
+import { ReportIdentityFields } from "@/components/carbon_chatbot/report_identity_fields";
 import { OutlineRail } from "@/components/carbon_chatbot/outline_rail";
 import { OutlineDrawer } from "@/components/carbon_chatbot/outline_drawer";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -52,6 +63,11 @@ interface ICarbonReportPreviewProps {
   onImportReport?: (file: File) => void;
   // Info: (20260716 - Tzuhan) 報告檔名改名(透傳工具列)
   onRenameDocument?: (documentName: string) => void;
+  /**
+   * Info: (20260814 - Emily) 查證識別欄位逐格寫回（issue 24）。
+   * 省略即不顯示那塊面板 —— 唯讀或尚未支援的使用端不該看到一個填不了的表單。
+   */
+  onUpdateIdentity?: (patch: ICarbonReportIdentity) => void;
   // Info: (20260720 - Tzuhan) #23 數據段落勾稽三態(透傳 OutlineDrawer → OutlineTree)
   dataBadgeState?: CarbonDataBadgeStateEnum;
 }
@@ -79,7 +95,19 @@ const generateMarkdownFromParagraphs = (
 
   // Info: (20260713 - Tzuhan) MarkdownContent 未啟用 rehype-raw,嚴禁在內容層塞原生 HTML;
   // Info: (20260713 - Tzuhan) 狀態徽章由 ReportToolbar 呈現,文件內僅保留 Markdown 原生語法的草稿聲明(匯出 PDF 亦可見)
-  let md = `# ${session.title}\n\n> _${draftStatusLine}_\n\n---\n\n`;
+  /**
+   * Info: (20260812 - Emily) 不再輸出文件級 H1
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * 原本是 `# ${session.title}` —— 而 `session.title` 是**使用者第一則訊息截斷 24 字**
+   * (`use_carbon_chat.ts` 的 `session.title = firstUserMessage.text.trim().slice(0, 24)`)。
+   * 於是那份要送第三方查證的 53 頁報告，第一頁印的是 `8/12.test1`。
+   *
+   * 報告名稱改走文件外殼 `ICarbonReportShell.title`:它是文件的中繼資料而不是內容，
+   * 而 ADR 014 要求 `content` 逐字照抄原文。留在內容裡還有一個實際後果 ——
+   * 使用者可以在編輯器裡把它刪掉，然後那份文件就沒有名稱了，而沒有人會發現。
+   */
+  let md = `> _${draftStatusLine}_\n\n---\n\n`;
 
   // Info: (20260714 - Tzuhan) 標頭一律由 p.title 組出;content 只存內文(stripLeadingSectionHeading 相容舊格式殘留標頭)
   // Info: (20260730 - Tzuhan) 版面收斂:原本每個空段落都輸出一整句「本段尚未生成…」,
@@ -123,11 +151,19 @@ export default function CarbonReportPreview({
   readOnly = false,
   onImportReport = undefined,
   onRenameDocument = undefined,
+  onUpdateIdentity = undefined,
   dataBadgeState = undefined,
 }: ICarbonReportPreviewProps) {
   const { t } = useTranslation();
   const [, setErrorModal] = useState({ isOpen: false, message: "" });
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+  /**
+   * Info: (20260814 - Emily) 查證識別欄位面板（issue 24）。
+   *
+   * 預設收合:那四格填一次就不再動,常駐展開會永久吃掉報告的高度。
+   * 但工具列的觸發鈕會顯示「還缺幾項」,所以沒填也不會被忘記。
+   */
+  const [isIdentityOpen, setIsIdentityOpen] = useState<boolean>(false);
   const previewContainerRef = useRef<HTMLDivElement>(null);
 
   const reportData = session?.reportData;
@@ -252,13 +288,79 @@ export default function CarbonReportPreview({
   };
 
   // Info: (20260716 - Tzuhan) 報告保真:rawMarkdown(使用者所見即所存)優先;無則以大綱組稿骨架起始
-  const markdownContent =
+  const storedMarkdown =
     reportData?.rawMarkdown ??
     generateMarkdownFromParagraphs(
       session,
       (count) => t("carbon_chatbot.sections_pending_summary", { count }),
       t("carbon_chatbot.report_status_draft"),
     );
+
+  /**
+   * Info: (20260812 - Emily) 既有草稿的讀取端補救
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * `rawMarkdown` 是權威來源而且是**逐段 patch** 的 —— 已經存過的草稿，
+   * 第一行早就烤進了 `# <會話名>`，不會因為產生端改了就變。
+   * 這與 timeline、私有區符號、表頭補欄是同一個形狀（修正端 ≠ 生效端），
+   * 那三次都因此被回報「沒修好」。
+   *
+   * ## 這裡只**讀**標題，不改傳下去的內容
+   *
+   * 剝除發生在兩個**渲染端**（`MarkdownContent` 的 `stripDocumentTitle`
+   * 與 `buildCarbonReportHtml`），與 timeline／私有區符號的補救放在同一層。
+   *
+   * 不能在這裡剝：`PdfEditor` 的 `value` 同時餵編輯器與預覽，而 `onChange`
+   * 會把內容存回 `rawMarkdown` —— 傳一份剝過的進去，使用者**編輯一次**
+   * 那行標題就從儲存裡消失了，而它是目前唯一的名稱來源。
+   * 一次編輯換來一份無名的查證文件，而且沒有人會發現。
+   */
+  const { title: legacyHeading } = stripLeadingDocumentTitle(storedMarkdown);
+  const markdownContent = storedMarkdown;
+
+  /**
+   * Info: (20260812 - Emily) 沒有名稱時**留空，不猜**。
+   *
+   * 與目錄頁碼「找不到就留白」同一個判準:第一頁沒有標題是一眼看得出來的缺漏，
+   * 而一個猜出來的名稱印在查證文件的封面上會被當成事實。
+   *
+   * Info: (20260814 - Emily) 退路改為「盤查年度 + 報告書」（issue 24）。
+   *
+   * 仍然**不猜公司名**：報告 1.1 節雖然寫著公司名稱，但抽錯的代價是封面印成
+   * 另一家公司。盤查年度不一樣 —— 它是**使用者自己填的**識別欄位而不是抽出來的，
+   * 拿它組名稱不算猜。年度也沒填時 `buildDefaultReportName` 回空字串，
+   * 第一頁就沒有標題，維持「留空不猜」。
+   */
+  const identity = reportData?.identity;
+  const reportTitle = resolveReportName({
+    explicitName: reportData?.reportName,
+    legacyHeading,
+    fallback: buildDefaultReportName({
+      inventoryYear: identity?.inventoryYear,
+      suffix: t("admin_mission_board.pdf_editor.report_identity.name_suffix")!,
+    }),
+  });
+
+  /**
+   * Info: (20260814 - Emily) 四列一律都給，沒填的填「未填寫」（見 buildIdentityRows）。
+   * 文案在這裡取而不是在渲染端寫死:純函式與伺服端都不知道使用者的語言。
+   */
+  const identityRows = buildIdentityRows({
+    identity,
+    labels: {
+      inventoryYear: t(
+        "admin_mission_board.pdf_editor.report_identity.inventory_year",
+      )!,
+      preparedBy: t(
+        "admin_mission_board.pdf_editor.report_identity.prepared_by",
+      )!,
+      verifiedBy: t(
+        "admin_mission_board.pdf_editor.report_identity.verified_by",
+      )!,
+      issuedOn: t("admin_mission_board.pdf_editor.report_identity.issued_on")!,
+    },
+    placeholder: t("admin_mission_board.pdf_editor.report_identity.unfilled")!,
+  });
 
   return (
     <div className="relative flex h-full w-full flex-1 flex-col border-l border-gray-200 bg-white">
@@ -275,6 +377,23 @@ export default function CarbonReportPreview({
           isDrawerOpen={isDrawerOpen}
           onToggleDrawer={() => setIsDrawerOpen((prev) => !prev)}
           saveStatus={saveStatus}
+          onToggleIdentity={
+            onUpdateIdentity && !readOnly
+              ? () => setIsIdentityOpen((prev) => !prev)
+              : undefined
+          }
+          identityMissing={missingIdentityFields(identity).length}
+          isIdentityOpen={isIdentityOpen}
+        />
+      )}
+      {/* Info: (20260814 - Emily) 面板貼在工具列下方而不是做成 modal:
+          這四項要邊看報告邊填（年度對照 2.1 節、製作單位對照 1.4 節），
+          modal 會把要對照的東西蓋掉。 */}
+      {isIdentityOpen && onUpdateIdentity && (
+        <ReportIdentityFields
+          identity={identity}
+          onChange={onUpdateIdentity}
+          readOnly={readOnly}
         />
       )}
 
@@ -321,6 +440,18 @@ export default function CarbonReportPreview({
             defaultViewMode={PdfToolViewMode.PREVIEW}
             contentVariant="compact"
             value={markdownContent}
+            /*
+             * Info: (20260812 - Emily) 報告名稱走文件外殼，不走內容
+             * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+             * 空字串代表還沒命名 —— 外殼那端不印，而不是印一個猜出來的名稱。
+             */
+            reportTitle={reportTitle}
+            identityRows={identityRows}
+            /*
+             * Info: (20260812 - Emily) 既有草稿內容裡那行 `# <會話名>` 在**渲染時**剝掉。
+             * 儲存的內容不動 —— 見上方 legacyHeading 那段。
+             */
+            stripDocumentTitle
             onChange={onMarkdownChange}
             setErrorModal={setErrorModal}
             storageKey={`chatbot_draft_${session.id}`}

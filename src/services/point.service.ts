@@ -48,6 +48,24 @@ export class PointService {
           status: order.status,
           createdAt: order.createdAt,
         });
+      } else if (order.type === ORDER_TYPE.ADMIN_ISSUED) {
+        /**
+         * Info: (20260813 - Luphia) 後台發放給**團隊**的訂單掛在操作管理員名下
+         * （data.teamId 標記），它是團隊入帳、不是管理員個人收到點數；
+         * 不排除的話管理員的點數歷程會憑空多出一筆他從未持有的點數。
+         */
+        const data = order.data as { teamId?: string } | null;
+        if (!data?.teamId) {
+          history.push({
+            id: `admin-${order.id}`,
+            type: "REWARD",
+            sourceKey: "billing.point_history.source_admin_issued",
+            fallbackSource: "Admin Issued",
+            amount: order.amount,
+            status: order.status,
+            createdAt: order.createdAt,
+          });
+        }
       } else if (order.type !== "OEN_BINDING") {
         // Info: (20260409 - Luphia) ANALYSIS, CHAT etc (consumed points)
         if (order.amount !== 0n) {

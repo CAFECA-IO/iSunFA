@@ -5,16 +5,20 @@ import { jsonOk, jsonFail, jsonFailWithPayload } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { ORDER_TYPE } from "@/constants/status";
 import { BILLABLE_FEATURE_CODE } from "@/constants/subscription_quota";
+import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import { teamQuotaPaymentSchema } from "@/validators";
 import {
+  failOrder,
   getPendingOrder,
   markOrderCompleted,
   markOrderPaying,
 } from "@/services/order.service";
+import { resolveOrderSpendCost } from "@/lib/order/order_cost";
 import { fulfillPaidAnalysisOrder } from "@/services/analysis_fulfillment.service";
 import {
   QuotaExceededError,
   refundCredits,
+  resolvePayingTeamId,
   spendCredits,
 } from "@/services/spend.service";
 
@@ -36,26 +40,60 @@ export async function POST(
     const { order_id: orderId } = await params;
     const parsed = teamQuotaPaymentSchema.safeParse(await request.json());
     if (!parsed.success) return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
-    const { teamId } = parsed.data;
+    /**
+     * Info: (20260813 - Luphia) 付款團隊（設計書 §5.6）：只屬一個團隊時 server 自動解析，
+     * 屬多個團隊而未指定則回 TW_TEAM_AMBIGUOUS，由前端出選單。
+     */
+    const teamId = await resolvePayingTeamId(user.id, parsed.data.teamId);
 
     const order = await getPendingOrder(orderId, user.id);
     if (order.type !== ORDER_TYPE.ANALYSIS) {
       return jsonFail(API_ERRORS.VA_INVALID_ORDER_TYPE);
     }
 
-    // Info: (20260807 - Luphia) 1. 扣抵（訂閱額度 → 分配點數）；金額 = 訂單點數成本
+    /**
+     * Info: (20260813 - Luphia) 物流碳足跡以專屬 featureCode 記帳（設計書 §5.4）：
+     * 它的扣款順序與其他功能相反（優先扣分配點數），而順序是由 featureCode 決定的，
+     * 全部記成 AI_ANALYSIS 就分不出來、也對不了帳。category 可能巢狀於 data.data。
+     */
+    const orderData = order.data as {
+      category?: string;
+      data?: { category?: string };
+    } | null;
+    const category = orderData?.category ?? orderData?.data?.category;
+    const featureCode =
+      category === ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT
+        ? BILLABLE_FEATURE_CODE.LOGISTICS_CARBON
+        : BILLABLE_FEATURE_CODE.AI_ANALYSIS;
+
+    // Info: (20260807 - Luphia) 1. 扣抵（訂閱額度 / 分配點數，順序依 featureCode）；金額 = 訂單點數成本
     const idempotencyKey = `analysis:${orderId}`;
     let spend;
     try {
       spend = await spendCredits({
         teamId,
         userId: user.id,
-        featureCode: BILLABLE_FEATURE_CODE.AI_ANALYSIS,
-        cost: BigInt(order.amount),
+        featureCode,
+        cost: resolveOrderSpendCost(BigInt(order.amount)),
         idempotencyKey,
         nowSec: Math.floor(Date.now() / 1000),
+        /**
+         * Info: (20260813 - Luphia) 訂單是固定價格、沒有結算步驟（設計書 §5.4）：
+         * 不接受封頂扣款，否則一張 10 點的訂單會以剩餘的 3 點成交而無人補收。
+         */
+        allowPartial: false,
       });
     } catch (error) {
+      /**
+       * Info: (20260813 - Luphia) 扣抵失敗即把訂單標記失敗，不讓它停在 PENDING。
+       * 前端每次重試都會建一張新訂單，殘留的待付訂單會越積越多
+       * （實測一次失敗的操作留下 4 張）；付不成的單就該收掉。
+       */
+      await failOrder(orderId, "team_quota_payment_failed").catch(
+        (failError: unknown) => {
+          console.error("[API] failed to close unpaid order", failError);
+        },
+      );
       if (error instanceof QuotaExceededError) {
         return jsonFailWithPayload(API_ERRORS.TW_QUOTA_EXCEEDED, error.data);
       }

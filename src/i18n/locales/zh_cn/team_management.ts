@@ -6,7 +6,39 @@ export const teamManagement = {
   accept_via_fido2: "使用 FIDO2 接受邀请",
   accepting: "处理中...",
   no_teams: "目前没有任何团队。",
+  // Info: (20260818 - Luphia) 加席费用的事前披露（产品反馈 20260818）
+  // Info: (20260819 - Luphia) 邀请发送的冷却倒计时（产品决定 20260819）
+  invite_cooldown: {
+    notice: "刚刚发送了一封邀请，请等待 {{seconds}} 秒后再发送下一封。",
+    button: "请等待 {{seconds}} 秒",
+  },
+  seat_charge: {
+    loading: "正在试算费用…",
+    charge_title: "提交后将立即收取 {{amount}}",
+    charge_detail:
+      "新增 {{seats}} 个席位，按本期剩余 {{days}} 天比例计算，向团队订阅的付款方式收取。",
+    reuse: "本次使用已付费但空出的席位，不会再次收费。",
+    period_end: "本期即将结束，本次不收费，席位仍会立即生效。",
+    free_plan: "免费方案不收席位费用。",
+    blocked_title: "当前无法新增成员",
+    quote_failed:
+      "费用试算失败。为避免在不知道金额的情况下扣款，请先重新试算。",
+    retry: "重新试算",
+    submit_with_amount: "确认并支付 {{amount}}",
+  },
   invite_member: "邀请成员",
+  decline_invite: "拒绝邀请",
+  declining: "处理中...",
+  revoke_invite: "撤回",
+  revoke_invite_hint:
+    "撤回这封尚未接受的邀请。已收取的席位费用不退还，但释出的席位可用于邀请其他人员。",
+  // Info: (20260815 - Luphia) email 邀請（規範 §4 / P4）
+  invite_method: "邀请方式",
+  invite_by_address: "钱包地址",
+  invite_by_email: "电子邮件",
+  email_address: "电子邮件",
+  invite_email_hint:
+    "系统会寄出一封含加入链接的邀请信，链接为一次性且 7 天内有效。",
   you: "您",
   pending_invite: "待接受的邀请",
   pending: "等待中",
@@ -23,6 +55,10 @@ export const teamManagement = {
     "您需要通过通行密钥 (Passkey) 进行验证并在链上签署此交易。",
   signing: "签署中...",
   invite_via_fido2: "使用 FIDO2 发送邀请",
+  // Info: (20260818 - Luphia) 以「信箱不符」之邀請加入的成員標記（第三輪 C-2），僅管理職可見
+  email_mismatch: "邮箱不符",
+  email_mismatch_hint:
+    "接受邀请的账号，其已验证邮箱与受邀邮箱不同。可能是本人改用其他邮箱登录，也可能是邀请链接被转发出去。",
   roles: {
     OWNER: "拥有者",
     ADMIN: "管理员",
@@ -44,6 +80,18 @@ export const teamManagement = {
     error_role: "更改角色失败",
     error_remove: "移除成员失败",
     invalid_address: "无效的 Web3 钱包地址，格式应为 0x 开头的 42 位字符。",
+    invalid_email: "电子邮件格式不正确。",
+    invite_email_sent: "邀请信已寄出！",
+    free_plan_limit_title: "免费版仅供拥有者一人使用",
+    free_plan_limit_hint:
+      "要邀请成员请升级为团队版或企业版；订阅后依实际人数计费，邀请的成员各自享有完整额度。",
+    free_plan_limit_cta: "查看方案",
+    seat_charged: "邀请已发送，并已向团队的付款方式收取 {{amount}}。",
+    seat_reused: "已使用既有的付费席位，本次未再收费。",
+    revoke_success: "已撤回邀请，该席位可用于邀请其他人员。",
+    error_revoke: "撤回邀请失败",
+    decline_success: "已拒绝邀请。",
+    error_decline: "拒绝邀请失败",
   },
   scan_qr_code: "扫描 QR Code",
   scanning: "正在扫描...",
@@ -52,14 +100,19 @@ export const teamManagement = {
   wallet: {
     title: "团队钱包与订阅额度",
     quota_title: "订阅额度",
+    my_quota_title: "您的额度",
+    team_total_title: "全队合计（{{count}} 位成员）",
     load_failed: "无法载入，请稍后再试。",
     retry: "重试",
     quota_5h: "每 5 小时额度",
     quota_week: "每周额度",
+    documents_memory_link: "文件与记忆",
     balance_title: "团队钱包",
     pool_balance: "未分配点数",
     frozen_warning: "团队钱包已冻结（守恒核对异常），请联系客服处理。",
     buy_credits: "前往购买点数",
+    manage_plan: "管理方案",
+    manage_plan_hint: "额度不足时可升级方案",
     buy_credits_hint: "购买的点数将存入团队钱包，供管理者分配。",
     allocated_points: "分配点数",
     allocate_to: "分配点数给 {{name}}",
@@ -67,7 +120,14 @@ export const teamManagement = {
     amount_label: "点数",
     amount_limit: "可用上限 {{max}} 点",
     allocate: "分配",
+    allocate_member: "分配对象",
+    allocate_hint: "把未分配的点数分给团队成员",
     revoke: "收回",
+    // Info: (20260814 - Luphia) 分配即鑄到成員的鏈上錢包（ADR 015 修訂）
+    allocate_onchain_note:
+      "分配的点数会直接进入该成员的个人钱包（区块链地址），成员在任何情境都能使用，不限于本团队，且分配后团队无法收回。",
+    revoke_onchain_note:
+      "收回会销毁该成员钱包中的点数，上限为本团队累计分配给他的数量；他已经使用掉的部分无法收回。",
     allocation_success: "操作成功。",
     allocation_failed: "操作失败，请确认余额后再试。",
     invalid_amount: "请输入正整数点数。",

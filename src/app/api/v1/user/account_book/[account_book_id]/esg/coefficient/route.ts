@@ -1,4 +1,5 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { parseOptionalPositiveInt } from "@/lib/utils/pagination";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -107,12 +108,8 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const tabParam = searchParams.get("tab");
     const searchParam = searchParams.get("search");
-    const page = searchParams.get("page")
-      ? parseInt(searchParams.get("page")!)
-      : undefined;
-    const pageSize = searchParams.get("pageSize")
-      ? parseInt(searchParams.get("pageSize")!)
-      : undefined;
+    const page = parseOptionalPositiveInt(searchParams.get("page"));
+    const pageSize = parseOptionalPositiveInt(searchParams.get("pageSize"));
     // Info: (20260416 - Julian) 單位參數，用於 Esg Detail Modal 篩選
     const unitParam = searchParams.get("unit");
 

@@ -324,3 +324,32 @@ export const patchMarkdownSection = (
     .join("\n")
     .replace(/\n{3,}/g, "\n\n");
 };
+
+/**
+ * Info: (20260813 - Luphia) 無帳本會話的待付款 402（設計書 §5.5）。
+ *
+ * 個人點數在鏈上、扣款需簽章，因此後端先建單並以此錯誤回傳 orderId；
+ * 呼叫端付款後以**相同的 clientMessageId** 重送，冪等鍵不變才會找回那張已付訂單。
+ * payload 形狀不符即回 null——沒有 orderId 就無從付款，退回一般錯誤處理。
+ */
+export const parsePersonalPaymentRequired = (
+  error: unknown,
+): { orderId: string; cost: number } | null => {
+  if (!(error instanceof RequestApiError)) return null;
+  const body = error.data as
+    | { errorCode?: string; payload?: unknown }
+    | undefined;
+  if (body?.errorCode !== API_ERRORS.TW_PERSONAL_PAYMENT_REQUIRED.code) {
+    return null;
+  }
+  const payload = body.payload as
+    | { orderId?: unknown; cost?: unknown }
+    | undefined;
+  if (
+    typeof payload?.orderId !== "string" ||
+    typeof payload.cost !== "number"
+  ) {
+    return null;
+  }
+  return { orderId: payload.orderId, cost: payload.cost };
+};

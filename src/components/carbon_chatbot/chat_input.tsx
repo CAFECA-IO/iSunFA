@@ -151,8 +151,27 @@ export function ChatInput({
     if (onAddFiles) setIsDragOver(true);
   };
 
+  /**
+   * Info: (20260814 - Emily) 輸入區改為排在文檔流裡，不再絕對定位浮在對話上。
+   *
+   * 原本是 `absolute right-6 bottom-6 left-6`，而 `ChatArea` 用寫死的 `pb-32`
+   * 留位置。那個數字只夠一列輸入框，可是這個容器**往上長**：待送附件、附件錯誤、
+   * 匯入導流卡、待匯入提示、後續建議、斷線提示、草稿提示，全部疊在輸入列上面。
+   *
+   * 疊到超過 8rem 就開始蓋住最後幾則訊息，而且蓋得很難看 ——
+   * 這個容器自己沒有背景，卡片之間的縫隙會透出底下的對話文字。
+   * 實測三個後續建議（每一句都長到各佔一行）就足以蓋掉一整則 AI 回覆。
+   *
+   * 用寫死的 padding 追一個會變的高度是追不完的：每加一種提示卡就要重算一次，
+   * 而算錯的表現是「訊息被蓋住」——沒有錯誤、只是看不到。
+   * 排進文檔流之後，重疊在結構上就不可能發生：輸入區要多高就拿多高，
+   * 對話區自己讓位。堆得太高的代價變成「對話區變短」，那是看得見的。
+   *
+   * `bg-white` 是必要的：在流裡它會遮住捲到底下的訊息，
+   * 沒有背景的話卡片縫隙仍然會透出文字。
+   */
   return (
-    <div className="absolute right-6 bottom-6 left-6 z-10">
+    <div className="relative z-10 shrink-0 bg-white px-6 pt-2 pb-6">
       {/* Info: (20260714 - Tzuhan) 待送附件 chips:可移除;讀取中顯示 spinner */}
       {pendingAttachments.length > 0 && (
         <div className="mx-auto mb-2 flex flex-wrap gap-2">

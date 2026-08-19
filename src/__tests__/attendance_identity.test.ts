@@ -94,6 +94,12 @@ const buildService = (stubs: IStubs): AttendanceIdentityService => {
   const identities: IUserIdentityRepository = {
     findByUserId: async () => stubs.identities ?? [makeIdentity()],
     findByProviderUserId: async () => null,
+    /**
+     * Info: (20260818 - Luphia) 合併 PR #6652 時補的樁：那條分支為「邀請前先確認
+     * 對方是否已是成員」在介面上加了 `findByEmail`（第三輪 C-4）。
+     * 身分橋接用不到它，補一個空回傳讓介面完整即可。
+     */
+    findByEmail: async () => [],
     create: async () => makeIdentity(),
     touchLogin: async () => makeIdentity(),
     deleteByUserAndProvider: async () => 0,

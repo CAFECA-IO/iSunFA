@@ -18,8 +18,104 @@ import {
   WALLET_OP_OUTCOME,
 } from "@/constants/subscription_quota";
 
+/**
+ * Info: (20260814 - Luphia) 收據品項描述。
+ *
+ * 原本一律寫 `iSunFA Credits - {credits}`，於是訂閱的收據會寫「Credits - 1500」——
+ * 而訂閱一點錢包點數都沒有發（履行只寫 TeamSubscription）。收據是對外憑證，
+ * 描述必須與實際交付的東西一致：訂閱交付的是方案與席次，不是點數。
+ */
+function buildReceiptItemDescription(
+  orderType: string | null,
+  credits: number,
+  data: {
+    planId?: string;
+    seats?: number;
+    billingInterval?: string;
+    seatAddition?: boolean;
+  } | null,
+): string {
+  /**
+   * Info: (20260814 - Luphia) 綁卡直扣路徑只拿得到 orderData（沒有 order.type），
+   * 以資料形狀回推：訂閱一定同時帶 planId 與 billingInterval，席次補收帶 seatAddition。
+   */
+  const kind =
+    orderType ??
+    (data?.seatAddition
+      ? ORDER_TYPE.BILLING_SEAT_ADDITION
+      : data?.planId && data?.billingInterval
+        ? ORDER_TYPE.BILLING_SUBSCRIBE
+        : ORDER_TYPE.OEN_PAYMENT);
+  if (kind === ORDER_TYPE.BILLING_SUBSCRIBE) {
+    const plan = data?.planId ?? "team";
+    const seats = data?.seats ?? 1;
+    const interval = data?.billingInterval ?? BILLING_INTERVAL.MONTH;
+    return `iSunFA Team Subscription - ${plan} (${interval}) x${seats} seat(s)`;
+  }
+  if (kind === ORDER_TYPE.BILLING_SEAT_ADDITION) {
+    return `iSunFA Team Seat Addition - ${data?.seats ?? 1} seat(s)`;
+  }
+  return `iSunFA Credits - ${credits}`;
+}
+
 export interface IOrderWithUser extends Order {
   user: User | null;
+}
+
+/**
+ * Info: (20260814 - Luphia) 已扣款但無法履行時，把訂單標記為 MINT_FAILED 並寫入原因。
+ *
+ * 這裡刻意**不 throw**：webhook 的交易一旦回滾，收款紀錄（receipt、paymentTransaction）
+ * 會一起消失，金流商還會不斷重送——錢收了卻查無此事，比履行失敗本身更難處理。
+ * 因此收款照記，改把訂單推進到「已扣款、未履行」這個既有狀態：前端的訂單查詢會帶出
+ * data.error，後台訂單管理也篩得到，人工介入有依據。
+ *
+ * MINT_FAILED 的字面是鏈上鑄造失敗，這裡借用於離鏈履行（入池、套用方案）：
+ * 語意同為「款已收、貨未到」，且前端與後台都已認得這個狀態，另立新狀態的代價更大。
+ */
+async function markFulfillmentFailedInTx(
+  tx: Prisma.TransactionClient,
+  order: IOrderWithUser,
+  reason: string,
+): Promise<void> {
+  // Info: (20260814 - Luphia) 靜默是這裡最大的風險，log 與 DB 兩邊都要留痕
+  console.error(
+    `[payment] order ${order.id} (${order.type}) paid but not fulfilled: ${reason}`,
+  );
+  await tx.order.update({
+    where: { id: order.id },
+    data: {
+      status: ORDER_STATUS.MINT_FAILED,
+      data: {
+        ...((order.data as Prisma.InputJsonObject) ?? {}),
+        error: reason,
+      } as Prisma.InputJsonObject,
+    },
+  });
+}
+
+/**
+ * Info: (20260818 - Luphia) 哪些訂單狀態算「已經扣過款」（第三輪 A-2）。
+ *
+ * 判準是「這筆錢是否可能已經或即將離開用戶的帳戶」：
+ * - `PENDING` / `PAYING`：扣款在路上，重複建單會變成扣兩次
+ * - `PAID` / `EXECUTING` / `COMPLETED`：錢收到了
+ * - `MINT_FAILED`：**錢收到了**，只是後續履行失敗——那要走補償，不是重收一次
+ *
+ * 不在此列的 `PAYMENT_FAILED` / `FAILED` / `CANCEL` 一律視為沒扣過，
+ * 重試會真的再扣一次款。
+ */
+const REPLAYABLE_ORDER_STATUSES = [
+  ORDER_STATUS.PENDING,
+  ORDER_STATUS.PAYING,
+  ORDER_STATUS.PAID,
+  ORDER_STATUS.EXECUTING,
+  ORDER_STATUS.COMPLETED,
+  ORDER_STATUS.MINT_FAILED,
+] as const;
+
+function isChargeableOrderStatus(status: string): boolean {
+  return (REPLAYABLE_ORDER_STATUSES as readonly string[]).includes(status);
 }
 
 export class PaymentRepository {
@@ -84,12 +180,14 @@ export class PaymentRepository {
         } else if (
           order.type === ORDER_TYPE.OEN_PAYMENT ||
           order.type === ORDER_TYPE.BILLING_TEAM_POINT ||
+          order.type === ORDER_TYPE.BILLING_SEAT_ADDITION ||
           /**
-           * Info: (20260807 - Luphia) 團隊訂閱（data 帶 teamId）才進本分支；
-           * 個人 BILLING_SUBSCRIBE 維持原行為（webhook 不處理），避免改變既有語意
+           * Info: (20260814 - Luphia) 訂閱訂單一律進本分支，不再以 data.teamId 當門檻。
+           * 原本缺 teamId 的訂閱訂單連這個分支都進不來：不開收據、不改狀態、不報錯，
+           * 訂單就停在 PENDING——錢收了，而系統對此一無所知。
+           * 缺件改由下方履行段落標記為「已扣款未履行」，讓它浮上來。
            */
-          (order.type === ORDER_TYPE.BILLING_SUBSCRIBE &&
-            Boolean((order.data as { teamId?: string })?.teamId))
+          order.type === ORDER_TYPE.BILLING_SUBSCRIBE
         ) {
           const _creditsToMint = (order.data as IOenOrderData)?.credits || 0;
           const standardizedData = buildReceiptDataToSave(
@@ -114,7 +212,15 @@ export class PaymentRepository {
                   transactionTime: new Date().toISOString(),
                   buyerId: order.userId,
                   buyerName: order.user?.name || "Unknown",
-                  itemDescription: `iSunFA Credits - ${_creditsToMint}`,
+                  itemDescription: buildReceiptItemDescription(
+                    order.type,
+                    _creditsToMint,
+                    order.data as {
+                      planId?: string;
+                      seats?: number;
+                      billingInterval?: string;
+                    } | null,
+                  ),
                   gatewayTxId: body.data?.id,
                 },
               } as Prisma.InputJsonObject,
@@ -149,7 +255,13 @@ export class PaymentRepository {
              */
             const teamId = (order.data as IOenOrderData & { teamId?: string })
               ?.teamId;
-            if (teamId && _creditsToMint > 0) {
+            if (!teamId || _creditsToMint <= 0) {
+              await markFulfillmentFailedInTx(
+                tx,
+                order,
+                `team point order missing ${!teamId ? "teamId" : "credits"}`,
+              );
+            } else {
               const credited = await creditPoolInTx(tx, {
                 teamId,
                 credits: BigInt(_creditsToMint),
@@ -165,8 +277,23 @@ export class PaymentRepository {
                   where: { id: order.id },
                   data: { status: ORDER_STATUS.COMPLETED },
                 });
+              } else {
+                // Info: (20260814 - Luphia) 錢包凍結等入池失敗：留痕供人工介入，不吞掉
+                await markFulfillmentFailedInTx(
+                  tx,
+                  order,
+                  `credit pool rejected: ${credited.outcome}`,
+                );
               }
             }
+            amountPaid = order.amount;
+          } else if (order.type === ORDER_TYPE.BILLING_SEAT_ADDITION) {
+            /**
+             * Info: (20260814 - Luphia) 席次補收由發起端（邀請 / 加成員）同步履行：
+             * 它拿得到 OEN 的即時回應，扣款成功當下就加席並標記 COMPLETED。
+             * 這裡只記收款、不重複加席——webhook 若在同步流程完成前先到，
+             * 兩邊都加一次就會讓團隊平白多出一個席次的帳。
+             */
             amountPaid = order.amount;
           } else if (order.type === ORDER_TYPE.BILLING_SUBSCRIBE) {
             /**
@@ -177,8 +304,21 @@ export class PaymentRepository {
               teamId?: string;
               planId?: string;
               billingInterval?: BillingInterval;
+              seats?: number;
+              unitPrice?: number;
             };
-            if (subData.teamId && subData.planId) {
+            if (!subData.teamId || !subData.planId) {
+              /**
+               * Info: (20260814 - Luphia) 訂閱訂單不知道要套用到哪個團隊 / 哪個方案，
+               * 就是履行失敗。這種訂單不該存在（建單端一律帶齊），但真的出現時
+               * 必須看得見——靜靜停在 PAID 等於沒有人會發現用戶付了錢沒拿到方案。
+               */
+              await markFulfillmentFailedInTx(
+                tx,
+                order,
+                `subscription order missing ${!subData.teamId ? "teamId" : "planId"}`,
+              );
+            } else {
               await applyTeamSubscriptionInTx(tx, {
                 teamId: subData.teamId,
                 planId: subData.planId,
@@ -186,6 +326,9 @@ export class PaymentRepository {
                   subData.billingInterval ?? BILLING_INTERVAL.MONTH,
                 orderId: order.id,
                 nowMs: Date.now(),
+                // Info: (20260814 - Luphia) 席次與單價快照（規範 P2），續訂與期中補收都靠它
+                seats: subData.seats,
+                unitPrice: subData.unitPrice,
               });
               await tx.order.update({
                 where: { id: order.id },
@@ -275,6 +418,67 @@ export class PaymentRepository {
     };
 
     return prisma.order.create({ data: safeData });
+  }
+
+  /**
+   * Info: (20260813 - Luphia) 以冪等鍵查用戶的訂單（個人點數扣款路徑，設計書 §5.5）。
+   * 鍵存於 data.idempotencyKey：同一則訊息重送時要找回原訂單，
+   * 而不是每次重試都建一張新的待付訂單。
+   */
+  async findOrderByIdempotencyKey(userId: string, idempotencyKey: string) {
+    /**
+     * Info: (20260815 - Luphia) 先查真欄位，查不到再回頭找 JSON path（第二輪 B-3）。
+     *
+     * 冪等鍵已升格為帶唯一約束的欄位，但改版前建立的訂單只有 `data.idempotencyKey`；
+     * 兩邊都查才不會讓舊訂單在重試時被當成「沒扣過」而再扣一次。
+     *
+     * Info: (20260818 - Luphia) **只有「錢真的在路上或已經到」的訂單算重放**（第三輪 A-2）。
+     *
+     * 原本不看 `status`，而扣款失敗只把訂單改成 `PAYMENT_FAILED`、`idempotencyKey`
+     * 這個唯一欄位原封留著。於是管理員在畫面上重按一次邀請，就會找到那張失敗的訂單、
+     * 走進重放分支——不扣款、不加席次，卻照樣建立邀請並寄信。**一個沒付錢的席次。**
+     *
+     * 失敗與取消的訂單必須被視為「沒扣過」，重試才會真的再扣一次款。
+     */
+    const byColumn = await prisma.order.findUnique({
+      where: { idempotencyKey },
+    });
+    if (
+      byColumn &&
+      byColumn.userId === userId &&
+      isChargeableOrderStatus(byColumn.status)
+    ) {
+      return byColumn;
+    }
+
+    return prisma.order.findFirst({
+      where: {
+        userId,
+        data: { path: ["idempotencyKey"], equals: idempotencyKey },
+        status: { in: [...REPLAYABLE_ORDER_STATUSES] },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  /**
+   * Info: (20260814 - Luphia) 本期已補收的席次費用合計（PR #6652 第二輪 B-2）。
+   *
+   * 用於「單期補收總額上限」：邀請開放 OWNER / ADMIN，但扣的是訂閱那張卡，
+   * 沒有上限就等於允許一位管理員替擁有者的卡連刷。
+   * 只算已完成的訂單——失敗或待付的不佔額度。
+   */
+  async sumSeatAdditionAmount(teamId: string, since: Date): Promise<bigint> {
+    const orders = await prisma.order.findMany({
+      where: {
+        type: ORDER_TYPE.BILLING_SEAT_ADDITION,
+        status: ORDER_STATUS.COMPLETED,
+        createdAt: { gte: since },
+        data: { path: ["teamId"], equals: teamId },
+      },
+      select: { amount: true },
+    });
+    return orders.reduce((sum, order) => sum + order.amount, BigInt(0));
   }
 
   async getOrderById(orderId: string) {
@@ -594,7 +798,16 @@ export class PaymentRepository {
               transactionTime: new Date().toISOString(),
               buyerId: userId,
               buyerName: userName,
-              itemDescription: `iSunFA Credits - ${credits}`,
+              itemDescription: buildReceiptItemDescription(
+                null,
+                credits,
+                orderData as {
+                  planId?: string;
+                  seats?: number;
+                  billingInterval?: string;
+                  seatAddition?: boolean;
+                },
+              ),
               gatewayTxId:
                 (oenData as { data?: { id?: string }; id?: string })?.data
                   ?.id ||

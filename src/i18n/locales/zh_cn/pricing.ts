@@ -2,11 +2,36 @@ export const pricing = {
   free_cost: "免费",
   title: "云端服务订阅方案",
   subtitle: "根据团队规模选择最合适的方案",
+  // Info: (20260814 - Luphia) 付費方案以席次計價，單位標明每席
+  per_seat_monthly: "席 / 月",
+  per_seat_yearly: "席 / 年",
   monthly: "月缴",
   yearly: "年缴",
   save_percent: "省下 17%",
   // Info: (20260807 - Luphia) 費思費率標註（設計書 §5.3 定價揭露），數字由 API 插值、嚴禁寫死
   faith_agent: "费思人工智能代理人",
+  /**
+   * Info: (20260812 - Luphia) 费思个人化记忆文案（服务条款 §3.7、隐私权政策 §5）。
+   * 保留天数由 FAITH_MEMORY_RETENTION_DAYS 插值，不写死数字，避免与条款不一致。
+   */
+  faith_agent_free_tooltip: "具备任务短期记忆",
+  faith_agent_memory: "费思人工智能代理人（专属记忆）",
+  faith_agent_memory_tooltip: "具备任务短期记忆、长期记忆与反馈学习机制",
+  faith_memory_note_title: "关于费思的专属记忆",
+  faith_memory_note:
+    "费思的记忆分两层：任务短期记忆让它在同一项任务进行中记得前后文，所有方案皆具备；长期记忆与反馈学习机制则为云端版的团队版与企业版专属——每位成员各自拥有一个独立的费思人工智能代理人，会记录您在对话中给予的反馈与偏好（例如惯用的会计科目、报表呈现方式、回答的详细程度），随着使用逐渐记住您的需求，让回答越来越贴近您的工作方式；这些记忆只用于改善您个人的使用体验，不会与其他成员或其他客户共用，也不会用于训练共享的 AI 模型。",
+  faith_memory_note_retention:
+    "若您停止订阅，我们会保留这份记忆 {{days}} 天，期间内恢复订阅即可延续；{{days}} 天届满后，我们会删除费思对您的记忆信息，以保障您的隐私。您也可以不必等待期满，随时要求我们删除。免费版不提供专属记忆。详见服务条款第 3.7 条与隐私权政策第 5 条。",
+  /**
+   * Info: (20260812 - Luphia) 席位计费文案（服务条款 §3.1 / §3.6）。
+   * 价格数字为「每席位」单价，不是团队总额。
+   */
+  price_multiply_note: "此为每位成员的费用，应付金额需乘上团队成员数量",
+  seat_billing_note_title: "关于席位计费",
+  seat_billing_note:
+    "团队版与企业版依席位计费：一位团队成员占一个席位，应付金额 = 席位数 × 每席位费用。上方标示的价格为每席位单价，实际金额于您选定团队后计算，并在付款前显示「席位数 × 每席位费用 = 应付总额」。免费版不收席位费用。",
+  seat_billing_note_change:
+    "计费周期中邀请新成员时，该席位自邀请寄出时起占用，并依当期剩余天数比例补收该席位费用（尾数舍去，计算结果为零者免收）；邀请经拒绝、撤回或逾期即释出席位。成员退出或被移出团队时，当期不予退费，并自下一计费周期起以新席位数计费。详见服务条款第 3.1 条与第 3.6 条。",
   currency_prefix: "NT$ ",
 
   cta: "立即开始",
@@ -48,7 +73,6 @@ export const pricing = {
       name: "免费版",
       desc: "适合个人使用者",
       features: {
-        fido: "1 组 FIDO2 密钥",
         vouchers: "每月 {{amount}} 份会计凭证",
         vouchers_overage_tooltip: "每份 {{price}} 点数",
         logistics: "每月 {{amount}} 笔物流碳足迹",
@@ -61,8 +85,11 @@ export const pricing = {
       name: "免费版",
       desc: "适合个人使用者",
       features: {
+        // Info: (20260815 - Luphia) 免費版人數上限（條款 §3.1 指向此標示）
+        member_limit: "团队人数不限",
+        member_limit_tooltip:
+          "免费版的额度为**全团队共用一份**（不随人数增加），因此不限成员人数；需要每位成员各自拥有额度请升级为团队版或企业版。",
         storage: "存储空间 {{gb}} GB",
-        fido: "1 组 FIDO2 密钥",
         consults: "每月最多咨询 {{amount}} 个问题",
         consults_tooltip: "每个问题 {{price}} 点数",
         vouchers: "每月最多分析 {{amount}} 份会计凭证",
@@ -78,8 +105,6 @@ export const pricing = {
       desc: "适合成长中的团队",
       features: {
         storage: "存储空间 {{gb}} GB",
-        fido: "无限 FIDO2 密钥",
-        fido_tooltip: "根据 fido2 密钥数量收取订阅费",
         quota_multiple: "Tokens 额度为免费版的 {{multiple}} 倍",
         consults: "每月最多咨询 {{amount}} 个问题",
         consults_tooltip: "每个问题 {{price}} 点数",
@@ -98,8 +123,6 @@ export const pricing = {
       desc: "适合大型机构与事务所",
       features: {
         storage: "存储空间 {{gb}} GB",
-        fido: "无限 FIDO2 密钥",
-        fido_tooltip: "根据 fido2 密钥数量收取订阅费",
         quota_multiple: "Tokens 额度为团队版的 {{multiple}} 倍",
         consults: "每月最多咨询 {{amount}} 个问题",
         consults_tooltip: "每个问题 {{price}} 点数",
@@ -114,8 +137,7 @@ export const pricing = {
         migration: "资料移转服务",
         migration_tooltip: "根据资料年份与笔数额外收费",
         custom_tools: "客制化功能模块",
-        custom_tools_tooltip:
-          "针对需求客制化开发功能，需额外收取开发费用，功能上线后可获得分润",
+        custom_tools_tooltip: "针对需求客制化开发功能，需额外收取开发费用",
       },
     },
   },
@@ -218,7 +240,14 @@ export const pricing = {
       use_saved_card: "使用已绑定的信用卡",
       bind_new_card: "绑定新信用卡",
       agree_tos: "我同意使用条款 (Terms of Service) 与退费政策 (Refund Policy)",
-      subscription_reset_note: "点数有效时间为 30 日，需在时效内使用完毕",
+      // Info: (20260814 - Luphia) 訂閱買到的是額度視窗，不是錢包點數（設計書 §7 履行只寫 TeamSubscription）
+      subscription_quota_note:
+        "订阅期间依方案额度使用；额度每 5 小时与每周自动重置，不累积至下一期，也不会转为点数。",
+      amount_changed_title: "金额已更新",
+      amount_changed_hint:
+        "您停留期间团队人数有变动。画面原本显示 {{shown}}，实际应付为 {{actual}}。尚未扣款，确认后才会付款。",
+      amount_changed_confirm: "确认并以新金额付款",
+      subscription_activated: "方案已启用，每位成员的额度即刻生效。",
       selected_modules: "已选模块",
       track_order_btn: "订单追踪",
     },

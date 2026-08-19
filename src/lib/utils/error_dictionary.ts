@@ -769,6 +769,43 @@ export const API_ERRORS = {
     message: "Carbon session not found",
     status: ApiCode.NOT_FOUND,
   } as IErrorDef,
+  /**
+   * Info: (20260813 - Luphia) 團隊不存在（後台發放點數等以 teamId 定址的操作）。
+   *
+   * Info: (20260818 - Luphia) 由 `NF000017` 改為 `NF000024`（第五輪 B-1）。
+   *
+   * develop 在 PR #6651 以同一個碼定義了 `NF_EMPLOYEE_FOR_USER`（「這個人不是這個
+   * 帳本的員工」，刻意不回 403 以免洩漏「這個信箱在系統裡有員工檔」）。
+   * `API_ERRORS` 以**鍵**索引，兩個鍵並存不會有型別錯誤——只有 code 字串撞號，
+   * 而任何依 `errorCode` 分流的前端文案、i18n 映射與支援文件都分不出這兩件事。
+   * 對方那條的存在理由正是「不要洩漏」，被映射成「團隊不存在」等於保護失效。
+   *
+   * 兩邊都是新增的碼，改動哪一邊都行；改這邊是因為 develop 已經合併、
+   * 而這條分支還沒有。
+   */
+  NF_TEAM: {
+    code: "NF000024",
+    message: "Team not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+  /**
+   * Info: (20260813 - Luphia) 碳盤查會話未綁定帳本（產品拍板 20260813：一律綁帳本）。
+   * 沒有帳本就沒有計費團隊，扣不了額度；此時 fail closed 而非放行不計費，
+   * 並以專屬錯誤碼讓前端能引導用戶把會話綁到帳本，而不是丟一句「系統錯誤」。
+   */
+  /**
+   * Info: (20260818 - Luphia) 由 `VA000041` 改為 `VA000047`（第五輪自查）。
+   *
+   * 這個碼在**同一個檔案**裡已經被 `VA_FILE_TOO_LARGE`（既有）用掉了——
+   * 本 PR 新增這一條時沿用了一個已在使用中的號碼。不是跨分支的問題，
+   * 是這條分支自己的重複，而在此之前沒有任何機制會發現
+   * （見 `error_dictionary_codes.test.ts`）。
+   */
+  VA_CARBON_SESSION_NOT_BOUND: {
+    code: "VA000047",
+    message: "Carbon session is not bound to an account book",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
 
   // Info: (20260421 - Luphia) IS: Internal Server Errors (000001 ~ 000099)
   IS_DB_FAILED: {
@@ -972,6 +1009,34 @@ export const API_ERRORS = {
     message: "Only team owner or admin can manage the team wallet",
     status: ApiCode.FORBIDDEN,
   } as IErrorDef,
+  /**
+   * Info: (20260813 - Luphia) 無帳本會話改扣個人點數時，尚未完成付款（產品拍板 20260813）。
+   * 個人點數在鏈上，扣款需簽章：伺服器先建單並以此錯誤回傳 orderId，
+   * 前端走既有 useOrderTransaction 完成付款後重送同一則訊息（冪等鍵相同，不會重複建單）。
+   * 託管帳號的簽章由伺服器代行，體感上就是直接扣。
+   */
+  /**
+   * Info: (20260813 - Luphia) 用戶屬於多個團隊卻未指定付款團隊（設計書 §5.6）。
+   * 歧義不該由系統猜——猜錯的後果是某個團隊莫名其妙被扣了額度。
+   * 前端據此出團隊選單，而不是隨便挑一個。
+   */
+  TW_TEAM_AMBIGUOUS: {
+    code: "TW000011",
+    message: "Multiple teams available; specify which team pays",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  /**
+   * Info: (20260818 - Luphia) 由 `TW000010` 改為 `TW000021`（第五輪自查）。
+   *
+   * 同上：`TW_INVALID_CREDIT_PLAN`（既有）已經使用 `TW000010`。
+   * 這一條是 402 的付款要求，前端會依它切換到「以個人點數支付」的流程；
+   * 與「方案代碼無效」共用同一個字串，前端只能靠其他欄位猜。
+   */
+  TW_PERSONAL_PAYMENT_REQUIRED: {
+    code: "TW000021",
+    message: "Personal credit payment required",
+    status: ApiCode.PAYMENT_REQUIRED,
+  } as IErrorDef,
   TW_WALLET_FROZEN: {
     code: "TW000005",
     message: "Team wallet is frozen pending audit",
@@ -1000,6 +1065,181 @@ export const API_ERRORS = {
   TW_INVALID_CREDIT_PLAN: {
     code: "TW000010",
     message: "Unknown credit plan id",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  /**
+   * Info: (20260814 - Luphia) 付費團隊加人需先補收席次費用（規範 P3）：
+   * 找不到可扣款的卡就不能加人——否則等於免費加席，帳永遠補不回來。
+   */
+  /**
+   * Info: (20260818 - Luphia) 由 `TW000011` 改為 `TW000022`（第五輪自查）。
+   *
+   * `TW_TEAM_AMBIGUOUS`（同一位使用者屬於多個團隊、無法決定由誰付款）已經用了
+   * `TW000011`。兩者都由本 PR 新增，而且**兩邊各有一條測試斷言 `TW000011`**
+   * ——它們之所以同時通過，正是因為撞號。
+   */
+  TW_SEAT_PAYMENT_METHOD_MISSING: {
+    code: "TW000022",
+    message: "No payment method on record for seat charge",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  /**
+   * Info: (20260814 - Luphia) 同一把冪等鍵的工作已經扣過款且尚未退還（重放）。
+   * 冪等鍵保護的是扣款，不是工作——照跑等於同一筆錢買到無限次 LLM 呼叫。
+   */
+  TW_DUPLICATE_REQUEST: {
+    code: "TW000013",
+    message: "This request was already processed",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+  /**
+   * Info: (20260814 - Luphia) 分配點數要鑄到成員自己的區塊鏈錢包，
+   * 成員沒有錢包位址就無處可鑄——與其扣了池卻沒人收到，不如當場擋下。
+   */
+  TW_MEMBER_WALLET_MISSING: {
+    code: "TW000014",
+    message: "Member has no wallet address for on-chain allocation",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+  /**
+   * Info: (20260814 - Luphia) 付費訂閱查無單價（unit_price 為 0）：
+   * 這是資料異常而非零元零頭，放行等於整個週期內加人全部免費且無聲。
+   */
+  TW_SEAT_PRICE_MISSING: {
+    code: "TW000015",
+    message: "Subscription has no unit price on record",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  /**
+   * Info: (20260814 - Luphia) 單期席次補收總額超過上限（PR #6652 第二輪 B-2）：
+   * 扣的是訂閱那張卡而發起者可能是 ADMIN，上限是防「替他人的卡連刷」的護欄。
+   */
+  TW_SEAT_CHARGE_CAP_EXCEEDED: {
+    code: "TW000016",
+    message: "Seat charges for this period exceeded the allowed cap",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  /**
+   * Info: (20260819 - Luphia) `TW_FREE_PLAN_MEMBER_LIMIT`（TW000017）已移除。
+   *
+   * 免費版人數上限於 2026-08-19 取消：上限存在的理由是免費額度逐成員各一份，
+   * 而免費方案的額度已改為**全隊共用一份**，加人不再產生額度。
+   * 這個碼因此不再有任何丟出點；號碼不重用（對外契約的碼一旦用過就不再回收）。
+   */
+  // Info: (20260814 - Luphia) 席次補收扣款失敗：fail-closed，不建立邀請也不加人
+  TW_SEAT_CHARGE_FAILED: {
+    code: "TW000012",
+    message: "Seat charge failed",
+    status: ApiCode.PAYMENT_REQUIRED,
+  } as IErrorDef,
+  /**
+   * Info: (20260815 - Luphia) 尚未設定寄信（規範 §4 / P4：email 邀請）。
+   * 屬設定缺漏而非使用者輸入錯誤，因此給 500 而非 400——
+   * 邀請者沒有任何事情做錯，要動的是後台設定。
+   */
+  TW_MAIL_NOT_CONFIGURED: {
+    code: "TW000018",
+    message: "Mail delivery is not configured",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  /**
+   * Info: (20260815 - Luphia) 邀請信寄送失敗：邀請已回滾，席次留給下一次使用。
+   * 與 TW000018 分開是因為處置不同——這個重試可能就會過。
+   */
+  TW_INVITATION_MAIL_FAILED: {
+    code: "TW000019",
+    message: "Failed to deliver the invitation email",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
+  /**
+   * Info: (20260818 - Luphia) 收回分配點數已停用（調查 20260818）。
+   *
+   * 點數在成員自己的鏈上錢包裡，移出必須有**持有人的簽章**，而收回的對象不會去簽。
+   * 不是缺一個平台可呼叫的 `burn(address, uint256)`——扣款那條路以持有人簽章做到了
+   * （見 `ensurePersonalCreditCharge`）。條款 §3.5 已改為「分配後不可收回」。
+   *
+   * 給一個**專屬的錯誤碼**而不是讓它走到鏈上失敗回 `TW000010`：
+   * 通用的「操作失敗」會讓客服以為重試就好，而這件事重試一百次也一樣。
+   */
+  /**
+   * Info: (20260819 - Luphia) 同時未接受的邀請數已達上限（產品決定 20260819）。
+   *
+   * 免費版人數上限移除之後，這是「一次撒出幾百封」的煞車。訊息刻意說得出**下一步**
+   * （撤回或等對方回應），因為使用者能自己解決——不像額度用罄只能等重置。
+   */
+  TW_PENDING_INVITE_LIMIT: {
+    code: "TW000023",
+    message:
+      "Too many invitations are waiting to be accepted; revoke some or wait for a response",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  /**
+   * Info: (20260819 - Luphia) 今日寄出的邀請數已達上限（產品決定 20260819）。
+   *
+   * 與上一條分工：這條擋的是「撤回再邀、撤回再邀」的迴圈——只看同時未接受數的話，
+   * 那個迴圈可以無限寄信而同時數永遠是 1。計數以**已建立的邀請列**為準，
+   * 撤回或被拒絕的仍然算（信已經寄出去了）。
+   */
+  TW_INVITE_DAILY_LIMIT: {
+    code: "TW000024",
+    message: "Daily invitation limit reached for this team; try again tomorrow",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  /**
+   * Info: (20260819 - Luphia) 送出時帶的試算金額與服務端重算的結果不符（review #6682 高）。
+   *
+   * 試算是在對話框開啟時算的，送出是在使用者填完欄位、走完 FIDO2 簽章之後——
+   * 中間的兩個輸入都會變：席次佔用（另一位管理者同時邀了人）、以及計費週期
+   * （8/31 23:58 試算「本期即將結束、不收費」，00:02 完成簽章時已是新週期，
+   * 比例計價回近乎全額）。同一支實作在兩個時點給出不同答案，而先前沒有任何
+   * 一端再確認一次——畫面說 0、卡被刷 840，且事後提示只讀 `reusedPaidSeat`，
+   * 使用者完全看不出來。
+   *
+   * 因此金額不符時**擋下並要求重新試算**，而不是照新價扣款。
+   *
+   * 號碼跳過 23 / 24：那兩個號碼由邀請量上限那條分支（#6684）先取用，
+   * 而兩條分支是兄弟。跨 PR 撞號會讓對外的錯誤碼契約在合併後才爆
+   * （見 `error_dictionary_codes.test.ts` 的由來）。
+   */
+  TW_SEAT_QUOTE_STALE: {
+    code: "TW000025",
+    message:
+      "The seat charge changed since it was shown; please review it again",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+  /**
+   * Info: (20260819 - Luphia) 一個人只能擁有一個免費團隊（產品決定 20260819）。
+   *
+   * 邀請量的兩道上限是 **per-team** 的，而建立團隊先前沒有數量上限也沒有限流——
+   * 一個帳號建 10 個免費團隊，就有 10 份 20 封／50 封的額度（review #6684 中）。
+   * 「擁有」指 OWNER：被別人邀請加入的團隊不算，那不是他能開的量。
+   */
+  TW_FREE_TEAM_LIMIT: {
+    code: "TW000026",
+    message: "You can only own one team on the free plan",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  /**
+   * Info: (20260819 - Luphia) 邀請寄送的冷卻時間（產品決定 20260819）。
+   *
+   * 每分鐘 10 封的限流擋的是「狂點」，而冷卻擋的是「穩定地一直寄」：
+   * 兩者的差別在於後者看起來像正常使用。payload 帶 `retryAfterSeconds`，
+   * 前端據此顯示倒數——只說「請稍後再試」而不說多久，使用者只能一直按。
+   */
+  TW_INVITE_COOLDOWN: {
+    code: "TW000027",
+    message: "Please wait before sending another invitation",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  TW_ALLOCATION_REVOKE_DISABLED: {
+    code: "TW000020",
+    message: "Revoking allocated credits is no longer supported",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  // Info: (20260815 - Luphia) 邀請信箱格式不正確（規範 §4 / P4）
+  VL_INVALID_EMAIL: {
+    code: "VL000018",
+    message: "Invalid email address",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
 

@@ -1,4 +1,5 @@
 export const common = {
+  retry: "再試行",
   view: "ビュー",
   regenerate: "再生成",
   ai_notes: {

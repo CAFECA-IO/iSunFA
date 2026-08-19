@@ -33,7 +33,12 @@ export const teamWalletLedgerQuerySchema = z.object({
 
 // Info: (20260807 - Luphia) 團隊額度付款（POST /order/[order_id]/team_quota_payment）
 export const teamQuotaPaymentSchema = z.object({
-  teamId: z.string().min(1),
+  /**
+   * Info: (20260813 - Luphia) 選填（設計書 §5.6）：AI 分析與物流查詢沒有帳本情境，
+   * 付款團隊只能來自用戶。只屬一個團隊時由 server 自動解析，不必詢問；
+   * 屬多個團隊而未指定即回 TW_TEAM_AMBIGUOUS，讓前端出選單而非隨便挑一個。
+   */
+  teamId: z.string().min(1).optional(),
 });
 
 // Info: (20260807 - Luphia) PUT /subscription（OWNER 專屬）：free 免付款直接降級，付費方案需綁卡
@@ -43,4 +48,14 @@ export const teamSubscriptionUpdateSchema = z.object({
     .enum([BILLING_INTERVAL.MONTH, BILLING_INTERVAL.YEAR])
     .default(BILLING_INTERVAL.MONTH),
   paymentMethodId: z.string().min(1).optional(),
+});
+
+/**
+ * Info: (20260818 - Luphia) 加席試算的查詢參數（`GET .../seat_quote`）。
+ *
+ * 上界 50：試算本身唯讀、不扣款，但它會查佔用量與本期已補收金額，
+ * 給一個荒謬的席次數只會浪費查詢。實務上邀請一次一人，批次擴編也遠低於 50。
+ */
+export const seatQuoteQuerySchema = z.object({
+  seats: z.coerce.number().int().min(1).max(50).default(1),
 });

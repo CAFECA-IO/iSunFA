@@ -68,6 +68,16 @@ export const adminMissionBoard = {
     brand: "iSunFA 스마트 회계",
     internal_document: "내부 문서",
     system_report: "시스템 보고서",
+    report_identity: {
+      title: "검증 식별 정보",
+      inventory_year: "산정 연도",
+      prepared_by: "작성 부서",
+      verified_by: "검증 기관",
+      issued_on: "갱신일",
+      unfilled: "미기입",
+      name_suffix: "온실가스 배출량 산정 보고서",
+      hint: "검증 기관은 보고서 내용에서 도출할 수 없어 직접 입력해야 합니다",
+    },
     footer_title: "AI로 탄소 회계를 재구성하다",
     footer_text:
       "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.",

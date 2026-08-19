@@ -25,7 +25,37 @@ export const TEAM_INVITATION_STATUS = {
   PENDING: "PENDING",
   ACCEPTED: "ACCEPTED",
   REJECTED: "REJECTED",
+  /**
+   * Info: (20260818 - Luphia) 由管理者撤回（第三輪 D）。
+   *
+   * 與 `REJECTED` 分開：那是**受邀者**說不用了，這是**團隊**收回邀請。
+   * 兩者對席次的效果相同（都不再佔用），但在稽核上是完全不同的事件——
+   * 混成一個狀態就答不出「這封邀請是對方拒絕的，還是我們自己撤掉的」。
+   */
+  REVOKED: "REVOKED",
 } as const;
+
+/**
+ * Info: (20260817 - Luphia) 受邀信箱與接受者已驗證信箱的比對結果。
+ *
+ * 只記錄、不阻擋——工作信箱收到邀請、用個人 Google 帳號登入是正常行為，
+ * 擋下來只會製造客訴。但稽核時「相符」與「查無可比對信箱」是兩件事，
+ * 混成一個布林值就分不出來了。
+ */
+export const INVITE_EMAIL_MATCH = {
+  // Info: (20260817 - Luphia) 接受者的某個已驗證信箱等於受邀信箱
+  MATCHED: "MATCHED",
+  // Info: (20260817 - Luphia) 有已驗證信箱，但沒有一個等於受邀信箱
+  MISMATCHED: "MISMATCHED",
+  /**
+   * Info: (20260817 - Luphia) 接受者沒有任何已驗證信箱可比對。
+   * 這是常態而非異常：passkey 註冊全程不問 email。
+   */
+  UNAVAILABLE: "UNAVAILABLE",
+} as const;
+
+export type InviteEmailMatch =
+  (typeof INVITE_EMAIL_MATCH)[keyof typeof INVITE_EMAIL_MATCH];
 
 export const ORDER_TYPE = {
   OEN_BINDING: "OEN_BINDING",
@@ -40,6 +70,11 @@ export const ORDER_TYPE = {
   BILLING_POINT: "BILLING_POINT",
   // Info: (20260807 - Luphia) 團隊錢包購點：付款成功後入池（離鏈 Ledger），不 mint 鏈上點數
   BILLING_TEAM_POINT: "BILLING_TEAM_POINT",
+  /**
+   * Info: (20260814 - Luphia) 期中增加席次的比例補收（規範 P3）：
+   * 以團隊記錄在案的綁定卡即時扣款，成功才建立邀請，不 mint 鏈上點數。
+   */
+  BILLING_SEAT_ADDITION: "BILLING_SEAT_ADDITION",
 } as const;
 
 export type OrderType = (typeof ORDER_TYPE)[keyof typeof ORDER_TYPE];

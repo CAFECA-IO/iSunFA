@@ -21,6 +21,7 @@ export * from "@/validators/logistics_report_pdf";
 export * from "@/validators/carbon_source_table";
 export * from "@/validators/team_wallet";
 export * from "@/validators/faith_chat";
+export * from "@/validators/team_invitation";
 // Info: (20260813 - Julian) 簽到系統
 export * from "@/validators/attendance";
 export * from "@/validators/leave";
