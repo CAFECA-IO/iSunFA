@@ -172,7 +172,7 @@ export interface IOvertimeRequestSummary {
   reason: string;
   status: OvertimeRequestStatus;
   /**
-   * Info: (20260819 - Julian) §32 IV 的認定，由 `HR_ADMIN` 在核准當下給出。
+   * Info: (20260819 - Julian) §32 IV 的認定，由 `HR_ADMIN` 在核准**之前**登記。
    * 為真時 `emergencyReportUrl` / `emergencyReportedAt` 必有值 ——
    * 由 `assertOvertimeEmergencyRecord` 雙向保證（review B7）。
    */

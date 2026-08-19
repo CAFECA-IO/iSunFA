@@ -152,14 +152,26 @@ interface IOvertimeCase {
   decision?: "approve" | "reject";
   /** Info: (20260818 - Julian) 未指定即照申請的整段核准 */
   approvedMinutes?: number;
+  /**
+   * Info: (20260819 - Julian) §32 IV 天災事變的認定（review B7）。
+   *
+   * 由**具 `HR_ADMIN` 職能者**在核准之前登記，不是申請人自己勾的。
+   * 三個欄位缺一不可 —— `assertOvertimeEmergencyRecord` 會擋。
+   */
+  emergency?: {
+    /** Info: (20260819 - Julian) 認定者的工號。必須具 HR_ADMIN，否則 service 丟 403 */
+    declaredBy: string;
+    reportUrl: string;
+    reportedAt: Date;
+  };
   note: string;
 }
 
 /**
- * Info: (20260818 - Julian) 加班的九個案例。
+ * Info: (20260819 - Julian) 加班的十個案例。
  *
  * 排列的原則與既有 seed 的「刻意佈置的異常」相同：**一片乾淨的資料什麼也證明不了。**
- * 這九筆刻意覆蓋九條不同的路徑，每一條在畫面上長得不一樣：
+ * 這十筆刻意覆蓋十條不同的路徑，每一條在畫面上長得不一樣：
  *
  * - 休息日加班費，跨前 2 小時與逾 2 小時兩個級距（OT-1）
  * - 申請 10 小時但打卡只到 9 小時 → 認列 9 小時（OT-1，ADR 024 §2）
@@ -169,6 +181,16 @@ interface IOvertimeCase {
  * - 被駁回的單 → 駁回後不得留著核准分鐘（OT-5）
  * - 待簽核的事後補單 ×2（OT-6／OT-7）與事前申請 ×1（OT-8）→ 加班簽核頁有東西可按
  * - 一張**核准時會被單日上限擋下**的單（OT-9）→ 超時的紅字與報告書入口有東西可演
+ * - §32 IV 天災事變：HR 登記報備、主管才核准（OT-10）→ 整段 `EMERGENCY_DOUBLE`
+ *
+ * OT-10 是 review B7 之後才有的。它示範的不只是一個級距，而是一個**順序**：
+ * 認定由 EMP002（唯一具 `HR_ADMIN` 職能者）在核准之前登記並附上報備紀錄，
+ * 核准仍由 EMP005 按。那個欄位原本是申請人在送出時自填的一個布林值，
+ * 而它會讓整段工資的計算標準跳到加倍發給。
+ *
+ * **刻意沒有也不可能放進來的一條**：例假日（週日）的加班。它在送出那一關
+ * 就被擋下（§40 須報主管機關核備，該記載模型尚未建立），因此 seed 生不出來 ——
+ * 那不是遺漏，是 ADR 024 §4.5 要的結果。
  *
  * 刻意**沒有**放進來的一條：EMP005 在 08-08 也有假日打卡（既有 seed 的
  * 「颱風後搶修」），而他沒有任何一張加班單。那 540 分鐘會原封不動出現在
@@ -333,6 +355,44 @@ const OVERTIME_CASES: IOvertimeCase[] = [
     submittedAt: at(OT_PENDING_DAY, 21, 0),
     decidedBy: null,
     note: "待簽核（事前申請）",
+  },
+  {
+    label: "OT-10",
+    employeeNo: "EMP006",
+    workDate: OT_DECLARED_DAY,
+    filingType: OvertimeFilingType.POST_HOC,
+    compensationMode: OvertimeCompensationMode.PAYMENT,
+    // Info: (20260819 - Julian) 09:00–13:00
+    requestedStartMinute: 540,
+    requestedEndMinute: 780,
+    reason: "豪雨致邊坡坍方阻斷聯外便道，緊急搶通供工區人員撤離",
+    submittedAt: at(OT_PENDING_DAY, 8, 30),
+    /**
+     * Info: (20260819 - Julian) §32 IV 的認定由 EMP002 林淑芬登記（她是這個
+     * 帳本裡唯一具 `HR_ADMIN` 職能的人，見 `seed_attendance_demo.ts`），
+     * 核准仍由 EMP005 張文彬按 —— **兩個人、兩件事**。
+     *
+     * 這正是 review B7 的重點：認定的後果是整段工資的計算標準跳到加倍發給，
+     * 而「已報備」是一件對外發生的事。它原本是申請人在送出的 payload 裡
+     * 自填的一個布林值，沒有佐證、沒有覆核、沒有紀錄。
+     */
+    emergency: {
+      declaredBy: "EMP002",
+      reportUrl:
+        "https://demo.isunfa.example/labor-filings/2026-0815-emergency.pdf",
+      // Info: (20260819 - Julian) 加班開始（09:00）後兩小時報備，在 §32 IV 的 24 小時內
+      reportedAt: at(OT_DECLARED_DAY, 11, 0),
+    },
+    decidedBy: "EMP005",
+    decision: "approve",
+    /**
+     * Info: (20260819 - Julian) 與 OT-1 刻意成對：**兩張都是休息日加班**。
+     *
+     * OT-1 切成 `REST_DAY_FIRST_2H` + `REST_DAY_BEYOND_2H` 兩段；
+     * 這一張因為經報備的天災事變，整段是單一的 `EMERGENCY_DOUBLE`。
+     * 級距不是猜出來的，看得見的差別就是判定表第 2 條在起作用。
+     */
+    note: "§32 IV 天災事變（EMP002 登記報備、EMP005 核准）→ 整段 EMERGENCY_DOUBLE，標記點得進報備紀錄",
   },
 ];
 
@@ -738,6 +798,30 @@ async function seedOvertimeCases(): Promise<void> {
       continue;
     }
 
+    /**
+     * Info: (20260819 - Julian) 認定排在決行**之前**（review B7）。
+     *
+     * `declareEmergency` 只在 `PENDING` 時可用 —— 核准當下就依旗標切好了
+     * 分段，事後才蓋上旗標會讓一張已經按普通級距算完的單子突然變成
+     * 加倍發給。順序寫反的話這裡會直接丟，不會默默產出一張級距錯的單。
+     */
+    if (overtimeCase.emergency !== undefined) {
+      const declarerEmployeeId = await mustFindEmployeeId(
+        overtimeCase.emergency.declaredBy,
+      );
+      await overtimeRequestService.declareEmergency({
+        accountBookId: ACCOUNT_BOOK_ID,
+        requestId,
+        actorEmployeeId: declarerEmployeeId,
+        reportUrl: overtimeCase.emergency.reportUrl,
+        reportedAt: overtimeCase.emergency.reportedAt.toISOString(),
+      });
+      console.log(
+        `   ${overtimeCase.label} §32 IV 認定：${overtimeCase.emergency.declaredBy} 登記報備 ` +
+          `${overtimeCase.emergency.reportedAt.toISOString()}`,
+      );
+    }
+
     const actorEmployeeId = await mustFindEmployeeId(overtimeCase.decidedBy);
 
     if (overtimeCase.decision === "reject") {
@@ -870,6 +954,15 @@ function printRunbook(): void {
     "      同一頁的「未核准時段」會列出 08-08 他自己的假日出勤 540 分鐘 ——",
   );
   console.log("      有打卡事實、沒有任何一張單涵蓋它，系統只負責讓它浮出來。");
+  console.log(
+    "      清單上 OT-10（EMP006 李冠廷 08-15 09:00–13:00）帶著「天災事變」橘標，",
+  );
+  console.log(
+    "      **點得進報備紀錄** —— 那是 EMP002 林淑芬事先登記的，不是申請人自己勾的。",
+  );
+  console.log(
+    "      同樣是休息日：OT-1 切成前 2 小時／逾 2 小時兩段，OT-10 整段加倍發給。",
+  );
   console.log("   4. 同一位 → /hr_management/leave/approval");
   console.log("      四張待簽核假單，其中 LV-3 是三天 → 走兩關的那條規則；");
   console.log(

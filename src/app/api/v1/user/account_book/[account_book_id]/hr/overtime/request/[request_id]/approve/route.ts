@@ -13,7 +13,7 @@ import { overtimeRequestService } from "@/services/overtime_request.service";
 /**
  * Info: (20260818 - Julian) L26：核准加班單，**同時決定認列分鐘與分段**。
  * POST /api/v1/user/account_book/[account_book_id]/hr/overtime/request/:request_id/approve
- *      body：`{ approvedMinutes?, emergency? }`（省略即照申請的整段核准）
+ *      body：`{ approvedMinutes? }`（省略即照申請的整段核准）
  *
  * ## 這一支是加班模組風險最高的端點
  *
@@ -31,11 +31,13 @@ import { overtimeRequestService } from "@/services/overtime_request.service";
  * §32 II／III 的三條線（單日 12 小時、單月 46／54 小時、三個月 138 小時）
  * 在核准前檢查，越過即 throw：那不是需要人判斷的例外，是違法（ADR 024 §6.2）。
  *
- * ## §32 IV 天災事變的認定在這裡，不在送出時
+ * ## §32 IV 天災事變的認定不在這一支
  *
- * `emergency: { reportUrl, reportedAt }` 讓具 `HR_ADMIN` 職能者在核准當下
- * 認定天災事變並附上報備紀錄。它原本是申請人在送出的 payload 裡自填的一個
- * 布林值 —— 而它會讓整段加班跳到加倍發給（review B7）。省略即非天災事變。
+ * 它原本是申請人在送出的 payload 裡自填的一個布林值，而它會讓整段加班
+ * 跳到加倍發給（review B7）。現在由具 `HR_ADMIN` 職能者走
+ * `.../emergency` 在**核准之前**登記，附上報備紀錄。這一支只讀那個已存的
+ * 旗標來切級距 —— 認定與核准是兩個人的兩件事，做成同一支端點的兩個欄位，
+ * 會要求同一個人既管得到他、又具 HR 職能，而那在一般組織裡是空集合。
  */
 export async function POST(
   request: NextRequest,
@@ -73,7 +75,6 @@ export async function POST(
         requestId,
         actorEmployeeId: actor.id,
         approvedMinutes: parsed.data.approvedMinutes,
-        emergency: parsed.data.emergency,
         observedAt: new Date(),
       }),
     );

@@ -950,6 +950,9 @@ export const hrManagement = {
     field_reason: "초과근무 사유",
     field_reason_placeholder: "예: 콘크리트 타설을 당일 내 완료해야 함",
     field_emergency: "천재지변(§32 IV, 신고 완료)",
+    action_declare_emergency: "천재지변 등록",
+    error_declare_emergency:
+      "인정에 실패했습니다. 인사 관리자 권한이 있는지, 이 신청이 아직 결재 대기 중인지 확인하세요.",
     field_emergency_report: "신고 기록 링크",
     field_emergency_reported_at: "신고 시각",
     field_emergency_moved_hint:

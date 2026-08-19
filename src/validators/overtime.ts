@@ -59,8 +59,8 @@ export const overtimeRequestCreateSchema = z
      * §32 IV 的構成要件是「天災、事變或突發事件」**且**已依法報備，
      * 而後者是一件對外發生的事，不是申請單上的一個勾選框。
      *
-     * 現在由具 `HR_ADMIN` 職能者在核准當下認定，並強制附上報備紀錄
-     * （見 `overtimeApprovalSchema` 的 `emergency`）。標準與 §32 III
+     * 現在由具 `HR_ADMIN` 職能者在**核准之前**登記，並強制附上報備紀錄
+     * （見 `overtimeEmergencyDeclareSchema`）。標準與 §32 III
      * 54 小時放寬一致：一個沒有記載的「已報備」等於沒有報備。
      */
   })
@@ -78,27 +78,33 @@ export const overtimeRequestCreateSchema = z
  */
 export const overtimeApprovalSchema = z.object({
   approvedMinutes: z.number().int().min(0).optional(),
-  /**
-   * Info: (20260819 - Julian) §32 IV 天災事變的認定（review B7）。
-   *
-   * 省略即非天災事變 —— 這一段是「有沒有這回事」的認定，不是一個可以
-   * 靠預設值成立的狀態。填了就必須同時給出報備紀錄與報備時點，
-   * 兩者缺一不可（repository 端由 `assertOvertimeEmergencyRecord` 再擋一次，
-   * 因為 seed 與資料遷移不會經過這個 schema）。
-   *
-   * `reportedAt` 收 ISO 8601 字串而不是 epoch：這一欄會被人讀、被貼進
-   * 報備公文，一個看不出時區的數字沒有辦法拿去對。
-   */
-  emergency: z
-    .object({
-      reportUrl: z
-        .string()
-        .trim()
-        .min(1)
-        .max(OVERTIME_EMERGENCY_REPORT_URL_MAX_LENGTH),
-      reportedAt: z.string().datetime({ offset: true }),
-    })
-    .optional(),
+});
+
+/**
+ * Info: (20260819 - Julian) §32 IV 天災事變的認定（review B7）。
+ *
+ * ## 為什麼自成一支 schema 而不是掛在核准的 payload 上
+ *
+ * 第一版把它做成核准的一個欄位，結果撞上一個結構性的空集合：核准要求
+ * 「管得到他的主管」，認定要求 `HR_ADMIN`，而一般組織裡沒有人同時是兩者。
+ * 拆開之後順序也對了 —— 實務上是 HR 先報備、拿到紀錄，這張單才帶著
+ * 加倍發給的性質進到主管手上。
+ *
+ * 兩個欄位都必填，沒有預設值：這是「有沒有這回事」的認定，
+ * 不是一個可以靠忘記填就成立的狀態（repository 端由
+ * `assertOvertimeEmergencyRecord` 再擋一次，因為 seed 與資料遷移
+ * 不會經過這個 schema）。
+ *
+ * `reportedAt` 收 ISO 8601 字串而不是 epoch：這一欄會被人讀、被貼進
+ * 報備公文，一個看不出時區的數字沒有辦法拿去對。
+ */
+export const overtimeEmergencyDeclareSchema = z.object({
+  reportUrl: z
+    .string()
+    .trim()
+    .min(1)
+    .max(OVERTIME_EMERGENCY_REPORT_URL_MAX_LENGTH),
+  reportedAt: z.string().datetime({ offset: true }),
 });
 
 export type IOvertimeRequestCreatePayload = z.infer<

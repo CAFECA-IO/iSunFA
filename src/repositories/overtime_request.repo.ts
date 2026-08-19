@@ -65,16 +65,17 @@ export interface IOvertimeApprovalWrite {
    */
   evidenceBasis: OvertimeEvidenceBasis;
   /**
-   * Info: (20260819 - Julian) §32 IV 的認定與它的報備紀錄（review B7）。
+   * Info: (20260819 - Julian) 核准**不碰**報備欄位（review B7）。
    *
-   * 與狀態**同一次更新**落地：分兩次寫會出現一個短暫的中間狀態，
-   * 那裡有一張已核准、已加倍、但還沒有報備紀錄的單子 ——
-   * 而 `assertOvertimeEmergencyRecord` 正是要讓那個狀態不存在。
+   * §32 IV 的認定是 HR 在核准之前做的另一件事（`declareEmergency`），
+   * 那三個欄位在那一步就已經落地並驗過。這裡再寫一次沒有意義，
+   * 而且會要求 service 把「認定者是誰」一路帶到核准 —— 那是稽核用的資訊，
+   * 不該為了一次不必要的寫入而外拋到清單的視圖裡。
+   *
+   * 因此這張表的報備欄位只有兩個寫入者：`create`（一律為空）與
+   * `declareEmergency`（三者俱全），兩者都各自呼叫
+   * `assertOvertimeEmergencyRecord`。
    */
-  isEmergency: boolean;
-  emergencyReportUrl: string | null;
-  emergencyReportedAt: Date | null;
-  emergencyDeclaredByEmployeeId: string | null;
   segments: readonly IOvertimeSegment[];
   engineVersion: number;
   /** Info: (20260818 - Julian) 由 service 組好，repository 只負責在寫入前擋一次 */
@@ -118,6 +119,21 @@ export interface IOvertimeRequestRepository {
   approve(
     params: IOvertimeApprovalWrite,
   ): Promise<IOvertimeApprovalWriteResult>;
+  /**
+   * Info: (20260819 - Julian) HR 登記 §32 IV 的報備（review B7）。
+   *
+   * 附條件更新（`status = PENDING`）而不是先讀再寫：認定與核准是**兩個人
+   * 在兩個畫面上做的兩件事**，主管隨時可能在 HR 按下去的同一秒核准掉。
+   * `count === 0` 即「已被決行」—— 那時候再蓋上旗標，會讓一張已經按
+   * 普通級距算完錢的單子突然變成加倍發給，而分段早就寫好了。
+   */
+  declareEmergency(params: {
+    accountBookId: string;
+    requestId: string;
+    emergencyReportUrl: string;
+    emergencyReportedAt: Date;
+    emergencyDeclaredByEmployeeId: string;
+  }): Promise<OvertimeDecisionOutcome>;
   reject(params: {
     accountBookId: string;
     requestId: string;
@@ -180,7 +196,6 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
     params: IOvertimeApprovalWrite,
   ): Promise<IOvertimeApprovalWriteResult> {
     assertOvertimeFilingType(params.invariant);
-    assertOvertimeEmergencyRecord(params);
 
     return prisma.$transaction(async (tx) => {
       const moved = await tx.overtimeRequest.updateMany({
@@ -194,10 +209,6 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
           approvedMinutes: params.approvedMinutes,
           recognizedMinutes: params.recognizedMinutes,
           evidenceBasis: params.evidenceBasis,
-          isEmergency: params.isEmergency,
-          emergencyReportUrl: params.emergencyReportUrl,
-          emergencyReportedAt: params.emergencyReportedAt,
-          emergencyDeclaredByEmployeeId: params.emergencyDeclaredByEmployeeId,
         },
       });
       if (moved.count === 0) {
@@ -362,6 +373,44 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
         status: OvertimeRequestStatus.WITHDRAWN,
         withdrawnAt: params.withdrawnAt,
         withdrawReason: params.withdrawReason,
+      },
+    });
+    return moved.count === 0
+      ? OvertimeDecisionOutcome.ALREADY_REVIEWED
+      : OvertimeDecisionOutcome.DECIDED;
+  }
+
+  public async declareEmergency(params: {
+    accountBookId: string;
+    requestId: string;
+    emergencyReportUrl: string;
+    emergencyReportedAt: Date;
+    emergencyDeclaredByEmployeeId: string;
+  }): Promise<OvertimeDecisionOutcome> {
+    /**
+     * Info: (20260819 - Julian) 不變式在寫入前先擋一次。
+     * 這裡的參數必然通過（三者都是必填），但把它寫出來是為了讓
+     * 「認定的每一條寫入路徑都經過同一個判準」這句話在程式裡是真的 ——
+     * 而不是靠讀者去比對三支方法的參數型別。
+     */
+    assertOvertimeEmergencyRecord({
+      isEmergency: true,
+      emergencyReportUrl: params.emergencyReportUrl,
+      emergencyReportedAt: params.emergencyReportedAt,
+      emergencyDeclaredByEmployeeId: params.emergencyDeclaredByEmployeeId,
+    });
+
+    const moved = await prisma.overtimeRequest.updateMany({
+      where: {
+        id: params.requestId,
+        accountBookId: params.accountBookId,
+        status: OvertimeRequestStatus.PENDING,
+      },
+      data: {
+        isEmergency: true,
+        emergencyReportUrl: params.emergencyReportUrl,
+        emergencyReportedAt: params.emergencyReportedAt,
+        emergencyDeclaredByEmployeeId: params.emergencyDeclaredByEmployeeId,
       },
     });
     return moved.count === 0

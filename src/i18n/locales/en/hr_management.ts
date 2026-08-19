@@ -968,6 +968,9 @@ export const hrManagement = {
     field_emergency: "Emergency (Article 32 IV, filing made)",
     field_emergency_hint:
       "HR administrators only. Ticking this requires the filing record and the moment it was made: it moves the whole period to double pay. It does not apply to statutory rest days, which need the separate Article 40 filing.",
+    action_declare_emergency: "Record emergency",
+    error_declare_emergency:
+      "Could not record the emergency. Check that you hold the HR administrator function and that this request is still pending.",
     field_emergency_report: "Filing record (URL)",
     field_emergency_reported_at: "Filed at",
     field_emergency_moved_hint:

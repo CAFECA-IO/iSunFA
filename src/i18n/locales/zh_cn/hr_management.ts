@@ -914,6 +914,8 @@ export const hrManagement = {
     field_reason: "加班事由",
     field_reason_placeholder: "例：混凝土浇置必须当日完成",
     field_emergency: "天灾事变（§32 IV，已报备查）",
+    action_declare_emergency: "登记天灾事变",
+    error_declare_emergency: "认定失败，请确认你具备人资管理员职能且此单仍待签核。",
     field_emergency_report: "报备记录链接",
     field_emergency_reported_at: "报备时点",
     field_emergency_moved_hint:

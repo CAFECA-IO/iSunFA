@@ -1,5 +1,6 @@
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { logger } from "@/lib/utils/logger";
 import { DEMO_TIME_ZONE, WorkDayType } from "@/constants/attendance";
 import { EmployeeHrFunction } from "@/constants/hr_management";
 import {
@@ -252,11 +253,6 @@ export class OvertimeRequestService {
     actorEmployeeId: string;
     /** Info: (20260818 - Julian) 未指定即照申請的整段核准 */
     approvedMinutes?: number;
-    /**
-     * Info: (20260819 - Julian) §32 IV 天災事變的認定（review B7）。
-     * 省略即非天災事變；填了則限具 `HR_ADMIN` 職能者，且必須帶報備紀錄。
-     */
-    emergency?: { reportUrl: string; reportedAt: string };
     observedAt: Date;
   }): Promise<IOvertimeApprovalResult> {
     const request = await this.mustFindSummary(
@@ -286,19 +282,6 @@ export class OvertimeRequestService {
     if (context.workDayType === null) {
       throw new AppError(API_ERRORS.VA_OVERTIME_DAY_NOT_SCHEDULED);
     }
-    /**
-     * Info: (20260819 - Julian) 天災事變的認定在這裡發生，不在送出時（review B7）。
-     *
-     * `request.isEmergency` 進到這裡永遠是 false —— 送出的 payload 已經
-     * 沒有那個欄位。認定與它的報備紀錄一起由決行者給出，並在下面
-     * 與狀態同一次寫入落地，讓 repository 的不變式擋得到它。
-     */
-    const emergency = await this.resolveEmergencyDeclaration({
-      accountBookId: params.accountBookId,
-      actorEmployeeId: params.actorEmployeeId,
-      input: params.emergency,
-    });
-
     /**
      * Info: (20260819 - Julian) 日別把關**不**看 `isEmergency`（review B7）。
      * §32 IV 的備查不是 §40 的核備，例假日一律擋下（ADR 024 §4.5）。
@@ -332,7 +315,7 @@ export class OvertimeRequestService {
     const segments =
       recognizedMinutes === 0
         ? []
-        : this.deriveSegments(context, emergency !== null, recognizedMinutes);
+        : this.deriveSegments(context, request.isEmergency, recognizedMinutes);
 
     const written = await this.requests.approve({
       accountBookId: params.accountBookId,
@@ -352,10 +335,6 @@ export class OvertimeRequestService {
         : OvertimeEvidenceBasis.PUNCH_RECORD,
       segments,
       engineVersion: OVERTIME_ENGINE_VERSION,
-      isEmergency: emergency !== null,
-      emergencyReportUrl: emergency?.reportUrl ?? null,
-      emergencyReportedAt: emergency?.reportedAt ?? null,
-      emergencyDeclaredByEmployeeId: emergency?.declaredByEmployeeId ?? null,
       invariant: {
         filingType: request.filingType,
         status: OvertimeRequestStatus.APPROVED,
@@ -389,6 +368,83 @@ export class OvertimeRequestService {
       compensatoryGrantCount: written.grantCount,
       cashOutEventIds: written.cashOutEventIds,
     };
+  }
+
+  /**
+   * Info: (20260819 - Julian) §32 IV 天災事變的認定（review B7）。
+   *
+   * ## 為什麼是獨立的一步，不是核准的一個參數
+   *
+   * 第一版把它做成核准 payload 的一個欄位，結果撞上一個結構性的空集合：
+   * 核准要求「管得到他的主管」，認定要求 `HR_ADMIN`，而**一般組織裡
+   * 沒有人同時是兩者** —— 於是 §32 IV 變成一條走不通的路。
+   *
+   * 拆開之後順序也對了：實務上是 HR 先去報備（通知工會，或報當地主管機關
+   * 備查），拿到紀錄之後這張單才帶著加倍發給的性質進到主管手上。
+   * 主管在待簽清單上會先看到「天災事變」的標記再按核准，而不是自己去認定
+   * 一件他沒有辦法查證的事。
+   *
+   * ## 為什麼限 PENDING
+   *
+   * 核准當下就依旗標切好了分段、算好了補休或折現。事後才蓋上旗標，
+   * 會讓一張已經按普通級距算完的單子突然變成加倍發給，而分段早就寫好了 ——
+   * 那是一個兩邊對不起來的狀態。已決行的單子要改，只能走更正流程。
+   * ToDo: (20260819 - Julian) 更正流程（撤銷核准並重算）尚未實作。
+   *
+   * ## 為什麼不驗 24 小時
+   *
+   * §32 IV 要求延長開始後 24 小時內報備。逾期是另一個違章，**不會**讓
+   * 天災事變這個事實消失 —— 擋下只會逼出一個把 `reportedAt` 往前填的動作，
+   * 而那比逾期本身更難查。時點照實記下，逾期的統計留給 L28。
+   */
+  public async declareEmergency(params: {
+    accountBookId: string;
+    requestId: string;
+    actorEmployeeId: string;
+    reportUrl: string;
+    reportedAt: string;
+  }): Promise<IOvertimeRequestSummary> {
+    const request = await this.mustFindSummary(
+      params.accountBookId,
+      params.requestId,
+    );
+    this.assertPending(request);
+
+    /**
+     * Info: (20260819 - Julian) **限 HR_ADMIN。** 認定的後果是整段工資的
+     * 計算標準跳到加倍發給，而報備是一件對外發生的事。讓一個沒有辦法查證
+     * 那份紀錄的人認定，等於讓他替公司作證。標準與 §32 III 54 小時放寬
+     * 一致（`assertOvertimePolicy`）。
+     */
+    const isHr = await employeeHrFunctionRepo.hasAnyFunction({
+      accountBookId: params.accountBookId,
+      employeeId: params.actorEmployeeId,
+      hrFunctions: [EmployeeHrFunction.HR_ADMIN],
+    });
+    if (!isHr) {
+      throw new AppError(API_ERRORS.FO_HR_FUNCTION_REQUIRED);
+    }
+
+    const reportedAt = new Date(params.reportedAt);
+    if (Number.isNaN(reportedAt.getTime())) {
+      throw new AppError(API_ERRORS.VA_INVALID_INPUT_DATA);
+    }
+
+    const outcome = await this.requests.declareEmergency({
+      accountBookId: params.accountBookId,
+      requestId: request.id,
+      emergencyReportUrl: params.reportUrl,
+      emergencyReportedAt: reportedAt,
+      emergencyDeclaredByEmployeeId: params.actorEmployeeId,
+    });
+    if (outcome === OvertimeDecisionOutcome.ALREADY_REVIEWED) {
+      throw new AppError(API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED);
+    }
+
+    logger.info(
+      `[overtime] emergency declared: request=${request.id} by=${params.actorEmployeeId}`,
+    );
+    return this.mustFindSummary(params.accountBookId, request.id);
   }
 
   // Info: (20260818 - Julian) L27：駁回。與核准套用同一組決行者判斷
@@ -519,57 +575,6 @@ export class OvertimeRequestService {
     if (!manages) {
       throw new AppError(API_ERRORS.FO_NOT_AUTHORIZED_REVIEWER);
     }
-  }
-
-  /**
-   * Info: (20260819 - Julian) §32 IV 天災事變的認定（review B7）。
-   *
-   * ## 為什麼限 HR_ADMIN 而不是決行的主管
-   *
-   * 認定的後果是**整段工資的計算標準**跳到加倍發給，而報備是一件對外
-   * 發生的事（通知工會，或報當地主管機關備查）。一線主管簽得動加班，
-   * 但他不是那個去報備的人 —— 讓他認定，等於讓一個沒有辦法查證那份紀錄
-   * 的人替公司作證。標準與 §32 III 54 小時放寬一致（`assertOvertimePolicy`）。
-   *
-   * ## 為什麼不在這裡驗 24 小時
-   *
-   * §32 IV 要求延長開始後 24 小時內報備。逾期是另一個違章，**不會**讓
-   * 天災事變這個事實消失 —— 擋下只會逼出一個把 `reportedAt` 往前填的動作，
-   * 而那比逾期本身更難查。時點照實記下，逾期的統計留給 L28。
-   *
-   * 回 null 代表「不是天災事變」，不是「認定失敗」——
-   * 失敗的路徑一律用丟的（缺紀錄、沒有職能），不會靜默降級成普通加班。
-   */
-  private async resolveEmergencyDeclaration(params: {
-    accountBookId: string;
-    actorEmployeeId: string;
-    input: { reportUrl: string; reportedAt: string } | undefined;
-  }): Promise<{
-    reportUrl: string;
-    reportedAt: Date;
-    declaredByEmployeeId: string;
-  } | null> {
-    if (params.input === undefined) return null;
-
-    const isHr = await employeeHrFunctionRepo.hasAnyFunction({
-      accountBookId: params.accountBookId,
-      employeeId: params.actorEmployeeId,
-      hrFunctions: [EmployeeHrFunction.HR_ADMIN],
-    });
-    if (!isHr) {
-      throw new AppError(API_ERRORS.FO_HR_FUNCTION_REQUIRED);
-    }
-
-    const reportedAt = new Date(params.input.reportedAt);
-    if (Number.isNaN(reportedAt.getTime())) {
-      throw new AppError(API_ERRORS.VA_INVALID_INPUT_DATA);
-    }
-
-    return {
-      reportUrl: params.input.reportUrl,
-      reportedAt,
-      declaredByEmployeeId: params.actorEmployeeId,
-    };
   }
 
   /**

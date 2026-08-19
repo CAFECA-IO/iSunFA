@@ -921,7 +921,9 @@ export const hrManagement = {
     field_reason_placeholder: "例：混凝土澆置必須當日完成",
     field_emergency: "天災事變（§32 IV，已報備查）",
     field_emergency_hint:
-      "限人資管理員認定。勾選後必須附上報備紀錄與報備時點：它會讓整段加班跳到加倍發給。例假日不適用（§40 須另報主管機關核備）。",
+      "限人資管理員登記，且僅限待簽核的單。登記後主管才會看到「天災事變」標記再決定核不核；它會讓整段加班跳到加倍發給。例假日不適用（§40 須另報主管機關核備）。",
+    action_declare_emergency: "登記天災事變",
+    error_declare_emergency: "認定失敗，請確認你具備人資管理員職能且此單仍待簽核。",
     field_emergency_report: "報備紀錄連結",
     field_emergency_reported_at: "報備時點",
     field_emergency_moved_hint:

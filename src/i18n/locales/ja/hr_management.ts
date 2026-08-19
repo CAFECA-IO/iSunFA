@@ -947,6 +947,9 @@ export const hrManagement = {
     field_reason: "残業理由",
     field_reason_placeholder: "例：コンクリート打設を当日中に完了させるため",
     field_emergency: "天災事変（§32 IV、届出済み）",
+    action_declare_emergency: "天災事変を登録",
+    error_declare_emergency:
+      "認定に失敗しました。人事管理者の権限があること、この申請が承認待ちであることをご確認ください。",
     field_emergency_report: "届出記録のリンク",
     field_emergency_reported_at: "届出日時",
     field_emergency_moved_hint:

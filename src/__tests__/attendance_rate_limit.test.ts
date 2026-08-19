@@ -141,6 +141,9 @@ const EXPECTED_BUCKET: Record<string, Record<string, RateLimitBucketEnum>> = {
   "overtime/request/[request_id]/approve/route.ts": {
     POST: RateLimitBucketEnum.LEAVE_WRITE,
   },
+  "overtime/request/[request_id]/emergency/route.ts": {
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
   "overtime/request/[request_id]/reject/route.ts": {
     POST: RateLimitBucketEnum.LEAVE_WRITE,
   },

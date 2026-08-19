@@ -10,7 +10,11 @@ import {
   IStorableOvertimeEmergency,
   OvertimeRequestInvariantError,
 } from "@/repositories/overtime_request_invariant";
-import { overtimeRequestCreateSchema } from "@/validators/overtime";
+import {
+  overtimeApprovalSchema,
+  overtimeEmergencyDeclareSchema,
+  overtimeRequestCreateSchema,
+} from "@/validators/overtime";
 
 /**
  * Info: (20260819 - Julian) §32 IV 天災事變的認定必須有記載（review B7）。
@@ -89,6 +93,52 @@ describe("assertOvertimeEmergencyRecord — 沒有記載就沒有報備", () => 
         ...(patch as Partial<IStorableOvertimeEmergency>),
       }),
     ).toThrow(OvertimeRequestInvariantError);
+  });
+});
+
+/**
+ * Info: (20260819 - Julian) 認定與核准是**兩支端點**。
+ *
+ * 第一版把認定做成核准 payload 的一個欄位，結果撞上一個結構性的空集合：
+ * 核准要求「管得到他的主管」，認定要求 `HR_ADMIN`，而一般組織裡沒有人
+ * 同時是兩者 —— demo 帳本正是如此（EMP005 管得到人但不是 HR，
+ * EMP002 是 HR 但不管人），於是 §32 IV 成了一條走不通的路。
+ */
+describe("認定不在核准的 payload 裡", () => {
+  it("核准 schema 只收 approvedMinutes", () => {
+    const parsed = overtimeApprovalSchema.safeParse({
+      approvedMinutes: 60,
+      emergency: { reportUrl: "https://e.test/1", reportedAt: "2026-08-15T11:00:00+08:00" },
+    });
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect("emergency" in parsed.data).toBe(false);
+  });
+
+  it("認定 schema 兩個欄位皆必填", () => {
+    expect(
+      overtimeEmergencyDeclareSchema.safeParse({
+        reportUrl: "https://e.test/1",
+        reportedAt: "2026-08-15T11:00:00+08:00",
+      }).success,
+    ).toBe(true);
+    expect(
+      overtimeEmergencyDeclareSchema.safeParse({
+        reportUrl: "https://e.test/1",
+      }).success,
+    ).toBe(false);
+    expect(
+      overtimeEmergencyDeclareSchema.safeParse({
+        reportedAt: "2026-08-15T11:00:00+08:00",
+      }).success,
+    ).toBe(false);
+    // Info: (20260819 - Julian) 空白字串不算紀錄
+    expect(
+      overtimeEmergencyDeclareSchema.safeParse({
+        reportUrl: "   ",
+        reportedAt: "2026-08-15T11:00:00+08:00",
+      }).success,
+    ).toBe(false);
   });
 });
 

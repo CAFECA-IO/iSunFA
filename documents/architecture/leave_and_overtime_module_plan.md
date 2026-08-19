@@ -1474,7 +1474,7 @@ DRAFT ──────▶ PENDING ──(每個節點依序)──▶ APPROVED
 
 **2026-08-19（review B7）已補**：上一段原本接著寫「**程式已經假設報備發生過，但系統裡沒有任何地方記錄它。** 那個旗標目前是一句沒有證據的宣稱」。那句話現在不再成立：
 
-- `isEmergency` 已**移出送出的 payload**。它由具 `HR_ADMIN` 職能者在核准當下認定（`POST .../approve` 的 `emergency: { reportUrl, reportedAt }`）。
+- `isEmergency` 已**移出送出的 payload**，改由具 `HR_ADMIN` 職能者走 `POST .../request/:id/emergency`（body `{ reportUrl, reportedAt }`）在**核准之前**登記。它自成一支端點而不是核准的一個欄位：核准要求「管得到他的主管」、認定要求 `HR_ADMIN`，做成同一個動作會要求同一個人兼具兩者，而那在一般組織裡是空集合（demo 帳本正是如此）。拆開之後順序也對了 —— 實務上是 HR 先報備、拿到紀錄，這張單才帶著加倍發給的性質進到主管手上。登記只在 `PENDING` 時可用：核准當下就依旗標切好了分段，事後才蓋上旗標會讓一張已按普通級距算完的單子突然變成加倍發給。
 - `OvertimeRequest` 新增 `emergencyReportUrl` / `emergencyReportedAt` / `emergencyDeclaredByEmployeeId`，並由 `assertOvertimeEmergencyRecord`（repository 層）**雙向**把關：為真必須三者俱全，為假則三者必須皆空。標準與 §32 III 54 小時放寬的 `assertOvertimePolicy` 一致 —— 一個沒有記載的「已報備」等於沒有報備。
 - 它**不再繞過例假日**。§40 走的是核備，是另一套程序（見 §8.1 #1）。
 

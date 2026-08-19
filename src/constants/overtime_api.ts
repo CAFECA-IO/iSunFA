@@ -34,3 +34,10 @@ export const overtimeRequestWithdrawApi = (requestId: string): string =>
 
 export const overtimeRequestRejectApi = (requestId: string): string =>
   `${OVERTIME_API_BASE}/request/${requestId}/reject`;
+
+/**
+ * Info: (20260819 - Julian) §32 IV 天災事變的認定（review B7）。
+ * 限 `HR_ADMIN`，且只在待簽核狀態 —— 它不是決行，單子仍要由主管核准。
+ */
+export const overtimeRequestEmergencyApi = (requestId: string): string =>
+  `${OVERTIME_API_BASE}/request/${requestId}/emergency`;
