@@ -18,9 +18,8 @@ import { leaveBalanceService } from "@/services/leave_balance.service";
  *
  * 未指定 `employeeId` 即為自己。
  *
- * ToDo: (20260817 - Julian) 查他人目前只驗身分 —— HR 角色沒有來源（甲-1）。
- * 餘額不是 Tier 2 個資（它不揭露健康狀態），但它仍是個人資料，
- * 正式版應限於 HR 與該員工的主管鏈。缺口見假勤接線守則 §3.5.1。
+ * Info: (20260819 - Julian) 查他人的授權在 service（`assertMayViewLeaveBalanceOf`）：
+ * 本人／管得到他的主管／`HR_ADMIN`。四個額度端點共用同一個答案。
  */
 export async function GET(
   request: NextRequest,
@@ -53,6 +52,7 @@ export async function GET(
 
     return jsonOk(
       await leaveBalanceService.list({
+        actorEmployeeId: actor.id,
         accountBookId,
         employeeId: parsed.data.employeeId ?? actor.id,
         // Info: (20260817 - Julian) 「今天」用當地日曆日，不是 UTC

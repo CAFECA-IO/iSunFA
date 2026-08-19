@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "@jest/globals";
+import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 import { LeaveBalanceService } from "@/services/leave_balance.service";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
@@ -13,6 +13,8 @@ import {
   ILedgerEntryView,
 } from "@/interfaces/leave_balance";
 import { ILeaveGrantRepository } from "@/repositories/leave_grant.repo";
+import { employeeRepo } from "@/repositories/employee.repo";
+import { employeeHrFunctionRepo } from "@/repositories/employee_hr_function.repo";
 import {
   IAccrualEmployee,
   IAccrualPolicy,
@@ -29,6 +31,32 @@ import {
  * 餘額畫面就會多出一列「還有 0 分鐘」，而使用者會以為公傷病假有上限。
  * 那不是計算錯誤，是編排錯誤 —— 引擎測不到它。
  */
+
+/**
+ * Info: (20260819 - Julian) 權限閘走 `leave_visibility.ts`，而那一支直接取
+ * repository 單例（與 `overtime_visibility.ts` 同一種寫法）。因此這裡把兩個
+ * 單例換掉，才測得到「閘有沒有真的擋」而不是「Prisma 連不連得上」。
+ *
+ * 預設放行（`hasAnyFunction` 回 true），讓既有的授予／調整案例照舊；
+ * 要驗被擋時再逐案改成 false。
+ */
+jest.mock("@/repositories/employee_hr_function.repo", () => ({
+  employeeHrFunctionRepo: { hasAnyFunction: jest.fn() },
+}));
+jest.mock("@/repositories/employee.repo", () => ({
+  employeeRepo: { managesEmployee: jest.fn() },
+}));
+
+/**
+ * Info: (20260819 - Julian) 用 `jest.mocked()` 而不是 `as jest.Mock`。
+ *
+ * jest 30 的 `jest.Mock` 不帶型別參數時，引數會被推成 `never` ——
+ * `mockResolvedValue(true)` 於是編不過。`jest.mocked()` 保留被 mock 那支的
+ * 真實簽名，因此 `Promise<boolean>` 這件事仍然被型別系統看著：
+ * 哪天 `hasAnyFunction` 改成回傳物件，這裡會當場編譯失敗而不是靜默通過。
+ */
+const hasAnyFunctionMock = jest.mocked(employeeHrFunctionRepo.hasAnyFunction);
+const managesEmployeeMock = jest.mocked(employeeRepo.managesEmployee);
 
 const BOOK = "book-1";
 const EMPLOYEE = "emp-006";
@@ -133,6 +161,9 @@ beforeEach(() => {
   grants = new FakeGrantRepo();
   context = new FakeContextRepo();
   service = new LeaveBalanceService(grants, context);
+  // Info: (20260819 - Julian) 預設：是 HR、不是誰的主管
+  hasAnyFunctionMock.mockReset().mockResolvedValue(true);
+  managesEmployeeMock.mockReset().mockResolvedValue(false);
 });
 
 describe("L33 — 授予的對象篩選", () => {
@@ -252,5 +283,127 @@ describe("L9 — 人工調整", () => {
       apiCode: API_ERRORS.VA_INVALID_INPUT_DATA.code,
     });
     expect(grants.adjusted).toEqual([]);
+  });
+});
+
+/**
+ * Info: (20260819 - Julian) 權限閘的回歸測試（review B2）。
+ *
+ * 在補上閘之前，這四支端點**完全沒有授權判斷**：`actorEmployeeId` 只被寫進
+ * 分錄，從來沒有被拿去判斷。於是任何一個同帳本的員工都可以讀他人的完整
+ * 額度帳本，並對任何人（含自己）反覆加額度 —— `deltaMinutes` 上界 366 天、
+ * 冪等鍵是隨機值所以連打有效，而額度會變成錢（未休折現）。
+ *
+ * 這幾條測的不是「訊息對不對」，是**擋不擋**。
+ */
+describe("額度的權限閘", () => {
+  it("L7：不是本人、不是主管、也不是 HR → 擋下", async () => {
+    hasAnyFunctionMock.mockResolvedValue(false);
+    await expect(
+      service.list({
+        accountBookId: BOOK,
+        actorEmployeeId: "emp-999",
+        employeeId: EMPLOYEE,
+        asOfDate: TODAY,
+      }),
+    ).rejects.toMatchObject({
+      apiCode: API_ERRORS.FO_NO_PERMISSION_TO_VIEW_THIS.code,
+    });
+  });
+
+  it("L7：本人一律看得到，不必是主管也不必是 HR", async () => {
+    hasAnyFunctionMock.mockResolvedValue(false);
+    const view = await service.list({
+      accountBookId: BOOK,
+      actorEmployeeId: EMPLOYEE,
+      employeeId: EMPLOYEE,
+      asOfDate: TODAY,
+    });
+    expect(view.employeeId).toBe(EMPLOYEE);
+    // Info: (20260819 - Julian) 本人這條要在查資料庫之前就短路
+    expect(managesEmployeeMock).not.toHaveBeenCalled();
+  });
+
+  it("L7：管得到他的主管看得到", async () => {
+    hasAnyFunctionMock.mockResolvedValue(false);
+    managesEmployeeMock.mockResolvedValue(true);
+    await expect(
+      service.list({
+        accountBookId: BOOK,
+        actorEmployeeId: "emp-005",
+        employeeId: EMPLOYEE,
+        asOfDate: TODAY,
+      }),
+    ).resolves.toMatchObject({ employeeId: EMPLOYEE });
+  });
+
+  it("L8：額度異動帳本套用同一道閘", async () => {
+    hasAnyFunctionMock.mockResolvedValue(false);
+    await expect(
+      service.listLedger({
+        accountBookId: BOOK,
+        actorEmployeeId: "emp-999",
+        employeeId: EMPLOYEE,
+        limit: 20,
+      }),
+    ).rejects.toMatchObject({
+      apiCode: API_ERRORS.FO_NO_PERMISSION_TO_VIEW_THIS.code,
+    });
+  });
+
+  /**
+   * Info: (20260819 - Julian) 寫入比讀取嚴格：主管看得到組員的餘額，
+   * 但**不能改**。對組員的加薪權不會因為他是主管就自動存在。
+   */
+  it("L9：主管管得到他，仍然不能調整額度", async () => {
+    hasAnyFunctionMock.mockResolvedValue(false);
+    managesEmployeeMock.mockResolvedValue(true);
+    await expect(
+      service.adjust({
+        accountBookId: BOOK,
+        employeeId: EMPLOYEE,
+        leavePolicyId: "annual",
+        deltaMinutes: 480,
+        reason: "幫組員加一天",
+        actorEmployeeId: "emp-005",
+        asOfDate: TODAY,
+      }),
+    ).rejects.toMatchObject({
+      apiCode: API_ERRORS.FO_HR_FUNCTION_REQUIRED.code,
+    });
+    // Info: (20260819 - Julian) 被擋下時一分鐘都不能落地
+    expect(grants.adjusted).toEqual([]);
+  });
+
+  it("L33：由人觸發的授予限 HR", async () => {
+    hasAnyFunctionMock.mockResolvedValue(false);
+    await expect(
+      service.accrueForEmployee({
+        accountBookId: BOOK,
+        employeeId: EMPLOYEE,
+        asOfDate: TODAY,
+        actorEmployeeId: "emp-999",
+      }),
+    ).rejects.toMatchObject({
+      apiCode: API_ERRORS.FO_HR_FUNCTION_REQUIRED.code,
+    });
+  });
+
+  /**
+   * Info: (20260819 - Julian) `actorEmployeeId` 為 null 代表系統（seed 與
+   * 日後的每日 Worker），不受此閘限制 —— 它不是任何人按的。
+   * 這一條同時釘住 seed 的呼叫方式不會因為補了閘而壞掉。
+   */
+  it("L33：系統觸發（actorEmployeeId 為 null）不受閘限制", async () => {
+    hasAnyFunctionMock.mockResolvedValue(false);
+    await expect(
+      service.accrueForEmployee({
+        accountBookId: BOOK,
+        employeeId: EMPLOYEE,
+        asOfDate: TODAY,
+        actorEmployeeId: null,
+      }),
+    ).resolves.toBeGreaterThanOrEqual(0);
+    expect(hasAnyFunctionMock).not.toHaveBeenCalled();
   });
 });

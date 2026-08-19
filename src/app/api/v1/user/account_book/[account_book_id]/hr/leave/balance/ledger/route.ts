@@ -54,6 +54,7 @@ export async function GET(
 
     return jsonOk(
       await leaveBalanceService.listLedger({
+        actorEmployeeId: actor.id,
         accountBookId,
         employeeId: scope.data.employeeId ?? actor.id,
         leavePolicyId: query.data.leavePolicyId,

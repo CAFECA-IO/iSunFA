@@ -26,9 +26,8 @@ import { leaveBalanceService } from "@/services/leave_balance.service";
  * **理由必填**：一筆沒有理由的額度調整，事後沒有人能判斷它合不合理，
  * 而它會直接變成錢（未休折現）。分錄上會記下操作者與這句理由。
  *
- * ToDo: (20260817 - Julian) 目前只驗身分 —— 這支端點應限 HR，
- * 而 HR 角色沒有來源（甲-1）。**這是本模組權限缺口影響最大的一支**：
- * 它能無中生有地增加任何人的額度。缺口見假勤接線守則 §3.5.1。
+ * Info: (20260819 - Julian) **限 `HR_ADMIN`**，閘在 service（`assertMayAdjustBalance`）。
+ * 額度會變成錢（未休折現），而主管對組員的加薪權不會因為他是主管就自動存在。
  */
 export async function POST(
   request: NextRequest,

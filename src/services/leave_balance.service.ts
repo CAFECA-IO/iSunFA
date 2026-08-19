@@ -18,6 +18,10 @@ import {
   ILeaveAccrualContextRepository,
   leaveAccrualContextRepo,
 } from "@/repositories/leave_accrual_context.repo";
+import {
+  assertMayAdjustBalance,
+  assertMayViewLeaveBalanceOf,
+} from "@/services/leave_visibility";
 
 /**
  * Info: (20260817 - Julian) 額度查詢與授予（L7 / L8 / L9 / L33）。
@@ -44,12 +48,25 @@ export class LeaveBalanceService {
     private readonly context: ILeaveAccrualContextRepository,
   ) {}
 
-  // Info: (20260817 - Julian) L7：某員工各假別的餘額
+  /**
+   * Info: (20260817 - Julian) L7：某員工各假別的餘額。
+   *
+   * Info: (20260819 - Julian) 權限閘放在 service 而不是 route：四個入口
+   * 對「誰看得到誰的額度」必須給同一個答案，而 seed 與日後的 Worker
+   * 也走這裡（見 `leave_visibility.ts`）。
+   */
   public async list(params: {
     accountBookId: string;
+    actorEmployeeId: string;
     employeeId: string;
     asOfDate: string;
   }): Promise<ILeaveBalanceView> {
+    await assertMayViewLeaveBalanceOf({
+      accountBookId: params.accountBookId,
+      actorEmployeeId: params.actorEmployeeId,
+      targetEmployeeId: params.employeeId,
+    });
+
     return {
       employeeId: params.employeeId,
       asOfDate: params.asOfDate,
@@ -63,11 +80,28 @@ export class LeaveBalanceService {
   // Info: (20260817 - Julian) L8：額度異動明細
   public async listLedger(params: {
     accountBookId: string;
+    actorEmployeeId: string;
     employeeId: string;
     leavePolicyId?: string;
     limit: number;
   }): Promise<ILedgerEntryView[]> {
-    return this.grants.listLedger(params);
+    await assertMayViewLeaveBalanceOf({
+      accountBookId: params.accountBookId,
+      actorEmployeeId: params.actorEmployeeId,
+      targetEmployeeId: params.employeeId,
+    });
+
+    /**
+     * Info: (20260819 - Julian) 明確挑欄位傳下去，不用 `...params` 整包丟。
+     * `actorEmployeeId` 是授權用的，不是查詢條件 —— 整包丟會讓 repository
+     * 收到一個它不該關心的欄位，而下一個人會以為那是過濾條件之一。
+     */
+    return this.grants.listLedger({
+      accountBookId: params.accountBookId,
+      employeeId: params.employeeId,
+      leavePolicyId: params.leavePolicyId,
+      limit: params.limit,
+    });
   }
 
   /**
@@ -87,6 +121,16 @@ export class LeaveBalanceService {
     // Info: (20260817 - Julian) 「現在」由呼叫端注入，service 不呼叫 Date.now()
     asOfDate: string;
   }): Promise<ILeaveBalanceView> {
+    /**
+     * Info: (20260819 - Julian) **限 HR_ADMIN。** 排在最前面：授權要在
+     * 任何驗證與寫入之前，否則一個沒有權限的人可以靠錯誤訊息的差別
+     * 探知這個帳本裡有沒有某個員工／某個假別。
+     */
+    await assertMayAdjustBalance({
+      accountBookId: params.accountBookId,
+      actorEmployeeId: params.actorEmployeeId,
+    });
+
     if (params.deltaMinutes === 0) {
       throw new AppError(API_ERRORS.VA_INVALID_INPUT_DATA);
     }
@@ -115,6 +159,7 @@ export class LeaveBalanceService {
     );
     return this.list({
       accountBookId: params.accountBookId,
+      actorEmployeeId: params.actorEmployeeId,
       employeeId: params.employeeId,
       asOfDate: params.asOfDate,
     });
@@ -131,6 +176,19 @@ export class LeaveBalanceService {
     asOfDate: string;
     actorEmployeeId: string | null;
   }): Promise<number> {
+    /**
+     * Info: (20260819 - Julian) `actorEmployeeId` 為 null 代表**系統**
+     * （seed 與日後的每日 Worker），不受此閘限制 —— 它不是任何人按的。
+     * 由人觸發時一律限 `HR_ADMIN`：手動端點是 Worker 上線前的替身，
+     * 替身沒有理由比本尊寬鬆（見 `assertMayAdjustBalance` 的說明）。
+     */
+    if (params.actorEmployeeId !== null) {
+      await assertMayAdjustBalance({
+        accountBookId: params.accountBookId,
+        actorEmployeeId: params.actorEmployeeId,
+      });
+    }
+
     const employee = await this.context.findEmployeeForAccrual({
       accountBookId: params.accountBookId,
       employeeId: params.employeeId,

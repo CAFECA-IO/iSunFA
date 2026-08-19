@@ -97,8 +97,13 @@ export class LeaveRequestService {
    * 這比「先判權限再查」慢，但正確：一個主管在 8 月調離某部門後，
    * 他仍然應該看得到 7 月那幾張自己簽過的單，而部門層級的權限判斷會把它們藏起來。
    *
-   * ToDo: (20260817 - Julian) HR 應可見全部，但帳本層級的 HR 角色來源尚未決定
-   * （ADR 023 §8.3）。在它決定之前，HR 只看得到自己簽過的單。
+   * ToDo: (20260819 - Julian) HR 應可見全部，目前只看得到自己簽過的單。
+   *
+   * 原本的理由是「帳本層級的 HR 角色來源尚未決定」—— **那句話已經不成立**：
+   * `EmployeeHrFunction.HR_ADMIN` 與 `employeeHrFunctionRepo.hasAnyFunction()`
+   * 在同一輪落地，假別設定、簽核規則、加班政策與額度四處都已經在用它。
+   * 因此這是**接線沒接**，不是能力不存在（checklist §5.4）。
+   * 接法比照 `leave_visibility.ts`：`hasAnyFunction([HR_ADMIN])` 通過即不濾。
    */
   public async list(params: {
     accountBookId: string;
