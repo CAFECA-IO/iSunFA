@@ -1,8 +1,14 @@
 // Info: (20260713 - Tzuhan) 碳盤查報告書標準章節大綱,共 11 章 33 段
-// Info: (20260818 - Emily) 原註解寫「IFRS S1/S2 對齊」,而 33 節的實際 title 是台灣 ISO 14064-1
-// Info: (20260818 - Emily) 盤查報告書的骨架(第九章查證、第十章報告格式、第十一章參考文獻)。
-// Info: (20260818 - Emily) 錯位在 guidance 而不在骨架,已於 08-18 逐條改為 ISO 14064-1:2018
-// Info: (20260818 - Emily) (`data/issue_drafts/open/44_iso_standard_alignment.md`)。
+// Info: (20260819 - Emily) 這份檔案的 guidance 是 **ISO 14064-1 版**,是目前的預設。
+// Info: (20260819 - Emily) IFRS S1/S2 揭露版在 `carbon_report_outline_ifrs.ts`,節 id 一一對應。
+// Info: (20260819 - Emily) 兩套並存不是二選一:ISO 14064-1 是盤查/查證標準,
+// Info: (20260819 - Emily) IFRS S1/S2 是法規強制的揭露框架(金管會分梯適用),層次不同。
+// Info: (20260819 - Emily) 08-18 的註解寫「錯位在 guidance,已逐條改為 ISO」—— 那句話的前提
+// Info: (20260819 - Emily) 在 08-19 被推翻:33 節與老闆整理的原文一一對應,
+// Info: (20260819 - Emily) 「聲明符合 IFRS S1/S2」是設計而不是缺陷。改動與理由見
+// Info: (20260819 - Emily) `data/issue_drafts/open/54_report_framework_selection_and_compliance_claim.md`
+// Info: (20260819 - Emily) (`open/44` 僅保留分類法接線那一半)。
+// Info: (20260819 - Emily) title 是切節錨點(`buildSectionHeading`),兩套共用,不得因框架不同而改。
 // Info: (20260818 - Emily) guidance 是注入 prompt 的東西 —— 它寫錯標準,產出的報告就宣告錯的標準。
 // Info: (20260818 - Emily) 不變式測試在 `src/__tests__/carbon_report_outline.test.ts`,不要靠人眼複查。
 // Info: (20260713 - Tzuhan) guidance 為各段落的撰寫目標,供 AI 引導對話時注入 prompt;isDataDriven 標記數據段落(數字必須來自後端決定論管線,LLM 只排版不算數)
