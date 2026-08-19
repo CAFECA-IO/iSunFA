@@ -124,6 +124,11 @@ export const teamManagement = {
     allocate_hint: "把未分配的点数分给团队成员",
     revoke: "收回",
     // Info: (20260814 - Luphia) 分配即鑄到成員的鏈上錢包（ADR 015 修訂）
+    // Info: (20260819 - Luphia) 分配处理中的动画与提示（产品需求 20260819）
+    allocating_title: "正在分配点数，请勿关闭或刷新此页",
+    allocating_warning:
+      "点数正在铸入该成员的区块链钱包，需要数秒至数十秒完成。此时关闭或刷新可能让这笔分配停在「已扣款、尚未确认上链」的状态，需要人工协助处理。",
+    allocating_button: "处理中…",
     allocate_onchain_note:
       "分配的点数会直接进入该成员的个人钱包（区块链地址），成员在任何情境都能使用，不限于本团队，且分配后团队无法收回。",
     revoke_onchain_note:
