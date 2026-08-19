@@ -4,6 +4,7 @@ declare const jest: typeof JestType;
 import { Prisma } from "@/generated";
 import { teamWalletRepo } from "@/repositories/team_wallet.repo";
 import {
+  ALLOCATE_OFFCHAIN_EXIT_PREFIX,
   TEAM_WALLET_ENTRY_TYPE,
   WALLET_OP_OUTCOME,
 } from "@/constants/subscription_quota";
@@ -376,6 +377,53 @@ describe("TeamWalletRepository.allocate / revoke", () => {
     });
     // Info: (20260814 - Luphia) 點數在鏈上，不再有第二套離鏈餘額
     expect(txMock.teamWalletAllocation.upsert).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 分配必須同時記一筆負的 ADJUST：價值離開了離鏈帳本。
+   *
+   * 少了這一筆，守恆恆等式的右側少了分配金額而左側不動——**按一次「分配」就足以
+   * 讓下一輪勾稽凍結錢包**。這條先前不存在，於是那個缺陷在全綠的狀態下上線。
+   *
+   * 斷言兩件事：金額為負、且冪等鍵是從原鍵推導的（配對得起來，修復腳本才分得出
+   * 哪些 ALLOCATE 已經有出帳分錄）。
+   */
+  it("pairs every allocation with a negative ADJUST for the off-chain exit", async () => {
+    txMock.teamWallet.findUnique
+      .mockResolvedValueOnce({
+        ...ACTIVE_WALLET,
+        unallocatedBalance: BigInt(700),
+      } as unknown)
+      .mockResolvedValueOnce({
+        ...ACTIVE_WALLET,
+        unallocatedBalance: BigInt(650),
+      } as unknown);
+
+    await teamWalletRepo.allocate(ALLOC_INPUT);
+
+    expect(txMock.teamWalletLedger.create).toHaveBeenCalledTimes(2);
+    expect(txMock.teamWalletLedger.create).toHaveBeenLastCalledWith({
+      data: expect.objectContaining({
+        entryType: TEAM_WALLET_ENTRY_TYPE.ADJUST,
+        amount: BigInt(-50),
+        idempotencyKey: `${ALLOCATE_OFFCHAIN_EXIT_PREFIX}alloc-1`,
+        targetUserId: "user-2",
+      }),
+    });
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 兩筆必須在**同一個交易**裡。
+   *
+   * 分開寫的話，中間掛掉就留下「池扣了、ALLOCATE 記了、出帳沒記」的狀態——
+   * 那正是這次要修的缺陷，只是換成偶發、更難查。這裡的證據是：只開了一次交易，
+   * 而上一條已經斷言兩筆 create 都走在那個交易的 client 上。
+   */
+  it("writes both entries inside the same transaction", async () => {
+    await teamWalletRepo.allocate(ALLOC_INPUT);
+
+    expect(asMock(prisma.$transaction)).toHaveBeenCalledTimes(1);
+    expect(txMock.teamWalletLedger.create).toHaveBeenCalledTimes(2);
   });
 
   it("returns INSUFFICIENT when the pool cannot cover the allocation", async () => {

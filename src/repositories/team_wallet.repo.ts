@@ -6,6 +6,8 @@ import {
   TeamWalletLedger,
 } from "@/generated";
 import {
+  ALLOCATE_OFFCHAIN_EXIT_FEATURE_CODE,
+  ALLOCATE_OFFCHAIN_EXIT_PREFIX,
   TEAM_WALLET_ENTRY_TYPE,
   TEAM_WALLET_STATUS,
   WALLET_OP_OUTCOME,
@@ -390,16 +392,55 @@ export class TeamWalletRepository {
           where: { id: wallet.id },
         });
 
+        const poolAfter =
+          walletAfter?.unallocatedBalance ?? wallet.unallocatedBalance;
+
         const ledger = await tx.teamWalletLedger.create({
           data: {
             teamWalletId: wallet.id,
             entryType: TEAM_WALLET_ENTRY_TYPE.ALLOCATE,
             amount,
-            poolBalanceAfter:
-              walletAfter?.unallocatedBalance ?? wallet.unallocatedBalance,
+            poolBalanceAfter: poolAfter,
             targetUserId,
             operatorUserId,
             idempotencyKey,
+          },
+        });
+
+        /**
+         * Info: (20260818 - Luphia) 同時記一筆負的 `ADJUST`：價值離開了離鏈帳本。
+         *
+         * 守恆勾稽的恆等式是
+         * `Σ(PURCHASE + ADJUST + CONSUME + REFUND) = 池餘額 + Σ 分配餘額`，
+         * 而 `ALLOCATE` / `REVOKE` 被**排除**，理由是它們只在池與分配之間搬動、
+         * 淨額為零。那個理由在分配改為鑄到成員自己的鏈上錢包（ADR 015 修訂）之後
+         * 就不成立了：池減少了 `amount`，而**再也沒有分配列去承接它**——
+         * 於是右側少 `amount`、左側不動，每成功分配一次差額就永久多一筆，
+         * 下一輪勾稽就把錢包凍結。按一次「分配」就足以觸發。
+         *
+         * 這筆 `ADJUST` 讓左側同步減少，恆等式全程成立。作法與另外兩條**已經做對**
+         * 的路徑一致：`scripts/migrate_allocations_onchain.ts` 歸零離鏈餘額時、
+         * 以及成員移除的沖銷（`writeOffAllocationForUser`），都是以負的 `ADJUST`
+         * 表達「價值離開帳本」。`allocate()` 是唯一漏掉的那條。
+         *
+         * 刻意不改勾稽去把 `ALLOCATE` 算進左側：改制前的 `ALLOCATE` 分錄**真的**是
+         * 淨額為零的內部搬動（有對應的分配列），同一個 entryType 現在有兩種語意，
+         * 一刀切會讓舊資料變成違反守恆。
+         *
+         * 鑄造失敗時 `compensateFailedAllocation` 會寫 `ADJUST(+amount)` 並把點數
+         * 退回池——與這一筆正好對沖，恆等式在補償前後都成立。
+         */
+        await tx.teamWalletLedger.create({
+          data: {
+            teamWalletId: wallet.id,
+            entryType: TEAM_WALLET_ENTRY_TYPE.ADJUST,
+            amount: -amount,
+            poolBalanceAfter: poolAfter,
+            allocationBalanceAfter: BigInt(0),
+            targetUserId,
+            operatorUserId,
+            idempotencyKey: `${ALLOCATE_OFFCHAIN_EXIT_PREFIX}${idempotencyKey}`,
+            featureCode: ALLOCATE_OFFCHAIN_EXIT_FEATURE_CODE,
           },
         });
 
@@ -569,8 +610,17 @@ export class TeamWalletRepository {
    * 恆等式 Σ(PURCHASE + ADJUST + CONSUME + REFUND) = 池餘額 + Σ 分配餘額
    * （ALLOCATE / REVOKE 為內部移轉，不列入左側）。
    */
-  async listAllWallets(): Promise<TeamWallet[]> {
-    return prisma.teamWallet.findMany();
+  async listAllWallets(teamId?: string): Promise<TeamWallet[]> {
+    /**
+     * Info: (20260818 - Luphia) `teamId` 為選填的**範圍限定**（勾稽預設仍是全域）。
+     *
+     * 需要它的兩個地方都不該碰別人的錢包：修復腳本的重驗，以及對真資料庫的 e2e——
+     * 勾稽會**凍結**它掃到的每一個違反者，開發機的資料庫裡有真實團隊，
+     * 一支測試不該有本事凍掉它們。
+     */
+    return prisma.teamWallet.findMany({
+      where: teamId ? { teamId } : undefined,
+    });
   }
 
   /**
@@ -678,6 +728,23 @@ export class TeamWalletRepository {
     return prisma.teamWallet.update({
       where: { id },
       data: { status: TEAM_WALLET_STATUS.FROZEN },
+    });
+  }
+
+  /**
+   * Info: (20260818 - Luphia) 解凍（`scripts/repair_wallet_conservation.ts`）。
+   *
+   * 在此之前**沒有任何程式碼把錢包寫回 ACTIVE**：凍結是單向的，而畫面上寫著
+   * 「請聯繫客服處理」——客服手上卻沒有工具，只能直接改資料庫。
+   *
+   * 這支刻意不做任何判斷（Repository 不含業務邏輯），因此呼叫端有義務先確認
+   * 恆等式已經成立。修復腳本的順序是：補分錄 → 重跑該團隊的勾稽 → 只有零違反
+   * 才呼叫這支。**不要**從 API 直接接上它。
+   */
+  async reactivateWallet(id: string): Promise<TeamWallet> {
+    return prisma.teamWallet.update({
+      where: { id },
+      data: { status: TEAM_WALLET_STATUS.ACTIVE },
     });
   }
 
