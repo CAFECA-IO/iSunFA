@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
+import { isTeamManagerRole } from "@/constants/team";
 import { teamRepo } from "@/repositories/team.repo";
 import { quoteSeatAddition } from "@/services/team_seat.service";
 import { seatQuoteQuerySchema } from "@/validators";
@@ -33,8 +34,19 @@ export async function GET(
      * 這是團隊的帳單資訊，不該讓 EDITOR / VIEWER 看到；也刻意不比邀請寬鬆——
      * 「試算」與「真的送出」看到的規則要一致，否則畫面會對沒有權限的人報價。
      */
+    /**
+     * Info: (20260819 - Luphia) 走集中的 `isTeamManagerRole`，不要手寫字面比對。
+     *
+     * `constants/team.ts` 已經寫過理由：這個組合原本以字面字串散落在各端點
+     * （`role !== "OWNER" && role !== "ADMIN"`），每一處都是一次拼錯的機會，
+     * 而拼錯的方向是「權限放寬」。新端點沿用字面字串等於把收斂掉的機會再放出去。
+     *
+     * 而且它有立即的後果：另一條分支正在移除團隊的 ADMIN 角色，並加了一支掃整個
+     * `src` 的測試擋 `"ADMIN"` 字面量。兩邊不論誰第二個合，這一行都會讓那支測試紅
+     * ——那不是誤報，是它正確地發揮作用。
+     */
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
-    if (!operator || (operator.role !== "OWNER" && operator.role !== "ADMIN")) {
+    if (!isTeamManagerRole(operator?.role)) {
       return jsonFail(API_ERRORS.FO_PERMISSION_DENIED_ONLY_OWN);
     }
 
