@@ -170,7 +170,22 @@ CLAUDE.md 的「零捏造」對法規同樣適用：**沒查到出處的數字�
 
 ⚠️ 授權依據為勞基法施行細則 §24，**條號待核對**（§3.2）。
 
-**護欄（Fail Fast）**：曆年制是雇主為了行政方便而選的制度，不得因此讓勞工拿到比週年制少的假。`assertCycleNotDisadvantageous()` 在**授予當下**同時試算兩制，若曆年制的累計授予日數低於週年制同期，即 `throw` 並拒絕授予。
+**護欄（Fail Fast）**：曆年制是雇主為了行政方便而選的制度，不得因此讓勞工拿到比週年制少的假。`assertCycleNotDisadvantageous()` **將**在**授予當下**同時試算兩制，若曆年制的累計授予日數低於週年制同期，即 `throw` 並拒絕授予。
+
+> **狀態（2026-08-19，review B3）：這條護欄尚未接線。** 引擎側的
+> `compareCycleBasisEntitlement()` 已實作並有測試，錯誤碼
+> `VA_LEAVE_CYCLE_DISADVANTAGEOUS` 也已配號，但**沒有任何地方丟它** ——
+> `assertCycleNotDisadvantageous` 目前只存在於註解裡。
+>
+> 不直接接上的原因是缺口 9：現行曆年制比例公式本身會少給，接上護欄會讓
+> **13 個內建假別裡的 11 個**曆年制設定全部授予失敗 —— 那不是 fail fast，
+> 是產品停擺，而錯的是公式不是設定。
+>
+> 在公式修正前的暫代處置：`assertLeavePolicyUnit`（repository，seed 與資料遷移
+> 繞不過去）與 `leavePolicyWriteSchema` 拒絕「年資級距 + 曆年制」這一個會踩到
+> §38 法定下界的組合。其餘曆年制（事假、病假、婚假…）是「一年內不超過」的
+> 上限額度，沒有逐年的法定下界要守，照常運作。內建假別無一使用被擋的組合。
+
 
 這條護欄的性質與財務的 `A = L + E`、ESG 的質量守恆相同：它是一條不可違反的下界，違反就代表輸入或設定有錯，而不是一個需要人工判斷的警示。依 CLAUDE.md §6，在 Service 開頭凍結，絕不讓髒資料進 DB。
 
@@ -410,8 +425,8 @@ enum LeaveAccrualMethod {
  * ToDo: (20260817 - Julian) 授權依據為勞動基準法施行細則 §24，條號待法務複核。
  *
  * 曆年制是**雇主為了行政方便**而選的制度，這個方便不能由勞工買單 ——
- * `assertCycleNotDisadvantageous` 在授予當下同時試算兩制，
- * 曆年制累計低於週年制即 throw（ADR 021 §3）。
+ * `assertCycleNotDisadvantageous` **將**在授予當下同時試算兩制，
+ * 曆年制累計低於週年制即 throw（ADR 021 §3）。**尚未接線，見 review B3 與 §17 缺口 9。**
  */
 enum LeaveCycleBasis {
   HIRE_ANNIVERSARY // Info: (20260817 - Julian) 週年制：週期起點為到職日
@@ -438,7 +453,7 @@ enum LeaveUnitBasis {
  * Info: (20260817 - Julian) 請假時數的捨入方向。
  *
  * 預設 UP（不足一單位以一單位計）是**對勞工不利**的預設，必須載明於工作規則。
- * 刻意沒有 DOWN：往下捨的結果會被 assertCycleNotDisadvantageous 擋掉並 throw，
+ * 刻意沒有 DOWN：往下捨的結果**將**被 assertCycleNotDisadvantageous 擋掉並 throw（尚未接線），
  * 提供一個必然觸發例外的設定值，只會讓租戶以為那是可用的選項。
  */
 enum LeaveRoundingMode {
@@ -1330,7 +1345,22 @@ export function resolveLeaveMinutes(input: IUnitResolutionInput): number;
           跨級距年 = 前段級距日數 × 前段占比 + 後段級距日數 × 後段占比
 ```
 
-**護欄**：`compareCycleBasisEntitlement()`（純函數，`src/lib/leave_entitlement_rules.ts`）以**年資年度 × 重疊比例歸屬**比較兩制，service 端的 `assertCycleNotDisadvantageous` 依其結果 `throw AppError(VA_LEAVE_CYCLE_DISADVANTAGEOUS)`。
+**護欄**：`compareCycleBasisEntitlement()`（純函數，`src/lib/leave_entitlement_rules.ts`）以**年資年度 × 重疊比例歸屬**比較兩制，service 端的 `assertCycleNotDisadvantageous` **將**依其結果 `throw AppError(VA_LEAVE_CYCLE_DISADVANTAGEOUS)`。
+
+> **狀態（2026-08-19，review B3）：這條護欄尚未接線。** 引擎側的
+> `compareCycleBasisEntitlement()` 已實作並有測試，錯誤碼
+> `VA_LEAVE_CYCLE_DISADVANTAGEOUS` 也已配號，但**沒有任何地方丟它** ——
+> `assertCycleNotDisadvantageous` 目前只存在於註解裡。
+>
+> 不直接接上的原因是缺口 9：現行曆年制比例公式本身會少給，接上護欄會讓
+> **13 個內建假別裡的 11 個**曆年制設定全部授予失敗 —— 那不是 fail fast，
+> 是產品停擺，而錯的是公式不是設定。
+>
+> 在公式修正前的暫代處置：`assertLeavePolicyUnit`（repository，seed 與資料遷移
+> 繞不過去）與 `leavePolicyWriteSchema` 拒絕「年資級距 + 曆年制」這一個會踩到
+> §38 法定下界的組合。其餘曆年制（事假、病假、婚假…）是「一年內不超過」的
+> 上限額度，沒有逐年的法定下界要守，照常運作。內建假別無一使用被擋的組合。
+
 
 > **不是比累計總數。** 第一版寫成「到 `asOf` 為止兩制累計相比」，實作後發現那個定義沒有意義：週年制在週年日一次給整年份、曆年制在 1/1 一次給整年份，任意時點總有一方領先 —— 同一份設定在 2/28 判違法、3/1 判合法，那不是護欄是擲骰子。改以每一個完整年資年度為窗、兩制的每一筆授予都按「週期與窗的重疊天數 ÷ 週期總天數」歸屬，同一把尺量完，剩下的才是真正的多寡差異。
 >
@@ -1697,7 +1727,7 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 | 6 | 行事曆未含加班 | 「誰在加班」與「誰在放假」是同一個營運問題的兩面 | 里程碑 5 evaluate；不影響本期交付 |
 | 7 | `deriveGrantSchedule` 對「年中到職且年中離職」未定義 | 離職當年的比例給假 | T2 的邊界案例，里程碑 2 補 |
 | 8 | **四種假別的日數或工資取決於「事件屬性」，`LeavePolicy` 只有單一 `annualDays` 與單一 `paidRatio`** | 喪假（親等 8/6/3 日）、產假（工資依年資滿六個月與否）、流產假（妊娠週數 4 星期／1 星期／5 日）、普通傷病假（住院與未住院上限不同、二年內另有合計上限） | 暫以 `accrualMethod = PER_EVENT` + `annualDays = null`，實際日數由 HR 於授予時輸入並記於 `LeaveGrant.reason`。**正解是把 `LeaveAccrualTier` 從「年資月數」推廣成通用的分級維度**；在推廣之前不得硬填一個數字 —— 填 8 日的喪假會讓祖父母喪假多給兩日，那不是保守而是錯誤。里程碑 2 決定是否推廣 |
-| 9 | **§6.3 的曆年制比例公式方向錯了** | 實作 `compareCycleBasisEntitlement` 後實測：一個 3/1 到職的人，週年制在 9/1 拿到法定 3 日，曆年制按「該年剩餘天數占比」只給 3 × 122/365 ≈ 1.1 日 —— 第一個年資年度就低於法定標準，而護欄會擋下**所有**曆年制設定 | 曆年制的實務作法是「把未來的年資額度**提前**給」，不是「把當期法定額度按比例砍掉」。公式須改為「不低於同期週年制法定日數」的下界形式。⚠️ 待法務確認函釋依據後修正，`leave_cycle_guard.test.ts` 已把現況釘成一條會紅的斷言，修正後改斷言而非刪測試 |
+| 9 | **§6.3 的曆年制比例公式方向錯了** | 實作 `compareCycleBasisEntitlement` 後實測：一個 3/1 到職的人，週年制在 9/1 拿到法定 3 日，曆年制按「該年剩餘天數占比」只給 3 × 122/365 ≈ 1.1 日 —— 第一個年資年度就低於法定標準，而護欄一旦接上會擋下**所有**曆年制設定（因此**目前刻意不接**，改以不變式暫時只拒絕「年資級距 + 曆年制」，見 review B3） | 曆年制的實務作法是「把未來的年資額度**提前**給」，不是「把當期法定額度按比例砍掉」。公式須改為「不低於同期週年制法定日數」的下界形式。⚠️ 待法務確認函釋依據後修正，`leave_cycle_guard.test.ts` 已把現況釘成一條會紅的斷言，修正後改斷言而非刪測試 |
 | 10 | **`LeaveProofRequirement` 沒有「一律要求證明」這個值** | 公傷病假要職災認定文件、產假要診斷證明、婚假要結婚證書、喪假要訃聞 —— 這四種**與請假日數無關**，但 enum 只有 `NONE` / `OPTIONAL` / `REQUIRED_OVER_THRESHOLD` 三個值 | 這五個假別（含普通傷病假）原本標 `REQUIRED_OVER_THRESHOLD`，而 `ILeavePolicySeed` **當時根本沒有門檻欄位** —— 五列全部帶著 `proofThresholdDays = null` 落地且不報錯。已補 `proofThresholdDays` 欄位與雙向不變式（`REQUIRED_OVER_THRESHOLD ⇔ 門檻非 null 且 > 0`），並把五個假別**暫降為 `OPTIONAL`**。<br>⚠️ 降級是為了不在法規欄位上寫一個猜的數字，**不是**主張證明可有可無。<br>不變式**刻意不接受門檻 = 0**：那讀起來是「一律要求」，放行它等於用門檻欄位偷渡一個缺失的 enum 值，缺口從此不會有人再提。正解是新增 `LeaveProofRequirement.REQUIRED`，里程碑 2 決定 |
 | 11 | **`proofThresholdDays` 是公司政策，不是法定數字** | 勞工請假規則 §10 只說「雇主得要求勞工提出有關證明文件」，未訂日數門檻 | 內建 seed 一律為 null，由租戶在假別設定畫面自行填寫。**本模組不得提供「內建預設門檻」** —— 一個看起來像查證過的數字比空白更難被質疑 |
 

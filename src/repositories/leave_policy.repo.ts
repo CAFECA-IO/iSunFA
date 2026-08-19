@@ -199,6 +199,7 @@ const assertWritable = (
   assertLeavePolicyUnit({
     id: leavePolicyId,
     accrualMethod: input.accrualMethod,
+    cycleBasis: input.cycleBasis,
     quotaMode: input.quotaMode,
     unitBasis: input.unitBasis,
     minimumUnitMinutes: input.minimumUnitMinutes,

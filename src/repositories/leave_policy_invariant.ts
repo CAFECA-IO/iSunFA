@@ -24,6 +24,7 @@
 
 import {
   LeaveAccrualMethod,
+  LeaveCycleBasis,
   LeaveProofRequirement,
   LeaveQuotaMode,
   LeaveUnitBasis,
@@ -43,6 +44,7 @@ export interface IStorableLeavePolicy {
   /** Info: (20260817 - Julian) 新建時為 undefined；更新時用於擋自我併計 */
   id?: string | null;
   accrualMethod: LeaveAccrualMethod;
+  cycleBasis: LeaveCycleBasis;
   quotaMode: LeaveQuotaMode;
   unitBasis: LeaveUnitBasis;
   minimumUnitMinutes: number | null | undefined;
@@ -64,6 +66,45 @@ export interface IStorableLeavePolicy {
  * 但那會動到 seed 與測試的呼叫點，留待下一次進到這個檔案時一併處理。
  */
 export function assertLeavePolicyUnit(params: IStorableLeavePolicy): void {
+  /**
+   * Info: (20260819 - Julian) **年資級距 + 曆年制暫時不可用**（review B3、計畫書 §17 缺口 9）。
+   *
+   * ## 為什麼擋
+   *
+   * ADR 021 §3.1 承諾了一條下界：曆年制的授予不得低於同期週年制
+   * （§38 是法定**最低**標準，換一種給假週期不能把它換低）。那條護欄叫
+   * `assertCycleNotDisadvantageous`，而**它從來沒有被實作** —— 引擎側的
+   * `compareCycleBasisEntitlement()` 有、錯誤碼 `VA_LEAVE_CYCLE_DISADVANTAGEOUS`
+   * 有、斷言它存在的測試也有，就是沒有任何地方丟它。
+   *
+   * ## 為什麼不是直接把護欄接上
+   *
+   * 因為現行的曆年制比例公式本身是錯的（缺口 9：3/1 到職者第一個年資年度
+   * 拿到 3 × 122/365 ≈ 1.1 日，法定 3 日）。接上護欄會讓**每一個**曆年制設定
+   * 都授予失敗 —— 而 13 個內建假別裡有 11 個是曆年制。那不是 fail fast，
+   * 是產品停擺，而真正的錯誤在公式不在設定。
+   *
+   * ## 為什麼只擋這一個組合
+   *
+   * 會踩到法定下界的只有 `SENIORITY_TIER`（§38 特休的年資級距）。
+   * `FIXED_PER_CYCLE`（事假 14 日、病假 30 日）與 `PER_EVENT`（婚假、喪假）
+   * 是「一年內不超過」的上限額度，沒有一條逐年的法定**下界**要守。
+   * 因此只擋危險的那一格：內建假別無一使用此組合（特休是年資級距 + 週年制），
+   * 租戶自訂時才擋得到。
+   *
+   * ToDo: (20260819 - Julian) 缺口 9 的公式修正（曆年制應為「提前給」而非
+   * 「按比例砍」）落地後，改為接上 `assertCycleNotDisadvantageous`，並移除本段。
+   */
+  if (
+    params.accrualMethod === LeaveAccrualMethod.SENIORITY_TIER &&
+    params.cycleBasis === LeaveCycleBasis.CALENDAR_YEAR
+  ) {
+    throw new LeavePolicyInvariantError(
+      "SENIORITY_TIER with CALENDAR_YEAR is temporarily rejected: the proportional first-cycle formula grants less than the statutory minimum (Article 38), and the guard that would catch it is not wired yet",
+      `accrualMethod=${params.accrualMethod}, cycleBasis=${params.cycleBasis}`,
+    );
+  }
+
   const hasUnitMinutes =
     params.minimumUnitMinutes !== null &&
     params.minimumUnitMinutes !== undefined;

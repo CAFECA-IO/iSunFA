@@ -5,6 +5,7 @@ import {
   IStorableLeavePolicy,
 } from "@/repositories/leave_policy_invariant";
 import {
+  LeaveCycleBasis,
   DEFAULT_LEAVE_POLICY_SEED,
   LeaveAccrualMethod,
   LeaveProofRequirement,
@@ -20,6 +21,7 @@ import {
  */
 
 const valid: IStorableLeavePolicy = {
+  cycleBasis: LeaveCycleBasis.HIRE_ANNIVERSARY,
   id: "policy-annual",
   accrualMethod: LeaveAccrualMethod.SENIORITY_TIER,
   quotaMode: LeaveQuotaMode.QUOTA,
@@ -290,6 +292,7 @@ describe("DEFAULT_LEAVE_POLICY_SEED", () => {
     expect(() =>
       assertLeavePolicyUnit({
         accrualMethod: seed.accrualMethod,
+        cycleBasis: seed.cycleBasis,
         quotaMode: seed.quotaMode,
         unitBasis: seed.unitBasis,
         minimumUnitMinutes: seed.minimumUnitMinutes,
@@ -301,4 +304,58 @@ describe("DEFAULT_LEAVE_POLICY_SEED", () => {
       }),
     ).not.toThrow();
   });
+});
+
+/**
+ * Info: (20260819 - Julian) 年資級距 + 曆年制的暫時性拒絕（review B3）。
+ *
+ * ADR 021 §3.1 承諾的護欄 `assertCycleNotDisadvantageous` **從未實作** ——
+ * 引擎側的 `compareCycleBasisEntitlement()` 有、錯誤碼有、斷言錯誤碼存在的
+ * 測試也有，就是沒有任何地方丟它。而現行曆年制比例公式會少給
+ * （計畫書 §17 缺口 9：3/1 到職者第一個年資年度拿到 1.1 日，法定 3 日）。
+ *
+ * 在公式修正前，這條不變式擋住唯一會踩到 §38 法定下界的組合。
+ * 它擋在 repository 而不是只擋在 validator，因為**內建假別是 seed 產生的**，
+ * 而 seed 繞過所有 service（ADR 021 §5）。
+ */
+describe("年資級距 + 曆年制（缺口 9 的暫代護欄）", () => {
+  it("拒絕 SENIORITY_TIER + CALENDAR_YEAR", () => {
+    expect(() =>
+      assertLeavePolicyUnit({
+        ...valid,
+        accrualMethod: LeaveAccrualMethod.SENIORITY_TIER,
+        cycleBasis: LeaveCycleBasis.CALENDAR_YEAR,
+        annualDays: null,
+      }),
+    ).toThrow(LeavePolicyInvariantError);
+  });
+
+  it("年資級距配週年制照常放行（特休就是這一組）", () => {
+    expect(() =>
+      assertLeavePolicyUnit({
+        ...valid,
+        accrualMethod: LeaveAccrualMethod.SENIORITY_TIER,
+        cycleBasis: LeaveCycleBasis.HIRE_ANNIVERSARY,
+        annualDays: null,
+      }),
+    ).not.toThrow();
+  });
+
+  /**
+   * Info: (20260819 - Julian) 其餘曆年制不受影響 —— 事假 14 日、病假 30 日
+   * 是「一年內不超過」的**上限**，沒有逐年的法定下界要守。
+   * 擋過頭會讓 13 個內建假別裡的 11 個種不進去。
+   */
+  it.each([LeaveAccrualMethod.FIXED_PER_CYCLE, LeaveAccrualMethod.PER_EVENT])(
+    "%s 配曆年制照常放行",
+    (accrualMethod) => {
+      expect(() =>
+        assertLeavePolicyUnit({
+          ...valid,
+          accrualMethod,
+          cycleBasis: LeaveCycleBasis.CALENDAR_YEAR,
+        }),
+      ).not.toThrow();
+    },
+  );
 });

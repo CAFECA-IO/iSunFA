@@ -116,7 +116,9 @@ export interface IPlannedGrant {
 /**
  * Info: (20260817 - Julian) 曆年制與週年制的累計比較結果（ADR 021 §3.1）。
  *
- * 引擎只算，不 throw —— `assertCycleNotDisadvantageous` 是 service 的職責，
+ * 引擎只算，不 throw —— `assertCycleNotDisadvantageous` **將**是 service 的職責，
+ * ToDo: (20260819 - Julian) 尚未接線（review B3）：引擎側的 `compareCycleBasisEntitlement()` 已實作，但沒有任何地方丟 `VA_LEAVE_CYCLE_DISADVANTAGEOUS`。原因是計畫書 §17 缺口 9——現行曆年制比例公式本身會少給，接上護欄會讓 13 個內建假別裡的 11 個曆年制全部授予失敗。在公式修正前，改以 `assertLeavePolicyUnit` 暫時拒絕「年資級距 + 曆年制」這一個危險組合。
+ *
  * 因為只有它知道該丟哪一個 `AppError`。引擎回一個可判斷的結構，
  * 呼叫端就無法「忘了檢查」（同 `LeaveRecallResolutionOutcome` 的理由）。
  */

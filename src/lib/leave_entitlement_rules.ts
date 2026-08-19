@@ -98,8 +98,9 @@ const compareIsoDate = (left: string, right: string): number =>
   left < right ? -1 : left > right ? 1 : 0;
 
 const daysBetweenInclusive = (fromIso: string, toIso: string): number =>
-  Math.round((toUtcDate(toIso).getTime() - toUtcDate(fromIso).getTime()) / DAY_MS) +
-  1;
+  Math.round(
+    (toUtcDate(toIso).getTime() - toUtcDate(fromIso).getTime()) / DAY_MS,
+  ) + 1;
 
 const daysInYear = (year: number): number =>
   (Date.UTC(year + 1, 0, 1) - Date.UTC(year, 0, 1)) / DAY_MS;
@@ -196,7 +197,9 @@ export function resolveLeaveMinutes(input: ILeaveUnitInput): ILeaveUnitResult {
       break;
     case LeaveDaySegment.CUSTOM: {
       if (startMinute === undefined || endMinute === undefined) {
-        throw new LeaveRuleError("CUSTOM segment requires start and end minute");
+        throw new LeaveRuleError(
+          "CUSTOM segment requires start and end minute",
+        );
       }
       if (endMinute <= startMinute) {
         throw new LeaveRuleError(
@@ -455,7 +458,8 @@ const buildAnniversarySchedule = (
   let cycleIndex = 0;
   while (compareIsoDate(cycleStart, horizon) <= 0) {
     const nextStart =
-      cycleIndex === 0 && policy.accrualMethod === LeaveAccrualMethod.SENIORITY_TIER
+      cycleIndex === 0 &&
+      policy.accrualMethod === LeaveAccrualMethod.SENIORITY_TIER
         ? addMonths(hireDate, 12)
         : addMonths(cycleStart, 12);
     const cycleEnd = addDays(nextStart, -1);
@@ -629,7 +633,9 @@ const buildCalendarMonthSchedule = (
  *
  * ## 引擎只算，不 throw
  *
- * `assertCycleNotDisadvantageous` 是 service 的職責，因為只有它知道該丟哪一個
+ * `assertCycleNotDisadvantageous` **將**是 service 的職責，因為只有它知道該丟哪一個
+ * ToDo: (20260819 - Julian) 尚未接線（review B3）：引擎側的 `compareCycleBasisEntitlement()` 已實作，但沒有任何地方丟 `VA_LEAVE_CYCLE_DISADVANTAGEOUS`。原因是計畫書 §17 缺口 9——現行曆年制比例公式本身會少給，接上護欄會讓 13 個內建假別裡的 11 個曆年制全部授予失敗。在公式修正前，改以 `assertLeavePolicyUnit` 暫時拒絕「年資級距 + 曆年制」這一個危險組合。
+ *
  * `AppError`。引擎回一個可判斷的結構，呼叫端就無法「忘了檢查」。
  */
 export function compareCycleBasisEntitlement(
@@ -751,7 +757,11 @@ export function allocateConsumption(
     if (left.createdAt !== right.createdAt) {
       return left.createdAt < right.createdAt ? -1 : 1;
     }
-    return left.grantId < right.grantId ? -1 : left.grantId > right.grantId ? 1 : 0;
+    return left.grantId < right.grantId
+      ? -1
+      : left.grantId > right.grantId
+        ? 1
+        : 0;
   });
 
   const allocations: ILeaveAllocation[] = [];

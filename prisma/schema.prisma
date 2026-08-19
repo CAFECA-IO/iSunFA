@@ -2891,7 +2891,8 @@ enum LeaveAccrualMethod {
  * ToDo: (20260817 - Julian) 授權依據為勞動基準法施行細則 §24，條號待法務複核。
  *
  * 曆年制是**雇主為了行政方便**而選的制度，這個方便不能由勞工買單 ——
- * `assertCycleNotDisadvantageous` 在授予當下同時試算兩制，
+ * `assertCycleNotDisadvantageous` **將**在授予當下同時試算兩制，
+ * ToDo: (20260819 - Julian) 尚未接線（review B3）：引擎側的 `compareCycleBasisEntitlement()` 已實作，但沒有任何地方丟 `VA_LEAVE_CYCLE_DISADVANTAGEOUS`。原因是計畫書 §17 缺口 9——現行曆年制比例公式本身會少給，接上護欄會讓 13 個內建假別裡的 11 個曆年制全部授予失敗。在公式修正前，改以 `assertLeavePolicyUnit` 暫時拒絕「年資級距 + 曆年制」這一個危險組合。
  * 曆年制累計低於週年制即 throw（ADR 021 §3）。
  */
 enum LeaveCycleBasis {
@@ -2919,7 +2920,7 @@ enum LeaveUnitBasis {
  * Info: (20260817 - Julian) 請假時數的捨入方向。
  *
  * 預設 UP（不足一單位以一單位計）是**對勞工不利**的預設，必須載明於工作規則。
- * 刻意沒有 DOWN：往下捨的結果會被 assertCycleNotDisadvantageous 擋掉並 throw，
+ * 刻意沒有 DOWN：往下捨的結果**將**被 assertCycleNotDisadvantageous 擋掉並 throw（尚未接線，見 review B3），
  * 提供一個必然觸發例外的設定值，只會讓租戶以為那是可用的選項。
  */
 enum LeaveRoundingMode {

@@ -99,7 +99,22 @@ export enum LeaveCycleBasis {
 
 實務上這件事很容易發生：曆年制的首年按比例給假，而比例的分母、起算點、捨入方向各家算法不同，隨手一個「不足一日者捨去」就會少給。
 
-因此 `compareCycleBasisEntitlement()`（純函數）**在授予當下同時試算兩制**，service 端的 `assertCycleNotDisadvantageous` 依其結果 `throw`。
+因此 `compareCycleBasisEntitlement()`（純函數）**將在授予當下同時試算兩制**，service 端的 `assertCycleNotDisadvantageous` 依其結果 `throw`。
+
+> **狀態（2026-08-19，review B3）：這條護欄尚未接線。** 引擎側的
+> `compareCycleBasisEntitlement()` 已實作並有測試，錯誤碼
+> `VA_LEAVE_CYCLE_DISADVANTAGEOUS` 也已配號，但**沒有任何地方丟它** ——
+> `assertCycleNotDisadvantageous` 目前只存在於註解裡。
+>
+> 不直接接上的原因是缺口 9：現行曆年制比例公式本身會少給，接上護欄會讓
+> **13 個內建假別裡的 11 個**曆年制設定全部授予失敗 —— 那不是 fail fast，
+> 是產品停擺，而錯的是公式不是設定。
+>
+> 在公式修正前的暫代處置：`assertLeavePolicyUnit`（repository，seed 與資料遷移
+> 繞不過去）與 `leavePolicyWriteSchema` 拒絕「年資級距 + 曆年制」這一個會踩到
+> §38 法定下界的組合。其餘曆年制（事假、病假、婚假…）是「一年內不超過」的
+> 上限額度，沒有逐年的法定下界要守，照常運作。內建假別無一使用被擋的組合。
+
 
 **比較的方式不是「累計總數相比」。** 第一版是那樣寫的，實作後發現定義不成立：週年制在週年日一次給整年份、曆年制在 1/1 一次給整年份，任意時點總有一方領先 —— 同一份設定在 2/28 判違法、3/1 判合法。改以**每一個完整年資年度為窗**，兩制的每一筆授予都按「該筆週期與本窗的重疊天數 ÷ 該筆週期總天數」歸屬進來，兩邊用同一把尺，時點差異被消掉。
 

@@ -61,7 +61,8 @@ export enum LeaveUnitBasis {
  * Info: (20260817 - Julian) 請假時數的捨入方向，對齊 Prisma enum LeaveRoundingMode。
  *
  * 預設 `UP`（不足一單位以一單位計）是**對勞工不利**的預設，必須載明於工作規則。
- * 刻意沒有 `DOWN`：往下捨的結果會被 `assertCycleNotDisadvantageous` 擋掉並 throw，
+ * 刻意沒有 `DOWN`：往下捨的結果**將**被 `assertCycleNotDisadvantageous` 擋掉並 throw，
+ * ToDo: (20260819 - Julian) 尚未接線（review B3）：引擎側的 `compareCycleBasisEntitlement()` 已實作，但沒有任何地方丟 `VA_LEAVE_CYCLE_DISADVANTAGEOUS`。原因是計畫書 §17 缺口 9——現行曆年制比例公式本身會少給，接上護欄會讓 13 個內建假別裡的 11 個曆年制全部授予失敗。在公式修正前，改以 `assertLeavePolicyUnit` 暫時拒絕「年資級距 + 曆年制」這一個危險組合。
  * 提供一個必然觸發例外的設定值，只會讓租戶以為那是可用的選項。
  */
 export enum LeaveRoundingMode {

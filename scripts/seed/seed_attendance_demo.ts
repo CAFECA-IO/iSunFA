@@ -966,6 +966,7 @@ async function seedLeavePolicies(): Promise<Map<string, string>> {
      */
     assertLeavePolicyUnit({
       accrualMethod: seed.accrualMethod,
+      cycleBasis: seed.cycleBasis,
       quotaMode: seed.quotaMode,
       unitBasis: seed.unitBasis,
       minimumUnitMinutes: seed.minimumUnitMinutes,

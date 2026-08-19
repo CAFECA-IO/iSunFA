@@ -101,7 +101,7 @@ _追蹤重大架構變更背後的歷史脈絡與取捨：_
 - **[ADR 010: Immutable Pipeline, File-System Queue, and Stateless Workers](architecture/decisions/010_immutable_pipeline_and_stateless_workers.md)**：採用無狀態攤銷、不可變資料管道與 Web3 檔案系統佇列的分散式高可用設計。
 - **[ADR 011: Agentic Reflection and Deterministic Validation](architecture/decisions/011_agentic_reflection_and_deterministic_validation.md)**：AI 反思機制與確定性驗證層，建立 BSI 級別的自評重做與懸記防護網。
 - **[ADR 015: Off-chain Team Wallet Ledger](architecture/decisions/015_offchain_team_wallet_ledger.md)**：團隊錢包與訂閱額度採 C 案混合制——離鏈決定論帳本營運（免逐次簽章、append-only Ledger + 守恆勾稽），每日 merkle root 鏈上錨定；1:1 backing 為金鑰治理到位後的 Phase 2。
-- **[ADR 021: Leave Types as Configurable Data](architecture/decisions/021_leave_policy_as_data_and_accrual_cycle.md)**：假別規則資料化——「行為分類用 enum、參數用欄位」的切法、到職日制與曆年制雙軌並存及「不低於週年制」護欄，以及「半天不是 240 分鐘」的單位基準。
+- **[ADR 021: Leave Types as Configurable Data](architecture/decisions/021_leave_policy_as_data_and_accrual_cycle.md)**：假別規則資料化——「行為分類用 enum、參數用欄位」的切法、到職日制與曆年制雙軌並存及規劃中的「不低於週年制」護欄（**尚未接線**，見 ADR 021 §3.1 的狀態說明），以及「半天不是 240 分鐘」的單位基準。
 - **[ADR 022: Append-Only Ledger for Leave Entitlement](architecture/decisions/022_leave_entitlement_append_only_ledger.md)**：假勤額度採批次授予 + append-only 帳本（比照 ADR 015），餘額為可重建的派生快取；帳本單位為分鐘，「日」只出現在授予與折現兩個端點。
 - **[ADR 023: Approval Chain Snapshots and SoD](architecture/decisions/023_leave_approval_chain_snapshot_and_sod.md)**：簽核鏈於送出當下固化成快照，組織異動不改寫歷史；空鏈拒絕送出而非自動核准；額度不預扣，扣減發生在最後一關通過的同一個交易內。
 - **[ADR 024: Overtime Recognition and the Payroll Boundary](architecture/decisions/024_overtime_recognition_premium_tiers_and_module_boundary.md)**：加班認列為「核准 ∩ 打卡事實」取小者；§24 加成切成可稽核分段；補休 1:1 一段一批以保留級距；模組邊界劃在分鐘，不算金額（同 ADR 020）。

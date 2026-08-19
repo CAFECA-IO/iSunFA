@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, jest } from "@jest/globals";
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterAll,
+  jest,
+} from "@jest/globals";
 import { LeaveBalanceService } from "@/services/leave_balance.service";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
@@ -34,29 +41,23 @@ import {
 
 /**
  * Info: (20260819 - Julian) 權限閘走 `leave_visibility.ts`，而那一支直接取
- * repository 單例（與 `overtime_visibility.ts` 同一種寫法）。因此這裡把兩個
- * 單例換掉，才測得到「閘有沒有真的擋」而不是「Prisma 連不連得上」。
+ * repository 單例（與 `overtime_visibility.ts` 同一種寫法）。因此這裡要把
+ * 那兩支方法換掉，才測得到「閘有沒有真的擋」而不是「Prisma 連不連得上」。
  *
- * 預設放行（`hasAnyFunction` 回 true），讓既有的授予／調整案例照舊；
- * 要驗被擋時再逐案改成 false。
- */
-jest.mock("@/repositories/employee_hr_function.repo", () => ({
-  employeeHrFunctionRepo: { hasAnyFunction: jest.fn() },
-}));
-jest.mock("@/repositories/employee.repo", () => ({
-  employeeRepo: { managesEmployee: jest.fn() },
-}));
-
-/**
- * Info: (20260819 - Julian) 用 `jest.mocked()` 而不是 `as jest.Mock`。
+ * ## 為什麼用 `jest.spyOn` 而不是 `jest.mock`
  *
- * jest 30 的 `jest.Mock` 不帶型別參數時，引數會被推成 `never` ——
- * `mockResolvedValue(true)` 於是編不過。`jest.mocked()` 保留被 mock 那支的
- * 真實簽名，因此 `Promise<boolean>` 這件事仍然被型別系統看著：
- * 哪天 `hasAnyFunction` 改成回傳物件，這裡會當場編譯失敗而不是靜默通過。
+ * `jest.mock()` 的工廠依賴**呼叫被提升到 import 之前**。這個專案走
+ * `next/jest`（SWC）而且 `jest` 是從 `@jest/globals` 具名匯入的，那個提升
+ * 不成立 —— 模組先被求值、`leave_visibility.ts` 已經抓到真的單例，
+ * 之後才登記 mock。症狀是 `hasAnyFunctionMock.mockReset is not a function`：
+ * 拿到的是**真的那支方法**，不是 mock。
+ *
+ * `jest.spyOn` 沒有這個前提：它在執行當下改寫物件上的屬性，而
+ * `leave_visibility.ts` 是在呼叫時才做屬性存取（`repo.hasAnyFunction(...)`），
+ * 因此一定看得到被換掉的那一支。
  */
-const hasAnyFunctionMock = jest.mocked(employeeHrFunctionRepo.hasAnyFunction);
-const managesEmployeeMock = jest.mocked(employeeRepo.managesEmployee);
+const hasAnyFunctionMock = jest.spyOn(employeeHrFunctionRepo, "hasAnyFunction");
+const managesEmployeeMock = jest.spyOn(employeeRepo, "managesEmployee");
 
 const BOOK = "book-1";
 const EMPLOYEE = "emp-006";
@@ -164,6 +165,15 @@ beforeEach(() => {
   // Info: (20260819 - Julian) 預設：是 HR、不是誰的主管
   hasAnyFunctionMock.mockReset().mockResolvedValue(true);
   managesEmployeeMock.mockReset().mockResolvedValue(false);
+});
+
+/**
+ * Info: (20260819 - Julian) `spyOn` 改的是真的那個單例物件，不還原會漏到
+ * 同一個 worker 裡跑的其他測試檔 —— 而那種汙染的症狀是「單獨跑會過、
+ * 整包跑會紅」，最難查的一種。
+ */
+afterAll(() => {
+  jest.restoreAllMocks();
 });
 
 describe("L33 — 授予的對象篩選", () => {

@@ -38,7 +38,7 @@ const policyCodeSchema = z
  * 給假方式決定能不能有固定日數），只送一部分會讓不變式對著一半新一半舊的
  * 組合做判斷 —— 而那個組合從來沒有真的存在過。
  */
-export const leavePolicyWriteSchema = z.object({
+const leavePolicyWriteBaseSchema = z.object({
   code: policyCodeSchema,
   name: z.string().trim().min(1).max(50),
   accrualMethod: z.enum([
@@ -85,7 +85,39 @@ export const leavePolicyWriteSchema = z.object({
   legalBasis: z.string().trim().max(200).nullable().default(null),
 });
 
-// Info: (20260818 - Julian) 級距表的一列。階梯本身的規則（遞增、不重複）在不變式，不在這裡
+/**
+ * Info: (20260819 - Julian) 年資級距 + 曆年制暫時擋下（review B3、計畫書 §17 缺口 9）。
+ *
+ * ## 為什麼掛在 `leavePolicyWriteSchema` 本身而不是另外開一個名字
+ *
+ * 另開一個 `...WithCycleGuard` 就等於留下兩個名字，而舊的那個仍然編得過、
+ * 仍然可以被 import —— 下一支端點照著既有寫法抄，就抄到沒有護欄的那一個。
+ * **這正是 B3 本身的失敗模式**（能力存在、接線沒接上），不該在修它的時候
+ * 再造一個。掛在原名上，繞不過去。
+ *
+ * 真正的把關在 `assertLeavePolicyUnit`（repository —— seed 與資料遷移繞不過去），
+ * 這裡多擋一次是為了**訊息**：不變式丟的是給開發者看的英文，
+ * 而設定畫面上的人需要知道自己選錯了哪兩格。
+ *
+ * ToDo: (20260819 - Julian) 缺口 9 的比例公式修正落地、
+ * `assertCycleNotDisadvantageous` 接上之後，本段與不變式那一段一起移除。
+ */
+export const leavePolicyWriteSchema = leavePolicyWriteBaseSchema.superRefine(
+  (value, ctx) => {
+    if (
+      value.accrualMethod === LeaveAccrualMethod.SENIORITY_TIER &&
+      value.cycleBasis === LeaveCycleBasis.CALENDAR_YEAR
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "年資級距目前不支援曆年制：現行比例公式在第一個年資年度會低於法定日數（勞基法 §38），而攔截它的護欄尚未接線",
+        path: ["cycleBasis"],
+      });
+    }
+  },
+);
+
 export const leaveAccrualTierSchema = z.object({
   minSeniorityMonths: z.number().int().min(0).max(1200),
   days: z.number().positive().max(366),
