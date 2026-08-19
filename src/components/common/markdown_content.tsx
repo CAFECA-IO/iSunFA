@@ -23,6 +23,7 @@ import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_tab
 import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
 import { padAllTableHeaders } from "@/lib/utils/markdown_table_columns";
 import { stripLeadingDocumentTitle } from "@/lib/utils/carbon_report_title";
+import { stripEchoedSectionHeadings } from "@/lib/utils/markdown_echoed_heading";
 
 // Info: (20260720 - Tzuhan) #54 證據鏈元件動態載入:含 RecordTabModal 依賴鏈,不拖累一般 markdown 渲染
 const EvidenceChain = dynamic(
@@ -232,10 +233,18 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
       const titled = stripDocumentTitle
         ? stripLeadingDocumentTitle(content).body
         : content;
+      /**
+       * Info: (20260819 - Emily) `stripEchoedSectionHeadings` 的位置與
+       * `buildCarbonReportHtml` 完全一致(comment → br → office → echo):
+       * 兩個渲染端看到的輸入必須是同一份,否則就是「預覽對了、匯出沒對」
+       * 那個形狀的下一次(本檔上方已記過三次)。
+       */
       const normalized = padAllTableHeaders(
         convertTimelineBlocksToTables(
-          replaceOfficeSymbolChars(
-            stripHtmlLineBreaksOutsideFences(stripMarkdownComments(titled)),
+          stripEchoedSectionHeadings(
+            replaceOfficeSymbolChars(
+              stripHtmlLineBreaksOutsideFences(stripMarkdownComments(titled)),
+            ),
           ),
         ),
       );

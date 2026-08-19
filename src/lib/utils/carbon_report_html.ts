@@ -9,6 +9,7 @@ import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_tab
 import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
 import { padAllTableHeaders } from "@/lib/utils/markdown_table_columns";
 import { stripLeadingDocumentTitle } from "@/lib/utils/carbon_report_title";
+import { stripEchoedSectionHeadings } from "@/lib/utils/markdown_echoed_heading";
 import {
   CARBON_PDF_CHART_MAX_HEIGHT_MM,
   CARBON_PDF_FONT_STACK,
@@ -659,9 +660,26 @@ export const buildCarbonReportHtml = (
    * 剝除只看「第一個非空行」，會被那行註解擋住而漏剝。
    * 預覽端由 `MarkdownContent` 的 `stripDocumentTitle` 做同一件事。
    */
-  const source = stripLeadingDocumentTitle(
-    stripHtmlLineBreaksOutsideFences(stripMarkdownComments(markdown)),
-  ).body;
+  /**
+   * Info: (20260819 - Emily) 順帶剝掉「標題之後那一行同文的內容」(`open/36` 的一半)。
+   *
+   * 排序有兩個約束,兩個都是必要的:
+   * 1. 要在 `stripMarkdownComments` **之後** —— 標題與同文那一行之間若夾著段落錨點
+   *    的 HTML 註解,相鄰判定會被那行註解擋掉。
+   * 2. 要在 `restoreLineStructure` / `splitInlineListItems` **之前** ——
+   *    那兩支會往內容裡插入換行,同文那一行一旦被拆成兩行就不再等於標題。
+   *
+   * `replaceOfficeSymbolChars` 先套一次,讓兩個渲染端在同一個點上看到同一份文字
+   * (`MarkdownContent` 的順序也是 comment → br → office → echo)。
+   * 它是冪等且不改長度的,後面鏈上再套一次無害。
+   */
+  const source = stripEchoedSectionHeadings(
+    replaceOfficeSymbolChars(
+      stripLeadingDocumentTitle(
+        stripHtmlLineBreaksOutsideFences(stripMarkdownComments(markdown)),
+      ).body,
+    ),
+  );
   /**
    * Info: (20260811 - Emily) 既有草稿裡的 mermaid timeline 在此轉成表格。
    * 產表端已改成直接輸出表格,但既有草稿的 markdown 裡存著改動前產生的 timeline 區塊,
