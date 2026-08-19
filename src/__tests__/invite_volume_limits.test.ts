@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
-import { assertInviteVolumeWithinLimits } from "@/services/team_invitation.service";
+import {
+  assertInviteVolumeWithinLimits,
+  getInviteLimits,
+  resolveCooldownRemaining,
+} from "@/services/team_invitation.service";
 import { teamRepo } from "@/repositories/team.repo";
 import { systemSettingService } from "@/services/system_setting.service";
 import { SystemSettingKey } from "@/constants/system_setting";
@@ -24,6 +28,8 @@ jest.mock("@/repositories/team.repo", () => ({
   teamRepo: {
     countPendingInvitations: jest.fn(async () => 0),
     countInvitationsCreatedSince: jest.fn(async () => 0),
+    // Info: (20260819 - Luphia) 冷卻讀最近一封邀請的時間（產品決定 20260819）
+    findLastInvitationSentAt: jest.fn(async () => null),
   },
 }));
 
@@ -45,6 +51,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   asMock(teamRepo.countPendingInvitations).mockResolvedValue(0);
   asMock(teamRepo.countInvitationsCreatedSince).mockResolvedValue(0);
+  asMock(teamRepo.findLastInvitationSentAt).mockResolvedValue(null);
   asMock(systemSettingService.get).mockResolvedValue(undefined);
 });
 
@@ -161,5 +168,91 @@ describe("assertInviteVolumeWithinLimits", () => {
     await expect(
       assertInviteVolumeWithinLimits("team-1", NOW_MS),
     ).rejects.toMatchObject({ code: "TW000023" });
+  });
+});
+
+/**
+ * Info: (20260819 - Luphia) 邀請寄送的冷卻（產品決定 20260819）。
+ *
+ * 與「每分鐘 10 封」的限流分工不同：限流擋的是狂點，冷卻擋的是**穩定地一直寄**
+ * ——後者在限流眼中完全正常（每分鐘 1 封，永遠不超限）。
+ */
+describe("resolveCooldownRemaining", () => {
+  const LAST = new Date(NOW_MS - 20_000);
+
+  it("沒有寄過就沒有冷卻", () => {
+    expect(resolveCooldownRemaining(null, NOW_MS, 60)).toBe(0);
+  });
+
+  it("距上一封 20 秒、冷卻 60 秒 → 還要等 40 秒", () => {
+    expect(resolveCooldownRemaining(LAST, NOW_MS, 60)).toBe(40);
+  });
+
+  /**
+   * Info: (20260819 - Luphia) **向上取整**：回 0 的意思是「現在可以寄」。
+   * 還差 0.4 秒時回 0，前端倒數結束的那一刻按下去會被服務端擋——
+   * 顯示的與實際的必須是同一件事。
+   */
+  it("不足一秒的剩餘無條件進位為 1", () => {
+    expect(
+      resolveCooldownRemaining(new Date(NOW_MS - 59_600), NOW_MS, 60),
+    ).toBe(1);
+  });
+
+  it("已經過了冷卻就回 0，不回負數", () => {
+    expect(
+      resolveCooldownRemaining(new Date(NOW_MS - 120_000), NOW_MS, 60),
+    ).toBe(0);
+  });
+});
+
+describe("assertInviteVolumeWithinLimits：冷卻", () => {
+  it("冷卻中擋下，並帶出剩餘秒數", async () => {
+    asMock(teamRepo.findLastInvitationSentAt).mockResolvedValue(
+      new Date(NOW_MS - 15_000),
+    );
+
+    await expect(
+      assertInviteVolumeWithinLimits("team-1", NOW_MS),
+    ).rejects.toMatchObject({
+      code: "TW000027",
+      data: { retryAfterSeconds: 45 },
+    });
+  });
+
+  /**
+   * Info: (20260819 - Luphia) 冷卻要擋在兩道總量上限**之前**。
+   *
+   * 三道同時成立時，回哪一個決定使用者看到什麼：冷卻是唯一「等一下就好」的那個，
+   * 而另外兩道要他撤回邀請或等到明天。回錯的那一個會讓人做多餘的事。
+   */
+  it("冷卻與總量上限同時成立時，回的是冷卻", async () => {
+    asMock(teamRepo.findLastInvitationSentAt).mockResolvedValue(
+      new Date(NOW_MS - 1_000),
+    );
+    asMock(teamRepo.countPendingInvitations).mockResolvedValue(999);
+
+    await expect(
+      assertInviteVolumeWithinLimits("team-1", NOW_MS),
+    ).rejects.toMatchObject({ code: "TW000027" });
+  });
+});
+
+describe("getInviteLimits", () => {
+  // Info: (20260819 - Luphia) 唯讀：對話框開啟時讀一次，讓倒數在按下去之前就看得到
+  it("回冷卻剩餘與兩道上限的現況", async () => {
+    asMock(teamRepo.findLastInvitationSentAt).mockResolvedValue(
+      new Date(NOW_MS - 10_000),
+    );
+    asMock(teamRepo.countPendingInvitations).mockResolvedValue(3);
+    asMock(teamRepo.countInvitationsCreatedSince).mockResolvedValue(7);
+
+    await expect(getInviteLimits("team-1", NOW_MS)).resolves.toEqual({
+      cooldownSecondsRemaining: 50,
+      pendingCount: 3,
+      pendingLimit: DEFAULT_TEAM_PENDING_INVITE_LIMIT,
+      sentToday: 7,
+      dailyLimit: DEFAULT_TEAM_INVITE_DAILY_LIMIT,
+    });
   });
 });

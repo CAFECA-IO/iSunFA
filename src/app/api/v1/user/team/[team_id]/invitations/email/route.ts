@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
-import { jsonOk, jsonFail } from "@/lib/utils/response";
+import { jsonOk, jsonFail, jsonFailWithPayload } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { enforceRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
@@ -8,7 +8,10 @@ import { teamRepo } from "@/repositories/team.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
 import { canGrantRole, TeamRole } from "@/constants/team";
-import { inviteMemberByEmail } from "@/services/team_invitation.service";
+import {
+  InviteCooldownError,
+  inviteMemberByEmail,
+} from "@/services/team_invitation.service";
 
 /**
  * Info: (20260815 - Luphia) 以 email 邀請成員（規範 §4 / P4）。
@@ -121,6 +124,15 @@ export async function POST(
 
     return jsonOk(result);
   } catch (error) {
+    /**
+     * Info: (20260819 - Luphia) 冷卻的剩餘秒數要帶到前端（產品決定 20260819）。
+     *
+     * 走 `jsonFailWithPayload`（與 402 額度用罄同一個作法）——用一般的 jsonFail
+     * 那個數字就掉了，而前端只剩「請稍後再試」可以顯示，使用者只能一直按。
+     */
+    if (error instanceof InviteCooldownError) {
+      return jsonFailWithPayload(API_ERRORS.TW_INVITE_COOLDOWN, error.data);
+    }
     if (error instanceof ApiError) {
       return jsonFail({
         code: error.code,

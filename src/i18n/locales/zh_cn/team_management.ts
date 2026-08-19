@@ -7,6 +7,11 @@ export const teamManagement = {
   accepting: "处理中...",
   no_teams: "目前没有任何团队。",
   // Info: (20260818 - Luphia) 加席费用的事前披露（产品反馈 20260818）
+  // Info: (20260819 - Luphia) 邀请发送的冷却倒计时（产品决定 20260819）
+  invite_cooldown: {
+    notice: "刚刚发送了一封邀请，请等待 {{seconds}} 秒后再发送下一封。",
+    button: "请等待 {{seconds}} 秒",
+  },
   seat_charge: {
     loading: "正在试算费用…",
     charge_title: "提交后将立即收取 {{amount}}",

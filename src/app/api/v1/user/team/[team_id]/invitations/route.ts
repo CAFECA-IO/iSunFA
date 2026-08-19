@@ -1,7 +1,7 @@
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { stringToHex } from "viem";
-import { jsonOk, jsonFail } from "@/lib/utils/response";
+import { jsonOk, jsonFail, jsonFailWithPayload } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { enforceRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
@@ -15,7 +15,10 @@ import { isAddress } from "viem";
 import { buildPendingInviteKey } from "@/lib/team/pending_invite_key";
 import { canGrantRole, TeamRole } from "@/constants/team";
 import { chargeSeatAddition } from "@/services/team_seat.service";
-import { assertInviteVolumeWithinLimits } from "@/services/team_invitation.service";
+import {
+  InviteCooldownError,
+  assertInviteVolumeWithinLimits,
+} from "@/services/team_invitation.service";
 import { paymentRepo } from "@/repositories/payment.repo";
 import type { IOenCallbackData } from "@/interfaces/payment";
 
@@ -248,6 +251,15 @@ export async function POST(
     // Info: (20260814 - Luphia) 一併回報補收結果，前端才說得出「已補收 N 元」
     return jsonOk({ ...newInvitation, seatCharge });
   } catch (error) {
+    /**
+     * Info: (20260819 - Luphia) 冷卻的剩餘秒數要帶到前端（產品決定 20260819）。
+     *
+     * 走 `jsonFailWithPayload`（與 402 額度用罄同一個作法）——用一般的 jsonFail
+     * 那個數字就掉了，而前端只剩「請稍後再試」可以顯示，使用者只能一直按。
+     */
+    if (error instanceof InviteCooldownError) {
+      return jsonFailWithPayload(API_ERRORS.TW_INVITE_COOLDOWN, error.data);
+    }
     if (error instanceof ApiError) {
       return jsonFail({
         code: error.code,
@@ -305,6 +317,15 @@ export async function GET(
      * 同層的 email 邀請一直是這樣做的（見 `invitations/email/route.ts`），
      * 這裡補齊，兩條路徑的錯誤契約才一致。
      */
+    /**
+     * Info: (20260819 - Luphia) 冷卻的剩餘秒數要帶到前端（產品決定 20260819）。
+     *
+     * 走 `jsonFailWithPayload`（與 402 額度用罄同一個作法）——用一般的 jsonFail
+     * 那個數字就掉了，而前端只剩「請稍後再試」可以顯示，使用者只能一直按。
+     */
+    if (error instanceof InviteCooldownError) {
+      return jsonFailWithPayload(API_ERRORS.TW_INVITE_COOLDOWN, error.data);
+    }
     if (error instanceof ApiError) {
       return jsonFail({
         code: error.code,

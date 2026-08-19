@@ -1207,6 +1207,30 @@ export const API_ERRORS = {
       "The seat charge changed since it was shown; please review it again",
     status: ApiCode.CONFLICT,
   } as IErrorDef,
+  /**
+   * Info: (20260819 - Luphia) 一個人只能擁有一個免費團隊（產品決定 20260819）。
+   *
+   * 邀請量的兩道上限是 **per-team** 的，而建立團隊先前沒有數量上限也沒有限流——
+   * 一個帳號建 10 個免費團隊，就有 10 份 20 封／50 封的額度（review #6684 中）。
+   * 「擁有」指 OWNER：被別人邀請加入的團隊不算，那不是他能開的量。
+   */
+  TW_FREE_TEAM_LIMIT: {
+    code: "TW000026",
+    message: "You can only own one team on the free plan",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  /**
+   * Info: (20260819 - Luphia) 邀請寄送的冷卻時間（產品決定 20260819）。
+   *
+   * 每分鐘 10 封的限流擋的是「狂點」，而冷卻擋的是「穩定地一直寄」：
+   * 兩者的差別在於後者看起來像正常使用。payload 帶 `retryAfterSeconds`，
+   * 前端據此顯示倒數——只說「請稍後再試」而不說多久，使用者只能一直按。
+   */
+  TW_INVITE_COOLDOWN: {
+    code: "TW000027",
+    message: "Please wait before sending another invitation",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
   TW_ALLOCATION_REVOKE_DISABLED: {
     code: "TW000020",
     message: "Revoking allocated credits is no longer supported",

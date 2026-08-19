@@ -3,6 +3,7 @@ import { INVITE_EMAIL_MATCH, TEAM_INVITATION_STATUS } from "@/constants/status";
 import { TeamRole } from "@/constants/team";
 import { SystemSettingKey } from "@/constants/system_setting";
 import {
+  DEFAULT_TEAM_INVITE_COOLDOWN_SECONDS,
   DEFAULT_TEAM_INVITE_DAILY_LIMIT,
   DEFAULT_TEAM_PENDING_INVITE_LIMIT,
 } from "@/constants/subscription_quota";
@@ -98,6 +99,93 @@ const resolveTeamInviteDailyLimit = (): Promise<number> =>
     DEFAULT_TEAM_INVITE_DAILY_LIMIT,
   );
 
+const resolveTeamInviteCooldownSeconds = (): Promise<number> =>
+  resolveNumericSetting(
+    SystemSettingKey.TEAM_INVITE_COOLDOWN_SECONDS,
+    DEFAULT_TEAM_INVITE_COOLDOWN_SECONDS,
+  );
+
+/**
+ * Info: (20260819 - Luphia) 冷卻期間帶著剩餘秒數（產品決定 20260819）。
+ *
+ * 只說「請稍後再試」而不說多久，使用者只能一直按——而每一次按都會再打一次 API。
+ * 剩餘秒數走 payload（同 402 額度用罄的作法），前端據此顯示倒數。
+ */
+export class InviteCooldownError extends ApiError {
+  public data: { retryAfterSeconds: number };
+
+  constructor(retryAfterSeconds: number) {
+    super(
+      API_ERRORS.TW_INVITE_COOLDOWN.code,
+      API_ERRORS.TW_INVITE_COOLDOWN.message,
+      API_ERRORS.TW_INVITE_COOLDOWN.status,
+    );
+    this.name = "InviteCooldownError";
+    this.data = { retryAfterSeconds };
+  }
+}
+
+export interface IInviteLimitsView {
+  /** Info: (20260819 - Luphia) 還要等幾秒才能再寄；0 代表現在就可以 */
+  cooldownSecondsRemaining: number;
+  pendingCount: number;
+  pendingLimit: number;
+  sentToday: number;
+  dailyLimit: number;
+}
+
+/**
+ * Info: (20260819 - Luphia) 邀請量的現況（唯讀），供對話框開啟時顯示。
+ *
+ * 與 `assertInviteVolumeWithinLimits` 讀同一組數字。**刻意不讓它自己判斷能不能寄**
+ * ——那個判斷只有一份，在下面那支；這裡只回原始數字，畫面自己決定怎麼呈現。
+ * 兩邊各判一次的話，「畫面說可以、送出被擋」就會變成可能發生的事。
+ */
+export async function getInviteLimits(
+  teamId: string,
+  nowMs: number,
+): Promise<IInviteLimitsView> {
+  const [pendingLimit, dailyLimit, cooldownSeconds] = await Promise.all([
+    resolveTeamPendingInviteLimit(),
+    resolveTeamInviteDailyLimit(),
+    resolveTeamInviteCooldownSeconds(),
+  ]);
+  const [pendingCount, sentToday, lastSentAt] = await Promise.all([
+    teamRepo.countPendingInvitations(teamId, nowMs),
+    teamRepo.countInvitationsCreatedSince(teamId, new Date(nowMs - DAY_MS)),
+    teamRepo.findLastInvitationSentAt(teamId),
+  ]);
+
+  return {
+    cooldownSecondsRemaining: resolveCooldownRemaining(
+      lastSentAt,
+      nowMs,
+      cooldownSeconds,
+    ),
+    pendingCount,
+    pendingLimit,
+    sentToday,
+    dailyLimit,
+  };
+}
+
+/**
+ * Info: (20260819 - Luphia) 剩餘冷卻秒數（純函式，向上取整）。
+ *
+ * 向上取整而不是四捨五入：回 0 的意思是「現在可以寄」，而還差 0.4 秒時回 0
+ * 會讓前端倒數結束的那一刻按下去被擋——顯示的與實際的必須是同一件事。
+ */
+export function resolveCooldownRemaining(
+  lastSentAt: Date | null,
+  nowMs: number,
+  cooldownSeconds: number,
+): number {
+  if (!lastSentAt) return 0;
+  const elapsedMs = nowMs - lastSentAt.getTime();
+  const remainingMs = cooldownSeconds * 1000 - elapsedMs;
+  return remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;
+}
+
 /**
  * Info: (20260819 - Luphia) 邀請量的兩道團隊層上限（產品決定 20260819）。
  *
@@ -124,10 +212,30 @@ export async function assertInviteVolumeWithinLimits(
     resolveTeamInviteDailyLimit(),
   ]);
 
-  const [pendingCount, sentToday] = await Promise.all([
+  const [pendingCount, sentToday, lastSentAt] = await Promise.all([
     teamRepo.countPendingInvitations(teamId, nowMs),
     teamRepo.countInvitationsCreatedSince(teamId, new Date(nowMs - DAY_MS)),
+    teamRepo.findLastInvitationSentAt(teamId),
   ]);
+
+  /**
+   * Info: (20260819 - Luphia) 冷卻（產品決定 20260819）：距離上一封未滿一分鐘就擋。
+   *
+   * 與「每分鐘 10 封」的限流分工不同：限流擋的是狂點，冷卻擋的是**穩定地一直寄**
+   * ——後者在限流眼中看起來完全正常（每分鐘 1 封，永遠不會超限）。
+   *
+   * 擋在兩道總量上限**之前**：它是最便宜的檢查，而且是使用者最常撞到的一道，
+   * 錯誤訊息也帶得出「還要等幾秒」這種可行動的資訊。
+   */
+  const cooldownRemaining = resolveCooldownRemaining(
+    lastSentAt,
+    nowMs,
+    await resolveTeamInviteCooldownSeconds(),
+  );
+  if (cooldownRemaining > 0) {
+    logger.info("invitation cooldown active", { teamId, cooldownRemaining });
+    throw new InviteCooldownError(cooldownRemaining);
+  }
 
   if (pendingCount >= pendingLimit) {
     logger.info("pending invitation limit reached", {

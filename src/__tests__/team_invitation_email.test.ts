@@ -53,6 +53,8 @@ jest.mock("@/repositories/team.repo", () => ({
      */
     countPendingInvitations: jest.fn(async () => 0),
     countInvitationsCreatedSince: jest.fn(async () => 0),
+    // Info: (20260819 - Luphia) 冷卻讀最近一封邀請的時間（預設 null＝沒有冷卻）
+    findLastInvitationSentAt: jest.fn(async () => null),
   },
 }));
 
@@ -145,6 +147,7 @@ beforeEach(() => {
    */
   asMock(teamRepo.countPendingInvitations).mockResolvedValue(0);
   asMock(teamRepo.countInvitationsCreatedSince).mockResolvedValue(0);
+  asMock(teamRepo.findLastInvitationSentAt).mockResolvedValue(null);
   asMock(systemSettingService.get).mockResolvedValue("https://isunfa.com");
   /**
    * Info: (20260816 - Luphia) acceptInvitation 回 null 代表「沒搶到那一列」，

@@ -37,6 +37,12 @@ jest.mock("@/repositories/team.repo", () => ({
     createTeamInvitation: jest.fn(async () => ({ id: "inv-1" })),
     countPendingInvitations: jest.fn(async () => 0),
     countInvitationsCreatedSince: jest.fn(async () => 0),
+    /**
+     * Info: (20260819 - Luphia) 冷卻讀最近一封邀請的時間（產品決定 20260819）。
+     * 預設 null＝沒有冷卻；替身少了這一支，閘門會以「不是函式」讓整條路徑回 500，
+     * 而那與被測的行為無關（checklist §1.8）。
+     */
+    findLastInvitationSentAt: jest.fn(async () => null),
     getUserByAddress: jest.fn(async () => null),
     // Info: (20260819 - Luphia) 位址邀請會取團隊名稱寫進鏈上通知
     getTeamById: jest.fn(async () => ({ id: "team-1", name: "E2E Team" })),
@@ -86,6 +92,12 @@ jest.mock("@/services/team_invitation.service", () => {
   return {
     inviteMemberByEmail: jest.fn(async () => ({ invitationId: "inv-1" })),
     assertInviteVolumeWithinLimits: actual.assertInviteVolumeWithinLimits,
+    /**
+     * Info: (20260819 - Luphia) 錯誤類別也要是**真的那一個**。
+     * 少了它，route 的 `error instanceof InviteCooldownError` 會對 undefined 做
+     * instanceof 而整條路徑丟 TypeError——而那與被測的行為無關（checklist §1.8）。
+     */
+    InviteCooldownError: actual.InviteCooldownError,
   };
 });
 
@@ -123,6 +135,12 @@ function emailRequest(): {
           email: "invitee@example.com",
           role: "VIEWER",
           authentication: { id: "cred" },
+          /**
+           * Info: (20260819 - Luphia) 席次費用的事前揭露（#6682）之後，兩支端點都
+           * 要求送出畫面顯示過的金額。這裡的情境是免費方案／有空席（不收費），
+           * 因此 0 是正確的期望值。
+           */
+          expectedAmount: 0,
         }),
       },
     ),
@@ -151,6 +169,8 @@ function addressRequest(): NextRequest {
         address: `0x${"1".repeat(40)}`,
         role: "VIEWER",
         authentication: { id: "cred" },
+        // Info: (20260819 - Luphia) 見上方說明（#6682 之後為必填）
+        expectedAmount: 0,
       }),
     },
   );
@@ -166,6 +186,7 @@ beforeEach(() => {
   asMock(webAuthnService.verifySignature).mockResolvedValue(true);
   asMock(teamRepo.countPendingInvitations).mockResolvedValue(0);
   asMock(teamRepo.countInvitationsCreatedSince).mockResolvedValue(0);
+  asMock(teamRepo.findLastInvitationSentAt).mockResolvedValue(null);
 });
 
 describe("邀請寄送端的量控接線", () => {

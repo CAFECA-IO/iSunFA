@@ -13,6 +13,7 @@
 
 import { DEFAULT_FAITH_MEMORY_RETENTION_DAYS } from "@/constants/llm";
 import {
+  DEFAULT_TEAM_INVITE_COOLDOWN_SECONDS,
   DEFAULT_TEAM_INVITE_DAILY_LIMIT,
   DEFAULT_TEAM_PENDING_INVITE_LIMIT,
 } from "@/constants/subscription_quota";
@@ -41,6 +42,8 @@ export enum SystemSettingKey {
    * 預設值與理由見 `DEFAULT_TEAM_PENDING_INVITE_LIMIT` / `DEFAULT_TEAM_INVITE_DAILY_LIMIT`。
    */
   TEAM_PENDING_INVITE_LIMIT = "TEAM_PENDING_INVITE_LIMIT",
+  // Info: (20260819 - Luphia) 邀請寄送的冷卻秒數（產品決定 20260819）
+  TEAM_INVITE_COOLDOWN_SECONDS = "TEAM_INVITE_COOLDOWN_SECONDS",
   TEAM_INVITE_DAILY_LIMIT = "TEAM_INVITE_DAILY_LIMIT",
   /**
    * Deprecated: (20260819 - Luphia) [start] 免費版人數上限已於 2026-08-19 移除
@@ -166,6 +169,12 @@ export const SYSTEM_SETTING_DEFINITIONS: Record<
     envKey: "FREE_PLAN_MAX_MEMBERS",
   },
   // Deprecated: (20260819 - Luphia) [end]
+  [SystemSettingKey.TEAM_INVITE_COOLDOWN_SECONDS]: {
+    key: SystemSettingKey.TEAM_INVITE_COOLDOWN_SECONDS,
+    group: SystemSettingGroup.PAYMENT,
+    isSecret: false,
+    envKey: "TEAM_INVITE_COOLDOWN_SECONDS",
+  },
   [SystemSettingKey.TEAM_PENDING_INVITE_LIMIT]: {
     key: SystemSettingKey.TEAM_PENDING_INVITE_LIMIT,
     group: SystemSettingGroup.PAYMENT,
@@ -233,6 +242,9 @@ export const SYSTEM_SETTING_FALLBACKS: Partial<
   // Info: (20260819 - Luphia) 邀請量上限的保底值，與 subscription_quota 的常數同源
   [SystemSettingKey.TEAM_PENDING_INVITE_LIMIT]: String(
     DEFAULT_TEAM_PENDING_INVITE_LIMIT,
+  ),
+  [SystemSettingKey.TEAM_INVITE_COOLDOWN_SECONDS]: String(
+    DEFAULT_TEAM_INVITE_COOLDOWN_SECONDS,
   ),
   [SystemSettingKey.TEAM_INVITE_DAILY_LIMIT]: String(
     DEFAULT_TEAM_INVITE_DAILY_LIMIT,

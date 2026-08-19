@@ -7,6 +7,11 @@ export const teamManagement = {
   accepting: "처리 중...",
   no_teams: "팀이 없습니다.",
   // Info: (20260818 - Luphia) 좌석 추가 비용의 사전 안내（사용자 제보 20260818）
+  // Info: (20260819 - Luphia) 초대 발송 쿨다운（제품 결정 20260819）
+  invite_cooldown: {
+    notice: "방금 초대를 보냈습니다. {{seconds}}초 후에 다시 보낼 수 있습니다.",
+    button: "{{seconds}}초 대기",
+  },
   seat_charge: {
     loading: "요금을 계산하고 있습니다…",
     charge_title: "전송하면 {{amount}}이 즉시 청구됩니다",
