@@ -2076,7 +2076,11 @@ export enum HrPiiTable {
 > 依計畫書 §14.2「不遷移，重種」—— 現存假勤資料只在 Demo 帳本
 > `demo-book-public-works`，由 `seed_attendance_demo.ts` 重種即可，不寫資料遷移。
 >
-> **實測（2026-08-17）**：直接 `db push` 會因七個必填欄位撞上既有列而中止。
+> **實測（2026-08-17）**：直接 `db push` 會因**八個**必填欄位撞上既有列而中止
+> （2026-08-19 更正，review B10：先前寫「七個」。實際是
+> `leave_request` 的 `leave_policy_id`／`reason_cipher`／`pii_key_version`／
+> `total_minutes`／`total_days` 五個，加上 `leave_day` 的 `minutes`／
+> `day_equivalent_minutes`／`entitlement_engine_version` 三個）。
 > 那些列就是 `TODAY_LEAVE` 的兩張假單（`leave_request` 2 列、`leave_day` 2 列），
 > 先刪再 push 即可，**不需要 `--force-reset`**：
 >
@@ -2091,6 +2095,12 @@ export enum HrPiiTable {
 > 最後一步不可省略：`employee_shift_day` 尚有兩列被投影成 `LEAVE`，
 > 假單刪除後會成為孤兒投影 —— **不違反任何約束，所以不會報錯**，
 > 但現場頁會出現「有人在放假卻查不到是誰」。`clearDemoData()` 會一併洗掉。
+>
+> Info: (20260819 - Julian) 本表是**開發者套用 schema** 時的驗證清單。
+> 部署到有資料的環境請改看
+> `documents/engineering_guidelines/deploy_checklist_leave_overtime_2026q3.md`
+> —— 那一份多處理三件本表沒有的事：移除欄位與 enum 的回滾代價、
+> 正式環境已有真實假單時的停損點、以及「不會噴錯」的那幾種漏做（review B10）。
 
 ---
 
@@ -2133,10 +2143,21 @@ schema 已套用並通過 `@prisma/prisma-schema-wasm` 的 `validate()`
 `LEAVE_POLICY_CODE` 滿足 `key === value` 而被誤判成鏡像，現以命名慣例
 （SCREAMING_SNAKE 不可能是 Prisma enum 的鏡像）排除，而不是再開一張登記表。
 
-> **尚未完成**：`npx prisma generate` 與 `npx prisma migrate dev` 需在 macOS 端執行
+> **尚未完成**：`npx prisma generate` 與 `npx prisma db push` 需在 macOS 端執行
 > （本機環境的 `binaries.prisma.sh` 被封鎖）。在 generate 之前
 > `tsc --noEmit` 有 42 個錯誤，**全部**是「新 model / 新 enum 成員不存在於
 > `src/generated`」這一類，generate 後應歸零。
+>
+> Info: (20260819 - Julian) 這一行原本寫的是 `migrate dev`（review B10）。
+> §19.4 已經為同一個錯誤更正過一次，並在那裡寫明「本專案沒有
+> `prisma/migrations/`，工作流是 `db push` 而不是 `migrate dev`」——
+> **而錯誤在相鄰的下一小節復活了**，且復活的那一份正是部署者會照做的那一份
+> （更正過的那一份長在一張驗證表裡，這一份長在「實際套用紀錄」裡）。
+>
+> 一份文件裡兩處講同一件事，就會有一處先被更正、另一處繼續說舊話。
+> 完整的部署程序已抽到
+> `documents/engineering_guidelines/deploy_checklist_leave_overtime_2026q3.md`
+> —— **那份是唯一的落點**，本節此後只記錄「當時做了什麼」，不再充當操作指引。
 
 ---
 

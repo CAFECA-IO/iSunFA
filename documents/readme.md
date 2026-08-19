@@ -27,6 +27,8 @@
    > 說明為何我們在財務與碳排計算中全面棄用原生 `number`，並強制使用 `Prisma.Decimal` 與 `BigInt`。
 5. 🕘 **[部署檢查表：簽到系統](engineering_guidelines/deploy_checklist_attendance_2026q3.md)**
    > 7 張新表 + `Employee.user_id` 的套用順序、為何**不需要**回填（空值是正確的初始狀態，不是待填），以及四種做錯順序的症狀 —— 其中最難查的一種完全不報錯：座標用地圖標註值而非實測值，seed 會成功，而主角站在現場打不了卡。
+6. 🗓️ **[部署檢查表：假勤系統](engineering_guidelines/deploy_checklist_leave_overtime_2026q3.md)**
+   > 15 張新表、19 個新 enum，以及**與上一份最重要的差別：這次不是純新增**。移除了 `enum LeaveType` 與 `leave_request` 的四個欄位，對兩張既有表加了 8 個必填且無 default 的欄位 —— 因此上一份「回滾程式碼不需要回滾 schema」的結論在這裡**不成立**。另有兩種漏做完全不報錯，以及正式環境已有真實假單時的停損點。
 
 > ℹ️ **Info: (20260817 - Luphia)** 本次新增的程式碼註解多處引用「Code Review 檢查清單 §X」。
 > 那份文件（`engineering_guidelines/code_review_checklist.md`）隨
