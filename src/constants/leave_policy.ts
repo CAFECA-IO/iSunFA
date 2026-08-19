@@ -176,7 +176,13 @@ export enum LeaveBalanceHealth {
  * **這些值嚴禁被規則引擎以 if/switch 比對**（ADR 021 §2.1）——
  * 它們只供 seed 建立、i18n 對照與跨帳本統計。租戶自訂的假別有自己的 code，
  * 一旦引擎開始讀 code，那些假別就會靜默掉進一段沒有為它們寫過的分支。
- * 由 `leave_policy_no_code_branching.test.ts` 釘住。
+ *
+ * Info: (20260819 - Julian) 由 `leave_policy_no_code_branching.test.ts`（T19）釘住。
+ * 那支測試在 review B8 之前**並不存在**，而這句話已經寫在這裡 ——
+ * 讀到的人會以為這件事有人守著。現在它真的存在：以 TypeScript 的 AST
+ * 掃 `src/lib/leave_*`、`src/lib/overtime_*`、`src/services/leave*`、
+ * `src/services/overtime*` 共 13 個檔，四種寫法（字串常值、取用本表的成員、
+ * switch、等值比較）全擋。
  */
 export const LEAVE_POLICY_CODE = {
   ANNUAL: "ANNUAL",

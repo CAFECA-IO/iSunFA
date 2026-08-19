@@ -107,7 +107,8 @@ const MIRRORED: Record<string, Record<string, string>> = {
    * Info: (20260817 - Julian) `LeaveType` 已於本次移除。依 ADR 021，假別是**資料**
    * 而不是型別 —— 它降級為 `LeavePolicy.code` 的 seed 初始列（`LEAVE_POLICY_CODE`）。
    * 那不是字串 enum（值是中文代碼常數而非鍵名），所以它不屬於這裡，
-   * 而是由 `leave_seed_integrity.test.ts` 驗證其與 seed 的一致性。
+   * 而是由 `leave_seed_integrity.test.ts`（T23）驗證其與 seed 的一致性
+   * —— 該檔在 review B8 之前並不存在，現已補上，逐一比對十三個代號。
    */
   LeaveRequestStatus: LeaveConstants.LeaveRequestStatus,
   LeaveRecallStatus: LeaveConstants.LeaveRecallStatus,
@@ -279,7 +280,8 @@ const UI_ONLY = [
  * 帶底線的 SCREAMING_SNAKE 匯出**在型別上不可能**是任何 Prisma enum 的鏡像。
  * 反過來說，這條規則不會放過任何真正該登記的東西 —— 它只擋掉不可能的那一類。
  *
- * 它與 seed 的一致性由 `leave_seed_integrity.test.ts` 負責，不在本檔的職責內。
+ * 它與 seed 的一致性由 `leave_seed_integrity.test.ts`（T23）負責，不在本檔的職責內
+ * —— 該檔在 review B8 之前並不存在，現已補上。
  */
 const isConstantTableName = (name: string): boolean => name.includes("_");
 

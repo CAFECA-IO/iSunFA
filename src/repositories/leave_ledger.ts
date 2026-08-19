@@ -256,3 +256,68 @@ export const writeRestoreForDay = async (
 
   return restored;
 };
+
+/**
+ * Info: (20260817 - Julian) 從帳本重算某員工某假別的餘額。
+ *
+ * 「異動總和」即餘額 —— `GRANT` 是正的、`CONSUME` 是負的，
+ * 所以不需要另外記「授予了多少」。這也是 `readGrantBalances` 的作法，
+ * 兩邊必須一致，否則勾稽會把自己的算法差異報成資料錯誤。
+ */
+export const sumLedgerMinutes = async (
+  tx: Prisma.TransactionClient,
+  params: { accountBookId: string; employeeId: string; leavePolicyId: string },
+): Promise<number> => {
+  const grants = await tx.leaveGrant.findMany({
+    where: {
+      accountBookId: params.accountBookId,
+      employeeId: params.employeeId,
+      leavePolicyId: params.leavePolicyId,
+    },
+    select: { id: true },
+  });
+  if (grants.length === 0) return 0;
+
+  const sum = await tx.leaveLedgerEntry.aggregate({
+    where: { leaveGrantId: { in: grants.map((grant) => grant.id) } },
+    _sum: { deltaMinutes: true },
+  });
+  return sum._sum.deltaMinutes ?? 0;
+};
+
+/**
+ * Info: (20260817 - Julian) 餘額快取寫回。**upsert 而非 update**：
+ * 第一次授予時那一列還不存在，而 `updateMany` 在沒有列時是安靜的成功
+ * （`count === 0` 不是錯誤）—— 那會讓第一批額度授予完成、餘額卻仍是零，
+ * 而扣減端的附條件更新會把它讀成「額度不足」。
+ */
+export const writeBalance = async (
+  tx: Prisma.TransactionClient,
+  params: {
+    accountBookId: string;
+    employeeId: string;
+    leavePolicyId: string;
+    remainingMinutes: number;
+    reconciledAt?: Date | null;
+  },
+): Promise<void> => {
+  await tx.leaveBalance.upsert({
+    where: {
+      employeeId_leavePolicyId: {
+        employeeId: params.employeeId,
+        leavePolicyId: params.leavePolicyId,
+      },
+    },
+    create: {
+      accountBookId: params.accountBookId,
+      employeeId: params.employeeId,
+      leavePolicyId: params.leavePolicyId,
+      remainingMinutes: params.remainingMinutes,
+      reconciledAt: params.reconciledAt ?? null,
+    },
+    update: {
+      remainingMinutes: params.remainingMinutes,
+      ...(params.reconciledAt ? { reconciledAt: params.reconciledAt } : {}),
+    },
+  });
+};

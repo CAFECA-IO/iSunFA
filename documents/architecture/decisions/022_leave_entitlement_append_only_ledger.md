@@ -173,6 +173,7 @@ Worker 重試達上限（3 次）建立 `giveup` 標記或進 DLQ，依 CLAUDE.m
 ## 🚧 8. 後果與待辦
 
 1. **`leave_ledger_conservation.test.ts` 是本模組的紅線之一**（另一條是 ADR 021 的 `no_code_branching`）。它必須驗證：逐批守恆、總量守恆、`rebuildLeaveBalance` 冪等、且重建結果與快取逐欄相同。
+   （✅ 2026-08-19 補上（review B8）。四項全驗，另加「回補退回原批而非重新分配」與「過期批不可扣但仍在帳本總和裡」。以記憶體替身跑真正的 `leave_ledger` 函式 —— **不模擬列鎖與交易隔離**，那是 T10 的事且需要真的 PostgreSQL。為此 `sumLedgerMinutes` / `writeBalance` 由 `leave_grant.repo.ts` 搬到 `leave_ledger.ts`：前者 import `@/lib/prisma`，會把一個吃 `DATABASE_URL` 的連線池拉進 jest，而一條因為環境變數而跑不起來的紅線，與沒有紅線是同一件事。）
 2. **每日勾稽 Worker 掛 `scripts/run_worker.ts`**，比照出勤模組 `startServiceLoop("AttendanceEvaluator", ..., HOUR_MS)` 的慣例，新增 `startServiceLoop("LeaveEntitlementReconciler", ..., DAY_MS)`。
 3. **`LeaveGrant.grantedMinutes` 的取整方向待定**：`grantedDays × dayEquivalentMinutes` 在比例給假時會產生小數分鐘（`3.5 日 × 465 分鐘 = 1627.5`）。目前定為無條件進位（對勞工有利），需與 ADR 021 §3.2 的捨入方向一併由法務確認。
 4. **與薪資模組的接口尚未存在**：`LeaveCashOutEvent` 目前只到「事件」為止，無金額。處置同 ADR 020 —— 留明確接口，不猜。

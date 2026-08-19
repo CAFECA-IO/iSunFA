@@ -1,4 +1,3 @@
-import { Prisma } from "@/generated";
 import { prisma } from "@/lib/prisma";
 import {
   LeaveGrantSource,
@@ -12,6 +11,7 @@ import {
   ILedgerEntryView,
 } from "@/interfaces/leave_balance";
 import { assertGrantSource } from "@/repositories/leave_grant_invariant";
+import { sumLedgerMinutes, writeBalance } from "@/repositories/leave_ledger";
 
 /**
  * Info: (20260817 - Julian) 額度批次與餘額快取的寫入端。
@@ -73,71 +73,6 @@ export interface ILeaveGrantRepository {
     limit: number;
   }): Promise<ILedgerEntryView[]>;
 }
-
-/**
- * Info: (20260817 - Julian) 從帳本重算某員工某假別的餘額。
- *
- * 「異動總和」即餘額 —— `GRANT` 是正的、`CONSUME` 是負的，
- * 所以不需要另外記「授予了多少」。這也是 `readGrantBalances` 的作法，
- * 兩邊必須一致，否則勾稽會把自己的算法差異報成資料錯誤。
- */
-export const sumLedgerMinutes = async (
-  tx: Prisma.TransactionClient,
-  params: { accountBookId: string; employeeId: string; leavePolicyId: string },
-): Promise<number> => {
-  const grants = await tx.leaveGrant.findMany({
-    where: {
-      accountBookId: params.accountBookId,
-      employeeId: params.employeeId,
-      leavePolicyId: params.leavePolicyId,
-    },
-    select: { id: true },
-  });
-  if (grants.length === 0) return 0;
-
-  const sum = await tx.leaveLedgerEntry.aggregate({
-    where: { leaveGrantId: { in: grants.map((grant) => grant.id) } },
-    _sum: { deltaMinutes: true },
-  });
-  return sum._sum.deltaMinutes ?? 0;
-};
-
-/**
- * Info: (20260817 - Julian) 餘額快取寫回。**upsert 而非 update**：
- * 第一次授予時那一列還不存在，而 `updateMany` 在沒有列時是安靜的成功
- * （`count === 0` 不是錯誤）—— 那會讓第一批額度授予完成、餘額卻仍是零，
- * 而扣減端的附條件更新會把它讀成「額度不足」。
- */
-export const writeBalance = async (
-  tx: Prisma.TransactionClient,
-  params: {
-    accountBookId: string;
-    employeeId: string;
-    leavePolicyId: string;
-    remainingMinutes: number;
-    reconciledAt?: Date | null;
-  },
-): Promise<void> => {
-  await tx.leaveBalance.upsert({
-    where: {
-      employeeId_leavePolicyId: {
-        employeeId: params.employeeId,
-        leavePolicyId: params.leavePolicyId,
-      },
-    },
-    create: {
-      accountBookId: params.accountBookId,
-      employeeId: params.employeeId,
-      leavePolicyId: params.leavePolicyId,
-      remainingMinutes: params.remainingMinutes,
-      reconciledAt: params.reconciledAt ?? null,
-    },
-    update: {
-      remainingMinutes: params.remainingMinutes,
-      ...(params.reconciledAt ? { reconciledAt: params.reconciledAt } : {}),
-    },
-  });
-};
 
 class LeaveGrantRepository implements ILeaveGrantRepository {
   /**
@@ -462,3 +397,18 @@ export class LeaveGrantMissingError extends Error {
 }
 
 export const leaveGrantRepo: ILeaveGrantRepository = new LeaveGrantRepository();
+
+/**
+ * Info: (20260819 - Julian) `sumLedgerMinutes` 與 `writeBalance` 已搬到
+ * `leave_ledger.ts`（review B8），這裡保留轉出讓既有呼叫端不必動。
+ *
+ * 兩個理由。其一，它們本來就是**帳本的原語**，而那個檔案的檔頭寫的正是
+ * 「額度帳本的寫入原語」—— 放在這裡會讓 `overtime_request.repo.ts` 為了
+ * 扣一筆補休而 import 整個特休授予的 repository。
+ *
+ * 其二，這個檔案 import `@/lib/prisma`，而那一支在載入時就建出 `PrismaClient`
+ * （吃 `DATABASE_URL`）。T6 要拿記憶體替身去跑這兩支，經由這裡 import
+ * 會把一個需要連線設定的行程相依拉進 jest —— 而一條因為環境變數而跑不起來的
+ * 紅線，與沒有紅線是同一件事。
+ */
+export { sumLedgerMinutes, writeBalance };

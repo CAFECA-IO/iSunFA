@@ -151,7 +151,11 @@ export async function PUT(
  * ## 內建假別不可停用
  *
  * 停掉特休不會讓法定義務消失，只會讓員工請不了假，而
- * `leave_seed_integrity` 對「每個帳本都有完整的內建假別」的保證也會落空。
+ * `leave_seed_integrity`（T23）對「內建假別齊備」的保證也會落空。
+ *
+ * Info: (20260819 - Julian) 那支測試在 review B8 之前並不存在，現已補上，
+ * 但它驗的是 seed **規格**而不是各帳本的實際資料 —— 見
+ * `leave_policy.service.ts` 的 `deactivate` 說明。
  */
 export async function DELETE(
   request: NextRequest,

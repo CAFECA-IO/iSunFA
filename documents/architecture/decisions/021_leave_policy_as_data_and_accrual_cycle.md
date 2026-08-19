@@ -192,3 +192,4 @@ export enum LeaveUnitBasis {
 2. **`EMPLOYEE_SCHEDULED_LEAVE_TYPES` 刪除**（✅ 2026-08-17 完成）：改讀 `LeavePolicy.recallable`。該常數自己的 ToDo 已預告此事。
 3. **⚠️ 待法務複核**（計畫書 §3.2）：施行細則 §24 的條號、特休比例給假「不得低於週年制」的函釋字號、§38 I ⑥「每一年加給一日」自滿 10 年當年或次年起算（差一日）。
 4. **`leave_policy_no_code_branching.test.ts` 必須在里程碑 1 就存在**，不能等到有人違反。牆要在人進來之前蓋好。
+   （✅ 2026-08-19 補上 —— **但它遲到了**：里程碑 1 交付了 774 行的 `leave_entitlement_rules.ts`，牆是在人進來之後才蓋的。review B8 指出這件事時，`src/constants/leave_policy.ts` 已經有一句「由 `leave_policy_no_code_branching.test.ts` 釘住」寫了兩天。所幸掃出來是零違規 —— 但那是運氣，不是這條待辦被履行的證據。實作以 TypeScript 的 AST 掃 13 個引擎與編排檔，四種寫法全擋，另附一組把假的違規餵給掃描器的自我驗證。）

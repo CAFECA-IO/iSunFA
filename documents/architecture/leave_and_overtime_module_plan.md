@@ -1691,39 +1691,47 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 
 ## 16. 測試矩陣
 
-| # | 檔案 | 覆蓋 |
-|---|---|---|
-| T1 | `leave_entitlement_rules.test.ts` | §38 六個級距的邊界（滿 6 月前一日／當日、滿 10 年、封頂 30 日） |
-| T2 | `leave_cycle_basis.test.ts` | 到職日制 vs 曆年制；首年比例；跨級距年度 |
-| T3 | `leave_cycle_guard.test.ts` | D4 護欄：曆年制低於週年制必 `throw` |
-| T4 | `leave_unit_boundary.test.ts` | 半小時／半天／整天；奇數 `requiredWorkMinutes`；`UP` 與 `NEAREST` |
-| T5 | `leave_allocation_fifo.test.ts` | FIFO by `expiresOn`；同到期日以 `createdAt` 為序；跨批次扣減 |
-| T6 | `leave_ledger_conservation.test.ts` | `Σ(deltaMinutes) === LeaveBalance.remainingMinutes`；`rebuildLeaveBalance` 冪等 |
-| T7 | `leave_ledger_idempotency.test.ts` | 同 `idempotencyKey` 重跑不重複入帳 |
-| T8 | `leave_approval_chain.test.ts` | 規則展開；相鄰去重；`escalatedReason`；空鏈必 `throw`（D7） |
-| T9 | `leave_approval_sod.test.ts` | 四條 SoD；`pendingKey` 唯一性 |
-| T10 | `leave_balance_race.test.ts` | D8：兩單併發核准，第二單以 `count === 0` 判輸 |
-| T11 | `leave_projection.test.ts` | 核准投影 `dayType = LEAVE`；駁回不投影；銷假投影回 `WORK` + 班別 |
-| T12 | `overtime_rules.test.ts` | §8.1 切段表逐條；跨 120 分鐘邊界切兩段 |
-| T13 | `overtime_limits.test.ts` | 12h／46h／54h／138h；`extendedLimitAgreed` 未附記載時退回 46h |
-| T14 | `overtime_recognition.test.ts` | D9：核准 ∩ 事實取小；無打卡走 `MANUAL_DECLARATION` |
-| T15 | `overtime_to_comp_leave.test.ts` | D12：一段一筆 grant；1:1 不乘倍率；級距隨批次保留 |
-| T16 | `leave_calendar_scope.test.ts` | §9.2 四種角色的可見欄位；同事看不到假別 |
-| T17 | `leave_concurrency.test.ts` | D14：特休只警示不擋；`employerMayReject` 為真才硬擋 |
-| T18 | `leave_pii_invariant.test.ts` | `reasonCipher` 三組合檢查；AAD 綁定；`randomUUID()` 而非 `@default(uuid())` |
-| T19 | `leave_policy_no_code_branching.test.ts` | 靜態檢查：規則引擎未對 `LeavePolicy.code` 做 if/switch（D1） |
-| T20 | `hr_enum_mirror.test.ts`（既有，擴充） | §5.1 新增 enum 全數登記 |
-| T21 | `leave_i18n_keys.test.ts` | 五語系（en/ja/ko/zh_cn/zh_tw）key 齊備；比照 `attendance_i18n_keys.test.ts` |
-| T22 | `leave_cash_out.test.ts` | 年度終結、遞延屆期、補休屆期、契約終止四條路徑；事件無金額欄位；`cashOutOnExpiry` 為真時必先產事件再 `EXPIRE`（ADR 022 §8.5） |
-| T23 | `leave_seed_integrity.test.ts` | 每個帳本都有完整的內建假別；`isSystemDefined` 者不可刪除；seed 只落地 §3.1 已查證的數字（ADR 021 §5） |
-| T24 | `leave_policy_invariant.test.ts` | `assertLeavePolicyUnit`：單位基準與分鐘數的雙向約束、能否整除 60、年資級距不得帶固定日數、不限額度不得標折現、自我併計 |
-| T25 | `leave_grant_invariant.test.ts` | `assertGrantSource`：來源與 `overtimeSegmentId` 雙向、§32-1 的 1:1、`grantedMinutes` 可驗算、到期日不得早於週期結束 |
-| T26 | `overtime_request_invariant.test.ts` | `assertOvertimeFilingType`：事前／事後與送出時點、已核准必須說得出分鐘數、認列不得超過核准 |
-| T27 | `leave_approval_rule_invariant.test.ts` | `assertRuleRangesDisjoint`：自 0 起、首尾相接、末段無上界；錯誤訊息分得出「重疊」與「有洞」 |
-| T28 | `leave_request_service.test.ts` | 送出→簽核→扣額度的編排：試算與送出算出同一組數字、不預扣、四條 SoD、中間節點不扣額度、最後一關前置檢查、`BALANCE_RACE` 與 `ALREADY_REVIEWED` 分流 |
-| T29 | `leave_error_codes.test.ts` | 模組引用的 21 個錯誤碼皆存在、家族正確、代碼全域不重複。**在 `tsc --noEmit` 跑不動的期間補位**（schema 未套用前整包型別檢查起不來，而那正是漏掉不存在常數的窗口） |
+| # | 檔案 | 覆蓋 | 狀態／里程碑 |
+|---|---|---|---|
+| T1 | `leave_entitlement_rules.test.ts` | §38 六個級距的邊界（滿 6 月前一日／當日、滿 10 年、封頂 30 日） | ✅ 已有 |
+| T2 | `leave_cycle_basis.test.ts` | 到職日制 vs 曆年制；首年比例；跨級距年度 | ✅ 已有 |
+| T3 | `leave_cycle_guard.test.ts` | D4 護欄：曆年制低於週年制必 `throw` | ✅ 已有 |
+| T4 | `leave_unit_boundary.test.ts` | 半小時／半天／整天；奇數 `requiredWorkMinutes`；`UP` 與 `NEAREST` | ✅ 已有 |
+| T5 | `leave_allocation_fifo.test.ts` | FIFO by `expiresOn`；同到期日以 `createdAt` 為序；跨批次扣減 | ✅ 已有 |
+| T6 | `leave_ledger_conservation.test.ts` | `Σ(deltaMinutes) === LeaveBalance.remainingMinutes`；`rebuildLeaveBalance` 冪等 | ✅ **2026-08-19 補**（review B8）。記憶體替身，不含列鎖與交易隔離 —— 那是 T10 |
+| T7 | `leave_ledger_idempotency.test.ts` | 同 `idempotencyKey` 重跑不重複入帳 | ❌ 未寫。里程碑 2。冪等鍵的唯一索引在 T6 以手工比對代替，真實的 P2002 未驗 |
+| T8 | `leave_approval_chain.test.ts` | 規則展開；相鄰去重；`escalatedReason`；空鏈必 `throw`（D7） | ✅ 已有 |
+| T9 | `leave_approval_sod.test.ts` | 四條 SoD；`pendingKey` 唯一性 | ❌ 未寫。里程碑 2。四條 SoD 目前只有 T28 涵蓋其中兩條 |
+| T10 | `leave_balance_race.test.ts` | D8：兩單併發核准，第二單以 `count === 0` 判輸 | ❌ 未寫。**需要真的 PostgreSQL**，里程碑 3 與勾稽 Worker 一起做。不可用替身：它驗的正是列鎖 |
+| T11 | `leave_projection.test.ts` | 核准投影 `dayType = LEAVE`；駁回不投影；銷假投影回 `WORK` + 班別 | ❌ 未寫。里程碑 2 |
+| T12 | `overtime_rules.test.ts` | §8.1 切段表逐條；跨 120 分鐘邊界切兩段 | ✅ 已有 |
+| T13 | `overtime_limits.test.ts` | 12h／46h／54h／138h；`extendedLimitAgreed` 未附記載時退回 46h | ✅ 已有 |
+| T14 | `overtime_recognition.test.ts` | D9：核准 ∩ 事實取小；無打卡走 `MANUAL_DECLARATION` | ✅ 已有 |
+| T15 | `overtime_to_comp_leave.test.ts` | D12：一段一筆 grant；1:1 不乘倍率；級距隨批次保留 | ✅ 已有 |
+| T16 | `leave_calendar_scope.test.ts` | §9.2 四種角色的可見欄位；同事看不到假別 | ❌ 未寫。里程碑 5（可見範圍分級屆時才收斂） |
+| T17 | `leave_concurrency.test.ts` | D14：特休只警示不擋；`employerMayReject` 為真才硬擋 | ❌ 未寫。里程碑 3 |
+| T18 | `leave_pii_invariant.test.ts` | `reasonCipher` 三組合檢查；AAD 綁定；`randomUUID()` 而非 `@default(uuid())` | ❌ 未寫。里程碑 2。PII 不變式本身已在 `hr_pii_invariant.test.ts`，缺的是假單這一側 |
+| T19 | `leave_policy_no_code_branching.test.ts` | 靜態檢查：規則引擎未對 `LeavePolicy.code` 做 if/switch（D1） | ✅ **2026-08-19 補**（review B8）。AST 掃描，13 個檔、四種寫法 |
+| T20 | `hr_enum_mirror.test.ts`（既有，擴充） | §5.1 新增 enum 全數登記 | ✅ 已有 |
+| T21 | `leave_i18n_keys.test.ts` | 五語系（en/ja/ko/zh_cn/zh_tw）key 齊備；比照 `attendance_i18n_keys.test.ts` | ❌ 未寫。里程碑 2。`attendance_i18n_keys.test.ts` 已掃全 `src`，實質涵蓋大部分 |
+| T22 | `leave_cash_out.test.ts` | 年度終結、遞延屆期、補休屆期、契約終止四條路徑；事件無金額欄位；`cashOutOnExpiry` 為真時必先產事件再 `EXPIRE`（ADR 022 §8.5） | ❌ 未寫。里程碑 4（折現 Worker 尚未存在） |
+| T23 | `leave_seed_integrity.test.ts` | 每個帳本都有完整的內建假別；`isSystemDefined` 者不可刪除；seed 只落地 §3.1 已查證的數字（ADR 021 §5） | ⚠️ **2026-08-19 部分補**（review B8）。驗的是 seed **規格**；「這個帳本真的種進去了嗎」需要 DB，隨勾稽 Worker（里程碑 3） |
+| T24 | `leave_policy_invariant.test.ts` | `assertLeavePolicyUnit`：單位基準與分鐘數的雙向約束、能否整除 60、年資級距不得帶固定日數、不限額度不得標折現、自我併計 | ✅ 已有 |
+| T25 | `leave_grant_invariant.test.ts` | `assertGrantSource`：來源與 `overtimeSegmentId` 雙向、§32-1 的 1:1、`grantedMinutes` 可驗算、到期日不得早於週期結束 | ✅ 已有 |
+| T26 | `overtime_request_invariant.test.ts` | `assertOvertimeFilingType`：事前／事後與送出時點、已核准必須說得出分鐘數、認列不得超過核准 | ✅ 已有 |
+| T27 | `leave_approval_rule_invariant.test.ts` | `assertRuleRangesDisjoint`：自 0 起、首尾相接、末段無上界；錯誤訊息分得出「重疊」與「有洞」 | ✅ 已有 |
+| T28 | `leave_request_service.test.ts` | 送出→簽核→扣額度的編排：試算與送出算出同一組數字、不預扣、四條 SoD、中間節點不扣額度、最後一關前置檢查、`BALANCE_RACE` 與 `ALREADY_REVIEWED` 分流 | ✅ 已有 |
+| T29 | `leave_error_codes.test.ts` | 模組引用的 21 個錯誤碼皆存在、家族正確、代碼全域不重複。**在 `tsc --noEmit` 跑不動的期間補位**（schema 未套用前整包型別檢查起不來，而那正是漏掉不存在常數的窗口） | ✅ 已有 |
 
 **T6 與 T19 是本模組的兩條紅線**：前者保證帳本沒有說謊，後者保證假別真的可設定而不是假裝可設定。
+
+> **狀態欄是 2026-08-19（review B8）加的，理由是那次 review 指出：這張表列的 29 支裡有 12 支不存在，而其中包含上面這句話點名的「兩條紅線」。**
+>
+> 更糟的是有五處程式碼註解寫著這些測試「釘住」「保證」某件事 —— 讀到的人會以為有人在守著。ADR 021:179 對 T19 的要求是「**必須在里程碑 1 就存在**，不能等到有人違反。**牆要在人進來之前蓋好**」，而里程碑 1 交付了 774 行的 `leave_entitlement_rules.ts`，牆沒有蓋。
+>
+> 這次補了 T6、T19 與 T23 的規格部分，其餘十支在上表逐一標明「未寫」與它該落在哪個里程碑。**沒寫不是問題，宣稱寫了才是**（checklist §6）—— 一張看起來全綠的測試矩陣，比一張明確標著十個叉的表更危險。
+>
+> T10（併發）刻意不補：它驗的正是 PostgreSQL 的列鎖，用替身寫出來的版本會**永遠是綠的**，而那比沒有更糟。它要跟每日勾稽 Worker 一起做。
 
 ---
 
