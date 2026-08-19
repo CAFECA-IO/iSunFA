@@ -1,12 +1,17 @@
 import { NextRequest } from "next/server";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
-import { jsonOk, jsonFail } from "@/lib/utils/response";
+import { jsonOk, jsonFail, jsonFailWithPayload } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { enforceRateLimit } from "@/lib/rate_limiter";
+import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { teamRepo } from "@/repositories/team.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
 import { canGrantRole, TeamRole } from "@/constants/team";
-import { inviteMemberByEmail } from "@/services/team_invitation.service";
+import {
+  InviteCooldownError,
+  inviteMemberByEmail,
+} from "@/services/team_invitation.service";
 
 /**
  * Info: (20260815 - Luphia) 以 email 邀請成員（規範 §4 / P4）。
@@ -27,6 +32,23 @@ export async function POST(
     if (!sessionUser) return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
 
     const { team_id: teamId } = await params;
+
+    /**
+     * Info: (20260819 - Luphia) 寄送端的限流（產品決定 20260819）。
+     *
+     * 免費版人數上限移除之後，寄信量沒有任何界線。這一層依**操作者**擋單人狂點
+     * （10/分、100/日）；整團的總量另有兩道團隊層上限
+     * （`assertInviteVolumeWithinLimits`）——多位管理員各自在限流額度內，
+     * 仍然能疊出大量寄信，所以兩層都要。
+     *
+     * 維度用 `sessionUser.address` 而不是 IP：同一間辦公室的兩位管理員不該互相
+     * 排擠，而同一個人換 IP 也不該重新計數。
+     */
+    const limited = enforceRateLimit(
+      sessionUser.address,
+      RateLimitBucketEnum.TEAM_INVITE_SEND,
+    );
+    if (limited) return limited;
 
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
     if (!operator || (operator.role !== "OWNER" && operator.role !== "ADMIN")) {
@@ -102,6 +124,15 @@ export async function POST(
 
     return jsonOk(result);
   } catch (error) {
+    /**
+     * Info: (20260819 - Luphia) 冷卻的剩餘秒數要帶到前端（產品決定 20260819）。
+     *
+     * 走 `jsonFailWithPayload`（與 402 額度用罄同一個作法）——用一般的 jsonFail
+     * 那個數字就掉了，而前端只剩「請稍後再試」可以顯示，使用者只能一直按。
+     */
+    if (error instanceof InviteCooldownError) {
+      return jsonFailWithPayload(API_ERRORS.TW_INVITE_COOLDOWN, error.data);
+    }
     if (error instanceof ApiError) {
       return jsonFail({
         code: error.code,

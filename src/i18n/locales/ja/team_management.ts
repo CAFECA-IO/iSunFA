@@ -7,6 +7,12 @@ export const teamManagement = {
   accepting: "処理中...",
   no_teams: "チームがありません。",
   // Info: (20260818 - Luphia) 席数追加費用の事前開示（ユーザー報告 20260818）
+  // Info: (20260819 - Luphia) 招待送信のクールダウン（製品判断 20260819）
+  invite_cooldown: {
+    notice:
+      "招待を送信したばかりです。次の送信まで {{seconds}} 秒お待ちください。",
+    button: "{{seconds}} 秒お待ちください",
+  },
   seat_charge: {
     loading: "料金を計算しています…",
     charge_title: "送信すると {{amount}} が即時請求されます",

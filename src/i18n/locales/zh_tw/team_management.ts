@@ -13,6 +13,11 @@ export const teamManagement = {
    * 「我在邀請時完全不知道會被加收多少錢」——因此金額要在送出前就講清楚，
    * 而且要說得出「為什麼是這個數字」（幾席、本期還剩幾天）。
    */
+  // Info: (20260819 - Luphia) 邀請寄送的冷卻倒數（產品決定 20260819）
+  invite_cooldown: {
+    notice: "剛剛寄出一封邀請，請等待 {{seconds}} 秒後再寄下一封。",
+    button: "請等待 {{seconds}} 秒",
+  },
   seat_charge: {
     loading: "正在試算費用…",
     charge_title: "送出後將立即收取 {{amount}}",

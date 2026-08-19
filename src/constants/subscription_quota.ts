@@ -91,6 +91,34 @@ export const DEFAULT_SUBSCRIPTION_QUOTA_BY_PLAN: Record<
  * 付費方案不變：人數仍由「席次 × 單價」自然封頂，額度仍是一人一池。
  */
 
+/**
+ * Info: (20260819 - Luphia) 邀請量的兩道團隊層上限（產品決定 20260819）。
+ *
+ * 免費版人數上限移除之後，寄信量失去所有界線：免費團隊不收席次費，而每一封
+ * email 邀請都是真的寄出去的信。付費團隊有「席次費」當煞車，免費團隊沒有。
+ *
+ * 兩道分工不同，缺一不可：
+ *
+ * - **同時未接受數**（`PENDING_INVITE`）：擋「一次撒出幾百封」。它也順帶封住
+ *   席次佔用——未失效的 PENDING 邀請本來就佔席次。
+ * - **每日寄送數**（`INVITE_DAILY`）：擋「撤回再邀、撤回再邀」的迴圈。
+ *   只看同時未接受數的話，那個迴圈可以無限寄信而同時數永遠是 1。
+ *
+ * 正式值為系統設定（可後台調整），此為查無設定列時的 fail-safe 預設。
+ * 數字取「正常團隊碰不到、濫用會撞上」：一次擴編二十人已經是大動作，
+ * 而一天五十封信不是任何正常團隊的行為。
+ */
+/**
+ * Info: (20260819 - Luphia) 邀請寄送的冷卻秒數（產品決定 20260819）。
+ *
+ * 與「每分鐘 10 封」的限流分工不同：限流擋的是狂點（一瞬間打很多次），
+ * 冷卻擋的是**穩定地一直寄**——後者在限流眼中看起來完全正常。
+ */
+export const DEFAULT_TEAM_INVITE_COOLDOWN_SECONDS = 60;
+
+export const DEFAULT_TEAM_PENDING_INVITE_LIMIT = 20;
+export const DEFAULT_TEAM_INVITE_DAILY_LIMIT = 50;
+
 export const TEAM_SUBSCRIPTION_STATUS = {
   ACTIVE: "ACTIVE",
   PAST_DUE: "PAST_DUE",

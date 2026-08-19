@@ -7,6 +7,12 @@ export const teamManagement = {
   accepting: "Accepting...",
   no_teams: "No teams available.",
   // Info: (20260818 - Luphia) Up-front disclosure of the seat charge (user report 20260818)
+  // Info: (20260819 - Luphia) Invitation send cooldown (product decision 20260819)
+  invite_cooldown: {
+    notice:
+      "An invitation was just sent. Please wait {{seconds}}s before sending another.",
+    button: "Wait {{seconds}}s",
+  },
   seat_charge: {
     loading: "Calculating the charge…",
     charge_title: "You will be charged {{amount}} immediately",

@@ -183,6 +183,48 @@ export class TeamRepository implements ITeamRepository {
   }
 
   /**
+   * Info: (20260819 - Luphia) 這個人**擁有**（OWNER）的團隊，附各自的訂閱狀態。
+   *
+   * 供「一個人只能擁有一個免費團隊」的判斷（產品決定 20260819）。回訂閱的三個
+   * 欄位而不是回一個布林，是因為「什麼是有效方案」只能有一個判斷點
+   * （`resolveEffectivePlanId`）——在這裡自己判一次，兩邊遲早分岔。
+   *
+   * 一次查詢帶出訂閱（`include`），不是先撈團隊再逐一查（N+1）。
+   */
+  async listOwnedTeamsWithSubscription(userId: string): Promise<
+    {
+      teamId: string;
+      subscription: {
+        planId: string;
+        status: string;
+        currentPeriodEnd: Date;
+      } | null;
+    }[]
+  > {
+    const memberships = await prisma.teamMember.findMany({
+      where: { userId, role: TeamRole.OWNER },
+      select: {
+        teamId: true,
+        team: {
+          select: {
+            teamSubscription: {
+              select: {
+                planId: true,
+                status: true,
+                currentPeriodEnd: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return memberships.map((membership) => ({
+      teamId: membership.teamId,
+      subscription: membership.team?.teamSubscription ?? null,
+    }));
+  }
+
+  /**
    * Info: (20260814 - Luphia) 團隊人數 = 席次數（規範 P2）：訂閱以此乘上單價計費。
    * 以成員關聯計數，不含待接受的邀請——邀請的席次在發出時就已單獨補收。
    */
@@ -265,6 +307,39 @@ export class TeamRepository implements ITeamRepository {
    */
   async deleteInvitation(id: string) {
     return prisma.teamInvitation.delete({ where: { id } });
+  }
+
+  /**
+   * Info: (20260819 - Luphia) 某個時間點之後這個團隊建立過幾封邀請（產品決定 20260819）。
+   *
+   * 用於「每日寄送數」上限。計數以**邀請列的建立時間**為準，而且**不看狀態**：
+   * 撤回、被拒絕、已逾期的都算——信已經寄出去了，而這道上限管的是寄信量，
+   * 不是目前還有效的邀請數（那是 `countPendingInvitations` 的事）。
+   *
+   * 因此不需要另外一張計數表：邀請列本身就是寄送紀錄。
+   */
+  /**
+   * Info: (20260819 - Luphia) 這個團隊最近一次寄出邀請的時間（冷卻用）。
+   *
+   * 與日計數同一個資料來源（邀請列本身就是寄送紀錄），因此**不濾 status**：
+   * 撤回或被拒絕的那一封信也已經寄出去了，冷卻該照算。
+   */
+  async findLastInvitationSentAt(teamId: string): Promise<Date | null> {
+    const latest = await prisma.teamInvitation.findFirst({
+      where: { teamId },
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+    });
+    return latest?.createdAt ?? null;
+  }
+
+  async countInvitationsCreatedSince(
+    teamId: string,
+    since: Date,
+  ): Promise<number> {
+    return prisma.teamInvitation.count({
+      where: { teamId, createdAt: { gte: since } },
+    });
   }
 
   /**

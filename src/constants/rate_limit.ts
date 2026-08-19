@@ -68,6 +68,21 @@ export enum RateLimitBucketEnum {
   INVITE_TOKEN_UNIDENTIFIED = "INVITE_TOKEN_UNIDENTIFIED",
 
   /**
+   * Info: (20260819 - Luphia) 邀請的**寄送端**（產品決定 20260819）。
+   *
+   * 免費版人數上限移除之後，寄信量沒有任何界線：免費團隊不收席次費，
+   * 而每一封 email 邀請都是真的寄出去的信。人數不再是煞車，這裡就是。
+   *
+   * 維度是**操作者**（OWNER / ADMIN，這兩支端點要登入），不是 IP：
+   * 同一間辦公室的兩位管理員不該互相排擠，而同一個人換 IP 也不該重新計數。
+   *
+   * 尺寸與團隊層的上限分工：這個桶擋「一個人短時間狂點」，
+   * 團隊層的兩道上限（同時未接受數、每日寄送數）擋「整團的總量」。
+   * 少了團隊層，多個管理員各自在額度內就能疊出大量寄信。
+   */
+  TEAM_INVITE_SEND = "TEAM_INVITE_SEND",
+
+  /**
    * Info: (20260817 - Luphia) 打卡（time_attendance_module_plan §10.3 的護欄 G6）。
    *
    * 正常人一天打 2–4 次卡。上限壓低是為了讓腳本刷卡在造成資料污染前先撞牆並留下告警 ——
@@ -147,6 +162,10 @@ export const RATE_LIMIT_RULES: Record<RateLimitBucketEnum, IRateLimitWindow[]> =
     [RateLimitBucketEnum.INVITE_TOKEN]: [
       { windowMs: MINUTE_MS, max: envInt("INVITE_RL_PER_MINUTE", 20) },
       { windowMs: DAY_MS, max: envInt("INVITE_RL_PER_DAY", 200) },
+    ],
+    [RateLimitBucketEnum.TEAM_INVITE_SEND]: [
+      { windowMs: MINUTE_MS, max: envInt("INVITE_SEND_RL_PER_MINUTE", 10) },
+      { windowMs: DAY_MS, max: envInt("INVITE_SEND_RL_PER_DAY", 100) },
     ],
     [RateLimitBucketEnum.INVITE_TOKEN_UNIDENTIFIED]: [
       {

@@ -27,6 +27,9 @@ import { isAddress } from "viem";
  * 這裡的型別刻意與服務端的 `ISeatQuote` 對齊（同一組 `kind`），
  * 而金額由服務端算，前端**不自己算**：算兩次就會有兩個答案。
  */
+// Info: (20260819 - Luphia) 與 API_ERRORS.TW_INVITE_COOLDOWN 同一個碼
+const TW_INVITE_COOLDOWN_CODE = "TW000027";
+
 type SeatQuoteKind =
   | "FREE_PLAN"
   | "REUSE_PAID_SEAT"
@@ -73,6 +76,14 @@ export default function InviteMemberModal({
    * 後者不需要邀請者先問到對方的錢包位址。
    */
   const [inviteMode, setInviteMode] = useState<"ADDRESS" | "EMAIL">("ADDRESS");
+  /**
+   * Info: (20260819 - Luphia) 邀請冷卻的倒數（產品決定 20260819）。
+   *
+   * 冷卻剩餘秒數在**對話框開啟時**就讀一次，讓「還要等 43 秒」在按下去之前
+   * 就看得到——只在按下去之後才說「請稍後再試」的話，使用者只能一直按，
+   * 而每一次按都是一次請求（也就是說，那個設計會製造它想擋的流量）。
+   */
+  const [cooldown, setCooldown] = useState(0);
   // Info: (20260818 - Luphia) 加席費用的事前揭露（見上方 ISeatQuote）
   const [quote, setQuote] = useState<ISeatQuote | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -104,15 +115,51 @@ export default function InviteMemberModal({
     }
   }, [selectedTeamId]);
 
+  const loadInviteLimits = useCallback(async () => {
+    if (!selectedTeamId) return;
+    try {
+      const json = await request<{
+        success: boolean;
+        payload?: { cooldownSecondsRemaining?: number };
+      }>(`/api/v1/user/team/${selectedTeamId}/invite_limits`);
+      setCooldown(json.payload?.cooldownSecondsRemaining ?? 0);
+    } catch {
+      /**
+       * Info: (20260819 - Luphia) 讀不到就當作沒有冷卻。
+       *
+       * 與試算不同：試算失敗會擋住送出（不知道金額就不該扣款），而冷卻的真正
+       * 防線在服務端——這裡只是「先告訴使用者」。讀不到就擋住送出，等於把一個
+       * 顯示用的請求變成第二道會誤擋的閘。
+       */
+      setCooldown(0);
+    }
+  }, [selectedTeamId]);
+
   // Info: (20260818 - Luphia) 開啟時試算一次；關閉時清掉，避免下次開啟閃到上一團的金額
   useEffect(() => {
     if (!isOpen) {
       setQuote(null);
       setQuoteFailed(false);
+      setCooldown(0);
       return;
     }
     void loadQuote();
-  }, [isOpen, loadQuote]);
+    void loadInviteLimits();
+  }, [isOpen, loadQuote, loadInviteLimits]);
+
+  /**
+   * Info: (20260819 - Luphia) 每秒遞減到 0 為止。
+   *
+   * 只在 `cooldown > 0` 時掛計時器，歸零就自己清掉——常駐一個每秒醒來的計時器
+   * 是這種倒數最常見的多餘成本，而它在對話框關閉後還會繼續跑。
+   */
+  useEffect(() => {
+    if (!isOpen || cooldown <= 0) return undefined;
+    const timer = setInterval(() => {
+      setCooldown((seconds) => (seconds > 1 ? seconds - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isOpen, cooldown]);
 
   const targetValue = inviteMode === "ADDRESS" ? inviteAddress : inviteEmail;
 
@@ -227,7 +274,18 @@ export default function InviteMemberModal({
       }
     } catch (err) {
       console.error(err);
+      /**
+       * Info: (20260819 - Luphia) 冷卻中：改成倒數，而不是丟一句錯誤訊息。
+       * 服務端的 payload 帶著剩餘秒數（`TW000027`）。
+       */
       if (err instanceof ApiError) {
+        const data = err.data as
+          | { errorCode?: string; payload?: { retryAfterSeconds?: number } }
+          | undefined;
+        if (data?.errorCode === TW_INVITE_COOLDOWN_CODE) {
+          setCooldown(data?.payload?.retryAfterSeconds ?? 60);
+          return;
+        }
         showAlert(err.message);
       } else {
         showAlert(t("team_management.alerts.error_invite"));
@@ -398,6 +456,25 @@ export default function InviteMemberModal({
                * 知道會被加收多少錢」。金額一律由服務端試算（同一支 `quoteSeatAddition`
                * 也負責真正的扣款），前端不自己算。
                */}
+              {/**
+               * Info: (20260819 - Luphia) 冷卻倒數（產品決定 20260819）。
+               *
+               * 放在費用揭露**之前**：「現在還不能寄」比「會收多少錢」更優先——
+               * 使用者需要先知道要不要等，再決定要不要看價格。
+               */}
+              {cooldown > 0 && (
+                <div
+                  className="rounded-lg border border-amber-200 bg-amber-50 p-3"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <p className="text-xs text-amber-900">
+                    {t("team_management.invite_cooldown.notice", {
+                      seconds: String(cooldown),
+                    })}
+                  </p>
+                </div>
+              )}
               {quoteLoading && (
                 <p className="text-xs text-gray-500">
                   {t("team_management.seat_charge.loading")}
@@ -495,17 +572,23 @@ export default function InviteMemberModal({
                     quoteLoading ||
                     quoteFailed ||
                     !quote ||
-                    quote.kind === "BLOCKED"
+                    quote.kind === "BLOCKED" ||
+                    // Info: (20260819 - Luphia) 冷卻中不得送出（服務端也會擋，這是先講）
+                    cooldown > 0
                   }
                   className="inline-flex w-full items-center justify-center rounded-lg bg-orange-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50 sm:w-auto"
                 >
-                  {inviting
-                    ? t("team_management.signing")
-                    : quote?.kind === "CHARGE"
-                      ? t("team_management.seat_charge.submit_with_amount", {
-                          amount: `${quote.currency} ${quote.amount.toLocaleString()}`,
-                        })
-                      : t("team_management.invite_via_fido2")}
+                  {cooldown > 0
+                    ? t("team_management.invite_cooldown.button", {
+                        seconds: String(cooldown),
+                      })
+                    : inviting
+                      ? t("team_management.signing")
+                      : quote?.kind === "CHARGE"
+                        ? t("team_management.seat_charge.submit_with_amount", {
+                            amount: `${quote.currency} ${quote.amount.toLocaleString()}`,
+                          })
+                        : t("team_management.invite_via_fido2")}
                 </button>
               </div>
             </form>
