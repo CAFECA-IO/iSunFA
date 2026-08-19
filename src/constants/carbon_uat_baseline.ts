@@ -74,6 +74,14 @@ export const BASELINE_TIERS: ReadonlyArray<{
       "重複的標題",
       "目錄對不上的條目",
       "log_tocMissing",
+      /**
+       * Info: (20260819 - Emily) 紙面上宣告別的揭露框架。與「未出現的節」同一層:
+       * 不是統計量,是齊或不齊。現行預設框架是 ISO 14064-1,
+       * 而未進金管會適用時程的公司不得聲明遵循 IFRS 永續揭露準則 ——
+       * 紙上出現一次就是一次合規風險,不是「次數變多才有問題」。
+       * `open/54` 的框架選擇落地後改成依框架分流(選 IFRS 時應該出現)。
+       */
+      "紙上宣告別的揭露框架",
       // Info: (20260818 - Emily) 碼位:紙上看不出來的靜默失敗,任何一個都不行
       "私有區符號",
       "相容區部首",
@@ -106,6 +114,14 @@ export const BASELINE_TIERS: ReadonlyArray<{
       "目錄條目",
       "大綱命中數",
       "圖表退化成表格",
+      /**
+       * Info: (20260819 - Emily) `open/36` 的兩個鍵。放 record_only 的理由與
+       * `47` 相同:`36` 延到 post-launch,列進 must_match 會讓 B3 永遠過不了。
+       * 08-19 實測兩趟 12 與 13 處且集合不同(run1 有 9.2、run2 有 1.1/1.3)。
+       * `36` 修好之後升到 must_match。
+       */
+      "節標題重印",
+      "節標題重印_剝號後仍同文",
       "log_chartsRendered",
       "log_chartsFailed",
       "log_圖表被拒",

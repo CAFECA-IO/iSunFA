@@ -656,6 +656,97 @@ const main = async (): Promise<void> => {
     );
   }
 
+  // Info: (20260819 - Emily) ── 節標題被重印:系統標題之後緊接原文自己的標題 ──
+  /**
+   * Info: (20260819 - Emily) `open/36`。與上面「重複的標題」是**不同形狀**:
+   * 那條是同一個字串連印兩行,這條是系統大綱標題之後緊接原文自己的標題
+   * (例:`1.3 氣候與永續政策聲明` 下一行 `1.3政策聲明`)。
+   *
+   * ## 為什麼是 record_only 而不是 must_match
+   *
+   * `36` 卡在立場決定(保系統標題還是保原文標題),延到 post-launch。
+   * 08-19 實測兩趟是 12 與 13 處,而且**集合不同**(run1 有 9.2,run2 有 1.1/1.3)——
+   * 列進 `must_match` 會讓「兩趟一致」在 `36` 修好之前永遠過不了,
+   * 那正是 `carbon_uat_baseline.ts` 對 `open/47` 寫過的理由。
+   * `36` 修好之後再升層。
+   *
+   * ## 兩個鍵而不是一個
+   *
+   * `節標題重印` 是 A2(只剝掉重複的節號前綴)修得掉的那一半。
+   * `節標題重印_剝號後仍同文` 是 A2 **修不掉**的那一半 —— 原文標題剝掉號之後
+   * 與系統標題互相包含(`1.5 組織邊界` vs `組織邊界設定方法`、
+   * `3.1 溫室氣體排放量計算說明` 兩邊完全相同),讀者看到的還是同一句話印兩次。
+   * 08-19 實測 5 與 6 處。分兩個鍵,判準才能活過那次修正 ——
+   * 只記總數的話,A2 上線後數字掉一半,看起來像修好了。
+   *
+   * 子節不算重印:`1.1` 之後的 `1.1.1 公司名稱` 是正常的階層,不是同一個標題印兩次。
+   */
+  const numberedSections = CARBON_REPORT_OUTLINE.filter((section) =>
+    /^\d+\.\d+$/.test(section.code),
+  );
+  const reprintedHeadings: string[] = [];
+  const reprintedStillSameText: string[] = [];
+  numberedSections.forEach((section) => {
+    const heading = squeeze(`${section.code} ${section.title}`);
+    const code = squeeze(section.code);
+    const at = nonEmptyLines.indexOf(heading);
+    if (at < 0) return;
+    for (let j = at + 1; j < Math.min(at + 4, nonEmptyLines.length); j += 1) {
+      const line = nonEmptyLines[j];
+      // Info: (20260819 - Emily) 同一字串連印兩行是上一條判準的事,這裡跳過
+      if (line === heading) continue;
+      if (!line.startsWith(code) || line.length === code.length) continue;
+      const rest = line.slice(code.length);
+      // Info: (20260819 - Emily) `.數字` = 子節編號,不是標題重印(否定前瞻的等價寫法)
+      if (/^\.\d/.test(rest)) break;
+      reprintedHeadings.push(section.code);
+      const title = squeeze(section.title);
+      if (title.includes(rest) || rest.includes(title)) {
+        reprintedStillSameText.push(section.code);
+      }
+      break;
+    }
+  });
+  snapshot.節標題重印 = reprintedHeadings;
+  snapshot.節標題重印_剝號後仍同文 = reprintedStillSameText;
+  record(
+    reprintedHeadings.length === 0 ? "pass" : "warn",
+    "節標題重印(open/36,不擋上線)",
+    `${reprintedHeadings.length}/${numberedSections.length} 節重印,其中 ${reprintedStillSameText.length} 節剝號後仍與系統標題同文`,
+  );
+
+  // Info: (20260819 - Emily) ── 紙面上不得宣告別的揭露框架 ──
+  /**
+   * Info: (20260819 - Emily) `open/44` / `open/54` 的**紙面側**判準。
+   *
+   * 08-18 之後 guidance 那一側已經是 0/33 節(由 `carbon_report_outline.test.ts` 守),
+   * 但那條測試看的是 constants,看不到紙。模型可以在別的地方寫出這些字
+   * (原文引用、自行補的參考文獻、AI 自己的框架句),而那才是客戶拿到的東西。
+   * 修正端與生效端要分清楚 —— 這一條守生效端。
+   *
+   * ## 為什麼只列框架名稱
+   *
+   * 只列揭露框架的**專有名稱**。08-19 量過客戶原文:`財務` 出現 58 次
+   * (例如財務控制法,是 ISO 14064-1 自己的合併方法用語),
+   * 所以拿「財務」「投資人」「股東」當判準會比它要守的東西寬 ——
+   * 那些詞在一份合法的 ISO 盤查報告裡本來就可能出現。
+   * 這裡守的是「宣告了哪個框架」,不是「用了哪些字」。
+   *
+   * 已驗:這五個字串在客戶原文與兩份 08-18 產出裡都是 0 次
+   * (`GRID` 也是 0,所以 `GRI` 沒有子字串誤判的風險)。
+   *
+   * ## 什麼時候要改
+   *
+   * `open/54` 的框架選擇落地之後,這一條要改成依所選框架分流:
+   * 選 IFRS 的產出**應該**出現 IFRS,而且未到期時必須有免責敘述。
+   * 屆時把這裡換成 `checkFrameworkConsistency(framework)`。
+   */
+  const FOREIGN_FRAMEWORKS = ["IFRS", "TCFD", "SASB", "GRI", "CDP"];
+  expectZero(
+    "紙上宣告別的揭露框架",
+    FOREIGN_FRAMEWORKS.filter((name) => squeezed.includes(name)),
+  );
+
   // Info: (20260814 - Emily) ── 目錄的每一條要對得上實體頁(頁碼是量測出來的,所以可以反查) ──
   checkToc(text);
 
