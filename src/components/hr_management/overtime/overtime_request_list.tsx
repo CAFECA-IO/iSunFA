@@ -178,6 +178,11 @@ const OvertimeRequestList: FC<{
     return <p className="text-sm text-gray-400">{t(emptyKey)}</p>;
   }
 
+  // Info: (20260818 - Julian) 兩段說明只在真的有單可簽／可撤時才出現
+  const hasPending = requests.some(
+    (item) => item.status === OvertimeRequestStatus.PENDING,
+  );
+
   return (
     <div className="flex flex-col gap-2">
       {error && (
@@ -362,10 +367,6 @@ const OvertimeRequestList: FC<{
                   <X className="size-3.5" />
                   {t("hr_management.overtime.action_reject")}
                 </button>
-
-                <p className="basis-full text-xs leading-relaxed text-gray-400">
-                  {t("hr_management.overtime.field_approved_minutes_hint")}
-                </p>
               </div>
             )}
 
@@ -423,15 +424,32 @@ const OvertimeRequestList: FC<{
                   )}
                   {t("hr_management.overtime.action_withdraw")}
                 </button>
-
-                <p className="basis-full text-xs leading-relaxed text-gray-400">
-                  {t("hr_management.overtime.action_withdraw_hint")}
-                </p>
               </div>
             )}
           </div>
         );
       })}
+
+      {/**
+       * Info: (20260818 - Julian) 兩段規則說明擺在清單末端，每種各一次。
+       *
+       * 它們講的是**規則**不是這一列的狀況 —— 逐列重印一次，讀者第二次就開始
+       * 略過它，而第一次真正需要它的人反而被淹沒在重複裡。清單愈長愈明顯：
+       * 五張待簽核的單就是五段一模一樣的灰字。
+       *
+       * 條件是「有沒有那個動作可做」而不是「清單空不空」：一份全是已核准
+       * 的清單上掛一句撤回說明，同樣是噪音。
+       */}
+      {decidable && hasPending && (
+        <p className="px-1 text-xs leading-relaxed text-gray-400">
+          {t("hr_management.overtime.field_approved_minutes_hint")}
+        </p>
+      )}
+      {withdrawable && hasPending && (
+        <p className="px-1 text-xs leading-relaxed text-gray-400">
+          {t("hr_management.overtime.action_withdraw_hint")}
+        </p>
+      )}
     </div>
   );
 };
