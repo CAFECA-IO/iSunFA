@@ -12,6 +12,11 @@
  */
 
 import { DEFAULT_FAITH_MEMORY_RETENTION_DAYS } from "@/constants/llm";
+import {
+  DEFAULT_TEAM_INVITE_COOLDOWN_SECONDS,
+  DEFAULT_TEAM_INVITE_DAILY_LIMIT,
+  DEFAULT_TEAM_PENDING_INVITE_LIMIT,
+} from "@/constants/subscription_quota";
 export enum SystemSettingKey {
   GOOGLE_OAUTH_CLIENT_ID = "GOOGLE_OAUTH_CLIENT_ID",
   GOOGLE_OAUTH_CLIENT_SECRET = "GOOGLE_OAUTH_CLIENT_SECRET",
@@ -28,6 +33,18 @@ export enum SystemSettingKey {
    * 均載明相同天數，改設定時必須同步修訂該三處文字。
    */
   FAITH_MEMORY_RETENTION_DAYS = "FAITH_MEMORY_RETENTION_DAYS",
+  /**
+   * Info: (20260819 - Luphia) 邀請量的兩道團隊層上限（產品決定 20260819）。
+   *
+   * 免費版人數上限移除之後（額度改為全隊共用），寄信量沒有任何界線：免費團隊
+   * 不收席次費，而每一封 email 邀請都是真的寄出去的信。這兩個值就是新的界線——
+   * 同時未接受的邀請數擋「一次撒出幾百封」，每日寄送數擋「撤回再邀」的迴圈。
+   * 預設值與理由見 `DEFAULT_TEAM_PENDING_INVITE_LIMIT` / `DEFAULT_TEAM_INVITE_DAILY_LIMIT`。
+   */
+  TEAM_PENDING_INVITE_LIMIT = "TEAM_PENDING_INVITE_LIMIT",
+  // Info: (20260819 - Luphia) 邀請寄送的冷卻秒數（產品決定 20260819）
+  TEAM_INVITE_COOLDOWN_SECONDS = "TEAM_INVITE_COOLDOWN_SECONDS",
+  TEAM_INVITE_DAILY_LIMIT = "TEAM_INVITE_DAILY_LIMIT",
   /**
    * Deprecated: (20260819 - Luphia) [start] 免費版人數上限已於 2026-08-19 移除
    * （免費方案的額度改為全隊共用一份，加人不再產生額度）。**程式碼已無任何讀者。**
@@ -152,6 +169,24 @@ export const SYSTEM_SETTING_DEFINITIONS: Record<
     envKey: "FREE_PLAN_MAX_MEMBERS",
   },
   // Deprecated: (20260819 - Luphia) [end]
+  [SystemSettingKey.TEAM_INVITE_COOLDOWN_SECONDS]: {
+    key: SystemSettingKey.TEAM_INVITE_COOLDOWN_SECONDS,
+    group: SystemSettingGroup.PAYMENT,
+    isSecret: false,
+    envKey: "TEAM_INVITE_COOLDOWN_SECONDS",
+  },
+  [SystemSettingKey.TEAM_PENDING_INVITE_LIMIT]: {
+    key: SystemSettingKey.TEAM_PENDING_INVITE_LIMIT,
+    group: SystemSettingGroup.PAYMENT,
+    isSecret: false,
+    envKey: "TEAM_PENDING_INVITE_LIMIT",
+  },
+  [SystemSettingKey.TEAM_INVITE_DAILY_LIMIT]: {
+    key: SystemSettingKey.TEAM_INVITE_DAILY_LIMIT,
+    group: SystemSettingGroup.PAYMENT,
+    isSecret: false,
+    envKey: "TEAM_INVITE_DAILY_LIMIT",
+  },
   [SystemSettingKey.SMTP_HOST]: {
     key: SystemSettingKey.SMTP_HOST,
     group: SystemSettingGroup.MAIL,
@@ -203,6 +238,16 @@ export const SYSTEM_SETTING_FALLBACKS: Partial<
   // Info: (20260812 - Luphia) 保底值與 DEFAULT_FAITH_MEMORY_RETENTION_DAYS 同源，見 src/constants/llm.ts
   [SystemSettingKey.FAITH_MEMORY_RETENTION_DAYS]: String(
     DEFAULT_FAITH_MEMORY_RETENTION_DAYS,
+  ),
+  // Info: (20260819 - Luphia) 邀請量上限的保底值，與 subscription_quota 的常數同源
+  [SystemSettingKey.TEAM_PENDING_INVITE_LIMIT]: String(
+    DEFAULT_TEAM_PENDING_INVITE_LIMIT,
+  ),
+  [SystemSettingKey.TEAM_INVITE_COOLDOWN_SECONDS]: String(
+    DEFAULT_TEAM_INVITE_COOLDOWN_SECONDS,
+  ),
+  [SystemSettingKey.TEAM_INVITE_DAILY_LIMIT]: String(
+    DEFAULT_TEAM_INVITE_DAILY_LIMIT,
   ),
 };
 

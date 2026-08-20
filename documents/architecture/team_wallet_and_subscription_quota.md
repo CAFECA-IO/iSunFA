@@ -742,13 +742,17 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 
 ### 6.4 權限矩陣
 
-| 操作 | OWNER | ADMIN | EDITOR / VIEWER |
-|---|---|---|---|
-| 變更訂閱方案 | ✅ | ❌ | ❌ |
-| 購買團隊點數 | ✅ | ✅ | ❌ |
-| 分配 / 收回點數 | ✅ | ✅ | ❌ |
-| 查看錢包全貌與 Ledger | ✅ | ✅ | 僅見自己的分配餘額與額度狀態 |
-| 消耗額度 / 分配點數 | ✅ | ✅ | ✅ |
+> **2026-08-19 修訂：團隊 ADMIN 角色已取消。** 理由是結構性的——ADMIN 握有「會花 OWNER 的錢」的權限卻不是持卡人：邀請成員會即時向訂閱那張卡補收席次費用，而那是 merchant-initiated 交易、沒有持卡人當下的授權。先前為此加的兩道補丁（單期補收總額上限 TW000016、只有 OWNER 能授予 OWNER）都是在補同一個洞。既有的 ADMIN 成員由 `scripts/backfill_remove_team_admin.ts` **降為 EDITOR**（降級而非升級：失去權限可由 OWNER 個別補回，多發權限收不回來）。
+
+| 操作 | OWNER | EDITOR / VIEWER |
+|---|---|---|
+| 變更訂閱方案 | ✅ | ❌ |
+| 購買團隊點數 | ✅ | ❌ |
+| 分配點數 | ✅ | ❌ |
+| 邀請 / 移除成員、變更角色 | ✅ | ❌ |
+| 查看錢包全貌與 Ledger | ✅ | 僅見自己的分配餘額與額度狀態 |
+| 消耗額度 | ✅ | ✅ |
+| 編輯帳本內容 | ✅ | EDITOR ✅ / VIEWER ❌ |
 
 授權檢查抽成 `src/services/team_wallet_access.guard.ts`（沿用 `account_book_access.guard.ts` 慣例），API 層不寫角色判斷。
 

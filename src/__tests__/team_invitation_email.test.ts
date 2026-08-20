@@ -45,8 +45,16 @@ jest.mock("@/repositories/team.repo", () => ({
     findInvitationByTokenHash: jest.fn(),
     getTeamMember: jest.fn(async () => null),
     acceptInvitation: jest.fn(),
-    // Info: (20260818 - Luphia) 接受時的免費版人數上限第二道防線（第三輪 B-1）
     countMembers: jest.fn(async () => 1),
+    /**
+     * Info: (20260819 - Luphia) 邀請量的兩道團隊層上限（`assertInviteVolumeWithinLimits`）。
+     * 替身要有這兩支，否則所有邀請測試都會以「不是函式」失敗——而那不是被測行為錯，
+     * 是替身沒有照實模擬（checklist §1.8）。預設回 0：正常情況遠低於上限。
+     */
+    countPendingInvitations: jest.fn(async () => 0),
+    countInvitationsCreatedSince: jest.fn(async () => 0),
+    // Info: (20260819 - Luphia) 冷卻讀最近一封邀請的時間（預設 null＝沒有冷卻）
+    findLastInvitationSentAt: jest.fn(async () => null),
   },
 }));
 
@@ -132,6 +140,14 @@ beforeEach(() => {
     orderId: "order-1",
   });
   asMock(sendMail).mockResolvedValue(undefined);
+  /**
+   * Info: (20260819 - Luphia) 兩支計數每輪都要重設。
+   * `clearAllMocks()` 清呼叫紀錄但**不還原 `mockResolvedValue`**，
+   * 因此上限測試設的 20 / 50 會滲進後面每一條案例（本檔實際發生過）。
+   */
+  asMock(teamRepo.countPendingInvitations).mockResolvedValue(0);
+  asMock(teamRepo.countInvitationsCreatedSince).mockResolvedValue(0);
+  asMock(teamRepo.findLastInvitationSentAt).mockResolvedValue(null);
   asMock(systemSettingService.get).mockResolvedValue("https://isunfa.com");
   /**
    * Info: (20260816 - Luphia) acceptInvitation 回 null 代表「沒搶到那一列」，
@@ -167,6 +183,42 @@ const invite = (email = "friend@example.com") =>
   });
 
 describe("inviteMemberByEmail", () => {
+  /**
+   * Info: (20260819 - Luphia) 兩道團隊層上限真的擋在**email 邀請**的路徑上（review #6684 高）。
+   *
+   * 這條路徑才是真的會寄信的那一條，而先前完全沒有接線測試：`assertInviteVolumeWithinLimits`
+   * 的呼叫刪掉之後，email 邀請完全失去整團總量的上限，而所有測試照樣綠。
+   *
+   * 三個斷言成組：擋下的錯誤碼、**沒有扣款**、**沒有建立邀請列也沒有寄信**——
+   * 只驗第一個的話，「擋了但信已經寄出去」也會通過。
+   */
+  it.each([
+    [
+      "同時未接受數達上限",
+      () => asMock(teamRepo.countPendingInvitations).mockResolvedValue(20),
+      "TW000023",
+    ],
+    [
+      "今日寄送數達上限",
+      () => asMock(teamRepo.countInvitationsCreatedSince).mockResolvedValue(50),
+      "TW000024",
+    ],
+  ])("%s 時擋下，且不扣款、不建列、不寄信", async (_label, arrange, code) => {
+    /**
+     * Info: (20260819 - Luphia) 三道量控**只對免費方案**（產品決定 20260819），
+     * 而本檔的預設訂閱是付費方案（那是大多數案例要的前提）。因此這兩條要自己
+     * 把團隊設成免費——不設的話它們會通過，而「通過」正是付費團隊的正確行為。
+     */
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(null);
+    arrange();
+
+    await expect(invite()).rejects.toMatchObject({ code });
+
+    expect(asMock(chargeSeatAddition)).not.toHaveBeenCalled();
+    expect(asMock(teamRepo.createTeamInvitation)).not.toHaveBeenCalled();
+    expect(asMock(sendMail)).not.toHaveBeenCalled();
+  });
+
   it("建立邀請並寄出信件", async () => {
     const result = await invite();
 
@@ -833,11 +885,12 @@ describe("revokeInvitation", () => {
   };
 
   beforeEach(() => {
-    asMock(teamRepo.getTeamMember).mockResolvedValue({ role: "ADMIN" });
+    // Info: (20260819 - Luphia) 撤回限管理職，而團隊 ADMIN 已取消 → 只剩 OWNER
+    asMock(teamRepo.getTeamMember).mockResolvedValue({ role: "OWNER" });
     asMock(teamRepo.getInvitationByIdWithDetails).mockResolvedValue(pending);
   });
 
-  it("OWNER / ADMIN 可以撤回，且回報席次已釋出但不退費", async () => {
+  it("OWNER 可以撤回，且回報席次已釋出但不退費", async () => {
     const result = await revokeInvitation({
       teamId: TEAM.id,
       inviteId: "inv-1",

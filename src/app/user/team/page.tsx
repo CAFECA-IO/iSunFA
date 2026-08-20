@@ -31,6 +31,7 @@ import {
   type AllocationDirection,
 } from "@/constants/subscription_quota";
 import { IAccountBook } from "@/interfaces/account_book";
+import { isTeamManagerRole } from "@/constants/team";
 
 interface ITeam {
   id: string;
@@ -245,8 +246,7 @@ export default function TeamManagementPage() {
   const currentUserMember = members.find(
     (m) => m.user?.address === user?.address,
   );
-  const isOwnerOrAdmin =
-    currentUserMember?.role === "OWNER" || currentUserMember?.role === "ADMIN";
+  const isOwnerOrAdmin = isTeamManagerRole(currentUserMember?.role);
   const isOwner = currentUserMember?.role === "OWNER";
 
   /**
@@ -756,9 +756,6 @@ export default function TeamManagementPage() {
                                 }
                                 className="rounded-md border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 shadow-sm focus:border-orange-500 focus:ring-orange-500"
                               >
-                                <option value="ADMIN">
-                                  {t("team_management.roles.ADMIN")}
-                                </option>
                                 <option value="EDITOR">
                                   {t("team_management.roles.EDITOR")}
                                 </option>

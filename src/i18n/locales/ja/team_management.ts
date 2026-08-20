@@ -6,6 +6,28 @@ export const teamManagement = {
   accept_via_fido2: "FIDO2を使って受け入れる",
   accepting: "処理中...",
   no_teams: "チームがありません。",
+  // Info: (20260818 - Luphia) 席数追加費用の事前開示（ユーザー報告 20260818）
+  // Info: (20260819 - Luphia) 招待送信のクールダウン（製品判断 20260819）
+  invite_cooldown: {
+    notice:
+      "招待を送信したばかりです。次の送信まで {{seconds}} 秒お待ちください。",
+    button: "{{seconds}} 秒お待ちください",
+  },
+  seat_charge: {
+    loading: "料金を計算しています…",
+    charge_title: "送信すると {{amount}} が即時請求されます",
+    charge_detail:
+      "{{seats}} 席を追加し、当期の残り {{days}} 日で日割り計算した金額を、チームのサブスクリプションの支払い方法に請求します。",
+    reuse: "今回は既に支払い済みの空き席を使用するため、追加請求はありません。",
+    period_end:
+      "当期は間もなく終了するため今回は請求されません。席数は即時反映されます。",
+    free_plan: "無料プランでは席数費用は発生しません。",
+    blocked_title: "現在メンバーを追加できません",
+    quote_failed:
+      "料金の計算に失敗しました。金額が分からないまま請求されるのを避けるため、再計算してください。",
+    retry: "再計算",
+    submit_with_amount: "確認して {{amount}} を支払う",
+  },
   invite_member: "メンバーを招待",
   decline_invite: "辞退する",
   declining: "処理中...",
@@ -67,6 +89,8 @@ export const teamManagement = {
     free_plan_limit_hint:
       "メンバーを招待するにはチーム版または企業版へのアップグレードが必要です。料金は席数に応じて計算され、招待した各メンバーがそれぞれ利用枠を持ちます。",
     free_plan_limit_cta: "プランを見る",
+    seat_charged:
+      "招待を送信し、チームの支払い方法に {{amount}} を請求しました。",
     seat_reused:
       "支払い済みの空き席を利用したため、今回は追加料金は発生しません。",
     revoke_success:
@@ -108,6 +132,12 @@ export const teamManagement = {
     allocate_hint: "未配布のポイントをメンバーに配布します",
     revoke: "回収",
     // Info: (20260814 - Luphia) 分配即鑄到成員的鏈上錢包（ADR 015 修訂）
+    // Info: (20260819 - Luphia) 割当処理中の表示と警告（製品要求 20260819）
+    allocating_title:
+      "ポイントを割り当てています。ページを閉じたり再読み込みしないでください",
+    allocating_warning:
+      "ポイントをメンバーのブロックチェーンウォレットに発行しています（数秒〜数十秒）。ここで閉じたり再読み込みすると、「引き落み済み・オンチェーン未確認」の状態で止まり、手動対応が必要になる場合があります。",
+    allocating_button: "処理中…",
     allocate_onchain_note:
       "配布したポイントはメンバー本人のウォレット（ブロックチェーンアドレス）に直接送られます。このチーム以外でも利用でき、配布後にチーム側から回収することはできません。",
     revoke_onchain_note:

@@ -1161,6 +1161,76 @@ export const API_ERRORS = {
    * 給一個**專屬的錯誤碼**而不是讓它走到鏈上失敗回 `TW000010`：
    * 通用的「操作失敗」會讓客服以為重試就好，而這件事重試一百次也一樣。
    */
+  /**
+   * Info: (20260819 - Luphia) 同時未接受的邀請數已達上限（產品決定 20260819）。
+   *
+   * 免費版人數上限移除之後，這是「一次撒出幾百封」的煞車。訊息刻意說得出**下一步**
+   * （撤回或等對方回應），因為使用者能自己解決——不像額度用罄只能等重置。
+   */
+  TW_PENDING_INVITE_LIMIT: {
+    code: "TW000023",
+    message:
+      "Too many invitations are waiting to be accepted; revoke some or wait for a response",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  /**
+   * Info: (20260819 - Luphia) 今日寄出的邀請數已達上限（產品決定 20260819）。
+   *
+   * 與上一條分工：這條擋的是「撤回再邀、撤回再邀」的迴圈——只看同時未接受數的話，
+   * 那個迴圈可以無限寄信而同時數永遠是 1。計數以**已建立的邀請列**為準，
+   * 撤回或被拒絕的仍然算（信已經寄出去了）。
+   */
+  TW_INVITE_DAILY_LIMIT: {
+    code: "TW000024",
+    message: "Daily invitation limit reached for this team; try again tomorrow",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  /**
+   * Info: (20260819 - Luphia) 送出時帶的試算金額與服務端重算的結果不符（review #6682 高）。
+   *
+   * 試算是在對話框開啟時算的，送出是在使用者填完欄位、走完 FIDO2 簽章之後——
+   * 中間的兩個輸入都會變：席次佔用（另一位管理者同時邀了人）、以及計費週期
+   * （8/31 23:58 試算「本期即將結束、不收費」，00:02 完成簽章時已是新週期，
+   * 比例計價回近乎全額）。同一支實作在兩個時點給出不同答案，而先前沒有任何
+   * 一端再確認一次——畫面說 0、卡被刷 840，且事後提示只讀 `reusedPaidSeat`，
+   * 使用者完全看不出來。
+   *
+   * 因此金額不符時**擋下並要求重新試算**，而不是照新價扣款。
+   *
+   * 號碼跳過 23 / 24：那兩個號碼由邀請量上限那條分支（#6684）先取用，
+   * 而兩條分支是兄弟。跨 PR 撞號會讓對外的錯誤碼契約在合併後才爆
+   * （見 `error_dictionary_codes.test.ts` 的由來）。
+   */
+  TW_SEAT_QUOTE_STALE: {
+    code: "TW000025",
+    message:
+      "The seat charge changed since it was shown; please review it again",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+  /**
+   * Info: (20260819 - Luphia) 一個人只能擁有一個免費團隊（產品決定 20260819）。
+   *
+   * 邀請量的兩道上限是 **per-team** 的，而建立團隊先前沒有數量上限也沒有限流——
+   * 一個帳號建 10 個免費團隊，就有 10 份 20 封／50 封的額度（review #6684 中）。
+   * 「擁有」指 OWNER：被別人邀請加入的團隊不算，那不是他能開的量。
+   */
+  TW_FREE_TEAM_LIMIT: {
+    code: "TW000026",
+    message: "You can only own one team on the free plan",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  /**
+   * Info: (20260819 - Luphia) 邀請寄送的冷卻時間（產品決定 20260819）。
+   *
+   * 每分鐘 10 封的限流擋的是「狂點」，而冷卻擋的是「穩定地一直寄」：
+   * 兩者的差別在於後者看起來像正常使用。payload 帶 `retryAfterSeconds`，
+   * 前端據此顯示倒數——只說「請稍後再試」而不說多久，使用者只能一直按。
+   */
+  TW_INVITE_COOLDOWN: {
+    code: "TW000027",
+    message: "Please wait before sending another invitation",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
   TW_ALLOCATION_REVOKE_DISABLED: {
     code: "TW000020",
     message: "Revoking allocated credits is no longer supported",

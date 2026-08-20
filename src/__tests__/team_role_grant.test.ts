@@ -19,9 +19,13 @@ describe("canGrantRole", () => {
     expect(canGrantRole(TeamRole.OWNER, TeamRole.OWNER)).toBe(true);
   });
 
-  // Info: (20260818 - Luphia) 本檔最重要的一條
-  it("ADMIN 不能授予 OWNER", () => {
-    expect(canGrantRole(TeamRole.ADMIN, TeamRole.OWNER)).toBe(false);
+  /**
+   * Info: (20260819 - Luphia) 團隊 ADMIN 已取消（產品決定 20260819），但**殘留的
+   * `"ADMIN"` 字串仍可能出現在資料庫裡**（回填腳本跑之前）。那種列必須一樣擋下來
+   * ——`canGrantRole` 認的是「是不是 OWNER」，不是「不是某幾個角色」。
+   */
+  it("已移除的 ADMIN 字串不能授予 OWNER", () => {
+    expect(canGrantRole("ADMIN", TeamRole.OWNER)).toBe(false);
   });
 
   it("非管理職一律不能授予 OWNER", () => {
@@ -32,13 +36,12 @@ describe("canGrantRole", () => {
   });
 
   /**
-   * Info: (20260818 - Luphia) 其餘角色 ADMIN 授得了——這條端點本來就開放
-   * OWNER / ADMIN 邀請成員，收得太緊會把正常流程一起擋掉。
+   * Info: (20260818 - Luphia) 授予 OWNER 以外的角色不受這道檢查限制——
+   * 端點自己的權限閘才是「誰能邀請」的判準，這裡收得太緊會把正常流程一起擋掉。
    */
-  it("ADMIN 可以授予其餘角色", () => {
-    expect(canGrantRole(TeamRole.ADMIN, TeamRole.ADMIN)).toBe(true);
-    expect(canGrantRole(TeamRole.ADMIN, TeamRole.EDITOR)).toBe(true);
-    expect(canGrantRole(TeamRole.ADMIN, TeamRole.VIEWER)).toBe(true);
+  it("OWNER 以外的目標角色不受這道檢查限制", () => {
+    expect(canGrantRole(TeamRole.OWNER, TeamRole.EDITOR)).toBe(true);
+    expect(canGrantRole(TeamRole.EDITOR, TeamRole.VIEWER)).toBe(true);
   });
 });
 

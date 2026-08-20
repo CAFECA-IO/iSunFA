@@ -49,3 +49,13 @@ export const teamSubscriptionUpdateSchema = z.object({
     .default(BILLING_INTERVAL.MONTH),
   paymentMethodId: z.string().min(1).optional(),
 });
+
+/**
+ * Info: (20260818 - Luphia) 加席試算的查詢參數（`GET .../seat_quote`）。
+ *
+ * 上界 50：試算本身唯讀、不扣款，但它會查佔用量與本期已補收金額，
+ * 給一個荒謬的席次數只會浪費查詢。實務上邀請一次一人，批次擴編也遠低於 50。
+ */
+export const seatQuoteQuerySchema = z.object({
+  seats: z.coerce.number().int().min(1).max(50).default(1),
+});

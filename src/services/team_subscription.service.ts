@@ -1,7 +1,7 @@
 import { Order } from "@/generated";
 import { SUBSCRIPTION_PLAN_PRICE, CURRENCY_UNIT } from "@/constants/price";
 import { ORDER_TYPE } from "@/constants/status";
-import { TeamRole } from "@/constants/team";
+import { TeamRole, isTeamManagerRole } from "@/constants/team";
 import {
   BILLING_INTERVAL,
   BillingInterval,
@@ -179,8 +179,7 @@ export async function getTeamSubscriptionView(params: {
      * 非管理職直接**不查**而不是查了再丟掉：查了再丟掉的版本，
      * 下一個人在別處重用這個函式時就會把它一起回出去。
      */
-    const isManager =
-      member.role === TeamRole.OWNER || member.role === TeamRole.ADMIN;
+    const isManager = isTeamManagerRole(member.role);
     const teamTotals = isManager
       ? await buildTeamQuotaTotals(teamId, planId, nowSec)
       : undefined;

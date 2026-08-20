@@ -1,7 +1,15 @@
 import { logger } from "@/lib/utils/logger";
 import { INVITE_EMAIL_MATCH, TEAM_INVITATION_STATUS } from "@/constants/status";
-import { TeamRole } from "@/constants/team";
+import { TeamRole, isTeamManagerRole } from "@/constants/team";
 import { SystemSettingKey } from "@/constants/system_setting";
+import {
+  DEFAULT_TEAM_INVITE_COOLDOWN_SECONDS,
+  DEFAULT_TEAM_INVITE_DAILY_LIMIT,
+  DEFAULT_TEAM_PENDING_INVITE_LIMIT,
+  TEAM_PLAN,
+} from "@/constants/subscription_quota";
+import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
+import { resolveEffectivePlanId } from "@/services/spend.service";
 import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import {
   buildInviteUrl,
@@ -55,12 +63,270 @@ export function isValidInviteEmail(email: string): boolean {
   return email.length <= 254 && EMAIL_PATTERN.test(email);
 }
 
+/**
+ * Info: (20260819 - Luphia) 兩道上限的設定解析（正式值為 DB 系統設定，ADR 017）。
+ *
+ * 讀不到或驗簽失敗一律退回程式內的保底值，理由與 `resolveFaithMemoryRetentionDays`
+ * 同一套：這兩個值不是憑證、也不授權任何事，而退回保底值是**較嚴格**的方向
+ * （被竄改成 999999 也不會讓上限失效）。
+ */
+const DAY_MS = 86_400_000;
+
+async function resolveNumericSetting(
+  key: SystemSettingKey,
+  fallback: number,
+): Promise<number> {
+  try {
+    const raw = await systemSettingService.get(key);
+    const parsed = Number(raw);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+  } catch (error) {
+    logger.warn("failed to resolve invite limit setting; using fallback", {
+      key,
+      fallback,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return fallback;
+  }
+}
+
+const resolveTeamPendingInviteLimit = (): Promise<number> =>
+  resolveNumericSetting(
+    SystemSettingKey.TEAM_PENDING_INVITE_LIMIT,
+    DEFAULT_TEAM_PENDING_INVITE_LIMIT,
+  );
+
+const resolveTeamInviteDailyLimit = (): Promise<number> =>
+  resolveNumericSetting(
+    SystemSettingKey.TEAM_INVITE_DAILY_LIMIT,
+    DEFAULT_TEAM_INVITE_DAILY_LIMIT,
+  );
+
+const resolveTeamInviteCooldownSeconds = (): Promise<number> =>
+  resolveNumericSetting(
+    SystemSettingKey.TEAM_INVITE_COOLDOWN_SECONDS,
+    DEFAULT_TEAM_INVITE_COOLDOWN_SECONDS,
+  );
+
+/**
+ * Info: (20260819 - Luphia) 冷卻期間帶著剩餘秒數（產品決定 20260819）。
+ *
+ * 只說「請稍後再試」而不說多久，使用者只能一直按——而每一次按都會再打一次 API。
+ * 剩餘秒數走 payload（同 402 額度用罄的作法），前端據此顯示倒數。
+ */
+export class InviteCooldownError extends ApiError {
+  public data: { retryAfterSeconds: number };
+
+  constructor(retryAfterSeconds: number) {
+    super(
+      API_ERRORS.TW_INVITE_COOLDOWN.code,
+      API_ERRORS.TW_INVITE_COOLDOWN.message,
+      API_ERRORS.TW_INVITE_COOLDOWN.status,
+    );
+    this.name = "InviteCooldownError";
+    this.data = { retryAfterSeconds };
+  }
+}
+
+/**
+ * Info: (20260819 - Luphia) 冷卻**只對免費方案生效**（產品決定 20260819）。
+ *
+ * 三道量控存在的理由是「免費團隊不收席次費，寄信量沒有經濟上的煞車」。付費團隊
+ * 每加一席都在付錢，而冷卻是三道裡對他們最痛的一道：60 席的公司要一次邀 60 位
+ * 員工，每分鐘一封就是**花一小時**才寄得完，而那些席次的錢已經付了。
+ *
+ * 兩道總量上限（同時未接受 20、每日 50）**維持一律套用**：那是總量的煞車，
+ * 而帳號被盜時付費團隊反而是更好的跳板（有卡、有信譽），不該完全沒有上界。
+ *
+ * 「什麼是免費方案」交給 `resolveEffectivePlanId`（唯一判斷點）：訂閱過期或
+ * 被取消一律視為免費，否則「讓訂閱過期」就成了免除冷卻的方法。
+ */
+async function isFreePlanTeam(teamId: string, nowMs: number): Promise<boolean> {
+  const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
+  return (
+    resolveEffectivePlanId(
+      subscription && {
+        planId: subscription.planId,
+        status: subscription.status,
+        currentPeriodEnd: subscription.currentPeriodEnd,
+      },
+      Math.floor(nowMs / 1000),
+    ) === TEAM_PLAN.FREE
+  );
+}
+
+export interface IInviteLimitsView {
+  /** Info: (20260819 - Luphia) 還要等幾秒才能再寄；0 代表現在就可以 */
+  cooldownSecondsRemaining: number;
+  pendingCount: number;
+  sentToday: number;
+  /**
+   * Info: (20260819 - Luphia) 上限；**`null` 代表這個方案不適用**（付費團隊）。
+   *
+   * 回 `null` 而不是一個很大的數字：畫面要說得出「不限」與「上限很高」的差別，
+   * 而一個假的大數字會在某天被當成真的上限顯示出去。
+   */
+  pendingLimit: number | null;
+  dailyLimit: number | null;
+}
+
+/**
+ * Info: (20260819 - Luphia) 邀請量的現況（唯讀），供對話框開啟時顯示。
+ *
+ * 與 `assertInviteVolumeWithinLimits` 讀同一組數字。**刻意不讓它自己判斷能不能寄**
+ * ——那個判斷只有一份，在下面那支；這裡只回原始數字，畫面自己決定怎麼呈現。
+ * 兩邊各判一次的話，「畫面說可以、送出被擋」就會變成可能發生的事。
+ */
+export async function getInviteLimits(
+  teamId: string,
+  nowMs: number,
+): Promise<IInviteLimitsView> {
+  const [pendingLimit, dailyLimit, cooldownSeconds] = await Promise.all([
+    resolveTeamPendingInviteLimit(),
+    resolveTeamInviteDailyLimit(),
+    resolveTeamInviteCooldownSeconds(),
+  ]);
+  /**
+   * Info: (20260819 - Luphia) 付費團隊不套用這三道（見 `assertInviteVolumeWithinLimits`）：
+   * 不查冷卻、上限回 `null`。用量仍然回傳——那是有用的資訊，只是沒有上界。
+   */
+  const freePlan = await isFreePlanTeam(teamId, nowMs);
+  const [pendingCount, sentToday, lastSentAt] = await Promise.all([
+    teamRepo.countPendingInvitations(teamId, nowMs),
+    teamRepo.countInvitationsCreatedSince(teamId, new Date(nowMs - DAY_MS)),
+    freePlan
+      ? teamRepo.findLastInvitationSentAt(teamId)
+      : Promise.resolve(null),
+  ]);
+
+  return {
+    cooldownSecondsRemaining: resolveCooldownRemaining(
+      lastSentAt,
+      nowMs,
+      cooldownSeconds,
+    ),
+    pendingCount,
+    sentToday,
+    pendingLimit: freePlan ? pendingLimit : null,
+    dailyLimit: freePlan ? dailyLimit : null,
+  };
+}
+
+/**
+ * Info: (20260819 - Luphia) 剩餘冷卻秒數（純函式，向上取整）。
+ *
+ * 向上取整而不是四捨五入：回 0 的意思是「現在可以寄」，而還差 0.4 秒時回 0
+ * 會讓前端倒數結束的那一刻按下去被擋——顯示的與實際的必須是同一件事。
+ */
+export function resolveCooldownRemaining(
+  lastSentAt: Date | null,
+  nowMs: number,
+  cooldownSeconds: number,
+): number {
+  if (!lastSentAt) return 0;
+  const elapsedMs = nowMs - lastSentAt.getTime();
+  const remainingMs = cooldownSeconds * 1000 - elapsedMs;
+  return remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;
+}
+
+/**
+ * Info: (20260819 - Luphia) 邀請量的兩道團隊層上限（產品決定 20260819）。
+ *
+ * 免費版人數上限移除之後（額度改為全隊共用一份），寄信量失去所有界線：免費團隊
+ * 不收席次費，而每一封 email 邀請都是真的寄出去的信。人數不再是煞車，這裡就是。
+ *
+ * 兩道分工不同，缺一不可：
+ *
+ * 1. **同時未接受數**：擋「一次撒出幾百封」。
+ * 2. **每日寄送數**：擋「撤回再邀、撤回再邀」的迴圈——只看第 1 道的話，
+ *    那個迴圈可以無限寄信而同時數永遠是 1。計數以已建立的邀請列為準，
+ *    撤回或被拒絕的仍然算（信已經寄出去了）。
+ *
+ * 位置在**扣款與建立邀請之前**：擋下來時不該產生任何金流，也不該留下邀請列。
+ * 另有一層依操作者的限流（`RateLimitBucketEnum.TEAM_INVITE_SEND`）擋單人狂點，
+ * 而這裡擋的是整團的總量——多位管理員各自在限流額度內，仍然能疊出大量寄信。
+ */
+export async function assertInviteVolumeWithinLimits(
+  teamId: string,
+  nowMs: number,
+): Promise<void> {
+  /**
+   * Info: (20260819 - Luphia) **三道量控只對免費方案生效**（產品決定 20260819）。
+   *
+   * 這三道存在的理由是「免費團隊不收席次費，寄信量沒有經濟上的煞車」。付費團隊
+   * 每加一席都在付錢，那本身就是煞車——而三道限制對他們的代價是實際的：
+   * 60 席的公司一次邀 60 位員工，會在第 21 封撞到同時未接受數，而每分鐘一封
+   * 更要花一小時。那些席次的錢已經付了，而錯誤訊息還把責任推給管理員。
+   *
+   * 付費團隊剩下的界線是**每操作者的限流**（10/分、100/日，`TEAM_INVITE_SEND`）。
+   * 那一層是 process 記憶體的實作：多實例各自計數、重啟歸零，因此它擋得住
+   * 「一個人狂點」，擋不住「總量」。這是這個決定明知而為的取捨——
+   * 付費團隊的濫用成本由席次費與金流紀錄承擔，不由這三道承擔。
+   */
+  const freePlan = await isFreePlanTeam(teamId, nowMs);
+  if (!freePlan) return;
+
+  const [pendingLimit, dailyLimit] = await Promise.all([
+    resolveTeamPendingInviteLimit(),
+    resolveTeamInviteDailyLimit(),
+  ]);
+  const [pendingCount, sentToday, lastSentAt] = await Promise.all([
+    teamRepo.countPendingInvitations(teamId, nowMs),
+    teamRepo.countInvitationsCreatedSince(teamId, new Date(nowMs - DAY_MS)),
+    freePlan
+      ? teamRepo.findLastInvitationSentAt(teamId)
+      : Promise.resolve(null),
+  ]);
+
+  /**
+   * Info: (20260819 - Luphia) 冷卻（產品決定 20260819）：距離上一封未滿一分鐘就擋。
+   *
+   * 與「每分鐘 10 封」的限流分工不同：限流擋的是狂點，冷卻擋的是**穩定地一直寄**
+   * ——後者在限流眼中看起來完全正常（每分鐘 1 封，永遠不會超限）。
+   *
+   * 擋在兩道總量上限**之前**：它是最便宜的檢查，而且是使用者最常撞到的一道，
+   * 錯誤訊息也帶得出「還要等幾秒」這種可行動的資訊。
+   */
+  const cooldownRemaining = resolveCooldownRemaining(
+    lastSentAt,
+    nowMs,
+    await resolveTeamInviteCooldownSeconds(),
+  );
+  if (cooldownRemaining > 0) {
+    logger.info("invitation cooldown active", { teamId, cooldownRemaining });
+    throw new InviteCooldownError(cooldownRemaining);
+  }
+
+  if (pendingCount >= pendingLimit) {
+    logger.info("pending invitation limit reached", {
+      teamId,
+      pendingCount,
+      pendingLimit,
+    });
+    throw toApiError(API_ERRORS.TW_PENDING_INVITE_LIMIT);
+  }
+
+  if (sentToday >= dailyLimit) {
+    logger.info("daily invitation limit reached", {
+      teamId,
+      sentToday,
+      dailyLimit,
+    });
+    throw toApiError(API_ERRORS.TW_INVITE_DAILY_LIMIT);
+  }
+}
+
 export interface IInviteByEmailParams {
   teamId: string;
   operatorUserId: string;
   email: string;
   role: TeamRole;
   nowMs: number;
+  /**
+   * Info: (20260819 - Luphia) 畫面上顯示過的席次費用，扣款前比對（review #6682 高）。
+   * 不符即 `TW_SEAT_QUOTE_STALE`，要求重新試算——不照新價扣款。
+   */
+  expectedAmount?: number;
 }
 
 export interface IInviteByEmailResult {
@@ -142,7 +408,7 @@ function isUniqueConstraintError(error: unknown): boolean {
 export async function inviteMemberByEmail(
   params: IInviteByEmailParams,
 ): Promise<IInviteByEmailResult> {
-  const { teamId, operatorUserId, email, role, nowMs } = params;
+  const { teamId, operatorUserId, email, role, nowMs, expectedAmount } = params;
   const normalizedEmail = email.trim().toLowerCase();
 
   if (!isValidInviteEmail(normalizedEmail)) {
@@ -195,6 +461,11 @@ export async function inviteMemberByEmail(
   }
 
   /**
+   * Info: (20260819 - Luphia) 量控在扣款之前：擋下來時不產生金流、不留邀請列。
+   */
+  await assertInviteVolumeWithinLimits(teamId, nowMs);
+
+  /**
    * Info: (20260815 - Luphia) 席次：先看有沒有已付費的空位，沒有才補收。
    * 冪等鍵以信箱為準，重試同一封邀請不會扣第二次。
    */
@@ -203,6 +474,8 @@ export async function inviteMemberByEmail(
     seats: 1,
     nowMs,
     operatorUserId,
+    // Info: (20260819 - Luphia) 畫面上顯示過的金額，扣款前比對（review #6682 高）
+    expectedAmount,
     /**
      * Info: (20260818 - Luphia) 冪等鍵以「同一個收件匣」為準（第三輪 C-1）：
      * 否則同一個人的 plus/點號變體每一封都會真的刷一次 OWNER 的卡。
@@ -542,7 +815,7 @@ export async function revokeInvitation(
   const { teamId, inviteId, operatorUserId } = params;
 
   const operator = await teamRepo.getTeamMember(operatorUserId, teamId);
-  if (!operator || (operator.role !== "OWNER" && operator.role !== "ADMIN")) {
+  if (!isTeamManagerRole(operator?.role)) {
     throw toApiError(API_ERRORS.FO_PERMISSION_DENIED_ONLY_OWN);
   }
 
