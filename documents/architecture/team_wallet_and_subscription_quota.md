@@ -872,6 +872,14 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 
 購買會取代排程這件事**在付款前就要說**：升級的排程是在履行時由 `applyTeamSubscriptionInTx` 清掉的，因此建單回應帶 `supersedesPendingPlanId`（現在式，那一刻還沒取消），而歸屬選擇器在付款前顯示「已排定於 X 降級為 Y；本次購買完成後將取消該降級」。
 
+#### 7.1.2 第二輪 self-review（2026-08-20）
+
+| 問題 | 症狀 | 修法 |
+|---|---|---|
+| 降級走購買流程回 `orderId: null` | 付款畫面把它當訂單用 → `completeCheckout(null, undefined)` 簽章失敗。**排程已寫入 DB，而使用者看到付款錯誤** | `orderCreator` 改回**可辨識聯集**（`kind: "order" \| "scheduled"`），付款畫面分流到 `PaymentStep.scheduled`（沒有金額的一頁）。根因是型別把 `orderId` 宣告成 `string` 而伺服器回 null——**契約說謊，編譯器就幫不上忙** |
+| 扣款失敗後冪等鍵仍被佔著 | `order.idempotency_key` 是唯一欄位，而失敗的訂單留著它。續訂：下一輪建新單撞 P2002，每小時噴錯、永遠續不上，直到寬限用盡降級 free。席次：P2002 被當成「重放」吞掉 → 回 `charged: false` → **邀請照樣寄出，席次沒付錢** | 兩處在扣款失敗時 `releaseIdempotencyKey`（`data.idempotencyKey` 留著供稽核）。成功的訂單仍握著鍵，「同一期不重複扣款」的保護不變 |
+| 沿用未付訂單時金額可能過期 | 那張單是幾小時前建的，`amount` 是當時的席次數算的 → 少收一個席次期 | 只在金額相符時沿用；不符就取消舊單（否則它仍可從別的分頁付掉）並建新單 |
+
 展延的期初刻意不動：期中加席次的比例計價讀 `periodStart` / `periodEnd`（`resolveSeatProration`），把期初改成今天會讓分母縮水，於是同一天加人要付更多——展延只該讓分母變大。當期已結束（續訂、過期後重新訂閱）則從現在起算：中間沒有權益的空窗不該追認為已付費期間。
 
 條款同步：服務條款 §3.6 加上「提前續購（展延）」一項，明示剩餘天數不會消失。

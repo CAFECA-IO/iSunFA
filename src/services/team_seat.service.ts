@@ -604,6 +604,18 @@ export async function chargeSeatAddition(
   });
 
   if (!charge.ok) {
+    /**
+     * Info: (20260820 - Luphia) 扣款失敗要**放掉冪等鍵**（self-review 第二輪，中）。
+     *
+     * 那把鍵是唯一欄位，而失敗的訂單仍佔著它。下一次同一個對象、同一期的邀請
+     * 會查不到（`findOrderByIdempotencyKey` 刻意不認失敗的訂單）而去建新單，
+     * 然後撞 P2002——**而那個 P2002 被當成「重放」吞掉，回 `charged: false`，
+     * 於是邀請照樣寄出。一張卡被拒之後，下一次邀請就是一個沒付錢的席次。**
+     *
+     * 放掉之後重試會真的再扣一次款；「同一期不重複扣款」仍然成立，
+     * 因為成功的訂單還握著鍵。
+     */
+    await paymentRepo.releaseIdempotencyKey(order.orderId);
     logger.error("seat addition charge failed", {
       teamId,
       orderId: order.orderId,

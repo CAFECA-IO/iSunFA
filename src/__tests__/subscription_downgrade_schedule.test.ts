@@ -58,6 +58,8 @@ jest.mock("@/repositories/payment.repo", () => ({
     })),
     // Info: (20260820 - Luphia) 同方案同週期的未付訂單（沿用而不是再建一張）
     findInFlightSubscriptionOrder: jest.fn(async () => null),
+    // Info: (20260820 - Luphia) 金額已過期的舊單要被取消，否則它仍是可付的
+    cancelOrder: jest.fn(async () => undefined),
   },
 }));
 
@@ -122,6 +124,7 @@ beforeEach(() => {
     data: { billingInterval: BILLING_INTERVAL.MONTH },
   });
   asMock(paymentRepo.findInFlightSubscriptionOrder).mockResolvedValue(null);
+  asMock(paymentRepo.cancelOrder).mockResolvedValue(undefined);
 });
 
 describe("降級：排程到當期屆滿", () => {
@@ -470,10 +473,15 @@ describe("未付訂單沿用，不再建第二張", () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
       subscriptionRow({ planId: TEAM_PLAN.TEAM, unitPrice: 840 }),
     );
+    /**
+     * Info: (20260820 - Luphia) 金額要與**現在**算出來的一致才會沿用
+     *（self-review 第二輪，小）：3 席 × 企業版月費 2,940 = 8,820。
+     * 不一致代表席次變動過，那張單會被取消並改建新單。
+     */
     asMock(paymentRepo.findInFlightSubscriptionOrder).mockResolvedValue({
       id: "order-inflight",
       challenge: "challenge-inflight",
-      amount: BigInt(2520),
+      amount: BigInt(8820),
     });
 
     const result = await changeTeamSubscription({
@@ -490,9 +498,41 @@ describe("未付訂單沿用，不再建第二張", () => {
       expect.objectContaining({
         orderId: "order-inflight",
         challenge: "challenge-inflight",
-        cost: 2520,
+        cost: 8820,
       }),
     );
+  });
+
+  /**
+   * Info: (20260820 - Luphia) 金額已變（席次變動）→ 不沿用、取消舊單、建新單。
+   *
+   * 不取消的話那張舊單仍是可付的：從另一個分頁或訂單列表付掉就以舊金額成交。
+   */
+  it("金額已不同 → 取消舊單並建新單", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({ planId: TEAM_PLAN.TEAM, unitPrice: 840 }),
+    );
+    asMock(paymentRepo.findInFlightSubscriptionOrder).mockResolvedValue({
+      id: "order-stale",
+      challenge: "challenge-stale",
+      amount: BigInt(2940),
+    });
+
+    const result = await changeTeamSubscription({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      paymentMethodId: "pm-1",
+      nowMs: NOW_MS,
+    });
+
+    expect(asMock(paymentRepo.cancelOrder)).toHaveBeenCalledWith(
+      "order-stale",
+      expect.stringContaining("superseded"),
+    );
+    expect(asMock(generatePaymentOrder)).toHaveBeenCalledTimes(1);
+    expect(result.orderId).toBe("order-1");
   });
 
   // Info: (20260820 - Luphia) 沒有未付訂單就照常建單（否則「一律沿用」也會通過上面那條）
@@ -501,6 +541,7 @@ describe("未付訂單沿用，不再建第二張", () => {
       subscriptionRow({ planId: TEAM_PLAN.TEAM, unitPrice: 840 }),
     );
     asMock(paymentRepo.findInFlightSubscriptionOrder).mockResolvedValue(null);
+    asMock(paymentRepo.cancelOrder).mockResolvedValue(undefined);
 
     await changeTeamSubscription({
       userId: "user-1",

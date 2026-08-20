@@ -221,6 +221,9 @@ export const pricing = {
       },
     },
     payment_modal: {
+      scheduled_title: "変更を予約しました",
+      scheduled_body:
+        "今回の変更に支払いは不要です。{{date}} から{{plan}}に変更されます。それまではプランと利用枠は変わりません。",
       success_title: "購入完了",
       error_title: "購入失敗",
       original_credits: "現在のポイント",

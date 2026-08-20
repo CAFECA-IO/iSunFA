@@ -251,6 +251,17 @@ async function renewOne(
   });
 
   if (!charge.ok) {
+    /**
+     * Info: (20260820 - Luphia) 扣款失敗要**放掉冪等鍵**（self-review 第二輪，中）。
+     *
+     * 那把鍵是唯一欄位，而失敗的訂單仍佔著它。下一輪 `findOrderByIdempotencyKey`
+     * 刻意不認失敗的訂單（「失敗必須被視為沒扣過」），於是會去建新單——
+     * 然後撞 P2002，每小時噴一次錯，永遠續不上，直到寬限期用盡降級 free。
+     *
+     * 放掉之後重試才真的能再建單、再扣一次款，而「同一期不重複扣款」的保護
+     * 仍然成立：成功的訂單（COMPLETED / 請款中）都還握著鍵。
+     */
+    await paymentRepo.releaseIdempotencyKey(renewalOrder.orderId);
     logger.error("subscription renewal charge failed", {
       teamId: sub.teamId,
       orderId: renewalOrder.orderId,

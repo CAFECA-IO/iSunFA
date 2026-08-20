@@ -42,19 +42,36 @@ export interface IPurchaseContext {
   unitPrice?: number;
 }
 
-export interface IPurchaseOrderResult {
-  orderId: string;
-  challenge: string;
-  /**
-   * Info: (20260817 - Luphia) server 實際建單的金額（PR #6652 第二輪 C-4）。
-   *
-   * 付款畫面顯示的席次金額是前端用**頁面載入時**的人數算的，實收由建單當下的
-   * `countMembers()` 重算——中間有人加入，使用者看到 4,200、卡被扣 5,040。
-   * `generatePaymentOrder` 一直都有回這個值，是前端把它丟掉了；接住它，
-   * 金額不符時就先停下來讓人看清楚，而不是在刷完卡之後才發現。
-   */
-  cost?: number;
-}
+/**
+ * Info: (20260820 - Luphia) 建單的結果有**兩種**，而型別必須說得出來（self-review 第二輪）。
+ *
+ * `PUT /subscription` 對降級與取消排程回的是 `orderId: null`——沒有東西要付。
+ * 先前的型別把 `orderId` 宣告成 `string`，於是付款畫面拿著 null 一路走到
+ * `completeCheckout(null, undefined)`：**排程其實成功了，而使用者看到付款錯誤。**
+ * 型別說謊，所以編譯器幫不上忙。
+ *
+ * 改成可辨識聯集之後，「不需要付款」是一種必須被處理的結果，而不是一個
+ * 恰好為 null 的欄位。
+ */
+export type IPurchaseOutcome =
+  | {
+      kind: "order";
+      orderId: string;
+      challenge: string;
+      /**
+       * Info: (20260817 - Luphia) server 實際建單的金額（PR #6652 第二輪 C-4）。
+       *
+       * 付款畫面顯示的席次金額是前端用**頁面載入時**的人數算的，實收由建單當下
+       * 的 `countMembers()` 重算——中間有人加入，使用者看到 4,200、卡被扣 5,040。
+       */
+      cost?: number;
+    }
+  | {
+      kind: "scheduled";
+      // Info: (20260820 - Luphia) 排程中的目標方案與生效時點（epoch 秒）
+      pendingPlanId: string | null;
+      effectiveAt: number | null;
+    };
 
 interface ITeamListItem {
   id: string;
@@ -287,10 +304,16 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
    */
   const orderCreator = useMemo(() => {
     if (!isActive || !usesTeam || !selectedTeamId) return undefined;
-    return async (paymentMethodId: string): Promise<IPurchaseOrderResult> => {
+    return async (paymentMethodId: string): Promise<IPurchaseOutcome> => {
       if (isSubscription) {
         const response = await request<{
-          payload: IPurchaseOrderResult | null;
+          payload: {
+            orderId: string | null;
+            challenge?: string;
+            cost?: number;
+            pendingPlanId?: string | null;
+            effectiveAt?: number | null;
+          } | null;
         }>(`/api/v1/user/team/${selectedTeamId}/subscription`, {
           method: HTTP_METHOD.PUT,
           body: JSON.stringify({
@@ -300,21 +323,41 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
           }),
         });
         if (!response.payload) throw new Error("Failed to create order");
-        return response.payload;
+        /**
+         * Info: (20260820 - Luphia) 沒有訂單＝這是排程（降級），不是失敗。
+         * 由這裡分流，付款畫面才不會拿著 null 去簽章。
+         */
+        if (!response.payload.orderId) {
+          return {
+            kind: "scheduled",
+            pendingPlanId: response.payload.pendingPlanId ?? null,
+            effectiveAt: response.payload.effectiveAt ?? null,
+          };
+        }
+        return {
+          kind: "order",
+          orderId: response.payload.orderId,
+          challenge: response.payload.challenge ?? "",
+          cost: response.payload.cost,
+        };
       }
 
-      const response = await request<{ payload: IPurchaseOrderResult | null }>(
-        `/api/v1/user/team/${selectedTeamId}/wallet/purchase`,
-        {
-          method: HTTP_METHOD.POST,
-          body: JSON.stringify({
-            creditPlanId: context.creditPlanId,
-            paymentMethodId,
-          }),
-        },
-      );
+      const response = await request<{
+        payload: { orderId: string; challenge: string; cost?: number } | null;
+      }>(`/api/v1/user/team/${selectedTeamId}/wallet/purchase`, {
+        method: HTTP_METHOD.POST,
+        body: JSON.stringify({
+          creditPlanId: context.creditPlanId,
+          paymentMethodId,
+        }),
+      });
       if (!response.payload) throw new Error("Failed to create order");
-      return response.payload;
+      return {
+        kind: "order",
+        orderId: response.payload.orderId,
+        challenge: response.payload.challenge,
+        cost: response.payload.cost,
+      };
     };
   }, [
     isActive,

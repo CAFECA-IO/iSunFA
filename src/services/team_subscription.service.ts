@@ -460,7 +460,7 @@ export async function changeTeamSubscription(params: {
       planId,
       billingInterval,
     });
-    if (inFlight) {
+    if (inFlight && Number(inFlight.amount) === amount) {
       logger.info("subscription order reused", {
         teamId,
         orderId: inFlight.id,
@@ -473,6 +473,29 @@ export async function changeTeamSubscription(params: {
         cost: Number(inFlight.amount),
         planId: currentPlanId,
       };
+    }
+
+    /**
+     * Info: (20260820 - Luphia) 金額已經不同就**不沿用**（self-review 第二輪，小）。
+     *
+     * 那張未付的單是幾小時前建的，`amount` 是**當時**的席次數算的。中間有人加入
+     * 就會少收一個席次期。付款畫面的金額守門會擋下並要求再確認，因此不會靜默扣錯，
+     * 但使用者確認後沿用的仍是舊金額。
+     *
+     * 改建新單，並把舊那張標記取消——不取消的話它仍是可付的：從另一個分頁或
+     * 訂單列表把它付掉，就以舊金額成交。
+     */
+    if (inFlight) {
+      await paymentRepo.cancelOrder(
+        inFlight.id,
+        `superseded: amount ${Number(inFlight.amount)} → ${amount}`,
+      );
+      logger.info("subscription order superseded by a new amount", {
+        teamId,
+        orderId: inFlight.id,
+        previousAmount: Number(inFlight.amount),
+        amount,
+      });
     }
 
     /**

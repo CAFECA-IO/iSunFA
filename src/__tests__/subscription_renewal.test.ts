@@ -25,6 +25,12 @@ jest.mock("@/repositories/payment.repo", () => ({
      * 症狀是「一筆都沒續訂」而看起來與扣款邏輯有關（checklist §1.8）。
      */
     findOrderByIdempotencyKey: jest.fn(async () => null),
+    /**
+     * Info: (20260820 - Luphia) 扣款失敗後要放掉冪等鍵（唯一欄位）。
+     * 不 mock 會是 undefined，而失敗分支就會丟 TypeError——症狀變成
+     * 「續訂拋錯」而不是「扣款失敗」（checklist §1.8）。
+     */
+    releaseIdempotencyKey: jest.fn(async () => undefined),
     getOrderById: jest.fn(),
     getPaymentMethodById: jest.fn(),
     createPaymentTransactionAndUpdateOrder: jest.fn(),
@@ -81,6 +87,7 @@ const PAST_DUE_SUB = {
 function mockHappyPath() {
   // Info: (20260820 - Luphia) 每個案例重設：clearAllMocks 不會還原 factory 裡的實作
   asMock(paymentRepo.findOrderByIdempotencyKey).mockResolvedValue(null);
+  asMock(paymentRepo.releaseIdempotencyKey).mockResolvedValue(undefined);
   asMock(teamSubscriptionRepo.listPastDueAutoRenew).mockResolvedValue([
     PAST_DUE_SUB,
   ]);
@@ -320,5 +327,41 @@ describe("續訂冪等", () => {
     expect(
       asMock(teamSubscriptionRepo.applyTeamSubscription),
     ).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Info: (20260820 - Luphia) 扣款失敗後那把冪等鍵必須放掉（self-review 第二輪，中）。
+ *
+ * `order.idempotency_key` 是唯一欄位。不放掉的話下一輪查不到那張失敗的訂單
+ *（刻意不認失敗狀態），去建新單就撞 P2002——每小時噴一次錯，永遠續不上，
+ * 直到寬限期用盡降級為免費版。
+ */
+describe("扣款失敗後釋放冪等鍵", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockHappyPath();
+  });
+
+  it("扣款失敗時放掉鍵，讓下一輪能真的重試", async () => {
+    global.fetch = jest.fn(async () => ({
+      ok: true,
+      json: async () => ({ code: "E9999" }),
+    })) as unknown as typeof fetch;
+
+    const result = await processSubscriptionRenewals(NOW_MS);
+
+    expect(result.failed).toBe(1);
+    expect(asMock(paymentRepo.releaseIdempotencyKey)).toHaveBeenCalledWith(
+      "order-renewal",
+    );
+  });
+
+  // Info: (20260820 - Luphia) 成功時**不放**：那把鍵正是「這一期已經收過錢」的證據
+  it("扣款成功時不放掉鍵", async () => {
+    const result = await processSubscriptionRenewals(NOW_MS);
+
+    expect(result.renewed).toBe(1);
+    expect(asMock(paymentRepo.releaseIdempotencyKey)).not.toHaveBeenCalled();
   });
 });

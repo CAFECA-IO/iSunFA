@@ -9,7 +9,7 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { X, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { X, Loader2, CheckCircle2, XCircle, CalendarClock } from "lucide-react";
 import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useRouter } from "next/navigation";
@@ -75,6 +75,11 @@ export default function PaymentModal({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Info: (20260820 - Luphia) 排程結果（沒有付款）：生效時點與目標方案
+  const [scheduled, setScheduled] = useState<{
+    pendingPlanId: string | null;
+    effectiveAt: number | null;
+  } | null>(null);
   /**
    * Info: (20260817 - Luphia) 建單金額與畫面不符時暫存的那張訂單（第二輪 C-4）。
    * 訂單已經以正確金額建立，只是還沒扣款；使用者確認後沿用同一張，
@@ -479,7 +484,27 @@ export default function PaymentModal({
        * 履行路徑才套得到方案 / 入得了池）；個人歸屬維持原本的通用建單。
        */
       if (orderCreator) {
-        const teamOrder = await orderCreator(selectedPaymentMethodId);
+        const outcome = await orderCreator(selectedPaymentMethodId);
+
+        /**
+         * Info: (20260820 - Luphia) 排程（降級／取消降級）沒有東西要付
+         *（self-review 第二輪）。
+         *
+         * 先前這裡直接把回應當訂單用，於是 `completeCheckout(null, undefined)`
+         * 讓簽章失敗——**排程已經寫入 DB，而使用者看到付款錯誤**。
+         * 分流到專屬的一頁：說出生效時點，不顯示任何金額。
+         */
+        if (outcome.kind === "scheduled") {
+          setScheduled({
+            pendingPlanId: outcome.pendingPlanId,
+            effectiveAt: outcome.effectiveAt,
+          });
+          setStep(PaymentStep.scheduled);
+          setLoading(false);
+          return;
+        }
+
+        const teamOrder = outcome;
 
         /**
          * Info: (20260817 - Luphia) 建單金額與畫面上的金額不一致就先停下（第二輪 C-4）。
@@ -1097,6 +1122,54 @@ export default function PaymentModal({
                                 </div>
                               </form>
                             </>
+                          )}
+
+                          {/**
+                           * Info: (20260820 - Luphia) 排程完成的一頁：**沒有金額**。
+                           * 沿用 success 那一頁會顯示「已付金額」與點數前後餘額，
+                           * 而這條路徑一毛錢都沒收。
+                           */}
+                          {step === PaymentStep.scheduled && (
+                            <div className="flex flex-col items-center">
+                              <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <CalendarClock
+                                  className="h-6 w-6 text-blue-600"
+                                  aria-hidden="true"
+                                />
+                              </div>
+                              <DialogTitle
+                                as="h3"
+                                className="mt-4 text-lg leading-6 font-semibold text-gray-900"
+                              >
+                                {t(
+                                  "pricing.credits.payment_modal.scheduled_title",
+                                )}
+                              </DialogTitle>
+                              <p className="mt-3 text-center text-sm text-gray-600">
+                                {t(
+                                  "pricing.credits.payment_modal.scheduled_body",
+                                  {
+                                    plan: scheduled?.pendingPlanId
+                                      ? t(
+                                          `pricing.plans.${scheduled.pendingPlanId}.name`,
+                                        )
+                                      : "",
+                                    date: scheduled?.effectiveAt
+                                      ? new Date(
+                                          scheduled.effectiveAt * 1000,
+                                        ).toLocaleDateString()
+                                      : "",
+                                  },
+                                )}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={onClose}
+                                className="mt-6 w-full rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white hover:bg-orange-500"
+                              >
+                                {t("pricing.credits.payment_modal.close_btn")}
+                              </button>
+                            </div>
                           )}
 
                           {step === "success" && (

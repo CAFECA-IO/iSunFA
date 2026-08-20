@@ -383,3 +383,47 @@ describe("排程降級的付款前揭露", () => {
     },
   );
 });
+
+/**
+ * Info: (20260820 - Luphia) 降級走購買流程時**不得**進入付款（self-review 第二輪，嚴重）。
+ *
+ * `PUT /subscription` 對降級回 `orderId: null`，而付款畫面先前直接把回應當訂單用：
+ * `completeCheckout(null, undefined)` 讓簽章失敗——**排程已經寫入 DB，而使用者
+ * 看到付款錯誤**。型別把 `orderId` 宣告成 `string`（契約說謊），所以編譯器沒擋。
+ */
+describe("排程結果不進入付款流程", () => {
+  it("hook 以可辨識聯集回報「不需付款」", () => {
+    const hook = codeOf("src", "hooks", "use_purchase_target.tsx");
+
+    expect(hook).toMatch(/kind: "scheduled"/);
+    expect(hook).toMatch(/if \(!response\.payload\.orderId\)/);
+  });
+
+  it("付款畫面分流到專屬的一頁，不呼叫 completeCheckout", () => {
+    const modal = codeOf("src", "components", "pricing", "payment_modal.tsx");
+
+    expect(modal).toMatch(/outcome\.kind === "scheduled"/);
+    expect(modal).toMatch(/PaymentStep\.scheduled/);
+  });
+
+  it("orderCreator 的型別本身就分得出兩種結果", () => {
+    const contract = codeOf("src", "interfaces", "payment.ts");
+
+    expect(contract).toMatch(/kind: "order"/);
+    expect(contract).toMatch(/kind: "scheduled"/);
+  });
+
+  // Info: (20260820 - Luphia) 五語系都要有那一頁的文案
+  it.each(["zh_tw", "en", "zh_cn", "ja", "ko"])(
+    "%s 有 scheduled_title / scheduled_body",
+    (locale) => {
+      const file = readFileSync(
+        join(process.cwd(), "src", "i18n", "locales", locale, "pricing.ts"),
+        "utf8",
+      );
+
+      expect(file).toMatch(/scheduled_title/);
+      expect(file).toMatch(/scheduled_body/);
+    },
+  );
+});

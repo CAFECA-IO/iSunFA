@@ -220,6 +220,9 @@ export const pricing = {
       },
     },
     payment_modal: {
+      scheduled_title: "변경이 예약되었습니다",
+      scheduled_body:
+        "이번 변경에는 결제가 필요하지 않습니다. {{date}}부터 {{plan}}으로 변경되며, 그때까지 요금제와 사용량은 그대로 유지됩니다.",
       success_title: "구매 성공",
       error_title: "구매 실패",
       original_credits: "기존 포인트",

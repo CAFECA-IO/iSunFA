@@ -216,6 +216,9 @@ export const pricing = {
       },
     },
     payment_modal: {
+      scheduled_title: "变更已排程",
+      scheduled_body:
+        "本次变更不需付款，将于 {{date}} 起改为{{plan}}；在那之前你的方案与额度保持不变。",
       success_title: "购买成功",
       error_title: "购买失败",
       original_credits: "原有点数",

@@ -220,6 +220,9 @@ export const pricing = {
       },
     },
     payment_modal: {
+      scheduled_title: "Change Scheduled",
+      scheduled_body:
+        "No payment is required. Your plan changes to {{plan}} on {{date}}; until then your plan and quota stay the same.",
       success_title: "Purchase Successful",
       error_title: "Purchase Failed",
       original_credits: "Original Credits",
