@@ -1018,6 +1018,8 @@ export const hrManagement = {
       "この申請は既に処理されています。再読み込みしてください。",
     error_reclassified_midway:
       "承認の途中で人事がこの申請を天災・事変（§32 IV）と認定したため、全区間が倍額支給になりました。再読み込みして金額をご確認のうえ承認してください。",
+    error_emergency_revoked_midway:
+      "承認の途中で人事がこの申請の天災・事変（§32 IV）認定を取り消したため、全区間が通常の割増賃金に戻りました。再読み込みして金額をご確認のうえ承認してください。",
     error_emergency_already_declared:
       "この申請には既に §32 IV の認定があります。新しい届出を記録する前に、既存の認定を取り消してください。",
     error_emergency_not_declared:
@@ -1030,6 +1032,12 @@ export const hrManagement = {
       "その日はシフトが組まれていないため割増区分を決められません。人事にシフト登録を依頼してください。",
     error_premium_undefined:
       "その日区分の割増基準は未確定です（休工日・休暇日）。人事にご相談ください。",
+    error_self_decide:
+      "自分が提出した残業申請に対して承認・認定はできません。他の人事管理者にご依頼ください。",
+    error_not_reviewer:
+      "この申請の決裁者ではありません。決裁は申請者を管轄する上長が行います。",
+    error_comp_policy_missing:
+      "代休の休暇区分が未設定のため振替できません。残業手当を選ぶか、人事に作成を依頼してください。",
     error_not_found: "この残業申請は存在しません。",
   },
 };

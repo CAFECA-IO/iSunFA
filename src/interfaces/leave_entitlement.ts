@@ -20,7 +20,14 @@ import {
 export interface ILeaveShiftLength {
   /** Info: (20260817 - Julian) 應工作分鐘（不含休息）。日約當分鐘的來源 */
   requiredWorkMinutes: number;
-  /** Info: (20260817 - Julian) 法定／約定休息分鐘。CUSTOM 區間的上限判斷需要它 */
+  /**
+   * Info: (20260817 - Julian) 法定／約定休息分鐘。
+   *
+   * Info: (20260820 - Julian) `resolveLeaveMinutes` **已經不讀它**
+   * （review 第 10 輪第 1 條）：拿總量去扣會做出一個階梯，而階梯不單調
+   * ——「多請一分鐘、少扣三十分鐘」。留著這一欄是因為它是班別的事實，
+   * 且休息時段的起訖補上之後，精確的扣除需要它。
+   */
   breakMinutes: number;
 }
 

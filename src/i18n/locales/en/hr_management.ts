@@ -1037,6 +1037,8 @@ export const hrManagement = {
       "This request has already been decided. Reload to see the result.",
     error_reclassified_midway:
       "HR declared this an emergency (Article 32 IV) while you were approving it, so the whole span is now paid double. Reload, check the amount, then approve.",
+    error_emergency_revoked_midway:
+      "HR revoked the Article 32 IV emergency determination while you were approving it, so the whole span falls back to the ordinary overtime premium. Reload, check the amount, then approve.",
     error_emergency_already_declared:
       "This request already carries an Article 32 IV determination. Revoke the existing filing before recording a new one.",
     error_emergency_not_declared:
@@ -1049,6 +1051,12 @@ export const hrManagement = {
       "That date has no shift scheduled, so no statutory premium applies. Ask HR to add it to the roster.",
     error_premium_undefined:
       "The premium for that kind of day is not settled yet (suspended or leave days). Ask HR.",
+    error_self_decide:
+      "You cannot approve or file a determination on your own overtime request. Ask another HR administrator to handle it.",
+    error_not_reviewer:
+      "You are not this request's reviewer — it has to be decided by a manager who supervises the applicant.",
+    error_comp_policy_missing:
+      "No compensatory-leave type is set up, so overtime cannot be converted. Pick overtime pay, or ask HR to create it.",
     error_not_found: "This overtime request no longer exists.",
   },
 };

@@ -1570,6 +1570,21 @@ export const API_ERRORS = {
   } as IErrorDef,
 
   /**
+   * Info: (20260820 - Julian) 反方向的重新分類（review 第 4 輪第 3 條）。
+   *
+   * `VA_OVERTIME_RECLASSIFIED_MIDWAY` 只講得出「被認定 → 加倍發給」。撤回
+   * 落地之後另一個方向是真的：工資**降回**普通級距。用同一個碼的話，主管
+   * 會讀到一句與事實相反的說明，而這個方向對勞工不利 —— 恰是最需要他在
+   * 按下去之前看清楚的那一個。
+   */
+  VA_OVERTIME_EMERGENCY_REVOKED_MIDWAY: {
+    code: "VA000074",
+    message:
+      "The Article 32 IV determination on this overtime request was revoked while you were approving it; the whole span falls back to the ordinary premium, so reload and confirm the amount before approving",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
    * Info: (20260818 - Julian) 撤回事後補單卻沒填理由。
    *
    * 事前申請的撤回不必填 —— 那是取消一個還沒發生的計畫。事後補單不同：

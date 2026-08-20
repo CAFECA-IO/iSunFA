@@ -44,6 +44,8 @@ export const OVERTIME_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
    */
   [API_ERRORS.VA_OVERTIME_RECLASSIFIED_MIDWAY.code]:
     "hr_management.overtime.error_reclassified_midway",
+  [API_ERRORS.VA_OVERTIME_EMERGENCY_REVOKED_MIDWAY.code]:
+    "hr_management.overtime.error_emergency_revoked_midway",
   /**
    * Info: (20260820 - Julian) §32 IV 認定的兩種落空（review 第 3 輪第 2 條）。
    * 都不與「已決行」共用：那一句要人資不用再管，這兩句分別是
@@ -67,4 +69,23 @@ export const OVERTIME_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
   // Info: (20260818 - Julian) 明細與可見範圍
   [API_ERRORS.NF_OVERTIME_REQUEST.code]:
     "hr_management.overtime.error_not_found",
+
+  /**
+   * Info: (20260820 - Julian) 這三個碼由**加班的 service** 丟出，先前只登記在
+   * 假單那張表（review 第 10 輪第 2 條）。
+   *
+   * 症狀最清楚的是 `FO_SELF_APPROVAL_FORBIDDEN`：人資對自己的加班單按下
+   * 「登記天災事變」，查不到文案而落到 fallback「請確認你具備人資管理員職能
+   * 且此單仍待簽核」—— 而他確實有職能、單子確實待簽核。
+   *
+   * 不與假單共用同一個 key：同一個碼在兩個模組要說的是不同的話
+   * （「不能簽核自己送出的假單」對加班的認定動作是錯的敘述）。
+   * 每一頁本來就會傳自己的 overrides，這正是那個機制存在的理由。
+   */
+  [API_ERRORS.FO_SELF_APPROVAL_FORBIDDEN.code]:
+    "hr_management.overtime.error_self_decide",
+  [API_ERRORS.FO_NOT_AUTHORIZED_REVIEWER.code]:
+    "hr_management.overtime.error_not_reviewer",
+  [API_ERRORS.NF_LEAVE_POLICY.code]:
+    "hr_management.overtime.error_comp_policy_missing",
 };

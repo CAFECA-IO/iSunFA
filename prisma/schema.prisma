@@ -4010,9 +4010,13 @@ model OvertimeEmergencyDeclaration {
   /**
    * Info: (20260820 - Julian) 撤回的三欄。null 表這份認定仍然有效。
    *
-   * `revokeReason` 與 `revokedAt` 同生共死（由 `assertEmergencyDeclaration` 雙向擋）：
-   * 一筆沒有理由的撤回，事後分不出是「報備被主管機關退回」還是「當初認定錯了」，
-   * 而那兩件事的後續處置完全不同。
+   * `revokeReason` 與 `revokedAt` 同生共死：一筆沒有理由的撤回，事後分不出是
+   * 「報備被主管機關退回」還是「當初認定錯了」，而那兩件事的後續處置完全不同。
+   *
+   * 執行者是 `assertEmergencyDeclaration`，兩條寫入路徑都經過它：
+   * `overtimeRequestRepo.declareEmergency`（三欄皆 null ＝ 認定仍有效）與
+   * `overtimeRequestRepo.revokeEmergency`（讀出有效那一列，把三欄合上去再擋）。
+   * 撤回那一側原本沒有呼叫端，這句註解一度是沒有執行者的規則（review 第 4 輪第 4 條）。
    */
   revokedAt            DateTime? @map("revoked_at")
   revokedByEmployeeId  String?   @map("revoked_by_employee_id")

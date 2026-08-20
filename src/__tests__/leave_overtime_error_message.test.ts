@@ -101,9 +101,17 @@ const EXPECTED_OVERTIME_CODES: readonly string[] = [
   API_ERRORS.VA_OVERTIME_EXCEEDS_QUARTERLY_LIMIT.code,
   API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED.code,
   API_ERRORS.VA_OVERTIME_RECLASSIFIED_MIDWAY.code,
+  API_ERRORS.VA_OVERTIME_EMERGENCY_REVOKED_MIDWAY.code,
   API_ERRORS.VA_OVERTIME_EMERGENCY_ALREADY_DECLARED.code,
   API_ERRORS.VA_OVERTIME_EMERGENCY_NOT_DECLARED.code,
   API_ERRORS.VA_OVERTIME_REPORTED_AT_OUT_OF_RANGE.code,
+  /**
+   * Info: (20260820 - Julian) 這三個碼由加班的 service 丟出，因此**兩張表都要有**
+   * （review 第 10 輪第 2 條）。同一個碼在兩個模組說的是不同的話。
+   */
+  API_ERRORS.FO_SELF_APPROVAL_FORBIDDEN.code,
+  API_ERRORS.FO_NOT_AUTHORIZED_REVIEWER.code,
+  API_ERRORS.NF_LEAVE_POLICY.code,
   API_ERRORS.VA_OVERTIME_COMP_EXPIRY_UNSET.code,
   API_ERRORS.FO_OVERTIME_NOT_APPLICANT.code,
   API_ERRORS.VA_OVERTIME_WITHDRAW_REASON_REQUIRED.code,
@@ -217,18 +225,55 @@ describe("errorI18nKeyOf 真的會查這兩張表", () => {
  * 豁免必須**逐筆具名**而不是用前綴略過：`VA_INVALID_INPUT_DATA` 該豁免、
  * `VA_LEAVE_ON_NON_WORKING_DAY` 不該，而它們的前綴一樣。
  */
-const LEAVE_OVERTIME_SERVICES: readonly string[] = [
-  "src/services/leave_request.service.ts",
-  "src/services/leave_balance.service.ts",
-  "src/services/leave.service.ts",
-  "src/services/leave_visibility.ts",
-  "src/services/leave_policy.service.ts",
-  "src/services/leave_approval_rule.service.ts",
-  "src/services/overtime_request.service.ts",
-  "src/services/overtime_policy.service.ts",
-  "src/services/overtime_visibility.ts",
-  "src/services/overtime_report.service.ts",
+/**
+ * Info: (20260820 - Julian) **問題要問對**（review 第 10 輪第 2 條）。
+ *
+ * 第一版把三張表取**聯集**再問「這個碼在裡面嗎」。那個觀測量答的是
+ * 「系統的某個角落有沒有這句話」，而使用者的問題是
+ * **「丟它的那支 service 所在的畫面查得到嗎」** —— 兩者不是同一件事，
+ * 於是它放過了三個碼：`FO_SELF_APPROVAL_FORBIDDEN`、
+ * `FO_NOT_AUTHORIZED_REVIEWER`、`NF_LEAVE_POLICY` 由**加班的** service 丟出，
+ * 卻只登記在**假單**那張表。
+ *
+ * 最清楚的症狀：人資對自己的加班單按下「登記天災事變」，
+ * 落到 fallback「請確認你具備人資管理員職能且此單仍待簽核」——
+ * 而他確實有職能、單子也確實待簽核。checklist §1.9：
+ * 觀測量與要回答的問題必須是同一個。
+ *
+ * 因此改成**逐模組**：每一支 service 檔綁定它的畫面所用的那一張表。
+ */
+const SERVICE_TABLES: readonly {
+  label: string;
+  files: readonly string[];
+  table: Readonly<Record<string, string>>;
+}[] = [
+  {
+    label: "假單",
+    files: [
+      "src/services/leave_request.service.ts",
+      "src/services/leave_balance.service.ts",
+      "src/services/leave.service.ts",
+      "src/services/leave_visibility.ts",
+      "src/services/leave_policy.service.ts",
+      "src/services/leave_approval_rule.service.ts",
+    ],
+    table: LEAVE_ERROR_I18N_KEY,
+  },
+  {
+    label: "加班",
+    files: [
+      "src/services/overtime_request.service.ts",
+      "src/services/overtime_policy.service.ts",
+      "src/services/overtime_visibility.ts",
+      "src/services/overtime_report.service.ts",
+    ],
+    table: OVERTIME_ERROR_I18N_KEY,
+  },
 ];
+
+const LEAVE_OVERTIME_SERVICES: readonly string[] = SERVICE_TABLES.flatMap(
+  (group) => group.files,
+);
 
 /**
  * Info: (20260820 - Julian) 刻意不登記在假勤對照表裡的碼，逐筆說明。
@@ -324,9 +369,11 @@ const PENDING_SCREEN: Readonly<Record<string, string>> = {
 };
 
 describe("覆蓋：service 丟得出來的碼都要有文案", () => {
-  const thrownCodes = (): Set<string> => {
+  const thrownCodes = (
+    files: readonly string[] = LEAVE_OVERTIME_SERVICES,
+  ): Set<string> => {
     const found = new Set<string>();
-    for (const relative of LEAVE_OVERTIME_SERVICES) {
+    for (const relative of files) {
       const full = join(process.cwd(), relative);
       const source = ts.createSourceFile(
         full,
@@ -362,25 +409,33 @@ describe("覆蓋：service 丟得出來的碼都要有文案", () => {
     expect(codes.has("VA_LEAVE_INSUFFICIENT_BALANCE")).toBe(true);
   });
 
-  it("每一個丟得出來的碼，要嘛有文案、要嘛在豁免名單裡", () => {
-    const registered = new Set<string>([
-      ...Object.keys(LEAVE_ERROR_I18N_KEY),
-      ...Object.keys(OVERTIME_ERROR_I18N_KEY),
-      ...Object.keys(SHARED_ATTENDANCE_ERROR_I18N_KEY),
-    ]);
+  /**
+   * Info: (20260820 - Julian) 逐模組問：**那一支 service 的畫面**查得到嗎。
+   *
+   * 全模組共用表（限流、職能閘、可見範圍閘）算數 —— 它是每一頁都會查的
+   * 第二順位。假單那張表**不算**加班的覆蓋，反之亦然。
+   */
+  it.each(SERVICE_TABLES.map((group) => [group.label, group] as const))(
+    "%s：service 丟得出來的碼，該模組的畫面都查得到",
+    (_label, group) => {
+      const registered = new Set<string>([
+        ...Object.keys(group.table),
+        ...Object.keys(SHARED_ATTENDANCE_ERROR_I18N_KEY),
+      ]);
 
-    const uncovered = [...thrownCodes()]
-      .filter((name) => !(name in EXEMPT) && !(name in PENDING_SCREEN))
-      .filter((name) => {
-        const def = (API_ERRORS as Record<string, { code: string } | undefined>)[
-          name
-        ];
-        return def !== undefined && !registered.has(def.code);
-      })
-      .sort();
+      const uncovered = [...thrownCodes(group.files)]
+        .filter((name) => !(name in EXEMPT) && !(name in PENDING_SCREEN))
+        .filter((name) => {
+          const def = (
+            API_ERRORS as Record<string, { code: string } | undefined>
+          )[name];
+          return def !== undefined && !registered.has(def.code);
+        })
+        .sort();
 
-    expect(uncovered).toEqual([]);
-  });
+      expect(uncovered).toEqual([]);
+    },
+  );
 
   /**
    * Info: (20260820 - Julian) 豁免名單不得腐爛：列了一個 service 根本不丟的碼，

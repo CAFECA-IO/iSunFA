@@ -368,14 +368,23 @@ export class OvertimeRequestService {
     });
 
     /**
-     * Info: (20260820 - Julian) 重新分類要與已決行分開回報（review 第 3 條）。
+     * Info: (20260820 - Julian) 重新分類要與已決行分開回報，且**兩個方向分開**
+     * （review 第 3 條 / 第 4 輪第 3 條）。
      *
-     * 這張單還在 PENDING，只是工資標準在我算的過程中跳到了加倍發給。
-     * 回「已決行」會讓主管以為不用再管，而它會一直停在待簽清單上。
-     * 重新載入之後再按一次就會走加倍級距 —— 不需要任何補救動作。
+     * 兩個方向的共同點：這張單還在 PENDING，重新載入再按一次就會走新的級距，
+     * 不需要任何補救動作。回「已決行」會讓主管以為不用再管，而它會一直
+     * 停在待簽清單上。
+     *
+     * 兩個方向的差別在**金額往哪邊走**，而那是主管唯一要重新確認的事：
+     * 認定 → 加倍發給；撤回 → 降回普通級距。用同一句話講的話，撤回那一側
+     * 的主管會讀到「工資改為加倍發給」，於是照著按下去 —— 而實際落地的
+     * 金額比他確認過的少。
      */
-    if (written.outcome === OvertimeDecisionOutcome.RECLASSIFIED) {
+    if (written.outcome === OvertimeDecisionOutcome.RECLASSIFIED_TO_EMERGENCY) {
       throw new AppError(API_ERRORS.VA_OVERTIME_RECLASSIFIED_MIDWAY);
+    }
+    if (written.outcome === OvertimeDecisionOutcome.RECLASSIFIED_TO_ORDINARY) {
+      throw new AppError(API_ERRORS.VA_OVERTIME_EMERGENCY_REVOKED_MIDWAY);
     }
     if (written.outcome === OvertimeDecisionOutcome.ALREADY_REVIEWED) {
       throw new AppError(API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED);

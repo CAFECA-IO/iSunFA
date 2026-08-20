@@ -458,6 +458,24 @@ describe("認列 = min(核准, 事實)，且超出的部分要交出去", () => 
     expect(repo.written?.evidenceBasis).toBe(
       OvertimeEvidenceBasis.PUNCH_RECORD,
     );
+
+    /**
+     * Info: (20260820 - Julian) 落地的兩個分鐘數也要各自驗（review 第 4 輪第 5 條）。
+     *
+     * 回傳值驗過了，但**寫下去的 payload** 先前一筆都沒驗。這是這條測試裡
+     * 唯一兩者不相等的案例（核准 120、事實 60），因此也是唯一分得出
+     * `recognizedMinutes,` 與 `recognizedMinutes: approvedMinutes,` 的地方 ——
+     * 後者會讓資料庫收到 120 分的認列，而回傳值仍然是 60，
+     * 畫面與帳本從此各說各話。
+     */
+    expect(repo.written?.approvedMinutes).toBe(120);
+    expect(repo.written?.recognizedMinutes).toBe(60);
+    // Info: (20260820 - Julian) 不變式那一份是另一個物件，也會被同一個手誤打到
+    expect(repo.written?.invariant.approvedMinutes).toBe(120);
+    expect(repo.written?.invariant.recognizedMinutes).toBe(60);
+    expect(repo.written?.recognizedMinutes).not.toBe(
+      repo.written?.approvedMinutes,
+    );
   });
 
   /**
@@ -851,16 +869,27 @@ describe("核准帶下去的 isEmergencyAtDerivation", () => {
    * 兩個斷言成對：各自的碼要對，且**兩者不得相同** —— 共用同一個碼的話，
    * 主管會看到「此加班單已決行」而不再處理，但那張單其實還在等他。
    */
-  it("repository 回 RECLASSIFIED 時是另一個錯誤碼", async () => {
-    repo.approveOutcome = OvertimeDecisionOutcome.RECLASSIFIED;
-    const reclassified = await codeOf(() => approve({ approvedMinutes: 60 }));
+  it("重新分類的兩個方向與已決行是三句不同的話", async () => {
+    repo.approveOutcome = OvertimeDecisionOutcome.RECLASSIFIED_TO_EMERGENCY;
+    const declared = await codeOf(() => approve({ approvedMinutes: 60 }));
+
+    repo.approveOutcome = OvertimeDecisionOutcome.RECLASSIFIED_TO_ORDINARY;
+    const revoked = await codeOf(() => approve({ approvedMinutes: 60 }));
 
     repo.approveOutcome = OvertimeDecisionOutcome.ALREADY_REVIEWED;
     const alreadyReviewed = await codeOf(() => approve({ approvedMinutes: 60 }));
 
-    expect(reclassified).toBe(API_ERRORS.VA_OVERTIME_RECLASSIFIED_MIDWAY.code);
+    expect(declared).toBe(API_ERRORS.VA_OVERTIME_RECLASSIFIED_MIDWAY.code);
+    expect(revoked).toBe(
+      API_ERRORS.VA_OVERTIME_EMERGENCY_REVOKED_MIDWAY.code,
+    );
     expect(alreadyReviewed).toBe(API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED.code);
-    expect(reclassified).not.toBe(alreadyReviewed);
+    /**
+     * Info: (20260820 - Julian) 三個兩兩不同 —— 這是這條測試唯一的紅線。
+     * 撤回那一側若退回共用 `VA_OVERTIME_RECLASSIFIED_MIDWAY`，主管會讀到
+     * 「工資改為加倍發給」而按下去，實際落地的金額卻比他確認過的少。
+     */
+    expect(new Set([declared, revoked, alreadyReviewed]).size).toBe(3);
   });
 });
 
@@ -976,5 +1005,106 @@ describe("revokeEmergency —— §32 IV 認定的撤回", () => {
     );
     expect(code).toBe(API_ERRORS.VA_OVERTIME_EMERGENCY_ALREADY_DECLARED.code);
     expect(code).not.toBe(API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED.code);
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) 補休折換這條路徑**整個 PR 沒有任何測試走過**
+ * （review 第 4 輪第 5 條）。
+ *
+ * 本檔所有 fixture 的 `compensationMode` 都是 `PAYMENT`，於是
+ * `resolveCompensatory` 每一次都在第一個 `if` 就回 null，而它後面那三道閘
+ * （沒有補休假別、沒有到期月數、`dayEquivalentMinutes` 從哪來）
+ * 一次都沒有被執行過。repository 那一側的
+ * `deriveCompensatoryGrantDays` → `assertGrantSource` → `leaveGrant.create`
+ * 同樣沒有 —— 那條路徑由 `overtime_compensatory_conversion.test.ts` 接手，
+ * 這裡負責的是 service 交出去的那份 `compensatory` payload 對不對。
+ */
+describe("補休折換：service 交出去的 payload", () => {
+  const compensatoryOf = (minutes: number): IOvertimeRequestSummary =>
+    summaryOf({
+      compensationMode: OvertimeCompensationMode.COMPENSATORY_LEAVE,
+      requestedStartMinute: 1020,
+      requestedEndMinute: 1020 + minutes,
+    });
+
+  /**
+   * Info: (20260820 - Julian) 兩件事成對：補休那一份要齊全，且折現那一份**必須是 null**。
+   *
+   * 只驗前者的話，一份兩者都非 null 的 payload 也會通過，
+   * 而 repository 的迴圈是 `if (compensatory) ... continue;` ——
+   * 折現會被靜默吃掉，沒有任何人看得出少了一筆。
+   */
+  it("補休模式交出補休 payload，且不交折現 payload", async () => {
+    context.summary = compensatoryOf(120);
+
+    await approve();
+
+    expect(repo.written?.compensatory).toEqual({
+      leavePolicyId: "policy-comp",
+      dayEquivalentMinutes: 8 * HOUR,
+      // Info: (20260820 - Julian) 2026-08-14 往後推 6 個月
+      expiresOn: "2027-02-14",
+    });
+    expect(repo.written?.cashOut).toBeNull();
+  });
+
+  // Info: (20260820 - Julian) 對照組：發錢模式的方向剛好相反
+  it("發錢模式交出折現 payload，且不交補休 payload", async () => {
+    context.summary = summaryOf({
+      compensationMode: OvertimeCompensationMode.PAYMENT,
+    });
+
+    await approve();
+
+    expect(repo.written?.compensatory).toBeNull();
+    expect(repo.written?.cashOut).not.toBeNull();
+  });
+
+  /**
+   * Info: (20260820 - Julian) 沒有補休假別時擋下，而不是折換到一個不存在的假別。
+   * 這一道閘先前沒有任何測試走得到（fixture 全是 `PAYMENT`）。
+   */
+  it("帳本沒有設補休假別時擋下", async () => {
+    context.summary = compensatoryOf(120);
+    context.approval = contextOf({ compensatoryPolicyId: null });
+
+    expect(await codeOf(approve)).toBe(API_ERRORS.NF_LEAVE_POLICY.code);
+    expect(repo.written).toBeNull();
+  });
+
+  /**
+   * Info: (20260820 - Julian) §32-1 的補休有到期日，沒協商出期限就不能發。
+   * 發出去一筆沒有到期日的補休，等於把它變成永久額度。
+   */
+  it("帳本沒有設補休到期月數時擋下", async () => {
+    context.summary = compensatoryOf(120);
+    context.approval = contextOf({ compensatoryExpiryMonths: null });
+
+    expect(await codeOf(approve)).toBe(
+      API_ERRORS.VA_OVERTIME_COMP_EXPIRY_UNSET.code,
+    );
+    expect(repo.written).toBeNull();
+  });
+
+  /**
+   * Info: (20260820 - Julian) 認列 0 分鐘時不折換，也不因缺設定而擋下。
+   *
+   * 沒有分段就沒有補休可發 —— 此時去查補休假別是多問一個與結果無關的問題，
+   * 而那個問題答不出來會讓一張「核准 0 分鐘」的單子丟出
+   * 「帳本沒設補休假別」，主管完全看不懂。
+   */
+  it("認列 0 分鐘時兩份 payload 都是 null，且不查補休設定", async () => {
+    context.summary = compensatoryOf(120);
+    context.approval = contextOf({
+      compensatoryPolicyId: null,
+      compensatoryExpiryMonths: null,
+    });
+
+    await approve({ approvedMinutes: 0 });
+
+    expect(repo.written?.segments).toEqual([]);
+    expect(repo.written?.compensatory).toBeNull();
+    expect(repo.written?.cashOut).toBeNull();
   });
 });

@@ -27,6 +27,7 @@ import {
   assertOvertimeFilingType,
   assertOvertimeSegmentPremium,
   IStorableOvertimeRequest,
+  OvertimeRequestInvariantError,
 } from "@/repositories/overtime_request_invariant";
 
 /**
@@ -286,9 +287,20 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
           current !== null &&
           current.status === OvertimeRequestStatus.PENDING &&
           current.isEmergency !== params.isEmergencyAtDerivation;
+        /**
+         * Info: (20260820 - Julian) 重新分類要分得出**方向**（review 第 4 輪第 3 條）。
+         *
+         * `!==` 對稱，兩個方向都會落在這裡：人資中途認定（false → true，
+         * 工資加倍），或人資中途撤回（true → false，工資降回普通級距）。
+         * 回同一個結局的話，呼叫端只講得出其中一個方向，而另一個方向的
+         * 主管會讀到一句與事實相反的說明。方向就在手上（`current.isEmergency`），
+         * 不需要多一次查詢 —— 少傳它才是刻意把已知的事實丟掉。
+         */
         return {
           outcome: reclassified
-            ? OvertimeDecisionOutcome.RECLASSIFIED
+            ? current.isEmergency
+              ? OvertimeDecisionOutcome.RECLASSIFIED_TO_EMERGENCY
+              : OvertimeDecisionOutcome.RECLASSIFIED_TO_ORDINARY
             : OvertimeDecisionOutcome.ALREADY_REVIEWED,
           grantCount: 0,
           cashOutEventIds: [],
@@ -596,11 +608,66 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
       }
 
       /**
+       * Info: (20260820 - Julian) 撤回也要過同一道判準（review 第 4 輪第 4 條）。
+       *
+       * `assertEmergencyDeclaration` 原本只有 `declareEmergency` 一個呼叫端，
+       * 而它傳的撤回三欄是三個字面 `null` —— 於是那支不變式**在它被寫來守的
+       * 那條路徑上一個呼叫端都沒有**，schema 註解卻寫著「由
+       * `assertEmergencyDeclaration` 雙向擋」。測試直接呼叫函式本身，
+       * 所以永遠是綠的（§1.7）。
+       *
+       * 讀一次有效認定，把撤回三欄合上去再擋，是唯一能讓那句註解成立的做法：
+       * 判準要看得到完整的一列（連結、時點、認定者 ＋ 撤回三欄），
+       * 而撤回的呼叫端手上只有後三欄。
+       *
+       * 這一讀不影響是否寫入 —— 上面那次附條件更新已經做完判斷。
+       * 它只提供擋下來所需要的另外三個欄位；擋下來時整個交易回滾，
+       * 旗標那次更新一併撤銷，不會留下「旗標翻了、歷史沒有」的半套狀態。
+       */
+      const active = await tx.overtimeEmergencyDeclaration.findFirst({
+        where: {
+          overtimeRequestId: params.requestId,
+          accountBookId: params.accountBookId,
+          revokedAt: null,
+        },
+        select: {
+          reportUrl: true,
+          reportedAt: true,
+          declaredByEmployeeId: true,
+        },
+      });
+      if (active === null) {
+        /**
+         * Info: (20260820 - Julian) 旗標說「認定中」，歷史表卻沒有那一列。
+         *
+         * 這是資料層面的破口，不是使用者做錯了什麼：走得到這裡表示上面那次
+         * `where: { isEmergency: true }` 命中了。放行的話會撤回一份沒有任何
+         * 痕跡的認定 —— 勞動檢查時既看不到報備、也看不到撤回。
+         *
+         * 已知成因只有一個：歷史表加進來（本 PR）之前就存在的
+         * `isEmergency = true` 舊列。正式環境沒有這種列（部署檢查表已納入），
+         * 開發機若撞到，處置是把那張單的 `isEmergency` 改回 false 再重新認定。
+         */
+        throw new OvertimeRequestInvariantError(
+          "an emergency determination that is in force must have left a history row; revoking one that has none would erase a filing that was made to the outside world",
+          `overtimeRequestId=${params.requestId}`,
+        );
+      }
+      assertEmergencyDeclaration({
+        reportUrl: active.reportUrl,
+        reportedAt: active.reportedAt,
+        declaredByEmployeeId: active.declaredByEmployeeId,
+        revokedAt: params.revokedAt,
+        revokedByEmployeeId: params.revokedByEmployeeId,
+        revokeReason: params.revokeReason,
+      });
+
+      /**
        * Info: (20260820 - Julian) 補在**還沒被撤回的那一列**上（`revokedAt: null`）。
        *
-       * 不用 `findFirst` 再 `update`：那是先讀再寫，而附條件的 `updateMany`
-       * 在同一句話裡完成（同本檔其餘狀態轉移的既有處置）。
-       * 上面那次更新已經保證此刻恰有一份有效認定。
+       * 用附條件的 `updateMany` 而不是拿上面那次 `findFirst` 的 id 去 `update`：
+       * 條件要在寫入的同一句話裡（同本檔其餘狀態轉移的既有處置）。
+       * 旗標那次更新已經保證此刻恰有一份有效認定。
        */
       await tx.overtimeEmergencyDeclaration.updateMany({
         where: {

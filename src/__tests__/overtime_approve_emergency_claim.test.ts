@@ -150,7 +150,7 @@ describe("核准的 claim 帶著 isEmergency", () => {
    * **重新分類**而不是已決行。只驗第一個的話，回一句「已決行」也會通過，
    * 而那會讓主管以為不用再管這張單。
    */
-  it("旗標在核准過程中被改掉時不寫入，且回 RECLASSIFIED", async () => {
+  it("旗標在核准過程中被改掉時不寫入，且回 RECLASSIFIED_TO_EMERGENCY", async () => {
     row.isEmergency = true; // Info: (20260820 - Julian) HR 在這一刻按下 §32 IV 認定
 
     const result = await overtimeRequestRepo.approve(
@@ -160,13 +160,21 @@ describe("核准的 claim 帶著 isEmergency", () => {
       }),
     );
 
-    expect(result.outcome).toBe(OvertimeDecisionOutcome.RECLASSIFIED);
+    expect(result.outcome).toBe(
+      OvertimeDecisionOutcome.RECLASSIFIED_TO_EMERGENCY,
+    );
     expect(created.segments).toHaveLength(0);
     expect(row.status).toBe("PENDING");
   });
 
-  // Info: (20260820 - Julian) 反方向的交錯：認定被撤掉了，加倍級距同樣不得落地
-  it("依天災事變算好的分段，遇上旗標已翻回 false 時同樣擋下", async () => {
+  /**
+   * Info: (20260820 - Julian) 反方向的交錯：認定被撤掉了，加倍級距同樣不得落地。
+   *
+   * 這一條原本與上一條斷言同一個結局，於是「方向」在回傳值裡就消失了，
+   * 而呼叫端的文案只講得出其中一個方向（review 第 4 輪第 3 條）。
+   * 最後那個 `not.toBe` 是這條測試的重點：兩個方向若再度合流，它會紅。
+   */
+  it("依天災事變算好的分段，遇上旗標已翻回 false 時擋下並回 RECLASSIFIED_TO_ORDINARY", async () => {
     row.isEmergency = false;
 
     const result = await overtimeRequestRepo.approve(
@@ -176,8 +184,14 @@ describe("核准的 claim 帶著 isEmergency", () => {
       }),
     );
 
-    expect(result.outcome).toBe(OvertimeDecisionOutcome.RECLASSIFIED);
+    expect(result.outcome).toBe(
+      OvertimeDecisionOutcome.RECLASSIFIED_TO_ORDINARY,
+    );
     expect(created.segments).toHaveLength(0);
+    expect(row.status).toBe("PENDING");
+    expect(OvertimeDecisionOutcome.RECLASSIFIED_TO_ORDINARY).not.toBe(
+      OvertimeDecisionOutcome.RECLASSIFIED_TO_EMERGENCY,
+    );
   });
 
   /**

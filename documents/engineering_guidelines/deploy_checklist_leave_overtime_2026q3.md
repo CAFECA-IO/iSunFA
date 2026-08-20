@@ -42,6 +42,24 @@
 > 因此下面第六節「清 demo 資料」的拓樸不變（刪 `overtime_request` 時它會跟著走），
 > 但**回滾 schema** 時要先刪它再刪 `overtime_request`。
 
+> **開發機才會踩到的一個狀態**：這張表加進來之前，`declareEmergency` 只翻
+> `OvertimeRequest.isEmergency` 的旗標、不寫歷史列。若某台開發機在那之前
+> 做過一次 §32 IV 認定，那張單現在是「旗標為 true、歷史表沒有對應列」——
+> 而 `revokeEmergency` 會以不變式錯誤擋下（放行等於撤回一份沒有痕跡的認定）。
+>
+> 正式環境不會有這種列（本 PR 才第一次上線 §32 IV 認定）。開發機撞到的處置：
+>
+> ```sql
+> -- 先看有沒有
+> SELECT r.id FROM overtime_request r
+>   LEFT JOIN overtime_emergency_declaration d ON d.overtime_request_id = r.id
+>  WHERE r.is_emergency = true AND d.id IS NULL;
+> -- 有的話把旗標與三個現況欄位一起清掉，再用畫面重新認定一次
+> UPDATE overtime_request SET is_emergency = false, emergency_report_url = NULL,
+>        emergency_reported_at = NULL, emergency_declared_by_employee_id = NULL
+>  WHERE id IN (...);
+> ```
+
 ### 新增 19 個 enum
 
 `LeaveAccrualMethod`、`LeaveCycleBasis`、`LeaveQuotaMode`、`LeaveUnitBasis`、`LeaveRoundingMode`、

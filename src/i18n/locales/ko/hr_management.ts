@@ -1020,6 +1020,8 @@ export const hrManagement = {
     error_already_reviewed: "이 신청은 이미 처리되었습니다. 새로고침하세요.",
     error_reclassified_midway:
       "결재 중에 인사팀이 이 신청을 천재·사변(§32 IV)으로 인정하여 전 구간이 배액 지급으로 바뀌었습니다. 새로 고침하여 금액을 확인한 뒤 승인하세요.",
+    error_emergency_revoked_midway:
+      "결재 중에 인사팀이 이 신청의 천재·사변(§32 IV) 인정을 취소하여 전 구간이 일반 연장근로 할증으로 돌아갔습니다. 새로 고침하여 금액을 확인한 뒤 승인하세요.",
     error_emergency_already_declared:
       "이 신청에는 이미 §32 IV 인정이 있습니다. 새 신고를 기록하기 전에 기존 인정을 취소하세요.",
     error_emergency_not_declared:
@@ -1032,6 +1034,12 @@ export const hrManagement = {
       "그날은 근무가 편성되어 있지 않아 가산 구간을 정할 수 없습니다. 인사팀에 편성을 요청하세요.",
     error_premium_undefined:
       "해당 일자 구분의 가산 기준이 아직 정해지지 않았습니다(휴공일·휴가일). 인사팀에 문의하세요.",
+    error_self_decide:
+      "본인이 제출한 초과근무 신청은 승인하거나 인정할 수 없습니다. 다른 인사 관리자에게 요청하세요.",
+    error_not_reviewer:
+      "이 신청의 결재자가 아닙니다. 결재는 신청자를 관할하는 상급자가 합니다.",
+    error_comp_policy_missing:
+      "보상휴가 휴가 종류가 설정되어 있지 않아 전환할 수 없습니다. 수당을 선택하거나 인사팀에 생성을 요청하세요.",
     error_not_found: "이 초과근무 신청은 존재하지 않습니다.",
   },
 };

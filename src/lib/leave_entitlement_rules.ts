@@ -165,9 +165,11 @@ export const ceilToScale = (value: number, scale: number): number => {
  * ## 已知限制
  *
  * `CUSTOM` 區間無法精確扣除休息時間 —— `ShiftPattern` 只有 `breakMinutes` 總量，
- * 沒有休息時段的起訖，因此算不出區間與休息的交集。此處以
- * 「區間長度扣掉休息總量後仍不得超過應工作分鐘」逼近。
- * ToDo: (20260817 - Julian) 要精確，`ShiftPattern` 需增加休息時段欄位。
+ * 沒有休息時段的起訖，因此算不出區間與休息的交集。
+ * 現行的逼近是 `min(區間長度, 應工作分鐘)`，語意是「你缺席的那段時間裡，
+ * **最多**有這麼多應工作分鐘」（理由與被它取代的那個階梯式子見下方 CUSTOM 分支）。
+ * ToDo: (20260817 - Julian) 要精確，`ShiftPattern` 需增加休息時段的起訖欄位；
+ * 屆時這個式子會成為實際重疊量的上界。
  */
 export function resolveLeaveMinutes(input: ILeaveUnitInput): ILeaveUnitResult {
   const { policy, shift, segment, startMinute, endMinute } = input;
@@ -207,10 +209,47 @@ export function resolveLeaveMinutes(input: ILeaveUnitInput): ILeaveUnitResult {
         );
       }
       const span = endMinute - startMinute;
-      // Info: (20260817 - Julian) 區間涵蓋休息時，扣掉休息總量；仍不得超過應工作分鐘
-      const netSpan =
-        span > dayEquivalentMinutes ? span - shift.breakMinutes : span;
-      rawMinutes = Math.min(netSpan, dayEquivalentMinutes);
+      /**
+       * Info: (20260820 - Julian) 扣減必須是**單調**的：請更多假不得扣更少額度
+       * （review 第 10 輪第 1 條）。
+       *
+       * ## 原本的式子
+       *
+       * ```ts
+       * const netSpan = span > dayEquivalentMinutes ? span - shift.breakMinutes : span;
+       * ```
+       *
+       * 它在 `span === dayEquivalentMinutes` 這個點上是一個**階梯**：
+       * 480 分班、休息 60 分下，`07:30→15:30`（480 分）扣 480，
+       * 而 `07:30→15:31`（481 分）扣 421、捨入成 **450**。
+       * 多請一分鐘，少扣 30 分鐘。12 個合法的 `minimumUnitMinutes` 裡有 11 個
+       * 在無條件進位下露得出來（只有 60 剛好被進位遮住），四捨五入下 12 個全露。
+       *
+       * ## 為什麼不是「算出實際涵蓋到的休息時間」
+       *
+       * 那才是正解，但資料裡沒有 —— `ILeaveShiftLength` 只有
+       * `requiredWorkMinutes` 與 `breakMinutes` 兩個**長度**，沒有休息的位置。
+       * 「這段區間涵蓋了多少休息」在現行資料模型下是答不出來的。
+       * ToDo: (20260820 - Julian) `ShiftPattern` 若補上休息的起訖，
+       * 這裡應改為實際重疊量，而下面這個式子會變成它的上界。
+       *
+       * ## 判準：兩個錨點 + 單調
+       *
+       * | 情形 | 應扣 |
+       * |---|---|
+       * | 請一小時（不可能涵蓋整段休息） | 60 分 |
+       * | 請完整個核心區間 | 一日（480 分） |
+       *
+       * `min(span, 應工作分鐘)` 是唯一同時滿足這兩個錨點且單調的式子，
+       * 它的語意是「你缺席的那段時間裡，**最多**有這麼多應工作分鐘」。
+       *
+       * **方向要講清楚**：`span` 落在（應工作分鐘, 應工作分鐘＋休息）之間時，
+       * 這個式子比原本扣得多（481 分由 421 變成 480）。那是單調的代價 ——
+       * 而另一個方向（一律扣掉休息）會讓「早上請一小時」扣 0 分，
+       * 一個荒謬得多的結果。原本的階梯正是為了迴避那個荒謬而生的，
+       * 它迴避的方式是製造另一個更難發現的錯。
+       */
+      rawMinutes = Math.min(span, dayEquivalentMinutes);
       break;
     }
     default: {

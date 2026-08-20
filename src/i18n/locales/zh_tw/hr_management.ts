@@ -986,6 +986,8 @@ export const hrManagement = {
     error_already_reviewed: "這張單已經被決行了。重新整理即可看到結果。",
     error_reclassified_midway:
       "這張單在你核准的過程中被人資認定為天災事變（§32 IV），整段工資改為加倍發給。請重新整理，確認金額後再核准。",
+    error_emergency_revoked_midway:
+      "這張單在你核准的過程中被人資撤回了 §32 IV 天災事變的認定，整段工資降回一般加班級距。請重新整理，確認金額後再核准。",
     error_emergency_already_declared:
       "這張單已經有一份 §32 IV 的認定。要記錄新的報備，請先撤回既有的那一份。",
     error_emergency_not_declared: "這張單沒有可撤回的 §32 IV 認定。",
@@ -997,6 +999,11 @@ export const hrManagement = {
       "那一天沒有排班，因此定不出加成標準。請人資先排班。",
     error_premium_undefined:
       "該日別的加成標準尚未確定（停工日、請假日），請洽人資。",
+    error_self_decide:
+      "不能對自己送出的加班單做這個動作。請由其他具人資管理職能的同事處理。",
+    error_not_reviewer: "你不是這張加班單的簽核者，決行的人必須是管得到申請人的主管。",
+    error_comp_policy_missing:
+      "找不到補休假別的設定，換不了補休。請改選加班費，或請人資建立。",
     error_not_found: "這張加班單已不存在。",
   },
 };
