@@ -939,10 +939,31 @@ export const exactDaysToDecimalString = (
   // Info: (20260819 - Julian) 四捨五入到第 scale 位
   const scaled =
     (remainder * factor * 2n + days.denominator) / (days.denominator * 2n);
-  let fraction = scaled.toString().padStart(scale, "0");
-  fraction = fraction.replace(/0+$/, "");
-  const carried = fraction.length > scale;
-  if (carried) return `${negative ? "-" : ""}${whole + 1n}`;
+
+  /**
+   * Info: (20260820 - Julian) 進位要在**還是數字的時候**判（review 第 4 條）。
+   *
+   * 這裡原本是「先剝尾零、再看字串長度」：
+   *
+   * ```ts
+   * fraction = fraction.replace(/0+$/, "");   // 先剝
+   * const carried = fraction.length > scale;  // 再判 → 恆為 false
+   * ```
+   *
+   * `scaled` 的上界是 `factor`，因此唯一會進位的情形就是 `scaled === factor`，
+   * 而它的字串是「1 後面 scale 個零」—— 尾零一剝只剩 `"1"`，長度 1 不可能
+   * 大於 scale。那個分支是**死碼**，而落空的後果不是差一位小數：
+   * `299999999999 / 100000000000`（≈2.99999999999）會寫成 `"2.1"`，
+   * 差了 0.9 天。這條路要分母大於 `2 × 10^10` 才走得到 —— 連續數日、
+   * 各日班別的 `requiredWorkMinutes` 兩兩互質時，`totalDaysOf` 的最小公倍
+   * 分母就會到那個量級（實測五日 421/425/429/437/443 分 → 分母約 1.5×10^13）。
+   *
+   * 判準改成算術比較，且排在任何字串處理之前 —— 字串答不了這個問題，
+   * 因為「進位」與「小數尾零」在剝過之後長得一模一樣。
+   */
+  if (scaled === factor) return `${negative ? "-" : ""}${whole + 1n}`;
+
+  const fraction = scaled.toString().padStart(scale, "0").replace(/0+$/, "");
   return fraction === ""
     ? `${negative ? "-" : ""}${whole}`
     : `${negative ? "-" : ""}${whole}.${fraction}`;

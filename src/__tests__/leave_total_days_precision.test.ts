@@ -5,6 +5,7 @@ import {
   exactDaysToNumber,
   totalDaysOf,
 } from "@/lib/leave_entitlement_rules";
+import type { IExactDays } from "@/lib/leave_entitlement_rules";
 
 /**
  * Info: (20260819 - Julian) 總日數的精度（review B5）。
@@ -21,6 +22,16 @@ import {
  */
 const plan = (count: number, minutes: number, dayEquivalentMinutes: number) =>
   Array.from({ length: count }, () => ({ minutes, dayEquivalentMinutes }));
+
+/**
+ * Info: (20260820 - Julian) 進位案例（review 第 4 條）。顯式標註成 tuple 陣列 ——
+ * 不標的話 TS 會把三種型別推成聯集，`it.each` 的回呼參數就拿不到各自的型別。
+ */
+const CARRY_CASES: readonly [number, string, string, IExactDays][] = [
+  [1, "1.99", "2", { numerator: 199n, denominator: 100n }],
+  [2, "2.999", "3", { numerator: 2999n, denominator: 1000n }],
+  [3, "3.9999", "4", { numerator: 39999n, denominator: 10000n }],
+];
 
 describe("totalDaysOf — 恰好整數天不得掉到整數下方", () => {
   it.each([
@@ -71,6 +82,79 @@ describe("totalDaysOf — 恰好整數天不得掉到整數下方", () => {
    */
   it("exactDaysToNumber 只是顯示用", () => {
     expect(exactDaysToNumber(totalDaysOf(plan(7, 180, 420)))).toBe(3);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 進位分支（review 第 4 條）。
+   *
+   * ## 為什麼上面那幾條抓不到它
+   *
+   * 它們的分母都是 7、3、2 這種小數字，四捨五入之後離 `10^scale` 遠得很，
+   * 從來走不到進位那一支。而那一支原本是**死碼**：它先剝掉尾零、再用字串
+   * 長度判進位，而唯一會進位的 `scaled === 10^scale` 的字串是「1 後面 scale
+   * 個零」—— 尾零一剝只剩 `"1"`。分支永遠不成立，落地的值是 `"2.1"`。
+   *
+   * 差的不是一位小數，是 **0.9 天**。`totalDays` 同時決定簽核規則命中
+   * （ADR 023 §2.2 的右開區間），2.1 天與 3 天走的是不同的關。
+   *
+   * ## 為什麼要用真的 plan 建構
+   *
+   * 直接餵一個手工的 `IExactDays` 只證明「函式對這個分數會怎麼算」，
+   * 不證明**這個分數生得出來**。要走到這一支，分母得大於 `2 × 10^10`，
+   * 而它來自 `totalDaysOf` 的最小公倍：連續五日、各日班別的
+   * `requiredWorkMinutes` 兩兩互質時就到那個量級。下面這五個值
+   * （421 / 425 / 429 / 437 / 443）互質，分母 14,859,817,690,575。
+   */
+  it("四捨五入剛好進位時給出整數，不是 x.1", () => {
+    const exact = totalDaysOf([
+      { minutes: 327, dayEquivalentMinutes: 421 },
+      { minutes: 296, dayEquivalentMinutes: 425 },
+      { minutes: 127, dayEquivalentMinutes: 429 },
+      { minutes: 381, dayEquivalentMinutes: 437 },
+      { minutes: 159, dayEquivalentMinutes: 443 },
+    ]);
+
+    /**
+     * Info: (20260820 - Julian) 先釘住前提：它**不是**恰好 3 天（否則
+     * `remainder === 0` 提前回傳，根本走不到進位那一支），只是差
+     * 1/14859817690575 天，在小數第 10 位進位成 3。
+     */
+    expect(exact.denominator).toBe(14859817690575n);
+    expect(compareDaysTo(exact, 3)).toBe(-1);
+
+    // Info: (20260820 - Julian) 缺陷發生時這裡是 "2.1"
+    expect(exactDaysToDecimalString(exact)).toBe("3");
+  });
+
+  /**
+   * Info: (20260820 - Julian) 同一支分支在小 scale 下容易得多 ——
+   * 現行呼叫端都用預設的 10，但這條把「判準與 scale 無關」釘住。
+   */
+  it.each(CARRY_CASES)(
+    "scale=%i 時 %s 進位成 %s",
+    (scale, _label, expected, days) => {
+      expect(exactDaysToDecimalString(days, scale)).toBe(expected);
+    },
+  );
+
+  // Info: (20260820 - Julian) 負數走同一條路：進位是「離零更遠」，不是「變大」
+  it("負值進位時往負向進", () => {
+    expect(
+      exactDaysToDecimalString({ numerator: -199n, denominator: 100n }, 1),
+    ).toBe("-2");
+  });
+
+  /**
+   * Info: (20260820 - Julian) 反向的一半：**沒有**進位時不得憑空多一位整數。
+   * 只驗上面那幾條的話，把判準寫成「一律進位」也會通過。
+   */
+  it("差得夠遠時不進位", () => {
+    expect(
+      exactDaysToDecimalString({ numerator: 194n, denominator: 100n }, 1),
+    ).toBe("1.9");
+    expect(
+      exactDaysToDecimalString({ numerator: 195n, denominator: 100n }, 1),
+    ).toBe("2");
   });
 
   it("日約當為 0 直接丟，不會靜默算出 Infinity", () => {
