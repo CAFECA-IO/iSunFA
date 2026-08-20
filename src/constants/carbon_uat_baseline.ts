@@ -150,6 +150,13 @@ export const BASELINE_TIERS: ReadonlyArray<{
       "log_接回折斷列",
       "log_補分隔列",
       "log_分隔列放棄補",
+      /**
+       * Info: (20260820 - Emily) 被丟的原因清單。record_only 而不是 must_match：
+       * 原因會隨模型輸出變動（有的趟次一種、有的趟次兩種），
+       * 而承重的判準是 `log_丟表`（有沒有丟）與 `markdown 表格語法外洩`（有沒有印成亂碼）。
+       * 這個鍵回答的是「為什麼」。
+       */
+      "log_丟表原因",
       "log_補欄",
       "log_tounicode_decision",
       "log_tounicode_replaced",

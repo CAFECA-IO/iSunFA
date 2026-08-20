@@ -42,7 +42,13 @@ const DIVIDER = /^\|[\s:|-]+\|$/;
  */
 const MIN_CONSISTENT_ROWS = 3;
 
-const cellCount = (line: string): number =>
+/**
+ * Info: (20260820 - Emily) 一列有幾個儲存格。**匯出**給 `validateSourceTables` 共用 ——
+ * 「一列有幾格」是同一個判定，不該有第二份實作（PR review B1 的同一條規則）。
+ *
+ * `\|` 是逃脫的直線不是欄位邊界，所以用否定回顧。
+ */
+export const countTableCells = (line: string): number =>
   line
     .replace(/^\|/, "")
     .replace(/\|$/, "")
@@ -80,11 +86,14 @@ export const ensureTableDivider = (
   // Info: (20260814 - Emily) 找第一段「連續且欄數一致」的列
   for (let start = 0; start < lines.length; start += 1) {
     if (!isRowAt(start)) continue;
-    const columns = cellCount(lines[start].trim());
+    const columns = countTableCells(lines[start].trim());
     if (columns < 2) continue;
 
     let end = start;
-    while (isRowAt(end + 1) && cellCount(lines[end + 1].trim()) === columns) {
+    while (
+      isRowAt(end + 1) &&
+      countTableCells(lines[end + 1].trim()) === columns
+    ) {
       end += 1;
     }
     if (end - start + 1 < MIN_CONSISTENT_ROWS) continue;

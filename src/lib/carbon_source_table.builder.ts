@@ -12,6 +12,7 @@ import {
   CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH,
   SOURCE_TABLE_NO_PATTERN,
 } from "@/constants/carbon_source_tables";
+import { countTableCells } from "@/lib/utils/markdown_table_divider";
 
 export interface ICarbonSourceTable {
   /** Info: (20260801 - Tzuhan) 原文的表號(如 表3.8),同時是錨點鍵與圖說前綴 */
@@ -28,6 +29,13 @@ export enum SourceTableRejectReasonEnum {
   INVALID_TABLE_NO = "invalid_table_no",
   EMPTY_MARKDOWN = "empty_markdown",
   NOT_A_TABLE = "not_a_table",
+  /**
+   * Info: (20260820 - Emily) 有「表頭列 + 緊接的分隔列」，但兩者**欄數不同**。
+   * GFM 要求分隔列的儲存格數等於表頭列 —— 不等就整個區塊都不渲染。
+   * 與 `NOT_A_TABLE` 分開是因為它們是不同的問題：
+   * 前者是「模型沒寫分隔列」，後者是「寫了但對不上」，修法不同。
+   */
+  DIVIDER_COLUMN_MISMATCH = "divider_column_mismatch",
   TOO_MANY_TABLES = "too_many_tables",
 }
 
@@ -58,20 +66,60 @@ export interface ISourceTableValidation {
  * 兩種錯的代價差很多:誤收一段散文會被逐字照錄的原則與表號驗證擋下,
  * 誤丟一張表卻是無聲的 —— 報告裡就是少一張,沒有人會知道。
  */
-const looksLikeMarkdownTable = (markdown: string): boolean => {
+type TableShape = "table" | "no_divider" | "column_mismatch";
+
+/**
+ * Info: (20260820 - Emily) 08-20 補上**欄數一致**這個條件，理由是實跑量到的失效。
+ *
+ * 原本只要求「存在任一組表頭列 + 緊接的分隔列」。實測 08-19 run2 與 08-20 run A
+ * 各有一張表通過了這個檢查，卻在紙上印成 1,129~1,273 個管線與 6~19 條 `|---`：
+ * 模型把兩層合併表頭壓成**一個約 600 格的邏輯列**，而分隔列只有 6 欄。
+ *
+ * GFM 要求分隔列的儲存格數等於表頭列，不等就整個區塊都不渲染。
+ * 所以「有分隔列」不是充分條件，「欄數也對得上」才是。
+ *
+ * ## 為什麼不回到「分隔列必須是第二個非空行」
+ *
+ * 那是 08-01 的原始規則，08-04 因為實測而放寬 —— 表3.8 與表3.4 都被判
+ * `not_a_table` 整張丟掉（表3.8 是桑基圖唯一的資料來源，於是圖整張消失），
+ * 因為前面幾行可能是原文的表格標題、廠址標籤或空白。那個放寬是對的，這裡不動它。
+ *
+ * 新條件只補一件事：**那一組配對的欄數要相同。** 前面有幾行標題仍然無所謂。
+ *
+ * ## 為什麼要分辨三種結果
+ *
+ * 「沒有分隔列」與「有但對不上」的修法不同（前者補、後者是模型輸出壞了），
+ * 而日誌只寫 `not_a_table` 的話兩者分不開 —— 08-04 的註解已經記過一次
+ * 「知道被擋了，但永遠不知道為什麼」的代價。
+ */
+const inspectMarkdownTable = (markdown: string): TableShape => {
   const lines = markdown
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
-  if (lines.length < 2) return false;
+  if (lines.length < 2) return "no_divider";
   const isRow = (line: string): boolean => /^\|.*\|$/.test(line);
   // Info: (20260801 - Tzuhan) 分隔列:| --- | :--: | 之類,只由 -、:、|、空白組成
   const isDivider = (line: string): boolean =>
     isRow(line) && /^\|[\s:|-]+\|$/.test(line);
-  return lines.some(
-    (line, index) =>
-      index + 1 < lines.length && isRow(line) && isDivider(lines[index + 1]),
-  );
+
+  const pairs = lines
+    .map((line, index) => ({ line, next: lines[index + 1] }))
+    .filter(
+      (pair) =>
+        pair.next !== undefined &&
+        isRow(pair.line) &&
+        !isDivider(pair.line) &&
+        isDivider(pair.next),
+    );
+  if (pairs.length === 0) return "no_divider";
+
+  return pairs.some(
+    (pair) =>
+      countTableCells(pair.line) === countTableCells(pair.next as string),
+  )
+    ? "table"
+    : "column_mismatch";
 };
 
 /**
@@ -103,10 +151,14 @@ export function validateSourceTables(
         offendingTableNo: table.tableNo,
       };
     }
-    if (!looksLikeMarkdownTable(table.markdown)) {
+    const shape = inspectMarkdownTable(table.markdown);
+    if (shape !== "table") {
       return {
         isValid: false,
-        reason: SourceTableRejectReasonEnum.NOT_A_TABLE,
+        reason:
+          shape === "column_mismatch"
+            ? SourceTableRejectReasonEnum.DIVIDER_COLUMN_MISMATCH
+            : SourceTableRejectReasonEnum.NOT_A_TABLE,
         offendingTableNo: table.tableNo,
       };
     }

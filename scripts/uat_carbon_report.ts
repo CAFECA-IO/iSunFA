@@ -993,6 +993,25 @@ const checkLog = (log: string, text?: string): void => {
     ...log.matchAll(/source table dropped.*?"tableNo":"([^"]+)"/g),
   ].map((match) => match[1]);
   snapshot.log_丟表 = dropped;
+  /**
+   * Info: (20260820 - Emily) 被丟的**原因**，用來分辨兩種完全不同的情況。
+   *
+   * `divider_column_mismatch` = 08-20 新增的渲染不變式擋下來的
+   * （表頭與分隔列欄數不一致，GFM 不會渲染成表格）。這是**預期的**：
+   * 它把「印成一片管線」換成「明確失敗」，所以 `log_丟表` 會上升。
+   *
+   * `not_a_table` / `too_many_tables` = 原本就有的那幾種，代表不同的問題。
+   *
+   * 只看 `log_丟表` 的數字分不出這兩者，而它們的處理方式相反：
+   * 前者要修模型輸出（`open/47` 根因），後者要看是不是誤丟。
+   */
+  snapshot.log_丟表原因 = [
+    ...new Set(
+      [...log.matchAll(/source table dropped.*?"reason":"([^"]+)"/g)].map(
+        (match) => match[1],
+      ),
+    ),
+  ];
   if (dropped.length === 0) {
     record("pass", "log:原文表格被丟", "0 張");
   } else {
