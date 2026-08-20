@@ -1,6 +1,6 @@
 import { logger } from "@/lib/utils/logger";
 import { INVITE_EMAIL_MATCH, TEAM_INVITATION_STATUS } from "@/constants/status";
-import { TeamRole } from "@/constants/team";
+import { TeamRole, isTeamManagerRole } from "@/constants/team";
 import { SystemSettingKey } from "@/constants/system_setting";
 import {
   DEFAULT_TEAM_INVITE_COOLDOWN_SECONDS,
@@ -812,7 +812,7 @@ export async function revokeInvitation(
   const { teamId, inviteId, operatorUserId } = params;
 
   const operator = await teamRepo.getTeamMember(operatorUserId, teamId);
-  if (!operator || (operator.role !== "OWNER" && operator.role !== "ADMIN")) {
+  if (!isTeamManagerRole(operator?.role)) {
     throw toApiError(API_ERRORS.FO_PERMISSION_DENIED_ONLY_OWN);
   }
 

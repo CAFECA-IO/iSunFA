@@ -1,4 +1,5 @@
 import {
+  PLAN_RANK,
   TEAM_PLAN,
   TEAM_SUBSCRIPTION_STATUS,
   TeamPlanId,
@@ -16,17 +17,13 @@ import type { ISubscriptionCardMetadata } from "@/lib/subscription/subscription_
  * 一旦碰到 repository 或 viem，那個頁面就打包不起來。
  *
  * 從儲存體**讀出**方案是 `services/plan.service.ts` 的事（DB + 鏈上），這裡只做折算。
+ *
+ * Info: (20260820 - Luphia) 方案的**高低次序**（`PLAN_RANK`）住在
+ * `constants/subscription_quota.ts`，不在這裡：它是方案列舉本身的屬性，
+ * 而升／降級的判斷（`isPlanDowngrade`，決定降級於期末才生效）也讀同一份。
+ * 本檔改為匯入——同一組次序若有兩份定義，兩邊遲早分岔，而分岔的後果是
+ * 「這次算不算降級」在顯示側與計費側得到不同答案。
  */
-
-/**
- * Info: (20260819 - Luphia) 方案高低次序。數字只用於比較，不代表價格或額度倍數——
- * 那些是 DB 系統設定（`subscription_plan_quota`），不可從這裡推導。
- */
-export const PLAN_RANK: Record<TeamPlanId, number> = {
-  [TEAM_PLAN.FREE]: 0,
-  [TEAM_PLAN.TEAM]: 1,
-  [TEAM_PLAN.BUSINESS]: 2,
-};
 
 /**
  * Info: (20260819 - Luphia) 字串是不是已知的團隊方案。

@@ -885,11 +885,12 @@ describe("revokeInvitation", () => {
   };
 
   beforeEach(() => {
-    asMock(teamRepo.getTeamMember).mockResolvedValue({ role: "ADMIN" });
+    // Info: (20260819 - Luphia) 撤回限管理職，而團隊 ADMIN 已取消 → 只剩 OWNER
+    asMock(teamRepo.getTeamMember).mockResolvedValue({ role: "OWNER" });
     asMock(teamRepo.getInvitationByIdWithDetails).mockResolvedValue(pending);
   });
 
-  it("OWNER / ADMIN 可以撤回，且回報席次已釋出但不退費", async () => {
+  it("OWNER 可以撤回，且回報席次已釋出但不退費", async () => {
     const result = await revokeInvitation({
       teamId: TEAM.id,
       inviteId: "inv-1",

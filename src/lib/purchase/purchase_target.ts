@@ -35,7 +35,8 @@ export type BlockingReason =
 
 // Info: (20260814 - Luphia) 訂閱限 OWNER、購點限 OWNER / ADMIN（設計書 §6.4 權限矩陣）
 const SUBSCRIPTION_ROLES: string[] = [TeamRole.OWNER];
-const WALLET_ROLES: string[] = [TeamRole.OWNER, TeamRole.ADMIN];
+// Info: (20260819 - Luphia) 團隊 ADMIN 已取消（產品決定 20260819），錢包操作限 OWNER
+const WALLET_ROLES: string[] = [TeamRole.OWNER];
 
 export function resolvePurchaseMode(
   planId: string | undefined,

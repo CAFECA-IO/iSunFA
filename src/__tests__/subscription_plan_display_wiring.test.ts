@@ -90,13 +90,28 @@ describe("訂閱變更都會標記卡片待同步", () => {
     "downgradeToFree",
   ];
 
+  /**
+   * Info: (20260820 - Luphia) 以**宣告**定位，不是以名字定位。
+   *
+   * 原本用 `repo.indexOf(name)`，而降級排程那一輪在 `expireOverdue` 的註解裡寫了
+   * 「見 downgradeToFree 的同一段說明」——於是 `downgradeToFree` 的起點落在那句
+   * 註解上，切出來的範圍完全不是那支函式的內容，測試紅在一個與行為無關的地方。
+   * 註解提到別的函式名是很正常的事，所以該修的是定位方式。
+   */
+  function declarationIndex(name: string): number {
+    const match = new RegExp(
+      `(?:export\\s+async\\s+function|async)\\s+${name}\\s*\\(`,
+    ).exec(repo);
+    return match?.index ?? -1;
+  }
+
   it.each(MUTATORS)("%s 會標記待同步", (mutator) => {
-    const start = repo.indexOf(mutator);
+    const start = declarationIndex(mutator);
     expect(start).toBeGreaterThan(-1);
 
-    // Info: (20260819 - Luphia) 到下一個 mutator 或檔尾為止，就是這一支的範圍
+    // Info: (20260819 - Luphia) 到下一個 mutator 的宣告或檔尾為止，就是這一支的範圍
     const nextStarts = MUTATORS.map((other) =>
-      other === mutator ? -1 : repo.indexOf(other, start + mutator.length),
+      other === mutator ? -1 : declarationIndex(other),
     ).filter((index) => index > start);
     const end = nextStarts.length > 0 ? Math.min(...nextStarts) : repo.length;
 

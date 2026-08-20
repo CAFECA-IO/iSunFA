@@ -49,6 +49,16 @@ export interface ITeamSubscriptionView {
   currentPeriodStart: number;
   currentPeriodEnd: number;
   autoRenew: boolean;
+  /**
+   * Info: (20260820 - Luphia) 已排程、於當期屆滿時生效的方案（降級）；null＝沒有排程。
+   *
+   * 一定要回傳：降級不期中生效（退款政策 §2.1），因此畫面上的 `planId` 仍是原方案，
+   * 而使用者需要看得出「我按過降級了」。少了這一欄，唯一的回饋是按下去之後
+   * 什麼都沒變——於是他會再按一次，而那一次會被當成升級（建單、收整期的錢）。
+   */
+  pendingPlanId: TeamPlanId | null;
+  // Info: (20260820 - Luphia) 排程生效時點（epoch 秒）＝當期屆滿；沒有排程時為 null
+  pendingEffectiveAt: number | null;
   // Info: (20260817 - Luphia) 觀看者本人的額度（一人一池）
   quota: IQuotaStatus;
   /**

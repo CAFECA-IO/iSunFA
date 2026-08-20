@@ -67,9 +67,9 @@ export async function POST(
     // Info: (20260813 - Luphia) 使權限檢查退化成「屬於任一團隊即通過」，且建立成員時必然拋錯
     const { team_id: teamId } = await params;
 
-    // Info: (20260325 - Tzuhan) Check permission (OWNER or ADMIN)
+    // Info: (20260819 - Luphia) 權限閘：管理職（ADMIN 取消後只剩 OWNER）
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
-    if (!operator || (operator.role !== "OWNER" && operator.role !== "ADMIN")) {
+    if (!isTeamManagerRole(operator?.role)) {
       return jsonFail(API_ERRORS.FO_PERMISSION_DENIED_ONLY_OWN);
     }
 
@@ -100,10 +100,20 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Clear challenge to prevent replay
     await webAuthnRepo.clearChallenge(sessionUser.id);
 
-    const assignedRole: TeamRole =
-      role === "ADMIN" || role === "EDITOR" || role === "VIEWER"
-        ? role
-        : TeamRole.VIEWER;
+    /**
+     * Info: (20260819 - Luphia) 不認識的角色一律拒絕（review #6685 中-3）。
+     * 這條路徑同樣會補收席次費用，靜默降級等於「收了錢、給錯角色、不報錯」。
+     *
+     * 這支端點是直接加人，因此**不允許授予 OWNER**（那要走轉移擁有權的流程）；
+     * 但非法值與「不允許的值」要分開回應，不能都變成 VIEWER。
+     */
+    if (!(Object.values(TeamRole) as string[]).includes(role)) {
+      return jsonFail(API_ERRORS.AUTH_INVALID_ROLE);
+    }
+    if (role === TeamRole.OWNER) {
+      return jsonFail(API_ERRORS.FO_PERMISSION_DENIED_ONLY_OWN);
+    }
+    const assignedRole = role as TeamRole;
 
     // Info: (20260325 - Tzuhan) Find the target user by address
     const targetUser = await webAuthnRepo.findUserByAddress(address);

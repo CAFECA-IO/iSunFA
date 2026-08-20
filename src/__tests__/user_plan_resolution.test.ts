@@ -1,7 +1,6 @@
 import { describe, it, expect } from "@jest/globals";
 import {
   isTeamPlanId,
-  PLAN_RANK,
   reconcilePlan,
   resolveHighestPlan,
   resolveUnanimousPlan,
@@ -14,18 +13,11 @@ import { TEAM_PLAN } from "@/constants/subscription_quota";
  * 兩條而不是一條，是因為兩個位置的**後果不同**：徽章只是一行字，
  * 而方案頁的「目前方案」標記會停用購買鈕。這一支把兩者的差異釘住，
  * 否則「統一成一條比較乾淨」的重構會把購買鈕鎖掉一整類使用者。
+ *
+ * Info: (20260820 - Luphia) `PLAN_RANK` 本身的次序在
+ * `subscription_downgrade_schedule.test.ts` 驗（它與 `isPlanDowngrade` 同源，
+ * 決定降級於期末才生效）。同一組數字在兩支測試裡各斷言一次沒有增加保護。
  */
-
-describe("方案高低", () => {
-  it("business > team > free", () => {
-    expect(PLAN_RANK[TEAM_PLAN.BUSINESS]).toBeGreaterThan(
-      PLAN_RANK[TEAM_PLAN.TEAM],
-    );
-    expect(PLAN_RANK[TEAM_PLAN.TEAM]).toBeGreaterThan(
-      PLAN_RANK[TEAM_PLAN.FREE],
-    );
-  });
-});
 
 describe("徽章：取最高", () => {
   it("沒有任何團隊時是免費版", () => {

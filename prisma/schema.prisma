@@ -365,6 +365,13 @@ model TeamSubscription {
    */
   unitPrice          Int      @default(0) @map("unit_price")
   /**
+   * Info: (20260820 - Luphia) 已排程、**於當期屆滿時才生效**的方案（降級用）。
+   * 退款政策 §2.1 承諾「取消或降級於當前結算週期結束後自動生效」，因此降級不得
+   * 立即改 `planId`——當期權益必須維持原方案（使用者已付到期末）。
+   * NULL＝沒有排程中的變更。升級不走這一欄（立即生效）。
+   */
+  pendingPlanId      String?  @map("pending_plan_id")
+  /**
    * Info: (20260819 - Luphia) 鏈上訂閱會員卡（DynamicKYCMembership ERC721）的同步狀態。
    * 卡片是訂閱的鏡像：權益判斷一律讀本表其他欄位，不讀鏈（見 constants/subscription_nft）。
    * `nftSyncedAt` 為 NULL 就是「待同步」，也就是 worker 的工作佇列，
