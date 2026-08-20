@@ -1,3 +1,4 @@
+import { isRealCalendarDate } from "@/lib/utils/attendance_time";
 import { z } from "zod";
 import { isoDateSchema } from "@/validators/attendance";
 import { LEAVE_REASON_MAX_LENGTH } from "@/constants/leave_policy";
@@ -27,7 +28,26 @@ import { LEAVE_REASON_MAX_LENGTH } from "@/constants/leave_policy";
  */
 export const localDateTimeSchema = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d$/);
+  .regex(/^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d$/)
+  /**
+   * Info: (20260819 - Julian) 日期部分必須是**真實存在的日曆日**。
+   *
+   * 第一版只有上面那個正則，於是 `2026-04-31`、`2026-02-30`、甚至
+   * `2026-13-01` 全部通過（review 第 1 條）。而它取代的 `isoDateSchema`
+   * **有**這道檢查，該處的註解正好寫著「日期字串的定義只該有一份」——
+   * 這支就是掉了檢查的第二份。
+   *
+   * 後果不是 400 變 500，是**一整天的假靜默消失**：`2026-04-31` 查無排班
+   * 被跳過，而區間展開時 `Date` 把它正規化成 `05-01` 再往後推，
+   * `2026-05-01` 從來沒有進到清單裡 —— 額度不扣、排班不投影成 `LEAVE`、
+   * 判定引擎把那天算成無故缺勤。回 200，畫面上看不出任何異常。
+   *
+   * 判準共用 `isRealCalendarDate`，不再各寫一份。
+   */
+  .refine(
+    (value) => isRealCalendarDate(value.slice(0, 10)),
+    "not a real calendar date",
+  );
 
 /**
  * Info: (20260817 - Julian) 送出／試算共用同一個輸入形狀。

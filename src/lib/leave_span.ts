@@ -1,5 +1,10 @@
 import { LeaveDaySegment } from "@/constants/leave_policy";
 import { MINUTES_PER_DAY } from "@/constants/attendance";
+import {
+  enumerateIsoDates,
+  isoDaySpan,
+  isRealCalendarDate,
+} from "@/lib/utils/attendance_time";
 
 /**
  * Info: (20260819 - Julian) 把一段「日期＋時刻」的區間展開成逐日的請假計畫。
@@ -66,7 +71,6 @@ export class LeaveSpanError extends Error {
 }
 
 const ISO_LOCAL = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})$/;
-const DAY_MS = 86_400_000;
 
 export interface ILocalDateTime {
   workDate: string;
@@ -88,6 +92,14 @@ export const parseLocalDateTime = (value: string): ILocalDateTime | null => {
   const hour = Number(matched[2]);
   const minute = Number(matched[3]);
   if (hour > 23 || minute > 59) return null;
+  /**
+   * Info: (20260819 - Julian) 曆日檢查在這裡再做一次，不只在 zod（review 第 1 條）。
+   *
+   * `localDateTimeSchema` 擋得住 API 進來的 `2026-04-31`，但 **seed、
+   * 資料遷移與日後的批次匯入都不經過 zod** —— 而它們正是最可能餵進
+   * 手工組出來的日期字串的路徑。判準與 validator 共用同一支。
+   */
+  if (!isRealCalendarDate(matched[1])) return null;
   return { workDate: matched[1], minuteOfDay: hour * 60 + minute };
 };
 
@@ -110,31 +122,36 @@ export const daysBetweenIso = (
   fromIso: string,
   toIso: string,
 ): number | null => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(fromIso)) return null;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(toIso)) return null;
-  const from = new Date(`${fromIso}T00:00:00.000Z`).getTime();
-  const to = new Date(`${toIso}T00:00:00.000Z`).getTime();
-  if (Number.isNaN(from) || Number.isNaN(to)) return null;
-  return Math.round((to - from) / DAY_MS);
+  // Info: (20260819 - Julian) 不是真實曆日就回 null，不要靜默正規化成別的一天
+  if (!isRealCalendarDate(fromIso) || !isRealCalendarDate(toIso)) return null;
+  return isoDaySpan(fromIso, toIso) - 1;
 };
 
-/** Info: (20260819 - Julian) 全程 UTC，理由同 `leave_entitlement_rules.ts`：避免執行環境時區滲入 */
-const addDays = (isoDate: string, days: number): string =>
-  new Date(new Date(`${isoDate}T00:00:00.000Z`).getTime() + days * DAY_MS)
-    .toISOString()
-    .slice(0, 10);
-
+/**
+ * Info: (20260819 - Julian) 展開連續的日曆日。**改用既有的 `enumerateIsoDates`**
+ * （review 第 1 條）。
+ *
+ * 先前這裡自己寫了一份 `datesBetween`：用字串比較推進、用 `Date` 加日。
+ * 那個組合對一個不存在的日期會**跳過中間整整一天** ——
+ * `datesBetween("2026-04-31", "2026-05-02")` 回的是
+ * `["2026-04-31", "2026-05-02"]`，因為 `Date` 把 04-31 正規化成 05-01，
+ * 加一天就直接到了 05-02，而迴圈的字串比較看不出來。
+ *
+ * `attendance_time.ts` 的 `enumerateIsoDates` 用日數算術，本來就沒有這個問題
+ * ——「日曆日怎麼展開」也不該有第二份實作。
+ *
+ * 上限檢查留在這裡：`enumerateIsoDates` 是通用工具，62 天是**請假**的規則。
+ */
 export const datesBetween = (fromIso: string, toIso: string): string[] => {
-  const dates: string[] = [];
-  let cursor = fromIso;
-  while (cursor <= toIso) {
-    dates.push(cursor);
-    cursor = addDays(cursor, 1);
-    if (dates.length > MAX_SPAN_DAYS) {
-      throw new LeaveSpanError(`span exceeds ${MAX_SPAN_DAYS} days`);
-    }
+  if (!isRealCalendarDate(fromIso) || !isRealCalendarDate(toIso)) {
+    throw new LeaveSpanError(
+      `not a real calendar date: ${fromIso} .. ${toIso}`,
+    );
   }
-  return dates;
+  if (isoDaySpan(fromIso, toIso) > MAX_SPAN_DAYS) {
+    throw new LeaveSpanError(`span exceeds ${MAX_SPAN_DAYS} days`);
+  }
+  return enumerateIsoDates(fromIso, toIso);
 };
 
 /**

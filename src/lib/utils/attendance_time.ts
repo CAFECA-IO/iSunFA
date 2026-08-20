@@ -50,6 +50,33 @@ const toDayNumber = (isoDate: string): number => {
 const fromDayNumber = (dayNumber: number): string =>
   new Date(dayNumber * 86_400_000).toISOString().slice(0, 10);
 
+/**
+ * Info: (20260819 - Julian) 這串字是不是一個**真實存在的日曆日**。
+ *
+ * `Date` 會把 `2026-04-31` 靜默正規化成 `2026-05-01`、把 `2026-13-01`
+ * 正規化成 `2027-01-01` —— 不丟錯，只是換一天。因此判準是
+ * 「正規化之後還等不等於自己」。
+ *
+ * ## 為什麼放在這裡
+ *
+ * 這個檔案已經擁有日曆日的算術（`addIsoDays` / `isoDaySpan` /
+ * `enumerateIsoDates`），而「什麼字串算是一個日曆日」是同一組概念的入口。
+ * 放在 `validators/` 會讓 `lib/` 反過來相依 `validators/`；
+ * 放在兩邊各一份，就會出現 review 指出的那種第二份定義 ——
+ * `isoDateSchema` 的註解自己寫著「**日期字串的定義只該有一份**」，
+ * 而 `localDateTimeSchema` 就是掉了這道檢查的第二份（review 第 1 條）。
+ *
+ * 現在 `isoDateSchema`、`localDateTimeSchema` 與 `leave_span.ts` 都用這一支。
+ */
+export function isRealCalendarDate(isoDate: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return false;
+  const parsed = new Date(`${isoDate}T00:00:00.000Z`);
+  return (
+    !Number.isNaN(parsed.getTime()) &&
+    parsed.toISOString().slice(0, 10) === isoDate
+  );
+}
+
 // Info: (20260813 - Julian) 日曆日加減天數。純日曆運算，不牽涉時區
 export function addIsoDays(isoDate: string, delta: number): string {
   return fromDayNumber(toDayNumber(isoDate) + delta);

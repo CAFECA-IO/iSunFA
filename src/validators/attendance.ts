@@ -1,3 +1,4 @@
+import { isRealCalendarDate } from "@/lib/utils/attendance_time";
 import { z } from "zod";
 import { PunchType, WorkDayType } from "@/constants/attendance";
 
@@ -26,13 +27,8 @@ export type IAttendancePunchInput = z.infer<typeof attendancePunchSchema>;
 export const isoDateSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
-  .refine((value) => {
-    const parsed = new Date(`${value}T00:00:00.000Z`);
-    return (
-      !Number.isNaN(parsed.getTime()) &&
-      parsed.toISOString().slice(0, 10) === value
-    );
-  }, "not a real calendar date");
+  // Info: (20260819 - Julian) 判準抽到 `attendance_time.ts`，與 `localDateTimeSchema` 共用同一支
+  .refine(isRealCalendarDate, "not a real calendar date");
 
 /**
  * Info: (20260813 - Julian) 判定結果查詢（A9）。
