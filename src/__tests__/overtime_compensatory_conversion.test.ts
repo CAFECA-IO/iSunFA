@@ -109,6 +109,26 @@ jest.mock("@/lib/prisma", () => {
         return {};
       }),
     },
+    /**
+     * Info: (20260820 - Julian) `ledgerActorOf` 要查操作者的姓名工號
+     * （review 第 6 輪 M16）。
+     *
+     * 這一段是後補的：M16 讓每一筆帳本分錄都帶操作者快照，而快照由
+     * repository 在寫入前查一次 —— 於是這支替身少了 `employee`，
+     * 整組測試以 `Cannot read properties of undefined` 收場。
+     *
+     * **帳本 id 對不上時回 null**：`ledgerActorOf` 對那條路徑是丟例外
+     * （一筆人為調整偽裝成系統動作，是稽核上最不該發生的那一種），
+     * 少了這一段，那道防線在測試裡就不存在。
+     */
+    employee: {
+      findFirst: jest.fn(
+        async ({ where }: { where: { id: string; accountBookId: string } }) =>
+          where.accountBookId === "book-1" && where.id === "mgr-1"
+            ? { id: "mgr-1", employeeNo: "MGR001", name: "測試主管" }
+            : null,
+      ),
+    },
   };
   return {
     prisma: {
@@ -321,5 +341,53 @@ describe("補休折換：一段一批，且一小時換一小時（§32-1）", (
       OvertimePremiumTier.WEEKDAY_BEYOND_2H,
     ]);
     expect(captured.cashOuts.map((event) => event.minutes)).toEqual([120, 60]);
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) 帳本分錄要記得住操作者（review 第 6 輪 M16）。
+ *
+ * `LeaveLedgerEntry.actorEmployeeId` 是 `SetNull`，讀取端先前靠 live join
+ * 取姓名 —— 那位主管離職之後，這筆補休入帳就查不出是誰核准的。
+ * 額度帳本是 append-only 的稽核來源（ADR 022 §1）。
+ */
+describe("補休入帳帶著操作者的姓名工號快照（M16）", () => {
+  it("三欄一起落地，且姓名工號來自查詢而不是呼叫端自己填", async () => {
+    await overtimeRequestRepo.approve(writeOf());
+
+    expect(captured.ledger).toHaveLength(2);
+    for (const entry of captured.ledger) {
+      expect(entry.actorEmployeeId).toBe("mgr-1");
+      expect(entry.actorEmployeeNo).toBe("MGR001");
+      expect(entry.actorName).toBe("測試主管");
+    }
+  });
+
+  /**
+   * Info: (20260820 - Julian) 操作者不屬於這個帳本時**擋下**，不是回 null。
+   *
+   * 回 null 會讓那一列看起來像系統排程產生的 —— 一筆人為核准偽裝成系統動作。
+   * 這一條同時證明快照真的來自查詢：若實作改成直接抄 `params.actorEmployeeId`，
+   * 它會綠著寫下一個查不到的人。
+   */
+  it("操作者不在這個帳本時擋下，一筆都不寫", async () => {
+    await expect(
+      overtimeRequestRepo.approve({
+        ...writeOf(),
+        actorEmployeeId: "mgr-from-another-book",
+      }),
+    ).rejects.toThrow();
+
+    /**
+     * Info: (20260820 - Julian) **連分段都還沒寫**。
+     *
+     * 操作者是在迴圈之前解出來的，因此租戶不符會在任何寫入之前擋下 ——
+     * 只斷言 `grants` 與 `ledger` 為空的話，一個「先寫分段再檢查」的實作
+     * 也會通過，而它已經在資料庫裡留下了一段孤兒分段（正式環境靠交易回滾
+     * 收拾，但順序不該靠回滾才正確）。
+     */
+    expect(captured.segments).toHaveLength(0);
+    expect(captured.grants).toHaveLength(0);
+    expect(captured.ledger).toHaveLength(0);
   });
 });

@@ -591,6 +591,8 @@ export const hrManagement = {
     error_no_permission_to_view: "你沒有查看這個人紀錄的權限。",
     error_no_employee_record:
       "你的帳號尚未對應到這個帳本裡的員工。請洽人資建立。",
+    error_range_too_large:
+      "查詢的日期區間太長，請縮短範圍後再試一次。",
   },
   attendance_result: {
     title: "出勤總覽與異常",
@@ -841,7 +843,26 @@ export const hrManagement = {
     node_hr: "人資",
     node_specific: "指定簽核者",
     chain_empty: "尚無簽核鏈",
-    chain_escalated: "自動上升：{{reason}}",
+    chain_escalated_same_kind:
+      "自動改派：這一關的{{kind}}是你本人，已改由另一位擔任",
+    chain_escalated_higher:
+      "自動上升：這一關的{{from}}是你本人，已上升由{{to}}簽核",
+    unresolved_no_matching_rule:
+      "沒有任何簽核規則涵蓋這個天數",
+    unresolved_empty_rule_steps:
+      "命中的簽核規則沒有設定任何關卡",
+    unresolved_no_direct_manager:
+      "你的資料上沒有直屬主管",
+    unresolved_no_department_manager:
+      "你所屬部門往上都沒有設定主管",
+    unresolved_no_hr:
+      "這個帳本沒有人資管理員",
+    unresolved_no_other_hr:
+      "你是唯一的人資管理員，鏈上沒有其他人可以簽",
+    unresolved_specific_employee_missing:
+      "指定的簽核者已離職或不在這個帳本",
+    unresolved_malformed_rule_threshold:
+      "某一條簽核規則的天數門檻不是可對帳的十進位數",
 
     error_load: "載入失敗",
     error_preview: "試算失敗",

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { LeaveQuotaMode } from "@/constants/leave_policy";
 import { IEmployeeGrantSummary } from "@/interfaces/leave_balance";
+import { floorRatioText } from "@/lib/utils/hr_quantity_display";
 import { useTranslation } from "@/i18n/i18n_context";
 
 /**
@@ -60,8 +61,15 @@ const LeaveBalanceCards: FC<{
         const unlimited = balance.quotaMode === LeaveQuotaMode.UNLIMITED;
         const perDayMinutes =
           balance.dayEquivalentMinutes ?? dayEquivalentMinutes;
-        const days =
-          perDayMinutes > 0 ? balance.remainingMinutes / perDayMinutes : null;
+        /**
+         * Info: (20260820 - Julian) 餘額**無條件捨去**（review 第 7 輪 M28）。
+         *
+         * 原本是 `(remainingMinutes / perDayMinutes).toFixed(1)`，而 `toFixed`
+         * 四捨五入：449 分、一日 450 分 → 0.9977… → 顯示「1.0 天」。
+         * 使用者照著請一天，送出後拿到 `VA_LEAVE_INSUFFICIENT_BALANCE` ——
+         * 而這張卡片存在的唯一理由就是不讓他撞上那個結果。
+         */
+        const days = floorRatioText(balance.remainingMinutes, perDayMinutes);
         const selected = balance.leavePolicyId === selectedPolicyId;
 
         return (
@@ -99,7 +107,7 @@ const LeaveBalanceCards: FC<{
             ) : (
               <>
                 <div className="mt-2 text-2xl font-semibold text-gray-900 tabular-nums">
-                  {days === null ? "—" : days.toFixed(1)}
+                  {days ?? "—"}
                   <span className="ml-1 text-sm font-normal text-gray-500">
                     {t("hr_management.leave.unit_day")}
                   </span>

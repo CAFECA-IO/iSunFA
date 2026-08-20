@@ -131,6 +131,18 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
       });
       const known = new Set(existing.map((grant) => grant.cycleStartDate));
 
+      /**
+       * Info: (20260820 - Julian) 操作者查一次就好，且要在**任何寫入之前**
+       * （review 第 6 輪 M16）。
+       *
+       * 第一版把 `await ledgerActorOf(...)` 直接展開在每一筆分錄的 `data` 裡，
+       * 有兩個毛病：同一次呼叫的操作者是同一個人，卻每一段各查一次；
+       * 而且它排在批次寫入**之後**——操作者不屬於這個帳本時，
+       * 例外會在已經寫進一筆批次之後才丟。正式環境靠交易回滾收拾，
+       * 但一個「先寫再檢查」的順序不該靠回滾才正確。
+       */
+      const actor = await ledgerActorOf(tx, params);
+
       let issued = 0;
       for (const plan of params.planned) {
         if (known.has(plan.cycleStartDate)) continue;
@@ -160,7 +172,7 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
             deltaMinutes: plan.grantedMinutes,
             grantBalanceAfterMinutes: plan.grantedMinutes,
             // Info: (20260820 - Julian) 操作者三欄一起落地（review 第 6 輪 M16）
-            ...(await ledgerActorOf(tx, params)),
+            ...actor,
             /**
              * Info: (20260817 - Julian) 以週期起日組鍵（`buildLeaveGrantIdempotencyKey`）。
              * Worker 每日重跑、補跑漏掉的月份、同一秒被觸發兩次 —— 都只會有一筆。
@@ -214,6 +226,9 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
       // Info: (20260817 - Julian) 沒有任何批次可掛 —— 由 service 轉成 NF_LEAVE_GRANT
       if (!target) throw new LeaveGrantMissingError(params.leavePolicyId);
 
+      // Info: (20260820 - Julian) 操作者先解出來（同上：寫入之前，review 第 6 輪 M16）
+      const adjustActor = await ledgerActorOf(tx, params);
+
       const sums = await tx.leaveLedgerEntry.aggregate({
         where: { leaveGrantId: target.id },
         _sum: { deltaMinutes: true },
@@ -227,7 +242,7 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
           deltaMinutes: params.deltaMinutes,
           grantBalanceAfterMinutes: balanceAfter,
           // Info: (20260820 - Julian) 操作者三欄一起落地（review 第 6 輪 M16）
-          ...(await ledgerActorOf(tx, params)),
+          ...adjustActor,
           reason: params.reason,
           idempotencyKey: params.idempotencyKey,
         },

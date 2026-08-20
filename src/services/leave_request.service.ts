@@ -269,6 +269,7 @@ export class LeaveRequestService {
         status: step.status as LeaveApprovalStepStatus,
         mergedFromKinds: step.mergedFromKinds as LeaveApprovalNodeKind[],
         escalatedReason: step.escalatedReason,
+        escalatedFromKind: step.escalatedFromKind as LeaveApprovalNodeKind | null,
         decidedAt: step.decidedAt ? step.decidedAt.toISOString() : null,
         comment: step.comment,
       })),

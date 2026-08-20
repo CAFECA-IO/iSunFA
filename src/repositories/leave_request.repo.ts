@@ -95,6 +95,7 @@ const DETAIL_INCLUDE = {
       status: true,
       mergedFromKinds: true,
       escalatedReason: true,
+      escalatedFromKind: true,
       decidedAt: true,
       comment: true,
       pendingKey: true,
@@ -411,6 +412,8 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
               approverJobTitle: step.approver.jobTitle,
               mergedFromKinds: step.mergedFromKinds,
               escalatedReason: step.escalatedReason,
+              // Info: (20260820 - Julian) 畫面用的結構化版本（review 第 7 輪 M27）
+              escalatedFromKind: step.escalatedFromKind,
               status: LeaveApprovalStepStatus.PENDING,
               // Info: (20260817 - Julian) 只有第一關是「當前待簽」，其餘留 null（partial unique）
               pendingKey: step.order === 0 ? requestId : null,

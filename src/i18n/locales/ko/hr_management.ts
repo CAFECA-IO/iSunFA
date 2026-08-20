@@ -604,6 +604,8 @@ export const hrManagement = {
       "이 사람의 기록을 볼 권한이 없습니다.",
     error_no_employee_record:
       "계정이 이 장부의 직원과 연결되어 있지 않습니다. 인사팀에 등록을 요청하세요.",
+    error_range_too_large:
+      "조회 기간이 너무 깁니다. 범위를 줄여 다시 시도해 주세요.",
   },
   attendance_result: {
     title: "근태 현황과 이상",
@@ -864,7 +866,26 @@ export const hrManagement = {
     node_hr: "인사",
     node_specific: "지정 결재자",
     chain_empty: "결재선이 없습니다",
-    chain_escalated: "자동 상신: {{reason}}",
+    chain_escalated_same_kind:
+      "자동 재배정: 이 단계의 {{kind}}이(가) 본인이어서 다른 분으로 변경되었습니다",
+    chain_escalated_higher:
+      "자동 상향: 이 단계의 {{from}}이(가) 본인이어서 {{to}}(으)로 상향되었습니다",
+    unresolved_no_matching_rule:
+      "이 일수에 해당하는 결재 규칙이 없습니다",
+    unresolved_empty_rule_steps:
+      "해당 결재 규칙에 결재 단계가 설정되어 있지 않습니다",
+    unresolved_no_direct_manager:
+      "직속 상급자가 등록되어 있지 않습니다",
+    unresolved_no_department_manager:
+      "상위 부서에 책임자가 등록되어 있지 않습니다",
+    unresolved_no_hr:
+      "이 장부에 인사 관리자가 없습니다",
+    unresolved_no_other_hr:
+      "유일한 인사 관리자가 본인이어서 결재할 수 있는 다른 분이 없습니다",
+    unresolved_specific_employee_missing:
+      "지정된 결재자가 퇴사했거나 이 장부에 없습니다",
+    unresolved_malformed_rule_threshold:
+      "결재 규칙의 일수 기준이 대조 가능한 십진수가 아닙니다",
 
     error_load: "불러오지 못했습니다",
     error_preview: "미리 계산에 실패했습니다",

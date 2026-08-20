@@ -102,7 +102,7 @@ describe("共用文案的覆蓋範圍", () => {
    * 刪掉一筆會紅（那正是實測發現沒人守的那個退化），多加一筆也會紅，
    * 而多加時請一併更新這裡並確認五個語系都有字典（由 i18n 掃描接手）。
    */
-  it("共用表恰好覆蓋這五個錯誤碼", () => {
+  it("共用表恰好覆蓋這六個錯誤碼", () => {
     expect(Object.keys(SHARED_ATTENDANCE_ERROR_I18N_KEY).sort()).toEqual(
       [
         API_ERRORS.IS_RATE_LIMITED.code,
@@ -117,6 +117,16 @@ describe("共用文案的覆蓋範圍", () => {
         API_ERRORS.FO_HR_FUNCTION_REQUIRED.code,
         API_ERRORS.FO_NO_PERMISSION_TO_VIEW_THIS.code,
         API_ERRORS.NF_EMPLOYEE_FOR_USER.code,
+        /**
+         * Info: (20260820 - Julian) 區間上限（review 第 7 輪 M26）。
+         *
+         * 三支 service 會丟它：出勤結果、排班、加班的「未核准時段」——
+         * 三者都是畫面上的日期選擇器，而使用者要做的事只有一件（縮短區間）。
+         * 它先前被歸在假勤覆蓋測試的豁免名單，理由寫「簽到模組的缺口」，
+         * 而那個推論漏了加班那一支。放共用表，同 `NF_EMPLOYEE_FOR_USER` 的理由：
+         * 跨模組、同一個判準在三個地方各擋一次。
+         */
+        API_ERRORS.VA_ATTENDANCE_RANGE_TOO_LARGE.code,
       ].sort(),
     );
   });

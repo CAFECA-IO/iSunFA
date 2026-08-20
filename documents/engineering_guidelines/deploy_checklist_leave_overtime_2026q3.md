@@ -341,6 +341,7 @@ SELECT account_book_id, code, carry_forward_months
 | `leave_approval_step` | `chain_version` | **新增，NOT NULL** | `LEAVE_APPROVAL_CHAIN_VERSION` 的註解寫著「並記於快照」，而它零引用（M15）。對照組 `leave_day.entitlement_engine_version` 與 `overtime_segment.engine_version` 都落地了 |
 | `leave_approval_step` | `decided_by_employee_id` / `_no` / `_name` | 新增，nullable | `HR` 關改成任一位 `HR_ADMIN` 都接得了（M19），「應該簽的人」與「真的簽的人」會不一樣 |
 | `leave_ledger_entry` | `actor_employee_no` / `actor_name` | 新增，nullable | `actor_employee_id` 是 `SetNull`，離職後帳本查不出操作者（M16） |
+| `leave_approval_step` | `escalated_from_kind` | 新增，nullable | 上升的說明原本是一句開發者英文，直接印給使用者（M27）。既有列為 null —— **不回填**：把那句英文解析回節點型別是猜的，猜錯會在簽核紀錄上留下一個錯的事實 |
 | `leave_request` | `proof_document_id` | **移除** | 零引用、無 `@relation`、無租戶檢查（M18）。見下方 |
 
 ### `chain_version` 是 NOT NULL —— 既有列要先回填

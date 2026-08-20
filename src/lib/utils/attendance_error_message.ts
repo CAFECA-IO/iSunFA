@@ -56,6 +56,19 @@ export const SHARED_ATTENDANCE_ERROR_I18N_KEY: Readonly<
    */
   [API_ERRORS.NF_EMPLOYEE_FOR_USER.code]:
     "hr_management.attendance_common.error_no_employee_record",
+  /**
+   * Info: (20260820 - Julian) 查詢區間超過上限（review 第 7 輪 M26）。
+   *
+   * 三支 service 會丟它：出勤結果、排班、以及加班的「未核准時段」。
+   * 三者都是**畫面上的日期選擇器**丟出來的 —— 使用者往前拉了太多天，
+   * 而他要做的事只有一件：把區間縮短。落到各頁的 fallback（「載入失敗」）
+   * 會讓他以為是系統壞了，於是重整、重按，而每一次都會再失敗一次。
+   *
+   * 放在共用表而不是三張模組表：它與模組無關，是同一個判準
+   * （`DEMO_ATTENDANCE_MAX_RANGE_DAYS`）在三個地方各擋一次。
+   */
+  [API_ERRORS.VA_ATTENDANCE_RANGE_TOO_LARGE.code]:
+    "hr_management.attendance_common.error_range_too_large",
 };
 
 /**

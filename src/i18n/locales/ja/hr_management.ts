@@ -603,6 +603,8 @@ export const hrManagement = {
       "この方の記録を閲覧する権限がありません。",
     error_no_employee_record:
       "お使いのアカウントはこの帳簿の従業員と紐づいていません。人事に登録を依頼してください。",
+    error_range_too_large:
+      "指定された期間が長すぎます。範囲を短くしてもう一度お試しください。",
   },
   attendance_result: {
     title: "勤怠一覧と異常",
@@ -861,7 +863,26 @@ export const hrManagement = {
     node_hr: "人事",
     node_specific: "指名承認者",
     chain_empty: "承認経路がありません",
-    chain_escalated: "自動的に上位へ：{{reason}}",
+    chain_escalated_same_kind:
+      "自動再割当：この段階の{{kind}}がご本人のため、別の方に変更されました",
+    chain_escalated_higher:
+      "自動エスカレーション：この段階の{{from}}がご本人のため、{{to}}に引き上げられました",
+    unresolved_no_matching_rule:
+      "この日数に該当する承認ルールがありません",
+    unresolved_empty_rule_steps:
+      "該当する承認ルールに承認段階が設定されていません",
+    unresolved_no_direct_manager:
+      "直属の上長が登録されていません",
+    unresolved_no_department_manager:
+      "上位のいずれの部署にも責任者が登録されていません",
+    unresolved_no_hr:
+      "この帳簿に人事管理者がいません",
+    unresolved_no_other_hr:
+      "唯一の人事管理者がご本人のため、他に承認できる方がいません",
+    unresolved_specific_employee_missing:
+      "指名された承認者は退職済み、またはこの帳簿に存在しません",
+    unresolved_malformed_rule_threshold:
+      "承認ルールの日数しきい値が照合可能な十進数ではありません",
 
     error_load: "読み込みに失敗しました",
     error_preview: "試算に失敗しました",

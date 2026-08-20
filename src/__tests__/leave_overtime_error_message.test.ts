@@ -320,7 +320,16 @@ const EXEMPT: Readonly<Record<string, string>> = {
   NF_EMPLOYEE: "簽到／人事設定畫面的錯誤；該模組尚無對照表（見上方 ToDo）",
   NF_SHIFT_PATTERN: "排班設定畫面的錯誤；同上",
   CF_SCHEDULE_DAY_CONFLICT: "排班設定畫面的錯誤；同上",
-  VA_ATTENDANCE_RANGE_TOO_LARGE: "出勤查詢的錯誤；同上",
+  /**
+   * Info: (20260820 - Julian) 這一個已經移出上面那組（review 第 7 輪 M26）。
+   *
+   * 上面那段「簽到模組的缺口，不是假勤的」對它**不成立**：加班的
+   * `listUnapproved` 也會丟它，而那是本模組的畫面
+   * （簽核頁的「未核准時段」日期選擇器）。它現在登記在
+   * `SHARED_ATTENDANCE_ERROR_I18N_KEY` —— 與 `NF_EMPLOYEE_FOR_USER`
+   * 同一張表、同一個理由：跨模組、同一個判準在三個地方各擋一次。
+   */
+  VA_ATTENDANCE_RANGE_TOO_LARGE: "全模組共用表已登記（三個模組共用同一個區間上限）",
 };
 
 /**

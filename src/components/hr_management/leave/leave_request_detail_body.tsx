@@ -260,7 +260,7 @@ const LeaveRequestDetailBody: FC<{ requestId: string }> = ({ requestId }) => {
               approverJobTitle: step.approverJobTitle,
               status: step.status,
               mergedFromKinds: step.mergedFromKinds,
-              escalatedReason: step.escalatedReason,
+              escalatedFromKind: step.escalatedFromKind,
             }))}
           />
         </div>

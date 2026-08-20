@@ -3792,8 +3792,26 @@ model LeaveApprovalStep {
   // Info: (20260817 - Julian) 相鄰去重時被併掉的節點型別（例如直屬主管恰好就是部門經理）。
   // Info: (20260817 - Julian) 讓「為什麼這張單只有兩關」查得到，而不是看起來像少簽了一關
   mergedFromKinds LeaveApprovalNodeKind[] @map("merged_from_kinds")
-  // Info: (20260817 - Julian) 節點解析出申請人本人時自動上升的理由（老闆也要能請假，不 throw）
+  /**
+   * Info: (20260817 - Julian) 節點解析出申請人本人時自動上升的理由（老闆也要能請假，不 throw）。
+   *
+   * Info: (20260820 - Julian) ⚠️ 這是**開發者英文**，不上畫面（review 第 7 輪 M27）：
+   * `"HR resolved to the applicant; escalated to DEPARTMENT_MANAGER"`。
+   * 它給 log 與勞動檢查看 —— 畫面要顯示的是下面那一欄。
+   */
   escalatedReason String?                 @map("escalated_reason")
+  /**
+   * Info: (20260820 - Julian) 上升前**原本**是哪一種節點（review 第 7 輪 M27）。
+   *
+   * 與這一關最終的 `nodeKind` 比對即得出兩種情形：
+   * 相同 → 同型別換了另一個人；不同 → 沿階梯上升到 `nodeKind`。
+   * 畫面照這個分岔挑一句可翻譯的文案，不再把英文敘述原封不動印出來。
+   *
+   * Nullable：多數節點沒有上升過。既有列也為 null —— 它們的 `escalatedReason`
+   * 仍在，只是畫面對舊列顯示不出結構化的說明（不回填：那句英文解析回
+   * 節點型別是猜的，而猜錯會在簽核紀錄上留下一個錯的事實）。
+   */
+  escalatedFromKind LeaveApprovalNodeKind? @map("escalated_from_kind")
 
   decidedAt DateTime? @map("decided_at")
   comment   String?

@@ -100,6 +100,7 @@ export function resolveApprovalChain(
       approver: outcome.approver,
       mergedFromKinds: [],
       escalatedReason: outcome.escalatedReason,
+      escalatedFromKind: outcome.escalatedFromKind,
     });
   }
 
@@ -142,6 +143,7 @@ type INodeOutcome =
       nodeKind: LeaveApprovalNodeKind;
       approver: IApproverIdentity;
       escalatedReason: string | null;
+      escalatedFromKind: LeaveApprovalNodeKind | null;
     }
   | { ok: false; reason: LeaveApprovalUnresolvedReason; detail: string };
 
@@ -178,6 +180,8 @@ const resolveNode = (
       sameKind.employeeId,
       org,
       `${nodeKind} resolved to the applicant; another approver of the same kind was selected`,
+      // Info: (20260820 - Julian) 同型別換人：from === to（review 第 7 輪 M27）
+      nodeKind,
     );
   }
 
@@ -198,6 +202,8 @@ const resolveNode = (
       next.employeeId,
       org,
       `${nodeKind} resolved to the applicant; escalated to ${higher}`,
+      // Info: (20260820 - Julian) 上升：from 是原本那一關，to 是 `higher`
+      nodeKind,
     );
   }
 
@@ -275,11 +281,27 @@ const candidateFor = (
   }
 };
 
+/**
+ * Info: (20260820 - Julian) `escalatedFromKind` 是給**畫面**看的，
+ * `escalatedReason` 是給**稽核與 log** 看的（review 第 7 輪 M27）。
+ *
+ * 原本只有後者，而它是一句用樣板字串拼出來的開發者英文
+ * （`"HR resolved to the applicant; escalated to DEPARTMENT_MANAGER"`）。
+ * 畫面把它原封不動印出來，於是韓文使用者看到
+ * 「자동 상향: HR resolved to the applicant; escalated to …」——
+ * 而 `leave_error_message.ts` 的檔頭才剛把這件事寫成規矩。
+ *
+ * 一句英文沒有辦法翻譯，因為它不是資料、是敘述。所以改成傳一個**節點型別**：
+ * 畫面拿它與這一關最終的 `nodeKind` 比對，兩者相同即「同型別換人」、
+ * 不同即「上升」，各配一句可翻譯的文案。原本那句英文留著不刪 ——
+ * 它在 log 與勞檢時仍然是最好讀的一行。
+ */
 const identify = (
   nodeKind: LeaveApprovalNodeKind,
   employeeId: string,
   org: IApprovalOrgSnapshot,
   escalatedReason: string | null,
+  escalatedFromKind: LeaveApprovalNodeKind | null = null,
 ): INodeOutcome => {
   const approver = org.directory[employeeId];
   if (approver === undefined) {
@@ -289,7 +311,7 @@ const identify = (
       detail: `approver ${employeeId} is not in the directory (left the company?)`,
     };
   }
-  return { ok: true, nodeKind, approver, escalatedReason };
+  return { ok: true, nodeKind, approver, escalatedReason, escalatedFromKind };
 };
 
 /**

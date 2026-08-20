@@ -22,6 +22,7 @@ import { errorI18nKeyOf } from "@/lib/utils/attendance_error_message";
 import { LEAVE_ERROR_I18N_KEY } from "@/lib/utils/leave_error_message";
 import HrFormSheet from "@/components/hr_management/hr_form_sheet";
 import { IEnvelopeLike, request } from "@/lib/utils/request";
+import { LEAVE_UNRESOLVED_REASON_I18N_KEY } from "@/lib/utils/leave_chain_message";
 import { useTranslation } from "@/i18n/i18n_context";
 
 /**
@@ -617,8 +618,16 @@ const MyLeavePageBody: FC = () => {
 
             {preview.unresolvedReason ? (
               <p className="text-sm text-rose-700">
+                {/**
+                  * Info: (20260820 - Julian) 成因也要翻譯（review 第 7 輪 M27）。
+                  *
+                  * 這裡原本直接插 `preview.unresolvedReason` —— 一個 enum 值，
+                  * 於是使用者讀到「簽核流程展不開（NO_DEPARTMENT_MANAGER）」。
+                  */}
                 {t("hr_management.leave.preview_chain_unresolved", {
-                  reason: preview.unresolvedReason,
+                  reason: t(
+                    LEAVE_UNRESOLVED_REASON_I18N_KEY[preview.unresolvedReason],
+                  ),
                 })}
               </p>
             ) : (
@@ -636,7 +645,7 @@ const MyLeavePageBody: FC = () => {
                     approverJobTitle: step.approver.jobTitle,
                     status: "PENDING" as never,
                     mergedFromKinds: step.mergedFromKinds,
-                    escalatedReason: step.escalatedReason,
+                    escalatedFromKind: step.escalatedFromKind,
                   }))}
                 />
               </div>

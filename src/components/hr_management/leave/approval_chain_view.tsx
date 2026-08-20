@@ -15,7 +15,12 @@ export interface IChainStepView {
   approverJobTitle: string | null;
   status: LeaveApprovalStepStatus;
   mergedFromKinds: LeaveApprovalNodeKind[];
-  escalatedReason: string | null;
+  /**
+   * Info: (20260820 - Julian) 上升前原本是哪一關（review 第 7 輪 M27）。
+   * `escalatedReason`（開發者英文）**不再進到這個型別** ——
+   * 它進不來，就沒有人會不小心把它印出去。
+   */
+  escalatedFromKind: LeaveApprovalNodeKind | null;
 }
 
 const NODE_KIND_I18N_KEY: Readonly<Record<LeaveApprovalNodeKind, string>> = {
@@ -104,11 +109,28 @@ const ApprovalChainView: FC<{ steps: IChainStepView[] }> = ({ steps }) => {
                 ))}
               </div>
 
-              {step.escalatedReason && (
+              {/**
+                * Info: (20260820 - Julian) 兩種情形各一句可翻譯的文案
+                * （review 第 7 輪 M27）。
+                *
+                * 這裡原本印的是 `escalatedReason` —— 一句用樣板字串拼出來的
+                * 開發者英文（`"HR resolved to the applicant; escalated to
+                * DEPARTMENT_MANAGER"`）。韓文使用者看到的是
+                * 「자동 상향: HR resolved to the applicant; escalated to …」，
+                * 而 `leave_error_message.ts` 的檔頭才剛把這件事寫成規矩。
+                *
+                * `from === nodeKind` 表示同型別換了另一個人；不同表示上升。
+                */}
+              {step.escalatedFromKind !== null && (
                 <div className="mt-1 text-xs text-amber-600">
-                  {t("hr_management.leave.chain_escalated", {
-                    reason: step.escalatedReason,
-                  })}
+                  {step.escalatedFromKind === step.nodeKind
+                    ? t("hr_management.leave.chain_escalated_same_kind", {
+                        kind: t(NODE_KIND_I18N_KEY[step.escalatedFromKind]),
+                      })
+                    : t("hr_management.leave.chain_escalated_higher", {
+                        from: t(NODE_KIND_I18N_KEY[step.escalatedFromKind]),
+                        to: t(NODE_KIND_I18N_KEY[step.nodeKind]),
+                      })}
                 </div>
               )}
             </div>

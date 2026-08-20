@@ -310,6 +310,22 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
 
       const cashOutEventIds: string[] = [];
       let grantCount = 0;
+      /**
+       * Info: (20260820 - Julian) 操作者查一次，且在**任何寫入之前**
+       * （review 第 6 輪 M16）。
+       *
+       * 第一版展開在每一筆分錄的 `data` 裡，於是它排在
+       * `overtimeSegment.create` 與 `leaveGrant.create` **之後** ——
+       * 操作者不屬於這個帳本時，例外會在已經寫進一段分段與一筆補休批次
+       * 之後才丟。正式環境靠交易回滾收拾，但「先寫再檢查」的順序
+       * 不該靠回滾才正確。
+       *
+       * 只有補休折換會寫帳本（折現寫的是 `LeaveCashOutEvent`，沒有操作者欄位），
+       * 因此**發錢的單子不查這一次** —— 那是最常見的路徑，替它多打一次
+       * 查詢只為了一個不會用到的值。
+       */
+      const actor =
+        params.compensatory === null ? null : await ledgerActorOf(tx, params);
 
       for (const segment of params.segments) {
         const stored = await tx.overtimeSegment.create({
@@ -324,6 +340,19 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
         });
 
         if (params.compensatory !== null) {
+          /**
+           * Info: (20260820 - Julian) 走到這裡 `actor` 必然非 null（它與
+           * `params.compensatory` 由同一個條件決定），但用 `?? {}` 帶過會讓
+           * 那個「必然」在型別上消失 —— 而它一旦不成立，症狀是一筆**查不出
+           * 操作者的補休入帳**，沒有任何錯誤訊息。寧可在這裡大聲壞掉。
+           */
+          if (actor === null) {
+            throw new OvertimeRequestInvariantError(
+              "a compensatory conversion reached the ledger without a resolved actor",
+              `requestId=${params.requestId}`,
+            );
+          }
+
           const { leavePolicyId, dayEquivalentMinutes, expiresOn } =
             params.compensatory;
           const grantedDays = deriveCompensatoryGrantDays({
@@ -379,7 +408,7 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
               deltaMinutes: segment.minutes,
               grantBalanceAfterMinutes: segment.minutes,
               // Info: (20260820 - Julian) 操作者三欄一起落地（review 第 6 輪 M16）
-              ...(await ledgerActorOf(tx, params)),
+              ...actor,
               idempotencyKey: buildOvertimeGrantIdempotencyKey(stored.id),
             },
           });

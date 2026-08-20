@@ -83,8 +83,13 @@ export interface IResolvedApprovalStep {
    * 讓「為什麼這張單只有兩關」查得到，而不是看起來像少簽了一關。
    */
   mergedFromKinds: LeaveApprovalNodeKind[];
-  /** Info: (20260817 - Julian) 節點解析出申請人本人時自動上升的理由。null 表未上升 */
+  /**
+   * Info: (20260817 - Julian) 節點解析出申請人本人時自動上升的理由。null 表未上升。
+   * ⚠️ 開發者英文，**不上畫面**（review 第 7 輪 M27）。
+   */
   escalatedReason: string | null;
+  /** Info: (20260820 - Julian) 上升前原本是哪一種節點。畫面照它與 `nodeKind` 的異同挑文案 */
+  escalatedFromKind: LeaveApprovalNodeKind | null;
 }
 
 /**
@@ -490,6 +495,7 @@ export interface ILeaveRequestDetailRow {
     status: string;
     mergedFromKinds: string[];
     escalatedReason: string | null;
+    escalatedFromKind: string | null;
     decidedAt: Date | null;
     comment: string | null;
     /** Info: (20260817 - Julian) 非 null 即為「當前待簽」（partial unique 的語意） */
@@ -512,7 +518,9 @@ export interface ILeaveApprovalStepDetail {
   approverJobTitle: string | null;
   status: LeaveApprovalStepStatus;
   mergedFromKinds: LeaveApprovalNodeKind[];
+  /** Info: (20260820 - Julian) 開發者英文，**不上畫面**（review 第 7 輪 M27） */
   escalatedReason: string | null;
+  escalatedFromKind: LeaveApprovalNodeKind | null;
   decidedAt: string | null;
   comment: string | null;
 }

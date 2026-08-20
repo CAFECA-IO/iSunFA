@@ -4,6 +4,11 @@ import { FC } from "react";
 import { AlertTriangle, FileCheck2, FileQuestion } from "lucide-react";
 import { OVERTIME_TIER_I18N_KEY } from "@/constants/overtime";
 import { IOvertimeSummaryView } from "@/interfaces/overtime";
+import {
+  ceilRatioText,
+  floorRatioText,
+  MINUTES_PER_HOUR,
+} from "@/lib/utils/hr_quantity_display";
 import { useTranslation } from "@/i18n/i18n_context";
 
 /**
@@ -25,8 +30,26 @@ const OvertimeSummaryCards: FC<{ summary: IOvertimeSummaryView }> = ({
 }) => {
   const { t } = useTranslation();
 
-  // Info: (20260818 - Julian) 分鐘轉小時只在顯示層做；一位小數足以表達「還剩 3.5 小時」
-  const hours = (minutes: number): string => (minutes / 60).toFixed(1);
+  /**
+   * Info: (20260818 - Julian) 分鐘轉小時只在顯示層做；一位小數足以表達「還剩 3.5 小時」。
+   *
+   * Info: (20260820 - Julian) 但**方向要分開**（review 第 7 輪 M28）。
+   * 原本一律 `toFixed(1)`（四捨五入）：59 分鐘的剩餘額度會顯示成
+   * 「還可加班 1.0 小時」，而使用者照著送出會被上限擋下 ——
+   * 那正是這幾張卡片存在的理由（檔頭：「不然他只會收到一個被拒絕的結果」）。
+   */
+
+  /** Info: (20260820 - Julian) 「已經用掉多少」→ 進位。少報會讓人以為還有空間 */
+  const usedHours = (minutes: number): string =>
+    ceilRatioText(minutes, MINUTES_PER_HOUR) ?? "—";
+
+  /**
+   * Info: (20260820 - Julian) 「還可以用多少」與「上限是多少」→ 捨去。
+   * 兩者多報的後果相同：使用者以為還能加，而核准端會擋下。
+   */
+  const availableHours = (minutes: number): string =>
+    floorRatioText(minutes, MINUTES_PER_HOUR) ?? "—";
+
   const monthlyLeft = summary.monthlyLimitMinutes - summary.monthlyMinutes;
 
   return (
@@ -36,14 +59,14 @@ const OvertimeSummaryCards: FC<{ summary: IOvertimeSummaryView }> = ({
           {t("hr_management.overtime.summary_monthly")}
         </div>
         <div className="mt-1 text-2xl font-semibold text-gray-900 tabular-nums">
-          {hours(summary.monthlyMinutes)}
+          {usedHours(summary.monthlyMinutes)}
           <span className="ml-1 text-sm font-normal text-gray-500">
             {t("hr_management.overtime.unit_hour")}
           </span>
         </div>
         <div className="mt-1 text-xs text-gray-400">
           {t("hr_management.overtime.summary_limit", {
-            hours: hours(summary.monthlyLimitMinutes),
+            hours: availableHours(summary.monthlyLimitMinutes),
           })}
         </div>
         {/**
@@ -57,7 +80,7 @@ const OvertimeSummaryCards: FC<{ summary: IOvertimeSummaryView }> = ({
           {monthlyLeft < 0
             ? t("hr_management.overtime.summary_over_limit")
             : t("hr_management.overtime.summary_remaining", {
-                hours: hours(monthlyLeft),
+                hours: availableHours(monthlyLeft),
               })}
         </div>
       </div>
@@ -67,7 +90,7 @@ const OvertimeSummaryCards: FC<{ summary: IOvertimeSummaryView }> = ({
           {t("hr_management.overtime.summary_quarterly")}
         </div>
         <div className="mt-1 text-2xl font-semibold text-gray-900 tabular-nums">
-          {hours(summary.quarterlyMinutes)}
+          {usedHours(summary.quarterlyMinutes)}
           <span className="ml-1 text-sm font-normal text-gray-500">
             {t("hr_management.overtime.unit_hour")}
           </span>
@@ -84,7 +107,7 @@ const OvertimeSummaryCards: FC<{ summary: IOvertimeSummaryView }> = ({
           {summary.quarterlyLimitMinutes === null
             ? t("hr_management.overtime.summary_quarterly_none")
             : t("hr_management.overtime.summary_limit", {
-                hours: hours(summary.quarterlyLimitMinutes),
+                hours: availableHours(summary.quarterlyLimitMinutes),
               })}
         </div>
       </div>
@@ -109,7 +132,7 @@ const OvertimeSummaryCards: FC<{ summary: IOvertimeSummaryView }> = ({
                   {t(OVERTIME_TIER_I18N_KEY[entry.tier])}
                 </span>
                 <span className="font-medium text-gray-800 tabular-nums">
-                  {hours(entry.minutes)}
+                  {usedHours(entry.minutes)}
                   <span className="ml-0.5 text-xs font-normal text-gray-400">
                     {t("hr_management.overtime.unit_hour")}
                   </span>
@@ -124,14 +147,14 @@ const OvertimeSummaryCards: FC<{ summary: IOvertimeSummaryView }> = ({
             <FileCheck2 className="size-3.5 shrink-0 text-emerald-500" />
             {t("hr_management.overtime.summary_punch_backed")}
             <span className="ml-auto font-medium tabular-nums">
-              {hours(summary.punchBackedMinutes)}
+              {usedHours(summary.punchBackedMinutes)}
             </span>
           </span>
           <span className="flex items-center gap-1.5 text-gray-600">
             <FileQuestion className="size-3.5 shrink-0 text-amber-500" />
             {t("hr_management.overtime.summary_declared")}
             <span className="ml-auto font-medium tabular-nums">
-              {hours(summary.declaredMinutes)}
+              {usedHours(summary.declaredMinutes)}
             </span>
           </span>
           {summary.declaredMinutes > 0 && (

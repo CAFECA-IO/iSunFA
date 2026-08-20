@@ -50,6 +50,7 @@ import { leaveApprovalRuleRepo } from "@/repositories/leave_approval_rule.repo";
 import { leaveAccrualContextRepo } from "@/repositories/leave_accrual_context.repo";
 import { leaveBalanceService } from "@/services/leave_balance.service";
 import { LEAVE_ENTITLEMENT_ENGINE_VERSION } from "@/lib/leave_entitlement_rules";
+import { LEAVE_APPROVAL_CHAIN_VERSION } from "@/lib/leave_approval_chain";
 import { hrManagement as hrManagementZhTw } from "@/i18n/locales/zh_tw/hr_management";
 
 /**
@@ -1598,6 +1599,16 @@ async function main(): Promise<void> {
           create: {
             order: 1,
             nodeKind: LeaveApprovalNodeKind.DIRECT_MANAGER,
+            /**
+             * Info: (20260820 - Julian) 固化數值就要固化它的依據
+             * （接線守則 §3.1，review 第 6 輪 M15）。
+             *
+             * 這一行是 `chainVersion` 設成 NOT NULL 的用意本身：seed **繞過
+             * 所有 service 與 repository**，直接寫 `leaveApprovalStep`。
+             * 欄位若給了 default，這裡漏填會靜默落地一個猜的版本號；
+             * 沒有 default，它在編譯期就攔下來（而它真的攔到了）。
+             */
+            chainVersion: LEAVE_APPROVAL_CHAIN_VERSION,
             approverEmployeeId: approver.id,
             approverEmployeeNo: approverPerson.no,
             approverName: approverPerson.name,
@@ -1605,6 +1616,20 @@ async function main(): Promise<void> {
             status: LeaveApprovalStepStatus.APPROVED,
             mergedFromKinds: [LeaveApprovalNodeKind.DEPARTMENT_MANAGER],
             decidedAt: at(DEMO_DATE, 8, 0),
+            /**
+             * Info: (20260820 - Julian) 決行者三欄（review 第 6 輪 M19）。
+             *
+             * 型別上可以省略（三欄都是 nullable），但省略會做出一種**真實資料
+             * 不會有的形狀**：一張 `status = APPROVED`、`decidedAt` 有值、
+             * 卻查不出是誰按的單子（checklist §1.4）。demo 資料要長得像真的，
+             * 否則照它寫的畫面在正式資料上會走到沒被想過的分支。
+             *
+             * 這一關是直屬主管，`approver` 就是實際決行者 —— 兩者相同是常態，
+             * 只有 `HR` 那一池才會不同。
+             */
+            decidedByEmployeeId: approver.id,
+            decidedByEmployeeNo: approverPerson.no,
+            decidedByName: approverPerson.name,
           },
         },
       },

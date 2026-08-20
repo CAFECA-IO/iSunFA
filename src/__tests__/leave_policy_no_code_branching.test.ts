@@ -240,6 +240,12 @@ describe("T19：規則引擎不得對 LeavePolicy.code 分支（ADR 021 §2.1）
      * 它們是錯誤碼 → i18n key 的對照，不碰假別代號，因此本來就乾淨 ——
      * 列在這裡是為了讓「牆管到哪裡」這件事寫得出來。
      */
+    /**
+     * Info: (20260820 - Julian) 展不開的成因 → i18n key（review 第 7 輪 M27）。
+     * 與下面兩支同型：對照表，不碰假別代號。它進到這道牆裡是自動的
+     * （檔名符合 `leave_*`），而這一條名單讓那件事說得出來。
+     */
+    join("src", "lib", "utils", "leave_chain_message.ts"),
     join("src", "lib", "utils", "leave_error_message.ts"),
     join("src", "lib", "utils", "overtime_error_message.ts"),
     join("src", "services", "leave.service.ts"),
@@ -254,7 +260,7 @@ describe("T19：規則引擎不得對 LeavePolicy.code 分支（ADR 021 §2.1）
     join("src", "services", "overtime_visibility.ts"),
   ];
 
-  it("掃描根確實掃到這 16 支（否則下面那條永遠是綠的）", () => {
+  it("掃描根確實掃到這 17 支（否則下面那條永遠是綠的）", () => {
     expect(files.map((path) => relative(process.cwd(), path))).toEqual(
       EXPECTED_FILES,
     );

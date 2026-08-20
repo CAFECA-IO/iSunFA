@@ -591,6 +591,8 @@ export const hrManagement = {
     error_no_permission_to_view: "你没有查看这个人纪录的权限。",
     error_no_employee_record:
       "你的帐号尚未对应到这个帐本里的员工。请洽人资建立。",
+    error_range_too_large:
+      "查询的日期区间太长，请缩短范围后再试一次。",
   },
   attendance_result: {
     title: "出勤总览与异常",
@@ -834,7 +836,26 @@ export const hrManagement = {
     node_hr: "人资",
     node_specific: "指定签核者",
     chain_empty: "尚无签核链",
-    chain_escalated: "自动上升：{{reason}}",
+    chain_escalated_same_kind:
+      "自动改派：这一关的{{kind}}是你本人，已改由另一位担任",
+    chain_escalated_higher:
+      "自动上升：这一关的{{from}}是你本人，已上升由{{to}}签核",
+    unresolved_no_matching_rule:
+      "没有任何签核规则涵盖这个天数",
+    unresolved_empty_rule_steps:
+      "命中的签核规则没有设定任何关卡",
+    unresolved_no_direct_manager:
+      "你的资料上没有直属主管",
+    unresolved_no_department_manager:
+      "你所属部门往上都没有设定主管",
+    unresolved_no_hr:
+      "这个帐本没有人资管理员",
+    unresolved_no_other_hr:
+      "你是唯一的人资管理员，链上没有其他人可以签",
+    unresolved_specific_employee_missing:
+      "指定的签核者已离职或不在这个帐本",
+    unresolved_malformed_rule_threshold:
+      "某一条签核规则的天数门槛不是可对帐的十进位数",
 
     error_load: "加载失败",
     error_preview: "试算失败",

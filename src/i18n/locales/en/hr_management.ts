@@ -614,6 +614,8 @@ export const hrManagement = {
       "You do not have permission to view this person's record.",
     error_no_employee_record:
       "Your account is not linked to an employee in this account book yet. Ask HR to add you.",
+    error_range_too_large:
+      "That date range is too long. Please pick a shorter one and try again.",
   },
   attendance_result: {
     title: "Attendance overview and exceptions",
@@ -875,7 +877,26 @@ export const hrManagement = {
     node_hr: "HR",
     node_specific: "Named approver",
     chain_empty: "No approval chain",
-    chain_escalated: "Escalated automatically: {{reason}}",
+    chain_escalated_same_kind:
+      "Auto-reassigned: you are the {{kind}} for this step, so another one was chosen.",
+    chain_escalated_higher:
+      "Auto-escalated: you are the {{from}} for this step, so it went up to the {{to}}.",
+    unresolved_no_matching_rule:
+      "no approval rule covers a request of this length",
+    unresolved_empty_rule_steps:
+      "the matching approval rule has no approval steps",
+    unresolved_no_direct_manager:
+      "you have no direct manager on record",
+    unresolved_no_department_manager:
+      "no department above you has a manager on record",
+    unresolved_no_hr:
+      "this account book has no HR administrator",
+    unresolved_no_other_hr:
+      "you are the only HR administrator, and no one else can approve this",
+    unresolved_specific_employee_missing:
+      "the named approver has left or is not in this account book",
+    unresolved_malformed_rule_threshold:
+      "an approval rule has a day threshold that cannot be read as a plain decimal",
 
     error_load: "Failed to load",
     error_preview: "Preview failed",
