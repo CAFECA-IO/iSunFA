@@ -763,12 +763,28 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 | Method + Path | 用途 | 權限 |
 |---|---|---|
 | `GET /subscription` | 方案、計費週期、雙視窗剩餘額度與 `resetAt`、`faithTokensPerCredit` 費率（供未來揭露介面用，§5.3） | 成員 |
-| `PUT /subscription` | 變更方案（建 `BILLING_SUBSCRIBE` 訂單，`data.teamId`） | OWNER |
+| `PUT /subscription` | 變更方案：**升級**建 `BILLING_SUBSCRIBE` 訂單立即生效；**降級**只排程（`pendingPlanId`），當期屆滿才生效（§7.1） | OWNER |
 | `GET /wallet` | 池餘額 + 自己的分配餘額（管理者另含全員分配總表） | 成員 |
 | `POST /wallet/purchase` | 購買點數入池 | OWNER / ADMIN |
 | `GET /wallet/allocations` | 全員分配清單 | OWNER / ADMIN |
 | `POST /wallet/allocations` | 分配 / 收回 | OWNER / ADMIN |
 | `GET /wallet/ledger` | 流水帳（分頁，`sortSpecSchema`） | OWNER / ADMIN |
+
+### 7.1 降級不期中生效（2026-08-20 修正）
+
+**先前的行為與對外承諾相反。** `PUT /subscription` 對 free 是「免付款直接降級」——當場把 `planId` 改成 free，額度立刻掉到免費版；而《退款政策》§2.1 寫的是「一旦取消或降級，您的變更將於當前結算週期結束後自動生效」，並明言不按比例退費。**收了整期的錢、當場收回權益**，兩者不能並存，而承諾的那一側才是對的。付費→付費的降級更糟：走建單路徑會再收一次錢，並把週期從當下重新起算。
+
+| 變更 | 生效時點 | 收費 | 實作 |
+|---|---|---|---|
+| 升級（含同方案續購／改計費週期） | 立即 | 立即建單 | 原路徑不變 |
+| 降級為較低的付費方案 | 當期屆滿 | 不收費；期末續訂以新方案計價 | `pendingPlanId` + `autoRenew` 維持 true，續訂 worker 讀 `pendingPlanId` |
+| 降級為 free | 當期屆滿 | 不收費 | `pendingPlanId = free` + `autoRenew = false`，期末由 `expireOverdue` 落地 |
+| 降級後改回原方案 | 立即取消排程 | 不收費 | `cancelPendingPlanChange`（一併恢復 `autoRenew`） |
+
+- **判準只有一個**：`isPlanDowngrade`（`PLAN_RANK` 比較，`src/constants/subscription_quota.ts`）。散在服務層各判一次的話，遲早有一條路徑讓降級立即生效。
+- **`GET /subscription` 揭露 `pendingPlanId` / `pendingEffectiveAt`**：當期 `planId` 仍是原方案，使用者需要看得出「我按過降級了」——否則按下去畫面沒變，他會再按一次，而那一次會被當成升級（建單、收整期的錢）。
+- **排程在週期邊界被清掉**：`applyTeamSubscriptionInTx`（新週期套用）、`expireOverdue`（降到 free）、`downgradeToFree`（寬限期用盡）三處都清 `pendingPlanId`。留著的話下一期會再降一次。
+- **附帶效果（不是巧合）**：鏈上訂閱憑證因此不會多報。卡片的 `plan` 與 `period_end` 只在週期邊界改變，而那正是離鏈資料也改變的時點——期中降級曾是唯一會讓「鏈上說付費、實際已降級」出現的路徑（§6.5.3 的已知缺口，於此消失）。
 
 慣例遵循：`getIdentityFromDeWT` 取身分 → guard → service → `jsonOk` / `jsonFail(API_ERRORS.XXX)`；Zod schema 全部放 `src/validators/team_wallet.ts` 並在 `src/validators/index.ts` re-export。
 
@@ -817,7 +833,7 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 1. 各方案的正式額度數字（§4.1 為程式碼預設值；正式值寫入 `SubscriptionPlanQuota` 設定表，需後台介面或 seed 腳本寫入）。
 2. 團隊點數是否設**有效期**（現設計為永久有效；若要到期，Ledger 已預留 `ADJUST` 型別 + 到期 Worker 即可擴充）。
 3. `free` 方案是否允許購買團隊點數（現設計：允許，額度與錢包互相獨立）。
-4. 訂閱降級時當期已消耗超過新方案週額 → 現設計：立即按新額度擋下，不追溯扣款。
+4. ~~訂閱降級時當期已消耗超過新方案週額~~ → **2026-08-20 起不再存在**：降級於當期屆滿才生效（§7.1），當期額度一律按原方案計，因此沒有「已消耗超過新方案週額」這個狀態。
 5. ~~團隊解散時池內剩餘點數的退費政策~~ → **已拍板（2026-08-07）：解散／終止訂閱時剩餘點數全數失效不退還，解散前強制提示剩餘點數並取得確認**（見 §6.3；服務條款 §3.5 與退款政策 §3.1 已同步起草）。
 6. ~~費思費率~~ → **已拍板（2026-08-07）：`FAITH_TOKENS_PER_CREDIT = 1_000`；點值 TWD 0.1 為成本基準下限，點數售價須 ≥ 3 倍（NT$0.3/點），現行售價已符合**（見 §5.3）。剩餘待評估（非阻塞）：費思是否改用 Flash 級模型將毛利自 59–79% 推至 90%+，列 P3 一併評估。
    ~~AI 諮詢室是否也改為 token 計量~~ → **已拍板（2026-08-07）：AI 諮詢室維持固定 5 點，不改。**

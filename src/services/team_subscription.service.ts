@@ -5,6 +5,7 @@ import { TeamRole, isTeamManagerRole } from "@/constants/team";
 import {
   BILLING_INTERVAL,
   BillingInterval,
+  isPlanDowngrade,
   TEAM_PLAN,
   TEAM_SUBSCRIPTION_STATUS,
   TeamPlanId,
@@ -198,6 +199,21 @@ export async function getTeamSubscriptionView(params: {
         ? Math.floor(subscription.currentPeriodEnd.getTime() / 1000)
         : 0,
       autoRenew: subscription?.autoRenew ?? false,
+      /**
+       * Info: (20260820 - Luphia) 排程中的降級一併揭露（見 interface 的說明）。
+       * 認不出來的代號當成沒有排程——回一個畫面翻不出名字的方案代號更糟。
+       */
+      pendingPlanId:
+        subscription?.pendingPlanId &&
+        (Object.values(TEAM_PLAN) as string[]).includes(
+          subscription.pendingPlanId,
+        )
+          ? (subscription.pendingPlanId as TeamPlanId)
+          : null,
+      pendingEffectiveAt:
+        subscription?.pendingPlanId && subscription.currentPeriodEnd
+          ? Math.floor(subscription.currentPeriodEnd.getTime() / 1000)
+          : null,
       quota,
       teamTotals,
       faithTokensPerCredit: billing.tokensPerCredit,
@@ -246,10 +262,43 @@ export async function getAccountBookQuotaView(params: {
 
 /**
  * Info: (20260807 - Luphia) 變更方案（設計書 §7 PUT /subscription，OWNER 專屬）。
- * free 為免付款直接降級（當期額度立即按新方案計，不追溯扣款）；
  * 付費方案建立 BILLING_SUBSCRIBE 訂單（data 帶 teamId），付款成功後由
  * processOenPayment / checkout 履行路徑套用訂閱。
+ *
+ * Info: (20260820 - Luphia) **降級不會期中生效**（修正 20260820）。
+ *
+ * 這一支原本對 free 是「免付款直接降級」——當場把 `planId` 改成 free，額度立刻
+ * 掉到免費版。而《退款政策》§2.1 寫的是「一旦取消或降級，您的變更將於當前結算
+ * 週期結束後自動生效」，且明言不按比例退費：**收了整期的錢、當場收回權益**，
+ * 程式與對外承諾相反，而承諾的那一側才是對的。
+ *
+ * 付費→付費的降級更糟：走建單路徑會**再收一次錢**，並把週期從當下重新起算。
+ *
+ * 現在的規則：
+ *
+ * | 變更 | 生效時點 | 收費 |
+ * |---|---|---|
+ * | 升級（含同方案續購／改計費週期） | 立即 | 立即建單 |
+ * | 降級（含降到 free） | **當期屆滿** | 不收費；期末由續訂／到期流程處理 |
+ * | 降級後改回原方案 | 立即取消排程 | 不收費 |
+ *
+ * 附帶效果（不是巧合）：鏈上的訂閱憑證因此不會多報。卡片的 `period_end` 與方案
+ * 只在週期邊界改變，而那正是離鏈資料也改變的時點——期中降級曾是唯一會讓
+ * 「鏈上說付費、實際已降級」出現的路徑（見設計書 §6.5）。
  */
+
+export interface IChangeSubscriptionResult {
+  // Info: (20260820 - Luphia) 需要付款時才有（升級／續購）；降級與取消排程一律 null
+  orderId: string | null;
+  challenge?: string;
+  cost?: number;
+  // Info: (20260820 - Luphia) **當期**方案：降級排程後這裡仍是原方案（權益沒有變）
+  planId: TeamPlanId;
+  // Info: (20260820 - Luphia) 排程中的降級；null＝沒有排程（含剛剛取消）
+  pendingPlanId?: TeamPlanId | null;
+  // Info: (20260820 - Luphia) 排程生效時點（epoch 秒）＝當期屆滿
+  effectiveAt?: number;
+}
 
 export async function changeTeamSubscription(params: {
   userId: string;
@@ -258,7 +307,7 @@ export async function changeTeamSubscription(params: {
   billingInterval: BillingInterval;
   paymentMethodId?: string;
   nowMs: number;
-}) {
+}): Promise<IChangeSubscriptionResult> {
   const { userId, teamId, planId, billingInterval, paymentMethodId, nowMs } =
     params;
 
@@ -268,9 +317,57 @@ export async function changeTeamSubscription(params: {
       throw toApiError(API_ERRORS.TW_WALLET_FORBIDDEN);
     }
 
+    const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
+    const nowSec = Math.floor(nowMs / 1000);
+    const currentPlanId = resolveEffectivePlanId(subscription, nowSec);
+
+    /**
+     * Info: (20260820 - Luphia) 已排程降級後又送出「目前方案」＝取消降級。
+     *
+     * 沒有這一條，使用者就沒有回頭路：畫面上他的方案還是團隊版（正確），
+     * 於是再按一次團隊版會走升級路徑——建一張新單、再收一整期的錢。
+     */
+    if (subscription?.pendingPlanId && planId === currentPlanId) {
+      await teamSubscriptionRepo.cancelPendingPlanChange(teamId);
+      return {
+        orderId: null,
+        planId: currentPlanId,
+        pendingPlanId: null,
+        effectiveAt: nowSec,
+      };
+    }
+
+    if (isPlanDowngrade(currentPlanId, planId)) {
+      /**
+       * Info: (20260820 - Luphia) 沒有訂閱列就沒有「當期」可以等到期末——
+       * 而 `resolveEffectivePlanId(null)` 回 free，因此這條路徑只有在
+       * 「有效方案是付費」時才走得到，也就是訂閱列必然存在。留這道 fail-fast
+       * 讓型別窄化有依據，而不是用 `!` 假裝它一定存在。
+       */
+      if (!subscription) {
+        throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
+      }
+      await teamSubscriptionRepo.schedulePlanChange({
+        teamId,
+        pendingPlanId: planId,
+        // Info: (20260820 - Luphia) 降到 free＝期末終止（關閉續訂）；降到較低付費方案仍要續訂
+        autoRenew: planId !== TEAM_PLAN.FREE,
+      });
+      return {
+        orderId: null,
+        // Info: (20260820 - Luphia) 回**當期**方案：當期權益沒有變，畫面不該顯示新方案
+        planId: currentPlanId,
+        pendingPlanId: planId,
+        effectiveAt: Math.floor(subscription.currentPeriodEnd.getTime() / 1000),
+      };
+    }
+
     if (planId === TEAM_PLAN.FREE) {
-      await teamSubscriptionRepo.downgradeToFree(teamId, nowMs);
-      return { orderId: null, planId };
+      /**
+       * Info: (20260820 - Luphia) 走到這裡表示當期已經是 free（不是降級）。
+       * 免費方案不需要訂單，也沒有東西要排程。
+       */
+      return { orderId: null, planId: TEAM_PLAN.FREE };
     }
 
     if (!paymentMethodId) {
@@ -288,7 +385,11 @@ export async function changeTeamSubscription(params: {
     const seats = await teamRepo.countMembers(teamId);
     const amount = resolveSubscriptionAmount(unitPrice, seats);
 
-    return generatePaymentOrder(userId, {
+    /**
+     * Info: (20260820 - Luphia) 一併回**當期**方案：升級要等付款完成才生效，
+     * 在那之前使用者的方案沒有變，畫面不該提前改。
+     */
+    const order = await generatePaymentOrder(userId, {
       type: ORDER_TYPE.BILLING_SUBSCRIBE,
       amount,
       unit: CURRENCY_UNIT.TWD,
@@ -307,6 +408,7 @@ export async function changeTeamSubscription(params: {
       seats: Math.max(1, seats),
       unitPrice,
     });
+    return { ...order, planId: currentPlanId };
   });
 }
 

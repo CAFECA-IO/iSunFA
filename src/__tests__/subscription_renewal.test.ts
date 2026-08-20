@@ -57,6 +57,8 @@ const NOW_MS = 1786075200 * 1000;
 const PAST_DUE_SUB = {
   teamId: "team-1",
   planId: "team",
+  // Info: (20260820 - Luphia) 沒有排程中的降級（真實列一定有這一欄，null 是常態）
+  pendingPlanId: null,
   status: "PAST_DUE",
   autoRenew: true,
   latestOrderId: "order-prev",
@@ -95,6 +97,63 @@ function mockHappyPath() {
     json: async () => ({ code: "S0000" }),
   })) as unknown as typeof fetch;
 }
+
+/**
+ * Info: (20260820 - Luphia) 排程中的降級**在週期邊界兌現**（修正 20260820）。
+ *
+ * 降級不期中生效（退款政策 §2.1），所以它必須在某個地方落地——就是這裡：
+ * 續訂依 `pendingPlanId` 計價、建單、套用，而 `applyTeamSubscription` 隨即清掉排程。
+ *
+ * 少了這一段，排程會是一張永遠不兌現的空頭承諾：使用者按了降級、期末照原方案
+ * 全額續訂，而畫面上那行「將於 X 起改為團隊版」永遠不會實現。
+ */
+describe("排程降級在期末兌現", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockHappyPath();
+  });
+
+  it("依 pendingPlanId 計價與套用（企業版 → 團隊版）", async () => {
+    asMock(teamSubscriptionRepo.listPastDueAutoRenew).mockResolvedValue([
+      { ...PAST_DUE_SUB, planId: "business", pendingPlanId: "team" },
+    ]);
+
+    const result = await processSubscriptionRenewals(NOW_MS);
+
+    expect(result.renewed).toBe(1);
+    expect(generatePaymentOrder).toHaveBeenCalledWith(
+      "user-owner",
+      expect.objectContaining({
+        planId: "team",
+        // Info: (20260820 - Luphia) 8 人 × 團隊版月費 840 = 6,720（不是企業版的 2,940）
+        unitPrice: 840,
+        amount: 6720,
+      }),
+    );
+    expect(teamSubscriptionRepo.applyTeamSubscription).toHaveBeenCalledWith(
+      expect.objectContaining({ planId: "team" }),
+    );
+  });
+
+  /**
+   * Info: (20260820 - Luphia) 排程降到 free 的列不該被收費。
+   *
+   * 那種列的 `autoRenew` 已關閉，正常情況下 `listPastDueAutoRenew` 撈不到它；
+   * 但「排程 free 卻仍自動續訂」這種不該存在的組合若真的出現，
+   * 也不能變成一張免費方案的收費訂單。
+   */
+  it("排程降到 free 時不建單、不扣款", async () => {
+    asMock(teamSubscriptionRepo.listPastDueAutoRenew).mockResolvedValue([
+      { ...PAST_DUE_SUB, planId: "business", pendingPlanId: "free" },
+    ]);
+
+    const result = await processSubscriptionRenewals(NOW_MS);
+
+    expect(result.skipped).toBe(1);
+    expect(generatePaymentOrder).not.toHaveBeenCalled();
+    expect(teamSubscriptionRepo.applyTeamSubscription).not.toHaveBeenCalled();
+  });
+});
 
 describe("processSubscriptionRenewals", () => {
   beforeEach(() => {

@@ -63,6 +63,7 @@ NEXT_PUBLIC_CREDIT_POINT_ADDRESS
 | `faith_memory`（新表） | 費思長期記憶：密文欄位、`expires_at`、`(user_id, team_id)` 唯一鍵 | 低；新表無既有資料 |
 | `faith_memory_deletion_log`（新表） | 記憶刪除的稽核列（不含內容） | 低；新表無既有資料 |
 | `team_subscription` | 新增 `seats`（預設 1）、`unit_price`（預設 0） | 低，但**必須接著做 3.1** |
+| `team_subscription` | 新增 `pending_plan_id`（可為 NULL，2026-08-20 降級排程） | 低；既有列為 NULL＝沒有排程中的變更，**不需要回填** |
 | `team_wallet_ledger` | 新增 `tx_hash`（可為 NULL） | 低 |
 | `team_quota_usage` | 索引改為 `(team_id, user_id, window_key_5h)` 與 `(team_id, user_id, window_key_week)` | 低；舊索引可留可刪 |
 
@@ -244,6 +245,22 @@ npx tsx scripts/backfill_remove_team_admin.ts
 
 ---
 
+
+### 3.7 降級改為期末生效（2026-08-20）— **不需要回填，但要看一件事**
+
+降級不再期中生效（《退款政策》§2.1、設計書 §7.1）。既有列的 `pending_plan_id` 為 NULL，語意就是「沒有排程中的變更」，因此沒有回填。
+
+**要看的是部署前已經被立即降級的團隊**：舊行為會把 `plan_id` 直接改成 `free` 並把 `unit_price` 歸零，那些列已經降完了，**無法從資料回推「他當初付到哪一天」**（週期欄位仍是原週期，但 `plan_id` 已是 free）。若有客訴，只能以訂單紀錄（`BILLING_SUBSCRIBE` 的 `created_at` 與週期）人工判斷補償。查詢方式：
+
+```sql
+SELECT team_id, plan_id, status, current_period_end, unit_price
+FROM team_subscription
+WHERE plan_id = 'free' AND current_period_end > NOW();
+```
+
+有列＝這些團隊在「已付費期間內」被降為免費版（舊行為造成）。數量通常是 0（此功能上線後才會有人用到降級）。
+
+---
 
 ## 4. 部署後驗證
 

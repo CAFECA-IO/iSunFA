@@ -45,11 +45,23 @@ async function renewOne(
   sub: {
     teamId: string;
     planId: string;
+    pendingPlanId: string | null;
     latestOrderId: string | null;
   },
   nowMs: number,
 ): Promise<"renewed" | "failed" | "skipped"> {
-  const planId = resolvePlanId(sub.planId) as Exclude<
+  /**
+   * Info: (20260820 - Luphia) 續訂用的是**排程中的方案**（若有）。
+   *
+   * 降級不期中生效（退款政策 §2.1），而週期邊界就是它生效的地方——續訂在這裡
+   * 依新方案計價、建單、套用，`applyTeamSubscription` 隨即把排程清掉。
+   *
+   * 排程降到 free 的列不會走到這裡：那種列的 `autoRenew` 已關閉，
+   * 由 `expireOverdue` 在期末落地（`listPastDueAutoRenew` 只撈 autoRenew=true）。
+   * 這裡仍留一道 free 的早退，讓「排程 free 卻仍自動續訂」這種不該存在的組合
+   * 不會變成一張免費方案的收費訂單。
+   */
+  const planId = resolvePlanId(sub.pendingPlanId ?? sub.planId) as Exclude<
     TeamPlanId,
     typeof TEAM_PLAN.FREE
   >;

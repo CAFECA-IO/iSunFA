@@ -50,6 +50,11 @@ export async function applyTeamSubscriptionInTx(
       autoRenew: true,
       latestOrderId: orderId,
       /**
+       * Info: (20260820 - Luphia) 套用新週期＝排程已經兌現（或被升級取代），清掉它。
+       * 留著的話，下一次期末會再降一次——而使用者早就改變主意了。
+       */
+      pendingPlanId: null,
+      /**
        * Info: (20260814 - Luphia) 席次與單價缺省時不覆寫：期中加人只動 seats，
        * 續訂或改方案才會連同單價一起換新。用 undefined 讓 Prisma 略過該欄位。
        */
@@ -139,6 +144,14 @@ export class TeamSubscriptionRepository {
       data: {
         planId: TEAM_PLAN.FREE,
         status: TEAM_SUBSCRIPTION_STATUS.PAST_DUE,
+        /**
+         * Info: (20260820 - Luphia) 這一支就是「降級為 free」的**實現**（排程於此兌現），
+         * 因此連同排程一起清掉，並讓單價說實話——免費方案沒有單價。
+         * 不歸零的話，降級後 `unitPrice` 仍是 840，而「免費方案不補收」只剩
+         * `resolveEffectivePlanId` 一道遠處的防線（見 downgradeToFree 的同一段說明）。
+         */
+        pendingPlanId: null,
+        unitPrice: 0,
       },
     });
     return result.count;
@@ -159,6 +172,44 @@ export class TeamSubscriptionRepository {
       data: { status: TEAM_SUBSCRIPTION_STATUS.PAST_DUE },
     });
     return result.count;
+  }
+
+  /**
+   * Info: (20260820 - Luphia) 排程一個**期末生效**的方案變更（降級）。
+   *
+   * 只動 `pendingPlanId` 與 `autoRenew`，**不碰 `planId`／`currentPeriodEnd`／`unitPrice`**
+   * ——當期權益必須維持原方案（退款政策 §2.1：降級於當期結束後生效，且不按比例退費）。
+   *
+   * `autoRenew` 的兩種情形不同：
+   *
+   * - 降到 free：期末就是終止，關掉自動續訂，由 `expireOverdue` 在期末落地。
+   * - 降到較低的**付費**方案：期末仍要續訂（用新方案計價），因此維持自動續訂。
+   */
+  async schedulePlanChange(params: {
+    teamId: string;
+    pendingPlanId: string;
+    autoRenew: boolean;
+  }): Promise<void> {
+    await prisma.teamSubscription.update({
+      where: { teamId: params.teamId },
+      data: {
+        pendingPlanId: params.pendingPlanId,
+        autoRenew: params.autoRenew,
+      },
+    });
+  }
+
+  /**
+   * Info: (20260820 - Luphia) 取消排程（使用者改變主意，改回目前的方案）。
+   *
+   * 一併把自動續訂打開：排程降到 free 時關掉了它，只清 `pendingPlanId` 會留下
+   * 「方案沒變，但期末會停掉」——那是使用者按下「取消降級」後最不預期的結果。
+   */
+  async cancelPendingPlanChange(teamId: string): Promise<void> {
+    await prisma.teamSubscription.update({
+      where: { teamId },
+      data: { pendingPlanId: null, autoRenew: true },
+    });
   }
 
   // Info: (20260807 - Luphia) 續訂 Worker 用：待自動扣款的過期付費訂閱
@@ -195,6 +246,8 @@ export class TeamSubscriptionRepository {
          * 而免費版的人數上限另有把關（`FREE_PLAN_MAX_MEMBERS`）。
          */
         unitPrice: 0,
+        // Info: (20260820 - Luphia) 已經降到底了，排程沒有意義
+        pendingPlanId: null,
       },
       create: {
         teamId,
