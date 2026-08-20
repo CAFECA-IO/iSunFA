@@ -28,18 +28,12 @@ import { useTranslation } from "@/i18n/i18n_context";
 /**
  * Info: (20260817 - Julian) 我的請假（L1 / L7 / L10 / L11 / L17）。
  *
- * ## 為什麼一定要有試算
+ * 這一頁的核心不是送出按鈕，是它上面那塊試算結果：扣幾分鐘、剩多少、
+ * 要簽幾關、誰簽、有沒有人同一天也請假。看不到這些，員工只能靠試錯 ——
+ * 而每一次試錯都是一張要有人去駁回的單。
  *
- * 送出前看不到「這樣請會發生什麼」，員工只能靠試錯 ——
- * 而每一次試錯都是一張要有人去駁回的單（`ILeaveRequestPreview` 的檔頭）。
- * 所以這一頁的核心不是送出按鈕，是它上面那塊試算結果：
- * 扣幾分鐘、剩多少、要簽幾關、誰簽、有沒有人同一天也請假。
- *
- * ## 試算是純計算，不預扣
- *
- * 因此可以在使用者每改一次日期時重跑，不會留下任何痕跡。
- * 這也是「不預扣額度」那個設計（ADR 023 §6）在畫面上的好處：
- * 開著表單不送出，不會佔住任何人的額度。
+ * 試算是純計算、不預扣，所以可以在每次改日期時重跑而不留痕跡
+ * （ADR 023 §6「不預扣額度」在畫面上的好處）。
  */
 
 
@@ -60,42 +54,25 @@ const MyLeavePageBody: FC = () => {
 
   const [policyId, setPolicyId] = useState<string>("");
   /**
-   * Info: (20260819 - Julian) 起訖各是一個「日期＋時刻」（`<input type="datetime-local">`）。
+   * Info: (20260819 - Julian) 起訖各是一個「日期＋時刻」。
    *
-   * 先前是「一組日期清單 + 一組共用的起訖時刻」，也就是「這幾天，每天都請
-   * 09:00–12:00」。改成連續時段之後，「我從 8/19 早上八點走到 8/21 下午五點」
-   * 是一句話而不是三筆設定 —— 而那正是工地的說法。
-   *
-   * 逐日的展開移到伺服器（`expandLeaveSpan`）：首日要請到當天班別結束為止，
+   * 「我從 8/19 早上八點走到 8/21 下午五點」是一段連續時間，那是工地的說法。
+   * 逐日的展開在伺服器（`expandLeaveSpan`）：首日要請到當天班別結束為止，
    * 而前端不知道那個人那一天的班到幾點。
    */
   const [startAt, setStartAt] = useState("");
   const [endAt, setEndAt] = useState("");
 
   /**
-   * Info: (20260819 - Julian) 「起」不設上界，「迄」的下界跟著「起」走。
+   * Info: (20260819 - Julian) 「起」不設上界，「迄」只設下界（`min = 起`）。
    *
-   * ## 為什麼「起」不限制
+   * 兩邊都限制會**互相咬住**：日期選錯時「起」被「迄」擋在上界之前、
+   * 「迄」被「起」擋在下界之後，使用者得把兩個 picker 都清掉才能重選 ——
+   * 為了防一種錯誤而製造出更難脫身的另一種。單向約束沒有死結：永遠可以先改
+   * 「起」把下界移開。改「起」時順手把「迄」帶到一小時後。
    *
-   * 兩邊都限制的話，使用者不小心把日期選錯（例如選到下個月），就必須
-   * **把兩個 picker 都清掉**才能重選 —— 「起」被「迄」擋在上界之前、
-   * 「迄」被「起」擋在下界之後，兩個互相咬住。那是一個為了防止一種錯誤，
-   * 而製造出另一種更難脫身的錯誤。
-   *
-   * 「起」可以自由改，因此它每改一次就把「迄」帶到一小時後 ——
-   * 使用者重選日期時不必再回頭修「迄」，而那個值本來就已經被上一次的
-   * 選擇弄成不合理的了。
-   *
-   * ## 為什麼「迄」仍然限制
-   *
-   * 它只有下界（`min = 起`），而下界不會把人咬住：使用者永遠可以先改「起」
-   * 把下界移開。單向的約束沒有死結。
-   *
-   * ## 送出端仍然擋
-   *
-   * `min` 只約束選單，部分瀏覽器允許直接鍵入超出範圍的值 ——
-   * `span === null` 時送出鈕按不下去。**護欄與提示是兩件事**，
-   * 畫面上不提示不等於放行。
+   * `min` 只約束選單，部分瀏覽器允許直接鍵入 —— 真正的護欄是
+   * `span === null` 時送出鈕按不下去。**護欄與提示是兩件事。**
    */
   const pickStart = (value: string): void => {
     setStartAt(value);
@@ -135,15 +112,13 @@ const MyLeavePageBody: FC = () => {
     setLoadError(null);
     try {
       /**
-       * Info: (20260818 - Julian) 三支端點都回信封（`jsonOk`），而 `request()` 不拆 ——
-       * 它最後一行是 `return data as T`，型別參數在這裡是斷言而不是保證，
+       * Info: (20260818 - Julian) 三支端點都回信封（`jsonOk`），而 `request()` **不拆** ——
+       * 它最後一行是 `return data as T`，型別參數在這裡是斷言不是保證，
        * 所以少接一層 `.payload` 編譯器不會有意見。
        *
        * 代價不是「少了幾個欄位」而是整頁掛掉：`policies` 變成信封物件，
-       * `policies.map` 在 render 期間丟 TypeError，而全樹沒有 `error.tsx`，
-       * 於是換成 Next.js 內建的錯誤邊界（This page couldn't load）。
+       * `policies.map` 在 render 期間丟 TypeError，而全樹沒有 `error.tsx`。
        * 更難查的是它**只在 API 成功時發生** —— 失敗會被 catch 接住顯示紅字橫幅。
-       * 拆法比照簽到的 `schedule_page_body.tsx`。
        */
       const [policyRes, balanceRes, requestRes] = await Promise.all([
         request<IEnvelopeLike<ILeavePolicyOption[]>>(LEAVE_API.POLICY),
@@ -176,40 +151,24 @@ const MyLeavePageBody: FC = () => {
   }, [reload]);
 
   /**
-   * Info: (20260818 - Julian) **一律以起訖時刻表達**，不再有整天／上下半天的選項。
+   * Info: (20260818 - Julian) **一律以起訖時刻表達**，沒有整天／上下半天的選項。
    *
-   * ## 為什麼
+   * 使用者是工地人員，每個人的班別與上下班時刻都不一樣 ——「上半天」是辦公室
+   * 的說法，對他們不是一個直覺的量。直接給起訖，他們填的就是自己實際的時刻。
    *
-   * 本系統的使用者是工地人員，每個人的班別與上下班時刻都不一樣。「上半天」
-   * 對他們不是一個直覺的量 —— 那是辦公室的說法。直接給起訖，他們填的就是
-   * 自己實際的時刻，不必先在心裡把它換算成某個時段名稱。
+   * `LeaveDaySegment` 的四個值仍然存在、既有資料仍讀得出來，只是**新的單一律
+   * 送 `CUSTOM`**；扣幾分鐘由引擎依該假別的 `unitBasis` 與 `minimumUnitMinutes`
+   * 進位，而進位的差額由下方的橘字說出來。填法與計算方式因此分開。
    *
-   * ## 為什麼可以這樣做
-   *
-   * `LeaveDaySegment` 的四個值仍然存在、既有資料仍然讀得出來（假單明細頁
-   * 照樣顯示「上半天」），只是**新的單一律送 `CUSTOM`**。至於扣幾分鐘，
-   * 由引擎依該假別的 `unitBasis` 與 `minimumUnitMinutes` 進位 ——
-   * 半天制的假別會進位回半天、整天制的會進位回整天，而進位的差額由下方
-   * 的橘字明白說出來。使用者的填法與制度的計算方式因此分開了。
-   *
-   * ## 「半天制」目前沒有法源
-   *
-   * 計畫書 §3.1 已查證的是各假別的**日數上限**，最小請假單位不在其中，
-   * §3.2 待核對也沒有列它 —— 那六種 `HALF_WORKDAY` 是 seed 的一個假設。
-   * 已補進 §3.2（2026-08-18）。在它結案之前，UI 不該替那個假設加上護欄。
+   * 「半天制」目前沒有法源：計畫書 §3.1 查證的是各假別的**日數上限**，
+   * 最小請假單位不在其中 —— 那六種 `HALF_WORKDAY` 是 seed 的一個假設（已補進
+   * §3.2 待核對）。在它結案之前，UI 不該替那個假設加上護欄。
    */
   /**
    * Info: (20260819 - Julian) 展開後首末日仍是 `CUSTOM`、中間日是 `FULL`，
    * 但那是**伺服器**決定的（`expandLeaveSpan`），前端不再送 segment。
    */
 
-  /**
-   * Info: (20260818 - Julian) 送出與試算共用同一份 payload。
-   *
-   * 兩者若各組一次，遲早會有一邊漏帶 `startMinute` —— 而那個 bug 的症狀是
-   * 「試算顯示 2 小時，送出卻扣了一整天」，比沒有試算更糟
-   * （同 `leaveRequestCreateSchema` 與試算共用 schema 的理由）。
-   */
   /**
    * Info: (20260819 - Julian) 送出與試算共用同一份 payload。
    *
@@ -226,16 +185,10 @@ const MyLeavePageBody: FC = () => {
   }, [startAt, endAt]);
 
   /**
-   * Info: (20260818 - Julian) 使用者實際選了幾分鐘（未進位），用來說明進位差額。
-   * 一組起訖 × 天數 —— 表單只收一組（見下方起訖選擇器的說明）。
-   */
-  /**
-   * Info: (20260819 - Julian) 使用者實際選了多長的一段（**牆上時鐘的差**，未扣休息、
-   * 未剔除非上班日、未進位）。用來與試算回來的認列分鐘對照，說明差額從哪來。
-   *
-   * 它刻意不等於認列分鐘：中間夾著週日、跨日的夜間不算工時、最小單位要進位 ——
-   * 三者都會讓兩個數字不同。把它顯示出來，是為了讓「為什麼我選了三天卻只扣兩天」
-   * 有一個看得見的起點。
+   * Info: (20260819 - Julian) 使用者實際選了多長（**牆上時鐘的差**，未扣休息、
+   * 未剔除非上班日、未進位）。它刻意不等於認列分鐘 —— 中間夾著週日、跨日的
+   * 夜間不算工時、最小單位要進位，三者都會讓兩個數字不同。顯示它，是為了讓
+   * 「為什麼我選了三天卻只扣兩天」有一個看得見的起點。
    */
   const rawSelectedMinutes = useMemo(
     () => (span === null ? null : rawSpanMinutes(span.startAt, span.endAt)),
@@ -263,10 +216,9 @@ const MyLeavePageBody: FC = () => {
         /**
          * Info: (20260818 - Julian) 事由固定送佔位字串，**不送使用者打的那一份**。
          *
-         * 試算的結果與事由無關（`buildPlan` 根本沒讀它），但只要把 `reason`
-         * 接進這個 effect 的相依，打字就會逐字觸發一次 POST ——
-         * 一句十個字的事由等於十次試算，而 `READ` 桶一分鐘只有 120 次。
-         * 順帶一提：事由是 Tier 2 個資，沒有必要在還沒送出前就一路送上伺服器。
+         * 試算結果與事由無關（`buildPlan` 根本沒讀它），但只要把 `reason` 接進這個
+         * effect 的相依，打字就會逐字觸發一次 POST —— 十個字的事由等於十次試算，
+         * 而 `READ` 桶一分鐘只有 120 次。事由也是 Tier 2 個資，沒必要在送出前就上傳。
          */
         reason: PREVIEW_REASON_PLACEHOLDER,
         ...span,
@@ -276,10 +228,9 @@ const MyLeavePageBody: FC = () => {
         if (!active) return;
 
         /**
-         * Info: (20260818 - Julian) 2xx 卻沒有 payload 是伺服器違約（處置同
-         * `schedule_page_body.tsx`）：走通用訊息，不把 null 當成一份試算結果。
-         * 送出的三個前提全部讀 `preview`，靜靜塞 null 進去的效果是
-         * 送出鈕永遠不會亮，而畫面上沒有任何東西說明為什麼。
+         * Info: (20260818 - Julian) 2xx 卻沒有 payload 是伺服器違約：走通用訊息，
+         * 不把 null 當成一份試算結果。送出的三個前提全部讀 `preview`，靜靜塞 null
+         * 進去的效果是送出鈕永遠不會亮，而畫面上沒有任何東西說明為什麼。
          */
         if (!response.payload) {
           setPreview(null);
@@ -356,14 +307,13 @@ const MyLeavePageBody: FC = () => {
   /**
    * Info: (20260818 - Julian) 只有最小單位是**固定分鐘**的假別可以選自訂時段。
    *
-   * 半天制的假別（婚假、喪假、生理假…）技術上也算得出來，但結果會被進位
-   * 到半天 —— 給一個時刻選擇器、卻無論選幾分鐘都扣半天，是靜默升級。
-   * 那正是 `assertHalfDaySelectable` 拒絕「整天制假別選半天」的同一個理由：
-   * 「靜默升級會讓一個人以為自己請了半天，月底看到扣一天才發現。」
+   * 半天制的假別技術上也算得出來，但結果會被進位到半天 —— 給一個時刻選擇器、
+   * 卻無論選幾分鐘都扣半天，是靜默升級（同 `assertHalfDaySelectable` 的理由：
+   * 「會讓一個人以為自己請了半天，月底看到扣一天才發現」）。
    *
-   * ToDo: (20260818 - Julian) 哪些假別可以用小時計是**法規問題**（生理假、
-   * 產檢假、陪產假各有函釋）。要放寬請改 `DEFAULT_LEAVE_POLICY_SEED` 的
-   * `unitBasis`，而不是放寬這裡 —— 這裡只是忠實反映那份設定。
+   * ToDo: (20260818 - Julian) 哪些假別可以用小時計是**法規問題**（生理假、產檢假、
+   * 陪產假各有函釋）。要放寬請改 `DEFAULT_LEAVE_POLICY_SEED` 的 `unitBasis`，
+   * 而不是放寬這裡 —— 這裡只是忠實反映那份設定。
    */
   const blockingWarning = preview?.concurrencyWarnings.some(
     (warning) => warning.blocking,
@@ -409,21 +359,14 @@ const MyLeavePageBody: FC = () => {
       </section>
 
       {/**
-       * Info: (20260820 - Julian) 手機版的表單入口（review 第 6 輪 M24）。
+       * Info: (20260820 - Julian) 手機版的表單入口。
        *
-       * ## 被修掉的死路
-       *
-       * 表單先前**只能**從餘額卡片點開（`LeaveBalanceCards` 的 `onSelect`
-       * 是唯一把 `drawerOpen` 設成 true 的地方），而 `balances` 為空時
-       * 一張卡片都不會渲染。桌機沒事 —— `HrFormSheet` 關閉時是
-       * `hidden lg:block`，表單一直在畫面上。**手機上完全打不開**：
-       * 新到職、還沒有任何額度的員工，在手機上送不出任何一張假單，
+       * 表單先前**只能**從餘額卡片點開，而 `balances` 為空時一張卡片都不會渲染 ——
+       * 桌機沒事（`HrFormSheet` 關閉時是 `hidden lg:block`，表單一直在畫面上），
+       * **手機上完全打不開**：新到職、還沒有任何額度的員工送不出任何一張假單，
        * 包含不需要額度的事假與病假。
        *
-       * 加班頁一直都有這個入口（`my_overtime_page_body.tsx`），請假頁漏了。
-       *
-       * 不設條件（不是只在 `balances.length === 0` 時才顯示）：
-       * 有額度的人也可能想直接開表單，而一個時有時無的按鈕比沒有按鈕更難用。
+       * 不設條件（不是只在沒有額度時才顯示）：一個時有時無的按鈕比沒有按鈕更難用。
        */}
       <button
         type="button"
@@ -459,19 +402,12 @@ const MyLeavePageBody: FC = () => {
 
         <div className="mt-3 flex flex-col gap-2">
           {/**
-           * Info: (20260819 - Julian) 起／迄各一個「日期＋時刻」。
+           * Info: (20260819 - Julian) 沒有「整天」捷徑：每個人的班別不同，整天對他們
+           * 就是「07:30 到 17:00」這組每天打卡的數字，而不是一個要另外學的選項。
+           * 想請整天就填自己的上下班時刻，引擎會夾到當日應工作分鐘為止。
            *
-           * 先前是「一列一列加日期，再共用一組起訖時刻」——「這幾天，每天都請
-           * 09:00–12:00」。工地的說法是「我從 8/19 早上八點走到 8/21 下午五點」，
-           * 那是一段連續時間，不是三筆各自獨立的設定。
-           *
-           * 沒有「整天」捷徑：每個人的班別不同，整天對他們就是
-           * 「07:30 到 17:00」這組他們每天打卡的數字，而不是一個要另外學的選項。
-           * 想請整天就填自己的上下班時刻，引擎會把它夾到當日應工作分鐘為止
-           * （`resolveLeaveMinutes` 的 `Math.min(netSpan, dayEquivalentMinutes)`）。
-           *
-           * 跨日的中間幾天由伺服器補成整天，首末日切到班別的核心區間 ——
-           * 前端不知道那個人那一天的班到幾點，猜的話會差半小時而看不出來。
+           * 跨日的中間幾天由伺服器補成整天、首末日切到班別核心區間 —— 前端不知道
+           * 那個人那一天的班到幾點，猜的話會差半小時而看不出來。
            */}
           <div className="flex flex-col gap-2 sm:flex-row">
             <label className="flex flex-1 flex-col gap-1 text-xs text-gray-600">
@@ -496,11 +432,8 @@ const MyLeavePageBody: FC = () => {
           </div>
 
           {/**
-           * Info: (20260819 - Julian) 選了多長，當場說出來。
-           *
-           * 這是**牆上時鐘的差**，不是認列時數 —— 中間夾著週日、跨日的夜間
-           * 不算工時、最小單位要進位，三者都會讓兩個數字不同。先講這一個，
-           * 是因為它是使用者唯一能直接驗算的數字；認列由下方的試算回答。
+           * Info: (20260819 - Julian) 這是**牆上時鐘的差**，不是認列時數。先講它，因為它
+           * 是使用者唯一能直接驗算的數字；認列由下方的試算回答。
            */}
           {rawSelectedMinutes !== null && rawSelectedMinutes > 0 && (
             <p className="text-xs text-gray-500">
@@ -619,11 +552,9 @@ const MyLeavePageBody: FC = () => {
             {preview.unresolvedReason ? (
               <p className="text-sm text-rose-700">
                 {/**
-                  * Info: (20260820 - Julian) 成因也要翻譯（review 第 7 輪 M27）。
-                  *
-                  * 這裡原本直接插 `preview.unresolvedReason` —— 一個 enum 值，
-                  * 於是使用者讀到「簽核流程展不開（NO_DEPARTMENT_MANAGER）」。
-                  */}
+                 * Info: (20260820 - Julian) 成因也要翻譯 —— `unresolvedReason` 是 enum 值，
+                 * 直接插進去使用者會讀到「簽核流程展不開（NO_DEPARTMENT_MANAGER）」。
+                 */}
                 {t("hr_management.leave.preview_chain_unresolved", {
                   reason: t(
                     LEAVE_UNRESOLVED_REASON_I18N_KEY[preview.unresolvedReason],

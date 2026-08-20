@@ -35,17 +35,12 @@ const SEGMENT_I18N_KEY: Readonly<Record<string, string>> = {
 /**
  * Info: (20260817 - Julian) 假單明細（L12）。
  *
- * ## 這一頁是事由唯一看得到的地方
+ * **這一頁是事由唯一看得到的地方**：事由密文入庫（ADR 018 Tier 2），清單端點
+ * 一律不帶它。簽核者在這裡看到的東西會留下個資讀取軌跡（`AuditLogAction.READ`）。
  *
- * 事由密文入庫（ADR 018 Tier 2），清單端點一律不帶它 ——
- * 清單是會被投影在會議室螢幕上的畫面，而這一頁是一次明確的點擊。
- * 簽核者在這裡看到的東西會留下個資讀取軌跡（`AuditLogAction.READ`）。
- *
- * ## 為什麼把「已加密」這件事顯示給使用者看
- *
- * 不是為了炫技。看得到「事由是加密儲存的、誰看過會被記錄」，
- * 員工才願意寫「回診複檢」而不是「私事」—— 而後者主管判斷不了。
- * 這一行字是那個設計唯一會被使用者感知到的部分。
+ * 「已加密」這件事顯示給使用者看不是為了炫技：看得到「事由是加密儲存的、
+ * 誰看過會被記錄」，員工才願意寫「回診複檢」而不是「私事」—— 而後者主管
+ * 判斷不了。
  */
 const LeaveRequestDetailBody: FC<{ requestId: string }> = ({ requestId }) => {
   const { t } = useTranslation();
@@ -172,10 +167,8 @@ const LeaveRequestDetailBody: FC<{ requestId: string }> = ({ requestId }) => {
         </div>
 
         {/**
-         * Info: (20260817 - Julian) 併休警示要留在單據上。
-         *
-         * 它是送出當下的事實（`concurrencyWarned`），而不是現在重算的結果 ——
-         * 簽核者要知道的是「這個人送出時就已經知道有人同一天請假」。
+         * Info: (20260817 - Julian) 併休警示是**送出當下的事實**（`concurrencyWarned`），
+         * 不是現在重算的結果 —— 簽核者要知道的是「這個人送出時就已經知道有人同一天請假」。
          */}
         {detail.concurrencyWarned && (
           <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">
@@ -193,9 +186,8 @@ const LeaveRequestDetailBody: FC<{ requestId: string }> = ({ requestId }) => {
 
         {detail.reason === null ? (
           /**
-           * Info: (20260817 - Julian) 解不開時說出來，而不是顯示成空白。
-           * 空白讀起來像「他沒寫」，而那會讓簽核者以為申請人敷衍 ——
-           * 實際上是金鑰出了問題，那是維運要處理的事。
+           * Info: (20260817 - Julian) 解不開時說出來，而不是顯示成空白。空白讀起來像
+           * 「他沒寫」，會讓簽核者以為申請人敷衍 —— 實際上是金鑰出了問題。
            */
           <p className="mt-2 flex items-center gap-1.5 text-sm text-rose-600">
             <KeyRound className="size-4" />
@@ -233,9 +225,8 @@ const LeaveRequestDetailBody: FC<{ requestId: string }> = ({ requestId }) => {
                 </span>
               </span>
               {/**
-               * Info: (20260817 - Julian) 被銷假的那一天要看得出來。
-               * 它仍留在單據上（`LeaveDay` 不刪列）—— 刪掉的話
-               * 「他曾經請過這天、後來被銷了」就消失了。
+               * Info: (20260817 - Julian) 被銷假的那一天要看得出來。它仍留在單據上
+               * （`LeaveDay` 不刪列）—— 刪掉的話「他曾經請過這天、後來被銷了」就消失了。
                */}
               {day.recalledAt && (
                 <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
@@ -266,10 +257,8 @@ const LeaveRequestDetailBody: FC<{ requestId: string }> = ({ requestId }) => {
         </div>
 
         {/**
-         * Info: (20260817 - Julian) 簽核意見另外列出來。
-         *
-         * 不塞進鏈的節點裡：駁回理由通常是整段話，而鏈是一個緊湊的
-         * 流程圖 —— 把長文字擠進去會讓「簽到哪一關」變得難讀。
+         * Info: (20260817 - Julian) 簽核意見另外列，不塞進鏈的節點裡：駁回理由通常是
+         * 整段話，而鏈是一個緊湊的流程圖 —— 擠進去會讓「簽到哪一關」變得難讀。
          */}
         {detail.steps.some((step) => step.comment) && (
           <div className="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3">
@@ -304,8 +293,8 @@ const LeaveRequestDetailBody: FC<{ requestId: string }> = ({ requestId }) => {
        * Info: (20260817 - Julian) 只有**當前待簽的那個人**看得到簽核鈕。
        *
        * 簽過的人與後面幾關的人都看得到這一頁（那是他們的責任的一部分），
-       * 但按鈕只給輪到的人 —— 讓一個按下去必定收到
-       * `FO_NOT_AUTHORIZED_REVIEWER` 的按鈕存在，是用錯誤訊息當說明。
+       * 但按鈕只給輪到的人 —— 讓一個按下去必定收到 `FO_NOT_AUTHORIZED_REVIEWER`
+       * 的按鈕存在，是用錯誤訊息當說明。
        */}
       {detail.viewerIsCurrentApprover && (
         <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">

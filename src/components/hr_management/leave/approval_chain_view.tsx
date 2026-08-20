@@ -16,9 +16,8 @@ export interface IChainStepView {
   status: LeaveApprovalStepStatus;
   mergedFromKinds: LeaveApprovalNodeKind[];
   /**
-   * Info: (20260820 - Julian) 上升前原本是哪一關（review 第 7 輪 M27）。
-   * `escalatedReason`（開發者英文）**不再進到這個型別** ——
-   * 它進不來，就沒有人會不小心把它印出去。
+   * Info: (20260820 - Julian) 上升前原本是哪一關。`escalatedReason`（開發者英文）
+   * **不進到這個型別** —— 它進不來，就沒有人會不小心把它印出去。
    */
   escalatedFromKind: LeaveApprovalNodeKind | null;
 }
@@ -35,17 +34,12 @@ const NODE_KIND_I18N_KEY: Readonly<Record<LeaveApprovalNodeKind, string>> = {
 /**
  * Info: (20260817 - Julian) 簽核鏈的可視化。
  *
- * ## 為什麼要把「被併掉的節點」畫出來
+ * **被併掉的節點要畫出來**：直屬主管恰好就是部門經理時，相鄰去重會把兩關
+ * 併成一關（計畫書 §7.3）。不說的話，一張「3 天以上要簽兩關」的單子只顯示
+ * 一關，看起來像少簽了，而查起來要翻規則表才知道是合併。
  *
- * 直屬主管恰好就是部門經理時，相鄰去重會把兩關併成一關（計畫書 §7.3）。
- * 不說的話，一張「3 天以上要簽兩關」的單子只顯示一關 ——
- * 看起來像少簽了，而查起來要翻規則表才知道是合併。
- * `mergedFromKinds` 就是為了這一刻存在的，這裡把它印出來。
- *
- * ## 為什麼要把「自動上升的理由」畫出來
- *
- * 節點解析出申請人本人時會自動往上找（老闆也要能請假）。
- * 那一關的簽核者與規則寫的不一樣，不說明就是一個沒有解釋的意外。
+ * **自動上升的理由也要畫出來**：節點解析出申請人本人時會自動往上找
+ * （老闆也要能請假），那一關的簽核者與規則寫的不一樣，不說明就是意外。
  */
 const ApprovalChainView: FC<{ steps: IChainStepView[] }> = ({ steps }) => {
   const { t } = useTranslation();
@@ -110,17 +104,13 @@ const ApprovalChainView: FC<{ steps: IChainStepView[] }> = ({ steps }) => {
               </div>
 
               {/**
-                * Info: (20260820 - Julian) 兩種情形各一句可翻譯的文案
-                * （review 第 7 輪 M27）。
-                *
-                * 這裡原本印的是 `escalatedReason` —— 一句用樣板字串拼出來的
-                * 開發者英文（`"HR resolved to the applicant; escalated to
-                * DEPARTMENT_MANAGER"`）。韓文使用者看到的是
-                * 「자동 상향: HR resolved to the applicant; escalated to …」，
-                * 而 `leave_error_message.ts` 的檔頭才剛把這件事寫成規矩。
-                *
-                * `from === nodeKind` 表示同型別換了另一個人；不同表示上升。
-                */}
+               * Info: (20260820 - Julian) 兩種情形各一句**可翻譯**的文案。
+               *
+               * 不能直接印 `escalatedReason` —— 那是樣板字串拼出來的開發者英文，
+               * 韓文使用者會讀到「자동 상향: HR resolved to the applicant; escalated to …」。
+               *
+               * `from === nodeKind` 表示同型別換了另一個人；不同表示上升。
+               */}
               {step.escalatedFromKind !== null && (
                 <div className="mt-1 text-xs text-amber-600">
                   {step.escalatedFromKind === step.nodeKind
