@@ -17,10 +17,8 @@ import { useTranslation } from "@/i18n/i18n_context";
 
 /**
  * Info: (20260818 - Julian) 兩個簽核頁的待簽筆數，用來在選單上印徽章。`null` = 還不知道。
- *
- * 它**不再決定要不要顯示** —— 那由 `hr/me` 的身分決定。以存量代替身分會把
- * 剛升上來、還沒有人送單的主管擋在門外，正是 `overtime_approval_page_body`
- * 檔頭說「不用 403 表達『你沒有要簽的單』」要避免的那件事。
+ * 它**不決定要不要顯示** —— 那由 `hr/me` 的身分決定；以存量代替身分會把剛升上來、
+ * 還沒有人送單的主管擋在門外。
  */
 interface IApprovalInbox {
   leave: number | null;
@@ -41,13 +39,8 @@ interface IHrSidebarProps {
 }
 
 /**
- * Info: (20260810 - Julian) 左側主選單。
- * 桌機固定在版面左側，行動版改為覆蓋式抽屜（`isOpen` 控制）。
- * 兩者共用同一份 `HR_NAV_SECTIONS`，避免選單項目在兩處各寫一次而漂移。
- *
- * Info: (20260818 - Julian) 改為兩段式：四個群組（人事管理／簽到系統／假勤管理／
- * 加上兩個不分組的區塊）。項目長到 14 個之後，「排班月曆在哪」變成一件要從頭
- * 掃到尾的事 —— 分組把掃描範圍從 14 個縮到幾個標題。
+ * Info: (20260810 - Julian) 左側主選單。桌機固定在版面左側，行動版改為覆蓋式抽屜
+ * （`isOpen` 控制）；兩者共用同一份 `HR_NAV_SECTIONS`，避免選單項目在兩處漂移。
  */
 const HrSidebar: FC<IHrSidebarProps> = ({ identity, isOpen, onClose }) => {
   const { t } = useTranslation();
@@ -60,10 +53,8 @@ const HrSidebar: FC<IHrSidebarProps> = ({ identity, isOpen, onClose }) => {
 
   /**
    * Info: (20260818 - Julian) 誰看得到簽核入口：部門主管，或具 `HR_ADMIN` 職能的人資。
-   *
-   * 這是**顯示**判準不是授權判準 —— 每一支端點自己仍會擋（假單比對簽核鏈上的
-   * `approverEmployeeId`，加班比對 `listManagedEmployeeIds` 的子樹）。
-   * 藏起來只是為了不讓一個按下去必定是空的入口佔著位置。
+   * 這是**顯示**判準不是授權判準 —— 每一支端點自己仍會擋；藏起來只是為了不讓一個
+   * 按下去必定是空的入口佔著位置。
    */
   const canApprove =
     identity === null ||
@@ -75,10 +66,7 @@ const HrSidebar: FC<IHrSidebarProps> = ({ identity, isOpen, onClose }) => {
     if (!canApprove) return undefined;
 
     let active = true;
-    /**
-     * Info: (20260818 - Julian) 兩支各自成敗，用 `allSettled` 而不是 `all` ——
-     * 加班那支掛掉不該讓假單那個徽章也跟著消失。
-     */
+    // Info: (20260818 - Julian) 用 `allSettled` 而不是 `all`：加班那支掛掉不該讓假單徽章也消失
     void Promise.allSettled([
       request<IEnvelopeLike<unknown[]>>(LEAVE_API.REQUEST_PENDING),
       request<IEnvelopeLike<unknown[]>>(OVERTIME_API.REQUEST_PENDING),
@@ -105,10 +93,7 @@ const HrSidebar: FC<IHrSidebarProps> = ({ identity, isOpen, onClose }) => {
         ? inbox.overtime
         : null;
 
-  /**
-   * Info: (20260818 - Julian) 選中哪一項由 `activeHrNavKeyOf` 一次決定，
-   * 不在這裡逐項比對前綴 —— 逐項比對的版本讓巢狀路由同時亮兩項（見該函式的說明）。
-   */
+  // Info: (20260818 - Julian) 選中哪一項由 `activeHrNavKeyOf` 一次決定，不在這裡逐項比對前綴
   const activeKey = activeHrNavKeyOf(pathname);
 
   const renderItem = (item: IHrNavItem) => {
@@ -154,10 +139,7 @@ const HrSidebar: FC<IHrSidebarProps> = ({ identity, isOpen, onClose }) => {
           className={`size-5 shrink-0 ${isActive ? "text-orange-500" : "text-gray-400"}`}
         />
         <span className="min-w-0 flex-1 truncate">{t(item.labelKey)}</span>
-        {/**
-         * Info: (20260818 - Julian) 既然為了藏空選單已經查了筆數，就把它印出來：
-         * 主管最想知道的是「有幾張等我」，而那個數字現在是免費的。
-         */}
+        {/* Info: (20260818 - Julian) 既然為了藏空選單已經查了筆數，就把「有幾張等我」印出來 */}
         {pendingCount !== null && pendingCount > 0 && (
           <span className="shrink-0 rounded-full bg-orange-500 px-1.5 py-0.5 text-xs font-semibold text-white tabular-nums">
             {pendingCount}

@@ -9,21 +9,11 @@ import { useTranslation } from "@/i18n/i18n_context";
 /**
  * Info: (20260818 - Julian) 同一份表單，兩種版型：桌機內嵌卡片、手機由下方彈出。
  *
- * ## 只有一個實例
+ * 用 CSS 換位置而不是寫兩份 —— 兩份意味著兩套 `<input>`、兩個要同步的 DOM。
+ * `lg:` 那一串把 fixed / 圓角 / 陰影全部收回內嵌卡片，因此桌機不受 `open` 影響。
  *
- * 用 CSS 換位置，不是寫兩份 —— 兩份意味著兩套 `<input>`、兩個要同步的 DOM，
- * 以及日後只改到其中一份的機會（同 `hr_sidebar.tsx` 只寫一份 `navList` 的理由）。
- * `lg:` 那一串把 fixed / absolute / 圓角 / 陰影全部收回內嵌卡片的樣子，
- * 因此桌機完全不受 `open` 影響：關著是內嵌卡片，開著也還是內嵌卡片。
- *
- * ## 為什麼斷點在 JS 端有一份副本
- *
- * 這是唯一非 CSS 能解的部分：`useScrollLock` 與 `role="dialog"` 不看螢幕寬度。
- * 只靠 `lg:hidden` 的話，桌機開啟時會被鎖住捲動、而畫面上沒有任何遮罩
- * 說明為什麼捲不動。
- *
- * Info: (20260818 - Julian) 從 `my_leave_page_body` 抽出來 —— 加班頁是第二個
- * 需要它的地方，而第二次就該抽了。
+ * 斷點在 JS 端另有一份副本，因為 `useScrollLock` 與 `role="dialog"` 不看螢幕寬度：
+ * 只靠 `lg:hidden` 會讓桌機開啟時被鎖住捲動，而畫面上沒有遮罩說明為什麼捲不動。
  */
 const HrFormSheet: FC<{
   /** Info: (20260818 - Julian) 只影響手機版；桌機一律內嵌顯示 */
@@ -51,10 +41,7 @@ const HrFormSheet: FC<{
 
   useScrollLock(asSheet);
 
-  /**
-   * Info: (20260818 - Julian) Esc 關閉。手機上少用，但接了鍵盤的平板與
-   * 桌機縮窄視窗都會走到這裡，而一個關不掉的遮罩是死路。
-   */
+  // Info: (20260818 - Julian) Esc 關閉 —— 平板接鍵盤、桌機縮窄視窗都走這裡，關不掉的遮罩是死路
   useEffect(() => {
     if (!asSheet) return undefined;
 

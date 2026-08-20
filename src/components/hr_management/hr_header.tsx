@@ -33,11 +33,10 @@ const HrHeader: FC<IHrHeaderProps> = ({ identity, onToggleSidebar }) => {
   const { user, logout } = useAuth();
 
   /**
-   * Info: (20260818 - Julian) 優先顯示**員工檔**的姓名，退回登入帳號的名字。
+   * Info: (20260818 - Julian) 優先顯示**員工檔**姓名，退回登入帳號的名字。
    *
-   * `useAuth()` 給的是 `User.name` —— Google 帳號的顯示名稱，與人事系統裡的
-   * 身分未必相同（共用平板、passkey 帳號、演示時切換身分）。而這一頁上
-   * 每一個數字都是**員工檔**的數字：他的額度、他的加班、他要簽的單。
+   * `useAuth()` 給的是 Google 帳號顯示名稱，與人事系統裡的身分未必相同
+   * （共用平板、演示時切換身分），而這一頁每一個數字都是員工檔的數字 ——
    * 兩者不一致時顯示前者，會讓人對著別人的資料以為是自己的。
    */
   const displayName = identity?.name ?? user?.name ?? "";
@@ -106,12 +105,7 @@ const HrHeader: FC<IHrHeaderProps> = ({ identity, onToggleSidebar }) => {
             <Bell className="size-5 shrink-0" />
           </button>
 
-          {/**
-           * Info: (20260818 - Julian) 使用者選單。
-           *
-           * 這顆按鈕不再標 `feature_pending` —— 它現在真的做得到一件事。
-           * 留著那個灰掉的樣式會讓使用者不去點它，而登出就在裡面。
-           */}
+          {/* Info: (20260818 - Julian) 不標 `feature_pending`：灰掉會讓人不去點它，而登出就在裡面 */}
           <Menu as="div" className="relative">
             <MenuButton
               aria-label={t("hr_management.user_menu_aria")}
@@ -135,11 +129,7 @@ const HrHeader: FC<IHrHeaderProps> = ({ identity, onToggleSidebar }) => {
             </MenuButton>
 
             <MenuItems className="absolute right-0 z-40 mt-2 w-52 origin-top-right rounded-xl bg-white p-1 shadow-lg ring-1 ring-gray-200 focus:outline-none">
-              {/**
-               * Info: (20260818 - Julian) 小尺寸的按鈕上放不下姓名（`lg:inline`），
-               * 所以在選單裡補一次。共用平板換人時，「現在登入的是誰」
-               * 必須在按下登出之前就看得到。
-               */}
+              {/* Info: (20260818 - Julian) 小尺寸按鈕放不下姓名；共用平板換人時，登出前必須先看得到現在是誰 */}
               {displayName && (
                 <div className="px-3 py-2 lg:hidden">
                   <div className="truncate text-sm font-medium text-gray-700">

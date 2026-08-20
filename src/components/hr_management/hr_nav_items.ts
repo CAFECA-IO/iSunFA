@@ -26,24 +26,12 @@ export interface IHrNavItem {
 }
 
 /**
- * Info: (20260818 - Julian) 側邊選單的分組。
+ * Info: (20260818 - Julian) 側邊選單的分組：項目長到 14 個之後，分組把掃描範圍
+ * 從 14 個縮到 4 個群組標題。
  *
- * ## 為什麼分組
- *
- * 項目長到 14 個之後，「排班月曆在哪」變成一件要從頭掃到尾的事。
- * 分組把掃描範圍從 14 個縮到 4 個群組標題。
- *
- * ## 為什麼群組直接持有項目，而不是持有 key 再去查表
- *
- * 查表的版本會有兩種漂移：群組裡列了一個不存在的 key，或某個項目
- * 不屬於任何群組 —— 前者渲染出空白，後者讓一整頁從選單上消失，
- * **兩者都不會報錯**。讓群組持有項目、扁平清單由它推導出來，
- * 這兩種狀態在型別上就表示不出來。
- *
- * ## 為什麼沒有收合
- *
- * 分組標題本身就解決了掃描問題，而收合會多一個要記住的狀態
- * （記在哪？換頁後還記得嗎？）。需要時再加。
+ * 群組直接持有項目，而不是持有 key 再去查表 —— 查表版會有兩種漂移：群組裡列了
+ * 不存在的 key（渲染出空白），或某項不屬於任何群組（一整頁從選單上消失），
+ * **兩者都不會報錯**。讓扁平清單由分組推導，這兩種狀態在型別上就表示不出來。
  */
 export interface IHrNavSection {
   key: string;
@@ -54,10 +42,7 @@ export interface IHrNavSection {
 
 export const HR_NAV_SECTIONS: IHrNavSection[] = [
   {
-    /**
-     * Info: (20260818 - Julian) 儀表板不屬於任何群組：它是模組首頁，
-     * 收進「人事管理」會讓「回到總覽」變成一個要先找到群組的動作。
-     */
+    // Info: (20260818 - Julian) 儀表板是模組首頁，收進群組會讓「回到總覽」變成要先找群組
     key: "overview",
     labelKey: null,
     items: [
@@ -189,9 +174,7 @@ export const HR_NAV_SECTIONS: IHrNavSection[] = [
 ];
 
 /**
- * Info: (20260810 - Julian) 側邊選單項目的扁平清單。
- *
- * Info: (20260818 - Julian) 由分組推導而來，不是另外維護的第二份 ——
+ * Info: (20260818 - Julian) 扁平清單由分組推導，不是另外維護的第二份 ——
  * 兩份清單會有一天對不起來，而症狀是某一頁的選單項永遠不亮。
  */
 export const HR_NAV_ITEMS: IHrNavItem[] = HR_NAV_SECTIONS.flatMap(
@@ -201,25 +184,14 @@ export const HR_NAV_ITEMS: IHrNavItem[] = HR_NAV_SECTIONS.flatMap(
 /**
  * Info: (20260818 - Julian) 目前選中哪一項：**最長的那一個前綴，只有一項**。
  *
- * ## 為什麼不是每一項各自比對
+ * 逐項各自算 `startsWith(item.href)` 在巢狀路由上必然多亮 ——
+ * `/hr_management/attendance/presence` 會讓「出勤打卡」與「現場狀態」同時亮。
+ * 選中是一個全域的決定（十四項裡挑一項），回傳單一 key 讓「同時亮兩項」
+ * 表示不出來；改成最長匹配後儀表板也不必再特判全等。
  *
- * 前一版由側邊選單各自算 `pathname.startsWith(item.href)`，只有儀表板特判全等。
- * 那個寫法在巢狀路由上必然多亮：`/hr_management/attendance/presence` 會讓
- * 「出勤打卡」與「現場狀態」同時亮，`/hr_management/leave/approval` 會讓
- * 「我的請假」與「待我簽核」同時亮 —— 而每加一層子路由就會再犯一次。
- *
- * 選中是一個**全域**的決定（十四項裡挑一項），不是十四個各自獨立的布林值。
- * 寫成回傳單一 key，「同時亮兩項」在型別上就不再表示得出來。
- * 改成最長匹配之後儀表板也不必再特判：`/hr_management` 是所有頁的前綴，
- * 但任何子頁都存在更長的匹配。
- *
- * ## 為什麼比對到路徑段為止
- *
- * `href` 或 `href/…`，不是裸的 `startsWith` —— 否則日後出現
- * `/hr_management/leave_policy` 會被 `/hr_management/leave` 吃掉。
- *
- * 沒有自己選單項的頁面（如 `/hr_management/leave/request/:id`）會落在它的列表上，
- * 那是刻意的：詳情頁仍要亮著帶它進來的那一項。
+ * 比對到路徑段為止（`href` 或 `href/…`，不是裸的 `startsWith`），否則日後出現
+ * `/hr_management/leave_policy` 會被 `/hr_management/leave` 吃掉。沒有自己選單項
+ * 的頁面（如請假明細）會落在它的列表上，那是刻意的。
  */
 export const activeHrNavKeyOf = (pathname: string): string | null => {
   let matched: IHrNavItem | null = null;
