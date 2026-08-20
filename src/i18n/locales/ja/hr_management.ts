@@ -597,6 +597,12 @@ export const hrManagement = {
     error_rate_limited:
       "短時間に操作が集中しました。少し待ってからもう一度お試しください。",
     error_supervisor_only: "この操作は部門責任者のみ実行できます。",
+    error_hr_function_required:
+      "この操作には人事管理者の権限が必要です。人事に付与を依頼するか、権限のある方に依頼してください。",
+    error_no_permission_to_view:
+      "この方の記録を閲覧する権限がありません。",
+    error_no_employee_record:
+      "お使いのアカウントはこの帳簿の従業員と紐づいていません。人事に登録を依頼してください。",
   },
   attendance_result: {
     title: "勤怠一覧と異常",

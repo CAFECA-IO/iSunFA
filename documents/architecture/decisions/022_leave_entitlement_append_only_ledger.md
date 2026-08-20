@@ -66,6 +66,21 @@ ADR 015 對團隊錢包做的是同一件事：`TeamWalletLedger` append-only、
 
 `reconciledAt` 可為 null，語意是「從未勾稽過」—— 與「勾稽過且相符」是兩件事。這個區分沿用 `AttendancePresence.STALE` 的精神：**不知道**不等於**沒問題**。
 
+> ⚠️ **第 3 條目前是規劃，不是現況**（2026-08-20，review 第 5 輪第 2 條）。
+>
+> 上面三條寫成並列的現在式，讀起來像三件都已經在跑。實際上：
+> 第 1 條成立（`leave_grant.repo.ts` 與 `leave_ledger.ts` 全部收 `tx`）；
+> 第 2 條的**函式**存在（`rebuildBalanceWithin`，並由 T6 直接呼叫），
+> 但**沒有任何產品程式碼呼叫它**；第 3 條的 Worker
+> （`LeaveEntitlementReconciler`）**不存在** —— `grep` 全 repo 只命中本文件自己。
+>
+> 直接後果：`LeaveBalance.reconciledAt` 在正式環境**永遠是 null**。
+> 而依照上一段自己立的語意，那代表「從未勾稽過」——
+> 也就是**不知道**快取對不對，而不是「沒問題」。餘額卡若把 null 畫成空白，
+> 讀的人會把它讀成後者。
+>
+> 待辦見 §8.2。在它落地之前，「兩份數字必須永遠相等」這句話沒有執行者。
+
 ### 2.4 撤銷是寫反向分錄，不是刪列
 
 駁回、撤回、銷假、人工調整全部寫 `LeaveLedgerEntry(entryType = RESTORE | ADJUST)`，`deltaMinutes` 為正。
@@ -173,8 +188,31 @@ Worker 重試達上限（3 次）建立 `giveup` 標記或進 DLQ，依 CLAUDE.m
 ## 🚧 8. 後果與待辦
 
 1. **`leave_ledger_conservation.test.ts` 是本模組的紅線之一**（另一條是 ADR 021 的 `no_code_branching`）。它必須驗證：逐批守恆、總量守恆、`rebuildLeaveBalance` 冪等、且重建結果與快取逐欄相同。
-   （✅ 2026-08-19 補上（review B8）。四項全驗，另加「回補退回原批而非重新分配」與「過期批不可扣但仍在帳本總和裡」。以記憶體替身跑真正的 `leave_ledger` 函式 —— **不模擬列鎖與交易隔離**，那是 T10 的事且需要真的 PostgreSQL。為此 `sumLedgerMinutes` / `writeBalance` 由 `leave_grant.repo.ts` 搬到 `leave_ledger.ts`：前者 import `@/lib/prisma`，會把一個吃 `DATABASE_URL` 的連線池拉進 jest，而一條因為環境變數而跑不起來的紅線，與沒有紅線是同一件事。）
-2. **每日勾稽 Worker 掛 `scripts/run_worker.ts`**，比照出勤模組 `startServiceLoop("AttendanceEvaluator", ..., HOUR_MS)` 的慣例，新增 `startServiceLoop("LeaveEntitlementReconciler", ..., DAY_MS)`。
+   （🟡 2026-08-19 補上（review B8），另加「回補退回原批而非重新分配」與「過期批不可扣但仍在帳本總和裡」。以記憶體替身跑真正的 `leave_ledger` 函式 —— **不模擬列鎖與交易隔離**，那是 T10 的事且需要真的 PostgreSQL。為此 `sumLedgerMinutes` / `writeBalance` 由 `leave_grant.repo.ts` 搬到 `leave_ledger.ts`：前者 import `@/lib/prisma`，會把一個吃 `DATABASE_URL` 的連線池拉進 jest，而一條因為環境變數而跑不起來的紅線，與沒有紅線是同一件事。）
+
+   **2026-08-19 那個「四項全驗」的 ✅ 下錯了**（2026-08-20，review 第 5 輪第 1、2 條）。當時第三、四項其實都不成立：
+
+   | 項 | 2026-08-19 的實況 | 現在 |
+   |---|---|---|
+   | 逐批守恆 | 只套在單日案例上；跨日重複扣帳測不出來 | ✅ `expectLedgerSelfConsistent()` 逐批逐筆，每次寫入後都跑 |
+   | 總量守恆 | ✅ | ✅ |
+   | `rebuildBalance` 冪等 | 驗的是測試檔裡**手抄的一份副本**，產品那一支零呼叫端 | 🟡 本體抽成 `rebuildBalanceWithin`（收 `tx`），測試直接呼叫**產品那一支**；但**仍然沒有任何產品程式碼呼叫它**（見 §2.3 的警告） |
+   | 重建結果與快取**逐欄**相同 | 替身的 `IBalanceRow` 只有五欄，缺的正是 `expiringSoonMinutes` —— 而那一欄當時**沒有任何寫入者**。「兩邊都沒有」被讀成「兩邊相同」 | ✅ 替身補齊欄位，`rebuildBalanceWithin` 一併重算 `expiringSoonMinutes`，並斷言整列逐欄相等 |
+
+   這一格保留成 🟡 而不是改回 ✅：**第三項的驗證是完整的，但被驗的東西還沒有人用。** 一個沒有呼叫端的函式再怎麼測，快取也不會被勾稽 —— 而那正是這條紅線存在的理由。
+2. **每日勾稽 Worker 掛 `scripts/run_worker.ts`** ⚠️ **尚未開始**，比照出勤模組 `startServiceLoop("AttendanceEvaluator", ..., HOUR_MS)` 的慣例，新增 `startServiceLoop("LeaveEntitlementReconciler", ..., DAY_MS)`。
+
+   它一支扛著三件事，缺任何一件都有可觀察的症狀（2026-08-20 補列，review 第 5 輪）：
+
+   | 它要做的 | 沒做的症狀 |
+   |---|---|
+   | 呼叫 `rebuildBalance` 勾稽 | `reconciledAt` 永遠 null —— 依 §2.3 的語意是「從未勾稽過」，而畫面會把它畫成空白 |
+   | 授予（`accrueForEmployee`） | 額度不會自己長出來，每個人餘額都是 0（部署檢查表 §三） |
+   | 到期：先 `LeaveCashOutEvent` 再 `EXPIRE`（見第 5 項） | 過期額度永遠帶著正餘額，且 §38 IV 的折現從未發生 |
+
+   `expiringSoonMinutes` 已於 2026-08-20 補上寫入者（`rebuildBalanceWithin`），
+   因此第一件事一旦掛上，到期提醒會跟著活過來 —— 在那之前它停在最後一次
+   有人呼叫重建時的值，而目前沒有人呼叫。
 3. **`LeaveGrant.grantedMinutes` 的取整方向待定**：`grantedDays × dayEquivalentMinutes` 在比例給假時會產生小數分鐘（`3.5 日 × 465 分鐘 = 1627.5`）。目前定為無條件進位（對勞工有利），需與 ADR 021 §3.2 的捨入方向一併由法務確認。
 4. **與薪資模組的接口尚未存在**：`LeaveCashOutEvent` 目前只到「事件」為止，無金額。處置同 ADR 020 —— 留明確接口，不猜。
 5. **`entryType = EXPIRE` 的觸發時機**：批次到期當日由 Worker 產生負向分錄。⚠️ 若該假別 `cashOutOnExpiry = true`（特休、補休），必須先產 `LeaveCashOutEvent` 再 `EXPIRE`，順序不可顛倒 —— 顛倒的話那筆額度會先歸零，折現事件就算不出分鐘數。以 `leave_cash_out.test.ts` 釘住。

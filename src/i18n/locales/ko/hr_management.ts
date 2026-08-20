@@ -598,6 +598,12 @@ export const hrManagement = {
     error_rate_limited:
       "짧은 시간에 요청이 너무 많았습니다. 잠시 후 다시 시도해 주세요.",
     error_supervisor_only: "이 작업은 부서 관리자만 할 수 있습니다.",
+    error_hr_function_required:
+      "이 작업에는 인사 관리자 권한이 필요합니다. 인사팀에 부여를 요청하거나 권한이 있는 분께 요청하세요.",
+    error_no_permission_to_view:
+      "이 사람의 기록을 볼 권한이 없습니다.",
+    error_no_employee_record:
+      "계정이 이 장부의 직원과 연결되어 있지 않습니다. 인사팀에 등록을 요청하세요.",
   },
   attendance_result: {
     title: "근태 현황과 이상",

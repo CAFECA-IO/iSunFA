@@ -241,21 +241,38 @@ const EXEMPT: Readonly<Record<string, string>> = {
   VA_INVALID_INPUT_DATA: "格式錯誤，通用文案已足夠",
   // Info: (20260820 - Julian) 500。使用者做不了任何事，且訊息不該洩漏底層原因
   IS_DB_FAILED: "伺服器端故障，不是使用者能處置的事",
-  // Info: (20260820 - Julian) 429 與主管閘由 SHARED_ATTENDANCE_ERROR_I18N_KEY 接住
+  // Info: (20260820 - Julian) 限流、主管閘、職能閘、可見範圍閘、身分解析都在全模組共用表
   IS_RATE_LIMITED: "全模組共用表已登記",
   FO_ATTENDANCE_SUPERVISOR_ONLY: "全模組共用表已登記",
   /**
-   * Info: (20260820 - Julian) 以下這些的呼叫端不是假單／加班的畫面，
-   * 而是人事設定與排班那幾支（它們有自己的錯誤對照）。列在這裡是為了讓
-   * 「為什麼不在這兩張表裡」有一個寫得出來的答案，不是靠讀者自己推。
+   * Info: (20260820 - Julian) 這三個在 2026-08-20 之前被錯誤地歸成
+   * 「屬人事設定畫面」而略過（review 第 5 輪第 3 條）。
+   *
+   * 推論錯在哪：`FO_HR_FUNCTION_REQUIRED` 的觸發按鈕就在**已經存在**的
+   * 加班待簽清單上（§32 IV 認定），而不是在還沒做的人事設定畫面。
+   * 沒有 HR 職能的人按下去會落到 fallback「認定失敗」——
+   * 他需要知道的是「這個動作要人事職能」。
+   *
+   * 現在三個都登記在 `SHARED_ATTENDANCE_ERROR_I18N_KEY`，
+   * 因此下面的覆蓋檢查會直接通過，不再需要豁免 —— 留在這裡的是
+   * 為什麼它們不在假單／加班那兩張表裡。
    */
-  NF_EMPLOYEE: "人事設定畫面的錯誤，不在假勤兩張表的範圍",
-  NF_EMPLOYEE_FOR_USER: "身分解析失敗，屬登入流程",
-  NF_SHIFT_PATTERN: "排班設定畫面的錯誤",
-  CF_SCHEDULE_DAY_CONFLICT: "排班設定畫面的錯誤",
-  VA_ATTENDANCE_RANGE_TOO_LARGE: "出勤查詢的錯誤，屬簽到系統那張表",
-  FO_HR_FUNCTION_REQUIRED: "人事職能閘，四個模組共用；文案屬人事設定畫面",
-  FO_NO_PERMISSION_TO_VIEW_THIS: "可見範圍閘，四個模組共用",
+  FO_HR_FUNCTION_REQUIRED: "全模組共用表已登記（跨四個模組的職能閘）",
+  FO_NO_PERMISSION_TO_VIEW_THIS: "全模組共用表已登記（跨模組的可見範圍閘）",
+  NF_EMPLOYEE_FOR_USER: "全模組共用表已登記（每一支端點的第一道門）",
+  /**
+   * Info: (20260820 - Julian) 以下這幾個的呼叫端是**簽到模組**的畫面。
+   *
+   * 誠實一點：那些畫面目前**沒有**自己的錯誤對照表
+   * （`schedule_page_body.tsx` 呼叫 `errorI18nKeyOf` 時不帶 overrides），
+   * 所以它們今天同樣落到通用訊息。那是簽到模組的缺口，不是假勤的 ——
+   * 列在這裡是為了不把它假裝成「已經有人管」。
+   * ToDo: (20260820 - Julian) 簽到模組補一張 `ATTENDANCE_ERROR_I18N_KEY`。
+   */
+  NF_EMPLOYEE: "簽到／人事設定畫面的錯誤；該模組尚無對照表（見上方 ToDo）",
+  NF_SHIFT_PATTERN: "排班設定畫面的錯誤；同上",
+  CF_SCHEDULE_DAY_CONFLICT: "排班設定畫面的錯誤；同上",
+  VA_ATTENDANCE_RANGE_TOO_LARGE: "出勤查詢的錯誤；同上",
 };
 
 /**

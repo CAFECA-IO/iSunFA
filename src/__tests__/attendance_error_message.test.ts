@@ -102,11 +102,21 @@ describe("共用文案的覆蓋範圍", () => {
    * 刪掉一筆會紅（那正是實測發現沒人守的那個退化），多加一筆也會紅，
    * 而多加時請一併更新這裡並確認五個語系都有字典（由 i18n 掃描接手）。
    */
-  it("共用表恰好覆蓋這兩個錯誤碼", () => {
+  it("共用表恰好覆蓋這五個錯誤碼", () => {
     expect(Object.keys(SHARED_ATTENDANCE_ERROR_I18N_KEY).sort()).toEqual(
       [
         API_ERRORS.IS_RATE_LIMITED.code,
         API_ERRORS.FO_ATTENDANCE_SUPERVISOR_ONLY.code,
+        /**
+         * Info: (20260820 - Julian) 三個跨模組的閘（review 第 5 輪第 3 條）。
+         *
+         * `FO_HR_FUNCTION_REQUIRED` 是 §32 IV 認定端點最主要的錯誤，
+         * 而那個按鈕就在已經存在的加班待簽清單上 —— 先前它落到 fallback
+         * 「認定失敗」，按下去的人不知道自己缺的是人事職能。
+         */
+        API_ERRORS.FO_HR_FUNCTION_REQUIRED.code,
+        API_ERRORS.FO_NO_PERMISSION_TO_VIEW_THIS.code,
+        API_ERRORS.NF_EMPLOYEE_FOR_USER.code,
       ].sort(),
     );
   });

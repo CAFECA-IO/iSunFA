@@ -160,21 +160,26 @@ npx tsx scripts/seed/seed_leave_overtime_demo.ts
 （`POST .../hr/leave/balance/accrue`，限 `HR_ADMIN`）——
 **但在正式帳本上這一步做不到，先看下一節。**
 
-### ⚠️ `leave_balance.expiring_soon_minutes` 永遠是 0
+### ⚠️ `leave_balance.expiring_soon_minutes` 與 `reconciled_at` 需要那支 Worker
 
-這一欄有 default 0、被 `leave_grant.repo.ts` 讀出來餵給餘額卡，
-**而全 repo 沒有任何地方寫它**（`grep expiringSoonMinutes` 只有一個讀取點）。
-寫它的是同一支還不存在的每日 Worker（它同時要做 `EXPIRE` 分錄與勾稽）。
+`expiring_soon_minutes` 的**計算已於 2026-08-20 補上**（`rebuildBalanceWithin`
+一併重算，判準是「還沒過期、且 30 天內到期的批次餘額合計」）——
+但 `rebuildBalance` **目前沒有任何產品程式碼呼叫**，呼叫它的是那支還不存在的
+每日勾稽 Worker（ADR 022 §8.2）。
 
-後果：餘額卡上的「即將到期」對每一個人都顯示 0，**包含特休下週就要到期的人**。
-那不是「沒有即將到期的額度」，是「沒有人算過」，而畫面說不出這個差別。
+因此上線當下這兩欄的實況是：
 
-上線前的處置只有兩個，兩個都要**明確選一個**：
+| 欄 | 上線當下 | 補救 |
+|---|---|---|
+| `expiring_soon_minutes` | 授予時寫 0，之後沒有人重算 —— 餘額卡的「即將到期」對每個人都是 0 | Worker 掛上去即活；在那之前可手動對每人呼叫一次重建 |
+| `reconciled_at` | 永遠 null。依 ADR 022 §2.3 的語意，那是「**從未勾稽過**」，不是「沒問題」 | 同上 |
 
-1. 把餘額卡上的「即將到期」欄位隱藏，直到 Worker 掛上去。
-2. 接受它顯示 0，並在畫面上標成「尚未計算」。
+**畫面要說得出這個差別。** 一個永遠顯示 0 的到期提醒，比沒有那個提醒更糟；
+一個把 null 畫成空白的「最近勾稽」欄位，讀的人會以為勾稽過了。
+上線前**明確選一個**：
 
-**不要什麼都不做**：一個永遠顯示 0 的到期提醒，比沒有那個提醒更糟。
+1. 兩欄都隱藏，直到 Worker 掛上去。
+2. 顯示，但標成「尚未計算」／「從未勾稽」。
 
 ---
 

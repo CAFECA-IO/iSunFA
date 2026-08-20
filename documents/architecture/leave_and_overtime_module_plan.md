@@ -1637,9 +1637,23 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 |---|---|---|
 | 額度分鐘、請假分鐘、加班分鐘 | `Int` | 整數計數，非金融量。同出勤模組 §D8 |
 | 授予日數 `grantedDays`、折現日數、`paidRatio` | `Prisma.Decimal` | 會直接乘上工資變成錢，適用 CLAUDE.md §2 |
+| **運算中的日數**（總日數、簽核門檻比較、日數 × 日約當） | **`IExactDays`（`bigint` 分數）** | 見下方說明（review B5／B6） |
 | 加成倍率 | `{ numerator: Int, denominator: Int }` 常數 | 嚴禁 `1.333`（D11） |
 | 日期 | `String "YYYY-MM-DD"` | 與 `AttendancePunch.workDate`、`EmployeeShiftDay.workDate` 同型別同語意 |
 | 時刻 | `Int` 分鐘（0–2879） | 同 `ShiftPattern`，跨夜可表達 |
+
+> Info: (20260820 - Julian) 第三列是 2026-08-19 新增的第五種型別，先前**這張表與
+> 全部文件都沒有提到它**（review 第 7 輪）。
+>
+> `Decimal` 是**落地**型別，`IExactDays` 是**運算**型別，兩者不互相取代：
+> `Σ 分鐘ᵢ ÷ 日約當ᵢ` 在 420 分班上是 7 分之一，十進位表示不完 ——
+> 而那個值同時決定簽核關卡（ADR 023 §2.2 的右開區間）。實測
+> `MoneyUtil` 的 decimal.js 預設設定（precision 20）下，四組「數學上恰好 3 日」
+> 的反例仍有**兩組**掉到 3 以下，方向與原生 `double` 相同。
+>
+> 落地一律經 `exactDaysToDecimalString()` 轉字串；**顯示用的
+> `exactDaysToNumber()` 不可拿去比對規則**。完整記載見
+> `documents/engineering_guidelines/numerical_precision_guideline.md §5`。
 
 **時區**：沿用出勤模組的政策時區（Demo 期間為 `DEMO_TIME_ZONE` 常數，正式版為 `AttendancePolicy.timeZone`）。額度週期的「年度終結」是政策時區的 12/31 23:59:59，不是 UTC —— 差一個時區就差一天的特休，而那一天是要折現成錢的。
 

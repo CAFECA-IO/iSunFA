@@ -5,6 +5,7 @@ import {
   readConsumableGrants,
   rebuildBalanceWithin,
   sumLedgerMinutes,
+  writeBalance,
   writeConsumeForDays,
   writeRestoreForDay,
 } from "@/repositories/leave_ledger";
@@ -76,11 +77,23 @@ interface IEntryRow {
   idempotencyKey: string;
 }
 
+/**
+ * Info: (20260820 - Julian) 這個替身列必須有**表上的每一欄**（review 第 5 輪第 1 條）。
+ *
+ * ADR 022 §8.1 對這條紅線的第四項要求是「重建結果與快取**逐欄**相同」，
+ * 而第一版的 fixture 只有五欄 —— 缺的正是 `expiringSoonMinutes`，
+ * 也正是當時**沒有任何寫入者**的那一欄。於是「重建沒寫它、替身也沒有它」
+ * 被讀成「兩邊相同」，而 ADR 上打了一個 ✅（checklist §1.5：
+ * 兩邊都是 undefined 的假通過）。
+ *
+ * 少一欄不是「測得比較少」，是**把缺口凍結成已驗證**。
+ */
 interface IBalanceRow {
   accountBookId: string;
   employeeId: string;
   leavePolicyId: string;
   remainingMinutes: number;
+  expiringSoonMinutes: number;
   reconciledAt: Date | null;
 }
 
@@ -218,7 +231,11 @@ class InMemoryLedger {
         upsert: async (args: {
           where: { employeeId_leavePolicyId: { employeeId: string; leavePolicyId: string } };
           create: IBalanceRow;
-          update: { remainingMinutes: number; reconciledAt?: Date };
+          update: {
+            remainingMinutes: number;
+            expiringSoonMinutes?: number;
+            reconciledAt?: Date;
+          };
         }) => {
           const key = args.where.employeeId_leavePolicyId;
           const existing = this.balances.find(
@@ -231,6 +248,14 @@ class InMemoryLedger {
             return args.create;
           }
           existing.remainingMinutes = args.update.remainingMinutes;
+          /**
+           * Info: (20260820 - Julian) 只在 `update` 真的帶了這一欄時才動它
+           * —— `writeBalance` 對授予／人工調整那兩條路徑刻意省略它，
+           * 而替身若一律寫回 `undefined`，就測不出「省略等於不動」。
+           */
+          if (args.update.expiringSoonMinutes !== undefined) {
+            existing.expiringSoonMinutes = args.update.expiringSoonMinutes;
+          }
           if (args.update.reconciledAt) existing.reconciledAt = args.update.reconciledAt;
           return existing;
         },
@@ -257,7 +282,11 @@ let ledger: InMemoryLedger;
  * `prisma.$transaction` 外殼。這裡呼叫的就是產品在交易內跑的那幾行。
  */
 const rebuild = (): Promise<number> =>
-  rebuildBalanceWithin(ledger.client, { ...SCOPE, reconciledAt: RECONCILED_AT });
+  rebuildBalanceWithin(ledger.client, {
+    ...SCOPE,
+    asOfDate: AS_OF,
+    reconciledAt: RECONCILED_AT,
+  });
 
 const balanceRow = (): IBalanceRow | undefined => ledger.balances[0];
 
@@ -649,4 +678,148 @@ describe("T6 範圍過濾：帳本、員工、假別三個鍵各自都要生效"
       ).rejects.toThrow(/asOfDate/);
     },
   );
+});
+
+/**
+ * Info: (20260820 - Julian) 第四項要求的另一半：**`expiringSoonMinutes` 也要被重建**
+ * （review 第 5 輪第 1 條）。
+ *
+ * ## 這一欄先前沒有任何寫入者
+ *
+ * `grep expiringSoonMinutes` 只有讀取點 —— `leave_grant.repo.ts` 把它撈出來
+ * 一路送到餘額卡。default 是 0，於是畫面對**每一個人**都顯示
+ * 「即將到期 0 分鐘」，包含特休下週就要到期的那一位。
+ * 那不是「沒有即將到期的額度」，是「沒有人算過」，而畫面說不出這個差別。
+ * §38 IV 未休折現的前置提醒因此從來沒有發生過。
+ *
+ * ## 而測試把它凍結成正確
+ *
+ * 上面那個 `IBalanceRow` 原本只有五欄，缺的正是這一欄 —— 於是
+ * 「重建沒寫它、替身也沒有它」被讀成「兩邊相同」，
+ * 而 ADR 022 §8.1 據此打了一個「四項全驗」的 ✅。
+ */
+describe("T6 第四項：重建連 expiringSoonMinutes 一起重算", () => {
+  /**
+   * Info: (20260820 - Julian) 兩批的到期日刻意跨過 30 天的界線：
+   * `grant-early` 到期於 2026-12-31（距 `AS_OF` 134 天，不算），
+   * 這裡再加一批 20 天後到期的（算）。少了跨界的那一組，
+   * 一個「把全部餘額都當成即將到期」的實作也會通過。
+   */
+  const addExpiringSoon = (): void => {
+    ledger.addGrant(
+      {
+        id: "grant-soon",
+        // Info: (20260820 - Julian) AS_OF 是 2026-08-19，30 天內
+        expiresOn: "2026-09-08",
+        createdAt: new Date("2026-02-01T00:00:00.000Z"),
+      },
+      300,
+    );
+  };
+
+  it("只把 30 天內到期的批次算進去", async () => {
+    addExpiringSoon();
+    await rebuild();
+
+    // Info: (20260820 - Julian) 只有 grant-soon 的 300 分；另兩批分別在 12/31 與次年到期
+    expect(balanceRow()?.expiringSoonMinutes).toBe(300);
+    expect(balanceRow()?.remainingMinutes).toBe(1440 + 300);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 扣掉之後即將到期的量要跟著變小 ——
+   * 它讀的是**批次餘額**，不是授予當初的面額。
+   */
+  it("扣過之後即將到期的量跟著減少", async () => {
+    addExpiringSoon();
+    const balances = await readConsumableGrants(ledger.client, {
+      ...SCOPE,
+      asOfDate: AS_OF,
+    });
+    // Info: (20260820 - Julian) FIFO 先扣 grant-soon（它最早到期）
+    await writeConsumeForDays(ledger.client, {
+      balances,
+      days: [{ leaveDayId: "day-1", minutes: 120 }],
+      actorEmployeeId: ACTOR,
+    });
+    await rebuild();
+
+    expect(balanceRow()?.expiringSoonMinutes).toBe(180);
+    expectLedgerSelfConsistent();
+  });
+
+  /**
+   * Info: (20260820 - Julian) 已過期的批次**不算**「即將到期」。
+   *
+   * 它們不是即將到期，是已經到期 —— 那是 `EXPIRE` 分錄與折現的事
+   * （ADR 022 §8.5，Worker 尚未存在）。混進來的話，畫面會催一筆
+   * 已經催不回來的額度。
+   */
+  it("已過期的批次不算即將到期", async () => {
+    ledger.addGrant(
+      {
+        id: "grant-expired",
+        expiresOn: "2026-01-31",
+        createdAt: new Date("2025-01-01T00:00:00.000Z"),
+      },
+      120,
+    );
+    await rebuild();
+
+    expect(balanceRow()?.expiringSoonMinutes).toBe(0);
+    // Info: (20260820 - Julian) 但它仍在帳本總和裡（可用量 ≠ 帳本總和）
+    expect(balanceRow()?.remainingMinutes).toBe(1440 + 120);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 授予與人工調整**不得**把這一欄歸零。
+   *
+   * 那兩條路徑手上沒有「今天是哪一天」，因此 `writeBalance` 對它們省略
+   * 這個參數。省略必須等於「不動」而不是「寫 0」—— 寫 0 的症狀
+   * 與「從來沒有人算過」一模一樣，而那正是這一組要消滅的東西。
+   */
+  it("writeBalance 省略該欄時不動它（授予與人工調整走這條）", async () => {
+    addExpiringSoon();
+    await rebuild();
+    expect(balanceRow()?.expiringSoonMinutes).toBe(300);
+
+    await writeBalance(ledger.client, {
+      ...SCOPE,
+      remainingMinutes: 999,
+    });
+
+    expect(balanceRow()?.remainingMinutes).toBe(999);
+    expect(balanceRow()?.expiringSoonMinutes).toBe(300);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 「逐欄相同」現在真的成立：把整列的每一欄
+   * 都與重建算出來的值比對，而不是只比 `remainingMinutes`。
+   *
+   * 用 `Object.keys` 列出實際欄位再逐一比，而不是寫死五個欄位名 ——
+   * 日後 `LeaveBalance` 再多一欄而重建沒跟上時，這一條會紅。
+   */
+  it("重建結果與快取逐欄相同", async () => {
+    addExpiringSoon();
+    await rebuild();
+
+    const row = balanceRow();
+    expect(row).toBeDefined();
+    if (row === undefined) return;
+
+    expect(Object.keys(row).sort()).toEqual([
+      "accountBookId",
+      "employeeId",
+      "expiringSoonMinutes",
+      "leavePolicyId",
+      "reconciledAt",
+      "remainingMinutes",
+    ]);
+    expect(row).toEqual({
+      ...SCOPE,
+      remainingMinutes: await sumLedgerMinutes(ledger.client, SCOPE),
+      expiringSoonMinutes: 300,
+      reconciledAt: RECONCILED_AT,
+    });
+  });
 });

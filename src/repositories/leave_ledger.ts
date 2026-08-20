@@ -1,5 +1,9 @@
 import { Prisma } from "@/generated";
-import { LeaveLedgerEntryType } from "@/constants/leave_policy";
+import {
+  LEAVE_EXPIRING_SOON_DAYS,
+  LeaveLedgerEntryType,
+} from "@/constants/leave_policy";
+import { addIsoDays } from "@/lib/utils/attendance_time";
 import { allocateConsumption } from "@/lib/leave_entitlement_rules";
 import { IConsumableGrant } from "@/interfaces/leave_entitlement";
 
@@ -298,6 +302,17 @@ export const writeBalance = async (
     employeeId: string;
     leavePolicyId: string;
     remainingMinutes: number;
+    /**
+     * Info: (20260820 - Julian) 即將到期的分鐘數。**省略即不動這一欄**
+     * （review 第 5 輪第 1 條）。
+     *
+     * 授予與人工調整那兩條路徑不算它（它們手上沒有「今天是哪一天」，
+     * 而「即將」是相對於某一天的），因此它們省略；由
+     * `rebuildBalanceWithin` 負責。省略時**不能**寫 0 ——
+     * 那會讓每一次授予把上一次算出來的到期提醒歸零，
+     * 而症狀與「從來沒有人算過」一模一樣。
+     */
+    expiringSoonMinutes?: number;
     reconciledAt?: Date | null;
   },
 ): Promise<void> => {
@@ -313,13 +328,57 @@ export const writeBalance = async (
       employeeId: params.employeeId,
       leavePolicyId: params.leavePolicyId,
       remainingMinutes: params.remainingMinutes,
+      expiringSoonMinutes: params.expiringSoonMinutes ?? 0,
       reconciledAt: params.reconciledAt ?? null,
     },
     update: {
       remainingMinutes: params.remainingMinutes,
+      ...(params.expiringSoonMinutes === undefined
+        ? {}
+        : { expiringSoonMinutes: params.expiringSoonMinutes }),
       ...(params.reconciledAt ? { reconciledAt: params.reconciledAt } : {}),
     },
   });
+};
+
+/**
+ * Info: (20260820 - Julian) 即將到期的分鐘數（review 第 5 輪第 1 條）。
+ *
+ * ## 這一欄先前**沒有任何寫入者**
+ *
+ * `grep expiringSoonMinutes` 只有讀取點：`leave_grant.repo.ts` 把它從
+ * `LeaveBalance` 撈出來，一路送到餘額卡。而它的 default 是 0，
+ * 於是畫面對**每一個人**都顯示「即將到期 0 分鐘」——
+ * 包含特休下週就要到期的那一位。
+ *
+ * 那不是「沒有即將到期的額度」，是「沒有人算過」，而畫面說不出這個差別。
+ * §38 IV 未休折現的前置提醒因此從來沒有發生過。
+ *
+ * ## 判準
+ *
+ * 「還沒過期、且在 `LEAVE_EXPIRING_SOON_DAYS` 天內到期」的批次餘額合計。
+ * 已過期的批次不算 —— 它們不是「即將」到期，是**已經**到期，
+ * 而那是 `EXPIRE` 分錄與折現的事（ADR 022 §8.5，Worker 尚未存在）。
+ *
+ * 用 `readConsumableGrants` 而不是自己查：它就是「哪些批次還有餘額、
+ * 還沒過期」的唯一定義（`consumableGrantWhere`，review B4）。
+ * 自己再查一次會出現第二個答案，而兩個答案遲早在到期日當天分岔。
+ */
+export const sumExpiringSoonMinutes = async (
+  tx: Prisma.TransactionClient,
+  params: {
+    accountBookId: string;
+    employeeId: string;
+    leavePolicyId: string;
+    /** Info: (20260820 - Julian) 「今天」由呼叫端注入，這一層不取 `Date.now()` */
+    asOfDate: string;
+  },
+): Promise<number> => {
+  const grants = await readConsumableGrants(tx, params);
+  const threshold = addIsoDays(params.asOfDate, LEAVE_EXPIRING_SOON_DAYS);
+  return grants
+    .filter((grant) => grant.expiresOn <= threshold)
+    .reduce((sum, grant) => sum + grant.remainingMinutes, 0);
 };
 
 /**
@@ -341,13 +400,30 @@ export const rebuildBalanceWithin = async (
     accountBookId: string;
     employeeId: string;
     leavePolicyId: string;
+    /**
+     * Info: (20260820 - Julian) 「即將到期」是相對於某一天的，因此重建需要它
+     * （review 第 5 輪第 1 條）。由呼叫端注入，這一層不取 `Date.now()`。
+     */
+    asOfDate: string;
     reconciledAt: Date;
   },
 ): Promise<number> => {
   const remainingMinutes = await sumLedgerMinutes(tx, params);
+  /**
+   * Info: (20260820 - Julian) 重建**兩個**派生欄位，不是一個（review 第 5 輪第 1 條）。
+   *
+   * ADR 022 §8.1 對這條紅線的第四項要求是「重建結果與快取**逐欄**相同」。
+   * 在補上這一行之前那句話不可能成立 —— `expiringSoonMinutes` 沒有任何
+   * 寫入者，重建碰不到它，而守恆測試的替身裡也剛好沒有這一欄，
+   * 於是「兩邊都沒有」被讀成「兩邊相同」（checklist §1.5）。
+   */
+  const expiringSoonMinutes = await sumExpiringSoonMinutes(tx, params);
   await writeBalance(tx, {
-    ...params,
+    accountBookId: params.accountBookId,
+    employeeId: params.employeeId,
+    leavePolicyId: params.leavePolicyId,
     remainingMinutes,
+    expiringSoonMinutes,
     reconciledAt: params.reconciledAt,
   });
   return remainingMinutes;

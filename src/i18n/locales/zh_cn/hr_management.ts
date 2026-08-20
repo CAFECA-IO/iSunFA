@@ -586,6 +586,11 @@ export const hrManagement = {
   attendance_common: {
     error_rate_limited: "短时间内操作过于频繁，请稍等一下再试。",
     error_supervisor_only: "这个操作只有部门主管可以执行。",
+    error_hr_function_required:
+      "这个动作需要人资管理职能。请洽人资指派，或请已有该职能的同事代为处理。",
+    error_no_permission_to_view: "你没有查看这个人纪录的权限。",
+    error_no_employee_record:
+      "你的帐号尚未对应到这个帐本里的员工。请洽人资建立。",
   },
   attendance_result: {
     title: "出勤总览与异常",

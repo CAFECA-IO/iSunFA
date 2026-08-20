@@ -64,6 +64,8 @@ export interface ILeaveGrantRepository {
     accountBookId: string;
     employeeId: string;
     leavePolicyId: string;
+    /** Info: (20260820 - Julian) 「即將到期」相對於哪一天（review 第 5 輪第 1 條） */
+    asOfDate: string;
     reconciledAt: Date;
   }): Promise<number>;
   summarize(params: {
@@ -250,6 +252,8 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
     accountBookId: string;
     employeeId: string;
     leavePolicyId: string;
+    /** Info: (20260820 - Julian) 「即將到期」相對於哪一天（review 第 5 輪第 1 條） */
+    asOfDate: string;
     reconciledAt: Date;
   }): Promise<number> {
     return prisma.$transaction((tx) => rebuildBalanceWithin(tx, params));

@@ -608,6 +608,12 @@ export const hrManagement = {
     error_rate_limited:
       "Too many requests in a short time. Please wait a moment and try again.",
     error_supervisor_only: "Only a department manager can perform this action.",
+    error_hr_function_required:
+      "This action requires the HR administrator function. Ask HR to grant it, or ask someone who already has it to do this for you.",
+    error_no_permission_to_view:
+      "You do not have permission to view this person's record.",
+    error_no_employee_record:
+      "Your account is not linked to an employee in this account book yet. Ask HR to add you.",
   },
   attendance_result: {
     title: "Attendance overview and exceptions",

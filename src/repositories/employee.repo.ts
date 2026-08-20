@@ -202,22 +202,12 @@ class EmployeeRepository implements IEmployeeRepository {
     });
   }
   /**
-   * Info: (20260813 - Julian) 這個人是不是任一部門的主管。
+   * Info: (20260818 - Julian) 顯示用的員工資料（工號、姓名、職稱、部門名）。
    *
-   * **這不是權限矩陣**，是計畫書 §8.5 的視野分級 —— 決定「看不看得到圍欄地圖」
-   * 與「畫面上顯不顯示銷假徵詢按鈕」。正式版的權限控制仍然是 §7.3 第 1 順位，
-   * 而它會取代這個方法，不是建立在它之上。
-   *
-   * 用 `Department.managerId` 而不是職稱字串：職稱是自由文字，
-   * 「工地主任」與「工地主任(代)」在字串比對下是兩個人，而在組織圖上是同一件事。
-   *
-   * ⚠️ Info: (20260817 - Julian) **這個方法回答的是「他是不是主管」，
-   * 不是「他管不管得到某個人」。** 拿它當授權判斷會放行跨部門的操作 ——
-   * 第一工務段的主管可以對第五工務段的員工發起銷假徵詢。
-   * 需要後者請用 `managesEmployee()`。
-   *
-   * 兩個都留著是刻意的：顯示按鈕與允許動作是兩個不同的問題，
-   * 用同一個答案回答它們，正是這次那個缺口的成因。
+   * Info: (20260820 - Julian) 這裡原本掛著一整段在講 `isDepartmentManager`
+   * 的說明（Minor 25）—— 包括「拿它當授權判斷會放行跨部門的操作」那句警告。
+   * 註解錯位不是排版問題：那句警告要警告的方法在它下面二十行，
+   * 而那個方法一句註解都沒有，讀的人不會知道它有這個陷阱。已搬回去。
    */
   public async findProfile(params: {
     accountBookId: string;
@@ -248,6 +238,24 @@ class EmployeeRepository implements IEmployeeRepository {
     };
   }
 
+  /**
+   * Info: (20260813 - Julian) 這個人是不是任一部門的主管。
+   *
+   * **這不是權限矩陣**，是計畫書 §8.5 的視野分級 —— 決定「看不看得到圍欄地圖」
+   * 與「畫面上顯不顯示銷假徵詢按鈕」。正式版的權限控制仍然是 §7.3 第 1 順位，
+   * 而它會取代這個方法，不是建立在它之上。
+   *
+   * 用 `Department.managerId` 而不是職稱字串：職稱是自由文字，
+   * 「工地主任」與「工地主任(代)」在字串比對下是兩個人，而在組織圖上是同一件事。
+   *
+   * ⚠️ Info: (20260817 - Julian) **這個方法回答的是「他是不是主管」，
+   * 不是「他管不管得到某個人」。** 拿它當授權判斷會放行跨部門的操作 ——
+   * 第一工務段的主管可以對第五工務段的員工發起銷假徵詢。
+   * 需要後者請用 `listManagedScope` 系列（`managesEmployee`）。
+   *
+   * 兩個都留著是刻意的：顯示按鈕與允許動作是兩個不同的問題，
+   * 用同一個答案回答它們，正是這次那個缺口的成因。
+   */
   public async isDepartmentManager(params: {
     accountBookId: string;
     employeeId: string;
@@ -262,7 +270,36 @@ class EmployeeRepository implements IEmployeeRepository {
   }
 
   /**
-   * Info: (20260817 - Julian) 這個主管管不管得到那位員工。**這是授權判斷。**
+   * Info: (20260817 - Julian) 那位員工在不在這個主管的**管轄範圍**內（不含他自己）。
+   *
+   * ## 這一支不做「該不該」的判斷（M11）
+   *
+   * Info: (20260820 - Julian) 它原本的第一行寫著「**這是授權判斷。**」，
+   * 而 `coding_guidelines §1.1` 的反例正是那句話：
+   * 「『這個人有沒有權限做這件事』不行（留在 Repository）」。
+   *
+   * 修的是那句話而不是這段程式碼，理由要寫清楚 —— 這一支算的是**組織圖上的
+   * 一個事實**：target 的部門在不在 manager 那個部門的子樹裡。
+   * 「因此他可以看／可以簽」是**決定**，而決定只在 `assertMay*` 那幾支
+   * （`leave_visibility.ts`、`overtime_visibility.ts`、`assertMayDecide`）。
+   * 同一個事實在不同動作上會導出不同的答案：查餘額時「管得到」就放行，
+   * 核准時「管得到」還要再過一道不得自我核准 —— 那正是決定與事實的差別。
+   *
+   * ## 但「不含自己」確實是一條政策，而它刻意留在這裡
+   *
+   * 嚴格說，`managerEmployeeId === targetEmployeeId → false` 是職責分離
+   * （ADR 023 §5），不是組織圖的事實。把它上移到 service 是比較純的分層，
+   * **但目前有兩個呼叫端沒有自己的自我檢查**：
+   * `leave.service` 的銷假徵詢與 `attendance_schedule.service` 的改班。
+   * 移走等於讓主管可以對自己發起銷假徵詢、改自己的班，
+   * 而症狀不會有任何錯誤訊息。`error_dictionary.ts:1861` 也已經把
+   * 「主管改不了自己的班」寫成一個對外承諾。
+   *
+   * 因此把它定義成**管轄範圍的一部分**（我的範圍不含我自己），
+   * 並由 `employee_managed_scope.test.ts` 釘住 —— 那支測試在補上之前，
+   * 這條被兩個服務依賴的行為一條測試都沒有。
+   * ToDo: (20260820 - Julian) 那兩個呼叫端各補一道明確的自我檢查之後，
+   * 這一行可以上移，屆時分層才真的乾淨。
    *
    * ## 為什麼要用子樹而不是直屬部門
    *
@@ -326,7 +363,10 @@ class EmployeeRepository implements IEmployeeRepository {
   }
 
   /**
-   * Info: (20260818 - Julian) 我管得到的所有員工 id（不含自己）。**這是授權判斷的複數版。**
+   * Info: (20260818 - Julian) 我的**管轄範圍**裡的所有員工 id（不含自己）。
+   *
+   * Info: (20260820 - Julian) 原本寫「這是授權判斷的複數版」（M11）——
+   * 同 `managesEmployee`，它算的是組織圖上的範圍，決定在 `assertMay*`。
    *
    * ## 為什麼需要一個複數版
    *

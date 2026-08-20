@@ -1,4 +1,3 @@
-import { isRealCalendarDate } from "@/lib/utils/attendance_time";
 import { z } from "zod";
 import { isoDateSchema } from "@/validators/attendance";
 import { LEAVE_REASON_MAX_LENGTH } from "@/constants/leave_policy";
