@@ -3,7 +3,7 @@ import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { prisma } from "@/lib/prisma";
-import { TEAM_PLAN } from "@/constants/subscription_quota";
+import { BILLING_INTERVAL, TEAM_PLAN } from "@/constants/subscription_quota";
 
 /**
  * Info: (20260820 - Luphia) 排程降級**實際寫進資料庫的欄位**。
@@ -21,6 +21,11 @@ jest.mock("@/lib/prisma", () => {
     update: jest.fn(async () => ({})),
     updateMany: jest.fn(async () => ({ count: 1 })),
     upsert: jest.fn(async () => ({})),
+    /**
+     * Info: (20260820 - Luphia) 套用新週期前會先讀當期（展延判斷，產品決定 20260820）：
+     * 當期還沒結束就把期末往後加，不從現在重算。回 null＝沒有既有訂閱（首購）。
+     */
+    findUnique: jest.fn(async () => null),
   };
   /**
    * Info: (20260820 - Luphia) `$transaction` 把**同一個** client 交給 callback。
@@ -49,6 +54,7 @@ beforeEach(() => {
   asMock(prisma.teamSubscription.update).mockResolvedValue({});
   asMock(prisma.teamSubscription.updateMany).mockResolvedValue({ count: 1 });
   asMock(prisma.teamSubscription.upsert).mockResolvedValue({});
+  asMock(prisma.teamSubscription.findUnique).mockResolvedValue(null);
 });
 
 describe("schedulePlanChange", () => {
@@ -141,5 +147,112 @@ describe("期末落地時清掉排程", () => {
       update: Record<string, unknown>;
     };
     expect(call.update.pendingPlanId).toBeNull();
+  });
+});
+
+/**
+ * Info: (20260820 - Luphia) 付款履行改為**展延**（產品決定 20260820，self-review B-5）。
+ *
+ * 原本一律 `now → now + 週期`，而 `upsert` 讓第二次付款覆寫第一次：第 20 天再買
+ * 一期，期末變成「今天 +30 天」，**前 10 天付過的錢消失**；雙擊付兩次則是兩筆
+ * 扣款、一期權益。而退款政策原則不退，那些天數沒有補救路徑。
+ */
+describe("套用訂閱：當期未結束時展延", () => {
+  const PERIOD_START = new Date(NOW_MS - 20 * 86_400_000);
+  const PERIOD_END = new Date(NOW_MS + 10 * 86_400_000);
+
+  function upsertArg() {
+    return asMock(prisma.teamSubscription.upsert).mock.calls[0][0] as {
+      update: { currentPeriodStart?: Date; currentPeriodEnd?: Date };
+      create: { currentPeriodStart: Date; currentPeriodEnd: Date };
+    };
+  }
+
+  it("當期還有 10 天：期末往後加一期，期初不動", async () => {
+    asMock(prisma.teamSubscription.findUnique).mockResolvedValue({
+      currentPeriodStart: PERIOD_START,
+      currentPeriodEnd: PERIOD_END,
+    });
+
+    await teamSubscriptionRepo.applyTeamSubscription({
+      teamId: "team-1",
+      planId: TEAM_PLAN.TEAM,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      orderId: "order-1",
+      nowMs: NOW_MS,
+    });
+
+    const arg = upsertArg();
+    // Info: (20260820 - Luphia) 10 天剩餘 + 30 天 = 從現在起算 40 天
+    expect(arg.update.currentPeriodEnd?.getTime()).toBe(
+      PERIOD_END.getTime() + 30 * 86_400_000,
+    );
+    /**
+     * Info: (20260820 - Luphia) 期初不動：期中加席次的比例計價讀
+     * `periodStart`/`periodEnd`，把期初改成今天會讓分母縮水，
+     * 於是同一天加人要付更多。展延只該讓分母變大。
+     */
+    expect(arg.update.currentPeriodStart?.getTime()).toBe(
+      PERIOD_START.getTime(),
+    );
+  });
+
+  it("當期已結束（續訂）：從現在起算一期", async () => {
+    asMock(prisma.teamSubscription.findUnique).mockResolvedValue({
+      currentPeriodStart: new Date(NOW_MS - 40 * 86_400_000),
+      currentPeriodEnd: new Date(NOW_MS - 86_400_000),
+    });
+
+    await teamSubscriptionRepo.applyTeamSubscription({
+      teamId: "team-1",
+      planId: TEAM_PLAN.TEAM,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      orderId: "order-1",
+      nowMs: NOW_MS,
+    });
+
+    const arg = upsertArg();
+    expect(arg.update.currentPeriodStart?.getTime()).toBe(NOW_MS);
+    expect(arg.update.currentPeriodEnd?.getTime()).toBe(
+      NOW_MS + 30 * 86_400_000,
+    );
+  });
+
+  it("首次訂閱（沒有既有列）：從現在起算一期", async () => {
+    asMock(prisma.teamSubscription.findUnique).mockResolvedValue(null);
+
+    await teamSubscriptionRepo.applyTeamSubscription({
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.YEAR,
+      orderId: "order-1",
+      nowMs: NOW_MS,
+    });
+
+    const arg = upsertArg();
+    expect(arg.create.currentPeriodStart.getTime()).toBe(NOW_MS);
+    expect(arg.create.currentPeriodEnd.getTime()).toBe(
+      NOW_MS + 365 * 86_400_000,
+    );
+  });
+
+  // Info: (20260820 - Luphia) 年繳的展延也是加 365 天，不是換算成月
+  it("年繳展延：期末加 365 天", async () => {
+    asMock(prisma.teamSubscription.findUnique).mockResolvedValue({
+      currentPeriodStart: PERIOD_START,
+      currentPeriodEnd: PERIOD_END,
+    });
+
+    await teamSubscriptionRepo.applyTeamSubscription({
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.YEAR,
+      orderId: "order-1",
+      nowMs: NOW_MS,
+    });
+
+    expect(upsertArg().update.currentPeriodEnd?.getTime()).toBe(
+      PERIOD_END.getTime() + 365 * 86_400_000,
+    );
   });
 });

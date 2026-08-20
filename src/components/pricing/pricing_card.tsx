@@ -29,6 +29,19 @@ export default function PricingCard({
   onSelect = undefined,
 }: IPricingProps) {
   const { t } = useTranslation();
+  /**
+   * Info: (20260820 - Luphia) 目前方案**只標記、不停用**（self-review A-1 / A-2）。
+   *
+   * 原本 `disabled={isCurrentPlan}`，於是同一個方案再也按不下去——而伺服器端對
+   * 這兩件事都是支援的：
+   *
+   * - **改計費週期**（月繳改年繳）：方案沒變，只能從這一格進去，而它被停用了。
+   * - **提早延長一期**：付款履行已改為展延（不再從現在重算），因此提早買不吃虧。
+   *
+   * 另一個理由更難察覺：`currentPlan` 來自**顯示**答案（鏈上為準）。鏈上卡片
+   * 虛高時（履行漏掉、DB 還原舊備份）這一格會被停用，於是使用者**買不回**
+   * 自己實際沒有的方案。停用一個購買鈕的代價，比多一次確認高得多。
+   */
   const isCurrentPlan = currentPlan === planKey;
 
   const planPriceValue =
@@ -139,17 +152,17 @@ export default function PricingCard({
       </div>
       <button
         aria-describedby={planKey}
-        disabled={isCurrentPlan || priceUnavailable}
+        disabled={priceUnavailable}
         onClick={onSelect}
         className={`mt-8 block w-full rounded-md px-3 py-2 text-center text-sm leading-6 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
-          isCurrentPlan || priceUnavailable
+          priceUnavailable
             ? "cursor-not-allowed bg-gray-100 text-gray-400 ring-1 ring-gray-200"
             : popular
               ? "bg-orange-600 text-white shadow-sm hover:bg-orange-500 focus-visible:outline-orange-600"
               : "bg-orange-50 text-orange-600 hover:bg-orange-100 focus-visible:outline-orange-600"
         }`}
       >
-        {isCurrentPlan ? t("pricing.current_plan") : t("pricing.select_plan")}
+        {isCurrentPlan ? t("pricing.extend_plan") : t("pricing.select_plan")}
       </button>
     </div>
   );

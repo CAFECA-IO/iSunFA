@@ -856,6 +856,22 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 - **判準只有一個**：`isPlanDowngrade`（`PLAN_RANK` 比較，`src/constants/subscription_quota.ts`）。散在服務層各判一次的話，遲早有一條路徑讓降級立即生效。
 - **`GET /subscription` 揭露 `pendingPlanId` / `pendingEffectiveAt`**：當期 `planId` 仍是原方案，使用者需要看得出「我按過降級了」——否則按下去畫面沒變，他會再按一次，而那一次會被當成升級（建單、收整期的錢）。
 - **排程在週期邊界被清掉**：`applyTeamSubscriptionInTx`（新週期套用）、`expireOverdue`（降到 free）、`downgradeToFree`（寬限期用盡）三處都清 `pendingPlanId`。留著的話下一期會再降一次。
+#### 7.1.1 重複訂閱：擋重複扣款，不擋重複購買（2026-08-20 self-review）
+
+分析「狀態會不會讓使用者不能再訂閱」時發現**兩個方向都錯**：合法的再次購買被 UI 擋住，而真正該防的重複扣款沒有防。
+
+| 問題 | 原因 | 修法 |
+|---|---|---|
+| 同方案的購買鈕被停用 → 改計費週期、提早延長都做不到 | `disabled={isCurrentPlan}` | 目前方案**只標記、不停用**（按鈕文案改為「延長方案」） |
+| 鏈上卡片虛高時買不回正確方案 | 購買閘吃的是**顯示**答案（鏈上為準） | 同上；停用一個購買鈕的代價比多一次確認高得多 |
+| 雙擊／雙分頁 = 兩張可付的訂單 | 訂閱建單沒有任何冪等保護（席次補收有） | 同方案同週期已有**未付**訂單（PENDING / PAYING）就沿用同一張；已付的代表再買一期，建新單 |
+| 續訂扣款成功但套用失敗 → 下一輪再扣一次 | 續訂建單沒有冪等鍵 | 鍵綁「正在到期的那一期」（`renew:{teamId}:p{periodStart}`）；已 COMPLETED 就補套用不再扣款，還在請款中就跳過 |
+| 付兩次只得一期；提早續購吃掉剩餘天數 | 履行一律 `now → now + 週期`，`upsert` 覆寫 | **展延**：當期未結束時期末往後加，期初不動 |
+
+展延的期初刻意不動：期中加席次的比例計價讀 `periodStart` / `periodEnd`（`resolveSeatProration`），把期初改成今天會讓分母縮水，於是同一天加人要付更多——展延只該讓分母變大。當期已結束（續訂、過期後重新訂閱）則從現在起算：中間沒有權益的空窗不該追認為已付費期間。
+
+條款同步：服務條款 §3.6 加上「提前續購（展延）」一項，明示剩餘天數不會消失。
+
 - **附帶效果（不是巧合）**：鏈上訂閱憑證因此不會多報。卡片的 `plan` 與 `period_end` 只在週期邊界改變，而那正是離鏈資料也改變的時點——期中降級曾是唯一會讓「鏈上說付費、實際已降級」出現的路徑（§6.5.3 的已知缺口，於此消失）。
 
 慣例遵循：`getIdentityFromDeWT` 取身分 → guard → service → `jsonOk` / `jsonFail(API_ERRORS.XXX)`；Zod schema 全部放 `src/validators/team_wallet.ts` 並在 `src/validators/index.ts` re-export。

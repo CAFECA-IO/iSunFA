@@ -39,6 +39,7 @@ export const pricing = {
   features: "功能特色",
   per_key: " / 鑰匙",
   select_plan: "選擇方案",
+  extend_plan: "延長方案",
   current_plan: "目前方案",
   coming_soon_title: "聯絡我們",
   coming_soon_prefix: "我們已獲選為",

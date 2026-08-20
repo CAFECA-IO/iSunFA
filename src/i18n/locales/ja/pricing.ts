@@ -40,6 +40,7 @@ export const pricing = {
   features: "機能",
   per_key: " / キー",
   select_plan: "プランを選択",
+  extend_plan: "プランを延長",
   current_plan: "現在のプラン",
   coming_soon_title: "お問い合わせ",
   coming_soon_prefix: "",

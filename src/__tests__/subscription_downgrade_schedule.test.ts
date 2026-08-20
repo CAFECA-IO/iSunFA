@@ -56,6 +56,8 @@ jest.mock("@/repositories/payment.repo", () => ({
       id: "order-0",
       data: { billingInterval: "month" },
     })),
+    // Info: (20260820 - Luphia) 同方案同週期的未付訂單（沿用而不是再建一張）
+    findInFlightSubscriptionOrder: jest.fn(async () => null),
   },
 }));
 
@@ -119,6 +121,7 @@ beforeEach(() => {
     id: "order-0",
     data: { billingInterval: BILLING_INTERVAL.MONTH },
   });
+  asMock(paymentRepo.findInFlightSubscriptionOrder).mockResolvedValue(null);
 });
 
 describe("降級：排程到當期屆滿", () => {
@@ -371,5 +374,89 @@ describe("取消排程與改計費週期要分得開（self-review 小項）", (
     });
 
     expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Info: (20260820 - Luphia) 重複點擊不得變成兩張可付的單（self-review B-4）。
+ *
+ * 訂閱建單原本沒有任何冪等保護。兩張單就是兩筆扣款，而在「展延」之前那兩筆
+ * 還只換到一期權益。
+ */
+describe("未付訂單沿用，不再建第二張", () => {
+  it("同方案同週期已有未付訂單 → 回同一張，不建新單", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({ planId: TEAM_PLAN.TEAM, unitPrice: 840 }),
+    );
+    asMock(paymentRepo.findInFlightSubscriptionOrder).mockResolvedValue({
+      id: "order-inflight",
+      challenge: "challenge-inflight",
+      amount: BigInt(2520),
+    });
+
+    const result = await changeTeamSubscription({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      paymentMethodId: "pm-1",
+      nowMs: NOW_MS,
+    });
+
+    expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
+    expect(result).toEqual(
+      expect.objectContaining({
+        orderId: "order-inflight",
+        challenge: "challenge-inflight",
+        cost: 2520,
+      }),
+    );
+  });
+
+  // Info: (20260820 - Luphia) 沒有未付訂單就照常建單（否則「一律沿用」也會通過上面那條）
+  it("沒有未付訂單時照常建單", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({ planId: TEAM_PLAN.TEAM, unitPrice: 840 }),
+    );
+    asMock(paymentRepo.findInFlightSubscriptionOrder).mockResolvedValue(null);
+
+    await changeTeamSubscription({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      paymentMethodId: "pm-1",
+      nowMs: NOW_MS,
+    });
+
+    expect(asMock(generatePaymentOrder)).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * Info: (20260820 - Luphia) 查詢條件必須帶方案與週期：只帶 teamId 的話，
+   * 「月繳團隊版的未付單」會讓「年繳企業版」也被沿用——付到錯的東西。
+   */
+  it("查詢帶上團隊、方案與計費週期", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({ planId: TEAM_PLAN.TEAM, unitPrice: 840 }),
+    );
+
+    await changeTeamSubscription({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.YEAR,
+      paymentMethodId: "pm-1",
+      nowMs: NOW_MS,
+    });
+
+    expect(
+      asMock(paymentRepo.findInFlightSubscriptionOrder),
+    ).toHaveBeenCalledWith({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.YEAR,
+    });
   });
 });

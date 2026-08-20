@@ -39,6 +39,7 @@ export const pricing = {
   features: "Features",
   per_key: " / key",
   select_plan: "Select Plan",
+  extend_plan: "Extend Plan",
   current_plan: "Current Plan",
   coming_soon_title: "Contact Us",
   coming_soon_prefix: "We have been selected as an ",

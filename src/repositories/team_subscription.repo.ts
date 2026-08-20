@@ -53,8 +53,38 @@ export async function applyTeamSubscriptionInTx(
   const { teamId, planId, billingInterval, orderId, nowMs, seats, unitPrice } =
     input;
   const periodDays = billingInterval === BILLING_INTERVAL.YEAR ? 365 : 30;
-  const currentPeriodStart = new Date(nowMs);
-  const currentPeriodEnd = new Date(nowMs + periodDays * DAY_MS);
+
+  /**
+   * Info: (20260820 - Luphia) 當期還沒結束就**展延**，不從現在重算（產品決定 20260820）。
+   *
+   * 原本一律 `now → now + 週期`，而 `upsert` 讓第二次付款覆寫第一次：
+   *
+   * - 第 20 天再買一期 → 期末變成「今天 +30 天」，**前 10 天付過的錢消失**。
+   * - 雙擊付兩次 → 兩筆扣款、一期權益。
+   *
+   * 而退款政策原則不退（§2.2），所以那些天數沒有任何補救路徑。展延之後
+   * 「付兩次＝兩期」，提早續購也不再吃虧——與「不退費」搭起來才站得住。
+   *
+   * 期初**不動**（維持原本的期初）：期中加席次的比例計價讀的是 `periodStart`/
+   * `periodEnd`（`resolveSeatProration`），把期初改成今天會讓那個分母縮水，
+   * 於是同一天加人要付更多。展延只該讓分母變大。
+   *
+   * 當期已結束（續訂、過期後重新訂閱）則從現在起算：中間那段沒有權益的空窗
+   * 不該追認為已付費期間（fail-closed 的一致做法）。
+   */
+  const existing = await tx.teamSubscription.findUnique({
+    where: { teamId },
+    select: { currentPeriodStart: true, currentPeriodEnd: true },
+  });
+  const stillActive =
+    existing !== null && existing.currentPeriodEnd.getTime() > nowMs;
+  const currentPeriodStart = stillActive
+    ? existing.currentPeriodStart
+    : new Date(nowMs);
+  const currentPeriodEnd = new Date(
+    (stillActive ? existing.currentPeriodEnd.getTime() : nowMs) +
+      periodDays * DAY_MS,
+  );
 
   return tx.teamSubscription.upsert({
     where: { teamId },

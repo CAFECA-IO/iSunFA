@@ -42,6 +42,7 @@ import { teamQuotaUsageRepo } from "@/repositories/team_quota_usage.repo";
 import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
 import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
+import { logger } from "@/lib/utils/logger";
 import { teamWalletRepo } from "@/repositories/team_wallet.repo";
 
 /**
@@ -420,6 +421,38 @@ export async function changeTeamSubscription(params: {
     const unitPrice = getPlanUnitPrice(planId, billingInterval);
     const seats = await teamRepo.countMembers(teamId);
     const amount = resolveSubscriptionAmount(unitPrice, seats);
+
+    /**
+     * Info: (20260820 - Luphia) 同方案同週期已經有一張**未付**的訂單就沿用它
+     *（self-review B-4）。
+     *
+     * 訂閱建單原本沒有任何冪等保護：雙擊或開兩個分頁就是兩張都能付的訂單，
+     * 而兩張單就是兩筆扣款。沿用而不是拒絕——使用者要的就是那張單，
+     * 回同一個 `orderId` / `challenge` 讓他把它付掉。
+     *
+     * 只認未付的（PENDING / PAYING）。已付的代表他是**再買一期**，
+     * 那要建新單並展延（見 `applyTeamSubscriptionInTx`）。
+     */
+    const inFlight = await paymentRepo.findInFlightSubscriptionOrder({
+      userId,
+      teamId,
+      planId,
+      billingInterval,
+    });
+    if (inFlight) {
+      logger.info("subscription order reused", {
+        teamId,
+        orderId: inFlight.id,
+        planId,
+        billingInterval,
+      });
+      return {
+        orderId: inFlight.id,
+        challenge: inFlight.challenge,
+        cost: Number(inFlight.amount),
+        planId: currentPlanId,
+      };
+    }
 
     /**
      * Info: (20260820 - Luphia) 一併回**當期**方案：升級要等付款完成才生效，

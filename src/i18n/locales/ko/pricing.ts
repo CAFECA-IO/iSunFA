@@ -40,6 +40,7 @@ export const pricing = {
   features: "기능",
   per_key: " / 키",
   select_plan: "요금제 선택",
+  extend_plan: "요금제 연장",
   current_plan: "현재 요금제",
   coming_soon_title: "문의하기",
   coming_soon_prefix: "",

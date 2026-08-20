@@ -462,6 +462,45 @@ export class PaymentRepository {
   }
 
   /**
+   * Info: (20260820 - Luphia) 同一個團隊、同方案同週期的**未付**訂閱訂單（self-review B-4）。
+   *
+   * 訂閱建單原本沒有任何冪等保護：雙擊或開兩個分頁就是兩張都能付的訂單，
+   * 而履行會把週期覆寫掉——**付兩次只拿到一期**。
+   *
+   * 只認 PENDING / PAYING（錢還沒到）：
+   *
+   * - `PAID` / `COMPLETED` 代表錢已經收了，那不是重複點擊而是**再買一期**，
+   *   應該建新單（展延，見 `applyTeamSubscriptionInTx`）。把它回給前端會讓人
+   *   去付一張已經付過的單。
+   * - `PAYMENT_FAILED` / `CANCEL` 必須當成「沒扣過」，否則重試永遠拿到那張壞單。
+   */
+  async findInFlightSubscriptionOrder(params: {
+    userId: string;
+    teamId: string;
+    planId: string;
+    billingInterval: string;
+  }) {
+    return prisma.order.findFirst({
+      where: {
+        userId: params.userId,
+        type: ORDER_TYPE.BILLING_SUBSCRIBE,
+        status: { in: [ORDER_STATUS.PENDING, ORDER_STATUS.PAYING] },
+        AND: [
+          { data: { path: ["teamId"], equals: params.teamId } },
+          { data: { path: ["planId"], equals: params.planId } },
+          {
+            data: {
+              path: ["billingInterval"],
+              equals: params.billingInterval,
+            },
+          },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  /**
    * Info: (20260814 - Luphia) 本期已補收的席次費用合計（PR #6652 第二輪 B-2）。
    *
    * 用於「單期補收總額上限」：邀請開放 OWNER / ADMIN，但扣的是訂閱那張卡，

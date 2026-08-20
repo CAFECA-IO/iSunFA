@@ -262,6 +262,21 @@ describe("價格查不到時不顯示免費", () => {
     const card = codeOf("src", "components", "pricing", "pricing_card.tsx");
 
     expect(card).toMatch(/priceUnavailable/);
-    expect(card).toMatch(/disabled=\{isCurrentPlan \|\| priceUnavailable\}/);
+    expect(card).toMatch(/disabled=\{priceUnavailable\}/);
+  });
+
+  /**
+   * Info: (20260820 - Luphia) 反過來也要釘住：**目前方案不得停用購買鈕**
+   *（self-review A-1 / A-2）。
+   *
+   * 停用它會讓「改計費週期」與「提早延長」都做不到，而伺服器端支援兩者；
+   * 更難察覺的是 `currentPlan` 來自顯示答案（鏈上為準），鏈上虛高時
+   * 使用者會買不回自己實際沒有的方案。
+   */
+  it("目前方案只標記、不停用", () => {
+    const card = codeOf("src", "components", "pricing", "pricing_card.tsx");
+
+    expect(card).not.toMatch(/disabled=\{isCurrentPlan/);
+    expect(card).toMatch(/pricing\.extend_plan/);
   });
 });

@@ -1,7 +1,7 @@
 import { logger } from "@/lib/utils/logger";
 import { CURRENCY_UNIT } from "@/constants/price";
 import { getPlanUnitPrice } from "@/services/plan.service";
-import { ORDER_TYPE } from "@/constants/status";
+import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import {
   BILLING_INTERVAL,
   BillingInterval,
@@ -42,12 +42,45 @@ interface IRenewableOrderData {
   billingInterval?: BillingInterval;
 }
 
+/**
+ * Info: (20260820 - Luphia) 續訂的冪等鍵：一期一把。
+ *
+ * 抽成函式而不是就地拼字串：回收路徑（找既有訂單）與建單路徑必須用**同一把**，
+ * 兩處各拼一次遲早分岔，而分岔的症狀是「找不到既有訂單 → 再扣一次款」。
+ */
+function renewalIdempotencyKey(teamId: string, periodStart: Date): string {
+  return `renew:${teamId}:p${periodStart.getTime()}`;
+}
+
+// Info: (20260820 - Luphia) 套用續訂結果（正常路徑與「扣款成功但套用失敗」的回收路徑共用）
+async function applyRenewedSubscription(params: {
+  teamId: string;
+  planId: string;
+  billingInterval: BillingInterval;
+  orderId: string;
+  nowMs: number;
+  seats: number;
+  unitPrice: number;
+}): Promise<void> {
+  await teamSubscriptionRepo.applyTeamSubscription({
+    teamId: params.teamId,
+    planId: params.planId,
+    billingInterval: params.billingInterval,
+    orderId: params.orderId,
+    nowMs: params.nowMs,
+    seats: Math.max(1, params.seats),
+    unitPrice: params.unitPrice,
+  });
+}
+
 async function renewOne(
   sub: {
     teamId: string;
     planId: string;
     pendingPlanId: string | null;
     latestOrderId: string | null;
+    // Info: (20260820 - Luphia) 冪等鍵綁「正在到期的那一期」，見 renewalIdempotencyKey
+    currentPeriodStart: Date;
   },
   nowMs: number,
 ): Promise<"renewed" | "failed" | "skipped"> {
@@ -109,6 +142,58 @@ async function renewOne(
   const seats = await teamRepo.countMembers(sub.teamId);
   const amount = resolveSubscriptionAmount(unitPrice, seats);
 
+  /**
+   * Info: (20260820 - Luphia) 續訂的冪等鍵綁「正在到期的那一期」（self-review B-6）。
+   *
+   * 原本完全沒有鍵。扣款成功但 `applyTeamSubscription` 失敗時（DB 短暫故障），
+   * 訂閱仍是 PAST_DUE + autoRenew，於是**下一小時再建一張新單、再扣一次款**——
+   * 而使用者已經付過這一期了。沒有任何地方認得出「這一期收過錢」。
+   *
+   * 綁期初而不是「當下時間」：同一期只會有一把鍵，而下一期換一把。
+   */
+  const idempotencyKey = renewalIdempotencyKey(
+    sub.teamId,
+    sub.currentPeriodStart,
+  );
+  const existing = await paymentRepo.findOrderByIdempotencyKey(
+    lastOrder.userId,
+    idempotencyKey,
+  );
+  if (existing) {
+    /**
+     * Info: (20260820 - Luphia) 這一期已經有一張「錢在路上或已經到」的訂單。
+     *
+     * 兩種狀態要分開處置，因為一種是**錢已經收了而權益沒給**，另一種還沒定案：
+     *
+     * - `COMPLETED`：扣款成功、套用失敗（否則這一列不會還在 PAST_DUE 名單裡）。
+     *   直接補套用，不再扣款。
+     * - 其他（PENDING / PAYING / PAID）：結果還沒定案，這一輪跳過。
+     *   再送一次請款等於重複扣款，而金流商那邊可能正在處理。
+     */
+    if (existing.status === ORDER_STATUS.COMPLETED) {
+      await applyRenewedSubscription({
+        teamId: sub.teamId,
+        planId,
+        billingInterval,
+        orderId: existing.id,
+        nowMs,
+        seats: await teamRepo.countMembers(sub.teamId),
+        unitPrice,
+      });
+      logger.warn("subscription renewal recovered from a completed charge", {
+        teamId: sub.teamId,
+        orderId: existing.id,
+      });
+      return "renewed";
+    }
+    logger.info("subscription renewal skipped: charge already in flight", {
+      teamId: sub.teamId,
+      orderId: existing.id,
+      status: existing.status,
+    });
+    return "skipped";
+  }
+
   const renewalOrder = await generatePaymentOrder(lastOrder.userId, {
     type: ORDER_TYPE.BILLING_SUBSCRIBE,
     amount,
@@ -128,6 +213,7 @@ async function renewOne(
      * 讀不到 teamId 就會把這張單標記為「已扣款未履行」。
      */
     teamId: sub.teamId,
+    idempotencyKey,
     data: { renewal: true },
   });
   const orderData = {
@@ -173,13 +259,13 @@ async function renewOne(
     return "failed";
   }
 
-  await teamSubscriptionRepo.applyTeamSubscription({
+  await applyRenewedSubscription({
     teamId: sub.teamId,
     planId,
     billingInterval,
     orderId: renewalOrder.orderId,
     nowMs,
-    seats: Math.max(1, seats),
+    seats,
     unitPrice,
   });
   await paymentRepo.updateOrderCompleted(renewalOrder.orderId);

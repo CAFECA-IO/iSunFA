@@ -44,7 +44,17 @@ jest.mock("@/repositories/faith_billing_setting.repo", () => ({
   faithBillingSettingRepo: { resolveSetting: jest.fn() },
 }));
 jest.mock("@/repositories/payment.repo", () => ({
-  paymentRepo: { updateOrderCompleted: jest.fn() },
+  paymentRepo: {
+    updateOrderCompleted: jest.fn(),
+    /**
+     * Info: (20260820 - Luphia) 建單前會查「同方案同週期是否已有未付訂單」，
+     * 並讀最後一張訂單判斷當期計費週期。兩支不 mock 的話是 undefined，
+     * 而錯誤會被 `guarded` 包成籠統的「操作失敗」——看起來與被測的建單無關
+     *（checklist §1.8）。
+     */
+    findInFlightSubscriptionOrder: jest.fn(async () => null),
+    getOrderById: jest.fn(async () => null),
+  },
 }));
 jest.mock("@/services/order.service", () => ({
   generatePaymentOrder: jest.fn(),
