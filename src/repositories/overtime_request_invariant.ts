@@ -26,6 +26,7 @@ import {
   OvertimeRequestStatus,
 } from "@/constants/overtime";
 import type { IOvertimeSegment } from "@/interfaces/overtime";
+import { isSafeHttpUrl } from "@/lib/utils/safe_url";
 
 export class OvertimeRequestInvariantError extends Error {
   constructor(
@@ -201,6 +202,24 @@ export function assertOvertimeEmergencyRecord(
         `emergencyReportUrl=${url}`,
       );
     }
+    /**
+     * Info: (20260820 - Julian) 記載要**點得進去**（review 第 1 條）。
+     *
+     * 只要求非空的話，`N/A` 就通得過 —— 而
+     * `OVERTIME_EMERGENCY_REPORT_URL_MAX_LENGTH` 的註解自己寫著
+     * 「一個填了 `N/A` 的必填欄位，比沒有這個欄位更糟：它看起來像有記載」。
+     * B7 把這一欄從自填布林值改成強制記載，要的正是「不再有看起來像記載的狀態」，
+     * 而一個不是連結的字串把那個狀態原封不動地搬了回來。
+     *
+     * 協定白名單而不只是「像不像 URL」：這一欄會直接進 `<a href={...}>`，
+     * 而 `new URL()`（zod `.url()` 的實作）認得 `javascript:` 與 `data:`。
+     */
+    if (!isSafeHttpUrl((url as string).trim())) {
+      throw new OvertimeRequestInvariantError(
+        "the Article 32 IV filing must be an http(s) link that can actually be opened; a placeholder like N/A reads as a record while pointing at nothing, and a javascript: value would reach the anchor that renders it",
+        `emergencyReportUrl=${url}`,
+      );
+    }
     if (!hasReportedAt) {
       throw new OvertimeRequestInvariantError(
         "the emergency filing must carry the moment it was made; Article 32 IV allows twenty-four hours and an inspection asks for that timestamp",
@@ -282,6 +301,76 @@ export function assertOvertimeSegmentPremium(
     throw new OvertimeRequestInvariantError(
       "a segment may not be paid at the emergency double rate unless the request carries the Article 32 IV filing; the premium would be doubled with no record to show an inspection",
       `isEmergency=false, tiers=[${params.segments.map((s) => s.tier).join(", ")}]`,
+    );
+  }
+}
+
+export interface IStorableEmergencyDeclaration {
+  reportUrl: string;
+  reportedAt: Date;
+  declaredByEmployeeId: string;
+  revokedAt: Date | null | undefined;
+  revokedByEmployeeId: string | null | undefined;
+  revokeReason: string | null | undefined;
+}
+
+/**
+ * Info: (20260820 - Julian) 認定歷史列的「撤回三欄同生共死」（review 第 3 輪第 2 條）。
+ *
+ * ## 為什麼撤回要留列而不是把欄位清空
+ *
+ * `assertOvertimeEmergencyRecord` 的反方向（沒有 `isEmergency` 就不得帶記載）
+ * 是對的 —— 半套資料讀不出是撤回還是漏填。但它逼出的動作是**把三欄一起
+ * 設成 null**，而那等於硬刪一份對外發生過的紀錄：公司真的通知過工會、
+ * 真的報過主管機關，那件事不會因為欄位變成 null 而沒有發生過。
+ * 那條不變式的註解自己寫下了正解：「前者**應該留下撤回的痕跡**」——
+ * 這張表就是那個痕跡，而這一支是它的把關。
+ *
+ * ## 為什麼理由必填
+ *
+ * 「報備被主管機關退回」與「當初認定錯了」的後續處置完全不同：前者要重新
+ * 報備、後者要檢討是誰認定的。一筆沒有理由的撤回，事後分不出是哪一種。
+ * 同 `LeaveGrant` 的人工調整、`OvertimeRequest.withdrawReason` 的既有處置。
+ */
+export function assertEmergencyDeclaration(
+  params: IStorableEmergencyDeclaration,
+): void {
+  if (!isSafeHttpUrl(params.reportUrl.trim())) {
+    throw new OvertimeRequestInvariantError(
+      "the Article 32 IV filing must be an http(s) link that can actually be opened",
+      `reportUrl=${params.reportUrl}`,
+    );
+  }
+  if (Number.isNaN(params.reportedAt.getTime())) {
+    throw new OvertimeRequestInvariantError(
+      "the emergency filing must carry a real moment; an unparseable timestamp cannot answer the twenty-four hour question",
+      `reportedAt=${String(params.reportedAt)}`,
+    );
+  }
+  if (params.declaredByEmployeeId.trim() === "") {
+    throw new OvertimeRequestInvariantError(
+      "the emergency determination must name the HR administrator who made it",
+      `declaredByEmployeeId=${params.declaredByEmployeeId}`,
+    );
+  }
+
+  const revokedAt = params.revokedAt;
+  const revokedBy = params.revokedByEmployeeId;
+  const reason = params.revokeReason;
+
+  const hasRevokedAt = revokedAt !== null && revokedAt !== undefined;
+  const hasRevokedBy =
+    revokedBy !== null && revokedBy !== undefined && revokedBy.trim() !== "";
+  const hasReason =
+    reason !== null && reason !== undefined && reason.trim() !== "";
+
+  // Info: (20260820 - Julian) 三欄全空＝這份認定仍然有效
+  if (!hasRevokedAt && !hasRevokedBy && !hasReason) return;
+
+  if (!hasRevokedAt || !hasRevokedBy || !hasReason) {
+    throw new OvertimeRequestInvariantError(
+      "a revoked determination must state when, by whom and why; half a revocation cannot be told apart from a forgotten field, and the difference decides whether the filing has to be made again",
+      `revokedAt=${String(revokedAt)}, revokedByEmployeeId=${revokedBy}, revokeReason=${reason}`,
     );
   }
 }

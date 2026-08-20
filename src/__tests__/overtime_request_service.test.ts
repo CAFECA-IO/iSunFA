@@ -29,6 +29,7 @@ import {
 } from "@/repositories/overtime_request.repo";
 import { IOvertimeRequestContext } from "@/repositories/overtime_request_context.repo";
 import {
+  assertEmergencyDeclaration,
   assertOvertimeEmergencyRecord,
   assertOvertimeFilingType,
   assertOvertimeSegmentPremium,
@@ -173,8 +174,42 @@ class FakeRepo implements Partial<IOvertimeRequestRepository> {
   }): Promise<OvertimeDecisionOutcome> {
     // Info: (20260820 - Julian) 同 approve：假 repository 也要跑真的不變式
     assertOvertimeEmergencyRecord({ isEmergency: true, ...params });
+    assertEmergencyDeclaration({
+      reportUrl: params.emergencyReportUrl,
+      reportedAt: params.emergencyReportedAt,
+      declaredByEmployeeId: params.emergencyDeclaredByEmployeeId,
+      revokedAt: null,
+      revokedByEmployeeId: null,
+      revokeReason: null,
+    });
     this.declared = params;
     return this.declareOutcome;
+  }
+
+  public revoked: unknown = null;
+
+  public revokeOutcome: OvertimeDecisionOutcome =
+    OvertimeDecisionOutcome.DECIDED;
+
+  async revokeEmergency(params: {
+    revokedByEmployeeId: string;
+    revokedAt: Date;
+    revokeReason: string;
+  }): Promise<OvertimeDecisionOutcome> {
+    /**
+     * Info: (20260820 - Julian) 撤回三欄同生共死也由真的不變式擋
+     * （review 第 3 輪第 2 條）—— service 交出去的那組必須過得了它。
+     */
+    assertEmergencyDeclaration({
+      reportUrl: "https://example.test/filings/probe",
+      reportedAt: new Date("2026-08-15T11:00:00+08:00"),
+      declaredByEmployeeId: "emp-hr",
+      revokedAt: params.revokedAt,
+      revokedByEmployeeId: params.revokedByEmployeeId,
+      revokeReason: params.revokeReason,
+    });
+    this.revoked = params;
+    return this.revokeOutcome;
   }
 }
 
@@ -737,5 +772,119 @@ describe("核准帶下去的 isEmergencyAtDerivation", () => {
     expect(reclassified).toBe(API_ERRORS.VA_OVERTIME_RECLASSIFIED_MIDWAY.code);
     expect(alreadyReviewed).toBe(API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED.code);
     expect(reclassified).not.toBe(alreadyReviewed);
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) §32 IV 認定的**重複與撤回**（review 第 3 輪第 2 條）。
+ *
+ * 認定原本是單向且可無痕覆寫的：
+ *
+ * - 第二次認定靜默取代前一份的連結、時點與認定者，且回 `DECIDED`
+ *   —— 呼叫端看到的與成功的第一次一模一樣。
+ * - 撤回沒有任何路徑，而 `assertOvertimeEmergencyRecord` 的反方向
+ *   逼得唯一走法是把三欄一起清空 ＝ 硬刪一份對外發生過的紀錄。
+ *   那條不變式的註解自己寫下了正解卻沒有實作：「應該留下撤回的痕跡」。
+ */
+describe("revokeEmergency —— §32 IV 認定的撤回", () => {
+  const REVOKE_REASON = "主管機關退回，須重新報備";
+
+  const revoke = (overrides: { actorEmployeeId?: string; reason?: string } = {}) =>
+    service.revokeEmergency({
+      accountBookId: BOOK,
+      requestId: "ot-1",
+      actorEmployeeId: overrides.actorEmployeeId ?? HR_ADMIN,
+      reason: overrides.reason ?? REVOKE_REASON,
+      observedAt: new Date("2026-08-16T02:00:00.000Z"),
+    });
+
+  beforeEach(() => {
+    context.summary = summaryOf({ isEmergency: true });
+  });
+
+  it("HR_ADMIN 撤回別人單子上的認定：成立，撤回三欄都落地", async () => {
+    await expect(revoke()).resolves.toBeDefined();
+    expect(repo.revoked).toEqual({
+      accountBookId: BOOK,
+      requestId: "ot-1",
+      revokedByEmployeeId: HR_ADMIN,
+      revokedAt: new Date("2026-08-16T02:00:00.000Z"),
+      revokeReason: REVOKE_REASON,
+    });
+  });
+
+  /**
+   * Info: (20260820 - Julian) 閘門與認定**完全相同**，逐條驗。
+   *
+   * 撤回會把整段工資從加倍發給降回普通級距 —— 那個方向對雇主有利、
+   * 對勞工不利，比認定本身更需要職責分離。少了任一道，
+   * 「先認定再自己撤回」就是一條繞過 §32 IV 的路。
+   */
+  it("沒有 HR_ADMIN 職能：403，且 repository 沒有被呼叫", async () => {
+    hasHrFunctionSpy.mockResolvedValue(false);
+    expect(await codeOf(() => revoke({ actorEmployeeId: MANAGER }))).toBe(
+      API_ERRORS.FO_HR_FUNCTION_REQUIRED.code,
+    );
+    expect(repo.revoked).toBeNull();
+  });
+
+  it("HR_ADMIN 撤回自己單子上的認定：403，且 repository 沒有被呼叫", async () => {
+    context.summary = summaryOf({ isEmergency: true, employeeId: HR_ADMIN });
+    expect(await codeOf(() => revoke({ actorEmployeeId: HR_ADMIN }))).toBe(
+      API_ERRORS.FO_SELF_APPROVAL_FORBIDDEN.code,
+    );
+    expect(repo.revoked).toBeNull();
+  });
+
+  it("自我撤回的判斷排在職能查詢之前", async () => {
+    context.summary = summaryOf({ isEmergency: true, employeeId: HR_ADMIN });
+    await codeOf(() => revoke({ actorEmployeeId: HR_ADMIN }));
+    expect(hasHrFunctionSpy).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    OvertimeRequestStatus.APPROVED,
+    OvertimeRequestStatus.REJECTED,
+    OvertimeRequestStatus.WITHDRAWN,
+  ])("狀態為 %s 時擋下，且 repository 沒有被呼叫", async (status) => {
+    context.summary = summaryOf({ isEmergency: true, status });
+    expect(await codeOf(revoke)).toBe(
+      API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED.code,
+    );
+    expect(repo.revoked).toBeNull();
+  });
+
+  /**
+   * Info: (20260820 - Julian) 三種落空要有三個碼。
+   *
+   * 合成同一句話的話，人資分不出「主管先決行了」（不用管）與
+   * 「本來就沒有認定」（他點錯單子了）—— 而後者若回「已撤回」，
+   * 畫面會顯示一個沒有發生過的動作。
+   */
+  it("沒有可撤回的認定時回專屬的碼，不是「已決行」", async () => {
+    repo.revokeOutcome = OvertimeDecisionOutcome.NOT_DECLARED;
+    const notDeclared = await codeOf(revoke);
+
+    repo.revokeOutcome = OvertimeDecisionOutcome.ALREADY_REVIEWED;
+    const alreadyReviewed = await codeOf(revoke);
+
+    expect(notDeclared).toBe(API_ERRORS.VA_OVERTIME_EMERGENCY_NOT_DECLARED.code);
+    expect(alreadyReviewed).toBe(API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED.code);
+    expect(notDeclared).not.toBe(alreadyReviewed);
+  });
+
+  it("重複認定回專屬的碼，不是「已決行」", async () => {
+    repo.declareOutcome = OvertimeDecisionOutcome.ALREADY_DECLARED;
+    const code = await codeOf(() =>
+      service.declareEmergency({
+        accountBookId: BOOK,
+        requestId: "ot-1",
+        actorEmployeeId: HR_ADMIN,
+        reportUrl: "https://example.test/filings/2026-0815-002",
+        reportedAt: "2026-08-15T11:00:00+08:00",
+      }),
+    );
+    expect(code).toBe(API_ERRORS.VA_OVERTIME_EMERGENCY_ALREADY_DECLARED.code);
+    expect(code).not.toBe(API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED.code);
   });
 });

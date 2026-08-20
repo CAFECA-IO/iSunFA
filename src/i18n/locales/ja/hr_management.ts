@@ -1012,6 +1012,10 @@ export const hrManagement = {
       "この申請は既に処理されています。再読み込みしてください。",
     error_reclassified_midway:
       "承認の途中で人事がこの申請を天災・事変（§32 IV）と認定したため、全区間が倍額支給になりました。再読み込みして金額をご確認のうえ承認してください。",
+    error_emergency_already_declared:
+      "この申請には既に §32 IV の認定があります。新しい届出を記録する前に、既存の認定を取り消してください。",
+    error_emergency_not_declared:
+      "この申請には取り消せる §32 IV の認定がありません。",
     error_comp_expiry_unset:
       "代休の期限が未協定のため振替できません。残業手当を選ぶか、人事に設定を依頼してください。",
     error_day_not_scheduled:

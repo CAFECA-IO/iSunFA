@@ -981,6 +981,9 @@ export const hrManagement = {
     error_already_reviewed: "這張單已經被決行了。重新整理即可看到結果。",
     error_reclassified_midway:
       "這張單在你核准的過程中被人資認定為天災事變（§32 IV），整段工資改為加倍發給。請重新整理，確認金額後再核准。",
+    error_emergency_already_declared:
+      "這張單已經有一份 §32 IV 的認定。要記錄新的報備，請先撤回既有的那一份。",
+    error_emergency_not_declared: "這張單沒有可撤回的 §32 IV 認定。",
     error_comp_expiry_unset:
       "公司尚未協商補休期限，因此換不了補休。請改選加班費，或請人資設定。",
     error_day_not_scheduled:

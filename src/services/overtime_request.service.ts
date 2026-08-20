@@ -477,12 +477,91 @@ export class OvertimeRequestService {
       emergencyReportedAt: reportedAt,
       emergencyDeclaredByEmployeeId: params.actorEmployeeId,
     });
+    /**
+     * Info: (20260820 - Julian) 已經認定過**不是**已決行（review 第 3 輪第 2 條）。
+     * 下一步不同：一句是不用再管，這一句是要先撤回既有的那份。
+     */
+    if (outcome === OvertimeDecisionOutcome.ALREADY_DECLARED) {
+      throw new AppError(API_ERRORS.VA_OVERTIME_EMERGENCY_ALREADY_DECLARED);
+    }
     if (outcome === OvertimeDecisionOutcome.ALREADY_REVIEWED) {
       throw new AppError(API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED);
     }
 
     logger.info(
       `[overtime] emergency declared: request=${request.id} by=${params.actorEmployeeId}`,
+    );
+    return this.mustFindSummary(params.accountBookId, request.id);
+  }
+
+  /**
+   * Info: (20260820 - Julian) 撤回 §32 IV 的認定（review 第 3 輪第 2 條）。
+   *
+   * ## 為什麼非有不可
+   *
+   * 認定原本是**單向**的：填錯連結、報備被主管機關退回、認錯了單子 ——
+   * 三種情形都沒有出口。`assertOvertimeEmergencyRecord` 的反方向
+   * （沒有 `isEmergency` 就不得帶記載）逼得唯一的走法是把三欄一起清空，
+   * 而那等於硬刪一份對外發生過的紀錄。那條不變式的註解自己寫下了正解
+   * 卻沒有實作：「前者**應該留下撤回的痕跡**」。
+   *
+   * 現在痕跡在 `OvertimeEmergencyDeclaration`：認定寫一列，撤回在同一列
+   * 補上時點、撤回者與理由，兩者都不刪。
+   *
+   * ## 閘門與認定完全相同
+   *
+   * 限 PENDING（決行後分段已經按當時的旗標切好）、限 HR_ADMIN、
+   * 不得對自己的單子操作。三道用同一組理由 —— 撤回一份認定會把整段工資
+   * 從加倍發給降回普通級距，而那個方向對雇主有利、對勞工不利，
+   * 比認定本身更需要職責分離。
+   *
+   * ToDo: (20260820 - Julian) 已決行的單子要改認定，仍然只能走更正流程
+   * （撤銷核准並重算），而那尚未實作 —— 與 `declareEmergency` 同一個缺口。
+   */
+  public async revokeEmergency(params: {
+    accountBookId: string;
+    requestId: string;
+    actorEmployeeId: string;
+    reason: string;
+    /** Info: (20260820 - Julian) 撤回的時點由呼叫端給，service 不自取 `Date.now()`（同 approve） */
+    observedAt: Date;
+  }): Promise<IOvertimeRequestSummary> {
+    const request = await this.mustFindSummary(
+      params.accountBookId,
+      params.requestId,
+    );
+    this.assertPending(request);
+
+    // Info: (20260820 - Julian) 順序同 declareEmergency：自我檢查排在職能查詢之前
+    if (params.actorEmployeeId === request.employeeId) {
+      throw new AppError(API_ERRORS.FO_SELF_APPROVAL_FORBIDDEN);
+    }
+
+    const isHr = await employeeHrFunctionRepo.hasAnyFunction({
+      accountBookId: params.accountBookId,
+      employeeId: params.actorEmployeeId,
+      hrFunctions: [EmployeeHrFunction.HR_ADMIN],
+    });
+    if (!isHr) {
+      throw new AppError(API_ERRORS.FO_HR_FUNCTION_REQUIRED);
+    }
+
+    const outcome = await this.requests.revokeEmergency({
+      accountBookId: params.accountBookId,
+      requestId: request.id,
+      revokedByEmployeeId: params.actorEmployeeId,
+      revokedAt: params.observedAt,
+      revokeReason: params.reason,
+    });
+    if (outcome === OvertimeDecisionOutcome.NOT_DECLARED) {
+      throw new AppError(API_ERRORS.VA_OVERTIME_EMERGENCY_NOT_DECLARED);
+    }
+    if (outcome === OvertimeDecisionOutcome.ALREADY_REVIEWED) {
+      throw new AppError(API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED);
+    }
+
+    logger.info(
+      `[overtime] emergency revoked: request=${request.id} by=${params.actorEmployeeId}`,
     );
     return this.mustFindSummary(params.accountBookId, request.id);
   }

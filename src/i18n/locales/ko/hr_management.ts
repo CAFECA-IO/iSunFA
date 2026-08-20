@@ -1014,6 +1014,10 @@ export const hrManagement = {
     error_already_reviewed: "이 신청은 이미 처리되었습니다. 새로고침하세요.",
     error_reclassified_midway:
       "결재 중에 인사팀이 이 신청을 천재·사변(§32 IV)으로 인정하여 전 구간이 배액 지급으로 바뀌었습니다. 새로 고침하여 금액을 확인한 뒤 승인하세요.",
+    error_emergency_already_declared:
+      "이 신청에는 이미 §32 IV 인정이 있습니다. 새 신고를 기록하기 전에 기존 인정을 취소하세요.",
+    error_emergency_not_declared:
+      "이 신청에는 취소할 §32 IV 인정이 없습니다.",
     error_comp_expiry_unset:
       "보상휴가 기한이 아직 합의되지 않아 전환할 수 없습니다. 수당을 선택하거나 인사팀에 설정을 요청하세요.",
     error_day_not_scheduled:

@@ -65,15 +65,30 @@ interface IViolation {
   snippet: string;
 }
 
+/**
+ * Info: (20260820 - Julian) **遞迴**走訪（review 第 6 條）。
+ *
+ * 原本只看根目錄那一層，於是把一支引擎搬進子目錄就等於把它移出這道牆
+ * —— 而搬檔案的人不會看到任何紅燈。自己寫遞迴而不是用
+ * `readdirSync({ recursive: true })`：後者的 `Dirent` 要拿到所在目錄
+ * 需要 `parentPath`，而那是較新的 Node 才有的欄位，靜默失效的形狀
+ * 正是這一條要避免的。
+ */
+const walk = (dir: string, match: RegExp, into: string[]): void => {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      walk(full, match, into);
+      continue;
+    }
+    if (entry.isFile() && match.test(entry.name)) into.push(full);
+  }
+};
+
 const collectFiles = (): string[] => {
   const files: string[] = [];
   for (const root of SCAN_ROOTS) {
-    const absolute = join(process.cwd(), root.dir);
-    for (const name of readdirSync(absolute, { withFileTypes: true })) {
-      if (!name.isFile()) continue;
-      if (!root.match.test(name.name)) continue;
-      files.push(join(absolute, name.name));
-    }
+    walk(join(process.cwd(), root.dir), root.match, files);
   }
   return files.sort();
 };
@@ -98,16 +113,32 @@ const literalTextOf = (node: ts.Node): string | null => {
   return null;
 };
 
-const scan = (filePath: string): IViolation[] => {
-  const text = readFileSync(filePath, "utf8");
-  const source = ts.createSourceFile(
-    filePath,
+const parse = (fileName: string, text: string): ts.SourceFile =>
+  ts.createSourceFile(
+    fileName,
     text,
     ts.ScriptTarget.Latest,
     true,
     ts.ScriptKind.TS,
   );
-  const file = relative(process.cwd(), filePath);
+
+/**
+ * Info: (20260820 - Julian) 收**已剖析的** `SourceFile`（review 第 6 條）。
+ *
+ * 原本它自己讀檔、自己剖析，於是下面那條「掃描器抓得到幾種寫法」餵不進
+ * 一段字串，只好在測試裡**再抄一份訪問器**。兩份當天就已經分岔：
+ * 這裡認四種等值運算子（`===` `!==` `==` `!=`），那一份只認兩種。
+ *
+ * 後果不是「少驗兩種」而是「這一份根本沒有被驗」：刪掉這裡的
+ * `isSwitchStatement` 檢查，「沒有引擎讀假別的身分」照樣綠（本來零違規），
+ * 「掃描器抓得到四種寫法」也照樣綠（它有自己的那一份）——
+ * ADR 021 那道牆從此不擋 `switch (policy.code)`，而報告完全正常。
+ * checklist §1.10：驗收與產品要讀同一支實作。
+ *
+ * 同一輪的 `hr_pii_id_no_default.test.ts` 做對了（自我驗證呼叫真的
+ * `idLineOf` / `modelBlockOf`），這裡補齊。
+ */
+const scan = (source: ts.SourceFile, file: string): IViolation[] => {
   const found: IViolation[] = [];
 
   const at = (node: ts.Node): number =>
@@ -173,6 +204,16 @@ const scan = (filePath: string): IViolation[] => {
   return found;
 };
 
+const scanPath = (filePath: string): IViolation[] =>
+  scan(
+    parse(filePath, readFileSync(filePath, "utf8")),
+    relative(process.cwd(), filePath),
+  );
+
+/** Info: (20260820 - Julian) 自我驗證走**同一支** `scan`，只是餵它一段字串 */
+const probe = (body: string): string[] =>
+  scan(parse("probe.ts", body), "probe.ts").map((item) => item.kind);
+
 describe("T19：規則引擎不得對 LeavePolicy.code 分支（ADR 021 §2.1）", () => {
   const files = collectFiles();
 
@@ -182,14 +223,41 @@ describe("T19：規則引擎不得對 LeavePolicy.code 分支（ADR 021 §2.1）
    * 一支掃到零個檔案的測試永遠是綠的，而它綠的時候看起來與真的守住了
    * 一模一樣。目錄改名、檔案搬家、`match` 寫錯，都會讓上面那支測試
    * 從「沒有違規」變成「沒有在看」—— 這一條把兩者分開。
+   *
+   * Info: (20260820 - Julian) 由「至少 10 支」改成**逐一列出**（review 第 6 條）。
+   *
+   * 下限值分不出「掃到 16 支」與「掃到 10 支、另外 6 支被漏掉」——
+   * 而那正是這一條存在的理由。列成名單之後，新增一支引擎會紅（提醒作者
+   * 這道牆現在也管它）、少掉一支也會紅（提醒有人把它移出了牆外）。
    */
-  it("掃描根確實掃到東西（否則下面那條永遠是綠的）", () => {
-    expect(files.length).toBeGreaterThanOrEqual(10);
-    const names = files.map((path) => relative(process.cwd(), path));
-    expect(names).toContain(join("src", "lib", "leave_entitlement_rules.ts"));
-    expect(names).toContain(join("src", "lib", "leave_approval_chain.ts"));
-    expect(names).toContain(join("src", "services", "leave_request.service.ts"));
-    expect(names).toContain(join("src", "lib", "overtime_rules.ts"));
+  const EXPECTED_FILES: readonly string[] = [
+    join("src", "lib", "leave_approval_chain.ts"),
+    join("src", "lib", "leave_entitlement_rules.ts"),
+    join("src", "lib", "leave_span.ts"),
+    join("src", "lib", "overtime_rules.ts"),
+    /**
+     * Info: (20260820 - Julian) 這兩支是遞迴之後才進來的（原本只看根目錄那一層）。
+     * 它們是錯誤碼 → i18n key 的對照，不碰假別代號，因此本來就乾淨 ——
+     * 列在這裡是為了讓「牆管到哪裡」這件事寫得出來。
+     */
+    join("src", "lib", "utils", "leave_error_message.ts"),
+    join("src", "lib", "utils", "overtime_error_message.ts"),
+    join("src", "services", "leave.service.ts"),
+    join("src", "services", "leave_approval_rule.service.ts"),
+    join("src", "services", "leave_balance.service.ts"),
+    join("src", "services", "leave_policy.service.ts"),
+    join("src", "services", "leave_request.service.ts"),
+    join("src", "services", "leave_visibility.ts"),
+    join("src", "services", "overtime_policy.service.ts"),
+    join("src", "services", "overtime_report.service.ts"),
+    join("src", "services", "overtime_request.service.ts"),
+    join("src", "services", "overtime_visibility.ts"),
+  ];
+
+  it("掃描根確實掃到這 16 支（否則下面那條永遠是綠的）", () => {
+    expect(files.map((path) => relative(process.cwd(), path))).toEqual(
+      EXPECTED_FILES,
+    );
   });
 
   it("十三個內建代號都在掃描字典裡（代號增修時這條會提醒）", () => {
@@ -199,7 +267,7 @@ describe("T19：規則引擎不得對 LeavePolicy.code 分支（ADR 021 §2.1）
   });
 
   it("沒有任何一支引擎或編排讀假別的身分", () => {
-    const violations = files.flatMap(scan);
+    const violations = files.flatMap(scanPath);
     const report = violations
       .map((item) => `${item.file}:${item.line} [${item.kind}] ${item.snippet}`)
       .join("\n");
@@ -210,56 +278,61 @@ describe("T19：規則引擎不得對 LeavePolicy.code 分支（ADR 021 §2.1）
    * Info: (20260819 - Julian) 掃描器自己要被驗一次。
    *
    * 一個抓不到東西的檢查與一個沒有違規的程式庫，在測試報告上看起來相同。
-   * 這一條餵它四種真實的違規寫法，要求它四種都抓到 —— 否則上面那條
-   * 「沒有任何一支引擎讀假別的身分」證明的只是掃描器壞了。
+   *
+   * Info: (20260820 - Julian) 這裡走的是**真的** `scan`（review 第 6 條），
+   * 而且斷言的是**精確的違規種類清單**，不是 `toBeGreaterThan(0)` ——
+   * 後者連「每個節點都算一次」的壞掃描器都會放行，而那種掃描器會讓
+   * 上面那條「沒有違規」永遠紅，於是有人把它調鬆。
    */
-  it("掃描器抓得到四種寫法（用假的檔案餵它）", () => {
-    const probe = (body: string): number => {
-      const source = ts.createSourceFile(
-        "probe.ts",
-        body,
-        ts.ScriptTarget.Latest,
-        true,
-        ts.ScriptKind.TS,
-      );
-      let hits = 0;
-      const walk = (node: ts.Node): void => {
-        const literal = literalTextOf(node);
-        if (
-          literal !== null &&
-          POLICY_CODES.includes(literal) &&
-          node.parent !== undefined &&
-          !ts.isLiteralTypeNode(node.parent)
-        ) {
-          hits += 1;
-        }
-        if (isPolicyCodeMember(node)) hits += 1;
-        if (ts.isSwitchStatement(node) && isCodeAccess(node.expression)) {
-          hits += 1;
-        }
-        if (
-          ts.isBinaryExpression(node) &&
-          (node.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken ||
-            node.operatorToken.kind ===
-              ts.SyntaxKind.ExclamationEqualsEqualsToken) &&
-          (isCodeAccess(node.left) || isCodeAccess(node.right))
-        ) {
-          hits += 1;
-        }
-        ts.forEachChild(node, walk);
-      };
-      ts.forEachChild(source, walk);
-      return hits;
-    };
+  describe("掃描器自我驗證（走真的 scan）", () => {
+    it.each([
+      ["嚴格相等", `const x = policy.code === "ANNUAL";`],
+      // Info: (20260820 - Julian) 雙等號先前只有 scan 認得，probe 那一份不認
+      ["寬鬆相等", `const x = policy.code == "ANNUAL";`],
+      ["嚴格不等", `const x = policy.code !== "ANNUAL";`],
+      ["寬鬆不等", `const x = policy.code != "ANNUAL";`],
+    ])("%s：等值比較 + 字串常值各一筆", (_label, body) => {
+      expect(probe(body)).toEqual(["以假別代號做等值比較", "假別代號的字串常值"]);
+    });
 
-    expect(probe(`const x = policy.code === "ANNUAL";`)).toBeGreaterThan(0);
-    expect(probe(`const x = policy.code === LEAVE_POLICY_CODE.SICK;`)).toBeGreaterThan(0);
-    expect(probe(`switch (policy.code) { default: break; }`)).toBeGreaterThan(0);
-    expect(probe(`const m = { MARRIAGE: 1 }; const y = "MARRIAGE";`)).toBeGreaterThan(0);
+    it("比對 LEAVE_POLICY_CODE 的成員：等值比較 + 取用成員", () => {
+      expect(probe(`const x = policy.code === LEAVE_POLICY_CODE.SICK;`)).toEqual([
+        "以假別代號做等值比較",
+        "取用 LEAVE_POLICY_CODE 的成員",
+      ]);
+    });
 
-    // Info: (20260819 - Julian) 反面：正常的引擎寫法不得被誤判
-    expect(probe(`if (policy.quotaMode === LeaveQuotaMode.QUOTA) return 1;`)).toBe(0);
-    expect(probe(`const days = policy.annualDays ?? 0;`)).toBe(0);
-    expect(probe(`type Code = "ANNUAL" | "SICK";`)).toBe(0);
+    /**
+     * Info: (20260820 - Julian) `switch` 這一條就是 mutation 的落點：
+     * 刪掉 `scan` 裡的 `isSwitchStatement` 檢查，先前兩條測試都不會紅。
+     */
+    it("switch (policy.code)", () => {
+      expect(probe(`switch (policy.code) { default: break; }`)).toEqual([
+        "以假別代號做 switch",
+      ]);
+    });
+
+    it("代號字串出現在值的位置（不必有比較）", () => {
+      expect(probe(`const m = { MARRIAGE: 1 }; const y = "MARRIAGE";`)).toEqual([
+        "假別代號的字串常值",
+      ]);
+    });
+
+    /**
+     * Info: (20260819 - Julian) 反面：正常的引擎寫法不得被誤判。
+     *
+     * Info: (20260820 - Julian) 「查詢不是分支」那條界線**不在規則裡**：
+     * `where: { code: "COMPENSATORY" }` 這種寫法規則①照樣會認定為違規，
+     * 它被放行是因為 `src/repositories/` 根本不在掃描根裡（見檔頭）。
+     * 把它寫成一條「不算違規」的案例，會讓下一個人以為規則自己分得出來。
+     */
+    it.each([
+      ["讀屬性而非身分", `if (policy.quotaMode === LeaveQuotaMode.QUOTA) return 1;`],
+      ["讀法定面額", `const days = policy.annualDays ?? 0;`],
+      ["型別位置的代號是宣告，不是分支", `type Code = "ANNUAL" | "SICK";`],
+      ["讀 name 而非 code", `const label = policy.name ?? policy.id;`],
+    ])("%s：不算違規", (_label, body) => {
+      expect(probe(body)).toEqual([]);
+    });
   });
 });

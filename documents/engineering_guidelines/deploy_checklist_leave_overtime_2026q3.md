@@ -26,12 +26,21 @@
 
 ## 一、這次動了什麼
 
-### 新增 15 張表
+### 新增 16 張表
 
 `LeavePolicy`、`LeaveAccrualTier`、`LeaveApprovalRule`、`LeaveApprovalRuleStep`、`LeaveApprovalStep`、
 `LeaveGrant`、`LeaveLedgerEntry`、`LeaveBalance`、`LeaveCashOutEvent`、
 `LeaveConcurrencyRule`、`LeaveConcurrencyWarning`、
-`OvertimePolicy`、`OvertimeRequest`、`OvertimeSegment`、`EmployeeHrFunctionAssignment`
+`OvertimePolicy`、`OvertimeRequest`、`OvertimeSegment`、`EmployeeHrFunctionAssignment`、
+`OvertimeEmergencyDeclaration`
+
+> `OvertimeEmergencyDeclaration` 是本輪 review 才補上的（§32 IV 認定與撤回的歷史）。
+> 它是**純新增**、沒有既有列要回填，且沒有任何既有查詢讀它 ——
+> 在本文件其餘各節的意義上，它不改變任何結論。
+>
+> 唯一要注意的是**順序**：它對 `overtime_request` 有 `onDelete: Cascade` 的外鍵，
+> 因此下面第六節「清 demo 資料」的拓樸不變（刪 `overtime_request` 時它會跟著走），
+> 但**回滾 schema** 時要先刪它再刪 `overtime_request`。
 
 ### 新增 19 個 enum
 
@@ -180,7 +189,7 @@ schema **不是**純新增，因此：
 |---|---|
 | 只回滾程式碼、不回滾 schema | **不行。** 舊程式碼讀 `leave_request.leave_type`，那一欄已經不存在 —— 症狀是每一支假單端點 500 |
 | 連 schema 一起回滾 | 把 `prisma/schema.prisma` 切回舊版後 `db push`。**8 個必填欄位與 4 個被移除的欄位會反向重演一次**：新表被刪、`leave_type` 以 NOT NULL 加回來而既有列填不出值 → 先清 `leave_request` 再 push |
-| 只想停用功能、不動資料庫 | 走這一條。15 張新表留在資料庫裡不影響任何既有功能，把假勤的入口從側邊欄拿掉即可 |
+| 只想停用功能、不動資料庫 | 走這一條。16 張新表留在資料庫裡不影響任何既有功能，把假勤的入口從側邊欄拿掉即可 |
 
 第三條是預設建議：**回滾 schema 的代價高於留著它。**
 

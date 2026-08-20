@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isoDateSchema } from "@/validators/attendance";
+import { isSafeHttpUrl } from "@/lib/utils/safe_url";
 import { MINUTES_PER_DAY } from "@/constants/attendance";
 import {
   OVERTIME_EMERGENCY_REPORT_URL_MAX_LENGTH,
@@ -99,13 +100,47 @@ export const overtimeApprovalSchema = z.object({
  * 報備公文，一個看不出時區的數字沒有辦法拿去對。
  */
 export const overtimeEmergencyDeclareSchema = z.object({
+  /**
+   * Info: (20260820 - Julian) **要是一個能點的 http(s) 連結**（review 第 1 條）。
+   *
+   * 原本只有 `.trim().min(1).max(500)`，於是三件事同時成立：
+   *
+   * 1. `N/A` 通過 —— 而 `OVERTIME_EMERGENCY_REPORT_URL_MAX_LENGTH` 的註解
+   *    自己寫著「一個填了 `N/A` 的必填欄位，比沒有這個欄位更糟：它看起來
+   *    像有記載」。B7 把這一欄從自填布林值改成強制記載，就是為了不再有
+   *    「看起來像有記載」的狀態。
+   * 2. 它直接進 `<a href={...}>`，於是 `javascript:` 進得了 href。
+   * 3. 同一個檔案的同型欄位 `agreementRecordUrl` 有 `.url()`，這裡沒有 ——
+   *    同一份 schema 檔裡兩種標準，讀的人會以為寬的那個是刻意的。
+   *
+   * `.url()` 也不夠：zod 走 `new URL()`，`javascript:alert(1)` 會通過
+   * （實測 zod 4.4.3）。協定白名單見 `isSafeHttpUrl`。
+   */
   reportUrl: z
     .string()
     .trim()
     .min(1)
-    .max(OVERTIME_EMERGENCY_REPORT_URL_MAX_LENGTH),
+    .max(OVERTIME_EMERGENCY_REPORT_URL_MAX_LENGTH)
+    .refine(isSafeHttpUrl, {
+      message: "reportUrl must be an http(s) URL",
+    }),
   reportedAt: z.string().datetime({ offset: true }),
 });
+
+/**
+ * Info: (20260820 - Julian) 撤回 §32 IV 的認定（review 第 2 條）。
+ *
+ * 理由必填且沒有預設值：撤回的是一件**對外發生過**的事，
+ * 而「為什麼撤回」是事後唯一能分辨「報備被主管機關退回」與
+ * 「當初認定錯了」的資訊。與 `LeaveRequest.reason` 非空同一條理由。
+ */
+export const overtimeEmergencyRevokeSchema = z.object({
+  reason: z.string().trim().min(1).max(OVERTIME_REASON_MAX_LENGTH),
+});
+
+export type IOvertimeEmergencyRevokePayload = z.infer<
+  typeof overtimeEmergencyRevokeSchema
+>;
 
 export type IOvertimeRequestCreatePayload = z.infer<
   typeof overtimeRequestCreateSchema
@@ -167,7 +202,16 @@ export const overtimeUnapprovedQuerySchema = z
  */
 export const overtimePolicyUpdateSchema = z.object({
   extendedLimitAgreed: z.boolean(),
-  agreementRecordUrl: z.string().trim().url().nullable().default(null),
+  /**
+   * Info: (20260820 - Julian) `.url()` 擋不掉 `javascript:`（review 第 1 條）——
+   * zod 走的是 `new URL()`，而它認得所有協定。這一欄同樣會被畫成連結。
+   */
+  agreementRecordUrl: z
+    .string()
+    .trim()
+    .refine(isSafeHttpUrl, { message: "agreementRecordUrl must be an http(s) URL" })
+    .nullable()
+    .default(null),
   agreedAt: z.string().datetime().nullable().default(null),
   /** Info: (20260818 - Julian) §32-1 無法定日數，null 表尚未協商 —— 那時換不了補休 */
   compensatoryExpiryMonths: z.number().int().min(1).nullable().default(null),

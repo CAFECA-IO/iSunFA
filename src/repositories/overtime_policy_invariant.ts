@@ -21,6 +21,8 @@ export class OvertimePolicyInvariantError extends Error {
   }
 }
 
+import { isSafeHttpUrl } from "@/lib/utils/safe_url";
+
 export interface IStorableOvertimePolicy {
   extendedLimitAgreed: boolean;
   agreementRecordUrl: string | null | undefined;
@@ -35,6 +37,20 @@ export function assertOvertimePolicy(params: IStorableOvertimePolicy): void {
     if (url === null || url === undefined || url.trim() === "") {
       throw new OvertimePolicyInvariantError(
         "the 54-hour extension requires a recorded union or labour-management agreement (Article 32 III); an unrecorded consent grants 8 hours nobody agreed to",
+        `agreementRecordUrl=${url}`,
+      );
+    }
+    /**
+     * Info: (20260820 - Julian) 記載要**點得進去**（review 第 1 條）。
+     *
+     * 這一欄會被畫成連結，而 validator 的 `.url()` 走 `new URL()`——
+     * `javascript:` 與 `data:` 都通得過（實測 zod 4.4.3）。這裡再擋一次，
+     * 因為 seed 與資料遷移不經過 validator（同下面 `assertOvertimeEmergencyRecord`
+     * 存在的理由）。
+     */
+    if (!isSafeHttpUrl(url.trim())) {
+      throw new OvertimePolicyInvariantError(
+        "the recorded agreement must be an http(s) link that can actually be opened; a value that is not a URL reads as a record while pointing at nothing",
         `agreementRecordUrl=${url}`,
       );
     }

@@ -5,7 +5,9 @@ import {
   deriveOvertimeSegments,
   OvertimeRuleErrorReason,
 } from "@/lib/overtime_rules";
+import type { IStorableEmergencyDeclaration } from "@/repositories/overtime_request_invariant";
 import {
+  assertEmergencyDeclaration,
   assertOvertimeEmergencyRecord,
   assertOvertimeSegmentPremium,
   IStorableOvertimeEmergency,
@@ -308,5 +310,119 @@ describe("assertOvertimeSegmentPremium — 旗標與級距講同一個故事", (
     expect(() =>
       assertOvertimeSegmentPremium({ isEmergency: false, segments: [] }),
     ).not.toThrow();
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) 報備連結必須**點得進去**（review 第 3 輪第 1 條）。
+ *
+ * 這一欄從自填布林值改成強制記載，要的是「不再有看起來像記載的狀態」。
+ * 只要求非空的話 `N/A` 就通得過 —— 而
+ * `OVERTIME_EMERGENCY_REPORT_URL_MAX_LENGTH` 的註解自己寫著
+ * 「一個填了 `N/A` 的必填欄位，比沒有這個欄位更糟：它看起來像有記載」。
+ *
+ * 協定白名單而不只是「像不像 URL」：這一欄直接進 `<a href={...}>`，
+ * 而 zod `.url()` 的實作 `new URL()` 認得 `javascript:`、`data:`、`file:`、
+ * `vbscript:`（本 repo 實測 zod 4.4.3，四種全部通過）。
+ */
+describe("報備連結的協定白名單", () => {
+  it.each([
+    ["placeholder", "N/A"],
+    ["文號而不是連結", "北市勞動字第 1140819 號"],
+    ["javascript:", "javascript:alert(1)"],
+    ["data:", "data:text/html,<script>alert(1)</script>"],
+    ["file:", "file:///etc/passwd"],
+    ["vbscript:", "vbscript:msgbox(1)"],
+  ])("%s 擋下", (_label, reportUrl) => {
+    expect(() =>
+      assertOvertimeEmergencyRecord({ ...RECORDED, emergencyReportUrl: reportUrl }),
+    ).toThrow(OvertimeRequestInvariantError);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 反面：正當的連結不得被擋。
+   *
+   * 內網位址**刻意放行** —— 公司把公文放在內部文件伺服器是正當的記錄位置，
+   * 擋掉只會逼出一個對外看得到、但其實不是那份公文的網址，
+   * 而那比內網連結更糟（它看起來可以查證）。「連到哪」的判斷交給畫面，
+   * 它會把 host 顯示出來。
+   */
+  it.each([
+    ["主管機關網站", "https://www.mol.gov.tw/filings/2026-0819"],
+    ["內網文件伺服器", "http://intranet.local/filings/2026-0819.pdf"],
+  ])("%s 放行", (_label, reportUrl) => {
+    expect(() =>
+      assertOvertimeEmergencyRecord({ ...RECORDED, emergencyReportUrl: reportUrl }),
+    ).not.toThrow();
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) 認定歷史列的「撤回三欄同生共死」（review 第 3 輪第 2 條）。
+ *
+ * 撤回留列而不是把欄位清空：公司真的通知過工會、真的報過主管機關，
+ * 那件事不會因為系統把欄位設成 null 而沒有發生過。
+ */
+describe("assertEmergencyDeclaration", () => {
+  const ACTIVE = {
+    reportUrl: "https://example.test/filings/2026-0819-001",
+    reportedAt: new Date("2026-08-19T09:00:00+08:00"),
+    declaredByEmployeeId: "emp-hr1",
+    revokedAt: null,
+    revokedByEmployeeId: null,
+    revokeReason: null,
+  };
+
+  it("有效的認定（撤回三欄全空）通過", () => {
+    expect(() => assertEmergencyDeclaration(ACTIVE)).not.toThrow();
+  });
+
+  it("完整的撤回通過", () => {
+    expect(() =>
+      assertEmergencyDeclaration({
+        ...ACTIVE,
+        revokedAt: new Date("2026-08-20T10:00:00+08:00"),
+        revokedByEmployeeId: "emp-hr1",
+        revokeReason: "主管機關退回，須重新報備",
+      }),
+    ).not.toThrow();
+  });
+
+  /**
+   * Info: (20260820 - Julian) 三選二不行：半套撤回分不出是「撤回了」還是
+   * 「某一欄漏填」，而那個差別決定的是「這份報備要不要重做」。
+   */
+  const REVOKED_AT = new Date("2026-08-20T10:00:00+08:00");
+  /**
+   * Info: (20260820 - Julian) 顯式標註成 tuple 陣列 —— 不標的話 TS 會把兩種型別
+   * 推成聯集，`it.each` 的回呼參數就拿不到各自的型別。
+   */
+  const HALF_REVOCATIONS: readonly [
+    string,
+    Partial<IStorableEmergencyDeclaration>,
+  ][] = [
+    ["少了時點", { revokedByEmployeeId: "emp-hr1", revokeReason: "打錯了" }],
+    ["少了撤回者", { revokedAt: REVOKED_AT, revokeReason: "打錯了" }],
+    ["少了理由", { revokedAt: REVOKED_AT, revokedByEmployeeId: "emp-hr1" }],
+    [
+      "理由是空白字串",
+      {
+        revokedAt: REVOKED_AT,
+        revokedByEmployeeId: "emp-hr1",
+        revokeReason: "   ",
+      },
+    ],
+  ];
+
+  it.each(HALF_REVOCATIONS)("%s 擋下", (_label, patch) => {
+    expect(() =>
+      assertEmergencyDeclaration({ ...ACTIVE, ...patch }),
+    ).toThrow(OvertimeRequestInvariantError);
+  });
+
+  it("歷史列的連結同樣走協定白名單", () => {
+    expect(() =>
+      assertEmergencyDeclaration({ ...ACTIVE, reportUrl: "javascript:alert(1)" }),
+    ).toThrow(OvertimeRequestInvariantError);
   });
 });

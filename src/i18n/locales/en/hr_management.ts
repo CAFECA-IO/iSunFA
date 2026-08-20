@@ -1031,6 +1031,10 @@ export const hrManagement = {
       "This request has already been decided. Reload to see the result.",
     error_reclassified_midway:
       "HR declared this an emergency (Article 32 IV) while you were approving it, so the whole span is now paid double. Reload, check the amount, then approve.",
+    error_emergency_already_declared:
+      "This request already carries an Article 32 IV determination. Revoke the existing filing before recording a new one.",
+    error_emergency_not_declared:
+      "This request carries no Article 32 IV determination to revoke.",
     error_comp_expiry_unset:
       "The company has not agreed a compensatory-leave period yet, so overtime cannot be converted. Pick overtime pay, or ask HR to set it.",
     error_day_not_scheduled:

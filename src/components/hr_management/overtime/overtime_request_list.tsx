@@ -26,6 +26,7 @@ import {
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { OVERTIME_ERROR_I18N_KEY } from "@/lib/utils/overtime_error_message";
 import { formatMinuteOfDay } from "@/lib/utils/attendance_format";
+import { safeUrlHostOf } from "@/lib/utils/safe_url";
 import { IEnvelopeLike, request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
 
@@ -272,22 +273,46 @@ const OvertimeRequestList: FC<{
                    * 這一欄從自填布林值改成強制記載的理由。
                    */}
                   {item.isEmergency &&
-                    (item.emergencyReportUrl === null ? (
-                      <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-700">
-                        <Siren className="size-3" />
-                        {t("hr_management.overtime.list_emergency_badge")}
-                      </span>
-                    ) : (
-                      <a
-                        href={item.emergencyReportUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-700 underline decoration-orange-300 underline-offset-2 hover:bg-orange-200"
-                      >
-                        <Siren className="size-3" />
-                        {t("hr_management.overtime.list_emergency_badge")}
-                      </a>
-                    ))}
+                    (() => {
+                      /**
+                       * Info: (20260820 - Julian) 只有 http(s) 才畫成連結（review 第 1 條）。
+                       *
+                       * 服務端已經擋在 validator 與 repository 不變式兩層，這裡是
+                       * **既有資料**的那一層：在補上驗證之前寫進去的列仍然在庫裡，
+                       * 而它們會直接進 `href`。解不出 host 就退回不可點的標記 ——
+                       * 與「沒有連結」畫成同一個樣子，因為那正是它的狀態。
+                       *
+                       * 顯示 host 的理由：這一欄刻意**不擋內網位址**（公司把公文
+                       * 放在內部文件伺服器是正當的），於是「連到哪」必須讓讀的人
+                       * 自己看得到 —— `intranet.local` 與主管機關的網域不是同一回事，
+                       * 而一個只寫著「天災事變」的標記說不出這個差別。
+                       */
+                      const host =
+                        item.emergencyReportUrl === null
+                          ? null
+                          : safeUrlHostOf(item.emergencyReportUrl);
+                      if (item.emergencyReportUrl === null || host === null) {
+                        return (
+                          <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-700">
+                            <Siren className="size-3" />
+                            {t("hr_management.overtime.list_emergency_badge")}
+                          </span>
+                        );
+                      }
+                      return (
+                        <a
+                          href={item.emergencyReportUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          title={item.emergencyReportUrl}
+                          className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-700 underline decoration-orange-300 underline-offset-2 hover:bg-orange-200"
+                        >
+                          <Siren className="size-3" />
+                          {t("hr_management.overtime.list_emergency_badge")}
+                          <span className="font-normal opacity-70">{host}</span>
+                        </a>
+                      );
+                    })()}
                   {item.evidenceBasis ===
                     OvertimeEvidenceBasis.MANUAL_DECLARATION && (
                     <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">

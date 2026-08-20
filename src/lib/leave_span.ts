@@ -183,18 +183,9 @@ export const expandLeaveSpan = (params: {
     const isFirst = index === 0;
     const isLast = index === dates.length - 1;
 
-    if (isFirst && isLast) {
-      return {
-        workDate,
-        segment: LeaveDaySegment.CUSTOM,
-        startMinute: start.minuteOfDay,
-        endMinute: end.minuteOfDay,
-      };
-    }
-
     /**
-     * Info: (20260819 - Julian) 首末日要班別才切得出區間；中間日整天請，
-     * 不需要知道班別長什麼樣。查無班別時交給呼叫端擋 ——
+     * Info: (20260819 - Julian) 中間日整天請，不需要知道班別長什麼樣。
+     * 首末日（含只有一天的情形）要班別才切得出區間 —— 查無班別時交給呼叫端擋，
      * 這支函式不認識 `AppError`，也不該認識（同引擎不知道 HTTP 的理由）。
      */
     if (!isFirst && !isLast) {
@@ -207,36 +198,56 @@ export const expandLeaveSpan = (params: {
     }
 
     /**
+     * Info: (20260820 - Julian) **單日也要夾進班別區間**（review 第 3 條）。
+     *
+     * 這裡原本有一支 `isFirst && isLast` 的捷徑，排在 `shiftOf` **之前**就
+     * 直接回 `CUSTOM(start, end)` —— 於是同一支函式對「單日」與「首日」
+     * 說了兩種話，而差的方向對勞工不利：480 分班（08:00–17:00）下
+     *
+     * | 使用者填的 | 舊的單日分支 | 實際與班別的重疊 |
+     * |---|---|---|
+     * | 06:00 – 08:00 | 120 分 | 0 分 |
+     * | 16:00 – 23:00 | 420 分 | 60 分 |
+     *
+     * 而本輪把輸入改成連續時段之後，「單日」正是最常被走到的那一條路徑。
+     *
+     * 現在三種情形共用同一個式子：有界的那一側用使用者填的時刻，
+     * 沒界的那一側用班別的邊界，兩側再一起夾進班別區間。
+     * `isFirst && isLast` 自然落在「兩側都有界」，不需要自己的分支 ——
+     * **一個不需要特例的規則就不該有特例**，特例正是兩邊分岔的地方。
+     */
+    const startMinute = isFirst
+      ? Math.max(start.minuteOfDay, shift.startMinute)
+      : shift.startMinute;
+    const endMinute = isLast
+      ? Math.min(end.minuteOfDay, shift.endMinute)
+      : shift.endMinute;
+
+    /**
      * Info: (20260819 - Julian) 首末日**可能一分鐘都不涵蓋**，那時候把它整天丟掉。
      *
      * 下班之後才開始請（起 18:17、班到 17:00），或隔天上班之前就結束
      * （迄 07:00、班從 08:00 開始）—— 那一天他本來就不在班上，
      * 沒有任何工時需要請假。
      *
-     * 先前這裡用 `Math.min` / `Math.max` 把它夾進班別區間，結果夾出一個
+     * 先前這裡用 `Math.min` / `Math.max` 夾完就直接回，結果夾出一個
      * **零長度**的區間（`1020 → 1020`），而 `resolveLeaveMinutes` 對 CUSTOM
      * 要求區間必須往前走，於是丟出結構性錯誤 —— 再被 `buildPlan` 轉成
      * 「請假時間不符合這個假別的最小單位」。使用者看到的是一句與成因無關的話，
      * 而他選的時間其實完全合理，只是第一天沒有班。
+     *
+     * 整段都落在班外時（單日的 06:00–08:00）這裡會把唯一的一天也丟掉，
+     * 於是 `buildPlan` 回「非上班日」—— 那正是它註解裡寫的
+     * 「整段區間一天工時都沒有」，訊息與成因對得上。
      */
-    if (isFirst && start.minuteOfDay >= shift.endMinute) return null;
-    if (isLast && end.minuteOfDay <= shift.startMinute) return null;
+    if (startMinute >= endMinute) return null;
 
-    return isFirst
-      ? {
-          workDate,
-          segment: LeaveDaySegment.CUSTOM,
-          // Info: (20260819 - Julian) 比班別早到的部分不算請假
-          startMinute: Math.max(start.minuteOfDay, shift.startMinute),
-          endMinute: shift.endMinute,
-        }
-      : {
-          workDate,
-          segment: LeaveDaySegment.CUSTOM,
-          startMinute: shift.startMinute,
-          // Info: (20260819 - Julian) 比班別晚走的部分不算請假
-          endMinute: Math.min(end.minuteOfDay, shift.endMinute),
-        };
+    return {
+      workDate,
+      segment: LeaveDaySegment.CUSTOM,
+      startMinute,
+      endMinute,
+    };
   });
 
   return expanded.filter((day): day is ILeaveSpanDay => day !== null);

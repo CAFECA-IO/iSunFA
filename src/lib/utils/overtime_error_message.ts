@@ -44,6 +44,15 @@ export const OVERTIME_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
    */
   [API_ERRORS.VA_OVERTIME_RECLASSIFIED_MIDWAY.code]:
     "hr_management.overtime.error_reclassified_midway",
+  /**
+   * Info: (20260820 - Julian) §32 IV 認定的兩種落空（review 第 3 輪第 2 條）。
+   * 都不與「已決行」共用：那一句要人資不用再管，這兩句分別是
+   * 「要先撤回既有的那份」與「本來就沒有可撤回的認定」。
+   */
+  [API_ERRORS.VA_OVERTIME_EMERGENCY_ALREADY_DECLARED.code]:
+    "hr_management.overtime.error_emergency_already_declared",
+  [API_ERRORS.VA_OVERTIME_EMERGENCY_NOT_DECLARED.code]:
+    "hr_management.overtime.error_emergency_not_declared",
   [API_ERRORS.VA_OVERTIME_COMP_EXPIRY_UNSET.code]:
     "hr_management.overtime.error_comp_expiry_unset",
 

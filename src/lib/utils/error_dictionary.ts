@@ -1528,6 +1528,26 @@ export const API_ERRORS = {
    * 而這一句要主管**重新看一次再按** —— 工資標準已經從普通級距跳到加倍發給，
    * 而他剛才在畫面上看到的金額不是現在會寫進去的那個。
    */
+  /**
+   * Info: (20260820 - Julian) §32 IV 認定的兩種落空（review 第 3 輪第 2 條）。
+   *
+   * 都不與 `VA_OVERTIME_ALREADY_REVIEWED` 共用：那一句的下一步是「不用管了」，
+   * 這兩句分別是「要先撤回既有的那份」與「本來就沒有可撤回的認定」。
+   */
+  VA_OVERTIME_EMERGENCY_ALREADY_DECLARED: {
+    code: "VA000071",
+    message:
+      "This overtime request already carries an Article 32 IV determination; revoke the existing one before filing a new record",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  VA_OVERTIME_EMERGENCY_NOT_DECLARED: {
+    code: "VA000072",
+    message:
+      "This overtime request carries no Article 32 IV determination to revoke",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
   VA_OVERTIME_RECLASSIFIED_MIDWAY: {
     code: "VA000070",
     message:

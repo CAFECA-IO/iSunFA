@@ -22,6 +22,7 @@ import {
 } from "@/repositories/leave_grant.repo";
 import { assertGrantSource } from "@/repositories/leave_grant_invariant";
 import {
+  assertEmergencyDeclaration,
   assertOvertimeEmergencyRecord,
   assertOvertimeFilingType,
   assertOvertimeSegmentPremium,
@@ -151,6 +152,20 @@ export interface IOvertimeRequestRepository {
     emergencyReportUrl: string;
     emergencyReportedAt: Date;
     emergencyDeclaredByEmployeeId: string;
+  }): Promise<OvertimeDecisionOutcome>;
+  /**
+   * Info: (20260820 - Julian) 撤回 §32 IV 的認定（review 第 3 輪第 2 條）。
+   *
+   * 與認定對稱：附條件更新要求 `isEmergency = true`，於是「撤回一份不存在的
+   * 認定」與「兩個人同時撤回」都落在 `count === 0`，而不是安靜地成功。
+   * 歷史列不刪，只補上撤回的三欄。
+   */
+  revokeEmergency(params: {
+    accountBookId: string;
+    requestId: string;
+    revokedByEmployeeId: string;
+    revokedAt: Date;
+    revokeReason: string;
   }): Promise<OvertimeDecisionOutcome>;
   reject(params: {
     accountBookId: string;
@@ -460,23 +475,148 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
       emergencyReportedAt: params.emergencyReportedAt,
       emergencyDeclaredByEmployeeId: params.emergencyDeclaredByEmployeeId,
     });
-
-    const moved = await prisma.overtimeRequest.updateMany({
-      where: {
-        id: params.requestId,
-        accountBookId: params.accountBookId,
-        status: OvertimeRequestStatus.PENDING,
-      },
-      data: {
-        isEmergency: true,
-        emergencyReportUrl: params.emergencyReportUrl,
-        emergencyReportedAt: params.emergencyReportedAt,
-        emergencyDeclaredByEmployeeId: params.emergencyDeclaredByEmployeeId,
-      },
+    assertEmergencyDeclaration({
+      reportUrl: params.emergencyReportUrl,
+      reportedAt: params.emergencyReportedAt,
+      declaredByEmployeeId: params.emergencyDeclaredByEmployeeId,
+      revokedAt: null,
+      revokedByEmployeeId: null,
+      revokeReason: null,
     });
-    return moved.count === 0
-      ? OvertimeDecisionOutcome.ALREADY_REVIEWED
-      : OvertimeDecisionOutcome.DECIDED;
+
+    return prisma.$transaction(async (tx) => {
+      const moved = await tx.overtimeRequest.updateMany({
+        where: {
+          id: params.requestId,
+          accountBookId: params.accountBookId,
+          status: OvertimeRequestStatus.PENDING,
+          /**
+           * Info: (20260820 - Julian) **只認定得了一次**（review 第 3 輪第 2 條）。
+           *
+           * 原本條件只有 `status`，於是第二次認定會靜默蓋掉連結、時點與
+           * 認定者，並回 `DECIDED` —— 呼叫端看到的與成功的第一次一模一樣，
+           * 而前一份報備紀錄從此沒有任何資料說得出來。
+           *
+           * 這一行同時是「一張單最多一份有效認定」的執行者：歷史表沒有
+           * partial unique index（Prisma schema 表達不出來），約束在這裡。
+           */
+          isEmergency: false,
+        },
+        data: {
+          isEmergency: true,
+          emergencyReportUrl: params.emergencyReportUrl,
+          emergencyReportedAt: params.emergencyReportedAt,
+          emergencyDeclaredByEmployeeId: params.emergencyDeclaredByEmployeeId,
+        },
+      });
+      if (moved.count === 0) {
+        /**
+         * Info: (20260820 - Julian) 兩種落空要分得出來：已決行 vs 已經認定過。
+         * 回同一句話的話，HR 會以為是別人先決行了，而實際上是他自己
+         * （或另一位人資）已經認定過一次，那時該做的是先撤回再重新認定。
+         */
+        const current = await tx.overtimeRequest.findFirst({
+          where: {
+            id: params.requestId,
+            accountBookId: params.accountBookId,
+          },
+          select: { status: true, isEmergency: true },
+        });
+        return current !== null &&
+          current.status === OvertimeRequestStatus.PENDING &&
+          current.isEmergency
+          ? OvertimeDecisionOutcome.ALREADY_DECLARED
+          : OvertimeDecisionOutcome.ALREADY_REVIEWED;
+      }
+
+      /**
+       * Info: (20260820 - Julian) 歷史列與旗標同一筆交易（review 第 3 輪第 2 條）。
+       *
+       * 分開寫的話會出現「旗標翻了、歷史沒有」或反過來 —— 前者讓加倍發給
+       * 沒有可追查的來源，後者讓勞動檢查看到一份不對應任何加班單的報備。
+       */
+      await tx.overtimeEmergencyDeclaration.create({
+        data: {
+          accountBookId: params.accountBookId,
+          overtimeRequestId: params.requestId,
+          reportUrl: params.emergencyReportUrl,
+          reportedAt: params.emergencyReportedAt,
+          declaredByEmployeeId: params.emergencyDeclaredByEmployeeId,
+        },
+      });
+
+      return OvertimeDecisionOutcome.DECIDED;
+    });
+  }
+
+  public async revokeEmergency(params: {
+    accountBookId: string;
+    requestId: string;
+    revokedByEmployeeId: string;
+    revokedAt: Date;
+    revokeReason: string;
+  }): Promise<OvertimeDecisionOutcome> {
+    return prisma.$transaction(async (tx) => {
+      const moved = await tx.overtimeRequest.updateMany({
+        where: {
+          id: params.requestId,
+          accountBookId: params.accountBookId,
+          status: OvertimeRequestStatus.PENDING,
+          // Info: (20260820 - Julian) 撤回一份不存在的認定不是成功，是落空
+          isEmergency: true,
+        },
+        /**
+         * Info: (20260820 - Julian) 三欄一起清空 —— `assertOvertimeEmergencyRecord`
+         * 的反方向要求「沒有 `isEmergency` 就不得帶記載」。
+         *
+         * 這不是刪掉那份紀錄：它整份留在 `OvertimeEmergencyDeclaration` 裡，
+         * 連同撤回的時點、撤回者與理由。這裡清掉的是**現況**欄位，
+         * 而現況是「這張單目前不是天災事變」。
+         */
+        data: {
+          isEmergency: false,
+          emergencyReportUrl: null,
+          emergencyReportedAt: null,
+          emergencyDeclaredByEmployeeId: null,
+        },
+      });
+      if (moved.count === 0) {
+        const current = await tx.overtimeRequest.findFirst({
+          where: {
+            id: params.requestId,
+            accountBookId: params.accountBookId,
+          },
+          select: { status: true, isEmergency: true },
+        });
+        return current !== null &&
+          current.status === OvertimeRequestStatus.PENDING &&
+          !current.isEmergency
+          ? OvertimeDecisionOutcome.NOT_DECLARED
+          : OvertimeDecisionOutcome.ALREADY_REVIEWED;
+      }
+
+      /**
+       * Info: (20260820 - Julian) 補在**還沒被撤回的那一列**上（`revokedAt: null`）。
+       *
+       * 不用 `findFirst` 再 `update`：那是先讀再寫，而附條件的 `updateMany`
+       * 在同一句話裡完成（同本檔其餘狀態轉移的既有處置）。
+       * 上面那次更新已經保證此刻恰有一份有效認定。
+       */
+      await tx.overtimeEmergencyDeclaration.updateMany({
+        where: {
+          overtimeRequestId: params.requestId,
+          accountBookId: params.accountBookId,
+          revokedAt: null,
+        },
+        data: {
+          revokedAt: params.revokedAt,
+          revokedByEmployeeId: params.revokedByEmployeeId,
+          revokeReason: params.revokeReason,
+        },
+      });
+
+      return OvertimeDecisionOutcome.DECIDED;
+    });
   }
 
   public async reject(params: {

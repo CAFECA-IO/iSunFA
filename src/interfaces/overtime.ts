@@ -225,6 +225,20 @@ export enum OvertimeDecisionOutcome {
    * 主管會照字面理解成不用管，而那張單會一直停在待簽清單上沒有人動。
    */
   RECLASSIFIED = "RECLASSIFIED",
+  /**
+   * Info: (20260820 - Julian) 這張單已經有一份有效的 §32 IV 認定（review 第 3 輪第 2 條）。
+   *
+   * 與 `ALREADY_REVIEWED` 分開：後者的下一步是「不用管了」，這一個是
+   * 「要先撤回既有的那份」。合成同一句話的話，人資會以為是主管先決行了，
+   * 而實際上那份報備紀錄還在，且他正要覆寫它。
+   */
+  ALREADY_DECLARED = "ALREADY_DECLARED",
+  /**
+   * Info: (20260820 - Julian) 這張單沒有可撤回的認定（review 第 3 輪第 2 條）。
+   * 撤回一份不存在的認定不是成功 —— 回 `DECIDED` 會讓畫面顯示「已撤回」，
+   * 而其實什麼都沒有發生。
+   */
+  NOT_DECLARED = "NOT_DECLARED",
 }
 
 // Info: (20260818 - Julian) ===== 查詢類端點的 DTO（L24 / L28 / L29 / L30）=====

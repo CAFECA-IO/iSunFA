@@ -852,6 +852,8 @@ model AccountBook {
   leaveConcurrencyRules LeaveConcurrencyRule[]
   leaveCashOutEvents    LeaveCashOutEvent[]
   overtimeRequests      OvertimeRequest[]
+  // Info: (20260820 - Julian) §32 IV 認定與撤回的歷史（review 第 3 輪第 2 條）
+  overtimeEmergencyDeclarations OvertimeEmergencyDeclaration[]
   overtimePolicy        OvertimePolicy?
 
   @@map("account_book")
@@ -3942,12 +3944,82 @@ model OvertimeRequest {
 
   segments OvertimeSegment[]
 
+  /**
+   * Info: (20260820 - Julian) §32 IV 認定的歷史（review 第 3 輪第 2 條）。
+   *
+   * 上面那三欄是**現況**（誰現在的認定、指向哪份紀錄）；這張表是**經過**。
+   * 兩者分開的理由見 `OvertimeEmergencyDeclaration` 的檔頭。
+   */
+  emergencyDeclarations OvertimeEmergencyDeclaration[]
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([accountBookId, employeeId])
   @@index([accountBookId, workDate])
   @@map("overtime_request")
+}
+
+/**
+ * Info: (20260820 - Julian) §32 IV 認定與撤回的歷史（review 第 3 輪第 2 條）。
+ *
+ * ## 為什麼不能只有 `OvertimeRequest` 上那三欄
+ *
+ * 那三欄只存得下**一份**認定，而且是可覆寫的。於是兩件事同時做不到：
+ *
+ * 1. **重複認定會靜默取代前一份。** 第二次呼叫 `declareEmergency` 蓋掉
+ *    連結、時點與認定者，而回傳值仍然是 `DECIDED` —— 看起來像成功的第一次。
+ *    事後沒有任何資料說得出「本來報備的是哪一份」。
+ * 2. **撤回只能把三欄一起清空。** `assertOvertimeEmergencyRecord` 的反方向
+ *    （沒有 `isEmergency` 就不得帶記載）逼出這個動作，而它等於**硬刪一份
+ *    對外發生過的紀錄** —— 公司真的通知過工會、真的報過主管機關，
+ *    那件事不會因為系統把欄位設成 null 而沒有發生過。
+ *    那條不變式的註解自己寫下了正解卻沒有實作：
+ *    「前者**應該留下撤回的痕跡**，不是把旗標翻回去就算了。」
+ *
+ * ## 分工
+ *
+ * `OvertimeRequest` 的三欄是**現況**（給清單、給分段判定用，一次查詢就讀得到）；
+ * 這張表是**經過**（給勞動檢查與事後追查用）。認定寫一列，撤回在同一列上
+ * 補 `revokedAt` / `revokedBy` / `revokeReason`，兩者都不刪。
+ *
+ * 「同一張單最多只有一份有效認定」由 `OvertimeRequest.isEmergency` 的
+ * 附條件更新保證（`where: { isEmergency: false }`），不靠這張表的唯一鍵 ——
+ * partial unique index 在 Prisma schema 裡表達不出來，而一個表達不出來的
+ * 約束寫成註解就會是下一個沒有執行者的規則。
+ */
+model OvertimeEmergencyDeclaration {
+  id String @id @default(uuid())
+
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  overtimeRequestId String          @map("overtime_request_id")
+  overtimeRequest   OvertimeRequest @relation(fields: [overtimeRequestId], references: [id], onDelete: Cascade)
+
+  // Info: (20260820 - Julian) 報備紀錄的連結。只收 http(s)（見 isSafeHttpUrl）
+  reportUrl String @map("report_url")
+
+  // Info: (20260820 - Julian) 報備發生的時點（§32 IV 的 24 小時由這一欄計算）
+  reportedAt DateTime @map("reported_at")
+
+  // Info: (20260820 - Julian) 認定者。不設外鍵關聯：離職後仍要答得出當時是誰認定的
+  declaredByEmployeeId String   @map("declared_by_employee_id")
+  declaredAt           DateTime @default(now()) @map("declared_at")
+
+  /**
+   * Info: (20260820 - Julian) 撤回的三欄。null 表這份認定仍然有效。
+   *
+   * `revokeReason` 與 `revokedAt` 同生共死（由 `assertEmergencyDeclaration` 雙向擋）：
+   * 一筆沒有理由的撤回，事後分不出是「報備被主管機關退回」還是「當初認定錯了」，
+   * 而那兩件事的後續處置完全不同。
+   */
+  revokedAt            DateTime? @map("revoked_at")
+  revokedByEmployeeId  String?   @map("revoked_by_employee_id")
+  revokeReason         String?   @map("revoke_reason")
+
+  @@index([accountBookId, overtimeRequestId])
+  @@map("overtime_emergency_declaration")
 }
 
 /**
