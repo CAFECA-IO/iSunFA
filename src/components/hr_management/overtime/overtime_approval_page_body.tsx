@@ -22,18 +22,13 @@ import { useTranslation } from "@/i18n/i18n_context";
 /**
  * Info: (20260818 - Julian) 加班簽核（L26 / L27 / L29 與待簽清單）。
  *
- * ## 為什麼未核准時段跟待簽清單放同一頁
- *
- * 它們是同一個決定的兩面：待簽清單是「有人申請了，請你決定」，
- * 未核准時段是「有人待著，但沒有人申請」。只做前者，主管會以為
- * 沒出現在清單上的就沒有發生 —— 而那正是勞動檢查會看見的東西
+ * 未核准時段與待簽清單同一頁，因為它們是同一個決定的兩面：一個是
+ * 「有人申請了，請你決定」，一個是「有人待著，但沒有人申請」。只做前者，
+ * 主管會以為沒出現在清單上的就沒有發生 —— 而那正是勞動檢查會看見的東西
  * （ADR 024 §2.1）。
  *
- * ## 為什麼不是主管的人也打得開
- *
- * 待簽清單對他而言是空的，而那是正確的：「你沒有要簽的單」與
- * 「你沒有權限」是兩件事，用 403 表達前者會讓一個剛被升為主管的人
- * 以為系統壞了（同假單 L16 的既有處置）。
+ * 不是主管的人也打得開，清單對他而言是空的：「你沒有要簽的單」與
+ * 「你沒有權限」是兩件事，用 403 表達前者會讓剛升上來的人以為系統壞了。
  */
 
 /** Info: (20260818 - Julian) 以**當地**日期取今天，不用 `toISOString()`（那是 UTC，跨日會差一天） */
@@ -44,27 +39,21 @@ const OvertimeApprovalPageBody: FC = () => {
   const { t } = useTranslation();
 
   const [pending, setPending] = useState<IOvertimeRequestSummary[]>([]);
-  /**
-   * Info: (20260819 - Julian) §32 IV 的認定限 `HR_ADMIN`（review B7）。
-   * 這只決定看不看得到那一區 —— 授權在 service 端。
-   */
+  // Info: (20260819 - Julian) §32 IV 的認定限 HR_ADMIN。這只決定看不看得到，授權在 service 端
   const [mayDeclareEmergency, setMayDeclareEmergency] = useState(false);
   /**
-   * Info: (20260820 - Julian) **下屬的**未核准時段（review 第 6 輪 M23）。
+   * Info: (20260820 - Julian) **下屬的**未核准時段，一人一份。
    *
-   * 這裡原本是單一份報告，而查詢沒有帶 `employeeId` —— route 的預設是本人，
-   * 於是簽核頁顯示的是主管自己的未核准時段，下屬的永遠不會出現在任何畫面上。
-   * 本檔檔頭寫的正是這件事的後果：「主管會以為沒出現在清單上的就沒有發生」。
+   * 不帶 `scope` 的話 route 預設查本人 —— 簽核頁會顯示主管自己的時段，
+   * 而下屬的不會出現在任何畫面上（正是檔頭那句話的後果）。
    */
   const [reports, setReports] = useState<IOvertimeExceptionReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   /**
-   * Info: (20260818 - Julian) 未核准時段預設看近 14 天。
-   *
-   * 不預設整個區間上限（`DEMO_ATTENDANCE_MAX_RANGE_DAYS`）：那份清單是要
-   * 用眼睛掃的，一次列三個月會讓人直接放棄看它。使用者可以自己往前調。
+   * Info: (20260818 - Julian) 預設近 14 天而不是整個區間上限：
+   * 那份清單是要用眼睛掃的，一次列三個月會讓人直接放棄看它。可自行往前調。
    */
   const [days, setDays] = useState(14);
 
@@ -84,7 +73,7 @@ const OvertimeApprovalPageBody: FC = () => {
             query: {
               from: addIsoDays(to, -(days - 1)),
               to,
-              // Info: (20260820 - Julian) 我管得到的每一個人（review 第 6 輪 M23）
+              // Info: (20260820 - Julian) 我管得到的每一個人
               scope: "team",
             },
           },

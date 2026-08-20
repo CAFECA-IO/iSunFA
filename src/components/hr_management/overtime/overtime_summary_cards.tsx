@@ -14,16 +14,12 @@ import { useTranslation } from "@/i18n/i18n_context";
 /**
  * Info: (20260818 - Julian) 加班統計卡（L28）。
  *
- * ## 為什麼顯示「還剩幾小時」而不是百分比
+ * 顯示「還剩幾小時」而不是使用率：使用者要回答的是「這個月還能加幾小時」。
+ * 端點回分鐘與上限兩個數字讓畫面自己減（§32 II 的分母是 46 還是 54，
+ * 取決於有沒有記載的同意）。
  *
- * 使用率是 `已用 / 上限` 一個比例，而使用者要回答的問題是
- * 「這個月還能加幾小時」。端點刻意回分鐘與上限兩個數字讓畫面自己減
- * （§32 II 的分母是 46 還是 54 小時，取決於有沒有記載的同意）。
- *
- * ## 為什麼佐證來源占一整塊
- *
- * 勞動檢查會問「你們有多少加班沒有出勤紀錄佐證」。把它藏在小字裡，
- * 等於要人在被問到時才第一次看到這個數字（ADR 024 §2.2）。
+ * 佐證來源占一整塊而不是小字：勞動檢查會問「你們有多少加班沒有出勤紀錄
+ * 佐證」，藏起來等於要人在被問到時才第一次看到這個數字（ADR 024 §2.2）。
  */
 const OvertimeSummaryCards: FC<{ summary: IOvertimeSummaryView }> = ({
   summary,
@@ -31,12 +27,11 @@ const OvertimeSummaryCards: FC<{ summary: IOvertimeSummaryView }> = ({
   const { t } = useTranslation();
 
   /**
-   * Info: (20260818 - Julian) 分鐘轉小時只在顯示層做；一位小數足以表達「還剩 3.5 小時」。
+   * Info: (20260818 - Julian) 分鐘轉小時只在顯示層做，一位小數。
    *
-   * Info: (20260820 - Julian) 但**方向要分開**（review 第 7 輪 M28）。
-   * 原本一律 `toFixed(1)`（四捨五入）：59 分鐘的剩餘額度會顯示成
-   * 「還可加班 1.0 小時」，而使用者照著送出會被上限擋下 ——
-   * 那正是這幾張卡片存在的理由（檔頭：「不然他只會收到一個被拒絕的結果」）。
+   * Info: (20260820 - Julian) **取整方向要分開**：四捨五入會把 59 分鐘的剩餘
+   * 額度顯示成「還可加班 1.0 小時」，而使用者照著送出會被上限擋下 ——
+   * 那正是這幾張卡片要避免的結果。
    */
 
   /** Info: (20260820 - Julian) 「已經用掉多少」→ 進位。少報會讓人以為還有空間 */
@@ -69,11 +64,7 @@ const OvertimeSummaryCards: FC<{ summary: IOvertimeSummaryView }> = ({
             hours: availableHours(summary.monthlyLimitMinutes),
           })}
         </div>
-        {/**
-         * Info: (20260818 - Julian) 貼著線或超過都要說出來。
-         * 上限本身由核准端擋（越過即 throw），但員工在送出之前就該看得到 ——
-         * 不然他只會收到一個被拒絕的結果，而不知道為什麼。
-         */}
+        {/* Info: (20260818 - Julian) 貼著線或超過都要說出來：擋是核准端的事，但員工在送出前就該看得到 */}
         <div
           className={`mt-2 text-xs font-medium ${monthlyLeft < 0 ? "text-rose-600" : "text-emerald-600"}`}
         >
