@@ -1765,6 +1765,35 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 | 10 | **`LeaveProofRequirement` 沒有「一律要求證明」這個值** | 公傷病假要職災認定文件、產假要診斷證明、婚假要結婚證書、喪假要訃聞 —— 這四種**與請假日數無關**，但 enum 只有 `NONE` / `OPTIONAL` / `REQUIRED_OVER_THRESHOLD` 三個值 | 這五個假別（含普通傷病假）原本標 `REQUIRED_OVER_THRESHOLD`，而 `ILeavePolicySeed` **當時根本沒有門檻欄位** —— 五列全部帶著 `proofThresholdDays = null` 落地且不報錯。已補 `proofThresholdDays` 欄位與雙向不變式（`REQUIRED_OVER_THRESHOLD ⇔ 門檻非 null 且 > 0`），並把五個假別**暫降為 `OPTIONAL`**。<br>⚠️ 降級是為了不在法規欄位上寫一個猜的數字，**不是**主張證明可有可無。<br>不變式**刻意不接受門檻 = 0**：那讀起來是「一律要求」，放行它等於用門檻欄位偷渡一個缺失的 enum 值，缺口從此不會有人再提。正解是新增 `LeaveProofRequirement.REQUIRED`，里程碑 2 決定 |
 | 11 | **`proofThresholdDays` 是公司政策，不是法定數字** | 勞工請假規則 §10 只說「雇主得要求勞工提出有關證明文件」，未訂日數門檻 | 內建 seed 一律為 null，由租戶在假別設定畫面自行填寫。**本模組不得提供「內建預設門檻」** —— 一個看起來像查證過的數字比空白更難被質疑 |
 
+### 17.1 ADR 的待辦與現況
+
+> Info: (20260820 - Julian) ADR 只記決策，**進度集中在這裡**。
+> 先前四份 ADR 各自在文末維護一段「後果與待辦」，其中混著已完成的項目、
+> 過期的 ✅ 標記與 review 的敘事 —— 四個地方各自腐爛，而讀 ADR 的人
+> 無從分辨哪一句還算數。
+
+| ADR | 項目 | 現況 | 症狀／備註 |
+|---|---|---|---|
+| 021 | 曆年制「不低於週年制」護欄接線 | ⛔ 未接 | 引擎與錯誤碼都在，但無人呼叫。成因是缺口 9 的公式本身會少給，接上會讓 11/13 個內建假別授予失敗。暫以 `assertLeavePolicyUnit` 拒絕「年資級距 + 曆年制」這一個會踩到 §38 下界的組合 |
+| 021 | `leave_policy_no_code_branching.test.ts` | ✅ | 以 TS AST 掃 16 個引擎與編排檔，四種寫法全擋，附自我驗證 |
+| 022 | `leave_ledger_conservation.test.ts` 四項 | ✅ | 逐批守恆、總量守恆、重建冪等、重建結果與快取逐欄相同 |
+| 022 | **每日勾稽 Worker（`LeaveEntitlementReconciler`）** | ⛔ 未開始 | 一支扛三件事，缺任一件都有可觀察症狀 —— 見下表 |
+| 022 | `grantedMinutes` 取整方向 | ⚠️ 待法務 | 現為無條件進位（對勞工有利），與 021 §3.2 一併確認 |
+| 022 | `entryType = EXPIRE` 的觸發 | ⛔ 未開始 | 屬 Worker 的第三件事。⚠️ `cashOutOnExpiry = true` 者必須**先產 `LeaveCashOutEvent` 再 `EXPIRE`**，順序顛倒則折現算不出分鐘數 |
+| 023 | 代理人機制 | ⛔ 未做 | 同缺口 4。暫以 `SPECIFIC_EMPLOYEE` 節點手動繞行 |
+| 023 | **誰有權指派 HR 職能** | ⛔ 未決 | 不能讓 `HR_ADMIN` 指派 `HR_ADMIN`（自我擴權），也不能空著（第一個人拿不到）。因此**目前沒有指派 API**，只有 seed 與 repository 方法。傾向由帳本 team 的 `OWNER` / `ADMIN` 指派。<br>⚠️ 連帶後果：全新的正式帳本無法自行 bootstrap，須先跑 `scripts/bootstrap_hr_admin.ts`（見部署檢查表 §三之二） |
+| 024 | `WorkDayType.SUSPENDED` 的加成標準 | ⚠️ 待核對 | enum 值已補；停工日到工的加成標準本身未查證 |
+| 024 | `UNAPPROVED_OVERTIME` 保存期限 | ⛔ 未決 | 目前為衍生提示、不落地。若落地須一併決定保存期限與 PII 分級 |
+| 024 | 加班與行事曆整合 | ⛔ 未做 | 同缺口 6，里程碑 5 後評估 |
+
+**那支 Worker 一支扛三件事**，因此它的缺席有三種互不相同的症狀：
+
+| 它要做的 | 沒做的症狀 |
+|---|---|
+| 呼叫 `rebuildBalance` 勾稽 | `reconciledAt` 永遠 null。依 ADR 022 §2.3 的語意那是「**從未勾稽過**」，不是「沒問題」—— 畫面若把 null 畫成空白，讀的人會讀成後者 |
+| 授予（`accrueForEmployee`） | 額度不會自己長出來，每個人餘額都是 0，看起來像「這個人今年還沒有特休」 |
+| 到期（先折現事件、再 `EXPIRE`） | 過期額度永遠帶著正餘額，§38 IV 的折現從未發生。`expiringSoonMinutes` 也停在最後一次有人呼叫重建時的值 |
+
 ---
 
 ## 18. 待抽出的 ADR
