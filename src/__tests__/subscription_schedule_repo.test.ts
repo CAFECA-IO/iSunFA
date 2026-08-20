@@ -26,6 +26,11 @@ jest.mock("@/lib/prisma", () => {
      * 當期還沒結束就把期末往後加，不從現在重算。回 null＝沒有既有訂閱（首購）。
      */
     findUnique: jest.fn(async () => null),
+    /**
+     * Info: (20260820 - Luphia) 重複履行同一張訂單時直接回既有列（不動任何欄位）。
+     * 不 mock 會是 undefined，而那條守門一走就丟 TypeError（checklist §1.8）。
+     */
+    findUniqueOrThrow: jest.fn(async () => ({ teamId: "team-1" })),
   };
   /**
    * Info: (20260820 - Luphia) `$transaction` 把**同一個** client 交給 callback。
@@ -55,6 +60,9 @@ beforeEach(() => {
   asMock(prisma.teamSubscription.updateMany).mockResolvedValue({ count: 1 });
   asMock(prisma.teamSubscription.upsert).mockResolvedValue({});
   asMock(prisma.teamSubscription.findUnique).mockResolvedValue(null);
+  asMock(prisma.teamSubscription.findUniqueOrThrow).mockResolvedValue({
+    teamId: "team-1",
+  });
 });
 
 describe("schedulePlanChange", () => {
@@ -254,5 +262,54 @@ describe("套用訂閱：當期未結束時展延", () => {
     expect(upsertArg().update.currentPeriodEnd?.getTime()).toBe(
       PERIOD_END.getTime() + 365 * 86_400_000,
     );
+  });
+});
+
+/**
+ * Info: (20260820 - Luphia) 同一張訂單只履行一次（self-review 第三輪）。
+ *
+ * 展延之前重複履行是無害的（兩次都算成 `now → now + 週期`），改成展延之後
+ * 同一件事變成「多送一期」。上游目前擋得住（webhook 的 PENDING 閘、checkout
+ * 的狀態檢查、續訂的冪等鍵），這一層是最後一道。
+ */
+describe("重複履行同一張訂單", () => {
+  it("latestOrderId 相同 → 不再展延，直接回既有列", async () => {
+    asMock(prisma.teamSubscription.findUnique).mockResolvedValue({
+      currentPeriodStart: new Date(NOW_MS - 86_400_000),
+      currentPeriodEnd: new Date(NOW_MS + 86_400_000),
+      latestOrderId: "order-1",
+    });
+    asMock(prisma.teamSubscription.findUniqueOrThrow).mockResolvedValue({
+      teamId: "team-1",
+    });
+
+    await teamSubscriptionRepo.applyTeamSubscription({
+      teamId: "team-1",
+      planId: TEAM_PLAN.TEAM,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      orderId: "order-1",
+      nowMs: NOW_MS,
+    });
+
+    expect(asMock(prisma.teamSubscription.upsert)).not.toHaveBeenCalled();
+  });
+
+  // Info: (20260820 - Luphia) 另一半：不同訂單就是「再買一期」，必須照常展延
+  it("不同訂單 → 照常展延", async () => {
+    asMock(prisma.teamSubscription.findUnique).mockResolvedValue({
+      currentPeriodStart: new Date(NOW_MS - 86_400_000),
+      currentPeriodEnd: new Date(NOW_MS + 86_400_000),
+      latestOrderId: "order-old",
+    });
+
+    await teamSubscriptionRepo.applyTeamSubscription({
+      teamId: "team-1",
+      planId: TEAM_PLAN.TEAM,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      orderId: "order-new",
+      nowMs: NOW_MS,
+    });
+
+    expect(asMock(prisma.teamSubscription.upsert)).toHaveBeenCalledTimes(1);
   });
 });

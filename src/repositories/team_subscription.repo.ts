@@ -74,8 +74,30 @@ export async function applyTeamSubscriptionInTx(
    */
   const existing = await tx.teamSubscription.findUnique({
     where: { teamId },
-    select: { currentPeriodStart: true, currentPeriodEnd: true },
+    select: {
+      currentPeriodStart: true,
+      currentPeriodEnd: true,
+      latestOrderId: true,
+    },
   });
+
+  /**
+   * Info: (20260820 - Luphia) 同一張訂單只履行一次（self-review 第三輪）。
+   *
+   * 展延之前，重複履行是**無害**的：兩次都算成 `now → now + 週期`，結果一樣。
+   * 改成展延之後同一件事變成「多送一期」，因此在最靠近資料的地方也擋一次。
+   *
+   * **上游目前擋得住**（我查過，所以這裡不假裝它是唯一防線）：webhook 的履行段
+   * 整段掛在 `order.status === PENDING` 之下，checkout 進來就先要求 PENDING，
+   * 續訂則由冪等鍵的唯一約束把兩個 worker 序列化。這道守門的價值是「往後也擋得住」
+   * ——`applyTeamSubscription` 是公開方法，而重複履行的代價已經不再是零。
+   *
+   * `latestOrderId` 就是「這一列上次被哪張訂單套用」，足以認出重放；訂單 id 每次
+   * 付款都不同，正常的「再買一期」不會被誤擋。
+   */
+  if (orderId && existing?.latestOrderId === orderId) {
+    return tx.teamSubscription.findUniqueOrThrow({ where: { teamId } });
+  }
   const stillActive =
     existing !== null && existing.currentPeriodEnd.getTime() > nowMs;
   const currentPeriodStart = stillActive

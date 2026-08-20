@@ -880,6 +880,12 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 | 扣款失敗後冪等鍵仍被佔著 | `order.idempotency_key` 是唯一欄位，而失敗的訂單留著它。續訂：下一輪建新單撞 P2002，每小時噴錯、永遠續不上，直到寬限用盡降級 free。席次：P2002 被當成「重放」吞掉 → 回 `charged: false` → **邀請照樣寄出，席次沒付錢** | 兩處在扣款失敗時 `releaseIdempotencyKey`（`data.idempotencyKey` 留著供稽核）。成功的訂單仍握著鍵，「同一期不重複扣款」的保護不變 |
 | 沿用未付訂單時金額可能過期 | 那張單是幾小時前建的，`amount` 是當時的席次數算的 → 少收一個席次期 | 只在金額相符時沿用；不符就取消舊單（否則它仍可從別的分頁付掉）並建新單 |
 
+#### 7.1.3 第三輪 self-review（2026-08-20）
+
+**展延讓「重複履行」從無害變成有害。** 之前兩次履行都算成 `now → now + 週期`，結果一樣；改成展延之後同一件事就是多送一期。因此 `applyTeamSubscriptionInTx` 加一道 `latestOrderId === orderId` 的守門（同一張訂單只履行一次）。
+
+**上游目前擋得住，這裡不假裝是唯一防線**（三條都查過）：webhook 的履行段整段掛在 `order.status === PENDING` 之下（重複投遞根本進不來，TypeScript 也證實了——加在裡面的守門會被判為不可能成立）、checkout 進來就先要求 PENDING、續訂則由冪等鍵的唯一約束把兩個 worker 序列化。這道守門的價值是「往後也擋得住」：`applyTeamSubscription` 是公開方法，而重複履行的代價已經不再是零。
+
 展延的期初刻意不動：期中加席次的比例計價讀 `periodStart` / `periodEnd`（`resolveSeatProration`），把期初改成今天會讓分母縮水，於是同一天加人要付更多——展延只該讓分母變大。當期已結束（續訂、過期後重新訂閱）則從現在起算：中間沒有權益的空窗不該追認為已付費期間。
 
 條款同步：服務條款 §3.6 加上「提前續購（展延）」一項，明示剩餘天數不會消失。
