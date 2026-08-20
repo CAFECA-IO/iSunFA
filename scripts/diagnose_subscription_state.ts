@@ -18,7 +18,7 @@
 import { prisma } from "@/lib/prisma";
 import { ORDER_TYPE } from "@/constants/status";
 import { TeamRole } from "@/constants/team";
-import { resolveEffectivePlanId } from "@/services/spend.service";
+import { resolveEffectivePlanId } from "@/lib/subscription/plan_rules";
 import { SUBSCRIPTION_CARD_MAX_SYNC_ATTEMPTS } from "@/constants/subscription_nft";
 
 function argValue(flag: string): string | undefined {

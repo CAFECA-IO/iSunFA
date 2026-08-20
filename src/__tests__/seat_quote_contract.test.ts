@@ -58,8 +58,8 @@ jest.mock("@/repositories/team.repo", () => ({
 
 jest.mock("@/services/team_subscription.service", () => ({
   resolveEffectivePlanId: jest.requireActual<
-    typeof import("@/services/spend.service")
-  >("@/services/spend.service").resolveEffectivePlanId,
+    typeof import("@/lib/subscription/plan_rules")
+  >("@/lib/subscription/plan_rules").resolveEffectivePlanId,
 }));
 
 jest.mock("@/repositories/webauthn.repo", () => ({

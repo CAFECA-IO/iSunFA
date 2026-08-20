@@ -94,6 +94,55 @@ export function buildCardTokenUri(metadata: ISubscriptionCardMetadata): string {
   return `${SUBSCRIPTION_CARD_URI_PREFIX}${Buffer.from(json, "utf8").toString("base64")}`;
 }
 
+/**
+ * Info: (20260819 - Luphia) tokenURI → metadata。解不開時回 null，不丟錯。
+ *
+ * 鏈上讀回來的東西一律當**未知**（CLAUDE.md §2）：那個字串可能是別的系統鑄的卡、
+ * 可能是舊格式、也可能根本不是 data URI。任何一種都只是「這張卡不算訂閱憑證」，
+ * 不是例外狀況——丟錯會讓一張陌生的卡把整個方案查詢變成失敗。
+ *
+ * 驗證到 `attributes` 是陣列為止：再往下的欄位語意由 `plan_rules` 判斷，
+ * 這裡只保證結構對得上，不假裝知道內容是不是合理。
+ */
+export function parseCardTokenUri(
+  uri: string | null | undefined,
+): ISubscriptionCardMetadata | null {
+  if (!uri || !uri.startsWith(SUBSCRIPTION_CARD_URI_PREFIX)) return null;
+  try {
+    const json = Buffer.from(
+      uri.slice(SUBSCRIPTION_CARD_URI_PREFIX.length),
+      "base64",
+    ).toString("utf8");
+    const parsed: unknown = JSON.parse(json);
+    if (!parsed || typeof parsed !== "object") return null;
+    const candidate = parsed as Partial<ISubscriptionCardMetadata>;
+    if (!Array.isArray(candidate.attributes)) return null;
+    return {
+      name: typeof candidate.name === "string" ? candidate.name : "",
+      description:
+        typeof candidate.description === "string" ? candidate.description : "",
+      attributes: candidate.attributes.filter(
+        (item): item is ISubscriptionCardMetadata["attributes"][number] =>
+          Boolean(item) &&
+          typeof item === "object" &&
+          typeof (item as { trait_type?: unknown }).trait_type === "string",
+      ),
+    };
+  } catch {
+    return null;
+  }
+}
+
+// Info: (20260819 - Luphia) metadata 裡的團隊（`team_id` 屬性）；認不出來回 null
+export function readCardTeamId(
+  metadata: ISubscriptionCardMetadata | null,
+): string | null {
+  const value = metadata?.attributes.find(
+    (item) => item.trait_type === "team_id",
+  )?.value;
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
 export interface ISubscriptionCardDecision {
   action: SubscriptionCardAction;
   // Info: (20260819 - Luphia) 決策理由：進 log 與測試斷言，讓「為什麼沒動作」說得出來

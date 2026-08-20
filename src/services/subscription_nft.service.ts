@@ -12,7 +12,10 @@ import {
   buildCardMetadata,
   buildCardTokenUri,
   decideCardAction,
+  parseCardTokenUri,
+  readCardTeamId,
   type ISubscriptionCardFacts,
+  type ISubscriptionCardMetadata,
 } from "@/lib/subscription/subscription_card";
 import { publicClient } from "@/lib/viem";
 import {
@@ -22,7 +25,7 @@ import {
 import { logger } from "@/lib/utils/logger";
 import { teamRepo } from "@/repositories/team.repo";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
-import { resolveEffectivePlanId } from "@/services/spend.service";
+import { resolveEffectivePlanId } from "@/lib/subscription/plan_rules";
 
 /**
  * Info: (20260819 - Luphia) 訂閱會員卡（鏈上 NFT）的同步。
@@ -38,8 +41,10 @@ import { resolveEffectivePlanId } from "@/services/spend.service";
  * - **成功也要等**：確認一筆交易是數秒等級，那段時間掛在使用者的付款請求上。
  *
  * 因此訂閱一經變更就在 `TeamSubscription` 上留下待辦（`nftSyncedAt = null`），
- * 由 worker 每分鐘掃一次補上。卡片晚一分鐘出現不影響任何權益——**權益一律讀 DB**，
- * 這是刻意的方向（見 `constants/subscription_nft` 的說明）。
+ * 由 worker 每分鐘掃一次補上。**權益不受影響**（那一路只讀 DB，見
+ * `plan.service.getTeamEntitlement`）；代價是**顯示**——方案徽章以鏈上為準，
+ * 因此卡片尚未鑄出的那一分鐘內會顯示免費版。這是刻意接受的取捨，
+ * 反過來（鏈上有卡而畫面說免費版）才是難以解釋的那一種錯。
  *
  * ## 冪等
  *
@@ -50,6 +55,15 @@ import { resolveEffectivePlanId } from "@/services/spend.service";
 
 const CARD_ABI = ABIS.DYNAMIC_KYC_MEMBERSHIP;
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
+/**
+ * Info: (20260819 - Luphia) 鑄造事件（`getLogs` 的過濾條件）。
+ * 由 ABI 取出而不是自己寫一份簽章：兩份宣告遲早會分岔，而分岔的症狀是「掃不到任何卡」。
+ */
+const MINT_EVENT = CARD_ABI.find(
+  (item): item is Extract<typeof item, { type: "event" }> =>
+    item.type === "event" && item.name === "Transfer",
+)!;
 
 export interface ICardSyncOutcome {
   teamId: string;
@@ -131,6 +145,123 @@ export function extractMintedTokenId(
     }
   }
   return null;
+}
+
+export interface IChainCard {
+  tokenId: string;
+  // Info: (20260819 - Luphia) metadata 解不開時為 null（外部鑄的卡、或格式已改）
+  metadata: ISubscriptionCardMetadata | null;
+  // Info: (20260819 - Luphia) metadata 裡的團隊；認不出來時為 null
+  teamId: string | null;
+}
+
+/**
+ * Info: (20260819 - Luphia) 讀出一個地址**現在**持有的訂閱會員卡（產品決定 20260819：
+ * 鏈上為準，DB 為快取）。
+ *
+ * 三段，順序是為了少打 RPC：
+ *
+ * 1. `balanceOf` 一次讀。回 0 就結束——「這個地址沒有任何卡」是權威答案，
+ *    不需要再掃任何東西，而絕大多數使用者屬於這一類。
+ * 2. 先試 DB 快取裡的 tokenId（`hintTokenIds`）：命中就只要兩次 `view` 呼叫。
+ * 3. 快取湊不齊 `balanceOf` 的數量時才掃 `Transfer` 事件——那是唯一能發現
+ *    「DB 不知道的卡」的辦法（合約沒有 ERC721Enumerable，問不到某個地址持有哪些 token），
+ *    而那正是「鏈上為準」要處理的情形：履行漏掉、DB 還原到舊備份。
+ *
+ * `ownerOf` 一律再確認一次：卡片可被持有人自行轉走（合約只擋黑名單），
+ * 而 `Transfer` 事件只說「曾經鑄給他」。
+ */
+export async function readOwnedChainCards(
+  address: string,
+  hintTokenIds: string[] = [],
+): Promise<IChainCard[]> {
+  const { cardAddress } = await getClients();
+  const owner = getAddress(address);
+
+  const balance = (await publicClient.readContract({
+    address: cardAddress,
+    abi: CARD_ABI,
+    functionName: "balanceOf",
+    args: [owner],
+  })) as bigint;
+
+  if (balance === BigInt(0)) return [];
+
+  const confirmed: IChainCard[] = [];
+  const seen = new Set<string>();
+
+  const consider = async (tokenId: string): Promise<void> => {
+    if (seen.has(tokenId)) return;
+    seen.add(tokenId);
+    try {
+      const holder = (await publicClient.readContract({
+        address: cardAddress,
+        abi: CARD_ABI,
+        functionName: "ownerOf",
+        args: [BigInt(tokenId)],
+      })) as string;
+      if (holder.toLowerCase() !== owner.toLowerCase()) return;
+
+      const uri = (await publicClient.readContract({
+        address: cardAddress,
+        abi: CARD_ABI,
+        functionName: "tokenURI",
+        args: [BigInt(tokenId)],
+      })) as string;
+      const metadata = parseCardTokenUri(uri);
+      confirmed.push({
+        tokenId,
+        metadata,
+        teamId: readCardTeamId(metadata),
+      });
+    } catch {
+      /**
+       * Info: (20260819 - Luphia) 單一 token 讀不到就跳過（可能已被銷毀、或 id 是舊的）。
+       * 不讓一張讀不到的卡把整個地址的結果變成「沒有卡」——那會把付費戶顯示成免費版。
+       */
+    }
+  };
+
+  for (const tokenId of hintTokenIds) {
+    await consider(tokenId);
+  }
+
+  if (BigInt(confirmed.length) < balance) {
+    for (const tokenId of await discoverMintedTokenIds(cardAddress, owner)) {
+      await consider(tokenId);
+    }
+  }
+
+  return confirmed;
+}
+
+/**
+ * Info: (20260819 - Luphia) 掃 `Transfer(from = 0x0, to = 持卡人)` 找出鑄給這個地址的卡。
+ *
+ * 只掃鑄造（`from` 是零地址）：轉入的卡不是這個系統發的憑證，方案判斷不該採信
+ * ——否則在二級市場拿到一張卡就能讓徽章顯示企業版。
+ *
+ * 掃全鏈（`fromBlock: 0`）是刻意的：本專案跑的是自有鏈，卡片合約的事件量很小，
+ * 而「從某個區塊開始掃」需要一個會過期的假設（部署區塊），錯了就是安靜地漏卡。
+ */
+async function discoverMintedTokenIds(
+  cardAddress: `0x${string}`,
+  owner: string,
+): Promise<string[]> {
+  const logs = await publicClient.getLogs({
+    address: cardAddress,
+    event: MINT_EVENT,
+    args: { from: ZERO_ADDRESS as `0x${string}`, to: owner as `0x${string}` },
+    fromBlock: BigInt(0),
+    toBlock: "latest",
+  });
+
+  return logs
+    .map((log) => {
+      const args = log.args as { tokenId?: bigint };
+      return args.tokenId?.toString();
+    })
+    .filter((tokenId): tokenId is string => Boolean(tokenId));
 }
 
 async function mintCard(to: string, uri: string) {

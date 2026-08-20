@@ -1,7 +1,7 @@
 import { SystemSettingKey } from "@/constants/system_setting";
 import { FAITH_MEMORY_DELETION_REASON } from "@/constants/faith_memory";
 import { TEAM_PLAN } from "@/constants/subscription_quota";
-import { resolveEffectivePlanId } from "@/services/spend.service";
+import { getTeamEntitlement } from "@/services/plan.service";
 import {
   memoryItemId,
   mergeMemoryItems,
@@ -10,7 +10,6 @@ import {
   type IFaithMemoryItem,
 } from "@/lib/faith_memory/items";
 import { faithMemoryRepo } from "@/repositories/faith_memory.repo";
-import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { logger } from "@/lib/utils/logger";
 import {
   parseRetentionDays,
@@ -67,8 +66,8 @@ export async function isFaithMemoryEnabled(
   nowSec: number,
 ): Promise<boolean> {
   try {
-    const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
-    return resolveEffectivePlanId(subscription, nowSec) !== TEAM_PLAN.FREE;
+    // Info: (20260819 - Luphia) 方案經 `plan.service` 的權益入口（集中化 20260819）
+    return (await getTeamEntitlement({ teamId, nowSec })) !== TEAM_PLAN.FREE;
   } catch (error) {
     // Info: (20260817 - Luphia) 查不到訂閱狀態時當作免費版：不讀不寫才是保守解
     logger.error("faith memory plan gate failed", {

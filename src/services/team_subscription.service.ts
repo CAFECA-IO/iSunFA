@@ -1,5 +1,5 @@
 import { Order } from "@/generated";
-import { SUBSCRIPTION_PLAN_PRICE, CURRENCY_UNIT } from "@/constants/price";
+import { CURRENCY_UNIT } from "@/constants/price";
 import { ORDER_TYPE } from "@/constants/status";
 import { TeamRole } from "@/constants/team";
 import {
@@ -26,7 +26,7 @@ import type {
 import {
   resolveEffectivePlanId,
   resolvePlanId,
-} from "@/services/spend.service";
+} from "@/lib/subscription/plan_rules";
 import { generatePaymentOrder } from "@/services/order.service";
 import { assertTeamMember } from "@/services/team_wallet_access.guard";
 import {
@@ -36,7 +36,7 @@ import {
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { teamRepo } from "@/repositories/team.repo";
 import { resolveSubscriptionAmount } from "@/lib/billing/seat_billing";
-import { resolveHighestPlan } from "@/lib/subscription/user_plan";
+import { getPlanUnitPrice, getTeamEntitlement } from "@/services/plan.service";
 import { teamQuotaUsageRepo } from "@/repositories/team_quota_usage.repo";
 import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
 import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
@@ -207,46 +207,6 @@ export async function getTeamSubscriptionView(params: {
   });
 }
 
-export interface IUserPlanSnapshot {
-  // Info: (20260819 - Luphia) 徽章顯示用：擁有的團隊中最高的有效方案
-  plan: TeamPlanId;
-  /**
-   * Info: (20260819 - Luphia) 這個人**擁有**的每個團隊的有效方案（一團一筆）。
-   *
-   * 回事實而不是只回一個結論：方案頁的「目前方案」標記會停用購買鈕，它需要的是
-   * 「是否全部一致」（`resolveUnanimousPlan`），而徽章需要的是最高——同一份事實
-   * 兩種讀法。只回結論的話，其中一邊遲早會拿另一邊的結論去用。
-   */
-  ownedPlans: TeamPlanId[];
-}
-
-/**
- * Info: (20260819 - Luphia) 這個人的方案快照（`GET /auth/me` 用）。
- *
- * 在此之前 `/auth/me` **完全沒有回 plan**，於是前端的 `user.plan` 永遠是
- * undefined，畫面一律 fallback 到免費版——訂閱付了款、DB 也寫進去了，
- * 而右上角徽章與方案頁的「目前方案」都還停在免費版（回報 20260819）。
- *
- * 範圍是**擁有**（OWNER）的團隊，不是所有參與的團隊：訂閱只有 OWNER 能買
- * （見 `usePurchaseTarget`），所以「我的方案」問的是「我付費買到什麼」。
- * 若改採所有參與的團隊，一位免費戶只要被邀進別人的團隊版就會看到自己是團隊版，
- * 而方案頁那一格的購買鈕會因此被停用——他反而買不了。
- *
- * 有效方案一律經 `resolveEffectivePlanId`：過期、PAST_DUE 都折算成 free，
- * 與扣費側同一個判準，畫面上的方案與實際拿到的額度才不會互相矛盾。
- */
-export async function getUserPlanSnapshot(params: {
-  userId: string;
-  nowSec: number;
-}): Promise<IUserPlanSnapshot> {
-  const { userId, nowSec } = params;
-  const owned = await teamRepo.listOwnedTeamsWithSubscription(userId);
-  const ownedPlans = owned.map((team) =>
-    resolveEffectivePlanId(team.subscription, nowSec),
-  );
-  return { plan: resolveHighestPlan(ownedPlans), ownedPlans };
-}
-
 /**
  * Info: (20260813 - Luphia) 帳本情境下的額度檢視（費思常駐儀表用）。
  *
@@ -272,8 +232,8 @@ export async function getAccountBookQuotaView(params: {
 
   return guarded(async () => {
     const teamId = accountBook.teamId;
-    const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
-    const planId = resolveEffectivePlanId(subscription, nowSec);
+    // Info: (20260819 - Luphia) 只需要方案本身：走 `plan.service` 的權益入口（集中化 20260819）
+    const planId = await getTeamEntitlement({ teamId, nowSec });
     const quota = await buildQuotaStatus(teamId, userId, planId, nowSec);
     const allocation = await teamWalletRepo.getAllocation(teamId, userId);
 
@@ -323,10 +283,8 @@ export async function changeTeamSubscription(params: {
      * Info: (20260814 - Luphia) 席次計價（規範 P2）：金額 = 單價 × 團隊人數，**由 server 計算**。
      * 前端只負責顯示；採信前端送來的總額等於把價格交給呼叫端決定。
      */
-    const unitPrice =
-      SUBSCRIPTION_PLAN_PRICE[planId][
-        billingInterval === BILLING_INTERVAL.YEAR ? "yearly" : "monthly"
-      ];
+    // Info: (20260819 - Luphia) 單價經 `plan.service` 的單一出口（集中化 20260819）
+    const unitPrice = getPlanUnitPrice(planId, billingInterval);
     const seats = await teamRepo.countMembers(teamId);
     const amount = resolveSubscriptionAmount(unitPrice, seats);
 

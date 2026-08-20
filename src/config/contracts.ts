@@ -63,6 +63,15 @@ export const ABIS = {
      */
     "function setTokenURI(uint256 tokenId, string memory uri) external",
     /**
+     * Info: (20260819 - Luphia) 方案以**鏈上為準**（產品決定 20260819），因此需要讀卡：
+     * `balanceOf` 當閘門（回 0 就不必再查任何東西）、`ownerOf` 確認現在還在他手上
+     * （卡片可被持有人自行轉走）、`tokenURI` 取 metadata。三支皆來自 vendored 的
+     * OpenZeppelin ERC721 / ERC721URIStorage（繼承鏈，見 abi_contract_parity 測試）。
+     */
+    "function balanceOf(address owner) view returns (uint256)",
+    "function ownerOf(uint256 tokenId) view returns (address)",
+    "function tokenURI(uint256 tokenId) view returns (string)",
+    /**
      * Info: (20260819 - Luphia) 鑄造後從收據回讀 tokenId 用。
      * `mintCard` 的回傳值拿不到——`writeContract` 只給交易哈希，
      * 而 `simulateContract` 給的是「模擬當下」的號碼，中間有人鑄一張就對不上。

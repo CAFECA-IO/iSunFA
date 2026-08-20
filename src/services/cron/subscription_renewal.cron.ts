@@ -1,5 +1,6 @@
 import { logger } from "@/lib/utils/logger";
-import { CURRENCY_UNIT, SUBSCRIPTION_PLAN_PRICE } from "@/constants/price";
+import { CURRENCY_UNIT } from "@/constants/price";
+import { getPlanUnitPrice } from "@/services/plan.service";
 import { ORDER_TYPE } from "@/constants/status";
 import {
   BILLING_INTERVAL,
@@ -9,7 +10,7 @@ import {
 } from "@/constants/subscription_quota";
 import { chargeOrderWithSavedCard } from "@/services/team_billing.service";
 import { generatePaymentOrder } from "@/services/order.service";
-import { resolvePlanId } from "@/services/spend.service";
+import { resolvePlanId } from "@/lib/subscription/plan_rules";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { teamRepo } from "@/repositories/team.repo";
 import { resolveSubscriptionAmount } from "@/lib/billing/seat_billing";
@@ -91,10 +92,8 @@ async function renewOne(
    * 期中離職的席次要停止收費，期中加入但已比例補收過的席次則從新一期起整期計。
    * 沿用上一期的席次數會讓帳愈拖愈偏。
    */
-  const unitPrice =
-    SUBSCRIPTION_PLAN_PRICE[planId][
-      billingInterval === BILLING_INTERVAL.YEAR ? "yearly" : "monthly"
-    ];
+  // Info: (20260819 - Luphia) 單價經 `plan.service` 的單一出口（集中化 20260819）
+  const unitPrice = getPlanUnitPrice(planId, billingInterval);
   const seats = await teamRepo.countMembers(sub.teamId);
   const amount = resolveSubscriptionAmount(unitPrice, seats);
 

@@ -2,9 +2,10 @@ import { describe, it, expect } from "@jest/globals";
 import {
   isTeamPlanId,
   PLAN_RANK,
+  reconcilePlan,
   resolveHighestPlan,
   resolveUnanimousPlan,
-} from "@/lib/subscription/user_plan";
+} from "@/lib/subscription/plan_rules";
 import { TEAM_PLAN } from "@/constants/subscription_quota";
 
 /**
@@ -108,5 +109,33 @@ describe("未知方案代號", () => {
     expect(["team", "enterprise"].filter(isTeamPlanId)).toEqual([
       TEAM_PLAN.TEAM,
     ]);
+  });
+});
+
+/**
+ * Info: (20260819 - Luphia) DB 與鏈上各說一個方案時的對帳（產品決定 20260819：鏈上為準）。
+ *
+ * 兩個方向都要有測試，因為兩個方向的代價不對稱：
+ * 「鏈上有、DB 沒有」照 DB 走會把付費戶打回免費版（最難解釋的錯）；
+ * 「DB 有、鏈上沒有」照鏈上走會讓剛付款的人等一分鐘（可解釋、可觀測）。
+ * 這一組斷言把那個取捨釘住——哪天有人改成 max(DB, 鏈上)，這裡會紅。
+ */
+describe("DB 與鏈上的對帳", () => {
+  it("一致時回該方案，不記為不一致", () => {
+    expect(
+      reconcilePlan({ dbPlan: TEAM_PLAN.TEAM, chainPlan: TEAM_PLAN.TEAM }),
+    ).toEqual({ plan: TEAM_PLAN.TEAM, mismatch: false });
+  });
+
+  it("鏈上有、DB 沒有 → 回鏈上，並記為不一致", () => {
+    expect(
+      reconcilePlan({ dbPlan: TEAM_PLAN.FREE, chainPlan: TEAM_PLAN.BUSINESS }),
+    ).toEqual({ plan: TEAM_PLAN.BUSINESS, mismatch: true });
+  });
+
+  it("DB 有、鏈上沒有 → 仍以鏈上為準（卡片尚未鑄出的那一分鐘）", () => {
+    expect(
+      reconcilePlan({ dbPlan: TEAM_PLAN.TEAM, chainPlan: TEAM_PLAN.FREE }),
+    ).toEqual({ plan: TEAM_PLAN.FREE, mismatch: true });
   });
 });

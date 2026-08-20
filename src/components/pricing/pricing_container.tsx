@@ -8,7 +8,7 @@ import { MoneyUtil } from "@/lib/utils/money";
 import { CREDIT_PLANS } from "@/config/credit_plans";
 import { PaymentStep } from "@/interfaces/payment";
 import { PendingBillingIntervalType } from "@/types/pricing";
-import { SUBSCRIPTION_PLAN_PRICE } from "@/constants/price";
+import type { IPlanCatalogEntry } from "@/services/plan.service";
 
 import ConfirmModal from "@/components/common/confirm_modal";
 import AuthModal from "@/components/auth/auth_modal";
@@ -19,11 +19,20 @@ import { PricingProvider } from "@/contexts/pricing_context";
 
 interface IPricingContainerProps {
   activeTab: "subscription" | "credits" | "on_premise" | "solutions";
+  /**
+   * Info: (20260819 - Luphia) 方案目錄由 server 端的 `plan.service` 傳入（集中化 20260819）。
+   *
+   * 這個容器原本自己 import 價格常數來算揭露金額。價格與「有哪些方案」只能有一個來源：
+   * 兩份讀法的代價不是重複，是**畫面顯示的金額與 server 計算的金額可以不一樣**，
+   * 而使用者只會在帳單上發現。
+   */
+  plans: IPlanCatalogEntry[];
   children: ReactNode;
 }
 
 export default function PricingContainer({
   activeTab,
+  plans,
   children,
 }: IPricingContainerProps) {
   const { t } = useTranslation();
@@ -100,10 +109,21 @@ export default function PricingContainer({
       setAuthModalOpen(true);
       return;
     }
-    const amount =
-      SUBSCRIPTION_PLAN_PRICE[planKey as keyof typeof SUBSCRIPTION_PLAN_PRICE][
-        billingInterval === "month" ? "monthly" : "yearly"
-      ].toString();
+    const plan = plans.find((entry) => entry.id === planKey);
+    /**
+     * Info: (20260819 - Luphia) 目錄裡沒有這個方案就**不開付款畫面**。
+     *
+     * 先前的寫法是 `SUBSCRIPTION_PLAN_PRICE[planKey as keyof ...]`——那個 `as`
+     * 讓未知的 planKey 在型別上看起來合法，執行時取到 undefined 再 `[...]`
+     * 直接丟 TypeError（畫面卡住、沒有任何訊息）。價格揭露寧可不開，不能猜。
+     */
+    if (!plan) {
+      console.warn(`[Pricing] unknown planKey: ${planKey}`);
+      return;
+    }
+    const amount = (
+      billingInterval === "month" ? plan.monthlyPrice : plan.yearlyPrice
+    ).toString();
     /**
      * Info: (20260815 - Luphia) 訂閱不帶點數（PR #6652 第二輪 D）。
      *

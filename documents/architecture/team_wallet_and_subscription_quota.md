@@ -758,11 +758,23 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 
 兩件事的成因不同，一起修但要分開理解。
 
-#### 6.5.1 卡片是鏡像，不是權益來源
+#### 6.5.1 鏈上是帳本，DB 是快取——但只對「顯示」成立
 
+方案的判斷有**兩個方向相反**的需求，因此有兩個入口，都在 `src/services/plan.service.ts`：
+
+| 入口 | 用途 | 來源 | 失敗方向 |
+|---|---|---|---|
+| `getUserPlan()` | 徽章、方案頁的「目前方案」 | **鏈上為準**，DB 為快取 | 不要把付費戶說成免費戶 |
+| `getTeamEntitlement()` | 扣費、席次補收、額度、記憶保留 | 純 DB，fail-closed | 絕不因資料異常放大額度 |
+
+- **顯示為什麼採信鏈上**：付款履行漏掉、DB 還原到舊備份時，使用者手上握著鏈上憑證，而畫面說他是免費版——那是最難解釋的一種錯。鏈上**讀不到**（合約未部署、RPC 失敗）才退回 DB：「讀不到」與「讀到了但沒有卡」是兩件事，混為一談會讓一次節點抖動把所有付費戶打成免費版。
+- **權益為什麼不採信鏈上**：卡片可被持有人自行轉走（合約只擋黑名單），若權益採信鏈上憑證，收到一張轉讓卡的人就能動用那個團隊的額度；而且扣費路徑不能因為 RPC 逾時而放行或擋下。
+- **代價**：卡片尚未鑄出的那一分鐘內（worker 週期），徽章顯示免費版。刻意接受，且有測試釘住（`plan_service_chain.test.ts`）——要改成 `max(DB, 鏈上)` 會讓那一條紅，而那應該引發一次討論。
+- **不回寫訂閱本身**：不一致時只回填卡號快取（`nft_token_id`，且僅在原本為 NULL 時）並警示。metadata 帶著 `team_id`，若讓它回寫 `TeamSubscription.planId`，任何拿到一張轉讓卡的人都能改寫那個團隊的計費資料。快取可以被鏈上糾正，計費資料只能由付款流程寫入。
 - 卡片合約是 `DynamicKYCMembership`（`contracts/dynamic_kyc_membership.sol`）：部署的合約集裡只有它是 ERC721，`mintCard` / `setTokenURI` 都是平台管理員角色。
 - **不走 `SubscriptionManager.addSubscription`**：那一支會**鑄點數**，而訂閱買到的是額度視窗、不發點數（§5.4.2）。
-- **權益一律讀 DB**（`resolveEffectivePlanId`），不讀鏈。方向不能反過來——鏈上寫入會失敗、會延遲，把權益綁在它上面等於讓一次 RPC 逾時變成「方案消失」。
+
+鏈上讀取的形狀（`readOwnedChainCards`）：`balanceOf` 當閘門（回 0 就一次 RPC 結束，絕大多數使用者屬於這一類）→ 先試 DB 快取的卡號 → 湊不齊 `balanceOf` 的數量時才掃 `Transfer(from = 0x0, to = 持卡人)` 事件（合約沒有 ERC721Enumerable，這是唯一能發現「DB 不知道的卡」的辦法）。每一張都以 `ownerOf` 再確認一次現在還在他手上。只認**鑄造**事件——轉入的卡不是本系統發的憑證，否則在二級市場拿到一張卡就能讓徽章顯示企業版。
 
 #### 6.5.2 為什麼是背景同步
 
@@ -788,12 +800,17 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 
 #### 6.5.4 方案顯示（`GET /auth/me`）
 
-`/auth/me` 原本**一個 plan 欄位都沒回**（唯一痕跡是一段被註解掉的鏈上讀取），因此前端 `user.plan` 永遠 undefined，畫面一律 fallback 成免費版。現改由 `getUserPlanSnapshot()` 回：
+`/auth/me` 原本**一個 plan 欄位都沒回**（唯一痕跡是一段被註解掉的鏈上讀取），因此前端 `user.plan` 永遠 undefined，畫面一律 fallback 成免費版。現改由 `plan.service.getUserPlan()` 回：
 
 | 欄位 | 內容 | 用途 |
 |---|---|---|
-| `plan` | 擁有的團隊中**最高**的有效方案 | 右上角徽章 |
+| `plan` | 擁有的團隊中**最高**的有效方案（對帳後） | 右上角徽章 |
 | `ownedPlans` | 擁有的每個團隊的有效方案（逐團事實） | 方案頁的「目前方案」標記 |
+| `planSource` | `CHAIN`（鏈上確認過）或 `DB`（鏈上讀不到，暫以快取顯示） | 前端要分得出這兩種 |
+
+**方案目錄也集中在同一個 service**：`listPlans()` 是「有哪些方案、各自的價格／月配點／儲存／額度」的唯一讀者，`getPlanUnitPrice()` 是收費金額的唯一出口。在此之前價格常數有四處讀者（方案卡、付款容器、建單、續訂 worker），而「改價漏掉其中一處」不會有任何測試發現——症狀是使用者看到一個價格、卡被扣另一個。掃描測試（`subscription_plan_display_wiring.test.ts`）現在擋著：除了常數定義處與 `plan.service`，沒有檔案讀得到那些常數。
+
+純規則（折算、比較、對帳）在 `src/lib/subscription/plan_rules.ts`，只依賴 constants（方案頁的 client component 會匯入它）。原本 `resolvePlanId` / `resolveEffectivePlanId` 住在 `spend.service`，那讓「什麼是有效方案」有兩個門。
 
 - 範圍是**擁有（OWNER）的團隊**，不是所有參與的團隊：訂閱只有 OWNER 能買，「我的方案」問的是「我付費買到什麼」。若採所有參與的團隊，一位免費戶被邀進別人的團隊版就會看到自己是團隊版，而方案頁那一格的購買鈕會因此停用——他反而買不了。
 - 方案頁的標記規則是**全體一致才標**（`resolveUnanimousPlan`），不是取最高：那個標記會停用購買鈕，照最高標會讓「擁有一個免費團隊 + 一個團隊版團隊」的人再也無法為前者訂閱團隊版。

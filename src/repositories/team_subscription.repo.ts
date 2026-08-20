@@ -184,6 +184,40 @@ export class TeamSubscriptionRepository {
   }
 
   /**
+   * Info: (20260819 - Luphia) 這些團隊的卡號快取（方案讀取的 hint）。
+   *
+   * 一次查回來而不是逐團問：`/auth/me` 每次頁面載入都會呼叫，逐團往返會讓
+   * 一位擁有多個團隊的使用者每次多打數趟。值可能是 null（尚未鑄卡），
+   * 而 null 本身就是資訊——它讓方案讀取知道要去掃鏈上事件。
+   */
+  async listCardTokenIds(
+    teamIds: string[],
+  ): Promise<Map<string, string | null>> {
+    if (teamIds.length === 0) return new Map();
+    const rows = await prisma.teamSubscription.findMany({
+      where: { teamId: { in: teamIds } },
+      select: { teamId: true, nftTokenId: true },
+    });
+    return new Map(rows.map((row) => [row.teamId, row.nftTokenId]));
+  }
+
+  /**
+   * Info: (20260819 - Luphia) 只補卡號快取，**不動任何計費欄位**（方案以鏈上為準時的回填）。
+   *
+   * `where` 帶 `nftTokenId: null`：只在「還沒有卡號」時寫得進去，
+   * 因此不會蓋掉 worker 從鑄造收據取得的權威值。兩者衝突時不該由顯示路徑決定誰對。
+   *
+   * 刻意不碰 `nftSyncedAt`：那是 worker 的工作佇列。這裡補上卡號之後，
+   * 那一列仍然待同步——worker 下一輪會確認 metadata 是不是最新的。
+   */
+  async cacheCardTokenId(teamId: string, tokenId: string): Promise<void> {
+    await prisma.teamSubscription.updateMany({
+      where: { teamId, nftTokenId: null },
+      data: { nftTokenId: tokenId },
+    });
+  }
+
+  /**
    * Info: (20260819 - Luphia) 待同步鏈上會員卡的訂閱（worker 用）。
    *
    * 條件只有兩個：**沒有同步時間**（= 待辦，見 `CARD_DIRTY`）且**還沒放棄**。

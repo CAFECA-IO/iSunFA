@@ -6,7 +6,7 @@ import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import { resolveSeatProration } from "@/lib/billing/seat_billing";
 import { generatePaymentOrder } from "@/services/order.service";
 import { chargeOrderWithSavedCard } from "@/services/team_billing.service";
-import { resolveEffectivePlanId } from "@/services/spend.service";
+import { resolveEffectivePlanId } from "@/lib/subscription/plan_rules";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { teamRepo } from "@/repositories/team.repo";

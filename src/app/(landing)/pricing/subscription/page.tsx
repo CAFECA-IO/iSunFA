@@ -1,12 +1,8 @@
 import PricingContainer from "@/components/pricing/pricing_container";
 import SubscriptionContent from "@/app/(landing)/pricing/subscription/subscription_content";
 import { Metadata } from "next";
-import {
-  ISubscriptionQuota,
-  TEAM_PLAN,
-  type TeamPlanId,
-} from "@/constants/subscription_quota";
-import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
+import { TEAM_PLAN, type TeamPlanId } from "@/constants/subscription_quota";
+import { listPlans, type IPlanCatalogEntry } from "@/services/plan.service";
 import { resolveFaithMemoryRetentionDays } from "@/services/faith_memory.service";
 
 export const metadata: Metadata = {
@@ -29,12 +25,14 @@ export const metadata: Metadata = {
  * 兩視窗倍數不一致時取較小值並無條件捨去——對外一律報保守值，絕不高報額度。
  */
 function quotaMultiple(
-  quotas: Record<TeamPlanId, ISubscriptionQuota>,
+  plans: IPlanCatalogEntry[],
   plan: TeamPlanId,
   base: TeamPlanId,
 ): number {
-  const target = quotas[plan];
-  const baseline = quotas[base];
+  const target = plans.find((entry) => entry.id === plan)?.quota;
+  const baseline = plans.find((entry) => entry.id === base)?.quota;
+  // Info: (20260819 - Luphia) 目錄缺項就報 1 倍（保守值），不對外報一個算不出來的倍數
+  if (!target || !baseline) return 1;
   return Math.floor(
     Math.min(target.per5h / baseline.per5h, target.perWeek / baseline.perWeek),
   );
@@ -46,20 +44,24 @@ export default async function SubscriptionPricingPage() {
    * 傳入 client component：client 無從查詢 DB，於此取值可確保 SSR 與水合結果一致，
    * 且後台調整設定後方案頁自動同步（見下方 quotaMultiple 的說明）。
    */
-  const [quotas, faithMemoryRetentionDays] = await Promise.all([
-    subscriptionPlanQuotaRepo.resolveAllQuotas(),
+  /**
+   * Info: (20260819 - Luphia) 方案目錄一律經 `plan.service`（集中化 20260819）。
+   *
+   * 這裡原本直接 import 價格常數、也直接呼叫 repository —— 於是「有哪些方案、
+   * 各自多少錢／多少額度」在方案頁、付款容器、方案卡各有一份讀法。
+   * 現在只有 `listPlans()` 讀得到那些來源，畫面拿到的是同一份目錄。
+   */
+  const [plans, faithMemoryRetentionDays] = await Promise.all([
+    listPlans(),
     resolveFaithMemoryRetentionDays(),
   ]);
   return (
-    <PricingContainer activeTab="subscription">
+    <PricingContainer activeTab="subscription" plans={plans}>
       <SubscriptionContent
-        teamQuotaMultiple={quotaMultiple(
-          quotas,
-          TEAM_PLAN.TEAM,
-          TEAM_PLAN.FREE,
-        )}
+        plans={plans}
+        teamQuotaMultiple={quotaMultiple(plans, TEAM_PLAN.TEAM, TEAM_PLAN.FREE)}
         businessQuotaMultiple={quotaMultiple(
-          quotas,
+          plans,
           TEAM_PLAN.BUSINESS,
           TEAM_PLAN.TEAM,
         )}

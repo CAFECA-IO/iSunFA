@@ -1,10 +1,16 @@
 import { useTranslation } from "@/i18n/i18n_context";
 import { Check, HelpCircle } from "lucide-react";
-import { SUBSCRIPTION_PLAN_PRICE } from "@/constants/price";
 
 // Info: (20260102 - Luphia) Renamed to IPricingProps for lint compliance
 interface IPricingProps {
   planKey: "free" | "team" | "business";
+  /**
+   * Info: (20260819 - Luphia) 價格由呼叫端自方案目錄傳入（集中化 20260819）。
+   * 卡片原本自己 import `SUBSCRIPTION_PLAN_PRICE`——那是「有哪些方案、多少錢」
+   * 的第三份讀法，而它與 server 實際收的金額之間沒有任何東西保證一致。
+   */
+  monthlyPrice: number;
+  yearlyPrice: number;
   billingInterval: "month" | "year";
   features: (string | { text: string; tooltip?: string })[];
   popular?: boolean;
@@ -14,6 +20,8 @@ interface IPricingProps {
 
 export default function PricingCard({
   planKey,
+  monthlyPrice,
+  yearlyPrice,
   billingInterval,
   features,
   popular = false,
@@ -23,11 +31,8 @@ export default function PricingCard({
   const { t } = useTranslation();
   const isCurrentPlan = currentPlan === planKey;
 
-  // Info: (20260102 - Luphia) Dynamic keys are safe here as planKey is typed
   const planPriceValue =
-    SUBSCRIPTION_PLAN_PRICE[planKey][
-      billingInterval === "month" ? "monthly" : "yearly"
-    ];
+    billingInterval === "month" ? monthlyPrice : yearlyPrice;
   const price =
     planPriceValue === 0
       ? t("pricing.free_cost")
