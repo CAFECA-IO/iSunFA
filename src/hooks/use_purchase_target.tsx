@@ -140,23 +140,48 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
    * 契約不划算。失敗就不顯示揭露——寧可少一行字，不要顯示一個猜的日期。
    */
   const [periodEndSec, setPeriodEndSec] = useState<number | null>(null);
+  /**
+   * Info: (20260820 - Luphia) 排程中的降級也要在付款前說（同一趟查詢就有）。
+   *
+   * 購買會取代排程——升級是在履行時被 `applyTeamSubscriptionInTx` 清掉，
+   * 同方案的延長則是在建單前就取消。兩種都不會有任何畫面提到那個排程消失了，
+   * 而使用者是刻意排定它的。
+   */
+  const [pending, setPending] = useState<{
+    planId: string;
+    effectiveAt: number;
+  } | null>(null);
   useEffect(() => {
     if (!isSubscription || !selectedTeamId) {
       setPeriodEndSec(null);
+      setPending(null);
       return undefined;
     }
     let active = true;
-    request<{ payload: { currentPeriodEnd?: number } | null }>(
-      `/api/v1/user/team/${selectedTeamId}/subscription`,
-    )
+    request<{
+      payload: {
+        currentPeriodEnd?: number;
+        pendingPlanId?: string | null;
+        pendingEffectiveAt?: number | null;
+      } | null;
+    }>(`/api/v1/user/team/${selectedTeamId}/subscription`)
       .then((response) => {
         if (!active) return;
         const end = response.payload?.currentPeriodEnd ?? 0;
         // Info: (20260820 - Luphia) 當期已結束（或沒有訂閱）就不是展延，不必揭露
         setPeriodEndSec(end * 1000 > Date.now() ? end : null);
+        const pendingPlanId = response.payload?.pendingPlanId ?? null;
+        const effectiveAt = response.payload?.pendingEffectiveAt ?? null;
+        setPending(
+          pendingPlanId && effectiveAt
+            ? { planId: pendingPlanId, effectiveAt }
+            : null,
+        );
       })
       .catch(() => {
-        if (active) setPeriodEndSec(null);
+        if (!active) return;
+        setPeriodEndSec(null);
+        setPending(null);
       });
     return () => {
       active = false;
@@ -331,6 +356,8 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
       unitPrice={context.unitPrice ?? null}
       seatAmount={seatAmount}
       extensionPeriodEndSec={periodEndSec}
+      pendingPlanId={pending?.planId ?? null}
+      pendingEffectiveAt={pending?.effectiveAt ?? null}
     />
   );
 

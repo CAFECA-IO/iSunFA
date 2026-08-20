@@ -55,6 +55,14 @@ interface IPurchaseTargetSelectorProps {
    * null＝當期已結束或沒有訂閱，那不是展延，不顯示這段揭露。
    */
   extensionPeriodEndSec?: number | null;
+  /**
+   * Info: (20260820 - Luphia) 排程中的降級（方案代號與生效時點）。
+   *
+   * 購買會取代它——升級是在履行時清掉，同方案的延長是在建單前取消。
+   * 兩種都不會有任何畫面提到那個排程消失了，而使用者是刻意排定它的。
+   */
+  pendingPlanId?: string | null;
+  pendingEffectiveAt?: number | null;
   disabled?: boolean;
 }
 
@@ -71,6 +79,8 @@ export default function PurchaseTargetSelector({
   unitPrice = null,
   seatAmount = null,
   extensionPeriodEndSec = null,
+  pendingPlanId = null,
+  pendingEffectiveAt = null,
   disabled = false,
 }: IPurchaseTargetSelectorProps) {
   const { t } = useTranslation();
@@ -211,6 +221,24 @@ export default function PurchaseTargetSelector({
               team:
                 teams.find((team) => team.id === selectedTeamId)?.name ?? "",
               date: new Date(extensionPeriodEndSec * 1000).toLocaleDateString(),
+            })}
+          </p>
+        )}
+
+      {/**
+       * Info: (20260820 - Luphia) 排程中的降級：付款前就要說「這筆付款會取消它」。
+       * 方案名沿用方案頁的 i18n 鍵（`pricing.plans.*.name`），兩處必須是同一個詞。
+       */}
+      {target === PURCHASE_TARGET.TEAM &&
+        pendingPlanId !== null &&
+        pendingEffectiveAt !== null &&
+        selectedTeamId && (
+          <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
+            {t("purchase_target.pending_downgrade_note", {
+              team:
+                teams.find((team) => team.id === selectedTeamId)?.name ?? "",
+              date: new Date(pendingEffectiveAt * 1000).toLocaleDateString(),
+              plan: t(`pricing.plans.${pendingPlanId}.name`),
             })}
           </p>
         )}

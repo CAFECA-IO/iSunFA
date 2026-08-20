@@ -244,12 +244,22 @@ describe("取消排程", () => {
    * 畫面上他的方案還是企業版（正確），於是再按一次企業版會走升級路徑——
    * 建一張新單、再收一整期的錢。
    */
-  it("排程中又選回當期方案：取消排程，不建單", async () => {
+  it("排程中又選回當期方案（不帶付款方式）：取消排程，不建單", async () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
       subscriptionRow({ pendingPlanId: TEAM_PLAN.FREE, autoRenew: false }),
     );
 
-    const result = await change(TEAM_PLAN.BUSINESS);
+    /**
+     * Info: (20260820 - Luphia) 取消排程是**不帶付款方式**的呼叫（新契約）：
+     * 帶了就是「我要買」，會取消排程並建單（延長）。
+     */
+    const result = await changeTeamSubscription({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      nowMs: NOW_MS,
+    });
 
     expect(
       asMock(teamSubscriptionRepo.cancelPendingPlanChange),
@@ -317,7 +327,11 @@ describe("取消排程與改計費週期要分得開（self-review 小項）", (
    * 「排程降級中的月繳戶想改成年繳」會被當成取消降級——排程清掉了、年繳沒生效，
    * 而畫面沒有任何訊息（靜默的 no-op）。
    */
-  it("同方案同週期 → 只取消排程，不建單", async () => {
+  /**
+   * Info: (20260820 - Luphia) 「取消降級」與「延長期間」用**有沒有帶付款方式**分辨：
+   * 兩者的方案與週期完全一樣（都是當期的）。不帶＝單純取消排程。
+   */
+  it("同方案同週期且不帶付款方式 → 只取消排程，不建單", async () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
       subscriptionRow({ pendingPlanId: TEAM_PLAN.FREE, autoRenew: false }),
     );
@@ -327,7 +341,6 @@ describe("取消排程與改計費週期要分得開（self-review 小項）", (
       teamId: "team-1",
       planId: TEAM_PLAN.BUSINESS,
       billingInterval: BILLING_INTERVAL.MONTH,
-      paymentMethodId: "pm-1",
       nowMs: NOW_MS,
     });
 
@@ -359,7 +372,7 @@ describe("取消排程與改計費週期要分得開（self-review 小項）", (
   });
 
   // Info: (20260820 - Luphia) 讀不到訂單時退為月繳（保守側：只會多走一次建單）
-  it("查不到最後一張訂單時，同方案月繳仍視為取消排程", async () => {
+  it("查不到最後一張訂單時，同方案月繳且不帶付款方式仍視為取消排程", async () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
       subscriptionRow({ pendingPlanId: TEAM_PLAN.FREE, latestOrderId: null }),
     );
@@ -369,11 +382,80 @@ describe("取消排程與改計費週期要分得開（self-review 小項）", (
       teamId: "team-1",
       planId: TEAM_PLAN.BUSINESS,
       billingInterval: BILLING_INTERVAL.MONTH,
-      paymentMethodId: "pm-1",
       nowMs: NOW_MS,
     });
 
     expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260820 - Luphia) 帶付款方式＝「我要買」：取消排程**並**建單。
+   *
+   * 這條擋的是一條**壞掉的流程**，不只是少一句提示：方案卡改為可按之後，
+   * 「延長方案」送進來的方案與週期就是當期的，先前會走進取消分支並回
+   * `orderId: null`，而付款畫面拿著 null 繼續往下走。
+   */
+  it("同方案同週期但帶付款方式 → 取消排程並建單（延長）", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({ pendingPlanId: TEAM_PLAN.FREE, autoRenew: false }),
+    );
+
+    const result = await changeTeamSubscription({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      paymentMethodId: "pm-1",
+      nowMs: NOW_MS,
+    });
+
+    expect(
+      asMock(teamSubscriptionRepo.cancelPendingPlanChange),
+    ).toHaveBeenCalledWith("team-1");
+    expect(asMock(generatePaymentOrder)).toHaveBeenCalledTimes(1);
+    expect(result.orderId).toBe("order-1");
+  });
+
+  /**
+   * Info: (20260820 - Luphia) 升級時排程還沒被清掉（那是履行時的事），
+   * 因此回應要說「這筆付款會取代哪一個排程」——現在式，不是「已取消」。
+   */
+  it("升級時回報這次購買會取代的排程", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({
+        planId: TEAM_PLAN.TEAM,
+        unitPrice: 840,
+        pendingPlanId: TEAM_PLAN.FREE,
+      }),
+    );
+
+    const result = await changeTeamSubscription({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      paymentMethodId: "pm-1",
+      nowMs: NOW_MS,
+    });
+
+    expect(result.supersedesPendingPlanId).toBe(TEAM_PLAN.FREE);
+  });
+
+  it("沒有排程時不回報取代", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({ planId: TEAM_PLAN.TEAM, unitPrice: 840 }),
+    );
+
+    const result = await changeTeamSubscription({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      paymentMethodId: "pm-1",
+      nowMs: NOW_MS,
+    });
+
+    expect(result.supersedesPendingPlanId).toBeNull();
   });
 });
 

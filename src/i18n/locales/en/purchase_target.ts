@@ -4,6 +4,8 @@ export const purchaseTarget = {
   seat_breakdown: "{{seats}} seats × NT$ {{unit}} = NT$ {{total}}",
   extension_note:
     'The current subscription period for "{{team}}" runs until {{date}}. This purchase is **added on top of that date** — the remaining days are not lost. You may purchase again to extend further; there is no limit on the number of times.',
+  pending_downgrade_note:
+    '"{{team}}" is scheduled to change to {{plan}} on {{date}}. Completing this purchase cancels that scheduled change.',
   seat_note:
     "Seats are counted from your team's current size; the amount charged reflects the size at checkout.",
   // Info: (20260814 - Luphia) 沒有團隊可選時要說出是哪一種沒有（載入中／失敗／過期／無權限）

@@ -25,6 +25,7 @@ import type {
   ITeamSubscriptionView,
 } from "@/interfaces/team_wallet";
 import {
+  isTeamPlanId,
   resolveEffectivePlanId,
   resolvePlanId,
 } from "@/lib/subscription/plan_rules";
@@ -305,6 +306,14 @@ export interface IChangeSubscriptionResult {
   pendingPlanId?: TeamPlanId | null;
   // Info: (20260820 - Luphia) 排程生效時點（epoch 秒）＝當期屆滿
   effectiveAt?: number;
+  /**
+   * Info: (20260820 - Luphia) 這次購買**將**取代的排程（現在式）。
+   *
+   * 升級不經過取消分支——排程是履行時由 `applyTeamSubscriptionInTx` 清掉的，
+   * 所以在付款完成之前它仍然存在。欄位名不用「已取消」：那一刻還沒取消。
+   * null＝沒有排程要取代。
+   */
+  supersedesPendingPlanId?: TeamPlanId | null;
 }
 
 /**
@@ -359,14 +368,26 @@ export async function changeTeamSubscription(params: {
      * 週期不同 → 也取消排程，但**繼續往下走建單**（他要的是換週期，那是續購）。
      */
     const currentInterval = await resolveCurrentBillingInterval(subscription);
-    const cancelsPendingOnly =
+    /**
+     * Info: (20260820 - Luphia) 「取消降級」與「延長期間」用**有沒有帶付款方式**分辨。
+     *
+     * 兩者送進來的方案與週期完全一樣（都是當期的），先前只比對這兩個值，於是
+     * 購買流程按下「延長方案」時會走進取消排程的分支——**回一個 `orderId: null`**，
+     * 而付款畫面拿著 null 繼續往下走。那不只是少一句提示，是一條壞掉的流程
+     *（在方案卡改為可按之前它按不到，所以先前看不出來）。
+     *
+     * 帶了付款方式就是「我要買」：取消排程**並**建單（購買本來就會取代排程，
+     * 履行時 `applyTeamSubscriptionInTx` 也會清掉它）。沒帶就是單純取消排程。
+     */
+    const cancelOnly =
       Boolean(subscription?.pendingPlanId) &&
       planId === currentPlanId &&
-      billingInterval === currentInterval;
+      billingInterval === currentInterval &&
+      !paymentMethodId;
 
     if (subscription?.pendingPlanId && planId === currentPlanId) {
       await teamSubscriptionRepo.cancelPendingPlanChange(teamId);
-      if (cancelsPendingOnly) {
+      if (cancelOnly) {
         return {
           orderId: null,
           planId: currentPlanId,
@@ -477,7 +498,22 @@ export async function changeTeamSubscription(params: {
       seats: Math.max(1, seats),
       unitPrice,
     });
-    return { ...order, planId: currentPlanId };
+    /**
+     * Info: (20260820 - Luphia) 一併回「這次購買會取代的排程」。
+     *
+     * 升級不會經過上面那個取消分支——排程是在**履行**時由
+     * `applyTeamSubscriptionInTx` 清掉的。因此在付款完成之前它仍然存在，
+     * 而使用者需要知道「付完這筆，原定期末的降級就不會發生」。
+     * 用現在式的欄位名（`supersedesPendingPlanId`）而不是「已取消」：
+     * 那一刻還沒取消。
+     */
+    return {
+      ...order,
+      planId: currentPlanId,
+      supersedesPendingPlanId: isTeamPlanId(subscription?.pendingPlanId ?? "")
+        ? (subscription?.pendingPlanId as TeamPlanId)
+        : null,
+    };
   });
 }
 

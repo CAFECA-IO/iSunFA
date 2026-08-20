@@ -329,3 +329,57 @@ describe("展延的付款前揭露", () => {
     },
   );
 });
+
+/**
+ * Info: (20260820 - Luphia) 排程中的降級也要在付款前說：購買會取代它
+ *（升級在履行時清掉、同方案的延長在建單前取消），而使用者是刻意排定它的。
+ */
+describe("排程降級的付款前揭露", () => {
+  it("選擇器在有排程時說明這筆購買會取消它", () => {
+    const selector = codeOf(
+      "src",
+      "components",
+      "pricing",
+      "purchase_target_selector.tsx",
+    );
+
+    expect(selector).toMatch(/purchase_target\.pending_downgrade_note/);
+    /**
+     * Info: (20260820 - Luphia) 兩個條件都要斷言。
+     *
+     * 只驗其中一個時，把另一半改成 `false`（整段揭露消失）測試照樣是綠的——
+     * **掃描測試只保護它真的比對到的那幾個字**。
+     */
+    expect(selector).toMatch(/pendingPlanId !== null/);
+    expect(selector).toMatch(/pendingEffectiveAt !== null/);
+  });
+
+  it("hook 一併取回排程資訊並傳下去", () => {
+    const hook = codeOf("src", "hooks", "use_purchase_target.tsx");
+
+    expect(hook).toMatch(/pendingPlanId=\{pending\?\.planId \?\? null\}/);
+    expect(hook).toMatch(
+      /pendingEffectiveAt=\{pending\?\.effectiveAt \?\? null\}/,
+    );
+  });
+
+  // Info: (20260820 - Luphia) 五語系都要有這段文案（缺一個就是那個語系看不到揭露）
+  it.each(["zh_tw", "en", "zh_cn", "ja", "ko"])(
+    "%s 有 pending_downgrade_note 文案",
+    (locale) => {
+      expect(
+        readFileSync(
+          join(
+            process.cwd(),
+            "src",
+            "i18n",
+            "locales",
+            locale,
+            "purchase_target.ts",
+          ),
+          "utf8",
+        ),
+      ).toMatch(/pending_downgrade_note/);
+    },
+  );
+});

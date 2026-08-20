@@ -851,7 +851,7 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 | 升級（含同方案續購／改計費週期） | 立即 | 立即建單 | 原路徑不變 |
 | 降級為較低的付費方案 | 當期屆滿 | 不收費；期末續訂以新方案計價 | `pendingPlanId` + `autoRenew` 維持 true，續訂 worker 讀 `pendingPlanId` |
 | 降級為 free | 當期屆滿 | 不收費 | `pendingPlanId = free` + `autoRenew = false`，期末由 `expireOverdue` 落地 |
-| 降級後改回原方案 | 立即取消排程 | 不收費 | `cancelPendingPlanChange`（一併恢復 `autoRenew`） |
+| 取消排程（改回原方案） | 立即 | 不收費 | `cancelPendingPlanChange`（一併恢復 `autoRenew`）。**以「不帶 `paymentMethodId`」表達**——帶了就是購買 |
 
 - **判準只有一個**：`isPlanDowngrade`（`PLAN_RANK` 比較，`src/constants/subscription_quota.ts`）。散在服務層各判一次的話，遲早有一條路徑讓降級立即生效。
 - **`GET /subscription` 揭露 `pendingPlanId` / `pendingEffectiveAt`**：當期 `planId` 仍是原方案，使用者需要看得出「我按過降級了」——否則按下去畫面沒變，他會再按一次，而那一次會被當成升級（建單、收整期的錢）。
@@ -867,6 +867,10 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 | 雙擊／雙分頁 = 兩張可付的訂單 | 訂閱建單沒有任何冪等保護（席次補收有） | 同方案同週期已有**未付**訂單（PENDING / PAYING）就沿用同一張；已付的代表再買一期，建新單 |
 | 續訂扣款成功但套用失敗 → 下一輪再扣一次 | 續訂建單沒有冪等鍵 | 鍵綁「正在到期的那一期」（`renew:{teamId}:p{periodStart}`）；已 COMPLETED 就補套用不再扣款，還在請款中就跳過 |
 | 付兩次只得一期；提早續購吃掉剩餘天數 | 履行一律 `now → now + 週期`，`upsert` 覆寫 | **展延**：當期未結束時期末往後加，期初不動 |
+
+**「取消排程」與「延長期間」用有沒有帶付款方式分辨**（2026-08-20）：兩者送進來的方案與週期完全一樣（都是當期的）。先前只比對這兩個值，於是購買流程按下「延長方案」會走進取消分支並回 `orderId: null`，而付款畫面拿著 null 繼續往下走——方案卡改為可按之後才會踩到。帶了付款方式就是「我要買」：取消排程**並**建單。
+
+購買會取代排程這件事**在付款前就要說**：升級的排程是在履行時由 `applyTeamSubscriptionInTx` 清掉的，因此建單回應帶 `supersedesPendingPlanId`（現在式，那一刻還沒取消），而歸屬選擇器在付款前顯示「已排定於 X 降級為 Y；本次購買完成後將取消該降級」。
 
 展延的期初刻意不動：期中加席次的比例計價讀 `periodStart` / `periodEnd`（`resolveSeatProration`），把期初改成今天會讓分母縮水，於是同一天加人要付更多——展延只該讓分母變大。當期已結束（續訂、過期後重新訂閱）則從現在起算：中間沒有權益的空窗不該追認為已付費期間。
 

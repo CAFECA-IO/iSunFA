@@ -4,6 +4,8 @@ export const purchaseTarget = {
   seat_breakdown: "{{seats}} 席 × NT$ {{unit}} ＝ NT$ {{total}}",
   extension_note:
     "「{{team}}」目前的訂閱期間至 {{date}}。本次購買將**自該日起算並累加**，當期剩餘天數不會消失；可重複購買以繼續延長，不設次數上限。",
+  pending_downgrade_note:
+    "「{{team}}」已排定於 {{date}} 起降級為{{plan}}。本次購買完成後，該降級將取消。",
   seat_note: "席次以團隊目前人數計算；實際收費金額以結帳當下的人數為準。",
   // Info: (20260814 - Luphia) 沒有團隊可選時要說出是哪一種沒有（載入中／失敗／過期／無權限）
   session_expired: "登入已過期，請重新登入後再選擇團隊。",
