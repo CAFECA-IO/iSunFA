@@ -669,6 +669,13 @@ export const buildCarbonReportHtml = (
    */
   const source = prepareCarbonMarkdown(markdown, {
     stripDocumentTitle: true,
+    /*
+     * Info: (20260820 - Emily) 匯出端固定開：這條路徑只有碳盤查報告會走，
+     * 而碳報告的標頭一律由 `p.title` 產生，內容第一行的同文是重複。
+     * 預覽端由 `MarkdownContent` 的 `stripEchoedHeadings` 做同一件事，
+     * 但那個元件還服務另外 16 個使用端，所以那邊是開關、這邊是固定。
+     */
+    stripEchoedHeadings: true,
   }).markdown;
   /**
    * Info: (20260811 - Emily) 既有草稿裡的 mermaid timeline 在此轉成表格。

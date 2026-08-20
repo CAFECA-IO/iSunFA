@@ -120,6 +120,16 @@ interface IMarkdownContentProps {
    * 與 timeline、私有區符號同一層的讀取端補救。
    */
   stripDocumentTitle?: boolean;
+  /**
+   * Info: (20260820 - Emily) 剝掉「標頭後緊接一行完全同文」的那一行（碳盤查報告專用）。
+   *
+   * 成因是碳報告組稿端一律由 `p.title` 產生標頭，而 `content` 的第一行有時
+   * 就是那個標題。用 opt-in 而不是預設，理由與 `restoreSourceLineBreaks` 相同
+   * （#6644）：在別的使用端，「標頭後緊接同文一行」可能是內容而不是重複，
+   * 剝掉會是**靜默的內容遺失** ——
+   * `"## 注意事項\n注意事項\n\n請攜帶證件"` → `"## 注意事項\n\n請攜帶證件"`。
+   */
+  stripEchoedHeadings?: boolean;
   restoreSourceLineBreaks?: boolean;
   theme?: "dark" | "light";
   variant?: MarkdownContentVariant;
@@ -129,6 +139,7 @@ interface IMarkdownContentProps {
 const MarkdownContent: FC<IMarkdownContentProps> = ({
   content,
   stripDocumentTitle = false,
+  stripEchoedHeadings = false,
   restoreSourceLineBreaks = false,
   theme = "dark",
   variant = "document",
@@ -236,7 +247,10 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
        */
       const normalized = padAllTableHeaders(
         convertTimelineBlocksToTables(
-          prepareCarbonMarkdown(content, { stripDocumentTitle }).markdown,
+          prepareCarbonMarkdown(content, {
+            stripDocumentTitle,
+            stripEchoedHeadings,
+          }).markdown,
         ),
       );
       /*
@@ -257,7 +271,7 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
         : normalized;
       return escapeArithmeticEmphasis(structured);
     },
-    [content, restoreSourceLineBreaks, stripDocumentTitle],
+    [content, restoreSourceLineBreaks, stripDocumentTitle, stripEchoedHeadings],
   );
 
   const components = useMemo(

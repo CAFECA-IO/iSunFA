@@ -42,12 +42,23 @@ export interface IPreparedCarbonMarkdown {
  *    後面每一支「只看第一個非空行」或「看相鄰行」的轉換。
  * 2. `stripLeadingDocumentTitle` 要在剝註解**之後** ——
  *    否則註解在 H1 前面時漏剝（見檔頭那個實測輸入）。
- * 3. `stripEchoedSectionHeadings` 要在剝註解之後（相鄰判定會被註解擋掉），
+ * 3. `stripEchoedSectionHeadings`（`stripEchoedHeadings` 為 true 時才跑）
+ *    要在剝註解之後（相鄰判定會被註解擋掉），
  *    且要在任何**插入換行**的轉換之前（`restoreLineStructure` /
  *    `splitInlineListItems` 會把同文那一行拆開，就不再等於標題）。
  *    那兩支都在本函式之後，由各端自行決定。
  * 4. `replaceOfficeSymbolChars` 排在 echo 之前：標題字串裡若有 Word 私有區符號，
  *    換過之後兩邊比對才對得上。它是冪等且不改長度的，各端後面再套一次無害。
+ *
+ * ⚠ `stripEchoedHeadings` 是開關而不是無條件套用（PR review 第三輪）：
+ * 這支轉換的成因是**碳報告組稿端一律由 `p.title` 產生標頭**，所以
+ * 「標頭後緊接一行同文」在碳報告裡是重複、在別處可能是內容。實測
+ * `"## 注意事項\n注意事項\n\n請攜帶證件"` 會被靜默剝成
+ * `"## 注意事項\n\n請攜帶證件"` —— 而 `MarkdownContent` 有 17 個 tsx 使用端。
+ * 同一個原則（一支只對碳報告成立的轉換不該無條件套給全部人，#6644）
+ * 在 `markdown_content.tsx` 裡已經套給 `restoreSourceLineBreaks`，
+ * 這支新加的當時漏了。旗標在 options 裡是**必填**而不是選填：
+ * 選填加預設值會讓下一個呼叫端「不寫就等於關」，而該不該關是它必須回答的問題。
  *
  * ⚠ 本函式**只涵蓋兩端真正共用的前段**。之後的步驟兩端仍然不同
  * （預覽是 timeline → padHeaders → split/restore；匯出是 split/restore →
@@ -57,7 +68,7 @@ export interface IPreparedCarbonMarkdown {
  */
 export const prepareCarbonMarkdown = (
   markdown: string,
-  options: { stripDocumentTitle: boolean },
+  options: { stripDocumentTitle: boolean; stripEchoedHeadings: boolean },
 ): IPreparedCarbonMarkdown => {
   const cleaned = stripHtmlLineBreaksOutsideFences(
     stripMarkdownComments(markdown),
@@ -66,8 +77,12 @@ export const prepareCarbonMarkdown = (
     ? stripLeadingDocumentTitle(cleaned)
     : { title: "", body: cleaned };
 
+  const symbols = replaceOfficeSymbolChars(titled.body);
+
   return {
-    markdown: stripEchoedSectionHeadings(replaceOfficeSymbolChars(titled.body)),
+    markdown: options.stripEchoedHeadings
+      ? stripEchoedSectionHeadings(symbols)
+      : symbols,
     documentTitle: titled.title,
   };
 };
