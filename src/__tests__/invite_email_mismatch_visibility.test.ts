@@ -99,10 +99,14 @@ describe("attachEmailMismatch", () => {
     ]);
   });
 
-  // Info: (20260818 - Luphia) ADMIN 同樣有處置成員的權限，因此同樣看得到（產品決定 20260817）
-  it("ADMIN 也看得到", () => {
-    const result = attachEmailMismatch(MEMBERS, TeamRole.ADMIN, ["u1"]);
-    expect(result[0]).toHaveProperty("emailMismatch", true);
+  /**
+   * Info: (20260819 - Luphia) 團隊 ADMIN 已取消（產品決定 20260819）。
+   * 殘留的 `"ADMIN"` 字串**不是**管理職，因此拿到的是原樣清單——
+   * 標記只給有處置權的人看，而那個人現在只有 OWNER。
+   */
+  it("殘留的 ADMIN 字串看不到標記", () => {
+    const result = attachEmailMismatch(MEMBERS, "ADMIN" as TeamRole, ["u1"]);
+    expect(result).toEqual(MEMBERS);
   });
 
   /**

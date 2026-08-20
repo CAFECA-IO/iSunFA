@@ -7,7 +7,7 @@ import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { teamRepo } from "@/repositories/team.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
-import { canGrantRole, TeamRole } from "@/constants/team";
+import { canGrantRole, isTeamManagerRole, TeamRole } from "@/constants/team";
 import {
   InviteCooldownError,
   inviteMemberByEmail,
@@ -51,7 +51,7 @@ export async function POST(
     if (limited) return limited;
 
     const operator = await teamRepo.getTeamMember(sessionUser.id, teamId);
-    if (!operator || (operator.role !== "OWNER" && operator.role !== "ADMIN")) {
+    if (!isTeamManagerRole(operator?.role)) {
       return jsonFail(API_ERRORS.FO_PERMISSION_DENIED_ONLY_OWN);
     }
 
@@ -97,18 +97,39 @@ export async function POST(
     // Info: (20260815 - Luphia) 用過即清，防重放（與位址邀請相同）
     await webAuthnRepo.clearChallenge(sessionUser.id);
 
-    const assignedRole = ["OWNER", "ADMIN", "EDITOR", "VIEWER"].includes(role)
-      ? (role as TeamRole)
-      : ("VIEWER" as TeamRole);
+    /**
+     * Info: (20260819 - Luphia) 可授予的角色以列舉為準（團隊 ADMIN 已取消）。
+     * 先前是手寫字串陣列，於是移除角色時這裡會被漏掉——列舉改了、這裡沒改，
+     * 邀請仍然收得下一個已經不存在的角色。
+     */
+    /**
+     * Info: (20260819 - Luphia) 不認識的角色一律**拒絕**，不要靜默降為 VIEWER
+     * （review #6685 中-3）。
+     *
+     * 這條路徑會扣款。舊行為是「不認識就當 VIEWER」，於是：部署後 OWNER 的瀏覽器
+     * 還跑著快取的舊 JS（邀請對話框仍列出 ADMIN 選項），或某個 integration 仍送
+     * `role: "ADMIN"` → 流程走完 → **先扣一席的錢** → 建一封 VIEWER 邀請 → 回 200。
+     * 團隊付了錢、拿到一個角色不對的成員，畫面沒有任何錯誤。
+     *
+     * 同一組功能的 `members/[member_id]` 對同樣的輸入是拒絕的——兩條路對同一個
+     * 非法輸入給出兩種結果，本身就是缺陷。會扣款的路徑，fail-closed 的方向是拒絕。
+     */
+    if (!(Object.values(TeamRole) as string[]).includes(role)) {
+      return jsonFail(API_ERRORS.AUTH_INVALID_ROLE);
+    }
+    const assignedRole = role as TeamRole;
 
     /**
      * Info: (20260818 - Luphia) 只有 OWNER 能授予 OWNER（第三輪 B-3）。
      *
-     * 上面的權限閘是 OWNER || ADMIN，對「授予什麼角色」原本毫無檢查——
+     * 上面的權限閘原本是 OWNER || ADMIN，對「授予什麼角色」毫無檢查——
      * ADMIN 送 `role: "OWNER"` 邀請自己的第二個帳號，接受後團隊就多一位 OWNER。
-     * 變更**既有**成員角色的端點早就有這道檢查，邀請這條路漏了。
+     *
+     * Info: (20260819 - Luphia) 團隊 ADMIN 已取消，這條路徑只剩 OWNER 走得到，
+     * 因此這道檢查現在恆為真。**保留**它：權限閘與「能授予什麼」是兩件事，
+     * 哪天管理職的集合又變大，少了這道就會再開一次同樣的洞。
      */
-    if (!canGrantRole(operator.role, assignedRole)) {
+    if (!canGrantRole(operator?.role, assignedRole)) {
       return jsonFail(API_ERRORS.FO_PERMISSION_DENIED_ONLY_OWN);
     }
 

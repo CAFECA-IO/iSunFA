@@ -436,9 +436,6 @@ export default function InviteMemberModal({
                   <option value={TeamRole.OWNER}>
                     {t("team_management.roles.OWNER")}
                   </option>
-                  <option value={TeamRole.ADMIN}>
-                    {t("team_management.roles.ADMIN")}
-                  </option>
                   <option value={TeamRole.EDITOR}>
                     {t("team_management.roles.EDITOR")}
                   </option>

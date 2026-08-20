@@ -131,6 +131,11 @@ export const teamManagement = {
     allocate_hint: "Give unallocated credits to a team member",
     revoke: "Revoke",
     // Info: (20260814 - Luphia) 分配即鑄到成員的鏈上錢包（ADR 015 修訂）
+    // Info: (20260819 - Luphia) Allocation progress and warning (product request 20260819)
+    allocating_title: "Allocating credits — do not close or refresh this page",
+    allocating_warning:
+      'The credits are being minted into this member\'s blockchain wallet, which takes a few seconds. Closing or refreshing now may leave the allocation in a "deducted but not confirmed on-chain" state that needs manual follow-up.',
+    allocating_button: "Processing…",
     allocate_onchain_note:
       "Allocated credits go straight to the member's own wallet (their blockchain address). They can use them anywhere, not just in this team, and the team cannot take them back afterwards.",
     revoke_onchain_note:

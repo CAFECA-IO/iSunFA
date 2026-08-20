@@ -20,10 +20,11 @@ export enum CarbonAccessLevelEnum {
 }
 
 // Info: (20260716 - Tzuhan) TeamRole 中具編輯權者(VIEWER 之外全部);抽常數避免散落字串比對
-const EDIT_CAPABLE_ROLES: readonly string[] = ["OWNER", "ADMIN", "EDITOR"];
+// Info: (20260819 - Luphia) 團隊 ADMIN 已取消（產品決定 20260819）
+const EDIT_CAPABLE_ROLES: readonly string[] = ["OWNER", "EDITOR"];
 
 // Info: (20260730 - Tzuhan) 具封存權者:僅帳本管理層。EDITOR 不在此列(見 CarbonAccessLevelEnum.DELETE 註解)
-const DELETE_CAPABLE_ROLES: readonly string[] = ["OWNER", "ADMIN"];
+const DELETE_CAPABLE_ROLES: readonly string[] = ["OWNER"];
 
 export interface ICarbonAccessDecision {
   allowed: boolean;

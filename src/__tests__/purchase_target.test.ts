@@ -50,7 +50,8 @@ describe("purchase mode", () => {
 describe("eligible teams", () => {
   const TEAMS = [
     { id: "t1", role: TeamRole.OWNER },
-    { id: "t2", role: TeamRole.ADMIN },
+    // Info: (20260819 - Luphia) 團隊 ADMIN 已取消；殘留字串一律不具資格
+    { id: "t2", role: "ADMIN" },
     { id: "t3", role: TeamRole.EDITOR },
     { id: "t4", role: null },
   ];
@@ -60,9 +61,14 @@ describe("eligible teams", () => {
     expect(eligible.map((team) => team.id)).toEqual(["t1"]);
   });
 
-  it("lets owners and admins buy team credits", () => {
+  /**
+   * Info: (20260819 - Luphia) 團隊 ADMIN 取消後，購買團隊點數限 OWNER
+   * （產品決定 20260819）。`t2` 是殘留的 `"ADMIN"` 字串，必須**不具資格**——
+   * 回填腳本跑之前那種列還在，而它們不該還能刷團隊的錢。
+   */
+  it("只有 OWNER 能買團隊點數，殘留的 ADMIN 不具資格", () => {
     const eligible = filterEligibleTeams(TEAMS, PURCHASE_MODE.CREDIT_PACK);
-    expect(eligible.map((team) => team.id)).toEqual(["t1", "t2"]);
+    expect(eligible.map((team) => team.id)).toEqual(["t1"]);
   });
 
   it("offers no teams when the purchase needs no target", () => {

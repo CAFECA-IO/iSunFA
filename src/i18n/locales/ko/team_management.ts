@@ -131,6 +131,12 @@ export const teamManagement = {
     allocate_hint: "미배정 포인트를 팀원에게 배정합니다",
     revoke: "회수",
     // Info: (20260814 - Luphia) 分配即鑄到成員的鏈上錢包（ADR 015 修訂）
+    // Info: (20260819 - Luphia) 배분 처리 중 표시와 경고（제품 요구 20260819）
+    allocating_title:
+      "포인트를 배분하는 중입니다. 페이지를 닫거나 새로 고치지 마세요",
+    allocating_warning:
+      "포인트를 해당 멤버의 블록체인 지갑으로 발행하고 있습니다(수 초~수십 초). 지금 닫거나 새로 고치면 '차감됨·온체인 미확인' 상태로 남아 수동 처리가 필요할 수 있습니다.",
+    allocating_button: "처리 중…",
     allocate_onchain_note:
       "배정한 포인트는 해당 구성원 본인의 지갑(블록체인 주소)으로 바로 전송됩니다. 이 팀 외부에서도 사용할 수 있으며, 배정 후에는 팀에서 회수할 수 없습니다.",
     revoke_onchain_note:
