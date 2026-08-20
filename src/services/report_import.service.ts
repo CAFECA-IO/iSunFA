@@ -23,7 +23,10 @@ import {
   PDF_TEXT_LAYER_REASON,
 } from "@/lib/pdf_text_layer";
 import { PdfTextLayerDecisionEnum } from "@/constants/pdf_text_layer";
-import { ensureTableDivider } from "@/lib/utils/markdown_table_divider";
+import {
+  ensureTableDivider,
+  trimRowsToDividerWidth,
+} from "@/lib/utils/markdown_table_divider";
 import { joinWrappedTableRows } from "@/lib/utils/markdown_table_rows";
 import { extractPagesAsPdf } from "@/lib/utils/pdf_page_extract";
 import {
@@ -1065,7 +1068,30 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
           return { ...table, markdown: fix.markdown };
         });
 
-        const shaped = repaired.filter((table) => {
+        /**
+         * Info: (20260820 - Emily) 超寬列裁到分隔列的欄數
+         * (`data/issue_drafts/open/47_source_table_dropped.md` 的第四種形狀)。
+         *
+         * 08-20 run C：`表3.4` 的第一列是 547 格、只有 5 格有字，分隔列與 14 列
+         * 資料全是 6 格。GFM 因此整張不渲染 —— 渲染不變式把它改成明示丟表，
+         * 紙上乾淨了，但內文還引用著那張表。只裁空白格，一格有字就不裁。
+         *
+         * **必須排在 `validateSourceTables` 之前**：裁完才對得上分隔列，
+         * 排在裁決之後等於裁了也沒用。
+         */
+        const trimmedRows = repaired.map((table) => {
+          const fix = trimRowsToDividerWidth(table.markdown);
+          if (fix.trimmed === 0) return table;
+          logger.warn("[ReportImportService] source table rows trimmed", {
+            paragraphId,
+            tableNo: table.tableNo,
+            caption: table.caption.slice(0, 40),
+            rows: fix.trimmed,
+          });
+          return { ...table, markdown: fix.markdown };
+        });
+
+        const shaped = trimmedRows.filter((table) => {
           const check = validateSourceTables([table]);
           if (!check.isValid) {
             /**

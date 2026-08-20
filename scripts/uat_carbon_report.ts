@@ -344,6 +344,54 @@ const MERMAID_LEAK = /(sankey-beta|graph (TD|LR)\b|flowchart (TD|LR)\b|%%\{)/g;
  * 抓單一個字元會比它要守的東西寬。分隔列與「連三個管線」是 markdown 表格才有的形狀。
  */
 const MARKDOWN_TABLE_LEAK = /(\|\s*-{3,}\s*\||\|\s*\|\s*\|)/g;
+
+/**
+ * Info: (20260820 - Emily) 對帳附錄裡**刻意逐字引用**的原文列不算外洩。
+ *
+ * `carbon_table38.disclosure.ts` 在「無法解析的資料列(N):」之後，用行內程式碼
+ * 把那 N 列原文一字不改印出來。那段的存在理由寫在該檔檔頭:
+ * 「只說『有 3 列無法解析』的話,沒有人能判斷那 3 列重不重要」。
+ * 也就是說,那些管線是**引用**,不是渲染失敗 —— 與「程式碼區塊內原樣保留」同一族。
+ *
+ * 08-20 run C 實測:6 處外洩全部落在這一段(第 30 頁),而同一趟真正的渲染失敗
+ * (表3.4 欄數不符)是被 `divider_column_mismatch` 丟掉的,紙上一個管線都沒有。
+ * 判準沒有排除這一段的話,它比它要守的東西**寬** —— 會把刻意的引用報成缺陷,
+ * 而一支會亂叫的驗收腳本沒有人會再看它。
+ *
+ * 排除的範圍刻意收得很窄:只跳過標題行宣告的那 N 列,而且必須是以管線開頭的行。
+ * 排除幾列會記進快照(`對帳逐字引用列_排除`),不靜默。
+ */
+const UNPARSED_ROWS_HEADING = /無法解析的資料列\((\d+)\)/g;
+
+const stripQuotedUnparsedRows = (
+  input: string,
+): { text: string; excluded: number } => {
+  const lines = input.split("\n");
+  const drop = new Set<number>();
+
+  lines.forEach((line, index) => {
+    const matched = [...line.matchAll(UNPARSED_ROWS_HEADING)];
+    if (matched.length === 0) return;
+    let remaining = Number(matched[0][1]);
+    let cursor = index + 1;
+    while (remaining > 0 && cursor < lines.length) {
+      const candidate = lines[cursor].trim();
+      if (candidate.length === 0) {
+        cursor += 1;
+        continue;
+      }
+      if (!candidate.startsWith("|")) break;
+      drop.add(cursor);
+      remaining -= 1;
+      cursor += 1;
+    }
+  });
+
+  return {
+    text: lines.filter((_, index) => !drop.has(index)).join("\n"),
+    excluded: drop.size,
+  };
+};
 /**
  * Info: (20260814 - Emily) 內文引用表號:`如表 3.1`、`見表3.1`、`表 3.1 所示`。
  *
@@ -529,7 +577,12 @@ const main = async (): Promise<void> => {
   await checkCMaps(bytes);
   expectZero("反斜線逸出外洩", text.match(ESCAPE_LEAK) ?? []);
   expectZero("mermaid 語法外洩", text.match(MERMAID_LEAK) ?? []);
-  expectZero("markdown 表格語法外洩", text.match(MARKDOWN_TABLE_LEAK) ?? []);
+  const quoted = stripQuotedUnparsedRows(text);
+  snapshot.對帳逐字引用列_排除 = quoted.excluded;
+  expectZero(
+    "markdown 表格語法外洩",
+    quoted.text.match(MARKDOWN_TABLE_LEAK) ?? [],
+  );
   expectZero("待補佔位符", text.match(/待補/g) ?? []);
   expectZero("資料不足佔位符", text.match(/資料不足/g) ?? []);
 

@@ -157,6 +157,12 @@ export const BASELINE_TIERS: ReadonlyArray<{
        * 這個鍵回答的是「為什麼」。
        */
       "log_丟表原因",
+      /**
+       * Info: (20260820 - Emily) 對帳附錄裡刻意逐字引用的原文列,被外洩判準排除掉幾列。
+       * record_only:它是**判準縮窄了多少**的計量,不是產品行為。
+       * 排除必須留下數字 —— 沉默的排除等於把判準悄悄放寬。
+       */
+      "對帳逐字引用列_排除",
       "log_補欄",
       "log_tounicode_decision",
       "log_tounicode_replaced",
