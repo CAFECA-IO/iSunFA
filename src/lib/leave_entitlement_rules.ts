@@ -443,6 +443,29 @@ const buildGrant = (
   isProrated,
 });
 
+/**
+ * Info: (20260820 - Julian) 排程迴圈的防呆上界（review 第 9 輪第 2 條）。
+ *
+ * ## 為什麼要有
+ *
+ * `horizon` 來自呼叫端的 `asOfDate`，而它一路上沒有任何上界 ——
+ * `asOfDate = "9999-12-31"` 一次請求就會鑄出 **7,980 批、239,117 日**的額度
+ * （實測：2020 到職、曆年制、特休級距表）。而 `assertMayAccrueBalance`
+ * 放行「對自己執行」的理由寫著「它交出去的是引擎算出的**應然**……生不出多的」——
+ * 沒有上界的 horizon 讓那句話不成立。
+ *
+ * ## 為什麼三支要同一個數字
+ *
+ * 先前三支各行其是：週年制 40 個週期、曆月制 600 個月、**曆年制沒有**。
+ * 而 12 個預設假別裡有 10 個是 `CALENDAR_YEAR` —— 缺的正是覆蓋面最大的那一支。
+ * 三個不同的數字讀不出任何規則，讀的人只會以為那是各自試出來的。
+ *
+ * 80 是「一份不可能存在的年資」：它不是業務規則，而是**逃生閥** ——
+ * 正常情況下永遠先被 `horizon` 終止。順帶修掉週年制原本 40 的截斷：
+ * 一個 41 年年資的人，第 41 個週期會被靜默地不授予，而那是少給。
+ */
+const MAX_PLANNED_CYCLES = 80;
+
 const buildAnniversarySchedule = (
   hireDate: string,
   horizon: string,
@@ -479,8 +502,8 @@ const buildAnniversarySchedule = (
     );
     cycleStart = nextStart;
     cycleIndex += 1;
-    // Info: (20260817 - Julian) 迴圈上界：40 年份的週期。防呆而非業務規則，正常必先被 horizon 終止
-    if (cycleIndex > 40) break;
+    // Info: (20260820 - Julian) 防呆上界，三支共用同一個常數（見 MAX_PLANNED_CYCLES）
+    if (cycleIndex > MAX_PLANNED_CYCLES) break;
   }
   return grants;
 };
@@ -508,7 +531,15 @@ const buildCalendarYearSchedule = (
   const firstYear = Number(first.slice(0, 4));
   const horizonYear = Number(horizon.slice(0, 4));
 
-  for (let year = firstYear; year <= horizonYear; year += 1) {
+  /**
+   * Info: (20260820 - Julian) 這一支原本**沒有防呆上界**（review 第 9 輪第 2 條）。
+   * 另外兩支都有，而 12 個預設假別裡有 10 個走這一支。
+   */
+  for (
+    let year = firstYear;
+    year <= horizonYear && year - firstYear <= MAX_PLANNED_CYCLES;
+    year += 1
+  ) {
     const yearStart = `${year}-01-01`;
     const yearEnd = `${year}-12-31`;
     const cycleStart = compareIsoDate(first, yearStart) > 0 ? first : yearStart;
@@ -597,7 +628,10 @@ const buildCalendarMonthSchedule = (
 
   let monthStart = `${first.slice(0, 7)}-01`;
   let guard = 0;
-  while (compareIsoDate(monthStart, horizon) <= 0 && guard < 600) {
+  while (
+    compareIsoDate(monthStart, horizon) <= 0 &&
+    guard < MAX_PLANNED_CYCLES * 12
+  ) {
     const nextMonthStart = addMonths(monthStart, 1);
     const cycleStart =
       compareIsoDate(first, monthStart) > 0 ? first : monthStart;

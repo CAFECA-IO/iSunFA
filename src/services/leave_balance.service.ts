@@ -3,6 +3,8 @@ import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
 import { LeaveAccrualMethod, LeaveQuotaMode } from "@/constants/leave_policy";
+import { DEMO_TIME_ZONE } from "@/constants/attendance";
+import { toZonedParts } from "@/lib/utils/attendance_time";
 import { deriveGrantSchedule } from "@/lib/leave_entitlement_rules";
 import { IPlannedGrant } from "@/interfaces/leave_entitlement";
 import {
@@ -176,8 +178,11 @@ export class LeaveBalanceService {
   public async accrueForEmployee(params: {
     accountBookId: string;
     employeeId: string;
+    /** Info: (20260820 - Julian) 授予到哪一天為止。**不得晚於 `observedAt` 那一天** */
     asOfDate: string;
     actorEmployeeId: string | null;
+    /** Info: (20260820 - Julian) 「現在」由呼叫端注入，service 不取 `Date.now()` */
+    observedAt: Date;
   }): Promise<number> {
     /**
      * Info: (20260819 - Julian) `actorEmployeeId` 為 null 代表**系統**
@@ -185,6 +190,22 @@ export class LeaveBalanceService {
      * 由人觸發時一律限 `HR_ADMIN`：手動端點是 Worker 上線前的替身，
      * 替身沒有理由比本尊寬鬆（見 `assertMayAccrueBalance` 的說明）。
      */
+    /**
+     * Info: (20260820 - Julian) **`asOfDate` 不得指向未來**（review 第 9 輪第 2 條）。
+     *
+     * `asOfDate` 就是 `deriveGrantSchedule` 的 horizon，而它先前沒有任何上界：
+     * `"9999-12-31"` 一次請求鑄出 7,980 批、239,117 日的額度（實測，曆年制）。
+     * 而這一支明文允許對自己執行，理由是「它交出去的是引擎算出的**應然**……
+     * 生不出多的」—— 沒有上界的 horizon 讓那句話不成立。
+     *
+     * 擋在授權之前：一個把日期填到三千年後的請求，不需要先問他是不是人資。
+     * 「今天」由呼叫端注入（`observedAt`），這一層不取 `Date.now()`。
+     */
+    const today = toZonedParts(params.observedAt, DEMO_TIME_ZONE).isoDate;
+    if (params.asOfDate > today) {
+      throw new AppError(API_ERRORS.VA_INVALID_INPUT_DATA);
+    }
+
     if (params.actorEmployeeId !== null) {
       /**
        * Info: (20260820 - Julian) 走 `assertMayAccrueBalance` 而不是

@@ -39,7 +39,17 @@ export const leaveBalanceAdjustSchema = z.object({
   reason: z.string().trim().min(1).max(500),
 });
 
-// Info: (20260817 - Julian) L33：把額度補到某一天為止。省略 asOfDate 即今日
+/**
+ * Info: (20260817 - Julian) L33：把額度補到某一天為止。省略 asOfDate 即今日。
+ *
+ * Info: (20260820 - Julian) **上界擋在 service**（`accrueForEmployee`），不在這裡
+ * （review 第 9 輪第 2 條）。
+ *
+ * `asOfDate` 就是排程的 horizon，指到未來會鑄出未來的額度 ——
+ * 但「今天是哪一天」需要政策時區與一個時鐘，而 validator 是純函式、
+ * 不該讀時鐘（同本模組「現在由呼叫端注入」的既有規矩）。
+ * 擋在 service 還有一個好處：seed 與日後的 Worker 也繞不過去。
+ */
 export const leaveAccrualRunSchema = z.object({
   employeeId: z.string().uuid().optional(),
   asOfDate: isoDateSchema.optional(),

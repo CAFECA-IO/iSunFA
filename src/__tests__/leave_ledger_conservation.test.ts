@@ -63,6 +63,12 @@ interface IGrantRow {
   accountBookId: string;
   employeeId: string;
   leavePolicyId: string;
+  /**
+   * Info: (20260820 - Julian) 週期起始日（review 第 9 輪第 2 條）。
+   * `consumableGrantWhere` 以它擋掉「週期還沒開始的批次」——
+   * 替身少了這一欄，那道下界就沒有任何一條測試碰得到。
+   */
+  cycleStartDate: string;
   expiresOn: string;
   createdAt: Date;
 }
@@ -124,8 +130,16 @@ class InMemoryLedger {
    * 那一行刪掉，全檔照樣綠。
    */
   public addGrant(
-    row: Omit<IGrantRow, "accountBookId" | "employeeId" | "leavePolicyId"> &
-      Partial<Pick<IGrantRow, "accountBookId" | "employeeId" | "leavePolicyId">>,
+    row: Omit<
+      IGrantRow,
+      "accountBookId" | "employeeId" | "leavePolicyId" | "cycleStartDate"
+    > &
+      Partial<
+        Pick<
+          IGrantRow,
+          "accountBookId" | "employeeId" | "leavePolicyId" | "cycleStartDate"
+        >
+      >,
     minutes: number,
   ): void {
     const grant: IGrantRow = {
@@ -133,6 +147,8 @@ class InMemoryLedger {
       accountBookId: row.accountBookId ?? BOOK,
       employeeId: row.employeeId ?? EMP,
       leavePolicyId: row.leavePolicyId ?? POLICY,
+      // Info: (20260820 - Julian) 預設是一個早就開始的週期；要驗下界的測試自己覆寫
+      cycleStartDate: row.cycleStartDate ?? "2026-01-01",
     };
     this.grants.push(grant);
     this.entries.push({
@@ -171,6 +187,7 @@ class InMemoryLedger {
             employeeId?: string;
             leavePolicyId?: string;
             expiresOn?: { gte: string };
+            cycleStartDate?: { lte: string };
           };
         }) =>
           this.grants.filter((grant) => {
@@ -179,6 +196,8 @@ class InMemoryLedger {
             if (where.employeeId && grant.employeeId !== where.employeeId) return false;
             if (where.leavePolicyId && grant.leavePolicyId !== where.leavePolicyId) return false;
             if (where.expiresOn && grant.expiresOn < where.expiresOn.gte) return false;
+            // Info: (20260820 - Julian) 週期還沒開始的批次不可扣（review 第 9 輪第 2 條）
+            if (where.cycleStartDate && grant.cycleStartDate > where.cycleStartDate.lte) return false;
             return true;
           }),
       },
@@ -821,5 +840,88 @@ describe("T6 第四項：重建連 expiringSoonMinutes 一起重算", () => {
       expiringSoonMinutes: 300,
       reconciledAt: RECONCILED_AT,
     });
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) 週期還沒開始的批次不可扣（review 第 9 輪第 2 條）。
+ *
+ * ## 為什麼這是三道修正裡最根本的一道
+ *
+ * `deriveGrantSchedule` 的 horizon 來自 `asOfDate`，而它先前沒有任何上界 ——
+ * `asOfDate = "9999-12-31"` 一次請求鑄出 7,980 批（實測）。上界與排程迴圈的
+ * 防呆各補一道之後，這一道是最後一層：**即使前兩道都失守，未來週期的批次
+ * 今天仍然扣不到**。前兩道擋的是「產生」，這一道擋的是「動用」，
+ * 而錢是在動用的那一刻出去的。
+ */
+describe("T6 週期下界：還沒開始的批次不參與 FIFO", () => {
+  it("未來週期的批次不可扣，但仍在帳本總和裡", async () => {
+    ledger.addGrant(
+      {
+        id: "grant-future",
+        cycleStartDate: "2027-01-01",
+        expiresOn: "2027-12-31",
+        createdAt: new Date("2026-08-01T00:00:00.000Z"),
+      },
+      960,
+    );
+
+    const consumable = await readConsumableGrants(ledger.client, {
+      ...SCOPE,
+      asOfDate: AS_OF,
+    });
+    expect(consumable.map((item) => item.grantId)).toEqual([
+      "grant-early",
+      "grant-late",
+    ]);
+
+    // Info: (20260820 - Julian) 帳本記的是歷史，可用量才受週期限制（同過期批的處置）
+    expect(await sumLedgerMinutes(ledger.client, SCOPE)).toBe(1440 + 960);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 反面：週期開始當天就可以扣。
+   * 少了這一條，一個「一律排除未來批次」寫成 `<` 而不是 `<=` 的實作也會通過，
+   * 而那會讓每一個週期的第一天請假都扣不到當期的額度。
+   */
+  it("週期起始日當天即可扣", async () => {
+    ledger.addGrant(
+      {
+        id: "grant-today",
+        cycleStartDate: AS_OF,
+        expiresOn: "2027-12-31",
+        createdAt: new Date("2026-08-01T00:00:00.000Z"),
+      },
+      480,
+    );
+
+    const consumable = await readConsumableGrants(ledger.client, {
+      ...SCOPE,
+      asOfDate: AS_OF,
+    });
+    expect(consumable.map((item) => item.grantId)).toContain("grant-today");
+  });
+
+  /**
+   * Info: (20260820 - Julian) 請未來的假時，`asOfDate` 取的是**實際請假的第一天**
+   * （`buildPlan` 的既有處置）—— 因此明年一月的假扣得到明年一月的批次。
+   * 這一條把「下界不是在懲罰預先安排的假」寫下來。
+   */
+  it("以未來的請假日為 asOfDate 時，該日已開始的批次扣得到", async () => {
+    ledger.addGrant(
+      {
+        id: "grant-future",
+        cycleStartDate: "2027-01-01",
+        expiresOn: "2027-12-31",
+        createdAt: new Date("2026-08-01T00:00:00.000Z"),
+      },
+      960,
+    );
+
+    const consumable = await readConsumableGrants(ledger.client, {
+      ...SCOPE,
+      asOfDate: "2027-01-15",
+    });
+    expect(consumable.map((item) => item.grantId)).toContain("grant-future");
   });
 });

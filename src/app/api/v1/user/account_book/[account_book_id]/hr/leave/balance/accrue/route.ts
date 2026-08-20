@@ -59,6 +59,8 @@ export async function POST(
         parsed.data.asOfDate ??
         toZonedParts(new Date(), DEMO_TIME_ZONE).isoDate,
       actorEmployeeId: actor.id,
+      // Info: (20260820 - Julian) 「現在」由 route 注入，service 不取 Date.now()
+      observedAt: new Date(),
     });
 
     return jsonOk({ issued });

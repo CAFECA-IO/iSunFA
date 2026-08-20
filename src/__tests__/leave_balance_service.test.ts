@@ -62,6 +62,12 @@ const managesEmployeeMock = jest.spyOn(employeeRepo, "managesEmployee");
 const BOOK = "book-1";
 const EMPLOYEE = "emp-006";
 const TODAY = "2026-08-14";
+/**
+ * Info: (20260820 - Julian) `asOfDate` 不得指向未來（review 第 9 輪第 2 條）。
+ * 固定一個晚於 `TODAY` 的時點，讓既有案例不受新的上界影響 ——
+ * 而下面另有一組專門驗那道上界。
+ */
+const OBSERVED_AT = new Date("2026-08-14T23:00:00+08:00");
 
 const policy = (
   id: string,
@@ -155,6 +161,7 @@ const accrue = () =>
     accountBookId: BOOK,
     employeeId: EMPLOYEE,
     asOfDate: TODAY,
+    observedAt: OBSERVED_AT,
     actorEmployeeId: null,
   });
 
@@ -392,6 +399,7 @@ describe("額度的權限閘", () => {
         accountBookId: BOOK,
         employeeId: EMPLOYEE,
         asOfDate: TODAY,
+        observedAt: OBSERVED_AT,
         actorEmployeeId: "emp-999",
       }),
     ).rejects.toMatchObject({
@@ -411,6 +419,7 @@ describe("額度的權限閘", () => {
         accountBookId: BOOK,
         employeeId: EMPLOYEE,
         asOfDate: TODAY,
+        observedAt: OBSERVED_AT,
         actorEmployeeId: null,
       }),
     ).resolves.toBeGreaterThanOrEqual(0);
@@ -513,8 +522,59 @@ describe("L9 / L33 — 自我操作的分界（review 第 5 條）", () => {
         accountBookId: BOOK,
         employeeId: HR,
         asOfDate: TODAY,
+        observedAt: OBSERVED_AT,
         actorEmployeeId: HR,
       }),
     ).resolves.toBeGreaterThanOrEqual(0);
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) `asOfDate` 的上界（review 第 9 輪第 2 條）。
+ *
+ * `asOfDate` 就是 `deriveGrantSchedule` 的 horizon，而它先前沒有任何上界：
+ * `"9999-12-31"` 一次請求鑄出 **7,980 批、239,117 日**的額度（實測，曆年制）。
+ * 而 `assertMayAccrueBalance` 放行「對自己執行」的理由正是
+ * 「它交出去的是引擎算出的應然……生不出多的」—— 沒有上界的 horizon
+ * 讓那句話不成立。
+ */
+describe("L33 — asOfDate 不得指向未來", () => {
+  const accrueAt = (asOfDate: string) =>
+    service.accrueForEmployee({
+      accountBookId: BOOK,
+      employeeId: EMPLOYEE,
+      asOfDate,
+      actorEmployeeId: "emp-hr",
+      observedAt: OBSERVED_AT,
+    });
+
+  /**
+   * Info: (20260820 - Julian) 兩個斷言成對：回 400，**且**一批都沒有落地。
+   * 少了後者，一個「先鑄出來再丟」的實作會通過。
+   */
+  it.each([["遙遠的未來", "9999-12-31"], ["明天", "2026-08-15"]])(
+    "%s：擋下，且一批都沒有落地",
+    async (_label, asOfDate) => {
+      await expect(accrueAt(asOfDate)).rejects.toMatchObject({
+        apiCode: API_ERRORS.VA_INVALID_INPUT_DATA.code,
+      });
+      expect(grants.issuedFor).toEqual([]);
+    },
+  );
+
+  /**
+   * Info: (20260820 - Julian) 上界擋在授權**之前**：一個把日期填到三千年後的
+   * 請求，不需要先問他是不是人資。順序反過來的話，錯誤訊息會變成
+   * 「你沒有權限」，而真正的問題是那個日期。
+   */
+  it("上界不依賴職能查詢的結果", async () => {
+    hasAnyFunctionMock.mockClear();
+    await expect(accrueAt("9999-12-31")).rejects.toBeDefined();
+    expect(hasAnyFunctionMock).not.toHaveBeenCalled();
+  });
+
+  // Info: (20260820 - Julian) 反面：今天照常成立（否則「一律擋」也會通過）
+  it("asOfDate 等於今天時照常授予", async () => {
+    await expect(accrueAt(TODAY)).resolves.toBeGreaterThanOrEqual(0);
   });
 });

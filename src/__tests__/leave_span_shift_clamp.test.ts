@@ -29,8 +29,21 @@ import { expandLeaveSpan, ILeaveSpanShift } from "@/lib/leave_span";
 // Info: (20260820 - Julian) 08:00–17:00 的核心區間（分鐘）
 const SHIFT: ILeaveSpanShift = { startMinute: 480, endMinute: 1020 };
 
+/**
+ * Info: (20260820 - Julian) **seed 裡真的存在的夜班**（review 第 8 輪）。
+ *
+ * `SITE-NIGHT` 的核心區間是 1200–1740，即 20:00 → **次日** 05:00 ——
+ * 終點超過 1440。第一版的 fixture 只有日班，於是「使用者填的時刻（0–1439）」
+ * 與「班別區間（可超過 1440）」兩個值域被混在一起夾這件事，
+ * 在整個測試檔裡沒有任何一條碰得到（checklist §1.4：fixture 不是真實資料的形狀）。
+ */
+const NIGHT_SHIFT: ILeaveSpanShift = { startMinute: 1200, endMinute: 1740 };
+
 const expand = (startAt: string, endAt: string) =>
   expandLeaveSpan({ startAt, endAt, shiftOf: () => SHIFT });
+
+const expandNight = (startAt: string, endAt: string) =>
+  expandLeaveSpan({ startAt, endAt, shiftOf: () => NIGHT_SHIFT });
 
 /**
  * Info: (20260820 - Julian) [說明, 起, 迄, 夾完的起, 夾完的迄]。
@@ -140,5 +153,143 @@ describe("單日的答案與多日的首末日一致", () => {
         shiftOf: () => null,
       }),
     ).toEqual([{ workDate: "2026-08-19", segment: LeaveDaySegment.FULL }]);
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) 跨夜班：午夜之後的那一段屬於**前一天**的工作日
+ * （review 第 8 輪）。
+ *
+ * ## 被修掉的東西
+ *
+ * `parseLocalDateTime` 回的 `minuteOfDay` 值域是 0–1439（牆上時鐘），
+ * 而 `ILeaveSpanShift` 用的是「距該工作日 00:00 的分鐘數」——
+ * 跨夜班大於 1440。把兩者直接拿去夾，午夜後的每一個時刻都被
+ * `Math.max(x, 1200)` 夾成 1200，而終點 ≤ 1439，於是
+ * `startMinute >= endMinute` 必然成立、整天被丟掉，`buildPlan` 回
+ * **「非上班日」**—— 而他明明就在上班。
+ *
+ * 單日 15 分格 4560 組裡有 3240 組因此由可用變成被拒；
+ * 也就是說「夜班工人想請下半夜那段假」曾經**沒有任何可表達的形式**。
+ *
+ * ## 修完之後的判準
+ *
+ * 使用者填的是「日曆日 + 牆上時鐘」，而 `LeaveDay` 記的是「工作日 + 該工作日的
+ * 第幾分鐘」。兩者在跨夜班上不是同一個東西，因此換算一次：
+ * 落在午夜後的時刻，工作日退一天、分鐘數加 1440。
+ */
+describe("跨夜班：午夜後的時段屬於前一天的工作日", () => {
+  it.each([
+    // Info: (20260820 - Julian) [說明, 起, 迄, 期望的工作日, 起分, 迄分]
+    ["純午夜後（缺陷下整天被丟掉）", "2026-08-20T02:00", "2026-08-20T05:00", "2026-08-19", 1560, 1740],
+    ["從午夜整點起", "2026-08-20T00:00", "2026-08-20T05:00", "2026-08-19", 1440, 1740],
+    ["午夜後的一小段", "2026-08-20T03:00", "2026-08-20T04:00", "2026-08-19", 1620, 1680],
+    ["午夜前（同一個值域，本來就對）", "2026-08-19T21:00", "2026-08-19T23:00", "2026-08-19", 1260, 1380],
+    ["整班", "2026-08-19T20:00", "2026-08-20T05:00", "2026-08-19", 1200, 1740],
+    ["跨過午夜的一段", "2026-08-19T22:00", "2026-08-20T03:00", "2026-08-19", 1320, 1620],
+  ] as readonly [string, string, string, string, number, number][])(
+    "%s",
+    (_label, startAt, endAt, workDate, startMinute, endMinute) => {
+      expect(expandNight(startAt, endAt)).toEqual([
+        {
+          workDate,
+          segment: LeaveDaySegment.CUSTOM,
+          startMinute,
+          endMinute,
+        },
+      ]);
+    },
+  );
+
+  /**
+   * Info: (20260820 - Julian) 一個日曆日可能碰到**兩個**工作日的班。
+   *
+   * 8/20 02:00–23:00 涵蓋 8/19 那一班的尾巴（02:00–05:00）與 8/20 那一班的
+   * 開頭（20:00–23:00），中間那段白天他本來就不在班上。
+   * 這一條是「日曆日 ≠ 工作日」最直接的證據 —— 舊的單日捷徑連這個形狀
+   * 都表達不出來。
+   */
+  it("一個日曆日橫跨兩個工作日的班時，切成兩格", () => {
+    expect(expandNight("2026-08-20T02:00", "2026-08-20T23:00")).toEqual([
+      {
+        workDate: "2026-08-19",
+        segment: LeaveDaySegment.CUSTOM,
+        startMinute: 1560,
+        endMinute: 1740,
+      },
+      {
+        workDate: "2026-08-20",
+        segment: LeaveDaySegment.CUSTOM,
+        startMinute: 1200,
+        endMinute: 1380,
+      },
+    ]);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 多日：末日的迄若落在它自己的班開始之前，
+   * 那個時刻屬於**前一天**那一班 —— 末日自己一分鐘都不貢獻。
+   *
+   * 8/19 20:00 → 8/22 05:00 的意思是「今晚上班到後天早上收工都不在」，
+   * 而 8/22 05:00 正是 8/21 那一班的終點。若 8/22 也生出一格，
+   * 那一天的夜班（8/22 20:00 起）會被誤扣掉。
+   */
+  it("多日區間的末日若只到清晨，末日不再貢獻一格", () => {
+    expect(expandNight("2026-08-19T20:00", "2026-08-22T05:00")).toEqual([
+      {
+        workDate: "2026-08-19",
+        segment: LeaveDaySegment.CUSTOM,
+        startMinute: 1200,
+        endMinute: 1740,
+      },
+      { workDate: "2026-08-20", segment: LeaveDaySegment.FULL },
+      { workDate: "2026-08-21", segment: LeaveDaySegment.FULL },
+    ]);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 反面：白天那段對夜班的人來說仍然不是上班時間。
+   * 少了這一條，一個「一律往前一天挪」的實作也會通過。
+   */
+  it.each([
+    ["整段落在白天", "2026-08-20T08:00", "2026-08-20T12:00"],
+    ["清晨收工之後到晚班之前", "2026-08-20T06:00", "2026-08-20T19:00"],
+  ])("%s：整天丟掉", (_label, startAt, endAt) => {
+    expect(expandNight(startAt, endAt)).toEqual([]);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 前一天沒有夜班時**不得**往前挪。
+   *
+   * 判準只看班別的形狀：前一天有班、那一班跨午夜、且起點換算過去真的落在
+   * 核心區間內，三者同時成立才接。少了這一條，一個排日班的人請
+   * 「明天凌晨兩點到五點」會被記到前一天的日班上。
+   */
+  it("前一天是日班時，午夜後的時段仍然不算", () => {
+    expect(
+      expandLeaveSpan({
+        startAt: "2026-08-20T02:00",
+        endAt: "2026-08-20T05:00",
+        shiftOf: () => SHIFT,
+      }),
+    ).toEqual([]);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 日班的行為完全不受影響。
+   *
+   * 這一條是整組改動的回歸線：`crossesMidnight` 為偽時，
+   * 每一條路徑都必須與修改前逐字相同。
+   */
+  it("日班不受跨夜處理影響", () => {
+    expect(expand("2026-08-19T06:00", "2026-08-19T12:00")).toEqual([
+      {
+        workDate: "2026-08-19",
+        segment: LeaveDaySegment.CUSTOM,
+        startMinute: 480,
+        endMinute: 720,
+      },
+    ]);
+    expect(expand("2026-08-19T17:00", "2026-08-19T23:00")).toEqual([]);
   });
 });

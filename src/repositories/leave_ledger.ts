@@ -75,6 +75,23 @@ export const consumableGrantWhere = (params: {
     employeeId: params.employeeId,
     leavePolicyId: params.leavePolicyId,
     expiresOn: { gte: params.asOfDate },
+    /**
+     * Info: (20260820 - Julian) **週期還沒開始的批次不能扣**（review 第 9 輪第 2 條）。
+     *
+     * 先前只有到期日的上界，沒有起始日的下界 —— 於是明年度的特休今天就扣得動。
+     * 那不只是「提前預支」：它與 `deriveGrantSchedule` 的 horizon 沒有上界這件事
+     * 疊起來，就是「一次請求鑄出未來數千年的額度並立刻動用」。
+     *
+     * 這一條是三道修正裡**最根本的一道**：即使 `asOfDate` 的上界與排程迴圈的
+     * 防呆上界都失守，未來週期的批次今天仍然扣不到。前兩道擋的是「產生」，
+     * 這一道擋的是「動用」，而錢是在動用的那一刻出去的。
+     *
+     * 與 `expiresOn` 用同一個 `asOfDate`：兩者一起把「今天可用的批次」定義成
+     * 一個左閉右閉的區間 —— `cycleStartDate ≤ asOfDate ≤ expiresOn`。
+     * 請未來的假時 `asOfDate` 取的是**實際請假的第一天**（見 `buildPlan`），
+     * 因此明年一月的假扣得到明年一月的批次，扣不到明年七月的。
+     */
+    cycleStartDate: { lte: params.asOfDate },
   };
 };
 

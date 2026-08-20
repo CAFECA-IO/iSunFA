@@ -1642,6 +1642,21 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 | 日期 | `String "YYYY-MM-DD"` | 與 `AttendancePunch.workDate`、`EmployeeShiftDay.workDate` 同型別同語意 |
 | 時刻 | `Int` 分鐘（0–2879） | 同 `ShiftPattern`，跨夜可表達 |
 
+> ⚠️ Info: (20260820 - Julian) 「時刻」有**兩個值域**，混用過一次（review 第 8 輪）。
+>
+> | 來源 | 值域 | 意思 |
+> |---|---|---|
+> | 使用者填的 `"YYYY-MM-DDTHH:mm"` | 0–1439 | 該**日曆日**的牆上時鐘 |
+> | `ShiftPattern` / `LeaveDay` / `AttendancePunch` | 0–2879 | 距該**工作日** 00:00 的分鐘數 |
+>
+> 跨夜班（seed 的 `SITE-NIGHT` 是 1200–1740，20:00 → 次日 05:00）讓兩者不再相等：
+> 使用者填的「8/20 02:00」在系統裡是**8/19 這個工作日的第 1560 分**。
+> 直接拿兩者互相夾取，午夜後的每一個時刻都會被夾成班別起點而算出零長度區間 ——
+> 症狀是那一天整天被丟掉、使用者收到「非上班日」，而他明明就在上班。
+>
+> 換算的唯一入口是 `expandLeaveSpan`（它為此要向呼叫端多要一天的班表）。
+> 任何新的「使用者時刻 vs 班別區間」比較都必須先換算，不得直接比。
+
 > Info: (20260820 - Julian) 第三列是 2026-08-19 新增的第五種型別，先前**這張表與
 > 全部文件都沒有提到它**（review 第 7 輪）。
 >

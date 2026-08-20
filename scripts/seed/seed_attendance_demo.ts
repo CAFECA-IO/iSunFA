@@ -1105,6 +1105,13 @@ async function seedLeaveGrants(): Promise<void> {
       asOfDate: DEMO_DATE,
       // Info: (20260817 - Julian) 系統排程產生，非某個人的動作
       actorEmployeeId: null,
+      /**
+       * Info: (20260820 - Julian) `asOfDate` 不得指向未來，seed 也一樣
+       * （review 第 9 輪第 2 條）。`DEMO_DATE` 是一個固定的過去日期，
+       * 因此這裡給真正的現在 —— 若哪天 `DEMO_DATE` 被改到未來，
+       * seed 會當場中止，而那正是要的：demo 資料不該預鑄未來的額度。
+       */
+      observedAt: new Date(),
     });
   }
   console.log(

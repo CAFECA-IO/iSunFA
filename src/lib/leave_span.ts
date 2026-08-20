@@ -1,6 +1,7 @@
 import { LeaveDaySegment } from "@/constants/leave_policy";
 import { MINUTES_PER_DAY } from "@/constants/attendance";
 import {
+  addIsoDays,
   enumerateIsoDates,
   isoDaySpan,
   isRealCalendarDate,
@@ -161,10 +162,39 @@ export const datesBetween = (fromIso: string, toIso: string): string[] => {
  */
 export const MAX_SPAN_DAYS = 62;
 
+/**
+ * Info: (20260820 - Julian) 使用者填的時刻與班別區間**不在同一個值域**（review 第 8 輪）。
+ *
+ * `parseLocalDateTime` 回的 `minuteOfDay` 是 0–1439（牆上時鐘）；
+ * `ILeaveSpanShift` 用的是「距該工作日 00:00 的分鐘數」，跨夜班**大於 1440**
+ * （seed 的 `SITE-NIGHT` 是 1200–1740，即 20:00 → 次日 05:00）。
+ *
+ * 把兩者直接拿去 `Math.max` / `Math.min` 夾，午夜之後的每一個時刻都會被
+ * 夾成班別的起點而算出零長度區間，那一天整天被丟掉，
+ * 而 `buildPlan` 回的是「非上班日」—— **他明明就在上班**。
+ * 單日 15 分格 4560 組裡有 3240 組因此由可用變成被拒。
+ *
+ * 這一支把「日曆日 + 牆上時鐘」轉成「某個工作日的第幾分鐘」。
+ * `offsetDays` 為 1 代表這個時刻落在該工作日的次日（跨夜班的後半段）。
+ */
+const minutesInWorkDateFrame = (
+  minuteOfDay: number,
+  offsetDays: 0 | 1,
+): number => minuteOfDay + offsetDays * MINUTES_PER_DAY;
+
+/** Info: (20260820 - Julian) 這個班別跨過午夜嗎（核心區間的終點超過當日 24:00） */
+const crossesMidnight = (shift: ILeaveSpanShift): boolean =>
+  shift.endMinute > MINUTES_PER_DAY;
+
 export const expandLeaveSpan = (params: {
   startAt: string;
   endAt: string;
-  /** Info: (20260819 - Julian) 逐日的班別核心區間。查無該日時以 null 表示（由呼叫端擋） */
+  /**
+   * Info: (20260819 - Julian) 逐日的班別核心區間。查無該日時以 null 表示（由呼叫端擋）。
+   *
+   * Info: (20260820 - Julian) 呼叫端必須**同時備妥區間第一天的前一天**：
+   * 跨夜班在午夜後的那一段，所屬的工作日是前一天（review 第 8 輪）。
+   */
   shiftOf: (workDate: string) => ILeaveSpanShift | null;
 }): ILeaveSpanDay[] => {
   const start = mustParseLocalDateTime(params.startAt);
@@ -178,8 +208,48 @@ export const expandLeaveSpan = (params: {
   }
 
   const dates = datesBetween(start.workDate, end.workDate);
+  const days = new Map<string, ILeaveSpanDay>();
 
-  const expanded = dates.map((workDate, index): ILeaveSpanDay | null => {
+  /**
+   * Info: (20260820 - Julian) 起點落在跨夜班的午夜後半段時，它屬於**前一天**的班。
+   *
+   * 例：夜班 20:00 → 次日 05:00。使用者填「8/20 02:00 起」，
+   * 那三個小時是 **8/19** 那一班的尾巴，不是 8/20 的任何一段 ——
+   * 8/20 那一班要到晚上 20:00 才開始。
+   *
+   * 判準只看班別的形狀，不猜：前一天有班、那一班跨午夜、
+   * 且起點換算到那一天的座標之後真的落在核心區間內，三者同時成立才接。
+   */
+  const previousDate = addIsoDays(start.workDate, -1);
+  const previousShift = params.shiftOf(previousDate);
+  const startsInPreviousNightShift =
+    previousShift !== null &&
+    crossesMidnight(previousShift) &&
+    minutesInWorkDateFrame(start.minuteOfDay, 1) < previousShift.endMinute;
+
+  if (startsInPreviousNightShift && previousShift !== null) {
+    /**
+     * Info: (20260820 - Julian) 迄若也落在同一班內就一起收掉，否則請到那一班結束。
+     * 前一天不在 `dates` 裡（它是區間的第一天的前一天），因此不會與下面的迴圈撞號。
+     */
+    const endsInSameShift =
+      end.workDate === start.workDate &&
+      minutesInWorkDateFrame(end.minuteOfDay, 1) <= previousShift.endMinute;
+    days.set(previousDate, {
+      workDate: previousDate,
+      segment: LeaveDaySegment.CUSTOM,
+      startMinute: Math.max(
+        minutesInWorkDateFrame(start.minuteOfDay, 1),
+        previousShift.startMinute,
+      ),
+      endMinute: endsInSameShift
+        ? minutesInWorkDateFrame(end.minuteOfDay, 1)
+        : previousShift.endMinute,
+    });
+    if (endsInSameShift) return [...days.values()];
+  }
+
+  dates.forEach((workDate, index) => {
     const isFirst = index === 0;
     const isLast = index === dates.length - 1;
 
@@ -189,39 +259,64 @@ export const expandLeaveSpan = (params: {
      * 這支函式不認識 `AppError`，也不該認識（同引擎不知道 HTTP 的理由）。
      */
     if (!isFirst && !isLast) {
-      return { workDate, segment: LeaveDaySegment.FULL };
+      days.set(workDate, { workDate, segment: LeaveDaySegment.FULL });
+      return;
     }
 
     const shift = params.shiftOf(workDate);
     if (shift === null) {
-      return { workDate, segment: LeaveDaySegment.FULL };
+      days.set(workDate, { workDate, segment: LeaveDaySegment.FULL });
+      return;
     }
 
     /**
-     * Info: (20260820 - Julian) **單日也要夾進班別區間**（review 第 3 條）。
+     * Info: (20260820 - Julian) **單日也要夾進班別區間**（review 第 3 輪第 3 條）。
      *
      * 這裡原本有一支 `isFirst && isLast` 的捷徑，排在 `shiftOf` **之前**就
-     * 直接回 `CUSTOM(start, end)` —— 於是同一支函式對「單日」與「首日」
-     * 說了兩種話，而差的方向對勞工不利：480 分班（08:00–17:00）下
+     * 直接回 `CUSTOM(start, end)`，於是同一支函式對「單日」與「首日」說了
+     * 兩種話，而差的方向對勞工不利：480 分班（08:00–17:00）下，
+     * 06:00–08:00 扣 120 分（實際重疊 0）、16:00–23:00 扣 420 分（實際 60）。
      *
-     * | 使用者填的 | 舊的單日分支 | 實際與班別的重疊 |
-     * |---|---|---|
-     * | 06:00 – 08:00 | 120 分 | 0 分 |
-     * | 16:00 – 23:00 | 420 分 | 60 分 |
-     *
-     * 而本輪把輸入改成連續時段之後，「單日」正是最常被走到的那一條路徑。
-     *
-     * 現在三種情形共用同一個式子：有界的那一側用使用者填的時刻，
+     * 三種情形因此共用同一個式子：有界的那一側用使用者填的時刻，
      * 沒界的那一側用班別的邊界，兩側再一起夾進班別區間。
-     * `isFirst && isLast` 自然落在「兩側都有界」，不需要自己的分支 ——
-     * **一個不需要特例的規則就不該有特例**，特例正是兩邊分岔的地方。
+     * **一個不需要特例的規則就不該有特例** —— 特例正是兩邊分岔的地方。
      */
     const startMinute = isFirst
       ? Math.max(start.minuteOfDay, shift.startMinute)
       : shift.startMinute;
+
+    /**
+     * Info: (20260820 - Julian) 迄落在跨夜班的午夜後半段時，它屬於**這一天**的班。
+     *
+     * 例：夜班 20:00 → 次日 05:00，使用者填「8/19 20:00 起、8/20 05:00 迄」。
+     * `dates` 是 [8/19, 8/20]，而 8/20 05:00 是 **8/19** 那一班的 1740 分 ——
+     * 因此收在 8/19 這一格，8/20 自己不再貢獻任何一格（見下方的 `return`）。
+     */
+    const endsInThisNightShift =
+      isLast === false &&
+      index === dates.length - 2 &&
+      crossesMidnight(shift) &&
+      minutesInWorkDateFrame(end.minuteOfDay, 1) <= shift.endMinute;
+
     const endMinute = isLast
       ? Math.min(end.minuteOfDay, shift.endMinute)
-      : shift.endMinute;
+      : endsInThisNightShift
+        ? minutesInWorkDateFrame(end.minuteOfDay, 1)
+        : shift.endMinute;
+
+    /**
+     * Info: (20260820 - Julian) 末日的班若跨午夜，而迄落在它開始之前，
+     * 那個時刻屬於**前一天**的班 —— 而前一天就是上一圈已經處理過的那一格。
+     * 這一天自己一分鐘都不涵蓋，整天丟掉。
+     */
+    if (
+      isLast &&
+      !isFirst &&
+      crossesMidnight(shift) &&
+      end.minuteOfDay < shift.startMinute
+    ) {
+      return;
+    }
 
     /**
      * Info: (20260819 - Julian) 首末日**可能一分鐘都不涵蓋**，那時候把它整天丟掉。
@@ -230,27 +325,26 @@ export const expandLeaveSpan = (params: {
      * （迄 07:00、班從 08:00 開始）—— 那一天他本來就不在班上，
      * 沒有任何工時需要請假。
      *
-     * 先前這裡用 `Math.min` / `Math.max` 夾完就直接回，結果夾出一個
-     * **零長度**的區間（`1020 → 1020`），而 `resolveLeaveMinutes` 對 CUSTOM
-     * 要求區間必須往前走，於是丟出結構性錯誤 —— 再被 `buildPlan` 轉成
-     * 「請假時間不符合這個假別的最小單位」。使用者看到的是一句與成因無關的話，
-     * 而他選的時間其實完全合理，只是第一天沒有班。
-     *
-     * 整段都落在班外時（單日的 06:00–08:00）這裡會把唯一的一天也丟掉，
-     * 於是 `buildPlan` 回「非上班日」—— 那正是它註解裡寫的
+     * 夾出零長度區間會讓 `resolveLeaveMinutes` 丟結構性錯誤，再被 `buildPlan`
+     * 轉成「請假時間不符合最小單位」—— 一句與成因無關的話。
+     * 整段都落在班外時（單日的 06:00–08:00）連唯一的一天也丟掉，
+     * 於是 `buildPlan` 回「非上班日」，而那正是它註解裡寫的
      * 「整段區間一天工時都沒有」，訊息與成因對得上。
      */
-    if (startMinute >= endMinute) return null;
+    if (startMinute >= endMinute) return;
 
-    return {
+    days.set(workDate, {
       workDate,
       segment: LeaveDaySegment.CUSTOM,
       startMinute,
       endMinute,
-    };
+    });
   });
 
-  return expanded.filter((day): day is ILeaveSpanDay => day !== null);
+  // Info: (20260820 - Julian) 以工作日排序：前一天的夜班可能排在 `dates` 之前
+  return [...days.values()].sort((left, right) =>
+    left.workDate < right.workDate ? -1 : left.workDate > right.workDate ? 1 : 0,
+  );
 };
 
 /** Info: (20260819 - Julian) 給畫面用的總時數（分鐘）。真正的認列由 L17 試算回答 */

@@ -30,6 +30,7 @@ import {
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
 import { WorkDayType } from "@/constants/attendance";
+import { previousIsoDate } from "@/lib/utils/attendance_time";
 import { LeaveRequestStatus } from "@/constants/leave";
 import {
   LeaveApprovalNodeKind,
@@ -618,10 +619,21 @@ export class LeaveRequestService {
       throw new AppError(API_ERRORS.VA_INVALID_INPUT_DATA);
     }
 
+    /**
+     * Info: (20260820 - Julian) 連**區間的前一天**也要撈（review 第 8 輪）。
+     *
+     * 跨夜班在午夜之後的那一段，所屬的工作日是前一天：夜班 20:00 → 次日 05:00，
+     * 使用者填「8/20 02:00 起」，那三個小時是 **8/19** 那一班的尾巴。
+     * `expandLeaveSpan` 會為此向 `shiftOf` 詢問前一天 —— 沒撈進來的話它問到 null，
+     * 那一段就會被當成「沒有班」而整天丟掉，使用者收到的是「非上班日」，
+     * 而他明明就在上班。
+     *
+     * 多撈一天的代價是一列查詢；少撈一天的代價是夜班工人請不了下半夜的假。
+     */
     const schedules = await this.context.findSchedules({
       accountBookId,
       employeeId,
-      workDates: spanDates,
+      workDates: [previousIsoDate(spanDates[0]), ...spanDates],
     });
 
     let spanDays: ILeaveDayInput[];

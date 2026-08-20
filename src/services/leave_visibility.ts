@@ -124,10 +124,24 @@ export async function assertMayAdjustBalance(params: {
  * 集合不同，而「同一支函式靠參數決定嚴不嚴格」正是下一個人會傳錯的地方。
  *
  * 為什麼授予可以對自己：`accrueForEmployee` 交出去的是
- * `deriveGrantSchedule` 算出的**應然**（到今天為止依年資該有哪些批次），
- * 它補得出漏掉的，生不出多的 —— 對自己跑一次與對別人跑一次結果都一樣，
- * 且它是冪等的。反過來擋掉的話，一個只有一位人資的公司裡，
- * 那位人資的特休永遠沒有人授予得了 —— 那是 B7 撞到過的同一個空集合。
+ * `deriveGrantSchedule` 算出的**應然**（到 `asOfDate` 為止依年資該有哪些批次），
+ * 對自己跑一次與對別人跑一次結果都一樣，且它是冪等的
+ * （`LeaveLedgerEntry.idempotencyKey` 為 `@unique`，鍵含週期起始日，
+ * 同一週期的第二批會撞鍵並回滾整個交易）。反過來擋掉的話，
+ * 一個只有一位人資的公司裡，那位人資的特休永遠沒有人授予得了 ——
+ * 那是 B7 撞到過的同一個空集合。
+ *
+ * ⚠️ Info: (20260820 - Julian) 上面那句「生不出多的」曾經**是假的**
+ * （review 第 9 輪第 2 條）。`asOfDate` 就是排程的 horizon，而它沒有上界，
+ * 曆年制的排程迴圈也沒有防呆上界 —— `"9999-12-31"` 一次請求就鑄出
+ * **7,980 批、239,117 日**（實測）。
+ *
+ * 三道各自獨立的修正之後它才成立：`asOfDate` 不得指向未來（本檔的呼叫端
+ * `accrueForEmployee`）、排程迴圈的 `MAX_PLANNED_CYCLES`（引擎）、
+ * 以及可扣批次的 `cycleStartDate ≤ asOfDate`（`consumableGrantWhere`）。
+ *
+ * 這件事本身值得記著：**用一段站不住的論證放寬一道閘，比沒有那道閘更難被
+ * 下一個人發現** —— 他讀到理由寫得很完整，就不會再去驗那個前提。
  *
  * `actorEmployeeId` 為 null 代表系統（seed 與日後的每日 Worker），
  * 由呼叫端在進來之前就分流，不受此閘限制。
