@@ -128,21 +128,33 @@ describe("readOwnedChainCards", () => {
   it("沒有卡（balanceOf = 0）就只打一次 RPC", async () => {
     stubChain({ balance: BigInt(0) });
 
-    const cards = await readOwnedChainCards(OWNER, ["42"]);
+    const cards = await readOwnedChainCards(OWNER, {
+      hintTokenIds: ["42"],
+      discoverMissing: true,
+    });
 
     expect(cards).toEqual([]);
     expect(asMock(publicClient.readContract)).toHaveBeenCalledTimes(1);
     expect(asMock(publicClient.getLogs)).not.toHaveBeenCalled();
   });
 
-  it("快取的卡號命中時不掃事件", async () => {
+  /**
+   * Info: (20260820 - Luphia) 快取命中的路徑：兩次 view 呼叫拿到卡片內容，不掃事件。
+   *
+   * 「要不要掃」現在由呼叫端決定（`discoverMissing`），所以這裡明寫 false——
+   * 命中與否不再是掃描的觸發條件（見下方「掃描由呼叫端決定」的說明）。
+   */
+  it("快取的卡號命中時取得卡片內容，且不掃事件", async () => {
     stubChain({
       balance: BigInt(1),
       owners: { "42": OWNER },
       uris: { "42": tokenUri("team-1", TEAM_PLAN.TEAM) },
     });
 
-    const cards = await readOwnedChainCards(OWNER, ["42"]);
+    const cards = await readOwnedChainCards(OWNER, {
+      hintTokenIds: ["42"],
+      discoverMissing: false,
+    });
 
     expect(cards).toHaveLength(1);
     expect(cards[0].tokenId).toBe("42");
@@ -167,7 +179,10 @@ describe("readOwnedChainCards", () => {
       { args: { tokenId: BigInt(77) } },
     ]);
 
-    const cards = await readOwnedChainCards(OWNER, ["42"]);
+    const cards = await readOwnedChainCards(OWNER, {
+      hintTokenIds: ["42"],
+      discoverMissing: true,
+    });
 
     expect(cards.map((card) => card.tokenId)).toEqual(["77"]);
   });
@@ -186,7 +201,7 @@ describe("readOwnedChainCards", () => {
       { args: { tokenId: BigInt(9) } },
     ]);
 
-    const cards = await readOwnedChainCards(OWNER, []);
+    const cards = await readOwnedChainCards(OWNER, { discoverMissing: true });
 
     expect(cards.map((card) => card.teamId)).toEqual(["team-3"]);
     expect(asMock(publicClient.getLogs)).toHaveBeenCalledTimes(1);
@@ -195,7 +210,7 @@ describe("readOwnedChainCards", () => {
   it("只掃鑄造（from 為零地址）的事件", async () => {
     stubChain({ balance: BigInt(1), owners: {}, uris: {} });
 
-    await readOwnedChainCards(OWNER, []);
+    await readOwnedChainCards(OWNER, { discoverMissing: true });
 
     const query = asMock(publicClient.getLogs).mock.calls[0][0] as {
       args: { from: string; to: string };
@@ -215,7 +230,9 @@ describe("readOwnedChainCards", () => {
       uris: { "6": tokenUri("team-1", TEAM_PLAN.TEAM) },
     });
 
-    const cards = await readOwnedChainCards(OWNER, ["5", "6"]);
+    const cards = await readOwnedChainCards(OWNER, {
+      hintTokenIds: ["5", "6"],
+    });
 
     expect(cards.map((card) => card.tokenId)).toEqual(["6"]);
   });
@@ -228,7 +245,7 @@ describe("readOwnedChainCards", () => {
       uris: { "3": "ipfs://QmSomethingElse" },
     });
 
-    const cards = await readOwnedChainCards(OWNER, ["3"]);
+    const cards = await readOwnedChainCards(OWNER, { hintTokenIds: ["3"] });
 
     expect(cards).toEqual([{ tokenId: "3", metadata: null, teamId: null }]);
   });
@@ -243,8 +260,44 @@ describe("readOwnedChainCards", () => {
       { args: { tokenId: BigInt(8) } },
     ]);
 
-    const cards = await readOwnedChainCards(OWNER, ["8"]);
+    const cards = await readOwnedChainCards(OWNER, {
+      hintTokenIds: ["8"],
+      discoverMissing: true,
+    });
 
     expect(cards).toHaveLength(1);
+  });
+});
+
+describe("掃描由呼叫端決定（self-review 風險 2）", () => {
+  /**
+   * Info: (20260820 - Luphia) 沒有要求掃描時就**不掃**，即使 `balanceOf` 大於
+   * 已確認的卡片數。
+   *
+   * 那個差額的常見成因不是快取缺漏，而是「這個人持有一張已不屬於自己團隊的卡」
+   *（換過 OWNER、團隊解散）。舊條件會為此在每次 `/auth/me` 做一次全鏈掃描。
+   */
+  it("balanceOf 大於已確認數，但呼叫端沒要求掃描 → 不掃", async () => {
+    stubChain({
+      balance: BigInt(3),
+      owners: { "1": OWNER },
+      uris: { "1": tokenUri("team-1", TEAM_PLAN.TEAM) },
+    });
+
+    const cards = await readOwnedChainCards(OWNER, {
+      hintTokenIds: ["1"],
+      discoverMissing: false,
+    });
+
+    expect(cards).toHaveLength(1);
+    expect(asMock(publicClient.getLogs)).not.toHaveBeenCalled();
+  });
+
+  it("沒有卡（balanceOf = 0）時，即使要求掃描也不掃", async () => {
+    stubChain({ balance: BigInt(0) });
+
+    await readOwnedChainCards(OWNER, { discoverMissing: true });
+
+    expect(asMock(publicClient.getLogs)).not.toHaveBeenCalled();
   });
 });

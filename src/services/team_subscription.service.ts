@@ -215,6 +215,11 @@ export async function getTeamSubscriptionView(params: {
         subscription?.pendingPlanId && subscription.currentPeriodEnd
           ? Math.floor(subscription.currentPeriodEnd.getTime() / 1000)
           : null,
+      /**
+       * Info: (20260820 - Luphia) `nftSyncedAt` 為 null＝鏈上那份還沒寫上去。
+       * 沒有訂閱列時為 false：沒有訂閱就沒有卡要同步。
+       */
+      cardSyncPending: subscription ? subscription.nftSyncedAt === null : false,
       quota,
       teamTotals,
       faithTokensPerCredit: billing.tokensPerCredit,
@@ -301,6 +306,21 @@ export interface IChangeSubscriptionResult {
   effectiveAt?: number;
 }
 
+/**
+ * Info: (20260820 - Luphia) 當期的計費週期存在最後一張訂單的 data 裡，不在訂閱列上。
+ *
+ * 讀不到時回月繳（與 `applyTeamSubscriptionInTx` 的預設一致）：那是保守的一側，
+ * 猜錯只會讓「改成年繳」多走一次建單，而不會把排程默默清掉。
+ */
+async function resolveCurrentBillingInterval(
+  subscription: { latestOrderId: string | null } | null,
+): Promise<BillingInterval> {
+  if (!subscription?.latestOrderId) return BILLING_INTERVAL.MONTH;
+  const order = await paymentRepo.getOrderById(subscription.latestOrderId);
+  const data = order?.data as { billingInterval?: BillingInterval } | null;
+  return data?.billingInterval ?? BILLING_INTERVAL.MONTH;
+}
+
 export async function changeTeamSubscription(params: {
   userId: string;
   teamId: string;
@@ -327,15 +347,32 @@ export async function changeTeamSubscription(params: {
      *
      * 沒有這一條，使用者就沒有回頭路：畫面上他的方案還是團隊版（正確），
      * 於是再按一次團隊版會走升級路徑——建一張新單、再收一整期的錢。
+     *
+     * Info: (20260820 - Luphia) **但要先分辨他改的是不是計費週期**（self-review 小項）。
+     *
+     * `TeamSubscription` 沒有 `billingInterval` 欄位，當期的週期只存在於最後一張
+     * 訂單的 data 裡。原本只比方案代號，於是「排程降級中的月繳戶想改成年繳」
+     * 會被當成取消降級——排程清掉了、年繳沒生效，而畫面沒有任何訊息。
+     *
+     * 週期相同 → 取消排程（他就是要留在原方案）；
+     * 週期不同 → 也取消排程，但**繼續往下走建單**（他要的是換週期，那是續購）。
      */
+    const currentInterval = await resolveCurrentBillingInterval(subscription);
+    const cancelsPendingOnly =
+      Boolean(subscription?.pendingPlanId) &&
+      planId === currentPlanId &&
+      billingInterval === currentInterval;
+
     if (subscription?.pendingPlanId && planId === currentPlanId) {
       await teamSubscriptionRepo.cancelPendingPlanChange(teamId);
-      return {
-        orderId: null,
-        planId: currentPlanId,
-        pendingPlanId: null,
-        effectiveAt: nowSec,
-      };
+      if (cancelsPendingOnly) {
+        return {
+          orderId: null,
+          planId: currentPlanId,
+          pendingPlanId: null,
+          effectiveAt: nowSec,
+        };
+      }
     }
 
     if (isPlanDowngrade(currentPlanId, planId)) {

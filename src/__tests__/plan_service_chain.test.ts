@@ -43,7 +43,7 @@ jest.mock("@/repositories/team.repo", () => ({
 jest.mock("@/repositories/team_subscription.repo", () => ({
   teamSubscriptionRepo: {
     getByTeamId: jest.fn(async () => null),
-    listCardTokenIds: jest.fn(async () => new Map()),
+    listCardSyncState: jest.fn(async () => new Map()),
     cacheCardTokenId: jest.fn(async () => undefined),
   },
 }));
@@ -61,6 +61,41 @@ jest.mock("@/services/subscription_nft.service", () => ({
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
 
 const NOW_SEC = 1_760_000_000;
+const NOW_MS = NOW_SEC * 1000;
+
+/**
+ * Info: (20260820 - Luphia) 「已同步完成」的卡片狀態。
+ * 預設狀態刻意是**已同步**：待同步是特例，而特例要在案例裡明寫出來，
+ * 否則「鏈上為準」那幾條會在不知不覺間變成測「待同步走 DB」。
+ */
+function syncedState(teamId: string, tokenId: string | null) {
+  return new Map([
+    [
+      teamId,
+      {
+        tokenId,
+        syncedAt: new Date(NOW_MS - 60_000),
+        attempts: 0,
+        updatedAtMs: NOW_MS - 120_000,
+      },
+    ],
+  ]);
+}
+
+// Info: (20260820 - Luphia) 待同步（鏈上那份已知過期）且在寬限內
+function pendingState(teamId: string, tokenId: string | null = null) {
+  return new Map([
+    [
+      teamId,
+      {
+        tokenId,
+        syncedAt: null,
+        attempts: 0,
+        updatedAtMs: NOW_MS - 30_000,
+      },
+    ],
+  ]);
+}
 const ADDRESS = "0x00000000000000000000000000000000000000b2";
 
 function ownedTeam(teamId: string, planId: string, overrides = {}) {
@@ -95,7 +130,7 @@ function chainCard(
 beforeEach(() => {
   jest.clearAllMocks();
   asMock(teamRepo.listOwnedTeamsWithSubscription).mockResolvedValue([]);
-  asMock(teamSubscriptionRepo.listCardTokenIds).mockResolvedValue(new Map());
+  asMock(teamSubscriptionRepo.listCardSyncState).mockResolvedValue(new Map());
   asMock(teamSubscriptionRepo.cacheCardTokenId).mockResolvedValue(undefined);
   asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(null);
   asMock(readOwnedChainCards).mockResolvedValue([]);
@@ -276,8 +311,8 @@ describe("快取回填", () => {
     asMock(teamRepo.listOwnedTeamsWithSubscription).mockResolvedValue([
       ownedTeam("team-1", TEAM_PLAN.TEAM),
     ]);
-    asMock(teamSubscriptionRepo.listCardTokenIds).mockResolvedValue(
-      new Map([["team-1", "42"]]),
+    asMock(teamSubscriptionRepo.listCardSyncState).mockResolvedValue(
+      syncedState("team-1", "42"),
     );
     asMock(readOwnedChainCards).mockResolvedValue([
       chainCard("team-1", TEAM_PLAN.TEAM, "42"),
@@ -319,13 +354,17 @@ describe("快取回填", () => {
     asMock(teamRepo.listOwnedTeamsWithSubscription).mockResolvedValue([
       ownedTeam("team-1", TEAM_PLAN.TEAM),
     ]);
-    asMock(teamSubscriptionRepo.listCardTokenIds).mockResolvedValue(
-      new Map([["team-1", "42"]]),
+    asMock(teamSubscriptionRepo.listCardSyncState).mockResolvedValue(
+      syncedState("team-1", "42"),
     );
 
     await getUserPlan({ userId: "user-1", address: ADDRESS, nowSec: NOW_SEC });
 
-    expect(asMock(readOwnedChainCards)).toHaveBeenCalledWith(ADDRESS, ["42"]);
+    expect(asMock(readOwnedChainCards)).toHaveBeenCalledWith(ADDRESS, {
+      hintTokenIds: ["42"],
+      // Info: (20260820 - Luphia) 卡號已知 → 不必掃事件（見下方「掃描的觸發條件」）
+      discoverMissing: false,
+    });
   });
 });
 
@@ -409,4 +448,175 @@ describe("方案目錄", () => {
     );
     expect(getPlanUnitPrice(TEAM_PLAN.FREE, BILLING_INTERVAL.MONTH)).toBe(0);
   });
+});
+
+describe("待同步期間以 DB 顯示（self-review 嚴重項）", () => {
+  /**
+   * Info: (20260820 - Luphia) 續訂後的空窗：DB 已是新週期，而鏈上那張卡的
+   * `period_end` 仍是舊的（折算為 free）。照鏈上顯示會把剛續訂成功的付費戶
+   * 打回免費版，而且**每期都會發生一次**。
+   */
+  it("卡片待同步且鏈上讀到過期的卡 → 顯示 DB 的付費方案", async () => {
+    asMock(teamRepo.listOwnedTeamsWithSubscription).mockResolvedValue([
+      ownedTeam("team-1", TEAM_PLAN.TEAM),
+    ]);
+    asMock(teamSubscriptionRepo.listCardSyncState).mockResolvedValue(
+      pendingState("team-1", "42"),
+    );
+    asMock(readOwnedChainCards).mockResolvedValue([
+      chainCard("team-1", TEAM_PLAN.TEAM, "42", NOW_SEC - 1),
+    ]);
+
+    const snapshot = await getUserPlan({
+      userId: "user-1",
+      address: ADDRESS,
+      nowSec: NOW_SEC,
+    });
+
+    expect(snapshot.plan).toBe(TEAM_PLAN.TEAM);
+    expect(snapshot.source).toBe(PLAN_SOURCE.PENDING_CHAIN);
+    // Info: (20260820 - Luphia) 待同步不算不一致，否則每期續訂都會產生假告警
+    expect(snapshot.mismatches).toBe(0);
+  });
+
+  it("首次訂閱、卡片還沒鑄出 → 顯示 DB 的付費方案", async () => {
+    asMock(teamRepo.listOwnedTeamsWithSubscription).mockResolvedValue([
+      ownedTeam("team-1", TEAM_PLAN.BUSINESS),
+    ]);
+    asMock(teamSubscriptionRepo.listCardSyncState).mockResolvedValue(
+      pendingState("team-1", null),
+    );
+    asMock(readOwnedChainCards).mockResolvedValue([]);
+
+    const snapshot = await getUserPlan({
+      userId: "user-1",
+      address: ADDRESS,
+      nowSec: NOW_SEC,
+    });
+
+    expect(snapshot.plan).toBe(TEAM_PLAN.BUSINESS);
+    expect(snapshot.source).toBe(PLAN_SOURCE.PENDING_CHAIN);
+  });
+
+  /**
+   * Info: (20260820 - Luphia) 界：卡住的同步不該讓「顯示付費」永久靠 DB 撐著。
+   * 超過寬限就回到鏈上為準（使用者會看到免費版），而那是要修 worker 的訊號。
+   */
+  it("待同步超過寬限 → 回到鏈上為準", async () => {
+    asMock(teamRepo.listOwnedTeamsWithSubscription).mockResolvedValue([
+      ownedTeam("team-1", TEAM_PLAN.TEAM),
+    ]);
+    asMock(teamSubscriptionRepo.listCardSyncState).mockResolvedValue(
+      new Map([
+        [
+          "team-1",
+          {
+            tokenId: "42",
+            syncedAt: null,
+            attempts: 0,
+            // Info: (20260820 - Luphia) 16 分鐘前更新，寬限為 15 分鐘
+            updatedAtMs: NOW_MS - 16 * 60_000,
+          },
+        ],
+      ]),
+    );
+    asMock(readOwnedChainCards).mockResolvedValue([
+      chainCard("team-1", TEAM_PLAN.TEAM, "42", NOW_SEC - 1),
+    ]);
+
+    const snapshot = await getUserPlan({
+      userId: "user-1",
+      address: ADDRESS,
+      nowSec: NOW_SEC,
+    });
+
+    expect(snapshot.plan).toBe(TEAM_PLAN.FREE);
+    expect(snapshot.source).toBe(PLAN_SOURCE.CHAIN);
+  });
+
+  // Info: (20260820 - Luphia) 已同步完成的列不受影響：這條防止「一律走 DB」的退化
+  it("已同步完成時仍以鏈上為準", async () => {
+    asMock(teamRepo.listOwnedTeamsWithSubscription).mockResolvedValue([
+      ownedTeam("team-1", TEAM_PLAN.TEAM),
+    ]);
+    asMock(teamSubscriptionRepo.listCardSyncState).mockResolvedValue(
+      syncedState("team-1", "42"),
+    );
+    asMock(readOwnedChainCards).mockResolvedValue([]);
+
+    const snapshot = await getUserPlan({
+      userId: "user-1",
+      address: ADDRESS,
+      nowSec: NOW_SEC,
+    });
+
+    expect(snapshot.plan).toBe(TEAM_PLAN.FREE);
+    expect(snapshot.source).toBe(PLAN_SOURCE.CHAIN);
+  });
+});
+
+describe("掃描的觸發條件（self-review 風險 2）", () => {
+  /**
+   * Info: (20260820 - Luphia) 掃事件只在「DB 說付費、卻沒有卡號」時才值得做。
+   *
+   * 原本的條件是 `已確認卡片數 < balanceOf`，而持有「已不屬於自己團隊」的卡時
+   * 那個條件永遠成立——每次 `/auth/me` 都會做一次 fromBlock 0 的全鏈掃描。
+   */
+  it("付費團隊沒有卡號 → 要求掃描", async () => {
+    asMock(teamRepo.listOwnedTeamsWithSubscription).mockResolvedValue([
+      ownedTeam("team-1", TEAM_PLAN.TEAM),
+    ]);
+    asMock(teamSubscriptionRepo.listCardSyncState).mockResolvedValue(
+      syncedState("team-1", null),
+    );
+
+    await getUserPlan({ userId: "user-1", address: ADDRESS, nowSec: NOW_SEC });
+
+    expect(asMock(readOwnedChainCards)).toHaveBeenCalledWith(
+      ADDRESS,
+      expect.objectContaining({ discoverMissing: true }),
+    );
+  });
+
+  it("免費團隊沒有卡號 → 不掃描（免費方案本來就沒有卡）", async () => {
+    asMock(teamRepo.listOwnedTeamsWithSubscription).mockResolvedValue([
+      ownedTeam("team-1", TEAM_PLAN.FREE),
+    ]);
+    asMock(teamSubscriptionRepo.listCardSyncState).mockResolvedValue(
+      syncedState("team-1", null),
+    );
+
+    await getUserPlan({ userId: "user-1", address: ADDRESS, nowSec: NOW_SEC });
+
+    expect(asMock(readOwnedChainCards)).toHaveBeenCalledWith(
+      ADDRESS,
+      expect.objectContaining({ discoverMissing: false }),
+    );
+  });
+});
+
+describe("鏈上讀取逾時（self-review 風險 1）", () => {
+  /**
+   * Info: (20260820 - Luphia) `catch` 擋得住失敗，擋不住**慢**。
+   * `/auth/me` 是所有畫面的前置條件，逾時必須退回 DB 而不是一起掛住。
+   */
+  it("讀取遲遲不回時退回 DB，不會一直等", async () => {
+    asMock(teamRepo.listOwnedTeamsWithSubscription).mockResolvedValue([
+      ownedTeam("team-1", TEAM_PLAN.TEAM),
+    ]);
+    asMock(teamSubscriptionRepo.listCardSyncState).mockResolvedValue(
+      syncedState("team-1", "42"),
+    );
+    // Info: (20260820 - Luphia) 永遠不 resolve：逾時是唯一的出路
+    asMock(readOwnedChainCards).mockReturnValue(new Promise(() => {}));
+
+    const snapshot = await getUserPlan({
+      userId: "user-1",
+      address: ADDRESS,
+      nowSec: NOW_SEC,
+    });
+
+    expect(snapshot.source).toBe(PLAN_SOURCE.DB);
+    expect(snapshot.plan).toBe(TEAM_PLAN.TEAM);
+  }, 10_000);
 });

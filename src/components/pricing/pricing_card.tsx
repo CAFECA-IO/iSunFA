@@ -9,8 +9,8 @@ interface IPricingProps {
    * 卡片原本自己 import `SUBSCRIPTION_PLAN_PRICE`——那是「有哪些方案、多少錢」
    * 的第三份讀法，而它與 server 實際收的金額之間沒有任何東西保證一致。
    */
-  monthlyPrice: number;
-  yearlyPrice: number;
+  monthlyPrice: number | null;
+  yearlyPrice: number | null;
   billingInterval: "month" | "year";
   features: (string | { text: string; tooltip?: string })[];
   popular?: boolean;
@@ -33,8 +33,18 @@ export default function PricingCard({
 
   const planPriceValue =
     billingInterval === "month" ? monthlyPrice : yearlyPrice;
-  const price =
-    planPriceValue === 0
+  /**
+   * Info: (20260820 - Luphia) 價格取不到時**不顯示數字、也不讓人按**
+   *（self-review 風險 3）。
+   *
+   * 顯示 0 會被讀成「免費」——那是對外報價出錯，而錯的方向是我們吃虧之外還得
+   * 跟客戶解釋。停用購買鈕與 `PricingContainer` 的 `unknown planKey` 一致，
+   * 兩處不會再互相矛盾。
+   */
+  const priceUnavailable = planPriceValue === null;
+  const price = priceUnavailable
+    ? "—"
+    : planPriceValue === 0
       ? t("pricing.free_cost")
       : `NT$ ${planPriceValue.toLocaleString()}`;
 
@@ -75,7 +85,7 @@ export default function PricingCard({
            */}
           <span className="text-sm leading-6 font-semibold text-gray-600">
             /{" "}
-            {planPriceValue > 0
+            {(planPriceValue ?? 0) > 0
               ? t(
                   billingInterval === "month"
                     ? "pricing.per_seat_monthly"
@@ -93,7 +103,7 @@ export default function PricingCard({
          * 規範 team_seat_billing_and_email_invitation.md §1）：卡片上的數字是**每位成員**的費用，
          * 不是團隊總額。免費版不依人數計費，故不顯示此行。
          */}
-        {planPriceValue > 0 && (
+        {(planPriceValue ?? 0) > 0 && (
           <p className="mt-2 text-xs leading-5 text-gray-500">
             {t("pricing.price_multiply_note")}
           </p>
@@ -129,10 +139,10 @@ export default function PricingCard({
       </div>
       <button
         aria-describedby={planKey}
-        disabled={isCurrentPlan}
+        disabled={isCurrentPlan || priceUnavailable}
         onClick={onSelect}
         className={`mt-8 block w-full rounded-md px-3 py-2 text-center text-sm leading-6 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
-          isCurrentPlan
+          isCurrentPlan || priceUnavailable
             ? "cursor-not-allowed bg-gray-100 text-gray-400 ring-1 ring-gray-200"
             : popular
               ? "bg-orange-600 text-white shadow-sm hover:bg-orange-500 focus-visible:outline-orange-600"

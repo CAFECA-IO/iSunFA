@@ -127,27 +127,79 @@ export function resolveUnanimousPlan(
 }
 
 /**
- * Info: (20260819 - Luphia) 同一個團隊，DB 與鏈上各說一個方案時採**鏈上為準**
- *（產品決定 20260819：鏈上是帳本，DB 是快取）。
+ * Info: (20260819 - Luphia) 同一個團隊，DB 與鏈上各說一個方案時的取捨。
  *
- * 「為準」不等於「照抄」：兩者都經過各自的折算（過期一律 free），因此這裡拿到的
- * 已經是兩個**有效**方案。差異只有兩種成因，而處理方式相同——回鏈上那個，並讓
- * 呼叫端把差異記下來（`plan.service` 會警示並回填快取）：
+ * 產品決定 20260819：**鏈上為準，DB 是快取**。但「為準」的前提是那份鏈上資料
+ * **確實是最新的**，而這件事我們自己知道——`nftSyncedAt IS NULL` 就是「我們還沒
+ * 把新內容寫上去」的證據（見 `constants/subscription_nft`）。
  *
- * - **鏈上有、DB 沒有**：付款履行漏掉、或 DB 被還原到舊備份。照 DB 顯示會把
- *   一位付費戶打回免費版，而他手上握著鏈上憑證——那是最難解釋的一種錯。
- * - **DB 有、鏈上沒有**：卡片還沒鑄（worker 落後一分鐘）、或持有人把卡轉走了。
+ * 因此判斷是「取已知較新的那一份」，而新舊**可知、不是猜**：
  *
- * 第二種是這個決定唯一的代價：卡片尚未鑄出的那一分鐘內，徽章會顯示免費版。
- * 因此 `plan.service` 在鏈上讀不到任何卡（含 RPC 失敗）時退回 DB——
- * 「讀不到」與「讀到了但沒有」必須分開，前者不是資訊。
+ * | 鏈上那份 | 採信 | 為什麼 |
+ * |---|---|---|
+ * | 已確認同步 | **鏈上** | 此時與 DB 不一致是真的不一致（履行漏掉、DB 還原到舊備份），而使用者手上握著憑證 |
+ * | 已知過期（待同步） | **DB** | 我們自己還沒寫上去。剛續訂成功的卡片 `period_end` 仍是舊的，折算為 free——照鏈上顯示會把付費戶打回免費版，而且**每期續訂都會發生一次** |
+ *
+ * 第二列有界（`SUBSCRIPTION_CARD_PENDING_GRACE_MS`）：卡住的同步不該讓「顯示付費」
+ * 永久靠 DB 撐著。超過就回到第一列，並讓呼叫端以 error 記錄——那時該修 worker。
+ *
+ * 「鏈上**讀不到**」是第三種情形，不在這裡：那不是資訊（RPC 失敗、合約未部署），
+ * 由 `plan.service` 退回 DB 並在回應標明來源。
  */
+export const PLAN_RECONCILE_SOURCE = {
+  CHAIN: "CHAIN",
+  // Info: (20260820 - Luphia) 鏈上那份已知過期（待同步且在寬限內）：以 DB 為顯示依據
+  PENDING_CHAIN: "PENDING_CHAIN",
+} as const;
+
+export type PlanReconcileSource =
+  (typeof PLAN_RECONCILE_SOURCE)[keyof typeof PLAN_RECONCILE_SOURCE];
+
 export function reconcilePlan(params: {
   dbPlan: TeamPlanId;
   chainPlan: TeamPlanId;
-}): { plan: TeamPlanId; mismatch: boolean } {
+  // Info: (20260820 - Luphia) 鏈上那份是否**已知過期**（待同步且仍在寬限內）
+  chainStale: boolean;
+}): {
+  plan: TeamPlanId;
+  mismatch: boolean;
+  source: PlanReconcileSource;
+} {
+  if (params.chainStale) {
+    return {
+      plan: params.dbPlan,
+      /**
+       * Info: (20260820 - Luphia) 待同步期間**不算不一致**：兩者本來就該不同
+       * （我們還沒寫上去）。算進去的話，每一次續訂都會產生一筆假的告警，
+       * 而真正需要注意的不一致就淹沒在裡面。
+       */
+      mismatch: false,
+      source: PLAN_RECONCILE_SOURCE.PENDING_CHAIN,
+    };
+  }
   return {
     plan: params.chainPlan,
     mismatch: params.chainPlan !== params.dbPlan,
+    source: PLAN_RECONCILE_SOURCE.CHAIN,
   };
+}
+
+/**
+ * Info: (20260820 - Luphia) 鏈上那份是不是「已知過期」——純判斷，供 `plan.service` 呼叫。
+ *
+ * 三個條件同時成立才算：**沒有同步時間**（待辦）、**還沒放棄**（重試未達上限）、
+ * 且**還在寬限內**。後兩個是界：卡住的同步（黑名單、缺角色）會停在待辦，
+ * 而沒有界的話那一列會永久以 DB 顯示付費，鏈上卻沒有任何憑證。
+ */
+export function isChainCopyStale(params: {
+  syncedAt: Date | null;
+  attempts: number;
+  updatedAtMs: number;
+  nowMs: number;
+  maxAttempts: number;
+  graceMs: number;
+}): boolean {
+  if (params.syncedAt !== null) return false;
+  if (params.attempts >= params.maxAttempts) return false;
+  return params.nowMs - params.updatedAtMs <= params.graceMs;
 }

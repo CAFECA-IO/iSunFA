@@ -10,11 +10,18 @@ import {
   TeamPlanId,
 } from "@/constants/subscription_quota";
 import {
+  isChainCopyStale,
+  PLAN_RECONCILE_SOURCE,
   reconcilePlan,
   resolveChainCardPlan,
   resolveEffectivePlanId,
   resolveHighestPlan,
 } from "@/lib/subscription/plan_rules";
+import {
+  CHAIN_CARD_READ_TIMEOUT_MS,
+  SUBSCRIPTION_CARD_MAX_SYNC_ATTEMPTS,
+  SUBSCRIPTION_CARD_PENDING_GRACE_MS,
+} from "@/constants/subscription_nft";
 import { logger } from "@/lib/utils/logger";
 import { teamRepo } from "@/repositories/team.repo";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
@@ -121,17 +128,27 @@ export async function getTeamEntitlement(params: {
 
 export interface IUserPlanTeam {
   teamId: string;
-  // Info: (20260819 - Luphia) 對帳後的方案（鏈上為準）
+  // Info: (20260819 - Luphia) 對帳後的方案（鏈上為準；待同步期間為 DB）
   plan: TeamPlanId;
   dbPlan: TeamPlanId;
   chainPlan: TeamPlanId;
   tokenId: string | null;
+  // Info: (20260820 - Luphia) 這一團的答案是哪裡來的（逐團，因為每團的同步狀態不同）
+  source: PlanSource;
 }
 
 export const PLAN_SOURCE = {
-  // Info: (20260819 - Luphia) 鏈上讀到了（含「讀到了但沒有卡」），以鏈上為準
+  // Info: (20260819 - Luphia) 鏈上讀到了、且那份是最新的，以鏈上為準
   CHAIN: "CHAIN",
-  // Info: (20260819 - Luphia) 鏈上**讀不到**（未部署、RPC 失敗），退回 DB
+  /**
+   * Info: (20260820 - Luphia) 鏈上那份**已知過期**（我們還沒寫上去），本次以 DB 顯示。
+   *
+   * 這不是降級的處置，是誠實的標籤：剛續訂或剛訂閱的那段時間，卡片上的
+   * `period_end` 仍是舊的，照鏈上顯示會把付費戶打回免費版。前端可據此顯示
+   * 「鏈上憑證產生中」而不是假裝已經有卡。
+   */
+  PENDING_CHAIN: "PENDING_CHAIN",
+  // Info: (20260819 - Luphia) 鏈上**讀不到**（未部署、RPC 失敗、逾時），退回 DB
   DB: "DB",
 } as const;
 
@@ -178,6 +195,7 @@ export async function getUserPlan(params: {
   nowSec: number;
 }): Promise<IUserPlanSnapshot> {
   const { userId, address, nowSec } = params;
+  const nowMs = nowSec * 1000;
   const log = logger.child({ service: "PlanService" });
 
   const owned = await teamRepo.listOwnedTeamsWithSubscription(userId);
@@ -188,24 +206,60 @@ export async function getUserPlan(params: {
     ]),
   );
 
-  const cachedTokenIds = await teamSubscriptionRepo.listCardTokenIds(
+  const cardState = await teamSubscriptionRepo.listCardSyncState(
     owned.map((team) => team.teamId),
   );
 
+  const staleTeams = new Set(
+    owned
+      .filter((team) => {
+        const state = cardState.get(team.teamId);
+        if (!state) return false;
+        return isChainCopyStale({
+          syncedAt: state.syncedAt,
+          attempts: state.attempts,
+          updatedAtMs: state.updatedAtMs,
+          nowMs,
+          maxAttempts: SUBSCRIPTION_CARD_MAX_SYNC_ATTEMPTS,
+          graceMs: SUBSCRIPTION_CARD_PENDING_GRACE_MS,
+        });
+      })
+      .map((team) => team.teamId),
+  );
+
+  /**
+   * Info: (20260820 - Luphia) 只有「DB 說付費、卻沒有卡號」時才值得掃鏈上事件
+   *（self-review 風險 2）。
+   *
+   * 原本的條件是 `已確認卡片數 < balanceOf`，看似只在快取缺漏時掃一次。但持有
+   * 「已不屬於自己團隊」的卡時（換過 OWNER、團隊解散），那張卡永遠不在 hint 裡，
+   * 於是條件永遠成立——**每次 `/auth/me` 都會對合約做一次 fromBlock 0 的全鏈掃描**。
+   *
+   * 由 service 算出「該找、但找不到」的數量再交給讀取端：掃描要處理的情形只有一種
+   * ——DB 認為這個團隊付費，而我們不知道它的卡號（履行漏掉、DB 還原到舊備份）。
+   */
+  const missingCards = owned.filter(
+    (team) =>
+      (dbPlans.get(team.teamId) ?? TEAM_PLAN.FREE) !== TEAM_PLAN.FREE &&
+      !cardState.get(team.teamId)?.tokenId,
+  ).length;
+
   const chain = await readChainPlans({
     address,
-    hintTokenIds: [...cachedTokenIds.values()].filter(
-      (tokenId): tokenId is string => Boolean(tokenId),
-    ),
+    hintTokenIds: [...cardState.values()]
+      .map((state) => state.tokenId)
+      .filter((tokenId): tokenId is string => Boolean(tokenId)),
+    discoverMissing: missingCards > 0,
     nowSec,
     onFailure: (reason) =>
-      log.warn("鏈上方案讀取失敗，本次以 DB 為準", { userId, reason }),
+      log.warn("鏈上方案讀取失敗或逾時，本次以 DB 為準", { userId, reason }),
   });
 
   const teams: IUserPlanTeam[] = owned.map((team) => {
     const dbPlan = dbPlans.get(team.teamId) ?? TEAM_PLAN.FREE;
     const card = chain.available ? chain.byTeam.get(team.teamId) : undefined;
     const chainPlan = card?.plan ?? TEAM_PLAN.FREE;
+    const cachedTokenId = cardState.get(team.teamId)?.tokenId ?? null;
 
     if (!chain.available) {
       return {
@@ -213,15 +267,38 @@ export async function getUserPlan(params: {
         plan: dbPlan,
         dbPlan,
         chainPlan,
-        tokenId: cachedTokenIds.get(team.teamId) ?? null,
+        tokenId: cachedTokenId,
+        source: PLAN_SOURCE.DB,
       };
     }
 
-    const { plan, mismatch } = reconcilePlan({ dbPlan, chainPlan });
+    const chainStale = staleTeams.has(team.teamId);
+    const { plan, mismatch, source } = reconcilePlan({
+      dbPlan,
+      chainPlan,
+      chainStale,
+    });
     if (mismatch) {
       log.warn("鏈上方案與 DB 不一致，以鏈上為準", {
         userId,
         teamId: team.teamId,
+        dbPlan,
+        chainPlan,
+      });
+    }
+    /**
+     * Info: (20260820 - Luphia) 待辦停太久要看得見。
+     *
+     * 寬限內以 DB 顯示是刻意的；**超過寬限**的那一列會回到鏈上為準，於是使用者
+     * 突然被打回免費版。那不是顯示問題而是 worker 卡住了，因此以 error 記錄——
+     * 只留 warn 的話它會混在每期續訂都會出現的正常訊息裡。
+     */
+    const state = cardState.get(team.teamId);
+    if (!chainStale && state && state.syncedAt === null) {
+      log.error("訂閱卡待同步已超過寬限，方案顯示改回鏈上結果", {
+        userId,
+        teamId: team.teamId,
+        attempts: state.attempts,
         dbPlan,
         chainPlan,
       });
@@ -231,13 +308,17 @@ export async function getUserPlan(params: {
       plan,
       dbPlan,
       chainPlan,
-      tokenId: card?.tokenId ?? cachedTokenIds.get(team.teamId) ?? null,
+      tokenId: card?.tokenId ?? cachedTokenId,
+      source:
+        source === PLAN_RECONCILE_SOURCE.PENDING_CHAIN
+          ? PLAN_SOURCE.PENDING_CHAIN
+          : PLAN_SOURCE.CHAIN,
     };
   });
 
   // Info: (20260819 - Luphia) 快取被鏈上糾正（發現 DB 不知道的卡）：只補卡號，不動計費資料
   if (chain.available) {
-    await backfillTokenIdCache(teams, cachedTokenIds, log);
+    await backfillTokenIdCache(teams, cardState, log);
   }
 
   const ownedPlans = teams.map((team) => team.plan);
@@ -245,7 +326,16 @@ export async function getUserPlan(params: {
     plan: resolveHighestPlan(ownedPlans),
     ownedPlans,
     teams,
-    source: chain.available ? PLAN_SOURCE.CHAIN : PLAN_SOURCE.DB,
+    /**
+     * Info: (20260820 - Luphia) 整體來源取**最保守**的那一個：只要有一個團隊
+     * 還在等鏈上，整份快照就標 PENDING_CHAIN——前端要說「憑證產生中」，
+     * 而它拿到的是一個徽章用的單一值。
+     */
+    source: !chain.available
+      ? PLAN_SOURCE.DB
+      : teams.some((team) => team.source === PLAN_SOURCE.PENDING_CHAIN)
+        ? PLAN_SOURCE.PENDING_CHAIN
+        : PLAN_SOURCE.CHAIN,
     mismatches: teams.filter((team) => team.plan !== team.dbPlan).length,
   };
 }
@@ -260,6 +350,7 @@ export async function getUserPlan(params: {
 async function readChainPlans(params: {
   address?: string | null;
   hintTokenIds: string[];
+  discoverMissing: boolean;
   nowSec: number;
   onFailure: (reason: string) => void;
 }): Promise<{
@@ -270,15 +361,30 @@ async function readChainPlans(params: {
   if (!params.address) return { available: false, byTeam };
 
   try {
-    const cards = await readOwnedChainCards(
-      params.address,
-      params.hintTokenIds,
+    const cards = await withTimeout(
+      readOwnedChainCards(params.address, {
+        hintTokenIds: params.hintTokenIds,
+        discoverMissing: params.discoverMissing,
+      }),
+      CHAIN_CARD_READ_TIMEOUT_MS,
     );
     for (const card of cards) {
       if (!card.teamId) continue;
       const plan = resolveChainCardPlan(card.metadata, params.nowSec);
       const existing = byTeam.get(card.teamId);
-      if (!existing || resolveHighestPlan([existing.plan, plan]) === plan) {
+      /**
+       * Info: (20260820 - Luphia) 同一團有多張卡時：先比方案（取高），同高則取
+       * **號碼小的那一張**（最早鑄出的）。
+       *
+       * 重鑄本來就不該發生（指紋冪等擋著），但真發生時「回哪一個卡號」不能取決於
+       * 迴圈次序——那會讓同一次查詢在不同時候回不同的卡號，而卡號會被寫回快取。
+       */
+      if (
+        !existing ||
+        resolveHighestPlan([existing.plan, plan]) !== existing.plan ||
+        (existing.plan === plan &&
+          BigInt(card.tokenId) < BigInt(existing.tokenId))
+      ) {
         byTeam.set(card.teamId, { plan, tokenId: card.tokenId });
       }
     }
@@ -286,6 +392,34 @@ async function readChainPlans(params: {
   } catch (error) {
     params.onFailure(error instanceof Error ? error.message : String(error));
     return { available: false, byTeam };
+  }
+}
+
+/**
+ * Info: (20260820 - Luphia) 逾時保護（self-review 風險 1）。
+ *
+ * `catch` 擋得住失敗，擋不住**慢**：RPC 掛住時 `/auth/me` 會一起掛住，而它是所有
+ * 畫面的前置條件。逾時的處置與失敗相同——退回 DB，並在回應標明來源。
+ *
+ * 逾時之後那個 promise 仍會跑完（viem 無法取消），因此掛一個 `catch` 吞掉它的
+ * 錯誤：沒有這一行，逾時後的失敗會變成 unhandled rejection，在某些 Node 設定下
+ * 直接讓行程結束。
+ */
+async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: NodeJS.Timeout | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`鏈上讀取逾時（${ms}ms）`)),
+          ms,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+    promise.catch(() => undefined);
   }
 }
 
@@ -299,12 +433,12 @@ async function readChainPlans(params: {
  */
 async function backfillTokenIdCache(
   teams: IUserPlanTeam[],
-  cached: Map<string, string | null>,
+  cardState: Map<string, { tokenId: string | null }>,
   log: ReturnType<typeof logger.child>,
 ): Promise<void> {
   for (const team of teams) {
     if (!team.tokenId) continue;
-    if (cached.get(team.teamId)) continue;
+    if (cardState.get(team.teamId)?.tokenId) continue;
     try {
       await teamSubscriptionRepo.cacheCardTokenId(team.teamId, team.tokenId);
       log.info("以鏈上結果回填卡號快取", {

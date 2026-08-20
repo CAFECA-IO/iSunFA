@@ -3,6 +3,7 @@ import { decodeEventLog, getAddress, type Log } from "viem";
 import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
 import {
   SUBSCRIPTION_CARD_ACTION,
+  SUBSCRIPTION_CARD_DELETED_FINGERPRINT,
   SUBSCRIPTION_CARD_MAX_SYNC_ATTEMPTS,
   SUBSCRIPTION_CARD_SYNC_BATCH_SIZE,
   SubscriptionCardAction,
@@ -173,8 +174,9 @@ export interface IChainCard {
  */
 export async function readOwnedChainCards(
   address: string,
-  hintTokenIds: string[] = [],
+  options: { hintTokenIds?: string[]; discoverMissing?: boolean } = {},
 ): Promise<IChainCard[]> {
+  const hintTokenIds = options.hintTokenIds ?? [];
   const { cardAddress } = await getClients();
   const owner = getAddress(address);
 
@@ -226,7 +228,17 @@ export async function readOwnedChainCards(
     await consider(tokenId);
   }
 
-  if (BigInt(confirmed.length) < balance) {
+  /**
+   * Info: (20260820 - Luphia) 掃事件的條件改由呼叫端決定（self-review 風險 2）。
+   *
+   * 原本是 `已確認卡片數 < balanceOf`。那個條件對「快取剛好缺一張」是對的，
+   * 但對「持有已不屬於自己團隊的卡」永遠成立——那張卡不在 hint 裡、也不會被
+   * 任何 hint 找到，於是**每次呼叫都掃一次全鏈**。而呼叫端是 `/auth/me`。
+   *
+   * 現在只在「DB 說某個團隊付費、卻沒有卡號」時掃（`discoverMissing`）：
+   * 那正是掃描唯一能解決的情形（履行漏掉、DB 還原到舊備份）。
+   */
+  if (options.discoverMissing) {
     for (const tokenId of await discoverMintedTokenIds(cardAddress, owner)) {
       await consider(tokenId);
     }
@@ -378,7 +390,7 @@ export async function syncPendingSubscriptionCards(
       if (subscription.team.deletedAt) {
         await teamSubscriptionRepo.recordCardSynced({
           teamId,
-          fingerprint: "deleted",
+          fingerprint: SUBSCRIPTION_CARD_DELETED_FINGERPRINT,
           syncedAt: new Date(nowMs),
         });
         summary.skipped += 1;

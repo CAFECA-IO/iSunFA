@@ -53,6 +53,36 @@ export const SUBSCRIPTION_CARD_SYNC_BATCH_SIZE = 20;
 export const SUBSCRIPTION_CARD_SYNC_INTERVAL_MS = 60_000;
 
 /**
+ * Info: (20260820 - Luphia) 「鏈上那份已知過期」的容忍上限（self-review 嚴重項）。
+ *
+ * 待同步（`nftSyncedAt IS NULL`）代表**我們自己還沒把新內容寫上鏈**，因此那段時間
+ * 應該讀 DB —— 否則剛續訂成功的付費戶會看到免費版：卡片的 `period_end` 仍是舊的，
+ * 而過期的卡折算為 free。這件事**每期續訂都會發生一次**，不只第一次訂閱。
+ *
+ * 但它必須有界，否則卡住的同步會讓「顯示付費」永久靠 DB 撐著，而鏈上根本沒有憑證。
+ * 超過這個時間就回到鏈上為準，並以 error 記錄 —— 那時該修的是 worker，不是顯示。
+ */
+export const SUBSCRIPTION_CARD_PENDING_GRACE_MS = 15 * 60_000;
+
+/**
+ * Info: (20260820 - Luphia) 讀鏈的逾時（self-review 風險 1）。
+ *
+ * `catch` 只擋得住「失敗」，擋不住「慢」。`/auth/me` 是所有畫面的前置條件，
+ * 讓一個徽章用的查詢在 RPC 掛住時把整個 session 拖住，代價與收益完全不成比例。
+ * 逾時的處置與失敗相同：退回 DB，並在回應裡說明來源是 DB。
+ */
+export const CHAIN_CARD_READ_TIMEOUT_MS = 2_500;
+
+/**
+ * Info: (20260820 - Luphia) 已解散團隊的指紋佔位值。
+ *
+ * 不是真的指紋——它只是讓那一列離開待辦佇列（見 `syncPendingSubscriptionCards`）。
+ * 抽成常數而不是寫字面值：CLAUDE.md §3「任何用於判斷或比對的字串必須收斂」，
+ * 而它確實會被比對（下一輪決策讀 `nftFingerprint`）。
+ */
+export const SUBSCRIPTION_CARD_DELETED_FINGERPRINT = "deleted";
+
+/**
  * Info: (20260819 - Luphia) tokenURI 以 data URI 承載，不上 IPFS。
  *
  * 卡片的 metadata 只有方案、期間、席次這幾個欄位，而 IPFS 上傳是一個會失敗、

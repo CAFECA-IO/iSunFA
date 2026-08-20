@@ -197,21 +197,51 @@ export class TeamSubscriptionRepository {
   }
 
   /**
-   * Info: (20260819 - Luphia) 這些團隊的卡號快取（方案讀取的 hint）。
+   * Info: (20260820 - Luphia) 這些團隊的**卡片同步狀態**（方案讀取用）。
    *
-   * 一次查回來而不是逐團問：`/auth/me` 每次頁面載入都會呼叫，逐團往返會讓
-   * 一位擁有多個團隊的使用者每次多打數趟。值可能是 null（尚未鑄卡），
-   * 而 null 本身就是資訊——它讓方案讀取知道要去掃鏈上事件。
+   * 一次查回來而不是逐團問：`/auth/me` 每次頁面載入都會呼叫。
+   *
+   * 四個欄位各有用途，缺一個就會回到某個已經修過的缺陷：
+   *
+   * - `tokenId`：讀鏈的 hint（命中就不必掃事件）。null 本身也是資訊。
+   * - `syncedAt`：null＝**鏈上那份已知過期**（我們還沒寫上去）→ 顯示改讀 DB。
+   *   少了它，剛續訂成功的付費戶會看到免費版（舊 `period_end` 折算為 free）。
+   * - `attempts` / `updatedAt`：那個「讀 DB」必須有界——卡住的同步不該讓
+   *   「顯示付費」永久靠 DB 撐著（見 `isChainCopyStale`）。
    */
-  async listCardTokenIds(
-    teamIds: string[],
-  ): Promise<Map<string, string | null>> {
+  async listCardSyncState(teamIds: string[]): Promise<
+    Map<
+      string,
+      {
+        tokenId: string | null;
+        syncedAt: Date | null;
+        attempts: number;
+        updatedAtMs: number;
+      }
+    >
+  > {
     if (teamIds.length === 0) return new Map();
     const rows = await prisma.teamSubscription.findMany({
       where: { teamId: { in: teamIds } },
-      select: { teamId: true, nftTokenId: true },
+      select: {
+        teamId: true,
+        nftTokenId: true,
+        nftSyncedAt: true,
+        nftSyncAttempts: true,
+        updatedAt: true,
+      },
     });
-    return new Map(rows.map((row) => [row.teamId, row.nftTokenId]));
+    return new Map(
+      rows.map((row) => [
+        row.teamId,
+        {
+          tokenId: row.nftTokenId,
+          syncedAt: row.nftSyncedAt,
+          attempts: row.nftSyncAttempts,
+          updatedAtMs: row.updatedAt.getTime(),
+        },
+      ]),
+    );
   }
 
   /**

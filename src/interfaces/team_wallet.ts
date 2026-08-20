@@ -59,6 +59,17 @@ export interface ITeamSubscriptionView {
   pendingPlanId: TeamPlanId | null;
   // Info: (20260820 - Luphia) 排程生效時點（epoch 秒）＝當期屆滿；沒有排程時為 null
   pendingEffectiveAt: number | null;
+  /**
+   * Info: (20260820 - Luphia) 鏈上會員卡是否還在等同步（self-review：兩個入口可能不一致）。
+   *
+   * 這支端點的 `planId` 是**權益**答案（純 DB、fail-closed），而 `/auth/me` 的
+   * `plan` 是**顯示**答案（鏈上為準）。兩者在卡片同步完成前可以不同——徽章與這個
+   * 面板同時顯示不同方案，而使用者無從得知為什麼。
+   *
+   * 回這一個布林（不做第二次鏈上讀取：面板不值得多一趟 RPC）讓畫面說得出
+   * 「鏈上憑證同步中」，兩處的差異因此變成有解釋的，而不是矛盾。
+   */
+  cardSyncPending: boolean;
   // Info: (20260817 - Luphia) 觀看者本人的額度（一人一池）
   quota: IQuotaStatus;
   /**

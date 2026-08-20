@@ -5,6 +5,7 @@ declare const jest: typeof JestType;
 import { changeTeamSubscription } from "@/services/team_subscription.service";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { generatePaymentOrder } from "@/services/order.service";
+import { paymentRepo } from "@/repositories/payment.repo";
 import { assertTeamMember } from "@/services/team_wallet_access.guard";
 import {
   BILLING_INTERVAL,
@@ -46,6 +47,16 @@ jest.mock("@/repositories/team_subscription.repo", () => ({
 
 jest.mock("@/repositories/team.repo", () => ({
   teamRepo: { countMembers: jest.fn(async () => 3) },
+}));
+
+jest.mock("@/repositories/payment.repo", () => ({
+  paymentRepo: {
+    // Info: (20260820 - Luphia) 當期的計費週期只存在最後一張訂單的 data 裡
+    getOrderById: jest.fn(async () => ({
+      id: "order-0",
+      data: { billingInterval: "month" },
+    })),
+  },
 }));
 
 jest.mock("@/services/order.service", () => ({
@@ -103,6 +114,10 @@ beforeEach(() => {
     orderId: "order-1",
     challenge: "c",
     cost: 2520,
+  });
+  asMock(paymentRepo.getOrderById).mockResolvedValue({
+    id: "order-0",
+    data: { billingInterval: BILLING_INTERVAL.MONTH },
   });
 });
 
@@ -289,5 +304,72 @@ describe("權限", () => {
     expect(
       asMock(teamSubscriptionRepo.schedulePlanChange),
     ).not.toHaveBeenCalled();
+  });
+});
+
+describe("取消排程與改計費週期要分得開（self-review 小項）", () => {
+  /**
+   * Info: (20260820 - Luphia) `TeamSubscription` 沒有 `billingInterval` 欄位，
+   * 當期週期只存在最後一張訂單的 data 裡。原本只比方案代號，於是
+   * 「排程降級中的月繳戶想改成年繳」會被當成取消降級——排程清掉了、年繳沒生效，
+   * 而畫面沒有任何訊息（靜默的 no-op）。
+   */
+  it("同方案同週期 → 只取消排程，不建單", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({ pendingPlanId: TEAM_PLAN.FREE, autoRenew: false }),
+    );
+
+    const result = await changeTeamSubscription({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      paymentMethodId: "pm-1",
+      nowMs: NOW_MS,
+    });
+
+    expect(
+      asMock(teamSubscriptionRepo.cancelPendingPlanChange),
+    ).toHaveBeenCalledWith("team-1");
+    expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
+    expect(result.pendingPlanId).toBeNull();
+  });
+
+  it("同方案但改成年繳 → 取消排程**並**建單", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({ pendingPlanId: TEAM_PLAN.FREE, autoRenew: false }),
+    );
+
+    await changeTeamSubscription({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.YEAR,
+      paymentMethodId: "pm-1",
+      nowMs: NOW_MS,
+    });
+
+    expect(
+      asMock(teamSubscriptionRepo.cancelPendingPlanChange),
+    ).toHaveBeenCalledWith("team-1");
+    expect(asMock(generatePaymentOrder)).toHaveBeenCalledTimes(1);
+  });
+
+  // Info: (20260820 - Luphia) 讀不到訂單時退為月繳（保守側：只會多走一次建單）
+  it("查不到最後一張訂單時，同方案月繳仍視為取消排程", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({ pendingPlanId: TEAM_PLAN.FREE, latestOrderId: null }),
+    );
+
+    await changeTeamSubscription({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      paymentMethodId: "pm-1",
+      nowMs: NOW_MS,
+    });
+
+    expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
   });
 });

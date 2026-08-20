@@ -288,7 +288,8 @@ WHERE plan_id = 'free' AND current_period_end > NOW();
 - [ ] 收據只取得到自己的訂單（換一個 `order_id` 應回 404）
 - [ ] 付費團隊的 OWNER 登入後，右上角徽章顯示團隊版／企業版（不是免費版），且方案頁的「目前方案」標在對應那一格
 - [ ] 該 OWNER 的錢包在一分鐘內出現一張訂閱會員卡 NFT，`team_subscription.nft_token_id` 有值
-- [ ] `/auth/me` 的 `planSource` 是 `CHAIN`（若是 `DB`，表示鏈上讀不到——查合約位址與 RPC）
+- [ ] `/auth/me` 的 `planSource` 是 `CHAIN`（`PENDING_CHAIN` 表示卡片還在同步中，正常且短暫；持續是 `DB` 表示鏈上讀不到或**逾時**——查合約位址與 RPC 延遲）
+- [ ] log 沒有「訂閱卡待同步已超過寬限」：那一行代表 worker 卡住，而使用者會在 15 分鐘後被打回免費版顯示
 - [ ] 方案頁的三個價格與 `plan.service.listPlans()` 一致（改價後只要改常數，四處讀者已收斂為一處）
 - [ ] 後台發放點數連點兩下只入帳一次
 - [ ] 免費版團隊可以邀請成員（不再有人數上限），且方案頁顯示「團隊人數不限」

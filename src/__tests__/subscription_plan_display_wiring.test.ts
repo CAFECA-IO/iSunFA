@@ -233,3 +233,35 @@ describe("方案的單一入口", () => {
     }
   });
 });
+
+/**
+ * Info: (20260820 - Luphia) 對外報價不得因為「查不到」而顯示免費（self-review 風險 3）。
+ *
+ * 目錄缺項時的舊 fallback 是一組零值，而價格 0 在方案卡上顯示為「免費」——
+ * 團隊版那一格會標成免費，而購買鈕又因為 `unknown planKey` 拒絕開啟：
+ * 對外報價出錯，兩處還互相矛盾。掃描測試守住這兩個檔案不再回退成零。
+ */
+describe("價格查不到時不顯示免費", () => {
+  it("方案頁的目錄查表不再回零值 fallback", () => {
+    const content = codeOf(
+      "src",
+      "app",
+      "(landing)",
+      "pricing",
+      "subscription",
+      "subscription_content.tsx",
+    );
+
+    expect(content).not.toMatch(/monthlyPrice: 0/);
+    expect(content).toMatch(
+      /monthlyPrice=\{planOf\(TEAM_PLAN\.\w+\)\?\.monthlyPrice \?\? null\}/,
+    );
+  });
+
+  it("方案卡在價格為 null 時顯示佔位並停用購買鈕", () => {
+    const card = codeOf("src", "components", "pricing", "pricing_card.tsx");
+
+    expect(card).toMatch(/priceUnavailable/);
+    expect(card).toMatch(/disabled=\{isCurrentPlan \|\| priceUnavailable\}/);
+  });
+});

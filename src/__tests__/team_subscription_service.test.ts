@@ -110,6 +110,70 @@ describe("getTeamSubscriptionView", () => {
    * 這個數字回答的是「我付的錢被用掉多少」，而付錢的是 OWNER；
    * 對其他成員它沒有對應的問題，卻能加上人數推估同事的平均用量。
    */
+  /**
+   * Info: (20260820 - Luphia) 這支端點要說得出**自己的依據**（self-review：兩個入口）。
+   *
+   * `planId` 是權益答案（純 DB、fail-closed），而 `/auth/me` 的 `plan` 是顯示答案
+   *（鏈上為準）。兩者在卡片同步完成前可以不同——徽章與這個面板同時顯示不同方案，
+   * 而使用者無從得知為什麼。`cardSyncPending` 讓畫面說得出「鏈上憑證同步中」。
+   */
+  describe("卡片同步狀態的揭露", () => {
+    beforeEach(() => {
+      mockMembers({ "user-1": "OWNER" });
+    });
+
+    it("待同步時回報 true", async () => {
+      asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+        planId: TEAM_PLAN.TEAM,
+        status: "ACTIVE",
+        currentPeriodStart: new Date((NOW_SEC - 86400) * 1000),
+        currentPeriodEnd: new Date((NOW_SEC + 86400) * 1000),
+        autoRenew: true,
+        nftSyncedAt: null,
+      } as unknown);
+
+      const view = await getTeamSubscriptionView({
+        userId: "user-1",
+        teamId: "team-1",
+        nowSec: NOW_SEC,
+      });
+
+      expect(view.cardSyncPending).toBe(true);
+    });
+
+    it("已同步時回報 false", async () => {
+      asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+        planId: TEAM_PLAN.TEAM,
+        status: "ACTIVE",
+        currentPeriodStart: new Date((NOW_SEC - 86400) * 1000),
+        currentPeriodEnd: new Date((NOW_SEC + 86400) * 1000),
+        autoRenew: true,
+        nftSyncedAt: new Date(NOW_SEC * 1000),
+      } as unknown);
+
+      const view = await getTeamSubscriptionView({
+        userId: "user-1",
+        teamId: "team-1",
+        nowSec: NOW_SEC,
+      });
+
+      expect(view.cardSyncPending).toBe(false);
+    });
+
+    // Info: (20260820 - Luphia) 沒有訂閱列就沒有卡要同步，不該回 true
+    it("沒有訂閱列時回報 false", async () => {
+      asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(null);
+
+      const view = await getTeamSubscriptionView({
+        userId: "user-1",
+        teamId: "team-1",
+        nowSec: NOW_SEC,
+      });
+
+      expect(view.cardSyncPending).toBe(false);
+    });
+  });
+
   describe("team totals", () => {
     beforeEach(() => {
       mockMembers({ "user-1": "OWNER" });

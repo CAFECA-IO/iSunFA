@@ -771,14 +771,17 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 | `getUserPlan()` | 徽章、方案頁的「目前方案」 | **鏈上為準**，DB 為快取 | 不要把付費戶說成免費戶 |
 | `getTeamEntitlement()` | 扣費、席次補收、額度、記憶保留 | 純 DB，fail-closed | 絕不因資料異常放大額度 |
 
-- **顯示為什麼採信鏈上**：付款履行漏掉、DB 還原到舊備份時，使用者手上握著鏈上憑證，而畫面說他是免費版——那是最難解釋的一種錯。鏈上**讀不到**（合約未部署、RPC 失敗）才退回 DB：「讀不到」與「讀到了但沒有卡」是兩件事，混為一談會讓一次節點抖動把所有付費戶打成免費版。
+- **顯示為什麼採信鏈上**：付款履行漏掉、DB 還原到舊備份時，使用者手上握著鏈上憑證，而畫面說他是免費版——那是最難解釋的一種錯。鏈上**讀不到**（合約未部署、RPC 失敗、**逾時**）才退回 DB：「讀不到」與「讀到了但沒有卡」是兩件事，混為一談會讓一次節點抖動把所有付費戶打成免費版。
+- **「為準」的前提是那份鏈上資料確實最新**（2026-08-20 self-review 修正）。`nft_synced_at IS NULL` 就是「我們自己還沒寫上去」的證據，那段時間**改讀 DB** 並回報 `PENDING_CHAIN`。少了這一條，剛續訂成功的付費戶會看到免費版：卡片的 `period_end` 仍是舊的，而過期的卡折算為 free——而且**每期續訂都會發生一次**，不只第一次訂閱。這個「讀 DB」有兩道界（重試未達上限、且在 `SUBSCRIPTION_CARD_PENDING_GRACE_MS` = 15 分鐘內），超過就回到鏈上為準並以 error 記錄：卡住的同步不該讓「顯示付費」永久靠 DB 撐著。
 - **權益為什麼不採信鏈上**：卡片可被持有人自行轉走（合約只擋黑名單），若權益採信鏈上憑證，收到一張轉讓卡的人就能動用那個團隊的額度；而且扣費路徑不能因為 RPC 逾時而放行或擋下。
 - **代價**：卡片尚未鑄出的那一分鐘內（worker 週期），徽章顯示免費版。刻意接受，且有測試釘住（`plan_service_chain.test.ts`）——要改成 `max(DB, 鏈上)` 會讓那一條紅，而那應該引發一次討論。
 - **不回寫訂閱本身**：不一致時只回填卡號快取（`nft_token_id`，且僅在原本為 NULL 時）並警示。metadata 帶著 `team_id`，若讓它回寫 `TeamSubscription.planId`，任何拿到一張轉讓卡的人都能改寫那個團隊的計費資料。快取可以被鏈上糾正，計費資料只能由付款流程寫入。
 - 卡片合約是 `DynamicKYCMembership`（`contracts/dynamic_kyc_membership.sol`）：部署的合約集裡只有它是 ERC721，`mintCard` / `setTokenURI` 都是平台管理員角色。
 - **不走 `SubscriptionManager.addSubscription`**：那一支會**鑄點數**，而訂閱買到的是額度視窗、不發點數（§5.4.2）。
 
-鏈上讀取的形狀（`readOwnedChainCards`）：`balanceOf` 當閘門（回 0 就一次 RPC 結束，絕大多數使用者屬於這一類）→ 先試 DB 快取的卡號 → 湊不齊 `balanceOf` 的數量時才掃 `Transfer(from = 0x0, to = 持卡人)` 事件（合約沒有 ERC721Enumerable，這是唯一能發現「DB 不知道的卡」的辦法）。每一張都以 `ownerOf` 再確認一次現在還在他手上。只認**鑄造**事件——轉入的卡不是本系統發的憑證，否則在二級市場拿到一張卡就能讓徽章顯示企業版。
+鏈上讀取的形狀（`readOwnedChainCards`）：`balanceOf` 當閘門（回 0 就一次 RPC 結束，絕大多數使用者屬於這一類）→ 先試 DB 快取的卡號 → **呼叫端要求時**才掃 `Transfer(from = 0x0, to = 持卡人)` 事件（合約沒有 ERC721Enumerable，這是唯一能發現「DB 不知道的卡」的辦法）。每一張都以 `ownerOf` 再確認一次現在還在他手上。只認**鑄造**事件——轉入的卡不是本系統發的憑證，否則在二級市場拿到一張卡就能讓徽章顯示企業版。
+
+掃描的觸發條件由 service 決定（`discoverMissing`＝有付費團隊卻沒有卡號），不是「已確認卡片數 < `balanceOf`」（2026-08-20 self-review 修正）。舊條件對「快取剛好缺一張」是對的，但持有**已不屬於自己團隊**的卡時（換過 OWNER、團隊解散）它永遠成立——於是每次 `/auth/me` 都對合約做一次 `fromBlock 0` 的全鏈掃描。整段讀取另有 `CHAIN_CARD_READ_TIMEOUT_MS`（2.5 秒）的逾時：`catch` 擋得住失敗，擋不住慢，而 `/auth/me` 是所有畫面的前置條件。
 
 #### 6.5.2 為什麼是背景同步
 
@@ -810,7 +813,9 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 |---|---|---|
 | `plan` | 擁有的團隊中**最高**的有效方案（對帳後） | 右上角徽章 |
 | `ownedPlans` | 擁有的每個團隊的有效方案（逐團事實） | 方案頁的「目前方案」標記 |
-| `planSource` | `CHAIN`（鏈上確認過）或 `DB`（鏈上讀不到，暫以快取顯示） | 前端要分得出這兩種 |
+| `planSource` | `CHAIN`（鏈上確認過）／`PENDING_CHAIN`（鏈上那份已知過期，暫以 DB 顯示）／`DB`（鏈上讀不到） | 前端要分得出這三種 |
+
+**同一件事有兩個對外入口，兩邊都要說得出依據**（2026-08-20 self-review）：`GET /auth/me` 的 `plan` 是**顯示**答案（鏈上為準），`GET /subscription` 的 `planId` 是**權益**答案（純 DB、fail-closed）。兩者在卡片同步完成前可以不同，而使用者無從得知為什麼——因此 `/subscription` 一併回 `cardSyncPending`（不做第二次鏈上讀取：面板不值得多一趟 RPC），讓畫面說得出「鏈上憑證同步中」。差異因此是有解釋的，而不是矛盾。
 
 **方案目錄也集中在同一個 service**：`listPlans()` 是「有哪些方案、各自的價格／月配點／儲存／額度」的唯一讀者，`getPlanUnitPrice()` 是收費金額的唯一出口。在此之前價格常數有四處讀者（方案卡、付款容器、建單、續訂 worker），而「改價漏掉其中一處」不會有任何測試發現——症狀是使用者看到一個價格、卡被扣另一個。掃描測試（`subscription_plan_display_wiring.test.ts`）現在擋著：除了常數定義處與 `plan.service`，沒有檔案讀得到那些常數。
 
