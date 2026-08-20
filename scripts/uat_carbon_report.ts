@@ -9,6 +9,7 @@ import fs from "node:fs";
 import zlib from "node:zlib";
 import { PDFDocument, PDFName, PDFRawStream } from "pdf-lib";
 import { extractPdfTextLayer } from "@/lib/pdf_text_layer";
+import { squeezeForMatch } from "@/lib/utils/squeeze_for_match";
 import {
   CARBON_REPORT_CHAPTERS,
   CARBON_REPORT_OUTLINE,
@@ -105,11 +106,9 @@ const reportRadicals = (found: readonly string[]): void => {
 const OUR_REPORT_MIN_OUTLINE_HITS = 8;
 
 const assertOurReport = (text: string): boolean => {
-  const squeeze = (value: string): string =>
-    value.normalize("NFKC").replace(/\s+/g, "");
-  const squeezed = squeeze(text);
+  const squeezed = squeezeForMatch(text);
   const hits = CARBON_REPORT_OUTLINE.filter((section) =>
-    squeezed.includes(squeeze(section.title)),
+    squeezed.includes(squeezeForMatch(section.title)),
   ).length;
   snapshot.大綱命中數 = hits;
 
@@ -600,11 +599,9 @@ const main = async (): Promise<void> => {
    * 在文字層裡可能是「報告目的與主要\n使用者」—— 直接 includes 會全部落空。
    * 第一版沒壓，結果 8 節被誤報為「沒出現」。
    */
-  const squeeze = (value: string): string =>
-    value.normalize("NFKC").replace(/\s+/g, "");
-  const squeezed = squeeze(text);
+  const squeezed = squeezeForMatch(text);
   const absentSections = CARBON_REPORT_OUTLINE.filter(
-    (section) => !squeezed.includes(squeeze(section.title)),
+    (section) => !squeezed.includes(squeezeForMatch(section.title)),
   ).map((section) => `${section.code} ${section.title}`);
   snapshot.大綱節數 = CARBON_REPORT_OUTLINE.length;
   snapshot.未出現的節 = absentSections;
@@ -638,14 +635,14 @@ const main = async (): Promise<void> => {
    *    用全文計數會把目錄算成缺陷。
    */
   const headingStrings = new Set<string>([
-    ...CARBON_REPORT_CHAPTERS.map((chapter) => squeeze(chapter.title)),
+    ...CARBON_REPORT_CHAPTERS.map((chapter) => squeezeForMatch(chapter.title)),
     ...CARBON_REPORT_OUTLINE.map((section) =>
-      squeeze(`${section.code} ${section.title}`),
+      squeezeForMatch(`${section.code} ${section.title}`),
     ),
   ]);
   const nonEmptyLines = text
     .split("\n")
-    .map((line) => squeeze(line))
+    .map((line) => squeezeForMatch(line))
     .filter((line) => line.length > 0);
   const repeatedHeadings = [
     ...new Set(
@@ -703,8 +700,8 @@ const main = async (): Promise<void> => {
   const reprintedHeadings: string[] = [];
   const reprintedStillSameText: string[] = [];
   numberedSections.forEach((section) => {
-    const heading = squeeze(`${section.code} ${section.title}`);
-    const code = squeeze(section.code);
+    const heading = squeezeForMatch(`${section.code} ${section.title}`);
+    const code = squeezeForMatch(section.code);
     const at = nonEmptyLines.indexOf(heading);
     if (at < 0) return;
     for (let j = at + 1; j < Math.min(at + 4, nonEmptyLines.length); j += 1) {
@@ -716,7 +713,7 @@ const main = async (): Promise<void> => {
       // Info: (20260819 - Emily) `.數字` = 子節編號,不是標題重印(否定前瞻的等價寫法)
       if (/^\.\d/.test(rest)) break;
       reprintedHeadings.push(section.code);
-      const title = squeeze(section.title);
+      const title = squeezeForMatch(section.title);
       if (title.includes(rest) || rest.includes(title)) {
         reprintedStillSameText.push(section.code);
       }
@@ -776,10 +773,10 @@ const main = async (): Promise<void> => {
    * Info: (20260819 - Emily) 同上,讀 i18n 那一端 —— 紙上印的是它。
    * 這兩條先前讀預設文案卻過了,是因為兩份剛好同字,不是判準對。
    */
-  const sankeyTitle = squeeze(
+  const sankeyTitle = squeezeForMatch(
     carbonChatbotZhTw.chart_imported_sankey_title ?? "",
   );
-  const sankeyNoLedger = squeeze(
+  const sankeyNoLedger = squeezeForMatch(
     carbonChatbotZhTw.chart_imported_sankey_no_ledger ?? "",
   );
   const sankeyPresent =
@@ -816,7 +813,7 @@ const main = async (): Promise<void> => {
    * 這與 `importedSankeyTitle` 那條的差別:標題的 i18n 與預設剛好同字,
    * 所以那條沒被抓到 —— 那是巧合,不是判準對。
    */
-  const isoMappingNote = squeeze(
+  const isoMappingNote = squeezeForMatch(
     carbonChatbotZhTw.chart_imported_sankey_iso_mapping ?? "",
   );
   const scopeWordAppears = squeezed.includes("範疇");

@@ -19,19 +19,11 @@
 // Info: (20260819 - Emily) `content` 本身不變(ADR 014 的逐字照錄),剝除只發生在渲染。
 
 import { FENCE_PATTERN } from "@/lib/utils/markdown_comment";
+// Info: (20260820 - Emily) 比對用正規化走 canonical 那一支(PR review B1)
+import { squeezeForMatch } from "@/lib/utils/squeeze_for_match";
 
 /** Info: (20260819 - Emily) ATX 標頭;允許最多三格縮排與尾端的收尾井號 */
 const HEADING_PATTERN = /^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$/;
-
-/**
- * Info: (20260819 - Emily) 比對用正規化:NFKC + 去掉所有空白。
- *
- * 去空白而不是收斂成單一空白:抽取端會在全形與半形之間插入空白,
- * 而「第五章 溫室氣體…」與「第五章溫室氣體…」在紙上是同一句話。
- * NFKC 讓全形數字與括號也對得上。
- */
-const normalizeForCompare = (text: string): string =>
-  text.normalize("NFKC").replace(/\s+/g, "");
 
 /**
  * Info: (20260819 - Emily) 剝掉緊接在標題之後、與該標題文字完全相同的行。
@@ -60,7 +52,7 @@ export const stripEchoedSectionHeadings = (content: string): string => {
       return;
     }
     const heading = HEADING_PATTERN.exec(line);
-    const candidate = normalizeForCompare(heading ? heading[2] : line);
+    const candidate = squeezeForMatch(heading ? heading[2] : line);
     if (pendingHeading !== null && candidate === pendingHeading) return;
     pendingHeading = heading ? candidate : null;
     kept.push(line);
