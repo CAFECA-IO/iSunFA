@@ -1012,6 +1012,8 @@ export const hrManagement = {
     error_regular_off:
       "법정휴일 근무는 §40 절차가 필요합니다. 인사팀에 문의하세요.",
     error_already_reviewed: "이 신청은 이미 처리되었습니다. 새로고침하세요.",
+    error_reclassified_midway:
+      "결재 중에 인사팀이 이 신청을 천재·사변(§32 IV)으로 인정하여 전 구간이 배액 지급으로 바뀌었습니다. 새로 고침하여 금액을 확인한 뒤 승인하세요.",
     error_comp_expiry_unset:
       "보상휴가 기한이 아직 합의되지 않아 전환할 수 없습니다. 수당을 선택하거나 인사팀에 설정을 요청하세요.",
     error_day_not_scheduled:

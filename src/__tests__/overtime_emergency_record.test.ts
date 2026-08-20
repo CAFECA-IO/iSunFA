@@ -7,6 +7,7 @@ import {
 } from "@/lib/overtime_rules";
 import {
   assertOvertimeEmergencyRecord,
+  assertOvertimeSegmentPremium,
   IStorableOvertimeEmergency,
   OvertimeRequestInvariantError,
 } from "@/repositories/overtime_request_invariant";
@@ -211,5 +212,101 @@ describe("例假日一律擋下，天災事變不是通行證", () => {
         { order: 0, tier: OvertimePremiumTier.EMERGENCY_DOUBLE, minutes: 180 },
       ]);
     }
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) 旗標與級距不得各說各話（review 第 3 條）。
+ *
+ * `deriveOvertimeSegments` 的判定表 #2 保證了這個對應，但那只涵蓋
+ * 「分段是從那支函式拿到的」那條路。核准的交錯（見
+ * `overtime_approve_emergency_claim.test.ts`）、資料遷移、未來的更正流程
+ * 都不走那支函式，而這張表存得下那個矛盾。
+ */
+describe("assertOvertimeSegmentPremium — 旗標與級距講同一個故事", () => {
+  const emergency = {
+    order: 0,
+    tier: OvertimePremiumTier.EMERGENCY_DOUBLE,
+    minutes: 180,
+  };
+  const weekdayFirst = {
+    order: 0,
+    tier: OvertimePremiumTier.WEEKDAY_FIRST_2H,
+    minutes: 120,
+  };
+  const weekdayBeyond = {
+    order: 1,
+    tier: OvertimePremiumTier.WEEKDAY_BEYOND_2H,
+    minutes: 60,
+  };
+
+  it("天災事變：整段一筆加倍發給時通過", () => {
+    expect(() =>
+      assertOvertimeSegmentPremium({
+        isEmergency: true,
+        segments: [emergency],
+      }),
+    ).not.toThrow();
+  });
+
+  it("非天災事變：普通級距時通過", () => {
+    expect(() =>
+      assertOvertimeSegmentPremium({
+        isEmergency: false,
+        segments: [weekdayFirst, weekdayBeyond],
+      }),
+    ).not.toThrow();
+  });
+
+  /**
+   * Info: (20260820 - Julian) 這一條就是核准交錯落地之後的那筆紀錄：
+   * 單子說「已依 §32 IV 報備」，分段說「平日前兩小時加給三分之一」。
+   */
+  it("已報備卻是普通級距 —— 工資少算，而報備紀錄會證明公司知道", () => {
+    expect(() =>
+      assertOvertimeSegmentPremium({
+        isEmergency: true,
+        segments: [weekdayFirst, weekdayBeyond],
+      }),
+    ).toThrow(OvertimeRequestInvariantError);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 反方向代價更大：加倍發給已經出去，
+   * 而系統裡沒有任何一份 §32 IV 的報備紀錄可以答覆勞動檢查。
+   */
+  it("沒有報備卻掛著加倍級距 —— 錢出去了，佐證答不出來", () => {
+    expect(() =>
+      assertOvertimeSegmentPremium({
+        isEmergency: false,
+        segments: [emergency],
+      }),
+    ).toThrow(OvertimeRequestInvariantError);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 天災事變不切級距（判定表 #2 直接回一筆）。
+   * 混著一筆普通級距，等於把「加倍發給」偷偷折成部分加倍。
+   */
+  it("天災事變混進一筆普通級距時擋下", () => {
+    expect(() =>
+      assertOvertimeSegmentPremium({
+        isEmergency: true,
+        segments: [emergency, weekdayBeyond],
+      }),
+    ).toThrow(OvertimeRequestInvariantError);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 認列 0 分鐘沒有分段，那不是矛盾 ——
+   * 一張核准 0 分鐘的單子沒有任何工資標準要決定。
+   */
+  it("認列 0 分鐘（無分段）時兩種旗標都通過", () => {
+    expect(() =>
+      assertOvertimeSegmentPremium({ isEmergency: true, segments: [] }),
+    ).not.toThrow();
+    expect(() =>
+      assertOvertimeSegmentPremium({ isEmergency: false, segments: [] }),
+    ).not.toThrow();
   });
 });

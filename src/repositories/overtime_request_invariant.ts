@@ -22,8 +22,10 @@
 
 import {
   OvertimeFilingType,
+  OvertimePremiumTier,
   OvertimeRequestStatus,
 } from "@/constants/overtime";
+import type { IOvertimeSegment } from "@/interfaces/overtime";
 
 export class OvertimeRequestInvariantError extends Error {
   constructor(
@@ -218,6 +220,68 @@ export function assertOvertimeEmergencyRecord(
     throw new OvertimeRequestInvariantError(
       "a request that is not an emergency must not carry an emergency filing; half a record cannot be read as either withdrawn or forgotten",
       `emergencyReportUrl=${url}, emergencyReportedAt=${String(reportedAt)}, emergencyDeclaredByEmployeeId=${declaredBy}`,
+    );
+  }
+}
+
+export interface IStorableOvertimeSegmentSet {
+  isEmergency: boolean;
+  segments: readonly IOvertimeSegment[];
+}
+
+/**
+ * Info: (20260820 - Julian) 旗標與級距必須講同一個故事（review 第 3 條）。
+ *
+ * ## 這條守的是什麼
+ *
+ * `deriveOvertimeSegments` 的判定表 #2 是「`isEmergency` 為真 ⇒ 整段一筆
+ * `EMERGENCY_DOUBLE`，不切級距」。那是一個**雙向**的對應，而它原本只活在
+ * 那支純函式裡 —— 只要有人不是從那支函式拿到分段（核准的交錯、資料遷移、
+ * 手動補資料），這張表就能同時存著「已依 §32 IV 報備」與「按平日前兩小時
+ * 加給三分之一計算」的兩筆紀錄，而它們不可能同時為真。
+ *
+ * ## 為什麼兩個方向的代價不對稱，但兩個方向都要擋
+ *
+ * `isEmergency` 為真卻是普通級距：報備做了、工資少算 —— 對勞工不利，
+ * 而勞檢時那份報備紀錄會證明公司知道該加倍發給。
+ *
+ * 普通旗標卻掛著 `EMERGENCY_DOUBLE`：加倍發給了，而系統裡**沒有任何一份
+ * §32 IV 的報備紀錄**（那三個欄位由 `assertOvertimeEmergencyRecord` 綁在
+ * `isEmergency` 上）。這是錢已經出去、佐證答不出來的那一種。
+ *
+ * ## 為什麼不在這裡驗分鐘總數
+ *
+ * 分段的分鐘合計等於 `recognizedMinutes` 是另一條規則，
+ * 由 `assertOvertimeFilingType` 那一側的認列分鐘負責。一條不變式驗兩件事，
+ * 壞掉的時候讀者分不出是哪一件壞了。
+ */
+export function assertOvertimeSegmentPremium(
+  params: IStorableOvertimeSegmentSet,
+): void {
+  /**
+   * Info: (20260820 - Julian) 認列 0 分鐘時沒有分段（service 的 `recognizedMinutes === 0`
+   * 分支）。那不是矛盾 —— 一張核准 0 分鐘的單子沒有任何工資標準要決定。
+   */
+  if (params.segments.length === 0) return;
+
+  const emergencyCount = params.segments.filter(
+    (segment) => segment.tier === OvertimePremiumTier.EMERGENCY_DOUBLE,
+  ).length;
+
+  if (params.isEmergency) {
+    if (params.segments.length !== 1 || emergencyCount !== 1) {
+      throw new OvertimeRequestInvariantError(
+        "an Article 32 IV emergency is paid double for its whole span; segments computed on the ordinary tiers contradict the filing this request carries",
+        `isEmergency=true, tiers=[${params.segments.map((s) => s.tier).join(", ")}]`,
+      );
+    }
+    return;
+  }
+
+  if (emergencyCount > 0) {
+    throw new OvertimeRequestInvariantError(
+      "a segment may not be paid at the emergency double rate unless the request carries the Article 32 IV filing; the premium would be doubled with no record to show an inspection",
+      `isEmergency=false, tiers=[${params.segments.map((s) => s.tier).join(", ")}]`,
     );
   }
 }

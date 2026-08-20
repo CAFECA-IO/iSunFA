@@ -216,6 +216,15 @@ export interface IOvertimeApprovalResult {
 export enum OvertimeDecisionOutcome {
   DECIDED = "DECIDED",
   ALREADY_REVIEWED = "ALREADY_REVIEWED",
+  /**
+   * Info: (20260820 - Julian) 核准算到一半，這張單被 §32 IV 認定改寫了（review 第 3 條）。
+   *
+   * 與 `ALREADY_REVIEWED` 分開，因為**下一步不一樣**：已決行是「別人先按了，
+   * 你什麼都不用做」；重新分類是「這張單還在等你，但工資標準已經不是你剛才
+   * 看到的那個」—— 主管必須重新看一次再按。兩者共用一句「已決行」的話，
+   * 主管會照字面理解成不用管，而那張單會一直停在待簽清單上沒有人動。
+   */
+  RECLASSIFIED = "RECLASSIFIED",
 }
 
 // Info: (20260818 - Julian) ===== 查詢類端點的 DTO（L24 / L28 / L29 / L30）=====

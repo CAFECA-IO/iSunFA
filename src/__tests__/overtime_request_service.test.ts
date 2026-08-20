@@ -31,6 +31,7 @@ import { IOvertimeRequestContext } from "@/repositories/overtime_request_context
 import {
   assertOvertimeEmergencyRecord,
   assertOvertimeFilingType,
+  assertOvertimeSegmentPremium,
 } from "@/repositories/overtime_request_invariant";
 
 /**
@@ -139,13 +140,26 @@ class FakeRepo implements Partial<IOvertimeRequestRepository> {
      * 等於把「送進去的東西合法嗎」這個問題從測試裡刪掉。
      */
     assertOvertimeFilingType(params.invariant);
+    /**
+     * Info: (20260820 - Julian) 級距與旗標的一致性也是真的那一支（review 第 3 條）。
+     * service 交出去的那組分段必須過得了它 —— 否則「旗標與級距講同一個故事」
+     * 在測試裡就只是 repository 自己的事，而 service 算錯不會有任何測試變紅。
+     */
+    assertOvertimeSegmentPremium({
+      isEmergency: params.isEmergencyAtDerivation,
+      segments: params.segments,
+    });
     this.written = params;
     return {
-      outcome: OvertimeDecisionOutcome.DECIDED,
+      outcome: this.approveOutcome,
       grantCount: 0,
       cashOutEventIds: [],
     };
   }
+
+  /** Info: (20260820 - Julian) 讓測試模擬 repository 的附條件更新落空（review 第 3 條） */
+  public approveOutcome: OvertimeDecisionOutcome =
+    OvertimeDecisionOutcome.DECIDED;
 
   public declared: unknown = null;
 
@@ -679,5 +693,49 @@ describe("declareEmergency —— §32 IV 的認定閘", () => {
       ),
     ).toBe(API_ERRORS.VA_INVALID_INPUT_DATA.code);
     expect(repo.declared).toBeNull();
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) 核准把「我算的時候旗標是這個值」交給 repository（review 第 3 條）。
+ *
+ * repository 拿它當附條件更新的一部分（`overtime_approve_emergency_claim.test.ts`
+ * 驗那一段）。這裡驗的是接線的另一半：service 有沒有真的把讀到的值傳下去 ——
+ * 傳一個寫死的 `false`、或乾脆不傳，claim 就形同虛設而那支測試照樣綠。
+ */
+describe("核准帶下去的 isEmergencyAtDerivation", () => {
+  it.each([
+    ["非天災事變", false, OvertimePremiumTier.WEEKDAY_FIRST_2H],
+    ["天災事變", true, OvertimePremiumTier.EMERGENCY_DOUBLE],
+  ])(
+    "%s：傳下去的值等於讀到的旗標，且分段依它決定",
+    async (_label, isEmergency, tier) => {
+      context.summary = summaryOf({ isEmergency });
+
+      await approve({ approvedMinutes: 60 });
+
+      expect(repo.written?.isEmergencyAtDerivation).toBe(isEmergency);
+      expect(repo.written?.segments.map((segment) => segment.tier)).toEqual([
+        tier,
+      ]);
+    },
+  );
+
+  /**
+   * Info: (20260820 - Julian) 重新分類與已決行是**兩句不同的話**。
+   *
+   * 兩個斷言成對：各自的碼要對，且**兩者不得相同** —— 共用同一個碼的話，
+   * 主管會看到「此加班單已決行」而不再處理，但那張單其實還在等他。
+   */
+  it("repository 回 RECLASSIFIED 時是另一個錯誤碼", async () => {
+    repo.approveOutcome = OvertimeDecisionOutcome.RECLASSIFIED;
+    const reclassified = await codeOf(() => approve({ approvedMinutes: 60 }));
+
+    repo.approveOutcome = OvertimeDecisionOutcome.ALREADY_REVIEWED;
+    const alreadyReviewed = await codeOf(() => approve({ approvedMinutes: 60 }));
+
+    expect(reclassified).toBe(API_ERRORS.VA_OVERTIME_RECLASSIFIED_MIDWAY.code);
+    expect(alreadyReviewed).toBe(API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED.code);
+    expect(reclassified).not.toBe(alreadyReviewed);
   });
 });

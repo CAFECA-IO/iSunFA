@@ -334,6 +334,15 @@ export class OvertimeRequestService {
         ? OvertimeEvidenceBasis.MANUAL_DECLARATION
         : OvertimeEvidenceBasis.PUNCH_RECORD,
       segments,
+      /**
+       * Info: (20260820 - Julian) 分段是照**這一刻讀到的**旗標算的（review 第 3 條）。
+       *
+       * `request` 是 `:258` 那次查詢的結果，到這裡中間隔了 `assertMayDecide`、
+       * `buildApprovalContext` 與上限查詢。HR 的 §32 IV 認定只要求
+       * `status = PENDING`，那段窗口它進得來 —— 傳這個值下去，讓 repository
+       * 拿它當附條件更新的一部分，這張單在我算完之後被改過就不會寫進去。
+       */
+      isEmergencyAtDerivation: request.isEmergency,
       engineVersion: OVERTIME_ENGINE_VERSION,
       invariant: {
         filingType: request.filingType,
@@ -357,6 +366,16 @@ export class OvertimeRequestService {
       cashOut: this.resolveCashOut(request, context, segments.length),
     });
 
+    /**
+     * Info: (20260820 - Julian) 重新分類要與已決行分開回報（review 第 3 條）。
+     *
+     * 這張單還在 PENDING，只是工資標準在我算的過程中跳到了加倍發給。
+     * 回「已決行」會讓主管以為不用再管，而它會一直停在待簽清單上。
+     * 重新載入之後再按一次就會走加倍級距 —— 不需要任何補救動作。
+     */
+    if (written.outcome === OvertimeDecisionOutcome.RECLASSIFIED) {
+      throw new AppError(API_ERRORS.VA_OVERTIME_RECLASSIFIED_MIDWAY);
+    }
     if (written.outcome === OvertimeDecisionOutcome.ALREADY_REVIEWED) {
       throw new AppError(API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED);
     }

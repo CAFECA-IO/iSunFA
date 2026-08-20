@@ -971,6 +971,8 @@ export const hrManagement = {
       "申请时序与送出时间不符：事前申请必须在班别开始前送出。",
     error_regular_off: "例假日出勤须依 §40 程序处理，请洽人资。",
     error_already_reviewed: "这张单已经被决行了。重新整理即可看到结果。",
+    error_reclassified_midway:
+      "这张单在你核准的过程中被人资认定为天灾事变（§32 IV），整段工资改为加倍发给。请重新整理，确认金额后再核准。",
     error_comp_expiry_unset:
       "公司尚未协商补休期限，因此换不了补休。请改选加班费，或请人资设定。",
     error_day_not_scheduled:

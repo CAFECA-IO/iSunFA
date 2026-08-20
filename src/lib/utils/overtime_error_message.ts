@@ -38,6 +38,12 @@ export const OVERTIME_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
     "hr_management.overtime.error_exceeds_quarterly",
   [API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED.code]:
     "hr_management.overtime.error_already_reviewed",
+  /**
+   * Info: (20260820 - Julian) 與「已決行」分開的一句（review 第 3 條）。
+   * 兩者的下一步相反：一句是不用再管，這一句是重新看過再按一次。
+   */
+  [API_ERRORS.VA_OVERTIME_RECLASSIFIED_MIDWAY.code]:
+    "hr_management.overtime.error_reclassified_midway",
   [API_ERRORS.VA_OVERTIME_COMP_EXPIRY_UNSET.code]:
     "hr_management.overtime.error_comp_expiry_unset",
 

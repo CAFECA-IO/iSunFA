@@ -24,6 +24,7 @@ import { assertGrantSource } from "@/repositories/leave_grant_invariant";
 import {
   assertOvertimeEmergencyRecord,
   assertOvertimeFilingType,
+  assertOvertimeSegmentPremium,
   IStorableOvertimeRequest,
 } from "@/repositories/overtime_request_invariant";
 
@@ -77,6 +78,19 @@ export interface IOvertimeApprovalWrite {
    * `assertOvertimeEmergencyRecord`。
    */
   segments: readonly IOvertimeSegment[];
+  /**
+   * Info: (20260820 - Julian) **分段是照哪一個 `isEmergency` 算出來的**（review 第 3 條）。
+   *
+   * 不是要寫進去的值 —— 核准不碰這一欄（見上方）。它是**樂觀鎖的比較基準**：
+   * service 在 `:318` 讀出旗標算好分段，中間還隔著數次查詢，而 HR 的
+   * `declareEmergency` 只要求 `status = PENDING`，那段窗口對它完全敞開。
+   * 交錯之後這張單會同時是「已依 §32 IV 報備」與「按普通級距算完錢」，
+   * 而分段、補休批次、折現事件都已經在同一筆交易裡寫好了。
+   *
+   * `declareEmergency` 的註解只說得出反方向（「主管隨時可能在 HR 按下去的
+   * 同一秒核准掉」），那一頭由 `status = PENDING` 擋著；這一欄擋的是另一頭。
+   */
+  isEmergencyAtDerivation: boolean;
   engineVersion: number;
   /** Info: (20260818 - Julian) 由 service 組好，repository 只負責在寫入前擋一次 */
   invariant: IStorableOvertimeRequest;
@@ -126,6 +140,10 @@ export interface IOvertimeRequestRepository {
    * 在兩個畫面上做的兩件事**，主管隨時可能在 HR 按下去的同一秒核准掉。
    * `count === 0` 即「已被決行」—— 那時候再蓋上旗標，會讓一張已經按
    * 普通級距算完錢的單子突然變成加倍發給，而分段早就寫好了。
+   *
+   * Info: (20260820 - Julian) 這一條只擋得住**「核准先、認定後」**（review 第 3 條）。
+   * 反方向（認定卡進核准的計算過程中間）status 全程都是 PENDING，這裡看不見；
+   * 由 `approve` 的 `where` 多帶一個 `isEmergency` 擋（見 `isEmergencyAtDerivation`）。
    */
   declareEmergency(params: {
     accountBookId: string;
@@ -196,6 +214,17 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
     params: IOvertimeApprovalWrite,
   ): Promise<IOvertimeApprovalWriteResult> {
     assertOvertimeFilingType(params.invariant);
+    /**
+     * Info: (20260820 - Julian) 級距與旗標必須一致（review 第 3 條）。
+     *
+     * 擋在交易之外：這一條純粹看參數，不需要 DB。真正的併發防護是下面
+     * `where` 裡的 `isEmergency` —— 兩者分工不同，這一條擋的是「呼叫端自己
+     * 就算錯了」（遷移腳本、未來的更正流程），那一條擋的是「算對了但中途被改」。
+     */
+    assertOvertimeSegmentPremium({
+      isEmergency: params.isEmergencyAtDerivation,
+      segments: params.segments,
+    });
 
     return prisma.$transaction(async (tx) => {
       const moved = await tx.overtimeRequest.updateMany({
@@ -203,6 +232,15 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
           id: params.requestId,
           accountBookId: params.accountBookId,
           status: OvertimeRequestStatus.PENDING,
+          /**
+           * Info: (20260820 - Julian) 把「我算的時候它是這個值」納入 claim（review 第 3 條）。
+           *
+           * 只 claim `status` 的話，HR 在 service 讀出旗標之後、交易開始之前
+           * 按下認定，這裡仍然 `count === 1`，於是普通級距的分段連同補休批次
+           * 一起落地在一張已經標記為天災事變的單子上 —— 那個狀態沒有任何
+           * 後續流程會回頭修正，而它在薪資結算日才會以「少算的工資」現形。
+           */
+          isEmergency: params.isEmergencyAtDerivation,
         },
         data: {
           status: OvertimeRequestStatus.APPROVED,
@@ -212,8 +250,31 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
         },
       });
       if (moved.count === 0) {
+        /**
+         * Info: (20260820 - Julian) 兩種落空要分得出來（review 第 3 條）。
+         *
+         * `count === 0` 現在有兩個成因：已經被決行，或是還在 PENDING 但旗標
+         * 變了。回同一種結局的話，主管會看到「此加班單已決行」而不再處理，
+         * 而那張單其實還在等他 —— 一句安撫的錯誤訊息把一張單子變成孤兒。
+         *
+         * 這一讀只用來**分類錯誤訊息**，不參與判斷是否寫入（判斷已經由上面
+         * 那一次附條件更新做完了），因此它自己再被誰改一次也不會產生錯誤的寫入。
+         */
+        const current = await tx.overtimeRequest.findFirst({
+          where: {
+            id: params.requestId,
+            accountBookId: params.accountBookId,
+          },
+          select: { status: true, isEmergency: true },
+        });
+        const reclassified =
+          current !== null &&
+          current.status === OvertimeRequestStatus.PENDING &&
+          current.isEmergency !== params.isEmergencyAtDerivation;
         return {
-          outcome: OvertimeDecisionOutcome.ALREADY_REVIEWED,
+          outcome: reclassified
+            ? OvertimeDecisionOutcome.RECLASSIFIED
+            : OvertimeDecisionOutcome.ALREADY_REVIEWED,
           grantCount: 0,
           cashOutEventIds: [],
         };

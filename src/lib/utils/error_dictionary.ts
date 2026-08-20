@@ -1522,6 +1522,20 @@ export const API_ERRORS = {
   } as IErrorDef,
 
   /**
+   * Info: (20260820 - Julian) 核准算到一半被 §32 IV 認定改寫（review 第 3 條）。
+   *
+   * 不與 `VA_OVERTIME_ALREADY_REVIEWED` 共用：那一句要主管**不要再管**這張單，
+   * 而這一句要主管**重新看一次再按** —— 工資標準已經從普通級距跳到加倍發給，
+   * 而他剛才在畫面上看到的金額不是現在會寫進去的那個。
+   */
+  VA_OVERTIME_RECLASSIFIED_MIDWAY: {
+    code: "VA000070",
+    message:
+      "This overtime request was declared an emergency (Article 32 IV) while you were approving it; reload and confirm the doubled premium before approving",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
    * Info: (20260818 - Julian) 撤回事後補單卻沒填理由。
    *
    * 事前申請的撤回不必填 —— 那是取消一個還沒發生的計畫。事後補單不同：

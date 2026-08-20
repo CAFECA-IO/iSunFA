@@ -1029,6 +1029,8 @@ export const hrManagement = {
       "Working on a statutory rest day needs the Article 40 procedure. Ask HR to handle it.",
     error_already_reviewed:
       "This request has already been decided. Reload to see the result.",
+    error_reclassified_midway:
+      "HR declared this an emergency (Article 32 IV) while you were approving it, so the whole span is now paid double. Reload, check the amount, then approve.",
     error_comp_expiry_unset:
       "The company has not agreed a compensatory-leave period yet, so overtime cannot be converted. Pick overtime pay, or ask HR to set it.",
     error_day_not_scheduled:

@@ -1010,6 +1010,8 @@ export const hrManagement = {
       "法定休日の勤務は §40 の手続きが必要です。人事にご相談ください。",
     error_already_reviewed:
       "この申請は既に処理されています。再読み込みしてください。",
+    error_reclassified_midway:
+      "承認の途中で人事がこの申請を天災・事変（§32 IV）と認定したため、全区間が倍額支給になりました。再読み込みして金額をご確認のうえ承認してください。",
     error_comp_expiry_unset:
       "代休の期限が未協定のため振替できません。残業手当を選ぶか、人事に設定を依頼してください。",
     error_day_not_scheduled:
