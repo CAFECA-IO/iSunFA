@@ -5,12 +5,17 @@ import { NextRequest } from "next/server";
 import { POST as addressInvite } from "@/app/api/v1/user/team/[team_id]/invitations/route";
 import { POST as emailInvite } from "@/app/api/v1/user/team/[team_id]/invitations/email/route";
 import { POST as addMember } from "@/app/api/v1/user/team/[team_id]/members/route";
+import {
+  DELETE as removeMember,
+  PATCH as changeMemberRole,
+} from "@/app/api/v1/user/team/[team_id]/members/[member_id]/route";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
 import { chargeSeatAddition } from "@/services/team_seat.service";
 import { inviteMemberByEmail } from "@/services/team_invitation.service";
 import { webAuthnService } from "@/services/webauthn.service";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { writeOffAllocationOnMemberRemoval } from "@/services/team_wallet.service";
 
 /**
  * Info: (20260819 - Luphia) 管理職權限閘真的擋在路徑上（review #6685 高-2）。
@@ -45,7 +50,33 @@ jest.mock("@/repositories/team.repo", () => ({
     findLastInvitationSentAt: jest.fn(async () => null),
     getTeamById: jest.fn(async () => ({ id: "team-1", name: "T" })),
     createTeamMember: jest.fn(async () => ({ id: "member-1" })),
+    /**
+     * Info: (20260819 - Luphia) `members/[member_id]` 的四支（review #6685 的一句備註）。
+     * 逐項列舉而不是 `...actual`：teamRepo 直接碰 prisma，requireActual 會把真連線帶進來。
+     */
+    getTeamMemberById: jest.fn(async () => ({
+      id: "member-2",
+      teamId: "team-1",
+      userId: "user-target",
+      role: "VIEWER",
+    })),
+    countTeamMembersByRole: jest.fn(async () => 2),
+    updateTeamMember: jest.fn(async () => ({ id: "member-2", role: "EDITOR" })),
+    deleteTeamMember: jest.fn(async () => ({ id: "member-2" })),
   },
+}));
+
+/**
+ * Info: (20260819 - Luphia) 移除成員的兩個副作用（分配沖銷、記憶刪除）都要 stub：
+ * 兩者都會碰資料庫，而它們與被測的權限閘無關——不 stub 的話「閘擋下了嗎」
+ * 會被一個資料庫錯誤蓋掉（checklist §1.8）。
+ */
+jest.mock("@/services/team_wallet.service", () => ({
+  writeOffAllocationOnMemberRemoval: jest.fn(async () => undefined),
+}));
+
+jest.mock("@/services/faith_memory.service", () => ({
+  deleteFaithMemoryOnMemberRemoval: jest.fn(async () => undefined),
 }));
 
 jest.mock("@/repositories/webauthn.repo", () => ({
@@ -290,5 +321,204 @@ describe("會動錢的端點：管理職以外一律擋下", () => {
 
     expect(response.status).toBe(200);
     expect(asMock(chargeSeatAddition)).toHaveBeenCalledTimes(1);
+  });
+});
+
+/**
+ * Info: (20260819 - Luphia) 第五道閘：`members/[member_id]`（改角色 / 移除成員）。
+ *
+ * 上一輪 reviewer 的一句備註——接線測試涵蓋三支「會動錢」的 route，而這一支
+ * 「若要補值得補」：它能**改角色**（把人升成 OWNER 就等於多一位可以動錢的人）
+ * 也能**移除成員**（移除會釋出席次，而席次是計費單位）。
+ *
+ * 兩支 handler 的閘不同，所以分開驗：
+ *
+ * - `PATCH`（改角色）是硬性 `operator.role !== "OWNER"`
+ * - `DELETE`（移除）走 `isTeamManagerRole`，但**自己退出團隊不受限**
+ *
+ * 最後一條（自刪）是這一組裡最容易被改壞的：把 `!isSelfDelete && !isManager`
+ * 簡化成 `!isManager` 會讓任何非管理職**無法退出團隊**，而所有「被擋下」的
+ * 斷言都還是綠的。
+ */
+describe("成員管理端點：改角色限 OWNER、移除他人限管理職", () => {
+  const MEMBER_PARAMS = Promise.resolve({
+    team_id: "team-1",
+    member_id: "member-2",
+  });
+
+  function memberRequest(method: string): NextRequest {
+    return new NextRequest(
+      "https://isunfa.com/api/v1/user/team/team-1/members/member-2",
+      {
+        method,
+        headers: {
+          "content-type": "application/json",
+          authorization: "Bearer dewt",
+        },
+        body: JSON.stringify({
+          role: "EDITOR",
+          authentication: { id: "cred" },
+        }),
+      },
+    );
+  }
+
+  const NON_OWNERS = ["EDITOR", "VIEWER", "ADMIN"];
+
+  it.each(NON_OWNERS)("改角色：%s 被擋下，且沒有改任何角色", async (role) => {
+    asMock(getIdentityFromDeWT).mockResolvedValue({
+      id: "user-1",
+      address: `0xpatch-${role}`,
+    });
+    asMock(teamRepo.getTeamMember).mockResolvedValue({ id: "member-1", role });
+
+    const response = await changeMemberRole(memberRequest("PATCH"), {
+      params: MEMBER_PARAMS,
+    });
+
+    expect(response.status).not.toBe(200);
+    expect(asMock(teamRepo.updateTeamMember)).not.toHaveBeenCalled();
+  });
+
+  it.each(NON_OWNERS)(
+    "移除他人：%s 被擋下，且沒有移除、沒有沖銷分配",
+    async (role) => {
+      asMock(getIdentityFromDeWT).mockResolvedValue({
+        id: "user-1",
+        address: `0xdelete-${role}`,
+      });
+      asMock(teamRepo.getTeamMember).mockResolvedValue({
+        id: "member-1",
+        role,
+      });
+
+      const response = await removeMember(memberRequest("DELETE"), {
+        params: MEMBER_PARAMS,
+      });
+
+      expect(response.status).not.toBe(200);
+      expect(asMock(teamRepo.deleteTeamMember)).not.toHaveBeenCalled();
+      expect(asMock(writeOffAllocationOnMemberRemoval)).not.toHaveBeenCalled();
+    },
+  );
+
+  it("移除他人：不是團隊成員也被擋下", async () => {
+    asMock(getIdentityFromDeWT).mockResolvedValue({
+      id: "user-1",
+      address: "0xdelete-none",
+    });
+    asMock(teamRepo.getTeamMember).mockResolvedValue(null);
+
+    const response = await removeMember(memberRequest("DELETE"), {
+      params: MEMBER_PARAMS,
+    });
+
+    expect(response.status).not.toBe(200);
+    expect(asMock(teamRepo.deleteTeamMember)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260819 - Luphia) 改角色送出已移除的 ADMIN 值要**拒絕**，
+   * 不是靜默寫進資料庫（那會造出一個權限判斷一律 false 的成員）。
+   */
+  it("改角色：OWNER 送出已移除的 ADMIN 值也被拒絕", async () => {
+    asMock(getIdentityFromDeWT).mockResolvedValue({
+      id: "user-1",
+      address: "0xpatch-admin-value",
+    });
+    asMock(teamRepo.getTeamMember).mockResolvedValue({
+      id: "member-1",
+      role: "OWNER",
+    });
+
+    const response = await changeMemberRole(
+      new NextRequest(
+        "https://isunfa.com/api/v1/user/team/team-1/members/member-2",
+        {
+          method: "PATCH",
+          headers: {
+            "content-type": "application/json",
+            authorization: "Bearer dewt",
+          },
+          body: JSON.stringify({
+            role: "ADMIN",
+            authentication: { id: "cred" },
+          }),
+        },
+      ),
+      { params: MEMBER_PARAMS },
+    );
+
+    expect(response.status).not.toBe(200);
+    expect(asMock(teamRepo.updateTeamMember)).not.toHaveBeenCalled();
+  });
+
+  // Info: (20260819 - Luphia) 另一半之一：OWNER 真的改得動、也移得動
+  it("OWNER 改得動角色", async () => {
+    asMock(getIdentityFromDeWT).mockResolvedValue({
+      id: "user-1",
+      address: "0xpatch-owner",
+    });
+    asMock(teamRepo.getTeamMember).mockResolvedValue({
+      id: "member-1",
+      role: "OWNER",
+    });
+
+    const response = await changeMemberRole(memberRequest("PATCH"), {
+      params: MEMBER_PARAMS,
+    });
+
+    expect(response.status).toBe(200);
+    expect(asMock(teamRepo.updateTeamMember)).toHaveBeenCalledWith("member-2", {
+      role: "EDITOR",
+    });
+  });
+
+  it("OWNER 移除得了他人", async () => {
+    asMock(getIdentityFromDeWT).mockResolvedValue({
+      id: "user-1",
+      address: "0xdelete-owner",
+    });
+    asMock(teamRepo.getTeamMember).mockResolvedValue({
+      id: "member-1",
+      role: "OWNER",
+    });
+
+    const response = await removeMember(memberRequest("DELETE"), {
+      params: MEMBER_PARAMS,
+    });
+
+    expect(response.status).toBe(200);
+    expect(asMock(teamRepo.deleteTeamMember)).toHaveBeenCalledWith("member-2");
+  });
+
+  /**
+   * Info: (20260819 - Luphia) 另一半之二：**自己退出團隊不受角色限制**。
+   *
+   * 這一條擋的是「把閘簡化成一律限管理職」那種改法——所有「被擋下」的斷言
+   * 都還會是綠的，而 EDITOR 從此無法離開團隊（只能請 OWNER 動手）。
+   */
+  it("EDITOR 可以自己退出團隊（自刪不受管理職限制）", async () => {
+    asMock(getIdentityFromDeWT).mockResolvedValue({
+      id: "user-1",
+      address: "0xdelete-self",
+    });
+    asMock(teamRepo.getTeamMember).mockResolvedValue({
+      id: "member-2",
+      role: "EDITOR",
+    });
+    asMock(teamRepo.getTeamMemberById).mockResolvedValue({
+      id: "member-2",
+      teamId: "team-1",
+      userId: "user-1",
+      role: "EDITOR",
+    });
+
+    const response = await removeMember(memberRequest("DELETE"), {
+      params: MEMBER_PARAMS,
+    });
+
+    expect(response.status).toBe(200);
+    expect(asMock(teamRepo.deleteTeamMember)).toHaveBeenCalledWith("member-2");
   });
 });
