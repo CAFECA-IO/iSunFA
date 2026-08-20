@@ -52,13 +52,41 @@ const CLOSED_ROW = /^\|.*\|$/;
 const OPEN_ROW = /^\|.*[^|]$/;
 
 /**
- * Info: (20260814 - Emily) 一格最多被折成幾行。
+ * Info: (20260820 - Emily) 一格最多被折成幾行。**4 → 32,依 08-20 run D 的實測。**
  *
- * log 裡實際看到的都是 2 個續行（表4.1、表4.4 的表頭各佔三行）。
- * 取 4 是留餘裕但仍能把散文擋在外面：一段散文的第五行以內湊巧以 `|` 收尾，
- * 而中間沒有任何一行以 `|` 開頭 —— 那不太可能。
+ * 原本取 4,理由是「log 裡實際看到的都是 2 個續行」。08-20 run D 推翻了那個假設:
+ * 表4.4 與 表4.8 被 `not_a_table` 整張丟掉,量測那兩份 payload 的折斷段:
+ *
+ *     表4.4  折斷 4 段,所需續行數 5 / 5 / 6 / 16
+ *     表4.8  折斷 16 段,所需續行數 6…29(眾數 8)
+ *
+ * 每一段都超過 4,所以兩張表的每一列都放棄接回 → 整張丟掉。
+ * 表4.8 是 173 列的排放源不確定性分析,單筆代價最大的靜默丟失。
+ *
+ * ## 為什麼不是改用「碎片長度」當判準
+ *
+ * 折斷的碎片看起來很短(`或設`、`區間之下`),所以「短碎片才接」是個很自然的想法。
+ * 實測不成立:187 條續行碎片的中位長度是 5 字,但有 26 條超過 20 字、最長 89 字。
+ * 拿長度當門檻會在半路切斷這兩張表,比不接更糟(半張表沒有 log 說它少了什麼)。
+ *
+ * ## 放寬的是哪一道護欄,以及為什麼可以放寬
+ *
+ * 危險的錯是**把兩列併成一列**(後面每一格左移一位,一個氣體的排放量標成別的名目)。
+ * 擋住那件事的是「續行不得以 `|` 開頭」與「全文至少一列完整閉合」,
+ * 兩者都與續行數無關,一個都沒動。
+ *
+ * 續行數只擋一種情況:把散文吸進表格列。而這裡的輸入是模型已經宣告為表格、
+ * 且通過表號驗證的 `sourceTables[].markdown`,不是自由段落;吸進散文的後果也是
+ * 一格內容變醜(看得見),不是欄位錯位(看不見)。用「無聲的丟表」換「看得見的變醜」
+ * 是這個檔頭一路的立場。
+ *
+ * 32 是實測最大值 29 再留餘裕。用掉超過 4 個續行時呼叫端會記 log ——
+ * 放寬不能是靜默的,累積起來要回頭改匯入 prompt。
  */
-const MAX_CONTINUATION_LINES = 4;
+export const MAX_CONTINUATION_LINES = 32;
+
+// Info: (20260820 - Emily) 超過這個續行數就記 log:它是「原文長得不標準」的強訊號
+export const CONTINUATION_LINES_NOTEWORTHY = 4;
 
 const cellCount = (line: string): number =>
   line
@@ -117,12 +145,15 @@ const hasClosedRow = (lines: readonly string[]): boolean =>
  */
 export const joinWrappedTableRows = (
   markdown: string,
-): { markdown: string; joined: number } => {
+): { markdown: string; joined: number; maxContinuations: number } => {
   const lines = markdown.split("\n");
-  if (!hasClosedRow(lines)) return { markdown, joined: 0 };
+  if (!hasClosedRow(lines)) {
+    return { markdown, joined: 0, maxContinuations: 0 };
+  }
 
   const output: string[] = [];
   let joined = 0;
+  let maxContinuations = 0;
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
@@ -159,8 +190,9 @@ export const joinWrappedTableRows = (
 
     output.push(`${indent}${merged}`);
     joined += 1;
+    maxContinuations = Math.max(maxContinuations, cursor - index);
     index = cursor;
   }
 
-  return { markdown: output.join("\n"), joined };
+  return { markdown: output.join("\n"), joined, maxContinuations };
 };

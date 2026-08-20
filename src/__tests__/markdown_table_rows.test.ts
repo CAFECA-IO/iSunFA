@@ -1,4 +1,7 @@
-import { joinWrappedTableRows } from "@/lib/utils/markdown_table_rows";
+import {
+  joinWrappedTableRows,
+  MAX_CONTINUATION_LINES,
+} from "@/lib/utils/markdown_table_rows";
 import { ensureTableDivider } from "@/lib/utils/markdown_table_divider";
 
 /**
@@ -99,6 +102,7 @@ describe("joinWrappedTableRows", () => {
     expect(joinWrappedTableRows(source)).toEqual({
       markdown: source,
       joined: 0,
+      maxContinuations: 0,
     });
   });
 
@@ -125,15 +129,23 @@ describe("joinWrappedTableRows", () => {
     expect(result.markdown).toBe(source);
   });
 
+  /**
+   * Info: (20260820 - Emily) 素材改成跟著 `MAX_CONTINUATION_LINES` 走。
+   *
+   * 原本寫死 5 個續行 —— 上限是 4 的時候那剛好超過。08-20 把上限放寬到 32 之後
+   * 這條測試變綠了,而它要驗的**規則**(超過上限就整段放棄)一點都沒有失效,
+   * 失效的是素材綁死了那個數字。所以改成由上限推出素材,
+   * 下一次有人再動上限,這條測試仍然在驗同一件事。
+   */
   it("should give up entirely when the row never closes within the cap", () => {
     const source = [
       "| 甲 | 乙 |",
       "| 開頭 | 這一列",
-      "永遠",
-      "都不",
-      "會收",
-      "尾所以要放棄",
-      "第六行才收尾 |",
+      ...Array.from(
+        { length: MAX_CONTINUATION_LINES },
+        (_, index) => `永遠都不會收尾的第${index}段`,
+      ),
+      "終於收尾 |",
     ].join("\n");
 
     const result = joinWrappedTableRows(source);
@@ -191,6 +203,7 @@ describe("joinWrappedTableRows", () => {
     expect(joinWrappedTableRows(source)).toEqual({
       markdown: source,
       joined: 0,
+      maxContinuations: 0,
     });
   });
 });
@@ -236,6 +249,7 @@ describe("joinWrappedTableRows 的護欄", () => {
     expect(joinWrappedTableRows(source)).toEqual({
       markdown: source,
       joined: 0,
+      maxContinuations: 0,
     });
   });
 
@@ -246,6 +260,7 @@ describe("joinWrappedTableRows 的護欄", () => {
     expect(joinWrappedTableRows(source)).toEqual({
       markdown: source,
       joined: 0,
+      maxContinuations: 0,
     });
   });
 
@@ -271,5 +286,97 @@ describe("joinWrappedTableRows 的護欄", () => {
     );
 
     expect(result.markdown.split("\n")[0]).toBe("| 甲 | a\\|b尾 |");
+  });
+});
+
+/**
+ * Info: (20260820 - Emily) 續行上限從 4 放寬到 32 —— 08-20 run D 的實測依據。
+ *
+ * 那一趟 `表4.4` 與 `表4.8` 被 `not_a_table` 整張丟掉（表4.8 是 173 列）。
+ * 量測 log 裡那兩份 payload 的每一段折斷:
+ *
+ *     表4.4  4 段,所需續行數 5 / 5 / 6 / 16
+ *     表4.8  16 段,所需續行數 6…29
+ *
+ * 每一段都超過舊上限 4,所以每一列都放棄接回。
+ * 下面那個表頭是從 `data/scratch/t4.4_run_d.txt` 逐字取的第 9–25 行,
+ * 一列被折成 17 行 —— 素材是本尊,不是我另編一個看起來像的。
+ */
+describe("續行上限放寬到 32（08-20 run D）", () => {
+  const RUN_D_HEADER = [
+    "| | | | 95%信賴",
+    "區間之下",
+    "限 | 95%信賴",
+    "區間之上",
+    "限 | 溫室",
+    "氣體 | 溫室氣體排",
+    "放當量(噸",
+    "CO₂ e/年) | 95%信賴",
+    "區間之下",
+    "限 | 95%信賴",
+    "區間之上",
+    "限 | 單一溫室氣體不確定",
+    "性 | 95%信賴",
+    "區間之下",
+    "限 | 95%信賴",
+    "區間之上",
+    "限 | |",
+  ];
+  // Info: (20260820 - Emily) hasClosedRow 需要全文至少一列閉合 —— 原 payload 有 9 列
+  const RUN_D_TABLE = [...RUN_D_HEADER, "| 1 | 2 | 3 |"].join("\n");
+
+  it("被折成 17 行的表頭接得回來", () => {
+    const result = joinWrappedTableRows(RUN_D_TABLE);
+
+    expect(result.joined).toBe(1);
+    expect(result.markdown.split("\n")[0]).toContain("95%信賴區間之下限");
+    expect(result.markdown.split("\n")[0]).toContain("溫室氣體排放當量");
+  });
+
+  it("接回來的那一列是一行，欄數合理", () => {
+    const first = joinWrappedTableRows(RUN_D_TABLE).markdown.split("\n")[0];
+
+    expect(first.startsWith("|")).toBe(true);
+    expect(first.endsWith("|")).toBe(true);
+    expect(first.split("|").length - 2).toBeGreaterThan(8);
+  });
+
+  /**
+   * Info: (20260820 - Emily) 放寬不能是靜默的 —— 呼叫端要記 log,
+   * 所以用掉幾個續行必須回報得出來。
+   */
+  it("回報實際用掉的最大續行數", () => {
+    expect(joinWrappedTableRows(RUN_D_TABLE).maxContinuations).toBe(16);
+  });
+
+  /**
+   * Info: (20260820 - Emily) 反向對照:放寬的只有續行數這一道。
+   * 擋住「兩列併成一列」的兩道護欄都沒動,這兩條要證明它們還在。
+   */
+  it("續行以 `|` 開頭時仍然不接（那是另一列，不是折斷）", () => {
+    const twoRows = ["| 甲 | 乙", "| 1 | 2 |", "| 3 | 4 |"].join("\n");
+    const result = joinWrappedTableRows(twoRows);
+
+    expect(result.joined).toBe(0);
+    expect(result.markdown).toBe(twoRows);
+  });
+
+  it("全文沒有任何一列閉合時仍然整段放棄", () => {
+    const noClosed = ["| 甲 | 乙", "1 | 2", "3 | 4"].join("\n");
+    const result = joinWrappedTableRows(noClosed);
+
+    expect(result.joined).toBe(0);
+    expect(result.maxContinuations).toBe(0);
+  });
+
+  it("空行仍然是段落邊界（散文不會被吸進表格列）", () => {
+    const withBlank = [
+      "| 甲 | 乙",
+      "",
+      "這是一段散文，不該被接進上面那一列。",
+      "| 1 | 2 |",
+    ].join("\n");
+
+    expect(joinWrappedTableRows(withBlank).joined).toBe(0);
   });
 });

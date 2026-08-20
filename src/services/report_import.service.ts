@@ -27,7 +27,10 @@ import {
   ensureTableDivider,
   trimRowsToDividerWidth,
 } from "@/lib/utils/markdown_table_divider";
-import { joinWrappedTableRows } from "@/lib/utils/markdown_table_rows";
+import {
+  CONTINUATION_LINES_NOTEWORTHY,
+  joinWrappedTableRows,
+} from "@/lib/utils/markdown_table_rows";
 import { extractPagesAsPdf } from "@/lib/utils/pdf_page_extract";
 import {
   narrowVisionPagesToRange,
@@ -1022,11 +1025,18 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
         const rejoined = candidates.map((table) => {
           const fix = joinWrappedTableRows(table.markdown);
           if (fix.joined === 0) return table;
+          /*
+           * Info: (20260820 - Emily) 續行數一併記出來。08-20 把上限從 4 放寬到 32,
+           * 而放寬不能是靜默的:用掉幾個續行是「原文長得不標準」的強度指標,
+           * 累積起來要回頭改匯入 prompt,不是讓這支函式永遠替 prompt 擦屁股。
+           */
           logger.warn("[ReportImportService] source table rows rejoined", {
             paragraphId,
             tableNo: table.tableNo,
             caption: table.caption.slice(0, 40),
             rows: fix.joined,
+            maxContinuations: fix.maxContinuations,
+            noteworthy: fix.maxContinuations > CONTINUATION_LINES_NOTEWORTHY,
           });
           return { ...table, markdown: fix.markdown };
         });
