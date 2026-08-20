@@ -1,3 +1,5 @@
+import { GUIDE_FIGURE_ID } from "@/constants/logistics_guide";
+
 export const transportationCarbonFootprintCalculator = {
   title: "Logistics Carbon Footprint",
   default_ai_input:
@@ -167,6 +169,15 @@ export const transportationCarbonFootprintCalculator = {
   // Info: (20260724 - Tzuhan) Export options modal (requirement 2)
   methodology: {
     title: "How the figures are calculated",
+    intro:
+      "The sections below explain where every number comes from. If you only need to know how far the conclusions can be trusted, go straight to section 11, Known limitations.",
+    limits_title: "Read this before using these numbers",
+    read_full: "Read the full calculation method",
+    highlights: [
+      "The scope covers **transport only**: no warehousing, handling or packaging, and nothing from the production or disposal of the goods themselves. This number is not a full product life-cycle carbon footprint.",
+      "The road network **currently covers Taiwan only**: land legs elsewhere are estimated as great-circle distance x {{landTortuosity}} and marked Estimated in the report. Where a route is mostly non-Taiwan land transport, that estimation error goes straight into the result.",
+      "The sea and air factors were **produced for the United States** (published 2016 and 2017), and the air distance excludes routing detours and high-altitude radiative forcing, so the real impact is higher than the figure reported here.",
+    ],
     sections: [
       {
         id: "scope",
@@ -274,7 +285,7 @@ export const transportationCarbonFootprintCalculator = {
           {
             term: "When no route is available",
             detail:
-              "The great-circle distance is multiplied by a tortuosity factor of {{landTortuosity}} and marked est. in the report. The factor reflects how far real roads typically deviate from a straight line and is not calibrated per route.",
+              "The great-circle distance is multiplied by a tortuosity factor of {{landTortuosity}} and marked Estimated in the report. The factor reflects how far real roads typically deviate from a straight line and is not calibrated per route.",
           },
         ],
       },
@@ -298,7 +309,7 @@ export const transportationCarbonFootprintCalculator = {
           {
             term: "When no route can be planned",
             detail:
-              "The great-circle distance is multiplied by a tortuosity factor of {{seaTortuosity}} and marked est. The sea factor exceeds the road factor because lanes are constrained by landmasses and straits, producing greater deviation.",
+              "The great-circle distance is multiplied by a tortuosity factor of {{seaTortuosity}} and marked Estimated. The sea factor exceeds the road factor because lanes are constrained by landmasses and straits, producing greater deviation.",
           },
         ],
       },
@@ -464,6 +475,178 @@ export const transportationCarbonFootprintCalculator = {
             term: "The shipping lane data version is not recorded",
             detail:
               "The lane geometry is supplied as a static file and the system records no issuing body, release version or licence terms, so the data's currency cannot be traced.",
+          },
+        ],
+      },
+    ],
+  },
+  guide: {
+    title: "How to Use",
+    subtitle:
+      "From a one-sentence route description to a deliverable PDF and CSV — the whole workflow is here, followed by how every number is calculated and where its limits are.",
+    nav_title: "On this page",
+    figure_note:
+      "The figures are interface illustrations: redrawn from the components and strings the screen actually uses, so they follow the interface language and the light/dark theme. They are not screen captures of one particular release. Numbers on a figure map to the notes below it.",
+    figure_caption: "Illustration: {{title}}",
+    start_cta: "Start carbon accounting",
+    empty_cta: "First time here? Read the guide",
+    chapters: [
+      {
+        id: "overview",
+        title: "1. What each of the four tabs is for",
+        summary:
+          "Get oriented first. This tool splits four different jobs across four tabs, and being on the wrong tab is the most common place people get stuck.",
+        steps: [
+          {
+            id: "overview_tabs",
+            title: "Division of labour between tabs",
+            body: "Carbon Accounting computes emissions for one route, Mileage computes distances for many routes, Historical Reports holds completed analyses, and How to Use is this page.",
+            figure: GUIDE_FIGURE_ID.TABS,
+            callouts: [
+              "**Carbon Accounting**: enter one origin/destination pair and a weight to get a full report with map, per-leg mileage and emissions, exportable as PDF. Each generation costs {{analysisCost}} credits.",
+              "**Mileage**: handles many routes at once from pasted text or an Excel/CSV import, and returns distances only. Useful for surveying routes before deciding which ones deserve a full accounting.",
+              "**Historical Reports**: lists past analyses; reload or export them without recomputing and without spending credits again.",
+              "**How to Use**: this page. Switching tabs does not clear anything you have already typed.",
+            ],
+            notes: [
+              "The active tab lives in the ?tab= query parameter, so a link to any tab can be sent to a colleague as-is.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "analysis",
+        title: "2. Carbon Accounting: from one sentence to one report",
+        summary: "One route, one report, four steps.",
+        steps: [
+          {
+            id: "analysis_describe",
+            title: "Describe the route, or enter coordinates directly",
+            body: "Write the origin, destination and weight in one sentence under Transportation Route Description, then press Generate Analysis Report. The system first asks the AI to extract the parameters from that sentence; this step costs nothing.",
+            figure: GUIDE_FIGURE_ID.ANALYSIS_INPUT,
+            callouts: [
+              "**Transportation Route Description**: one sentence is enough, e.g. transport 5000 kg of slate from Sun Yat-sen Memorial Hall in Taipei to the Manchester Museum. The AI only turns text into an origin, a destination and a weight; every distance and emission figure comes from the deterministic rule engine on the backend.",
+              "**Advanced Manual Parameter Configuration**: expand it when you need exact coordinates and fill in latitude, longitude and total weight. Once all five fields are filled, the manual values win and **the AI parser is not called at all**.",
+              "**Generate Analysis Report**: parses first, then opens the payment confirmation. After parsing, the advanced panel expands automatically so you can check the extracted coordinates and weight before paying.",
+            ],
+            notes: [
+              "Typing in the description field clears any coordinates and weight already entered. This prevents the inconsistent state where the description says New York while the coordinates are still last run's Tokyo.",
+              "If the parse is wrong, edit the numbers in the advanced panel — there is no need to rewrite the sentence.",
+            ],
+          },
+          {
+            id: "analysis_pay",
+            title: "Confirm the charge",
+            body: "Once the parameters are complete a payment confirmation appears. This is the only place credits are spent — parsing, switching tabs and browsing history are all free.",
+            figure: GUIDE_FIGURE_ID.ANALYSIS_PAYMENT,
+            callouts: [
+              "**Credits required**: {{analysisCost}} credits per analysis. If you belong to a team with quota, the team quota is charged first; the dialog shows the actual funding source and the balance.",
+              "**Pay and generate**: starts the calculation. Running the same parameters again costs another charge, which is why it is worth checking the coordinates and weight in the previous step.",
+            ],
+          },
+          {
+            id: "analysis_read",
+            title: "Read the report",
+            body: "The report is organised by plan: land-only, sea multimodal, air multimodal and sea-land-air multimodal each get their own card with a map, per-leg mileage and emissions.",
+            figure: GUIDE_FIGURE_ID.ANALYSIS_REPORT,
+            callouts: [
+              "**Plan switches**: only applicable plans appear. A plan is dropped when the two ports are closer than {{minSeaKm}} km, the two airports closer than {{minAirKm}} km, or when driving is no longer than the multimodal alternative.",
+              "**The plan code** (e.g. R01-SEA) runs through the screen, the PDF filename and every CSV row; it is the single index that ties the three together.",
+              "A leg marked **Estimated** means routing failed and the distance is the great-circle distance times a tortuosity factor (land ×{{landTortuosity}}, sea ×{{seaTortuosity}}). When reviewing a report, count these first.",
+              "**Total emissions** are computed on the backend at unrounded precision, so adding up the displayed legs can differ from the total by a few decimals; the report discloses that difference and its source.",
+              "**The factor and formula** are always disclosed inside the report: total distance (km) × (weight (kg) / 1000) × the factor for that mode.",
+            ],
+            notes: [
+              "A missing plan is not a missing calculation. The applicability check removes inapplicable plans entirely rather than handing you a report full of zeroes; the rules are in section 9 below.",
+            ],
+          },
+          {
+            id: "analysis_export",
+            title: "Export PDF and CSV",
+            body: "Pressing Export Report — either on the report or in the history list — opens a selection dialog for which plans to export and whether to include emission figures.",
+            figure: GUIDE_FIGURE_ID.EXPORT_MODAL,
+            callouts: [
+              "**Plan selection**: only plans applicable to this route are listed. Each plan produces its own PDF, and multiple files are packed into a ZIP.",
+              "**Calculate CO2 equivalent**: clear it and neither the PDF nor the CSV will contain any emission figure — only routes and distances.",
+              "**The emission factor set** is a disclosure, not a choice: what you see is the set the calculation actually used. To apply a different set, clear the option above, take the distance-only CSV and apply your own factors.",
+              "The exported summary.csv carries full precision and the plan code, so it can be reconciled row by row against the PDF of the same name.",
+            ],
+            notes: [
+              "During export a full-screen progress overlay covers the page. That is there to keep the underlying content out of the capture, not a freeze.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "mileage",
+        title: "3. Mileage: many routes in one pass",
+        summary:
+          "Use this when you only need distances, or when there are dozens of routes to process at once.",
+        steps: [
+          {
+            id: "mileage_run",
+            title: "Build the list and compute mileage",
+            body: "Paste text for the AI to parse, add rows manually, or import an Excel/CSV file. Once the list is ready, Start Mileage Calculation processes all of it in one go.",
+            figure: GUIDE_FIGURE_ID.MILEAGE_FLOW,
+            callouts: [
+              "**Paste text for automatic parsing**: drop in a whole shipping note or email body and press AI Auto Parse to break it into origin/destination rows.",
+              "**Waypoints (optional)**: set intermediate stops here. Every waypoint needs coordinates — auto-parse can fetch them, and a waypoint without coordinates stops the calculation with a prompt.",
+              "**Batch import**: accepts .xlsx, .xls and .csv. The import maps your file's columns onto origin, destination and waypoints, so no fixed column names are required.",
+              "**Transport mode**: defaults to AI Auto Detect, or force land-only, sea-land, air-land or sea-land-air.",
+              "**Start Mileage Calculation**: submits the whole list at once. Results can then be exported row by row or in bulk, through the same export flow as carbon accounting.",
+            ],
+            notes: [
+              "Mileage results are also written to Historical Reports, and reloading one switches back to the Mileage tab automatically.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "history",
+        title: "4. Historical Reports: revisit and re-export",
+        summary:
+          "Completed analyses stay here; reviewing and exporting them costs no further credits.",
+        steps: [
+          {
+            id: "history_reopen",
+            title: "Reload or export directly",
+            body: "The list is ordered by time and only COMPLETED rows can be loaded. Loading switches to the matching tab and restores the origin, destination and weight used at the time.",
+            figure: GUIDE_FIGURE_ID.HISTORY_TABLE,
+            callouts: [
+              "**Type** tells carbon accounting apart from mileage — the two load into different tabs. A mileage run covering several routes can be expanded row by row.",
+              "**Load** reopens the original report for review, with no recomputation and no charge.",
+              "**Export Report** loads the record and opens the export dialog straight away, which is what you want when all you need is another copy of the PDF.",
+            ],
+            notes: [
+              "After loading, the URL carries analysisId, so the link can be shared as-is and the browser Back button returns precisely to the list.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "troubleshoot",
+        title: "5. Common situations",
+        summary: "All of the following are by design, not faults.",
+        steps: [
+          {
+            id: "trouble_missing_plan",
+            title: "A transport plan does not appear",
+            body: "The applicability check ruled it out: the two ports are closer than {{minSeaKm}} km, the two airports closer than {{minAirKm}} km, or driving is no longer than that multimodal plan. The plan is then omitted entirely rather than reported as zero.",
+          },
+          {
+            id: "trouble_estimate",
+            title: "An Estimated badge appears next to a distance",
+            body: "Routing did not succeed for that leg, so the distance is the great-circle distance times a tortuosity factor (land ×{{landTortuosity}}, sea ×{{seaTortuosity}}). The road network **currently covers Taiwan only**, so land legs outside Taiwan are almost always estimates.",
+          },
+          {
+            id: "trouble_total_mismatch",
+            title: "The legs do not add up to the total",
+            body: "The total is computed on the backend at unrounded precision while the displayed legs are rounded to two decimals, so their sum naturally differs. The report discloses the difference; for full precision use the exported summary.csv.",
+          },
+          {
+            id: "trouble_no_payment",
+            title: "Generate Analysis Report does not open the payment dialog",
+            body: "Incomplete parameters never reach payment. Check that the description field has content, or that all five advanced fields are filled; the error message appears under the configuration card.",
           },
         ],
       },

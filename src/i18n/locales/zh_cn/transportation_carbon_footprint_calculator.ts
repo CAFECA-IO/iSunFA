@@ -1,3 +1,5 @@
+import { GUIDE_FIGURE_ID } from "@/constants/logistics_guide";
+
 export const transportationCarbonFootprintCalculator = {
   title: "物流碳足迹",
   default_ai_input: "从台北国父纪念馆运送 5000 公斤的石板到曼彻斯特博物馆",
@@ -157,6 +159,15 @@ export const transportationCarbonFootprintCalculator = {
   // Info: (20260724 - Tzuhan) 导出勾选菜单(需求二)
   methodology: {
     title: "计算方式说明",
+    intro:
+      "以下逐节说明每一个数字是怎么来的。若只想知道结论的可信范围，直接看第十一节「已知限制」。",
+    limits_title: "使用这份数字前必读",
+    read_full: "看完整计算方式说明",
+    highlights: [
+      "计算范围**只含运输过程**：不含仓储、装卸、包装，也不含货物本身的生产与废弃。这份数字不等于产品的完整生命周期碳足迹。",
+      "道路路网**目前仅覆盖台湾**：境外的陆运段以直线距离乘 {{landTortuosity}} 推估，并在报告中标上「估算值」。若某条路线以境外陆运为主，推估误差会直接进入结果。",
+      "海运与空运系数的**生产区域为美国**（公告年份 2016 与 2017），且空运距离未计绕飞与高空辐射强迫加成，实际影响高于本报告数值。",
+    ],
     // Info: (20260802 - Luphia) 內文暫以英文回退：審計用詞的正確性需母語者覆核，
     // Info: (20260802 - Luphia) 譯錯的方法論說明比沒有說明更糟。結構與 token 已就位，翻譯可直接替換此陣列。
     sections: [
@@ -266,7 +277,7 @@ export const transportationCarbonFootprintCalculator = {
           {
             term: "When no route is available",
             detail:
-              "The great-circle distance is multiplied by a tortuosity factor of {{landTortuosity}} and marked est. in the report. The factor reflects how far real roads typically deviate from a straight line and is not calibrated per route.",
+              "The great-circle distance is multiplied by a tortuosity factor of {{landTortuosity}} and marked 「估算值」 in the report. The factor reflects how far real roads typically deviate from a straight line and is not calibrated per route.",
           },
         ],
       },
@@ -290,7 +301,7 @@ export const transportationCarbonFootprintCalculator = {
           {
             term: "When no route can be planned",
             detail:
-              "The great-circle distance is multiplied by a tortuosity factor of {{seaTortuosity}} and marked est. The sea factor exceeds the road factor because lanes are constrained by landmasses and straits, producing greater deviation.",
+              "The great-circle distance is multiplied by a tortuosity factor of {{seaTortuosity}} and marked 「估算值」. The sea factor exceeds the road factor because lanes are constrained by landmasses and straits, producing greater deviation.",
           },
         ],
       },
@@ -456,6 +467,176 @@ export const transportationCarbonFootprintCalculator = {
             term: "The shipping lane data version is not recorded",
             detail:
               "The lane geometry is supplied as a static file and the system records no issuing body, release version or licence terms, so the data's currency cannot be traced.",
+          },
+        ],
+      },
+    ],
+  },
+  guide: {
+    title: "操作说明",
+    subtitle:
+      "从一句话的路线描述，到可交付的 PDF 与 CSV，这里是完整流程。往下接着是每一个数字的计算方式与已知限制。",
+    nav_title: "本页目录",
+    figure_note:
+      "图为界面示意图：以画面实际使用的组件样式与实际字串重绘，因此会随界面语言与深浅主题变化，不是某一版的画面截取。图上的编号对应图下的说明。",
+    figure_caption: "示意图：{{title}}",
+    start_cta: "开始碳排核算",
+    empty_cta: "第一次使用？看操作说明",
+    chapters: [
+      {
+        id: "overview",
+        title: "一、四个分页各自负责什么",
+        summary:
+          "先认位置。这个工具把四件不同的事分在四个分页，走错分页是最常见的卡点。",
+        steps: [
+          {
+            id: "overview_tabs",
+            title: "分页的分工",
+            body: "碳排核算算「一条路线的排放」，里程核算算「很多条路线的距离」，历史报告是已完成的分析，操作说明就是本页。",
+            figure: GUIDE_FIGURE_ID.TABS,
+            callouts: [
+              "**碳排核算**：输入一组起讫点与重量，产出含地图、逐段里程与排放量的完整报告，可汇出 PDF。每次产生扣 {{analysisCost}} 点。",
+              "**里程核算**：一次处理多条路线，可粘贴文本或导入 Excel／CSV，只产出各段距离。适合先盘点路线，再决定要对哪几条做完整核算。",
+              "**历史报告**：列出过去的分析，可重新载入检视或直接汇出，不重算、不再扣点。",
+              "**操作说明**：本页。切换分页不会清掉已经填好的内容。",
+            ],
+            notes: [
+              "分页状态写在网址的 ?tab= 参数上，可以把某个分页的链接直接传给同事。",
+            ],
+          },
+        ],
+      },
+      {
+        id: "analysis",
+        title: "二、碳排核算：从一句话到一份报告",
+        summary: "一条路线、一份报告，共四步。",
+        steps: [
+          {
+            id: "analysis_describe",
+            title: "描述路线，或直接填座标",
+            body: "在「运输路线描述」用一句话写清楚起点、迄点与重量，按下「产生分析报告」。系统会先请 AI 从这句话里萃取参数，这一步不扣点。",
+            figure: GUIDE_FIGURE_ID.ANALYSIS_INPUT,
+            callouts: [
+              "**运输路线描述**：一句话即可，例如「从台北国父纪念馆运送 5000 公斤的石板到曼彻斯特博物馆」。AI 只负责把文字转成起讫点与重量，所有距离与排放都由后端的确定性规则引擎计算。",
+              "**进阶参数手动配置**：需要精确座标时展开它，直接填经纬度与总重。五个栏位一旦填齐，系统即以手动值为准，**不再呼叫 AI 解析**。",
+              "**产生分析报告**：按下后先解析、再跳出付款确认。解析完成会自动展开进阶参数，让你在付款前核对它抓到的座标与重量。",
+            ],
+            notes: [
+              "在描述栏位打字会清空已填的经纬度与重量。这是为了避免「描述写着纽约、座标留着上一次的东京」这种前后不一致。",
+              "解析结果不对就直接改进阶参数里的数字，不必重写描述。",
+            ],
+          },
+          {
+            id: "analysis_pay",
+            title: "确认扣点",
+            body: "参数齐全后会跳出付款确认。这是唯一会扣点的地方——在此之前的解析、切换分页、浏览历史都不扣点。",
+            figure: GUIDE_FIGURE_ID.ANALYSIS_PAYMENT,
+            callouts: [
+              "**所需点数**：本项分析每次 {{analysisCost}} 点。若你属于某个有额度的团队，会优先扣团队额度，对话框上会显示实际扣款来源与余额。",
+              "**支付并生成**：按下后开始计算。同一组参数再算一次会再扣一次点，故建议先在上一步核对座标与重量。",
+            ],
+          },
+          {
+            id: "analysis_read",
+            title: "读懂报告",
+            body: "报告以「方案」为单位：纯陆运、海运联运、空运联运、海陆空联运各自一张卡片，含地图、逐段里程与排放量。",
+            figure: GUIDE_FIGURE_ID.ANALYSIS_REPORT,
+            callouts: [
+              "**方案切换**：只会出现适用的方案。两港距离不足 {{minSeaKm}} km、两机场不足 {{minAirKm}} km，或陆运本身就不比该联运方案远时，该方案不会出现。",
+              "**方案代码**（如 R01-SEA）贯穿画面、PDF 档名与 CSV 每一列，是三者互相对照的唯一索引。",
+              "标上 **「估算值」** 的区段代表路径规划没有成功，改以直线距离乘绕行系数推估（陆运 ×{{landTortuosity}}、海运 ×{{seaTortuosity}}）。核对报告时请先看这里有几段。",
+              "**总碳排放量**由后端以未舍入的精度计算，因此逐段相加可能与总计差几分位；报告会揭露该差额及其来源。",
+              "**碳排系数与公式**一律揭露在报告内：总里程(km) × (重量(kg)/1000) × 该模式系数。",
+            ],
+            notes: [
+              "看不到某个方案不是漏算。适用性判定会把不适用的方案整个移除，而不是给你一份数值为零的报告；规则见下方「九、方案的适用性判定」。",
+            ],
+          },
+          {
+            id: "analysis_export",
+            title: "汇出 PDF 与 CSV",
+            body: "在报告或历史清单按下「汇出报告」，会先出现勾选选单，决定要汇出哪些方案、是否包含排放数值。",
+            figure: GUIDE_FIGURE_ID.EXPORT_MODAL,
+            callouts: [
+              "**勾选方案**：只列出此路线适用的方案。每个方案产出独立的一份 PDF，多份会打包成 ZIP。",
+              "**计算二氧化碳当量**：取消勾选则 PDF 与 CSV 都不会出现任何排放数值，只留路径与距离。",
+              "**排放系数组**是揭露而非选项：显示的就是计算实际采用的那一组。想改用其他系数，请取消上一项勾选，取得距离版 CSV 后自行套用。",
+              "汇出的 summary.csv 带完整精度与方案代码，可与同名 PDF 逐列对照。",
+            ],
+            notes: [
+              "汇出期间画面会被满版的进度提示盖住。那是为了避免截图时抓到底下的内容，不是卡住。",
+            ],
+          },
+        ],
+      },
+      {
+        id: "mileage",
+        title: "三、里程核算：一次处理很多条路线",
+        summary: "只想知道距离，或一次要处理几十条路线时走这里。",
+        steps: [
+          {
+            id: "mileage_run",
+            title: "建立清单并核算里程",
+            body: "粘贴一段文字让 AI 解析，或手动逐条加入，也可以直接导入 Excel／CSV。清单建好后按「开始核算里程」一次算完。",
+            figure: GUIDE_FIGURE_ID.MILEAGE_FLOW,
+            callouts: [
+              "**粘贴文本自动解析**：把出货单或邮件内容整段粘贴进来，按「AI 自动解析」拆成起讫点清单。",
+              "**中继站（选填）**：需要指定途经点时在此设定。每个中继站都必须有经纬度，可按自动解析取得；缺座标的中继站会让核算停下来并提示。",
+              "**批次导入**：支援 .xlsx／.xls／.csv。导入时会让你把档案栏位对应到起点、终点与中继站，不要求固定的栏位名称。",
+              "**运输模式**：预设「AI 自动判断」，也可以指定纯陆运、海陆联运、空陆联运或海陆空联运，强制以该组合计算。",
+              "**开始核算里程**：整份清单一次送出。算完后可逐条或整批汇出，汇出流程与碳排核算相同。",
+            ],
+            notes: [
+              "里程核算的结果也会进历史报告，回头载入时会自动切到「里程核算」分页呈现。",
+            ],
+          },
+        ],
+      },
+      {
+        id: "history",
+        title: "四、历史报告：回头检视与补件",
+        summary: "已完成的分析都留在这里，重新检视与汇出都不再扣点。",
+        steps: [
+          {
+            id: "history_reopen",
+            title: "重新载入或直接汇出",
+            body: "清单依时间排列，状态为 COMPLETED 的才可载入。载入后会自动切到对应的分页，并把当时的起讫点与重量一并还原。",
+            figure: GUIDE_FIGURE_ID.HISTORY_TABLE,
+            callouts: [
+              "**核算类型**分辨这笔是碳排核算还是里程核算——两者载入后会切到不同的分页。含多条路线的里程核算可以展开逐条检视。",
+              "**载入**把当时的报告重新开出来检视，不重算、不扣点。",
+              "**汇出报告**在载入完成后直接开启汇出勾选选单，适合只想补一份 PDF 的情形。",
+            ],
+            notes: [
+              "载入后网址会带上 analysisId，可以把链接直接传给同事，或用浏览器的上一页精准回到清单。",
+            ],
+          },
+        ],
+      },
+      {
+        id: "troubleshoot",
+        title: "五、常见状况",
+        summary: "以下都是设计上的行为，不是故障。",
+        steps: [
+          {
+            id: "trouble_missing_plan",
+            title: "某个运输方案没有出现",
+            body: "适用性判定认定它不适用：两港距离不足 {{minSeaKm}} km、两机场距离不足 {{minAirKm}} km，或陆运本身就不比该联运方案远。此时该方案整个不产出，而非产出一份零值报告。",
+          },
+          {
+            id: "trouble_estimate",
+            title: "里程旁边出现「估算值」标记",
+            body: "该段的路径规划没有成功，改以直线距离乘绕行系数推估（陆运 ×{{landTortuosity}}、海运 ×{{seaTortuosity}}）。道路路网**目前仅覆盖台湾**，故境外陆运段几乎都是推估值。",
+          },
+          {
+            id: "trouble_total_mismatch",
+            title: "逐段相加与总计差了几分位",
+            body: "总计由后端以未舍入的精度计算，而画面上的逐段数值已四舍五入至小数两位，两者相加自然会差。报告会揭露该差额；需要完整精度请看汇出的 summary.csv。",
+          },
+          {
+            id: "trouble_no_payment",
+            title: "按下产生分析报告却没有跳出付款",
+            body: "参数不完整时不会进到付款流程。请确认描述栏位有内容，或进阶参数的五个栏位全部填齐；错误讯息会出现在参数配置卡片下方。",
           },
         ],
       },

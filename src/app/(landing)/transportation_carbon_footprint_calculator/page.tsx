@@ -23,6 +23,7 @@ import {
   MapPin,
   ArrowRight,
   Layers,
+  BookOpen,
 } from "lucide-react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
@@ -50,7 +51,8 @@ import {
   ExportOptionsModal,
   type IExportOptions,
 } from "@/components/transportation_carbon_footprint_calculator/export_options_modal";
-import MethodologySection from "@/components/transportation_carbon_footprint_calculator/methodology_section";
+import { MethodologyHighlights } from "@/components/transportation_carbon_footprint_calculator/methodology_section";
+import { GuideSection } from "@/components/transportation_carbon_footprint_calculator/guide_section";
 import { useScrollLock } from "@/hooks/use_scroll_lock";
 import {
   buildExportFileName,
@@ -83,6 +85,8 @@ import { IOrderPayload } from "@/hooks/use_order_transaction";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import {
   TRANSPORT_CALCULATOR_QUERY_PARAM,
+  TRANSPORT_CALCULATOR_TAB,
+  type TransportCalculatorTab,
   HISTORY_VIEW_STATE_STORAGE_KEY,
   buildPlanCode,
 } from "@/constants/logistics";
@@ -139,12 +143,19 @@ function ReportPageContent() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const activeTab =
-    searchParams?.get(TRANSPORT_CALCULATOR_QUERY_PARAM.TAB) === "history"
-      ? "history"
-      : searchParams?.get(TRANSPORT_CALCULATOR_QUERY_PARAM.TAB) === "mileage"
-        ? "mileage"
-        : "analysis";
+  /**
+   * Info: (20260820 - Luphia) ?tab= 的解析改為對常數做白名單比對。
+   *
+   * 原本是三段三元運算子,加第四個分頁就要再疊一層;且分頁名以裸字串出現在
+   * 解析、比對與按鈕三處,漏改一處就是一個永遠切不過去的分頁。
+   * 無法辨識的值一律回落到碳排核算 —— 網址是使用者可編輯的輸入,不可信。
+   */
+  const tabParam = searchParams?.get(TRANSPORT_CALCULATOR_QUERY_PARAM.TAB);
+  const activeTab: TransportCalculatorTab = (
+    Object.values(TRANSPORT_CALCULATOR_TAB) as string[]
+  ).includes(tabParam ?? "")
+    ? (tabParam as TransportCalculatorTab)
+    : TRANSPORT_CALCULATOR_TAB.ANALYSIS;
 
   // Info: (20260724 - Tzuhan) 歷史清單瀏覽狀態(展開列)受控化,配合 sessionStorage 保存/還原(需求四)
   const [historyExpandedKeys, setHistoryExpandedKeys] = useState<Set<string>>(
@@ -159,11 +170,14 @@ function ReportPageContent() {
    */
   const setActiveTab = useCallback(
     (
-      tab: "analysis" | "history" | "mileage",
+      tab: TransportCalculatorTab,
       options?: { replace?: boolean; analysisId?: string },
     ) => {
       // Info: (20260724 - Tzuhan) 離開 history tab 時暫存捲動位置與展開列,返回時還原
-      if (activeTab === "history" && tab !== "history") {
+      if (
+        activeTab === TRANSPORT_CALCULATOR_TAB.HISTORY &&
+        tab !== TRANSPORT_CALCULATOR_TAB.HISTORY
+      ) {
         try {
           sessionStorage.setItem(
             HISTORY_VIEW_STATE_STORAGE_KEY,
@@ -314,7 +328,7 @@ function ReportPageContent() {
 
   // Info: (20260724 - Tzuhan) 返回 history tab 時還原捲動位置與展開列(需求四)
   useEffect(() => {
-    if (activeTab !== "history") return;
+    if (activeTab !== TRANSPORT_CALCULATOR_TAB.HISTORY) return;
     try {
       const raw = sessionStorage.getItem(HISTORY_VIEW_STATE_STORAGE_KEY);
       if (!raw) return;
@@ -457,7 +471,7 @@ function ReportPageContent() {
     const onPaid = async () => {
       await calculateFootprint();
       setIsPaymentModalOpen(false);
-      setActiveTab("history");
+      setActiveTab(TRANSPORT_CALCULATOR_TAB.HISTORY);
     };
 
     await pay(
@@ -1217,12 +1231,16 @@ function ReportPageContent() {
             setPlan(null);
             // Info: (20260724 - Tzuhan) push + analysisId:上一頁可精準返回清單,前進/刷新可重現此檢視(需求四)
             if (shouldNavigate)
-              setActiveTab("mileage", { analysisId: item.id });
+              setActiveTab(TRANSPORT_CALCULATOR_TAB.MILEAGE, {
+                analysisId: item.id,
+              });
           } else {
             setPlan(parsed);
             setBatchResults(null);
             if (shouldNavigate)
-              setActiveTab("analysis", { analysisId: item.id });
+              setActiveTab(TRANSPORT_CALCULATOR_TAB.ANALYSIS, {
+                analysisId: item.id,
+              });
           }
           setOrigin(item.origin || { lat: "", lng: "" });
           setDest(item.dest || { lat: "", lng: "" });
@@ -1532,44 +1550,63 @@ function ReportPageContent() {
 
       <div className="relative z-10 mx-auto w-full max-w-7xl flex-1 space-y-12">
         {/* Info: (20260501 - Luphia) User Requested Header Design */}
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900">
-            {t("transportation_carbon_footprint_calculator.ui.title")}
-          </h1>
-          <p className="mt-2 text-sm text-gray-500">
-            {t("transportation_carbon_footprint_calculator.ui.description")}
-          </p>
+        {/* Info: (20260820 - Luphia) 標題列右側常駐使用說明入口:
+            說明在標題旁,是唯一「不必先捲動就看得到」的位置。
+            未登入時不顯示 —— 未登入的畫面只有登入提示,切了分頁也沒有東西可看。 */}
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {t("transportation_carbon_footprint_calculator.ui.title")}
+            </h1>
+            <p className="mt-2 text-sm text-gray-500">
+              {t("transportation_carbon_footprint_calculator.ui.description")}
+            </p>
+          </div>
+          {user && activeTab !== TRANSPORT_CALCULATOR_TAB.GUIDE && (
+            <button
+              type="button"
+              onClick={() => setActiveTab(TRANSPORT_CALCULATOR_TAB.GUIDE)}
+              className="border-border-default text-text-secondary hover:bg-surface-hover hover:text-text-primary flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors"
+            >
+              <BookOpen className="size-4" />
+              {t("transportation_carbon_footprint_calculator.guide.title")}
+            </button>
+          )}
         </div>
 
         {user ? (
           <>
             {/* Info: (20260502 - Luphia) Tabs */}
+            {/* Info: (20260820 - Luphia) 四個分頁改由清單渲染。
+                原本是三段幾乎相同的 button,樣式字串各抄一份;加上「使用說明」會變成四份。
+                另加 flex-wrap 與較窄的內距:四個分頁的標籤在英/日/韓語下比中文長得多,
+                固定 px-8 會在窄視窗把整條分頁列擠出容器。 */}
             <div className="mb-8 flex justify-center">
-              <div className="flex rounded-lg bg-gray-100 p-1">
-                <button
-                  onClick={() => setActiveTab("analysis")}
-                  className={`${activeTab === "analysis" ? "bg-white shadow-sm" : "hover:bg-gray-50"} rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200`}
-                >
-                  {t(
-                    "transportation_carbon_footprint_calculator.ui.tab_analysis",
-                  )}
-                </button>
-                <button
-                  onClick={() => setActiveTab("mileage")}
-                  className={`${activeTab === "mileage" ? "bg-white shadow-sm" : "hover:bg-gray-50"} rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200`}
-                >
-                  {t(
-                    "transportation_carbon_footprint_calculator.ui.tab_mileage",
-                  )}
-                </button>
-                <button
-                  onClick={() => setActiveTab("history")}
-                  className={`${activeTab === "history" ? "bg-white shadow-sm" : "hover:bg-gray-50"} rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200`}
-                >
-                  {t(
-                    "transportation_carbon_footprint_calculator.ui.tab_history",
-                  )}
-                </button>
+              <div
+                role="tablist"
+                className="flex flex-wrap justify-center rounded-lg bg-gray-100 p-1"
+              >
+                {(
+                  [
+                    [TRANSPORT_CALCULATOR_TAB.ANALYSIS, "ui.tab_analysis"],
+                    [TRANSPORT_CALCULATOR_TAB.MILEAGE, "ui.tab_mileage"],
+                    [TRANSPORT_CALCULATOR_TAB.HISTORY, "ui.tab_history"],
+                    [TRANSPORT_CALCULATOR_TAB.GUIDE, "guide.title"],
+                  ] as const
+                ).map(([tab, labelKey]) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`${activeTab === tab ? "bg-white shadow-sm" : "hover:bg-gray-50"} rounded-md px-5 py-2 text-sm font-semibold whitespace-nowrap text-gray-900 transition-all duration-200 sm:px-8`}
+                  >
+                    {t(
+                      `transportation_carbon_footprint_calculator.${labelKey}`,
+                    )}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -1578,182 +1615,186 @@ function ReportPageContent() {
               className={`-mx-2 bg-transparent transition-all md:mx-0 ${isExporting ? "relative overflow-hidden rounded-3xl bg-white shadow-2xl" : ""}`}
             >
               {/* Info: (20260501 - Luphia) 如果是在分析分頁且非匯出狀態，顯示輸入控制面板 */}
-              {activeTab === "analysis" && !isExporting && (
-                <div className="min-h-[200px] rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-                  <div className="mb-6 flex items-center justify-between">
-                    <h2 className="flex items-center gap-2 text-lg font-bold text-gray-800">
-                      {t(
-                        "transportation_carbon_footprint_calculator.ui.config_title",
-                      )}
-                    </h2>
-                  </div>
+              {activeTab === TRANSPORT_CALCULATOR_TAB.ANALYSIS &&
+                !isExporting && (
+                  <div className="min-h-[200px] rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
+                    <div className="mb-6 flex items-center justify-between">
+                      <h2 className="flex items-center gap-2 text-lg font-bold text-gray-800">
+                        {t(
+                          "transportation_carbon_footprint_calculator.ui.config_title",
+                        )}
+                      </h2>
+                    </div>
 
-                  <div className="space-y-6">
-                    {/* Info: (20260501 - Luphia) 第一列：語意輸入框與產生按鈕 */}
-                    <div className="flex flex-col items-end gap-4 md:flex-row">
-                      <label className="flex w-full flex-1 flex-col gap-2">
-                        <div className="block text-sm font-medium text-gray-700">
-                          {t(
-                            "transportation_carbon_footprint_calculator.ui.route_description",
-                          )}
+                    <div className="space-y-6">
+                      {/* Info: (20260501 - Luphia) 第一列：語意輸入框與產生按鈕 */}
+                      <div className="flex flex-col items-end gap-4 md:flex-row">
+                        <label className="flex w-full flex-1 flex-col gap-2">
+                          <div className="block text-sm font-medium text-gray-700">
+                            {t(
+                              "transportation_carbon_footprint_calculator.ui.route_description",
+                            )}
+                          </div>
+                          <input
+                            type="text"
+                            value={aiInput}
+                            onChange={(e) => {
+                              setAiInput(e.target.value);
+                              setOrigin({ lat: "", lng: "" });
+                              setDest({ lat: "", lng: "" });
+                              setWeightKg("");
+                            }}
+                            placeholder={t(
+                              "transportation_carbon_footprint_calculator.ui.route_placeholder",
+                            )}
+                            aria-label={t(
+                              "transportation_carbon_footprint_calculator.ui.route_description",
+                            )}
+                            disabled={isLocked || isParsing}
+                            className="h-auto w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none disabled:opacity-50"
+                          />
+                        </label>
+                        <div className="flex h-auto w-full flex-col items-center gap-3 sm:flex-row md:w-auto">
+                          <button
+                            onClick={handleOpenPayment}
+                            disabled={
+                              loading ||
+                              isParsing ||
+                              isExporting ||
+                              (!aiInput.trim() &&
+                                !(
+                                  origin.lat !== "" &&
+                                  origin.lng !== "" &&
+                                  dest.lat !== "" &&
+                                  dest.lng !== "" &&
+                                  weightKg !== ""
+                                ))
+                            }
+                            className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 px-8 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                          >
+                            {(loading || isParsing) && (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            )}
+                            {t(
+                              "transportation_carbon_footprint_calculator.ui.generate_report",
+                            )}
+                          </button>
                         </div>
-                        <input
-                          type="text"
-                          value={aiInput}
-                          onChange={(e) => {
-                            setAiInput(e.target.value);
-                            setOrigin({ lat: "", lng: "" });
-                            setDest({ lat: "", lng: "" });
-                            setWeightKg("");
-                          }}
-                          placeholder={t(
-                            "transportation_carbon_footprint_calculator.ui.route_placeholder",
-                          )}
-                          aria-label={t(
-                            "transportation_carbon_footprint_calculator.ui.route_description",
-                          )}
-                          disabled={isLocked || isParsing}
-                          className="h-auto w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none disabled:opacity-50"
-                        />
-                      </label>
-                      <div className="flex h-auto w-full flex-col items-center gap-3 sm:flex-row md:w-auto">
+                      </div>
+
+                      {/* Info: (20260501 - Luphia) 折疊式手動參數確認 */}
+                      <div className="mt-2 overflow-hidden rounded-xl border border-gray-100 bg-gray-50 transition-all">
                         <button
-                          onClick={handleOpenPayment}
-                          disabled={
-                            loading ||
-                            isParsing ||
-                            isExporting ||
-                            (!aiInput.trim() &&
-                              !(
-                                origin.lat !== "" &&
-                                origin.lng !== "" &&
-                                dest.lat !== "" &&
-                                dest.lng !== "" &&
-                                weightKg !== ""
-                              ))
-                          }
-                          className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 px-8 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                          onClick={() => setShowManual(!showManual)}
+                          className="group flex w-full items-center justify-between px-6 py-3 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
                         >
-                          {(loading || isParsing) && (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          )}
-                          {t(
-                            "transportation_carbon_footprint_calculator.ui.generate_report",
+                          <span className="flex items-center gap-2 transition-colors group-hover:text-gray-900">
+                            {t(
+                              "transportation_carbon_footprint_calculator.ui.advanced_config",
+                            )}
+                          </span>
+                          {showManual ? (
+                            <ChevronUp className="h-4 w-4 transition-colors group-hover:text-gray-900" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 transition-colors group-hover:text-gray-900" />
                           )}
                         </button>
+
+                        {showManual && (
+                          <div className="grid grid-cols-1 gap-5 border-t border-gray-100 bg-white p-6 md:grid-cols-2 lg:grid-cols-5">
+                            {[
+                              {
+                                label: "origin_lat",
+                                value: origin.lat,
+                                setter: (val: number | "") =>
+                                  setOrigin({ ...origin, lat: val }),
+                              },
+                              {
+                                label: "origin_lng",
+                                value: origin.lng,
+                                setter: (val: number | "") =>
+                                  setOrigin({ ...origin, lng: val }),
+                              },
+                              {
+                                label: "dest_lat",
+                                value: dest.lat,
+                                setter: (val: number | "") =>
+                                  setDest({ ...dest, lat: val }),
+                              },
+                              {
+                                label: "dest_lng",
+                                value: dest.lng,
+                                setter: (val: number | "") =>
+                                  setDest({ ...dest, lng: val }),
+                              },
+                              {
+                                label: "total_weight",
+                                value: weightKg,
+                                setter: (val: number | "") => setWeightKg(val),
+                              },
+                            ].map((field) => (
+                              <label
+                                key={field.label}
+                                className="flex cursor-pointer flex-col gap-1.5"
+                              >
+                                <span className="text-sm font-medium text-gray-700">
+                                  {t(
+                                    `transportation_carbon_footprint_calculator.ui.${field.label}`,
+                                  )}
+                                </span>
+                                <input
+                                  type="number"
+                                  step="any"
+                                  aria-label={t(
+                                    `transportation_carbon_footprint_calculator.ui.${field.label}`,
+                                  )}
+                                  value={field.value}
+                                  onChange={(e) =>
+                                    field.setter(
+                                      e.target.value
+                                        ? parseFloat(e.target.value)
+                                        : "",
+                                    )
+                                  }
+                                  disabled={isLocked}
+                                  className="w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none disabled:opacity-50"
+                                />
+                              </label>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    {/* Info: (20260501 - Luphia) 折疊式手動參數確認 */}
-                    <div className="mt-2 overflow-hidden rounded-xl border border-gray-100 bg-gray-50 transition-all">
-                      <button
-                        onClick={() => setShowManual(!showManual)}
-                        className="group flex w-full items-center justify-between px-6 py-3 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100"
-                      >
-                        <span className="flex items-center gap-2 transition-colors group-hover:text-gray-900">
-                          {t(
-                            "transportation_carbon_footprint_calculator.ui.advanced_config",
-                          )}
-                        </span>
-                        {showManual ? (
-                          <ChevronUp className="h-4 w-4 transition-colors group-hover:text-gray-900" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 transition-colors group-hover:text-gray-900" />
-                        )}
-                      </button>
-
-                      {showManual && (
-                        <div className="grid grid-cols-1 gap-5 border-t border-gray-100 bg-white p-6 md:grid-cols-2 lg:grid-cols-5">
-                          {[
-                            {
-                              label: "origin_lat",
-                              value: origin.lat,
-                              setter: (val: number | "") =>
-                                setOrigin({ ...origin, lat: val }),
-                            },
-                            {
-                              label: "origin_lng",
-                              value: origin.lng,
-                              setter: (val: number | "") =>
-                                setOrigin({ ...origin, lng: val }),
-                            },
-                            {
-                              label: "dest_lat",
-                              value: dest.lat,
-                              setter: (val: number | "") =>
-                                setDest({ ...dest, lat: val }),
-                            },
-                            {
-                              label: "dest_lng",
-                              value: dest.lng,
-                              setter: (val: number | "") =>
-                                setDest({ ...dest, lng: val }),
-                            },
-                            {
-                              label: "total_weight",
-                              value: weightKg,
-                              setter: (val: number | "") => setWeightKg(val),
-                            },
-                          ].map((field) => (
-                            <label
-                              key={field.label}
-                              className="flex cursor-pointer flex-col gap-1.5"
-                            >
-                              <span className="text-sm font-medium text-gray-700">
-                                {t(
-                                  `transportation_carbon_footprint_calculator.ui.${field.label}`,
-                                )}
-                              </span>
-                              <input
-                                type="number"
-                                step="any"
-                                aria-label={t(
-                                  `transportation_carbon_footprint_calculator.ui.${field.label}`,
-                                )}
-                                value={field.value}
-                                onChange={(e) =>
-                                  field.setter(
-                                    e.target.value
-                                      ? parseFloat(e.target.value)
-                                      : "",
-                                  )
-                                }
-                                disabled={isLocked}
-                                className="w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 transition-all focus:ring-2 focus:ring-orange-500 focus:outline-none disabled:opacity-50"
-                              />
-                            </label>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    {error && (
+                      <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-4 text-sm font-medium text-red-600">
+                        {error}
+                      </div>
+                    )}
                   </div>
-
-                  {error && (
-                    <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-4 text-sm font-medium text-red-600">
-                      {error}
-                    </div>
-                  )}
-                </div>
-              )}
+                )}
 
               {/* Info: (20260510 - Luphia) 里程核算區塊 */}
-              {!isExporting && activeTab === "mileage" && (
-                <div className="mt-10 w-full">
-                  {batchResults ? (
-                    <MileageBatchResults
-                      batchResults={batchResults}
-                      onRecalculate={() => setBatchResults(null)}
-                      onDownload={handleExportRequest}
-                      isExporting={isExporting}
-                      exportingIndex={exportingIndex}
-                    />
-                  ) : (
-                    <MileageCalculator
-                      onNavigateToHistory={() => setActiveTab("history")}
-                    />
-                  )}
-                </div>
-              )}
+              {!isExporting &&
+                activeTab === TRANSPORT_CALCULATOR_TAB.MILEAGE && (
+                  <div className="mt-10 w-full">
+                    {batchResults ? (
+                      <MileageBatchResults
+                        batchResults={batchResults}
+                        onRecalculate={() => setBatchResults(null)}
+                        onDownload={handleExportRequest}
+                        isExporting={isExporting}
+                        exportingIndex={exportingIndex}
+                      />
+                    ) : (
+                      <MileageCalculator
+                        onNavigateToHistory={() =>
+                          setActiveTab(TRANSPORT_CALCULATOR_TAB.HISTORY)
+                        }
+                      />
+                    )}
+                  </div>
+                )}
               {/* Info: (20260511 - Luphia) Render hidden batch items for PDF export sequentially to avoid WebGL context limits */}
               {/* Info: (20260724 - Tzuhan) 需求二:以 (路線, 方案) 為渲染單位,key 強制 remount 以重新觸發 onReady */}
               {isExporting &&
@@ -1776,81 +1817,83 @@ function ReportPageContent() {
                 )}
 
               {/* Info: (20260501 - Luphia) 歷史分析路徑區塊 */}
-              {!isExporting && activeTab === "history" && (
-                <div ref={historyTableRef} className="mt-10 w-full">
-                  <DataTable
-                    columns={historyColumns}
-                    data={history}
-                    rowKey={(row) => row.id}
-                    expandedKeys={historyExpandedKeys}
-                    onExpandedKeysChange={setHistoryExpandedKeys}
-                    rowExpandable={(row) =>
-                      row.action === "calculate_batch" &&
-                      row.items !== undefined &&
-                      row.items.length > 1
-                    }
-                    expandedRowRender={(row) => {
-                      if (
-                        row.action !== "calculate_batch" ||
-                        !row.items ||
-                        row.items.length <= 1
-                      )
-                        return null;
-                      return (
-                        <div className="w-full">
-                          <table className="w-full text-left text-sm whitespace-nowrap">
-                            <thead>
-                              <tr className="border-b border-gray-200 text-gray-500">
-                                <th className="px-4 py-2">#</th>
-                                <th className="px-4 py-2">
-                                  {t("common.origin")}
-                                </th>
-                                <th className="px-4 py-2">
-                                  {t("common.destination")}
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                              {row.items.map((item, index) => (
-                                <tr key={index} className="hover:bg-white/50">
-                                  <td className="px-4 py-2 text-gray-400">
-                                    {index + 1}
-                                  </td>
-                                  <td className="px-4 py-2">
-                                    {typeof item.origin === "string"
-                                      ? item.origin
-                                      : typeof item.origin === "object" &&
-                                          item.origin !== null
-                                        ? item.origin.name ||
-                                          (item.origin.lat
-                                            ? `${item.origin.lat}, ${item.origin.lng}`
-                                            : JSON.stringify(item.origin))
-                                        : ""}
-                                  </td>
-                                  <td className="px-4 py-2">
-                                    {typeof item.dest === "string"
-                                      ? item.dest
-                                      : typeof item.dest === "object" &&
-                                          item.dest !== null
-                                        ? item.dest.name ||
-                                          (item.dest.lat
-                                            ? `${item.dest.lat}, ${item.dest.lng}`
-                                            : JSON.stringify(item.dest))
-                                        : ""}
-                                  </td>
+              {!isExporting &&
+                activeTab === TRANSPORT_CALCULATOR_TAB.HISTORY && (
+                  <div ref={historyTableRef} className="mt-10 w-full">
+                    <DataTable
+                      columns={historyColumns}
+                      data={history}
+                      rowKey={(row) => row.id}
+                      expandedKeys={historyExpandedKeys}
+                      onExpandedKeysChange={setHistoryExpandedKeys}
+                      rowExpandable={(row) =>
+                        row.action === "calculate_batch" &&
+                        row.items !== undefined &&
+                        row.items.length > 1
+                      }
+                      expandedRowRender={(row) => {
+                        if (
+                          row.action !== "calculate_batch" ||
+                          !row.items ||
+                          row.items.length <= 1
+                        )
+                          return null;
+                        return (
+                          <div className="w-full">
+                            <table className="w-full text-left text-sm whitespace-nowrap">
+                              <thead>
+                                <tr className="border-b border-gray-200 text-gray-500">
+                                  <th className="px-4 py-2">#</th>
+                                  <th className="px-4 py-2">
+                                    {t("common.origin")}
+                                  </th>
+                                  <th className="px-4 py-2">
+                                    {t("common.destination")}
+                                  </th>
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      );
-                    }}
-                  />
-                </div>
-              )}
+                              </thead>
+                              <tbody className="divide-y divide-gray-100">
+                                {row.items.map((item, index) => (
+                                  <tr key={index} className="hover:bg-white/50">
+                                    <td className="px-4 py-2 text-gray-400">
+                                      {index + 1}
+                                    </td>
+                                    <td className="px-4 py-2">
+                                      {typeof item.origin === "string"
+                                        ? item.origin
+                                        : typeof item.origin === "object" &&
+                                            item.origin !== null
+                                          ? item.origin.name ||
+                                            (item.origin.lat
+                                              ? `${item.origin.lat}, ${item.origin.lng}`
+                                              : JSON.stringify(item.origin))
+                                          : ""}
+                                    </td>
+                                    <td className="px-4 py-2">
+                                      {typeof item.dest === "string"
+                                        ? item.dest
+                                        : typeof item.dest === "object" &&
+                                            item.dest !== null
+                                          ? item.dest.name ||
+                                            (item.dest.lat
+                                              ? `${item.dest.lat}, ${item.dest.lng}`
+                                              : JSON.stringify(item.dest))
+                                          : ""}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        );
+                      }}
+                    />
+                  </div>
+                )}
 
               {/* Info: (20260501 - Luphia) 報告內容區塊 */}
-              {(isExporting || activeTab === "analysis") && (
+              {(isExporting ||
+                activeTab === TRANSPORT_CALCULATOR_TAB.ANALYSIS) && (
                 <div
                   ref={scrollTargetRef}
                   className="mt-10 transition-all duration-500 ease-in-out"
@@ -2081,23 +2124,55 @@ function ReportPageContent() {
                           "transportation_carbon_footprint_calculator.ui.not_generated",
                         )}
                       </h3>
+                      {/* Info: (20260820 - Luphia) 空狀態是第一次使用者停留最久的畫面,
+                          也是唯一能確定他還沒開始操作的時機 —— 說明的入口放這裡最有機會被用到 */}
+                      {!isExporting && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setActiveTab(TRANSPORT_CALCULATOR_TAB.GUIDE)
+                          }
+                          className="text-brand hover:text-brand-on-soft mx-auto mt-3 flex items-center gap-1.5 text-sm font-semibold transition-colors"
+                        >
+                          <BookOpen className="size-4" />
+                          {t(
+                            "transportation_carbon_footprint_calculator.guide.empty_cta",
+                          )}
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            {/* Info: (20260801 - Luphia) 計算方式說明置於結果之後:
-                先看結論,需要追問原理時往下即是。與 PDF 附錄共用同一份內容 */}
-            {!isExporting && (
-              <div className="mt-6">
-                <MethodologySection
-                  title={t(
-                    "transportation_carbon_footprint_calculator.methodology.title",
-                  )}
+            {/* Info: (20260820 - Luphia) 使用說明分頁:操作說明 + 完整計算方式說明。
+                置於 reportRef 之外 —— 那個 div 是 PDF 擷取的根節點,說明書不屬於報告內容。 */}
+            {!isExporting && activeTab === TRANSPORT_CALCULATOR_TAB.GUIDE && (
+              <div className="mt-2">
+                <GuideSection
+                  onStartAnalysis={() =>
+                    setActiveTab(TRANSPORT_CALCULATOR_TAB.ANALYSIS)
+                  }
                 />
               </div>
             )}
+
+            {/* Info: (20260820 - Luphia) 結果旁的限制摘要,取代原本頁尾的折疊式計算方式說明。
+                折疊區的問題不在內容而在可見性:它在長報告之後且預設收合,等於不存在。
+                此處只放三條會改變判讀的限制且不可收合,完整說明改由「使用說明」分頁承載。 */}
+            {!isExporting &&
+              ((activeTab === TRANSPORT_CALCULATOR_TAB.ANALYSIS && plan) ||
+                (activeTab === TRANSPORT_CALCULATOR_TAB.MILEAGE &&
+                  batchResults)) && (
+                <div className="mt-6">
+                  <MethodologyHighlights
+                    onOpenGuide={() =>
+                      setActiveTab(TRANSPORT_CALCULATOR_TAB.GUIDE)
+                    }
+                  />
+                </div>
+              )}
           </>
         ) : (
           <AuthPlaceholder
