@@ -411,6 +411,27 @@ export class OvertimeRequestService {
     this.assertPending(request);
 
     /**
+     * Info: (20260820 - Julian) **不得對自己的單子認定**（review 第 2 條）。
+     *
+     * 第一版只問了「你是不是 HR_ADMIN」，沒有問「這張單是不是你自己的」。
+     * 於是 B7 修掉的旁路沒有消失，只是從「任何申請人自證」**收窄成
+     * 「具 HR_ADMIN 職能的申請人自證」** —— 而中小企業與工地帳本裡，
+     * 人資常常也是會加班的那個人（demo 帳本的 HR_ADMIN 只有 EMP002 一位）。
+     *
+     * 這條規則當時就已經寫進不變式的錯誤訊息裡：
+     * 「the applicant may not certify their own premium」。
+     * **訊息宣稱的事必須真的有人擋** —— 一句沒有執行者的規則，
+     * 讀到它的人會以為那件事不可能發生（同 review B8 的教訓）。
+     *
+     * 排在 HR 職能查詢**之前**，理由同 `assertMayDecide` 的自我核准判斷：
+     * 順序反過來的話，一個「剛好是 HR_ADMIN 的申請人」會先通過職能查詢，
+     * 而那正是這條要擋的組合。
+     */
+    if (params.actorEmployeeId === request.employeeId) {
+      throw new AppError(API_ERRORS.FO_SELF_APPROVAL_FORBIDDEN);
+    }
+
+    /**
      * Info: (20260819 - Julian) **限 HR_ADMIN。** 認定的後果是整段工資的
      * 計算標準跳到加倍發給，而報備是一件對外發生的事。讓一個沒有辦法查證
      * 那份紀錄的人認定，等於讓他替公司作證。標準與 §32 III 54 小時放寬

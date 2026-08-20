@@ -58,6 +58,7 @@ import { leaveRequestService } from "@/services/leave_request.service";
 import { overtimeRequestService } from "@/services/overtime_request.service";
 import { POST as leaveSubmit } from "@/app/api/v1/user/account_book/[account_book_id]/hr/leave/request/route";
 import { POST as overtimeSubmit } from "@/app/api/v1/user/account_book/[account_book_id]/hr/overtime/request/route";
+import { POST as overtimeDeclareEmergency } from "@/app/api/v1/user/account_book/[account_book_id]/hr/overtime/request/[request_id]/emergency/route";
 
 jest.mock("@/lib/auth/dewt", () => ({ getIdentityFromDeWT: jest.fn() }));
 jest.mock("@/services/attendance_identity.service", () => ({
@@ -67,7 +68,7 @@ jest.mock("@/services/leave_request.service", () => ({
   leaveRequestService: { submit: jest.fn() },
 }));
 jest.mock("@/services/overtime_request.service", () => ({
-  overtimeRequestService: { submit: jest.fn() },
+  overtimeRequestService: { submit: jest.fn(), declareEmergency: jest.fn() },
 }));
 
 const dewtMock = getIdentityFromDeWT as unknown as ReturnType<
@@ -83,6 +84,10 @@ const leaveSubmitMock = leaveRequestService.submit as unknown as ReturnType<
 const overtimeSubmitMock =
   overtimeRequestService.submit as unknown as ReturnType<
     typeof jest.fn<(params: { input: Record<string, unknown> }) => Promise<unknown>>
+  >;
+const declareEmergencyMock =
+  overtimeRequestService.declareEmergency as unknown as ReturnType<
+    typeof jest.fn<(params: Record<string, unknown>) => Promise<unknown>>
   >;
 
 const BOOK = "book-1";
@@ -144,6 +149,7 @@ beforeEach(() => {
   resolveEmployeeMock.mockReset();
   leaveSubmitMock.mockReset();
   overtimeSubmitMock.mockReset();
+  declareEmergencyMock.mockReset();
 
   dewtMock.mockImplementation(async (header) =>
     header === null ? null : { address: header.replace("Bearer ", "") },
@@ -151,6 +157,7 @@ beforeEach(() => {
   resolveEmployeeMock.mockResolvedValue({ id: "emp-1" });
   leaveSubmitMock.mockResolvedValue({ id: "req-1" });
   overtimeSubmitMock.mockResolvedValue({ id: "ot-1" });
+  declareEmergencyMock.mockResolvedValue({ id: "ot-1" });
 });
 
 describe("裝配：限流真的擋得住（不是只有那兩行的順序對）", () => {
@@ -277,5 +284,75 @@ describe("裝配：validator 也真的接上了", () => {
 
     const input = overtimeSubmitMock.mock.calls[0][0].input;
     expect("isEmergency" in input).toBe(false);
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) §32 IV 認定的端點也要有裝配證據（review 第 2 條）。
+ *
+ * 這一支是 B7 的核心：它決定一張加班單會不會整段跳到加倍發給。
+ * 而它先前**不在這個檔案裡**，也就是說「限流有沒有接上」「validator 有沒有
+ * 接上」對它都沒有答案 —— 授權那一側由
+ * `overtime_request_service.test.ts` 的 `declareEmergency` 那一組負責。
+ */
+describe("裝配：§32 IV 認定端點", () => {
+  const declareParams = () =>
+    Promise.resolve({ account_book_id: BOOK, request_id: "ot-1" });
+
+  const body = {
+    reportUrl: "https://example.test/filings/2026-0815-001",
+    reportedAt: "2026-08-15T11:00:00+08:00",
+  };
+
+  it("超限回 429，且 service 沒有被多呼叫一次", async () => {
+    const address = "0xprobe-emergency-rl";
+    const limit = perMinuteLimit(RateLimitBucketEnum.LEAVE_WRITE);
+
+    for (let i = 0; i < limit; i += 1) {
+      const response = await overtimeDeclareEmergency(post(body, address), {
+        params: declareParams(),
+      });
+      expect(response.status).toBe(200);
+    }
+    const callsBefore = declareEmergencyMock.mock.calls.length;
+
+    const blocked = await overtimeDeclareEmergency(post(body, address), {
+      params: declareParams(),
+    });
+    expect(blocked.status).toBe(httpOf(API_ERRORS.IS_RATE_LIMITED));
+    expect(declareEmergencyMock.mock.calls.length).toBe(callsBefore);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 兩個欄位都必填 —— 缺一個就到不了 service。
+   *
+   * 「一個沒有記載的『已報備』等於沒有報備」是這條規則的全部，
+   * 而它必須在 400 就停住：讓一個只有連結沒有時點的認定進到 service，
+   * repository 的不變式才擋下來，那時使用者收到的是 500。
+   */
+  it.each([
+    ["缺報備紀錄", { reportedAt: body.reportedAt }],
+    ["缺報備時點", { reportUrl: body.reportUrl }],
+    ["報備紀錄是空白", { ...body, reportUrl: "   " }],
+  ])("%s：400，service 不被呼叫", async (label, payload) => {
+    const response = await overtimeDeclareEmergency(
+      post(payload, `0xprobe-em-${label.length}`),
+      { params: declareParams() },
+    );
+    expect(response.status).toBe(httpOf(API_ERRORS.VA_INVALID_INPUT_DATA));
+    expect(declareEmergencyMock).not.toHaveBeenCalled();
+  });
+
+  it("合法時把兩個欄位原樣交給 service", async () => {
+    await overtimeDeclareEmergency(post(body, "0xprobe-em-ok"), {
+      params: declareParams(),
+    });
+    expect(declareEmergencyMock).toHaveBeenCalledTimes(1);
+    expect(declareEmergencyMock.mock.calls[0][0]).toMatchObject({
+      accountBookId: BOOK,
+      requestId: "ot-1",
+      reportUrl: body.reportUrl,
+      reportedAt: body.reportedAt,
+    });
   });
 });

@@ -3,6 +3,7 @@ import { OvertimeRequestService } from "@/services/overtime_request.service";
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { WorkDayType } from "@/constants/attendance";
+import { EmployeeHrFunction } from "@/constants/hr_management";
 import {
   OVERTIME_DAILY_TOTAL_LIMIT_MINUTES,
   OVERTIME_MONTHLY_EXTENDED_LIMIT_MINUTES,
@@ -20,13 +21,17 @@ import {
   OvertimeDecisionOutcome,
 } from "@/interfaces/overtime";
 import { employeeRepo } from "@/repositories/employee.repo";
+import { employeeHrFunctionRepo } from "@/repositories/employee_hr_function.repo";
 import {
   IOvertimeApprovalWrite,
   IOvertimeApprovalWriteResult,
   IOvertimeRequestRepository,
 } from "@/repositories/overtime_request.repo";
 import { IOvertimeRequestContext } from "@/repositories/overtime_request_context.repo";
-import { assertOvertimeFilingType } from "@/repositories/overtime_request_invariant";
+import {
+  assertOvertimeEmergencyRecord,
+  assertOvertimeFilingType,
+} from "@/repositories/overtime_request_invariant";
 
 /**
  * Info: (20260819 - Julian) 加班單編排（L25 / L26 / L27）——**這支先前不存在**（review B9）。
@@ -58,6 +63,8 @@ const BOOK = "book-1";
 const APPLICANT = "emp-006";
 const MANAGER = "emp-005";
 const OUTSIDER = "emp-009";
+// Info: (20260820 - Julian) 具 HR_ADMIN 職能者。demo 帳本是 EMP002 林淑芬
+const HR_ADMIN = "emp-002";
 const WORK_DATE = "2026-08-14";
 
 const HOUR = 60;
@@ -139,6 +146,22 @@ class FakeRepo implements Partial<IOvertimeRequestRepository> {
       cashOutEventIds: [],
     };
   }
+
+  public declared: unknown = null;
+
+  public declareOutcome: OvertimeDecisionOutcome =
+    OvertimeDecisionOutcome.DECIDED;
+
+  async declareEmergency(params: {
+    emergencyReportUrl: string;
+    emergencyReportedAt: Date;
+    emergencyDeclaredByEmployeeId: string;
+  }): Promise<OvertimeDecisionOutcome> {
+    // Info: (20260820 - Julian) 同 approve：假 repository 也要跑真的不變式
+    assertOvertimeEmergencyRecord({ isEmergency: true, ...params });
+    this.declared = params;
+    return this.declareOutcome;
+  }
 }
 
 let context: FakeContext;
@@ -146,6 +169,7 @@ let repo: FakeRepo;
 let service: OvertimeRequestService;
 
 const managesSpy = jest.spyOn(employeeRepo, "managesEmployee");
+const hasHrFunctionSpy = jest.spyOn(employeeHrFunctionRepo, "hasAnyFunction");
 
 afterAll(() => {
   jest.restoreAllMocks();
@@ -160,6 +184,8 @@ beforeEach(() => {
   );
   managesSpy.mockReset();
   managesSpy.mockResolvedValue(true);
+  hasHrFunctionSpy.mockReset();
+  hasHrFunctionSpy.mockResolvedValue(true);
 });
 
 const approve = (overrides: { actorEmployeeId?: string; approvedMinutes?: number } = {}) =>
@@ -496,5 +522,162 @@ describe("已決行的單子不得再決行", () => {
     expect(await codeOf(approve)).toBe(
       API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED.code,
     );
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) §32 IV 的認定（`declareEmergency`）——
+ * **這一段先前完全沒有測試**（review 第 2 條，`grep declareEmergency src/__tests__` = 0）。
+ *
+ * ## 沒有它的時候，刪三行就全綠
+ *
+ * 拿掉 `if (!isHr) throw` 那三行 → 同帳本的**任何**員工都能對自己的待簽單
+ * 認定天災事變，整段跳 `EMERGENCY_DOUBLE`，而全套測試不變。
+ * B7 花了一整輪把「申請人自填的布林值」改成「HR 認定 + 強制報備紀錄」，
+ * 那個保證卻沒有任何行為證據。
+ *
+ * ## 而閘本身還漏了一條
+ *
+ * 第一版只問「你是不是 HR_ADMIN」，沒問「這張單是不是你自己的」。
+ * 於是旁路沒有消失，只是從「任何申請人自證」收窄成
+ * 「**具 HR_ADMIN 職能的申請人自證**」—— 而中小企業與工地帳本裡，
+ * 人資常常也是會加班的那個人（demo 帳本只有 EMP002 一位 HR_ADMIN）。
+ *
+ * 更糟的是**這條規則當時就已經寫在不變式的錯誤訊息裡**：
+ * 「the applicant may not certify their own premium」。
+ * 規格說了、程式沒擋、也沒有測試 —— 三者分岔而沒有人會發現。
+ *
+ * ## 斷言一律成對
+ *
+ * 「回 403」與「repository 沒有被呼叫」要一起驗：少了後者，
+ * 一個「先寫進去再回 403」的實作會通過（同 review B9 對限流的處置）。
+ */
+describe("declareEmergency —— §32 IV 的認定閘", () => {
+  const REPORT = {
+    reportUrl: "https://example.test/filings/2026-0815-001",
+    reportedAt: "2026-08-15T11:00:00+08:00",
+  };
+
+  const declare = (overrides: { actorEmployeeId?: string } = {}) =>
+    service.declareEmergency({
+      accountBookId: BOOK,
+      requestId: "ot-1",
+      actorEmployeeId: overrides.actorEmployeeId ?? HR_ADMIN,
+      ...REPORT,
+    });
+
+  it("HR_ADMIN 對別人的單子認定：成立，三個欄位都落地", async () => {
+    await expect(declare()).resolves.toBeDefined();
+    expect(repo.declared).toEqual({
+      accountBookId: BOOK,
+      requestId: "ot-1",
+      emergencyReportUrl: REPORT.reportUrl,
+      emergencyReportedAt: new Date(REPORT.reportedAt),
+      emergencyDeclaredByEmployeeId: HR_ADMIN,
+    });
+  });
+
+  /**
+   * Info: (20260820 - Julian) 認定者是**決行者以外的第三個角色**。
+   *
+   * 這一條順帶釘住 B7 的結構：認定不需要「管得到他」——
+   * HR 通常不是那個人的主管。若哪天有人把 `managesEmployee` 也加進來，
+   * §32 IV 會在大部分組織裡再次變成走不通的路。
+   */
+  it("HR_ADMIN 不必管得到那個人", async () => {
+    managesSpy.mockResolvedValue(false);
+    await expect(declare()).resolves.toBeDefined();
+    expect(managesSpy).not.toHaveBeenCalled();
+  });
+
+  it("沒有 HR_ADMIN 職能：403，且 repository 沒有被呼叫", async () => {
+    hasHrFunctionSpy.mockResolvedValue(false);
+    expect(await codeOf(() => declare({ actorEmployeeId: MANAGER }))).toBe(
+      API_ERRORS.FO_HR_FUNCTION_REQUIRED.code,
+    );
+    expect(repo.declared).toBeNull();
+  });
+
+  it("只問 HR_ADMIN，不含 TIMEKEEPER", async () => {
+    await declare();
+    expect(hasHrFunctionSpy).toHaveBeenCalledWith({
+      accountBookId: BOOK,
+      employeeId: HR_ADMIN,
+      hrFunctions: [EmployeeHrFunction.HR_ADMIN],
+    });
+  });
+
+  /**
+   * Info: (20260820 - Julian) **具 HR_ADMIN 職能的申請人也不得自證。**
+   *
+   * 這是 review 第 2 條點名的那個組合，而它不是理論上的：
+   * demo 帳本只有一位 HR_ADMIN，而她也會加班。
+   */
+  it("HR_ADMIN 對自己的單子認定：403，且 repository 沒有被呼叫", async () => {
+    context.summary = summaryOf({ employeeId: HR_ADMIN });
+    hasHrFunctionSpy.mockResolvedValue(true);
+
+    expect(await codeOf(() => declare({ actorEmployeeId: HR_ADMIN }))).toBe(
+      API_ERRORS.FO_SELF_APPROVAL_FORBIDDEN.code,
+    );
+    expect(repo.declared).toBeNull();
+  });
+
+  /**
+   * Info: (20260820 - Julian) 自我認定的判斷排在**職能查詢之前**。
+   *
+   * 順序反過來的話，「剛好是 HR_ADMIN 的申請人」會先通過職能查詢 ——
+   * 而那正是這條要擋的組合。理由同 `assertMayDecide` 的自我核准判斷。
+   */
+  it("自我認定不依賴職能查詢的結果", async () => {
+    context.summary = summaryOf({ employeeId: HR_ADMIN });
+    await codeOf(() => declare({ actorEmployeeId: HR_ADMIN }));
+    expect(hasHrFunctionSpy).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260820 - Julian) 只在 `PENDING` 時可用。
+   *
+   * 核准當下就依旗標切好了分段、算好了補休或折現。事後才蓋上旗標，
+   * 會讓一張已經按普通級距算完的單子突然變成加倍發給。
+   */
+  it.each([
+    OvertimeRequestStatus.APPROVED,
+    OvertimeRequestStatus.REJECTED,
+    OvertimeRequestStatus.WITHDRAWN,
+  ])("狀態為 %s 時擋下，且 repository 沒有被呼叫", async (status) => {
+    context.summary = summaryOf({ status });
+    expect(await codeOf(declare)).toBe(
+      API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED.code,
+    );
+    expect(repo.declared).toBeNull();
+  });
+
+  /**
+   * Info: (20260820 - Julian) 附條件更新輸掉（主管在同一秒核准掉了）。
+   *
+   * repository 回 `ALREADY_REVIEWED`，service 必須轉成使用者看得懂的碼 ——
+   * 而不是回一張「認定成功」的單子。
+   */
+  it("認定與核准撞在一起時回已決行", async () => {
+    repo.declareOutcome = OvertimeDecisionOutcome.ALREADY_REVIEWED;
+    expect(await codeOf(declare)).toBe(
+      API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED.code,
+    );
+  });
+
+  it("報備時點格式錯時回 400", async () => {
+    expect(
+      await codeOf(() =>
+        service.declareEmergency({
+          accountBookId: BOOK,
+          requestId: "ot-1",
+          actorEmployeeId: HR_ADMIN,
+          reportUrl: REPORT.reportUrl,
+          reportedAt: "not-a-date",
+        }),
+      ),
+    ).toBe(API_ERRORS.VA_INVALID_INPUT_DATA.code);
+    expect(repo.declared).toBeNull();
   });
 });
