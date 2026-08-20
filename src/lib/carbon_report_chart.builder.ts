@@ -32,6 +32,24 @@ import {
 import { IComputedLedger } from "@/types/carbon_chatbot.types";
 
 // Info: (20260720 - Tzuhan) 圖表文案(由呼叫端以 i18n 注入;佔位/凍結沿用 #23 表格文案語意)
+/**
+ * Info: (20260820 - Emily) 為什麼有三個欄位是必填而其餘是選填。
+ *
+ * 選填 + `if (labels.x)` + 呼叫端是完整物件字面值（沒有 spread 預設值）
+ * = 加了新文案卻忘了接 i18n 時**紙上什麼都不印，而且沒有任何錯誤**。
+ * 這個坑在本檔與 `use_carbon_chat.ts` 的註解裡記過三次
+ * （20260805、20260806、20260819），第三次是 08-19 兩趟驗收全紅。
+ *
+ * 註解防不住它，型別可以：`importedSankeyTitle`、`importedSankeyIsoMapping`、
+ * `importedTopItemsTitle` 這三個是**紙上一定要有的文字**，改成必填之後，
+ * 呼叫端漏接會在 `tsc --noEmit` 就紅（#6671 已把它放進 `npm test`）。
+ *
+ * 驗收方式：在本型別加一個新的必填欄位而不動 `use_carbon_chat.ts`，
+ * `tsc` 必須報 TS2741。
+ *
+ * 其餘欄位維持選填是刻意的 —— 它們是「有就印、沒有就略過」的補充說明
+ * （廠址小計、低於門檻、期間未標註…），缺了不會讓讀者看不到主要內容。
+ */
 export interface ICarbonChartLabels {
   pieTitle: string;
   barTitle: string;
@@ -52,7 +70,7 @@ export interface ICarbonChartLabels {
    * Info: (20260803 - Tzuhan) 匯入桑基圖的標題。**必須帶基準與單位** ——
    * 一張沒有單位的流量圖,讀者無從判斷 8332 是公噸還是公斤,差一千倍。
    */
-  importedSankeyTitle?: string;
+  importedSankeyTitle: string;
   /** Info: (20260803 - Tzuhan) 圖下方「未畫出的項目」說明抬頭 */
   importedSankeyExcluded?: string;
   /**
@@ -92,9 +110,9 @@ export interface ICarbonChartLabels {
    * 多個 GHG 類別對到同一個 ISO 類別(Cat 1/2/3/5/8 → 類別四),
    * 只換標籤會得到好幾列「類別四」各自小計,比現在更糟。
    */
-  importedSankeyIsoMapping?: string;
+  importedSankeyIsoMapping: string;
   /** Info: (20260806 - Tzuhan) 排放去向圖的標題(前 N 大 + 其他) */
-  importedTopItemsTitle?: string;
+  importedTopItemsTitle: string;
   /**
    * Info: (20260806 - Tzuhan) 「其他」節點名。**它是一個真的節點**,不是丟掉 ——
    * 沒進前 N 名的流量仍然畫在圖上,廠址的流出才等於流入。

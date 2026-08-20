@@ -13,17 +13,13 @@ import {
 } from "@/constants/carbon_evidence";
 import { useState, useEffect } from "react";
 import { downloadFile } from "@/lib/file_operator";
-import { stripMarkdownComments } from "@/lib/utils/markdown_comment";
-import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_break";
 import dynamic from "next/dynamic";
 import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
 import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
 import { splitInlineListItems } from "@/lib/utils/markdown_list_structure";
 import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
-import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
 import { padAllTableHeaders } from "@/lib/utils/markdown_table_columns";
-import { stripLeadingDocumentTitle } from "@/lib/utils/carbon_report_title";
-import { stripEchoedSectionHeadings } from "@/lib/utils/markdown_echoed_heading";
+import { prepareCarbonMarkdown } from "@/lib/utils/carbon_markdown_prepare";
 
 // Info: (20260720 - Tzuhan) #54 證據鏈元件動態載入:含 RecordTabModal 依賴鏈,不拖累一般 markdown 渲染
 const EvidenceChain = dynamic(
@@ -230,22 +226,17 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
        * 剝除只看「第一個非空行是不是單一個 #」，放在前面才不會被其他轉換
        * 插進來的內容擋住第一行。
        */
-      const titled = stripDocumentTitle
-        ? stripLeadingDocumentTitle(content).body
-        : content;
       /**
-       * Info: (20260819 - Emily) `stripEchoedSectionHeadings` 的位置與
-       * `buildCarbonReportHtml` 完全一致(comment → br → office → echo):
-       * 兩個渲染端看到的輸入必須是同一份,否則就是「預覽對了、匯出沒對」
-       * 那個形狀的下一次(本檔上方已記過三次)。
+       * Info: (20260820 - Emily) 前置轉換改走共用函式（PR review A2）。
+       *
+       * 原本這裡與 `buildCarbonReportHtml` 各排一串，靠兩則註解宣稱
+       * 「順序完全一致」—— 而 `stripLeadingDocumentTitle` 兩邊位置不同，
+       * 「HTML 註解在 H1 之前」的輸入在兩端產出不同結果（本端漏剝報告名稱）。
+       * 順序現在寫在 `prepareCarbonMarkdown` 裡。
        */
       const normalized = padAllTableHeaders(
         convertTimelineBlocksToTables(
-          stripEchoedSectionHeadings(
-            replaceOfficeSymbolChars(
-              stripHtmlLineBreaksOutsideFences(stripMarkdownComments(titled)),
-            ),
-          ),
+          prepareCarbonMarkdown(content, { stripDocumentTitle }).markdown,
         ),
       );
       /*
