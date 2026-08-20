@@ -248,6 +248,12 @@ describe("T19：規則引擎不得對 LeavePolicy.code 分支（ADR 021 §2.1）
     join("src", "lib", "utils", "leave_chain_message.ts"),
     join("src", "lib", "utils", "leave_error_message.ts"),
     join("src", "lib", "utils", "overtime_error_message.ts"),
+    /**
+     * Info: (20260820 - Julian) 額度快取的每日勾稽（review 第 10 輪第 2 條）。
+     * 它掛在 `services/cron/` 下，而掃描根是**遞迴**的 —— 這道牆本來就該
+     * 管到它：一支會依假別重算額度的排程，正是最不該對代號分支的地方。
+     */
+    join("src", "services", "cron", "leave_balance_reconcile.cron.ts"),
     join("src", "services", "leave.service.ts"),
     join("src", "services", "leave_approval_rule.service.ts"),
     join("src", "services", "leave_balance.service.ts"),
@@ -260,7 +266,7 @@ describe("T19：規則引擎不得對 LeavePolicy.code 分支（ADR 021 §2.1）
     join("src", "services", "overtime_visibility.ts"),
   ];
 
-  it("掃描根確實掃到這 17 支（否則下面那條永遠是綠的）", () => {
+  it("掃描根確實掃到這 18 支（否則下面那條永遠是綠的）", () => {
     expect(files.map((path) => relative(process.cwd(), path))).toEqual(
       EXPECTED_FILES,
     );

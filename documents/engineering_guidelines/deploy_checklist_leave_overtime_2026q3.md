@@ -24,6 +24,51 @@
 
 ---
 
+## 零、這個模組預設是關的 ⚠️ 先讀這一節
+
+`/hr_management` 的 13 個頁面與 37 支 `/hr/` API **已經在程式碼裡，也就是
+已經部署出去了**。它沒有從任何全站導覽連出去，但那不是保護：路徑猜得到，
+而 `hr_management/layout.tsx` 的註解自己寫著「這個 layout 連沒有登入的頁面
+都會渲染」。
+
+因此 `src/middleware.ts` 加了一道路徑閘：
+
+| `HR_MODULE_ENABLED` | 行為 |
+|---|---|
+| 未設定（**預設**） | `/hr_management/*` 與任何一段是 `hr` 的 API 路徑一律回 **404** |
+| `"true"` | 正常開放 |
+| 其他任何值（`1` / `yes` / `TRUE`） | 一律視為**關** |
+
+**上線前**：正式環境不要設定它。確認方式是直接打一支端點 ——
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' https://<正式網域>/hr_management
+curl -s -o /dev/null -w '%{http_code}\n' https://<正式網域>/api/v1/hr/employee
+# 兩個都要是 404
+```
+
+**這個模組正式上線那天**：把 `HR_MODULE_ENABLED=true` 設進去，
+然後**重新 build**。
+
+> ⚠️ 這是 **build 時**的開關，不是 runtime 的。Next.js 會把 middleware 裡的
+> `process.env` 在打包時內聯成字面值 —— 在部署平台改了環境變數卻沒有觸發
+> 重新部署時，這道閘不會變。上線那天請以上面那兩個 `curl` 確認，
+> 不要以「環境變數面板顯示已設定」為準。
+
+### 這道閘擋不了什麼
+
+它是**路徑層**的閘，不是授權。模組打開之後，「誰可以看誰的資料」仍然由
+每一支端點自己的 `assertMay*` 負責 —— 那些檢查一條都不能因為有了這道閘
+而省略。這裡擋的是「整個模組還沒好」，不是「這個人不該看這一筆」。
+
+判準在 `src/constants/hr_module_gate.ts`（不是寫在 middleware 裡：
+`hr_module_gate.test.ts` 要驗的就是那個判準，寫在 middleware 裡的話測試
+只能手抄一份規則）。那支測試會掃 `src/app` 底下所有 `page.tsx` / `route.ts`，
+確認**每一支人事路由都被擋、其餘一支都沒被誤擋** ——
+新增一支落在規則外的端點，它會紅。
+
+---
+
 ## 一、這次動了什麼
 
 ### 新增 16 張表
