@@ -209,15 +209,39 @@ describe("語言檔的操作說明", () => {
  * Info: (20260820 - Luphia) 限制摘要是原本頁尾折疊區真正想達成的事:
  * 看到數字的人同時看到數字的邊界。固化其規模,避免日後被當成裝飾刪掉。
  */
+const highlightsOf = (dictionary: {
+  methodology?: { highlights?: string[] };
+}): string[] => dictionary.methodology?.highlights ?? [];
+
+/**
+ * Info: (20260820 - Luphia) ja / ko / zh_cn 的限制摘要刻意維持英文回退,
+ * 與同一區塊的 sections 一致 —— 審計用詞的準確度無法自行驗證,
+ * 而譯錯的限制摘要比英文原文更危險:讀者會以為自己讀懂了。
+ */
+const FALLBACK_LOCALES = ["ja", "ko", "zh_cn"] as const;
+
 describe("報告旁的限制摘要", () => {
   it.each(LOCALES)("%s 有三條限制摘要", (_locale, dictionary) => {
-    const highlights = (
-      dictionary as { methodology?: { highlights?: string[] } }
-    ).methodology?.highlights;
-    expect(highlights?.length ?? 0).toBeGreaterThanOrEqual(3);
-    expect(highlights?.length).toBe(
-      (zhTw as { methodology?: { highlights?: string[] } }).methodology
-        ?.highlights?.length,
-    );
+    expect(highlightsOf(dictionary).length).toBeGreaterThanOrEqual(3);
+    expect(highlightsOf(dictionary).length).toBe(highlightsOf(zhTw).length);
+  });
+
+  /**
+   * Info: (20260820 - Luphia) 回退語言必須與 en **逐字相同**。
+   *
+   * 沒有這條斷言,英文文案更新後三份回退會靜默留在舊版 ——
+   * 而回退的內容既然是英文,任何差異就只可能是漏同步,不可能是翻譯。
+   * 這也是「翻譯落地」的驗收點:某語言不再等於 en,即代表它已翻譯,
+   * 屆時應同步移除該語言檔 highlights 上方的回退註解。
+   */
+  it.each(
+    LOCALES.filter(([locale]) => FALLBACK_LOCALES.includes(locale as never)),
+  )("%s 的限制摘要與 en 的英文回退逐字相同", (_locale, dictionary) => {
+    expect(highlightsOf(dictionary)).toEqual(highlightsOf(en));
+  });
+
+  // Info: (20260820 - Luphia) zh_tw 是來源語言,必須是中文而非回退
+  it("zh_tw 的限制摘要不是英文回退", () => {
+    expect(highlightsOf(zhTw)).not.toEqual(highlightsOf(en));
   });
 });

@@ -170,10 +170,12 @@ export const transportationCarbonFootprintCalculator = {
       "아래 각 절에서 모든 수치가 어디서 나오는지 설명합니다. 결론을 어디까지 신뢰할 수 있는지만 알고 싶다면 제11절 「알려진 한계」로 바로 이동하세요.",
     limits_title: "이 수치를 쓰기 전에 반드시 읽어 주세요",
     read_full: "계산 방식 전문 보기",
+    // Info: (20260820 - Luphia) 限制摘要同 sections 以英文回退：韓文審計用詞我無法驗證準確度，
+    // Info: (20260820 - Luphia) 譯錯的限制摘要比沒有摘要更糟。用詞與 sections 一致，翻譯可一併替換。
     highlights: [
-      "산정 범위는 **운송 과정만** 포함합니다. 창고 보관, 하역, 포장은 물론 화물 자체의 생산과 폐기도 포함하지 않습니다. 이 수치는 제품의 전과정 탄소 발자국이 아닙니다.",
-      "도로망은 **현재 대만만 수록**합니다. 대만 밖 육상 구간은 대권 거리 × {{landTortuosity}}로 추정하고 보고서에 「추정치」로 표시합니다. 대만 밖 육상 운송이 주가 되는 경로라면 그 추정 오차가 결과에 그대로 들어갑니다.",
-      "해상과 항공 계수는 **생산 지역이 미국**(공표 연도 2016년과 2017년)이며, 항공 거리는 우회 비행과 고고도 복사 강제력을 포함하지 않으므로 실제 영향은 이 보고서의 수치보다 큽니다.",
+      "The scope covers **transport only**: no warehousing, loading and unloading, or packaging, and nothing from the production or disposal of the goods themselves. The result is therefore not the full life-cycle carbon footprint of the shipment.",
+      "The road network **currently covers Taiwan only**: road legs outside Taiwan are estimated from straight-line distance times a tortuosity factor of {{landTortuosity}} and marked Estimated in the report. Where a route's emissions are dominated by road transport abroad, the estimation error enters the result directly.",
+      "The sea and air factors have a **production region of the United States** (announced 2016 and 2017), and the air distance excludes routing detours, climb and high-altitude radiative forcing — both the actual flight distance and the climate impact exceed the figures reported here.",
     ],
     // Info: (20260802 - Luphia) 內文暫以英文回退：韓文審計用詞我無法驗證準確度，
     // Info: (20260802 - Luphia) 譯錯的方法論說明比沒有說明更糟。結構與 token 已就位，翻譯可直接替換此陣列。

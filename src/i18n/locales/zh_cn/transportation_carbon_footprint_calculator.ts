@@ -163,10 +163,12 @@ export const transportationCarbonFootprintCalculator = {
       "以下逐节说明每一个数字是怎么来的。若只想知道结论的可信范围，直接看第十一节「已知限制」。",
     limits_title: "使用这份数字前必读",
     read_full: "看完整计算方式说明",
+    // Info: (20260820 - Luphia) 限制摘要同 sections 以英文回退：審計用詞的正確性需母語者覆核，
+    // Info: (20260820 - Luphia) 譯錯的限制摘要比沒有摘要更糟。用詞與 sections 一致，翻譯可一併替換。
     highlights: [
-      "计算范围**只含运输过程**：不含仓储、装卸、包装，也不含货物本身的生产与废弃。这份数字不等于产品的完整生命周期碳足迹。",
-      "道路路网**目前仅覆盖台湾**：境外的陆运段以直线距离乘 {{landTortuosity}} 推估，并在报告中标上「估算值」。若某条路线以境外陆运为主，推估误差会直接进入结果。",
-      "海运与空运系数的**生产区域为美国**（公告年份 2016 与 2017），且空运距离未计绕飞与高空辐射强迫加成，实际影响高于本报告数值。",
+      "The scope covers **transport only**: no warehousing, loading and unloading, or packaging, and nothing from the production or disposal of the goods themselves. The result is therefore not the full life-cycle carbon footprint of the shipment.",
+      "The road network **currently covers Taiwan only**: road legs outside Taiwan are estimated from straight-line distance times a tortuosity factor of {{landTortuosity}} and marked Estimated in the report. Where a route's emissions are dominated by road transport abroad, the estimation error enters the result directly.",
+      "The sea and air factors have a **production region of the United States** (announced 2016 and 2017), and the air distance excludes routing detours, climb and high-altitude radiative forcing — both the actual flight distance and the climate impact exceed the figures reported here.",
     ],
     // Info: (20260802 - Luphia) 內文暫以英文回退：審計用詞的正確性需母語者覆核，
     // Info: (20260802 - Luphia) 譯錯的方法論說明比沒有說明更糟。結構與 token 已就位，翻譯可直接替換此陣列。
