@@ -1049,6 +1049,8 @@ export const hrManagement = {
       "결재 중에 인사팀이 이 신청의 천재·사변(§32 IV) 인정을 취소하여 전 구간이 일반 연장근로 할증으로 돌아갔습니다. 새로 고침하여 금액을 확인한 뒤 승인하세요.",
     error_day_length_unknown:
       "이 직원의 1일 소정근로시간을 산출할 수 없어 보상휴가 전환도 수당 지급도 불가능합니다. 인사팀에 근무 일정 등록을 요청하세요.",
+    error_overlaps_existing:
+      "같은 날 이 시간대와 겹치는 연장근로 신청이 이미 있습니다. 시간을 조정하거나 기존 신청을 먼저 철회하세요.",
     error_agreement_record_required:
       "월 상한을 54시간으로 완화하려면 기록이 필요합니다(§32 III): 회의록 링크와 동의한 날짜를 입력하세요.",
     error_emergency_already_declared:

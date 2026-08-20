@@ -53,6 +53,19 @@ export interface IOvertimeRequestContext {
     to?: string;
   }): Promise<IOvertimeRequestSummary[]>;
   /** Info: (20260818 - Julian) 該工作日的排班。沒有排班時為 null —— 那與「排了但不是上班日」不同 */
+  /**
+   * Info: (20260820 - Julian) 同一天、同一人、時段重疊的**有效**加班單
+   * （review 第 13 輪第 2 條）。
+   *
+   * 回 id 而不是布林：錯誤訊息之外，事後要查得出是撞到哪一張。
+   */
+  findOverlappingRequestId(params: {
+    accountBookId: string;
+    employeeId: string;
+    workDate: string;
+    requestedStartMinute: number;
+    requestedEndMinute: number;
+  }): Promise<string | null>;
   findScheduledDay(params: {
     accountBookId: string;
     employeeId: string;
@@ -277,20 +290,34 @@ const sumRecognizedMinutes = async (params: {
  * 因此這一支收 `PENDING` 與 `APPROVED` 兩種狀態，`REJECTED` / `WITHDRAWN`
  * 不算（它們不是加班事實）。
  *
- * ## 待簽的單用什麼分鐘數
+ * ## 一律用**申請區間長度**，不用 `recognizedMinutes`
  *
- * 它還沒有 `recognizedMinutes`（要核准當下才算得出來），因此取
- * `requestedEnd - requestedStart` 當**上界**。方向要說清楚：
+ * 第一版寫的是 `recognizedMinutes ?? (requestedEnd - requestedStart)` ——
+ * 已核准的用認列、待簽的用申請長度。那**沒有消除順序依賴，只是把方向從
+ * 少付換成多付**（review 第 13 輪第 1 條）：
  *
- * - 上界偏大 → 本次被推到較高的級距 → **對勞工有利**。
- * - 那張待簽單日後被駁回 → 本次的級距回頭看是偏高的，
- *   而那筆錢已經發出去了。同樣對勞工有利，且不違法（給高於法定下限）。
+ * ```
+ * A 17:00–19:00 申請 120、實際打卡只有 60；B 19:00–21:00 申請並待滿 120
+ *   先核 A 再核 B：B 看到 A 的「認列 60」   → B 落在 1/3 + 2/3
+ *   先核 B 再核 A：B 看到 A 的「申請 120」  → B 整段 2/3
+ * ```
  *
- * 反方向（少算）才是不能接受的那一個：它直接低於 §24 I 的法定下限。
+ * 兩種順序差 20 個工資單位。而正式環境
+ * `recognizedMinutes = min(核准, 打卡)`、`evidenceBasis` 預設 `PUNCH_RECORD`
+ * —— **有打卡就常態小於申請區間**，所以那不是邊角情形，是常態。
+ *
+ * 一律取申請長度之後，同日每一張單的級距是**申請本身的函數**：
+ * 與誰先被核准無關，也與打卡多寡無關。實測兩種順序完全一致。
+ *
+ * ## 這個選擇的代價，講清楚
+ *
+ * 申請長度是上界，因此打卡短的那天級距會偏高 → **對勞工有利**，
+ * 且高於 §24 I 的法定下限。反方向（少算）才是不能接受的那一個。
  * 兩種偏差都會存在，選擇的是哪一邊 —— 而只有一邊會被勞檢開罰。
  *
- * ToDo: (20260820 - Julian) 更正流程（撤銷核准並重算）落地之後，
- * 這裡可以改成「核准當下對同日手足單一併重算」，兩種偏差就都消失。
+ * 真正兩邊都不偏的做法是「核准當下對同日手足單一併重算並覆寫分段」，
+ * 而那要有更正流程（分段一旦落地就對應到已發或待發的工資）。
+ * ToDo: (20260820 - Julian) 更正流程落地之後改成重算，這個上界就可以拿掉。
  */
 const sumEarlierSameDayMinutes = async (params: {
   accountBookId: string;
@@ -309,24 +336,40 @@ const sumEarlierSameDayMinutes = async (params: {
         in: [OvertimeRequestStatus.PENDING, OvertimeRequestStatus.APPROVED],
       },
       /**
-       * Info: (20260820 - Julian) `lt` 而非 `lte`：起始分鐘相同的兩張單是
-       * 重疊的加班，那是另一個問題（重疊本身該擋）。用 `lte` 只會讓其中一張
-       * 把另一張算進自己的先前累計，而兩張互相算就都被推高一級。
+       * Info: (20260820 - Julian) 起點相同時以 **id 決勝**（review 第 13 輪第 2 條）。
+       *
+       * 第一版只有 `lt`，並在註解裡寫「起始分鐘相同的兩張單是重疊的加班，
+       * 那是另一個問題（重疊本身該擋）」—— 而**那個「該擋」當時沒有實作**：
+       * `submit()` 沒有任何重疊檢查，`OvertimeRequest` 也沒有對應的唯一鍵。
+       * 後果是同起點的兩張單互不計入，兩張都拿 1/3：實測各 120 分時
+       * 得到 80 個工資單位，正解 120 —— **低於 §24 I 的法定下限**。
+       *
+       * 現在兩件事都做了：`submit()` 補上重疊檢查（讓那句話成真），
+       * 而這裡以 id 決勝處理「檢查上線之前就存在的既有列」。
+       * 誰排前面是任意的，但**總額**因此正確（1/3 + 2/3），
+       * 且對同一組資料永遠給出同一個答案。
        */
-      requestedStartMinute: { lt: params.requestedStartMinute },
+      OR: [
+        { requestedStartMinute: { lt: params.requestedStartMinute } },
+        {
+          AND: [
+            { requestedStartMinute: params.requestedStartMinute },
+            { id: { lt: params.excludeRequestId } },
+          ],
+        },
+      ],
     },
     select: {
-      recognizedMinutes: true,
       requestedStartMinute: true,
       requestedEndMinute: true,
     },
   });
 
+  /**
+   * Info: (20260820 - Julian) 一律申請長度 —— 見檔頭「不用 `recognizedMinutes`」。
+   */
   return rows.reduce(
-    (total, row) =>
-      total +
-      (row.recognizedMinutes ??
-        row.requestedEndMinute - row.requestedStartMinute),
+    (total, row) => total + (row.requestedEndMinute - row.requestedStartMinute),
     0,
   );
 };
@@ -366,6 +409,49 @@ class OvertimeRequestContextRepository implements IOvertimeRequestContext {
       orderBy: [{ workDate: "desc" }, { createdAt: "desc" }],
     });
     return rows.map(toSummary);
+  }
+
+  /**
+   * Info: (20260820 - Julian) 重疊偵測（review 第 13 輪第 2 條）。
+   *
+   * ## 為什麼非有不可
+   *
+   * `sumEarlierSameDayMinutes` 的註解一度寫著「重疊本身該擋」，而**那句話
+   * 當時沒有任何實作** —— `submit()` 沒有檢查，schema 也沒有唯一鍵。
+   * 兩張時段重疊的加班單意味著同一段時間被算兩次工資，
+   * 而級距那一側還會因為起點相同而互不計入（少付）。
+   *
+   * ## 判準：半開區間相交
+   *
+   * `a.start < b.end && b.start < a.end`。右端不含 —— 17:00–19:00 與
+   * 19:00–21:00 是**相鄰**不是重疊，那是本模組最常見的合法形狀
+   * （同 `sumWindowOverlapMinutes` 的右端不含）。
+   *
+   * 只看 `PENDING` 與 `APPROVED`：駁回與撤回的單不是加班事實，
+   * 撞到它們不該擋住重送（同 `sumEarlierSameDayMinutes` 的狀態集合）。
+   */
+  public async findOverlappingRequestId(params: {
+    accountBookId: string;
+    employeeId: string;
+    workDate: string;
+    requestedStartMinute: number;
+    requestedEndMinute: number;
+  }): Promise<string | null> {
+    const row = await prisma.overtimeRequest.findFirst({
+      where: {
+        accountBookId: params.accountBookId,
+        employeeId: params.employeeId,
+        workDate: params.workDate,
+        status: {
+          in: [OvertimeRequestStatus.PENDING, OvertimeRequestStatus.APPROVED],
+        },
+        requestedStartMinute: { lt: params.requestedEndMinute },
+        requestedEndMinute: { gt: params.requestedStartMinute },
+      },
+      select: { id: true },
+      orderBy: { requestedStartMinute: "asc" },
+    });
+    return row?.id ?? null;
   }
 
   public async findScheduledDay(params: {

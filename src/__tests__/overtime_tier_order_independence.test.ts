@@ -168,23 +168,38 @@ const contextFor = (spec: typeof A) =>
  * 切段用的是**真的** `deriveOvertimeSegments` —— 這一支測的是那一欄餵給它
  * 之後產出什麼級距，而不是那一欄本身等於幾。
  */
-const approve = async (spec: typeof A): Promise<OvertimePremiumTier[]> => {
+const approve = async (
+  spec: typeof A,
+  /**
+   * Info: (20260820 - Julian) 核准當下**實際認列**幾分鐘（review 第 13 輪第 1 條）。
+   *
+   * 預設等於申請長度，但正式環境
+   * `recognizedMinutes = min(核准, 打卡)`、`evidenceBasis` 預設 `PUNCH_RECORD`
+   * —— **有打卡就常態小於申請區間**。第一版的 fixture 一律
+   * `recognizedMinutes = 申請長度`，而那恰好是「順序依賴為 0」的唯一組態，
+   * 也是生產資料裡最不常見的形狀（checklist §1.4 + §1.9）：
+   * 測試因此看不到它要驗的那件事。
+   */
+  recognizedMinutes: number = spec.requestedEndMinute - spec.requestedStartMinute,
+): Promise<OvertimePremiumTier[]> => {
   const context = await contextFor(spec);
-  const minutes = spec.requestedEndMinute - spec.requestedStartMinute;
   const segments = deriveOvertimeSegments({
     workDayType: context.workDayType as WorkDayType,
     isEmergency: false,
-    minutes,
+    minutes: recognizedMinutes,
     priorRecognizedMinutes: context.earlierRecognizedMinutes,
   });
 
   const row = rows.find((item) => item.id === spec.id);
   if (row === undefined) throw new Error(`fixture 少了 ${spec.id}`);
   row.status = OvertimeRequestStatus.APPROVED;
-  row.recognizedMinutes = minutes;
+  row.recognizedMinutes = recognizedMinutes;
 
   return segments.map((segment) => segment.tier);
 };
+
+/** Info: (20260820 - Julian) A 申請 120 分，但當天只打卡 60 分 */
+const A_PUNCHED_MINUTES = 60;
 
 beforeEach(() => {
   rows = [
@@ -230,6 +245,46 @@ describe("同日兩張加班單：級距與核准順序無關（M4）", () => {
 
     expect(byId.get(A.id)).toEqual([OvertimePremiumTier.WEEKDAY_FIRST_2H]);
     expect(byId.get(B.id)).toEqual([OvertimePremiumTier.WEEKDAY_BEYOND_2H]);
+  });
+
+  /**
+   * Info: (20260820 - Julian) **A 的打卡短於申請時，順序仍然不得影響級距**
+   * （review 第 13 輪第 1 條）。
+   *
+   * 這一條是本檔真正的紅線，而它在 2026-08-20 之前**會紅**：
+   * 那時 `sumEarlierSameDayMinutes` 用的是
+   * `recognizedMinutes ?? (requestedEnd - requestedStart)`，於是
+   *
+   * ```
+   * 先核 A 再核 B：B 看到 A 的「認列 60」  → B = 1/3 + 2/3
+   * 先核 B 再核 A：B 看到 A 的「申請 120」 → B = 整段 2/3
+   * ```
+   *
+   * 差 20 個工資單位。修法是一律取申請長度 —— 級距因此是**申請本身的函數**，
+   * 與誰先被核准、與打卡多寡都無關。
+   */
+  it("A 的打卡短於申請時，兩種順序仍給同一組級距", async () => {
+    const forwardA = await approve(A, A_PUNCHED_MINUTES);
+    const forwardB = await approve(B);
+
+    rows = [
+      rowOf(A, OvertimeRequestStatus.PENDING, null),
+      rowOf(B, OvertimeRequestStatus.PENDING, null),
+    ];
+    const reversedB = await approve(B);
+    const reversedA = await approve(A, A_PUNCHED_MINUTES);
+
+    expect(reversedA).toEqual(forwardA);
+    expect(reversedB).toEqual(forwardB);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 而且那一組級距要是**對的**。
+   * B 排在 A（申請 17:00–19:00）之後，因此它整段都在第三小時之後。
+   */
+  it("A 打卡短時，B 仍整段落在 2/3", async () => {
+    await approve(A, A_PUNCHED_MINUTES);
+    expect(await approve(B)).toEqual([OvertimePremiumTier.WEEKDAY_BEYOND_2H]);
   });
 
   /**

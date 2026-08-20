@@ -127,8 +127,34 @@ describe("單日的答案與多日的首末日一致", () => {
     expect(single[0]).toEqual(multi[multi.length - 1]);
   });
 
-  // Info: (20260820 - Julian) 中間日仍然是整天，不受夾的影響
-  it("中間日仍是 FULL，且不需要班別", () => {
+  /**
+   * Info: (20260820 - Julian) 中間日仍然是整天，不受夾的影響。
+   *
+   * ⚠️ **拆成兩條**（review 第 13 輪第 3 條）。
+   *
+   * 原本只有一條，而它的 `shiftOf` 對中間日回 **null** ——
+   * 於是「中間日」與「查無班別」兩條路都回 `FULL`，**測試分不出是哪一條在
+   * 做事**。實測：把第 9 輪那個死條件（`index === dates.length - 2`）加回去，
+   * 這個檔案 37 條斷言全綠，因為「有班別的中間日必須是 FULL」在整份測試裡
+   * 沒有任何人釘 —— 而那正是那一輪的缺陷本體。
+   *
+   * 下面第一條是**有班別**的中間日：它只可能由「中間日整天請」那條路產生。
+   */
+  it("有班別的中間日仍是 FULL（不是被夾成 CUSTOM）", () => {
+    const days = expandLeaveSpan({
+      startAt: "2026-08-19T09:00",
+      endAt: "2026-08-21T12:00",
+      // Info: (20260820 - Julian) 每一天都有班 —— 中間日的 FULL 不能是「查無班別」造成的
+      shiftOf: () => SHIFT,
+    });
+    expect(days[1]).toEqual({
+      workDate: "2026-08-20",
+      segment: LeaveDaySegment.FULL,
+    });
+  });
+
+  // Info: (20260820 - Julian) 另一條路：中間日查無班別，同樣是 FULL
+  it("查無班別的中間日也是 FULL", () => {
     const days = expandLeaveSpan({
       startAt: "2026-08-19T09:00",
       endAt: "2026-08-21T12:00",
@@ -360,6 +386,11 @@ describe("跨夜班：午夜後的時段屬於前一天的工作日", () => {
    * | `if (workDate > endOwnerDate) return;` | 「末日只到清晨」與跨三日那三條 |
    * | `if (startMinute >= endMinute) return;` | **只有**下面這兩條 |
    * | `endOwnerDate` 恆取 `end.workDate` | 「末日只到清晨」與跨三日那三條 |
+   * | 把第 9 輪的 `index === dates.length - 2` 死條件加回去 | 「有班別的中間日仍是 FULL」 |
+   *
+   * ⚠️ 最後一列是 2026-08-20 補上的（review 第 13 輪第 3 條）：這張表原本
+   * 只列三個突變，而**那個缺陷本體的突變當時存活**。一張漏了一列的突變表
+   * 比沒有表更危險 —— 它讀起來像「都驗過了」。
    *
    * 兩組不重疊 —— 那才是「各自有人守」的意思。合併它們之前先想清楚
    * 合併之後哪一行還有人釘。

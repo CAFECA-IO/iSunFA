@@ -1066,6 +1066,8 @@ export const hrManagement = {
       "HR revoked the Article 32 IV emergency determination while you were approving it, so the whole span falls back to the ordinary overtime premium. Reload, check the amount, then approve.",
     error_day_length_unknown:
       "We cannot work out how long this employee's working day is, so overtime cannot be converted to compensatory leave or cashed out. Ask HR to schedule a shift for them.",
+    error_overlaps_existing:
+      "Another overtime request already covers part of this time range on that day. Adjust the times, or withdraw the other request first.",
     error_agreement_record_required:
       "Extending the monthly cap to 54 hours requires a recorded agreement (Article 32 III): a link to the minutes and the date it was made.",
     error_emergency_already_declared:

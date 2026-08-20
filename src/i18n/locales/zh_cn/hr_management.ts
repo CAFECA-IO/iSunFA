@@ -1007,6 +1007,8 @@ export const hrManagement = {
       "这张单在你核准的过程中被人资撤回了 §32 IV 天灾事变的认定，整段工资降回一般加班级距。请重新整理，确认金额后再核准。",
     error_day_length_unknown:
       "算不出这位员工的一日工时，因此无法折换补休或折现。请人资替他排一格班。",
+    error_overlaps_existing:
+      "当天已经有一张加班单涵盖了这段时间的一部分。请调整时段，或先撤回那一张。",
     error_agreement_record_required:
       "放宽单月上限到 54 小时（§32 III）必须留下记载：工会或劳资会议的纪录链接，以及同意的日期。",
     error_emergency_already_declared:

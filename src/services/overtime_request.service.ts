@@ -115,6 +115,29 @@ export class OvertimeRequestService {
      * 而那一天沒有一個班可以當基準。用 0 分（當地午夜）會讓所有休息日加班
      * 都被判成事後補單，那個比例會被拿去回答勞動檢查。
      */
+    /**
+     * Info: (20260820 - Julian) 同一天不得送出時段重疊的兩張單
+     * （review 第 13 輪第 2 條）。
+     *
+     * 重疊意味著同一段時間被算兩次工資。它先前完全沒有人擋 ——
+     * 而 `sumEarlierSameDayMinutes` 的註解卻寫著「重疊本身該擋」，
+     * 一句沒有執行者的話。
+     *
+     * 擋在送出而不是核准：兩張重疊的單一旦都進了待簽清單，主管沒有辦法
+     * 從畫面上看出它們重疊，而先按哪一張會決定誰被擋 —— 那又是一個
+     * 取決於操作順序的結果。
+     */
+    const overlapping = await this.context.findOverlappingRequestId({
+      accountBookId: params.accountBookId,
+      employeeId: params.employeeId,
+      workDate: input.workDate,
+      requestedStartMinute: input.requestedStartMinute,
+      requestedEndMinute: input.requestedEndMinute,
+    });
+    if (overlapping !== null) {
+      throw new AppError(API_ERRORS.VA_OVERTIME_OVERLAPS_EXISTING);
+    }
+
     const referenceMinute =
       scheduled.windowStartMinute ?? input.requestedStartMinute;
 

@@ -1617,6 +1617,19 @@ export const API_ERRORS = {
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
 
+  /**
+   * Info: (20260820 - Julian) 同一天已經有一張時段重疊的加班單（review 第 13 輪第 2 條）。
+   *
+   * 重疊意味著同一段時間被算兩次工資。相鄰不算重疊 ——
+   * 17:00–19:00 與 19:00–21:00 是本模組最常見的合法形狀。
+   */
+  VA_OVERTIME_OVERLAPS_EXISTING: {
+    code: "VA000078",
+    message:
+      "another overtime request already covers part of this time range on that day",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
   VA_OVERTIME_DAY_LENGTH_UNKNOWN: {
     code: "VA000076",
     message:

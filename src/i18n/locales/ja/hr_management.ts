@@ -1047,6 +1047,8 @@ export const hrManagement = {
       "承認の途中で人事がこの申請の天災・事変（§32 IV）認定を取り消したため、全区間が通常の割増賃金に戻りました。再読み込みして金額をご確認のうえ承認してください。",
     error_day_length_unknown:
       "この従業員の1日の所定労働時間を算出できないため、代替休暇への振替も買い上げもできません。人事にシフトの設定をご依頼ください。",
+    error_overlaps_existing:
+      "同じ日に、この時間帯と重なる残業申請が既にあります。時間を調整するか、先にその申請を取り下げてください。",
     error_agreement_record_required:
       "月間上限を54時間に緩和するには記録が必要です（§32 III）：議事録のリンクと同意した日付をご入力ください。",
     error_emergency_already_declared:

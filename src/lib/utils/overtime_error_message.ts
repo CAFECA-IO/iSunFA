@@ -46,6 +46,9 @@ export const OVERTIME_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
     "hr_management.overtime.error_reclassified_midway",
   [API_ERRORS.VA_OVERTIME_EMERGENCY_REVOKED_MIDWAY.code]:
     "hr_management.overtime.error_emergency_revoked_midway",
+  // Info: (20260820 - Julian) review 第 13 輪第 2 條：同日時段重疊
+  [API_ERRORS.VA_OVERTIME_OVERLAPS_EXISTING.code]:
+    "hr_management.overtime.error_overlaps_existing",
   // Info: (20260820 - Julian) review 第 5 輪 M7／M8：算不出這個人的一日工時
   [API_ERRORS.VA_OVERTIME_DAY_LENGTH_UNKNOWN.code]:
     "hr_management.overtime.error_day_length_unknown",
