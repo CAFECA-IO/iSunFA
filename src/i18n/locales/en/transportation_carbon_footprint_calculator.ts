@@ -11,6 +11,8 @@ export const transportationCarbonFootprintCalculator = {
     ai_parse_failed: "AI parsing failed",
     missing_params:
       "Unable to obtain complete parameters. Please confirm the AI parsing results or enter them manually.",
+    load_history_failed:
+      "Unable to load the historical report. Please try again later.",
   },
   payment: {
     fee_name: "Carbon Footprint Analysis Fee",

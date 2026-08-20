@@ -11,6 +11,8 @@ export const transportationCarbonFootprintCalculator = {
     ai_parse_failed: "AI 구문 분석 실패",
     missing_params:
       "전체 매개변수를 가져올 수 없습니다. AI 분석 결과를 확인하거나 수동으로 입력하세요.",
+    load_history_failed:
+      "과거 보고서를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.",
   },
   payment: {
     fee_name: "탄소 발자국 분석 비용",

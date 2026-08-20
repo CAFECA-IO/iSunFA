@@ -11,6 +11,8 @@ export const transportationCarbonFootprintCalculator = {
     ai_parse_failed: "AIの解析に失敗しました",
     missing_params:
       "完全なパラメータを取得できません。AIの解析結果を確認するか、手動で入力してください。",
+    load_history_failed:
+      "履歴レポートを読み込めませんでした。しばらくしてからもう一度お試しください。",
   },
   payment: {
     fee_name: "カーボンフットプリント分析費用",

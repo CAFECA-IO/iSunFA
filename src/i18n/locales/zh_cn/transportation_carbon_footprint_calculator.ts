@@ -8,6 +8,7 @@ export const transportationCarbonFootprintCalculator = {
     missing_input: "请输入运输路线描述，或展开进阶设定手动输入完整参数。",
     ai_parse_failed: "AI 解析失败",
     missing_params: "无法取得完整参数，请确认 AI 解析结果或手动输入。",
+    load_history_failed: "无法载入历史报告，请稍后再试。",
   },
   payment: {
     fee_name: "碳足迹分析费用",
