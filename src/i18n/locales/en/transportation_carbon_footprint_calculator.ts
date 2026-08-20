@@ -11,6 +11,8 @@ export const transportationCarbonFootprintCalculator = {
     ai_parse_failed: "AI parsing failed",
     missing_params:
       "Unable to obtain complete parameters. Please confirm the AI parsing results or enter them manually.",
+    load_history_failed:
+      "Unable to load the historical report. Please try again later.",
   },
   payment: {
     fee_name: "Carbon Footprint Analysis Fee",
@@ -174,9 +176,9 @@ export const transportationCarbonFootprintCalculator = {
     limits_title: "Read this before using these numbers",
     read_full: "Read the full calculation method",
     highlights: [
-      "The scope covers **transport only**: no warehousing, handling or packaging, and nothing from the production or disposal of the goods themselves. This number is not a full product life-cycle carbon footprint.",
-      "The road network **currently covers Taiwan only**: land legs elsewhere are estimated as great-circle distance x {{landTortuosity}} and marked Estimated in the report. Where a route is mostly non-Taiwan land transport, that estimation error goes straight into the result.",
-      "The sea and air factors were **produced for the United States** (published 2016 and 2017), and the air distance excludes routing detours and high-altitude radiative forcing, so the real impact is higher than the figure reported here.",
+      "The scope covers **transport only**: no warehousing, loading and unloading, or packaging, and nothing from the production or disposal of the goods themselves. The result is therefore not the full life-cycle carbon footprint of the shipment.",
+      "The road network **currently covers Taiwan only**: road legs outside Taiwan are estimated from straight-line distance times a tortuosity factor of {{landTortuosity}} and marked Estimated in the report. Where a route's emissions are dominated by road transport abroad, the estimation error enters the result directly.",
+      "The sea and air factors have a **production region of the United States** (announced 2016 and 2017), and the air distance excludes routing detours, climb and high-altitude radiative forcing — both the actual flight distance and the climate impact exceed the figures reported here.",
     ],
     sections: [
       {

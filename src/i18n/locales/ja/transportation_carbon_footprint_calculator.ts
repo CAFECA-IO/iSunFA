@@ -11,6 +11,8 @@ export const transportationCarbonFootprintCalculator = {
     ai_parse_failed: "AIの解析に失敗しました",
     missing_params:
       "完全なパラメータを取得できません。AIの解析結果を確認するか、手動で入力してください。",
+    load_history_failed:
+      "履歴レポートを読み込めませんでした。しばらくしてからもう一度お試しください。",
   },
   payment: {
     fee_name: "カーボンフットプリント分析費用",
@@ -173,10 +175,12 @@ export const transportationCarbonFootprintCalculator = {
       "以下の各節で、それぞれの数値がどこから来ているかを説明します。結論をどこまで信頼できるかだけを知りたい場合は、第 11 節「既知の制約」へ直接お進みください。",
     limits_title: "この数値を使う前に必ずお読みください",
     read_full: "算出方法の全文を読む",
+    // Info: (20260820 - Luphia) 限制摘要同 sections 以英文回退：日文審計用詞我無法驗證準確度，
+    // Info: (20260820 - Luphia) 譯錯的限制摘要比沒有摘要更糟。用詞與 sections 一致，翻譯可一併替換。
     highlights: [
-      "算定範囲は**輸送プロセスのみ**です。倉庫保管・荷役・包装は含まず、貨物自体の生産や廃棄も含みません。この数値は製品のライフサイクル全体のカーボンフットプリントではありません。",
-      "道路ネットワークは**現在台湾のみを収録**しています。台湾外の陸上区間は大圏距離 × {{landTortuosity}} で推定し、レポートでは「概算値」と表示されます。台湾外の陸送が主となるルートでは、その推定誤差がそのまま結果に入ります。",
-      "海上と航空の係数は**生産地域が米国**（公表年 2016 年と 2017 年）であり、航空距離は迂回飛行と高高度の放射強制力を含まないため、実際の影響は本レポートの数値より大きくなります。",
+      "The scope covers **transport only**: no warehousing, loading and unloading, or packaging, and nothing from the production or disposal of the goods themselves. The result is therefore not the full life-cycle carbon footprint of the shipment.",
+      "The road network **currently covers Taiwan only**: road legs outside Taiwan are estimated from straight-line distance times a tortuosity factor of {{landTortuosity}} and marked Estimated in the report. Where a route's emissions are dominated by road transport abroad, the estimation error enters the result directly.",
+      "The sea and air factors have a **production region of the United States** (announced 2016 and 2017), and the air distance excludes routing detours, climb and high-altitude radiative forcing — both the actual flight distance and the climate impact exceed the figures reported here.",
     ],
     // Info: (20260802 - Luphia) 內文暫以英文回退：日文審計用詞我無法驗證準確度，
     // Info: (20260802 - Luphia) 譯錯的方法論說明比沒有說明更糟。結構與 token 已就位，翻譯可直接替換此陣列。
