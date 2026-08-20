@@ -869,12 +869,43 @@ const main = async (): Promise<void> => {
   const isoMappingNote = squeezeForMatch(
     carbonChatbotZhTw.chart_imported_sankey_iso_mapping ?? "",
   );
-  const scopeWordAppears = squeezed.includes("範疇");
+  /**
+   * Info: (20260820 - Emily) 判準看的是**系統把範疇當分類標籤印出來**,
+   * 而不是紙上出現過「範疇」這兩個字。
+   *
+   * 08-20 run C 實測:紙上「範疇」6 處,圖表印的是 **0 處**(那一趟帳本是空的,
+   * 所有圖表區塊回的都是佔位符)。6 處的來源是:
+   *   2 處 大綱的節標題「2.3 排放範疇與類別劃分」(目錄 + 正文)
+   *   2 處 客戶原文照錄(表2.2 的表名、第四章品質檢核的敘述)
+   *   2 處 系統的近似映射揭露「…合併於同一範疇類別」—— 那**本身就是**在說明映射
+   *
+   * 用「範疇」兩個字當判準,就是要求那句桑基圖的對照說明在**沒有對象**的情況下
+   * 也要上紙 —— 那是對著判準答題,不是修缺陷。
+   *
+   * 收窄之後仍然抓得到它原本要抓的東西:08-19 那一趟圖表印了範疇標籤(各範疇占比、
+   * 各範疇排放量、範疇小計)而沒有對照說明,在新判準下照樣紅。
+   *
+   * `紙上範疇字數` 記進快照(record_only):收窄了多少必須看得見,
+   * 沉默的收窄等於把判準悄悄放寬。
+   */
+  const SCOPE_LABEL_KEYS = [
+    "chart_scope_pie_title",
+    "chart_scope_bar_title",
+    "chart_imported_sankey_title",
+    "chart_imported_sankey_collapsed",
+    "report_table_subtotal_heading",
+  ] as const;
+  const scopeLabelsOnPaper = SCOPE_LABEL_KEYS.filter((key) => {
+    const label = squeezeForMatch(carbonChatbotZhTw[key] ?? "");
+    return label.length > 0 && squeezed.includes(label);
+  });
+  snapshot.紙上範疇字數 = (text.match(/範疇/g) ?? []).length;
+  snapshot.紙上範疇分類標籤 = [...scopeLabelsOnPaper];
   expectZero(
     "紙上有範疇卻沒有類別對照說明",
-    scopeWordAppears &&
+    scopeLabelsOnPaper.length > 0 &&
       !(isoMappingNote.length > 0 && squeezed.includes(isoMappingNote))
-      ? ["缺少範疇↔類別對照說明"]
+      ? [`缺少範疇↔類別對照說明(觸發標籤:${scopeLabelsOnPaper.join("、")})`]
       : [],
   );
 
