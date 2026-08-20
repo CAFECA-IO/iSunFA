@@ -11,7 +11,11 @@ import {
   ILedgerEntryView,
 } from "@/interfaces/leave_balance";
 import { assertGrantSource } from "@/repositories/leave_grant_invariant";
-import { sumLedgerMinutes, writeBalance } from "@/repositories/leave_ledger";
+import {
+  rebuildBalanceWithin,
+  sumLedgerMinutes,
+  writeBalance,
+} from "@/repositories/leave_ledger";
 
 /**
  * Info: (20260817 - Julian) 額度批次與餘額快取的寫入端。
@@ -237,6 +241,10 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
    * 回傳重建後的分鐘數。每日勾稽 Worker 拿它與快取原值比對，
    * 不一致即為 `LeaveBalanceHealth.MISMATCH` —— 而**帳本是對的那一個**，
    * 所以這裡直接覆寫，不是報錯了事。
+   *
+   * Info: (20260820 - Julian) 本體在 `rebuildBalanceWithin`（review 第 5 條）。
+   * 這一支只剩交易外殼 —— 原本兩行本體寫在 `$transaction` 裡面，
+   * 紅線測試餵不進替身，只好手抄一份，於是**產品這一支從來沒有被跑過**。
    */
   public async rebuildBalance(params: {
     accountBookId: string;
@@ -244,15 +252,7 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
     leavePolicyId: string;
     reconciledAt: Date;
   }): Promise<number> {
-    return prisma.$transaction(async (tx) => {
-      const remainingMinutes = await sumLedgerMinutes(tx, params);
-      await writeBalance(tx, {
-        ...params,
-        remainingMinutes,
-        reconciledAt: params.reconciledAt,
-      });
-      return remainingMinutes;
-    });
+    return prisma.$transaction((tx) => rebuildBalanceWithin(tx, params));
   }
 
   // Info: (20260817 - Julian) L7：各假別的餘額與最近到期日

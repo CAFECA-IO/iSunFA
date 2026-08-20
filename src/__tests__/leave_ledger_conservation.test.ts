@@ -3,8 +3,8 @@ import { Prisma } from "@/generated";
 import { LeaveLedgerEntryType } from "@/constants/leave_policy";
 import {
   readConsumableGrants,
+  rebuildBalanceWithin,
   sumLedgerMinutes,
-  writeBalance,
   writeConsumeForDays,
   writeRestoreForDay,
 } from "@/repositories/leave_ledger";
@@ -22,6 +22,18 @@ import {
  *
  * ADR 022:175 稱它為「本模組的紅線之一」，要求驗四件事：
  * 逐批守恆、總量守恆、`rebuildBalance` 冪等、重建結果與快取逐欄相同。
+ *
+ * Info: (20260820 - Julian) 第一版**宣稱驗了四項而三項守不住**（review 第 5 條）。
+ *
+ * 1. 逐批守恆只套在單日的案例上。唯一有兩天的那條走的是總量，而
+ *    `writeConsumeForDays` 少了就地遞減時，帳本與快取會**一起**位移 ——
+ *    總量那一行照樣通過，`grant-early` 卻被超額扣了 240。
+ *    現在由 `expectLedgerSelfConsistent()` 逐批逐筆守著，每一次寫入之後都跑。
+ * 2. `rebuild` 是把產品那一支的本體手抄了一份，而產品那一支全 repo 零呼叫端。
+ *    本體因此搬進 `rebuildBalanceWithin`（收 `tx`），這裡呼叫的就是它。
+ * 3. `InMemoryLedger.addGrant` 把三個範圍鍵 `Omit` 掉，呼叫端沒有辦法放一筆
+ *    屬於別人的批次進來 —— 刪掉 `consumableGrantWhere` 的 `accountBookId:`
+ *    不會有任何測試變紅。現在三個鍵都可覆寫，並各有一條測試。
  *
  * ## 它先前不存在（review B8）
  *
@@ -90,12 +102,24 @@ class InMemoryLedger {
   public balances: IBalanceRow[] = [];
   private sequence = 0;
 
-  public addGrant(row: Omit<IGrantRow, "accountBookId" | "employeeId" | "leavePolicyId">, minutes: number): void {
+  /**
+   * Info: (20260820 - Julian) 三個範圍鍵**可以覆寫**（review 第 5 條）。
+   *
+   * 原本它們被 `Omit` 掉、一律填成本人本帳本本假別 —— 於是呼叫端根本
+   * **沒有辦法**放一筆屬於別人的批次進來，而「範圍過濾有沒有生效」
+   * 這個問題就從測試裡消失了：把 `consumableGrantWhere` 的 `accountBookId:`
+   * 那一行刪掉，全檔照樣綠。
+   */
+  public addGrant(
+    row: Omit<IGrantRow, "accountBookId" | "employeeId" | "leavePolicyId"> &
+      Partial<Pick<IGrantRow, "accountBookId" | "employeeId" | "leavePolicyId">>,
+    minutes: number,
+  ): void {
     const grant: IGrantRow = {
       ...row,
-      accountBookId: BOOK,
-      employeeId: EMP,
-      leavePolicyId: POLICY,
+      accountBookId: row.accountBookId ?? BOOK,
+      employeeId: row.employeeId ?? EMP,
+      leavePolicyId: row.leavePolicyId ?? POLICY,
     };
     this.grants.push(grant);
     this.entries.push({
@@ -221,15 +245,19 @@ const RECONCILED_AT = new Date("2026-08-19T00:00:00.000Z");
 
 let ledger: InMemoryLedger;
 
-const rebuild = async (): Promise<number> => {
-  const remainingMinutes = await sumLedgerMinutes(ledger.client, SCOPE);
-  await writeBalance(ledger.client, {
-    ...SCOPE,
-    remainingMinutes,
-    reconciledAt: RECONCILED_AT,
-  });
-  return remainingMinutes;
-};
+/**
+ * Info: (20260820 - Julian) 走**產品那一支**（review 第 5 條）。
+ *
+ * 這裡原本是把 `leaveGrantRepo.rebuildBalance` 的本體手抄一份
+ * （`sumLedgerMinutes` + `writeBalance` 兩行）。於是「rebuild 冪等」
+ * 那一組驗的是測試自己抄的副本，而產品那一支全 repo 零呼叫端
+ * （勾稽 Worker 還沒寫）—— 兩份實作的任一份被改壞都不會有測試變紅。
+ *
+ * 本體因此搬到 `rebuildBalanceWithin`（收 `tx`），`rebuildBalance` 只剩
+ * `prisma.$transaction` 外殼。這裡呼叫的就是產品在交易內跑的那幾行。
+ */
+const rebuild = (): Promise<number> =>
+  rebuildBalanceWithin(ledger.client, { ...SCOPE, reconciledAt: RECONCILED_AT });
 
 const balanceRow = (): IBalanceRow | undefined => ledger.balances[0];
 
@@ -244,6 +272,49 @@ const perGrantBalances = (): Map<string, number> => {
     );
   }
   return totals;
+};
+
+/**
+ * Info: (20260820 - Julian) 帳本的**自我一致性**（review 第 5 條）。
+ *
+ * 兩件事，逐批逐筆：
+ *
+ * 1. 每一筆的 `grantBalanceAfterMinutes` 等於該批到此為止的分錄累加值。
+ * 2. 任何一批的餘額都不得為負。
+ *
+ * ## 為什麼非有不可
+ *
+ * `writeConsumeForDays` 的檔頭把「就地遞減」點名為關鍵：逐日扣必須看得到
+ * 前一天扣完之後的餘額。拿掉那兩行之後，第二天會**再從同一批扣一次**，
+ * 而總量守恆完全看不出來 —— 帳本與快取一起位移，
+ * `expect(remainingMinutes).toBe(1440 - 720)` 照樣通過、銷假退 240 照樣通過。
+ * 那正是這個檔案自己寫下的那句話：「總量守恆仍然成立（帳本與快取一起錯），
+ * 這是唯一一種守恆式檢查不出來的錯法」—— 當時只把它套在冪等鍵那一條。
+ *
+ * 上面兩件事各自抓得到它：`grant-early` 被超額扣掉之後，
+ * 第二筆 CONSUME 的 `grantBalanceAfterMinutes`（240，由 `running` 算出）
+ * 與實際累加值（-240）對不上，而累加值本身也已經是負的。
+ */
+const expectLedgerSelfConsistent = (): void => {
+  for (const grant of ledger.grants) {
+    let running = 0;
+    for (const entry of ledger.entries.filter(
+      (row) => row.leaveGrantId === grant.id,
+    )) {
+      running += entry.deltaMinutes;
+      expect({
+        grantId: grant.id,
+        key: entry.idempotencyKey,
+        balanceAfter: entry.grantBalanceAfterMinutes,
+      }).toEqual({
+        grantId: grant.id,
+        key: entry.idempotencyKey,
+        balanceAfter: running,
+      });
+    }
+    // Info: (20260820 - Julian) 沒有任何一批可以被扣到負的（重複分配的直接症狀）
+    expect(running).toBeGreaterThanOrEqual(0);
+  }
 };
 
 beforeEach(async () => {
@@ -280,13 +351,43 @@ describe("T6 逐批守恆：每一批的餘額等於它自己的分錄之和", (
      * 它的全部用途是勾稽時定位斷點 —— 一欄說謊的「扣完剩多少」
      * 會讓對帳的人在正確的那一批上找錯誤。
      */
-    for (const grant of ledger.grants) {
-      let running = 0;
-      for (const entry of ledger.entries.filter((row) => row.leaveGrantId === grant.id)) {
-        running += entry.deltaMinutes;
-        expect(entry.grantBalanceAfterMinutes).toBe(running);
-      }
-    }
+    expectLedgerSelfConsistent();
+  });
+
+  /**
+   * Info: (20260820 - Julian) **跨日**扣減：第二天必須看得到第一天扣完的餘額（review 第 5 條）。
+   *
+   * 上面那一條只有一天，因此 `writeConsumeForDays` 的就地遞減對它沒有影響。
+   * 這一條是它缺的另一半 —— 480 剛好把先到期那批扣光，第二天的 240
+   * 只能落在後到期那批。少了遞減的話，第二天會再從 `grant-early` 扣一次
+   * （它在 `running` 裡還是 480），而總量看起來完全正常。
+   *
+   * 三個斷言缺一不可：逐批的數字、沒有任何一批為負、以及第二天的分錄
+   * 真的掛在 `grant-late` 上 —— 只驗前兩者的話，「兩批各扣一半」也會通過。
+   */
+  it("跨日扣減時，第二天看得到第一天扣完之後的餘額", async () => {
+    const balances = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
+    const ok = await writeConsumeForDays(ledger.client, {
+      balances,
+      days: [
+        { leaveDayId: "day-1", minutes: 480 },
+        { leaveDayId: "day-2", minutes: 240 },
+      ],
+      actorEmployeeId: ACTOR,
+    });
+    expect(ok).toBe(true);
+
+    const perGrant = perGrantBalances();
+    expect(perGrant.get("grant-early")).toBe(0);
+    expect(perGrant.get("grant-late")).toBe(960 - 240);
+    expectLedgerSelfConsistent();
+
+    // Info: (20260820 - Julian) 第二天完全落在後到期那批（先到期的已經扣光）
+    expect(
+      ledger.entries
+        .filter((entry) => entry.leaveDayId === "day-2")
+        .map((entry) => [entry.leaveGrantId, entry.deltaMinutes]),
+    ).toEqual([["grant-late", -240]]);
   });
 
   it("額度不足時回 false，且**一筆分錄都不留**", async () => {
@@ -315,6 +416,13 @@ describe("T6 總量守恆：Σ(deltaMinutes) === LeaveBalance.remainingMinutes",
     });
     await rebuild();
     expect(balanceRow()?.remainingMinutes).toBe(1440 - 720);
+    /**
+     * Info: (20260820 - Julian) 總量對不代表逐批對（review 第 5 條）——
+     * 重複分配會讓帳本與快取**一起**位移，總量那一行照樣通過。
+     */
+    expect(perGrantBalances().get("grant-early")).toBe(0);
+    expect(perGrantBalances().get("grant-late")).toBe(960 - 240);
+    expectLedgerSelfConsistent();
 
     const restored = await writeRestoreForDay(ledger.client, {
       leaveDayId: "day-2",
@@ -327,6 +435,7 @@ describe("T6 總量守恆：Σ(deltaMinutes) === LeaveBalance.remainingMinutes",
     const total = ledger.entries.reduce((sum, entry) => sum + entry.deltaMinutes, 0);
     expect(balanceRow()?.remainingMinutes).toBe(total);
     expect(total).toBe(1440 - 480);
+    expectLedgerSelfConsistent();
   });
 
   /**
@@ -352,6 +461,7 @@ describe("T6 總量守恆：Σ(deltaMinutes) === LeaveBalance.remainingMinutes",
     const perGrant = perGrantBalances();
     expect(perGrant.get("grant-early")).toBe(480);
     expect(perGrant.get("grant-late")).toBe(960);
+    expectLedgerSelfConsistent();
   });
 
   it("那一天根本沒有 CONSUME 時回 0，不是「應該回補多少」", async () => {
@@ -448,4 +558,95 @@ describe("T6 rebuild 冪等，且重建結果與快取逐欄相同", () => {
 
     expect(await sumLedgerMinutes(ledger.client, SCOPE)).toBe(1440 + 120);
   });
+});
+
+/**
+ * Info: (20260820 - Julian) 範圍過濾：別人的批次不得混進來（review 第 5 條）。
+ *
+ * `consumableGrantWhere` 有三個範圍鍵（帳本、員工、假別）與一個到期條件。
+ * 這一組先前**測不到**：替身的 `addGrant` 把三個鍵 `Omit` 掉、一律填成
+ * 本人本帳本本假別，於是呼叫端沒有辦法放一筆屬於別人的批次進來 ——
+ * 刪掉 `accountBookId:` 那一行不會有任何測試變紅，而症狀是
+ * 「A 公司的員工扣到 B 公司的額度」。
+ *
+ * 每一筆外來批次的 `expiresOn` 都刻意設在 `asOfDate` 之後 ——
+ * 它被排除的理由必須是那個範圍鍵，不能是「反正它也過期了」。
+ */
+type IGrantScope = Partial<
+  Pick<IGrantRow, "accountBookId" | "employeeId" | "leavePolicyId">
+>;
+
+const FOREIGN_CASES: readonly [string, IGrantScope][] = [
+  ["別的帳本", { accountBookId: "book-2" }],
+  ["別的員工", { employeeId: "emp-2" }],
+  ["別的假別", { leavePolicyId: "policy-sick" }],
+];
+
+describe("T6 範圍過濾：帳本、員工、假別三個鍵各自都要生效", () => {
+  it.each(FOREIGN_CASES)(
+    "%s 的批次既不可扣，也不計入本人的帳本總和",
+    async (_label, scope) => {
+      ledger.addGrant(
+        {
+          id: "grant-foreign",
+          expiresOn: "2028-12-31",
+          createdAt: new Date("2026-01-01T00:00:00.000Z"),
+          ...scope,
+        },
+        720,
+      );
+
+      const consumable = await readConsumableGrants(ledger.client, {
+        ...SCOPE,
+        asOfDate: AS_OF,
+      });
+      expect(consumable.map((item) => item.grantId)).toEqual([
+        "grant-early",
+        "grant-late",
+      ]);
+
+      // Info: (20260820 - Julian) 720 分沒有進到本人的總和裡
+      expect(await sumLedgerMinutes(ledger.client, SCOPE)).toBe(1440);
+    },
+  );
+
+  /**
+   * Info: (20260820 - Julian) 反向的一半：外來批次本身沒有壞掉。
+   * 只驗「查不到」的話，一個永遠回空陣列的實作也會通過。
+   */
+  it("換成那個範圍去查，就查得到它", async () => {
+    ledger.addGrant(
+      {
+        id: "grant-foreign",
+        employeeId: "emp-2",
+        expiresOn: "2028-12-31",
+        createdAt: new Date("2026-01-01T00:00:00.000Z"),
+      },
+      720,
+    );
+
+    const consumable = await readConsumableGrants(ledger.client, {
+      ...SCOPE,
+      employeeId: "emp-2",
+      asOfDate: AS_OF,
+    });
+    expect(consumable.map((item) => item.grantId)).toEqual(["grant-foreign"]);
+    expect(
+      await sumLedgerMinutes(ledger.client, { ...SCOPE, employeeId: "emp-2" }),
+    ).toBe(720);
+  });
+
+  /**
+   * Info: (20260820 - Julian) `asOfDate` 的格式閘（`consumableGrantWhere` 的 fail fast）。
+   * 空字串會讓 `expiresOn: { gte: "" }` 比對到每一列 —— 到期過濾靜默失效，
+   * 而查詢仍然「成功」。
+   */
+  it.each(["", "2026-8-19", "2026/08/19"])(
+    "asOfDate 格式不對時直接丟（%p）",
+    async (asOfDate) => {
+      await expect(
+        readConsumableGrants(ledger.client, { ...SCOPE, asOfDate }),
+      ).rejects.toThrow(/asOfDate/);
+    },
+  );
 });

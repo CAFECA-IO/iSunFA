@@ -321,3 +321,34 @@ export const writeBalance = async (
     },
   });
 };
+
+/**
+ * Info: (20260820 - Julian) 從帳本重建餘額快取的**本體**（ADR 022 §4 第二條規矩）。
+ *
+ * ## 為什麼收 `tx` 而不是自己開交易（review 第 5 條）
+ *
+ * 原本整段只存在於 `leave_grant.repo.ts` 的 `rebuildBalance` 裡，而那一支
+ * 第一行就是 `prisma.$transaction` —— 於是紅線測試餵不進替身，只能在測試檔裡
+ * **手抄一份同樣的兩行**。結果是：測試驗的是它自己抄的那一份，
+ * 產品那一支全 repo 零呼叫端（勾稽 Worker 還沒寫），改壞了不會有任何測試變紅。
+ * 那正是 checklist §1.10 說的「驗收與產品要讀同一支實作」。
+ *
+ * 分工與這個檔案的其餘函式一致：本體收 `tx`、交易由呼叫端開。
+ */
+export const rebuildBalanceWithin = async (
+  tx: Prisma.TransactionClient,
+  params: {
+    accountBookId: string;
+    employeeId: string;
+    leavePolicyId: string;
+    reconciledAt: Date;
+  },
+): Promise<number> => {
+  const remainingMinutes = await sumLedgerMinutes(tx, params);
+  await writeBalance(tx, {
+    ...params,
+    remainingMinutes,
+    reconciledAt: params.reconciledAt,
+  });
+  return remainingMinutes;
+};
