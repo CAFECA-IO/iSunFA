@@ -331,6 +331,15 @@ export interface ILeaveRequestRepository {
   }): Promise<ILeaveRequestSummary[]>;
   /** Info: (20260817 - Julian) 待我簽核：`pendingKey` 非 null 且簽核者是我 */
   listPendingForApprover(params: {
+    /**
+     * Info: (20260820 - Julian) 是否一併撈「當前待簽是 `HR` 節點」的單
+     * （review 第 6 輪 M19）。
+     *
+     * `HR` 關改成任一位 `HR_ADMIN` 都接得了之後，只照
+     * `approverEmployeeId` 撈會讓其他人資**看不到他們簽得動的單**——
+     * 而看得到的與簽得動的必須是同一群人，否則不是清單漏了、就是按下去被擋。
+     */
+    includeHrPool: boolean;
     accountBookId: string;
     approverEmployeeId: string;
   }): Promise<ILeaveRequestSummary[]>;
@@ -368,6 +377,12 @@ export interface ILeaveRequestRepository {
     requestId: string;
     stepId: string;
     actorEmployeeId: string;
+    /**
+     * Info: (20260820 - Julian) 決行者的姓名工號快照要查得到人
+     * （review 第 6 輪 M19）。沒有它就只能以 id 全庫查，
+     * 而那會穿過帳本邊界。
+     */
+    accountBookId: string;
     decidedAt: Date;
     comment?: string;
   }): Promise<LeaveApprovalOutcome>;
@@ -400,6 +415,8 @@ export interface ILeaveRequestRepository {
     totalMinutes: number;
   }): Promise<LeaveApprovalOutcome>;
   rejectStep(params: {
+    // Info: (20260820 - Julian) 決行者快照（review 第 6 輪 M19）
+    accountBookId: string;
     requestId: string;
     stepId: string;
     actorEmployeeId: string;

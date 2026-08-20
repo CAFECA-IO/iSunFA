@@ -18,7 +18,10 @@ import {
   assertAccrualTierTable,
   IStorableAccrualTier,
 } from "@/repositories/leave_accrual_tier_invariant";
-import { assertLeavePolicyUnit } from "@/repositories/leave_policy_invariant";
+import {
+  assertLeavePolicyUnit,
+  assertNoMergeCycle,
+} from "@/repositories/leave_policy_invariant";
 
 /**
  * Info: (20260817 - Julian) 假別設定的存取層（L1–L6）。
@@ -63,9 +66,25 @@ export interface ILeavePolicyRepository {
     accountBookId: string;
     leavePolicyId: string;
   }): Promise<boolean>;
-  listTiers(leavePolicyId: string): Promise<ILeaveAccrualTierView[]>;
+  /**
+   * Info: (20260820 - Julian) 兩支都收 `accountBookId`（review 第 6 輪 M21）。
+   *
+   * 原本只收 `leavePolicyId`，而 `replaceTiers` 的第一步是
+   * `deleteMany({ where: { leavePolicyId } })` —— 一個猜到（或從別處撿到）
+   * 別的帳本的 policy id 的呼叫端，可以把那個租戶的整張級距表清空。
+   * 本檔第 324 行對 `update` 已經寫下同一句話：
+   * 「租戶隔離不能靠呼叫端記得先查一次」。
+   *
+   * `LeaveAccrualTier` 沒有自己的 `accountBookId`（它掛在 `LeavePolicy` 下），
+   * 因此條件走關聯：`leavePolicy: { accountBookId }`。
+   */
+  listTiers(params: {
+    accountBookId: string;
+    leavePolicyId: string;
+  }): Promise<ILeaveAccrualTierView[]>;
   /** Info: (20260818 - Julian) 全量取代，非差異更新（計畫書 §10 L6） */
   replaceTiers(params: {
+    accountBookId: string;
     leavePolicyId: string;
     tiers: readonly IStorableAccrualTier[];
   }): Promise<ILeaveAccrualTierView[]>;
@@ -84,9 +103,28 @@ export class LeavePolicyCodeTakenError extends Error {
   }
 }
 
-// Info: (20260818 - Julian) Decimal → number。日數與比例都不參與金額運算，轉數字是安全的（ADR 003 §2）
+/**
+ * Info: (20260818 - Julian) Decimal → number。**只給不參與金額運算的欄位**。
+ *
+ * Info: (20260820 - Julian) 原本的註解寫「日數與比例都不參與金額運算」
+ * （review 第 6 輪 M20）—— 前半對，後半錯。`annualDays` 與
+ * `proofThresholdDays` 是天數，不會變成錢；`paidRatio` 會：
+ * ADR 022 §3.4 明列它「會直接乘上工資變成錢」，而 ADR 003 §2 的原文是
+ * 「🚨 後端 API 絕對禁止輸出浮點數比率」。那一欄改走 `toDecimalText`。
+ */
 const toNumber = (value: Prisma.Decimal | null): number | null =>
   value === null ? null : Number(value);
+
+/**
+ * Info: (20260820 - Julian) Decimal → **十進位字串**（review 第 6 輪 M20）。
+ *
+ * `Number(new Prisma.Decimal("0.7"))` 是 0.69999999999999996，而下游把它
+ * 乘上月薪就是一筆算錯的工資。字串一路傳到薪資模組，由那一側用它自己的
+ * Decimal 讀進去 —— 中間沒有任何一步經過 double
+ * （同 `LeaveRequest.totalDays` 與 `LeaveGrant.grantedDays` 的既有處置）。
+ */
+const toDecimalText = (value: Prisma.Decimal | null): string | null =>
+  value === null ? null : value.toString();
 
 const DETAIL_SELECT = {
   id: true,
@@ -151,7 +189,7 @@ const toDetail = (row: {
   proratedRoundingScale: row.proratedRoundingScale,
   carryForwardMonths: row.carryForwardMonths,
   cashOutOnExpiry: row.cashOutOnExpiry,
-  paidRatio: toNumber(row.paidRatio),
+  paidRatio: toDecimalText(row.paidRatio),
   proofRequirement: row.proofRequirement as LeaveProofRequirement,
   proofThresholdDays: toNumber(row.proofThresholdDays),
   employerMayReject: row.employerMayReject,
@@ -326,17 +364,41 @@ class LeavePolicyRepository implements ILeavePolicyRepository {
        * Info: (20260818 - Julian) `updateMany` 帶 `accountBookId` 條件，
        * 而不是 `update({ where: { id } })` —— 後者查得到別的帳本的那一列。
        * 租戶隔離不能靠呼叫端記得先查一次。
+       *
+       * Info: (20260820 - Julian) 成環偵測也搬進這道閘（review 第 6 輪 M22）。
+       *
+       * `assertNoMergeCycle` 原本只由 `LeavePolicyService.update` 呼叫，而
+       * `leave_policy_invariant.ts` 的檔頭自己論證過：
+       * 「高風險寫入路徑不是 API —— 是 **seed**，而 seed 繞過所有 service」。
+       * 一條只掛在 service 上的守衛，對它自己指名的那條路徑完全不設防。
+       *
+       * 讀圖與檢查在同一筆交易裡：分開做的話，兩個人同時把 A→B 與 B→A
+       * 寫進去，各自讀到的圖都還沒有對方那一筆，兩邊都通過。
        */
-      const moved = await prisma.leavePolicy.updateMany({
-        where: {
-          id: params.leavePolicyId,
-          accountBookId: params.accountBookId,
-        },
-        data: toWriteData(params.input),
+      await prisma.$transaction(async (tx) => {
+        const rows = await tx.leavePolicy.findMany({
+          where: { accountBookId: params.accountBookId },
+          select: { id: true, mergesIntoPolicyId: true },
+        });
+        assertNoMergeCycle({
+          edges: Object.fromEntries(
+            rows.map((row) => [row.id, row.mergesIntoPolicyId]),
+          ),
+          from: params.leavePolicyId,
+          to: params.input.mergesIntoPolicyId,
+        });
+
+        const moved = await tx.leavePolicy.updateMany({
+          where: {
+            id: params.leavePolicyId,
+            accountBookId: params.accountBookId,
+          },
+          data: toWriteData(params.input),
+        });
+        if (moved.count === 0) {
+          throw new LeavePolicyMissingError(params.leavePolicyId);
+        }
       });
-      if (moved.count === 0) {
-        throw new LeavePolicyMissingError(params.leavePolicyId);
-      }
     } catch (error) {
       if (isUniqueViolation(error)) {
         throw new LeavePolicyCodeTakenError(params.input.code);
@@ -372,11 +434,16 @@ class LeavePolicyRepository implements ILeavePolicyRepository {
     return moved.count > 0;
   }
 
-  public async listTiers(
-    leavePolicyId: string,
-  ): Promise<ILeaveAccrualTierView[]> {
+  public async listTiers(params: {
+    accountBookId: string;
+    leavePolicyId: string;
+  }): Promise<ILeaveAccrualTierView[]> {
     const rows = await prisma.leaveAccrualTier.findMany({
-      where: { leavePolicyId },
+      where: {
+        leavePolicyId: params.leavePolicyId,
+        // Info: (20260820 - Julian) 租戶條件走關聯（review 第 6 輪 M21）
+        leavePolicy: { accountBookId: params.accountBookId },
+      },
       select: {
         minSeniorityMonths: true,
         days: true,
@@ -395,6 +462,7 @@ class LeavePolicyRepository implements ILeavePolicyRepository {
   }
 
   public async replaceTiers(params: {
+    accountBookId: string;
     leavePolicyId: string;
     tiers: readonly IStorableAccrualTier[];
   }): Promise<ILeaveAccrualTierView[]> {
@@ -408,9 +476,33 @@ class LeavePolicyRepository implements ILeavePolicyRepository {
      * 而授予 Worker 可能剛好在那一刻讀到它。
      */
     await prisma.$transaction(async (tx) => {
+      /**
+       * Info: (20260820 - Julian) 刪除也帶租戶條件（review 第 6 輪 M21）。
+       *
+       * 這是本檔破壞力最大的一句話：全量刪除。只用 `leavePolicyId` 當條件時，
+       * 一個拿到別的帳本 policy id 的呼叫端可以把那個租戶的級距表整張清空，
+       * 而級距表沒有版本、刪掉就沒有了。
+       */
       await tx.leaveAccrualTier.deleteMany({
-        where: { leavePolicyId: params.leavePolicyId },
+        where: {
+          leavePolicyId: params.leavePolicyId,
+          leavePolicy: { accountBookId: params.accountBookId },
+        },
       });
+      /**
+       * Info: (20260820 - Julian) 刪了 0 列不代表跨租戶 —— 也可能本來就沒有級距。
+       * 因此另外確認那個假別**屬於這個帳本**再寫入；否則新的級距會掛到
+       * 一個不屬於呼叫者的假別下（刪除擋住了、新增沒擋等於只擋了一半）。
+       */
+      const owned = await tx.leavePolicy.count({
+        where: {
+          id: params.leavePolicyId,
+          accountBookId: params.accountBookId,
+        },
+      });
+      if (owned === 0) {
+        throw new LeavePolicyMissingError(params.leavePolicyId);
+      }
       await tx.leaveAccrualTier.createMany({
         data: params.tiers.map((tier) => ({
           leavePolicyId: params.leavePolicyId,
@@ -426,7 +518,10 @@ class LeavePolicyRepository implements ILeavePolicyRepository {
       });
     });
 
-    return this.listTiers(params.leavePolicyId);
+    return this.listTiers({
+      accountBookId: params.accountBookId,
+      leavePolicyId: params.leavePolicyId,
+    });
   }
 }
 

@@ -261,6 +261,150 @@ GROUP BY account_book_id;
 
 ---
 
+## 四之二、本輪 review 改了三個「已算過的答案」⚠️ 先看影響面
+
+以下三項改的不是欄位形狀，而是**同一組事實會算出不同的數字**。既有列不會自動
+變動，但下一次有人重新核准、或打開報表，看到的數字會與上線前不同。上線前先跑
+這三段查詢，知道影響到誰。
+
+### (1) 同日多張加班單的加成級距（M4）
+
+級距先前依**核准順序**、現在依**時段先後**。已核准的分段不會被回頭改寫，
+所以差異只會出現在「同一天有兩張以上加班單、且晚的那張先被核准」的既有列上。
+
+```sql
+-- 同日多張已核准加班單，且「開始較晚的那張，id 卻先被核准」
+SELECT a.account_book_id, a.employee_id, a.work_date,
+       count(*) AS requests_that_day
+  FROM overtime_request a
+  JOIN overtime_request b
+    ON b.account_book_id = a.account_book_id
+   AND b.employee_id     = a.employee_id
+   AND b.work_date       = a.work_date
+   AND b.id <> a.id
+ WHERE a.status = 'APPROVED' AND b.status = 'APPROVED'
+ GROUP BY a.account_book_id, a.employee_id, a.work_date
+ HAVING count(*) > 1;
+```
+
+有列 → 那幾天的分段是依舊規則切的。**不要**自動重算：分段一旦落地就對應到
+已發或待發的工資，重算屬於更正流程（尚未實作，見 ADR 024 §4.1 的 ToDo）。
+把清單交給人資核對即可。
+
+### (2) 滾動三個月窗的右端（M5）
+
+月報表的窗先前以**月底**為錨、閘門以**當日**為錨，兩者的左端最多差 30 天。
+現在報表的錨夾到今天。影響的是「當月」的報表數字，過去的月份不變。
+
+```sql
+-- 當月已核准且落在「舊報表窗看不到、新報表窗看得到」的那一段
+SELECT account_book_id, employee_id, work_date, recognized_minutes
+  FROM overtime_request
+ WHERE status = 'APPROVED'
+   AND work_date >= (date_trunc('month', CURRENT_DATE) - INTERVAL '3 months')::date
+   AND work_date <  date_trunc('month', CURRENT_DATE)::date
+ ORDER BY account_book_id, employee_id, work_date;
+```
+
+這些分鐘先前不在當月報表的「本季累計」裡、現在會在。方向是**數字變大**，
+也就是「剩餘額度」變小 —— 那才是閘門一直以來看到的值。
+
+### (3) 特休不再預設遞延（M6）
+
+`DEFAULT_LEAVE_POLICY_SEED` 的 `ANNUAL.carryForwardMonths` 由 12 改為 **0**
+（§38 IV 的法定預設是年度終結發給工資；遞延須逐個勞工協商同意）。
+
+種子只在**建立新帳本**時套用，**既有帳本的那一列不會變**：
+
+```sql
+SELECT account_book_id, code, carry_forward_months
+  FROM leave_policy
+ WHERE code = 'ANNUAL' AND carry_forward_months <> 0;
+```
+
+有列 → 那些帳本仍是 12 個月遞延。要不要改成 0 是**該公司的決定**，不是這次
+上線的一部分 —— 改了會讓那些員工的未休特休在年度終結轉為折現。
+把清單交給人資，由他們逐帳本確認。
+
+> ⚠️ 逐個勞工的協商記載（誰、哪一年、何時同意）目前**沒有欄位**。
+> 在它補上之前，`carry_forward_months` 是整個假別的設定，調大就是全體一律遞延。
+> 缺口已列入計畫書 §17。
+
+---
+
+## 四之三、第 6 輪 review 的 schema 與 API 變更 ⚠️ 要 `prisma db push`
+
+### 新增四個欄位、移除一個
+
+| 表 | 欄位 | 動作 | 為什麼 |
+|---|---|---|---|
+| `leave_approval_step` | `chain_version` | **新增，NOT NULL** | `LEAVE_APPROVAL_CHAIN_VERSION` 的註解寫著「並記於快照」，而它零引用（M15）。對照組 `leave_day.entitlement_engine_version` 與 `overtime_segment.engine_version` 都落地了 |
+| `leave_approval_step` | `decided_by_employee_id` / `_no` / `_name` | 新增，nullable | `HR` 關改成任一位 `HR_ADMIN` 都接得了（M19），「應該簽的人」與「真的簽的人」會不一樣 |
+| `leave_ledger_entry` | `actor_employee_no` / `actor_name` | 新增，nullable | `actor_employee_id` 是 `SetNull`，離職後帳本查不出操作者（M16） |
+| `leave_request` | `proof_document_id` | **移除** | 零引用、無 `@relation`、無租戶檢查（M18）。見下方 |
+
+### `chain_version` 是 NOT NULL —— 既有列要先回填
+
+新欄位沒有 `@default`，因此 `db push` 對**已經有列**的 `leave_approval_step`
+會失敗。正式環境目前沒有真實假單（見第四節那段查詢），demo 資料重種即可。
+若查出來有列：
+
+```sql
+-- 既有的鏈都是第 1 版展開的（`LEAVE_APPROVAL_CHAIN_VERSION` 從未改過）
+ALTER TABLE leave_approval_step ADD COLUMN chain_version INT;
+UPDATE leave_approval_step SET chain_version = 1 WHERE chain_version IS NULL;
+ALTER TABLE leave_approval_step ALTER COLUMN chain_version SET NOT NULL;
+```
+
+### `proof_document_id` 移除前先確認沒有值
+
+```sql
+SELECT count(*) FROM leave_request WHERE proof_document_id IS NOT NULL;
+```
+
+應為 0（全庫沒有任何一行程式寫過它）。不是 0 就**停下來**：那表示有一條
+本文件不知道的寫入路徑。
+
+### 額度帳本的操作者快照對既有列是 null
+
+`actor_employee_no` / `actor_name` 只有新分錄才有。既有分錄仍然只有 id，
+畫面上會顯示 live join 的結果（那個人還在的話）或空白。**不回填**：
+「當時的姓名工號」已經遺失，補一個現在的姓名進去會讓快照這件事變成假的。
+
+### API 形狀變了兩處，前端要跟
+
+| 端點 | 欄位 | 舊 | 新 |
+|---|---|---|---|
+| `GET/POST/PUT .../hr/leave/policy[/:id]` | `paidRatio` | `number \| null` | **`string \| null`**（十進位字串，M20）。輸入端同步改收字串 |
+| `GET .../hr/overtime/unapproved` | 回傳 | 單一報告 | 帶 `scope=team` 時回**陣列**（M23）。不帶時形狀不變 |
+
+`paidRatio` 目前沒有任何前端元件在讀（`grep paidRatio src/**/*.tsx` 為空），
+因此這一項不影響現有畫面；假別設定頁動工時照新形狀寫。
+
+---
+
+## 四之四、額度快取的每日勾稽 ⚠️ 這一支要真的排上去
+
+`scripts/reconcile_leave_balances.ts`（本輪新增）。在它之前
+`rebuildBalance` **零產品呼叫端**，連帶：
+
+- `leave_balance.reconciled_at` 永遠 null —— 畫面答不出「上次對帳是什麼時候」
+- `leave_balance.expiring_soon_minutes` 零寫入者 —— L7 額度卡對每一個人都顯示
+  「即將到期 0 分鐘」，而真相是「沒有人算過」。特休屆期未休依 §38 IV 要折現
+
+```
+npx tsx scripts/reconcile_leave_balances.ts --dry-run     # 先看規模
+npx tsx scripts/reconcile_leave_balances.ts               # 全部帳本
+```
+
+**上線後第一次要手動跑一次**：既有的 `LeaveBalance` 列全都沒有算過
+`expiring_soon_minutes`。之後掛每日排程（時區內凌晨）。它是冪等的。
+
+> 「即將到期」是相對於**今天**的量，因此非得有排程不可 —— 只在授予／扣減
+> 時算的話，一批額度會在無人動它的日子裡靜靜過期，而畫面到最後一刻顯示 0。
+
+---
+
 ## 五、環境變數
 
 | 鍵 | 用途 | 缺了會怎樣 |

@@ -14,6 +14,7 @@ import {
   IOvertimePolicyRepository,
   overtimePolicyRepo,
 } from "@/repositories/overtime_policy.repo";
+import { OvertimePolicyInvariantError } from "@/repositories/overtime_policy_invariant";
 import {
   IOvertimeRequestContext,
   overtimeRequestContextRepo,
@@ -66,14 +67,34 @@ export class OvertimePolicyService {
   }): Promise<IOvertimePolicyView> {
     await this.assertMayConfigure(params);
 
-    await this.policies.upsert({
-      accountBookId: params.accountBookId,
-      extendedLimitAgreed: params.input.extendedLimitAgreed,
-      agreementRecordUrl: params.input.agreementRecordUrl,
-      agreedAt:
-        params.input.agreedAt === null ? null : new Date(params.input.agreedAt),
-      compensatoryExpiryMonths: params.input.compensatoryExpiryMonths,
-    });
+    /**
+     * Info: (20260820 - Julian) 不變式要收斂成 4xx（review 第 5 輪 M9）。
+     *
+     * `assertOvertimePolicy` 丟的 `OvertimePolicyInvariantError` 不是 `AppError`，
+     * 不包的話 route 走到最後的 catch-all 變成 **500**。實際會踩到的情境很平常：
+     * HR 勾了「已取得工會同意」但忘了貼會議紀錄連結 —— 那是一個表單漏填，
+     * 使用者看到的卻是伺服器故障，而畫面上沒有任何線索指向那一格。
+     *
+     * 同 PR 的 `LeavePolicyService.write()` 已經對三種 repository 例外做了
+     * 這件事；這一支漏了。
+     */
+    try {
+      await this.policies.upsert({
+        accountBookId: params.accountBookId,
+        extendedLimitAgreed: params.input.extendedLimitAgreed,
+        agreementRecordUrl: params.input.agreementRecordUrl,
+        agreedAt:
+          params.input.agreedAt === null
+            ? null
+            : new Date(params.input.agreedAt),
+        compensatoryExpiryMonths: params.input.compensatoryExpiryMonths,
+      });
+    } catch (error) {
+      if (error instanceof OvertimePolicyInvariantError) {
+        throw new AppError(API_ERRORS.VA_OVERTIME_AGREEMENT_RECORD_REQUIRED);
+      }
+      throw error;
+    }
 
     return this.read(params.accountBookId);
   }

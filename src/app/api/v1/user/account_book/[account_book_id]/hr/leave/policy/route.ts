@@ -7,7 +7,6 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { enforceRateLimit } from "@/lib/rate_limiter";
 import { attendanceIdentityService } from "@/services/attendance_identity.service";
-import { leavePolicyRepo } from "@/repositories/leave_policy.repo";
 import { leavePolicyService } from "@/services/leave_policy.service";
 import { leavePolicyWriteSchema } from "@/validators";
 
@@ -42,7 +41,7 @@ export async function GET(
     const { account_book_id: accountBookId } = await params;
     await attendanceIdentityService.resolveEmployee(sessionUser, accountBookId);
 
-    return jsonOk(await leavePolicyRepo.listActive(accountBookId));
+    return jsonOk(await leavePolicyService.listActive({ accountBookId }));
   } catch (error) {
     if (error instanceof AppError) {
       return jsonFail({

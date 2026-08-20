@@ -46,6 +46,12 @@ export const OVERTIME_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
     "hr_management.overtime.error_reclassified_midway",
   [API_ERRORS.VA_OVERTIME_EMERGENCY_REVOKED_MIDWAY.code]:
     "hr_management.overtime.error_emergency_revoked_midway",
+  // Info: (20260820 - Julian) review 第 5 輪 M7／M8：算不出這個人的一日工時
+  [API_ERRORS.VA_OVERTIME_DAY_LENGTH_UNKNOWN.code]:
+    "hr_management.overtime.error_day_length_unknown",
+  // Info: (20260820 - Julian) review 第 5 輪 M9：放寬到 54 小時但沒留下記載
+  [API_ERRORS.VA_OVERTIME_AGREEMENT_RECORD_REQUIRED.code]:
+    "hr_management.overtime.error_agreement_record_required",
   /**
    * Info: (20260820 - Julian) §32 IV 認定的兩種落空（review 第 3 輪第 2 條）。
    * 都不與「已決行」共用：那一句要人資不用再管，這兩句分別是

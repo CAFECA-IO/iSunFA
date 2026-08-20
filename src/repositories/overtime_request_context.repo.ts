@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { DEMO_TIME_ZONE, PunchType, WorkDayType } from "@/constants/attendance";
 import { LEAVE_POLICY_CODE } from "@/constants/leave_policy";
 import {
-  OVERTIME_QUARTERLY_WINDOW_MONTHS,
   OvertimeCompensationMode,
   OvertimeEvidenceBasis,
   OvertimeFilingType,
@@ -15,7 +14,7 @@ import {
   IOvertimeEmployeeRef,
   IOvertimeRequestSummary,
 } from "@/interfaces/overtime";
-import { derivePunchIntervals } from "@/lib/overtime_rules";
+import { derivePunchIntervals, quarterlyWindowOf } from "@/lib/overtime_rules";
 import {
   addIsoDays,
   addIsoMonths,
@@ -61,7 +60,18 @@ export interface IOvertimeRequestContext {
   }): Promise<{
     dayType: WorkDayType;
     windowStartMinute: number | null;
+    /**
+     * Info: (20260820 - Julian) 這一天**依班別排定要工作**的分鐘數
+     * （review 第 6 輪 M17）。非上班日一律 0 —— 那不是缺資料，
+     * 是這一天本來就沒有正常工作時間。
+     */
     requiredWorkMinutes: number;
+    /**
+     * Info: (20260820 - Julian) 「這天本來要上幾分鐘」的快照，僅非上班日有值，
+     * 且既有列為 null（欄位本 PR 才加）。它回答的是「他的一天有多長」，
+     * **不是**「這一天有多少正常工作時間」—— 兩者混用是 M17 的成因。
+     */
+    plannedWorkMinutes: number | null;
   } | null>;
   buildApprovalContext(params: {
     accountBookId: string;
@@ -69,6 +79,11 @@ export interface IOvertimeRequestContext {
     workDate: string;
     /** Info: (20260818 - Julian) 累計時要把本張單自己排除，否則它會把自己算進上限 */
     excludeRequestId: string;
+    /**
+     * Info: (20260820 - Julian) 本張單的起始分鐘。用來切出「當日開始得比它早」
+     * 的那一份累計，級距依它定（review 第 5 輪 M4）。
+     */
+    requestedStartMinute: number;
   }): Promise<IOvertimeApprovalContext>;
   /**
    * Info: (20260818 - Julian) 指定員工集合的待簽加班單。
@@ -222,6 +237,11 @@ const sumRecognizedMinutes = async (params: {
   from: string;
   to: string;
   excludeRequestId: string;
+  /**
+   * Info: (20260820 - Julian) 只數**開始得比這個分鐘早**的那些單（review 第 5 輪 M4）。
+   * 省略即不限先後（單日上限與月／季累計用的就是那個語意）。
+   */
+  startedBeforeMinute?: number;
 }): Promise<number> => {
   const aggregate = await prisma.overtimeRequest.aggregate({
     where: {
@@ -230,6 +250,9 @@ const sumRecognizedMinutes = async (params: {
       status: OvertimeRequestStatus.APPROVED,
       workDate: { gte: params.from, lte: params.to },
       id: { not: params.excludeRequestId },
+      ...(params.startedBeforeMinute === undefined
+        ? {}
+        : { requestedStartMinute: { lt: params.startedBeforeMinute } }),
     },
     _sum: { recognizedMinutes: true },
   });
@@ -281,6 +304,7 @@ class OvertimeRequestContextRepository implements IOvertimeRequestContext {
     dayType: WorkDayType;
     windowStartMinute: number | null;
     requiredWorkMinutes: number;
+    plannedWorkMinutes: number | null;
   } | null> {
     const row = await prisma.employeeShiftDay.findFirst({
       where: {
@@ -303,13 +327,32 @@ class OvertimeRequestContextRepository implements IOvertimeRequestContext {
       // Info: (20260818 - Julian) 非上班日必無班別（`assertSchedulableDay` 保證），窗起因此為 null
       windowStartMinute: row.shiftPattern?.windowStartMinute ?? null,
       /**
-       * Info: (20260818 - Julian) 應工作分鐘：有班別取班別，否則取固化的
-       * `plannedWorkMinutes`（非上班日的持久來源，待辦甲-3 已補），都沒有才是 0。
-       * 這個值進 `evaluateOvertimeLimits` 的「單日正常 + 延長 ≤ 12 小時」，
-       * 取錯會讓上限檢查在休息日整個失效。
+       * Info: (20260820 - Julian) 正常工作時間**只看班別**（review 第 6 輪 M17）。
+       *
+       * ## 原本的式子與它真正的毛病
+       *
+       * ```ts
+       * row.shiftPattern?.requiredWorkMinutes ?? row.plannedWorkMinutes ?? 0
+       * ```
+       *
+       * 它進的是 `evaluateOvertimeLimits` 的「單日正常＋延長 ≤ 12 小時」
+       * （§32 II）。非上班日必無班別，於是這一天的上限取決於
+       * `plannedWorkMinutes` 有沒有值 —— 而那個欄位是本 PR 才加的，
+       * **既有列一律 null**。同一種日子、同一個人，上限是 12 小時還是
+       * 12 減 8 小時，只取決於那一列是這次上線前還是上線後寫的。
+       *
+       * 那個不一致才是缺陷，而不是「該取 0 還是該取 480」。
+       *
+       * ## 為什麼定案是 0
+       *
+       * §32 II 算的是「延長之工作時間**連同正常工作時間**」。休息日、國定假日
+       * 沒有排定的正常工作時間，整個 12 小時都給延長工時 —— 那正是 §24 II
+       * 休息日出勤的常態。請假日同理：請假的那幾小時不是工作時間。
+       * `plannedWorkMinutes` 回答的是另一個問題（「他的一天有多長」，
+       * 供半天假換算與補休折換），它照原樣往下傳，由需要它的人自己取。
        */
-      requiredWorkMinutes:
-        row.shiftPattern?.requiredWorkMinutes ?? row.plannedWorkMinutes ?? 0,
+      requiredWorkMinutes: row.shiftPattern?.requiredWorkMinutes ?? 0,
+      plannedWorkMinutes: row.plannedWorkMinutes,
     };
   }
 
@@ -511,6 +554,7 @@ class OvertimeRequestContextRepository implements IOvertimeRequestContext {
     accountBookId: string;
     employeeId: string;
     workDate: string;
+    requestedStartMinute: number;
     excludeRequestId: string;
   }): Promise<IOvertimeApprovalContext> {
     const scheduled = await this.findScheduledDay(params);
@@ -539,13 +583,10 @@ class OvertimeRequestContextRepository implements IOvertimeRequestContext {
     const monthStart = `${params.workDate.slice(0, 7)}-01`;
     const monthEnd = addIsoDays(addIsoMonths(monthStart, 1), -1);
     /**
-     * Info: (20260818 - Julian) 滾動三個月，含當日（`OVERTIME_QUARTERLY_WINDOW_IS_ROLLING`）。
-     * 「三個月前的今天」再加一天才是窗的左界 —— 否則窗長會是三個月又一天。
+     * Info: (20260820 - Julian) 窗界由 `quarterlyWindowOf` 給（review 第 5 輪 M5）。
+     * 這段算式先前在這裡與月報表各有一份手抄本，而兩份給出不同的左端。
      */
-    const quarterStart = addIsoDays(
-      addIsoMonths(params.workDate, -OVERTIME_QUARTERLY_WINDOW_MONTHS),
-      1,
-    );
+    const quarter = quarterlyWindowOf(params.workDate);
 
     // Info: (20260818 - Julian) 三次加總共用同一組範圍鍵，只有期間不同
     const scope = {
@@ -556,22 +597,35 @@ class OvertimeRequestContextRepository implements IOvertimeRequestContext {
 
     const [
       priorRecognizedMinutes,
+      earlierRecognizedMinutes,
       priorMonthlyMinutes,
       priorQuarterlyMinutes,
       policy,
       compensatoryPolicy,
     ] = await Promise.all([
+      /**
+       * Info: (20260818 - Julian) 當日全部（單日 12 小時上限用）——
+       * 那道閘與時段先後無關。
+       */
       sumRecognizedMinutes({
         ...scope,
         from: params.workDate,
         to: params.workDate,
       }),
-      sumRecognizedMinutes({ ...scope, from: monthStart, to: monthEnd }),
+      /**
+       * Info: (20260820 - Julian) 當日**開始得比本次早**的那些（級距用，review 第 5 輪 M4）。
+       *
+       * `lt` 而非 `lte`：起始分鐘相同的兩張單是重疊的加班，那是另一個問題
+       * （重疊本身該擋），用 `lte` 只會讓其中一張把另一張算進自己的先前累計。
+       */
       sumRecognizedMinutes({
         ...scope,
-        from: quarterStart,
+        from: params.workDate,
         to: params.workDate,
+        startedBeforeMinute: params.requestedStartMinute,
       }),
+      sumRecognizedMinutes({ ...scope, from: monthStart, to: monthEnd }),
+      sumRecognizedMinutes({ ...scope, from: quarter.from, to: quarter.to }),
       prisma.overtimePolicy.findUnique({
         where: { accountBookId: params.accountBookId },
         select: {
@@ -596,9 +650,19 @@ class OvertimeRequestContextRepository implements IOvertimeRequestContext {
       compensatoryDayEquivalentMinutes:
         scheduled !== null && scheduled.requiredWorkMinutes > 0
           ? scheduled.requiredWorkMinutes
-          : await this.findRecentWorkdayLength(params),
+          : /**
+             * Info: (20260820 - Julian) 非上班日先問那一天自己的快照
+             * （review 第 6 輪 M17）。
+             *
+             * `plannedWorkMinutes` 是投影當下固化的「這天本來要上幾分鐘」——
+             * 比「最近一個有班別的上班日」更貼近事實（那個人可能上週才換班別）。
+             * 既有列為 null 時才往前找，那是這個欄位補上之前唯一的來源。
+             */
+            (scheduled?.plannedWorkMinutes ??
+            (await this.findRecentWorkdayLength(params))),
       punchIntervals,
       priorRecognizedMinutes,
+      earlierRecognizedMinutes,
       priorMonthlyMinutes,
       priorQuarterlyMinutes,
       /**

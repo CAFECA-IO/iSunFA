@@ -861,6 +861,8 @@ export const hrManagement = {
     error_day_already_active: "這一天已經有一張生效中的假單",
     error_concurrency_exceeded:
       "該期間同部門請假人數已達上限，請與主管協商後改期",
+    error_concurrency_rule_invalid:
+      "這個帳本裡有一條併休上限規則沒有說出可執行的上限，因此無法檢查。請人資修正該規則。",
     error_policy_not_found: "這個假別不存在或已停用，請重新選擇",
     error_self_approval: "不能簽核自己送出的假單",
     error_not_reviewer: "你不是這張單目前這一關的簽核者，請等上一關完成",
@@ -968,6 +970,8 @@ export const hrManagement = {
     decided_granted: "已換出 {{count}} 批補休",
     unapproved_title: "未核准時段",
     unapproved_empty: "沒有落在核准範圍外的在場時間",
+    unapproved_team_empty:
+      "這段期間內，你的組員都沒有落在核准範圍外的在場時間。",
     unapproved_hint:
       "在場但沒有任何一張單涵蓋的時段。可能是漏了申請，也可能只是多待了一會兒 —— 由你判斷。",
     unapproved_range_days: "近 {{days}} 天",
@@ -988,6 +992,10 @@ export const hrManagement = {
       "這張單在你核准的過程中被人資認定為天災事變（§32 IV），整段工資改為加倍發給。請重新整理，確認金額後再核准。",
     error_emergency_revoked_midway:
       "這張單在你核准的過程中被人資撤回了 §32 IV 天災事變的認定，整段工資降回一般加班級距。請重新整理，確認金額後再核准。",
+    error_day_length_unknown:
+      "算不出這位員工的一日工時，因此無法折換補休或折現。請人資替他排一格班。",
+    error_agreement_record_required:
+      "放寬單月上限到 54 小時（§32 III）必須留下記載：工會或勞資會議的紀錄連結，以及同意的日期。",
     error_emergency_already_declared:
       "這張單已經有一份 §32 IV 的認定。要記錄新的報備，請先撤回既有的那一份。",
     error_emergency_not_declared: "這張單沒有可撤回的 §32 IV 認定。",

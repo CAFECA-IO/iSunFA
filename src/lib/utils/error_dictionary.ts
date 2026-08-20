@@ -1577,6 +1577,53 @@ export const API_ERRORS = {
    * 會讀到一句與事實相反的說明，而這個方向對勞工不利 —— 恰是最需要他在
    * 按下去之前看清楚的那一個。
    */
+  /**
+   * Info: (20260820 - Julian) 併休規則本身設定壞了（review 第 5 輪 M2）。
+   *
+   * 這不是請假的人做錯了什麼 —— 是那條規則沒說出一個可執行的上限
+   * （兩欄皆空、兩欄都填、比例非正數，或把 `BLOCK` 綁在特休上）。
+   * 先前這種列會被讀成「上限 0 人」，於是整個部門請不了假，
+   * 而畫面說的是「同時請假人數已達上限」：一句把設定錯誤講成使用者問題的話。
+   */
+  VA_LEAVE_CONCURRENCY_RULE_INVALID: {
+    code: "VA000075",
+    message:
+      "a concurrency rule in this account book does not state an enforceable limit; ask HR to correct the rule",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260820 - Julian) 算不出「這個人的一天有多長」（review 第 5 輪 M7／M8）。
+   *
+   * 補休折換要拿它把分鐘換成天數，加班費折現要把它寫進事件供薪資模組換算日薪。
+   * 兩條路徑先前各自用 `?? 0` 與 `?? regularWorkMinutes` 頂替 ——
+   * 前者往下撞成 500，後者在非上班日會寫進一個 0，而 0 是薪資模組的除數。
+   *
+   * 觸發條件是這個人當天沒有排班，且最近也找不到一個有班別的上班日。
+   * 處置在人資手上：排一格班就有答案了。
+   */
+  /**
+   * Info: (20260820 - Julian) 放寬到 54 小時卻沒留下記載（review 第 5 輪 M9）。
+   *
+   * §32 III 的前提是「經工會同意，如事業單位無工會者，經勞資會議同意」，
+   * 而一個沒有記載的「已同意」等於沒有同意 —— 系統會據此多放 8 小時。
+   * 這是一個表單漏填（勾了同意、沒貼會議紀錄連結，或沒填同意日期），
+   * 先前它以 **500** 呈現，畫面上沒有任何線索指向那一格。
+   */
+  VA_OVERTIME_AGREEMENT_RECORD_REQUIRED: {
+    code: "VA000077",
+    message:
+      "extending the monthly cap to 54 hours (Article 32 III) requires a recorded agreement: an http(s) link to the minutes and the date it was made",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  VA_OVERTIME_DAY_LENGTH_UNKNOWN: {
+    code: "VA000076",
+    message:
+      "this employee has no derivable workday length, so overtime cannot be converted or cashed out; ask HR to schedule a shift for them",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
   VA_OVERTIME_EMERGENCY_REVOKED_MIDWAY: {
     code: "VA000074",
     message:

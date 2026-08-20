@@ -883,6 +883,8 @@ export const hrManagement = {
     error_day_already_active: "この日には有効な休暇申請がすでにあります",
     error_concurrency_exceeded:
       "その期間は同じ部署の休暇取得者が上限に達しています。上長と相談のうえ日程を変更してください",
+    error_concurrency_rule_invalid:
+      "この帳簿の同時取得上限ルールに有効な上限が設定されていないため、判定できません。人事にルールの修正をご依頼ください。",
     error_policy_not_found:
       "この休暇種別は存在しないか、無効化されています。選び直してください",
     error_self_approval: "自分が提出した申請は承認できません",
@@ -997,6 +999,8 @@ export const hrManagement = {
     decided_granted: "代休を {{count}} 件付与しました",
     unapproved_title: "未承認の時間帯",
     unapproved_empty: "承認済み以外の在場時間はありません",
+    unapproved_team_empty:
+      "この期間中、チームメンバーに承認範囲外の在席時間はありません。",
     unapproved_hint:
       "どの申請にも含まれない在場時間です。申請漏れかもしれませんし、単に少し残っていただけかもしれません —— 判断はあなたに委ねられます。",
     unapproved_range_days: "直近 {{days}} 日",
@@ -1020,6 +1024,10 @@ export const hrManagement = {
       "承認の途中で人事がこの申請を天災・事変（§32 IV）と認定したため、全区間が倍額支給になりました。再読み込みして金額をご確認のうえ承認してください。",
     error_emergency_revoked_midway:
       "承認の途中で人事がこの申請の天災・事変（§32 IV）認定を取り消したため、全区間が通常の割増賃金に戻りました。再読み込みして金額をご確認のうえ承認してください。",
+    error_day_length_unknown:
+      "この従業員の1日の所定労働時間を算出できないため、代替休暇への振替も買い上げもできません。人事にシフトの設定をご依頼ください。",
+    error_agreement_record_required:
+      "月間上限を54時間に緩和するには記録が必要です（§32 III）：議事録のリンクと同意した日付をご入力ください。",
     error_emergency_already_declared:
       "この申請には既に §32 IV の認定があります。新しい届出を記録する前に、既存の認定を取り消してください。",
     error_emergency_not_declared:

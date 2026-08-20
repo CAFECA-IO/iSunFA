@@ -1,7 +1,11 @@
+import { Prisma } from "@/generated";
 import { prisma } from "@/lib/prisma";
 import { WorkDayType } from "@/constants/attendance";
 import { LeaveRequestStatus } from "@/constants/leave";
-import { LeaveApprovalStepStatus } from "@/constants/leave_policy";
+import {
+  LeaveApprovalNodeKind,
+  LeaveApprovalStepStatus,
+} from "@/constants/leave_policy";
 import {
   readConsumableGrants,
   writeConsumeForDays,
@@ -11,6 +15,7 @@ import { assertSchedulableDay } from "@/repositories/attendance_schedule_invaria
 import { assertStorablePii } from "@/repositories/hr_pii_invariant";
 import { HrPiiTable } from "@/constants/hr_pii";
 import { LEAVE_ENTITLEMENT_ENGINE_VERSION } from "@/lib/leave_entitlement_rules";
+import { LEAVE_APPROVAL_CHAIN_VERSION } from "@/lib/leave_approval_chain";
 import {
   ILeaveApprovalStepRecord,
   ILeaveRequestDetailRow,
@@ -137,6 +142,44 @@ const SUMMARY_INCLUDE = {
  * 檔案裡原本的註解寫著「中途 return BALANCE_RACE 時交易會整個回捲」——
  * 那句話對 Prisma 的互動式交易不成立，這個哨兵是為了讓它成立。
  */
+/**
+ * Info: (20260820 - Julian) 實際按下去的那個人的快照（review 第 6 輪 M19）。
+ *
+ * `HR` 關改成「任一位 HR_ADMIN 都接得了」之後，`approverEmployeeId`
+ * （展開時解析到誰**應該**簽）與實際簽的人會不一樣。少了這三欄，
+ * 帳面上會顯示由被指派的那位簽核，事實上是另一位 —— 那比原本的
+ * 「那位人資離職就永久卡住」更糟：卡住看得見，簽錯人看不見。
+ *
+ * 查不到人就丟：走到這裡的 id 是 service 剛解析出來的操作者，
+ * 查不到就是租戶邊界的破口（同 `ledgerActorOf` 的處置）。
+ */
+const deciderSnapshotOf = async (
+  tx: Prisma.TransactionClient,
+  params: { accountBookId: string; actorEmployeeId: string },
+): Promise<{
+  decidedByEmployeeId: string;
+  decidedByEmployeeNo: string;
+  decidedByName: string;
+}> => {
+  const employee = await tx.employee.findFirst({
+    where: {
+      id: params.actorEmployeeId,
+      accountBookId: params.accountBookId,
+    },
+    select: { id: true, employeeNo: true, name: true },
+  });
+  if (employee === null) {
+    throw new Error(
+      `LeaveApprovalStep: decider is not an employee of this account book (accountBookId=${params.accountBookId}, actorEmployeeId=${params.actorEmployeeId})`,
+    );
+  }
+  return {
+    decidedByEmployeeId: employee.id,
+    decidedByEmployeeNo: employee.employeeNo,
+    decidedByName: employee.name,
+  };
+};
+
 class BalanceRaceError extends Error {
   constructor() {
     super("leave balance was consumed by a concurrent approval");
@@ -214,19 +257,41 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
    * 然後收到一個他看不懂的 403。`pendingKey` 有唯一約束保護，
    * 是「當前待簽」這件事唯一可信的來源。
    */
-  public async listPendingForApprover(params: {
-    accountBookId: string;
-    approverEmployeeId: string;
-  }): Promise<ILeaveRequestSummary[]> {
-    const rows = await prisma.leaveRequest.findMany({
-      where: {
-        accountBookId: params.accountBookId,
-        approvalSteps: {
+  public async listPendingForApprover(
+    params: Parameters<ILeaveRequestRepository["listPendingForApprover"]>[0],
+  ): Promise<ILeaveRequestSummary[]> {
+    /**
+     * Info: (20260820 - Julian) 人資看得到整池的 `HR` 關（review 第 6 輪 M19）。
+     *
+     * `includeHrPool` 由 service 依「這個人有沒有 `HR_ADMIN` 職能」決定 ——
+     * 那是一個授權判斷，不屬於這一層（`coding_guidelines §1.1`）。
+     * 這裡只照著旗標查。
+     *
+     * 申請人自己那張單不會因此冒出來：`HR` 節點在展開時就把申請人排除了
+     * （`candidateFor` 的 `excludeEmployeeId`），而真的撞上時
+     * `claimStep` 的 `FO_SELF_APPROVAL_FORBIDDEN` 仍在。
+     */
+    const pendingStep = params.includeHrPool
+      ? {
+          some: {
+            pendingKey: { not: null },
+            OR: [
+              { approverEmployeeId: params.approverEmployeeId },
+              { nodeKind: LeaveApprovalNodeKind.HR },
+            ],
+          },
+        }
+      : {
           some: {
             approverEmployeeId: params.approverEmployeeId,
             pendingKey: { not: null },
           },
-        },
+        };
+
+    const rows = await prisma.leaveRequest.findMany({
+      where: {
+        accountBookId: params.accountBookId,
+        approvalSteps: pendingStep,
       },
       include: SUMMARY_INCLUDE,
       orderBy: { createdAt: "asc" },
@@ -330,6 +395,16 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
             create: params.steps.map((step) => ({
               order: step.order,
               nodeKind: step.nodeKind,
+              /**
+               * Info: (20260820 - Julian) 固化數值就要固化它的依據
+               * （接線守則 §3.1，review 第 6 輪 M15）。
+               *
+               * `LEAVE_APPROVAL_CHAIN_VERSION` 的註解從第一天就寫著
+               * 「並記於快照」，而在補上這一行之前它**零引用** ——
+               * 同一句話上面那兩行（`entitlementEngineVersion`）做到了，
+               * 這一行沒有。三份引擎版本裡，簽核鏈是勞動檢查最會問的那一份。
+               */
+              chainVersion: LEAVE_APPROVAL_CHAIN_VERSION,
               approverEmployeeId: step.approver.employeeId,
               approverEmployeeNo: step.approver.employeeNo,
               approverName: step.approver.name,
@@ -364,6 +439,7 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
     params: Parameters<ILeaveRequestRepository["advanceStep"]>[0],
   ): Promise<LeaveApprovalOutcome> {
     return prisma.$transaction(async (tx) => {
+      const decider = await deciderSnapshotOf(tx, params);
       const claimed = await tx.leaveApprovalStep.updateMany({
         where: {
           id: params.stepId,
@@ -373,6 +449,8 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
         data: {
           status: LeaveApprovalStepStatus.APPROVED,
           decidedAt: params.decidedAt,
+          // Info: (20260820 - Julian) 誰真的按下去（review 第 6 輪 M19）
+          ...decider,
           comment: params.comment ?? null,
           pendingKey: null,
         },
@@ -417,6 +495,7 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
      */
     try {
       return await prisma.$transaction(async (tx) => {
+        const decider = await deciderSnapshotOf(tx, params);
         const claimed = await tx.leaveApprovalStep.updateMany({
           where: {
             id: params.stepId,
@@ -426,6 +505,8 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
           data: {
             status: LeaveApprovalStepStatus.APPROVED,
             decidedAt: params.decidedAt,
+            // Info: (20260820 - Julian) 誰真的按下去（review 第 6 輪 M19）
+            ...decider,
             comment: params.comment ?? null,
             pendingKey: null,
           },
@@ -511,6 +592,8 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
               minutes: day.minutes,
             })),
             actorEmployeeId: params.actorEmployeeId,
+            // Info: (20260820 - Julian) 操作者快照要查得到人（review 第 6 輪 M16）
+            accountBookId: params.accountBookId,
           });
           /**
            * Info: (20260819 - Julian) 逐批不足 —— 總量過了但攤不到批次上。
@@ -585,6 +668,7 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
     params: Parameters<ILeaveRequestRepository["rejectStep"]>[0],
   ): Promise<LeaveApprovalOutcome> {
     return prisma.$transaction(async (tx) => {
+      const decider = await deciderSnapshotOf(tx, params);
       const claimed = await tx.leaveApprovalStep.updateMany({
         where: {
           id: params.stepId,
@@ -594,6 +678,8 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
         data: {
           status: LeaveApprovalStepStatus.REJECTED,
           decidedAt: params.decidedAt,
+          // Info: (20260820 - Julian) 誰真的按下去（review 第 6 輪 M19）
+          ...decider,
           comment: params.comment ?? null,
           pendingKey: null,
         },

@@ -898,6 +898,8 @@ export const hrManagement = {
     error_day_already_active: "An active leave already exists on that date.",
     error_concurrency_exceeded:
       "Too many people in your department are already on leave then. Agree on a new date with your manager.",
+    error_concurrency_rule_invalid:
+      "A concurrency rule in this account book does not state an enforceable limit, so leave cannot be checked against it. Ask HR to correct the rule.",
     error_policy_not_found:
       "That leave type no longer exists or has been disabled. Pick another one.",
     error_self_approval: "You may not approve your own request.",
@@ -1015,6 +1017,8 @@ export const hrManagement = {
     decided_granted: "{{count}} compensatory leave batch(es) granted",
     unapproved_title: "Unapproved time",
     unapproved_empty: "Nothing outside approved overtime",
+    unapproved_team_empty:
+      "No one in your team has attendance outside an approved overtime window in this range.",
     unapproved_hint:
       "Time on site that no request covers. It might be a missing filing, or just someone staying a while — you decide.",
     unapproved_range_days: "Last {{days}} days",
@@ -1039,6 +1043,10 @@ export const hrManagement = {
       "HR declared this an emergency (Article 32 IV) while you were approving it, so the whole span is now paid double. Reload, check the amount, then approve.",
     error_emergency_revoked_midway:
       "HR revoked the Article 32 IV emergency determination while you were approving it, so the whole span falls back to the ordinary overtime premium. Reload, check the amount, then approve.",
+    error_day_length_unknown:
+      "We cannot work out how long this employee's working day is, so overtime cannot be converted to compensatory leave or cashed out. Ask HR to schedule a shift for them.",
+    error_agreement_record_required:
+      "Extending the monthly cap to 54 hours requires a recorded agreement (Article 32 III): a link to the minutes and the date it was made.",
     error_emergency_already_declared:
       "This request already carries an Article 32 IV determination. Revoke the existing filing before recording a new one.",
     error_emergency_not_declared:

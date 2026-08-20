@@ -49,7 +49,14 @@ const OvertimeApprovalPageBody: FC = () => {
    * 這只決定看不看得到那一區 —— 授權在 service 端。
    */
   const [mayDeclareEmergency, setMayDeclareEmergency] = useState(false);
-  const [report, setReport] = useState<IOvertimeExceptionReport | null>(null);
+  /**
+   * Info: (20260820 - Julian) **下屬的**未核准時段（review 第 6 輪 M23）。
+   *
+   * 這裡原本是單一份報告，而查詢沒有帶 `employeeId` —— route 的預設是本人，
+   * 於是簽核頁顯示的是主管自己的未核准時段，下屬的永遠不會出現在任何畫面上。
+   * 本檔檔頭寫的正是這件事的後果：「主管會以為沒出現在清單上的就沒有發生」。
+   */
+  const [reports, setReports] = useState<IOvertimeExceptionReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -71,14 +78,21 @@ const OvertimeApprovalPageBody: FC = () => {
         request<IEnvelopeLike<IOvertimeRequestSummary[]>>(
           OVERTIME_API.REQUEST_PENDING,
         ),
-        request<IEnvelopeLike<IOvertimeExceptionReport>>(
+        request<IEnvelopeLike<IOvertimeExceptionReport[]>>(
           OVERTIME_API.UNAPPROVED,
-          { query: { from: addIsoDays(to, -(days - 1)), to } },
+          {
+            query: {
+              from: addIsoDays(to, -(days - 1)),
+              to,
+              // Info: (20260820 - Julian) 我管得到的每一個人（review 第 6 輪 M23）
+              scope: "team",
+            },
+          },
         ),
         request<IEnvelopeLike<IHrIdentityView>>(HR_IDENTITY_API.ME),
       ]);
       setPending(pendingRes.payload ?? []);
-      setReport(reportRes.payload);
+      setReports(reportRes.payload ?? []);
       setMayDeclareEmergency(
         meRes.payload?.hrFunctions?.includes(EmployeeHrFunction.HR_ADMIN) ??
           false,
@@ -156,7 +170,23 @@ const OvertimeApprovalPageBody: FC = () => {
           </select>
         </div>
 
-        {report !== null && <OvertimeUnapprovedPanel report={report} />}
+        {reports.length === 0 ? (
+          <p className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-500">
+            {t("hr_management.overtime.unapproved_team_empty")}
+          </p>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {reports.map((item) => (
+              <div key={item.employeeId} className="flex flex-col gap-2">
+                {/* Info: (20260820 - Julian) 逐人分組：一份混在一起的清單看不出是誰的 */}
+                <h3 className="text-xs font-medium text-gray-500">
+                  {item.employeeNo} {item.employeeName}
+                </h3>
+                <OvertimeUnapprovedPanel report={item} />
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

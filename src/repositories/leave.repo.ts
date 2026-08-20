@@ -317,6 +317,8 @@ class LeaveRepository implements ILeaveRepository {
       const restored = await writeRestoreForDay(tx, {
         leaveDayId: projection.leaveDayId,
         actorEmployeeId: projection.employeeId,
+        // Info: (20260820 - Julian) 操作者快照要查得到人（review 第 6 輪 M16）
+        accountBookId: projection.accountBookId,
         reason: `銷假徵詢同意（recall ${recallId}）`,
       });
 

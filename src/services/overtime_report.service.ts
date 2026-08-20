@@ -1,8 +1,10 @@
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
-import { DEMO_ATTENDANCE_MAX_RANGE_DAYS } from "@/constants/attendance";
 import {
-  OVERTIME_QUARTERLY_WINDOW_MONTHS,
+  DEMO_ATTENDANCE_MAX_RANGE_DAYS,
+  DEMO_TIME_ZONE,
+} from "@/constants/attendance";
+import {
   overtimeLimitsOf,
   OvertimeEvidenceBasis,
   OvertimeExceptionType,
@@ -16,17 +18,23 @@ import {
   IOvertimeSummaryView,
   IOvertimeTierTotal,
 } from "@/interfaces/overtime";
-import { subtractIntervals, totalIntervalMinutes } from "@/lib/overtime_rules";
+import {
+  quarterlyWindowOf,
+  subtractIntervals,
+  totalIntervalMinutes,
+} from "@/lib/overtime_rules";
 import {
   addIsoDays,
   addIsoMonths,
   enumerateIsoDates,
   isoDaySpan,
+  toZonedParts,
 } from "@/lib/utils/attendance_time";
 import {
   IOvertimeRequestContext,
   overtimeRequestContextRepo,
 } from "@/repositories/overtime_request_context.repo";
+import { employeeRepo } from "@/repositories/employee.repo";
 import { assertMayViewOvertimeOf } from "@/services/overtime_visibility";
 
 /**
@@ -46,6 +54,11 @@ export class OvertimeReportService {
    * 而一個答不出這題的系統等於默認全部都是（ADR 024 §2.2）。
    */
   public async summarize(params: {
+    /**
+     * Info: (20260820 - Julian) 由 route 傳入，不在 service 裡讀時鐘
+     * —— 一個會自己看現在幾點的函式在測試裡重現不了（同本模組其餘處置）。
+     */
+    observedAt: Date;
     accountBookId: string;
     actorEmployeeId: string;
     employeeId: string;
@@ -62,11 +75,27 @@ export class OvertimeReportService {
 
     const monthStart = `${params.month}-01`;
     const monthEnd = addIsoDays(addIsoMonths(monthStart, 1), -1);
-    // Info: (20260818 - Julian) 滾動三個月，右端對齊該月月底（同核准時的窗定義）
-    const quarterFrom = addIsoDays(
-      addIsoMonths(monthEnd, -OVERTIME_QUARTERLY_WINDOW_MONTHS),
-      1,
-    );
+    /**
+     * Info: (20260820 - Julian) 與核准閘門**同一支**函式、且錨點夾到今天
+     * （review 第 5 輪 M5）。
+     *
+     * ## 原本錯在哪
+     *
+     * 這裡自己抄了一份窗界算式並以**月底**為右端，註解卻寫「同核准時的窗定義」。
+     * 對 `2026-08` 而言報表窗是 `06-01~08-31`，而 `2026-08-10` 那天的閘門窗是
+     * `05-11~08-10` —— 報表的左端晚了 21 天，於是 5/11–5/31 的加班在報表上
+     * 不見了。方向對使用者不利：主管看到「還有 8 小時」，按下核准卻被擋下。
+     *
+     * ## 為什麼夾到今天
+     *
+     * 當月的月底還沒發生。以它為錨會把窗整個往後推，而**往後推等於把左端
+     * 往後推**，剛好丟掉最舊的那幾天 —— 那幾天是閘門仍然會算進去的。
+     * 夾到今天之後，當月的報表窗與「今天送出一張單」的閘門窗逐日相同；
+     * 過去的月份仍以月底為錨，那是那個月結束當下閘門看到的窗。
+     */
+    const today = toZonedParts(params.observedAt, DEMO_TIME_ZONE).isoDate;
+    const anchor = monthEnd < today ? monthEnd : today;
+    const quarter = quarterlyWindowOf(anchor);
 
     const [monthly, quarterly, policy] = await Promise.all([
       this.context.findApprovedInRange({
@@ -78,8 +107,8 @@ export class OvertimeReportService {
       this.context.findApprovedInRange({
         accountBookId: params.accountBookId,
         employeeId: params.employeeId,
-        from: quarterFrom,
-        to: monthEnd,
+        from: quarter.from,
+        to: quarter.to,
       }),
       this.context.findPolicy(params.accountBookId),
     ]);
@@ -114,8 +143,8 @@ export class OvertimeReportService {
         0,
       ),
       monthlyLimitMinutes: limits.monthlyMinutes,
-      quarterFrom,
-      quarterTo: monthEnd,
+      quarterFrom: quarter.from,
+      quarterTo: quarter.to,
       quarterlyMinutes: quarterly.reduce(
         (total, request) => total + request.recognizedMinutes,
         0,
@@ -152,6 +181,62 @@ export class OvertimeReportService {
    * （`evaluateAttendanceDay` 會 `clampToWindow`）。這裡的減法只服務**提示**，
    * 不參與任何認列 —— 兩者不可互相引用，否則提示會反過來變成事實來源。
    */
+  /**
+   * Info: (20260820 - Julian) L29 的**團隊版**（review 第 6 輪 M23）。
+   *
+   * ## 被修掉的空缺
+   *
+   * 簽核頁呼叫 L29 時沒有帶 `employeeId`，而 route 的預設是「本人」——
+   * 於是主管在簽核頁上看到的是**他自己**的未核准時段，
+   * 下屬的時段不會出現在任何一個畫面上。那支元件的檔頭自己寫著：
+   * 「只做前者，主管會以為沒出現在清單上的就沒有發生」。
+   *
+   * ## 為什麼不是讓前端逐一呼叫
+   *
+   * 前端手上沒有「我管得到誰」那份清單，而讓它自己拼會變成第二份授權判斷。
+   * 範圍在這裡解一次，與 `listPending` 同源 —— 看得到的與簽得動的是同一群人。
+   *
+   * 每個人各自過一次 `assertMayViewOvertimeOf`（`listUnapproved` 內），
+   * 因此這一支沒有放寬任何可見範圍：它只是替主管把那幾次呼叫合起來。
+   */
+  public async listUnapprovedForTeam(params: {
+    accountBookId: string;
+    actorEmployeeId: string;
+    from: string;
+    to: string;
+  }): Promise<IOvertimeExceptionReport[]> {
+    const employeeIds = await employeeRepo.listManagedEmployeeIds({
+      accountBookId: params.accountBookId,
+      managerEmployeeId: params.actorEmployeeId,
+    });
+
+    /**
+     * Info: (20260820 - Julian) 依序而非 `Promise.all`：一次可能是數十個人 ×
+     * 每人數十天的打卡，平行打過去會在一個查詢裡把連線池吃光。
+     * 這份清單是給眼睛掃的，慢一點沒關係，把資料庫拖垮有關係。
+     */
+    const reports: IOvertimeExceptionReport[] = [];
+    for (const employeeId of employeeIds) {
+      reports.push(
+        await this.listUnapproved({
+          accountBookId: params.accountBookId,
+          actorEmployeeId: params.actorEmployeeId,
+          employeeId,
+          from: params.from,
+          to: params.to,
+        }),
+      );
+    }
+
+    /**
+     * Info: (20260820 - Julian) 沒有例外的人不回。
+     *
+     * 這份清單的用途是「誰有未核准的時段」，把每個人都列出來（多數是空的）
+     * 會讓真正有事的那兩三個人淹在裡面 —— 而那正是這個提示要對抗的東西。
+     */
+    return reports.filter((report) => report.exceptions.length > 0);
+  }
+
   public async listUnapproved(params: {
     accountBookId: string;
     actorEmployeeId: string;

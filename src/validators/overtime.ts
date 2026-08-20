@@ -193,6 +193,20 @@ export const overtimeUnapprovedQuerySchema = z
     from: isoDateSchema,
     to: isoDateSchema,
     employeeId: z.string().min(1).optional(),
+    /**
+     * Info: (20260820 - Julian) `team` = 我管得到的每一個人（review 第 6 輪 M23）。
+     *
+     * 預設是本人，因為那是「我的加班」頁的用法。簽核頁要的是團隊，
+     * 而它先前**沒有任何方式表達那件事** —— 於是主管在簽核頁上看到的是
+     * 自己的未核准時段，下屬的永遠不會出現。
+     *
+     * 與 `employeeId` 互斥：兩個都給就講不清楚要哪一個。
+     */
+    scope: z.enum(["self", "team"]).default("self"),
+  })
+  .refine((value) => !(value.scope === "team" && value.employeeId), {
+    message: "scope=team cannot be combined with employeeId",
+    path: ["scope"],
   })
   .refine((value) => value.from <= value.to, {
     message: "from must not be later than to",

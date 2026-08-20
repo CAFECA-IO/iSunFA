@@ -5,6 +5,7 @@ import { LeaveAccrualMethod } from "@/constants/leave_policy";
 import {
   ILeaveAccrualTierView,
   ILeavePolicyDetail,
+  ILeavePolicyOption,
   ILeavePolicyWritable,
 } from "@/interfaces/leave_policy_option";
 import {
@@ -67,6 +68,31 @@ export class LeavePolicyService {
     private readonly policies: ILeavePolicyRepository,
     private readonly hrFunctions: IEmployeeHrFunctionRepository,
   ) {}
+
+  /**
+   * Info: (20260820 - Julian) L1：可請的假別清單（review 第 6 輪 M10）。
+   *
+   * ## 為什麼這一支存在
+   *
+   * L1 的 route 先前**直接 import `leavePolicyRepo` 並呼叫 `listActive()`**——
+   * 全庫唯一一支跳過 service 的假勤端點，而同一個檔案的 POST 走 service、
+   * 同模組的單筆讀取也走 service。是漏接，不是刻意的例外
+   * （CLAUDE.md §1「API 絕不含 DB 操作」）。
+   *
+   * ## 這一支不設可見範圍閘，而那是刻意的
+   *
+   * 「公司有哪些假可以請」不是機密，藏起來的效果是員工不知道自己有生理假
+   * 可以請。身分解析（`resolveEmployee`）在 route 已經做完 ——
+   * 它保證呼叫者是這個帳本的員工，而那是這支端點需要的全部。
+   *
+   * 沒有閘不代表不需要 service：這一層是「帳本邊界由誰負責」的所在，
+   * 而下一個要加快取、加排序、或把停用的假別一併回傳的人會改在這裡。
+   */
+  public async listActive(params: {
+    accountBookId: string;
+  }): Promise<ILeavePolicyOption[]> {
+    return this.policies.listActive(params.accountBookId);
+  }
 
   /**
    * Info: (20260818 - Julian) 設定畫面的單筆讀取。
@@ -186,7 +212,10 @@ export class LeavePolicyService {
   }): Promise<ILeaveAccrualTierView[]> {
     await this.assertMayConfigure(params);
     await this.mustFind(params);
-    return this.policies.listTiers(params.leavePolicyId);
+    return this.policies.listTiers({
+      accountBookId: params.accountBookId,
+      leavePolicyId: params.leavePolicyId,
+    });
   }
 
   /**
@@ -211,6 +240,7 @@ export class LeavePolicyService {
 
     try {
       return await this.policies.replaceTiers({
+        accountBookId: params.accountBookId,
         leavePolicyId: params.leavePolicyId,
         tiers: params.input.tiers,
       });

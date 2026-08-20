@@ -305,6 +305,15 @@ export interface ILeavePolicySeed {
   readonly carryForwardMonths: number;
   readonly cashOutOnExpiry: boolean;
   /** Info: (20260817 - Julian) 工資照給 = 1、折半發給 = 0.5、不給工資 = 0；條件式給付者為 null */
+  /**
+   * Info: (20260820 - Julian) 種子這一側仍是 number（review 第 6 輪 M20）。
+   *
+   * API 的輸入輸出都改成十進位字串了，但這份常數只有 1 / 0.5 / 0 / null
+   * 四個值，全部在 double 裡是精確的，而 `leave_seed_integrity.test.ts` 的
+   * 「`paidRatio` 只能是 1、0.5、0 或 null」把那個集合釘住 ——
+   * 換句話說，這裡的 number 由一條測試保證不會長出 0.7 那種值。
+   * 要加第五個值時，先把這一欄改成字串再加。
+   */
   readonly paidRatio: number | null;
   readonly proofRequirement: LeaveProofRequirement;
   /**
@@ -333,8 +342,27 @@ export const DEFAULT_LEAVE_POLICY_SEED: readonly ILeavePolicySeed[] = [
     annualDays: null,
     unitBasis: LeaveUnitBasis.FIXED_MINUTES,
     minimumUnitMinutes: 60,
-    // Info: (20260817 - Julian) §38 IV：經勞雇雙方協商同意得遞延一年
-    carryForwardMonths: 12,
+    /**
+     * Info: (20260820 - Julian) 法定預設是**年度終結發給工資**，不是遞延
+     * （review 第 5 輪 M6）。
+     *
+     * §38 IV 的條文順序是：年度終結或契約終止而未休的日數，雇主**應發給工資**；
+     * 「經勞雇雙方協商同意」得遞延一年，是那個原則的例外，且協商是
+     * **逐個勞工**的。種子把它設成 12，等於讓全體員工一律取得遞延 ——
+     * 一個沒有任何人協商過的例外，而系統裡也沒有任何欄位記載那份協商。
+     *
+     * 連帶的症狀：`LeaveCashOutReason.ANNUAL_YEAR_END` 因此**永遠不觸發**，
+     * 於是「年度終結未休折現」這條法定路徑在產品裡從來沒有跑過。
+     *
+     * 設成 0 是把預設對回法條。要遞延的公司在假別設定畫面把它改上去 ——
+     * 那個動作本身就是一份記載，而現在這個 0 至少沒有替任何人做決定
+     * （計畫書 §17 缺口 11：本模組不得提供「內建預設門檻」）。
+     *
+     * ToDo: (20260820 - Julian) 逐個勞工的協商記載（誰、哪一年、何時同意）
+     * 目前**沒有欄位**，因此 `carryForwardMonths` 仍然只能是整個假別的設定。
+     * 缺口已列入計畫書 §17；在它補上之前，把這個值調大就是全體一律遞延。
+     */
+    carryForwardMonths: 0,
     cashOutOnExpiry: true,
     paidRatio: 1,
     proofRequirement: LeaveProofRequirement.NONE,

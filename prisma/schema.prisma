@@ -2047,6 +2047,8 @@ model Employee {
   leaveBalances            LeaveBalance[]            @relation("LeaveBalanceEmployee")
   leaveLedgerActions       LeaveLedgerEntry[]        @relation("LeaveLedgerActor")
   leaveApprovalSteps       LeaveApprovalStep[]       @relation("LeaveApprovalStepApprover")
+  // Info: (20260820 - Julian) 實際按下核准／駁回的那些關（review 第 6 輪 M19）
+  leaveApprovalDecisions   LeaveApprovalStep[]       @relation("LeaveApprovalStepDecider")
   leaveApprovalRuleSteps   LeaveApprovalRuleStep[]   @relation("LeaveApprovalRuleSpecific")
   leaveConcurrencyWarnings LeaveConcurrencyWarning[] @relation("LeaveConcurrencyWarningViewer")
   leaveCashOutEvents       LeaveCashOutEvent[]       @relation("LeaveCashOutEmployee")
@@ -2984,8 +2986,19 @@ model LeaveRequest {
   totalMinutes Int     @map("total_minutes")
   totalDays    Decimal @map("total_days")
 
-  // Info: (20260817 - Julian) 證明文件。假別本身已揭露健康狀態，文件更甚 —— Tier 2
-  proofDocumentId String? @map("proof_document_id")
+  /**
+   * Info: (20260820 - Julian) `proofDocumentId` 已移除（review 第 6 輪 M18）。
+   *
+   * 它落地時是一個 `String?`：沒有 `@relation`、沒有租戶檢查，而
+   * `grep proofDocumentId` 全庫唯一的命中就是它自己這一行 —— 零讀取、零寫入。
+   * 對照之下 `proofRequirement` / `proofThresholdDays` 那套規則有七八個檔案在讀。
+   * 也就是說「需要證明文件」上線了，「文件在哪」永遠是 null。
+   *
+   * 留著比拆掉危險：一個永遠 null 的欄位讀起來像「這張單沒附證明」，
+   * 而真相是「這個系統從來沒有地方可以附」。真正要做的是一整條上傳路徑
+   * （儲存、租戶隔離、Tier 2 加密、保存期限），那不是一個欄位。
+   * 缺口記於計畫書 §17；補的時候連同 `@relation` 一起加。
+   */
 
   // Info: (20260817 - Julian) 併休超限警示的快照。不是擋，是記錄協商的起點（計畫書 §D14）
   concurrencyWarned Boolean @default(false) @map("concurrency_warned")
@@ -3574,6 +3587,24 @@ model LeaveLedgerEntry {
   // Info: (20260817 - Julian) 操作者。系統排程產生者為 null，並以 reason 標明來源
   actorEmployeeId String?   @map("actor_employee_id")
   actor           Employee? @relation("LeaveLedgerActor", fields: [actorEmployeeId], references: [id], onDelete: SetNull)
+
+  /**
+   * Info: (20260820 - Julian) 操作者的姓名工號快照（review 第 6 輪 M16）。
+   *
+   * `actorEmployeeId` 是 `SetNull`，而讀取端靠 live join 取姓名 ——
+   * 那位人資離職之後，這一列的操作者就變成一個永遠答不出來的 null。
+   * 額度帳本是 append-only 的稽核來源（ADR 022 §1），「這筆調整是誰做的」
+   * 正是它存在的理由之一。
+   *
+   * 同 PR 的 `LeaveApprovalStep` 與 `EmployeeHrFunctionAssignment` 都補了
+   * 同型的快照並在註解引 ADR 023 §1 —— 三者之中稽核價值最高的這一份漏了。
+   *
+   * Nullable：系統排程產生的分錄沒有操作者（那時 `actorEmployeeId` 也是 null，
+   * 三欄同進同出，由 `assertLedgerActor` 擋）。
+   */
+  actorEmployeeNo String? @map("actor_employee_no")
+  actorName       String? @map("actor_name")
+
   reason          String?
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -3719,7 +3750,42 @@ model LeaveApprovalStep {
   approverName       String  @map("approver_name")
   approverJobTitle   String? @map("approver_job_title")
 
+  /**
+   * Info: (20260820 - Julian) 展開這條鏈的引擎版本（review 第 6 輪 M15）。
+   *
+   * `LEAVE_APPROVAL_CHAIN_VERSION` 的註解從落地那天就寫著「並記於快照」，
+   * 而 `grep` 全庫零引用、schema 也沒有這一欄 —— 那句話沒有任何執行者。
+   * 對照組兩個都真的落地了：`LeaveDay.entitlementEngineVersion` 與
+   * `OvertimeSegment.engineVersion`。三者之中，簽核鏈是勞動檢查最會問的
+   * 那一份（「這張單當初依什麼規則決定要幾關、由誰簽」），卻是唯一沒有的。
+   *
+   * 非空：每一條落地的鏈都必然由某個版本的展開器產生。
+   *
+   * ⚠️ 它屬於**這一張**（`LeaveApprovalStep`，展開的結果），不是
+   * `LeaveApprovalRuleStep`（規則的模板）。兩者的欄位開頭幾行長得一模一樣
+   * （`order` + `nodeKind`），2026-08-20 第一版就是照那兩行定位而加錯了表 ——
+   * 加在模板上等於記「這條規則是第幾版寫的」，而要答的問題是
+   * 「**這張單**當初是依哪一版展開的」。
+   */
+  chainVersion Int @map("chain_version")
+
   status LeaveApprovalStepStatus @default(PENDING)
+
+  /**
+   * Info: (20260820 - Julian) **實際按下去的那個人**（review 第 6 輪 M19）。
+   *
+   * `approverEmployeeId` 是展開當下解析到的人（誰**應該**簽）。`HR` 節點
+   * 改成「任一位 HR_ADMIN 都接得了」之後，這兩者會不一樣 ——
+   * 而少了這一欄，帳面上會顯示由被指派的那位簽核，事實上是另一位。
+   * 那比原本的永久卡住更糟：卡住看得見，簽錯人看不見。
+   *
+   * 三欄一組，理由同 `approverEmployeeNo` / `approverName`：
+   * `SetNull` 讓離職不刪單，快照讓離職之後仍答得出當時是誰。
+   */
+  decidedByEmployeeId String?   @map("decided_by_employee_id")
+  decidedBy           Employee? @relation("LeaveApprovalStepDecider", fields: [decidedByEmployeeId], references: [id], onDelete: SetNull)
+  decidedByEmployeeNo String?   @map("decided_by_employee_no")
+  decidedByName       String?   @map("decided_by_name")
 
   pendingKey String? @unique @map("pending_key")
 

@@ -5,9 +5,11 @@ import {
   OVERTIME_MONTHLY_EXTENDED_LIMIT_MINUTES,
   OVERTIME_MONTHLY_LIMIT_MINUTES,
   OVERTIME_QUARTERLY_EXTENDED_LIMIT_MINUTES,
+  OVERTIME_QUARTERLY_WINDOW_MONTHS,
   OVERTIME_TIER_BOUNDARY_MINUTES,
   OvertimePremiumTier,
 } from "@/constants/overtime";
+import { addIsoDays, addIsoMonths } from "@/lib/utils/attendance_time";
 import {
   IMinuteInterval,
   IOvertimeLimitInput,
@@ -248,6 +250,41 @@ export function evaluateOvertimeLimits(
  * `unapprovedMinutes` 交出去**，不靜默丟棄 —— 未核准的加班是勞資爭議
  * 最常見的起點，事實仍存在於 `AttendancePunch` 裡，只是沒有人看見。
  */
+/**
+ * Info: (20260820 - Julian) 滾動三個月窗的**唯一**定義（review 第 5 輪 M5）。
+ *
+ * ## 為什麼要抽出來
+ *
+ * 這段算式先前有兩份手抄本：核准閘門（`overtime_request_context.repo.ts`）
+ * 以請假那一天為右端，月報表（`overtime_report.service.ts`）以**月底**為右端，
+ * 而報表那一份的註解寫著「同核准時的窗定義」。兩者對 `2026-08-10` 給出
+ *
+ * ```
+ * 閘門：2026-05-11 ~ 2026-08-10
+ * 報表：2026-06-01 ~ 2026-08-31
+ * ```
+ *
+ * 報表的左端晚了 21 天，於是 5/11–5/31 的加班在報表上不見了 ——
+ * 主管看到「還有 8 小時」，按下核准卻被閘門擋下，而兩個數字都自稱是
+ * 「滾動三個月」（checklist §1.10：同一個概念不得有第二份實作）。
+ *
+ * ## 右端含當日
+ *
+ * 「三個月前的今天」再加一天才是左端 —— 否則窗長會是三個月又一天。
+ */
+export function quarterlyWindowOf(anchorIsoDate: string): {
+  from: string;
+  to: string;
+} {
+  return {
+    from: addIsoDays(
+      addIsoMonths(anchorIsoDate, -OVERTIME_QUARTERLY_WINDOW_MONTHS),
+      1,
+    ),
+    to: anchorIsoDate,
+  };
+}
+
 export function reconcileOvertimeMinutes(input: {
   approvedMinutes: number;
   actualMinutes: number;

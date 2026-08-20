@@ -105,6 +105,11 @@ const contextOf = (
   // Info: (20260819 - Julian) 空陣列 = 當日無成對打卡 → 自陳，認列等於核准
   punchIntervals: [],
   priorRecognizedMinutes: 0,
+  /**
+   * Info: (20260820 - Julian) 當日開始得比本次早的那些（級距用，review 第 5 輪 M4）。
+   * 預設 0 ＝ 本次是當天的第一段加班。
+   */
+  earlierRecognizedMinutes: 0,
   priorMonthlyMinutes: 0,
   priorQuarterlyMinutes: 0,
   extendedLimitAgreed: false,
@@ -118,12 +123,23 @@ class FakeContext implements Partial<IOvertimeRequestContext> {
 
   public approval: IOvertimeApprovalContext = contextOf();
 
+  /** Info: (20260820 - Julian) `listPending` 實際送下去的那一份 id 清單 */
+  public pendingQueriedIds: readonly string[] | null = null;
+
   async findSummaryById(): Promise<IOvertimeRequestSummary | null> {
     return this.summary;
   }
 
   async buildApprovalContext(): Promise<IOvertimeApprovalContext> {
     return this.approval;
+  }
+
+  async listPendingForApprover(params: {
+    accountBookId: string;
+    employeeIds: readonly string[];
+  }): Promise<IOvertimeRequestSummary[]> {
+    this.pendingQueriedIds = params.employeeIds;
+    return [];
   }
 }
 
@@ -1106,5 +1122,174 @@ describe("補休折換：service 交出去的 payload", () => {
     expect(repo.written?.segments).toEqual([]);
     expect(repo.written?.compensatory).toBeNull();
     expect(repo.written?.cashOut).toBeNull();
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) 級距依**時間**先後，不是核准先後（review 第 5 輪 M4）。
+ *
+ * `priorRecognizedMinutes` 的聚合條件只有「同一天、已核准」，沒有任何時間成分。
+ * 級距吃它的話，同日兩張單誰拿到前兩小時的 1/3 取決於主管按核准的順序：
+ *
+ * ```
+ * 先核 19:00–21:00 → 它 prior=0 → 1/3；再核 17:00–19:00 → prior=120 → 2/3
+ * 反過來按          → 兩者對調
+ * ```
+ *
+ * 同一組事實、不同的工資，而兩次都通過了所有檢查。
+ */
+describe("同日多張加班單的級距（M4）", () => {
+  /**
+   * Info: (20260820 - Julian) 兩條成對，且**兩欄的值刻意相反**——
+   * 這是唯一能證明「吃的是哪一欄」的形狀。任一欄被誤用，就有一條會紅。
+   */
+  it("當天已有兩小時、但那兩小時開始得比本次晚 → 本次仍是前兩小時的 1/3", async () => {
+    context.approval = contextOf({
+      // Info: (20260820 - Julian) 當日總量有 120 分（單日上限看得到）
+      priorRecognizedMinutes: 120,
+      // Info: (20260820 - Julian) 但沒有一段開始得比本次早（級距看得到的是這個）
+      earlierRecognizedMinutes: 0,
+    });
+
+    await approve({ approvedMinutes: 60 });
+
+    expect(repo.written?.segments).toEqual([
+      { order: 0, tier: OvertimePremiumTier.WEEKDAY_FIRST_2H, minutes: 60 },
+    ]);
+  });
+
+  it("那兩小時開始得比本次早 → 本次落在第三小時起的 2/3", async () => {
+    context.approval = contextOf({
+      priorRecognizedMinutes: 120,
+      earlierRecognizedMinutes: 120,
+    });
+
+    await approve({ approvedMinutes: 60 });
+
+    expect(repo.written?.segments).toEqual([
+      { order: 0, tier: OvertimePremiumTier.WEEKDAY_BEYOND_2H, minutes: 60 },
+    ]);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 單日 12 小時的上限**仍然**吃當日總量。
+   *
+   * 少了這一條，把兩處都改成 `earlierRecognizedMinutes` 也會讓上面兩條通過，
+   * 而那會讓一個人靠「先申請晚一點的時段」繞過單日上限。
+   */
+  it("單日上限吃的是當日總量，不是只有先前那些", async () => {
+    context.summary = requestOf(120);
+    context.approval = contextOf({
+      // Info: (20260820 - Julian) 已有 11 小時，再 2 小時就超過 12 小時
+      priorRecognizedMinutes: 11 * HOUR,
+      earlierRecognizedMinutes: 0,
+      priorMonthlyMinutes: 0,
+      priorQuarterlyMinutes: 0,
+    });
+
+    expect(await codeOf(() => approve({ approvedMinutes: 120 }))).toBe(
+      API_ERRORS.VA_OVERTIME_EXCEEDS_DAILY_LIMIT.code,
+    );
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) 「算不出這個人的一天有多長」要有自己的 4xx
+ * （review 第 5 輪 M7／M8）。
+ *
+ * 兩條路徑先前各自用 `?? 0` 與 `?? regularWorkMinutes` 頂替：
+ * 前者往下撞成 `OvertimeRuleError`（非 `AppError`）→ route 收斂成 **500**；
+ * 後者在非上班日會把 **0** 寫進折現事件，而薪資模組拿它當除數。
+ */
+describe("一日工時算不出來時的兩條路徑（M7／M8）", () => {
+  it("補休折換：回專屬的 4xx，不是 500，且什麼都不寫", async () => {
+    context.summary = summaryOf({
+      compensationMode: OvertimeCompensationMode.COMPENSATORY_LEAVE,
+    });
+    context.approval = contextOf({ compensatoryDayEquivalentMinutes: null });
+
+    expect(await codeOf(() => approve({ approvedMinutes: 60 }))).toBe(
+      API_ERRORS.VA_OVERTIME_DAY_LENGTH_UNKNOWN.code,
+    );
+    expect(repo.written).toBeNull();
+  });
+
+  /**
+   * Info: (20260820 - Julian) 發錢模式在**非上班日**——加班費折現最常發生的日子。
+   * `regularWorkMinutes` 那天是 0，而舊式子會拿它當面額寫下去。
+   */
+  it("加班費折現：非上班日不得把 0 當作一日面額寫進事件", async () => {
+    context.approval = contextOf({
+      compensatoryDayEquivalentMinutes: null,
+      regularWorkMinutes: 0,
+    });
+
+    expect(await codeOf(() => approve({ approvedMinutes: 60 }))).toBe(
+      API_ERRORS.VA_OVERTIME_DAY_LENGTH_UNKNOWN.code,
+    );
+    expect(repo.written).toBeNull();
+  });
+
+  /**
+   * Info: (20260820 - Julian) 對照組：面額算得出來時照常寫入。
+   * 少了它，「一律擋」也會讓上面兩條通過。
+   */
+  it("面額算得出來時照常落地", async () => {
+    context.approval = contextOf({ compensatoryDayEquivalentMinutes: 8 * HOUR });
+
+    await approve({ approvedMinutes: 60 });
+
+    expect(repo.written?.cashOut).toEqual({
+      dayEquivalentMinutes: 8 * HOUR,
+      legalBasis: expect.any(String),
+    });
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) 自己的單子不出現在自己的待簽清單裡
+ * （review 第 6 輪 M11）。
+ *
+ * 這一步先前寫在 `employeeRepo.listManagedEmployeeIds` 的查詢條件裡
+ * （`id: { not: managerEmployeeId }`）—— 一條職責分離的政策躲在 Repository。
+ * 政策搬到 service 之後，這一組是它唯一的執行者：`listManagedEmployeeIds`
+ * 現在會回傳含自己的子樹，若 service 忘了過濾，主管的待簽清單上就會出現
+ * 自己的單子，而按下去會被 `assertMayDecide` 的
+ * `FO_SELF_APPROVAL_FORBIDDEN` 擋掉 —— 正是那段註解說要避免的
+ * 「看得到卻簽不動」。
+ */
+describe("待簽清單排除自己（M11 的政策落點）", () => {
+  const listManagedSpy = jest.spyOn(employeeRepo, "listManagedEmployeeIds");
+
+  afterAll(() => {
+    listManagedSpy.mockRestore();
+  });
+
+  it("repository 回的子樹含自己時，送下去的清單不含自己", async () => {
+    // Info: (20260820 - Julian) 這正是搬走 `id: { not: ... }` 之後的回傳形狀
+    listManagedSpy.mockResolvedValue(["emp-a", MANAGER, "emp-b"]);
+
+    await service.listPending({
+      accountBookId: BOOK,
+      actorEmployeeId: MANAGER,
+    });
+
+    expect(context.pendingQueriedIds).toEqual(["emp-a", "emp-b"]);
+    expect(context.pendingQueriedIds).not.toContain(MANAGER);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 對照組：其他人一個都不能被順手濾掉。
+   * 只斷言「不含自己」的話，一個回空陣列的實作也會通過。
+   */
+  it("其他人原樣送下去", async () => {
+    listManagedSpy.mockResolvedValue(["emp-a", "emp-b"]);
+
+    await service.listPending({
+      accountBookId: BOOK,
+      actorEmployeeId: MANAGER,
+    });
+
+    expect(context.pendingQueriedIds).toEqual(["emp-a", "emp-b"]);
   });
 });

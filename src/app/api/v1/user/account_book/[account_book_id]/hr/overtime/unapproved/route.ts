@@ -47,6 +47,7 @@ export async function GET(
       from: searchParams.get("from") ?? undefined,
       to: searchParams.get("to") ?? undefined,
       employeeId: searchParams.get("employeeId") ?? undefined,
+      scope: searchParams.get("scope") ?? undefined,
     });
     if (!parsed.success) return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
 
@@ -55,6 +56,24 @@ export async function GET(
       sessionUser,
       accountBookId,
     );
+
+    /**
+     * Info: (20260820 - Julian) `scope=team` 回**陣列**（review 第 6 輪 M23）。
+     *
+     * 不把單人版包成一元陣列來統一形狀：那會讓「我的加班」頁多一層解包，
+     * 而它的語意本來就是一份報告。兩種形狀由 `scope` 決定，呼叫端自己知道
+     * 它問的是哪一種。
+     */
+    if (parsed.data.scope === "team") {
+      return jsonOk(
+        await overtimeReportService.listUnapprovedForTeam({
+          accountBookId,
+          actorEmployeeId: actor.id,
+          from: parsed.data.from,
+          to: parsed.data.to,
+        }),
+      );
+    }
 
     return jsonOk(
       await overtimeReportService.listUnapproved({

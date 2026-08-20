@@ -64,7 +64,14 @@ export interface ILeavePolicyDetail {
   carryForwardMonths: number;
   cashOutOnExpiry: boolean;
   /** Info: (20260818 - Julian) 條件式給付者為 null（產假依年資而異） */
-  paidRatio: number | null;
+  /**
+   * Info: (20260820 - Julian) **十進位字串**，不是 number（review 第 6 輪 M20）。
+   *
+   * ADR 003 §2：「後端 API 絕對禁止輸出浮點數比率」。這一欄會直接乘上工資
+   * 變成錢（ADR 022 §3.4），而 `Number(Decimal("0.7"))` 是
+   * 0.69999999999999996 —— 差的那一點在薪資結算日才會現形。
+   */
+  paidRatio: string | null;
   proofRequirement: LeaveProofRequirement;
   proofThresholdDays: number | null;
   employerMayReject: boolean;

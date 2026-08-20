@@ -166,15 +166,23 @@ describe("managesEmployee —— 管轄範圍是部門子樹", () => {
   });
 
   /**
-   * Info: (20260820 - Julian) **不含自己。**
+   * Info: (20260820 - Julian) **含自己**（review 第 6 輪 M11）。
    *
-   * 這一條是 `leave.service` 的銷假徵詢與 `attendance_schedule.service`
-   * 的改班唯一的自我檢查 —— 那兩支沒有自己的。改成 true 的話，
-   * 主管可以對自己發起銷假徵詢、改自己的班，而不會有任何錯誤訊息。
+   * 這一條原本斷言 false，因為 `managesEmployee` 裡有一行
+   * `manager === target → false`。那一行是職責分離（ADR 023 §5），
+   * 是政策不是事實，而 `coding_guidelines §1.1` 把政策列為 Repository 的反例。
+   *
+   * 政策已經搬到四個呼叫端各自的第一行（`leave.service` 的銷假徵詢、
+   * `attendance_schedule.service` 的改班、`assertMayDecide`、
+   * 兩支 `assertMayView*` 的自己一律放行）。這一支現在只回答組織圖：
+   * 主管的部門當然在他自己的子樹裡。
+   *
+   * ⚠️ 改回 false 之前先確認那四支還在 —— 這條斷言是它們的對立面，
+   * 兩邊同時鬆掉才會出事。
    */
-  it("管自己：回 false（兩個服務靠這一條擋自我操作）", async () => {
-    expect(await manages("emp-mgr1", "emp-mgr1")).toBe(false);
-    expect(await manages("emp-chief", "emp-chief")).toBe(false);
+  it("管自己：回 true（這是組織圖的事實，政策在呼叫端）", async () => {
+    expect(await manages("emp-mgr1", "emp-mgr1")).toBe(true);
+    expect(await manages("emp-chief", "emp-chief")).toBe(true);
   });
 
   /**
@@ -202,13 +210,24 @@ describe("listManagedEmployeeIds —— 複數版與單數版必須一致", () =
       managerEmployeeId,
     });
 
-  it("段主管只拿得到自己段裡的人，且不含自己", async () => {
-    expect((await listOf("emp-mgr1")).sort()).toEqual(["emp-a"]);
+  /**
+   * Info: (20260820 - Julian) **含自己**（review 第 6 輪 M11）。
+   *
+   * 這兩條原本斷言「不含自己」，因為查詢帶著
+   * `id: { not: managerEmployeeId }` —— 一條職責分離的政策寫在 Repository
+   * 的 where 裡。政策搬到 `OvertimeRequestService.listPending`，
+   * 待簽清單看起來完全一樣，而 `overtime_request_service.test.ts`
+   * 的「待簽清單排除自己」那一組釘住的就是搬過去的那一步。
+   */
+  it("段主管拿得到自己段裡的人（含自己）", async () => {
+    expect((await listOf("emp-mgr1")).sort()).toEqual(
+      ["emp-a", "emp-mgr1"].sort(),
+    );
   });
 
-  it("處長拿得到整棵子樹，且不含自己", async () => {
+  it("處長拿得到整棵子樹（含自己）", async () => {
     expect((await listOf("emp-chief")).sort()).toEqual(
-      ["emp-a", "emp-b", "emp-mgr1", "emp-mgr5"].sort(),
+      ["emp-a", "emp-b", "emp-chief", "emp-mgr1", "emp-mgr5"].sort(),
     );
   });
 

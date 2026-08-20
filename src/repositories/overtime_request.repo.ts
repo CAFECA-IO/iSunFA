@@ -20,6 +20,7 @@ import {
   sumLedgerMinutes,
   writeBalance,
 } from "@/repositories/leave_grant.repo";
+import { ledgerActorOf } from "@/repositories/leave_ledger";
 import { assertGrantSource } from "@/repositories/leave_grant_invariant";
 import {
   assertEmergencyDeclaration,
@@ -377,7 +378,8 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
               entryType: LeaveLedgerEntryType.GRANT,
               deltaMinutes: segment.minutes,
               grantBalanceAfterMinutes: segment.minutes,
-              actorEmployeeId: params.actorEmployeeId,
+              // Info: (20260820 - Julian) 操作者三欄一起落地（review 第 6 輪 M16）
+              ...(await ledgerActorOf(tx, params)),
               idempotencyKey: buildOvertimeGrantIdempotencyKey(stored.id),
             },
           });

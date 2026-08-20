@@ -132,8 +132,28 @@ export interface IOvertimeApprovalContext {
    * 那是 `MANUAL_DECLARATION` 的觸發條件，不是「加班 0 分鐘」。
    */
   punchIntervals: IMinuteInterval[];
-  /** Info: (20260818 - Julian) 當日先前已認列的加班分鐘。決定本段從第幾小時起算 */
+  /**
+   * Info: (20260818 - Julian) 當日已認列的加班分鐘（**不分先後**）。
+   * 只服務單日 12 小時的法定上限 —— 那道閘問的是「這一天總共多少」，
+   * 與時段的先後無關。
+   */
   priorRecognizedMinutes: number;
+  /**
+   * Info: (20260820 - Julian) 當日**開始得比本次早**的那些加班的認列分鐘
+   * （review 第 5 輪 M4）。決定本段從第幾小時起算。
+   *
+   * ## 為什麼與上面那一欄分開
+   *
+   * 加成級距先前吃的是 `priorRecognizedMinutes`，而它的聚合條件只有
+   * 「同一天、已核准」—— 沒有任何時間成分。於是同日兩張單的工資取決於
+   * **主管按核准的順序**：先核 19:00–21:00 那張，它拿到前兩小時的 1/3；
+   * 再核 17:00–19:00 那張，它拿到第三小時起的 2/3。反過來按則兩者對調。
+   * 同一組事實、不同的工資，而兩次都「通過了所有檢查」。
+   *
+   * §24 I 的級距是依**當日延長工作時間的先後**定的，不是依誰先簽名。
+   * 因此級距改吃這一欄，而單日上限仍吃上面那一欄。
+   */
+  earlierRecognizedMinutes: number;
   /** Info: (20260818 - Julian) 不含本次的當月延長工時累計 */
   priorMonthlyMinutes: number;
   /** Info: (20260818 - Julian) 不含本次的滾動三個月延長工時累計 */

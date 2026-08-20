@@ -71,8 +71,27 @@ const leavePolicyWriteBaseSchema = z.object({
   proratedRoundingScale: z.number().int().min(0).max(4).default(1),
   carryForwardMonths: z.number().int().min(0).max(120).default(0),
   cashOutOnExpiry: z.boolean().default(false),
-  /** Info: (20260818 - Julian) 工資照給 = 1、折半 = 0.5、不給 = 0；條件式給付者為 null */
-  paidRatio: z.number().min(0).max(1).nullable().default(null),
+  /**
+   * Info: (20260818 - Julian) 工資照給 = 1、折半 = 0.5、不給 = 0；條件式給付者為 null。
+   *
+   * Info: (20260820 - Julian) 收**十進位字串**，不是 number（review 第 6 輪 M20）。
+   *
+   * 這一欄會直接乘上工資變成錢（ADR 022 §3.4），而 ADR 003 §2 的規矩是
+   * 「後端 API 絕對禁止輸出浮點數比率」—— 輸出改成字串之後，輸入還收 number
+   * 就會留下一個不對稱的介面：前端拿到 `"0.7"`、送回去要先 `Number()` 一次，
+   * 而那一次正是規矩要擋的那一步。
+   *
+   * 正規表示式而不是 `z.coerce.number()`：後者會先變成 double 再驗，
+   * 等於在驗證器裡把要避免的轉換做掉。上界 1 以字串比較擋不了
+   * （`"0.9" > "1"` 為真），因此用 `refine` 拿字串本身的位數判斷。
+   */
+  paidRatio: z
+    .string()
+    .regex(/^(?:0(?:\.\d{1,6})?|1(?:\.0{1,6})?)$/, {
+      message: "paidRatio must be a decimal between 0 and 1 (up to 6 places)",
+    })
+    .nullable()
+    .default(null),
   proofRequirement: z.enum([
     LeaveProofRequirement.NONE,
     LeaveProofRequirement.OPTIONAL,

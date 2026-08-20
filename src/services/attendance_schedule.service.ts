@@ -240,6 +240,23 @@ export class AttendanceScheduleService {
         throw new AppError(API_ERRORS.FO_ATTENDANCE_SUPERVISOR_ONLY);
       }
 
+      /**
+       * Info: (20260820 - Julian) 主管改不了自己的班（review 第 6 輪 M11）。
+       *
+       * 排班是判定的比較基準，自己改自己的基準正是職責分離要防的那件事
+       * （ADR 023 §5）。這一條先前靠 `managesEmployee()` 內部「管自己回 false」
+       * 那一行擋 —— 而那是一條政策判斷躲在 repository 裡
+       * （`coding_guidelines §1.1` 的唯一反例）。
+       *
+       * 搬到這裡，**碼與訊息都不變**：`FO_ATTENDANCE_SCHEDULE_SCOPE` 的檔頭
+       * 早就把「主管改不了自己的排班會落到這個碼」寫成對外承諾。
+       * 需要改時由具 `HR_ADMIN` / `TIMEKEEPER` 職能的人代為處理 ——
+       * 那條路徑在上面的 `hasHrFunction` 分支，不受這一行影響。
+       */
+      if (actorEmployeeId === input.employeeId) {
+        throw new AppError(API_ERRORS.FO_ATTENDANCE_SCHEDULE_SCOPE);
+      }
+
       const managesTarget = await this.employees.managesEmployee({
         accountBookId,
         managerEmployeeId: actorEmployeeId,

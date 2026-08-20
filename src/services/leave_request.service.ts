@@ -32,6 +32,12 @@ import { logger } from "@/lib/utils/logger";
 import { WorkDayType } from "@/constants/attendance";
 import { previousIsoDate } from "@/lib/utils/attendance_time";
 import { LeaveRequestStatus } from "@/constants/leave";
+import { EmployeeHrFunction } from "@/constants/hr_management";
+import {
+  employeeHrFunctionRepo,
+  IEmployeeHrFunctionRepository,
+} from "@/repositories/employee_hr_function.repo";
+import { LeaveConcurrencyInvariantError } from "@/repositories/leave_concurrency_invariant";
 import {
   LeaveApprovalNodeKind,
   LeaveApprovalStepStatus,
@@ -96,6 +102,12 @@ export class LeaveRequestService {
      * 注入之後，測試傳自己的假物件，不必知道生產環境用的是哪一個。
      */
     private readonly audit: ILeaveAuditTrail = auditLogRepo,
+    /**
+     * Info: (20260820 - Julian) `HR` 關的那一池人（review 第 6 輪 M19）。
+     * 與 `buildOrgSnapshot` 展開時用的是同一支 —— 兩邊各查一套的話，
+     * 會出現「解析時他在池裡、簽核時他不在」這種只在特定時序下出現的 403。
+     */
+    private readonly employees: IEmployeeHrFunctionRepository = employeeHrFunctionRepo,
   ) {}
 
   /**
@@ -169,9 +181,22 @@ export class LeaveRequestService {
     accountBookId: string;
     actorEmployeeId: string;
   }): Promise<ILeaveRequestSummary[]> {
+    /**
+     * Info: (20260820 - Julian) 人資看得到整池的 `HR` 關（review 第 6 輪 M19）。
+     *
+     * 與 `claimStep` 對 `HR` 節點放行的是同一個判準 —— 兩邊不一致的話，
+     * 不是「清單上少了他簽得動的單」就是「清單上的單按下去被擋」。
+     */
+    const isHr = await this.employees.hasAnyFunction({
+      accountBookId: params.accountBookId,
+      employeeId: params.actorEmployeeId,
+      hrFunctions: [EmployeeHrFunction.HR_ADMIN],
+    });
+
     return this.requests.listPendingForApprover({
       accountBookId: params.accountBookId,
       approverEmployeeId: params.actorEmployeeId,
+      includeHrPool: isHr,
     });
   }
 
@@ -466,6 +491,7 @@ export class LeaveRequestService {
           requestId: request.id,
           stepId: step.id,
           actorEmployeeId: params.actorEmployeeId,
+          accountBookId: params.accountBookId,
           decidedAt: params.observedAt,
           comment: params.comment,
         }),
@@ -553,6 +579,7 @@ export class LeaveRequestService {
         requestId: request.id,
         stepId: step.id,
         actorEmployeeId: params.actorEmployeeId,
+        accountBookId: params.accountBookId,
         decidedAt: params.observedAt,
         comment: params.comment,
       }),
@@ -752,13 +779,28 @@ export class LeaveRequestService {
             asOfDate: workingDays[0].workDate,
           })
         : Promise.resolve([]),
-      this.context.findConcurrencyStatus({
-        accountBookId,
-        employeeId,
-        leavePolicyId: policy.id,
-        // Info: (20260819 - Julian) 同上：併休人數只問真的會請假的那幾天
-        workDates: workingDays.map((day) => day.workDate),
-      }),
+      /**
+       * Info: (20260820 - Julian) 規則設定壞掉要收斂成說得出原因的 4xx
+       * （review 第 5 輪 M2）。
+       *
+       * `assertConcurrencyRule` 丟的不是 `AppError`，不包的話 route 會收斂成
+       * **500**，而真正的原因（某一條併休規則沒說出可執行的上限）
+       * 只留在伺服器的 log 裡 —— 人資看不到，也就修不了。
+       */
+      this.context
+        .findConcurrencyStatus({
+          accountBookId,
+          employeeId,
+          leavePolicyId: policy.id,
+          // Info: (20260819 - Julian) 同上：併休人數只問真的會請假的那幾天
+          workDates: workingDays.map((day) => day.workDate),
+        })
+        .catch((error: unknown) => {
+          if (error instanceof LeaveConcurrencyInvariantError) {
+            throw new AppError(API_ERRORS.VA_LEAVE_CONCURRENCY_RULE_INVALID);
+          }
+          throw error;
+        }),
     ]);
 
     const chain: IApprovalChainResolution = resolveApprovalChain({
@@ -814,7 +856,34 @@ export class LeaveRequestService {
     if (step === undefined) {
       throw new AppError(API_ERRORS.VA_LEAVE_ALREADY_REVIEWED);
     }
-    if (step.approverEmployeeId !== params.actorEmployeeId) {
+
+    /**
+     * Info: (20260820 - Julian) `HR` 關是**一池人**，不是一個人
+     * （review 第 6 輪 M19）。
+     *
+     * schema 對 `LeaveApprovalNodeKind.HR` 寫的是「具 HR 角色者，**任一人簽核
+     * 即通過**」，而這一行原本一律比對 `step.approverEmployeeId` ——
+     * 展開時為了讓快照落在一個具體的人，取的是排序後的第一位。
+     * 那位人資請假或離職（`approverEmployeeId` 是 `SetNull`），這一關就
+     * **永久卡住**，而那句註解讓讀者以為任何人資都接得手。
+     *
+     * 判準與展開時的池同源：`EmployeeHrFunctionAssignment` 裡仍生效的
+     * `HR_ADMIN`（`buildOrgSnapshot` 用的是同一支 `listHolderIds`）。
+     * 不得自我核准那一條在上面已經擋過，因此這裡不必再排除申請人。
+     *
+     * 其餘節點型別維持嚴格比對：它們各自只有一個候選人，放寬會讓
+     * 「誰該簽這一關」變成沒有答案的問題。
+     */
+    if (step.nodeKind === LeaveApprovalNodeKind.HR) {
+      const isHr = await this.employees.hasAnyFunction({
+        accountBookId: params.accountBookId,
+        employeeId: params.actorEmployeeId,
+        hrFunctions: [EmployeeHrFunction.HR_ADMIN],
+      });
+      if (!isHr) {
+        throw new AppError(API_ERRORS.FO_NOT_AUTHORIZED_REVIEWER);
+      }
+    } else if (step.approverEmployeeId !== params.actorEmployeeId) {
       throw new AppError(API_ERRORS.FO_NOT_AUTHORIZED_REVIEWER);
     }
 

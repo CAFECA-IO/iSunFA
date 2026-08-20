@@ -45,6 +45,9 @@ export const LEAVE_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
     "hr_management.leave.error_day_already_active",
   [API_ERRORS.CF_LEAVE_CONCURRENCY_EXCEEDED.code]:
     "hr_management.leave.error_concurrency_exceeded",
+  // Info: (20260820 - Julian) review 第 5 輪 M2：併休規則本身設定壞了
+  [API_ERRORS.VA_LEAVE_CONCURRENCY_RULE_INVALID.code]:
+    "hr_management.leave.error_concurrency_rule_invalid",
   [API_ERRORS.NF_LEAVE_POLICY.code]:
     "hr_management.leave.error_policy_not_found",
 

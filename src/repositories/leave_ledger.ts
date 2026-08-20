@@ -157,9 +157,12 @@ export const writeConsumeForDays = async (
     balances: IConsumableGrant[];
     days: readonly ILeaveDayConsumption[];
     actorEmployeeId: string;
+    // Info: (20260820 - Julian) 操作者快照要查得到人（review 第 6 輪 M16）
+    accountBookId: string;
   },
 ): Promise<boolean> => {
   const running = params.balances.map((item) => ({ ...item }));
+  const actor = await ledgerActorOf(tx, params);
 
   for (const day of params.days) {
     if (day.minutes <= 0) continue;
@@ -178,7 +181,8 @@ export const writeConsumeForDays = async (
           deltaMinutes: -item.minutes,
           grantBalanceAfterMinutes: item.grantBalanceAfterMinutes,
           leaveDayId: day.leaveDayId,
-          actorEmployeeId: params.actorEmployeeId,
+          // Info: (20260820 - Julian) 操作者三欄一起落地（review 第 6 輪 M16）
+          ...actor,
           /**
            * Info: (20260817 - Julian) 冪等鍵以「日 × 批次」組成。
            * 同一天同一批只能扣一次，而重試、補償、Worker 重跑都靠它擋。
@@ -216,8 +220,11 @@ export const writeRestoreForDay = async (
     leaveDayId: string;
     actorEmployeeId: string | null;
     reason: string;
+    // Info: (20260820 - Julian) 操作者快照要查得到人（review 第 6 輪 M16）
+    accountBookId: string;
   },
 ): Promise<number> => {
+  const actor = await ledgerActorOf(tx, params);
   const consumed = await tx.leaveLedgerEntry.findMany({
     where: {
       leaveDayId: params.leaveDayId,
@@ -260,7 +267,8 @@ export const writeRestoreForDay = async (
         deltaMinutes: minutes,
         grantBalanceAfterMinutes: balanceAfter,
         leaveDayId: params.leaveDayId,
-        actorEmployeeId: params.actorEmployeeId,
+        // Info: (20260820 - Julian) 操作者三欄一起落地（review 第 6 輪 M16）
+        ...actor,
         reason: params.reason,
         /**
          * Info: (20260817 - Julian) 一個 `LeaveDay` 只會被銷一次
@@ -444,4 +452,102 @@ export const rebuildBalanceWithin = async (
     reconciledAt: params.reconciledAt,
   });
   return remainingMinutes;
+};
+
+/**
+ * Info: (20260820 - Julian) 帳本操作者的姓名工號快照（review 第 6 輪 M16）。
+ *
+ * ## 為什麼在這一層查，而不是要每個呼叫端傳進來
+ *
+ * `leaveLedgerEntry.create` 有五個站點（授予、扣減、調整、到期、加班折換），
+ * 分散在三個 repository。要求每一個都自己帶姓名工號，等於留下五個各自可能
+ * 忘記的地方 —— 而忘記的症狀是「那一列的操作者永遠查不出來」，
+ * 沒有任何錯誤訊息。查一次是一個以主鍵取單列的查詢，代價遠小於那個風險。
+ *
+ * 這不違反「Repository 不做業務判斷」：它回答的是「這個 id 當時的姓名工號
+ * 是什麼」，是事實不是決定。
+ *
+ * ## 為什麼是快照而不是 live join
+ *
+ * `actorEmployeeId` 是 `onDelete: SetNull` —— 那位人資離職之後，
+ * live join 會讓這一列的操作者變成 null，而額度帳本是 append-only 的
+ * 稽核來源（ADR 022 §1）：「這筆調整是誰做的」正是它存在的理由之一。
+ * 同 `LeaveApprovalStep.approverEmployeeNo` 與
+ * `EmployeeHrFunctionAssignment` 的既有處置（ADR 023 §1）。
+ */
+export interface ILedgerActorSnapshot {
+  actorEmployeeId: string | null;
+  actorEmployeeNo: string | null;
+  actorName: string | null;
+}
+
+export class LeaveLedgerInvariantError extends Error {
+  constructor(reason: string, detail: string) {
+    super(`LeaveLedgerEntry: ${reason} (${detail})`);
+    this.name = "LeaveLedgerInvariantError";
+  }
+}
+
+/**
+ * Info: (20260820 - Julian) 三欄同生共死：有 id 就要有快照，沒有 id 就三欄皆空。
+ *
+ * 半套的組合讀不出是「系統排程產生的」還是「查快照時漏掉了」，
+ * 而那兩件事的後續處置完全不同（同 `assertEmergencyDeclaration` 的形狀）。
+ */
+export function assertLedgerActor(params: ILedgerActorSnapshot): void {
+  const hasId = params.actorEmployeeId !== null;
+  const hasNo = params.actorEmployeeNo !== null;
+  const hasName = params.actorName !== null;
+
+  if (hasId === hasNo && hasNo === hasName) return;
+
+  throw new LeaveLedgerInvariantError(
+    "a ledger entry must carry either an actor with their name and employee number, or none of the three; half a snapshot cannot be told apart from a system-generated entry",
+    `actorEmployeeId=${params.actorEmployeeId}, actorEmployeeNo=${params.actorEmployeeNo}, actorName=${params.actorName}`,
+  );
+}
+
+/**
+ * Info: (20260820 - Julian) 取出寫入用的操作者三欄。
+ *
+ * 查不到那個 id 時**丟例外**而不是退回 null：走到這裡的 id 是 service 剛剛
+ * 解析出來的員工，查不到就是租戶邊界或資料層面的破口。
+ * 退回 null 會讓那一列看起來像系統排程產生的 —— 一筆人為調整偽裝成系統動作，
+ * 是稽核上最不該發生的那一種。
+ */
+export const ledgerActorOf = async (
+  tx: Prisma.TransactionClient,
+  params: { accountBookId: string; actorEmployeeId: string | null },
+): Promise<ILedgerActorSnapshot> => {
+  if (params.actorEmployeeId === null) {
+    const empty = {
+      actorEmployeeId: null,
+      actorEmployeeNo: null,
+      actorName: null,
+    };
+    assertLedgerActor(empty);
+    return empty;
+  }
+
+  const employee = await tx.employee.findFirst({
+    where: {
+      id: params.actorEmployeeId,
+      accountBookId: params.accountBookId,
+    },
+    select: { id: true, employeeNo: true, name: true },
+  });
+  if (employee === null) {
+    throw new LeaveLedgerInvariantError(
+      "the ledger actor is not an employee of this account book; recording the entry would either lose the actor or attribute it across a tenant boundary",
+      `accountBookId=${params.accountBookId}, actorEmployeeId=${params.actorEmployeeId}`,
+    );
+  }
+
+  const snapshot = {
+    actorEmployeeId: employee.id,
+    actorEmployeeNo: employee.employeeNo,
+    actorName: employee.name,
+  };
+  assertLedgerActor(snapshot);
+  return snapshot;
 };

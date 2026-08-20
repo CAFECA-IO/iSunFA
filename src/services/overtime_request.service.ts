@@ -238,7 +238,17 @@ export class OvertimeRequestService {
 
     return this.context.listPendingForApprover({
       accountBookId: params.accountBookId,
-      employeeIds,
+      /**
+       * Info: (20260820 - Julian) 自己的單子不出現在自己的待簽清單裡
+       * （review 第 6 輪 M11）。
+       *
+       * 這一步先前在 `listManagedEmployeeIds` 的 `where` 裡（`id: { not: ... }`），
+       * 而那是一條職責分離的政策躲在 Repository 的查詢條件裡。搬到這裡之後，
+       * 它與 `assertMayDecide` 的第一行（`FO_SELF_APPROVAL_FORBIDDEN`）
+       * 講的是同一件事，且**看得到的與簽得動的仍是同一群人** ——
+       * 那正是這一支上面那段註解要求的。
+       */
+      employeeIds: employeeIds.filter((id) => id !== params.actorEmployeeId),
     });
   }
 
@@ -279,6 +289,11 @@ export class OvertimeRequestService {
       employeeId: request.employeeId,
       workDate: request.workDate,
       excludeRequestId: request.id,
+      /**
+       * Info: (20260820 - Julian) 級距要依**時間**先後，不是核准先後
+       * （review 第 5 輪 M4）。傳起始分鐘下去切出「當日開始得比它早」的那一份。
+       */
+      requestedStartMinute: request.requestedStartMinute,
     });
     if (context.workDayType === null) {
       throw new AppError(API_ERRORS.VA_OVERTIME_DAY_NOT_SCHEDULED);
@@ -838,7 +853,16 @@ export class OvertimeRequestService {
         workDayType: context.workDayType as WorkDayType,
         isEmergency,
         minutes: recognizedMinutes,
-        priorRecognizedMinutes: context.priorRecognizedMinutes,
+        /**
+         * Info: (20260820 - Julian) **`earlierRecognizedMinutes`，不是
+         * `priorRecognizedMinutes`**（review 第 5 輪 M4）。
+         *
+         * §24 I 的級距依當日延長工時的先後定。吃「當日全部」的話，同日兩張單
+         * 誰拿到前兩小時的 1/3 取決於主管按核准的順序 —— 同一組事實、
+         * 不同的工資。單日 12 小時的上限仍吃 `priorRecognizedMinutes`
+         * （見 `assertWithinStatutoryLimits`），那道閘與先後無關。
+         */
+        priorRecognizedMinutes: context.earlierRecognizedMinutes,
       });
     } catch (error) {
       if (!(error instanceof OvertimeRuleError)) throw error;
@@ -886,9 +910,28 @@ export class OvertimeRequestService {
       throw new AppError(API_ERRORS.VA_OVERTIME_COMP_EXPIRY_UNSET);
     }
 
+    /**
+     * Info: (20260820 - Julian) 第三個前提也要有自己的 4xx（review 第 5 輪 M7）。
+     *
+     * 原本這裡是 `?? 0`。上面兩個前提（沒有補休假別、沒有協商期限）各有一句
+     * 說得出原因的 4xx，第三個卻靜默填 0 往下送 ——
+     * `deriveCompensatoryGrantDays` 會以 `OvertimeRuleError` 擋下它，
+     * 而那不是 `AppError`，route 收斂成 **500**。
+     *
+     * 真正的原因是「這個人沒有可推導的一日工時」：他沒有排班，且
+     * `findRecentWorkdayLength` 也找不到最近一個有班別的上班日。
+     * 那是人資排一格班就能解決的事，而 500 說不出這件事。
+     */
+    if (
+      context.compensatoryDayEquivalentMinutes === null ||
+      context.compensatoryDayEquivalentMinutes <= 0
+    ) {
+      throw new AppError(API_ERRORS.VA_OVERTIME_DAY_LENGTH_UNKNOWN);
+    }
+
     return {
       leavePolicyId: context.compensatoryPolicyId,
-      dayEquivalentMinutes: context.compensatoryDayEquivalentMinutes ?? 0,
+      dayEquivalentMinutes: context.compensatoryDayEquivalentMinutes,
       expiresOn: addIsoMonths(
         request.workDate,
         context.compensatoryExpiryMonths,
@@ -906,9 +949,40 @@ export class OvertimeRequestService {
     }
     if (segmentCount === 0) return null;
 
+    /**
+     * Info: (20260820 - Julian) 折現事件的一日面額不得是 0（review 第 5 輪 M8）。
+     *
+     * 原本是 `compensatoryDayEquivalentMinutes ?? regularWorkMinutes`，而
+     * `regularWorkMinutes` 在**非上班日**（休息日、國定假日）是 **0** ——
+     * 那正是加班費折現最常發生的日子。落地一個 `dayEquivalentMinutes = 0`
+     * 的折現事件，薪資模組拿它當除數換算日薪時會得到 Infinity 或當場除以零，
+     * 而它是在薪資結算日才會現形的那種錯（ADR 022 §3.3、ADR 024 §7）。
+     *
+     * 這裡不再退到 `regularWorkMinutes`，而且那個備援**只可能給出 0**：
+     * `buildApprovalContext` 裡
+     *
+     * ```ts
+     * compensatoryDayEquivalentMinutes:
+     *   scheduled !== null && scheduled.requiredWorkMinutes > 0
+     *     ? scheduled.requiredWorkMinutes            // 此時它等於 regularWorkMinutes
+     *     : await this.findRecentWorkdayLength(...)  // 此時 regularWorkMinutes 必為 0
+     * regularWorkMinutes: scheduled?.requiredWorkMinutes ?? 0
+     * ```
+     *
+     * 前一支非 null 時備援根本不會觸發；備援觸發時（前一支為 null）
+     * `scheduled` 要嘛是 null、要嘛 `requiredWorkMinutes === 0`，
+     * 兩種情形下 `regularWorkMinutes` 都是 0。所以那行 `??` 從落地起
+     * 就只有一個效果：把「答不出來」寫成一個 0。
+     */
+    if (
+      context.compensatoryDayEquivalentMinutes === null ||
+      context.compensatoryDayEquivalentMinutes <= 0
+    ) {
+      throw new AppError(API_ERRORS.VA_OVERTIME_DAY_LENGTH_UNKNOWN);
+    }
+
     return {
-      dayEquivalentMinutes:
-        context.compensatoryDayEquivalentMinutes ?? context.regularWorkMinutes,
+      dayEquivalentMinutes: context.compensatoryDayEquivalentMinutes,
       legalBasis: OVERTIME_PAYMENT_LEGAL_BASIS,
     };
   }

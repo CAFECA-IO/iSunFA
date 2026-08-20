@@ -270,36 +270,31 @@ class EmployeeRepository implements IEmployeeRepository {
   }
 
   /**
-   * Info: (20260817 - Julian) 那位員工在不在這個主管的**管轄範圍**內（不含他自己）。
+   * Info: (20260817 - Julian) 那位員工在不在這個主管的部門子樹裡。
    *
-   * ## 這一支不做「該不該」的判斷（M11）
+   * ## 這一支只回答「是什麼」（review 第 6 輪 M11）
    *
-   * Info: (20260820 - Julian) 它原本的第一行寫著「**這是授權判斷。**」，
-   * 而 `coding_guidelines §1.1` 的反例正是那句話：
-   * 「『這個人有沒有權限做這件事』不行（留在 Repository）」。
+   * 它原本的第一行寫著「**這是授權判斷。**」，而且真的做了一個授權判斷：
+   * `managerEmployeeId === targetEmployeeId → false`。那是職責分離
+   * （ADR 023 §5），不是組織圖上的事實 —— 而 `coding_guidelines §1.1` 把
+   * 「這個人有沒有權限做這件事」列為 Repository 唯一的反例。
    *
-   * 修的是那句話而不是這段程式碼，理由要寫清楚 —— 這一支算的是**組織圖上的
-   * 一個事實**：target 的部門在不在 manager 那個部門的子樹裡。
-   * 「因此他可以看／可以簽」是**決定**，而決定只在 `assertMay*` 那幾支
-   * （`leave_visibility.ts`、`overtime_visibility.ts`、`assertMayDecide`）。
-   * 同一個事實在不同動作上會導出不同的答案：查餘額時「管得到」就放行，
-   * 核准時「管得到」還要再過一道不得自我核准 —— 那正是決定與事實的差別。
+   * 上一輪只改了那句註解、把行為重新定義成「管轄範圍不含自己」，
+   * 理由是有兩個呼叫端（`leave.service` 的銷假徵詢、
+   * `attendance_schedule.service` 的改班）沒有自己的自我檢查，移走會讓
+   * 主管可以對自己動手而沒有任何錯誤訊息。那是一個**成立的顧慮**，
+   * 但它的解法是替那兩支補上檢查，不是把政策留在這一層並替它換一個名字 ——
+   * 換名字之後同一段程式碼還在，而下一個人只會更難看出它在那裡。
    *
-   * ## 但「不含自己」確實是一條政策，而它刻意留在這裡
+   * 現在兩支都有自己的一行了（各自丟原本那個碼，使用者觀察到的行為不變），
+   * 這一支因此回到單純的事實：target 的部門在不在 manager 那個部門的子樹裡。
+   * **包含 manager 自己**——他的部門當然在他自己的子樹裡。
    *
-   * 嚴格說，`managerEmployeeId === targetEmployeeId → false` 是職責分離
-   * （ADR 023 §5），不是組織圖的事實。把它上移到 service 是比較純的分層，
-   * **但目前有兩個呼叫端沒有自己的自我檢查**：
-   * `leave.service` 的銷假徵詢與 `attendance_schedule.service` 的改班。
-   * 移走等於讓主管可以對自己發起銷假徵詢、改自己的班，
-   * 而症狀不會有任何錯誤訊息。`error_dictionary.ts:1861` 也已經把
-   * 「主管改不了自己的班」寫成一個對外承諾。
-   *
-   * 因此把它定義成**管轄範圍的一部分**（我的範圍不含我自己），
-   * 並由 `employee_managed_scope.test.ts` 釘住 —— 那支測試在補上之前，
-   * 這條被兩個服務依賴的行為一條測試都沒有。
-   * ToDo: (20260820 - Julian) 那兩個呼叫端各補一道明確的自我檢查之後，
-   * 這一行可以上移，屆時分層才真的乾淨。
+   * 「因此他可以看／可以簽」是**決定**，而決定在 `assertMay*` 那幾支
+   * （`leave_visibility.ts`、`overtime_visibility.ts`、`assertMayDecide`），
+   * 它們每一支都在呼叫這裡之前先處理過「對象就是自己」這件事。
+   * 同一個事實在不同動作上導出不同的答案：查餘額時自己一律放行，
+   * 核准時自己一律擋下 —— 那正是決定與事實的差別。
    *
    * ## 為什麼要用子樹而不是直屬部門
    *
@@ -325,9 +320,6 @@ class EmployeeRepository implements IEmployeeRepository {
     managerEmployeeId: string;
     targetEmployeeId: string;
   }): Promise<boolean> {
-    // Info: (20260817 - Julian) 管自己不算 —— 職責分離的第一條（ADR 023 §5）
-    if (params.managerEmployeeId === params.targetEmployeeId) return false;
-
     const managed = await prisma.department.findFirst({
       where: {
         accountBookId: params.accountBookId,
@@ -380,8 +372,17 @@ class EmployeeRepository implements IEmployeeRepository {
    * `collectDepartmentScope` 展開子樹 → 取該子樹裡的員工。若哪天放寬成
    * 一人可管多部門（待辦乙-4），兩支要一起改 —— 而它們現在讀起來就是同一件事。
    *
-   * 不含自己：職責分離的第一條（ADR 023 §5）—— 自己的單子不會出現在
-   * 自己的待簽清單裡。
+   * Info: (20260820 - Julian) **含自己**（review 第 6 輪 M11）。
+   *
+   * 這一支原本在 `where` 裡帶 `id: { not: managerEmployeeId }`，理由寫的是
+   * 「職責分離的第一條（ADR 023 §5）—— 自己的單子不會出現在自己的待簽清單裡」。
+   * 那個結論是對的，但它是一條**政策**，而政策不屬於 Repository
+   * （`coding_guidelines §1.1`）。與 `managesEmployee` 同一次搬走：
+   * 排除自己的那一步移到 `OvertimeRequestService.listPending`，
+   * 使用者看到的清單完全不變。
+   *
+   * 兩支仍然是同一件事的兩個形狀（單數／複數），
+   * `employee_managed_scope.test.ts` 會確認它們對同一組資料給出一致的答案。
    */
   public async listManagedEmployeeIds(params: {
     accountBookId: string;
@@ -409,7 +410,6 @@ class EmployeeRepository implements IEmployeeRepository {
       where: {
         accountBookId: params.accountBookId,
         departmentId: { in: [...scope] },
-        id: { not: params.managerEmployeeId },
       },
       select: { id: true },
     });

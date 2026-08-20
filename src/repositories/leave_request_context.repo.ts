@@ -1,4 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import {
+  assertConcurrencyRule,
+  concurrencyLimitOf,
+} from "@/repositories/leave_concurrency_invariant";
 import { readConsumableGrants } from "@/repositories/leave_ledger";
 import { WorkDayType } from "@/constants/attendance";
 import { EmployeeHrFunction } from "@/constants/hr_management";
@@ -264,11 +268,24 @@ export class LeaveRequestContextRepository implements ILeaveRequestContext {
     leavePolicyId: string;
     workDates: readonly string[];
   }): Promise<ILeaveConcurrencyStatus[]> {
-    const employee = await prisma.employee.findFirst({
+    /**
+     * Info: (20260820 - Julian) 查不到人＝呼叫端傳了一個不屬於這個帳本的 id
+     * （review 第 6 輪 M12）。
+     *
+     * 原本這裡是一行沒有註解的 `if (employee === null) return []`，而回空陣列
+     * 的語意是「這個人沒有任何併休規則適用」—— **包含 `BLOCK`**。
+     * 也就是說：只要 `employeeId` 對不上，整個併休管制就靜默失效，
+     * 而呼叫端拿到的答案與「規則檢查過了、沒有超限」一模一樣。
+     *
+     * 同一支檔案的 `buildOrgSnapshot` 對同一張表用的是 `findFirstOrThrow`，
+     * 兩種處置在同一個檔案裡相反。這裡改成同樣丟 —— 走到這裡的
+     * `employeeId` 是 service 剛剛解析出來的，查不到就是資料層面的破口，
+     * 而**一道靜默失效的管制比一個錯誤訊息危險得多**。
+     */
+    const employee = await prisma.employee.findFirstOrThrow({
       where: { id: params.employeeId, accountBookId: params.accountBookId },
       select: { departmentId: true },
     });
-    if (employee === null) return [];
 
     const rules = await prisma.leaveConcurrencyRule.findMany({
       where: {
@@ -289,9 +306,33 @@ export class LeaveRequestContextRepository implements ILeaveRequestContext {
         maxConcurrentEmployees: true,
         maxConcurrentRatio: true,
         action: true,
+        // Info: (20260820 - Julian) `assertConcurrencyRule` 的 §38 II 那一條要它
+        leavePolicy: { select: { employerMayReject: true } },
       },
     });
     if (rules.length === 0) return [];
+
+    /**
+     * Info: (20260820 - Julian) 規則本身先過一次判準（review 第 5 輪 M2）。
+     *
+     * schema 檔頭寫著這些約束「由 repository 不變式擋」，而那支不變式
+     * **在 2026-08-20 之前不存在**。最貴的一條是兩欄皆 null：讀取端的
+     * `?? 0` 把上限變成 0 人，於是整個部門每一張假單都超限，
+     * 而畫面上的理由是「同時請假人數已達上限 0 人」。
+     *
+     * 擋在讀取端而不是寫入端，是因為這張表**目前沒有任何寫入路徑**
+     * （見 `leave_concurrency_invariant.ts` 檔頭）—— 讀取是它今天唯一
+     * 咬得到東西的地方。
+     */
+    for (const rule of rules) {
+      assertConcurrencyRule({
+        maxConcurrentEmployees: rule.maxConcurrentEmployees,
+        maxConcurrentRatio: rule.maxConcurrentRatio?.toString() ?? null,
+        action: rule.action as LeaveConcurrencyAction,
+        leavePolicyId: rule.leavePolicyId,
+        employerMayReject: rule.leavePolicy?.employerMayReject ?? null,
+      });
+    }
 
     const headcount = await prisma.employee.count({
       where: {
@@ -320,9 +361,20 @@ export class LeaveRequestContextRepository implements ILeaveRequestContext {
       });
 
       for (const rule of rules) {
-        const limit =
-          rule.maxConcurrentEmployees ??
-          Math.floor(headcount * Number(rule.maxConcurrentRatio ?? 0));
+        /**
+         * Info: (20260820 - Julian) 名額以整數運算得出（review 第 5 輪 M1）。
+         *
+         * 原本是 `Math.floor(headcount * Number(ratio))` —— `90 × 0.7` 在 double
+         * 下是 62.99999999999999，於是 90 人的部門少一個名額。實測 19,800 組
+         * 有 12 組如此，失效方向是把合法的請假擋掉，而畫面只說「已達上限 62 人」。
+         * 推導與清單見 `concurrencyLimitOf` 的檔頭。
+         */
+        const limit = concurrencyLimitOf({
+          headcount,
+          maxConcurrentEmployees: rule.maxConcurrentEmployees,
+          // Info: (20260820 - Julian) Decimal 以字串取出，不經過 double
+          maxConcurrentRatio: rule.maxConcurrentRatio?.toString() ?? null,
+        });
         if (observedCount + 1 > limit) {
           statuses.push({
             workDate,

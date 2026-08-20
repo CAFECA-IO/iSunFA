@@ -125,6 +125,21 @@ export class LeaveService {
      * 銷假徵詢是一個帶壓力的動作（計畫書 §8.5：同意與否由當事人決定，
      * 但發起本身就是壓力），跨部門發起沒有任何組織上的依據。
      */
+    /**
+     * Info: (20260820 - Julian) 不得對自己發起徵詢（review 第 6 輪 M11）。
+     *
+     * 這一條先前**不在這裡**：它靠 `employeeRepo.managesEmployee()` 內部
+     * 「管自己回 false」那一行擋。那一行是職責分離（ADR 023 §5），
+     * 是一條政策判斷，而 `coding_guidelines §1.1` 把
+     * 「這個人有沒有權限做這件事」列為 Repository 唯一的反例。
+     *
+     * 判斷搬到這裡之後，repository 只回答組織圖上的事實。**碼刻意不變**：
+     * 使用者觀察到的行為與先前一模一樣，換的只是誰做的決定。
+     */
+    if (actorEmployeeId === leaveDay.leaveRequest.employeeId) {
+      throw new AppError(API_ERRORS.FO_LEAVE_RECALL_SCOPE);
+    }
+
     const managesTarget = await this.employees.managesEmployee({
       accountBookId,
       managerEmployeeId: actorEmployeeId,

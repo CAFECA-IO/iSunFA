@@ -279,6 +279,22 @@ class InMemoryLedger {
           return existing;
         },
       },
+      /**
+       * Info: (20260820 - Julian) `ledgerActorOf` 要查操作者的姓名工號
+       * （review 第 6 輪 M16）。
+       *
+       * 替身回一個固定的人，而**帳本 id 對不上時回 null** —— 那條路徑
+       * （跨租戶的操作者）在 `ledgerActorOf` 裡是丟例外，
+       * 少了這一段，替身會讓那道防線在測試裡不存在。
+       */
+      employee: {
+        findFirst: async (args: {
+          where: { id: string; accountBookId: string };
+        }) =>
+          args.where.accountBookId === BOOK && args.where.id === ACTOR
+            ? { id: ACTOR, employeeNo: "EMP001", name: "測試操作者" }
+            : null,
+      },
     } as unknown as Prisma.TransactionClient;
   }
 }
@@ -384,6 +400,7 @@ describe("T6 逐批守恆：每一批的餘額等於它自己的分錄之和", (
     const balances = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
     // Info: (20260819 - Julian) 600 分 > 先到期那批的 480 → 必然跨批
     const ok = await writeConsumeForDays(ledger.client, {
+      accountBookId: BOOK,
       balances,
       days: [{ leaveDayId: "day-1", minutes: 600 }],
       actorEmployeeId: ACTOR,
@@ -416,6 +433,7 @@ describe("T6 逐批守恆：每一批的餘額等於它自己的分錄之和", (
   it("跨日扣減時，第二天看得到第一天扣完之後的餘額", async () => {
     const balances = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
     const ok = await writeConsumeForDays(ledger.client, {
+      accountBookId: BOOK,
       balances,
       days: [
         { leaveDayId: "day-1", minutes: 480 },
@@ -442,6 +460,7 @@ describe("T6 逐批守恆：每一批的餘額等於它自己的分錄之和", (
     const before = ledger.entries.length;
     const balances = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
     const ok = await writeConsumeForDays(ledger.client, {
+      accountBookId: BOOK,
       balances,
       days: [{ leaveDayId: "day-x", minutes: 2000 }],
       actorEmployeeId: ACTOR,
@@ -455,6 +474,7 @@ describe("T6 總量守恆：Σ(deltaMinutes) === LeaveBalance.remainingMinutes",
   it("授予、扣減、回補之後總量仍然相等", async () => {
     const balances = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
     await writeConsumeForDays(ledger.client, {
+      accountBookId: BOOK,
       balances,
       days: [
         { leaveDayId: "day-1", minutes: 480 },
@@ -473,6 +493,7 @@ describe("T6 總量守恆：Σ(deltaMinutes) === LeaveBalance.remainingMinutes",
     expectLedgerSelfConsistent();
 
     const restored = await writeRestoreForDay(ledger.client, {
+      accountBookId: BOOK,
       leaveDayId: "day-2",
       actorEmployeeId: ACTOR,
       reason: "銷假",
@@ -496,11 +517,13 @@ describe("T6 總量守恆：Σ(deltaMinutes) === LeaveBalance.remainingMinutes",
   it("回補退回原批，不是重新分配", async () => {
     const balances = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
     await writeConsumeForDays(ledger.client, {
+      accountBookId: BOOK,
       balances,
       days: [{ leaveDayId: "day-1", minutes: 600 }],
       actorEmployeeId: ACTOR,
     });
     await writeRestoreForDay(ledger.client, {
+      accountBookId: BOOK,
       leaveDayId: "day-1",
       actorEmployeeId: ACTOR,
       reason: "銷假",
@@ -514,6 +537,7 @@ describe("T6 總量守恆：Σ(deltaMinutes) === LeaveBalance.remainingMinutes",
 
   it("那一天根本沒有 CONSUME 時回 0，不是「應該回補多少」", async () => {
     const restored = await writeRestoreForDay(ledger.client, {
+      accountBookId: BOOK,
       leaveDayId: "day-never-consumed",
       actorEmployeeId: ACTOR,
       reason: "銷假",
@@ -526,6 +550,7 @@ describe("T6 rebuild 冪等，且重建結果與快取逐欄相同", () => {
   it("連跑三次結果相同，快取也不會漂移", async () => {
     const balances = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
     await writeConsumeForDays(ledger.client, {
+      accountBookId: BOOK,
       balances,
       days: [{ leaveDayId: "day-1", minutes: 300 }],
       actorEmployeeId: ACTOR,
@@ -567,6 +592,7 @@ describe("T6 rebuild 冪等，且重建結果與快取逐欄相同", () => {
   it("同一天重跑會撞上冪等鍵，不會重複入帳", async () => {
     const balances = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
     await writeConsumeForDays(ledger.client, {
+      accountBookId: BOOK,
       balances,
       days: [{ leaveDayId: "day-1", minutes: 240 }],
       actorEmployeeId: ACTOR,
@@ -576,6 +602,7 @@ describe("T6 rebuild 冪等，且重建結果與快取逐欄相同", () => {
     const fresh = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
     await expect(
       writeConsumeForDays(ledger.client, {
+      accountBookId: BOOK,
         balances: fresh,
         days: [{ leaveDayId: "day-1", minutes: 240 }],
         actorEmployeeId: ACTOR,
@@ -757,6 +784,7 @@ describe("T6 第四項：重建連 expiringSoonMinutes 一起重算", () => {
     });
     // Info: (20260820 - Julian) FIFO 先扣 grant-soon（它最早到期）
     await writeConsumeForDays(ledger.client, {
+      accountBookId: BOOK,
       balances,
       days: [{ leaveDayId: "day-1", minutes: 120 }],
       actorEmployeeId: ACTOR,

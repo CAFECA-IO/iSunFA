@@ -15,6 +15,7 @@ import {
   rebuildBalanceWithin,
   sumLedgerMinutes,
   writeBalance,
+  ledgerActorOf,
 } from "@/repositories/leave_ledger";
 
 /**
@@ -158,7 +159,8 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
             entryType: LeaveLedgerEntryType.GRANT,
             deltaMinutes: plan.grantedMinutes,
             grantBalanceAfterMinutes: plan.grantedMinutes,
-            actorEmployeeId: params.actorEmployeeId,
+            // Info: (20260820 - Julian) 操作者三欄一起落地（review 第 6 輪 M16）
+            ...(await ledgerActorOf(tx, params)),
             /**
              * Info: (20260817 - Julian) 以週期起日組鍵（`buildLeaveGrantIdempotencyKey`）。
              * Worker 每日重跑、補跑漏掉的月份、同一秒被觸發兩次 —— 都只會有一筆。
@@ -224,7 +226,8 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
           entryType: LeaveLedgerEntryType.ADJUST,
           deltaMinutes: params.deltaMinutes,
           grantBalanceAfterMinutes: balanceAfter,
-          actorEmployeeId: params.actorEmployeeId,
+          // Info: (20260820 - Julian) 操作者三欄一起落地（review 第 6 輪 M16）
+          ...(await ledgerActorOf(tx, params)),
           reason: params.reason,
           idempotencyKey: params.idempotencyKey,
         },

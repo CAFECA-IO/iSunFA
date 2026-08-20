@@ -407,6 +407,32 @@ const MyLeavePageBody: FC = () => {
         />
       </section>
 
+      {/**
+       * Info: (20260820 - Julian) 手機版的表單入口（review 第 6 輪 M24）。
+       *
+       * ## 被修掉的死路
+       *
+       * 表單先前**只能**從餘額卡片點開（`LeaveBalanceCards` 的 `onSelect`
+       * 是唯一把 `drawerOpen` 設成 true 的地方），而 `balances` 為空時
+       * 一張卡片都不會渲染。桌機沒事 —— `HrFormSheet` 關閉時是
+       * `hidden lg:block`，表單一直在畫面上。**手機上完全打不開**：
+       * 新到職、還沒有任何額度的員工，在手機上送不出任何一張假單，
+       * 包含不需要額度的事假與病假。
+       *
+       * 加班頁一直都有這個入口（`my_overtime_page_body.tsx`），請假頁漏了。
+       *
+       * 不設條件（不是只在 `balances.length === 0` 時才顯示）：
+       * 有額度的人也可能想直接開表單，而一個時有時無的按鈕比沒有按鈕更難用。
+       */}
+      <button
+        type="button"
+        onClick={() => setDrawerOpen(true)}
+        className="flex items-center justify-center gap-1.5 rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 lg:hidden"
+      >
+        <CalendarPlus className="size-4" />
+        {t("hr_management.leave.form_title")}
+      </button>
+
       <HrFormSheet
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}

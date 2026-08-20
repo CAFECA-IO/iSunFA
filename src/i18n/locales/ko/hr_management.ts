@@ -886,6 +886,8 @@ export const hrManagement = {
     error_day_already_active: "해당 날짜에 이미 유효한 휴가 신청이 있습니다",
     error_concurrency_exceeded:
       "그 기간에 같은 부서의 휴가자가 상한에 도달했습니다. 상급자와 협의해 일정을 조정하세요",
+    error_concurrency_rule_invalid:
+      "이 장부의 동시 휴가 상한 규칙에 적용 가능한 상한이 없어 확인할 수 없습니다. 인사팀에 규칙 수정을 요청하세요.",
     error_policy_not_found:
       "이 휴가 종류는 존재하지 않거나 비활성화되었습니다. 다시 선택하세요",
     error_self_approval: "본인이 제출한 신청은 결재할 수 없습니다",
@@ -1000,6 +1002,8 @@ export const hrManagement = {
     decided_granted: "보상휴가 {{count}}건을 부여했습니다",
     unapproved_title: "미승인 시간대",
     unapproved_empty: "승인 범위 밖의 체류 시간이 없습니다",
+    unapproved_team_empty:
+      "이 기간 동안 팀원에게 승인 범위 밖의 재실 시간이 없습니다.",
     unapproved_hint:
       "어떤 신청에도 포함되지 않은 체류 시간입니다. 신청 누락일 수도, 그저 조금 더 머문 것일 수도 있습니다 —— 판단은 관리자의 몫입니다.",
     unapproved_range_days: "최근 {{days}}일",
@@ -1022,6 +1026,10 @@ export const hrManagement = {
       "결재 중에 인사팀이 이 신청을 천재·사변(§32 IV)으로 인정하여 전 구간이 배액 지급으로 바뀌었습니다. 새로 고침하여 금액을 확인한 뒤 승인하세요.",
     error_emergency_revoked_midway:
       "결재 중에 인사팀이 이 신청의 천재·사변(§32 IV) 인정을 취소하여 전 구간이 일반 연장근로 할증으로 돌아갔습니다. 새로 고침하여 금액을 확인한 뒤 승인하세요.",
+    error_day_length_unknown:
+      "이 직원의 1일 소정근로시간을 산출할 수 없어 보상휴가 전환도 수당 지급도 불가능합니다. 인사팀에 근무 일정 등록을 요청하세요.",
+    error_agreement_record_required:
+      "월 상한을 54시간으로 완화하려면 기록이 필요합니다(§32 III): 회의록 링크와 동의한 날짜를 입력하세요.",
     error_emergency_already_declared:
       "이 신청에는 이미 §32 IV 인정이 있습니다. 새 신고를 기록하기 전에 기존 인정을 취소하세요.",
     error_emergency_not_declared:

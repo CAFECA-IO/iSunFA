@@ -60,6 +60,12 @@ export async function GET(
         actorEmployeeId: actor.id,
         employeeId: parsed.data.employeeId ?? actor.id,
         month: parsed.data.month,
+        /**
+         * Info: (20260820 - Julian) 「現在」由 route 讀一次再傳下去
+         * （review 第 5 輪 M5）。當月的滾動三個月窗要夾到今天，
+         * 否則左端會被推到未來的月底去算，反而丟掉最舊的那幾天。
+         */
+        observedAt: new Date(),
       }),
     );
   } catch (error) {
