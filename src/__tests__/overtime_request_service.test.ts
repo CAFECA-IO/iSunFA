@@ -613,6 +613,20 @@ describe("declareEmergency —— §32 IV 的認定閘", () => {
   // Info: (20260820 - Julian) 報備當天稍晚，用來釘住「不得在未來」那一側
   const OBSERVED_AT = new Date("2026-08-15T20:00:00+08:00");
 
+  /**
+   * Info: (20260820 - Julian) `REPORT.reportedAt` 換算之後**應該**是哪個時點。
+   *
+   * 寫成帶時區的字面值，**不可以**寫成 `new Date(REPORT.reportedAt)` ——
+   * 後者對一個不帶時區的字串（`"2026-08-15T11:00"`）會用**執行 jest 的那台
+   * 機器的時區**去解析。在 UTC 的 CI 上是 `11:00Z`，在開發者的台北筆電上是
+   * `03:00Z`，而被測程式一律用政策時區算出 `03:00Z`。
+   *
+   * 也就是說那種寫法會讓這條測試在台北綠、在 CI 紅 —— 而它要驗的東西
+   * （service 有沒有用政策時區換算）在兩邊都沒有被驗到。
+   * 這正是本輪修掉的那個缺陷本身，只是搬進了斷言裡。
+   */
+  const REPORTED_AT_INSTANT = new Date("2026-08-15T11:00:00+08:00");
+
   const declare = (overrides: { actorEmployeeId?: string } = {}) =>
     service.declareEmergency({
       accountBookId: BOOK,
@@ -628,7 +642,7 @@ describe("declareEmergency —— §32 IV 的認定閘", () => {
       accountBookId: BOOK,
       requestId: "ot-1",
       emergencyReportUrl: REPORT.reportUrl,
-      emergencyReportedAt: new Date(REPORT.reportedAt),
+      emergencyReportedAt: REPORTED_AT_INSTANT,
       emergencyDeclaredByEmployeeId: HR_ADMIN,
     });
   });
@@ -799,8 +813,10 @@ describe("declareEmergency —— §32 IV 的認定閘", () => {
   it("牆上時鐘依政策時區換算成時點", async () => {
     await declare();
     expect(repo.declared).toMatchObject({
-      emergencyReportedAt: new Date("2026-08-15T11:00:00+08:00"),
+      emergencyReportedAt: REPORTED_AT_INSTANT,
     });
+    // Info: (20260820 - Julian) 明寫出 UTC 的樣子，讓「差八小時」一眼看得出來
+    expect(REPORTED_AT_INSTANT.toISOString()).toBe("2026-08-15T03:00:00.000Z");
   });
 });
 
