@@ -161,7 +161,8 @@ interface IOvertimeCase {
     /** Info: (20260819 - Julian) 認定者的工號。必須具 HR_ADMIN，否則 service 丟 403 */
     declaredBy: string;
     reportUrl: string;
-    reportedAt: Date;
+    /** Info: (20260820 - Julian) 牆上時鐘 `"YYYY-MM-DDTHH:mm"`（review 第 4 輪第 2 條） */
+    reportedAt: string;
   };
   note: string;
 }
@@ -379,8 +380,12 @@ const OVERTIME_CASES: IOvertimeCase[] = [
       declaredBy: "EMP002",
       reportUrl:
         "https://demo.isunfa.example/labor-filings/2026-0815-emergency.pdf",
-      // Info: (20260819 - Julian) 加班開始（09:00）後兩小時報備，在 §32 IV 的 24 小時內
-      reportedAt: at(OT_DECLARED_DAY, 11, 0),
+      /**
+       * Info: (20260820 - Julian) 牆上時鐘字串（review 第 4 輪第 2 條）。
+       * 加班開始（09:00）後兩小時報備，在 §32 IV 的 24 小時內。
+       * 政策時區的換算在 service，seed 與前端都不自己做。
+       */
+      reportedAt: `${OT_DECLARED_DAY}T11:00`,
     },
     decidedBy: "EMP005",
     decision: "approve",
@@ -817,11 +822,13 @@ async function seedOvertimeCases(): Promise<void> {
         requestId,
         actorEmployeeId: declarerEmployeeId,
         reportUrl: overtimeCase.emergency.reportUrl,
-        reportedAt: overtimeCase.emergency.reportedAt.toISOString(),
+        reportedAt: overtimeCase.emergency.reportedAt,
+        // Info: (20260820 - Julian) 「現在」由呼叫端注入，service 不自取 Date.now()
+        observedAt: new Date(),
       });
       console.log(
         `   ${overtimeCase.label} §32 IV 認定：${overtimeCase.emergency.declaredBy} 登記報備 ` +
-          `${overtimeCase.emergency.reportedAt.toISOString()}`,
+          `${overtimeCase.emergency.reportedAt}`,
       );
     }
 

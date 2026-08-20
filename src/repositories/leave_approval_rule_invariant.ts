@@ -69,6 +69,22 @@ export function assertRuleRangesDisjoint(
         `minDays=${rule.minDays}`,
       );
     }
+    /**
+     * Info: (20260820 - Julian) 門檻必須是**可對帳的十進位**（review 第 4 條）。
+     *
+     * `compareDaysTo` 走 `exactRationalOf`，而它對指數記號直接丟
+     * （B5 的規矩：一個沒有辦法用手還原成分數的門檻，事後對不了帳）。
+     * `1e-7` 通得過 `min(0).max(366)`、通得過這裡原本的 `isFinite`、
+     * 也通得過區間不重疊的檢查，落地之後 `String()` 寫成 `"1e-7"`、
+     * 讀回來仍是 `1e-7` —— 而該帳本的每一次試算與送出從此 500。
+     *
+     * 擋在這裡而不是只擋在 validator：seed 與資料遷移不經過 validator，
+     * 而這一列一旦寫進去，壞的不是這一列，是整個帳本的假單功能。
+     */
+    assertPlainDecimalThreshold("minDays", rule.minDays);
+    if (rule.maxDays !== null) {
+      assertPlainDecimalThreshold("maxDays", rule.maxDays);
+    }
     if (rule.maxDays !== null && rule.maxDays <= rule.minDays) {
       throw new LeaveApprovalRuleInvariantError(
         "maxDays must be greater than minDays; a zero-width range can never match",
@@ -124,6 +140,37 @@ export function assertRuleRangesDisjoint(
     throw new LeaveApprovalRuleInvariantError(
       "the last range must be unbounded; otherwise the longest leaves would need no approval at all",
       `lastRange=[${last.minDays}, ${last.maxDays})`,
+    );
+  }
+}
+
+/**
+ * Info: (20260820 - Julian) 天數門檻的十進位形狀（review 第 4 條）。
+ *
+ * 兩件事：不得是指數記號（`String(1e-7)` 就是 `"1e-7"`，而 JS 對絕對值
+ * 小於 `1e-6` 的數字一律用指數記號），且小數位不得超過三位。
+ *
+ * 三位不是隨便挑的：簽核門檻是**寫在人事規章裡的一個數字** ——
+ * 半天（0.5）、四分之一天（0.25）都在三位之內，而 0.0001 天（8.6 秒）
+ * 作為「這種長度以上要多簽一關」的界線沒有任何意義。
+ * 上界擋掉的是誤植與惡意，不是需求。
+ */
+const MAX_THRESHOLD_DECIMALS = 3;
+
+function assertPlainDecimalThreshold(field: string, value: number): void {
+  const text = String(value);
+  if (text.includes("e") || text.includes("E")) {
+    throw new LeaveApprovalRuleInvariantError(
+      `${field} must be a plain decimal; a threshold in exponential notation cannot be reconciled by hand, and the approval engine refuses to compare against it`,
+      `${field}=${text}`,
+    );
+  }
+  const dot = text.indexOf(".");
+  const decimals = dot === -1 ? 0 : text.length - dot - 1;
+  if (decimals > MAX_THRESHOLD_DECIMALS) {
+    throw new LeaveApprovalRuleInvariantError(
+      `${field} must have at most ${MAX_THRESHOLD_DECIMALS} decimal places; a boundary finer than that is not a rule anyone wrote down`,
+      `${field}=${text}`,
     );
   }
 }

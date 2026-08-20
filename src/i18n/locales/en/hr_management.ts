@@ -1035,6 +1035,8 @@ export const hrManagement = {
       "This request already carries an Article 32 IV determination. Revoke the existing filing before recording a new one.",
     error_emergency_not_declared:
       "This request carries no Article 32 IV determination to revoke.",
+    error_reported_at_out_of_range:
+      "The filing time cannot be in the future, nor earlier than the day the overtime took place. Check the time on the filing record.",
     error_comp_expiry_unset:
       "The company has not agreed a compensatory-leave period yet, so overtime cannot be converted. Pick overtime pay, or ask HR to set it.",
     error_day_not_scheduled:

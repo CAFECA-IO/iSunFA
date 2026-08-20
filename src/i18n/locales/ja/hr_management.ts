@@ -1016,6 +1016,8 @@ export const hrManagement = {
       "この申請には既に §32 IV の認定があります。新しい届出を記録する前に、既存の認定を取り消してください。",
     error_emergency_not_declared:
       "この申請には取り消せる §32 IV の認定がありません。",
+    error_reported_at_out_of_range:
+      "届出日時に未来、または残業日より前の時刻は指定できません。届出記録の時刻をご確認ください。",
     error_comp_expiry_unset:
       "代休の期限が未協定のため振替できません。残業手当を選ぶか、人事に設定を依頼してください。",
     error_day_not_scheduled:

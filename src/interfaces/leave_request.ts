@@ -105,6 +105,19 @@ export enum LeaveApprovalUnresolvedReason {
   NO_OTHER_HR = "NO_OTHER_HR",
   // Info: (20260817 - Julian) 指名的簽核者已不在職或不在本帳本
   SPECIFIC_EMPLOYEE_MISSING = "SPECIFIC_EMPLOYEE_MISSING",
+  /**
+   * Info: (20260820 - Julian) 規則的天數門檻本身不是一個可對帳的十進位數（review 第 4 條）。
+   *
+   * `compareDaysTo` 走 `exactRationalOf`，而它對指數記號直接丟
+   * （B5 立的規矩：一個沒有辦法用手還原成分數的門檻，事後對不了帳）。
+   * 那個丟出來的 `LeaveRuleError` 原本一路衝出去變成 500 ——
+   * 該帳本的每一次試算與送出全部掛掉，而成因是一列設定資料。
+   *
+   * 現在歸到這裡：**這是設定缺口，不是故障**。與其餘 unresolved 一樣的處置
+   * ——試算照常顯示原因、送出拒絕（`CF_LEAVE_APPROVAL_CHAIN_UNRESOLVED`），
+   * 而**不是自動核准**（ADR 023 §3）。
+   */
+  MALFORMED_RULE_THRESHOLD = "MALFORMED_RULE_THRESHOLD",
 }
 
 /**

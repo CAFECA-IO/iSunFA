@@ -1541,6 +1541,20 @@ export const API_ERRORS = {
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
 
+  /**
+   * Info: (20260820 - Julian) 報備時點落在可能的區間之外（review 第 4 輪第 2 條）。
+   *
+   * 不共用 `VA_INVALID_INPUT_DATA`：那一句說的是「格式不對」，而這裡格式
+   * 完全正確 —— 是那個時刻不可能是這次加班的報備（在未來，或早於加班那一天）。
+   * 兩者的下一步不同：一個是重打，一個是回去確認公文上的時間。
+   */
+  VA_OVERTIME_REPORTED_AT_OUT_OF_RANGE: {
+    code: "VA000073",
+    message:
+      "The Article 32 IV filing time must not be in the future, nor earlier than the day the overtime took place",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
   VA_OVERTIME_EMERGENCY_NOT_DECLARED: {
     code: "VA000072",
     message:

@@ -75,6 +75,7 @@ export async function POST(
         actorEmployeeId: actor.id,
         reportUrl: parsed.data.reportUrl,
         reportedAt: parsed.data.reportedAt,
+        observedAt: new Date(),
       }),
     );
   } catch (error) {

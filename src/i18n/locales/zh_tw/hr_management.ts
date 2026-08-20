@@ -984,6 +984,8 @@ export const hrManagement = {
     error_emergency_already_declared:
       "這張單已經有一份 §32 IV 的認定。要記錄新的報備，請先撤回既有的那一份。",
     error_emergency_not_declared: "這張單沒有可撤回的 §32 IV 認定。",
+    error_reported_at_out_of_range:
+      "報備時間不能是未來，也不能早於加班當天。請對照報備紀錄上的時間。",
     error_comp_expiry_unset:
       "公司尚未協商補休期限，因此換不了補休。請改選加班費，或請人資設定。",
     error_day_not_scheduled:

@@ -31,7 +31,37 @@ const nodeKindSchema = z.enum([
  * 是「留職停薪」，而那是另一個制度 —— 用同一張假單表達它，
  * 會讓額度扣抵去扣一個不存在的批次。
  */
-const daysSchema = z.number().min(0).max(366);
+/**
+ * Info: (20260820 - Julian) 必須是**可對帳的十進位**（review 第 4 條）。
+ *
+ * 原本只有 `min(0).max(366)`，於是 `1e-7` 通過 —— 而 `String(1e-7)` 是
+ * `"1e-7"`（JS 對絕對值小於 `1e-6` 的數字一律用指數記號），落地又讀回之後，
+ * `compareDaysTo` 的 `exactRationalOf` 對它直接丟 `LeaveRuleError`。
+ * 那個丟出來的地方**不在** service 那個「`LeaveRuleError` → 400」的 try 裡，
+ * 於是該帳本的每一次試算與送出都變成 500。改成精確比較之前它只是一次
+ * 數值比較、不會炸 —— 這是新核心引進的迴歸。
+ *
+ * 小數位上限三位：簽核門檻是寫在人事規章裡的數字，半天（0.5）與
+ * 四分之一天（0.25）都在三位之內。同一條規矩在
+ * `assertPlainDecimalThreshold` 再擋一次（seed 與資料遷移不經過這裡）。
+ */
+const MAX_THRESHOLD_DECIMALS = 3;
+
+const daysSchema = z
+  .number()
+  .min(0)
+  .max(366)
+  .refine((value) => !String(value).includes("e") && !String(value).includes("E"), {
+    message: "days must be a plain decimal, not exponential notation",
+  })
+  .refine(
+    (value) => {
+      const text = String(value);
+      const dot = text.indexOf(".");
+      return (dot === -1 ? 0 : text.length - dot - 1) <= MAX_THRESHOLD_DECIMALS;
+    },
+    { message: `days must have at most ${MAX_THRESHOLD_DECIMALS} decimal places` },
+  );
 
 const ruleStepSchema = z.object({
   nodeKind: nodeKindSchema,

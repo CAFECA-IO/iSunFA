@@ -2,6 +2,7 @@ import {
   compareDaysTo,
   exactDaysToDecimalString,
   IExactDays,
+  LeaveRuleError,
 } from "@/lib/leave_entitlement_rules";
 import { LeaveApprovalNodeKind } from "@/constants/leave_policy";
 import {
@@ -44,7 +45,30 @@ const ESCALATION_LADDER: readonly LeaveApprovalNodeKind[] = [
 export function resolveApprovalChain(
   input: IApprovalChainInput,
 ): IApprovalChainResolution {
-  const rule = selectRule(input.rules, input.leavePolicyId, input.totalDays);
+  /**
+   * Info: (20260820 - Julian) 門檻壞掉是**設定缺口**，不是故障（review 第 4 條）。
+   *
+   * `compareDaysTo` 對指數記號的門檻會丟 `LeaveRuleError`（B5 的規矩：
+   * 還原不回分數的數字不能拿來比對）。而這支函式的呼叫點在 `buildPlan`
+   * 的 `:752`，**不在**上面那個「`LeaveRuleError` → 400」的 try 裡面 ——
+   * 於是一列 `minDays = 1e-7` 的規則會讓該帳本的試算與送出全部 500。
+   *
+   * 收在這裡而不是在 service 再包一層 try：這支函式的契約就是
+   * 「展得開回步驟，展不開回原因」，而門檻讀不懂正是一種展不開。
+   * 在外面包 try 的話，每一個呼叫端都要記得包（而 `preview` 與 `submit`
+   * 是兩個呼叫端）。
+   */
+  let rule: IApprovalRuleWithSteps | null;
+  try {
+    rule = selectRule(input.rules, input.leavePolicyId, input.totalDays);
+  } catch (error) {
+    if (!(error instanceof LeaveRuleError)) throw error;
+    return {
+      ok: false,
+      reason: LeaveApprovalUnresolvedReason.MALFORMED_RULE_THRESHOLD,
+      detail: `a rule threshold cannot be read as a plain decimal: ${error.message}`,
+    };
+  }
   if (rule === null) {
     return {
       ok: false,

@@ -119,6 +119,47 @@ describe("assertGrantSource — 判準必須獨立於乘法實作", () => {
       assertGrantSource({ ...seniorityGrant, grantedMinutes: 3360.5 }),
     ).toThrow(LeaveGrantInvariantError);
   });
+
+  /**
+   * Info: (20260820 - Julian) 訊息要說對**是哪一邊錯**（review 第 4 輪第 1 條）。
+   *
+   * 這兩條先前不存在，而缺陷是真的：兩個方向的診斷字串**互相顛倒**——
+   * 463（多給，正是 B6 的形狀）會說 `granted too few`。
+   * 判準本身沒錯，擋得住；錯的是擋住之後說的話，而那句話會把查修的人
+   * 推向相反的方向 —— 他會去找「為什麼算少了」，而實際上是算多了。
+   *
+   * 只驗 `toThrow` 的話這個缺陷永遠不會紅：上面每一條都通過。
+   * 診斷訊息是這條不變式對外的**唯一**產出（它擋下之後沒有別的東西可看），
+   * 因此它與判準一樣需要被釘住。
+   */
+  it.each([
+    ["多給一分鐘", 463, "granted one minute too many"],
+    ["少給一分鐘", 461, "granted too few"],
+  ])("%s 的訊息說的是同一個方向", (_label, grantedMinutes, phrase) => {
+    expect(() =>
+      assertGrantSource({
+        ...seniorityGrant,
+        grantedDays: 1.1,
+        dayEquivalentMinutes: 420,
+        grantedMinutes,
+      }),
+    ).toThrow(phrase);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 反面：兩句話不得同時出現，也不得互換。
+   * 只驗 `toThrow(phrase)` 的話，一個把兩句話都塞進訊息的實作會通過。
+   */
+  it("多給時不會同時說少給", () => {
+    expect(() =>
+      assertGrantSource({
+        ...seniorityGrant,
+        grantedDays: 1.1,
+        dayEquivalentMinutes: 420,
+        grantedMinutes: 463,
+      }),
+    ).not.toThrow("granted too few");
+  });
 });
 
 /**

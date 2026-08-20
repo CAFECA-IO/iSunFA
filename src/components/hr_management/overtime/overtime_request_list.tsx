@@ -509,9 +509,18 @@ const OvertimeRequestList: FC<{
                               overtimeRequestEmergencyApi(item.id),
                               {
                                 reportUrl: emergencyUrl[item.id] ?? "",
-                                reportedAt: new Date(
-                                  emergencyAt[item.id] ?? "",
-                                ).toISOString(),
+                                /**
+                                 * Info: (20260820 - Julian) 原樣送出，**不在這裡換算**
+                                 * （review 第 4 輪第 2 條）。
+                                 *
+                                 * `datetime-local` 給的就是 `"YYYY-MM-DDTHH:mm"`
+                                 * 牆上時鐘。原本這裡是 `new Date(值).toISOString()`
+                                 * —— 那個 `new Date` 用的是**這台裝置**的時區，
+                                 * 於是人資筆電的時區決定了 §32 IV 的
+                                 * 「二十四小時內」怎麼算。政策時區由伺服器決定
+                                 * （同假單起訖的既有處置）。
+                                 */
+                                reportedAt: emergencyAt[item.id] ?? "",
                               },
                               "hr_management.overtime.error_declare_emergency",
                             )

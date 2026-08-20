@@ -1,7 +1,13 @@
 import { describe, it, expect } from "@jest/globals";
+import { readFileSync } from "fs";
+import { join } from "path";
+import ts from "typescript";
 import { ApiError } from "@/lib/utils/request";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
-import { errorI18nKeyOf } from "@/lib/utils/attendance_error_message";
+import {
+  errorI18nKeyOf,
+  SHARED_ATTENDANCE_ERROR_I18N_KEY,
+} from "@/lib/utils/attendance_error_message";
 import { LEAVE_ERROR_I18N_KEY } from "@/lib/utils/leave_error_message";
 import { OVERTIME_ERROR_I18N_KEY } from "@/lib/utils/overtime_error_message";
 import { hrManagement as en } from "@/i18n/locales/en/hr_management";
@@ -57,6 +63,17 @@ const lookup = (
  *
  * 寫死一份名單而不是從對照表自己算 —— 從被測物推導期望值，等於問它
  * 「你等於你自己嗎」（checklist §1.9）。刪掉任何一筆，下面的集合相等就會紅。
+ *
+ * Info: (20260820 - Julian) 但這份名單當初是**照著對照表抄下來的**（review 第 4 輪第 5 條）。
+ *
+ * 抄下來的期望值只換了一個放置地點，沒有換來源 —— 它擋得住「日後有人刪掉
+ * 某一筆」，擋不住「當初就漏登記」，而後者正是這張表最可能出錯的方向。
+ * 症狀完全一樣：使用者被擋下時看到的是通用的「操作失敗」，
+ * 而不是「這一季超過 138 小時」。
+ *
+ * 因此下面多了一組 `describe`：**從 service 實際會丟的碼推導**期望的覆蓋，
+ * 用 TypeScript AST 掃 `API_ERRORS.X`。那一組的來源是**產品程式碼**，
+ * 與這份名單完全獨立 —— 兩者都在，才同時擋得住「刪一筆」與「漏一筆」。
  */
 const EXPECTED_LEAVE_CODES: readonly string[] = [
   API_ERRORS.VA_LEAVE_INSUFFICIENT_BALANCE.code,
@@ -86,6 +103,7 @@ const EXPECTED_OVERTIME_CODES: readonly string[] = [
   API_ERRORS.VA_OVERTIME_RECLASSIFIED_MIDWAY.code,
   API_ERRORS.VA_OVERTIME_EMERGENCY_ALREADY_DECLARED.code,
   API_ERRORS.VA_OVERTIME_EMERGENCY_NOT_DECLARED.code,
+  API_ERRORS.VA_OVERTIME_REPORTED_AT_OUT_OF_RANGE.code,
   API_ERRORS.VA_OVERTIME_COMP_EXPIRY_UNSET.code,
   API_ERRORS.FO_OVERTIME_NOT_APPLICANT.code,
   API_ERRORS.VA_OVERTIME_WITHDRAW_REASON_REQUIRED.code,
@@ -178,5 +196,206 @@ describe("errorI18nKeyOf 真的會查這兩張表", () => {
         OVERTIME_ERROR_I18N_KEY,
       ),
     ).not.toBe("fallback.key");
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) **覆蓋**：service 丟得出來的碼，畫面都要說得出話（review 第 4 輪第 5 條）。
+ *
+ * ## 為什麼上面那組不夠
+ *
+ * 上面驗的是「對照表 == 一份手抄名單」。名單是照著表抄的，於是任何**當初
+ * 就沒登記**的碼在兩邊同時缺席 —— 缺口被凍結成「正確」。
+ * 那是 checklist §1.9 的同一個形狀，只是多繞了一層。
+ *
+ * ## 判準的來源改成產品程式碼
+ *
+ * 掃 leave / overtime 的 service 檔，把出現過的 `API_ERRORS.X` 全部撈出來，
+ * 要求每一個都落在三張表之一（假單、加班、全模組共用），
+ * 否則必須列進下面的豁免名單並寫明理由。
+ *
+ * 豁免必須**逐筆具名**而不是用前綴略過：`VA_INVALID_INPUT_DATA` 該豁免、
+ * `VA_LEAVE_ON_NON_WORKING_DAY` 不該，而它們的前綴一樣。
+ */
+const LEAVE_OVERTIME_SERVICES: readonly string[] = [
+  "src/services/leave_request.service.ts",
+  "src/services/leave_balance.service.ts",
+  "src/services/leave.service.ts",
+  "src/services/leave_visibility.ts",
+  "src/services/leave_policy.service.ts",
+  "src/services/leave_approval_rule.service.ts",
+  "src/services/overtime_request.service.ts",
+  "src/services/overtime_policy.service.ts",
+  "src/services/overtime_visibility.ts",
+  "src/services/overtime_report.service.ts",
+];
+
+/**
+ * Info: (20260820 - Julian) 刻意不登記在假勤對照表裡的碼，逐筆說明。
+ *
+ * 這份名單存在的意義是**逼出理由**：把一個碼加進來要寫一句話說服自己，
+ * 而「因為它現在沒有文案」不是一句說得過去的話。
+ */
+const EXEMPT: Readonly<Record<string, string>> = {
+  // Info: (20260820 - Julian) 通用的輸入格式錯誤。畫面上的下一步就是「重打一次」，不需要專屬文案
+  VA_INVALID_INPUT_DATA: "格式錯誤，通用文案已足夠",
+  // Info: (20260820 - Julian) 500。使用者做不了任何事，且訊息不該洩漏底層原因
+  IS_DB_FAILED: "伺服器端故障，不是使用者能處置的事",
+  // Info: (20260820 - Julian) 429 與主管閘由 SHARED_ATTENDANCE_ERROR_I18N_KEY 接住
+  IS_RATE_LIMITED: "全模組共用表已登記",
+  FO_ATTENDANCE_SUPERVISOR_ONLY: "全模組共用表已登記",
+  /**
+   * Info: (20260820 - Julian) 以下這些的呼叫端不是假單／加班的畫面，
+   * 而是人事設定與排班那幾支（它們有自己的錯誤對照）。列在這裡是為了讓
+   * 「為什麼不在這兩張表裡」有一個寫得出來的答案，不是靠讀者自己推。
+   */
+  NF_EMPLOYEE: "人事設定畫面的錯誤，不在假勤兩張表的範圍",
+  NF_EMPLOYEE_FOR_USER: "身分解析失敗，屬登入流程",
+  NF_SHIFT_PATTERN: "排班設定畫面的錯誤",
+  CF_SCHEDULE_DAY_CONFLICT: "排班設定畫面的錯誤",
+  VA_ATTENDANCE_RANGE_TOO_LARGE: "出勤查詢的錯誤，屬簽到系統那張表",
+  FO_HR_FUNCTION_REQUIRED: "人事職能閘，四個模組共用；文案屬人事設定畫面",
+  FO_NO_PERMISSION_TO_VIEW_THIS: "可見範圍閘，四個模組共用",
+};
+
+/**
+ * Info: (20260820 - Julian) **端點還沒有畫面**的碼（review 第 4 輪第 5 條）。
+ *
+ * 這 17 個碼是新的覆蓋檢查第一次跑出來的東西 —— 它們先前同時缺席於
+ * 對照表與那份手抄名單，於是缺口被凍結成「正確」。
+ *
+ * 為什麼不現在就補文案：它們的端點**全部沒有畫面**（假別設定、簽核規則設定、
+ * 額度調整、銷假四組都只有 API）。替一個還沒設計出來的畫面寫五個語系的
+ * 使用者文案，寫出來的東西沒有人驗得了對不對 —— 那正是這個 review 系列
+ * 反覆在抓的「看起來像有記載」。
+ *
+ * ## 這個豁免怎麼自己失效
+ *
+ * 每一筆對應一個**還不存在的** API 常數名。`src/constants/leave_api.ts` 的
+ * 註解自己立了規矩：「帶路徑參數的端點寫成函式，避免呼叫端自己接字串」——
+ * 因此畫面一旦要呼叫那個端點，那個常數就會出現，而下面的
+ * 「畫面出現時豁免要失效」那一條會當場變紅，並指名是哪幾個碼該補文案。
+ *
+ * 這道機制**擋不住**「有人不照規矩、在畫面裡直接接字串」。那時它會靜默失效，
+ * 而這句話就是它的說明書 —— 一個沒有寫下限制的守衛，讀的人會以為它守得更多。
+ *
+ * ToDo: (20260820 - Julian) 四組畫面各自落地時，把對應的碼從這裡搬到
+ * `LEAVE_ERROR_I18N_KEY` 並補五個語系。
+ */
+const PENDING_SCREEN: Readonly<Record<string, string>> = {
+  // Info: (20260820 - Julian) 假別設定（L2–L6）
+  CF_LEAVE_POLICY_CODE_TAKEN: "leavePolicyApi",
+  VA_LEAVE_POLICY_LOCKED_FIELD: "leavePolicyApi",
+  VA_LEAVE_POLICY_MERGE_CYCLE: "leavePolicyApi",
+  VA_LEAVE_TIER_TABLE_INVALID: "leavePolicyApi",
+  VA_LEAVE_TIER_NOT_APPLICABLE: "leavePolicyApi",
+  // Info: (20260820 - Julian) 簽核規則設定
+  VA_LEAVE_APPROVAL_RULE_INVALID: "leaveApprovalRuleApi",
+  VA_LEAVE_GENERAL_RULE_REQUIRED: "leaveApprovalRuleApi",
+  // Info: (20260820 - Julian) 額度調整與授予（L9 / L33）
+  NF_LEAVE_GRANT: "leaveBalanceAdjustApi",
+  VA_LEAVE_NO_SHIFT_FOR_ACCRUAL: "leaveBalanceAccrueApi",
+  // Info: (20260820 - Julian) 銷假（畫面目前只顯示 recalledAt，沒有發起銷假的動作）
+  CF_LEAVE_RECALL_ANSWERED: "leaveRecallApi",
+  CF_LEAVE_RECALL_PENDING: "leaveRecallApi",
+  FO_LEAVE_RECALL_NOT_OWNER: "leaveRecallApi",
+  FO_LEAVE_RECALL_SCOPE: "leaveRecallApi",
+  NF_LEAVE_RECALL: "leaveRecallApi",
+  NF_LEAVE_DAY: "leaveRecallApi",
+  VA_LEAVE_NOT_RECALLABLE: "leaveRecallApi",
+  VA_LEAVE_RECALL_PAST: "leaveRecallApi",
+};
+
+describe("覆蓋：service 丟得出來的碼都要有文案", () => {
+  const thrownCodes = (): Set<string> => {
+    const found = new Set<string>();
+    for (const relative of LEAVE_OVERTIME_SERVICES) {
+      const full = join(process.cwd(), relative);
+      const source = ts.createSourceFile(
+        full,
+        readFileSync(full, "utf8"),
+        ts.ScriptTarget.Latest,
+        true,
+        ts.ScriptKind.TS,
+      );
+      const visit = (node: ts.Node): void => {
+        if (
+          ts.isPropertyAccessExpression(node) &&
+          ts.isIdentifier(node.expression) &&
+          node.expression.text === "API_ERRORS"
+        ) {
+          found.add(node.name.text);
+        }
+        ts.forEachChild(node, visit);
+      };
+      ts.forEachChild(source, visit);
+    }
+    return found;
+  };
+
+  /**
+   * Info: (20260820 - Julian) 掃描根確實掃到東西 —— 一支掃到零個碼的測試
+   * 永遠是綠的，而它綠的時候看起來與真的覆蓋了一模一樣
+   * （同 `leave_policy_no_code_branching.test.ts` 的那一條）。
+   */
+  it("掃描根確實掃到 service 丟出來的碼", () => {
+    const codes = thrownCodes();
+    expect(codes.size).toBeGreaterThan(30);
+    expect(codes.has("VA_OVERTIME_EXCEEDS_QUARTERLY_LIMIT")).toBe(true);
+    expect(codes.has("VA_LEAVE_INSUFFICIENT_BALANCE")).toBe(true);
+  });
+
+  it("每一個丟得出來的碼，要嘛有文案、要嘛在豁免名單裡", () => {
+    const registered = new Set<string>([
+      ...Object.keys(LEAVE_ERROR_I18N_KEY),
+      ...Object.keys(OVERTIME_ERROR_I18N_KEY),
+      ...Object.keys(SHARED_ATTENDANCE_ERROR_I18N_KEY),
+    ]);
+
+    const uncovered = [...thrownCodes()]
+      .filter((name) => !(name in EXEMPT) && !(name in PENDING_SCREEN))
+      .filter((name) => {
+        const def = (API_ERRORS as Record<string, { code: string } | undefined>)[
+          name
+        ];
+        return def !== undefined && !registered.has(def.code);
+      })
+      .sort();
+
+    expect(uncovered).toEqual([]);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 豁免名單不得腐爛：列了一個 service 根本不丟的碼，
+   * 代表它被刪掉了或改名了，而豁免會安靜地留著替下一個同名的碼開門。
+   */
+  it("豁免名單裡的每一個碼都真的還在被丟", () => {
+    const thrown = thrownCodes();
+    const stale = [...Object.keys(EXEMPT), ...Object.keys(PENDING_SCREEN)]
+      .filter((name) => name !== "IS_RATE_LIMITED")
+      .filter((name) => !thrown.has(name))
+      .sort();
+    expect(stale).toEqual([]);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 畫面出現時，豁免要**當場失效**。
+   *
+   * 判準是那個端點的 API 常數有沒有出現在 `src/constants/leave_api.ts` ——
+   * 那個檔案自己立了「端點寫成常數／函式，不讓呼叫端接字串」的規矩，
+   * 因此畫面要呼叫它就得先加常數。加了，這條就紅，並指名該補哪幾個碼。
+   *
+   * 訊息裡帶上碼與常數名，是因為紅的時候看到的人多半不是寫下這份豁免的人。
+   */
+  it("豁免所依賴的「端點還沒有畫面」仍然成立", () => {
+    const apiConstants = readFileSync(
+      join(process.cwd(), "src", "constants", "leave_api.ts"),
+      "utf8",
+    );
+    const nowReachable = Object.entries(PENDING_SCREEN)
+      .filter(([, apiName]) => apiConstants.includes(apiName))
+      .map(([code, apiName]) => `${code}（${apiName} 已存在，請補文案）`)
+      .sort();
+    expect(nowReachable).toEqual([]);
   });
 });

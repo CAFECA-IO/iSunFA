@@ -28,6 +28,12 @@ import { leaveBalanceService } from "@/services/leave_balance.service";
  *
  * Info: (20260819 - Julian) **限 `HR_ADMIN`**，閘在 service（`assertMayAdjustBalance`）。
  * 額度會變成錢（未休折現），而主管對組員的加薪權不會因為他是主管就自動存在。
+ *
+ * Info: (20260820 - Julian) 且**不得調整自己的**（review 第 5 條）。
+ * `deltaMinutes` 上界 ±366 天、冪等鍵是隨機值（人工調整本來就允許重複），
+ * 因此連打有效 —— 少了這一道，一位人資可以在一分鐘內給自己加上任意多的特休。
+ * `employeeId` 取自 query，`actorEmployeeId` 取自 DeWT 解析出來的身分：
+ * 兩者的來源不同是這道閘的前提，由 `leave_route_wiring.test.ts` 釘住。
  */
 export async function POST(
   request: NextRequest,

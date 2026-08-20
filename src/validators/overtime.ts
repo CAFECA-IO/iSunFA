@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isoDateSchema } from "@/validators/attendance";
+import { isoDateSchema, localDateTimeSchema } from "@/validators/attendance";
 import { isSafeHttpUrl } from "@/lib/utils/safe_url";
 import { MINUTES_PER_DAY } from "@/constants/attendance";
 import {
@@ -96,8 +96,17 @@ export const overtimeApprovalSchema = z.object({
  * `assertOvertimeEmergencyRecord` 再擋一次，因為 seed 與資料遷移
  * 不會經過這個 schema）。
  *
- * `reportedAt` 收 ISO 8601 字串而不是 epoch：這一欄會被人讀、被貼進
- * 報備公文，一個看不出時區的數字沒有辦法拿去對。
+ * Info: (20260820 - Julian) `reportedAt` 改收**牆上時鐘**（review 第 4 輪第 2 條）。
+ *
+ * 原本收帶時區的 ISO 8601，而前端是用 `new Date(值).toISOString()` 組出來的
+ * —— 那個 `new Date` 用的是**送單裝置的時區**。人資把筆電時區設成 UTC、
+ * 或人在國外處理台灣的單子，記下來的報備時點就整整差了幾個小時，
+ * 而 §32 IV 的「二十四小時內」正是拿這一欄算的。
+ *
+ * 同一輪的 `leaveRequestCreateSchema` 剛好把相反的原則寫下來了：
+ * 「政策時區由伺服器決定（`DEMO_TIME_ZONE`），而不是由送單的裝置決定。」
+ * 這裡改成共用同一支 `localDateTimeSchema`，換算交給 service ——
+ * 使用者填的是牆上時鐘，那就讓它一路是牆上時鐘，直到伺服器才變成時點。
  */
 export const overtimeEmergencyDeclareSchema = z.object({
   /**
@@ -124,7 +133,7 @@ export const overtimeEmergencyDeclareSchema = z.object({
     .refine(isSafeHttpUrl, {
       message: "reportUrl must be an http(s) URL",
     }),
-  reportedAt: z.string().datetime({ offset: true }),
+  reportedAt: localDateTimeSchema,
 });
 
 /**

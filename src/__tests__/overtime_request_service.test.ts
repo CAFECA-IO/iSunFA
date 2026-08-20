@@ -602,16 +602,23 @@ describe("已決行的單子不得再決行", () => {
  * 一個「先寫進去再回 403」的實作會通過（同 review B9 對限流的處置）。
  */
 describe("declareEmergency —— §32 IV 的認定閘", () => {
+  /**
+   * Info: (20260820 - Julian) 牆上時鐘（review 第 4 輪第 2 條）——
+   * 政策時區的換算在 service，不在送單的裝置上。
+   */
   const REPORT = {
     reportUrl: "https://example.test/filings/2026-0815-001",
-    reportedAt: "2026-08-15T11:00:00+08:00",
+    reportedAt: "2026-08-15T11:00",
   };
+  // Info: (20260820 - Julian) 報備當天稍晚，用來釘住「不得在未來」那一側
+  const OBSERVED_AT = new Date("2026-08-15T20:00:00+08:00");
 
   const declare = (overrides: { actorEmployeeId?: string } = {}) =>
     service.declareEmergency({
       accountBookId: BOOK,
       requestId: "ot-1",
       actorEmployeeId: overrides.actorEmployeeId ?? HR_ADMIN,
+      observedAt: OBSERVED_AT,
       ...REPORT,
     });
 
@@ -724,10 +731,76 @@ describe("declareEmergency —— §32 IV 的認定閘", () => {
           actorEmployeeId: HR_ADMIN,
           reportUrl: REPORT.reportUrl,
           reportedAt: "not-a-date",
+          observedAt: OBSERVED_AT,
         }),
       ),
     ).toBe(API_ERRORS.VA_INVALID_INPUT_DATA.code);
     expect(repo.declared).toBeNull();
+  });
+
+  /**
+   * Info: (20260820 - Julian) 報備時點的上下界（review 第 4 輪第 2 條）。
+   *
+   * 這一欄先前**完全沒有界線**：可未來、可早於加班日好幾個月。
+   * 而 §32 IV 的「二十四小時內」正是拿它算的 —— 把時點填到三個月後，
+   * L28 的逾期統計永遠算不出逾期。
+   *
+   * 兩條界線的性質不同，因此都要有：上界（不得在未來）不需要任何解釋，
+   * 下界（不得早於加班那一天的開始）來自條文本身（「延長開始**後**」）。
+   * **不擋逾期**是刻意的：逾期是另一個違章，擋下只會逼出往前填的動作。
+   */
+  it.each([
+    ["在未來", "2026-08-16T09:00"],
+    ["早於加班日", "2026-08-13T23:59"],
+  ])("報備時點 %s 時擋下，且 repository 沒有被呼叫", async (_label, reportedAt) => {
+    expect(
+      await codeOf(() =>
+        service.declareEmergency({
+          accountBookId: BOOK,
+          requestId: "ot-1",
+          actorEmployeeId: HR_ADMIN,
+          reportUrl: REPORT.reportUrl,
+          reportedAt,
+          observedAt: OBSERVED_AT,
+        }),
+      ),
+    ).toBe(API_ERRORS.VA_OVERTIME_REPORTED_AT_OUT_OF_RANGE.code);
+    expect(repo.declared).toBeNull();
+  });
+
+  /**
+   * Info: (20260820 - Julian) 反面：邊界之內照常放行 —— 含「加班那天的 00:00」
+   * 與「逾 24 小時才報備」。只驗上面兩條的話，「一律擋」也會通過，
+   * 而逾期那一條會讓一個真實的違章變成一張送不出去的單。
+   */
+  it.each([
+    ["加班日的 00:00（同日稍早先通知工會）", "2026-08-14T00:00", new Date("2026-08-15T20:00:00+08:00")],
+    ["逾 24 小時才報備（是違章，但不擋）", "2026-08-17T09:00", new Date("2026-08-18T09:00:00+08:00")],
+  ])("報備時點 %s 時放行", async (_label, reportedAt, observedAt) => {
+    await expect(
+      service.declareEmergency({
+        accountBookId: BOOK,
+        requestId: "ot-1",
+        actorEmployeeId: HR_ADMIN,
+        reportUrl: REPORT.reportUrl,
+        reportedAt,
+        observedAt,
+      }),
+    ).resolves.toBeDefined();
+  });
+
+  /**
+   * Info: (20260820 - Julian) 換算用的是**政策時區**，不是行程時區。
+   *
+   * `"2026-08-15T11:00"` 在 Asia/Taipei 是 `03:00Z` —— 交給 repository 的
+   * 必須是這個時點。前端原本自己 `new Date(值).toISOString()`，
+   * 那會變成執行環境的時區，而這一條就是那個缺陷的紅燈。
+   */
+  it("牆上時鐘依政策時區換算成時點", async () => {
+    await declare();
+    expect(repo.declared).toMatchObject({
+      emergencyReportedAt: new Date("2026-08-15T11:00:00+08:00"),
+    });
   });
 });
 
@@ -881,7 +954,8 @@ describe("revokeEmergency —— §32 IV 認定的撤回", () => {
         requestId: "ot-1",
         actorEmployeeId: HR_ADMIN,
         reportUrl: "https://example.test/filings/2026-0815-002",
-        reportedAt: "2026-08-15T11:00:00+08:00",
+        reportedAt: "2026-08-15T11:00",
+        observedAt: new Date("2026-08-15T20:00:00+08:00"),
       }),
     );
     expect(code).toBe(API_ERRORS.VA_OVERTIME_EMERGENCY_ALREADY_DECLARED.code);

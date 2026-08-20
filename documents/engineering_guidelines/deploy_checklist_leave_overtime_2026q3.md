@@ -64,7 +64,22 @@
 |---|---|---|---|
 | `leave_request` | `leave_type`、`reason`、`decided_by_employee_id`、`decided_at` | `leave_policy_id`、`reason_cipher`、`pii_key_version`、`total_minutes`、`total_days` | `pii_algorithm`（default）、`proof_document_id`（可空）、`concurrency_warned`（default） |
 | `leave_day` | — | `minutes`、`day_equivalent_minutes`、`entitlement_engine_version` | `segment`（default `FULL`）、`start_minute`／`end_minute`（可空） |
-| `employee_shift_day` 的 `WorkDayType` | — | — | 新增列舉值 `SUSPENDED` |
+| `employee_shift_day` | — | — | 新增列舉值 `SUSPENDED`（`WorkDayType`）、新增欄位 `planned_work_minutes`（可空）⚠️ 見下 |
+
+#### ⚠️ `employee_shift_day.planned_work_minutes` 補不回來
+
+它記的是「那一天原本應該工作幾分鐘」，只有**非上班日**才需要（上班日讀
+`shift_pattern.required_work_minutes`）。可空，因此 `db push` 不會中止 ——
+但**既有列一律是 null，而且沒有辦法回填**：回填需要「當時的班別」，
+而那正是已經遺失的東西（`schema.prisma` 的 ToDo 已寫下這件事）。
+
+後果不是報錯，是 `overtime_request_context.repo.ts:312` 的
+`shiftPattern?.requiredWorkMinutes ?? plannedWorkMinutes ?? 0` 對那些日子
+取到 **0** —— 而 0 會讓那一天的加班上限計算把它當成「不需要工作的日子」。
+
+- **demo 資料**：重種即可（第二節第 3 步已含）。
+- **正式資料**：須由 HR 逐筆確認，或接受「上線前的非上班日在加班統計裡以 0 計」。
+  這是一個要**明確決定**的事，不是可以略過的欄位。
 
 ### 移除五張表 `id` 的 `@default(uuid())` ⚠️ 不影響資料庫
 
@@ -142,7 +157,65 @@ npx tsx scripts/seed/seed_leave_overtime_demo.ts
 （ADR 022 §8.2 的待辦第 2 項）。在它掛上去之前，額度不會自己長出來 ——
 症狀是每個人的餘額都是 0，而畫面上看起來像「這個人今年還沒有特休」。
 上線後若不打算立刻掛 Worker，至少要手動對每一位員工跑一次 L33
-（`POST .../hr/leave/balance/accrue`，限 `HR_ADMIN`）。
+（`POST .../hr/leave/balance/accrue`，限 `HR_ADMIN`）——
+**但在正式帳本上這一步做不到，先看下一節。**
+
+### ⚠️ `leave_balance.expiring_soon_minutes` 永遠是 0
+
+這一欄有 default 0、被 `leave_grant.repo.ts` 讀出來餵給餘額卡，
+**而全 repo 沒有任何地方寫它**（`grep expiringSoonMinutes` 只有一個讀取點）。
+寫它的是同一支還不存在的每日 Worker（它同時要做 `EXPIRE` 分錄與勾稽）。
+
+後果：餘額卡上的「即將到期」對每一個人都顯示 0，**包含特休下週就要到期的人**。
+那不是「沒有即將到期的額度」，是「沒有人算過」，而畫面說不出這個差別。
+
+上線前的處置只有兩個，兩個都要**明確選一個**：
+
+1. 把餘額卡上的「即將到期」欄位隱藏，直到 Worker 掛上去。
+2. 接受它顯示 0，並在畫面上標成「尚未計算」。
+
+**不要什麼都不做**：一個永遠顯示 0 的到期提醒，比沒有那個提醒更糟。
+
+---
+
+## 三之二、正式帳本的 bootstrap 死結 ⚠️ 這一節可能擋住整次上線
+
+**在一個全新的正式帳本上，人事功能完全設定不起來。**
+
+假勤模組的每一支設定端點都要求操作者具 `HR_ADMIN` 職能
+（假別設定 L2–L6、簽核規則、加班政策、額度調整 L9、額度授予 L33）。
+`HR_ADMIN` 記在 `EmployeeHrFunctionAssignment` —— **本次新增的 15 張表之一，
+上線當下是空的**。
+
+而**沒有任何端點可以指派職能**：`employeeHrFunctionRepo.grant()` 存在，
+但 `grep -rln "employeeHrFunctionRepo" src/app/` 是空的。
+第一位 `HR_ADMIN` 因此在產品裡生不出來，於是：
+
+```
+要設定假別 → 需要 HR_ADMIN
+要有 HR_ADMIN → 需要有人指派
+要指派 → 需要一支不存在的端點
+```
+
+demo 帳本沒有這個問題，因為 `seed_attendance_demo.ts` 直接寫進去了。
+**上一節那句「手動對每一位員工跑一次 L33」在正式帳本上正是這個死結的受害者**
+—— 它要求 `HR_ADMIN`，而那時一位都沒有。
+
+### 解法：先跑 bootstrap 腳本
+
+```bash
+# 在第二節的第 2 步（prisma generate）之後、任何設定動作之前
+npx tsx scripts/bootstrap_hr_admin.ts <account_book_id> <employee_no>
+```
+
+它走 `employeeHrFunctionRepo.grant()`（因此不變式照跑、授予紀錄留得下來），
+**只在該帳本尚無任何 `HR_ADMIN` 時才動作** —— 第二次執行會拒絕，
+避免它變成一條繞過職責分離的長期後門。
+
+指派之後的第二位以後的人事，應由第一位 `HR_ADMIN` 透過產品指派 ——
+**而那支端點還沒有做**。
+ToDo: (20260820 - Julian) 人事職能的指派端點與畫面（甲-1 的最後一段）。
+在它落地之前，換人只能再跑一次這支腳本（先撤銷舊的）。
 
 ---
 

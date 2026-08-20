@@ -111,7 +111,7 @@ describe("認定不在核准的 payload 裡", () => {
   it("核准 schema 只收 approvedMinutes", () => {
     const parsed = overtimeApprovalSchema.safeParse({
       approvedMinutes: 60,
-      emergency: { reportUrl: "https://e.test/1", reportedAt: "2026-08-15T11:00:00+08:00" },
+      emergency: { reportUrl: "https://e.test/1", reportedAt: "2026-08-15T11:00" },
     });
     expect(parsed.success).toBe(true);
     if (!parsed.success) return;
@@ -122,7 +122,7 @@ describe("認定不在核准的 payload 裡", () => {
     expect(
       overtimeEmergencyDeclareSchema.safeParse({
         reportUrl: "https://e.test/1",
-        reportedAt: "2026-08-15T11:00:00+08:00",
+        reportedAt: "2026-08-15T11:00",
       }).success,
     ).toBe(true);
     expect(
@@ -132,14 +132,14 @@ describe("認定不在核准的 payload 裡", () => {
     ).toBe(false);
     expect(
       overtimeEmergencyDeclareSchema.safeParse({
-        reportedAt: "2026-08-15T11:00:00+08:00",
+        reportedAt: "2026-08-15T11:00",
       }).success,
     ).toBe(false);
     // Info: (20260819 - Julian) 空白字串不算紀錄
     expect(
       overtimeEmergencyDeclareSchema.safeParse({
         reportUrl: "   ",
-        reportedAt: "2026-08-15T11:00:00+08:00",
+        reportedAt: "2026-08-15T11:00",
       }).success,
     ).toBe(false);
   });

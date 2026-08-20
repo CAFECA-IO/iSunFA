@@ -19,6 +19,7 @@ import {
   leaveAccrualContextRepo,
 } from "@/repositories/leave_accrual_context.repo";
 import {
+  assertMayAccrueBalance,
   assertMayAdjustBalance,
   assertMayViewLeaveBalanceOf,
 } from "@/services/leave_visibility";
@@ -129,6 +130,8 @@ export class LeaveBalanceService {
     await assertMayAdjustBalance({
       accountBookId: params.accountBookId,
       actorEmployeeId: params.actorEmployeeId,
+      // Info: (20260820 - Julian) 不得調整自己的額度（review 第 5 條）
+      targetEmployeeId: params.employeeId,
     });
 
     if (params.deltaMinutes === 0) {
@@ -180,10 +183,16 @@ export class LeaveBalanceService {
      * Info: (20260819 - Julian) `actorEmployeeId` 為 null 代表**系統**
      * （seed 與日後的每日 Worker），不受此閘限制 —— 它不是任何人按的。
      * 由人觸發時一律限 `HR_ADMIN`：手動端點是 Worker 上線前的替身，
-     * 替身沒有理由比本尊寬鬆（見 `assertMayAdjustBalance` 的說明）。
+     * 替身沒有理由比本尊寬鬆（見 `assertMayAccrueBalance` 的說明）。
      */
     if (params.actorEmployeeId !== null) {
-      await assertMayAdjustBalance({
+      /**
+       * Info: (20260820 - Julian) 走 `assertMayAccrueBalance` 而不是
+       * `assertMayAdjustBalance`（review 第 5 條）：授予**允許對自己**。
+       * 它交出去的是引擎算出的應然，補得出漏掉的、生不出多的；
+       * 擋掉的話，只有一位人資的公司裡那位人資的特休永遠沒有人授予得了。
+       */
+      await assertMayAccrueBalance({
         accountBookId: params.accountBookId,
         actorEmployeeId: params.actorEmployeeId,
       });

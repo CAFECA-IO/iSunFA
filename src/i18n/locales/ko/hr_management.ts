@@ -1018,6 +1018,8 @@ export const hrManagement = {
       "이 신청에는 이미 §32 IV 인정이 있습니다. 새 신고를 기록하기 전에 기존 인정을 취소하세요.",
     error_emergency_not_declared:
       "이 신청에는 취소할 §32 IV 인정이 없습니다.",
+    error_reported_at_out_of_range:
+      "신고 시각은 미래이거나 초과근무일보다 이를 수 없습니다. 신고 기록의 시각을 확인하세요.",
     error_comp_expiry_unset:
       "보상휴가 기한이 아직 합의되지 않아 전환할 수 없습니다. 수당을 선택하거나 인사팀에 설정을 요청하세요.",
     error_day_not_scheduled:

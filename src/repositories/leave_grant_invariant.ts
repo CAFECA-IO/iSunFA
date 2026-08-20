@@ -202,8 +202,20 @@ export function assertGrantSource(params: IStorableLeaveGrant): void {
  * ```
  *
  * 兩側都是 `bigint` 的乘法與比較，沒有除法、沒有取整、沒有浮點。
- * 上界擋「給多了」（`1.1 日 × 420 分` 寫成 463），下界擋「給少了」
- * （寫成 461），而 462 是唯一同時滿足兩者的整數。
+ * 462 是唯一同時滿足兩者的整數。
+ *
+ * **哪一側擋哪一個方向**（20260820 - Julian，review 第 4 輪第 1 條）：
+ *
+ * | 不等式 | 被違反時代表 | 例（1.1 日 × 420 分，正解 462） |
+ * |---|---|---|
+ * | `num × eq ≤ minutes × den` | 分鐘數**太少** | 461 |
+ * | `(minutes − 1) × den < num × eq` | 分鐘數**太多** | 463 |
+ *
+ * 直覺會把它們對調（「右邊是上界所以擋給多了」），而這裡原本就是那樣寫的 ——
+ * 註解與診斷訊息一起反了。症狀不是擋不住（判準本身是對的），是**擋住之後
+ * 說錯話**：B6 的真實形狀是多給一分鐘，而訊息會告訴查修的人「給太少了」，
+ * 把他推向相反的方向。變數名因此改成講方向的 `atLeastExact` / `atMostCeiling`，
+ * 不再叫「上界／下界」。
  *
  * 刻意寫在這個檔案裡而不是 import 引擎的換算函式：不變式一旦與被驗的
  * 實作共用程式碼，它驗的就是「這支函式跟自己一致」。
@@ -234,13 +246,18 @@ function assertCeilingOfProduct(
 
   const product = numerator * BigInt(dayEquivalentMinutes);
   const granted = BigInt(minutes);
-  const withinUpperBound = product <= granted * denominator;
-  const withinLowerBound = (granted - 1n) * denominator < product;
+  /**
+   * Info: (20260820 - Julian) 變數名講的是**方向**，不是「上界／下界」。
+   * 後者在這個式子裡剛好與直覺相反，而這一行的全部用途就是說清楚
+   * 「錯在哪一邊」給查修的人看（review 第 4 輪第 1 條）。
+   */
+  const atLeastExact = product <= granted * denominator;
+  const atMostCeiling = (granted - 1n) * denominator < product;
 
-  if (!withinUpperBound || !withinLowerBound) {
+  if (!atLeastExact || !atMostCeiling) {
     throw new LeaveGrantInvariantError(
       "grantedMinutes does not follow from grantedDays x dayEquivalentMinutes; the audit trail would not reconcile",
-      `grantedDays=${text}, dayEquivalentMinutes=${dayEquivalentMinutes}, grantedMinutes=${minutes}, ${withinUpperBound ? "granted too few" : "granted one minute too many"}`,
+      `grantedDays=${text}, dayEquivalentMinutes=${dayEquivalentMinutes}, grantedMinutes=${minutes}, ${atLeastExact ? "granted one minute too many" : "granted too few"}`,
     );
   }
 }

@@ -976,6 +976,8 @@ export const hrManagement = {
     error_emergency_already_declared:
       "这张单已经有一份 §32 IV 的认定。要记录新的报备，请先撤回既有的那一份。",
     error_emergency_not_declared: "这张单没有可撤回的 §32 IV 认定。",
+    error_reported_at_out_of_range:
+      "报备时间不能是未来，也不能早于加班当天。请对照报备纪录上的时间。",
     error_comp_expiry_unset:
       "公司尚未协商补休期限，因此换不了补休。请改选加班费，或请人资设定。",
     error_day_not_scheduled:

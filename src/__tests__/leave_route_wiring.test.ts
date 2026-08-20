@@ -59,6 +59,11 @@ import { overtimeRequestService } from "@/services/overtime_request.service";
 import { POST as leaveSubmit } from "@/app/api/v1/user/account_book/[account_book_id]/hr/leave/request/route";
 import { POST as overtimeSubmit } from "@/app/api/v1/user/account_book/[account_book_id]/hr/overtime/request/route";
 import { POST as overtimeDeclareEmergency } from "@/app/api/v1/user/account_book/[account_book_id]/hr/overtime/request/[request_id]/emergency/route";
+import { leaveBalanceService } from "@/services/leave_balance.service";
+import { GET as balanceList } from "@/app/api/v1/user/account_book/[account_book_id]/hr/leave/balance/route";
+import { GET as balanceLedger } from "@/app/api/v1/user/account_book/[account_book_id]/hr/leave/balance/ledger/route";
+import { POST as balanceAdjust } from "@/app/api/v1/user/account_book/[account_book_id]/hr/leave/balance/adjust/route";
+import { POST as balanceAccrue } from "@/app/api/v1/user/account_book/[account_book_id]/hr/leave/balance/accrue/route";
 
 jest.mock("@/lib/auth/dewt", () => ({ getIdentityFromDeWT: jest.fn() }));
 jest.mock("@/services/attendance_identity.service", () => ({
@@ -69,6 +74,14 @@ jest.mock("@/services/leave_request.service", () => ({
 }));
 jest.mock("@/services/overtime_request.service", () => ({
   overtimeRequestService: { submit: jest.fn(), declareEmergency: jest.fn() },
+}));
+jest.mock("@/services/leave_balance.service", () => ({
+  leaveBalanceService: {
+    list: jest.fn(),
+    listLedger: jest.fn(),
+    adjust: jest.fn(),
+    accrueForEmployee: jest.fn(),
+  },
 }));
 
 const dewtMock = getIdentityFromDeWT as unknown as ReturnType<
@@ -90,8 +103,35 @@ const declareEmergencyMock =
     typeof jest.fn<(params: Record<string, unknown>) => Promise<unknown>>
   >;
 
+type IServiceMock = ReturnType<
+  typeof jest.fn<(params: Record<string, unknown>) => Promise<unknown>>
+>;
+
+const balanceMocks = {
+  list: leaveBalanceService.list as unknown as IServiceMock,
+  listLedger: leaveBalanceService.listLedger as unknown as IServiceMock,
+  adjust: leaveBalanceService.adjust as unknown as IServiceMock,
+  accrue: leaveBalanceService.accrueForEmployee as unknown as IServiceMock,
+};
+
 const BOOK = "book-1";
 const MINUTE_MS = 60_000;
+
+/**
+ * Info: (20260820 - Julian) **操作者的身分只有一個來源：`resolveEmployee`**（review 第 6 條）。
+ *
+ * 這兩個常數刻意不同，而且 `TARGET` 會出現在每一個請求的 query／body 裡。
+ * 於是「`actorEmployeeId` 是從解析出來的身分來的，還是從使用者送的資料來的」
+ * 變成一個測得出來的問題：把 route 的 `actorEmployeeId: actor.id` 改成
+ * `parsed.data.employeeId ?? actor.id`，下面每一條就會收到 `TARGET` 而變紅。
+ *
+ * 為什麼這一條非測不可：權限閘的第一行是 `if (actor === target) return`
+ * ——身分若取自請求本身，任何人都可以宣稱自己是目標本人，而閘直接短路。
+ * service 層的測試（`leave_balance_service.test.ts`）對此完全無感，
+ * 因為它是直接呼叫 service 的（checklist §1.7：測到函式不等於測到接線）。
+ */
+const ACTOR = "11111111-1111-4111-8111-111111111111";
+const TARGET = "22222222-2222-4222-8222-222222222222";
 
 /**
  * Info: (20260819 - Julian) `IErrorDef.status` 是 `ApiCode`（`"RATE_LIMIT"`），
@@ -154,10 +194,14 @@ beforeEach(() => {
   dewtMock.mockImplementation(async (header) =>
     header === null ? null : { address: header.replace("Bearer ", "") },
   );
-  resolveEmployeeMock.mockResolvedValue({ id: "emp-1" });
+  resolveEmployeeMock.mockResolvedValue({ id: ACTOR });
   leaveSubmitMock.mockResolvedValue({ id: "req-1" });
   overtimeSubmitMock.mockResolvedValue({ id: "ot-1" });
   declareEmergencyMock.mockResolvedValue({ id: "ot-1" });
+  for (const mock of Object.values(balanceMocks)) {
+    mock.mockReset();
+    mock.mockResolvedValue({ ok: true });
+  }
 });
 
 describe("裝配：限流真的擋得住（不是只有那兩行的順序對）", () => {
@@ -301,7 +345,7 @@ describe("裝配：§32 IV 認定端點", () => {
 
   const body = {
     reportUrl: "https://example.test/filings/2026-0815-001",
-    reportedAt: "2026-08-15T11:00:00+08:00",
+    reportedAt: "2026-08-15T11:00",
   };
 
   it("超限回 429，且 service 沒有被多呼叫一次", async () => {
@@ -353,6 +397,243 @@ describe("裝配：§32 IV 認定端點", () => {
       requestId: "ot-1",
       reportUrl: body.reportUrl,
       reportedAt: body.reportedAt,
+    });
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) 四支額度端點的裝配（review 第 6 條）。
+ *
+ * ## 這一組先前完全不存在
+ *
+ * 這個檔案原本只 import 兩支 handler（假單／加班單送出），而**本輪補上的
+ * 兩道授權閘都不在裡面** —— 額度那四支一支都沒有。於是：
+ *
+ * 把 `balance/route.ts` 的 `actorEmployeeId: actor.id` 改成
+ * `parsed.data.employeeId ?? actor.id`，任何人都可以在 query 裡宣稱自己
+ * 就是目標本人，而 `assertMayViewLeaveBalanceOf` 的第一行
+ * `if (actor === target) return` 直接短路 —— 整組閘形同虛設，
+ * 而 `leave_balance_service.test.ts` 全綠（它是直接呼叫 service 的）。
+ *
+ * checklist §1.7「測到函式不等於測到接線」在本輪**被作者自己引用過**，
+ * 卻只套用在限流與送出兩件事上。
+ *
+ * ## 為什麼身分要用兩個不同的值
+ *
+ * `ACTOR` 只從 `resolveEmployee` 出來，`TARGET` 只出現在 query／body 裡。
+ * 兩者相同的話，這一組測試會在缺陷存在時照樣通過 —— 那正是它要抓的東西。
+ */
+describe("裝配：額度四支端點的操作者身分只能來自 session", () => {
+  const get = (query: string, address: string): NextRequest =>
+    new NextRequest(`http://localhost/api/v1/probe?${query}`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${address}` },
+    });
+
+  const postTo = (
+    query: string,
+    body: unknown,
+    address: string,
+  ): NextRequest =>
+    new NextRequest(`http://localhost/api/v1/probe?${query}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${address}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+  const adjustBody = {
+    leavePolicyId: "33333333-3333-4333-8333-333333333333",
+    deltaMinutes: 480,
+    reason: "前公司年資併計",
+  };
+
+  it("L7 餘額：actorEmployeeId 來自 session，employeeId 來自 query", async () => {
+    await balanceList(get(`employeeId=${TARGET}`, "0xprobe-bal-list"), {
+      params: params(),
+    });
+
+    expect(balanceMocks.list).toHaveBeenCalledTimes(1);
+    expect(balanceMocks.list.mock.calls[0][0]).toMatchObject({
+      accountBookId: BOOK,
+      actorEmployeeId: ACTOR,
+      employeeId: TARGET,
+    });
+  });
+
+  it("L8 帳本：actorEmployeeId 來自 session，employeeId 來自 query", async () => {
+    await balanceLedger(
+      get(`employeeId=${TARGET}`, "0xprobe-bal-ledger"),
+      { params: params() },
+    );
+
+    expect(balanceMocks.listLedger).toHaveBeenCalledTimes(1);
+    expect(balanceMocks.listLedger.mock.calls[0][0]).toMatchObject({
+      actorEmployeeId: ACTOR,
+      employeeId: TARGET,
+    });
+  });
+
+  /**
+   * Info: (20260820 - Julian) L9 是會變成錢的那一支，因此驗得最完整：
+   * 身分、限流、validator 三件事。
+   */
+  it("L9 調整：actorEmployeeId 來自 session，employeeId 來自 query", async () => {
+    await balanceAdjust(
+      postTo(`employeeId=${TARGET}`, adjustBody, "0xprobe-bal-adjust"),
+      { params: params() },
+    );
+
+    expect(balanceMocks.adjust).toHaveBeenCalledTimes(1);
+    expect(balanceMocks.adjust.mock.calls[0][0]).toMatchObject({
+      accountBookId: BOOK,
+      actorEmployeeId: ACTOR,
+      employeeId: TARGET,
+      deltaMinutes: adjustBody.deltaMinutes,
+      reason: adjustBody.reason,
+    });
+  });
+
+  it("L33 授予：actorEmployeeId 來自 session，employeeId 來自 body", async () => {
+    await balanceAccrue(
+      postTo("", { employeeId: TARGET }, "0xprobe-bal-accrue"),
+      { params: params() },
+    );
+
+    expect(balanceMocks.accrue).toHaveBeenCalledTimes(1);
+    expect(balanceMocks.accrue.mock.calls[0][0]).toMatchObject({
+      actorEmployeeId: ACTOR,
+      employeeId: TARGET,
+    });
+  });
+
+  /**
+   * Info: (20260820 - Julian) 省略 `employeeId` 時退回本人 —— 而「本人」
+   * 同樣是 session 那一個，不是請求裡的任何東西。
+   */
+  it("省略 employeeId 時兩邊都是 session 的身分", async () => {
+    await balanceList(get("", "0xprobe-bal-self"), { params: params() });
+    expect(balanceMocks.list.mock.calls[0][0]).toMatchObject({
+      actorEmployeeId: ACTOR,
+      employeeId: ACTOR,
+    });
+  });
+
+  // Info: (20260820 - Julian) 未登入時連 service 都不該碰到
+  it("未登入時四支都不進入 service", async () => {
+    dewtMock.mockResolvedValue(null);
+    const anon = new NextRequest("http://localhost/api/v1/probe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(adjustBody),
+    });
+
+    await balanceList(anon, { params: params() });
+    await balanceLedger(anon, { params: params() });
+    await balanceAdjust(anon, { params: params() });
+    await balanceAccrue(anon, { params: params() });
+
+    for (const mock of Object.values(balanceMocks)) {
+      expect(mock).not.toHaveBeenCalled();
+    }
+  });
+
+  /**
+   * Info: (20260820 - Julian) 限流真的擋在 L9 的路徑上，且擋在 service 之前。
+   * 兩個斷言缺一不可 —— 只驗回應碼的話，「擋了但還是調了」也會通過。
+   */
+  it("L9 超限回 429，且 service 沒有被多呼叫一次", async () => {
+    const address = "0xprobe-bal-rl";
+    const limit = perMinuteLimit(RateLimitBucketEnum.LEAVE_WRITE);
+
+    for (let i = 0; i < limit; i += 1) {
+      const response = await balanceAdjust(
+        postTo(`employeeId=${TARGET}`, adjustBody, address),
+        { params: params() },
+      );
+      expect(response.status).toBe(200);
+    }
+    const before = balanceMocks.adjust.mock.calls.length;
+
+    const blocked = await balanceAdjust(
+      postTo(`employeeId=${TARGET}`, adjustBody, address),
+      { params: params() },
+    );
+    expect(blocked.status).toBe(httpOf(API_ERRORS.IS_RATE_LIMITED));
+    expect(balanceMocks.adjust.mock.calls.length).toBe(before);
+  });
+
+  /**
+   * Info: (20260820 - Julian) validator 接上了：理由空白、調整量超界都到不了 service。
+   * 「一筆沒有理由的額度調整，事後沒有人能判斷它合不合理」——
+   * 那句話要在 400 就停住，不是靠 service 再擋一次。
+   */
+  it.each([
+    ["理由空白", { ...adjustBody, reason: "   " }],
+    ["調整量超過 366 天", { ...adjustBody, deltaMinutes: 367 * 24 * 60 }],
+    ["缺假別", { deltaMinutes: 480, reason: "x" }],
+  ])("L9 %s：400，service 不被呼叫", async (label, body) => {
+    const response = await balanceAdjust(
+      postTo(`employeeId=${TARGET}`, body, `0xprobe-adj-${label.length}`),
+      { params: params() },
+    );
+    expect(response.status).toBe(httpOf(API_ERRORS.VA_INVALID_INPUT_DATA));
+    expect(balanceMocks.adjust).not.toHaveBeenCalled();
+  });
+
+  // Info: (20260820 - Julian) L9 沒給 employeeId 時不得靜默退回本人（那會變成自我調整）
+  it("L9 省略 employeeId 時回 400，不退回本人", async () => {
+    const response = await balanceAdjust(
+      postTo("", adjustBody, "0xprobe-adj-noemp"),
+      { params: params() },
+    );
+    expect(response.status).toBe(httpOf(API_ERRORS.VA_INVALID_INPUT_DATA));
+    expect(balanceMocks.adjust).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) 送出與認定的操作者身分同樣只能來自 session（review 第 6 條）。
+ *
+ * 上面那三個 describe 驗的是限流與 validator，`actorEmployeeId` 這一欄
+ * 先前沒有任何一條斷言碰過 —— 而它正是所有授權閘的輸入。
+ */
+describe("裝配：送出與認定的 actorEmployeeId 也只能來自 session", () => {
+  it("假單送出", async () => {
+    await leaveSubmit(post({ ...leaveBody, employeeId: TARGET }, "0xprobe-id-leave"), {
+      params: params(),
+    });
+    expect(leaveSubmitMock.mock.calls[0][0]).toMatchObject({
+      employeeId: ACTOR,
+    });
+  });
+
+  it("加班單送出", async () => {
+    await overtimeSubmit(
+      post({ ...overtimeBody, employeeId: TARGET }, "0xprobe-id-ot"),
+      { params: params() },
+    );
+    expect(overtimeSubmitMock.mock.calls[0][0]).toMatchObject({
+      employeeId: ACTOR,
+    });
+  });
+
+  it("§32 IV 認定", async () => {
+    await overtimeDeclareEmergency(
+      post(
+        {
+          reportUrl: "https://example.test/filings/2026-0815-001",
+          reportedAt: "2026-08-15T11:00",
+          actorEmployeeId: TARGET,
+        },
+        "0xprobe-id-em",
+      ),
+      { params: Promise.resolve({ account_book_id: BOOK, request_id: "ot-1" }) },
+    );
+    expect(declareEmergencyMock.mock.calls[0][0]).toMatchObject({
+      actorEmployeeId: ACTOR,
     });
   });
 });

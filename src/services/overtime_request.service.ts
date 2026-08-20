@@ -30,6 +30,7 @@ import {
   addIsoMonths,
   instantOfWorkDateMinute,
 } from "@/lib/utils/attendance_time";
+import { parseLocalDateTime } from "@/lib/leave_span";
 import { employeeRepo } from "@/repositories/employee.repo";
 import { employeeHrFunctionRepo } from "@/repositories/employee_hr_function.repo";
 import {
@@ -421,7 +422,10 @@ export class OvertimeRequestService {
     requestId: string;
     actorEmployeeId: string;
     reportUrl: string;
+    /** Info: (20260820 - Julian) 牆上時鐘 `"YYYY-MM-DDTHH:mm"`，政策時區在此換算 */
     reportedAt: string;
+    /** Info: (20260820 - Julian) 「現在」由呼叫端注入，service 不自取 `Date.now()` */
+    observedAt: Date;
   }): Promise<IOvertimeRequestSummary> {
     const request = await this.mustFindSummary(
       params.accountBookId,
@@ -465,10 +469,26 @@ export class OvertimeRequestService {
       throw new AppError(API_ERRORS.FO_HR_FUNCTION_REQUIRED);
     }
 
-    const reportedAt = new Date(params.reportedAt);
-    if (Number.isNaN(reportedAt.getTime())) {
+    /**
+     * Info: (20260820 - Julian) 牆上時鐘 → 時點，**在伺服器用政策時區換算**
+     * （review 第 4 輪第 2 條）。
+     *
+     * 前端原本自己 `new Date(值).toISOString()`，而那是**裝置**的時區。
+     * §32 IV 的「二十四小時內」拿這一欄算，差一個時區就差好幾個小時，
+     * 而畫面上看起來完全正常。`instantOfWorkDateMinute` 是本模組唯一
+     * 知道偏移的地方（含日光節約），與加班的事前／事後判定共用同一支。
+     */
+    const local = parseLocalDateTime(params.reportedAt);
+    if (local === null) {
       throw new AppError(API_ERRORS.VA_INVALID_INPUT_DATA);
     }
+    const reportedAt = instantOfWorkDateMinute(
+      local.workDate,
+      local.minuteOfDay,
+      DEMO_TIME_ZONE,
+    );
+
+    this.assertReportedAtInRange(request, reportedAt, params.observedAt);
 
     const outcome = await this.requests.declareEmergency({
       accountBookId: params.accountBookId,
@@ -492,6 +512,46 @@ export class OvertimeRequestService {
       `[overtime] emergency declared: request=${request.id} by=${params.actorEmployeeId}`,
     );
     return this.mustFindSummary(params.accountBookId, request.id);
+  }
+
+  /**
+   * Info: (20260820 - Julian) 報備時點的上下界（review 第 4 輪第 2 條）。
+   *
+   * ## 上界：不得在未來
+   *
+   * 「我已經在某個還沒到的時刻報備過了」在任何解讀下都不成立。這是這一欄
+   * 唯一一條**不需要猜**的界線，而少了它，把時點填到三個月後可以讓
+   * L28 的「逾 24 小時才報備」統計永遠算不出逾期。
+   *
+   * ## 下界：不得早於該加班日的開始
+   *
+   * §32 IV 講的是「延長開始**後**二十四小時內」通知 —— 一份時點落在
+   * 那一天開始之前的紀錄，不可能是關於這次加班的報備。
+   * 取整個工作日的 00:00 而不是班別窗起：同一天稍早就先通知工會是合理的
+   * （颱風警報上午發布、下午的加班晚上才開始），沒有理由擋。
+   *
+   * ## 為什麼**不**擋逾期
+   *
+   * 逾 24 小時通報是另一個違章，擋下不會讓天災事變這個事實消失 ——
+   * 只會逼出一個把時點往前填的動作，而那比逾期本身更難查
+   * （`declareEmergency` 檔頭的既有論證，這裡沿用）。
+   */
+  private assertReportedAtInRange(
+    request: IOvertimeRequestSummary,
+    reportedAt: Date,
+    observedAt: Date,
+  ): void {
+    if (reportedAt.getTime() > observedAt.getTime()) {
+      throw new AppError(API_ERRORS.VA_OVERTIME_REPORTED_AT_OUT_OF_RANGE);
+    }
+    const workDateStart = instantOfWorkDateMinute(
+      request.workDate,
+      0,
+      DEMO_TIME_ZONE,
+    );
+    if (reportedAt.getTime() < workDateStart.getTime()) {
+      throw new AppError(API_ERRORS.VA_OVERTIME_REPORTED_AT_OUT_OF_RANGE);
+    }
   }
 
   /**

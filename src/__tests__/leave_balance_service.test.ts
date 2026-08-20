@@ -417,3 +417,104 @@ describe("額度的權限閘", () => {
     expect(hasAnyFunctionMock).not.toHaveBeenCalled();
   });
 });
+
+/**
+ * Info: (20260820 - Julian) **HR_ADMIN 不得調整自己的額度**（review 第 5 條）。
+ *
+ * B2 補的是「任何一個同帳本的員工都可以對任何人（**含自己**）反覆加額度」
+ * 的**前半** —— 換成限 HR_ADMIN 之後，「含自己」那一半原封不動：
+ * `assertMayAdjustBalance` 收的參數裡根本沒有「對象是誰」，
+ * 於是那個問題在型別上就問不出來。
+ *
+ * 代價是直接的：`deltaMinutes` 上界 ±366 天，冪等鍵是 `randomUUID()`
+ * （刻意的，人工調整本來就允許重複），連打有效。而
+ * `leave_visibility.ts` 自己寫著：「額度不是一個顯示用的數字，它會變成錢
+ * ……一筆憑空的調整，最後會出現在薪資單上。」
+ */
+describe("L9 / L33 — 自我操作的分界（review 第 5 條）", () => {
+  const HR = "emp-hr";
+
+  beforeEach(() => {
+    hasAnyFunctionMock.mockResolvedValue(true);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 兩個斷言成對：回 403，**且**一分鐘都沒有落地。
+   * 少了後者，一個「先寫進去再丟」的實作會通過。
+   */
+  it("L9：HR_ADMIN 調整自己的額度時擋下，且沒有寫進帳本", async () => {
+    await expect(
+      service.adjust({
+        accountBookId: BOOK,
+        employeeId: HR,
+        leavePolicyId: "annual",
+        deltaMinutes: 480,
+        reason: "幫自己加一天",
+        actorEmployeeId: HR,
+        asOfDate: TODAY,
+      }),
+    ).rejects.toMatchObject({
+      apiCode: API_ERRORS.FO_SELF_APPROVAL_FORBIDDEN.code,
+    });
+    expect(grants.adjusted).toEqual([]);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 自我檢查排在職能查詢**之前**。
+   * 順序反過來的話，一個 HR_ADMIN 會先通過職能查詢 ——
+   * 而那正是這一條要擋的組合（同 `declareEmergency` 的既有處置）。
+   */
+  it("L9：自我調整不依賴職能查詢的結果", async () => {
+    hasAnyFunctionMock.mockClear();
+    await expect(
+      service.adjust({
+        accountBookId: BOOK,
+        employeeId: HR,
+        leavePolicyId: "annual",
+        deltaMinutes: 480,
+        reason: "幫自己加一天",
+        actorEmployeeId: HR,
+        asOfDate: TODAY,
+      }),
+    ).rejects.toMatchObject({
+      apiCode: API_ERRORS.FO_SELF_APPROVAL_FORBIDDEN.code,
+    });
+    expect(hasAnyFunctionMock).not.toHaveBeenCalled();
+  });
+
+  // Info: (20260820 - Julian) 對照組：調整**別人**的額度仍然照常成立
+  it("L9：HR_ADMIN 調整別人的額度仍然成立", async () => {
+    await service.adjust({
+      accountBookId: BOOK,
+      employeeId: EMPLOYEE,
+      leavePolicyId: "annual",
+      deltaMinutes: 480,
+      reason: "前公司年資併計",
+      actorEmployeeId: HR,
+      asOfDate: TODAY,
+    });
+    expect(grants.adjusted).toEqual([
+      { deltaMinutes: 480, reason: "前公司年資併計" },
+    ]);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 授予**允許對自己**，而且必須允許。
+   *
+   * `accrueForEmployee` 交出去的是 `deriveGrantSchedule` 算出的應然，
+   * 補得出漏掉的、生不出多的。擋掉的話，一個只有一位人資的公司裡，
+   * 那位人資的特休永遠沒有人授予得了 —— 那是 B7 撞到過的同一個空集合。
+   *
+   * 這一條與上面那條合起來才說得完整：放寬的是哪一支、沒放寬的是哪一支。
+   */
+  it("L33：HR_ADMIN 對自己授予不受阻", async () => {
+    await expect(
+      service.accrueForEmployee({
+        accountBookId: BOOK,
+        employeeId: HR,
+        asOfDate: TODAY,
+        actorEmployeeId: HR,
+      }),
+    ).resolves.toBeGreaterThanOrEqual(0);
+  });
+});

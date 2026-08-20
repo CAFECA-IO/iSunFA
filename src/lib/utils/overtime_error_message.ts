@@ -53,6 +53,8 @@ export const OVERTIME_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
     "hr_management.overtime.error_emergency_already_declared",
   [API_ERRORS.VA_OVERTIME_EMERGENCY_NOT_DECLARED.code]:
     "hr_management.overtime.error_emergency_not_declared",
+  [API_ERRORS.VA_OVERTIME_REPORTED_AT_OUT_OF_RANGE.code]:
+    "hr_management.overtime.error_reported_at_out_of_range",
   [API_ERRORS.VA_OVERTIME_COMP_EXPIRY_UNSET.code]:
     "hr_management.overtime.error_comp_expiry_unset",
 

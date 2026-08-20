@@ -411,3 +411,58 @@ describe("resolveApprovalChain — 展不開時要指出缺什麼", () => {
     expect(result.reason).toBe(LeaveApprovalUnresolvedReason.EMPTY_RULE_STEPS);
   });
 });
+
+/**
+ * Info: (20260820 - Julian) 門檻壞掉是**設定缺口，不是故障**（review 第 4 條）。
+ *
+ * `compareDaysTo` 對指數記號的門檻會丟 `LeaveRuleError`，而
+ * `resolveApprovalChain` 的呼叫點在 `buildPlan` 的 `:752` ——
+ * **不在**那個「`LeaveRuleError` → 400」的 try 裡面。於是一列
+ * `minDays = 1e-7` 的規則會讓該帳本的每一次試算與送出都變成 500。
+ *
+ * 這一支的契約是「展得開回步驟，展不開回原因」，而門檻讀不懂正是一種展不開：
+ * 試算照常顯示原因、送出拒絕（`CF_LEAVE_APPROVAL_CHAIN_UNRESOLVED`），
+ * 而**不是自動核准**（ADR 023 §3）。
+ */
+describe("resolveApprovalChain — 壞掉的門檻不得變成 500", () => {
+  const brokenRules = [
+    {
+      leavePolicyId: null,
+      // Info: (20260820 - Julian) `String(1e-7)` 就是 "1e-7"
+      minDays: 1e-7,
+      maxDays: null,
+      steps: rules[0].steps,
+    },
+  ];
+
+  // Info: (20260820 - Julian) 缺陷存在時這一行會**丟出** LeaveRuleError，測試直接紅
+  it("回 MALFORMED_RULE_THRESHOLD 而不是丟例外", () => {
+    const result = resolveApprovalChain({
+      leavePolicyId: "policy-annual",
+      totalDays: totalDaysOf([{ minutes: 480, dayEquivalentMinutes: 480 }]),
+      rules: brokenRules,
+      org,
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toBe(
+      LeaveApprovalUnresolvedReason.MALFORMED_RULE_THRESHOLD,
+    );
+  });
+
+  /**
+   * Info: (20260820 - Julian) 反面：正常的門檻仍然展得開。
+   * 只驗上面那條的話，一個「一律回 MALFORMED」的實作也會通過，
+   * 而它會讓每一張假單都送不出去。
+   */
+  it("正常的門檻不受影響", () => {
+    const result = resolveApprovalChain({
+      leavePolicyId: "policy-annual",
+      totalDays: totalDaysOf([{ minutes: 480, dayEquivalentMinutes: 480 }]),
+      rules,
+      org,
+    });
+    expect(result.ok).toBe(true);
+  });
+});

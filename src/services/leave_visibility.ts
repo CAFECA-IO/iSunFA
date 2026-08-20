@@ -79,6 +79,62 @@ export async function assertMayViewLeaveBalanceOf(params: {
 export async function assertMayAdjustBalance(params: {
   accountBookId: string;
   actorEmployeeId: string;
+  /**
+   * Info: (20260820 - Julian) 被調整的人（review 第 5 條）。
+   *
+   * 這個參數先前**不存在** —— 於是「對象是不是自己」在型別上就問不出來，
+   * 而上面那段自己寫下的洞（「任何一個同帳本的員工都可以對任何人
+   * **包含自己**反覆加額度」）只被補了前半：換成 HR_ADMIN 之後，
+   * 「包含自己」這一半原封不動。
+   */
+  targetEmployeeId: string;
+}): Promise<void> {
+  /**
+   * Info: (20260820 - Julian) **不得調整自己的額度**（review 第 5 條）。
+   *
+   * 與 §32 IV 認定的自我檢查（`declareEmergency`）是同一個形狀，
+   * 而代價更直接：`deltaMinutes` 的上界是 ±366 天，冪等鍵是 `randomUUID()`
+   * （刻意的，人工調整本來就允許重複），因此連打有效 ——
+   * 一個 HR_ADMIN 可以在一分鐘內給自己加上任意多的特休，
+   * 而未休完的特休依 §38 IV 折現發給工資。這個檔案自己寫著：
+   * 「額度不是一個顯示用的數字，它會變成錢……一筆憑空的調整，
+   * 最後會出現在薪資單上。」
+   *
+   * 排在職能查詢**之前**：順序反過來的話，一個 HR_ADMIN 會先通過職能查詢，
+   * 而那正是這條要擋的組合（同 `declareEmergency` 的既有處置）。
+   *
+   * 這不會讓 HR_ADMIN 拿不到自己該有的額度：法定的部分由
+   * `accrueForEmployee` 依 `deriveGrantSchedule` 產生（見
+   * `assertMayAccrueBalance`），那一支算得出「應然」而生不出額外的量。
+   * 真的需要人工調整自己的額度時，找另一位 HR_ADMIN ——
+   * 那正是職責分離要的東西。
+   */
+  if (params.actorEmployeeId === params.targetEmployeeId) {
+    throw new AppError(API_ERRORS.FO_SELF_APPROVAL_FORBIDDEN);
+  }
+
+  if (await isHrAdmin(params.accountBookId, params.actorEmployeeId)) return;
+  throw new AppError(API_ERRORS.FO_HR_FUNCTION_REQUIRED);
+}
+
+/**
+ * Info: (20260820 - Julian) 授予（L33）：限 `HR_ADMIN`，但**允許對自己**（review 第 5 條）。
+ *
+ * 與 `assertMayAdjustBalance` 分成兩支而不是共用一支帶旗標的：兩者放行的
+ * 集合不同，而「同一支函式靠參數決定嚴不嚴格」正是下一個人會傳錯的地方。
+ *
+ * 為什麼授予可以對自己：`accrueForEmployee` 交出去的是
+ * `deriveGrantSchedule` 算出的**應然**（到今天為止依年資該有哪些批次），
+ * 它補得出漏掉的，生不出多的 —— 對自己跑一次與對別人跑一次結果都一樣，
+ * 且它是冪等的。反過來擋掉的話，一個只有一位人資的公司裡，
+ * 那位人資的特休永遠沒有人授予得了 —— 那是 B7 撞到過的同一個空集合。
+ *
+ * `actorEmployeeId` 為 null 代表系統（seed 與日後的每日 Worker），
+ * 由呼叫端在進來之前就分流，不受此閘限制。
+ */
+export async function assertMayAccrueBalance(params: {
+  accountBookId: string;
+  actorEmployeeId: string;
 }): Promise<void> {
   if (await isHrAdmin(params.accountBookId, params.actorEmployeeId)) return;
   throw new AppError(API_ERRORS.FO_HR_FUNCTION_REQUIRED);
