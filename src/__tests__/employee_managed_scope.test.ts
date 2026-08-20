@@ -26,7 +26,20 @@ declare const jest: typeof JestType;
  * 那段邏輯整個換掉，於是問題從測試裡消失（checklist §1.7）。
  */
 
+/**
+ * Info: (20260820 - Julian) 兩個替身列都帶索引簽章。
+ *
+ * 下面的 `matches()` 是照 `where` 的鍵去查列，因此它收的是
+ * `Record<string, unknown>` —— 而**沒有索引簽章的 interface 不可指派給它**
+ * （TS2345）。加索引簽章而不是在呼叫點 `as` 轉型：轉型會把「這個鍵真的存在嗎」
+ * 這個問題關掉，而替身寫錯鍵名的症狀是「查不到 → 回 false」，
+ * 與被測邏輯真的擋下來長得一模一樣。
+ *
+ * 具名欄位仍然逐一列出（索引簽章只是額外允許以字串取用），
+ * 因此打錯 `parentId` 這種事還是編譯期就會紅。
+ */
 interface IDepartmentRow {
+  [key: string]: string | null;
   id: string;
   parentId: string | null;
   managerId: string | null;
@@ -34,6 +47,7 @@ interface IDepartmentRow {
 }
 
 interface IEmployeeRow {
+  [key: string]: string | null;
   id: string;
   departmentId: string | null;
   accountBookId: string;
