@@ -1,5 +1,5 @@
 import { describe, it, expect } from "@jest/globals";
-import { readdirSync } from "fs";
+import { existsSync, readdirSync, readFileSync } from "fs";
 import { join, relative, sep } from "path";
 import {
   isHrModuleEnabled,
@@ -8,6 +8,9 @@ import {
 
 /**
  * Info: (20260820 - Julian) 上線前的閘要**真的蓋住每一支**。
+ *
+ * 閘掛在 `src/proxy.ts`（Next 16 把 middleware 更名為 proxy；本專案早就有
+ * 那一支，而兩個檔案同時存在時 build 會直接失敗）。
  *
  * ## 為什麼掃檔案系統而不是列一份名單
  *
@@ -133,6 +136,62 @@ describe("人事模組的上線閘：路徑判準", () => {
  * 寬鬆的解析會讓一個打錯的值意外地把模組打開 —— 而那正是這道閘要防的事。
  * 兩種遺漏都會發生（忘了設、設錯了），只有一種會讓外人看到不該看的東西。
  */
+/**
+ * Info: (20260820 - Julian) `proxy.ts` 的 `matcher` 要真的把人事路徑放進來。
+ *
+ * 判準寫得再對，沒有經過那支函式就等於沒有閘 —— 而**原本的 matcher 刻意
+ * 排除 `api`**（canonical 導向不該碰 API），也就是 37 支 `/hr/` 端點
+ * 一支都不會經過。這一組把「誰經過」釘住，與上面「經過之後擋不擋」分開。
+ */
+describe("人事模組的上線閘：proxy 的 matcher", () => {
+  const proxySource = readFileSync(
+    join(process.cwd(), "src", "proxy.ts"),
+    "utf8",
+  );
+
+  /**
+   * Info: (20260820 - Julian) 逐字比對那兩條 matcher。
+   *
+   * 不重新實作 Next 的 matcher 語意去「模擬」—— 那會是第二份規則，
+   * 而它與真正生效的那一份可以分岔（checklist §1.9）。
+   * 這裡要的是「有沒有人把它拿掉」，逐字比對就答得出來。
+   */
+  it("matcher 涵蓋 API（否則 37 支 hr 端點一支都不會經過）", () => {
+    expect(proxySource).toContain('"/api/:path*"');
+  });
+
+  it("原本那條全站 matcher 還在（頁面仍然要經過）", () => {
+    expect(proxySource).toContain(
+      '"/((?!api|_next/static|_next/image|favicon.ico).*)"',
+    );
+  });
+
+  /**
+   * Info: (20260820 - Julian) 閘要排在 canonical 導向**之前**。
+   *
+   * 排在後面的話，非 canonical 主機上的請求會先收到 307 —— 而那等於
+   * 告訴對方「這個路徑存在，只是要換個網域」。回 404 的重點是看不出
+   * 這裡有東西，所以它必須是第一個回答。
+   */
+  it("閘排在 canonical 導向之前", () => {
+    expect(proxySource.indexOf("isHrModulePath")).toBeLessThan(
+      proxySource.indexOf("NEXT_PUBLIC_APP_URL"),
+    );
+  });
+
+  /**
+   * Info: (20260820 - Julian) 而且**只有一支** proxy／middleware。
+   *
+   * 這一條是實際踩過的坑：第一版另外開了 `src/middleware.ts`，
+   * 而 Next 16 兩者同時存在時 build 直接失敗 —— 一個只有 `npm run build`
+   * 才看得出來的錯誤。
+   */
+  it("沒有另一支 middleware.ts 與它打架", () => {
+    expect(existsSync(join(process.cwd(), "src", "middleware.ts"))).toBe(false);
+    expect(existsSync(join(process.cwd(), "middleware.ts"))).toBe(false);
+  });
+});
+
 describe("人事模組的上線閘：旗標", () => {
   it("未設定時是關的", () => {
     expect(isHrModuleEnabled(undefined)).toBe(false);

@@ -31,7 +31,8 @@
 而 `hr_management/layout.tsx` 的註解自己寫著「這個 layout 連沒有登入的頁面
 都會渲染」。
 
-因此 `src/middleware.ts` 加了一道路徑閘：
+因此 `src/proxy.ts` 加了一道路徑閘（Next 16 把 middleware 更名為 proxy，
+本專案早就有這一支；另外開一個 `middleware.ts` 會讓 build 直接失敗）：
 
 | `HR_MODULE_ENABLED` | 行為 |
 |---|---|
@@ -61,11 +62,18 @@ curl -s -o /dev/null -w '%{http_code}\n' https://<正式網域>/api/v1/hr/employ
 每一支端點自己的 `assertMay*` 負責 —— 那些檢查一條都不能因為有了這道閘
 而省略。這裡擋的是「整個模組還沒好」，不是「這個人不該看這一筆」。
 
-判準在 `src/constants/hr_module_gate.ts`（不是寫在 middleware 裡：
-`hr_module_gate.test.ts` 要驗的就是那個判準，寫在 middleware 裡的話測試
+判準在 `src/constants/hr_module_gate.ts`（不是寫在 `proxy.ts` 裡：
+`hr_module_gate.test.ts` 要驗的就是那個判準，寫在 `proxy.ts` 裡的話測試
 只能手抄一份規則）。那支測試會掃 `src/app` 底下所有 `page.tsx` / `route.ts`，
 確認**每一支人事路由都被擋、其餘一支都沒被誤擋** ——
 新增一支落在規則外的端點，它會紅。
+
+> ⚠️ `proxy.ts` 原本的 `matcher` **刻意排除 `api`**（canonical 導向不該碰 API），
+> 因此另外補了 `"/api/:path*"`，否則 37 支端點一支都不會經過這道閘。
+> 為了不改變 API 既有行為，函式開頭對 `/api/` 提早 `return NextResponse.next()`——
+> 它們只借用這道閘，不走 canonical 導向、也不設 `x-url`（本來就沒有）。
+> 2026-08-20 實測：全站 308 支路由，人事 50 支（13 頁 ＋ 37 API），
+> matcher 到不了的 0 支。
 
 ---
 

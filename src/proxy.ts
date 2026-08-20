@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { validateEnv } from "@/validators/env";
 import { hostnameOf, normalizeHostname } from "@/lib/utils/host";
 import type { NextRequest } from "next/server";
+import {
+  isHrModuleEnabled,
+  isHrModulePath,
+} from "@/constants/hr_module_gate";
 
 // Info: (20260809 - Luphia) 記錄「這個主機已嘗試過 canonical 導向」的短效 cookie，用於斷開導向迴圈
 const CANONICAL_REDIRECT_COOKIE = "canonical_redirect_attempted";
@@ -16,6 +20,46 @@ function readClientHost(request: NextRequest): string {
 }
 
 export async function proxy(request: NextRequest) {
+  /**
+   * Info: (20260820 - Julian) 人事管理模組的上線閘 —— **排在最前面**。
+   *
+   * ## 為什麼在這裡而不是自己開一支 middleware
+   *
+   * 第一版寫成 `src/middleware.ts`，而 Next 16 已經把 middleware 更名為
+   * proxy —— 兩個檔案同時存在時 build 直接失敗。這個專案早就有 `proxy.ts`，
+   * 一支路由層的閘本來就該掛在它上面。
+   *
+   * ## 為什麼排在 canonical 導向之前
+   *
+   * 導向會把請求送去另一個主機，而那個主機上這道閘一樣會擋 —— 但中間多一次
+   * 307 就等於告訴對方「這個路徑存在，只是要換個網域」。回 404 的重點是
+   * **看不出這裡有東西**，所以它必須是第一個回答。
+   *
+   * 也排在 `validateEnv()` 之前：一道安全閘不該以「環境變數驗證有沒有過」
+   * 為前提。環境壞掉的時候，開發中的模組更不該對外開著。
+   */
+  if (
+    !isHrModuleEnabled() &&
+    isHrModulePath(request.nextUrl.pathname)
+  ) {
+    return new NextResponse(null, { status: 404 });
+  }
+
+  /**
+   * Info: (20260820 - Julian) API 路徑到此為止，不走下面的 canonical 導向。
+   *
+   * `matcher` 原本**排除** `api`，也就是 API 請求從來不經過這一支。
+   * 為了讓上面那道閘蓋得到 37 支 `/hr/` 端點，matcher 補上了 `/api/:path*` ——
+   * 但下面那段 canonical 導向是寫給**瀏覽器**的（307 + cookie 防迴圈），
+   * 對 API 客戶端丟 307 會讓 fetch 靜默跟著跑到另一個網域，或者直接壞掉。
+   *
+   * 因此 API 只借用這道閘，其餘行為與加閘之前**完全相同**（連 `x-url` 都
+   * 不設 —— 它們本來就沒有）。
+   */
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
   const targetUrlStr = process.env.NEXT_PUBLIC_APP_URL;
   const envIsValid = await validateEnv();
 
@@ -113,5 +157,14 @@ export const config = {
      * - favicon.ico (favicon file)
      */
     "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    /**
+     * Info: (20260820 - Julian) API 也要經過，否則人事模組的閘只擋得到畫面
+     * （而 37 支 `/hr/` 端點照樣回得出資料 —— 那才是真正會外洩的東西）。
+     *
+     * 上面那一條刻意排除 `api`，理由是 canonical 導向不該碰 API；
+     * 那個理由仍然成立，所以函式開頭對 `/api/` 提早 return。
+     * 兩件事分開：**誰經過**由這裡決定，**經過之後做什麼**由函式決定。
+     */
+    "/api/:path*",
   ],
 };
