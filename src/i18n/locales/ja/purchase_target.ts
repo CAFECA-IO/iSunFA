@@ -2,6 +2,8 @@ export const purchaseTarget = {
   subscription_title: "どのチームのサブスクリプションですか",
   credits_title: "クレジットの入金先",
   seat_breakdown: "{{seats}} 席 × NT$ {{unit}} ＝ NT$ {{total}}",
+  extension_note:
+    "「{{team}}」の現在の契約期間は {{date}} までです。今回のご購入はその日から**加算**され、残り日数は失われません。回数の上限はなく、繰り返し購入して延長できます。",
   seat_note:
     "席数は現在のチーム人数で計算します。実際の請求額は決済時点の人数に基づきます。",
   // Info: (20260814 - Luphia) 沒有團隊可選時要說出是哪一種沒有（載入中／失敗／過期／無權限）

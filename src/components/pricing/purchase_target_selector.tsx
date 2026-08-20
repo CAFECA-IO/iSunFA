@@ -48,6 +48,13 @@ interface IPurchaseTargetSelectorProps {
   seatCount?: number | null;
   unitPrice?: number | null;
   seatAmount?: number | null;
+  /**
+   * Info: (20260820 - Luphia) 當期期末（epoch 秒）；有值代表這次購買是**展延**
+   *（產品決定 20260820：不設預付上限，但要明確告知）。
+   *
+   * null＝當期已結束或沒有訂閱，那不是展延，不顯示這段揭露。
+   */
+  extensionPeriodEndSec?: number | null;
   disabled?: boolean;
 }
 
@@ -63,6 +70,7 @@ export default function PurchaseTargetSelector({
   seatCount = null,
   unitPrice = null,
   seatAmount = null,
+  extensionPeriodEndSec = null,
   disabled = false,
 }: IPurchaseTargetSelectorProps) {
   const { t } = useTranslation();
@@ -188,6 +196,23 @@ export default function PurchaseTargetSelector({
               {t("purchase_target.seat_note")}
             </p>
           </div>
+        )}
+
+      {/**
+       * Info: (20260820 - Luphia) 展延揭露：付款前就要說清楚「從哪一天起算」。
+       * 履行是自當期屆滿日累加（`applyTeamSubscriptionInTx`），而使用者的預設
+       * 想像是「從今天起算 30 天」——兩者差幾天，不說就只能事後自己推。
+       */}
+      {target === PURCHASE_TARGET.TEAM &&
+        extensionPeriodEndSec !== null &&
+        selectedTeamId && (
+          <p className="rounded-lg bg-blue-50 p-3 text-xs text-blue-800">
+            {t("purchase_target.extension_note", {
+              team:
+                teams.find((team) => team.id === selectedTeamId)?.name ?? "",
+              date: new Date(extensionPeriodEndSec * 1000).toLocaleDateString(),
+            })}
+          </p>
         )}
 
       {target === PURCHASE_TARGET.PERSONAL && (

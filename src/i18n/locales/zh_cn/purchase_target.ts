@@ -2,6 +2,8 @@ export const purchaseTarget = {
   subscription_title: "订阅给哪个团队",
   credits_title: "点数存入哪里",
   seat_breakdown: "{{seats}} 席 × NT$ {{unit}} ＝ NT$ {{total}}",
+  extension_note:
+    "「{{team}}」当前的订阅期间至 {{date}}。本次购买将**自该日起算并累加**，当期剩余天数不会消失；可重复购买以继续延长，不设次数上限。",
   seat_note: "席次以团队目前人数计算；实际收费金额以结帐当下的人数为准。",
   // Info: (20260814 - Luphia) 沒有團隊可選時要說出是哪一種沒有（載入中／失敗／過期／無權限）
   session_expired: "登录已过期，请重新登录后再选择团队。",

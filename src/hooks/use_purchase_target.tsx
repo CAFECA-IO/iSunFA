@@ -127,6 +127,42 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
   // Info: (20260814 - Luphia) 供畫面重試（網路抖動不該讓人只能重整整頁）
   const reloadTeams = useCallback(() => setReloadToken((n) => n + 1), []);
 
+  /**
+   * Info: (20260820 - Luphia) 選定團隊後查當期期末，用於**付款前的展延揭露**
+   *（產品決定 20260820：不設預付上限，但要明確告知）。
+   *
+   * 付款履行改為展延（`applyTeamSubscriptionInTx`）：當期還沒結束時，新購期間
+   * 自**當期屆滿日**起算並累加。使用者需要在付款前就知道這件事——否則
+   * 「我今天付錢，是不是從今天算起？」只能靠事後看訂閱頁推斷。
+   *
+   * 查 `GET /subscription` 而不是把期末塞進團隊清單：那支端點本來就回這個欄位，
+   * 而團隊清單是所有購買情境共用的（購點也用），為一個訂閱專屬的揭露改它的
+   * 契約不划算。失敗就不顯示揭露——寧可少一行字，不要顯示一個猜的日期。
+   */
+  const [periodEndSec, setPeriodEndSec] = useState<number | null>(null);
+  useEffect(() => {
+    if (!isSubscription || !selectedTeamId) {
+      setPeriodEndSec(null);
+      return undefined;
+    }
+    let active = true;
+    request<{ payload: { currentPeriodEnd?: number } | null }>(
+      `/api/v1/user/team/${selectedTeamId}/subscription`,
+    )
+      .then((response) => {
+        if (!active) return;
+        const end = response.payload?.currentPeriodEnd ?? 0;
+        // Info: (20260820 - Luphia) 當期已結束（或沒有訂閱）就不是展延，不必揭露
+        setPeriodEndSec(end * 1000 > Date.now() ? end : null);
+      })
+      .catch(() => {
+        if (active) setPeriodEndSec(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [isSubscription, selectedTeamId]);
+
   const eligibleTeams = useMemo(
     () => filterEligibleTeams(teams, mode),
     [teams, mode],
@@ -294,6 +330,7 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
       seatCount={seatCount}
       unitPrice={context.unitPrice ?? null}
       seatAmount={seatAmount}
+      extensionPeriodEndSec={periodEndSec}
     />
   );
 

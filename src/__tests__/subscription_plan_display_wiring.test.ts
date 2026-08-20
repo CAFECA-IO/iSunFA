@@ -280,3 +280,52 @@ describe("價格查不到時不顯示免費", () => {
     expect(card).toMatch(/pricing\.extend_plan/);
   });
 });
+
+/**
+ * Info: (20260820 - Luphia) 展延要在**付款前**說清楚（產品決定 20260820：
+ * 不設預付上限，但要明確告知）。
+ *
+ * 履行是自當期屆滿日累加，而使用者的預設想像是「從今天起算」。兩者差幾天，
+ * 不說就只能事後自己推——而條款寫的是「付款畫面於送出前會顯示本次購買的起算日」，
+ * 那句話必須有對應的實作。
+ */
+describe("展延的付款前揭露", () => {
+  it("選定團隊後會查當期期末並傳給選擇器", () => {
+    const hook = codeOf("src", "hooks", "use_purchase_target.tsx");
+
+    expect(hook).toMatch(/\/subscription`/);
+    expect(hook).toMatch(/extensionPeriodEndSec=\{periodEndSec\}/);
+  });
+
+  it("選擇器在當期未結束時顯示起算日", () => {
+    const selector = codeOf(
+      "src",
+      "components",
+      "pricing",
+      "purchase_target_selector.tsx",
+    );
+
+    expect(selector).toMatch(/purchase_target\.extension_note/);
+    expect(selector).toMatch(/extensionPeriodEndSec !== null/);
+  });
+
+  // Info: (20260820 - Luphia) 五語系都要有那一段文案（缺一個語系就是那個語系看不到揭露）
+  it.each(["zh_tw", "en", "zh_cn", "ja", "ko"])(
+    "%s 有 extension_note 文案",
+    (locale) => {
+      expect(
+        readFileSync(
+          join(
+            process.cwd(),
+            "src",
+            "i18n",
+            "locales",
+            locale,
+            "purchase_target.ts",
+          ),
+          "utf8",
+        ),
+      ).toMatch(/extension_note/);
+    },
+  );
+});
