@@ -37,6 +37,8 @@ const A = { id: "ot-a", requestedStartMinute: 1020, requestedEndMinute: 1140 };
 const B = { id: "ot-b", requestedStartMinute: 1140, requestedEndMinute: 1260 };
 
 interface IRequestRow {
+  // Info: (20260820 - Julian) 讓 `matchesRequest` 以鍵名取值；具名欄位仍逐一列出
+  [key: string]: string | number | null;
   id: string;
   accountBookId: string;
   employeeId: string;
@@ -65,46 +67,83 @@ const rowOf = (
 });
 
 /**
- * Info: (20260820 - Julian) 只實作被測查詢**真的用到的**條件。
+ * Info: (20260820 - Julian) 只實作被測查詢真的用到的條件，**其餘一律丟例外**。
  *
- * 刻意不做成通用的 where 解譯器：一個「幾乎完整」的替身會讓人以為沒被測到
- * 的條件也被測到了。少任何一種，被測程式會當場算錯而不是安靜跳過。
+ * ## 為什麼要丟，而不是忽略
+ *
+ * 第一版是一連串 `if (where.X !== undefined)`，於是**沒被列到的鍵會被安靜
+ * 略過**。當被測查詢從 `requestedStartMinute: { lt }` 改成 `OR: [...]`（起點
+ * 相同時以 id 決勝）之後，這支替身對起點完全不過濾 —— 每一列都命中，
+ * A 因此看到 B 的 120 分而拿到 2/3。
+ *
+ * 諷刺的是第一版的註解就寫著「少任何一種，被測程式會當場算錯，不會安靜地
+ * 跳過」—— 那句話當時是錯的，`if` 串本身就是安靜跳過。現在改成逐鍵分派，
+ * 遇到不認得的鍵直接丟：替身跟不上被測查詢時，紅的是替身而不是斷言。
+ *
+ * 仍然刻意不做成通用的 Prisma where 解譯器：一個「幾乎完整」的替身會讓人
+ * 以為沒被測到的條件也被測到了。
  */
-const matchesRequest = (
-  row: IRequestRow,
-  where: Record<string, unknown>,
-): boolean => {
-  if (where.accountBookId !== undefined && row.accountBookId !== where.accountBookId) return false;
-  if (where.employeeId !== undefined && row.employeeId !== where.employeeId) return false;
-  if (where.workDate !== undefined) {
-    const clause = where.workDate as { gte?: string; lte?: string } | string;
-    if (typeof clause === "string") {
-      if (row.workDate !== clause) return false;
-    } else {
-      if (clause.gte !== undefined && row.workDate < clause.gte) return false;
-      if (clause.lte !== undefined && row.workDate > clause.lte) return false;
+type IWhereClause = Record<string, unknown>;
+
+const matchesField = (actual: unknown, clause: unknown): boolean => {
+  if (clause === null || typeof clause !== "object") return actual === clause;
+
+  for (const [op, value] of Object.entries(clause as IWhereClause)) {
+    switch (op) {
+      case "lt":
+        if (!(Number(actual) < Number(value))) return false;
+        break;
+      case "gt":
+        if (!(Number(actual) > Number(value))) return false;
+        break;
+      case "gte":
+        if ((actual as string) < (value as string)) return false;
+        break;
+      case "lte":
+        if ((actual as string) > (value as string)) return false;
+        break;
+      case "not":
+        if (actual === value) return false;
+        break;
+      case "in":
+        if (!(value as unknown[]).includes(actual)) return false;
+        break;
+      default:
+        throw new Error(`替身不支援這個運算子：${op}`);
     }
   }
-  if (where.id !== undefined) {
-    const clause = where.id as { not?: string };
-    if (clause.not !== undefined && row.id === clause.not) return false;
-  }
-  if (where.status !== undefined) {
-    const clause = where.status as { in?: string[] } | string;
-    if (typeof clause === "string") {
-      if (row.status !== clause) return false;
-    } else if (Array.isArray(clause.in)) {
-      if (!clause.in.includes(row.status)) return false;
-    } else {
-      throw new Error(`替身不支援這個 status 條件：${JSON.stringify(clause)}`);
+  return true;
+};
+
+const ROW_FIELDS: readonly string[] = [
+  "id",
+  "accountBookId",
+  "employeeId",
+  "workDate",
+  "status",
+  "requestedStartMinute",
+  "requestedEndMinute",
+  "recognizedMinutes",
+];
+
+const matchesRequest = (row: IRequestRow, where: IWhereClause): boolean => {
+  for (const [key, clause] of Object.entries(where)) {
+    if (key === "OR") {
+      if (!(clause as IWhereClause[]).some((one) => matchesRequest(row, one))) {
+        return false;
+      }
+      continue;
     }
-  }
-  if (where.requestedStartMinute !== undefined) {
-    const clause = where.requestedStartMinute as { lt?: number };
-    if (clause.lt === undefined) {
-      throw new Error("替身只支援 requestedStartMinute 的 lt");
+    if (key === "AND") {
+      if (!(clause as IWhereClause[]).every((one) => matchesRequest(row, one))) {
+        return false;
+      }
+      continue;
     }
-    if (!(row.requestedStartMinute < clause.lt)) return false;
+    if (!ROW_FIELDS.includes(key)) {
+      throw new Error(`替身不支援這個條件鍵：${key}`);
+    }
+    if (!matchesField(row[key], clause)) return false;
   }
   return true;
 };
