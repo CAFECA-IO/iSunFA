@@ -22,6 +22,7 @@ import {
 import {
   assertNoMergeCycle,
   LeavePolicyInvariantError,
+  LeavePolicyMergeCycleError,
 } from "@/repositories/leave_policy_invariant";
 import {
   ILeaveAccrualTierTablePayload,
@@ -336,6 +337,20 @@ export class LeavePolicyService {
       if (error instanceof LeavePolicyMissingError) {
         throw new AppError(API_ERRORS.NF_LEAVE_POLICY);
       }
+      /**
+       * Info: (20260820 - Julian) 成環要收斂成它自己的碼（review 第 11 輪第 3 條）。
+       *
+       * 順序不能反：`LeavePolicyMergeCycleError` 是
+       * `LeavePolicyInvariantError` 的子類別，先比對父類別的話它永遠走不到。
+       *
+       * 走到這裡的成環是**併發競態**（前置檢查讀圖與寫入之間有人插隊），
+       * 而那正是 repository 那道閘存在的理由。收斂成
+       * `VA_INVALID_INPUT_DATA`（「輸入格式錯誤」）會讓使用者去檢查他剛才
+       * 填的欄位 —— 而那些欄位都是對的。
+       */
+      if (error instanceof LeavePolicyMergeCycleError) {
+        throw new AppError(API_ERRORS.VA_LEAVE_POLICY_MERGE_CYCLE);
+      }
       if (error instanceof LeavePolicyInvariantError) {
         throw new AppError(API_ERRORS.VA_INVALID_INPUT_DATA);
       }
@@ -347,7 +362,15 @@ export class LeavePolicyService {
     try {
       check();
     } catch (error) {
-      if (error instanceof LeavePolicyInvariantError) {
+      /**
+       * Info: (20260820 - Julian) 收窄到成環那一支（review 第 11 輪第 3 條）。
+       *
+       * 這裡原本接的是父類別 `LeavePolicyInvariantError` —— 而
+       * `wrapInvariant` 包的雖然只有 `assertNoMergeCycle`，
+       * 用父類別等於承諾「這個 `check` 丟的任何不變式錯誤都是成環」。
+       * 哪天有人把第二支 assert 包進來，它會被貼上一個不對的碼。
+       */
+      if (error instanceof LeavePolicyMergeCycleError) {
         throw new AppError(API_ERRORS.VA_LEAVE_POLICY_MERGE_CYCLE);
       }
       throw error;

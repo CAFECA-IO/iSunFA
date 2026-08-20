@@ -249,16 +249,69 @@ export const expandLeaveSpan = (params: {
     if (endsInSameShift) return [...days.values()];
   }
 
+  /**
+   * Info: (20260820 - Julian) 「迄落在哪一個工作日的班上」在迴圈**之前**算好
+   * （review 第 9 輪第 2 條）。
+   *
+   * ## 被修掉的死條件
+   *
+   * 這裡原本靠迴圈裡的一行判斷：
+   *
+   * ```ts
+   * isLast === false && index === dates.length - 2 && crossesMidnight(shift) && …
+   * ```
+   *
+   * `dates.length >= 3` 時 `length - 2` 指的是**中間日**，而中間日在上方
+   * `if (!isFirst && !isLast)` 就已經回傳了 —— 這一行永遠求值不到。
+   * 它實際的意思是「兩天區間的第一天」，而它讀起來是「倒數第二天」。
+   * 名字與行為不一致的地方，就是下一個人會再踩的地方。
+   *
+   * 後果：跨三日以上的夜班假，倒數第二天恆為 `FULL`，
+   * 即使使用者的迄只涵蓋那一班的前半段 —— 實測連「末日 00:00 收工」與
+   * 「末日 05:00 收工」都算出同一個答案。方向全部是**多扣**。
+   *
+   * ## 現在的判準
+   *
+   * 迄的時刻只可能屬於兩班之一：`end.workDate` 自己那一班，或
+   * **前一天**那一班的午夜後半段。前者是常態，後者要三件事同時成立
+   * （前一天有班、那一班跨午夜、換算到那一天的座標後落在它結束之前）——
+   * 與 `startsInPreviousNightShift` 對起點的判準是同一個形狀。
+   *
+   * 算出來之後，迴圈只要問「這一天是不是 `endOwnerDate`」，
+   * 不必再從 index 推。`endOwnerDate` 之後的日子一分鐘都不涵蓋，整天丟掉。
+   */
+  const endPreviousDate = addIsoDays(end.workDate, -1);
+  const endPreviousShift = params.shiftOf(endPreviousDate);
+  const endsInPreviousNightShift =
+    endPreviousShift !== null &&
+    crossesMidnight(endPreviousShift) &&
+    minutesInWorkDateFrame(end.minuteOfDay, 1) <= endPreviousShift.endMinute;
+
+  const endOwnerDate = endsInPreviousNightShift
+    ? endPreviousDate
+    : end.workDate;
+  const endMinuteInFrame = endsInPreviousNightShift
+    ? minutesInWorkDateFrame(end.minuteOfDay, 1)
+    : end.minuteOfDay;
+
   dates.forEach((workDate, index) => {
     const isFirst = index === 0;
-    const isLast = index === dates.length - 1;
+    /**
+     * Info: (20260820 - Julian) 「最後一個涵蓋得到的日子」＝ 迄那一班所屬的工作日，
+     * **不是** `dates` 的最後一個元素。跨夜班的迄落在次日凌晨時，那個次日
+     * 自己一分鐘都不涵蓋。
+     */
+    const isEndDay = workDate === endOwnerDate;
+
+    // Info: (20260820 - Julian) 迄那一班之後的日子：整天丟掉
+    if (workDate > endOwnerDate) return;
 
     /**
      * Info: (20260819 - Julian) 中間日整天請，不需要知道班別長什麼樣。
      * 首末日（含只有一天的情形）要班別才切得出區間 —— 查無班別時交給呼叫端擋，
      * 這支函式不認識 `AppError`，也不該認識（同引擎不知道 HTTP 的理由）。
      */
-    if (!isFirst && !isLast) {
+    if (!isFirst && !isEndDay) {
       days.set(workDate, { workDate, segment: LeaveDaySegment.FULL });
       return;
     }
@@ -286,37 +339,17 @@ export const expandLeaveSpan = (params: {
       : shift.startMinute;
 
     /**
-     * Info: (20260820 - Julian) 迄落在跨夜班的午夜後半段時，它屬於**這一天**的班。
+     * Info: (20260820 - Julian) 迄那一天用 `endMinuteInFrame`（已經換算到這一天的座標），
+     * 其餘的日子請到班別結束。兩側再一起夾進班別區間。
      *
-     * 例：夜班 20:00 → 次日 05:00，使用者填「8/19 20:00 起、8/20 05:00 迄」。
-     * `dates` 是 [8/19, 8/20]，而 8/20 05:00 是 **8/19** 那一班的 1740 分 ——
-     * 因此收在 8/19 這一格，8/20 自己不再貢獻任何一格（見下方的 `return`）。
+     * 「末日的班跨午夜、而迄落在它開始之前」那個特例不見了 ——
+     * 它現在由 `workDate > endOwnerDate` 那一行涵蓋：那種情形下迄屬於
+     * 前一天的班，`endOwnerDate` 就是前一天，這一天整個丟掉。
+     * 一個不需要特例的規則就不該有特例。
      */
-    const endsInThisNightShift =
-      isLast === false &&
-      index === dates.length - 2 &&
-      crossesMidnight(shift) &&
-      minutesInWorkDateFrame(end.minuteOfDay, 1) <= shift.endMinute;
-
-    const endMinute = isLast
-      ? Math.min(end.minuteOfDay, shift.endMinute)
-      : endsInThisNightShift
-        ? minutesInWorkDateFrame(end.minuteOfDay, 1)
-        : shift.endMinute;
-
-    /**
-     * Info: (20260820 - Julian) 末日的班若跨午夜，而迄落在它開始之前，
-     * 那個時刻屬於**前一天**的班 —— 而前一天就是上一圈已經處理過的那一格。
-     * 這一天自己一分鐘都不涵蓋，整天丟掉。
-     */
-    if (
-      isLast &&
-      !isFirst &&
-      crossesMidnight(shift) &&
-      end.minuteOfDay < shift.startMinute
-    ) {
-      return;
-    }
+    const endMinute = isEndDay
+      ? Math.min(endMinuteInFrame, shift.endMinute)
+      : shift.endMinute;
 
     /**
      * Info: (20260819 - Julian) 首末日**可能一分鐘都不涵蓋**，那時候把它整天丟掉。

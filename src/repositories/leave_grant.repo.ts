@@ -382,6 +382,18 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
         createdAt: true,
         leaveGrant: { select: { leavePolicyId: true, expiresOn: true } },
         leaveDay: { select: { workDate: true } },
+        /**
+         * Info: (20260820 - Julian) 快照優先，live join 只服務**舊列**
+         * （review 第 10 輪第 1 條）。
+         *
+         * M16 補了 `actorEmployeeNo` / `actorName` 兩欄，但這一支 ——
+         * L8 額度異動明細**唯一的讀取端** —— 還是照著 `row.actor` 讀。
+         * 於是那位人資離職之後（`actorEmployeeId` 是 `onDelete: SetNull`），
+         * 畫面照樣顯示「系統」，而資料庫裡明明有答案。
+         * 寫了快照卻沒有人讀，等於沒補。
+         */
+        actorEmployeeNo: true,
+        actorName: true,
         actor: { select: { employeeNo: true, name: true } },
       },
       orderBy: { createdAt: "desc" },
@@ -397,9 +409,18 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
       grantExpiresOn: row.leaveGrant.expiresOn,
       workDate: row.leaveDay?.workDate ?? null,
       reason: row.reason,
-      // Info: (20260817 - Julian) 系統排程產生者為 null，畫面顯示「系統」
-      actorEmployeeNo: row.actor?.employeeNo ?? null,
-      actorName: row.actor?.name ?? null,
+      /**
+       * Info: (20260817 - Julian) 系統排程產生者為 null，畫面顯示「系統」。
+       *
+       * Info: (20260820 - Julian) **快照優先**（review 第 10 輪第 1 條）。
+       *
+       * 順序不能反過來：`row.actor` 是 live join，那個人離職之後就是 null，
+       * 而快照是寫入當下固化的。先讀快照、讀不到才回頭問關聯 ——
+       * 後者只服務 M16 之前落地的舊列（它們沒有快照，且不回填：
+       * 「當時的姓名工號」已經遺失，補一個現在的進去會讓快照這件事變成假的）。
+       */
+      actorEmployeeNo: row.actorEmployeeNo ?? row.actor?.employeeNo ?? null,
+      actorName: row.actorName ?? row.actor?.name ?? null,
       createdAt: row.createdAt.toISOString(),
     }));
   }

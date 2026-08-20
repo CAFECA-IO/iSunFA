@@ -45,7 +45,10 @@ import { evaluateAttendanceDay } from "@/lib/attendance_rules";
 import { IShiftWindow } from "@/interfaces/attendance";
 import { attendancePunchRepo } from "@/repositories/attendance_punch.repo";
 import { assertSchedulableDay } from "@/repositories/attendance_schedule_invariant";
-import { assertLeavePolicyUnit } from "@/repositories/leave_policy_invariant";
+import {
+  assertLeavePolicyUnit,
+  assertNoMergeCycle,
+} from "@/repositories/leave_policy_invariant";
 import { leaveApprovalRuleRepo } from "@/repositories/leave_approval_rule.repo";
 import { leaveAccrualContextRepo } from "@/repositories/leave_accrual_context.repo";
 import { leaveBalanceService } from "@/services/leave_balance.service";
@@ -950,8 +953,8 @@ function policyNameZhTw(code: LeavePolicyCode): string {
  * 分兩趟：先全部建立，再回填 `mergesIntoPolicyId`（家庭照顧假併入事假，
  * 性平法 §20）—— 自關聯要求被指向的那一列先存在。
  *
- * `assertLeavePolicyUnit` 在此自行補上，理由同 `assertSchedulableDay`：
- * 種子腳本直接進 Prisma，繞過了 repository 這道關卡。
+ * `assertLeavePolicyUnit`（第一趟）與 `assertNoMergeCycle`（第二趟）在此自行補上，
+ * 理由同 `assertSchedulableDay`：種子腳本直接進 Prisma，繞過了 repository 這道關卡。
  */
 async function seedLeavePolicies(): Promise<Map<string, string>> {
   const idByCode = new Map<string, string>();
@@ -1016,12 +1019,34 @@ async function seedLeavePolicies(): Promise<Map<string, string>> {
     idByCode.set(seed.code, policy.id);
   }
 
+  /**
+   * Info: (20260820 - Julian) 第二趟也要過同一道判準（review 第 11 輪第 3 條）。
+   *
+   * 第一趟有手動補 `assertLeavePolicyUnit`，第二趟沒有補
+   * `assertNoMergeCycle` —— 而這一趟寫的**正是**成環偵測唯一在意的那一欄。
+   * `leave_policy_invariant.ts` 的檔頭自己寫著「高風險寫入路徑不是 API，
+   * 是 **seed**，而 seed 繞過所有 service」；一份繞過自己所指名的那條路徑的
+   * 守衛，等於沒有守衛。
+   *
+   * `edges` 逐筆累積：與 repository 那道閘一樣，判斷要看**寫入後的圖**，
+   * 而不是「先全部寫完再檢查」—— 後者發現成環時資料已經壞了。
+   */
+  const edges: Record<string, string | null> = Object.fromEntries(
+    [...idByCode.values()].map((id) => [id, null]),
+  );
+
   for (const seed of DEFAULT_LEAVE_POLICY_SEED) {
     if (seed.mergesIntoCode === null) continue;
+    const from = idByCode.get(seed.code)!;
+    const to = idByCode.get(seed.mergesIntoCode)!;
+
+    assertNoMergeCycle({ edges, from, to });
+
     await prisma.leavePolicy.update({
-      where: { id: idByCode.get(seed.code)! },
-      data: { mergesIntoPolicyId: idByCode.get(seed.mergesIntoCode)! },
+      where: { id: from },
+      data: { mergesIntoPolicyId: to },
     });
+    edges[from] = to;
   }
 
   console.log(

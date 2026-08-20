@@ -233,6 +233,18 @@ describe("跨夜班：午夜後的時段屬於前一天的工作日", () => {
    * 8/19 20:00 → 8/22 05:00 的意思是「今晚上班到後天早上收工都不在」，
    * 而 8/22 05:00 正是 8/21 那一班的終點。若 8/22 也生出一格，
    * 那一天的夜班（8/22 20:00 起）會被誤扣掉。
+   *
+   * Info: (20260820 - Julian) ⚠️ **這一條的迄選在缺陷為 0 的那一點**
+   * （review 第 9 輪第 2 條）。
+   *
+   * `05:00` 恰好是 8/21 那一班的終點，因此「涵蓋整班」與「錯誤地整天算」
+   * 給出同一個分鐘數 —— 於是跨三日以上的末班只涵蓋前半段時多扣的那一段，
+   * 這條測試看不見。下面 `it.each` 那一組補的就是 `05:00` 以外的時刻。
+   *
+   * 8/21 由 `FULL` 改為 `CUSTOM(1200, 1740)`：兩者**扣的分鐘數相同**
+   * （實測 `resolveLeaveMinutes` 對夜班兩種形狀都給 450 —— 進位之後由
+   * `Math.min(rounded, dayEquivalentMinutes)` 夾回來），而 `CUSTOM` 多說了
+   * 一件事：涵蓋的是哪一段窗。首日一直都是這個形狀。
    */
   it("多日區間的末日若只到清晨，末日不再貢獻一格", () => {
     expect(expandNight("2026-08-19T20:00", "2026-08-22T05:00")).toEqual([
@@ -243,13 +255,114 @@ describe("跨夜班：午夜後的時段屬於前一天的工作日", () => {
         endMinute: 1740,
       },
       { workDate: "2026-08-20", segment: LeaveDaySegment.FULL },
-      { workDate: "2026-08-21", segment: LeaveDaySegment.FULL },
+      {
+        workDate: "2026-08-21",
+        segment: LeaveDaySegment.CUSTOM,
+        startMinute: 1200,
+        endMinute: 1740,
+      },
     ]);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 跨三日以上，末班**只涵蓋前半段**
+   * （review 第 9 輪第 2 條）。
+   *
+   * ## 被修掉的死條件
+   *
+   * `expandLeaveSpan` 原本靠迴圈裡的
+   * `index === dates.length - 2` 判斷「迄落在這一天的夜班上」，
+   * 而 `dates.length >= 3` 時那個 index 指的是**中間日** ——
+   * 中間日在上一個 `if (!isFirst && !isLast)` 就已經回傳了。
+   * 那一行永遠求值不到，於是倒數第二天恆為 `FULL`：
+   * 實測「末日 00:00 收工」與「末日 05:00 收工」算出**完全一樣**的答案。
+   *
+   * ## 為什麼是這幾個時刻
+   *
+   * 曝光窗是「末日凌晨收工」，也就是夜班最常見的形狀。`04:00` 之後
+   * 由 `min(span, requiredWorkMinutes)` 吸收掉，因此挑在它之前；
+   * `05:00`（班別終點）刻意留在上面那一條，兩者一起才說得出
+   * 「終點正確」與「終點之前也正確」是兩件事。
+   */
+  it.each([
+    ["00:00 收工", "2026-08-21T00:00", 1440],
+    ["02:00 收工", "2026-08-21T02:00", 1560],
+    ["03:30 收工", "2026-08-21T03:30", 1650],
+  ])("跨三日、末班 %s：倒數第二天只到那個時刻", (_label, endAt, endMinute) => {
+    expect(expandNight("2026-08-19T20:00", endAt)).toEqual([
+      {
+        workDate: "2026-08-19",
+        segment: LeaveDaySegment.CUSTOM,
+        startMinute: 1200,
+        endMinute: 1740,
+      },
+      {
+        workDate: "2026-08-20",
+        segment: LeaveDaySegment.CUSTOM,
+        startMinute: 1200,
+        endMinute,
+      },
+    ]);
+  });
+
+  /**
+   * Info: (20260820 - Julian) 同一件事的另一個說法：**迄越晚，扣得不得越少**。
+   *
+   * 上面三條釘的是具體數字，這一條釘的是關係 —— 而缺陷的形狀正是
+   * 「整段區間的答案與迄無關」，那會讓相鄰兩個迄算出同一個值。
+   * 逐分鐘掃過整個凌晨，任何一處退回「恆為 FULL」都會讓它紅。
+   */
+  it("跨三日、末班凌晨逐分鐘：涵蓋的分鐘數隨迄單調遞增", () => {
+    const coveredMinutes = (endAt: string): number =>
+      expandNight("2026-08-19T20:00", endAt).reduce(
+        (total, day) =>
+          total +
+          (day.segment === LeaveDaySegment.FULL
+            ? NIGHT_SHIFT.endMinute - NIGHT_SHIFT.startMinute
+            : (day.endMinute ?? 0) - (day.startMinute ?? 0)),
+        0,
+      );
+
+    let previous = -1;
+    let distinct = 0;
+    for (let minute = 1; minute <= 300; minute += 1) {
+      const hh = String(Math.floor(minute / 60)).padStart(2, "0");
+      const mm = String(minute % 60).padStart(2, "0");
+      const covered = coveredMinutes(`2026-08-21T${hh}:${mm}`);
+      expect(covered).toBeGreaterThanOrEqual(previous);
+      if (covered !== previous) distinct += 1;
+      previous = covered;
+    }
+
+    /**
+     * Info: (20260820 - Julian) 而且要**真的隨迄變動**。
+     * 只驗單調的話，一個恆回同一個值的實作（正是那個缺陷）也會通過。
+     */
+    expect(distinct).toBe(300);
   });
 
   /**
    * Info: (20260820 - Julian) 反面：白天那段對夜班的人來說仍然不是上班時間。
    * 少了這一條，一個「一律往前一天挪」的實作也會通過。
+   *
+   * Info: (20260820 - Julian) ⚠️ **這兩條釘的是「零長度守衛」，不是跨夜處理**
+   * （review 第 11 輪第 4 條）。
+   *
+   * 兩者曾經混為一談：舊版有一條「末日的班跨午夜、而迄落在它開始之前就丟掉」
+   * 的分支，而它是死碼 —— 那種情形夾出來的區間本來就是零長度，
+   * 上面那個 `startMinute >= endMinute` 已經先攔下了。於是唯一「點名」跨夜
+   * 行為的測試，證明的其實是零長度守衛在做的事，**把那個分支刪掉照樣是綠的**。
+   *
+   * 現在分開了，2026-08-20 以突變測試逐一確認過：
+   *
+   * | 拿掉哪一行 | 哪些斷言會紅 |
+   * |---|---|
+   * | `if (workDate > endOwnerDate) return;` | 「末日只到清晨」與跨三日那三條 |
+   * | `if (startMinute >= endMinute) return;` | **只有**下面這兩條 |
+   * | `endOwnerDate` 恆取 `end.workDate` | 「末日只到清晨」與跨三日那三條 |
+   *
+   * 兩組不重疊 —— 那才是「各自有人守」的意思。合併它們之前先想清楚
+   * 合併之後哪一行還有人釘。
    */
   it.each([
     ["整段落在白天", "2026-08-20T08:00", "2026-08-20T12:00"],

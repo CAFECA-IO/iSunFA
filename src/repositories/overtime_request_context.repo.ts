@@ -237,11 +237,6 @@ const sumRecognizedMinutes = async (params: {
   from: string;
   to: string;
   excludeRequestId: string;
-  /**
-   * Info: (20260820 - Julian) 只數**開始得比這個分鐘早**的那些單（review 第 5 輪 M4）。
-   * 省略即不限先後（單日上限與月／季累計用的就是那個語意）。
-   */
-  startedBeforeMinute?: number;
 }): Promise<number> => {
   const aggregate = await prisma.overtimeRequest.aggregate({
     where: {
@@ -250,13 +245,90 @@ const sumRecognizedMinutes = async (params: {
       status: OvertimeRequestStatus.APPROVED,
       workDate: { gte: params.from, lte: params.to },
       id: { not: params.excludeRequestId },
-      ...(params.startedBeforeMinute === undefined
-        ? {}
-        : { requestedStartMinute: { lt: params.startedBeforeMinute } }),
     },
     _sum: { recognizedMinutes: true },
   });
   return aggregate._sum.recognizedMinutes ?? 0;
+};
+
+/**
+ * Info: (20260820 - Julian) 當日**開始得比本次早**的加班分鐘（review 第 5 輪 M4，
+ * 第 8 輪修正）。
+ *
+ * ## 為什麼不是在 `sumRecognizedMinutes` 上加一個條件
+ *
+ * 第一版就是那樣做的，而它把 `status = APPROVED` 與「開始得更早」**以 AND
+ * 串在一起** —— 於是「更早的那一張還沒被核准」與「更早的那一張不存在」
+ * 變成同一個答案。同日兩張不重疊的單 A(17:00–19:00)、B(19:00–21:00)：
+ *
+ * ```
+ * 先核 A 再核 B：A earlier=0 → 1/3；B earlier=120 → 2/3     ✅
+ * 先核 B 再核 A：B earlier=0 → 1/3；A earlier=0  → 1/3     ❌ 少一段 2/3
+ * ```
+ *
+ * 而分段在核准當下算一次就落地，同日手足單**不會被重算**（更正流程尚未實作）。
+ * 舊碼的缺陷是**歸屬錯**（總額仍是 1/3 + 2/3），這個第一版的缺陷是
+ * **總額少一段 §24 I 的 2/3 加成** —— 前者是帳面難看，後者是少付工資。
+ *
+ * ## 判準：級距是「時間」的屬性，不是「核准狀態」的屬性
+ *
+ * §24 I 說的是「延長工作時間在二小時以內者」加給 1/3、「再延長」加給 2/3。
+ * 那個「二小時以內」數的是**當天在此之前的延長工時**，與誰先簽名無關。
+ * 因此這一支收 `PENDING` 與 `APPROVED` 兩種狀態，`REJECTED` / `WITHDRAWN`
+ * 不算（它們不是加班事實）。
+ *
+ * ## 待簽的單用什麼分鐘數
+ *
+ * 它還沒有 `recognizedMinutes`（要核准當下才算得出來），因此取
+ * `requestedEnd - requestedStart` 當**上界**。方向要說清楚：
+ *
+ * - 上界偏大 → 本次被推到較高的級距 → **對勞工有利**。
+ * - 那張待簽單日後被駁回 → 本次的級距回頭看是偏高的，
+ *   而那筆錢已經發出去了。同樣對勞工有利，且不違法（給高於法定下限）。
+ *
+ * 反方向（少算）才是不能接受的那一個：它直接低於 §24 I 的法定下限。
+ * 兩種偏差都會存在，選擇的是哪一邊 —— 而只有一邊會被勞檢開罰。
+ *
+ * ToDo: (20260820 - Julian) 更正流程（撤銷核准並重算）落地之後，
+ * 這裡可以改成「核准當下對同日手足單一併重算」，兩種偏差就都消失。
+ */
+const sumEarlierSameDayMinutes = async (params: {
+  accountBookId: string;
+  employeeId: string;
+  workDate: string;
+  excludeRequestId: string;
+  requestedStartMinute: number;
+}): Promise<number> => {
+  const rows = await prisma.overtimeRequest.findMany({
+    where: {
+      accountBookId: params.accountBookId,
+      employeeId: params.employeeId,
+      workDate: params.workDate,
+      id: { not: params.excludeRequestId },
+      status: {
+        in: [OvertimeRequestStatus.PENDING, OvertimeRequestStatus.APPROVED],
+      },
+      /**
+       * Info: (20260820 - Julian) `lt` 而非 `lte`：起始分鐘相同的兩張單是
+       * 重疊的加班，那是另一個問題（重疊本身該擋）。用 `lte` 只會讓其中一張
+       * 把另一張算進自己的先前累計，而兩張互相算就都被推高一級。
+       */
+      requestedStartMinute: { lt: params.requestedStartMinute },
+    },
+    select: {
+      recognizedMinutes: true,
+      requestedStartMinute: true,
+      requestedEndMinute: true,
+    },
+  });
+
+  return rows.reduce(
+    (total, row) =>
+      total +
+      (row.recognizedMinutes ??
+        row.requestedEndMinute - row.requestedStartMinute),
+    0,
+  );
 };
 
 class OvertimeRequestContextRepository implements IOvertimeRequestContext {
@@ -614,15 +686,15 @@ class OvertimeRequestContextRepository implements IOvertimeRequestContext {
       }),
       /**
        * Info: (20260820 - Julian) 當日**開始得比本次早**的那些（級距用，review 第 5 輪 M4）。
-       *
-       * `lt` 而非 `lte`：起始分鐘相同的兩張單是重疊的加班，那是另一個問題
-       * （重疊本身該擋），用 `lte` 只會讓其中一張把另一張算進自己的先前累計。
+       * 它收 `PENDING` 與 `APPROVED` 兩種狀態 —— 理由見
+       * `sumEarlierSameDayMinutes` 的檔頭（級距是時間的屬性，不是核准狀態的）。
        */
-      sumRecognizedMinutes({
-        ...scope,
-        from: params.workDate,
-        to: params.workDate,
-        startedBeforeMinute: params.requestedStartMinute,
+      sumEarlierSameDayMinutes({
+        accountBookId: params.accountBookId,
+        employeeId: params.employeeId,
+        workDate: params.workDate,
+        excludeRequestId: params.excludeRequestId,
+        requestedStartMinute: params.requestedStartMinute,
       }),
       sumRecognizedMinutes({ ...scope, from: monthStart, to: monthEnd }),
       sumRecognizedMinutes({ ...scope, from: quarter.from, to: quarter.to }),

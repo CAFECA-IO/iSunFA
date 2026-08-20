@@ -1782,6 +1782,7 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 | 12 | **§38 IV 的特休遞延協商沒有記載欄位** | 條文的原則是年度終結未休即**發給工資**，遞延是「經勞雇雙方協商同意」的例外，而協商是**逐個勞工**的。系統只有 `LeavePolicy.carryForwardMonths` 這個**整個假別**的設定，記不下「誰、哪一年、何時同意」 | 種子預設已由 12 改為 **0**（review 第 5 輪 M6）—— 先前的 12 等於替全體員工取得一個沒有人協商過的例外，且讓 `LeaveCashOutReason.ANNUAL_YEAR_END` 永遠不觸發。<br>⚠️ 改成 0 **不是**主張不得遞延：要遞延的公司在假別設定畫面調上去即可。但在協商記載的欄位補上之前，調上去仍然是**全體一律遞延** —— 那個限制留在這裡，不靠一個預設值假裝已經有了。<br>正解是一張逐勞工逐年度的協商同意記錄（同 `OvertimeEmergencyDeclaration` 之於 §32 IV 認定的形狀）。里程碑 2 決定 |
 | 13 | **併休規則沒有寫入路徑** | `LeaveConcurrencyRule` 全庫沒有任何 `create`／`update` 呼叫端，既有列只能由 SQL 進來 | `assertConcurrencyRule` 已寫好並掛在**讀取端**（`findConcurrencyStatus`）—— 那是它今天唯一咬得到東西的地方（review 第 5 輪 M2）。規則管理端點落地時，`create`／`update` 兩條路徑各呼叫它一次，讀取端那一次保留（seed 與 SQL 仍不經過 service） |
 | 14 | **請假的證明文件沒有上傳路徑** | `proofRequirement` / `proofThresholdDays` 那套規則有七八個檔案在讀，而「文件在哪」沒有任何地方存得下 | schema 原有一個 `LeaveRequest.proofDocumentId String?`：沒有 `@relation`、沒有租戶檢查、零讀取零寫入 —— 也就是「需要證明文件」上線了、「文件在哪」永遠 null。已於 review 第 6 輪 M18 **移除**：一個永遠 null 的欄位讀起來像「這張單沒附證明」，而真相是「這個系統從來沒有地方可以附」，留著比拆掉更難被下一個人發現。<br>正解是一整條路徑（儲存、租戶隔離、Tier 2 加密、保存期限，見缺口 5），不是一個欄位。補的時候連同 `@relation` 一起加 |
+| 15 | **額度快取的勾稽已排程，但沒有告警** | `services/cron/leave_balance_reconcile.cron.ts` 每小時對帳一次並覆寫，差異只寫進 `logger.warn` | 「快取與帳本分岔過幾次」是 ADR 022 §8.2 要的訊號，而一行 log 沒有人會看。ToDo: 差異數接上專案的告警管道（同 `wallet_audit.cron` 對守恆違反的處置）。在那之前，上線後前幾天請人工看一次 `[leave] balance mismatch` |
 
 ### 17.1 ADR 的待辦與現況
 

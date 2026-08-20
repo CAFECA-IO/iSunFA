@@ -12,6 +12,7 @@ import { runWalletGuardian } from "@/services/cron/wallet_audit.cron";
 import { expireOverdueTeamSubscriptions } from "@/services/cron/subscription_expiry.cron";
 import { processSubscriptionRenewals } from "@/services/cron/subscription_renewal.cron";
 import { runFaithMemoryRetention } from "@/services/cron/faith_memory_retention.cron";
+import { runLeaveBalanceReconcile } from "@/services/cron/leave_balance_reconcile.cron";
 import {
   installWorkerShutdownHandlers,
   isShuttingDown,
@@ -96,6 +97,18 @@ async function runWorker() {
       "FaithMemoryRetention",
       () => runFaithMemoryRetention(),
       6 * 60 * 60 * 1000,
+    ),
+    /**
+     * Info: (20260820 - Julian) 額度快取的勾稽（ADR 022 §2.3、review 第 10 輪第 2 條）。
+     *
+     * 每小時一次而不是一天一次：`expiringSoonMinutes` 是相對於「今天」的量，
+     * 日界一過就該重算，而一支一天只跑一次的迴圈沒有辦法保證它落在日界之後。
+     * 重建本身冪等（依帳本重算並覆寫），多跑幾次只是多幾次全表加總。
+     */
+    startServiceLoop(
+      "LeaveBalanceReconcile",
+      () => runLeaveBalanceReconcile(),
+      60 * 60 * 1000,
     ),
   ]);
 

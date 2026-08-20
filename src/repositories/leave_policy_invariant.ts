@@ -40,6 +40,26 @@ export class LeavePolicyInvariantError extends Error {
   }
 }
 
+/**
+ * Info: (20260820 - Julian) 成環有自己的型別（review 第 11 輪第 3 條）。
+ *
+ * `LeavePolicyInvariantError` 涵蓋這個檔案裡十一種判準，而 service 的
+ * `write()` 把它們一律收斂成 `VA_INVALID_INPUT_DATA`。專屬的
+ * `VA_LEAVE_POLICY_MERGE_CYCLE` 因此**只有 service 的前置檢查走得到** ——
+ * 而那道前置檢查在併發下會漏（兩個人同時把 A→B 與 B→A 寫進去，
+ * 各自讀到的圖都還沒有對方那一筆）。也就是說：**唯一真的需要
+ * repository 那道閘的情境，使用者收到的是最不具訊息量的那個碼**。
+ *
+ * 以子類別分辨而不是比對 `reason` 字串：那個字串是寫給開發者的英文，
+ * 拿它當判準等於讓錯誤碼跟著文案走，而文案是會被改的。
+ */
+export class LeavePolicyMergeCycleError extends LeavePolicyInvariantError {
+  constructor(reason: string, detail: string) {
+    super(reason, detail);
+    this.name = "LeavePolicyMergeCycleError";
+  }
+}
+
 export interface IStorableLeavePolicy {
   /** Info: (20260817 - Julian) 新建時為 undefined；更新時用於擋自我併計 */
   id?: string | null;
@@ -290,7 +310,7 @@ export function assertNoMergeCycle(params: {
 
   while (cursor !== null) {
     if (visited.has(cursor)) {
-      throw new LeavePolicyInvariantError(
+      throw new LeavePolicyMergeCycleError(
         "merging into that leave type closes a cycle; consumption would be deducted around the loop",
         `from=${params.from}, to=${params.to}, revisited=${cursor}`,
       );

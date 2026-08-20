@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { leaveGrantRepo } from "@/repositories/leave_grant.repo";
+import {
+  sumExpiringSoonMinutes,
+  sumLedgerMinutes,
+} from "@/repositories/leave_ledger";
 import { DEMO_TIME_ZONE } from "@/constants/attendance";
 import { toZonedParts } from "@/lib/utils/attendance_time";
 
@@ -35,10 +39,18 @@ import { toZonedParts } from "@/lib/utils/attendance_time";
  * npx tsx scripts/reconcile_leave_balances.ts --dry-run     # 只報差異，不寫
  * ```
  *
- * 建議掛每日排程（時區內的凌晨）。它是**冪等**的：同一天跑兩次的結果相同。
+ * 它是**冪等**的：同一天跑兩次的結果相同。
  *
- * ToDo: (20260820 - Julian) 目前是手動／cron 腳本。專案的 Worker 框架
- * （`scripts/run_worker.ts`）就緒後改掛上去，並把差異數送進告警。
+ * ## 這一支與排程的分工（review 第 10 輪第 2 條）
+ *
+ * 固定的勾稽已經掛在 Worker 上了（`services/cron/leave_balance_reconcile.cron.ts`，
+ * 由 `scripts/run_worker.ts` 每小時叫一次）—— 手動跑一支腳本不是排程，
+ * 而「沒有人會固定去按的動作」與「沒有呼叫端」在效果上是同一件事。
+ *
+ * 這一支留著是因為它多了兩件排程不做的事：
+ *
+ * - `--dry-run`：**只比對不寫入**，供上線前驗收（見下方它為什麼必須真的比對）。
+ * - `--book`：限定單一帳本，供事故排查。
  */
 
 interface IArgs {
@@ -106,21 +118,75 @@ const main = async (): Promise<void> => {
     });
 
     try {
-      if (args.dryRun) {
-        continue;
-      }
-      const after = await leaveGrantRepo.rebuildBalance({
-        accountBookId: scope.accountBookId,
-        employeeId: scope.employeeId,
-        leavePolicyId: scope.leavePolicyId,
-        asOfDate,
-        reconciledAt,
-      });
+      /**
+       * Info: (20260820 - Julian) `--dry-run` 也要**真的比對**（review 第 10 輪第 2 條）。
+       *
+       * 第一版是 `if (args.dryRun) continue;` —— `before` 查了卻沒用、
+       * `mismatched` 永不遞增，於是結尾一律印「0 組不一致」。
+       * 而部署檢查表把它寫成「先看規模」：**一支在缺陷存在時照樣回報 0 的
+       * 驗收**，會被當成「上線前確認過沒有分岔」的憑據（checklist §1.9）。
+       * 那比沒有這個選項危險得多。
+       *
+       * 現在兩條路徑算的是**同一組數字**，差別只在寫不寫：
+       * `rebuildBalanceWithin` 的本體就是 `sumLedgerMinutes` ＋
+       * `sumExpiringSoonMinutes`，dry-run 直接呼叫那兩支，不經過 upsert。
+       * 各自抄一份會讓「試跑說沒事、真跑改了一堆」變成可能。
+       */
+      const after = args.dryRun
+        ? await prisma.$transaction(async (tx) => ({
+            remainingMinutes: await sumLedgerMinutes(tx, scope),
+            expiringSoonMinutes: await sumExpiringSoonMinutes(tx, {
+              ...scope,
+              asOfDate,
+            }),
+          }))
+        : await leaveGrantRepo
+            .rebuildBalance({
+              accountBookId: scope.accountBookId,
+              employeeId: scope.employeeId,
+              leavePolicyId: scope.leavePolicyId,
+              asOfDate,
+              reconciledAt,
+            })
+            .then(async (remainingMinutes) => ({
+              remainingMinutes,
+              /**
+               * Info: (20260820 - Julian) 重建之後把快取讀回來拿到
+               * `expiringSoonMinutes` —— `rebuildBalance` 只回餘額，
+               * 而報告要說得出兩欄各差多少。
+               */
+              expiringSoonMinutes:
+                (
+                  await prisma.leaveBalance.findUnique({
+                    where: {
+                      employeeId_leavePolicyId: {
+                        employeeId: scope.employeeId,
+                        leavePolicyId: scope.leavePolicyId,
+                      },
+                    },
+                    select: { expiringSoonMinutes: true },
+                  })
+                )?.expiringSoonMinutes ?? 0,
+            }));
 
-      if (before === null || before.remainingMinutes !== after) {
+      /**
+       * Info: (20260820 - Julian) 兩欄都比。只比 `remainingMinutes` 的話，
+       * 「即將到期從來沒有人算過」（M13 的症狀）在報告上是看不見的 ——
+       * 而那正是這支腳本存在的一半理由。
+       */
+      const cacheRemaining = before?.remainingMinutes ?? null;
+      const cacheExpiring = before?.expiringSoonMinutes ?? null;
+      const differs =
+        before === null ||
+        cacheRemaining !== after.remainingMinutes ||
+        cacheExpiring !== after.expiringSoonMinutes;
+
+      if (differs) {
         mismatched += 1;
         process.stdout.write(
-          `[reconcile] MISMATCH employee=${scope.employeeId} policy=${scope.leavePolicyId} cache=${before?.remainingMinutes ?? "(none)"} ledger=${after}\n`,
+          `[reconcile] MISMATCH employee=${scope.employeeId} policy=${scope.leavePolicyId}` +
+            ` remaining: cache=${cacheRemaining ?? "(none)"} ledger=${after.remainingMinutes}` +
+            ` expiringSoon: cache=${cacheExpiring ?? "(none)"} ledger=${after.expiringSoonMinutes}\n`,
         );
       }
     } catch (error) {
@@ -137,9 +203,17 @@ const main = async (): Promise<void> => {
   }
 
   process.stdout.write(
-    `[reconcile] 完成：${scopes.length} 組，${mismatched} 組與帳本不一致（已依帳本覆寫），${failed} 組失敗\n`,
+    `[reconcile] 完成：${scopes.length} 組，${mismatched} 組與帳本不一致` +
+      `（${args.dryRun ? "dry-run，未寫入" : "已依帳本覆寫"}），${failed} 組失敗\n`,
   );
-  if (failed > 0) process.exitCode = 1;
+  /**
+   * Info: (20260820 - Julian) dry-run 有不一致時也以非零結束
+   * （review 第 10 輪第 2 條）。
+   *
+   * 它的用途是上線前的驗收，而一個永遠 exit 0 的驗收在 CI 裡等於沒有跑。
+   * 真跑時不算失敗：那時候不一致已經被修好了，那是它的工作。
+   */
+  if (failed > 0 || (args.dryRun && mismatched > 0)) process.exitCode = 1;
 };
 
 main()

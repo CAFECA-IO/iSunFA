@@ -291,6 +291,24 @@ SELECT a.account_book_id, a.employee_id, a.work_date,
 已發或待發的工資，重算屬於更正流程（尚未實作，見 ADR 024 §4.1 的 ToDo）。
 把清單交給人資核對即可。
 
+> ⚠️ 核對時要看的是**總額**，不是歸屬。舊規則依核准順序決定級距，
+> 因此同日兩張單的 1/3 與 2/3 可能掛反（總額仍然對）。真正要找的是
+> 「兩張單都拿 1/3」那種列 —— 它少付了一段 §24 I 的 2/3 加成：
+>
+> ```sql
+> -- 同日有兩段以上加班、卻沒有任何一段是 BEYOND_2H
+> SELECT r.account_book_id, r.employee_id, r.work_date,
+>        sum(s.minutes) AS total_minutes
+>   FROM overtime_request r
+>   JOIN overtime_segment s ON s.overtime_request_id = r.id
+>  WHERE r.status = 'APPROVED'
+>  GROUP BY r.account_book_id, r.employee_id, r.work_date
+>  HAVING sum(s.minutes) > 120
+>     AND count(*) FILTER (WHERE s.tier = 'WEEKDAY_BEYOND_2H') = 0;
+> ```
+>
+> 有列就是**少付**，要補發 —— 那與「掛反」不同，不能只是核對了事。
+
 ### (2) 滾動三個月窗的右端（M5）
 
 月報表的窗先前以**月底**為錨、閘門以**當日**為錨，兩者的左端最多差 30 天。
@@ -394,15 +412,90 @@ SELECT count(*) FROM leave_request WHERE proof_document_id IS NOT NULL;
   「即將到期 0 分鐘」，而真相是「沒有人算過」。特休屆期未休依 §38 IV 要折現
 
 ```
-npx tsx scripts/reconcile_leave_balances.ts --dry-run     # 先看規模
-npx tsx scripts/reconcile_leave_balances.ts               # 全部帳本
+npx tsx scripts/reconcile_leave_balances.ts --dry-run     # 只比對不寫入，看有多少組分岔
+npx tsx scripts/reconcile_leave_balances.ts               # 全部帳本，依帳本覆寫
 ```
 
+`--dry-run` 有任何一組不一致時**以非零結束** —— 它是上線前的驗收，
+而一個永遠 exit 0 的驗收在 CI 裡等於沒有跑。真跑時不算失敗
+（那時候不一致已經被修好了，那是它的工作）。
+
+> ⚠️ 2026-08-20 之前的 `--dry-run` 是**假的**：它 `continue` 掉整個比對，
+> `mismatched` 永不遞增，結尾一律印「0 組不一致」。若你在那之前跑過它並
+> 據此認定「沒有分岔」，那個結論沒有依據，請重跑一次。
+
 **上線後第一次要手動跑一次**：既有的 `LeaveBalance` 列全都沒有算過
-`expiring_soon_minutes`。之後掛每日排程（時區內凌晨）。它是冪等的。
+`expiring_soon_minutes`。之後由 Worker 接手 ——
+`services/cron/leave_balance_reconcile.cron.ts` 已註冊在 `scripts/run_worker.ts`，
+每小時一次。它是冪等的。
 
 > 「即將到期」是相對於**今天**的量，因此非得有排程不可 —— 只在授予／扣減
 > 時算的話，一批額度會在無人動它的日子裡靜靜過期，而畫面到最後一刻顯示 0。
+
+---
+
+## 四之五、`leave_concurrency_rule` 的既有列 ⚠️ 不查會讓整個部門請不了假
+
+本輪 M2 補了 `assertConcurrencyRule`，而它掛在**讀取端**
+（`findConcurrencyStatus`）—— 因為這張表在本模組沒有任何寫入路徑，
+既有列只能由 SQL 進來，讀取是它唯一咬得到東西的地方。
+
+後果要說清楚：**不合判準的既有列會從上線那一刻起讓假單試算與送出直接回 4xx**
+（`VA000075`），而那道查詢是 `buildPlan` 的一部分 —— L17 試算與 L18 送出
+兩支都走它。也就是說，那個部門的人**一張假單都送不出去**，
+畫面上的訊息是「這個帳本裡有一條併休上限規則沒有說出可執行的上限」。
+
+上線前先查。判準有五條，一次查完：
+
+```sql
+SELECT r.id, r.account_book_id, r.department_id, r.leave_policy_id,
+       r.max_concurrent_employees, r.max_concurrent_ratio, r.action,
+       p.employer_may_reject
+  FROM leave_concurrency_rule r
+  LEFT JOIN leave_policy p ON p.id = r.leave_policy_id
+ WHERE
+       -- (1) 兩欄皆空：讀取端舊碼的 `?? 0` 會讓上限變成 0 人
+       (r.max_concurrent_employees IS NULL AND r.max_concurrent_ratio IS NULL)
+       -- (2) 兩欄都填：兩個互相矛盾的上限，系統沒有依據判斷該信哪一個
+    OR (r.max_concurrent_employees IS NOT NULL AND r.max_concurrent_ratio IS NOT NULL)
+       -- (3) 人數為負
+    OR (r.max_concurrent_employees < 0)
+       -- (4) 比例非正數（0 與負數都會讓整個部門請不了假）
+    OR (r.max_concurrent_ratio IS NOT NULL AND r.max_concurrent_ratio <= 0)
+       -- (5) BLOCK 綁在「期日由勞工排定」的假別上（§38 II），永遠不會生效
+    OR (r.action = 'BLOCK' AND r.leave_policy_id IS NOT NULL
+        AND p.employer_may_reject = false);
+```
+
+沒有列 → 這一節跳過。有列的處置：
+
+| 命中哪一條 | 怎麼修 |
+|---|---|
+| (1) | 決定它到底要限制什麼，補上人數或比例其中一個；**若那條規則本來就沒有用意，刪掉它** |
+| (2) | 刪掉其中一欄。讀取端舊碼靜默偏好人數那一欄，因此「設定畫面上的比例看起來生效了卻沒有」—— 以人數為準通常就是現況 |
+| (3) (4) | 補成正數，或刪掉 |
+| (5) | 把 `action` 改成 `WARN`。**不要**改 `employer_may_reject` —— 那是法規屬性，不是設定 |
+
+> 這張表沒有管理畫面（計畫書 §17 缺口 13），因此修法就是 SQL。
+> 修完再跑一次上面那段查詢確認回空集合。
+
+### 另外看一眼：上限剛好是 0
+
+```sql
+SELECT id, account_book_id, department_id, leave_policy_id, action
+  FROM leave_concurrency_rule
+ WHERE max_concurrent_employees = 0;
+```
+
+`0` **不會**被不變式擋下（它是一個說得出口的設定：「同時不得有人請假」），
+但它的效果與上面第 (1) 條的缺陷一模一樣 —— `action = 'BLOCK'` 時
+那個部門一張假單都送不出去，`WARN` 時每一張都跳警示。
+
+差別在於前者是**有人這樣設定**、後者是**沒有人設定過**，而系統分不出來，
+所以這一條只能靠人看。查出來有列就跟人資確認一次是不是本意。
+
+> ⚠️ 正式環境目前預期是**沒有任何列**（本模組從未寫入過它）。查出來有列，
+> 表示有一條本文件不知道的寫入路徑 —— 那件事本身要先弄清楚再上線。
 
 ---
 
