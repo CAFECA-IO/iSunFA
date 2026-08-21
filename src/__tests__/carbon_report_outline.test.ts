@@ -35,6 +35,8 @@ import { solutions as solutionsKo } from "@/i18n/locales/ko/solutions";
 import { solutions as solutionsZhCn } from "@/i18n/locales/zh_cn/solutions";
 import { solutions as solutionsZhTw } from "@/i18n/locales/zh_tw/solutions";
 import { CARBON_REPORT_GUIDANCE_IFRS } from "@/constants/carbon_report_outline_ifrs";
+import { COMPLIANCE_CLAIM_PATTERNS } from "@/constants/carbon_report_framework";
+import { squeezeForMatch } from "@/lib/utils/squeeze_for_match";
 import { Iso14064Category, IsoCategoryDetails } from "@/constants/esg";
 
 /**
@@ -381,7 +383,13 @@ describe("對外宣告的標準（三端一致）", () => {
       .replace(/\/\/[^\n]*/g, "");
 
     expect(code).not.toMatch(/IFRS/);
-    expect(code).toContain("${CARBON_REPORT_STANDARD}");
+    /*
+     * Info: (20260821 - Emily) 08-21 之後,角色句的標準名稱走框架視圖而不是直接
+     * import 常數(單一來源搬進 carbonFrameworkView;直接引用由
+     * carbon_framework_view.test.ts 的消費者掃描釘住)。這條斷言跟著搬:
+     * 要守的東西沒變 —— 角色句不得硬編任何標準名稱,必須經過單一來源。
+     */
+    expect(code).toContain("${view.standardLabel}");
   });
 });
 
@@ -441,6 +449,16 @@ describe("指名這份大綱或這份報告的檔案,不得宣告 IFRS（機械�
    */
   const ALLOWLIST = [
     "src/__tests__/carbon_report_outline.test.ts",
+    /**
+     * Info: (20260821 - Emily) 框架視圖與它的測試。視圖是**合法的切換點**:
+     * 它存在的理由就是同時指名這份大綱與 IFRS 揭露版,依所選框架回傳其中一套
+     * (角色句 + guidance + 外殼聲明三欄一體,見該檔檔頭)。
+     * 它宣告 IFRS 是有條件的(IFRS_S1_S2 分支),而「宣告要帶條件」正是 08-21
+     * 判準改版(全域黑名單 → 依宣告分流)的核心 —— 紙面那端由
+     * auditFrameworkClaims 的四條判準守,不靠這個掃描。
+     */
+    "src/lib/carbon_framework_view.ts",
+    "src/__tests__/carbon_framework_view.test.ts",
     /**
      * Info: (20260819 - Emily) IFRS 揭露版的 guidance。裡面的 IFRS 字樣是**內容**,
      * 不是誤植 —— 那份檔案存在的理由就是保存 IFRS S1/S2 那一套指引。
@@ -567,5 +585,40 @@ describe("兩套 guidance 的一致性", () => {
    */
   it("IFRS 揭露版仍保有 IFRS S1/S2 的宣告", () => {
     expect(CARBON_REPORT_GUIDANCE_IFRS["ch1-intro"]).toContain("IFRS S1/S2");
+  });
+
+  /**
+   * Info: (20260821 - Emily) 兩套 guidance 都不得含**主體合規動詞**(符合/遵循/依循/通過 + IFRS)。
+   *
+   * 08-21 實際抓到兩段:原稿的 ch1-intro「聲明報告編寫符合 IFRS S1/S2」與
+   * ch3-3「載明遵循 IFRS S2 規定」。guidance 是系統 prompt,模型會照著把那些動詞
+   * 印上紙 —— 那不是幻覺,是我們自己指示的。而未到金管會適用時程的企業
+   * 提前宣告合規是紅線。
+   *
+   * 用**驗收判準同一份** COMPLIANCE_CLAIM_PATTERNS 掃:源頭與紙面同一把尺,
+   * 兩邊各寫一份的話,改了一邊另一邊就靜靜過期。
+   * 上一行那條「仍保有 IFRS S1/S2」是反方向的護欄:框架名稱要留著,
+   * 合規動詞不能有 —— 兩條一起才說得完整。
+   */
+  it("兩套 guidance 都不含主體合規宣告的動詞", () => {
+    const offenders: string[] = [];
+    CARBON_REPORT_OUTLINE.forEach((section) => {
+      const squeezedGuidance = squeezeForMatch(section.guidance);
+      COMPLIANCE_CLAIM_PATTERNS.forEach((pattern) => {
+        if (pattern.test(squeezedGuidance)) {
+          offenders.push(`ISO版 ${section.id}: ${String(pattern)}`);
+        }
+      });
+    });
+    Object.entries(CARBON_REPORT_GUIDANCE_IFRS).forEach(([id, guidance]) => {
+      const squeezedGuidance = squeezeForMatch(guidance);
+      COMPLIANCE_CLAIM_PATTERNS.forEach((pattern) => {
+        if (pattern.test(squeezedGuidance)) {
+          offenders.push(`IFRS版 ${id}: ${String(pattern)}`);
+        }
+      });
+    });
+
+    expect(offenders).toEqual([]);
   });
 });

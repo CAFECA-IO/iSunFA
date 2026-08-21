@@ -19,9 +19,13 @@ import {
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
   CARBON_REPORT_OUTLINE,
-  CARBON_REPORT_STANDARD,
   ICarbonReportSection,
 } from "@/constants/carbon_report_outline";
+import {
+  carbonFrameworkView,
+  type ICarbonFrameworkView,
+} from "@/lib/carbon_framework_view";
+import { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
 import { CarbonParagraphDraftLlmOutputSchema } from "@/validators";
 import {
   IParagraphDraft,
@@ -73,7 +77,15 @@ export class ParagraphDraftService {
       );
     }
 
-    const prompt = this.buildPrompt(section, input);
+    /*
+     * Info: (20260821 - Emily) 角色句與 guidance 走同一個框架視圖 —— 兩個框架欄位
+     * 出自同一次呼叫,不存在「guidance 換了 IFRS、角色句還在說 ISO」的寫法
+     * (08-18 那個分裂的反向版,見 carbon_framework_view.ts 檔頭)。
+     */
+    const view = carbonFrameworkView(
+      input.framework ?? CarbonDisclosureFrameworkEnum.INVENTORY_ONLY,
+    );
+    const prompt = this.buildPrompt(section, input, view);
 
     let raw: string;
     try {
@@ -132,6 +144,7 @@ export class ParagraphDraftService {
   private buildPrompt(
     section: ICarbonReportSection,
     input: IParagraphDraftInput,
+    view: ICarbonFrameworkView,
   ): string {
     const conversationBlock =
       input.conversationContext.length > 0
@@ -194,14 +207,15 @@ ${factsBlock}
      * 兩句互相矛盾而框架句在前。改了 guidance 卻留著這句,等於修正端與生效端沒對上 ——
      * B2 的閘門(「報告上宣告錯的標準」)在這裡才真的關上。
      *
-     * 標準名稱取自 `CARBON_REPORT_STANDARD`,不在這裡重打(見那個常數的註解)。
+     * 標準名稱取自框架視圖(單一來源)。直接 import 標準常數在本檔是禁止的,
+     * 由 carbon_framework_view.test.ts 的掃描釘住 —— 掃描含註解,所以這裡不寫常數名。
      */
-    return `你是一位專業碳會計師,負責撰寫依 ${CARBON_REPORT_STANDARD} 編製的溫室氣體盤查報告書的指定段落草稿。
+    return `你是一位專業碳會計師,負責撰寫依 ${view.standardLabel} 編製的溫室氣體盤查報告書的指定段落草稿。
 
 【段落資訊】
 編號: ${section.code}
 標題: ${section.title}
-撰寫目標: ${section.guidance}
+撰寫目標: ${view.guidanceOf(section.id) ?? section.guidance}
 
 【對話紀錄】(僅供理解背景)
 ${conversationBlock}

@@ -30,9 +30,24 @@
  *   因為 guidance 會被注入 prompt,原樣的標記會被模型照抄進報告。
  *   這是唯一的字面修改。
  */
+/**
+ * Info: (20260821 - Emily) 兩段動詞修訂(ch1-intro、ch3-3),偏離原稿的唯一兩處。
+ *
+ * 原稿寫「聲明報告編寫**符合** IFRS S1/S2」與「載明**遵循** IFRS S2 規定」。
+ * 那兩個動詞是主體合規宣告 —— 金管會的適用時程分階段,未到期的企業提前宣告
+ * 是紅線(見 carbon_report_framework.ts 檔頭),而 guidance 是系統 prompt,
+ * 照原稿餵給模型等於**系統蓄意**產出違規句,不是模型幻覺。
+ *
+ * 修訂保留原稿的全部實質內容(IFRS 架構、AR6 GWP),只換動詞:
+ *   符合 IFRS S1/S2      → 依 IFRS S1/S2 之架構…編製   (結構陳述,可以印)
+ *   載明遵循 IFRS S2 規定 → 載明採用 IFRS S2 所要求之…  (方法論引用)
+ *
+ * 「兩套 guidance 都不得含合規動詞」由 carbon_report_outline.test.ts 掃描釘住,
+ * 用的是與驗收判準同一份 COMPLIANCE_CLAIM_PATTERNS —— 源頭與紙面同一把尺。
+ */
 export const CARBON_REPORT_GUIDANCE_IFRS: Readonly<Record<string, string>> = {
   "ch1-intro":
-    "闡述組織如何將氣候變遷視為董事會層級的重大財務風險與機會，並聲明報告編寫符合 IFRS S1/S2 與相應量化標準。",
+    "闡述組織如何將氣候變遷視為董事會層級的重大財務風險與機會，並聲明本報告依 IFRS S1/S2 之架構與相應量化標準編製。",
   "ch1-1":
     "填寫公司基礎營運資訊，並說明與財務報表申報主體（Reporting Entity）的一致性。",
   "ch1-2":
@@ -58,7 +73,7 @@ export const CARBON_REPORT_GUIDANCE_IFRS: Readonly<Record<string, string>> = {
   "ch3-2":
     "建立數據品質階層方針。說明原始數據（Primary Data，如電費單、採購發票）與推估數據的比例，並列出所引用的官方或國際權威排放係數庫。",
   "ch3-3":
-    "說明核心計算算式，並載明遵循 IFRS S2 規定，統一採用 IPCC 最新公告之全球暖化潛勢值（GWP，如 AR6）進行 CO2e 的當量轉換。",
+    "說明核心計算算式，並載明採用 IFRS S2 所要求之 IPCC 最新公告全球暖化潛勢值（GWP，如 AR6）進行 CO2e 的當量轉換。",
   "ch3-4":
     "完整公開各範疇（包含範疇二的所在地/市場基準、範疇三的供應鏈運輸、售出產品使用階段等）的算式邏輯、生質碳單獨報告說明及重大假設。",
   "ch3-5":
