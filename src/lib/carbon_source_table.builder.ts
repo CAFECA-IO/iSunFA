@@ -12,7 +12,7 @@ import {
   CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH,
   SOURCE_TABLE_NO_PATTERN,
 } from "@/constants/carbon_source_tables";
-import { countTableCells } from "@/lib/utils/markdown_table_divider";
+import { countTableCells } from "@/lib/utils/markdown_table_cells";
 
 export interface ICarbonSourceTable {
   /** Info: (20260801 - Tzuhan) 原文的表號(如 表3.8),同時是錨點鍵與圖說前綴 */

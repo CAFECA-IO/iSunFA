@@ -6,10 +6,10 @@
  */
 import { describe, it, expect } from "@jest/globals";
 import {
-  countTableCells,
   ensureTableDivider,
   trimRowsToDividerWidth,
 } from "@/lib/utils/markdown_table_divider";
+import { countTableCells } from "@/lib/utils/markdown_table_cells";
 
 // Info: (20260814 - Emily) 表3.1 溫室氣體排放鑑別表：兩層表頭、10 欄、無分隔列
 const TABLE_3_1 = [

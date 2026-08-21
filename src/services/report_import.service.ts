@@ -1050,6 +1050,23 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
 
         const rejoined = candidates.map((table) => {
           const fix = joinWrappedTableRows(table.markdown);
+          /*
+           * Info: (20260821 - Emily) 一列都沒接但**有被第 6 條護欄拒絕**的情況要記出來。
+           * 原本這裡直接 return,於是「因為會吞掉別的列所以整段不接」變成無痕 ——
+           * 那張表接下來被丟掉,而 log 只會說 not_a_table,說不出真正的原因。
+           */
+          if (
+            fix.joined === 0 &&
+            fix.refusedTooWide + fix.refusedLooksLikeRow > 0
+          ) {
+            logger.warn("[ReportImportService] source table rows refused", {
+              paragraphId,
+              tableNo: table.tableNo,
+              caption: table.caption.slice(0, 40),
+              refusedTooWide: fix.refusedTooWide,
+              refusedLooksLikeRow: fix.refusedLooksLikeRow,
+            });
+          }
           if (fix.joined === 0) return table;
           /*
            * Info: (20260820 - Emily) 續行數一併記出來。08-20 把上限從 4 放寬到 32,
@@ -1063,6 +1080,19 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
             rows: fix.joined,
             maxContinuations: fix.maxContinuations,
             noteworthy: fix.maxContinuations > CONTINUATION_LINES_NOTEWORTHY,
+            /*
+             * Info: (20260821 - Emily) 被第 6 條護欄拒絕的列數(接完比同段最寬完整列還寬,
+             * 代表吞掉了別的列)。非 0 代表原文混用了前導管線 —— 那張表接下來會被驗證器
+             * 擋掉,而這個數字是唯一說得出「為什麼沒接」的地方。
+             */
+            refusedTooWide: fix.refusedTooWide,
+            /*
+             * Info: (20260821 - Emily) 第 7 條護欄擋下的列數(續行本身就是一列)。
+             * 與 refusedTooWide 分開記:前者是「寬度累加超過表寬」,
+             * 後者是「這個續行補上管線就是合法列」—— 兩條抓的不是同一件事,
+             * 而且 refusedTooWide 的餘裕實測是 0,它一旦非 0 就是那個脆弱情況到了。
+             */
+            refusedLooksLikeRow: fix.refusedLooksLikeRow,
           });
           return { ...table, markdown: fix.markdown };
         });

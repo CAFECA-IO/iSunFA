@@ -42,10 +42,74 @@
  * 3. 續行不得是空行 —— 空行是段落邊界
  * 4. 續行數有上限；上限之內接不完就整段放棄，不留半成品
  * 5. 接完的那一列必須至少兩格，否則不算列
+ * 6. **接完的那一列不得比同段裡最寬的完整列更寬**（見 `widestClosedRow`）
+ * 7. **續行本身若「補上前導管線就是一個寬度符合本表的合法列」，就不是折斷碎片**
+ *    （見 `closedRowWidths`）—— 那是一列，不是一格的下半截
+ *
+ * ## 第 6 條的由來：第 2 條擋不住「混用前導管線」（08-21 PR review 指出）
+ *
+ * 本檔原本聲稱「擋住併列的是第 1、2 條，兩者都與續行數無關」。**那句話錯了**，
+ * 它成立的前提是「每一列都有前導管線」，而 GFM 允許省略首尾管線、原文可以混用：
+ *
+ *     | 氣體 | 排放量 |
+ *     | CO2 | 1000
+ *     CH4 | 2000 |
+ *
+ * `CH4 | 2000 |` 不以 `|` 開頭，於是被當成續行接進上一列 ——
+ * **CH4 整列消失，2000 落進 CO2 的欄位**。而接出來的是一個閉合、≥2 格的列，
+ * `validateSourceTables` 會接受，沒有任何 log 說少了一列。
+ * 那正是本檔一開始就寫著「比丟一張表嚴重得多」的那一類。
+ *
+ * 這個弱點是既有的（上限 4 時一個續行就足以發生），但把上限放寬到 32 之後，
+ * 最多能吞掉的真實資料列從 4 放大到 32，所以必須在這一輪處理。
+ *
+ * ### 為什麼判準是「不得比最寬的完整列更寬」
+ *
+ * 折斷是把**一列**切成多行，接回後的寬度必然是這張表真實存在的某個列寬，
+ * 因此不可能超過同段裡最寬的完整列。而「吞掉別的列」必然讓寬度累加、超過那個上限。
+ * 實測（本尊素材與 review 給的混用案例）：
+ *
+ *     表4.4          最寬完整列 14   接回產生 13、14   通過
+ *     表4.8          最寬完整列 13   接回產生 13       通過
+ *     混用（2 列）    最寬完整列 2    接回產生 3        擋下
+ *     混用（4 列）    最寬完整列 2    接回產生 5        擋下
+ *
+ * **不採用「須等於分隔列寬」**（review 給的選項一的字面版本）：實測 `表4.4` 的分隔列
+ * 是 13 格而它的資料列是 14 格（廠址標籤列才是 13），那個判準會擋掉三個完整的資料列。
+ *
+ * ### 第 6 條的餘裕是 0，所以還需要第 7 條
+ *
+ * 實測本尊素材：
+ *
+ *     表4.4  完整列 9 列，最寬 14   接回產生 13、14   餘裕 0
+ *     表4.8  完整列 2 列，最寬 13   接回產生 13       餘裕 0
+ *
+ * **兩份都剛好貼齊上限。** 第 6 條通過是因為「最寬的完整列恰好與被折斷的那一列同寬」，
+ * 那是運氣不是設計 —— `表4.8` 173 行裡只有 2 列完整閉合，那一趟若連它們也被折斷、
+ * 只剩一列較窄的標籤列，整張表就會被第 6 條擋掉。
+ *
+ * 第 7 條不依賴那個餘裕，它直接問「這個續行本身是不是一列」：
+ *
+ *     CH4 | 2000 |   →  | CH4 | 2000 |  = 2 格 = 本表列寬  →  是一列，不接
+ *     程度 |          →  | 程度 |        = 1 格 ≠ 13        →  是碎片，接
+ *     限 | |          →  | 限 | |        = 2 格 ≠ 13        →  是碎片，接
+ *
+ * 三份本尊素材**零誤判**，兩個混用案例都抓到（量測見 PR 說明）。
+ *
+ * ### 兩條都留，因為抓的不是同一件事
+ *
+ * 第 7 條抓「被吞掉的列寬度剛好等於本表列寬」；第 6 條抓「寬度累加超過表寬」
+ * （表寬 5、被吞的列 3 格 → 合併成 7 格：第 7 條漏、第 6 條抓到）。
+ *
+ * 兩條各自計數（`refusedTooWide` / `refusedLooksLikeRow`）並分別記 log。
+ * **第 6 條的 0 餘裕因此是可觀測的**：`refusedTooWide` 一旦在真實匯入裡非 0，
+ * 就代表那個情況到了，而我們會當場知道，不是靠註解提醒下一個人。
  *
  * 放棄時維持現行行為（交回原樣、由驗證器擋下並記 log），
  * 那是一個已知且看得見的結果；接錯則是看不見的。
  */
+
+import { countTableCells } from "@/lib/utils/markdown_table_cells";
 
 const CLOSED_ROW = /^\|.*\|$/;
 /** Info: (20260814 - Emily) 以 `|` 開頭但沒有以 `|` 收尾 —— 被折斷的列首 */
@@ -88,12 +152,6 @@ export const MAX_CONTINUATION_LINES = 32;
 // Info: (20260820 - Emily) 超過這個續行數就記 log:它是「原文長得不標準」的強訊號
 export const CONTINUATION_LINES_NOTEWORTHY = 4;
 
-const cellCount = (line: string): number =>
-  line
-    .replace(/^\|/, "")
-    .replace(/\|$/, "")
-    .split(/(?<!\\)\|/).length;
-
 /**
  * Info: (20260814 - Emily) 只有兩邊都是 ASCII 字母數字才補空白。
  *
@@ -133,8 +191,35 @@ const joinFragments = (left: string, right: string): string => {
 const hasClosedRow = (lines: readonly string[]): boolean =>
   lines.some((line) => {
     const trimmed = line.trim();
-    return CLOSED_ROW.test(trimmed) && cellCount(trimmed) >= 2;
+    return CLOSED_ROW.test(trimmed) && countTableCells(trimmed) >= 2;
   });
+
+/**
+ * Info: (20260821 - Emily) 同一段裡最寬的完整列 —— 接回結果的寬度上限（第 6 條護欄）。
+ * 只算 ≥2 格的閉合列,與 `hasClosedRow` 同一個門檻。
+ */
+/**
+ * Info: (20260821 - Emily) 同一段裡所有完整列的寬度集合 —— 第 7 條護欄的依據。
+ * `hasClosedRow` 已保證至少有一列,所以這個集合不會是空的。
+ */
+const closedRowWidths = (lines: readonly string[]): ReadonlySet<number> => {
+  const widths = new Set<number>();
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    if (!CLOSED_ROW.test(trimmed)) return;
+    const width = countTableCells(trimmed);
+    if (width >= 2) widths.add(width);
+  });
+  return widths;
+};
+
+const widestClosedRow = (lines: readonly string[]): number =>
+  lines.reduce((widest, line) => {
+    const trimmed = line.trim();
+    if (!CLOSED_ROW.test(trimmed)) return widest;
+    const width = countTableCells(trimmed);
+    return width >= 2 ? Math.max(widest, width) : widest;
+  }, 0);
 
 /**
  * Info: (20260814 - Emily) 把被折斷的列接回一行。決定性、冪等。
@@ -145,15 +230,31 @@ const hasClosedRow = (lines: readonly string[]): boolean =>
  */
 export const joinWrappedTableRows = (
   markdown: string,
-): { markdown: string; joined: number; maxContinuations: number } => {
+): {
+  markdown: string;
+  joined: number;
+  maxContinuations: number;
+  refusedTooWide: number;
+  refusedLooksLikeRow: number;
+} => {
   const lines = markdown.split("\n");
   if (!hasClosedRow(lines)) {
-    return { markdown, joined: 0, maxContinuations: 0 };
+    return {
+      markdown,
+      joined: 0,
+      maxContinuations: 0,
+      refusedTooWide: 0,
+      refusedLooksLikeRow: 0,
+    };
   }
 
+  const ceiling = widestClosedRow(lines);
+  const tableWidths = closedRowWidths(lines);
   const output: string[] = [];
   let joined = 0;
   let maxContinuations = 0;
+  let refusedTooWide = 0;
+  let refusedLooksLikeRow = 0;
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
@@ -174,6 +275,17 @@ export const joinWrappedTableRows = (
       // Info: (20260814 - Emily) 空行是段落邊界;以 `|` 開頭的更可能是另一列
       if (trimmed === "" || trimmed.startsWith("|")) break;
 
+      /*
+       * Info: (20260821 - Emily) 第 7 條護欄:這個續行補上前導管線之後,
+       * 若成為一個寬度符合本表的合法列,它就是一列而不是一格的下半截。
+       * GFM 允許省略首尾管線,所以原文混用時「不以 `|` 開頭」不足以判定它是續行。
+       */
+      const asRow = `|${trimmed}`;
+      if (CLOSED_ROW.test(asRow) && tableWidths.has(countTableCells(asRow))) {
+        refusedLooksLikeRow += 1;
+        break;
+      }
+
       merged = joinFragments(merged, trimmed);
       cursor = index + step;
       if (CLOSED_ROW.test(merged)) {
@@ -183,7 +295,17 @@ export const joinWrappedTableRows = (
     }
 
     // Info: (20260814 - Emily) 接不成、或接完不足兩格 —— 整段放棄，不留半成品
-    if (!closed || cellCount(merged) < 2) {
+    if (!closed || countTableCells(merged) < 2) {
+      output.push(line);
+      continue;
+    }
+
+    /*
+     * Info: (20260821 - Emily) 第 6 條護欄：接完比同段最寬的完整列還寬 = 吞掉了別的列。
+     * 交回原樣讓驗證器擋下並記 log —— 看得見的失敗勝過欄位悄悄左移。
+     */
+    if (countTableCells(merged) > ceiling) {
+      refusedTooWide += 1;
       output.push(line);
       continue;
     }
@@ -194,5 +316,11 @@ export const joinWrappedTableRows = (
     index = cursor;
   }
 
-  return { markdown: output.join("\n"), joined, maxContinuations };
+  return {
+    markdown: output.join("\n"),
+    joined,
+    maxContinuations,
+    refusedTooWide,
+    refusedLooksLikeRow,
+  };
 };

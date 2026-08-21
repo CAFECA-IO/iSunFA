@@ -99,11 +99,15 @@ describe("joinWrappedTableRows", () => {
      */
     const source = ["| 甲 | 乙", "丙 | 丁 |"].join("\n");
 
-    expect(joinWrappedTableRows(source)).toEqual({
-      markdown: source,
-      joined: 0,
-      maxContinuations: 0,
-    });
+    const result = joinWrappedTableRows(source);
+
+    /*
+     * Info: (20260821 - Emily) 逐項斷言而不是整個物件 toEqual：
+     * 回傳值加一個欄位就讓四條測試爛掉,已經發生兩次(maxContinuations、refusedTooWide)。
+     * 這些測試要守的是「原樣返回、一列都沒接」,不是回傳物件的形狀。
+     */
+    expect(result.markdown).toBe(source);
+    expect(result.joined).toBe(0);
   });
 
   it("should not merge two rows when the next line starts with a pipe", () => {
@@ -200,11 +204,15 @@ describe("joinWrappedTableRows", () => {
   it("should leave non table content untouched", () => {
     const source = ["# 標題", "", "一段散文。", "", "另一段散文。"].join("\n");
 
-    expect(joinWrappedTableRows(source)).toEqual({
-      markdown: source,
-      joined: 0,
-      maxContinuations: 0,
-    });
+    const result = joinWrappedTableRows(source);
+
+    /*
+     * Info: (20260821 - Emily) 逐項斷言而不是整個物件 toEqual：
+     * 回傳值加一個欄位就讓四條測試爛掉,已經發生兩次(maxContinuations、refusedTooWide)。
+     * 這些測試要守的是「原樣返回、一列都沒接」,不是回傳物件的形狀。
+     */
+    expect(result.markdown).toBe(source);
+    expect(result.joined).toBe(0);
   });
 });
 
@@ -246,22 +254,30 @@ describe("joinWrappedTableRows 的護欄", () => {
     // Info: (20260814 - Emily) 沒有護欄時會變成 "| 甲 | 乙1 | 2 3 | 4 |" —— 三列併成一列
     const source = ["| 甲 | 乙", "1 | 2", "3 | 4 |"].join("\n");
 
-    expect(joinWrappedTableRows(source)).toEqual({
-      markdown: source,
-      joined: 0,
-      maxContinuations: 0,
-    });
+    const result = joinWrappedTableRows(source);
+
+    /*
+     * Info: (20260821 - Emily) 逐項斷言而不是整個物件 toEqual：
+     * 回傳值加一個欄位就讓四條測試爛掉,已經發生兩次(maxContinuations、refusedTooWide)。
+     * 這些測試要守的是「原樣返回、一列都沒接」,不是回傳物件的形狀。
+     */
+    expect(result.markdown).toBe(source);
+    expect(result.joined).toBe(0);
   });
 
   it("should not swallow prose that happens to end with a pipe", () => {
     // Info: (20260814 - Emily) 沒有護欄時會變成 "| 1 | 2接下來是一段話 |"
     const source = ["| 1 | 2", "接下來是一段話 |"].join("\n");
 
-    expect(joinWrappedTableRows(source)).toEqual({
-      markdown: source,
-      joined: 0,
-      maxContinuations: 0,
-    });
+    const result = joinWrappedTableRows(source);
+
+    /*
+     * Info: (20260821 - Emily) 逐項斷言而不是整個物件 toEqual：
+     * 回傳值加一個欄位就讓四條測試爛掉,已經發生兩次(maxContinuations、refusedTooWide)。
+     * 這些測試要守的是「原樣返回、一列都沒接」,不是回傳物件的形狀。
+     */
+    expect(result.markdown).toBe(source);
+    expect(result.joined).toBe(0);
   });
 
   it("should rejoin a folded divider row into a valid divider", () => {
@@ -322,8 +338,20 @@ describe("續行上限放寬到 32（08-20 run D）", () => {
     "區間之上",
     "限 | |",
   ];
-  // Info: (20260820 - Emily) hasClosedRow 需要全文至少一列閉合 —— 原 payload 有 9 列
-  const RUN_D_TABLE = [...RUN_D_HEADER, "| 1 | 2 | 3 |"].join("\n");
+  /**
+   * Info: (20260821 - Emily) 這一列不是隨便湊的,它同時決定第 6 條護欄的上限。
+   *
+   * 第一版我寫 `| 1 | 2 | 3 |`(三格)只為了滿足 `hasClosedRow`,而第 6 條護欄
+   * 拿「同段最寬的完整列」當上限,於是上限變成 3、接回的 13 格表頭被擋下 ——
+   * 三條測試因此紅。本尊素材(`t4.4__0820_D`)裡的完整列是 13 / 14 格,所以它是綠的。
+   *
+   * 也就是說:**合成素材不具代表性時,它會用一個真實情況不存在的方式紅或綠。**
+   * 這裡改成照 log 逐字取的廠址標籤列(13 格,與接回後的表頭同寬)。
+   * 這一族的可信來源是 `source_table_corpus.test.ts` 的本尊回放,不是這裡。
+   */
+  const RUN_D_CLOSED_ROW =
+    "| (1) 高興昌鋼鐡股份有限公司 總公司 | | | | | | | | | | | | |";
+  const RUN_D_TABLE = [...RUN_D_HEADER, RUN_D_CLOSED_ROW].join("\n");
 
   it("被折成 17 行的表頭接得回來", () => {
     const result = joinWrappedTableRows(RUN_D_TABLE);
@@ -378,5 +406,139 @@ describe("續行上限放寬到 32（08-20 run D）", () => {
     ].join("\n");
 
     expect(joinWrappedTableRows(withBlank).joined).toBe(0);
+  });
+});
+
+/**
+ * Info: (20260821 - Emily) 第 6 條護欄：接完不得比同段最寬的完整列更寬。
+ * 08-21 PR review 指出第 2 條（續行不得以 `|` 開頭）擋不住混用前導管線的原文。
+ */
+describe("混用前導管線時不得吞掉別的列（第 6 條護欄）", () => {
+  it("兩列混用：不接，交回原樣", () => {
+    const source = ["| 氣體 | 排放量 |", "| CO2 | 1000", "CH4 | 2000 |"].join(
+      "\n",
+    );
+    const result = joinWrappedTableRows(source);
+
+    expect(result.joined).toBe(0);
+    /*
+     * Info: (20260821 - Emily) 抓到它的是第 7 條（`| CH4 | 2000 |` = 2 格 = 本表列寬），
+     * 不是第 6 條 —— 兩條分開計數就是為了看得出是哪一條在守。
+     */
+    expect(result.refusedLooksLikeRow).toBe(1);
+    expect(result.markdown).toBe(source);
+  });
+
+  it("四列混用：不接（放寬上限的直接代價）", () => {
+    const source = [
+      "| 氣體 | 排放量 |",
+      "| CO2 | 1000",
+      "CH4 | 2000",
+      "N2O | 3000",
+      "SF6 | 4000 |",
+    ].join("\n");
+    const result = joinWrappedTableRows(source);
+
+    expect(result.joined).toBe(0);
+    expect(result.refusedLooksLikeRow).toBe(1);
+  });
+
+  /**
+   * Info: (20260821 - Emily) 反向對照：吞掉別的列會讓那一列的數字落進別的欄位。
+   * 這一條釘的是**後果**而不是機制 —— 機制改了但後果沒防住的話它仍然要紅。
+   */
+  it("被吞掉的那一列的內容不會落進上一列", () => {
+    const source = ["| 氣體 | 排放量 |", "| CO2 | 1000", "CH4 | 2000 |"].join(
+      "\n",
+    );
+    const firstRow = joinWrappedTableRows(source).markdown.split("\n")[1];
+
+    expect(firstRow).not.toContain("CH4");
+    expect(firstRow).not.toContain("2000");
+  });
+
+  /**
+   * Info: (20260821 - Emily) 護欄不能寬到把本尊素材一起擋掉。
+   * `表4.4` 的資料列是 14 格而分隔列是 13 格 —— 這就是為什麼判準不是
+   * 「須等於分隔列寬」（review 選項一的字面版本會擋掉三個完整的資料列）。
+   */
+  /**
+   * Info: (20260821 - Emily) 第 6 條的上限是「同段最寬的完整列」而**不是分隔列**。
+   *
+   * 這裡分隔列 2 格、資料列 3 格。若上限取分隔列，接回的 3 格會被誤殺 ——
+   * 而那正是本尊素材 `表4.4` 的形狀（分隔列 13 格、資料列 14 格），
+   * 也是 review 選項一的字面版本會弄壞它的原因。
+   *
+   * 續行刻意選 `尾 |`（補上管線是 1 格，不在表寬集合裡），否則會先被第 7 條攔下，
+   * 這條測試就驗不到第 6 條 —— 第一版就是這樣紅的。
+   */
+  it("第 6 條的上限取同段最寬完整列，不是分隔列", () => {
+    const source = [
+      "| 甲 | 乙 | 丙 |",
+      "|---|---|",
+      "| 資料 | 值 | 註 |",
+      "| 折斷的 | 值 | 註",
+      "尾 |",
+    ].join("\n");
+    const result = joinWrappedTableRows(source);
+
+    expect(result.joined).toBe(1);
+    expect(result.refusedTooWide).toBe(0);
+    expect(result.refusedLooksLikeRow).toBe(0);
+  });
+
+  /**
+   * Info: (20260821 - Emily) 曖昧的續行 —— 它補上前導管線之後寬度剛好符合本表，
+   * 所以它更可能是一列而不是一格的下半截。這是第 7 條的職責，釘住它。
+   *
+   * 這個素材原本是上面那條測試用的，改成驗第 7 條而不是刪掉：
+   * 「續行本身就是一列」是真的行為，值得有測試守。
+   */
+  it("曖昧的續行（補上管線就是合法列）由第 7 條攔下", () => {
+    const source = [
+      "| 甲 | 乙 | 丙 |",
+      "|---|---|",
+      "| 資料 | 值 | 註 |",
+      "| 折斷的",
+      "一列 | 值 | 註 |",
+    ].join("\n");
+    const result = joinWrappedTableRows(source);
+
+    expect(result.joined).toBe(0);
+    expect(result.refusedLooksLikeRow).toBe(1);
+    expect(result.refusedTooWide).toBe(0);
+    expect(result.markdown).toBe(source);
+  });
+});
+
+/**
+ * Info: (20260821 - Emily) 第 6 條護欄的**已知脆弱點**，釘成測試而不是寫在註解裡。
+ *
+ * 實測本尊素材的餘裕是 **0**（表4.4 最寬完整列 14 / 接回產生 14；
+ * 表4.8 最寬 13 / 接回 13）。也就是說第 6 條通過是因為「最寬的完整列恰好與被折斷的
+ * 那一列同寬」。若整張表最寬的那一列正是被折斷的那一列、而完整列都比它窄，
+ * 第 6 條會拒絕接回，整張表被驗證器擋掉。
+ *
+ * 這條測試釘的是**目前的行為**（拒絕），不是我們想要的行為。
+ * 哪天有人把第 6 條改好，這條會紅 —— 那時候要改的是這條測試，而且要看得見地改。
+ * 在那之前 `refusedTooWide` 在真實匯入的 log 裡非 0 就是這個情況到了。
+ */
+describe("第 6 條護欄的已知脆弱點（釘住現況，不是背書）", () => {
+  it("最寬的那一列被折斷、完整列都比它窄時，整段拒絕接回", () => {
+    /*
+     * Info: (20260821 - Emily) 續行選 `尾 |`（補上管線是 1 格，不在表寬集合裡），
+     * 否則第 7 條會先攔下而驗不到第 6 條。這條要隔離的是第 6 條的脆弱點本身。
+     */
+    const source = [
+      "| 窄 | 列 |",
+      "| 這是最寬的一列 | 甲 | 乙 | 丙",
+      "尾 |",
+    ].join("\n");
+    const result = joinWrappedTableRows(source);
+
+    expect(result.joined).toBe(0);
+    expect(result.refusedTooWide).toBe(1);
+    expect(result.refusedLooksLikeRow).toBe(0);
+    expect(result.markdown).toBe(source);
   });
 });

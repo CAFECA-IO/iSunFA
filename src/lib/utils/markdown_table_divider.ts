@@ -31,6 +31,11 @@
  * 散文不會湊巧出現三行都被直線切成同樣格數的段落，而表格必然如此。
  */
 
+import {
+  countTableCells,
+  splitTableCells,
+} from "@/lib/utils/markdown_table_cells";
+
 const ROW = /^\|.*\|$/;
 const DIVIDER = /^\|[\s:|-]+\|$/;
 
@@ -41,18 +46,6 @@ const DIVIDER = /^\|[\s:|-]+\|$/;
  * 四列太緊（原文有些小表就是三列）。
  */
 const MIN_CONSISTENT_ROWS = 3;
-
-/**
- * Info: (20260820 - Emily) 一列有幾個儲存格。**匯出**給 `validateSourceTables` 共用 ——
- * 「一列有幾格」是同一個判定，不該有第二份實作（PR review B1 的同一條規則）。
- *
- * `\|` 是逃脫的直線不是欄位邊界，所以用否定回顧。
- */
-export const countTableCells = (line: string): number =>
-  line
-    .replace(/^\|/, "")
-    .replace(/\|$/, "")
-    .split(/(?<!\\)\|/).length;
 
 /**
  * Info: (20260820 - Emily) 把「超寬列」裁到分隔列的欄數 —— 只裁空白，不裁內容。
@@ -79,12 +72,6 @@ export const countTableCells = (line: string): number =>
  * 會把一個氣體的排放量整欄移位，那比丟一張表嚴重得多。
  */
 const BLANK_OR_DASHES = /^[\s-]*$/;
-
-const splitTableCells = (line: string): string[] =>
-  line
-    .replace(/^\|/, "")
-    .replace(/\|$/, "")
-    .split(/(?<!\\)\|/);
 
 export const trimRowsToDividerWidth = (
   markdown: string,
