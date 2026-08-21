@@ -36,7 +36,15 @@
 
 ## 二、格式落差:兩種都叫「ESG 報告」的不同文件
 
-我們的 33 節大綱(`src/constants/carbon_report_outline.ts`)是照 **ISO 14064-1 / IFRS S2 溫室氣體盤查報告書**的骨架設計的。
+我們的 33 節大綱(`src/constants/carbon_report_outline.ts`)是照 **ISO 14064-1 溫室氣體盤查報告書**的骨架設計的。
+
+<!-- Info: (20260818 - Emily) 原本寫「ISO 14064-1 / IFRS S2」。已改成只有 ISO 14064-1(`open/44`,上線阻擋 B2)。 -->
+<!-- Info: (20260818 - Emily) 那不是筆誤而是一個會複製自己的錯:`carbon_report_outline.ts` 的檔頭第 1 行原本寫 -->
+<!-- Info: (20260818 - Emily) 「IFRS S1/S2 對齊」,而 `open/44` 前兩版整張票寫錯的成因就是照抄了那行過期註解。 -->
+<!-- Info: (20260818 - Emily) 這一行是下一個人查「這份大綱依哪個標準」時會讀的 ADR —— 留著它,同一個坑只是搬到 documents/。 -->
+<!-- Info: (20260818 - Emily) 骨架本身沒有改過:第五~十一章是台灣 ISO 14064-1 盤查報告書的典型章節,而不是 IFRS 的四大支柱。 -->
+<!-- Info: (20260818 - Emily) 帳本側(`esgRecord` / `computedLedger`)確實對齊 GHG Protocol / IFRS S2,那是另一套, -->
+<!-- Info: (20260818 - Emily) 見 `architecture/compliance_and_audit/esg_methodology_mapping.md`;兩套在子代碼層由 `iso14064_subcategory.ts` 接起來。 -->
 
 **對上盤查報告書 —— 幾乎逐節對應:**
 

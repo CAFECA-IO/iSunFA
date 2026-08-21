@@ -40,6 +40,22 @@ export interface ICarbonDiagramTemplate {
   maxNodes: number;
 }
 
+/**
+ * Info: (20260818 - Emily) 每個 `maxNodes` 從 08-18 起**不再是承重參數**
+ * （`data/issue_drafts/open/48_diagram_silent_failure.md`）。
+ *
+ * 超過上限的處置由「整張圖消失」改成「退化成表格」,於是猜錯上限的後果
+ * 從「資料在紙上消失」變成「換一種呈現」。這件事重要,因為這些值本來就猜不準:
+ *
+ * - `GOVERNANCE_TREE` 的 20 是 08-14 對著「那一次輸出 17 個節點」調的（原本 12）,
+ *   而同一份原文兩趟給 **17 和 21** —— 第二趟就超了。
+ * - `MILESTONE_TIMELINE` 的 40 是同一天對著「28 條里程碑」調的,
+ *   而兩趟分別給 **67 和 62**。
+ *
+ * 把 20 改成 25、40 改成 70 只是把同一個問題推到下一次。
+ * 所以這些值現在只回答一個問題:「畫成圖還讀得動嗎?」——
+ * 答案是否的時候換表格,而不是把內容丟掉。
+ */
 export const CARBON_DIAGRAM_TEMPLATES: Record<
   CarbonDiagramTemplateEnum,
   ICarbonDiagramTemplate
@@ -173,6 +189,46 @@ export const CARBON_DIAGRAM_MIN_NODES = 3;
  * 讀取端是純文字轉換,拿不到 labels,不可能跟著改。已移除那兩個覆寫欄位:
  * **一個無法在兩端同時兌現的選項,不該提供。** 日後真要 i18n,兩端都得吃同一組。
  */
+/**
+ * Info: (20260818 - Emily) 結構退化表的三個表頭 —— 唯一來源
+ * （`data/issue_drafts/open/48_diagram_silent_failure.md`）。
+ *
+ * 與 `MILESTONE_TABLE_HEADERS` 同一個理由:表頭散進多處會分岔,
+ * 而讀取端的純文字轉換拿不到 labels,不可能跟著改。所以不提供覆寫。
+ */
+/**
+ * Info: (20260818 - Emily) 「超過上限」說明文字裡的兩個關鍵片語 —— **唯一來源**。
+ *
+ * 這份契約有兩端:產生端是 `CARBON_DIAGRAM_DEFAULT_LABELS.tooMany`,
+ * 讀取端是驗收腳本 `scripts/uat_carbon_report.ts` —— 它要從 PDF 的文字層分辨
+ * 「退化成表格了」與「整張圖不見了」。
+ *
+ * 抽成常數而不是讓兩端各寫一份正規表示式:片語改了而腳本照舊回報 ✓,
+ * 是這一週被 review 擋下三次的同一個形狀 ——
+ * **驗證的對象要在程式的輸入空間裡,不要在論證裡。**
+ * 一支會說謊的驗收腳本比沒有驗收腳本更糟。
+ */
+export const DIAGRAM_CAP_EXCEEDED_PHRASE = "超過本圖的繪製上限";
+
+export const DIAGRAM_DEGRADED_TO_TABLE_PHRASE = "改以表格呈現";
+
+/**
+ * Info: (20260818 - Emily) 退化表裡「這一格原本就沒有值」的內容:
+ * 根節點沒有上層項目、補在表尾的節點沒有層級。
+ *
+ * **不能是空字串** —— 與 `MILESTONE_EMPTY_EVENT` 同一個陷阱:
+ * 空儲存格會讓那一列變成「第一格有內容、其餘皆空」,而 `carbon_report_html` 的
+ * `isGroupRow` 正是這個判準,於是一個資料點會被渲染成橫跨整表的章節標題。
+ * 破折號讓它留在資料列的形狀裡,同時誠實表達那一格沒有值。
+ */
+export const HIERARCHY_NO_VALUE = "—";
+
+export const HIERARCHY_TABLE_HEADERS = {
+  level: "層級",
+  item: "項目",
+  parent: "上層項目",
+} as const;
+
 export const MILESTONE_TABLE_HEADERS = {
   period: "時間",
   event: "事件",

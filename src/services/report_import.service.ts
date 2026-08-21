@@ -1030,7 +1030,29 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
 
         const repaired = rejoined.map((table) => {
           const fix = ensureTableDivider(table.markdown);
-          if (!fix.inserted) return table;
+          if (!fix.inserted) {
+            /**
+             * Info: (20260819 - Emily) 沒補的兩種情況要分得開。
+             *
+             * `skipped` 有值 = 找到了一致列但它上面還有表格列,補進去會讓整張表
+             * 印成原始 markdown(`open/47` 第三種形狀,08-19 run2 實測)。
+             * 這一張接下來會被 `validateSourceTables` 擋掉,而那是刻意的 ——
+             * 一個看得見的失敗勝過一片管線。所以要記出來,否則它就變成
+             * 「表格莫名少一張」而沒有原因。
+             */
+            if (fix.skipped) {
+              logger.warn(
+                "[ReportImportService] source table divider skipped",
+                {
+                  paragraphId,
+                  tableNo: table.tableNo,
+                  caption: table.caption.slice(0, 40),
+                  reason: fix.skipped,
+                },
+              );
+            }
+            return table;
+          }
           /*
            * Info: (20260814 - Emily) 補了要記出來：這是「原文長得不標準」的訊號，
            * 累積起來要回頭改 prompt，而不是永遠靠讀取端補。

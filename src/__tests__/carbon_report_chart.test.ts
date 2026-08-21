@@ -7,6 +7,7 @@ import {
   hasCarbonChartBlocks,
   refreshCarbonChartBlocks,
   collapsePassThroughNodes,
+  CARBON_CHART_DEFAULT_LABELS,
 } from "@/lib/carbon_report_chart.builder";
 import {
   CarbonChartTemplateEnum,
@@ -15,6 +16,7 @@ import {
 } from "@/constants/carbon_report_charts";
 import { ArticulationStatusEnum } from "@/constants/carbon_articulation";
 import { GhgProtocolCategory } from "@/constants/esg";
+import { LedgerProvenanceEnum } from "@/constants/imported_quantity";
 import { IComputedLedger } from "@/types/carbon_chatbot.types";
 
 const buildLedger = (
@@ -504,5 +506,55 @@ describe("insertCarbonChartBlock / refreshCarbonChartBlocks", () => {
     const refreshed = refreshCarbonChartBlocks(content, violated);
     expect(refreshed).not.toContain("```mermaid");
     expect(refreshed).toContain("凍結");
+  });
+});
+
+/**
+ * Info: (20260819 - Emily) `open/53`:圖上標範疇制、敘述用類別制,而紙上沒有一句話說
+ * 它們是同一批排放源。真修要改分組鍵(多個 GHG 類別對到同一個 ISO 類別),
+ * 08-19 先把對照說出來 —— 隱藏的分類判斷等於沒有依據。
+ *
+ * 兩條測試都是必要的,而且第二條才是重點:
+ * 加說明的那次改動**不可以**讓桑基圖本身消失。這一週已經有過
+ * 「修一件事、另一件安靜地不見」的先例(圖表超上限整張不畫),
+ * 所以判準要同時釘住「說明在」與「圖還在」。
+ */
+describe("IMPORTED_EMISSION_SANKEY 的範疇↔類別對照（open/53）", () => {
+  const importedLedger = () =>
+    buildLedger({
+      entries: [
+        {
+          ...buildLedger().entries[0],
+          provenance: LedgerProvenanceEnum.IMPORTED,
+        },
+      ],
+    });
+
+  it("圖下方有範疇↔類別的對照說明", () => {
+    const block = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY,
+      importedLedger(),
+    );
+
+    expect(CARBON_CHART_DEFAULT_LABELS.importedSankeyIsoMapping).toBeDefined();
+    expect(block).toContain(
+      CARBON_CHART_DEFAULT_LABELS.importedSankeyIsoMapping as string,
+    );
+  });
+
+  it("加了說明之後桑基圖本身還在", () => {
+    const block = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY,
+      importedLedger(),
+    );
+
+    expect(block).toContain("sankey-beta");
+    expect(block).toContain("```mermaid");
+    // Info: (20260819 - Emily) 說明是圖**之後**的一行,不是取代圖
+    expect(block.indexOf("sankey-beta")).toBeLessThan(
+      block.indexOf(
+        CARBON_CHART_DEFAULT_LABELS.importedSankeyIsoMapping as string,
+      ),
+    );
   });
 });

@@ -62,7 +62,7 @@ const cellCount = (line: string): number =>
  */
 export const ensureTableDivider = (
   markdown: string,
-): { markdown: string; inserted: boolean } => {
+): { markdown: string; inserted: boolean; skipped?: string } => {
   const lines = markdown.split("\n");
   const isRowAt = (index: number): boolean =>
     index < lines.length && ROW.test(lines[index].trim());
@@ -88,6 +88,34 @@ export const ensureTableDivider = (
       end += 1;
     }
     if (end - start + 1 < MIN_CONSISTENT_ROWS) continue;
+
+    /**
+     * Info: (20260819 - Emily) 一致列的**上面**還有表格列 —— 不補,交回原樣。
+     *
+     * GFM 只認「表格區塊的第二行」那條分隔列。一致列不是第一列時,補進去的分隔列
+     * 落在區塊中間,而上面那一列仍然沒有分隔列 —— 整個區塊因此都不渲染,
+     * markdown 原樣印在紙上。
+     *
+     * 08-19 run2 實測:`表3.4` 的表頭被模型壓成**一個約 600 格的邏輯列**
+     * (原文是兩層合併表頭),而一致列是它下面的 6 欄資料列。補完之後紙上出現
+     * 1,273 個管線與 19 條 `|---|---|`(`open/47` 第三種形狀)。
+     *
+     * 這裡的立場與補而不丟相反,理由是**後果不對等**:
+     * 補錯位置 → 紙上一片管線,而且沒有任何 log 說它壞了(靜默且醜);
+     * 不補 → `validateSourceTables` 會擋下來,`log_丟表` 與「引用但不存在的表」
+     * 兩條判準都會叫。與 `open/48`「退化不消失、失敗留下痕跡」同一個原則:
+     * 一個看得見的失敗勝過一個看起來像成品的壞東西。
+     *
+     * 不猜「哪一列才是真正的表頭」的理由見上方註解 —— 猜錯會把一個氣體的
+     * 排放量標成別的名目,那比丟一張表嚴重。
+     */
+    if (start > 0 && isRowAt(start - 1)) {
+      return {
+        markdown,
+        inserted: false,
+        skipped: "rows_above_consistent_run",
+      };
+    }
 
     const indent = lines[start].match(/^\s*/)?.[0] ?? "";
     const divider = `${indent}|${" --- |".repeat(columns)}`;

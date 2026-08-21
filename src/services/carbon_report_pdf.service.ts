@@ -9,8 +9,8 @@ import {
 import {
   assignTocPageNumbers,
   countLeadingTocPages,
-  squeezeForTocMatch,
 } from "@/lib/utils/carbon_toc_pages";
+import { squeezeForMatch } from "@/lib/utils/squeeze_for_match";
 import { CARBON_TOC_PAGE_HEADING_HITS } from "@/constants/carbon_pdf";
 import { extractPdfTextLayer, splitTextByPages } from "@/lib/pdf_text_layer";
 import { assertCjkRenderable } from "@/lib/utils/pdf_font_guard";
@@ -179,14 +179,14 @@ export class CarbonReportPdfService {
       });
       return { filled: 0, missing: entries.length };
     }
-    // Info: (20260812 - Emily) NFKC + 去空白的理由見 squeezeForTocMatch
-    const pages = splitTextByPages(extracted.text).map(squeezeForTocMatch);
+    // Info: (20260812 - Emily) NFKC + 去空白的理由見 squeezeForMatch
+    const pages = splitTextByPages(extracted.text).map(squeezeForMatch);
 
     // Info: (20260812 - Emily) 目錄自己佔幾頁,判定與理由都在 countLeadingTocPages
-    const needles = entries.map((entry) => squeezeForTocMatch(entry.text));
+    const needles = entries.map((entry) => squeezeForMatch(entry.text));
     const skip = countLeadingTocPages({
       squeezedPages: pages,
-      squeezedTocTitle: squeezeForTocMatch(tocTitle),
+      squeezedTocTitle: squeezeForMatch(tocTitle),
       squeezedEntries: needles,
       headingHits: CARBON_TOC_PAGE_HEADING_HITS,
     });
@@ -312,7 +312,7 @@ export class CarbonReportPdfService {
          *
          * 必須在**兩趡列印都跑完之後**才修：第二趡會重新產生整份 PDF，
          * 先修的話整個被覆蓋掉。fillTocPageNumbers 讀的是文字層，
-         * 而它自己用 squeezeForTocMatch 比對，不受部首影響（實測 33/33 都對）。
+         * 而它自己用 squeezeForMatch 比對，不受部首影響（實測 33/33 都對）。
          *
          * 修不動不讓列印失敗 —— 一份「可以看但搜不到」的報告，
          * 仍然遠好過一份沒有產出的報告。但**不修得靜悄悄**：

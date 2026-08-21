@@ -9,8 +9,8 @@ import { describe, it, expect } from "@jest/globals";
 import {
   assignTocPageNumbers,
   countLeadingTocPages,
-  squeezeForTocMatch,
 } from "@/lib/utils/carbon_toc_pages";
+import { squeezeForMatch } from "@/lib/utils/squeeze_for_match";
 import { CARBON_TOC_PAGE_HEADING_HITS } from "@/constants/carbon_pdf";
 
 const count = (
@@ -19,23 +19,23 @@ const count = (
   entries: readonly string[],
 ): number =>
   countLeadingTocPages({
-    squeezedPages: pages.map(squeezeForTocMatch),
-    squeezedTocTitle: squeezeForTocMatch(tocTitle),
-    squeezedEntries: entries.map(squeezeForTocMatch),
+    squeezedPages: pages.map(squeezeForMatch),
+    squeezedTocTitle: squeezeForMatch(tocTitle),
+    squeezedEntries: entries.map(squeezeForMatch),
     headingHits: CARBON_TOC_PAGE_HEADING_HITS,
   });
 
-describe("squeezeForTocMatch", () => {
+describe("squeezeForMatch", () => {
   /**
    * Info: (20260812 - Emily) 文字層抽出來的字不一定是同一個碼位:
    * 實測「第一章」的「一」是 U+2F00(康熙部首)。少了 NFKC,34 條裡有 10 條留白。
    */
   it("should fold Kangxi radicals onto the ordinary ideograph", () => {
-    expect(squeezeForTocMatch("第⼀章")).toBe(squeezeForTocMatch("第一章"));
+    expect(squeezeForMatch("第⼀章")).toBe(squeezeForMatch("第一章"));
   });
 
   it("should drop the whitespace the text layer inserts between characters", () => {
-    expect(squeezeForTocMatch("3.4 計 算\n細節")).toBe("3.4計算細節");
+    expect(squeezeForMatch("3.4 計 算\n細節")).toBe("3.4計算細節");
   });
 });
 
@@ -190,8 +190,8 @@ describe("assignTocPageNumbers", () => {
     skip: number,
   ) =>
     assignTocPageNumbers({
-      squeezedPages: pages.map(squeezeForTocMatch),
-      squeezedEntries: entries.map(squeezeForTocMatch),
+      squeezedPages: pages.map(squeezeForMatch),
+      squeezedEntries: entries.map(squeezeForMatch),
       skip,
     });
 

@@ -417,6 +417,8 @@ interface IPdfEditorProps {
    * 使用端上，一支只對碳報告成立的轉換不該無條件套給全部人（`#6644`）。
    */
   stripDocumentTitle?: boolean;
+  // Info: (20260820 - Emily) 與 stripDocumentTitle 同層的轉發旗標，碳報告專用（見 MarkdownContent）
+  stripEchoedHeadings?: boolean;
   restoreSourceLineBreaks?: boolean;
 }
 
@@ -436,6 +438,7 @@ export default function PdfEditor({
   splitBreakpoint = "md",
   serverPrint = false,
   stripDocumentTitle = false,
+  stripEchoedHeadings = false,
   restoreSourceLineBreaks = false,
 }: IPdfEditorProps) {
   const { t } = useTranslation();
@@ -1157,6 +1160,7 @@ export default function PdfEditor({
                       }}
                       theme="light"
                       stripDocumentTitle={stripDocumentTitle}
+                      stripEchoedHeadings={stripEchoedHeadings}
                       restoreSourceLineBreaks={restoreSourceLineBreaks}
                     />
                   </div>

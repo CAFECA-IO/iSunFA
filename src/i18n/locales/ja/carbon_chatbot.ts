@@ -297,6 +297,8 @@ export const carbonChatbot = {
   // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層(屏東佔 97%,同圖畫不出比重);廠址改列小計
   chart_imported_sankey_site_totals: "拠点別小計（tCO2e/年、全社比）",
   chart_imported_sankey_ghg_mapping: "サブコードと GHG Protocol カテゴリの対応",
+  chart_imported_sankey_iso_mapping:
+    "図の分類層は GHG プロトコルのスコープで表示しています。ISO 14064-1 との対応：スコープ1＝カテゴリ1、スコープ2＝カテゴリ2、スコープ3＝カテゴリ3〜6。本報告書の記述は ISO 14064-1 のカテゴリ区分に従い、両者は同一の排出源を指します。",
   chart_imported_sankey_below_threshold: "比率が小さく非表示(tCO2e/年)",
   chart_imported_sankey_organization: "全社",
   book_bind_pending_unlock:
