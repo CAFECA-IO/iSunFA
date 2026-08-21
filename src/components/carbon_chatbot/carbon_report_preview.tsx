@@ -452,6 +452,13 @@ export default function CarbonReportPreview({
              * 儲存的內容不動 —— 見上方 legacyHeading 那段。
              */
             stripDocumentTitle
+            /*
+             * Info: (20260820 - Emily) 剝掉「標頭後緊接一行同文」的那一行。
+             * 組稿端一律由 `p.title` 產生標頭，內容第一行的同文是重複；
+             * 這個旗標在 `MarkdownContent` 預設關閉（那支元件還服務 16 個
+             * 非碳使用端，剝掉會是靜默的內容遺失），所以碳報告這端要主動開。
+             */
+            stripEchoedHeadings
             onChange={onMarkdownChange}
             setErrorModal={setErrorModal}
             storageKey={`chatbot_draft_${session.id}`}

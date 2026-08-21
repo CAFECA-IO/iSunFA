@@ -32,7 +32,7 @@ export const solutions = {
     "Not just reports, but a navigation map for carbon reduction.",
   iso_report: "Organizational Carbon Footprint Report",
   iso_report_desc:
-    "Organizational carbon footprint report compliant with IFRS S1/S2 standards.",
+    "Organizational carbon footprint report compliant with the ISO 14064-1 standard.",
   inventory: "GHG Inventory List",
   inventory_desc:
     "Detailed record of all emission sources for future tracking.",

@@ -1,14 +1,12 @@
 import { marked } from "marked";
 import { escapeHtml } from "@/lib/utils/logistics_report_html";
-import { stripMarkdownComments } from "@/lib/utils/markdown_comment";
-import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_break";
 import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
 import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
 import { splitInlineListItems } from "@/lib/utils/markdown_list_structure";
 import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
 import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
 import { padAllTableHeaders } from "@/lib/utils/markdown_table_columns";
-import { stripLeadingDocumentTitle } from "@/lib/utils/carbon_report_title";
+import { prepareCarbonMarkdown } from "@/lib/utils/carbon_markdown_prepare";
 import {
   CARBON_PDF_CHART_MAX_HEIGHT_MM,
   CARBON_PDF_FONT_STACK,
@@ -659,9 +657,26 @@ export const buildCarbonReportHtml = (
    * 剝除只看「第一個非空行」，會被那行註解擋住而漏剝。
    * 預覽端由 `MarkdownContent` 的 `stripDocumentTitle` 做同一件事。
    */
-  const source = stripLeadingDocumentTitle(
-    stripHtmlLineBreaksOutsideFences(stripMarkdownComments(markdown)),
-  ).body;
+  /**
+   * Info: (20260820 - Emily) 前置轉換改走共用函式（PR review A2）。
+   *
+   * 原本這裡與 `MarkdownContent` 各排一串，靠兩則註解宣稱「順序完全一致」——
+   * 而 `stripLeadingDocumentTitle` 兩邊位置不同，同一份輸入產出不同結果。
+   * 順序現在寫在 `prepareCarbonMarkdown` 裡，兩端各呼叫一次。
+   *
+   * 這裡固定剝文件級 H1：報告名稱已改走 `shell.title`（文件外殼），
+   * 內文那個是舊的，不剝的話同一頁會出現兩個名稱。
+   */
+  const source = prepareCarbonMarkdown(markdown, {
+    stripDocumentTitle: true,
+    /*
+     * Info: (20260820 - Emily) 匯出端固定開：這條路徑只有碳盤查報告會走，
+     * 而碳報告的標頭一律由 `p.title` 產生，內容第一行的同文是重複。
+     * 預覽端由 `MarkdownContent` 的 `stripEchoedHeadings` 做同一件事，
+     * 但那個元件還服務另外 16 個使用端，所以那邊是開關、這邊是固定。
+     */
+    stripEchoedHeadings: true,
+  }).markdown;
   /**
    * Info: (20260811 - Emily) 既有草稿裡的 mermaid timeline 在此轉成表格。
    * 產表端已改成直接輸出表格,但既有草稿的 markdown 裡存著改動前產生的 timeline 區塊,

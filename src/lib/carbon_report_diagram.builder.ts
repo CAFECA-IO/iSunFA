@@ -11,6 +11,10 @@ import {
   CARBON_TIMELINE_MIN_DATED_EVENTS,
   CarbonDiagramRendererEnum,
   CarbonDiagramTemplateEnum,
+  DIAGRAM_CAP_EXCEEDED_PHRASE,
+  DIAGRAM_DEGRADED_TO_TABLE_PHRASE,
+  HIERARCHY_NO_VALUE,
+  HIERARCHY_TABLE_HEADERS,
   MILESTONE_TABLE_HEADERS,
   buildDiagramAnchorEnd,
   buildDiagramAnchorStart,
@@ -51,8 +55,14 @@ export const CARBON_DIAGRAM_DEFAULT_LABELS: ICarbonDiagramLabels = {
   unverifiable: "(圖表節點無法回溯至本節原文,已略過不繪製)",
   insufficient: "(本節內容不足以繪製結構圖)",
   skippedTooLong: "以下項目文字過長,未畫進圖中(內容仍在本節原文)",
-  tooMany:
-    "(本節的結構共 {{count}} 個項目,超過本圖的繪製上限 {{max}} 個,未繪製;完整內容見本節文字)",
+  /**
+   * Info: (20260818 - Emily) 文案從「未繪製」改成「改以表格呈現」
+   * （`data/issue_drafts/open/48_diagram_silent_failure.md`）。
+   *
+   * 08-14 這句話本身已經是對的（它說的是「畫不下」而不是「內容不足」）,
+   * 但**說得對與東西還在是兩件事**。說明是最低標,退化才是補而不丟。
+   */
+  tooMany: `(本節的結構共 {{count}} 個項目,${DIAGRAM_CAP_EXCEEDED_PHRASE} {{max}} 個,${DIAGRAM_DEGRADED_TO_TABLE_PHRASE})`,
 };
 
 export enum DiagramRejectReasonEnum {
@@ -148,14 +158,33 @@ export function validateDiagramNodes(
     return { isValid: false, reason: DiagramRejectReasonEnum.NO_NODES };
   }
   const template = CARBON_DIAGRAM_TEMPLATES[templateId];
-  if (nodes.length > template.maxNodes) {
-    return {
-      isValid: false,
-      reason: DiagramRejectReasonEnum.TOO_MANY_NODES,
-      nodeCount: nodes.length,
-      maxNodes: template.maxNodes,
-    };
-  }
+
+  /**
+   * Info: (20260818 - Emily) 超過上限的判定移到**所有信任與結構檢查之後**
+   * （`data/issue_drafts/open/48_diagram_silent_failure.md`）。
+   *
+   * 原本它是第二道檢查,排在原文回溯之前。那在「超過上限就不畫」的年代沒有差別 ——
+   * 兩條路都是不畫。但 08-18 起超過上限會**退化成表格**,而表格會印在紙上,
+   * 於是順序變成承重的:排在回溯之前的話,一批模型編出來的節點只要數量夠多,
+   * 就會繞過回溯檢查、以表格的形式印進一份要送查證的文件。
+   *
+   * 本檔第一行寫的「節點文字必須能在原文找到是這張圖能出現在審計文件裡的唯一理由」
+   * 對表格同樣成立 —— 換一種呈現不會讓沒有出處的字變得可信。
+   *
+   * 同理排在 `UNKNOWN_PARENT` 與 `CYCLIC` 之後:退化表有一欄「上層項目」,
+   * 而父節點的文字只由「它自己也是一個節點」保證有出處。父節點指向圖外時,
+   * 那一欄會印出沒有驗過的字串。
+   */
+  const overflow = (
+    extra: Partial<IDiagramValidation> = {},
+  ): IDiagramValidation => ({
+    isValid: false,
+    reason: DiagramRejectReasonEnum.TOO_MANY_NODES,
+    nodeCount: nodes.length,
+    maxNodes: template.maxNodes,
+    ...extra,
+  });
+  const isOverflowing = nodes.length > template.maxNodes;
 
   /**
    * Info: (20260806 - Tzuhan) 原文回溯先驗,長度後驗 —— **順序是這段邏輯的關鍵。**
@@ -256,6 +285,9 @@ export function validateDiagramNodes(
         reason: DiagramRejectReasonEnum.TOO_FEW_DATED_EVENTS,
       };
     }
+    // Info: (20260818 - Emily) 到這裡 timeline 的節點都驗過了,超過上限交給退化表
+    if (isOverflowing) return overflow({ skippedLabels });
+
     // Info: (20260806 - Tzuhan) 過長者不畫但要說出來(見上方 skippedLabels 的理由)
     return skippedLabels.length > 0
       ? { isValid: true, skippedLabels }
@@ -300,6 +332,9 @@ export function validateDiagramNodes(
       cursor = parentByLabel.get(cursor);
     }
   }
+
+  // Info: (20260818 - Emily) 一切都驗過了,只剩「畫不下」—— 那是退化的入口,不是否決
+  if (isOverflowing) return overflow();
 
   return { isValid: true };
 }
@@ -411,6 +446,71 @@ function buildMilestoneTable(nodes: ICarbonDiagramNode[]): string {
 }
 
 /**
+ * Info: (20260818 - Emily) 結構退化表:超過繪製上限時改用它,而不是把內容丟掉
+ * （`data/issue_drafts/open/48_diagram_silent_failure.md`）。
+ *
+ * 三欄:層級 / 項目 / 上層項目。層級與上層項目兩欄一起把樹的形狀表達完整 ——
+ * 只給項目清單的話,「品管部隸屬於哪一位副主任委員」這件原文有的資訊會不見,
+ * 那就變成另一種形式的丟。
+ *
+ * 排列用深度優先（根節點依原順序,子節點依原順序），讓表讀起來像那棵樹。
+ * 最後一段的 `remaining` 是保險:任何沒被走訪到的節點一律補在表尾。
+ * 走訪邏輯若有 bug,後果應該是「順序不好看」而不是「少一列」——
+ * 這一整張票的判準就是補而不丟,實作自己也要守它。
+ */
+function buildHierarchyTable(nodes: ICarbonDiagramNode[]): string {
+  const childrenOf = new Map<string, ICarbonDiagramNode[]>();
+  const roots: ICarbonDiagramNode[] = [];
+  const known = new Set(nodes.map((node) => node.label));
+  nodes.forEach((node) => {
+    const parent = node.parent;
+    if (parent === undefined || !known.has(parent)) {
+      roots.push(node);
+      return;
+    }
+    const bucket = childrenOf.get(parent) ?? [];
+    bucket.push(node);
+    childrenOf.set(parent, bucket);
+  });
+
+  const rows: string[] = [];
+  const visited = new Set<string>();
+  const walk = (node: ICarbonDiagramNode, level: number): void => {
+    if (visited.has(node.label)) return;
+    visited.add(node.label);
+    /**
+     * Info: (20260818 - Emily) 根節點的上層欄印破折號而不是留白 ——
+     * 空儲存格會被 `carbon_report_html` 的 `isGroupRow` 讀成章節分隔列
+     * （見 `HIERARCHY_NO_VALUE` 的理由）。
+     */
+    const parent =
+      node.parent !== undefined && known.has(node.parent)
+        ? escapeTableCell(node.parent)
+        : HIERARCHY_NO_VALUE;
+    rows.push(`| ${level} | ${escapeTableCell(node.label)} | ${parent} |`);
+    (childrenOf.get(node.label) ?? []).forEach((child) =>
+      walk(child, level + 1),
+    );
+  };
+  roots.forEach((root) => walk(root, 1));
+
+  // Info: (20260818 - Emily) 保險:走訪沒碰到的一律補在表尾,寧可順序難看也不能少一列
+  const remaining = nodes.filter((node) => !visited.has(node.label));
+  remaining.forEach((node) => {
+    visited.add(node.label);
+    rows.push(
+      `| ${HIERARCHY_NO_VALUE} | ${escapeTableCell(node.label)} | ${escapeTableCell(node.parent ?? HIERARCHY_NO_VALUE)} |`,
+    );
+  });
+
+  return [
+    `| ${HIERARCHY_TABLE_HEADERS.level} | ${HIERARCHY_TABLE_HEADERS.item} | ${HIERARCHY_TABLE_HEADERS.parent} |`,
+    "| --- | --- | --- |",
+    ...rows,
+  ].join("\n");
+}
+
+/**
  * Info: (20260730 - Tzuhan) 產出結構圖區塊(錨點包夾,與數據圖表同一套替換機制)。
  * 驗證未過時不畫圖,但輸出說明文字——沉默地少一張圖,查核者不會知道發生過什麼。
  */
@@ -458,6 +558,46 @@ export function buildCarbonDiagramBlock(
     `${buildDiagramAnchorStart(templateId)}\n\n${body}\n\n${buildDiagramAnchorEnd(templateId)}`;
 
   const validation = validateDiagramNodes(templateId, nodes, sourceText);
+
+  /**
+   * Info: (20260818 - Emily) 超過上限**不是**否決,是換一種呈現
+   * （`data/issue_drafts/open/48_diagram_silent_failure.md`,上線阻擋 B3）。
+   *
+   * 08-17 實測那一趟,兩節的結構圖都整張消失:
+   * `ch1-1` 的沿革 62 個項目（上限 40）、`ch1-4` 的委員會 21 個（上限 20）。
+   * 說明文字是對的,但 62 條沿革與 21 位委員在紙上一個都不剩 ——
+   * 而那些內容全部通過了原文回溯,是可信的。
+   *
+   * 走到這裡的 `TOO_MANY_NODES` 已經過了回溯、長度、父節點與環的檢查
+   * （見 `validateDiagramNodes` 裡那段順序說明）,所以印成表格是安全的。
+   * 表格本來就是這份報告的主要載體（實測 19 張）,讀者不會不習慣。
+   */
+  if (
+    !validation.isValid &&
+    validation.reason === DiagramRejectReasonEnum.TOO_MANY_NODES
+  ) {
+    const skippedOverflow = new Set(validation.skippedLabels ?? []);
+    const kept =
+      skippedOverflow.size > 0
+        ? nodes.filter((node) => !skippedOverflow.has(node.label))
+        : nodes;
+    const table =
+      CARBON_DIAGRAM_TEMPLATES[templateId].renderer ===
+      CarbonDiagramRendererEnum.TIMELINE
+        ? buildMilestoneTable(kept)
+        : buildHierarchyTable(kept);
+    const parts = [`> _${rejectionNote(validation, labels)}_`, "", table];
+    if (skippedOverflow.size > 0 && labels.skippedTooLong) {
+      parts.push(
+        "",
+        `**${labels.skippedTooLong}**`,
+        "",
+        ...Array.from(skippedOverflow).map((label) => `- ${label}`),
+      );
+    }
+    return wrap(parts.join("\n"));
+  }
+
   if (!validation.isValid) {
     return wrap(`> _${rejectionNote(validation, labels)}_`);
   }

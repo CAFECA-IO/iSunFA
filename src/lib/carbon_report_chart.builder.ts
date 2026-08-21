@@ -32,6 +32,24 @@ import {
 import { IComputedLedger } from "@/types/carbon_chatbot.types";
 
 // Info: (20260720 - Tzuhan) 圖表文案(由呼叫端以 i18n 注入;佔位/凍結沿用 #23 表格文案語意)
+/**
+ * Info: (20260820 - Emily) 為什麼有三個欄位是必填而其餘是選填。
+ *
+ * 選填 + `if (labels.x)` + 呼叫端是完整物件字面值（沒有 spread 預設值）
+ * = 加了新文案卻忘了接 i18n 時**紙上什麼都不印，而且沒有任何錯誤**。
+ * 這個坑在本檔與 `use_carbon_chat.ts` 的註解裡記過三次
+ * （20260805、20260806、20260819），第三次是 08-19 兩趟驗收全紅。
+ *
+ * 註解防不住它，型別可以：`importedSankeyTitle`、`importedSankeyIsoMapping`、
+ * `importedTopItemsTitle` 這三個是**紙上一定要有的文字**，改成必填之後，
+ * 呼叫端漏接會在 `tsc --noEmit` 就紅（#6671 已把它放進 `npm test`）。
+ *
+ * 驗收方式：在本型別加一個新的必填欄位而不動 `use_carbon_chat.ts`，
+ * `tsc` 必須報 TS2741。
+ *
+ * 其餘欄位維持選填是刻意的 —— 它們是「有就印、沒有就略過」的補充說明
+ * （廠址小計、低於門檻、期間未標註…），缺了不會讓讀者看不到主要內容。
+ */
 export interface ICarbonChartLabels {
   pieTitle: string;
   barTitle: string;
@@ -52,7 +70,7 @@ export interface ICarbonChartLabels {
    * Info: (20260803 - Tzuhan) 匯入桑基圖的標題。**必須帶基準與單位** ——
    * 一張沒有單位的流量圖,讀者無從判斷 8332 是公噸還是公斤,差一千倍。
    */
-  importedSankeyTitle?: string;
+  importedSankeyTitle: string;
   /** Info: (20260803 - Tzuhan) 圖下方「未畫出的項目」說明抬頭 */
   importedSankeyExcluded?: string;
   /**
@@ -74,8 +92,27 @@ export interface ICarbonChartLabels {
    * 那個映射是 1:1 所以不畫成一層,但它是一個分類判斷,必須說出來。
    */
   importedSankeyGhgMapping?: string;
+  /**
+   * Info: (20260819 - Emily) 範疇制與 ISO 類別制的對照說明(`open/53`)。
+   *
+   * 圖上的分類層印的是 GHG Protocol 的範疇一/二/三,而本報告的敘述採 ISO 14064-1
+   * 類別一~六 —— 兩邊各自都對,中間對不上,而**紙上沒有一句話說它們是同一批排放源**。
+   * 08-19 量到:一份宣告依 ISO 14064-1 編製的報告裡,「範疇」出現 77 次,
+   * 其中至少 72 次是系統自己印上去的(客戶原文全文只有 5 次)。
+   *
+   * 與上面 `importedSankeyGhgMapping` 同一個理由:隱藏的分類判斷等於沒有依據,
+   * 查核者無法質疑他看不到的東西。所以不是把「範疇」藏起來,是把對照說出來。
+   *
+   * 這是固定文字而不是交給模型寫的原因:模型不知道系統圖表印了什麼標籤,
+   * 叫它寫這一句就是叫它猜;而固定文字驗得起來(驗收腳本可以要求它與「範疇」同時出現)。
+   *
+   * 真修是把圖表改成類別制(`open/53`),但那要改**分組鍵**不只是換標籤 ——
+   * 多個 GHG 類別對到同一個 ISO 類別(Cat 1/2/3/5/8 → 類別四),
+   * 只換標籤會得到好幾列「類別四」各自小計,比現在更糟。
+   */
+  importedSankeyIsoMapping: string;
   /** Info: (20260806 - Tzuhan) 排放去向圖的標題(前 N 大 + 其他) */
-  importedTopItemsTitle?: string;
+  importedTopItemsTitle: string;
   /**
    * Info: (20260806 - Tzuhan) 「其他」節點名。**它是一個真的節點**,不是丟掉 ——
    * 沒進前 N 名的流量仍然畫在圖上,廠址的流出才等於流入。
@@ -129,6 +166,8 @@ export const CARBON_CHART_DEFAULT_LABELS: ICarbonChartLabels = {
   importedSankeyCollapsed: "節點過多,已降為一層(全公司 → 範疇)",
   importedSankeySiteTotals: "各廠址小計(公噸 CO2e/年,占全公司比)",
   importedSankeyGhgMapping: "子代碼與 GHG Protocol 類別的對照",
+  importedSankeyIsoMapping:
+    "圖上的分類層依 GHG Protocol 範疇標示;對照 ISO 14064-1 為:範疇一=類別一、範疇二=類別二、範疇三=類別三至類別六。本報告敘述採 ISO 14064-1 類別制,兩者指同一批排放源。",
   importedTopItemsTitle:
     "排放去向:全公司 → 前九大排放項目與其他(原文照錄,所在地基準,公噸 CO2e/年)",
   importedSankeyOther: "其他",
@@ -690,6 +729,13 @@ const buildImportedSankey = (
          */
         lines.push(`- ${subCategory} → ${ghgCategory}`);
       });
+  }
+  /**
+   * Info: (20260819 - Emily) 對照說明不綁 `ghgBySubCategory` 是否為空 ——
+   * 圖上的範疇標籤在任何情況下都印得出來,說明就得跟著在。
+   */
+  if (labels.importedSankeyIsoMapping) {
+    lines.push("", `> _${labels.importedSankeyIsoMapping}_`);
   }
   return lines.join("\n");
 };

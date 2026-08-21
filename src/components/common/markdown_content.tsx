@@ -13,16 +13,13 @@ import {
 } from "@/constants/carbon_evidence";
 import { useState, useEffect } from "react";
 import { downloadFile } from "@/lib/file_operator";
-import { stripMarkdownComments } from "@/lib/utils/markdown_comment";
-import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_break";
 import dynamic from "next/dynamic";
 import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
 import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
 import { splitInlineListItems } from "@/lib/utils/markdown_list_structure";
 import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
-import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
 import { padAllTableHeaders } from "@/lib/utils/markdown_table_columns";
-import { stripLeadingDocumentTitle } from "@/lib/utils/carbon_report_title";
+import { prepareCarbonMarkdown } from "@/lib/utils/carbon_markdown_prepare";
 
 // Info: (20260720 - Tzuhan) #54 證據鏈元件動態載入:含 RecordTabModal 依賴鏈,不拖累一般 markdown 渲染
 const EvidenceChain = dynamic(
@@ -123,6 +120,16 @@ interface IMarkdownContentProps {
    * 與 timeline、私有區符號同一層的讀取端補救。
    */
   stripDocumentTitle?: boolean;
+  /**
+   * Info: (20260820 - Emily) 剝掉「標頭後緊接一行完全同文」的那一行（碳盤查報告專用）。
+   *
+   * 成因是碳報告組稿端一律由 `p.title` 產生標頭，而 `content` 的第一行有時
+   * 就是那個標題。用 opt-in 而不是預設，理由與 `restoreSourceLineBreaks` 相同
+   * （#6644）：在別的使用端，「標頭後緊接同文一行」可能是內容而不是重複，
+   * 剝掉會是**靜默的內容遺失** ——
+   * `"## 注意事項\n注意事項\n\n請攜帶證件"` → `"## 注意事項\n\n請攜帶證件"`。
+   */
+  stripEchoedHeadings?: boolean;
   restoreSourceLineBreaks?: boolean;
   theme?: "dark" | "light";
   variant?: MarkdownContentVariant;
@@ -132,6 +139,7 @@ interface IMarkdownContentProps {
 const MarkdownContent: FC<IMarkdownContentProps> = ({
   content,
   stripDocumentTitle = false,
+  stripEchoedHeadings = false,
   restoreSourceLineBreaks = false,
   theme = "dark",
   variant = "document",
@@ -229,14 +237,20 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
        * 剝除只看「第一個非空行是不是單一個 #」，放在前面才不會被其他轉換
        * 插進來的內容擋住第一行。
        */
-      const titled = stripDocumentTitle
-        ? stripLeadingDocumentTitle(content).body
-        : content;
+      /**
+       * Info: (20260820 - Emily) 前置轉換改走共用函式（PR review A2）。
+       *
+       * 原本這裡與 `buildCarbonReportHtml` 各排一串，靠兩則註解宣稱
+       * 「順序完全一致」—— 而 `stripLeadingDocumentTitle` 兩邊位置不同，
+       * 「HTML 註解在 H1 之前」的輸入在兩端產出不同結果（本端漏剝報告名稱）。
+       * 順序現在寫在 `prepareCarbonMarkdown` 裡。
+       */
       const normalized = padAllTableHeaders(
         convertTimelineBlocksToTables(
-          replaceOfficeSymbolChars(
-            stripHtmlLineBreaksOutsideFences(stripMarkdownComments(titled)),
-          ),
+          prepareCarbonMarkdown(content, {
+            stripDocumentTitle,
+            stripEchoedHeadings,
+          }).markdown,
         ),
       );
       /*
@@ -257,7 +271,7 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
         : normalized;
       return escapeArithmeticEmphasis(structured);
     },
-    [content, restoreSourceLineBreaks, stripDocumentTitle],
+    [content, restoreSourceLineBreaks, stripDocumentTitle, stripEchoedHeadings],
   );
 
   const components = useMemo(

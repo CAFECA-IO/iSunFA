@@ -31,6 +31,11 @@
  * 散文不會湊巧出現三行都被直線切成同樣格數的段落，而表格必然如此。
  */
 
+import {
+  countTableCells,
+  splitTableCells,
+} from "@/lib/utils/markdown_table_cells";
+
 const ROW = /^\|.*\|$/;
 const DIVIDER = /^\|[\s:|-]+\|$/;
 
@@ -42,11 +47,66 @@ const DIVIDER = /^\|[\s:|-]+\|$/;
  */
 const MIN_CONSISTENT_ROWS = 3;
 
-const cellCount = (line: string): number =>
-  line
-    .replace(/^\|/, "")
-    .replace(/\|$/, "")
-    .split(/(?<!\\)\|/).length;
+/**
+ * Info: (20260820 - Emily) 把「超寬列」裁到分隔列的欄數 —— 只裁空白，不裁內容。
+ *
+ * ## 為什麼需要
+ *
+ * 08-20 run C：`表3.4` 的第一列是 **547 格、其中只有 5 格有字**
+ * （`| 排放類型 | 活動或設施 | 排放源 | 年活動數據資訊 |` 後面接 541 個空格與一個 `-`），
+ * 而分隔列與其後 14 列資料全部是 6 格。GFM 要求表頭與分隔列欄數相同，
+ * 於是整張表不渲染 —— 08-19 那趟就是這樣在紙上印出 1,273 個管線的。
+ *
+ * 08-20 的渲染不變式把它改成明示丟表，紙上乾淨了，但**表也沒了**，
+ * 而內文還引用著它（`內文引用的表不存在 缺 表3.4`）。丟表是比印亂碼好的失敗，
+ * 但它仍然是失敗。
+ *
+ * ## 為什麼裁得掉而且不算猜
+ *
+ * 超出分隔列欄數的那些格**全部是空白或只有連字號** —— 空格不帶資訊，
+ * 裁掉它不會丟掉任何一個排放量數字。這與 `padTableHeaderToWidest`（補窄的表頭）
+ * 是同一件事的兩個方向：讓表頭與分隔列對齊，而不是去猜哪一列才是表頭。
+ *
+ * ⚠ 一旦超出的部分**有任何實質內容就不裁**，交回原樣讓
+ * `validateSourceTables` 丟掉它。理由與不猜表頭相同：裁掉有字的格
+ * 會把一個氣體的排放量整欄移位，那比丟一張表嚴重得多。
+ */
+const BLANK_OR_DASHES = /^[\s-]*$/;
+
+export const trimRowsToDividerWidth = (
+  markdown: string,
+): { markdown: string; trimmed: number } => {
+  const lines = markdown.split("\n");
+  const dividerIndex = lines.findIndex(
+    (line, index) =>
+      index > 0 &&
+      ROW.test(lines[index - 1].trim()) &&
+      !DIVIDER.test(lines[index - 1].trim()) &&
+      DIVIDER.test(line.trim()),
+  );
+  if (dividerIndex < 0) return { markdown, trimmed: 0 };
+
+  const width = countTableCells(lines[dividerIndex].trim());
+  let trimmed = 0;
+
+  const next = lines.map((line, index) => {
+    if (index === dividerIndex) return line;
+    const body = line.trim();
+    if (!ROW.test(body) || DIVIDER.test(body)) return line;
+
+    const cells = splitTableCells(body);
+    if (cells.length <= width) return line;
+    if (!cells.slice(width).every((cell) => BLANK_OR_DASHES.test(cell))) {
+      return line;
+    }
+
+    trimmed += 1;
+    const indent = line.match(/^\s*/)?.[0] ?? "";
+    return `${indent}|${cells.slice(0, width).join("|")}|`;
+  });
+
+  return { markdown: next.join("\n"), trimmed };
+};
 
 /**
  * Info: (20260814 - Emily) 補一條分隔列。已經有的話原樣返回（冪等）。
@@ -62,7 +122,7 @@ const cellCount = (line: string): number =>
  */
 export const ensureTableDivider = (
   markdown: string,
-): { markdown: string; inserted: boolean } => {
+): { markdown: string; inserted: boolean; skipped?: string } => {
   const lines = markdown.split("\n");
   const isRowAt = (index: number): boolean =>
     index < lines.length && ROW.test(lines[index].trim());
@@ -80,14 +140,45 @@ export const ensureTableDivider = (
   // Info: (20260814 - Emily) 找第一段「連續且欄數一致」的列
   for (let start = 0; start < lines.length; start += 1) {
     if (!isRowAt(start)) continue;
-    const columns = cellCount(lines[start].trim());
+    const columns = countTableCells(lines[start].trim());
     if (columns < 2) continue;
 
     let end = start;
-    while (isRowAt(end + 1) && cellCount(lines[end + 1].trim()) === columns) {
+    while (
+      isRowAt(end + 1) &&
+      countTableCells(lines[end + 1].trim()) === columns
+    ) {
       end += 1;
     }
     if (end - start + 1 < MIN_CONSISTENT_ROWS) continue;
+
+    /**
+     * Info: (20260819 - Emily) 一致列的**上面**還有表格列 —— 不補,交回原樣。
+     *
+     * GFM 只認「表格區塊的第二行」那條分隔列。一致列不是第一列時,補進去的分隔列
+     * 落在區塊中間,而上面那一列仍然沒有分隔列 —— 整個區塊因此都不渲染,
+     * markdown 原樣印在紙上。
+     *
+     * 08-19 run2 實測:`表3.4` 的表頭被模型壓成**一個約 600 格的邏輯列**
+     * (原文是兩層合併表頭),而一致列是它下面的 6 欄資料列。補完之後紙上出現
+     * 1,273 個管線與 19 條 `|---|---|`(`open/47` 第三種形狀)。
+     *
+     * 這裡的立場與補而不丟相反,理由是**後果不對等**:
+     * 補錯位置 → 紙上一片管線,而且沒有任何 log 說它壞了(靜默且醜);
+     * 不補 → `validateSourceTables` 會擋下來,`log_丟表` 與「引用但不存在的表」
+     * 兩條判準都會叫。與 `open/48`「退化不消失、失敗留下痕跡」同一個原則:
+     * 一個看得見的失敗勝過一個看起來像成品的壞東西。
+     *
+     * 不猜「哪一列才是真正的表頭」的理由見上方註解 —— 猜錯會把一個氣體的
+     * 排放量標成別的名目,那比丟一張表嚴重。
+     */
+    if (start > 0 && isRowAt(start - 1)) {
+      return {
+        markdown,
+        inserted: false,
+        skipped: "rows_above_consistent_run",
+      };
+    }
 
     const indent = lines[start].match(/^\s*/)?.[0] ?? "";
     const divider = `${indent}|${" --- |".repeat(columns)}`;

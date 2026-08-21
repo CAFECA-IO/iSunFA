@@ -19,6 +19,7 @@ import {
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
   CARBON_REPORT_OUTLINE,
+  CARBON_REPORT_STANDARD,
   ICarbonReportSection,
 } from "@/constants/carbon_report_outline";
 import { CarbonParagraphDraftLlmOutputSchema } from "@/validators";
@@ -184,7 +185,18 @@ ${factsBlock}
 6. citedFacts 逐條列出修訂實際引用的事實;未引用回空陣列。${dataDrivenRule}`;
     }
 
-    return `你是一位專業碳會計師,負責撰寫溫室氣體盤查報告書(IFRS S1/S2 對齊)的指定段落草稿。
+    /**
+     * Info: (20260818 - Emily) 角色句原本寫「(IFRS S1/S2 對齊)」——
+     * 而 `open/44` 只改了 guidance(`open/44` 的驗收條件也只寫到 guidance)。
+     *
+     * 這一句的位置比 guidance **更前面**,而且每一次草稿呼叫都會注入:
+     * 模型會同時收到「這是一份 IFRS S1/S2 對齊的報告」與「請依 ISO 14064-1 寫這一節」,
+     * 兩句互相矛盾而框架句在前。改了 guidance 卻留著這句,等於修正端與生效端沒對上 ——
+     * B2 的閘門(「報告上宣告錯的標準」)在這裡才真的關上。
+     *
+     * 標準名稱取自 `CARBON_REPORT_STANDARD`,不在這裡重打(見那個常數的註解)。
+     */
+    return `你是一位專業碳會計師,負責撰寫依 ${CARBON_REPORT_STANDARD} 編製的溫室氣體盤查報告書的指定段落草稿。
 
 【段落資訊】
 編號: ${section.code}
