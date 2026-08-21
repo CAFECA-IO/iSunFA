@@ -347,6 +347,12 @@ jest.mock("@/lib/prisma", () => {
     },
     leaveLedgerEntry: {
       count: jest.fn(async () => 0),
+      /**
+       * Info: (20260821 - Julian) 逐批守恆會讀它（review 第二輪 R1）。
+       * 本檔一律 PAYMENT，沒有補休批次，因此永遠是空的 ——
+       * 但方法必須存在，否則撤銷路徑會在這裡 TypeError。
+       */
+      findMany: jest.fn(async () => []),
       create: jest.fn(async () => {
         throw new Error("本檔一律 PAYMENT，不該有補休分錄");
       }),

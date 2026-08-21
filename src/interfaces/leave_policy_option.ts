@@ -30,6 +30,16 @@ export interface ILeavePolicyOption {
    */
   employerMayReject: boolean;
   legalBasis: string | null;
+  /**
+   * Info: (20260821 - Julian) 現在能不能選（review 第二輪 R2）。
+   *
+   * 回的是**結論**而不是 `mergesIntoPolicyId`：請假的人不需要知道併計規則，
+   * 就像他不需要知道 `paidRatio`。回規則會讓前端長出第二份判斷，而那一份
+   * 遲早會與伺服器的閘分家 —— 分家的方向是前端說可以、伺服器說不行。
+   *
+   * 目前唯一的 false 來源是「設了併計目標的假別」（家庭照顧假）。
+   */
+  isSelectable: boolean;
 }
 
 /**

@@ -600,8 +600,7 @@ export const hrManagement = {
     error_supervisor_only: "이 작업은 부서 관리자만 할 수 있습니다.",
     error_hr_function_required:
       "이 작업에는 인사 관리자 권한이 필요합니다. 인사팀에 부여를 요청하거나 권한이 있는 분께 요청하세요.",
-    error_no_permission_to_view:
-      "이 사람의 기록을 볼 권한이 없습니다.",
+    error_no_permission_to_view: "이 사람의 기록을 볼 권한이 없습니다.",
     error_no_employee_record:
       "계정이 이 장부의 직원과 연결되어 있지 않습니다. 인사팀에 등록을 요청하세요.",
     error_range_too_large:
@@ -823,6 +822,7 @@ export const hrManagement = {
 
     form_title: "신청서 작성",
     field_policy: "휴가 종류",
+    policy_unavailable_suffix: " (현재 선택 불가)",
     field_reason: "사유",
     field_reason_placeholder: "예: 재진, 집안 사정",
     field_reason_encrypted:
@@ -870,16 +870,13 @@ export const hrManagement = {
       "자동 재배정: 이 단계의 {{kind}}이(가) 본인이어서 다른 분으로 변경되었습니다",
     chain_escalated_higher:
       "자동 상향: 이 단계의 {{from}}이(가) 본인이어서 {{to}}(으)로 상향되었습니다",
-    unresolved_no_matching_rule:
-      "이 일수에 해당하는 결재 규칙이 없습니다",
+    unresolved_no_matching_rule: "이 일수에 해당하는 결재 규칙이 없습니다",
     unresolved_empty_rule_steps:
       "해당 결재 규칙에 결재 단계가 설정되어 있지 않습니다",
-    unresolved_no_direct_manager:
-      "직속 상급자가 등록되어 있지 않습니다",
+    unresolved_no_direct_manager: "직속 상급자가 등록되어 있지 않습니다",
     unresolved_no_department_manager:
       "상위 부서에 책임자가 등록되어 있지 않습니다",
-    unresolved_no_hr:
-      "이 장부에 인사 관리자가 없습니다",
+    unresolved_no_hr: "이 장부에 인사 관리자가 없습니다",
     unresolved_no_other_hr:
       "유일한 인사 관리자가 본인이어서 결재할 수 있는 다른 분이 없습니다",
     unresolved_specific_employee_missing:
@@ -1063,8 +1060,7 @@ export const hrManagement = {
       "월 상한을 54시간으로 완화하려면 기록이 필요합니다(§32 III): 회의록 링크와 동의한 날짜를 입력하세요.",
     error_emergency_already_declared:
       "이 신청에는 이미 §32 IV 인정이 있습니다. 새 신고를 기록하기 전에 기존 인정을 취소하세요.",
-    error_emergency_not_declared:
-      "이 신청에는 취소할 §32 IV 인정이 없습니다.",
+    error_emergency_not_declared: "이 신청에는 취소할 §32 IV 인정이 없습니다.",
     error_reported_at_out_of_range:
       "신고 시각은 미래이거나 초과근무일보다 이를 수 없습니다. 신고 기록의 시각을 확인하세요.",
     error_comp_expiry_unset:

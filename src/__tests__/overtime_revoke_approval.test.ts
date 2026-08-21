@@ -229,6 +229,19 @@ jest.mock("@/lib/prisma", () => {
         }
         return hits;
       }),
+      /**
+       * Info: (20260821 - Julian) 逐批守恆用的讀取（review 第二輪 R1）。
+       * 只回 repository 真的 `select` 的兩欄 —— 替身回得比產品碼要的多，
+       * 就會替它掩蓋「忘了 select」這一類錯誤。
+       */
+      findMany: jest.fn(async ({ where }: { where: IFakeWhere }) =>
+        entries
+          .filter((row) => matchesRow(row, where, ENTRY_FIELDS))
+          .map((row) => ({
+            leaveGrantId: row.leaveGrantId,
+            deltaMinutes: (row.deltaMinutes as number) ?? 0,
+          })),
+      ),
       // Info: (20260821 - Julian) `aggregate` 也要看 `where`，否則跨批次的加總會塌成同一個值
       aggregate: jest.fn(async ({ where }: { where: IFakeWhere }) => ({
         _sum: {
@@ -731,5 +744,98 @@ describe("撤銷核准：不得波及其他單子", () => {
     );
     expect(reversals).toHaveLength(1);
     expect(reversals[0].leaveGrantId).toBe("grant-1");
+  });
+});
+
+/**
+ * Info: (20260821 - Julian) **遮蔽案例：同員工、同假別的第二批**（review 第二輪 R1）。
+ *
+ * 第一版的後盾是「撤銷之後這個假別的餘額不得為負」，而 `sumLedgerMinutes`
+ * 加總的是整個 `(accountBookId, employeeId, leavePolicyId)` 底下的**所有批次**，
+ * 補休卻是一張加班單一批。員工有第二張已核准的補休加班單是常態，不是邊角 ——
+ * 於是批次 A 的 `+120 −120 −120 = −120` 會被批次 B 的 `+120` 遮成 `0`，
+ * `0 < 0` 為 false，違反就這樣 commit 出去。
+ *
+ * 上一版的測試看不到這件事，因為 fixture 裡的第二批屬於**另一個員工**
+ * （`emp-007`）—— 它驗的是「不得波及別人」，剛好避開了遮蔽（§1.4）。
+ * 這一組把第二批放回同一個員工身上。
+ */
+describe("撤銷核准：逐批守恆（範圍加總遮得住的那一種）", () => {
+  beforeEach(() => {
+    requests.push({
+      id: OTHER_REQUEST,
+      accountBookId: BOOK,
+      status: "APPROVED",
+      compensationMode: OvertimeCompensationMode.COMPENSATORY_LEAVE,
+      approvalRevokeCount: 0,
+    });
+    segments.push({
+      id: "seg-9",
+      overtimeRequestId: OTHER_REQUEST,
+      revokedAt: null,
+    });
+    grants.push({
+      id: "grant-9",
+      accountBookId: BOOK,
+      overtimeSegmentId: "seg-9",
+      // Info: (20260821 - Julian) 關鍵在這裡：同一個員工、同一個假別
+      employeeId: "emp-006",
+      leavePolicyId: POLICY,
+      grantedMinutes: 120,
+      revokedAt: null,
+    });
+    entries.push({
+      id: "entry-9",
+      leaveGrantId: "grant-9",
+      entryType: LeaveLedgerEntryType.GRANT,
+      deltaMinutes: 120,
+      idempotencyKey: "overtime-grant:seg-9",
+    });
+  });
+
+  it("預檢後才出現的扣減，第二批遮不住它", async () => {
+    raceEntryAfterPrecheck = true;
+
+    await expect(revoke()).rejects.toBeInstanceOf(
+      OvertimeApprovalNotReversibleError,
+    );
+    // Info: (20260821 - Julian) 那筆扣減必須還在 —— 它是偵測得到的原因
+    expect(
+      entries.some((entry) => entry.entryType === LeaveLedgerEntryType.CONSUME),
+    ).toBe(true);
+  });
+
+  /**
+   * Info: (20260821 - Julian) 範圍級那一道留著，擋的是另一件事：批次以外的來源
+   * 把整個假別扣成負的。代價是**另一批的既有損壞會擋下這一張的撤銷** ——
+   * 刻意的，因為替代方案是把一個負餘額寫進快取，而 ADR 022 的模型裡
+   * 那個值不可能是對的。
+   */
+  it("另一批本來就被扣穿時擋下，且不把負餘額寫進快取", async () => {
+    entries.push({
+      id: "entry-bad",
+      leaveGrantId: "grant-9",
+      entryType: LeaveLedgerEntryType.CONSUME,
+      deltaMinutes: -240,
+    });
+
+    await expect(revoke()).rejects.toBeInstanceOf(
+      OvertimeApprovalNotReversibleError,
+    );
+    expect(balances).toHaveLength(0);
+  });
+
+  /**
+   * Info: (20260821 - Julian) 對照組。少了它，一個「有第二批就一律擋下」的
+   * 實作也會讓上面兩條通過 —— 而那會讓第二次以後的撤銷全部失敗。
+   */
+  it("對照組：有第二批但沒有競態時，撤銷照常成功", async () => {
+    await expect(revoke()).resolves.toBe(OvertimeDecisionOutcome.DECIDED);
+
+    const other = grants.find((one) => one.id === "grant-9");
+    expect(other?.revokedAt).toBeNull();
+    expect(
+      entries.filter((entry) => entry.leaveGrantId === "grant-9"),
+    ).toHaveLength(1);
   });
 });

@@ -599,8 +599,7 @@ export const hrManagement = {
     error_supervisor_only: "この操作は部門責任者のみ実行できます。",
     error_hr_function_required:
       "この操作には人事管理者の権限が必要です。人事に付与を依頼するか、権限のある方に依頼してください。",
-    error_no_permission_to_view:
-      "この方の記録を閲覧する権限がありません。",
+    error_no_permission_to_view: "この方の記録を閲覧する権限がありません。",
     error_no_employee_record:
       "お使いのアカウントはこの帳簿の従業員と紐づいていません。人事に登録を依頼してください。",
     error_range_too_large:
@@ -820,6 +819,7 @@ export const hrManagement = {
 
     form_title: "申請の作成",
     field_policy: "休暇種別",
+    policy_unavailable_suffix: "（現在は選択できません）",
     field_reason: "理由",
     field_reason_placeholder: "例：通院、家庭の事情",
     field_reason_encrypted:
@@ -867,16 +867,13 @@ export const hrManagement = {
       "自動再割当：この段階の{{kind}}がご本人のため、別の方に変更されました",
     chain_escalated_higher:
       "自動エスカレーション：この段階の{{from}}がご本人のため、{{to}}に引き上げられました",
-    unresolved_no_matching_rule:
-      "この日数に該当する承認ルールがありません",
+    unresolved_no_matching_rule: "この日数に該当する承認ルールがありません",
     unresolved_empty_rule_steps:
       "該当する承認ルールに承認段階が設定されていません",
-    unresolved_no_direct_manager:
-      "直属の上長が登録されていません",
+    unresolved_no_direct_manager: "直属の上長が登録されていません",
     unresolved_no_department_manager:
       "上位のいずれの部署にも責任者が登録されていません",
-    unresolved_no_hr:
-      "この帳簿に人事管理者がいません",
+    unresolved_no_hr: "この帳簿に人事管理者がいません",
     unresolved_no_other_hr:
       "唯一の人事管理者がご本人のため、他に承認できる方がいません",
     unresolved_specific_employee_missing:

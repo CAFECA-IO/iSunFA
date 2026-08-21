@@ -591,8 +591,7 @@ export const hrManagement = {
     error_no_permission_to_view: "你没有查看这个人纪录的权限。",
     error_no_employee_record:
       "你的帐号尚未对应到这个帐本里的员工。请洽人资建立。",
-    error_range_too_large:
-      "查询的日期区间太长，请缩短范围后再试一次。",
+    error_range_too_large: "查询的日期区间太长，请缩短范围后再试一次。",
   },
   attendance_result: {
     title: "出勤总览与异常",
@@ -765,7 +764,8 @@ export const hrManagement = {
   leave: {
     field_start_at: "起（日期与时间）",
     field_end_at: "迄（日期与时间）",
-    span_selected: "选取区间共 {{hours}} 小时（未扣休息与非上班日，实际扣抵见下方试算）",
+    span_selected:
+      "选取区间共 {{hours}} 小时（未扣休息与非上班日，实际扣抵见下方试算）",
     detail_title: "假单明细",
     detail_reason: "请假事由",
     detail_reason_undecryptable: "事由无法解密（密钥异常），请联系系统管理员",
@@ -794,6 +794,7 @@ export const hrManagement = {
 
     form_title: "填写假单",
     field_policy: "假别",
+    policy_unavailable_suffix: "（暂不开放）",
     field_reason: "事由",
     field_reason_placeholder: "例：回诊复检、家中临时有事",
     field_reason_encrypted: "事由会加密储存，仅签核者于明细页可见",
@@ -840,20 +841,13 @@ export const hrManagement = {
       "自动改派：这一关的{{kind}}是你本人，已改由另一位担任",
     chain_escalated_higher:
       "自动上升：这一关的{{from}}是你本人，已上升由{{to}}签核",
-    unresolved_no_matching_rule:
-      "没有任何签核规则涵盖这个天数",
-    unresolved_empty_rule_steps:
-      "命中的签核规则没有设定任何关卡",
-    unresolved_no_direct_manager:
-      "你的资料上没有直属主管",
-    unresolved_no_department_manager:
-      "你所属部门往上都没有设定主管",
-    unresolved_no_hr:
-      "这个帐本没有人资管理员",
-    unresolved_no_other_hr:
-      "你是唯一的人资管理员，链上没有其他人可以签",
-    unresolved_specific_employee_missing:
-      "指定的签核者已离职或不在这个帐本",
+    unresolved_no_matching_rule: "没有任何签核规则涵盖这个天数",
+    unresolved_empty_rule_steps: "命中的签核规则没有设定任何关卡",
+    unresolved_no_direct_manager: "你的资料上没有直属主管",
+    unresolved_no_department_manager: "你所属部门往上都没有设定主管",
+    unresolved_no_hr: "这个帐本没有人资管理员",
+    unresolved_no_other_hr: "你是唯一的人资管理员，链上没有其他人可以签",
+    unresolved_specific_employee_missing: "指定的签核者已离职或不在这个帐本",
     unresolved_malformed_rule_threshold:
       "某一条签核规则的天数门槛不是可对帐的十进位数",
 
@@ -943,7 +937,8 @@ export const hrManagement = {
     field_reason_placeholder: "例：混凝土浇置必须当日完成",
     field_emergency: "天灾事变（§32 IV，已报备查）",
     action_declare_emergency: "登记天灾事变",
-    error_declare_emergency: "认定失败，请确认你具备人资管理员职能且此单仍待签核。",
+    error_declare_emergency:
+      "认定失败，请确认你具备人资管理员职能且此单仍待签核。",
     field_emergency_report: "报备记录链接",
     field_emergency_reported_at: "报备时点",
     field_emergency_moved_hint:
@@ -1032,7 +1027,8 @@ export const hrManagement = {
       "该日别的加成标准尚未确定（停工日、请假日），请洽人资。",
     error_self_decide:
       "不能对自己送出的加班单做这个动作。请由其他具人资管理职能的同事处理。",
-    error_not_reviewer: "你不是这张加班单的签核者，决行的人必须是管得到申请人的主管。",
+    error_not_reviewer:
+      "你不是这张加班单的签核者，决行的人必须是管得到申请人的主管。",
     error_comp_policy_missing:
       "找不到补休假别的设定，换不了补休。请改选加班费，或请人资建立。",
     error_not_found: "这张加班单已不存在。",

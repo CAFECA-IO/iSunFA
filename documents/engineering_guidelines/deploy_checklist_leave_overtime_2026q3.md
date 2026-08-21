@@ -32,10 +32,10 @@
 
 ### 現況：兩層，都不需要任何環境變數
 
-| 層 | 機制 | 對訪客（未登入） |
-|---|---|---|
-| 資料 | 37 支 `/hr/` 端點全部走 `getIdentityFromDeWT` | 一律 **401**，一個位元組都拿不到 |
-| 畫面 | `hr_management/layout.tsx` 包在 `<AuthGuard>` 裡 | 導回首頁，外框不渲染 |
+| 層   | 機制                                             | 對訪客（未登入）                 |
+| ---- | ------------------------------------------------ | -------------------------------- |
+| 資料 | 37 支 `/hr/` 端點全部走 `getIdentityFromDeWT`    | 一律 **401**，一個位元組都拿不到 |
+| 畫面 | `hr_management/layout.tsx` 包在 `<AuthGuard>` 裡 | 導回首頁，外框不渲染             |
 
 `<AuthGuard>` 就是 `/user/**` 用的那一支（`/admin/**` 用 `<AdminAuthGuard>`）。
 `/hr_management` 先前**兩個都沒有**，這才是「連沒登入也會渲染」的成因。
@@ -131,11 +131,11 @@
 
 ### 改了 3 張既有表
 
-| 表 | 移除 | 新增（NOT NULL 且**無** default） | 新增（可空或有 default） |
-|---|---|---|---|
-| `leave_request` | `leave_type`、`reason`、`decided_by_employee_id`、`decided_at` | `leave_policy_id`、`reason_cipher`、`pii_key_version`、`total_minutes`、`total_days` | `pii_algorithm`（default）、`proof_document_id`（可空）、`concurrency_warned`（default） |
-| `leave_day` | — | `minutes`、`day_equivalent_minutes`、`entitlement_engine_version` | `segment`（default `FULL`）、`start_minute`／`end_minute`（可空） |
-| `employee_shift_day` | — | — | 新增列舉值 `SUSPENDED`（`WorkDayType`）、新增欄位 `planned_work_minutes`（可空）⚠️ 見下 |
+| 表                   | 移除                                                           | 新增（NOT NULL 且**無** default）                                                    | 新增（可空或有 default）                                                                 |
+| -------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `leave_request`      | `leave_type`、`reason`、`decided_by_employee_id`、`decided_at` | `leave_policy_id`、`reason_cipher`、`pii_key_version`、`total_minutes`、`total_days` | `pii_algorithm`（default）、`proof_document_id`（可空）、`concurrency_warned`（default） |
+| `leave_day`          | —                                                              | `minutes`、`day_equivalent_minutes`、`entitlement_engine_version`                    | `segment`（default `FULL`）、`start_minute`／`end_minute`（可空）                        |
+| `employee_shift_day` | —                                                              | —                                                                                    | 新增列舉值 `SUSPENDED`（`WorkDayType`）、新增欄位 `planned_work_minutes`（可空）⚠️ 見下  |
 
 #### ⚠️ `employee_shift_day.planned_work_minutes` 補不回來
 
@@ -195,14 +195,14 @@ npx tsx scripts/seed/seed_leave_overtime_demo.ts
 
 ### 做錯順序的症狀
 
-| 漏做／做反 | 症狀 |
-|---|---|
-| 跳過第 0 步直接 `db push` | push **中止**並列出那 8 個欄位。這一個會噴錯，是這張表裡最好的情況 |
-| 用 `--force-reset` 抄近路 | 整個資料庫被清空，**包含 `employee`** —— 那張表在正式環境有真實個資 |
-| 跳過第 2 步 | `next build` 失敗（型別找不到新表）。也會噴錯 |
-| **跳過第 3 步** | **不會噴錯。** `employee_shift_day` 仍有被投影成 `LEAVE` 的列，而它們的假單已被第 0 步刪掉 —— 孤兒投影不違反任何約束，現場頁會出現「有人在放假卻查不到是誰」 |
-| 只跑 `seed_attendance_demo.ts`、漏跑 `seed_leave_overtime_demo.ts` | **不會噴錯。** 假別、簽核規則、加班政策都在，但一張假單與加班單都沒有 —— 看起來像功能沒做完 |
-| 先跑 `seed_leave_overtime_demo.ts` | 它會**自己中止**並說「請先執行 `seed_attendance_demo.ts`」（它依賴假別與員工）。刻意做成中止而不是靜默略過 |
+| 漏做／做反                                                         | 症狀                                                                                                                                                         |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 跳過第 0 步直接 `db push`                                          | push **中止**並列出那 8 個欄位。這一個會噴錯，是這張表裡最好的情況                                                                                           |
+| 用 `--force-reset` 抄近路                                          | 整個資料庫被清空，**包含 `employee`** —— 那張表在正式環境有真實個資                                                                                          |
+| 跳過第 2 步                                                        | `next build` 失敗（型別找不到新表）。也會噴錯                                                                                                                |
+| **跳過第 3 步**                                                    | **不會噴錯。** `employee_shift_day` 仍有被投影成 `LEAVE` 的列，而它們的假單已被第 0 步刪掉 —— 孤兒投影不違反任何約束，現場頁會出現「有人在放假卻查不到是誰」 |
+| 只跑 `seed_attendance_demo.ts`、漏跑 `seed_leave_overtime_demo.ts` | **不會噴錯。** 假別、簽核規則、加班政策都在，但一張假單與加班單都沒有 —— 看起來像功能沒做完                                                                  |
+| 先跑 `seed_leave_overtime_demo.ts`                                 | 它會**自己中止**並說「請先執行 `seed_attendance_demo.ts`」（它依賴假別與員工）。刻意做成中止而不是靜默略過                                                   |
 
 最後兩列是這張表存在的理由：**它們安靜。**
 
@@ -241,10 +241,10 @@ npx tsx scripts/seed/seed_leave_overtime_demo.ts
 
 因此上線當下這兩欄的實況是：
 
-| 欄 | 上線當下 | 補救 |
-|---|---|---|
-| `expiring_soon_minutes` | 授予時寫 0，之後沒有人重算 —— 餘額卡的「即將到期」對每個人都是 0 | Worker 掛上去即活；在那之前可手動對每人呼叫一次重建 |
-| `reconciled_at` | 永遠 null。依 ADR 022 §2.3 的語意，那是「**從未勾稽過**」，不是「沒問題」 | 同上 |
+| 欄                      | 上線當下                                                                  | 補救                                                |
+| ----------------------- | ------------------------------------------------------------------------- | --------------------------------------------------- |
+| `expiring_soon_minutes` | 授予時寫 0，之後沒有人重算 —— 餘額卡的「即將到期」對每個人都是 0          | Worker 掛上去即活；在那之前可手動對每人呼叫一次重建 |
+| `reconciled_at`         | 永遠 null。依 ADR 022 §2.3 的語意，那是「**從未勾稽過**」，不是「沒問題」 | 同上                                                |
 
 **畫面要說得出這個差別。** 一個永遠顯示 0 的到期提醒，比沒有那個提醒更糟；
 一個把 null 畫成空白的「最近勾稽」欄位，讀的人會以為勾稽過了。
@@ -408,13 +408,13 @@ SELECT account_book_id, code, carry_forward_months
 
 ### 新增五個欄位（純新增、nullable 或有預設值，不需回填）
 
-| 表 | 欄位 | 動作 | 為什麼 |
-|---|---|---|---|
-| `leave_cash_out_event` | `overtime_segment_id` | 新增，nullable、`@unique`、`onDelete: Restrict` | 加班費折現的 `source_grant_ids` 是空陣列（它不來自任何額度批次），於是**一筆折現事件說不出它是哪一張加班單產生的**。兩個後果：撤銷核准找不到要回收的事件，而勞檢問「這筆加班費對應哪一段核准」也答不出來 |
-| `leave_grant` | `revoked_at` | 新增，nullable | 撤銷加班核准時**不刪批次**（ADR 022 §2.1「`LeaveGrant` 不可變」），只標記它並在帳本補一筆反向分錄。`consumableGrantWhere` 會濾掉它 |
-| `overtime_request` | `approval_revoked_at` / `approval_revoked_by_employee_id` | 新增，nullable | 撤銷核准之後申請人可以再 `withdraw`，最後這張單長得與「從來沒有人送過」一樣 —— 而它曾經被核准、曾經進到員工餘額。誰在什麼時候撤的必須留 |
-| `overtime_segment` | `revoked_at` / `revoke_seq` | 新增，nullable ／ `@default(0)`；唯一鍵改為 `[overtime_request_id, order, revoke_seq]` | 分段不再實刪（刪它會撞上批次的 `onDelete: Restrict` → P2003 → 500）。現役世代恆為 0，撤銷時整組改寫成該次的撤銷次數 |
-| `overtime_request` | `approval_revoke_count` | 新增，`@default(0)` | 反向分錄的冪等鍵含它。同一張單被撤銷兩次時，鍵裡沒有次數就會撞唯一鍵被當成重放，而那一次撤銷是真的 |
+| 表                     | 欄位                                                      | 動作                                                                                   | 為什麼                                                                                                                                                                                                   |
+| ---------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `leave_cash_out_event` | `overtime_segment_id`                                     | 新增，nullable、`@unique`、`onDelete: Restrict`                                        | 加班費折現的 `source_grant_ids` 是空陣列（它不來自任何額度批次），於是**一筆折現事件說不出它是哪一張加班單產生的**。兩個後果：撤銷核准找不到要回收的事件，而勞檢問「這筆加班費對應哪一段核准」也答不出來 |
+| `leave_grant`          | `revoked_at`                                              | 新增，nullable                                                                         | 撤銷加班核准時**不刪批次**（ADR 022 §2.1「`LeaveGrant` 不可變」），只標記它並在帳本補一筆反向分錄。`consumableGrantWhere` 會濾掉它                                                                       |
+| `overtime_request`     | `approval_revoked_at` / `approval_revoked_by_employee_id` | 新增，nullable                                                                         | 撤銷核准之後申請人可以再 `withdraw`，最後這張單長得與「從來沒有人送過」一樣 —— 而它曾經被核准、曾經進到員工餘額。誰在什麼時候撤的必須留                                                                  |
+| `overtime_segment`     | `revoked_at` / `revoke_seq`                               | 新增，nullable ／ `@default(0)`；唯一鍵改為 `[overtime_request_id, order, revoke_seq]` | 分段不再實刪（刪它會撞上批次的 `onDelete: Restrict` → P2003 → 500）。現役世代恆為 0，撤銷時整組改寫成該次的撤銷次數                                                                                      |
+| `overtime_request`     | `approval_revoke_count`                                   | 新增，`@default(0)`                                                                    | 反向分錄的冪等鍵含它。同一張單被撤銷兩次時，鍵裡沒有次數就會撞唯一鍵被當成重放，而那一次撤銷是真的                                                                                                       |
 
 > **這一輪把撤銷改成符合 ADR 022。** 第 7 輪的 `revokeApproval` 直接
 > `deleteMany` 帳本與批次，而 ADR 022 §2.1 寫著 `LeaveLedgerEntry`
@@ -472,10 +472,31 @@ SELECT account_book_id, code, carry_forward_months
 > 與『這批補休沒有被動過』是同一件事」—— 那句話在批次改成**只標記不刪**
 > （ADR 022 §2.1）之後就過期了：沒有人再刪批次，那條外鍵**永遠不會被觸發**。
 >
-> 現在的後盾是**結果導向**的：撤銷之後重算該假別的餘額，為負就整筆回滾。
-> 預檢與寫入之間若插進一筆扣減，那批的分錄會變成 `+120 −120 −60 = −60`，
-> 而負餘額在 ADR 022 的模型裡不可能是對的（FIFO 只扣得動有餘額的批次）。
+> 現在的後盾是**結果導向**的，但要說清楚是「哪一個結果」。
+>
+> ⚠️ **2026-08-21 再更正。** 上一版這裡寫的是「撤銷之後重算**該假別**的餘額，
+> 為負就整筆回滾」—— 那是**範圍級**的加總，而它偵測不到自己宣稱偵測的競態：
+> 補休是一張加班單一批，員工只要有第二張已核准的補休加班單，
+> 被撤銷那一批的 `+120 −120 −120 = −120` 就會被另一批的 `+120` 遮成 `0`，
+> `0 < 0` 為 false，違反照樣 commit。那句話因此宣稱了實作沒做到的保證。
+>
+> 真正的後盾是**逐批守恆**：撤銷之後，被撤銷的每一批淨額必須正好是 `0`
+> （ADR 022 §2.3「守恆必須逐 `LeaveGrant` 成立」）。預檢與寫入之間若插進
+> 一筆扣減，那一批就是 `−60`，不等於 `0`，整筆回滾。
+>
+> 範圍級那一道留著，但它擋的是**另一件事**：批次以外的來源把整個假別扣成負的。
+> 代價是另一批的既有損壞會擋下這一張的撤銷 —— 刻意的，因為替代方案是把一個
+> 負餘額寫進 `leave_balance` 快取。
+>
 > 折現那一側則是條件式刪除（`settled_at IS NULL`）加比對筆數。
+>
+> **勾稽 cron 仍然看不到逐批負值**（`sumLedgerMinutes` 是範圍級的）。
+> 這是已知缺口，記於計畫書 §17；上線後若要人工查，用逐批加總：
+>
+> ```sql
+> SELECT leave_grant_id, sum(delta_minutes) AS net
+> FROM leave_ledger_entry GROUP BY leave_grant_id HAVING sum(delta_minutes) < 0;
+> ```
 
 ### 上線前確認
 
@@ -500,13 +521,13 @@ PostgreSQL 的 unique **不約束 NULL** —— 撤銷核准會刪掉分段卻�
 
 ### 新增四個欄位、移除一個
 
-| 表 | 欄位 | 動作 | 為什麼 |
-|---|---|---|---|
-| `leave_approval_step` | `chain_version` | **新增，NOT NULL** | `LEAVE_APPROVAL_CHAIN_VERSION` 的註解寫著「並記於快照」，而它零引用（M15）。對照組 `leave_day.entitlement_engine_version` 與 `overtime_segment.engine_version` 都落地了 |
-| `leave_approval_step` | `decided_by_employee_id` / `_no` / `_name` | 新增，nullable | `HR` 關改成任一位 `HR_ADMIN` 都接得了（M19），「應該簽的人」與「真的簽的人」會不一樣 |
-| `leave_ledger_entry` | `actor_employee_no` / `actor_name` | 新增，nullable | `actor_employee_id` 是 `SetNull`，離職後帳本查不出操作者（M16） |
-| `leave_approval_step` | `escalated_from_kind` | 新增，nullable | 上升的說明原本是一句開發者英文，直接印給使用者（M27）。既有列為 null —— **不回填**：把那句英文解析回節點型別是猜的，猜錯會在簽核紀錄上留下一個錯的事實 |
-| `leave_request` | `proof_document_id` | **移除** | 零引用、無 `@relation`、無租戶檢查（M18）。見下方 |
+| 表                    | 欄位                                       | 動作               | 為什麼                                                                                                                                                                  |
+| --------------------- | ------------------------------------------ | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `leave_approval_step` | `chain_version`                            | **新增，NOT NULL** | `LEAVE_APPROVAL_CHAIN_VERSION` 的註解寫著「並記於快照」，而它零引用（M15）。對照組 `leave_day.entitlement_engine_version` 與 `overtime_segment.engine_version` 都落地了 |
+| `leave_approval_step` | `decided_by_employee_id` / `_no` / `_name` | 新增，nullable     | `HR` 關改成任一位 `HR_ADMIN` 都接得了（M19），「應該簽的人」與「真的簽的人」會不一樣                                                                                    |
+| `leave_ledger_entry`  | `actor_employee_no` / `actor_name`         | 新增，nullable     | `actor_employee_id` 是 `SetNull`，離職後帳本查不出操作者（M16）                                                                                                         |
+| `leave_approval_step` | `escalated_from_kind`                      | 新增，nullable     | 上升的說明原本是一句開發者英文，直接印給使用者（M27）。既有列為 null —— **不回填**：把那句英文解析回節點型別是猜的，猜錯會在簽核紀錄上留下一個錯的事實                  |
+| `leave_request`       | `proof_document_id`                        | **移除**           | 零引用、無 `@relation`、無租戶檢查（M18）。見下方                                                                                                                       |
 
 ### `chain_version` 是 NOT NULL —— 既有列要先回填
 
@@ -538,10 +559,10 @@ SELECT count(*) FROM leave_request WHERE proof_document_id IS NOT NULL;
 
 ### API 形狀變了兩處，前端要跟
 
-| 端點 | 欄位 | 舊 | 新 |
-|---|---|---|---|
+| 端點                                     | 欄位        | 舊               | 新                                                          |
+| ---------------------------------------- | ----------- | ---------------- | ----------------------------------------------------------- |
 | `GET/POST/PUT .../hr/leave/policy[/:id]` | `paidRatio` | `number \| null` | **`string \| null`**（十進位字串，M20）。輸入端同步改收字串 |
-| `GET .../hr/overtime/unapproved` | 回傳 | 單一報告 | 帶 `scope=team` 時回**陣列**（M23）。不帶時形狀不變 |
+| `GET .../hr/overtime/unapproved`         | 回傳        | 單一報告         | 帶 `scope=team` 時回**陣列**（M23）。不帶時形狀不變         |
 
 `paidRatio` 目前沒有任何前端元件在讀（`grep paidRatio src/**/*.tsx` 為空），
 因此這一項不影響現有畫面；假別設定頁動工時照新形狀寫。
@@ -615,12 +636,12 @@ SELECT r.id, r.account_book_id, r.department_id, r.leave_policy_id,
 
 沒有列 → 這一節跳過。有列的處置：
 
-| 命中哪一條 | 怎麼修 |
-|---|---|
-| (1) | 決定它到底要限制什麼，補上人數或比例其中一個；**若那條規則本來就沒有用意，刪掉它** |
-| (2) | 刪掉其中一欄。讀取端舊碼靜默偏好人數那一欄，因此「設定畫面上的比例看起來生效了卻沒有」—— 以人數為準通常就是現況 |
-| (3) (4) | 補成正數，或刪掉 |
-| (5) | 把 `action` 改成 `WARN`。**不要**改 `employer_may_reject` —— 那是法規屬性，不是設定 |
+| 命中哪一條 | 怎麼修                                                                                                          |
+| ---------- | --------------------------------------------------------------------------------------------------------------- |
+| (1)        | 決定它到底要限制什麼，補上人數或比例其中一個；**若那條規則本來就沒有用意，刪掉它**                              |
+| (2)        | 刪掉其中一欄。讀取端舊碼靜默偏好人數那一欄，因此「設定畫面上的比例看起來生效了卻沒有」—— 以人數為準通常就是現況 |
+| (3) (4)    | 補成正數，或刪掉                                                                                                |
+| (5)        | 把 `action` 改成 `WARN`。**不要**改 `employer_may_reject` —— 那是法規屬性，不是設定                             |
 
 > 這張表沒有管理畫面（計畫書 §17 缺口 13），因此修法就是 SQL。
 > 修完再跑一次上面那段查詢確認回空集合。
@@ -647,10 +668,10 @@ SELECT id, account_book_id, department_id, leave_policy_id, action
 
 ## 五、環境變數
 
-| 鍵 | 用途 | 缺了會怎樣 |
-|---|---|---|
-| `HR_PII_KEY_V1` | 假單事由的 Tier 2 加密（ADR 018） | 送出假單直接失敗。**不是可選的** |
-| `LEAVE_RL_WRITE_PER_MINUTE` / `_PER_DAY` | 假勤寫入的限流窗口 | 有預設值（30／500），可不設 |
+| 鍵                                       | 用途                              | 缺了會怎樣                       |
+| ---------------------------------------- | --------------------------------- | -------------------------------- |
+| `HR_PII_KEY_V1`                          | 假單事由的 Tier 2 加密（ADR 018） | 送出假單直接失敗。**不是可選的** |
+| `LEAVE_RL_WRITE_PER_MINUTE` / `_PER_DAY` | 假勤寫入的限流窗口                | 有預設值（30／500），可不設      |
 
 > `validateEnvDetailed()` 把 `.env.example` 裡出現的每一個鍵都當成**必填**：
 > 某個鍵在 example 有、在部署的 `.env` 沒有，系統就進入「尚未初始化」，
@@ -665,11 +686,11 @@ SELECT id, account_book_id, department_id, leave_policy_id, action
 
 schema **不是**純新增，因此：
 
-| 情境 | 做法 |
-|---|---|
-| 只回滾程式碼、不回滾 schema | **不行。** 舊程式碼讀 `leave_request.leave_type`，那一欄已經不存在 —— 症狀是每一支假單端點 500 |
-| 連 schema 一起回滾 | 把 `prisma/schema.prisma` 切回舊版後 `db push`。**8 個必填欄位與 4 個被移除的欄位會反向重演一次**：新表被刪、`leave_type` 以 NOT NULL 加回來而既有列填不出值 → 先清 `leave_request` 再 push |
-| 只想停用功能、不動資料庫 | 走這一條。16 張新表留在資料庫裡不影響任何既有功能，把假勤的入口從側邊欄拿掉即可 |
+| 情境                        | 做法                                                                                                                                                                                        |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 只回滾程式碼、不回滾 schema | **不行。** 舊程式碼讀 `leave_request.leave_type`，那一欄已經不存在 —— 症狀是每一支假單端點 500                                                                                              |
+| 連 schema 一起回滾          | 把 `prisma/schema.prisma` 切回舊版後 `db push`。**8 個必填欄位與 4 個被移除的欄位會反向重演一次**：新表被刪、`leave_type` 以 NOT NULL 加回來而既有列填不出值 → 先清 `leave_request` 再 push |
+| 只想停用功能、不動資料庫    | 走這一條。16 張新表留在資料庫裡不影響任何既有功能，把假勤的入口從側邊欄拿掉即可                                                                                                             |
 
 第三條是預設建議：**回滾 schema 的代價高於留著它。**
 

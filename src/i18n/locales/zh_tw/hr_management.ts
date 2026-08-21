@@ -591,8 +591,7 @@ export const hrManagement = {
     error_no_permission_to_view: "你沒有查看這個人紀錄的權限。",
     error_no_employee_record:
       "你的帳號尚未對應到這個帳本裡的員工。請洽人資建立。",
-    error_range_too_large:
-      "查詢的日期區間太長，請縮短範圍後再試一次。",
+    error_range_too_large: "查詢的日期區間太長，請縮短範圍後再試一次。",
   },
   attendance_result: {
     title: "出勤總覽與異常",
@@ -801,6 +800,7 @@ export const hrManagement = {
 
     form_title: "填寫假單",
     field_policy: "假別",
+    policy_unavailable_suffix: "（暫不開放）",
     field_reason: "事由",
     field_reason_placeholder: "例：回診複檢、家中臨時有事",
     field_reason_encrypted: "事由會加密儲存，僅簽核者於明細頁可見",
@@ -847,20 +847,13 @@ export const hrManagement = {
       "自動改派：這一關的{{kind}}是你本人，已改由另一位擔任",
     chain_escalated_higher:
       "自動上升：這一關的{{from}}是你本人，已上升由{{to}}簽核",
-    unresolved_no_matching_rule:
-      "沒有任何簽核規則涵蓋這個天數",
-    unresolved_empty_rule_steps:
-      "命中的簽核規則沒有設定任何關卡",
-    unresolved_no_direct_manager:
-      "你的資料上沒有直屬主管",
-    unresolved_no_department_manager:
-      "你所屬部門往上都沒有設定主管",
-    unresolved_no_hr:
-      "這個帳本沒有人資管理員",
-    unresolved_no_other_hr:
-      "你是唯一的人資管理員，鏈上沒有其他人可以簽",
-    unresolved_specific_employee_missing:
-      "指定的簽核者已離職或不在這個帳本",
+    unresolved_no_matching_rule: "沒有任何簽核規則涵蓋這個天數",
+    unresolved_empty_rule_steps: "命中的簽核規則沒有設定任何關卡",
+    unresolved_no_direct_manager: "你的資料上沒有直屬主管",
+    unresolved_no_department_manager: "你所屬部門往上都沒有設定主管",
+    unresolved_no_hr: "這個帳本沒有人資管理員",
+    unresolved_no_other_hr: "你是唯一的人資管理員，鏈上沒有其他人可以簽",
+    unresolved_specific_employee_missing: "指定的簽核者已離職或不在這個帳本",
     unresolved_malformed_rule_threshold:
       "某一條簽核規則的天數門檻不是可對帳的十進位數",
 
@@ -1040,7 +1033,8 @@ export const hrManagement = {
       "該日別的加成標準尚未確定（停工日、請假日），請洽人資。",
     error_self_decide:
       "不能對自己送出的加班單做這個動作。請由其他具人資管理職能的同事處理。",
-    error_not_reviewer: "你不是這張加班單的簽核者，決行的人必須是管得到申請人的主管。",
+    error_not_reviewer:
+      "你不是這張加班單的簽核者，決行的人必須是管得到申請人的主管。",
     error_comp_policy_missing:
       "找不到補休假別的設定，換不了補休。請改選加班費，或請人資建立。",
     error_not_found: "這張加班單已不存在。",

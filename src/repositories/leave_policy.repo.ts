@@ -266,6 +266,7 @@ class LeavePolicyRepository implements ILeavePolicyRepository {
         proofThresholdDays: true,
         employerMayReject: true,
         legalBasis: true,
+        mergesIntoPolicyId: true,
       },
       orderBy: { code: "asc" },
     });
@@ -285,6 +286,13 @@ class LeavePolicyRepository implements ILeavePolicyRepository {
           : Number(policy.proofThresholdDays),
       employerMayReject: policy.employerMayReject,
       legalBasis: policy.legalBasis,
+      /**
+       * Info: (20260821 - Julian) 併計尚未實作，設了併計目標的假別送出會被
+       * `VA_LEAVE_MERGE_NOT_IMPLEMENTED` 擋下（review 第二輪 R2）。
+       * 這裡把它算成一個布林，讓下拉選單在使用者選之前就標示出來 ——
+       * 否則選單照樣提供、試算照樣說可以，直到按下送出。
+       */
+      isSelectable: policy.mergesIntoPolicyId === null,
     }));
   }
 

@@ -1172,3 +1172,148 @@ describe("list / listPending / get — 可見範圍", () => {
     expect(result.steps).toHaveLength(1);
   });
 });
+
+/**
+ * Info: (20260821 - Julian) **併計閘的三個入口**（review 第二輪 R2）。
+ *
+ * 第一版只擋在 `submit()`。`approve()` 沒有閘，而那是**實際可達的繞過路徑，
+ * 且不需要任何舊資料**：HR 先用 `mergesIntoPolicyId: null` 建假別 → 員工送出
+ * （當下合法）→ HR 把併計目標設起來（假別設定支援的編輯）→ 主管核准 →
+ * 只扣一邊的額度，法定上限被繞過。`preview()` 沒有閘則會先回一個完整成功的
+ * 結果，使用者被系統確認「你有 7 天可以請」，按下送出才被拒。
+ *
+ * 這一組刻意寫成**行為**斷言而不是掃原始碼：把閘搬走、包進 `if (false)`、
+ * 或抽成 helper 之後只在其中一個入口呼叫，都必須紅。
+ */
+describe("併計閘：三個入口都要擋", () => {
+  const mergeRequest = (
+    overrides: Partial<ILeaveRequestRecord> = {},
+  ): ILeaveRequestRecord => ({
+    id: "req-merge",
+    accountBookId: "book-1",
+    employeeId: "emp-staff",
+    leavePolicyId: FAMILY_CARE.id,
+    status: LeaveRequestStatus.PENDING,
+    totalMinutes: 480,
+    totalDays: 1,
+    days: [{ id: "day-0", workDate: "2026-08-18", minutes: 480 }],
+    steps: [
+      {
+        id: "step-0",
+        order: 0,
+        nodeKind: LeaveApprovalNodeKind.DIRECT_MANAGER,
+        approverEmployeeId: "emp-lead",
+        approverEmployeeNo: "EMP002",
+        approverName: "李組長",
+        status: LeaveApprovalStepStatus.PENDING,
+        isPending: true,
+      },
+    ],
+    ...overrides,
+  });
+
+  const twoSteps = (): ILeaveRequestRecord =>
+    mergeRequest({
+      steps: [
+        {
+          id: "step-0",
+          order: 0,
+          nodeKind: LeaveApprovalNodeKind.DIRECT_MANAGER,
+          approverEmployeeId: "emp-lead",
+          approverEmployeeNo: "EMP002",
+          approverName: "李組長",
+          status: LeaveApprovalStepStatus.PENDING,
+          isPending: true,
+        },
+        {
+          id: "step-1",
+          order: 1,
+          nodeKind: LeaveApprovalNodeKind.DEPARTMENT_MANAGER,
+          approverEmployeeId: "emp-dept",
+          approverEmployeeNo: "EMP003",
+          approverName: "陳經理",
+          status: LeaveApprovalStepStatus.PENDING,
+          isPending: false,
+        },
+      ],
+    });
+
+  const approveAs = (actorEmployeeId: string) =>
+    service.approve({
+      accountBookId: "book-1",
+      requestId: "req-merge",
+      actorEmployeeId,
+      observedAt: AT,
+    });
+
+  it("試算：不得回一個完整成功的結果", async () => {
+    context.policy = FAMILY_CARE;
+
+    await expect(
+      service.preview({
+        accountBookId: "book-1",
+        employeeId: "emp-staff",
+        input: submitInput(["2026-08-18"]),
+        observedAt: AT,
+      }),
+    ).rejects.toMatchObject({
+      apiCode: API_ERRORS.VA_LEAVE_MERGE_NOT_IMPLEMENTED.code,
+    });
+  });
+
+  /**
+   * Info: (20260821 - Julian) 這一條是繞過路徑本身：假單在 `mergesIntoPolicyId`
+   * 還是 null 的時候就送出去了，核准當下才變成併計假別。
+   */
+  it("核准最後一關：擋下，且沒有扣任何額度", async () => {
+    repo.record = mergeRequest();
+    context.policy = FAMILY_CARE;
+
+    await expect(approveAs("emp-lead")).rejects.toMatchObject({
+      apiCode: API_ERRORS.VA_LEAVE_MERGE_NOT_IMPLEMENTED.code,
+    });
+    expect(repo.completed).toBeNull();
+  });
+
+  /**
+   * Info: (20260821 - Julian) 中間關卡也要擋。放行的話這張單會一路推進到
+   * 最後一關才拒絕，而每一關的簽核者都花時間看過它。
+   */
+  it("核准中間關卡：擋下，且沒有推進", async () => {
+    repo.record = twoSteps();
+    context.policy = FAMILY_CARE;
+
+    await expect(approveAs("emp-lead")).rejects.toMatchObject({
+      apiCode: API_ERRORS.VA_LEAVE_MERGE_NOT_IMPLEMENTED.code,
+    });
+    expect(repo.advanced).toBeNull();
+  });
+
+  /**
+   * Info: (20260821 - Julian) 三個對照組。少了它們，一個無條件 `throw`
+   * 的實作會讓上面三條全綠 —— 而它會把整個請假功能擋死。
+   */
+  it("對照組：沒設併計的假別，試算與核准都照常", async () => {
+    context.policy = PERSONAL;
+
+    await expect(
+      service.preview({
+        accountBookId: "book-1",
+        employeeId: "emp-staff",
+        input: submitInput(["2026-08-18"]),
+        observedAt: AT,
+      }),
+    ).resolves.toBeDefined();
+
+    repo.record = mergeRequest({ leavePolicyId: PERSONAL.id });
+    await expect(approveAs("emp-lead")).resolves.toBe(
+      LeaveApprovalOutcome.COMPLETED,
+    );
+
+    repo.record = twoSteps();
+    repo.record.leavePolicyId = PERSONAL.id;
+    await expect(approveAs("emp-lead")).resolves.toBe(
+      LeaveApprovalOutcome.ADVANCED,
+    );
+  });
+});

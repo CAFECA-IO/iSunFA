@@ -800,7 +800,8 @@ export const hrManagement = {
   leave: {
     field_start_at: "From (date and time)",
     field_end_at: "To (date and time)",
-    span_selected: "{{hours}} hours selected (before breaks and non-working days; see the preview below for what is actually deducted)",
+    span_selected:
+      "{{hours}} hours selected (before breaks and non-working days; see the preview below for what is actually deducted)",
     detail_title: "Request detail",
     detail_reason: "Reason",
     detail_reason_undecryptable:
@@ -834,6 +835,7 @@ export const hrManagement = {
 
     form_title: "New request",
     field_policy: "Leave type",
+    policy_unavailable_suffix: " (unavailable for now)",
     field_reason: "Reason",
     field_reason_placeholder: "e.g. follow-up appointment, family matter",
     field_reason_encrypted:
@@ -885,12 +887,10 @@ export const hrManagement = {
       "no approval rule covers a request of this length",
     unresolved_empty_rule_steps:
       "the matching approval rule has no approval steps",
-    unresolved_no_direct_manager:
-      "you have no direct manager on record",
+    unresolved_no_direct_manager: "you have no direct manager on record",
     unresolved_no_department_manager:
       "no department above you has a manager on record",
-    unresolved_no_hr:
-      "this account book has no HR administrator",
+    unresolved_no_hr: "this account book has no HR administrator",
     unresolved_no_other_hr:
       "you are the only HR administrator, and no one else can approve this",
     unresolved_specific_employee_missing:
@@ -953,7 +953,8 @@ export const hrManagement = {
   overtime: {
     field_start_at: "From (date and time)",
     field_end_at: "To (date and time)",
-    span_selected: "{{hours}} hours requested (recognition follows the punch record)",
+    span_selected:
+      "{{hours}} hours requested (recognition follows the punch record)",
     title: "My overtime",
     approval_page_title: "Overtime approvals",
     loading: "Loading…",

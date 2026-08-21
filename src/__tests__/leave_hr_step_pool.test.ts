@@ -6,10 +6,14 @@ import { LeaveRequestStatus } from "@/constants/leave";
 import {
   LeaveApprovalNodeKind,
   LeaveApprovalStepStatus,
+  LeaveQuotaMode,
+  LeaveRoundingMode,
+  LeaveUnitBasis,
 } from "@/constants/leave_policy";
 import { EmployeeHrFunction } from "@/constants/hr_management";
 import {
   ILeaveApprovalStepRecord,
+  ILeavePolicySnapshot,
   ILeaveRequestContext,
   ILeaveRequestRecord,
   ILeaveRequestRepository,
@@ -122,6 +126,33 @@ class FakeRepo implements Partial<ILeaveRequestRepository> {
   }
 }
 
+/**
+ * Info: (20260821 - Julian) 這裡先前傳的是 `{} as unknown as ILeaveRequestContext`。
+ *
+ * 那個轉型是一句謊：空物件宣稱自己滿足整個介面，而它一個方法都沒有。
+ * 只要 `approve()` 有一天在末關之前就需要 context，這一檔就會 TypeError ——
+ * 而那一天在併計閘補進中間關卡時到了（review 第二輪 R2）。
+ *
+ * 換成一個真的替身，只實作這一檔會走到的那一支，其餘留給介面去要求。
+ */
+class FakeContext implements Partial<ILeaveRequestContext> {
+  /** Info: (20260821 - Julian) 沒設併計 —— 本檔測的是 HR 池，不是那道閘 */
+  public policy: ILeavePolicySnapshot = {
+    id: "policy-annual",
+    code: "ANNUAL",
+    quotaMode: LeaveQuotaMode.QUOTA,
+    unitBasis: LeaveUnitBasis.FIXED_MINUTES,
+    minimumUnitMinutes: 60,
+    roundingMode: LeaveRoundingMode.UP,
+    employerMayReject: false,
+    mergesIntoPolicyId: null,
+  };
+
+  async findActivePolicy(): Promise<ILeavePolicySnapshot | null> {
+    return this.policy;
+  }
+}
+
 class FakeHrFunctions implements Partial<IEmployeeHrFunctionRepository> {
   public holders = new Set([ASSIGNED_HR, OTHER_HR]);
 
@@ -136,6 +167,7 @@ class FakeHrFunctions implements Partial<IEmployeeHrFunctionRepository> {
   }
 }
 
+let context: FakeContext;
 let repo: FakeRepo;
 let hrFunctions: FakeHrFunctions;
 let service: LeaveRequestService;
@@ -161,9 +193,10 @@ const codeOf = async (run: () => Promise<unknown>): Promise<string> => {
 beforeEach(() => {
   repo = new FakeRepo();
   hrFunctions = new FakeHrFunctions();
+  context = new FakeContext();
   service = new LeaveRequestService(
     repo as unknown as ILeaveRequestRepository,
-    {} as unknown as ILeaveRequestContext,
+    context as unknown as ILeaveRequestContext,
     undefined,
     hrFunctions as unknown as IEmployeeHrFunctionRepository,
   );
@@ -235,12 +268,18 @@ describe("HR 關：任一位 HR_ADMIN 都接得了", () => {
  */
 describe("待簽清單：人資看得到整池的 HR 關", () => {
   it("有 HR 職能時撈整池", async () => {
-    await service.listPending({ accountBookId: BOOK, actorEmployeeId: OTHER_HR });
+    await service.listPending({
+      accountBookId: BOOK,
+      actorEmployeeId: OTHER_HR,
+    });
     expect(repo.listQuery?.includeHrPool).toBe(true);
   });
 
   it("沒有 HR 職能時只撈指名給自己的", async () => {
-    await service.listPending({ accountBookId: BOOK, actorEmployeeId: OUTSIDER });
+    await service.listPending({
+      accountBookId: BOOK,
+      actorEmployeeId: OUTSIDER,
+    });
     expect(repo.listQuery?.includeHrPool).toBe(false);
   });
 });

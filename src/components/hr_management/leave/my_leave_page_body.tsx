@@ -36,7 +36,6 @@ import { useTranslation } from "@/i18n/i18n_context";
  * （ADR 023 §6「不預扣額度」在畫面上的好處）。
  */
 
-
 /**
  * Info: (20260818 - Julian) 試算用的事由佔位字串。
  * validator 要求非空白，而試算不寫入任何東西，因此填什麼都不影響結果。
@@ -129,8 +128,14 @@ const MyLeavePageBody: FC = () => {
       setPolicies(policyList);
       setBalance(balanceRes.payload);
       setRequests(requestRes.payload ?? []);
-      if (policyList.length > 0)
-        setPolicyId((current) => current || policyList[0].id);
+      /**
+       * Info: (20260821 - Julian) 預設選第一個**可選**的假別（review 第二輪 R2）。
+       * 用 `[0]` 會讓表單一開啟就停在一個送出必被拒的假別上 ——
+       * 而那正好是排序在最前面的那幾個法定假別之一。
+       */
+      const firstSelectable = policyList.find((policy) => policy.isSelectable);
+      if (firstSelectable !== undefined)
+        setPolicyId((current) => current || firstSelectable.id);
     } catch (error) {
       setLoadError(
         t(
@@ -391,11 +396,28 @@ const MyLeavePageBody: FC = () => {
               onChange={(event) => setPolicyId(event.target.value)}
               className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800"
             >
-              {policies.map((policy) => (
-                <option key={policy.id} value={policy.id}>
-                  {policy.name}
-                </option>
-              ))}
+              {policies.map((policy) => {
+                /**
+                 * Info: (20260821 - Julian) 併計尚未實作的假別在**選之前**就灰掉
+                 * （review 第二輪 R2）。
+                 *
+                 * 先前選得到、試算還會回一個完整成功的結果，直到按下送出才被拒。
+                 * 判斷不在這裡做：`isSelectable` 是伺服器算好的結論，前端再算一次
+                 * 就會有第二份規則，而它遲早會與伺服器的閘分家。
+                 */
+                return (
+                  <option
+                    key={policy.id}
+                    value={policy.id}
+                    disabled={!policy.isSelectable}
+                  >
+                    {policy.isSelectable
+                      ? policy.name
+                      : policy.name +
+                        t("hr_management.leave.policy_unavailable_suffix")}
+                  </option>
+                );
+              })}
             </select>
           </label>
         </div>

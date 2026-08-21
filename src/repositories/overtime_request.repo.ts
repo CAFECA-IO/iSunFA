@@ -640,8 +640,15 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
       const grantIds = grants.map((grant) => grant.id);
 
       /**
-       * Info: (20260821 - Julian) 預檢：這批補休有沒有被動過。
-       * 只為了錯誤訊息 —— 真正的保證是下面 `leaveGrant.deleteMany` 撞上的外鍵。
+       * Info: (20260821 - Julian) 預檢：這批補休有沒有被動過。**只為了錯誤訊息。**
+       *
+       * 更正（review 第二輪 R5）：這裡先前寫「真正的保證是下面
+       * `leaveGrant.deleteMany` 撞上的外鍵」。那支 `deleteMany` 在第 9 輪改成
+       * 軟刪除時就一起不存在了，`LeaveLedgerEntry.leaveGrant` 的
+       * `onDelete: Restrict` 因此永遠不會被觸發 —— 那句話從那一刻起就是假的，
+       * 而它剛好長在最像規格的位置。同一支函式裡另外兩處已經更正過，只有這裡漏掉。
+       *
+       * 先查後改攔不住競態。真正的後盾是寫入之後的**逐批守恆**斷言（見下半段）。
        */
       const touched = await tx.leaveLedgerEntry.count({
         where: {
@@ -729,6 +736,47 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
       });
 
       /**
+       * Info: (20260821 - Julian) **逐批守恆**：被撤銷的每一批，淨額必須正好是 0
+       * （review 第二輪 R1）。
+       *
+       * 先前放在這個位置的後盾是「該假別的餘額不得為負」，而那個觀測量是
+       * **範圍級**的：`sumLedgerMinutes` 加總的是整個
+       * `(accountBookId, employeeId, leavePolicyId)` 底下的所有批次，而補休是
+       * 一張加班單一批。員工只要有第二張已核准的補休加班單 —— 常態，不是邊角
+       * —— 遮蔽就成立：批次 A 是 `+120 −120 −120 = −120`、批次 B 是 `+120`，
+       * 範圍加總為 `0`，`0 < 0` 為 false，違反就這樣 commit 出去，
+       * 而「撤銷成功」與「撤銷破壞了帳本」塌成同一個觀測值。
+       *
+       * 逐批看則分得出來：A 的淨額是 −120，不等於 0。這也正是 ADR 022 §2.3
+       * 的原話 ——「守恆必須逐 `LeaveGrant` 成立」。範圍加總是衍生值，
+       * 而衍生值救不了另一個衍生值。
+       *
+       * 順帶把上面那句 `grantBalanceAfterMinutes: 0` 從宣稱變成被驗證的值：
+       * 淨額為 0 才寫得下去。
+       */
+      const netByGrant = new Map<string, number>(
+        grantIds.map((grantId) => [grantId, 0]),
+      );
+      const grantEntries = await tx.leaveLedgerEntry.findMany({
+        where: { leaveGrantId: { in: grantIds } },
+        select: { leaveGrantId: true, deltaMinutes: true },
+      });
+      for (const entry of grantEntries) {
+        netByGrant.set(
+          entry.leaveGrantId,
+          (netByGrant.get(entry.leaveGrantId) ?? 0) + entry.deltaMinutes,
+        );
+      }
+      for (const [grantId, net] of netByGrant) {
+        if (net !== 0) {
+          throw new OvertimeApprovalNotReversibleError(
+            params.requestId,
+            `grant ${grantId} would be left at ${net} minutes after the reversal; the compensatory leave was consumed while this revocation was running`,
+          );
+        }
+      }
+
+      /**
        * Info: (20260821 - Julian) 折現事件的刪除**帶上 `settledAt: null`**
        * （review 第 8 輪第 3 條）。
        *
@@ -791,18 +839,21 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
       for (const scope of scopes.values()) {
         const remainingMinutes = await sumLedgerMinutes(tx, scope);
         /**
-         * Info: (20260821 - Julian) **撤銷之後餘額不得為負** —— 這是那次預檢
-         * 唯一真正的後盾（review 第 9 輪 B1）。
+         * Info: (20260821 - Julian) 範圍級的餘額不得為負。**保留，但它不是那道後盾。**
          *
-         * 上面 `touched` 那次 `count` 是先查後改。第 8 輪的註解說「真正的保證
-         * 是外鍵」，而那句話在**批次改成不刪之後就過期了**：
-         * `LeaveLedgerEntry.leaveGrant` 的 `onDelete: Restrict` 永遠不會被觸發，
-         * 因為沒有人再刪批次。
+         * 更正（review 第二輪 R1）：這裡先前寫著它「讓競態有了偵測器，不再只有
+         * 一句宣稱」。它偵測得到的只有「整個假別被扣穿」這一種形狀；同一員工
+         * 同一假別只要還有另一批補休，被撤銷那一批的負值就會被那一批的正額遮掉。
+         * 偵測器是上面的逐批守恆，不是這裡。
          *
-         * 剩下的保護在這裡，而且它是**結果導向**的：預檢與寫入之間若插進一筆
-         * 扣減，那批的分錄會變成 `+120 −120 −60 = −60`，而一個負的餘額在
-         * ADR 022 的模型裡不可能是對的（FIFO 只扣得動有餘額的批次）。
-         * 丟出去讓整筆交易回滾 —— 競態因此有了偵測器，不再只有一句宣稱。
+         * 留著是因為它便宜，而且擋的是另一件事：批次以外的來源（人工調整、
+         * 未來的併計扣減）把整個假別扣成負的。順序刻意是先逐批、後範圍 ——
+         * 先跑分得出來的那一道，錯誤訊息才會指到正確的批次。
+         *
+         * 代價說清楚：**另一批的既有損壞會擋下這一張的撤銷。** 這是刻意的，
+         * 因為替代方案是把一個負餘額寫進 `LeaveBalance` 快取，而那個值在
+         * ADR 022 的模型裡不可能是對的 —— 寧可讓操作失敗並指出損壞，
+         * 也不要讓它成功並把損壞抄進快取。
          */
         if (remainingMinutes < 0) {
           throw new OvertimeApprovalNotReversibleError(

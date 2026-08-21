@@ -341,6 +341,16 @@ export class LeaveRequestService {
     const { plan, chain, grants, concurrency, policy } =
       await this.buildPlan(params);
 
+    /**
+     * Info: (20260821 - Julian) 併計閘之二：試算（review 第二輪 R2）。
+     *
+     * 這一支先前沒有閘，於是它會回一個**完整成功**的結果：`remainingMinutesBefore`
+     * 是 7 日、簽核鏈解得出來、`shortfallMinutes: 0`。使用者在畫面上被系統確認
+     * 「你有 7 天家庭照顧假可以請」，按下送出才被拒 —— 試算正在斷言那道閘
+     * 存在的目的所要保護的額度。
+     */
+    this.assertMergeNotImplemented(policy);
+
     const totalMinutes = plan.reduce((sum, day) => sum + day.minutes, 0);
     const totalDays = toTotalDays(plan);
 
@@ -406,37 +416,8 @@ export class LeaveRequestService {
       throw new AppError(API_ERRORS.CF_LEAVE_APPROVAL_CHAIN_UNRESOLVED);
     }
 
-    /**
-     * Info: (20260821 - Julian) **跨假別併計尚未實作，因此擋下**（review 第 10 輪 B2）。
-     *
-     * ## 這道閘擋的是什麼
-     *
-     * 計畫書 §6.5 寫著「家庭照顧假併入事假（性平法 §20）… `allocateConsumption`
-     * 在扣減主假別後對被併入的假別再產一筆 `CONSUME`」，而 `mergesIntoPolicyId`
-     * 在**整個扣減路徑上零讀取端** —— `readConsumableGrants` 只收單一
-     * `leavePolicyId`，`allocateConsumption` 收的是一個扁平的 grants 陣列，
-     * 完全沒有假別維度。
-     *
-     * 後果是法定額度被繞過：員工請滿 7 日家庭照顧假之後，事假額度仍是完整的
-     * 14 日（合計 21 日），而性平法 §20 的上限是 14 日 —— **每人每年多出 7 日**。
-     *
-     * ## 為什麼是擋而不是猜一個實作
-     *
-     * 併計要動的是請假模組最精密的那個交易（附條件扣總量 → FIFO 逐批 →
-     * 逐日分錄），而且三條路徑都要一起改：核准的逐層扣減、銷假／駁回的逐層
-     * 還原、以及送出前置檢查也要含被併入的假別。少了還原那一段，偏差方向會
-     * 變成對勞工不利且無人報錯。
-     *
-     * 計畫書對生理假的處置是同一個判準：「在規則核對完成前留空，不猜一個數字
-     * 填進去」。這裡把它擴大成「規則寫了但沒有執行者時，不放行」。
-     *
-     * ToDo: (20260821 - Julian) 併計扣減落地後移除這道閘（計畫書 §17 缺口 17）。
-     * `leave_merge_gate.test.ts` 會在扣減路徑出現 `mergesInto` 讀取端時變紅，
-     * 提醒把這裡一起拿掉。
-     */
-    if (policy.mergesIntoPolicyId !== null) {
-      throw new AppError(API_ERRORS.VA_LEAVE_MERGE_NOT_IMPLEMENTED);
-    }
+    // Info: (20260821 - Julian) 併計閘之一：送出。三個入口的理由見 `assertMergeNotImplemented`
+    this.assertMergeNotImplemented(policy);
 
     if (policy.quotaMode === LeaveQuotaMode.QUOTA) {
       const { shortfallMinutes } = allocateConsumption({
@@ -526,6 +507,25 @@ export class LeaveRequestService {
   }): Promise<LeaveApprovalOutcome> {
     const { request, step } = await this.claimStep(params);
 
+    /**
+     * Info: (20260821 - Julian) 併計閘之三：核准（review 第二輪 R2）。
+     *
+     * **這一條才是實際可達的繞過路徑，而且不需要任何舊資料：**
+     * HR 先用 `mergesIntoPolicyId: null` 建假別 X → 員工對 X 送出（閘放行，
+     * 當下合法）→ HR 把 X 的 `mergesIntoPolicyId` 設起來（`leave_policy` 支援
+     * 的編輯）→ 主管核准 → `completeApproval` 只扣 X 的額度。
+     * 部署當下已經 PENDING 的假單同理。
+     *
+     * 因此 `requirePolicy` 從「最後一關才讀」提前到這裡：閘要蓋住**兩條分支**。
+     * 中間關卡多一次查詢是刻意的成本 —— 讓簽核者當場知道這張單不會過，
+     * 好過把它推到最後一關才拒絕。
+     */
+    const policy = await this.requirePolicy(
+      params.accountBookId,
+      request.leavePolicyId,
+    );
+    this.assertMergeNotImplemented(policy);
+
     const isFinal = step.order === request.steps.length - 1;
     if (!isFinal) {
       return this.settle(
@@ -546,11 +546,6 @@ export class LeaveRequestService {
      * repository 在交易內重算 FIFO 分配並以附條件的 `updateMany` 判輸 ——
      * 讀後寫在併發下會兩張單都過（ADR 023 §6.4）。
      */
-    const policy = await this.requirePolicy(
-      params.accountBookId,
-      request.leavePolicyId,
-    );
-
     /**
      * Info: (20260817 - Julian) 這裡只做**前置檢查**，不把分配結果傳下去。
      *
@@ -853,6 +848,48 @@ export class LeaveRequestService {
     });
 
     return { policy, plan, chain, grants, concurrency };
+  }
+
+  /**
+   * Info: (20260821 - Julian) **跨假別併計尚未實作，因此擋下**（review 第 10 輪 B2）。
+   *
+   * ## 這道閘擋的是什麼
+   *
+   * 計畫書 §6.5 寫著「家庭照顧假併入事假（性平法 §20）… `allocateConsumption`
+   * 在扣減主假別後對被併入的假別再產一筆 `CONSUME`」，而 `mergesIntoPolicyId`
+   * 在**整個扣減路徑上零讀取端** —— `readConsumableGrants` 只收單一
+   * `leavePolicyId`，`allocateConsumption` 收的是一個扁平的 grants 陣列，
+   * 完全沒有假別維度。
+   *
+   * 後果是法定額度被繞過：員工請滿 7 日家庭照顧假之後，事假額度仍是完整的
+   * 14 日（合計 21 日），而性平法 §20 的上限是 14 日 —— **每人每年多出 7 日**。
+   *
+   * ## 為什麼是一支共用的私有方法而不是三段複製
+   *
+   * 第一版只擋在 `submit()`，而 `approve()` 與 `preview()` 都沒有
+   * （review 第二輪 R2）—— 一道只蓋住一個入口的閘，讀起來卻像蓋住了全部。
+   * 收斂成一支之後，「有幾個入口讀得到假別」與「有幾個入口被擋」是同一個數字，
+   * 而下一個新增入口的人會在型別上看到它。
+   *
+   * ## 為什麼是擋而不是猜一個實作
+   *
+   * 併計要動的是請假模組最精密的那個交易（附條件扣總量 → FIFO 逐批 →
+   * 逐日分錄），而且三條路徑都要一起改：核准的逐層扣減、銷假／駁回的逐層
+   * 還原、以及送出前置檢查也要含被併入的假別。少了還原那一段，偏差方向會
+   * 變成對勞工不利且無人報錯。
+   *
+   * 計畫書對生理假的處置是同一個判準：「在規則核對完成前留空，不猜一個數字
+   * 填進去」。這裡把它擴大成「規則寫了但沒有執行者時，不放行」。
+   *
+   * ToDo: (20260821 - Julian) 併計扣減落地後移除這道閘與它的三個呼叫端
+   * （計畫書 §17 缺口 17），並把 `ILeavePolicyOption.isSelectable` 一併拿掉。
+   */
+  private assertMergeNotImplemented(policy: {
+    mergesIntoPolicyId: string | null;
+  }): void {
+    if (policy.mergesIntoPolicyId !== null) {
+      throw new AppError(API_ERRORS.VA_LEAVE_MERGE_NOT_IMPLEMENTED);
+    }
   }
 
   private async requirePolicy(accountBookId: string, leavePolicyId: string) {

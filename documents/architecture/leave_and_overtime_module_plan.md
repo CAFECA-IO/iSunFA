@@ -26,12 +26,12 @@
 
 ### 1.1 範圍
 
-| 需求 | 落點 |
-|---|---|
+| 需求                                                       | 落點             |
+| ---------------------------------------------------------- | ---------------- |
 | 假別規則設定（內建勞基法假別、自訂給假規則、最小請假單位） | §4 D1–D5、§5、§6 |
-| 線上請假與簽核（餘額查詢、多級簽核） | §4 D6–D8、§7 |
-| 加班管理（事前／事後申請、加班費或補休二選一） | §4 D9–D13、§8 |
-| 假勤行事曆（部門排休視覺化、併休上限） | §4 D14、§9 |
+| 線上請假與簽核（餘額查詢、多級簽核）                       | §4 D6–D8、§7     |
+| 加班管理（事前／事後申請、加班費或補休二選一）             | §4 D9–D13、§8    |
+| 假勤行事曆（部門排休視覺化、併休上限）                     | §4 D14、§9       |
 
 ### 1.2 非範圍（明確劃出去，避免邊界漂移）
 
@@ -70,50 +70,50 @@ CLAUDE.md 的「零捏造」對法規同樣適用：**沒查到出處的數字�
 
 ### 3.1 已查證（查證日期 2026-08-17）
 
-| 項目 | 內容 | 出處 |
-|---|---|---|
-| 勞基法版本 | 民國 113 年 7 月 31 日修正 | 勞動部勞動法令查詢系統 |
-| §38 I 特休日數 | 6 月以上未滿 1 年 **3 日**；1 年以上未滿 2 年 **7 日**；2 年以上未滿 3 年 **10 日**；3 年以上未滿 5 年 **14 日**；5 年以上未滿 10 年 **15 日**；10 年以上每年加 **1 日**，加至 **30 日**為止 | 勞動部「特別休假日數、排定原則及遞延」 |
-| §38 II | 期日**由勞工排定**；雇主基於企業經營上急迫需求或勞工個人因素，得與勞工協商調整 | 同上 |
-| §38 IV | 年度終結未休 → 發給工資；經勞雇雙方協商同意得**遞延一年**；次年度終結或契約終止仍未休 → 發給工資 | 同上 |
-| §24 平日延長 | 前 2 小時**加給 1/3 以上**；再延長 2 小時**加給 2/3 以上**；§32 IV 天災事變情形**加倍發給** | 勞動部勞動法令查詢系統 |
-| §24 休息日 | 工作 2 小時以內**另再加給 4/3 以上**；工作 2 小時後**另再加給 5/3 以上** | 同上 |
-| §32 上限 | 正常工時加計延長工時**一日不得超過 12 小時**；延長工時**一個月不得超過 46 小時**，經工會或勞資會議同意得達 **54 小時**，且**每三個月不得超過 138 小時** | 同上 |
-| §32-1 補休 | 依**勞工工作之時數**計算補休時數（1:1）；期限由勞雇雙方協商；期限屆滿或契約終止未補休之時數，**依延長工作時間或休息日工作當日之工資計算標準發給工資** | 同上 |
-| §36 | 每 7 日應有 2 日之休息，1 日為例假、1 日為休息日 | 同上 |
-| §39 | 例假、休息日、休假、特別休假，工資由雇主照給；經同意於假日工作者，工資**加倍發給** | 同上 |
-| 婚假 | **8 日**，工資照給（勞工請假規則 §2） | 勞動部「勞動基準法暨性別平等工作法相關假別請假及工資權益」 |
-| 喪假 | 父母等 **8 日**、祖父母等 **6 日**、曾祖父母等 **3 日**，工資照給（勞工請假規則 §3） | 同上 |
-| 普通傷病假 | 未住院 **1 年內不超過 30 日**；住院 **2 年內不超過 1 年**；工資**折半發給**（勞工請假規則 §4） | 同上 |
-| 公傷病假 | 治療休養期間，工資照給（勞工請假規則 §6） | 同上 |
-| 事假 | **1 年內不超過 14 日**，不給工資（勞工請假規則 §7） | 同上 |
-| 生理假 | 性平法 §14，**每月 1 日**，薪資減半 | 同上 |
-| 產假 | **8 星期**；受僱 6 個月以上工資照給，未滿 6 個月**減半發給** | 同上 |
-| 流產假 | 妊娠 3 個月以上 **4 星期**；2 個月以上未滿 3 個月 **1 星期**；未滿 2 個月 **5 日** | 同上 |
-| 產檢假 | **7 日**，薪資照給（性平法 §15） | 同上 |
-| 陪產檢及陪產假 | **7 日**，薪資照給；陪產應於配偶分娩當日及前後合計 **15 日**內請假 | 同上 |
-| 安胎休養 | **2 年內不超過 1 年**，30 日內半薪，超過無薪 | 同上 |
-| 家庭照顧假 | **7 日**，**併入事假計算**，不給薪；雇主不得視為缺勤而影響全勤獎金（性平法 §20） | 同上 |
-| 育嬰留職停薪 | 最長 **2 年**；任職滿 6 個月後、子女滿 3 歲前 | 同上 |
-| 哺乳時間 | 子女未滿 2 歲，每日 **60 分鐘**；延長工作達 1 小時以上另加 **30 分鐘**；**視為工作時間** | 同上 |
-| **勞工請假規則修正** | **自民國 115 年 1 月 1 日施行**：① 1 年內請普通傷病假未超過 **10 日**者，雇主不得因此為不利處分 ② 勞工釋明後**舉證責任轉由雇主負擔** ③ 考核不得僅以病假日數為考量 ④ **全勤獎金應按請病假日數依比例計算**扣發 | 勞動部《勞工請假規則》部分條文修正相關問答 |
+| 項目                 | 內容                                                                                                                                                                                                         | 出處                                                       |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| 勞基法版本           | 民國 113 年 7 月 31 日修正                                                                                                                                                                                   | 勞動部勞動法令查詢系統                                     |
+| §38 I 特休日數       | 6 月以上未滿 1 年 **3 日**；1 年以上未滿 2 年 **7 日**；2 年以上未滿 3 年 **10 日**；3 年以上未滿 5 年 **14 日**；5 年以上未滿 10 年 **15 日**；10 年以上每年加 **1 日**，加至 **30 日**為止                 | 勞動部「特別休假日數、排定原則及遞延」                     |
+| §38 II               | 期日**由勞工排定**；雇主基於企業經營上急迫需求或勞工個人因素，得與勞工協商調整                                                                                                                               | 同上                                                       |
+| §38 IV               | 年度終結未休 → 發給工資；經勞雇雙方協商同意得**遞延一年**；次年度終結或契約終止仍未休 → 發給工資                                                                                                             | 同上                                                       |
+| §24 平日延長         | 前 2 小時**加給 1/3 以上**；再延長 2 小時**加給 2/3 以上**；§32 IV 天災事變情形**加倍發給**                                                                                                                  | 勞動部勞動法令查詢系統                                     |
+| §24 休息日           | 工作 2 小時以內**另再加給 4/3 以上**；工作 2 小時後**另再加給 5/3 以上**                                                                                                                                     | 同上                                                       |
+| §32 上限             | 正常工時加計延長工時**一日不得超過 12 小時**；延長工時**一個月不得超過 46 小時**，經工會或勞資會議同意得達 **54 小時**，且**每三個月不得超過 138 小時**                                                      | 同上                                                       |
+| §32-1 補休           | 依**勞工工作之時數**計算補休時數（1:1）；期限由勞雇雙方協商；期限屆滿或契約終止未補休之時數，**依延長工作時間或休息日工作當日之工資計算標準發給工資**                                                        | 同上                                                       |
+| §36                  | 每 7 日應有 2 日之休息，1 日為例假、1 日為休息日                                                                                                                                                             | 同上                                                       |
+| §39                  | 例假、休息日、休假、特別休假，工資由雇主照給；經同意於假日工作者，工資**加倍發給**                                                                                                                           | 同上                                                       |
+| 婚假                 | **8 日**，工資照給（勞工請假規則 §2）                                                                                                                                                                        | 勞動部「勞動基準法暨性別平等工作法相關假別請假及工資權益」 |
+| 喪假                 | 父母等 **8 日**、祖父母等 **6 日**、曾祖父母等 **3 日**，工資照給（勞工請假規則 §3）                                                                                                                         | 同上                                                       |
+| 普通傷病假           | 未住院 **1 年內不超過 30 日**；住院 **2 年內不超過 1 年**；工資**折半發給**（勞工請假規則 §4）                                                                                                               | 同上                                                       |
+| 公傷病假             | 治療休養期間，工資照給（勞工請假規則 §6）                                                                                                                                                                    | 同上                                                       |
+| 事假                 | **1 年內不超過 14 日**，不給工資（勞工請假規則 §7）                                                                                                                                                          | 同上                                                       |
+| 生理假               | 性平法 §14，**每月 1 日**，薪資減半                                                                                                                                                                          | 同上                                                       |
+| 產假                 | **8 星期**；受僱 6 個月以上工資照給，未滿 6 個月**減半發給**                                                                                                                                                 | 同上                                                       |
+| 流產假               | 妊娠 3 個月以上 **4 星期**；2 個月以上未滿 3 個月 **1 星期**；未滿 2 個月 **5 日**                                                                                                                           | 同上                                                       |
+| 產檢假               | **7 日**，薪資照給（性平法 §15）                                                                                                                                                                             | 同上                                                       |
+| 陪產檢及陪產假       | **7 日**，薪資照給；陪產應於配偶分娩當日及前後合計 **15 日**內請假                                                                                                                                           | 同上                                                       |
+| 安胎休養             | **2 年內不超過 1 年**，30 日內半薪，超過無薪                                                                                                                                                                 | 同上                                                       |
+| 家庭照顧假           | **7 日**，**併入事假計算**，不給薪；雇主不得視為缺勤而影響全勤獎金（性平法 §20）                                                                                                                             | 同上                                                       |
+| 育嬰留職停薪         | 最長 **2 年**；任職滿 6 個月後、子女滿 3 歲前                                                                                                                                                                | 同上                                                       |
+| 哺乳時間             | 子女未滿 2 歲，每日 **60 分鐘**；延長工作達 1 小時以上另加 **30 分鐘**；**視為工作時間**                                                                                                                     | 同上                                                       |
+| **勞工請假規則修正** | **自民國 115 年 1 月 1 日施行**：① 1 年內請普通傷病假未超過 **10 日**者，雇主不得因此為不利處分 ② 勞工釋明後**舉證責任轉由雇主負擔** ③ 考核不得僅以病假日數為考量 ④ **全勤獎金應按請病假日數依比例計算**扣發 | 勞動部《勞工請假規則》部分條文修正相關問答                 |
 
 > **115-01-01（西元 2027-01-01）的修正在本模組的開發期程之內。** 第 ④ 點直接要求系統能輸出「病假日數」供薪資模組按比例扣減全勤獎金，第 ① 點要求系統能標示出「1 年內病假是否逾 10 日」。這兩件事寫進 §6.6 與 §10 的 API，不是未來工作。
 
 ### 3.2 ⚠️ 待核對（法務複核前不得寫入 constants）
 
-| 項目 | 為何待核對 |
-|---|---|
-| 勞基法施行細則 §24（曆年制／週年制的授權依據） | 條號未回原文核對。D4 的整個制度選項建立在這條之上 |
-| 生理假「全年未逾 3 日不併入病假計算」 | 官方彙整表只給「每月 1 日、半薪」，未載明併計規則。此規則直接決定額度引擎要不要跨假別扣減 |
-| 喪假各親等完整對照 | 官方彙整表列名為「父母等 / 祖父母等 / 曾祖父母等」，親屬範圍未展開 |
-| 普通傷病假未住院與住院「2 年內合計不得超過 1 年」 | 官方彙整表分列兩欄，未載明合計上限 |
-| 勞工請假規則各條條號（§2 婚假、§3 喪假、§4 病假、§6 公傷病假、§7 事假、§8 公假） | 條號取自官方彙整表的標註，未逐條回原文核對 |
-| 特休比例給假「不得低於週年制」的函釋字號 | D4 的雙軌護欄需要一個明確的依據，目前只有實務通說 |
-| 職災勞工公傷病假與《勞工職業災害保險及保護法》的關係 | 影響 `LeavePolicy` 是否需要區分兩種公傷病假 |
-| 加班費「加給」與「發給」的用語 | §24 平日用「加給 1/3」（即發給 4/3），休息日用「另再加給 4/3」（即發給 7/3）。D11 的常數以**加給倍率**為準，但需法務確認本文件的換算陳述無誤 |
-| **各假別的「最小請假單位」** | §3.1 已查證的是各假別的**日數上限**（婚假 8 日、喪假 8/6/3 日、事假 14 日…），**單位完全不在其中**。而 `DEFAULT_LEAVE_POLICY_SEED` 把婚假、喪假、生理假、產檢假、陪產假、家庭照顧假設成 `HALF_WORKDAY` —— 那是一個**沒有法源、先前也沒有被登記成待核對**的假設（2026-08-18 補列）。本系統的使用者是工地人員，每個人的班別與上下班時刻都不同，「上半天」對他們不是直覺的量；請假表單因此改為一律填起訖時刻，扣減仍由 `unitBasis` 決定。若查證後確認某些假別法無最小單位限制，應改為 `FIXED_MINUTES` |
-| **§32 IV 天災、事變或突發事件的延長工時與其報備義務** | 條文、報備時限、受理機關（工會／當地主管機關）、法定書表格式與必填欄位，以及「事後補給適當休息」的具體要求，**全部未回原文核對**。**2026-08-19（review B7）起，此項不再是「未查證卻已放行」**：`isEmergency` 已不再繞過日別限制（例假日一律擋下），且必須帶 `emergencyReportUrl` + `emergencyReportedAt` + 認定者才成立，由 `assertOvertimeEmergencyRecord` 雙向把關。仍待核對的是**書表格式與必填欄位**，那決定 `emergencyReportUrl` 指向的東西該長什麼樣 —— 見 §8.3 |
+| 項目                                                                             | 為何待核對                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 勞基法施行細則 §24（曆年制／週年制的授權依據）                                   | 條號未回原文核對。D4 的整個制度選項建立在這條之上                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 生理假「全年未逾 3 日不併入病假計算」                                            | 官方彙整表只給「每月 1 日、半薪」，未載明併計規則。此規則直接決定額度引擎要不要跨假別扣減                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 喪假各親等完整對照                                                               | 官方彙整表列名為「父母等 / 祖父母等 / 曾祖父母等」，親屬範圍未展開                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 普通傷病假未住院與住院「2 年內合計不得超過 1 年」                                | 官方彙整表分列兩欄，未載明合計上限                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 勞工請假規則各條條號（§2 婚假、§3 喪假、§4 病假、§6 公傷病假、§7 事假、§8 公假） | 條號取自官方彙整表的標註，未逐條回原文核對                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 特休比例給假「不得低於週年制」的函釋字號                                         | D4 的雙軌護欄需要一個明確的依據，目前只有實務通說                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 職災勞工公傷病假與《勞工職業災害保險及保護法》的關係                             | 影響 `LeavePolicy` 是否需要區分兩種公傷病假                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 加班費「加給」與「發給」的用語                                                   | §24 平日用「加給 1/3」（即發給 4/3），休息日用「另再加給 4/3」（即發給 7/3）。D11 的常數以**加給倍率**為準，但需法務確認本文件的換算陳述無誤                                                                                                                                                                                                                                                                                                                                                       |
+| **各假別的「最小請假單位」**                                                     | §3.1 已查證的是各假別的**日數上限**（婚假 8 日、喪假 8/6/3 日、事假 14 日…），**單位完全不在其中**。而 `DEFAULT_LEAVE_POLICY_SEED` 把婚假、喪假、生理假、產檢假、陪產假、家庭照顧假設成 `HALF_WORKDAY` —— 那是一個**沒有法源、先前也沒有被登記成待核對**的假設（2026-08-18 補列）。本系統的使用者是工地人員，每個人的班別與上下班時刻都不同，「上半天」對他們不是直覺的量；請假表單因此改為一律填起訖時刻，扣減仍由 `unitBasis` 決定。若查證後確認某些假別法無最小單位限制，應改為 `FIXED_MINUTES` |
+| **§32 IV 天災、事變或突發事件的延長工時與其報備義務**                            | 條文、報備時限、受理機關（工會／當地主管機關）、法定書表格式與必填欄位，以及「事後補給適當休息」的具體要求，**全部未回原文核對**。**2026-08-19（review B7）起，此項不再是「未查證卻已放行」**：`isEmergency` 已不再繞過日別限制（例假日一律擋下），且必須帶 `emergencyReportUrl` + `emergencyReportedAt` + 認定者才成立，由 `assertOvertimeEmergencyRecord` 雙向把關。仍待核對的是**書表格式與必填欄位**，那決定 `emergencyReportUrl` 指向的東西該長什麼樣 —— 見 §8.3                              |
 
 > 所有 ⚠️ 項目在程式碼中一律標 `// ToDo: (20260817 - Julian) 法源待法務複核`，並集中於 `src/constants/leave_policy.ts`，不散落。
 
@@ -186,7 +186,6 @@ CLAUDE.md 的「零捏造」對法規同樣適用：**沒查到出處的數字�
 > §38 法定下界的組合。其餘曆年制（事假、病假、婚假…）是「一年內不超過」的
 > 上限額度，沒有逐年的法定下界要守，照常運作。內建假別無一使用被擋的組合。
 
-
 這條護欄的性質與財務的 `A = L + E`、ESG 的質量守恆相同：它是一條不可違反的下界，違反就代表輸入或設定有錯，而不是一個需要人工判斷的警示。依 CLAUDE.md §6，在 Service 開頭凍結，絕不讓髒資料進 DB。
 
 **比例給假的捨入**：比例計算會產生無限小數（例如 `7 × 214/365`）。`LeavePolicy.proratedRoundingScale`（小數位數，預設 `1`）與 `LeavePolicy.proratedRoundingMode` 決定捨入，且**捨入方向固定為對勞工有利（無條件進位）**，不開放設成截去 —— 因為往下捨的那一版永遠會被上一條護欄擋掉，開放一個必然觸發 `throw` 的設定值沒有意義。
@@ -201,9 +200,9 @@ CLAUDE.md 的「零捏造」對法規同樣適用：**沒查到出處的數字�
 // Info: (20260817 - Julian) 最小請假單位的基準。「半天」是相對量不是絕對量，
 // Info: (20260817 - Julian) 故不能與「三十分鐘」共用同一個分鐘數欄位。
 export enum LeaveUnitBasis {
-  FIXED_MINUTES = "FIXED_MINUTES",   // Info: (20260817 - Julian) 以 minimumUnitMinutes 為準（半小時 = 30、一小時 = 60）
-  HALF_WORKDAY = "HALF_WORKDAY",     // Info: (20260817 - Julian) 該日班別 requiredWorkMinutes 的一半
-  FULL_WORKDAY = "FULL_WORKDAY",     // Info: (20260817 - Julian) 該日班別 requiredWorkMinutes
+  FIXED_MINUTES = "FIXED_MINUTES", // Info: (20260817 - Julian) 以 minimumUnitMinutes 為準（半小時 = 30、一小時 = 60）
+  HALF_WORKDAY = "HALF_WORKDAY", // Info: (20260817 - Julian) 該日班別 requiredWorkMinutes 的一半
+  FULL_WORKDAY = "FULL_WORKDAY", // Info: (20260817 - Julian) 該日班別 requiredWorkMinutes
 }
 ```
 
@@ -221,10 +220,10 @@ export enum LeaveUnitBasis {
 
 ```typescript
 export enum LeaveApprovalNodeKind {
-  DIRECT_MANAGER = "DIRECT_MANAGER",         // Info: (20260817 - Julian) Employee.managerId
+  DIRECT_MANAGER = "DIRECT_MANAGER", // Info: (20260817 - Julian) Employee.managerId
   DEPARTMENT_MANAGER = "DEPARTMENT_MANAGER", // Info: (20260817 - Julian) Department.managerId，沿部門樹向上找第一個有主管的節點
-  HR = "HR",                                 // Info: (20260817 - Julian) 具 HR 角色者，全體皆可簽（任一人簽核即通過）
-  SPECIFIC_EMPLOYEE = "SPECIFIC_EMPLOYEE",   // Info: (20260817 - Julian) 指名特定員工（小型組織與代理情境）
+  HR = "HR", // Info: (20260817 - Julian) 具 HR 角色者，全體皆可簽（任一人簽核即通過）
+  SPECIFIC_EMPLOYEE = "SPECIFIC_EMPLOYEE", // Info: (20260817 - Julian) 指名特定員工（小型組織與代理情境）
 }
 ```
 
@@ -283,14 +282,14 @@ export function deriveOvertimeSegments(
 
 級距 enum 與**加給**倍率（⚠️ 用語待法務確認，§3.2）：
 
-| `OvertimePremiumTier` | 適用 | 加給倍率 | 法源 |
-|---|---|---|---|
-| `WEEKDAY_FIRST_2H` | 上班日延長前 2 小時 | 1/3 | §24 I ① |
-| `WEEKDAY_BEYOND_2H` | 上班日再延長 | 2/3 | §24 I ② |
-| `REST_DAY_FIRST_2H` | 休息日前 2 小時 | 4/3 | §24 II ① |
-| `REST_DAY_BEYOND_2H` | 休息日 2 小時後 | 5/3 | §24 II ② |
-| `HOLIDAY_DOUBLE` | 休假日／例假日經同意出勤 | 工資加倍發給 | §39 |
-| `EMERGENCY_DOUBLE` | §32 IV 天災事變等 | 加倍發給 | §24 I ③ |
+| `OvertimePremiumTier` | 適用                     | 加給倍率     | 法源     |
+| --------------------- | ------------------------ | ------------ | -------- |
+| `WEEKDAY_FIRST_2H`    | 上班日延長前 2 小時      | 1/3          | §24 I ①  |
+| `WEEKDAY_BEYOND_2H`   | 上班日再延長             | 2/3          | §24 I ②  |
+| `REST_DAY_FIRST_2H`   | 休息日前 2 小時          | 4/3          | §24 II ① |
+| `REST_DAY_BEYOND_2H`  | 休息日 2 小時後          | 5/3          | §24 II ② |
+| `HOLIDAY_DOUBLE`      | 休假日／例假日經同意出勤 | 工資加倍發給 | §39      |
+| `EMERGENCY_DOUBLE`    | §32 IV 天災事變等        | 加倍發給     | §24 I ③  |
 
 倍率一律以 `{ numerator: number; denominator: number }` 整數對表示，集中於 `src/constants/overtime.ts`，**嚴禁寫成 `1.333`**。理由與 CLAUDE.md §2「高精度數值」同源：這些倍率最終會乘上工資變成錢，浮點在這裡沒有立足之地。本模組不做這個乘法，但它必須把一個**可以無誤差相乘的東西**交給薪資模組。
 
@@ -314,13 +313,13 @@ export function deriveOvertimeSegments(
 
 **決策**：新增 `LeaveCashOutEvent`，是本模組與薪資模組之間唯一的介面。
 
-| `LeaveCashOutReason` | 觸發時機 | 法源 |
-|---|---|---|
-| `OVERTIME_PAYMENT` | 加班單核准且選擇加班費 | §24 |
-| `ANNUAL_YEAR_END` | 特休年度終結未休且未協商遞延 | §38 IV |
-| `ANNUAL_CARRY_FORWARD_END` | 遞延年度終結仍未休 | §38 IV |
-| `COMPENSATORY_EXPIRED` | 補休期限屆滿未休 | §32-1 |
-| `TERMINATION_SETTLEMENT` | 契約終止時之結算 | §38 IV、§32-1 |
+| `LeaveCashOutReason`       | 觸發時機                     | 法源          |
+| -------------------------- | ---------------------------- | ------------- |
+| `OVERTIME_PAYMENT`         | 加班單核准且選擇加班費       | §24           |
+| `ANNUAL_YEAR_END`          | 特休年度終結未休且未協商遞延 | §38 IV        |
+| `ANNUAL_CARRY_FORWARD_END` | 遞延年度終結仍未休           | §38 IV        |
+| `COMPENSATORY_EXPIRED`     | 補休期限屆滿未休             | §32-1         |
+| `TERMINATION_SETTLEMENT`   | 契約終止時之結算             | §38 IV、§32-1 |
 
 事件內容：員工、分鐘數、級距（若有）、兩端的日約當分鐘、法源標記、來源 `LeaveGrant` 清單。**沒有金額欄位。**
 
@@ -343,28 +342,28 @@ export function deriveOvertimeSegments(
 
 依既有 `hr_enum_mirror.test.ts` 的慣例，有 schema 對應物者登記於 `MIRRORED`，純 UI 衍生者登記於 `UI_ONLY`。
 
-| Enum | 值 | 對應 |
-|---|---|---|
-| `LeaveAccrualMethod` | `NONE` / `SENIORITY_TIER` / `FIXED_PER_CYCLE` / `PER_EVENT` | MIRRORED |
-| `LeaveCycleBasis` | `HIRE_ANNIVERSARY` / `CALENDAR_YEAR` / `CALENDAR_MONTH` | MIRRORED |
-| `LeaveUnitBasis` | `FIXED_MINUTES` / `HALF_WORKDAY` / `FULL_WORKDAY` | MIRRORED |
-| `LeaveRoundingMode` | `UP` / `NEAREST` | MIRRORED |
-| `LeaveQuotaMode` | `QUOTA` / `UNLIMITED` | MIRRORED |
-| `LeaveProofRequirement` | `NONE` / `OPTIONAL` / `REQUIRED_OVER_THRESHOLD` | MIRRORED |
-| `LeaveGrantSource` | `SENIORITY_ACCRUAL` / `CARRY_FORWARD` / `OVERTIME_CONVERSION` / `MANUAL_ADJUSTMENT` | MIRRORED |
-| `LeaveLedgerEntryType` | `GRANT` / `CONSUME` / `RESTORE` / `EXPIRE` / `CASH_OUT` / `ADJUST` | MIRRORED |
-| `LeaveApprovalNodeKind` | `DIRECT_MANAGER` / `DEPARTMENT_MANAGER` / `HR` / `SPECIFIC_EMPLOYEE` | MIRRORED |
-| `LeaveApprovalStepStatus` | `PENDING` / `APPROVED` / `REJECTED` / `SKIPPED` | MIRRORED |
-| `LeaveDaySegment` | `FULL` / `MORNING` / `AFTERNOON` / `CUSTOM` | MIRRORED |
-| `LeaveCashOutReason` | 見 D13 表 | MIRRORED |
-| `LeaveConcurrencyAction` | `WARN` / `BLOCK` | MIRRORED |
-| `OvertimeFilingType` | `ADVANCE` / `POST_HOC` | MIRRORED |
-| `OvertimeCompensationMode` | `PAYMENT` / `COMPENSATORY_LEAVE` | MIRRORED |
-| `OvertimeEvidenceBasis` | `PUNCH_RECORD` / `MANUAL_DECLARATION` | MIRRORED |
-| `OvertimePremiumTier` | 見 D11 表 | MIRRORED |
-| `OvertimeRequestStatus` | `PENDING` / `APPROVED` / `REJECTED` / `WITHDRAWN` | MIRRORED |
-| `LeaveBalanceHealth` | `OK` / `STALE` / `MISMATCH` | UI_ONLY（勾稽結果，不落地） |
-| `OvertimeExceptionType` | `UNAPPROVED_OVERTIME` / `MISSING_PUNCH_EVIDENCE` | UI_ONLY（由打卡與加班單比對推導） |
+| Enum                       | 值                                                                                  | 對應                              |
+| -------------------------- | ----------------------------------------------------------------------------------- | --------------------------------- |
+| `LeaveAccrualMethod`       | `NONE` / `SENIORITY_TIER` / `FIXED_PER_CYCLE` / `PER_EVENT`                         | MIRRORED                          |
+| `LeaveCycleBasis`          | `HIRE_ANNIVERSARY` / `CALENDAR_YEAR` / `CALENDAR_MONTH`                             | MIRRORED                          |
+| `LeaveUnitBasis`           | `FIXED_MINUTES` / `HALF_WORKDAY` / `FULL_WORKDAY`                                   | MIRRORED                          |
+| `LeaveRoundingMode`        | `UP` / `NEAREST`                                                                    | MIRRORED                          |
+| `LeaveQuotaMode`           | `QUOTA` / `UNLIMITED`                                                               | MIRRORED                          |
+| `LeaveProofRequirement`    | `NONE` / `OPTIONAL` / `REQUIRED_OVER_THRESHOLD`                                     | MIRRORED                          |
+| `LeaveGrantSource`         | `SENIORITY_ACCRUAL` / `CARRY_FORWARD` / `OVERTIME_CONVERSION` / `MANUAL_ADJUSTMENT` | MIRRORED                          |
+| `LeaveLedgerEntryType`     | `GRANT` / `CONSUME` / `RESTORE` / `EXPIRE` / `CASH_OUT` / `ADJUST`                  | MIRRORED                          |
+| `LeaveApprovalNodeKind`    | `DIRECT_MANAGER` / `DEPARTMENT_MANAGER` / `HR` / `SPECIFIC_EMPLOYEE`                | MIRRORED                          |
+| `LeaveApprovalStepStatus`  | `PENDING` / `APPROVED` / `REJECTED` / `SKIPPED`                                     | MIRRORED                          |
+| `LeaveDaySegment`          | `FULL` / `MORNING` / `AFTERNOON` / `CUSTOM`                                         | MIRRORED                          |
+| `LeaveCashOutReason`       | 見 D13 表                                                                           | MIRRORED                          |
+| `LeaveConcurrencyAction`   | `WARN` / `BLOCK`                                                                    | MIRRORED                          |
+| `OvertimeFilingType`       | `ADVANCE` / `POST_HOC`                                                              | MIRRORED                          |
+| `OvertimeCompensationMode` | `PAYMENT` / `COMPENSATORY_LEAVE`                                                    | MIRRORED                          |
+| `OvertimeEvidenceBasis`    | `PUNCH_RECORD` / `MANUAL_DECLARATION`                                               | MIRRORED                          |
+| `OvertimePremiumTier`      | 見 D11 表                                                                           | MIRRORED                          |
+| `OvertimeRequestStatus`    | `PENDING` / `APPROVED` / `REJECTED` / `WITHDRAWN`                                   | MIRRORED                          |
+| `LeaveBalanceHealth`       | `OK` / `STALE` / `MISMATCH`                                                         | UI_ONLY（勾稽結果，不落地）       |
+| `OvertimeExceptionType`    | `UNAPPROVED_OVERTIME` / `MISSING_PUNCH_EVIDENCE`                                    | UI_ONLY（由打卡與加班單比對推導） |
 
 > **`CALENDAR_MONTH` 是寫 seed 時才發現的**：生理假是「每月得請一日」（性平法 §14），而年度週期表達不了它 —— 用年度額度 12 日會讓一個人在一月請完全年份，那不是這條規定的意思。這種缺口只有在把法規逐條落成資料時才會浮出來，這也是本計畫堅持先寫 seed 規格再寫引擎的理由。
 
@@ -1312,7 +1311,9 @@ model OvertimePolicy {
 export const LEAVE_ENTITLEMENT_ENGINE_VERSION = 1;
 
 // Info: (20260817 - Julian) 依年資與設定算出「到某個時點為止應該被授予哪些批次」
-export function deriveGrantSchedule(input: IGrantScheduleInput): IPlannedGrant[];
+export function deriveGrantSchedule(
+  input: IGrantScheduleInput,
+): IPlannedGrant[];
 
 // Info: (20260817 - Julian) 依 FIFO by expiresOn 決定一次扣減要動用哪些批次、各扣多少
 export function allocateConsumption(input: IConsumptionInput): IAllocation[];
@@ -1326,13 +1327,13 @@ export function resolveLeaveMinutes(input: IUnitResolutionInput): number;
 ### 6.2 §38 特休級距表（seed 資料，非程式碼）
 
 | `minSeniorityMonths` | `days` | `incrementDaysPerYear` | `maxDays` |
-|---|---|---|---|
-| 6 | 3 | — | — |
-| 12 | 7 | — | — |
-| 24 | 10 | — | — |
-| 36 | 14 | — | — |
-| 60 | 15 | — | — |
-| 120 | 16 | 1 | 30 |
+| -------------------- | ------ | ---------------------- | --------- |
+| 6                    | 3      | —                      | —         |
+| 12                   | 7      | —                      | —         |
+| 24                   | 10     | —                      | —         |
+| 36                   | 14     | —                      | —         |
+| 60                   | 15     | —                      | —         |
+| 120                  | 16     | 1                      | 30        |
 
 > 120 個月（10 年）該列的 `days = 16`：§38 I ⑥ 為「十年以上者，每一年加給一日」，即滿 10 年當年為 15 + 1 = 16 日，其後每年再加 1 日至 30 日為止。⚠️ **此推導需法務複核**（§3.2）：條文的「每一年加給一日」究竟自滿 10 年當年起算或次年起算，實務上有不同見解，差一日。在複核完成前，seed 以 16 落地並在該列標 `// ToDo: (20260817 - Julian) 起算年待法務複核`。
 
@@ -1360,7 +1361,6 @@ export function resolveLeaveMinutes(input: IUnitResolutionInput): number;
 > 繞不過去）與 `leavePolicyWriteSchema` 拒絕「年資級距 + 曆年制」這一個會踩到
 > §38 法定下界的組合。其餘曆年制（事假、病假、婚假…）是「一年內不超過」的
 > 上限額度，沒有逐年的法定下界要守，照常運作。內建假別無一使用被擋的組合。
-
 
 > **不是比累計總數。** 第一版寫成「到 `asOf` 為止兩制累計相比」，實作後發現那個定義沒有意義：週年制在週年日一次給整年份、曆年制在 1/1 一次給整年份，任意時點總有一方領先 —— 同一份設定在 2/28 判違法、3/1 判合法，那不是護欄是擲骰子。改以每一個完整年資年度為窗、兩制的每一筆授予都按「週期與窗的重疊天數 ÷ 週期總天數」歸屬，同一把尺量完，剩下的才是真正的多寡差異。
 >
@@ -1414,10 +1414,10 @@ DRAFT ──────▶ PENDING ──(每個節點依序)──▶ APPROVED
 
 ### 7.2 需求範例的規則設定
 
-| 規則 | `minDays` | `maxDays` | 節點序列 |
-|---|---|---|---|
-| 短假 | 0 | 3 | `DIRECT_MANAGER` |
-| 長假 | 3 | — | `DIRECT_MANAGER` → `DEPARTMENT_MANAGER` → `HR` |
+| 規則 | `minDays` | `maxDays` | 節點序列                                       |
+| ---- | --------- | --------- | ---------------------------------------------- |
+| 短假 | 0         | 3         | `DIRECT_MANAGER`                               |
+| 長假 | 3         | —         | `DIRECT_MANAGER` → `DEPARTMENT_MANAGER` → `HR` |
 
 `minDays` 含下界、`maxDays` 不含上界（右開），`assertRuleRangesDisjoint` 保證區間不重疊且覆蓋 `[0, ∞)`。**「3 天內」與「3 天以上」的邊界歸屬**：需求原文的兩句在 3.0 天處重疊。本計畫定為 `[0, 3)` 與 `[3, ∞)`，即恰好 3 天走長假規則 —— 這是一個必須被明講的取捨，不能留給實作者猜。租戶可改。
 
@@ -1433,16 +1433,16 @@ DRAFT ──────▶ PENDING ──(每個節點依序)──▶ APPROVED
 
 判定順序由上而下，第一個命中即決定該段級距。
 
-| # | 當日 `WorkDayType` | 條件 | 級距 |
-|---|---|---|---|
-| 1 | `REGULAR_OFF` | — | **擋下**（`FO_OVERTIME_ON_REGULAR_OFF`），須依 §40 報主管機關**核備**，見下 |
-| 2 | 任意（例假除外） | `isEmergency`（§32 IV 天災事變經報備查，且有記載） | `EMERGENCY_DOUBLE` |
-| 3 | `HOLIDAY` | 經同意出勤 | `HOLIDAY_DOUBLE` |
-| 4 | `REST_DAY` | 當日累計 ≤ 120 分鐘 | `REST_DAY_FIRST_2H` |
-| 5 | `REST_DAY` | 當日累計 > 120 分鐘 | `REST_DAY_BEYOND_2H` |
-| 6 | `WORK` | 當日延長累計 ≤ 120 分鐘 | `WEEKDAY_FIRST_2H` |
-| 7 | `WORK` | 當日延長累計 > 120 分鐘 | `WEEKDAY_BEYOND_2H` |
-| 8 | `SUSPENDED` | — | ⚠️ 待核對（停工日到工的加成標準） |
+| #   | 當日 `WorkDayType` | 條件                                               | 級距                                                                        |
+| --- | ------------------ | -------------------------------------------------- | --------------------------------------------------------------------------- |
+| 1   | `REGULAR_OFF`      | —                                                  | **擋下**（`FO_OVERTIME_ON_REGULAR_OFF`），須依 §40 報主管機關**核備**，見下 |
+| 2   | 任意（例假除外）   | `isEmergency`（§32 IV 天災事變經報備查，且有記載） | `EMERGENCY_DOUBLE`                                                          |
+| 3   | `HOLIDAY`          | 經同意出勤                                         | `HOLIDAY_DOUBLE`                                                            |
+| 4   | `REST_DAY`         | 當日累計 ≤ 120 分鐘                                | `REST_DAY_FIRST_2H`                                                         |
+| 5   | `REST_DAY`         | 當日累計 > 120 分鐘                                | `REST_DAY_BEYOND_2H`                                                        |
+| 6   | `WORK`             | 當日延長累計 ≤ 120 分鐘                            | `WEEKDAY_FIRST_2H`                                                          |
+| 7   | `WORK`             | 當日延長累計 > 120 分鐘                            | `WEEKDAY_BEYOND_2H`                                                         |
+| 8   | `SUSPENDED`        | —                                                  | ⚠️ 待核對（停工日到工的加成標準）                                           |
 
 一次加班跨越 #4/#5 或 #6/#7 邊界時，**切成兩段**，各自成為一筆 `OvertimeSegment`（D12 的補休分批入帳因此成立）。
 
@@ -1456,11 +1456,11 @@ DRAFT ──────▶ PENDING ──(每個節點依序)──▶ APPROVED
 
 `assertOvertimeLimits()` 在核准前檢查，任一不過即 `throw`：
 
-| 限制 | 值 | 設定來源 |
-|---|---|---|
-| 單日正常 + 延長 | ≤ 12 小時 | 法定，不可設定 |
-| 單月延長累計 | ≤ 46 小時；`extendedLimitAgreed` 為真時 ≤ 54 小時 | `OvertimePolicy.extendedLimitAgreed`（工會或勞資會議同意的記載） |
-| 每三個月延長累計 | ≤ 138 小時（僅 `extendedLimitAgreed` 為真時適用） | 法定 |
+| 限制             | 值                                                | 設定來源                                                         |
+| ---------------- | ------------------------------------------------- | ---------------------------------------------------------------- |
+| 單日正常 + 延長  | ≤ 12 小時                                         | 法定，不可設定                                                   |
+| 單月延長累計     | ≤ 46 小時；`extendedLimitAgreed` 為真時 ≤ 54 小時 | `OvertimePolicy.extendedLimitAgreed`（工會或勞資會議同意的記載） |
+| 每三個月延長累計 | ≤ 138 小時（僅 `extendedLimitAgreed` 為真時適用） | 法定                                                             |
 
 `extendedLimitAgreed` 必須同時填 `agreementRecordUrl` 與 `agreedAt` —— 一個沒有記載的「已同意」等於沒有同意，而系統會據此多放 8 小時。
 
@@ -1482,13 +1482,13 @@ DRAFT ──────▶ PENDING ──(每個節點依序)──▶ APPROVED
 
 **在動工之前必須先決定它是哪一種東西**，因為兩者的資料模型不同：
 
-| | A：§32 IV 的合法性依據 | B：超限的例外核准紀錄 |
-|---|---|---|
-| 超時為何被允許 | 原因屬天災／事變／突發事件，法有明文 | **不被允許。它就是違法** |
-| 報告書是什麼 | 法定通報的內容（受理機關、時限、格式皆為法定） | 公司內部的說明，不改變合法性 |
-| 上限 | 對這一類放行 | 仍然超出，只是不擋 |
-| 落地成什麼 | 掛在 `isEmergency` 上的報備紀錄（**已實作**，見上） | 一筆**違規**紀錄，須出現在統計與勞檢報表 |
-| 做錯的代價 | 把 B 當 A：系統對勞動檢查宣稱一件合法性，而它不成立 | 把 A 當 B：合法的天災加班被記成違規，統計失真且無法更正 |
+|                | A：§32 IV 的合法性依據                              | B：超限的例外核准紀錄                                   |
+| -------------- | --------------------------------------------------- | ------------------------------------------------------- |
+| 超時為何被允許 | 原因屬天災／事變／突發事件，法有明文                | **不被允許。它就是違法**                                |
+| 報告書是什麼   | 法定通報的內容（受理機關、時限、格式皆為法定）      | 公司內部的說明，不改變合法性                            |
+| 上限           | 對這一類放行                                        | 仍然超出，只是不擋                                      |
+| 落地成什麼     | 掛在 `isEmergency` 上的報備紀錄（**已實作**，見上） | 一筆**違規**紀錄，須出現在統計與勞檢報表                |
+| 做錯的代價     | 把 B 當 A：系統對勞動檢查宣稱一件合法性，而它不成立 | 把 A 當 B：合法的天災加班被記成違規，統計失真且無法更正 |
 
 **不阻擋這件事本身是對的**：事實已經發生，擋下來只會讓那段工時變成沒有紀錄的加班，而事實仍然留在 `AttendancePunch` 裡（同 ADR 024 §2.1 對未核准加班的論證）。但「不擋」與「合法」是兩件事，系統必須分得開。
 
@@ -1511,12 +1511,12 @@ DRAFT ──────▶ PENDING ──(每個節點依序)──▶ APPROVED
 
 ### 9.2 可見範圍
 
-| 觀看者 | 可見內容 |
-|---|---|
-| 本人 | 自己的全部：假別、事由、簽核進度 |
-| 同部門同事 | 姓名 + **「已排休」**，**不顯示假別、不顯示事由** |
-| 直屬主管 / 部門經理 | 直屬部屬的假別；事由僅在該單需其簽核時可見 |
-| HR | 全部 |
+| 觀看者              | 可見內容                                          |
+| ------------------- | ------------------------------------------------- |
+| 本人                | 自己的全部：假別、事由、簽核進度                  |
+| 同部門同事          | 姓名 + **「已排休」**，**不顯示假別、不顯示事由** |
+| 直屬主管 / 部門經理 | 直屬部屬的假別；事由僅在該單需其簽核時可見        |
+| HR                  | 全部                                              |
 
 **為什麼同事看不到假別**：病假、生理假、產假、安胎、家庭照顧假會直接揭露健康與生育狀況。行事曆的用途是「這週人手夠不夠」，而回答這個問題只需要知道「他不在」。多顯示的每一個欄位都是一次沒有必要的個資揭露 —— 依 ADR 018 的分級精神，最小揭露優先。
 
@@ -1530,38 +1530,38 @@ DRAFT ──────▶ PENDING ──(每個節點依序)──▶ APPROVED
 
 前綴 `/api/v1/user/account_book/[account_book_id]/hr/leave/`（加班為 `.../hr/overtime/`）。編號 L 系列，與出勤模組的 A1–A21 不衝突。
 
-| # | 方法 | 路徑 | 用途 |
-|---|---|---|---|
-| L1 | GET | `policy` | 假別設定清單 |
-| L2 | POST | `policy` | 新增自訂假別 |
-| L3 | PUT | `policy/[policy_id]` | 修改假別設定 |
-| L4 | DELETE | `policy/[policy_id]` | 停用假別（`isSystemDefined` 者拒絕刪除） |
-| L5 | GET | `policy/[policy_id]/tier` | 年資級距表 |
-| L6 | PUT | `policy/[policy_id]/tier` | 覆寫年資級距表（全量取代，非差異更新） |
-| L7 | GET | `balance` | 我的（或指定員工的）各假別餘額 |
-| L8 | GET | `balance/[employee_id]/ledger` | 額度異動明細（帳本） |
-| L9 | POST | `balance/[employee_id]/adjust` | 人工調整額度（HR，須填理由） |
-| L10 | GET | `request` | 假單清單（依角色過濾） |
-| L11 | POST | `request` | 送出假單 |
-| L12 | GET | `request/[request_id]` | 假單明細（含簽核鏈快照） |
-| L13 | DELETE | `request/[request_id]` | 撤回假單 |
-| L14 | POST | `request/[request_id]/approve` | 核准當前節點 |
-| L15 | POST | `request/[request_id]/reject` | 駁回 |
-| L16 | GET | `request/pending` | 待我簽核的假單 |
-| L17 | POST | `request/preview` | 試算：這樣請會扣多少、餘額夠不夠、要簽幾關、有無併休超限 |
-| L18 | GET | `calendar` | 假勤行事曆（部門 × 期間） |
-| L19 | GET | `concurrency_rule` | 併休上限規則 |
-| L20 | PUT | `concurrency_rule` | 設定併休上限 |
-| L21 | GET | `statistics` | 假別統計（含 §6.6 的病假 10 日提示） |
-| L22 | GET | `cash_out` | 待折現事件清單 |
-| L23 | GET | `cash_out/export` | 待折現事件 CSV（薪資模組上線前的交棒） |
-| L24 | GET | `../overtime/request` | 加班單清單 |
-| L25 | POST | `../overtime/request` | 送出加班單（事前或事後） |
-| L26 | POST | `../overtime/request/[id]/approve` | 核准加班單（同時決定認列分鐘與分段） |
-| L27 | POST | `../overtime/request/[id]/reject` | 駁回加班單 |
-| L28 | GET | `../overtime/summary` | 加班時數統計（月／季，含上限使用率） |
-| L29 | GET | `../overtime/unapproved` | 有打卡但無核准加班單的時段（D9 的 `UNAPPROVED_OVERTIME`） |
-| L30 | PUT | `../overtime/policy` | 加班政策（`extendedLimitAgreed` 與其記載） |
+| #   | 方法   | 路徑                               | 用途                                                      |
+| --- | ------ | ---------------------------------- | --------------------------------------------------------- |
+| L1  | GET    | `policy`                           | 假別設定清單                                              |
+| L2  | POST   | `policy`                           | 新增自訂假別                                              |
+| L3  | PUT    | `policy/[policy_id]`               | 修改假別設定                                              |
+| L4  | DELETE | `policy/[policy_id]`               | 停用假別（`isSystemDefined` 者拒絕刪除）                  |
+| L5  | GET    | `policy/[policy_id]/tier`          | 年資級距表                                                |
+| L6  | PUT    | `policy/[policy_id]/tier`          | 覆寫年資級距表（全量取代，非差異更新）                    |
+| L7  | GET    | `balance`                          | 我的（或指定員工的）各假別餘額                            |
+| L8  | GET    | `balance/[employee_id]/ledger`     | 額度異動明細（帳本）                                      |
+| L9  | POST   | `balance/[employee_id]/adjust`     | 人工調整額度（HR，須填理由）                              |
+| L10 | GET    | `request`                          | 假單清單（依角色過濾）                                    |
+| L11 | POST   | `request`                          | 送出假單                                                  |
+| L12 | GET    | `request/[request_id]`             | 假單明細（含簽核鏈快照）                                  |
+| L13 | DELETE | `request/[request_id]`             | 撤回假單                                                  |
+| L14 | POST   | `request/[request_id]/approve`     | 核准當前節點                                              |
+| L15 | POST   | `request/[request_id]/reject`      | 駁回                                                      |
+| L16 | GET    | `request/pending`                  | 待我簽核的假單                                            |
+| L17 | POST   | `request/preview`                  | 試算：這樣請會扣多少、餘額夠不夠、要簽幾關、有無併休超限  |
+| L18 | GET    | `calendar`                         | 假勤行事曆（部門 × 期間）                                 |
+| L19 | GET    | `concurrency_rule`                 | 併休上限規則                                              |
+| L20 | PUT    | `concurrency_rule`                 | 設定併休上限                                              |
+| L21 | GET    | `statistics`                       | 假別統計（含 §6.6 的病假 10 日提示）                      |
+| L22 | GET    | `cash_out`                         | 待折現事件清單                                            |
+| L23 | GET    | `cash_out/export`                  | 待折現事件 CSV（薪資模組上線前的交棒）                    |
+| L24 | GET    | `../overtime/request`              | 加班單清單                                                |
+| L25 | POST   | `../overtime/request`              | 送出加班單（事前或事後）                                  |
+| L26 | POST   | `../overtime/request/[id]/approve` | 核准加班單（同時決定認列分鐘與分段）                      |
+| L27 | POST   | `../overtime/request/[id]/reject`  | 駁回加班單                                                |
+| L28 | GET    | `../overtime/summary`              | 加班時數統計（月／季，含上限使用率）                      |
+| L29 | GET    | `../overtime/unapproved`           | 有打卡但無核准加班單的時段（D9 的 `UNAPPROVED_OVERTIME`） |
+| L30 | PUT    | `../overtime/policy`               | 加班政策（`extendedLimitAgreed` 與其記載）                |
 
 **L17 是本模組最重要的一支端點。** 需求說「員工可透過系統查看剩餘休假額度並送出申請」—— 若送出前看不到「這樣請會發生什麼」，員工就只能靠試錯，而每一次試錯都是一張要有人去駁回的單。L17 的回應是純計算、不寫入、不預扣。
 
@@ -1573,29 +1573,29 @@ DRAFT ──────▶ PENDING ──(每個節點依序)──▶ APPROVED
 
 新增流水號自既有最大值起算（現況 `VA000046` / `FO000011` / `NF000023` / `CF000008`）：
 
-| 常數 | 碼 | `ApiCode` | 語意 |
-|---|---|---|---|
-| `VA_LEAVE_INSUFFICIENT_BALANCE` | `VA000069` | `VALIDATION_ERROR` | 額度不足 |
-| `VA_LEAVE_UNIT_NOT_ALIGNED` | `VA000048` | `VALIDATION_ERROR` | 請假時間不符最小單位 |
-| `VA_LEAVE_ALREADY_REVIEWED` | `VA000049` | `VALIDATION_ERROR` | 該節點已簽核 |
-| `VA_LEAVE_CYCLE_DISADVANTAGEOUS` | `VA000050` | `VALIDATION_ERROR` | 曆年制給假低於週年制（D4 護欄） |
-| `VA_OVERTIME_EXCEEDS_DAILY_LIMIT` | `VA000051` | `VALIDATION_ERROR` | 逾單日 12 小時 |
-| `VA_OVERTIME_EXCEEDS_MONTHLY_LIMIT` | `VA000052` | `VALIDATION_ERROR` | 逾單月 46／54 小時 |
-| `VA_OVERTIME_EXCEEDS_QUARTERLY_LIMIT` | `VA000053` | `VALIDATION_ERROR` | 逾三個月 138 小時 |
-| `VA_OVERTIME_FILING_TYPE_MISMATCH` | `VA000054` | `VALIDATION_ERROR` | 事前／事後與時序不符（D10） |
-| `VA_LEAVE_ON_NON_WORKING_DAY` | `VA000055` | `VALIDATION_ERROR` | 在沒有上班班別的日子請假：會扣額度卻不產生任何效果 |
-| `FO_SELF_APPROVAL_FORBIDDEN` | `FO000014` | `FORBIDDEN` | 不得自我核准。**新增** —— 見下方說明 |
-| `FO_NOT_AUTHORIZED_REVIEWER` | `FO000015` | `FORBIDDEN` | 非當前簽核節點不得代簽。**新增** |
-| `FO_LEAVE_CALENDAR_SCOPE` | `FO000012` | `FORBIDDEN` | 逾越可見範圍（§9.2） |
-| `FO_OVERTIME_ON_REGULAR_OFF` | `FO000013` | `FORBIDDEN` | 例假日加班須依 §40 程序（§8.1 #3） |
-| `NF_LEAVE_POLICY` | `NF000028` | `NOT_FOUND` | 假別不存在或已停用 |
-| `NF_LEAVE_GRANT` | `NF000025` | `NOT_FOUND` | 額度批次不存在 |
-| `NF_OVERTIME_REQUEST` | `NF000026` | `NOT_FOUND` | 加班單不存在 |
-| `NF_LEAVE_REQUEST` | `NF000027` | `NOT_FOUND` | 假單不存在或不屬於本帳本 |
-| `CF_LEAVE_APPROVAL_CHAIN_UNRESOLVED` | `CF000009` | `CONFLICT` | 簽核鏈展開為空（D7） |
-| `CF_LEAVE_DAY_ALREADY_ACTIVE` | `CF000010` | `CONFLICT` | 同人同日已有生效假單（`activeKey` 撞擊） |
-| `CF_LEAVE_CONCURRENCY_EXCEEDED` | `CF000011` | `CONFLICT` | 併休超限且該假別可硬擋（D14） |
-| `CF_LEAVE_BALANCE_RACE` | `CF000012` | `CONFLICT` | 核准當下額度被他單先扣（D8） |
+| 常數                                  | 碼         | `ApiCode`          | 語意                                               |
+| ------------------------------------- | ---------- | ------------------ | -------------------------------------------------- |
+| `VA_LEAVE_INSUFFICIENT_BALANCE`       | `VA000069` | `VALIDATION_ERROR` | 額度不足                                           |
+| `VA_LEAVE_UNIT_NOT_ALIGNED`           | `VA000048` | `VALIDATION_ERROR` | 請假時間不符最小單位                               |
+| `VA_LEAVE_ALREADY_REVIEWED`           | `VA000049` | `VALIDATION_ERROR` | 該節點已簽核                                       |
+| `VA_LEAVE_CYCLE_DISADVANTAGEOUS`      | `VA000050` | `VALIDATION_ERROR` | 曆年制給假低於週年制（D4 護欄）                    |
+| `VA_OVERTIME_EXCEEDS_DAILY_LIMIT`     | `VA000051` | `VALIDATION_ERROR` | 逾單日 12 小時                                     |
+| `VA_OVERTIME_EXCEEDS_MONTHLY_LIMIT`   | `VA000052` | `VALIDATION_ERROR` | 逾單月 46／54 小時                                 |
+| `VA_OVERTIME_EXCEEDS_QUARTERLY_LIMIT` | `VA000053` | `VALIDATION_ERROR` | 逾三個月 138 小時                                  |
+| `VA_OVERTIME_FILING_TYPE_MISMATCH`    | `VA000054` | `VALIDATION_ERROR` | 事前／事後與時序不符（D10）                        |
+| `VA_LEAVE_ON_NON_WORKING_DAY`         | `VA000055` | `VALIDATION_ERROR` | 在沒有上班班別的日子請假：會扣額度卻不產生任何效果 |
+| `FO_SELF_APPROVAL_FORBIDDEN`          | `FO000014` | `FORBIDDEN`        | 不得自我核准。**新增** —— 見下方說明               |
+| `FO_NOT_AUTHORIZED_REVIEWER`          | `FO000015` | `FORBIDDEN`        | 非當前簽核節點不得代簽。**新增**                   |
+| `FO_LEAVE_CALENDAR_SCOPE`             | `FO000012` | `FORBIDDEN`        | 逾越可見範圍（§9.2）                               |
+| `FO_OVERTIME_ON_REGULAR_OFF`          | `FO000013` | `FORBIDDEN`        | 例假日加班須依 §40 程序（§8.1 #3）                 |
+| `NF_LEAVE_POLICY`                     | `NF000028` | `NOT_FOUND`        | 假別不存在或已停用                                 |
+| `NF_LEAVE_GRANT`                      | `NF000025` | `NOT_FOUND`        | 額度批次不存在                                     |
+| `NF_OVERTIME_REQUEST`                 | `NF000026` | `NOT_FOUND`        | 加班單不存在                                       |
+| `NF_LEAVE_REQUEST`                    | `NF000027` | `NOT_FOUND`        | 假單不存在或不屬於本帳本                           |
+| `CF_LEAVE_APPROVAL_CHAIN_UNRESOLVED`  | `CF000009` | `CONFLICT`         | 簽核鏈展開為空（D7）                               |
+| `CF_LEAVE_DAY_ALREADY_ACTIVE`         | `CF000010` | `CONFLICT`         | 同人同日已有生效假單（`activeKey` 撞擊）           |
+| `CF_LEAVE_CONCURRENCY_EXCEEDED`       | `CF000011` | `CONFLICT`         | 併休超限且該假別可硬擋（D14）                      |
+| `CF_LEAVE_BALANCE_RACE`               | `CF000012` | `CONFLICT`         | 核准當下額度被他單先扣（D8）                       |
 
 > `ApiCode` 與 `HTTP_MAP` 已於 2026-08-07 收斂為 `Record<ApiCode, number>`（見 `known_issues/api_http_status_dual_mapping.md`），新增錯誤碼不需再人工同步 HTTP 狀態。**新增 `ApiCode` 成員才需要。本模組不新增。**
 
@@ -1607,11 +1607,11 @@ DRAFT ──────▶ PENDING ──(每個節點依序)──▶ APPROVED
 
 `HrPiiTable` 由 5 張增至 **7 張**，新增：
 
-| 表 | 欄位 | 分級 | 理由 |
-|---|---|---|---|
-| `LeaveRequest` | `reasonCipher`（取代明文 `reason`） | **Tier 2 CONFIDENTIAL** | 請假事由會載明病名、家屬狀況、司法事由 |
-| `LeaveRequest` | `proofDocumentId` 指向的檔案 | **Tier 2 CONFIDENTIAL** | 診斷證明、死亡證明、結婚證書 |
-| `LeaveCashOutEvent` | — | Tier 3 INTERNAL | 只有分鐘與級距，無金額無事由 |
+| 表                  | 欄位                                | 分級                    | 理由                                   |
+| ------------------- | ----------------------------------- | ----------------------- | -------------------------------------- |
+| `LeaveRequest`      | `reasonCipher`（取代明文 `reason`） | **Tier 2 CONFIDENTIAL** | 請假事由會載明病名、家屬狀況、司法事由 |
+| `LeaveRequest`      | `proofDocumentId` 指向的檔案        | **Tier 2 CONFIDENTIAL** | 診斷證明、死亡證明、結婚證書           |
+| `LeaveCashOutEvent` | —                                   | Tier 3 INTERNAL         | 只有分鐘與級距，無金額無事由           |
 
 **假別本身（`leavePolicyId`）不加密**：它是複合查詢與統計的維度，加密後行事曆與統計端點都查不了。改以**可見範圍**控管（§9.2）—— 這與 `Employee.email` 「為複合唯一鍵成員，不加密」的取捨同型：不是所有敏感欄位都適合加密，有些該用授權控管。
 
@@ -1633,20 +1633,20 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 
 ## 13. 精度與時區
 
-| 量 | 型別 | 理由 |
-|---|---|---|
-| 額度分鐘、請假分鐘、加班分鐘 | `Int` | 整數計數，非金融量。同出勤模組 §D8 |
-| 授予日數 `grantedDays`、折現日數、`paidRatio` | `Prisma.Decimal` | 會直接乘上工資變成錢，適用 CLAUDE.md §2 |
-| **運算中的日數**（總日數、簽核門檻比較、日數 × 日約當） | **`IExactDays`（`bigint` 分數）** | 見下方說明（review B5／B6） |
-| 加成倍率 | `{ numerator: Int, denominator: Int }` 常數 | 嚴禁 `1.333`（D11） |
-| 日期 | `String "YYYY-MM-DD"` | 與 `AttendancePunch.workDate`、`EmployeeShiftDay.workDate` 同型別同語意 |
-| 時刻 | `Int` 分鐘（0–2879） | 同 `ShiftPattern`，跨夜可表達 |
+| 量                                                      | 型別                                        | 理由                                                                    |
+| ------------------------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------- |
+| 額度分鐘、請假分鐘、加班分鐘                            | `Int`                                       | 整數計數，非金融量。同出勤模組 §D8                                      |
+| 授予日數 `grantedDays`、折現日數、`paidRatio`           | `Prisma.Decimal`                            | 會直接乘上工資變成錢，適用 CLAUDE.md §2                                 |
+| **運算中的日數**（總日數、簽核門檻比較、日數 × 日約當） | **`IExactDays`（`bigint` 分數）**           | 見下方說明（review B5／B6）                                             |
+| 加成倍率                                                | `{ numerator: Int, denominator: Int }` 常數 | 嚴禁 `1.333`（D11）                                                     |
+| 日期                                                    | `String "YYYY-MM-DD"`                       | 與 `AttendancePunch.workDate`、`EmployeeShiftDay.workDate` 同型別同語意 |
+| 時刻                                                    | `Int` 分鐘（0–2879）                        | 同 `ShiftPattern`，跨夜可表達                                           |
 
 > ⚠️ Info: (20260820 - Julian) 「時刻」有**兩個值域**，混用過一次（review 第 8 輪）。
 >
-> | 來源 | 值域 | 意思 |
-> |---|---|---|
-> | 使用者填的 `"YYYY-MM-DDTHH:mm"` | 0–1439 | 該**日曆日**的牆上時鐘 |
+> | 來源                                            | 值域   | 意思                          |
+> | ----------------------------------------------- | ------ | ----------------------------- |
+> | 使用者填的 `"YYYY-MM-DDTHH:mm"`                 | 0–1439 | 該**日曆日**的牆上時鐘        |
 > | `ShiftPattern` / `LeaveDay` / `AttendancePunch` | 0–2879 | 距該**工作日** 00:00 的分鐘數 |
 >
 > 跨夜班（seed 的 `SITE-NIGHT` 是 1200–1740，20:00 → 次日 05:00）讓兩者不再相等：
@@ -1678,14 +1678,14 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 
 ### 14.1 現況盤點
 
-| 表 | 現況 | 處置 |
-|---|---|---|
-| `LeaveRequest` | Demo 版，`leaveType` 為 enum 欄位 | **重建**：`leaveType` → `leavePolicyId`，新增總量、證明、簽核鏈關聯 |
-| `LeaveDay` | Demo 版，只有 `workDate` 與 `activeKey` | **重建**：新增 `segment` / `minutes` / `dayEquivalentMinutes` |
-| `LeaveRecall` | Demo 版，三段式設計正確 | **保留**，僅隨 FK 調整 |
-| `enum LeaveType`（Prisma 與 `src/constants/leave.ts`） | 7 個值 | **降為 seed 資料**：7 個值成為 `LeavePolicy.code` 的初始列 |
-| `LEAVE_TYPE_I18N_KEY` | `Record<LeaveType, string>` | 改為 `LeavePolicy.code → i18n key`，自訂假別回退顯示 `name` |
-| `EMPLOYEE_SCHEDULED_LEAVE_TYPES` | 寫死 `[ANNUAL]` | **刪除**，改讀 `LeavePolicy.recallable`（該常數的 ToDo 已預告此事） |
+| 表                                                     | 現況                                    | 處置                                                                |
+| ------------------------------------------------------ | --------------------------------------- | ------------------------------------------------------------------- |
+| `LeaveRequest`                                         | Demo 版，`leaveType` 為 enum 欄位       | **重建**：`leaveType` → `leavePolicyId`，新增總量、證明、簽核鏈關聯 |
+| `LeaveDay`                                             | Demo 版，只有 `workDate` 與 `activeKey` | **重建**：新增 `segment` / `minutes` / `dayEquivalentMinutes`       |
+| `LeaveRecall`                                          | Demo 版，三段式設計正確                 | **保留**，僅隨 FK 調整                                              |
+| `enum LeaveType`（Prisma 與 `src/constants/leave.ts`） | 7 個值                                  | **降為 seed 資料**：7 個值成為 `LeavePolicy.code` 的初始列          |
+| `LEAVE_TYPE_I18N_KEY`                                  | `Record<LeaveType, string>`             | 改為 `LeavePolicy.code → i18n key`，自訂假別回退顯示 `name`         |
+| `EMPLOYEE_SCHEDULED_LEAVE_TYPES`                       | 寫死 `[ANNUAL]`                         | **刪除**，改讀 `LeavePolicy.recallable`（該常數的 ToDo 已預告此事） |
 
 ### 14.2 為什麼是「不遷移，重種」
 
@@ -1704,15 +1704,15 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 
 ## 15. 里程碑
 
-| # | 內容 | 交付判準 |
-|---|---|---|
+| #     | 內容           | 交付判準                                                                                                                                                                                                            |
+| ----- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **1** | 資料模型與設定 | `LeavePolicy` / `LeaveAccrualTier` 落地；seed 產出勞基法內建假別（僅 §3.1 已查證者）並通過 T23；`leave_policy_no_code_branching.test.ts`（T19）先於任何規則引擎程式碼存在；`WorkDayType.SUSPENDED` 補上；L1–L6 可用 |
-| **2** | 額度引擎與帳本 | `leave_entitlement_rules.ts` 純函數 + 單元測試；`assertLeavePolicyUnit` / `assertGrantSource` 擋在 repository（T24、T25）；`LeaveGrant` / `LeaveLedgerEntry` / `LeaveBalance` 落地；每日勾稽 Worker；L7–L9 可用 |
-| **3** | 請假與簽核 | 簽核鏈快照、SoD、`activeKey` 投影；`assertRuleRangesDisjoint`（T27）；`LeaveRequestService` 與 unit-of-work repository（T8、T28）；L10–L17 可用；A11 進入相容期 |
-| **4** | 加班 | `overtime_rules.ts` 純函數 + 上限護欄；`assertOvertimeFilingType`（T26）；補休分批入帳；L24–L30 可用 |
-| **5** | 行事曆與併休 | L18–L20；可見範圍分級；移除 `leaveType` 相容欄位 |
-| **6** | 折現與交棒 | `LeaveCashOutEvent`；年度終結 Worker；§6.6 的 115-01-01 輸出；L21–L23 |
-| **7** | 法務複核與收斂 | §3.2 所有 ⚠️ 逐項結案；`ToDo:` 清空（CLAUDE.md §4：Release 前必須全數清空） |
+| **2** | 額度引擎與帳本 | `leave_entitlement_rules.ts` 純函數 + 單元測試；`assertLeavePolicyUnit` / `assertGrantSource` 擋在 repository（T24、T25）；`LeaveGrant` / `LeaveLedgerEntry` / `LeaveBalance` 落地；每日勾稽 Worker；L7–L9 可用     |
+| **3** | 請假與簽核     | 簽核鏈快照、SoD、`activeKey` 投影；`assertRuleRangesDisjoint`（T27）；`LeaveRequestService` 與 unit-of-work repository（T8、T28）；L10–L17 可用；A11 進入相容期                                                     |
+| **4** | 加班           | `overtime_rules.ts` 純函數 + 上限護欄；`assertOvertimeFilingType`（T26）；補休分批入帳；L24–L30 可用                                                                                                                |
+| **5** | 行事曆與併休   | L18–L20；可見範圍分級；移除 `leaveType` 相容欄位                                                                                                                                                                    |
+| **6** | 折現與交棒     | `LeaveCashOutEvent`；年度終結 Worker；§6.6 的 115-01-01 輸出；L21–L23                                                                                                                                               |
+| **7** | 法務複核與收斂 | §3.2 所有 ⚠️ 逐項結案；`ToDo:` 清空（CLAUDE.md §4：Release 前必須全數清空）                                                                                                                                         |
 
 **里程碑 7 不是可選的。** 本文件目前有 8 個 ⚠️ 待核對項，其中 3 個（施行細則 §24、生理假併計、§40 例假出勤）直接決定程式行為。在它們結案之前，本模組不得標記為 Production Ready。
 
@@ -1720,37 +1720,37 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 
 ## 16. 測試矩陣
 
-| # | 檔案 | 覆蓋 | 狀態／里程碑 |
-|---|---|---|---|
-| T1 | `leave_entitlement_rules.test.ts` | §38 六個級距的邊界（滿 6 月前一日／當日、滿 10 年、封頂 30 日） | ✅ 已有 |
-| T2 | `leave_cycle_basis.test.ts` | 到職日制 vs 曆年制；首年比例；跨級距年度 | ✅ 已有 |
-| T3 | `leave_cycle_guard.test.ts` | D4 護欄：曆年制低於週年制必 `throw` | ✅ 已有 |
-| T4 | `leave_unit_boundary.test.ts` | 半小時／半天／整天；奇數 `requiredWorkMinutes`；`UP` 與 `NEAREST` | ✅ 已有 |
-| T5 | `leave_allocation_fifo.test.ts` | FIFO by `expiresOn`；同到期日以 `createdAt` 為序；跨批次扣減 | ✅ 已有 |
-| T6 | `leave_ledger_conservation.test.ts` | `Σ(deltaMinutes) === LeaveBalance.remainingMinutes`；`rebuildLeaveBalance` 冪等 | ✅ **2026-08-19 補**（review B8）。記憶體替身，不含列鎖與交易隔離 —— 那是 T10 |
-| T7 | `leave_ledger_idempotency.test.ts` | 同 `idempotencyKey` 重跑不重複入帳 | ❌ 未寫。里程碑 2。冪等鍵的唯一索引在 T6 以手工比對代替，真實的 P2002 未驗 |
-| T8 | `leave_approval_chain.test.ts` | 規則展開；相鄰去重；`escalatedReason`；空鏈必 `throw`（D7） | ✅ 已有 |
-| T9 | `leave_approval_sod.test.ts` | 四條 SoD；`pendingKey` 唯一性 | ❌ 未寫。里程碑 2。四條 SoD 目前只有 T28 涵蓋其中兩條 |
-| T10 | `leave_balance_race.test.ts` | D8：兩單併發核准，第二單以 `count === 0` 判輸 | ❌ 未寫。**需要真的 PostgreSQL**，里程碑 3 與勾稽 Worker 一起做。不可用替身：它驗的正是列鎖 |
-| T11 | `leave_projection.test.ts` | 核准投影 `dayType = LEAVE`；駁回不投影；銷假投影回 `WORK` + 班別 | ❌ 未寫。里程碑 2 |
-| T12 | `overtime_rules.test.ts` | §8.1 切段表逐條；跨 120 分鐘邊界切兩段 | ✅ 已有 |
-| T13 | `overtime_limits.test.ts` | 12h／46h／54h／138h；`extendedLimitAgreed` 未附記載時退回 46h | ✅ 已有 |
-| T14 | `overtime_recognition.test.ts` | D9：核准 ∩ 事實取小；無打卡走 `MANUAL_DECLARATION` | ✅ 已有 |
-| T15 | `overtime_to_comp_leave.test.ts` | D12：一段一筆 grant；1:1 不乘倍率；級距隨批次保留 | ✅ 已有 |
-| T16 | `leave_calendar_scope.test.ts` | §9.2 四種角色的可見欄位；同事看不到假別 | ❌ 未寫。里程碑 5（可見範圍分級屆時才收斂） |
-| T17 | `leave_concurrency.test.ts` | D14：特休只警示不擋；`employerMayReject` 為真才硬擋 | ❌ 未寫。里程碑 3 |
-| T18 | `leave_pii_invariant.test.ts` | `reasonCipher` 三組合檢查；AAD 綁定；`randomUUID()` 而非 `@default(uuid())` | ❌ 未寫。里程碑 2。PII 不變式本身已在 `hr_pii_invariant.test.ts`，缺的是假單這一側 |
-| T19 | `leave_policy_no_code_branching.test.ts` | 靜態檢查：規則引擎未對 `LeavePolicy.code` 做 if/switch（D1） | ✅ **2026-08-19 補**（review B8）。AST 掃描，13 個檔、四種寫法 |
-| T20 | `hr_enum_mirror.test.ts`（既有，擴充） | §5.1 新增 enum 全數登記 | ✅ 已有 |
-| T21 | `leave_i18n_keys.test.ts` | 五語系（en/ja/ko/zh_cn/zh_tw）key 齊備；比照 `attendance_i18n_keys.test.ts` | ❌ 未寫。里程碑 2。`attendance_i18n_keys.test.ts` 已掃全 `src`，實質涵蓋大部分 |
-| T22 | `leave_cash_out.test.ts` | 年度終結、遞延屆期、補休屆期、契約終止四條路徑；事件無金額欄位；`cashOutOnExpiry` 為真時必先產事件再 `EXPIRE`（ADR 022 §8.5） | ❌ 未寫。里程碑 4（折現 Worker 尚未存在） |
-| T23 | `leave_seed_integrity.test.ts` | 每個帳本都有完整的內建假別；`isSystemDefined` 者不可刪除；seed 只落地 §3.1 已查證的數字（ADR 021 §5） | ⚠️ **2026-08-19 部分補**（review B8）。驗的是 seed **規格**；「這個帳本真的種進去了嗎」需要 DB，隨勾稽 Worker（里程碑 3） |
-| T24 | `leave_policy_invariant.test.ts` | `assertLeavePolicyUnit`：單位基準與分鐘數的雙向約束、能否整除 60、年資級距不得帶固定日數、不限額度不得標折現、自我併計 | ✅ 已有 |
-| T25 | `leave_grant_invariant.test.ts` | `assertGrantSource`：來源與 `overtimeSegmentId` 雙向、§32-1 的 1:1、`grantedMinutes` 可驗算、到期日不得早於週期結束 | ✅ 已有 |
-| T26 | `overtime_request_invariant.test.ts` | `assertOvertimeFilingType`：事前／事後與送出時點、已核准必須說得出分鐘數、認列不得超過核准 | ✅ 已有 |
-| T27 | `leave_approval_rule_invariant.test.ts` | `assertRuleRangesDisjoint`：自 0 起、首尾相接、末段無上界；錯誤訊息分得出「重疊」與「有洞」 | ✅ 已有 |
-| T28 | `leave_request_service.test.ts` | 送出→簽核→扣額度的編排：試算與送出算出同一組數字、不預扣、四條 SoD、中間節點不扣額度、最後一關前置檢查、`BALANCE_RACE` 與 `ALREADY_REVIEWED` 分流 | ✅ 已有 |
-| T29 | `leave_error_codes.test.ts` | 模組引用的 21 個錯誤碼皆存在、家族正確、代碼全域不重複。**在 `tsc --noEmit` 跑不動的期間補位**（schema 未套用前整包型別檢查起不來，而那正是漏掉不存在常數的窗口） | ✅ 已有 |
+| #   | 檔案                                     | 覆蓋                                                                                                                                                              | 狀態／里程碑                                                                                                              |
+| --- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| T1  | `leave_entitlement_rules.test.ts`        | §38 六個級距的邊界（滿 6 月前一日／當日、滿 10 年、封頂 30 日）                                                                                                   | ✅ 已有                                                                                                                   |
+| T2  | `leave_cycle_basis.test.ts`              | 到職日制 vs 曆年制；首年比例；跨級距年度                                                                                                                          | ✅ 已有                                                                                                                   |
+| T3  | `leave_cycle_guard.test.ts`              | D4 護欄：曆年制低於週年制必 `throw`                                                                                                                               | ✅ 已有                                                                                                                   |
+| T4  | `leave_unit_boundary.test.ts`            | 半小時／半天／整天；奇數 `requiredWorkMinutes`；`UP` 與 `NEAREST`                                                                                                 | ✅ 已有                                                                                                                   |
+| T5  | `leave_allocation_fifo.test.ts`          | FIFO by `expiresOn`；同到期日以 `createdAt` 為序；跨批次扣減                                                                                                      | ✅ 已有                                                                                                                   |
+| T6  | `leave_ledger_conservation.test.ts`      | `Σ(deltaMinutes) === LeaveBalance.remainingMinutes`；`rebuildLeaveBalance` 冪等                                                                                   | ✅ **2026-08-19 補**（review B8）。記憶體替身，不含列鎖與交易隔離 —— 那是 T10                                             |
+| T7  | `leave_ledger_idempotency.test.ts`       | 同 `idempotencyKey` 重跑不重複入帳                                                                                                                                | ❌ 未寫。里程碑 2。冪等鍵的唯一索引在 T6 以手工比對代替，真實的 P2002 未驗                                                |
+| T8  | `leave_approval_chain.test.ts`           | 規則展開；相鄰去重；`escalatedReason`；空鏈必 `throw`（D7）                                                                                                       | ✅ 已有                                                                                                                   |
+| T9  | `leave_approval_sod.test.ts`             | 四條 SoD；`pendingKey` 唯一性                                                                                                                                     | ❌ 未寫。里程碑 2。四條 SoD 目前只有 T28 涵蓋其中兩條                                                                     |
+| T10 | `leave_balance_race.test.ts`             | D8：兩單併發核准，第二單以 `count === 0` 判輸                                                                                                                     | ❌ 未寫。**需要真的 PostgreSQL**，里程碑 3 與勾稽 Worker 一起做。不可用替身：它驗的正是列鎖                               |
+| T11 | `leave_projection.test.ts`               | 核准投影 `dayType = LEAVE`；駁回不投影；銷假投影回 `WORK` + 班別                                                                                                  | ❌ 未寫。里程碑 2                                                                                                         |
+| T12 | `overtime_rules.test.ts`                 | §8.1 切段表逐條；跨 120 分鐘邊界切兩段                                                                                                                            | ✅ 已有                                                                                                                   |
+| T13 | `overtime_limits.test.ts`                | 12h／46h／54h／138h；`extendedLimitAgreed` 未附記載時退回 46h                                                                                                     | ✅ 已有                                                                                                                   |
+| T14 | `overtime_recognition.test.ts`           | D9：核准 ∩ 事實取小；無打卡走 `MANUAL_DECLARATION`                                                                                                                | ✅ 已有                                                                                                                   |
+| T15 | `overtime_to_comp_leave.test.ts`         | D12：一段一筆 grant；1:1 不乘倍率；級距隨批次保留                                                                                                                 | ✅ 已有                                                                                                                   |
+| T16 | `leave_calendar_scope.test.ts`           | §9.2 四種角色的可見欄位；同事看不到假別                                                                                                                           | ❌ 未寫。里程碑 5（可見範圍分級屆時才收斂）                                                                               |
+| T17 | `leave_concurrency.test.ts`              | D14：特休只警示不擋；`employerMayReject` 為真才硬擋                                                                                                               | ❌ 未寫。里程碑 3                                                                                                         |
+| T18 | `leave_pii_invariant.test.ts`            | `reasonCipher` 三組合檢查；AAD 綁定；`randomUUID()` 而非 `@default(uuid())`                                                                                       | ❌ 未寫。里程碑 2。PII 不變式本身已在 `hr_pii_invariant.test.ts`，缺的是假單這一側                                        |
+| T19 | `leave_policy_no_code_branching.test.ts` | 靜態檢查：規則引擎未對 `LeavePolicy.code` 做 if/switch（D1）                                                                                                      | ✅ **2026-08-19 補**（review B8）。AST 掃描，13 個檔、四種寫法                                                            |
+| T20 | `hr_enum_mirror.test.ts`（既有，擴充）   | §5.1 新增 enum 全數登記                                                                                                                                           | ✅ 已有                                                                                                                   |
+| T21 | `leave_i18n_keys.test.ts`                | 五語系（en/ja/ko/zh_cn/zh_tw）key 齊備；比照 `attendance_i18n_keys.test.ts`                                                                                       | ❌ 未寫。里程碑 2。`attendance_i18n_keys.test.ts` 已掃全 `src`，實質涵蓋大部分                                            |
+| T22 | `leave_cash_out.test.ts`                 | 年度終結、遞延屆期、補休屆期、契約終止四條路徑；事件無金額欄位；`cashOutOnExpiry` 為真時必先產事件再 `EXPIRE`（ADR 022 §8.5）                                     | ❌ 未寫。里程碑 4（折現 Worker 尚未存在）                                                                                 |
+| T23 | `leave_seed_integrity.test.ts`           | 每個帳本都有完整的內建假別；`isSystemDefined` 者不可刪除；seed 只落地 §3.1 已查證的數字（ADR 021 §5）                                                             | ⚠️ **2026-08-19 部分補**（review B8）。驗的是 seed **規格**；「這個帳本真的種進去了嗎」需要 DB，隨勾稽 Worker（里程碑 3） |
+| T24 | `leave_policy_invariant.test.ts`         | `assertLeavePolicyUnit`：單位基準與分鐘數的雙向約束、能否整除 60、年資級距不得帶固定日數、不限額度不得標折現、自我併計                                            | ✅ 已有                                                                                                                   |
+| T25 | `leave_grant_invariant.test.ts`          | `assertGrantSource`：來源與 `overtimeSegmentId` 雙向、§32-1 的 1:1、`grantedMinutes` 可驗算、到期日不得早於週期結束                                               | ✅ 已有                                                                                                                   |
+| T26 | `overtime_request_invariant.test.ts`     | `assertOvertimeFilingType`：事前／事後與送出時點、已核准必須說得出分鐘數、認列不得超過核准                                                                        | ✅ 已有                                                                                                                   |
+| T27 | `leave_approval_rule_invariant.test.ts`  | `assertRuleRangesDisjoint`：自 0 起、首尾相接、末段無上界；錯誤訊息分得出「重疊」與「有洞」                                                                       | ✅ 已有                                                                                                                   |
+| T28 | `leave_request_service.test.ts`          | 送出→簽核→扣額度的編排：試算與送出算出同一組數字、不預扣、四條 SoD、中間節點不扣額度、最後一關前置檢查、`BALANCE_RACE` 與 `ALREADY_REVIEWED` 分流                 | ✅ 已有                                                                                                                   |
+| T29 | `leave_error_codes.test.ts`              | 模組引用的 21 個錯誤碼皆存在、家族正確、代碼全域不重複。**在 `tsc --noEmit` 跑不動的期間補位**（schema 未套用前整包型別檢查起不來，而那正是漏掉不存在常數的窗口） | ✅ 已有                                                                                                                   |
 
 **T6 與 T19 是本模組的兩條紅線**：前者保證帳本沒有說謊，後者保證假別真的可設定而不是假裝可設定。
 
@@ -1766,25 +1766,26 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 
 ## 17. 已知缺口
 
-| # | 缺口 | 影響 | 處置 |
-|---|---|---|---|
-| 1 | §3.2 的 8 個 ⚠️ 待核對 | 3 個直接決定程式行為 | 里程碑 7；未結案前不得 Production Ready |
-| 2 | 薪資模組尚未存在 | 所有折現只到事件為止；「基準時薪」無來源 | 同 ADR 020 的處置：留明確接口，不猜 |
-| 3 | `Employee` 無「是否保留舊制年資」 | 與 ADR 020 同一個缺口；特休年資起算若涉及事業單位改組會失準 | 沿用 ADR 020 的待辦，不在本模組重複開 |
-| 4 | 代理人機制未做 | 主管出差時簽核卡住 | 里程碑 3 後評估；暫以 `SPECIFIC_EMPLOYEE` 節點手動繞行 |
-| 5 | 假別證明文件的保存期限未定 | 與 ADR 018 對打卡座標的待辦同型 | 併入 ADR 018 的保存期限議題一併處理 |
-| 6 | 行事曆未含加班 | 「誰在加班」與「誰在放假」是同一個營運問題的兩面 | 里程碑 5 evaluate；不影響本期交付 |
-| 7 | `deriveGrantSchedule` 對「年中到職且年中離職」未定義 | 離職當年的比例給假 | T2 的邊界案例，里程碑 2 補 |
-| 8 | **四種假別的日數或工資取決於「事件屬性」，`LeavePolicy` 只有單一 `annualDays` 與單一 `paidRatio`** | 喪假（親等 8/6/3 日）、產假（工資依年資滿六個月與否）、流產假（妊娠週數 4 星期／1 星期／5 日）、普通傷病假（住院與未住院上限不同、二年內另有合計上限） | 暫以 `accrualMethod = PER_EVENT` + `annualDays = null`，實際日數由 HR 於授予時輸入並記於 `LeaveGrant.reason`。**正解是把 `LeaveAccrualTier` 從「年資月數」推廣成通用的分級維度**；在推廣之前不得硬填一個數字 —— 填 8 日的喪假會讓祖父母喪假多給兩日，那不是保守而是錯誤。里程碑 2 決定是否推廣 |
-| 9 | **§6.3 的曆年制比例公式方向錯了** | 實作 `compareCycleBasisEntitlement` 後實測：一個 3/1 到職的人，週年制在 9/1 拿到法定 3 日，曆年制按「該年剩餘天數占比」只給 3 × 122/365 ≈ 1.1 日 —— 第一個年資年度就低於法定標準，而護欄一旦接上會擋下**所有**曆年制設定（因此**目前刻意不接**，改以不變式暫時只拒絕「年資級距 + 曆年制」，見 review B3） | 曆年制的實務作法是「把未來的年資額度**提前**給」，不是「把當期法定額度按比例砍掉」。公式須改為「不低於同期週年制法定日數」的下界形式。⚠️ 待法務確認函釋依據後修正，`leave_cycle_guard.test.ts` 已把現況釘成一條會紅的斷言，修正後改斷言而非刪測試 |
-| 10 | **`LeaveProofRequirement` 沒有「一律要求證明」這個值** | 公傷病假要職災認定文件、產假要診斷證明、婚假要結婚證書、喪假要訃聞 —— 這四種**與請假日數無關**，但 enum 只有 `NONE` / `OPTIONAL` / `REQUIRED_OVER_THRESHOLD` 三個值 | 這五個假別（含普通傷病假）原本標 `REQUIRED_OVER_THRESHOLD`，而 `ILeavePolicySeed` **當時根本沒有門檻欄位** —— 五列全部帶著 `proofThresholdDays = null` 落地且不報錯。已補 `proofThresholdDays` 欄位與雙向不變式（`REQUIRED_OVER_THRESHOLD ⇔ 門檻非 null 且 > 0`），並把五個假別**暫降為 `OPTIONAL`**。<br>⚠️ 降級是為了不在法規欄位上寫一個猜的數字，**不是**主張證明可有可無。<br>不變式**刻意不接受門檻 = 0**：那讀起來是「一律要求」，放行它等於用門檻欄位偷渡一個缺失的 enum 值，缺口從此不會有人再提。正解是新增 `LeaveProofRequirement.REQUIRED`，里程碑 2 決定 |
-| 11 | **`proofThresholdDays` 是公司政策，不是法定數字** | 勞工請假規則 §10 只說「雇主得要求勞工提出有關證明文件」，未訂日數門檻 | 內建 seed 一律為 null，由租戶在假別設定畫面自行填寫。**本模組不得提供「內建預設門檻」** —— 一個看起來像查證過的數字比空白更難被質疑 |
-| 12 | **§38 IV 的特休遞延協商沒有記載欄位** | 條文的原則是年度終結未休即**發給工資**，遞延是「經勞雇雙方協商同意」的例外，而協商是**逐個勞工**的。系統只有 `LeavePolicy.carryForwardMonths` 這個**整個假別**的設定，記不下「誰、哪一年、何時同意」 | 種子預設已由 12 改為 **0**（review 第 5 輪 M6）—— 先前的 12 等於替全體員工取得一個沒有人協商過的例外，且讓 `LeaveCashOutReason.ANNUAL_YEAR_END` 永遠不觸發。<br>⚠️ 改成 0 **不是**主張不得遞延：要遞延的公司在假別設定畫面調上去即可。但在協商記載的欄位補上之前，調上去仍然是**全體一律遞延** —— 那個限制留在這裡，不靠一個預設值假裝已經有了。<br>正解是一張逐勞工逐年度的協商同意記錄（同 `OvertimeEmergencyDeclaration` 之於 §32 IV 認定的形狀）。里程碑 2 決定 |
-| 13 | **併休規則沒有寫入路徑** | `LeaveConcurrencyRule` 全庫沒有任何 `create`／`update` 呼叫端，既有列只能由 SQL 進來 | `assertConcurrencyRule` 已寫好並掛在**讀取端**（`findConcurrencyStatus`）—— 那是它今天唯一咬得到東西的地方（review 第 5 輪 M2）。規則管理端點落地時，`create`／`update` 兩條路徑各呼叫它一次，讀取端那一次保留（seed 與 SQL 仍不經過 service） |
-| 14 | **請假的證明文件沒有上傳路徑** | `proofRequirement` / `proofThresholdDays` 那套規則有七八個檔案在讀，而「文件在哪」沒有任何地方存得下 | schema 原有一個 `LeaveRequest.proofDocumentId String?`：沒有 `@relation`、沒有租戶檢查、零讀取零寫入 —— 也就是「需要證明文件」上線了、「文件在哪」永遠 null。已於 review 第 6 輪 M18 **移除**：一個永遠 null 的欄位讀起來像「這張單沒附證明」，而真相是「這個系統從來沒有地方可以附」，留著比拆掉更難被下一個人發現。<br>正解是一整條路徑（儲存、租戶隔離、Tier 2 加密、保存期限，見缺口 5），不是一個欄位。補的時候連同 `@relation` 一起加 |
-| 15 | **額度快取的勾稽已排程，但沒有告警** | `services/cron/leave_balance_reconcile.cron.ts` 每小時對帳一次並覆寫，差異只寫進 `logger.warn` | 「快取與帳本分岔過幾次」是 ADR 022 §8.2 要的訊號，而一行 log 沒有人會看。ToDo: 差異數接上專案的告警管道（同 `wallet_audit.cron` 對守恆違反的處置）。在那之前，上線後前幾天請人工看一次 `[leave] balance mismatch` |
-| 16 | **同日多張加班單的級距以「申請區間長度」為基準，不是認列分鐘；且分段落地後不重算** | 打卡短於申請時級距偏高一級（對勞工有利）。**但偏差不是單向的**：級距只看核准當下已存在的單，「較晚時段先核准、較早的事後補」會讓兩張都從 0 起算、都拿 1/3 —— 17–19 與 19–21 各 120 分實測 80 個工資單位，§24 I 下限 120，**少付 40**（review 第 15 輪） | 級距必須與**核准順序無關**，而分段一旦落地就不會被重算（更正流程未實作）。用認列分鐘的話，同一張單的級距取決於同日手足單是先核還是後核 —— 實測兩種順序差 20 個工資單位（review 第 13 輪第 1 條）。<br>少付的那條路徑由 `submit()` 擋住（`VA_OVERTIME_EARLIER_THAN_APPROVED`：同日已有起點更晚的已核准單時不得送出），而它叫人做的「撤回較晚那張、兩張一起重送」由 `revokeApproval`（`APPROVED → PENDING`）執行。<br>⚠️ **2026-08-21 更正**：那道閘上線時 `APPROVED` 還是終端狀態，五個 `updateMany` 全部 `where.status = PENDING` —— 補救**沒有執行者**，於是那 2 小時永久進不了系統，從少付 40 變成**少付 80**（review 第 7 輪 B1）。`revokeApproval` 是那句話的執行者，也是本缺口正解的第一塊。**擋下仍然不等於算對**。<br>**正解是核准當下對同日手足單一併重算並覆寫分段**，那要有更正流程；補上之後上界與那道閘都可以拿掉 |
-| 17 | **跨假別併計扣減（`mergesIntoPolicyId`）尚未實作，送出端一律擋下** | 設了併計的假別**完全不能用**（目前只有家庭照顧假，性平法 §20）。使用者看到 `VA_LEAVE_MERGE_NOT_IMPLEMENTED`，文案指向人資並建議改用其他假別 | §6.5 寫著「`allocateConsumption` 在扣減主假別後對被併入的假別再產一筆 `CONSUME`」，而 `mergesIntoPolicyId` 在**整個扣減路徑上零讀取端**（review 第 10 輪 B2）——`readConsumableGrants` 只收單一 `leavePolicyId`，`allocateConsumption` 收扁平 grants 陣列。<br>放行的後果是法定額度被繞過：請滿 7 日家庭照顧假之後事假仍是完整 14 日（合計 21 日），而 §20 的上限是 14 日 —— **每人每年多出 7 日**。<br>擋而不是猜一個實作：併計要動請假模組最精密的那個交易（附條件扣總量 → FIFO 逐批 → 逐日分錄），且**三條路徑要一起改** —— 核准的逐層扣減、銷假／駁回的逐層還原、送出前置檢查也要含被併入的假別。少了還原那一段，偏差方向會變成對勞工不利且無人報錯。<br>判準同計畫書對生理假的處置：「規則核對完成前不猜一個數字填進去」，這裡擴大為「規則寫了但沒有執行者時不放行」。<br>`leave_merge_gate.test.ts` 是**自我作廢**的：扣減路徑一出現 `mergesInto` 讀取端就會紅，提醒把那道閘一起移除 |
+| #   | 缺口                                                                                               | 影響                                                                                                                                                                                                                                                                                                      | 處置                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| --- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | §3.2 的 8 個 ⚠️ 待核對                                                                             | 3 個直接決定程式行為                                                                                                                                                                                                                                                                                      | 里程碑 7；未結案前不得 Production Ready                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 2   | 薪資模組尚未存在                                                                                   | 所有折現只到事件為止；「基準時薪」無來源                                                                                                                                                                                                                                                                  | 同 ADR 020 的處置：留明確接口，不猜                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 3   | `Employee` 無「是否保留舊制年資」                                                                  | 與 ADR 020 同一個缺口；特休年資起算若涉及事業單位改組會失準                                                                                                                                                                                                                                               | 沿用 ADR 020 的待辦，不在本模組重複開                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 4   | 代理人機制未做                                                                                     | 主管出差時簽核卡住                                                                                                                                                                                                                                                                                        | 里程碑 3 後評估；暫以 `SPECIFIC_EMPLOYEE` 節點手動繞行                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 5   | 假別證明文件的保存期限未定                                                                         | 與 ADR 018 對打卡座標的待辦同型                                                                                                                                                                                                                                                                           | 併入 ADR 018 的保存期限議題一併處理                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 6   | 行事曆未含加班                                                                                     | 「誰在加班」與「誰在放假」是同一個營運問題的兩面                                                                                                                                                                                                                                                          | 里程碑 5 evaluate；不影響本期交付                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 7   | `deriveGrantSchedule` 對「年中到職且年中離職」未定義                                               | 離職當年的比例給假                                                                                                                                                                                                                                                                                        | T2 的邊界案例，里程碑 2 補                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 8   | **四種假別的日數或工資取決於「事件屬性」，`LeavePolicy` 只有單一 `annualDays` 與單一 `paidRatio`** | 喪假（親等 8/6/3 日）、產假（工資依年資滿六個月與否）、流產假（妊娠週數 4 星期／1 星期／5 日）、普通傷病假（住院與未住院上限不同、二年內另有合計上限）                                                                                                                                                    | 暫以 `accrualMethod = PER_EVENT` + `annualDays = null`，實際日數由 HR 於授予時輸入並記於 `LeaveGrant.reason`。**正解是把 `LeaveAccrualTier` 從「年資月數」推廣成通用的分級維度**；在推廣之前不得硬填一個數字 —— 填 8 日的喪假會讓祖父母喪假多給兩日，那不是保守而是錯誤。里程碑 2 決定是否推廣                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 9   | **§6.3 的曆年制比例公式方向錯了**                                                                  | 實作 `compareCycleBasisEntitlement` 後實測：一個 3/1 到職的人，週年制在 9/1 拿到法定 3 日，曆年制按「該年剩餘天數占比」只給 3 × 122/365 ≈ 1.1 日 —— 第一個年資年度就低於法定標準，而護欄一旦接上會擋下**所有**曆年制設定（因此**目前刻意不接**，改以不變式暫時只拒絕「年資級距 + 曆年制」，見 review B3） | 曆年制的實務作法是「把未來的年資額度**提前**給」，不是「把當期法定額度按比例砍掉」。公式須改為「不低於同期週年制法定日數」的下界形式。⚠️ 待法務確認函釋依據後修正，`leave_cycle_guard.test.ts` 已把現況釘成一條會紅的斷言，修正後改斷言而非刪測試                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 10  | **`LeaveProofRequirement` 沒有「一律要求證明」這個值**                                             | 公傷病假要職災認定文件、產假要診斷證明、婚假要結婚證書、喪假要訃聞 —— 這四種**與請假日數無關**，但 enum 只有 `NONE` / `OPTIONAL` / `REQUIRED_OVER_THRESHOLD` 三個值                                                                                                                                       | 這五個假別（含普通傷病假）原本標 `REQUIRED_OVER_THRESHOLD`，而 `ILeavePolicySeed` **當時根本沒有門檻欄位** —— 五列全部帶著 `proofThresholdDays = null` 落地且不報錯。已補 `proofThresholdDays` 欄位與雙向不變式（`REQUIRED_OVER_THRESHOLD ⇔ 門檻非 null 且 > 0`），並把五個假別**暫降為 `OPTIONAL`**。<br>⚠️ 降級是為了不在法規欄位上寫一個猜的數字，**不是**主張證明可有可無。<br>不變式**刻意不接受門檻 = 0**：那讀起來是「一律要求」，放行它等於用門檻欄位偷渡一個缺失的 enum 值，缺口從此不會有人再提。正解是新增 `LeaveProofRequirement.REQUIRED`，里程碑 2 決定                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 11  | **`proofThresholdDays` 是公司政策，不是法定數字**                                                  | 勞工請假規則 §10 只說「雇主得要求勞工提出有關證明文件」，未訂日數門檻                                                                                                                                                                                                                                     | 內建 seed 一律為 null，由租戶在假別設定畫面自行填寫。**本模組不得提供「內建預設門檻」** —— 一個看起來像查證過的數字比空白更難被質疑                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 12  | **§38 IV 的特休遞延協商沒有記載欄位**                                                              | 條文的原則是年度終結未休即**發給工資**，遞延是「經勞雇雙方協商同意」的例外，而協商是**逐個勞工**的。系統只有 `LeavePolicy.carryForwardMonths` 這個**整個假別**的設定，記不下「誰、哪一年、何時同意」                                                                                                      | 種子預設已由 12 改為 **0**（review 第 5 輪 M6）—— 先前的 12 等於替全體員工取得一個沒有人協商過的例外，且讓 `LeaveCashOutReason.ANNUAL_YEAR_END` 永遠不觸發。<br>⚠️ 改成 0 **不是**主張不得遞延：要遞延的公司在假別設定畫面調上去即可。但在協商記載的欄位補上之前，調上去仍然是**全體一律遞延** —— 那個限制留在這裡，不靠一個預設值假裝已經有了。<br>正解是一張逐勞工逐年度的協商同意記錄（同 `OvertimeEmergencyDeclaration` 之於 §32 IV 認定的形狀）。里程碑 2 決定                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 13  | **併休規則沒有寫入路徑**                                                                           | `LeaveConcurrencyRule` 全庫沒有任何 `create`／`update` 呼叫端，既有列只能由 SQL 進來                                                                                                                                                                                                                      | `assertConcurrencyRule` 已寫好並掛在**讀取端**（`findConcurrencyStatus`）—— 那是它今天唯一咬得到東西的地方（review 第 5 輪 M2）。規則管理端點落地時，`create`／`update` 兩條路徑各呼叫它一次，讀取端那一次保留（seed 與 SQL 仍不經過 service）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 14  | **請假的證明文件沒有上傳路徑**                                                                     | `proofRequirement` / `proofThresholdDays` 那套規則有七八個檔案在讀，而「文件在哪」沒有任何地方存得下                                                                                                                                                                                                      | schema 原有一個 `LeaveRequest.proofDocumentId String?`：沒有 `@relation`、沒有租戶檢查、零讀取零寫入 —— 也就是「需要證明文件」上線了、「文件在哪」永遠 null。已於 review 第 6 輪 M18 **移除**：一個永遠 null 的欄位讀起來像「這張單沒附證明」，而真相是「這個系統從來沒有地方可以附」，留著比拆掉更難被下一個人發現。<br>正解是一整條路徑（儲存、租戶隔離、Tier 2 加密、保存期限，見缺口 5），不是一個欄位。補的時候連同 `@relation` 一起加                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 15  | **額度快取的勾稽已排程，但沒有告警**                                                               | `services/cron/leave_balance_reconcile.cron.ts` 每小時對帳一次並覆寫，差異只寫進 `logger.warn`                                                                                                                                                                                                            | 「快取與帳本分岔過幾次」是 ADR 022 §8.2 要的訊號，而一行 log 沒有人會看。ToDo: 差異數接上專案的告警管道（同 `wallet_audit.cron` 對守恆違反的處置）。在那之前，上線後前幾天請人工看一次 `[leave] balance mismatch`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 16  | **同日多張加班單的級距以「申請區間長度」為基準，不是認列分鐘；且分段落地後不重算**                 | 打卡短於申請時級距偏高一級（對勞工有利）。**但偏差不是單向的**：級距只看核准當下已存在的單，「較晚時段先核准、較早的事後補」會讓兩張都從 0 起算、都拿 1/3 —— 17–19 與 19–21 各 120 分實測 80 個工資單位，§24 I 下限 120，**少付 40**（review 第 15 輪）                                                   | 級距必須與**核准順序無關**，而分段一旦落地就不會被重算（更正流程未實作）。用認列分鐘的話，同一張單的級距取決於同日手足單是先核還是後核 —— 實測兩種順序差 20 個工資單位（review 第 13 輪第 1 條）。<br>少付的那條路徑由 `submit()` 擋住（`VA_OVERTIME_EARLIER_THAN_APPROVED`：同日已有起點更晚的已核准單時不得送出），而它叫人做的「撤回較晚那張、兩張一起重送」由 `revokeApproval`（`APPROVED → PENDING`）執行。<br>⚠️ **2026-08-21 更正**：那道閘上線時 `APPROVED` 還是終端狀態，五個 `updateMany` 全部 `where.status = PENDING` —— 補救**沒有執行者**，於是那 2 小時永久進不了系統，從少付 40 變成**少付 80**（review 第 7 輪 B1）。`revokeApproval` 是那句話的執行者，也是本缺口正解的第一塊。**擋下仍然不等於算對**。<br>**正解是核准當下對同日手足單一併重算並覆寫分段**，那要有更正流程；補上之後上界與那道閘都可以拿掉                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 17  | **跨假別併計扣減（`mergesIntoPolicyId`）尚未實作，送出／試算／核准三處一律擋下**                   | 設了併計的假別**完全不能用**（目前只有家庭照顧假，性平法 §20）。使用者看到 `VA_LEAVE_MERGE_NOT_IMPLEMENTED`，文案指向人資並建議改用其他假別                                                                                                                                                               | §6.5 寫著「`allocateConsumption` 在扣減主假別後對被併入的假別再產一筆 `CONSUME`」，而 `mergesIntoPolicyId` 在**整個扣減路徑上零讀取端**（review 第 10 輪 B2）——`readConsumableGrants` 只收單一 `leavePolicyId`，`allocateConsumption` 收扁平 grants 陣列。<br>放行的後果是法定額度被繞過：請滿 7 日家庭照顧假之後事假仍是完整 14 日（合計 21 日），而 §20 的上限是 14 日 —— **每人每年多出 7 日**。<br>擋而不是猜一個實作：併計要動請假模組最精密的那個交易（附條件扣總量 → FIFO 逐批 → 逐日分錄），且**三條路徑要一起改** —— 核准的逐層扣減、銷假／駁回的逐層還原、送出前置檢查也要含被併入的假別。少了還原那一段，偏差方向會變成對勞工不利且無人報錯。<br>判準同計畫書對生理假的處置：「規則核對完成前不猜一個數字填進去」，這裡擴大為「規則寫了但沒有執行者時不放行」。<br>`leave_merge_gate.test.ts` 是**自我作廢**的：扣減路徑一出現 `mergesInto` 讀取端就會紅，提醒把那道閘一起移除。<br>⚠️ **2026-08-21 更正（review 第二輪 R2）**：第一版只擋在 `submit()`。`approve()` 沒有閘，而那是**不需要任何舊資料的繞過路徑** —— HR 先用 `mergesIntoPolicyId: null` 建假別、員工送出（當下合法）、HR 再把併計目標設起來（假別設定支援的編輯）、主管核准 → 只扣一邊的額度。`preview()` 也沒有，於是它會回一個完整成功的試算，使用者被系統確認「你有 7 天可以請」，按下送出才被拒。現已收斂成 `LeaveRequestService.assertMergeNotImplemented()` 一支私有方法，三個入口各呼叫一次，並新增 `ILeavePolicyOption.isSelectable` 讓下拉選單在**使用者選之前**就把它灰掉。移除這道閘時要一起拿掉的是：三個呼叫端、那支私有方法、`isSelectable`，以及 `leave_merge_gate.test.ts` |
+| 18  | **勾稽 cron 比的是範圍級加總，看不到逐批守恆違反**                                                 | 若某一批的淨額為負而同假別另一批的正額把它遮住，每小時的勾稽 Worker 會回報「一致」。撤銷路徑已在交易內逐批擋下（見下方），但**帳本上既有的逐批負值沒有人會報**                                                                                                                                            | ADR 022 §2.3 要求守恆逐 `LeaveGrant` 成立，而 §8.1 的勾稽用的是 `sumLedgerMinutes`，它加總的是整個 `(accountBookId, employeeId, leavePolicyId)` 底下的所有批次（review 第二輪 R1）。<br>`revokeApproval` 這一條路已經補上逐批斷言（被撤銷的每一批淨額必須正好是 0），但那只蓋住撤銷；prod 上若已存在逐批負值，勾稽照樣說一致。<br>人工查法：`SELECT leave_grant_id, sum(delta_minutes) FROM leave_ledger_entry GROUP BY 1 HAVING sum(delta_minutes) < 0;`<br>補法是把勾稽改成逐批比對 —— 成本是每次掃描的列數從「每人每假別一列」變成「每人每假別每批一列」                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ### 17.1 ADR 的待辦與現況
 
@@ -1793,27 +1794,27 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 > 過期的 ✅ 標記與 review 的敘事 —— 四個地方各自腐爛，而讀 ADR 的人
 > 無從分辨哪一句還算數。
 
-| ADR | 項目 | 現況 | 症狀／備註 |
-|---|---|---|---|
-| 021 | 曆年制「不低於週年制」護欄接線 | ⛔ 未接 | 引擎與錯誤碼都在，但無人呼叫。成因是缺口 9 的公式本身會少給，接上會讓 11/13 個內建假別授予失敗。暫以 `assertLeavePolicyUnit` 拒絕「年資級距 + 曆年制」這一個會踩到 §38 下界的組合 |
-| 021 | `leave_policy_no_code_branching.test.ts` | ✅ | 以 TS AST 掃 16 個引擎與編排檔，四種寫法全擋，附自我驗證 |
-| 022 | `leave_ledger_conservation.test.ts` 四項 | ✅ | 逐批守恆、總量守恆、重建冪等、重建結果與快取逐欄相同 |
+| ADR | 項目                                          | 現況      | 症狀／備註                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| --- | --------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 021 | 曆年制「不低於週年制」護欄接線                | ⛔ 未接   | 引擎與錯誤碼都在，但無人呼叫。成因是缺口 9 的公式本身會少給，接上會讓 11/13 個內建假別授予失敗。暫以 `assertLeavePolicyUnit` 拒絕「年資級距 + 曆年制」這一個會踩到 §38 下界的組合                                                                                                                                                                                                                                                                          |
+| 021 | `leave_policy_no_code_branching.test.ts`      | ✅        | 以 TS AST 掃 16 個引擎與編排檔，四種寫法全擋，附自我驗證                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 022 | `leave_ledger_conservation.test.ts` 四項      | ✅        | 逐批守恆、總量守恆、重建冪等、重建結果與快取逐欄相同                                                                                                                                                                                                                                                                                                                                                                                                       |
 | 022 | **勾稽 Worker（`runLeaveBalanceReconcile`）** | ✅ 已上線 | **2026-08-21 更正**：這一列先前寫「⛔ 未開始 / `LeaveEntitlementReconciler`」，而那支排程**已註冊進 `run_worker.ts`、有 12 條測試、本輪還被改寫**（review 第 7 輪）。名稱也不對，實際是 `src/services/cron/leave_balance_reconcile.cron.ts`；間隔是**每小時**不是每日（`expiringSoonMinutes` 相對於「今天」，日界一過就該重算）。<br>它扛的是三件事裡的**前兩件**：`reconciledAt` 與 `expiringSoonMinutes`。第三件 `entryType = EXPIRE` 見下一列，仍未開始 |
-| 022 | `grantedMinutes` 取整方向 | ⚠️ 待法務 | 現為無條件進位（對勞工有利），與 021 §3.2 一併確認 |
-| 022 | `entryType = EXPIRE` 的觸發 | ⛔ 未開始 | 屬 Worker 的第三件事。⚠️ `cashOutOnExpiry = true` 者必須**先產 `LeaveCashOutEvent` 再 `EXPIRE`**，順序顛倒則折現算不出分鐘數 |
-| 023 | 代理人機制 | ⛔ 未做 | 同缺口 4。暫以 `SPECIFIC_EMPLOYEE` 節點手動繞行 |
-| 023 | **誰有權指派 HR 職能** | ⛔ 未決 | 不能讓 `HR_ADMIN` 指派 `HR_ADMIN`（自我擴權），也不能空著（第一個人拿不到）。因此**目前沒有指派 API**，只有 seed 與 repository 方法。傾向由帳本 team 的 `OWNER` / `ADMIN` 指派。<br>⚠️ 連帶後果：全新的正式帳本無法自行 bootstrap，須先跑 `scripts/bootstrap_hr_admin.ts`（見部署檢查表 §三之二） |
-| 024 | `WorkDayType.SUSPENDED` 的加成標準 | ⚠️ 待核對 | enum 值已補；停工日到工的加成標準本身未查證 |
-| 024 | `UNAPPROVED_OVERTIME` 保存期限 | ⛔ 未決 | 目前為衍生提示、不落地。若落地須一併決定保存期限與 PII 分級 |
-| 024 | 加班與行事曆整合 | ⛔ 未做 | 同缺口 6，里程碑 5 後評估 |
+| 022 | `grantedMinutes` 取整方向                     | ⚠️ 待法務 | 現為無條件進位（對勞工有利），與 021 §3.2 一併確認                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 022 | `entryType = EXPIRE` 的觸發                   | ⛔ 未開始 | 屬 Worker 的第三件事。⚠️ `cashOutOnExpiry = true` 者必須**先產 `LeaveCashOutEvent` 再 `EXPIRE`**，順序顛倒則折現算不出分鐘數                                                                                                                                                                                                                                                                                                                               |
+| 023 | 代理人機制                                    | ⛔ 未做   | 同缺口 4。暫以 `SPECIFIC_EMPLOYEE` 節點手動繞行                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 023 | **誰有權指派 HR 職能**                        | ⛔ 未決   | 不能讓 `HR_ADMIN` 指派 `HR_ADMIN`（自我擴權），也不能空著（第一個人拿不到）。因此**目前沒有指派 API**，只有 seed 與 repository 方法。傾向由帳本 team 的 `OWNER` / `ADMIN` 指派。<br>⚠️ 連帶後果：全新的正式帳本無法自行 bootstrap，須先跑 `scripts/bootstrap_hr_admin.ts`（見部署檢查表 §三之二）                                                                                                                                                          |
+| 024 | `WorkDayType.SUSPENDED` 的加成標準            | ⚠️ 待核對 | enum 值已補；停工日到工的加成標準本身未查證                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 024 | `UNAPPROVED_OVERTIME` 保存期限                | ⛔ 未決   | 目前為衍生提示、不落地。若落地須一併決定保存期限與 PII 分級                                                                                                                                                                                                                                                                                                                                                                                                |
+| 024 | 加班與行事曆整合                              | ⛔ 未做   | 同缺口 6，里程碑 5 後評估                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 **那支 Worker 一支扛三件事**，因此它的缺席有三種互不相同的症狀：
 
-| 它要做的 | 沒做的症狀 |
-|---|---|
-| 呼叫 `rebuildBalance` 勾稽 | `reconciledAt` 永遠 null。依 ADR 022 §2.3 的語意那是「**從未勾稽過**」，不是「沒問題」—— 畫面若把 null 畫成空白，讀的人會讀成後者 |
-| 授予（`accrueForEmployee`） | 額度不會自己長出來，每個人餘額都是 0，看起來像「這個人今年還沒有特休」 |
-| 到期（先折現事件、再 `EXPIRE`） | 過期額度永遠帶著正餘額，§38 IV 的折現從未發生。`expiringSoonMinutes` 也停在最後一次有人呼叫重建時的值 |
+| 它要做的                        | 沒做的症狀                                                                                                                        |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 呼叫 `rebuildBalance` 勾稽      | `reconciledAt` 永遠 null。依 ADR 022 §2.3 的語意那是「**從未勾稽過**」，不是「沒問題」—— 畫面若把 null 畫成空白，讀的人會讀成後者 |
+| 授予（`accrueForEmployee`）     | 額度不會自己長出來，每個人餘額都是 0，看起來像「這個人今年還沒有特休」                                                            |
+| 到期（先折現事件、再 `EXPIRE`） | 過期額度永遠帶著正餘額，§38 IV 的折現從未發生。`expiringSoonMinutes` 也停在最後一次有人呼叫重建時的值                             |
 
 ---
 
@@ -1821,12 +1822,12 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 
 本計畫的四項決策屬不可逆的架構取捨，抽為獨立 ADR：
 
-| ADR | 標題 | 對應決策 |
-|---|---|---|
-| **021** | 假別規則資料化與給假週期制度 | D1、D4、D5 |
+| ADR     | 標題                                  | 對應決策               |
+| ------- | ------------------------------------- | ---------------------- |
+| **021** | 假別規則資料化與給假週期制度          | D1、D4、D5             |
 | **022** | 假勤額度採 append-only 帳本與批次授予 | D2、D3、D12 的扣減順序 |
-| **023** | 簽核鏈快照與多級簽核的職責分離 | D6、D7、D8 |
-| **024** | 加班的事實認列、加成分段與模組邊界 | D9、D10、D11、D12、D13 |
+| **023** | 簽核鏈快照與多級簽核的職責分離        | D6、D7、D8             |
+| **024** | 加班的事實認列、加成分段與模組邊界    | D9、D10、D11、D12、D13 |
 
 D14（併休上限只對特休警示）刻意**不抽 ADR**：它不是架構取捨，是法遵判斷，其正確性完全繫於 §38 II 的解釋。留在本計畫書 §4 與 §9.3，隨法務複核一併確認。
 
@@ -2122,14 +2123,14 @@ export enum HrPiiTable {
 
 ### 19.4 套用後的驗證清單
 
-| # | 指令 | 預期 |
-|---|---|---|
-| 1 | `npx prisma validate` | OK（已實測合併後可通過） |
-| 2 | `npx prisma format` | 無 diff（草案已按 Prisma 格式排版） |
-| 3 | `npx tsc --noEmit` | 無錯誤 |
-| 4 | `npx eslint src/constants` | 無警告 |
-| 5 | `npm test -- hr_enum_mirror` | 通過（新 enum 全數登記後） |
-| 6 | `npx prisma db push` | schema 同步進 DB（**不是** `migrate dev`，見下） |
+| #   | 指令                         | 預期                                             |
+| --- | ---------------------------- | ------------------------------------------------ |
+| 1   | `npx prisma validate`        | OK（已實測合併後可通過）                         |
+| 2   | `npx prisma format`          | 無 diff（草案已按 Prisma 格式排版）              |
+| 3   | `npx tsc --noEmit`           | 無錯誤                                           |
+| 4   | `npx eslint src/constants`   | 無警告                                           |
+| 5   | `npm test -- hr_enum_mirror` | 通過（新 enum 全數登記後）                       |
+| 6   | `npx prisma db push`         | schema 同步進 DB（**不是** `migrate dev`，見下） |
 
 > **本專案沒有 `prisma/migrations/`，工作流是 `db push` 而不是 `migrate dev`。**
 > 在一個有資料但沒有 migration 歷史的 DB 上跑 `migrate dev`，Prisma 會要求 baseline
@@ -2176,16 +2177,16 @@ schema 已套用並通過 `@prisma/prisma-schema-wasm` 的 `validate()`
 「移除 `enum LeaveType` 會打到誰」。列在這裡，是為了讓下一次移除 enum 時
 知道要往哪些方向找。
 
-| # | 檔案 | 改動 | 找到它的方式 |
-|---|---|---|---|
-| 1 | `src/constants/leave.ts` | 移除 `LeaveType`、`LEAVE_TYPE_I18N_KEY`、`EMPLOYEE_SCHEDULED_LEAVE_TYPES` | grep |
-| 2 | `src/constants/attendance.ts` | `WorkDayType += SUSPENDED`，並補上三處 `Record<WorkDayType, …>` 的窮舉 | **tsc**（三個 exhaustive record 直接紅） |
-| 3 | `src/interfaces/leave.ts` | `ILeaveTodayEntry` 的 `leaveType`/`reason` → `onLeave: true`；`ILeaveRecallView.leaveType` → `leavePolicyCode` + `leavePolicyName` | 設計決定（見下） |
-| 4 | `src/repositories/leave.repo.ts` | 兩個 include 加上 `leavePolicy: { select: { code, name } }` | tsc |
-| 5 | `src/services/leave.service.ts` | `toTodayEntry` / `toRecallView` 兩個投影函式 | tsc |
-| 6 | `src/components/…/leave_today_panel.tsx` | 不再顯示假別 | tsc |
-| 7 | `src/i18n/locales/{5 語系}/hr_management.ts` | `type_*`（7 個）→ `policy_*`（13 個）；新增 `day_type_suspended` 與其縮寫、`leave_on_leave` | `attendance_i18n_keys.test.ts` |
-| 8 | `scripts/seed/seed_attendance_demo.ts` | 先種 13 個 `LeavePolicy`；假單改掛 policy、事由密文入庫、逐日固化總量、簽核以 `LeaveApprovalStep` 落地；停工日改用 `SUSPENDED` | tsc |
+| #   | 檔案                                         | 改動                                                                                                                               | 找到它的方式                             |
+| --- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| 1   | `src/constants/leave.ts`                     | 移除 `LeaveType`、`LEAVE_TYPE_I18N_KEY`、`EMPLOYEE_SCHEDULED_LEAVE_TYPES`                                                          | grep                                     |
+| 2   | `src/constants/attendance.ts`                | `WorkDayType += SUSPENDED`，並補上三處 `Record<WorkDayType, …>` 的窮舉                                                             | **tsc**（三個 exhaustive record 直接紅） |
+| 3   | `src/interfaces/leave.ts`                    | `ILeaveTodayEntry` 的 `leaveType`/`reason` → `onLeave: true`；`ILeaveRecallView.leaveType` → `leavePolicyCode` + `leavePolicyName` | 設計決定（見下）                         |
+| 4   | `src/repositories/leave.repo.ts`             | 兩個 include 加上 `leavePolicy: { select: { code, name } }`                                                                        | tsc                                      |
+| 5   | `src/services/leave.service.ts`              | `toTodayEntry` / `toRecallView` 兩個投影函式                                                                                       | tsc                                      |
+| 6   | `src/components/…/leave_today_panel.tsx`     | 不再顯示假別                                                                                                                       | tsc                                      |
+| 7   | `src/i18n/locales/{5 語系}/hr_management.ts` | `type_*`（7 個）→ `policy_*`（13 個）；新增 `day_type_suspended` 與其縮寫、`leave_on_leave`                                        | `attendance_i18n_keys.test.ts`           |
+| 8   | `scripts/seed/seed_attendance_demo.ts`       | 先種 13 個 `LeavePolicy`；假單改掛 policy、事由密文入庫、逐日固化總量、簽核以 `LeaveApprovalStep` 落地；停工日改用 `SUSPENDED`     | tsc                                      |
 
 **三件由這次連帶改動觸發、且不是機械替換的決定：**
 
