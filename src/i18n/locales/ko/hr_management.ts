@@ -1051,6 +1051,8 @@ export const hrManagement = {
       "이 직원의 1일 소정근로시간을 산출할 수 없어 보상휴가 전환도 수당 지급도 불가능합니다. 인사팀에 근무 일정 등록을 요청하세요.",
     error_overlaps_existing:
       "같은 날 이 시간대와 겹치는 연장근로 신청이 이미 있습니다. 시간을 조정하거나 기존 신청을 먼저 철회하세요.",
+    error_earlier_than_approved:
+      "같은 날 더 늦은 시간대의 연장근로 신청이 이미 승인되어 가산율이 확정되었습니다. 지금 더 이른 시간대를 신청하면 두 건 모두 낮은 가산율로 계산됩니다. 늦은 쪽 신청을 철회한 뒤 함께 다시 제출하세요.",
     error_agreement_record_required:
       "월 상한을 54시간으로 완화하려면 기록이 필요합니다(§32 III): 회의록 링크와 동의한 날짜를 입력하세요.",
     error_emergency_already_declared:

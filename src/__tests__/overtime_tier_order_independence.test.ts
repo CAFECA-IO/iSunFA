@@ -154,6 +154,44 @@ jest.mock("@/lib/prisma", () => ({
       findMany: jest.fn(async ({ where }: { where: Record<string, unknown> }) =>
         rows.filter((row) => matchesRequest(row, where)),
       ),
+      /**
+       * Info: (20260821 - Julian) `findLaterStartApprovedRequestId` 走的是這一支。
+       *
+       * **`orderBy` 真的排**，不是回第一個命中的。被測查詢寫了
+       * `orderBy: { requestedStartMinute: "asc" }`，而替身若照 `rows` 的插入
+       * 順序回傳，「回的是最早的那一張」就會由 fixture 的排列順序決定 ——
+       * 測試綠燈，實際上什麼都沒釘住（checklist §1.2）。
+       *
+       * 同 `matchesRequest`：不認得的排序鍵直接丟，不安靜地忽略。
+       */
+      findFirst: jest.fn(
+        async ({
+          where,
+          orderBy,
+        }: {
+          where: Record<string, unknown>;
+          orderBy?: Record<string, string>;
+        }) => {
+          const hits = rows.filter((row) => matchesRequest(row, where));
+          if (orderBy !== undefined) {
+            const [[field, direction]] = Object.entries(orderBy);
+            if (!ROW_FIELDS.includes(field)) {
+              throw new Error(`替身不支援這個排序鍵：${field}`);
+            }
+            if (direction !== "asc" && direction !== "desc") {
+              throw new Error(`替身不支援這個排序方向：${direction}`);
+            }
+            hits.sort((left, right) => {
+              const a = left[field];
+              const b = right[field];
+              if (a === b) return 0;
+              const ascending = (a as number) < (b as number) ? -1 : 1;
+              return direction === "asc" ? ascending : -ascending;
+            });
+          }
+          return hits[0] ?? null;
+        },
+      ),
       aggregate: jest.fn(
         async ({ where }: { where: Record<string, unknown> }) => ({
           _sum: {
@@ -187,6 +225,8 @@ jest.mock("@/lib/prisma", () => ({
 import { overtimeRequestContextRepo } from "@/repositories/overtime_request_context.repo";
 import { deriveOvertimeSegments } from "@/lib/overtime_rules";
 import {
+  OVERTIME_PREMIUM,
+  OVERTIME_TIER_BOUNDARY_MINUTES,
   OvertimePremiumTier,
   OvertimeRequestStatus,
 } from "@/constants/overtime";
@@ -364,5 +404,176 @@ describe("同日兩張加班單：級距與核准順序無關（M4）", () => {
 
     expect(context.earlierRecognizedMinutes).toBe(120);
     expect(context.priorRecognizedMinutes).toBe(0);
+  });
+});
+
+/**
+ * Info: (20260821 - Julian) 觀測量換一個：**當日加成總額不得低於 §24 I 的下限**
+ * （review 第 15 輪）。
+ *
+ * ## 為什麼上面那一組抓不到這件事
+ *
+ * 上面每一條的觀測量都是「兩種**核准**順序給同一組級距」。而「較晚的先核准、
+ * 較早的事後補」這條路徑上，兩張都拿 1/3 是**唯一**的落地結果 —— 沒有第二種
+ * 順序可以拿來比，那個觀測量照樣通過（checklist §1.9：測試量錯了東西，
+ * 不是寫得不夠多）。
+ *
+ * 這裡改量錢：把落地的級距換算成工資單位，與一個**獨立算出來**的法定下限比。
+ * 下限的算法只依 §24 I 的條文（前 2 小時 1/3、再延長 2/3），不碰被測的那條路。
+ */
+const RATE_OF = (tier: OvertimePremiumTier): number => {
+  const ratio = OVERTIME_PREMIUM[tier];
+  return ratio.numerator / ratio.denominator;
+};
+
+/**
+ * Info: (20260821 - Julian) 落地的級距換算成工資單位。
+ *
+ * 本檔每一張單都是整段 120 分、不跨 2 小時邊界，因此**一張單只會有一段**。
+ * 多於一段時直接丟：那代表 fixture 的形狀變了，此時把分鐘平均分攤到各段
+ * 會算出一個看起來合理、實際上憑空編造的金額。
+ */
+const premiumUnitsOf = (
+  landed: readonly { tiers: OvertimePremiumTier[]; minutes: number }[],
+): number =>
+  landed.reduce((total, one) => {
+    if (one.tiers.length !== 1) {
+      throw new Error(
+        `本檔的換算只支援單一級距的單，收到 ${one.tiers.length} 段`,
+      );
+    }
+    return total + one.minutes * RATE_OF(one.tiers[0]);
+  }, 0);
+
+/**
+ * Info: (20260821 - Julian) 獨立的 oracle：§24 I 對**整天**的延長工時算一次。
+ * 不看核准順序、不看單據怎麼切 —— 那正是被測那一側可能算錯的東西。
+ */
+const legalFloorUnitsOf = (totalMinutes: number): number => {
+  const first = Math.min(totalMinutes, OVERTIME_TIER_BOUNDARY_MINUTES);
+  return first * (1 / 3) + (totalMinutes - first) * (2 / 3);
+};
+
+const SPAN = 120;
+const DAY_FLOOR_UNITS = legalFloorUnitsOf(SPAN * 2);
+
+describe("同日兩張加班單：當日加成總額不得低於 §24 I 下限", () => {
+  it.each([
+    ["先 A 再 B", [A, B] as const],
+    ["先 B 再 A", [B, A] as const],
+  ])("%s：兩張都先送出時，總額等於下限 120", async (_label, order) => {
+    const landed: { tiers: OvertimePremiumTier[]; minutes: number }[] = [];
+    for (const spec of order) {
+      landed.push({ tiers: await approve(spec), minutes: SPAN });
+    }
+
+    expect(premiumUnitsOf(landed)).toBeCloseTo(DAY_FLOOR_UNITS, 6);
+    expect(DAY_FLOOR_UNITS).toBe(120);
+  });
+
+  /**
+   * Info: (20260821 - Julian) 這道閘存在的理由，數字化。
+   *
+   * 級距在核准當下算一次就落地，而 `sumEarlierSameDayMinutes` 只看得到那一刻
+   * **已經存在**的單。先核准 B（19:00–21:00）、A（17:00–19:00）事後才補進來：
+   * B 永遠不知道 A，A 前面本來就沒有人 —— 兩張都從 0 起算、都拿 1/3。
+   *
+   * 這一條**刻意斷言那個錯的數字**（80，下限 120，少付 40）：它是
+   * `VA_OVERTIME_EARLIER_THAN_APPROVED` 那道閘唯一的存在理由。
+   * 哪一天它變紅了，代表核准當下已經改成對同日手足單重算 ——
+   * 那時該做的是把那道閘一起移除（計畫書 §17 缺口 16），不是改這個數字。
+   */
+  it("事後補一張更早的單，總額會掉到 80（低於下限）—— 故送出端必須擋", async () => {
+    rows = [rowOf(B, OvertimeRequestStatus.PENDING, null)];
+    const landedB = await approve(B);
+
+    // Info: (20260821 - Julian) A 此刻才被建立，B 已經定案
+    rows.push(rowOf(A, OvertimeRequestStatus.PENDING, null));
+    const landedA = await approve(A);
+
+    expect(landedB).toEqual([OvertimePremiumTier.WEEKDAY_FIRST_2H]);
+    expect(landedA).toEqual([OvertimePremiumTier.WEEKDAY_FIRST_2H]);
+    expect(
+      premiumUnitsOf([
+        { tiers: landedB, minutes: SPAN },
+        { tiers: landedA, minutes: SPAN },
+      ]),
+    ).toBeCloseTo(80, 6);
+    expect(DAY_FLOOR_UNITS).toBe(120);
+  });
+
+  /**
+   * Info: (20260821 - Julian) 因此送出端的那道閘必須看得到 B。
+   * 這是 `submit()` 實際問的那一支查詢（真的 repository、真的 where）。
+   */
+  it("同日已核准且起點更晚時，查得到那一張", async () => {
+    rows = [rowOf(B, OvertimeRequestStatus.APPROVED, SPAN)];
+
+    await expect(
+      overtimeRequestContextRepo.findLaterStartApprovedRequestId({
+        accountBookId: BOOK,
+        employeeId: EMP,
+        workDate: WORK_DATE,
+        requestedStartMinute: A.requestedStartMinute,
+      }),
+    ).resolves.toBe(B.id);
+  });
+
+  /**
+   * Info: (20260821 - Julian) 反方向一：較晚那張**還在待簽**時不擋。
+   * 它還沒定級距，在自己被核准的當下會重新讀一次 —— 擋它只會擋掉合法的並行送單。
+   */
+  it("較晚那張還在待簽時，不回報", async () => {
+    rows = [rowOf(B, OvertimeRequestStatus.PENDING, null)];
+
+    await expect(
+      overtimeRequestContextRepo.findLaterStartApprovedRequestId({
+        accountBookId: BOOK,
+        employeeId: EMP,
+        workDate: WORK_DATE,
+        requestedStartMinute: A.requestedStartMinute,
+      }),
+    ).resolves.toBeNull();
+  });
+
+  /**
+   * Info: (20260821 - Julian) 反方向二：已核准的那張**開始得更早**時不擋。
+   * 那是正常順序 —— 本次落在它後面，級距讀得到它，算得出來。
+   */
+  it("已核准的那張開始得更早時，不回報", async () => {
+    rows = [rowOf(A, OvertimeRequestStatus.APPROVED, SPAN)];
+
+    await expect(
+      overtimeRequestContextRepo.findLaterStartApprovedRequestId({
+        accountBookId: BOOK,
+        employeeId: EMP,
+        workDate: WORK_DATE,
+        requestedStartMinute: B.requestedStartMinute,
+      }),
+    ).resolves.toBeNull();
+  });
+
+  /**
+   * Info: (20260821 - Julian) 撞到多張時回**起點最早**的那一張，而不是任意一張。
+   *
+   * 錯誤訊息之外，事後要查得出是撞到哪一張；「任意一張」會讓同一組資料在不同
+   * 時候給出不同的答案。fixture 故意把晚的那張排在陣列前面 —— 少了
+   * `orderBy` 的話這一條會回 `ot-c`。
+   */
+  it("同日有多張已核准且更晚時，回起點最早的那一張", async () => {
+    const C = { id: "ot-c", requestedStartMinute: 1260, requestedEndMinute: 1380 };
+    rows = [
+      rowOf(C, OvertimeRequestStatus.APPROVED, SPAN),
+      rowOf(B, OvertimeRequestStatus.APPROVED, SPAN),
+    ];
+
+    await expect(
+      overtimeRequestContextRepo.findLaterStartApprovedRequestId({
+        accountBookId: BOOK,
+        employeeId: EMP,
+        workDate: WORK_DATE,
+        requestedStartMinute: A.requestedStartMinute,
+      }),
+    ).resolves.toBe(B.id);
   });
 });

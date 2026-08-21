@@ -49,6 +49,9 @@ export const OVERTIME_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
   // Info: (20260820 - Julian) review 第 13 輪第 2 條：同日時段重疊
   [API_ERRORS.VA_OVERTIME_OVERLAPS_EXISTING.code]:
     "hr_management.overtime.error_overlaps_existing",
+  // Info: (20260821 - Julian) review 第 15 輪：事後補一張比已核准者更早的單
+  [API_ERRORS.VA_OVERTIME_EARLIER_THAN_APPROVED.code]:
+    "hr_management.overtime.error_earlier_than_approved",
   // Info: (20260820 - Julian) review 第 5 輪 M7／M8：算不出這個人的一日工時
   [API_ERRORS.VA_OVERTIME_DAY_LENGTH_UNKNOWN.code]:
     "hr_management.overtime.error_day_length_unknown",

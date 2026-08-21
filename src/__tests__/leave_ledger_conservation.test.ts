@@ -3,6 +3,7 @@ import { Prisma } from "@/generated";
 import { LeaveLedgerEntryType } from "@/constants/leave_policy";
 import {
   readConsumableGrants,
+  ILeaveBalanceRebuildResult,
   rebuildBalanceWithin,
   sumLedgerMinutes,
   writeBalance,
@@ -316,7 +317,7 @@ let ledger: InMemoryLedger;
  * 本體因此搬到 `rebuildBalanceWithin`（收 `tx`），`rebuildBalance` 只剩
  * `prisma.$transaction` 外殼。這裡呼叫的就是產品在交易內跑的那幾行。
  */
-const rebuild = (): Promise<number> =>
+const rebuild = (): Promise<ILeaveBalanceRebuildResult> =>
   rebuildBalanceWithin(ledger.client, {
     ...SCOPE,
     asOfDate: AS_OF,
@@ -561,7 +562,13 @@ describe("T6 rebuild 冪等，且重建結果與快取逐欄相同", () => {
     const third = await rebuild();
     expect([second, third]).toEqual([first, first]);
     expect(ledger.balances).toHaveLength(1);
-    expect(balanceRow()?.remainingMinutes).toBe(first);
+    /**
+     * Info: (20260821 - Julian) **逐欄**比對快取與重建的回傳（review 第 16 輪）。
+     * 只比 `remainingMinutes` 的話，`expiringSoonMinutes` 寫錯不會被看見 ——
+     * 而 ADR 022 §8.1 這條紅線的原文就是「逐欄相同」。
+     */
+    expect(balanceRow()?.remainingMinutes).toBe(first.remainingMinutes);
+    expect(balanceRow()?.expiringSoonMinutes).toBe(first.expiringSoonMinutes);
     expect(balanceRow()?.reconciledAt).toEqual(RECONCILED_AT);
   });
 
@@ -578,7 +585,7 @@ describe("T6 rebuild 冪等，且重建結果與快取逐欄相同", () => {
     row.remainingMinutes = 99999;
 
     const rebuilt = await rebuild();
-    expect(rebuilt).toBe(1440);
+    expect(rebuilt.remainingMinutes).toBe(1440);
     expect(balanceRow()?.remainingMinutes).toBe(1440);
   });
 

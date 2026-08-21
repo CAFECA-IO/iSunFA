@@ -1630,6 +1630,27 @@ export const API_ERRORS = {
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
 
+  /**
+   * Info: (20260821 - Julian) 事後補一張**比已核准者更早**的加班單（review 第 15 輪）。
+   *
+   * §24 I 的級距在核准當下算一次就落地，而它只看得到那一刻已經存在的單。
+   * 先核准 19:00–21:00、再補一張 17:00–19:00，兩張都從 0 起算、都拿 1/3：
+   * 實測 80 個工資單位，法定下限 120 —— **少付 40**，且沒有任何路徑會回頭
+   * 更正（更正流程未實作）。
+   *
+   * 因此擋在送出而不是核准：核准當下才擋的話，那張已核准的單早就落地了，
+   * 使用者被擋卻無事可做。擋在這裡，下一步是明確的 —— 撤回較晚那張，
+   * 兩張一起重送，級距就會正確地切成 1/3 + 2/3。
+   *
+   * `PENDING` 的手足單不觸發：它還沒定級距，在自己被核准時會重新讀一次。
+   */
+  VA_OVERTIME_EARLIER_THAN_APPROVED: {
+    code: "VA000079",
+    message:
+      "an overtime request starting later that day has already been approved, and its Article 24 I premium tier is frozen; filing an earlier span now would under-pay both. Withdraw the later request and re-file them together",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
   VA_OVERTIME_DAY_LENGTH_UNKNOWN: {
     code: "VA000076",
     message:

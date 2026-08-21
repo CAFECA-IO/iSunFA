@@ -24,56 +24,56 @@
 
 ---
 
-## 零、這個模組預設是關的 ⚠️ 先讀這一節
+## 零、`/hr_management` 的存取控制 ⚠️ 先讀這一節
 
-`/hr_management` 的 13 個頁面與 37 支 `/hr/` API **已經在程式碼裡，也就是
-已經部署出去了**。它沒有從任何全站導覽連出去，但那不是保護：路徑猜得到，
-而 `hr_management/layout.tsx` 的註解自己寫著「這個 layout 連沒有登入的頁面
-都會渲染」。
+**這一節在 2026-08-21 整節重寫。** 先前寫的是一道 `HR_MODULE_ENABLED`
+環境變數路徑閘；**那道閘已經拆掉了**，理由見下。照舊版做的人會去正式環境
+設一個不存在的環境變數，然後以為模組被擋住了。
 
-因此 `src/proxy.ts` 加了一道路徑閘（Next 16 把 middleware 更名為 proxy，
-本專案早就有這一支；另外開一個 `middleware.ts` 會讓 build 直接失敗）：
+### 現況：兩層，都不需要任何環境變數
 
-| `HR_MODULE_ENABLED` | 行為 |
-|---|---|
-| 未設定（**預設**） | `/hr_management/*` 與任何一段是 `hr` 的 API 路徑一律回 **404** |
-| `"true"` | 正常開放 |
-| 其他任何值（`1` / `yes` / `TRUE`） | 一律視為**關** |
+| 層 | 機制 | 對訪客（未登入） |
+|---|---|---|
+| 資料 | 37 支 `/hr/` 端點全部走 `getIdentityFromDeWT` | 一律 **401**，一個位元組都拿不到 |
+| 畫面 | `hr_management/layout.tsx` 包在 `<AuthGuard>` 裡 | 導回首頁，外框不渲染 |
 
-**上線前**：正式環境不要設定它。確認方式是直接打一支端點 ——
+`<AuthGuard>` 就是 `/user/**` 用的那一支（`/admin/**` 用 `<AdminAuthGuard>`）。
+`/hr_management` 先前**兩個都沒有**，這才是「連沒登入也會渲染」的成因。
 
-```bash
-curl -s -o /dev/null -w '%{http_code}\n' https://<正式網域>/hr_management
-curl -s -o /dev/null -w '%{http_code}\n' https://<正式網域>/api/v1/hr/employee
-# 兩個都要是 404
-```
+`app_route_auth_guard.test.ts` 用 AST 檢查這三個路由根的 layout：
+`return` 的**根元素**必須是守衛。純 `grep` 會被「import 了卻沒包上去」
+滿足，而那正是最像修好了的壞法。
 
-**這個模組正式上線那天**：把 `HR_MODULE_ENABLED=true` 設進去，
-然後**重新 build**。
+### 那道環境變數閘為什麼拆掉
 
-> ⚠️ 這是 **build 時**的開關，不是 runtime 的。Next.js 會把 middleware 裡的
-> `process.env` 在打包時內聯成字面值 —— 在部署平台改了環境變數卻沒有觸發
-> 重新部署時，這道閘不會變。上線那天請以上面那兩個 `curl` 確認，
-> 不要以「環境變數面板顯示已設定」為準。
+它擋的是「路徑上任何一段是 `hr`」，而那**不只涵蓋本 PR 新增的東西**：
 
-### 這道閘擋不了什麼
+- `hr/attendance/**` 的 **13 支 API** 與 **8 個 `hr_management` 頁面**
+  早就在 `origin/develop` 上（#6651 已合）。
+- develop 的部署流程沒有 `HR_MODULE_ENABLED`，所以 merge 進去的那一刻
+  **打卡整組回 404**。
 
-它是**路徑層**的閘，不是授權。模組打開之後，「誰可以看誰的資料」仍然由
-每一支端點自己的 `assertMay*` 負責 —— 那些檢查一條都不能因為有了這道閘
-而省略。這裡擋的是「整個模組還沒好」，不是「這個人不該看這一筆」。
+它又是 **build 時**的旗標（Next 會把 `process.env` 內聯進 middleware 產物），
+在部署平台改了環境變數而沒有觸發重新部署時不會生效 —— 一個「以為改了、
+其實沒改」的開關，比沒有開關更危險。
 
-判準在 `src/constants/hr_module_gate.ts`（不是寫在 `proxy.ts` 裡：
-`hr_module_gate.test.ts` 要驗的就是那個判準，寫在 `proxy.ts` 裡的話測試
-只能手抄一份規則）。那支測試會掃 `src/app` 底下所有 `page.tsx` / `route.ts`，
-確認**每一支人事路由都被擋、其餘一支都沒被誤擋** ——
-新增一支落在規則外的端點，它會紅。
+而它多擋的只有「未登入者看得到空外框」這一件事，正是 `<AuthGuard>`
+本來就在做的事。
 
-> ⚠️ `proxy.ts` 原本的 `matcher` **刻意排除 `api`**（canonical 導向不該碰 API），
-> 因此另外補了 `"/api/:path*"`，否則 37 支端點一支都不會經過這道閘。
-> 為了不改變 API 既有行為，函式開頭對 `/api/` 提早 `return NextResponse.next()`——
-> 它們只借用這道閘，不走 canonical 導向、也不設 `x-url`（本來就沒有）。
-> 2026-08-20 實測：全站 308 支路由，人事 50 支（13 頁 ＋ 37 API），
-> matcher 到不了的 0 支。
+> `src/proxy.ts` 的 `matcher` 也一併還原。加閘時為了蓋到 API 補了
+> `"/api/:path*"`，那讓**全站每一支 API** 都多繞一次 proxy；閘拿掉之後
+> 沒有理由留著。`app_route_auth_guard.test.ts` 有一條釘住它。
+
+### 這兩層擋不了什麼
+
+- **`<AuthGuard>` 是 client-side 的**（同 `/user/**`）：外框的 JS 仍會送到
+  瀏覽器，擋的是「渲染出來並且能操作」。真正的牆是端點的 401。
+- **已登入的員工猜到網址就進得去** leave/overtime。那是刻意的 ——
+  側邊選單本來就直接連過去。「誰可以看誰的資料」仍然由每一支端點的
+  `assertMay*` 負責，一條都不能因為有了這兩層而省略。
+- 若日後真的需要一道模組級開關，它**必須先解決「已上線路徑不得被波及」**
+  這件事（例如只匹配 `hr/leave` 與 `hr/overtime` 兩個子樹）。
+  `app_route_auth_guard.test.ts` 有一條擋著那道閘原樣復活。
 
 ---
 

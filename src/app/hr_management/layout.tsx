@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import AuthGuard from "@/components/auth/auth_guard";
 import HrHeader from "@/components/hr_management/hr_header";
 import HrSidebar from "@/components/hr_management/hr_sidebar";
 import { HR_IDENTITY_API } from "@/constants/hr_identity_api";
@@ -10,6 +11,36 @@ import { IEnvelopeLike, request } from "@/lib/utils/request";
 
 /**
  * Info: (20260810 - Julian) 人事管理系統的外框：頂部列 + 左側選單 + 主內容區。
+ *
+ * Info: (20260821 - Julian) 包在 `<AuthGuard>` 裡（review 第 16 輪）。
+ *
+ * ## 這裡先前沒有守衛，而 `/user/**` 與 `/admin/**` 都有
+ *
+ * `/user/**` 用 `<AuthGuard>`、`/admin/**` 用 `<AdminAuthGuard>`，
+ * 而這一支兩個都沒有 —— 於是未登入者打得開 `/hr_management/*` 的外框：
+ * 頂部列、側邊選單、每一頁的空狀態。**資料沒有外洩**（37 支 `/hr/` 端點
+ * 全部走 `getIdentityFromDeWT`，無票一律 401），洩的是「這個系統有哪些
+ * 功能、選單怎麼分組」。
+ *
+ * ## 為什麼不是環境變數的路徑閘
+ *
+ * 上一版在 `proxy.ts` 加了一道 `HR_MODULE_ENABLED` 的路徑閘，關著時
+ * `/hr_management/*` 與任何一段是 `hr` 的 API 全回 404。它擋掉的**不只是
+ * 本 PR 新增的東西**：`hr/attendance/**` 的 13 支 API 與 8 個頁面早就在
+ * `origin/develop` 上（#6651），而 develop 的部署流程沒有那個環境變數 ——
+ * merge 進去的那一刻打卡就整組 404。它又是 **build 時**的旗標
+ * （Next 會把 `process.env` 內聯），改了面板不重新部署不會生效。
+ *
+ * 它多擋的只有「未登入者看得到空外框」這一件事，而那正是 `<AuthGuard>`
+ * 本來就在做的事，且與全站同一個標準。
+ *
+ * ## 這道守衛擋不了什麼
+ *
+ * 它是 client-side 的（同 `/user/**`）：外框的 JS 仍然會送到瀏覽器，
+ * 擋的是「渲染出來並且能操作」。真正的牆是每一支端點的 401 與
+ * `assertMay*` —— 那些檢查一條都不能因為有了這層而省略。
+ * 已登入的員工猜到網址仍然進得去 leave/overtime，那是刻意的：
+ * 側邊選單本來就直接連過去。
  */
 export default function HrManagementLayout({
   children,
@@ -67,21 +98,23 @@ export default function HrManagementLayout({
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <HrHeader
-        identity={identity}
-        onToggleSidebar={() => setIsSidebarOpen(true)}
-      />
-
-      <div className="flex">
-        <HrSidebar
+    <AuthGuard>
+      <div className="min-h-screen bg-gray-50">
+        <HrHeader
           identity={identity}
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
+          onToggleSidebar={() => setIsSidebarOpen(true)}
         />
 
-        <main className="min-w-0 flex-1">{children}</main>
+        <div className="flex">
+          <HrSidebar
+            identity={identity}
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+          />
+
+          <main className="min-w-0 flex-1">{children}</main>
+        </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 }

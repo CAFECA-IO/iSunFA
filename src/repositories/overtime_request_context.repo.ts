@@ -66,6 +66,21 @@ export interface IOvertimeRequestContext {
     requestedStartMinute: number;
     requestedEndMinute: number;
   }): Promise<string | null>;
+  /**
+   * Info: (20260821 - Julian) 同一天、起點**晚於**本次、且**已核准**的加班單
+   * （review 第 15 輪）。
+   *
+   * 只問 `APPROVED`：`PENDING` 的手足單還沒定級距，它在自己被核准的當下
+   * 會重新讀一次同日較早的分鐘數，屆時就看得到本次這張了。已核准的那張
+   * 不會 —— 分段落地就不再重算（更正流程未實作），它的級距永遠停在
+   * 「當時同日沒有更早的加班」那個答案上。
+   */
+  findLaterStartApprovedRequestId(params: {
+    accountBookId: string;
+    employeeId: string;
+    workDate: string;
+    requestedStartMinute: number;
+  }): Promise<string | null>;
   findScheduledDay(params: {
     accountBookId: string;
     employeeId: string;
@@ -311,13 +326,22 @@ const sumRecognizedMinutes = async (params: {
  *
  * ## 這個選擇的代價，講清楚
  *
- * 申請長度是上界，因此打卡短的那天級距會偏高 → **對勞工有利**，
- * 且高於 §24 I 的法定下限。反方向（少算）才是不能接受的那一個。
- * 兩種偏差都會存在，選擇的是哪一邊 —— 而只有一邊會被勞檢開罰。
+ * 申請長度是上界，因此打卡短的那天級距會偏高 —— 那個方向對勞工有利。
+ *
+ * **但「殘餘偏差只會偏高」是錯的，別把它當前提**（review 第 15 輪）。
+ * 這一支只看得到**核准當下已經存在**的單，而分段落地就不再重算，
+ * 於是「較晚時段的單先核准、較早的事後補」會讓兩張都從 0 起算、
+ * 都落在 1/3：17–19 與 19–21 各 120 分，實測 80 個工資單位，
+ * 而 §24 I 的下限是 120 —— **少付 40**。
+ *
+ * 那條路徑現在由 `submit()` 的 `findLaterStartApprovedRequestId` 擋住
+ * （`VA_OVERTIME_EARLIER_THAN_APPROVED`），因此少付的形狀進不了資料庫。
+ * 擋下不等於算對：它把一個算不對的組合擋在門外，換人資去撤回後重送。
  *
  * 真正兩邊都不偏的做法是「核准當下對同日手足單一併重算並覆寫分段」，
  * 而那要有更正流程（分段一旦落地就對應到已發或待發的工資）。
- * ToDo: (20260820 - Julian) 更正流程落地之後改成重算，這個上界就可以拿掉。
+ * ToDo: (20260821 - Julian) 更正流程落地之後改成重算，這個上界與那道閘
+ * 都可以拿掉 —— 屆時事後補一張更早的單只會觸發重算，不必再擋。
  */
 const sumEarlierSameDayMinutes = async (params: {
   accountBookId: string;
@@ -447,6 +471,35 @@ class OvertimeRequestContextRepository implements IOvertimeRequestContext {
         },
         requestedStartMinute: { lt: params.requestedEndMinute },
         requestedEndMinute: { gt: params.requestedStartMinute },
+      },
+      select: { id: true },
+      orderBy: { requestedStartMinute: "asc" },
+    });
+    return row?.id ?? null;
+  }
+
+  /**
+   * Info: (20260821 - Julian) 同日已核准、且起點晚於本次的那一張（review 第 15 輪）。
+   *
+   * 「是什麼」的查詢：這裡只回答同日有沒有這樣一張單，要不要因此擋下由
+   * service 決定（coding_guidelines §1.1）。回 id 而不是布林，理由同
+   * `findOverlappingRequestId` —— 事後要查得出是撞到哪一張。
+   *
+   * 嚴格 `gt`：起點相同的那一種由重疊檢查擋（相同起點 + 正長度必定相交）。
+   */
+  public async findLaterStartApprovedRequestId(params: {
+    accountBookId: string;
+    employeeId: string;
+    workDate: string;
+    requestedStartMinute: number;
+  }): Promise<string | null> {
+    const row = await prisma.overtimeRequest.findFirst({
+      where: {
+        accountBookId: params.accountBookId,
+        employeeId: params.employeeId,
+        workDate: params.workDate,
+        status: OvertimeRequestStatus.APPROVED,
+        requestedStartMinute: { gt: params.requestedStartMinute },
       },
       select: { id: true },
       orderBy: { requestedStartMinute: "asc" },

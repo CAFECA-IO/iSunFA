@@ -138,6 +138,37 @@ export class OvertimeRequestService {
       throw new AppError(API_ERRORS.VA_OVERTIME_OVERLAPS_EXISTING);
     }
 
+    /**
+     * Info: (20260821 - Julian) 同日已有起點更晚的**已核准**單時，不得再補一張更早的
+     * （review 第 15 輪）。
+     *
+     * §24 I 的級距在核准當下算一次就落地，而它只數「那一刻已經存在、且開始得更早」
+     * 的分鐘數。先核准 19:00–21:00 再補 17:00–19:00，後者對前者而言來得太遲：
+     * 兩張都從 0 起算、都拿 1/3，合計 80 個工資單位，而法定下限是 120 ——
+     * **少付 40**，且沒有任何路徑會回頭更正（分段落地即不重算）。
+     *
+     * 重疊檢查擋不到它：17–19 與 19–21 是相鄰不是重疊，那是本模組最常見的合法形狀。
+     *
+     * 只看 `APPROVED`。`PENDING` 的手足單還沒定級距，它在自己被核准的當下會重新
+     * 讀一次同日較早的分鐘數，屆時就看得到這一張 —— 擋它只會擋掉合法的並行送單。
+     *
+     * 擋在送出而不是核准：那張已核准的單早就落地了，到核准才擋等於讓使用者
+     * 面對一個他無事可做的錯誤。在這裡，下一步是明確的 —— 撤回較晚那張，
+     * 兩張一起重送，級距就會正確地切成 1/3 + 2/3。
+     *
+     * ToDo: (20260821 - Julian) 更正流程落地後改成重算並覆寫分段，這道閘即可移除
+     * （計畫書 §17 缺口 16）。
+     */
+    const laterApproved = await this.context.findLaterStartApprovedRequestId({
+      accountBookId: params.accountBookId,
+      employeeId: params.employeeId,
+      workDate: input.workDate,
+      requestedStartMinute: input.requestedStartMinute,
+    });
+    if (laterApproved !== null) {
+      throw new AppError(API_ERRORS.VA_OVERTIME_EARLIER_THAN_APPROVED);
+    }
+
     const referenceMinute =
       scheduled.windowStartMinute ?? input.requestedStartMinute;
 

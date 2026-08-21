@@ -141,6 +141,46 @@ class FakeContext implements Partial<IOvertimeRequestContext> {
     this.pendingQueriedIds = params.employeeIds;
     return [];
   }
+
+  /** Info: (20260821 - Julian) 送出端：平日、8 小時、窗起 08:00 */
+  public scheduledDay: {
+    dayType: WorkDayType;
+    windowStartMinute: number | null;
+    requiredWorkMinutes: number;
+    plannedWorkMinutes: number | null;
+  } | null = {
+    dayType: WorkDayType.WORK,
+    windowStartMinute: 480,
+    requiredWorkMinutes: 8 * HOUR,
+    plannedWorkMinutes: null,
+  };
+
+  async findScheduledDay(): Promise<typeof this.scheduledDay> {
+    return this.scheduledDay;
+  }
+
+  /** Info: (20260821 - Julian) 撞到的那一張重疊單；null = 沒撞到 */
+  public overlappingId: string | null = null;
+
+  async findOverlappingRequestId(): Promise<string | null> {
+    return this.overlappingId;
+  }
+
+  /**
+   * Info: (20260821 - Julian) 同日已核准、且起點更晚的那一張（review 第 15 輪）。
+   * 這裡只回答「有沒有」；那一支查詢本身的 where 由
+   * `overtime_tier_order_independence.test.ts` 以真的 repository 釘住。
+   */
+  public laterStartApprovedId: string | null = null;
+
+  public laterStartAskedFor: number | null = null;
+
+  async findLaterStartApprovedRequestId(params: {
+    requestedStartMinute: number;
+  }): Promise<string | null> {
+    this.laterStartAskedFor = params.requestedStartMinute;
+    return this.laterStartApprovedId;
+  }
 }
 
 class FakeRepo implements Partial<IOvertimeRequestRepository> {
@@ -172,6 +212,18 @@ class FakeRepo implements Partial<IOvertimeRequestRepository> {
       grantCount: 0,
       cashOutEventIds: [],
     };
+  }
+
+  /** Info: (20260821 - Julian) `submit()` 真的寫下去的那一份；null = 從未走到寫入 */
+  public created: { invariant: unknown } | null = null;
+
+  async create(params: { invariant: unknown }): Promise<string> {
+    // Info: (20260821 - Julian) 同 approve：假 repository 也要跑真的不變式
+    assertOvertimeFilingType(
+      params.invariant as Parameters<typeof assertOvertimeFilingType>[0],
+    );
+    this.created = params;
+    return "ot-1";
   }
 
   /** Info: (20260820 - Julian) 讓測試模擬 repository 的附條件更新落空（review 第 3 條） */
@@ -1291,5 +1343,88 @@ describe("待簽清單排除自己（M11 的政策落點）", () => {
     });
 
     expect(context.pendingQueriedIds).toEqual(["emp-a", "emp-b"]);
+  });
+});
+
+/**
+ * Info: (20260821 - Julian) 送出端的兩道同日閘（review 第 13 輪第 2 條、第 15 輪）。
+ *
+ * ## 為什麼擋在送出
+ *
+ * §24 I 的級距在**核准當下**算一次就落地，而它只數那一刻已經存在、且開始得
+ * 更早的分鐘數；分段落地後不會被重算（更正流程未實作）。因此
+ * 「先核准較晚那張、較早的事後補」會讓兩張都從 0 起算、都拿 1/3：
+ * 17:00–19:00 與 19:00–21:00 各 120 分，合計 80 個工資單位，
+ * 而 §24 I 的下限是 120 —— **少付 40**。
+ *
+ * 那個算術由 `overtime_tier_order_independence.test.ts` 用真的引擎釘住；
+ * 這裡釘的是「送出端擋不擋得住」。
+ */
+describe("送出：同日既有加班單的兩道閘", () => {
+  const DAY = "2026-08-20";
+
+  /** Info: (20260821 - Julian) A = 17:00–19:00（較早），B = 19:00–21:00（較晚） */
+  const submitEarlier = () =>
+    service.submit({
+      accountBookId: BOOK,
+      employeeId: APPLICANT,
+      input: {
+        workDate: DAY,
+        filingType: OvertimeFilingType.POST_HOC,
+        compensationMode: OvertimeCompensationMode.PAYMENT,
+        requestedStartMinute: 17 * HOUR,
+        requestedEndMinute: 19 * HOUR,
+        reason: "工地趕澆置",
+      },
+      // Info: (20260821 - Julian) 22:00 才補單 —— 晚於班別窗起，POST_HOC 合法
+      observedAt: new Date("2026-08-20T14:00:00.000Z"),
+    });
+
+  it("同日已有起點更晚的**已核准**單時，擋下並回專屬碼", async () => {
+    context.laterStartApprovedId = "ot-b";
+
+    expect(await codeOf(submitEarlier)).toBe(
+      API_ERRORS.VA_OVERTIME_EARLIER_THAN_APPROVED.code,
+    );
+    // Info: (20260821 - Julian) 沒有寫進去 —— 少付的形狀不得落地
+    expect(repo.created).toBeNull();
+    expect(context.laterStartAskedFor).toBe(17 * HOUR);
+  });
+
+  /**
+   * Info: (20260821 - Julian) 對照組：那一張還在**待簽**時放行。
+   *
+   * 少了這一條，一個無條件 `throw` 的實作也會讓上面那條通過 ——
+   * 而它會把合法的並行送單全部擋掉。待簽的手足單在自己被核准的當下
+   * 會重新讀一次同日較早的分鐘數，屆時就看得到這一張。
+   */
+  it("同日較晚那張還在待簽時（查詢回 null），照常送出", async () => {
+    context.laterStartApprovedId = null;
+
+    await expect(submitEarlier()).resolves.toBeDefined();
+    expect(repo.created).not.toBeNull();
+  });
+
+  /**
+   * Info: (20260821 - Julian) 另一道閘：時段重疊。它先前也沒有任何行為測試。
+   * 兩者的分工是硬的 —— 起點相同由這一道擋（相同起點 + 正長度必定相交），
+   * 起點不同但更晚且已核准由上一道擋。
+   */
+  it("同日已有時段重疊的單時，回重疊碼而不是級距碼", async () => {
+    context.overlappingId = "ot-c";
+
+    expect(await codeOf(submitEarlier)).toBe(
+      API_ERRORS.VA_OVERTIME_OVERLAPS_EXISTING.code,
+    );
+    expect(repo.created).toBeNull();
+  });
+
+  it("那天沒有排班時，回未排班碼", async () => {
+    context.scheduledDay = null;
+
+    expect(await codeOf(submitEarlier)).toBe(
+      API_ERRORS.VA_OVERTIME_DAY_NOT_SCHEDULED.code,
+    );
+    expect(repo.created).toBeNull();
   });
 });

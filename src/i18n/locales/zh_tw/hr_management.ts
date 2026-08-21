@@ -1017,6 +1017,8 @@ export const hrManagement = {
       "算不出這位員工的一日工時，因此無法折換補休或折現。請人資替他排一格班。",
     error_overlaps_existing:
       "當天已經有一張加班單涵蓋了這段時間的一部分。請調整時段，或先撤回那一張。",
+    error_earlier_than_approved:
+      "當天已有一張時段較晚的加班單核准了，它的加成級距已經固定。此時補一張更早的，兩張都會以較低的級距計算。請先撤回較晚那一張，兩張一起重送。",
     error_agreement_record_required:
       "放寬單月上限到 54 小時（§32 III）必須留下記載：工會或勞資會議的紀錄連結，以及同意的日期。",
     error_emergency_already_declared:

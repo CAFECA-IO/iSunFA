@@ -140,34 +140,22 @@ const main = async (): Promise<void> => {
               asOfDate,
             }),
           }))
-        : await leaveGrantRepo
-            .rebuildBalance({
-              accountBookId: scope.accountBookId,
-              employeeId: scope.employeeId,
-              leavePolicyId: scope.leavePolicyId,
-              asOfDate,
-              reconciledAt,
-            })
-            .then(async (remainingMinutes) => ({
-              remainingMinutes,
-              /**
-               * Info: (20260820 - Julian) 重建之後把快取讀回來拿到
-               * `expiringSoonMinutes` —— `rebuildBalance` 只回餘額，
-               * 而報告要說得出兩欄各差多少。
-               */
-              expiringSoonMinutes:
-                (
-                  await prisma.leaveBalance.findUnique({
-                    where: {
-                      employeeId_leavePolicyId: {
-                        employeeId: scope.employeeId,
-                        leavePolicyId: scope.leavePolicyId,
-                      },
-                    },
-                    select: { expiringSoonMinutes: true },
-                  })
-                )?.expiringSoonMinutes ?? 0,
-            }));
+        : /**
+           * Info: (20260821 - Julian) 重建直接回兩欄，不再讀回快取
+           * （review 第 16 輪）。
+           *
+           * 先前是重建之後再 `findUnique` 把 `expiringSoonMinutes` 撈回來。
+           * 那個值是「剛剛寫進去的東西」而不是「算出來的東西」——
+           * 拿它去驗 `writeBalance` 寫得對不對，等於用被測物當 oracle
+           * （checklist §1.8）。現在兩條路徑拿到的都是計算的產物。
+           */
+          await leaveGrantRepo.rebuildBalance({
+            accountBookId: scope.accountBookId,
+            employeeId: scope.employeeId,
+            leavePolicyId: scope.leavePolicyId,
+            asOfDate,
+            reconciledAt,
+          });
 
       /**
        * Info: (20260820 - Julian) 兩欄都比。只比 `remainingMinutes` 的話，

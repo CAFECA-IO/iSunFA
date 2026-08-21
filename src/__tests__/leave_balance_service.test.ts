@@ -117,8 +117,11 @@ class FakeGrantRepo implements ILeaveGrantRepository {
     });
   }
 
-  async rebuildBalance(): Promise<number> {
-    return 0;
+  async rebuildBalance(): Promise<{
+    remainingMinutes: number;
+    expiringSoonMinutes: number;
+  }> {
+    return { remainingMinutes: 0, expiringSoonMinutes: 0 };
   }
 
   async summarize(): Promise<IEmployeeGrantSummary[]> {

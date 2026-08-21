@@ -419,6 +419,25 @@ export const sumExpiringSoonMinutes = async (
  *
  * 分工與這個檔案的其餘函式一致：本體收 `tx`、交易由呼叫端開。
  */
+/**
+ * Info: (20260821 - Julian) 重建的結果 —— **兩個派生欄位都回**（review 第 16 輪）。
+ *
+ * 先前只回 `remainingMinutes`。ADR 022 §8.1 要求「重建結果與快取**逐欄**相同」，
+ * 而只回一欄的簽章讓那句話沒有辦法在呼叫端成立：
+ *
+ * - 每日勾稽的 cron 只比得了 `remainingMinutes`，於是
+ *   `expiringSoonMinutes` 漂掉不會被算進 `mismatched` ——
+ *   而「即將到期從來沒有人算過」正是這支排程存在的一半理由（§38 IV 折現提醒）。
+ * - `scripts/reconcile_leave_balances.ts` 只好在重建之後**再讀一次快取**
+ *   把第二欄撈回來。那份讀回來的值是「寫進去的東西」不是「算出來的東西」，
+ *   兩者相等是靠 `writeBalance` 沒寫錯 —— 用它去驗證 `writeBalance`
+ *   等於拿被測物當 oracle。
+ */
+export interface ILeaveBalanceRebuildResult {
+  remainingMinutes: number;
+  expiringSoonMinutes: number;
+}
+
 export const rebuildBalanceWithin = async (
   tx: Prisma.TransactionClient,
   params: {
@@ -432,7 +451,7 @@ export const rebuildBalanceWithin = async (
     asOfDate: string;
     reconciledAt: Date;
   },
-): Promise<number> => {
+): Promise<ILeaveBalanceRebuildResult> => {
   const remainingMinutes = await sumLedgerMinutes(tx, params);
   /**
    * Info: (20260820 - Julian) 重建**兩個**派生欄位，不是一個（review 第 5 輪第 1 條）。
@@ -451,7 +470,7 @@ export const rebuildBalanceWithin = async (
     expiringSoonMinutes,
     reconciledAt: params.reconciledAt,
   });
-  return remainingMinutes;
+  return { remainingMinutes, expiringSoonMinutes };
 };
 
 /**

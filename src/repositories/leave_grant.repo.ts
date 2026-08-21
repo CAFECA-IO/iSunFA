@@ -12,6 +12,7 @@ import {
 } from "@/interfaces/leave_balance";
 import { assertGrantSource } from "@/repositories/leave_grant_invariant";
 import {
+  ILeaveBalanceRebuildResult,
   rebuildBalanceWithin,
   sumLedgerMinutes,
   writeBalance,
@@ -68,7 +69,7 @@ export interface ILeaveGrantRepository {
     /** Info: (20260820 - Julian) 「即將到期」相對於哪一天（review 第 5 輪第 1 條） */
     asOfDate: string;
     reconciledAt: Date;
-  }): Promise<number>;
+  }): Promise<ILeaveBalanceRebuildResult>;
   summarize(params: {
     accountBookId: string;
     employeeId: string;
@@ -273,7 +274,7 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
     /** Info: (20260820 - Julian) 「即將到期」相對於哪一天（review 第 5 輪第 1 條） */
     asOfDate: string;
     reconciledAt: Date;
-  }): Promise<number> {
+  }): Promise<ILeaveBalanceRebuildResult> {
     return prisma.$transaction((tx) => rebuildBalanceWithin(tx, params));
   }
 

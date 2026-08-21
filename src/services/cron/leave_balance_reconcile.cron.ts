@@ -32,10 +32,35 @@ import { leaveGrantRepo } from "@/repositories/leave_grant.repo";
  * 手動腳本留著：它多了 `--dry-run` 與單一帳本，供上線前驗收與事故排查。
  */
 
-/** Info: (20260820 - Julian) 一次勾稽的結果，供 log 與測試斷言 */
+/**
+ * Info: (20260820 - Julian) 一次勾稽的結果，供 log 與測試斷言。
+ *
+ * Info: (20260821 - Julian) **逐欄拆開**（review 第 16 輪）。
+ *
+ * 先前只有一個 `mismatched`，而比對只看 `remainingMinutes` ——
+ * ADR 022 §8.1 對這條紅線的要求是「重建結果與快取**逐欄**相同」，
+ * 那一版做不到。更糟的是漏掉的正是 `expiringSoonMinutes`：
+ * 它是 M13 的那一欄，「畫面對每個人都顯示即將到期 0 分鐘」的症狀
+ * 與「真的沒有即將到期」一模一樣，而這支排程本來就該是唯一看得出
+ * 差別的地方（§38 IV 未休折現的前置提醒）。
+ *
+ * 兩欄分開數而不是只給一個總數：兩者的處置不同 —— 餘額漂掉是帳務問題
+ * （有人繞過帳本改了快取），到期分鐘漂掉多半是這支排程自己漏跑。
+ */
 export interface ILeaveBalanceReconcileResult {
   scanned: number;
+  /** Info: (20260821 - Julian) 任一派生欄位與帳本不符的組數（不是兩欄相加） */
   mismatched: number;
+  mismatchedRemaining: number;
+  mismatchedExpiringSoon: number;
+  /**
+   * Info: (20260821 - Julian) 這一次之前從來沒有被勾稽過的組數。
+   *
+   * `reconciledAt` 為 null 表示這一列從授予那一刻起就沒有人對過帳。
+   * 它不算「不一致」（帳可能剛好是對的），但**它是這支排程沒在跑的證據** ——
+   * 一個穩定運行的系統裡，第二次之後這個數字該是 0。
+   */
+  neverReconciled: number;
   failed: number;
 }
 
@@ -61,6 +86,9 @@ export const runLeaveBalanceReconcile =
 
     const scopes = await scopesOf();
     let mismatched = 0;
+    let mismatchedRemaining = 0;
+    let mismatchedExpiringSoon = 0;
+    let neverReconciled = 0;
     let failed = 0;
 
     for (const scope of scopes) {
@@ -76,7 +104,11 @@ export const runLeaveBalanceReconcile =
             leavePolicyId: scope.leavePolicyId,
           },
         },
-        select: { remainingMinutes: true },
+        select: {
+          remainingMinutes: true,
+          expiringSoonMinutes: true,
+          reconciledAt: true,
+        },
       });
 
       try {
@@ -85,11 +117,46 @@ export const runLeaveBalanceReconcile =
           asOfDate,
           reconciledAt,
         });
-        if (before === null || before.remainingMinutes !== after) {
+
+        if (before === null) {
+          /**
+           * Info: (20260821 - Julian) 快取根本不存在 —— 兩欄都算漂。
+           *
+           * 這一列的帳本有分錄卻沒有快取列，畫面上那個假別會整個消失。
+           * 從 `LeaveGrant` 那一側掃就是為了看見它（見 `scopesOf`）。
+           */
           mismatched += 1;
+          mismatchedRemaining += 1;
+          mismatchedExpiringSoon += 1;
+          neverReconciled += 1;
           logger.warn(
-            `[leave] balance mismatch employee=${scope.employeeId} policy=${scope.leavePolicyId} cache=${before?.remainingMinutes ?? "(none)"} ledger=${after}`,
+            `[leave] balance missing employee=${scope.employeeId} policy=${scope.leavePolicyId} ledger.remaining=${after.remainingMinutes} ledger.expiringSoon=${after.expiringSoonMinutes}`,
           );
+        } else {
+          if (before.reconciledAt === null) neverReconciled += 1;
+
+          const remainingDrifted =
+            before.remainingMinutes !== after.remainingMinutes;
+          const expiringDrifted =
+            before.expiringSoonMinutes !== after.expiringSoonMinutes;
+
+          if (remainingDrifted) mismatchedRemaining += 1;
+          if (expiringDrifted) mismatchedExpiringSoon += 1;
+
+          if (remainingDrifted || expiringDrifted) {
+            mismatched += 1;
+            /**
+             * Info: (20260821 - Julian) 兩欄都印出來，含**沒有漂的那一欄**。
+             *
+             * 只印漂掉的那一欄，事後看 log 的人分不出「另一欄是對的」
+             * 與「另一欄沒有被檢查」—— 而後者正是這一輪要修掉的東西。
+             */
+            logger.warn(
+              `[leave] balance mismatch employee=${scope.employeeId} policy=${scope.leavePolicyId}` +
+                ` remaining: cache=${before.remainingMinutes} ledger=${after.remainingMinutes}${remainingDrifted ? " DRIFT" : ""}` +
+                ` expiringSoon: cache=${before.expiringSoonMinutes} ledger=${after.expiringSoonMinutes}${expiringDrifted ? " DRIFT" : ""}`,
+            );
+          }
         }
       } catch (error) {
         /**
@@ -104,11 +171,20 @@ export const runLeaveBalanceReconcile =
       }
     }
 
-    if (mismatched > 0 || failed > 0) {
+    if (mismatched > 0 || failed > 0 || neverReconciled > 0) {
       logger.warn(
-        `[leave] balance reconcile: scanned=${scopes.length} mismatched=${mismatched} failed=${failed}`,
+        `[leave] balance reconcile: scanned=${scopes.length} mismatched=${mismatched}` +
+          ` (remaining=${mismatchedRemaining} expiringSoon=${mismatchedExpiringSoon})` +
+          ` neverReconciled=${neverReconciled} failed=${failed}`,
       );
     }
 
-    return { scanned: scopes.length, mismatched, failed };
+    return {
+      scanned: scopes.length,
+      mismatched,
+      mismatchedRemaining,
+      mismatchedExpiringSoon,
+      neverReconciled,
+      failed,
+    };
   };
