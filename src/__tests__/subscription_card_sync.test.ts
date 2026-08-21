@@ -9,7 +9,11 @@ import { teamRepo } from "@/repositories/team.repo";
 import { publicClient } from "@/lib/viem";
 import { getAdminWalletClient } from "@/lib/wallet/admin_wallet";
 import { ABIS } from "@/config/contracts";
-import { buildCardFingerprint } from "@/lib/subscription/subscription_card";
+import {
+  buildCardFingerprint,
+  buildCardMetadata,
+  buildCardTokenUri,
+} from "@/lib/subscription/subscription_card";
 import {
   TEAM_PLAN,
   TEAM_SUBSCRIPTION_STATUS,
@@ -53,6 +57,17 @@ jest.mock("@/lib/viem", () => ({
       status: "success",
       logs: [],
     })),
+    /**
+     * Info: (20260821 - Luphia) 鑄前有兩道讀取：探針（supportsInterface）與
+     * 認養（balanceOf → 可能再掃事件）。預設「錢包可收、鏈上沒有既有卡」，
+     * 讓既有的鑄卡案例走得到鑄造那一步。
+     */
+    readContract: jest.fn(async (args: { functionName: string }) => {
+      if (args.functionName === "supportsInterface") return true;
+      if (args.functionName === "balanceOf") return BigInt(0);
+      throw new Error(`unexpected read: ${args.functionName}`);
+    }),
+    getLogs: jest.fn(async () => []),
   },
 }));
 
@@ -70,6 +85,8 @@ jest.mock("@/repositories/team_subscription.repo", () => ({
     countCardSyncPending: jest.fn(async () => 0),
     recordCardSynced: jest.fn(async () => undefined),
     recordCardSyncFailure: jest.fn(async () => undefined),
+    // Info: (20260821 - Luphia) 鑄前認領（樂觀鎖）：預設搶得到
+    claimCardSync: jest.fn(async () => true),
   },
 }));
 
@@ -144,6 +161,15 @@ beforeEach(() => {
   asMock(publicClient.simulateContract).mockResolvedValue({
     request: { mock: true },
   });
+  asMock(publicClient.readContract).mockImplementation(
+    async (args: { functionName: string }) => {
+      if (args.functionName === "supportsInterface") return true;
+      if (args.functionName === "balanceOf") return BigInt(0);
+      throw new Error(`unexpected read: ${args.functionName}`);
+    },
+  );
+  asMock(publicClient.getLogs).mockResolvedValue([]);
+  asMock(teamSubscriptionRepo.claimCardSync).mockResolvedValue(true);
   asMock(publicClient.waitForTransactionReceipt).mockResolvedValue({
     status: "success",
     logs: [transferLog(42n)],
@@ -393,5 +419,118 @@ describe("批次與積壓", () => {
     const summary = await syncPendingSubscriptionCards(NOW_MS);
 
     expect(summary.givenUp).toBe(2);
+  });
+});
+
+describe("鑄卡前的三道前置（review #6687 阻擋級 / 高-1 / 高-3）", () => {
+  /**
+   * Info: (20260821 - Luphia) 阻擋級的 worker 側對策：`_safeMint` 對沒有
+   * `onERC721Received` 的錢包必定 revert（鏈上實測，每個現有 SCW 都是）。
+   * 探針 false → 跳過、不算失敗、不燒重試——錢包升級（ADR 021）完成的
+   * 下一輪自動開始鑄造，離鏈側不需要任何改動。
+   */
+  it("錢包不能收 ERC-721 → 跳過，不鑄、不記失敗、不燒重試", async () => {
+    asMock(teamSubscriptionRepo.listCardSyncCandidates).mockResolvedValue([
+      subscriptionRow(),
+    ]);
+    asMock(publicClient.readContract).mockImplementation(
+      async (args: { functionName: string }) => {
+        // Info: (20260821 - Luphia) V1 錢包沒有 supportsInterface：呼叫 revert
+        if (args.functionName === "supportsInterface")
+          throw new Error("execution reverted");
+        if (args.functionName === "balanceOf") return BigInt(0);
+        throw new Error(`unexpected read: ${args.functionName}`);
+      },
+    );
+
+    const summary = await syncPendingSubscriptionCards(NOW_MS);
+
+    expect(summary.walletNotReady).toBe(1);
+    expect(summary.failed).toBe(0);
+    expect(asMock(publicClient.simulateContract)).not.toHaveBeenCalled();
+    expect(
+      asMock(teamSubscriptionRepo.recordCardSyncFailure),
+    ).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260821 - Luphia) 認養（高-1 的一半）：「鏈上成功、DB 沒寫成」的
+   * 中斷會留下一張 DB 不知道的卡。鑄之前先找，找到就認領——合約沒有 burn，
+   * 多鑄的那張永遠收不回。
+   */
+  it("鏈上已有這個團隊的卡 → 認領，不再鑄造", async () => {
+    asMock(teamSubscriptionRepo.listCardSyncCandidates).mockResolvedValue([
+      subscriptionRow(),
+    ]);
+    const orphanUri = (() => {
+      const facts = {
+        teamId: "team-1",
+        effectivePlanId: TEAM_PLAN.TEAM,
+        periodStartSec: Math.floor(NOW_MS / 1000) - 86_400,
+        periodEndSec: Math.floor(NOW_MS / 1000) + 86_400,
+        seats: 3,
+      };
+      return buildCardTokenUri(buildCardMetadata(facts));
+    })();
+    asMock(publicClient.readContract).mockImplementation(
+      async (args: { functionName: string; args?: unknown[] }) => {
+        if (args.functionName === "supportsInterface") return true;
+        if (args.functionName === "balanceOf") return BigInt(1);
+        if (args.functionName === "ownerOf") return OWNER_ADDRESS;
+        if (args.functionName === "tokenURI") return orphanUri;
+        throw new Error(`unexpected read: ${args.functionName}`);
+      },
+    );
+    asMock(publicClient.getLogs).mockResolvedValue([
+      { args: { tokenId: BigInt(66) } },
+    ]);
+
+    const summary = await syncPendingSubscriptionCards(NOW_MS);
+
+    expect(summary.minted).toBe(0);
+    expect(asMock(publicClient.simulateContract)).not.toHaveBeenCalled();
+    expect(asMock(teamSubscriptionRepo.recordCardSynced)).toHaveBeenCalledWith(
+      expect.objectContaining({ teamId: "team-1", tokenId: "66" }),
+    );
+  });
+
+  /**
+   * Info: (20260821 - Luphia) 認領（高-1 的另一半）：兩個 worker 同時處理同一列，
+   * 樂觀鎖讓後到的搶不到 → 跳過，不會鑄出第二張。
+   */
+  it("認領失敗（另一個 worker 搶到）→ 跳過，不鑄", async () => {
+    asMock(teamSubscriptionRepo.listCardSyncCandidates).mockResolvedValue([
+      subscriptionRow(),
+    ]);
+    asMock(teamSubscriptionRepo.claimCardSync).mockResolvedValue(false);
+
+    const summary = await syncPendingSubscriptionCards(NOW_MS);
+
+    expect(summary.minted).toBe(0);
+    expect(asMock(publicClient.simulateContract)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260821 - Luphia) 付費優先（高-3）：首次上線的積壓幾乎都是免費團隊，
+   * 剛付費的人的卡值得先鑄。
+   */
+  it("付費團隊排在免費團隊前面處理", async () => {
+    const order: string[] = [];
+    asMock(teamSubscriptionRepo.listCardSyncCandidates).mockResolvedValue([
+      subscriptionRow({ teamId: "team-free", planId: TEAM_PLAN.FREE }),
+      subscriptionRow({ teamId: "team-paid" }),
+    ]);
+    asMock(teamRepo.findTeamOwner).mockImplementation(async () => {
+      return { userId: "user-1", address: OWNER_ADDRESS };
+    });
+    asMock(teamSubscriptionRepo.recordCardSynced).mockImplementation(
+      async (params: { teamId: string }) => {
+        order.push(params.teamId);
+      },
+    );
+
+    await syncPendingSubscriptionCards(NOW_MS);
+
+    expect(order[0]).toBe("team-paid");
   });
 });

@@ -762,26 +762,20 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 
 兩件事的成因不同，一起修但要分開理解。
 
-#### 6.5.1 鏈上是帳本，DB 是快取——但只對「顯示」成立
+#### 6.5.1 方案一律讀 DB；「鏈上為準」只涵蓋會員卡本身（產品裁定 2026-08-21）
 
-方案的判斷有**兩個方向相反**的需求，因此有兩個入口，都在 `src/services/plan.service.ts`：
+> 本節曾寫「顯示以鏈上為準、DB 為快取」（2026-08-19 – 08-20 的三個版本），已由產品裁定**更正**：「鏈上為準」的範圍只有**會員卡本身的狀態**（卡片是否存在、metadata、持有人）；金流交易只存在 DB，**付款完成即視為會員卡有效，不論鏈上是否已完成鑄造**。任何「鏈上沒有卡 ⇒ 沒有方案」的推論都是錯的。
 
-| 入口 | 用途 | 來源 | 失敗方向 |
-|---|---|---|---|
-| `getUserPlan()` | 徽章、方案頁的「目前方案」 | **鏈上為準**，DB 為快取 | 不要把付費戶說成免費戶 |
-| `getTeamEntitlement()` | 扣費、席次補收、額度、記憶保留 | 純 DB，fail-closed | 絕不因資料異常放大額度 |
+錯誤推論的代價已經實際發生過（review #6687 阻擋級）：`mintCard` 用 `_safeMint`，而現有的每一個 SCW 都沒有 `onERC721Received`——鑄卡對所有使用者必定 revert；顯示又採信鏈上，於是重試用盡後**付費客戶被顯示成免費版**，這正是整個 PR 開頭要修的症狀。
 
-- **顯示為什麼採信鏈上**：付款履行漏掉、DB 還原到舊備份時，使用者手上握著鏈上憑證，而畫面說他是免費版——那是最難解釋的一種錯。鏈上**讀不到**（合約未部署、RPC 失敗、**逾時**）才退回 DB：「讀不到」與「讀到了但沒有卡」是兩件事，混為一談會讓一次節點抖動把所有付費戶打成免費版。
-- **「為準」的前提是那份鏈上資料確實最新**（2026-08-20 self-review 修正）。`nft_synced_at IS NULL` 就是「我們自己還沒寫上去」的證據，那段時間**改讀 DB** 並回報 `PENDING_CHAIN`。少了這一條，剛續訂成功的付費戶會看到免費版：卡片的 `period_end` 仍是舊的，而過期的卡折算為 free——而且**每期續訂都會發生一次**，不只第一次訂閱。這個「讀 DB」有兩道界（重試未達上限、且在 `SUBSCRIPTION_CARD_PENDING_GRACE_MS` = 15 分鐘內），超過就回到鏈上為準並以 error 記錄：卡住的同步不該讓「顯示付費」永久靠 DB 撐著。
-- **權益為什麼不採信鏈上**：卡片可被持有人自行轉走（合約只擋黑名單），若權益採信鏈上憑證，收到一張轉讓卡的人就能動用那個團隊的額度；而且扣費路徑不能因為 RPC 逾時而放行或擋下。
-- **代價**：卡片尚未鑄出的那一分鐘內（worker 週期），徽章顯示免費版。刻意接受，且有測試釘住（`plan_service_chain.test.ts`）——要改成 `max(DB, 鏈上)` 會讓那一條紅，而那應該引發一次討論。
-- **不回寫訂閱本身**：不一致時只回填卡號快取（`nft_token_id`，且僅在原本為 NULL 時）並警示。metadata 帶著 `team_id`，若讓它回寫 `TeamSubscription.planId`，任何拿到一張轉讓卡的人都能改寫那個團隊的計費資料。快取可以被鏈上糾正，計費資料只能由付款流程寫入。
-- 卡片合約是 `DynamicKYCMembership`（`contracts/dynamic_kyc_membership.sol`）：部署的合約集裡只有它是 ERC721，`mintCard` / `setTokenURI` 都是平台管理員角色。
-- **不走 `SubscriptionManager.addSubscription`**：那一支會**鑄點數**，而訂閱買到的是額度視窗、不發點數（§5.4.2）。
+| 入口 | 用途 | 來源 |
+|---|---|---|
+| `getUserPlan()` | 徽章、方案頁的「目前方案」 | **純 DB**（一次查詢，零 RPC） |
+| `getTeamEntitlement()` | 扣費、席次補收、額度、記憶保留 | 純 DB，fail-closed |
 
-鏈上讀取的形狀（`readOwnedChainCards`）：`balanceOf` 當閘門（回 0 就一次 RPC 結束，絕大多數使用者屬於這一類）→ 先試 DB 快取的卡號 → **呼叫端要求時**才掃 `Transfer(from = 0x0, to = 持卡人)` 事件（合約沒有 ERC721Enumerable，這是唯一能發現「DB 不知道的卡」的辦法）。每一張都以 `ownerOf` 再確認一次現在還在他手上。只認**鑄造**事件——轉入的卡不是本系統發的憑證，否則在二級市場拿到一張卡就能讓徽章顯示企業版。
+隨裁定移除的東西：`reconcilePlan` / `isChainCopyStale` / `resolveChainCardPlan` / `PLAN_SOURCE`（沒有第二個來源，就沒有東西要對帳）、`/auth/me` 的 `planSource` 欄位、顯示路徑的整條鏈上讀取與它的逾時保護。守住它的兩道測試：`plan_service_chain.test.ts` 把 viem mock 成炸彈（顯示路徑打任何 RPC 當場紅）、掃描測試釘住 `plan.service` 不 import 鏈上讀取。
 
-掃描的觸發條件由 service 決定（`discoverMissing`＝有付費團隊卻沒有卡號），不是「已確認卡片數 < `balanceOf`」（2026-08-20 self-review 修正）。舊條件對「快取剛好缺一張」是對的，但持有**已不屬於自己團隊**的卡時（換過 OWNER、團隊解散）它永遠成立——於是每次 `/auth/me` 都對合約做一次 `fromBlock 0` 的全鏈掃描。整段讀取另有 `CHAIN_CARD_READ_TIMEOUT_MS`（2.5 秒）的逾時：`catch` 擋得住失敗，擋不住慢，而 `/auth/me` 是所有畫面的前置條件。
+卡片仍然照鑄（worker），但定位是**純鏡像**：它的存在與否、新舊與否，都不影響任何顯示或權益。
 
 #### 6.5.2 為什麼是背景同步
 
@@ -800,6 +794,7 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 | 卡號 | `nft_token_id` | 續期時無從判斷「鑄新的」還是「換 URI」 |
 | 重試上限 | `nft_sync_attempts`（上限 5）＋ `nft_sync_error` | 永久性失敗（地址被列入黑名單、管理員錢包缺角色）會每分鐘燒一次 gas 估算 |
 
+- **鑄造前的三道前置**（2026-08-21，review #6687 阻擋級 / 高-1 / 高-3）：（一）**探針** `supportsInterface(0x150b7a02)`——現有 SCW 沒有 `onERC721Received`，`_safeMint` 必定 revert；探針 false 時跳過、不算失敗、不燒重試（`walletNotReady` 計數），錢包升級（ADR 021）完成的下一輪自動開始鑄造。（二）**認養**——鑄之前先以事件掃描找這個團隊的既有卡，找到就認領而不再鑄（「鏈上成功、DB 沒寫成」的中斷會留下 DB 不知道的卡，而合約沒有 burn）。（三）**認領**——以 `nftSyncAttempts` 當樂觀鎖（`updateMany where attempts = 觀察值`），兩個 worker 同列只有一個搶得到。候選排序改為**付費優先、新到舊**（原本的 `updatedAt asc` 在首次上線時正好把剛付費的人排到整批積壓的最後面）。
 - `tokenId` **只認收據裡的 `Transfer(from=0x0, to=持卡人)` 事件**，不用 `simulateContract` 的回傳值：後者是模擬當下的 `_nextTokenId`，中間有人鑄一張就偏一號，而 `setTokenURI` 只檢查 `_requireOwned`——偏一號會把**別人那張卡**的 metadata 覆寫掉。找不到事件時當失敗重試，不寫一個猜的卡號。
 - 鏈上環境未備妥（本機、未部署合約）時**整輪停手**，不逐列記失敗：否則每個團隊的重試額度都會被一個與它們無關的原因燒完。
 - 降級（到期、PAST_DUE、改回 free）會換 URI 把卡片標成非有效；**不重鑄、不銷毀**（合約沒有 burn）。換 OWNER 不搬卡——卡片鑄出後只有持有人能轉，平台再鑄一張等於憑空多一份有效憑證（開放問題見 §10）。

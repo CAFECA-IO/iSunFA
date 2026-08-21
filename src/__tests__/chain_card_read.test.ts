@@ -80,7 +80,6 @@ const NOW_SEC = 1_760_000_000;
 function tokenUri(teamId: string, plan: string) {
   const facts: ISubscriptionCardFacts = {
     teamId,
-    teamName: teamId,
     effectivePlanId: plan as ISubscriptionCardFacts["effectivePlanId"],
     periodStartSec: NOW_SEC - 86_400,
     periodEndSec: NOW_SEC + 86_400,

@@ -249,67 +249,25 @@ export class TeamSubscriptionRepository {
   }
 
   /**
-   * Info: (20260820 - Luphia) 這些團隊的**卡片同步狀態**（方案讀取用）。
-   *
-   * 一次查回來而不是逐團問：`/auth/me` 每次頁面載入都會呼叫。
-   *
-   * 四個欄位各有用途，缺一個就會回到某個已經修過的缺陷：
-   *
-   * - `tokenId`：讀鏈的 hint（命中就不必掃事件）。null 本身也是資訊。
-   * - `syncedAt`：null＝**鏈上那份已知過期**（我們還沒寫上去）→ 顯示改讀 DB。
-   *   少了它，剛續訂成功的付費戶會看到免費版（舊 `period_end` 折算為 free）。
-   * - `attempts` / `updatedAt`：那個「讀 DB」必須有界——卡住的同步不該讓
-   *   「顯示付費」永久靠 DB 撐著（見 `isChainCopyStale`）。
+   * Info: (20260821 - Luphia) 鑄卡前的**認領**（review #6687 高-1）：
+   * 以 `nftSyncAttempts` 當樂觀鎖。兩個 worker 同時讀到同一列（attempts 相同），
+   * 第一個 updateMany 命中（count=1），第二個的 where 已對不上（count=0）→ 跳過。
+   * 認領同時把 attempts +1：中途崩潰時這一列自然回到佇列，且佔用有代價
+   * （五次崩潰後停手），不會無聲地無限重試。
    */
-  async listCardSyncState(teamIds: string[]): Promise<
-    Map<
-      string,
-      {
-        tokenId: string | null;
-        syncedAt: Date | null;
-        attempts: number;
-        updatedAtMs: number;
-      }
-    >
-  > {
-    if (teamIds.length === 0) return new Map();
-    const rows = await prisma.teamSubscription.findMany({
-      where: { teamId: { in: teamIds } },
-      select: {
-        teamId: true,
-        nftTokenId: true,
-        nftSyncedAt: true,
-        nftSyncAttempts: true,
-        updatedAt: true,
+  async claimCardSync(
+    teamId: string,
+    observedAttempts: number,
+  ): Promise<boolean> {
+    const result = await prisma.teamSubscription.updateMany({
+      where: {
+        teamId,
+        nftSyncedAt: null,
+        nftSyncAttempts: observedAttempts,
       },
+      data: { nftSyncAttempts: { increment: 1 } },
     });
-    return new Map(
-      rows.map((row) => [
-        row.teamId,
-        {
-          tokenId: row.nftTokenId,
-          syncedAt: row.nftSyncedAt,
-          attempts: row.nftSyncAttempts,
-          updatedAtMs: row.updatedAt.getTime(),
-        },
-      ]),
-    );
-  }
-
-  /**
-   * Info: (20260819 - Luphia) 只補卡號快取，**不動任何計費欄位**（方案以鏈上為準時的回填）。
-   *
-   * `where` 帶 `nftTokenId: null`：只在「還沒有卡號」時寫得進去，
-   * 因此不會蓋掉 worker 從鑄造收據取得的權威值。兩者衝突時不該由顯示路徑決定誰對。
-   *
-   * 刻意不碰 `nftSyncedAt`：那是 worker 的工作佇列。這裡補上卡號之後，
-   * 那一列仍然待同步——worker 下一輪會確認 metadata 是不是最新的。
-   */
-  async cacheCardTokenId(teamId: string, tokenId: string): Promise<void> {
-    await prisma.teamSubscription.updateMany({
-      where: { teamId, nftTokenId: null },
-      data: { nftTokenId: tokenId },
-    });
+    return result.count === 1;
   }
 
   /**
@@ -334,8 +292,15 @@ export class TeamSubscriptionRepository {
         nftSyncAttempts: { lt: maxAttempts },
       },
       include: { team: { select: { name: true, deletedAt: true } } },
-      // Info: (20260819 - Luphia) 先進先出：新付費的人不該被一批舊的免費團隊卡在後面
-      orderBy: { updatedAt: "asc" },
+      /**
+       * Info: (20260821 - Luphia) 新到舊（review #6687 高-3）。
+       *
+       * 原本是 `asc` 且註解寫「先進先出：新付費的人不該被卡在後面」——效果
+       * **正好相反**：首次上線時所有既有列都待同步，而 `db push` 不動
+       * `updatedAt`，於是剛付費的人（updatedAt 最新）被排到整批積壓的最後面。
+       * 付費/免費的優先序在 service 端排（那需要折算有效方案，Repo 排不了）。
+       */
+      orderBy: { updatedAt: "desc" },
       take: limit,
     });
   }

@@ -72,6 +72,13 @@ export const ABIS = {
     "function ownerOf(uint256 tokenId) view returns (address)",
     "function tokenURI(uint256 tokenId) view returns (string)",
     /**
+     * Info: (20260821 - Luphia) `_safeMint` 對沒有 `onERC721Received` 的收受人
+     * 的 revert（review #6687 阻擋級的實測錯誤，selector 0x64a0ae92）。
+     * 宣告進 ABI，`nftSyncError` 才存得下人話而不是一串 hex——worker 的探針
+     * 讓它不該再發生，但「不該發生的失敗」正是最需要說得出原因的那種。
+     */
+    "error ERC721InvalidReceiver(address receiver)",
+    /**
      * Info: (20260819 - Luphia) 鑄造後從收據回讀 tokenId 用。
      * `mintCard` 的回傳值拿不到——`writeContract` 只給交易哈希，
      * 而 `simulateContract` 給的是「模擬當下」的號碼，中間有人鑄一張就對不上。

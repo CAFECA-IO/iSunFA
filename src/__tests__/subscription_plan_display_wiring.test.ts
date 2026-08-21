@@ -62,14 +62,26 @@ describe("方案顯示的來源", () => {
     expect(header).toMatch(/PLAN\.FREE/);
   });
 
-  it("/auth/me 只經 plan.service 的單一入口，並回傳逐團事實與來源", () => {
+  it("/auth/me 只經 plan.service 的單一入口，且不再回 planSource", () => {
     const route = codeOf("src", "app", "api", "v1", "auth", "me", "route.ts");
 
     expect(route).toMatch(/from "@\/services\/plan\.service"/);
     expect(route).toMatch(/getUserPlan\(/);
     expect(route).toMatch(/plan: planSnapshot\.plan/);
     expect(route).toMatch(/ownedPlans: planSnapshot\.ownedPlans/);
-    expect(route).toMatch(/planSource: planSnapshot\.source/);
+    /**
+     * Info: (20260821 - Luphia) `planSource` 已取消（產品裁定 20260821：方案一律
+     * 讀 DB，沒有第二個來源就沒有「來源」要說明）。這條反向斷言擋「改回讀鏈上」
+     * 的重構——與 plan_service_chain 測試裡的 viem 炸彈 mock 是同一道防線的兩半。
+     */
+    expect(route).not.toMatch(/planSource:/);
+  });
+
+  it("方案顯示路徑不 import 任何鏈上讀取", () => {
+    const service = codeOf("src", "services", "plan.service.ts");
+
+    expect(service).not.toMatch(/from "@\/lib\/viem"/);
+    expect(service).not.toMatch(/readOwnedChainCards/);
   });
 });
 

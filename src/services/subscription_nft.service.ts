@@ -27,6 +27,7 @@ import { logger } from "@/lib/utils/logger";
 import { teamRepo } from "@/repositories/team.repo";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { resolveEffectivePlanId } from "@/lib/subscription/plan_rules";
+import { TEAM_PLAN } from "@/constants/subscription_quota";
 
 /**
  * Info: (20260819 - Luphia) 訂閱會員卡（鏈上 NFT）的同步。
@@ -83,6 +84,11 @@ export interface ICardSyncSummary {
   failed: number;
   // Info: (20260819 - Luphia) 已放棄（達重試上限）的總數：需要人介入，必須看得見
   givenUp: number;
+  /**
+   * Info: (20260821 - Luphia) 錢包尚不能收 ERC-721（探針 false）而跳過的數量。
+   * 不算失敗、不燒重試——錢包升級（ADR 021）完成的下一輪自動開始鑄造。
+   */
+  walletNotReady: number;
   // Info: (20260819 - Luphia) 本輪沒處理完的剩餘量（下一輪會接手）；不靜默截斷
   remaining: number;
 }
@@ -276,6 +282,61 @@ async function discoverMintedTokenIds(
     .filter((tokenId): tokenId is string => Boolean(tokenId));
 }
 
+/**
+ * Info: (20260821 - Luphia) 錢包能不能收 ERC-721：`supportsInterface(0x150b7a02)`。
+ *
+ * V1 錢包沒有這個函式 → 呼叫 revert → 視為 false。與升級待辦腳本
+ * （`scripts/request_wallet_upgrades.ts`）同一條判準；Fido2AccountV2（ADR 021）
+ * 回 true——探針的兩側語意在 forge 測試裡各有一條釘住。
+ */
+async function walletCanReceive(address: string): Promise<boolean> {
+  try {
+    const result = (await publicClient.readContract({
+      address: getAddress(address),
+      abi: [
+        {
+          type: "function",
+          name: "supportsInterface",
+          stateMutability: "view",
+          inputs: [{ name: "interfaceId", type: "bytes4" }],
+          outputs: [{ name: "", type: "bool" }],
+        },
+      ] as const,
+      functionName: "supportsInterface",
+      args: ["0x150b7a02"],
+    })) as boolean;
+    return result === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Info: (20260821 - Luphia) 鑄之前先找既有卡（review 高-1）。
+ *
+ * 「鏈上成功、DB 沒寫成」的中斷（等收據逾時、SIGTERM、DB 抖動）會留下一張
+ * DB 不知道的卡；合約沒有 burn，再鑄一張就是一張永遠收不回的孤兒卡。
+ * 用讀取端既有的 `readOwnedChainCards`（含事件掃描）找這個團隊的卡，
+ * 找到就回卡號讓呼叫端認領。
+ */
+async function findExistingCardForTeam(
+  owner: string,
+  teamId: string,
+): Promise<string | null> {
+  try {
+    const cards = await readOwnedChainCards(owner, { discoverMissing: true });
+    const match = cards.find((card) => card.teamId === teamId);
+    return match?.tokenId ?? null;
+  } catch {
+    /**
+     * Info: (20260821 - Luphia) 查不到就當沒有，照常走鑄造：這一步是防重複的
+     * 加強，不是鑄造的前提——讓它的失敗擋住鑄造，等於用一個讀取問題
+     * 換一個功能停擺。
+     */
+    return null;
+  }
+}
+
 async function mintCard(to: string, uri: string) {
   const { account, walletClient, cardAddress } = await getClients();
   const recipient = getAddress(to);
@@ -341,6 +402,7 @@ export async function syncPendingSubscriptionCards(
     skipped: 0,
     failed: 0,
     givenUp: 0,
+    walletNotReady: 0,
     remaining: 0,
   };
 
@@ -380,6 +442,19 @@ export async function syncPendingSubscriptionCards(
 
   const nowSec = Math.floor(nowMs / 1000);
 
+  /**
+   * Info: (20260821 - Luphia) 付費優先（review #6687 高-3 的另一半）。
+   *
+   * 首次上線的積壓幾乎都是免費團隊（不需要鑄卡、只是清佇列），而剛付費的人
+   * 的卡值得先鑄。付費/免費要折算有效方案（status + 週期），Repo 的 orderBy
+   * 排不了，在這裡排——同組內維持 Repo 給的新到舊。
+   */
+  candidates.sort((a, b) => {
+    const aPaid = resolveEffectivePlanId(a, nowSec) !== TEAM_PLAN.FREE ? 0 : 1;
+    const bPaid = resolveEffectivePlanId(b, nowSec) !== TEAM_PLAN.FREE ? 0 : 1;
+    return aPaid - bPaid;
+  });
+
   for (const subscription of candidates) {
     const { teamId } = subscription;
     try {
@@ -404,7 +479,6 @@ export async function syncPendingSubscriptionCards(
 
       const facts: ISubscriptionCardFacts = {
         teamId,
-        teamName: subscription.team.name,
         // Info: (20260819 - Luphia) 有效方案與扣費側同一個判準（過期／PAST_DUE 折算為 free）
         effectivePlanId: resolveEffectivePlanId(subscription, nowSec),
         periodStartSec: Math.floor(
@@ -429,6 +503,51 @@ export async function syncPendingSubscriptionCards(
       const uri = buildCardTokenUri(buildCardMetadata(facts));
 
       if (decision.action === SUBSCRIPTION_CARD_ACTION.MINT) {
+        /**
+         * Info: (20260821 - Luphia) 鑄造前的三道前置，順序有意義：
+         *
+         * 1. **探針**（review #6687 阻擋級的 worker 側對策）：`mintCard` 用
+         *    `_safeMint`，收受人沒有 `onERC721Received` 就必定 revert
+         *    `ERC721InvalidReceiver`——鏈上實測對現有的每一個 SCW 都成立。
+         *    探針 false 時**跳過、不算失敗、不燒重試**：那不是這個團隊的錯，
+         *    是錢包版本的事（ADR 021）；升級完成的下一輪自動開始鑄造。
+         * 2. **認養**（review 高-1 的一半）：鏈上寫入成功、DB 寫入失敗的中斷
+         *    會留下一張 DB 不知道的卡。鑄之前先找，找到就認領而不是再鑄
+         *    ——合約沒有 burn，多鑄的那張收不回來。
+         * 3. **認領**（review 高-1 的另一半）：以 `nftSyncAttempts` 當樂觀鎖，
+         *    兩個 worker 同時處理同一列時只有一個搶得到，另一個這輪跳過。
+         */
+        if (!(await walletCanReceive(owner.address))) {
+          summary.walletNotReady += 1;
+          continue;
+        }
+
+        const existing = await findExistingCardForTeam(owner.address, teamId);
+        if (existing) {
+          await teamSubscriptionRepo.recordCardSynced({
+            teamId,
+            tokenId: existing,
+            ownerAddress: owner.address,
+            fingerprint: decision.fingerprint,
+            syncedAt: new Date(nowMs),
+          });
+          summary.skipped += 1;
+          log.warn("鏈上已有這個團隊的卡，認領而不再鑄造", {
+            teamId,
+            tokenId: existing,
+          });
+          continue;
+        }
+
+        const claimed = await teamSubscriptionRepo.claimCardSync(
+          teamId,
+          subscription.nftSyncAttempts,
+        );
+        if (!claimed) {
+          summary.skipped += 1;
+          continue;
+        }
+
         const { tokenId, hash } = await mintCard(owner.address, uri);
         await teamSubscriptionRepo.recordCardSynced({
           teamId,

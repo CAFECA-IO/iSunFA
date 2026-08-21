@@ -26,7 +26,12 @@ export interface ISubscriptionCardState {
 
 export interface ISubscriptionCardFacts {
   teamId: string;
-  teamName: string | null;
+  /**
+   * Info: (20260821 - Luphia) 刻意**沒有**團隊名稱（review #6687 中-3）。
+   * tokenURI 的內容會永久留在鏈上（`setTokenURI` 只能覆寫當前值，舊值仍在
+   * 歷史 calldata 裡，而合約沒有 burn）——「某位址屬於某事務所」是未經同意的
+   * 客戶識別資訊。`team_id` 是內部 UUID，對外不可反查，顯示名稱由離鏈補。
+   */
   // Info: (20260819 - Luphia) **有效**方案（過期／PAST_DUE 已折算為 free），非 DB 原值
   effectivePlanId: TeamPlanId;
   periodStartSec: number;
@@ -70,8 +75,8 @@ export function buildCardMetadata(
   return {
     name: `${SUBSCRIPTION_CARD_NAME} · ${facts.effectivePlanId}`,
     description: isPaid
-      ? `iSunFA ${facts.effectivePlanId} subscription for team ${facts.teamName ?? facts.teamId}.`
-      : `iSunFA subscription for team ${facts.teamName ?? facts.teamId} is not active.`,
+      ? `iSunFA ${facts.effectivePlanId} subscription.`
+      : `iSunFA subscription is not active.`,
     attributes: [
       { trait_type: "plan", value: facts.effectivePlanId },
       { trait_type: "team_id", value: facts.teamId },

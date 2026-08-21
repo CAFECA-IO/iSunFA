@@ -8,7 +8,6 @@ import {
   readCardTeamId,
   type ISubscriptionCardFacts,
 } from "@/lib/subscription/subscription_card";
-import { resolveChainCardPlan } from "@/lib/subscription/plan_rules";
 import {
   SUBSCRIPTION_CARD_ACTION,
   SUBSCRIPTION_CARD_URI_PREFIX,
@@ -25,7 +24,6 @@ import { TEAM_PLAN } from "@/constants/subscription_quota";
 
 const facts: ISubscriptionCardFacts = {
   teamId: "team-1",
-  teamName: "費思會計師事務所",
   effectivePlanId: TEAM_PLAN.TEAM,
   periodStartSec: 1_760_000_000,
   periodEndSec: 1_762_592_000,
@@ -230,6 +228,10 @@ describe("同步決策", () => {
 describe("鏈上卡片的解讀", () => {
   const uri = buildCardTokenUri(buildCardMetadata(facts));
 
+  /**
+   * Info: (20260821 - Luphia) 解讀只剩 worker 在用（鑄前認養既有卡）：
+   * 方案顯示已改為純 DB（產品裁定 20260821），resolveChainCardPlan 隨之移除。
+   */
   it("解得回原本的 metadata 與團隊", () => {
     const metadata = parseCardTokenUri(uri);
 
@@ -255,52 +257,15 @@ describe("鏈上卡片的解讀", () => {
     expect(parseCardTokenUri(bad)).toBeNull();
   });
 
-  it("期間未過的付費卡 → 該方案", () => {
-    expect(
-      resolveChainCardPlan(buildCardMetadata(facts), facts.periodEndSec - 1),
-    ).toBe(TEAM_PLAN.TEAM);
-  });
-
   /**
-   * Info: (20260819 - Luphia) 卡片不會過期消失（合約沒有 burn），
-   * 因此「期末在過去」是常態：一張去年的卡代表 free，不是 business。
+   * Info: (20260821 - Luphia) metadata **不得**含團隊名稱（review #6687 中-3）：
+   * tokenURI 永久留在鏈上，「某位址屬於某事務所」是未經同意的客戶識別資訊。
+   * team_id 是內部 UUID，對外不可反查。
    */
-  it("期間已過的卡 → free", () => {
-    expect(
-      resolveChainCardPlan(buildCardMetadata(facts), facts.periodEndSec + 1),
-    ).toBe(TEAM_PLAN.FREE);
-  });
+  it("metadata 不含團隊名稱", () => {
+    const json = JSON.stringify(buildCardMetadata(facts));
 
-  it("讀不到 metadata、方案代號不認識 → free", () => {
-    expect(resolveChainCardPlan(null, facts.periodEndSec - 1)).toBe(
-      TEAM_PLAN.FREE,
-    );
-    expect(
-      resolveChainCardPlan(
-        {
-          name: "x",
-          description: "",
-          attributes: [
-            { trait_type: "plan", value: "enterprise" },
-            { trait_type: "period_end", value: facts.periodEndSec },
-          ],
-        },
-        facts.periodEndSec - 1,
-      ),
-    ).toBe(TEAM_PLAN.FREE);
-  });
-
-  // Info: (20260819 - Luphia) 沒有 period_end 的卡不能當成永久有效
-  it("缺 period_end → free", () => {
-    expect(
-      resolveChainCardPlan(
-        {
-          name: "x",
-          description: "",
-          attributes: [{ trait_type: "plan", value: TEAM_PLAN.BUSINESS }],
-        },
-        facts.periodEndSec - 1,
-      ),
-    ).toBe(TEAM_PLAN.FREE);
+    expect(json).not.toContain("teamName");
+    expect(json).toContain("team_id");
   });
 });

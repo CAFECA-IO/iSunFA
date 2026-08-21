@@ -254,7 +254,7 @@ npx tsx scripts/backfill_remove_team_admin.ts
 
 - [ ] **worker 有在跑**：`npx tsx scripts/run_worker.ts` 的 log 應出現 `SubscriptionCardSync` 與「訂閱卡同步完成」，且 `remaining` 逐輪下降。
 - [ ] **合約位址已設定**：`NEXT_PUBLIC_DYNAMIC_KYC_MEMBERSHIP_ADDRESS`。沒設定時 worker 會每輪印一行「鏈上環境未備妥，本輪不同步訂閱卡」並**整輪跳過**（不會燒掉任何團隊的重試額度），但卡片永遠不會出現。
-  ⚠️ 這個位址也是**方案顯示**的依據（2026-08-19：顯示以鏈上為準）。沒設定或 RPC 不通時 `/auth/me` 回 `planSource: "DB"` 並以快取顯示——功能不會壞，但那表示「鏈上為準」實際上沒有生效，值得當成告警而不是常態。
+  （2026-08-21 更正：方案顯示已改為純 DB，這個位址**只**影響卡片鑄造，與任何畫面無關。沒設定時 worker 每輪跳過並留 log，卡片不會出現，其他一切照常。）
 - [ ] **管理員錢包有 `DEFAULT_ADMIN_ROLE`**：`mintCard` / `setTokenURI` 都是該角色專屬。缺角色的症狀是每個團隊各失敗 5 次後停手，`team_subscription.nft_sync_error` 會留下 revert 原因。
 
 積壓與放棄的觀察點（都在同一行 log 裡）：`givenUp > 0` 表示有團隊已達重試上限，需要人看 `nft_sync_error`；修好原因（解黑名單、補角色）後把該列的 `nft_sync_attempts` 歸零即可自動接續。
@@ -288,8 +288,8 @@ WHERE plan_id = 'free' AND current_period_end > NOW();
 - [ ] 收據只取得到自己的訂單（換一個 `order_id` 應回 404）
 - [ ] 付費團隊的 OWNER 登入後，右上角徽章顯示團隊版／企業版（不是免費版），且方案頁的「目前方案」標在對應那一格
 - [ ] 該 OWNER 的錢包在一分鐘內出現一張訂閱會員卡 NFT，`team_subscription.nft_token_id` 有值
-- [ ] `/auth/me` 的 `planSource` 是 `CHAIN`（`PENDING_CHAIN` 表示卡片還在同步中，正常且短暫；持續是 `DB` 表示鏈上讀不到或**逾時**——查合約位址與 RPC 延遲）
-- [ ] log 沒有「訂閱卡待同步已超過寬限」：那一行代表 worker 卡住，而使用者會在 15 分鐘後被打回免費版顯示
+- [ ] ~~`/auth/me` 的 `planSource`~~ **已取消**（2026-08-21 裁定：方案一律讀 DB、零 RPC，沒有第二個來源就沒有「來源」欄位）。改驗：付費團隊 OWNER 的徽章與方案頁**只由 DB 決定**，與鑄卡進度無關
+- [ ] worker log 的 `walletNotReady` 數字符合預期（= 尚未升級錢包的付費團隊數；那不是錯誤，是 ADR 021 的常態混合狀態）。`npx tsx scripts/list_card_sync_giveups.ts` 應為空——有列就是探針以外的失敗，需要人看
 - [ ] 方案頁的三個價格與 `plan.service.listPlans()` 一致（改價後只要改常數，四處讀者已收斂為一處）
 - [ ] 後台發放點數連點兩下只入帳一次
 - [ ] 免費版團隊可以邀請成員（不再有人數上限），且方案頁顯示「團隊人數不限」
