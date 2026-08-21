@@ -1022,6 +1022,32 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
          * 另一趟零張。所以「重新匯入一次沒有 dropped」不構成驗證通過，
          * 要連續兩趟才算。
          */
+        /**
+         * Info: (20260820 - Emily) 收割用:把**每一張**候選表的原始 markdown 記出來,
+         * 不只被丟掉的那些。
+         *
+         * 原本只有 `source table dropped` 帶 `full`,於是一趟 40 分鐘的匯入只能拿到
+         * 1–2 種形狀,而這個缺陷偶發(08-20 三趟分別丟 0 / 表3.4 / 表4.4+表4.8)。
+         * 修法因此變成「跑一趟看到一種形狀、修一種、再跑一趟」——
+         * 原檔 19 張表,那個迴圈可以跑好幾週。
+         *
+         * 開了這個旗標,一趟就拿到 19 張的真實長相,收割進
+         * `src/__tests__/fixtures/source_tables/` 之後每次改動 0.3 秒跑完所有形狀。
+         *
+         * 預設關閉:payload 動輒數 KB,19 張就是上百 KB,不該進正常的 log。
+         */
+        if (process.env.CARBON_DUMP_SOURCE_TABLES === "1") {
+          candidates.forEach((table) => {
+            logger.warn("[ReportImportService] source table candidate", {
+              paragraphId,
+              tableNo: table.tableNo,
+              caption: table.caption.slice(0, 40),
+              lineCount: table.markdown.split("\n").length,
+              full: table.markdown,
+            });
+          });
+        }
+
         const rejoined = candidates.map((table) => {
           const fix = joinWrappedTableRows(table.markdown);
           if (fix.joined === 0) return table;
