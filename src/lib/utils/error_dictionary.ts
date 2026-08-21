@@ -1231,6 +1231,17 @@ export const API_ERRORS = {
     message: "Please wait before sending another invitation",
     status: ApiCode.FORBIDDEN,
   } as IErrorDef,
+  /**
+   * Info: (20260821 - Luphia) 展延購買的時間閘門（產品裁定 20260821）：
+   * 當期剩餘超過 30 天時不得購買延長／換方案。沒有這道閘門，展延語意對
+   * 「換方案」是一個約四折買到高階方案的漏洞（review #6687 二輪阻擋-1）。
+   */
+  TW_SUBSCRIPTION_EXTENSION_TOO_EARLY: {
+    code: "TW000028",
+    message:
+      "Subscription can only be extended within 30 days of the current period end",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
   TW_ALLOCATION_REVOKE_DISABLED: {
     code: "TW000020",
     message: "Revoking allocated credits is no longer supported",

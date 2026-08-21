@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma, TeamSubscription } from "@/generated";
 import {
-  BILLING_INTERVAL,
+  BILLING_INTERVAL_DAYS,
   BillingInterval,
   TEAM_PLAN,
   TEAM_SUBSCRIPTION_STATUS,
@@ -52,7 +52,7 @@ export async function applyTeamSubscriptionInTx(
 ): Promise<TeamSubscription> {
   const { teamId, planId, billingInterval, orderId, nowMs, seats, unitPrice } =
     input;
-  const periodDays = billingInterval === BILLING_INTERVAL.YEAR ? 365 : 30;
+  const periodDays = BILLING_INTERVAL_DAYS[billingInterval];
 
   /**
    * Info: (20260820 - Luphia) 當期還沒結束就**展延**，不從現在重算（產品決定 20260820）。
@@ -117,6 +117,8 @@ export async function applyTeamSubscriptionInTx(
       currentPeriodEnd,
       autoRenew: true,
       latestOrderId: orderId,
+      // Info: (20260821 - Luphia) 週期快照：期中加人的補收分母按這一期買的週期算
+      billingInterval,
       // Info: (20260819 - Luphia) 方案／期間變了，鏈上那張卡就過期了：標記待同步
       ...CARD_DIRTY,
       /**
@@ -139,6 +141,7 @@ export async function applyTeamSubscriptionInTx(
       currentPeriodEnd,
       autoRenew: true,
       latestOrderId: orderId,
+      billingInterval,
       seats: seats ?? 1,
       unitPrice: unitPrice ?? 0,
     },

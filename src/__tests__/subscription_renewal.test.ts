@@ -290,10 +290,35 @@ describe("續訂冪等", () => {
   });
 
   /**
-   * Info: (20260820 - Luphia) 已完成的訂單＝錢收了而權益沒給（否則這一列不會還在
-   * PAST_DUE 名單裡）。補套用，**不再扣款**。
+   * Info: (20260821 - Luphia) **`PAID` 才是「扣款成功、套用失敗」的實際狀態**
+   * （review #6687 二輪阻擋-2）：`completePaymentTransactionAndOrder` 在扣款
+   * 成功時寫 PAID 開收據，`COMPLETED` 要到套用成功後才寫上。原本只認
+   * COMPLETED——一個系統產不出來的狀態——真正卡住的 PAID 被當成「請款中」
+   * 每小時跳過，三天後降級免費版：使用者付了錢，最終得到免費版。
    */
-  it("這一期已有 COMPLETED 訂單 → 補套用，不再建單扣款", async () => {
+  it("這一期已有 PAID 訂單（扣款成功、套用失敗）→ 補套用並補寫 COMPLETED", async () => {
+    asMock(paymentRepo.findOrderByIdempotencyKey).mockResolvedValue({
+      id: "order-charged",
+      status: "PAID",
+    });
+
+    const result = await processSubscriptionRenewals(NOW_MS);
+
+    expect(result.renewed).toBe(1);
+    expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
+    expect(
+      asMock(teamSubscriptionRepo.applyTeamSubscription),
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({ orderId: "order-charged" }),
+    );
+    // Info: (20260821 - Luphia) 不補寫的話訂單永遠停在 PAID
+    expect(asMock(paymentRepo.updateOrderCompleted)).toHaveBeenCalledWith(
+      "order-charged",
+    );
+  });
+
+  // Info: (20260821 - Luphia) COMPLETED 保留給 webhook 先到的情形：同樣補套用
+  it("這一期已有 COMPLETED 訂單（webhook 先到）→ 補套用，不再建單扣款", async () => {
     asMock(paymentRepo.findOrderByIdempotencyKey).mockResolvedValue({
       id: "order-charged",
       status: "COMPLETED",
@@ -311,7 +336,7 @@ describe("續訂冪等", () => {
   });
 
   /**
-   * Info: (20260820 - Luphia) 還沒定案的訂單（PAYING / PAID）→ 這一輪跳過。
+   * Info: (20260820 - Luphia) 還沒定案的訂單（PENDING / PAYING）→ 這一輪跳過。
    * 再送一次請款等於重複扣款，而金流商那邊可能正在處理。
    */
   it("這一期已有請款中的訂單 → 跳過，不重複扣款", async () => {

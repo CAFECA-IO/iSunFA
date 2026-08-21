@@ -3,7 +3,9 @@ export const purchaseTarget = {
   credits_title: "크레딧을 어디에 넣을까요",
   seat_breakdown: "{{seats}}석 × NT$ {{unit}} = NT$ {{total}}",
   extension_note:
-    "「{{team}}」의 현재 구독 기간은 {{date}}까지입니다. 이번 구매는 해당 날짜부터 **가산**되며 남은 일수는 사라지지 않습니다. 횟수 제한 없이 반복 구매하여 연장할 수 있습니다.",
+    "「{{team}}」의 현재 구독 기간은 {{date}}까지입니다. 구매한 기간은 해당 날짜부터 가산되며 남은 일수는 사라지지 않습니다(업그레이드의 경우 새 요금제는 결제 완료 즉시 적용됩니다). 연장 구매는 기간 종료 30일 전부터 가능합니다.",
+  extension_too_early_note:
+    "「{{team}}」의 현재 구독 기간은 {{date}}까지입니다. 남은 일수가 많아 아직 연장을 구매할 수 없습니다. 기간 종료 30일 전 이후에 연장 또는 요금제 변경을 진행해 주세요.",
   pending_downgrade_note:
     "「{{team}}」은(는) {{date}}부터 {{plan}}으로 변경될 예정입니다. 이번 구매가 완료되면 해당 예정은 취소됩니다.",
   seat_note:

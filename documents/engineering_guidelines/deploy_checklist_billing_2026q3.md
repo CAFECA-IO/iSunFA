@@ -278,11 +278,40 @@ WHERE plan_id = 'free' AND current_period_end > NOW();
 
 有列＝這些團隊在「已付費期間內」被降為免費版（舊行為造成）。數量通常是 0（此功能上線後才會有人用到降級）。
 
+### 3.8 回填 `billing_interval`（2026-08-21）— **有年繳訂閱的環境必做，且要在開放加人之前**
+
+`team_subscription.billing_interval` 是新欄位，既有列拿到預設值 `month`。期中加人的補收分母讀這一欄（一期的天數）——**年繳列被當成月繳會把補收金額乘上約 12 倍**（review #6687 二輪高-1）。正確值存在每列最後一張訂單的 `data.billingInterval`，回填腳本從那裡讀：
+
+```
+npx tsx scripts/backfill_billing_interval.ts          # 檢視（dry-run）
+npx tsx scripts/backfill_billing_interval.ts --apply  # 套用
+```
+
+「無法判定」的列（訂單讀不到週期）腳本會列出、不猜——人工核對後手動更新。全部是月繳的環境跑一次確認 0 列待修即可。
+
+### 3.9 檢查卡在 PAID 的續訂訂單（2026-08-21）— **上線前先查，那些人正在寬限期倒數**
+
+「扣款成功、套用失敗」的續訂訂單停在 `PAID`，修正前的 worker 永遠跳過它們，三天後降級免費版（review #6687 二輪阻擋-2）。部署這版之後 worker 會自動補套用，但**部署前**先查有多少人已經中招、有沒有已經被降級的：
+
+```sql
+-- 還來得及自動補救的（部署後第一輪 worker 會處理）
+SELECT o.id, o.user_id, o.created_at FROM "order" o
+WHERE o.type = 'BILLING_SUBSCRIBE' AND o.status = 'PAID'
+  AND o.idempotency_key LIKE 'renew:%';
+
+-- 已經降級的（付了錢、拿到免費版）：需要人工補償
+SELECT ts.team_id, ts.plan_id, ts.status FROM team_subscription ts
+JOIN "order" o ON o.idempotency_key = 'renew:' || ts.team_id || ':p' || (EXTRACT(EPOCH FROM ts.current_period_start) * 1000)::bigint
+WHERE o.status = 'PAID' AND ts.plan_id = 'free';
+```
+
 ---
 
 ## 4. 部署後驗證
 
-- [ ] 既有付費團隊可以新增成員，且補收金額 = 單價 × 剩餘天數 ÷ 整期
+- [ ] 既有付費團隊可以新增成員，且補收金額 = 單價 × 剩餘時間 ÷ **一期長度**（月 30／年 365 天；不是 ÷ 期初到期末的跨距——展延後那可能是好幾期）
+- [ ] 剩餘超過 30 天的付費團隊按「延長方案」：付款前顯示「暫不開放購買延長」的說明，送出則被 `TW000028` 擋下；剩餘 30 天內照常建單
+- [ ] 寬限期（PAST_DUE）的團隊按「降級為免費版」：立即生效（`plan_id` = free、`auto_renew` = false），續訂 worker 下一輪不再對它扣款
 - [ ] 成員的個人點數餘額顯示正確（遷移後應等於原分配餘額 + 原有個人點數）
 - [ ] 額度用盡時的 402 提示：一般情況顯示倒數；單筆超過視窗上限時**不顯示倒數**、改提示升級或改用個人點數
 - [ ] 收據只取得到自己的訂單（換一個 `order_id` 應回 404）

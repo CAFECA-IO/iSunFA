@@ -3,7 +3,9 @@ export const purchaseTarget = {
   credits_title: "点数存入哪里",
   seat_breakdown: "{{seats}} 席 × NT$ {{unit}} ＝ NT$ {{total}}",
   extension_note:
-    "「{{team}}」当前的订阅期间至 {{date}}。本次购买将**自该日起算并累加**，当期剩余天数不会消失；可重复购买以继续延长，不设次数上限。",
+    "「{{team}}」当前的订阅期间至 {{date}}。本次购买的期间将自该日起算并累加，当期剩余天数不会消失（若为升级，新方案自付款完成起立即适用）。订阅剩余 30 天内才能购买延长。",
+  extension_too_early_note:
+    "「{{team}}」当前的订阅期间至 {{date}}。剩余天数尚多，暂不开放购买延长——请于到期前 30 天内再进行延长或变更方案。",
   pending_downgrade_note:
     "「{{team}}」已排定于 {{date}} 起降级为{{plan}}。本次购买完成后，该降级将取消。",
   seat_note: "席次以团队目前人数计算；实际收费金额以结帐当下的人数为准。",

@@ -56,6 +56,11 @@ interface IPurchaseTargetSelectorProps {
    */
   extensionPeriodEndSec?: number | null;
   /**
+   * Info: (20260821 - Luphia) 剩餘超過 30 天＝展延閘門會擋（產品裁定 20260821）。
+   * 由 hook 在 effect 裡算好傳進來——render 期不能呼叫 Date.now()。
+   */
+  extensionTooEarly?: boolean;
+  /**
    * Info: (20260820 - Luphia) 排程中的降級（方案代號與生效時點）。
    *
    * 購買會取代它——升級是在履行時清掉，同方案的延長是在建單前取消。
@@ -79,6 +84,7 @@ export default function PurchaseTargetSelector({
   unitPrice = null,
   seatAmount = null,
   extensionPeriodEndSec = null,
+  extensionTooEarly = false,
   pendingPlanId = null,
   pendingEffectiveAt = null,
   disabled = false,
@@ -212,16 +218,28 @@ export default function PurchaseTargetSelector({
        * Info: (20260820 - Luphia) 展延揭露：付款前就要說清楚「從哪一天起算」。
        * 履行是自當期屆滿日累加（`applyTeamSubscriptionInTx`），而使用者的預設
        * 想像是「從今天起算 30 天」——兩者差幾天，不說就只能事後自己推。
+       *
+       * Info: (20260821 - Luphia) 剩餘超過 30 天時換成「暫不開放」的說法
+       * （展延閘門，產品裁定 20260821）：後端會拒絕那筆購買
+       * （`TW_SUBSCRIPTION_EXTENSION_TOO_EARLY`），付款前就該講，
+       * 而不是讓使用者填完卡號才看到錯誤。
        */}
       {target === PURCHASE_TARGET.TEAM &&
         extensionPeriodEndSec !== null &&
         selectedTeamId && (
           <p className="rounded-lg bg-blue-50 p-3 text-xs text-blue-800">
-            {t("purchase_target.extension_note", {
-              team:
-                teams.find((team) => team.id === selectedTeamId)?.name ?? "",
-              date: new Date(extensionPeriodEndSec * 1000).toLocaleDateString(),
-            })}
+            {t(
+              extensionTooEarly
+                ? "purchase_target.extension_too_early_note"
+                : "purchase_target.extension_note",
+              {
+                team:
+                  teams.find((team) => team.id === selectedTeamId)?.name ?? "",
+                date: new Date(
+                  extensionPeriodEndSec * 1000,
+                ).toLocaleDateString(),
+              },
+            )}
           </p>
         )}
 

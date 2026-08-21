@@ -165,12 +165,24 @@ async function renewOne(
      *
      * 兩種狀態要分開處置，因為一種是**錢已經收了而權益沒給**，另一種還沒定案：
      *
-     * - `COMPLETED`：扣款成功、套用失敗（否則這一列不會還在 PAST_DUE 名單裡）。
-     *   直接補套用，不再扣款。
-     * - 其他（PENDING / PAYING / PAID）：結果還沒定案，這一輪跳過。
+     * Info: (20260821 - Luphia) 判準是「訂單狀態代表錢已經收到」（review #6687
+     * 二輪阻擋-2）。原本只認 `COMPLETED`——但「扣款成功、套用失敗」留下的狀態
+     * 是 **`PAID`**：`completePaymentTransactionAndOrder` 在扣款成功時寫 `PAID`
+     * 開收據，`updateOrderCompleted` 要到**套用成功之後**才寫 `COMPLETED`。
+     * 於是那個分支永遠不會成立，真正卡住的 `PAID` 被分到「還沒定案，跳過」——
+     * 跳過是永久的（冪等鍵每小時找到同一張、每小時跳過），三天後
+     * `downgradeToFree`：使用者付了錢，最終得到免費版。
+     *
+     * - `PAID`（常態：扣款成功、套用失敗）／`COMPLETED`（webhook 先到）：
+     *   錢已收到，直接補套用，不再扣款。補完把訂單補寫 `COMPLETED`，
+     *   否則它會永遠停在 `PAID`。
+     * - `PENDING` / `PAYING`：結果還沒定案，這一輪跳過。
      *   再送一次請款等於重複扣款，而金流商那邊可能正在處理。
      */
-    if (existing.status === ORDER_STATUS.COMPLETED) {
+    if (
+      existing.status === ORDER_STATUS.PAID ||
+      existing.status === ORDER_STATUS.COMPLETED
+    ) {
       await applyRenewedSubscription({
         teamId: sub.teamId,
         planId,
@@ -180,9 +192,11 @@ async function renewOne(
         seats: await teamRepo.countMembers(sub.teamId),
         unitPrice,
       });
-      logger.warn("subscription renewal recovered from a completed charge", {
+      await paymentRepo.updateOrderCompleted(existing.id);
+      logger.warn("subscription renewal recovered from a paid charge", {
         teamId: sub.teamId,
         orderId: existing.id,
+        status: existing.status,
       });
       return "renewed";
     }

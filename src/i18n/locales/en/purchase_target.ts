@@ -3,7 +3,9 @@ export const purchaseTarget = {
   credits_title: "Where should the credits go?",
   seat_breakdown: "{{seats}} seats × NT$ {{unit}} = NT$ {{total}}",
   extension_note:
-    'The current subscription period for "{{team}}" runs until {{date}}. This purchase is **added on top of that date** — the remaining days are not lost. You may purchase again to extend further; there is no limit on the number of times.',
+    'The current subscription period for "{{team}}" runs until {{date}}. The purchased period is added on top of that date — the remaining days are not lost (for an upgrade, the new plan applies immediately upon payment). Extensions can only be purchased within 30 days of the period end.',
+  extension_too_early_note:
+    'The current subscription period for "{{team}}" runs until {{date}}. Too many days remain to purchase an extension — please come back within 30 days of the period end to extend or change the plan.',
   pending_downgrade_note:
     '"{{team}}" is scheduled to change to {{plan}} on {{date}}. Completing this purchase cancels that scheduled change.',
   seat_note:

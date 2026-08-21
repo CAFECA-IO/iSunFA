@@ -371,7 +371,13 @@ describe("取消排程與改計費週期要分得開（self-review 小項）", (
     );
   });
 
-  it("同方案但改成年繳 → 取消排程**並**建單", async () => {
+  /**
+   * Info: (20260821 - Luphia) 購買路徑**不就地取消排程**（review #6687 二輪
+   * 阻擋-3）：那筆訂單可能沒付掉（關掉付款畫面、卡被拒），先取消等於排程
+   * 消失、autoRenew 被重開而沒有任何補償。排程由履行在付款成功時清掉
+   * （`applyTeamSubscriptionInTx` 的 `pendingPlanId: null`），與升級同一條規則。
+   */
+  it("同方案但改成年繳 → 建單，排程留給履行清", async () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
       subscriptionRow({ pendingPlanId: TEAM_PLAN.FREE, autoRenew: false }),
     );
@@ -387,7 +393,7 @@ describe("取消排程與改計費週期要分得開（self-review 小項）", (
 
     expect(
       asMock(teamSubscriptionRepo.cancelPendingPlanChange),
-    ).toHaveBeenCalledWith("team-1");
+    ).not.toHaveBeenCalled();
     expect(asMock(generatePaymentOrder)).toHaveBeenCalledTimes(1);
   });
 
@@ -409,13 +415,17 @@ describe("取消排程與改計費週期要分得開（self-review 小項）", (
   });
 
   /**
-   * Info: (20260820 - Luphia) 帶付款方式＝「我要買」：取消排程**並**建單。
+   * Info: (20260820 - Luphia) 帶付款方式＝「我要買」：建單（延長）。
    *
    * 這條擋的是一條**壞掉的流程**，不只是少一句提示：方案卡改為可按之後，
    * 「延長方案」送進來的方案與週期就是當期的，先前會走進取消分支並回
    * `orderId: null`，而付款畫面拿著 null 繼續往下走。
+   *
+   * Info: (20260821 - Luphia) 建單**不就地取消排程**（review #6687 二輪阻擋-3）：
+   * 訂單沒付掉時排程必須還在。排程由履行清；回應以 `supersedesPendingPlanId`
+   * 揭露「本次購買完成後，該降級將取消」——現在式，與文案一致。
    */
-  it("同方案同週期但帶付款方式 → 取消排程並建單（延長）", async () => {
+  it("同方案同週期但帶付款方式 → 建單且排程原封不動（延長）", async () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
       subscriptionRow({ pendingPlanId: TEAM_PLAN.FREE, autoRenew: false }),
     );
@@ -431,12 +441,13 @@ describe("取消排程與改計費週期要分得開（self-review 小項）", (
 
     expect(
       asMock(teamSubscriptionRepo.cancelPendingPlanChange),
-    ).toHaveBeenCalledWith("team-1");
+    ).not.toHaveBeenCalled();
     expect(asMock(generatePaymentOrder)).toHaveBeenCalledTimes(1);
     expect(result).toEqual(
       expect.objectContaining({
         kind: SUBSCRIPTION_CHANGE_KIND.ORDER,
         orderId: "order-1",
+        supersedesPendingPlanId: TEAM_PLAN.FREE,
       }),
     );
   });
@@ -607,5 +618,148 @@ describe("未付訂單沿用，不再建第二張", () => {
       planId: TEAM_PLAN.BUSINESS,
       billingInterval: BILLING_INTERVAL.YEAR,
     });
+  });
+});
+
+describe("展延閘門：剩餘 30 天內才能購買（review #6687 二輪阻擋-1）", () => {
+  /**
+   * Info: (20260821 - Luphia) 展延語意（新期疊在舊期末之後、planId 立即換新）
+   * 對「換方案」是一個漏洞：年繳團隊版第 1 天買月繳企業版 → 剩餘 364 天全部
+   * 免費升級再加一個月，約四折。閘門把免費升級的剩餘天數壓到最多 30 天。
+   */
+  it("剩餘 31 天 → 拒絕購買（升級也一樣），不建單", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({
+        planId: TEAM_PLAN.TEAM,
+        currentPeriodEnd: new Date(NOW_MS + 31 * 86_400_000),
+      }),
+    );
+
+    await expect(
+      changeTeamSubscription({
+        userId: "user-1",
+        teamId: "team-1",
+        planId: TEAM_PLAN.BUSINESS,
+        billingInterval: BILLING_INTERVAL.MONTH,
+        paymentMethodId: "pm-1",
+        nowMs: NOW_MS,
+      }),
+    ).rejects.toMatchObject({ code: "TW000028" });
+    expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
+  });
+
+  it("剩餘恰好 30 天 → 放行建單", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({
+        planId: TEAM_PLAN.TEAM,
+        currentPeriodEnd: new Date(NOW_MS + 30 * 86_400_000),
+      }),
+    );
+
+    const result = await changeTeamSubscription({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      paymentMethodId: "pm-1",
+      nowMs: NOW_MS,
+    });
+
+    expect(result).toEqual(
+      expect.objectContaining({ kind: SUBSCRIPTION_CHANGE_KIND.ORDER }),
+    );
+  });
+
+  /**
+   * Info: (20260821 - Luphia) 閘門用**折算後**的有效方案判斷：過期或 PAST_DUE
+   * 是重新訂閱，不是展延——不受閘門影響（否則過期戶永遠買不回來）。
+   */
+  it("已過期的訂閱不受閘門影響（重新訂閱）", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({
+        planId: TEAM_PLAN.TEAM,
+        currentPeriodEnd: new Date(NOW_MS - 1000),
+      }),
+    );
+
+    const result = await changeTeamSubscription({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.TEAM,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      paymentMethodId: "pm-1",
+      nowMs: NOW_MS,
+    });
+
+    expect(result).toEqual(
+      expect.objectContaining({ kind: SUBSCRIPTION_CHANGE_KIND.ORDER }),
+    );
+  });
+});
+
+describe("寬限期（PAST_DUE）按降級為免費版（review #6687 二輪高-2）", () => {
+  /**
+   * Info: (20260821 - Luphia) 原本這條路徑用折算後的 free 判斷，於是「什麼都
+   * 沒做」卻回報成功，而 `listPastDueAutoRenew` 的三個條件全都還成立——
+   * 使用者按了降級，續訂 worker 下一小時照樣拿他的卡扣款。
+   * 產品裁定 20260821：寬限期的降級**立即生效**（那時本來就沒有付費權益）。
+   */
+  it("寬限期選 free → 立即 downgradeToFree（autoRenew 隨之關閉）", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({
+        planId: TEAM_PLAN.TEAM,
+        status: TEAM_SUBSCRIPTION_STATUS.PAST_DUE,
+        currentPeriodEnd: new Date(NOW_MS - 86_400_000),
+      }),
+    );
+
+    const result = await change(TEAM_PLAN.FREE);
+
+    expect(asMock(teamSubscriptionRepo.downgradeToFree)).toHaveBeenCalledWith(
+      "team-1",
+      NOW_MS,
+    );
+    expect(result).toEqual(
+      expect.objectContaining({
+        kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
+        planId: TEAM_PLAN.FREE,
+      }),
+    );
+  });
+
+  /**
+   * Info: (20260821 - Luphia) 同成因的變化型：寬限期內已有排程時再送 free，
+   * 原本會撞上「取消排程」分支——他按的是「降級」，效果卻是重新打開自動續訂。
+   */
+  it("寬限期已有排程時選 free → 仍是降級，不是取消排程", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({
+        planId: TEAM_PLAN.TEAM,
+        status: TEAM_SUBSCRIPTION_STATUS.PAST_DUE,
+        currentPeriodEnd: new Date(NOW_MS - 86_400_000),
+        pendingPlanId: TEAM_PLAN.FREE,
+      }),
+    );
+
+    await change(TEAM_PLAN.FREE);
+
+    expect(
+      asMock(teamSubscriptionRepo.cancelPendingPlanChange),
+    ).not.toHaveBeenCalled();
+    expect(asMock(teamSubscriptionRepo.downgradeToFree)).toHaveBeenCalled();
+  });
+
+  // Info: (20260821 - Luphia) DB 也是 free 時維持原狀：真的沒有東西要做
+  it("本來就是 free → 不動 DB", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({
+        planId: TEAM_PLAN.FREE,
+        currentPeriodEnd: new Date(NOW_MS - 86_400_000),
+      }),
+    );
+
+    await change(TEAM_PLAN.FREE);
+
+    expect(asMock(teamSubscriptionRepo.downgradeToFree)).not.toHaveBeenCalled();
   });
 });

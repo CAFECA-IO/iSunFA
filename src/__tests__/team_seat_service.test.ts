@@ -88,6 +88,8 @@ const ACTIVE_SUBSCRIPTION = {
   currentPeriodEnd: PERIOD_END,
   seats: 3,
   unitPrice: 840,
+  // Info: (20260821 - Luphia) 補收分母讀這一欄（一期的天數），見 review #6687 二輪高-1
+  billingInterval: "month",
   latestOrderId: "order-sub-1",
 };
 

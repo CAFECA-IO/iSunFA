@@ -1,7 +1,11 @@
 import { logger } from "@/lib/utils/logger";
 import { CURRENCY_UNIT } from "@/constants/price";
 import { ORDER_TYPE } from "@/constants/status";
-import { TEAM_PLAN } from "@/constants/subscription_quota";
+import {
+  BILLING_INTERVAL_DAYS,
+  BillingInterval,
+  TEAM_PLAN,
+} from "@/constants/subscription_quota";
 import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import { resolveSeatProration } from "@/lib/billing/seat_billing";
 import { generatePaymentOrder } from "@/services/order.service";
@@ -117,6 +121,10 @@ export interface ISeatChargeParams {
  * 上限取「當期訂閱費的 2 倍」：正常的期中擴編（加幾席）遠低於它，
  * 而異常的批次邀請會撞上。撞到上限不是拒絕擴編，是要求改由續訂時一次計費
  * （或先聯繫客服），把異常拉回人的視線內。
+ *
+ * Info: (20260821 - Luphia) 倍數綁的是**一期**（unitPrice 是一期的價格）。
+ * 展延讓當期跨距可能超過一期，但展延閘門（剩餘 30 天內才能續購）保證跨距
+ * 不超過「一期 + 30 天」，單席補收最多約 1.97 期——合法的擴編仍在 2 倍內。
  */
 const SEAT_CHARGE_PERIOD_MULTIPLIER = 2;
 
@@ -324,11 +332,35 @@ export async function quoteSeatAddition(
 
   const periodStartMs = subscription.currentPeriodStart.getTime();
   const periodEndMs = subscription.currentPeriodEnd.getTime();
+  /**
+   * Info: (20260821 - Luphia) 比例的分母是**一個計費週期**，不是
+   * `periodEnd − periodStart`（review #6687 二輪高-1：展延後的跨距是好幾期，
+   * 用跨距當分母會把補收除以期數）。週期讀訂閱列的快照欄位；
+   * 認不得的值當資料異常擋下——分母猜錯的後果是把年繳戶的補收乘上十幾倍
+   * （或反向少收），比擋下一次加人嚴重得多。
+   */
+  const periodDays =
+    BILLING_INTERVAL_DAYS[subscription.billingInterval as BillingInterval];
+  if (!periodDays) {
+    logger.error("seat addition blocked: unknown billing interval", {
+      teamId,
+      billingInterval: subscription.billingInterval,
+    });
+    return {
+      ...blockedQuote(API_ERRORS.TW_SEAT_PRICE_MISSING, {
+        seats,
+        planId: subscription.planId,
+      }),
+      occupied,
+      paidSeats,
+    };
+  }
   const amount = resolveSeatProration({
     unitPrice: subscription.unitPrice,
     nowMs,
     periodStartMs,
     periodEndMs,
+    periodDays,
     seats: seatsToCharge,
   });
   const remainingDays = Math.max(1, Math.ceil((periodEndMs - nowMs) / DAY_MS));

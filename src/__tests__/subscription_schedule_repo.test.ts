@@ -171,10 +171,39 @@ describe("套用訂閱：當期未結束時展延", () => {
 
   function upsertArg() {
     return asMock(prisma.teamSubscription.upsert).mock.calls[0][0] as {
-      update: { currentPeriodStart?: Date; currentPeriodEnd?: Date };
-      create: { currentPeriodStart: Date; currentPeriodEnd: Date };
+      update: {
+        currentPeriodStart?: Date;
+        currentPeriodEnd?: Date;
+        billingInterval?: string;
+      };
+      create: {
+        currentPeriodStart: Date;
+        currentPeriodEnd: Date;
+        billingInterval?: string;
+      };
     };
   }
+
+  /**
+   * Info: (20260821 - Luphia) 週期快照（review #6687 二輪高-1）：
+   * 期中加人的補收分母讀 `TeamSubscription.billingInterval`（一期的天數）。
+   * 履行不寫這一欄的話，年繳戶會被預設值 month 當成月繳——補收乘上約 12 倍。
+   */
+  it("履行時把計費週期快照進訂閱列（update 與 create 都是）", async () => {
+    asMock(prisma.teamSubscription.findUnique).mockResolvedValue(null);
+
+    await teamSubscriptionRepo.applyTeamSubscription({
+      teamId: "team-1",
+      planId: TEAM_PLAN.TEAM,
+      billingInterval: BILLING_INTERVAL.YEAR,
+      orderId: "order-1",
+      nowMs: NOW_MS,
+    });
+
+    const arg = upsertArg();
+    expect(arg.update.billingInterval).toBe(BILLING_INTERVAL.YEAR);
+    expect(arg.create.billingInterval).toBe(BILLING_INTERVAL.YEAR);
+  });
 
   it("當期還有 10 天：期末往後加一期，期初不動", async () => {
     asMock(prisma.teamSubscription.findUnique).mockResolvedValue({

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { HTTP_METHOD } from "@/constants/http";
 import { resolveSubscriptionAmount } from "@/lib/billing/seat_billing";
+import { SUBSCRIPTION_EXTENSION_WINDOW_DAYS } from "@/constants/subscription_quota";
 import {
   BLOCKING_REASON,
   PURCHASE_MODE,
@@ -158,11 +159,17 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
    */
   const [periodEndSec, setPeriodEndSec] = useState<number | null>(null);
   /**
+   * Info: (20260821 - Luphia) 剩餘超過 30 天＝展延閘門會擋（產品裁定 20260821）。
+   * 在 effect 裡與 periodEndSec 一起算好（render 期不能呼叫 Date.now()），
+   * 付款前就把「暫不開放購買延長」講出來，而不是讓使用者填完卡號才看到錯誤。
+   */
+  const [extensionTooEarly, setExtensionTooEarly] = useState(false);
+  /**
    * Info: (20260820 - Luphia) 排程中的降級也要在付款前說（同一趟查詢就有）。
    *
-   * 購買會取代排程——升級是在履行時被 `applyTeamSubscriptionInTx` 清掉，
-   * 同方案的延長則是在建單前就取消。兩種都不會有任何畫面提到那個排程消失了，
-   * 而使用者是刻意排定它的。
+   * 購買會取代排程——排程一律在**履行**時被 `applyTeamSubscriptionInTx` 清掉
+   * （20260821 起延長也一樣，不再於建單前取消：訂單沒付掉時排程必須還在）。
+   * 沒有這行揭露，就不會有任何畫面提到那個排程將要消失，而使用者是刻意排定它的。
    */
   const [pending, setPending] = useState<{
     planId: string;
@@ -171,6 +178,7 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
   useEffect(() => {
     if (!isSubscription || !selectedTeamId) {
       setPeriodEndSec(null);
+      setExtensionTooEarly(false);
       setPending(null);
       return undefined;
     }
@@ -187,6 +195,10 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
         const end = response.payload?.currentPeriodEnd ?? 0;
         // Info: (20260820 - Luphia) 當期已結束（或沒有訂閱）就不是展延，不必揭露
         setPeriodEndSec(end * 1000 > Date.now() ? end : null);
+        setExtensionTooEarly(
+          end * 1000 - Date.now() >
+            SUBSCRIPTION_EXTENSION_WINDOW_DAYS * 86_400_000,
+        );
         const pendingPlanId = response.payload?.pendingPlanId ?? null;
         const effectiveAt = response.payload?.pendingEffectiveAt ?? null;
         setPending(
@@ -198,6 +210,7 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
       .catch(() => {
         if (!active) return;
         setPeriodEndSec(null);
+        setExtensionTooEarly(false);
         setPending(null);
       });
     return () => {
@@ -402,6 +415,7 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
       unitPrice={context.unitPrice ?? null}
       seatAmount={seatAmount}
       extensionPeriodEndSec={periodEndSec}
+      extensionTooEarly={extensionTooEarly}
       pendingPlanId={pending?.planId ?? null}
       pendingEffectiveAt={pending?.effectiveAt ?? null}
     />

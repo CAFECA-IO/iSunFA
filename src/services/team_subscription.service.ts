@@ -6,6 +6,7 @@ import {
   BILLING_INTERVAL,
   BillingInterval,
   isPlanDowngrade,
+  SUBSCRIPTION_EXTENSION_WINDOW_DAYS,
   TEAM_PLAN,
   TEAM_SUBSCRIPTION_STATUS,
   TeamPlanId,
@@ -365,57 +366,44 @@ export async function changeTeamSubscription(params: {
      * Info: (20260821 - Luphia) 排程中的方案，算一次（簡化 20260821）。
      * 認不出來的代號視為沒有排程——回一個畫面翻不出名字的方案代號更糟。
      */
-    let pendingTarget = isTeamPlanId(subscription?.pendingPlanId ?? "")
+    const pendingTarget = isTeamPlanId(subscription?.pendingPlanId ?? "")
       ? (subscription?.pendingPlanId as TeamPlanId)
       : null;
 
     /**
-     * Info: (20260820 - Luphia) 已排程降級後又送出「目前方案」＝取消降級。
+     * Info: (20260820 - Luphia) 已排程降級後又送出「目前方案」且**沒帶付款方式**
+     * ＝取消降級。沒有這一條，使用者就沒有回頭路：畫面上他的方案還是團隊版
+     * （正確），再按一次團隊版會走升級路徑——建一張新單、再收一整期的錢。
+     * 「取消降級」與「延長期間」送進來的方案完全一樣，判準是付款方式：
+     * 帶了就是「我要買」（往下走建單），沒帶就是單純取消。
      *
-     * 沒有這一條，使用者就沒有回頭路：畫面上他的方案還是團隊版（正確），
-     * 於是再按一次團隊版會走升級路徑——建一張新單、再收一整期的錢。
+     * Info: (20260821 - Luphia) 取消只在**沒帶付款方式**時就地執行（review #6687
+     * 二輪阻擋-3）。原本取消寫在分辨之前，於是「延長」也先把排程取消了——
+     * 而它接下來的建單、扣款可能不會成功（關掉付款畫面、卡被拒），沒有任何補償：
+     * 排程消失、autoRenew 被重新打開，期末照原方案續扣一整期。
      *
-     * Info: (20260820 - Luphia) **但要先分辨他改的是不是計費週期**（self-review 小項）。
+     * 帶付款方式時**這裡什麼都不動**：排程由履行（`applyTeamSubscriptionInTx`
+     * 的 `pendingPlanId: null`）在付款成功時清掉，與升級同一條規則；`pendingTarget`
+     * 保留，回應才說得出「本次購買完成後，該降級將取消」（現在式，與付款前的
+     * 揭露文案一致）。
      *
-     * `TeamSubscription` 沒有 `billingInterval` 欄位，當期的週期只存在於最後一張
-     * 訂單的 data 裡。原本只比方案代號，於是「排程降級中的月繳戶想改成年繳」
-     * 會被當成取消降級——排程清掉了、年繳沒生效，而畫面沒有任何訊息。
-     *
-     * 週期相同 → 取消排程（他就是要留在原方案）；
-     * 週期不同 → 也取消排程，但**繼續往下走建單**（他要的是換週期，那是續購）。
+     * `planId !== FREE` 的守門（review 二輪高-2 的變化型）：寬限期內
+     * `currentPlanId` 是**折算後**的 free，使用者送 free 是要**降級**，
+     * 不是取消排程——沒有這道守門，他按「降級」的效果會是重新打開自動續訂。
      */
-    /**
-     * Info: (20260820 - Luphia) 「取消降級」與「延長期間」用**有沒有帶付款方式**分辨。
-     *
-     * 兩者送進來的方案完全一樣（都是當期的），先前只比對方案，於是購買流程按下
-     * 「延長方案」時會走進取消排程的分支——**回一個 `orderId: null`**，而付款畫面
-     * 拿著 null 繼續往下走。那不只是少一句提示，是一條壞掉的流程。
-     *
-     * 帶了付款方式就是「我要買」：取消排程**並**建單。沒帶就是單純取消排程。
-     *
-     * Info: (20260821 - Luphia) 計費週期的比對已移除（簡化 20260821）。
-     *
-     * 先前還多比一次「週期是否相同」，而那需要去讀最後一張訂單（週期只存在
-     * 訂單的 data 裡），還得為讀不到的情形猜一個預設值。有了付款方式這個判準之後
-     * 它完全是多餘的：沒帶付款方式就是取消（取消本身沒有週期語意），帶了就是購買。
-     * 順帶修掉一個小坑——原本「同方案、不同週期、沒帶付款方式」會**先取消排程再丟
-     * schema 錯誤**：排程沒了，而呼叫端拿到的是一個錯誤。
-     */
-    if (subscription?.pendingPlanId && planId === currentPlanId) {
+    if (
+      subscription?.pendingPlanId &&
+      planId === currentPlanId &&
+      planId !== TEAM_PLAN.FREE &&
+      !paymentMethodId
+    ) {
       await teamSubscriptionRepo.cancelPendingPlanChange(teamId);
-      /**
-       * Info: (20260821 - Luphia) 已經在這裡取消掉了，後面就不該再回報
-       * 「這次購買將取代某個排程」——那個排程已經不存在。
-       */
-      pendingTarget = null;
-      if (!paymentMethodId) {
-        return {
-          kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
-          planId: currentPlanId,
-          pendingPlanId: null,
-          effectiveAt: nowSec,
-        };
-      }
+      return {
+        kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
+        planId: currentPlanId,
+        pendingPlanId: null,
+        effectiveAt: nowSec,
+      };
     }
 
     if (isPlanDowngrade(currentPlanId, planId)) {
@@ -445,9 +433,22 @@ export async function changeTeamSubscription(params: {
 
     if (planId === TEAM_PLAN.FREE) {
       /**
-       * Info: (20260820 - Luphia) 走到這裡表示當期已經是 free（不是降級）。
-       * 免費方案不需要訂單，也沒有東西要排程。
+       * Info: (20260821 - Luphia) 走到這裡的「free」有兩種，必須用 **DB 的原值**
+       * 分辨，不能用折算值（review #6687 二輪高-2）：
+       *
+       * - DB 也是 free：真的沒有東西要做。
+       * - DB 是付費方案而折算成 free：**寬限期**（PAST_DUE，扣款失敗三天內）。
+       *   原本這裡什麼都不做卻回報成功，而 `listPastDueAutoRenew` 的三個條件
+       *   （PAST_DUE、autoRenew、planId ≠ free）全都還成立——使用者按了
+       *   「降級為免費版」，續訂 worker 下一小時照樣拿他的卡去扣款。
+       *
+       * 寬限期的降級**立即生效**（產品裁定 20260821）：寬限期內本來就沒有
+       * 付費權益（fail-closed 已折算成 free），立即落地最誠實；`downgradeToFree`
+       * 一併關掉 autoRenew、清排程、歸零單價、標記卡片待同步。
        */
+      if (subscription && subscription.planId !== TEAM_PLAN.FREE) {
+        await teamSubscriptionRepo.downgradeToFree(teamId, nowMs);
+      }
       return {
         kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
         planId: TEAM_PLAN.FREE,
@@ -458,6 +459,27 @@ export async function changeTeamSubscription(params: {
 
     if (!paymentMethodId) {
       throw toApiError(API_ERRORS.VL_SCHEMA_ERROR);
+    }
+
+    /**
+     * Info: (20260821 - Luphia) 展延閘門（產品裁定 20260821，review #6687 二輪
+     * 阻擋-1）：**當期剩餘超過 30 天不得購買**——延長與換方案都是。
+     *
+     * 履行的展延語意（新期自當期屆滿日累加、`planId` 立即換新）維持原案；
+     * 但沒有閘門時它對「換方案」是一個漏洞：年繳團隊版第 1 天買月繳企業版，
+     * 剩餘 364 天全部免費升級成企業版再加一個月（約四折）。閘門把免費升級的
+     * 剩餘天數壓到最多 30 天，也讓訂閱跨距任何時候不超過「一期 + 30 天」。
+     *
+     * 判斷用**折算後**的有效方案：過期或 PAST_DUE 的列（remaining 可能為負或
+     * 折算為 free）不受閘門影響——那是重新訂閱，不是展延。
+     */
+    if (
+      subscription &&
+      currentPlanId !== TEAM_PLAN.FREE &&
+      subscription.currentPeriodEnd.getTime() - nowMs >
+        SUBSCRIPTION_EXTENSION_WINDOW_DAYS * 86_400_000
+    ) {
+      throw toApiError(API_ERRORS.TW_SUBSCRIPTION_EXTENSION_TOO_EARLY);
     }
 
     /**

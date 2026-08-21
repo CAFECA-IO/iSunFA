@@ -262,6 +262,30 @@ export const BILLING_INTERVAL = {
 export type BillingInterval =
   (typeof BILLING_INTERVAL)[keyof typeof BILLING_INTERVAL];
 
+/**
+ * Info: (20260821 - Luphia) 一個計費週期的天數（月繳 30／年繳 365）。
+ *
+ * 原本只在 `applyTeamSubscriptionInTx` 裡有一份三元式；期中加人的比例補收
+ * 也需要它（分母是**一期**的長度，不是 `periodEnd − periodStart`——展延之後
+ * 那個跨距可能是好幾期，用跨距當分母會把補收金額除以期數，review #6687
+ * 二輪高-1）。兩處必須是同一份數字。
+ */
+export const BILLING_INTERVAL_DAYS: Record<BillingInterval, number> = {
+  [BILLING_INTERVAL.MONTH]: 30,
+  [BILLING_INTERVAL.YEAR]: 365,
+};
+
+/**
+ * Info: (20260821 - Luphia) 展延購買的時間閘門（產品裁定 20260821，review #6687
+ * 二輪阻擋-1）：**當期剩餘 30 天內才能購買延長／換方案**。
+ *
+ * 展延語意（新期自當期屆滿日累加）維持不變，但沒有閘門時它對「換方案」是
+ * 一個漏洞：年繳團隊版第 1 天買月繳企業版 → 剩餘 364 天全部免費升級企業版
+ * 再加一個月，約四折。閘門把「免費升級的剩餘天數」上限壓到 30 天，
+ * 也讓任何時點的訂閱跨距不超過「一期 + 30 天」（席次補收上限 2 倍因此夠用）。
+ */
+export const SUBSCRIPTION_EXTENSION_WINDOW_DAYS = 30;
+
 // Info: (20260807 - Luphia) 分配 API 的操作方向（設計書 §6.2）
 export const ALLOCATION_DIRECTION = {
   ALLOCATE: "ALLOCATE",

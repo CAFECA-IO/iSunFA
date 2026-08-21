@@ -365,6 +365,13 @@ model TeamSubscription {
    */
   unitPrice          Int      @default(0) @map("unit_price")
   /**
+   * Info: (20260821 - Luphia) 本期計費週期（BILLING_INTERVAL 常數：month/year）。
+   * 先前只存在最後一張訂單的 data 裡，於是「期中加人的補收分母該是幾天」
+   * 在資料層答不出來（review #6687 二輪高-1）。快照在這裡，與 unitPrice 同理：
+   * 期中補收要按「當初買的週期」算，不是按下一張訂單的。
+   */
+  billingInterval    String   @default("month") @map("billing_interval")
+  /**
    * Info: (20260820 - Luphia) 已排程、**於當期屆滿時才生效**的方案（降級用）。
    * 退款政策 §2.1 承諾「取消或降級於當前結算週期結束後自動生效」，因此降級不得
    * 立即改 `planId`——當期權益必須維持原方案（使用者已付到期末）。
