@@ -146,14 +146,23 @@ export function resolveUnanimousPlan(
  * 「鏈上**讀不到**」是第三種情形，不在這裡：那不是資訊（RPC 失敗、合約未部署），
  * 由 `plan.service` 退回 DB 並在回應標明來源。
  */
-export const PLAN_RECONCILE_SOURCE = {
+/**
+ * Info: (20260820 - Luphia) 方案答案的來源。**一份列舉，三種值**（簡化 20260820）。
+ *
+ * 原本這裡與 `plan.service` 各有一份（前者兩種、後者三種），中間再寫一段
+ * 對照——而兩份列舉的字面值一模一樣。多出來的是一段可以寫錯的對照，
+ * 不是任何額外的表達力。
+ */
+export const PLAN_SOURCE = {
+  // Info: (20260820 - Luphia) 鏈上讀到了、且那份是最新的
   CHAIN: "CHAIN",
   // Info: (20260820 - Luphia) 鏈上那份已知過期（待同步且在寬限內）：以 DB 為顯示依據
   PENDING_CHAIN: "PENDING_CHAIN",
+  // Info: (20260820 - Luphia) 鏈上**讀不到**（未部署、RPC 失敗、逾時）：退回 DB
+  DB: "DB",
 } as const;
 
-export type PlanReconcileSource =
-  (typeof PLAN_RECONCILE_SOURCE)[keyof typeof PLAN_RECONCILE_SOURCE];
+export type PlanSource = (typeof PLAN_SOURCE)[keyof typeof PLAN_SOURCE];
 
 export function reconcilePlan(params: {
   dbPlan: TeamPlanId;
@@ -163,7 +172,8 @@ export function reconcilePlan(params: {
 }): {
   plan: TeamPlanId;
   mismatch: boolean;
-  source: PlanReconcileSource;
+  // Info: (20260820 - Luphia) 只會是 CHAIN 或 PENDING_CHAIN；DB 由呼叫端決定（讀不到）
+  source: typeof PLAN_SOURCE.CHAIN | typeof PLAN_SOURCE.PENDING_CHAIN;
 } {
   if (params.chainStale) {
     return {
@@ -174,13 +184,13 @@ export function reconcilePlan(params: {
        * 而真正需要注意的不一致就淹沒在裡面。
        */
       mismatch: false,
-      source: PLAN_RECONCILE_SOURCE.PENDING_CHAIN,
+      source: PLAN_SOURCE.PENDING_CHAIN,
     };
   }
   return {
     plan: params.chainPlan,
     mismatch: params.chainPlan !== params.dbPlan,
-    source: PLAN_RECONCILE_SOURCE.CHAIN,
+    source: PLAN_SOURCE.CHAIN,
   };
 }
 

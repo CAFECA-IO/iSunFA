@@ -58,6 +58,23 @@ jest.mock("@/services/subscription_nft.service", () => ({
   readOwnedChainCards: jest.fn(async () => []),
 }));
 
+/**
+ * Info: (20260821 - Luphia) 「不一致」不再以回傳欄位表達（簡化 20260820）——
+ * 沒有呼叫端讀它。現在唯一會看到它的地方是 log，因此斷言改看 log。
+ */
+const logWarn = jest.fn();
+const logError = jest.fn();
+jest.mock("@/lib/utils/logger", () => ({
+  logger: {
+    child: () => ({
+      warn: (...args: unknown[]) => logWarn(...args),
+      error: (...args: unknown[]) => logError(...args),
+      info: jest.fn(),
+      debug: jest.fn(),
+    }),
+  },
+}));
+
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
 
 const NOW_SEC = 1_760_000_000;
@@ -154,9 +171,12 @@ describe("getUserPlan：鏈上為準", () => {
     expect(snapshot.plan).toBe(TEAM_PLAN.TEAM);
     expect(snapshot.ownedPlans).toEqual([TEAM_PLAN.TEAM]);
     expect(snapshot.source).toBe(PLAN_SOURCE.CHAIN);
-    expect(snapshot.mismatches).toBe(1);
-    expect(snapshot.teams[0]).toEqual(
-      expect.objectContaining({ dbPlan: TEAM_PLAN.FREE, tokenId: "42" }),
+    expect(logWarn).toHaveBeenCalledWith(
+      expect.stringContaining("不一致"),
+      expect.objectContaining({
+        dbPlan: TEAM_PLAN.FREE,
+        chainPlan: TEAM_PLAN.TEAM,
+      }),
     );
   });
 
@@ -175,7 +195,8 @@ describe("getUserPlan：鏈上為準", () => {
     });
 
     expect(snapshot.plan).toBe(TEAM_PLAN.BUSINESS);
-    expect(snapshot.mismatches).toBe(0);
+    // Info: (20260821 - Luphia) 一致時不該留下任何「不一致」的紀錄
+    expect(logWarn).not.toHaveBeenCalled();
   });
 
   /**
@@ -198,7 +219,10 @@ describe("getUserPlan：鏈上為準", () => {
 
     expect(snapshot.plan).toBe(TEAM_PLAN.FREE);
     expect(snapshot.source).toBe(PLAN_SOURCE.CHAIN);
-    expect(snapshot.mismatches).toBe(1);
+    expect(logWarn).toHaveBeenCalledWith(
+      expect.stringContaining("不一致"),
+      expect.objectContaining({ dbPlan: TEAM_PLAN.TEAM }),
+    );
   });
 
   it("鏈上讀取失敗 → 退回 DB，且不算不一致", async () => {
@@ -215,7 +239,18 @@ describe("getUserPlan：鏈上為準", () => {
 
     expect(snapshot.plan).toBe(TEAM_PLAN.TEAM);
     expect(snapshot.source).toBe(PLAN_SOURCE.DB);
-    expect(snapshot.mismatches).toBe(0);
+    /**
+     * Info: (20260821 - Luphia) 讀不到會留一筆「讀取失敗」的 warn（那是要看見的），
+     * 但**不該**留「不一致」——讀不到不是不一致。
+     */
+    expect(logWarn).toHaveBeenCalledWith(
+      expect.stringContaining("讀取失敗"),
+      expect.objectContaining({ reason: "rpc down" }),
+    );
+    expect(logWarn).not.toHaveBeenCalledWith(
+      expect.stringContaining("不一致"),
+      expect.anything(),
+    );
   });
 
   // Info: (20260819 - Luphia) 沒有地址（尚未建錢包）就沒有鏈上事實可讀，退回 DB
@@ -476,7 +511,7 @@ describe("待同步期間以 DB 顯示（self-review 嚴重項）", () => {
     expect(snapshot.plan).toBe(TEAM_PLAN.TEAM);
     expect(snapshot.source).toBe(PLAN_SOURCE.PENDING_CHAIN);
     // Info: (20260820 - Luphia) 待同步不算不一致，否則每期續訂都會產生假告警
-    expect(snapshot.mismatches).toBe(0);
+    expect(logWarn).not.toHaveBeenCalled();
   });
 
   it("首次訂閱、卡片還沒鑄出 → 顯示 DB 的付費方案", async () => {

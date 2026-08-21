@@ -11,7 +11,8 @@ import {
 } from "@/constants/subscription_quota";
 import {
   isChainCopyStale,
-  PLAN_RECONCILE_SOURCE,
+  PLAN_SOURCE,
+  type PlanSource,
   reconcilePlan,
   resolveChainCardPlan,
   resolveEffectivePlanId,
@@ -27,6 +28,10 @@ import { teamRepo } from "@/repositories/team.repo";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
 import { readOwnedChainCards } from "@/services/subscription_nft.service";
+
+// Info: (20260820 - Luphia) 來源列舉的單一來源在 plan_rules（client 也匯入它）
+export { PLAN_SOURCE } from "@/lib/subscription/plan_rules";
+export type { PlanSource } from "@/lib/subscription/plan_rules";
 
 /**
  * Info: (20260819 - Luphia) 方案的**單一入口** service（產品決定 20260819）。
@@ -126,34 +131,6 @@ export async function getTeamEntitlement(params: {
   return resolveEffectivePlanId(subscription, params.nowSec);
 }
 
-export interface IUserPlanTeam {
-  teamId: string;
-  // Info: (20260819 - Luphia) 對帳後的方案（鏈上為準；待同步期間為 DB）
-  plan: TeamPlanId;
-  dbPlan: TeamPlanId;
-  chainPlan: TeamPlanId;
-  tokenId: string | null;
-  // Info: (20260820 - Luphia) 這一團的答案是哪裡來的（逐團，因為每團的同步狀態不同）
-  source: PlanSource;
-}
-
-export const PLAN_SOURCE = {
-  // Info: (20260819 - Luphia) 鏈上讀到了、且那份是最新的，以鏈上為準
-  CHAIN: "CHAIN",
-  /**
-   * Info: (20260820 - Luphia) 鏈上那份**已知過期**（我們還沒寫上去），本次以 DB 顯示。
-   *
-   * 這不是降級的處置，是誠實的標籤：剛續訂或剛訂閱的那段時間，卡片上的
-   * `period_end` 仍是舊的，照鏈上顯示會把付費戶打回免費版。前端可據此顯示
-   * 「鏈上憑證產生中」而不是假裝已經有卡。
-   */
-  PENDING_CHAIN: "PENDING_CHAIN",
-  // Info: (20260819 - Luphia) 鏈上**讀不到**（未部署、RPC 失敗、逾時），退回 DB
-  DB: "DB",
-} as const;
-
-export type PlanSource = (typeof PLAN_SOURCE)[keyof typeof PLAN_SOURCE];
-
 export interface IUserPlanSnapshot {
   // Info: (20260819 - Luphia) 徽章顯示用：擁有的團隊中最高的方案
   plan: TeamPlanId;
@@ -163,10 +140,17 @@ export interface IUserPlanSnapshot {
    * 而徽章需要的是最高——同一份事實兩種讀法。
    */
   ownedPlans: TeamPlanId[];
-  teams: IUserPlanTeam[];
+  /**
+   * Info: (20260820 - Luphia) 這份快照的來源（取最保守的那一個）。
+   *
+   * 只要有一個團隊還在等鏈上，整份就標 `PENDING_CHAIN`——前端要說「憑證產生中」，
+   * 而它拿到的是一個徽章用的單一值。
+   *
+   * Info: (20260820 - Luphia) 逐團明細（`teams` / `mismatches`）已移除（簡化 20260820）：
+   * 沒有任何呼叫端讀它們，而不一致本身仍然會以 `log.warn` / `log.error` 留下紀錄
+   *——那才是需要被看見的地方。留著一份沒有人讀的結構只會讓下一個人以為它有用途。
+   */
   source: PlanSource;
-  // Info: (20260819 - Luphia) 鏈上與 DB 不一致的團隊數（0 表示對得上）
-  mismatches: number;
 }
 
 /**
@@ -255,29 +239,22 @@ export async function getUserPlan(params: {
       log.warn("鏈上方案讀取失敗或逾時，本次以 DB 為準", { userId, reason }),
   });
 
-  const teams: IUserPlanTeam[] = owned.map((team) => {
+  let anyPending = false;
+  const resolved = owned.map((team) => {
     const dbPlan = dbPlans.get(team.teamId) ?? TEAM_PLAN.FREE;
-    const card = chain.available ? chain.byTeam.get(team.teamId) : undefined;
-    const chainPlan = card?.plan ?? TEAM_PLAN.FREE;
     const cachedTokenId = cardState.get(team.teamId)?.tokenId ?? null;
 
-    if (!chain.available) {
-      return {
-        teamId: team.teamId,
-        plan: dbPlan,
-        dbPlan,
-        chainPlan,
-        tokenId: cachedTokenId,
-        source: PLAN_SOURCE.DB,
-      };
-    }
+    if (!chain.available) return { plan: dbPlan, tokenId: cachedTokenId };
 
+    const card = chain.byTeam.get(team.teamId);
+    const chainPlan = card?.plan ?? TEAM_PLAN.FREE;
     const chainStale = staleTeams.has(team.teamId);
     const { plan, mismatch, source } = reconcilePlan({
       dbPlan,
       chainPlan,
       chainStale,
     });
+    if (source === PLAN_SOURCE.PENDING_CHAIN) anyPending = true;
     if (mismatch) {
       log.warn("鏈上方案與 DB 不一致，以鏈上為準", {
         userId,
@@ -303,40 +280,30 @@ export async function getUserPlan(params: {
         chainPlan,
       });
     }
-    return {
-      teamId: team.teamId,
-      plan,
-      dbPlan,
-      chainPlan,
-      tokenId: card?.tokenId ?? cachedTokenId,
-      source:
-        source === PLAN_RECONCILE_SOURCE.PENDING_CHAIN
-          ? PLAN_SOURCE.PENDING_CHAIN
-          : PLAN_SOURCE.CHAIN,
-    };
+    return { plan, tokenId: card?.tokenId ?? cachedTokenId };
   });
 
   // Info: (20260819 - Luphia) 快取被鏈上糾正（發現 DB 不知道的卡）：只補卡號，不動計費資料
   if (chain.available) {
-    await backfillTokenIdCache(teams, cardState, log);
+    await backfillTokenIdCache(
+      owned.map((team, index) => ({
+        teamId: team.teamId,
+        tokenId: resolved[index].tokenId,
+      })),
+      cardState,
+      log,
+    );
   }
 
-  const ownedPlans = teams.map((team) => team.plan);
+  const ownedPlans = resolved.map((team) => team.plan);
   return {
     plan: resolveHighestPlan(ownedPlans),
     ownedPlans,
-    teams,
-    /**
-     * Info: (20260820 - Luphia) 整體來源取**最保守**的那一個：只要有一個團隊
-     * 還在等鏈上，整份快照就標 PENDING_CHAIN——前端要說「憑證產生中」，
-     * 而它拿到的是一個徽章用的單一值。
-     */
     source: !chain.available
       ? PLAN_SOURCE.DB
-      : teams.some((team) => team.source === PLAN_SOURCE.PENDING_CHAIN)
+      : anyPending
         ? PLAN_SOURCE.PENDING_CHAIN
         : PLAN_SOURCE.CHAIN,
-    mismatches: teams.filter((team) => team.plan !== team.dbPlan).length,
   };
 }
 
@@ -432,7 +399,7 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
  * 失敗不影響回傳：這是快取回填，讀方案不能因為寫快取失敗而失敗。
  */
 async function backfillTokenIdCache(
-  teams: IUserPlanTeam[],
+  teams: { teamId: string; tokenId: string | null }[],
   cardState: Map<string, { tokenId: string | null }>,
   log: ReturnType<typeof logger.child>,
 ): Promise<void> {

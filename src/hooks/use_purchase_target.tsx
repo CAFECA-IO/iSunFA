@@ -308,7 +308,8 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
       if (isSubscription) {
         const response = await request<{
           payload: {
-            orderId: string | null;
+            kind: "order" | "scheduled";
+            orderId?: string | null;
             challenge?: string;
             cost?: number;
             pendingPlanId?: string | null;
@@ -324,10 +325,12 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
         });
         if (!response.payload) throw new Error("Failed to create order");
         /**
-         * Info: (20260820 - Luphia) 沒有訂單＝這是排程（降級），不是失敗。
-         * 由這裡分流，付款畫面才不會拿著 null 去簽章。
+         * Info: (20260821 - Luphia) 直接讀 server 的 `kind`（簡化 20260821）。
+         *
+         * 先前這裡是「`orderId` 是不是 null」的推斷——而 server 端也已改成
+         * 可辨識聯集，兩邊各自推斷同一件事只是多一個會不一致的地方。
          */
-        if (!response.payload.orderId) {
+        if (response.payload.kind === "scheduled") {
           return {
             kind: "scheduled",
             pendingPlanId: response.payload.pendingPlanId ?? null,
@@ -336,7 +339,7 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
         }
         return {
           kind: "order",
-          orderId: response.payload.orderId,
+          orderId: response.payload.orderId ?? "",
           challenge: response.payload.challenge ?? "",
           cost: response.payload.cost,
         };

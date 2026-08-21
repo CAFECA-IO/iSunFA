@@ -2,7 +2,7 @@ import { describe, it, expect } from "@jest/globals";
 import {
   isChainCopyStale,
   isTeamPlanId,
-  PLAN_RECONCILE_SOURCE,
+  PLAN_SOURCE,
   reconcilePlan,
   resolveHighestPlan,
   resolveUnanimousPlan,
@@ -133,7 +133,7 @@ describe("DB 與鏈上的對帳", () => {
     ).toEqual({
       plan: TEAM_PLAN.TEAM,
       mismatch: false,
-      source: PLAN_RECONCILE_SOURCE.CHAIN,
+      source: PLAN_SOURCE.CHAIN,
     });
   });
 
@@ -147,7 +147,7 @@ describe("DB 與鏈上的對帳", () => {
     ).toEqual({
       plan: TEAM_PLAN.BUSINESS,
       mismatch: true,
-      source: PLAN_RECONCILE_SOURCE.CHAIN,
+      source: PLAN_SOURCE.CHAIN,
     });
   });
 
@@ -168,7 +168,7 @@ describe("DB 與鏈上的對帳", () => {
     ).toEqual({
       plan: TEAM_PLAN.TEAM,
       mismatch: false,
-      source: PLAN_RECONCILE_SOURCE.PENDING_CHAIN,
+      source: PLAN_SOURCE.PENDING_CHAIN,
     });
   });
 

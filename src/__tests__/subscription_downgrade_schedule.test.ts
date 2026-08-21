@@ -2,7 +2,10 @@ import { describe, it, expect, beforeEach } from "@jest/globals";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
 
-import { changeTeamSubscription } from "@/services/team_subscription.service";
+import {
+  changeTeamSubscription,
+  SUBSCRIPTION_CHANGE_KIND,
+} from "@/services/team_subscription.service";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { generatePaymentOrder } from "@/services/order.service";
 import { paymentRepo } from "@/repositories/payment.repo";
@@ -142,7 +145,7 @@ describe("降級：排程到當期屆滿", () => {
     expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
     expect(asMock(teamSubscriptionRepo.downgradeToFree)).not.toHaveBeenCalled();
     expect(result).toEqual({
-      orderId: null,
+      kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
       // Info: (20260820 - Luphia) 回**當期**方案：權益沒有變，畫面不該顯示新方案
       planId: TEAM_PLAN.BUSINESS,
       pendingPlanId: TEAM_PLAN.TEAM,
@@ -169,15 +172,24 @@ describe("降級：排程到當期屆滿", () => {
     });
     expect(asMock(teamSubscriptionRepo.downgradeToFree)).not.toHaveBeenCalled();
     expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
-    expect(result.planId).toBe(TEAM_PLAN.BUSINESS);
-    expect(result.pendingPlanId).toBe(TEAM_PLAN.FREE);
+    expect(result).toEqual(
+      expect.objectContaining({
+        kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
+        planId: TEAM_PLAN.BUSINESS,
+        pendingPlanId: TEAM_PLAN.FREE,
+      }),
+    );
   });
 
   // Info: (20260820 - Luphia) 生效時點就是當期屆滿，不是「三十天後」之類的另算
   it("生效時點等於當期屆滿", async () => {
     const result = await change(TEAM_PLAN.FREE);
 
-    expect(result.effectiveAt).toBe(Math.floor(PERIOD_END_MS / 1000));
+    expect(result).toEqual(
+      expect.objectContaining({
+        effectiveAt: Math.floor(PERIOD_END_MS / 1000),
+      }),
+    );
   });
 
   /**
@@ -269,7 +281,7 @@ describe("取消排程", () => {
     ).toHaveBeenCalledWith("team-1");
     expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
     expect(result).toEqual({
-      orderId: null,
+      kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
       planId: TEAM_PLAN.BUSINESS,
       pendingPlanId: null,
       effectiveAt: Math.floor(NOW_MS / 1000),
@@ -351,7 +363,12 @@ describe("取消排程與改計費週期要分得開（self-review 小項）", (
       asMock(teamSubscriptionRepo.cancelPendingPlanChange),
     ).toHaveBeenCalledWith("team-1");
     expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
-    expect(result.pendingPlanId).toBeNull();
+    expect(result).toEqual(
+      expect.objectContaining({
+        kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
+        pendingPlanId: null,
+      }),
+    );
   });
 
   it("同方案但改成年繳 → 取消排程**並**建單", async () => {
@@ -416,7 +433,12 @@ describe("取消排程與改計費週期要分得開（self-review 小項）", (
       asMock(teamSubscriptionRepo.cancelPendingPlanChange),
     ).toHaveBeenCalledWith("team-1");
     expect(asMock(generatePaymentOrder)).toHaveBeenCalledTimes(1);
-    expect(result.orderId).toBe("order-1");
+    expect(result).toEqual(
+      expect.objectContaining({
+        kind: SUBSCRIPTION_CHANGE_KIND.ORDER,
+        orderId: "order-1",
+      }),
+    );
   });
 
   /**
@@ -441,7 +463,9 @@ describe("取消排程與改計費週期要分得開（self-review 小項）", (
       nowMs: NOW_MS,
     });
 
-    expect(result.supersedesPendingPlanId).toBe(TEAM_PLAN.FREE);
+    expect(result).toEqual(
+      expect.objectContaining({ supersedesPendingPlanId: TEAM_PLAN.FREE }),
+    );
   });
 
   it("沒有排程時不回報取代", async () => {
@@ -458,7 +482,9 @@ describe("取消排程與改計費週期要分得開（self-review 小項）", (
       nowMs: NOW_MS,
     });
 
-    expect(result.supersedesPendingPlanId).toBeNull();
+    expect(result).toEqual(
+      expect.objectContaining({ supersedesPendingPlanId: null }),
+    );
   });
 });
 
@@ -532,7 +558,7 @@ describe("未付訂單沿用，不再建第二張", () => {
       expect.stringContaining("superseded"),
     );
     expect(asMock(generatePaymentOrder)).toHaveBeenCalledTimes(1);
-    expect(result.orderId).toBe("order-1");
+    expect(result).toEqual(expect.objectContaining({ orderId: "order-1" }));
   });
 
   // Info: (20260820 - Luphia) 沒有未付訂單就照常建單（否則「一律沿用」也會通過上面那條）

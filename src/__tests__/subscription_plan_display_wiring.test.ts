@@ -396,7 +396,11 @@ describe("排程結果不進入付款流程", () => {
     const hook = codeOf("src", "hooks", "use_purchase_target.tsx");
 
     expect(hook).toMatch(/kind: "scheduled"/);
-    expect(hook).toMatch(/if \(!response\.payload\.orderId\)/);
+    /**
+     * Info: (20260821 - Luphia) 改為直接讀 server 的 `kind`（簡化 20260821）：
+     * 兩邊各自從 `orderId` 推斷同一件事，只是多一個會不一致的地方。
+     */
+    expect(hook).toMatch(/response\.payload\.kind === "scheduled"/);
   });
 
   it("付款畫面分流到專屬的一頁，不呼叫 completeCheckout", () => {

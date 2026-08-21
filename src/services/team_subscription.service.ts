@@ -295,41 +295,51 @@ export async function getAccountBookQuotaView(params: {
  * 「鏈上說付費、實際已降級」出現的路徑（見設計書 §6.5）。
  */
 
-export interface IChangeSubscriptionResult {
-  // Info: (20260820 - Luphia) 需要付款時才有（升級／續購）；降級與取消排程一律 null
-  orderId: string | null;
-  challenge?: string;
-  cost?: number;
-  // Info: (20260820 - Luphia) **當期**方案：降級排程後這裡仍是原方案（權益沒有變）
-  planId: TeamPlanId;
-  // Info: (20260820 - Luphia) 排程中的降級；null＝沒有排程（含剛剛取消）
-  pendingPlanId?: TeamPlanId | null;
-  // Info: (20260820 - Luphia) 排程生效時點（epoch 秒）＝當期屆滿
-  effectiveAt?: number;
-  /**
-   * Info: (20260820 - Luphia) 這次購買**將**取代的排程（現在式）。
-   *
-   * 升級不經過取消分支——排程是履行時由 `applyTeamSubscriptionInTx` 清掉的，
-   * 所以在付款完成之前它仍然存在。欄位名不用「已取消」：那一刻還沒取消。
-   * null＝沒有排程要取代。
-   */
-  supersedesPendingPlanId?: TeamPlanId | null;
-}
-
 /**
- * Info: (20260820 - Luphia) 當期的計費週期存在最後一張訂單的 data 裡，不在訂閱列上。
+ * Info: (20260821 - Luphia) 變更方案的結果是**兩種**，型別要說得出來（簡化 20260821）。
  *
- * 讀不到時回月繳（與 `applyTeamSubscriptionInTx` 的預設一致）：那是保守的一側，
- * 猜錯只會讓「改成年繳」多走一次建單，而不會把排程默默清掉。
+ * 先前是一個有六個選擇性欄位的物件，而「哪些欄位同時有值」只能靠讀程式推斷：
+ * 降級回 `orderId: null` 且沒有 `challenge`，購買則反過來。前端因此得靠
+ * 「`orderId` 是不是 null」來猜自己拿到的是哪一種——而那正是上一輪那條壞掉的
+ * 流程的來源（付款畫面拿著 null 去簽章）。
+ *
+ * 收斂成聯集之後，`kind` 是唯一的判斷點，前端不必再猜，而「不需付款」變成一種
+ * 必須被處理的結果。
  */
-async function resolveCurrentBillingInterval(
-  subscription: { latestOrderId: string | null } | null,
-): Promise<BillingInterval> {
-  if (!subscription?.latestOrderId) return BILLING_INTERVAL.MONTH;
-  const order = await paymentRepo.getOrderById(subscription.latestOrderId);
-  const data = order?.data as { billingInterval?: BillingInterval } | null;
-  return data?.billingInterval ?? BILLING_INTERVAL.MONTH;
-}
+export const SUBSCRIPTION_CHANGE_KIND = {
+  // Info: (20260821 - Luphia) 要付款：回訂單與 challenge
+  ORDER: "order",
+  // Info: (20260821 - Luphia) 不需付款：排程（降級）或取消排程
+  SCHEDULED: "scheduled",
+} as const;
+
+export type SubscriptionChangeKind =
+  (typeof SUBSCRIPTION_CHANGE_KIND)[keyof typeof SUBSCRIPTION_CHANGE_KIND];
+
+export type IChangeSubscriptionResult =
+  | {
+      kind: typeof SUBSCRIPTION_CHANGE_KIND.ORDER;
+      orderId: string;
+      challenge: string;
+      cost: number;
+      // Info: (20260820 - Luphia) **當期**方案：升級要付款後才生效，畫面不該提前改
+      planId: TeamPlanId;
+      /**
+       * Info: (20260820 - Luphia) 這次購買**將**取代的排程（現在式）。
+       * 升級的排程是履行時才由 `applyTeamSubscriptionInTx` 清掉的，
+       * 所以在付款完成之前它仍然存在。null＝沒有排程要取代。
+       */
+      supersedesPendingPlanId: TeamPlanId | null;
+    }
+  | {
+      kind: typeof SUBSCRIPTION_CHANGE_KIND.SCHEDULED;
+      // Info: (20260820 - Luphia) 當期方案（沒有變）
+      planId: TeamPlanId;
+      // Info: (20260820 - Luphia) 排程中的方案；null＝剛剛取消了排程
+      pendingPlanId: TeamPlanId | null;
+      // Info: (20260820 - Luphia) 生效時點（epoch 秒）＝當期屆滿；取消時為當下
+      effectiveAt: number;
+    };
 
 export async function changeTeamSubscription(params: {
   userId: string;
@@ -351,6 +361,13 @@ export async function changeTeamSubscription(params: {
     const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
     const nowSec = Math.floor(nowMs / 1000);
     const currentPlanId = resolveEffectivePlanId(subscription, nowSec);
+    /**
+     * Info: (20260821 - Luphia) 排程中的方案，算一次（簡化 20260821）。
+     * 認不出來的代號視為沒有排程——回一個畫面翻不出名字的方案代號更糟。
+     */
+    let pendingTarget = isTeamPlanId(subscription?.pendingPlanId ?? "")
+      ? (subscription?.pendingPlanId as TeamPlanId)
+      : null;
 
     /**
      * Info: (20260820 - Luphia) 已排程降級後又送出「目前方案」＝取消降級。
@@ -367,29 +384,33 @@ export async function changeTeamSubscription(params: {
      * 週期相同 → 取消排程（他就是要留在原方案）；
      * 週期不同 → 也取消排程，但**繼續往下走建單**（他要的是換週期，那是續購）。
      */
-    const currentInterval = await resolveCurrentBillingInterval(subscription);
     /**
      * Info: (20260820 - Luphia) 「取消降級」與「延長期間」用**有沒有帶付款方式**分辨。
      *
-     * 兩者送進來的方案與週期完全一樣（都是當期的），先前只比對這兩個值，於是
-     * 購買流程按下「延長方案」時會走進取消排程的分支——**回一個 `orderId: null`**，
-     * 而付款畫面拿著 null 繼續往下走。那不只是少一句提示，是一條壞掉的流程
-     *（在方案卡改為可按之前它按不到，所以先前看不出來）。
+     * 兩者送進來的方案完全一樣（都是當期的），先前只比對方案，於是購買流程按下
+     * 「延長方案」時會走進取消排程的分支——**回一個 `orderId: null`**，而付款畫面
+     * 拿著 null 繼續往下走。那不只是少一句提示，是一條壞掉的流程。
      *
-     * 帶了付款方式就是「我要買」：取消排程**並**建單（購買本來就會取代排程，
-     * 履行時 `applyTeamSubscriptionInTx` 也會清掉它）。沒帶就是單純取消排程。
+     * 帶了付款方式就是「我要買」：取消排程**並**建單。沒帶就是單純取消排程。
+     *
+     * Info: (20260821 - Luphia) 計費週期的比對已移除（簡化 20260821）。
+     *
+     * 先前還多比一次「週期是否相同」，而那需要去讀最後一張訂單（週期只存在
+     * 訂單的 data 裡），還得為讀不到的情形猜一個預設值。有了付款方式這個判準之後
+     * 它完全是多餘的：沒帶付款方式就是取消（取消本身沒有週期語意），帶了就是購買。
+     * 順帶修掉一個小坑——原本「同方案、不同週期、沒帶付款方式」會**先取消排程再丟
+     * schema 錯誤**：排程沒了，而呼叫端拿到的是一個錯誤。
      */
-    const cancelOnly =
-      Boolean(subscription?.pendingPlanId) &&
-      planId === currentPlanId &&
-      billingInterval === currentInterval &&
-      !paymentMethodId;
-
     if (subscription?.pendingPlanId && planId === currentPlanId) {
       await teamSubscriptionRepo.cancelPendingPlanChange(teamId);
-      if (cancelOnly) {
+      /**
+       * Info: (20260821 - Luphia) 已經在這裡取消掉了，後面就不該再回報
+       * 「這次購買將取代某個排程」——那個排程已經不存在。
+       */
+      pendingTarget = null;
+      if (!paymentMethodId) {
         return {
-          orderId: null,
+          kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
           planId: currentPlanId,
           pendingPlanId: null,
           effectiveAt: nowSec,
@@ -414,7 +435,7 @@ export async function changeTeamSubscription(params: {
         autoRenew: planId !== TEAM_PLAN.FREE,
       });
       return {
-        orderId: null,
+        kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
         // Info: (20260820 - Luphia) 回**當期**方案：當期權益沒有變，畫面不該顯示新方案
         planId: currentPlanId,
         pendingPlanId: planId,
@@ -427,7 +448,12 @@ export async function changeTeamSubscription(params: {
        * Info: (20260820 - Luphia) 走到這裡表示當期已經是 free（不是降級）。
        * 免費方案不需要訂單，也沒有東西要排程。
        */
-      return { orderId: null, planId: TEAM_PLAN.FREE };
+      return {
+        kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
+        planId: TEAM_PLAN.FREE,
+        pendingPlanId: null,
+        effectiveAt: nowSec,
+      };
     }
 
     if (!paymentMethodId) {
@@ -468,10 +494,12 @@ export async function changeTeamSubscription(params: {
         billingInterval,
       });
       return {
+        kind: SUBSCRIPTION_CHANGE_KIND.ORDER,
         orderId: inFlight.id,
         challenge: inFlight.challenge,
         cost: Number(inFlight.amount),
         planId: currentPlanId,
+        supersedesPendingPlanId: pendingTarget,
       };
     }
 
@@ -531,11 +559,12 @@ export async function changeTeamSubscription(params: {
      * 那一刻還沒取消。
      */
     return {
-      ...order,
+      kind: SUBSCRIPTION_CHANGE_KIND.ORDER,
+      orderId: order.orderId,
+      challenge: order.challenge,
+      cost: order.cost ?? amount,
       planId: currentPlanId,
-      supersedesPendingPlanId: isTeamPlanId(subscription?.pendingPlanId ?? "")
-        ? (subscription?.pendingPlanId as TeamPlanId)
-        : null,
+      supersedesPendingPlanId: pendingTarget,
     };
   });
 }

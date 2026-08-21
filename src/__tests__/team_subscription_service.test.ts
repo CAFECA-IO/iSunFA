@@ -465,7 +465,7 @@ describe("changeTeamSubscription", () => {
     });
 
     expect(result).toEqual({
-      orderId: null,
+      kind: "scheduled",
       // Info: (20260820 - Luphia) 當期方案不變
       planId: TEAM_PLAN.BUSINESS,
       pendingPlanId: TEAM_PLAN.FREE,
@@ -490,7 +490,16 @@ describe("changeTeamSubscription", () => {
       nowMs: NOW_MS,
     });
 
-    expect(result).toEqual({ orderId: null, planId: TEAM_PLAN.FREE });
+    /**
+     * Info: (20260821 - Luphia) 已是免費版時仍屬「不需付款」那一半（`scheduled`），
+     * 只是沒有排程中的變更。
+     */
+    expect(result).toEqual({
+      kind: "scheduled",
+      planId: TEAM_PLAN.FREE,
+      pendingPlanId: null,
+      effectiveAt: expect.any(Number),
+    });
     expect(teamSubscriptionRepo.schedulePlanChange).not.toHaveBeenCalled();
     expect(generatePaymentOrder).not.toHaveBeenCalled();
   });

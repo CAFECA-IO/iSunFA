@@ -101,9 +101,7 @@ export async function GET(request: NextRequest) {
     let planSnapshot: IUserPlanSnapshot = {
       plan: TEAM_PLAN.FREE,
       ownedPlans: [],
-      teams: [],
       source: PLAN_SOURCE.DB,
-      mismatches: 0,
     };
     try {
       planSnapshot = await getUserPlan({
