@@ -10,6 +10,7 @@ import zlib from "node:zlib";
 import { PDFDocument, PDFName, PDFRawStream } from "pdf-lib";
 import { extractPdfTextLayer } from "@/lib/pdf_text_layer";
 import { squeezeForMatch } from "@/lib/utils/squeeze_for_match";
+import { auditFrameworkClaims } from "@/lib/utils/carbon_framework_claims";
 import {
   CARBON_REPORT_CHAPTERS,
   CARBON_REPORT_OUTLINE,
@@ -807,11 +808,46 @@ const main = async (): Promise<void> => {
    * 選 IFRS 的產出**應該**出現 IFRS,而且未到期時必須有免責敘述。
    * 屆時把這裡換成 `checkFrameworkConsistency(framework)`。
    */
-  const FOREIGN_FRAMEWORKS = ["IFRS", "TCFD", "SASB", "GRI", "CDP"];
-  expectZero(
-    "紙上宣告別的揭露框架",
-    FOREIGN_FRAMEWORKS.filter((name) => squeezed.includes(name)),
-  );
+  /**
+   * Info: (20260821 - Emily) 從「全域黑名單」改成「依成品自己的宣告分流」。
+   *
+   * 08-19 的版本是 `["IFRS","TCFD","SASB","GRI","CDP"]` 一律禁止。產品決策改變了前提：
+   * 33 段大綱本身就是 IFRS S1/S2 的架構，報告**可以**宣告架構對齊 ——
+   * 真正的紅線不是框架名稱，是**主體的合規宣告**（未到金管會適用時程的企業提前宣告）。
+   *
+   * 判準看的是**成品自己怎麼宣告**，不是我們的意圖，所以不需要等 `open/54` 的選擇機制
+   * 落地就能生效。文案取自 `carbon_report_framework.ts`，與將來的產出端同一份字串。
+   *
+   * ## 四條的涵蓋範圍（用輸入空間寫，不用程式碼寫）
+   *
+   * 1. `紙上宣告別的揭露框架` —— TCFD/SASB/GRI/CDP，**任何情況**出現即紅。
+   *    我們沒有對齊它們，所以沒有 when 子句。
+   * 2. `紙上出現 IFRS 卻沒宣告架構對齊` —— **當報告沒有印出架構對齊聲明時**，
+   *    出現 IFRS 即紅。有印就放行。
+   * 3. `宣告架構對齊卻沒有免責句` —— **當報告印了對齊聲明時**，必須也印免責句。
+   *    只印前者會讓讀者把「架構對齊」讀成「合規」。
+   * 4. `紙上有合規宣告` —— `COMPLIANCE_CLAIM_PATTERNS` 裡的說法，**任何情況**即紅。
+   *
+   * ## 現在最多能發生多壞（從界推，不從個例推）
+   *
+   * 第 4 條的界就是 `COMPLIANCE_CLAIM_PATTERNS` 的長度：**清單外的說法漏得掉**。
+   * 例如「已達成 IFRS S1 要求」「與 IFRS S2 一致」都不在清單裡。
+   * 所以最壞情況是「一份印了對齊聲明與免責句的報告，同時用清單外的說法斷言合規」
+   * —— 四條全綠而紙上有合規宣告。清單只能變長。
+   *
+   * 第 2 條另有一個已知洞：**客戶原文自己提到 IFRS 時**（逐字照錄），這條會紅，
+   * 而那不是我們的宣告。與「對帳附錄的逐字引用被報成表格語法外洩」同一形狀。
+   * 已量：客戶原文與三份產出裡 `IFRS` 都是 0 次，所以今天不會誤報；
+   * 真的遇到時要把判準收窄到「系統印的區塊」，不是現在憑空加例外。
+   */
+  const claims = auditFrameworkClaims(text);
+  snapshot.紙上宣告架構對齊 = claims.alignmentDeclared ? 1 : 0;
+  snapshot.紙上有免責句 = claims.disclaimerPresent ? 1 : 0;
+
+  expectZero("紙上宣告別的揭露框架", claims.unalignedFrameworks);
+  expectZero("紙上出現 IFRS 卻沒宣告架構對齊", claims.ifrsWithoutAlignment);
+  expectZero("宣告架構對齊卻沒有免責句", claims.alignmentWithoutDisclaimer);
+  expectZero("紙上有合規宣告", claims.complianceClaims);
 
   // Info: (20260819 - Emily) ── 桑基圖要嘛在紙上,要嘛紙上說明它為什麼不在 ──
   /**
