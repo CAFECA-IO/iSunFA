@@ -1241,6 +1241,83 @@ const checkLog = (log: string, text?: string): void => {
     record("warn", "log:圖表被拒", rejected.join("、"));
   }
 
+  /**
+   * Info: (20260821 - Emily) ── 圖表被拒 × 紙上痕跡的對帳 ──
+   *
+   * 表格那邊早就有「log 說丟了、紙上也真的沒有」,圖表這邊一直沒有 ——
+   * 同一個原則只做了一半。08-20 兩趟的實測就是代價:
+   * run C 拒 2 張、紙上 1 個痕跡;run D 拒 1 張、紙上 0 個。
+   * 被拒的圖比紙上的痕跡多 = 有圖無聲消失,而「圖表未繪製」那幾條判準
+   * 只數紙上的句子,紙上什麼都沒有時它們同時是 0、同時看起來綠。
+   *
+   * 判準:**每一張被拒的圖,紙上都要有一個痕跡**(素材不足/無法回溯/超過上限,
+   * 三種片語都算)。痕跡比被拒多不叫(退化與佔位有其他來源);少了才是無聲消失。
+   *
+   * ⚠ 這條對 run D 的既存產出**就是紅的** —— 那不是誤報,是 open/48 還沒修完的
+   * 實測證據。修的是產品(被拒時要把說明印上紙),不是把這條調綠。
+   */
+  if (text !== undefined) {
+    const squeezedPaper = squeezeForMatch(text);
+    const paperTraces =
+      (squeezedPaper.match(
+        new RegExp(squeezeForMatch("本節內容不足以繪製結構圖"), "g"),
+      )?.length ?? 0) +
+      (squeezedPaper.match(
+        new RegExp(squeezeForMatch("無法回溯至本節原文"), "g"),
+      )?.length ?? 0) +
+      (squeezedPaper.match(
+        new RegExp(squeezeForMatch(DIAGRAM_CAP_EXCEEDED_PHRASE), "g"),
+      )?.length ?? 0);
+    snapshot.紙上圖表失敗痕跡 = paperTraces;
+    expectZero(
+      "圖表被拒卻紙上無痕",
+      rejected.length > paperTraces
+        ? [`被拒 ${rejected.length} 張、紙上只有 ${paperTraces} 個痕跡`]
+        : [],
+    );
+  }
+
+  /**
+   * Info: (20260821 - Emily) ── 段落裁決的對帳 ──
+   *
+   * `segment rejected` 一段被丟時,log 帶著 contentChars —— 判斷嚴不嚴重的數字
+   * 早就記了,只是沒人讀。08-20 run C 實測:ch2-intro 被拒、contentChars 0
+   * (模型吐了空段,沒有真的遺失),而「大綱節數 33/33」照樣綠,因為那條只看
+   * 節標題在不在。同一形狀若 contentChars 是 5000,遺失就是無聲的。
+   *
+   * 分兩層:被拒本身 record_only(空段是模型輸出的變異);
+   * **有內容卻被拒**是 must_match —— 那是一段真實原文無聲消失。
+   */
+  const rejectedSegments = [
+    ...log.matchAll(
+      /segment rejected.*?"paragraphId":"([^"]*)".*?"contentChars":(\d+|null)/g,
+    ),
+  ].map((match) => ({
+    paragraphId: match[1],
+    chars: match[2] === "null" ? null : Number(match[2]),
+  }));
+  snapshot.log_段落被拒 = rejectedSegments.map(
+    (seg) => `${seg.paragraphId}(${seg.chars ?? "?"}字)`,
+  );
+  expectZero(
+    "段落被拒且原文有內容",
+    rejectedSegments
+      .filter((seg) => seg.chars === null || seg.chars > 0)
+      .map((seg) => `${seg.paragraphId}(${seg.chars ?? "?"}字)`),
+  );
+
+  /**
+   * Info: (20260821 - Emily) ── 其餘四種「丟東西」事件,至少要看得見 ──
+   *
+   * 12 個丟棄類 log 事件裡,先前只有 1 個有紙面對帳。這四種今天先進快照
+   * (record_only):看得見才輪得到判斷嚴不嚴重。三份既有 log 實測都是 0,
+   * 所以它們暫時只是地雷偵測器,不是已知缺陷的量尺。
+   */
+  snapshot.log_表格整批被拒 = count(/source table rejected/g);
+  snapshot.log_活動數據被拒 = count(/activity record rejected/g);
+  snapshot.log_llm輸出不合schema = count(/llm output schema invalid/g);
+  snapshot.log_私有區字元無對照 = count(/unmapped private-use chars/g);
+
   const rendered =
     /"chartsRendered":(\d+),"chartsFailed":(\d+),"tocFilled":(\d+),"tocMissing":(\d+)/.exec(
       log,
