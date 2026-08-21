@@ -3332,3 +3332,31 @@ input[type="color" i]::-moz-color-swatch {
     opacity: 1;
   }
 }
+
+/* Info: (20260821 - Luphia) 小鈴鐺的搖動動畫（發現新通知時觸發一次，見 notification_bell.tsx） */
+@keyframes bell-shake {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  15% {
+    transform: rotate(14deg);
+  }
+  30% {
+    transform: rotate(-12deg);
+  }
+  45% {
+    transform: rotate(9deg);
+  }
+  60% {
+    transform: rotate(-6deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
+
+.animate-bell-shake {
+  animation: bell-shake 0.9s ease-in-out;
+  transform-origin: top center;
+}

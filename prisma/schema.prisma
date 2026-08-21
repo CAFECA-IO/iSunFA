@@ -56,6 +56,8 @@ model User {
   revokedInvitations    TeamInvitation[]       @relation("InvitationRevoker")
   // Info: (20260817 - Luphia) 費思長期記憶（一個團隊一份，見 FaithMemory）
   faithMemories         FaithMemory[]
+  // Info: (20260821 - Luphia) 小鈴鐺的事件型通知（ADR 021 補充）
+  notifications         Notification[]
   auditLogs             AuditLog[]
   vouchers              Voucher[]
   esgRecords            EsgRecord[]
@@ -346,6 +348,34 @@ model TeamInvitation {
  * 團隊點數採離鏈決定論帳本（C 案混合制：離鏈營運 + 每日 merkle 鏈上錨定），
  * 金額一律 BigInt 零誤差；TeamWalletLedger 為 append-only，更正僅允許反向分錄。
  */
+/**
+ * Info: (20260821 - Luphia) 使用者通知（小鈴鐺，ADR 021 補充）。
+ *
+ * 只存**事件型**通知（工作完成、系統要求升級錢包）。**待辦型**（待接受的
+ * 團隊邀請）刻意不存——那是活的狀態，邀請被接受／撤回時通知必須同步消失，
+ * 存一份副本就多一個會過期的地方；小鈴鐺讀取時向邀請表現算。
+ *
+ * `dedupeKey` 唯一：worker 重試、腳本重跑都不會發出第二則同一件事的通知
+ *（與訂單 idempotencyKey 同一個形狀）。
+ */
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id])
+  // Info: (20260821 - Luphia) NOTIFICATION_TYPE 常數；畫面依 type 決定文案與連結
+  type      String
+  // Info: (20260821 - Luphia) type 專屬的資料（analysisId、teamId…），畫面插值用
+  payload   Json
+  dedupeKey String?   @unique @map("dedupe_key")
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  // Info: (20260821 - Luphia) 小鈴鐺的兩條查詢：未讀計數與清單（新到舊）
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@map("notification")
+}
+
 model TeamSubscription {
   id                 String   @id @default(uuid())
   teamId             String   @unique @map("team_id")

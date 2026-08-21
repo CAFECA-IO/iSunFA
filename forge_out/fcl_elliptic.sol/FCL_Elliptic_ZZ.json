@@ -1,0 +1,50 @@
+{
+  "abi": [],
+  "bytecode": {
+    "object": "0x6080806040523460175760399081601c823930815050f35b5f80fdfe5f80fdfea26469706673582212204316b7bb4058922f01d04ee9d50f54f743fece1f5d9100ce82379da5bd941e3b64736f6c634300081e0033",
+    "sourceMap": "1220:52621:170:-:0;;;;;;;;;;;;;;;;;;;;;",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x5f80fdfea26469706673582212204316b7bb4058922f01d04ee9d50f54f743fece1f5d9100ce82379da5bd941e3b64736f6c634300081e0033",
+    "sourceMap": "1220:52621:170:-:0;;",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {},
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.30+commit.73712a01\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/lib/fcl_elliptic.sol\":\"FCL_Elliptic_ZZ\"},\"evmVersion\":\"prague\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":@erc3643org/=node_modules/@erc3643org/\",\":hardhat/=node_modules/hardhat/\"],\"viaIR\":true},\"sources\":{\"contracts/lib/fcl_elliptic.sol\":{\"keccak256\":\"0xe366177d58ef44b98144a98e8659cdb1fdab160b37d40b04a6d69ecefc322334\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://879c08c42b6845b205778ac27b4b1ac4908adaf552526f218411644705d93558\",\"dweb:/ipfs/QmayBSKUg5Bt2K1y7dLsCxmGLTLNnf6Rawtd9A6cFFwHgm\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": { "version": "0.8.30+commit.73712a01" },
+    "language": "Solidity",
+    "output": {
+      "abi": [],
+      "devdoc": { "kind": "dev", "methods": {}, "version": 1 },
+      "userdoc": { "kind": "user", "methods": {}, "version": 1 }
+    },
+    "settings": {
+      "remappings": [
+        "@erc3643org/=node_modules/@erc3643org/",
+        "hardhat/=node_modules/hardhat/"
+      ],
+      "optimizer": { "enabled": true, "runs": 200 },
+      "metadata": { "bytecodeHash": "ipfs" },
+      "compilationTarget": {
+        "contracts/lib/fcl_elliptic.sol": "FCL_Elliptic_ZZ"
+      },
+      "evmVersion": "prague",
+      "libraries": {},
+      "viaIR": true
+    },
+    "sources": {
+      "contracts/lib/fcl_elliptic.sol": {
+        "keccak256": "0xe366177d58ef44b98144a98e8659cdb1fdab160b37d40b04a6d69ecefc322334",
+        "urls": [
+          "bzz-raw://879c08c42b6845b205778ac27b4b1ac4908adaf552526f218411644705d93558",
+          "dweb:/ipfs/QmayBSKUg5Bt2K1y7dLsCxmGLTLNnf6Rawtd9A6cFFwHgm"
+        ],
+        "license": "MIT"
+      }
+    },
+    "version": 1
+  },
+  "id": 170
+}

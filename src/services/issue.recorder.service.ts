@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { orderRepo } from "@/repositories/order.repo";
 import { analysisRepo } from "@/repositories/analysis.repo";
+import { notifyAnalysisCompleted } from "@/services/notification.service";
 import { ORDER_STATUS } from "@/constants/status";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import {
@@ -229,6 +230,18 @@ export class IssueRecorderService {
             }
 
             await analysisRepo.updateAnalysisResult(analysis.id, parsedResult);
+
+            /**
+             * Info: (20260821 - Luphia) 結果落地後通知小鈴鐺（ADR 021 補充）。
+             * `notifyAnalysisCompleted` 永不拋錯且以 dedupeKey 冪等——
+             * recorder 重試同一個 task 不會發第二則，通知失敗也不會
+             * 影響已經寫入的結果。
+             */
+            await notifyAnalysisCompleted({
+              userId: analysis.userId,
+              analysisId: analysis.id,
+              analysisType: analysis.type,
+            });
 
             // Info: (20260420 - Luphia) Save Analysis tags if present
             if (typeof parsedResult === "object" && parsedResult !== null) {

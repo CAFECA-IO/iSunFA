@@ -1,0 +1,575 @@
+{
+  "abi": [
+    {
+      "type": "constructor",
+      "inputs": [
+        {
+          "name": "defaultAdmin",
+          "type": "address",
+          "internalType": "address"
+        },
+        { "name": "anchorer", "type": "address", "internalType": "address" }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "ANCHOR_ROLE",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "bytes32", "internalType": "bytes32" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "DEFAULT_ADMIN_ROLE",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "bytes32", "internalType": "bytes32" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "commitAnchor",
+      "inputs": [
+        { "name": "day", "type": "uint256", "internalType": "uint256" },
+        { "name": "dayRoot", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "chainedRoot", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "entryCount", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "getRoleAdmin",
+      "inputs": [
+        { "name": "role", "type": "bytes32", "internalType": "bytes32" }
+      ],
+      "outputs": [{ "name": "", "type": "bytes32", "internalType": "bytes32" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "grantRole",
+      "inputs": [
+        { "name": "role", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "account", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "hasRole",
+      "inputs": [
+        { "name": "role", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "account", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "renounceRole",
+      "inputs": [
+        { "name": "role", "type": "bytes32", "internalType": "bytes32" },
+        {
+          "name": "callerConfirmation",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "revokeRole",
+      "inputs": [
+        { "name": "role", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "account", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "supportsInterface",
+      "inputs": [
+        { "name": "interfaceId", "type": "bytes4", "internalType": "bytes4" }
+      ],
+      "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "event",
+      "name": "AnchorCommitted",
+      "inputs": [
+        {
+          "name": "day",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "dayRoot",
+          "type": "bytes32",
+          "indexed": false,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "chainedRoot",
+          "type": "bytes32",
+          "indexed": false,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "entryCount",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "RoleAdminChanged",
+      "inputs": [
+        {
+          "name": "role",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "previousAdminRole",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "newAdminRole",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "RoleGranted",
+      "inputs": [
+        {
+          "name": "role",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "account",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "sender",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "RoleRevoked",
+      "inputs": [
+        {
+          "name": "role",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "account",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "sender",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    { "type": "error", "name": "AccessControlBadConfirmation", "inputs": [] },
+    {
+      "type": "error",
+      "name": "AccessControlUnauthorizedAccount",
+      "inputs": [
+        { "name": "account", "type": "address", "internalType": "address" },
+        { "name": "neededRole", "type": "bytes32", "internalType": "bytes32" }
+      ]
+    }
+  ],
+  "bytecode": {
+    "object": "0x60803461007557601f61069938819003918201601f19168301916001600160401b03831184841017610079578084926040948552833981010312610075578061005f61005960206100526100659561008d565b930161008d565b916100a1565b50610117565b5060405161048e90816101ab8239f35b5f80fd5b634e487b7160e01b5f52604160045260245ffd5b51906001600160a01b038216820361007557565b6001600160a01b0381165f9081525f5160206106595f395f51905f52602052604090205460ff16610112576001600160a01b03165f8181525f5160206106595f395f51905f5260205260408120805460ff191660011790553391905f5160206106395f395f51905f528180a4600190565b505f90565b6001600160a01b0381165f9081525f5160206106795f395f51905f52602052604090205460ff16610112576001600160a01b03165f8181525f5160206106795f395f51905f5260205260408120805460ff191660011790553391907f08b5ce2e3163e37059f807346dad4dd6235ed44f92dced22992662cb45706362905f5160206106395f395f51905f529080a460019056fe6080806040526004361015610012575f80fd5b5f3560e01c90816301ffc9a71461029f57508063248a9ca31461026d5780632f2ff15d1461023e57806336568abe1461020857806391d14854146101cd578063a217fddf146101b3578063b6e75e4a146100f3578063d547741f146100bd5763fd5f48c51461007f575f80fd5b346100b9575f3660031901126100b95760206040517f08b5ce2e3163e37059f807346dad4dd6235ed44f92dced22992662cb457063628152f35b5f80fd5b346100b9576100f16100ce366102f2565b906100ec6100e7825f525f602052600160405f20015490565b610318565b6103d8565b005b346100b95760803660031901126100b957335f9081527f4bd90266521889410eccfff4a30b752c59701e46284d866f59cb044dde9128ef602052604090205460ff161561017c576040516024358152604435602082015260643560408201527f1c1d0b6c8791059baf598f3620d123cd90794bd3cb12cf952cb6561146205502606060043592a2005b63e2517d3f60e01b5f52336004527f08b5ce2e3163e37059f807346dad4dd6235ed44f92dced22992662cb4570636260245260445ffd5b346100b9575f3660031901126100b95760206040515f8152f35b346100b9576101db366102f2565b905f525f60205260405f209060018060a01b03165f52602052602060ff60405f2054166040519015158152f35b346100b957610216366102f2565b336001600160a01b0382160361022f576100f1916103d8565b63334bd91960e11b5f5260045ffd5b346100b9576100f161024f366102f2565b906102686100e7825f525f602052600160405f20015490565b610350565b346100b95760203660031901126100b95760206102976004355f525f602052600160405f20015490565b604051908152f35b346100b95760203660031901126100b9576004359063ffffffff60e01b82168092036100b957602091637965db0b60e01b81149081156102e1575b5015158152f35b6301ffc9a760e01b149050836102da565b60409060031901126100b957600435906024356001600160a01b03811681036100b95790565b5f8181526020818152604080832033845290915290205460ff161561033a5750565b63e2517d3f60e01b5f523360045260245260445ffd5b5f818152602081815260408083206001600160a01b038616845290915290205460ff166103d2575f818152602081815260408083206001600160a01b0395909516808452949091528120805460ff19166001179055339291907f2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d9080a4600190565b50505f90565b5f818152602081815260408083206001600160a01b038616845290915290205460ff16156103d2575f818152602081815260408083206001600160a01b0395909516808452949091528120805460ff19169055339291907ff6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b9080a460019056fea2646970667358221220f05d31a4bf946900565dc47afecee1c8e3f60a32db5d98d80dbbf0e5d34221fc64736f6c634300081e00332f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0dad3228b676f7d3cd4284a5443f17f1962b36e491b30a40b2405849e597ba5fb54bd90266521889410eccfff4a30b752c59701e46284d866f59cb044dde9128ef",
+    "sourceMap": "693:750:8:-:0;;;;;;;;;;;;;-1:-1:-1;;693:750:8;;;;-1:-1:-1;;;;;693:750:8;;;;;;;;;;;;;;;;;;;;;;;;1103:44;693:750;;;1157:33;693:750;;:::i;:::-;;;;:::i;:::-;1103:44;;:::i;:::-;;1157:33;:::i;:::-;;693:750;;;;;;;;;;-1:-1:-1;693:750:8;;;;;;-1:-1:-1;693:750:8;;;;;-1:-1:-1;693:750:8;;;;-1:-1:-1;;;;;693:750:8;;;;;;:::o;6179:316:24:-;-1:-1:-1;;;;;693:750:8;;2232:4:24;693:750:8;;;-1:-1:-1;;;;;;;;;;;693:750:8;;;;;;;;;;-1:-1:-1;;;;;693:750:8;2232:4:24;693:750:8;;;-1:-1:-1;;;;;;;;;;;693:750:8;;;;;;;-1:-1:-1;;693:750:8;;;;;735:10:140;;693:750:8;-1:-1:-1;;;;;;;;;;;2232:4:24;;6370:40;6347:4;6424:11;:::o;6272:217::-;6466:12;2232:4;6466:12;:::o;6179:316::-;-1:-1:-1;;;;;693:750:8;;;;;;-1:-1:-1;;;;;;;;;;;693:750:8;;;;;;;;;;-1:-1:-1;;;;;693:750:8;;;;;-1:-1:-1;;;;;;;;;;;693:750:8;;;;;;;-1:-1:-1;;693:750:8;;;;;735:10:140;;693:750:8;776:24;;-1:-1:-1;;;;;;;;;;;6370:40:24;693:750:8;6370:40:24;6347:4;6424:11;:::o",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x6080806040526004361015610012575f80fd5b5f3560e01c90816301ffc9a71461029f57508063248a9ca31461026d5780632f2ff15d1461023e57806336568abe1461020857806391d14854146101cd578063a217fddf146101b3578063b6e75e4a146100f3578063d547741f146100bd5763fd5f48c51461007f575f80fd5b346100b9575f3660031901126100b95760206040517f08b5ce2e3163e37059f807346dad4dd6235ed44f92dced22992662cb457063628152f35b5f80fd5b346100b9576100f16100ce366102f2565b906100ec6100e7825f525f602052600160405f20015490565b610318565b6103d8565b005b346100b95760803660031901126100b957335f9081527f4bd90266521889410eccfff4a30b752c59701e46284d866f59cb044dde9128ef602052604090205460ff161561017c576040516024358152604435602082015260643560408201527f1c1d0b6c8791059baf598f3620d123cd90794bd3cb12cf952cb6561146205502606060043592a2005b63e2517d3f60e01b5f52336004527f08b5ce2e3163e37059f807346dad4dd6235ed44f92dced22992662cb4570636260245260445ffd5b346100b9575f3660031901126100b95760206040515f8152f35b346100b9576101db366102f2565b905f525f60205260405f209060018060a01b03165f52602052602060ff60405f2054166040519015158152f35b346100b957610216366102f2565b336001600160a01b0382160361022f576100f1916103d8565b63334bd91960e11b5f5260045ffd5b346100b9576100f161024f366102f2565b906102686100e7825f525f602052600160405f20015490565b610350565b346100b95760203660031901126100b95760206102976004355f525f602052600160405f20015490565b604051908152f35b346100b95760203660031901126100b9576004359063ffffffff60e01b82168092036100b957602091637965db0b60e01b81149081156102e1575b5015158152f35b6301ffc9a760e01b149050836102da565b60409060031901126100b957600435906024356001600160a01b03811681036100b95790565b5f8181526020818152604080832033845290915290205460ff161561033a5750565b63e2517d3f60e01b5f523360045260245260445ffd5b5f818152602081815260408083206001600160a01b038616845290915290205460ff166103d2575f818152602081815260408083206001600160a01b0395909516808452949091528120805460ff19166001179055339291907f2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d9080a4600190565b50505f90565b5f818152602081815260408083206001600160a01b038616845290915290205460ff16156103d2575f818152602081815260408083206001600160a01b0395909516808452949091528120805460ff19169055339291907ff6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b9080a460019056fea2646970667358221220f05d31a4bf946900565dc47afecee1c8e3f60a32db5d98d80dbbf0e5d34221fc64736f6c634300081e0033",
+    "sourceMap": "693:750:8:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;693:750:8;;;;;;;776:24;693:750;;;;;;;;;;;4747:26:24;693:750:8;;;:::i;:::-;4717:18:24;2475:4;4717:18;;3901:6;693:750:8;3901:6:24;693:750:8;;3901:22:24;693:750:8;3901:6:24;693:750:8;3901:22:24;693:750:8;3810:120:24;;4717:18;2475:4;:::i;:::-;4747:26;:::i;:::-;693:750:8;;;;;;;-1:-1:-1;;693:750:8;;;;735:10:140;693:750:8;;;;;;;;;;;;;3519:23:24;3515:108;;693:750:8;;;;;;;;;;;;;;;;;;1380:54;693:750;;;1380:54;;693:750;3515:108:24;3565:47;;;693:750:8;3565:47:24;735:10:140;693:750:8;;776:24;693:750;;;;3565:47:24;693:750:8;;;;;;-1:-1:-1;;693:750:8;;;;;;;;;;;;;;;;;;:::i;:::-;;;;;;;;;;2954:29:24;693:750:8;;;;;;-1:-1:-1;693:750:8;;;;;;-1:-1:-1;693:750:8;;;;;;;;;;;;;;;;;;:::i;:::-;735:10:140;-1:-1:-1;;;;;693:750:8;;5421:34:24;5417:102;;5529:37;;;:::i;5417:102::-;5478:30;;;693:750:8;5478:30:24;693:750:8;;5478:30:24;693:750:8;;;;4330:25:24;693:750:8;;;:::i;:::-;4300:18:24;2475:4;4300:18;;3901:6;693:750:8;3901:6:24;693:750:8;;3901:22:24;693:750:8;3901:6:24;693:750:8;3901:22:24;693:750:8;3810:120:24;;2475:4;4330:25;:::i;693:750:8:-;;;;;;-1:-1:-1;;693:750:8;;;;;;;;3901:6:24;693:750:8;3901:6:24;693:750:8;;3901:22:24;693:750:8;3901:6:24;693:750:8;3901:22:24;693:750:8;3810:120:24;;693:750:8;;;;;;;;;;;;;-1:-1:-1;;693:750:8;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;2673:47:24;;;:87;;;;693:750:8;;;;;;;2673:87:24;-1:-1:-1;;;861:40:154;;-1:-1:-1;2673:87:24;;;693:750:8;;;;;;;;;;;;;;-1:-1:-1;;;;;693:750:8;;;;;;;:::o;3199:103:24:-;2954:6;693:750:8;;;;;;;;;;;735:10:140;693:750:8;;;;;;;;;;3519:23:24;3515:108;;3199:103;:::o;3515:108::-;3565:47;;;2954:6;3565:47;735:10:140;3565:47:24;693:750:8;;;;2954:6:24;3565:47;6179:316;693:750:8;;;;;;;;;;;;-1:-1:-1;;;;;693:750:8;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;693:750:8;;;;;;;;;;;;;;;-1:-1:-1;;693:750:8;;;;;735:10:140;;693:750:8;;6370:40:24;;693:750:8;6370:40:24;6347:4;6424:11;:::o;6272:217::-;6466:12;;693:750:8;6466:12:24;:::o;6730:317::-;693:750:8;;;;;;;;;;;;-1:-1:-1;;;;;693:750:8;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;693:750:8;;;;;;;;;;;;;;;-1:-1:-1;;693:750:8;;;735:10:140;;693:750:8;;6922:40:24;;693:750:8;6922:40:24;693:750:8;6976:11:24;:::o",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "ANCHOR_ROLE()": "fd5f48c5",
+    "DEFAULT_ADMIN_ROLE()": "a217fddf",
+    "commitAnchor(uint256,bytes32,bytes32,uint256)": "b6e75e4a",
+    "getRoleAdmin(bytes32)": "248a9ca3",
+    "grantRole(bytes32,address)": "2f2ff15d",
+    "hasRole(bytes32,address)": "91d14854",
+    "renounceRole(bytes32,address)": "36568abe",
+    "revokeRole(bytes32,address)": "d547741f",
+    "supportsInterface(bytes4)": "01ffc9a7"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.30+commit.73712a01\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"defaultAdmin\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"anchorer\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"AccessControlBadConfirmation\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"neededRole\",\"type\":\"bytes32\"}],\"name\":\"AccessControlUnauthorizedAccount\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"day\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"dayRoot\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"chainedRoot\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"entryCount\",\"type\":\"uint256\"}],\"name\":\"AnchorCommitted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"previousAdminRole\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"newAdminRole\",\"type\":\"bytes32\"}],\"name\":\"RoleAdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"ANCHOR_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"DEFAULT_ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"day\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"dayRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"chainedRoot\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"entryCount\",\"type\":\"uint256\"}],\"name\":\"commitAnchor\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"}],\"name\":\"getRoleAdmin\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"grantRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"hasRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"callerConfirmation\",\"type\":\"address\"}],\"name\":\"renounceRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"revokeRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceId\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"C \\u6848 Phase 1\\uff08ADR 015\\uff09\\uff1a\\u5718\\u968a\\u9322\\u5305\\u96e2\\u93c8\\u5e33\\u672c\\u7684\\u6bcf\\u65e5 merkle root \\u9328\\u5b9a\\u3002 \\u672c\\u5408\\u7d04\\u300c\\u4e0d\\u6301\\u6709\\u4efb\\u4f55\\u8cc7\\u7522\\u300d\\u2014\\u2014\\u50c5\\u8a18\\u9304\\u4e8b\\u4ef6\\uff0ckey \\u6dea\\u9677\\u7684\\u6700\\u58de\\u60c5\\u6cc1\\u662f\\u5beb\\u5165\\u5783\\u573e root \\uff08\\u53ef\\u7531 DB \\u91cd\\u7b97\\u63ed\\u7a7f\\uff09\\uff0c\\u4e0d\\u53ca\\u8cc7\\u91d1\\uff1b\\u6545\\u9328\\u5b9a\\u4f7f\\u7528\\u7368\\u7acb\\u7684 ANCHOR_ROLE \\u800c\\u975e DEFAULT_ADMIN_ROLE\\u3002 chainedRoot = keccak256(\\u524d\\u65e5 chainedRoot \\u2016 dayRoot)\\uff0c\\u93c8\\u5f0f\\u7d81\\u5b9a\\u6b77\\u53f2\\uff0c \\u4efb\\u4f55\\u4eba\\u53ef\\u81ea DB \\u91cd\\u7b97\\u4e26\\u8207\\u4e8b\\u4ef6\\u6bd4\\u5c0d\\u9a57\\u8b49\\uff08\\u8a2d\\u8a08\\u66f8 \\u00a73 \\u93c8\\u4e0a\\u9328\\u5b9a\\uff09\\u3002\",\"errors\":{\"AccessControlBadConfirmation()\":[{\"details\":\"The caller of a function is not the expected one. NOTE: Don't confuse with {AccessControlUnauthorizedAccount}.\"}],\"AccessControlUnauthorizedAccount(address,bytes32)\":[{\"details\":\"The `account` is missing a role.\"}]},\"events\":{\"RoleAdminChanged(bytes32,bytes32,bytes32)\":{\"details\":\"Emitted when `newAdminRole` is set as ``role``'s admin role, replacing `previousAdminRole` `DEFAULT_ADMIN_ROLE` is the starting admin for all roles, despite {RoleAdminChanged} not being emitted signaling this.\"},\"RoleGranted(bytes32,address,address)\":{\"details\":\"Emitted when `account` is granted `role`. `sender` is the account that originated the contract call, an admin role bearer except when using {AccessControl-_setupRole}.\"},\"RoleRevoked(bytes32,address,address)\":{\"details\":\"Emitted when `account` is revoked `role`. `sender` is the account that originated the contract call:   - if using `revokeRole`, it is the admin role bearer   - if using `renounceRole`, it is the role bearer (i.e. `account`)\"}},\"kind\":\"dev\",\"methods\":{\"getRoleAdmin(bytes32)\":{\"details\":\"Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role's admin, use {_setRoleAdmin}.\"},\"grantRole(bytes32,address)\":{\"details\":\"Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``'s admin role. May emit a {RoleGranted} event.\"},\"hasRole(bytes32,address)\":{\"details\":\"Returns `true` if `account` has been granted `role`.\"},\"renounceRole(bytes32,address)\":{\"details\":\"Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function's purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `callerConfirmation`. May emit a {RoleRevoked} event.\"},\"revokeRole(bytes32,address)\":{\"details\":\"Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``'s admin role. May emit a {RoleRevoked} event.\"},\"supportsInterface(bytes4)\":{\"details\":\"See {IERC165-supportsInterface}.\"}},\"title\":\"LedgerAnchor\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"notice\":\"Info: (20260807 - Luphia)\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/ledger_anchor.sol\":\"LedgerAnchor\"},\"evmVersion\":\"prague\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":@erc3643org/=node_modules/@erc3643org/\",\":hardhat/=node_modules/hardhat/\"],\"viaIR\":true},\"sources\":{\"contracts/ledger_anchor.sol\":{\"keccak256\":\"0xf955f586f92a8851409ca2fc4fccac0ef2f070c2f65698621b3fe72e9314b0a6\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://90c06aae94e3dd517ebd2cc3640f5b4dced6b6a670d15577c3d751378dda9838\",\"dweb:/ipfs/QmT5Tjz2bf2fZHXskdbB1kotJhaSmXPzbZe82eMDcZj29Y\"]},\"contracts/lib/@openzeppelin/contracts/access/AccessControl.sol\":{\"keccak256\":\"0xa0e92d42942f4f57c5be50568dac11e9d00c93efcb458026e18d2d9b9b2e7308\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://46326c0bb1e296b67185e81c918e0b40501b8b6386165855df0a3f3c634b6a80\",\"dweb:/ipfs/QmTwyrDYtsxsk6pymJTK94PnEpzsmkpUxFuzEiakDopy4Z\"]},\"contracts/lib/@openzeppelin/contracts/access/IAccessControl.sol\":{\"keccak256\":\"0xb6b36edd6a2999fd243ff226d6cbf84bd71af2432bbd0dfe19392996a1d9cb41\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://1fd2f35495652e57e3f99bc6c510bc5f7dd398a176ea2e72d8ed730aebc6ca26\",\"dweb:/ipfs/QmTQV6X4gkikTib49cho5iDX3JvSQbdsoEChoDwrk3CbbH\"]},\"contracts/lib/@openzeppelin/contracts/utils/Context.sol\":{\"keccak256\":\"0x493033a8d1b176a037b2cc6a04dad01a5c157722049bbecf632ca876224dd4b2\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://6a708e8a5bdb1011c2c381c9a5cfd8a9a956d7d0a9dc1bd8bcdaf52f76ef2f12\",\"dweb:/ipfs/Qmax9WHBnVsZP46ZxEMNRQpLQnrdE4dK8LehML1Py8FowF\"]},\"contracts/lib/@openzeppelin/contracts/utils/introspection/ERC165.sol\":{\"keccak256\":\"0x9e8778b14317ba9e256c30a76fd6c32b960af621987f56069e1e819c77c6a133\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://1777404f1dcd0fac188e55a288724ec3c67b45288e49cc64723e95e702b49ab8\",\"dweb:/ipfs/QmZFdC626GButBApwDUvvTnUzdinevC3B24d7yyh57XkiA\"]},\"contracts/lib/@openzeppelin/contracts/utils/introspection/IERC165.sol\":{\"keccak256\":\"0x4296879f55019b23e135000eb36896057e7101fb7fb859c5ef690cf14643757b\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://87b3541437c8c443ccd36795e56a338ed12855eec17f8da624511b8d1a7e14df\",\"dweb:/ipfs/QmeJQCtZrQjtJLr6u7ZHWeH3pBnjtLWzvRrKViAi7UZqxL\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": { "version": "0.8.30+commit.73712a01" },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "defaultAdmin",
+              "type": "address"
+            },
+            { "internalType": "address", "name": "anchorer", "type": "address" }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "inputs": [],
+          "type": "error",
+          "name": "AccessControlBadConfirmation"
+        },
+        {
+          "inputs": [
+            { "internalType": "address", "name": "account", "type": "address" },
+            {
+              "internalType": "bytes32",
+              "name": "neededRole",
+              "type": "bytes32"
+            }
+          ],
+          "type": "error",
+          "name": "AccessControlUnauthorizedAccount"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "day",
+              "type": "uint256",
+              "indexed": true
+            },
+            {
+              "internalType": "bytes32",
+              "name": "dayRoot",
+              "type": "bytes32",
+              "indexed": false
+            },
+            {
+              "internalType": "bytes32",
+              "name": "chainedRoot",
+              "type": "bytes32",
+              "indexed": false
+            },
+            {
+              "internalType": "uint256",
+              "name": "entryCount",
+              "type": "uint256",
+              "indexed": false
+            }
+          ],
+          "type": "event",
+          "name": "AnchorCommitted",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "role",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "internalType": "bytes32",
+              "name": "previousAdminRole",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "internalType": "bytes32",
+              "name": "newAdminRole",
+              "type": "bytes32",
+              "indexed": true
+            }
+          ],
+          "type": "event",
+          "name": "RoleAdminChanged",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "role",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "internalType": "address",
+              "name": "account",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address",
+              "indexed": true
+            }
+          ],
+          "type": "event",
+          "name": "RoleGranted",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "role",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "internalType": "address",
+              "name": "account",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "internalType": "address",
+              "name": "sender",
+              "type": "address",
+              "indexed": true
+            }
+          ],
+          "type": "event",
+          "name": "RoleRevoked",
+          "anonymous": false
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "ANCHOR_ROLE",
+          "outputs": [
+            { "internalType": "bytes32", "name": "", "type": "bytes32" }
+          ]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "DEFAULT_ADMIN_ROLE",
+          "outputs": [
+            { "internalType": "bytes32", "name": "", "type": "bytes32" }
+          ]
+        },
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "day", "type": "uint256" },
+            { "internalType": "bytes32", "name": "dayRoot", "type": "bytes32" },
+            {
+              "internalType": "bytes32",
+              "name": "chainedRoot",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint256",
+              "name": "entryCount",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "commitAnchor"
+        },
+        {
+          "inputs": [
+            { "internalType": "bytes32", "name": "role", "type": "bytes32" }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "getRoleAdmin",
+          "outputs": [
+            { "internalType": "bytes32", "name": "", "type": "bytes32" }
+          ]
+        },
+        {
+          "inputs": [
+            { "internalType": "bytes32", "name": "role", "type": "bytes32" },
+            { "internalType": "address", "name": "account", "type": "address" }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "grantRole"
+        },
+        {
+          "inputs": [
+            { "internalType": "bytes32", "name": "role", "type": "bytes32" },
+            { "internalType": "address", "name": "account", "type": "address" }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "hasRole",
+          "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }]
+        },
+        {
+          "inputs": [
+            { "internalType": "bytes32", "name": "role", "type": "bytes32" },
+            {
+              "internalType": "address",
+              "name": "callerConfirmation",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "renounceRole"
+        },
+        {
+          "inputs": [
+            { "internalType": "bytes32", "name": "role", "type": "bytes32" },
+            { "internalType": "address", "name": "account", "type": "address" }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "revokeRole"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes4",
+              "name": "interfaceId",
+              "type": "bytes4"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "supportsInterface",
+          "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }]
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {
+          "getRoleAdmin(bytes32)": {
+            "details": "Returns the admin role that controls `role`. See {grantRole} and {revokeRole}. To change a role's admin, use {_setRoleAdmin}."
+          },
+          "grantRole(bytes32,address)": {
+            "details": "Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have ``role``'s admin role. May emit a {RoleGranted} event."
+          },
+          "hasRole(bytes32,address)": {
+            "details": "Returns `true` if `account` has been granted `role`."
+          },
+          "renounceRole(bytes32,address)": {
+            "details": "Revokes `role` from the calling account. Roles are often managed via {grantRole} and {revokeRole}: this function's purpose is to provide a mechanism for accounts to lose their privileges if they are compromised (such as when a trusted device is misplaced). If the calling account had been revoked `role`, emits a {RoleRevoked} event. Requirements: - the caller must be `callerConfirmation`. May emit a {RoleRevoked} event."
+          },
+          "revokeRole(bytes32,address)": {
+            "details": "Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have ``role``'s admin role. May emit a {RoleRevoked} event."
+          },
+          "supportsInterface(bytes4)": {
+            "details": "See {IERC165-supportsInterface}."
+          }
+        },
+        "version": 1
+      },
+      "userdoc": { "kind": "user", "methods": {}, "version": 1 }
+    },
+    "settings": {
+      "remappings": [
+        "@erc3643org/=node_modules/@erc3643org/",
+        "hardhat/=node_modules/hardhat/"
+      ],
+      "optimizer": { "enabled": true, "runs": 200 },
+      "metadata": { "bytecodeHash": "ipfs" },
+      "compilationTarget": { "contracts/ledger_anchor.sol": "LedgerAnchor" },
+      "evmVersion": "prague",
+      "libraries": {},
+      "viaIR": true
+    },
+    "sources": {
+      "contracts/ledger_anchor.sol": {
+        "keccak256": "0xf955f586f92a8851409ca2fc4fccac0ef2f070c2f65698621b3fe72e9314b0a6",
+        "urls": [
+          "bzz-raw://90c06aae94e3dd517ebd2cc3640f5b4dced6b6a670d15577c3d751378dda9838",
+          "dweb:/ipfs/QmT5Tjz2bf2fZHXskdbB1kotJhaSmXPzbZe82eMDcZj29Y"
+        ],
+        "license": "MIT"
+      },
+      "contracts/lib/@openzeppelin/contracts/access/AccessControl.sol": {
+        "keccak256": "0xa0e92d42942f4f57c5be50568dac11e9d00c93efcb458026e18d2d9b9b2e7308",
+        "urls": [
+          "bzz-raw://46326c0bb1e296b67185e81c918e0b40501b8b6386165855df0a3f3c634b6a80",
+          "dweb:/ipfs/QmTwyrDYtsxsk6pymJTK94PnEpzsmkpUxFuzEiakDopy4Z"
+        ],
+        "license": "MIT"
+      },
+      "contracts/lib/@openzeppelin/contracts/access/IAccessControl.sol": {
+        "keccak256": "0xb6b36edd6a2999fd243ff226d6cbf84bd71af2432bbd0dfe19392996a1d9cb41",
+        "urls": [
+          "bzz-raw://1fd2f35495652e57e3f99bc6c510bc5f7dd398a176ea2e72d8ed730aebc6ca26",
+          "dweb:/ipfs/QmTQV6X4gkikTib49cho5iDX3JvSQbdsoEChoDwrk3CbbH"
+        ],
+        "license": "MIT"
+      },
+      "contracts/lib/@openzeppelin/contracts/utils/Context.sol": {
+        "keccak256": "0x493033a8d1b176a037b2cc6a04dad01a5c157722049bbecf632ca876224dd4b2",
+        "urls": [
+          "bzz-raw://6a708e8a5bdb1011c2c381c9a5cfd8a9a956d7d0a9dc1bd8bcdaf52f76ef2f12",
+          "dweb:/ipfs/Qmax9WHBnVsZP46ZxEMNRQpLQnrdE4dK8LehML1Py8FowF"
+        ],
+        "license": "MIT"
+      },
+      "contracts/lib/@openzeppelin/contracts/utils/introspection/ERC165.sol": {
+        "keccak256": "0x9e8778b14317ba9e256c30a76fd6c32b960af621987f56069e1e819c77c6a133",
+        "urls": [
+          "bzz-raw://1777404f1dcd0fac188e55a288724ec3c67b45288e49cc64723e95e702b49ab8",
+          "dweb:/ipfs/QmZFdC626GButBApwDUvvTnUzdinevC3B24d7yyh57XkiA"
+        ],
+        "license": "MIT"
+      },
+      "contracts/lib/@openzeppelin/contracts/utils/introspection/IERC165.sol": {
+        "keccak256": "0x4296879f55019b23e135000eb36896057e7101fb7fb859c5ef690cf14643757b",
+        "urls": [
+          "bzz-raw://87b3541437c8c443ccd36795e56a338ed12855eec17f8da624511b8d1a7e14df",
+          "dweb:/ipfs/QmeJQCtZrQjtJLr6u7ZHWeH3pBnjtLWzvRrKViAi7UZqxL"
+        ],
+        "license": "MIT"
+      }
+    },
+    "version": 1
+  },
+  "id": 8
+}
