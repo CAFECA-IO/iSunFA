@@ -88,18 +88,23 @@ describe("tokenURI", () => {
     );
   });
 
-  it("metadata 帶方案、團隊、席次與期間", () => {
+  /**
+   * Info: (20260821 - Luphia) **精確比對**，不是 `arrayContaining`（review #6687
+   * 測試背書：只檢查該有的在，追加 OWNER 的 email 之類的欄位仍然綠）。
+   * tokenURI 永久留鏈且合約沒有 burn——這份清單就是「允許上鏈的全部欄位」，
+   * 多一個都要先過這條測試（中-3 的團隊名稱正是這樣被移除的）。
+   */
+  it("metadata 的欄位恰好是：方案、團隊 id、席次、期間", () => {
     const metadata = buildCardMetadata(facts);
 
     expect(metadata.name).toContain(TEAM_PLAN.TEAM);
-    expect(metadata.attributes).toEqual(
-      expect.arrayContaining([
-        { trait_type: "plan", value: TEAM_PLAN.TEAM },
-        { trait_type: "team_id", value: "team-1" },
-        { trait_type: "seats", value: 4 },
-        { trait_type: "period_end", value: facts.periodEndSec },
-      ]),
-    );
+    expect(metadata.attributes).toEqual([
+      { trait_type: "plan", value: TEAM_PLAN.TEAM },
+      { trait_type: "team_id", value: "team-1" },
+      { trait_type: "seats", value: 4 },
+      { trait_type: "period_start", value: facts.periodStartSec },
+      { trait_type: "period_end", value: facts.periodEndSec },
+    ]);
   });
 
   // Info: (20260819 - Luphia) 期間寫 epoch 秒，不寫格式化日期（時區是顯示端的事）

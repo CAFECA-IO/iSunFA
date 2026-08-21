@@ -253,7 +253,8 @@ export class TeamSubscriptionRepository {
    * 以 `nftSyncAttempts` 當樂觀鎖。兩個 worker 同時讀到同一列（attempts 相同），
    * 第一個 updateMany 命中（count=1），第二個的 where 已對不上（count=0）→ 跳過。
    * 認領同時把 attempts +1：中途崩潰時這一列自然回到佇列，且佔用有代價
-   * （五次崩潰後停手），不會無聲地無限重試。
+   * （五次崩潰後停手），不會無聲地無限重試。認領後的**乾淨失敗**不再另計
+   * （`recordCardSyncFailure` 的 `countAttempt: false`），每輪恰好燒 1 次。
    */
   async claimCardSync(
     teamId: string,
@@ -278,20 +279,21 @@ export class TeamSubscriptionRepository {
    * `currentPeriodEnd` 折算成有效方案（`resolveEffectivePlanId`），
    * 而那是 Service 的事；Repo 多判一次，兩邊遲早分岔。
    *
-   * 帶團隊名稱（一次 join，不是逐團隊再查）：卡片 metadata 要寫團隊名。
+   * Info: (20260821 - Luphia) join 只為了 `deletedAt`（解散的團隊不發卡）。
+   * 團隊**名稱**刻意不帶：metadata 已不含團隊名（review #6687 中-3，
+   * tokenURI 永久留鏈，客戶識別資訊不上鏈）——這裡帶了名字，等於留一個
+   * 「順手寫回 metadata」的入口。
    */
   async listCardSyncCandidates(
     limit: number,
     maxAttempts: number,
-  ): Promise<
-    (TeamSubscription & { team: { name: string; deletedAt: Date | null } })[]
-  > {
+  ): Promise<(TeamSubscription & { team: { deletedAt: Date | null } })[]> {
     return prisma.teamSubscription.findMany({
       where: {
         nftSyncedAt: null,
         nftSyncAttempts: { lt: maxAttempts },
       },
-      include: { team: { select: { name: true, deletedAt: true } } },
+      include: { team: { select: { deletedAt: true } } },
       /**
        * Info: (20260821 - Luphia) 新到舊（review #6687 高-3）。
        *
@@ -359,12 +361,23 @@ export class TeamSubscriptionRepository {
    * `nftSyncedAt` 保持 null（仍是待辦），因此下一輪會重試；累加到上限之後
    * `listCardSyncCandidates` 就不再撈它——那時需要人看 `nftSyncError`。
    * 訊息截斷到 500 字：鏈上錯誤動輒帶一整包 calldata，整包存進去對診斷沒有幫助。
+   *
+   * Info: (20260821 - Luphia) `countAttempt: false` 只留訊息、不累加：
+   * 認領（`claimCardSync`）已經把這一輪 +1 了，失敗時再 +1 就是一輪燒兩次
+   * ——重試上限 5 實際只剩 2~3 次。每一輪失敗恰好計 1 次，由呼叫端
+   * 依「這輪有沒有認領過」決定（第四輪 self-review）。
    */
-  async recordCardSyncFailure(teamId: string, message: string): Promise<void> {
+  async recordCardSyncFailure(
+    teamId: string,
+    message: string,
+    options: { countAttempt?: boolean } = {},
+  ): Promise<void> {
     await prisma.teamSubscription.update({
       where: { teamId },
       data: {
-        nftSyncAttempts: { increment: 1 },
+        ...(options.countAttempt === false
+          ? {}
+          : { nftSyncAttempts: { increment: 1 } }),
         nftSyncError: message.slice(0, 500),
       },
     });

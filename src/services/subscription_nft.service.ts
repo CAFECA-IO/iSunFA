@@ -43,10 +43,10 @@ import { TEAM_PLAN } from "@/constants/subscription_quota";
  * - **成功也要等**：確認一筆交易是數秒等級，那段時間掛在使用者的付款請求上。
  *
  * 因此訂閱一經變更就在 `TeamSubscription` 上留下待辦（`nftSyncedAt = null`），
- * 由 worker 每分鐘掃一次補上。**權益不受影響**（那一路只讀 DB，見
- * `plan.service.getTeamEntitlement`）；代價是**顯示**——方案徽章以鏈上為準，
- * 因此卡片尚未鑄出的那一分鐘內會顯示免費版。這是刻意接受的取捨，
- * 反過來（鏈上有卡而畫面說免費版）才是難以解釋的那一種錯。
+ * 由 worker 每分鐘掃一次補上。**權益與顯示都不受影響**（兩路都只讀 DB，
+ * 見 `plan.service`；產品裁定 20260821：付款完成即視為會員卡有效，
+ * 不論鏈上是否已完成鑄造）——卡片是訂閱的鏈上鏡射憑證，鑄得慢或暫時
+ * 鑄不出（錢包尚不能收 ERC-721，見下方探針）不影響使用者可見的任何東西。
  *
  * ## 冪等
  *
@@ -163,26 +163,26 @@ export interface IChainCard {
 }
 
 /**
- * Info: (20260819 - Luphia) 讀出一個地址**現在**持有的訂閱會員卡（產品決定 20260819：
- * 鏈上為準，DB 為快取）。
+ * Info: (20260819 - Luphia) 讀出一個地址**現在**持有的訂閱會員卡。
  *
- * 三段，順序是為了少打 RPC：
+ * Info: (20260821 - Luphia) 唯一的呼叫端是 worker 鑄卡前的認養
+ * （`findExistingCardForTeam`）。原本這一支服務 `/auth/me` 的「顯示以鏈上為準」，
+ * 帶著 DB 卡號快取（hint）與「要不要掃事件」的開關——那條顯示路徑已依
+ * 產品裁定 20260821 整層移除（方案一律讀 DB），hint 機制隨之只剩死碼，一併清掉。
+ *
+ * 兩段，順序是為了少打 RPC：
  *
  * 1. `balanceOf` 一次讀。回 0 就結束——「這個地址沒有任何卡」是權威答案，
- *    不需要再掃任何東西，而絕大多數使用者屬於這一類。
- * 2. 先試 DB 快取裡的 tokenId（`hintTokenIds`）：命中就只要兩次 `view` 呼叫。
- * 3. 快取湊不齊 `balanceOf` 的數量時才掃 `Transfer` 事件——那是唯一能發現
- *    「DB 不知道的卡」的辦法（合約沒有 ERC721Enumerable，問不到某個地址持有哪些 token），
- *    而那正是「鏈上為準」要處理的情形：履行漏掉、DB 還原到舊備份。
+ *    不需要再掃任何東西。
+ * 2. 掃 `Transfer` 鑄造事件找出 token：合約沒有 ERC721Enumerable，
+ *    問不到某個地址持有哪些 token，事件是唯一的辦法。
  *
  * `ownerOf` 一律再確認一次：卡片可被持有人自行轉走（合約只擋黑名單），
  * 而 `Transfer` 事件只說「曾經鑄給他」。
  */
 export async function readOwnedChainCards(
   address: string,
-  options: { hintTokenIds?: string[]; discoverMissing?: boolean } = {},
 ): Promise<IChainCard[]> {
-  const hintTokenIds = options.hintTokenIds ?? [];
   const { cardAddress } = await getClients();
   const owner = getAddress(address);
 
@@ -230,24 +230,8 @@ export async function readOwnedChainCards(
     }
   };
 
-  for (const tokenId of hintTokenIds) {
+  for (const tokenId of await discoverMintedTokenIds(cardAddress, owner)) {
     await consider(tokenId);
-  }
-
-  /**
-   * Info: (20260820 - Luphia) 掃事件的條件改由呼叫端決定（self-review 風險 2）。
-   *
-   * 原本是 `已確認卡片數 < balanceOf`。那個條件對「快取剛好缺一張」是對的，
-   * 但對「持有已不屬於自己團隊的卡」永遠成立——那張卡不在 hint 裡、也不會被
-   * 任何 hint 找到，於是**每次呼叫都掃一次全鏈**。而呼叫端是 `/auth/me`。
-   *
-   * 現在只在「DB 說某個團隊付費、卻沒有卡號」時掃（`discoverMissing`）：
-   * 那正是掃描唯一能解決的情形（履行漏掉、DB 還原到舊備份）。
-   */
-  if (options.discoverMissing) {
-    for (const tokenId of await discoverMintedTokenIds(cardAddress, owner)) {
-      await consider(tokenId);
-    }
   }
 
   return confirmed;
@@ -324,7 +308,7 @@ async function findExistingCardForTeam(
   teamId: string,
 ): Promise<string | null> {
   try {
-    const cards = await readOwnedChainCards(owner, { discoverMissing: true });
+    const cards = await readOwnedChainCards(owner);
     const match = cards.find((card) => card.teamId === teamId);
     return match?.tokenId ?? null;
   } catch {
@@ -457,6 +441,12 @@ export async function syncPendingSubscriptionCards(
 
   for (const subscription of candidates) {
     const { teamId } = subscription;
+    /**
+     * Info: (20260821 - Luphia) 這一輪是否已認領（attempts 已 +1）。失敗記錄
+     * 據此決定要不要再計一次——認領與失敗各 +1 會讓每輪失敗燒兩次重試，
+     * 上限 5 實際只剩 2~3 次（第四輪 self-review）。
+     */
+    let claimedAttempt = false;
     try {
       /**
        * Info: (20260819 - Luphia) 已解散的團隊不發卡，但要把待辦清掉：
@@ -547,6 +537,7 @@ export async function syncPendingSubscriptionCards(
           summary.skipped += 1;
           continue;
         }
+        claimedAttempt = true;
 
         const { tokenId, hash } = await mintCard(owner.address, uri);
         await teamSubscriptionRepo.recordCardSynced({
@@ -603,7 +594,9 @@ export async function syncPendingSubscriptionCards(
       summary.failed += 1;
       log.error("訂閱卡同步失敗", { teamId, reason: message });
       try {
-        await teamSubscriptionRepo.recordCardSyncFailure(teamId, message);
+        await teamSubscriptionRepo.recordCardSyncFailure(teamId, message, {
+          countAttempt: !claimedAttempt,
+        });
       } catch (recordError) {
         // Info: (20260819 - Luphia) 連失敗都記不下來（DB 掛了）：只能留 log，下一輪重試
         log.error("訂閱卡同步失敗且無法記錄", {

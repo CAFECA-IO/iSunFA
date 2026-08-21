@@ -129,6 +129,23 @@ describe("訂閱變更都會標記卡片待同步", () => {
 
     expect(repo.slice(start, end)).toMatch(/CARD_DIRTY/);
   });
+
+  /**
+   * Info: (20260821 - Luphia) 佇列順序新到舊（review #6687 高-3 / 測試背書）。
+   *
+   * repo 在 worker 測試裡整個被 mock，`orderBy` 的語意沒有任何執行期測試
+   * ——asc/desc 反轉時全綠。asc 曾經以「先進先出」之名上線，效果是首次
+   * 上線的整批積壓（`db push` 不動 `updatedAt`，全部都比新付費的人舊）
+   * 排在剛付費的人前面。付費/免費的優先序在 service 端另有排序與測試；
+   * 這裡釘住 repo 給的底序。
+   */
+  it("同步佇列新到舊（updatedAt desc）", () => {
+    const start = repo.indexOf("async listCardSyncCandidates");
+    expect(start).toBeGreaterThan(-1);
+    const scope = repo.slice(start, repo.indexOf("countCardSyncGivenUp"));
+
+    expect(scope).toContain('orderBy: { updatedAt: "desc" }');
+  });
 });
 
 describe("worker 掛上同步迴圈", () => {

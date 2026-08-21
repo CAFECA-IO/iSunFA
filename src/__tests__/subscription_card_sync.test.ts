@@ -123,7 +123,7 @@ function subscriptionRow(overrides: Record<string, unknown> = {}) {
     nftSyncError: null,
     createdAt: new Date(NOW_MS),
     updatedAt: new Date(NOW_MS),
-    team: { name: "團隊一", deletedAt: null },
+    team: { deletedAt: null },
     ...overrides,
   };
 }
@@ -238,9 +238,15 @@ describe("付費訂閱尚未發卡", () => {
     expect(
       asMock(teamSubscriptionRepo.recordCardSynced),
     ).not.toHaveBeenCalled();
+    /**
+     * Info: (20260821 - Luphia) 這個失敗發生在**認領之後**（attempts 已 +1），
+     * 因此不再另計——否則一輪失敗燒兩次重試，上限 5 實際只剩 2~3 次。
+     */
     expect(
       asMock(teamSubscriptionRepo.recordCardSyncFailure),
-    ).toHaveBeenCalledWith("team-1", expect.stringContaining("Transfer"));
+    ).toHaveBeenCalledWith("team-1", expect.stringContaining("Transfer"), {
+      countAttempt: false,
+    });
   });
 
   // Info: (20260819 - Luphia) 別人的地址收到的卡不算這一筆（同一筆交易可能有多個事件）
@@ -368,9 +374,15 @@ describe("不該發卡的情況", () => {
     const summary = await syncPendingSubscriptionCards(NOW_MS);
 
     expect(summary.failed).toBe(1);
+    /**
+     * Info: (20260821 - Luphia) 這個失敗發生在**認領之前**（attempts 還沒動），
+     * 由失敗記錄計數——每一輪失敗恰好燒 1 次重試，不多不少。
+     */
     expect(
       asMock(teamSubscriptionRepo.recordCardSyncFailure),
-    ).toHaveBeenCalledWith("team-1", expect.stringContaining("OWNER"));
+    ).toHaveBeenCalledWith("team-1", expect.stringContaining("OWNER"), {
+      countAttempt: true,
+    });
   });
 });
 
@@ -419,6 +431,27 @@ describe("批次與積壓", () => {
     const summary = await syncPendingSubscriptionCards(NOW_MS);
 
     expect(summary.givenUp).toBe(2);
+  });
+
+  /**
+   * Info: (20260821 - Luphia) 已放棄的列**留在佇列裡**，不清待辦（review #6687
+   * 測試背書：這個分支原本沒有任何測試，把它改成 `recordCardSynced` 全套仍然綠）。
+   * 清掉的後果是 `countCardSyncGivenUp` 永遠回 0——中-1 那個唯一的告警訊號消失，
+   * giveups 腳本也再列不出任何東西。正常情況 Repo 的 `lt maxAttempts` 過濾
+   * 讓這種列根本不會被撈出來；這一條測的是過濾漂移時的第二道防線。
+   */
+  it("已達重試上限的列 → 不動鏈也不清待辦", async () => {
+    asMock(teamSubscriptionRepo.listCardSyncCandidates).mockResolvedValue([
+      subscriptionRow({ nftSyncAttempts: 5 }),
+    ]);
+
+    const summary = await syncPendingSubscriptionCards(NOW_MS);
+
+    expect(summary.skipped).toBe(1);
+    expect(asMock(publicClient.simulateContract)).not.toHaveBeenCalled();
+    expect(
+      asMock(teamSubscriptionRepo.recordCardSynced),
+    ).not.toHaveBeenCalled();
   });
 });
 

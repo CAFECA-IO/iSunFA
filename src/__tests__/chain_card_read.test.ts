@@ -12,15 +12,20 @@ import {
 import { TEAM_PLAN } from "@/constants/subscription_quota";
 
 /**
- * Info: (20260819 - Luphia) 讀鏈上會員卡（方案以鏈上為準的那一半）。
+ * Info: (20260819 - Luphia) 讀鏈上會員卡。
+ *
+ * Info: (20260821 - Luphia) 唯一的呼叫端是 worker 鑄卡前的認養（高-1）：
+ * 「鏈上成功、DB 沒寫成」的中斷會留下一張 DB 不知道的卡，鑄之前要找得到它。
+ * 原本這一支還服務 `/auth/me` 的顯示路徑，帶著卡號快取（hint）與掃描開關
+ * ——那條路徑已依產品裁定 20260821 移除（方案一律讀 DB），這裡跟著瘦身。
  *
  * 三件只有在這一層才看得見的事：
  *
- * 1. `balanceOf` 是閘門：回 0 就一次 RPC 結束。`/auth/me` 每次頁面載入都會走這條路，
- *    而絕大多數使用者沒有卡——少了這道閘門，每個人每次載入都要掃一次事件。
- * 2. `ownerOf` 一定要再確認：卡片可被持有人自行轉走，而快取裡的卡號不會知道。
- * 3. 快取湊不齊 `balanceOf` 的數量時才掃 `Transfer` 事件——那是唯一能發現
- *    「DB 不知道的卡」的辦法，也正是「鏈上為準」要處理的情形。
+ * 1. `balanceOf` 是閘門：回 0 就一次 RPC 結束，不掃任何事件。
+ * 2. `ownerOf` 一定要再確認：卡片可被持有人自行轉走，
+ *    而 `Transfer` 事件只說「曾經鑄給他」。
+ * 3. 讀不到的單張卡不能污染整個結果——認養找不到既有卡的後果是多鑄一張
+ *    收不回的孤兒卡。
  */
 
 const OWNER = "0x00000000000000000000000000000000000000b2";
@@ -118,89 +123,37 @@ function stubChain(options: {
   );
 }
 
+function mintLogs(...tokenIds: bigint[]) {
+  asMock(publicClient.getLogs).mockResolvedValue(
+    tokenIds.map((tokenId) => ({ args: { tokenId } })),
+  );
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   asMock(publicClient.getLogs).mockResolvedValue([]);
 });
 
 describe("readOwnedChainCards", () => {
-  it("沒有卡（balanceOf = 0）就只打一次 RPC", async () => {
+  it("沒有卡（balanceOf = 0）就只打一次 RPC，不掃事件", async () => {
     stubChain({ balance: BigInt(0) });
 
-    const cards = await readOwnedChainCards(OWNER, {
-      hintTokenIds: ["42"],
-      discoverMissing: true,
-    });
+    const cards = await readOwnedChainCards(OWNER);
 
     expect(cards).toEqual([]);
     expect(asMock(publicClient.readContract)).toHaveBeenCalledTimes(1);
     expect(asMock(publicClient.getLogs)).not.toHaveBeenCalled();
   });
 
-  /**
-   * Info: (20260820 - Luphia) 快取命中的路徑：兩次 view 呼叫拿到卡片內容，不掃事件。
-   *
-   * 「要不要掃」現在由呼叫端決定（`discoverMissing`），所以這裡明寫 false——
-   * 命中與否不再是掃描的觸發條件（見下方「掃描由呼叫端決定」的說明）。
-   */
-  it("快取的卡號命中時取得卡片內容，且不掃事件", async () => {
-    stubChain({
-      balance: BigInt(1),
-      owners: { "42": OWNER },
-      uris: { "42": tokenUri("team-1", TEAM_PLAN.TEAM) },
-    });
-
-    const cards = await readOwnedChainCards(OWNER, {
-      hintTokenIds: ["42"],
-      discoverMissing: false,
-    });
-
-    expect(cards).toHaveLength(1);
-    expect(cards[0].tokenId).toBe("42");
-    expect(cards[0].teamId).toBe("team-1");
-    expect(asMock(publicClient.getLogs)).not.toHaveBeenCalled();
-  });
-
-  /**
-   * Info: (20260819 - Luphia) 卡片已被轉走時，快取裡那個卡號**不算**。
-   * 少了 `ownerOf` 這一步，轉走的卡會繼續讓前持有人顯示付費方案。
-   */
-  it("卡已轉給別人 → 不算，且改掃事件", async () => {
-    stubChain({
-      balance: BigInt(1),
-      owners: { "42": OTHER, "77": OWNER },
-      uris: {
-        "42": tokenUri("team-1", TEAM_PLAN.TEAM),
-        "77": tokenUri("team-2", TEAM_PLAN.BUSINESS),
-      },
-    });
-    asMock(publicClient.getLogs).mockResolvedValue([
-      { args: { tokenId: BigInt(77) } },
-    ]);
-
-    const cards = await readOwnedChainCards(OWNER, {
-      hintTokenIds: ["42"],
-      discoverMissing: true,
-    });
-
-    expect(cards.map((card) => card.tokenId)).toEqual(["77"]);
-  });
-
-  /**
-   * Info: (20260819 - Luphia) DB 不知道的卡要靠掃事件才找得到——
-   * 履行漏掉、DB 還原到舊備份時，這是唯一能把人救回付費方案的路徑。
-   */
-  it("快取為空時掃鑄造事件找出卡片", async () => {
+  it("掃鑄造事件找出持有中的卡片", async () => {
     stubChain({
       balance: BigInt(1),
       owners: { "9": OWNER },
       uris: { "9": tokenUri("team-3", TEAM_PLAN.BUSINESS) },
     });
-    asMock(publicClient.getLogs).mockResolvedValue([
-      { args: { tokenId: BigInt(9) } },
-    ]);
+    mintLogs(BigInt(9));
 
-    const cards = await readOwnedChainCards(OWNER, { discoverMissing: true });
+    const cards = await readOwnedChainCards(OWNER);
 
     expect(cards.map((card) => card.teamId)).toEqual(["team-3"]);
     expect(asMock(publicClient.getLogs)).toHaveBeenCalledTimes(1);
@@ -209,7 +162,7 @@ describe("readOwnedChainCards", () => {
   it("只掃鑄造（from 為零地址）的事件", async () => {
     stubChain({ balance: BigInt(1), owners: {}, uris: {} });
 
-    await readOwnedChainCards(OWNER, { discoverMissing: true });
+    await readOwnedChainCards(OWNER);
 
     const query = asMock(publicClient.getLogs).mock.calls[0][0] as {
       args: { from: string; to: string };
@@ -219,8 +172,29 @@ describe("readOwnedChainCards", () => {
   });
 
   /**
+   * Info: (20260819 - Luphia) 卡片已被轉走時，那個卡號**不算**。
+   * 少了 `ownerOf` 這一步，認養會把一張已不在手上的卡當成「既有卡」認領，
+   * DB 從此指著一張別人的卡。
+   */
+  it("已轉給別人的卡不算持有", async () => {
+    stubChain({
+      balance: BigInt(1),
+      owners: { "42": OTHER, "77": OWNER },
+      uris: {
+        "42": tokenUri("team-1", TEAM_PLAN.TEAM),
+        "77": tokenUri("team-2", TEAM_PLAN.BUSINESS),
+      },
+    });
+    mintLogs(BigInt(42), BigInt(77));
+
+    const cards = await readOwnedChainCards(OWNER);
+
+    expect(cards.map((card) => card.tokenId)).toEqual(["77"]);
+  });
+
+  /**
    * Info: (20260819 - Luphia) 一張讀不到的卡不該讓整個結果變成「沒有卡」——
-   * 那會把付費戶顯示成免費戶。
+   * 對認養而言那等於「找不到既有卡」，於是多鑄一張收不回的孤兒卡。
    */
   it("其中一張讀不到時，其他張仍然回得出來", async () => {
     stubChain({
@@ -228,75 +202,39 @@ describe("readOwnedChainCards", () => {
       owners: { "5": OWNER, "6": OWNER },
       uris: { "6": tokenUri("team-1", TEAM_PLAN.TEAM) },
     });
+    mintLogs(BigInt(5), BigInt(6));
 
-    const cards = await readOwnedChainCards(OWNER, {
-      hintTokenIds: ["5", "6"],
-    });
+    const cards = await readOwnedChainCards(OWNER);
 
     expect(cards.map((card) => card.tokenId)).toEqual(["6"]);
   });
 
-  // Info: (20260819 - Luphia) 不是本系統格式的卡：留著 tokenId 但沒有團隊，方案判斷會忽略它
+  // Info: (20260819 - Luphia) 不是本系統格式的卡：留著 tokenId 但沒有團隊，認養比對 teamId 會忽略它
   it("metadata 解不開時 teamId 為 null", async () => {
     stubChain({
       balance: BigInt(1),
       owners: { "3": OWNER },
       uris: { "3": "ipfs://QmSomethingElse" },
     });
+    mintLogs(BigInt(3));
 
-    const cards = await readOwnedChainCards(OWNER, { hintTokenIds: ["3"] });
+    const cards = await readOwnedChainCards(OWNER);
 
     expect(cards).toEqual([{ tokenId: "3", metadata: null, teamId: null }]);
   });
 
+  // Info: (20260819 - Luphia) 同一個 tokenId 在事件裡出現兩次（理論上不會，防禦性去重）
   it("同一個卡號不會被處理兩次", async () => {
     stubChain({
       balance: BigInt(2),
       owners: { "8": OWNER },
       uris: { "8": tokenUri("team-1", TEAM_PLAN.TEAM) },
     });
-    asMock(publicClient.getLogs).mockResolvedValue([
-      { args: { tokenId: BigInt(8) } },
-    ]);
+    mintLogs(BigInt(8), BigInt(8));
 
-    const cards = await readOwnedChainCards(OWNER, {
-      hintTokenIds: ["8"],
-      discoverMissing: true,
-    });
+    const cards = await readOwnedChainCards(OWNER);
 
     expect(cards).toHaveLength(1);
-  });
-});
-
-describe("掃描由呼叫端決定（self-review 風險 2）", () => {
-  /**
-   * Info: (20260820 - Luphia) 沒有要求掃描時就**不掃**，即使 `balanceOf` 大於
-   * 已確認的卡片數。
-   *
-   * 那個差額的常見成因不是快取缺漏，而是「這個人持有一張已不屬於自己團隊的卡」
-   *（換過 OWNER、團隊解散）。舊條件會為此在每次 `/auth/me` 做一次全鏈掃描。
-   */
-  it("balanceOf 大於已確認數，但呼叫端沒要求掃描 → 不掃", async () => {
-    stubChain({
-      balance: BigInt(3),
-      owners: { "1": OWNER },
-      uris: { "1": tokenUri("team-1", TEAM_PLAN.TEAM) },
-    });
-
-    const cards = await readOwnedChainCards(OWNER, {
-      hintTokenIds: ["1"],
-      discoverMissing: false,
-    });
-
-    expect(cards).toHaveLength(1);
-    expect(asMock(publicClient.getLogs)).not.toHaveBeenCalled();
-  });
-
-  it("沒有卡（balanceOf = 0）時，即使要求掃描也不掃", async () => {
-    stubChain({ balance: BigInt(0) });
-
-    await readOwnedChainCards(OWNER, { discoverMissing: true });
-
-    expect(asMock(publicClient.getLogs)).not.toHaveBeenCalled();
+    expect(asMock(publicClient.readContract)).toHaveBeenCalledTimes(3);
   });
 });
