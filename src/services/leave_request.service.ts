@@ -454,6 +454,14 @@ export class LeaveRequestService {
      * 特休依 §38 II 期日由勞工排定，雇主只能協商調整 —— 在送出端硬擋
      * 等於用技術手段行使一個法律上沒有的否決權（計畫書 §D14）。
      * 超限對特休只留下 `concurrencyWarned`，呈現在簽核者的畫面上。
+     *
+     * ToDo: (20260821 - Julian) **U3：`LeaveConcurrencyWarning` 整張表零寫入。**
+     *
+     * schema 稱它是「爭議時**唯一的憑據**」（計畫書 §333），而全 repo
+     * `create` / `read` 各 0 筆 —— 目前只落地一個布林 `concurrencyWarned`，
+     * 於是簽核者看得到「送出時已知有人同日請假」，卻看不到**該日已有幾人、
+     * 上限是幾人**。爭議發生時那個布林答不出任何問題。
+     * 送出時把 `observedCount` / `limitValue` / `workDate` 一併寫進那張表。
      */
     const blocking = concurrency.some(
       (item) =>
@@ -923,6 +931,17 @@ export class LeaveRequestService {
 
     return { request, step };
   }
+
+  /**
+   * ToDo: (20260821 - Julian) **U6：簽核通知完全沒有接。**
+   *
+   * `leave_request.service` / `leave_request.repo` / `overtime_request.service`
+   * 對 `notif` / `通知` / `mail` **零命中**，而專案本來就有 `mail.service.ts`、
+   * 其他模組也用 ToDo 標同型缺口 —— 假勤這邊一個都沒有。
+   *
+   * 後果不是「少了一個提醒」：簽核鏈是逐關推進的，沒有通知就沒有任何機制
+   * 讓下一關知道輪到他，而假單沒有期限（計畫書 §1426、ADR 023 §8.2）。
+   */
 
   /**
    * Info: (20260817 - Julian) 把 repository 的結局轉成 API 語意。

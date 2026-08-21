@@ -26,6 +26,15 @@ export enum OvertimeFilingType {
  *
  * 勞動基準法 §32-1 要求由**勞工**選擇，不是雇主指定 ——
  * 因此這個欄位在申請單上由員工填，核准者不得變更（變更須退回重送）。
+ *
+ * ToDo: (20260821 - Julian) **U8：`PAYMENT ⇄ COMPENSATORY_LEAVE` 互轉未實作。**
+ *
+ * ADR 024 §5.3 與計畫書 D12 都要求它，而目前**完全不存在**
+ * （無 endpoint、無 service、無 validator、無 UI）。
+ *
+ * 上面那句「變更須退回重送」目前也走不通：退回重送要先能撤銷核准
+ * （`revokeApproval` 已有，但沒有 UI —— 見 U9），而已核准的加班單
+ * 在簽核頁上根本顯示不出來。
  */
 export enum OvertimeCompensationMode {
   PAYMENT = "PAYMENT",

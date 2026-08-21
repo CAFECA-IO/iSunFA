@@ -284,6 +284,21 @@ export class OvertimeReportService {
 
       if (presence.length > 0) {
         const window = windowsByDate[workDate];
+        /**
+         * ⚠️ ToDo: (20260821 - Julian) **U12：這裡用的是申請區間，不是核准分鐘。**
+         *
+         * `covered` 拿 `requestedStart…requestedEnd` 當作「已經被涵蓋」，
+         * 而部分核准（申請 3 小時、只核准 2 小時）時那多出來的 1 小時
+         * **也被當成涵蓋掉了** —— 於是 L29 永遠看不到它。
+         *
+         * 而 `interfaces/overtime.ts` 的 `unapprovedMinutes` 註解寫著
+         * 「它在 L29 會被完整列出」，ADR 024 §2 row 3 也是這樣說的。
+         * 兩處都在描述一件這一行讓它不成立的事。
+         *
+         * 修法要用 `approvedMinutes` 從區間起點截一段出來，而不是整段 ——
+         * 但「核准 2 小時對應區間裡的哪 2 小時」需要一個決定
+         * （從頭截？依打卡？），那個決定還沒有做，所以先標而不猜。
+         */
         const covered: IMinuteInterval[] = [
           ...dayApproved.map((request) => ({
             startMinute: request.requestedStartMinute,

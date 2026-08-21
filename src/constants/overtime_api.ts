@@ -39,6 +39,20 @@ export const overtimeRequestRejectApi = (requestId: string): string =>
  * Info: (20260821 - Julian) L27-b：撤銷核准，回到待簽（review 第 7 輪 B1）。
  * 它是 `VA_OVERTIME_EARLIER_THAN_APPROVED` 那句「先撤回較晚那一張」
  * 唯一的執行者 —— 在它之前 `APPROVED` 是終端狀態。
+ *
+ * ⚠️ ToDo: (20260821 - Julian) **U9：這一支目前零呼叫端。**
+ *
+ * 端點有、service 有、測試有，但**畫面上按不到**：
+ *
+ * - 這個常數在 `src/` 裡沒有任何 import。
+ * - 簽核頁只抓 `PENDING`（`overtime_request_context.repo.listPendingForApprover`），
+ *   已核准的單根本列不出來。
+ * - `decide()` 寫死 `POST`，§32 IV 認定的 `DELETE` 同樣觸發不了。
+ *
+ * 而 zh_tw 的錯誤文案正在叫使用者「先撤回較晚那一張」—— 又一次
+ * **一句沒有執行者的補救**，只是這次執行者存在、只是到不了他手上。
+ * 上線前必補，否則 `VA_OVERTIME_EARLIER_THAN_APPROVED` 在使用者眼中
+ * 仍然是一條死路（計畫書 §17 缺口 16）。
  */
 export const overtimeRequestRevokeApprovalApi = (requestId: string): string =>
   `${OVERTIME_API_BASE}/request/${requestId}/revoke_approval`;

@@ -252,6 +252,21 @@ export class OvertimeRequestService {
    * `assertMayViewOvertimeOf` 判斷，擋下時回 403 而不是空陣列 ——
    * 空陣列是對資料的陳述（「他沒有加過班」），被擋是對請求的陳述。
    */
+  /**
+   * ToDo: (20260821 - Julian) **U13：區間上限與分頁都還沒有。**
+   *
+   * `validators/overtime.ts` 的 `overtimeRequestListQuerySchema` 寫著
+   * 「區間上限不在這裡擋：它需要專屬錯誤碼與日期運算，**屬 service 的判斷**」
+   * —— 而 service 這一支沒有做任何區間檢查，`from` / `to` 都可以省略，
+   * repository 也沒有 `take`。於是 `GET .../overtime/request` 會回整段歷史。
+   *
+   * 假勤那一側是同一句話、同樣缺執行者（`leaveRequestListQuerySchema`）。
+   * UI 也不帶區間（`my_overtime_page_body.tsx`），所以現況就是每次進頁面
+   * 都拉全部。
+   *
+   * 兩件事要一起做：service 端的區間上限（含專屬錯誤碼），與 repository 的
+   * `take` / cursor —— 只做前者的話，一個帶了合法區間但資料很多的帳本仍會炸。
+   */
   public async list(params: {
     accountBookId: string;
     actorEmployeeId: string;
@@ -495,6 +510,15 @@ export class OvertimeRequestService {
    * §32 IV 要求延長開始後 24 小時內報備。逾期是另一個違章，**不會**讓
    * 天災事變這個事實消失 —— 擋下只會逼出一個把 `reportedAt` 往前填的動作，
    * 而那比逾期本身更難查。時點照實記下，逾期的統計留給 L28。
+   *
+   * ⚠️ ToDo: (20260821 - Julian) **U11：L28 沒有在算那個統計。**
+   *
+   * `emergencyReportedAt` 有寫入端，但**沒有任何地方算它與加班起始的差值**
+   * （ADR 024 §4.6）。而上面那個取捨（「不擋逾期報備」）**只有在統計存在時
+   * 才站得住** —— 少了它，逾期報備既不擋也不記，等於沒有發生過。
+   *
+   * 這一條與 U10 是同一個形狀：一個決定把責任推給某個統計，而那個統計
+   * 不存在。同一支端點一起補。
    */
   public async declareEmergency(params: {
     accountBookId: string;

@@ -462,6 +462,15 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
            * 而薪資模組要的正是那個切分（ADR 024 §5.2、§7）。
            * **事件沒有金額欄位**：本模組不算錢。
            */
+          /**
+           * ToDo: (20260821 - Julian) **U4：L22／L23 的折現清單與 CSV 匯出還沒有。**
+           *
+           * `LeaveCashOutEvent` 目前只有這一個 `create`、兩個 delete
+           * 與一個內部 `count` —— **沒有任何 list / read / export**。
+           * 每一次 `PAYMENT` 核准都在灌一筆沒有人拿得出來的薪資義務，
+           * 而 ADR 024 §7.2 把它當成交棒給薪資模組的介面。
+           * 計畫書 §1556-1557（L22／L23）。
+           */
           const event = await tx.leaveCashOutEvent.create({
             data: {
               accountBookId: params.accountBookId,

@@ -270,9 +270,20 @@ export interface IStorableOvertimeSegmentSet {
  *
  * ## 為什麼不在這裡驗分鐘總數
  *
- * 分段的分鐘合計等於 `recognizedMinutes` 是另一條規則，
- * 由 `assertOvertimeFilingType` 那一側的認列分鐘負責。一條不變式驗兩件事，
- * 壞掉的時候讀者分不出是哪一件壞了。
+ * 分段的分鐘合計等於 `recognizedMinutes` 是另一條規則。
+ *
+ * ⚠️ ToDo: (20260821 - Julian) **U7：那一側其實沒有在驗它。**
+ *
+ * 這裡先前寫「由 `assertOvertimeFilingType` 那一側的認列分鐘負責」，
+ * 而那一支只檢查 `recognized <= approved` 與 `recognized >= 0` ——
+ * **沒有任何地方把分段加總起來**。於是 ADR 024 §4.4 要求「由 repository 擋」
+ * 的那條不變式零實作，而這段註解讓它看起來像已經有人管了。
+ *
+ * 症狀：一組合計不等於認列分鐘的分段可以落地，補休批次或折現事件因此
+ * 多發或少發，而畫面與總數各自都不會顯示異常。
+ * 補在 `approve` 的 repository 端（它手上同時有 `segments` 與
+ * `recognizedMinutes`），與現有兩支不變式並列而不是塞進其中一支 ——
+ * 一條不變式驗兩件事，壞掉的時候讀者分不出是哪一件壞了。
  */
 export function assertOvertimeSegmentPremium(
   params: IStorableOvertimeSegmentSet,

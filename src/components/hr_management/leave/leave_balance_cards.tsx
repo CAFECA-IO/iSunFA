@@ -63,6 +63,17 @@ const LeaveBalanceCards: FC<{
          * 會拿到 `VA_LEAVE_INSUFFICIENT_BALANCE` —— 而這張卡片存在的唯一理由
          * 就是不讓他撞上那個結果。
          */
+        /**
+         * ToDo: (20260821 - Julian) **`expiringSoonMinutes` 算好了卻從未渲染。**
+         *
+         * 勾稽 cron 每小時算它、DTO 也送出來了，而這張卡片一次都沒有用到它 ——
+         * 於是那支 cron 存在的理由（它的檔頭寫著「額度卡對每一個人都顯示
+         * 『即將到期 0 分鐘』，而真相是沒有人算過」）在畫面上仍然成立：
+         * 現在是**算過了但沒有人顯示**。
+         *
+         * §38 IV 未休折現的前置提醒因此還是沒有發生。
+         * 顯示時要與剩餘天數分開（那是兩個問題：還剩多少、其中多少快過期了）。
+         */
         const days = floorRatioText(balance.remainingMinutes, perDayMinutes);
         const selected = balance.leavePolicyId === selectedPolicyId;
 

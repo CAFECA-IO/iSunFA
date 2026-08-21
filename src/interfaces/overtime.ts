@@ -325,6 +325,17 @@ export interface IOvertimeTierTotal {
  * 而一個答不出這題的系統，等於默認全部都是（ADR 024 §2.2）。
  */
 export interface IOvertimeSummaryView extends IOvertimeEmployeeRef {
+  /**
+   * ToDo: (20260821 - Julian) **U10：`POST_HOC` 沒有被單獨計數。**
+   *
+   * ADR 024 §3 寫著「`POST_HOC` 會在統計端點被單獨計數（勞動檢查會問事後
+   * 補單的比例）」，而這個 view **沒有 filing type 欄位**，`summarize()`
+   * 也只按 `tier` 與 `evidenceBasis` 聚合。
+   *
+   * 更尖銳的是：`assertOvertimeFilingType` 反方向那條守衛
+   * （事前送出卻標成 `POST_HOC` 也要擋）**唯一的理由**就是「那個比例會失真」——
+   * 守衛保護的是一個**沒有人在算**的數字。補上這一欄，那條守衛才有意義。
+   */
   /** Info: (20260818 - Julian) "YYYY-MM" */
   month: string;
   monthlyMinutes: number;
