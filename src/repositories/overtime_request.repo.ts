@@ -607,8 +607,13 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
       const isPayment =
         claimed?.compensationMode === OvertimeCompensationMode.PAYMENT;
 
+      /**
+       * Info: (20260821 - Julian) 只找**現役**分段（`revokedAt: null`）。
+       * 少了這個條件，第二次撤銷會把前一次已經標記過的那組再算一次，
+       * 於是「折現事件數 == 分段數」那條不變式必定對不上。
+       */
       const segments = await tx.overtimeSegment.findMany({
-        where: { overtimeRequestId: params.requestId },
+        where: { overtimeRequestId: params.requestId, revokedAt: null },
         select: { id: true },
       });
       const segmentIds = segments.map((segment) => segment.id);
@@ -738,22 +743,24 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
       }
 
       /**
-       * Info: (20260821 - Julian) 分段**仍然實刪**，這是刻意的取捨。
+       * Info: (20260821 - Julian) 分段也**只標記，不刪**（review 第 9 輪 B1）。
        *
-       * `@@unique([overtimeRequestId, order])` 讓「留著舊分段」與「重新核准要
-       * 再寫一次 order 0」互斥 —— 保留分段就必須把撤銷次數加進唯一鍵，
-       * 那會波及每一個讀分段的地方（摘要、L28 統計、折現換算）。
+       * 第一版是 `deleteMany`，而它在補休那條路上**必定 500**：
+       * `LeaveGrant.overtimeSegment` 是 `onDelete: Restrict`，而上面剛把批次
+       * 改成標記 `revokedAt`（ADR 022 §2.1）—— 批次還活著、`overtimeSegmentId`
+       * 還指著這一列，刪父列就是 P2003，而 P2003 不是 `AppError`，
+       * route 會把它收斂成 `IS_DB_FAILED`（500）。
        *
-       * 與帳本那一側的差別在於**分段不是帳本**：它是核准當下的推導結果，
-       * 而推導的輸入（申請區間、認列分鐘、`isEmergency`）全部留在
-       * `OvertimeRequest` 上，撤銷的事實也留在上面那三個稽核欄位裡。
-       * `engineVersion` 的原意（「舊資料仍能說明它當初依哪一版算出來」）
-       * 對**現存**的分段仍然成立。
-       * ToDo: (20260821 - Julian) 決行歷史（`OvertimeDecisionLog`）落地時，
-       * 把被撤銷的那組分段一起快照進去，這個取捨就可以拿掉。
+       * `revokeSeq` 一併寫成這一次的撤銷次數：現役世代恆為 0，
+       * 撤銷過的是 1, 2, 3…，`@@unique([overtimeRequestId, order, revokeSeq])`
+       * 因此讓重新核准寫得回 `order = 0`。
+       *
+       * 這也讓 `engineVersion` 的原意（「舊資料仍能說明它當初依哪一版算出來」）
+       * 對**被撤銷的**那組分段一起成立 —— 而那是加班費算過多少錢的唯一憑據。
        */
-      await tx.overtimeSegment.deleteMany({
-        where: { overtimeRequestId: params.requestId },
+      await tx.overtimeSegment.updateMany({
+        where: { overtimeRequestId: params.requestId, revokedAt: null },
+        data: { revokedAt: params.revokedAt, revokeSeq: revokeCount },
       });
 
       /**
@@ -773,10 +780,28 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
         });
       }
       for (const scope of scopes.values()) {
-        await writeBalance(tx, {
-          ...scope,
-          remainingMinutes: await sumLedgerMinutes(tx, scope),
-        });
+        const remainingMinutes = await sumLedgerMinutes(tx, scope);
+        /**
+         * Info: (20260821 - Julian) **撤銷之後餘額不得為負** —— 這是那次預檢
+         * 唯一真正的後盾（review 第 9 輪 B1）。
+         *
+         * 上面 `touched` 那次 `count` 是先查後改。第 8 輪的註解說「真正的保證
+         * 是外鍵」，而那句話在**批次改成不刪之後就過期了**：
+         * `LeaveLedgerEntry.leaveGrant` 的 `onDelete: Restrict` 永遠不會被觸發，
+         * 因為沒有人再刪批次。
+         *
+         * 剩下的保護在這裡，而且它是**結果導向**的：預檢與寫入之間若插進一筆
+         * 扣減，那批的分錄會變成 `+120 −120 −60 = −60`，而一個負的餘額在
+         * ADR 022 的模型裡不可能是對的（FIFO 只扣得動有餘額的批次）。
+         * 丟出去讓整筆交易回滾 —— 競態因此有了偵測器，不再只有一句宣稱。
+         */
+        if (remainingMinutes < 0) {
+          throw new OvertimeApprovalNotReversibleError(
+            params.requestId,
+            `reversing this approval would leave ${remainingMinutes} minutes on policy ${scope.leavePolicyId}; the compensatory leave was consumed while this revocation was running`,
+          );
+        }
+        await writeBalance(tx, { ...scope, remainingMinutes });
       }
 
       return OvertimeDecisionOutcome.DECIDED;

@@ -6,6 +6,7 @@ import { HR_PII_KEY_BYTES } from "@/constants/hr_pii";
 import { describe, it, expect, beforeEach, beforeAll } from "@jest/globals";
 import { LeaveRequestService } from "@/services/leave_request.service";
 import { AppError } from "@/lib/utils/error";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { WorkDayType } from "@/constants/attendance";
 import { LeaveRequestStatus } from "@/constants/leave";
 import {
@@ -49,6 +50,8 @@ const ANNUAL: ILeavePolicySnapshot = {
   roundingMode: LeaveRoundingMode.UP,
   // Info: (20260817 - Julian) §38 II：期日由勞工排定，雇主只能協商調整
   employerMayReject: false,
+  // Info: (20260821 - Julian) 特休不併入任何假別（review 第 10 輪 B2）
+  mergesIntoPolicyId: null,
 };
 
 const PERSONAL: ILeavePolicySnapshot = {
@@ -56,6 +59,20 @@ const PERSONAL: ILeavePolicySnapshot = {
   id: "policy-personal",
   code: "PERSONAL",
   employerMayReject: true,
+};
+
+/**
+ * Info: (20260821 - Julian) 併入事假的假別（家庭照顧假，性平法 §20）。
+ *
+ * 併計扣減尚未實作，送出端必須擋下 —— 放行的話請滿 7 日家庭照顧假之後
+ * 事假仍是完整 14 日，法定上限被繞過（review 第 10 輪 B2、計畫書 §17 缺口 17）。
+ */
+const FAMILY_CARE: ILeavePolicySnapshot = {
+  ...ANNUAL,
+  id: "policy-family-care",
+  code: "FAMILY_CARE",
+  employerMayReject: true,
+  mergesIntoPolicyId: PERSONAL.id,
 };
 
 const WORK_DAY: ILeaveDaySchedule = {
@@ -482,6 +499,50 @@ describe("submit — 送出", () => {
     ).rejects.toMatchObject({ apiCode: "VA000055" });
   });
 
+  /**
+   * Info: (20260821 - Julian) **設了併計的假別一律擋下**（review 第 10 輪 B2）。
+   *
+   * `mergesIntoPolicyId` 在整個扣減路徑上零讀取端 —— 放行等於讓法定額度被繞過：
+   * 請滿 7 日家庭照顧假之後事假仍是完整 14 日（性平法 §20 的上限是 14 日）。
+   *
+   * 結構面（「扣減路徑真的還沒有讀取端」）由 `leave_merge_gate.test.ts` 掃，
+   * 這一條驗的是**行為**：那道閘真的丟得出那個碼。
+   */
+  it("設了 mergesIntoPolicyId 的假別擋在送出端", async () => {
+    context.policy = FAMILY_CARE;
+
+    await expect(
+      service.submit({
+        accountBookId: "book-1",
+        employeeId: "emp-staff",
+        input: submitInput(["2026-08-18"]),
+        observedAt: AT,
+      }),
+    ).rejects.toMatchObject({
+      apiCode: API_ERRORS.VA_LEAVE_MERGE_NOT_IMPLEMENTED.code,
+    });
+    // Info: (20260821 - Julian) 而且一個字都沒寫進去
+    expect(repo.created).toBeNull();
+  });
+
+  /**
+   * Info: (20260821 - Julian) 對照組：沒設併計的假別照常送得出去。
+   * 少了它，一個無條件 `throw` 的實作也會讓上面那條通過 —— 而它會把
+   * 整個請假功能擋死。
+   */
+  it("沒設 mergesIntoPolicyId 的假別不受影響", async () => {
+    context.policy = PERSONAL;
+
+    await expect(
+      service.submit({
+        accountBookId: "book-1",
+        employeeId: "emp-staff",
+        input: submitInput(["2026-08-18"]),
+        observedAt: AT,
+      }),
+    ).resolves.toBeDefined();
+  });
+
   it("假別不存在或已停用時回 404", async () => {
     context.policy = null;
     await expect(
@@ -741,6 +802,31 @@ describe("approve — 扣額度只發生在最後一關", () => {
         observedAt: AT,
       }),
     ).rejects.toMatchObject({ apiCode: "CF000012" });
+  });
+
+  /**
+   * Info: (20260821 - Julian) 那一天已經有另一張生效中的假單（review 第 11 輪 B3）。
+   *
+   * **不需要併發**：同一人對同一天送出事假與病假（兩張待簽可以涵蓋同一天），
+   * 核准第一張、再核准第二張就撞上 `LeaveDay.activeKey` 的唯一鍵。
+   *
+   * 這一條之前不存在，而 `CF_LEAVE_DAY_ALREADY_ACTIVE` 也從未被丟過 ——
+   * 錯誤碼、五個語系文案、兩支字典形狀測試都備好了，中間少一段接線，
+   * 症狀是 500。
+   */
+  it("那一天已有生效假單，回報 CF_LEAVE_DAY_ALREADY_ACTIVE 而非 500", async () => {
+    repo.record = twoStepRequest(1);
+    repo.nextOutcome = LeaveApprovalOutcome.DAY_ALREADY_ACTIVE;
+    await expect(
+      service.approve({
+        accountBookId: "book-1",
+        requestId: "req-2",
+        actorEmployeeId: "emp-dept",
+        observedAt: AT,
+      }),
+    ).rejects.toMatchObject({
+      apiCode: API_ERRORS.CF_LEAVE_DAY_ALREADY_ACTIVE.code,
+    });
   });
 
   it("同一關被另一個分頁先簽掉，回報已決", async () => {

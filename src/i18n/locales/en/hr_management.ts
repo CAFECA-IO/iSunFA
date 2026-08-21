@@ -910,6 +910,8 @@ export const hrManagement = {
      */
     error_insufficient_balance:
       "Not enough balance. Shorten the request or pick another leave type.",
+    error_merge_not_implemented:
+      "This leave type also draws down another leave type, and that rule is not available yet, so requests cannot be submitted. Please ask HR — using a different leave type is the workaround for now.",
     error_unit_not_aligned:
       "The duration does not match this leave type's minimum unit. Adjust the segment.",
     error_non_working_day:

@@ -413,6 +413,7 @@ SELECT account_book_id, code, carry_forward_months
 | `leave_cash_out_event` | `overtime_segment_id` | 新增，nullable、`@unique`、`onDelete: Restrict` | 加班費折現的 `source_grant_ids` 是空陣列（它不來自任何額度批次），於是**一筆折現事件說不出它是哪一張加班單產生的**。兩個後果：撤銷核准找不到要回收的事件，而勞檢問「這筆加班費對應哪一段核准」也答不出來 |
 | `leave_grant` | `revoked_at` | 新增，nullable | 撤銷加班核准時**不刪批次**（ADR 022 §2.1「`LeaveGrant` 不可變」），只標記它並在帳本補一筆反向分錄。`consumableGrantWhere` 會濾掉它 |
 | `overtime_request` | `approval_revoked_at` / `approval_revoked_by_employee_id` | 新增，nullable | 撤銷核准之後申請人可以再 `withdraw`，最後這張單長得與「從來沒有人送過」一樣 —— 而它曾經被核准、曾經進到員工餘額。誰在什麼時候撤的必須留 |
+| `overtime_segment` | `revoked_at` / `revoke_seq` | 新增，nullable ／ `@default(0)`；唯一鍵改為 `[overtime_request_id, order, revoke_seq]` | 分段不再實刪（刪它會撞上批次的 `onDelete: Restrict` → P2003 → 500）。現役世代恆為 0，撤銷時整組改寫成該次的撤銷次數 |
 | `overtime_request` | `approval_revoke_count` | 新增，`@default(0)` | 反向分錄的冪等鍵含它。同一張單被撤銷兩次時，鍵裡沒有次數就會撞唯一鍵被當成重放，而那一次撤銷是真的 |
 
 > **這一輪把撤銷改成符合 ADR 022。** 第 7 輪的 `revokeApproval` 直接
@@ -422,9 +423,22 @@ SELECT account_book_id, code, carry_forward_months
 > 的註解：「兩者都不刪」）。現在帳本補負向 `ADJUST`、批次標 `revoked_at`，
 > 兩者都留著。
 >
-> **分段（`overtime_segment`）仍然實刪**，這是刻意的取捨：
-> `@@unique([overtime_request_id, order])` 讓「留著舊分段」與「重新核准要再寫
-> 一次 order 0」互斥。理由與 ToDo 寫在 `revokeApproval` 的註解裡。
+> ⚠️ **2026-08-21 更正：分段也改成只標記，不刪。**
+>
+> 先前寫「分段仍然實刪，這是刻意的取捨」——而那個取捨在同一輪把批次改成
+> 軟刪除之後**變成一個必定 500 的路徑**：`leave_grant.overtime_segment_id`
+> 是 `onDelete: Restrict`，批次還活著、還指著那一列，刪父列就是 P2003，
+> 而 P2003 不是 `AppError`，route 會收斂成 `IS_DB_FAILED`。
+> **補休加班單的撤銷因此必定失敗**，而它正是
+> `VA_OVERTIME_EARLIER_THAN_APPROVED` 官方補救動作的執行者。
+>
+> 清掉 `leave_grant.overtime_segment_id` 不是選項：
+> `OVERTIME_CONVERSION ⟺ overtimeSegmentId != null` 是雙向不變式。
+>
+> 唯一鍵因此改成 `@@unique([overtime_request_id, order, revoke_seq])`：
+> **現役世代恆為 0**，撤銷時整組改寫成該次的 `approval_revoke_count`。
+> 所有讀分段的地方（`SUMMARY_SELECT`、L28 統計）都加了 `where: { revokedAt: null }`
+> —— 少了它，一張撤銷後又重新核准的單會同時帶著兩個世代，時數統計加倍。
 
 > ⚠️ 這一欄改了型別，**`npx prisma db push` 之後一定要 `npx prisma generate`**，
 > 否則 `tsc` 會在 `overtime_request.repo.ts` 報
@@ -453,9 +467,15 @@ SELECT account_book_id, code, carry_forward_months
 - 補休已被請掉／過期／折現（那批批次有 `GRANT` 以外的分錄）
 - 折現已由薪資模組結算（`leave_cash_out_event.settled_at` 非 null）
 
-> 真正的保證是外鍵：`leave_ledger_entry.leave_grant_id` 是 `onDelete: Restrict`，
-> 所以「刪得掉批次」與「這批補休沒有被動過」是同一件事。程式裡那次預檢只負責
-> 把它翻譯成一句人看得懂的話，**並擋得住預檢與刪除之間才發生的那一次扣減**。
+> ⚠️ **2026-08-21 更正。** 這一段先前寫「真正的保證是外鍵：
+> `leave_ledger_entry.leave_grant_id` 是 `onDelete: Restrict`，所以『刪得掉批次』
+> 與『這批補休沒有被動過』是同一件事」—— 那句話在批次改成**只標記不刪**
+> （ADR 022 §2.1）之後就過期了：沒有人再刪批次，那條外鍵**永遠不會被觸發**。
+>
+> 現在的後盾是**結果導向**的：撤銷之後重算該假別的餘額，為負就整筆回滾。
+> 預檢與寫入之間若插進一筆扣減，那批的分錄會變成 `+120 −120 −60 = −60`，
+> 而負餘額在 ADR 022 的模型裡不可能是對的（FIFO 只扣得動有餘額的批次）。
+> 折現那一側則是條件式刪除（`settled_at IS NULL`）加比對筆數。
 
 ### 上線前確認
 

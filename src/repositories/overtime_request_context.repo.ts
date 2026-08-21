@@ -250,7 +250,17 @@ const SUMMARY_SELECT = {
   emergencyReportedAt: true,
   createdAt: true,
   employee: { select: { employeeNo: true, name: true } },
-  segments: { select: { order: true, tier: true, minutes: true } },
+  /**
+   * Info: (20260821 - Julian) 只讀**現役**分段（review 第 9 輪 B1）。
+   *
+   * 撤銷核准之後舊分段留在表上（`revokedAt` 非 null），少了這個條件，
+   * 一張被撤銷又重新核准的單會同時帶著兩個世代的分段 ——
+   * L28 的時數統計因此加倍，而畫面與數字各自都不會顯示異常。
+   */
+  segments: {
+    where: { revokedAt: null },
+    select: { order: true, tier: true, minutes: true },
+  },
 } as const;
 
 /**
@@ -649,7 +659,11 @@ class OvertimeRequestContextRepository implements IOvertimeRequestContext {
         requestedEndMinute: true,
         recognizedMinutes: true,
         evidenceBasis: true,
-        segments: { select: { tier: true, minutes: true } },
+        // Info: (20260821 - Julian) 同 `SUMMARY_SELECT`：撤銷過的分段不進統計
+        segments: {
+          where: { revokedAt: null },
+          select: { tier: true, minutes: true },
+        },
       },
       orderBy: [{ workDate: "asc" }, { requestedStartMinute: "asc" }],
     });

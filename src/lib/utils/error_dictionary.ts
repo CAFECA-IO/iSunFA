@@ -1648,6 +1648,24 @@ export const API_ERRORS = {
    * Info: (20260821 - Julian) 這張單不在 `APPROVED`，沒有核准可以撤銷
    * （review 第 7 輪 B1）。
    */
+  /**
+   * Info: (20260821 - Julian) 這個假別要併入另一個假別，而併計扣減尚未實作
+   * （review 第 10 輪 B2）。
+   *
+   * `LeavePolicy.mergesIntoPolicyId` 是計畫書 §6.5 的實作載體（家庭照顧假
+   * 併入事假，性平法 §20），而它在扣減路徑上**沒有任何讀取端**。放行等於
+   * 讓法定上限被繞過：請滿 7 日家庭照顧假之後事假仍是完整 14 日。
+   *
+   * 對使用者而言這不是「輸入錯了」，是「這個假別還不能用」——
+   * 文案因此要指向人資而不是叫他改時段。
+   */
+  VA_LEAVE_MERGE_NOT_IMPLEMENTED: {
+    code: "VA000082",
+    message:
+      "this leave type is configured to also draw down another leave type (LeavePolicy.mergesIntoPolicyId), and that cross-type deduction is not implemented yet; the request is refused rather than silently granting quota beyond the statutory cap",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
   VA_OVERTIME_NOT_APPROVED: {
     code: "VA000080",
     message:
@@ -1770,9 +1788,13 @@ export const API_ERRORS = {
   /**
    * Info: (20260818 - Julian) 併計關係成環。
    *
-   * 家庭照顧假併入事假（性平法 §20）是一個有向關係。A→B→A 會讓
-   * `allocateConsumption` 沿著環一直扣下去 —— 請一天假扣掉兩個假別各一天，
-   * 而兩邊的餘額都對不上。自指由 `assertLeavePolicyUnit` 擋，更長的環擋在這裡。
+   * 家庭照顧假併入事假（性平法 §20）是一個有向關係。A→B→A 會讓併計扣減
+   * 沿著環一直扣下去 —— 請一天假扣掉兩個假別各一天，而兩邊的餘額都對不上。
+   * 自指由 `assertLeavePolicyUnit` 擋，更長的環擋在這裡。
+   *
+   * ⚠️ Info: (20260821 - Julian) 描述的是**併計扣減落地之後**的行為
+   * （review 第 10 輪 B2）：`allocateConsumption` 目前不走任何鏈，
+   * 送出端由 `VA_LEAVE_MERGE_NOT_IMPLEMENTED` 擋著。
    */
   VA_LEAVE_POLICY_MERGE_CYCLE: {
     code: "VA000065",

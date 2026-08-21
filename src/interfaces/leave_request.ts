@@ -209,6 +209,16 @@ export interface ILeavePolicySnapshot {
   roundingMode: LeaveRoundingMode;
   /** Info: (20260817 - Julian) 決定併休超限能不能硬擋（計畫書 §D14） */
   employerMayReject: boolean;
+  /**
+   * Info: (20260821 - Julian) 這個假別會不會同時扣減另一個假別（review 第 10 輪 B2）。
+   *
+   * 目前只用來**擋下送出** —— 併計扣減尚未實作（計畫書 §17 缺口 17），
+   * 而放行會讓法定額度被繞過：請滿 7 日家庭照顧假之後事假仍是完整 14 日。
+   *
+   * 併計落地之後這一欄會變成扣減路徑的輸入，屆時 `null` 與非 null 的差別
+   * 才是「要不要往下扣一層」。
+   */
+  mergesIntoPolicyId: string | null;
 }
 
 /** Info: (20260817 - Julian) 某一天的排班在請假眼中的樣子 */
@@ -307,6 +317,17 @@ export enum LeaveApprovalOutcome {
   COMPLETED = "COMPLETED",
   BALANCE_RACE = "BALANCE_RACE",
   ALREADY_REVIEWED = "ALREADY_REVIEWED",
+  /**
+   * Info: (20260821 - Julian) 這一天已經有另一張**生效中**的假單
+   * （`LeaveDay.activeKey` 的唯一鍵擋下，review 第 11 輪 B3）。
+   *
+   * 不需要併發也會發生：同一人對同一天送出事假與病假（兩張待簽可以涵蓋
+   * 同一天，見 `submit` 的檔頭），核准第一張之後再核准第二張就撞上。
+   *
+   * 與 `BALANCE_RACE` 分開：那一個是「額度被別張單先扣走」，重送可能成功；
+   * 這一個是「那天已經請掉了」，下一步是先銷掉另一張假。
+   */
+  DAY_ALREADY_ACTIVE = "DAY_ALREADY_ACTIVE",
 }
 
 /**

@@ -269,7 +269,8 @@ export class LeaveRequestService {
         status: step.status as LeaveApprovalStepStatus,
         mergedFromKinds: step.mergedFromKinds as LeaveApprovalNodeKind[],
         escalatedReason: step.escalatedReason,
-        escalatedFromKind: step.escalatedFromKind as LeaveApprovalNodeKind | null,
+        escalatedFromKind:
+          step.escalatedFromKind as LeaveApprovalNodeKind | null,
         decidedAt: step.decidedAt ? step.decidedAt.toISOString() : null,
         comment: step.comment,
       })),
@@ -403,6 +404,38 @@ export class LeaveRequestService {
         detail: chain.detail,
       });
       throw new AppError(API_ERRORS.CF_LEAVE_APPROVAL_CHAIN_UNRESOLVED);
+    }
+
+    /**
+     * Info: (20260821 - Julian) **跨假別併計尚未實作，因此擋下**（review 第 10 輪 B2）。
+     *
+     * ## 這道閘擋的是什麼
+     *
+     * 計畫書 §6.5 寫著「家庭照顧假併入事假（性平法 §20）… `allocateConsumption`
+     * 在扣減主假別後對被併入的假別再產一筆 `CONSUME`」，而 `mergesIntoPolicyId`
+     * 在**整個扣減路徑上零讀取端** —— `readConsumableGrants` 只收單一
+     * `leavePolicyId`，`allocateConsumption` 收的是一個扁平的 grants 陣列，
+     * 完全沒有假別維度。
+     *
+     * 後果是法定額度被繞過：員工請滿 7 日家庭照顧假之後，事假額度仍是完整的
+     * 14 日（合計 21 日），而性平法 §20 的上限是 14 日 —— **每人每年多出 7 日**。
+     *
+     * ## 為什麼是擋而不是猜一個實作
+     *
+     * 併計要動的是請假模組最精密的那個交易（附條件扣總量 → FIFO 逐批 →
+     * 逐日分錄），而且三條路徑都要一起改：核准的逐層扣減、銷假／駁回的逐層
+     * 還原、以及送出前置檢查也要含被併入的假別。少了還原那一段，偏差方向會
+     * 變成對勞工不利且無人報錯。
+     *
+     * 計畫書對生理假的處置是同一個判準：「在規則核對完成前留空，不猜一個數字
+     * 填進去」。這裡把它擴大成「規則寫了但沒有執行者時，不放行」。
+     *
+     * ToDo: (20260821 - Julian) 併計扣減落地後移除這道閘（計畫書 §17 缺口 17）。
+     * `leave_merge_gate.test.ts` 會在扣減路徑出現 `mergesInto` 讀取端時變紅，
+     * 提醒把這裡一起拿掉。
+     */
+    if (policy.mergesIntoPolicyId !== null) {
+      throw new AppError(API_ERRORS.VA_LEAVE_MERGE_NOT_IMPLEMENTED);
     }
 
     if (policy.quotaMode === LeaveQuotaMode.QUOTA) {
@@ -904,6 +937,16 @@ export class LeaveRequestService {
     }
     if (outcome === LeaveApprovalOutcome.ALREADY_REVIEWED) {
       throw new AppError(API_ERRORS.VA_LEAVE_ALREADY_REVIEWED);
+    }
+    /**
+     * Info: (20260821 - Julian) 那一天已經有另一張生效中的假單
+     * （review 第 11 輪 B3）。
+     *
+     * 與 `BALANCE_RACE` 分開的理由同上：下一步不一樣。額度競態重送可能成功；
+     * 這一個要先把另一張假銷掉，重送幾次都是同一個結果。
+     */
+    if (outcome === LeaveApprovalOutcome.DAY_ALREADY_ACTIVE) {
+      throw new AppError(API_ERRORS.CF_LEAVE_DAY_ALREADY_ACTIVE);
     }
     return outcome;
   }

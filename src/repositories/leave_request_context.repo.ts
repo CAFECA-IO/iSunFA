@@ -48,6 +48,8 @@ export class LeaveRequestContextRepository implements ILeaveRequestContext {
         minimumUnitMinutes: true,
         roundingMode: true,
         employerMayReject: true,
+        // Info: (20260821 - Julian) 送出端要據此擋下併計假別（review 第 10 輪 B2）
+        mergesIntoPolicyId: true,
       },
     });
     return policy as ILeavePolicySnapshot | null;

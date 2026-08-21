@@ -868,6 +868,8 @@ export const hrManagement = {
      */
     error_insufficient_balance: "额度不足，请减少天数或改用其他假别",
     error_unit_not_aligned: "请假时间不符合这个假别的最小单位，请调整时段",
+    error_merge_not_implemented:
+      "这个假别会同时扣减另一个假别的额度，而那条规则尚未开放，因此暂时无法送出。请洽人资 —— 目前的替代做法是改用其他假别。",
     error_non_working_day:
       "所选时段没有需要请假的工时（不是上班日，或落在上下班时间之外），送出也不会扣额度",
     error_chain_unresolved:

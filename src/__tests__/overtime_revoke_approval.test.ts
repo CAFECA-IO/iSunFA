@@ -53,7 +53,7 @@ let raceEntryAfterPrecheck = false;
 let settleAfterPrecheck = false;
 
 const REQUEST_FIELDS = ["id", "accountBookId", "status"];
-const SEGMENT_FIELDS = ["id", "overtimeRequestId"];
+const SEGMENT_FIELDS = ["id", "overtimeRequestId", "revokedAt"];
 /**
  * Info: (20260821 - Julian) 含 `accountBookId` / `employeeId` / `leavePolicyId`：
  * 餘額重算走的 `sumLedgerMinutes` 是用那三個欄位查批次的。第一版漏了它們，
@@ -71,11 +71,22 @@ const ENTRY_FIELDS = ["id", "leaveGrantId", "entryType"];
 const CASH_OUT_FIELDS = ["id", "overtimeSegmentId", "settledAt"];
 
 /**
- * Info: (20260821 - Julian) 外鍵 `onDelete: Restrict` 由替身**模擬**。
- * 只實作被斷言的那一條規則，訊息形狀比照 Prisma 的 P2003。
+ * Info: (20260821 - Julian) 外鍵 `onDelete: Restrict` 由替身模擬 ——
+ * **兩條都要，而且要是產品真的會走到的那幾條**（review 第 9 輪 B1）。
+ *
+ * 上一版只模擬 `leave_ledger_entry → leave_grant` 一條，而產品在那一輪就
+ * 已經改成不刪批次了 —— 那條外鍵**永遠不會被觸發**。同時
+ * `overtimeSegment.deleteMany` 在替身裡無條件成功，而它在真的資料庫上
+ * 必定撞 `leave_grant → overtime_segment`（批次還活著、還指著那一列）。
+ *
+ * 於是替身模擬了一條不會發生的保護、放行了一條必定 500 的操作 ——
+ * checklist §1.8「被 mock 的那個世界不可能存在」。
  */
-const RESTRICT_MESSAGE =
+const RESTRICT_LEDGER =
   "Foreign key constraint violated on the constraint: `leave_ledger_entry_leave_grant_id_fkey`";
+
+const RESTRICT_SEGMENT =
+  "Foreign key constraint violated on the constraint: `leave_grant_overtime_segment_id_fkey`";
 
 jest.mock("@/lib/prisma", () => {
   const client = {
@@ -114,14 +125,45 @@ jest.mock("@/lib/prisma", () => {
       findMany: jest.fn(async ({ where }: { where: IFakeWhere }) =>
         segments.filter((row) => matchesRow(row, where, SEGMENT_FIELDS)),
       ),
+      /**
+       * Info: (20260821 - Julian) 產品**不該再走這條路**，但替身仍要模擬外鍵。
+       *
+       * `LeaveGrant.overtimeSegment` 與 `LeaveCashOutEvent.overtimeSegment`
+       * 都是 `onDelete: Restrict`：只要還有子列指著，刪父列就是 P2003。
+       * 留著它，是為了讓「有人把 `updateMany` 改回 `deleteMany`」當場變紅，
+       * 而不是等到正式環境的 500。
+       */
       deleteMany: jest.fn(async ({ where }: { where: IFakeWhere }) => {
-        const keep = segments.filter(
-          (row) => !matchesRow(row, where, SEGMENT_FIELDS),
+        const doomed = segments.filter((row) =>
+          matchesRow(row, where, SEGMENT_FIELDS),
         );
-        const count = segments.length - keep.length;
-        segments = keep;
-        return { count };
+        const ids = new Set(doomed.map((row) => row.id as string));
+        /**
+         * Info: (20260821 - Julian) `overtimeSegmentId` 可以是 null（補休屆期
+         * 折現不來自加班分段）。先前用 `as string` 蓋過去 —— 行為剛好對
+         * （null 不會在一個裝字串的 Set 裡），但「null 算不算撞到」因此變成
+         * 一個沒有人看得見的答案。明確排除比較誠實。
+         */
+        const pointsAtDoomed = (value: unknown): boolean =>
+          typeof value === "string" && ids.has(value);
+        if (
+          grants.some((grant) => pointsAtDoomed(grant.overtimeSegmentId)) ||
+          cashOuts.some((one) => pointsAtDoomed(one.overtimeSegmentId))
+        ) {
+          throw new Error(RESTRICT_SEGMENT);
+        }
+        segments = segments.filter((row) => !ids.has(row.id as string));
+        return { count: doomed.length };
       }),
+      updateMany: jest.fn(
+        async ({ where, data }: { where: IFakeWhere; data: IFakeWhere }) => {
+          const hits = segments.filter((row) =>
+            matchesRow(row, where, SEGMENT_FIELDS),
+          );
+          for (const row of hits) Object.assign(row, data);
+          return { count: hits.length };
+        },
+      ),
     },
     leaveGrant: {
       findMany: jest.fn(async ({ where }: { where: IFakeWhere }) =>
@@ -144,7 +186,7 @@ jest.mock("@/lib/prisma", () => {
         );
         const ids = new Set(doomed.map((row) => row.id as string));
         if (entries.some((entry) => ids.has(entry.leaveGrantId as string))) {
-          throw new Error(RESTRICT_MESSAGE);
+          throw new Error(RESTRICT_LEDGER);
         }
         grants = grants.filter((row) => !ids.has(row.id as string));
         return { count: doomed.length };
@@ -263,7 +305,7 @@ const compensatoryFixture = () => {
       approvalRevokeCount: 0,
     },
   ];
-  segments = [{ id: "seg-1", overtimeRequestId: REQUEST }];
+  segments = [{ id: "seg-1", overtimeRequestId: REQUEST, revokedAt: null }];
   grants = [
     {
       id: "grant-1",
@@ -353,7 +395,10 @@ describe("撤銷核准：帳本與批次都不刪（ADR 022 §2.1／§2.4）", (
 
     // Info: (20260821 - Julian) 重新核准：新分段、新批次、新的 GRANT 分錄
     requests[0].status = "APPROVED";
-    segments = [{ id: "seg-2", overtimeRequestId: REQUEST }];
+    segments = [
+      ...segments,
+      { id: "seg-2", overtimeRequestId: REQUEST, revokedAt: null },
+    ];
     grants.push({
       id: "grant-2",
       accountBookId: BOOK,
@@ -458,6 +503,40 @@ describe("撤銷核准：不可逆的邊界", () => {
     expect(segments).toHaveLength(1);
   });
 
+  /**
+   * Info: (20260821 - Julian) **PAYMENT 單撤銷兩次** —— 這是「只找現役分段」
+   * 唯一會現形的地方（review 第 9 輪）。
+   *
+   * 分段不再實刪，所以第二次撤銷若沒有 `revokedAt: null` 的過濾，
+   * `segmentIds` 會同時含舊世代與新世代（2 個），而舊世代的折現事件在第一次
+   * 撤銷時已經刪掉了 —— 於是「折現事件數 == 分段數」必定對不上（1 ≠ 2），
+   * **這張單從此永遠撤銷不了**，而錯誤訊息會說是舊資料的問題。
+   */
+  it("PAYMENT 單撤銷 → 重新核准 → 再撤銷，第二次仍然成功", async () => {
+    requests[0].compensationMode = OvertimeCompensationMode.PAYMENT;
+    grants = [];
+    entries = [];
+    cashOuts = [{ id: "cash-1", overtimeSegmentId: "seg-1", settledAt: null }];
+
+    await expect(revoke()).resolves.toBe(OvertimeDecisionOutcome.DECIDED);
+
+    // Info: (20260821 - Julian) 重新核准：新分段、新折現事件
+    requests[0].status = "APPROVED";
+    segments.push({ id: "seg-2", overtimeRequestId: REQUEST, revokedAt: null });
+    cashOuts.push({
+      id: "cash-2",
+      overtimeSegmentId: "seg-2",
+      settledAt: null,
+    });
+
+    await expect(revoke()).resolves.toBe(OvertimeDecisionOutcome.DECIDED);
+    expect(cashOuts).toHaveLength(0);
+    expect(segments.map((one) => [one.id, one.revokeSeq])).toEqual([
+      ["seg-1", 1],
+      ["seg-2", 2],
+    ]);
+  });
+
   it("PAYMENT 單的折現事件逐段對得起來時，正常撤銷", async () => {
     requests[0].compensationMode = OvertimeCompensationMode.PAYMENT;
     grants = [];
@@ -465,8 +544,10 @@ describe("撤銷核准：不可逆的邊界", () => {
     cashOuts = [{ id: "cash-1", overtimeSegmentId: "seg-1", settledAt: null }];
 
     await expect(revoke()).resolves.toBe(OvertimeDecisionOutcome.DECIDED);
+    // Info: (20260821 - Julian) 折現事件刪掉，分段只標記
     expect(cashOuts).toHaveLength(0);
-    expect(segments).toHaveLength(0);
+    expect(segments).toHaveLength(1);
+    expect(segments[0].revokedAt).toEqual(REVOKED_AT);
   });
 
   /**
@@ -490,20 +571,80 @@ describe("撤銷核准：不可逆的邊界", () => {
   });
 
   /**
-   * Info: (20260821 - Julian) 預檢通過、更新當下才出現扣減 —— 這條路現在由
-   * **餘額重算**吸收：反向分錄與那筆扣減都留在帳本上，`sumLedgerMinutes`
-   * 算得出淨額。批次不再被刪，因此不必再依賴外鍵擋。
+   * Info: (20260821 - Julian) **預檢通過、寫入當下才出現扣減 → 餘額為負 → 回滾**
+   * （review 第 9 輪 B1）。
    *
-   * 它仍然值得釘：撤銷不得把一筆已經發生的扣減弄丟。
+   * 這條路的保護在第 8 輪被寫成「真正的保證是外鍵」，而那句話在批次改成
+   * **不刪**之後就過期了 —— `LeaveLedgerEntry.leaveGrant` 的 `onDelete: Restrict`
+   * 永遠不會被觸發，因為沒有人再刪批次。
+   *
+   * 現在的後盾是結果導向的：那批的分錄變成 `+120 −120 −60 = −60`，
+   * 而負餘額在 ADR 022 的模型裡不可能是對的（FIFO 只扣得動有餘額的批次）。
    */
-  it("預檢後才出現的扣減不會被弄丟", async () => {
+  it("預檢後才出現的扣減 → 餘額會變負 → 撤銷被擋下", async () => {
     raceEntryAfterPrecheck = true;
 
-    await revoke();
-
+    await expect(revoke()).rejects.toBeInstanceOf(
+      OvertimeApprovalNotReversibleError,
+    );
+    // Info: (20260821 - Julian) 那一筆扣減必須還在 —— 它是偵測得到的原因
     expect(
       entries.some((entry) => entry.entryType === LeaveLedgerEntryType.CONSUME),
     ).toBe(true);
+  });
+
+  /**
+   * Info: (20260821 - Julian) **分段不得被實刪。**
+   *
+   * `LeaveGrant.overtimeSegment` 是 `onDelete: Restrict`，而批次現在只標記
+   * 不刪 —— 刪分段就是刪一個仍被參照的父列，P2003 不是 `AppError`，
+   * route 會收斂成 500。補休加班單的撤銷因此會**必定失敗**。
+   *
+   * 這一條直接對著替身模擬的那條外鍵：把 `updateMany` 改回 `deleteMany`
+   * 就會在這裡撞上 P2003。
+   */
+  it("撤銷後分段留在表上，只被標記且 revokeSeq 帶上次數", async () => {
+    await revoke();
+
+    expect(segments).toHaveLength(1);
+    expect(segments[0].revokedAt).toEqual(REVOKED_AT);
+    expect(segments[0].revokeSeq).toBe(1);
+  });
+
+  /**
+   * Info: (20260821 - Julian) 第二次撤銷只處理**現役**那一組。
+   *
+   * 少了 `revokedAt: null` 的過濾，第二次會把前一次標記過的也算進來，
+   * 於是「折現事件數 == 分段數」那條不變式必定對不上，撤銷永久失敗。
+   */
+  it("撤銷 → 重新核准 → 再撤銷，兩個世代各自帶著自己的 revokeSeq", async () => {
+    await revoke();
+
+    requests[0].status = "APPROVED";
+    segments.push({ id: "seg-2", overtimeRequestId: REQUEST, revokedAt: null });
+    grants.push({
+      id: "grant-2",
+      accountBookId: BOOK,
+      overtimeSegmentId: "seg-2",
+      employeeId: "emp-006",
+      leavePolicyId: POLICY,
+      grantedMinutes: 120,
+      revokedAt: null,
+    });
+    entries.push({
+      id: "entry-3",
+      leaveGrantId: "grant-2",
+      entryType: LeaveLedgerEntryType.GRANT,
+      deltaMinutes: 120,
+      idempotencyKey: "overtime-grant:seg-2",
+    });
+
+    await expect(revoke()).resolves.toBe(OvertimeDecisionOutcome.DECIDED);
+
+    expect(segments.map((one) => [one.id, one.revokeSeq])).toEqual([
+      ["seg-1", 1],
+      ["seg-2", 2],
+    ]);
   });
 
   it("不在已核准時回 NOT_APPROVED，且什麼都不動", async () => {
@@ -532,7 +673,11 @@ describe("撤銷核准：不得波及其他單子", () => {
       compensationMode: OvertimeCompensationMode.COMPENSATORY_LEAVE,
       approvalRevokeCount: 0,
     });
-    segments.push({ id: "seg-9", overtimeRequestId: OTHER_REQUEST });
+    segments.push({
+      id: "seg-9",
+      overtimeRequestId: OTHER_REQUEST,
+      revokedAt: null,
+    });
     grants.push({
       id: "grant-9",
       accountBookId: BOOK,
@@ -556,10 +701,14 @@ describe("撤銷核准：不得波及其他單子", () => {
     });
   });
 
-  it("撤銷 ot-1 之後，ot-2 的分段仍在", async () => {
+  it("撤銷 ot-1 之後，只有 ot-1 的分段被標記", async () => {
     await revoke(REQUEST);
 
-    expect(segments.map((one) => one.id)).toEqual(["seg-9"]);
+    // Info: (20260821 - Julian) 兩張的分段都還在（不再實刪），但只有一張被標記
+    expect(segments.map((one) => [one.id, one.revokedAt === null])).toEqual([
+      ["seg-1", false],
+      ["seg-9", true],
+    ]);
   });
 
   it("撤銷 ot-1 之後，ot-2 的折現事件與批次都沒被動到", async () => {

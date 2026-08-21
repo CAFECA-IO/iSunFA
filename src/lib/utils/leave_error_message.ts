@@ -33,6 +33,9 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
  */
 export const LEAVE_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
   // Info: (20260818 - Julian) 送出假單
+  // Info: (20260821 - Julian) review 第 10 輪 B2：併計扣減尚未實作
+  [API_ERRORS.VA_LEAVE_MERGE_NOT_IMPLEMENTED.code]:
+    "hr_management.leave.error_merge_not_implemented",
   [API_ERRORS.VA_LEAVE_INSUFFICIENT_BALANCE.code]:
     "hr_management.leave.error_insufficient_balance",
   [API_ERRORS.VA_LEAVE_UNIT_NOT_ALIGNED.code]:

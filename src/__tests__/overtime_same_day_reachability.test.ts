@@ -123,7 +123,7 @@ const REQUEST_FIELDS = [
   "recognizedMinutes",
   "isEmergency",
 ];
-const SEGMENT_FIELDS = ["id", "overtimeRequestId"];
+const SEGMENT_FIELDS = ["id", "overtimeRequestId", "revokedAt"];
 const CASH_OUT_FIELDS = ["id", "overtimeSegmentId", "settledAt"];
 /**
  * Info: (20260821 - Julian) 含 `accountBookId` / `employeeId` / `leavePolicyId`：
@@ -148,21 +148,33 @@ jest.mock("@/lib/prisma", () => {
         async ({
           where,
           orderBy,
+          select,
         }: {
           where: IFakeWhere;
           orderBy?: Record<string, string>;
+          select?: { segments?: { where?: IFakeWhere } };
         }) => {
           /**
-           * Info: (20260821 - Julian) `segments` 是**現算**的，不是存在列上。
-           * 存在列上的話，撤銷核准刪掉分段之後那張單的摘要仍會帶著舊分段 ——
-           * 而「摘要說有分段、分段表是空的」正是這一支要抓的那種中間狀態。
+           * Info: (20260821 - Julian) `segments` 是**現算**的，而且**照被測程式
+           * 傳進來的巢狀 `where` 過濾**（review 第 9 輪）。
+           *
+           * 第一版只用 `overtimeRequestId` 過濾，於是 `SUMMARY_SELECT` 那個
+           * `where: { revokedAt: null }` 對替身完全不存在 —— 把它拿掉的突變
+           * 是綠的。而它擋的是「一張被撤銷又重新核准的單同時帶著兩個世代的
+           * 分段」，L28 的時數統計會因此加倍。
            */
+          const segmentWhere = select?.segments?.where;
           const hits = requests
             .filter((row) => matchesRow(row, where, REQUEST_FIELDS))
             .map((row) => ({
               ...row,
               segments: segments
                 .filter((one) => one.overtimeRequestId === row.id)
+                .filter((one) =>
+                  segmentWhere === undefined
+                    ? true
+                    : matchesRow(one, segmentWhere, SEGMENT_FIELDS),
+                )
                 .map(({ order, tier, minutes }) => ({ order, tier, minutes })),
             }));
           return sortRows(hits, orderBy, REQUEST_FIELDS)[0] ?? null;
@@ -232,6 +244,9 @@ jest.mock("@/lib/prisma", () => {
         const row = {
           ...(data as unknown as ISegmentRow),
           id: `seg-${nextId}`,
+          // Info: (20260821 - Julian) 新建的分段一律是現役世代
+          revokedAt: null,
+          revokeSeq: 0,
         };
         segments.push(row);
         return row;
@@ -239,14 +254,42 @@ jest.mock("@/lib/prisma", () => {
       findMany: jest.fn(async ({ where }: { where: IFakeWhere }) =>
         segments.filter((row) => matchesRow(row, where, SEGMENT_FIELDS)),
       ),
+      /**
+       * Info: (20260821 - Julian) 產品**不該再走這條路**（分段改為只標記），
+       * 但替身仍要模擬 `onDelete: Restrict`：有人改回 `deleteMany` 就要當場紅。
+       */
       deleteMany: jest.fn(async ({ where }: { where: IFakeWhere }) => {
-        const keep = segments.filter(
-          (row) => !matchesRow(row, where, SEGMENT_FIELDS),
+        const doomed = segments.filter((row) =>
+          matchesRow(row, where, SEGMENT_FIELDS),
         );
-        const count = segments.length - keep.length;
-        segments = keep;
-        return { count };
+        const ids = new Set(doomed.map((row) => row.id));
+        /**
+         * Info: (20260821 - Julian) `overtimeSegmentId` 是 `string | null`
+         * （補休屆期折現不來自加班分段），null 不指向任何分段 —— 明確排除，
+         * 不用 `as string` 蓋過去：那會讓「null 算不算撞到」變成一個看不見的答案。
+         */
+        if (
+          cashOuts.some(
+            (one) =>
+              one.overtimeSegmentId !== null && ids.has(one.overtimeSegmentId),
+          )
+        ) {
+          throw new Error(
+            "Foreign key constraint violated on the constraint: `leave_cash_out_event_overtime_segment_id_fkey`",
+          );
+        }
+        segments = segments.filter((row) => !ids.has(row.id));
+        return { count: doomed.length };
       }),
+      updateMany: jest.fn(
+        async ({ where, data }: { where: IFakeWhere; data: IFakeWhere }) => {
+          const hits = segments.filter((row) =>
+            matchesRow(row, where, SEGMENT_FIELDS),
+          );
+          for (const row of hits) Object.assign(row, data);
+          return { count: hits.length };
+        },
+      ),
     },
     leaveCashOutEvent: {
       create: jest.fn(async ({ data }: { data: Record<string, unknown> }) => {
@@ -396,9 +439,16 @@ const rateOf = (tier: string): number => {
   return ratio.numerator / ratio.denominator;
 };
 
+/** Info: (20260821 - Julian) 現役分段：撤銷過的留在表上，但不算錢 */
+const liveSegments = (): ISegmentRow[] =>
+  segments.filter((one) => one.revokedAt === null);
+
 /** Info: (20260821 - Julian) 目前**落地**的分段換算成工資單位 */
 const paidUnits = (): number =>
-  segments.reduce((total, one) => total + one.minutes * rateOf(one.tier), 0);
+  liveSegments().reduce(
+    (total, one) => total + one.minutes * rateOf(one.tier),
+    0,
+  );
 
 /** Info: (20260821 - Julian) 目前**認列**的總分鐘（工時有沒有進到系統裡） */
 const recognizedTotal = (): number =>
@@ -469,7 +519,12 @@ describe("同日兩段加班：沒有可達序列讓總額低於 §24 I 下限",
 
     // Info: (20260821 - Julian) 第二步：照文案撤回較晚那一張
     await revokeApproval(late.id);
-    expect(segments).toHaveLength(0);
+    /**
+     * Info: (20260821 - Julian) 分段**不再被刪**，只標記（review 第 9 輪 B1）——
+     * 刪它會撞上 `LeaveGrant` / `LeaveCashOutEvent` 的 `onDelete: Restrict`。
+     */
+    expect(liveSegments()).toHaveLength(0);
+    expect(segments).toHaveLength(1);
     expect(cashOuts).toHaveLength(0);
     expect(recognizedTotal()).toBe(0);
 
@@ -488,6 +543,25 @@ describe("同日兩段加班：沒有可達序列讓總額低於 §24 I 下限",
    * 只斷言總額的話，一個把整張單刪掉再讓使用者重打的實作也會通過 ——
    * 而那會湮滅「他曾經送過、曾經被核准過」這件事。
    */
+  /**
+   * Info: (20260821 - Julian) 撤銷 → 重新核准之後，**摘要只帶現役世代**。
+   *
+   * 舊分段留在表上（不再實刪），`SUMMARY_SELECT` 的 `where: { revokedAt: null }`
+   * 是唯一擋住「同一張單帶兩個世代」的東西 —— 少了它，L28 的時數統計加倍，
+   * 而畫面與數字各自都不會顯示異常。
+   */
+  it("撤銷後重新核准，摘要只看得到新世代的分段", async () => {
+    const late = await submit(B);
+    await approve(late.id);
+    await revokeApproval(late.id);
+    const reapproved = await approve(late.id);
+
+    // Info: (20260821 - Julian) 表上有兩個世代，摘要只該看到一個
+    expect(segments).toHaveLength(2);
+    expect(reapproved.request.segments).toHaveLength(1);
+    expect(paidUnits()).toBeCloseTo(SPAN * (1 / 3), 6);
+  });
+
   it("撤銷核准後單子回到待簽，且核准與認列分鐘都被清掉", async () => {
     const late = await submit(B);
     await approve(late.id);

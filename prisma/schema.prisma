@@ -4194,9 +4194,41 @@ model OvertimeSegment {
   // Info: (20260821 - Julian) 反向關聯：選擇發加班費時，本段會產生一筆折現事件（review 第 7 輪 B1）
   cashOutEvent LeaveCashOutEvent?
 
+  /**
+   * Info: (20260821 - Julian) 分段**不再實刪**（review 第 9 輪 B1）。
+   *
+   * ## 為什麼非改不可：一個必定 500 的路徑
+   *
+   * `LeaveGrant.overtimeSegment` 是 `onDelete: Restrict`，而撤銷核准現在把
+   * 批次改成**標記** `revokedAt`（ADR 022 §2.1「不可變」）—— 批次還活著、
+   * `overtimeSegmentId` 還指著這一列。此時再 `overtimeSegment.deleteMany`
+   * 就是刪一個仍被參照的父列：P2003 → 不是 `AppError` → route 落
+   * `IS_DB_FAILED` **500**。
+   *
+   * 補休加班單的撤銷因此**必定失敗**，而它正是
+   * `VA_OVERTIME_EARLIER_THAN_APPROVED` 官方補救動作的執行者。
+   *
+   * 清掉 `LeaveGrant.overtimeSegmentId` 不是選項：
+   * `OVERTIME_CONVERSION ⟺ overtimeSegmentId != null` 是**雙向**不變式
+   * （見 `LeaveGrantSource` 與 `assertGrantSource`），清掉會讓一筆
+   * `OVERTIME_CONVERSION` 的批次說不出自己從哪一段來。
+   *
+   * ## `revokeSeq` 是唯一鍵的一部分，不是統計
+   *
+   * 保留舊分段與「重新核准要再寫一次 `order = 0`」互斥，因此唯一鍵要能分辨
+   * 世代。**現役世代恆為 0**，撤銷時把整組改成該次的 `approvalRevokeCount`
+   * （1, 2, 3…）—— 同一時刻最多只有一個世代是 0，唯一性因此成立。
+   *
+   * 不用 `@@unique([overtimeRequestId, order, revokedAt])`：PostgreSQL 的
+   * NULL 彼此不相等，那樣寫等於對現役分段完全沒有約束。
+   */
+  revokedAt DateTime? @map("revoked_at")
+
+  revokeSeq Int @default(0) @map("revoke_seq")
+
   createdAt DateTime @default(now()) @map("created_at")
 
-  @@unique([overtimeRequestId, order])
+  @@unique([overtimeRequestId, order, revokeSeq])
   @@map("overtime_segment")
 }
 

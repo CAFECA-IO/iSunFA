@@ -895,6 +895,8 @@ export const hrManagement = {
      */
     error_insufficient_balance:
       "残日数が足りません。日数を減らすか、別の休暇種別を選んでください",
+    error_merge_not_implemented:
+      "この休暇種別は別の休暇の残日数も同時に消化しますが、その規則がまだ利用できないため申請できません。人事にご相談ください（当面は別の休暇種別をご利用ください）。",
     error_unit_not_aligned:
       "この休暇種別の最小単位に合っていません。時間帯を調整してください",
     error_non_working_day:

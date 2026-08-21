@@ -181,6 +181,44 @@ const deciderSnapshotOf = async (
   };
 };
 
+/**
+ * Info: (20260821 - Julian) 這個 P2002 是不是撞在 `LeaveDay.activeKey` 上
+ * （review 第 11 輪 B3）。
+ *
+ * ## 為什麼要看 `meta.target`，不是「只要是 P2002 就算」
+ *
+ * 這個交易裡不只一個唯一鍵：`LeaveLedgerEntry.idempotencyKey` 也是。
+ * 把任何 P2002 都翻成「這一天已經有生效的假單」，會在冪等鍵撞上時
+ * 對使用者說一件與事實無關的事，而真正的缺陷（重放或分錄重複）被藏起來。
+ *
+ * ## 認不出來時**不猜**
+ *
+ * `meta.target` 缺漏或不含這一欄時回 `false`，讓錯誤照原樣往上丟（→ 500）。
+ * 兩個方向的代價不對稱：誤判成 409 會告訴使用者一個假的衝突並掩蓋 bug；
+ * 誤判成 500 只是維持現況，而現況本來就是一個要修的 bug 被看見。
+ *
+ * 欄位名與約束名都認：Prisma 在 PostgreSQL 上依版本可能給
+ * `["active_key"]` 或 `leave_day_active_key_key`。
+ *
+ * 不用 `instanceof`：Prisma 的錯誤類別跨版本換過位置
+ * （同 `leave_policy.repo.ts` 的 `isUniqueViolation`）。
+ */
+export const isActiveKeyViolation = (error: unknown): boolean => {
+  if (
+    typeof error !== "object" ||
+    error === null ||
+    (error as { code?: unknown }).code !== "P2002"
+  ) {
+    return false;
+  }
+  const target = (error as { meta?: { target?: unknown } }).meta?.target;
+  if (target === undefined || target === null) return false;
+  const described = Array.isArray(target)
+    ? target.map(String).join(",")
+    : String(target);
+  return described.includes("active_key") || described.includes("activeKey");
+};
+
 class BalanceRaceError extends Error {
   constructor() {
     super("leave balance was consumed by a concurrent approval");
@@ -656,6 +694,22 @@ export class LeaveRequestRepository implements ILeaveRequestRepository {
     } catch (error) {
       if (error instanceof BalanceRaceError) {
         return LeaveApprovalOutcome.BALANCE_RACE;
+      }
+      /**
+       * Info: (20260821 - Julian) `LeaveDay.activeKey` 的唯一鍵撞上了
+       * （review 第 11 輪 B3）。
+       *
+       * 這一段先前不存在，於是 `CF_LEAVE_DAY_ALREADY_ACTIVE` **從未被丟過** ——
+       * 錯誤碼、五個語系的文案、兩支字典形狀測試全都備好了，中間少一段接線。
+       * 症狀是 500：route 的 catch-all 把原始的 Prisma 錯誤收斂成
+       * `IS_DB_FAILED`（同時違反 coding_guidelines §5.2「不讓原始 Prisma 錯誤
+       * 噴到 API 層」）。
+       *
+       * **重現不需要併發**：同一人對同一天送出事假與病假 —— 兩張待簽可以
+       * 涵蓋同一天（見 `submit` 的檔頭）—— 核准第一張、再核准第二張。
+       */
+      if (isActiveKeyViolation(error)) {
+        return LeaveApprovalOutcome.DAY_ALREADY_ACTIVE;
       }
       throw error;
     }

@@ -898,6 +898,8 @@ export const hrManagement = {
      */
     error_insufficient_balance:
       "잔여 일수가 부족합니다. 일수를 줄이거나 다른 휴가 종류를 선택하세요",
+    error_merge_not_implemented:
+      "이 휴가 종류는 다른 휴가의 잔여 일수도 함께 차감하지만 해당 규칙이 아직 제공되지 않아 신청할 수 없습니다. 인사팀에 문의하세요(당분간 다른 휴가 종류를 이용해 주세요).",
     error_unit_not_aligned:
       "이 휴가 종류의 최소 단위와 맞지 않습니다. 시간대를 조정하세요",
     error_non_working_day:
