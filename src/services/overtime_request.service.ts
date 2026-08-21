@@ -749,13 +749,22 @@ export class OvertimeRequestService {
    *
    * **不要求理由。** 撤銷之後單子回到待簽、仍在清單上、仍要再被決行一次，
    * 它不像 `withdraw` 那樣終結一張單 —— 那才是需要留下「為什麼」的動作。
-   * ToDo: (20260821 - Julian) 決行歷史（誰在什麼時候撤銷了核准）待
-   * `OvertimeDecisionLog` 落地，屆時把操作者與時點一起記下來。
+   *
+   * ## 但**誰**在**什麼時候**撤銷的一定要留（review 第 8 輪第 1 條）
+   *
+   * 撤銷 → 申請人 `withdraw`，最後這張單長得與「從來沒有人送過」一模一樣，
+   * 而它曾經被核准 240 分鐘、曾經進到員工的 `LeaveBalance` 裡。
+   * 操作者與時點因此寫進 `OvertimeRequest.approvalRevokedAt` /
+   * `approvalRevokedByEmployeeId`，並與狀態轉移在同一次附條件更新裡落地。
+   * ToDo: (20260821 - Julian) 完整的決行歷史（含被撤銷的那組分段）
+   * 待 `OvertimeDecisionLog` 落地。
    */
   public async revokeApproval(params: {
     accountBookId: string;
     requestId: string;
     actorEmployeeId: string;
+    /** Info: (20260821 - Julian) 撤銷時點由呼叫端給，service 不自取 `Date.now()`（同 approve） */
+    observedAt: Date;
   }): Promise<IOvertimeRequestSummary> {
     const request = await this.mustFindSummary(
       params.accountBookId,
@@ -775,6 +784,8 @@ export class OvertimeRequestService {
     const outcome = await this.revokeOrTranslate({
       accountBookId: params.accountBookId,
       requestId: request.id,
+      revokedByEmployeeId: params.actorEmployeeId,
+      revokedAt: params.observedAt,
     });
     if (outcome === OvertimeDecisionOutcome.NOT_APPROVED) {
       throw new AppError(API_ERRORS.VA_OVERTIME_NOT_APPROVED);
@@ -793,6 +804,8 @@ export class OvertimeRequestService {
   private async revokeOrTranslate(params: {
     accountBookId: string;
     requestId: string;
+    revokedByEmployeeId: string;
+    revokedAt: Date;
   }): Promise<OvertimeDecisionOutcome> {
     try {
       return await this.requests.revokeApproval(params);

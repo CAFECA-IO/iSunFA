@@ -60,6 +60,7 @@ export async function POST(
         accountBookId,
         requestId,
         actorEmployeeId: actor.id,
+        observedAt: new Date(),
       }),
     );
   } catch (error) {

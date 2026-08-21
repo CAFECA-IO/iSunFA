@@ -92,6 +92,15 @@ export const consumableGrantWhere = (params: {
      * 因此明年一月的假扣得到明年一月的批次，扣不到明年七月的。
      */
     cycleStartDate: { lte: params.asOfDate },
+    /**
+     * Info: (20260821 - Julian) 被撤銷的批次不能扣（review 第 8 輪第 1 條）。
+     *
+     * 撤銷加班核准時 `LeaveGrant` 依 ADR 022 §2.1 不刪列，只標 `revokedAt`
+     * 並補一筆反向分錄把餘額歸零。少了這個條件，那批批次仍會進 FIFO ——
+     * `readConsumableGrants` 會替它算出「可扣 0 分鐘」，於是請假時掃到批次
+     * 卻一分鐘都扣不到，而畫面上沒有任何線索指向「那批被撤銷了」。
+     */
+    revokedAt: null,
   };
 };
 

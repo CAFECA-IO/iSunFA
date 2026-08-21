@@ -61,6 +61,16 @@ ADR 015 對團隊錢包做的是同一件事：`TeamWalletLedger` append-only、
 
 駁回、撤回、銷假、人工調整全部寫 `LeaveLedgerEntry(entryType = RESTORE | ADJUST)`，`deltaMinutes` 為正。
 
+> Info: (20260821 - Julian) **撤銷加班核准**（`revokeApproval`，L27-b）走的是同一條規矩，
+> 但方向相反：它收回一批已經授予的補休，因此寫的是 `ADJUST` 且 `deltaMinutes` 為**負**，
+> `grantBalanceAfterMinutes` 為 0。批次那一側標 `LeaveGrant.revokedAt` 而不刪列，
+> 並由 `consumableGrantWhere` 濾掉 —— 「他曾經換到過這批補休、後來被撤銷了」
+> 因此仍然查得出來。
+>
+> 冪等鍵是 `overtime-revoke:<segmentId>:<revokeCount>`。**次數不能省**：
+> 同一張單可以撤銷 → 重新核准 → 再撤銷，而鍵是唯一的；沒有次數的話第二次
+> 會被當成重放，帳本少一筆反向分錄，`Σ(deltaMinutes)` 與 `LeaveBalance` 就此分岔。
+
 理由同 `LeaveDay` 銷假時把 `activeKey` 設回 null 而不刪列：刪掉的話「他曾經請過、後來被銷了」這個事實就消失了，而那正是主管機關會查的東西。
 
 ---

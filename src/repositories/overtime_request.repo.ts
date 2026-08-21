@@ -6,6 +6,8 @@ import {
 } from "@/constants/leave_policy";
 import {
   buildOvertimeGrantIdempotencyKey,
+  buildOvertimeRevokeIdempotencyKey,
+  OVERTIME_APPROVAL_REVOKED_REASON,
   OvertimeCompensationMode,
   OvertimeEvidenceBasis,
   OvertimeFilingType,
@@ -205,6 +207,8 @@ export interface IOvertimeRequestRepository {
   revokeApproval(params: {
     accountBookId: string;
     requestId: string;
+    revokedByEmployeeId: string;
+    revokedAt: Date;
   }): Promise<OvertimeDecisionOutcome>;
   /**
    * Info: (20260818 - Julian) 申請人撤回。與 `reject` 同樣是附條件更新 ——
@@ -550,6 +554,9 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
   public async revokeApproval(params: {
     accountBookId: string;
     requestId: string;
+    /** Info: (20260821 - Julian) 撤銷者與時點一起落地 —— 撤銷本身也要留痕 */
+    revokedByEmployeeId: string;
+    revokedAt: Date;
   }): Promise<OvertimeDecisionOutcome> {
     return prisma.$transaction(async (tx) => {
       const moved = await tx.overtimeRequest.updateMany({
@@ -571,9 +578,34 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
           approvedMinutes: null,
           recognizedMinutes: null,
           evidenceBasis: OvertimeEvidenceBasis.PUNCH_RECORD,
+          /**
+           * Info: (20260821 - Julian) 稽核三欄寫在**同一個 `data`** 裡
+           * （review 第 8 輪第 1 條）。
+           *
+           * 不另外 `update` 一次：撤銷的事實與狀態轉移必須是同一個原子動作，
+           * 否則會有一個「已經回到 PENDING、但查不出是誰撤的」的中間狀態。
+           * `approvalRevokeCount` 的遞增也在這裡 —— 下面反向分錄的冪等鍵
+           * 要用它，兩者同生共死。
+           */
+          approvalRevokedAt: params.revokedAt,
+          approvalRevokedByEmployeeId: params.revokedByEmployeeId,
+          approvalRevokeCount: { increment: 1 },
         },
       });
       if (moved.count === 0) return OvertimeDecisionOutcome.NOT_APPROVED;
+
+      /**
+       * Info: (20260821 - Julian) 把遞增後的次數讀回來當冪等鍵的一部分。
+       * 讀在 claim **之後**：claim 成功就代表這一次撤銷是我們的，
+       * 此刻讀到的次數不會再被別人改（同一交易內）。
+       */
+      const claimed = await tx.overtimeRequest.findFirst({
+        where: { id: params.requestId, accountBookId: params.accountBookId },
+        select: { approvalRevokeCount: true, compensationMode: true },
+      });
+      const revokeCount = claimed?.approvalRevokeCount ?? 1;
+      const isPayment =
+        claimed?.compensationMode === OvertimeCompensationMode.PAYMENT;
 
       const segments = await tx.overtimeSegment.findMany({
         where: { overtimeRequestId: params.requestId },
@@ -582,8 +614,14 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
       const segmentIds = segments.map((segment) => segment.id);
 
       const grants = await tx.leaveGrant.findMany({
-        where: { overtimeSegmentId: { in: segmentIds } },
-        select: { id: true, employeeId: true, leavePolicyId: true },
+        where: { overtimeSegmentId: { in: segmentIds }, revokedAt: null },
+        select: {
+          id: true,
+          employeeId: true,
+          leavePolicyId: true,
+          grantedMinutes: true,
+          overtimeSegmentId: true,
+        },
       });
       const grantIds = grants.map((grant) => grant.id);
 
@@ -604,41 +642,116 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
         );
       }
 
-      const settled = await tx.leaveCashOutEvent.count({
-        where: {
-          overtimeSegmentId: { in: segmentIds },
-          settledAt: { not: null },
-        },
+      /**
+       * Info: (20260821 - Julian) 折現事件必須**逐段對得起來**（review 第 8 輪第 2 條）。
+       *
+       * `approve` 對 `PAYMENT` 單是一段一筆事件，所以「連結到這些分段的事件數」
+       * 必須等於分段數。對不上只有一種成因：那些事件是
+       * `leave_cash_out_event.overtime_segment_id` 這一欄上線**之前**建立的，
+       * `overtime_segment_id IS NULL` —— 而 PostgreSQL 的 unique **不約束 NULL**。
+       *
+       * 若放行，兩件事會同時發生：
+       *
+       * 1. 刪不到那筆舊事件 → 留下一筆描述「系統現在說從未被核准」那段工時的
+       *    折現事件，薪資模組落地後會照它發錢。
+       * 2. 重新核准時 `resolveCashOut` 在 `PAYMENT` + 有分段時必定非 null，
+       *    為每個新分段各建一筆 —— **同一段 120 分鐘存在兩筆事件，付兩次**。
+       *
+       * 因此對不上就丟。`VA_OVERTIME_APPROVAL_NOT_REVERSIBLE` 的文案
+       * 「找人資做人工調整」剛好就是正確的下一步。
+       */
+      const linkedCashOuts = await tx.leaveCashOutEvent.count({
+        where: { overtimeSegmentId: { in: segmentIds } },
       });
-      if (settled > 0) {
+      /**
+       * Info: (20260821 - Julian) 判準直接讀 `compensationMode`，不從
+       * 「有沒有補休批次」反推 —— 反推在「批次已被前一次撤銷標記掉」時會給錯答案。
+       */
+      const expectedCashOuts = isPayment ? segmentIds.length : 0;
+      if (linkedCashOuts !== expectedCashOuts) {
         throw new OvertimeApprovalNotReversibleError(
           params.requestId,
-          `${settled} cash-out events have already been settled by payroll`,
+          `expected ${expectedCashOuts} linked cash-out events for this ${claimed?.compensationMode} request with ${segmentIds.length} segments, found ${linkedCashOuts}; the difference predates leave_cash_out_event.overtime_segment_id`,
         );
       }
 
       /**
-       * Info: (20260821 - Julian) **只刪 `GRANT` 分錄**，不是這批批次的全部分錄。
+       * Info: (20260821 - Julian) **帳本寫反向分錄，批次只標記** —— 都不刪
+       * （ADR 022 §2.1／§2.4，review 第 8 輪第 1 條）。
        *
-       * 第一版寫的是 `where: { leaveGrantId: { in: grantIds } }` —— 它會把
-       * 「預檢之後才落地的那一筆扣減」也一起刪掉，於是下一行的
-       * `leaveGrant.deleteMany` 再也撞不到外鍵。上面那段註解宣稱
-       * 「真正的保證是外鍵」，而第一版親手把外鍵擋得住的那一列先移走了：
-       * 一句沒有執行者的保證（§5.4）。
+       * 第一版是 `leaveLedgerEntry.deleteMany` + `leaveGrant.deleteMany`，
+       * 而 ADR 022 §2.1 的原話是 `LeaveLedgerEntry`「永不 update、永不 delete」、
+       * `LeaveGrant`「不可變」，§2.4 是「撤銷是寫反向分錄，不是刪列」。
+       * 同一張加班單上的 §32 IV 認定早就照做了（`OvertimeEmergencyDeclaration`
+       * 的註解寫著「兩者都不刪」）—— 硬刪讓同一張單的兩種撤銷稽核強度不一樣，
+       * 而被刪掉的那一側是**進過員工餘額**的那一側。
        *
-       * 收窄成 `entryType: GRANT` 之後，競態進來的扣減會留在原地，
-       * `onDelete: Restrict` 因此真的擋得住，整個交易回滾。
+       * 反向分錄的三個要點：
+       * - `deltaMinutes` 是負的授予量，`grantBalanceAfterMinutes` 因此為 0。
+       * - `entryType` 用 `ADJUST`：`RESTORE` 的語意是「銷假把額度還回來」，
+       *   方向相反，混用會讓 L10 的帳本畫面說錯故事。
+       * - `idempotencyKey` 含撤銷次數，否則第二次撤銷會撞唯一鍵被當成重放。
        */
-      await tx.leaveLedgerEntry.deleteMany({
-        where: {
-          leaveGrantId: { in: grantIds },
-          entryType: LeaveLedgerEntryType.GRANT,
-        },
+      for (const grant of grants) {
+        await tx.leaveLedgerEntry.create({
+          data: {
+            leaveGrantId: grant.id,
+            entryType: LeaveLedgerEntryType.ADJUST,
+            deltaMinutes: -grant.grantedMinutes,
+            grantBalanceAfterMinutes: 0,
+            actorEmployeeId: params.revokedByEmployeeId,
+            reason: OVERTIME_APPROVAL_REVOKED_REASON,
+            idempotencyKey: buildOvertimeRevokeIdempotencyKey(
+              grant.overtimeSegmentId ?? grant.id,
+              revokeCount,
+            ),
+          },
+        });
+      }
+
+      await tx.leaveGrant.updateMany({
+        where: { id: { in: grantIds } },
+        data: { revokedAt: params.revokedAt },
       });
-      await tx.leaveGrant.deleteMany({ where: { id: { in: grantIds } } });
-      await tx.leaveCashOutEvent.deleteMany({
-        where: { overtimeSegmentId: { in: segmentIds } },
+
+      /**
+       * Info: (20260821 - Julian) 折現事件的刪除**帶上 `settledAt: null`**
+       * （review 第 8 輪第 3 條）。
+       *
+       * 上面那次 `count` 是先查後改，而折現這一側**沒有外鍵當後盾**
+       * （補休那一側有：`LeaveLedgerEntry.leaveGrant` 是 `onDelete: Restrict`）。
+       * READ COMMITTED 下的順序可以是：`count` 讀到 null → 薪資模組 commit
+       * `settled_at` → `deleteMany` 看得到那個新 commit 並**照樣刪掉**，
+       * 全程無衝突、沒有東西會觸發回滾。
+       *
+       * 條件式刪除 + 比對筆數之後，「已結算不准撤」與「刪得掉」變成同一件事，
+       * 兩側的保護強度也就不必再解釋為什麼不同。
+       */
+      const removed = await tx.leaveCashOutEvent.deleteMany({
+        where: { overtimeSegmentId: { in: segmentIds }, settledAt: null },
       });
+      if (removed.count !== linkedCashOuts) {
+        throw new OvertimeApprovalNotReversibleError(
+          params.requestId,
+          `${linkedCashOuts - removed.count} cash-out events were settled by payroll while this revocation was running`,
+        );
+      }
+
+      /**
+       * Info: (20260821 - Julian) 分段**仍然實刪**，這是刻意的取捨。
+       *
+       * `@@unique([overtimeRequestId, order])` 讓「留著舊分段」與「重新核准要
+       * 再寫一次 order 0」互斥 —— 保留分段就必須把撤銷次數加進唯一鍵，
+       * 那會波及每一個讀分段的地方（摘要、L28 統計、折現換算）。
+       *
+       * 與帳本那一側的差別在於**分段不是帳本**：它是核准當下的推導結果，
+       * 而推導的輸入（申請區間、認列分鐘、`isEmergency`）全部留在
+       * `OvertimeRequest` 上，撤銷的事實也留在上面那三個稽核欄位裡。
+       * `engineVersion` 的原意（「舊資料仍能說明它當初依哪一版算出來」）
+       * 對**現存**的分段仍然成立。
+       * ToDo: (20260821 - Julian) 決行歷史（`OvertimeDecisionLog`）落地時，
+       * 把被撤銷的那組分段一起快照進去，這個取捨就可以拿掉。
+       */
       await tx.overtimeSegment.deleteMany({
         where: { overtimeRequestId: params.requestId },
       });

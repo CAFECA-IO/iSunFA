@@ -2,6 +2,12 @@ import { describe, it, expect, beforeEach } from "@jest/globals";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
 
+import {
+  IFakeWhere,
+  matchesRow,
+  sortRows,
+} from "@/lib/testing/fake_prisma_where";
+
 /**
  * Info: (20260821 - Julian) **沒有任何可達序列讓當日加成總額低於 §24 I 的下限**
  * （review 第 7 輪 B1）。
@@ -98,78 +104,14 @@ let cashOuts: ICashOutRow[] = [];
 let nextId = 0;
 
 /**
- * Info: (20260821 - Julian) 只實作被測程式真的用到的鍵，**其餘一律丟**。
- * 理由同 `overtime_tier_order_independence.test.ts`：一連串
- * `if (where.X !== undefined)` 會讓沒被列到的條件安靜地不生效，
- * 而那種替身會在被測查詢改形狀的那一天給出一個看起來合理的錯答案。
+ * Info: (20260821 - Julian) `where` 的比對器由 `@/lib/testing/fake_prisma_where`
+ * 提供 —— **與 `overtime_revoke_approval.test.ts` 共用同一份**
+ * （review 第 8 輪第 4 條）。
+ *
+ * 先前兩支各抄一份，而「兩支會不會分岔」本身就是新的失效點：這一支的比對器
+ * 很嚴，那一支有六支方法根本不看 `where`，於是「刪這一張」與「刪整張表」
+ * 在那邊塌成同一個值 —— 而那是本模組破壞性最強的一支端點。
  */
-type IWhere = Record<string, unknown>;
-
-const compareValues = (actual: unknown, value: unknown): number => {
-  if (typeof actual === "number" && typeof value === "number") {
-    return actual === value ? 0 : actual < value ? -1 : 1;
-  }
-  if (typeof actual === "string" && typeof value === "string") {
-    return actual === value ? 0 : actual < value ? -1 : 1;
-  }
-  throw new Error(`替身不比較這組型別：${typeof actual} 對 ${typeof value}`);
-};
-
-const matchesField = (actual: unknown, clause: unknown): boolean => {
-  if (clause === null || typeof clause !== "object") return actual === clause;
-  for (const [op, value] of Object.entries(clause as IWhere)) {
-    switch (op) {
-      case "lt":
-        if (!(compareValues(actual, value) < 0)) return false;
-        break;
-      case "gt":
-        if (!(compareValues(actual, value) > 0)) return false;
-        break;
-      case "gte":
-        if (compareValues(actual, value) < 0) return false;
-        break;
-      case "lte":
-        if (compareValues(actual, value) > 0) return false;
-        break;
-      case "not":
-        if (value === null ? actual === null : actual === value) return false;
-        break;
-      case "in":
-        if (!(value as unknown[]).includes(actual)) return false;
-        break;
-      default:
-        throw new Error(`替身不支援這個運算子：${op}`);
-    }
-  }
-  return true;
-};
-
-const matches = (
-  row: Record<string, unknown>,
-  where: IWhere,
-  fields: readonly string[],
-): boolean => {
-  for (const [key, clause] of Object.entries(where)) {
-    if (key === "OR") {
-      if (!(clause as IWhere[]).some((one) => matches(row, one, fields))) {
-        return false;
-      }
-      continue;
-    }
-    if (key === "AND") {
-      if (!(clause as IWhere[]).every((one) => matches(row, one, fields))) {
-        return false;
-      }
-      continue;
-    }
-    if (!fields.includes(key)) {
-      throw new Error(`替身不支援這個條件鍵：${key}`);
-    }
-    if (!matchesField(row[key], clause)) return false;
-  }
-  return true;
-};
-
 const REQUEST_FIELDS = [
   "id",
   "accountBookId",
@@ -183,20 +125,31 @@ const REQUEST_FIELDS = [
 ];
 const SEGMENT_FIELDS = ["id", "overtimeRequestId"];
 const CASH_OUT_FIELDS = ["id", "overtimeSegmentId", "settledAt"];
-const GRANT_FIELDS = ["id", "overtimeSegmentId"];
+/**
+ * Info: (20260821 - Julian) 含 `accountBookId` / `employeeId` / `leavePolicyId`：
+ * 餘額重算走的 `sumLedgerMinutes` 是用那三個欄位查批次的。
+ */
+const GRANT_FIELDS = [
+  "id",
+  "accountBookId",
+  "employeeId",
+  "leavePolicyId",
+  "overtimeSegmentId",
+  "revokedAt",
+];
 
 jest.mock("@/lib/prisma", () => {
   const client = {
     overtimeRequest: {
-      findMany: jest.fn(async ({ where }: { where: IWhere }) =>
-        requests.filter((row) => matches(row, where, REQUEST_FIELDS)),
+      findMany: jest.fn(async ({ where }: { where: IFakeWhere }) =>
+        requests.filter((row) => matchesRow(row, where, REQUEST_FIELDS)),
       ),
       findFirst: jest.fn(
         async ({
           where,
           orderBy,
         }: {
-          where: IWhere;
+          where: IFakeWhere;
           orderBy?: Record<string, string>;
         }) => {
           /**
@@ -205,33 +158,20 @@ jest.mock("@/lib/prisma", () => {
            * 而「摘要說有分段、分段表是空的」正是這一支要抓的那種中間狀態。
            */
           const hits = requests
-            .filter((row) => matches(row, where, REQUEST_FIELDS))
+            .filter((row) => matchesRow(row, where, REQUEST_FIELDS))
             .map((row) => ({
               ...row,
               segments: segments
                 .filter((one) => one.overtimeRequestId === row.id)
                 .map(({ order, tier, minutes }) => ({ order, tier, minutes })),
             }));
-          if (orderBy !== undefined) {
-            const [[field, direction]] = Object.entries(orderBy);
-            if (!REQUEST_FIELDS.includes(field)) {
-              throw new Error(`替身不支援這個排序鍵：${field}`);
-            }
-            hits.sort((left, right) => {
-              const cmp = compareValues(
-                (left as IRequestRow)[field],
-                (right as IRequestRow)[field],
-              );
-              return direction === "asc" ? cmp : -cmp;
-            });
-          }
-          return hits[0] ?? null;
+          return sortRows(hits, orderBy, REQUEST_FIELDS)[0] ?? null;
         },
       ),
-      aggregate: jest.fn(async ({ where }: { where: IWhere }) => ({
+      aggregate: jest.fn(async ({ where }: { where: IFakeWhere }) => ({
         _sum: {
           recognizedMinutes: requests
-            .filter((row) => matches(row, where, REQUEST_FIELDS))
+            .filter((row) => matchesRow(row, where, REQUEST_FIELDS))
             .reduce(
               (total, row) => total + ((row.recognizedMinutes as number) ?? 0),
               0,
@@ -254,17 +194,34 @@ jest.mock("@/lib/prisma", () => {
            * 晚於那個起點。給一個當地 08:00 的 `createdAt` 會讓兩張單都在
            * 核准時被擋，而那個紅燈指的是 fixture 不是產品。
            */
+          // Info: (20260821 - Julian) 撤銷次數的起點；`{ increment: 1 }` 需要它是數字
+          approvalRevokeCount: 0,
           createdAt: SUBMITTED_AT,
         };
         requests.push(row);
         return row;
       }),
       updateMany: jest.fn(
-        async ({ where, data }: { where: IWhere; data: IWhere }) => {
+        async ({ where, data }: { where: IFakeWhere; data: IFakeWhere }) => {
           const hits = requests.filter((row) =>
-            matches(row, where, REQUEST_FIELDS),
+            matchesRow(row, where, REQUEST_FIELDS),
           );
-          for (const row of hits) Object.assign(row, data);
+          for (const row of hits) {
+            for (const [key, value] of Object.entries(data)) {
+              // Info: (20260821 - Julian) `approvalRevokeCount: { increment: 1 }`
+              if (
+                value !== null &&
+                typeof value === "object" &&
+                "increment" in (value as IFakeWhere)
+              ) {
+                row[key] =
+                  ((row[key] as number) ?? 0) +
+                  ((value as { increment: number }).increment ?? 0);
+                continue;
+              }
+              row[key] = value;
+            }
+          }
           return { count: hits.length };
         },
       ),
@@ -279,12 +236,12 @@ jest.mock("@/lib/prisma", () => {
         segments.push(row);
         return row;
       }),
-      findMany: jest.fn(async ({ where }: { where: IWhere }) =>
-        segments.filter((row) => matches(row, where, SEGMENT_FIELDS)),
+      findMany: jest.fn(async ({ where }: { where: IFakeWhere }) =>
+        segments.filter((row) => matchesRow(row, where, SEGMENT_FIELDS)),
       ),
-      deleteMany: jest.fn(async ({ where }: { where: IWhere }) => {
+      deleteMany: jest.fn(async ({ where }: { where: IFakeWhere }) => {
         const keep = segments.filter(
-          (row) => !matches(row, where, SEGMENT_FIELDS),
+          (row) => !matchesRow(row, where, SEGMENT_FIELDS),
         );
         const count = segments.length - keep.length;
         segments = keep;
@@ -303,12 +260,13 @@ jest.mock("@/lib/prisma", () => {
         return row;
       }),
       count: jest.fn(
-        async ({ where }: { where: IWhere }) =>
-          cashOuts.filter((row) => matches(row, where, CASH_OUT_FIELDS)).length,
+        async ({ where }: { where: IFakeWhere }) =>
+          cashOuts.filter((row) => matchesRow(row, where, CASH_OUT_FIELDS))
+            .length,
       ),
-      deleteMany: jest.fn(async ({ where }: { where: IWhere }) => {
+      deleteMany: jest.fn(async ({ where }: { where: IFakeWhere }) => {
         const keep = cashOuts.filter(
-          (row) => !matches(row, where, CASH_OUT_FIELDS),
+          (row) => !matchesRow(row, where, CASH_OUT_FIELDS),
         );
         const count = cashOuts.length - keep.length;
         cashOuts = keep;
@@ -320,16 +278,35 @@ jest.mock("@/lib/prisma", () => {
      * 仍然實作它們**並回空集合**，而不是省略：省略的話 `revokeApproval`
      * 走到那幾行會丟「不是函式」，而那個紅燈指的是替身不是產品。
      */
+    /**
+     * Info: (20260821 - Julian) 本檔一律走 `PAYMENT`，因此補休那三張表永遠是空的。
+     * 仍然實作它們**並回空集合**，而不是省略：省略的話 `revokeApproval`
+     * 走到那幾行會丟「不是函式」，而那個紅燈指的是替身不是產品。
+     */
     leaveGrant: {
-      findMany: jest.fn(async ({ where }: { where: IWhere }) => {
-        matches({ id: "", overtimeSegmentId: null }, where, GRANT_FIELDS);
+      findMany: jest.fn(async ({ where }: { where: IFakeWhere }) => {
+        // Info: (20260821 - Julian) 條件仍然過一次比對器：不認得的鍵要當場丟
+        matchesRow(
+          {
+            id: "",
+            accountBookId: "",
+            employeeId: "",
+            leavePolicyId: "",
+            overtimeSegmentId: null,
+            revokedAt: null,
+          },
+          where,
+          GRANT_FIELDS,
+        );
         return [];
       }),
-      deleteMany: jest.fn(async () => ({ count: 0 })),
+      updateMany: jest.fn(async () => ({ count: 0 })),
     },
     leaveLedgerEntry: {
       count: jest.fn(async () => 0),
-      deleteMany: jest.fn(async () => ({ count: 0 })),
+      create: jest.fn(async () => {
+        throw new Error("本檔一律 PAYMENT，不該有補休分錄");
+      }),
     },
     // Info: (20260821 - Julian) 平日、8 小時、窗起 08:00
     employeeShiftDay: {
@@ -401,6 +378,7 @@ const revokeApproval = (requestId: string) =>
     accountBookId: BOOK,
     requestId,
     actorEmployeeId: MANAGER,
+    observedAt: new Date("2026-08-20T15:00:00.000Z"),
   });
 
 const codeOf = async (run: () => Promise<unknown>): Promise<string> => {

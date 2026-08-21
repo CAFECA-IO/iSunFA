@@ -178,6 +178,38 @@ export const buildOvertimeGrantIdempotencyKey = (
 ): string => `overtime-grant:${overtimeSegmentId}`;
 
 /**
+ * Info: (20260821 - Julian) 撤銷核准的**反向分錄**冪等鍵（review 第 8 輪第 1 條）。
+ *
+ * ## 為什麼鍵裡一定要有撤銷次數
+ *
+ * 撤銷不刪帳本，而是補一筆負向 `ADJUST` 把該批餘額歸零（ADR 022 §2.4）。
+ * 同一張單可以被撤銷不只一次：撤銷 → 重新核准 → 再撤銷。若鍵只由分段 id
+ * 組成，第二次撤銷會撞上 `idempotencyKey` 的唯一鍵而**被當成重放** ——
+ * 那一次撤銷是真的，帳本卻會少一筆反向分錄，`Σ(deltaMinutes)` 與
+ * `LeaveBalance` 就此分岔，而 ADR 022 §2.3 的守恆勾稽會在幾小時後才發現。
+ *
+ * 次數取自 `OvertimeRequest.approvalRevokeCount`，而它在撤銷那次**附條件更新
+ * 的同一個 `data` 裡遞增** —— 兩者因此是同一個原子動作的兩面，不會出現
+ * 「鍵已經用過但次數還沒加」的中間狀態。
+ *
+ * 分段 id 仍然在鍵裡：重新核准會產生新的分段，而反向分錄要指得回被撤銷的那一批。
+ */
+/**
+ * Info: (20260821 - Julian) 反向分錄的 `reason`。
+ *
+ * `LeaveGrant.reason` 的註解說「一筆沒有理由的額度調整，事後沒有人能判斷它
+ * 合不合理」—— 分錄這一側同理。寫成常數而不是在呼叫端拼字串：
+ * L10 的帳本畫面要認得出這一種調整，而認字串就必須是同一份字串。
+ */
+export const OVERTIME_APPROVAL_REVOKED_REASON =
+  "overtime approval revoked; compensatory grant reversed";
+
+export const buildOvertimeRevokeIdempotencyKey = (
+  overtimeSegmentId: string,
+  revokeCount: number,
+): string => `overtime-revoke:${overtimeSegmentId}:${revokeCount}`;
+
+/**
  * Info: (20260818 - Julian) 滾動三個月窗的月數。與 `OVERTIME_QUARTERLY_WINDOW_IS_ROLLING`
  * 是同一個決定的兩面：那個布林說「用滾動的」，這個數字說「滾多長」。
  */

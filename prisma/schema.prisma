@@ -3544,6 +3544,19 @@ model LeaveGrant {
   // Info: (20260817 - Julian) 人工調整必須說明理由：一筆沒有理由的額度調整，事後沒有人能判斷它合不合理
   reason String?
 
+  /**
+   * Info: (20260821 - Julian) 批次被撤銷的時點（review 第 8 輪第 1 條）。
+   *
+   * `LeaveGrant` 依 ADR 022 §2.1 是**不可變**的，因此撤銷加班核准時不刪這一列，
+   * 只標記它，並在帳本上補一筆反向分錄把該批餘額歸零。刪列的話
+   * 「他曾經換到過這批補休、後來被撤銷了」就消失了 —— 而 §2.4 說那正是
+   * 主管機關會查的東西。
+   *
+   * `consumableGrantWhere` 必須濾掉它：否則一批餘額已經是 0 的批次仍會進入
+   * FIFO，症狀是請假時「掃到批次但一分鐘都扣不到」。
+   */
+  revokedAt DateTime? @map("revoked_at")
+
   entries LeaveLedgerEntry[]
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -4022,6 +4035,34 @@ model OvertimeRequest {
 
   // Info: (20260819 - Julian) 認定者（具 HR_ADMIN 職能）。不設外鍵關聯：離職後仍要答得出當時是誰認定的
   emergencyDeclaredByEmployeeId String? @map("emergency_declared_by_employee_id")
+
+  /**
+   * Info: (20260821 - Julian) 撤銷核准的稽核三欄（review 第 8 輪第 1 條）。
+   *
+   * ## 為什麼一定要留
+   *
+   * `revokeApproval` 把單子從 `APPROVED` 移回 `PENDING`，申請人接著可以
+   * `withdraw` —— 於是一段**曾經被核准 240 分鐘、曾經進到員工 `LeaveBalance`
+   * 裡**的加班，最後長得與「從來沒有人送過」一模一樣。ADR 022 §2.4 的理由
+   * 原話是「刪掉的話『他曾經請過、後來被銷了』這個事實就消失了，而那正是
+   * 主管機關會查的東西」。
+   *
+   * 同一張單上的 §32 IV 認定早就這樣做了（見 `OvertimeEmergencyDeclaration`
+   * 的 `revokedAt` / `revokedBy` / `revokeReason`，那裡寫著「兩者都不刪」），
+   * 而核准的撤銷先前零留痕 —— 同一張單的兩種撤銷，稽核強度不一樣。
+   *
+   * ## `approvalRevokeCount` 不是統計，是冪等鍵的一部分
+   *
+   * 撤銷寫的是**反向分錄**（ADR 022 §2.4），而 `LeaveLedgerEntry.idempotencyKey`
+   * 是唯一鍵。同一張單被撤銷兩次時，若鍵裡不含次數，第二次會撞上唯一鍵並被
+   * 當成重放 —— 而那一次撤銷是真的，帳本會少一筆反向分錄。
+   */
+  approvalRevokedAt DateTime? @map("approval_revoked_at")
+
+  // Info: (20260821 - Julian) 撤銷者。不設外鍵關聯，理由同 `emergencyDeclaredByEmployeeId`
+  approvalRevokedByEmployeeId String? @map("approval_revoked_by_employee_id")
+
+  approvalRevokeCount Int @default(0) @map("approval_revoke_count")
 
   // Info: (20260818 - Julian) 撤回的時點與理由。只有 status = WITHDRAWN 時有值
   withdrawnAt DateTime? @map("withdrawn_at")
