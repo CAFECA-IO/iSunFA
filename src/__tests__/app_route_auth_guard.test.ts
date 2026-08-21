@@ -86,8 +86,8 @@ const GUARDED_ROOTS: readonly {
  * 而它取代掉的 `hr_module_gate.test.ts` 做得更好：掃整個 `src/app` 且
  * 雙向斷言。掃描型測試的價值等於它的掃描根（§1.1）。
  *
- * 現在枚舉 `src/app` 底下每一個第一層目錄，每一根必須落在 `GUARDED_ROOTS` **或**這裡 ——
- * 新增一根就必須表態，忘了表態會紅。
+ * 現在枚舉 `src/app` 底下每一個**有路由檔**的第一層目錄，每一根必須落在
+ * `GUARDED_ROOTS` **或**這裡 —— 新增一根就必須表態，忘了表態會紅。
  */
 const PUBLIC_ROOTS: readonly string[] = [
   "(landing)",
@@ -98,8 +98,32 @@ const PUBLIC_ROOTS: readonly string[] = [
   "invite",
   "salary_calculator",
   "share",
-  "test",
 ];
+
+/**
+ * Info: (20260821 - Julian) 什麼才算一個「路由根」：底下真的找得到路由檔。
+ *
+ * 第一版的判準是「`src/app` 底下每一個目錄」，而 `src/app/test` 是一個
+ * **空目錄** —— git 不追蹤空目錄，於是它在有跑過舊分支的工作區存在、
+ * 在乾淨的 checkout 不存在。那一版的 `stale` 斷言因此在兩種環境給出
+ * 兩個答案，而**紅的那一邊才是對的**：一個空目錄本來就不是路由根，
+ * 不該要求任何人替它表態。
+ *
+ * 這是 checklist §1.4 的形狀 —— 我驗證時所在的工作區，與 `npm test`
+ * 真正要跑的環境不一樣，而差別剛好落在被斷言的那個集合上。
+ *
+ * 判準改成「遞迴找得到 `page.tsx` / `route.ts` / `layout.tsx`」，
+ * 與 Next.js 認定路由的方式同源，而不是「磁碟上有沒有這個資料夾」。
+ */
+const ROUTE_FILES: readonly string[] = ["page.tsx", "route.ts", "layout.tsx"];
+
+const hasRouteFile = (dir: string): boolean =>
+  readdirSync(dir, { withFileTypes: true }).some((entry) => {
+    const full = join(dir, entry.name);
+    return entry.isDirectory()
+      ? hasRouteFile(full)
+      : ROUTE_FILES.includes(entry.name);
+  });
 
 const layoutPathOf = (root: string): string =>
   join(process.cwd(), "src", "app", root, "layout.tsx");
@@ -198,7 +222,9 @@ describe("需要登入的路由根：layout 必須包在守衛裡", () => {
     const appDir = join(process.cwd(), "src", "app");
     const roots = readdirSync(appDir, { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
-      .map((entry) => entry.name);
+      .map((entry) => entry.name)
+      // Info: (20260821 - Julian) 空目錄不是路由根 —— 見 `hasRouteFile` 的說明
+      .filter((name) => hasRouteFile(join(appDir, name)));
 
     const declared = new Set([
       ...GUARDED_ROOTS.map((one) => one.root),
@@ -209,9 +235,14 @@ describe("需要登入的路由根：layout 必須包在守衛裡", () => {
     expect(undeclared).toEqual([]);
 
     /**
-     * Info: (20260821 - Julian) 反方向：清單裡不得有已經不存在的根。
+     * Info: (20260821 - Julian) 反方向：清單裡不得有**已經沒有路由**的根。
+     *
      * 少了這一條，一個被刪掉的路由根會永遠留在 `PUBLIC_ROOTS` 裡，
      * 而下一個同名的新根會被它默默地放行。
+     *
+     * 「沒有路由」而不是「資料夾不存在」：兩者的差別就是 `src/app/test`
+     * 那個空目錄。用資料夾存在與否當判準，會讓這條斷言取決於誰在哪一台
+     * 機器上跑 —— 而那正是它第一次上 CI 就紅的原因。
      */
     const stale = [...declared].filter((name) => !roots.includes(name));
     expect(stale).toEqual([]);
