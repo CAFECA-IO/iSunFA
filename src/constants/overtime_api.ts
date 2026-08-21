@@ -36,6 +36,14 @@ export const overtimeRequestRejectApi = (requestId: string): string =>
   `${OVERTIME_API_BASE}/request/${requestId}/reject`;
 
 /**
+ * Info: (20260821 - Julian) L27-b：撤銷核准，回到待簽（review 第 7 輪 B1）。
+ * 它是 `VA_OVERTIME_EARLIER_THAN_APPROVED` 那句「先撤回較晚那一張」
+ * 唯一的執行者 —— 在它之前 `APPROVED` 是終端狀態。
+ */
+export const overtimeRequestRevokeApprovalApi = (requestId: string): string =>
+  `${OVERTIME_API_BASE}/request/${requestId}/revoke_approval`;
+
+/**
  * Info: (20260819 - Julian) §32 IV 天災事變的認定（review B7）。
  * 限 `HR_ADMIN`，且只在待簽核狀態 —— 它不是決行，單子仍要由主管核准。
  */

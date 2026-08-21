@@ -1783,7 +1783,7 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 | 13 | **併休規則沒有寫入路徑** | `LeaveConcurrencyRule` 全庫沒有任何 `create`／`update` 呼叫端，既有列只能由 SQL 進來 | `assertConcurrencyRule` 已寫好並掛在**讀取端**（`findConcurrencyStatus`）—— 那是它今天唯一咬得到東西的地方（review 第 5 輪 M2）。規則管理端點落地時，`create`／`update` 兩條路徑各呼叫它一次，讀取端那一次保留（seed 與 SQL 仍不經過 service） |
 | 14 | **請假的證明文件沒有上傳路徑** | `proofRequirement` / `proofThresholdDays` 那套規則有七八個檔案在讀，而「文件在哪」沒有任何地方存得下 | schema 原有一個 `LeaveRequest.proofDocumentId String?`：沒有 `@relation`、沒有租戶檢查、零讀取零寫入 —— 也就是「需要證明文件」上線了、「文件在哪」永遠 null。已於 review 第 6 輪 M18 **移除**：一個永遠 null 的欄位讀起來像「這張單沒附證明」，而真相是「這個系統從來沒有地方可以附」，留著比拆掉更難被下一個人發現。<br>正解是一整條路徑（儲存、租戶隔離、Tier 2 加密、保存期限，見缺口 5），不是一個欄位。補的時候連同 `@relation` 一起加 |
 | 15 | **額度快取的勾稽已排程，但沒有告警** | `services/cron/leave_balance_reconcile.cron.ts` 每小時對帳一次並覆寫，差異只寫進 `logger.warn` | 「快取與帳本分岔過幾次」是 ADR 022 §8.2 要的訊號，而一行 log 沒有人會看。ToDo: 差異數接上專案的告警管道（同 `wallet_audit.cron` 對守恆違反的處置）。在那之前，上線後前幾天請人工看一次 `[leave] balance mismatch` |
-| 16 | **同日多張加班單的級距以「申請區間長度」為基準，不是認列分鐘；且分段落地後不重算** | 打卡短於申請時級距偏高一級（對勞工有利）。**但偏差不是單向的**：級距只看核准當下已存在的單，「較晚時段先核准、較早的事後補」會讓兩張都從 0 起算、都拿 1/3 —— 17–19 與 19–21 各 120 分實測 80 個工資單位，§24 I 下限 120，**少付 40**（review 第 15 輪） | 級距必須與**核准順序無關**，而分段一旦落地就不會被重算（更正流程未實作）。用認列分鐘的話，同一張單的級距取決於同日手足單是先核還是後核 —— 實測兩種順序差 20 個工資單位（review 第 13 輪第 1 條）。<br>少付的那條路徑目前由 `submit()` 擋住（`VA_OVERTIME_EARLIER_THAN_APPROVED`：同日已有起點更晚的已核准單時不得送出），人資撤回後重送即可。**擋下不等於算對**。<br>**正解是核准當下對同日手足單一併重算並覆寫分段**，那要有更正流程；補上之後上界與那道閘都可以拿掉 |
+| 16 | **同日多張加班單的級距以「申請區間長度」為基準，不是認列分鐘；且分段落地後不重算** | 打卡短於申請時級距偏高一級（對勞工有利）。**但偏差不是單向的**：級距只看核准當下已存在的單，「較晚時段先核准、較早的事後補」會讓兩張都從 0 起算、都拿 1/3 —— 17–19 與 19–21 各 120 分實測 80 個工資單位，§24 I 下限 120，**少付 40**（review 第 15 輪） | 級距必須與**核准順序無關**，而分段一旦落地就不會被重算（更正流程未實作）。用認列分鐘的話，同一張單的級距取決於同日手足單是先核還是後核 —— 實測兩種順序差 20 個工資單位（review 第 13 輪第 1 條）。<br>少付的那條路徑由 `submit()` 擋住（`VA_OVERTIME_EARLIER_THAN_APPROVED`：同日已有起點更晚的已核准單時不得送出），而它叫人做的「撤回較晚那張、兩張一起重送」由 `revokeApproval`（`APPROVED → PENDING`）執行。<br>⚠️ **2026-08-21 更正**：那道閘上線時 `APPROVED` 還是終端狀態，五個 `updateMany` 全部 `where.status = PENDING` —— 補救**沒有執行者**，於是那 2 小時永久進不了系統，從少付 40 變成**少付 80**（review 第 7 輪 B1）。`revokeApproval` 是那句話的執行者，也是本缺口正解的第一塊。**擋下仍然不等於算對**。<br>**正解是核准當下對同日手足單一併重算並覆寫分段**，那要有更正流程；補上之後上界與那道閘都可以拿掉 |
 
 ### 17.1 ADR 的待辦與現況
 
@@ -1797,7 +1797,7 @@ AAD 綁定沿用 ADR 018 的格式：`LeaveRequest:{id}:reasonCipher:{keyVersion
 | 021 | 曆年制「不低於週年制」護欄接線 | ⛔ 未接 | 引擎與錯誤碼都在，但無人呼叫。成因是缺口 9 的公式本身會少給，接上會讓 11/13 個內建假別授予失敗。暫以 `assertLeavePolicyUnit` 拒絕「年資級距 + 曆年制」這一個會踩到 §38 下界的組合 |
 | 021 | `leave_policy_no_code_branching.test.ts` | ✅ | 以 TS AST 掃 16 個引擎與編排檔，四種寫法全擋，附自我驗證 |
 | 022 | `leave_ledger_conservation.test.ts` 四項 | ✅ | 逐批守恆、總量守恆、重建冪等、重建結果與快取逐欄相同 |
-| 022 | **每日勾稽 Worker（`LeaveEntitlementReconciler`）** | ⛔ 未開始 | 一支扛三件事，缺任一件都有可觀察症狀 —— 見下表 |
+| 022 | **勾稽 Worker（`runLeaveBalanceReconcile`）** | ✅ 已上線 | **2026-08-21 更正**：這一列先前寫「⛔ 未開始 / `LeaveEntitlementReconciler`」，而那支排程**已註冊進 `run_worker.ts`、有 12 條測試、本輪還被改寫**（review 第 7 輪）。名稱也不對，實際是 `src/services/cron/leave_balance_reconcile.cron.ts`；間隔是**每小時**不是每日（`expiringSoonMinutes` 相對於「今天」，日界一過就該重算）。<br>它扛的是三件事裡的**前兩件**：`reconciledAt` 與 `expiringSoonMinutes`。第三件 `entryType = EXPIRE` 見下一列，仍未開始 |
 | 022 | `grantedMinutes` 取整方向 | ⚠️ 待法務 | 現為無條件進位（對勞工有利），與 021 §3.2 一併確認 |
 | 022 | `entryType = EXPIRE` 的觸發 | ⛔ 未開始 | 屬 Worker 的第三件事。⚠️ `cashOutOnExpiry = true` 者必須**先產 `LeaveCashOutEvent` 再 `EXPIRE`**，順序顛倒則折現算不出分鐘數 |
 | 023 | 代理人機制 | ⛔ 未做 | 同缺口 4。暫以 `SPECIFIC_EMPLOYEE` 節點手動繞行 |

@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
+import { readFileSync } from "fs";
+import { join } from "path";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
 
@@ -263,6 +265,56 @@ describe("額度勾稽：逐欄比對", () => {
     expect(line).toContain("expiringSoon: cache=0 ledger=480 DRIFT");
     // Info: (20260821 - Julian) 沒漂的那一欄不得被標成 DRIFT
     expect(line).not.toContain("ledger=1440 DRIFT");
+  });
+});
+
+describe("額度勾稽：它真的會被觸發", () => {
+  /**
+   * Info: (20260821 - Julian) 上面每一條都在測「被呼叫時算得對」，
+   * 而**沒有一條在測它會被呼叫**（review 第 7 輪）。
+   *
+   * 這正是這支排程存在的理由：它的前身 `scripts/reconcile_leave_balances.ts`
+   * 要人手動 `npx tsx` 去跑，而「沒有人會固定去按的動作」與「沒有呼叫端」
+   * 在效果上是同一件事。把它寫進 `run_worker.ts` 之後，那個註冊本身
+   * 就成了新的單點 —— 有人重構 worker 時刪掉一行，這一整檔照樣全綠。
+   *
+   * 形狀照抄 `faith_memory_retention_rules.test.ts` 的「有註冊進 worker」。
+   */
+  const worker = readFileSync(
+    join(process.cwd(), "scripts", "run_worker.ts"),
+    "utf8",
+  );
+
+  it("worker 有 import 這支排程", () => {
+    expect(worker).toMatch(/runLeaveBalanceReconcile/);
+  });
+
+  it("worker 有為它開一條迴圈", () => {
+    expect(worker).toMatch(
+      /startServiceLoop\(\s*\n?\s*"LeaveBalanceReconcile"/,
+    );
+  });
+
+  /**
+   * Info: (20260821 - Julian) 間隔是**每小時**，不是每天。
+   *
+   * `expiringSoonMinutes` 是相對於「今天」的量，日界一過就該重算，
+   * 而一支一天只跑一次的迴圈沒有辦法保證它落在日界之後。
+   * 精確值而非門檻：改動間隔時這一條要跟著改，而那正是要人停下來想一次的點。
+   */
+  it("間隔是每小時", () => {
+    /**
+     * Info: (20260821 - Julian) 取**第三個引數本身**，不是在整段裡找子字串。
+     *
+     * 第一版是 `expect(loop).toContain("60 * 60 * 1000")` —— 而
+     * `24 * 60 * 60 * 1000` **也含有**那個子字串，於是「間隔改成每天」
+     * 這個突變是綠的。它正是這一條要擋的那個改動。
+     */
+    const interval = /runLeaveBalanceReconcile\(\),\s*\n?\s*([^,\n]+),/.exec(
+      worker,
+    )?.[1];
+
+    expect(interval).toBe("60 * 60 * 1000");
   });
 });
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "@jest/globals";
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, existsSync, readdirSync } from "fs";
 import { join } from "path";
 import ts from "typescript";
 
@@ -46,10 +46,59 @@ import ts from "typescript";
  * 「只要包了什麼都算」：後者會讓某天有人把 `/admin` 換成一般 `AuthGuard`
  * 而測試照樣綠。
  */
-const GUARDED_ROOTS: readonly { root: string; guards: readonly string[] }[] = [
-  { root: "user", guards: ["AuthGuard"] },
-  { root: "admin", guards: ["AdminAuthGuard"] },
-  { root: "hr_management", guards: ["AuthGuard", "AdminAuthGuard"] },
+const GUARDED_ROOTS: readonly {
+  root: string;
+  guards: readonly string[];
+  /**
+   * Info: (20260821 - Julian) 允許幾條「裸 fragment」的提早 return
+   * （review 第 7 輪第 2 條）。
+   *
+   * 上一版只斷言「**至少有一條** return 是守衛」，於是加一條
+   * `if (…) return <>{children}</>;` 而保留主 return 的變異體**是綠的** ——
+   * 而那不是假想的寫法，它是逐字抄 `src/app/admin/layout.tsx:18`
+   * （為了讓 setup / reboot 在還沒有管理員時能開）。下一個人要讓某個 HR 頁面
+   * 對外開放，最自然的做法就是抄那一行。
+   *
+   * fragment 把「不是守衛」偽裝成「不算一條」。現在**精確計數**：
+   * `/admin` 允許 1 條並在下面寫明是哪一條，其餘一律 0。
+   */
+  allowedBareFragments: number;
+}[] = [
+  { root: "user", guards: ["AuthGuard"], allowedBareFragments: 0 },
+  {
+    root: "admin",
+    guards: ["AdminAuthGuard"],
+    // Info: (20260821 - Julian) `/admin/setup` 與 `/admin/reboot`：還沒有管理員時要能開
+    allowedBareFragments: 1,
+  },
+  {
+    root: "hr_management",
+    guards: ["AttendanceAuthGate"],
+    allowedBareFragments: 0,
+  },
+];
+
+/**
+ * Info: (20260821 - Julian) 刻意不需要登入的路由根（review 第 7 輪第 3 條）。
+ *
+ * 上一版的掃描根是三個硬編碼字串，`it.each` 只走那個三元素陣列 ——
+ * 新增一支 `src/app/settings/layout.tsx` 而不註冊，**永遠不會被讀到**。
+ * 而它取代掉的 `hr_module_gate.test.ts` 做得更好：掃整個 `src/app` 且
+ * 雙向斷言。掃描型測試的價值等於它的掃描根（§1.1）。
+ *
+ * 現在枚舉 `src/app` 底下每一個第一層目錄，每一根必須落在 `GUARDED_ROOTS` **或**這裡 ——
+ * 新增一根就必須表態，忘了表態會紅。
+ */
+const PUBLIC_ROOTS: readonly string[] = [
+  "(landing)",
+  "api",
+  "auth",
+  "cafeca",
+  "charts",
+  "invite",
+  "salary_calculator",
+  "share",
+  "test",
 ];
 
 const layoutPathOf = (root: string): string =>
@@ -71,7 +120,14 @@ const returnedRootElementsOf = (source: string, fileName: string): string[] => {
     if (ts.isParenthesizedExpression(node)) return nameOf(node.expression);
     if (ts.isJsxElement(node)) return node.openingElement.tagName.getText();
     if (ts.isJsxSelfClosingElement(node)) return node.tagName.getText();
-    // Info: (20260821 - Julian) `<>…</>` 是「沒有根元素」，記成空字串讓斷言看得見它
+    /**
+     * Info: (20260821 - Julian) `<>…</>` 是「沒有根元素」，記成空字串。
+     *
+     * 上一版這裡寫「讓斷言**看得見**它」，而下面的迴圈是
+     * `if (name === "") continue;` —— 明確地讓斷言看不見它（review 第 7 輪）。
+     * 那句話是那個 fragment 繞過洞的入口。現在真的看得見了：
+     * `allowedBareFragments` 對空字串**精確計數**。
+     */
     if (ts.isJsxFragment(node)) return "";
     return null;
   };
@@ -109,11 +165,17 @@ describe("需要登入的路由根：layout 必須包在守衛裡", () => {
       expect(roots.length).toBeGreaterThan(0);
 
       /**
-       * Info: (20260821 - Julian) `/admin` 對 `setup` / `reboot` 有一條刻意的
-       * 提早 return（那兩頁在還沒有管理員的時候就要能開）。因此允許
-       * `<>…</>` 這種 fragment 直通，但**不允許**直接回一個具名元素 ——
-       * 那才是「忘了包」的樣子。
+       * Info: (20260821 - Julian) 裸 fragment 的條數**精確等於**允許值。
+       *
+       * 「至少有一條 return 是守衛」不夠：加一條
+       * `if (…) return <>{children}</>;` 並保留主 return，
+       * 那條斷言照樣過，而那個 return 完全沒有守衛。
        */
+      expect(roots.filter((name) => name === "").length).toBe(
+        spec.allowedBareFragments,
+      );
+
+      // Info: (20260821 - Julian) 其餘每一條的根元素都必須是守衛
       for (const name of roots) {
         if (name === "") continue;
         expect(spec.guards).toContain(name);
@@ -123,6 +185,37 @@ describe("需要登入的路由根：layout 必須包在守衛裡", () => {
       expect(roots.some((name) => spec.guards.includes(name))).toBe(true);
     },
   );
+
+  /**
+   * Info: (20260821 - Julian) `src/app` 底下的每一根都必須表態
+   * （review 第 7 輪第 3 條）。
+   *
+   * 這是被取代掉的 `hr_module_gate.test.ts` 唯一做得比較好的地方：
+   * 它掃整個 `src/app` 並雙向斷言。硬編碼三個字串的版本今天沒有漏，
+   * 問題是**新增一個根不會有任何提示**。
+   */
+  it("src/app 底下的每一個路由根，不是受保護就是被明確標為公開", () => {
+    const appDir = join(process.cwd(), "src", "app");
+    const roots = readdirSync(appDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name);
+
+    const declared = new Set([
+      ...GUARDED_ROOTS.map((one) => one.root),
+      ...PUBLIC_ROOTS,
+    ]);
+    const undeclared = roots.filter((name) => !declared.has(name));
+
+    expect(undeclared).toEqual([]);
+
+    /**
+     * Info: (20260821 - Julian) 反方向：清單裡不得有已經不存在的根。
+     * 少了這一條，一個被刪掉的路由根會永遠留在 `PUBLIC_ROOTS` 裡，
+     * 而下一個同名的新根會被它默默地放行。
+     */
+    const stale = [...declared].filter((name) => !roots.includes(name));
+    expect(stale).toEqual([]);
+  });
 
   /**
    * Info: (20260821 - Julian) 反方向：那道環境變數路徑閘**不得復活**。

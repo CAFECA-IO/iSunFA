@@ -1011,6 +1011,10 @@ export const hrManagement = {
       "当天已经有一张加班单涵盖了这段时间的一部分。请调整时段，或先撤回那一张。",
     error_earlier_than_approved:
       "当天已有一张时段较晚的加班单核准了，它的加成级距已经固定。此时补一张更早的，两张都会以较低的级距计算。请先撤回较晚那一张，两张一起重送。",
+    error_not_approved:
+      "这张加班单目前不在已核准状态，没有核准可以撤销。请重新整理看它现在的状态。",
+    error_approval_not_reversible:
+      "这次核准换到的补休已经被请掉、过期或折现，或加班费已由薪资结算，核准无法再撤销。请改请人资以人工调整更正额度。",
     error_agreement_record_required:
       "放宽单月上限到 54 小时（§32 III）必须留下记载：工会或劳资会议的纪录链接，以及同意的日期。",
     error_emergency_already_declared:

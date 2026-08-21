@@ -39,6 +39,7 @@ import {
 } from "@/repositories/overtime_request_context.repo";
 import {
   IOvertimeRequestRepository,
+  OvertimeApprovalNotReversibleError,
   overtimeRequestRepo,
 } from "@/repositories/overtime_request.repo";
 import { OvertimeRequestInvariantError } from "@/repositories/overtime_request_invariant";
@@ -729,6 +730,78 @@ export class OvertimeRequestService {
       throw new AppError(API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED);
     }
     return this.mustFindSummary(params.accountBookId, request.id);
+  }
+
+  /**
+   * Info: (20260821 - Julian) L27-b：撤銷核准，讓單子回到待簽（review 第 7 輪 B1）。
+   *
+   * ## 這一支存在的理由是一句話必須成真
+   *
+   * `VA_OVERTIME_EARLIER_THAN_APPROVED` 的五個語系文案都寫著「先撤回較晚
+   * 那一張，兩張一起重送」。在這一支之前那個動作**做不到** —— `APPROVED`
+   * 是終端狀態，`withdraw` 對它丟 `VA_OVERTIME_ALREADY_REVIEWED`。於是那道閘
+   * 不是保護，是把一段真實工時永久擋在系統外：實測從少付 40 變成少付 80。
+   *
+   * ## 誰可以撤銷：與核准同一組人
+   *
+   * 撤銷是核准的反面，判準必須一樣 —— 不得自我核准、非管轄範圍不得代簽
+   * （`assertMayDecide`）。給比核准更寬的權限，等於開一條繞過核准權的路徑。
+   *
+   * **不要求理由。** 撤銷之後單子回到待簽、仍在清單上、仍要再被決行一次，
+   * 它不像 `withdraw` 那樣終結一張單 —— 那才是需要留下「為什麼」的動作。
+   * ToDo: (20260821 - Julian) 決行歷史（誰在什麼時候撤銷了核准）待
+   * `OvertimeDecisionLog` 落地，屆時把操作者與時點一起記下來。
+   */
+  public async revokeApproval(params: {
+    accountBookId: string;
+    requestId: string;
+    actorEmployeeId: string;
+  }): Promise<IOvertimeRequestSummary> {
+    const request = await this.mustFindSummary(
+      params.accountBookId,
+      params.requestId,
+    );
+    /**
+     * Info: (20260821 - Julian) 這裡**不呼叫** `assertPending` —— 它要的正是
+     * 相反的狀態。真正的判斷由 repository 的附條件更新做（`status: APPROVED`），
+     * 先讀再判會讓兩個人同時撤銷都通過。
+     */
+    await this.assertMayDecide(
+      params.accountBookId,
+      params.actorEmployeeId,
+      request,
+    );
+
+    const outcome = await this.revokeOrTranslate({
+      accountBookId: params.accountBookId,
+      requestId: request.id,
+    });
+    if (outcome === OvertimeDecisionOutcome.NOT_APPROVED) {
+      throw new AppError(API_ERRORS.VA_OVERTIME_NOT_APPROVED);
+    }
+    return this.mustFindSummary(params.accountBookId, request.id);
+  }
+
+  /**
+   * Info: (20260821 - Julian) 把 repository 的「已經不可逆」轉成 4xx。
+   *
+   * `OvertimeApprovalNotReversibleError` 不是 `AppError`，route 的 catch 會
+   * 把它收斂成 `IS_DB_FAILED` —— 於是「這批補休已經被請掉了」這件使用者
+   * 看得懂、也知道下一步（找人資做人工調整）的事，在畫面上長得像伺服器壞了。
+   * 同 `createOrTranslate` 對 `OvertimeRequestInvariantError` 的處置。
+   */
+  private async revokeOrTranslate(params: {
+    accountBookId: string;
+    requestId: string;
+  }): Promise<OvertimeDecisionOutcome> {
+    try {
+      return await this.requests.revokeApproval(params);
+    } catch (error) {
+      if (error instanceof OvertimeApprovalNotReversibleError) {
+        throw new AppError(API_ERRORS.VA_OVERTIME_APPROVAL_NOT_REVERSIBLE);
+      }
+      throw error;
+    }
   }
 
   /**

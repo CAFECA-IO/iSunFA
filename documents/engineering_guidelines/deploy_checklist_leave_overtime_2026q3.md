@@ -224,7 +224,8 @@ npx tsx scripts/seed/seed_leave_overtime_demo.ts
 **需要一支才會有值、但不是回填的**：`LeaveGrant` / `LeaveBalance` 一開始是空的。
 額度由 `leaveBalanceService.accrueForEmployee` 授予，demo 的 seed 已代跑。
 
-正式環境上線後應由每日 Worker 補跑，而**那支 Worker 尚未存在**
+正式環境上線後由勾稽 Worker 補跑（`runLeaveBalanceReconcile`，每小時一次，
+已註冊在 `run_worker.ts`）。⚠️ **2026-08-21 更正**：這裡先前寫「那支 Worker 尚未存在」
 （ADR 022 §8.2 的待辦第 2 項）。在它掛上去之前，額度不會自己長出來 ——
 症狀是每個人的餘額都是 0，而畫面上看起來像「這個人今年還沒有特休」。
 上線後若不打算立刻掛 Worker，至少要手動對每一位員工跑一次 L33
@@ -400,6 +401,59 @@ SELECT account_book_id, code, carry_forward_months
 > ⚠️ 逐個勞工的協商記載（誰、哪一年、何時同意）目前**沒有欄位**。
 > 在它補上之前，`carry_forward_months` 是整個假別的設定，調大就是全體一律遞延。
 > 缺口已列入計畫書 §17。
+
+---
+
+## 四之四、第 7 輪 review 的 schema 與 API 變更 ⚠️ 要 `prisma db push` + `prisma generate`
+
+### 新增一個欄位（純新增、nullable，不需回填）
+
+| 表 | 欄位 | 動作 | 為什麼 |
+|---|---|---|---|
+| `leave_cash_out_event` | `overtime_segment_id` | 新增，nullable、`@unique`、`onDelete: Restrict` | 加班費折現的 `source_grant_ids` 是空陣列（它不來自任何額度批次），於是**一筆折現事件說不出它是哪一張加班單產生的**。兩個後果：撤銷核准找不到要回收的事件，而勞檢問「這筆加班費對應哪一段核准」也答不出來。既有列為 null —— 補休屆期折現本來就不來自加班分段 |
+
+> ⚠️ 這一欄改了型別，**`npx prisma db push` 之後一定要 `npx prisma generate`**，
+> 否則 `tsc` 會在 `overtime_request.repo.ts` 報
+> 「`overtimeSegmentId` does not exist in type `LeaveCashOutEventWhereInput`」。
+
+### 新增一支端點：撤銷核准
+
+`POST .../hr/overtime/request/:request_id/revoke_approval`（L27-b）
+
+**它修的是一個 Blocker。** 第 6 輪加的 `VA_OVERTIME_EARLIER_THAN_APPROVED`
+擋下「同日已有起點更晚的已核准單時再補一張更早的」，而它的錯誤訊息與五個語系
+文案都寫著「撤回較晚那一張，兩張一起重送」——
+
+**那個動作當時做不到。** `OvertimeRequest` 的五個 `updateMany` 全部
+`where.status = PENDING`，`APPROVED` 是終端狀態，`withdraw` 對它丟
+`VA_OVERTIME_ALREADY_REVIEWED`。於是那張較早的單**永久送不出去**：
+一段真實工時整段不存在於系統裡，實測從「少付 40」變成「**少付 80**」——
+比不擋還糟。
+
+`revokeApproval` 在同一個交易裡把核准的四樣後果還原：分段、補休批次與
+`GRANT` 分錄、折現事件、餘額快取。
+
+**兩個不可逆的邊界會擋下它**（回 `VA_OVERTIME_APPROVAL_NOT_REVERSIBLE`，
+下一步是**人工調整**而不是重按）：
+
+- 補休已被請掉／過期／折現（那批批次有 `GRANT` 以外的分錄）
+- 折現已由薪資模組結算（`leave_cash_out_event.settled_at` 非 null）
+
+> 真正的保證是外鍵：`leave_ledger_entry.leave_grant_id` 是 `onDelete: Restrict`，
+> 所以「刪得掉批次」與「這批補休沒有被動過」是同一件事。程式裡那次預檢只負責
+> 把它翻譯成一句人看得懂的話，**並擋得住預檢與刪除之間才發生的那一次扣減**。
+
+### 上線前確認
+
+```sql
+-- 既有的加班費折現事件都沒有 segment 連結（本次之前建立的）
+SELECT count(*) FROM leave_cash_out_event
+WHERE reason = 'OVERTIME_PAYMENT' AND overtime_segment_id IS NULL;
+```
+
+有列是正常的 —— 它們建立時還沒有這一欄。**但它們撤銷不了核准**
+（`revokeApproval` 找不到要回收的事件，會留下孤兒）。若正式環境已有這種列，
+撤銷那些單子之前請先人工確認折現事件的處置。
 
 ---
 

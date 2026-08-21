@@ -85,22 +85,52 @@ const rowOf = (
  */
 type IWhereClause = Record<string, unknown>;
 
+/**
+ * Info: (20260821 - Julian) 四個比較運算子用**同一個**比較器（review 第 7 輪 M1）。
+ *
+ * 第一版是不對稱的：`lt` / `gt` 走 `Number(actual) < Number(value)`，
+ * 而 `gte` / `lte` 走原生字串比較。兩個後果：
+ *
+ * 1. **`lt` → `lte` 這個突變殺不掉。** 兩者只在「相等」那一點有差別，
+ *    而 fixture 的三個起點 1020 / 1140 / 1260 互不相同 —— 全檔沒有任何
+ *    同起點的列，那條邊界從來沒有被走過。
+ * 2. **`id` 決勝那條 `AND` 分支形同虛設。** 被測查詢寫的是
+ *    `id: { lt: excludeRequestId }`，而 id 是字串：`Number("ot-a")` 是 `NaN`，
+ *    `NaN < NaN` 恆為 false，於是那個分支**永遠不命中**。替身對同起點
+ *    回報的正是修前那個少付的答案 —— 照它寫斷言就會寫下錯的期望值，
+ *    照法規寫則會紅，而紅的是替身不是產品（checklist §1.10）。
+ *
+ * 現在依**兩邊的實際型別**選比較方式，型別不同就丟：Prisma 的比較是依欄位
+ * 型別決定的，一個會把字串悄悄轉成 `NaN` 的替身，錯的方向是「安靜地不命中」。
+ */
+const compareValues = (actual: unknown, value: unknown): number => {
+  if (typeof actual === "number" && typeof value === "number") {
+    return actual === value ? 0 : actual < value ? -1 : 1;
+  }
+  if (typeof actual === "string" && typeof value === "string") {
+    return actual === value ? 0 : actual < value ? -1 : 1;
+  }
+  throw new Error(
+    `替身不比較這組型別：${typeof actual} 對 ${typeof value}（值 ${String(actual)} / ${String(value)}）`,
+  );
+};
+
 const matchesField = (actual: unknown, clause: unknown): boolean => {
   if (clause === null || typeof clause !== "object") return actual === clause;
 
   for (const [op, value] of Object.entries(clause as IWhereClause)) {
     switch (op) {
       case "lt":
-        if (!(Number(actual) < Number(value))) return false;
+        if (!(compareValues(actual, value) < 0)) return false;
         break;
       case "gt":
-        if (!(Number(actual) > Number(value))) return false;
+        if (!(compareValues(actual, value) > 0)) return false;
         break;
       case "gte":
-        if ((actual as string) < (value as string)) return false;
+        if (compareValues(actual, value) < 0) return false;
         break;
       case "lte":
-        if ((actual as string) > (value as string)) return false;
+        if (compareValues(actual, value) > 0) return false;
         break;
       case "not":
         if (actual === value) return false;
@@ -135,7 +165,9 @@ const matchesRequest = (row: IRequestRow, where: IWhereClause): boolean => {
       continue;
     }
     if (key === "AND") {
-      if (!(clause as IWhereClause[]).every((one) => matchesRequest(row, one))) {
+      if (
+        !(clause as IWhereClause[]).every((one) => matchesRequest(row, one))
+      ) {
         return false;
       }
       continue;
@@ -259,7 +291,8 @@ const approve = async (
    * 也是生產資料裡最不常見的形狀（checklist §1.4 + §1.9）：
    * 測試因此看不到它要驗的那件事。
    */
-  recognizedMinutes: number = spec.requestedEndMinute - spec.requestedStartMinute,
+  recognizedMinutes: number = spec.requestedEndMinute -
+    spec.requestedStartMinute,
 ): Promise<OvertimePremiumTier[]> => {
   const context = await contextFor(spec);
   const segments = deriveOvertimeSegments({
@@ -386,7 +419,10 @@ describe("同日兩張加班單：級距與核准順序無關（M4）", () => {
     [OvertimeRequestStatus.REJECTED],
     [OvertimeRequestStatus.WITHDRAWN],
   ])("更早的那張是 %s 時不算", async (status) => {
-    rows = [rowOf(A, status, null), rowOf(B, OvertimeRequestStatus.PENDING, null)];
+    rows = [
+      rowOf(A, status, null),
+      rowOf(B, OvertimeRequestStatus.PENDING, null),
+    ];
 
     const context = await contextFor(B);
     expect(context.earlierRecognizedMinutes).toBe(0);
@@ -540,6 +576,67 @@ describe("同日兩張加班單：當日加成總額不得低於 §24 I 下限",
    * Info: (20260821 - Julian) 反方向二：已核准的那張**開始得更早**時不擋。
    * 那是正常順序 —— 本次落在它後面，級距讀得到它，算得出來。
    */
+  /**
+   * Info: (20260821 - Julian) **同起點**的兩張單：`id` 決勝那條分支
+   * （review 第 7 輪 M1）。
+   *
+   * 這個形狀今天送不進來（`findOverlappingRequestId` 會擋 —— 相同起點加正長度
+   * 必定相交），它存在是為了**重疊檢查上線之前就躺在庫裡的既有列**。
+   * 那正是它從來沒有被測到的原因：整個檔案的 fixture 都是互不相同的起點。
+   *
+   * 期望值由 §24 I 推出來，不是由替身推出來：當日兩段各 120 分，
+   * 先來的拿 1/3、後來的拿 2/3，合計 120 個工資單位。誰排前面由 id 決定
+   * （任意但**穩定**），而**總額**與誰排前面無關 —— 那才是這條分支的目的。
+   */
+  it("同起點的兩張單以 id 決勝，總額仍等於下限", async () => {
+    const EARLY = {
+      id: "ot-a",
+      requestedStartMinute: 1020,
+      requestedEndMinute: 1140,
+    };
+    const LATE = {
+      id: "ot-b",
+      requestedStartMinute: 1020,
+      requestedEndMinute: 1140,
+    };
+    rows = [
+      rowOf(EARLY, OvertimeRequestStatus.PENDING, null),
+      rowOf(LATE, OvertimeRequestStatus.PENDING, null),
+    ];
+
+    const landed = [
+      { tiers: await approve(EARLY), minutes: SPAN },
+      { tiers: await approve(LATE), minutes: SPAN },
+    ];
+
+    // Info: (20260821 - Julian) id 小的那張排前面，因此它是當日的前兩小時
+    expect(landed[0].tiers).toEqual([OvertimePremiumTier.WEEKDAY_FIRST_2H]);
+    expect(landed[1].tiers).toEqual([OvertimePremiumTier.WEEKDAY_BEYOND_2H]);
+    expect(premiumUnitsOf(landed)).toBeCloseTo(DAY_FLOOR_UNITS, 6);
+  });
+
+  /**
+   * Info: (20260821 - Julian) 同起點時**只有 id 較小的那張**算進先前累計。
+   *
+   * 少了這一條，一個把 `id: { lt }` 改成 `id: { lte }` 的實作也會通過上面
+   * 那一條（`lte` 只多含它自己，而 `id: { not: excludeRequestId }` 剛好
+   * 把自己濾掉了）—— 但它會讓「起點相同、id 相同」這個不可能的狀態
+   * 在型別上重新變得可表達。這裡直接釘住兩個方向。
+   */
+  it.each([
+    ["id 較小的那張看不到 id 較大的", "ot-a", 0],
+    ["id 較大的那張看得到 id 較小的", "ot-b", 120],
+  ])("同起點：%s", async (_label, meId, expected) => {
+    const SAME = { requestedStartMinute: 1020, requestedEndMinute: 1140 };
+    rows = [
+      rowOf({ id: "ot-a", ...SAME }, OvertimeRequestStatus.PENDING, null),
+      rowOf({ id: "ot-b", ...SAME }, OvertimeRequestStatus.PENDING, null),
+    ];
+
+    const context = await contextFor({ id: meId, ...SAME });
+    expect(context.earlierRecognizedMinutes).toBe(expected);
+  });
+
   it("已核准的那張開始得更早時，不回報", async () => {
     rows = [rowOf(A, OvertimeRequestStatus.APPROVED, SPAN)];
 
@@ -554,6 +651,76 @@ describe("同日兩張加班單：當日加成總額不得低於 §24 I 下限",
   });
 
   /**
+   * Info: (20260821 - Julian) 重疊檢查的 repository 側（review 第 7 輪 M2）。
+   *
+   * 服務層有成對斷言（擋下時沒有寫入、放行時有），但**被接的那個查詢
+   * 零測試** —— `findOverlappingRequestId` 在 `src/__tests__/` 只有一個
+   * `FakeContext` 的 stub。三個突變因此存活：一律回 `null`、
+   * 狀態集合只留 `APPROVED`、以及 `lt`/`gt` → `lte`/`gte`。
+   *
+   * 最後那一個最貴：它會把 17–19 與 19–21 這種**相鄰**的組合整組擋掉，
+   * 而 `repo.ts` 自己的註解說那是「本模組最常見的合法形狀」。
+   */
+  const overlapping = (span: {
+    requestedStartMinute: number;
+    requestedEndMinute: number;
+  }) =>
+    overtimeRequestContextRepo.findOverlappingRequestId({
+      accountBookId: BOOK,
+      employeeId: EMP,
+      workDate: WORK_DATE,
+      requestedStartMinute: span.requestedStartMinute,
+      requestedEndMinute: span.requestedEndMinute,
+    });
+
+  it.each([
+    ["待簽", OvertimeRequestStatus.PENDING],
+    ["已核准", OvertimeRequestStatus.APPROVED],
+  ])("時段真的相交時回那一張的 id（既有單是 %s）", async (_label, status) => {
+    rows = [rowOf(A, status, null)];
+
+    // Info: (20260821 - Julian) 18:00–20:00 與 A（17:00–19:00）相交 60 分
+    await expect(
+      overlapping({ requestedStartMinute: 1080, requestedEndMinute: 1200 }),
+    ).resolves.toBe(A.id);
+  });
+
+  /**
+   * Info: (20260821 - Julian) **相鄰不算重疊。** 右端不含。
+   * 這是本模組最常見的合法形狀 —— 擋掉它等於讓「17–19 加班完接著 19–21」
+   * 這種連續加班送不出去，而那正是 §24 I 級距要處理的情境。
+   */
+  it("相鄰（前一張的結束＝這一張的開始）不算重疊", async () => {
+    rows = [rowOf(A, OvertimeRequestStatus.PENDING, null)];
+
+    await expect(overlapping(B)).resolves.toBeNull();
+  });
+
+  /**
+   * Info: (20260821 - Julian) 反方向：駁回與撤回的單不是加班事實，撞到不該擋重送。
+   */
+  it.each([
+    [OvertimeRequestStatus.REJECTED],
+    [OvertimeRequestStatus.WITHDRAWN],
+  ])("既有單是 %s 時不算重疊", async (status) => {
+    rows = [rowOf(A, status, null)];
+
+    await expect(
+      overlapping({ requestedStartMinute: 1080, requestedEndMinute: 1200 }),
+    ).resolves.toBeNull();
+  });
+
+  /**
+   * Info: (20260821 - Julian) 完全同一段也是重疊 —— 這是 `id` 決勝那條分支
+   * 之所以只需要處理「檢查上線之前的既有列」的原因。
+   */
+  it("完全相同的時段算重疊", async () => {
+    rows = [rowOf(A, OvertimeRequestStatus.PENDING, null)];
+
+    await expect(overlapping(A)).resolves.toBe(A.id);
+  });
+
+  /**
    * Info: (20260821 - Julian) 撞到多張時回**起點最早**的那一張，而不是任意一張。
    *
    * 錯誤訊息之外，事後要查得出是撞到哪一張；「任意一張」會讓同一組資料在不同
@@ -561,7 +728,11 @@ describe("同日兩張加班單：當日加成總額不得低於 §24 I 下限",
    * `orderBy` 的話這一條會回 `ot-c`。
    */
   it("同日有多張已核准且更晚時，回起點最早的那一張", async () => {
-    const C = { id: "ot-c", requestedStartMinute: 1260, requestedEndMinute: 1380 };
+    const C = {
+      id: "ot-c",
+      requestedStartMinute: 1260,
+      requestedEndMinute: 1380,
+    };
     rows = [
       rowOf(C, OvertimeRequestStatus.APPROVED, SPAN),
       rowOf(B, OvertimeRequestStatus.APPROVED, SPAN),

@@ -1070,6 +1070,10 @@ export const hrManagement = {
       "Another overtime request already covers part of this time range on that day. Adjust the times, or withdraw the other request first.",
     error_earlier_than_approved:
       "An overtime request starting later that day has already been approved, and its premium rate is already fixed. Filing an earlier span now would pay both at the lower rate. Withdraw the later request and submit them together.",
+    error_not_approved:
+      "This overtime request is not approved right now, so there is no approval to revoke. Reload the page to see its current status.",
+    error_approval_not_reversible:
+      "The compensatory leave from this approval has already been used, expired or cashed out, or payroll has already settled its payment. The approval can no longer be revoked — ask HR to correct the balance with a manual adjustment instead.",
     error_agreement_record_required:
       "Extending the monthly cap to 54 hours requires a recorded agreement (Article 32 III): a link to the minutes and the date it was made.",
     error_emergency_already_declared:

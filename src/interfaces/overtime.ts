@@ -273,6 +273,26 @@ export enum OvertimeDecisionOutcome {
    * 而其實什麼都沒有發生。
    */
   NOT_DECLARED = "NOT_DECLARED",
+  /**
+   * Info: (20260821 - Julian) 這張單不在 `APPROVED`，沒有核准可以撤銷
+   * （review 第 7 輪 B1）。
+   *
+   * 與 `ALREADY_REVIEWED` 分開：那一句說的是「別人先決行了」，
+   * 而這一句要說的是「它從來沒有被核准過，或已經被撤回了」——
+   * 兩者的下一步相反（一個是不用管，一個是去看它現在在哪個狀態）。
+   */
+  NOT_APPROVED = "NOT_APPROVED",
+  /**
+   * Info: (20260821 - Julian) 核准的後果**已經不可逆**（review 第 7 輪 B1）。
+   *
+   * 補休批次已經被請掉／過期／折現，或折現事件已經由薪資模組結算
+   * （`LeaveCashOutEvent.settledAt` 非 null）。此時撤銷核准等於憑空
+   * 消滅一筆已經被使用或已經發出去的權益。
+   *
+   * 這**不是**「操作失敗，再試一次」——它是一個終局的事實，
+   * 訊息必須說得出下一步（人工調整，而不是重按）。
+   */
+  APPROVAL_NOT_REVERSIBLE = "APPROVAL_NOT_REVERSIBLE",
 }
 
 // Info: (20260818 - Julian) ===== 查詢類端點的 DTO（L24 / L28 / L29 / L30）=====

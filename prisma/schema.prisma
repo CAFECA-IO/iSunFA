@@ -3921,6 +3921,21 @@ model LeaveCashOutEvent {
   // Info: (20260817 - Julian) 來源批次。跨批次折現會有多個
   sourceGrantIds String[] @map("source_grant_ids")
 
+  /**
+   * Info: (20260821 - Julian) 加班費折現的來源分段（review 第 7 輪 B1）。
+   *
+   * 加班費折現不來自任何額度批次，所以 `sourceGrantIds` 是空陣列 ——
+   * 於是在補上這一欄之前，**一筆折現事件說不出它是哪一張加班單產生的**。
+   * 兩個後果：撤銷核准時找不到要回收的事件（`revokeApproval` 因此不可能寫），
+   * 而勞動檢查問「這筆加班費對應哪一段核准」時也答不出來。
+   *
+   * 可為 null：補休屆期折現（§38 IV／§32-1）不來自加班分段。
+   * `onDelete: Restrict` —— 分段要先把事件收掉才刪得掉，
+   * 順序做錯時是 DB 擋下來，不是靠呼叫端記得。
+   */
+  overtimeSegmentId String?          @unique @map("overtime_segment_id")
+  overtimeSegment   OvertimeSegment? @relation(fields: [overtimeSegmentId], references: [id], onDelete: Restrict)
+
   // Info: (20260817 - Julian) 法源記載，例 "勞動基準法 §38 IV"。字串：它從不參與判斷
   legalBasis String @map("legal_basis")
 
@@ -4134,6 +4149,9 @@ model OvertimeSegment {
 
   // Info: (20260817 - Julian) 反向關聯：選擇換補休時，本段會產生一筆 LeaveGrant（1:1，不乘倍率）
   grant LeaveGrant?
+
+  // Info: (20260821 - Julian) 反向關聯：選擇發加班費時，本段會產生一筆折現事件（review 第 7 輪 B1）
+  cashOutEvent LeaveCashOutEvent?
 
   createdAt DateTime @default(now()) @map("created_at")
 

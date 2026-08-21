@@ -1644,6 +1644,34 @@ export const API_ERRORS = {
    *
    * `PENDING` 的手足單不觸發：它還沒定級距，在自己被核准時會重新讀一次。
    */
+  /**
+   * Info: (20260821 - Julian) 這張單不在 `APPROVED`，沒有核准可以撤銷
+   * （review 第 7 輪 B1）。
+   */
+  VA_OVERTIME_NOT_APPROVED: {
+    code: "VA000080",
+    message:
+      "this overtime request is not in the approved state, so there is no approval to revoke; reload and check its current status",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260821 - Julian) 核准的後果已經不可逆（review 第 7 輪 B1）。
+   *
+   * 補休批次已被請掉／過期／折現，或折現事件已由薪資模組結算
+   * （`LeaveCashOutEvent.settledAt` 非 null）。撤銷等於憑空消滅一筆
+   * 已經被使用或已經發出去的權益，因此擋下。
+   *
+   * 下一步不是重按，是人工調整（L9 `leave/balance/adjust`）——
+   * 文案必須說出這件事，否則使用者只會一直按同一顆按鈕。
+   */
+  VA_OVERTIME_APPROVAL_NOT_REVERSIBLE: {
+    code: "VA000081",
+    message:
+      "the compensatory leave from this approval has already been used, expired or cashed out, or payroll has settled its overtime payment; the approval can no longer be revoked, so correct it with a manual balance adjustment instead",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
   VA_OVERTIME_EARLIER_THAN_APPROVED: {
     code: "VA000079",
     message:

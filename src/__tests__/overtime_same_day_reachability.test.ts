@@ -1,0 +1,558 @@
+import { describe, it, expect, beforeEach } from "@jest/globals";
+import type { jest as JestType } from "@jest/globals";
+declare const jest: typeof JestType;
+
+/**
+ * Info: (20260821 - Julian) **沒有任何可達序列讓當日加成總額低於 §24 I 的下限**
+ * （review 第 7 輪 B1）。
+ *
+ * ## 為什麼非要這一支不可
+ *
+ * 在它之前沒有任何測試同時碰到 `submit` 與 `approve`：
+ *
+ * - 級距側（`overtime_tier_order_independence.test.ts`）從 `approve` 證明
+ *   「事後補一張更早的單會掉到 80」。
+ * - 服務側（`overtime_request_service.test.ts`）從 `submit` 證明「那道閘會擋」。
+ * - 中間那句「**所以**沒有任何可達序列低於下限」只寫在註解裡 ——
+ *   而它是那道閘存在的全部理由。
+ *
+ * 第 7 輪 review 證明那句話當時是假的：閘的錯誤訊息叫人「撤回較晚那張、
+ * 兩張一起重送」，而 `APPROVED` 是終端狀態（五個 `updateMany` 全部
+ * `where.status = PENDING`），那個動作**做不到**。於是那 2 小時永久進不了
+ * 系統：從「級距算錯、少付 40」變成「工時消失、少付 80」。
+ *
+ * 這一支走完整條路：`submit(B) → approve(B) → submit(A) 被擋 →
+ * revokeApproval(B) → submit(A) → approve(A) → approve(B)`，
+ * 最後拿**落地的分段**與一個獨立算出的法定下限比。
+ *
+ * ## 替身在 prisma 那一層
+ *
+ * 於是 service、`overtimeRequestRepo`、`overtimeRequestContextRepo`
+ * 三層都跑真的。把 `revokeApproval` 換成假的來測「service 有沒有呼叫它」，
+ * 證明的是接線而不是結果，而這一支要證的正是**結果**。
+ *
+ * 折換方式一律 `PAYMENT`：撤銷核准要還原的是分段與折現事件。
+ * 補休那一條路徑（額度批次、帳本分錄、餘額快取、以及「已經被請掉就不准撤」
+ * 的邊界）由 `overtime_revoke_approval.test.ts` 負責。
+ */
+
+const BOOK = "book-1";
+const EMP = "emp-006";
+const MANAGER = "emp-005";
+const WORK_DATE = "2026-08-20";
+const HOUR = 60;
+
+/** Info: (20260821 - Julian) A 較早（17:00–19:00），B 較晚（19:00–21:00），各 120 分 */
+const A = { start: 17 * HOUR, end: 19 * HOUR };
+const B = { start: 19 * HOUR, end: 21 * HOUR };
+const SPAN = 120;
+
+interface IRequestRow {
+  [key: string]: unknown;
+  id: string;
+  accountBookId: string;
+  employeeId: string;
+  /**
+   * Info: (20260821 - Julian) `SUMMARY_SELECT` 用的是**巢狀 select**
+   * （`employee: { select: { employeeNo, name } }`）與 `segments`，
+   * 因此替身回的列必須是那個形狀，不是把欄位攤平。
+   * 攤平的話 `toSummary` 讀 `row.employee.employeeNo` 會炸 —— 而那個紅燈
+   * 指的是替身，不是產品。
+   */
+  employee: { employeeNo: string; name: string };
+  workDate: string;
+  status: string;
+  filingType: string;
+  compensationMode: string;
+  evidenceBasis: string;
+  requestedStartMinute: number;
+  requestedEndMinute: number;
+  reason: string;
+  isEmergency: boolean;
+  approvedMinutes: number | null;
+  recognizedMinutes: number | null;
+  createdAt: Date;
+}
+
+interface ISegmentRow {
+  [key: string]: unknown;
+  id: string;
+  overtimeRequestId: string;
+  order: number;
+  tier: string;
+  minutes: number;
+}
+
+interface ICashOutRow {
+  [key: string]: unknown;
+  id: string;
+  overtimeSegmentId: string | null;
+  settledAt: Date | null;
+  minutes: number;
+  premiumTier: string | null;
+}
+
+let requests: IRequestRow[] = [];
+let segments: ISegmentRow[] = [];
+let cashOuts: ICashOutRow[] = [];
+let nextId = 0;
+
+/**
+ * Info: (20260821 - Julian) 只實作被測程式真的用到的鍵，**其餘一律丟**。
+ * 理由同 `overtime_tier_order_independence.test.ts`：一連串
+ * `if (where.X !== undefined)` 會讓沒被列到的條件安靜地不生效，
+ * 而那種替身會在被測查詢改形狀的那一天給出一個看起來合理的錯答案。
+ */
+type IWhere = Record<string, unknown>;
+
+const compareValues = (actual: unknown, value: unknown): number => {
+  if (typeof actual === "number" && typeof value === "number") {
+    return actual === value ? 0 : actual < value ? -1 : 1;
+  }
+  if (typeof actual === "string" && typeof value === "string") {
+    return actual === value ? 0 : actual < value ? -1 : 1;
+  }
+  throw new Error(`替身不比較這組型別：${typeof actual} 對 ${typeof value}`);
+};
+
+const matchesField = (actual: unknown, clause: unknown): boolean => {
+  if (clause === null || typeof clause !== "object") return actual === clause;
+  for (const [op, value] of Object.entries(clause as IWhere)) {
+    switch (op) {
+      case "lt":
+        if (!(compareValues(actual, value) < 0)) return false;
+        break;
+      case "gt":
+        if (!(compareValues(actual, value) > 0)) return false;
+        break;
+      case "gte":
+        if (compareValues(actual, value) < 0) return false;
+        break;
+      case "lte":
+        if (compareValues(actual, value) > 0) return false;
+        break;
+      case "not":
+        if (value === null ? actual === null : actual === value) return false;
+        break;
+      case "in":
+        if (!(value as unknown[]).includes(actual)) return false;
+        break;
+      default:
+        throw new Error(`替身不支援這個運算子：${op}`);
+    }
+  }
+  return true;
+};
+
+const matches = (
+  row: Record<string, unknown>,
+  where: IWhere,
+  fields: readonly string[],
+): boolean => {
+  for (const [key, clause] of Object.entries(where)) {
+    if (key === "OR") {
+      if (!(clause as IWhere[]).some((one) => matches(row, one, fields))) {
+        return false;
+      }
+      continue;
+    }
+    if (key === "AND") {
+      if (!(clause as IWhere[]).every((one) => matches(row, one, fields))) {
+        return false;
+      }
+      continue;
+    }
+    if (!fields.includes(key)) {
+      throw new Error(`替身不支援這個條件鍵：${key}`);
+    }
+    if (!matchesField(row[key], clause)) return false;
+  }
+  return true;
+};
+
+const REQUEST_FIELDS = [
+  "id",
+  "accountBookId",
+  "employeeId",
+  "workDate",
+  "status",
+  "requestedStartMinute",
+  "requestedEndMinute",
+  "recognizedMinutes",
+  "isEmergency",
+];
+const SEGMENT_FIELDS = ["id", "overtimeRequestId"];
+const CASH_OUT_FIELDS = ["id", "overtimeSegmentId", "settledAt"];
+const GRANT_FIELDS = ["id", "overtimeSegmentId"];
+
+jest.mock("@/lib/prisma", () => {
+  const client = {
+    overtimeRequest: {
+      findMany: jest.fn(async ({ where }: { where: IWhere }) =>
+        requests.filter((row) => matches(row, where, REQUEST_FIELDS)),
+      ),
+      findFirst: jest.fn(
+        async ({
+          where,
+          orderBy,
+        }: {
+          where: IWhere;
+          orderBy?: Record<string, string>;
+        }) => {
+          /**
+           * Info: (20260821 - Julian) `segments` 是**現算**的，不是存在列上。
+           * 存在列上的話，撤銷核准刪掉分段之後那張單的摘要仍會帶著舊分段 ——
+           * 而「摘要說有分段、分段表是空的」正是這一支要抓的那種中間狀態。
+           */
+          const hits = requests
+            .filter((row) => matches(row, where, REQUEST_FIELDS))
+            .map((row) => ({
+              ...row,
+              segments: segments
+                .filter((one) => one.overtimeRequestId === row.id)
+                .map(({ order, tier, minutes }) => ({ order, tier, minutes })),
+            }));
+          if (orderBy !== undefined) {
+            const [[field, direction]] = Object.entries(orderBy);
+            if (!REQUEST_FIELDS.includes(field)) {
+              throw new Error(`替身不支援這個排序鍵：${field}`);
+            }
+            hits.sort((left, right) => {
+              const cmp = compareValues(
+                (left as IRequestRow)[field],
+                (right as IRequestRow)[field],
+              );
+              return direction === "asc" ? cmp : -cmp;
+            });
+          }
+          return hits[0] ?? null;
+        },
+      ),
+      aggregate: jest.fn(async ({ where }: { where: IWhere }) => ({
+        _sum: {
+          recognizedMinutes: requests
+            .filter((row) => matches(row, where, REQUEST_FIELDS))
+            .reduce(
+              (total, row) => total + ((row.recognizedMinutes as number) ?? 0),
+              0,
+            ),
+        },
+      })),
+      create: jest.fn(async ({ data }: { data: Record<string, unknown> }) => {
+        nextId += 1;
+        const row = {
+          ...(data as unknown as IRequestRow),
+          id: `ot-${nextId}`,
+          employee: { employeeNo: "EMP006", name: "李冠廷" },
+          approvedMinutes: null,
+          recognizedMinutes: null,
+          /**
+           * Info: (20260821 - Julian) 送出時刻＝`observedAt`（當地 22:00）。
+           *
+           * `approve` 的不變式拿 `createdAt` 當 `submittedAtMs`，並與
+           * **申請區間的起點**（不是班別窗起）比 —— `POST_HOC` 要求送出
+           * 晚於那個起點。給一個當地 08:00 的 `createdAt` 會讓兩張單都在
+           * 核准時被擋，而那個紅燈指的是 fixture 不是產品。
+           */
+          createdAt: SUBMITTED_AT,
+        };
+        requests.push(row);
+        return row;
+      }),
+      updateMany: jest.fn(
+        async ({ where, data }: { where: IWhere; data: IWhere }) => {
+          const hits = requests.filter((row) =>
+            matches(row, where, REQUEST_FIELDS),
+          );
+          for (const row of hits) Object.assign(row, data);
+          return { count: hits.length };
+        },
+      ),
+    },
+    overtimeSegment: {
+      create: jest.fn(async ({ data }: { data: Record<string, unknown> }) => {
+        nextId += 1;
+        const row = {
+          ...(data as unknown as ISegmentRow),
+          id: `seg-${nextId}`,
+        };
+        segments.push(row);
+        return row;
+      }),
+      findMany: jest.fn(async ({ where }: { where: IWhere }) =>
+        segments.filter((row) => matches(row, where, SEGMENT_FIELDS)),
+      ),
+      deleteMany: jest.fn(async ({ where }: { where: IWhere }) => {
+        const keep = segments.filter(
+          (row) => !matches(row, where, SEGMENT_FIELDS),
+        );
+        const count = segments.length - keep.length;
+        segments = keep;
+        return { count };
+      }),
+    },
+    leaveCashOutEvent: {
+      create: jest.fn(async ({ data }: { data: Record<string, unknown> }) => {
+        nextId += 1;
+        const row = {
+          ...(data as unknown as ICashOutRow),
+          id: `cash-${nextId}`,
+          settledAt: null,
+        };
+        cashOuts.push(row);
+        return row;
+      }),
+      count: jest.fn(
+        async ({ where }: { where: IWhere }) =>
+          cashOuts.filter((row) => matches(row, where, CASH_OUT_FIELDS)).length,
+      ),
+      deleteMany: jest.fn(async ({ where }: { where: IWhere }) => {
+        const keep = cashOuts.filter(
+          (row) => !matches(row, where, CASH_OUT_FIELDS),
+        );
+        const count = cashOuts.length - keep.length;
+        cashOuts = keep;
+        return { count };
+      }),
+    },
+    /**
+     * Info: (20260821 - Julian) 本檔一律走 `PAYMENT`，因此補休那三張表永遠是空的。
+     * 仍然實作它們**並回空集合**，而不是省略：省略的話 `revokeApproval`
+     * 走到那幾行會丟「不是函式」，而那個紅燈指的是替身不是產品。
+     */
+    leaveGrant: {
+      findMany: jest.fn(async ({ where }: { where: IWhere }) => {
+        matches({ id: "", overtimeSegmentId: null }, where, GRANT_FIELDS);
+        return [];
+      }),
+      deleteMany: jest.fn(async () => ({ count: 0 })),
+    },
+    leaveLedgerEntry: {
+      count: jest.fn(async () => 0),
+      deleteMany: jest.fn(async () => ({ count: 0 })),
+    },
+    // Info: (20260821 - Julian) 平日、8 小時、窗起 08:00
+    employeeShiftDay: {
+      findFirst: jest.fn(async () => ({
+        dayType: "WORK",
+        plannedWorkMinutes: null,
+        shiftPattern: { windowStartMinute: 480, requiredWorkMinutes: 480 },
+      })),
+    },
+    // Info: (20260821 - Julian) 無打卡 → 自陳，認列等於核准
+    attendancePunch: { findMany: jest.fn(async () => []) },
+    overtimePolicy: {
+      findUnique: jest.fn(async () => ({
+        extendedLimitAgreed: false,
+        compensatoryExpiryMonths: 6,
+      })),
+    },
+    leavePolicy: { findFirst: jest.fn(async () => ({ id: "policy-comp" })) },
+    $transaction: jest.fn(
+      async (run: (tx: unknown) => Promise<unknown>) => await run(client),
+    ),
+  };
+  return { prisma: client };
+});
+
+import { overtimeRequestService } from "@/services/overtime_request.service";
+import { AppError } from "@/lib/utils/error";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { employeeRepo } from "@/repositories/employee.repo";
+import {
+  OVERTIME_PREMIUM,
+  OVERTIME_TIER_BOUNDARY_MINUTES,
+  OvertimeCompensationMode,
+  OvertimeFilingType,
+  OvertimePremiumTier,
+} from "@/constants/overtime";
+
+const managesSpy = jest.spyOn(employeeRepo, "managesEmployee");
+
+/**
+ * Info: (20260821 - Julian) 送出。`observedAt` 晚於班別窗起（08:00），
+ * 因此 `POST_HOC` 合法 —— 事後補單是本模組的一級公民，不是邊角情形。
+ */
+const submit = (span: { start: number; end: number }) =>
+  overtimeRequestService.submit({
+    accountBookId: BOOK,
+    employeeId: EMP,
+    input: {
+      workDate: WORK_DATE,
+      filingType: OvertimeFilingType.POST_HOC,
+      compensationMode: OvertimeCompensationMode.PAYMENT,
+      requestedStartMinute: span.start,
+      requestedEndMinute: span.end,
+      reason: "工地趕澆置",
+    },
+    observedAt: SUBMITTED_AT,
+  });
+
+const approve = (requestId: string) =>
+  overtimeRequestService.approve({
+    accountBookId: BOOK,
+    requestId,
+    actorEmployeeId: MANAGER,
+    observedAt: new Date("2026-08-20T14:30:00.000Z"),
+  });
+
+const revokeApproval = (requestId: string) =>
+  overtimeRequestService.revokeApproval({
+    accountBookId: BOOK,
+    requestId,
+    actorEmployeeId: MANAGER,
+  });
+
+const codeOf = async (run: () => Promise<unknown>): Promise<string> => {
+  try {
+    await run();
+  } catch (error) {
+    if (error instanceof AppError) return error.apiCode;
+    throw error;
+  }
+  throw new Error("預期會丟 AppError，但它成功了");
+};
+
+const rateOf = (tier: string): number => {
+  const ratio = OVERTIME_PREMIUM[tier as OvertimePremiumTier];
+  return ratio.numerator / ratio.denominator;
+};
+
+/** Info: (20260821 - Julian) 目前**落地**的分段換算成工資單位 */
+const paidUnits = (): number =>
+  segments.reduce((total, one) => total + one.minutes * rateOf(one.tier), 0);
+
+/** Info: (20260821 - Julian) 目前**認列**的總分鐘（工時有沒有進到系統裡） */
+const recognizedTotal = (): number =>
+  requests
+    .filter((row) => row.status === "APPROVED")
+    .reduce((total, row) => total + (row.recognizedMinutes ?? 0), 0);
+
+/**
+ * Info: (20260821 - Julian) 獨立 oracle：§24 I 對**整天**的延長工時算一次。
+ * 不看單據怎麼切、不看核准順序 —— 那正是被測那一側可能算錯的東西。
+ */
+const legalFloorUnits = (totalMinutes: number): number => {
+  const first = Math.min(totalMinutes, OVERTIME_TIER_BOUNDARY_MINUTES);
+  return first * (1 / 3) + (totalMinutes - first) * (2 / 3);
+};
+
+/** Info: (20260821 - Julian) 當地 22:00 送出 —— 晚於兩段的起點，`POST_HOC` 合法 */
+const SUBMITTED_AT = new Date("2026-08-20T14:00:00.000Z");
+
+const DAY_MINUTES = SPAN * 2;
+const FLOOR = legalFloorUnits(DAY_MINUTES);
+
+beforeEach(() => {
+  requests = [];
+  segments = [];
+  cashOuts = [];
+  nextId = 0;
+  managesSpy.mockReset();
+  managesSpy.mockResolvedValue(true);
+});
+
+describe("同日兩段加班：沒有可達序列讓總額低於 §24 I 下限", () => {
+  it("法定下限是 120 個工資單位（兩段各 120 分）", () => {
+    expect(FLOOR).toBe(120);
+  });
+
+  // Info: (20260821 - Julian) 對照組：兩張都先送出時本來就對
+  it("兩張都先送出、依序核准 → 總額等於下限", async () => {
+    const first = await submit(A);
+    const second = await submit(B);
+    await approve(first.id);
+    await approve(second.id);
+
+    expect(recognizedTotal()).toBe(DAY_MINUTES);
+    expect(paidUnits()).toBeCloseTo(FLOOR, 6);
+  });
+
+  /**
+   * Info: (20260821 - Julian) **這一條是 B1 的紅線**，也是本檔存在的理由。
+   *
+   * 較晚那張先被核准（當晚送、隔天早上批），較早那段之後才補 ——
+   * 送出被擋，而錯誤訊息叫人「撤回較晚那張，兩張一起重送」。
+   * 這裡就照那句話做一次，然後看結果。
+   *
+   * 在 `revokeApproval` 落地之前這一條會紅在第三步：`APPROVED` 是終端狀態，
+   * 那個補救根本沒有執行者，於是 240 分的真實工時只有 120 分進得了系統
+   * （實付 40，下限 120 —— 少付 80，比不擋還糟）。
+   */
+  it("較晚那張先核准、較早的事後補：照文案的補救走完，總額回到下限", async () => {
+    const late = await submit(B);
+    await approve(late.id);
+
+    // Info: (20260821 - Julian) 第一步：閘擋下，且它擋的理由是級距會算錯
+    expect(await codeOf(() => submit(A))).toBe(
+      API_ERRORS.VA_OVERTIME_EARLIER_THAN_APPROVED.code,
+    );
+    expect(recognizedTotal()).toBe(SPAN);
+
+    // Info: (20260821 - Julian) 第二步：照文案撤回較晚那一張
+    await revokeApproval(late.id);
+    expect(segments).toHaveLength(0);
+    expect(cashOuts).toHaveLength(0);
+    expect(recognizedTotal()).toBe(0);
+
+    // Info: (20260821 - Julian) 第三步：兩張一起重送、重核
+    const early = await submit(A);
+    await approve(early.id);
+    await approve(late.id);
+
+    expect(recognizedTotal()).toBe(DAY_MINUTES);
+    expect(paidUnits()).toBeCloseTo(FLOOR, 6);
+  });
+
+  /**
+   * Info: (20260821 - Julian) 撤銷之後那張單**真的回到待簽**，不是被刪掉。
+   *
+   * 只斷言總額的話，一個把整張單刪掉再讓使用者重打的實作也會通過 ——
+   * 而那會湮滅「他曾經送過、曾經被核准過」這件事。
+   */
+  it("撤銷核准後單子回到待簽，且核准與認列分鐘都被清掉", async () => {
+    const late = await submit(B);
+    await approve(late.id);
+
+    const row = requests.find((one) => one.id === late.id);
+    expect(row?.status).toBe("APPROVED");
+    expect(row?.approvedMinutes).toBe(SPAN);
+
+    await revokeApproval(late.id);
+
+    expect(row?.status).toBe("PENDING");
+    expect(row?.approvedMinutes).toBeNull();
+    expect(row?.recognizedMinutes).toBeNull();
+  });
+
+  /**
+   * Info: (20260821 - Julian) 反方向：還在待簽的單沒有核准可以撤銷。
+   *
+   * 少了這一條，一個無條件成功的 `revokeApproval` 也會讓上面兩條通過，
+   * 而它會把一張從未被核准的單「撤銷」成功 —— 畫面顯示已撤銷，
+   * 實際上什麼都沒發生。
+   */
+  it("對待簽中的單撤銷核准 → VA_OVERTIME_NOT_APPROVED", async () => {
+    const pending = await submit(B);
+
+    expect(await codeOf(() => revokeApproval(pending.id))).toBe(
+      API_ERRORS.VA_OVERTIME_NOT_APPROVED.code,
+    );
+    expect(requests[0].status).toBe("PENDING");
+  });
+
+  /**
+   * Info: (20260821 - Julian) 撤銷與核准套用**同一組**決行者判斷。
+   * 給撤銷比核准更寬的權限，等於開一條繞過核准權的路徑。
+   */
+  it("管不到這個人的人不能撤銷核准", async () => {
+    const late = await submit(B);
+    await approve(late.id);
+    managesSpy.mockResolvedValue(false);
+
+    expect(await codeOf(() => revokeApproval(late.id))).toBe(
+      API_ERRORS.FO_NOT_AUTHORIZED_REVIEWER.code,
+    );
+    expect(requests[0].status).toBe("APPROVED");
+  });
+});

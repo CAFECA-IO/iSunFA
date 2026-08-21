@@ -32,6 +32,25 @@ import {
 } from "@/repositories/overtime_request_invariant";
 
 /**
+ * Info: (20260821 - Julian) 核准的後果已經不可逆（review 第 7 輪 B1）。
+ *
+ * 補休批次已被請掉／過期／折現，或折現事件已由薪資模組結算。
+ * 不是 `AppError`：它由 service 轉成 4xx 與一句說得出下一步的文案
+ * （同 `OvertimeRequestInvariantError` 的處置）。
+ */
+export class OvertimeApprovalNotReversibleError extends Error {
+  public readonly requestId: string;
+
+  public constructor(requestId: string, detail: string) {
+    super(
+      `the approval of overtime request ${requestId} can no longer be reversed: ${detail}`,
+    );
+    this.name = "OvertimeApprovalNotReversibleError";
+    this.requestId = requestId;
+  }
+}
+
+/**
  * Info: (20260818 - Julian) 加班單的寫入端。
  *
  * ## 核准是一個 unit-of-work
@@ -170,6 +189,20 @@ export interface IOvertimeRequestRepository {
     revokeReason: string;
   }): Promise<OvertimeDecisionOutcome>;
   reject(params: {
+    accountBookId: string;
+    requestId: string;
+  }): Promise<OvertimeDecisionOutcome>;
+  /**
+   * Info: (20260821 - Julian) 撤銷核准：`APPROVED → PENDING`（review 第 7 輪 B1）。
+   *
+   * 在它之前 `APPROVED` 是終端狀態 —— 五個 `updateMany` 全部
+   * `where.status = PENDING`。而 `VA_OVERTIME_EARLIER_THAN_APPROVED`
+   * 的文案叫使用者「撤回較晚那張、兩張一起重送」，一句沒有執行者的補救。
+   *
+   * 補休已被使用或折現已被薪資結算時丟 `OvertimeApprovalNotReversibleError`
+   * —— 那不是「再試一次」，是一個終局的事實。
+   */
+  revokeApproval(params: {
     accountBookId: string;
     requestId: string;
   }): Promise<OvertimeDecisionOutcome>;
@@ -436,6 +469,12 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
               cashOutDayEquivalentMinutes: params.cashOut.dayEquivalentMinutes,
               // Info: (20260818 - Julian) 加班費的折現不來自任何額度批次
               sourceGrantIds: [],
+              /**
+               * Info: (20260821 - Julian) 但它來自**這一段**（review 第 7 輪 B1）。
+               * 少了這一欄，撤銷核准找不到要回收的事件，勞檢問「這筆加班費
+               * 對應哪一段核准」也答不出來。
+               */
+              overtimeSegmentId: stored.id,
               legalBasis: params.cashOut.legalBasis,
             },
             select: { id: true },
@@ -466,6 +505,168 @@ class OvertimeRequestRepository implements IOvertimeRequestRepository {
         grantCount,
         cashOutEventIds,
       };
+    });
+  }
+
+  /**
+   * Info: (20260821 - Julian) 撤銷核准：`APPROVED → PENDING`（review 第 7 輪 B1）。
+   *
+   * ## 為什麼非有不可
+   *
+   * `VA_OVERTIME_EARLIER_THAN_APPROVED` 的錯誤訊息與五個語系的文案都寫著
+   * 「撤回較晚那張、兩張一起重送」，而在這一支之前**那個動作做不到**：
+   * `OvertimeRequest` 的五個 `updateMany` 全部 `where.status = PENDING`，
+   * `APPROVED` 是終端狀態，`withdraw` 對它丟 `VA_OVERTIME_ALREADY_REVIEWED`。
+   * 於是那張較早的單永久送不出去 —— 一段真實工時整段不存在於系統裡，
+   * 從「級距算錯、少付 40」變成「工時消失、少付 80」。
+   *
+   * **一句沒有執行者的補救比沒有補救更糟**：它會讓讀訊息的人以為有路可走。
+   *
+   * ## 要還原的四樣東西
+   *
+   * `approve` 在同一個交易裡寫下：分段、（補休）額度批次與 GRANT 分錄、
+   * （發錢）折現事件、以及餘額快取。這裡逐一還原，順序由外鍵決定 ——
+   * 分錄 → 批次 → 折現事件 → 分段（`LeaveGrant.overtimeSegment` 與
+   * `LeaveCashOutEvent.overtimeSegment` 都是 `onDelete: Restrict`）。
+   *
+   * ## 不可逆的邊界，由**資料庫**擋，不是由這裡的檢查擋
+   *
+   * 補休批次一旦被請掉／過期／折現，它就有了 `GRANT` 以外的分錄；
+   * 而 `LeaveLedgerEntry.leaveGrant` 是 `onDelete: Restrict`，
+   * 所以「刪得掉批次」與「這批補休沒有被動過」是**同一件事**。
+   * 下面那次預檢只是為了給出一句說得出下一步的訊息 ——
+   * 真正的保證是外鍵，它擋得住預檢與刪除之間才發生的那一次扣減。
+   *
+   * 折現事件則看 `settledAt`：薪資模組結算過就不能撤，
+   * 那筆錢已經發出去了。
+   *
+   * ## 為什麼先 claim 再檢查
+   *
+   * 與 `approve` 的「參數驗證要在寫入之前」不同 —— 這裡的前提**只能從
+   * 資料庫讀出來**，不是呼叫端交出來的東西。因此先用附條件更新 claim
+   * 住 `APPROVED`（擋掉並行的第二次撤銷），再驗證、不通過就丟例外讓
+   * 交易整個回滾。回滾在這裡是機制，不是替草率順序收拾的網子。
+   */
+  public async revokeApproval(params: {
+    accountBookId: string;
+    requestId: string;
+  }): Promise<OvertimeDecisionOutcome> {
+    return prisma.$transaction(async (tx) => {
+      const moved = await tx.overtimeRequest.updateMany({
+        where: {
+          id: params.requestId,
+          accountBookId: params.accountBookId,
+          status: OvertimeRequestStatus.APPROVED,
+        },
+        data: {
+          status: OvertimeRequestStatus.PENDING,
+          /**
+           * Info: (20260821 - Julian) 三欄一起清掉。
+           *
+           * `assertOvertimeFilingType` 要求「非 APPROVED 的單不得帶著核准
+           * 與認列分鐘」—— 留著它們的話，一張回到待簽的單看起來像曾經被
+           * 核准過，而 L28 的統計會把它算進去。`evidenceBasis` 回到送出時
+           * 的預設：認列基準要等下一次核准當下才知道。
+           */
+          approvedMinutes: null,
+          recognizedMinutes: null,
+          evidenceBasis: OvertimeEvidenceBasis.PUNCH_RECORD,
+        },
+      });
+      if (moved.count === 0) return OvertimeDecisionOutcome.NOT_APPROVED;
+
+      const segments = await tx.overtimeSegment.findMany({
+        where: { overtimeRequestId: params.requestId },
+        select: { id: true },
+      });
+      const segmentIds = segments.map((segment) => segment.id);
+
+      const grants = await tx.leaveGrant.findMany({
+        where: { overtimeSegmentId: { in: segmentIds } },
+        select: { id: true, employeeId: true, leavePolicyId: true },
+      });
+      const grantIds = grants.map((grant) => grant.id);
+
+      /**
+       * Info: (20260821 - Julian) 預檢：這批補休有沒有被動過。
+       * 只為了錯誤訊息 —— 真正的保證是下面 `leaveGrant.deleteMany` 撞上的外鍵。
+       */
+      const touched = await tx.leaveLedgerEntry.count({
+        where: {
+          leaveGrantId: { in: grantIds },
+          entryType: { not: LeaveLedgerEntryType.GRANT },
+        },
+      });
+      if (touched > 0) {
+        throw new OvertimeApprovalNotReversibleError(
+          params.requestId,
+          `${touched} ledger entries other than GRANT already exist on the compensatory grants`,
+        );
+      }
+
+      const settled = await tx.leaveCashOutEvent.count({
+        where: {
+          overtimeSegmentId: { in: segmentIds },
+          settledAt: { not: null },
+        },
+      });
+      if (settled > 0) {
+        throw new OvertimeApprovalNotReversibleError(
+          params.requestId,
+          `${settled} cash-out events have already been settled by payroll`,
+        );
+      }
+
+      /**
+       * Info: (20260821 - Julian) **只刪 `GRANT` 分錄**，不是這批批次的全部分錄。
+       *
+       * 第一版寫的是 `where: { leaveGrantId: { in: grantIds } }` —— 它會把
+       * 「預檢之後才落地的那一筆扣減」也一起刪掉，於是下一行的
+       * `leaveGrant.deleteMany` 再也撞不到外鍵。上面那段註解宣稱
+       * 「真正的保證是外鍵」，而第一版親手把外鍵擋得住的那一列先移走了：
+       * 一句沒有執行者的保證（§5.4）。
+       *
+       * 收窄成 `entryType: GRANT` 之後，競態進來的扣減會留在原地，
+       * `onDelete: Restrict` 因此真的擋得住，整個交易回滾。
+       */
+      await tx.leaveLedgerEntry.deleteMany({
+        where: {
+          leaveGrantId: { in: grantIds },
+          entryType: LeaveLedgerEntryType.GRANT,
+        },
+      });
+      await tx.leaveGrant.deleteMany({ where: { id: { in: grantIds } } });
+      await tx.leaveCashOutEvent.deleteMany({
+        where: { overtimeSegmentId: { in: segmentIds } },
+      });
+      await tx.overtimeSegment.deleteMany({
+        where: { overtimeRequestId: params.requestId },
+      });
+
+      /**
+       * Info: (20260821 - Julian) 餘額快取與帳本同交易更新（ADR 022 §4 第一條規矩）。
+       * 依 `(employeeId, leavePolicyId)` 去重之後各重算一次 —— 一張單的分段
+       * 全部落在同一個假別上，但去重讓這件事不必是前提。
+       */
+      const scopes = new Map<
+        string,
+        { accountBookId: string; employeeId: string; leavePolicyId: string }
+      >();
+      for (const grant of grants) {
+        scopes.set(`${grant.employeeId}/${grant.leavePolicyId}`, {
+          accountBookId: params.accountBookId,
+          employeeId: grant.employeeId,
+          leavePolicyId: grant.leavePolicyId,
+        });
+      }
+      for (const scope of scopes.values()) {
+        await writeBalance(tx, {
+          ...scope,
+          remainingMinutes: await sumLedgerMinutes(tx, scope),
+        });
+      }
+
+      return OvertimeDecisionOutcome.DECIDED;
     });
   }
 

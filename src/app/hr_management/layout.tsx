@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import AuthGuard from "@/components/auth/auth_guard";
+import AttendanceAuthGate from "@/components/hr_management/attendance/attendance_auth_gate";
 import HrHeader from "@/components/hr_management/hr_header";
 import HrSidebar from "@/components/hr_management/hr_sidebar";
 import { HR_IDENTITY_API } from "@/constants/hr_identity_api";
@@ -12,15 +12,27 @@ import { IEnvelopeLike, request } from "@/lib/utils/request";
 /**
  * Info: (20260810 - Julian) 人事管理系統的外框：頂部列 + 左側選單 + 主內容區。
  *
- * Info: (20260821 - Julian) 包在 `<AuthGuard>` 裡（review 第 16 輪）。
+ * Info: (20260821 - Julian) 包在 `<AttendanceAuthGate>` 裡（review 第 16／17 輪）。
  *
  * ## 這裡先前沒有守衛，而 `/user/**` 與 `/admin/**` 都有
  *
  * `/user/**` 用 `<AuthGuard>`、`/admin/**` 用 `<AdminAuthGuard>`，
  * 而這一支兩個都沒有 —— 於是未登入者打得開 `/hr_management/*` 的外框：
- * 頂部列、側邊選單、每一頁的空狀態。**資料沒有外洩**（37 支 `/hr/` 端點
- * 全部走 `getIdentityFromDeWT`，無票一律 401），洩的是「這個系統有哪些
- * 功能、選單怎麼分組」。
+ * 頂部列、側邊選單、每一頁的空狀態。洩的是「這個系統有哪些功能、
+ * 選單怎麼分組」。
+ *
+ * ## 為什麼是 `AttendanceAuthGate` 而不是 `AuthGuard`
+ *
+ * 上一版用的是 `<AuthGuard>`，而**它會弄丟深連結**（review 第 17 輪）：
+ * 未登入時 `AuthGuard` 直接 `router.replace("/")`，人落在行銷首頁。
+ * 底下 13 個頁面本來**全部**包在 `AttendanceAuthGate` 裡，它未登入時
+ * **就地**顯示登入卡並帶 `returnTo={pathname}`，登入後回到原頁 ——
+ * 而 `AuthGuard` 在外層讓那個分支永遠到不了（`children` 從不掛載），
+ * 約 125 行登入 UI 對匿名使用者變成死碼。
+ *
+ * 受害的是 QR code、書籤、假單通知連結，以及 session 過期的員工 ——
+ * 那是**已經上線**的打卡流程。與被否決的那道環境變數閘同一類傷害
+ * （它的罪是「merge 那一刻打卡整組 404」），較輕但同型。
  *
  * ## 為什麼不是環境變數的路徑閘
  *
@@ -36,11 +48,23 @@ import { IEnvelopeLike, request } from "@/lib/utils/request";
  *
  * ## 這道守衛擋不了什麼
  *
- * 它是 client-side 的（同 `/user/**`）：外框的 JS 仍然會送到瀏覽器，
- * 擋的是「渲染出來並且能操作」。真正的牆是每一支端點的 401 與
- * `assertMay*` —— 那些檢查一條都不能因為有了這層而省略。
- * 已登入的員工猜到網址仍然進得去 leave/overtime，那是刻意的：
- * 側邊選單本來就直接連過去。
+ * 它是 client-side 的：外框的 JS 仍然會送到瀏覽器，擋的是「渲染出來並且
+ * 能操作」。真正的牆是每一支端點的 401 與 `assertMay*` —— 那些檢查一條都
+ * 不能因為有了這層而省略。已登入的員工猜到網址仍然進得去 leave/overtime，
+ * 那是刻意的：側邊選單本來就直接連過去。
+ *
+ * **而「資料沒有外洩，因為端點會 401」這句話對 4 個頁面不成立**
+ * （review 第 17 輪）：`employee` / `organization` / `movement` / 儀表板
+ * 根本不打任何端點，它們讀的是打包進 JS bundle 的 `MOCK_HR_*` 常數。
+ * 今天不外洩是因為**那些資料是假的**，不是因為 401 —— 而 `/api/v1/hr/*`
+ * 上線那天那句話就會失效。見 `mock_hr_employees.ts` 的 ToDo。
+ *
+ * ## 底下每一頁也各自包了一次
+ *
+ * 那是外層守衛加上去之前就有的形狀，留著不影響正確性：children 只在
+ * 已登入時掛載，內層那道立刻通過。
+ * ToDo: (20260821 - Julian) 13 頁的內層 `AttendanceAuthGate` 可以收掉，
+ * 但那是 13 個檔案的改動，與本輪的迴歸修復分開做。
  */
 export default function HrManagementLayout({
   children,
@@ -98,7 +122,7 @@ export default function HrManagementLayout({
   }, []);
 
   return (
-    <AuthGuard>
+    <AttendanceAuthGate>
       <div className="min-h-screen bg-gray-50">
         <HrHeader
           identity={identity}
@@ -115,6 +139,6 @@ export default function HrManagementLayout({
           <main className="min-w-0 flex-1">{children}</main>
         </div>
       </div>
-    </AuthGuard>
+    </AttendanceAuthGate>
   );
 }

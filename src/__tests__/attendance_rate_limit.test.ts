@@ -146,6 +146,9 @@ const EXPECTED_BUCKET: Record<string, Record<string, RateLimitBucketEnum>> = {
     // Info: (20260820 - Julian) 撤回認定（review 第 3 輪第 2 條）。與認定同桶：同樣是寫入
     DELETE: RateLimitBucketEnum.LEAVE_WRITE,
   },
+  "overtime/request/[request_id]/revoke_approval/route.ts": {
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
   "overtime/request/[request_id]/reject/route.ts": {
     POST: RateLimitBucketEnum.LEAVE_WRITE,
   },
@@ -266,6 +269,68 @@ describe("HR 端點的限流覆蓋率", () => {
       .map((handler) => `${handler.file}:${handler.method}`);
 
     expect(withoutBusinessAnchor).toEqual([]);
+  });
+
+  /**
+   * Info: (20260821 - Julian) **每一支都先驗票**（review 第 7 輪第 4 條）。
+   *
+   * 整個模組的安全論證只有一根支柱：「37 支 `/hr/` 端點全部走
+   * `getIdentityFromDeWT`，訪客一律 401」。那句話寫進了 `layout.tsx`、
+   * 部署檢查表與 PR 敘述，而**在這一條之前沒有任何測試守著它** ——
+   * 它當下為真，但下一支端點就可以讓它為假，而症狀是靜悄悄的。
+   *
+   * 現行的間接約束擋不住：限流測試要求每支 handler 有 `resolveEmployee(`，
+   * 而 `const sessionUser = await someRepo.findUserById(body.userId)`
+   * 這種形狀型別會過、限流測試會過、全綠。
+   *
+   * 掛在**既有的**切割器上，不新增掃描根：多一個掃描根就多一個會腐爛的
+   * 「這裡要掃哪些檔案」的清單。
+   */
+  it("每一個 handler 都先呼叫 getIdentityFromDeWT", () => {
+    const unauthenticated = listHandlers()
+      .filter((handler) => !handler.body.includes("getIdentityFromDeWT("))
+      .map((handler) => `${handler.file}:${handler.method}`);
+
+    expect(unauthenticated).toEqual([]);
+  });
+
+  /**
+   * Info: (20260821 - Julian) 而且**排在限流之前**。
+   *
+   * 順序不是講究：限流桶以 `sessionUser.address` 為鍵，先限流就沒有鍵可用；
+   * 而反過來把驗票放在業務邏輯之後，等於讓未驗票的請求先跑一段程式。
+   * 這一條與上面「限流早於 resolveEmployee」串起來，把三者的順序釘死：
+   * **驗票 → 限流 → 業務**。
+   */
+  it("getIdentityFromDeWT 排在 enforceRateLimit 之前", () => {
+    const late = listHandlers().flatMap((handler) => {
+      const authAt = handler.body.indexOf("getIdentityFromDeWT(");
+      const limitAt = handler.body.indexOf("enforceRateLimit(");
+      if (authAt === -1 || limitAt === -1) return [];
+      return authAt < limitAt ? [] : [`${handler.file}:${handler.method}`];
+    });
+
+    expect(late).toEqual([]);
+  });
+
+  /**
+   * Info: (20260821 - Julian) 驗票失敗要 `return`，不是 `throw`。
+   *
+   * 每一支的 `catch` 都把非 `AppError` 收斂成 `IS_DB_FAILED`（500）。
+   * 驗票失敗若用 `throw`，訪客拿到的會是 500 而不是 401 —— 而
+   * 「無票一律 401」正是那句安全論證的原文。
+   */
+  it("驗票失敗回的是 401，且用 return 不是 throw", () => {
+    const wrong = listHandlers().flatMap((handler) => {
+      if (!handler.body.includes("getIdentityFromDeWT(")) return [];
+      return /return jsonFail\(API_ERRORS\.AUTH_INVALID_TOKEN\)/.test(
+        handler.body,
+      )
+        ? []
+        : [`${handler.file}:${handler.method}`];
+    });
+
+    expect(wrong).toEqual([]);
   });
 });
 

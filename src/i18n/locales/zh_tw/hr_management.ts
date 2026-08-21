@@ -1019,6 +1019,10 @@ export const hrManagement = {
       "當天已經有一張加班單涵蓋了這段時間的一部分。請調整時段，或先撤回那一張。",
     error_earlier_than_approved:
       "當天已有一張時段較晚的加班單核准了，它的加成級距已經固定。此時補一張更早的，兩張都會以較低的級距計算。請先撤回較晚那一張，兩張一起重送。",
+    error_not_approved:
+      "這張加班單目前不在已核准狀態，沒有核准可以撤銷。請重新整理看它現在的狀態。",
+    error_approval_not_reversible:
+      "這次核准換到的補休已經被請掉、過期或折現，或加班費已由薪資結算，核准無法再撤銷。請改請人資以人工調整更正額度。",
     error_agreement_record_required:
       "放寬單月上限到 54 小時（§32 III）必須留下記載：工會或勞資會議的紀錄連結，以及同意的日期。",
     error_emergency_already_declared:

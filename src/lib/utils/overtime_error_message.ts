@@ -52,6 +52,15 @@ export const OVERTIME_ERROR_I18N_KEY: Readonly<Record<string, string>> = {
   // Info: (20260821 - Julian) review 第 15 輪：事後補一張比已核准者更早的單
   [API_ERRORS.VA_OVERTIME_EARLIER_THAN_APPROVED.code]:
     "hr_management.overtime.error_earlier_than_approved",
+  /**
+   * Info: (20260821 - Julian) 撤銷核准的兩種落空（review 第 7 輪 B1）。
+   * 分開登記：一句是「它本來就不在已核准」，另一句是「已經來不及了，
+   * 改走人工調整」—— 後者的下一步不是重按。
+   */
+  [API_ERRORS.VA_OVERTIME_NOT_APPROVED.code]:
+    "hr_management.overtime.error_not_approved",
+  [API_ERRORS.VA_OVERTIME_APPROVAL_NOT_REVERSIBLE.code]:
+    "hr_management.overtime.error_approval_not_reversible",
   // Info: (20260820 - Julian) review 第 5 輪 M7／M8：算不出這個人的一日工時
   [API_ERRORS.VA_OVERTIME_DAY_LENGTH_UNKNOWN.code]:
     "hr_management.overtime.error_day_length_unknown",
