@@ -344,6 +344,54 @@ const MERMAID_LEAK = /(sankey-beta|graph (TD|LR)\b|flowchart (TD|LR)\b|%%\{)/g;
  * 抓單一個字元會比它要守的東西寬。分隔列與「連三個管線」是 markdown 表格才有的形狀。
  */
 const MARKDOWN_TABLE_LEAK = /(\|\s*-{3,}\s*\||\|\s*\|\s*\|)/g;
+
+/**
+ * Info: (20260820 - Emily) 對帳附錄裡**刻意逐字引用**的原文列不算外洩。
+ *
+ * `carbon_table38.disclosure.ts` 在「無法解析的資料列(N):」之後，用行內程式碼
+ * 把那 N 列原文一字不改印出來。那段的存在理由寫在該檔檔頭:
+ * 「只說『有 3 列無法解析』的話,沒有人能判斷那 3 列重不重要」。
+ * 也就是說,那些管線是**引用**,不是渲染失敗 —— 與「程式碼區塊內原樣保留」同一族。
+ *
+ * 08-20 run C 實測:6 處外洩全部落在這一段(第 30 頁),而同一趟真正的渲染失敗
+ * (表3.4 欄數不符)是被 `divider_column_mismatch` 丟掉的,紙上一個管線都沒有。
+ * 判準沒有排除這一段的話,它比它要守的東西**寬** —— 會把刻意的引用報成缺陷,
+ * 而一支會亂叫的驗收腳本沒有人會再看它。
+ *
+ * 排除的範圍刻意收得很窄:只跳過標題行宣告的那 N 列,而且必須是以管線開頭的行。
+ * 排除幾列會記進快照(`對帳逐字引用列_排除`),不靜默。
+ */
+const UNPARSED_ROWS_HEADING = /無法解析的資料列\((\d+)\)/g;
+
+const stripQuotedUnparsedRows = (
+  input: string,
+): { text: string; excluded: number } => {
+  const lines = input.split("\n");
+  const drop = new Set<number>();
+
+  lines.forEach((line, index) => {
+    const matched = [...line.matchAll(UNPARSED_ROWS_HEADING)];
+    if (matched.length === 0) return;
+    let remaining = Number(matched[0][1]);
+    let cursor = index + 1;
+    while (remaining > 0 && cursor < lines.length) {
+      const candidate = lines[cursor].trim();
+      if (candidate.length === 0) {
+        cursor += 1;
+        continue;
+      }
+      if (!candidate.startsWith("|")) break;
+      drop.add(cursor);
+      remaining -= 1;
+      cursor += 1;
+    }
+  });
+
+  return {
+    text: lines.filter((_, index) => !drop.has(index)).join("\n"),
+    excluded: drop.size,
+  };
+};
 /**
  * Info: (20260814 - Emily) 內文引用表號:`如表 3.1`、`見表3.1`、`表 3.1 所示`。
  *
@@ -529,7 +577,12 @@ const main = async (): Promise<void> => {
   await checkCMaps(bytes);
   expectZero("反斜線逸出外洩", text.match(ESCAPE_LEAK) ?? []);
   expectZero("mermaid 語法外洩", text.match(MERMAID_LEAK) ?? []);
-  expectZero("markdown 表格語法外洩", text.match(MARKDOWN_TABLE_LEAK) ?? []);
+  const quoted = stripQuotedUnparsedRows(text);
+  snapshot.對帳逐字引用列_排除 = quoted.excluded;
+  expectZero(
+    "markdown 表格語法外洩",
+    quoted.text.match(MARKDOWN_TABLE_LEAK) ?? [],
+  );
   expectZero("待補佔位符", text.match(/待補/g) ?? []);
   expectZero("資料不足佔位符", text.match(/資料不足/g) ?? []);
 
@@ -816,12 +869,43 @@ const main = async (): Promise<void> => {
   const isoMappingNote = squeezeForMatch(
     carbonChatbotZhTw.chart_imported_sankey_iso_mapping ?? "",
   );
-  const scopeWordAppears = squeezed.includes("範疇");
+  /**
+   * Info: (20260820 - Emily) 判準看的是**系統把範疇當分類標籤印出來**,
+   * 而不是紙上出現過「範疇」這兩個字。
+   *
+   * 08-20 run C 實測:紙上「範疇」6 處,圖表印的是 **0 處**(那一趟帳本是空的,
+   * 所有圖表區塊回的都是佔位符)。6 處的來源是:
+   *   2 處 大綱的節標題「2.3 排放範疇與類別劃分」(目錄 + 正文)
+   *   2 處 客戶原文照錄(表2.2 的表名、第四章品質檢核的敘述)
+   *   2 處 系統的近似映射揭露「…合併於同一範疇類別」—— 那**本身就是**在說明映射
+   *
+   * 用「範疇」兩個字當判準,就是要求那句桑基圖的對照說明在**沒有對象**的情況下
+   * 也要上紙 —— 那是對著判準答題,不是修缺陷。
+   *
+   * 收窄之後仍然抓得到它原本要抓的東西:08-19 那一趟圖表印了範疇標籤(各範疇占比、
+   * 各範疇排放量、範疇小計)而沒有對照說明,在新判準下照樣紅。
+   *
+   * `紙上範疇字數` 記進快照(record_only):收窄了多少必須看得見,
+   * 沉默的收窄等於把判準悄悄放寬。
+   */
+  const SCOPE_LABEL_KEYS = [
+    "chart_scope_pie_title",
+    "chart_scope_bar_title",
+    "chart_imported_sankey_title",
+    "chart_imported_sankey_collapsed",
+    "report_table_subtotal_heading",
+  ] as const;
+  const scopeLabelsOnPaper = SCOPE_LABEL_KEYS.filter((key) => {
+    const label = squeezeForMatch(carbonChatbotZhTw[key] ?? "");
+    return label.length > 0 && squeezed.includes(label);
+  });
+  snapshot.紙上範疇字數 = (text.match(/範疇/g) ?? []).length;
+  snapshot.紙上範疇分類標籤 = [...scopeLabelsOnPaper];
   expectZero(
     "紙上有範疇卻沒有類別對照說明",
-    scopeWordAppears &&
+    scopeLabelsOnPaper.length > 0 &&
       !(isoMappingNote.length > 0 && squeezed.includes(isoMappingNote))
-      ? ["缺少範疇↔類別對照說明"]
+      ? [`缺少範疇↔類別對照說明(觸發標籤:${scopeLabelsOnPaper.join("、")})`]
       : [],
   );
 
@@ -993,6 +1077,25 @@ const checkLog = (log: string, text?: string): void => {
     ...log.matchAll(/source table dropped.*?"tableNo":"([^"]+)"/g),
   ].map((match) => match[1]);
   snapshot.log_丟表 = dropped;
+  /**
+   * Info: (20260820 - Emily) 被丟的**原因**，用來分辨兩種完全不同的情況。
+   *
+   * `divider_column_mismatch` = 08-20 新增的渲染不變式擋下來的
+   * （表頭與分隔列欄數不一致，GFM 不會渲染成表格）。這是**預期的**：
+   * 它把「印成一片管線」換成「明確失敗」，所以 `log_丟表` 會上升。
+   *
+   * `not_a_table` / `too_many_tables` = 原本就有的那幾種，代表不同的問題。
+   *
+   * 只看 `log_丟表` 的數字分不出這兩者，而它們的處理方式相反：
+   * 前者要修模型輸出（`open/47` 根因），後者要看是不是誤丟。
+   */
+  snapshot.log_丟表原因 = [
+    ...new Set(
+      [...log.matchAll(/source table dropped.*?"reason":"([^"]+)"/g)].map(
+        (match) => match[1],
+      ),
+    ),
+  ];
   if (dropped.length === 0) {
     record("pass", "log:原文表格被丟", "0 張");
   } else {
