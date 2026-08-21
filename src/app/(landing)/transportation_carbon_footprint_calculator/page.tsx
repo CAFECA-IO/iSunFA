@@ -82,7 +82,7 @@ import {
   type ILegacyBatchItem,
 } from "@/lib/utils/logistics_report";
 import { IOrderPayload } from "@/hooks/use_order_transaction";
-import { ANALYSIS_CATEGORY } from "@/constants/analysis";
+import { ANALYSIS_CATEGORY, MILEAGE_ACTION } from "@/constants/analysis";
 import {
   TRANSPORT_CALCULATOR_QUERY_PARAM,
   TRANSPORT_CALCULATOR_TAB,
@@ -386,7 +386,9 @@ function ReportPageContent() {
 
     if (!hasManualParams) {
       if (!aiInput.trim()) {
-        setError("請輸入運輸路線描述，或展開進階設定手動輸入完整參數。");
+        setError(
+          t("transportation_carbon_footprint_calculator.error.missing_input"),
+        );
         return;
       }
       setLoading(true);
@@ -407,7 +409,9 @@ function ReportPageContent() {
           throw new Error(
             errorData.message ||
               errorData.error ||
-              `AI 解析失敗 (${resParse.status})`,
+              `${t(
+                "transportation_carbon_footprint_calculator.error.ai_parse_failed",
+              )} (${resParse.status})`,
           );
         }
 
@@ -423,7 +427,13 @@ function ReportPageContent() {
         setWeightKg(currentWeight);
         setShowManual(true);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "AI 解析失敗");
+        setError(
+          err instanceof Error
+            ? err.message
+            : t(
+                "transportation_carbon_footprint_calculator.error.ai_parse_failed",
+              ),
+        );
         setLoading(false);
         setIsParsing(false);
         return;
@@ -440,7 +450,9 @@ function ReportPageContent() {
       currentDest.lng === "" ||
       currentWeight === ""
     ) {
-      setError("無法取得完整參數，請確認 AI 解析結果或手動輸入。");
+      setError(
+        t("transportation_carbon_footprint_calculator.error.missing_params"),
+      );
       return;
     }
 
@@ -1258,13 +1270,23 @@ function ReportPageContent() {
         }
       } catch (err) {
         console.error("Failed to load history", err);
-        setError("無法載入歷史報告");
+        setError(
+          t(
+            "transportation_carbon_footprint_calculator.error.load_history_failed",
+          ),
+        );
       } finally {
         setLoading(false);
       }
       return false;
     },
-    [setActiveTab],
+    /**
+     * Info: (20260820 - Luphia) t 進入依賴陣列不會讓 handleLoadHistory 變得不穩定:
+     * I18nProvider 位於 root layout,其 state 只在切換語言時變動,
+     * 故 t 的識別在同一語言下是穩定的 —— 依賴 handleLoadHistory 的
+     * analysisId 自動載入 effect 不會因此每次 render 都重跑。
+     */
+    [setActiveTab, t],
   );
 
   // Info: (20260724 - Tzuhan) URL 帶 analysisId 時自動載入該筆(刷新/前進可重現載入的報告檢視,需求四)
@@ -1317,9 +1339,16 @@ function ReportPageContent() {
     {
       key: "type",
       label: t("common.type"),
+      /**
+       * Info: (20260820 - Luphia) 沿用分頁標籤的鍵而不新增兩個鍵:
+       * 這一欄回答的正是「這筆載入後會切到哪個分頁」,兩處必須是同一個詞 ——
+       * 分開定義就會出現「清單寫 A、分頁寫 B」而沒有任何機制會發現。
+       */
       render: (row) => (
         <span className="font-bold text-gray-700">
-          {row.action === "calculate_batch" ? "里程核算" : "碳排核算"}
+          {row.action === MILEAGE_ACTION.CALCULATE_BATCH
+            ? t("transportation_carbon_footprint_calculator.ui.tab_mileage")
+            : t("transportation_carbon_footprint_calculator.ui.tab_analysis")}
         </span>
       ),
     },
@@ -1327,7 +1356,7 @@ function ReportPageContent() {
       key: "origin",
       label: t("common.origin"),
       render: (row) => {
-        if (row.action === "calculate_batch") {
+        if (row.action === MILEAGE_ACTION.CALCULATE_BATCH) {
           if (row.items && row.items.length === 1) {
             return (
               <div className="flex items-center gap-1.5 text-sm text-gray-700">
@@ -1367,7 +1396,7 @@ function ReportPageContent() {
       key: "dest",
       label: t("common.destination"),
       render: (row) => {
-        if (row.action === "calculate_batch") {
+        if (row.action === MILEAGE_ACTION.CALCULATE_BATCH) {
           if (row.items && row.items.length === 1) {
             return (
               <div className="flex items-center gap-1.5 text-sm text-gray-700">
@@ -1827,13 +1856,13 @@ function ReportPageContent() {
                       expandedKeys={historyExpandedKeys}
                       onExpandedKeysChange={setHistoryExpandedKeys}
                       rowExpandable={(row) =>
-                        row.action === "calculate_batch" &&
+                        row.action === MILEAGE_ACTION.CALCULATE_BATCH &&
                         row.items !== undefined &&
                         row.items.length > 1
                       }
                       expandedRowRender={(row) => {
                         if (
-                          row.action !== "calculate_batch" ||
+                          row.action !== MILEAGE_ACTION.CALCULATE_BATCH ||
                           !row.items ||
                           row.items.length <= 1
                         )
