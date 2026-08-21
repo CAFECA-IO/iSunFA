@@ -300,9 +300,13 @@ WHERE o.type = 'BILLING_SUBSCRIBE' AND o.status = 'PAID'
   AND o.idempotency_key LIKE 'renew:%';
 
 -- 已經降級的（付了錢、拿到免費版）：需要人工補償
-SELECT ts.team_id, ts.plan_id, ts.status FROM team_subscription ts
-JOIN "order" o ON o.idempotency_key = 'renew:' || ts.team_id || ':p' || (EXTRACT(EPOCH FROM ts.current_period_start) * 1000)::bigint
-WHERE o.status = 'PAID' AND ts.plan_id = 'free';
+-- （續訂訂單的 data.teamId 是頂層欄位，用它 join；不要用 epoch 重組冪等鍵——
+--   period_start 帶毫秒時會對不上）
+SELECT ts.team_id, ts.plan_id, ts.status, o.id AS order_id, o.created_at
+FROM "order" o
+JOIN team_subscription ts ON ts.team_id = o.data->>'teamId'
+WHERE o.status = 'PAID' AND o.idempotency_key LIKE 'renew:%'
+  AND ts.plan_id = 'free';
 ```
 
 ---
