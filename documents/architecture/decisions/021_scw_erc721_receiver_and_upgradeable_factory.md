@@ -87,7 +87,7 @@ forge `testV2WalletAnswersReceiverProbe` 與 `testUntouchedV1WalletKeepsOldImple
 2. **Canary**：在本地鏈對一個 V1 錢包做完整升級驗證（簽章、轉點、收卡、再升級一次），再對正式鏈的平台自有錢包重複一次
 3. **託管批次**（4 個）：平台代簽升級 UserOp，全程可觀測
 4. **新註冊切換**：env 的 `NEXT_PUBLIC_SCW_FACTORY_ADDRESS` 指向 V2 factory。**切換前必須逐一驗證所有 DB `user.address` 在鏈上都有 code**（factory 事件 2,144 ≈ 使用者 2,119，看似急切部署，仍須驗證）；V1 factory 位址保留在設定中，既有使用者的位址一律以 DB 為準，禁止對舊使用者重推
-5. **passkey 漸進升級**：app 在下次登入／付款時夾帶升級 UserOp（一次額外的生物辨識確認），滲透率跟著活躍度走
+5. **passkey 漸進升級**：app 在下次登入／付款時夾帶升級 UserOp（一次額外的生物辨識確認），滲透率跟著活躍度走。**告知通道是小鈴鐺**（PR #6701）：`scripts/request_wallet_upgrades.ts` 以與會員卡 worker 同一條 `supportsInterface` 探針，只對還不能收 ERC-721 的使用者發出「系統要求升級錢包」待辦——已升級的人不會收到一則按了沒事做的通知，dedupeKey 一人一則、重跑不重複
 6. 會員卡 worker 的探針邏輯（PR #6687 的 A 方案）在任何一步之前就可以先上——它對 V1 錢包的行為是便宜地跳過
 
 ## Consequences（後果）
