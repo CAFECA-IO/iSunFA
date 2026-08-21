@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Dialog } from "@headlessui/react";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
   ALLOCATION_DIRECTION,
@@ -64,6 +64,32 @@ export default function AllocationModal({
   useEffect(() => {
     if (isOpen) setAmount("0");
   }, [isOpen]);
+
+  /**
+   * Info: (20260819 - Luphia) 處理中攔住「關閉分頁 / 重新整理」（產品需求 20260819）。
+   *
+   * 分配不是一次資料庫寫入就結束：先在交易內扣團隊池，**接著在交易外鑄到成員的
+   * 鏈上錢包**，成功才回填 `txHash`、明確失敗才寫反向分錄補回池（ADR 015 修訂）。
+   * 中途離開的代價很具體——請求被中斷時，那筆 `ALLOCATE` 可能停在 `txHash: null`，
+   * 也就是「已扣池、尚未確認上鏈」，而那是需要人工追查的狀態。
+   *
+   * 畫面上的提示只能勸阻**點關閉鈕**；重新整理與關閉分頁要靠瀏覽器自己的確認對話框，
+   * 而那只有 `beforeunload` 叫得出來。`preventDefault()` 與 `returnValue` 都設是
+   * 為了跨瀏覽器（Chrome 早期只認後者，規範改為前者）。
+   *
+   * 只在 `submitting` 期間掛，處理完立刻卸下——常駐一個 beforeunload 會讓使用者
+   * 在任何時候離開頁面都被問一次，那種提示很快就會被無視。
+   */
+  useEffect(() => {
+    if (!submitting) return undefined;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+      return "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [submitting]);
 
   /**
    * Info: (20260818 - Luphia) 未指定對象時預選第一位，但**不預選一個不在清單裡的人**。
@@ -175,6 +201,34 @@ export default function AllocationModal({
                 ? t("team_management.wallet.allocate_onchain_note")
                 : t("team_management.wallet.revoke_onchain_note")}
             </p>
+            {/**
+             * Info: (20260819 - Luphia) 處理中的動畫與「不要關閉」的提示（產品需求 20260819）。
+             *
+             * 先前處理中只是把按鈕變灰：使用者看不出系統在做事，於是會重按、
+             * 重新整理，或直接關掉分頁——而這條路徑中途離開會留下
+             * 「已扣池、尚未確認上鏈」的分錄。因此把**為什麼要等**也寫出來
+             * （要等鏈上確認），只說「請稍候」的提示留不住人。
+             */}
+            {submitting && (
+              <div
+                className="mt-3 flex items-start gap-3 rounded-lg border border-orange-200 bg-orange-50 p-3"
+                role="status"
+                aria-live="assertive"
+              >
+                <Loader2
+                  className="mt-0.5 size-4 shrink-0 animate-spin text-orange-600"
+                  aria-hidden="true"
+                />
+                <div className="text-xs text-orange-900">
+                  <p className="font-semibold">
+                    {t("team_management.wallet.allocating_title")}
+                  </p>
+                  <p className="mt-1">
+                    {t("team_management.wallet.allocating_warning")}
+                  </p>
+                </div>
+              </div>
+            )}
             <div className="mt-5 flex justify-end gap-2">
               <button
                 onClick={onClose}
@@ -186,9 +240,14 @@ export default function AllocationModal({
               <button
                 onClick={submit}
                 disabled={submitting || !isValid}
-                className="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {t("common.confirm")}
+                {submitting && (
+                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                )}
+                {submitting
+                  ? t("team_management.wallet.allocating_button")
+                  : t("common.confirm")}
               </button>
             </div>
           </div>

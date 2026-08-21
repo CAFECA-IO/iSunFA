@@ -20,5 +20,6 @@ export const purchaseTarget = {
   no_owner_team:
     "Only a team owner can subscribe. You do not own any team yet — ask the owner to subscribe, or create a team first.",
   no_manager_team:
-    "Buying team credits requires owner or admin rights. You have no team to manage right now; you can buy personal credits instead.",
+    // Info: (20260819 - Luphia) 團隊 ADMIN 已取消（產品決定 20260819），文案不得再提到它
+    "Buying team credits requires owner rights. You have no team to manage right now; you can buy personal credits instead.",
 };

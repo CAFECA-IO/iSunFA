@@ -39,6 +39,7 @@
  * 那種表的欄位標籤需要人工對照原文。
  */
 
+import { splitTableCells } from "@/lib/utils/markdown_table_cells";
 import {
   classifyMarkdownLines,
   MarkdownLineKind,
@@ -47,13 +48,8 @@ import {
 const ROW = /^\s*\|.*\|\s*$/;
 const DIVIDER = /^\s*\|[\s:|-]+\|\s*$/;
 
-/** Info: (20260811 - Emily) 逐格切開;`\|` 是逃脫的直線,不是欄位邊界 */
-const splitCells = (line: string): string[] =>
-  line
-    .trim()
-    .replace(/^\|/, "")
-    .replace(/\|$/, "")
-    .split(/(?<!\\)\|/);
+// Info: (20260821 - Emily) 切格走正典實作(見 markdown_table_cells 檔頭)
+const splitCells = splitTableCells;
 
 export interface IMarkdownTableColumnFix {
   /** Info: (20260811 - Emily) 修補後的 markdown;不需修補時與輸入相同 */

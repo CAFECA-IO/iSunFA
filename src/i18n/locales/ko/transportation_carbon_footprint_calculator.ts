@@ -1,3 +1,5 @@
+import { GUIDE_FIGURE_ID } from "@/constants/logistics_guide";
+
 export const transportationCarbonFootprintCalculator = {
   title: "물류 탄소 발자국",
   default_ai_input:
@@ -9,6 +11,8 @@ export const transportationCarbonFootprintCalculator = {
     ai_parse_failed: "AI 구문 분석 실패",
     missing_params:
       "전체 매개변수를 가져올 수 없습니다. AI 분석 결과를 확인하거나 수동으로 입력하세요.",
+    load_history_failed:
+      "과거 보고서를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.",
   },
   payment: {
     fee_name: "탄소 발자국 분석 비용",
@@ -164,6 +168,17 @@ export const transportationCarbonFootprintCalculator = {
   // Info: (20260724 - Tzuhan) 내보내기 선택 모달(요구사항 2)
   methodology: {
     title: "계산 방식 설명",
+    intro:
+      "아래 각 절에서 모든 수치가 어디서 나오는지 설명합니다. 결론을 어디까지 신뢰할 수 있는지만 알고 싶다면 제11절 「알려진 한계」로 바로 이동하세요.",
+    limits_title: "이 수치를 쓰기 전에 반드시 읽어 주세요",
+    read_full: "계산 방식 전문 보기",
+    // Info: (20260820 - Luphia) 限制摘要同 sections 以英文回退：韓文審計用詞我無法驗證準確度，
+    // Info: (20260820 - Luphia) 譯錯的限制摘要比沒有摘要更糟。用詞與 sections 一致，翻譯可一併替換。
+    highlights: [
+      "The scope covers **transport only**: no warehousing, loading and unloading, or packaging, and nothing from the production or disposal of the goods themselves. The result is therefore not the full life-cycle carbon footprint of the shipment.",
+      "The road network **currently covers Taiwan only**: road legs outside Taiwan are estimated from straight-line distance times a tortuosity factor of {{landTortuosity}} and marked Estimated in the report. Where a route's emissions are dominated by road transport abroad, the estimation error enters the result directly.",
+      "The sea and air factors have a **production region of the United States** (announced 2016 and 2017), and the air distance excludes routing detours, climb and high-altitude radiative forcing — both the actual flight distance and the climate impact exceed the figures reported here.",
+    ],
     // Info: (20260802 - Luphia) 內文暫以英文回退：韓文審計用詞我無法驗證準確度，
     // Info: (20260802 - Luphia) 譯錯的方法論說明比沒有說明更糟。結構與 token 已就位，翻譯可直接替換此陣列。
     sections: [
@@ -273,7 +288,7 @@ export const transportationCarbonFootprintCalculator = {
           {
             term: "When no route is available",
             detail:
-              "The great-circle distance is multiplied by a tortuosity factor of {{landTortuosity}} and marked est. in the report. The factor reflects how far real roads typically deviate from a straight line and is not calibrated per route.",
+              "The great-circle distance is multiplied by a tortuosity factor of {{landTortuosity}} and marked 「추정치」 in the report. The factor reflects how far real roads typically deviate from a straight line and is not calibrated per route.",
           },
         ],
       },
@@ -297,7 +312,7 @@ export const transportationCarbonFootprintCalculator = {
           {
             term: "When no route can be planned",
             detail:
-              "The great-circle distance is multiplied by a tortuosity factor of {{seaTortuosity}} and marked est. The sea factor exceeds the road factor because lanes are constrained by landmasses and straits, producing greater deviation.",
+              "The great-circle distance is multiplied by a tortuosity factor of {{seaTortuosity}} and marked 「추정치」. The sea factor exceeds the road factor because lanes are constrained by landmasses and straits, producing greater deviation.",
           },
         ],
       },
@@ -463,6 +478,178 @@ export const transportationCarbonFootprintCalculator = {
             term: "The shipping lane data version is not recorded",
             detail:
               "The lane geometry is supplied as a static file and the system records no issuing body, release version or licence terms, so the data's currency cannot be traced.",
+          },
+        ],
+      },
+    ],
+  },
+  guide: {
+    title: "사용 안내",
+    subtitle:
+      "한 문장의 경로 설명에서 납품 가능한 PDF와 CSV까지, 전체 흐름을 정리했습니다. 이어서 각 수치의 계산 방식과 알려진 한계가 나옵니다.",
+    nav_title: "이 페이지 목차",
+    figure_note:
+      "그림은 화면 예시도입니다. 실제 화면이 사용하는 컴포넌트 스타일과 문자열로 다시 그렸기 때문에 표시 언어와 라이트／다크 테마에 따라 바뀌며, 특정 버전의 화면 캡처가 아닙니다. 그림의 번호는 그림 아래 설명과 대응합니다.",
+    figure_caption: "예시도: {{title}}",
+    start_cta: "탄소 회계 시작",
+    empty_cta: "처음이신가요? 사용 안내 보기",
+    chapters: [
+      {
+        id: "overview",
+        title: "1. 네 개 탭의 역할",
+        summary:
+          "먼저 위치를 파악하세요. 이 도구는 서로 다른 네 가지 작업을 네 개 탭으로 나눠 두었고, 탭을 잘못 고르는 것이 가장 흔한 막힘 지점입니다.",
+        steps: [
+          {
+            id: "overview_tabs",
+            title: "탭별 분담",
+            body: "탄소 회계는 「한 경로의 배출량」, 마일리지는 「여러 경로의 거리」, 과거 보고서는 완료된 분석이며, 사용 안내는 이 페이지입니다.",
+            figure: GUIDE_FIGURE_ID.TABS,
+            callouts: [
+              "**탄소 회계**: 출발지·도착지·중량을 입력하면 지도, 구간별 마일리지, 배출량이 담긴 완전한 보고서가 나오고 PDF로 내보낼 수 있습니다. 생성마다 {{analysisCost}} 크레딧이 차감됩니다.",
+              "**마일리지**: 텍스트 붙여넣기 또는 Excel／CSV 가져오기로 여러 경로를 한 번에 처리하며 거리만 산출합니다. 어떤 경로를 본격적으로 핵산할지 고르기 전 점검용으로 적합합니다.",
+              "**과거 보고서**: 지난 분석을 나열합니다. 재계산도 추가 크레딧도 없이 다시 열어 보거나 내보낼 수 있습니다.",
+              "**사용 안내**: 이 페이지입니다. 탭을 바꿔도 이미 입력한 내용은 지워지지 않습니다.",
+            ],
+            notes: [
+              "현재 탭은 주소의 ?tab= 파라미터에 담기므로, 특정 탭의 링크를 그대로 동료에게 보낼 수 있습니다.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "analysis",
+        title: "2. 탄소 회계: 한 문장에서 한 편의 보고서까지",
+        summary: "한 경로, 한 보고서, 모두 네 단계입니다.",
+        steps: [
+          {
+            id: "analysis_describe",
+            title: "경로를 설명하거나 좌표를 직접 입력",
+            body: "「운송 경로 설명」에 출발지·도착지·중량을 한 문장으로 쓰고 「분석 보고서 생성」을 누릅니다. 시스템이 먼저 AI로 그 문장에서 매개변수를 추출하며, 이 단계에서는 차감되지 않습니다.",
+            figure: GUIDE_FIGURE_ID.ANALYSIS_INPUT,
+            callouts: [
+              "**운송 경로 설명**: 한 문장이면 충분합니다(예: 타이베이 국부기념관에서 맨체스터 박물관까지 5000 kg의 석판 운송). AI는 문장을 출발지·도착지·중량으로 바꾸는 역할만 하며, 모든 거리와 배출량은 백엔드의 결정론적 규칙 엔진이 계산합니다.",
+              "**고급 매개변수 수동 구성**: 정확한 좌표가 필요할 때 펼쳐 위도·경도·총중량을 입력합니다. 다섯 항목이 모두 채워지면 수동 값이 우선하며 **AI 해석은 호출되지 않습니다**.",
+              "**분석 보고서 생성**: 먼저 해석하고 이어서 결제 확인이 열립니다. 해석이 끝나면 고급 패널이 자동으로 펼쳐져, 결제 전에 추출된 좌표와 중량을 확인할 수 있습니다.",
+            ],
+            notes: [
+              "설명란에 입력하면 이미 채워진 위도·경도와 중량이 지워집니다. 「설명은 뉴욕인데 좌표는 지난번 도쿄」 같은 불일치를 막기 위한 동작입니다.",
+              "해석 결과가 틀리면 고급 패널의 숫자를 바로 고치면 되고, 문장을 다시 쓸 필요는 없습니다.",
+            ],
+          },
+          {
+            id: "analysis_pay",
+            title: "차감 확인",
+            body: "매개변수가 모두 갖춰지면 결제 확인이 나타납니다. 크레딧이 소모되는 곳은 여기뿐이며, 그 전의 해석·탭 전환·이력 열람은 무료입니다.",
+            figure: GUIDE_FIGURE_ID.ANALYSIS_PAYMENT,
+            callouts: [
+              "**필요 크레딧**: 이 분석은 1회당 {{analysisCost}} 크레딧입니다. 한도가 있는 팀에 속해 있으면 팀 한도가 먼저 차감되고, 실제 결제 출처와 잔액이 대화상자에 표시됩니다.",
+              "**결제 후 생성**: 누르면 계산이 시작됩니다. 같은 매개변수로 다시 계산하면 다시 차감되므로, 앞 단계에서 좌표와 중량을 확인해 두는 편이 좋습니다.",
+            ],
+          },
+          {
+            id: "analysis_read",
+            title: "보고서 읽기",
+            body: "보고서는 「플랜」 단위입니다. 육상 단독, 해상 복합, 항공 복합, 해륙공 복합이 각각 카드로 나오며 지도, 구간별 마일리지, 배출량을 포함합니다.",
+            figure: GUIDE_FIGURE_ID.ANALYSIS_REPORT,
+            callouts: [
+              "**플랜 전환**: 해당되는 플랜만 나타납니다. 두 항구가 {{minSeaKm}} km 미만, 두 공항이 {{minAirKm}} km 미만이거나, 육상 운송이 해당 복합 운송보다 멀지 않으면 그 플랜은 표시되지 않습니다.",
+              "**플랜 코드**(예: R01-SEA)는 화면, PDF 파일명, CSV의 각 행을 관통하는 유일한 상호 대조 색인입니다.",
+              "**「추정치」** 표시가 붙은 구간은 경로 탐색이 성공하지 못해 대권 거리에 우회 계수를 곱한 추정값입니다(육상 ×{{landTortuosity}}, 해상 ×{{seaTortuosity}}). 보고서를 검증할 때는 먼저 이 구간이 몇 개인지 보세요.",
+              "**총 배출량**은 백엔드에서 반올림하지 않은 정밀도로 계산되므로, 구간 합계와 총계가 소수 몇 자리 어긋날 수 있습니다. 보고서는 그 차액과 원인을 공개합니다.",
+              "**계수와 산식**은 항상 보고서 안에 공개됩니다: 총거리(km) × (중량(kg)/1000) × 해당 모드 계수.",
+            ],
+            notes: [
+              "플랜이 보이지 않는 것은 계산 누락이 아닙니다. 적용성 판정은 해당되지 않는 플랜을 통째로 제거하며, 값이 0인 보고서를 내놓지 않습니다. 규칙은 아래 「9. 플랜의 적용성 판정」을 참고하세요.",
+            ],
+          },
+          {
+            id: "analysis_export",
+            title: "PDF와 CSV 내보내기",
+            body: "보고서나 이력 목록에서 「보고서 내보내기」를 누르면 어떤 플랜을 내보낼지, 배출 수치를 포함할지 고르는 선택 창이 먼저 열립니다.",
+            figure: GUIDE_FIGURE_ID.EXPORT_MODAL,
+            callouts: [
+              "**플랜 선택**: 이 경로에 해당되는 플랜만 나열됩니다. 플랜마다 독립된 PDF가 생성되고, 여러 개면 ZIP으로 묶입니다.",
+              "**이산화탄소 환산량 계산**: 선택을 해제하면 PDF와 CSV 모두 배출 수치를 전혀 담지 않고 경로와 거리만 남습니다.",
+              "**배출 계수 세트**는 선택 항목이 아니라 공개입니다. 표시된 것이 계산에 실제로 쓰인 세트입니다. 다른 계수를 쓰려면 위 항목의 선택을 해제하고 거리만 담긴 CSV를 받아 직접 적용하세요.",
+              "내보낸 summary.csv는 완전한 정밀도와 플랜 코드를 담고 있어 같은 이름의 PDF와 행 단위로 대조할 수 있습니다.",
+            ],
+            notes: [
+              "내보내는 동안 전체 화면 진행 표시가 화면을 덮습니다. 캡처에 뒤쪽 내용이 담기지 않도록 하기 위한 것이며 멈춘 것이 아닙니다.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "mileage",
+        title: "3. 마일리지: 여러 경로를 한 번에",
+        summary:
+          "거리만 알고 싶을 때, 또는 수십 개 경로를 한 번에 처리해야 할 때 사용합니다.",
+        steps: [
+          {
+            id: "mileage_run",
+            title: "목록을 만들고 마일리지를 산출",
+            body: "텍스트를 붙여 AI에 해석시키거나, 한 건씩 직접 추가하거나, Excel／CSV를 가져옵니다. 목록이 준비되면 「마일리지 핵산 시작」으로 한 번에 처리합니다.",
+            figure: GUIDE_FIGURE_ID.MILEAGE_FLOW,
+            callouts: [
+              "**텍스트 붙여넣기 자동 해석**: 출하 전표나 메일 본문을 그대로 붙이고 「AI 자동 해석」을 누르면 출발지·도착지 목록으로 분해됩니다.",
+              "**중계지(선택)**: 경유지를 지정할 때 여기서 설정합니다. 중계지마다 위도·경도가 필요하며 자동 해석으로 가져올 수 있습니다. 좌표가 없는 중계지가 있으면 계산이 멈추고 안내가 표시됩니다.",
+              "**일괄 가져오기**: .xlsx／.xls／.csv를 지원합니다. 가져올 때 파일의 열을 출발지·도착지·중계지에 연결하므로 정해진 열 이름이 필요하지 않습니다.",
+              "**운송 모드**: 기본값은 「AI 자동 판별」이며, 육상 단독·해륙 복합·공륙 복합·해륙공 복합으로 강제 지정할 수도 있습니다.",
+              "**마일리지 핵산 시작**: 목록 전체를 한 번에 전송합니다. 완료 후 건별 또는 일괄로 내보낼 수 있고, 내보내기 흐름은 탄소 회계와 같습니다.",
+            ],
+            notes: [
+              "마일리지 결과도 과거 보고서에 기록되며, 다시 불러오면 자동으로 「마일리지」 탭에서 표시됩니다.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "history",
+        title: "4. 과거 보고서: 다시 보기와 재발행",
+        summary:
+          "완료된 분석은 모두 여기 남습니다. 다시 보거나 내보내는 데 추가 크레딧이 들지 않습니다.",
+        steps: [
+          {
+            id: "history_reopen",
+            title: "다시 불러오기 또는 바로 내보내기",
+            body: "목록은 시간순이며 상태가 COMPLETED인 행만 불러올 수 있습니다. 불러오면 해당 탭으로 전환되고 당시의 출발지·도착지·중량도 함께 복원됩니다.",
+            figure: GUIDE_FIGURE_ID.HISTORY_TABLE,
+            callouts: [
+              "**핵산 유형**으로 탄소 회계인지 마일리지인지 구분합니다. 둘은 불러온 뒤 서로 다른 탭으로 전환됩니다. 여러 경로를 담은 마일리지 계산은 행을 펼쳐 건별로 볼 수 있습니다.",
+              "**불러오기**는 당시 보고서를 다시 열어 보는 것뿐이며 재계산도 차감도 없습니다.",
+              "**보고서 내보내기**는 불러온 직후 내보내기 선택 창을 바로 엽니다. PDF 한 부만 더 필요할 때 적합합니다.",
+            ],
+            notes: [
+              "불러오면 주소에 analysisId가 붙으므로 링크를 그대로 공유할 수 있고, 브라우저 뒤로 가기로 목록에 정확히 돌아갈 수 있습니다.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "troubleshoot",
+        title: "5. 자주 있는 상황",
+        summary: "아래는 모두 설계된 동작이며 결함이 아닙니다.",
+        steps: [
+          {
+            id: "trouble_missing_plan",
+            title: "특정 운송 플랜이 나타나지 않음",
+            body: "적용성 판정이 해당되지 않는다고 보았습니다. 두 항구가 {{minSeaKm}} km 미만, 두 공항이 {{minAirKm}} km 미만이거나, 육상 운송이 그 복합 운송보다 멀지 않은 경우입니다. 이때 플랜은 0값 보고서가 아니라 통째로 생성되지 않습니다.",
+          },
+          {
+            id: "trouble_estimate",
+            title: "거리 옆에 「추정치」 표시가 나옴",
+            body: "그 구간의 경로 탐색이 성공하지 못해 대권 거리에 우회 계수를 곱한 추정값입니다(육상 ×{{landTortuosity}}, 해상 ×{{seaTortuosity}}). 도로망은 **현재 대만만 수록**하고 있어, 대만 밖 육상 구간은 거의 모두 추정값입니다.",
+          },
+          {
+            id: "trouble_total_mismatch",
+            title: "구간 합계와 총계가 소수 몇 자리 다름",
+            body: "총계는 백엔드에서 반올림하지 않은 정밀도로 계산되고 화면의 구간 값은 소수 둘째 자리로 반올림되어 있어, 합계는 당연히 어긋납니다. 보고서가 그 차액을 공개하며, 완전한 정밀도가 필요하면 내보낸 summary.csv를 보세요.",
+          },
+          {
+            id: "trouble_no_payment",
+            title: "분석 보고서 생성을 눌렀는데 결제가 열리지 않음",
+            body: "매개변수가 불완전하면 결제 단계로 넘어가지 않습니다. 설명란에 내용이 있는지, 또는 고급 매개변수 다섯 항목이 모두 채워졌는지 확인하세요. 오류 메시지는 설정 카드 아래에 표시됩니다.",
           },
         ],
       },

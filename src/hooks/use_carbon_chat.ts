@@ -1417,6 +1417,19 @@ export const useCarbonChat = () => {
       importedSankeyGhgMapping: t(
         "carbon_chatbot.chart_imported_sankey_ghg_mapping",
       ),
+
+      /**
+       * Info: (20260819 - Emily) `open/53` 的範疇↔類別對照說明。
+       *
+       * ⚠ 這一行必須接 i18n。本檔 20260806 那則註解記著同一個坑:
+       * 「文案當時只改了 default 沒改 i18n,而這個 hook 會用 i18n 覆蓋 default」——
+       * `chartLabels` 是完整的物件字面值,沒有 spread `CARBON_CHART_DEFAULT_LABELS`,
+       * 所以 builder 加了新的預設文案而這裡沒接,結果是**紙上什麼都不會印**。
+       * 08-19 兩趟驗收就是這樣紅的。
+       */
+      importedSankeyIsoMapping: t(
+        "carbon_chatbot.chart_imported_sankey_iso_mapping",
+      ),
       /**
        * Info: (20260806 - Tzuhan) 這兩個先前漏接 i18n,只吃得到 CARBON_CHART_DEFAULT_LABELS 的
        * 繁中預設值 —— 五層圖是 20260805 才加的,文案當時只改了 default 沒改 i18n,

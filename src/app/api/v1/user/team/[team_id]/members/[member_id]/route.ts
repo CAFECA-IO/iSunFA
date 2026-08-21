@@ -10,6 +10,7 @@ import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
 import { bundlerService } from "@/services/bundler.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
+import { isTeamManagerRole } from "@/constants/team";
 
 export async function PATCH(
   request: NextRequest,
@@ -33,7 +34,8 @@ export async function PATCH(
     const body = await request.json();
     const { role, authentication } = body;
 
-    if (!role || !["OWNER", "ADMIN", "EDITOR", "VIEWER"].includes(role)) {
+    // Info: (20260819 - Luphia) 團隊 ADMIN 已取消（產品決定 20260819）
+    if (!role || !["OWNER", "EDITOR", "VIEWER"].includes(role)) {
       return jsonFail(API_ERRORS.AUTH_INVALID_ROLE);
     }
 
@@ -173,17 +175,14 @@ export async function DELETE(
     // Info: (20260325 - Tzuhan) Permission check
     // Info: (20260325 - Tzuhan) 1. You can delete yourself (leaving the team)
     // Info: (20260325 - Tzuhan) 2. OWNER can delete ANY user inside the team
-    // Info: (20260325 - Tzuhan) 3. ADMIN can only delete MEMBER users inside the team
-    if (!isSelfDelete) {
-      if (operator.role === "EDITOR" || operator.role === "VIEWER") {
-        return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
-      }
-      if (
-        operator.role === "ADMIN" &&
-        (targetMember.role === "OWNER" || targetMember.role === "ADMIN")
-      ) {
-        return jsonFail(API_ERRORS.FO_ADMIN_CANNOT_REMOVE_OTHER_A);
-      }
+    /**
+     * Info: (20260819 - Luphia) 團隊 ADMIN 已取消（產品決定 20260819）：
+     * 原本第 3 條「ADMIN 只能移除一般成員、不得移除 OWNER 或其他 ADMIN」
+     * 隨之消失——非 OWNER 一律不得移除他人，最後一位 OWNER 的保護在下方。
+     * 錯誤碼 `FO_ADMIN_CANNOT_REMOVE_OTHER_A` 因此不再由這條路徑產生。
+     */
+    if (!isSelfDelete && !isTeamManagerRole(operator.role)) {
+      return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
     // Info: (20260325 - Tzuhan) If removing an OWNER, ensure it is not the last OWNER

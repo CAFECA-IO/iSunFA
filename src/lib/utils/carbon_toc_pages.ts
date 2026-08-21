@@ -10,18 +10,13 @@
  * 只有測試看得見,所以它不能住在需要 Chrome 才能跑的服務裡。
  */
 
-/**
- * Info: (20260812 - Emily) 比對前先 NFKC 再去空白。
- *
- * 去空白是因為文字層會在中文之間插入換行與空格;NFKC 是因為抽出來的字
- * 不一定是同一個碼位:實測「第一章」的「一」抽出來是 U+2F00(康熙部首),
- * 不是 U+4E00,字面看起來一樣但字串不相等。
- */
-export const squeezeForTocMatch = (value: string): string =>
-  value.normalize("NFKC").replace(/\s+/g, "");
+// Info: (20260820 - Emily) 「NFKC + 去空白」的判定在 `@/lib/utils/squeeze_for_match`
+// Info: (20260820 - Emily) (PR review B1:同一個對象的判定要有單一 canonical 函式,當時有四份相同實作)。
+// Info: (20260820 - Emily) 這裡刻意**不 re-export** —— 一個函式一個 import 路徑,
+// Info: (20260820 - Emily) 兩條路徑是同一種味道的小號版本。康熙部首那個實測理由跟著函式走。
 
 export interface ICountLeadingTocPagesInput {
-  /** Info: (20260812 - Emily) 逐頁文字,已經過 squeezeForTocMatch */
+  /** Info: (20260812 - Emily) 逐頁文字,已經過 squeezeForMatch */
   readonly squeezedPages: readonly string[];
   /** Info: (20260812 - Emily) 目錄標題(例如「目錄」),已 squeeze;取不到時傳空字串 */
   readonly squeezedTocTitle: string;
@@ -85,7 +80,7 @@ export const countLeadingTocPages = (
 };
 
 export interface IAssignTocPageNumbersInput {
-  /** Info: (20260812 - Emily) 逐頁文字,已經過 squeezeForTocMatch */
+  /** Info: (20260812 - Emily) 逐頁文字,已經過 squeezeForMatch */
   readonly squeezedPages: readonly string[];
   /** Info: (20260812 - Emily) 目錄條目的文字,已 squeeze,順序即目錄順序 */
   readonly squeezedEntries: readonly string[];

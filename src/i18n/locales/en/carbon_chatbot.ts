@@ -298,6 +298,8 @@ export const carbonChatbot = {
     "Per-site subtotals (tCO2e/year, share of company total)",
   chart_imported_sankey_ghg_mapping:
     "Sub-code to GHG Protocol category mapping",
+  chart_imported_sankey_iso_mapping:
+    "The classification layer in this figure is labelled by GHG Protocol scopes. Mapping to ISO 14064-1: Scope 1 = Category 1, Scope 2 = Category 2, Scope 3 = Categories 3 to 6. The narrative of this report follows the ISO 14064-1 categories; both refer to the same set of emission sources.",
   chart_imported_sankey_below_threshold: "Too small to plot (tCO2e/yr)",
   chart_imported_sankey_organization: "Whole company",
   book_bind_pending_unlock:

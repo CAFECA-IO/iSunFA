@@ -141,6 +141,23 @@ export const TRANSPORT_CALCULATOR_QUERY_PARAM = {
 } as const;
 
 /**
+ * Info: (20260820 - Luphia) 分頁識別碼。原本是散在 page.tsx 裡的裸字串,
+ * 而 ?tab= 的值同時出現在解析、比對與四個按鈕上 —— 少改一處就是一個永遠切不過去的分頁。
+ *
+ * guide 為新增的使用說明分頁:操作說明與計算方式說明先前只掛在頁尾的折疊區,
+ * 位於長報告之後,實際上等於沒有出口。
+ */
+export const TRANSPORT_CALCULATOR_TAB = {
+  ANALYSIS: "analysis",
+  MILEAGE: "mileage",
+  HISTORY: "history",
+  GUIDE: "guide",
+} as const;
+
+export type TransportCalculatorTab =
+  (typeof TRANSPORT_CALCULATOR_TAB)[keyof typeof TRANSPORT_CALCULATOR_TAB];
+
+/**
  * Info: (20260724 - Tzuhan) 歷史清單瀏覽狀態(捲動位置/展開列)的 sessionStorage key
  * 僅存 UI 狀態,不存業務資料;分頁關閉即清空
  */

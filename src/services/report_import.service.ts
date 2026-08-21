@@ -23,8 +23,14 @@ import {
   PDF_TEXT_LAYER_REASON,
 } from "@/lib/pdf_text_layer";
 import { PdfTextLayerDecisionEnum } from "@/constants/pdf_text_layer";
-import { ensureTableDivider } from "@/lib/utils/markdown_table_divider";
-import { joinWrappedTableRows } from "@/lib/utils/markdown_table_rows";
+import {
+  ensureTableDivider,
+  trimRowsToDividerWidth,
+} from "@/lib/utils/markdown_table_divider";
+import {
+  CONTINUATION_LINES_NOTEWORTHY,
+  joinWrappedTableRows,
+} from "@/lib/utils/markdown_table_rows";
 import { extractPagesAsPdf } from "@/lib/utils/pdf_page_extract";
 import {
   narrowVisionPagesToRange,
@@ -1016,21 +1022,106 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
          * 另一趟零張。所以「重新匯入一次沒有 dropped」不構成驗證通過，
          * 要連續兩趟才算。
          */
+        /**
+         * Info: (20260820 - Emily) 收割用:把**每一張**候選表的原始 markdown 記出來,
+         * 不只被丟掉的那些。
+         *
+         * 原本只有 `source table dropped` 帶 `full`,於是一趟 40 分鐘的匯入只能拿到
+         * 1–2 種形狀,而這個缺陷偶發(08-20 三趟分別丟 0 / 表3.4 / 表4.4+表4.8)。
+         * 修法因此變成「跑一趟看到一種形狀、修一種、再跑一趟」——
+         * 原檔 19 張表,那個迴圈可以跑好幾週。
+         *
+         * 開了這個旗標,一趟就拿到 19 張的真實長相,收割進
+         * `src/__tests__/fixtures/source_tables/` 之後每次改動 0.3 秒跑完所有形狀。
+         *
+         * 預設關閉:payload 動輒數 KB,19 張就是上百 KB,不該進正常的 log。
+         */
+        if (process.env.CARBON_DUMP_SOURCE_TABLES === "1") {
+          candidates.forEach((table) => {
+            logger.warn("[ReportImportService] source table candidate", {
+              paragraphId,
+              tableNo: table.tableNo,
+              caption: table.caption.slice(0, 40),
+              lineCount: table.markdown.split("\n").length,
+              full: table.markdown,
+            });
+          });
+        }
+
         const rejoined = candidates.map((table) => {
           const fix = joinWrappedTableRows(table.markdown);
+          /*
+           * Info: (20260821 - Emily) 一列都沒接但**有被第 6 條護欄拒絕**的情況要記出來。
+           * 原本這裡直接 return,於是「因為會吞掉別的列所以整段不接」變成無痕 ——
+           * 那張表接下來被丟掉,而 log 只會說 not_a_table,說不出真正的原因。
+           */
+          if (
+            fix.joined === 0 &&
+            fix.refusedTooWide + fix.refusedLooksLikeRow > 0
+          ) {
+            logger.warn("[ReportImportService] source table rows refused", {
+              paragraphId,
+              tableNo: table.tableNo,
+              caption: table.caption.slice(0, 40),
+              refusedTooWide: fix.refusedTooWide,
+              refusedLooksLikeRow: fix.refusedLooksLikeRow,
+            });
+          }
           if (fix.joined === 0) return table;
+          /*
+           * Info: (20260820 - Emily) 續行數一併記出來。08-20 把上限從 4 放寬到 32,
+           * 而放寬不能是靜默的:用掉幾個續行是「原文長得不標準」的強度指標,
+           * 累積起來要回頭改匯入 prompt,不是讓這支函式永遠替 prompt 擦屁股。
+           */
           logger.warn("[ReportImportService] source table rows rejoined", {
             paragraphId,
             tableNo: table.tableNo,
             caption: table.caption.slice(0, 40),
             rows: fix.joined,
+            maxContinuations: fix.maxContinuations,
+            noteworthy: fix.maxContinuations > CONTINUATION_LINES_NOTEWORTHY,
+            /*
+             * Info: (20260821 - Emily) 被第 6 條護欄拒絕的列數(接完比同段最寬完整列還寬,
+             * 代表吞掉了別的列)。非 0 代表原文混用了前導管線 —— 那張表接下來會被驗證器
+             * 擋掉,而這個數字是唯一說得出「為什麼沒接」的地方。
+             */
+            refusedTooWide: fix.refusedTooWide,
+            /*
+             * Info: (20260821 - Emily) 第 7 條護欄擋下的列數(續行本身就是一列)。
+             * 與 refusedTooWide 分開記:前者是「寬度累加超過表寬」,
+             * 後者是「這個續行補上管線就是合法列」—— 兩條抓的不是同一件事,
+             * 而且 refusedTooWide 的餘裕實測是 0,它一旦非 0 就是那個脆弱情況到了。
+             */
+            refusedLooksLikeRow: fix.refusedLooksLikeRow,
           });
           return { ...table, markdown: fix.markdown };
         });
 
         const repaired = rejoined.map((table) => {
           const fix = ensureTableDivider(table.markdown);
-          if (!fix.inserted) return table;
+          if (!fix.inserted) {
+            /**
+             * Info: (20260819 - Emily) 沒補的兩種情況要分得開。
+             *
+             * `skipped` 有值 = 找到了一致列但它上面還有表格列,補進去會讓整張表
+             * 印成原始 markdown(`open/47` 第三種形狀,08-19 run2 實測)。
+             * 這一張接下來會被 `validateSourceTables` 擋掉,而那是刻意的 ——
+             * 一個看得見的失敗勝過一片管線。所以要記出來,否則它就變成
+             * 「表格莫名少一張」而沒有原因。
+             */
+            if (fix.skipped) {
+              logger.warn(
+                "[ReportImportService] source table divider skipped",
+                {
+                  paragraphId,
+                  tableNo: table.tableNo,
+                  caption: table.caption.slice(0, 40),
+                  reason: fix.skipped,
+                },
+              );
+            }
+            return table;
+          }
           /*
            * Info: (20260814 - Emily) 補了要記出來：這是「原文長得不標準」的訊號，
            * 累積起來要回頭改 prompt，而不是永遠靠讀取端補。
@@ -1043,7 +1134,30 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
           return { ...table, markdown: fix.markdown };
         });
 
-        const shaped = repaired.filter((table) => {
+        /**
+         * Info: (20260820 - Emily) 超寬列裁到分隔列的欄數
+         * (`data/issue_drafts/open/47_source_table_dropped.md` 的第四種形狀)。
+         *
+         * 08-20 run C：`表3.4` 的第一列是 547 格、只有 5 格有字，分隔列與 14 列
+         * 資料全是 6 格。GFM 因此整張不渲染 —— 渲染不變式把它改成明示丟表，
+         * 紙上乾淨了，但內文還引用著那張表。只裁空白格，一格有字就不裁。
+         *
+         * **必須排在 `validateSourceTables` 之前**：裁完才對得上分隔列，
+         * 排在裁決之後等於裁了也沒用。
+         */
+        const trimmedRows = repaired.map((table) => {
+          const fix = trimRowsToDividerWidth(table.markdown);
+          if (fix.trimmed === 0) return table;
+          logger.warn("[ReportImportService] source table rows trimmed", {
+            paragraphId,
+            tableNo: table.tableNo,
+            caption: table.caption.slice(0, 40),
+            rows: fix.trimmed,
+          });
+          return { ...table, markdown: fix.markdown };
+        });
+
+        const shaped = trimmedRows.filter((table) => {
           const check = validateSourceTables([table]);
           if (!check.isValid) {
             /**

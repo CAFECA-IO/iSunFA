@@ -1,3 +1,5 @@
+import { GUIDE_FIGURE_ID } from "@/constants/logistics_guide";
+
 export const transportationCarbonFootprintCalculator = {
   title: "物流カーボンフットプリント",
   default_ai_input:
@@ -9,6 +11,8 @@ export const transportationCarbonFootprintCalculator = {
     ai_parse_failed: "AIの解析に失敗しました",
     missing_params:
       "完全なパラメータを取得できません。AIの解析結果を確認するか、手動で入力してください。",
+    load_history_failed:
+      "履歴レポートを読み込めませんでした。しばらくしてからもう一度お試しください。",
   },
   payment: {
     fee_name: "カーボンフットプリント分析費用",
@@ -167,6 +171,17 @@ export const transportationCarbonFootprintCalculator = {
   // Info: (20260724 - Tzuhan) エクスポート選択モーダル(要件2)
   methodology: {
     title: "計算方法の説明",
+    intro:
+      "以下の各節で、それぞれの数値がどこから来ているかを説明します。結論をどこまで信頼できるかだけを知りたい場合は、第 11 節「既知の制約」へ直接お進みください。",
+    limits_title: "この数値を使う前に必ずお読みください",
+    read_full: "算出方法の全文を読む",
+    // Info: (20260820 - Luphia) 限制摘要同 sections 以英文回退：日文審計用詞我無法驗證準確度，
+    // Info: (20260820 - Luphia) 譯錯的限制摘要比沒有摘要更糟。用詞與 sections 一致，翻譯可一併替換。
+    highlights: [
+      "The scope covers **transport only**: no warehousing, loading and unloading, or packaging, and nothing from the production or disposal of the goods themselves. The result is therefore not the full life-cycle carbon footprint of the shipment.",
+      "The road network **currently covers Taiwan only**: road legs outside Taiwan are estimated from straight-line distance times a tortuosity factor of {{landTortuosity}} and marked Estimated in the report. Where a route's emissions are dominated by road transport abroad, the estimation error enters the result directly.",
+      "The sea and air factors have a **production region of the United States** (announced 2016 and 2017), and the air distance excludes routing detours, climb and high-altitude radiative forcing — both the actual flight distance and the climate impact exceed the figures reported here.",
+    ],
     // Info: (20260802 - Luphia) 內文暫以英文回退：日文審計用詞我無法驗證準確度，
     // Info: (20260802 - Luphia) 譯錯的方法論說明比沒有說明更糟。結構與 token 已就位，翻譯可直接替換此陣列。
     sections: [
@@ -276,7 +291,7 @@ export const transportationCarbonFootprintCalculator = {
           {
             term: "When no route is available",
             detail:
-              "The great-circle distance is multiplied by a tortuosity factor of {{landTortuosity}} and marked est. in the report. The factor reflects how far real roads typically deviate from a straight line and is not calibrated per route.",
+              "The great-circle distance is multiplied by a tortuosity factor of {{landTortuosity}} and marked 「概算値」 in the report. The factor reflects how far real roads typically deviate from a straight line and is not calibrated per route.",
           },
         ],
       },
@@ -300,7 +315,7 @@ export const transportationCarbonFootprintCalculator = {
           {
             term: "When no route can be planned",
             detail:
-              "The great-circle distance is multiplied by a tortuosity factor of {{seaTortuosity}} and marked est. The sea factor exceeds the road factor because lanes are constrained by landmasses and straits, producing greater deviation.",
+              "The great-circle distance is multiplied by a tortuosity factor of {{seaTortuosity}} and marked 「概算値」. The sea factor exceeds the road factor because lanes are constrained by landmasses and straits, producing greater deviation.",
           },
         ],
       },
@@ -466,6 +481,178 @@ export const transportationCarbonFootprintCalculator = {
             term: "The shipping lane data version is not recorded",
             detail:
               "The lane geometry is supplied as a static file and the system records no issuing body, release version or licence terms, so the data's currency cannot be traced.",
+          },
+        ],
+      },
+    ],
+  },
+  guide: {
+    title: "操作ガイド",
+    subtitle:
+      "一文のルート説明から、納品できる PDF と CSV までの一連の手順をまとめています。その後に、各数値の算出方法と既知の制約が続きます。",
+    nav_title: "このページの目次",
+    figure_note:
+      "図は画面のイラストです。実際の画面が使っているコンポーネントと文字列で描き直しているため、表示言語やライト／ダークテーマに追従します。特定バージョンのスクリーンショットではありません。図中の番号は図の下の説明に対応します。",
+    figure_caption: "図：{{title}}",
+    start_cta: "炭素会計を始める",
+    empty_cta: "初めてですか？操作ガイドを見る",
+    chapters: [
+      {
+        id: "overview",
+        title: "1. 4 つのタブの役割",
+        summary:
+          "まず位置を把握します。このツールは 4 つの異なる作業を 4 つのタブに分けており、タブを間違えることが最もよくあるつまずきです。",
+        steps: [
+          {
+            id: "overview_tabs",
+            title: "タブの分担",
+            body: "炭素会計は「1 ルートの排出量」、マイレージ計算は「多数ルートの距離」、履歴レポートは完了済みの分析、操作ガイドはこのページです。",
+            figure: GUIDE_FIGURE_ID.TABS,
+            callouts: [
+              "**炭素会計**：出発地・目的地・重量を入力すると、地図・区間別マイレージ・排出量を含む完全なレポートが得られ、PDF に出力できます。生成ごとに {{analysisCost}} クレジットを消費します。",
+              "**マイレージ計算**：テキストの貼り付けまたは Excel／CSV の取り込みで複数ルートを一括処理し、距離のみを算出します。どのルートを本格的に核算するか選ぶ前の棚卸しに向いています。",
+              "**履歴レポート**：過去の分析を一覧表示します。再計算もクレジット消費もなく、再表示や出力ができます。",
+              "**操作ガイド**：このページです。タブを切り替えても入力済みの内容は消えません。",
+            ],
+            notes: [
+              "表示中のタブは URL の ?tab= パラメータに保持されるため、任意のタブのリンクをそのまま同僚に共有できます。",
+            ],
+          },
+        ],
+      },
+      {
+        id: "analysis",
+        title: "2. 炭素会計：一文から 1 本のレポートへ",
+        summary: "1 ルート、1 レポート、全 4 ステップです。",
+        steps: [
+          {
+            id: "analysis_describe",
+            title: "ルートを説明する、または座標を直接入力する",
+            body: "「輸送ルートの説明」に出発地・目的地・重量を一文で書き、「分析レポートを生成」を押します。まず AI がその一文からパラメータを抽出します。この段階では課金されません。",
+            figure: GUIDE_FIGURE_ID.ANALYSIS_INPUT,
+            callouts: [
+              "**輸送ルートの説明**：一文で十分です（例：台北の国父紀念館からマンチェスター博物館へ 5000 kg の石板を輸送）。AI はテキストを出発地・目的地・重量に変換するだけで、距離と排出量はすべてバックエンドの決定論的ルールエンジンが計算します。",
+              "**詳細パラメータの手動設定**：正確な座標が必要なときに展開し、緯度・経度・総重量を入力します。5 つの項目がすべて埋まると手動値が優先され、**AI 解析は呼び出されません**。",
+              "**分析レポートを生成**：まず解析し、その後に支払い確認が開きます。解析後は詳細パネルが自動的に展開され、支払い前に抽出された座標と重量を確認できます。",
+            ],
+            notes: [
+              "説明欄に入力すると、入力済みの緯度経度と重量はクリアされます。「説明にはニューヨーク、座標は前回の東京」という不整合を防ぐためです。",
+              "解析結果が誤っている場合は詳細パネルの数値を直接修正すればよく、文章を書き直す必要はありません。",
+            ],
+          },
+          {
+            id: "analysis_pay",
+            title: "課金を確認する",
+            body: "パラメータが揃うと支払い確認が表示されます。クレジットを消費するのはここだけで、それ以前の解析・タブ切り替え・履歴閲覧は無料です。",
+            figure: GUIDE_FIGURE_ID.ANALYSIS_PAYMENT,
+            callouts: [
+              "**必要クレジット**：この分析は 1 回あたり {{analysisCost}} クレジットです。枠を持つチームに所属している場合はチーム枠が優先され、実際の支払元と残高がダイアログに表示されます。",
+              "**支払って生成**：押すと計算が始まります。同じパラメータで再実行すると再度課金されるため、前のステップで座標と重量を確認しておくことをおすすめします。",
+            ],
+          },
+          {
+            id: "analysis_read",
+            title: "レポートを読む",
+            body: "レポートは「プラン」単位です。陸上輸送のみ、海上複合、航空複合、海陸空複合がそれぞれカードになり、地図・区間別マイレージ・排出量を含みます。",
+            figure: GUIDE_FIGURE_ID.ANALYSIS_REPORT,
+            callouts: [
+              "**プラン切り替え**：該当するプランのみが表示されます。2 港間が {{minSeaKm}} km 未満、2 空港間が {{minAirKm}} km 未満、または陸送がその複合輸送より遠くない場合、そのプランは表示されません。",
+              "**プランコード**（例：R01-SEA）は画面・PDF のファイル名・CSV の各行を貫く唯一の相互参照キーです。",
+              "**「概算値」** が付いた区間は経路探索が成功せず、大圏距離に迂回係数を掛けた推定値です（陸上 ×{{landTortuosity}}、海上 ×{{seaTortuosity}}）。レポートを検証する際はまずここを数えてください。",
+              "**総排出量**はバックエンドで丸めない精度で計算されるため、区間の合計と総計が小数数桁ずれることがあります。レポートはその差額と要因を開示します。",
+              "**係数と算式**は常にレポート内に開示されます：総距離(km) × (重量(kg)/1000) × 当該モードの係数。",
+            ],
+            notes: [
+              "プランが見えないのは計算漏れではありません。適用性判定は該当しないプランを丸ごと除外します。ゼロ値のレポートを出すことはありません。規則は下記「9. プランの適用性判定」を参照してください。",
+            ],
+          },
+          {
+            id: "analysis_export",
+            title: "PDF と CSV を出力する",
+            body: "レポートまたは履歴一覧で「レポートをエクスポート」を押すと、出力するプランと排出量を含めるかを選ぶダイアログが開きます。",
+            figure: GUIDE_FIGURE_ID.EXPORT_MODAL,
+            callouts: [
+              "**プランの選択**：このルートに該当するプランのみが並びます。プランごとに独立した PDF が生成され、複数ある場合は ZIP にまとめられます。",
+              "**二酸化炭素換算量を計算**：チェックを外すと、PDF も CSV も排出量を一切含まず、経路と距離だけになります。",
+              "**排出係数セット**は選択肢ではなく開示です。表示されているものが計算で実際に使われたセットです。別の係数を使う場合は上の項目のチェックを外し、距離のみの CSV に自分で適用してください。",
+              "出力される summary.csv は完全な精度とプランコードを持つため、同名の PDF と行単位で突き合わせられます。",
+            ],
+            notes: [
+              "出力中は全画面の進捗表示が画面を覆います。これはキャプチャに背後の内容が写らないようにするためで、停止しているわけではありません。",
+            ],
+          },
+        ],
+      },
+      {
+        id: "mileage",
+        title: "3. マイレージ計算：多数ルートを一括処理",
+        summary:
+          "距離だけを知りたいとき、あるいは数十本のルートを一度に処理したいときはこちらです。",
+        steps: [
+          {
+            id: "mileage_run",
+            title: "リストを作ってマイレージを算出する",
+            body: "テキストを貼り付けて AI に解析させる、手動で 1 件ずつ追加する、または Excel／CSV を取り込みます。リストができたら「マイレージ核算を開始」で一括処理します。",
+            figure: GUIDE_FIGURE_ID.MILEAGE_FLOW,
+            callouts: [
+              "**テキストを貼り付けて自動解析**：出荷伝票やメール本文をそのまま貼り付け、「AI 自動解析」で出発地・目的地のリストに分解します。",
+              "**中継地（任意）**：経由地を指定する場合はここで設定します。各中継地には緯度経度が必須で、自動解析で取得できます。座標のない中継地があると処理は停止し、その旨が表示されます。",
+              "**一括インポート**：.xlsx／.xls／.csv に対応します。取り込み時にファイルの列を出発地・目的地・中継地に対応付けるため、決まった列名は必要ありません。",
+              "**輸送モード**：既定は「AI 自動判定」で、陸上輸送のみ・海陸複合・空陸複合・海陸空複合を強制指定することもできます。",
+              "**マイレージ核算を開始**：リスト全体を一度に送信します。完了後は 1 件ずつでも一括でも出力でき、出力の流れは炭素会計と同じです。",
+            ],
+            notes: [
+              "マイレージの結果も履歴レポートに記録され、再読み込みすると自動的に「マイレージ計算」タブで表示されます。",
+            ],
+          },
+        ],
+      },
+      {
+        id: "history",
+        title: "4. 履歴レポート：見直しと再出力",
+        summary:
+          "完了した分析はここに残ります。見直しと出力に追加のクレジットはかかりません。",
+        steps: [
+          {
+            id: "history_reopen",
+            title: "再読み込みまたは直接出力",
+            body: "一覧は時系列で並び、状態が COMPLETED の行だけ読み込めます。読み込むと対応するタブに切り替わり、当時の出発地・目的地・重量も復元されます。",
+            figure: GUIDE_FIGURE_ID.HISTORY_TABLE,
+            callouts: [
+              "**核算タイプ**で炭素会計とマイレージ計算を区別します。読み込み後に切り替わるタブが異なります。複数ルートのマイレージ計算は行を展開して個別に確認できます。",
+              "**読み込み**は当時のレポートを再表示するだけで、再計算も課金もありません。",
+              "**レポートをエクスポート**は読み込み後すぐに出力ダイアログを開きます。PDF をもう一部だけ用意したい場合に適しています。",
+            ],
+            notes: [
+              "読み込むと URL に analysisId が付くため、リンクをそのまま共有でき、ブラウザの戻るボタンで一覧に正確に戻れます。",
+            ],
+          },
+        ],
+      },
+      {
+        id: "troubleshoot",
+        title: "5. よくある状況",
+        summary: "以下はいずれも設計どおりの挙動で、不具合ではありません。",
+        steps: [
+          {
+            id: "trouble_missing_plan",
+            title: "ある輸送プランが表示されない",
+            body: "適用性判定が該当しないと判断しました。2 港間が {{minSeaKm}} km 未満、2 空港間が {{minAirKm}} km 未満、または陸送がその複合輸送より遠くない場合です。このときプランはゼロ値ではなく丸ごと出力されません。",
+          },
+          {
+            id: "trouble_estimate",
+            title: "距離の横に「概算値」と表示される",
+            body: "その区間の経路探索が成功せず、大圏距離に迂回係数を掛けた推定値です（陸上 ×{{landTortuosity}}、海上 ×{{seaTortuosity}}）。道路ネットワークは**現在台湾のみを収録**しているため、台湾外の陸上区間はほぼ推定値になります。",
+          },
+          {
+            id: "trouble_total_mismatch",
+            title: "区間の合計と総計が小数数桁ずれる",
+            body: "総計はバックエンドで丸めない精度で計算され、画面の区間値は小数第 2 位に丸められているため、合計は当然ずれます。レポートはその差額を開示します。完全な精度が必要な場合は出力された summary.csv を参照してください。",
+          },
+          {
+            id: "trouble_no_payment",
+            title: "分析レポートを生成しても支払いが開かない",
+            body: "パラメータが不足している場合は支払いに進みません。説明欄に内容があるか、詳細パラメータの 5 項目がすべて埋まっているかを確認してください。エラーメッセージは設定カードの下に表示されます。",
           },
         ],
       },

@@ -248,3 +248,116 @@ describe("表頭列不在第一行", () => {
     expect(result.reason).toBe(SourceTableRejectReasonEnum.NOT_A_TABLE);
   });
 });
+
+/**
+ * Info: (20260820 - Emily) 分隔列欄數必須等於表頭列（`open/47` 的渲染不變式）。
+ *
+ * 實跑量到的失效：08-19 run2 與 08-20 run A 各有一張表通過了舊的
+ * 「存在任一組表頭列 + 緊接的分隔列」檢查，卻在紙上印成
+ * 1,129~1,273 個管線與 6~19 條 `|---` —— 模型把兩層合併表頭壓成
+ * 一個約 600 格的邏輯列，而分隔列只有 6 欄。
+ *
+ * GFM 要求分隔列的儲存格數等於表頭列，不等就整個區塊都不渲染。
+ * 所以「有分隔列」不是充分條件。
+ */
+describe("分隔列欄數不一致（open/47 渲染不變式）", () => {
+  const table = (markdown: string): ICarbonSourceTable => ({
+    tableNo: "表3.4",
+    caption: "本公司活動數據種類",
+    markdown,
+    sourcePages: [28, 32],
+  });
+
+  it("表頭 600 格、分隔列 6 欄 → DIVIDER_COLUMN_MISMATCH", () => {
+    const runaway = [
+      `| 排放類型 | 活動或設施 | 排放源 | 年活動數據資訊 |${" |".repeat(600)}`,
+      "| --- | --- | --- | --- | --- | --- |",
+      "| 1.1 固定式燃燒 | 緊急發電機 | 柴油 | 發電機試運轉表單 | 測試單位 | 自行評估 |",
+    ].join("\n");
+
+    const result = validateSourceTables([table(runaway)]);
+
+    expect(result.isValid).toBe(false);
+    expect(result.reason).toBe(
+      SourceTableRejectReasonEnum.DIVIDER_COLUMN_MISMATCH,
+    );
+  });
+
+  it("小幅欄數不一致也擋（4 欄表頭、3 欄分隔列）", () => {
+    const mismatched = [
+      "| 甲 | 乙 | 丙 | 丁 |",
+      "| --- | --- | --- |",
+      "| 1 | 2 | 3 | 4 |",
+    ].join("\n");
+
+    expect(validateSourceTables([table(mismatched)]).reason).toBe(
+      SourceTableRejectReasonEnum.DIVIDER_COLUMN_MISMATCH,
+    );
+  });
+
+  /**
+   * Info: (20260820 - Emily) 反向控制之一：欄數對得上的兩層表頭照樣通過。
+   * 沒有這一條，把不變式寫成「一律拒收」也會讓上面兩條綠。
+   */
+  it("兩層表頭且欄數一致 → 通過", () => {
+    const twoLevel = [
+      "| 設施/活動 | 溫室氣體源 | 種類 | 備註 |",
+      "| --- | --- | --- | --- |",
+      "| | | CO2 | （類別） |",
+      "| 緊急發電機 | 柴油 | V | 類別一 |",
+    ].join("\n");
+
+    expect(validateSourceTables([table(twoLevel)]).isValid).toBe(true);
+  });
+
+  /**
+   * Info: (20260820 - Emily) 反向控制之二：**08-04 那個放寬不能被這次改動吃掉。**
+   * 前面幾行是原文的表格標題或廠址標籤時，仍然要認得出這是一張表 ——
+   * 那次放寬的起因是表3.8 被整張丟掉，而它是桑基圖唯一的資料來源。
+   */
+  it("表格前面有標題行時仍然通過（保住 08-04 的放寬）", () => {
+    const withCaption = [
+      "表3.8 各公司溫室氣體排放量",
+      "(1) 總公司",
+      "| 邊界 | 類別 | 排放量 |",
+      "| --- | --- | --- |",
+      "| 總公司 | 類別一 | 17.85 |",
+    ].join("\n");
+
+    expect(validateSourceTables([table(withCaption)]).isValid).toBe(true);
+  });
+
+  it("完全沒有分隔列 → 仍然是 NOT_A_TABLE（兩種原因要分得開）", () => {
+    const noDivider = ["| 甲 | 乙 |", "| 1 | 2 |", "| 3 | 4 |"].join("\n");
+
+    expect(validateSourceTables([table(noDivider)]).reason).toBe(
+      SourceTableRejectReasonEnum.NOT_A_TABLE,
+    );
+  });
+
+  /**
+   * Info: (20260820 - Emily) 多組配對只要**任一組**欄數對得上就算表格 ——
+   * 這是 08-04 放寬的核心，不因為新增欄數條件而收緊。
+   */
+  it("多組配對中有一組欄數對得上 → 通過", () => {
+    const mixed = [
+      "| 壞的表頭 | 只有兩格 |",
+      "| --- | --- | --- | --- |",
+      "| 好的表頭 | 甲 | 乙 |",
+      "| --- | --- | --- |",
+      "| 1 | 2 | 3 |",
+    ].join("\n");
+
+    expect(validateSourceTables([table(mixed)]).isValid).toBe(true);
+  });
+
+  it("逃脫的直線不算欄位邊界", () => {
+    const escaped = [
+      "| 單位 | 值 |",
+      "| --- | --- |",
+      "| kg\\|年 | 1.5 |",
+    ].join("\n");
+
+    expect(validateSourceTables([table(escaped)]).isValid).toBe(true);
+  });
+});
