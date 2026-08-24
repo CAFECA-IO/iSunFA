@@ -11,7 +11,9 @@ import {
   PURCHASE_MODE,
   filterEligibleTeams,
   resolveBlockingReason,
+  resolvePeriodNote,
   resolvePurchaseMode,
+  type PeriodNote,
 } from "@/lib/purchase/purchase_target";
 import { useAuth } from "@/contexts/auth_context";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -159,20 +161,14 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
    */
   const [periodEndSec, setPeriodEndSec] = useState<number | null>(null);
   /**
-   * Info: (20260821 - Luphia) 剩餘超過 30 天＝展延閘門會擋（產品裁定 20260821）。
-   * 在 effect 裡與 periodEndSec 一起算好（render 期不能呼叫 Date.now()），
-   * 付款前就把「暫不開放購買延長」講出來，而不是讓使用者填完卡號才看到錯誤。
+   * Info: (20260821 - Luphia) 付款前要顯示哪一句期間說明（四條路見 `resolvePeriodNote`）。
    *
-   * Info: (20260821 - Luphia) 閘門只管**同方案**的延長（review #6687 三輪）：
-   * 換方案走折抵、隨時可買，那條路徑要顯示的是折抵的說明而不是「暫不開放」。
+   * 在 effect 裡與 periodEndSec 一起算好——render 期不能呼叫 `Date.now()`。
+   * 這裡原本是兩個布林（`extensionTooEarly` / `isPlanChange`），而後者只比對
+   * 「方案有沒有不同」，於是**降級**也被當成換方案，畫面對一個不收費的排程操作
+   * 說「升級立即生效、剩餘期間將折抵」——三個事實全錯（三輪 self-review）。
    */
-  const [extensionTooEarly, setExtensionTooEarly] = useState(false);
-  /**
-   * Info: (20260821 - Luphia) 這次購買是不是**換方案**（升級）。
-   * 換方案的舊期剩餘會按已付價值折抵成新方案天數（`resolveNextPeriod`），
-   * 而那件事必須在付款前說——使用者最想知道的就是「我剩下的天數會怎樣」。
-   */
-  const [isPlanChange, setIsPlanChange] = useState(false);
+  const [periodNote, setPeriodNote] = useState<PeriodNote | null>(null);
   /**
    * Info: (20260820 - Luphia) 排程中的降級也要在付款前說（同一趟查詢就有）。
    *
@@ -187,8 +183,7 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
   useEffect(() => {
     if (!isSubscription || !selectedTeamId) {
       setPeriodEndSec(null);
-      setExtensionTooEarly(false);
-      setIsPlanChange(false);
+      setPeriodNote(null);
       setPending(null);
       return undefined;
     }
@@ -204,23 +199,23 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
       .then((response) => {
         if (!active) return;
         const end = response.payload?.currentPeriodEnd ?? 0;
-        const periodActive = end * 1000 > Date.now();
-        // Info: (20260820 - Luphia) 當期已結束（或沒有訂閱）就不是展延，不必揭露
-        setPeriodEndSec(periodActive ? end : null);
+        const nowMs = Date.now();
         /**
-         * Info: (20260821 - Luphia) 換方案＝當期有效方案與這次要買的不同。
-         * `GET /subscription` 的 `planId` 已是折算後的有效方案（過期回 free），
-         * 因此過期戶不會被誤判成換方案——那是重新訂閱。
+         * Info: (20260821 - Luphia) 規則在 `resolvePeriodNote`（純函式、逐條測試）：
+         * 升級講折抵、降級講期末生效不收費、同方案講展延或「暫不開放」，
+         * 而當期已結束或當期是免費版時什麼都不講（那是重新訂閱，沒有剩餘期間要交代）。
+         * `GET /subscription` 的 `planId` 已是折算後的有效方案。
          */
-        const changingPlan =
-          periodActive && (response.payload?.planId ?? "") !== context.planId;
-        setIsPlanChange(changingPlan);
-        // Info: (20260821 - Luphia) 閘門只擋同方案的延長，換方案不受限
-        setExtensionTooEarly(
-          !changingPlan &&
-            end * 1000 - Date.now() >
-              SUBSCRIPTION_EXTENSION_WINDOW_DAYS * 86_400_000,
-        );
+        const note = resolvePeriodNote({
+          currentPlanId: response.payload?.planId ?? "",
+          targetPlanId: context.planId,
+          periodEndSec: end,
+          nowMs,
+          extensionWindowDays: SUBSCRIPTION_EXTENSION_WINDOW_DAYS,
+        });
+        setPeriodNote(note);
+        // Info: (20260820 - Luphia) 當期已結束（或沒有訂閱）就沒有期間要揭露
+        setPeriodEndSec(note !== null ? end : null);
         const pendingPlanId = response.payload?.pendingPlanId ?? null;
         const effectiveAt = response.payload?.pendingEffectiveAt ?? null;
         setPending(
@@ -232,8 +227,7 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
       .catch(() => {
         if (!active) return;
         setPeriodEndSec(null);
-        setExtensionTooEarly(false);
-        setIsPlanChange(false);
+        setPeriodNote(null);
         setPending(null);
       });
     return () => {
@@ -439,8 +433,7 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
       unitPrice={context.unitPrice ?? null}
       seatAmount={seatAmount}
       extensionPeriodEndSec={periodEndSec}
-      extensionTooEarly={extensionTooEarly}
-      isPlanChange={isPlanChange}
+      periodNote={periodNote}
       pendingPlanId={pending?.planId ?? null}
       pendingEffectiveAt={pending?.effectiveAt ?? null}
     />
