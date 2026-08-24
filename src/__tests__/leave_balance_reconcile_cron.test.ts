@@ -22,11 +22,12 @@ declare const jest: typeof JestType;
  * 那個簽章讓「逐欄」在呼叫端不可能成立。`expiringSoonMinutes` 漂掉
  * 不會被算進 `mismatched`，於是這支排程會回報「0 組不一致」。
  *
- * ## 替身放在 prisma 那一層
+ * ## 替身放在 repository 那一層
  *
  * 與 `overtime_tier_order_independence.test.ts` 同一個理由：把
- * `mismatched` 當輸入餵進假 repository，證明的是「回傳值有沒有被轉出去」，
- * 而錯的正是計算它的那一段。這裡 `rebuildBalance` 走的是真的那一支。
+ * `mismatched` 當輸入餵進替身，證明的是「回傳值有沒有被轉出去」，
+ * 而錯的正是計算它的那一段。這裡替身只給「帳本的答案」與「快取的原值」，
+ * 逐欄比對與計數走的是產品那一支。
  */
 
 interface IBalanceRow {
@@ -74,54 +75,42 @@ jest.mock("@/lib/utils/logger", () => ({
   },
 }));
 
-jest.mock("@/lib/prisma", () => ({
-  prisma: {
-    leaveGrant: {
-      findMany: jest.fn(async () => scopes),
-    },
-    leaveBalance: {
-      findUnique: jest.fn(
-        async ({
-          where,
-        }: {
-          where: {
-            employeeId_leavePolicyId: {
-              employeeId: string;
-              leavePolicyId: string;
-            };
-          };
-        }) => {
-          const key = where.employeeId_leavePolicyId;
-          const row = balances.find(
-            (one) =>
-              one.employeeId === key.employeeId &&
-              one.leavePolicyId === key.leavePolicyId,
-          );
-          /**
-           * Info: (20260821 - Julian) 回**複本**，不是那一列本身。
-           *
-           * 真的 Prisma 讀出來的是一份快照。回原物件的話，被測程式先讀
-           * `before`、再呼叫 `rebuildBalance`（替身會就地覆寫那一列），
-           * 於是等到比對的那一刻 `before` 已經變成重建後的值 ——
-           * **每一組都相等，一組都不會漂**。這一版的替身第一次就是這樣寫的，
-           * 而症狀是「逐欄比對的測試全綠，但它什麼都沒比到」。
-           */
-          return row === undefined ? null : { ...row };
-        },
-      ),
-    },
-  },
-}));
-
 /**
  * Info: (20260821 - Julian) 重建以真的簽章回**兩欄**，並如產品那樣覆寫快取。
  *
  * 替身在 repository 這一層而不是 prisma：重建的內部（兩支 aggregate ＋
  * 一次 upsert）已經有守恆測試釘住，這裡要的是它的**契約** ——
  * 少回一欄時這一檔要紅。
+ *
+ * Info: (20260824 - Julian) 掃描與讀快取也移到這一層（review 阻擋 2）。
+ *
+ * 上一版另外 `jest.mock("@/lib/prisma")` 去攔 `leaveGrant.findMany` 與
+ * `leaveBalance.findUnique`，因為那兩個查詢當時寫在排程裡。它們搬進
+ * repository 之後，這一檔只需要一個接縫 —— 而那個接縫正是產品現在唯一
+ * 碰得到 DB 的地方。
  */
 jest.mock("@/repositories/leave_grant.repo", () => ({
   leaveGrantRepo: {
+    listReconcileScopes: jest.fn(async () => scopes),
+    findBalanceSnapshot: jest.fn(
+      async (params: { employeeId: string; leavePolicyId: string }) => {
+        const row = balances.find(
+          (one) =>
+            one.employeeId === params.employeeId &&
+            one.leavePolicyId === params.leavePolicyId,
+        );
+        /**
+         * Info: (20260821 - Julian) 回**複本**，不是那一列本身。
+         *
+         * 真的 Prisma 讀出來的是一份快照。回原物件的話，被測程式先讀
+         * `before`、再呼叫 `rebuildBalance`（替身會就地覆寫那一列），
+         * 於是等到比對的那一刻 `before` 已經變成重建後的值 ——
+         * **每一組都相等，一組都不會漂**。這一版的替身第一次就是這樣寫的，
+         * 而症狀是「逐欄比對的測試全綠，但它什麼都沒比到」。
+         */
+        return row === undefined ? null : { ...row };
+      },
+    ),
     rebuildBalance: jest.fn(
       async (params: {
         employeeId: string;

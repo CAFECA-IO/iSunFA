@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/utils/logger";
 import { DEMO_TIME_ZONE } from "@/constants/attendance";
 import { toZonedParts } from "@/lib/utils/attendance_time";
@@ -64,27 +63,23 @@ export interface ILeaveBalanceReconcileResult {
   failed: number;
 }
 
-/**
- * Info: (20260820 - Julian) 掃 `LeaveGrant` 而不是 `LeaveBalance`。
- *
- * 兩者的差別正是要抓的東西之一：一個從來沒有被寫過的 `LeaveBalance` 列
- * 在 `LeaveBalance` 裡查不到，而它的帳本明明有分錄。從批次那一側掃，
- * 這種列會被建出來。
- */
-const scopesOf = async (): Promise<
-  { accountBookId: string; employeeId: string; leavePolicyId: string }[]
-> =>
-  prisma.leaveGrant.findMany({
-    select: { accountBookId: true, employeeId: true, leavePolicyId: true },
-    distinct: ["accountBookId", "employeeId", "leavePolicyId"],
-  });
-
 export const runLeaveBalanceReconcile =
   async (): Promise<ILeaveBalanceReconcileResult> => {
     const reconciledAt = new Date();
     const asOfDate = toZonedParts(reconciledAt, DEMO_TIME_ZONE).isoDate;
 
-    const scopes = await scopesOf();
+    /**
+     * Info: (20260824 - Julian) 掃描與讀快取都經由 repository（review 阻擋 2）。
+     *
+     * 這兩個查詢先前直接 `import { prisma }` 寫在這個檔案裡，而
+     * CLAUDE.md §1 的規則是「Repository 是唯一能碰 Prisma/DB 的層級」——
+     * 同一個檔案本來就已經在用 `leaveGrantRepo.rebuildBalance`，
+     * 所以不是沒有路可走，是那兩支繞過去了。
+     *
+     * 掃的是 `LeaveGrant` 而不是 `LeaveBalance`：一個從來沒有被寫過的
+     * 快取列在 `LeaveBalance` 裡查不到，而它的帳本明明有分錄。
+     */
+    const scopes = await leaveGrantRepo.listReconcileScopes();
     let mismatched = 0;
     let mismatchedRemaining = 0;
     let mismatchedExpiringSoon = 0;
@@ -97,18 +92,9 @@ export const runLeaveBalanceReconcile =
        * 只呼叫重建的話，這支排程會安靜地修好每一件事，
        * 而「快取與帳本分岔過幾次」正是 ADR 022 §8.2 要的那個訊號。
        */
-      const before = await prisma.leaveBalance.findUnique({
-        where: {
-          employeeId_leavePolicyId: {
-            employeeId: scope.employeeId,
-            leavePolicyId: scope.leavePolicyId,
-          },
-        },
-        select: {
-          remainingMinutes: true,
-          expiringSoonMinutes: true,
-          reconciledAt: true,
-        },
+      const before = await leaveGrantRepo.findBalanceSnapshot({
+        employeeId: scope.employeeId,
+        leavePolicyId: scope.leavePolicyId,
       });
 
       try {

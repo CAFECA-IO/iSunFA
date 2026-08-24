@@ -51,6 +51,32 @@ export interface ILedgerEntryView {
   createdAt: string;
 }
 
+/**
+ * Info: (20260824 - Julian) 一組「帳本 × 員工 × 假別」——勾稽的最小單位。
+ *
+ * 快取的唯一鍵是 `employeeId + leavePolicyId`，但重建要知道帳本
+ * （帳本層級 scoping），所以三欄一起走。
+ */
+export interface ILeaveBalanceScope {
+  accountBookId: string;
+  employeeId: string;
+  leavePolicyId: string;
+}
+
+/**
+ * Info: (20260824 - Julian) 勾稽前的快取原值（review 阻擋 2）。
+ *
+ * 勾稽必須在重建**之前**先讀一次快取：只呼叫重建的話，排程會安靜地修好
+ * 每一件事，而「快取與帳本分岔過幾次」正是 ADR 022 §8.2 要的那個訊號。
+ * 因此這是一個獨立的讀取端，不能靠重建的回傳值代替。
+ */
+export interface ILeaveBalanceCacheSnapshot {
+  remainingMinutes: number;
+  expiringSoonMinutes: number;
+  /** Info: (20260824 - Julian) null ＝ 這一列從授予那一刻起就沒有人對過帳 */
+  reconciledAt: Date | null;
+}
+
 export interface ILeaveBalanceView {
   employeeId: string;
   /** Info: (20260817 - Julian) 查詢基準日，供畫面標示「截至 X 日的餘額」 */

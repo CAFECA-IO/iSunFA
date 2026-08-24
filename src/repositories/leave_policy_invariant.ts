@@ -204,7 +204,7 @@ export function assertLeavePolicyUnit(params: IStorableLeavePolicy): void {
    * 更長的環（A→B→A）這裡擋不到 —— 它需要整個帳本的併計關係圖，
    * 見本檔下方的 `assertNoMergeCycle`（2026-08-18 補）。
    *
-   * ⚠️ Info: (20260821 - Julian) **併計扣減目前沒有任何實作**
+   * Info: (20260821 - Julian) ⚠️ **併計扣減目前沒有任何實作**
    * （review 第 10 輪 B2）。這一段先前寫的是「`allocateConsumption` 會扣兩次」，
    * 而 `allocateConsumption` 收的是一個扁平的 grants 陣列，不走任何鏈 ——
    * 那句話描述的是一個不可能發生的症狀，而真正的缺陷（法定額度被繞過）
@@ -294,7 +294,7 @@ function assertProofRequirement(params: IStorableLeavePolicy): void {
  * 但 A→B→A 的效果一樣壞：併計扣減會沿著鏈往下走，環會讓它一直走 ——
  * 請一天家庭照顧假，事假與家庭照顧假各扣一天，而兩邊的餘額都對不上帳本。
  *
- * ⚠️ Info: (20260821 - Julian) 這裡描述的是**併計扣減落地之後**的行為
+ * Info: (20260821 - Julian) ⚠️ 這裡描述的是**併計扣減落地之後**的行為
  * （review 第 10 輪 B2）。先前寫成「`allocateConsumption` 沿著併計鏈往下扣」，
  * 而它不走任何鏈 —— 整個扣減路徑上 `mergesIntoPolicyId` 零讀取端。
  * 守衛先建好沒有問題，但它守的是一個還沒有人實作的前提，不是現況。

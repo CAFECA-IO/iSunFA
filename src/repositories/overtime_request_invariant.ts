@@ -272,7 +272,7 @@ export interface IStorableOvertimeSegmentSet {
  *
  * 分段的分鐘合計等於 `recognizedMinutes` 是另一條規則。
  *
- * ⚠️ ToDo: (20260821 - Julian) **U7：那一側其實沒有在驗它。**
+ * ToDo: (20260821 - Julian) ⚠️ **U7：那一側其實沒有在驗它。**
  *
  * 這裡先前寫「由 `assertOvertimeFilingType` 那一側的認列分鐘負責」，
  * 而那一支只檢查 `recognized <= approved` 與 `recognized >= 0` ——

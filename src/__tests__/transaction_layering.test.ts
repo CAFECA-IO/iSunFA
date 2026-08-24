@@ -19,6 +19,15 @@ import { join, relative, sep } from "path";
  * 因此改成**釘住那條不變式本身**：數字由這支測試現算，
  * 而文件只留規則。違反時它會列出檔名，而不是要求誰去重數一次。
  *
+ * ## 這一檔釘住兩條，不是一條（review 阻擋 2）
+ *
+ * `$transaction` 只是「碰 DB」的**代理指標**，而規則講的是「只有 Repository
+ * 能碰 Prisma/DB」（CLAUDE.md §1）。兩者的差集不是空的：一支只做讀取的
+ * service 沒有交易，於是它會通過一道以它為名的規則 ——
+ * `leave_balance_reconcile.cron.ts` 當時就是這樣溜過去的。
+ * 底下第二個 describe 直接掃 `from "@/lib/prisma"` 的 import，
+ * 那才是「碰不碰得到 DB」的充要條件。
+ *
  * ## 掃描根是整個 `src`
  *
  * 只掃 `src/services` 會漏掉「有人把 `$transaction` 寫進 route 或 lib」——
@@ -55,14 +64,59 @@ const isTestFile = (relativePath: string): boolean =>
 const isRepository = (relativePath: string): boolean =>
   relativePath.startsWith(join("src", "repositories") + sep);
 
-const filesUsingTransaction = (): string[] => {
+const filesMatching = (needle: string): string[] => {
   const files: string[] = [];
   walk(SRC, files);
   return files
-    .filter((full) => readFileSync(full, "utf8").includes("$transaction"))
+    .filter((full) => readFileSync(full, "utf8").includes(needle))
     .map((full) => relative(process.cwd(), full))
     .sort();
 };
+
+const filesUsingTransaction = (): string[] => filesMatching("$transaction");
+
+/**
+ * Info: (20260824 - Julian) 碰得到 Prisma 的判準是**那個 import**（review 阻擋 2）。
+ *
+ * 上面那條掃的是 `$transaction`，而規則講的是「只有 Repository 能碰 DB」——
+ * 兩者範圍不同，而差集不是空的：一支只做讀取的 service 沒有交易，
+ * 於是它會通過一道以它為名的規則。`leave_balance_reconcile.cron.ts` 就是
+ * 這樣溜過去的（兩個 `findMany` / `findUnique`，零 `$transaction`）。
+ *
+ * `@/lib/prisma` 是那個 client 的唯一出口，所以「有沒有 import 它」
+ * 就是「碰不碰得到 DB」的充要條件 —— 不再是代理指標。
+ */
+const filesImportingPrisma = (): string[] =>
+  filesMatching('from "@/lib/prisma"');
+
+/** Info: (20260824 - Julian) client 的定義處本身；它不 import 自己，列出來是為了防未來改寫 */
+const PRISMA_MODULE = join("src", "lib", "prisma.ts");
+
+/**
+ * Info: (20260824 - Julian) 既存違反者的白名單 —— **只縮不增**。
+ *
+ * 這些在 `develop` 上就已經是這樣了（逐檔 `git show origin/develop:` 核對過）。
+ * 直接把規則開成紅燈會讓這支測試從第一天就是紅的，而一支永遠紅的紅線
+ * 與沒有紅線是同一件事；把它們寫死在這裡，新增的那一支就會是唯一的紅點。
+ *
+ * 底下第二條會反過來釘住「白名單裡的每一個檔案都還真的在違反」——
+ * 否則清乾淨一支之後，這張表會留著一個誰都不敢刪的名字。
+ */
+const GRANDFATHERED_PRISMA_IMPORTERS: readonly string[] = [
+  join("src", "app", "api", "v1", "admin", "team", "route.ts"),
+  join("src", "scripts", "e2e_seeder", "ai_blind_tester.ts"),
+  join("src", "scripts", "e2e_seeder", "cross_validator.ts"),
+  join("src", "scripts", "e2e_seeder", "dpp", "generate_dpp_compliance.ts"),
+  join("src", "scripts", "e2e_seeder", "dpp", "generate_dpp_ground_truth.ts"),
+  join("src", "scripts", "e2e_seeder", "export_phase2_db.ts"),
+  join("src", "scripts", "e2e_seeder", "fast_verify.ts"),
+  join("src", "scripts", "e2e_seeder", "import_phase2_db.ts"),
+  join("src", "scripts", "e2e_seeder", "phase2_runner.ts"),
+  join("src", "services", "allocation.engine.service.ts"),
+  join("src", "services", "cron", "amortization.worker.service.ts"),
+  join("src", "services", "cron", "fx_revaluation.worker.service.ts"),
+  join("src", "skills", "document", "esg_parsing.ts"),
+];
 
 describe("$transaction 只在 Repository 層（coding_guidelines §1.1）", () => {
   /**
@@ -94,5 +148,39 @@ describe("$transaction 只在 Repository 層（coding_guidelines §1.1）", () =
   it("被排除的檔案都是測試檔本身", () => {
     const excluded = filesUsingTransaction().filter(isTestFile);
     expect(excluded.filter((path) => !path.endsWith(".test.ts"))).toEqual([]);
+  });
+});
+
+describe("只有 Repository 碰得到 Prisma（CLAUDE.md §1）", () => {
+  const offenders = (): string[] =>
+    filesImportingPrisma()
+      .filter((path) => !isTestFile(path))
+      .filter((path) => !isRepository(path))
+      .filter((path) => path !== PRISMA_MODULE);
+
+  // Info: (20260824 - Julian) 掃描根壞掉時要紅，不是安靜地全綠（同上一段的理由）
+  it("掃描根確實掃到 @/lib/prisma 的 import", () => {
+    expect(filesImportingPrisma().length).toBeGreaterThan(10);
+  });
+
+  it("Repository 之外沒有新的檔案 import @/lib/prisma", () => {
+    expect(
+      offenders().filter(
+        (path) => !GRANDFATHERED_PRISMA_IMPORTERS.includes(path),
+      ),
+    ).toEqual([]);
+  });
+
+  /**
+   * Info: (20260824 - Julian) 白名單不得留下已經清乾淨的名字。
+   *
+   * 少了這一條，這張表只會長不會短：清掉一支之後沒有人知道那一行
+   * 可以刪了，而下一個讀到它的人會以為那個檔案還在違反。
+   */
+  it("白名單裡的每一個檔案都還真的在違反", () => {
+    const current = new Set(offenders());
+    expect(
+      GRANDFATHERED_PRISMA_IMPORTERS.filter((path) => !current.has(path)),
+    ).toEqual([]);
   });
 });

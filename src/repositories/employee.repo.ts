@@ -248,7 +248,7 @@ class EmployeeRepository implements IEmployeeRepository {
    * 用 `Department.managerId` 而不是職稱字串：職稱是自由文字，
    * 「工地主任」與「工地主任(代)」在字串比對下是兩個人，而在組織圖上是同一件事。
    *
-   * ⚠️ Info: (20260817 - Julian) **這個方法回答的是「他是不是主管」，
+   * Info: (20260817 - Julian) ⚠️ **這個方法回答的是「他是不是主管」，
    * 不是「他管不管得到某個人」。** 拿它當授權判斷會放行跨部門的操作 ——
    * 第一工務段的主管可以對第五工務段的員工發起銷假徵詢。
    * 需要後者請用 `listManagedScope` 系列（`managesEmployee`）。

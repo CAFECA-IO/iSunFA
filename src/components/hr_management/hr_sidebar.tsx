@@ -149,7 +149,7 @@ const HrSidebar: FC<IHrSidebarProps> = ({ identity, isOpen, onClose }) => {
     );
   };
 
-  /* Info: (20260818 - Julian) 分組選項 */
+  // Info: (20260818 - Julian) 分組選項
   const navList = (
     <nav className="flex h-full flex-col gap-4 overflow-auto p-3">
       {HR_NAV_SECTIONS.map((section) => (

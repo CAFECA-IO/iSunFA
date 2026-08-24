@@ -17,6 +17,8 @@ import {
 import { IPlannedGrant } from "@/interfaces/leave_entitlement";
 import {
   IEmployeeGrantSummary,
+  ILeaveBalanceCacheSnapshot,
+  ILeaveBalanceScope,
   ILedgerEntryView,
 } from "@/interfaces/leave_balance";
 import { ILeaveGrantRepository } from "@/repositories/leave_grant.repo";
@@ -130,6 +132,20 @@ class FakeGrantRepo implements ILeaveGrantRepository {
 
   async listLedger(): Promise<ILedgerEntryView[]> {
     return [];
+  }
+
+  /**
+   * Info: (20260824 - Julian) 勾稽用的兩支讀取端（review 阻擋 2）。
+   *
+   * 這一檔測的是額度服務，勾稽排程不經過它。丟錯而不是回空陣列 ——
+   * 回空陣列的話，哪天服務真的呼叫了它們，這一檔會靜靜地綠。
+   */
+  async listReconcileScopes(): Promise<ILeaveBalanceScope[]> {
+    throw new Error("FakeGrantRepo: listReconcileScopes() 不該被這一層呼叫");
+  }
+
+  async findBalanceSnapshot(): Promise<ILeaveBalanceCacheSnapshot | null> {
+    throw new Error("FakeGrantRepo: findBalanceSnapshot() 不該被這一層呼叫");
   }
 }
 
@@ -555,15 +571,15 @@ describe("L33 — asOfDate 不得指向未來", () => {
    * Info: (20260820 - Julian) 兩個斷言成對：回 400，**且**一批都沒有落地。
    * 少了後者，一個「先鑄出來再丟」的實作會通過。
    */
-  it.each([["遙遠的未來", "9999-12-31"], ["明天", "2026-08-15"]])(
-    "%s：擋下，且一批都沒有落地",
-    async (_label, asOfDate) => {
-      await expect(accrueAt(asOfDate)).rejects.toMatchObject({
-        apiCode: API_ERRORS.VA_INVALID_INPUT_DATA.code,
-      });
-      expect(grants.issuedFor).toEqual([]);
-    },
-  );
+  it.each([
+    ["遙遠的未來", "9999-12-31"],
+    ["明天", "2026-08-15"],
+  ])("%s：擋下，且一批都沒有落地", async (_label, asOfDate) => {
+    await expect(accrueAt(asOfDate)).rejects.toMatchObject({
+      apiCode: API_ERRORS.VA_INVALID_INPUT_DATA.code,
+    });
+    expect(grants.issuedFor).toEqual([]);
+  });
 
   /**
    * Info: (20260820 - Julian) 上界擋在授權**之前**：一個把日期填到三千年後的

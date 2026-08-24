@@ -1792,7 +1792,7 @@ export const API_ERRORS = {
    * 沿著環一直扣下去 —— 請一天假扣掉兩個假別各一天，而兩邊的餘額都對不上。
    * 自指由 `assertLeavePolicyUnit` 擋，更長的環擋在這裡。
    *
-   * ⚠️ Info: (20260821 - Julian) 描述的是**併計扣減落地之後**的行為
+   * Info: (20260821 - Julian) ⚠️ 描述的是**併計扣減落地之後**的行為
    * （review 第 10 輪 B2）：`allocateConsumption` 目前不走任何鏈，
    * 送出端由 `VA_LEAVE_MERGE_NOT_IMPLEMENTED` 擋著。
    */

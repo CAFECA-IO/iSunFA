@@ -8,6 +8,8 @@ import {
 import { IPlannedGrant } from "@/interfaces/leave_entitlement";
 import {
   IEmployeeGrantSummary,
+  ILeaveBalanceCacheSnapshot,
+  ILeaveBalanceScope,
   ILedgerEntryView,
 } from "@/interfaces/leave_balance";
 import { assertGrantSource } from "@/repositories/leave_grant_invariant";
@@ -70,6 +72,21 @@ export interface ILeaveGrantRepository {
     asOfDate: string;
     reconciledAt: Date;
   }): Promise<ILeaveBalanceRebuildResult>;
+  /**
+   * Info: (20260824 - Julian) 勾稽要掃的所有組合（review 阻擋 2）。
+   *
+   * 掃 `LeaveGrant` 而不是 `LeaveBalance`：一個從來沒有被寫過的快取列
+   * 在 `LeaveBalance` 裡查不到，而它的帳本明明有分錄 ——
+   * 從批次那一側掃，這種列會被建出來。
+   */
+  listReconcileScopes(params?: {
+    accountBookId?: string;
+  }): Promise<ILeaveBalanceScope[]>;
+  /** Info: (20260824 - Julian) 重建前的快取原值；null ＝ 這一列還不存在 */
+  findBalanceSnapshot(params: {
+    employeeId: string;
+    leavePolicyId: string;
+  }): Promise<ILeaveBalanceCacheSnapshot | null>;
   summarize(params: {
     accountBookId: string;
     employeeId: string;
@@ -276,6 +293,50 @@ class LeaveGrantRepository implements ILeaveGrantRepository {
     reconciledAt: Date;
   }): Promise<ILeaveBalanceRebuildResult> {
     return prisma.$transaction((tx) => rebuildBalanceWithin(tx, params));
+  }
+
+  /**
+   * Info: (20260824 - Julian) 勾稽的掃描端（review 阻擋 2）。
+   *
+   * 這兩支先前寫在 `services/cron/leave_balance_reconcile.cron.ts` 裡，
+   * 由那支排程直接 `import { prisma }` —— 而 CLAUDE.md §1 的規則是
+   * 「Repository 是唯一能碰 Prisma/DB 的層級」。那個檔案本來就已經在用
+   * 這個 repository（`rebuildBalance`），所以不是「沒有 repository 可用」，
+   * 是那兩個查詢繞過去了。
+   *
+   * 沒有一併搬進 `rebuildBalance` 的理由見 `ILeaveBalanceCacheSnapshot`：
+   * 讀「重建前的原值」與「重建」必須是兩次呼叫，否則差異數不出來。
+   */
+  public async listReconcileScopes(params?: {
+    accountBookId?: string;
+  }): Promise<ILeaveBalanceScope[]> {
+    return prisma.leaveGrant.findMany({
+      where:
+        params?.accountBookId === undefined
+          ? {}
+          : { accountBookId: params.accountBookId },
+      select: { accountBookId: true, employeeId: true, leavePolicyId: true },
+      distinct: ["accountBookId", "employeeId", "leavePolicyId"],
+    });
+  }
+
+  public async findBalanceSnapshot(params: {
+    employeeId: string;
+    leavePolicyId: string;
+  }): Promise<ILeaveBalanceCacheSnapshot | null> {
+    return prisma.leaveBalance.findUnique({
+      where: {
+        employeeId_leavePolicyId: {
+          employeeId: params.employeeId,
+          leavePolicyId: params.leavePolicyId,
+        },
+      },
+      select: {
+        remainingMinutes: true,
+        expiringSoonMinutes: true,
+        reconciledAt: true,
+      },
+    });
   }
 
   // Info: (20260817 - Julian) L7：各假別的餘額與最近到期日

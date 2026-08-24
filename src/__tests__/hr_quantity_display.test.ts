@@ -22,7 +22,7 @@ describe("floorRatioText —— 「還可以用多少」不得多報", () => {
    * 而下一個人不會知道它們為什麼在這裡。
    */
   it.each([
-    // [分子, 分母, 應顯示, toFixed 會顯示成]
+    // Info: (20260824 - Julian) [分子, 分母, 應顯示, toFixed 會顯示成]
     [449, 450, "0.9", "1.0"],
     [59, MINUTES_PER_HOUR, "0.9", "1.0"],
     [1795, 1800, "0.9", "1.0"],
@@ -112,7 +112,9 @@ describe("ceilRatioText —— 「已經用掉多少」不得少報", () => {
        * 而兩個顯示值都是對的。用一個浮點減法去驗一支刻意避開浮點的函式，
        * 是把被測物件要解決的問題重新引進測試裡（checklist §1.9）。
        */
-      expect(Math.round(high * 10) - Math.round(low * 10)).toBeLessThanOrEqual(1);
+      expect(Math.round(high * 10) - Math.round(low * 10)).toBeLessThanOrEqual(
+        1,
+      );
     }
   });
 });

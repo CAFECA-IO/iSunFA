@@ -285,7 +285,7 @@ export class OvertimeReportService {
       if (presence.length > 0) {
         const window = windowsByDate[workDate];
         /**
-         * ⚠️ ToDo: (20260821 - Julian) **U12：這裡用的是申請區間，不是核准分鐘。**
+         * ToDo: (20260821 - Julian) ⚠️ **U12：這裡用的是申請區間，不是核准分鐘。**
          *
          * `covered` 拿 `requestedStart…requestedEnd` 當作「已經被涵蓋」，
          * 而部分核准（申請 3 小時、只核准 2 小時）時那多出來的 1 小時

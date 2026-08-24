@@ -8,6 +8,8 @@ import { LeaveRequestService } from "@/services/leave_request.service";
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { WorkDayType } from "@/constants/attendance";
+import { EmployeeHrFunction } from "@/constants/hr_management";
+import { IEmployeeHrFunctionRepository } from "@/repositories/employee_hr_function.repo";
 import { LeaveRequestStatus } from "@/constants/leave";
 import {
   LeaveApprovalNodeKind,
@@ -234,7 +236,14 @@ class FakeRepository implements ILeaveRequestRepository {
   async listByEmployee() {
     return this.summaries;
   }
-  async listPendingForApprover() {
+  public pendingQuery:
+    | Parameters<ILeaveRequestRepository["listPendingForApprover"]>[0]
+    | null = null;
+
+  async listPendingForApprover(
+    params: Parameters<ILeaveRequestRepository["listPendingForApprover"]>[0],
+  ) {
+    this.pendingQuery = params;
     return this.pending;
   }
 
@@ -263,6 +272,73 @@ class FakeAuditTrail {
 
 let audit: FakeAuditTrail;
 
+/**
+ * Info: (20260824 - Julian) HR 職能查詢的假物件（review 阻擋 1）。
+ *
+ * `LeaveRequestService` 的第 4 個建構參數預設是**具體的**
+ * `employeeHrFunctionRepo`，而它用 module-level 的 `prisma`。
+ * 這支測試先前只注入前三個，於是 `listPending` 的第一件事
+ * （`hasAnyFunction`）會打到真的資料庫 —— 斷言之前就爆掉，
+ * 而它要守的正是 `includeHrPool`：決定「誰看得到誰的假單」的那條分支。
+ *
+ * 因此這裡連「問過什麼」都記下來：只回一個布林的替身，
+ * 仍然分不出 service 是拿 `HR_ADMIN` 去問、還是拿別的職能去問。
+ */
+class FakeHrFunctions implements IEmployeeHrFunctionRepository {
+  /** Info: (20260824 - Julian) 具備 `HR_ADMIN` 的人；其餘一律 false */
+  public hrAdmins = new Set<string>();
+
+  public asked: {
+    accountBookId: string;
+    employeeId: string;
+    hrFunctions: readonly EmployeeHrFunction[];
+  }[] = [];
+
+  async hasAnyFunction(params: {
+    accountBookId: string;
+    employeeId: string;
+    hrFunctions: readonly EmployeeHrFunction[];
+  }) {
+    this.asked.push(params);
+    return (
+      params.hrFunctions.includes(EmployeeHrFunction.HR_ADMIN) &&
+      this.hrAdmins.has(params.employeeId)
+    );
+  }
+
+  async listHolderIds(params: {
+    accountBookId: string;
+    hrFunction: EmployeeHrFunction;
+  }) {
+    return params.hrFunction === EmployeeHrFunction.HR_ADMIN
+      ? [...this.hrAdmins].sort()
+      : [];
+  }
+
+  async listFunctionsOf(params: { accountBookId: string; employeeId: string }) {
+    return this.hrAdmins.has(params.employeeId)
+      ? [EmployeeHrFunction.HR_ADMIN]
+      : [];
+  }
+
+  /**
+   * Info: (20260824 - Julian) 指派與撤銷沒有 API 端點（見 repository 檔頭），
+   * service 也不呼叫它們。丟錯而不是回 undefined —— 哪天有人在 service 裡
+   * 呼叫了，這支測試要當場說出來，而不是安靜地通過。
+   */
+  async grant(): Promise<void> {
+    throw new Error("FakeHrFunctions: grant() must not be called by a service");
+  }
+
+  async revoke(): Promise<boolean> {
+    throw new Error(
+      "FakeHrFunctions: revoke() must not be called by a service",
+    );
+  }
+}
+
+let hrFunctions: FakeHrFunctions;
+
 const grant = (
   grantId: string,
   expiresOn: string,
@@ -290,7 +366,8 @@ beforeEach(() => {
   };
   context.grants = [grant("g1", "2027-12-31", 4800)];
   audit = new FakeAuditTrail();
-  service = new LeaveRequestService(repo, context, audit);
+  hrFunctions = new FakeHrFunctions();
+  service = new LeaveRequestService(repo, context, audit, hrFunctions);
 });
 
 /**
@@ -1020,6 +1097,45 @@ describe("list / listPending / get — 可見範圍", () => {
       actorEmployeeId: "emp-lead",
     });
     expect(rows.map((row) => row.id)).toEqual(["req-9"]);
+  });
+
+  /**
+   * Info: (20260824 - Julian) `includeHrPool` 兩側都要釘住（review 阻擋 1）。
+   *
+   * 這條分支決定「誰看得到誰的假單」（M19）：對 `HR_ADMIN` 放行整池 `HR` 關，
+   * 對其他人只給自己是待簽人的那些。只驗其中一側的話，
+   * 一個永遠回 true 的實作也會過 —— 而那等於整池假單對全公司公開。
+   *
+   * 同時釘住問出去的職能清單：`claimStep` 對 `HR` 節點放行用的是同一個判準，
+   * 兩邊問的職能不同，就會出現「清單上看得到、按下去被擋」。
+   */
+  it("HR_ADMIN 的待簽清單含整池 HR 關，其他人不含", async () => {
+    repo.pending = [summary("req-9", "emp-staff")];
+    hrFunctions.hrAdmins.add("emp-hr");
+
+    await service.listPending({
+      accountBookId: "book-1",
+      actorEmployeeId: "emp-hr",
+    });
+    expect(repo.pendingQuery).toMatchObject({
+      accountBookId: "book-1",
+      approverEmployeeId: "emp-hr",
+      includeHrPool: true,
+    });
+
+    await service.listPending({
+      accountBookId: "book-1",
+      actorEmployeeId: "emp-lead",
+    });
+    expect(repo.pendingQuery).toMatchObject({
+      approverEmployeeId: "emp-lead",
+      includeHrPool: false,
+    });
+
+    expect(hrFunctions.asked.map((ask) => ask.hrFunctions)).toEqual([
+      [EmployeeHrFunction.HR_ADMIN],
+      [EmployeeHrFunction.HR_ADMIN],
+    ]);
   });
 
   /**

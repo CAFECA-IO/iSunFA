@@ -74,19 +74,18 @@ const parseArgs = (argv: readonly string[]): IArgs => {
  * `LeaveBalance` 列（授予寫入失敗、或那一列在 `writeBalance` 補上 upsert
  * 之前就存在）在 `LeaveBalance` 裡查不到，而它的帳本明明有分錄。
  * 從批次那一側掃，這種列會被建出來。
+ *
+ * Info: (20260824 - Julian) 查詢本體改走 `leaveGrantRepo.listReconcileScopes`
+ * （review 阻擋 2 的同一支）。
+ *
+ * 這支腳本與那支排程掃的必須是**同一組**：兩邊各寫一次 distinct，
+ * 就會出現「試跑掃到 300 組、排程掃到 280 組」而沒有人看得出差別。
+ * `--book` 的過濾因此下推到那支方法的參數裡。
  */
-const scopesOf = async (accountBookId: string | null) => {
-  const grants = await prisma.leaveGrant.findMany({
-    where: accountBookId === null ? {} : { accountBookId },
-    select: {
-      accountBookId: true,
-      employeeId: true,
-      leavePolicyId: true,
-    },
-    distinct: ["accountBookId", "employeeId", "leavePolicyId"],
-  });
-  return grants;
-};
+const scopesOf = async (accountBookId: string | null) =>
+  leaveGrantRepo.listReconcileScopes(
+    accountBookId === null ? undefined : { accountBookId },
+  );
 
 const main = async (): Promise<void> => {
   const args = parseArgs(process.argv.slice(2));
@@ -107,14 +106,9 @@ const main = async (): Promise<void> => {
      * 只呼叫重建的話，這支腳本會安靜地修好每一件事，
      * 而「快取與帳本分岔過幾次」正是 ADR 022 §8.2 要的那個訊號。
      */
-    const before = await prisma.leaveBalance.findUnique({
-      where: {
-        employeeId_leavePolicyId: {
-          employeeId: scope.employeeId,
-          leavePolicyId: scope.leavePolicyId,
-        },
-      },
-      select: { remainingMinutes: true, expiringSoonMinutes: true },
+    const before = await leaveGrantRepo.findBalanceSnapshot({
+      employeeId: scope.employeeId,
+      leavePolicyId: scope.leavePolicyId,
     });
 
     try {
