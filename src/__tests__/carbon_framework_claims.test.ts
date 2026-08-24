@@ -124,3 +124,73 @@ describe("auditFrameworkClaims", () => {
     ).toHaveLength(1);
   });
 });
+
+/**
+ * Info: (20260821 - Emily) PR review 第二輪:條 4 的界是**動詞軸 × 名稱軸**。
+ * 第一版只收四種動詞、只認 IFRS 一個名稱 —— 七種繞過全過,其中「依據」
+ * 正是揭露版 guidance 自己用過的動詞(ch1-5,已改「參照」)。
+ */
+describe("條 4 的兩軸界(review 第二輪的七個繞過)", () => {
+  const BYPASSES = [
+    "本報告依據 IFRS S2 規定編製組織邊界",
+    "本公司依照 IFRS S2 規定辦理",
+    "本報告按照 IFRS S1 之要求編製",
+    "本公司遵照 IFRS S2 準則揭露",
+    "本公司符合 TIFRS S1",
+    "本公司符合國際財務報導準則 S1",
+    "已達成 IFRS S1 要求",
+  ];
+
+  BYPASSES.forEach((sentence) => {
+    it(`繞過被抓到:${sentence}`, () => {
+      expect(
+        auditFrameworkClaims(sentence).complianceClaims.length,
+      ).toBeGreaterThan(0);
+    });
+  });
+
+  /**
+   * Info: (20260821 - Emily) 釘住 review 指出的掩護結構:「TIFRS」與「動詞不緊鄰」
+   * 今天之所以安全,是被條 2(沒宣告對齊就不准出現 IFRS)蓋住的;而條 2 在印了
+   * 對齊聲明後**關閉** —— #54 上線那一刻掩護消失。這條測試模擬那一刻:
+   * 對齊聲明 + 免責句都在(條 2 關閉),條 4 必須**自己**抓到。
+   */
+  it("印了對齊聲明之後(條 2 關閉),TIFRS 的合規宣告由條 4 自己抓到", () => {
+    const audit = auditFrameworkClaims(
+      `${FRAMEWORK_ALIGNMENT_PHRASE}。${FRAMEWORK_DISCLAIMER_PHRASE}。本公司符合 TIFRS S1。`,
+    );
+
+    expect(audit.ifrsWithoutAlignment).toEqual([]);
+    expect(audit.complianceClaims).toHaveLength(1);
+  });
+
+  /**
+   * Info: (20260821 - Emily) 跨子句不誤報 —— 而且**兩種逗號都要測**:
+   * squeezeForMatch 的 NFKC 會把全形逗號正規化成半形,排除類只排全形的話,
+   * 壓過的文字上每一個逗號都攔不住(review 給的排除類就有這個洞,已修)。
+   */
+  it("動詞與 IFRS 隔著子句時不誤報(全形與半形逗號)", () => {
+    [
+      "通過第三方查證,並依 IFRS 架構揭露",
+      "通過第三方查證，並依 IFRS 架構揭露",
+    ].forEach((sentence) => {
+      expect(auditFrameworkClaims(sentence).complianceClaims).toEqual([]);
+    });
+  });
+
+  it("新動詞的否定式不誤報", () => {
+    ["本公司未遵照 IFRS S2 辦理", "本報告尚未依據 IFRS S2 編製"].forEach(
+      (sentence) => {
+        expect(auditFrameworkClaims(sentence).complianceClaims).toEqual([]);
+      },
+    );
+  });
+
+  // Info: (20260821 - Emily) ch1-5 改動詞後的正常輸出必須綠 —— 這是改動詞的目的
+  it("「參照 IFRS S2 所定之方法」是方法論引用,不誤報", () => {
+    expect(
+      auditFrameworkClaims("本公司之組織邊界參照 IFRS S2 所定之方法對齊")
+        .complianceClaims,
+    ).toEqual([]);
+  });
+});

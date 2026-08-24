@@ -167,6 +167,22 @@ export class ParagraphDraftService {
         : "(無已確認事實)";
 
     // Info: (20260714 - Tzuhan) 數據段落:數字由後端決定論管線勾稽,LLM 只寫說明文字並保留表格佔位
+    /*
+     * Info: (20260821 - Emily) fail fast(PR review B1):原本寫
+     * `view.guidanceOf(id) ?? section.guidance` —— 視圖的整個目的是讓
+     * 「只換其中一個」寫不出來,而那個 fallback 在呼叫端把它寫回來了:
+     * IFRS 角色句配 ISO guidance,就是 08-18 那個分裂。集合相等測試讓它
+     * 今天不可達,但不可達的洞要用 throw 封死,不是靠測試蓋住。
+     */
+    const guidance = view.guidanceOf(section.id);
+    if (guidance === undefined) {
+      throw new ApiError(
+        API_ERRORS.VL_SCHEMA_ERROR.code,
+        API_ERRORS.VL_SCHEMA_ERROR.message,
+        API_ERRORS.VL_SCHEMA_ERROR.status,
+      );
+    }
+
     const dataDrivenRule = section.isDataDriven
       ? "\n6. 本段為數據段落:不得自行產生任何統計表格或加總數字,僅撰寫方法說明文字,並在表格應出現處保留「(數據表格由系統產出)」佔位。"
       : "";
@@ -215,7 +231,7 @@ ${factsBlock}
 【段落資訊】
 編號: ${section.code}
 標題: ${section.title}
-撰寫目標: ${view.guidanceOf(section.id) ?? section.guidance}
+撰寫目標: ${guidance}
 
 【對話紀錄】(僅供理解背景)
 ${conversationBlock}

@@ -958,6 +958,18 @@ const main = async (): Promise<void> => {
    * 是 JSON-lines 且引號轉義,直接餵進來會讓每一條帶引號的判準靜默回 0
    * （理由見 `normalizeUatLog`）。
    */
+  if (!logPath) {
+    /*
+     * Info: (20260821 - Emily) 沒給 --log 時,log 側的判準(含兩條 must_match 對帳)
+     * **整批沒跑** —— 那要看得見,不能靜默(PR review B3;「看得見才輪得到判斷」
+     * 是這支腳本自己的立場)。B4 閾值那邊已有自己的缺席處理,這行管其餘的。
+     */
+    record(
+      "warn",
+      "log:未提供",
+      "log 側判準整批未跑(含圖表/段落對帳兩條 must_match)",
+    );
+  }
   if (logPath) {
     checkLog(normalizeUatLog(fs.readFileSync(logPath, "utf-8")), text);
   }
@@ -1288,14 +1300,26 @@ const checkLog = (log: string, text?: string): void => {
    * 分兩層:被拒本身 record_only(空段是模型輸出的變異);
    * **有內容卻被拒**是 must_match —— 那是一段真實原文無聲消失。
    */
-  const rejectedSegments = [
-    ...log.matchAll(
-      /segment rejected.*?"paragraphId":"([^"]*)".*?"contentChars":(\d+|null)/g,
-    ),
-  ].map((match) => ({
-    paragraphId: match[1],
-    chars: match[2] === "null" ? null : Number(match[2]),
-  }));
+  /*
+   * Info: (20260821 - Emily) 逐行抓、欄位各自抽(PR review B2):原本一條 regex 用
+   * `.*?` 串起兩個欄位,等於要求它們**依序且同行** —— log 欄位順序一變就靜默回空、
+   * 判準靜默轉綠,而這個形狀咬過我們一次(normalizeUatLog 的檔頭記著)。
+   * normalizeUatLog 保證一事件一行,行內欄位順序則不做假設。
+   */
+  const rejectedSegments = log
+    .split("\n")
+    .filter((line) => line.includes("segment rejected"))
+    .map((line) => {
+      const paragraphId = /"paragraphId":"([^"]*)"/.exec(line)?.[1] ?? "(未知)";
+      const charsRaw = /"contentChars":(\d+|null)/.exec(line)?.[1];
+      return {
+        paragraphId,
+        chars:
+          charsRaw === undefined || charsRaw === "null"
+            ? null
+            : Number(charsRaw),
+      };
+    });
   snapshot.log_段落被拒 = rejectedSegments.map(
     (seg) => `${seg.paragraphId}(${seg.chars ?? "?"}字)`,
   );
