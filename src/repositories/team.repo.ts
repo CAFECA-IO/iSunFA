@@ -166,6 +166,28 @@ export class TeamRepository implements ITeamRepository {
    * 訂閱限 OWNER、購點限 OWNER / ADMIN（設計書 §6.4），前端要據此決定哪些團隊可選。
    * 少了這個欄位，畫面只能讓人全選一遍再被 server 打回票。
    */
+  /**
+   * Info: (20260821 - Luphia) 診斷用：某人所屬的每個團隊 + 該團隊的訂閱原值
+   *（`scripts/diagnose_subscription_state.ts`）。
+   *
+   * 與 `listMemberTeam` 的差別是它帶**訂閱列本身**：診斷要分辨「顯示端沒回 plan」
+   * 與「履行端沒套用」，而那需要看得到 DB 的原值（planId / status / 週期 / 卡片狀態）。
+   * 專屬方法而不是讓腳本自己拼 `select`：只有 Repository 碰得到 Prisma（CLAUDE.md §1），
+   * 而 `findManyMembers` 的回傳型別不含關聯，腳本會拿不到 `team`。
+   */
+  async listMembershipsWithSubscription(userId: string) {
+    return prisma.teamMember.findMany({
+      where: { userId },
+      select: {
+        role: true,
+        teamId: true,
+        team: {
+          select: { name: true, deletedAt: true, teamSubscription: true },
+        },
+      },
+    });
+  }
+
   async listMemberTeam(userId: string) {
     const teams = await prisma.team.findMany({
       where: { teamMembers: { some: { userId } } },

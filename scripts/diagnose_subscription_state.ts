@@ -15,8 +15,9 @@
  *     npx tsx scripts/diagnose_subscription_state.ts --address 0x1234...
  *     npx tsx scripts/diagnose_subscription_state.ts --user <userId>
  */
-import { prisma } from "@/lib/prisma";
-import { ORDER_TYPE } from "@/constants/status";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { teamRepo } from "@/repositories/team.repo";
+import { paymentRepo } from "@/repositories/payment.repo";
 import { TeamRole } from "@/constants/team";
 import { resolveEffectivePlanId } from "@/lib/subscription/plan_rules";
 import { SUBSCRIPTION_CARD_MAX_SYNC_ATTEMPTS } from "@/constants/subscription_nft";
@@ -40,9 +41,10 @@ async function main(): Promise<void> {
     return;
   }
 
+  // Info: (20260821 - Luphia) 查詢全部走 Repo（CLAUDE.md §1：只有 Repository 碰 Prisma）
   const user = address
-    ? await prisma.user.findUnique({ where: { address } })
-    : await prisma.user.findUnique({ where: { id: userId! } });
+    ? await webAuthnRepo.findUserByAddress(address)
+    : await webAuthnRepo.findUserById(userId!);
 
   if (!user) {
     out("找不到這個使用者。");
@@ -51,20 +53,7 @@ async function main(): Promise<void> {
 
   out(`使用者 ${user.id}  address ${user.address}`);
 
-  const memberships = await prisma.teamMember.findMany({
-    where: { userId: user.id },
-    select: {
-      role: true,
-      teamId: true,
-      team: {
-        select: {
-          name: true,
-          deletedAt: true,
-          teamSubscription: true,
-        },
-      },
-    },
-  });
+  const memberships = await teamRepo.listMembershipsWithSubscription(user.id);
 
   if (memberships.length === 0) {
     out("這個使用者不屬於任何團隊——沒有訂閱對象，畫面顯示免費版是正確的。");
@@ -109,21 +98,7 @@ async function main(): Promise<void> {
      * 問題就在履行路徑，不在顯示。
      */
     if (membership.role === TeamRole.OWNER) {
-      const orders = await prisma.order.findMany({
-        where: {
-          userId: user.id,
-          type: ORDER_TYPE.BILLING_SUBSCRIBE,
-        },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        select: {
-          id: true,
-          status: true,
-          amount: true,
-          createdAt: true,
-          data: true,
-        },
-      });
+      const orders = await paymentRepo.listRecentSubscriptionOrders(user.id, 5);
       const mine = orders.filter((order) => {
         const data = order.data as { teamId?: string } | null;
         return data?.teamId === membership.teamId;
@@ -145,6 +120,6 @@ main()
     );
     process.exitCode = 1;
   })
-  .finally(async () => {
-    await prisma.$disconnect();
+  .finally(() => {
+    // Info: (20260821 - Luphia) 連線由 `@/lib/prisma` 持有；這支已不碰 client
   });

@@ -18,17 +18,23 @@ import { IAttendanceScheduleUpdate } from "@/validators/attendance";
 import { useTranslation } from "@/i18n/i18n_context";
 
 /**
- * Info: (20260813 - Julian) 單格排班編輯面板（非下拉選單）。
- *
- * 用面板而非下拉選單：這張表會橫向捲動，浮動選單的定位在捲動容器裡容易出錯；
- * 面板也能把班別全名與時間窗一起寫出來。不做拖拉排班。
+ * Info: (20260813 - Julian) 單格排班編輯面板。用面板而非下拉選單：這張表會橫向捲動，
+ * 浮動選單的定位在捲動容器裡容易出錯。不做拖拉排班。
  */
 
+/**
+ * Info: (20260817 - Julian) 型別是 `Exclude<WorkDayType, WORK>`，少一個成員不會被編譯器
+ * 擋下來 —— 漏掉 `SUSPENDED` 的話停工日在畫面上就無法設定，只有種子腳本進得去。
+ *
+ * ToDo: (20260817 - Julian) 停工是機關對**整個工地**的單方決定；批次套用
+ * （選工地 + 日期區間）屬於排班頁的功能，不在本面板。
+ */
 const OFF_DAY_TYPES: Exclude<WorkDayType, WorkDayType.WORK>[] = [
   WorkDayType.REGULAR_OFF,
   WorkDayType.REST_DAY,
   WorkDayType.HOLIDAY,
   WorkDayType.LEAVE,
+  WorkDayType.SUSPENDED,
 ];
 
 const ScheduleCellEditor: FC<{
@@ -116,10 +122,7 @@ const ScheduleCellEditor: FC<{
               )}
             >
               <span className="text-sm font-medium">{pattern.name}</span>
-              {/**
-               * Info: (20260813 - Julian) 把時間窗印出來——班別名稱未必說得出
-               * 是幾點到幾點，寫出來才不必去別的頁面查。
-               */}
+              {/* Info: (20260813 - Julian) 把時間窗印出來：班別名稱未必說得出是幾點到幾點 */}
               <span className="text-xs opacity-80">
                 {formatMinuteOfDay(pattern.window.windowStartMinute, nextDay)}–
                 {formatMinuteOfDay(pattern.window.windowEndMinute, nextDay)}
@@ -147,10 +150,7 @@ const ScheduleCellEditor: FC<{
                   employeeId: row.employeeId,
                   workDate: cell.workDate,
                   dayType,
-                  /**
-                   * Info: (20260813 - Julian) 明確送 null，不是省略 ——
-                   * 把上班日改成休假時，舊的班別必須被清掉。
-                   */
+                  // Info: (20260813 - Julian) 明確送 null 不是省略：上班日改成休假時，舊班別必須被清掉
                   shiftPatternId: null,
                 })
               }

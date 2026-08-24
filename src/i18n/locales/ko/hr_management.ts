@@ -4,7 +4,17 @@ export const hrManagement = {
   notification_aria: "알림",
   user_menu_aria: "사용자 메뉴",
   open_menu_aria: "메뉴 열기",
+  // Info: (20260818 - Julian) 側邊選單的分組標題。不分組的項目（儀表板、系統設定）沒有對應鍵
+  nav_group: {
+    people: "인사 관리",
+    attendance: "출퇴근 시스템",
+    leave: "휴가·초과근무",
+  },
   nav: {
+    leave: "휴가 신청",
+    leave_approval: "결재 대기",
+    overtime: "내 초과근무",
+    overtime_approval: "초과근무 승인",
     dashboard: "대시보드",
     organization: "조직도",
     employee: "직원 관리",
@@ -588,6 +598,13 @@ export const hrManagement = {
     error_rate_limited:
       "짧은 시간에 요청이 너무 많았습니다. 잠시 후 다시 시도해 주세요.",
     error_supervisor_only: "이 작업은 부서 관리자만 할 수 있습니다.",
+    error_hr_function_required:
+      "이 작업에는 인사 관리자 권한이 필요합니다. 인사팀에 부여를 요청하거나 권한이 있는 분께 요청하세요.",
+    error_no_permission_to_view: "이 사람의 기록을 볼 권한이 없습니다.",
+    error_no_employee_record:
+      "계정이 이 장부의 직원과 연결되어 있지 않습니다. 인사팀에 등록을 요청하세요.",
+    error_range_too_large:
+      "조회 기간이 너무 깁니다. 범위를 줄여 다시 시도해 주세요.",
   },
   attendance_result: {
     title: "근태 현황과 이상",
@@ -634,11 +651,13 @@ export const hrManagement = {
     day_type_rest_day: "휴무일",
     day_type_holiday: "공휴일",
     day_type_leave: "휴가",
+    day_type_suspended: "작업 중지",
     day_type_short_work: "근",
     day_type_short_regular_off: "법",
     day_type_short_rest_day: "휴",
     day_type_short_holiday: "공",
     day_type_short_leave: "가",
+    day_type_short_suspended: "중",
     phase_upcoming: "시작 전",
     phase_in_progress: "진행 중",
     phase_concluded: "종료",
@@ -658,10 +677,11 @@ export const hrManagement = {
   attendance_presence: {
     stat_leave: "오늘 휴가",
     stat_leave_hint: "승인된 휴가이며 미출근으로 집계되지 않습니다",
+    leave_on_leave: "휴가 중",
     leave_title: "오늘 휴가（{{count}}명）",
     leave_empty: "오늘 휴가자가 없습니다",
     leave_hint:
-      "인력이 부족할 때 관리자는 이 명단의 직원에게 휴가 단축을 요청할 수 있습니다. 수락 여부는 본인이 결정합니다.",
+      "인력이 부족할 때 관리자는 이 명단의 직원에게 휴가 단축을 요청할 수 있습니다. 수락 여부는 본인이 결정합니다.\n이 명단에는 휴가 종류를 일부러 표시하지 않습니다 —— 병가·생리 휴가는 건강 상태를 드러내기 때문입니다.",
     leave_recall_action: "복귀 요청",
     leave_recall_pending: "응답 대기",
     recall_title: "휴가 단축 요청",
@@ -764,14 +784,297 @@ export const hrManagement = {
       "이 환경에서는 패스키를 사용할 수 없습니다. 패스키는 HTTPS（또는 localhost）보안 연결에서만 동작합니다. 정식 주소로 이 페이지를 열어 주세요.",
     hint: "로그인하는 Google 계정은 등록된 회사 이메일이어야 합니다. 로그인 후 「직원 정보가 연결되지 않았습니다」가 표시되면 인사팀에 이메일을 확인해 주세요.",
   },
-  // Info: (20260814 - Julian) 휴가 종류. `LEAVE_TYPE_I18N_KEY`에 대응
+  // Info: (20260817 - Julian) 기본 휴가 종류. `LEAVE_POLICY_I18N_KEY`에 대응. 테넌트가 정의한 휴가는 `LeavePolicy.name`으로 표시
   leave: {
-    type_annual: "연차 휴가",
-    type_personal: "개인 휴가",
-    type_sick: "병가",
-    type_official: "공가",
-    type_marriage: "결혼 휴가",
-    type_bereavement: "경조 휴가",
-    type_other: "기타",
+    field_start_at: "시작(날짜 및 시각)",
+    field_end_at: "종료(날짜 및 시각)",
+    span_selected:
+      "총 {{hours}}시간(휴게·비근무일 제외 전 값. 실제 차감은 아래 시산 참고)",
+    detail_title: "신청 상세",
+    detail_reason: "휴가 사유",
+    detail_reason_undecryptable:
+      "사유를 복호화할 수 없습니다(키 오류). 관리자에게 문의하세요.",
+    detail_reason_audited:
+      "사유는 암호화 저장되며, 본인 외의 열람은 모두 기록됩니다",
+    detail_days: "사용일 내역",
+    detail_day_recalled: "휴가 철회됨",
+    detail_chain: "결재선",
+    detail_concurrency_warned:
+      "신청 시점에 같은 기간 다른 동료의 휴가가 있었고 신청자에게 안내되었습니다",
+    segment_custom: "시간 지정",
+    unit_hint: "최소 단위는 {{minutes}}분이며, 미만은 1단위로 계산됩니다",
+    preview_rounded:
+      "선택한 시간은 {{raw}}분이지만 최소 단위에 따라 {{minutes}}분으로 계산됩니다",
+    action_detail: "상세",
+    action_back: "뒤로",
+    title: "휴가 신청",
+    approval_page_title: "결재 대기",
+    loading: "불러오는 중…",
+    unit_day: "일",
+    unit_minute: "분",
+
+    balance_title: "내 잔여 휴가",
+    balance_empty:
+      "부여된 휴가가 없습니다. 입사일과 근속 연수에 따라 일괄 부여됩니다. 계속 비어 있으면 인사팀에 문의하세요.",
+    balance_unlimited: "한도 없음",
+    balance_next_expiry: "가장 빠른 소멸일: {{date}}",
+    balance_never_reconciled: "원장과 대사한 적 없음",
+
+    form_title: "신청서 작성",
+    field_policy: "휴가 종류",
+    policy_unavailable_suffix: " (현재 선택 불가)",
+    field_reason: "사유",
+    field_reason_placeholder: "예: 재진, 집안 사정",
+    field_reason_encrypted:
+      "사유는 암호화되어 저장되며 상세 화면에서 결재자만 볼 수 있습니다",
+    segment_full: "종일",
+    segment_morning: "오전",
+    segment_afternoon: "오후",
+    action_submit: "신청하기",
+
+    preview_total: "총 {{days}}일 ({{minutes}}분)",
+    preview_after: "신청 후 잔여 {{minutes}}분",
+    preview_shortfall: "{{minutes}}분 부족하여 신청할 수 없습니다",
+    preview_chain: "결재 {{count}}단계",
+    preview_chain_unresolved:
+      "결재선을 만들 수 없습니다({{reason}}). 인사팀에 결재 규칙과 조직 설정을 확인해 주세요.",
+    preview_concurrency_warn:
+      "{{date}}에 이미 {{count}}명이 휴가입니다(권장 한도 {{limit}}). 신청은 가능하지만 관리자가 조정을 요청할 수 있습니다.",
+    preview_concurrency_blocked:
+      "{{date}}에 이미 {{count}}명이 휴가로 한도 {{limit}}을 초과하여 신청할 수 없습니다.",
+
+    my_requests_title: "내 신청 내역",
+    my_requests_empty: "아직 신청한 내역이 없습니다",
+    list_step_progress: "{{current}}/{{total}}단계, {{approver}} 결재 대기",
+    list_step_self: "당신은 {{current}}/{{total}}단계입니다",
+    status_pending: "결재 중",
+    status_approved: "승인됨",
+    status_rejected: "반려됨",
+    status_withdrawn: "철회됨",
+    action_withdraw: "철회",
+
+    approval_title: "결재 대기 ({{count}}건)",
+    approval_empty: "결재할 신청이 없습니다",
+    action_approve: "승인",
+    action_reject: "반려",
+    action_reject_confirm: "반려 확정",
+    field_reject_reason: "반려 사유(필수)",
+    field_reject_placeholder: "신청자에게 이 내용이 표시됩니다",
+
+    node_direct: "직속 상사",
+    node_department: "부서장",
+    node_hr: "인사",
+    node_specific: "지정 결재자",
+    chain_empty: "결재선이 없습니다",
+    chain_escalated_same_kind:
+      "자동 재배정: 이 단계의 {{kind}}이(가) 본인이어서 다른 분으로 변경되었습니다",
+    chain_escalated_higher:
+      "자동 상향: 이 단계의 {{from}}이(가) 본인이어서 {{to}}(으)로 상향되었습니다",
+    unresolved_no_matching_rule: "이 일수에 해당하는 결재 규칙이 없습니다",
+    unresolved_empty_rule_steps:
+      "해당 결재 규칙에 결재 단계가 설정되어 있지 않습니다",
+    unresolved_no_direct_manager: "직속 상급자가 등록되어 있지 않습니다",
+    unresolved_no_department_manager:
+      "상위 부서에 책임자가 등록되어 있지 않습니다",
+    unresolved_no_hr: "이 장부에 인사 관리자가 없습니다",
+    unresolved_no_other_hr:
+      "유일한 인사 관리자가 본인이어서 결재할 수 있는 다른 분이 없습니다",
+    unresolved_specific_employee_missing:
+      "지정된 결재자가 퇴사했거나 이 장부에 없습니다",
+    unresolved_malformed_rule_threshold:
+      "결재 규칙의 일수 기준이 대조 가능한 십진수가 아닙니다",
+
+    error_load: "불러오지 못했습니다",
+    error_preview: "미리 계산에 실패했습니다",
+    error_submit: "신청에 실패했습니다",
+    error_withdraw: "철회에 실패했습니다",
+    error_decide: "결재 처리에 실패했습니다",
+    /**
+     * Info: (20260818 - Julian) 오류 코드별 문구(대조표는 `leave_error_message.ts`).
+     * 각 문장은 "다음에 무엇을 해야 하는지"에 답해야 함 —— 하나의 "처리 실패"로 묶으면 진단 정보가 사라진다.
+     */
+    error_insufficient_balance:
+      "잔여 일수가 부족합니다. 일수를 줄이거나 다른 휴가 종류를 선택하세요",
+    error_merge_not_implemented:
+      "이 휴가 종류는 다른 휴가의 잔여 일수도 함께 차감하지만 해당 규칙이 아직 제공되지 않아 신청할 수 없습니다. 인사팀에 문의하세요(당분간 다른 휴가 종류를 이용해 주세요).",
+    error_unit_not_aligned:
+      "이 휴가 종류의 최소 단위와 맞지 않습니다. 시간대를 조정하세요",
+    error_non_working_day:
+      "선택한 기간에 해당하는 근무 시간이 없습니다(근무일이 아니거나 근무 시간 외). 휴가가 필요하지 않으며 잔여 일수도 차감되지 않습니다",
+    error_chain_unresolved:
+      "결재선을 만들 수 없습니다. 직속 상급자와 결재 규칙 설정을 인사팀에 확인하세요",
+    error_day_already_active: "해당 날짜에 이미 유효한 휴가 신청이 있습니다",
+    error_concurrency_exceeded:
+      "그 기간에 같은 부서의 휴가자가 상한에 도달했습니다. 상급자와 협의해 일정을 조정하세요",
+    error_concurrency_rule_invalid:
+      "이 장부의 동시 휴가 상한 규칙에 적용 가능한 상한이 없어 확인할 수 없습니다. 인사팀에 규칙 수정을 요청하세요.",
+    error_policy_not_found:
+      "이 휴가 종류는 존재하지 않거나 비활성화되었습니다. 다시 선택하세요",
+    error_self_approval: "본인이 제출한 신청은 결재할 수 없습니다",
+    error_not_reviewer:
+      "이 신청의 현재 결재자가 아닙니다. 이전 단계가 끝날 때까지 기다리세요",
+    error_already_reviewed:
+      "이 단계는 이미 결정되었습니다. 새로 고침하여 최신 상태를 확인하세요",
+    error_balance_race:
+      "잔여 일수가 방금 다른 신청에 사용되었습니다. 새로 고침 후 다시 시도하세요",
+    error_request_scope:
+      "이 신청은 본인의 것이 아니며 결재선에도 포함되어 있지 않습니다",
+    error_request_not_found: "이 휴가 신청을 찾을 수 없습니다",
+    policy_annual: "연차 휴가",
+    policy_personal: "개인 휴가",
+    policy_sick: "일반 상병 휴가",
+    policy_occupational_injury: "산재 휴가",
+    policy_official: "공가",
+    policy_marriage: "결혼 휴가",
+    policy_bereavement: "경조 휴가",
+    policy_menstrual: "생리 휴가",
+    policy_maternity: "출산 휴가",
+    policy_prenatal_checkup: "산전 검진 휴가",
+    policy_paternity: "배우자 출산·검진 동행 휴가",
+    policy_family_care: "가족 돌봄 휴가",
+    policy_compensatory: "보상 휴가",
+  },
+  // Info: (20260818 - Julian) 초과근무 모듈(L24–L30). 구간 라벨은 `OvertimePremiumTier`를 키로 사용합니다
+  overtime: {
+    field_start_at: "시작(날짜 및 시각)",
+    field_end_at: "종료(날짜 및 시각)",
+    span_selected: "총 {{hours}}시간(실제 인정은 출퇴근 기록 기준)",
+    title: "내 초과근무",
+    approval_page_title: "초과근무 승인",
+    loading: "불러오는 중…",
+    unit_minute: "분",
+    unit_hour: "시간",
+    summary_title: "이번 달 초과근무",
+    summary_monthly: "이번 달 인정분",
+    summary_quarterly: "최근 3개월",
+    summary_limit: "상한 {{hours}}시간",
+    summary_remaining: "{{hours}}시간 남음",
+    summary_over_limit: "상한 초과",
+    summary_quarterly_none: "연장 합의가 없어 3개월 상한은 적용되지 않습니다",
+    summary_punch_backed: "출퇴근 기록 있음",
+    summary_declared: "자기 신고(기록 없음)",
+    summary_evidence_hint:
+      "의도적으로 분리했습니다: 근로감독에서 「출퇴근 기록 없는 초과근무가 얼마나 되는가」를 묻기 때문입니다.",
+    summary_by_tier: "가산 구간별",
+    summary_empty: "이번 달 승인된 초과근무가 없습니다",
+    tier_weekday_first_2h: "평일 최초 2시간",
+    tier_weekday_beyond_2h: "평일 2시간 초과",
+    tier_rest_day_first_2h: "휴일(휴식일) 최초 2시간",
+    tier_rest_day_beyond_2h: "휴일(휴식일) 2시간 초과",
+    tier_holiday_double: "휴일(2배 지급)",
+    tier_emergency_double: "천재지변(2배 지급)",
+    form_title: "초과근무 신청",
+    field_filing: "신청 시점",
+    filing_advance: "사전 신청",
+    filing_post_hoc: "사후 신청",
+    filing_hint: "사전 신청은 해당일 근무 시작 전에 제출해야 합니다.",
+    field_compensation: "보상 방식",
+    compensation_payment: "초과근무 수당",
+    compensation_leave: "보상휴가로 전환",
+    compensation_hint:
+      "보상휴가는 실제 근무시간과 1:1로 환산하며 가산율을 곱하지 않습니다(가산은 만료 정산 시 적용).",
+    field_reason: "초과근무 사유",
+    field_reason_placeholder: "예: 콘크리트 타설을 당일 내 완료해야 함",
+    field_emergency: "천재지변(§32 IV, 신고 완료)",
+    action_declare_emergency: "천재지변 등록",
+    error_declare_emergency:
+      "인정에 실패했습니다. 인사 관리자 권한이 있는지, 이 신청이 아직 결재 대기 중인지 확인하세요.",
+    field_emergency_report: "신고 기록 링크",
+    field_emergency_reported_at: "신고 시각",
+    field_emergency_moved_hint:
+      "천재지변(§32 IV) 인정은 인사 관리자가 승인 시점에 하며 신고 기록을 첨부해야 하므로 이 신청서에는 없습니다.",
+    field_emergency_hint:
+      "인사 관리자만 인정할 수 있습니다. 선택하면 신고 기록과 신고 시각을 반드시 첨부해야 합니다: 전 구간이 2배 지급이 됩니다. 법정휴일에는 적용되지 않습니다(§40 은 별도로 관할 관청 신고가 필요).",
+    action_submit: "신청하기",
+    my_requests_title: "내 신청 내역",
+    my_requests_empty: "제출한 초과근무 신청이 없습니다",
+    list_requested: "신청 {{minutes}}분",
+    list_recognized: "인정 {{minutes}}분",
+    list_declared_badge: "자기 신고",
+    list_emergency_badge: "천재지변",
+    status_pending: "승인 대기",
+    status_approved: "승인됨",
+    status_rejected: "반려됨",
+    status_withdrawn: "철회됨",
+    approval_title: "내 승인 대기({{count}})",
+    approval_empty: "승인 대기 중인 초과근무 신청이 없습니다",
+    field_approved_minutes: "승인 분",
+    field_approved_minutes_hint:
+      "신청보다 적게 승인할 수 있습니다. 인정되는 값은 min(승인, 실제 체류시간)입니다.",
+    action_approve: "승인",
+    action_reject: "반려",
+    decided_recognized: "승인했습니다(인정 {{minutes}}분)",
+    action_withdraw: "철회",
+    action_withdraw_hint:
+      "철회해도 출퇴근 기록은 지워지지 않습니다. 해당 시간은 다른 신청이 포함할 때까지 「미승인 연장근로」로 되돌아갑니다.",
+    field_withdraw_reason: "철회 사유",
+    field_withdraw_reason_placeholder: "예: 날짜 오기재, 다른 신청으로 처리됨",
+    error_withdraw: "철회에 실패했습니다",
+    error_not_applicant:
+      "신청한 본인만 철회할 수 있습니다. 관리자는 반려를 사용하세요 — 결정자가 기록됩니다.",
+    error_withdraw_reason_required:
+      "사후 신청의 철회에는 사유가 필요합니다. 자발적 철회인지 기록에 남아야 합니다.",
+    action_write_report: "연장근로 보고서 작성",
+    report_disabled_hint:
+      "아직 제공되지 않습니다: 법적 근거와 서식 항목이 법무 검토 대기 중입니다(계획서 §8.3)",
+    decided_unapproved:
+      "승인 범위를 넘은 {{minutes}}분은 미승인 시간대에 집계되었습니다",
+    decided_granted: "보상휴가 {{count}}건을 부여했습니다",
+    unapproved_title: "미승인 시간대",
+    unapproved_empty: "승인 범위 밖의 체류 시간이 없습니다",
+    unapproved_team_empty:
+      "이 기간 동안 팀원에게 승인 범위 밖의 재실 시간이 없습니다.",
+    unapproved_hint:
+      "어떤 신청에도 포함되지 않은 체류 시간입니다. 신청 누락일 수도, 그저 조금 더 머문 것일 수도 있습니다 —— 판단은 관리자의 몫입니다.",
+    unapproved_range_days: "최근 {{days}}일",
+    exception_unapproved_overtime: "기록 있음·미승인",
+    exception_missing_punch_evidence: "승인됐지만 기록 없음",
+    error_load: "불러오지 못했습니다",
+    error_submit: "신청에 실패했습니다",
+    error_decide: "처리에 실패했습니다",
+    error_exceeds_daily:
+      "소정근로시간과 초과근무의 합이 법정 1일 12시간을 넘습니다. 시간을 줄이거나 다른 날로 옮기세요.",
+    error_exceeds_monthly:
+      "월간 초과근무 상한을 넘습니다. 남은 시간은 통계에서 확인하세요.",
+    error_exceeds_quarterly: "3개월 초과근무 상한을 넘습니다.",
+    error_filing_mismatch:
+      "신청 시점과 제출 시각이 맞지 않습니다: 사전 신청은 근무 시작 전에 제출해야 합니다.",
+    error_regular_off:
+      "법정휴일 근무는 §40 절차가 필요합니다. 인사팀에 문의하세요.",
+    error_already_reviewed: "이 신청은 이미 처리되었습니다. 새로고침하세요.",
+    error_reclassified_midway:
+      "결재 중에 인사팀이 이 신청을 천재·사변(§32 IV)으로 인정하여 전 구간이 배액 지급으로 바뀌었습니다. 새로 고침하여 금액을 확인한 뒤 승인하세요.",
+    error_emergency_revoked_midway:
+      "결재 중에 인사팀이 이 신청의 천재·사변(§32 IV) 인정을 취소하여 전 구간이 일반 연장근로 할증으로 돌아갔습니다. 새로 고침하여 금액을 확인한 뒤 승인하세요.",
+    error_day_length_unknown:
+      "이 직원의 1일 소정근로시간을 산출할 수 없어 보상휴가 전환도 수당 지급도 불가능합니다. 인사팀에 근무 일정 등록을 요청하세요.",
+    error_overlaps_existing:
+      "같은 날 이 시간대와 겹치는 연장근로 신청이 이미 있습니다. 시간을 조정하거나 기존 신청을 먼저 철회하세요.",
+    error_earlier_than_approved:
+      "같은 날 더 늦은 시간대의 연장근로 신청이 이미 승인되어 가산율이 확정되었습니다. 지금 더 이른 시간대를 신청하면 두 건 모두 낮은 가산율로 계산됩니다. 늦은 쪽 신청을 철회한 뒤 함께 다시 제출하세요.",
+    error_not_approved:
+      "이 연장근로 신청은 현재 승인 상태가 아니므로 취소할 승인이 없습니다. 새로고침하여 현재 상태를 확인하세요.",
+    error_approval_not_reversible:
+      "이 승인으로 전환된 보상휴가가 이미 사용·소멸·수당 지급되었거나, 급여에서 연장근로수당이 정산되었습니다. 승인은 더 이상 취소할 수 없으니 인사팀에 잔액 수동 조정을 요청하세요.",
+    error_agreement_record_required:
+      "월 상한을 54시간으로 완화하려면 기록이 필요합니다(§32 III): 회의록 링크와 동의한 날짜를 입력하세요.",
+    error_emergency_already_declared:
+      "이 신청에는 이미 §32 IV 인정이 있습니다. 새 신고를 기록하기 전에 기존 인정을 취소하세요.",
+    error_emergency_not_declared: "이 신청에는 취소할 §32 IV 인정이 없습니다.",
+    error_reported_at_out_of_range:
+      "신고 시각은 미래이거나 초과근무일보다 이를 수 없습니다. 신고 기록의 시각을 확인하세요.",
+    error_comp_expiry_unset:
+      "보상휴가 기한이 아직 합의되지 않아 전환할 수 없습니다. 수당을 선택하거나 인사팀에 설정을 요청하세요.",
+    error_day_not_scheduled:
+      "그날은 근무가 편성되어 있지 않아 가산 구간을 정할 수 없습니다. 인사팀에 편성을 요청하세요.",
+    error_premium_undefined:
+      "해당 일자 구분의 가산 기준이 아직 정해지지 않았습니다(휴공일·휴가일). 인사팀에 문의하세요.",
+    error_self_decide:
+      "본인이 제출한 초과근무 신청은 승인하거나 인정할 수 없습니다. 다른 인사 관리자에게 요청하세요.",
+    error_not_reviewer:
+      "이 신청의 결재자가 아닙니다. 결재는 신청자를 관할하는 상급자가 합니다.",
+    error_comp_policy_missing:
+      "보상휴가 휴가 종류가 설정되어 있지 않아 전환할 수 없습니다. 수당을 선택하거나 인사팀에 생성을 요청하세요.",
+    error_not_found: "이 초과근무 신청은 존재하지 않습니다.",
   },
 };

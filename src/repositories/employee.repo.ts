@@ -1,3 +1,5 @@
+import { collectDepartmentScope } from "@/lib/utils/hr_dashboard";
+import { IDepartment } from "@/interfaces/hr_management";
 import { Employee } from "@/generated";
 import { prisma } from "@/lib/prisma";
 
@@ -46,9 +48,29 @@ export interface IEmployeeRepository {
     accountBookId: string,
     employeeId: string,
   ): Promise<Employee | null>;
+  /**
+   * Info: (20260818 - Julian) 顯示用的員工檔：工號、姓名、職稱、部門名稱。
+   *
+   * 只有 Tier 1 欄位（同事之間本來就看得到的）。電話與信箱不在這裡 ——
+   * 那些是 Tier 2，要走專屬端點並留下 `AuditLog`（ADR 018 §6）。
+   */
+  findProfile(params: { accountBookId: string; employeeId: string }): Promise<{
+    employeeNo: string;
+    name: string;
+    jobTitle: string | null;
+    departmentName: string | null;
+  } | null>;
+
+  // Info: (20260817 - Julian) 「他是不是主管」——顯示用；授權請用 managesEmployee
   isDepartmentManager(params: {
     accountBookId: string;
     employeeId: string;
+  }): Promise<boolean>;
+  // Info: (20260817 - Julian) 「他管不管得到這個人」——授權用，比對部門子樹
+  managesEmployee(params: {
+    accountBookId: string;
+    managerEmployeeId: string;
+    targetEmployeeId: string;
   }): Promise<boolean>;
 }
 
@@ -180,14 +202,59 @@ class EmployeeRepository implements IEmployeeRepository {
     });
   }
   /**
+   * Info: (20260818 - Julian) 顯示用的員工資料（工號、姓名、職稱、部門名）。
+   *
+   * Info: (20260820 - Julian) 這裡原本掛著一整段在講 `isDepartmentManager`
+   * 的說明（Minor 25）—— 包括「拿它當授權判斷會放行跨部門的操作」那句警告。
+   * 註解錯位不是排版問題：那句警告要警告的方法在它下面二十行，
+   * 而那個方法一句註解都沒有，讀的人不會知道它有這個陷阱。已搬回去。
+   */
+  public async findProfile(params: {
+    accountBookId: string;
+    employeeId: string;
+  }): Promise<{
+    employeeNo: string;
+    name: string;
+    jobTitle: string | null;
+    departmentName: string | null;
+  } | null> {
+    const row = await prisma.employee.findFirst({
+      where: { id: params.employeeId, accountBookId: params.accountBookId },
+      select: {
+        employeeNo: true,
+        name: true,
+        // Info: (20260818 - Julian) 兩個外鍵都是 SetNull，因此都要能是 null
+        jobTitle: { select: { title: true } },
+        department: { select: { name: true } },
+      },
+    });
+    if (row === null) return null;
+
+    return {
+      employeeNo: row.employeeNo,
+      name: row.name,
+      jobTitle: row.jobTitle?.title ?? null,
+      departmentName: row.department?.name ?? null,
+    };
+  }
+
+  /**
    * Info: (20260813 - Julian) 這個人是不是任一部門的主管。
    *
    * **這不是權限矩陣**，是計畫書 §8.5 的視野分級 —— 決定「看不看得到圍欄地圖」
-   * 與「能不能發起銷假徵詢」兩件事。正式版的權限控制仍然是 §7.3 第 1 順位，
+   * 與「畫面上顯不顯示銷假徵詢按鈕」。正式版的權限控制仍然是 §7.3 第 1 順位，
    * 而它會取代這個方法，不是建立在它之上。
    *
    * 用 `Department.managerId` 而不是職稱字串：職稱是自由文字，
    * 「工地主任」與「工地主任(代)」在字串比對下是兩個人，而在組織圖上是同一件事。
+   *
+   * Info: (20260817 - Julian) ⚠️ **這個方法回答的是「他是不是主管」，
+   * 不是「他管不管得到某個人」。** 拿它當授權判斷會放行跨部門的操作 ——
+   * 第一工務段的主管可以對第五工務段的員工發起銷假徵詢。
+   * 需要後者請用 `listManagedScope` 系列（`managesEmployee`）。
+   *
+   * 兩個都留著是刻意的：顯示按鈕與允許動作是兩個不同的問題，
+   * 用同一個答案回答它們，正是這次那個缺口的成因。
    */
   public async isDepartmentManager(params: {
     accountBookId: string;
@@ -200,6 +267,153 @@ class EmployeeRepository implements IEmployeeRepository {
       },
     });
     return count > 0;
+  }
+
+  /**
+   * Info: (20260817 - Julian) 那位員工在不在這個主管的部門子樹裡。
+   *
+   * ## 這一支只回答「是什麼」（review 第 6 輪 M11）
+   *
+   * 它原本的第一行寫著「**這是授權判斷。**」，而且真的做了一個授權判斷：
+   * `managerEmployeeId === targetEmployeeId → false`。那是職責分離
+   * （ADR 023 §5），不是組織圖上的事實 —— 而 `coding_guidelines §1.1` 把
+   * 「這個人有沒有權限做這件事」列為 Repository 唯一的反例。
+   *
+   * 上一輪只改了那句註解、把行為重新定義成「管轄範圍不含自己」，
+   * 理由是有兩個呼叫端（`leave.service` 的銷假徵詢、
+   * `attendance_schedule.service` 的改班）沒有自己的自我檢查，移走會讓
+   * 主管可以對自己動手而沒有任何錯誤訊息。那是一個**成立的顧慮**，
+   * 但它的解法是替那兩支補上檢查，不是把政策留在這一層並替它換一個名字 ——
+   * 換名字之後同一段程式碼還在，而下一個人只會更難看出它在那裡。
+   *
+   * 現在兩支都有自己的一行了（各自丟原本那個碼，使用者觀察到的行為不變），
+   * 這一支因此回到單純的事實：target 的部門在不在 manager 那個部門的子樹裡。
+   * **包含 manager 自己**——他的部門當然在他自己的子樹裡。
+   *
+   * 「因此他可以看／可以簽」是**決定**，而決定在 `assertMay*` 那幾支
+   * （`leave_visibility.ts`、`overtime_visibility.ts`、`assertMayDecide`），
+   * 它們每一支都在呼叫這裡之前先處理過「對象就是自己」這件事。
+   * 同一個事實在不同動作上導出不同的答案：查餘額時自己一律放行，
+   * 核准時自己一律擋下 —— 那正是決定與事實的差別。
+   *
+   * ## 為什麼要用子樹而不是直屬部門
+   *
+   * 工程處長掛在 DEP-000（根），他的下屬分散在各工務段。只比對直屬部門
+   * 會讓他管不到任何人 —— 而組織圖上他管所有人。
+   *
+   * ## 為什麼在這裡撈全部門而不是遞迴查詢
+   *
+   * 一個帳本的部門數是數十量級，一次撈完在記憶體算，比在 DB 上做遞迴 CTE
+   * 便宜也好懂。範圍計算沿用 `collectDepartmentScope` —— 前端儀表板已經在用
+   * 同一支純函數（含防環：部門資料有環時反覆掃描不會堆爆），
+   * 兩邊各寫一份就會出現「主管在畫面上看得到、在後端被擋下」這種矛盾。
+   *
+   * ## `Department.managerId` 是 @unique
+   *
+   * 因此一個人最多掛一個部門的主管，這裡取 `findFirst` 即可。
+   * ToDo: (20260817 - Julian) 一人兼管兩個工務段在工程公司很常見，
+   * 而現行資料模型表達不了（接線守則 §3.5.2、待辦乙-4）。放寬成多對多之後，
+   * 這裡要改成把每個被管部門的子樹聯集起來。
+   */
+  public async managesEmployee(params: {
+    accountBookId: string;
+    managerEmployeeId: string;
+    targetEmployeeId: string;
+  }): Promise<boolean> {
+    const managed = await prisma.department.findFirst({
+      where: {
+        accountBookId: params.accountBookId,
+        managerId: params.managerEmployeeId,
+      },
+      select: { id: true },
+    });
+    if (!managed) return false;
+
+    const target = await prisma.employee.findFirst({
+      where: {
+        id: params.targetEmployeeId,
+        accountBookId: params.accountBookId,
+      },
+      select: { departmentId: true },
+    });
+    /**
+     * Info: (20260817 - Julian) 沒有部門的員工不屬於任何主管的範圍。
+     * 回 false 而不是 true：`Employee.departmentId` 是 `onDelete: SetNull`，
+     * 部門一被刪除，底下的人就全部變成 null —— 若這裡放行，
+     * 刪一個部門會讓所有主管突然管得到那些人。
+     */
+    if (!target?.departmentId) return false;
+
+    const departments = await prisma.department.findMany({
+      where: { accountBookId: params.accountBookId },
+      select: { id: true, parentId: true },
+    });
+
+    return collectDepartmentScope(departments as IDepartment[], managed.id).has(
+      target.departmentId,
+    );
+  }
+
+  /**
+   * Info: (20260818 - Julian) 我的**管轄範圍**裡的所有員工 id（不含自己）。
+   *
+   * Info: (20260820 - Julian) 原本寫「這是授權判斷的複數版」（M11）——
+   * 同 `managesEmployee`，它算的是組織圖上的範圍，決定在 `assertMay*`。
+   *
+   * ## 為什麼需要一個複數版
+   *
+   * `managesEmployee` 答的是「這個人歸不歸我管」，一次一個。主管要看
+   * 「有誰送了加班單等我簽」時，問的是反方向：先有範圍，才有清單。
+   * 拿單數版去對全帳本每個人跑一次，是 N 次部門樹走訪。
+   *
+   * ## 為什麼不是兩套邏輯
+   *
+   * 兩者都走同一條路：`Department.managerId` 找到我管的部門 →
+   * `collectDepartmentScope` 展開子樹 → 取該子樹裡的員工。若哪天放寬成
+   * 一人可管多部門（待辦乙-4），兩支要一起改 —— 而它們現在讀起來就是同一件事。
+   *
+   * Info: (20260820 - Julian) **含自己**（review 第 6 輪 M11）。
+   *
+   * 這一支原本在 `where` 裡帶 `id: { not: managerEmployeeId }`，理由寫的是
+   * 「職責分離的第一條（ADR 023 §5）—— 自己的單子不會出現在自己的待簽清單裡」。
+   * 那個結論是對的，但它是一條**政策**，而政策不屬於 Repository
+   * （`coding_guidelines §1.1`）。與 `managesEmployee` 同一次搬走：
+   * 排除自己的那一步移到 `OvertimeRequestService.listPending`，
+   * 使用者看到的清單完全不變。
+   *
+   * 兩支仍然是同一件事的兩個形狀（單數／複數），
+   * `employee_managed_scope.test.ts` 會確認它們對同一組資料給出一致的答案。
+   */
+  public async listManagedEmployeeIds(params: {
+    accountBookId: string;
+    managerEmployeeId: string;
+  }): Promise<string[]> {
+    const managed = await prisma.department.findFirst({
+      where: {
+        accountBookId: params.accountBookId,
+        managerId: params.managerEmployeeId,
+      },
+      select: { id: true },
+    });
+    if (!managed) return [];
+
+    const departments = await prisma.department.findMany({
+      where: { accountBookId: params.accountBookId },
+      select: { id: true, parentId: true },
+    });
+    const scope = collectDepartmentScope(
+      departments as IDepartment[],
+      managed.id,
+    );
+
+    const employees = await prisma.employee.findMany({
+      where: {
+        accountBookId: params.accountBookId,
+        departmentId: { in: [...scope] },
+      },
+      select: { id: true },
+    });
+    return employees.map((employee) => employee.id);
   }
 }
 

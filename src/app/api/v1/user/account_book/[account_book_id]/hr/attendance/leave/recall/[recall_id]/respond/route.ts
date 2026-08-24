@@ -12,7 +12,7 @@ import { leaveService } from "@/services/leave.service";
 
 /**
  * Info: (20260813 - Julian) A14：回應銷假徵詢。
- * POST .../hr/attendance/leave/recall/:recall_id/respond
+ * POST /api/v1/user/account_book/[account_book_id]/hr/attendance/leave/recall/:recall_id/respond
  *      body：`{ decision: "ACCEPT" | "DECLINE", note? }`
  *
  * **同意的那一刻才會改排班**，而且與「請假日退出生效」在同一個交易裡 ——

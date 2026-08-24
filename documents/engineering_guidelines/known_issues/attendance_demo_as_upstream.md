@@ -1,0 +1,335 @@
+# ⚠️ 簽到模組仍是 Demo，但它已經是上游
+
+> **Date**: 2026-08-17（2026-08-18 修訂：上游已硬化一輪，見各節的「已變更」註記）
+> **Author**: Julian
+> **Status**: 🔴 Open —— 在簽到模組轉正之前持續有效
+> **相關**: [簽到系統 Demo 開發計畫書 §7.3](../../architecture/attendance_demo_plan.md)、[出勤模組開發計畫書](../../architecture/time_attendance_module_plan.md)、[假勤模組開發計畫書 §19.5](../../architecture/leave_and_overtime_module_plan.md)
+
+---
+
+## 1. 這份文件要解決的問題
+
+簽到模組是**有意識地**做成 demo 的：三張判定結果表不建、沒有權限矩陣、政策參數是常數而不是表、補打卡申請單未實作。這些取捨在 `attendance_demo_plan.md` §7.3 排好了序，是好的工程紀律。
+
+問題不在那些取捨，而在**它已經變成上游了**。假勤模組（正式版設計）接了上去，之後薪資、專案工時、工程計價都會接。而「簽到是 demo」這件事**沒有寫在任何一支 API 的簽名上** —— 下一個接線的人看到的是一組能跑、有測試、有文件的端點。
+
+> **這份文件不是在要求「先把簽到做完才能接線」。**
+> 那個要求會擋住所有人，而且不必要 —— 簽到落地的那部分是可靠的。
+> 它要回答的是：**接線之前，哪些東西不能依賴，以及不依賴的話該怎麼辦。**
+
+**引用一律用檔名與符號名，不用行號。** 行號會漂移，而一份會被反覆查閱的規範不能每次 refactor 就變成假話。
+
+> **本文件經過一次對抗性複查**（2026-08-17），第一版有五處事實錯誤與五項重大遺漏，皆已修正。
+> 修正的內容留在文中（§3.1、§3.3、§3.5、§4、§7），因為那幾個錯誤本身就是接線時最容易犯的。
+
+---
+
+## 2. 一句話判準
+
+> **落地的可以信；推導的每次都不一樣；沒有的不要假裝有。**
+
+簽到模組刻意讓一大部分東西「不落地」—— 判定結果、現場狀態都是讀取時即時算的。那個決定是對的（`attendance_result.service.ts` 檔頭：「落地會產生第二份可能過期的真相」），**不要求改**。但它的直接後果是：
+
+- 你**現在**問它，它會給你一個答案
+- 你**明天**再問同一個問題，答案可能不同（引擎改了、排班改了、政策常數改了）
+- 而**沒有任何一份快照**能告訴你當初那個答案是什麼
+
+所以規則是：**任何需要事後舉證的數字，必須由你自己在當下固化。**
+
+---
+
+## 3. 接線前必答的五個問題
+
+### 3.1 我要的東西，簽到有沒有把它存下來？
+
+| 你想要的 | 有沒有落地 | 怎麼辦 |
+|---|---|---|
+| 打卡事實（誰、何時、在哪） | ✅ `AttendancePunch`，append-only | 直接讀 |
+| 排班（哪天上不上班、上哪一班） | ✅ `EmployeeShiftDay` | 直接讀 |
+| 班別定義（窗、核心時段、應工作分鐘） | ✅ `ShiftPattern` | 直接讀 |
+| 遲到 / 早退 / 缺卡 / 工時不足的判定 | ❌ 不落地 | 見下 |
+| 現在誰在班上 | ❌ 不落地 | 見下 |
+| 出勤異常清單 | ❌ 不落地 | 見下 |
+
+後三項由 `attendance_rules.ts` 的 `evaluateAttendanceDay()` 與 `attendance_presence.ts` 的 `resolvePresence()` 每次請求即時推導。它們是**純函數**，所以你可以自己呼叫；但**沒有 `AttendanceDailyResult` / `AttendanceException` / `AttendancePresence` 這三張表**，schema 裡一個 model 都沒有。
+
+**接線規則**：
+- 只是要顯示給人看 → 即時算，不要存
+- 要拿去算錢、要對帳、要在勞檢時舉證 → **在你自己的表裡存一份快照，並記下 `ATTENDANCE_ENGINE_VERSION`**
+- 快照要記引擎版本，否則引擎改版之後你分不出「當初算錯」與「規則改了」
+
+> ⚠️ **假勤模組沒有做到這條，不要照抄它。**
+> `LeaveDay.dayEquivalentMinutes` 固化了**數值**，卻沒有固化**版本** —— schema 上沒有任何 engineVersion 欄位。
+> `OvertimeSegment.engineVersion` 有欄位，但整個加班模組還沒有 repository，**那個欄位至今沒有任何寫入端**。
+> 也就是說：這條規則目前在 repo 裡**一個正確範例都沒有**。見 §7 待辦甲-6。
+
+---
+
+### 3.2 我要的是不是「某人某日應工作幾分鐘」？
+
+**如果是，注意這個數字在非上班日不存在。**
+
+`attendance_schedule_invariant.ts` 的 `assertSchedulableDay()` 強制兩條：`WORK` 必有班別、**非 `WORK` 必無班別**。所以一旦某天被投影成 `LEAVE` / `HOLIDAY` / `SUSPENDED`，`EmployeeShiftDay.shiftPatternId` 就是 `null`，「這天本來要上幾分鐘」**在資料庫裡不再存在**。
+
+這條不變式本身是對的（休假日掛著班別，排班月曆會畫出一個不存在於任何判定的班次）。但它意味著：
+
+**接線規則**：**投影之前先把數字固化在你自己的表上。** 投影之後再回頭找，找不到。
+
+假勤模組的做法是 `LeaveDay.dayEquivalentMinutes` —— 請假送出的當下，從該日排班的 `ShiftPattern.requiredWorkMinutes` 逐日抄一份。
+
+⚠️ **已知漏洞**：這只涵蓋走過假勤流程的日子。demo 種子腳本直接寫成 `LEAVE` 的那幾天沒有走這條路，目前是用「該員工的預設班別」回推的 —— **那是猜測**，只在「這個人每天上同一班」時才對。見 §7 待辦甲-3。
+
+---
+
+### 3.3 我要不要動 `EmployeeShiftDay`？
+
+**它是投影標的，不是真相。** 請假、銷假、停工都會覆寫它，而**覆寫的人負責能夠回復**。
+
+目前有**三個**寫入點：
+
+| 寫入點 | 動作 | 過 `assertSchedulableDay()` |
+|---|---|---|
+| `attendance_schedule.repo.upsertShiftDay` | upsert | ✅ |
+| `leave.repo.resolveRecall`（銷假投影回 `WORK`） | upsert | ✅ |
+| `leave_request.repo.completeApproval`（核准投影成 `LEAVE`） | **update** | ✅（2026-08-17 補上；第一版只有註解引述，沒有真的呼叫） |
+
+> **那個第一版的錯誤值得留在這裡**：當時的理由是「反正寫死 `LEAVE` + `null`，必然合法」。
+> 那句話對，但它描述的是**這一行現在長什麼樣**，不是一個保證 —— 哪天有人把它改成帶班別
+> （例如半天假想保留班別），沒有任何東西擋得住。**註解攔不下 refactor，斷言可以。**
+
+**接線規則**：
+
+| 規則 | 為什麼 |
+|---|---|
+| 寫入前**呼叫** `assertSchedulableDay()`，不是在註解裡引述它 | 見上 |
+| 用 `accountBookId_employeeId_workDate` 唯一鍵 | 同一天可能已經被別人投影過。用 `update` 表示「我確定它已存在」——若不確定，用 upsert |
+| 投影是**單向有損的**（見 §3.2），先固化再投影 | 投影之後原本那一班就查不到了 |
+| 覆寫之前先想清楚怎麼回復 | 銷假要投影回 `WORK`，靠的是 `LeaveRecall.shiftPatternId` 另存的一份 —— **但那是徵詢者指定的班，不必然等於原本那一班** |
+
+⚠️ **目前沒有任何排班異動軌跡。** `attendance_schedule.service.ts` 只有一行 `logger.info`，而且**只記新值不記原值**。原本打算用 `AuditLog` 補，實作時發現該表**沒有 payload 欄位**，答不出「原本是什麼」，於是刻意不做半套（`attendance_demo_plan.md` §8.7）。
+
+意思是：**「他請假那天本來是不是上班日」事後查不到。** 這對勞檢是硬傷。見 §7 待辦乙-2。
+
+---
+
+### 3.4 我要不要拿打卡當「工時」的事實來源？
+
+**窗內的正常工時可以信；窗外的一切都不可信。** 四個結構性原因：
+
+1. **`clampToWindow()` 會把窗外時間丟掉。** `evaluateAttendanceDay()` 先把打卡夾進 `[windowStartMinute, windowEndMinute]` 才相減 —— 加班時段結構上算不進 `workedMinutes`。
+2. **非上班日直接短路。** `dayType !== WORK` 立刻回 `OFF_DAY`，`workedMinutes` 停在 `0`。**「假日搶修」那些打卡，系統算出來的工時是 0。**
+3. **只取最早 IN / 最晚 OUT。** 中間外出不扣、晚上回來的段落與白天併成一段。這是本期的簡化，記載於 `time_attendance_module_plan.md`。
+4. **圍欄外一律 403 不入庫**（`FO_PUNCH_OUT_OF_FENCE`）。外勤到工**沒有任何入口**（補打卡申請單從未實作）。
+
+**接線規則**：
+- 要算「他有沒有正常上完班」→ 可以用
+- 要算「他加班幾分鐘」「他在工地待了幾小時」→ **現有引擎給不了，需要另寫一支窗外工時的推導**
+- 素材本身是夠的（append-only、伺服器產生的 `punchedAt`、多段進出可辨識），缺的是推導與外勤入口
+
+---
+
+### 3.5 我要不要判斷「誰有權做這件事」？
+
+> ⚠️ **這一項的成因不是簽到 demo。** 它是整個 HR 模組共用的地基缺口，簽到只是第一個繞過它的模組。修它也不只服務簽到 —— 報到、離職、試用期、假勤都在等。列在這裡是因為它是接線時最容易踩到、後果最嚴重的一項。
+
+#### 3.5.1 `Employee` 上沒有任何角色來源
+
+現況是三條互不相干的軸線：
+
+| | 是什麼 | 掛在哪 | 能不能拿來當 HR 角色 |
+|---|---|---|---|
+| `Role`（USER/ADMIN/SUPER_ADMIN） | 平台身分 | `User.role` | ❌ 平台管理員不是 HR |
+| `TeamRole`（OWNER/ADMIN/EDITOR/VIEWER） | 帳本存取權 | `TeamMember.role` | ❌ 財務的 ADMIN 不是 HR |
+| `HrDashboardRole`（HR/MANAGER） | **頁面上的切換器** | 沒有落地 | ❌ 它自己的 ToDo 寫著「接上權限後改為讀取 `useAuth()` 的角色，切換器整個移除」 |
+
+而 `Employee.userId` 是 **`String? @unique`** —— 工地的人可能根本沒有平台帳號，但他仍然要能出現在簽核鏈上；反過來，帳本的 `OWNER` 可能完全不是這家公司的員工。**三條軸線硬套會同時產生兩種錯誤。**
+
+**接線規則**：
+- **不要**從 `TeamRole` 或 `Role` 推導 HR 職能。這不是保守，是會錯。
+- 需要「HR」「薪資」「稽核」這類職能 → 目前沒有來源，**擋下來並回報明確錯誤**，不要猜。
+- 「直屬主管」與「部門主管」有來源（`Employee.managerId` / `Department.managerId`），**但那兩個來源自己也有兩個坑，見 3.5.2**。
+- **不可以把主管關係也做成角色列** —— 它們已經有來源，再存一份就是第二種真相（ADR 019 判準）。
+
+#### 3.5.2 主管關係這兩個「可靠來源」的兩個坑
+
+1. **`Department.managerId` 是 `@unique`** —— 一位員工最多只能掛**一個**部門的主管。「一人兼管兩個工務段」在工程公司很常見，但在資料上**不可表示**。而 `resolveDepartmentManager` 沿部門樹向上找的行為會把這個限制遮蓋成「總是找得到一個人」—— 找到的是上一層的人，不是兼管的那個人。
+2. **`Employee.managerId` 與 `Department.managerId` 都是 `onDelete: SetNull`** —— 主管的員工檔一被刪，所有下屬的直屬主管與該部門的主管欄位**靜默變 null**，簽核鏈直接變 `NO_DIRECT_MANAGER` / `NO_DEPARTMENT_MANAGER`。§3.3 抱怨排班無軌跡，但**這裡連一行 `logger.info` 都沒有**。
+
+#### 3.5.3 有兩個主管判斷，選錯那個會放行跨部門操作
+
+`employeeRepo` 上現在有**兩個**方法，名字很像、語意完全不同：
+
+| 方法 | 問的問題 | 用途 |
+|---|---|---|
+| `isDepartmentManager()` | 「你有沒有管**任何**部門？」 | 顯示用（要不要畫出按鈕、看不看得到圍欄地圖） |
+| `managesEmployee()` | 「**這個人**歸不歸你管？」（比對部門子樹） | 授權用 |
+
+前者的實作就是一句 `count > 0`：
+
+```ts
+const count = await prisma.department.count({
+  where: { accountBookId, managerId: params.employeeId },
+});
+return count > 0;
+```
+
+**拿它當授權判斷，第一工務段的主管就簽得動第五工務段的人。** 銷假徵詢原本正是這樣寫的，2026-08-17 已改為兩道閘門（先 `isDepartmentManager` 擋非主管、撈出單據後再 `managesEmployee` 比對範圍，回 `FO_LEAVE_RECALL_SCOPE`）。
+
+**已變更（2026-08-18）**：`attendance_schedule.service.updateScheduleDay` 新增了一道排班寫入閘，而它**刻意**用的是粗的 `isDepartmentManager` —— 上游把它定位成「在權限矩陣做出來之前把最大的洞收窄」，不是矩陣本身（見 `attendance_demo_plan.md` §7.3 第 1 順位的修訂）。
+
+所以現在同一個 repo 裡兩條路徑用著兩種嚴格度。**接線時不要因為「簽到用了 `isDepartmentManager`」就跟著用** —— 那是一個有意識的暫時取捨，不是可抄的範例。任何「這個人能不能對那個人做這件事」的判斷一律走 `managesEmployee()`。
+
+#### 3.5.4 排班仍可被竄改，只是門檻變高了
+
+原本任何員工都改得了任何人的排班，因此「先改某人的排班、再走下游那套嚴謹流程」是一條完整的繞道。
+
+**已變更（2026-08-18）**：排班 `PUT` 現在限部門主管，且每一次成功的異動寫一筆 `AuditLogDataType.EMPLOYEE_PII` / `AuditLogAction.UPDATE`（`dataId` 是被改的員工，`userId` 是操作者）。
+
+繞道**沒有被關閉，只是變窄**：閘用的是上面那個粗判斷，所以**任一部門的主管仍改得動全帳本任何人的排班**；而軌跡只記「誰在什麼時候改過誰」，**答不出「原本是什麼」**。接線時的假設不變：排班是可被竄改的，只是現在改完會留下一行可追查的紀錄。
+
+---
+
+## 4. 不可依賴的清單
+
+| # | 不可依賴 | 現況 | 接線時怎麼辦 |
+|---|---|---|---|
+| 1 | 判定結果、異常清單、現場狀態的**歷史值** | 三張表不建，讀取時即時推導 | 需舉證就自己存快照 **+ 引擎版本**（§3.1 註明：目前 repo 裡沒有正確範例可抄） |
+| 2 | 非上班日的「應工作分鐘數」 | `assertSchedulableDay` 保證班別為 null | 投影前先固化 |
+| 3 | 排班的**變更前值** | 已有 `EMPLOYEE_PII` / `UPDATE` 稽核（2026-08-18），但只記「誰改過誰」，不記舊值，畫面上也看不到 | 需要重建任一時點的班表就自己存快照 |
+| 4 | 主管關係的**變更歷程** | `onDelete: SetNull`，連 log 都沒有 | 簽核鏈要能容忍它突然變 null |
+| 5 | 窗外工時、假日到工工時 | `clampToWindow` + `OFF_DAY` 短路 | 另寫推導，或改用自陳 + 核准 |
+| 6 | 外勤／圍欄外的到工事實 | 403 不入庫，補登單未實作 | 只能自陳 |
+| 7 | HR 職能的**指派** | 角色本身已有來源（`EmployeeHrFunctionAssignment`，2026-08-18），但**誰有權指派尚未決定**，因此沒有指派 API | 讀取可依賴；需要指派時走 seed 或資料遷移，不要自己開端點 |
+| 8 | 「一人兼管多部門」的可表示性 | `Department.managerId` 是 `@unique` | 資料上做不到，別假設 |
+| 9 | `isDepartmentManager()` 當授權用 | 它只答「是不是主管」，跨部門會放行（§3.5.3）；上游的排班閘刻意沿用它 | 授權一律改用 `managesEmployee()` |
+| 10 | 政策參數的**租戶隔離** | 8 個 `DEMO_*` 全域常數，無 `AttendancePolicy` 表 | 見下 |
+| 11 | **時區** | `DEMO_TIME_ZONE = "Asia/Taipei"` 寫死，`AccountBook` 上沒有時區欄位 | 見下 |
+| 12 | `ATTENDANCE_API` 的端點字串 | `DEMO_ACCOUNT_BOOK_ID`（已標 `Deprecated:`）被寫死進 `ATTENDANCE_API_BASE`；常數本身標的是 `ToDo:` | 自己組 `[account_book_id]` 動態路徑 |
+| 13 | 緊急點名 CSV 的欄位標題 | `ROSTER_CSV_LABELS_ZH_TW` 寫死繁中，已標 `Deprecated:` | 依請求者語系取字典 |
+| 14 | ~~**假勤的額度帳本**~~ | ✅ 已有生產者（2026-08-17）：`leave_grant.repo.issue()` / `rebuildBalance()` 與簽核規則設定 API | 見 §4.2 的修訂 |
+
+### 4.1 第 10、11 項：政策參數不只是「換一個組裝點」
+
+`attendance_result.service.ts` 的 `DEMO_POLICY` 只裝了 **3 個**欄位（遲到、早退、缺卡寬限）。其餘五個常數是各自散在別處直接 import 的：
+
+| 常數 | 使用點 |
+|---|---|
+| `DEMO_MAX_ACCURACY_METERS`、`DEMO_WORK_DATE_TOLERANCE_MINUTES` | `attendance_punch.service.ts` |
+| `DEMO_PRESENCE_STALE_MINUTES` | `attendance_presence.service.ts` |
+| `DEMO_ATTENDANCE_MAX_RANGE_DAYS` | 兩支 service ＋ `error_dictionary.ts` |
+| `DEMO_TIME_ZONE` | 四支 service ＋ `use_server_clock.ts` ＋ **兩個 client component** ＋ roster export route |
+
+**時區尤其**：它有**前端**使用點。改成帳本層級的 `AttendancePolicy` 不是「把 `DEMO_POLICY` 換掉」，而是要新開一條把帳本時區送到 client 的路徑。這是中型工作，不是小型。
+
+### 4.2 第 14 項：假勤的額度帳本 —— ✅ 已解決（2026-08-17）
+
+> **本節保留為歷史紀錄。** 原文說 `LeaveLedgerEntryType` 的六種只有 `CONSUME` 有寫入端、
+> `LeaveGrant` / `LeaveBalance` / `LeaveApprovalRule` 全無生產者，因此**任何假單都會以
+> `NO_MATCHING_RULE` 失敗**。那個狀態已經結束：`leave_grant.repo` 有了 `issue()` /
+> `adjust()` / `rebuildBalance()`，`leave_ledger.ts` 有了 `writeConsumeForDays()` /
+> `writeRestoreForDay()`，簽核規則有了 repository、service 與 `PUT` 端點（L31／L32），
+> seed 會呼叫**正式的** `leaveBalanceService.accrueForEmployee()` 產生額度。
+>
+> 仍未有寫入端的是 `EXPIRE` 與 `CASH_OUT` —— 兩者的觸發點都是排程（屆期作廢、屆期折現），
+> 而排程 Worker 尚未掛上。接線時不要假設「過期的額度已經被清掉」。
+
+下面這個陷阱**仍然有效**：
+
+⚠️ **另一個陷阱**：`NO_HR` 這個 reason **不能反推「規則含 HR 節點」**。自我核准上升階梯走到底找不到人時，即使原節點是 `DIRECT_MANAGER`，回傳的仍是 `NO_HR`（只有原節點就是 HR 時才回 `NO_OTHER_HR`）。所以「老闆自己請假」的單子會拿到一個與成因無關的錯誤碼，而接線的人會照著它去查一個不存在的 HR 設定。
+
+---
+
+## 5. 可以放心依賴的清單
+
+同樣重要 —— 否則接線的人會什麼都自己重做一份，那才是真的災難。
+
+| 東西 | 為什麼可信 | 但要注意 |
+|---|---|---|
+| `AttendancePunch` | append-only（repository 刻意沒有 update/delete/upsert）、`punchedAt` 由伺服器產生、`workLocationId`（`onDelete: Restrict`）與 `distanceMeters` 已固化 | — |
+| `EmployeeShiftDay.dayType` | 落地的 enum，加班級距判定可以直接用 | 可被無聲竄改（§3.3） |
+| `ShiftPattern.requiredWorkMinutes` | **引擎層唯一的「一天多長」來源** | `LeaveDay.dayEquivalentMinutes` 是它在**特定時點**的拷貝，兩者不保證一致（班別改了，舊快照不動 —— 那正是快照的用意）。**不要再抄第三份** |
+| `assertSchedulableDay()` | 三個寫入點與種子腳本現已全部套用 | 第三個是 2026-08-17 才補的（§3.3） |
+| `activeKeyOf(employeeId, workDate)` | 「同一人同一天只能有一張生效假單」的唯一保證，只有一處定義 | **請 import，不要自己組字串** |
+| `evaluateAttendanceDay()` / `resolvePresence()` | 純函數、無 IO、有測試 | 結果不落地（§3.1） |
+| `collectDepartmentScope()` | 掃描到收斂而非遞迴，確實防環，有測試 | ⚠️ 純函數本身可信，但**它不是授權判斷** —— 授權要走 `employeeRepo.managesEmployee()`（那支的內部就是用它算子樹的）。前端元件吃的是已取回的部門陣列，那一份只決定畫面 |
+| `resolveOpenPunch()` / `isOnSite()` | 「他現在在不在現場」的**唯一**判斷點（2026-08-18）。依時序逐筆走，`[IN, IN, OUT]` 也給得出正確答案 | 不要自己數卡 —— 「上班卡數 > 下班卡數」是同一個問題的第二個答案，兩者在重複卡上結論相反 |
+| HR 端點的限流 | `enforceRateLimit` 排在 DeWT 驗證之後、業務邏輯之前，28 支端點全覆蓋；`attendance_rate_limit.test.ts` 以「檔案集合 = 對照表鍵集合」守著，新增端點漏登記就會紅 | 新增端點時**必須**在該測試的 `EXPECTED_BUCKET` 登記，並想清楚共不共用額度（假勤另立 `LEAVE_WRITE`，理由見該 enum） |
+| `errorI18nKeyOf()` + 錯誤碼對照表 | `error_dictionary` 的 `message` 是給開發者的英文，一律經此翻成五語系文案 | 新增使用者看得到的錯誤碼時，要同時登記對照表與五個語系，否則畫面上會出現英文 |
+
+---
+
+## 6. 兩個容易被誤複製的規範偏離
+
+### 6.1 ~~Repository 裡的 unit-of-work~~ —— ✅ 已不是偏離（2026-08-17）
+
+`CLAUDE.md` 明訂 Repository「**不處理業務邏輯**」，而 `leave.repo.resolveRecall()` 在一個 `$transaction` 裡編排三張表的寫入，與那句話字面衝突。
+
+**這條例外已經正式採納，條文在 `coding_guidelines.md` §1.1**（措辭待該文件作者 Tzuhan 複核）。採納時做了兩處收窄：例外**只涵蓋 `$transaction` 的回呼形式**（陣列形式的分頁＋總數是純讀取，不受約束）；並確認全 repo 的 `$transaction` 都已在 `src/repositories/` 底下，Service 層一處都沒有，因此規範上路沒有既有違例（`coding_guidelines.md` §1.2）。
+
+判準沒有變，仍值得記住：**拿掉交易之後，是否存在一個中間狀態會讓資料永久說謊？** 是 → 屬於這個例外；否 → 仍應拆回 Service 逐步呼叫。
+
+> 現況 33 處 `$transaction`（`src` + `scripts`，排除 generated 與測試）。
+
+### 6.2 種子腳本自己補不變式
+
+種子腳本直接進 Prisma，繞過了 repository 這道關卡，因此 `seed_attendance_demo.ts` 自己呼叫 `assertSchedulableDay()` 與 `assertLeavePolicyUnit()`。
+
+**這是要延續的模式，不是可省略的儀式** —— 規則產生器寫錯時，沒有這幾句就會安靜地種出違反不變式的資料，而那要到演示當天看到畫面才會發現。
+
+---
+
+## 7. 待辦（依「不補會怎樣」分級）
+
+### 甲. 硬阻斷 —— 不補，下游模組會算錯或違法
+
+| # | 項目 | 規模 | 備註 |
+|---|---|---|---|
+| 甲-1 | **`Employee` 層級的角色 enum** | 大（**主體已完成 2026-08-18**） | `EmployeeHrFunction`（`HR_ADMIN` / `TIMEKEEPER`）+ `EmployeeHrFunctionAssignment` 指派表，撤銷不刪列。三個接點已收：`hrEmployeeIds`、簽核規則設定、排班寫入閘。**仍缺**：誰有權指派（因此沒有指派 API，只有 seed 與 repository 方法）、以及 L2–L6 假別設定要不要掛同一道閘。決定與理由見 ADR 023 §8.3 |
+| 甲-2 | **`AttendancePolicy` 帳本層級政策表** | **中**（不是小） | 至少要有時區，而時區有前端使用點，需新開一條送到 client 的路徑（§4.1） |
+| ~~甲-3~~ | ~~**非上班日的「應工作分鐘數」持久來源**~~ | ✅ 完成 | `EmployeeShiftDay.plannedWorkMinutes` 已加，投影成非 WORK 時固化、銷假回補時清回 null，並由 `assertSchedulableDay` 雙向守著（WORK 日不得帶快照） |
+| ~~甲-4~~ | ~~**銷假接回額度帳本 + 檢查 `LeavePolicy.recallable`**~~ | ✅ 完成 | `resolveRecall` 走 `writeRestoreForDay()`（**退回原始的那幾批**，不重新配置 —— 這個差異對總量守恆不可見），`recallable` 由 `VA_LEAVE_NOT_RECALLABLE` 擋住 |
+| ~~甲-5~~ | ~~**收斂主管判斷**~~ | ✅ 完成 | 銷假徵詢走 `managesEmployee()`；排班寫入閘改為「具 HR 職能者跨部門 → 否則須是部門主管且該員在其子樹內」，兩個碼分開（`FO_ATTENDANCE_SUPERVISOR_ONLY` / `FO_ATTENDANCE_SCHEDULE_SCOPE`）。`isDepartmentManager` 保留為顯示用 |
+| ~~甲-6~~ | ~~**快照要記引擎版本**~~ | ✅ 完成（一半） | `LeaveDay.entitlementEngineVersion` 已加且有寫入端，§3.1 那條規則現在有正確範例可抄。**仍缺**：`OvertimeSegment.engineVersion` 有欄位、無寫入端（等 L24–L30 加班管理） |
+| ~~甲-7~~ | ~~**額度帳本的生產者**~~ | ✅ 完成 | 見 §4.2。**仍缺** `EXPIRE` / `CASH_OUT` 的寫入端，兩者都等排程 Worker |
+| 甲-8 | **上游硬化後補上的三件事** | 小 | ① 假勤 12 支端點的限流（已補，`LEAVE_WRITE`）；② 假勤畫面改走 `errorI18nKeyOf`（已補）；③ **假勤畫面漏拆回應信封**（2026-08-18 補，見下）。列在這裡是因為它們的成因是「上游立了規範而下游沒跟上」，而那類缺口每次接線都會再出現一次 |
+
+#### 甲-8 ③：`request()` 的型別參數是斷言，不是保證
+
+`src/lib/utils/request.ts` 的 `request<T>()` **不拆信封** —— 它最後一行是 `return data as T`，而 API 端一律經 `jsonOk()` 包成 `{ powerby, success, code, message, payload }`。
+少接一層 `.payload` 編譯器不會有意見，因為那個 `as` 讓型別參數變成一句沒有人查證的宣告。
+
+簽到四頁從一開始就寫成 `request<IEnvelopeLike<T>>(…)` 再讀 `.payload`；假勤三個 page body 的六個呼叫點**全數沿用了錯的那一版**，`src/components/hr_management/leave/` 底下 `IEnvelopeLike` 與 `.payload` 的出現次數是 0。
+
+症狀難查的地方有三層：
+
+- `tsc` 與 `next build` 全綠 —— 斷言不會被反駁，`.next` 產出的 chunk 清單與簽到逐行對齊。
+- 失敗發生在 render（`policies.map is not a function`），而全樹沒有任何 `error.tsx`，於是整頁換成 Next.js 內建的錯誤邊界（`This page couldn't load`），畫面上不留任何線索。
+- **它只在 API 成功時發生**。API 失敗會被 `catch` 接住顯示紅字橫幅 —— 也就是說「後端修好了」才是觸發條件。
+
+結構性的部分尚未處理：`request()` 的簽名本身在邀請這個錯誤。可能的收斂方向是讓一般端點改走 `requestEnvelope()`（它已存在，目前只服務保活式串流端點），或讓 `request()` 的回傳型別直接是 `IApiResponse<T>` 而非 `T`，讓「忘了拆」變成編譯錯誤而不是執行期空白畫面。
+**在收斂之前，任何新接線的畫面都必須自己記得寫 `IEnvelopeLike<T>` + `.payload`。**
+
+### 乙. 可降級 —— 取決於下游模組的範圍
+
+| # | 項目 | 降級做法 | 代價 |
+|---|---|---|---|
+| 乙-1 | **窗外工時推導 + 分段計時 + 補打卡申請單** | 加班改為純自陳 + 主管核准 | `min(核准, 實際)` 那條防線消失；外勤加班永遠佐證不了 |
+| 乙-2 | **排班與主管關係的異動軌跡** | 列為已知缺口先上 | 勞檢時答不出「他請假那天本來是不是上班日」。前置是 `AuditLog` 補 payload 欄位 |
+| 乙-3 | **權限矩陣** | 沿用現有的最小視野 | 上游仍可竄改排班以繞過下游的職責分離（門檻已從「任何員工」提高到「任一部門主管」，見 §3.5.4）。**但甲-5 不可降級** |
+| 乙-4 | **`Department.managerId` 放寬為多對多** | 維持 `@unique`，兼管者靠部門樹向上找 | 找到的是上一層的人，不是兼管的那個人（§3.5.2） |
+
+### 丙. 與接線無關 —— 不要因為在同一張清單上就一起做
+
+`SUSPICIOUS_JUMP` 瞬移偵測、線形工程圍欄（PostGIS）、`PunchVerification.NETWORK`、一次徵詢多天、徵詢推播通知、`LeaveRecallStatus.EXPIRED`、手機端驗證、圍欄校準頁。
+
+這些是簽到自己的品質債。**它們佔了 §7.3 待辦清單的大半，但沒有一項會讓下游模組算錯數字。**
+
+---
+
+## 8. 這份文件何時廢止
+
+甲-1 到甲-8 全部完成，且 §4 的十四項各自有了可依賴的替代來源時。屆時本文件併入 `time_attendance_module_plan.md`，`attendance_demo_plan.md` §7.3 一併結案。
+
+**2026-08-18 進度**：甲-3、甲-4、甲-5、甲-6（一半）、甲-7、甲-8（含當日新增的第 ③ 項）完成，甲-1 的主體完成（剩「誰有權指派」）。**只剩甲-2（`AttendancePolicy` 帳本層級政策表，含時區）是未動的大項。** §4 十四項中第 14 項已解除，第 7、9 項因甲-1 而改變（HR 職能現在有來源了，但「誰指派」仍無），第 3 項的敘述改變但仍不可依賴。
+
+在那之前：**接線可以做，但 §4 的每一項都必須在接線的模組裡有對應的處置，而不是假設它會被補上。**

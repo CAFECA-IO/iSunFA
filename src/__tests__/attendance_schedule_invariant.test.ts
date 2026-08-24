@@ -102,3 +102,70 @@ describe("assertSchedulableDay", () => {
     ).toThrow(/dayType=WORK/);
   });
 });
+
+/**
+ * Info: (20260817 - Julian) `plannedWorkMinutes` 的方向性。
+ *
+ * 這個欄位是假勤模組加的：`assertSchedulableDay` 保證非上班日必無班別，
+ * 於是一旦投影成 `LEAVE` / `SUSPENDED`，「這天本來要上幾分鐘」在 DB 裡就消失了 ——
+ * 而那是半天假換算、額度扣抵、銷假退回三件事的依據。
+ *
+ * 它與上面兩條是同一個形狀：同一個欄位在某個 `dayType` 下有意義、在另一個下必須為空。
+ */
+describe("assertSchedulableDay — plannedWorkMinutes", () => {
+  it("非上班日可以帶著快照", () => {
+    expect(() =>
+      assertSchedulableDay({
+        dayType: WorkDayType.LEAVE,
+        shiftPatternId: null,
+        plannedWorkMinutes: 480,
+      }),
+    ).not.toThrow();
+  });
+
+  // Info: (20260817 - Julian) 停工日尤其需要：停工天數是工期展延與契約計價的依據
+  it("停工日可以帶著快照", () => {
+    expect(() =>
+      assertSchedulableDay({
+        dayType: WorkDayType.SUSPENDED,
+        shiftPatternId: null,
+        plannedWorkMinutes: 450,
+      }),
+    ).not.toThrow();
+  });
+
+  it("非上班日不帶快照也通過（例假本來就不是上班日）", () => {
+    expect(() =>
+      assertSchedulableDay({
+        dayType: WorkDayType.REGULAR_OFF,
+        shiftPatternId: null,
+        plannedWorkMinutes: null,
+      }),
+    ).not.toThrow();
+  });
+
+  /**
+   * Info: (20260817 - Julian) 上班日的班別還在，`requiredWorkMinutes` 才是唯一來源。
+   * 留著舊快照的實際情境是：銷假把某天投影回 `WORK` 卻沒清掉它 ——
+   * 之後有人改了班別，那份快照就開始說謊，而它看起來仍像一個有效設定。
+   */
+  it("上班日帶著快照時擋下：那是第二個可以互相矛盾的答案", () => {
+    expect(() =>
+      assertSchedulableDay({
+        dayType: WorkDayType.WORK,
+        shiftPatternId: "shift-1",
+        plannedWorkMinutes: 480,
+      }),
+    ).toThrow(AttendanceScheduleInvariantError);
+  });
+
+  // Info: (20260817 - Julian) 既有呼叫端不傳這個欄位，必須維持通過
+  it("完全不傳這個欄位時維持原行為", () => {
+    expect(() =>
+      assertSchedulableDay({
+        dayType: WorkDayType.WORK,
+        shiftPatternId: "shift-1",
+      }),
+    ).not.toThrow();
+  });
+});

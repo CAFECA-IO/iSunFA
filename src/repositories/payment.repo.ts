@@ -564,6 +564,28 @@ export class PaymentRepository {
     return orders.reduce((sum, order) => sum + order.amount, BigInt(0));
   }
 
+  /**
+   * Info: (20260821 - Luphia) 某人最近的訂閱訂單（`scripts/diagnose_subscription_state.ts`）。
+   *
+   * 「我明明訂閱了，畫面還顯示免費版」有兩個成因（顯示端／履行端），而分辨它們
+   * 需要看得到訂單狀態：有 PAID / COMPLETED 的訂單而訂閱仍是 free，
+   * 問題就在履行路徑。查詢放 Repo——只有 Repository 碰得到 Prisma（CLAUDE.md §1）。
+   */
+  async listRecentSubscriptionOrders(userId: string, take: number) {
+    return prisma.order.findMany({
+      where: { userId, type: ORDER_TYPE.BILLING_SUBSCRIBE },
+      orderBy: { createdAt: "desc" },
+      take,
+      select: {
+        id: true,
+        status: true,
+        amount: true,
+        createdAt: true,
+        data: true,
+      },
+    });
+  }
+
   async getOrderById(orderId: string) {
     return prisma.order.findUnique({ where: { id: orderId } });
   }

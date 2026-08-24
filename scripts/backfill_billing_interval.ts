@@ -20,10 +20,10 @@
  *     npx tsx scripts/backfill_billing_interval.ts          # 檢視
  *     npx tsx scripts/backfill_billing_interval.ts --apply  # 套用
  */
-import { prisma } from "@/lib/prisma";
+import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
+import { paymentRepo } from "@/repositories/payment.repo";
 import {
   BILLING_INTERVAL,
-  TEAM_PLAN,
   type BillingInterval,
 } from "@/constants/subscription_quota";
 
@@ -45,25 +45,17 @@ async function main(): Promise<void> {
   /**
    * Info: (20260821 - Luphia) 免費列不參與席次補收（`unitPrice` 為 0 就先被擋），
    * 週期值無關緊要，不動它——留 NULL 也不會有人讀到。
+   *
+   * 查詢與寫入都走 Repo（CLAUDE.md §1：只有 Repository 碰得到 Prisma），
+   * 那條規則有一支掃描測試在守（`transaction_layering.test.ts`）。
    */
-  const rows = await prisma.teamSubscription.findMany({
-    where: { planId: { not: TEAM_PLAN.FREE } },
-    select: {
-      teamId: true,
-      planId: true,
-      billingInterval: true,
-      latestOrderId: true,
-    },
-  });
+  const rows = await teamSubscriptionRepo.listPaidForIntervalBackfill();
 
   let updated = 0;
   let unresolved = 0;
   for (const row of rows) {
     const order = row.latestOrderId
-      ? await prisma.order.findUnique({
-          where: { id: row.latestOrderId },
-          select: { data: true },
-        })
+      ? await paymentRepo.getOrderById(row.latestOrderId)
       : null;
     const interval = readOrderInterval(order?.data);
     if (!interval) {
@@ -82,10 +74,7 @@ async function main(): Promise<void> {
         `${row.billingInterval ?? "(未設定)"} → ${interval}`,
     );
     if (APPLY) {
-      await prisma.teamSubscription.update({
-        where: { teamId: row.teamId },
-        data: { billingInterval: interval },
-      });
+      await teamSubscriptionRepo.setBillingInterval(row.teamId, interval);
     }
     updated += 1;
   }
@@ -104,6 +93,6 @@ main()
     );
     process.exitCode = 1;
   })
-  .finally(async () => {
-    await prisma.$disconnect();
+  .finally(() => {
+    // Info: (20260821 - Luphia) 連線由 `@/lib/prisma` 持有；這支已不碰 client
   });

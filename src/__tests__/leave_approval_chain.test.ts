@@ -1,0 +1,468 @@
+import { describe, it, expect } from "@jest/globals";
+import { resolveApprovalChain } from "@/lib/leave_approval_chain";
+import { LeaveApprovalNodeKind } from "@/constants/leave_policy";
+import { IExactDays, totalDaysOf } from "@/lib/leave_entitlement_rules";
+import {
+  IApprovalOrgSnapshot,
+  IApprovalRuleWithSteps,
+  LeaveApprovalUnresolvedReason,
+} from "@/interfaces/leave_request";
+
+/**
+ * Info: (20260817 - Julian) T8：簽核鏈展開（ADR 023）。
+ *
+ * 展開的結果是**快照**，因此測試同時驗「工號與姓名有被帶出來」——
+ * 少了那兩個欄位，核准者離職後這張單就答不出「當時是誰核的」。
+ */
+
+const identity = (id: string, no: string, name: string) => ({
+  employeeId: id,
+  employeeNo: no,
+  name,
+  jobTitle: null,
+});
+
+const org: IApprovalOrgSnapshot = {
+  applicantEmployeeId: "emp-staff",
+  directManagerId: "emp-lead",
+  departmentManagerId: "emp-dept",
+  hrEmployeeIds: ["emp-hr2", "emp-hr1"],
+  directory: {
+    "emp-staff": identity("emp-staff", "EMP001", "王小明"),
+    "emp-lead": identity("emp-lead", "EMP002", "李組長"),
+    "emp-dept": identity("emp-dept", "EMP003", "陳經理"),
+    "emp-hr1": identity("emp-hr1", "EMP004", "林人資"),
+    "emp-hr2": identity("emp-hr2", "EMP005", "黃人資"),
+  },
+};
+
+// Info: (20260817 - Julian) 需求的兩段式規則：3 天內直屬主管；3 天以上簽至部門經理與 HR
+const rules: IApprovalRuleWithSteps[] = [
+  {
+    leavePolicyId: null,
+    minDays: 0,
+    maxDays: 3,
+    steps: [
+      {
+        order: 0,
+        nodeKind: LeaveApprovalNodeKind.DIRECT_MANAGER,
+        specificEmployeeId: null,
+      },
+    ],
+  },
+  {
+    leavePolicyId: null,
+    minDays: 3,
+    maxDays: null,
+    steps: [
+      {
+        order: 0,
+        nodeKind: LeaveApprovalNodeKind.DIRECT_MANAGER,
+        specificEmployeeId: null,
+      },
+      {
+        order: 1,
+        nodeKind: LeaveApprovalNodeKind.DEPARTMENT_MANAGER,
+        specificEmployeeId: null,
+      },
+      {
+        order: 2,
+        nodeKind: LeaveApprovalNodeKind.HR,
+        specificEmployeeId: null,
+      },
+    ],
+  },
+];
+
+/**
+ * Info: (20260819 - Julian) 天數是精確有理數而不是 double（review B5）。
+ *
+ * 這裡不自己組 `IExactDays` 字面值，一律走 production 的 `totalDaysOf` ——
+ * 手寫分子分母測到的是測試自己發明的值，而不是實際會拿去比對規則的那一個。
+ * 以 480 分班表示：`daysOf(2.5)` 就是 1200 分 ÷ 480 分。
+ */
+const daysOf = (value: number): IExactDays =>
+  totalDaysOf([{ minutes: value * 480, dayEquivalentMinutes: 480 }]);
+
+const resolve = (
+  totalDays: number,
+  overrides: Partial<IApprovalOrgSnapshot> = {},
+) =>
+  resolveApprovalChain({
+    leavePolicyId: "policy-annual",
+    totalDays: daysOf(totalDays),
+    rules,
+    org: { ...org, ...overrides },
+  });
+
+describe("resolveApprovalChain — 規則命中", () => {
+  it("短假只走直屬主管", () => {
+    const result = resolve(1);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.steps).toHaveLength(1);
+    expect(result.steps[0].approver.employeeNo).toBe("EMP002");
+  });
+
+  it("長假走三關", () => {
+    const result = resolve(5);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.steps.map((s) => s.approver.employeeNo)).toEqual([
+      "EMP002",
+      "EMP003",
+      "EMP004",
+    ]);
+  });
+
+  /**
+   * Info: (20260817 - Julian) 需求原文「3 天內…3 天以上…」在 3.0 天處重疊。
+   * 本專案定為左閉右開，**恰好 3 天走長假規則** —— 這種邊界不能留給實作者猜。
+   */
+  it("恰好 3 天走長假規則（左閉右開）", () => {
+    const result = resolve(3);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.steps).toHaveLength(3);
+  });
+
+  /**
+   * Info: (20260819 - Julian) 上一條的 3 是一個可精確表示的字面值，
+   * 因此它在 B5 缺陷存在時**照樣會通過**。真正會踩到的是累加出來的 3：
+   * 420 分班請 7 天、每天 180 分，數學上正好 3 天，但 double 累加得
+   * `2.9999999999999996` —— 於是掉進 `[0, 3)` 的短假規則，部門經理與 HR
+   * 那兩關從此不存在。這條就是那個降級的紅燈。
+   */
+  it("由 7 天 × 180 分（420 分班）累加出的恰好 3 天仍走長假規則（review B5）", () => {
+    const result = resolveApprovalChain({
+      leavePolicyId: "policy-annual",
+      totalDays: totalDaysOf(
+        Array.from({ length: 7 }, () => ({
+          minutes: 180,
+          dayEquivalentMinutes: 420,
+        })),
+      ),
+      rules,
+      org,
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.steps).toHaveLength(3);
+  });
+
+  it("2.5 天仍走短假規則", () => {
+    const result = resolve(2.5);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.steps).toHaveLength(1);
+  });
+
+  /**
+   * Info: (20260817 - Julian) 假別專屬規則**完全取代**通則，不混用：
+   * 若允許部分退回通則，改了通則之後特休的長假流程會跟著變、短假卻沒變。
+   */
+  it("假別專屬規則完全取代通則", () => {
+    const result = resolveApprovalChain({
+      leavePolicyId: "policy-annual",
+      totalDays: daysOf(10),
+      rules: [
+        ...rules,
+        {
+          leavePolicyId: "policy-annual",
+          minDays: 0,
+          maxDays: null,
+          steps: [
+            {
+              order: 0,
+              nodeKind: LeaveApprovalNodeKind.HR,
+              specificEmployeeId: null,
+            },
+          ],
+        },
+      ],
+      org,
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.steps).toHaveLength(1);
+    expect(result.steps[0].nodeKind).toBe(LeaveApprovalNodeKind.HR);
+  });
+
+  it("沒有規則涵蓋這個天數時回報 NO_MATCHING_RULE", () => {
+    const result = resolveApprovalChain({
+      leavePolicyId: "policy-annual",
+      totalDays: daysOf(1),
+      rules: [
+        {
+          leavePolicyId: null,
+          minDays: 5,
+          maxDays: null,
+          steps: rules[0].steps,
+        },
+      ],
+      org,
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toBe(LeaveApprovalUnresolvedReason.NO_MATCHING_RULE);
+  });
+});
+
+describe("resolveApprovalChain — 快照", () => {
+  it("帶出解析當下的工號與姓名（核准者離職後仍答得出是誰核的）", () => {
+    const result = resolve(1);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.steps[0].approver).toEqual({
+      employeeId: "emp-lead",
+      employeeNo: "EMP002",
+      name: "李組長",
+      jobTitle: null,
+    });
+  });
+
+  it("簽核者不在名冊（已離職）時回報，而不是留下一個空的節點", () => {
+    const result = resolve(1, { directManagerId: "emp-ghost" });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toBe(
+      LeaveApprovalUnresolvedReason.SPECIFIC_EMPLOYEE_MISSING,
+    );
+  });
+});
+
+describe("resolveApprovalChain — 相鄰去重", () => {
+  /**
+   * Info: (20260817 - Julian) 小部門裡直屬主管常常就是部門經理。
+   * 同一個人不簽兩次，但要記下被併掉的是哪些節點 ——
+   * 否則「為什麼這張單只有兩關」看起來像少簽了一關。
+   */
+  it("直屬主管恰好是部門經理時只簽一次，並記下被併掉的節點", () => {
+    const result = resolve(5, { departmentManagerId: "emp-lead" });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.steps).toHaveLength(2);
+    expect(result.steps[0].mergedFromKinds).toEqual([
+      LeaveApprovalNodeKind.DIRECT_MANAGER,
+      LeaveApprovalNodeKind.DEPARTMENT_MANAGER,
+    ]);
+    expect(result.steps.map((s) => s.order)).toEqual([0, 1]);
+  });
+
+  it("只去重相鄰的：A → B → A 的複核鏈保留", () => {
+    const result = resolveApprovalChain({
+      leavePolicyId: "policy-annual",
+      totalDays: daysOf(1),
+      rules: [
+        {
+          leavePolicyId: null,
+          minDays: 0,
+          maxDays: null,
+          steps: [
+            {
+              order: 0,
+              nodeKind: LeaveApprovalNodeKind.SPECIFIC_EMPLOYEE,
+              specificEmployeeId: "emp-lead",
+            },
+            {
+              order: 1,
+              nodeKind: LeaveApprovalNodeKind.DEPARTMENT_MANAGER,
+              specificEmployeeId: null,
+            },
+            {
+              order: 2,
+              nodeKind: LeaveApprovalNodeKind.SPECIFIC_EMPLOYEE,
+              specificEmployeeId: "emp-lead",
+            },
+          ],
+        },
+      ],
+      org,
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.steps).toHaveLength(3);
+  });
+});
+
+describe("resolveApprovalChain — 自我核准的上升", () => {
+  /**
+   * Info: (20260817 - Julian) 「老闆自己請假」不是錯誤狀態，是每個組織都會發生的常態。
+   * 做成錯誤只會逼出一個繞過簽核的後門（ADR 023 §5）。
+   */
+  it("自己是自己的主管時上升到部門經理，並記下理由", () => {
+    const result = resolve(1, { directManagerId: "emp-staff" });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.steps[0].nodeKind).toBe(
+      LeaveApprovalNodeKind.DEPARTMENT_MANAGER,
+    );
+    expect(result.steps[0].approver.employeeNo).toBe("EMP003");
+    expect(result.steps[0].escalatedReason).toContain("escalated to");
+  });
+
+  it("同時是直屬主管與部門經理時一路上升到 HR", () => {
+    const result = resolve(1, {
+      directManagerId: "emp-staff",
+      departmentManagerId: "emp-staff",
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.steps[0].nodeKind).toBe(LeaveApprovalNodeKind.HR);
+  });
+
+  it("HR 自己請假時改由另一位 HR 簽", () => {
+    const hrOrg: IApprovalOrgSnapshot = {
+      ...org,
+      applicantEmployeeId: "emp-hr1",
+      directManagerId: null,
+      departmentManagerId: null,
+    };
+    const result = resolveApprovalChain({
+      leavePolicyId: "policy-annual",
+      totalDays: daysOf(1),
+      rules: [
+        {
+          leavePolicyId: null,
+          minDays: 0,
+          maxDays: null,
+          steps: [
+            {
+              order: 0,
+              nodeKind: LeaveApprovalNodeKind.HR,
+              specificEmployeeId: null,
+            },
+          ],
+        },
+      ],
+      org: hrOrg,
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.steps[0].approver.employeeId).toBe("emp-hr2");
+  });
+
+  it("唯一的 HR 自己請假且無其他人可簽時回報 NO_OTHER_HR", () => {
+    const result = resolveApprovalChain({
+      leavePolicyId: "policy-annual",
+      totalDays: daysOf(1),
+      rules: [
+        {
+          leavePolicyId: null,
+          minDays: 0,
+          maxDays: null,
+          steps: [
+            {
+              order: 0,
+              nodeKind: LeaveApprovalNodeKind.HR,
+              specificEmployeeId: null,
+            },
+          ],
+        },
+      ],
+      org: {
+        ...org,
+        applicantEmployeeId: "emp-hr1",
+        hrEmployeeIds: ["emp-hr1"],
+        directManagerId: null,
+        departmentManagerId: null,
+      },
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toBe(LeaveApprovalUnresolvedReason.NO_OTHER_HR);
+  });
+});
+
+describe("resolveApprovalChain — 展不開時要指出缺什麼", () => {
+  /**
+   * Info: (20260817 - Julian) 解法在 HR 手上不在員工手上 ——
+   * 一句「簽核流程錯誤」會讓員工反覆重送。
+   */
+  it.each([
+    [
+      "沒有直屬主管",
+      { directManagerId: null },
+      LeaveApprovalUnresolvedReason.NO_DIRECT_MANAGER,
+    ],
+    [
+      "部門沒有經理",
+      { departmentManagerId: null },
+      LeaveApprovalUnresolvedReason.NO_DEPARTMENT_MANAGER,
+    ],
+    ["帳本沒有 HR", { hrEmployeeIds: [] }, LeaveApprovalUnresolvedReason.NO_HR],
+  ])("%s：回報 %s", (_label, overrides, expected) => {
+    const result = resolve(5, overrides as Partial<IApprovalOrgSnapshot>);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toBe(expected);
+    expect(result.detail.length).toBeGreaterThan(0);
+  });
+
+  it("命中的規則沒有任何節點時擋下，而不是視為自動核准", () => {
+    const result = resolveApprovalChain({
+      leavePolicyId: "policy-annual",
+      totalDays: daysOf(1),
+      rules: [{ leavePolicyId: null, minDays: 0, maxDays: null, steps: [] }],
+      org,
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toBe(LeaveApprovalUnresolvedReason.EMPTY_RULE_STEPS);
+  });
+});
+
+/**
+ * Info: (20260820 - Julian) 門檻壞掉是**設定缺口，不是故障**（review 第 4 條）。
+ *
+ * `compareDaysTo` 對指數記號的門檻會丟 `LeaveRuleError`，而
+ * `resolveApprovalChain` 的呼叫點在 `buildPlan` 的 `:752` ——
+ * **不在**那個「`LeaveRuleError` → 400」的 try 裡面。於是一列
+ * `minDays = 1e-7` 的規則會讓該帳本的每一次試算與送出都變成 500。
+ *
+ * 這一支的契約是「展得開回步驟，展不開回原因」，而門檻讀不懂正是一種展不開：
+ * 試算照常顯示原因、送出拒絕（`CF_LEAVE_APPROVAL_CHAIN_UNRESOLVED`），
+ * 而**不是自動核准**（ADR 023 §3）。
+ */
+describe("resolveApprovalChain — 壞掉的門檻不得變成 500", () => {
+  const brokenRules = [
+    {
+      leavePolicyId: null,
+      // Info: (20260820 - Julian) `String(1e-7)` 就是 "1e-7"
+      minDays: 1e-7,
+      maxDays: null,
+      steps: rules[0].steps,
+    },
+  ];
+
+  // Info: (20260820 - Julian) 缺陷存在時這一行會**丟出** LeaveRuleError，測試直接紅
+  it("回 MALFORMED_RULE_THRESHOLD 而不是丟例外", () => {
+    const result = resolveApprovalChain({
+      leavePolicyId: "policy-annual",
+      totalDays: totalDaysOf([{ minutes: 480, dayEquivalentMinutes: 480 }]),
+      rules: brokenRules,
+      org,
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toBe(
+      LeaveApprovalUnresolvedReason.MALFORMED_RULE_THRESHOLD,
+    );
+  });
+
+  /**
+   * Info: (20260820 - Julian) 反面：正常的門檻仍然展得開。
+   * 只驗上面那條的話，一個「一律回 MALFORMED」的實作也會通過，
+   * 而它會讓每一張假單都送不出去。
+   */
+  it("正常的門檻不受影響", () => {
+    const result = resolveApprovalChain({
+      leavePolicyId: "policy-annual",
+      totalDays: totalDaysOf([{ minutes: 480, dayEquivalentMinutes: 480 }]),
+      rules,
+      org,
+    });
+    expect(result.ok).toBe(true);
+  });
+});

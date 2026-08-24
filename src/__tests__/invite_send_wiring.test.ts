@@ -109,8 +109,31 @@ jest.mock("@/services/system_setting.service", () => ({
   systemSettingService: { get: jest.fn(async () => undefined) },
 }));
 
+/**
+ * Info: (20260820 - Julian) 閘門會讀訂閱來判斷是不是免費方案（三道量控只對免費方案，
+ * commit c0c04014a），因此**訂閱 repository 也是這一檔的邊界之一**。
+ *
+ * 少了這個替身，`assertInviteVolumeWithinLimits` 會呼叫到真的
+ * `teamSubscriptionRepo.getByTeamId`，於是這支「接線測試」靜默地依賴一台活的資料庫：
+ * 在有 DB 的機器上它連得上、查無訂閱、退回免費方案而通過；在沒有 DB 的機器（或 CI）
+ * 上它丟出一個不是 `ApiError` 的連線錯誤，被 route 最後那個 catch 收成 `IS000099`／500
+ * ——三條走位址邀請的案例因此全紅，而紅的原因與被測的行為無關（checklist §1.3、§1.8）。
+ *
+ * 同一支閘門的單元測試（`invite_volume_limits.test.ts`）一直有這個替身；
+ * c0c04014a 補了那一邊、漏了這一邊。預設查無訂閱＝免費方案，三道量控才會生效
+ * ——付費方案會直接 return，下面兩條上限的斷言就永遠是綠的。
+ */
+jest.mock("@/repositories/team_subscription.repo", () => ({
+  teamSubscriptionRepo: { getByTeamId: jest.fn(async () => null) },
+}));
+
+/**
+ * Info: (20260820 - Julian) 方法名是 `sendUserOp`（見 `bundler.service.ts`）。
+ * 原本替身給的是 `sendUserOperation`，於是 route 呼叫的那一支是 `undefined`，
+ * 真正發生的是一個被內層 try/catch 吞掉的 TypeError——替身等於沒有裝上去。
+ */
 jest.mock("@/services/bundler.service", () => ({
-  bundlerService: { sendUserOperation: jest.fn(async () => "0xhash") },
+  bundlerService: { sendUserOp: jest.fn(async () => "0xhash") },
 }));
 
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;

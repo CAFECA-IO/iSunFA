@@ -4,7 +4,17 @@ export const hrManagement = {
   notification_aria: "通知",
   user_menu_aria: "ユーザーメニュー",
   open_menu_aria: "メニューを開く",
+  // Info: (20260818 - Julian) 側邊選單的分組標題。不分組的項目（儀表板、系統設定）沒有對應鍵
+  nav_group: {
+    people: "人事管理",
+    attendance: "勤怠システム",
+    leave: "休暇・残業",
+  },
   nav: {
+    leave: "休暇申請",
+    leave_approval: "承認待ち",
+    overtime: "自分の残業",
+    overtime_approval: "残業承認",
     dashboard: "ダッシュボード",
     organization: "組織図",
     employee: "従業員管理",
@@ -587,6 +597,13 @@ export const hrManagement = {
     error_rate_limited:
       "短時間に操作が集中しました。少し待ってからもう一度お試しください。",
     error_supervisor_only: "この操作は部門責任者のみ実行できます。",
+    error_hr_function_required:
+      "この操作には人事管理者の権限が必要です。人事に付与を依頼するか、権限のある方に依頼してください。",
+    error_no_permission_to_view: "この方の記録を閲覧する権限がありません。",
+    error_no_employee_record:
+      "お使いのアカウントはこの帳簿の従業員と紐づいていません。人事に登録を依頼してください。",
+    error_range_too_large:
+      "指定された期間が長すぎます。範囲を短くしてもう一度お試しください。",
   },
   attendance_result: {
     title: "勤怠一覧と異常",
@@ -632,11 +649,13 @@ export const hrManagement = {
     day_type_rest_day: "所定休日",
     day_type_holiday: "祝日",
     day_type_leave: "休暇",
+    day_type_suspended: "作業中止",
     day_type_short_work: "勤",
     day_type_short_regular_off: "法",
     day_type_short_rest_day: "所",
     day_type_short_holiday: "祝",
     day_type_short_leave: "休",
+    day_type_short_suspended: "停",
     phase_upcoming: "未開始",
     phase_in_progress: "進行中",
     phase_concluded: "終了",
@@ -656,10 +675,11 @@ export const hrManagement = {
   attendance_presence: {
     stat_leave: "本日の休暇",
     stat_leave_hint: "承認済みの休暇。未出勤には数えません",
+    leave_on_leave: "休暇中",
     leave_title: "本日の休暇（{{count}} 名）",
     leave_empty: "本日の休暇はありません",
     leave_hint:
-      "人手が足りないとき、管理者はこの名簿の人に休暇短縮を打診できます。応じるかどうかは本人が決めます。",
+      "人手が足りないとき、管理者はこの名簿の人に休暇短縮を打診できます。応じるかどうかは本人が決めます。\nこの名簿では休暇種別を意図的に表示しません —— 病気休暇や生理休暇は健康状態を明かすためです。",
     leave_recall_action: "復帰を打診",
     leave_recall_pending: "回答待ち",
     recall_title: "休暇短縮の打診",
@@ -760,14 +780,300 @@ export const hrManagement = {
       "この環境ではパスキーを利用できません。パスキーは HTTPS（または localhost）の安全な接続でのみ動作します。正式なアドレスで開いてください。",
     hint: "ログインする Google アカウントは登録済みの会社メールアドレスである必要があります。ログイン後に「従業員情報が見つかりません」と表示される場合は、人事にアドレスをご確認ください。",
   },
-  // Info: (20260814 - Julian) 休暇種別。`LEAVE_TYPE_I18N_KEY` に対応
+  // Info: (20260817 - Julian) 組込み休暇種別。`LEAVE_POLICY_I18N_KEY` に対応。テナント独自の休暇は `LeavePolicy.name` を表示
   leave: {
-    type_annual: "年次有給休暇",
-    type_personal: "私用休暇",
-    type_sick: "病気休暇",
-    type_official: "公務休暇",
-    type_marriage: "結婚休暇",
-    type_bereavement: "忌引休暇",
-    type_other: "その他",
+    field_start_at: "開始（日付と時刻）",
+    field_end_at: "終了（日付と時刻）",
+    span_selected:
+      "計 {{hours}} 時間（休憩・非勤務日を除く前の値。実際の控除は下の試算をご確認ください）",
+    detail_title: "申請の詳細",
+    detail_reason: "休暇理由",
+    detail_reason_undecryptable:
+      "理由を復号できません（鍵の異常）。管理者にご連絡ください。",
+    detail_reason_audited:
+      "理由は暗号化して保存され、本人以外の閲覧はすべて記録されます",
+    detail_days: "取得日の内訳",
+    detail_day_recalled: "休暇取消済み",
+    detail_chain: "承認経路",
+    detail_concurrency_warned:
+      "申請時点で同期間に他の同僚の休暇があり、申請者には通知済みです",
+    segment_custom: "時間指定",
+    unit_hint:
+      "最小単位は {{minutes}} 分です。満たない場合は 1 単位として計算されます",
+    preview_rounded:
+      "選択は {{raw}} 分ですが、最小単位により {{minutes}} 分として計算されます",
+    action_detail: "詳細",
+    action_back: "戻る",
+    title: "休暇申請",
+    approval_page_title: "承認待ち",
+    loading: "読み込み中…",
+    unit_day: "日",
+    unit_minute: "分",
+
+    balance_title: "私の残日数",
+    balance_empty:
+      "付与された休暇がありません。入社日と勤続年数に基づき一括付与されます。空のままの場合は人事へご連絡ください。",
+    balance_unlimited: "上限なし",
+    balance_next_expiry: "直近の失効日：{{date}}",
+    balance_never_reconciled: "台帳と未照合",
+
+    form_title: "申請の作成",
+    field_policy: "休暇種別",
+    policy_unavailable_suffix: "（現在は選択できません）",
+    field_reason: "理由",
+    field_reason_placeholder: "例：通院、家庭の事情",
+    field_reason_encrypted:
+      "理由は暗号化して保存され、詳細画面で承認者のみ閲覧できます",
+    segment_full: "終日",
+    segment_morning: "午前",
+    segment_afternoon: "午後",
+    action_submit: "申請する",
+
+    preview_total: "合計 {{days}} 日（{{minutes}} 分）",
+    preview_after: "申請後の残り {{minutes}} 分",
+    preview_shortfall: "残日数が {{minutes}} 分不足しており申請できません",
+    preview_chain: "承認 {{count}} 段階",
+    preview_chain_unresolved:
+      "承認経路を展開できません（{{reason}}）。承認ルールと組織設定を人事にご確認ください。",
+    preview_concurrency_warn:
+      "{{date}} は既に {{count}} 名が休暇です（推奨上限 {{limit}}）。申請は可能ですが、管理者から調整の相談があるかもしれません。",
+    preview_concurrency_blocked:
+      "{{date}} は既に {{count}} 名が休暇で、上限 {{limit}} を超えるため申請できません。",
+
+    my_requests_title: "私の申請",
+    my_requests_empty: "まだ申請はありません",
+    list_step_progress: "{{current}}/{{total}} 段階目、{{approver}} の承認待ち",
+    list_step_self: "あなたは {{current}}/{{total}} 段階目です",
+    status_pending: "承認中",
+    status_approved: "承認済み",
+    status_rejected: "却下",
+    status_withdrawn: "取下げ",
+    action_withdraw: "取下げ",
+
+    approval_title: "承認待ち（{{count}} 件）",
+    approval_empty: "承認待ちの申請はありません",
+    action_approve: "承認",
+    action_reject: "却下",
+    action_reject_confirm: "却下を確定",
+    field_reject_reason: "却下理由（必須）",
+    field_reject_placeholder: "申請者にこの文面が表示されます",
+
+    node_direct: "直属の上長",
+    node_department: "部門長",
+    node_hr: "人事",
+    node_specific: "指名承認者",
+    chain_empty: "承認経路がありません",
+    chain_escalated_same_kind:
+      "自動再割当：この段階の{{kind}}がご本人のため、別の方に変更されました",
+    chain_escalated_higher:
+      "自動エスカレーション：この段階の{{from}}がご本人のため、{{to}}に引き上げられました",
+    unresolved_no_matching_rule: "この日数に該当する承認ルールがありません",
+    unresolved_empty_rule_steps:
+      "該当する承認ルールに承認段階が設定されていません",
+    unresolved_no_direct_manager: "直属の上長が登録されていません",
+    unresolved_no_department_manager:
+      "上位のいずれの部署にも責任者が登録されていません",
+    unresolved_no_hr: "この帳簿に人事管理者がいません",
+    unresolved_no_other_hr:
+      "唯一の人事管理者がご本人のため、他に承認できる方がいません",
+    unresolved_specific_employee_missing:
+      "指名された承認者は退職済み、またはこの帳簿に存在しません",
+    unresolved_malformed_rule_threshold:
+      "承認ルールの日数しきい値が照合可能な十進数ではありません",
+
+    error_load: "読み込みに失敗しました",
+    error_preview: "試算に失敗しました",
+    error_submit: "申請に失敗しました",
+    error_withdraw: "取下げに失敗しました",
+    error_decide: "承認処理に失敗しました",
+    /**
+     * Info: (20260818 - Julian) エラーコード別の文言（対応表は `leave_error_message.ts`）。
+     * 各文は「次に何をすべきか」に答えること —— 一律「操作に失敗しました」にまとめると診断情報が失われる。
+     */
+    error_insufficient_balance:
+      "残日数が足りません。日数を減らすか、別の休暇種別を選んでください",
+    error_merge_not_implemented:
+      "この休暇種別は別の休暇の残日数も同時に消化しますが、その規則がまだ利用できないため申請できません。人事にご相談ください（当面は別の休暇種別をご利用ください）。",
+    error_unit_not_aligned:
+      "この休暇種別の最小単位に合っていません。時間帯を調整してください",
+    error_non_working_day:
+      "選択した期間に対象となる勤務時間がありません（出勤日でない、または勤務時間外）。申請の必要はなく、残日数も減りません",
+    error_chain_unresolved:
+      "承認ルートを展開できません。直属の上長と承認ルールの設定を人事にご確認ください",
+    error_day_already_active: "この日には有効な休暇申請がすでにあります",
+    error_concurrency_exceeded:
+      "その期間は同じ部署の休暇取得者が上限に達しています。上長と相談のうえ日程を変更してください",
+    error_concurrency_rule_invalid:
+      "この帳簿の同時取得上限ルールに有効な上限が設定されていないため、判定できません。人事にルールの修正をご依頼ください。",
+    error_policy_not_found:
+      "この休暇種別は存在しないか、無効化されています。選び直してください",
+    error_self_approval: "自分が提出した申請は承認できません",
+    error_not_reviewer:
+      "この申請の現在の承認者ではありません。前の段階の完了をお待ちください",
+    error_already_reviewed:
+      "この段階はすでに決裁済みです。再読み込みして最新の状態をご確認ください",
+    error_balance_race:
+      "残日数が別の申請に先に消費されました。再読み込みしてやり直してください",
+    error_request_scope:
+      "この申請はあなたのものではなく、承認ルートにも含まれていません",
+    error_request_not_found: "この休暇申請は見つかりません",
+    policy_annual: "年次有給休暇",
+    policy_personal: "私用休暇",
+    policy_sick: "私傷病休暇",
+    policy_occupational_injury: "労災休暇",
+    policy_official: "公務休暇",
+    policy_marriage: "結婚休暇",
+    policy_bereavement: "忌引休暇",
+    policy_menstrual: "生理休暇",
+    policy_maternity: "産前産後休暇",
+    policy_prenatal_checkup: "妊婦健診休暇",
+    policy_paternity: "配偶者出産・健診付添休暇",
+    policy_family_care: "家族介護休暇",
+    policy_compensatory: "代休",
+  },
+  // Info: (20260818 - Julian) 残業モジュール（L24–L30）。区分ラベルは `OvertimePremiumTier` をキーとします
+  overtime: {
+    field_start_at: "開始（日付と時刻）",
+    field_end_at: "終了（日付と時刻）",
+    span_selected: "計 {{hours}} 時間（実際の認定は打刻記録に基づきます）",
+    title: "自分の残業",
+    approval_page_title: "残業承認",
+    loading: "読み込み中…",
+    unit_minute: "分",
+    unit_hour: "時間",
+    summary_title: "今月の残業",
+    summary_monthly: "今月の認定分",
+    summary_quarterly: "直近3か月",
+    summary_limit: "上限 {{hours}} 時間",
+    summary_remaining: "残り {{hours}} 時間",
+    summary_over_limit: "上限を超過",
+    summary_quarterly_none: "延長の同意がないため3か月上限は適用されません",
+    summary_punch_backed: "打刻記録あり",
+    summary_declared: "自己申告（打刻なし）",
+    summary_evidence_hint:
+      "意図的に分けています：労働監督で「出勤記録の裏付けがない残業がどれだけあるか」を問われるためです。",
+    summary_by_tier: "割増区分別",
+    summary_empty: "今月の承認済み残業はありません",
+    tier_weekday_first_2h: "平日 最初の2時間",
+    tier_weekday_beyond_2h: "平日 2時間超",
+    tier_rest_day_first_2h: "休息日 最初の2時間",
+    tier_rest_day_beyond_2h: "休息日 2時間超",
+    tier_holiday_double: "休日（倍額支給）",
+    tier_emergency_double: "天災事変（倍額支給）",
+    form_title: "残業申請の作成",
+    field_filing: "申請区分",
+    filing_advance: "事前申請",
+    filing_post_hoc: "事後申請",
+    filing_hint: "事前申請はその日のシフト開始前に提出する必要があります。",
+    field_compensation: "補償方法",
+    compensation_payment: "残業手当",
+    compensation_leave: "代休に振替",
+    compensation_hint:
+      "代休は実労働時間と1:1で換算し、割増率は掛けません（割増は期限切れの精算時に適用）。",
+    field_reason: "残業理由",
+    field_reason_placeholder: "例：コンクリート打設を当日中に完了させるため",
+    field_emergency: "天災事変（§32 IV、届出済み）",
+    action_declare_emergency: "天災事変を登録",
+    error_declare_emergency:
+      "認定に失敗しました。人事管理者の権限があること、この申請が承認待ちであることをご確認ください。",
+    field_emergency_report: "届出記録のリンク",
+    field_emergency_reported_at: "届出日時",
+    field_emergency_moved_hint:
+      "天災事変（§32 IV）の認定は人事管理者が承認時に行い、届出記録の添付が必要なため、この申請書には含まれません。",
+    field_emergency_hint:
+      "人事管理者のみが認定できます。選択する場合は届出記録と届出日時の添付が必須です：全区間が倍額支給となります。法定休日には適用されません（§40 は別途、所轄官庁への届出が必要）。",
+    action_submit: "申請する",
+    my_requests_title: "自分の申請",
+    my_requests_empty: "残業申請はまだありません",
+    list_requested: "申請 {{minutes}} 分",
+    list_recognized: "認定 {{minutes}} 分",
+    list_declared_badge: "自己申告",
+    list_emergency_badge: "天災事変",
+    status_pending: "承認待ち",
+    status_approved: "承認済み",
+    status_rejected: "却下",
+    status_withdrawn: "取り下げ",
+    approval_title: "承認待ち（{{count}}）",
+    approval_empty: "承認待ちの残業申請はありません",
+    field_approved_minutes: "承認する分数",
+    field_approved_minutes_hint:
+      "申請より少なくできます。認定されるのは min(承認, 実際の在場時間) です。",
+    action_approve: "承認",
+    action_reject: "却下",
+    decided_recognized: "承認しました（認定 {{minutes}} 分）",
+    action_withdraw: "取り下げ",
+    action_withdraw_hint:
+      "取り下げても打刻記録は消えません。その時間は別の申請が覆うまで「未承認の時間外労働」に戻ります。",
+    field_withdraw_reason: "取り下げ理由",
+    field_withdraw_reason_placeholder: "例：日付の誤り、別の申請で対応済み",
+    error_withdraw: "取り下げに失敗しました",
+    error_not_applicant:
+      "取り下げできるのは申請者本人のみです。上長は却下をご利用ください（決定者が記録されます）。",
+    error_withdraw_reason_required:
+      "事後申請の取り下げには理由が必要です。自発的な取り下げかどうかが記録に残る必要があります。",
+    action_write_report: "時間外労働報告書を作成",
+    report_disabled_hint:
+      "未開放：根拠法令と書式の項目が法務確認待ちです（計画書 §8.3）",
+    decided_unapproved:
+      "承認範囲を超えた {{minutes}} 分は未承認時間帯に計上されました",
+    decided_granted: "代休を {{count}} 件付与しました",
+    unapproved_title: "未承認の時間帯",
+    unapproved_empty: "承認済み以外の在場時間はありません",
+    unapproved_team_empty:
+      "この期間中、チームメンバーに承認範囲外の在席時間はありません。",
+    unapproved_hint:
+      "どの申請にも含まれない在場時間です。申請漏れかもしれませんし、単に少し残っていただけかもしれません —— 判断はあなたに委ねられます。",
+    unapproved_range_days: "直近 {{days}} 日",
+    exception_unapproved_overtime: "打刻あり・未承認",
+    exception_missing_punch_evidence: "承認済みだが打刻記録なし",
+    error_load: "読み込みに失敗しました",
+    error_submit: "申請に失敗しました",
+    error_decide: "処理に失敗しました",
+    error_exceeds_daily:
+      "所定労働時間と残業の合計が法定の1日12時間を超えます。時間を短くするか別日に移してください。",
+    error_exceeds_monthly:
+      "月間の残業上限を超えます。残り時間は統計で確認できます。",
+    error_exceeds_quarterly: "3か月ごとの残業上限を超えます。",
+    error_filing_mismatch:
+      "申請区分と提出時刻が一致しません：事前申請はシフト開始前に提出する必要があります。",
+    error_regular_off:
+      "法定休日の勤務は §40 の手続きが必要です。人事にご相談ください。",
+    error_already_reviewed:
+      "この申請は既に処理されています。再読み込みしてください。",
+    error_reclassified_midway:
+      "承認の途中で人事がこの申請を天災・事変（§32 IV）と認定したため、全区間が倍額支給になりました。再読み込みして金額をご確認のうえ承認してください。",
+    error_emergency_revoked_midway:
+      "承認の途中で人事がこの申請の天災・事変（§32 IV）認定を取り消したため、全区間が通常の割増賃金に戻りました。再読み込みして金額をご確認のうえ承認してください。",
+    error_day_length_unknown:
+      "この従業員の1日の所定労働時間を算出できないため、代替休暇への振替も買い上げもできません。人事にシフトの設定をご依頼ください。",
+    error_overlaps_existing:
+      "同じ日に、この時間帯と重なる残業申請が既にあります。時間を調整するか、先にその申請を取り下げてください。",
+    error_earlier_than_approved:
+      "同じ日に、これより遅い時間帯の残業申請が既に承認されており、割増率が確定しています。今からより早い時間帯を申請すると、両方とも低い割増率で計算されます。遅い方の申請を取り下げ、まとめて再申請してください。",
+    error_not_approved:
+      "この残業申請は現在承認済みの状態ではないため、取り消せる承認がありません。再読み込みして現在の状態をご確認ください。",
+    error_approval_not_reversible:
+      "この承認による代替休暇は既に取得・失効・買い上げ済みか、残業手当が給与で精算済みです。承認は取り消せません。人事に残高の手動調整をご依頼ください。",
+    error_agreement_record_required:
+      "月間上限を54時間に緩和するには記録が必要です（§32 III）：議事録のリンクと同意した日付をご入力ください。",
+    error_emergency_already_declared:
+      "この申請には既に §32 IV の認定があります。新しい届出を記録する前に、既存の認定を取り消してください。",
+    error_emergency_not_declared:
+      "この申請には取り消せる §32 IV の認定がありません。",
+    error_reported_at_out_of_range:
+      "届出日時に未来、または残業日より前の時刻は指定できません。届出記録の時刻をご確認ください。",
+    error_comp_expiry_unset:
+      "代休の期限が未協定のため振替できません。残業手当を選ぶか、人事に設定を依頼してください。",
+    error_day_not_scheduled:
+      "その日はシフトが組まれていないため割増区分を決められません。人事にシフト登録を依頼してください。",
+    error_premium_undefined:
+      "その日区分の割増基準は未確定です（休工日・休暇日）。人事にご相談ください。",
+    error_self_decide:
+      "自分が提出した残業申請に対して承認・認定はできません。他の人事管理者にご依頼ください。",
+    error_not_reviewer:
+      "この申請の決裁者ではありません。決裁は申請者を管轄する上長が行います。",
+    error_comp_policy_missing:
+      "代休の休暇区分が未設定のため振替できません。残業手当を選ぶか、人事に作成を依頼してください。",
+    error_not_found: "この残業申請は存在しません。",
   },
 };

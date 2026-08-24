@@ -46,6 +46,8 @@ const EXPECTED_BUCKET: Record<string, Record<string, RateLimitBucketEnum>> = {
     POST: RateLimitBucketEnum.ATTENDANCE_PUNCH,
   },
   "attendance/today/route.ts": { GET: RateLimitBucketEnum.READ },
+  // Info: (20260818 - Julian) 身分查詢：純讀，走 READ
+  "me/route.ts": { GET: RateLimitBucketEnum.READ },
   "attendance/location/route.ts": { GET: RateLimitBucketEnum.READ },
   "attendance/result/route.ts": { GET: RateLimitBucketEnum.READ },
   "attendance/schedule/route.ts": {
@@ -68,6 +70,87 @@ const EXPECTED_BUCKET: Record<string, Record<string, RateLimitBucketEnum>> = {
   "attendance/leave/recall/pending/route.ts": { GET: RateLimitBucketEnum.READ },
   "attendance/leave/recall/[recall_id]/respond/route.ts": {
     POST: RateLimitBucketEnum.ATTENDANCE_WRITE,
+  },
+
+  /**
+   * Info: (20260818 - Julian) 假勤模組（計畫書 §10 的 L1–L33）。
+   *
+   * 寫入走 `LEAVE_WRITE` 而不是 `ATTENDANCE_WRITE`：兩者尺寸相同但額度分開，
+   * 否則主管排完一個月的班之後，同一個人當天送不出自己的假單（見該 enum 的說明）。
+   *
+   * 試算（`request/preview`）是 POST 卻歸 `READ`：它不寫任何東西，
+   * 而畫面上每改一次日期就呼叫一次 —— 掛在寫入桶會讓即時預覽在正常填單時就撞牆。
+   */
+  "leave/policy/route.ts": {
+    GET: RateLimitBucketEnum.READ,
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "leave/policy/[policy_id]/route.ts": {
+    GET: RateLimitBucketEnum.READ,
+    PUT: RateLimitBucketEnum.LEAVE_WRITE,
+    DELETE: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "leave/policy/[policy_id]/tier/route.ts": {
+    GET: RateLimitBucketEnum.READ,
+    PUT: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "leave/approval_rule/route.ts": {
+    GET: RateLimitBucketEnum.READ,
+    PUT: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "leave/balance/route.ts": { GET: RateLimitBucketEnum.READ },
+  "leave/balance/ledger/route.ts": { GET: RateLimitBucketEnum.READ },
+  "leave/balance/adjust/route.ts": { POST: RateLimitBucketEnum.LEAVE_WRITE },
+  "leave/balance/accrue/route.ts": { POST: RateLimitBucketEnum.LEAVE_WRITE },
+  "leave/request/route.ts": {
+    GET: RateLimitBucketEnum.READ,
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "leave/request/pending/route.ts": { GET: RateLimitBucketEnum.READ },
+  "leave/request/preview/route.ts": { POST: RateLimitBucketEnum.READ },
+  "leave/request/[request_id]/route.ts": {
+    GET: RateLimitBucketEnum.READ,
+    DELETE: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "leave/request/[request_id]/approve/route.ts": {
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "leave/request/[request_id]/reject/route.ts": {
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+
+  /**
+   * Info: (20260818 - Julian) 加班（L24–L30）。同屬假勤模組，沿用 `LEAVE_WRITE`：
+   * 額度與假單共用一個桶是刻意的 —— 一個人一天送幾張加班單與幾張假單，
+   * 加起來才是他對這個模組的寫入節奏。
+   */
+  "overtime/request/route.ts": {
+    GET: RateLimitBucketEnum.READ,
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "overtime/request/pending/route.ts": { GET: RateLimitBucketEnum.READ },
+  "overtime/request/[request_id]/withdraw/route.ts": {
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "overtime/summary/route.ts": { GET: RateLimitBucketEnum.READ },
+  "overtime/unapproved/route.ts": { GET: RateLimitBucketEnum.READ },
+  "overtime/policy/route.ts": {
+    GET: RateLimitBucketEnum.READ,
+    PUT: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "overtime/request/[request_id]/approve/route.ts": {
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "overtime/request/[request_id]/emergency/route.ts": {
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+    // Info: (20260820 - Julian) 撤回認定（review 第 3 輪第 2 條）。與認定同桶：同樣是寫入
+    DELETE: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "overtime/request/[request_id]/revoke_approval/route.ts": {
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
+  },
+  "overtime/request/[request_id]/reject/route.ts": {
+    POST: RateLimitBucketEnum.LEAVE_WRITE,
   },
 };
 
@@ -157,6 +240,16 @@ describe("HR 端點的限流覆蓋率", () => {
    *
    * 以 `resolveEmployee` 當業務邏輯的起點：每一支都靠它把登入身分換成員工檔，
    * 而打卡的圍欄判定在它之後。限流的位置若跑到它後面，圍欄外的失敗就不再計入。
+   *
+   * Info: (20260819 - Julian) **這一條守的是那兩行的順序，不是「限流真的會擋」**
+   * （review B9）。刪掉 `if (limited) return limited;`、留著上一行的呼叫，
+   * 限流完全失效而本檔照樣全綠 —— `enforceRateLimit(` 仍然在，位置也仍然在前面。
+   * 行為那一側由 `leave_route_wiring.test.ts` 打真的 handler 補上：
+   * 斷言成對（回應是 429 **且** service 沒有被多呼叫一次）。
+   *
+   * 兩支不重疊也不互相取代：本檔的價值在於**每一支 route 都掃得到**
+   * （24 支全覆蓋，新增一支忘了接限流會在這裡紅），而裝配測試只打其中幾支
+   * 但驗的是真的行為。掃描保廣度，裝配保深度。
    */
   it("enforceRateLimit 排在 resolveEmployee 之前", () => {
     const late = listHandlers().flatMap((handler) => {
@@ -177,9 +270,71 @@ describe("HR 端點的限流覆蓋率", () => {
 
     expect(withoutBusinessAnchor).toEqual([]);
   });
+
+  /**
+   * Info: (20260821 - Julian) **每一支都先驗票**（review 第 7 輪第 4 條）。
+   *
+   * 整個模組的安全論證只有一根支柱：「37 支 `/hr/` 端點全部走
+   * `getIdentityFromDeWT`，訪客一律 401」。那句話寫進了 `layout.tsx`、
+   * 部署檢查表與 PR 敘述，而**在這一條之前沒有任何測試守著它** ——
+   * 它當下為真，但下一支端點就可以讓它為假，而症狀是靜悄悄的。
+   *
+   * 現行的間接約束擋不住：限流測試要求每支 handler 有 `resolveEmployee(`，
+   * 而 `const sessionUser = await someRepo.findUserById(body.userId)`
+   * 這種形狀型別會過、限流測試會過、全綠。
+   *
+   * 掛在**既有的**切割器上，不新增掃描根：多一個掃描根就多一個會腐爛的
+   * 「這裡要掃哪些檔案」的清單。
+   */
+  it("每一個 handler 都先呼叫 getIdentityFromDeWT", () => {
+    const unauthenticated = listHandlers()
+      .filter((handler) => !handler.body.includes("getIdentityFromDeWT("))
+      .map((handler) => `${handler.file}:${handler.method}`);
+
+    expect(unauthenticated).toEqual([]);
+  });
+
+  /**
+   * Info: (20260821 - Julian) 而且**排在限流之前**。
+   *
+   * 順序不是講究：限流桶以 `sessionUser.address` 為鍵，先限流就沒有鍵可用；
+   * 而反過來把驗票放在業務邏輯之後，等於讓未驗票的請求先跑一段程式。
+   * 這一條與上面「限流早於 resolveEmployee」串起來，把三者的順序釘死：
+   * **驗票 → 限流 → 業務**。
+   */
+  it("getIdentityFromDeWT 排在 enforceRateLimit 之前", () => {
+    const late = listHandlers().flatMap((handler) => {
+      const authAt = handler.body.indexOf("getIdentityFromDeWT(");
+      const limitAt = handler.body.indexOf("enforceRateLimit(");
+      if (authAt === -1 || limitAt === -1) return [];
+      return authAt < limitAt ? [] : [`${handler.file}:${handler.method}`];
+    });
+
+    expect(late).toEqual([]);
+  });
+
+  /**
+   * Info: (20260821 - Julian) 驗票失敗要 `return`，不是 `throw`。
+   *
+   * 每一支的 `catch` 都把非 `AppError` 收斂成 `IS_DB_FAILED`（500）。
+   * 驗票失敗若用 `throw`，訪客拿到的會是 500 而不是 401 —— 而
+   * 「無票一律 401」正是那句安全論證的原文。
+   */
+  it("驗票失敗回的是 401，且用 return 不是 throw", () => {
+    const wrong = listHandlers().flatMap((handler) => {
+      if (!handler.body.includes("getIdentityFromDeWT(")) return [];
+      return /return jsonFail\(API_ERRORS\.AUTH_INVALID_TOKEN\)/.test(
+        handler.body,
+      )
+        ? []
+        : [`${handler.file}:${handler.method}`];
+    });
+
+    expect(wrong).toEqual([]);
+  });
 });
 
-describe("出勤 bucket 的窗口設定", () => {
+describe("出勤與假勤 bucket 的窗口設定", () => {
   /**
    * Info: (20260817 - Luphia) 精確值而非門檻（檢查清單 §一.6）。
    * 這些數字取自母計畫 §10.3；**改動請連同該節一起改**，否則文件與程式碼會分岔。
@@ -188,6 +343,8 @@ describe("出勤 bucket 的窗口設定", () => {
     [RateLimitBucketEnum.ATTENDANCE_PUNCH, 5, 40],
     [RateLimitBucketEnum.ATTENDANCE_WRITE, 30, 500],
     [RateLimitBucketEnum.ATTENDANCE_EXPORT, 6, 60],
+    // Info: (20260818 - Julian) 與 `ATTENDANCE_WRITE` 同尺寸，但額度分開（見該 enum）
+    [RateLimitBucketEnum.LEAVE_WRITE, 30, 500],
   ])("%s 的分鐘與每日上限是 %i / %i", (bucket, perMinute, perDay) => {
     const windows = RATE_LIMIT_RULES[bucket as RateLimitBucketEnum];
 
@@ -204,14 +361,16 @@ describe("出勤 bucket 的窗口設定", () => {
    * 法定文件或個資稽核軌跡，那種節奏一天就能塞進五萬列。
    * 讀取類沿用 `READ`（只有分鐘窗）是刻意的 —— 它不寫入任何東西。
    */
-  it("三個出勤桶都有每日窗", () => {
-    const attendanceBuckets = [
+  it("四個人事寫入桶都有每日窗", () => {
+    const hrBuckets = [
       RateLimitBucketEnum.ATTENDANCE_PUNCH,
       RateLimitBucketEnum.ATTENDANCE_WRITE,
       RateLimitBucketEnum.ATTENDANCE_EXPORT,
+      // Info: (20260818 - Julian) 假單與額度帳同樣是「寫進去就要留著」的資料
+      RateLimitBucketEnum.LEAVE_WRITE,
     ];
 
-    const withoutDailyWindow = attendanceBuckets.filter(
+    const withoutDailyWindow = hrBuckets.filter(
       (bucket) =>
         !RATE_LIMIT_RULES[bucket].some(
           (window) => window.windowMs === 86_400_000,

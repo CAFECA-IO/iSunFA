@@ -25,3 +25,10 @@ export * from "@/validators/team_invitation";
 // Info: (20260813 - Julian) 簽到系統
 export * from "@/validators/attendance";
 export * from "@/validators/leave";
+// Info: (20260817 - Julian) 假勤模組
+export * from "@/validators/leave_request";
+export * from "@/validators/leave_approval_rule";
+export * from "@/validators/leave_balance";
+export * from "@/validators/leave_policy";
+// Info: (20260818 - Julian) 加班模組（L24–L30）
+export * from "@/validators/overtime";

@@ -12,7 +12,7 @@
  *
  *     npx tsx scripts/list_card_sync_giveups.ts
  */
-import { prisma } from "@/lib/prisma";
+import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { SUBSCRIPTION_CARD_MAX_SYNC_ATTEMPTS } from "@/constants/subscription_nft";
 
 async function main(): Promise<void> {
@@ -20,21 +20,10 @@ async function main(): Promise<void> {
     process.stdout.write(`${line}\n`);
   };
 
-  const rows = await prisma.teamSubscription.findMany({
-    where: {
-      nftSyncedAt: null,
-      nftSyncAttempts: { gte: SUBSCRIPTION_CARD_MAX_SYNC_ATTEMPTS },
-    },
-    select: {
-      teamId: true,
-      planId: true,
-      nftSyncAttempts: true,
-      nftSyncError: true,
-      updatedAt: true,
-      team: { select: { name: true } },
-    },
-    orderBy: { updatedAt: "asc" },
-  });
+  // Info: (20260821 - Luphia) 查詢在 Repo（CLAUDE.md §1：只有 Repository 碰 Prisma）
+  const rows = await teamSubscriptionRepo.listCardSyncGivenUp(
+    SUBSCRIPTION_CARD_MAX_SYNC_ATTEMPTS,
+  );
 
   if (rows.length === 0) {
     out("沒有已放棄的訂閱卡同步。");
@@ -61,6 +50,9 @@ main()
     );
     process.exitCode = 1;
   })
-  .finally(async () => {
-    await prisma.$disconnect();
+  .finally(() => {
+    /**
+     * Info: (20260821 - Luphia) 不再自己 `$disconnect`：連線由 `@/lib/prisma` 持有，
+     * 而這支腳本已經不碰 Prisma client（查詢走 Repo）。腳本結束時行程自然退出。
+     */
   });

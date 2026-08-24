@@ -23,8 +23,9 @@ export enum PunchVerification {
 /**
  * Info: (20260813 - Julian) 排班日的性質，對齊 Prisma enum WorkDayType。
  *
- * ToDo: (20260813 - Julian) 工程場景需要 `SUSPENDED`（因雨／颱風／災害停工）。
- * Demo 暫借 `HOLIDAY`，但正式版兩者不可混用（停工天數是工期展延依據）。
+ * Info: (20260817 - Julian) `SUSPENDED` 已補上，不再暫借 `HOLIDAY`。
+ * 停工天數是工期展延與契約計價的依據，混進國定假日就再也拆不開；
+ * 加班級距的判定也依賴兩者分開（假勤計畫書 §8.1 #8）。
  */
 export enum WorkDayType {
   WORK = "WORK",
@@ -32,6 +33,7 @@ export enum WorkDayType {
   REST_DAY = "REST_DAY",
   HOLIDAY = "HOLIDAY",
   LEAVE = "LEAVE",
+  SUSPENDED = "SUSPENDED",
 }
 
 // Info: (20260813 - Julian) 單日出勤判定的總結狀態。判定引擎的輸出，DB 沒有這個欄位
@@ -278,6 +280,8 @@ export const WORK_DAY_TYPE_SHORT_I18N_KEY: Record<WorkDayType, string> = {
   [WorkDayType.HOLIDAY]:
     "hr_management.attendance_result.day_type_short_holiday",
   [WorkDayType.LEAVE]: "hr_management.attendance_result.day_type_short_leave",
+  [WorkDayType.SUSPENDED]:
+    "hr_management.attendance_result.day_type_short_suspended",
 };
 
 // Info: (20260813 - Julian) 排班日型別的顯示文案，出勤總覽與排班月曆共用
@@ -288,6 +292,7 @@ export const WORK_DAY_TYPE_I18N_KEY: Record<WorkDayType, string> = {
   [WorkDayType.REST_DAY]: "hr_management.attendance_result.day_type_rest_day",
   [WorkDayType.HOLIDAY]: "hr_management.attendance_result.day_type_holiday",
   [WorkDayType.LEAVE]: "hr_management.attendance_result.day_type_leave",
+  [WorkDayType.SUSPENDED]: "hr_management.attendance_result.day_type_suspended",
 };
 
 /**
@@ -351,7 +356,12 @@ export const SHIFT_PATTERN_PALETTE: string[] = [
   "bg-cyan-100 text-cyan-700",
 ];
 
-// Info: (20260813 - Julian) 非上班日的配色，與班別色盤分開：這四種語意固定，不隨帳本改變
+/**
+ * Info: (20260813 - Julian) 非上班日的配色，與班別色盤分開：這幾種語意固定，不隨帳本改變。
+ *
+ * Info: (20260817 - Julian) `SUSPENDED` 取 slate 而不是沿用 `HOLIDAY` 的紅：
+ * 兩者在畫面上必須一眼分得開，否則「今年停工幾天」還是得靠人一格一格數。
+ */
 export const OFF_DAY_TYPE_STYLE: Record<
   Exclude<WorkDayType, WorkDayType.WORK>,
   string
@@ -360,6 +370,7 @@ export const OFF_DAY_TYPE_STYLE: Record<
   [WorkDayType.REST_DAY]: "bg-gray-100 text-gray-500",
   [WorkDayType.HOLIDAY]: "bg-red-100 text-red-600",
   [WorkDayType.LEAVE]: "bg-amber-100 text-amber-700",
+  [WorkDayType.SUSPENDED]: "bg-slate-200 text-slate-700",
 };
 
 // Info: (20260813 - Julian) 星期標頭。索引即 `isoWeekday` 的回傳值（0 = 週日）

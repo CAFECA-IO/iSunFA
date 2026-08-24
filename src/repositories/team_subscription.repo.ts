@@ -331,6 +331,72 @@ export class TeamSubscriptionRepository {
     });
   }
 
+  /**
+   * Info: (20260821 - Luphia) 已放棄的列本身（`scripts/list_card_sync_giveups.ts`）。
+   *
+   * `countCardSyncGivenUp` 只回數量，而修的人需要知道**是哪些團隊、錯在哪**。
+   * 放在 Repo 而不是讓腳本自己開 Prisma：只有 Repository 碰得到 Prisma
+   *（CLAUDE.md §1），而那條規則有一支掃描測試在守（`transaction_layering.test.ts`）。
+   */
+  async listCardSyncGivenUp(
+    maxAttempts: number,
+  ): Promise<
+    (Pick<
+      TeamSubscription,
+      "teamId" | "planId" | "nftSyncAttempts" | "nftSyncError" | "updatedAt"
+    > & { team: { name: string } | null })[]
+  > {
+    return prisma.teamSubscription.findMany({
+      where: {
+        nftSyncedAt: null,
+        nftSyncAttempts: { gte: maxAttempts },
+      },
+      select: {
+        teamId: true,
+        planId: true,
+        nftSyncAttempts: true,
+        nftSyncError: true,
+        updatedAt: true,
+        team: { select: { name: true } },
+      },
+      orderBy: { updatedAt: "asc" },
+    });
+  }
+
+  /**
+   * Info: (20260821 - Luphia) 待回填計費週期的付費訂閱（`scripts/backfill_billing_interval.ts`）。
+   *
+   * 免費列不參與席次補收，週期值無關緊要，因此不撈。帶 `latestOrderId`：
+   * 正確的週期只存在那張訂單的 `data` 裡（欄位是這次才加的）。
+   */
+  async listPaidForIntervalBackfill(): Promise<
+    Pick<
+      TeamSubscription,
+      "teamId" | "planId" | "billingInterval" | "latestOrderId"
+    >[]
+  > {
+    return prisma.teamSubscription.findMany({
+      where: { planId: { not: TEAM_PLAN.FREE } },
+      select: {
+        teamId: true,
+        planId: true,
+        billingInterval: true,
+        latestOrderId: true,
+      },
+    });
+  }
+
+  // Info: (20260821 - Luphia) 回填腳本用：只寫週期快照，其他欄位一個都不動
+  async setBillingInterval(
+    teamId: string,
+    billingInterval: BillingInterval,
+  ): Promise<void> {
+    await prisma.teamSubscription.update({
+      where: { teamId },
+      data: { billingInterval },
+    });
+  }
+
   // Info: (20260819 - Luphia) 待同步但已放棄（達重試上限）的列：給診斷與監控用
   async countCardSyncGivenUp(maxAttempts: number): Promise<number> {
     return prisma.teamSubscription.count({
