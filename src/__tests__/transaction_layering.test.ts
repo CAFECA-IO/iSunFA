@@ -33,6 +33,26 @@ import { join, relative, sep } from "path";
  * 只掃 `src/services` 會漏掉「有人把 `$transaction` 寫進 route 或 lib」——
  * 而那兩處違反的是同一條規則（「只有 Repository 能碰 Prisma」）。
  *
+ * ## 掃描根也包含根目錄的 `scripts/`
+ *
+ * Info: (20260824 - Luphia) 先前掃描根只有 `src`，於是根目錄的 `scripts/`
+ * **完全在監測之外** —— 而 `scripts/reconcile_leave_balances.ts` 會寫到
+ * 額度帳本（`LeaveLedgerEntry` / `LeaveBalance`，ADR 022 的錢那一側），
+ * 卻不受任何一條規則約束。`src/scripts/e2e_seeder/**` 反而是被掃到的，
+ * 只因為它剛好住在 `src` 底下 —— 同一種東西，兩種待遇，而分界線是
+ * 目錄位置而不是它做什麼。
+ *
+ * 納入之後 15 支腳本落進白名單（全部逐檔核對過現況）。那不是「開後門」：
+ * 白名單只縮不增，且下面第三條會釘住「每個名字都還真的在違反」，
+ * 因此它記的是**既有負債**，而下一支伸手拿 prisma 的腳本會是唯一的紅點。
+ *
+ * ## 為什麼不順手把那 15 支改掉
+ *
+ * 種子與 backfill 腳本直接用 prisma 是合理的：它們的工作就是在
+ * repository 的不變式之前把資料鋪好，上面也沒有 service 層可以走。
+ * 硬要它們繞 repository 會逼出一批只給腳本用的後門方法，
+ * 那比現在更糟。這一條要擋的是**新增**，不是既有。
+ *
  * ## 排除測試檔
  *
  * 測試會自己餵一個帶 `$transaction` 的 prisma 替身（T6、加班核准的 claim
@@ -41,6 +61,15 @@ import { join, relative, sep } from "path";
  */
 
 const SRC = join(process.cwd(), "src");
+
+/**
+ * Info: (20260824 - Luphia) 根目錄的維運腳本也要掃（見檔頭）。
+ * 與 `SRC` 分成兩個根而不是掃 `process.cwd()`：後者會連 `node_modules`、
+ * `.next`、`documents` 一起走一遍，慢且會掃到不是我們寫的程式碼。
+ */
+const SCRIPTS = join(process.cwd(), "scripts");
+
+const SCAN_ROOTS: readonly string[] = [SRC, SCRIPTS];
 
 /** Info: (20260820 - Julian) 產生的 Prisma client 不是我們寫的程式碼 */
 const IGNORED_DIRS: readonly string[] = ["generated"];
@@ -66,7 +95,7 @@ const isRepository = (relativePath: string): boolean =>
 
 const filesMatching = (needle: string): string[] => {
   const files: string[] = [];
-  walk(SRC, files);
+  for (const root of SCAN_ROOTS) walk(root, files);
   return files
     .filter((full) => readFileSync(full, "utf8").includes(needle))
     .map((full) => relative(process.cwd(), full))
@@ -103,6 +132,22 @@ const PRISMA_MODULE = join("src", "lib", "prisma.ts");
  * 否則清乾淨一支之後，這張表會留著一個誰都不敢刪的名字。
  */
 const GRANDFATHERED_PRISMA_IMPORTERS: readonly string[] = [
+  // Info: (20260824 - Luphia) 根目錄維運與種子腳本（掃描根納入 scripts/ 之後才看得到）
+  join("scripts", "backfill_faith_memory_aad.ts"),
+  join("scripts", "backfill_invite_email_match.ts"),
+  join("scripts", "backfill_pending_invite_key.ts"),
+  join("scripts", "backfill_remove_team_admin.ts"),
+  join("scripts", "backfill_subscription_seats.ts"),
+  join("scripts", "bootstrap_hr_admin.ts"),
+  join("scripts", "diagnose_wallet_conservation.ts"),
+  join("scripts", "import_pdfs.ts"),
+  join("scripts", "migrate_allocations_onchain.ts"),
+  join("scripts", "reconcile_leave_balances.ts"),
+  join("scripts", "repair_wallet_conservation.ts"),
+  join("scripts", "seed", "link_employee_user.ts"),
+  join("scripts", "seed", "seed_attendance_demo.ts"),
+  join("scripts", "seed", "seed_esg_coefficients.ts"),
+  join("scripts", "seed", "seed_leave_overtime_demo.ts"),
   join("src", "app", "api", "v1", "admin", "team", "route.ts"),
   join("src", "scripts", "e2e_seeder", "ai_blind_tester.ts"),
   join("src", "scripts", "e2e_seeder", "cross_validator.ts"),
@@ -118,6 +163,26 @@ const GRANDFATHERED_PRISMA_IMPORTERS: readonly string[] = [
   join("src", "skills", "document", "esg_parsing.ts"),
 ];
 
+/**
+ * Info: (20260824 - Luphia) `$transaction` 這一側的白名單 —— 掃描根納入
+ * `scripts/` 之後才需要它（`src` 底下非 repository 的 `$transaction` 是 0，
+ * 所以先前這一條不需要白名單）。
+ *
+ * 三支都是維運腳本，而它們開交易的理由與 service 不同：
+ * `leave_ledger.ts` 的原話是「這裡全部收 `tx`，不自己開交易：
+ * 開交易是**呼叫端**的責任」—— CLI 就是那個呼叫端，
+ * 它得先有一個 `tx` 才餵得進 `sumLedgerMinutes` / `sumExpiringSoonMinutes`。
+ *
+ * 所以這三個名字記的不是「違反」而是「這條規則對 CLI 入口不適用」。
+ * 仍然列名而不是整個 `scripts/` 放行：新增一支要動這張表，
+ * 那一刻才有人會問「它真的是入口嗎」。
+ */
+const GRANDFATHERED_TRANSACTION_USERS: readonly string[] = [
+  join("scripts", "backfill_remove_team_admin.ts"),
+  join("scripts", "migrate_allocations_onchain.ts"),
+  join("scripts", "reconcile_leave_balances.ts"),
+];
+
 describe("$transaction 只在 Repository 層（coding_guidelines §1.1）", () => {
   /**
    * Info: (20260820 - Julian) 掃描根確實掃到東西。
@@ -130,12 +195,45 @@ describe("$transaction 只在 Repository 層（coding_guidelines §1.1）", () =
     expect(filesUsingTransaction().length).toBeGreaterThan(10);
   });
 
-  it("產品程式碼裡的 $transaction 全部在 src/repositories/ 底下", () => {
-    const offenders = filesUsingTransaction()
+  /**
+   * Info: (20260824 - Luphia) `scripts/` 這個根**真的**被走到了。
+   *
+   * 少了這一條，`SCRIPTS` 路徑一旦算錯（改了 cwd、搬了目錄），
+   * 掃描會安靜地退回只有 `src`：所有斷言仍然全綠，而 `scripts/` 重新
+   * 變成監測之外 —— 那正是這次要修掉的狀態，卻沒有東西會說出來。
+   *
+   * 判準取「白名單裡的 `scripts/` 項目至少有一個真的被掃到」，
+   * 而不是寫死一個數量：數量會隨腳本增減變動，而根有沒有被走到不會。
+   */
+  it("掃描根確實走到根目錄的 scripts/", () => {
+    const scanned = new Set(filesMatching('from "@/lib/prisma"'));
+    const fromScripts = GRANDFATHERED_PRISMA_IMPORTERS.filter((path) =>
+      path.startsWith(`scripts${sep}`),
+    );
+    expect(
+      fromScripts.filter((path) => scanned.has(path)).length,
+    ).toBeGreaterThan(0);
+  });
+
+  const transactionOffenders = (): string[] =>
+    filesUsingTransaction()
       .filter((path) => !isTestFile(path))
       .filter((path) => !isRepository(path));
 
-    expect(offenders).toEqual([]);
+  it("產品程式碼裡的 $transaction 全部在 src/repositories/ 底下", () => {
+    expect(
+      transactionOffenders().filter(
+        (path) => !GRANDFATHERED_TRANSACTION_USERS.includes(path),
+      ),
+    ).toEqual([]);
+  });
+
+  // Info: (20260824 - Luphia) 白名單不得留下已經清乾淨的名字（同 prisma 那一側的理由）
+  it("$transaction 白名單裡的每一個檔案都還真的在用它", () => {
+    const current = new Set(transactionOffenders());
+    expect(
+      GRANDFATHERED_TRANSACTION_USERS.filter((path) => !current.has(path)),
+    ).toEqual([]);
   });
 
   /**
