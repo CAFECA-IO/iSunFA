@@ -8,6 +8,7 @@ import {
 } from "@/constants/subscription_quota";
 import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import { resolveSeatProration } from "@/lib/billing/seat_billing";
+import { MoneyUtil } from "@/lib/utils/money";
 import { generatePaymentOrder } from "@/services/order.service";
 import { chargeOrderWithSavedCard } from "@/services/team_billing.service";
 import { resolveEffectivePlanId } from "@/lib/subscription/plan_rules";
@@ -392,10 +393,27 @@ export async function quoteSeatAddition(
     teamId,
     subscription.currentPeriodStart,
   );
+  /**
+   * Info: (20260821 - Luphia) 上限按**當期實際跨距**縮放（review #6687 三輪）。
+   *
+   * `unitPrice` 是一期的價格，而當期跨距可以超過一期：同方案續購會展延，
+   * 換方案會加上折抵的天數（`resolveNextPeriod`）。跨距 3.8 期的當期若沿用
+   * 「2 × 一期」的上限，**合法的加人會被誤擋**——單席補收本身就可能是 3.8 倍
+   * 單價，而使用者只會看到一個指向「連刷」的錯誤訊息。
+   *
+   * 縮放而不是取消：上限的用途是防「ADMIN 替 OWNER 的卡連刷」，而那個風險
+   * 與期間長度成正比——覆蓋 4 期的當期，合法的擴編額度本來就該是 4 期的量。
+   * 至少 1 期（跨距短於一期只會出現在髒資料上，不放大也不縮小）。
+   */
+  const spanPeriods = MoneyUtil.toDecimal(periodEndMs - periodStartMs)
+    .dividedBy(periodDays * DAY_MS)
+    .toNumber();
   const periodCap =
-    BigInt(subscription.unitPrice) *
-    BigInt(paidSeats) *
-    BigInt(SEAT_CHARGE_PERIOD_MULTIPLIER);
+    (BigInt(subscription.unitPrice) *
+      BigInt(paidSeats) *
+      BigInt(SEAT_CHARGE_PERIOD_MULTIPLIER) *
+      BigInt(Math.max(100, Math.floor(spanPeriods * 100)))) /
+    BigInt(100);
   if (chargedThisPeriod + BigInt(amount) > periodCap) {
     logger.error("seat addition blocked: period charge cap exceeded", {
       teamId,

@@ -462,24 +462,54 @@ export async function changeTeamSubscription(params: {
     }
 
     /**
-     * Info: (20260821 - Luphia) 展延閘門（產品裁定 20260821，review #6687 二輪
-     * 阻擋-1）：**當期剩餘超過 30 天不得購買**——延長與換方案都是。
+     * Info: (20260821 - Luphia) 展延閘門（產品裁定 20260821）：
+     * **當期剩餘超過 30 天不得購買延長**。這是預付上限的取捨——不讓使用者
+     * 一次疊上好幾年的期間（那筆錢在平台帳上是長期負債，而退款政策不退費）。
      *
-     * 履行的展延語意（新期自當期屆滿日累加、`planId` 立即換新）維持原案；
-     * 但沒有閘門時它對「換方案」是一個漏洞：年繳團隊版第 1 天買月繳企業版，
-     * 剩餘 364 天全部免費升級成企業版再加一個月（約四折）。閘門把免費升級的
-     * 剩餘天數壓到最多 30 天，也讓訂閱跨距任何時候不超過「一期 + 30 天」。
+     * Info: (20260821 - Luphia) **換方案（升級）不受閘門限制**（產品裁定 20260821，
+     * review #6687 三輪）。閘門原本兩者都擋，副作用是年繳戶在前 335 天完全
+     * 不能升級——而升級是客戶主動要多付錢的操作，擋掉它的成本比價差高。
+     * 現在換方案由履行端的「折抵剩餘價值」處理
+     *（`resolveNextPeriod`）：舊期剩餘按已付價值折成新方案天數，
+     * 使用者一分不損失、平台也不再免費送一段高階服務，因此不需要時間閘門。
      *
      * 判斷用**折算後**的有效方案：過期或 PAST_DUE 的列（remaining 可能為負或
      * 折算為 free）不受閘門影響——那是重新訂閱，不是展延。
      */
-    if (
-      subscription &&
+    const isSamePlanExtension =
+      subscription !== null &&
       currentPlanId !== TEAM_PLAN.FREE &&
+      planId === currentPlanId;
+    if (
+      isSamePlanExtension &&
       subscription.currentPeriodEnd.getTime() - nowMs >
         SUBSCRIPTION_EXTENSION_WINDOW_DAYS * 86_400_000
     ) {
       throw toApiError(API_ERRORS.TW_SUBSCRIPTION_EXTENSION_TOO_EARLY);
+    }
+
+    /**
+     * Info: (20260821 - Luphia) 換方案時，舊列的計費週期必須是已知的
+     *（review #6687 三輪）：折抵要用舊方案的**日**單價，而日單價 = 單價 ÷ 一期天數。
+     *
+     * `billingInterval` 是新欄位且刻意可為 NULL，既有列要等
+     * `scripts/backfill_billing_interval.ts` 回填（檢查表 §3.8）。在那之前擋在
+     * **建單之前**——不是在履行時：履行端的退路是「剩餘期間 1:1 沿用」，
+     * 那對使用者不會更差，但會讓平台白送一段高階服務。錢還沒收就擋下，
+     * 是這兩害之外的第三條路。
+     */
+    if (
+      subscription &&
+      currentPlanId !== TEAM_PLAN.FREE &&
+      planId !== currentPlanId &&
+      !subscription.billingInterval
+    ) {
+      logger.error("plan change blocked: billing interval not backfilled", {
+        teamId,
+        currentPlanId,
+        targetPlanId: planId,
+      });
+      throw toApiError(API_ERRORS.TW_SEAT_BILLING_INTERVAL_MISSING);
     }
 
     /**

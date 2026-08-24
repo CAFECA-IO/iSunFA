@@ -6,6 +6,7 @@ import {
   TEAM_PLAN,
   TEAM_SUBSCRIPTION_STATUS,
 } from "@/constants/subscription_quota";
+import { resolveNextPeriod } from "@/lib/billing/subscription_period";
 
 /**
  * Info: (20260807 - Luphia) 團隊訂閱 Repository（設計書 §3.1）。
@@ -22,8 +23,6 @@ export interface IApplyTeamSubscriptionInput {
   seats?: number;
   unitPrice?: number;
 }
-
-const DAY_MS = 86_400_000;
 
 /**
  * Info: (20260819 - Luphia) 「這一列的鏈上會員卡需要重新同步」的標記。
@@ -65,18 +64,25 @@ export async function applyTeamSubscriptionInTx(
    * 而退款政策原則不退（§2.2），所以那些天數沒有任何補救路徑。展延之後
    * 「付兩次＝兩期」，提早續購也不再吃虧——與「不退費」搭起來才站得住。
    *
-   * 期初**不動**（維持原本的期初）：期中加席次的比例計價讀的是 `periodStart`/
-   * `periodEnd`（`resolveSeatProration`），把期初改成今天會讓那個分母縮水，
-   * 於是同一天加人要付更多。展延只該讓分母變大。
-   *
    * 當期已結束（續訂、過期後重新訂閱）則從現在起算：中間那段沒有權益的空窗
    * 不該追認為已付費期間（fail-closed 的一致做法）。
+   *
+   * Info: (20260821 - Luphia) **換方案時改為「折抵剩餘價值」**（產品裁定 20260821，
+   * review #6687 二輪阻擋-1 / 三輪）。期間三條規則已收斂到純函式
+   * `resolveNextPeriod`，決策與理由寫在那裡；這一支只負責把結果寫進去。
+   *
+   * 一句話版本：同方案續購維持展延（期初不動）；換方案則自現在起算一期、
+   * 再加上舊期剩餘價值折抵的天數——使用者付過的錢一分不作廢
+   *（**禁止造成用戶損失的設計**），平台也不再把剩餘天數 1:1 當高階方案免費送。
    */
   const existing = await tx.teamSubscription.findUnique({
     where: { teamId },
     select: {
+      planId: true,
       currentPeriodStart: true,
       currentPeriodEnd: true,
+      unitPrice: true,
+      billingInterval: true,
       latestOrderId: true,
     },
   });
@@ -98,15 +104,30 @@ export async function applyTeamSubscriptionInTx(
   if (orderId && existing?.latestOrderId === orderId) {
     return tx.teamSubscription.findUniqueOrThrow({ where: { teamId } });
   }
-  const stillActive =
-    existing !== null && existing.currentPeriodEnd.getTime() > nowMs;
-  const currentPeriodStart = stillActive
-    ? existing.currentPeriodStart
-    : new Date(nowMs);
-  const currentPeriodEnd = new Date(
-    (stillActive ? existing.currentPeriodEnd.getTime() : nowMs) +
-      periodDays * DAY_MS,
-  );
+  /**
+   * Info: (20260821 - Luphia) 新單價缺省時沿用舊值（`unitPrice` 是選填：
+   * 期中加人只動 seats）。折抵要用**新方案的**日單價，缺了它就換算不出來——
+   * 沿用舊值在「同方案續購」上永遠正確，而換方案的路徑一律帶單價
+   *（三個履行點都從訂單的 data 取，我逐一查過）。
+   */
+  const nextUnitPrice = unitPrice ?? existing?.unitPrice ?? 0;
+  const period = resolveNextPeriod({
+    nowMs,
+    existing: existing
+      ? {
+          planId: existing.planId,
+          periodStartMs: existing.currentPeriodStart.getTime(),
+          periodEndMs: existing.currentPeriodEnd.getTime(),
+          unitPrice: existing.unitPrice,
+          periodDays: existing.billingInterval
+            ? BILLING_INTERVAL_DAYS[existing.billingInterval as BillingInterval]
+            : null,
+        }
+      : null,
+    next: { planId, unitPrice: nextUnitPrice, periodDays },
+  });
+  const currentPeriodStart = new Date(period.periodStartMs);
+  const currentPeriodEnd = new Date(period.periodEndMs);
 
   return tx.teamSubscription.upsert({
     where: { teamId },

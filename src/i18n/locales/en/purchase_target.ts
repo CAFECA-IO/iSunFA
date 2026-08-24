@@ -5,7 +5,9 @@ export const purchaseTarget = {
   extension_note:
     'The current subscription period for "{{team}}" runs until {{date}}. The purchased period is added on top of that date — the remaining days are not lost (for an upgrade, the new plan applies immediately upon payment). Extensions can only be purchased within 30 days of the period end.',
   extension_too_early_note:
-    'The current subscription period for "{{team}}" runs until {{date}}. Too many days remain to purchase an extension — please come back within 30 days of the period end to extend or change the plan.',
+    'The current subscription period for "{{team}}" runs until {{date}}. Too many days remain to extend the same plan — please come back within 30 days of the period end. Upgrades are not restricted and can be made at any time.',
+  upgrade_credit_note:
+    'The current subscription period for "{{team}}" runs until {{date}}. The upgrade takes effect as soon as payment completes, and the remaining time on your current plan is not lost: its paid value is credited as additional days of the new plan, added after the new period.',
   pending_downgrade_note:
     '"{{team}}" is scheduled to change to {{plan}} on {{date}}. Completing this purchase cancels that scheduled change.',
   seat_note:

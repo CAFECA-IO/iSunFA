@@ -391,6 +391,56 @@ describe("chargeSeatAddition", () => {
   });
 
   /**
+   * Info: (20260821 - Luphia) 上限按當期實際跨距縮放（review #6687 三輪）。
+   *
+   * `unitPrice` 是**一期**的價格，而當期跨距可以超過一期：同方案續購會展延，
+   * 換方案會加上折抵的天數。跨距 3 期的當期若沿用「2 × 一期」的上限，
+   * 合法的加人會被誤擋——而使用者只會看到一個指向「連刷」的錯誤訊息。
+   *
+   * 這裡的期間是 90 天（3 期），上限因此是 840 × 3 席 × 2 × 3 = 15,120。
+   * 未縮放的舊上限是 5,040：已收 6,000 就會誤擋，而它現在必須放行。
+   */
+  it("跨距超過一期時，上限跟著放大（不誤擋合法擴編）", async () => {
+    asMock(teamRepo.countMembers).mockResolvedValue(3);
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+      ...ACTIVE_SUBSCRIPTION,
+      currentPeriodStart: PERIOD_START,
+      // Info: (20260821 - Luphia) 90 天跨距＝3 期（展延或折抵之後的常態）
+      currentPeriodEnd: new Date(PERIOD_START.getTime() + 90 * 86_400_000),
+    });
+    asMock(paymentRepo.sumSeatAdditionAmount).mockResolvedValue(BigInt(6000));
+
+    const result = await chargeSeatAddition({
+      teamId: "team-1",
+      nowMs: MID_PERIOD,
+      operatorUserId: "user-admin",
+    });
+
+    expect(result.charged).toBe(true);
+    expect(chargeOrderWithSavedCard).toHaveBeenCalledTimes(1);
+  });
+
+  // Info: (20260821 - Luphia) 縮放不等於取消：跨距 3 期仍然擋得住超過 3 期額度的連刷
+  it("跨距放大後仍擋得住超額連刷", async () => {
+    asMock(teamRepo.countMembers).mockResolvedValue(3);
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+      ...ACTIVE_SUBSCRIPTION,
+      currentPeriodStart: PERIOD_START,
+      currentPeriodEnd: new Date(PERIOD_START.getTime() + 90 * 86_400_000),
+    });
+    // Info: (20260821 - Luphia) 上限 15,120；已收 15,000 再收一席會超過
+    asMock(paymentRepo.sumSeatAdditionAmount).mockResolvedValue(BigInt(15000));
+
+    await expect(
+      chargeSeatAddition({
+        teamId: "team-1",
+        nowMs: MID_PERIOD,
+        operatorUserId: "user-admin",
+      }),
+    ).rejects.toMatchObject({ code: "TW000016" });
+  });
+
+  /**
    * Info: (20260814 - Luphia) 冪等：同一把鍵已經扣過就不再扣（第二輪 B-3）。
    * 建立邀請失敗後客戶端重試時，這是唯一擋得住重複扣款的東西。
    */

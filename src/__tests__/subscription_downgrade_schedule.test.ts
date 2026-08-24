@@ -91,6 +91,11 @@ function subscriptionRow(overrides: Record<string, unknown> = {}) {
     latestOrderId: "order-0",
     seats: 3,
     unitPrice: 2940,
+    /**
+     * Info: (20260821 - Luphia) 換方案的路徑會讀這一欄（折抵要用舊日單價），
+     * 缺了它會被建單前的守門擋下（`TW_SEAT_BILLING_INTERVAL_MISSING`）。
+     */
+    billingInterval: BILLING_INTERVAL.MONTH,
     pendingPlanId: null,
     createdAt: new Date(NOW_MS),
     updatedAt: new Date(NOW_MS),
@@ -621,16 +626,16 @@ describe("未付訂單沿用，不再建第二張", () => {
   });
 });
 
-describe("展延閘門：剩餘 30 天內才能購買（review #6687 二輪阻擋-1）", () => {
+describe("展延閘門：同方案延長限剩餘 30 天內（升級不受限）", () => {
   /**
    * Info: (20260821 - Luphia) 展延語意（新期疊在舊期末之後、planId 立即換新）
    * 對「換方案」是一個漏洞：年繳團隊版第 1 天買月繳企業版 → 剩餘 364 天全部
    * 免費升級再加一個月，約四折。閘門把免費升級的剩餘天數壓到最多 30 天。
    */
-  it("剩餘 31 天 → 拒絕購買（升級也一樣），不建單", async () => {
+  it("同方案剩餘 31 天 → 拒絕延長，不建單", async () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
       subscriptionRow({
-        planId: TEAM_PLAN.TEAM,
+        planId: TEAM_PLAN.BUSINESS,
         currentPeriodEnd: new Date(NOW_MS + 31 * 86_400_000),
       }),
     );
@@ -648,11 +653,93 @@ describe("展延閘門：剩餘 30 天內才能購買（review #6687 二輪阻�
     expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
   });
 
-  it("剩餘恰好 30 天 → 放行建單", async () => {
+  it("同方案剩餘恰好 30 天 → 放行建單", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({
+        planId: TEAM_PLAN.BUSINESS,
+        currentPeriodEnd: new Date(NOW_MS + 30 * 86_400_000),
+      }),
+    );
+
+    const result = await changeTeamSubscription({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      paymentMethodId: "pm-1",
+      nowMs: NOW_MS,
+    });
+
+    expect(result).toEqual(
+      expect.objectContaining({ kind: SUBSCRIPTION_CHANGE_KIND.ORDER }),
+    );
+  });
+
+  /**
+   * Info: (20260821 - Luphia) **升級不受閘門限制**（產品裁定 20260821，
+   * review #6687 三輪）。閘門原本兩者都擋，副作用是年繳戶在前 335 天完全
+   * 不能升級——而升級是客戶主動要多付錢的操作。換方案的公平性由履行端的
+   * 折抵處理（`resolveNextPeriod`），不需要時間閘門。
+   */
+  it("升級不受閘門限制：年繳剩 364 天仍可升級", async () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
       subscriptionRow({
         planId: TEAM_PLAN.TEAM,
-        currentPeriodEnd: new Date(NOW_MS + 30 * 86_400_000),
+        unitPrice: 8400,
+        billingInterval: BILLING_INTERVAL.YEAR,
+        currentPeriodStart: new Date(NOW_MS - 86_400_000),
+        currentPeriodEnd: new Date(NOW_MS + 364 * 86_400_000),
+      }),
+    );
+
+    const result = await changeTeamSubscription({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.YEAR,
+      paymentMethodId: "pm-1",
+      nowMs: NOW_MS,
+    });
+
+    expect(result).toEqual(
+      expect.objectContaining({ kind: SUBSCRIPTION_CHANGE_KIND.ORDER }),
+    );
+  });
+
+  /**
+   * Info: (20260821 - Luphia) 換方案但舊列的週期尚未回填 → 在**建單前**擋下
+   *（review #6687 三輪）。履行端的退路是「剩餘期間 1:1 沿用」，那對使用者
+   * 不會更差、但平台白送一段高階服務；錢還沒收就擋下是第三條路。
+   */
+  it("換方案時週期未回填 → 建單前擋下", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({
+        planId: TEAM_PLAN.TEAM,
+        unitPrice: 840,
+        billingInterval: null,
+      }),
+    );
+
+    await expect(
+      changeTeamSubscription({
+        userId: "user-1",
+        teamId: "team-1",
+        planId: TEAM_PLAN.BUSINESS,
+        billingInterval: BILLING_INTERVAL.MONTH,
+        paymentMethodId: "pm-1",
+        nowMs: NOW_MS,
+      }),
+    ).rejects.toMatchObject({ code: "TW000029" });
+    expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
+  });
+
+  // Info: (20260821 - Luphia) 同方案延長不讀舊週期（不折抵），NULL 不該擋下
+  it("同方案延長時週期未回填 → 照常建單", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({
+        planId: TEAM_PLAN.BUSINESS,
+        billingInterval: null,
+        currentPeriodEnd: new Date(NOW_MS + 10 * 86_400_000),
       }),
     );
 

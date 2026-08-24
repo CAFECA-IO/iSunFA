@@ -58,8 +58,14 @@ interface IPurchaseTargetSelectorProps {
   /**
    * Info: (20260821 - Luphia) 剩餘超過 30 天＝展延閘門會擋（產品裁定 20260821）。
    * 由 hook 在 effect 裡算好傳進來——render 期不能呼叫 Date.now()。
+   * 閘門只管同方案的延長，換方案（`isPlanChange`）不受限。
    */
   extensionTooEarly?: boolean;
+  /**
+   * Info: (20260821 - Luphia) 這次購買是換方案（升級）：舊期剩餘會按已付價值
+   * 折抵成新方案天數，那件事必須在付款前說（review #6687 三輪）。
+   */
+  isPlanChange?: boolean;
   /**
    * Info: (20260820 - Luphia) 排程中的降級（方案代號與生效時點）。
    *
@@ -85,6 +91,7 @@ export default function PurchaseTargetSelector({
   seatAmount = null,
   extensionPeriodEndSec = null,
   extensionTooEarly = false,
+  isPlanChange = false,
   pendingPlanId = null,
   pendingEffectiveAt = null,
   disabled = false,
@@ -219,19 +226,24 @@ export default function PurchaseTargetSelector({
        * 履行是自當期屆滿日累加（`applyTeamSubscriptionInTx`），而使用者的預設
        * 想像是「從今天起算 30 天」——兩者差幾天，不說就只能事後自己推。
        *
-       * Info: (20260821 - Luphia) 剩餘超過 30 天時換成「暫不開放」的說法
-       * （展延閘門，產品裁定 20260821）：後端會拒絕那筆購買
-       * （`TW_SUBSCRIPTION_EXTENSION_TOO_EARLY`），付款前就該講，
-       * 而不是讓使用者填完卡號才看到錯誤。
+       * Info: (20260821 - Luphia) 三句話走三條路（產品裁定 20260821）：
+       *
+       * - **換方案**（升級）：舊期剩餘按已付價值折抵成新方案天數。使用者
+       *   最擔心的就是「我剩下的天數會不會消失」，所以這句要先講。
+       * - **同方案、剩餘 > 30 天**：後端會拒絕（`TW_SUBSCRIPTION_EXTENSION_TOO_EARLY`），
+       *   付款前就該講，而不是讓人填完卡號才看到錯誤。
+       * - **同方案、窗內**：說明新期間自當期屆滿日累加。
        */}
       {target === PURCHASE_TARGET.TEAM &&
         extensionPeriodEndSec !== null &&
         selectedTeamId && (
           <p className="rounded-lg bg-blue-50 p-3 text-xs text-blue-800">
             {t(
-              extensionTooEarly
-                ? "purchase_target.extension_too_early_note"
-                : "purchase_target.extension_note",
+              isPlanChange
+                ? "purchase_target.upgrade_credit_note"
+                : extensionTooEarly
+                  ? "purchase_target.extension_too_early_note"
+                  : "purchase_target.extension_note",
               {
                 team:
                   teams.find((team) => team.id === selectedTeamId)?.name ?? "",
