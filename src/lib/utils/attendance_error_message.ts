@@ -19,10 +19,21 @@ export const errorCodeOf = (error: unknown): string => {
 /**
  * Info: (20260817 - Luphia) 全模組共用的錯誤文案，不必每一頁各自登記。
  *
- * 這兩個碼**任何一支端點都可能回**：限流掛在全部 13 支上，主管閘掛在排班寫入
- * 與銷假發起上。而「每一頁都要記得登記」這種要求，漏掉的那一頁不會報錯 ——
+ * 這些碼**任何一支端點都可能回**：限流掛在全部 13 支上，職能／可見範圍閘
+ * 掛在假別設定、額度、加班政策、§32 IV 認定與各種明細查詢上。
+ * 而「每一頁都要記得登記」這種要求，漏掉的那一頁不會報錯 ——
  * 只會讓使用者看到「請稍後再試」，而不知道是被限流（等一下就好）
  * 還是自己沒有權限（等到明天也一樣）。那兩件事的下一步完全不同。
+ *
+ * Info: (20260820 - Julian) 新增三個跨模組的閘（review 第 5 輪第 3 條）。
+ *
+ * `FO_HR_FUNCTION_REQUIRED` 是**本輪新端點最主要的錯誤**：
+ * 沒有 HR 職能的人按下「認定天災事變」會落到 fallback「認定失敗」，
+ * 而他需要知道的是「這個動作要人事職能」—— 一句「認定失敗」會讓他
+ * 一直重按，或去找工程師。同一個碼也擋著額度調整與所有人事設定。
+ *
+ * 它先前被歸到「屬人事設定畫面的文案」而略過，但那個推論錯了：
+ * 觸發它的按鈕就在**已經存在**的加班待簽清單上。
  *
  * 呼叫端傳入的 `overrides` 優先，某一頁需要更具體的說法時蓋得掉。
  */
@@ -33,6 +44,31 @@ export const SHARED_ATTENDANCE_ERROR_I18N_KEY: Readonly<
     "hr_management.attendance_common.error_rate_limited",
   [API_ERRORS.FO_ATTENDANCE_SUPERVISOR_ONLY.code]:
     "hr_management.attendance_common.error_supervisor_only",
+  [API_ERRORS.FO_HR_FUNCTION_REQUIRED.code]:
+    "hr_management.attendance_common.error_hr_function_required",
+  [API_ERRORS.FO_NO_PERMISSION_TO_VIEW_THIS.code]:
+    "hr_management.attendance_common.error_no_permission_to_view",
+  /**
+   * Info: (20260820 - Julian) 登入的帳號在這個帳本裡沒有對應的員工。
+   * 每一支假勤端點都先跑 `resolveEmployee`，因此它是所有頁面共同的第一道門
+   * —— 而使用者看到的若是各頁的通用訊息（「載入失敗」），
+   * 他會以為是系統壞了，而實際上是人事還沒把他建進這個帳本。
+   */
+  [API_ERRORS.NF_EMPLOYEE_FOR_USER.code]:
+    "hr_management.attendance_common.error_no_employee_record",
+  /**
+   * Info: (20260820 - Julian) 查詢區間超過上限（review 第 7 輪 M26）。
+   *
+   * 三支 service 會丟它：出勤結果、排班、以及加班的「未核准時段」。
+   * 三者都是**畫面上的日期選擇器**丟出來的 —— 使用者往前拉了太多天，
+   * 而他要做的事只有一件：把區間縮短。落到各頁的 fallback（「載入失敗」）
+   * 會讓他以為是系統壞了，於是重整、重按，而每一次都會再失敗一次。
+   *
+   * 放在共用表而不是三張模組表：它與模組無關，是同一個判準
+   * （`DEMO_ATTENDANCE_MAX_RANGE_DAYS`）在三個地方各擋一次。
+   */
+  [API_ERRORS.VA_ATTENDANCE_RANGE_TOO_LARGE.code]:
+    "hr_management.attendance_common.error_range_too_large",
 };
 
 /**

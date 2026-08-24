@@ -1,4 +1,4 @@
-import { LeaveRecallStatus, LeaveType } from "@/constants/leave";
+import { LeaveRecallStatus } from "@/constants/leave";
 
 /**
  * Info: (20260813 - Julian) 假勤 API 的回應型別。一律是扁平的顯示用 DTO，不是 Prisma 實體——
@@ -14,8 +14,17 @@ export interface ILeaveTodayEntry {
   name: string;
   departmentName: string | null;
   jobTitle: string | null;
-  leaveType: LeaveType;
-  reason: string;
+  /**
+   * Info: (20260817 - Julian) **不再回傳假別與事由。**
+   *
+   * 病假、生理假、產假、安胎、家庭照顧假會直接揭露健康與生育狀況，而事由更甚
+   * （ADR 018 Tier 2）。這支端點對全體員工開放，用途是「這週人手夠不夠」——
+   * 回答那個問題只需要知道「他不在」（計畫書 §9.2）。
+   *
+   * 主管在銷假徵詢的畫面上仍看得到假別（`ILeaveRecallView`），
+   * 因為那是他要做判斷的依據。
+   */
+  onLeave: true;
   /**
    * Info: (20260813 - Julian) 是否已經有一張待回應的徵詢。前端據此把按鈕換成「徵詢中」，
    * 而非讓人按下去才收到 409。
@@ -45,7 +54,9 @@ export interface ILeaveRecallView {
   employeeId: string;
   employeeNo: string;
   employeeName: string;
-  leaveType: LeaveType;
+  // Info: (20260817 - Julian) 假別改為 LeavePolicy 的代號與名稱（ADR 021：假別是資料不是列舉）
+  leavePolicyCode: string;
+  leavePolicyName: string;
   /** Info: (20260813 - Julian) 發起人。員工端要看到「是誰要求我回來」 */
   requestedByEmployeeNo: string;
   requestedByName: string;

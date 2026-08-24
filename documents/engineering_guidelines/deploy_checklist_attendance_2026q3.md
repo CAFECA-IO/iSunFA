@@ -106,6 +106,18 @@ npx tsx scripts/seed/seed_attendance_demo.ts
 
 schema 是純新增，**回滾程式碼不需要回滾 schema** —— 7 張空表與 1 個可空欄位留在資料庫裡不影響任何既有功能。
 
+> ⚠️ **(20260819 - Julian) 這個結論只適用於本次（PR #6651）。**
+>
+> 假勤模組（`feature/develop_time_and_attendance`）**推翻了它**：那次移除了
+> `leave_request` 的四個欄位與整個 `enum LeaveType`，並對兩張既有表加了
+> 8 個必填且無 default 的欄位。照上面那句話回滾，回滾後的程式碼會對著一張
+> 少了 `leave_type` 的表跑，每一支假單端點 500。
+>
+> 見 `deploy_checklist_leave_overtime_2026q3.md` §6。
+>
+> 上面那句話**刻意保留**而不是改寫：它是當時成立的判斷，刪掉它會讓
+> 「為什麼後來要另外寫一份」失去對照（review B10）。
+
 若要清掉 demo 資料，順序是外鍵的反向拓樸（`seed_attendance_demo.ts` 的清理段已按此順序寫好）：先解開 `department.manager_id`，再刪 `leave_request`（`leave_day` / `leave_recall` 隨 Cascade 走）、`attendance_punch`、`employee_shift_day`、`shift_pattern`、`work_location`，最後才是 `employee`。
 
 **不要用 `TRUNCATE ... CASCADE` 抄近路**：它會連 `employee` 一起清掉，而那張表在正式環境有真實個資。

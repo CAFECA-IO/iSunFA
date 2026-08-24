@@ -7,7 +7,6 @@ import {
   LeaveRecallDecision,
   LeaveRecallResolutionOutcome,
   LeaveRecallStatus,
-  LeaveType,
 } from "@/constants/leave";
 import { toZonedParts } from "@/lib/utils/attendance_time";
 import {
@@ -96,6 +95,14 @@ export class LeaveService {
       observedAt,
     } = params;
 
+    /**
+     * Info: (20260817 - Julian) 兩道閘門，順序不可對調。
+     *
+     * 第一道「你是不是主管」不需要知道對象是誰，因此可以在撈單據之前擋下 ——
+     * 非主管連 `leaveDayId` 存不存在都問不出來。
+     *
+     * 第二道「這個人歸不歸你管」必須等單據撈出來才問得了，見下。
+     */
     const isManager = await this.employees.isDepartmentManager({
       accountBookId,
       employeeId: actorEmployeeId,
@@ -109,6 +116,50 @@ export class LeaveService {
       leaveDayId,
     });
     if (!leaveDay) throw new AppError(API_ERRORS.NF_LEAVE_DAY);
+
+    /**
+     * Info: (20260817 - Julian) 對象必須在該主管的部門子樹內。
+     *
+     * 第一版只有上面那道閘門，而它問的是「你有沒有管**任何**部門」——
+     * 第一工務段的主管因此可以對第五工務段的員工發起銷假徵詢。
+     * 銷假徵詢是一個帶壓力的動作（計畫書 §8.5：同意與否由當事人決定，
+     * 但發起本身就是壓力），跨部門發起沒有任何組織上的依據。
+     */
+    /**
+     * Info: (20260820 - Julian) 不得對自己發起徵詢（review 第 6 輪 M11）。
+     *
+     * 這一條先前**不在這裡**：它靠 `employeeRepo.managesEmployee()` 內部
+     * 「管自己回 false」那一行擋。那一行是職責分離（ADR 023 §5），
+     * 是一條政策判斷，而 `coding_guidelines §1.1` 把
+     * 「這個人有沒有權限做這件事」列為 Repository 唯一的反例。
+     *
+     * 判斷搬到這裡之後，repository 只回答組織圖上的事實。**碼刻意不變**：
+     * 使用者觀察到的行為與先前一模一樣，換的只是誰做的決定。
+     */
+    if (actorEmployeeId === leaveDay.leaveRequest.employeeId) {
+      throw new AppError(API_ERRORS.FO_LEAVE_RECALL_SCOPE);
+    }
+
+    const managesTarget = await this.employees.managesEmployee({
+      accountBookId,
+      managerEmployeeId: actorEmployeeId,
+      targetEmployeeId: leaveDay.leaveRequest.employeeId,
+    });
+    if (!managesTarget) {
+      throw new AppError(API_ERRORS.FO_LEAVE_RECALL_SCOPE);
+    }
+
+    /**
+     * Info: (20260817 - Julian) 假別必須允許銷假徵詢。
+     *
+     * `LeavePolicy.recallable` 只有特休為 true —— §38 III 給的是
+     * 「雇主基於企業經營上急迫需求得與勞工協商調整」，而那條只寫在特休。
+     * 沒有這個檢查，主管可以對產假、病假、生理假發起徵詢：
+     * 那不只是沒有法源，它本身就是一個會上新聞的動作。
+     */
+    if (!leaveDay.leaveRequest.leavePolicy.recallable) {
+      throw new AppError(API_ERRORS.VA_LEAVE_NOT_RECALLABLE);
+    }
 
     // Info: (20260813 - Julian) 只能對今天（含）以後——改寫已過去的假日會把歷史 OFF_DAY 變成曠職；「今天」用當地日曆日，不是 UTC
     const today = toZonedParts(observedAt, this.timeZone).isoDate;
@@ -214,6 +265,8 @@ export class LeaveService {
               employeeId,
               workDate: recall.leaveDay.workDate,
               shiftPatternId: recall.shiftPatternId,
+              // Info: (20260817 - Julian) 回補額度時要知道退回哪一個假別的餘額快取
+              leavePolicyId: recall.leaveDay.leaveRequest.leavePolicyId,
             },
           }
         : { recallId, note, respondedAt, decision };
@@ -250,8 +303,8 @@ const toTodayEntry = (day: ILeaveDayRecord): ILeaveTodayEntry => ({
   name: day.leaveRequest.employee.name,
   departmentName: day.leaveRequest.employee.department?.name ?? null,
   jobTitle: day.leaveRequest.employee.jobTitle?.title ?? null,
-  leaveType: day.leaveRequest.leaveType as LeaveType,
-  reason: day.leaveRequest.reason,
+  // Info: (20260817 - Julian) 不回傳假別與事由：對全體開放的端點只需回答「他不在」（計畫書 §9.2）
+  onLeave: true,
   hasPendingRecall: day.recalls.length > 0,
 });
 
@@ -267,7 +320,8 @@ const toRecallView = (recall: ILeaveRecallRecord): ILeaveRecallView => ({
   employeeId: recall.leaveDay.leaveRequest.employee.id,
   employeeNo: recall.leaveDay.leaveRequest.employee.employeeNo,
   employeeName: recall.leaveDay.leaveRequest.employee.name,
-  leaveType: recall.leaveDay.leaveRequest.leaveType as LeaveType,
+  leavePolicyCode: recall.leaveDay.leaveRequest.leavePolicy.code,
+  leavePolicyName: recall.leaveDay.leaveRequest.leavePolicy.name,
   requestedByEmployeeNo: recall.requestedBy.employeeNo,
   requestedByName: recall.requestedBy.name,
   shiftPatternId: recall.shiftPatternId,

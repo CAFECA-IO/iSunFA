@@ -4,7 +4,17 @@ export const hrManagement = {
   notification_aria: "通知",
   user_menu_aria: "使用者選單",
   open_menu_aria: "開啟選單",
+  // Info: (20260818 - Julian) 側邊選單的分組標題。不分組的項目（儀表板、系統設定）沒有對應鍵
+  nav_group: {
+    people: "人事管理",
+    attendance: "簽到系統",
+    leave: "假勤管理",
+  },
   nav: {
+    leave: "我的請假",
+    leave_approval: "待我簽核",
+    overtime: "我的加班",
+    overtime_approval: "加班簽核",
     dashboard: "儀表板",
     organization: "組織架構",
     employee: "員工管理",
@@ -576,6 +586,12 @@ export const hrManagement = {
   attendance_common: {
     error_rate_limited: "短時間內操作過於頻繁，請稍等一下再試。",
     error_supervisor_only: "這個動作只有部門主管可以執行。",
+    error_hr_function_required:
+      "這個動作需要人資管理職能。請洽人資指派，或請已有該職能的同事代為處理。",
+    error_no_permission_to_view: "你沒有查看這個人紀錄的權限。",
+    error_no_employee_record:
+      "你的帳號尚未對應到這個帳本裡的員工。請洽人資建立。",
+    error_range_too_large: "查詢的日期區間太長，請縮短範圍後再試一次。",
   },
   attendance_result: {
     title: "出勤總覽與異常",
@@ -621,11 +637,13 @@ export const hrManagement = {
     day_type_rest_day: "休息日",
     day_type_holiday: "國定假日",
     day_type_leave: "請假",
+    day_type_suspended: "停工",
     day_type_short_work: "上",
     day_type_short_regular_off: "例",
     day_type_short_rest_day: "休",
     day_type_short_holiday: "國",
     day_type_short_leave: "假",
+    day_type_short_suspended: "停",
     phase_upcoming: "尚未開始",
     phase_in_progress: "進行中",
     phase_concluded: "已結束",
@@ -645,10 +663,11 @@ export const hrManagement = {
   attendance_presence: {
     stat_leave: "今日請假",
     stat_leave_hint: "已核准的請假，不列入未到工",
+    leave_on_leave: "已排休",
     leave_title: "今日請假（{{count}} 人）",
     leave_empty: "今天沒有人請假",
     leave_hint:
-      "人手不足時，主管可對這份名單上的人發起銷假徵詢；同意與否由當事人決定。",
+      "人手不足時，主管可對這份名單上的人發起銷假徵詢；同意與否由當事人決定。\n這份名單刻意不顯示假別 —— 病假、生理假等會揭露健康狀況。",
     leave_recall_action: "銷假徵詢",
     leave_recall_pending: "徵詢中",
     recall_title: "發起銷假徵詢",
@@ -741,14 +760,283 @@ export const hrManagement = {
       "這個環境無法使用 Passkey。Passkey 只在 HTTPS（或 localhost）安全連線下運作，請改用正式網址開啟本頁。",
     hint: "登入的 Google 帳號必須是已建檔的公司信箱。若登入後顯示「尚未對應到員工檔」，請聯繫人事確認信箱。",
   },
-  // Info: (20260814 - Julian) 假別名稱，對應 `LEAVE_TYPE_I18N_KEY`。用勞基法的正式用語，不用口語簡稱
+  /**
+   * Info: (20260817 - Julian) 內建假別名稱，對應 `LEAVE_POLICY_I18N_KEY`。
+   * 用勞基法的正式用語，不用口語簡稱。
+   *
+   * 沒有 `policy_other`：假別已是資料（ADR 021），租戶自訂的假別查無對照時
+   * 回退顯示 `LeavePolicy.name`，而不是被歸進一個叫「其他」的桶子。
+   */
   leave: {
-    type_annual: "特別休假",
-    type_personal: "事假",
-    type_sick: "病假",
-    type_official: "公假",
-    type_marriage: "婚假",
-    type_bereavement: "喪假",
-    type_other: "其他",
+    field_start_at: "起（日期與時間）",
+    field_end_at: "迄（日期與時間）",
+    span_selected:
+      "共 {{hours}} 小時（未扣休息與非上班日，實際扣抵見下方試算）",
+    detail_title: "假單明細",
+    detail_reason: "請假事由",
+    detail_reason_undecryptable: "事由無法解密（金鑰異常），請聯繫系統管理員",
+    detail_reason_audited: "事由為加密儲存；非本人的每一次查看都會留下存取紀錄",
+    detail_days: "請假明細",
+    detail_day_recalled: "已銷假",
+    detail_chain: "簽核鏈",
+    detail_concurrency_warned: "送出時該期間已有其他同仁請假，申請人已收到提醒",
+    segment_custom: "自訂時段",
+    unit_hint: "最小單位 {{minutes}} 分鐘，不足一單位者以一單位計",
+    preview_rounded: "實際選取 {{raw}} 分鐘，依最小單位計為 {{minutes}} 分鐘",
+    action_detail: "明細",
+    action_back: "返回",
+    title: "我的請假",
+    approval_page_title: "待我簽核",
+    loading: "載入中…",
+    unit_day: "天",
+    unit_minute: "分鐘",
+
+    balance_title: "我的額度",
+    balance_empty:
+      "尚未有任何額度。額度由系統依到職日與年資批次授予，若長期為空請聯繫人事。",
+    balance_unlimited: "不限額度",
+    balance_next_expiry: "最近到期：{{date}}",
+    balance_never_reconciled: "尚未與帳本勾稽",
+
+    form_title: "填寫假單",
+    field_policy: "假別",
+    policy_unavailable_suffix: "（暫不開放）",
+    field_reason: "事由",
+    field_reason_placeholder: "例：回診複檢、家中臨時有事",
+    field_reason_encrypted: "事由會加密儲存，僅簽核者於明細頁可見",
+    segment_full: "整天",
+    segment_morning: "上半天",
+    segment_afternoon: "下半天",
+    action_submit: "送出假單",
+
+    preview_total: "本次共 {{days}} 天（{{minutes}} 分鐘）",
+    preview_after: "送出後剩餘 {{minutes}} 分鐘",
+    preview_shortfall: "額度不足 {{minutes}} 分鐘，無法送出",
+    preview_chain: "需簽核 {{count}} 關",
+    preview_chain_unresolved:
+      "簽核流程展不開（{{reason}}），請聯繫人事確認簽核規則與組織設定",
+    preview_concurrency_warn:
+      "{{date}} 已有 {{count}} 人請假（建議上限 {{limit}}）。仍可送出，但主管可能與你協商調整",
+    preview_concurrency_blocked:
+      "{{date}} 已有 {{count}} 人請假，超過上限 {{limit}}，無法送出",
+
+    my_requests_title: "我的假單",
+    my_requests_empty: "還沒有送出過假單",
+    list_step_progress: "第 {{current}}/{{total}} 關，待 {{approver}} 簽核",
+    list_step_self: "你是第 {{current}}/{{total}} 關",
+    status_pending: "簽核中",
+    status_approved: "已核准",
+    status_rejected: "已駁回",
+    status_withdrawn: "已撤回",
+    action_withdraw: "撤回",
+
+    approval_title: "待我簽核（{{count}} 件）",
+    approval_empty: "目前沒有需要你簽核的假單",
+    action_approve: "核准",
+    action_reject: "駁回",
+    action_reject_confirm: "確認駁回",
+    field_reject_reason: "駁回理由（必填）",
+    field_reject_placeholder: "請說明原因，申請人會看到這段文字",
+
+    node_direct: "直屬主管",
+    node_department: "部門經理",
+    node_hr: "人資",
+    node_specific: "指定簽核者",
+    chain_empty: "尚無簽核鏈",
+    chain_escalated_same_kind:
+      "自動改派：這一關的{{kind}}是你本人，已改由另一位擔任",
+    chain_escalated_higher:
+      "自動上升：這一關的{{from}}是你本人，已上升由{{to}}簽核",
+    unresolved_no_matching_rule: "沒有任何簽核規則涵蓋這個天數",
+    unresolved_empty_rule_steps: "命中的簽核規則沒有設定任何關卡",
+    unresolved_no_direct_manager: "你的資料上沒有直屬主管",
+    unresolved_no_department_manager: "你所屬部門往上都沒有設定主管",
+    unresolved_no_hr: "這個帳本沒有人資管理員",
+    unresolved_no_other_hr: "你是唯一的人資管理員，鏈上沒有其他人可以簽",
+    unresolved_specific_employee_missing: "指定的簽核者已離職或不在這個帳本",
+    unresolved_malformed_rule_threshold:
+      "某一條簽核規則的天數門檻不是可對帳的十進位數",
+
+    error_load: "載入失敗",
+    error_preview: "試算失敗",
+    error_submit: "送出失敗",
+    error_withdraw: "撤回失敗",
+    error_decide: "簽核失敗",
+    /**
+     * Info: (20260818 - Julian) 錯誤碼專屬文案（對照表在 `leave_error_message.ts`）。
+     * 每一句都要答得出「下一步做什麼」—— 折成同一句「操作失敗」等於把診斷丟掉。
+     */
+    error_insufficient_balance: "額度不足，請減少天數或改用其他假別",
+    error_unit_not_aligned: "請假時間不符合這個假別的最小單位，請調整時段",
+    error_merge_not_implemented:
+      "這個假別會同時扣減另一個假別的額度，而那條規則尚未開放，因此暫時無法送出。請洽人資 —— 目前的替代做法是改用其他假別。",
+    error_non_working_day:
+      "所選時段沒有需要請假的工時（不是上班日，或落在上下班時間之外），送出也不會扣額度",
+    error_chain_unresolved:
+      "簽核流程展不開，請聯繫人事確認你的直屬主管與簽核規則設定",
+    error_day_already_active: "這一天已經有一張生效中的假單",
+    error_concurrency_exceeded:
+      "該期間同部門請假人數已達上限，請與主管協商後改期",
+    error_concurrency_rule_invalid:
+      "這個帳本裡有一條併休上限規則沒有說出可執行的上限，因此無法檢查。請人資修正該規則。",
+    error_policy_not_found: "這個假別不存在或已停用，請重新選擇",
+    error_self_approval: "不能簽核自己送出的假單",
+    error_not_reviewer: "你不是這張單目前這一關的簽核者，請等上一關完成",
+    error_already_reviewed: "這一關已經被決定了，請重新整理後查看最新狀態",
+    error_balance_race: "額度剛被另一張假單扣走，請重新整理後再試",
+    error_request_scope: "這張假單不是你的，你也不在它的簽核鏈上",
+    error_request_not_found: "找不到這張假單",
+    policy_annual: "特別休假",
+    policy_personal: "事假",
+    policy_sick: "普通傷病假",
+    policy_occupational_injury: "公傷病假",
+    policy_official: "公假",
+    policy_marriage: "婚假",
+    policy_bereavement: "喪假",
+    policy_menstrual: "生理假",
+    policy_maternity: "產假",
+    policy_prenatal_checkup: "產檢假",
+    policy_paternity: "陪產檢及陪產假",
+    policy_family_care: "家庭照顧假",
+    policy_compensatory: "補休",
+  },
+  // Info: (20260818 - Julian) 加班模組（L24–L30）。級距標籤以 `OvertimePremiumTier` 為鍵
+  overtime: {
+    field_start_at: "起（日期與時間）",
+    field_end_at: "迄（日期與時間）",
+    span_selected: "共 {{hours}} 小時（實際認列以打卡事實為準）",
+    title: "我的加班",
+    approval_page_title: "加班簽核",
+    loading: "載入中…",
+    unit_minute: "分鐘",
+    unit_hour: "小時",
+    summary_title: "本月加班",
+    summary_monthly: "本月已認列",
+    summary_quarterly: "近三個月",
+    summary_limit: "上限 {{hours}} 小時",
+    summary_remaining: "尚可加班 {{hours}} 小時",
+    summary_over_limit: "已超過上限",
+    summary_quarterly_none: "未經同意放寬，故無三個月上限",
+    summary_punch_backed: "有打卡佐證",
+    summary_declared: "自陳（無打卡）",
+    summary_evidence_hint:
+      "刻意分開列：勞動檢查會問「有多少加班沒有出勤紀錄佐證」。",
+    summary_by_tier: "依加成級距",
+    summary_empty: "本月尚無已核准的加班",
+    tier_weekday_first_2h: "平日前 2 小時",
+    tier_weekday_beyond_2h: "平日 2 小時後",
+    tier_rest_day_first_2h: "休息日前 2 小時",
+    tier_rest_day_beyond_2h: "休息日 2 小時後",
+    tier_holiday_double: "休假日（加倍發給）",
+    tier_emergency_double: "天災事變（加倍發給）",
+    form_title: "新增加班單",
+    field_filing: "申請時序",
+    filing_advance: "事前申請",
+    filing_post_hoc: "事後補單",
+    filing_hint: "事前申請必須在該日班別開始之前送出。",
+    field_compensation: "補償方式",
+    compensation_payment: "加班費",
+    compensation_leave: "換補休",
+    compensation_hint:
+      "補休依實際加班時數 1:1 換算，不乘加成倍率；倍率在屆期折現時才回來。",
+    field_reason: "加班事由",
+    field_reason_placeholder: "例：混凝土澆置必須當日完成",
+    field_emergency: "天災事變（§32 IV，已報備查）",
+    field_emergency_hint:
+      "限人資管理員登記，且僅限待簽核的單。登記後主管才會看到「天災事變」標記再決定核不核；它會讓整段加班跳到加倍發給。例假日不適用（§40 須另報主管機關核備）。",
+    action_declare_emergency: "登記天災事變",
+    error_declare_emergency:
+      "認定失敗，請確認你具備人資管理員職能且此單仍待簽核。",
+    field_emergency_report: "報備紀錄連結",
+    field_emergency_reported_at: "報備時點",
+    field_emergency_moved_hint:
+      "天災事變（§32 IV）的認定由人資管理員在核准時做，並須附報備紀錄，因此不在這張申請單上。",
+    action_submit: "送出加班單",
+    my_requests_title: "我的加班單",
+    my_requests_empty: "尚未送出任何加班單",
+    list_requested: "申請 {{minutes}} 分鐘",
+    list_recognized: "認列 {{minutes}} 分鐘",
+    list_declared_badge: "自陳",
+    list_emergency_badge: "天災事變",
+    status_pending: "待簽核",
+    status_approved: "已核准",
+    status_rejected: "已駁回",
+    status_withdrawn: "已撤回",
+    approval_title: "待我簽核（{{count}}）",
+    approval_empty: "目前沒有等待你簽核的加班單",
+    field_approved_minutes: "核准分鐘",
+    field_approved_minutes_hint:
+      "可以少於申請。實際認列的是 min(核准, 打卡事實)。",
+    action_approve: "核准",
+    action_reject: "駁回",
+    decided_recognized: "已核准，認列 {{minutes}} 分鐘",
+    action_withdraw: "撤回",
+    action_withdraw_hint:
+      "撤回不會刪掉打卡紀錄：那段時間會回到「未核准的加班」，直到有另一張單涵蓋它。",
+    field_withdraw_reason: "撤回理由",
+    field_withdraw_reason_placeholder: "例：報錯日期、該時段已由另一張單涵蓋",
+    error_withdraw: "撤回失敗",
+    error_not_applicant:
+      "只有送出這張單的人可以撤回。主管請改用駁回，那會記下是誰決定的。",
+    error_withdraw_reason_required:
+      "事後補單的撤回必須填理由 —— 紀錄上要看得出它是不是自願的。",
+    action_write_report: "填寫加班報告書",
+    report_disabled_hint: "尚未開放：法源與書表欄位仍待法務複核（計畫書 §8.3）",
+    decided_unapproved: "另有 {{minutes}} 分鐘超出核准範圍，已列入未核准時段",
+    decided_granted: "已換出 {{count}} 批補休",
+    unapproved_title: "未核准時段",
+    unapproved_empty: "沒有落在核准範圍外的在場時間",
+    unapproved_team_empty:
+      "這段期間內，你的組員都沒有落在核准範圍外的在場時間。",
+    unapproved_hint:
+      "在場但沒有任何一張單涵蓋的時段。可能是漏了申請，也可能只是多待了一會兒 —— 由你判斷。",
+    unapproved_range_days: "近 {{days}} 天",
+    exception_unapproved_overtime: "有打卡、無核准",
+    exception_missing_punch_evidence: "已核准但無打卡佐證",
+    error_load: "載入失敗",
+    error_submit: "送出失敗",
+    error_decide: "決行失敗",
+    error_exceeds_daily:
+      "當日正常工時加延長工時會超過法定 12 小時。請縮短時數或改到別天。",
+    error_exceeds_monthly: "會超過單月延長工時上限。可在統計看還剩多少。",
+    error_exceeds_quarterly: "會超過每三個月的延長工時上限。",
+    error_filing_mismatch:
+      "申請時序與送出時間不符：事前申請必須在班別開始前送出。",
+    error_regular_off: "例假日出勤須依 §40 程序處理，請洽人資。",
+    error_already_reviewed: "這張單已經被決行了。重新整理即可看到結果。",
+    error_reclassified_midway:
+      "這張單在你核准的過程中被人資認定為天災事變（§32 IV），整段工資改為加倍發給。請重新整理，確認金額後再核准。",
+    error_emergency_revoked_midway:
+      "這張單在你核准的過程中被人資撤回了 §32 IV 天災事變的認定，整段工資降回一般加班級距。請重新整理，確認金額後再核准。",
+    error_day_length_unknown:
+      "算不出這位員工的一日工時，因此無法折換補休或折現。請人資替他排一格班。",
+    error_overlaps_existing:
+      "當天已經有一張加班單涵蓋了這段時間的一部分。請調整時段，或先撤回那一張。",
+    error_earlier_than_approved:
+      "當天已有一張時段較晚的加班單核准了，它的加成級距已經固定。此時補一張更早的，兩張都會以較低的級距計算。請先撤回較晚那一張，兩張一起重送。",
+    error_not_approved:
+      "這張加班單目前不在已核准狀態，沒有核准可以撤銷。請重新整理看它現在的狀態。",
+    error_approval_not_reversible:
+      "這次核准換到的補休已經被請掉、過期或折現，或加班費已由薪資結算，核准無法再撤銷。請改請人資以人工調整更正額度。",
+    error_agreement_record_required:
+      "放寬單月上限到 54 小時（§32 III）必須留下記載：工會或勞資會議的紀錄連結，以及同意的日期。",
+    error_emergency_already_declared:
+      "這張單已經有一份 §32 IV 的認定。要記錄新的報備，請先撤回既有的那一份。",
+    error_emergency_not_declared: "這張單沒有可撤回的 §32 IV 認定。",
+    error_reported_at_out_of_range:
+      "報備時間不能是未來，也不能早於加班當天。請對照報備紀錄上的時間。",
+    error_comp_expiry_unset:
+      "公司尚未協商補休期限，因此換不了補休。請改選加班費，或請人資設定。",
+    error_day_not_scheduled:
+      "那一天沒有排班，因此定不出加成標準。請人資先排班。",
+    error_premium_undefined:
+      "該日別的加成標準尚未確定（停工日、請假日），請洽人資。",
+    error_self_decide:
+      "不能對自己送出的加班單做這個動作。請由其他具人資管理職能的同事處理。",
+    error_not_reviewer:
+      "你不是這張加班單的簽核者，決行的人必須是管得到申請人的主管。",
+    error_comp_policy_missing:
+      "找不到補休假別的設定，換不了補休。請改選加班費，或請人資建立。",
+    error_not_found: "這張加班單已不存在。",
   },
 };

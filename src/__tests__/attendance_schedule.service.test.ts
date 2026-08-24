@@ -21,6 +21,7 @@ import { IShiftPatternRepository } from "@/repositories/shift_pattern.repo";
 import { assertSchedulableDay } from "@/repositories/attendance_schedule_invariant";
 import { ICreateAuditLogInput } from "@/repositories/audit_log.repo";
 import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
+import { IEmployeeHrFunctionRepository } from "@/repositories/employee_hr_function.repo";
 
 /**
  * Info: (20260813 - Julian) 班別與排班寫入。
@@ -87,6 +88,7 @@ interface IHarness {
   written: IShiftDayInput[];
   rosterQueries: { departmentId?: string }[];
   managerQueries: string[];
+  scopeQueries: { managerEmployeeId: string; targetEmployeeId: string }[];
   auditLogs: ICreateAuditLogInput[];
 }
 
@@ -98,10 +100,18 @@ const buildService = (options: {
   upsertThrows?: Error;
   /** Info: (20260817 - Luphia) 操作者是不是部門主管；預設是，未指定時測的不是這道閘 */
   actorIsManager?: boolean;
+  /** Info: (20260818 - Julian) 被改的那個人歸不歸操作者管；預設是（同上，未指定時測的不是這道閘） */
+  actorManagesTarget?: boolean;
+  /** Info: (20260818 - Julian) 操作者是否具 HR_ADMIN / TIMEKEEPER 職能；預設否 */
+  actorHasHrFunction?: boolean;
 }): IHarness => {
   const written: IShiftDayInput[] = [];
   const rosterQueries: { departmentId?: string }[] = [];
   const managerQueries: string[] = [];
+  const scopeQueries: {
+    managerEmployeeId: string;
+    targetEmployeeId: string;
+  }[] = [];
   const auditLogs: ICreateAuditLogInput[] = [];
 
   const employees: IEmployeeRepository = {
@@ -117,9 +127,18 @@ const buildService = (options: {
       options.employeeInBook === false
         ? null
         : ({ id: TARGET_EMPLOYEE_ID, employeeNo: "EMP002" } as Employee),
+    // Info: (20260818 - Julian) 顯示用的員工檔（hr/me）；本檔不測它，補樁讓介面完整
+    findProfile: async () => null,
     isDepartmentManager: async (params) => {
       managerQueries.push(params.employeeId);
       return options.actorIsManager ?? true;
+    },
+    managesEmployee: async (params) => {
+      scopeQueries.push({
+        managerEmployeeId: params.managerEmployeeId,
+        targetEmployeeId: params.targetEmployeeId,
+      });
+      return options.actorManagesTarget ?? true;
     },
   };
 
@@ -144,6 +163,20 @@ const buildService = (options: {
    * Info: (20260817 - Luphia) 稽核只收不查（service 拿到的是 `Pick<…, "createAuditLog">`），
    * 所以假物件只有一個方法 —— 那正是把介面收窄的目的。
    */
+  /**
+   * Info: (20260818 - Julian) HR 職能只被問一個布林值，因此假物件也只回一個布林值。
+   * 預設 `false` 是刻意的：多數測試要走的是「部門主管」那條路，
+   * 而預設 `true` 會讓主管閘的每一條都靜靜地從 HR 那條捷徑通過。
+   */
+  const hrFunctions: IEmployeeHrFunctionRepository = {
+    listHolderIds: async () => [],
+    // Info: (20260818 - Julian) 顯示用的職能清單（hr/me）；本檔不測它
+    listFunctionsOf: async () => [],
+    hasAnyFunction: async () => options.actorHasHrFunction ?? false,
+    grant: async () => undefined,
+    revoke: async () => false,
+  };
+
   const audits = {
     createAuditLog: async (input: ICreateAuditLogInput) => {
       auditLogs.push(input);
@@ -163,10 +196,12 @@ const buildService = (options: {
       schedule,
       patterns,
       audits,
+      hrFunctions,
     ),
     written,
     rosterQueries,
     managerQueries,
+    scopeQueries,
     auditLogs,
   };
 };
@@ -275,7 +310,7 @@ describe("AttendanceScheduleService", () => {
    * 讀取端仍是全帳本可見（計畫書 §7.3 第 1 順位的權限矩陣要處理的範圍），
    * 這三條只管寫入。
    */
-  describe("A8 排班寫入限主管", () => {
+  describe("A8 排班寫入的授權（主管範圍 + HR 職能）", () => {
     it("非主管改排班回 403，且一個字都沒有寫進去", async () => {
       const { service, written } = buildService({
         patterns: [SITE_DAY],
@@ -352,6 +387,75 @@ describe("AttendanceScheduleService", () => {
       ).rejects.toMatchObject({
         apiCode: API_ERRORS.FO_ATTENDANCE_SUPERVISOR_ONLY.code,
       });
+    });
+
+    /**
+     * Info: (20260818 - Julian) 甲-1 把這道閘從「你有沒有管任何部門」收成
+     * 「這個人歸不歸你管」。少了這一條，第一工務段的主管改得動第五工務段的班表 ——
+     * 而那個缺口在只有「主管 / 非主管」這條軸線的測試底下是綠的。
+     */
+    it("是主管、但這個人不歸他管：回範圍錯誤，且一個字都沒有寫進去", async () => {
+      const { service, written, scopeQueries } = buildService({
+        patterns: [SITE_DAY],
+        actorIsManager: true,
+        actorManagesTarget: false,
+      });
+
+      await expect(
+        service.updateScheduleDay({
+          accountBookId: ACCOUNT_BOOK_ID,
+          input: {
+            employeeId: TARGET_EMPLOYEE_ID,
+            workDate: "2026-08-14",
+            dayType: WorkDayType.WORK,
+            shiftPatternId: SITE_DAY.id,
+          },
+          actorEmployeeId: ACTOR_MANAGER_ID,
+          actorEmployeeNo: "EMP001",
+          actorUserId: ACTOR_USER_ID,
+        }),
+      ).rejects.toMatchObject({
+        apiCode: API_ERRORS.FO_ATTENDANCE_SCHEDULE_SCOPE.code,
+      });
+      expect(written).toEqual([]);
+      // Info: (20260818 - Julian) 範圍判斷問的是「操作者 → 被改的人」這個方向
+      expect(scopeQueries).toEqual([
+        {
+          managerEmployeeId: ACTOR_MANAGER_ID,
+          targetEmployeeId: TARGET_EMPLOYEE_ID,
+        },
+      ]);
+    });
+
+    /**
+     * Info: (20260818 - Julian) 工地文書排得了全工地的班，而他不是任何部門的
+     * `managerId` —— 舊的粗判斷會把他擋在外面，而那正是「主管閘不等於權限矩陣」
+     * 的具體長相。具 HR 職能者走的是另一條路，兩個主管判斷一次都不會被問到。
+     */
+    it("具 HR 職能者跨部門通行，且完全不經過主管判斷", async () => {
+      const { service, written, managerQueries, scopeQueries } = buildService({
+        patterns: [SITE_DAY],
+        actorIsManager: false,
+        actorManagesTarget: false,
+        actorHasHrFunction: true,
+      });
+
+      await service.updateScheduleDay({
+        accountBookId: ACCOUNT_BOOK_ID,
+        input: {
+          employeeId: TARGET_EMPLOYEE_ID,
+          workDate: "2026-08-14",
+          dayType: WorkDayType.WORK,
+          shiftPatternId: SITE_DAY.id,
+        },
+        actorEmployeeId: ACTOR_MANAGER_ID,
+        actorEmployeeNo: "EMP001",
+        actorUserId: ACTOR_USER_ID,
+      });
+
+      expect(written).toHaveLength(1);
+      expect(managerQueries).toEqual([]);
+      expect(scopeQueries).toEqual([]);
     });
   });
 
