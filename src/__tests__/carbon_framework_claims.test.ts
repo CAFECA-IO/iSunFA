@@ -2,6 +2,7 @@ import { describe, it, expect } from "@jest/globals";
 import { auditFrameworkClaims } from "@/lib/utils/carbon_framework_claims";
 import {
   FRAMEWORK_ALIGNMENT_PHRASE,
+  COMPLIANCE_CLAIM_PATTERNS,
   FRAMEWORK_DISCLAIMER_PHRASE,
 } from "@/constants/carbon_report_framework";
 
@@ -86,6 +87,60 @@ describe("auditFrameworkClaims", () => {
   it("免責句本身不會被判成合規宣告", () => {
     expect(
       auditFrameworkClaims(FRAMEWORK_DISCLAIMER_PHRASE).complianceClaims,
+    ).toEqual([]);
+  });
+
+  /**
+   * Info: (20260824 - Luphia) 多句合規宣告要**全部**回報，依紙面順序（PR review）。
+   *
+   * 原本是非 global regex 配 `String.match`，只給第一筆 —— 閘門仍然會紅，
+   * 但這個陣列是 UAT 印給人看的修正清單，少報會讓人「改一句、重跑驗收、
+   * 才發現下一句」。三句就要跑三輪，而每一輪都要重新產或重讀 PDF。
+   */
+  it("條 4 回報全部命中,依紙面順序", () => {
+    const audit = auditFrameworkClaims(
+      "本公司遵循 IFRS S2 辦理。另本公司符合 IFRS S1 之要求。",
+    );
+
+    expect(audit.complianceClaims).toEqual(["遵循IFRS", "符合IFRS"]);
+  });
+
+  /**
+   * Info: (20260824 - Luphia) 同一句話出現兩次是**兩個**要改的地方，不去重。
+   * 去重會把「紙上有幾處」這個數字抹掉，而那正是這個陣列要回答的問題。
+   */
+  it("同一種說法出現兩次回報兩筆", () => {
+    const audit = auditFrameworkClaims(
+      "第一章:本公司符合 IFRS S1。第五章:本公司符合 IFRS S1。",
+    );
+
+    expect(audit.complianceClaims).toEqual(["符合IFRS", "符合IFRS"]);
+  });
+
+  /**
+   * Info: (20260824 - Luphia) 共用的 pattern **不得帶 `g`**。
+   *
+   * `carbon_report_outline.test.ts` 拿同一份 `COMPLIANCE_CLAIM_PATTERNS`
+   * 對 33 節 guidance 逐節 `pattern.test(...)`。帶 `g` 的 regex 在 `test`
+   * 命中時會推進 `lastIndex`，於是**下一節從上次停的位置開始找** ——
+   * 症狀是隔一節漏一節，而那個掃描仍然是綠的。
+   *
+   * 這個洞今天量不出來：33 節 guidance 目前全都乾淨，`test` 一次也沒命中，
+   * `lastIndex` 因此一直是 0。它會在**第一次真的有人寫出合規動詞**時現形 ——
+   * 也就是那個掃描唯一該叫的那一刻。
+   *
+   * 所以直接釘不變式本身，而不是靠一個「連續呼叫兩次答案相同」的行為測試：
+   * 後者對 `matchAll`、對 `String.match`、對帶不帶 `g` 全都是綠的
+   * （實測過），等於一條看起來在守、實際上什麼都沒守的測試。
+   *
+   * 條 4 自己要的 global 由 `allComplianceClaims` 每次現場複製一份，
+   * 狀態不跨呼叫也不回寫共用常數。
+   */
+  it("共用的合規宣告 pattern 不得帶 g 旗標", () => {
+    expect(
+      COMPLIANCE_CLAIM_PATTERNS.filter((pattern) =>
+        pattern.flags.includes("g"),
+      ),
     ).toEqual([]);
   });
 
