@@ -10,6 +10,7 @@ import zlib from "node:zlib";
 import { PDFDocument, PDFName, PDFRawStream } from "pdf-lib";
 import { extractPdfTextLayer } from "@/lib/pdf_text_layer";
 import { squeezeForMatch } from "@/lib/utils/squeeze_for_match";
+import { auditFrameworkClaims } from "@/lib/utils/carbon_framework_claims";
 import {
   CARBON_REPORT_CHAPTERS,
   CARBON_REPORT_OUTLINE,
@@ -807,11 +808,46 @@ const main = async (): Promise<void> => {
    * 選 IFRS 的產出**應該**出現 IFRS,而且未到期時必須有免責敘述。
    * 屆時把這裡換成 `checkFrameworkConsistency(framework)`。
    */
-  const FOREIGN_FRAMEWORKS = ["IFRS", "TCFD", "SASB", "GRI", "CDP"];
-  expectZero(
-    "紙上宣告別的揭露框架",
-    FOREIGN_FRAMEWORKS.filter((name) => squeezed.includes(name)),
-  );
+  /**
+   * Info: (20260821 - Emily) 從「全域黑名單」改成「依成品自己的宣告分流」。
+   *
+   * 08-19 的版本是 `["IFRS","TCFD","SASB","GRI","CDP"]` 一律禁止。產品決策改變了前提：
+   * 33 段大綱本身就是 IFRS S1/S2 的架構，報告**可以**宣告架構對齊 ——
+   * 真正的紅線不是框架名稱，是**主體的合規宣告**（未到金管會適用時程的企業提前宣告）。
+   *
+   * 判準看的是**成品自己怎麼宣告**，不是我們的意圖，所以不需要等 `open/54` 的選擇機制
+   * 落地就能生效。文案取自 `carbon_report_framework.ts`，與將來的產出端同一份字串。
+   *
+   * ## 四條的涵蓋範圍（用輸入空間寫，不用程式碼寫）
+   *
+   * 1. `紙上宣告別的揭露框架` —— TCFD/SASB/GRI/CDP，**任何情況**出現即紅。
+   *    我們沒有對齊它們，所以沒有 when 子句。
+   * 2. `紙上出現 IFRS 卻沒宣告架構對齊` —— **當報告沒有印出架構對齊聲明時**，
+   *    出現 IFRS 即紅。有印就放行。
+   * 3. `宣告架構對齊卻沒有免責句` —— **當報告印了對齊聲明時**，必須也印免責句。
+   *    只印前者會讓讀者把「架構對齊」讀成「合規」。
+   * 4. `紙上有合規宣告` —— `COMPLIANCE_CLAIM_PATTERNS` 裡的說法，**任何情況**即紅。
+   *
+   * ## 現在最多能發生多壞（從界推，不從個例推）
+   *
+   * 第 4 條的界就是 `COMPLIANCE_CLAIM_PATTERNS` 的長度：**清單外的說法漏得掉**。
+   * 例如「已達成 IFRS S1 要求」「與 IFRS S2 一致」都不在清單裡。
+   * 所以最壞情況是「一份印了對齊聲明與免責句的報告，同時用清單外的說法斷言合規」
+   * —— 四條全綠而紙上有合規宣告。清單只能變長。
+   *
+   * 第 2 條另有一個已知洞：**客戶原文自己提到 IFRS 時**（逐字照錄），這條會紅，
+   * 而那不是我們的宣告。與「對帳附錄的逐字引用被報成表格語法外洩」同一形狀。
+   * 已量：客戶原文與三份產出裡 `IFRS` 都是 0 次，所以今天不會誤報；
+   * 真的遇到時要把判準收窄到「系統印的區塊」，不是現在憑空加例外。
+   */
+  const claims = auditFrameworkClaims(text);
+  snapshot.紙上宣告架構對齊 = claims.alignmentDeclared ? 1 : 0;
+  snapshot.紙上有免責句 = claims.disclaimerPresent ? 1 : 0;
+
+  expectZero("紙上宣告別的揭露框架", claims.unalignedFrameworks);
+  expectZero("紙上出現 IFRS 卻沒宣告架構對齊", claims.ifrsWithoutAlignment);
+  expectZero("宣告架構對齊卻沒有免責句", claims.alignmentWithoutDisclaimer);
+  expectZero("紙上有合規宣告", claims.complianceClaims);
 
   // Info: (20260819 - Emily) ── 桑基圖要嘛在紙上,要嘛紙上說明它為什麼不在 ──
   /**
@@ -922,6 +958,18 @@ const main = async (): Promise<void> => {
    * 是 JSON-lines 且引號轉義,直接餵進來會讓每一條帶引號的判準靜默回 0
    * （理由見 `normalizeUatLog`）。
    */
+  if (!logPath) {
+    /*
+     * Info: (20260821 - Emily) 沒給 --log 時,log 側的判準(含兩條 must_match 對帳)
+     * **整批沒跑** —— 那要看得見,不能靜默(PR review B3;「看得見才輪得到判斷」
+     * 是這支腳本自己的立場)。B4 閾值那邊已有自己的缺席處理,這行管其餘的。
+     */
+    record(
+      "warn",
+      "log:未提供",
+      "log 側判準整批未跑(含圖表/段落對帳兩條 must_match)",
+    );
+  }
   if (logPath) {
     checkLog(normalizeUatLog(fs.readFileSync(logPath, "utf-8")), text);
   }
@@ -1204,6 +1252,95 @@ const checkLog = (log: string, text?: string): void => {
   if (rejected.length > 0) {
     record("warn", "log:圖表被拒", rejected.join("、"));
   }
+
+  /**
+   * Info: (20260821 - Emily) ── 圖表被拒 × 紙上痕跡的對帳 ──
+   *
+   * 表格那邊早就有「log 說丟了、紙上也真的沒有」,圖表這邊一直沒有 ——
+   * 同一個原則只做了一半。08-20 兩趟的實測就是代價:
+   * run C 拒 2 張、紙上 1 個痕跡;run D 拒 1 張、紙上 0 個。
+   * 被拒的圖比紙上的痕跡多 = 有圖無聲消失,而「圖表未繪製」那幾條判準
+   * 只數紙上的句子,紙上什麼都沒有時它們同時是 0、同時看起來綠。
+   *
+   * 判準:**每一張被拒的圖,紙上都要有一個痕跡**(素材不足/無法回溯/超過上限,
+   * 三種片語都算)。痕跡比被拒多不叫(退化與佔位有其他來源);少了才是無聲消失。
+   *
+   * ⚠ 這條對 run D 的既存產出**就是紅的** —— 那不是誤報,是 open/48 還沒修完的
+   * 實測證據。修的是產品(被拒時要把說明印上紙),不是把這條調綠。
+   */
+  if (text !== undefined) {
+    const squeezedPaper = squeezeForMatch(text);
+    const paperTraces =
+      (squeezedPaper.match(
+        new RegExp(squeezeForMatch("本節內容不足以繪製結構圖"), "g"),
+      )?.length ?? 0) +
+      (squeezedPaper.match(
+        new RegExp(squeezeForMatch("無法回溯至本節原文"), "g"),
+      )?.length ?? 0) +
+      (squeezedPaper.match(
+        new RegExp(squeezeForMatch(DIAGRAM_CAP_EXCEEDED_PHRASE), "g"),
+      )?.length ?? 0);
+    snapshot.紙上圖表失敗痕跡 = paperTraces;
+    expectZero(
+      "圖表被拒卻紙上無痕",
+      rejected.length > paperTraces
+        ? [`被拒 ${rejected.length} 張、紙上只有 ${paperTraces} 個痕跡`]
+        : [],
+    );
+  }
+
+  /**
+   * Info: (20260821 - Emily) ── 段落裁決的對帳 ──
+   *
+   * `segment rejected` 一段被丟時,log 帶著 contentChars —— 判斷嚴不嚴重的數字
+   * 早就記了,只是沒人讀。08-20 run C 實測:ch2-intro 被拒、contentChars 0
+   * (模型吐了空段,沒有真的遺失),而「大綱節數 33/33」照樣綠,因為那條只看
+   * 節標題在不在。同一形狀若 contentChars 是 5000,遺失就是無聲的。
+   *
+   * 分兩層:被拒本身 record_only(空段是模型輸出的變異);
+   * **有內容卻被拒**是 must_match —— 那是一段真實原文無聲消失。
+   */
+  /*
+   * Info: (20260821 - Emily) 逐行抓、欄位各自抽(PR review B2):原本一條 regex 用
+   * `.*?` 串起兩個欄位,等於要求它們**依序且同行** —— log 欄位順序一變就靜默回空、
+   * 判準靜默轉綠,而這個形狀咬過我們一次(normalizeUatLog 的檔頭記著)。
+   * normalizeUatLog 保證一事件一行,行內欄位順序則不做假設。
+   */
+  const rejectedSegments = log
+    .split("\n")
+    .filter((line) => line.includes("segment rejected"))
+    .map((line) => {
+      const paragraphId = /"paragraphId":"([^"]*)"/.exec(line)?.[1] ?? "(未知)";
+      const charsRaw = /"contentChars":(\d+|null)/.exec(line)?.[1];
+      return {
+        paragraphId,
+        chars:
+          charsRaw === undefined || charsRaw === "null"
+            ? null
+            : Number(charsRaw),
+      };
+    });
+  snapshot.log_段落被拒 = rejectedSegments.map(
+    (seg) => `${seg.paragraphId}(${seg.chars ?? "?"}字)`,
+  );
+  expectZero(
+    "段落被拒且原文有內容",
+    rejectedSegments
+      .filter((seg) => seg.chars === null || seg.chars > 0)
+      .map((seg) => `${seg.paragraphId}(${seg.chars ?? "?"}字)`),
+  );
+
+  /**
+   * Info: (20260821 - Emily) ── 其餘四種「丟東西」事件,至少要看得見 ──
+   *
+   * 12 個丟棄類 log 事件裡,先前只有 1 個有紙面對帳。這四種今天先進快照
+   * (record_only):看得見才輪得到判斷嚴不嚴重。三份既有 log 實測都是 0,
+   * 所以它們暫時只是地雷偵測器,不是已知缺陷的量尺。
+   */
+  snapshot.log_表格整批被拒 = count(/source table rejected/g);
+  snapshot.log_活動數據被拒 = count(/activity record rejected/g);
+  snapshot.log_llm輸出不合schema = count(/llm output schema invalid/g);
+  snapshot.log_私有區字元無對照 = count(/unmapped private-use chars/g);
 
   const rendered =
     /"chartsRendered":(\d+),"chartsFailed":(\d+),"tocFilled":(\d+),"tocMissing":(\d+)/.exec(
