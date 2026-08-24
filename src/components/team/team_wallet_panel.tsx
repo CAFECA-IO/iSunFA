@@ -7,6 +7,10 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { TEAM_WALLET_STATUS } from "@/constants/subscription_quota";
 // Info: (20260813 - Luphia) 額度儀表抽為共用元件，與費思的額度不足提示同一份實作
 import QuotaMeter from "@/components/common/quota_meter";
+import {
+  LEAVING_PLAN,
+  resolveLeavingPlan,
+} from "@/lib/subscription/plan_rules";
 
 /**
  * Info: (20260809 - Luphia) 團隊錢包與訂閱額度面板（產品調整 20260809 後的職責）：
@@ -37,6 +41,8 @@ interface ISubscriptionView {
    */
   pendingPlanId: string | null;
   autoRenew: boolean;
+  // Info: (20260824 - Luphia) 「維持目前方案」要帶回真值，不能寫死月繳（四輪低-1）
+  billingInterval: string;
   // Info: (20260821 - Luphia) 當期屆滿（epoch 秒）：上面兩種狀態的生效時點
   currentPeriodEnd: number;
   // Info: (20260817 - Luphia) 觀看者本人的額度（一人一池）
@@ -183,6 +189,12 @@ export default function TeamWalletPanel({
     fetchSubscription();
   }, [fetchSubscription]);
 
+  /**
+   * Info: (20260824 - Luphia) 「將要離開目前的付費狀態」是哪一種（規則見
+   * `resolveLeavingPlan`，含「有效方案是免費版就什麼都不說」那道守門）。
+   */
+  const leavingPlan = subscription ? resolveLeavingPlan(subscription) : null;
+
   const [resuming, setResuming] = useState(false);
   /**
    * Info: (20260821 - Luphia) 「維持目前方案」：把「將要離開目前方案」的狀態收回
@@ -206,7 +218,7 @@ export default function TeamWalletPanel({
         },
         body: JSON.stringify({
           planId: subscription.planId,
-          billingInterval: "month",
+          billingInterval: subscription.billingInterval,
         }),
       }).then((r) => r.json());
       if (!res.success) throw new Error(res.message || "resume failed");
@@ -333,11 +345,10 @@ export default function TeamWalletPanel({
                * 在此之前這兩種狀態在**畫面上完全看不到**（方案頁只知道目前方案），
                * 使用者按過降級之後唯一的回饋是「什麼都沒變」（四輪 self-review）。
                */}
-              {(subscription.pendingPlanId !== null ||
-                !subscription.autoRenew) && (
+              {leavingPlan !== null && (
                 <div className="space-y-2 rounded-lg bg-amber-50 p-3">
                   <p className="text-xs text-amber-800">
-                    {subscription.pendingPlanId
+                    {leavingPlan === LEAVING_PLAN.DOWNGRADE
                       ? t("team_management.wallet.pending_downgrade", {
                           plan: t(
                             `pricing.plans.${subscription.pendingPlanId}.name`,

@@ -204,6 +204,13 @@ export async function getTeamSubscriptionView(params: {
         : 0,
       autoRenew: subscription?.autoRenew ?? false,
       /**
+       * Info: (20260824 - Luphia) 本期週期；沒有訂閱列或尚未回填（NULL）時回月繳
+       * ——那是 `BILLING_INTERVAL` 的保守側，而真正需要精確值的地方
+       * （席次補收的分母）讀的是 DB 原值並在 NULL 時擋下，不吃這個預設。
+       */
+      billingInterval: (subscription?.billingInterval ??
+        BILLING_INTERVAL.MONTH) as BillingInterval,
+      /**
        * Info: (20260820 - Luphia) 排程中的降級一併揭露（見 interface 的說明）。
        * 認不出來的代號當成沒有排程——回一個畫面翻不出名字的方案代號更糟。
        */

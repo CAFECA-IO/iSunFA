@@ -10,6 +10,8 @@ export const purchaseTarget = {
     'The current subscription period for "{{team}}" runs until {{date}}. The downgrade takes effect on that date; your current plan and its benefits stay unchanged until then, and no payment is taken now. You can switch back to your current plan any time before it takes effect to cancel it.',
   upgrade_credit_note:
     'The current subscription period for "{{team}}" runs until {{date}}. The upgrade takes effect as soon as payment completes, and the remaining time on your current plan is not lost: its paid value is credited as additional days of the new plan, added after the new period.',
+  resume_autorenew_note:
+    'Auto-renewal for "{{team}}" is currently off — the current period ends {{date}} and would become the free plan. Completing this purchase turns auto-renewal back on, so it will be charged automatically at the period end; you can turn it off again from the team wallet page.',
   pending_downgrade_note:
     '"{{team}}" is scheduled to change to {{plan}} on {{date}}. Completing this purchase cancels that scheduled change.',
   seat_note:

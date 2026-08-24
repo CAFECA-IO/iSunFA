@@ -1,5 +1,6 @@
 import type {
   BillableFeatureCode,
+  BillingInterval,
   QuotaExceededOption,
   QuotaWindow,
   SpendSource,
@@ -49,6 +50,14 @@ export interface ITeamSubscriptionView {
   currentPeriodStart: number;
   currentPeriodEnd: number;
   autoRenew: boolean;
+  /**
+   * Info: (20260824 - Luphia) 本期的計費週期（月／年）。回傳它有兩個用途：
+   * 畫面要說得出「月繳／年繳」，而**呼叫端要帶得回真值**——團隊錢包頁的
+   * 「維持目前方案」曾經寫死 `"month"`（review #6687 四輪低-1）：今天無害
+   * （那條分支不讀這個欄位），但那是一個在請求裡說謊的參數，
+   * 而這個欄位過去曾經參與判斷。
+   */
+  billingInterval: BillingInterval;
   /**
    * Info: (20260820 - Luphia) 已排程、於當期屆滿時生效的方案（降級）；null＝沒有排程。
    *

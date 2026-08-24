@@ -179,7 +179,7 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
    * 沒有這行揭露，就不會有任何畫面提到那個排程將要消失，而使用者是刻意排定它的。
    */
   const [pending, setPending] = useState<{
-    planId: string;
+    planId: string | null;
     effectiveAt: number;
   } | null>(null);
   useEffect(() => {
@@ -194,6 +194,8 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
       payload: {
         planId?: string;
         currentPeriodEnd?: number;
+        // Info: (20260824 - Luphia) false＝已關閉自動續訂（期末轉免費版），見中-1
+        autoRenew?: boolean;
         pendingPlanId?: string | null;
         pendingEffectiveAt?: number | null;
       } | null;
@@ -218,10 +220,28 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
         setPeriodNote(note);
         // Info: (20260820 - Luphia) 當期已結束（或沒有訂閱）就沒有期間要揭露
         setPeriodEndSec(note !== null ? end : null);
+        /**
+         * Info: (20260824 - Luphia) 「本次購買會取代什麼」的揭露（review #6687 四輪中-1）。
+         *
+         * 兩種「將要離開目前付費狀態」都要說：期末降轉（`pendingPlanId`）與
+         * 期末轉免費版（`autoRenew === false`）。履行時 `applyTeamSubscriptionInTx`
+         * 一律寫 `autoRenew: true` 並清 `pendingPlanId`——也就是**買一期會把使用者
+         * 關掉的自動續訂重新打開**，而在此之前只有降轉那一種在付款前說得出來
+         *（狀態機收斂的副作用：那個狀態從 `pendingPlanId = 'free'` 改成
+         * `autoRenew = false`，而這句揭露只看 `pendingPlanId`）。
+         */
         const pendingPlanId = response.payload?.pendingPlanId ?? null;
-        const effectiveAt = response.payload?.pendingEffectiveAt ?? null;
+        /**
+         * Info: (20260824 - Luphia) `note !== null` 正好就是「當期還在、且當期是
+         * 付費方案」（見 `resolvePeriodNote`）——免費團隊的 `autoRenew` 是
+         * `?? false` 的預設值，不是「使用者關掉了續訂」（四輪高-1 同一個坑）。
+         */
+        const willResumeAutoRenew =
+          note !== null && response.payload?.autoRenew === false;
+        const effectiveAt =
+          response.payload?.pendingEffectiveAt ?? (end || null);
         setPending(
-          pendingPlanId && effectiveAt
+          (pendingPlanId || willResumeAutoRenew) && effectiveAt
             ? { planId: pendingPlanId, effectiveAt }
             : null,
         );

@@ -19,6 +19,10 @@ import {
   TEAM_PLAN,
   TEAM_SUBSCRIPTION_STATUS,
 } from "@/constants/subscription_quota";
+import {
+  LEAVING_PLAN,
+  resolveLeavingPlan,
+} from "@/lib/subscription/plan_rules";
 import { TeamRole } from "@/constants/team";
 
 /**
@@ -942,12 +946,21 @@ describe("維持目前方案的入口（前端接線）", () => {
    * Info: (20260821 - Luphia) 兩種「將要離開目前方案」的狀態都要看得見，
    * 否則使用者按過之後唯一的回饋是「什麼都沒變」，於是他會再按一次
    * ——而那一次會被當成購買（建單、收整期的錢）。
+   *
+   * Info: (20260824 - Luphia) **判斷本身改由 `resolveLeavingPlan` 逐條測**
+   *（見下一個 describe，review #6687 四輪高-1）。這裡只確認面板接上了那支
+   * 函式與兩句文案——先前這條斷言的是「`!subscription.autoRenew` 這個字串
+   * 在檔案裡」，而**那個字串本身就是缺陷**：免費團隊的 `autoRenew` 是
+   * `?? false` 的預設值，於是每個沒訂閱過的團隊都被說成「將轉為免費版」。
+   * 掃描測試對那種缺陷永遠是綠的——它能回答的問題就只到「有沒有接線」。
    */
-  it("面板顯示期末降轉與期末轉免費版兩種狀態", () => {
-    expect(panel).toContain("subscription.pendingPlanId !== null");
-    expect(panel).toContain("!subscription.autoRenew");
+  it("面板用 resolveLeavingPlan 判斷，並備妥兩句文案", () => {
+    expect(panel).toContain("resolveLeavingPlan(subscription)");
+    expect(panel).toContain("LEAVING_PLAN.DOWNGRADE");
     expect(panel).toContain("wallet.pending_downgrade");
     expect(panel).toContain("wallet.pending_expire");
+    // Info: (20260824 - Luphia) 不准再回到「自己看兩個欄位」那條路
+    expect(panel).not.toContain("!subscription.autoRenew");
   });
 
   // Info: (20260821 - Luphia) 變更訂閱狀態是 OWNER 專屬（server 端同判準），ADMIN 按了只會拿到 403
@@ -978,5 +991,161 @@ describe("維持目前方案的入口（前端接線）", () => {
         expect(file).toContain(key);
       }
     }
+  });
+});
+
+/**
+ * Info: (20260824 - Luphia) 「將要離開目前付費狀態」的判斷（review #6687 四輪高-1）。
+ *
+ * 這一組是那條掃描測試學到的教訓：判斷留在 JSX 裡時，唯一擋得住它的東西是
+ * 「字串在不在檔案裡」，而錯的答案本身就是那個字串。搬進純函式之後，
+ * 免費團隊那個案例是一條會紅的斷言。
+ *
+ * 缺陷的實際形狀：`GET /subscription` 對**沒有訂閱列**的團隊回
+ * `autoRenew: false`（沒有訂閱就談不上自動續訂——那是對的預設）與
+ * `currentPeriodEnd: 0`。畫面若只看 `!autoRenew`，每個從未訂閱過的團隊都會
+ * 看到「當期到 1970/1/1 後轉為免費版」，而旁邊那顆「維持目前方案」按下去
+ * 什麼都不會發生（server 對免費列不寫任何資料）——死路的按鈕比沒有按鈕更糟。
+ */
+describe("將要離開目前付費狀態的判斷", () => {
+  it("沒有訂閱過的團隊（free + autoRenew false）→ 什麼都不說", () => {
+    expect(
+      resolveLeavingPlan({
+        planId: TEAM_PLAN.FREE,
+        pendingPlanId: null,
+        autoRenew: false,
+      }),
+    ).toBeNull();
+  });
+
+  /**
+   * Info: (20260824 - Luphia) 同一個成因的第二種：曾經降級到免費版的列
+   *（`downgradeToFree` 寫 `autoRenew: false`，而 `currentPeriodEnd` 留著舊值）
+   * 會顯示一個**過去的日期**——「當期到 2026/7/3 後轉為免費版」，
+   * 而它三週前就已經是免費版了。
+   */
+  it("已經降級成免費版的列 → 什麼都不說（不會顯示過去的日期）", () => {
+    expect(
+      resolveLeavingPlan({
+        planId: TEAM_PLAN.FREE,
+        pendingPlanId: null,
+        autoRenew: false,
+      }),
+    ).toBeNull();
+  });
+
+  it("付費且已關閉自動續訂 → 期末轉免費版", () => {
+    expect(
+      resolveLeavingPlan({
+        planId: TEAM_PLAN.TEAM,
+        pendingPlanId: null,
+        autoRenew: false,
+      }),
+    ).toBe(LEAVING_PLAN.EXPIRE);
+  });
+
+  it("付費且已排定期末降轉 → 降轉（優先於續訂狀態）", () => {
+    expect(
+      resolveLeavingPlan({
+        planId: TEAM_PLAN.BUSINESS,
+        pendingPlanId: TEAM_PLAN.TEAM,
+        autoRenew: true,
+      }),
+    ).toBe(LEAVING_PLAN.DOWNGRADE);
+  });
+
+  it("付費、續訂中、沒有排程 → 什麼都不說", () => {
+    expect(
+      resolveLeavingPlan({
+        planId: TEAM_PLAN.TEAM,
+        pendingPlanId: null,
+        autoRenew: true,
+      }),
+    ).toBeNull();
+  });
+
+  // Info: (20260824 - Luphia) 認不出來的方案代號當免費版處理：寧可不說，也不要說錯
+  it("方案代號認不出來 → 什麼都不說", () => {
+    expect(
+      resolveLeavingPlan({
+        planId: "enterprise_x",
+        pendingPlanId: null,
+        autoRenew: false,
+      }),
+    ).toBeNull();
+  });
+});
+
+/**
+ * Info: (20260824 - Luphia) 「買一期會把關掉的自動續訂重新打開」要在付款前說
+ *（review #6687 四輪中-1）。
+ *
+ * 履行（`applyTeamSubscriptionInTx`）一律寫 `autoRenew: true` 並清
+ * `pendingPlanId`。狀態機收斂之前，「期末轉免費版」是 `pendingPlanId = 'free'`，
+ * 所以它會觸發「本次購買完成後，該降級將取消」那句；收斂之後那個狀態改由
+ * `autoRenew = false` 表達，而那句揭露只看 `pendingPlanId`——於是降轉還會說，
+ * 期末轉免費版不再說。兩種在產品上是同一件事。
+ */
+describe("購買會取代什麼：兩種狀態都要揭露", () => {
+  const hook = readFileSync(
+    join(process.cwd(), "src", "hooks", "use_purchase_target.tsx"),
+    "utf8",
+  );
+  const selector = readFileSync(
+    join(
+      process.cwd(),
+      "src",
+      "components",
+      "pricing",
+      "purchase_target_selector.tsx",
+    ),
+    "utf8",
+  );
+
+  it("hook 把「已關閉自動續訂」也算進要揭露的狀態", () => {
+    expect(hook).toContain("willResumeAutoRenew");
+    expect(hook).toContain("response.payload?.autoRenew === false");
+    /**
+     * Info: (20260824 - Luphia) 且必須先過「當期還在、當期是付費方案」那道守門
+     * ——免費團隊的 autoRenew 是預設值 false，不是使用者關掉的（高-1 同一個坑）。
+     */
+    expect(hook).toContain("note !== null && response.payload?.autoRenew");
+  });
+
+  it("selector 對兩種狀態各說一句", () => {
+    expect(selector).toContain("purchase_target.pending_downgrade_note");
+    expect(selector).toContain("purchase_target.resume_autorenew_note");
+  });
+
+  it("五個語言檔都有恢復自動續訂那句", () => {
+    for (const locale of ["zh_tw", "en", "zh_cn", "ja", "ko"]) {
+      const file = readFileSync(
+        join(
+          process.cwd(),
+          "src",
+          "i18n",
+          "locales",
+          locale,
+          "purchase_target.ts",
+        ),
+        "utf8",
+      );
+      expect(file).toContain("resume_autorenew_note:");
+      // Info: (20260824 - Luphia) 純 <p> 渲染不了 markdown（我第三次寫回去了）
+      expect(file).not.toContain("**");
+    }
+  });
+
+  // Info: (20260824 - Luphia) 低-1：維持目前方案要帶回真的週期，不能寫死月繳
+  it("面板的維持目前方案帶真實的計費週期", () => {
+    const walletPanel = readFileSync(
+      join(process.cwd(), "src", "components", "team", "team_wallet_panel.tsx"),
+      "utf8",
+    );
+
+    expect(walletPanel).toContain(
+      "billingInterval: subscription.billingInterval",
+    );
+    expect(walletPanel).not.toContain('billingInterval: "month"');
   });
 });

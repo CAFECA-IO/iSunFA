@@ -103,3 +103,41 @@ export function resolveUnanimousPlan(
   const [first] = plans;
   return plans.every((plan) => plan === first) ? first : undefined;
 }
+
+/**
+ * Info: (20260824 - Luphia) 「這個團隊將要離開目前的付費狀態」——是哪一種，或不是。
+ *
+ * 兩種狀態在產品上是同一件事（「我打算離開目前的付費狀態」），但落地方式不同：
+ *
+ * - `DOWNGRADE`：期末降轉到較低的**付費**方案（`pendingPlanId`），續訂 cron 以新方案計價。
+ * - `EXPIRE`：關閉自動續訂，期末由 `expireOverdue` 落地為 free（裁定 20260821：
+ *   降級是時間到不付錢的自然結果）。
+ *
+ * **有效方案是免費版時一律回 null**，這是這支函式存在的理由（review #6687 四輪高-1）：
+ * `GET /subscription` 對**沒有訂閱列**的團隊回 `autoRenew: false`（沒有訂閱就談不上
+ * 自動續訂，那是對的預設）與 `currentPeriodEnd: 0`。畫面若只看 `!autoRenew`，
+ * 每一個從未訂閱過的團隊都會被說成「當期到 1970/1/1 後轉為免費版」，
+ * 而那個提示旁邊的「維持目前方案」按鈕按下去什麼都不會發生
+ *（server 端對免費列不寫任何資料）——一個死路的按鈕比沒有按鈕更糟。
+ *
+ * 抽成純函式而不是留在 JSX 裡：這個缺陷躲過了掃描測試——那條測試斷言
+ * 「`!subscription.autoRenew` 這個字串在檔案裡」，而**字串本身就是缺陷**。
+ * 判斷搬到這裡之後，錯的答案是一條紅色的斷言，不是一個綠色的字串比對。
+ */
+export const LEAVING_PLAN = {
+  DOWNGRADE: "DOWNGRADE",
+  EXPIRE: "EXPIRE",
+} as const;
+
+export type LeavingPlan = (typeof LEAVING_PLAN)[keyof typeof LEAVING_PLAN];
+
+export function resolveLeavingPlan(subscription: {
+  // Info: (20260824 - Luphia) 有效方案（`GET /subscription` 的 planId，已折算）
+  planId: string;
+  pendingPlanId: string | null;
+  autoRenew: boolean;
+}): LeavingPlan | null {
+  if (resolvePlanId(subscription.planId) === TEAM_PLAN.FREE) return null;
+  if (subscription.pendingPlanId !== null) return LEAVING_PLAN.DOWNGRADE;
+  return subscription.autoRenew ? null : LEAVING_PLAN.EXPIRE;
+}

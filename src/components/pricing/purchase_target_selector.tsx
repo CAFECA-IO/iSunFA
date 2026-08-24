@@ -267,16 +267,32 @@ export default function PurchaseTargetSelector({
        */}
       {target === PURCHASE_TARGET.TEAM &&
         periodNote !== PERIOD_NOTE.DOWNGRADE_SCHEDULE &&
-        pendingPlanId !== null &&
         pendingEffectiveAt !== null &&
         selectedTeamId && (
           <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
-            {t("purchase_target.pending_downgrade_note", {
-              team:
-                teams.find((team) => team.id === selectedTeamId)?.name ?? "",
-              date: new Date(pendingEffectiveAt * 1000).toLocaleDateString(),
-              plan: t(`pricing.plans.${pendingPlanId}.name`),
-            })}
+            {pendingPlanId !== null
+              ? t("purchase_target.pending_downgrade_note", {
+                  team:
+                    teams.find((team) => team.id === selectedTeamId)?.name ??
+                    "",
+                  date: new Date(
+                    pendingEffectiveAt * 1000,
+                  ).toLocaleDateString(),
+                  plan: t(`pricing.plans.${pendingPlanId}.name`),
+                })
+              : /**
+                 * Info: (20260824 - Luphia) 已關閉自動續訂（期末轉免費版）：
+                 * 履行一律寫 `autoRenew: true`，也就是這筆購買會把使用者
+                 * 關掉的那件事重新打開——付款前就要說（review #6687 四輪中-1）。
+                 */
+                t("purchase_target.resume_autorenew_note", {
+                  team:
+                    teams.find((team) => team.id === selectedTeamId)?.name ??
+                    "",
+                  date: new Date(
+                    pendingEffectiveAt * 1000,
+                  ).toLocaleDateString(),
+                })}
           </p>
         )}
 

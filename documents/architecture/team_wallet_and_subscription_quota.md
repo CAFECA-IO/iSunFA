@@ -920,6 +920,14 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 - **`autoRenew` 進入 `PUT` 的回應**：「期末轉為免費版」那種狀態在 DB 裡沒有排程欄位，因此回應不能回一個 `pendingPlanId: 'free'`——那會讓 `PUT` 與 `GET /subscription` 對同一件事給出兩個答案。畫面靠 `autoRenew: false` 說話（付款完成頁三句話分流）。
 - **取消入口**：`changeTeamSubscription` 用「有沒有帶 `paymentMethodId`」分辨「維持目前方案」與「我要買」，而在此之前**全站唯一的 PUT 呼叫點**在購買流程裡、參數必填——服務條款 §3.6 承諾的「生效前可隨時改回原方案」一次都走不到，使用者只能再付一期來取消（剩餘超過 30 天時連那條路都被展延閘門擋住）。團隊錢包面板因此新增「將要離開目前方案」的狀態列與「維持目前方案」按鈕（OWNER 專屬，與 server 端同判準），送不帶付款方式的 `PUT`。守門是掃描測試——service 的取消分支自己永遠是綠的，只有掃前端原始碼才問得出「有沒有一個不帶付款方式的呼叫點」。
 
+#### 7.1.7 review #6687 四輪：三條顯示層修正（2026-08-24）
+
+**免費版團隊不該被說成「將要離開付費方案」（高-1）**：`GET /subscription` 對沒有訂閱列的團隊回 `autoRenew: false`（沒有訂閱就談不上自動續訂）與 `currentPeriodEnd: 0`，而面板只看那兩欄——於是每一個從未訂閱過的團隊都顯示「當期到 1970/1/1 後轉為免費版」，旁邊那顆「維持目前方案」按下去什麼都不會發生（server 對免費列不寫資料）。判斷抽成 `resolveLeavingPlan`（純函式、逐條測試），第一道就是「有效方案是免費版 → 什麼都不說」。**先前守它的掃描測試對這個缺陷永遠是綠的**——它斷言的是「`!subscription.autoRenew` 這個字串在檔案裡」，而那個字串本身就是缺陷（檢查表 §1.11）。
+
+**「買一期會把關掉的自動續訂重新打開」要在付款前說（中-1）**：履行（`applyTeamSubscriptionInTx`）一律寫 `autoRenew: true` 並清 `pendingPlanId`。狀態機收斂（§7.1.6）之前「期末轉免費版」是 `pendingPlanId = 'free'`，所以它會觸發「本次購買完成後，該降級將取消」那句；收斂之後那個狀態改由 `autoRenew = false` 表達，而那句揭露只看 `pendingPlanId`——於是降轉還會說、期末轉免費版不再說，而兩者在產品上是同一件事。揭露條件改成「有排程 **或** 已關閉續訂」，並補一句 `resume_autorenew_note`。
+
+**「維持目前方案」帶回真實的計費週期（低-1）**：面板的 PUT 曾寫死 `"month"`。今天無害（那條分支不讀這個欄位），但那是一個在請求裡說謊的參數，而這個欄位過去曾參與判斷。`GET /subscription` 因此新增 `billingInterval`（沒有訂閱列或尚未回填時回月繳；真正需要精確值的席次補收讀 DB 原值並在 NULL 時擋下，不吃這個預設）。
+
 #### 7.1.5 換方案＝折抵剩餘價值（2026-08-21 產品裁定，**禁止造成用戶損失的設計**）
 
 期間的三條規則收斂到純函式 `src/lib/billing/subscription_period.ts`（`resolveNextPeriod`）：
