@@ -93,14 +93,23 @@ const isTestFile = (relativePath: string): boolean =>
 const isRepository = (relativePath: string): boolean =>
   relativePath.startsWith(join("src", "repositories") + sep);
 
-const filesMatching = (needle: string): string[] => {
+/**
+ * Info: (20260824 - Luphia) 掃到的**全部**檔案，與內容無關。
+ *
+ * 分出這一層是為了讓「根有沒有被走到」問得起來 —— 那個問題不能用
+ * 「有幾個檔案違反」回答：違反數清零是好事（負債還完了），
+ * 而拿它當根的存活訊號，會讓還完債的那一刻變成紅燈。
+ */
+const scannedFiles = (): string[] => {
   const files: string[] = [];
   for (const root of SCAN_ROOTS) walk(root, files);
-  return files
-    .filter((full) => readFileSync(full, "utf8").includes(needle))
-    .map((full) => relative(process.cwd(), full))
-    .sort();
+  return files.map((full) => relative(process.cwd(), full)).sort();
 };
+
+const filesMatching = (needle: string): string[] =>
+  scannedFiles()
+    .filter((path) => readFileSync(path, "utf8").includes(needle))
+    .sort();
 
 const filesUsingTransaction = (): string[] => filesMatching("$transaction");
 
@@ -202,16 +211,17 @@ describe("$transaction 只在 Repository 層（coding_guidelines §1.1）", () =
    * 掃描會安靜地退回只有 `src`：所有斷言仍然全綠，而 `scripts/` 重新
    * 變成監測之外 —— 那正是這次要修掉的狀態，卻沒有東西會說出來。
    *
-   * 判準取「白名單裡的 `scripts/` 項目至少有一個真的被掃到」，
-   * 而不是寫死一個數量：數量會隨腳本增減變動，而根有沒有被走到不會。
+   * 判準是「`scripts/` 底下有檔案被走到」，**與有沒有人違反無關**。
+   *
+   * 第一版寫的是「白名單裡的 `scripts/` 項目至少有一個真的被掃到」，
+   * 那是錯的：白名單只縮不增，總有一天那 15 支會被清完並從表上移除，
+   * 而那一刻這條斷言會由「根活著」變成「沒有東西可比」——
+   * **還完負債反而是紅燈**。實測過那個情境（15 支全清、白名單清空）
+   * 確實會紅。一條會因為別人做對事而失敗的測試，遲早被改成它不該有的樣子。
    */
   it("掃描根確實走到根目錄的 scripts/", () => {
-    const scanned = new Set(filesMatching('from "@/lib/prisma"'));
-    const fromScripts = GRANDFATHERED_PRISMA_IMPORTERS.filter((path) =>
-      path.startsWith(`scripts${sep}`),
-    );
     expect(
-      fromScripts.filter((path) => scanned.has(path)).length,
+      scannedFiles().filter((path) => path.startsWith(`scripts${sep}`)).length,
     ).toBeGreaterThan(0);
   });
 
