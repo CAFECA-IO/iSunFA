@@ -178,6 +178,49 @@ describe("條 4 的兩軸界(review 第二輪的七個繞過)", () => {
     });
   });
 
+  /**
+   * Info: (20260824 - Luphia) 冒號也是子句邊界 —— 兩種寬度都測（PR review）。
+   *
+   * 上面那條守住了逗號，而排除類原本沒有冒號：NFKC 把 `：` 正規化成 `:`，
+   * 兩種都攔不住。冒號在報告裡比逗號更常出現（「查證結論：」這類標籤位置），
+   * 所以它是這個洞裡最容易踩到的那一半。
+   */
+  it("動詞與 IFRS 隔著冒號時不誤報(全形與半形冒號)", () => {
+    [
+      "通過第三方查證:本報告依 IFRS S1/S2 之架構編製",
+      "通過第三方查證：本報告依 IFRS S1/S2 之架構編製",
+    ].forEach((sentence) => {
+      expect(auditFrameworkClaims(sentence).complianceClaims).toEqual([]);
+    });
+  });
+
+  /**
+   * Info: (20260824 - Luphia) #54 上線後外殼要印的那張封面必須是綠的。
+   *
+   * 這是本條判準最重要的一個形狀：允許的〔對齊聲明 + 免責句〕**加上**
+   * 一行報告本來就有的查證聲明。三句各自合法，而 `squeezeForMatch`
+   * 連換行一起壓掉 —— 相鄰兩行變成一個連續字串，於是「通過…:…IFRS」
+   * 跨了兩句被條 4 命中，一份完全合規的報告過不了驗收。
+   *
+   * 條 2 與條 3 在這裡都必須是滿足的（有對齊聲明、也有免責句），
+   * 一起斷言才說得完整：紅的只會是條 4，而那正是要修掉的那一條。
+   */
+  it("允許的封面組合加上查證聲明時,四條判準全綠", () => {
+    const cover = [
+      "本報告已通過第三方查證：",
+      `${FRAMEWORK_ALIGNMENT_PHRASE}。`,
+      `${FRAMEWORK_DISCLAIMER_PHRASE}。`,
+    ].join("\n");
+    const audit = auditFrameworkClaims(cover);
+
+    expect(audit.alignmentDeclared).toBe(true);
+    expect(audit.disclaimerPresent).toBe(true);
+    expect(audit.unalignedFrameworks).toEqual([]);
+    expect(audit.ifrsWithoutAlignment).toEqual([]);
+    expect(audit.alignmentWithoutDisclaimer).toEqual([]);
+    expect(audit.complianceClaims).toEqual([]);
+  });
+
   it("新動詞的否定式不誤報", () => {
     ["本公司未遵照 IFRS S2 辦理", "本報告尚未依據 IFRS S2 編製"].forEach(
       (sentence) => {
