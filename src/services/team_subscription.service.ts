@@ -336,9 +336,19 @@ export type IChangeSubscriptionResult =
       kind: typeof SUBSCRIPTION_CHANGE_KIND.SCHEDULED;
       // Info: (20260820 - Luphia) 當期方案（沒有變）
       planId: TeamPlanId;
-      // Info: (20260820 - Luphia) 排程中的方案；null＝剛剛取消了排程
+      /**
+       * Info: (20260820 - Luphia) 期末要降轉到哪個**付費**方案；
+       * null＝沒有降轉（剛剛恢復訂閱，或這次是「期末轉免費版」——那種狀態由
+       * `autoRenew: false` 表達，見 20260821 的裁定）。
+       */
       pendingPlanId: TeamPlanId | null;
-      // Info: (20260820 - Luphia) 生效時點（epoch 秒）＝當期屆滿；取消時為當下
+      /**
+       * Info: (20260821 - Luphia) 期末還會不會自動續訂。`false`＝當期屆滿後
+       * 轉為免費版（降級是時間到不付錢的自然結果）。畫面要據此說話，
+       * 而不是靠一個 DB 裡不存在的 `pendingPlanId: free`。
+       */
+      autoRenew: boolean;
+      // Info: (20260820 - Luphia) 生效時點（epoch 秒）＝當期屆滿；恢復訂閱時為當下
       effectiveAt: number;
     };
 
@@ -371,37 +381,42 @@ export async function changeTeamSubscription(params: {
       : null;
 
     /**
-     * Info: (20260820 - Luphia) 已排程降級後又送出「目前方案」且**沒帶付款方式**
-     * ＝取消降級。沒有這一條，使用者就沒有回頭路：畫面上他的方案還是團隊版
-     * （正確），再按一次團隊版會走升級路徑——建一張新單、再收一整期的錢。
-     * 「取消降級」與「延長期間」送進來的方案完全一樣，判準是付款方式：
-     * 帶了就是「我要買」（往下走建單），沒帶就是單純取消。
+     * Info: (20260820 - Luphia) 送出「目前方案」且**沒帶付款方式**＝維持目前方案
+     *（服務條款 §3.6：生效前可隨時改回原方案）。沒有這一條，使用者就沒有回頭路：
+     * 畫面上他的方案還是團隊版（正確），再按一次團隊版會走購買路徑——
+     * 建一張新單、再收一整期的錢。判準是付款方式：帶了就是「我要買」
+     *（往下走建單），沒帶就是單純收回「將要離開目前方案」的狀態。
      *
-     * Info: (20260821 - Luphia) 取消只在**沒帶付款方式**時就地執行（review #6687
-     * 二輪阻擋-3）。原本取消寫在分辨之前，於是「延長」也先把排程取消了——
-     * 而它接下來的建單、扣款可能不會成功（關掉付款畫面、卡被拒），沒有任何補償：
-     * 排程消失、autoRenew 被重新打開，期末照原方案續扣一整期。
+     * Info: (20260821 - Luphia) 兩種狀態都由這一條收回（產品裁定 20260821）：
+     * 已關閉自動續訂（期末轉免費版）、已排定期末降轉。先前只認 `pendingPlanId`，
+     * 而「降到免費版」改成只關 `autoRenew` 之後，那種狀態就沒有任何路徑收得回來
+     * ——條款承諾的「隨時改回原方案」會做不到（四輪 self-review）。
      *
+     * Info: (20260821 - Luphia) 只在**沒帶付款方式**時就地執行（review #6687
+     * 二輪阻擋-3）。原本寫在分辨之前，於是「延長」也先把排程取消了——
+     * 而它接下來的建單、扣款可能不會成功（關掉付款畫面、卡被拒），沒有任何補償。
      * 帶付款方式時**這裡什麼都不動**：排程由履行（`applyTeamSubscriptionInTx`
-     * 的 `pendingPlanId: null`）在付款成功時清掉，與升級同一條規則；`pendingTarget`
-     * 保留，回應才說得出「本次購買完成後，該降級將取消」（現在式，與付款前的
-     * 揭露文案一致）。
+     * 的 `pendingPlanId: null`）在付款成功時清掉，與升級同一條規則。
      *
      * `planId !== FREE` 的守門（review 二輪高-2 的變化型）：寬限期內
      * `currentPlanId` 是**折算後**的 free，使用者送 free 是要**降級**，
-     * 不是取消排程——沒有這道守門，他按「降級」的效果會是重新打開自動續訂。
+     * 不是維持目前方案——沒有這道守門，他按「降級」的效果會是重新打開自動續訂。
      */
+    const leavingCurrentPlan =
+      subscription !== null &&
+      (subscription.pendingPlanId !== null || !subscription.autoRenew);
     if (
-      subscription?.pendingPlanId &&
+      leavingCurrentPlan &&
       planId === currentPlanId &&
       planId !== TEAM_PLAN.FREE &&
       !paymentMethodId
     ) {
-      await teamSubscriptionRepo.cancelPendingPlanChange(teamId);
+      await teamSubscriptionRepo.resumeSubscription(teamId);
       return {
         kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
         planId: currentPlanId,
         pendingPlanId: null,
+        autoRenew: true,
         effectiveAt: nowSec,
       };
     }
@@ -416,17 +431,38 @@ export async function changeTeamSubscription(params: {
       if (!subscription) {
         throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
       }
-      await teamSubscriptionRepo.schedulePlanChange({
-        teamId,
-        pendingPlanId: planId,
-        // Info: (20260820 - Luphia) 降到 free＝期末終止（關閉續訂）；降到較低付費方案仍要續訂
-        autoRenew: planId !== TEAM_PLAN.FREE,
-      });
+      /**
+       * Info: (20260821 - Luphia) 兩條路，判準是「還要不要繼續付錢」
+       *（產品裁定 20260821：**降級是時間到不付錢的自然結果**）：
+       *
+       * - **降到免費版**＝不再付錢：只關閉自動續訂。期末由 `expireOverdue`
+       *   落地為 free，不需要任何排程欄位——先前寫 `pendingPlanId = free`
+       *   是用兩個欄位表達同一件事。
+       * - **降到較低的付費方案**＝下一期改付較少：排程 `pendingPlanId`，
+       *   維持自動續訂，期末由續訂 cron 以新方案計價續訂。
+       *
+       * 兩條路都不碰當期權益（退款政策 §2.1：使用者已經付到期末）。
+       */
+      if (planId === TEAM_PLAN.FREE) {
+        await teamSubscriptionRepo.cancelAutoRenew(teamId);
+      } else {
+        await teamSubscriptionRepo.schedulePlanChange({
+          teamId,
+          pendingPlanId: planId,
+        });
+      }
       return {
         kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
         // Info: (20260820 - Luphia) 回**當期**方案：當期權益沒有變，畫面不該顯示新方案
         planId: currentPlanId,
-        pendingPlanId: planId,
+        /**
+         * Info: (20260821 - Luphia) 降到免費版沒有「排程中的方案」可回：
+         * DB 也不存了。畫面靠 `autoRenew: false` 說「期末到期後轉為免費版」——
+         * 回一個 DB 裡不存在的 `pendingPlanId: free` 會讓 `PUT` 與
+         * `GET /subscription` 對同一件事給出兩個答案。
+         */
+        pendingPlanId: planId === TEAM_PLAN.FREE ? null : planId,
+        autoRenew: planId !== TEAM_PLAN.FREE,
         effectiveAt: Math.floor(subscription.currentPeriodEnd.getTime() / 1000),
       };
     }
@@ -453,6 +489,12 @@ export async function changeTeamSubscription(params: {
         kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
         planId: TEAM_PLAN.FREE,
         pendingPlanId: null,
+        /**
+         * Info: (20260821 - Luphia) 已經是免費版了（寬限期立即落地，或本來就是），
+         * 沒有「期末會轉為免費版」這件事要說——回 true 讓畫面走「已維持目前方案」
+         * 那一句，而不是「當期到 X 日後轉為免費版」（當期已經沒有付費權益了）。
+         */
+        autoRenew: true,
         effectiveAt: nowSec,
       };
     }

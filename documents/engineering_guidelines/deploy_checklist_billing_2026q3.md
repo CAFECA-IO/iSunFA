@@ -317,6 +317,20 @@ WHERE o.status = 'PAID' AND o.idempotency_key LIKE 'renew:%'
   AND ts.plan_id = 'free';
 ```
 
+### 3.10 清掉舊的 `pending_plan_id = 'free'`（2026-08-21）— **有排程降級紀錄的環境要做**
+
+裁定後「不再付錢」只關 `auto_renew`，不寫排程欄位（設計書 §7.1.6）。部署前若有人已用舊行為排程過降到免費版，那些列會留著 `pending_plan_id = 'free'`：續訂 cron 讀不到它們（`auto_renew` 已是 false），但**團隊錢包面板會顯示「已排定於 X 起改為免費版」**，而新的正確說法是「自動續訂已關閉」。兩者結果相同，只是措辭不同——不影響金流，可從容處理：
+
+```sql
+-- 檢視
+SELECT team_id, plan_id, auto_renew, current_period_end
+FROM team_subscription WHERE pending_plan_id = 'free';
+
+-- 清理（auto_renew 應該已是 false；若不是，那一列是舊行為的殘缺狀態，要一併關掉）
+UPDATE team_subscription SET pending_plan_id = NULL, auto_renew = false
+WHERE pending_plan_id = 'free';
+```
+
 ---
 
 ## 4. 部署後驗證
@@ -326,6 +340,8 @@ WHERE o.status = 'PAID' AND o.idempotency_key LIKE 'renew:%'
 - [ ] 同一個團隊按**升級**（換較高方案）：不受 30 天閘門限制，付款前顯示「舊方案剩餘期間將按已付金額折抵為新方案天數」；付款後 `current_period_end` = 今天 + 一期 + 折抵天數（年繳團隊剩 335 天升月繳企業 ≈ 今天 + 30 + 78.7 天）
 - [ ] 展延或折抵之後跨距超過一期的團隊仍可加人（上限已按跨距縮放，不會誤擋 `TW000016`）
 - [ ] 寬限期（PAST_DUE）的團隊按「降級為免費版」：立即生效（`plan_id` = free、`auto_renew` = false），續訂 worker 下一輪不再對它扣款
+- [ ] 訂閱中的團隊按「降級為免費版」：`auto_renew` 轉 false、`pending_plan_id` 保持 NULL、`plan_id` 與週期**不變**；團隊錢包面板出現「自動續訂已關閉…轉為免費版」與「維持目前方案」按鈕（僅 OWNER 看得到），按下後 `auto_renew` 回 true
+- [ ] 降轉到較低付費方案：`pending_plan_id` 寫入且 `auto_renew` 維持 true；期末續訂 cron 以新方案計價（面板顯示「已排定於 X 起改為 Y」）
 - [ ] 成員的個人點數餘額顯示正確（遷移後應等於原分配餘額 + 原有個人點數）
 - [ ] 額度用盡時的 402 提示：一般情況顯示倒數；單筆超過視窗上限時**不顯示倒數**、改提示升級或改用個人點數
 - [ ] 收據只取得到自己的訂單（換一個 `order_id` 應回 404）

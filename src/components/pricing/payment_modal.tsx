@@ -75,9 +75,22 @@ export default function PaymentModal({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Info: (20260820 - Luphia) 排程結果（沒有付款）：生效時點與目標方案
+  /**
+   * Info: (20260820 - Luphia) 排程結果（沒有付款）：生效時點與目標方案。
+   *
+   * Info: (20260821 - Luphia) 三種結果共用這一頁（產品裁定 20260821），
+   * 靠 `pendingPlanId` 與 `autoRenew` 分辨：
+   *
+   * - `pendingPlanId` 有值 → 期末降轉到那個付費方案
+   * - `autoRenew === false` → 已取消自動續訂，期末轉為免費版
+   * - 其餘 → 已維持目前方案（恢復自動續訂）
+   *
+   * 三句話必須分開：`pendingPlanId` 為 null 時，原本那句會把方案名插成空字串
+   * ——「將於 X 起改為」後面什麼都沒有。
+   */
   const [scheduled, setScheduled] = useState<{
     pendingPlanId: string | null;
+    autoRenew: boolean;
     effectiveAt: number | null;
   } | null>(null);
   /**
@@ -497,6 +510,7 @@ export default function PaymentModal({
         if (outcome.kind === "scheduled") {
           setScheduled({
             pendingPlanId: outcome.pendingPlanId,
+            autoRenew: outcome.autoRenew ?? true,
             effectiveAt: outcome.effectiveAt,
           });
           setStep(PaymentStep.scheduled);
@@ -1147,7 +1161,11 @@ export default function PaymentModal({
                               </DialogTitle>
                               <p className="mt-3 text-center text-sm text-gray-600">
                                 {t(
-                                  "pricing.credits.payment_modal.scheduled_body",
+                                  scheduled?.pendingPlanId
+                                    ? "pricing.credits.payment_modal.scheduled_body"
+                                    : scheduled?.autoRenew === false
+                                      ? "pricing.credits.payment_modal.scheduled_expire_body"
+                                      : "pricing.credits.payment_modal.scheduled_resumed_body",
                                   {
                                     plan: scheduled?.pendingPlanId
                                       ? t(

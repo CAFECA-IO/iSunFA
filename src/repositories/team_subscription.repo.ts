@@ -408,15 +408,15 @@ export class TeamSubscriptionRepository {
   }
 
   /**
-   * Info: (20260820 - Luphia) 排程一個**期末生效**的方案變更（降級）。
+   * Info: (20260820 - Luphia) 排程一個**期末生效**的方案變更（降轉到較低的付費方案）。
    *
-   * 只動 `pendingPlanId` 與 `autoRenew`，**不碰 `planId`／`currentPeriodEnd`／`unitPrice`**
-   * ——當期權益必須維持原方案（退款政策 §2.1：降級於當期結束後生效，且不按比例退費）。
+   * 只動 `pendingPlanId`，**不碰 `planId`／`currentPeriodEnd`／`unitPrice`／`autoRenew`**
+   * ——當期權益必須維持原方案（退款政策 §2.1：降級於當期結束後生效，且不按比例退費），
+   * 而期末仍要續訂（用新方案計價，見 `subscription_renewal.cron` 讀 `pendingPlanId`）。
    *
-   * `autoRenew` 的兩種情形不同：
-   *
-   * - 降到 free：期末就是終止，關掉自動續訂，由 `expireOverdue` 在期末落地。
-   * - 降到較低的**付費**方案：期末仍要續訂（用新方案計價），因此維持自動續訂。
+   * Info: (20260821 - Luphia) `autoRenew` 參數已移除（產品裁定 20260821）：
+   * 這一支現在**只**服務「期末降轉到較低付費方案」，那條路必然維持自動續訂。
+   * 「不要再付錢了」不再走排程——那是 `cancelAutoRenew`，見下。
    *
    * 刻意**不**標記卡片待同步（`CARD_DIRTY`）：當期的方案與期限一個都沒變，
    * 鏈上那張卡仍然是對的。要到期末落地時才需要換 URI。
@@ -424,24 +424,51 @@ export class TeamSubscriptionRepository {
   async schedulePlanChange(params: {
     teamId: string;
     pendingPlanId: string;
-    autoRenew: boolean;
   }): Promise<void> {
     await prisma.teamSubscription.update({
       where: { teamId: params.teamId },
-      data: {
-        pendingPlanId: params.pendingPlanId,
-        autoRenew: params.autoRenew,
-      },
+      data: { pendingPlanId: params.pendingPlanId, autoRenew: true },
     });
   }
 
   /**
-   * Info: (20260820 - Luphia) 取消排程（使用者改變主意，改回目前的方案）。
+   * Info: (20260821 - Luphia) 關閉自動續訂（產品裁定 20260821：**降級是時間到不付錢
+   * 的自然結果**）。
    *
-   * 一併把自動續訂打開：排程降到 free 時關掉了它，只清 `pendingPlanId` 會留下
-   * 「方案沒變，但期末會停掉」——那是使用者按下「取消降級」後最不預期的結果。
+   * 「降到免費版」不需要排程：關掉自動續訂之後，`markOverdueForRenewal` 不會撈它
+   *（那一支只撈 `autoRenew = true`），期末由 `expireOverdue` 落地為 free。
+   * 先前這條路會寫 `pendingPlanId = free`，而那個值除了讓續訂 cron 多一道
+   * 「排程 free 卻仍自動續訂」的早退之外，沒有任何地方真的需要它——
+   * 兩個欄位表達同一件事，就是多一個會不一致的地方。
+   *
+   * 當期權益完全不動（`planId`／`currentPeriodEnd`／`unitPrice` 一個都不碰）：
+   * 使用者已經付到期末（退款政策 §2.1）。
+   *
+   * Info: (20260821 - Luphia) **一併清掉降轉排程**（四輪 self-review 寫測試時發現）：
+   * 已排定「期末降轉到團隊版」的人又改成「不再付錢」時，留著那個 `pendingPlanId`
+   * 會讓面板顯示「將改為團隊版」——而他選的是免費版。`expireOverdue` 雖然會在
+   * **期末**把它清掉，但那之前的整段期間畫面都在說一件使用者沒有選的事。
    */
-  async cancelPendingPlanChange(teamId: string): Promise<void> {
+  async cancelAutoRenew(teamId: string): Promise<void> {
+    await prisma.teamSubscription.update({
+      where: { teamId },
+      data: { pendingPlanId: null, autoRenew: false },
+    });
+  }
+
+  /**
+   * Info: (20260820 - Luphia) 恢復訂閱（使用者改變主意，維持目前的方案）。
+   *
+   * 一併清掉 `pendingPlanId` 並打開 `autoRenew`——兩種「將要離開目前方案」的狀態
+   * 都由這一支收回：
+   *
+   * - 已關閉自動續訂（期末會轉為免費版）→ 重新開啟。
+   * - 已排定期末降轉到較低方案 → 清掉排程。
+   *
+   * 只清一半會留下「方案沒變，但期末會停掉」——那是使用者按下「維持目前方案」後
+   * 最不預期的結果（服務條款 §3.6 承諾生效前可隨時改回原方案）。
+   */
+  async resumeSubscription(teamId: string): Promise<void> {
     await prisma.teamSubscription.update({
       where: { teamId },
       data: { pendingPlanId: null, autoRenew: true },

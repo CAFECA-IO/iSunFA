@@ -258,8 +258,15 @@ export default function PurchaseTargetSelector({
       {/**
        * Info: (20260820 - Luphia) 排程中的降級：付款前就要說「這筆付款會取消它」。
        * 方案名沿用方案頁的 i18n 鍵（`pricing.plans.*.name`），兩處必須是同一個詞。
+       *
+       * Info: (20260821 - Luphia) 但**這次動作本身就是降級時不能說這句**
+       *（四輪 self-review）：那條路徑不建單、不收費，而排程是被新的排程
+       * **取代**，不是「購買完成後取消」。兩句同時出現會互相矛盾——
+       * 藍色那句說「不會收取費用」，琥珀色那句說「本次購買完成後」。
+       * 上方的降級說明已經把結果講完，這句在那個情境下只會誤導。
        */}
       {target === PURCHASE_TARGET.TEAM &&
+        periodNote !== PERIOD_NOTE.DOWNGRADE_SCHEDULE &&
         pendingPlanId !== null &&
         pendingEffectiveAt !== null &&
         selectedTeamId && (

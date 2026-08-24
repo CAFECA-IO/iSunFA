@@ -118,6 +118,11 @@ export const teamManagement = {
       "The team wallet is frozen (conservation audit failure). Please contact support.",
     buy_credits: "Buy Credits",
     manage_plan: "Manage plan",
+    pending_downgrade:
+      "Scheduled to change to {{plan}} on {{date}}; until then your plan and quota stay the same.",
+    pending_expire:
+      "Auto-renewal is off: your plan and quota stay until {{date}}, then become the free plan unless you pay again.",
+    keep_current_plan: "Keep current plan",
     manage_plan_hint: "Upgrade the plan when the quota runs short",
     buy_credits_hint:
       "Purchased credits go into the team wallet for managers to allocate.",

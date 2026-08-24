@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
+import { readFileSync } from "fs";
+import { join } from "path";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
 
@@ -43,7 +45,9 @@ jest.mock("@/repositories/team_subscription.repo", () => ({
   teamSubscriptionRepo: {
     getByTeamId: jest.fn(async () => null),
     schedulePlanChange: jest.fn(async () => undefined),
-    cancelPendingPlanChange: jest.fn(async () => undefined),
+    // Info: (20260821 - Luphia) 「不再付錢」與「收回」各自一支（裁定 20260821）
+    cancelAutoRenew: jest.fn(async () => undefined),
+    resumeSubscription: jest.fn(async () => undefined),
     downgradeToFree: jest.fn(async () => undefined),
   },
 }));
@@ -119,9 +123,8 @@ beforeEach(() => {
   asMock(assertTeamMember).mockResolvedValue({ role: TeamRole.OWNER });
   asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(subscriptionRow());
   asMock(teamSubscriptionRepo.schedulePlanChange).mockResolvedValue(undefined);
-  asMock(teamSubscriptionRepo.cancelPendingPlanChange).mockResolvedValue(
-    undefined,
-  );
+  asMock(teamSubscriptionRepo.cancelAutoRenew).mockResolvedValue(undefined);
+  asMock(teamSubscriptionRepo.resumeSubscription).mockResolvedValue(undefined);
   asMock(generatePaymentOrder).mockResolvedValue({
     orderId: "order-1",
     challenge: "c",
@@ -139,14 +142,18 @@ describe("降級：排程到當期屆滿", () => {
   it("企業版 → 團隊版：只排程，不建單、不扣款、不動當期方案", async () => {
     const result = await change(TEAM_PLAN.TEAM);
 
+    /**
+     * Info: (20260821 - Luphia) 降到較低的**付費**方案才排程（裁定 20260821）：
+     * 那是「下一期改付較少」，期末要用新方案計價續訂，因此維持自動續訂。
+     * `autoRenew` 已不是參數（那一支現在只服務降轉）。
+     */
     expect(
       asMock(teamSubscriptionRepo.schedulePlanChange),
     ).toHaveBeenCalledWith({
       teamId: "team-1",
       pendingPlanId: TEAM_PLAN.TEAM,
-      // Info: (20260820 - Luphia) 降到較低的付費方案仍要續訂（期末以新方案計價）
-      autoRenew: true,
     });
+    expect(asMock(teamSubscriptionRepo.cancelAutoRenew)).not.toHaveBeenCalled();
     expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
     expect(asMock(teamSubscriptionRepo.downgradeToFree)).not.toHaveBeenCalled();
     expect(result).toEqual({
@@ -154,6 +161,8 @@ describe("降級：排程到當期屆滿", () => {
       // Info: (20260820 - Luphia) 回**當期**方案：權益沒有變，畫面不該顯示新方案
       planId: TEAM_PLAN.BUSINESS,
       pendingPlanId: TEAM_PLAN.TEAM,
+      // Info: (20260821 - Luphia) 降轉仍會續訂，只是下一期換方案
+      autoRenew: true,
       effectiveAt: Math.floor(PERIOD_END_MS / 1000),
     });
   });
@@ -163,25 +172,30 @@ describe("降級：排程到當期屆滿", () => {
    *
    * `downgradeToFree` 會把 `planId` 改成 free 並歸零單價——那支仍然存在
    *（寬限期用盡時由續訂 worker 呼叫），但**使用者主動降級不得走它**。
+   *
+   * Info: (20260821 - Luphia) 而它也**不再排程**（產品裁定 20260821：
+   * 降級是時間到不付錢的自然結果）：只關自動續訂，期末由 `expireOverdue`
+   * 落地為 free。回應不回 `pendingPlanId: free`——DB 裡不存那個值，
+   * 回它會讓 `PUT` 與 `GET /subscription` 對同一件事給出兩個答案。
    */
-  it("付費 → 免費版：只排程並關閉自動續訂，不呼叫 downgradeToFree", async () => {
+  it("付費 → 免費版：只關閉自動續訂，不排程也不呼叫 downgradeToFree", async () => {
     const result = await change(TEAM_PLAN.FREE);
 
+    expect(asMock(teamSubscriptionRepo.cancelAutoRenew)).toHaveBeenCalledWith(
+      "team-1",
+    );
     expect(
       asMock(teamSubscriptionRepo.schedulePlanChange),
-    ).toHaveBeenCalledWith({
-      teamId: "team-1",
-      pendingPlanId: TEAM_PLAN.FREE,
-      // Info: (20260820 - Luphia) 降到 free＝期末終止，關掉續訂讓 expireOverdue 落地
-      autoRenew: false,
-    });
+    ).not.toHaveBeenCalled();
     expect(asMock(teamSubscriptionRepo.downgradeToFree)).not.toHaveBeenCalled();
     expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
     expect(result).toEqual(
       expect.objectContaining({
         kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
         planId: TEAM_PLAN.BUSINESS,
-        pendingPlanId: TEAM_PLAN.FREE,
+        pendingPlanId: null,
+        // Info: (20260821 - Luphia) 畫面靠這一欄說「期末到期後轉為免費版」
+        autoRenew: false,
       }),
     );
   });
@@ -252,7 +266,7 @@ describe("升級：立即生效", () => {
 
     expect(asMock(generatePaymentOrder)).toHaveBeenCalledTimes(1);
     expect(
-      asMock(teamSubscriptionRepo.cancelPendingPlanChange),
+      asMock(teamSubscriptionRepo.resumeSubscription),
     ).not.toHaveBeenCalled();
   });
 });
@@ -282,30 +296,75 @@ describe("取消排程", () => {
     });
 
     expect(
-      asMock(teamSubscriptionRepo.cancelPendingPlanChange),
+      asMock(teamSubscriptionRepo.resumeSubscription),
     ).toHaveBeenCalledWith("team-1");
     expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
     expect(result).toEqual({
       kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
       planId: TEAM_PLAN.BUSINESS,
       pendingPlanId: null,
+      // Info: (20260821 - Luphia) 收回＝恢復自動續訂，期末照原方案續訂
+      autoRenew: true,
       effectiveAt: Math.floor(NOW_MS / 1000),
     });
   });
 
-  // Info: (20260820 - Luphia) 排程中改成另一個更低的方案：改排程，仍然不收費
-  it("排程中改選另一個降級目標：重新排程", async () => {
+  /**
+   * Info: (20260821 - Luphia) **已關閉自動續訂（沒有排程）時也要收得回來**
+   *（四輪 self-review 的變異驗證發現這條沒有守門）。
+   *
+   * 「降到免費版」改成只關 `autoRenew` 之後，那種狀態的 `pendingPlanId` 是 null——
+   * 收回分支若只認 `pendingPlanId`，使用者按了「不再付錢」就再也回不來：
+   * 服務條款 §3.6 承諾的「生效前可隨時改回原方案」對這種狀態不成立，
+   * 而唯一的替代路徑是再付一期（剩餘超過 30 天時連那條都被閘門擋住）。
+   */
+  it("已關閉自動續訂（無排程）時選回當期方案：恢復續訂，不建單", async () => {
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      subscriptionRow({ pendingPlanId: null, autoRenew: false }),
+    );
+
+    const result = await changeTeamSubscription({
+      userId: "user-1",
+      teamId: "team-1",
+      planId: TEAM_PLAN.BUSINESS,
+      billingInterval: BILLING_INTERVAL.MONTH,
+      nowMs: NOW_MS,
+    });
+
+    expect(
+      asMock(teamSubscriptionRepo.resumeSubscription),
+    ).toHaveBeenCalledWith("team-1");
+    expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
+    expect(result).toEqual(
+      expect.objectContaining({
+        kind: SUBSCRIPTION_CHANGE_KIND.SCHEDULED,
+        pendingPlanId: null,
+        autoRenew: true,
+      }),
+    );
+  });
+
+  /**
+   * Info: (20260820 - Luphia) 排程中改成更低的方案：仍然不收費。
+   *
+   * Info: (20260821 - Luphia) 改成 free 之後走的是**關閉自動續訂**（裁定 20260821），
+   * 而舊的降轉排程必須一併清掉——留著它，期末的續訂 cron 會讀到
+   * `pendingPlanId` 而**照那個方案繼續扣款**，等於使用者按了「不再付錢」
+   * 卻仍然被收費。這一條就是釘住那件事。
+   */
+  it("排程降轉中又改成免費版：關閉續訂並清掉舊排程", async () => {
     asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
       subscriptionRow({ pendingPlanId: TEAM_PLAN.TEAM }),
     );
 
     await change(TEAM_PLAN.FREE);
 
+    expect(asMock(teamSubscriptionRepo.cancelAutoRenew)).toHaveBeenCalledWith(
+      "team-1",
+    );
     expect(
       asMock(teamSubscriptionRepo.schedulePlanChange),
-    ).toHaveBeenCalledWith(
-      expect.objectContaining({ pendingPlanId: TEAM_PLAN.FREE }),
-    );
+    ).not.toHaveBeenCalled();
     expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
   });
 });
@@ -365,7 +424,7 @@ describe("取消排程與改計費週期要分得開（self-review 小項）", (
     });
 
     expect(
-      asMock(teamSubscriptionRepo.cancelPendingPlanChange),
+      asMock(teamSubscriptionRepo.resumeSubscription),
     ).toHaveBeenCalledWith("team-1");
     expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
     expect(result).toEqual(
@@ -397,7 +456,7 @@ describe("取消排程與改計費週期要分得開（self-review 小項）", (
     });
 
     expect(
-      asMock(teamSubscriptionRepo.cancelPendingPlanChange),
+      asMock(teamSubscriptionRepo.resumeSubscription),
     ).not.toHaveBeenCalled();
     expect(asMock(generatePaymentOrder)).toHaveBeenCalledTimes(1);
   });
@@ -445,7 +504,7 @@ describe("取消排程與改計費週期要分得開（self-review 小項）", (
     });
 
     expect(
-      asMock(teamSubscriptionRepo.cancelPendingPlanChange),
+      asMock(teamSubscriptionRepo.resumeSubscription),
     ).not.toHaveBeenCalled();
     expect(asMock(generatePaymentOrder)).toHaveBeenCalledTimes(1);
     expect(result).toEqual(
@@ -831,7 +890,7 @@ describe("寬限期（PAST_DUE）按降級為免費版（review #6687 二輪高-
     await change(TEAM_PLAN.FREE);
 
     expect(
-      asMock(teamSubscriptionRepo.cancelPendingPlanChange),
+      asMock(teamSubscriptionRepo.resumeSubscription),
     ).not.toHaveBeenCalled();
     expect(asMock(teamSubscriptionRepo.downgradeToFree)).toHaveBeenCalled();
   });
@@ -848,5 +907,76 @@ describe("寬限期（PAST_DUE）按降級為免費版（review #6687 二輪高-
     await change(TEAM_PLAN.FREE);
 
     expect(asMock(teamSubscriptionRepo.downgradeToFree)).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Info: (20260821 - Luphia) 「維持目前方案」在 UI 上走得到（四輪 self-review）。
+ *
+ * 這一組守的是一件掃描才擋得住的事：server 端用「有沒有帶 `paymentMethodId`」
+ * 分辨「維持目前方案」與「我要買」，而在此之前**全站唯一的 PUT 呼叫點**在購買
+ * 流程裡、參數必填——於是服務條款 §3.6 承諾的「生效前可隨時改回原方案」
+ * 一次都走不到，使用者只能再付一期來取消（剩餘超過 30 天時連那條路都被閘門擋住）。
+ *
+ * 單元測試看不到這件事：service 的取消分支自己是綠的。只有掃前端原始碼
+ * 才問得出「有沒有一個不帶付款方式的呼叫點」。
+ */
+describe("維持目前方案的入口（前端接線）", () => {
+  const panel = readFileSync(
+    join(process.cwd(), "src", "components", "team", "team_wallet_panel.tsx"),
+    "utf8",
+  );
+
+  it("錢包面板送出不帶 paymentMethodId 的 PUT", () => {
+    const start = panel.indexOf("const resumeSubscription");
+    expect(start).toBeGreaterThan(-1);
+    const scope = panel.slice(start, start + 1200);
+
+    expect(scope).toContain('method: "PUT"');
+    expect(scope).toContain("subscription");
+    // Info: (20260821 - Luphia) 帶了付款方式就會變成「我要買」——那是另一條路
+    expect(scope).not.toContain("paymentMethodId");
+  });
+
+  /**
+   * Info: (20260821 - Luphia) 兩種「將要離開目前方案」的狀態都要看得見，
+   * 否則使用者按過之後唯一的回饋是「什麼都沒變」，於是他會再按一次
+   * ——而那一次會被當成購買（建單、收整期的錢）。
+   */
+  it("面板顯示期末降轉與期末轉免費版兩種狀態", () => {
+    expect(panel).toContain("subscription.pendingPlanId !== null");
+    expect(panel).toContain("!subscription.autoRenew");
+    expect(panel).toContain("wallet.pending_downgrade");
+    expect(panel).toContain("wallet.pending_expire");
+  });
+
+  // Info: (20260821 - Luphia) 變更訂閱狀態是 OWNER 專屬（server 端同判準），ADMIN 按了只會拿到 403
+  it("按鈕只給 OWNER", () => {
+    const start = panel.indexOf("wallet.keep_current_plan");
+    expect(start).toBeGreaterThan(-1);
+    expect(panel.slice(Math.max(0, start - 800), start)).toContain("isOwner");
+  });
+
+  it("五個語言檔都有面板那三句文案", () => {
+    for (const locale of ["zh_tw", "en", "zh_cn", "ja", "ko"]) {
+      const file = readFileSync(
+        join(
+          process.cwd(),
+          "src",
+          "i18n",
+          "locales",
+          locale,
+          "team_management.ts",
+        ),
+        "utf8",
+      );
+      for (const key of [
+        "pending_downgrade:",
+        "pending_expire:",
+        "keep_current_plan:",
+      ]) {
+        expect(file).toContain(key);
+      }
+    }
   });
 });

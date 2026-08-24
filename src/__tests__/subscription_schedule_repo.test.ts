@@ -65,12 +65,16 @@ beforeEach(() => {
   });
 });
 
-describe("schedulePlanChange", () => {
-  it("只寫 pendingPlanId 與 autoRenew，當期資料一個都不動", async () => {
+describe("schedulePlanChange（期末降轉到較低的付費方案）", () => {
+  /**
+   * Info: (20260821 - Luphia) 這一支現在**只**服務期末降轉（產品裁定 20260821：
+   * 「不再付錢」改成關閉自動續訂，不寫排程欄位）。降轉那條路必然維持自動續訂
+   * ——期末要用新方案計價續訂，`autoRenew` 因此是寫死的 true，不再是參數。
+   */
+  it("只寫 pendingPlanId 並維持自動續訂，當期資料一個都不動", async () => {
     await teamSubscriptionRepo.schedulePlanChange({
       teamId: "team-1",
       pendingPlanId: TEAM_PLAN.TEAM,
-      autoRenew: true,
     });
 
     expect(asMock(prisma.teamSubscription.update)).toHaveBeenCalledWith({
@@ -79,33 +83,46 @@ describe("schedulePlanChange", () => {
       data: { pendingPlanId: TEAM_PLAN.TEAM, autoRenew: true },
     });
   });
+});
 
-  it("降到 free 時關閉自動續訂", async () => {
-    await teamSubscriptionRepo.schedulePlanChange({
-      teamId: "team-1",
-      pendingPlanId: TEAM_PLAN.FREE,
-      autoRenew: false,
-    });
+describe("cancelAutoRenew（不再付錢＝期末自然落地）", () => {
+  /**
+   * Info: (20260821 - Luphia) 產品裁定 20260821：**降級是時間到不付錢的自然結果**。
+   *
+   * 因此「降到免費版」只關自動續訂：`markOverdueForRenewal` 不會撈它
+   *（只撈 autoRenew=true），期末由 `expireOverdue` 落地為 free。
+   * 完整比對 `data`——這一支**不准**碰 `pendingPlanId`（兩個欄位表達同一件事
+   * 就是多一個會不一致的地方）、更不准碰 `planId` / 週期 / 單價
+   *（當期權益已經付到期末，退款政策 §2.1）。
+   */
+  it("關 autoRenew 並清掉降轉排程，當期權益一個都不動", async () => {
+    await teamSubscriptionRepo.cancelAutoRenew("team-1");
 
-    const call = asMock(prisma.teamSubscription.update).mock.calls[0][0] as {
-      data: Record<string, unknown>;
-    };
-    expect(call.data).toEqual({
-      pendingPlanId: TEAM_PLAN.FREE,
-      autoRenew: false,
+    /**
+     * Info: (20260821 - Luphia) 完整比對：這一支不准碰 `planId` / 週期 / 單價
+     *（當期權益已經付到期末，退款政策 §2.1），但**必須**清掉 `pendingPlanId`
+     * ——留著它，面板會對一個選了「不再付錢」的人顯示「將改為團隊版」。
+     */
+    expect(asMock(prisma.teamSubscription.update)).toHaveBeenCalledWith({
+      where: { teamId: "team-1" },
+      data: { pendingPlanId: null, autoRenew: false },
     });
   });
 });
 
-describe("cancelPendingPlanChange", () => {
+describe("resumeSubscription（維持目前方案）", () => {
   /**
-   * Info: (20260820 - Luphia) 取消排程要**一併恢復自動續訂**。
+   * Info: (20260820 - Luphia) 收回時要**一併恢復自動續訂**。
    *
    * 只清 `pendingPlanId` 會留下「方案沒變，但期末會停掉」——那是使用者按下
-   * 「取消降級」之後最不預期的結果，而且要到期末才會發現。
+   * 「維持目前方案」之後最不預期的結果，而且要到期末才會發現。
+   *
+   * Info: (20260821 - Luphia) 兩種狀態都由這一支收回（已關續訂／已排降轉），
+   * 因此它同時清 `pendingPlanId` 與開 `autoRenew`：服務條款 §3.6 承諾
+   * 「生效前可隨時改回原方案」，而那句話對兩種狀態都要成立。
    */
-  it("清掉排程並恢復自動續訂", async () => {
-    await teamSubscriptionRepo.cancelPendingPlanChange("team-1");
+  it("清掉降轉排程並恢復自動續訂", async () => {
+    await teamSubscriptionRepo.resumeSubscription("team-1");
 
     expect(asMock(prisma.teamSubscription.update)).toHaveBeenCalledWith({
       where: { teamId: "team-1" },

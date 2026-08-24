@@ -901,6 +901,25 @@ body：`{ userId, amount(bigIntString), direction: "ALLOCATE" | "REVOKE" }`
 
 **寬限期的降級立即生效（高-2，產品裁定 2026-08-21）**：PAST_DUE 時使用者按「降級為免費版」原本什麼都不做卻回報成功（判斷用了折算後的 free），續訂 worker 下一小時照樣扣款。現在用 DB 原值分辨：DB 是付費方案而折算成 free（＝寬限期）就地 `downgradeToFree`——寬限期內本來就沒有付費權益，立即落地最誠實，`autoRenew` 隨之關閉。同一個成因的變化型（寬限期內按 free 撞上「取消排程」分支、把 autoRenew 重新打開）由取消分支的 `planId !== free` 守門擋下。
 
+#### 7.1.6 降級是「時間到不付錢」的自然結果（2026-08-21 產品裁定）
+
+> 產品原話：「為何要降級與取消降級？降級是時間到不付錢的自然結果。」
+
+在此之前「降到免費版」會寫 `pendingPlanId = 'free'` 並關閉 `autoRenew`——**兩個欄位表達同一件事**，而其中一個（排程欄位）沒有任何地方真的需要它：`markOverdueForRenewal` 只撈 `autoRenew = true`，期末落地一律由 `expireOverdue` 完成。裁定後收斂成三個動作，各自一支 Repo 方法：
+
+| 使用者的動作 | 實際發生什麼 | Repo |
+|---|---|---|
+| **買**（含升級） | 建單付款；履行時折抵舊期剩餘價值（§7.1.5） | `applyTeamSubscription` |
+| **不再付錢**（選免費版） | 只關 `autoRenew`，並清掉任何降轉排程。當期權益維持到期末，期末由 `expireOverdue` 落地為 free | `cancelAutoRenew` |
+| **下一期改付較少**（降轉到較低付費方案） | 只寫 `pendingPlanId`，維持 `autoRenew`；期末續訂 cron 以新方案計價 | `schedulePlanChange` |
+| **維持目前方案**（收回上面兩種） | 清 `pendingPlanId` ＋ 開 `autoRenew` | `resumeSubscription` |
+
+三件連帶的事：
+
+- **`cancelAutoRenew` 一併清排程**：已排定「期末降轉團隊版」的人又選了免費版時，留著那個 `pendingPlanId` 會讓面板顯示「將改為團隊版」——而他選的是免費版。`expireOverdue` 雖然會在期末清掉它，但那之前整段期間畫面都在說一件使用者沒有選的事。
+- **`autoRenew` 進入 `PUT` 的回應**：「期末轉為免費版」那種狀態在 DB 裡沒有排程欄位，因此回應不能回一個 `pendingPlanId: 'free'`——那會讓 `PUT` 與 `GET /subscription` 對同一件事給出兩個答案。畫面靠 `autoRenew: false` 說話（付款完成頁三句話分流）。
+- **取消入口**：`changeTeamSubscription` 用「有沒有帶 `paymentMethodId`」分辨「維持目前方案」與「我要買」，而在此之前**全站唯一的 PUT 呼叫點**在購買流程裡、參數必填——服務條款 §3.6 承諾的「生效前可隨時改回原方案」一次都走不到，使用者只能再付一期來取消（剩餘超過 30 天時連那條路都被展延閘門擋住）。團隊錢包面板因此新增「將要離開目前方案」的狀態列與「維持目前方案」按鈕（OWNER 專屬，與 server 端同判準），送不帶付款方式的 `PUT`。守門是掃描測試——service 的取消分支自己永遠是綠的，只有掃前端原始碼才問得出「有沒有一個不帶付款方式的呼叫點」。
+
 #### 7.1.5 換方案＝折抵剩餘價值（2026-08-21 產品裁定，**禁止造成用戶損失的設計**）
 
 期間的三條規則收斂到純函式 `src/lib/billing/subscription_period.ts`（`resolveNextPeriod`）：

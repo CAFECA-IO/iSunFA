@@ -73,6 +73,8 @@ export type IPurchaseOutcome =
       kind: "scheduled";
       // Info: (20260820 - Luphia) 排程中的目標方案與生效時點（epoch 秒）
       pendingPlanId: string | null;
+      // Info: (20260821 - Luphia) false＝當期到期後轉為免費版（沒有排程欄位）
+      autoRenew?: boolean;
       effectiveAt: number | null;
     };
 
@@ -344,6 +346,7 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
             challenge?: string;
             cost?: number;
             pendingPlanId?: string | null;
+            autoRenew?: boolean;
             effectiveAt?: number | null;
           } | null;
         }>(`/api/v1/user/team/${selectedTeamId}/subscription`, {
@@ -365,6 +368,8 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
           return {
             kind: "scheduled",
             pendingPlanId: response.payload.pendingPlanId ?? null,
+            // Info: (20260821 - Luphia) 缺省視為仍會續訂：只有明確的 false 才是「期末轉免費版」
+            autoRenew: response.payload.autoRenew ?? true,
             effectiveAt: response.payload.effectiveAt ?? null,
           };
         }

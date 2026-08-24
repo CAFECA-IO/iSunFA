@@ -224,6 +224,10 @@ export const pricing = {
       scheduled_title: "変更を予約しました",
       scheduled_body:
         "今回の変更に支払いは不要です。{{date}} から{{plan}}に変更されます。それまではプランと利用枠は変わりません。",
+      scheduled_expire_body:
+        "自動更新を停止しました。お支払いは発生しません。現在のプランと利用枠は {{date}} まで維持され、その後お支払いがなければ無料プランに切り替わります。それまでは、いつでも自動更新を再開できます。",
+      scheduled_resumed_body:
+        "現在のプランを維持し、自動更新を再開しました。お支払いは発生しません。現在の期間はそのままで、期間終了時に同じプランで更新されます。",
       success_title: "購入完了",
       error_title: "購入失敗",
       original_credits: "現在のポイント",

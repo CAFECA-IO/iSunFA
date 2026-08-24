@@ -220,6 +220,10 @@ export const pricing = {
       scheduled_title: "變更已排程",
       scheduled_body:
         "本次變更不需付款，將於 {{date}} 起改為{{plan}}；在那之前你的方案與額度維持不變。",
+      scheduled_expire_body:
+        "已取消自動續訂，本次不需付款。當期方案與額度維持到 {{date}}，屆時未再付款即轉為免費版；在那之前你可以隨時恢復自動續訂。",
+      scheduled_resumed_body:
+        "已維持目前方案並恢復自動續訂，本次不需付款。當期不受影響，期末將照原方案續訂。",
       success_title: "購買成功",
       error_title: "購買失敗",
       original_credits: "原有點數",

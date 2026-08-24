@@ -30,6 +30,15 @@ interface IQuotaWindow {
 
 interface ISubscriptionView {
   planId: string;
+  /**
+   * Info: (20260821 - Luphia) 「將要離開目前方案」的兩種狀態（`GET /subscription`
+   * 本來就回這兩欄）：`pendingPlanId` 有值＝期末降轉；`autoRenew === false`＝
+   * 期末到期後轉為免費版。少了它們，使用者按過降級之後在畫面上完全看不出來。
+   */
+  pendingPlanId: string | null;
+  autoRenew: boolean;
+  // Info: (20260821 - Luphia) 當期屆滿（epoch 秒）：上面兩種狀態的生效時點
+  currentPeriodEnd: number;
   // Info: (20260817 - Luphia) 觀看者本人的額度（一人一池）
   quota: { quota5h: IQuotaWindow; quotaWeek: IQuotaWindow };
   /**
@@ -59,6 +68,12 @@ interface ITeamWalletPanelProps {
   wallet: ITeamWalletInfo | null;
   walletStatus: TeamWalletFetchStatus;
   isManager: boolean;
+  /**
+   * Info: (20260821 - Luphia) 訂閱的狀態變更（恢復自動續訂／取消期末降轉）是
+   * **OWNER 專屬**（server 端 `changeTeamSubscription` 也只放 OWNER）。
+   * 用 `isManager` 會把按鈕顯示給 ADMIN，而他按下去只會拿到 403。
+   */
+  isOwner?: boolean;
   onRetryWallet: () => void;
   /**
    * Info: (20260818 - Luphia) 分配點數入口（產品需求 20260818）。
@@ -134,6 +149,7 @@ export default function TeamWalletPanel({
   wallet,
   walletStatus,
   isManager,
+  isOwner = false,
   onRetryWallet,
   onAllocateClick = undefined,
 }: ITeamWalletPanelProps) {
@@ -166,6 +182,41 @@ export default function TeamWalletPanel({
     setSubscription(null);
     fetchSubscription();
   }, [fetchSubscription]);
+
+  const [resuming, setResuming] = useState(false);
+  /**
+   * Info: (20260821 - Luphia) 「維持目前方案」：把「將要離開目前方案」的狀態收回
+   *（服務條款 §3.6 承諾生效前可隨時改回原方案）。
+   *
+   * 兩種狀態都由這一支收回——已取消自動續訂（期末轉免費版）、已排定期末降轉。
+   * 送**不帶 `paymentMethodId`** 的 PUT：那是 server 端「維持目前方案」與
+   * 「我要買」的判準（見 `changeTeamSubscription`）。在此之前這個面板只讀不寫，
+   * 而全站唯一的 PUT 呼叫點在購買流程裡、永遠帶付款方式——於是條款承諾的
+   * 那條路徑在 UI 上一次都走不到（四輪 self-review）。
+   */
+  const resumeSubscription = useCallback(async () => {
+    if (!subscription) return;
+    setResuming(true);
+    try {
+      const res = await fetch(`/api/v1/user/team/${teamId}/subscription`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("dewt")}`,
+        },
+        body: JSON.stringify({
+          planId: subscription.planId,
+          billingInterval: "month",
+        }),
+      }).then((r) => r.json());
+      if (!res.success) throw new Error(res.message || "resume failed");
+      await fetchSubscription();
+    } catch (err) {
+      console.error("[TeamWalletPanel] resume subscription failed:", err);
+    } finally {
+      setResuming(false);
+    }
+  }, [subscription, teamId, fetchSubscription]);
 
   /**
    * Info: (20260809 - Luphia) 倒數顯示已移除（僅百分比進度條），
@@ -271,6 +322,48 @@ export default function TeamWalletPanel({
               >
                 {t("team_management.wallet.documents_memory_link")}
               </Link>
+
+              {/**
+               * Info: (20260821 - Luphia) 「將要離開目前方案」的狀態必須看得見，
+               * 而且要有回頭路（服務條款 §3.6）。兩種狀態各說一句：
+               *
+               * - `pendingPlanId` 有值 → 期末降轉到那個方案
+               * - `autoRenew === false` → 期末到期後轉為免費版
+               *
+               * 在此之前這兩種狀態在**畫面上完全看不到**（方案頁只知道目前方案），
+               * 使用者按過降級之後唯一的回饋是「什麼都沒變」（四輪 self-review）。
+               */}
+              {(subscription.pendingPlanId !== null ||
+                !subscription.autoRenew) && (
+                <div className="space-y-2 rounded-lg bg-amber-50 p-3">
+                  <p className="text-xs text-amber-800">
+                    {subscription.pendingPlanId
+                      ? t("team_management.wallet.pending_downgrade", {
+                          plan: t(
+                            `pricing.plans.${subscription.pendingPlanId}.name`,
+                          ),
+                          date: new Date(
+                            subscription.currentPeriodEnd * 1000,
+                          ).toLocaleDateString(),
+                        })
+                      : t("team_management.wallet.pending_expire", {
+                          date: new Date(
+                            subscription.currentPeriodEnd * 1000,
+                          ).toLocaleDateString(),
+                        })}
+                  </p>
+                  {isOwner && (
+                    <button
+                      type="button"
+                      onClick={resumeSubscription}
+                      disabled={resuming}
+                      className="rounded-lg border border-amber-600 px-3 py-1.5 text-xs font-semibold text-amber-700 transition-colors hover:bg-amber-100 disabled:opacity-50"
+                    >
+                      {t("team_management.wallet.keep_current_plan")}
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/**
                * Info: (20260814 - Luphia) 訂閱入口（管理職可見）：額度不夠時，

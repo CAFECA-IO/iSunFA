@@ -400,6 +400,33 @@ describe("付款前的期間說明", () => {
   });
 
   /**
+   * Info: (20260821 - Luphia) 兩句揭露不可互相矛盾（四輪 self-review）。
+   *
+   * 「已排定於 X 降級，本次購買完成後該降級將取消」這句只在**會發生購買**時成立
+   * （升級與同方案延長，履行時 `applyTeamSubscriptionInTx` 清掉 `pendingPlanId`）。
+   * 這次動作本身是降級時它兩處都錯：不會有購買，而舊排程是被新排程取代。
+   * 掃原始碼而不是渲染元件：這條釘的是「渲染條件裡有那道排除」，
+   * 而元件測試會被 i18n 與 provider 的接線拖成另一件事。
+   */
+  it("降級時不顯示「本次購買完成後將取消排程」那句", () => {
+    const selector = readFileSync(
+      join(
+        process.cwd(),
+        "src",
+        "components",
+        "pricing",
+        "purchase_target_selector.tsx",
+      ),
+      "utf8",
+    );
+    const start = selector.indexOf("pending_downgrade_note");
+    expect(start).toBeGreaterThan(-1);
+    // Info: (20260821 - Luphia) 排除條件必須在那個區塊的渲染條件裡，不是在別處
+    const block = selector.slice(Math.max(0, start - 600), start);
+    expect(block).toContain("periodNote !== PERIOD_NOTE.DOWNGRADE_SCHEDULE");
+  });
+
+  /**
    * Info: (20260821 - Luphia) 每一種期間行為都必須有對應文案，而且**四個語言檔
    * 全部要有**（審計文案的英文保留政策不適用於這裡：這是金額與期間的承諾）。
    * 掃描而不是逐鍵斷言：新增一種 PERIOD_NOTE 時漏掉翻譯會在這裡紅。

@@ -25,6 +25,9 @@ jest.mock("@/repositories/team_subscription.repo", () => ({
   teamSubscriptionRepo: {
     getByTeamId: jest.fn(),
     downgradeToFree: jest.fn(),
+    // Info: (20260821 - Luphia) 「不再付錢」與「收回」各自一支（裁定 20260821）
+    cancelAutoRenew: jest.fn(),
+    resumeSubscription: jest.fn(),
     applyTeamSubscription: jest.fn(),
     // Info: (20260820 - Luphia) 降級改為期末生效（設計書 §7.1）後新增的兩支
     schedulePlanChange: jest.fn(),
@@ -410,7 +413,8 @@ describe("changeTeamSubscription", () => {
     asMock(teamSubscriptionRepo.schedulePlanChange).mockResolvedValue(
       undefined,
     );
-    asMock(teamSubscriptionRepo.cancelPendingPlanChange).mockResolvedValue(
+    asMock(teamSubscriptionRepo.cancelAutoRenew).mockResolvedValue(undefined);
+    asMock(teamSubscriptionRepo.resumeSubscription).mockResolvedValue(
       undefined,
     );
     asMock(generatePaymentOrder).mockResolvedValue({
@@ -464,18 +468,22 @@ describe("changeTeamSubscription", () => {
       nowMs: NOW_MS,
     });
 
+    /**
+     * Info: (20260821 - Luphia) 「降到免費版」＝關閉自動續訂（產品裁定 20260821：
+     * 降級是時間到不付錢的自然結果）。不排程：`pendingPlanId` 只服務
+     * 「期末降轉到較低的付費方案」，而畫面靠 `autoRenew: false` 說
+     * 「當期到期後轉為免費版」。
+     */
     expect(result).toEqual({
       kind: "scheduled",
       // Info: (20260820 - Luphia) 當期方案不變
       planId: TEAM_PLAN.BUSINESS,
-      pendingPlanId: TEAM_PLAN.FREE,
+      pendingPlanId: null,
+      autoRenew: false,
       effectiveAt: NOW_SEC + 86400,
     });
-    expect(teamSubscriptionRepo.schedulePlanChange).toHaveBeenCalledWith({
-      teamId: "team-1",
-      pendingPlanId: TEAM_PLAN.FREE,
-      autoRenew: false,
-    });
+    expect(teamSubscriptionRepo.cancelAutoRenew).toHaveBeenCalledWith("team-1");
+    expect(teamSubscriptionRepo.schedulePlanChange).not.toHaveBeenCalled();
     expect(teamSubscriptionRepo.downgradeToFree).not.toHaveBeenCalled();
     expect(generatePaymentOrder).not.toHaveBeenCalled();
   });
@@ -498,9 +506,12 @@ describe("changeTeamSubscription", () => {
       kind: "scheduled",
       planId: TEAM_PLAN.FREE,
       pendingPlanId: null,
+      // Info: (20260821 - Luphia) 已經是免費版：沒有「期末會轉為免費版」要說
+      autoRenew: true,
       effectiveAt: expect.any(Number),
     });
     expect(teamSubscriptionRepo.schedulePlanChange).not.toHaveBeenCalled();
+    expect(teamSubscriptionRepo.cancelAutoRenew).not.toHaveBeenCalled();
     expect(generatePaymentOrder).not.toHaveBeenCalled();
   });
 

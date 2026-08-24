@@ -109,6 +109,12 @@ export interface IPaymentModalProps {
     | {
         kind: "scheduled";
         pendingPlanId: string | null;
+        /**
+         * Info: (20260821 - Luphia) 期末還會不會自動續訂（產品裁定 20260821）。
+         * `false` 且 `pendingPlanId` 為 null＝「當期到期後轉為免費版」——
+         * 那種狀態在 DB 裡就是關閉自動續訂，沒有排程欄位可回。
+         */
+        autoRenew?: boolean;
         effectiveAt: number | null;
       }
   >;

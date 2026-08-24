@@ -900,6 +900,8 @@ export default function TeamManagementPage() {
                   wallet={teamWallet}
                   walletStatus={walletStatus}
                   isManager={isOwnerOrAdmin}
+                  // Info: (20260821 - Luphia) 訂閱狀態的變更是 OWNER 專屬（server 端同判準）
+                  isOwner={isOwner}
                   onRetryWallet={retryTeamWallet}
                   onAllocateClick={
                     isOwnerOrAdmin
