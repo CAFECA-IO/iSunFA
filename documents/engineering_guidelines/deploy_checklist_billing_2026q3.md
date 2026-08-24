@@ -278,16 +278,24 @@ WHERE plan_id = 'free' AND current_period_end > NOW();
 
 有列＝這些團隊在「已付費期間內」被降為免費版（舊行為造成）。數量通常是 0（此功能上線後才會有人用到降級）。
 
-### 3.8 回填 `billing_interval`（2026-08-21）— **有年繳訂閱的環境必做，且要在開放加人之前**
+### 3.8 回填 `billing_interval`（2026-08-21）— **有付費訂閱的環境必做，且要在開放加人之前**
 
-`team_subscription.billing_interval` 是新欄位，既有列拿到預設值 `month`。期中加人的補收分母讀這一欄（一期的天數）——**年繳列被當成月繳會把補收金額乘上約 12 倍**（review #6687 二輪高-1）。正確值存在每列最後一張訂單的 `data.billingInterval`，回填腳本從那裡讀：
+`team_subscription.billing_interval` 是新欄位，**可為 NULL 且刻意不給預設值**（review #6687 三輪）：本專案沒有 migrations 目錄，`db push` 之後既有列一律是 NULL。期中加人的補收分母讀這一欄（一期的天數），NULL 會被守門擋下（`TW000029`），**那些付費團隊在回填之前加不了人**——這是刻意選的失敗方向：若給預設值 `month`，年繳列會拿到一個完全合法、只是錯的值，守門看不見它，補收分母變成 30 天而不是 365（**多收約 12 倍**，且 5 席以上剛好撞不到 2 倍上限）。寧可擋下，不要對綁定的卡多收。
+
+因此這一項的急迫性是「回填之前付費團隊不能加人」，不是「回填之前會算錯錢」。正確值存在每列最後一張訂單的 `data.billingInterval`，回填腳本從那裡讀：
 
 ```
 npx tsx scripts/backfill_billing_interval.ts          # 檢視（dry-run）
 npx tsx scripts/backfill_billing_interval.ts --apply  # 套用
 ```
 
-「無法判定」的列（訂單讀不到週期）腳本會列出、不猜——人工核對後手動更新。全部是月繳的環境跑一次確認 0 列待修即可。
+「無法判定」的列（訂單讀不到週期）腳本會列出、不猜——人工核對後手動更新；在補上之前那個團隊加不了人，但不會算錯錢。跑完再跑一次 dry-run 應為 0 列待修、0 列無法判定。
+
+```sql
+-- 驗證：付費訂閱不該有 NULL 週期
+SELECT team_id, plan_id FROM team_subscription
+WHERE plan_id <> 'free' AND billing_interval IS NULL;
+```
 
 ### 3.9 檢查卡在 PAID 的續訂訂單（2026-08-21）— **上線前先查，那些人正在寬限期倒數**
 

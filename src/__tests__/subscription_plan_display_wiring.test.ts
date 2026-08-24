@@ -460,3 +460,35 @@ describe("排程結果不進入付款流程", () => {
     },
   );
 });
+
+/**
+ * Info: (20260821 - Luphia) 計費週期欄位的**遷移安全性**（review #6687 三輪）。
+ *
+ * 這件事單元測試看不到：測試一律 mock repo，DB 的欄位預設值進不了測試——
+ * 把 schema 改回 `@default("month")`，`seat_quote_contract` 的兩條新案例
+ * （NULL → 擋下）仍然全綠，因為它們是自己餵 null 進去的。
+ *
+ * 而那個預設值是真正的風險所在：本專案沒有 migrations 目錄，`db push` 之後
+ * 既有列一律拿到預設值。給 `"month"` 就是給年繳列一個**完全合法、只是錯的**
+ * 值——`quoteSeatAddition` 的守門只認不合法的值，看不見它，於是回填之前
+ * 年繳團隊加人的補收分母是 30 天而不是 365（多收約 12 倍，且 5 席以上剛好
+ * 撞不到 2 倍上限）。所以這一條盯的是 schema 原文，與 `hr_enum_mirror` 同理：
+ * schema.prisma 在 git 裡、永遠與分支同代，是唯一可靠的對照組。
+ */
+describe("計費週期欄位不得有 DB 預設值", () => {
+  const schema = read("prisma", "schema.prisma");
+
+  function declarationOf(field: string): string {
+    const line = schema
+      .split("\n")
+      .find((candidate) => candidate.trim().startsWith(`${field} `));
+    return line ?? "";
+  }
+
+  it("billingInterval 是 nullable 且沒有 @default", () => {
+    const line = declarationOf("billingInterval");
+
+    expect(line).toContain("String?");
+    expect(line).not.toContain("@default");
+  });
+});

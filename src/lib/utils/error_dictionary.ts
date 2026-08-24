@@ -1242,6 +1242,17 @@ export const API_ERRORS = {
       "Subscription can only be extended within 30 days of the current period end",
     status: ApiCode.FORBIDDEN,
   } as IErrorDef,
+  /**
+   * Info: (20260821 - Luphia) 訂閱列的計費週期缺漏或認不得（review #6687 三輪）：
+   * 期中加人的補收分母是「一期的天數」，猜錯就是對綁定的卡多收十二倍。
+   * 尚未回填 `billing_interval` 的既有列會走到這裡（檢查表 §3.8），
+   * 因此訊息要指向真正的原因——借用 `TW_SEAT_PRICE_MISSING` 會讓運維去查單價。
+   */
+  TW_SEAT_BILLING_INTERVAL_MISSING: {
+    code: "TW000029",
+    message: "Subscription has no billing interval on record",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
   TW_ALLOCATION_REVOKE_DISABLED: {
     code: "TW000020",
     message: "Revoking allocated credits is no longer supported",

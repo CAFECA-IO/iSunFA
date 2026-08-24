@@ -60,6 +60,13 @@ const DAY_MS = 86_400_000;
 const SEAT_BLOCKING_ERRORS: readonly IErrorDef[] = [
   // Info: (20260819 - Luphia) TW_FREE_PLAN_MEMBER_LIMIT 已退役（免費版人數上限移除）
   API_ERRORS.TW_SEAT_PRICE_MISSING,
+  /**
+   * Info: (20260821 - Luphia) 新增擋下原因**一定要同步這份清單**（review #6687 三輪）：
+   * `chargeSeatAddition` 照這裡把試算的原因轉成實扣的錯誤，漏掉就退回泛用的
+   * `TW_OPERATION_FAILED`——試算說「週期沒回填」，實扣說「操作失敗」，
+   * 而運維要查的是兩個不同方向。`seat_quote_contract.test.ts` 逐條比對兩側。
+   */
+  API_ERRORS.TW_SEAT_BILLING_INTERVAL_MISSING,
   API_ERRORS.TW_SEAT_CHARGE_CAP_EXCEEDED,
   API_ERRORS.TW_SEAT_PAYMENT_METHOD_MISSING,
   API_ERRORS.TW_OPERATION_FAILED,
@@ -336,18 +343,20 @@ export async function quoteSeatAddition(
    * Info: (20260821 - Luphia) 比例的分母是**一個計費週期**，不是
    * `periodEnd − periodStart`（review #6687 二輪高-1：展延後的跨距是好幾期，
    * 用跨距當分母會把補收除以期數）。週期讀訂閱列的快照欄位；
-   * 認不得的值當資料異常擋下——分母猜錯的後果是把年繳戶的補收乘上十幾倍
-   * （或反向少收），比擋下一次加人嚴重得多。
+   * 認不得的值（含 NULL——`db push` 之後尚未回填的既有列）當資料異常擋下：
+   * 分母猜錯的後果是把年繳戶的補收乘上十二倍，比擋下一次加人嚴重得多。
+   * 欄位刻意可為 NULL 且無預設值（review #6687 三輪），這道守門才擋得到既有列。
    */
-  const periodDays =
-    BILLING_INTERVAL_DAYS[subscription.billingInterval as BillingInterval];
+  const periodDays = subscription.billingInterval
+    ? BILLING_INTERVAL_DAYS[subscription.billingInterval as BillingInterval]
+    : undefined;
   if (!periodDays) {
-    logger.error("seat addition blocked: unknown billing interval", {
+    logger.error("seat addition blocked: billing interval missing or unknown", {
       teamId,
       billingInterval: subscription.billingInterval,
     });
     return {
-      ...blockedQuote(API_ERRORS.TW_SEAT_PRICE_MISSING, {
+      ...blockedQuote(API_ERRORS.TW_SEAT_BILLING_INTERVAL_MISSING, {
         seats,
         planId: subscription.planId,
       }),

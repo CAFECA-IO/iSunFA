@@ -1,10 +1,14 @@
 /**
  * Info: (20260821 - Luphia) 回填 `TeamSubscription.billingInterval`（review #6687 二輪高-1）。
  *
- * 欄位是這次加的，既有列拿到的是預設值 `month`。對**年繳**列而言那是錯的，
- * 而且錯的代價很具體：期中加人的補收分母是「一期的天數」，年繳列被當成月繳
- * 會把補收金額乘上約 12 倍。正確值只存在每一列最後一張訂單的 `data` 裡，
- * 這支從那裡讀回來。
+ * 欄位是這次加的且**刻意可為 NULL、無預設值**（review #6687 三輪）：`db push`
+ * 之後既有列一律是 NULL，而 NULL 會被 `quoteSeatAddition` 的守門擋下
+ *（`TW_SEAT_BILLING_INTERVAL_MISSING`）——那些團隊在回填之前**加不了人**。
+ * 這是刻意選的失敗方向：若給預設值 `"month"`，年繳列會拿到一個完全合法、
+ * 只是錯的值，守門看不見它，期中加人的補收分母變成 30 天而不是 365
+ *（多收約 12 倍）。寧可擋下，不要對綁定的卡多收。
+ *
+ * 正確值只存在每一列最後一張訂單的 `data` 裡，這支從那裡讀回來。
  *
  * 判準：`latestOrderId` 指到的訂單 `data.billingInterval`。讀不到訂單或
  * data 裡沒有週期的列**跳過並列出**（不猜——猜錯就是把錢算錯），由人工核對。
@@ -38,7 +42,10 @@ async function main(): Promise<void> {
     process.stdout.write(`${line}\n`);
   };
 
-  // Info: (20260821 - Luphia) 免費列不參與席次補收，週期值無關緊要，不動它
+  /**
+   * Info: (20260821 - Luphia) 免費列不參與席次補收（`unitPrice` 為 0 就先被擋），
+   * 週期值無關緊要，不動它——留 NULL 也不會有人讀到。
+   */
   const rows = await prisma.teamSubscription.findMany({
     where: { planId: { not: TEAM_PLAN.FREE } },
     select: {
@@ -63,7 +70,8 @@ async function main(): Promise<void> {
       unresolved += 1;
       out(
         `SKIP team ${row.teamId} plan=${row.planId}：訂單讀不到週期` +
-          `（order=${row.latestOrderId ?? "無"}），請人工核對`,
+          `（order=${row.latestOrderId ?? "無"}），請人工核對` +
+          `——在補上之前這個團隊加不了人（守門擋著，不會算錯錢）`,
       );
       continue;
     }
@@ -71,7 +79,7 @@ async function main(): Promise<void> {
 
     out(
       `${APPLY ? "FIX " : "PLAN"} team ${row.teamId} plan=${row.planId}：` +
-        `${row.billingInterval} → ${interval}`,
+        `${row.billingInterval ?? "(未設定)"} → ${interval}`,
     );
     if (APPLY) {
       await prisma.teamSubscription.update({
