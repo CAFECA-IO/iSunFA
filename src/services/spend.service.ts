@@ -6,8 +6,6 @@ import {
   QUOTA_WINDOW,
   SPEND_SOURCE,
   TEAM_PLAN,
-  TEAM_SUBSCRIPTION_STATUS,
-  TeamPlanId,
   WALLET_OP_OUTCOME,
 } from "@/constants/subscription_quota";
 import {
@@ -22,6 +20,7 @@ import {
   splitSpend,
 } from "@/lib/quota/spend_split";
 import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
+import { resolveEffectivePlanId } from "@/lib/subscription/plan_rules";
 import type {
   IQuotaExceededPayload,
   ISpendResult,
@@ -95,37 +94,6 @@ export class QuotaExceededError extends ApiError {
 
 function toApiError(def: IErrorDef): ApiError {
   return new ApiError(def.code, def.message, def.status);
-}
-
-/**
- * Info: (20260807 - Luphia) 方案解析採 fail-closed：查無訂閱或未知 planId 一律視為 free，
- * 絕不因資料異常放大額度。
- */
-export function resolvePlanId(planId: string | undefined): TeamPlanId {
-  const known = Object.values(TEAM_PLAN) as string[];
-  if (planId && known.includes(planId)) return planId as TeamPlanId;
-  return TEAM_PLAN.FREE;
-}
-
-/**
- * Info: (20260807 - Luphia) 有效方案 = 方案 ID + 訂閱狀態 + 計費週期三者同時成立，
- * 缺一即 fail-closed 到 free——即使續訂 Worker 尚未跑到，過期訂閱也不會多放一點額度。
- */
-export function resolveEffectivePlanId(
-  subscription: {
-    planId: string;
-    status: string;
-    currentPeriodEnd: Date;
-  } | null,
-  nowSec: number,
-): TeamPlanId {
-  if (!subscription) return TEAM_PLAN.FREE;
-  const planId = resolvePlanId(subscription.planId);
-  if (planId === TEAM_PLAN.FREE) return TEAM_PLAN.FREE;
-  const isActive = subscription.status === TEAM_SUBSCRIPTION_STATUS.ACTIVE;
-  const inPeriod =
-    Math.floor(subscription.currentPeriodEnd.getTime() / 1000) >= nowSec;
-  return isActive && inPeriod ? planId : TEAM_PLAN.FREE;
 }
 
 /**

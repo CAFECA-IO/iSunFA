@@ -68,12 +68,15 @@ describe("reconcileOvertimeMinutes", () => {
   it.each([
     ["核准為負", -1, 60],
     ["事實為負", 60, -1],
-  ])("%s 時擋下（呼叫端的錯誤，不是使用者輸入）", (_label, approved, actual) => {
-    expect(() =>
-      reconcileOvertimeMinutes({
-        approvedMinutes: approved,
-        actualMinutes: actual,
-      }),
-    ).toThrow(OvertimeRuleError);
-  });
+  ])(
+    "%s 時擋下（呼叫端的錯誤，不是使用者輸入）",
+    (_label, approved, actual) => {
+      expect(() =>
+        reconcileOvertimeMinutes({
+          approvedMinutes: approved,
+          actualMinutes: actual,
+        }),
+      ).toThrow(OvertimeRuleError);
+    },
+  );
 });

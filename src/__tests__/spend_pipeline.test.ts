@@ -5,11 +5,11 @@ import {
   buildQuotaExceededOptions,
   QuotaExceededError,
   refundCredits,
-  resolveEffectivePlanId,
   resolvePayingTeamId,
   settleSpend,
   spendCredits,
 } from "@/services/spend.service";
+import { resolveEffectivePlanId } from "@/lib/subscription/plan_rules";
 import {
   BILLABLE_FEATURE_CODE,
   SPEND_SOURCE,

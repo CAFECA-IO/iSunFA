@@ -83,7 +83,9 @@ jest.mock("@/lib/prisma", () => {
         isEmergency: row.isEmergency,
       })),
     },
-    overtimeSegment: { create: jest.fn(create(() => captured.segments, "seg")) },
+    overtimeSegment: {
+      create: jest.fn(create(() => captured.segments, "seg")),
+    },
     leaveGrant: {
       create: jest.fn(create(() => captured.grants, "grant")),
       // Info: (20260820 - Julian) `sumLedgerMinutes` 走的那一支
@@ -102,7 +104,9 @@ jest.mock("@/lib/prisma", () => {
         },
       })),
     },
-    leaveCashOutEvent: { create: jest.fn(create(() => captured.cashOuts, "cash")) },
+    leaveCashOutEvent: {
+      create: jest.fn(create(() => captured.cashOuts, "cash")),
+    },
     leaveBalance: {
       upsert: jest.fn(async (args: unknown) => {
         captured.balances.push(args);
@@ -147,7 +151,10 @@ import {
   OvertimePremiumTier,
   OvertimeRequestStatus,
 } from "@/constants/overtime";
-import { LeaveGrantSource, LeaveLedgerEntryType } from "@/constants/leave_policy";
+import {
+  LeaveGrantSource,
+  LeaveLedgerEntryType,
+} from "@/constants/leave_policy";
 import { OvertimeDecisionOutcome } from "@/interfaces/overtime";
 
 const SHIFT_WINDOW_MS = Date.UTC(2026, 7, 15, 9, 0, 0);
@@ -163,14 +170,16 @@ const SEGMENTS = [
   { order: 1, tier: OvertimePremiumTier.WEEKDAY_BEYOND_2H, minutes: 60 },
 ];
 
-const writeOf = (overrides: {
-  compensatory?: {
-    leavePolicyId: string;
-    dayEquivalentMinutes: number;
-    expiresOn: string;
-  } | null;
-  cashOut?: { dayEquivalentMinutes: number; legalBasis: string } | null;
-} = {}) => ({
+const writeOf = (
+  overrides: {
+    compensatory?: {
+      leavePolicyId: string;
+      dayEquivalentMinutes: number;
+      expiresOn: string;
+    } | null;
+    cashOut?: { dayEquivalentMinutes: number; legalBasis: string } | null;
+  } = {},
+) => ({
   accountBookId: "book-1",
   requestId: "ot-1",
   employeeId: "emp-1",
@@ -274,7 +283,9 @@ describe("補休折換：一段一批，且一小時換一小時（§32-1）", (
       buildOvertimeGrantIdempotencyKey("seg-1"),
       buildOvertimeGrantIdempotencyKey("seg-2"),
     ]);
-    expect(new Set(captured.ledger.map((entry) => entry.idempotencyKey)).size).toBe(2);
+    expect(
+      new Set(captured.ledger.map((entry) => entry.idempotencyKey)).size,
+    ).toBe(2);
   });
 
   /**

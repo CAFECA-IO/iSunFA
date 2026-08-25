@@ -52,7 +52,8 @@ const idLineOf = (block: string): string => {
   const line = block
     .split("\n")
     .find((row) => /^\s+id\s+\S+\s+.*@id\b/.test(row));
-  if (line === undefined) throw new Error(`區塊裡找不到 @id 那一行：\n${block.slice(0, 200)}`);
+  if (line === undefined)
+    throw new Error(`區塊裡找不到 @id 那一行：\n${block.slice(0, 200)}`);
   return line.trim();
 };
 

@@ -60,9 +60,24 @@ const BOOK = "book-1";
  * 兩段刻意是兄弟而不是上下級 —— 跨部門放行的缺口只有在兄弟關係上看得見。
  */
 const departments: IDepartmentRow[] = [
-  { id: "DEP-000", parentId: null, managerId: "emp-chief", accountBookId: BOOK },
-  { id: "DEP-001", parentId: "DEP-000", managerId: "emp-mgr1", accountBookId: BOOK },
-  { id: "DEP-005", parentId: "DEP-000", managerId: "emp-mgr5", accountBookId: BOOK },
+  {
+    id: "DEP-000",
+    parentId: null,
+    managerId: "emp-chief",
+    accountBookId: BOOK,
+  },
+  {
+    id: "DEP-001",
+    parentId: "DEP-000",
+    managerId: "emp-mgr1",
+    accountBookId: BOOK,
+  },
+  {
+    id: "DEP-005",
+    parentId: "DEP-000",
+    managerId: "emp-mgr5",
+    accountBookId: BOOK,
+  },
 ];
 
 const employees: IEmployeeRow[] = [
@@ -98,23 +113,23 @@ const matches = (
   row: Record<string, unknown>,
   where: Record<string, unknown>,
 ): boolean =>
-  Object.entries(where).every(([key, value]) =>
-    matchesValue(row[key], value),
-  );
+  Object.entries(where).every(([key, value]) => matchesValue(row[key], value));
 
 jest.mock("@/lib/prisma", () => ({
   prisma: {
     department: {
-      findFirst: jest.fn(async ({ where }: { where: Record<string, unknown> }) =>
-        departments.find((row) => matches(row, where)) ?? null,
+      findFirst: jest.fn(
+        async ({ where }: { where: Record<string, unknown> }) =>
+          departments.find((row) => matches(row, where)) ?? null,
       ),
       findMany: jest.fn(async ({ where }: { where: Record<string, unknown> }) =>
         departments.filter((row) => matches(row, where)),
       ),
     },
     employee: {
-      findFirst: jest.fn(async ({ where }: { where: Record<string, unknown> }) =>
-        employees.find((row) => matches(row, where)) ?? null,
+      findFirst: jest.fn(
+        async ({ where }: { where: Record<string, unknown> }) =>
+          employees.find((row) => matches(row, where)) ?? null,
       ),
       findMany: jest.fn(async ({ where }: { where: Record<string, unknown> }) =>
         employees.filter((row) => matches(row, where)),

@@ -65,10 +65,12 @@ jest.mock("@/lib/prisma", () => {
     },
     overtimeEmergencyDeclaration: {
       findFirst: jest.fn(async () => activeDeclaration),
-      updateMany: jest.fn(async ({ data }: { data: Record<string, unknown> }) => {
-        declarationWrites.push(data);
-        return { count: 1 };
-      }),
+      updateMany: jest.fn(
+        async ({ data }: { data: Record<string, unknown> }) => {
+          declarationWrites.push(data);
+          return { count: 1 };
+        },
+      ),
     },
   };
   return {

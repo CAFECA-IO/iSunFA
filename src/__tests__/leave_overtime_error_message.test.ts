@@ -45,10 +45,7 @@ const DICTIONARIES: Record<string, Record<string, unknown>> = {
 };
 
 /** Info: (20260819 - Julian) `hr_management.leave.error_x` → 在該語系字典裡取值 */
-const lookup = (
-  dictionary: Record<string, unknown>,
-  key: string,
-): unknown => {
+const lookup = (dictionary: Record<string, unknown>, key: string): unknown => {
   const path = key.replace(/^hr_management\./, "").split(".");
   let cursor: unknown = dictionary;
   for (const segment of path) {
@@ -126,7 +123,11 @@ const EXPECTED_OVERTIME_CODES: readonly string[] = [
   API_ERRORS.NF_OVERTIME_REQUEST.code,
 ];
 
-const TABLES: readonly [string, Readonly<Record<string, string>>, readonly string[]][] = [
+const TABLES: readonly [
+  string,
+  Readonly<Record<string, string>>,
+  readonly string[],
+][] = [
   ["假單", LEAVE_ERROR_I18N_KEY, EXPECTED_LEAVE_CODES],
   ["加班", OVERTIME_ERROR_I18N_KEY, EXPECTED_OVERTIME_CODES],
 ];
@@ -137,9 +138,7 @@ describe.each(TABLES)("%s 錯誤對照表", (_label, table, expected) => {
   });
 
   it("每一個碼都真的存在於錯誤字典裡", () => {
-    const known = new Set(
-      Object.values(API_ERRORS).map((entry) => entry.code),
-    );
+    const known = new Set(Object.values(API_ERRORS).map((entry) => entry.code));
     for (const code of Object.keys(table)) expect(known.has(code)).toBe(true);
   });
 
@@ -147,9 +146,7 @@ describe.each(TABLES)("%s 錯誤對照表", (_label, table, expected) => {
     for (const [code, key] of Object.entries(table)) {
       for (const [locale, dictionary] of Object.entries(DICTIONARIES)) {
         const value = lookup(dictionary, key);
-        expect(
-          typeof value === "string" && value.trim().length > 0,
-        ).toBe(true);
+        expect(typeof value === "string" && value.trim().length > 0).toBe(true);
         if (typeof value !== "string") {
           throw new Error(`${locale} 缺 ${key}（碼 ${code}）`);
         }
@@ -201,7 +198,9 @@ describe("errorI18nKeyOf 真的會查這兩張表", () => {
    * 有人日後在這裡補一筆限流，共用表那一筆就會變成死碼。
    */
   it("限流不在模組表裡（由共用表接住）", () => {
-    expect(LEAVE_ERROR_I18N_KEY[API_ERRORS.IS_RATE_LIMITED.code]).toBeUndefined();
+    expect(
+      LEAVE_ERROR_I18N_KEY[API_ERRORS.IS_RATE_LIMITED.code],
+    ).toBeUndefined();
     expect(
       OVERTIME_ERROR_I18N_KEY[API_ERRORS.IS_RATE_LIMITED.code],
     ).toBeUndefined();
@@ -334,7 +333,8 @@ const EXEMPT: Readonly<Record<string, string>> = {
    * `SHARED_ATTENDANCE_ERROR_I18N_KEY` —— 與 `NF_EMPLOYEE_FOR_USER`
    * 同一張表、同一個理由：跨模組、同一個判準在三個地方各擋一次。
    */
-  VA_ATTENDANCE_RANGE_TOO_LARGE: "全模組共用表已登記（三個模組共用同一個區間上限）",
+  VA_ATTENDANCE_RANGE_TOO_LARGE:
+    "全模組共用表已登記（三個模組共用同一個區間上限）",
 };
 
 /**

@@ -6,10 +6,7 @@ import {
   deriveOvertimeSegments,
 } from "@/lib/overtime_rules";
 import { WorkDayType } from "@/constants/attendance";
-import {
-  OVERTIME_PREMIUM,
-  OvertimePremiumTier,
-} from "@/constants/overtime";
+import { OVERTIME_PREMIUM, OvertimePremiumTier } from "@/constants/overtime";
 
 /**
  * Info: (20260817 - Julian) T12：加班的加成切段（計畫書 §8.1、ADR 024 §4）。

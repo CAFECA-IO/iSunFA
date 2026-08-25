@@ -40,6 +40,7 @@ export const pricing = {
   features: "기능",
   per_key: " / 키",
   select_plan: "요금제 선택",
+  extend_plan: "요금제 연장",
   current_plan: "현재 요금제",
   coming_soon_title: "문의하기",
   coming_soon_prefix: "",
@@ -219,6 +220,13 @@ export const pricing = {
       },
     },
     payment_modal: {
+      scheduled_title: "변경이 예약되었습니다",
+      scheduled_body:
+        "이번 변경에는 결제가 필요하지 않습니다. {{date}}부터 {{plan}}으로 변경되며, 그때까지 요금제와 사용량은 그대로 유지됩니다.",
+      scheduled_expire_body:
+        "자동 갱신을 해지했으며 결제는 발생하지 않았습니다. 현재 요금제와 사용량은 {{date}}까지 유지되고, 이후 결제가 없으면 무료 요금제로 전환됩니다. 그 전에는 언제든 자동 갱신을 다시 켤 수 있습니다.",
+      scheduled_resumed_body:
+        "현재 요금제를 유지하고 자동 갱신을 다시 켰습니다. 결제는 발생하지 않았으며, 현재 기간은 영향을 받지 않고 기간 종료 시 동일한 요금제로 갱신됩니다.",
       success_title: "구매 성공",
       error_title: "구매 실패",
       original_credits: "기존 포인트",

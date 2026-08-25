@@ -249,6 +249,8 @@ describe("assertLedgerActor —— 操作者三欄同生共死（M16）", () => 
     ["有 id 沒姓名", { ...HUMAN, actorName: null }],
     ["有姓名沒 id", { ...HUMAN, actorEmployeeId: null }],
   ])("%s：擋下", (_label, snapshot) => {
-    expect(() => assertLedgerActor(snapshot)).toThrow(LeaveLedgerInvariantError);
+    expect(() => assertLedgerActor(snapshot)).toThrow(
+      LeaveLedgerInvariantError,
+    );
   });
 });

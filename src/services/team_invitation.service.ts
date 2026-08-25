@@ -8,8 +8,7 @@ import {
   DEFAULT_TEAM_PENDING_INVITE_LIMIT,
   TEAM_PLAN,
 } from "@/constants/subscription_quota";
-import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
-import { resolveEffectivePlanId } from "@/services/spend.service";
+import { getTeamEntitlement } from "@/services/plan.service";
 import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import {
   buildInviteUrl,
@@ -142,17 +141,15 @@ export class InviteCooldownError extends ApiError {
  * 被取消一律視為免費，否則「讓訂閱過期」就成了免除冷卻的方法。
  */
 async function isFreePlanTeam(teamId: string, nowMs: number): Promise<boolean> {
-  const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
-  return (
-    resolveEffectivePlanId(
-      subscription && {
-        planId: subscription.planId,
-        status: subscription.status,
-        currentPeriodEnd: subscription.currentPeriodEnd,
-      },
-      Math.floor(nowMs / 1000),
-    ) === TEAM_PLAN.FREE
-  );
+  /**
+   * Info: (20260819 - Luphia) 方案一律經 `plan.service` 的權益入口（集中化 20260819）：
+   * 這裡不再自己撈訂閱列再折算——那是第二道門，而兩道門的答案遲早不一樣。
+   */
+  const planId = await getTeamEntitlement({
+    teamId,
+    nowSec: Math.floor(nowMs / 1000),
+  });
+  return planId === TEAM_PLAN.FREE;
 }
 
 export interface IInviteLimitsView {

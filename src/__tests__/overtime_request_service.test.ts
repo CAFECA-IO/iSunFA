@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterAll, jest } from "@jest/globals";
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterAll,
+  jest,
+} from "@jest/globals";
 import { OvertimeRequestService } from "@/services/overtime_request.service";
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
@@ -305,7 +312,9 @@ beforeEach(() => {
   hasHrFunctionSpy.mockResolvedValue(true);
 });
 
-const approve = (overrides: { actorEmployeeId?: string; approvedMinutes?: number } = {}) =>
+const approve = (
+  overrides: { actorEmployeeId?: string; approvedMinutes?: number } = {},
+) =>
   service.approve({
     accountBookId: BOOK,
     requestId: "ot-1",
@@ -852,21 +861,24 @@ describe("declareEmergency —— §32 IV 的認定閘", () => {
   it.each([
     ["在未來", "2026-08-16T09:00"],
     ["早於加班日", "2026-08-13T23:59"],
-  ])("報備時點 %s 時擋下，且 repository 沒有被呼叫", async (_label, reportedAt) => {
-    expect(
-      await codeOf(() =>
-        service.declareEmergency({
-          accountBookId: BOOK,
-          requestId: "ot-1",
-          actorEmployeeId: HR_ADMIN,
-          reportUrl: REPORT.reportUrl,
-          reportedAt,
-          observedAt: OBSERVED_AT,
-        }),
-      ),
-    ).toBe(API_ERRORS.VA_OVERTIME_REPORTED_AT_OUT_OF_RANGE.code);
-    expect(repo.declared).toBeNull();
-  });
+  ])(
+    "報備時點 %s 時擋下，且 repository 沒有被呼叫",
+    async (_label, reportedAt) => {
+      expect(
+        await codeOf(() =>
+          service.declareEmergency({
+            accountBookId: BOOK,
+            requestId: "ot-1",
+            actorEmployeeId: HR_ADMIN,
+            reportUrl: REPORT.reportUrl,
+            reportedAt,
+            observedAt: OBSERVED_AT,
+          }),
+        ),
+      ).toBe(API_ERRORS.VA_OVERTIME_REPORTED_AT_OUT_OF_RANGE.code);
+      expect(repo.declared).toBeNull();
+    },
+  );
 
   /**
    * Info: (20260820 - Julian) 反面：邊界之內照常放行 —— 含「加班那天的 00:00」
@@ -874,8 +886,16 @@ describe("declareEmergency —— §32 IV 的認定閘", () => {
    * 而逾期那一條會讓一個真實的違章變成一張送不出去的單。
    */
   it.each([
-    ["加班日的 00:00（同日稍早先通知工會）", "2026-08-14T00:00", new Date("2026-08-15T20:00:00+08:00")],
-    ["逾 24 小時才報備（是違章，但不擋）", "2026-08-17T09:00", new Date("2026-08-18T09:00:00+08:00")],
+    [
+      "加班日的 00:00（同日稍早先通知工會）",
+      "2026-08-14T00:00",
+      new Date("2026-08-15T20:00:00+08:00"),
+    ],
+    [
+      "逾 24 小時才報備（是違章，但不擋）",
+      "2026-08-17T09:00",
+      new Date("2026-08-18T09:00:00+08:00"),
+    ],
   ])("報備時點 %s 時放行", async (_label, reportedAt, observedAt) => {
     await expect(
       service.declareEmergency({
@@ -945,12 +965,12 @@ describe("核准帶下去的 isEmergencyAtDerivation", () => {
     const revoked = await codeOf(() => approve({ approvedMinutes: 60 }));
 
     repo.approveOutcome = OvertimeDecisionOutcome.ALREADY_REVIEWED;
-    const alreadyReviewed = await codeOf(() => approve({ approvedMinutes: 60 }));
+    const alreadyReviewed = await codeOf(() =>
+      approve({ approvedMinutes: 60 }),
+    );
 
     expect(declared).toBe(API_ERRORS.VA_OVERTIME_RECLASSIFIED_MIDWAY.code);
-    expect(revoked).toBe(
-      API_ERRORS.VA_OVERTIME_EMERGENCY_REVOKED_MIDWAY.code,
-    );
+    expect(revoked).toBe(API_ERRORS.VA_OVERTIME_EMERGENCY_REVOKED_MIDWAY.code);
     expect(alreadyReviewed).toBe(API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED.code);
     /**
      * Info: (20260820 - Julian) 三個兩兩不同 —— 這是這條測試唯一的紅線。
@@ -975,7 +995,9 @@ describe("核准帶下去的 isEmergencyAtDerivation", () => {
 describe("revokeEmergency —— §32 IV 認定的撤回", () => {
   const REVOKE_REASON = "主管機關退回，須重新報備";
 
-  const revoke = (overrides: { actorEmployeeId?: string; reason?: string } = {}) =>
+  const revoke = (
+    overrides: { actorEmployeeId?: string; reason?: string } = {},
+  ) =>
     service.revokeEmergency({
       accountBookId: BOOK,
       requestId: "ot-1",
@@ -1054,7 +1076,9 @@ describe("revokeEmergency —— §32 IV 認定的撤回", () => {
     repo.revokeOutcome = OvertimeDecisionOutcome.ALREADY_REVIEWED;
     const alreadyReviewed = await codeOf(revoke);
 
-    expect(notDeclared).toBe(API_ERRORS.VA_OVERTIME_EMERGENCY_NOT_DECLARED.code);
+    expect(notDeclared).toBe(
+      API_ERRORS.VA_OVERTIME_EMERGENCY_NOT_DECLARED.code,
+    );
     expect(alreadyReviewed).toBe(API_ERRORS.VA_OVERTIME_ALREADY_REVIEWED.code);
     expect(notDeclared).not.toBe(alreadyReviewed);
   });
@@ -1287,7 +1311,9 @@ describe("一日工時算不出來時的兩條路徑（M7／M8）", () => {
    * 少了它，「一律擋」也會讓上面兩條通過。
    */
   it("面額算得出來時照常落地", async () => {
-    context.approval = contextOf({ compensatoryDayEquivalentMinutes: 8 * HOUR });
+    context.approval = contextOf({
+      compensatoryDayEquivalentMinutes: 8 * HOUR,
+    });
 
     await approve({ approvedMinutes: 60 });
 

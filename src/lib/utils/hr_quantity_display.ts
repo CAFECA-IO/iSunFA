@@ -44,7 +44,9 @@ export const MINUTES_PER_HOUR = 60;
 
 const formatScaled = (scaled: bigint, scale: number): string => {
   const negative = scaled < 0n;
-  const digits = (negative ? -scaled : scaled).toString().padStart(scale + 1, "0");
+  const digits = (negative ? -scaled : scaled)
+    .toString()
+    .padStart(scale + 1, "0");
   const whole = digits.slice(0, digits.length - scale);
   const fraction = scale === 0 ? "" : `.${digits.slice(digits.length - scale)}`;
   return `${negative ? "-" : ""}${whole}${fraction}`;
@@ -60,7 +62,8 @@ export const floorRatioText = (
   denominator: number,
   scale = 1,
 ): string | null => {
-  if (!Number.isInteger(numerator) || !Number.isInteger(denominator)) return null;
+  if (!Number.isInteger(numerator) || !Number.isInteger(denominator))
+    return null;
   if (denominator <= 0) return null;
 
   const factor = TEN ** BigInt(scale);
@@ -84,7 +87,8 @@ export const ceilRatioText = (
   denominator: number,
   scale = 1,
 ): string | null => {
-  if (!Number.isInteger(numerator) || !Number.isInteger(denominator)) return null;
+  if (!Number.isInteger(numerator) || !Number.isInteger(denominator))
+    return null;
   if (denominator <= 0) return null;
 
   const factor = TEN ** BigInt(scale);

@@ -39,6 +39,7 @@ export const pricing = {
   features: "Features",
   per_key: " / key",
   select_plan: "Select Plan",
+  extend_plan: "Extend Plan",
   current_plan: "Current Plan",
   coming_soon_title: "Contact Us",
   coming_soon_prefix: "We have been selected as an ",
@@ -219,6 +220,13 @@ export const pricing = {
       },
     },
     payment_modal: {
+      scheduled_title: "Change Scheduled",
+      scheduled_body:
+        "No payment is required. Your plan changes to {{plan}} on {{date}}; until then your plan and quota stay the same.",
+      scheduled_expire_body:
+        "Auto-renewal is off and no payment was taken. Your current plan and quota stay until {{date}}; with no further payment it becomes the free plan then. You can turn auto-renewal back on any time before that.",
+      scheduled_resumed_body:
+        "Your current plan is kept and auto-renewal is back on. No payment was taken; the current period is unaffected and will renew on the same plan.",
       success_title: "Purchase Successful",
       error_title: "Purchase Failed",
       original_credits: "Original Credits",

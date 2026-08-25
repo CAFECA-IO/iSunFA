@@ -118,6 +118,11 @@ export const teamManagement = {
       "팀 지갑이 동결되었습니다(보존 감사 이상). 고객 지원에 문의해 주세요.",
     buy_credits: "포인트 구매하기",
     manage_plan: "플랜 관리",
+    pending_downgrade:
+      "{{date}}부터 {{plan}}으로 변경될 예정입니다. 그때까지 요금제와 사용량은 그대로 유지됩니다.",
+    pending_expire:
+      "자동 갱신이 해지되었습니다. 요금제와 사용량은 {{date}}까지 유지되며, 이후 결제가 없으면 무료 요금제로 전환됩니다.",
+    keep_current_plan: "현재 요금제 유지",
     manage_plan_hint: "한도가 부족하면 플랜을 업그레이드하세요",
     buy_credits_hint:
       "구매한 포인트는 팀 지갑에 적립되어 관리자가 배분할 수 있습니다.",

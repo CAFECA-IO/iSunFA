@@ -193,12 +193,26 @@ class InMemoryLedger {
         }) =>
           this.grants.filter((grant) => {
             const where = args.where;
-            if (where.accountBookId && grant.accountBookId !== where.accountBookId) return false;
-            if (where.employeeId && grant.employeeId !== where.employeeId) return false;
-            if (where.leavePolicyId && grant.leavePolicyId !== where.leavePolicyId) return false;
-            if (where.expiresOn && grant.expiresOn < where.expiresOn.gte) return false;
+            if (
+              where.accountBookId &&
+              grant.accountBookId !== where.accountBookId
+            )
+              return false;
+            if (where.employeeId && grant.employeeId !== where.employeeId)
+              return false;
+            if (
+              where.leavePolicyId &&
+              grant.leavePolicyId !== where.leavePolicyId
+            )
+              return false;
+            if (where.expiresOn && grant.expiresOn < where.expiresOn.gte)
+              return false;
             // Info: (20260820 - Julian) 週期還沒開始的批次不可扣（review 第 9 輪第 2 條）
-            if (where.cycleStartDate && grant.cycleStartDate > where.cycleStartDate.lte) return false;
+            if (
+              where.cycleStartDate &&
+              grant.cycleStartDate > where.cycleStartDate.lte
+            )
+              return false;
             return true;
           }),
       },
@@ -210,9 +224,13 @@ class InMemoryLedger {
               _sum: { deltaMinutes: sum },
             }),
           ),
-        aggregate: async (args: { where: { leaveGrantId: { in: string[] } } }) => {
+        aggregate: async (args: {
+          where: { leaveGrantId: { in: string[] } };
+        }) => {
           let total = 0;
-          for (const value of this.sumByGrant(args.where.leaveGrantId.in).values()) {
+          for (const value of this.sumByGrant(
+            args.where.leaveGrantId.in,
+          ).values()) {
             total += value;
           }
           return { _sum: { deltaMinutes: total } };
@@ -242,14 +260,22 @@ class InMemoryLedger {
               `Unique constraint failed: idempotencyKey=${args.data.idempotencyKey}`,
             );
           }
-          const row: IEntryRow = { id: `entry-${(this.sequence += 1)}`, ...args.data };
+          const row: IEntryRow = {
+            id: `entry-${(this.sequence += 1)}`,
+            ...args.data,
+          };
           this.entries.push(row);
           return row;
         },
       },
       leaveBalance: {
         upsert: async (args: {
-          where: { employeeId_leavePolicyId: { employeeId: string; leavePolicyId: string } };
+          where: {
+            employeeId_leavePolicyId: {
+              employeeId: string;
+              leavePolicyId: string;
+            };
+          };
           create: IBalanceRow;
           update: {
             remainingMinutes: number;
@@ -276,7 +302,8 @@ class InMemoryLedger {
           if (args.update.expiringSoonMinutes !== undefined) {
             existing.expiringSoonMinutes = args.update.expiringSoonMinutes;
           }
-          if (args.update.reconciledAt) existing.reconciledAt = args.update.reconciledAt;
+          if (args.update.reconciledAt)
+            existing.reconciledAt = args.update.reconciledAt;
           return existing;
         },
       },
@@ -386,11 +413,19 @@ beforeEach(async () => {
   ledger = new InMemoryLedger();
   // Info: (20260819 - Julian) 兩批：先到期的 480 分、後到期的 960 分
   ledger.addGrant(
-    { id: "grant-early", expiresOn: "2026-12-31", createdAt: new Date("2026-01-01T00:00:00.000Z") },
+    {
+      id: "grant-early",
+      expiresOn: "2026-12-31",
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+    },
     480,
   );
   ledger.addGrant(
-    { id: "grant-late", expiresOn: "2027-12-31", createdAt: new Date("2026-07-01T00:00:00.000Z") },
+    {
+      id: "grant-late",
+      expiresOn: "2027-12-31",
+      createdAt: new Date("2026-07-01T00:00:00.000Z"),
+    },
     960,
   );
   await rebuild();
@@ -398,7 +433,10 @@ beforeEach(async () => {
 
 describe("T6 逐批守恆：每一批的餘額等於它自己的分錄之和", () => {
   it("跨批次扣減之後，兩批各自對得起來", async () => {
-    const balances = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
+    const balances = await readConsumableGrants(ledger.client, {
+      ...SCOPE,
+      asOfDate: AS_OF,
+    });
     // Info: (20260819 - Julian) 600 分 > 先到期那批的 480 → 必然跨批
     const ok = await writeConsumeForDays(ledger.client, {
       accountBookId: BOOK,
@@ -432,7 +470,10 @@ describe("T6 逐批守恆：每一批的餘額等於它自己的分錄之和", (
    * 真的掛在 `grant-late` 上 —— 只驗前兩者的話，「兩批各扣一半」也會通過。
    */
   it("跨日扣減時，第二天看得到第一天扣完之後的餘額", async () => {
-    const balances = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
+    const balances = await readConsumableGrants(ledger.client, {
+      ...SCOPE,
+      asOfDate: AS_OF,
+    });
     const ok = await writeConsumeForDays(ledger.client, {
       accountBookId: BOOK,
       balances,
@@ -459,7 +500,10 @@ describe("T6 逐批守恆：每一批的餘額等於它自己的分錄之和", (
 
   it("額度不足時回 false，且**一筆分錄都不留**", async () => {
     const before = ledger.entries.length;
-    const balances = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
+    const balances = await readConsumableGrants(ledger.client, {
+      ...SCOPE,
+      asOfDate: AS_OF,
+    });
     const ok = await writeConsumeForDays(ledger.client, {
       accountBookId: BOOK,
       balances,
@@ -473,7 +517,10 @@ describe("T6 逐批守恆：每一批的餘額等於它自己的分錄之和", (
 
 describe("T6 總量守恆：Σ(deltaMinutes) === LeaveBalance.remainingMinutes", () => {
   it("授予、扣減、回補之後總量仍然相等", async () => {
-    const balances = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
+    const balances = await readConsumableGrants(ledger.client, {
+      ...SCOPE,
+      asOfDate: AS_OF,
+    });
     await writeConsumeForDays(ledger.client, {
       accountBookId: BOOK,
       balances,
@@ -502,7 +549,10 @@ describe("T6 總量守恆：Σ(deltaMinutes) === LeaveBalance.remainingMinutes",
     expect(restored).toBe(240);
     await rebuild();
 
-    const total = ledger.entries.reduce((sum, entry) => sum + entry.deltaMinutes, 0);
+    const total = ledger.entries.reduce(
+      (sum, entry) => sum + entry.deltaMinutes,
+      0,
+    );
     expect(balanceRow()?.remainingMinutes).toBe(total);
     expect(total).toBe(1440 - 480);
     expectLedgerSelfConsistent();
@@ -516,7 +566,10 @@ describe("T6 總量守恆：Σ(deltaMinutes) === LeaveBalance.remainingMinutes",
    * 所以這裡逐批比對而不是只看總數。
    */
   it("回補退回原批，不是重新分配", async () => {
-    const balances = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
+    const balances = await readConsumableGrants(ledger.client, {
+      ...SCOPE,
+      asOfDate: AS_OF,
+    });
     await writeConsumeForDays(ledger.client, {
       accountBookId: BOOK,
       balances,
@@ -549,7 +602,10 @@ describe("T6 總量守恆：Σ(deltaMinutes) === LeaveBalance.remainingMinutes",
 
 describe("T6 rebuild 冪等，且重建結果與快取逐欄相同", () => {
   it("連跑三次結果相同，快取也不會漂移", async () => {
-    const balances = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
+    const balances = await readConsumableGrants(ledger.client, {
+      ...SCOPE,
+      asOfDate: AS_OF,
+    });
     await writeConsumeForDays(ledger.client, {
       accountBookId: BOOK,
       balances,
@@ -597,7 +653,10 @@ describe("T6 rebuild 冪等，且重建結果與快取逐欄相同", () => {
    * （帳本與快取一起錯），這是唯一一種守恆式檢查不出來的錯法。
    */
   it("同一天重跑會撞上冪等鍵，不會重複入帳", async () => {
-    const balances = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
+    const balances = await readConsumableGrants(ledger.client, {
+      ...SCOPE,
+      asOfDate: AS_OF,
+    });
     await writeConsumeForDays(ledger.client, {
       accountBookId: BOOK,
       balances,
@@ -606,10 +665,13 @@ describe("T6 rebuild 冪等，且重建結果與快取逐欄相同", () => {
     });
     const afterFirst = ledger.entries.length;
 
-    const fresh = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
+    const fresh = await readConsumableGrants(ledger.client, {
+      ...SCOPE,
+      asOfDate: AS_OF,
+    });
     await expect(
       writeConsumeForDays(ledger.client, {
-      accountBookId: BOOK,
+        accountBookId: BOOK,
         balances: fresh,
         days: [{ leaveDayId: "day-1", minutes: 240 }],
         actorEmployeeId: ACTOR,
@@ -628,11 +690,18 @@ describe("T6 rebuild 冪等，且重建結果與快取逐欄相同", () => {
    */
   it("過期批次不可扣，但仍留在帳本總和裡", async () => {
     ledger.addGrant(
-      { id: "grant-expired", expiresOn: "2026-01-31", createdAt: new Date("2025-01-01T00:00:00.000Z") },
+      {
+        id: "grant-expired",
+        expiresOn: "2026-01-31",
+        createdAt: new Date("2025-01-01T00:00:00.000Z"),
+      },
       120,
     );
 
-    const consumable = await readConsumableGrants(ledger.client, { ...SCOPE, asOfDate: AS_OF });
+    const consumable = await readConsumableGrants(ledger.client, {
+      ...SCOPE,
+      asOfDate: AS_OF,
+    });
     expect(consumable.map((item) => item.grantId)).toEqual([
       "grant-early",
       "grant-late",

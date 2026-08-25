@@ -376,7 +376,11 @@ export const expandLeaveSpan = (params: {
 
   // Info: (20260820 - Julian) 以工作日排序：前一天的夜班可能排在 `dates` 之前
   return [...days.values()].sort((left, right) =>
-    left.workDate < right.workDate ? -1 : left.workDate > right.workDate ? 1 : 0,
+    left.workDate < right.workDate
+      ? -1
+      : left.workDate > right.workDate
+        ? 1
+        : 0,
   );
 };
 

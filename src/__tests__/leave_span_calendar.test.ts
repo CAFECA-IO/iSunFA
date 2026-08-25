@@ -8,10 +8,7 @@ import {
 } from "@/lib/leave_span";
 import { isRealCalendarDate } from "@/lib/utils/attendance_time";
 import { leaveRequestCreateSchema } from "@/validators/leave_request";
-import {
-  isoDateSchema,
-  localDateTimeSchema,
-} from "@/validators/attendance";
+import { isoDateSchema, localDateTimeSchema } from "@/validators/attendance";
 
 /**
  * Info: (20260819 - Julian) 起訖的日期部分必須是**真實存在的日曆日**。
@@ -85,10 +82,18 @@ describe("localDateTimeSchema 擋得住不存在的日期", () => {
   });
 
   it("時刻的邊界照舊", () => {
-    expect(localDateTimeSchema.safeParse("2026-08-19T00:00").success).toBe(true);
-    expect(localDateTimeSchema.safeParse("2026-08-19T23:59").success).toBe(true);
-    expect(localDateTimeSchema.safeParse("2026-08-19T24:00").success).toBe(false);
-    expect(localDateTimeSchema.safeParse("2026-08-19T08:60").success).toBe(false);
+    expect(localDateTimeSchema.safeParse("2026-08-19T00:00").success).toBe(
+      true,
+    );
+    expect(localDateTimeSchema.safeParse("2026-08-19T23:59").success).toBe(
+      true,
+    );
+    expect(localDateTimeSchema.safeParse("2026-08-19T24:00").success).toBe(
+      false,
+    );
+    expect(localDateTimeSchema.safeParse("2026-08-19T08:60").success).toBe(
+      false,
+    );
     // Info: (20260819 - Julian) 帶時區的完整 ISO 8601 刻意不收（見 schema 的說明）
     expect(
       localDateTimeSchema.safeParse("2026-08-19T08:00:00+08:00").success,
@@ -159,19 +164,33 @@ describe("展開不得漏掉中間的任何一天", () => {
    * 而總天數看起來仍然合理。逐日比對，不比長度。
    */
   it.each([
-    ["2026-04-29", "2026-05-02", ["2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02"]],
-    ["2026-01-30", "2026-02-02", ["2026-01-30", "2026-01-31", "2026-02-01", "2026-02-02"]],
-    ["2026-12-30", "2027-01-02", ["2026-12-30", "2026-12-31", "2027-01-01", "2027-01-02"]],
-    ["2028-02-27", "2028-03-01", ["2028-02-27", "2028-02-28", "2028-02-29", "2028-03-01"]],
+    [
+      "2026-04-29",
+      "2026-05-02",
+      ["2026-04-29", "2026-04-30", "2026-05-01", "2026-05-02"],
+    ],
+    [
+      "2026-01-30",
+      "2026-02-02",
+      ["2026-01-30", "2026-01-31", "2026-02-01", "2026-02-02"],
+    ],
+    [
+      "2026-12-30",
+      "2027-01-02",
+      ["2026-12-30", "2026-12-31", "2027-01-01", "2027-01-02"],
+    ],
+    [
+      "2028-02-27",
+      "2028-03-01",
+      ["2028-02-27", "2028-02-28", "2028-02-29", "2028-03-01"],
+    ],
     ["2026-08-19", "2026-08-19", ["2026-08-19"]],
   ])("%s → %s", (from, to, expected) => {
     expect(datesBetween(from, to)).toEqual(expected);
   });
 
   it("上限仍然擋得住（62 天）", () => {
-    expect(() => datesBetween("2026-01-01", "2026-12-31")).toThrow(
-      /62/,
-    );
+    expect(() => datesBetween("2026-01-01", "2026-12-31")).toThrow(/62/);
     // Info: (20260819 - Julian) 剛好 62 天要放行 —— 邊界成對，否則只證明了「會擋」
     expect(datesBetween("2026-01-01", "2026-03-03")).toHaveLength(62);
   });

@@ -51,16 +51,21 @@ const daysSchema = z
   .number()
   .min(0)
   .max(366)
-  .refine((value) => !String(value).includes("e") && !String(value).includes("E"), {
-    message: "days must be a plain decimal, not exponential notation",
-  })
+  .refine(
+    (value) => !String(value).includes("e") && !String(value).includes("E"),
+    {
+      message: "days must be a plain decimal, not exponential notation",
+    },
+  )
   .refine(
     (value) => {
       const text = String(value);
       const dot = text.indexOf(".");
       return (dot === -1 ? 0 : text.length - dot - 1) <= MAX_THRESHOLD_DECIMALS;
     },
-    { message: `days must have at most ${MAX_THRESHOLD_DECIMALS} decimal places` },
+    {
+      message: `days must have at most ${MAX_THRESHOLD_DECIMALS} decimal places`,
+    },
   );
 
 const ruleStepSchema = z.object({

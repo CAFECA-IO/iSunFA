@@ -201,7 +201,10 @@ describe("天數門檻的十進位形狀", () => {
     ["1e-21", 1e-21],
   ])("minDays 是 %s 時擋下", (_label, value) => {
     expect(() =>
-      assertRuleRangesDisjoint([{ minDays: 0, maxDays: value }, { minDays: value, maxDays: null }]),
+      assertRuleRangesDisjoint([
+        { minDays: 0, maxDays: value },
+        { minDays: value, maxDays: null },
+      ]),
     ).toThrow(LeaveApprovalRuleInvariantError);
   });
 

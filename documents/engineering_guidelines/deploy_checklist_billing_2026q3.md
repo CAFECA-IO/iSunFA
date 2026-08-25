@@ -63,6 +63,8 @@ NEXT_PUBLIC_CREDIT_POINT_ADDRESS
 | `faith_memory`（新表） | 費思長期記憶：密文欄位、`expires_at`、`(user_id, team_id)` 唯一鍵 | 低；新表無既有資料 |
 | `faith_memory_deletion_log`（新表） | 記憶刪除的稽核列（不含內容） | 低；新表無既有資料 |
 | `team_subscription` | 新增 `seats`（預設 1）、`unit_price`（預設 0） | 低，但**必須接著做 3.1** |
+| `team_subscription` | 新增 `pending_plan_id`（可為 NULL，2026-08-20 降級排程） | 低；既有列為 NULL＝沒有排程中的變更，**不需要回填** |
+| `team_subscription` | 新增 `nft_token_id`、`nft_owner_address`、`nft_fingerprint`、`nft_synced_at`、`nft_sync_attempts`（預設 0）、`nft_sync_error`（2026-08-19，訂閱會員卡） | 低；既有列 `nft_synced_at` 為 NULL，而 NULL 的語意正是「待同步」——**因此不需要回填**，worker 會自己補上（見 3.6） |
 | `team_wallet_ledger` | 新增 `tx_hash`（可為 NULL） | 低 |
 | `team_quota_usage` | 索引改為 `(team_id, user_id, window_key_5h)` 與 `(team_id, user_id, window_key_week)` | 低；舊索引可留可刪 |
 
@@ -244,13 +246,110 @@ npx tsx scripts/backfill_remove_team_admin.ts
 
 ---
 
+### 3.6 訂閱會員卡的首次同步（2026-08-19）— **不需要回填，但要確認 worker 在跑**
+
+既有付費訂閱在 schema 套用後 `nft_synced_at` 皆為 NULL，也就是全部處於「待同步」。`SubscriptionCardSync` 迴圈（`scripts/run_worker.ts`，每分鐘一輪、每輪 20 個團隊）會依序為它們鑄卡，因此**沒有回填腳本，也不該有**——鑄卡是鏈上寫入，需要重試、需要冪等，那正是 worker 的形狀。
+
+上線後要確認的三件事：
+
+- [ ] **worker 有在跑**：`npx tsx scripts/run_worker.ts` 的 log 應出現 `SubscriptionCardSync` 與「訂閱卡同步完成」，且 `remaining` 逐輪下降。
+- [ ] **合約位址已設定**：`NEXT_PUBLIC_DYNAMIC_KYC_MEMBERSHIP_ADDRESS`。沒設定時 worker 會每輪印一行「鏈上環境未備妥，本輪不同步訂閱卡」並**整輪跳過**（不會燒掉任何團隊的重試額度），但卡片永遠不會出現。
+  （2026-08-21 更正：方案顯示已改為純 DB，這個位址**只**影響卡片鑄造，與任何畫面無關。沒設定時 worker 每輪跳過並留 log，卡片不會出現，其他一切照常。）
+- [ ] **管理員錢包有 `DEFAULT_ADMIN_ROLE`**：`mintCard` / `setTokenURI` 都是該角色專屬。缺角色的症狀是每個團隊各失敗 5 次後停手，`team_subscription.nft_sync_error` 會留下 revert 原因。
+
+積壓與放棄的觀察點（都在同一行 log 裡）：`givenUp > 0` 表示有團隊已達重試上限，需要人看 `nft_sync_error`；修好原因（解黑名單、補角色）後把該列的 `nft_sync_attempts` 歸零即可自動接續。
+
+**降級與續期不需要任何動作**：訂閱資料的每一條變更路徑都會把 `nft_synced_at` 設回 NULL，worker 下一輪就換 URI。
+
+---
+
+
+### 3.7 降級改為期末生效（2026-08-20）— **不需要回填，但要看一件事**
+
+降級不再期中生效（《退款政策》§2.1、設計書 §7.1）。既有列的 `pending_plan_id` 為 NULL，語意就是「沒有排程中的變更」，因此沒有回填。
+
+**要看的是部署前已經被立即降級的團隊**：舊行為會把 `plan_id` 直接改成 `free` 並把 `unit_price` 歸零，那些列已經降完了，**無法從資料回推「他當初付到哪一天」**（週期欄位仍是原週期，但 `plan_id` 已是 free）。若有客訴，只能以訂單紀錄（`BILLING_SUBSCRIBE` 的 `created_at` 與週期）人工判斷補償。查詢方式：
+
+```sql
+SELECT team_id, plan_id, status, current_period_end, unit_price
+FROM team_subscription
+WHERE plan_id = 'free' AND current_period_end > NOW();
+```
+
+有列＝這些團隊在「已付費期間內」被降為免費版（舊行為造成）。數量通常是 0（此功能上線後才會有人用到降級）。
+
+### 3.8 回填 `billing_interval`（2026-08-21）— **有付費訂閱的環境必做，且要在開放加人之前**
+
+`team_subscription.billing_interval` 是新欄位，**可為 NULL 且刻意不給預設值**（review #6687 三輪）：本專案沒有 migrations 目錄，`db push` 之後既有列一律是 NULL。期中加人的補收分母讀這一欄（一期的天數），NULL 會被守門擋下（`TW000029`），**那些付費團隊在回填之前加不了人**——這是刻意選的失敗方向：若給預設值 `month`，年繳列會拿到一個完全合法、只是錯的值，守門看不見它，補收分母變成 30 天而不是 365（**多收約 12 倍**，且 5 席以上剛好撞不到 2 倍上限）。寧可擋下，不要對綁定的卡多收。
+
+因此這一項的急迫性是「回填之前付費團隊不能加人」，不是「回填之前會算錯錢」。正確值存在每列最後一張訂單的 `data.billingInterval`，回填腳本從那裡讀：
+
+```
+npx tsx scripts/backfill_billing_interval.ts          # 檢視（dry-run）
+npx tsx scripts/backfill_billing_interval.ts --apply  # 套用
+```
+
+「無法判定」的列（訂單讀不到週期）腳本會列出、不猜——人工核對後手動更新；在補上之前那個團隊加不了人，但不會算錯錢。跑完再跑一次 dry-run 應為 0 列待修、0 列無法判定。
+
+```sql
+-- 驗證：付費訂閱不該有 NULL 週期
+SELECT team_id, plan_id FROM team_subscription
+WHERE plan_id <> 'free' AND billing_interval IS NULL;
+```
+
+### 3.9 檢查卡在 PAID 的續訂訂單（2026-08-21）— **上線前先查，那些人正在寬限期倒數**
+
+「扣款成功、套用失敗」的續訂訂單停在 `PAID`，修正前的 worker 永遠跳過它們，三天後降級免費版（review #6687 二輪阻擋-2）。部署這版之後 worker 會自動補套用，但**部署前**先查有多少人已經中招、有沒有已經被降級的：
+
+```sql
+-- 還來得及自動補救的（部署後第一輪 worker 會處理）
+SELECT o.id, o.user_id, o.created_at FROM "order" o
+WHERE o.type = 'BILLING_SUBSCRIBE' AND o.status = 'PAID'
+  AND o.idempotency_key LIKE 'renew:%';
+
+-- 已經降級的（付了錢、拿到免費版）：需要人工補償
+-- （續訂訂單的 data.teamId 是頂層欄位，用它 join；不要用 epoch 重組冪等鍵——
+--   period_start 帶毫秒時會對不上）
+SELECT ts.team_id, ts.plan_id, ts.status, o.id AS order_id, o.created_at
+FROM "order" o
+JOIN team_subscription ts ON ts.team_id = o.data->>'teamId'
+WHERE o.status = 'PAID' AND o.idempotency_key LIKE 'renew:%'
+  AND ts.plan_id = 'free';
+```
+
+### 3.10 清掉舊的 `pending_plan_id = 'free'`（2026-08-21）— **有排程降級紀錄的環境要做**
+
+裁定後「不再付錢」只關 `auto_renew`，不寫排程欄位（設計書 §7.1.6）。部署前若有人已用舊行為排程過降到免費版，那些列會留著 `pending_plan_id = 'free'`：續訂 cron 讀不到它們（`auto_renew` 已是 false），但**團隊錢包面板會顯示「已排定於 X 起改為免費版」**，而新的正確說法是「自動續訂已關閉」。兩者結果相同，只是措辭不同——不影響金流，可從容處理：
+
+```sql
+-- 檢視
+SELECT team_id, plan_id, auto_renew, current_period_end
+FROM team_subscription WHERE pending_plan_id = 'free';
+
+-- 清理（auto_renew 應該已是 false；若不是，那一列是舊行為的殘缺狀態，要一併關掉）
+UPDATE team_subscription SET pending_plan_id = NULL, auto_renew = false
+WHERE pending_plan_id = 'free';
+```
+
+---
 
 ## 4. 部署後驗證
 
-- [ ] 既有付費團隊可以新增成員，且補收金額 = 單價 × 剩餘天數 ÷ 整期
+- [ ] 既有付費團隊可以新增成員，且補收金額 = 單價 × 剩餘時間 ÷ **一期長度**（月 30／年 365 天；不是 ÷ 期初到期末的跨距——展延後那可能是好幾期）
+- [ ] 剩餘超過 30 天的付費團隊按**同方案**「延長方案」：付款前顯示「暫不開放購買延長」的說明，送出則被 `TW000028` 擋下；剩餘 30 天內照常建單
+- [ ] 同一個團隊按**升級**（換較高方案）：不受 30 天閘門限制，付款前顯示「舊方案剩餘期間將按已付金額折抵為新方案天數」；付款後 `current_period_end` = 今天 + 一期 + 折抵天數（年繳團隊剩 335 天升月繳企業 ≈ 今天 + 30 + 78.7 天）
+- [ ] 展延或折抵之後跨距超過一期的團隊仍可加人（上限已按跨距縮放，不會誤擋 `TW000016`）
+- [ ] 寬限期（PAST_DUE）的團隊按「降級為免費版」：立即生效（`plan_id` = free、`auto_renew` = false），續訂 worker 下一輪不再對它扣款
+- [ ] 訂閱中的團隊按「降級為免費版」：`auto_renew` 轉 false、`pending_plan_id` 保持 NULL、`plan_id` 與週期**不變**；團隊錢包面板出現「自動續訂已關閉…轉為免費版」與「維持目前方案」按鈕（僅 OWNER 看得到），按下後 `auto_renew` 回 true
+- [ ] 降轉到較低付費方案：`pending_plan_id` 寫入且 `auto_renew` 維持 true；期末續訂 cron 以新方案計價（面板顯示「已排定於 X 起改為 Y」）
 - [ ] 成員的個人點數餘額顯示正確（遷移後應等於原分配餘額 + 原有個人點數）
 - [ ] 額度用盡時的 402 提示：一般情況顯示倒數；單筆超過視窗上限時**不顯示倒數**、改提示升級或改用個人點數
 - [ ] 收據只取得到自己的訂單（換一個 `order_id` 應回 404）
+- [ ] 付費團隊的 OWNER 登入後，右上角徽章顯示團隊版／企業版（不是免費版），且方案頁的「目前方案」標在對應那一格
+- [ ] 該 OWNER 的錢包在一分鐘內出現一張訂閱會員卡 NFT，`team_subscription.nft_token_id` 有值
+- [ ] ~~`/auth/me` 的 `planSource`~~ **已取消**（2026-08-21 裁定：方案一律讀 DB、零 RPC，沒有第二個來源就沒有「來源」欄位）。改驗：付費團隊 OWNER 的徽章與方案頁**只由 DB 決定**，與鑄卡進度無關
+- [ ] worker log 的 `walletNotReady` 數字符合預期（= 尚未升級錢包的付費團隊數；那不是錯誤，是 ADR 021 的常態混合狀態）。`npx tsx scripts/list_card_sync_giveups.ts` 應為空——有列就是探針以外的失敗，需要人看
+- [ ] 方案頁的三個價格與 `plan.service.listPlans()` 一致（改價後只要改常數，四處讀者已收斂為一處）
 - [ ] 後台發放點數連點兩下只入帳一次
 - [ ] 免費版團隊可以邀請成員（不再有人數上限），且方案頁顯示「團隊人數不限」
 - [ ] 同一位管理員連續邀請超過 10 次／分鐘時回 429；團隊累積 20 封未接受邀請時回 TW000023

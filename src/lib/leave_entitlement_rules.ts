@@ -1081,10 +1081,7 @@ export const grantedMinutesOf = (
   grantedDays: number,
   dayEquivalentMinutes: number,
 ): number => {
-  if (
-    !Number.isInteger(dayEquivalentMinutes) ||
-    dayEquivalentMinutes <= 0
-  ) {
+  if (!Number.isInteger(dayEquivalentMinutes) || dayEquivalentMinutes <= 0) {
     throw new LeaveRuleError(
       `dayEquivalentMinutes must be a positive integer, got ${dayEquivalentMinutes}`,
     );

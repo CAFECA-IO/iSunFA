@@ -19,6 +19,18 @@ jest.mock("@/repositories/team_subscription.repo", () => ({
 }));
 jest.mock("@/repositories/payment.repo", () => ({
   paymentRepo: {
+    /**
+     * Info: (20260820 - Luphia) 續訂改為帶冪等鍵（同一期只扣一次）。
+     * 這一支不 mock 的話會是 undefined，而 renewOne 在建單前就會丟 TypeError——
+     * 症狀是「一筆都沒續訂」而看起來與扣款邏輯有關（checklist §1.8）。
+     */
+    findOrderByIdempotencyKey: jest.fn(async () => null),
+    /**
+     * Info: (20260820 - Luphia) 扣款失敗後要放掉冪等鍵（唯一欄位）。
+     * 不 mock 會是 undefined，而失敗分支就會丟 TypeError——症狀變成
+     * 「續訂拋錯」而不是「扣款失敗」（checklist §1.8）。
+     */
+    releaseIdempotencyKey: jest.fn(async () => undefined),
     getOrderById: jest.fn(),
     getPaymentMethodById: jest.fn(),
     createPaymentTransactionAndUpdateOrder: jest.fn(),
@@ -57,14 +69,25 @@ const NOW_MS = 1786075200 * 1000;
 const PAST_DUE_SUB = {
   teamId: "team-1",
   planId: "team",
+  // Info: (20260820 - Luphia) 沒有排程中的降級（真實列一定有這一欄，null 是常態）
+  pendingPlanId: null,
   status: "PAST_DUE",
   autoRenew: true,
   latestOrderId: "order-prev",
+  /**
+   * Info: (20260820 - Luphia) 期初：續訂的冪等鍵綁它（同一期只扣一次）。
+   * 少了這一欄，`renewalIdempotencyKey` 會對 undefined 呼叫 `getTime()`——
+   * 而症狀是「一筆都沒續訂」，看起來像扣款邏輯壞了（checklist §1.4 fixture 形狀）。
+   */
+  currentPeriodStart: new Date(NOW_MS - 31 * 86_400_000),
   // Info: (20260807 - Luphia) 一天前到期：仍在 3 天寬限期內
   currentPeriodEnd: new Date(NOW_MS - 86_400_000),
 };
 
 function mockHappyPath() {
+  // Info: (20260820 - Luphia) 每個案例重設：clearAllMocks 不會還原 factory 裡的實作
+  asMock(paymentRepo.findOrderByIdempotencyKey).mockResolvedValue(null);
+  asMock(paymentRepo.releaseIdempotencyKey).mockResolvedValue(undefined);
   asMock(teamSubscriptionRepo.listPastDueAutoRenew).mockResolvedValue([
     PAST_DUE_SUB,
   ]);
@@ -95,6 +118,63 @@ function mockHappyPath() {
     json: async () => ({ code: "S0000" }),
   })) as unknown as typeof fetch;
 }
+
+/**
+ * Info: (20260820 - Luphia) 排程中的降級**在週期邊界兌現**（修正 20260820）。
+ *
+ * 降級不期中生效（退款政策 §2.1），所以它必須在某個地方落地——就是這裡：
+ * 續訂依 `pendingPlanId` 計價、建單、套用，而 `applyTeamSubscription` 隨即清掉排程。
+ *
+ * 少了這一段，排程會是一張永遠不兌現的空頭承諾：使用者按了降級、期末照原方案
+ * 全額續訂，而畫面上那行「將於 X 起改為團隊版」永遠不會實現。
+ */
+describe("排程降級在期末兌現", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockHappyPath();
+  });
+
+  it("依 pendingPlanId 計價與套用（企業版 → 團隊版）", async () => {
+    asMock(teamSubscriptionRepo.listPastDueAutoRenew).mockResolvedValue([
+      { ...PAST_DUE_SUB, planId: "business", pendingPlanId: "team" },
+    ]);
+
+    const result = await processSubscriptionRenewals(NOW_MS);
+
+    expect(result.renewed).toBe(1);
+    expect(generatePaymentOrder).toHaveBeenCalledWith(
+      "user-owner",
+      expect.objectContaining({
+        planId: "team",
+        // Info: (20260820 - Luphia) 8 人 × 團隊版月費 840 = 6,720（不是企業版的 2,940）
+        unitPrice: 840,
+        amount: 6720,
+      }),
+    );
+    expect(teamSubscriptionRepo.applyTeamSubscription).toHaveBeenCalledWith(
+      expect.objectContaining({ planId: "team" }),
+    );
+  });
+
+  /**
+   * Info: (20260820 - Luphia) 排程降到 free 的列不該被收費。
+   *
+   * 那種列的 `autoRenew` 已關閉，正常情況下 `listPastDueAutoRenew` 撈不到它；
+   * 但「排程 free 卻仍自動續訂」這種不該存在的組合若真的出現，
+   * 也不能變成一張免費方案的收費訂單。
+   */
+  it("排程降到 free 時不建單、不扣款", async () => {
+    asMock(teamSubscriptionRepo.listPastDueAutoRenew).mockResolvedValue([
+      { ...PAST_DUE_SUB, planId: "business", pendingPlanId: "free" },
+    ]);
+
+    const result = await processSubscriptionRenewals(NOW_MS);
+
+    expect(result.skipped).toBe(1);
+    expect(generatePaymentOrder).not.toHaveBeenCalled();
+    expect(teamSubscriptionRepo.applyTeamSubscription).not.toHaveBeenCalled();
+  });
+});
 
 describe("processSubscriptionRenewals", () => {
   beforeEach(() => {
@@ -178,5 +258,135 @@ describe("processSubscriptionRenewals", () => {
     ).mockRejectedValue(new Error("db down"));
     const result = await processSubscriptionRenewals(NOW_MS);
     expect(result.failed).toBe(1);
+  });
+});
+
+/**
+ * Info: (20260820 - Luphia) 續訂的冪等（self-review B-6）。
+ *
+ * 原本完全沒有鍵：扣款成功而 `applyTeamSubscription` 失敗時，訂閱仍是
+ * PAST_DUE + autoRenew，於是**下一小時再建一張新單、再扣一次款**。
+ */
+describe("續訂冪等", () => {
+  beforeEach(() => {
+    /**
+     * Info: (20260820 - Luphia) 這一檔沒有全域的 `clearAllMocks`（每個案例自己呼叫
+     * `mockHappyPath`），因此呼叫紀錄會跨案例累積——`not.toHaveBeenCalled()` 會
+     * 撈到前一條案例的呼叫。這一段自己清。
+     */
+    jest.clearAllMocks();
+    mockHappyPath();
+  });
+
+  it("建單時帶上綁定當期的冪等鍵", async () => {
+    await processSubscriptionRenewals(NOW_MS);
+
+    expect(asMock(generatePaymentOrder)).toHaveBeenCalledWith(
+      "user-owner",
+      expect.objectContaining({
+        idempotencyKey: `renew:team-1:p${PAST_DUE_SUB.currentPeriodStart.getTime()}`,
+      }),
+    );
+  });
+
+  /**
+   * Info: (20260821 - Luphia) **`PAID` 才是「扣款成功、套用失敗」的實際狀態**
+   * （review #6687 二輪阻擋-2）：`completePaymentTransactionAndOrder` 在扣款
+   * 成功時寫 PAID 開收據，`COMPLETED` 要到套用成功後才寫上。原本只認
+   * COMPLETED——一個系統產不出來的狀態——真正卡住的 PAID 被當成「請款中」
+   * 每小時跳過，三天後降級免費版：使用者付了錢，最終得到免費版。
+   */
+  it("這一期已有 PAID 訂單（扣款成功、套用失敗）→ 補套用並補寫 COMPLETED", async () => {
+    asMock(paymentRepo.findOrderByIdempotencyKey).mockResolvedValue({
+      id: "order-charged",
+      status: "PAID",
+    });
+
+    const result = await processSubscriptionRenewals(NOW_MS);
+
+    expect(result.renewed).toBe(1);
+    expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
+    expect(
+      asMock(teamSubscriptionRepo.applyTeamSubscription),
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({ orderId: "order-charged" }),
+    );
+    // Info: (20260821 - Luphia) 不補寫的話訂單永遠停在 PAID
+    expect(asMock(paymentRepo.updateOrderCompleted)).toHaveBeenCalledWith(
+      "order-charged",
+    );
+  });
+
+  // Info: (20260821 - Luphia) COMPLETED 保留給 webhook 先到的情形：同樣補套用
+  it("這一期已有 COMPLETED 訂單（webhook 先到）→ 補套用，不再建單扣款", async () => {
+    asMock(paymentRepo.findOrderByIdempotencyKey).mockResolvedValue({
+      id: "order-charged",
+      status: "COMPLETED",
+    });
+
+    const result = await processSubscriptionRenewals(NOW_MS);
+
+    expect(result.renewed).toBe(1);
+    expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
+    expect(
+      asMock(teamSubscriptionRepo.applyTeamSubscription),
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({ orderId: "order-charged" }),
+    );
+  });
+
+  /**
+   * Info: (20260820 - Luphia) 還沒定案的訂單（PENDING / PAYING）→ 這一輪跳過。
+   * 再送一次請款等於重複扣款，而金流商那邊可能正在處理。
+   */
+  it("這一期已有請款中的訂單 → 跳過，不重複扣款", async () => {
+    asMock(paymentRepo.findOrderByIdempotencyKey).mockResolvedValue({
+      id: "order-paying",
+      status: "PAYING",
+    });
+
+    const result = await processSubscriptionRenewals(NOW_MS);
+
+    expect(result.skipped).toBe(1);
+    expect(asMock(generatePaymentOrder)).not.toHaveBeenCalled();
+    expect(
+      asMock(teamSubscriptionRepo.applyTeamSubscription),
+    ).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Info: (20260820 - Luphia) 扣款失敗後那把冪等鍵必須放掉（self-review 第二輪，中）。
+ *
+ * `order.idempotency_key` 是唯一欄位。不放掉的話下一輪查不到那張失敗的訂單
+ *（刻意不認失敗狀態），去建新單就撞 P2002——每小時噴一次錯，永遠續不上，
+ * 直到寬限期用盡降級為免費版。
+ */
+describe("扣款失敗後釋放冪等鍵", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockHappyPath();
+  });
+
+  it("扣款失敗時放掉鍵，讓下一輪能真的重試", async () => {
+    global.fetch = jest.fn(async () => ({
+      ok: true,
+      json: async () => ({ code: "E9999" }),
+    })) as unknown as typeof fetch;
+
+    const result = await processSubscriptionRenewals(NOW_MS);
+
+    expect(result.failed).toBe(1);
+    expect(asMock(paymentRepo.releaseIdempotencyKey)).toHaveBeenCalledWith(
+      "order-renewal",
+    );
+  });
+
+  // Info: (20260820 - Luphia) 成功時**不放**：那把鍵正是「這一期已經收過錢」的證據
+  it("扣款成功時不放掉鍵", async () => {
+    const result = await processSubscriptionRenewals(NOW_MS);
+
+    expect(result.renewed).toBe(1);
+    expect(asMock(paymentRepo.releaseIdempotencyKey)).not.toHaveBeenCalled();
   });
 });

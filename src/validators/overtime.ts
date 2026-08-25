@@ -232,7 +232,9 @@ export const overtimePolicyUpdateSchema = z.object({
   agreementRecordUrl: z
     .string()
     .trim()
-    .refine(isSafeHttpUrl, { message: "agreementRecordUrl must be an http(s) URL" })
+    .refine(isSafeHttpUrl, {
+      message: "agreementRecordUrl must be an http(s) URL",
+    })
     .nullable()
     .default(null),
   agreedAt: z.string().datetime().nullable().default(null),

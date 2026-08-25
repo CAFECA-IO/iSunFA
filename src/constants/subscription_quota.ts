@@ -55,6 +55,28 @@ export const TEAM_PLAN = {
 
 export type TeamPlanId = (typeof TEAM_PLAN)[keyof typeof TEAM_PLAN];
 
+/**
+ * Info: (20260820 - Luphia) 方案的高低次序。數字只用於比較，不代表價格或額度倍數
+ *（那些是 DB 系統設定，不可從這裡推導）。
+ *
+ * 存在的理由是「這次變更是升級還是降級」必須有**唯一**的判準：兩者的生效時點不同
+ *（升級立即、降級於當期屆滿），而判準若散在服務層各寫一次，遲早有一條路徑
+ * 讓降級立即生效——那正好違反退款政策 §2.1。
+ */
+export const PLAN_RANK: Record<TeamPlanId, number> = {
+  [TEAM_PLAN.FREE]: 0,
+  [TEAM_PLAN.TEAM]: 1,
+  [TEAM_PLAN.BUSINESS]: 2,
+};
+
+/**
+ * Info: (20260820 - Luphia) 由 `from` 換到 `to` 是不是降級（純比較，無副作用）。
+ * 同方案不算降級（那是重複購買或改計費週期，另循升級路徑）。
+ */
+export function isPlanDowngrade(from: TeamPlanId, to: TeamPlanId): boolean {
+  return PLAN_RANK[to] < PLAN_RANK[from];
+}
+
 export interface ISubscriptionQuota {
   per5h: number;
   perWeek: number;
@@ -239,6 +261,30 @@ export const BILLING_INTERVAL = {
 
 export type BillingInterval =
   (typeof BILLING_INTERVAL)[keyof typeof BILLING_INTERVAL];
+
+/**
+ * Info: (20260821 - Luphia) 一個計費週期的天數（月繳 30／年繳 365）。
+ *
+ * 原本只在 `applyTeamSubscriptionInTx` 裡有一份三元式；期中加人的比例補收
+ * 也需要它（分母是**一期**的長度，不是 `periodEnd − periodStart`——展延之後
+ * 那個跨距可能是好幾期，用跨距當分母會把補收金額除以期數，review #6687
+ * 二輪高-1）。兩處必須是同一份數字。
+ */
+export const BILLING_INTERVAL_DAYS: Record<BillingInterval, number> = {
+  [BILLING_INTERVAL.MONTH]: 30,
+  [BILLING_INTERVAL.YEAR]: 365,
+};
+
+/**
+ * Info: (20260821 - Luphia) 展延購買的時間閘門（產品裁定 20260821，review #6687
+ * 二輪阻擋-1）：**當期剩餘 30 天內才能購買延長／換方案**。
+ *
+ * 展延語意（新期自當期屆滿日累加）維持不變，但沒有閘門時它對「換方案」是
+ * 一個漏洞：年繳團隊版第 1 天買月繳企業版 → 剩餘 364 天全部免費升級企業版
+ * 再加一個月，約四折。閘門把「免費升級的剩餘天數」上限壓到 30 天，
+ * 也讓任何時點的訂閱跨距不超過「一期 + 30 天」（席次補收上限 2 倍因此夠用）。
+ */
+export const SUBSCRIPTION_EXTENSION_WINDOW_DAYS = 30;
 
 // Info: (20260807 - Luphia) 分配 API 的操作方向（設計書 §6.2）
 export const ALLOCATION_DIRECTION = {

@@ -65,8 +65,7 @@ export function assertGrantSource(params: IStorableLeaveGrant): void {
   const isOvertimeConversion =
     params.source === LeaveGrantSource.OVERTIME_CONVERSION;
   const hasSegment =
-    params.overtimeSegmentId !== null &&
-    params.overtimeSegmentId !== undefined;
+    params.overtimeSegmentId !== null && params.overtimeSegmentId !== undefined;
 
   // Info: (20260817 - Julian) 雙向：補休必掛分段，掛了分段的必是補休
   if (isOvertimeConversion && !hasSegment) {

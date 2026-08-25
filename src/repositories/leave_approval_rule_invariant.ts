@@ -60,7 +60,9 @@ export function assertRuleRangesDisjoint(
    */
   if (rules.length === 0) return;
 
-  const ordered = [...rules].sort((left, right) => left.minDays - right.minDays);
+  const ordered = [...rules].sort(
+    (left, right) => left.minDays - right.minDays,
+  );
 
   for (const rule of ordered) {
     if (!Number.isFinite(rule.minDays) || rule.minDays < 0) {

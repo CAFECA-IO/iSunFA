@@ -111,7 +111,10 @@ describe("認定不在核准的 payload 裡", () => {
   it("核准 schema 只收 approvedMinutes", () => {
     const parsed = overtimeApprovalSchema.safeParse({
       approvedMinutes: 60,
-      emergency: { reportUrl: "https://e.test/1", reportedAt: "2026-08-15T11:00" },
+      emergency: {
+        reportUrl: "https://e.test/1",
+        reportedAt: "2026-08-15T11:00",
+      },
     });
     expect(parsed.success).toBe(true);
     if (!parsed.success) return;
@@ -335,7 +338,10 @@ describe("報備連結的協定白名單", () => {
     ["vbscript:", "vbscript:msgbox(1)"],
   ])("%s 擋下", (_label, reportUrl) => {
     expect(() =>
-      assertOvertimeEmergencyRecord({ ...RECORDED, emergencyReportUrl: reportUrl }),
+      assertOvertimeEmergencyRecord({
+        ...RECORDED,
+        emergencyReportUrl: reportUrl,
+      }),
     ).toThrow(OvertimeRequestInvariantError);
   });
 
@@ -352,7 +358,10 @@ describe("報備連結的協定白名單", () => {
     ["內網文件伺服器", "http://intranet.local/filings/2026-0819.pdf"],
   ])("%s 放行", (_label, reportUrl) => {
     expect(() =>
-      assertOvertimeEmergencyRecord({ ...RECORDED, emergencyReportUrl: reportUrl }),
+      assertOvertimeEmergencyRecord({
+        ...RECORDED,
+        emergencyReportUrl: reportUrl,
+      }),
     ).not.toThrow();
   });
 });
@@ -415,14 +424,17 @@ describe("assertEmergencyDeclaration", () => {
   ];
 
   it.each(HALF_REVOCATIONS)("%s 擋下", (_label, patch) => {
-    expect(() =>
-      assertEmergencyDeclaration({ ...ACTIVE, ...patch }),
-    ).toThrow(OvertimeRequestInvariantError);
+    expect(() => assertEmergencyDeclaration({ ...ACTIVE, ...patch })).toThrow(
+      OvertimeRequestInvariantError,
+    );
   });
 
   it("歷史列的連結同樣走協定白名單", () => {
     expect(() =>
-      assertEmergencyDeclaration({ ...ACTIVE, reportUrl: "javascript:alert(1)" }),
+      assertEmergencyDeclaration({
+        ...ACTIVE,
+        reportUrl: "javascript:alert(1)",
+      }),
     ).toThrow(OvertimeRequestInvariantError);
   });
 });

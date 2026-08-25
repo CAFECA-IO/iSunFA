@@ -119,6 +119,11 @@ export const teamManagement = {
       "チームウォレットは凍結中です（保存則監査の異常）。サポートにお問い合わせください。",
     buy_credits: "ポイントを購入",
     manage_plan: "プランを管理",
+    pending_downgrade:
+      "{{date}} から{{plan}}に変更される予定です。それまではプランと利用枠は変わりません。",
+    pending_expire:
+      "自動更新は停止中です。プランと利用枠は {{date}} まで維持され、その後お支払いがなければ無料プランに切り替わります。",
+    keep_current_plan: "現在のプランを維持",
     manage_plan_hint: "枠が足りない場合はプランをアップグレードできます",
     buy_credits_hint:
       "購入したポイントはチームウォレットに入り、管理者が割り当てできます。",

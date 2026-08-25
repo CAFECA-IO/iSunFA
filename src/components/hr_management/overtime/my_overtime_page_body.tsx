@@ -82,9 +82,7 @@ const MyOvertimePageBody: FC = () => {
   const [startAt, setStartAt] = useState(
     () => `${localIsoDate(new Date())}T18:00`,
   );
-  const [endAt, setEndAt] = useState(
-    () => `${localIsoDate(new Date())}T20:00`,
-  );
+  const [endAt, setEndAt] = useState(() => `${localIsoDate(new Date())}T20:00`);
 
   /**
    * Info: (20260819 - Julian) 「起」不設上界，「迄」只設下界（`min = 起`）。

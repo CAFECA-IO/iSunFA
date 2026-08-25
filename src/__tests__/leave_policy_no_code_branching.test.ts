@@ -189,7 +189,8 @@ const scan = (source: ts.SourceFile, file: string): IViolation[] => {
     if (
       ts.isBinaryExpression(node) &&
       (node.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken ||
-        node.operatorToken.kind === ts.SyntaxKind.ExclamationEqualsEqualsToken ||
+        node.operatorToken.kind ===
+          ts.SyntaxKind.ExclamationEqualsEqualsToken ||
         node.operatorToken.kind === ts.SyntaxKind.EqualsEqualsToken ||
         node.operatorToken.kind === ts.SyntaxKind.ExclamationEqualsToken) &&
       (isCodeAccess(node.left) || isCodeAccess(node.right))
@@ -304,14 +305,16 @@ describe("T19：規則引擎不得對 LeavePolicy.code 分支（ADR 021 §2.1）
       ["嚴格不等", `const x = policy.code !== "ANNUAL";`],
       ["寬鬆不等", `const x = policy.code != "ANNUAL";`],
     ])("%s：等值比較 + 字串常值各一筆", (_label, body) => {
-      expect(probe(body)).toEqual(["以假別代號做等值比較", "假別代號的字串常值"]);
+      expect(probe(body)).toEqual([
+        "以假別代號做等值比較",
+        "假別代號的字串常值",
+      ]);
     });
 
     it("比對 LEAVE_POLICY_CODE 的成員：等值比較 + 取用成員", () => {
-      expect(probe(`const x = policy.code === LEAVE_POLICY_CODE.SICK;`)).toEqual([
-        "以假別代號做等值比較",
-        "取用 LEAVE_POLICY_CODE 的成員",
-      ]);
+      expect(
+        probe(`const x = policy.code === LEAVE_POLICY_CODE.SICK;`),
+      ).toEqual(["以假別代號做等值比較", "取用 LEAVE_POLICY_CODE 的成員"]);
     });
 
     /**
@@ -325,9 +328,9 @@ describe("T19：規則引擎不得對 LeavePolicy.code 分支（ADR 021 §2.1）
     });
 
     it("代號字串出現在值的位置（不必有比較）", () => {
-      expect(probe(`const m = { MARRIAGE: 1 }; const y = "MARRIAGE";`)).toEqual([
-        "假別代號的字串常值",
-      ]);
+      expect(probe(`const m = { MARRIAGE: 1 }; const y = "MARRIAGE";`)).toEqual(
+        ["假別代號的字串常值"],
+      );
     });
 
     /**
@@ -339,7 +342,10 @@ describe("T19：規則引擎不得對 LeavePolicy.code 分支（ADR 021 §2.1）
      * 把它寫成一條「不算違規」的案例，會讓下一個人以為規則自己分得出來。
      */
     it.each([
-      ["讀屬性而非身分", `if (policy.quotaMode === LeaveQuotaMode.QUOTA) return 1;`],
+      [
+        "讀屬性而非身分",
+        `if (policy.quotaMode === LeaveQuotaMode.QUOTA) return 1;`,
+      ],
       ["讀法定面額", `const days = policy.annualDays ?? 0;`],
       ["型別位置的代號是宣告，不是分支", `type Code = "ANNUAL" | "SICK";`],
       ["讀 name 而非 code", `const label = policy.name ?? policy.id;`],

@@ -62,8 +62,11 @@ jest.mock("@/lib/prisma", () => {
           return { count: 1 };
         },
       ),
-      findFirst: jest.fn(async ({ where }: { where: Record<string, unknown> }) =>
-        matches(where) ? { status: row.status, isEmergency: row.isEmergency } : null,
+      findFirst: jest.fn(
+        async ({ where }: { where: Record<string, unknown> }) =>
+          matches(where)
+            ? { status: row.status, isEmergency: row.isEmergency }
+            : null,
       ),
     },
     overtimeSegment: {

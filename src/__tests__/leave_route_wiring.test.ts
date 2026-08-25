@@ -92,11 +92,15 @@ const resolveEmployeeMock =
     typeof jest.fn<() => Promise<{ id: string }>>
   >;
 const leaveSubmitMock = leaveRequestService.submit as unknown as ReturnType<
-  typeof jest.fn<(params: { input: Record<string, unknown> }) => Promise<unknown>>
+  typeof jest.fn<
+    (params: { input: Record<string, unknown> }) => Promise<unknown>
+  >
 >;
 const overtimeSubmitMock =
   overtimeRequestService.submit as unknown as ReturnType<
-    typeof jest.fn<(params: { input: Record<string, unknown> }) => Promise<unknown>>
+    typeof jest.fn<
+      (params: { input: Record<string, unknown> }) => Promise<unknown>
+    >
   >;
 const declareEmergencyMock =
   overtimeRequestService.declareEmergency as unknown as ReturnType<
@@ -207,7 +211,13 @@ beforeEach(() => {
 describe("裝配：限流真的擋得住（不是只有那兩行的順序對）", () => {
   it.each([
     ["假單送出", "leave", leaveBody, () => leaveSubmitMock, leaveSubmit],
-    ["加班單送出", "overtime", overtimeBody, () => overtimeSubmitMock, overtimeSubmit],
+    [
+      "加班單送出",
+      "overtime",
+      overtimeBody,
+      () => overtimeSubmitMock,
+      overtimeSubmit,
+    ],
   ])(
     "%s：超限回 429，且 service 沒有被多呼叫一次",
     async (_label, slug, body, mockOf, handler) => {
@@ -301,7 +311,11 @@ describe("裝配：validator 也真的接上了", () => {
   it("迄早於起時回 400，service 不被呼叫", async () => {
     const response = await leaveSubmit(
       post(
-        { ...leaveBody, startAt: "2026-08-20T17:00", endAt: "2026-08-20T08:00" },
+        {
+          ...leaveBody,
+          startAt: "2026-08-20T17:00",
+          endAt: "2026-08-20T08:00",
+        },
         "0xprobe-invalid",
       ),
       { params: params() },
@@ -430,11 +444,7 @@ describe("裝配：額度四支端點的操作者身分只能來自 session", ()
       headers: { Authorization: `Bearer ${address}` },
     });
 
-  const postTo = (
-    query: string,
-    body: unknown,
-    address: string,
-  ): NextRequest =>
+  const postTo = (query: string, body: unknown, address: string): NextRequest =>
     new NextRequest(`http://localhost/api/v1/probe?${query}`, {
       method: "POST",
       headers: {
@@ -464,10 +474,9 @@ describe("裝配：額度四支端點的操作者身分只能來自 session", ()
   });
 
   it("L8 帳本：actorEmployeeId 來自 session，employeeId 來自 query", async () => {
-    await balanceLedger(
-      get(`employeeId=${TARGET}`, "0xprobe-bal-ledger"),
-      { params: params() },
-    );
+    await balanceLedger(get(`employeeId=${TARGET}`, "0xprobe-bal-ledger"), {
+      params: params(),
+    });
 
     expect(balanceMocks.listLedger).toHaveBeenCalledTimes(1);
     expect(balanceMocks.listLedger.mock.calls[0][0]).toMatchObject({
@@ -602,9 +611,12 @@ describe("裝配：額度四支端點的操作者身分只能來自 session", ()
  */
 describe("裝配：送出與認定的 actorEmployeeId 也只能來自 session", () => {
   it("假單送出", async () => {
-    await leaveSubmit(post({ ...leaveBody, employeeId: TARGET }, "0xprobe-id-leave"), {
-      params: params(),
-    });
+    await leaveSubmit(
+      post({ ...leaveBody, employeeId: TARGET }, "0xprobe-id-leave"),
+      {
+        params: params(),
+      },
+    );
     expect(leaveSubmitMock.mock.calls[0][0]).toMatchObject({
       employeeId: ACTOR,
     });
@@ -630,7 +642,9 @@ describe("裝配：送出與認定的 actorEmployeeId 也只能來自 session", 
         },
         "0xprobe-id-em",
       ),
-      { params: Promise.resolve({ account_book_id: BOOK, request_id: "ot-1" }) },
+      {
+        params: Promise.resolve({ account_book_id: BOOK, request_id: "ot-1" }),
+      },
     );
     expect(declareEmergencyMock.mock.calls[0][0]).toMatchObject({
       actorEmployeeId: ACTOR,
