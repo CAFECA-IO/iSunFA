@@ -13,7 +13,7 @@ import {
   notifyWalletUpgradeRequested,
 } from "@/services/notification.service";
 import { notificationRepo } from "@/repositories/notification.repo";
-import { teamRepo } from "@/repositories/team.repo";
+import { listPendingInvitationsForUser } from "@/services/team_invitation.service";
 import {
   NOTIFICATION_HISTORY_LIMIT,
   NOTIFICATION_TYPE,
@@ -242,8 +242,13 @@ jest.mock("@/repositories/notification.repo", () => {
   };
 });
 
-jest.mock("@/repositories/team.repo", () => ({
-  teamRepo: { getPendingInvitationsByAddress: jest.fn(async () => []) },
+/**
+ * Info: (20260825 - Julian) 邀請的查詢已收進 `team_invitation.service`（兩個消費者共用），
+ * 所以這裡換成 mock 那一支。「哪些邀請算數」（已驗證信箱、未過期、空位址早退）
+ * 由它自己的測試守，這一檔只驗**通知服務怎麼把它的結果組進待辦節**。
+ */
+jest.mock("@/services/team_invitation.service", () => ({
+  listPendingInvitationsForUser: jest.fn(async () => []),
 }));
 
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
@@ -285,12 +290,12 @@ function row(overrides: Partial<IRow> = {}): IRow {
 beforeEach(() => {
   jest.clearAllMocks();
   fakeRepo.__reset();
-  asMock(teamRepo.getPendingInvitationsByAddress).mockResolvedValue([]);
+  asMock(listPendingInvitationsForUser).mockResolvedValue([]);
 });
 
 describe("摘要", () => {
   it("待辦 = 活算的邀請 + DB 的待辦型；完成 = 其餘未讀", async () => {
-    asMock(teamRepo.getPendingInvitationsByAddress).mockResolvedValue([
+    asMock(listPendingInvitationsForUser).mockResolvedValue([
       invitation(),
       invitation({ id: "inv-2" }),
     ]);
@@ -357,48 +362,19 @@ describe("摘要", () => {
     });
 
     expect(asMock(notificationRepo.summarizeUnread)).toHaveBeenCalledWith(USER);
-    expect(
-      asMock(teamRepo.getPendingInvitationsByAddress),
-    ).toHaveBeenCalledWith(ADDRESS);
-  });
-
-  /**
-   * Info: (20260821 - Luphia) 過期的邀請點進去也接受不了，掛在鈴鐺上只會製造
-   * 一個按了沒反應的待辦。
-   */
-  it("過期的邀請不算待辦", async () => {
-    asMock(teamRepo.getPendingInvitationsByAddress).mockResolvedValue([
-      invitation({ expiresAt: new Date(NOW_MS - 1) }),
-      invitation({ id: "inv-2", expiresAt: new Date(NOW_MS + 1000) }),
-    ]);
-
-    const summary = await getNotificationSummary({
+    expect(asMock(listPendingInvitationsForUser)).toHaveBeenCalledWith({
       userId: USER,
       address: ADDRESS,
       nowMs: NOW_MS,
     });
-
-    expect(summary.todoCount).toBe(1);
   });
 
   /**
-   * Info: (20260825 - Julian) 空位址不得退化成「列出全站邀請」（計畫書 D5）。
-   *
-   * 斷言成對：回 0 **且**根本沒有去查邀請表。只驗前者的話，
-   * 「查了全站、剛好那個測試環境沒有資料」也會通過。
+   * Info: (20260825 - Julian) 「過期的邀請不算待辦」與「空位址不得查全站」
+   * 這兩條已移到 `team_invitation_pending_list.test.ts` ——
+   * 判斷本身搬進了 `listPendingInvitationsForUser`，而這一檔已經把它 mock 掉，
+   * 留在這裡只會變成「測試我自己寫的替身」。
    */
-  it("空位址回空待辦，且不查邀請表", async () => {
-    const summary = await getNotificationSummary({
-      userId: USER,
-      address: "",
-      nowMs: NOW_MS,
-    });
-
-    expect(summary.todoCount).toBe(0);
-    expect(
-      asMock(teamRepo.getPendingInvitationsByAddress),
-    ).not.toHaveBeenCalled();
-  });
 
   /**
    * Info: (20260825 - Julian) 0/0 是塌陷值（檢查清單 §一.9）：
@@ -419,17 +395,13 @@ describe("摘要", () => {
       latestUnreadAt: null,
     });
     expect(asMock(notificationRepo.summarizeUnread)).toHaveBeenCalledTimes(1);
-    expect(
-      asMock(teamRepo.getPendingInvitationsByAddress),
-    ).toHaveBeenCalledTimes(1);
+    expect(asMock(listPendingInvitationsForUser)).toHaveBeenCalledTimes(1);
   });
 });
 
 describe("清單", () => {
   it("邀請進待辦節、完成通知進完成節，錢包升級歸待辦", async () => {
-    asMock(teamRepo.getPendingInvitationsByAddress).mockResolvedValue([
-      invitation(),
-    ]);
+    asMock(listPendingInvitationsForUser).mockResolvedValue([invitation()]);
     fakeRepo.__seed([
       row({
         id: "n-wallet",

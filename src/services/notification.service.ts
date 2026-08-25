@@ -9,7 +9,7 @@ import {
 import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
 import { notificationRepo } from "@/repositories/notification.repo";
-import { teamRepo } from "@/repositories/team.repo";
+import { listPendingInvitationsForUser } from "@/services/team_invitation.service";
 
 /**
  * Info: (20260821 - Luphia) 小鈴鐺通知 Service（ADR 021 補充）。
@@ -103,32 +103,20 @@ export interface INotificationList {
 }
 
 /**
- * Info: (20260821 - Luphia) 未過期的待接受邀請（derived 待辦）。
+ * Info: (20260825 - Julian) 待辦型的邀請由 `team_invitation.service` 現算。
  *
- * 過期的要濾掉：`getPendingInvitationsByAddress` 只看 status，而 email 邀請
- * 有 `expiresAt`——過期的邀請點進去也接受不了，掛在鈴鐺上只會製造一個
- * 按了沒反應的待辦。
+ * 不在這裡自己查的理由：團隊頁（`/user/team`）也要回答同一個問題，而鈴鐺上
+ * 那則通知點下去正是導到那一頁。兩邊各查一次的話，兩個答案遲早會分岔，
+ * 而症狀是「通知說有一封邀請，點進去那一頁說沒有」。
+ *
+ * 「哪些邀請算數」（已驗證信箱、未過期）的判斷收在那一支裡，見它的說明。
  */
-async function listPendingInvitations(address: string, nowMs: number) {
-  /**
-   * Info: (20260825 - Julian) 空位址一律回空集合，不進 Prisma。
-   *
-   * `where: { inviteeAddress: undefined }` 在 Prisma 是**沒有這個條件**，
-   * 於是查詢退化成「列出全站待接受邀請」，而 payload 會吐出別人團隊的
-   * teamId / teamName / inviterName。這是跨租戶外洩的標準形狀
-   * （檢查清單 §三.1）。
-   *
-   * 今天的 `getIdentityFromDeWT` 兩條路徑都保證 address 有值
-   * （線上模式回 DB 的 User，離線模式 `if (!payload.sub || !payload.address) return null`），
-   * 所以這一行現在攔不到任何東西 —— 它防的是**那個保證哪天不成立**，
-   * 而失效時的症狀是靜默外洩，不是報錯。
-   */
-  if (!address) return [];
-  const invitations = await teamRepo.getPendingInvitationsByAddress(address);
-  return invitations.filter(
-    (invitation) =>
-      !invitation.expiresAt || invitation.expiresAt.getTime() > nowMs,
-  );
+async function listPendingInvitations(
+  userId: string,
+  address: string,
+  nowMs: number,
+) {
+  return listPendingInvitationsForUser({ userId, address, nowMs });
 }
 
 // Info: (20260821 - Luphia) 摘要（登入氣泡與輪詢都打這一支：兩個數字，愈便宜愈好）
@@ -140,7 +128,7 @@ export async function getNotificationSummary(params: {
   return guarded(
     async () => {
       const [invitations, unread] = await Promise.all([
-        listPendingInvitations(params.address, params.nowMs),
+        listPendingInvitations(params.userId, params.address, params.nowMs),
         notificationRepo.summarizeUnread(params.userId),
       ]);
       const unreadByType = unread.counts;
@@ -193,7 +181,7 @@ export async function listNotifications(params: {
   return guarded(
     async () => {
       const [invitations, storedTodos, completedPage] = await Promise.all([
-        listPendingInvitations(params.address, params.nowMs),
+        listPendingInvitations(params.userId, params.address, params.nowMs),
         notificationRepo.listUnreadByTypes(
           params.userId,
           TODO_NOTIFICATION_TYPES,

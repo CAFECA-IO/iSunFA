@@ -11,6 +11,7 @@ import {
   TEAM_INVITATION_STATUS,
   type InviteEmailMatch,
 } from "@/constants/status";
+import { canonicalizeEmailForKey } from "@/lib/team/email_identity";
 
 /**
  * Info: (20260814 - Luphia) 團隊 + 我在其中的角色（null = 資料異常，查得到團隊卻查不到成員身分）。
@@ -98,7 +99,10 @@ export interface ITeamRepository {
       | "createdAt"
     >[]
   >;
-  getPendingInvitationsByAddress(address: string): Promise<
+  getPendingInvitationsForRecipient(params: {
+    address: string;
+    emailKeys: readonly string[];
+  }): Promise<
     Prisma.TeamInvitationGetPayload<{
       include: {
         team: true;
@@ -294,8 +298,26 @@ export class TeamRepository implements ITeamRepository {
     });
   }
 
+  /**
+   * Info: (20260825 - Julian) `inviteeEmailKey` 在**這裡**算，不由呼叫端傳。
+   *
+   * 它是 `inviteeEmail` 的純函數（schema 的不變式），沒有政策在裡面 ——
+   * 這與 `pendingKey` 由呼叫端算刻意不同：那一欄要看 status，是政策。
+   *
+   * 交給呼叫端就是兩個可以忘記的地方（位址 route 與 `inviteMemberByEmail`），
+   * 而忘記的症狀是「那個人就是收不到通知」，不會有任何測試變紅。
+   */
   async createTeamInvitation(data: Prisma.TeamInvitationUncheckedCreateInput) {
-    return prisma.teamInvitation.create({ data });
+    const inviteeEmail =
+      typeof data.inviteeEmail === "string" ? data.inviteeEmail.trim() : "";
+    return prisma.teamInvitation.create({
+      data: {
+        ...data,
+        inviteeEmailKey: inviteeEmail
+          ? canonicalizeEmailForKey(inviteeEmail)
+          : null,
+      },
+    });
   }
 
   /**
@@ -433,11 +455,37 @@ export class TeamRepository implements ITeamRepository {
     });
   }
 
-  async getPendingInvitationsByAddress(address: string) {
+  /**
+   * Info: (20260825 - Julian) 一個人的待接受邀請 —— 位址邀請**與** email 邀請。
+   *
+   * 取代原本的 `getPendingInvitationsByAddress`。舊的只查 `inviteeAddress`，
+   * 而 email 邀請的那一欄是 NULL（對方可能還沒註冊時就寄出了），於是
+   * 「已註冊的人被 email 邀請」在小鈴鐺與團隊頁上都完全看不到。
+   * 舊的那支已刪除：留著就是一支「只看得到一半」的查詢等著被誤用。
+   *
+   * `emailKeys` 的兩個約定，呼叫端要負責：
+   *
+   * 1. **已經 canonical**（`canonicalizeEmailForKey`）—— 與 `pendingKey` 同一套，
+   *    否則唯一鍵認定 `alice+x@` 與 `alice@` 是同一個人，這裡卻認定不是
+   * 2. **只含已驗證的信箱** —— 未驗證的 email 是使用者宣稱的字串，拿它當
+   *    「這封邀請是給我的」的依據，等於宣稱一個信箱就能讀到別人團隊的名稱與邀請人姓名
+   *
+   * `emailKeys` 為空時 `in: []` 在 Prisma 是「永不匹配」，所以 `OR` 會退化成
+   * 只剩位址那一條 —— 安全。這一行寫下來是因為那個語意不該靠讀者去記得：
+   * 若哪天改成「空陣列時省略這個條件」，查詢就變成「列出全站待接受邀請」，
+   * 而那是跨租戶外洩的標準形狀（同 `listPendingInvitations` 的空 address 早退）。
+   */
+  async getPendingInvitationsForRecipient(params: {
+    address: string;
+    emailKeys: readonly string[];
+  }) {
     return prisma.teamInvitation.findMany({
       where: {
-        inviteeAddress: address,
         status: TEAM_INVITATION_STATUS.PENDING,
+        OR: [
+          { inviteeAddress: params.address },
+          { inviteeEmailKey: { in: [...params.emailKeys] } },
+        ],
       },
       include: {
         team: true,

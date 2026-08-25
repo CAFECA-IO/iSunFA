@@ -9,11 +9,13 @@
 
 ## 1. 這次新增的 schema
 
-**一張表、零個新 enum、零個新 env、零個媒體資產。**
+**一張新表、一個既有表的新欄位、零個新 enum、零個新 env、零個媒體資產。**
 
 | 物件 | 說明 |
 |---|---|
 | `notification` | 事件型通知 + 入庫的待辦型。初始 0 筆 |
+| `team_invitation.invitee_email_key` | **既有表的新欄位**（可空）。`invitee_email` 的正規化投影，讓「以已驗證的信箱反查待接受邀請」查得動索引。**需要回填**，見 §2.2 |
+| `@@index([inviteeEmailKey, status])` | 上面那支查詢一定同時帶 status |
 | `notification.dedupe_key` UNIQUE（**可空**） | 少了它，worker 三輪重試會產生三則「您的報告已完成」。**必須 nullable** —— 不需去重的通知不帶鍵，而 Postgres 唯一約束允許多個 null |
 | `@@index([userId, readAt])` | 未讀計數（`groupBy`）走這個 |
 | `@@index([userId, createdAt])` | 清單（新到舊）走這個 |
@@ -25,11 +27,26 @@
 
 ---
 
-## 2. 不需要回填
+## 2. 回填
+
+### 2.1 `notification` 不需要回填
 
 初始 0 筆，而**「沒有通知」是正確的初始狀態，不是待填**。
 
 **不要為既有的歷史分析補發通知。** 那些分析早就完成、使用者早就看過結果，補發會在鈴鐺上一次倒出幾十則指向幾個月前的東西 —— 而 `dedupeKey` 讓補發**只發生一次**，這個錯誤不可逆。
+
+### 2.2 `invitee_email_key` 需要回填
+
+```bash
+npx tsx scripts/backfill_invitee_email_key.ts            # 預演
+npx tsx scripts/backfill_invitee_email_key.ts --commit
+```
+
+**做錯順序不會壞，只會晚一點生效** —— 這在本專案罕見，值得寫下來。新欄位是 NULL 時查詢就是查不到，行為與回填前完全一樣：既有的 email 邀請暫時不出現在鈴鐺與團隊頁上，不會出錯、不會漏資料、不會誤發。所以 `db push` 與回填的先後不影響正確性。
+
+**腳本會對 `pending_key` 做自我驗證。** PENDING 的 email 邀請，`pending_key` 就是 `{teamId}:mail:{canonical}`，所以重算的結果必須等於它的後綴。對不上代表正規化規則在某個時間點分岔了 —— 那時腳本會**整批中止**、列出不一致的列、exit code 非 0。
+
+不是「跳過那幾列、其餘照寫」：對不上代表 `canonicalizeEmailForKey` 的行為與寫 `pending_key` 當時不同，那麼其他列算出來的值**也不可信**，它們只是剛好沒踩到有差異的那部分規則（子地址、Gmail 點號）。看到中止就去查那支函式，不要繞過。
 
 ### 2.1 `request_wallet_upgrades.ts`：跑之前「無法判定」必須是 0
 
@@ -66,9 +83,14 @@ npm run test:no-dotenv
 npm run build
 pm2 restart isunfa
 pm2 restart isunfa-worker   # ← 兩個都要，見 §5.1
+
+npx tsx scripts/backfill_invitee_email_key.ts            # 預演，看數字
+npx tsx scripts/backfill_invitee_email_key.ts --commit   # 見 §2.2
 ```
 
-### 3.1 `db push` 之後的三項驗證
+回填排在重啟之後是刻意的：它不影響服務起不起得來，而排在前面只會讓一個「晚做也沒關係」的步驟卡住部署。
+
+### 3.1 `db push` 之後的驗證
 
 ```sql
 -- ① 表在（只有一張）
@@ -83,6 +105,22 @@ SELECT column_name, data_type, is_nullable
 -- ③ 唯一鍵與兩個索引都在
 SELECT indexname, indexdef FROM pg_indexes WHERE tablename = 'notification';
 -- 期望：pkey + dedupe_key UNIQUE + (user_id, read_at) + (user_id, created_at)
+
+-- ④ 邀請表的新欄位與索引都在
+SELECT column_name, is_nullable FROM information_schema.columns
+ WHERE table_name = 'team_invitation' AND column_name = 'invitee_email_key';
+-- 期望：1 列，is_nullable = YES
+SELECT indexname FROM pg_indexes
+ WHERE tablename = 'team_invitation' AND indexdef LIKE '%invitee_email_key%';
+```
+
+回填之後再驗一次（`--commit` 跑完才有意義）：
+
+```sql
+-- ⑤ 該有值的都有了：PENDING 的 email 邀請不該還剩 NULL
+SELECT count(*) FROM team_invitation
+ WHERE status = 'PENDING' AND invitee_email IS NOT NULL AND invitee_email_key IS NULL;
+-- 期望：0
 ```
 
 ---
@@ -143,11 +181,13 @@ SELECT count(*) FROM notification
 
 ## 6. 回滾
 
-**回滾程式碼不需要回滾 schema。** `notification` 表在沒有程式讀寫它時是惰性的，且沒有任何既有表的欄位被改動。`pm2 restart` 回舊版即可。
+**回滾程式碼不需要回滾 schema。** `notification` 表在沒有程式讀寫它時是惰性的；`team_invitation.invitee_email_key` 是**可空的新欄位**，舊版程式完全不認得它，寫入時留 NULL 也不會有人抱怨。兩者都是純新增，`pm2 restart` 回舊版即可。
 
 （這與[假勤那份](deploy_checklist_leave_overtime_2026q3.md)**相反** —— 那次移除了欄位與 enum，所以那個結論在那裡不成立。這裡成立，是因為這次是純新增。）
 
 若要連 schema 一起清掉：`DROP TABLE IF EXISTS notification;`（沒有 enum 要 drop、沒有外鍵指向它）。**先確認內容可拋棄** —— 上線一段時間後，那裡面有使用者還沒看過的通知。
+
+`invitee_email_key` 可以留著不動：它是衍生值，留著無害。真要清除的話 `ALTER TABLE team_invitation DROP COLUMN invitee_email_key;` —— 但下次上線又要回填一次。
 
 ---
 

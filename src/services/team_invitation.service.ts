@@ -336,6 +336,60 @@ export interface IInviteByEmailResult {
 }
 
 /**
+ * Info: (20260825 - Julian) 一個人**當下待處理**的邀請 —— 位址與 email 兩條路徑都算。
+ *
+ * 小鈴鐺與團隊頁共用這一支。分開寫的話兩邊會對「我有哪些邀請」給出不同答案，
+ * 而鈴鐺上那則通知點下去正是導到團隊頁 —— 不一致的症狀會是
+ * 「通知說有一封邀請，點進去那一頁說沒有」。
+ *
+ * ## 兩個過濾，各自有理由
+ *
+ * **只採信已驗證的信箱**：未驗證的 email 是使用者宣稱的字串。拿它當
+ * 「這封邀請是給我的」的依據，等於任何人宣稱一個信箱就能讀到寄給該信箱的
+ * 邀請內容（團隊名稱、邀請人姓名）。這與 `userIdentityRepo.findByEmail`
+ * 只回已驗證的是同一個判斷。
+ *
+ * **濾掉過期的**：`status` 只有 PENDING/ACCEPTED/REJECTED/REVOKED，過期不是
+ * 其中之一 —— 時間到了不會有任何程式碼執行，`expiresAt` 只是變成過去式。
+ * 過期的邀請點進去也接受不了，留著只會製造一個按了沒反應的待辦。
+ *
+ * ## 它找不到誰
+ *
+ * 以 passkey 註冊、從未綁定第三方登入的人**沒有任何 email**（`User` 沒有那個欄位），
+ * 所以寄到信箱的邀請對他而言只存在於那封信裡。這是能力的上限，不是疏漏。
+ */
+export async function listPendingInvitationsForUser(params: {
+  userId: string;
+  address: string;
+  nowMs: number;
+}) {
+  /**
+   * Info: (20260825 - Julian) 空位址一律回空集合，不進 Prisma。
+   *
+   * `where: { inviteeAddress: undefined }` 在 Prisma 是**沒有這個條件**，
+   * 而這支查詢的 `OR` 會因此退化成「列出全站待接受邀請」。
+   * 今天 `getIdentityFromDeWT` 保證 address 有值 —— 這一行防的是那個保證哪天不成立，
+   * 而失效時的症狀是靜默外洩，不是報錯。
+   */
+  if (!params.address) return [];
+
+  const identities = await userIdentityRepo.findByUserId(params.userId);
+  const emailKeys = identities
+    .filter((identity) => identity.emailVerified && identity.email)
+    .map((identity) => canonicalizeEmailForKey(identity.email as string));
+
+  const invitations = await teamRepo.getPendingInvitationsForRecipient({
+    address: params.address,
+    emailKeys,
+  });
+
+  return invitations.filter(
+    (invitation) =>
+      !invitation.expiresAt || invitation.expiresAt.getTime() > params.nowMs,
+  );
+}
+
+/**
  * Info: (20260818 - Luphia) 以第三方綁定的信箱反查團隊成員（第三輪 C-4）。
  *
  * `User` 沒有 email 欄位，唯一的對應是第三方登入的綁定（`UserIdentity`）。
