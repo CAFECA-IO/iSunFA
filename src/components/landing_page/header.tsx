@@ -13,8 +13,11 @@ export default function Header() {
         <BrandLogo />
         <div className="flex gap-x-6 lg:gap-x-8 items-center">
           <HeaderNav />
-          <ThemeToggle />
-          <LanguageSelector />
+          {/* Info: (20260825 - Julian) xl 以下這兩個收進漢堡選單（見 header_nav.tsx） */}
+          <div className="hidden items-center gap-x-6 lg:gap-x-8 xl:flex">
+            <ThemeToggle />
+            <LanguageSelector />
+          </div>
           <UserActions />
         </div>
       </nav>

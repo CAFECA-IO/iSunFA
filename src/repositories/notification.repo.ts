@@ -92,14 +92,36 @@ export class NotificationRepository {
    * Info: (20260821 - Luphia) 未讀計數，**依型別分組**。
    * 摘要的兩個數字不能拿截斷在 20 則的清單去數——那會把「37 個完成通知」
    * 顯示成 20。count 走索引 (userId, readAt)，便宜。
+   *
+   * Info: (20260825 - Julian) 同時回傳**最新一則未讀的建立時間**（計畫書 D17）。
+   *
+   * 為什麼跟計數綁在同一支：提示音的跨分頁去重需要一個「這是哪一次抵達」的
+   * 識別值，而原本用的是 `todoCount:completedCount` —— 數量組合會重複，
+   * 於是「讀完 → 來一則 → 讀完 → 再來一則」的第二則就再也不出聲。
+   *
+   * 用 `_max` 併進既有的 groupBy 而不是另開一支查詢：這支是每 60 秒
+   * × 在線人數會打的端點，多一趟往返的代價要乘上那個係數。
+   * 兩個值本來就來自同一批列，分兩次查反而可能看到不一致的快照。
    */
-  async countUnreadByType(userId: string): Promise<Map<string, number>> {
+  async summarizeUnread(userId: string): Promise<{
+    counts: Map<string, number>;
+    latestCreatedAt: Date | null;
+  }> {
     const groups = await prisma.notification.groupBy({
       by: ["type"],
       where: { userId, readAt: null },
       _count: { _all: true },
+      _max: { createdAt: true },
     });
-    return new Map(groups.map((group) => [group.type, group._count._all]));
+    const latest = groups.reduce<Date | null>((newest, group) => {
+      const candidate = group._max.createdAt;
+      if (!candidate) return newest;
+      return newest === null || candidate > newest ? candidate : newest;
+    }, null);
+    return {
+      counts: new Map(groups.map((group) => [group.type, group._count._all])),
+      latestCreatedAt: latest,
+    };
   }
 
   /**

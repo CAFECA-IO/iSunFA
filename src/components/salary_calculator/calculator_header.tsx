@@ -67,8 +67,11 @@ const CalculatorHeader: FC = () => {
 
         <div className="flex items-center gap-x-4 lg:gap-x-8">
           <HeaderNav />
-          <ThemeToggle />
-          <LanguageSelector />
+          {/* Info: (20260825 - Julian) xl 以下這兩個收進漢堡選單（見 header_nav.tsx） */}
+          <div className="hidden items-center gap-x-4 lg:gap-x-8 xl:flex">
+            <ThemeToggle />
+            <LanguageSelector />
+          </div>
           <UserActions />
         </div>
       </nav>

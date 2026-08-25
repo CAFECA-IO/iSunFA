@@ -283,7 +283,7 @@ export default function NotificationBell() {
         leaveFrom="opacity-100 translate-y-0"
         leaveTo="opacity-0 translate-y-1"
       >
-        <PopoverPanel className="bg-surface-overlay border-border-default fixed inset-0 z-100 flex h-dvh w-full flex-col border p-2 shadow-lg md:absolute md:inset-auto md:top-full md:right-0 md:mt-2 md:h-auto md:max-h-[70vh] md:w-80 md:rounded-lg">
+        <PopoverPanel className="bg-surface-overlay border-border-default fixed inset-0 z-100 flex h-dvh w-full flex-col border shadow-lg md:absolute md:inset-auto md:top-full md:right-0 md:mt-2 md:h-auto md:max-h-[70vh] md:w-80 md:rounded-lg">
           {({ close }) => (
             <>
               {/* Info: (20260825 - Julian) 手機全螢幕時要有出口；桌機點外面就關 */}
@@ -311,17 +311,17 @@ export default function NotificationBell() {
                   <div className="flex flex-col gap-1">
                     {list.todos.length > 0 && (
                       <>
-                        <p className="text-text-muted px-3 pt-1 text-xs font-semibold">
+                        <div className="text-text-muted rounded-t-lg bg-gray-100 px-3 pt-2 pb-1 text-xs font-semibold">
                           {t("notification.todos_title")}
-                        </p>
+                        </div>
                         {list.todos.map(renderItem)}
                       </>
                     )}
                     {list.completed.length > 0 && (
                       <>
-                        <p className="text-text-muted px-3 pt-2 text-xs font-semibold">
+                        <div className="text-text-muted rounded-t-lg bg-gray-100 px-3 pt-2 pb-1 text-xs font-semibold">
                           {t("notification.completed_title")}
-                        </p>
+                        </div>
                         {list.completed.map(renderItem)}
                         {/**
                          * Info: (20260825 - Julian) 截斷了就要說出來（計畫書 D4）。

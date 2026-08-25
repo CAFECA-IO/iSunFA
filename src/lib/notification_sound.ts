@@ -34,16 +34,30 @@ export function hasNewArrival(prev: number | null, next: number): boolean {
 /**
  * Info: (20260825 - Julian) 這一次抵達的識別字串，給跨分頁搶佔用。
  *
- * 用**摘要的內容**而不是時間戳：三個分頁的輪詢 tick 不同步，
- * 時間戳一定不一樣，於是每個分頁都會認為自己是第一個。
- * 內容相同的兩次抵達在所有分頁算出來的鍵必然相同 ——
- * 這與 `dedupeKey` 拒絕 timestamp 是同一個理由（ADR 010 §1 的 Double Booking）。
+ * 要同時滿足兩件事，少一件這個機制就壞掉：
+ *
+ * 1. **每個分頁算出來要一樣** —— 否則三個分頁各認為自己是第一個，各響一聲。
+ *    所以不能用前端的 `Date.now()`：分頁的輪詢 tick 不同步，值必然不同
+ *    （與 `dedupeKey` 拒絕 timestamp 同一條理由，ADR 010 §1）。
+ * 2. **不同的抵達要不一樣** —— 否則識別值被 `seenKeys` 記住之後就再也不響。
+ *
+ * Info: (20260825 - Julian) 原本只用 `todoCount:completedCount`，
+ * 滿足第 1 點但**不滿足第 2 點**（計畫書 D17）。數量組合會重複：
+ * 「讀完 → 來一則（`0:1`）→ 響 → 讀完 → 再來一則（又是 `0:1`）→ 不響」。
+ * 那是最常見的使用節奏，不是邊角情況；而且畫面照樣搖，
+ * 沒有任何地方顯示提示音已經失效。
+ *
+ * 修法是把**伺服器端**最新未讀的 createdAt 一起編進去：它由來源決定，
+ * 所有分頁看到的是同一個值（滿足 1），而新的通知必然有更晚的時間（滿足 2）。
+ * 三個值一起組是為了涵蓋活算的待辦 —— 團隊邀請沒有通知列、沒有 createdAt，
+ * 但它一定讓 `todoCount` 變動。
  */
 export function arrivalKeyOf(
+  latestUnreadAt: number | null,
   todoCount: number,
   completedCount: number,
 ): string {
-  return `${todoCount}:${completedCount}`;
+  return `${latestUnreadAt ?? 0}:${todoCount}:${completedCount}`;
 }
 
 /**

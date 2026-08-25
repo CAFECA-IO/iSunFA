@@ -56,12 +56,50 @@ describe("arrivalKeyOf", () => {
    * 每個都認為自己是第一個 —— 與 `dedupeKey` 拒絕 timestamp 同一個理由。
    */
   it("同樣的摘要算出同樣的鍵", () => {
-    expect(arrivalKeyOf(1, 2)).toBe(arrivalKeyOf(1, 2));
+    expect(arrivalKeyOf(1_700_000_000_000, 1, 2)).toBe(
+      arrivalKeyOf(1_700_000_000_000, 1, 2),
+    );
   });
 
   it("不同的摘要算出不同的鍵", () => {
-    expect(arrivalKeyOf(1, 2)).not.toBe(arrivalKeyOf(2, 1));
-    expect(arrivalKeyOf(0, 1)).not.toBe(arrivalKeyOf(1, 0));
+    expect(arrivalKeyOf(1_700_000_000_000, 1, 2)).not.toBe(
+      arrivalKeyOf(1_700_000_000_000, 2, 1),
+    );
+    expect(arrivalKeyOf(1_700_000_000_000, 0, 1)).not.toBe(
+      arrivalKeyOf(1_700_000_000_000, 1, 0),
+    );
+  });
+
+  /**
+   * Info: (20260825 - Julian) 計畫書 D17 的回歸測試。
+   *
+   * 這一條釘住的是手動驗收實際抓到的行為：使用者把通知讀完、來了一則新的、
+   * 再讀完、再來一則 —— 兩次的數量組合都是「0 則待辦、1 則完成」，
+   * 舊的 `arrivalKeyOf(todo, completed)` 兩次算出同一把鍵，
+   * 而 `ChimeGate.seenKeys` 記得第一次，於是第二則**搖但不響**，
+   * 且畫面沒有任何地方顯示提示音已經失效。
+   *
+   * 斷言成對：同一次抵達仍要算出同一把鍵（跨分頁搶佔的前提），
+   * 只驗後者的話「每次都回亂數」也會通過。
+   */
+  it("數量相同但來源不同的兩次抵達，鍵必須不同", () => {
+    const first = arrivalKeyOf(1_700_000_000_000, 0, 1);
+    const second = arrivalKeyOf(1_700_000_060_000, 0, 1);
+
+    expect(second).not.toBe(first);
+
+    const gate = new ChimeGate({ now: () => 0 });
+    expect(gate.claim(first)).toBe(true);
+    // Info: (20260825 - Julian) 節流窗口之外，且是另一次抵達 —— 必須出聲
+    expect(new ChimeGate({ now: () => 0 }).claim(second)).toBe(true);
+  });
+
+  /**
+   * Info: (20260825 - Julian) 活算的待辦沒有 createdAt（團隊邀請不入庫）。
+   * 那種抵達只有數量會動，鍵仍然要跟著變。
+   */
+  it("沒有入庫通知時仍靠數量區分", () => {
+    expect(arrivalKeyOf(null, 0, 0)).not.toBe(arrivalKeyOf(null, 1, 0));
   });
 });
 

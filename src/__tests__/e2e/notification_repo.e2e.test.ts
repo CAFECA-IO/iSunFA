@@ -181,7 +181,7 @@ describe("NotificationRepository（真資料庫）", () => {
     );
 
     expect(marked).toBe(1);
-    const counts = await notificationRepo.countUnreadByType(userId);
+    const { counts } = await notificationRepo.summarizeUnread(userId);
     expect(counts.get(NOTIFICATION_TYPE.WALLET_UPGRADE)).toBe(1);
     expect(counts.get(NOTIFICATION_TYPE.ANALYSIS_COMPLETED)).toBeUndefined();
 
@@ -193,7 +193,50 @@ describe("NotificationRepository（真資料庫）", () => {
         NOW_MS,
       ),
     ).toBe(1);
-    expect((await notificationRepo.countUnreadByType(userId)).size).toBe(0);
+    const cleared = await notificationRepo.summarizeUnread(userId);
+    expect(cleared.counts.size).toBe(0);
+    // Info: (20260825 - Julian) 一則未讀都沒有時要回 null，不是某個殘留的時間
+    expect(cleared.latestCreatedAt).toBeNull();
+  });
+
+  /**
+   * Info: (20260825 - Julian) `_max` 真的取到未讀之中的最新（計畫書 D17）。
+   *
+   * 假實作裡這件事是我用 `reduce` 寫的；真 Prisma 的 `groupBy` + `_max`
+   * 是不是分組後才取最大、已讀的列有沒有被 `where` 排掉，只有真資料庫答得出來。
+   *
+   * 這個值是提示音跨分頁去重的識別值：取錯成「所有列的最新」的話，
+   * 一則更晚建立但已讀的列會把它釘住，於是新到的通知算出同一把鍵、
+   * 被 `seenKeys` 擋下 —— 搖但不響，而且沒有任何觀測量顯示這件事。
+   */
+  it("summarizeUnread 的最新時間只看未讀，且跨型別取最大", async () => {
+    await seed(
+      NOTIFICATION_TYPE.WALLET_UPGRADE,
+      "sum-todo",
+      new Date(NOW_MS - 5_000),
+    );
+    await seed(
+      NOTIFICATION_TYPE.ANALYSIS_COMPLETED,
+      "sum-done",
+      new Date(NOW_MS - 1_000),
+    );
+    const read = await seed(
+      NOTIFICATION_TYPE.ANALYSIS_COMPLETED,
+      "sum-read",
+      new Date(NOW_MS),
+    );
+    await prisma.notification.update({
+      where: { id: read.id },
+      data: { readAt: new Date(NOW_MS) },
+    });
+
+    const summary = await notificationRepo.summarizeUnread(userId);
+
+    // Info: (20260825 - Julian) 最新的那一列是已讀的，不能被算進來
+    expect(summary.latestCreatedAt?.getTime()).toBe(NOW_MS - 1_000);
+    // Info: (20260825 - Julian) 而且橫跨兩個型別分組，不是只看其中一組
+    expect(summary.counts.get(NOTIFICATION_TYPE.WALLET_UPGRADE)).toBe(1);
+    expect(summary.counts.get(NOTIFICATION_TYPE.ANALYSIS_COMPLETED)).toBe(1);
   });
 
   /**
@@ -320,7 +363,7 @@ describe("NotificationRepository（真資料庫）", () => {
     ).toBe(1);
 
     // Info: (20260825 - Julian) 另一位的通知必須原封不動
-    const theirs = await notificationRepo.countUnreadByType(otherUserId);
-    expect(theirs.get(NOTIFICATION_TYPE.ANALYSIS_COMPLETED)).toBe(1);
+    const theirs = await notificationRepo.summarizeUnread(otherUserId);
+    expect(theirs.counts.get(NOTIFICATION_TYPE.ANALYSIS_COMPLETED)).toBe(1);
   });
 });

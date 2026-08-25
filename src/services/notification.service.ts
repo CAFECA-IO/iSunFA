@@ -56,6 +56,23 @@ async function guarded<T>(
 export interface INotificationSummary {
   todoCount: number;
   completedCount: number;
+  /**
+   * Info: (20260825 - Julian) 最新一則未讀通知的建立時間（epoch ms），沒有就是 null。
+   *
+   * 存在的唯一理由是提示音的跨分頁去重（計畫書 D17）。那個機制需要一個
+   * 「這是哪一次抵達」的識別值，而它必須同時滿足兩件事：
+   *
+   * 1. **每個分頁算出來要一樣** —— 否則三個分頁各認為自己是第一個，各響一聲
+   * 2. **不同的抵達要不一樣** —— 否則同一個識別值被記住之後就再也不響
+   *
+   * 原本用的是 `todoCount:completedCount`，它滿足第 1 點但不滿足第 2 點：
+   * 「讀完 → 來一則 → 讀完 → 再來一則」兩次都是同一組數字，第二則搖但不響。
+   *
+   * 用伺服器的 `createdAt` 而不是前端的 `Date.now()`：前者對所有分頁是同一個值，
+   * 後者每個分頁都不同 —— 這與 `dedupeKey` 拒絕 timestamp 是同一條理由
+   * （ADR 010 §1），差別在於這裡要的正是「來源端的時間」。
+   */
+  latestUnreadAt: number | null;
 }
 
 export interface INotificationItem {
@@ -114,10 +131,11 @@ export async function getNotificationSummary(params: {
 }): Promise<INotificationSummary> {
   return guarded(
     async () => {
-      const [invitations, unreadByType] = await Promise.all([
+      const [invitations, unread] = await Promise.all([
         listPendingInvitations(params.address, params.nowMs),
-        notificationRepo.countUnreadByType(params.userId),
+        notificationRepo.summarizeUnread(params.userId),
       ]);
+      const unreadByType = unread.counts;
       /**
        * Info: (20260821 - Luphia) 分組是「待辦型 vs 其他」，不是逐型別列舉：
        * 未來新增事件型通知時這裡不需要跟著改，只有新增**待辦型**才要動
@@ -135,6 +153,16 @@ export async function getNotificationSummary(params: {
       return {
         todoCount: invitations.length + storedTodos,
         completedCount: completed,
+        /**
+         * Info: (20260825 - Julian) 只看**入庫**的通知，不含活算的邀請。
+         *
+         * 邀請沒有通知列，取不到 createdAt。少了它會不會漏響？不會 ——
+         * 新邀請一定讓 `todoCount` 上升，而識別值是這三個值一起組出來的
+         * （見 `arrivalKeyOf`），任何一個變了 key 就變了。
+         */
+        latestUnreadAt: unread.latestCreatedAt
+          ? unread.latestCreatedAt.getTime()
+          : null,
       };
     },
     { operation: "getNotificationSummary", userId: params.userId },

@@ -133,12 +133,21 @@ jest.mock("@/repositories/notification.repo", () => {
       ),
 
       // Info: (20260825 - Julian) 從同一份資料算，不是另一個固定值
-      countUnreadByType: jest.fn(async (userId: string) => {
+      summarizeUnread: jest.fn(async (userId: string) => {
         const counts = new Map<string, number>();
+        let latestCreatedAt: Date | null = null;
         unread(userId).forEach((row) => {
           counts.set(row.type, (counts.get(row.type) ?? 0) + 1);
+          /**
+           * Info: (20260825 - Julian) 最新時間也從同一份 rows 算出來。
+           * 寫死成一個固定值的話，「摘要回的是別人的最新時間」這種錯
+           * 不會讓任何測試變紅 —— 而那正是提示音去重要靠的值（D17）。
+           */
+          if (latestCreatedAt === null || row.createdAt > latestCreatedAt) {
+            latestCreatedAt = row.createdAt;
+          }
         });
-        return counts;
+        return { counts, latestCreatedAt };
       }),
 
       // Info: (20260825 - Julian) 真的把 readAt 寫進去，後續查詢會少掉那些列
@@ -251,14 +260,47 @@ describe("摘要", () => {
       nowMs: NOW_MS,
     });
 
-    expect(summary).toEqual({ todoCount: 3, completedCount: 37 });
+    expect(summary).toEqual({
+      todoCount: 3,
+      completedCount: 37,
+      // Info: (20260825 - Julian) 所有植入的列都是 NOW_MS - 100（見 `row()`）
+      latestUnreadAt: NOW_MS - 100,
+    });
+  });
+
+  /**
+   * Info: (20260825 - Julian) 最新未讀時間要是**未讀之中**的最新，
+   * 不是全部通知之中的最新（計畫書 D17）。
+   *
+   * 已讀的列不該影響它：讀完之後來一則新的，識別值必須跟著變，
+   * 而如果它是從「所有列」算出來的，一則更晚建立但已讀的列會把它釘住，
+   * 於是那一則新的算出同一把鍵、被 `seenKeys` 擋下 —— 搖但不響。
+   */
+  it("最新未讀時間只看未讀的列", async () => {
+    fakeRepo.__seed([
+      row({ id: "old-unread", createdAt: new Date(NOW_MS - 900) }),
+      row({
+        id: "newer-but-read",
+        createdAt: new Date(NOW_MS - 100),
+        readAt: new Date(NOW_MS),
+      }),
+    ]);
+
+    const summary = await getNotificationSummary({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(summary.latestUnreadAt).toBe(NOW_MS - 900);
+    expect(summary.completedCount).toBe(1);
   });
 
   /**
    * Info: (20260825 - Julian) 兩支查詢各自拿到**自己那個維度**的值。
    *
-   * 替身不看參數的話，把 `countUnreadByType(params.userId)` 寫成
-   * `countUnreadByType(params.address)`（跨租戶取錯計數）不會讓任何測試變紅。
+   * 替身不看參數的話，把 `summarizeUnread(params.userId)` 寫成
+   * `summarizeUnread(params.address)`（跨租戶取錯計數）不會讓任何測試變紅。
    */
   it("計數以 userId 查、邀請以 address 查", async () => {
     await getNotificationSummary({
@@ -267,9 +309,7 @@ describe("摘要", () => {
       nowMs: NOW_MS,
     });
 
-    expect(asMock(notificationRepo.countUnreadByType)).toHaveBeenCalledWith(
-      USER,
-    );
+    expect(asMock(notificationRepo.summarizeUnread)).toHaveBeenCalledWith(USER);
     expect(
       asMock(teamRepo.getPendingInvitationsByAddress),
     ).toHaveBeenCalledWith(ADDRESS);
@@ -326,8 +366,12 @@ describe("摘要", () => {
       nowMs: NOW_MS,
     });
 
-    expect(summary).toEqual({ todoCount: 0, completedCount: 0 });
-    expect(asMock(notificationRepo.countUnreadByType)).toHaveBeenCalledTimes(1);
+    expect(summary).toEqual({
+      todoCount: 0,
+      completedCount: 0,
+      latestUnreadAt: null,
+    });
+    expect(asMock(notificationRepo.summarizeUnread)).toHaveBeenCalledTimes(1);
     expect(
       asMock(teamRepo.getPendingInvitationsByAddress),
     ).toHaveBeenCalledTimes(1);
@@ -394,7 +438,12 @@ describe("清單", () => {
       listNotifications({ userId: USER, address: ADDRESS, nowMs: NOW_MS }),
     ]);
 
-    expect(summary).toEqual({ todoCount: 1, completedCount: 25 });
+    expect(summary).toEqual({
+      todoCount: 1,
+      completedCount: 25,
+      // Info: (20260825 - Julian) 25 則裡最新的是 index 0（NOW_MS - 0）
+      latestUnreadAt: NOW_MS,
+    });
     expect(list.todos.map((item) => item.id)).toEqual(["old-wallet"]);
     expect(list.completed).toHaveLength(NOTIFICATION_LIST_LIMIT);
     // Info: (20260825 - Julian) 截斷了就要說出來，不能讓畫面把 20 讀成全部
@@ -424,7 +473,12 @@ describe("標記已讀", () => {
       address: ADDRESS,
       nowMs: NOW_MS,
     });
-    expect(after).toEqual({ todoCount: 1, completedCount: 0 });
+    expect(after).toEqual({
+      todoCount: 1,
+      completedCount: 0,
+      // Info: (20260825 - Julian) 事件型被標已讀後，剩下的最新未讀是那則待辦
+      latestUnreadAt: NOW_MS - 100,
+    });
   });
 
   /**
@@ -448,7 +502,11 @@ describe("標記已讀", () => {
       address: ADDRESS,
       nowMs: NOW_MS,
     });
-    expect(after).toEqual({ todoCount: 0, completedCount: 1 });
+    expect(after).toEqual({
+      todoCount: 0,
+      completedCount: 1,
+      latestUnreadAt: NOW_MS - 100,
+    });
   });
 
   // Info: (20260825 - Julian) 沒有未讀時回 0，而不是假裝收掉了一則

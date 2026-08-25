@@ -28,6 +28,11 @@ import {
 export interface INotificationSummary {
   todoCount: number;
   completedCount: number;
+  /**
+   * Info: (20260825 - Julian) 最新一則未讀通知的建立時間（epoch ms）。
+   * 只用於組出提示音的抵達識別值，畫面不顯示它（見 `arrivalKeyOf`）。
+   */
+  latestUnreadAt: number | null;
 }
 
 export interface INotificationSummaryFeed {
@@ -105,7 +110,11 @@ export function useNotificationSummary(
       // Info: (20260825 - Julian) 動畫一律觸發；出聲要先過節流與跨分頁的閘
       setArrivalTick((tick) => tick + 1);
 
-      const key = arrivalKeyOf(next.todoCount, next.completedCount);
+      const key = arrivalKeyOf(
+        next.latestUnreadAt,
+        next.todoCount,
+        next.completedCount,
+      );
       if (gateRef.current?.claim(key)) {
         // Info: (20260825 - Julian) 先廣播再播：讓其他分頁盡快知道這一聲有人負責了
         channelRef.current?.postMessage(key);
