@@ -6,6 +6,7 @@ import {
   queryTopEmitters,
   querySiteSubtotals,
   queryAnomalies,
+  queryYearOverYear,
   toContextFacts,
   buildLedgerFactBundle,
   LedgerRefusalReasonEnum,
@@ -141,6 +142,30 @@ describe("queryTopEmitters", () => {
       "原文照錄 表3.8 (1) 總公司 2.1 外購電力",
     );
   });
+
+  it("占比由查詢層決定性算出(Decimal 一位小數),不留給 LLM 自己算", () => {
+    /**
+     * Info: (20260825 - Emily) 08-25 實測:事實包沒給占比,LLM 就自己算了 39.9% ——
+     * persona 禁計算擋不住。399/1000 = 39.9%:給了值,它就沒理由算。
+     * 總計欄位為 0 時不給占比(除以零),值裡不得出現 %。
+     */
+    const ledger = ledgerOf(
+      [importedEntry({ activityKey: "a", co2eKg: "399" })],
+      { totalCo2eKg: "1000" },
+    );
+    const result = queryTopEmitters(ledger, 1);
+    if (!result.ok) throw new Error("should be ok");
+    expect(result.facts[0].value).toContain("占全公司總量 39.9%");
+
+    const zeroTotal = queryTopEmitters(
+      ledgerOf([importedEntry({ activityKey: "a", co2eKg: "399" })], {
+        totalCo2eKg: "0",
+      }),
+      1,
+    );
+    if (!zeroTotal.ok) throw new Error("should be ok");
+    expect(zeroTotal.facts[0].value).not.toContain("%");
+  });
 });
 
 describe("querySiteSubtotals", () => {
@@ -248,6 +273,108 @@ describe("queryAnomalies(列舉制)", () => {
     const result = queryAnomalies(undefined);
     if (result.ok) throw new Error("should refuse");
     expect(result.refusal.reason).toBe(LedgerRefusalReasonEnum.LEDGER_EMPTY);
+  });
+
+  it("帳本空但有勾稽阻擋紀錄 → 回 ok 帶阻擋事實,不拒答(空帳本的原因就是答案)", () => {
+    const result = queryAnomalies(undefined, [
+      {
+        paragraphId: "ch3-4",
+        reason: "6 列無法解析;(1) 總公司 差額 201.465(原文 201.465 vs 加總 0)",
+        blockedAt: "2026-08-24T00:00:00.000Z",
+      },
+    ]);
+    if (!result.ok) throw new Error("should be ok");
+    expect(result.facts).toHaveLength(1);
+    expect(result.facts[0].label).toBe("匯入表格被勾稽擋下:ch3-4");
+    expect(result.facts[0].value).toContain("6 列無法解析");
+    expect(result.facts[0].source).toContain("2026-08-24");
+  });
+
+  it("帳本有料 + 阻擋紀錄 → 阻擋事實排最前(它解釋了帳本為何不完整)", () => {
+    const result = queryAnomalies(
+      ledgerOf([importedEntry({ activityKey: "a", co2eKg: "1" })], {
+        pending: [
+          { activityKey: "p1", sourceName: "柴油", reason: "無對應係數" },
+        ],
+      }),
+      [
+        {
+          paragraphId: "ch3-4",
+          reason: "勾稽未過",
+          blockedAt: "2026-08-24T00:00:00.000Z",
+        },
+      ],
+    );
+    if (!result.ok) throw new Error("should be ok");
+    expect(result.facts[0].label).toContain("勾稽擋下");
+    expect(result.facts[1].label).toContain("待補項");
+  });
+});
+
+describe("queryYearOverYear(年間量級跳動,列舉制第五偵測器)", () => {
+  const yearOf = (year: number, entries: IComputedLedgerEntry[]) => ({
+    year,
+    ledger: ledgerOf(entries),
+  });
+  const named = (sourceName: string, co2eKg: string) =>
+    importedEntry({ activityKey: `k:${sourceName}`, co2eKg, sourceName });
+
+  it("只有單一年度 → 拒答(「無法比較」與「比較過沒異常」要分得出來)", () => {
+    const result = queryYearOverYear(
+      yearOf(2024, [named("屏東 外購電力", "100")]),
+      undefined,
+    );
+    if (result.ok) throw new Error("should refuse");
+    expect(result.refusal.reason).toBe(
+      LedgerRefusalReasonEnum.DIMENSION_ABSENT,
+    );
+    expect(result.refusal.missing).toContain("另一年度");
+  });
+
+  it("×3.4 報跳動、×2 不報(門檻是量級不是波動),證據鏈含兩年值與兩邊溯源", () => {
+    const result = queryYearOverYear(
+      yearOf(2024, [
+        named("屏東 外購電力", "3400"),
+        named("總公司 外購電力", "200"),
+      ]),
+      yearOf(2023, [
+        named("屏東 外購電力", "1000"),
+        named("總公司 外購電力", "100"),
+      ]),
+    );
+    if (!result.ok) throw new Error("should be ok");
+    expect(result.facts).toHaveLength(1);
+    expect(result.facts[0].label).toBe("年間量級跳動:屏東 外購電力");
+    expect(result.facts[0].value).toContain("2023 年 1000");
+    expect(result.facts[0].value).toContain("2024 年 3400");
+    expect(result.facts[0].value).toContain("×3.4");
+    expect(result.facts[0].source).toContain("2023:");
+    expect(result.facts[0].source).toContain("2024:");
+  });
+
+  it("縮到 ÷3 以下同樣報(減排也可能是漏盤);0 → 正值寫成「0 → X」", () => {
+    const result = queryYearOverYear(
+      yearOf(2024, [named("A", "100"), named("B", "50")]),
+      yearOf(2023, [named("A", "900"), named("B", "0")]),
+    );
+    if (!result.ok) throw new Error("should be ok");
+    expect(result.facts.map((fact) => fact.label)).toEqual([
+      "年間量級跳動:A",
+      "年間量級跳動:B",
+    ]);
+    expect(result.facts[1].value).toContain("0 → 50");
+  });
+
+  it("消失與新增各自成疑點,措辭不下結論(可能真減排、也可能漏盤)", () => {
+    const result = queryYearOverYear(
+      yearOf(2024, [named("新設施", "100")]),
+      yearOf(2023, [named("舊設施", "100")]),
+    );
+    if (!result.ok) throw new Error("should be ok");
+    const labels = result.facts.map((fact) => fact.label);
+    expect(labels).toContain("年間新增排放源:新設施");
+    expect(labels).toContain("年間排放源消失:舊設施");
+    expect(result.facts.every((fact) => /可能/.test(fact.value))).toBe(true);
   });
 });
 

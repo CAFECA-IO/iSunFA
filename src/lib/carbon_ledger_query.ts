@@ -16,6 +16,7 @@ import { isImportedEntry } from "@/lib/carbon_table38.ledger";
 import type {
   IComputedLedger,
   IComputedLedgerEntry,
+  ILedgerImportBlock,
 } from "@/types/carbon_chatbot.types";
 import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
 
@@ -119,11 +120,27 @@ export const queryTopEmitters = (
     if (byAmount !== 0) return byAmount;
     return a.activityKey < b.activityKey ? -1 : 1;
   });
-  const facts = ranked.slice(0, count).map((entry, index) => ({
-    label: `排放量第 ${index + 1} 大:${entry.sourceName}`,
-    value: `${entry.co2eKg} kgCO2e(${entry.convertedQuantity} ${entry.convertedUnit})`,
-    source: traceOf(entry),
-  }));
+  /**
+   * Info: (20260825 - Emily) 占比由這裡決定性算出(Decimal,一位小數)。
+   * 08-25 實測:事實包沒給占比,LLM 就自己算了「39.9%」—— persona 禁計算
+   * 擋不住它,而 % 沒有排放單位、守門也不看。把占比變成事實,
+   * LLM 有現成的值可引用,就沒有理由自己算。
+   * (%的守門納管先不做:方法學文字裡的合法百分比 —— 重算門檻 3%、
+   * 不確定性 5% —— 不在事實包裡,納管會誤殺;記在 #6707。)
+   */
+  const total = MoneyUtil.toDecimal(ledger.totalCo2eKg);
+  const shareOf = (co2eKg: string): string | null =>
+    total.isZero()
+      ? null
+      : MoneyUtil.toDecimal(co2eKg).div(total).mul(100).toFixed(1);
+  const facts = ranked.slice(0, count).map((entry, index) => {
+    const share = shareOf(entry.co2eKg);
+    return {
+      label: `排放量第 ${index + 1} 大:${entry.sourceName}`,
+      value: `${entry.co2eKg} kgCO2e(${entry.convertedQuantity} ${entry.convertedUnit}${share === null ? "" : `,占全公司總量 ${share}%`})`,
+      source: traceOf(entry),
+    };
+  });
   return { ok: true, facts };
 };
 
@@ -172,25 +189,38 @@ export const querySiteSubtotals = (
 /**
  * Info: (20260825 - Emily) 疑點(「這間公司的碳排是否異常?」的素材)。
  *
- * **列舉制**:只讀帳本裡三個既存的決定性裁決 ——
- * 1. pending:決定論引擎判「無法裁決」的活動(絕不猜值的那批)
- * 2. articulation.violations:質量守恆勾稽的缺口(期初+採購-期末 ≠ 帳上消耗)
- * 3. articulation.warnings:合理性警示(數量超出物理量級邊界;僅警示不凍結)
+ * **列舉制**:只讀四個既存的決定性裁決 ——
+ * 1. importBlocks:匯入表格被勾稽擋下的紀錄(「對帳差異」偵測器;
+ *    存在 state 不在 ledger,因為被擋時帳本可能整本是空的)
+ * 2. pending:決定論引擎判「無法裁決」的活動(絕不猜值的那批)
+ * 3. articulation.violations:質量守恆勾稽的缺口(期初+採購-期末 ≠ 帳上消耗)
+ * 4. articulation.warnings:合理性警示(數量超出物理量級邊界;僅警示不凍結)
  *
  * 這裡**不發明新偵測器**(不能為了找錯而找):新的偵測器要先開票、
  * 定義證據鏈、進這個列舉,才輪得到出現在回答裡。
  * 沒有觸發時回 ok + 空 facts —— 「查過而無異常」與「沒查」必須分得出來。
+ *
+ * 帳本空 + 有阻擋紀錄 → **回 ok 帶阻擋事實,不拒答**:
+ * 「帳本為什麼是空的」本身就是這一題的答案,拒答反而把最該浮出的疑點藏掉。
  */
 export const queryAnomalies = (
   ledger: IComputedLedger | undefined,
+  importBlocks?: ILedgerImportBlock[],
 ): ILedgerQueryResult => {
+  const blockFacts: ILedgerFact[] = (importBlocks ?? []).map((block) => ({
+    label: `匯入表格被勾稽擋下:${block.paragraphId}`,
+    value: block.reason,
+    source: `匯入勾稽紀錄(${block.blockedAt})`,
+  }));
   if (!hasEntries(ledger)) {
+    if (blockFacts.length > 0) return { ok: true, facts: blockFacts };
     return refuse(
       LedgerRefusalReasonEnum.LEDGER_EMPTY,
       "帳本中沒有任何排放分錄,無從評估異常:請先匯入盤查報告",
     );
   }
   const facts: ILedgerFact[] = [
+    ...blockFacts,
     ...ledger.pending.map((item) => ({
       label: `待補項:${item.sourceName}`,
       value: item.reason,
@@ -223,6 +253,93 @@ export const toContextFacts = (result: ILedgerQueryResult): IContextFact[] =>
       }))
     : [];
 
+/**
+ * Info: (20260825 - Emily) 年間量級跳動的門檻:×3 或 ÷3(#6707 第五偵測器)。
+ *
+ * 為什麼是倍數不是百分比:需求原話是「量級跳動」—— ±30% 是正常年間波動
+ * (產能、天氣、係數改版),報了就是「為了找錯而找」;跨一個量級
+ * (三倍以上)才值得人看一眼。門檻是具名常數:要調,這裡調,說得出為什麼。
+ */
+export const YEAR_OVER_YEAR_JUMP_FACTOR = 3;
+
+/** Info: (20260825 - Emily) 年間比較的單邊輸入:年度 + 該年度的帳本 */
+export interface IYearLedger {
+  year: number;
+  ledger: IComputedLedger;
+}
+
+/**
+ * Info: (20260825 - Emily) 年間量級跳動偵測器(列舉制第五個;`open/63` 的查詢層半件)。
+ *
+ * 配對鍵用 sourceName(廠址+排放源,兩種 provenance 都有這個欄位)——
+ * activityKey 含 basis 前綴與 esgRecordId,同一排放源兩年的 key 不保證相等。
+ *
+ * 三種疑點形態,各有證據鏈(兩年的值+各自的表號):
+ * 1. 量級跳動:兩年都有值,比值 ≥ ×3 或 ≤ ÷3(0 → 正值視為跳動,寫「0 → X」)
+ * 2. 排放源消失:上年度有、本年度無 —— 可能是真減排,也可能是漏盤,都該看一眼
+ * 3. 排放源新增:本年度有、上年度無 —— 可能是新設施,也可能是上年度漏了
+ *
+ * 只有單一年度時拒答(DIMENSION_ABSENT)—— 「無法比較」與「比較過沒異常」
+ * 必須分得出來,這正是拒答一等公民的用法。
+ */
+export const queryYearOverYear = (
+  current: IYearLedger | undefined,
+  previous: IYearLedger | undefined,
+): ILedgerQueryResult => {
+  if (!current || !previous || !hasEntries(current.ledger)) {
+    return refuse(
+      LedgerRefusalReasonEnum.DIMENSION_ABSENT,
+      "帳本只有單一年度,年間比較無從進行:匯入另一年度的盤查報告後即可比對",
+    );
+  }
+  const byName = (ledger: IComputedLedger): Map<string, IComputedLedgerEntry> =>
+    new Map(ledger.entries.map((entry) => [entry.sourceName, entry]));
+  const currentByName = byName(current.ledger);
+  const previousByName = byName(previous.ledger);
+  const facts: ILedgerFact[] = [];
+
+  currentByName.forEach((entry, name) => {
+    const prior = previousByName.get(name);
+    if (!prior) {
+      facts.push({
+        label: `年間新增排放源:${name}`,
+        value: `${previous.year} 年無此排放源,${current.year} 年為 ${entry.co2eKg} kgCO2e —— 可能是新設施,也可能是 ${previous.year} 年漏盤`,
+        source: `${current.year}:${traceOf(entry)}`,
+      });
+      return;
+    }
+    const currentValue = MoneyUtil.toDecimal(entry.co2eKg);
+    const priorValue = MoneyUtil.toDecimal(prior.co2eKg);
+    if (priorValue.isZero() && currentValue.isZero()) return;
+    const jumped = priorValue.isZero()
+      ? true
+      : currentValue.div(priorValue).gte(YEAR_OVER_YEAR_JUMP_FACTOR) ||
+        (!currentValue.isZero() &&
+          priorValue.div(currentValue).gte(YEAR_OVER_YEAR_JUMP_FACTOR)) ||
+        currentValue.isZero();
+    if (!jumped) return;
+    const ratio = priorValue.isZero()
+      ? `0 → ${entry.co2eKg}`
+      : `×${currentValue.div(priorValue).toFixed(1)}`;
+    facts.push({
+      label: `年間量級跳動:${name}`,
+      value: `${previous.year} 年 ${prior.co2eKg} kgCO2e → ${current.year} 年 ${entry.co2eKg} kgCO2e(${ratio})`,
+      source: `${previous.year}:${traceOf(prior)} / ${current.year}:${traceOf(entry)}`,
+    });
+  });
+
+  previousByName.forEach((prior, name) => {
+    if (currentByName.has(name)) return;
+    facts.push({
+      label: `年間排放源消失:${name}`,
+      value: `${previous.year} 年為 ${prior.co2eKg} kgCO2e,${current.year} 年無此排放源 —— 可能是真減排,也可能是漏盤`,
+      source: `${previous.year}:${traceOf(prior)}`,
+    });
+  });
+
+  return { ok: true, facts };
+};
+
 /** Info: (20260825 - Emily) 事實包上限。與 validator 的 ledgerFacts max 同值 —— 超了請求會被 schema 打回 */
 export const LEDGER_FACT_BUNDLE_MAX = 80;
 /** Info: (20260825 - Emily) 「最高的碳排是什麼」要答得出前幾名,固定取 5:決定性,不隨帳本大小變 */
@@ -248,13 +365,14 @@ export const LEDGER_FACT_TOP_EMITTERS = 5;
  */
 export const buildLedgerFactBundle = (
   ledger: IComputedLedger | undefined,
+  importBlocks?: ILedgerImportBlock[],
 ): IContextFact[] => {
   const core = [
     ...toContextFacts(queryTotal(ledger)),
     ...toContextFacts(querySiteSubtotals(ledger)),
     ...toContextFacts(queryTopEmitters(ledger, LEDGER_FACT_TOP_EMITTERS)),
   ];
-  const anomalies = toContextFacts(queryAnomalies(ledger));
+  const anomalies = toContextFacts(queryAnomalies(ledger, importBlocks));
   const budget = LEDGER_FACT_BUNDLE_MAX - core.length - 1;
   if (anomalies.length <= budget + 1) {
     return [...core, ...anomalies];
