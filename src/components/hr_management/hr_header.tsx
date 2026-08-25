@@ -23,7 +23,7 @@ interface IHrHeaderProps {
  */
 const HrHeader: FC<IHrHeaderProps> = ({ identity, onToggleSidebar }) => {
   const { t } = useTranslation();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   /**
    * Info: (20260818 - Julian) 優先顯示**員工檔**姓名，退回登入帳號的名字。
@@ -33,12 +33,6 @@ const HrHeader: FC<IHrHeaderProps> = ({ identity, onToggleSidebar }) => {
    * 兩者不一致時顯示前者，會讓人對著別人的資料以為是自己的。
    */
   const displayName = identity?.name ?? user?.name ?? "";
-
-  /** Info: (20260818 - Julian) 「工地主任・第一工務所」；兩個外鍵都可能是 null */
-  const displayRole =
-    identity === null
-      ? ""
-      : [identity.jobTitle, identity.departmentName].filter(Boolean).join("・");
 
   return (
     <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur">
