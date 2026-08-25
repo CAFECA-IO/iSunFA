@@ -44,6 +44,27 @@
  */
 export type BaselineTier = "must_match" | "threshold" | "record_only";
 
+/**
+ * Info: (20260825 - Emily) B3 的缺席檢查(PR review 阻擋項,2026-08-25)。
+ *
+ * 基準線比對原本只走**本趟 snapshot** 的鍵 —— 基準線裡有、本趟沒產出的鍵
+ * 從頭到尾不會被看一眼,「判準沒跑」被回報成「判準通過」。
+ * 複現形狀:基準線含 --source 三鍵,本趟沒給 --source → changed=[] → B3 綠,
+ * 而三條 must_match 一次都沒執行。同型的鍵共八個(--log 五個 + --source 三個)。
+ *
+ * 只管 must_match 層:record_only/threshold 本來就允許缺席
+ * (數量會變的層缺席不是缺陷;B4 閾值層另有自己的缺席宣告)。
+ * 抽成純函式的理由與本檔開頭同一句:判準要在輸入空間裡,得有人能 import 它來測。
+ */
+export const findAbsentMustMatchKeys = (
+  baseline: Record<string, unknown>,
+  snapshot: Record<string, unknown>,
+): string[] =>
+  Object.keys(baseline)
+    .filter((key) => !(key in snapshot))
+    .filter((key) => classifyKey(key) === "must_match")
+    .sort();
+
 export const BASELINE_TIERS: ReadonlyArray<{
   readonly tier: BaselineTier;
   readonly keys?: readonly string[];
@@ -136,6 +157,20 @@ export const BASELINE_TIERS: ReadonlyArray<{
       "資料不足佔位符",
       // Info: (20260818 - Emily) open/48 的驗收:退化的次數可以變,整張消失不可以
       "圖表未繪製_節點太多且整張消失",
+      /**
+       * Info: (20260824 - Emily) 原檔表號覆蓋率(#6710)。與「未出現的節」同一層:
+       * 齊或不齊,不是統計量。「還是有缺漏的章節/表格」到 08-24 為止靠人眼翻頁,
+       * 這三條把它機器化(量尺 `scanTableNumbers`,護欄與 20 處版本號誤報史在檔頭):
+       *
+       * - `原檔表號數`:同一份原檔兩趟掃出不同張數 = 量尺非決定性,本身就是缺陷
+       * - `原檔表號_未見於紙面`:原檔有、成品隻字未提(照錄或「未取得」說明皆算提到 ——
+       *   與桑基圖判準同原則:失敗要留痕,靜默才是缺陷)
+       * - `紙面表號_原檔沒有`:成品提到原檔沒有的表號,與「引用但不存在的表」同族,
+       *   對照物是原檔不是實體表
+       */
+      "原檔表號數",
+      "原檔表號_未見於紙面",
+      "紙面表號_原檔沒有",
     ],
     why: "非零(或不齊)就是缺陷 —— 兩趟必須完全相同",
   },
