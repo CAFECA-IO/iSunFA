@@ -21,6 +21,7 @@ import {
   BASELINE_TIERS,
   activityDataLevel,
   classifyKey,
+  findAbsentMustMatchKeys,
   normalizeUatLog,
   unmeasuredThresholdLevel,
 } from "@/constants/carbon_uat_baseline";
@@ -55,6 +56,33 @@ const snapshotKeysWrittenByScript = (): {
     prefixes: [...new Set(prefixes)].sort(),
   };
 };
+
+describe("B3 缺席檢查:基準線有、本趟沒產出的 must_match 鍵", () => {
+  it("缺席的 must_match 鍵被點名(review 複現:基準線 4 鍵對 snapshot 1 鍵)", () => {
+    const baseline = {
+      私有區符號: 0,
+      原檔表號_未見於紙面: [],
+      紙面表號_原檔沒有: [],
+      對帳逐字引用列_排除: 6,
+    };
+    const snapshot = { 私有區符號: 0 };
+    expect(findAbsentMustMatchKeys(baseline, snapshot)).toEqual([
+      "原檔表號_未見於紙面",
+      "紙面表號_原檔沒有",
+    ]);
+  });
+
+  it("record_only 與 threshold 缺席不列(允許變動的層本來就允許缺席)", () => {
+    const baseline = { 對帳逐字引用列_排除: 6, log_input_tokens: 400000 };
+    expect(findAbsentMustMatchKeys(baseline, {})).toEqual([]);
+  });
+
+  it("兩邊都有 → 空;值不同不歸這條管(那是 changed 的事)", () => {
+    const baseline = { 私有區符號: 0 };
+    const snapshot = { 私有區符號: 3 };
+    expect(findAbsentMustMatchKeys(baseline, snapshot)).toEqual([]);
+  });
+});
 
 describe("驗收腳本的每一個快照鍵都有分層", () => {
   /**

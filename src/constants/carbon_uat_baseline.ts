@@ -44,6 +44,27 @@
  */
 export type BaselineTier = "must_match" | "threshold" | "record_only";
 
+/**
+ * Info: (20260825 - Emily) B3 的缺席檢查(PR review 阻擋項,2026-08-25)。
+ *
+ * 基準線比對原本只走**本趟 snapshot** 的鍵 —— 基準線裡有、本趟沒產出的鍵
+ * 從頭到尾不會被看一眼,「判準沒跑」被回報成「判準通過」。
+ * 複現形狀:基準線含 --source 三鍵,本趟沒給 --source → changed=[] → B3 綠,
+ * 而三條 must_match 一次都沒執行。同型的鍵共八個(--log 五個 + --source 三個)。
+ *
+ * 只管 must_match 層:record_only/threshold 本來就允許缺席
+ * (數量會變的層缺席不是缺陷;B4 閾值層另有自己的缺席宣告)。
+ * 抽成純函式的理由與本檔開頭同一句:判準要在輸入空間裡,得有人能 import 它來測。
+ */
+export const findAbsentMustMatchKeys = (
+  baseline: Record<string, unknown>,
+  snapshot: Record<string, unknown>,
+): string[] =>
+  Object.keys(baseline)
+    .filter((key) => !(key in snapshot))
+    .filter((key) => classifyKey(key) === "must_match")
+    .sort();
+
 export const BASELINE_TIERS: ReadonlyArray<{
   readonly tier: BaselineTier;
   readonly keys?: readonly string[];

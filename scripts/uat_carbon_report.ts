@@ -29,6 +29,7 @@ import {
   BASELINE_THRESHOLD_LIMITS,
   activityDataLevel,
   classifyKey,
+  findAbsentMustMatchKeys,
   normalizeUatLog,
   unmeasuredThresholdLevel,
 } from "@/constants/carbon_uat_baseline";
@@ -1622,14 +1623,32 @@ const compareBaseline = (): string | undefined => {
 
   const broke = changed.filter((key) => classifyKey(key) === "must_match");
   const drifted = changed.filter((key) => classifyKey(key) !== "must_match");
+  /**
+   * Info: (20260825 - Emily) 聯集補洞(PR review 阻擋項):`changed` 只走本趟 snapshot 的鍵,
+   * 基準線裡有、本趟沒產出的 must_match 鍵從頭到尾不會被比 ——
+   * 「判準沒跑」被回報成「判準通過」,正好是 #6710 目的的反面。
+   * 複現:基準線含 --source 三鍵、本趟沒給 --source → changed=[] → B3 綠。
+   * 同型的鍵有八個(--log 五個 + --source 三個),這裡一次補齊:
+   * must_match 層缺席即 fail;record_only/threshold 維持現狀
+   * (允許變動的層本來就允許缺席,B4 閾值層另有自己的缺席宣告)。
+   */
+  const absentMustMatch = findAbsentMustMatchKeys(baseline, snapshot);
+  if (absentMustMatch.length > 0) {
+    record(
+      "fail",
+      "B3 must_match 鍵本趟未產出",
+      `${absentMustMatch.join("、")} —— 判準沒跑不等於判準通過;補上缺的輸入(--source/--log)再比`,
+    );
+  }
 
-  if (broke.length === 0) {
+  if (broke.length === 0 && absentMustMatch.length === 0) {
     record(
       "pass",
       "B3 兩趟一致(must_match 層)",
       `${drifted.length} 項在允許變動的層,0 項在必須相同的層`,
     );
-  } else {
+  }
+  if (broke.length > 0) {
     record(
       "fail",
       "B3 兩趟不一致(must_match 層)",
@@ -1638,6 +1657,15 @@ const compareBaseline = (): string | undefined => {
   }
 
   const sections: string[] = [];
+  if (absentMustMatch.length > 0) {
+    sections.push(
+      `\n✗ must_match 鍵本趟未產出(${absentMustMatch.length} 項):\n${absentMustMatch
+        .map(
+          (key) => `  ${key}: ${JSON.stringify(baseline[key])} → (本趟未產出)`,
+        )
+        .join("\n")}`,
+    );
+  }
   if (broke.length > 0) {
     sections.push(
       `\n✗ 必須相同卻變了(${broke.length} 項):\n${broke.map(line).join("\n")}`,
