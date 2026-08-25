@@ -78,6 +78,9 @@ export async function POST(request: NextRequest) {
     init,
     attachments,
     clientMessageId,
+    // Info: (20260825 - Emily) #6707 帳本事實包:前端決定性組出(帳本 E2EE,伺服端讀不到),
+    // Info: (20260825 - Emily) 經 Zod 上限驗證後原樣進 persona —— 本路由不加工、不補算
+    ledgerFacts,
   } = parsed.data;
 
   // Info: (20260714 - Tzuhan) 頻道所有權裁決: 只允許讀寫自己 address 前綴的頻道，防跨用戶寫入
@@ -182,6 +185,8 @@ export async function POST(request: NextRequest) {
           historyForAi,
           currentStep,
           language,
+          undefined,
+          ledgerFacts,
         ),
     });
     const {

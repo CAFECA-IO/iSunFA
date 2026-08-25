@@ -31,6 +31,7 @@ import { GhgProtocolCategory } from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
 import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
 import { IInventoryExtraction } from "@/types/carbon_chatbot.types";
+import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
 import { logger } from "@/lib/utils/logger";
 import { recordLlmUsage } from "@/lib/llm/usage_scope";
 import { SystemSettingKey } from "@/constants/system_setting";
@@ -690,12 +691,28 @@ export class ChatService {
   private buildCarbonPersonaInstruction(
     currentStep?: string,
     language?: string,
+    ledgerFacts?: IContextFact[],
   ): string {
     const langInstruction = language ? `\n請務必使用 ${language} 回覆。` : "";
     const outlineCatalog = CARBON_REPORT_OUTLINE.map(
       (s) => `${s.id}: ${s.code} ${s.title}`,
     ).join("\n");
-    return `你是一個專業的碳會計師 (Carbon Accountant)。你的任務是引導用戶進行溫室氣體盤查。請一步步問問題，引導用戶回答，並在適當的時機請用戶上傳相關資料（如BOM表、能源帳單等）。請保持專業、友善，且每次對話只問一個核心問題以免用戶混淆。${currentStep ? `\n當前盤查流程節點：【${currentStep}】。請根據此階段的目標來引導對話。` : ""}
+    /**
+     * Info: (20260825 - Emily) #6707 帳本事實機制(第二層)。
+     * 事實由前端 buildLedgerFactBundle 從勾稽後帳本決定性取出(帳本 E2EE,伺服端讀不到),
+     * 這裡只負責兩件事:把清單放進人設、把「清單之外不得有數字」說死。
+     * **沒有事實也要有指令**:缺這段時 LLM 對數據問題會用常識補答 —— 那正是鐵律一要擋的。
+     */
+    const ledgerFactBlock =
+      ledgerFacts && ledgerFacts.length > 0
+        ? `\n【帳本事實機制】以下是系統從勾稽後帳本決定性取出的事實清單,為你回答數據問題的**唯一合法數字來源**:
+${ledgerFacts.map((fact) => `- ${fact.label} = ${fact.value}(來源:${fact.source})`).join("\n")}
+- 回答任何數據問題,數字只能**原樣引用**清單中的 value,並帶出該筆的來源讓使用者可追溯。
+- 清單裡沒有的數據 → 明確回答「帳本中沒有這項資料」並說明缺什麼;嚴禁用常識、行業平均或任何推算補答。
+- 嚴禁對清單數字做任何計算(加總、比例、換算、排名之外的推導)——清單給什麼,你說什麼。
+- 使用者問「是否異常/有沒有問題」→ 只能引用清單中的待補項/缺口/警示事實;一條都沒有時,回答「系統列舉的偵測器(待補、質量守恆、合理性)本輪未觸發」,不得自行發明疑點,也不得宣稱「絕無問題」。`
+        : `\n【帳本事實機制】目前帳本沒有可引用的事實(尚未匯入報告,或計算尚未完成)。使用者問到任何數據(排放量、佔比、排名、是否異常)時,明確回答帳本中沒有資料並引導完成匯入或計算;嚴禁編造或用常識估算任何數字。`;
+    return `你是一個專業的碳會計師 (Carbon Accountant)。你的任務是引導用戶進行溫室氣體盤查。請一步步問問題，引導用戶回答，並在適當的時機請用戶上傳相關資料（如BOM表、能源帳單等）。請保持專業、友善，且每次對話只問一個核心問題以免用戶混淆。${currentStep ? `\n當前盤查流程節點：【${currentStep}】。請根據此階段的目標來引導對話。` : ""}${ledgerFactBlock}
 【報告寫入機制】你的回覆一律為 JSON:reply 填對話內容；readyParagraphId 依下列規則填寫:
 - 用戶已提供當前段落所需的關鍵資訊，或明確同意/確認你彙整的內容時 → 填該段落的 id(只能從下方清單挑選)
 - 資訊尚未齊全、仍在追問時 → 填 "${NO_READY_PARAGRAPH}"
@@ -780,6 +797,8 @@ ${outlineCatalog}${langInstruction}`;
     currentStep?: string,
     language?: string,
     taskKey: LlmTaskKeyEnum = LlmTaskKeyEnum.CARBON_CHAT,
+    // Info: (20260825 - Emily) #6707 帳本事實包(見 buildCarbonPersonaInstruction 的註解)
+    ledgerFacts?: IContextFact[],
   ): Promise<ICarbonChatStructuredReply> {
     const genAI = await this.ensureClient();
     const model = genAI.getGenerativeModel({
@@ -787,6 +806,7 @@ ${outlineCatalog}${langInstruction}`;
       systemInstruction: this.buildCarbonPersonaInstruction(
         currentStep,
         language,
+        ledgerFacts,
       ),
       generationConfig: {
         responseMimeType: "application/json",

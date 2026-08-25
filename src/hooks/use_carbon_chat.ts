@@ -82,6 +82,7 @@ import {
   activityDedupeKey,
   stockRecordDedupeKey,
 } from "@/lib/carbon_inventory";
+import { buildLedgerFactBundle } from "@/lib/carbon_ledger_query";
 import {
   loadPendingImport as fetchPendingImportRecord,
   savePendingImport as putPendingImportRecord,
@@ -5188,6 +5189,15 @@ export const useCarbonChat = () => {
          * 每次重新產生就會變成「付了一張、又建一張」。
          */
         const clientMessageId = crypto.randomUUID();
+        /**
+         * Info: (20260825 - Emily) #6707 帳本事實包(第二層):每則訊息隨行注入。
+         * 帳本是 E2EE 的、伺服端讀不到,事實只能在這裡(解密後的狀態)決定性組出;
+         * LLM 回答數據問題的數字只能來自這一包(persona 端把「清單之外不得有數字」說死)。
+         * 帳本空時為空陣列 —— persona 對「無事實」另有明確拒答指令,這裡不補、不造。
+         */
+        const ledgerFacts = buildLedgerFactBundle(
+          inventoryStates[chatChannel]?.computedLedger,
+        );
         const sendChatRequest = () =>
           request<{
             success: boolean;
@@ -5222,6 +5232,8 @@ export const useCarbonChat = () => {
                * 同一則訊息重送（重試、雙擊）不重複扣點。
                */
               clientMessageId,
+              // Info: (20260825 - Emily) #6707 帳本事實包(組包邏輯見上方 ledgerFacts 的註解)
+              ...(ledgerFacts.length > 0 ? { ledgerFacts } : {}),
               // Info: (20260714 - Tzuhan) 附件只帶 metadata+cid(檔案已在 Laria)；請求 body 維持輕量
               ...(attachmentsMeta.length > 0
                 ? { attachments: attachmentsMeta }
