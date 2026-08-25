@@ -35,7 +35,8 @@ import {
   ContractFunctionZeroDataError,
   ExecutionRevertedError,
 } from "viem";
-import { prisma } from "@/lib/prisma";
+import { userRepo } from "@/repositories/user.repo";
+import { disconnectPrisma } from "@/repositories/prisma_lifecycle.repo";
 import { publicClient } from "@/lib/viem";
 import {
   dismissWalletUpgrade,
@@ -137,7 +138,7 @@ async function main(): Promise<void> {
       : "=== 預演（未加 --commit，不會發出任何通知）",
   );
 
-  const users = await prisma.user.findMany({
+  const users = await userRepo.findMany({
     where: onlyUserId ? { id: onlyUserId } : {},
     select: { id: true, address: true },
   });
@@ -247,5 +248,5 @@ main()
     process.exitCode = 1;
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await disconnectPrisma();
   });

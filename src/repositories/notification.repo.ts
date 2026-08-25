@@ -246,6 +246,24 @@ export class NotificationRepository {
   }
 
   /**
+   * Info: (20260825 - Julian) 刪掉某一位使用者的所有通知。
+   *
+   * **正式流程沒有任何地方呼叫它** —— 它存在是為了驗收前把狀態歸零
+   *（`scripts/qa_notification_fixtures.ts`）。寫在這裡而不是讓腳本自己碰 Prisma，
+   * 是因為 CLAUDE.md §1：碰得到 DB 的地方要收斂在一層，包括危險的那些。
+   *
+   * **為什麼是 DELETE 而不是標記已讀**：`dedupeKey` 是永久唯一鍵。把錢包升級
+   * 待辦標成已讀，那一列還在，重跑 `request_wallet_upgrades.ts` 會撞 P2002
+   * 而不補發 —— 於是那個情境就再也造不出來了。刪掉才是真的回到原點。
+   *
+   * 恆以 `userId` 為條件，沒有「全清」的版本。
+   */
+  async deleteAllByUser(userId: string): Promise<number> {
+    const result = await prisma.notification.deleteMany({ where: { userId } });
+    return result.count;
+  }
+
+  /**
    * Info: (20260825 - Julian) 把某一型別的未讀標為已讀（待辦型的關閉路徑）。
    *
    * 待辦型的消失由「事情真的做完了」驅動，不由「使用者看過了」驅動：

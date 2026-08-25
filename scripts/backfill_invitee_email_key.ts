@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma";
+import { teamRepo } from "@/repositories/team.repo";
+import { disconnectPrisma } from "@/repositories/prisma_lifecycle.repo";
 import { canonicalizeEmailForKey } from "@/lib/team/email_identity";
 import { TEAM_INVITATION_STATUS } from "@/constants/status";
 
@@ -52,19 +53,7 @@ async function main(): Promise<void> {
       : "=== 預演（未加 --commit，不會寫入）",
   );
 
-  const invitations = await prisma.teamInvitation.findMany({
-    where: {
-      inviteeEmailKey: null,
-      inviteeEmail: { not: null },
-    },
-    select: {
-      id: true,
-      status: true,
-      inviteeEmail: true,
-      pendingKey: true,
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const invitations = await teamRepo.listInvitationsMissingEmailKey();
 
   out(`待回填 ${invitations.length} 列`);
 
@@ -134,10 +123,7 @@ async function main(): Promise<void> {
   const failures: string[] = [];
   for (const row of rows) {
     try {
-      await prisma.teamInvitation.update({
-        where: { id: row.id },
-        data: { inviteeEmailKey: row.emailKey },
-      });
+      await teamRepo.setInvitationEmailKey(row.id, row.emailKey);
       written += 1;
     } catch (error) {
       failures.push(
@@ -163,5 +149,5 @@ main()
     process.exitCode = 1;
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await disconnectPrisma();
   });

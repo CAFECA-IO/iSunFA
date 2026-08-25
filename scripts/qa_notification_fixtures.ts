@@ -33,7 +33,9 @@
  *     npx tsx scripts/qa_notification_fixtures.ts --user <userId> --scenario many
  *     npx tsx scripts/qa_notification_fixtures.ts --user <userId> --clear --yes
  */
-import { prisma } from "@/lib/prisma";
+import { userRepo } from "@/repositories/user.repo";
+import { notificationRepo } from "@/repositories/notification.repo";
+import { disconnectPrisma } from "@/repositories/prisma_lifecycle.repo";
 import {
   notifyAnalysisCompleted,
   notifyAnalysisFailed,
@@ -64,7 +66,7 @@ function argOf(flag: string): string | undefined {
 }
 
 async function listUsers(): Promise<void> {
-  const users = await prisma.user.findMany({
+  const users = await userRepo.findMany({
     select: { id: true, name: true, address: true, createdAt: true },
     orderBy: { createdAt: "desc" },
     take: 20,
@@ -80,29 +82,23 @@ async function listUsers(): Promise<void> {
 }
 
 async function printStatus(userId: string): Promise<void> {
-  const groups = await prisma.notification.groupBy({
-    by: ["type"],
-    where: { userId },
-    _count: { _all: true },
-  });
-  const unread = await prisma.notification.groupBy({
-    by: ["type"],
-    where: { userId, readAt: null },
-    _count: { _all: true },
-  });
-  const unreadOf = new Map(unread.map((row) => [row.type, row._count._all]));
+  /**
+   * Info: (20260825 - Julian) 只印**未讀**，不印總數。
+   *
+   * 總數要另一支查詢，而驗收真正在對的是徽章 —— 徽章數的就是未讀。
+   * 想看歷史有幾則就打開面板，那正是這次改動要驗的東西。
+   */
+  const { counts } = await notificationRepo.summarizeUnread(userId);
 
-  if (groups.length === 0) {
-    out("這位使用者目前沒有任何通知。");
+  if (counts.size === 0) {
+    out("這位使用者目前沒有未讀通知。");
     return;
   }
-  out("型別                  未讀 / 總數");
-  groups.forEach((row) => {
-    out(
-      `  ${row.type.padEnd(20)} ${String(unreadOf.get(row.type) ?? 0).padStart(3)} / ${row._count._all}`,
-    );
+  out("型別                  未讀");
+  [...counts.entries()].forEach(([type, count]) => {
+    out(`  ${type.padEnd(20)} ${String(count).padStart(3)}`);
   });
-  const totalUnread = [...unreadOf.values()].reduce((sum, n) => sum + n, 0);
+  const totalUnread = [...counts.values()].reduce((sum, n) => sum + n, 0);
   out(`\n徽章上應該顯示：${totalUnread > 99 ? "99+" : totalUnread}`);
 }
 
@@ -113,13 +109,12 @@ async function printStatus(userId: string): Promise<void> {
  * 那是最容易手滑刪到別人資料的時候。沒有「清全部使用者」這個選項是刻意的。
  */
 async function clearFor(userId: string, confirmed: boolean): Promise<void> {
-  const count = await prisma.notification.count({ where: { userId } });
   if (!confirmed) {
-    out(`將刪除 ${count} 則通知（僅這一位使用者）。確定的話加上 --yes。`);
+    out("將刪除這一位使用者的所有通知。確定的話加上 --yes。");
     return;
   }
-  const result = await prisma.notification.deleteMany({ where: { userId } });
-  out(`已刪除 ${result.count} 則。`);
+  const deleted = await notificationRepo.deleteAllByUser(userId);
+  out(`已刪除 ${deleted} 則。`);
   /**
    * Info: (20260825 - Julian) 這裡用 DELETE 而不是標記已讀是有意義的。
    *
@@ -198,7 +193,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await userRepo.findById(userId);
   if (!user) {
     out(`找不到使用者 ${userId}。`);
     process.exitCode = 1;
@@ -235,5 +230,5 @@ main()
     process.exitCode = 1;
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await disconnectPrisma();
   });

@@ -20,6 +20,16 @@ export class UserRepository {
   }
 
   /**
+   * Info: (20260825 - Julian) 以 id 取單一使用者。
+   *
+   * 維運腳本要能分辨「這個 id 不存在」與「這個人沒有資料」，
+   * 而 `findMany({ where: { id } })` 的空陣列同時是這兩件事。
+   */
+  async findById(id: string): Promise<User | null> {
+    return prisma.user.findUnique({ where: { id } });
+  }
+
+  /**
    * Info: (20260809 - Luphia) 以第三方身分建立使用者。
    * User、UserIdentity、UserCustodialKey 三者必須同生共死：
    * 少了金鑰的 User 會是一個永遠簽不了名的孤兒帳號，因此包在同一個交易內。

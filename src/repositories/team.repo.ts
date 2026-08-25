@@ -543,6 +543,37 @@ export class TeamRepository implements ITeamRepository {
     });
   }
 
+  /**
+   * Info: (20260825 - Julian) 還沒算出 `inviteeEmailKey` 的 email 邀請（回填用）。
+   *
+   * 一併帶 `pendingKey`：回填腳本要拿它的後綴對照重算的結果 ——
+   * PENDING 的 email 邀請，`pendingKey` 就是 `{teamId}:mail:{canonical}`，
+   * 兩者不一致代表正規化規則在某個時間點分岔了，那時要中止而不是靜靜寫入。
+   */
+  async listInvitationsMissingEmailKey() {
+    return prisma.teamInvitation.findMany({
+      where: { inviteeEmailKey: null, inviteeEmail: { not: null } },
+      select: {
+        id: true,
+        status: true,
+        inviteeEmail: true,
+        pendingKey: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  // Info: (20260825 - Julian) 回填單列（逐列寫，失敗的那一列才報得出是哪一列）
+  async setInvitationEmailKey(
+    inviteId: string,
+    inviteeEmailKey: string,
+  ): Promise<void> {
+    await prisma.teamInvitation.update({
+      where: { id: inviteId },
+      data: { inviteeEmailKey },
+    });
+  }
+
   async getInvitationByIdWithDetails(inviteId: string) {
     return prisma.teamInvitation.findUnique({
       where: { id: inviteId },
