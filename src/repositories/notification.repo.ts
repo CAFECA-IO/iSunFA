@@ -38,13 +38,54 @@ export class NotificationRepository {
     }
   }
 
-  // Info: (20260821 - Luphia) 未讀的事件型通知（新到舊）
-  async listUnread(userId: string, limit: number): Promise<Notification[]> {
+  /**
+   * Info: (20260825 - Julian) 未讀的**待辦型**通知（新到舊）。
+   *
+   * 與事件型分成兩支查詢，而不是一支撈完再在記憶體裡分類 —— 後者在未讀
+   * 超過 limit 時會靜默吃掉待辦：`take: 20` 依 createdAt 取最新 20 則，
+   * 一則三天前的錢包升級待辦排在 25 則新分析後面就撈不到，
+   * 而摘要用的 `countUnreadByType` 沒有截斷、照樣算它。
+   * 結果是徽章說「1 則待辦」而待辦區整個不存在（計畫書 D4）。
+   *
+   * 待辦型天然有限（一人最多一則錢包升級），但仍給上限：
+   * 「天然有限」是今天的事實，不是資料庫層的約束。
+   */
+  async listUnreadByTypes(
+    userId: string,
+    types: readonly string[],
+    limit: number,
+  ): Promise<Notification[]> {
+    if (types.length === 0) return [];
     return prisma.notification.findMany({
-      where: { userId, readAt: null },
+      where: { userId, readAt: null, type: { in: [...types] } },
       orderBy: { createdAt: "desc" },
       take: limit,
     });
+  }
+
+  /**
+   * Info: (20260825 - Julian) 未讀的**事件型**通知（新到舊），附「還有更多」。
+   *
+   * 多取一則來判斷 hasMore：靜默截斷會被讀成「這就是全部」，而使用者
+   * 沒有任何方式發現少了 5 則（檢查清單 §一.1 的同構要求：有上限就要說出來）。
+   */
+  async listUnreadExcludingTypes(
+    userId: string,
+    excludeTypes: readonly string[],
+    limit: number,
+  ): Promise<{ items: Notification[]; hasMore: boolean }> {
+    const rows = await prisma.notification.findMany({
+      where: {
+        userId,
+        readAt: null,
+        ...(excludeTypes.length > 0
+          ? { type: { notIn: [...excludeTypes] } }
+          : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      take: limit + 1,
+    });
+    return { items: rows.slice(0, limit), hasMore: rows.length > limit };
   }
 
   /**
@@ -62,13 +103,50 @@ export class NotificationRepository {
   }
 
   /**
-   * Info: (20260821 - Luphia) 全部標為已讀。
+   * Info: (20260825 - Julian) 把**指定型別以外**的未讀標為已讀。
+   *
    * 以 `readAt: null` 為條件而不是逐 id：小鈴鐺打開就是「我看過了」，
-   * 逐 id 會讓「清單截斷在 20 則」之外的通知永遠未讀。
+   * 逐 id 會讓「清單截斷」之外的通知永遠未讀。
+   *
+   * `excludeTypes` 是這次新增的關鍵：待辦型（錢包升級）不能被「打開鈴鐺」
+   * 收掉。它存在 DB、`dedupeKey` 是永久唯一鍵，一旦被誤標已讀，
+   * 重跑 `request_wallet_upgrades.ts` 會撞 P2002 而不補發 ——
+   * 使用者從此不知道自己需要升級，且沒有任何觀測量會顯示這件事（計畫書 D1）。
    */
-  async markAllRead(userId: string, nowMs: number): Promise<number> {
+  async markReadExcludingTypes(
+    userId: string,
+    excludeTypes: readonly string[],
+    nowMs: number,
+  ): Promise<number> {
     const result = await prisma.notification.updateMany({
-      where: { userId, readAt: null },
+      where: {
+        userId,
+        readAt: null,
+        ...(excludeTypes.length > 0
+          ? { type: { notIn: [...excludeTypes] } }
+          : {}),
+      },
+      data: { readAt: new Date(nowMs) },
+    });
+    return result.count;
+  }
+
+  /**
+   * Info: (20260825 - Julian) 把某一型別的未讀標為已讀（待辦型的關閉路徑）。
+   *
+   * 待辦型的消失由「事情真的做完了」驅動，不由「使用者看過了」驅動：
+   * 錢包升級待辦在探針轉 true 時才收掉（見 `request_wallet_upgrades.ts`）。
+   *
+   * 回傳筆數而不是 void：呼叫端要能分辨「本來就沒有」與「收掉了一則」，
+   * 那是腳本回報數字的依據。
+   */
+  async markReadByType(
+    userId: string,
+    type: string,
+    nowMs: number,
+  ): Promise<number> {
+    const result = await prisma.notification.updateMany({
+      where: { userId, readAt: null, type },
       data: { readAt: new Date(nowMs) },
     });
     return result.count;

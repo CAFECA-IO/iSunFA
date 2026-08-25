@@ -2,17 +2,27 @@ import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
+import { logger } from "@/lib/utils/logger";
+import { RateLimitBucketEnum } from "@/constants/rate_limit";
+import { enforceRateLimit } from "@/lib/rate_limiter";
 import { listNotifications } from "@/services/notification.service";
 
 /**
  * Info: (20260821 - Luphia) 小鈴鐺展開的清單（ADR 021 補充）。
- * 純端口：驗身分 → service → 回傳。待辦與完成的分節在 service。
+ * 純端口：驗身分 → 限流 → service → 回傳。待辦與完成的分節在 service。
  */
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("Authorization");
     const user = await getIdentityFromDeWT(authHeader);
     if (!user) return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
+
+    // Info: (20260825 - Julian) DeWT 驗證之後、業務邏輯之前（限流規範 §2）
+    const limited = enforceRateLimit(
+      user.address,
+      RateLimitBucketEnum.NOTIFICATION_READ,
+    );
+    if (limited) return limited;
 
     const list = await listNotifications({
       userId: user.id,
@@ -28,6 +38,9 @@ export async function GET(request: NextRequest) {
         status: error.status,
       });
     }
+    logger.error("[API] notification list failed", {
+      message: (error as Error).message,
+    });
     return jsonFail(API_ERRORS.IS_UNKNOWN);
   }
 }

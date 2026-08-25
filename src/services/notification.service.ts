@@ -2,6 +2,7 @@ import { Prisma } from "@/generated";
 import {
   NOTIFICATION_DEDUPE_PREFIX,
   NOTIFICATION_LIST_LIMIT,
+  NOTIFICATION_TODO_LIST_LIMIT,
   NOTIFICATION_TYPE,
   TODO_NOTIFICATION_TYPES,
 } from "@/constants/notification";
@@ -28,11 +29,26 @@ function toApiError(def: IErrorDef): ApiError {
   return new ApiError(def.code, def.message, def.status);
 }
 
-async function guarded<T>(operation: () => Promise<T>): Promise<T> {
+/**
+ * Info: (20260825 - Julian) 未預期的錯誤要留線索再往上丟。
+ *
+ * 原本是靜默轉成 `IS_UNKNOWN`：連線耗盡、schema 漂移、Prisma 參數錯誤
+ * 全部塌成同一個 `IS000099`，而伺服器端沒有一行紀錄。
+ * 「塌成同一個值」在驗收裡的後果是偵測不到缺陷，在 log 裡的後果是
+ * 查不出成因（檢查清單 §一.9）。
+ */
+async function guarded<T>(
+  operation: () => Promise<T>,
+  context: Record<string, unknown>,
+): Promise<T> {
   try {
     return await operation();
   } catch (error) {
     if (error instanceof ApiError) throw error;
+    logger.error("notification service failed", {
+      ...context,
+      reason: error instanceof Error ? error.message : String(error),
+    });
     throw toApiError(API_ERRORS.IS_UNKNOWN);
   }
 }
@@ -53,6 +69,12 @@ export interface INotificationItem {
 export interface INotificationList {
   todos: INotificationItem[];
   completed: INotificationItem[];
+  /**
+   * Info: (20260825 - Julian) 完成節被截斷了嗎。
+   * 靜默截斷會被讀成「這就是全部」——徽章說 25 而清單只有 20 的時候，
+   * 使用者沒有任何方式知道少了 5 則。
+   */
+  hasMoreCompleted: boolean;
 }
 
 /**
@@ -63,6 +85,20 @@ export interface INotificationList {
  * 按了沒反應的待辦。
  */
 async function listPendingInvitations(address: string, nowMs: number) {
+  /**
+   * Info: (20260825 - Julian) 空位址一律回空集合，不進 Prisma。
+   *
+   * `where: { inviteeAddress: undefined }` 在 Prisma 是**沒有這個條件**，
+   * 於是查詢退化成「列出全站待接受邀請」，而 payload 會吐出別人團隊的
+   * teamId / teamName / inviterName。這是跨租戶外洩的標準形狀
+   * （檢查清單 §三.1）。
+   *
+   * 今天的 `getIdentityFromDeWT` 兩條路徑都保證 address 有值
+   * （線上模式回 DB 的 User，離線模式 `if (!payload.sub || !payload.address) return null`），
+   * 所以這一行現在攔不到任何東西 —— 它防的是**那個保證哪天不成立**，
+   * 而失效時的症狀是靜默外洩，不是報錯。
+   */
+  if (!address) return [];
   const invitations = await teamRepo.getPendingInvitationsByAddress(address);
   return invitations.filter(
     (invitation) =>
@@ -76,94 +112,151 @@ export async function getNotificationSummary(params: {
   address: string;
   nowMs: number;
 }): Promise<INotificationSummary> {
-  return guarded(async () => {
-    const [invitations, unreadByType] = await Promise.all([
-      listPendingInvitations(params.address, params.nowMs),
-      notificationRepo.countUnreadByType(params.userId),
-    ]);
-    /**
-     * Info: (20260821 - Luphia) 分組是「待辦型 vs 其他」，不是逐型別列舉：
-     * 未來新增事件型通知時這裡不需要跟著改，只有新增**待辦型**才要動
-     * TODO_NOTIFICATION_TYPES（常數層的單一清單）。
-     */
-    let storedTodos = 0;
-    let completed = 0;
-    for (const [type, count] of unreadByType) {
-      if ((TODO_NOTIFICATION_TYPES as readonly string[]).includes(type)) {
-        storedTodos += count;
-      } else {
-        completed += count;
+  return guarded(
+    async () => {
+      const [invitations, unreadByType] = await Promise.all([
+        listPendingInvitations(params.address, params.nowMs),
+        notificationRepo.countUnreadByType(params.userId),
+      ]);
+      /**
+       * Info: (20260821 - Luphia) 分組是「待辦型 vs 其他」，不是逐型別列舉：
+       * 未來新增事件型通知時這裡不需要跟著改，只有新增**待辦型**才要動
+       * TODO_NOTIFICATION_TYPES（常數層的單一清單）。
+       */
+      let storedTodos = 0;
+      let completed = 0;
+      for (const [type, count] of unreadByType) {
+        if ((TODO_NOTIFICATION_TYPES as readonly string[]).includes(type)) {
+          storedTodos += count;
+        } else {
+          completed += count;
+        }
       }
-    }
-    return {
-      todoCount: invitations.length + storedTodos,
-      completedCount: completed,
-    };
-  });
+      return {
+        todoCount: invitations.length + storedTodos,
+        completedCount: completed,
+      };
+    },
+    { operation: "getNotificationSummary", userId: params.userId },
+  );
 }
 
-// Info: (20260821 - Luphia) 鈴鐺展開的清單：待辦與完成分節
+/**
+ * Info: (20260821 - Luphia) 鈴鐺展開的清單：待辦與完成分節。
+ *
+ * Info: (20260825 - Julian) 待辦型與事件型**分兩次查**，不是撈一批再分類。
+ * 理由見 `notificationRepo.listUnreadByTypes` 的說明（計畫書 D4）：
+ * 一支查詢加上 `take` 會讓舊的待辦被新的完成通知擠出清單，
+ * 而摘要的計數沒有截斷、照樣算它 —— 徽章與清單就此分岔。
+ */
 export async function listNotifications(params: {
   userId: string;
   address: string;
   nowMs: number;
 }): Promise<INotificationList> {
-  return guarded(async () => {
-    const [invitations, stored] = await Promise.all([
-      listPendingInvitations(params.address, params.nowMs),
-      notificationRepo.listUnread(params.userId, NOTIFICATION_LIST_LIMIT),
-    ]);
+  return guarded(
+    async () => {
+      const [invitations, storedTodos, completedPage] = await Promise.all([
+        listPendingInvitations(params.address, params.nowMs),
+        notificationRepo.listUnreadByTypes(
+          params.userId,
+          TODO_NOTIFICATION_TYPES,
+          NOTIFICATION_TODO_LIST_LIMIT,
+        ),
+        notificationRepo.listUnreadExcludingTypes(
+          params.userId,
+          TODO_NOTIFICATION_TYPES,
+          NOTIFICATION_LIST_LIMIT,
+        ),
+      ]);
 
-    const todos: INotificationItem[] = invitations.map((invitation) => ({
-      /**
-       * Info: (20260821 - Luphia) derived 待辦以來源 id 合成識別：
-       * 前端只拿它當 React key 與去重依據，不會拿去打任何 API。
-       */
-      id: `invitation:${invitation.id}`,
-      type: NOTIFICATION_TYPE.TEAM_INVITATION,
-      payload: {
-        invitationId: invitation.id,
-        teamId: invitation.teamId,
-        teamName: invitation.team?.name ?? "",
-        inviterName: invitation.inviter?.name ?? "",
-      },
-      createdAt: invitation.createdAt.getTime(),
-    }));
+      const todos: INotificationItem[] = invitations.map((invitation) => ({
+        /**
+         * Info: (20260821 - Luphia) derived 待辦以來源 id 合成識別：
+         * 前端只拿它當 React key 與去重依據，不會拿去打任何 API。
+         */
+        id: `invitation:${invitation.id}`,
+        type: NOTIFICATION_TYPE.TEAM_INVITATION,
+        payload: {
+          invitationId: invitation.id,
+          teamId: invitation.teamId,
+          teamName: invitation.team?.name ?? "",
+          inviterName: invitation.inviter?.name ?? "",
+        },
+        createdAt: invitation.createdAt.getTime(),
+      }));
 
-    const completed: INotificationItem[] = [];
-    for (const notification of stored) {
-      const item: INotificationItem = {
+      const toItem = (notification: {
+        id: string;
+        type: string;
+        payload: unknown;
+        createdAt: Date;
+      }): INotificationItem => ({
         id: notification.id,
         type: notification.type,
         payload: (notification.payload ?? {}) as Record<string, unknown>,
         createdAt: notification.createdAt.getTime(),
-      };
-      if (
-        (TODO_NOTIFICATION_TYPES as readonly string[]).includes(
-          notification.type,
-        )
-      ) {
-        todos.push(item);
-      } else {
-        completed.push(item);
-      }
-    }
+      });
 
-    todos.sort((a, b) => b.createdAt - a.createdAt);
-    return { todos, completed };
-  });
+      todos.push(...storedTodos.map(toItem));
+      todos.sort((a, b) => b.createdAt - a.createdAt);
+
+      return {
+        todos,
+        completed: completedPage.items.map(toItem),
+        hasMoreCompleted: completedPage.hasMore,
+      };
+    },
+    { operation: "listNotifications", userId: params.userId },
+  );
 }
 
 /**
  * Info: (20260821 - Luphia) 打開鈴鐺＝看過了：事件型全部標已讀。
  * derived 待辦不受影響（它的消失只由來源狀態決定）。
+ *
+ * Info: (20260825 - Julian) **入庫的待辦型也不受影響**（計畫書 D1）。
+ *
+ * 原本 `markAllRead` 不分型別，於是點一下鈴鐺就會把「系統要求升級錢包」
+ * 標成已讀 —— 連展開都不必。而它補不回來：`dedupeKey` 是永久唯一鍵，
+ * 重跑腳本會撞 P2002 並被回報成「先前已發過」，
+ * ADR 021 rollout 第 5 步從此對那個人失效。
+ *
+ * 待辦型的關閉走 `dismissWalletUpgrade`：由「事情真的做完了」驅動，
+ * 不由「使用者看過了」驅動。
  */
 export async function markNotificationsRead(params: {
   userId: string;
   nowMs: number;
 }): Promise<number> {
-  return guarded(() =>
-    notificationRepo.markAllRead(params.userId, params.nowMs),
+  return guarded(
+    () =>
+      notificationRepo.markReadExcludingTypes(
+        params.userId,
+        TODO_NOTIFICATION_TYPES,
+        params.nowMs,
+      ),
+    { operation: "markNotificationsRead", userId: params.userId },
+  );
+}
+
+/**
+ * Info: (20260825 - Julian) 錢包升級待辦的關閉路徑（計畫書 D1）。
+ *
+ * 由 `scripts/request_wallet_upgrades.ts` 在探針轉 true 時呼叫 ——
+ * 也就是「這個人的錢包真的升級好了」的那一刻。這是待辦型與事件型
+ * 最大的差別：事件型讀過即已讀，待辦型要等事情做完。
+ *
+ * 回傳收掉的筆數，讓腳本能把「本來就沒有」與「收掉了一則」分開回報。
+ */
+export async function dismissWalletUpgrade(params: {
+  userId: string;
+  nowMs: number;
+}): Promise<number> {
+  return notificationRepo.markReadByType(
+    params.userId,
+    NOTIFICATION_TYPE.WALLET_UPGRADE,
+    params.nowMs,
   );
 }
 
@@ -200,6 +293,17 @@ export async function notifyAnalysisCompleted(params: {
 /**
  * Info: (20260821 - Luphia) 系統要求升級錢包（ADR 021 rollout 第 5 步的入口）。
  * 由 `scripts/request_wallet_upgrades.ts` 逐使用者發出；一人一則（dedupeKey）。
+ *
+ * Info: (20260825 - Julian) **這支會拋錯，與 `notifyAnalysisCompleted` 不同。**
+ *
+ * 兩者的呼叫端不一樣：那支掛在分析入庫的路徑上，失敗吞掉是因為
+ * 「少一則通知」遠好過「一份消失的報告」；這支的呼叫端是一支批次腳本，
+ * 而腳本需要知道哪些人沒發成功才能重跑。吞掉會讓失敗變成一個
+ * 沒有人看得到的數字。
+ *
+ * 呼叫端的義務：**逐人 try/catch，並在最後回報失敗清單**。
+ * 一路往上丟到 `main().catch` 的話，第 500 位使用者的連線中斷會讓
+ * 剩下的一則都沒發，而腳本沒有續跑點也沒有進度檔。
  */
 export async function notifyWalletUpgradeRequested(params: {
   userId: string;

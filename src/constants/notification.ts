@@ -42,8 +42,26 @@ export const NOTIFICATION_POLL_INTERVAL_MS = 60_000;
 // Info: (20260821 - Luphia) 登入摘要氣泡的自動收合時間
 export const NOTIFICATION_SUMMARY_TOAST_MS = 8_000;
 
-// Info: (20260821 - Luphia) 清單一次最多帶回幾則（事件型；待辦型天然有限）
+/**
+ * Info: (20260821 - Luphia) 清單一次最多帶回幾則（事件型）。
+ *
+ * Info: (20260825 - Julian) 這個上限**只套用在事件型**，而那是靠
+ * `listUnreadExcludingTypes` 的型別條件做到的，不是靠這行註解。
+ *
+ * 原本兩種型別共用一支不帶型別條件的查詢，於是「事件型」三個字只是願望：
+ * 一則舊的待辦排在 25 則新分析後面就被 `take` 切掉，
+ * 而摘要的計數沒有截斷、照樣算它（計畫書 D4）。
+ */
 export const NOTIFICATION_LIST_LIMIT = 20;
+
+/**
+ * Info: (20260825 - Julian) 待辦型的上限。
+ *
+ * 待辦型天然有限（一人最多一則錢包升級），但仍然給一個上限：
+ * 「天然有限」是今天的事實，不是資料庫層的約束，而下一個待辦型別
+ * 未必有同樣的性質。
+ */
+export const NOTIFICATION_TODO_LIST_LIMIT = 20;
 
 /**
  * Info: (20260821 - Luphia) dedupe key 的前綴（與訂單 idempotencyKey 同形狀）：
