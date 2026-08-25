@@ -105,3 +105,33 @@ export function splitRefund(
   const walletRefund = total < wallet ? total : wallet;
   return { walletRefund, quotaRefund: total - walletRefund };
 }
+
+/**
+ * Info: (20260825 - Luphia) 「這筆消費現在放不放行」——扣款端與試算端**共用同一個判準**
+ *（issue #6714）。
+ *
+ * 為什麼要抽出來：可中斷任務需要一支**唯讀**的「現在夠不夠」，好讓掃描行程
+ * 把「暫停中」的任務翻成「可以繼續」。而如果那支試算另寫一份判斷，
+ * 兩邊遲早分岔——分岔那天畫面會很有說服力地說「可以繼續了」，
+ * 使用者按下去卻又撞一次牆（檢查表 §1.10：驗收與產品要讀同一支實作）。
+ *
+ * 兩條判準對應 `spendCredits` 裡的兩個 402：
+ *
+ * - **固定價格**（`allowPartial = false`）：額度必須**足額**。沒有結算步驟就沒有人
+ *   補收差額，放行等於少收；而個人鏈上點數扣不動（合約沒有平台可呼叫的 burn），
+ *   因此它不參與這條判準。
+ * - **可封頂**（`allowPartial = true`）：只要還有一點可用量就放行，實耗於結算時追補。
+ *   這時鏈上點數算得進去——它在結算時扣得到。
+ */
+export function canAffordSpend(params: {
+  quotaAvailable: bigint;
+  // Info: (20260825 - Luphia) 可用的個人鏈上點數；不可扣款時呼叫端一律傳 0
+  chainCredits: bigint;
+  cost: bigint;
+  allowPartial: boolean;
+}): boolean {
+  const { quotaAvailable, chainCredits, cost, allowPartial } = params;
+  if (cost <= BigInt(0)) return false;
+  if (!allowPartial) return quotaAvailable >= cost;
+  return quotaAvailable + chainCredits > BigInt(0);
+}
