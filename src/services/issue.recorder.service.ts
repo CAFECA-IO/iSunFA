@@ -48,7 +48,31 @@ export class IssueRecorderService {
           (f) => f.startsWith("approved.") && f.endsWith(".md"),
         );
 
-        if (!approvedFile) continue;
+        /**
+         * Info: (20260825 - Julian) 沒有 `approved.*.md` 不代表沒事發生（計畫書 D18）。
+         *
+         * 上鏈提交被連續拒絕 3 次時，`mission.closer.service.ts` 會在
+         * MISSION_DIR 寫下 `giveup.md`，executor / commitor / closer 之後都跳過
+         * 這筆任務。而這裡只掃 `approved.*.md` —— 於是這筆任務對本服務**永遠不存在**。
+         *
+         * 後果不是「少一則通知」：本服務是全站**唯一**寫入訂單終態的地方
+         *（mission.* 與 issue.validator 都不碰 `ORDER_STATUS`），所以訂單會永遠卡在
+         * `EXECUTING`／`PAID`，`becameFailed` 不成立，使用者既收不到完成也收不到失敗。
+         * 他付了錢、送出分析，然後那件事安靜地消失。
+         */
+        if (!approvedFile) {
+          const gaveUp = await this.recordGiveUp({
+            taskDir,
+            folderName,
+            taskId,
+            missionDirBase: setupConfig.MISSION_DIR || "missions",
+          });
+          if (gaveUp) {
+            recordedTask = true;
+            break; // Info: (20260825 - Julian) 與成功路徑一致：一輪只處理一筆
+          }
+          continue;
+        }
 
         // Info: (20260420 - Luphia) Extract subIndex
         const subIndexStr = approvedFile.split(".")[1];
@@ -82,61 +106,21 @@ export class IssueRecorderService {
         let analysis = null;
 
         try {
-          // Info: (20260522 - Julian) Find analysis first by analysisId if present
-          if (localContextObj.analysisId) {
-            analysis = await analysisRepo.findById(localContextObj.analysisId);
-          }
-
-          // Info: (20260506 - Luphia) Read mission.json to get the exact orderId
-          // Info: (20260728 - Tzuhan) 優先序:analysis.orderId → context.json 的 orderId(發單時寫入,唯一可靠關聯)
-          // Info: (20260728 - Tzuhan) → mission.json(舊資料)→ mission contains 反查(最後手段,可能誤配重複 taskId 的舊單)
-          let orderId = "";
-          if (analysis) {
-            orderId = analysis.orderId;
-          } else if (typeof localContextObj.orderId === "string") {
-            orderId = localContextObj.orderId;
-          } else {
-            try {
-              const missionContent = await fs.readFile(
-                path.join(taskDir, "mission.json"),
-                "utf8",
-              );
-              const missionData = JSON.parse(missionContent);
-              if (missionData && missionData.orderId) {
-                orderId = missionData.orderId;
-              }
-            } catch {
-              console.warn(
-                `[MissionRecorder] Could not read mission.json for Task ID ${taskId}`,
-              );
-            }
-          }
-
-          let order = null;
-          if (orderId) {
-            order = await orderRepo.findFirst({
-              where: {
-                id: orderId,
-              },
-            });
-          } else {
-            // Info: (20260506 - Luphia) Fallback for older missions
-            // Info: (20260728 - Tzuhan) 防呆:taskId 為鏈上流水號,本地鏈重置後會重複 —
-            // Info: (20260728 - Tzuhan) 多筆匹配時取最新建立者並警告(舊行為 findFirst 無排序,曾誤配舊單)
-            const candidates = await orderRepo.findMany({
-              where: {
-                mission: { contains: `"${taskId}"` },
-              },
-              orderBy: { createdAt: "desc" },
-              take: 2,
-            });
-            if (candidates.length > 1) {
-              console.warn(
-                `[MissionRecorder] ⚠️ Task ID ${taskId} matches multiple orders (stale chain reset?); using the newest.`,
-              );
-            }
-            order = candidates[0] ?? null;
-          }
+          /**
+           * Info: (20260825 - Julian) 訂單與 analysis 的解析抽成共用方法。
+           *
+           * 放棄（`giveup.md`）那條路要用同一套優先序找訂單，而那套規則裡有
+           * 三處帶日期的註解記著踩過的坑（taskId 是鏈上流水號、本地鏈重置後會重複；
+           * 舊資料只有 mission.json）。抄第二份的代價不是重複，是**兩份會分岔** ——
+           * 而分岔的症狀是「有些任務失敗了卻找不到訂單」，沒有人會發現。
+           */
+          const resolved = await this.resolveAnalysisAndOrder(
+            taskDir,
+            taskId,
+            localContextObj,
+          );
+          analysis = resolved.analysis;
+          const order = resolved.order;
 
           if (!order) {
             if (
@@ -489,6 +473,207 @@ export class IssueRecorderService {
 
     if (!recordedTask) {
       console.log("[MissionRecorder] No approved tasks pending record update.");
+    }
+  }
+
+  /**
+   * Info: (20260825 - Julian) 依既有優先序把一筆任務對應回 `Analysis` 與 `Order`。
+   *
+   * 這段原本內嵌在成功路徑裡，`recordGiveUp` 出現後成為第二個消費者，
+   * 因此抽出來共用。優先序與各層 fallback 的理由保留原註解 —— 那是踩過的坑，
+   * 不是可以簡化的樣板。
+   */
+  private async resolveAnalysisAndOrder(
+    taskDir: string,
+    taskId: string,
+    localContextObj: Record<string, string>,
+  ): Promise<{
+    analysis: Awaited<ReturnType<typeof analysisRepo.findById>> | null;
+    order: Awaited<ReturnType<typeof orderRepo.findFirst>> | null;
+  }> {
+    let analysis = null;
+    // Info: (20260522 - Julian) Find analysis first by analysisId if present
+    if (localContextObj.analysisId) {
+      analysis = await analysisRepo.findById(localContextObj.analysisId);
+    }
+
+    // Info: (20260506 - Luphia) Read mission.json to get the exact orderId
+    // Info: (20260728 - Tzuhan) 優先序:analysis.orderId → context.json 的 orderId(發單時寫入,唯一可靠關聯)
+    // Info: (20260728 - Tzuhan) → mission.json(舊資料)→ mission contains 反查(最後手段,可能誤配重複 taskId 的舊單)
+    let orderId = "";
+    if (analysis) {
+      orderId = analysis.orderId;
+    } else if (typeof localContextObj.orderId === "string") {
+      orderId = localContextObj.orderId;
+    } else {
+      try {
+        const missionContent = await fs.readFile(
+          path.join(taskDir, "mission.json"),
+          "utf8",
+        );
+        const missionData = JSON.parse(missionContent);
+        if (missionData && missionData.orderId) {
+          orderId = missionData.orderId;
+        }
+      } catch {
+        console.warn(
+          `[MissionRecorder] Could not read mission.json for Task ID ${taskId}`,
+        );
+      }
+    }
+
+    let order = null;
+    if (orderId) {
+      order = await orderRepo.findFirst({
+        where: {
+          id: orderId,
+        },
+      });
+    } else {
+      // Info: (20260506 - Luphia) Fallback for older missions
+      // Info: (20260728 - Tzuhan) 防呆:taskId 為鏈上流水號,本地鏈重置後會重複 —
+      // Info: (20260728 - Tzuhan) 多筆匹配時取最新建立者並警告(舊行為 findFirst 無排序,曾誤配舊單)
+      const candidates = await orderRepo.findMany({
+        where: {
+          mission: { contains: `"${taskId}"` },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 2,
+      });
+      if (candidates.length > 1) {
+        console.warn(
+          `[MissionRecorder] ⚠️ Task ID ${taskId} matches multiple orders (stale chain reset?); using the newest.`,
+        );
+      }
+      order = candidates[0] ?? null;
+    }
+
+    return { analysis, order };
+  }
+
+  /**
+   * Info: (20260825 - Julian) 被放棄的任務也要走到終態（計畫書 D18）。
+   *
+   * `mission.closer.service.ts` 在上鏈提交被連續拒絕 3 次時寫下 `giveup.md`，
+   * 那是一個**終局**：executor 與 commitor 之後都不再碰這筆任務。
+   * 但它不會產生 `approved.*.md`，而本服務原本只認那個檔案。
+   *
+   * ## 為什麼修在這裡，而不是讓 closer 自己標記訂單
+   *
+   * 本服務目前是全站唯一寫入訂單終態的地方 —— `mission.planner` /
+   * `executor` / `commitor` / `closer` 與 `issue.validator` 都不碰 `ORDER_STATUS`。
+   * 那是個有價值的性質：要回答「訂單為什麼變成這個狀態」時只有一個地方要讀。
+   * 讓 closer 也寫一次會換來兩個寫入者，而它們對「什麼算終局」的判斷會慢慢分岔。
+   *
+   * ## 冪等
+   *
+   * 三層，由外而內：`recorded.flag` 擋重掃、`order.status` 已是 FAILED 就不重發、
+   * 而真正保證「一張訂單只發一則」的是 `analysis-failed:<orderId>` 這把
+   * dedupeKey（永久唯一鍵）。前兩層只是省掉注定撞鍵的往返。
+   *
+   * @returns 這一輪有沒有真的處理掉一筆（讓呼叫端決定要不要結束本 tick）
+   */
+  private async recordGiveUp(params: {
+    taskDir: string;
+    folderName: string;
+    taskId: string;
+    missionDirBase: string;
+  }): Promise<boolean> {
+    const giveupPath = path.join(
+      process.cwd(),
+      params.missionDirBase,
+      params.folderName,
+      "giveup.md",
+    );
+    try {
+      await fs.access(giveupPath);
+    } catch {
+      // Info: (20260825 - Julian) 沒放棄也沒核可：還在跑，不是本服務的事
+      return false;
+    }
+
+    const flagFile = path.join(params.taskDir, "recorded.flag");
+    try {
+      await fs.access(flagFile);
+      return false;
+    } catch {
+      /* Info: (20260825 - Julian) proceeding to record the give-up */
+    }
+
+    let localContextObj: Record<string, string> = {};
+    try {
+      const contextContent = await fs.readFile(
+        path.join(params.taskDir, "context.json"),
+        "utf8",
+      );
+      localContextObj = JSON.parse(contextContent);
+    } catch {
+      // Info: (20260825 - Julian) context.json 可能不存在（與成功路徑一致）
+    }
+
+    try {
+      const { order } = await this.resolveAnalysisAndOrder(
+        params.taskDir,
+        params.taskId,
+        localContextObj,
+      );
+
+      if (!order) {
+        /**
+         * Info: (20260825 - Julian) 找不到訂單就沒有收件人，通知不了。
+         *
+         * 仍然寫旗標：不寫的話每一輪都會重掃這筆、重查一次資料庫，
+         * 而答案永遠一樣。旗標的內容寫明原因，讓「為什麼這筆沒通知」
+         * 在檔案系統上留得下線索。
+         */
+        console.warn(
+          `[MissionRecorder] Given-up Task ID ${params.taskId} has no Order in database.`,
+        );
+        await fs.writeFile(
+          flagFile,
+          `Given up at ${new Date().toISOString()}, but no matching order was found.`,
+          "utf8",
+        );
+        return false;
+      }
+
+      if (order.status !== ORDER_STATUS.FAILED) {
+        await orderRepo.update({
+          where: { id: order.id },
+          data: { status: ORDER_STATUS.FAILED },
+        });
+        /**
+         * Info: (20260825 - Julian) 通知放在狀態寫入之後。
+         *
+         * 反過來的話，通知發出去而狀態寫入失敗，使用者會收到一則
+         * 「你的分析失敗了」而訂單在畫面上還顯示執行中 —— 兩個事實互相矛盾，
+         * 而他沒有辦法判斷哪一個是真的。
+         */
+        await notifyAnalysisFailed({
+          userId: order.userId,
+          orderId: order.id,
+        });
+        console.log(
+          `[MissionRecorder] Task ${params.taskId} was given up; Order ${order.id} marked FAILED and the user was notified.`,
+        );
+      }
+
+      await fs.writeFile(
+        flagFile,
+        `Recorded give-up at ${new Date().toISOString()}. Order ${order.id} set to FAILED.`,
+        "utf8",
+      );
+      return true;
+    } catch (error) {
+      /**
+       * Info: (20260825 - Julian) 這裡**不寫旗標**：寫了就等於把這筆任務
+       * 永久標成處理過，而它其實沒有。下一輪重試比靜默放棄好。
+       */
+      console.error(
+        `[MissionRecorder] Error recording give-up for Task ID ${params.taskId}:`,
+        error,
+      );
+      return false;
     }
   }
 }
