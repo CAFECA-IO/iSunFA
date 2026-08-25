@@ -6,7 +6,7 @@ import {
   scheduleFaithMemoryExpiry,
 } from "@/services/faith_memory.service";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
-import { resolveEffectivePlanId } from "@/services/spend.service";
+import { resolveEffectivePlanId } from "@/lib/subscription/plan_rules";
 import { TEAM_PLAN } from "@/constants/subscription_quota";
 
 /**

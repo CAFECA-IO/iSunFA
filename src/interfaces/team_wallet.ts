@@ -1,5 +1,6 @@
 import type {
   BillableFeatureCode,
+  BillingInterval,
   QuotaExceededOption,
   QuotaWindow,
   SpendSource,
@@ -49,6 +50,35 @@ export interface ITeamSubscriptionView {
   currentPeriodStart: number;
   currentPeriodEnd: number;
   autoRenew: boolean;
+  /**
+   * Info: (20260824 - Luphia) 本期的計費週期（月／年）。回傳它有兩個用途：
+   * 畫面要說得出「月繳／年繳」，而**呼叫端要帶得回真值**——團隊錢包頁的
+   * 「維持目前方案」曾經寫死 `"month"`（review #6687 四輪低-1）：今天無害
+   * （那條分支不讀這個欄位），但那是一個在請求裡說謊的參數，
+   * 而這個欄位過去曾經參與判斷。
+   */
+  billingInterval: BillingInterval;
+  /**
+   * Info: (20260820 - Luphia) 已排程、於當期屆滿時生效的方案（降級）；null＝沒有排程。
+   *
+   * 一定要回傳：降級不期中生效（退款政策 §2.1），因此畫面上的 `planId` 仍是原方案，
+   * 而使用者需要看得出「我按過降級了」。少了這一欄，唯一的回饋是按下去之後
+   * 什麼都沒變——於是他會再按一次，而那一次會被當成升級（建單、收整期的錢）。
+   */
+  pendingPlanId: TeamPlanId | null;
+  // Info: (20260820 - Luphia) 排程生效時點（epoch 秒）＝當期屆滿；沒有排程時為 null
+  pendingEffectiveAt: number | null;
+  /**
+   * Info: (20260820 - Luphia) 鏈上會員卡是否還在等同步（self-review：兩個入口可能不一致）。
+   *
+   * 這支端點的 `planId` 是**權益**答案（純 DB、fail-closed），而 `/auth/me` 的
+   * `plan` 是**顯示**答案（鏈上為準）。兩者在卡片同步完成前可以不同——徽章與這個
+   * 面板同時顯示不同方案，而使用者無從得知為什麼。
+   *
+   * 回這一個布林（不做第二次鏈上讀取：面板不值得多一趟 RPC）讓畫面說得出
+   * 「鏈上憑證同步中」，兩處的差異因此變成有解釋的，而不是矛盾。
+   */
+  cardSyncPending: boolean;
   // Info: (20260817 - Luphia) 觀看者本人的額度（一人一池）
   quota: IQuotaStatus;
   /**

@@ -44,6 +44,27 @@
  */
 export type BaselineTier = "must_match" | "threshold" | "record_only";
 
+/**
+ * Info: (20260825 - Emily) B3 的缺席檢查(PR review 阻擋項,2026-08-25)。
+ *
+ * 基準線比對原本只走**本趟 snapshot** 的鍵 —— 基準線裡有、本趟沒產出的鍵
+ * 從頭到尾不會被看一眼,「判準沒跑」被回報成「判準通過」。
+ * 複現形狀:基準線含 --source 三鍵,本趟沒給 --source → changed=[] → B3 綠,
+ * 而三條 must_match 一次都沒執行。同型的鍵共八個(--log 五個 + --source 三個)。
+ *
+ * 只管 must_match 層:record_only/threshold 本來就允許缺席
+ * (數量會變的層缺席不是缺陷;B4 閾值層另有自己的缺席宣告)。
+ * 抽成純函式的理由與本檔開頭同一句:判準要在輸入空間裡,得有人能 import 它來測。
+ */
+export const findAbsentMustMatchKeys = (
+  baseline: Record<string, unknown>,
+  snapshot: Record<string, unknown>,
+): string[] =>
+  Object.keys(baseline)
+    .filter((key) => !(key in snapshot))
+    .filter((key) => classifyKey(key) === "must_match")
+    .sort();
+
 export const BASELINE_TIERS: ReadonlyArray<{
   readonly tier: BaselineTier;
   readonly keys?: readonly string[];
@@ -83,6 +104,28 @@ export const BASELINE_TIERS: ReadonlyArray<{
        */
       "紙上宣告別的揭露框架",
       /**
+       * Info: (20260821 - Emily) 08-21 把「全域禁止揭露框架」拆成四條(見
+       * `uat_carbon_report.ts` 那一段)。三條新的都是 must_match:
+       *
+       * - `紙上出現 IFRS 卻沒宣告架構對齊`：沒宣告就不該出現,不是統計量
+       * - `宣告架構對齊卻沒有免責句`：兩句是一組,只印前者會被讀成合規
+       * - `紙上有合規宣告`：主體合規的斷言,任何情況都是紅線
+       */
+      "紙上出現 IFRS 卻沒宣告架構對齊",
+      "宣告架構對齊卻沒有免責句",
+      "紙上有合規宣告",
+      /**
+       * Info: (20260821 - Emily) 兩條對帳判準(12 個丟棄類 log 事件的補課,前兩個):
+       *
+       * - `圖表被拒卻紙上無痕`:每一張被拒的圖,紙上要有一個痕跡。
+       *   ⚠ 對 run D 的既存產出是**紅的** —— 那是 open/48 的實測證據,
+       *   修的是產品(被拒時把說明印上紙),不是把判準調綠。
+       * - `段落被拒且原文有內容`:一段真實原文無聲消失。空段被拒不算
+       *   (那是模型輸出變異,record_only 那個鍵記著)。
+       */
+      "圖表被拒卻紙上無痕",
+      "段落被拒且原文有內容",
+      /**
        * Info: (20260819 - Emily) 排放流向圖(桑基圖)。「圖在」或「說明它為什麼不在」
        * 二者之一即可,兩者都沒有才是缺陷 —— 與 `open/48` 同一個原則:失敗要留下痕跡。
        * 列 must_match 的理由:圖不見了不是統計量,是有或沒有。
@@ -114,6 +157,20 @@ export const BASELINE_TIERS: ReadonlyArray<{
       "資料不足佔位符",
       // Info: (20260818 - Emily) open/48 的驗收:退化的次數可以變,整張消失不可以
       "圖表未繪製_節點太多且整張消失",
+      /**
+       * Info: (20260824 - Emily) 原檔表號覆蓋率(#6710)。與「未出現的節」同一層:
+       * 齊或不齊,不是統計量。「還是有缺漏的章節/表格」到 08-24 為止靠人眼翻頁,
+       * 這三條把它機器化(量尺 `scanTableNumbers`,護欄與 20 處版本號誤報史在檔頭):
+       *
+       * - `原檔表號數`:同一份原檔兩趟掃出不同張數 = 量尺非決定性,本身就是缺陷
+       * - `原檔表號_未見於紙面`:原檔有、成品隻字未提(照錄或「未取得」說明皆算提到 ——
+       *   與桑基圖判準同原則:失敗要留痕,靜默才是缺陷)
+       * - `紙面表號_原檔沒有`:成品提到原檔沒有的表號,與「引用但不存在的表」同族,
+       *   對照物是原檔不是實體表
+       */
+      "原檔表號數",
+      "原檔表號_未見於紙面",
+      "紙面表號_原檔沒有",
     ],
     why: "非零(或不齊)就是缺陷 —— 兩趟必須完全相同",
   },
@@ -173,6 +230,24 @@ export const BASELINE_TIERS: ReadonlyArray<{
        */
       "紙上範疇字數",
       "紙上範疇分類標籤",
+      /**
+       * Info: (20260821 - Emily) 這份報告有沒有宣告架構對齊、有沒有印免責句。
+       * record_only:它們是**判準的分流依據**而不是產品行為的好壞 ——
+       * 承重的是上面那三條 must_match。兩個並列記錄才看得出判準走了哪一條分支。
+       */
+      "紙上宣告架構對齊",
+      "紙上有免責句",
+      /**
+       * Info: (20260821 - Emily) 對帳判準的原料與四個「丟東西」計數器。
+       * 承重的是上面那兩條 must_match;這些鍵讓「為什麼紅/綠」查得出來。
+       * 後四個在三份既有 log 實測皆 0 —— 它們是地雷偵測器,非 0 時再判嚴重性。
+       */
+      "紙上圖表失敗痕跡",
+      "log_段落被拒",
+      "log_表格整批被拒",
+      "log_活動數據被拒",
+      "log_llm輸出不合schema",
+      "log_私有區字元無對照",
       "log_補欄",
       "log_tounicode_decision",
       "log_tounicode_replaced",

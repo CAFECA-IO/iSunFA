@@ -4,7 +4,17 @@ export const hrManagement = {
   notification_aria: "Notifications",
   user_menu_aria: "User menu",
   open_menu_aria: "Open menu",
+  // Info: (20260818 - Julian) 側邊選單的分組標題。不分組的項目（儀表板、系統設定）沒有對應鍵
+  nav_group: {
+    people: "People",
+    attendance: "Attendance",
+    leave: "Leave & overtime",
+  },
   nav: {
+    leave: "My leave",
+    leave_approval: "Approvals",
+    overtime: "My overtime",
+    overtime_approval: "Overtime approvals",
     dashboard: "Dashboard",
     organization: "Organization",
     employee: "Employees",
@@ -598,6 +608,14 @@ export const hrManagement = {
     error_rate_limited:
       "Too many requests in a short time. Please wait a moment and try again.",
     error_supervisor_only: "Only a department manager can perform this action.",
+    error_hr_function_required:
+      "This action requires the HR administrator function. Ask HR to grant it, or ask someone who already has it to do this for you.",
+    error_no_permission_to_view:
+      "You do not have permission to view this person's record.",
+    error_no_employee_record:
+      "Your account is not linked to an employee in this account book yet. Ask HR to add you.",
+    error_range_too_large:
+      "That date range is too long. Please pick a shorter one and try again.",
   },
   attendance_result: {
     title: "Attendance overview and exceptions",
@@ -644,11 +662,14 @@ export const hrManagement = {
     day_type_rest_day: "Rest day",
     day_type_holiday: "Public holiday",
     day_type_leave: "Leave",
+    day_type_suspended: "Suspended",
     day_type_short_work: "W",
     day_type_short_regular_off: "S",
     day_type_short_rest_day: "R",
     day_type_short_holiday: "P",
     day_type_short_leave: "L",
+    // Info: (20260817 - Julian) Not "S" — that is already regular off. X reads as "no work today"
+    day_type_short_suspended: "X",
     phase_upcoming: "Not started",
     phase_in_progress: "In progress",
     phase_concluded: "Concluded",
@@ -668,10 +689,11 @@ export const hrManagement = {
   attendance_presence: {
     stat_leave: "On leave today",
     stat_leave_hint: "Approved leave; not counted as expected-absent",
+    leave_on_leave: "On leave",
     leave_title: "On leave today ({{count}})",
     leave_empty: "Nobody is on leave today",
     leave_hint:
-      "When short-staffed, a manager can ask someone on this list to cut their leave short. Whether to accept is the employee's decision.",
+      "When short-staffed, a manager can ask someone on this list to cut their leave short. Whether to accept is the employee\u2019s decision.\nLeave types are deliberately hidden here \u2014 sick and menstrual leave would disclose health information.",
     leave_recall_action: "Ask to return",
     leave_recall_pending: "Awaiting reply",
     recall_title: "Ask an employee to cut their leave short",
@@ -774,14 +796,307 @@ export const hrManagement = {
       "Passkeys are not available here. They only work over a secure connection (HTTPS or localhost) — open this page at the proper address.",
     hint: 'The Google account must be a company address that already has an employee record. If you see "no employee record is linked" after signing in, ask HR to check the address.',
   },
-  // Info: (20260814 - Julian) Leave type labels, keyed by `LEAVE_TYPE_I18N_KEY`
+  // Info: (20260817 - Julian) Built-in leave policy labels, keyed by `LEAVE_POLICY_I18N_KEY`. Tenant-defined policies fall back to `LeavePolicy.name`
   leave: {
-    type_annual: "Annual leave",
-    type_personal: "Personal leave",
-    type_sick: "Sick leave",
-    type_official: "Official leave",
-    type_marriage: "Marriage leave",
-    type_bereavement: "Bereavement leave",
-    type_other: "Other",
+    field_start_at: "From (date and time)",
+    field_end_at: "To (date and time)",
+    span_selected:
+      "{{hours}} hours selected (before breaks and non-working days; see the preview below for what is actually deducted)",
+    detail_title: "Request detail",
+    detail_reason: "Reason",
+    detail_reason_undecryptable:
+      "The reason could not be decrypted (key problem). Please contact an administrator.",
+    detail_reason_audited:
+      "Stored encrypted; every view by someone other than the requester is logged",
+    detail_days: "Days",
+    detail_day_recalled: "Recalled",
+    detail_chain: "Approval chain",
+    detail_concurrency_warned:
+      "Others were already on leave during this period when the request was submitted; the requester was warned",
+    segment_custom: "Custom hours",
+    unit_hint:
+      "Minimum unit {{minutes}} min; anything shorter counts as one full unit.",
+    preview_rounded:
+      "You selected {{raw}} min; it counts as {{minutes}} min after rounding to the minimum unit.",
+    action_detail: "Detail",
+    action_back: "Back",
+    title: "My leave",
+    approval_page_title: "Approvals",
+    loading: "Loading…",
+    unit_day: "d",
+    unit_minute: "min",
+
+    balance_title: "My balances",
+    balance_empty:
+      "No leave balance yet. Balances are granted in batches from your hire date and seniority; contact HR if this stays empty.",
+    balance_unlimited: "No quota limit",
+    balance_next_expiry: "Next expiry: {{date}}",
+    balance_never_reconciled: "Never reconciled against the ledger",
+
+    form_title: "New request",
+    field_policy: "Leave type",
+    policy_unavailable_suffix: " (unavailable for now)",
+    field_reason: "Reason",
+    field_reason_placeholder: "e.g. follow-up appointment, family matter",
+    field_reason_encrypted:
+      "Stored encrypted; visible only to approvers on the detail page",
+    segment_full: "Full day",
+    segment_morning: "Morning",
+    segment_afternoon: "Afternoon",
+    action_submit: "Submit request",
+
+    preview_total: "{{days}} day(s) total ({{minutes}} min)",
+    preview_after: "{{minutes}} min remaining after this",
+    preview_shortfall: "Short by {{minutes}} min; cannot submit",
+    preview_chain: "{{count}} approval step(s)",
+    preview_chain_unresolved:
+      "The approval chain cannot be resolved ({{reason}}). Ask HR to check the approval rules and org settings.",
+    preview_concurrency_warn:
+      "{{count}} people are already on leave on {{date}} (suggested limit {{limit}}). You can still submit; your manager may ask to reschedule.",
+    preview_concurrency_blocked:
+      "{{count}} people are already on leave on {{date}}, over the limit of {{limit}}. Cannot submit.",
+
+    my_requests_title: "My requests",
+    my_requests_empty: "No requests submitted yet",
+    list_step_progress: "Step {{current}}/{{total}}, waiting on {{approver}}",
+    list_step_self: "You are step {{current}}/{{total}}",
+    status_pending: "In review",
+    status_approved: "Approved",
+    status_rejected: "Rejected",
+    status_withdrawn: "Withdrawn",
+    action_withdraw: "Withdraw",
+
+    approval_title: "Waiting on you ({{count}})",
+    approval_empty: "Nothing is waiting for your approval",
+    action_approve: "Approve",
+    action_reject: "Reject",
+    action_reject_confirm: "Confirm rejection",
+    field_reject_reason: "Reason for rejection (required)",
+    field_reject_placeholder: "The requester will see this text",
+
+    node_direct: "Direct manager",
+    node_department: "Department manager",
+    node_hr: "HR",
+    node_specific: "Named approver",
+    chain_empty: "No approval chain",
+    chain_escalated_same_kind:
+      "Auto-reassigned: you are the {{kind}} for this step, so another one was chosen.",
+    chain_escalated_higher:
+      "Auto-escalated: you are the {{from}} for this step, so it went up to the {{to}}.",
+    unresolved_no_matching_rule:
+      "no approval rule covers a request of this length",
+    unresolved_empty_rule_steps:
+      "the matching approval rule has no approval steps",
+    unresolved_no_direct_manager: "you have no direct manager on record",
+    unresolved_no_department_manager:
+      "no department above you has a manager on record",
+    unresolved_no_hr: "this account book has no HR administrator",
+    unresolved_no_other_hr:
+      "you are the only HR administrator, and no one else can approve this",
+    unresolved_specific_employee_missing:
+      "the named approver has left or is not in this account book",
+    unresolved_malformed_rule_threshold:
+      "an approval rule has a day threshold that cannot be read as a plain decimal",
+
+    error_load: "Failed to load",
+    error_preview: "Preview failed",
+    error_submit: "Submit failed",
+    error_withdraw: "Withdraw failed",
+    error_decide: "Decision failed",
+    /**
+     * Info: (20260818 - Julian) Per-code copy (the lookup table lives in
+     * `leave_error_message.ts`). Each line must answer "what do I do next" —
+     * collapsing them into one "operation failed" throws the diagnosis away.
+     */
+    error_insufficient_balance:
+      "Not enough balance. Shorten the request or pick another leave type.",
+    error_merge_not_implemented:
+      "This leave type also draws down another leave type, and that rule is not available yet, so requests cannot be submitted. Please ask HR — using a different leave type is the workaround for now.",
+    error_unit_not_aligned:
+      "The duration does not match this leave type's minimum unit. Adjust the segment.",
+    error_non_working_day:
+      "The selected period contains no working time (not a working day, or outside shift hours), so no leave is needed and nothing would be deducted.",
+    error_chain_unresolved:
+      "The approval chain could not be resolved. Ask HR to check your manager and the approval rules.",
+    error_day_already_active: "An active leave already exists on that date.",
+    error_concurrency_exceeded:
+      "Too many people in your department are already on leave then. Agree on a new date with your manager.",
+    error_concurrency_rule_invalid:
+      "A concurrency rule in this account book does not state an enforceable limit, so leave cannot be checked against it. Ask HR to correct the rule.",
+    error_policy_not_found:
+      "That leave type no longer exists or has been disabled. Pick another one.",
+    error_self_approval: "You may not approve your own request.",
+    error_not_reviewer:
+      "You are not the current approver for this request; the previous step has to finish first.",
+    error_already_reviewed:
+      "This step has already been decided. Reload to see the current status.",
+    error_balance_race:
+      "The balance was just consumed by another request. Reload and try again.",
+    error_request_scope:
+      "This request is not yours and you are not on its approval chain.",
+    error_request_not_found: "This leave request no longer exists.",
+    policy_annual: "Annual leave",
+    policy_personal: "Personal leave",
+    policy_sick: "Sick leave",
+    policy_occupational_injury: "Occupational injury leave",
+    policy_official: "Official leave",
+    policy_marriage: "Marriage leave",
+    policy_bereavement: "Bereavement leave",
+    policy_menstrual: "Menstrual leave",
+    policy_maternity: "Maternity leave",
+    policy_prenatal_checkup: "Prenatal check-up leave",
+    policy_paternity: "Paternity and check-up accompaniment leave",
+    policy_family_care: "Family care leave",
+    policy_compensatory: "Compensatory leave",
+  },
+  // Info: (20260818 - Julian) Overtime module (L24-L30). Tier labels are keyed by `OvertimePremiumTier`
+  overtime: {
+    field_start_at: "From (date and time)",
+    field_end_at: "To (date and time)",
+    span_selected:
+      "{{hours}} hours requested (recognition follows the punch record)",
+    title: "My overtime",
+    approval_page_title: "Overtime approvals",
+    loading: "Loading…",
+    unit_minute: "min",
+    unit_hour: "h",
+    summary_title: "This month",
+    summary_monthly: "Recognised this month",
+    summary_quarterly: "Rolling three months",
+    summary_limit: "Limit {{hours}} h",
+    summary_remaining: "{{hours}} h left",
+    summary_over_limit: "Over the limit",
+    summary_quarterly_none:
+      "No three-month cap applies without an agreed extension",
+    summary_punch_backed: "Backed by punch records",
+    summary_declared: "Self-declared",
+    summary_evidence_hint:
+      "Split on purpose: an inspection asks how much overtime has no attendance record behind it.",
+    summary_by_tier: "By premium tier",
+    summary_empty: "No approved overtime this month",
+    tier_weekday_first_2h: "Weekday, first 2 h",
+    tier_weekday_beyond_2h: "Weekday, beyond 2 h",
+    tier_rest_day_first_2h: "Rest day, first 2 h",
+    tier_rest_day_beyond_2h: "Rest day, beyond 2 h",
+    tier_holiday_double: "Holiday (double pay)",
+    tier_emergency_double: "Emergency (double pay)",
+    form_title: "New overtime request",
+    field_filing: "Filing",
+    filing_advance: "In advance",
+    filing_post_hoc: "After the fact",
+    filing_hint:
+      "An advance filing must be submitted before that day's shift window opens.",
+    field_compensation: "Compensation",
+    compensation_payment: "Overtime pay",
+    compensation_leave: "Compensatory leave",
+    compensation_hint:
+      "Compensatory leave converts hour for hour; the premium multiplier applies at cash-out, not at conversion.",
+    field_reason: "Reason",
+    field_reason_placeholder: "e.g. concrete pour had to finish the same day",
+    field_emergency: "Emergency (Article 32 IV, filing made)",
+    field_emergency_hint:
+      "HR administrators only. Ticking this requires the filing record and the moment it was made: it moves the whole period to double pay. It does not apply to statutory rest days, which need the separate Article 40 filing.",
+    action_declare_emergency: "Record emergency",
+    error_declare_emergency:
+      "Could not record the emergency. Check that you hold the HR administrator function and that this request is still pending.",
+    field_emergency_report: "Filing record (URL)",
+    field_emergency_reported_at: "Filed at",
+    field_emergency_moved_hint:
+      "An Article 32 IV emergency is determined by an HR administrator at approval time and must carry the filing record, so it is not on this form.",
+    action_submit: "Submit",
+    my_requests_title: "My requests",
+    my_requests_empty: "No overtime requests yet",
+    list_requested: "Requested {{minutes}} min",
+    list_recognized: "Recognised {{minutes}} min",
+    list_declared_badge: "Self-declared",
+    list_emergency_badge: "Emergency",
+    status_pending: "In review",
+    status_approved: "Approved",
+    status_rejected: "Rejected",
+    status_withdrawn: "Withdrawn",
+    approval_title: "Waiting on you ({{count}})",
+    approval_empty: "Nothing is waiting for your approval",
+    field_approved_minutes: "Approved minutes",
+    field_approved_minutes_hint:
+      "May be less than requested. What gets recognised is min(approved, actual time on site).",
+    action_approve: "Approve",
+    action_reject: "Reject",
+    decided_recognized: "Approved — {{minutes}} min recognised",
+    action_withdraw: "Withdraw",
+    action_withdraw_hint:
+      'Withdrawing does not erase the punch record — the hours reappear under "unapproved overtime" until another request covers them.',
+    field_withdraw_reason: "Reason for withdrawing",
+    field_withdraw_reason_placeholder:
+      "e.g. filed on the wrong date; the work was covered by another request",
+    error_withdraw: "Withdrawal failed",
+    error_not_applicant:
+      "Only the person who filed this request may withdraw it. A manager should reject it instead, which records who decided.",
+    error_withdraw_reason_required:
+      "Withdrawing an after-the-fact request requires a reason — the record has to show whether it was voluntary.",
+    action_write_report: "Fill in overtime report",
+    report_disabled_hint:
+      "Not available yet — the statutory basis and form fields are still pending legal review (plan §8.3).",
+    decided_unapproved:
+      "{{minutes}} min beyond what you approved is listed under unapproved time",
+    decided_granted: "{{count}} compensatory leave batch(es) granted",
+    unapproved_title: "Unapproved time",
+    unapproved_empty: "Nothing outside approved overtime",
+    unapproved_team_empty:
+      "No one in your team has attendance outside an approved overtime window in this range.",
+    unapproved_hint:
+      "Time on site that no request covers. It might be a missing filing, or just someone staying a while — you decide.",
+    unapproved_range_days: "Last {{days}} days",
+    exception_unapproved_overtime: "On site, not approved",
+    exception_missing_punch_evidence: "Approved without a punch record",
+    error_load: "Failed to load",
+    error_submit: "Submit failed",
+    error_decide: "Decision failed",
+    error_exceeds_daily:
+      "Normal hours plus overtime would exceed the statutory 12 hours in one day. Shorten it or move part of it.",
+    error_exceeds_monthly:
+      "This would exceed the monthly overtime limit. Check the summary for how much is left.",
+    error_exceeds_quarterly:
+      "This would exceed the three-month overtime limit.",
+    error_filing_mismatch:
+      "The filing type does not match when this was submitted. An advance filing has to be sent before the shift starts.",
+    error_regular_off:
+      "Working on a statutory rest day needs the Article 40 procedure. Ask HR to handle it.",
+    error_already_reviewed:
+      "This request has already been decided. Reload to see the result.",
+    error_reclassified_midway:
+      "HR declared this an emergency (Article 32 IV) while you were approving it, so the whole span is now paid double. Reload, check the amount, then approve.",
+    error_emergency_revoked_midway:
+      "HR revoked the Article 32 IV emergency determination while you were approving it, so the whole span falls back to the ordinary overtime premium. Reload, check the amount, then approve.",
+    error_day_length_unknown:
+      "We cannot work out how long this employee's working day is, so overtime cannot be converted to compensatory leave or cashed out. Ask HR to schedule a shift for them.",
+    error_overlaps_existing:
+      "Another overtime request already covers part of this time range on that day. Adjust the times, or withdraw the other request first.",
+    error_earlier_than_approved:
+      "An overtime request starting later that day has already been approved, and its premium rate is already fixed. Filing an earlier span now would pay both at the lower rate. Withdraw the later request and submit them together.",
+    error_not_approved:
+      "This overtime request is not approved right now, so there is no approval to revoke. Reload the page to see its current status.",
+    error_approval_not_reversible:
+      "The compensatory leave from this approval has already been used, expired or cashed out, or payroll has already settled its payment. The approval can no longer be revoked — ask HR to correct the balance with a manual adjustment instead.",
+    error_agreement_record_required:
+      "Extending the monthly cap to 54 hours requires a recorded agreement (Article 32 III): a link to the minutes and the date it was made.",
+    error_emergency_already_declared:
+      "This request already carries an Article 32 IV determination. Revoke the existing filing before recording a new one.",
+    error_emergency_not_declared:
+      "This request carries no Article 32 IV determination to revoke.",
+    error_reported_at_out_of_range:
+      "The filing time cannot be in the future, nor earlier than the day the overtime took place. Check the time on the filing record.",
+    error_comp_expiry_unset:
+      "The company has not agreed a compensatory-leave period yet, so overtime cannot be converted. Pick overtime pay, or ask HR to set it.",
+    error_day_not_scheduled:
+      "That date has no shift scheduled, so no statutory premium applies. Ask HR to add it to the roster.",
+    error_premium_undefined:
+      "The premium for that kind of day is not settled yet (suspended or leave days). Ask HR.",
+    error_self_decide:
+      "You cannot approve or file a determination on your own overtime request. Ask another HR administrator to handle it.",
+    error_not_reviewer:
+      "You are not this request's reviewer — it has to be decided by a manager who supervises the applicant.",
+    error_comp_policy_missing:
+      "No compensatory-leave type is set up, so overtime cannot be converted. Pick overtime pay, or ask HR to create it.",
+    error_not_found: "This overtime request no longer exists.",
   },
 };

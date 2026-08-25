@@ -2,6 +2,19 @@
 
 import { AlertCircle, Users, Wallet } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import { PERIOD_NOTE, type PeriodNote } from "@/lib/purchase/purchase_target";
+
+/**
+ * Info: (20260821 - Luphia) 期間說明的 i18n 鍵對照。用查表而不是多層三元式：
+ * 新增一種期間行為時，漏掉對應文案會是 TypeScript 錯誤（`Record` 必須齊全），
+ * 而三元式漏掉只會靜靜落到最後那個 fallback——顯示一句與行為不符的承諾。
+ */
+const PERIOD_NOTE_I18N_KEY: Record<PeriodNote, string> = {
+  [PERIOD_NOTE.EXTENSION]: "purchase_target.extension_note",
+  [PERIOD_NOTE.EXTENSION_TOO_EARLY]: "purchase_target.extension_too_early_note",
+  [PERIOD_NOTE.UPGRADE_CREDIT]: "purchase_target.upgrade_credit_note",
+  [PERIOD_NOTE.DOWNGRADE_SCHEDULE]: "purchase_target.downgrade_schedule_note",
+};
 
 /**
  * Info: (20260814 - Luphia) 訂閱 / 購點的歸屬對象選擇（設計書 §6.1、§7）。
@@ -48,6 +61,26 @@ interface IPurchaseTargetSelectorProps {
   seatCount?: number | null;
   unitPrice?: number | null;
   seatAmount?: number | null;
+  /**
+   * Info: (20260820 - Luphia) 當期期末（epoch 秒）；有值代表這次購買是**展延**
+   *（產品決定 20260820：不設預付上限，但要明確告知）。
+   *
+   * null＝當期已結束或沒有訂閱，那不是展延，不顯示這段揭露。
+   */
+  extensionPeriodEndSec?: number | null;
+  /**
+   * Info: (20260821 - Luphia) 要顯示哪一句期間說明（`resolvePeriodNote` 的結果）。
+   * 由 hook 在 effect 裡算好傳進來——render 期不能呼叫 `Date.now()`。
+   */
+  periodNote?: PeriodNote | null;
+  /**
+   * Info: (20260820 - Luphia) 排程中的降級（方案代號與生效時點）。
+   *
+   * 購買會取代它——升級是在履行時清掉，同方案的延長是在建單前取消。
+   * 兩種都不會有任何畫面提到那個排程消失了，而使用者是刻意排定它的。
+   */
+  pendingPlanId?: string | null;
+  pendingEffectiveAt?: number | null;
   disabled?: boolean;
 }
 
@@ -63,6 +96,10 @@ export default function PurchaseTargetSelector({
   seatCount = null,
   unitPrice = null,
   seatAmount = null,
+  extensionPeriodEndSec = null,
+  periodNote = null,
+  pendingPlanId = null,
+  pendingEffectiveAt = null,
   disabled = false,
 }: IPurchaseTargetSelectorProps) {
   const { t } = useTranslation();
@@ -188,6 +225,75 @@ export default function PurchaseTargetSelector({
               {t("purchase_target.seat_note")}
             </p>
           </div>
+        )}
+
+      {/**
+       * Info: (20260820 - Luphia) 展延揭露：付款前就要說清楚「從哪一天起算」。
+       * 履行是自當期屆滿日累加（`applyTeamSubscriptionInTx`），而使用者的預設
+       * 想像是「從今天起算 30 天」——兩者差幾天，不說就只能事後自己推。
+       *
+       * Info: (20260821 - Luphia) 四句話走四條路，規則在 `resolvePeriodNote`：
+       *
+       * - **升級**：舊期剩餘按已付價值折抵成新方案天數（使用者最擔心的是
+       *   「我剩下的天數會不會消失」，這句要先講）。
+       * - **降級**：於當期屆滿生效、當期權益不變、**本次不收費**。
+       *   這條原本沿用升級那句——對一個不收費的排程操作說「立即生效並折抵」，
+       *   三個事實全錯（三輪 self-review 修的就是它）。
+       * - **同方案、剩餘 > 30 天**：後端會拒絕（`TW_SUBSCRIPTION_EXTENSION_TOO_EARLY`），
+       *   付款前就該講，而不是讓人填完卡號才看到錯誤。
+       * - **同方案、窗內**：新期間自當期屆滿日累加。
+       */}
+      {target === PURCHASE_TARGET.TEAM &&
+        extensionPeriodEndSec !== null &&
+        selectedTeamId && (
+          <p className="rounded-lg bg-blue-50 p-3 text-xs text-blue-800">
+            {t(PERIOD_NOTE_I18N_KEY[periodNote ?? PERIOD_NOTE.EXTENSION], {
+              team:
+                teams.find((team) => team.id === selectedTeamId)?.name ?? "",
+              date: new Date(extensionPeriodEndSec * 1000).toLocaleDateString(),
+            })}
+          </p>
+        )}
+
+      {/**
+       * Info: (20260820 - Luphia) 排程中的降級：付款前就要說「這筆付款會取消它」。
+       * 方案名沿用方案頁的 i18n 鍵（`pricing.plans.*.name`），兩處必須是同一個詞。
+       *
+       * Info: (20260821 - Luphia) 但**這次動作本身就是降級時不能說這句**
+       *（四輪 self-review）：那條路徑不建單、不收費，而排程是被新的排程
+       * **取代**，不是「購買完成後取消」。兩句同時出現會互相矛盾——
+       * 藍色那句說「不會收取費用」，琥珀色那句說「本次購買完成後」。
+       * 上方的降級說明已經把結果講完，這句在那個情境下只會誤導。
+       */}
+      {target === PURCHASE_TARGET.TEAM &&
+        periodNote !== PERIOD_NOTE.DOWNGRADE_SCHEDULE &&
+        pendingEffectiveAt !== null &&
+        selectedTeamId && (
+          <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
+            {pendingPlanId !== null
+              ? t("purchase_target.pending_downgrade_note", {
+                  team:
+                    teams.find((team) => team.id === selectedTeamId)?.name ??
+                    "",
+                  date: new Date(
+                    pendingEffectiveAt * 1000,
+                  ).toLocaleDateString(),
+                  plan: t(`pricing.plans.${pendingPlanId}.name`),
+                })
+              : /**
+                 * Info: (20260824 - Luphia) 已關閉自動續訂（期末轉免費版）：
+                 * 履行一律寫 `autoRenew: true`，也就是這筆購買會把使用者
+                 * 關掉的那件事重新打開——付款前就要說（review #6687 四輪中-1）。
+                 */
+                t("purchase_target.resume_autorenew_note", {
+                  team:
+                    teams.find((team) => team.id === selectedTeamId)?.name ??
+                    "",
+                  date: new Date(
+                    pendingEffectiveAt * 1000,
+                  ).toLocaleDateString(),
+                })}
+          </p>
         )}
 
       {target === PURCHASE_TARGET.PERSONAL && (

@@ -1,10 +1,16 @@
 import { useTranslation } from "@/i18n/i18n_context";
 import { Check, HelpCircle } from "lucide-react";
-import { SUBSCRIPTION_PLAN_PRICE } from "@/constants/price";
 
 // Info: (20260102 - Luphia) Renamed to IPricingProps for lint compliance
 interface IPricingProps {
   planKey: "free" | "team" | "business";
+  /**
+   * Info: (20260819 - Luphia) 價格由呼叫端自方案目錄傳入（集中化 20260819）。
+   * 卡片原本自己 import `SUBSCRIPTION_PLAN_PRICE`——那是「有哪些方案、多少錢」
+   * 的第三份讀法，而它與 server 實際收的金額之間沒有任何東西保證一致。
+   */
+  monthlyPrice: number | null;
+  yearlyPrice: number | null;
   billingInterval: "month" | "year";
   features: (string | { text: string; tooltip?: string })[];
   popular?: boolean;
@@ -14,6 +20,8 @@ interface IPricingProps {
 
 export default function PricingCard({
   planKey,
+  monthlyPrice,
+  yearlyPrice,
   billingInterval,
   features,
   popular = false,
@@ -21,15 +29,35 @@ export default function PricingCard({
   onSelect = undefined,
 }: IPricingProps) {
   const { t } = useTranslation();
+  /**
+   * Info: (20260820 - Luphia) 目前方案**只標記、不停用**（self-review A-1 / A-2）。
+   *
+   * 原本 `disabled={isCurrentPlan}`，於是同一個方案再也按不下去——而伺服器端對
+   * 這兩件事都是支援的：
+   *
+   * - **改計費週期**（月繳改年繳）：方案沒變，只能從這一格進去，而它被停用了。
+   * - **提早延長一期**：付款履行已改為展延（不再從現在重算），因此提早買不吃虧。
+   *
+   * 另一個理由更難察覺：`currentPlan` 來自**顯示**答案（鏈上為準）。鏈上卡片
+   * 虛高時（履行漏掉、DB 還原舊備份）這一格會被停用，於是使用者**買不回**
+   * 自己實際沒有的方案。停用一個購買鈕的代價，比多一次確認高得多。
+   */
   const isCurrentPlan = currentPlan === planKey;
 
-  // Info: (20260102 - Luphia) Dynamic keys are safe here as planKey is typed
   const planPriceValue =
-    SUBSCRIPTION_PLAN_PRICE[planKey][
-      billingInterval === "month" ? "monthly" : "yearly"
-    ];
-  const price =
-    planPriceValue === 0
+    billingInterval === "month" ? monthlyPrice : yearlyPrice;
+  /**
+   * Info: (20260820 - Luphia) 價格取不到時**不顯示數字、也不讓人按**
+   *（self-review 風險 3）。
+   *
+   * 顯示 0 會被讀成「免費」——那是對外報價出錯，而錯的方向是我們吃虧之外還得
+   * 跟客戶解釋。停用購買鈕與 `PricingContainer` 的 `unknown planKey` 一致，
+   * 兩處不會再互相矛盾。
+   */
+  const priceUnavailable = planPriceValue === null;
+  const price = priceUnavailable
+    ? "—"
+    : planPriceValue === 0
       ? t("pricing.free_cost")
       : `NT$ ${planPriceValue.toLocaleString()}`;
 
@@ -70,7 +98,7 @@ export default function PricingCard({
            */}
           <span className="text-sm leading-6 font-semibold text-gray-600">
             /{" "}
-            {planPriceValue > 0
+            {(planPriceValue ?? 0) > 0
               ? t(
                   billingInterval === "month"
                     ? "pricing.per_seat_monthly"
@@ -88,7 +116,7 @@ export default function PricingCard({
          * 規範 team_seat_billing_and_email_invitation.md §1）：卡片上的數字是**每位成員**的費用，
          * 不是團隊總額。免費版不依人數計費，故不顯示此行。
          */}
-        {planPriceValue > 0 && (
+        {(planPriceValue ?? 0) > 0 && (
           <p className="mt-2 text-xs leading-5 text-gray-500">
             {t("pricing.price_multiply_note")}
           </p>
@@ -124,17 +152,17 @@ export default function PricingCard({
       </div>
       <button
         aria-describedby={planKey}
-        disabled={isCurrentPlan}
+        disabled={priceUnavailable}
         onClick={onSelect}
         className={`mt-8 block w-full rounded-md px-3 py-2 text-center text-sm leading-6 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
-          isCurrentPlan
+          priceUnavailable
             ? "cursor-not-allowed bg-gray-100 text-gray-400 ring-1 ring-gray-200"
             : popular
               ? "bg-orange-600 text-white shadow-sm hover:bg-orange-500 focus-visible:outline-orange-600"
               : "bg-orange-50 text-orange-600 hover:bg-orange-100 focus-visible:outline-orange-600"
         }`}
       >
-        {isCurrentPlan ? t("pricing.current_plan") : t("pricing.select_plan")}
+        {isCurrentPlan ? t("pricing.extend_plan") : t("pricing.select_plan")}
       </button>
     </div>
   );

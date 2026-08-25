@@ -1,5 +1,6 @@
 import { TeamRole } from "@/constants/team";
-import { TEAM_PLAN } from "@/constants/subscription_quota";
+import { isPlanDowngrade, TEAM_PLAN } from "@/constants/subscription_quota";
+import { isTeamPlanId } from "@/lib/subscription/plan_rules";
 
 /**
  * Info: (20260814 - Luphia) 訂閱 / 購點的歸屬對象規則（設計書 §6.1、§7、§6.4）。
@@ -90,4 +91,65 @@ export function resolveBlockingReason(params: {
     return BLOCKING_REASON.TEAM_NOT_SELECTED;
   }
   return null;
+}
+
+/**
+ * Info: (20260821 - Luphia) 付款前要顯示哪一句期間說明（三輪 self-review）。
+ *
+ * 這個判斷原本寫在 hook 裡，而且只比對「方案有沒有不同」——於是**降級**也算換方案，
+ * 畫面會對一個「排程到期末、不建單、不收費」的操作說「升級自付款完成起立即生效，
+ * 舊方案剩餘期間將按已付金額折抵」：三個事實全錯。抽成純函式並逐條測試，
+ * 因為這一句是使用者按下付款前唯一看得到的期間承諾，而它挑錯的失敗方式是無聲的。
+ *
+ * 四條路各自對應履行端的一種行為：
+ *
+ * | 回傳 | 履行端會做什麼 |
+ * |---|---|
+ * | `UPGRADE_CREDIT` | 自現在起算一期 + 舊期剩餘價值折抵的天數（`resolveNextPeriod`） |
+ * | `DOWNGRADE_SCHEDULE` | 只寫 `pendingPlanId`，當期權益不變、**不收費**（退款政策 §2.1） |
+ * | `EXTENSION_TOO_EARLY` | 會被 `TW_SUBSCRIPTION_EXTENSION_TOO_EARLY` 擋下 |
+ * | `EXTENSION` | 期末往後加一期，期初不動 |
+ *
+ * `null`＝沒有當期可以說（沒有訂閱、當期已結束、當期是免費版）：那是重新訂閱，
+ * 自現在起算一期，沒有「剩餘期間」要交代。免費版尤其不能講折抵——它沒有已付價值
+ *（legacy 那批「plan free 但期末在未來」的列會走到這裡，見部署檢查表 §3.7）。
+ */
+export const PERIOD_NOTE = {
+  EXTENSION: "EXTENSION",
+  EXTENSION_TOO_EARLY: "EXTENSION_TOO_EARLY",
+  UPGRADE_CREDIT: "UPGRADE_CREDIT",
+  DOWNGRADE_SCHEDULE: "DOWNGRADE_SCHEDULE",
+} as const;
+
+export type PeriodNote = (typeof PERIOD_NOTE)[keyof typeof PERIOD_NOTE];
+
+export function resolvePeriodNote(params: {
+  // Info: (20260821 - Luphia) 當期**有效**方案（GET /subscription 的 planId，過期已折算為 free）
+  currentPlanId: string;
+  // Info: (20260821 - Luphia) 這次要買的方案
+  targetPlanId: string;
+  // Info: (20260821 - Luphia) 當期期末（epoch 秒）；0 或已過去代表沒有當期
+  periodEndSec: number;
+  nowMs: number;
+  extensionWindowDays: number;
+}): PeriodNote | null {
+  const { currentPlanId, targetPlanId, periodEndSec, nowMs } = params;
+
+  const remainingMs = periodEndSec * 1000 - nowMs;
+  if (remainingMs <= 0) return null;
+  if (!isTeamPlanId(currentPlanId) || currentPlanId === TEAM_PLAN.FREE) {
+    return null;
+  }
+
+  if (targetPlanId === currentPlanId) {
+    return remainingMs > params.extensionWindowDays * 86_400_000
+      ? PERIOD_NOTE.EXTENSION_TOO_EARLY
+      : PERIOD_NOTE.EXTENSION;
+  }
+
+  // Info: (20260821 - Luphia) 認不出來的目標方案不猜：寧可不說，也不要說錯
+  if (!isTeamPlanId(targetPlanId)) return null;
+  return isPlanDowngrade(currentPlanId, targetPlanId)
+    ? PERIOD_NOTE.DOWNGRADE_SCHEDULE
+    : PERIOD_NOTE.UPGRADE_CREDIT;
 }

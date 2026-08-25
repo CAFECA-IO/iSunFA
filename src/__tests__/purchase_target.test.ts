@@ -3,9 +3,11 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import {
   BLOCKING_REASON,
+  PERIOD_NOTE,
   PURCHASE_MODE,
   filterEligibleTeams,
   resolveBlockingReason,
+  resolvePeriodNote,
   resolvePurchaseMode,
 } from "@/lib/purchase/purchase_target";
 import { TEAM_PLAN } from "@/constants/subscription_quota";
@@ -240,5 +242,225 @@ describe("team purchase entry points", () => {
     expect(modal).toMatch(
       /setPendingTeamOrder\(teamOrder\);[\s\S]{0,120}?return;/,
     );
+  });
+});
+
+/**
+ * Info: (20260821 - Luphia) 付款前的期間說明（三輪 self-review 修的迴歸）。
+ *
+ * 這一句是使用者按下付款前**唯一看得到的期間承諾**，而它挑錯的失敗方式是無聲的：
+ * 沒有錯誤、沒有 log，只有事後「你說會折抵／你說立即生效」的客訴。
+ *
+ * 迴歸的成因是判斷只比對「方案有沒有不同」，於是降級被當成換方案——
+ * 對一個「排程到期末、不建單、不收費」的操作說「升級自付款完成起立即生效，
+ * 舊方案剩餘期間將按已付金額折抵」，三個事實全錯。
+ */
+describe("付款前的期間說明", () => {
+  const NOW_MS = 1_760_000_000_000;
+  const WINDOW = 30;
+
+  function note(params: {
+    current: string;
+    target: string;
+    remainingDays: number;
+  }) {
+    return resolvePeriodNote({
+      currentPlanId: params.current,
+      targetPlanId: params.target,
+      periodEndSec: Math.floor(
+        (NOW_MS + params.remainingDays * 86_400_000) / 1000,
+      ),
+      nowMs: NOW_MS,
+      extensionWindowDays: WINDOW,
+    });
+  }
+
+  it("升級 → 講折抵", () => {
+    expect(
+      note({
+        current: TEAM_PLAN.TEAM,
+        target: TEAM_PLAN.BUSINESS,
+        remainingDays: 300,
+      }),
+    ).toBe(PERIOD_NOTE.UPGRADE_CREDIT);
+  });
+
+  /**
+   * Info: (20260821 - Luphia) 這一條就是迴歸本身：降級**不是**升級折抵。
+   * 它排程到期末、不建單、不收費（退款政策 §2.1）。
+   */
+  it("降級 → 講期末生效不收費，不是折抵", () => {
+    expect(
+      note({
+        current: TEAM_PLAN.BUSINESS,
+        target: TEAM_PLAN.TEAM,
+        remainingDays: 10,
+      }),
+    ).toBe(PERIOD_NOTE.DOWNGRADE_SCHEDULE);
+  });
+
+  it("降到免費版 → 同樣是排程降級", () => {
+    expect(
+      note({
+        current: TEAM_PLAN.TEAM,
+        target: TEAM_PLAN.FREE,
+        remainingDays: 10,
+      }),
+    ).toBe(PERIOD_NOTE.DOWNGRADE_SCHEDULE);
+  });
+
+  it("同方案、窗內 → 講展延", () => {
+    expect(
+      note({
+        current: TEAM_PLAN.TEAM,
+        target: TEAM_PLAN.TEAM,
+        remainingDays: 30,
+      }),
+    ).toBe(PERIOD_NOTE.EXTENSION);
+  });
+
+  it("同方案、剩餘超過 30 天 → 講暫不開放（後端會擋）", () => {
+    expect(
+      note({
+        current: TEAM_PLAN.TEAM,
+        target: TEAM_PLAN.TEAM,
+        remainingDays: 31,
+      }),
+    ).toBe(PERIOD_NOTE.EXTENSION_TOO_EARLY);
+  });
+
+  /**
+   * Info: (20260821 - Luphia) 升級不受閘門限制（產品裁定 20260821），
+   * 因此剩餘再多也是講折抵，不能講「暫不開放」。
+   */
+  it("升級剩餘 364 天 → 仍講折抵，不講暫不開放", () => {
+    expect(
+      note({
+        current: TEAM_PLAN.TEAM,
+        target: TEAM_PLAN.BUSINESS,
+        remainingDays: 364,
+      }),
+    ).toBe(PERIOD_NOTE.UPGRADE_CREDIT);
+  });
+
+  /**
+   * Info: (20260821 - Luphia) 當期是免費版就**什麼都不講**：那是重新訂閱，
+   * 沒有已付價值可折抵、也沒有期間要累加。legacy 的「plan free 但期末在未來」
+   * 那批列（檢查表 §3.7）會走到這裡——講折抵等於承諾一個不存在的東西。
+   */
+  it("當期是免費版 → 不顯示任何期間說明", () => {
+    expect(
+      note({
+        current: TEAM_PLAN.FREE,
+        target: TEAM_PLAN.TEAM,
+        remainingDays: 100,
+      }),
+    ).toBeNull();
+  });
+
+  it("當期已結束 → 不顯示任何期間說明", () => {
+    expect(
+      note({
+        current: TEAM_PLAN.TEAM,
+        target: TEAM_PLAN.BUSINESS,
+        remainingDays: -1,
+      }),
+    ).toBeNull();
+  });
+
+  // Info: (20260821 - Luphia) 沒有訂閱列時 API 回 planId=free、期末 0
+  it("沒有訂閱 → 不顯示任何期間說明", () => {
+    expect(
+      resolvePeriodNote({
+        currentPlanId: TEAM_PLAN.FREE,
+        targetPlanId: TEAM_PLAN.TEAM,
+        periodEndSec: 0,
+        nowMs: NOW_MS,
+        extensionWindowDays: WINDOW,
+      }),
+    ).toBeNull();
+  });
+
+  // Info: (20260821 - Luphia) 認不出來的方案代號不猜：寧可不說，也不要說錯
+  it("方案代號認不出來 → 不顯示", () => {
+    expect(
+      note({
+        current: "enterprise_x",
+        target: TEAM_PLAN.TEAM,
+        remainingDays: 10,
+      }),
+    ).toBeNull();
+    expect(
+      note({
+        current: TEAM_PLAN.TEAM,
+        target: "enterprise_x",
+        remainingDays: 10,
+      }),
+    ).toBeNull();
+  });
+
+  /**
+   * Info: (20260821 - Luphia) 兩句揭露不可互相矛盾（四輪 self-review）。
+   *
+   * 「已排定於 X 降級，本次購買完成後該降級將取消」這句只在**會發生購買**時成立
+   * （升級與同方案延長，履行時 `applyTeamSubscriptionInTx` 清掉 `pendingPlanId`）。
+   * 這次動作本身是降級時它兩處都錯：不會有購買，而舊排程是被新排程取代。
+   * 掃原始碼而不是渲染元件：這條釘的是「渲染條件裡有那道排除」，
+   * 而元件測試會被 i18n 與 provider 的接線拖成另一件事。
+   */
+  it("降級時不顯示「本次購買完成後將取消排程」那句", () => {
+    const selector = readFileSync(
+      join(
+        process.cwd(),
+        "src",
+        "components",
+        "pricing",
+        "purchase_target_selector.tsx",
+      ),
+      "utf8",
+    );
+    const start = selector.indexOf("pending_downgrade_note");
+    expect(start).toBeGreaterThan(-1);
+    // Info: (20260821 - Luphia) 排除條件必須在那個區塊的渲染條件裡，不是在別處
+    const block = selector.slice(Math.max(0, start - 600), start);
+    expect(block).toContain("periodNote !== PERIOD_NOTE.DOWNGRADE_SCHEDULE");
+  });
+
+  /**
+   * Info: (20260821 - Luphia) 每一種期間行為都必須有對應文案，而且**四個語言檔
+   * 全部要有**（審計文案的英文保留政策不適用於這裡：這是金額與期間的承諾）。
+   * 掃描而不是逐鍵斷言：新增一種 PERIOD_NOTE 時漏掉翻譯會在這裡紅。
+   */
+  it("四條路的文案在五個語言檔都齊全", () => {
+    const keys = {
+      [PERIOD_NOTE.EXTENSION]: "extension_note",
+      [PERIOD_NOTE.EXTENSION_TOO_EARLY]: "extension_too_early_note",
+      [PERIOD_NOTE.UPGRADE_CREDIT]: "upgrade_credit_note",
+      [PERIOD_NOTE.DOWNGRADE_SCHEDULE]: "downgrade_schedule_note",
+    };
+    expect(Object.keys(keys).sort()).toEqual(Object.values(PERIOD_NOTE).sort());
+
+    for (const locale of ["zh_tw", "en", "zh_cn", "ja", "ko"]) {
+      const file = readFileSync(
+        join(
+          process.cwd(),
+          "src",
+          "i18n",
+          "locales",
+          locale,
+          "purchase_target.ts",
+        ),
+        "utf8",
+      );
+      for (const key of Object.values(keys)) {
+        expect(file).toContain(`${key}:`);
+      }
+      /**
+       * Info: (20260821 - Luphia) 這些句子渲染在純 `<p>` 裡，沒有經過任何 markdown
+       * 處理——寫 `**粗體**` 的話使用者會看到字面上的星號（reviewer 二輪指出，
+       * 而我三輪一度又寫回去）。
+       */
+      expect(file).not.toContain("**");
+    }
   });
 });

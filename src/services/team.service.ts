@@ -2,7 +2,7 @@ import { userRepo } from "@/repositories/user.repo";
 import { teamRepo } from "@/repositories/team.repo";
 import { TeamRole } from "@/constants/team";
 import { TEAM_PLAN } from "@/constants/subscription_quota";
-import { resolveEffectivePlanId } from "@/services/spend.service";
+import { resolveEffectivePlanId } from "@/lib/subscription/plan_rules";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
 

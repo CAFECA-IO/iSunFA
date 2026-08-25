@@ -38,6 +38,7 @@ export const pricing = {
   features: "功能特色",
   per_key: " / 钥匙",
   select_plan: "选择方案",
+  extend_plan: "延长方案",
   current_plan: "当前方案",
   coming_soon_title: "联络我们",
   coming_soon_prefix: "我们已获选为",
@@ -215,6 +216,13 @@ export const pricing = {
       },
     },
     payment_modal: {
+      scheduled_title: "变更已排程",
+      scheduled_body:
+        "本次变更不需付款，将于 {{date}} 起改为{{plan}}；在那之前你的方案与额度保持不变。",
+      scheduled_expire_body:
+        "已取消自动续订，本次不需付款。当期方案与额度保持到 {{date}}，届时未再付款即转为免费版；在那之前你可以随时恢复自动续订。",
+      scheduled_resumed_body:
+        "已保持当前方案并恢复自动续订，本次不需付款。当期不受影响，期末将照原方案续订。",
       success_title: "购买成功",
       error_title: "购买失败",
       original_credits: "原有点数",

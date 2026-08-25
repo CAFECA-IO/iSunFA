@@ -9,20 +9,36 @@ import {
   HR_MANAGEMENT_ROUTE,
   HR_PENDING_ACTION_CLASS,
 } from "@/constants/hr_management";
+import { IHrIdentityView } from "@/interfaces/hr_identity";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IHrHeaderProps {
+  /** Info: (20260818 - Julian) 由 layout 取得並下傳；`null` = 還不知道或未綁定 */
+  identity: IHrIdentityView | null;
   onToggleSidebar: () => void;
 }
 
 /**
  * Info: (20260810 - Julian) 人事管理系統的頂部列：Logo、系統名、全域搜尋、通知、使用者。
  */
-const HrHeader: FC<IHrHeaderProps> = ({ onToggleSidebar }) => {
+const HrHeader: FC<IHrHeaderProps> = ({ identity, onToggleSidebar }) => {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
-  const displayName = user?.name ?? "";
+  /**
+   * Info: (20260818 - Julian) 優先顯示**員工檔**姓名，退回登入帳號的名字。
+   *
+   * `useAuth()` 給的是 Google 帳號顯示名稱，與人事系統裡的身分未必相同
+   * （共用平板、演示時切換身分），而這一頁每一個數字都是員工檔的數字 ——
+   * 兩者不一致時顯示前者，會讓人對著別人的資料以為是自己的。
+   */
+  const displayName = identity?.name ?? user?.name ?? "";
+
+  /** Info: (20260818 - Julian) 「工地主任・第一工務所」；兩個外鍵都可能是 null */
+  const displayRole =
+    identity === null
+      ? ""
+      : [identity.jobTitle, identity.departmentName].filter(Boolean).join("・");
 
   return (
     <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur">
@@ -51,7 +67,7 @@ const HrHeader: FC<IHrHeaderProps> = ({ onToggleSidebar }) => {
         {/* Info: (20260810 - Julian) 全域搜尋 */}
         <div className="ml-auto hidden max-w-md flex-1 md:block">
           <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 shrink-0 -translate-y-1/2 text-gray-400" />
             <input
               type="search"
               aria-label={t("hr_management.global_search_placeholder")}

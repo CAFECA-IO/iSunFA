@@ -61,6 +61,13 @@ export enum PaymentStep {
   confirm = "confirm",
   processing = "processing",
   success = "success",
+  /**
+   * Info: (20260820 - Luphia) 變更已排程、**沒有付款**（降級一律於當期屆滿生效）。
+   *
+   * 不能沿用 `success`：那一頁顯示「已付金額」與點數前後餘額，而這條路徑
+   * 一毛錢都沒收。也不能沿用 `error`：排程確實成功了。
+   */
+  scheduled = "scheduled",
   error = "error",
   bank_transfer = "bank_transfer",
   bank_transfer_success = "bank_transfer_success",
@@ -90,11 +97,27 @@ export interface IPaymentModalProps {
   /**
    * Info: (20260814 - Luphia) 改寫建單方式：有值時以它建單（team-scoped 端點，
    * 訂單會帶 teamId），否則沿用預設的 `POST /api/v1/user/order`。
-   * 回傳的 orderId + challenge 與預設路徑同形，後續簽章與 checkout 完全共用。
+   *
+   * Info: (20260820 - Luphia) 結果是**可辨識聯集**（self-review 第二輪）：
+   * 降級與取消排程沒有東西要付，`PUT /subscription` 回的是 `orderId: null`。
+   * 先前這裡宣告成 `{ orderId: string }`，於是付款畫面拿著 null 一路走到
+   * `completeCheckout(null, undefined)`——排程其實成功了，而使用者看到付款錯誤。
+   * 型別說謊，編譯器就幫不上忙；改成聯集之後「不需付款」是一種必須處理的結果。
    */
-  orderCreator?: (
-    paymentMethodId: string,
-  ) => Promise<{ orderId: string; challenge: string; cost?: number }>;
+  orderCreator?: (paymentMethodId: string) => Promise<
+    | { kind: "order"; orderId: string; challenge: string; cost?: number }
+    | {
+        kind: "scheduled";
+        pendingPlanId: string | null;
+        /**
+         * Info: (20260821 - Luphia) 期末還會不會自動續訂（產品裁定 20260821）。
+         * `false` 且 `pendingPlanId` 為 null＝「當期到期後轉為免費版」——
+         * 那種狀態在 DB 裡就是關閉自動續訂，沒有排程欄位可回。
+         */
+        autoRenew?: boolean;
+        effectiveAt: number | null;
+      }
+  >;
   // Info: (20260814 - Luphia) 歸屬對象未備妥（未選團隊 / 權限不足）時的阻擋訊息
   purchaseBlockingMessage?: string | null;
 }

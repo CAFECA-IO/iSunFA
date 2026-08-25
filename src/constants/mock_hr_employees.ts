@@ -11,6 +11,18 @@ import { maskPiiTail } from "@/lib/utils/hr_pii_mask";
 /**
  * ToDo: (20260810 - Julian) 待 `/api/v1/hr/employee` 上線後移除，改由 API 取得。
  *
+ * ⚠️ **移除的那一天要一併加上職能閘，而且不能沿用「端點會 401 所以沒事」
+ * 這句理由**（review 第 7 輪第 5／6 條）。
+ *
+ * `/hr_management/{employee,organization,movement}` 與儀表板這 4 頁
+ * **不打任何端點** —— 它們讀的就是這裡的常數，而常數是打包進 JS bundle 的。
+ * 今天沒有 PII 外洩，是因為**這些資料是假的**，不是因為端點會 401。
+ * `layout.tsx` 的守衛是 client-side 的，bundle 照樣送得出去。
+ *
+ * 而這 4 頁對**任何已登入者**顯示全名冊與離職／任務操作入口 ——
+ * 它們沒有任何 `hrFunctions` / `HR_ADMIN` / `isDepartmentManager` 判斷。
+ * 換成真 API 的那一刻，那就是真的 PII 給了全公司每一個人看。
+ *
  * 日期一律寫死成字面值而非 `new Date()` 推算：mock 若隨當下時間漂移，
  * 畫面截圖與 UI 測試每天都會長得不一樣。
  *

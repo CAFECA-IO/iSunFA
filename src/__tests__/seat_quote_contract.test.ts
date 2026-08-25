@@ -58,8 +58,8 @@ jest.mock("@/repositories/team.repo", () => ({
 
 jest.mock("@/services/team_subscription.service", () => ({
   resolveEffectivePlanId: jest.requireActual<
-    typeof import("@/services/spend.service")
-  >("@/services/spend.service").resolveEffectivePlanId,
+    typeof import("@/lib/subscription/plan_rules")
+  >("@/lib/subscription/plan_rules").resolveEffectivePlanId,
 }));
 
 jest.mock("@/repositories/webauthn.repo", () => ({
@@ -99,6 +99,8 @@ const ACTIVE_SUBSCRIPTION = {
   currentPeriodEnd: PERIOD_END,
   seats: 3,
   unitPrice: 840,
+  // Info: (20260821 - Luphia) 補收分母讀這一欄（一期的天數），見 review #6687 二輪高-1
+  billingInterval: "month",
   latestOrderId: "order-sub-1",
 };
 
@@ -270,6 +272,33 @@ describe("quoteSeatAddition", () => {
           BigInt(840 * 3 * 2),
         ),
       API_ERRORS.TW_SEAT_CHARGE_CAP_EXCEEDED.code,
+    ],
+    /**
+     * Info: (20260821 - Luphia) 尚未回填週期的既有列（review #6687 三輪）。
+     *
+     * `billing_interval` 刻意可為 NULL、無預設值：`db push` 後既有列都是 NULL，
+     * 而 NULL 走到這道守門。若當初給了預設 `"month"`，年繳列會拿到一個合法但
+     * 錯誤的值——守門看不見，補收分母 30 天而非 365，對綁定的卡多收約 12 倍。
+     * 這一條同時釘住「擋下」與「錯誤碼指向真正的原因」（不是借用單價缺漏）。
+     */
+    [
+      "週期尚未回填（NULL）",
+      () =>
+        asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+          ...ACTIVE_SUBSCRIPTION,
+          billingInterval: null,
+        }),
+      API_ERRORS.TW_SEAT_BILLING_INTERVAL_MISSING.code,
+    ],
+    // Info: (20260821 - Luphia) 認不得的值（人工改壞、未來新增週期忘了同步常數）同樣擋下
+    [
+      "週期是認不得的值",
+      () =>
+        asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+          ...ACTIVE_SUBSCRIPTION,
+          billingInterval: "quarter",
+        }),
+      API_ERRORS.TW_SEAT_BILLING_INTERVAL_MISSING.code,
     ],
   ])("%s：試算擋下，且與實扣丟的錯誤碼一致", async (_label, arrange, code) => {
     arrange();

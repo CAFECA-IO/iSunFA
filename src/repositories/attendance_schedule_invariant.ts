@@ -23,6 +23,11 @@ export class AttendanceScheduleInvariantError extends Error {
 export interface ISchedulableDay {
   dayType: WorkDayType;
   shiftPatternId: string | null | undefined;
+  /**
+   * Info: (20260817 - Julian) 「這天本來要上幾分鐘」的快照，僅非上班日有意義。
+   * 選填：既有呼叫端不傳即視為 null（既有資料本來就是 null）。
+   */
+  plannedWorkMinutes?: number | null;
 }
 
 // Info: (20260813 - Julian) 寫入前檢查，違反即丟具名錯誤，由 service 層轉成驗證錯誤——不轉譯會讓呼叫端收到與成因無關的 500
@@ -42,6 +47,28 @@ export function assertSchedulableDay(params: ISchedulableDay): void {
     throw new AttendanceScheduleInvariantError(
       "a non-working day carries a shift pattern; the calendar would show a shift that no evaluation uses",
       `dayType=${params.dayType}, shiftPatternId=${params.shiftPatternId}`,
+    );
+  }
+
+  /**
+   * Info: (20260817 - Julian) 上班日不得留著 `plannedWorkMinutes`。
+   *
+   * 那個欄位的存在理由是「班別被清成 null 之後，這天本來要上幾分鐘仍查得到」——
+   * 而上班日的班別還在，`shiftPattern.requiredWorkMinutes` 才是唯一來源。
+   * 兩者同時存在就會有兩個可以互相矛盾的答案：銷假把某天投影回 `WORK`
+   * 卻沒清掉舊快照，之後有人改了班別，那個快照就開始說謊。
+   *
+   * 形狀與上面兩條完全相同 —— 同一個欄位在某個 `dayType` 下有意義、
+   * 在另一個下必須為空。
+   */
+  if (
+    isWorkDay &&
+    params.plannedWorkMinutes !== null &&
+    params.plannedWorkMinutes !== undefined
+  ) {
+    throw new AttendanceScheduleInvariantError(
+      "a work day carries a plannedWorkMinutes snapshot; the shift pattern is the only source and the two can diverge",
+      `dayType=${params.dayType}, plannedWorkMinutes=${params.plannedWorkMinutes}`,
     );
   }
 }

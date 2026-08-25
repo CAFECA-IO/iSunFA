@@ -2,16 +2,26 @@
 
 import { useState } from "react";
 import PricingCard from "@/components/pricing/pricing_card";
+import { ANALYSIS_BASE_COSTS } from "@/constants/price";
+import { TEAM_PLAN, type TeamPlanId } from "@/constants/subscription_quota";
+import type { IPlanCatalogEntry } from "@/services/plan.service";
 import {
-  ANALYSIS_BASE_COSTS,
-  SUBSCRIPTION_PLAN_CREDITS,
-} from "@/constants/price";
-import { CARBON_STORAGE_QUOTA_GB_BY_PLAN } from "@/constants/carbon_chatbot";
+  isTeamPlanId,
+  resolveUnanimousPlan,
+} from "@/lib/subscription/plan_rules";
 import { usePricing } from "@/contexts/pricing_context";
 import { useAuth } from "@/contexts/auth_context";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface ISubscriptionContentProps {
+  /**
+   * Info: (20260819 - Luphia) 方案目錄（`plan.service.listPlans()`，由 server 端傳入）。
+   *
+   * 這個檔案原本自己 import 月配點與儲存空間常數，方案卡另外自己 import 價格——
+   * 於是「有哪些方案、各自的數字」有三份讀法。目錄化之後只有 `plan.service`
+   * 讀得到那些來源，這裡拿到的是同一份事實（見 CLAUDE.md §3「單一來源」）。
+   */
+  plans: IPlanCatalogEntry[];
   // Info: (20260809 - Luphia) 額度倍數由 server 端計算後傳入（見 page.tsx 的 hydration 說明）
   teamQuotaMultiple: number;
   businessQuotaMultiple: number;
@@ -29,6 +39,7 @@ interface ISubscriptionContentProps {
 }
 
 export default function SubscriptionContent({
+  plans,
   teamQuotaMultiple,
   businessQuotaMultiple,
   faithMemoryRetentionDays,
@@ -50,6 +61,23 @@ export default function SubscriptionContent({
    * 團隊版 / 企業版列「（專屬記憶）」並述兩層記憶；細節與保留天數由方案格下方段落承載
    * （天數自 server 傳入的系統設定值插值，見 props，與條款同源）。
    */
+  /**
+   * Info: (20260820 - Luphia) 目錄查表。缺項時回 `undefined`，**不回零值**
+   *（self-review 風險 3）。
+   *
+   * 原本缺項會回一組全零，而價格 0 在方案卡上顯示為「免費」——於是團隊版那一格
+   * 會標成免費，而購買鈕又因為 `unknown planKey` 拒絕開啟付款：**對外報價出錯，
+   * 兩處還互相矛盾**。缺項時改為不顯示價格（方案卡顯示「—」並停用購買鈕）。
+   *
+   * 仍然不丟錯：方案頁是公開頁面，少一個方案的數字不該讓整頁 500。
+   */
+  const planOf = (id: TeamPlanId): IPlanCatalogEntry | undefined =>
+    plans.find((entry) => entry.id === id);
+
+  // Info: (20260820 - Luphia) 額度換算用的數字：缺項時以 0 呈現（換算不出來就是 0 份）
+  const creditsOf = (id: TeamPlanId): number => planOf(id)?.monthlyCredits ?? 0;
+  const storageOf = (id: TeamPlanId): number => planOf(id)?.storageGb ?? 0;
+
   const faithAgentFeature = {
     text: t("pricing.faith_agent"),
     tooltip: t("pricing.faith_agent_free_tooltip"),
@@ -61,11 +89,21 @@ export default function SubscriptionContent({
     }),
   };
 
-  const currentPlan = user
-    ? user.plan === "personal" || !user.plan
-      ? "free"
-      : user.plan
-    : undefined;
+  /**
+   * Info: (20260819 - Luphia) 「目前方案」標記改由**擁有的團隊**決定（修正 20260819）。
+   *
+   * 原本讀 `user.plan`，而 `/auth/me` 從來沒回過那個欄位：於是它永遠是 undefined，
+   * 三格裡永遠是免費版被標成「目前方案」——付了團隊版的人打開方案頁，
+   * 看到的仍然是「免費版 = 目前方案」。
+   *
+   * 規則是**全體一致才標**（`resolveUnanimousPlan`），不是取最高：這個標記會停用
+   * 購買鈕，若某人擁有一個免費團隊與一個團隊版團隊而標成團隊版，
+   * 他就再也無法為那個免費團隊訂閱團隊版。方案不一致時不標任何一格，
+   * 三個鈕都可用，實際買給哪個團隊由付款畫面的歸屬選擇決定。
+   */
+  const currentPlan = resolveUnanimousPlan(
+    (user?.ownedPlans ?? []).filter(isTeamPlanId),
+  );
 
   const showComingSoon = () => {
     if (!user) {
@@ -136,13 +174,15 @@ export default function SubscriptionContent({
         <div className="mx-auto mt-4 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
           <PricingCard
             planKey="free"
+            monthlyPrice={planOf(TEAM_PLAN.FREE)?.monthlyPrice ?? null}
+            yearlyPrice={planOf(TEAM_PLAN.FREE)?.yearlyPrice ?? null}
             billingInterval={billingInterval}
             currentPlan={currentPlan}
             features={[
               {
                 text: t("pricing.plans.free.features.consults", {
                   amount: Math.floor(
-                    SUBSCRIPTION_PLAN_CREDITS.free /
+                    creditsOf(TEAM_PLAN.FREE) /
                       ANALYSIS_BASE_COSTS.AI_CONSULTING,
                   ),
                 }),
@@ -153,7 +193,7 @@ export default function SubscriptionContent({
               {
                 text: t("pricing.plans.free.features.vouchers", {
                   amount: Math.floor(
-                    SUBSCRIPTION_PLAN_CREDITS.free /
+                    creditsOf(TEAM_PLAN.FREE) /
                       ANALYSIS_BASE_COSTS.CERTIFICATE_ANALYSIS,
                   ),
                 }),
@@ -165,7 +205,7 @@ export default function SubscriptionContent({
               {
                 text: t("pricing.plans.free.features.logistics", {
                   amount: Math.floor(
-                    SUBSCRIPTION_PLAN_CREDITS.free /
+                    creditsOf(TEAM_PLAN.FREE) /
                       ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT,
                   ),
                 }),
@@ -176,15 +216,14 @@ export default function SubscriptionContent({
               {
                 text: t("pricing.plans.free.features.ai_reports", {
                   amount: Math.floor(
-                    SUBSCRIPTION_PLAN_CREDITS.free /
-                      ANALYSIS_BASE_COSTS.AI_REPORT,
+                    creditsOf(TEAM_PLAN.FREE) / ANALYSIS_BASE_COSTS.AI_REPORT,
                   ),
                 }),
                 tooltip: t("pricing.plans.free.features.ai_overage_tooltip"),
               },
               faithAgentFeature,
               t("pricing.plans.free.features.storage", {
-                gb: CARBON_STORAGE_QUOTA_GB_BY_PLAN.free,
+                gb: storageOf(TEAM_PLAN.FREE),
               }),
               {
                 /**
@@ -203,6 +242,8 @@ export default function SubscriptionContent({
           />
           <PricingCard
             planKey="team"
+            monthlyPrice={planOf(TEAM_PLAN.TEAM)?.monthlyPrice ?? null}
+            yearlyPrice={planOf(TEAM_PLAN.TEAM)?.yearlyPrice ?? null}
             billingInterval={billingInterval}
             popular={true}
             currentPlan={currentPlan}
@@ -220,7 +261,7 @@ export default function SubscriptionContent({
               {
                 text: t("pricing.plans.team.features.consults", {
                   amount: Math.floor(
-                    SUBSCRIPTION_PLAN_CREDITS.team /
+                    creditsOf(TEAM_PLAN.TEAM) /
                       ANALYSIS_BASE_COSTS.AI_CONSULTING,
                   ),
                 }),
@@ -231,7 +272,7 @@ export default function SubscriptionContent({
               {
                 text: t("pricing.plans.team.features.vouchers", {
                   amount: Math.floor(
-                    SUBSCRIPTION_PLAN_CREDITS.team /
+                    creditsOf(TEAM_PLAN.TEAM) /
                       ANALYSIS_BASE_COSTS.CERTIFICATE_ANALYSIS,
                   ),
                 }),
@@ -243,7 +284,7 @@ export default function SubscriptionContent({
               {
                 text: t("pricing.plans.team.features.logistics", {
                   amount: Math.floor(
-                    SUBSCRIPTION_PLAN_CREDITS.team /
+                    creditsOf(TEAM_PLAN.TEAM) /
                       ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT,
                   ),
                 }),
@@ -254,8 +295,7 @@ export default function SubscriptionContent({
               {
                 text: t("pricing.plans.team.features.ai_reports", {
                   amount: Math.floor(
-                    SUBSCRIPTION_PLAN_CREDITS.team /
-                      ANALYSIS_BASE_COSTS.AI_REPORT,
+                    creditsOf(TEAM_PLAN.TEAM) / ANALYSIS_BASE_COSTS.AI_REPORT,
                   ),
                 }),
                 tooltip: t("pricing.plans.team.features.ai_overage_tooltip"),
@@ -264,12 +304,14 @@ export default function SubscriptionContent({
               t("pricing.plans.team.features.analytics"),
               t("pricing.plans.team.features.support"),
               t("pricing.plans.team.features.storage", {
-                gb: CARBON_STORAGE_QUOTA_GB_BY_PLAN.team,
+                gb: storageOf(TEAM_PLAN.TEAM),
               }),
             ]}
           />
           <PricingCard
             planKey="business"
+            monthlyPrice={planOf(TEAM_PLAN.BUSINESS)?.monthlyPrice ?? null}
+            yearlyPrice={planOf(TEAM_PLAN.BUSINESS)?.yearlyPrice ?? null}
             billingInterval={billingInterval}
             currentPlan={currentPlan}
             onSelect={() =>
@@ -286,7 +328,7 @@ export default function SubscriptionContent({
               {
                 text: t("pricing.plans.business.features.consults", {
                   amount: Math.floor(
-                    SUBSCRIPTION_PLAN_CREDITS.business /
+                    creditsOf(TEAM_PLAN.BUSINESS) /
                       ANALYSIS_BASE_COSTS.AI_CONSULTING,
                   ),
                 }),
@@ -297,7 +339,7 @@ export default function SubscriptionContent({
               {
                 text: t("pricing.plans.business.features.vouchers", {
                   amount: Math.floor(
-                    SUBSCRIPTION_PLAN_CREDITS.business /
+                    creditsOf(TEAM_PLAN.BUSINESS) /
                       ANALYSIS_BASE_COSTS.CERTIFICATE_ANALYSIS,
                   ),
                 }),
@@ -309,7 +351,7 @@ export default function SubscriptionContent({
               {
                 text: t("pricing.plans.business.features.logistics", {
                   amount: Math.floor(
-                    SUBSCRIPTION_PLAN_CREDITS.business /
+                    creditsOf(TEAM_PLAN.BUSINESS) /
                       ANALYSIS_BASE_COSTS.TRANSPORTATION_CARBON_FOOTPRINT,
                   ),
                 }),
@@ -323,7 +365,7 @@ export default function SubscriptionContent({
               {
                 text: t("pricing.plans.business.features.ai_reports", {
                   amount: Math.floor(
-                    SUBSCRIPTION_PLAN_CREDITS.business /
+                    creditsOf(TEAM_PLAN.BUSINESS) /
                       ANALYSIS_BASE_COSTS.AI_REPORT,
                   ),
                 }),
@@ -345,7 +387,7 @@ export default function SubscriptionContent({
                 ),
               },
               t("pricing.plans.business.features.storage", {
-                gb: CARBON_STORAGE_QUOTA_GB_BY_PLAN.business,
+                gb: storageOf(TEAM_PLAN.BUSINESS),
               }),
             ]}
           />

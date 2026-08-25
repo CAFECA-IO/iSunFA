@@ -4,8 +4,8 @@ import {
   LeaveRecallDecision,
   LeaveRecallResolutionOutcome,
   LeaveRecallStatus,
-  LeaveType,
 } from "@/constants/leave";
+import { LEAVE_POLICY_CODE } from "@/constants/leave_policy";
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { LeaveService } from "@/services/leave.service";
@@ -55,7 +55,12 @@ const SITE_DAY = {
 } as ShiftPattern;
 
 const leaveDay = (
-  overrides: Partial<{ id: string; workDate: string; pending: boolean }> = {},
+  overrides: Partial<{
+    id: string;
+    workDate: string;
+    pending: boolean;
+    recallable: boolean;
+  }> = {},
 ) =>
   ({
     id: overrides.id ?? "leave-day-1",
@@ -68,11 +73,15 @@ const leaveDay = (
       id: "req-1",
       accountBookId: ACCOUNT_BOOK_ID,
       employeeId: "emp-006",
-      leaveType: LeaveType.ANNUAL,
-      reason: "家庭旅遊",
+      leavePolicy: {
+        code: LEAVE_POLICY_CODE.ANNUAL,
+        name: "特別休假",
+        // Info: (20260817 - Julian) §38 III 只給特休這個協商空間
+        recallable: overrides.recallable ?? true,
+      },
+      // Info: (20260817 - Julian) 事由已改為密文欄位，且銷假路徑從不解密它
+      reasonCipher: "cipher:家庭旅遊",
       status: "APPROVED",
-      decidedByEmployeeId: "emp-005",
-      decidedAt: NOW,
       createdAt: NOW,
       updatedAt: NOW,
       employee: {
@@ -107,7 +116,12 @@ const recallRecord = (
       workDate: "2026-08-14",
       leaveRequest: {
         employeeId: overrides.employeeId ?? "emp-006",
-        leaveType: LeaveType.ANNUAL,
+        leavePolicyId: "policy-annual",
+        leavePolicy: {
+          code: LEAVE_POLICY_CODE.ANNUAL,
+          name: "特別休假",
+          recallable: true,
+        },
         employee: { id: "emp-006", employeeNo: "EMP006", name: "李冠廷" },
       },
     },
@@ -184,9 +198,29 @@ class FakeLeaveRepo implements ILeaveRepository {
 }
 
 class FakeEmployeeRepo implements IEmployeeRepository {
+  // Info: (20260817 - Julian) 「他是不是主管」——決定畫面顯不顯示徵詢入口
   public manager = true;
 
+  /**
+   * Info: (20260817 - Julian) 「這個人歸不歸他管」——授權判斷，與上面**分開**。
+   *
+   * 兩個旗標分開才測得出這次補上的那個缺口：`manager = true` 而
+   * `managesTarget = false`，正是「第一工務段的主管對第五工務段的人
+   * 發起徵詢」的情境。合成一個布林值就永遠測不到它。
+   */
+  public managesTarget = true;
+
   async findByUserId(): Promise<Employee | null> {
+    return null;
+  }
+
+  // Info: (20260818 - Julian) 顯示用的員工檔（hr/me）；本檔不測它，補樁讓介面完整
+  async findProfile(): Promise<{
+    employeeNo: string;
+    name: string;
+    jobTitle: string | null;
+    departmentName: string | null;
+  } | null> {
     return null;
   }
 
@@ -212,6 +246,10 @@ class FakeEmployeeRepo implements IEmployeeRepository {
 
   async isDepartmentManager(): Promise<boolean> {
     return this.manager;
+  }
+
+  async managesEmployee(): Promise<boolean> {
+    return this.managesTarget;
   }
 }
 
@@ -292,6 +330,58 @@ describe("今日請假名單（A11）", () => {
     });
 
     expect(view.entries[0].hasPendingRecall).toBe(true);
+  });
+});
+
+/**
+ * Info: (20260817 - Julian) 這一組全部是後補的，成因記在假勤接線守則 §3.5.3。
+ *
+ * 原本 `requestRecall` 只有一道閘門 —— `isDepartmentManager`，
+ * 而它問的是「你有沒有管**任何**部門」。既有測試只涵蓋「主管 / 非主管」
+ * 這條軸線，因此**兩個真實缺口都在測試綠燈的情況下存活**：
+ * 跨部門發起，以及對產假發起。
+ */
+describe("發起徵詢（A12）—— 授權範圍與假別適用性", () => {
+  it("跨部門不得發起：他是主管，但這個人不歸他管", async () => {
+    employees.manager = true;
+    employees.managesTarget = false;
+
+    await expect(request()).rejects.toMatchObject({
+      apiCode: API_ERRORS.FO_LEAVE_RECALL_SCOPE.code,
+    });
+  });
+
+  it("管得到的人才發得出去", async () => {
+    employees.manager = true;
+    employees.managesTarget = true;
+
+    await expect(request()).resolves.toBeDefined();
+  });
+
+  /**
+   * Info: (20260817 - Julian) §38 III 的協商空間只寫在特休。
+   * 對產假、病假、生理假發起徵詢不只是沒有法源 —— 它本身就是一個會上新聞的動作。
+   */
+  it("不可徵詢的假別擋下（產假、病假、生理假等）", async () => {
+    leaves.day = leaveDay({ recallable: false });
+
+    await expect(request()).rejects.toMatchObject({
+      apiCode: API_ERRORS.VA_LEAVE_NOT_RECALLABLE.code,
+    });
+  });
+
+  /**
+   * Info: (20260817 - Julian) 兩道閘門的順序有意義：非主管在**撈出單據之前**
+   * 就被擋下，因此連 `leaveDayId` 存不存在都問不出來。
+   * 把順序對調，這個性質會安靜地消失。
+   */
+  it("非主管拿到的是「你不是主管」，而不是範圍錯誤", async () => {
+    employees.manager = false;
+    employees.managesTarget = false;
+
+    await expect(request()).rejects.toMatchObject({
+      apiCode: API_ERRORS.FO_ATTENDANCE_SUPERVISOR_ONLY.code,
+    });
   });
 });
 

@@ -1,0 +1,1037 @@
+import { decryptPii } from "@/lib/hr_pii_crypto";
+import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
+import { auditLogRepo } from "@/repositories/audit_log.repo";
+
+/**
+ * Info: (20260817 - Julian) 個資讀取軌跡的最小介面。
+ *
+ * 只宣告 `createAuditLog`，不引用整個 `IAuditLogRepository` ——
+ * service 用不到的方法不該出現在它的相依裡，而測試更不該為了
+ * 建構一個 service 去假造整組稽核查詢。
+ */
+export interface ILeaveAuditTrail {
+  createAuditLog(data: {
+    userId: string;
+    accountBookId: string;
+    dataType: AuditLogDataType;
+    dataId: string;
+    action: AuditLogAction;
+  }): Promise<unknown>;
+}
+import { randomUUID } from "crypto";
+import { encryptPii } from "@/lib/hr_pii_crypto";
+import { AppError } from "@/lib/utils/error";
+import {
+  datesBetween,
+  expandLeaveSpan,
+  LeaveSpanError,
+  mustParseLocalDateTime,
+} from "@/lib/leave_span";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { logger } from "@/lib/utils/logger";
+import { WorkDayType } from "@/constants/attendance";
+import { previousIsoDate } from "@/lib/utils/attendance_time";
+import { LeaveRequestStatus } from "@/constants/leave";
+import { EmployeeHrFunction } from "@/constants/hr_management";
+import {
+  employeeHrFunctionRepo,
+  IEmployeeHrFunctionRepository,
+} from "@/repositories/employee_hr_function.repo";
+import { LeaveConcurrencyInvariantError } from "@/repositories/leave_concurrency_invariant";
+import {
+  LeaveApprovalNodeKind,
+  LeaveApprovalStepStatus,
+  LeaveConcurrencyAction,
+  LeaveDaySegment,
+  LeaveQuotaMode,
+} from "@/constants/leave_policy";
+import { HrPiiTable } from "@/constants/hr_pii";
+import {
+  LeaveRuleError,
+  allocateConsumption,
+  resolveLeaveMinutes,
+  totalDaysOf,
+  exactDaysToNumber,
+  exactDaysToDecimalString,
+  IExactDays,
+} from "@/lib/leave_entitlement_rules";
+import { resolveApprovalChain } from "@/lib/leave_approval_chain";
+import { leaveRequestRepo } from "@/repositories/leave_request.repo";
+import { leaveRequestContextRepo } from "@/repositories/leave_request_context.repo";
+import {
+  IApprovalChainResolution,
+  ILeaveDayInput,
+  ILeaveDayPlan,
+  ILeaveDaySchedule,
+  ILeaveRequestContext,
+  ILeaveRequestInput,
+  ILeaveRequestDetail,
+  ILeaveRequestPreview,
+  ILeaveRequestRecord,
+  ILeaveRequestListQuery,
+  ILeaveRequestRepository,
+  ILeaveRequestSummary,
+  LeaveApprovalOutcome,
+} from "@/interfaces/leave_request";
+
+/**
+ * Info: (20260817 - Julian) 請假的送出、試算與簽核（L10–L17）。
+ *
+ * ## 額度不預扣
+ *
+ * 送出時檢查餘額只為了給員工即時回饋，**不扣**。真正的扣減發生在
+ * 最後一個簽核節點通過的那個交易內（ADR 023 §6）。
+ * 預扣要處理駁回、撤回、簽核中主管離職三條補償路徑，每一條都是一個
+ * 可能漏掉的分支，而漏掉的後果是額度憑空消失 —— 那是員工會投訴、
+ * HR 查不出原因的那種 bug。不預扣則只有一條路徑會動到額度。
+ *
+ * ## 「現在」由呼叫端注入
+ *
+ * 每個方法都收 `observedAt`。service 不呼叫 `Date.now()`，
+ * 理由同判定引擎：跨日邊界上的行為必須能在測試裡重現。
+ */
+export class LeaveRequestService {
+  constructor(
+    private readonly requests: ILeaveRequestRepository,
+    private readonly context: ILeaveRequestContext,
+    /**
+     * Info: (20260817 - Julian) 注入而不是 import 單例。
+     *
+     * 第一版直接 import `auditLogRepo`，測試因此只能靠一個容器專用的替身
+     * 去攔截它 —— 而那個替身檔不進 repo，於是**測試在別人的機器上跑不起來**。
+     * 注入之後，測試傳自己的假物件，不必知道生產環境用的是哪一個。
+     */
+    private readonly audit: ILeaveAuditTrail = auditLogRepo,
+    /**
+     * Info: (20260820 - Julian) `HR` 關的那一池人（review 第 6 輪 M19）。
+     * 與 `buildOrgSnapshot` 展開時用的是同一支 —— 兩邊各查一套的話，
+     * 會出現「解析時他在池裡、簽核時他不在」這種只在特定時序下出現的 403。
+     */
+    private readonly employees: IEmployeeHrFunctionRepository = employeeHrFunctionRepo,
+  ) {}
+
+  /**
+   * Info: (20260817 - Julian) L10 假單清單。
+   *
+   * ## 可見範圍
+   *
+   * 未指定 `employeeId` 即為自己。指定他人時**必須是該員工假單的簽核者** ——
+   * 而「是不是簽核者」要逐張單判斷，不是一個部門層級的權限。
+   * 因此這裡的做法是：先取回那個人的清單，再濾掉自己不在鏈上的單。
+   *
+   * 這比「先判權限再查」慢，但正確：一個主管在 8 月調離某部門後，
+   * 他仍然應該看得到 7 月那幾張自己簽過的單，而部門層級的權限判斷會把它們藏起來。
+   *
+   * ToDo: (20260819 - Julian) HR 應可見全部，目前只看得到自己簽過的單。
+   *
+   * 原本的理由是「帳本層級的 HR 角色來源尚未決定」—— **那句話已經不成立**：
+   * `EmployeeHrFunction.HR_ADMIN` 與 `employeeHrFunctionRepo.hasAnyFunction()`
+   * 在同一輪落地，假別設定、簽核規則、加班政策與額度四處都已經在用它。
+   * 因此這是**接線沒接**，不是能力不存在（checklist §5.4）。
+   * 接法比照 `leave_visibility.ts`：`hasAnyFunction([HR_ADMIN])` 通過即不濾。
+   */
+  public async list(params: {
+    accountBookId: string;
+    actorEmployeeId: string;
+    query: ILeaveRequestListQuery;
+  }): Promise<ILeaveRequestSummary[]> {
+    const targetEmployeeId = params.query.employeeId ?? params.actorEmployeeId;
+    const rows = await this.requests.listByEmployee({
+      accountBookId: params.accountBookId,
+      employeeId: targetEmployeeId,
+      from: params.query.from,
+      to: params.query.to,
+    });
+
+    if (targetEmployeeId === params.actorEmployeeId) return rows;
+
+    const visible: ILeaveRequestSummary[] = [];
+    for (const row of rows) {
+      if (
+        await this.isOnChain(
+          params.accountBookId,
+          row.id,
+          params.actorEmployeeId,
+        )
+      ) {
+        visible.push(row);
+      }
+    }
+    /**
+     * Info: (20260817 - Julian) 一張都看不到時擋下，而不是回空陣列。
+     *
+     * 空陣列是對資料的陳述（「他沒有請過假」），被擋是對請求的陳述
+     * （「你不能看他的假單」）—— 兩者混在一起會讓人以為同事從不請假
+     * （同 `attendanceResultQuerySchema` 對 `from > to` 的處置理由）。
+     */
+    if (visible.length === 0) {
+      throw new AppError(API_ERRORS.FO_LEAVE_REQUEST_SCOPE);
+    }
+    return visible;
+  }
+
+  /**
+   * Info: (20260817 - Julian) L16 待我簽核。
+   *
+   * 只回「當前待簽」的那一關是我的單 —— 排在第二關的人在第一關通過之前
+   * 不該看到它出現在待辦清單裡，否則他會去簽一張還沒輪到他的單，
+   * 然後收到一個他看不懂的 403。
+   */
+  public async listPending(params: {
+    accountBookId: string;
+    actorEmployeeId: string;
+  }): Promise<ILeaveRequestSummary[]> {
+    /**
+     * Info: (20260820 - Julian) 人資看得到整池的 `HR` 關（review 第 6 輪 M19）。
+     *
+     * 與 `claimStep` 對 `HR` 節點放行的是同一個判準 —— 兩邊不一致的話，
+     * 不是「清單上少了他簽得動的單」就是「清單上的單按下去被擋」。
+     */
+    const isHr = await this.employees.hasAnyFunction({
+      accountBookId: params.accountBookId,
+      employeeId: params.actorEmployeeId,
+      hrFunctions: [EmployeeHrFunction.HR_ADMIN],
+    });
+
+    return this.requests.listPendingForApprover({
+      accountBookId: params.accountBookId,
+      approverEmployeeId: params.actorEmployeeId,
+      includeHrPool: isHr,
+    });
+  }
+
+  /**
+   * Info: (20260817 - Julian) L12 假單明細。
+   *
+   * 可見者：申請人本人，或**鏈上任何一個節點**（不限當前待簽）——
+   * 簽過的人有權回看自己簽了什麼，那是他的責任的一部分。
+   */
+  public async get(params: {
+    accountBookId: string;
+    requestId: string;
+    actorEmployeeId: string;
+    /** Info: (20260817 - Julian) 寫個資讀取軌跡需要平台身分，不是員工 id */
+    actorUserId: string;
+  }): Promise<ILeaveRequestDetail> {
+    const row = await this.requests.findDetailById(params);
+    if (row === null) throw new AppError(API_ERRORS.NF_LEAVE_REQUEST);
+
+    const isApplicant = row.employeeId === params.actorEmployeeId;
+    const onChain = row.approvalSteps.some(
+      (step) => step.approverEmployeeId === params.actorEmployeeId,
+    );
+    if (!isApplicant && !onChain) {
+      throw new AppError(API_ERRORS.FO_LEAVE_REQUEST_SCOPE);
+    }
+
+    const summary = await this.requests.findSummaryById(params);
+    if (summary === null) throw new AppError(API_ERRORS.NF_LEAVE_REQUEST);
+
+    /**
+     * Info: (20260817 - Julian) 別人看你的事由要留痕，自己看自己的不用。
+     *
+     * `AuditLogAction.READ` 的存在理由是「個資被看過本身就是事件」，
+     * 而那句話的前提是**被看的人與看的人不是同一個** ——
+     * 把本人的每一次開啟也記上，軌跡會被自己的瀏覽紀錄淹沒，
+     * 而「誰看過我的病假事由」這個唯一重要的問題反而查不出來。
+     *
+     * `dataId` 填申請人的 `Employee.id` 而不是假單 id：
+     * 個資調查的軸線是「哪些人受影響」（`AuditLogDataType.EMPLOYEE_PII` 的契約）。
+     */
+    if (!isApplicant) {
+      await this.audit.createAuditLog({
+        userId: params.actorUserId,
+        accountBookId: params.accountBookId,
+        dataType: AuditLogDataType.EMPLOYEE_PII,
+        dataId: row.employeeId,
+        action: AuditLogAction.READ,
+      });
+    }
+
+    return {
+      summary,
+      reason: this.decryptReason(row),
+      days: row.days.map((day) => ({
+        workDate: day.workDate,
+        segment: day.segment as LeaveDaySegment,
+        startMinute: day.startMinute,
+        endMinute: day.endMinute,
+        minutes: day.minutes,
+        dayEquivalentMinutes: day.dayEquivalentMinutes,
+        recalledAt: day.recalledAt ? day.recalledAt.toISOString() : null,
+      })),
+      steps: row.approvalSteps.map((step) => ({
+        order: step.order,
+        nodeKind: step.nodeKind as LeaveApprovalNodeKind,
+        approverEmployeeNo: step.approverEmployeeNo,
+        approverName: step.approverName,
+        approverJobTitle: step.approverJobTitle,
+        status: step.status as LeaveApprovalStepStatus,
+        mergedFromKinds: step.mergedFromKinds as LeaveApprovalNodeKind[],
+        escalatedReason: step.escalatedReason,
+        escalatedFromKind:
+          step.escalatedFromKind as LeaveApprovalNodeKind | null,
+        decidedAt: step.decidedAt ? step.decidedAt.toISOString() : null,
+        comment: step.comment,
+      })),
+      concurrencyWarned: row.concurrencyWarned,
+      viewerIsCurrentApprover: row.approvalSteps.some(
+        (step) =>
+          step.pendingKey !== null &&
+          step.approverEmployeeId === params.actorEmployeeId,
+      ),
+    };
+  }
+
+  /**
+   * Info: (20260817 - Julian) 解事由。解不開時回 null，不讓整頁 500。
+   *
+   * 金鑰輪替出問題時，這張單的其他資訊（誰、什麼假、幾天、簽到哪）仍然有用 ——
+   * 把一個欄位的故障放大成整頁失敗，只會讓維運同時失去問題與線索。
+   * 記 warn 而不是 error：它不是這次請求的失敗，是一個需要有人去查的狀態。
+   */
+  private decryptReason(row: {
+    id: string;
+    reasonCipher: string;
+    piiKeyVersion: number;
+  }): string | null {
+    try {
+      return decryptPii(
+        row.reasonCipher,
+        {
+          table: HrPiiTable.LEAVE_REQUEST,
+          field: "reasonCipher",
+          recordId: row.id,
+        },
+        row.piiKeyVersion,
+      );
+    } catch (error) {
+      logger.warn(
+        `[leave] reason decrypt failed: request=${row.id} keyVersion=${row.piiKeyVersion} (${(error as Error).message})`,
+      );
+      return null;
+    }
+  }
+
+  // Info: (20260817 - Julian) 呼叫者是否出現在該單的簽核鏈上（不限當前待簽）
+  private async isOnChain(
+    accountBookId: string,
+    requestId: string,
+    actorEmployeeId: string,
+  ): Promise<boolean> {
+    const record = await this.requests.findById({ accountBookId, requestId });
+    return (
+      record !== null &&
+      record.steps.some((step) => step.approverEmployeeId === actorEmployeeId)
+    );
+  }
+
+  /**
+   * Info: (20260817 - Julian) L17 試算。**純計算、不寫入、不預扣。**
+   *
+   * 這支端點是本模組最重要的一支：若送出前看不到「這樣請會發生什麼」，
+   * 員工只能靠試錯，而每一次試錯都是一張要有人去駁回的單。
+   */
+  public async preview(params: {
+    accountBookId: string;
+    employeeId: string;
+    input: ILeaveRequestInput;
+    observedAt: Date;
+  }): Promise<ILeaveRequestPreview> {
+    const { plan, chain, grants, concurrency, policy } =
+      await this.buildPlan(params);
+
+    /**
+     * Info: (20260821 - Julian) 併計閘之二：試算（review 第二輪 R2）。
+     *
+     * 這一支先前沒有閘，於是它會回一個**完整成功**的結果：`remainingMinutesBefore`
+     * 是 7 日、簽核鏈解得出來、`shortfallMinutes: 0`。使用者在畫面上被系統確認
+     * 「你有 7 天家庭照顧假可以請」，按下送出才被拒 —— 試算正在斷言那道閘
+     * 存在的目的所要保護的額度。
+     */
+    this.assertMergeNotImplemented(policy);
+
+    const totalMinutes = plan.reduce((sum, day) => sum + day.minutes, 0);
+    const totalDays = toTotalDays(plan);
+
+    const unlimited = policy.quotaMode === LeaveQuotaMode.UNLIMITED;
+    const remainingBefore = unlimited
+      ? null
+      : grants.reduce((sum, grant) => sum + grant.remainingMinutes, 0);
+    const allocation = unlimited
+      ? { allocations: [], shortfallMinutes: 0 }
+      : allocateConsumption({ grants, requiredMinutes: totalMinutes });
+
+    return {
+      days: plan,
+      totalMinutes,
+      // Info: (20260819 - Julian) 對外是顯示用的近似值；規則命中已在 chain 內以精確值判定
+      totalDays: exactDaysToNumber(totalDays),
+      remainingMinutesBefore: remainingBefore,
+      remainingMinutesAfter:
+        remainingBefore === null
+          ? null
+          : Math.max(0, remainingBefore - totalMinutes),
+      shortfallMinutes: allocation.shortfallMinutes,
+      approvalSteps: chain.ok ? chain.steps : [],
+      unresolvedReason: chain.ok ? null : chain.reason,
+      concurrencyWarnings: concurrency.map((item) => ({
+        workDate: item.workDate,
+        observedCount: item.observedCount,
+        limitValue: item.limitValue,
+        // Info: (20260817 - Julian) 特休（employerMayReject = false）永遠不會 blocking，見 §D14
+        blocking:
+          item.action === LeaveConcurrencyAction.BLOCK &&
+          policy.employerMayReject,
+      })),
+    };
+  }
+
+  // Info: (20260817 - Julian) L11 送出
+  public async submit(params: {
+    accountBookId: string;
+    employeeId: string;
+    input: ILeaveRequestInput;
+    observedAt: Date;
+  }): Promise<ILeaveRequestRecord> {
+    const { plan, chain, grants, concurrency, policy } =
+      await this.buildPlan(params);
+
+    const totalMinutes = plan.reduce((sum, day) => sum + day.minutes, 0);
+    const totalDays = toTotalDays(plan);
+
+    /**
+     * Info: (20260817 - Julian) 展不開就拒絕送出，**不是自動核准**（ADR 023 §3）。
+     *
+     * 自動核准會讓一個設定缺口靜默地變成一張看起來正常的生效假單。
+     * 成因寫進 log，因為解法在 HR 手上不在員工手上。
+     */
+    if (!chain.ok) {
+      logger.warn("[leave] approval chain unresolved", {
+        accountBookId: params.accountBookId,
+        employeeId: params.employeeId,
+        reason: chain.reason,
+        detail: chain.detail,
+      });
+      throw new AppError(API_ERRORS.CF_LEAVE_APPROVAL_CHAIN_UNRESOLVED);
+    }
+
+    // Info: (20260821 - Julian) 併計閘之一：送出。三個入口的理由見 `assertMergeNotImplemented`
+    this.assertMergeNotImplemented(policy);
+
+    if (policy.quotaMode === LeaveQuotaMode.QUOTA) {
+      const { shortfallMinutes } = allocateConsumption({
+        grants,
+        requiredMinutes: totalMinutes,
+      });
+      if (shortfallMinutes > 0) {
+        throw new AppError(API_ERRORS.VA_LEAVE_INSUFFICIENT_BALANCE);
+      }
+    }
+
+    /**
+     * Info: (20260817 - Julian) 併休超限：只有雇主有准駁權的假別才擋得住。
+     *
+     * 特休依 §38 II 期日由勞工排定，雇主只能協商調整 —— 在送出端硬擋
+     * 等於用技術手段行使一個法律上沒有的否決權（計畫書 §D14）。
+     * 超限對特休只留下 `concurrencyWarned`，呈現在簽核者的畫面上。
+     *
+     * ToDo: (20260821 - Julian) **U3：`LeaveConcurrencyWarning` 整張表零寫入。**
+     *
+     * schema 稱它是「爭議時**唯一的憑據**」（計畫書 §333），而全 repo
+     * `create` / `read` 各 0 筆 —— 目前只落地一個布林 `concurrencyWarned`，
+     * 於是簽核者看得到「送出時已知有人同日請假」，卻看不到**該日已有幾人、
+     * 上限是幾人**。爭議發生時那個布林答不出任何問題。
+     * 送出時把 `observedCount` / `limitValue` / `workDate` 一併寫進那張表。
+     */
+    const blocking = concurrency.some(
+      (item) =>
+        item.action === LeaveConcurrencyAction.BLOCK &&
+        policy.employerMayReject,
+    );
+    if (blocking) {
+      throw new AppError(API_ERRORS.CF_LEAVE_CONCURRENCY_EXCEEDED);
+    }
+
+    /**
+     * Info: (20260817 - Julian) id 先產生，因為它是加密 AAD 的一部分，
+     * 加密必須在 insert 之前完成（ADR 018 §3；與 `attendance_punch.service`
+     * 對 `latitudeCipher` 的處置相同）。
+     *
+     * 事由是 Tier 2 個資：「回診複檢」「父喪」「出庭」都寫在這一欄，
+     * 而假單清單是主管日常會開的畫面 —— 明文入庫等於讓每一次查詢都攤開它。
+     */
+    const requestId = randomUUID();
+    const reason = encryptPii(params.input.reason, {
+      table: HrPiiTable.LEAVE_REQUEST,
+      field: "reasonCipher",
+      recordId: requestId,
+    });
+
+    const created = await this.requests.createWithChain({
+      id: requestId,
+      accountBookId: params.accountBookId,
+      employeeId: params.employeeId,
+      leavePolicyId: policy.id,
+      reasonCipher: reason.cipher,
+      piiAlgorithm: reason.algorithm,
+      piiKeyVersion: reason.keyVersion,
+      totalMinutes,
+      /**
+       * Info: (20260819 - Julian) 傳**精確的十進位字串**（review B5）。
+       *
+       * `LeaveRequest.totalDays` 是 Decimal 欄位，而先前傳的是由 double 累加
+       * 出來的 number，再由 repository 用 `String()` 洗成字串騙過邊界防護 ——
+       * 洗掉的是一個已經算壞的值。CLAUDE.md §2 要的是運算用精確型別，
+       * 不是把 `2.9999999999999996` 存成字串。
+       */
+      totalDays: exactDaysToDecimalString(totalDays),
+      days: plan,
+      steps: chain.steps,
+      concurrencyWarned: concurrency.length > 0,
+    });
+
+    logger.info(
+      `[leave] request submitted: employee=${params.employeeId} policy=${policy.code} days=${exactDaysToDecimalString(totalDays)} steps=${chain.steps.length}`,
+    );
+    return created;
+  }
+
+  // Info: (20260817 - Julian) L14 核准當前節點
+  public async approve(params: {
+    accountBookId: string;
+    requestId: string;
+    actorEmployeeId: string;
+    comment?: string;
+    observedAt: Date;
+  }): Promise<LeaveApprovalOutcome> {
+    const { request, step } = await this.claimStep(params);
+
+    /**
+     * Info: (20260821 - Julian) 併計閘之三：核准（review 第二輪 R2）。
+     *
+     * **這一條才是實際可達的繞過路徑，而且不需要任何舊資料：**
+     * HR 先用 `mergesIntoPolicyId: null` 建假別 X → 員工對 X 送出（閘放行，
+     * 當下合法）→ HR 把 X 的 `mergesIntoPolicyId` 設起來（`leave_policy` 支援
+     * 的編輯）→ 主管核准 → `completeApproval` 只扣 X 的額度。
+     * 部署當下已經 PENDING 的假單同理。
+     *
+     * 因此 `requirePolicy` 從「最後一關才讀」提前到這裡：閘要蓋住**兩條分支**。
+     * 中間關卡多一次查詢是刻意的成本 —— 讓簽核者當場知道這張單不會過，
+     * 好過把它推到最後一關才拒絕。
+     */
+    const policy = await this.requirePolicy(
+      params.accountBookId,
+      request.leavePolicyId,
+    );
+    this.assertMergeNotImplemented(policy);
+
+    const isFinal = step.order === request.steps.length - 1;
+    if (!isFinal) {
+      return this.settle(
+        await this.requests.advanceStep({
+          requestId: request.id,
+          stepId: step.id,
+          actorEmployeeId: params.actorEmployeeId,
+          accountBookId: params.accountBookId,
+          decidedAt: params.observedAt,
+          comment: params.comment,
+        }),
+      );
+    }
+
+    /**
+     * Info: (20260817 - Julian) 最後一關：扣額度、投影排班、改狀態必須同一個交易。
+     *
+     * repository 在交易內重算 FIFO 分配並以附條件的 `updateMany` 判輸 ——
+     * 讀後寫在併發下會兩張單都過（ADR 023 §6.4）。
+     */
+    /**
+     * Info: (20260817 - Julian) 這裡只做**前置檢查**，不把分配結果傳下去。
+     *
+     * 分配必須在交易內依交易內讀到的餘額重算 —— 這裡算出來的那一份，
+     * 在另一張單先扣走之後就是舊的。前置檢查的價值是：在開交易之前
+     * 就給出「額度不足」這個較友善的失敗，而不是讓它變成一個 409 競態。
+     */
+    /**
+     * Info: (20260819 - Julian) 到期判斷的基準日 —— 前置檢查與交易內的 FIFO
+     * 共用同一個值，兩邊才會挑到同一批（review B4）。
+     *
+     * **不用 `?? ""` 兜底。** `expiresOn: { gte: "" }` 會比對到每一列，
+     * 到期過濾就此靜默失效，而查詢仍然「成功」—— 沒有任何症狀。
+     * 一張沒有任何請假日的假單是不變式層級的錯誤（validator 要求至少一天），
+     * 不是一個需要預設值的情境。
+     */
+    const firstWorkDate = request.days[0]?.workDate;
+    if (firstWorkDate === undefined) {
+      logger.error(
+        `[leave] request ${request.id} has no leave day; cannot determine expiry cut-off`,
+      );
+      throw new AppError(API_ERRORS.IS_DB_FAILED);
+    }
+
+    if (policy.quotaMode === LeaveQuotaMode.QUOTA) {
+      const grants = await this.context.findConsumableGrants({
+        accountBookId: params.accountBookId,
+        employeeId: request.employeeId,
+        leavePolicyId: request.leavePolicyId,
+        asOfDate: firstWorkDate,
+      });
+      const { shortfallMinutes } = allocateConsumption({
+        grants,
+        requiredMinutes: request.totalMinutes,
+      });
+      if (shortfallMinutes > 0) {
+        throw new AppError(API_ERRORS.VA_LEAVE_INSUFFICIENT_BALANCE);
+      }
+    }
+
+    return this.settle(
+      await this.requests.completeApproval({
+        accountBookId: params.accountBookId,
+        requestId: request.id,
+        stepId: step.id,
+        actorEmployeeId: params.actorEmployeeId,
+        decidedAt: params.observedAt,
+        comment: params.comment,
+        employeeId: request.employeeId,
+        leavePolicyId: request.leavePolicyId,
+        asOfDate: firstWorkDate,
+        totalMinutes: request.totalMinutes,
+      }),
+    );
+  }
+
+  // Info: (20260817 - Julian) L15 駁回。任一節點駁回即整張單駁回，額度不動
+  public async reject(params: {
+    accountBookId: string;
+    requestId: string;
+    actorEmployeeId: string;
+    comment?: string;
+    observedAt: Date;
+  }): Promise<LeaveApprovalOutcome> {
+    const { request, step } = await this.claimStep(params);
+    return this.settle(
+      await this.requests.rejectStep({
+        requestId: request.id,
+        stepId: step.id,
+        actorEmployeeId: params.actorEmployeeId,
+        accountBookId: params.accountBookId,
+        decidedAt: params.observedAt,
+        comment: params.comment,
+      }),
+    );
+  }
+
+  // Info: (20260817 - Julian) L13 撤回。只有申請人自己、且只在尚未有任何決定之前
+  public async withdraw(params: {
+    accountBookId: string;
+    requestId: string;
+    actorEmployeeId: string;
+    observedAt: Date;
+  }): Promise<LeaveApprovalOutcome> {
+    const request = await this.requireRequest(params);
+    if (request.employeeId !== params.actorEmployeeId) {
+      throw new AppError(API_ERRORS.FO_NOT_AUTHORIZED_REVIEWER);
+    }
+    if (request.status !== LeaveRequestStatus.PENDING) {
+      throw new AppError(API_ERRORS.VA_LEAVE_ALREADY_REVIEWED);
+    }
+    return this.settle(
+      await this.requests.withdraw({
+        requestId: request.id,
+        decidedAt: params.observedAt,
+      }),
+    );
+  }
+
+  // Info: (20260817 - Julian) ===== 內部 =====
+
+  /**
+   * Info: (20260817 - Julian) 送出與試算共用的計算：逐日換算、簽核鏈、額度、併休。
+   *
+   * 兩支端點必須算出完全一樣的東西 —— 試算顯示「會扣 3 天、簽兩關」，
+   * 送出卻扣了 4 天，那比沒有試算更糟。
+   */
+  private async buildPlan(params: {
+    accountBookId: string;
+    employeeId: string;
+    input: ILeaveRequestInput;
+  }) {
+    const { accountBookId, employeeId, input } = params;
+
+    const policy = await this.requirePolicy(accountBookId, input.leavePolicyId);
+
+    /**
+     * Info: (20260819 - Julian) 連續時段的展開在**這裡**，不在前端。
+     *
+     * 需求是「起 8/19 08:00、迄 8/21 17:00」這樣一段連續時間，而首日要請到
+     * 當天班別結束為止 —— 前端不知道那個人那一天的班到幾點。因此先撈班表，
+     * 再把區間切成逐日（`expandLeaveSpan`）。
+     *
+     * 兩趟查詢是刻意的：日期範圍由起訖字串就算得出來（不需要班表），
+     * 而切區間需要班表。合成一趟會讓 `expandLeaveSpan` 變成一支會查 DB 的
+     * 函式，那就沒有辦法在測試裡完整重現它（同引擎不查 DB 的既有邊界）。
+     */
+    let spanDates: string[];
+    try {
+      spanDates = datesBetween(
+        mustParseLocalDateTime(input.startAt).workDate,
+        mustParseLocalDateTime(input.endAt).workDate,
+      );
+    } catch {
+      throw new AppError(API_ERRORS.VA_INVALID_INPUT_DATA);
+    }
+
+    /**
+     * Info: (20260820 - Julian) 連**區間的前一天**也要撈（review 第 8 輪）。
+     *
+     * 跨夜班在午夜之後的那一段，所屬的工作日是前一天：夜班 20:00 → 次日 05:00，
+     * 使用者填「8/20 02:00 起」，那三個小時是 **8/19** 那一班的尾巴。
+     * `expandLeaveSpan` 會為此向 `shiftOf` 詢問前一天 —— 沒撈進來的話它問到 null，
+     * 那一段就會被當成「沒有班」而整天丟掉，使用者收到的是「非上班日」，
+     * 而他明明就在上班。
+     *
+     * 多撈一天的代價是一列查詢；少撈一天的代價是夜班工人請不了下半夜的假。
+     */
+    const schedules = await this.context.findSchedules({
+      accountBookId,
+      employeeId,
+      workDates: [previousIsoDate(spanDates[0]), ...spanDates],
+    });
+
+    let spanDays: ILeaveDayInput[];
+    try {
+      spanDays = expandLeaveSpan({
+        startAt: input.startAt,
+        endAt: input.endAt,
+        shiftOf: (workDate) => schedules[workDate]?.core ?? null,
+      });
+    } catch (error) {
+      if (error instanceof LeaveSpanError) {
+        throw new AppError(API_ERRORS.VA_INVALID_INPUT_DATA);
+      }
+      throw error;
+    }
+
+    /**
+     * Info: (20260819 - Julian) 區間裡的**非上班日直接跳過**，不是擋下整張單。
+     *
+     * ## 為什麼從「擋下」改成「跳過」
+     *
+     * 原本的規則是「沒有排班或不是上班日的日子不能請假」，理由是：在例假日
+     * 請假不會產生任何效果，卻會扣掉額度 —— 使用者付出了代價卻什麼也沒換到。
+     * 那個理由在**使用者逐日勾選**的時候成立：他點到週日，那多半是誤點。
+     *
+     * 改成連續時段之後就不成立了。「我 8/20 到 8/28 不在」是一句話，
+     * 中間夾著的週六週日**不是他選的**，是區間推導出來的。為此擋下整張單，
+     * 等於要求使用者自己把一段連續的假拆成好幾張避開假日 ——
+     * 而那正是這次改成起訖要消除的手工。
+     *
+     * ## 跳過不等於算少
+     *
+     * 那幾天本來就沒有工時可扣。額度以**分鐘**為單位（ADR 022 §2），
+     * 跳過一個沒有班的日子，扣減的分鐘數一分不差。
+     *
+     * ## 全部跳完才是錯
+     *
+     * 整段區間一天工時都沒有（整段落在連假裡、或下班後才起算），
+     * 那時才回「非上班日」—— 使用者填的格式完全正確，
+     * 是那段時間他本來就不在班上。
+     */
+    const workingDays = spanDays.filter((day) => {
+      const schedule = schedules[day.workDate];
+      return (
+        schedule !== undefined &&
+        schedule.dayType === WorkDayType.WORK &&
+        schedule.shift !== null
+      );
+    });
+
+    if (workingDays.length === 0) {
+      throw new AppError(API_ERRORS.VA_LEAVE_ON_NON_WORKING_DAY);
+    }
+
+    const plan: ILeaveDayPlan[] = workingDays.map((day) => {
+      // Info: (20260819 - Julian) 上面的 filter 已保證這三者都在
+      const schedule = schedules[day.workDate] as ILeaveDaySchedule & {
+        shift: NonNullable<ILeaveDaySchedule["shift"]>;
+      };
+      try {
+        const resolved = resolveLeaveMinutes({
+          policy: {
+            unitBasis: policy.unitBasis,
+            minimumUnitMinutes: policy.minimumUnitMinutes,
+            roundingMode: policy.roundingMode,
+          },
+          shift: schedule.shift,
+          segment: day.segment,
+          startMinute: day.startMinute,
+          endMinute: day.endMinute,
+        });
+        return {
+          workDate: day.workDate,
+          segment: day.segment,
+          startMinute:
+            day.segment === LeaveDaySegment.CUSTOM
+              ? (day.startMinute ?? null)
+              : null,
+          endMinute:
+            day.segment === LeaveDaySegment.CUSTOM
+              ? (day.endMinute ?? null)
+              : null,
+          minutes: resolved.minutes,
+          dayEquivalentMinutes: resolved.dayEquivalentMinutes,
+        };
+      } catch (error) {
+        /**
+         * Info: (20260817 - Julian) 引擎的結構性錯誤轉成 400，不讓它變成 500 ——
+         * 「這個假別最小單位是整天，不能請半天」是使用者看得懂並能自己修正的事。
+         */
+        if (error instanceof LeaveRuleError) {
+          throw new AppError(API_ERRORS.VA_LEAVE_UNIT_NOT_ALIGNED);
+        }
+        throw error;
+      }
+    });
+
+    const totalDays = toTotalDays(plan);
+    const [rules, org, grants, concurrency] = await Promise.all([
+      this.context.findApprovalRules({ accountBookId }),
+      this.context.buildOrgSnapshot({
+        accountBookId,
+        applicantEmployeeId: employeeId,
+      }),
+      policy.quotaMode === LeaveQuotaMode.QUOTA
+        ? this.context.findConsumableGrants({
+            accountBookId,
+            employeeId,
+            leavePolicyId: policy.id,
+            /**
+             * Info: (20260819 - Julian) 以**起始日**判斷哪些批次還沒過期。
+             * 取**實際請假的第一天**而不是區間的第一天：區間可能從週六起算，
+             * 而那一天已經被跳過。用它去問「哪些批次還沒過期」會早一到兩天，
+             * 剛好在批次到期日前後產生一個對不起來的答案。
+             */
+            asOfDate: workingDays[0].workDate,
+          })
+        : Promise.resolve([]),
+      /**
+       * Info: (20260820 - Julian) 規則設定壞掉要收斂成說得出原因的 4xx
+       * （review 第 5 輪 M2）。
+       *
+       * `assertConcurrencyRule` 丟的不是 `AppError`，不包的話 route 會收斂成
+       * **500**，而真正的原因（某一條併休規則沒說出可執行的上限）
+       * 只留在伺服器的 log 裡 —— 人資看不到，也就修不了。
+       */
+      this.context
+        .findConcurrencyStatus({
+          accountBookId,
+          employeeId,
+          leavePolicyId: policy.id,
+          // Info: (20260819 - Julian) 同上：併休人數只問真的會請假的那幾天
+          workDates: workingDays.map((day) => day.workDate),
+        })
+        .catch((error: unknown) => {
+          if (error instanceof LeaveConcurrencyInvariantError) {
+            throw new AppError(API_ERRORS.VA_LEAVE_CONCURRENCY_RULE_INVALID);
+          }
+          throw error;
+        }),
+    ]);
+
+    const chain: IApprovalChainResolution = resolveApprovalChain({
+      leavePolicyId: policy.id,
+      totalDays,
+      rules,
+      org,
+    });
+
+    return { policy, plan, chain, grants, concurrency };
+  }
+
+  /**
+   * Info: (20260821 - Julian) **跨假別併計尚未實作，因此擋下**（review 第 10 輪 B2）。
+   *
+   * ## 這道閘擋的是什麼
+   *
+   * 計畫書 §6.5 寫著「家庭照顧假併入事假（性平法 §20）… `allocateConsumption`
+   * 在扣減主假別後對被併入的假別再產一筆 `CONSUME`」，而 `mergesIntoPolicyId`
+   * 在**整個扣減路徑上零讀取端** —— `readConsumableGrants` 只收單一
+   * `leavePolicyId`，`allocateConsumption` 收的是一個扁平的 grants 陣列，
+   * 完全沒有假別維度。
+   *
+   * 後果是法定額度被繞過：員工請滿 7 日家庭照顧假之後，事假額度仍是完整的
+   * 14 日（合計 21 日），而性平法 §20 的上限是 14 日 —— **每人每年多出 7 日**。
+   *
+   * ## 為什麼是一支共用的私有方法而不是三段複製
+   *
+   * 第一版只擋在 `submit()`，而 `approve()` 與 `preview()` 都沒有
+   * （review 第二輪 R2）—— 一道只蓋住一個入口的閘，讀起來卻像蓋住了全部。
+   * 收斂成一支之後，「有幾個入口讀得到假別」與「有幾個入口被擋」是同一個數字，
+   * 而下一個新增入口的人會在型別上看到它。
+   *
+   * ## 為什麼是擋而不是猜一個實作
+   *
+   * 併計要動的是請假模組最精密的那個交易（附條件扣總量 → FIFO 逐批 →
+   * 逐日分錄），而且三條路徑都要一起改：核准的逐層扣減、銷假／駁回的逐層
+   * 還原、以及送出前置檢查也要含被併入的假別。少了還原那一段，偏差方向會
+   * 變成對勞工不利且無人報錯。
+   *
+   * 計畫書對生理假的處置是同一個判準：「在規則核對完成前留空，不猜一個數字
+   * 填進去」。這裡把它擴大成「規則寫了但沒有執行者時，不放行」。
+   *
+   * ToDo: (20260821 - Julian) 併計扣減落地後移除這道閘與它的三個呼叫端
+   * （計畫書 §17 缺口 17），並把 `ILeavePolicyOption.isSelectable` 一併拿掉。
+   */
+  private assertMergeNotImplemented(policy: {
+    mergesIntoPolicyId: string | null;
+  }): void {
+    if (policy.mergesIntoPolicyId !== null) {
+      throw new AppError(API_ERRORS.VA_LEAVE_MERGE_NOT_IMPLEMENTED);
+    }
+  }
+
+  private async requirePolicy(accountBookId: string, leavePolicyId: string) {
+    const policy = await this.context.findActivePolicy({
+      accountBookId,
+      leavePolicyId,
+    });
+    if (policy === null) throw new AppError(API_ERRORS.NF_LEAVE_POLICY);
+    return policy;
+  }
+
+  private async requireRequest(params: {
+    accountBookId: string;
+    requestId: string;
+  }): Promise<ILeaveRequestRecord> {
+    const request = await this.requests.findById(params);
+    if (request === null) throw new AppError(API_ERRORS.NF_LEAVE_REQUEST);
+    return request;
+  }
+
+  /**
+   * Info: (20260817 - Julian) 取出當前待簽節點並套用職責分離（ADR 023 §5）。
+   *
+   * 四條規則的順序不是隨意的：**先擋自我核准再擋非授權簽核者**。
+   * 反過來的話，一個把自己設成自己主管的人會收到「你不是簽核者」，
+   * 而他明明就在鏈上 —— 那個訊息會讓他去找 HR 改權限，改不好。
+   */
+  private async claimStep(params: {
+    accountBookId: string;
+    requestId: string;
+    actorEmployeeId: string;
+  }) {
+    const request = await this.requireRequest(params);
+
+    if (request.status !== LeaveRequestStatus.PENDING) {
+      throw new AppError(API_ERRORS.VA_LEAVE_ALREADY_REVIEWED);
+    }
+    if (request.employeeId === params.actorEmployeeId) {
+      throw new AppError(API_ERRORS.FO_SELF_APPROVAL_FORBIDDEN);
+    }
+
+    const step = request.steps.find((item) => item.isPending);
+    if (step === undefined) {
+      throw new AppError(API_ERRORS.VA_LEAVE_ALREADY_REVIEWED);
+    }
+
+    /**
+     * Info: (20260820 - Julian) `HR` 關是**一池人**，不是一個人
+     * （review 第 6 輪 M19）。
+     *
+     * schema 對 `LeaveApprovalNodeKind.HR` 寫的是「具 HR 角色者，**任一人簽核
+     * 即通過**」，而這一行原本一律比對 `step.approverEmployeeId` ——
+     * 展開時為了讓快照落在一個具體的人，取的是排序後的第一位。
+     * 那位人資請假或離職（`approverEmployeeId` 是 `SetNull`），這一關就
+     * **永久卡住**，而那句註解讓讀者以為任何人資都接得手。
+     *
+     * 判準與展開時的池同源：`EmployeeHrFunctionAssignment` 裡仍生效的
+     * `HR_ADMIN`（`buildOrgSnapshot` 用的是同一支 `listHolderIds`）。
+     * 不得自我核准那一條在上面已經擋過，因此這裡不必再排除申請人。
+     *
+     * 其餘節點型別維持嚴格比對：它們各自只有一個候選人，放寬會讓
+     * 「誰該簽這一關」變成沒有答案的問題。
+     */
+    if (step.nodeKind === LeaveApprovalNodeKind.HR) {
+      const isHr = await this.employees.hasAnyFunction({
+        accountBookId: params.accountBookId,
+        employeeId: params.actorEmployeeId,
+        hrFunctions: [EmployeeHrFunction.HR_ADMIN],
+      });
+      if (!isHr) {
+        throw new AppError(API_ERRORS.FO_NOT_AUTHORIZED_REVIEWER);
+      }
+    } else if (step.approverEmployeeId !== params.actorEmployeeId) {
+      throw new AppError(API_ERRORS.FO_NOT_AUTHORIZED_REVIEWER);
+    }
+
+    return { request, step };
+  }
+
+  /**
+   * ToDo: (20260821 - Julian) **U6：簽核通知完全沒有接。**
+   *
+   * `leave_request.service` / `leave_request.repo` / `overtime_request.service`
+   * 對 `notif` / `通知` / `mail` **零命中**，而專案本來就有 `mail.service.ts`、
+   * 其他模組也用 ToDo 標同型缺口 —— 假勤這邊一個都沒有。
+   *
+   * 後果不是「少了一個提醒」：簽核鏈是逐關推進的，沒有通知就沒有任何機制
+   * 讓下一關知道輪到他，而假單沒有期限（計畫書 §1426、ADR 023 §8.2）。
+   */
+
+  /**
+   * Info: (20260817 - Julian) 把 repository 的結局轉成 API 語意。
+   *
+   * `BALANCE_RACE` 與 `ALREADY_REVIEWED` 都不是故障，是併發下的正常結局 ——
+   * 但呼叫端需要不同的錯誤碼才能給出正確的訊息（一個是「額度被別張單先扣走」、
+   * 一個是「這一關已經有人簽過了」）。
+   */
+  private settle(outcome: LeaveApprovalOutcome): LeaveApprovalOutcome {
+    if (outcome === LeaveApprovalOutcome.BALANCE_RACE) {
+      throw new AppError(API_ERRORS.CF_LEAVE_BALANCE_RACE);
+    }
+    if (outcome === LeaveApprovalOutcome.ALREADY_REVIEWED) {
+      throw new AppError(API_ERRORS.VA_LEAVE_ALREADY_REVIEWED);
+    }
+    /**
+     * Info: (20260821 - Julian) 那一天已經有另一張生效中的假單
+     * （review 第 11 輪 B3）。
+     *
+     * 與 `BALANCE_RACE` 分開的理由同上：下一步不一樣。額度競態重送可能成功；
+     * 這一個要先把另一張假銷掉，重送幾次都是同一個結果。
+     */
+    if (outcome === LeaveApprovalOutcome.DAY_ALREADY_ACTIVE) {
+      throw new AppError(API_ERRORS.CF_LEAVE_DAY_ALREADY_ACTIVE);
+    }
+    return outcome;
+  }
+}
+
+/**
+ * Info: (20260817 - Julian) 總日數 = Σ(該日分鐘 ÷ 該日日約當分鐘)。
+ *
+ * **不是「幾天」的計數。** 半天的日子只算 0.5 天，而不同班別的半天
+ * 是不同的分鐘數 —— 這正是逐日固化 `dayEquivalentMinutes` 的用途
+ * （計畫書 §D3）。總日數只用於命中簽核規則區間與顯示，帳本記的仍是分鐘。
+ */
+/**
+ * Info: (20260819 - Julian) 總日數改由 `totalDaysOf` 精確計算（review B5）。
+ *
+ * 原本是 `plan.reduce((sum, day) => sum + day.minutes / day.dayEquivalentMinutes, 0)`，
+ * 而那個 double 在「恰好整數天」的形狀上會掉到整數下方
+ * （420 分班 × 7 天 × 180 分 → `2.9999999999999996`），
+ * 於是恰好 3 天的假單掉進 `[0, 3)` 的短假規則、少簽一關。
+ * 保留這個薄包裝只是為了讓三個呼叫點不必各自 import。
+ */
+const toTotalDays = (plan: readonly ILeaveDayPlan[]): IExactDays =>
+  totalDaysOf(plan);
+
+/**
+ * Info: (20260817 - Julian) 單例。route 只認這一個實例，
+ * 依賴注入的形狀留給測試（`leave_request_service.test.ts` 以假 repository 驗編排）。
+ */
+export const leaveRequestService = new LeaveRequestService(
+  leaveRequestRepo,
+  leaveRequestContextRepo,
+);

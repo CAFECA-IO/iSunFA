@@ -5,12 +5,15 @@ import { useSearchParams } from "next/navigation";
 import { request } from "@/lib/utils/request";
 import { HTTP_METHOD } from "@/constants/http";
 import { resolveSubscriptionAmount } from "@/lib/billing/seat_billing";
+import { SUBSCRIPTION_EXTENSION_WINDOW_DAYS } from "@/constants/subscription_quota";
 import {
   BLOCKING_REASON,
   PURCHASE_MODE,
   filterEligibleTeams,
   resolveBlockingReason,
+  resolvePeriodNote,
   resolvePurchaseMode,
+  type PeriodNote,
 } from "@/lib/purchase/purchase_target";
 import { useAuth } from "@/contexts/auth_context";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -42,19 +45,38 @@ export interface IPurchaseContext {
   unitPrice?: number;
 }
 
-export interface IPurchaseOrderResult {
-  orderId: string;
-  challenge: string;
-  /**
-   * Info: (20260817 - Luphia) server 實際建單的金額（PR #6652 第二輪 C-4）。
-   *
-   * 付款畫面顯示的席次金額是前端用**頁面載入時**的人數算的，實收由建單當下的
-   * `countMembers()` 重算——中間有人加入，使用者看到 4,200、卡被扣 5,040。
-   * `generatePaymentOrder` 一直都有回這個值，是前端把它丟掉了；接住它，
-   * 金額不符時就先停下來讓人看清楚，而不是在刷完卡之後才發現。
-   */
-  cost?: number;
-}
+/**
+ * Info: (20260820 - Luphia) 建單的結果有**兩種**，而型別必須說得出來（self-review 第二輪）。
+ *
+ * `PUT /subscription` 對降級與取消排程回的是 `orderId: null`——沒有東西要付。
+ * 先前的型別把 `orderId` 宣告成 `string`，於是付款畫面拿著 null 一路走到
+ * `completeCheckout(null, undefined)`：**排程其實成功了，而使用者看到付款錯誤。**
+ * 型別說謊，所以編譯器幫不上忙。
+ *
+ * 改成可辨識聯集之後，「不需要付款」是一種必須被處理的結果，而不是一個
+ * 恰好為 null 的欄位。
+ */
+export type IPurchaseOutcome =
+  | {
+      kind: "order";
+      orderId: string;
+      challenge: string;
+      /**
+       * Info: (20260817 - Luphia) server 實際建單的金額（PR #6652 第二輪 C-4）。
+       *
+       * 付款畫面顯示的席次金額是前端用**頁面載入時**的人數算的，實收由建單當下
+       * 的 `countMembers()` 重算——中間有人加入，使用者看到 4,200、卡被扣 5,040。
+       */
+      cost?: number;
+    }
+  | {
+      kind: "scheduled";
+      // Info: (20260820 - Luphia) 排程中的目標方案與生效時點（epoch 秒）
+      pendingPlanId: string | null;
+      // Info: (20260821 - Luphia) false＝當期到期後轉為免費版（沒有排程欄位）
+      autoRenew?: boolean;
+      effectiveAt: number | null;
+    };
 
 interface ITeamListItem {
   id: string;
@@ -126,6 +148,115 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
 
   // Info: (20260814 - Luphia) 供畫面重試（網路抖動不該讓人只能重整整頁）
   const reloadTeams = useCallback(() => setReloadToken((n) => n + 1), []);
+
+  /**
+   * Info: (20260820 - Luphia) 選定團隊後查當期期末，用於**付款前的展延揭露**
+   *（產品決定 20260820：不設預付上限，但要明確告知）。
+   *
+   * 付款履行改為展延（`applyTeamSubscriptionInTx`）：當期還沒結束時，新購期間
+   * 自**當期屆滿日**起算並累加。使用者需要在付款前就知道這件事——否則
+   * 「我今天付錢，是不是從今天算起？」只能靠事後看訂閱頁推斷。
+   *
+   * 查 `GET /subscription` 而不是把期末塞進團隊清單：那支端點本來就回這個欄位，
+   * 而團隊清單是所有購買情境共用的（購點也用），為一個訂閱專屬的揭露改它的
+   * 契約不划算。失敗就不顯示揭露——寧可少一行字，不要顯示一個猜的日期。
+   */
+  const [periodEndSec, setPeriodEndSec] = useState<number | null>(null);
+  /**
+   * Info: (20260821 - Luphia) 付款前要顯示哪一句期間說明（四條路見 `resolvePeriodNote`）。
+   *
+   * 在 effect 裡與 periodEndSec 一起算好——render 期不能呼叫 `Date.now()`。
+   * 這裡原本是兩個布林（`extensionTooEarly` / `isPlanChange`），而後者只比對
+   * 「方案有沒有不同」，於是**降級**也被當成換方案，畫面對一個不收費的排程操作
+   * 說「升級立即生效、剩餘期間將折抵」——三個事實全錯（三輪 self-review）。
+   */
+  const [periodNote, setPeriodNote] = useState<PeriodNote | null>(null);
+  /**
+   * Info: (20260820 - Luphia) 排程中的降級也要在付款前說（同一趟查詢就有）。
+   *
+   * 購買會取代排程——排程一律在**履行**時被 `applyTeamSubscriptionInTx` 清掉
+   * （20260821 起延長也一樣，不再於建單前取消：訂單沒付掉時排程必須還在）。
+   * 沒有這行揭露，就不會有任何畫面提到那個排程將要消失，而使用者是刻意排定它的。
+   */
+  const [pending, setPending] = useState<{
+    planId: string | null;
+    effectiveAt: number;
+  } | null>(null);
+  useEffect(() => {
+    if (!isSubscription || !selectedTeamId) {
+      setPeriodEndSec(null);
+      setPeriodNote(null);
+      setPending(null);
+      return undefined;
+    }
+    let active = true;
+    request<{
+      payload: {
+        planId?: string;
+        currentPeriodEnd?: number;
+        // Info: (20260824 - Luphia) false＝已關閉自動續訂（期末轉免費版），見中-1
+        autoRenew?: boolean;
+        pendingPlanId?: string | null;
+        pendingEffectiveAt?: number | null;
+      } | null;
+    }>(`/api/v1/user/team/${selectedTeamId}/subscription`)
+      .then((response) => {
+        if (!active) return;
+        const end = response.payload?.currentPeriodEnd ?? 0;
+        const nowMs = Date.now();
+        /**
+         * Info: (20260821 - Luphia) 規則在 `resolvePeriodNote`（純函式、逐條測試）：
+         * 升級講折抵、降級講期末生效不收費、同方案講展延或「暫不開放」，
+         * 而當期已結束或當期是免費版時什麼都不講（那是重新訂閱，沒有剩餘期間要交代）。
+         * `GET /subscription` 的 `planId` 已是折算後的有效方案。
+         */
+        const note = resolvePeriodNote({
+          currentPlanId: response.payload?.planId ?? "",
+          targetPlanId: context.planId,
+          periodEndSec: end,
+          nowMs,
+          extensionWindowDays: SUBSCRIPTION_EXTENSION_WINDOW_DAYS,
+        });
+        setPeriodNote(note);
+        // Info: (20260820 - Luphia) 當期已結束（或沒有訂閱）就沒有期間要揭露
+        setPeriodEndSec(note !== null ? end : null);
+        /**
+         * Info: (20260824 - Luphia) 「本次購買會取代什麼」的揭露（review #6687 四輪中-1）。
+         *
+         * 兩種「將要離開目前付費狀態」都要說：期末降轉（`pendingPlanId`）與
+         * 期末轉免費版（`autoRenew === false`）。履行時 `applyTeamSubscriptionInTx`
+         * 一律寫 `autoRenew: true` 並清 `pendingPlanId`——也就是**買一期會把使用者
+         * 關掉的自動續訂重新打開**，而在此之前只有降轉那一種在付款前說得出來
+         *（狀態機收斂的副作用：那個狀態從 `pendingPlanId = 'free'` 改成
+         * `autoRenew = false`，而這句揭露只看 `pendingPlanId`）。
+         */
+        const pendingPlanId = response.payload?.pendingPlanId ?? null;
+        /**
+         * Info: (20260824 - Luphia) `note !== null` 正好就是「當期還在、且當期是
+         * 付費方案」（見 `resolvePeriodNote`）——免費團隊的 `autoRenew` 是
+         * `?? false` 的預設值，不是「使用者關掉了續訂」（四輪高-1 同一個坑）。
+         */
+        const willResumeAutoRenew =
+          note !== null && response.payload?.autoRenew === false;
+        const effectiveAt =
+          response.payload?.pendingEffectiveAt ?? (end || null);
+        setPending(
+          (pendingPlanId || willResumeAutoRenew) && effectiveAt
+            ? { planId: pendingPlanId, effectiveAt }
+            : null,
+        );
+      })
+      .catch(() => {
+        if (!active) return;
+        setPeriodEndSec(null);
+        setPeriodNote(null);
+        setPending(null);
+      });
+    return () => {
+      active = false;
+    };
+    // Info: (20260821 - Luphia) 換方案的判斷要跟著使用者選的方案重算
+  }, [isSubscription, selectedTeamId, context.planId]);
 
   const eligibleTeams = useMemo(
     () => filterEligibleTeams(teams, mode),
@@ -226,10 +357,18 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
    */
   const orderCreator = useMemo(() => {
     if (!isActive || !usesTeam || !selectedTeamId) return undefined;
-    return async (paymentMethodId: string): Promise<IPurchaseOrderResult> => {
+    return async (paymentMethodId: string): Promise<IPurchaseOutcome> => {
       if (isSubscription) {
         const response = await request<{
-          payload: IPurchaseOrderResult | null;
+          payload: {
+            kind: "order" | "scheduled";
+            orderId?: string | null;
+            challenge?: string;
+            cost?: number;
+            pendingPlanId?: string | null;
+            autoRenew?: boolean;
+            effectiveAt?: number | null;
+          } | null;
         }>(`/api/v1/user/team/${selectedTeamId}/subscription`, {
           method: HTTP_METHOD.PUT,
           body: JSON.stringify({
@@ -239,21 +378,45 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
           }),
         });
         if (!response.payload) throw new Error("Failed to create order");
-        return response.payload;
+        /**
+         * Info: (20260821 - Luphia) 直接讀 server 的 `kind`（簡化 20260821）。
+         *
+         * 先前這裡是「`orderId` 是不是 null」的推斷——而 server 端也已改成
+         * 可辨識聯集，兩邊各自推斷同一件事只是多一個會不一致的地方。
+         */
+        if (response.payload.kind === "scheduled") {
+          return {
+            kind: "scheduled",
+            pendingPlanId: response.payload.pendingPlanId ?? null,
+            // Info: (20260821 - Luphia) 缺省視為仍會續訂：只有明確的 false 才是「期末轉免費版」
+            autoRenew: response.payload.autoRenew ?? true,
+            effectiveAt: response.payload.effectiveAt ?? null,
+          };
+        }
+        return {
+          kind: "order",
+          orderId: response.payload.orderId ?? "",
+          challenge: response.payload.challenge ?? "",
+          cost: response.payload.cost,
+        };
       }
 
-      const response = await request<{ payload: IPurchaseOrderResult | null }>(
-        `/api/v1/user/team/${selectedTeamId}/wallet/purchase`,
-        {
-          method: HTTP_METHOD.POST,
-          body: JSON.stringify({
-            creditPlanId: context.creditPlanId,
-            paymentMethodId,
-          }),
-        },
-      );
+      const response = await request<{
+        payload: { orderId: string; challenge: string; cost?: number } | null;
+      }>(`/api/v1/user/team/${selectedTeamId}/wallet/purchase`, {
+        method: HTTP_METHOD.POST,
+        body: JSON.stringify({
+          creditPlanId: context.creditPlanId,
+          paymentMethodId,
+        }),
+      });
       if (!response.payload) throw new Error("Failed to create order");
-      return response.payload;
+      return {
+        kind: "order",
+        orderId: response.payload.orderId,
+        challenge: response.payload.challenge,
+        cost: response.payload.cost,
+      };
     };
   }, [
     isActive,
@@ -294,6 +457,10 @@ export const usePurchaseTarget = (context: IPurchaseContext) => {
       seatCount={seatCount}
       unitPrice={context.unitPrice ?? null}
       seatAmount={seatAmount}
+      extensionPeriodEndSec={periodEndSec}
+      periodNote={periodNote}
+      pendingPlanId={pending?.planId ?? null}
+      pendingEffectiveAt={pending?.effectiveAt ?? null}
     />
   );
 

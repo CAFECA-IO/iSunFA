@@ -1,3 +1,4 @@
+import { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
 // Info: (20260714 - Tzuhan) Carbon Chatbot 段落草稿生成的 DTO 定義
 // Info: (20260714 - Tzuhan) LLM 只負責敘述撰寫與字串萃取;數值一律引用 contextFacts 原值,不做任何計算
 
@@ -26,6 +27,14 @@ export interface IParagraphDraftInput {
   // Info: (20260720 - Tzuhan) 修訂稿不直接落地,由前端對照卡人工確認後才寫入報告
   existingContent?: string;
   instruction?: string;
+  /**
+   * Info: (20260821 - Emily) 揭露框架。省略 = INVENTORY_ONLY(現行行為,只出盤查報告書)。
+   *
+   * 這裡是**選填**而 frameworkView 的參數是**必填**,兩者不矛盾:
+   * API 邊界要向後相容(既有呼叫端不帶這個欄位),但服務層一進門就把 undefined
+   * 收斂成明確的 enum 值 —— 「沒選」在系統內部不存在,只在線路上存在。
+   */
+  framework?: CarbonDisclosureFrameworkEnum;
 }
 
 export interface IParagraphDraft {

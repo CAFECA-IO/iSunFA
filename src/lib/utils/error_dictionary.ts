@@ -1231,6 +1231,28 @@ export const API_ERRORS = {
     message: "Please wait before sending another invitation",
     status: ApiCode.FORBIDDEN,
   } as IErrorDef,
+  /**
+   * Info: (20260821 - Luphia) 展延購買的時間閘門（產品裁定 20260821）：
+   * 當期剩餘超過 30 天時不得購買延長／換方案。沒有這道閘門，展延語意對
+   * 「換方案」是一個約四折買到高階方案的漏洞（review #6687 二輪阻擋-1）。
+   */
+  TW_SUBSCRIPTION_EXTENSION_TOO_EARLY: {
+    code: "TW000028",
+    message:
+      "Subscription can only be extended within 30 days of the current period end",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+  /**
+   * Info: (20260821 - Luphia) 訂閱列的計費週期缺漏或認不得（review #6687 三輪）：
+   * 期中加人的補收分母是「一期的天數」，猜錯就是對綁定的卡多收十二倍。
+   * 尚未回填 `billing_interval` 的既有列會走到這裡（檢查表 §3.8），
+   * 因此訊息要指向真正的原因——借用 `TW_SEAT_PRICE_MISSING` 會讓運維去查單價。
+   */
+  TW_SEAT_BILLING_INTERVAL_MISSING: {
+    code: "TW000029",
+    message: "Subscription has no billing interval on record",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
   TW_ALLOCATION_REVOKE_DISABLED: {
     code: "TW000020",
     message: "Revoking allocated credits is no longer supported",
@@ -1447,6 +1469,664 @@ export const API_ERRORS = {
   } as IErrorDef,
 
   // Info: (20260813 - Julian) 只有主管（任一部門的 managerId）能發起徵詢或看地圖
+  // Info: (20260817 - Julian) ===== 假勤模組（計畫書 §11）=====
+
+  // Info: (20260817 - Julian) 額度不足。送出時即回饋，但**不預扣**——扣減發生在最後一關通過的交易內（ADR 023 §6）
+  VA_LEAVE_INSUFFICIENT_BALANCE: {
+    code: "VA000069",
+    message: "Insufficient leave balance",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 請假時間不符該假別的最小單位（半小時／半天／整天）
+  VA_LEAVE_UNIT_NOT_ALIGNED: {
+    code: "VA000048",
+    message: "Leave duration does not align with the minimum unit",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 該簽核節點已被決定。同 VA_REQUEST_ALREADY_REVIEWED 的語意，對象換成假單
+  VA_LEAVE_ALREADY_REVIEWED: {
+    code: "VA000049",
+    message: "This approval step has already been decided",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 曆年制給假低於週年制同期應有（ADR 021 §3.1）。
+   * 這條護欄的性質與財務的 A = L + E 相同：越過它代表設定有錯，不是需要人判斷的警示。
+   */
+  VA_LEAVE_CYCLE_DISADVANTAGEOUS: {
+    code: "VA000050",
+    message:
+      "Calendar-year accrual grants fewer days than the anniversary basis",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 逾單日 12 小時（勞動基準法 §32 II）
+  VA_OVERTIME_EXCEEDS_DAILY_LIMIT: {
+    code: "VA000051",
+    message: "Overtime exceeds the statutory 12-hour daily total",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 逾單月 46 小時；帳本已記載工會或勞資會議同意者為 54 小時（§32 II、III）
+  VA_OVERTIME_EXCEEDS_MONTHLY_LIMIT: {
+    code: "VA000052",
+    message: "Overtime exceeds the statutory monthly limit",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 逾三個月 138 小時（§32 III）。區間定義暫採滾動三個月（較嚴）
+  VA_OVERTIME_EXCEEDS_QUARTERLY_LIMIT: {
+    code: "VA000053",
+    message: "Overtime exceeds the statutory three-month limit",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 事前／事後與時序不符。「事前申請卻在下班後才送出」不是一種可選的填法，是一個謊
+  VA_OVERTIME_FILING_TYPE_MISMATCH: {
+    code: "VA000054",
+    message: "Filing type contradicts the submission time",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 這張加班單已經被決行過。
+   *
+   * 與假單的 `VA_LEAVE_ALREADY_REVIEWED` 分開一個碼：加班單是單關決行，
+   * 兩者的下一步不同 —— 假單要看鏈上現在輪到誰，加班單重新整理就看得到結果。
+   */
+  VA_OVERTIME_ALREADY_REVIEWED: {
+    code: "VA000060",
+    message: "This overtime request has already been decided",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260820 - Julian) 核准算到一半被 §32 IV 認定改寫（review 第 3 條）。
+   *
+   * 不與 `VA_OVERTIME_ALREADY_REVIEWED` 共用：那一句要主管**不要再管**這張單，
+   * 而這一句要主管**重新看一次再按** —— 工資標準已經從普通級距跳到加倍發給，
+   * 而他剛才在畫面上看到的金額不是現在會寫進去的那個。
+   */
+  /**
+   * Info: (20260820 - Julian) §32 IV 認定的兩種落空（review 第 3 輪第 2 條）。
+   *
+   * 都不與 `VA_OVERTIME_ALREADY_REVIEWED` 共用：那一句的下一步是「不用管了」，
+   * 這兩句分別是「要先撤回既有的那份」與「本來就沒有可撤回的認定」。
+   */
+  VA_OVERTIME_EMERGENCY_ALREADY_DECLARED: {
+    code: "VA000071",
+    message:
+      "This overtime request already carries an Article 32 IV determination; revoke the existing one before filing a new record",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260820 - Julian) 報備時點落在可能的區間之外（review 第 4 輪第 2 條）。
+   *
+   * 不共用 `VA_INVALID_INPUT_DATA`：那一句說的是「格式不對」，而這裡格式
+   * 完全正確 —— 是那個時刻不可能是這次加班的報備（在未來，或早於加班那一天）。
+   * 兩者的下一步不同：一個是重打，一個是回去確認公文上的時間。
+   */
+  VA_OVERTIME_REPORTED_AT_OUT_OF_RANGE: {
+    code: "VA000073",
+    message:
+      "The Article 32 IV filing time must not be in the future, nor earlier than the day the overtime took place",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  VA_OVERTIME_EMERGENCY_NOT_DECLARED: {
+    code: "VA000072",
+    message:
+      "This overtime request carries no Article 32 IV determination to revoke",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  VA_OVERTIME_RECLASSIFIED_MIDWAY: {
+    code: "VA000070",
+    message:
+      "This overtime request was declared an emergency (Article 32 IV) while you were approving it; reload and confirm the doubled premium before approving",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260820 - Julian) 反方向的重新分類（review 第 4 輪第 3 條）。
+   *
+   * `VA_OVERTIME_RECLASSIFIED_MIDWAY` 只講得出「被認定 → 加倍發給」。撤回
+   * 落地之後另一個方向是真的：工資**降回**普通級距。用同一個碼的話，主管
+   * 會讀到一句與事實相反的說明，而這個方向對勞工不利 —— 恰是最需要他在
+   * 按下去之前看清楚的那一個。
+   */
+  /**
+   * Info: (20260820 - Julian) 併休規則本身設定壞了（review 第 5 輪 M2）。
+   *
+   * 這不是請假的人做錯了什麼 —— 是那條規則沒說出一個可執行的上限
+   * （兩欄皆空、兩欄都填、比例非正數，或把 `BLOCK` 綁在特休上）。
+   * 先前這種列會被讀成「上限 0 人」，於是整個部門請不了假，
+   * 而畫面說的是「同時請假人數已達上限」：一句把設定錯誤講成使用者問題的話。
+   */
+  VA_LEAVE_CONCURRENCY_RULE_INVALID: {
+    code: "VA000075",
+    message:
+      "a concurrency rule in this account book does not state an enforceable limit; ask HR to correct the rule",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260820 - Julian) 算不出「這個人的一天有多長」（review 第 5 輪 M7／M8）。
+   *
+   * 補休折換要拿它把分鐘換成天數，加班費折現要把它寫進事件供薪資模組換算日薪。
+   * 兩條路徑先前各自用 `?? 0` 與 `?? regularWorkMinutes` 頂替 ——
+   * 前者往下撞成 500，後者在非上班日會寫進一個 0，而 0 是薪資模組的除數。
+   *
+   * 觸發條件是這個人當天沒有排班，且最近也找不到一個有班別的上班日。
+   * 處置在人資手上：排一格班就有答案了。
+   */
+  /**
+   * Info: (20260820 - Julian) 放寬到 54 小時卻沒留下記載（review 第 5 輪 M9）。
+   *
+   * §32 III 的前提是「經工會同意，如事業單位無工會者，經勞資會議同意」，
+   * 而一個沒有記載的「已同意」等於沒有同意 —— 系統會據此多放 8 小時。
+   * 這是一個表單漏填（勾了同意、沒貼會議紀錄連結，或沒填同意日期），
+   * 先前它以 **500** 呈現，畫面上沒有任何線索指向那一格。
+   */
+  VA_OVERTIME_AGREEMENT_RECORD_REQUIRED: {
+    code: "VA000077",
+    message:
+      "extending the monthly cap to 54 hours (Article 32 III) requires a recorded agreement: an http(s) link to the minutes and the date it was made",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260820 - Julian) 同一天已經有一張時段重疊的加班單（review 第 13 輪第 2 條）。
+   *
+   * 重疊意味著同一段時間被算兩次工資。相鄰不算重疊 ——
+   * 17:00–19:00 與 19:00–21:00 是本模組最常見的合法形狀。
+   */
+  VA_OVERTIME_OVERLAPS_EXISTING: {
+    code: "VA000078",
+    message:
+      "another overtime request already covers part of this time range on that day",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260821 - Julian) 事後補一張**比已核准者更早**的加班單（review 第 15 輪）。
+   *
+   * §24 I 的級距在核准當下算一次就落地，而它只看得到那一刻已經存在的單。
+   * 先核准 19:00–21:00、再補一張 17:00–19:00，兩張都從 0 起算、都拿 1/3：
+   * 實測 80 個工資單位，法定下限 120 —— **少付 40**，且沒有任何路徑會回頭
+   * 更正（更正流程未實作）。
+   *
+   * 因此擋在送出而不是核准：核准當下才擋的話，那張已核准的單早就落地了，
+   * 使用者被擋卻無事可做。擋在這裡，下一步是明確的 —— 撤回較晚那張，
+   * 兩張一起重送，級距就會正確地切成 1/3 + 2/3。
+   *
+   * `PENDING` 的手足單不觸發：它還沒定級距，在自己被核准時會重新讀一次。
+   */
+  /**
+   * Info: (20260821 - Julian) 這張單不在 `APPROVED`，沒有核准可以撤銷
+   * （review 第 7 輪 B1）。
+   */
+  /**
+   * Info: (20260821 - Julian) 這個假別要併入另一個假別，而併計扣減尚未實作
+   * （review 第 10 輪 B2）。
+   *
+   * `LeavePolicy.mergesIntoPolicyId` 是計畫書 §6.5 的實作載體（家庭照顧假
+   * 併入事假，性平法 §20），而它在扣減路徑上**沒有任何讀取端**。放行等於
+   * 讓法定上限被繞過：請滿 7 日家庭照顧假之後事假仍是完整 14 日。
+   *
+   * 對使用者而言這不是「輸入錯了」，是「這個假別還不能用」——
+   * 文案因此要指向人資而不是叫他改時段。
+   */
+  VA_LEAVE_MERGE_NOT_IMPLEMENTED: {
+    code: "VA000082",
+    message:
+      "this leave type is configured to also draw down another leave type (LeavePolicy.mergesIntoPolicyId), and that cross-type deduction is not implemented yet; the request is refused rather than silently granting quota beyond the statutory cap",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  VA_OVERTIME_NOT_APPROVED: {
+    code: "VA000080",
+    message:
+      "this overtime request is not in the approved state, so there is no approval to revoke; reload and check its current status",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260821 - Julian) 核准的後果已經不可逆（review 第 7 輪 B1）。
+   *
+   * 補休批次已被請掉／過期／折現，或折現事件已由薪資模組結算
+   * （`LeaveCashOutEvent.settledAt` 非 null）。撤銷等於憑空消滅一筆
+   * 已經被使用或已經發出去的權益，因此擋下。
+   *
+   * 下一步不是重按，是人工調整（L9 `leave/balance/adjust`）——
+   * 文案必須說出這件事，否則使用者只會一直按同一顆按鈕。
+   */
+  VA_OVERTIME_APPROVAL_NOT_REVERSIBLE: {
+    code: "VA000081",
+    message:
+      "the compensatory leave from this approval has already been used, expired or cashed out, or payroll has settled its overtime payment; the approval can no longer be revoked, so correct it with a manual balance adjustment instead",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  VA_OVERTIME_EARLIER_THAN_APPROVED: {
+    code: "VA000079",
+    message:
+      "an overtime request starting later that day has already been approved, and its Article 24 I premium tier is frozen; filing an earlier span now would under-pay both. Withdraw the later request and re-file them together",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  VA_OVERTIME_DAY_LENGTH_UNKNOWN: {
+    code: "VA000076",
+    message:
+      "this employee has no derivable workday length, so overtime cannot be converted or cashed out; ask HR to schedule a shift for them",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  VA_OVERTIME_EMERGENCY_REVOKED_MIDWAY: {
+    code: "VA000074",
+    message:
+      "The Article 32 IV determination on this overtime request was revoked while you were approving it; the whole span falls back to the ordinary premium, so reload and confirm the amount before approving",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 撤回事後補單卻沒填理由。
+   *
+   * 事前申請的撤回不必填 —— 那是取消一個還沒發生的計畫。事後補單不同：
+   * 它是對**已經發生的事實**的陳述，而收回它的方向對雇主有利、對勞工不利
+   * （同 `assertOvertimeFilingType` 檔頭所說的那種「有動機」的地形）。
+   * 一筆沒有理由的撤回，事後沒有人判斷得出它是自願的還是被要求的。
+   */
+  VA_OVERTIME_WITHDRAW_REASON_REQUIRED: {
+    code: "VA000068",
+    message:
+      "Withdrawing an after-the-fact overtime request requires a reason; the record must show whether it was voluntary",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 帳本尚未協商補休期限，因此換不了補休。
+   *
+   * §32-1 只說「期限由勞雇雙方協商」，沒有法定日數，系統不預設一個數字
+   * （同 `proofThresholdDays` 留 null 的理由）。猜一個月數的後果是補休在一個
+   * 沒有人同意過的日期失效，而失效的補休要折現成錢。
+   * 這條只擋 `COMPENSATORY_LEAVE`，選 `PAYMENT` 的加班單不受影響。
+   */
+  VA_OVERTIME_COMP_EXPIRY_UNSET: {
+    code: "VA000061",
+    message:
+      "The account book has not agreed a compensatory-leave expiry period (Article 32-1)",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 那一天沒有排班，因此定不出加成標準。
+   *
+   * 與 `VA_OVERTIME_PREMIUM_UNDEFINED` 分開：這一個的解法在人資手上
+   * （把那天排進班表），另一個要等法源核對。折成同一句話會讓使用者
+   * 對著一個他自己補得起來的缺口乾等。
+   */
+  VA_OVERTIME_DAY_NOT_SCHEDULED: {
+    code: "VA000062",
+    message: "That work date has no schedule, so no statutory premium applies",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 該日別的加成標準尚未定義（請假日、停工日）。
+   *
+   * 停工日（因雨／颱風／災害）在工程業是常態不是例外，而它既不是例假、
+   * 不是休息日、也不是國定假日 —— 加成標準待法源核對（計畫書 §8.1 #8）。
+   * 在核對完成前擋下而不猜一個級距：猜錯的方向是少付工資。
+   */
+  VA_OVERTIME_PREMIUM_UNDEFINED: {
+    code: "VA000063",
+    message:
+      "No statutory overtime premium is defined for that day type yet (pending legal review)",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 內建假別的法定欄位不可修改，也不可停用。
+   *
+   * 內建的十三種假別由 seed 產生，它們的給假方式、工資比例、雇主有無准駁權
+   * 都直接來自勞基法與性平法（ADR 021 §5：「seed 成為正確性的一部分」）。
+   * 開放修改的效果不是彈性，是讓一個違法的設定看起來像一筆正常的假別 ——
+   * 而受影響的人要到請假被扣錯天數時才會發現。
+   *
+   * 可改的只有公司政策欄位：名稱、最小請假單位、證明文件要求與門檻、遞延月數。
+   */
+  VA_LEAVE_POLICY_LOCKED_FIELD: {
+    code: "VA000064",
+    message:
+      "This field of a system-defined leave type is fixed by statute and cannot be changed",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 併計關係成環。
+   *
+   * 家庭照顧假併入事假（性平法 §20）是一個有向關係。A→B→A 會讓併計扣減
+   * 沿著環一直扣下去 —— 請一天假扣掉兩個假別各一天，而兩邊的餘額都對不上。
+   * 自指由 `assertLeavePolicyUnit` 擋，更長的環擋在這裡。
+   *
+   * Info: (20260821 - Julian) ⚠️ 描述的是**併計扣減落地之後**的行為
+   * （review 第 10 輪 B2）：`allocateConsumption` 目前不走任何鏈，
+   * 送出端由 `VA_LEAVE_MERGE_NOT_IMPLEMENTED` 擋著。
+   */
+  VA_LEAVE_POLICY_MERGE_CYCLE: {
+    code: "VA000065",
+    message: "Merging into that leave type would form a cycle",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 年資級距表不合法。
+   *
+   * 級距表是特休日數的唯一來源（§38 I）。一張有洞、重疊或日數倒退的表，
+   * 會讓某個年資區間查不到日數或查到比前一級少的日數 ——
+   * 前者是錯誤，後者是「做越久假越少」，而兩者都不會報錯。
+   */
+  VA_LEAVE_TIER_TABLE_INVALID: {
+    code: "VA000066",
+    message: "The seniority tier table is not a valid ladder",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 這個假別不吃級距表。
+   *
+   * 與 `VA_LEAVE_TIER_TABLE_INVALID` 分開：那一個是表本身寫錯（改表就好），
+   * 這一個是假別的給假方式不是 `SENIORITY_TIER`（要先改給假方式）。
+   * 存進去的效果是一張永遠不會被讀到的表，而看設定的人會以為它生效了。
+   */
+  VA_LEAVE_TIER_NOT_APPLICABLE: {
+    code: "VA000067",
+    message:
+      "Only a SENIORITY_TIER leave type reads a tier table; storing one here would do nothing",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 在非上班日請假。
+   * 判定引擎看非 WORK 就回 OFF_DAY，因此這種假單不會產生任何效果，
+   * 卻會扣掉額度 —— 使用者付出了代價卻什麼也沒換到。
+   */
+  VA_LEAVE_ON_NON_WORKING_DAY: {
+    code: "VA000055",
+    message: "Leave cannot be taken on a day without a working shift",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 該假別不適用銷假徵詢。
+   *
+   * §38 III 的「雇主基於企業經營上急迫需求得與勞工協商調整」只寫在特休，
+   * 因此 `LeavePolicy.recallable` 只有特休為 true。第一版沒有讀這個欄位 ——
+   * 主管可以對產假、病假、生理假發起徵詢，而那不只是沒有法源。
+   *
+   * 歸類為 VALIDATION 而不是 FORBIDDEN：擋下來的不是「這個人不能做」，
+   * 是「這個假別不能被這樣對待」—— 換一個主管來也一樣不行。
+   */
+  VA_LEAVE_NOT_RECALLABLE: {
+    code: "VA000056",
+    message: "This leave type cannot be subject to a recall request",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 簽核規則整組不合法（區間有洞／重疊／最後一條有上界／空鏈）。
+   *
+   * `message` 會被 service 以不變式的原文覆寫 —— 「區間有洞 [3, 5)」與
+   * 「最後一條不得有上界」是兩個不同的修法，共用一句泛用訊息等於
+   * 只告訴使用者「存不進去」。
+   */
+  VA_LEAVE_APPROVAL_RULE_INVALID: {
+    code: "VA000057",
+    message: "The approval rule set is not a valid partition of [0, ∞)",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 通則不得為空。
+   *
+   * 假別專屬規則清空是合法的（退回走通則），但通則清空的效果是
+   * **這個帳本從此沒有任何假單送得出去** —— 而那要到有人請假時才顯現，
+   * 屆時錯誤訊息會指向「您尚未設定直屬主管」（同 ADR 023 §3 拒絕空鏈的理由）。
+   */
+  VA_LEAVE_GENERAL_RULE_REQUIRED: {
+    code: "VA000058",
+    message: "The general approval rule set cannot be empty",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 授予額度時找不到這名員工的班別。
+   *
+   * 「一天是幾分鐘」沒有預設值 —— 引擎明確拒絕猜（`dayEquivalentMinutes <= 0`
+   * 直接丟）。猜錯的後果是每一批額度的面額都錯，而且錯得看不出來：
+   * 餘額畫面會顯示一個看起來正常的數字。
+   */
+  VA_LEAVE_NO_SHIFT_FOR_ACCRUAL: {
+    code: "VA000059",
+    message:
+      "Cannot accrue leave for an employee with no scheduled shift; the day-equivalent minutes are unknown",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 逾越假單的可見範圍：想看的不是自己的單，
+   * 而呼叫者也不在那張單的簽核鏈上。
+   *
+   * ToDo: (20260821 - Julian) **U5：§9 假勤行事曆（L18）整節未實作。**
+   * 無 `calendar/` route、無導覽項，而 `FO_LEAVE_CALENDAR_SCOPE` 已經配了號
+   * 卻從未被丟 —— 一個配好號、寫好文案、沒有人丟的錯誤碼，
+   * 讀起來像「已接線」。計畫書 §1506-1527。
+   *
+   * 與 `FO_LEAVE_CALENDAR_SCOPE` 分開：行事曆的範圍是「哪個部門、哪段期間」，
+   * 這裡是「這張單是不是你的事」，兩者的訊息與修法都不同。
+   *
+   * 刻意回 403 而不是 404：「這不是你的」正是呼叫者需要知道的事
+   * （取捨同 `FO_LEAVE_RECALL_NOT_OWNER`，與 `NF_EMPLOYEE_FOR_USER` 相反）。
+   */
+  FO_LEAVE_REQUEST_SCOPE: {
+    code: "FO000016",
+    message:
+      "This leave request is not yours and you are not on its approval chain",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 逾越行事曆的可見範圍（計畫書 §9.2）
+  FO_LEAVE_CALENDAR_SCOPE: {
+    code: "FO000012",
+    message: "You may not view this scope of the leave calendar",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260819 - Julian) 例假日加班須依勞動基準法 §40 程序（天災事變或突發事件、
+   * 報當地主管機關**核備**、事後補假休息）。系統尚未實作核備與補假，故一律擋下 ——
+   * §32 IV 的 `isEmergency`（報備查）**不是**這一條的通行證，兩者程序不同（review B7）。
+   * 放行會讓一個違法的排班看起來像一筆正常的加班（ADR 024 §4.5）。
+   */
+  FO_OVERTIME_ON_REGULAR_OFF: {
+    code: "FO000013",
+    message:
+      "Overtime on a statutory rest day requires the Article 40 procedure",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 不得自我核准（職責分離第 1 條，ADR 023 §5）。
+   *
+   * 出勤模組計畫書 §D9 早就點名這個代碼，但補登單未實作，因此它從未被建立 ——
+   * 假勤模組是第一個真的需要它的地方。
+   *
+   * 與 `escalatedReason` 的自動上升是同一件事的兩面：本條擋的是
+   * 「繞過鏈去簽自己的單」，上升處理的是「鏈本身正當地指向了自己」。
+   * 混為一談會得到「老闆不能請假」這個荒謬的結果。
+   */
+  FO_SELF_APPROVAL_FORBIDDEN: {
+    code: "FO000014",
+    message: "You may not approve your own request",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 非當前簽核節點不得代簽（職責分離第 2 條）。
+   *
+   * 訊息刻意說「你不是目前這一關的簽核者」而不是「你沒有權限」——
+   * 後者會讓一個排在第二關的主管以為自己被排除在流程外。
+   */
+  FO_NOT_AUTHORIZED_REVIEWER: {
+    code: "FO000015",
+    message: "You are not the current approver for this request",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 撤回加班單的人不是申請人本人。
+   *
+   * 刻意不沿用 `FO_NOT_AUTHORIZED_REVIEWER`（假單撤回目前借用它）——
+   * 那句話是「你不是這一關的簽核者」，而使用者當下正在撤回**自己的**單，
+   * 收到那個訊息只會更困惑。主管想讓一張單消失，正確的動作是駁回，
+   * 那會留下他的名字。
+   */
+  FO_OVERTIME_NOT_APPLICANT: {
+    code: "FO000020",
+    message: "Only the applicant may withdraw an overtime request",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 銷假徵詢的對象不在該主管的部門範圍內。
+   *
+   * 與 `FO_ATTENDANCE_SUPERVISOR_ONLY` 是兩件事：那個說「你不是主管」，
+   * 這個說「你是主管，但這個人不歸你管」。第一版把兩者混在同一個檢查裡
+   * （`isDepartmentManager` 只問「有沒有管任何部門」），結果是第一工務段的
+   * 主管可以對第五工務段的員工發起徵詢。
+   *
+   * 回 403 而不是把它偽裝成 404：今日請假名單（A11）本來就對全體員工開放，
+   * 「這一天有人請假」不是秘密，藏起來只會讓主管看不懂為什麼按鈕沒有反應。
+   */
+  /**
+   * Info: (20260818 - Julian) 這個動作需要 HR 職能，而呼叫者沒有（甲-1）。
+   *
+   * 與 `FO_ATTENDANCE_SUPERVISOR_ONLY` 是不同的軸線：那個問「你是不是主管」
+   * （組織關係），這個問「你有沒有被指派人事職能」（`EmployeeHrFunctionAssignment`）。
+   * 一位工務段主管兩者兼具，一位人資承辦則只有後者 —— 合成同一個碼會讓
+   * 「我明明是主管為什麼不行」變成一個無法自己排解的問題。
+   *
+   * 訊息不列出缺哪一個職能：職能清單本身是組織內部資訊，而呼叫者的下一步
+   * 一律是「找人資要權限」，知道是 `HR_ADMIN` 還是 `TIMEKEEPER` 不改變那一步。
+   */
+  /**
+   * Info: (20260818 - Julian) 你是主管，但這個人不歸你管（排班寫入）。
+   *
+   * 與 `FO_ATTENDANCE_SUPERVISOR_ONLY` 分開的理由，同 `FO_LEAVE_RECALL_SCOPE`
+   * 與它分開的理由：那個說「你不是主管」，這個說「你是主管，但範圍不對」。
+   * 混為一談會讓一位工務段主管看著「這個動作只有部門主管可以執行」百思不解。
+   *
+   * 一個刻意的後果：`managesEmployee()` 對「管自己」回 false，所以**主管改不了
+   * 自己的排班**，會落到這個碼。那是對的 —— 排班是判定的比較基準，
+   * 自己改自己的基準正是職責分離要防的那件事（ADR 023 §5）。
+   * 需要改時由具 `HR_ADMIN` / `TIMEKEEPER` 職能的人代為處理。
+   */
+  FO_ATTENDANCE_SCHEDULE_SCOPE: {
+    code: "FO000019",
+    message: "This employee is not in your department scope",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  FO_HR_FUNCTION_REQUIRED: {
+    code: "FO000018",
+    message: "This action requires an HR function assignment",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  FO_LEAVE_RECALL_SCOPE: {
+    code: "FO000017",
+    message: "This employee is not in your department scope",
+    status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 假別不存在或已停用
+  NF_LEAVE_POLICY: {
+    code: "NF000028",
+    message: "Leave policy not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 額度批次不存在
+  NF_LEAVE_GRANT: {
+    code: "NF000025",
+    message: "Leave grant not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 加班單不存在
+  NF_OVERTIME_REQUEST: {
+    code: "NF000026",
+    message: "Overtime request not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 假單不存在（或不屬於本帳本）
+  NF_LEAVE_REQUEST: {
+    code: "NF000027",
+    message: "Leave request not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260817 - Julian) 簽核鏈展開為空（ADR 023 §3）。
+   * **不自動核准** —— 那會讓一個設定缺口靜默地變成一張看起來正常的生效假單。
+   * 訊息須指出缺什麼（沒有主管／部門沒有經理／帳本沒有 HR），因為解法在 HR 手上不在員工手上。
+   */
+  CF_LEAVE_APPROVAL_CHAIN_UNRESOLVED: {
+    code: "CF000009",
+    message: "No approver could be resolved for this request",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 同人同日已有生效假單（LeaveDay.activeKey 撞擊）
+  CF_LEAVE_DAY_ALREADY_ACTIVE: {
+    code: "CF000010",
+    message: "An active leave already exists for this employee on this date",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 併休超限且該假別可硬擋（employerMayReject = true）。特休永遠走不到這裡
+  CF_LEAVE_CONCURRENCY_EXCEEDED: {
+    code: "CF000011",
+    message: "Too many concurrent leaves in this department",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  // Info: (20260817 - Julian) 核准當下額度被他單先扣（ADR 023 §6.4 的 updateMany count === 0）
+  CF_LEAVE_BALANCE_RACE: {
+    code: "CF000012",
+    message: "Leave balance was consumed by another request",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260818 - Julian) 假別代號在這個帳本已經有人用了。
+   *
+   * `@@unique([accountBookId, code])` 是最終防線，但撞上它會丟 P2002 ——
+   * 那讀起來像故障。代號重複是使用者的輸入問題，不是資料庫的問題
+   * （coding_guidelines §5.2：不讓原始的 Prisma 錯誤噴到前端）。
+   */
+  CF_LEAVE_POLICY_CODE_TAKEN: {
+    code: "CF000013",
+    message: "That leave type code is already used in this account book",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
   FO_ATTENDANCE_SUPERVISOR_ONLY: {
     code: "FO000011",
     message: "This action is limited to department managers",

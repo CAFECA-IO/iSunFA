@@ -462,6 +462,89 @@ export class PaymentRepository {
   }
 
   /**
+   * Info: (20260820 - Luphia) 釋放訂單佔用的冪等鍵（self-review 第二輪，中）。
+   *
+   * `order.idempotency_key` 是**唯一欄位**，而扣款失敗後那把鍵仍被那張
+   * `PAYMENT_FAILED` 的訂單佔著。`findOrderByIdempotencyKey` 刻意排除失敗狀態
+   *（「失敗必須被視為沒扣過」），於是下一次重試查不到、去建新單，然後撞 P2002。
+   *
+   * 症狀分兩種，都很難從外面看出來：
+   *
+   * - **續訂**：cron 每小時噴一次 unique 衝突，永遠續不上，直到寬限期用盡降級 free。
+   * - **席次補收**：P2002 被當成「重放」吞掉，回 `charged: false`——
+   *   於是邀請照樣寄出，**那是一個沒付錢的席次**。
+   *
+   * 因此重試前把鍵放掉，`data.idempotencyKey` 留著供稽核（那一欄不是唯一）。
+   */
+  async releaseIdempotencyKey(orderId: string): Promise<void> {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { idempotencyKey: null },
+    });
+  }
+
+  /**
+   * Info: (20260820 - Luphia) 取消一張已被取代的未付訂單（self-review 第二輪，小）。
+   *
+   * 沿用未付訂單時若金額已過期（席次變動），會改建新單——而舊那張仍是可付的：
+   * 使用者從另一個分頁或訂單列表把它付掉，就以舊金額成交。標記 CANCEL 讓它
+   * 不再是一條可走的路。
+   */
+  async cancelOrder(orderId: string, reason: string): Promise<void> {
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) return;
+    const data = (order.data ?? {}) as Record<string, unknown>;
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: ORDER_STATUS.CANCEL,
+        // Info: (20260820 - Luphia) 一併放掉冪等鍵：取消的訂單不該佔著唯一欄位
+        idempotencyKey: null,
+        data: { ...data, cancelReason: reason } as Prisma.InputJsonObject,
+      },
+    });
+  }
+
+  /**
+   * Info: (20260820 - Luphia) 同一個團隊、同方案同週期的**未付**訂閱訂單（self-review B-4）。
+   *
+   * 訂閱建單原本沒有任何冪等保護：雙擊或開兩個分頁就是兩張都能付的訂單，
+   * 而履行會把週期覆寫掉——**付兩次只拿到一期**。
+   *
+   * 只認 PENDING / PAYING（錢還沒到）：
+   *
+   * - `PAID` / `COMPLETED` 代表錢已經收了，那不是重複點擊而是**再買一期**，
+   *   應該建新單（展延，見 `applyTeamSubscriptionInTx`）。把它回給前端會讓人
+   *   去付一張已經付過的單。
+   * - `PAYMENT_FAILED` / `CANCEL` 必須當成「沒扣過」，否則重試永遠拿到那張壞單。
+   */
+  async findInFlightSubscriptionOrder(params: {
+    userId: string;
+    teamId: string;
+    planId: string;
+    billingInterval: string;
+  }) {
+    return prisma.order.findFirst({
+      where: {
+        userId: params.userId,
+        type: ORDER_TYPE.BILLING_SUBSCRIBE,
+        status: { in: [ORDER_STATUS.PENDING, ORDER_STATUS.PAYING] },
+        AND: [
+          { data: { path: ["teamId"], equals: params.teamId } },
+          { data: { path: ["planId"], equals: params.planId } },
+          {
+            data: {
+              path: ["billingInterval"],
+              equals: params.billingInterval,
+            },
+          },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  /**
    * Info: (20260814 - Luphia) 本期已補收的席次費用合計（PR #6652 第二輪 B-2）。
    *
    * 用於「單期補收總額上限」：邀請開放 OWNER / ADMIN，但扣的是訂閱那張卡，
@@ -479,6 +562,28 @@ export class PaymentRepository {
       select: { amount: true },
     });
     return orders.reduce((sum, order) => sum + order.amount, BigInt(0));
+  }
+
+  /**
+   * Info: (20260821 - Luphia) 某人最近的訂閱訂單（`scripts/diagnose_subscription_state.ts`）。
+   *
+   * 「我明明訂閱了，畫面還顯示免費版」有兩個成因（顯示端／履行端），而分辨它們
+   * 需要看得到訂單狀態：有 PAID / COMPLETED 的訂單而訂閱仍是 free，
+   * 問題就在履行路徑。查詢放 Repo——只有 Repository 碰得到 Prisma（CLAUDE.md §1）。
+   */
+  async listRecentSubscriptionOrders(userId: string, take: number) {
+    return prisma.order.findMany({
+      where: { userId, type: ORDER_TYPE.BILLING_SUBSCRIBE },
+      orderBy: { createdAt: "desc" },
+      take,
+      select: {
+        id: true,
+        status: true,
+        amount: true,
+        createdAt: true,
+        data: true,
+      },
+    });
   }
 
   async getOrderById(orderId: string) {

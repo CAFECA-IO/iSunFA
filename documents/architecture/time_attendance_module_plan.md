@@ -1048,26 +1048,37 @@ CLAUDE.md §2 的原文是「**財務金額與碳排當量**嚴禁用原生 `num
 | **A20** | `POST` | `/presence/roster/export` | **緊急疏散點名匯出（CSV／PDF），必寫 `AuditLog`** |
 | **A21** | `POST` | `/presence/rebuild` | **由 punch 重建 presence（HR／維運，指定日期）** |
 
-**新增 `API_ERRORS`** —— 流水號接續現況（`VA000041` / `FO000008` / `NF000016` / `CF000003` 為目前最大值），**禁止自創 HTTP status**（`known_issues/api_http_status_dual_mapping.md`）：
+**新增 `API_ERRORS`**，**禁止自創 HTTP status**（`known_issues/api_http_status_dual_mapping.md`）。
+
+> **本表的號碼不是保留席位。** `src/lib/utils/error_dictionary.ts` 是唯一真相，
+> 而錯誤碼是**跨分支共用的命名空間**：實作當下才配號，且配號前要做
+> base / develop / branch 三方比對（code review checklist §6.1，比法是各取一份
+> 算「雙方各自新增」的交集，不是讀 diff）。
+>
+> 初版本表把號碼寫死在規劃階段，實作落地時已經漂掉 —— 16 列裡 4 列號碼不同、
+> 10 列從未實作。更糟的是那些沒實作的號碼**現在有些已被 develop 用走**
+> （例如 `VA000047` 在 develop 是 `VA_CARBON_SESSION_NOT_BOUND`），
+> 照抄本表實作就會直接撞號。因此未實作者一律不預留號碼。
+> 已實作者的號碼於 2026-08-19 對齊字典現況。
 
 | Key | code | ApiCode | 情境 |
 |---|---|---|---|
 | `VA_PUNCH_LOW_ACCURACY` | `VA000042` | `VALIDATION_ERROR` | G3；訊息須為「定位精度不足，請重試」 |
-| `VA_PUNCH_NO_SCHEDULE` | `VA000043` | `VALIDATION_ERROR` | 當日無排班且政策不允許自由打卡 |
-| `VA_CORRECTION_TOO_OLD` | `VA000044` | `VALIDATION_ERROR` | 超過補登跨度 |
-| `VA_REQUEST_ALREADY_REVIEWED` | `VA000045` | `VALIDATION_ERROR` | 重複審核 |
-| `VA_SHIFT_WINDOW_INVALID` | `VA000046` | `VALIDATION_ERROR` | 核心時間超出彈性窗 |
-| `VA_LOCATION_RADIUS_INVALID` | `VA000047` | `VALIDATION_ERROR` | 圍欄半徑低於下限（§D6） |
+| `VA_PUNCH_NO_SCHEDULE` | —（未實作） | `VALIDATION_ERROR` | 當日無排班且政策不允許自由打卡 |
+| `VA_CORRECTION_TOO_OLD` | —（未實作） | `VALIDATION_ERROR` | 超過補登跨度 |
+| `VA_REQUEST_ALREADY_REVIEWED` | —（未實作） | `VALIDATION_ERROR` | 重複審核 |
+| `VA_SHIFT_WINDOW_INVALID` | —（未實作） | `VALIDATION_ERROR` | 核心時間超出彈性窗 |
+| `VA_LOCATION_RADIUS_INVALID` | —（未實作） | `VALIDATION_ERROR` | 圍欄半徑低於下限（§D6） |
 | **`FO_PUNCH_OUT_OF_FENCE`** | `FO000009` | `FORBIDDEN` | **G4 —— 本模組最常被觸發的錯誤，回傳最近地點與距離** |
-| `FO_PUNCH_NETWORK_MISMATCH` | `FO000010` | `FORBIDDEN` | G4b |
-| `FO_SELF_APPROVAL_FORBIDDEN` | `FO000011` | `FORBIDDEN` | D9 |
-| `FO_NOT_AUTHORIZED_REVIEWER` | `FO000012` | `FORBIDDEN` | D9 |
-| `FO_ATTENDANCE_SCOPE_DENIED` | `FO000013` | `FORBIDDEN` | 越權查他人 |
-| `FO_ROSTER_EXPORT_DENIED` | `FO000014` | `FORBIDDEN` | 無 `EMERGENCY_ROSTER` 權限 |
-| `NF_WORK_LOCATION` | `NF000017` | `NOT_FOUND` | — |
-| `NF_SHIFT_PATTERN` | `NF000018` | `NOT_FOUND` | — |
-| `NF_CORRECTION_REQUEST` | `NF000019` | `NOT_FOUND` | — |
-| `CF_PUNCH_DUPLICATE` | `CF000004` | `CONFLICT` | 短時間內重複打卡（若政策設為拒絕而非收斂） |
+| `FO_PUNCH_NETWORK_MISMATCH` | —（未實作） | `FORBIDDEN` | G4b |
+| `FO_SELF_APPROVAL_FORBIDDEN` | `FO000014` | `FORBIDDEN` | D9 |
+| `FO_NOT_AUTHORIZED_REVIEWER` | `FO000015` | `FORBIDDEN` | D9 |
+| `FO_ATTENDANCE_SCOPE_DENIED` | —（未實作） | `FORBIDDEN` | 越權查他人 |
+| `FO_ROSTER_EXPORT_DENIED` | —（未實作） | `FORBIDDEN` | 無 `EMERGENCY_ROSTER` 權限 |
+| `NF_WORK_LOCATION` | `NF000018` | `NOT_FOUND` | — |
+| `NF_SHIFT_PATTERN` | `NF000021` | `NOT_FOUND` | — |
+| `NF_CORRECTION_REQUEST` | —（未實作） | `NOT_FOUND` | — |
+| `CF_PUNCH_DUPLICATE` | —（未實作） | `CONFLICT` | 短時間內重複打卡（若政策設為拒絕而非收斂） |
 
 > **`FO_PUNCH_OUT_OF_FENCE` 的回應內容需特別設計**：它會是全系統觸發頻率最高的 403，而收到它的人正站在某處試圖上班。回應必須包含**最近的地點名稱與距離**（`distanceMeters`），讓使用者立刻知道「我離台北總部 340 公尺，要再走近一點」而不是「系統說我不能打卡」。這個資訊免解密就拿得到（§4.3）。
 

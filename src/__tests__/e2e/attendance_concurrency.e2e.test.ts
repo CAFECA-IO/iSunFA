@@ -1,4 +1,6 @@
+import { randomUUID } from "crypto";
 import { describe, it, expect, beforeAll, afterAll } from "@jest/globals";
+import { Prisma } from "@/generated";
 import { prisma } from "@/lib/prisma";
 import { Gender } from "@/constants/hr_management";
 import { WorkDayType } from "@/constants/attendance";
@@ -7,8 +9,14 @@ import {
   LeaveRecallResolutionOutcome,
   LeaveRecallStatus,
   LeaveRequestStatus,
-  LeaveType,
 } from "@/constants/leave";
+import {
+  LEAVE_POLICY_CODE,
+  LeaveAccrualMethod,
+  LeaveCycleBasis,
+  LeaveUnitBasis,
+} from "@/constants/leave_policy";
+import { LEAVE_ENTITLEMENT_ENGINE_VERSION } from "@/lib/leave_entitlement_rules";
 import { activeKeyOf, leaveRepo } from "@/repositories/leave.repo";
 import { employeeRepo } from "@/repositories/employee.repo";
 
@@ -61,6 +69,7 @@ let teamId = "";
 let managerId = "";
 let employeeId = "";
 let shiftPatternId = "";
+let leavePolicyId = "";
 const createdUserIds: string[] = [];
 
 /**
@@ -83,6 +92,13 @@ const makeEmployee = async (params: {
 }): Promise<string> => {
   const employee = await prisma.employee.create({
     data: {
+      /**
+       * Info: (20260819 - Julian) id 自己產（review B11）。
+       *
+       * `Employee` 在 `HrPiiTable` 名單上，而那張表的 id 是加密 AAD 的一部分，
+       * 因此 schema 刻意沒有 `@default(uuid())` —— 由應用層產生是唯一的路徑。
+       */
+      id: randomUUID(),
       employeeNo: params.employeeNo,
       name: params.name,
       gender: Gender.MALE,
@@ -103,10 +119,21 @@ const makeEmployee = async (params: {
 const makePendingRecall = async (workDate: string): Promise<string> => {
   const request = await prisma.leaveRequest.create({
     data: {
+      // Info: (20260819 - Julian) 同上：`LeaveRequest` 也在 PII 名單上（review B11）
+      id: randomUUID(),
       accountBookId: BOOK_ID,
       employeeId,
-      leaveType: LeaveType.ANNUAL,
-      reason: "e2e 併發測試",
+      leavePolicyId,
+      /**
+       * Info: (20260818 - Julian) 事由改為密文欄位（ADR 018 Tier 2）。填佔位字串
+       * 而不呼叫 `encryptPii()`，理由同上面的 `PII_PLACEHOLDER` ——
+       * 銷假這條路徑從不解密它。
+       */
+      reasonCipher: `e2e-placeholder-reason-${STAMP}`,
+      piiKeyVersion: 1,
+      // Info: (20260818 - Julian) 一天整日；帳本的單位是分鐘，日數同時固化（ADR 022 §2）
+      totalMinutes: 480,
+      totalDays: new Prisma.Decimal(1),
       status: LeaveRequestStatus.APPROVED,
     },
   });
@@ -115,6 +142,10 @@ const makePendingRecall = async (workDate: string): Promise<string> => {
     data: {
       leaveRequestId: request.id,
       workDate,
+      // Info: (20260818 - Julian) 逐日固化的分鐘數與換算依據（ADR 022 §3.2），取該日班別的 480
+      minutes: 480,
+      dayEquivalentMinutes: 480,
+      entitlementEngineVersion: LEAVE_ENTITLEMENT_ENGINE_VERSION,
       activeKey: activeKeyOf(employeeId, workDate),
     },
   });
@@ -177,6 +208,27 @@ beforeAll(async () => {
     },
   });
   shiftPatternId = pattern.id;
+
+  /**
+   * Info: (20260818 - Julian) 假別自 ADR 021 起是**資料不是列舉** —— `LeaveRequest`
+   * 指向一列 `LeavePolicy`，所以這支測試必須先造一張。
+   *
+   * 只填必填欄位：`annualDays` 留空、不建級距表，因為本檔從不授予也不扣減額度。
+   * `recallable: true` 是唯一有語意的設定 —— §38 III 的協商空間只給特休，
+   * 而 `requestRecall` 會讀它（`VA_LEAVE_NOT_RECALLABLE`）。
+   */
+  const policy = await prisma.leavePolicy.create({
+    data: {
+      code: LEAVE_POLICY_CODE.ANNUAL,
+      name: "特別休假",
+      accountBookId: BOOK_ID,
+      accrualMethod: LeaveAccrualMethod.SENIORITY_TIER,
+      cycleBasis: LeaveCycleBasis.HIRE_ANNIVERSARY,
+      unitBasis: LeaveUnitBasis.HALF_WORKDAY,
+      recallable: true,
+    },
+  });
+  leavePolicyId = policy.id;
 });
 
 /**
@@ -190,6 +242,7 @@ afterAll(async () => {
     data: { managerId: null },
   });
   await prisma.leaveRequest.deleteMany({ where: { accountBookId: BOOK_ID } });
+  await prisma.leavePolicy.deleteMany({ where: { accountBookId: BOOK_ID } });
   await prisma.employeeShiftDay.deleteMany({
     where: { accountBookId: BOOK_ID },
   });
@@ -223,6 +276,7 @@ describe("同意銷假的三張表一起改（真資料庫）", () => {
         employeeId,
         workDate: TZ_DATE,
         shiftPatternId,
+        leavePolicyId,
       },
     });
 
@@ -320,6 +374,7 @@ describe("併發回應同一張徵詢（真資料庫）", () => {
           employeeId,
           workDate,
           shiftPatternId,
+          leavePolicyId,
         },
       }),
       leaveRepo.resolveRecall({

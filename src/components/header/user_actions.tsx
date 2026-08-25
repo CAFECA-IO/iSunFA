@@ -17,6 +17,15 @@ import {
   getModuleI18nKey,
 } from "@/constants/modules";
 import { useAuth } from "@/contexts/auth_context";
+/**
+ * Info: (20260819 - Luphia) 徽章的 fallback 用 `PLAN.FREE`，不是字面的 "personal"。
+ *
+ * `/auth/me` 現在會回實際方案（`getUserPlanSnapshot`），fallback 只在「還沒載到」
+ * 時出現。原本寫死 "personal"，而那個 i18n 鍵的文案雖然也是「免費版」，
+ * 卻是**另一個方案代號**（PLAN.PERSONAL 不參與團隊訂閱）——改方案文案時
+ * 只會有人改到 free 那一份，於是徽章顯示的是一個沒有人維護的字串。
+ */
+import { PLAN } from "@/constants/plans";
 import { useTranslation } from "@/i18n/i18n_context";
 import LoginButton from "@/components/common/login_button";
 import { useParams } from "next/navigation";
@@ -326,7 +335,7 @@ export default function UserActions() {
                     {/* Info: (20260423 - Julian) Desktop right info */}
                     <div className="hidden shrink-0 text-right md:block">
                       <div className="bg-brand-soft text-brand-on-soft ring-brand/30 mb-1 inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset">
-                        {t(`pricing.plans.${user.plan || "personal"}.name`)}
+                        {t(`pricing.plans.${user.plan || PLAN.FREE}.name`)}
                       </div>
                       <p className="text-text-muted text-xs">
                         {t("header.credits")}:{" "}
@@ -352,7 +361,7 @@ export default function UserActions() {
                   {/* Info: (20260423 - Julian) Mobile right info */}
                   <div className="mt-2 flex items-center justify-between md:hidden">
                     <div className="bg-brand-soft text-brand-on-soft ring-brand/30 inline-flex items-center rounded-md px-2 py-1 text-[10px] font-medium ring-1 ring-inset">
-                      {t(`pricing.plans.${user.plan || "personal"}.name`)}
+                      {t(`pricing.plans.${user.plan || PLAN.FREE}.name`)}
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       {accountBook && (

@@ -112,6 +112,11 @@ export const teamManagement = {
     frozen_warning: "团队钱包已冻结（守恒核对异常），请联系客服处理。",
     buy_credits: "前往购买点数",
     manage_plan: "管理方案",
+    pending_downgrade:
+      "已排定于 {{date}} 起改为{{plan}}；在那之前方案与额度保持不变。",
+    pending_expire:
+      "自动续订已关闭：当期方案与额度保持到 {{date}}，届时未再付款即转为免费版。",
+    keep_current_plan: "保持当前方案",
     manage_plan_hint: "额度不足时可升级方案",
     buy_credits_hint: "购买的点数将存入团队钱包，供管理者分配。",
     allocated_points: "分配点数",

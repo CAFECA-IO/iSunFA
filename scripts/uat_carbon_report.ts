@@ -1,5 +1,5 @@
 // Info: (20260814 - Emily) 碳報告產出的自動驗收(`data/issue_drafts/open/37_carbon_output_acceptance.md`)
-// Info: (20260814 - Emily) 用法:npx tsx scripts/uat_carbon_report.ts --pdf <下載的報告.pdf> [--log <server.log>] [--out snap.json] [--baseline 上一趟.json]
+// Info: (20260814 - Emily) 用法:npx tsx scripts/uat_carbon_report.ts --pdf <下載的報告.pdf> [--source <原檔.pdf>] [--log <server.log>] [--out snap.json] [--baseline 上一趟.json]
 //
 // Info: (20260814 - Emily) 為什麼要這支:08-14 之前每一輪修正的驗證都是「跑 12 分鐘匯入 → 人眼翻 57 頁」。
 // Info: (20260814 - Emily) 人眼看得到最刺眼的,看不到最嚴重的 —— 「表4.8 掉了」在 57 頁裡翻不到。
@@ -10,6 +10,8 @@ import zlib from "node:zlib";
 import { PDFDocument, PDFName, PDFRawStream } from "pdf-lib";
 import { extractPdfTextLayer } from "@/lib/pdf_text_layer";
 import { squeezeForMatch } from "@/lib/utils/squeeze_for_match";
+import { scanTableNumbers } from "@/lib/utils/table_number_scan";
+import { auditFrameworkClaims } from "@/lib/utils/carbon_framework_claims";
 import {
   CARBON_REPORT_CHAPTERS,
   CARBON_REPORT_OUTLINE,
@@ -27,6 +29,7 @@ import {
   BASELINE_THRESHOLD_LIMITS,
   activityDataLevel,
   classifyKey,
+  findAbsentMustMatchKeys,
   normalizeUatLog,
   unmeasuredThresholdLevel,
 } from "@/constants/carbon_uat_baseline";
@@ -306,6 +309,74 @@ const arg = (flag: string): string | undefined => {
   return index >= 0 ? process.argv[index + 1] : undefined;
 };
 
+/**
+ * Info: (20260824 - Emily) 原檔表號覆蓋率(#6710):原檔掃得到的每一個表號,成品都要提得到。
+ *
+ * ## 為什麼是「提得到」而不是「照錄了」
+ *
+ * 與桑基圖判準同一個原則:「在」或「說明它為什麼不在」二者之一即可。
+ * 成品印出「表3.7(未取得該表)」算提到 —— 失敗要留下痕跡,而痕跡就是覆蓋。
+ * 靜默才是缺陷:原檔有表3.7,成品從頭到尾沒有這四個字,人眼在 59 頁裡翻不到這件事。
+ * (08-24 之前「還是有缺漏的章節/表格」全靠人眼 —— 這條就是把那次驚魂機器化。)
+ *
+ * ## 兩個方向都量
+ *
+ * - `原檔表號_未見於紙面`:漏搬。08-24 run G 實測 0(19/19)。
+ * - `紙面表號_原檔沒有`:成品提到原檔沒有的表號 —— 憑空多出來的引用,
+ *   與「引用但不存在的表」同族,只是對照物是原檔不是實體表。
+ *
+ * ## 量尺共用、原檔用產品自己的抽取器
+ *
+ * 兩側都走 `scanTableNumbers`(護欄與誤報史在它的檔頭);原檔文字層走
+ * `extractPdfTextLayer` —— 與 --pdf 側同一支,理由同上面那段:兩支抽取器遲早分岔。
+ */
+const checkSourceCoverage = async (
+  sourcePath: string,
+  paperText: string,
+): Promise<void> => {
+  const extracted = await extractPdfTextLayer(fs.readFileSync(sourcePath));
+  if (!extracted) {
+    record("fail", "source:文字層", "原檔抽不出文字層 —— 覆蓋率無從量起");
+    return;
+  }
+  const sourceNumbers = scanTableNumbers(extracted.text.normalize("NFKC"));
+  const paperNumbers = scanTableNumbers(paperText);
+  const missing = sourceNumbers.filter(
+    (number) => !paperNumbers.includes(number),
+  );
+  const phantom = paperNumbers.filter(
+    (number) => !sourceNumbers.includes(number),
+  );
+  snapshot["原檔表號數"] = sourceNumbers.length;
+  snapshot["原檔表號_未見於紙面"] = missing;
+  snapshot["紙面表號_原檔沒有"] = phantom;
+  record(
+    sourceNumbers.length > 0 ? "pass" : "warn",
+    "source:表號",
+    sourceNumbers.length > 0
+      ? `${sourceNumbers.length} 張(${sourceNumbers.join(" ")})`
+      : "0 張 —— 原檔沒有可掃的表號,覆蓋率兩條形同未跑",
+  );
+  if (missing.length === 0) {
+    record("pass", "原檔表號_未見於紙面", "0 —— 原檔每一張表成品都提得到");
+  } else {
+    record(
+      "fail",
+      "原檔表號_未見於紙面",
+      `${missing.length} 張:${missing.join(" ")} —— 原檔有、成品隻字未提(靜默缺漏)`,
+    );
+  }
+  if (phantom.length === 0) {
+    record("pass", "紙面表號_原檔沒有", "0");
+  } else {
+    record(
+      "fail",
+      "紙面表號_原檔沒有",
+      `${phantom.length} 張:${phantom.join(" ")} —— 成品提到原檔沒有的表號(憑空引用或量尺誤報,都要查)`,
+    );
+  }
+};
+
 // Info: (20260814 - Emily) 私有區:Word 符號字型的字落在這裡,任何一個出現在成品上都是漏換
 const isPrivateUse = (char: string): boolean => {
   const code = char.codePointAt(0) ?? 0;
@@ -519,7 +590,7 @@ const main = async (): Promise<void> => {
   const pdfPath = arg("--pdf");
   if (!pdfPath) {
     process.stdout.write(
-      "用法:npx tsx scripts/uat_carbon_report.ts --pdf <報告.pdf> [--log <server.log>] [--out snap.json] [--baseline 上一趟.json]\n",
+      "用法:npx tsx scripts/uat_carbon_report.ts --pdf <報告.pdf> [--source <原檔.pdf>] [--log <server.log>] [--out snap.json] [--baseline 上一趟.json]\n",
     );
     process.exit(2);
   }
@@ -807,11 +878,46 @@ const main = async (): Promise<void> => {
    * 選 IFRS 的產出**應該**出現 IFRS,而且未到期時必須有免責敘述。
    * 屆時把這裡換成 `checkFrameworkConsistency(framework)`。
    */
-  const FOREIGN_FRAMEWORKS = ["IFRS", "TCFD", "SASB", "GRI", "CDP"];
-  expectZero(
-    "紙上宣告別的揭露框架",
-    FOREIGN_FRAMEWORKS.filter((name) => squeezed.includes(name)),
-  );
+  /**
+   * Info: (20260821 - Emily) 從「全域黑名單」改成「依成品自己的宣告分流」。
+   *
+   * 08-19 的版本是 `["IFRS","TCFD","SASB","GRI","CDP"]` 一律禁止。產品決策改變了前提：
+   * 33 段大綱本身就是 IFRS S1/S2 的架構，報告**可以**宣告架構對齊 ——
+   * 真正的紅線不是框架名稱，是**主體的合規宣告**（未到金管會適用時程的企業提前宣告）。
+   *
+   * 判準看的是**成品自己怎麼宣告**，不是我們的意圖，所以不需要等 `open/54` 的選擇機制
+   * 落地就能生效。文案取自 `carbon_report_framework.ts`，與將來的產出端同一份字串。
+   *
+   * ## 四條的涵蓋範圍（用輸入空間寫，不用程式碼寫）
+   *
+   * 1. `紙上宣告別的揭露框架` —— TCFD/SASB/GRI/CDP，**任何情況**出現即紅。
+   *    我們沒有對齊它們，所以沒有 when 子句。
+   * 2. `紙上出現 IFRS 卻沒宣告架構對齊` —— **當報告沒有印出架構對齊聲明時**，
+   *    出現 IFRS 即紅。有印就放行。
+   * 3. `宣告架構對齊卻沒有免責句` —— **當報告印了對齊聲明時**，必須也印免責句。
+   *    只印前者會讓讀者把「架構對齊」讀成「合規」。
+   * 4. `紙上有合規宣告` —— `COMPLIANCE_CLAIM_PATTERNS` 裡的說法，**任何情況**即紅。
+   *
+   * ## 現在最多能發生多壞（從界推，不從個例推）
+   *
+   * 第 4 條的界就是 `COMPLIANCE_CLAIM_PATTERNS` 的長度：**清單外的說法漏得掉**。
+   * 例如「已達成 IFRS S1 要求」「與 IFRS S2 一致」都不在清單裡。
+   * 所以最壞情況是「一份印了對齊聲明與免責句的報告，同時用清單外的說法斷言合規」
+   * —— 四條全綠而紙上有合規宣告。清單只能變長。
+   *
+   * 第 2 條另有一個已知洞：**客戶原文自己提到 IFRS 時**（逐字照錄），這條會紅，
+   * 而那不是我們的宣告。與「對帳附錄的逐字引用被報成表格語法外洩」同一形狀。
+   * 已量：客戶原文與三份產出裡 `IFRS` 都是 0 次，所以今天不會誤報；
+   * 真的遇到時要把判準收窄到「系統印的區塊」，不是現在憑空加例外。
+   */
+  const claims = auditFrameworkClaims(text);
+  snapshot.紙上宣告架構對齊 = claims.alignmentDeclared ? 1 : 0;
+  snapshot.紙上有免責句 = claims.disclaimerPresent ? 1 : 0;
+
+  expectZero("紙上宣告別的揭露框架", claims.unalignedFrameworks);
+  expectZero("紙上出現 IFRS 卻沒宣告架構對齊", claims.ifrsWithoutAlignment);
+  expectZero("宣告架構對齊卻沒有免責句", claims.alignmentWithoutDisclaimer);
+  expectZero("紙上有合規宣告", claims.complianceClaims);
 
   // Info: (20260819 - Emily) ── 桑基圖要嘛在紙上,要嘛紙上說明它為什麼不在 ──
   /**
@@ -915,6 +1021,22 @@ const main = async (): Promise<void> => {
   // Info: (20260814 - Emily) ── 行結構:標記黏在同一行 = 整份清單擠成一段文字牆 ──
   checkLineStructure(text);
 
+  const sourcePath = arg("--source");
+  if (!sourcePath) {
+    /*
+     * Info: (20260824 - Emily) 比照 --log 的缺席處理:沒給 --source 時,
+     * 覆蓋率兩條 must_match 整批沒跑 —— 要看得見,不能靜默。
+     */
+    record(
+      "warn",
+      "source:未提供",
+      "原檔表號覆蓋率判準未跑(#6710 兩條 must_match)",
+    );
+  }
+  if (sourcePath) {
+    await checkSourceCoverage(sourcePath, text);
+  }
+
   const logPath = arg("--log");
   // Info: (20260817 - Emily) 把紙上的文字一起交給 log 側 —— 交叉比對需要兩邊
   /**
@@ -922,6 +1044,18 @@ const main = async (): Promise<void> => {
    * 是 JSON-lines 且引號轉義,直接餵進來會讓每一條帶引號的判準靜默回 0
    * （理由見 `normalizeUatLog`）。
    */
+  if (!logPath) {
+    /*
+     * Info: (20260821 - Emily) 沒給 --log 時,log 側的判準(含兩條 must_match 對帳)
+     * **整批沒跑** —— 那要看得見,不能靜默(PR review B3;「看得見才輪得到判斷」
+     * 是這支腳本自己的立場)。B4 閾值那邊已有自己的缺席處理,這行管其餘的。
+     */
+    record(
+      "warn",
+      "log:未提供",
+      "log 側判準整批未跑(含圖表/段落對帳兩條 must_match)",
+    );
+  }
   if (logPath) {
     checkLog(normalizeUatLog(fs.readFileSync(logPath, "utf-8")), text);
   }
@@ -1205,6 +1339,95 @@ const checkLog = (log: string, text?: string): void => {
     record("warn", "log:圖表被拒", rejected.join("、"));
   }
 
+  /**
+   * Info: (20260821 - Emily) ── 圖表被拒 × 紙上痕跡的對帳 ──
+   *
+   * 表格那邊早就有「log 說丟了、紙上也真的沒有」,圖表這邊一直沒有 ——
+   * 同一個原則只做了一半。08-20 兩趟的實測就是代價:
+   * run C 拒 2 張、紙上 1 個痕跡;run D 拒 1 張、紙上 0 個。
+   * 被拒的圖比紙上的痕跡多 = 有圖無聲消失,而「圖表未繪製」那幾條判準
+   * 只數紙上的句子,紙上什麼都沒有時它們同時是 0、同時看起來綠。
+   *
+   * 判準:**每一張被拒的圖,紙上都要有一個痕跡**(素材不足/無法回溯/超過上限,
+   * 三種片語都算)。痕跡比被拒多不叫(退化與佔位有其他來源);少了才是無聲消失。
+   *
+   * ⚠ 這條對 run D 的既存產出**就是紅的** —— 那不是誤報,是 open/48 還沒修完的
+   * 實測證據。修的是產品(被拒時要把說明印上紙),不是把這條調綠。
+   */
+  if (text !== undefined) {
+    const squeezedPaper = squeezeForMatch(text);
+    const paperTraces =
+      (squeezedPaper.match(
+        new RegExp(squeezeForMatch("本節內容不足以繪製結構圖"), "g"),
+      )?.length ?? 0) +
+      (squeezedPaper.match(
+        new RegExp(squeezeForMatch("無法回溯至本節原文"), "g"),
+      )?.length ?? 0) +
+      (squeezedPaper.match(
+        new RegExp(squeezeForMatch(DIAGRAM_CAP_EXCEEDED_PHRASE), "g"),
+      )?.length ?? 0);
+    snapshot.紙上圖表失敗痕跡 = paperTraces;
+    expectZero(
+      "圖表被拒卻紙上無痕",
+      rejected.length > paperTraces
+        ? [`被拒 ${rejected.length} 張、紙上只有 ${paperTraces} 個痕跡`]
+        : [],
+    );
+  }
+
+  /**
+   * Info: (20260821 - Emily) ── 段落裁決的對帳 ──
+   *
+   * `segment rejected` 一段被丟時,log 帶著 contentChars —— 判斷嚴不嚴重的數字
+   * 早就記了,只是沒人讀。08-20 run C 實測:ch2-intro 被拒、contentChars 0
+   * (模型吐了空段,沒有真的遺失),而「大綱節數 33/33」照樣綠,因為那條只看
+   * 節標題在不在。同一形狀若 contentChars 是 5000,遺失就是無聲的。
+   *
+   * 分兩層:被拒本身 record_only(空段是模型輸出的變異);
+   * **有內容卻被拒**是 must_match —— 那是一段真實原文無聲消失。
+   */
+  /*
+   * Info: (20260821 - Emily) 逐行抓、欄位各自抽(PR review B2):原本一條 regex 用
+   * `.*?` 串起兩個欄位,等於要求它們**依序且同行** —— log 欄位順序一變就靜默回空、
+   * 判準靜默轉綠,而這個形狀咬過我們一次(normalizeUatLog 的檔頭記著)。
+   * normalizeUatLog 保證一事件一行,行內欄位順序則不做假設。
+   */
+  const rejectedSegments = log
+    .split("\n")
+    .filter((line) => line.includes("segment rejected"))
+    .map((line) => {
+      const paragraphId = /"paragraphId":"([^"]*)"/.exec(line)?.[1] ?? "(未知)";
+      const charsRaw = /"contentChars":(\d+|null)/.exec(line)?.[1];
+      return {
+        paragraphId,
+        chars:
+          charsRaw === undefined || charsRaw === "null"
+            ? null
+            : Number(charsRaw),
+      };
+    });
+  snapshot.log_段落被拒 = rejectedSegments.map(
+    (seg) => `${seg.paragraphId}(${seg.chars ?? "?"}字)`,
+  );
+  expectZero(
+    "段落被拒且原文有內容",
+    rejectedSegments
+      .filter((seg) => seg.chars === null || seg.chars > 0)
+      .map((seg) => `${seg.paragraphId}(${seg.chars ?? "?"}字)`),
+  );
+
+  /**
+   * Info: (20260821 - Emily) ── 其餘四種「丟東西」事件,至少要看得見 ──
+   *
+   * 12 個丟棄類 log 事件裡,先前只有 1 個有紙面對帳。這四種今天先進快照
+   * (record_only):看得見才輪得到判斷嚴不嚴重。三份既有 log 實測都是 0,
+   * 所以它們暫時只是地雷偵測器,不是已知缺陷的量尺。
+   */
+  snapshot.log_表格整批被拒 = count(/source table rejected/g);
+  snapshot.log_活動數據被拒 = count(/activity record rejected/g);
+  snapshot.log_llm輸出不合schema = count(/llm output schema invalid/g);
+  snapshot.log_私有區字元無對照 = count(/unmapped private-use chars/g);
+
   const rendered =
     /"chartsRendered":(\d+),"chartsFailed":(\d+),"tocFilled":(\d+),"tocMissing":(\d+)/.exec(
       log,
@@ -1400,14 +1623,32 @@ const compareBaseline = (): string | undefined => {
 
   const broke = changed.filter((key) => classifyKey(key) === "must_match");
   const drifted = changed.filter((key) => classifyKey(key) !== "must_match");
+  /**
+   * Info: (20260825 - Emily) 聯集補洞(PR review 阻擋項):`changed` 只走本趟 snapshot 的鍵,
+   * 基準線裡有、本趟沒產出的 must_match 鍵從頭到尾不會被比 ——
+   * 「判準沒跑」被回報成「判準通過」,正好是 #6710 目的的反面。
+   * 複現:基準線含 --source 三鍵、本趟沒給 --source → changed=[] → B3 綠。
+   * 同型的鍵有八個(--log 五個 + --source 三個),這裡一次補齊:
+   * must_match 層缺席即 fail;record_only/threshold 維持現狀
+   * (允許變動的層本來就允許缺席,B4 閾值層另有自己的缺席宣告)。
+   */
+  const absentMustMatch = findAbsentMustMatchKeys(baseline, snapshot);
+  if (absentMustMatch.length > 0) {
+    record(
+      "fail",
+      "B3 must_match 鍵本趟未產出",
+      `${absentMustMatch.join("、")} —— 判準沒跑不等於判準通過;補上缺的輸入(--source/--log)再比`,
+    );
+  }
 
-  if (broke.length === 0) {
+  if (broke.length === 0 && absentMustMatch.length === 0) {
     record(
       "pass",
       "B3 兩趟一致(must_match 層)",
       `${drifted.length} 項在允許變動的層,0 項在必須相同的層`,
     );
-  } else {
+  }
+  if (broke.length > 0) {
     record(
       "fail",
       "B3 兩趟不一致(must_match 層)",
@@ -1416,6 +1657,15 @@ const compareBaseline = (): string | undefined => {
   }
 
   const sections: string[] = [];
+  if (absentMustMatch.length > 0) {
+    sections.push(
+      `\n✗ must_match 鍵本趟未產出(${absentMustMatch.length} 項):\n${absentMustMatch
+        .map(
+          (key) => `  ${key}: ${JSON.stringify(baseline[key])} → (本趟未產出)`,
+        )
+        .join("\n")}`,
+    );
+  }
   if (broke.length > 0) {
     sections.push(
       `\n✗ 必須相同卻變了(${broke.length} 項):\n${broke.map(line).join("\n")}`,

@@ -35,6 +35,12 @@ jest.mock("@/repositories/payment.repo", () => ({
     // Info: (20260814 - Luphia) 單期補收上限與冪等（PR #6652 第二輪 B-2 / B-3）
     sumSeatAdditionAmount: jest.fn(async () => BigInt(0)),
     findOrderByIdempotencyKey: jest.fn(async () => null),
+    /**
+     * Info: (20260820 - Luphia) 扣款失敗後要放掉冪等鍵（唯一欄位）。
+     * 不放的話下一次同對象同期的邀請會撞 P2002，而那個 P2002 被當成「重放」
+     * 吞掉 → 回 `charged: false` → **邀請照樣寄出，席次沒付錢**。
+     */
+    releaseIdempotencyKey: jest.fn(async () => undefined),
   },
 }));
 
@@ -82,6 +88,8 @@ const ACTIVE_SUBSCRIPTION = {
   currentPeriodEnd: PERIOD_END,
   seats: 3,
   unitPrice: 840,
+  // Info: (20260821 - Luphia) 補收分母讀這一欄（一期的天數），見 review #6687 二輪高-1
+  billingInterval: "month",
   latestOrderId: "order-sub-1",
 };
 
@@ -383,6 +391,56 @@ describe("chargeSeatAddition", () => {
   });
 
   /**
+   * Info: (20260821 - Luphia) 上限按當期實際跨距縮放（review #6687 三輪）。
+   *
+   * `unitPrice` 是**一期**的價格，而當期跨距可以超過一期：同方案續購會展延，
+   * 換方案會加上折抵的天數。跨距 3 期的當期若沿用「2 × 一期」的上限，
+   * 合法的加人會被誤擋——而使用者只會看到一個指向「連刷」的錯誤訊息。
+   *
+   * 這裡的期間是 90 天（3 期），上限因此是 840 × 3 席 × 2 × 3 = 15,120。
+   * 未縮放的舊上限是 5,040：已收 6,000 就會誤擋，而它現在必須放行。
+   */
+  it("跨距超過一期時，上限跟著放大（不誤擋合法擴編）", async () => {
+    asMock(teamRepo.countMembers).mockResolvedValue(3);
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+      ...ACTIVE_SUBSCRIPTION,
+      currentPeriodStart: PERIOD_START,
+      // Info: (20260821 - Luphia) 90 天跨距＝3 期（展延或折抵之後的常態）
+      currentPeriodEnd: new Date(PERIOD_START.getTime() + 90 * 86_400_000),
+    });
+    asMock(paymentRepo.sumSeatAdditionAmount).mockResolvedValue(BigInt(6000));
+
+    const result = await chargeSeatAddition({
+      teamId: "team-1",
+      nowMs: MID_PERIOD,
+      operatorUserId: "user-admin",
+    });
+
+    expect(result.charged).toBe(true);
+    expect(chargeOrderWithSavedCard).toHaveBeenCalledTimes(1);
+  });
+
+  // Info: (20260821 - Luphia) 縮放不等於取消：跨距 3 期仍然擋得住超過 3 期額度的連刷
+  it("跨距放大後仍擋得住超額連刷", async () => {
+    asMock(teamRepo.countMembers).mockResolvedValue(3);
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue({
+      ...ACTIVE_SUBSCRIPTION,
+      currentPeriodStart: PERIOD_START,
+      currentPeriodEnd: new Date(PERIOD_START.getTime() + 90 * 86_400_000),
+    });
+    // Info: (20260821 - Luphia) 上限 15,120；已收 15,000 再收一席會超過
+    asMock(paymentRepo.sumSeatAdditionAmount).mockResolvedValue(BigInt(15000));
+
+    await expect(
+      chargeSeatAddition({
+        teamId: "team-1",
+        nowMs: MID_PERIOD,
+        operatorUserId: "user-admin",
+      }),
+    ).rejects.toMatchObject({ code: "TW000016" });
+  });
+
+  /**
    * Info: (20260814 - Luphia) 冪等：同一把鍵已經扣過就不再扣（第二輪 B-3）。
    * 建立邀請失敗後客戶端重試時，這是唯一擋得住重複扣款的東西。
    */
@@ -440,5 +498,77 @@ describe("chargeSeatAddition", () => {
     ).rejects.toMatchObject({ code: "TW000012" });
     expect(teamSubscriptionRepo.addSeats).not.toHaveBeenCalled();
     expect(paymentRepo.updateOrderCompleted).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Info: (20260820 - Luphia) 扣款失敗後那把冪等鍵必須放掉（self-review 第二輪，中）。
+ *
+ * 不放掉的後果比續訂那條更糟：下一次同一個對象、同一期的邀請會建新單並撞 P2002，
+ * 而那個 P2002 被 `isUniqueKeyConflict` 當成「重放」吞掉，回 `charged: false`
+ * ——邀請流程照樣建立邀請。**一張卡被拒之後，下一次邀請就是一個沒付錢的席次。**
+ */
+describe("席次補收：扣款失敗後釋放冪等鍵", () => {
+  /**
+   * Info: (20260820 - Luphia) 前置要讓流程**真的走到扣款**：付費訂閱、可用卡，
+   * 且已佔滿已付席次（3 席、已佔 3 個位置）→ 第 4 個人才需要補收。
+   *
+   * 少了任何一項都會在更前面被擋下（沒有卡、或走「重用已付席次」），
+   * 而「有沒有放掉鍵」的斷言照樣通過——判準與缺陷不相容（checklist §1.9）。
+   */
+  beforeEach(() => {
+    jest.clearAllMocks();
+    asMock(teamSubscriptionRepo.getByTeamId).mockResolvedValue(
+      ACTIVE_SUBSCRIPTION,
+    );
+    asMock(paymentRepo.getOrderById).mockResolvedValue({
+      id: "order-sub-1",
+      userId: "user-owner",
+      data: { paymentMethodId: "pm-1" },
+    });
+    asMock(paymentRepo.getPaymentMethodById).mockResolvedValue({
+      id: "pm-1",
+      token: "tok-1",
+      data: {},
+    });
+    asMock(paymentRepo.sumSeatAdditionAmount).mockResolvedValue(BigInt(0));
+    asMock(paymentRepo.findOrderByIdempotencyKey).mockResolvedValue(null);
+    asMock(paymentRepo.releaseIdempotencyKey).mockResolvedValue(undefined);
+    asMock(teamRepo.countMembers).mockResolvedValue(3);
+    asMock(teamRepo.countPendingInvitations).mockResolvedValue(0);
+  });
+
+  it("扣款失敗時放掉鍵並拋錯", async () => {
+    asMock(chargeOrderWithSavedCard).mockResolvedValue({
+      ok: false,
+      reason: "E9999",
+    });
+
+    await expect(
+      chargeSeatAddition({
+        teamId: "team-1",
+        seats: 1,
+        nowMs: MID_PERIOD,
+        idempotencyKey: "invite:team-1:0xabc",
+      }),
+    ).rejects.toBeDefined();
+
+    expect(asMock(paymentRepo.releaseIdempotencyKey)).toHaveBeenCalledWith(
+      "order-seat-1",
+    );
+  });
+
+  // Info: (20260820 - Luphia) 成功時**不放**：那把鍵正是「這一期已經收過錢」的證據
+  it("扣款成功時不放掉鍵", async () => {
+    asMock(chargeOrderWithSavedCard).mockResolvedValue({ ok: true });
+
+    await chargeSeatAddition({
+      teamId: "team-1",
+      seats: 1,
+      nowMs: MID_PERIOD,
+      idempotencyKey: "invite:team-1:0xabc",
+    });
+
+    expect(asMock(paymentRepo.releaseIdempotencyKey)).not.toHaveBeenCalled();
   });
 });
