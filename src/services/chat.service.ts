@@ -32,6 +32,10 @@ import { MeasurementUnit } from "@/constants/enums";
 import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
 import { IInventoryExtraction } from "@/types/carbon_chatbot.types";
 import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
+import {
+  auditReplyQuantities,
+  buildGateBlockedReply,
+} from "@/lib/carbon_reply_gate";
 import { logger } from "@/lib/utils/logger";
 import { recordLlmUsage } from "@/lib/llm/usage_scope";
 import { SystemSettingKey } from "@/constants/system_setting";
@@ -787,6 +791,47 @@ ${outlineCatalog}${langInstruction}`;
   }
 
   /**
+   * Info: (20260825 - Emily) 回覆出口守門(#6707 第三層)。
+   *
+   * persona 把「清單之外不得有數字」說死了(第二層),但指令不是保證 ——
+   * 委員名單捏造(#6708)就是模型無視約束的實證。這裡機器判:
+   * 回覆中帶排放單位的數字必須屬於「事實包 ∪ 使用者說過的數字」,
+   * 否則整則換成決定性攔截訊息(不經 LLM —— 攔下的原因就是它不可信),
+   * 並撤銷本輪的寫入訊號(readyParagraphId/revision/chartRequest):
+   * 一則編數字的回覆,它的「資訊已齊全」判斷同樣不可信。
+   * extraction 保留 —— 它照抄的是使用者訊息,與回覆裡的數字無關,且另有逐筆裁決。
+   *
+   * 只在有事實包時上崗:帳本空的訪談模式裡,AI 舉例性的數字
+   * (「例如 100 噸」)是正當教學,全面攔截會把守門變成狼來了。
+   * 帳本空時的防線是 persona 的無事實拒答指令(已知邊界,記在 #6707)。
+   */
+  private applyReplyGate(
+    structured: ICarbonChatStructuredReply,
+    ledgerFacts: IContextFact[] | undefined,
+    history: { role: "user" | "model"; text: string }[],
+  ): ICarbonChatStructuredReply {
+    if (!ledgerFacts || ledgerFacts.length === 0) return structured;
+    const gate = auditReplyQuantities(
+      structured.reply,
+      ledgerFacts,
+      history
+        .filter((message) => message.role === "user")
+        .map((message) => message.text),
+    );
+    if (gate.ok) return structured;
+    logger.warn("carbon reply gate blocked", {
+      violations: gate.violations,
+    });
+    return {
+      ...structured,
+      reply: buildGateBlockedReply(gate.violations),
+      readyParagraphId: null,
+      revisionParagraphId: null,
+      chartRequest: null,
+    };
+  }
+
+  /**
    * Info: (20260714 - Tzuhan) 碳會計師結構化回覆
    * 對話內容 + 段落完成訊號(碳盤查對 Gemini 的唯一對話路徑)
    * 解決「無限訪談迴圈」：AI 判斷段落資訊已齊全時回報 readyParagraphId
@@ -868,23 +913,32 @@ ${outlineCatalog}${langInstruction}`;
               paragraphId: chartCandidate.paragraphId as string,
             }
           : null;
-      return {
-        reply: parsed.reply,
-        readyParagraphId: isValidParagraph ? parsed.readyParagraphId : null,
-        extraction,
-        revisionParagraphId,
-        chartRequest,
-        usage,
-      };
+      // Info: (20260825 - Emily) #6707 出口守門:結構化與降級兩條路都要過(見 applyReplyGate)
+      return this.applyReplyGate(
+        {
+          reply: parsed.reply,
+          readyParagraphId: isValidParagraph ? parsed.readyParagraphId : null,
+          extraction,
+          revisionParagraphId,
+          chartRequest,
+          usage,
+        },
+        ledgerFacts,
+        history,
+      );
     } catch {
-      return {
-        reply: raw,
-        readyParagraphId: null,
-        extraction: null,
-        revisionParagraphId: null,
-        chartRequest: null,
-        usage,
-      };
+      return this.applyReplyGate(
+        {
+          reply: raw,
+          readyParagraphId: null,
+          extraction: null,
+          revisionParagraphId: null,
+          chartRequest: null,
+          usage,
+        },
+        ledgerFacts,
+        history,
+      );
     }
   }
 
