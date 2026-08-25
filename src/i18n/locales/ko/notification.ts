@@ -8,5 +8,8 @@ export const notification = {
   wallet_upgrade:
     "멤버십 카드 등 온체인 증명을 받으려면 지갑 업그레이드가 필요합니다",
   analysis_completed: "분석 작업이 완료되었습니다. 클릭하여 결과를 확인하세요",
+  analysis_failed:
+    "분석 작업이 실패했습니다. 다시 제출하거나 고객지원에 문의하세요",
+  has_more_completed: "읽지 않은 알림이 더 있습니다",
   view: "보기",
 };

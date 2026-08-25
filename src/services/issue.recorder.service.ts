@@ -2,7 +2,10 @@ import fs from "fs/promises";
 import path from "path";
 import { orderRepo } from "@/repositories/order.repo";
 import { analysisRepo } from "@/repositories/analysis.repo";
-import { notifyAnalysisCompleted } from "@/services/notification.service";
+import {
+  notifyAnalysisCompleted,
+  notifyAnalysisFailed,
+} from "@/services/notification.service";
 import { ORDER_STATUS } from "@/constants/status";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import {
@@ -162,8 +165,7 @@ export class IssueRecorderService {
               unknown
             >;
             const usage = parsedResult?.usage as
-              | Record<string, unknown>
-              | undefined;
+              Record<string, unknown> | undefined;
             if (usage?.totalTokens)
               tokensConsumed = MoneyUtil.toDecimal(
                 usage.totalTokens as string | number,
@@ -424,6 +426,20 @@ export class IssueRecorderService {
               }
             }
 
+            /**
+             * Info: (20260825 - Julian) 這一輪是不是「轉成失敗」的那一次（計畫書 D16）。
+             *
+             * 在 update 之前算：update 之後 `order.status` 這份記憶體副本
+             * 仍是舊值，但把判斷寫在後面會讓下一個人以為它讀的是新值。
+             *
+             * 已經是 FAILED 的訂單被重掃時不重發 —— 而真正保證「只發一則」
+             * 的是 `analysis-failed:<orderId>` 這把 dedupeKey，
+             * 這個旗標只是省掉那些注定撞唯一鍵的往返。
+             */
+            const becameFailed =
+              newOrderStatus === ORDER_STATUS.FAILED &&
+              order.status !== ORDER_STATUS.FAILED;
+
             // Info: (20260517 - Luphia) Update Order Status accurately based on DB sync result and accumulate tokens
             await orderRepo.update({
               where: { id: order.id },
@@ -435,6 +451,21 @@ export class IssueRecorderService {
             console.log(
               `[MissionRecorder] Successfully updated Order ${order.id} to ${newOrderStatus}.`,
             );
+
+            /**
+             * Info: (20260825 - Julian) 終局失敗才通知（計畫書 D16）。
+             *
+             * `failed_*.md` 的第 1、2 次是系統內部重試，使用者收到只會是雜訊；
+             * 這裡綁的是 `Order.status` 真的被寫成 FAILED 的那一次狀態轉換。
+             * `notifyAnalysisFailed` 永不拋錯 —— 失敗處理路徑上再拋一個錯，
+             * 只會把一個已經很難查的情境變得更難查。
+             */
+            if (becameFailed) {
+              await notifyAnalysisFailed({
+                userId: order.userId,
+                orderId: order.id,
+              });
+            }
           }
 
           // Info: (20260420 - Luphia) Write flag to prevent reprocessing

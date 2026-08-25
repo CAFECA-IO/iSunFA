@@ -2,7 +2,7 @@
 
 import { FC } from "react";
 import Link from "next/link";
-import { Bell, Menu, Search, UserCircle2 } from "lucide-react";
+import { Menu, Search, UserCircle2 } from "lucide-react";
 import BrandLogoImage from "@/components/common/brand_logo_image";
 import { useAuth } from "@/contexts/auth_context";
 import {
@@ -71,17 +71,6 @@ const HrHeader: FC<IHrHeaderProps> = ({ onToggleSidebar }) => {
           >
             <Search className="size-5 shrink-0" />
           </button>
-
-          <button
-            type="button"
-            aria-label={t("hr_management.notification_aria")}
-            title={t("hr_management.value.feature_pending")}
-            disabled
-            className={`relative rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 ${HR_PENDING_ACTION_CLASS}`}
-          >
-            <Bell className="size-5 shrink-0" />
-          </button>
-
           <button
             type="button"
             aria-label={t("hr_management.user_menu_aria")}

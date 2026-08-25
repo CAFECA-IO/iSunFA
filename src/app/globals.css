@@ -3360,3 +3360,18 @@ input[type="color" i]::-moz-color-swatch {
   animation: bell-shake 0.9s ease-in-out;
   transform-origin: top center;
 }
+
+/**
+ * Info: (20260825 - Julian) 尊重系統的「減少動態效果」偏好（計畫書 §4）。
+ *
+ * 這條**不受使用者偏好覆寫**：使用者偏好管的是「要不要搖」，
+ * 系統偏好管的是「這台機器上不要動」，後者優先。前庭功能障礙的人
+ * 不該為了收到通知而付出頭暈的代價。
+ *
+ * 動畫關掉之後未讀徽章仍在 —— 資訊不靠動畫傳達，動畫只是提示。
+ */
+@media (prefers-reduced-motion: reduce) {
+  .animate-bell-shake {
+    animation: none;
+  }
+}

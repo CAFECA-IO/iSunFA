@@ -291,6 +291,40 @@ export async function notifyAnalysisCompleted(params: {
 }
 
 /**
+ * Info: (20260825 - Julian) 分析**失敗**時發通知（recorder 呼叫，計畫書 D16）。
+ *
+ * 與 `notifyAnalysisCompleted` 同樣永不拋錯：失敗處理路徑上再拋一個錯，
+ * 只會把一個已經很難查的情境變得更難查。
+ *
+ * 冪等鍵用 **orderId**：失敗的路徑上 `analysis` 可能根本不存在
+ * （結果解析不出來、payload 缺漏），而 order 一定在。
+ * 一張訂單失敗一次、發一則 —— 而 recorder 每次重掃已失敗的訂單時
+ * 撞唯一鍵回 null，不會重發。
+ *
+ * **重試中不發**：`failed_*.md` 的第 1、2 次是系統內部重試，
+ * 使用者收到只會是雜訊。只有 `Order.status` 真的被寫成 `FAILED`
+ * 的那一刻才發（見 recorder 的 `becameFailed`）。
+ */
+export async function notifyAnalysisFailed(params: {
+  userId: string;
+  orderId: string;
+}): Promise<void> {
+  try {
+    await notificationRepo.createIfAbsent({
+      userId: params.userId,
+      type: NOTIFICATION_TYPE.ANALYSIS_FAILED,
+      payload: { orderId: params.orderId } as Prisma.InputJsonObject,
+      dedupeKey: `${NOTIFICATION_DEDUPE_PREFIX.ANALYSIS_FAILED}${params.orderId}`,
+    });
+  } catch (error) {
+    logger.warn("analysis-failed notification failed (non-fatal)", {
+      orderId: params.orderId,
+      reason: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+/**
  * Info: (20260821 - Luphia) 系統要求升級錢包（ADR 021 rollout 第 5 步的入口）。
  * 由 `scripts/request_wallet_upgrades.ts` 逐使用者發出；一人一則（dedupeKey）。
  *

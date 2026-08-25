@@ -10,5 +10,8 @@ export const notification = {
     "会員カードなどのオンチェーン証明を受け取るため、ウォレットのアップグレードが必要です",
   analysis_completed:
     "分析ジョブが完了しました。クリックして結果を確認してください",
+  analysis_failed:
+    "分析ジョブが失敗しました。再送信するかサポートにご連絡ください",
+  has_more_completed: "未読の通知がまだあります",
   view: "確認",
 };

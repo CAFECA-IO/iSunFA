@@ -9,5 +9,8 @@ export const notification = {
     "The system requests a wallet upgrade so it can receive on-chain credentials such as your membership card",
   analysis_completed:
     "Your analysis job has finished — click to view the result",
+  analysis_failed:
+    "Your analysis job failed — please resubmit or contact support",
+  has_more_completed: "More unread notifications",
   view: "View",
 };
