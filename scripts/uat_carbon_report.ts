@@ -1,5 +1,5 @@
 // Info: (20260814 - Emily) 碳報告產出的自動驗收(`data/issue_drafts/open/37_carbon_output_acceptance.md`)
-// Info: (20260814 - Emily) 用法:npx tsx scripts/uat_carbon_report.ts --pdf <下載的報告.pdf> [--log <server.log>] [--out snap.json] [--baseline 上一趟.json]
+// Info: (20260814 - Emily) 用法:npx tsx scripts/uat_carbon_report.ts --pdf <下載的報告.pdf> [--source <原檔.pdf>] [--log <server.log>] [--out snap.json] [--baseline 上一趟.json]
 //
 // Info: (20260814 - Emily) 為什麼要這支:08-14 之前每一輪修正的驗證都是「跑 12 分鐘匯入 → 人眼翻 57 頁」。
 // Info: (20260814 - Emily) 人眼看得到最刺眼的,看不到最嚴重的 —— 「表4.8 掉了」在 57 頁裡翻不到。
@@ -10,6 +10,7 @@ import zlib from "node:zlib";
 import { PDFDocument, PDFName, PDFRawStream } from "pdf-lib";
 import { extractPdfTextLayer } from "@/lib/pdf_text_layer";
 import { squeezeForMatch } from "@/lib/utils/squeeze_for_match";
+import { scanTableNumbers } from "@/lib/utils/table_number_scan";
 import { auditFrameworkClaims } from "@/lib/utils/carbon_framework_claims";
 import {
   CARBON_REPORT_CHAPTERS,
@@ -307,6 +308,74 @@ const arg = (flag: string): string | undefined => {
   return index >= 0 ? process.argv[index + 1] : undefined;
 };
 
+/**
+ * Info: (20260824 - Emily) 原檔表號覆蓋率(#6710):原檔掃得到的每一個表號,成品都要提得到。
+ *
+ * ## 為什麼是「提得到」而不是「照錄了」
+ *
+ * 與桑基圖判準同一個原則:「在」或「說明它為什麼不在」二者之一即可。
+ * 成品印出「表3.7(未取得該表)」算提到 —— 失敗要留下痕跡,而痕跡就是覆蓋。
+ * 靜默才是缺陷:原檔有表3.7,成品從頭到尾沒有這四個字,人眼在 59 頁裡翻不到這件事。
+ * (08-24 之前「還是有缺漏的章節/表格」全靠人眼 —— 這條就是把那次驚魂機器化。)
+ *
+ * ## 兩個方向都量
+ *
+ * - `原檔表號_未見於紙面`:漏搬。08-24 run G 實測 0(19/19)。
+ * - `紙面表號_原檔沒有`:成品提到原檔沒有的表號 —— 憑空多出來的引用,
+ *   與「引用但不存在的表」同族,只是對照物是原檔不是實體表。
+ *
+ * ## 量尺共用、原檔用產品自己的抽取器
+ *
+ * 兩側都走 `scanTableNumbers`(護欄與誤報史在它的檔頭);原檔文字層走
+ * `extractPdfTextLayer` —— 與 --pdf 側同一支,理由同上面那段:兩支抽取器遲早分岔。
+ */
+const checkSourceCoverage = async (
+  sourcePath: string,
+  paperText: string,
+): Promise<void> => {
+  const extracted = await extractPdfTextLayer(fs.readFileSync(sourcePath));
+  if (!extracted) {
+    record("fail", "source:文字層", "原檔抽不出文字層 —— 覆蓋率無從量起");
+    return;
+  }
+  const sourceNumbers = scanTableNumbers(extracted.text.normalize("NFKC"));
+  const paperNumbers = scanTableNumbers(paperText);
+  const missing = sourceNumbers.filter(
+    (number) => !paperNumbers.includes(number),
+  );
+  const phantom = paperNumbers.filter(
+    (number) => !sourceNumbers.includes(number),
+  );
+  snapshot["原檔表號數"] = sourceNumbers.length;
+  snapshot["原檔表號_未見於紙面"] = missing;
+  snapshot["紙面表號_原檔沒有"] = phantom;
+  record(
+    sourceNumbers.length > 0 ? "pass" : "warn",
+    "source:表號",
+    sourceNumbers.length > 0
+      ? `${sourceNumbers.length} 張(${sourceNumbers.join(" ")})`
+      : "0 張 —— 原檔沒有可掃的表號,覆蓋率兩條形同未跑",
+  );
+  if (missing.length === 0) {
+    record("pass", "原檔表號_未見於紙面", "0 —— 原檔每一張表成品都提得到");
+  } else {
+    record(
+      "fail",
+      "原檔表號_未見於紙面",
+      `${missing.length} 張:${missing.join(" ")} —— 原檔有、成品隻字未提(靜默缺漏)`,
+    );
+  }
+  if (phantom.length === 0) {
+    record("pass", "紙面表號_原檔沒有", "0");
+  } else {
+    record(
+      "fail",
+      "紙面表號_原檔沒有",
+      `${phantom.length} 張:${phantom.join(" ")} —— 成品提到原檔沒有的表號(憑空引用或量尺誤報,都要查)`,
+    );
+  }
+};
+
 // Info: (20260814 - Emily) 私有區:Word 符號字型的字落在這裡,任何一個出現在成品上都是漏換
 const isPrivateUse = (char: string): boolean => {
   const code = char.codePointAt(0) ?? 0;
@@ -520,7 +589,7 @@ const main = async (): Promise<void> => {
   const pdfPath = arg("--pdf");
   if (!pdfPath) {
     process.stdout.write(
-      "用法:npx tsx scripts/uat_carbon_report.ts --pdf <報告.pdf> [--log <server.log>] [--out snap.json] [--baseline 上一趟.json]\n",
+      "用法:npx tsx scripts/uat_carbon_report.ts --pdf <報告.pdf> [--source <原檔.pdf>] [--log <server.log>] [--out snap.json] [--baseline 上一趟.json]\n",
     );
     process.exit(2);
   }
@@ -950,6 +1019,22 @@ const main = async (): Promise<void> => {
 
   // Info: (20260814 - Emily) ── 行結構:標記黏在同一行 = 整份清單擠成一段文字牆 ──
   checkLineStructure(text);
+
+  const sourcePath = arg("--source");
+  if (!sourcePath) {
+    /*
+     * Info: (20260824 - Emily) 比照 --log 的缺席處理:沒給 --source 時,
+     * 覆蓋率兩條 must_match 整批沒跑 —— 要看得見,不能靜默。
+     */
+    record(
+      "warn",
+      "source:未提供",
+      "原檔表號覆蓋率判準未跑(#6710 兩條 must_match)",
+    );
+  }
+  if (sourcePath) {
+    await checkSourceCoverage(sourcePath, text);
+  }
 
   const logPath = arg("--log");
   // Info: (20260817 - Emily) 把紙上的文字一起交給 log 側 —— 交叉比對需要兩邊
