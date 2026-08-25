@@ -291,6 +291,23 @@ export async function notifyAnalysisCompleted(params: {
 }
 
 /**
+ * Info: (20260825 - Julian) 這批使用者裡，誰還掛著未讀的錢包升級待辦。
+ *
+ * 只給**預演**用：`request_wallet_upgrades.ts` 不帶 `--commit` 時要能回報
+ * 「有幾則待辦會被收掉」。沒有這一支的話，預演只講得出「會發幾則」，
+ * 講不出「會收幾則」—— 而這支腳本重跑時同時做這兩件事，
+ * 預演少講一半等於它只驗了一半。
+ */
+export async function listUsersWithPendingWalletUpgrade(params: {
+  userIds: readonly string[];
+}): Promise<Set<string>> {
+  return notificationRepo.listUserIdsWithUnread(
+    NOTIFICATION_TYPE.WALLET_UPGRADE,
+    params.userIds,
+  );
+}
+
+/**
  * Info: (20260825 - Julian) 分析**失敗**時發通知（recorder 呼叫，計畫書 D16）。
  *
  * 與 `notifyAnalysisCompleted` 同樣永不拋錯：失敗處理路徑上再拋一個錯，

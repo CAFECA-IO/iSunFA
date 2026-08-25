@@ -132,6 +132,32 @@ export class NotificationRepository {
   }
 
   /**
+   * Info: (20260825 - Julian) 這批使用者裡，誰有某一型別的未讀（唯讀）。
+   *
+   * 給預演用：`request_wallet_upgrades.ts` 不帶 `--commit` 時要能回報
+   * 「有幾則待辦**會被**收掉」，而那不能靠真的去收一次。
+   *
+   * 一支查詢查完整批，不是逐人問 —— 掃全站使用者時後者是 N 次往返，
+   * 而預演本來就已經要為每個人做一次 eth_call 了，不該再加一層。
+   *
+   * `distinct` 讓回傳是「有未讀的人」而不是「未讀的列」：呼叫端要的是
+   * 集合成員判斷，不是筆數。
+   */
+  async listUserIdsWithUnread(
+    type: string,
+    userIds: readonly string[],
+  ): Promise<Set<string>> {
+    // Info: (20260825 - Julian) 空集合不進 Prisma（`in: []` 也對，但省一趟）
+    if (userIds.length === 0) return new Set();
+    const rows = await prisma.notification.findMany({
+      where: { type, readAt: null, userId: { in: [...userIds] } },
+      select: { userId: true },
+      distinct: ["userId"],
+    });
+    return new Set(rows.map((row) => row.userId));
+  }
+
+  /**
    * Info: (20260825 - Julian) 把某一型別的未讀標為已讀（待辦型的關閉路徑）。
    *
    * 待辦型的消失由「事情真的做完了」驅動，不由「使用者看過了」驅動：

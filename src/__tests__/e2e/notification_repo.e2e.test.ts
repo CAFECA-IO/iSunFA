@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll } from "@jest/globals";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  beforeEach,
+  afterAll,
+} from "@jest/globals";
 import { prisma } from "@/lib/prisma";
 import { notificationRepo } from "@/repositories/notification.repo";
 import { NOTIFICATION_TYPE } from "@/constants/notification";
@@ -42,9 +49,8 @@ let userId = "";
 let otherUserId = "";
 
 /**
- * Info: (20260825 - Julian) 每一則測試資料都帶這個前綴，清理時只刪自己的。
- * 不用 `deleteMany({ where: { userId } })` 就好的原因：那也對，但兩位使用者
- * 各自的通知都要清，而以 dedupeKey 前綴刪更能表達「這些是我建的」。
+ * Info: (20260825 - Julian) 每一則測試資料都帶這個前綴，斷言時用它指名自己建的列。
+ * 加時間戳而不是固定字串：同一個資料庫上兩份 e2e 併跑時前綴不會撞。
  */
 const KEY_PREFIX = `e2e-notification-${STAMP}:`;
 
@@ -59,6 +65,27 @@ beforeAll(async () => {
   ]);
   userId = main.id;
   otherUserId = other.id;
+});
+
+/**
+ * Info: (20260825 - Julian) 每一則測試都從「兩位使用者都沒有通知」開始。
+ *
+ * 原本的寫法是各測試在自己結尾收拾（標已讀、刪掉自己建的列），那有兩個問題，
+ * 而且兩個都真的發生了：
+ *
+ * 1. 漏收拾看不出來。第一則測試建的 `dedupe` 那一列沒人刪，於是第三則的
+ *    `markReadExcludingTypes` 標到 2 列而不是 1 列 —— 紅的是第三則，
+ *    錯的是第一則。
+ * 2. 收拾寫在測試結尾，斷言失敗就不會執行。第三則一紅，它後面那行
+ *    `markReadByType` 沒跑，第四則跟著紅；第四則一紅，第五則再跟著紅。
+ *    一個缺陷印出三條失敗，而只有第一條指得到病灶。
+ *
+ * 前置清空則兩者皆免：狀態由「前一則有沒有收乾淨」決定，改成由這裡決定。
+ */
+beforeEach(async () => {
+  await prisma.notification.deleteMany({
+    where: { userId: { in: [userId, otherUserId] } },
+  });
 });
 
 afterAll(async () => {
@@ -135,10 +162,6 @@ describe("NotificationRepository（真資料庫）", () => {
     expect(a).not.toBeNull();
     expect(b).not.toBeNull();
     expect(a?.id).not.toBe(b?.id);
-
-    await prisma.notification.deleteMany({
-      where: { id: { in: [a?.id ?? "", b?.id ?? ""] } },
-    });
   });
 
   /**
@@ -226,8 +249,46 @@ describe("NotificationRepository（真資料庫）", () => {
     expect(wholePage.items).toHaveLength(3);
     // Info: (20260825 - Julian) 剛好取完時 hasMore 必須是 false（邊界：rows.length === limit）
     expect(wholePage.hasMore).toBe(false);
+  });
 
-    await notificationRepo.markReadExcludingTypes(userId, [], NOW_MS);
+  /**
+   * Info: (20260825 - Julian) `distinct` 與 `readAt: null` 在真 Prisma 下的行為。
+   *
+   * 假實作裡這兩件事是我用 `filter` + `Set` 寫的。真的要驗的是
+   * `distinct: ["userId"]` 真的存在（同一人兩則未讀不會讓他出現兩次 ——
+   * 回傳是 Set 所以看不出來，但底層多撈的列是白費的）
+   * 以及已讀的人真的不在裡面。
+   */
+  it("listUserIdsWithUnread 只回還掛著未讀的人", async () => {
+    await seed(NOTIFICATION_TYPE.WALLET_UPGRADE, "pending-1", new Date(NOW_MS));
+    await seed(
+      NOTIFICATION_TYPE.WALLET_UPGRADE,
+      "read-1",
+      new Date(NOW_MS),
+      otherUserId,
+    );
+    await notificationRepo.markReadByType(
+      otherUserId,
+      NOTIFICATION_TYPE.WALLET_UPGRADE,
+      NOW_MS,
+    );
+
+    const pending = await notificationRepo.listUserIdsWithUnread(
+      NOTIFICATION_TYPE.WALLET_UPGRADE,
+      [userId, otherUserId],
+    );
+
+    expect([...pending]).toEqual([userId]);
+
+    // Info: (20260825 - Julian) 不在名單裡的人不會被算進來（`--user` 模式的前提）
+    expect(
+      (
+        await notificationRepo.listUserIdsWithUnread(
+          NOTIFICATION_TYPE.WALLET_UPGRADE,
+          [otherUserId],
+        )
+      ).size,
+    ).toBe(0);
   });
 
   /**

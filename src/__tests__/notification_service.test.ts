@@ -5,6 +5,7 @@ declare const jest: typeof JestType;
 import {
   dismissWalletUpgrade,
   getNotificationSummary,
+  listUsersWithPendingWalletUpgrade,
   listNotifications,
   markNotificationsRead,
   notifyAnalysisCompleted,
@@ -155,6 +156,21 @@ jest.mock("@/repositories/notification.repo", () => {
           });
           return targets.length;
         },
+      ),
+
+      // Info: (20260825 - Julian) 真的依 type 與 userIds 過濾，且回「有未讀的人」不是「未讀的列」
+      listUserIdsWithUnread: jest.fn(
+        async (type: string, userIds: readonly string[]) =>
+          new Set(
+            rows
+              .filter(
+                (row) =>
+                  row.readAt === null &&
+                  row.type === type &&
+                  userIds.includes(row.userId),
+              )
+              .map((row) => row.userId),
+          ),
       ),
 
       markReadByType: jest.fn(
@@ -496,6 +512,52 @@ describe("完成通知的發送", () => {
         analysisType: "CERTIFICATE_ANALYSIS",
       }),
     ).resolves.toBeUndefined();
+  });
+});
+
+describe("預演要答得出「會收掉幾則」", () => {
+  /**
+   * Info: (20260825 - Julian) `request_wallet_upgrades.ts` 不帶 `--commit` 時
+   * 要能回報「有幾則待辦會被收掉」，而那不能靠真的去收一次。
+   *
+   * 斷言成對：有未讀待辦的人在集合裡（證明查得到）**且**已讀的人不在
+   * （證明 `readAt: null` 這個條件真的生效）。只驗前者的話，
+   * 「一律回全部」也會通過。
+   */
+  it("只回還掛著未讀待辦的人", async () => {
+    fakeRepo.__seed([
+      row({ id: "w1", type: NOTIFICATION_TYPE.WALLET_UPGRADE }),
+      row({
+        id: "w2",
+        type: NOTIFICATION_TYPE.WALLET_UPGRADE,
+        userId: "user-2",
+        readAt: new Date(NOW_MS),
+      }),
+      row({ id: "d1", userId: "user-3" }),
+    ]);
+
+    const pending = await listUsersWithPendingWalletUpgrade({
+      userIds: [USER, "user-2", "user-3"],
+    });
+
+    expect([...pending]).toEqual([USER]);
+  });
+
+  // Info: (20260825 - Julian) 不在名單裡的人不該被算進來（`--user` 模式的前提）
+  it("只看傳進來的那批使用者", async () => {
+    fakeRepo.__seed([
+      row({ id: "w1", type: NOTIFICATION_TYPE.WALLET_UPGRADE }),
+    ]);
+
+    expect([
+      ...(await listUsersWithPendingWalletUpgrade({ userIds: ["user-2"] })),
+    ]).toEqual([]);
+  });
+
+  it("空名單回空集合", async () => {
+    expect(
+      (await listUsersWithPendingWalletUpgrade({ userIds: [] })).size,
+    ).toBe(0);
   });
 });
 

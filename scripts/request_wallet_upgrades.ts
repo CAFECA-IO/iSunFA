@@ -8,7 +8,8 @@
  * 一則按了沒事做的待辦。
  *
  * 冪等：dedupeKey 一人一則，重跑不會重複發；已升級者再跑也不會補發
- * （探針已是 true）。
+ * （探針已是 true）。探針問不到鏈上的人（RPC 不通等）這輪不發也不收，
+ * 計入「無法判定」並讓 exit code 非 0 —— 見 `walletCanReceive`。
  *
  * Info: (20260825 - Julian) **已發出但後來升級完成的待辦，由這支腳本收掉**
  * （原本寫的是「由使用者開鈴鐺已讀收掉」，那條路已經拿掉）。
@@ -28,16 +29,57 @@
  *     npx tsx scripts/request_wallet_upgrades.ts --commit
  *     npx tsx scripts/request_wallet_upgrades.ts --user <userId> --commit
  */
+import {
+  BaseError,
+  ContractFunctionRevertedError,
+  ContractFunctionZeroDataError,
+  ExecutionRevertedError,
+} from "viem";
 import { prisma } from "@/lib/prisma";
 import { publicClient } from "@/lib/viem";
 import {
   dismissWalletUpgrade,
+  listUsersWithPendingWalletUpgrade,
   notifyWalletUpgradeRequested,
 } from "@/services/notification.service";
 
 // Info: (20260821 - Luphia) IERC721Receiver 的 interfaceId（與 worker 探針同值）
 const RECEIVER_INTERFACE_ID = "0x150b7a02";
 
+/**
+ * Info: (20260825 - Julian) 探針問不到答案時丟這個，而不是回 false。
+ *
+ * 分開一個型別的理由是統計要分得開：「問到了，答案是還沒升級」與
+ * 「根本沒問到」在報表上必須是兩個數字。
+ */
+class ProbeUndeterminedError extends Error {}
+
+/**
+ * Info: (20260825 - Julian) 只有**鏈上真的回答了**才算 false。
+ *
+ * 原本的寫法是 `catch { return false }`，理由是「V1 錢包沒有這個函式，
+ * revert 就是 false」—— 那句話對，但那個 catch 接的不只 revert。
+ * 它同樣接住 RPC 連不上、節點超時、chainId 設錯、address 根本不是合法
+ * 位址。這幾種情況下這支腳本會把**全部使用者**判成尚待升級，而它發出的
+ * 是一次性的 rollout 通知：dedupeKey 永久唯一，發錯了收不回來，
+ * 使用者看到的是一則叫他去升級一個早就升級好的錢包的待辦。
+ *
+ * 預設值選 false 是把「不知道」講成「否」。這裡改成：
+ *
+ * - 合約 revert（V1 錢包沒有這個函式）→ false，如原設計
+ * - 位址上沒有程式碼、回傳空資料（`0x`）→ false，同樣是鏈上的答案
+ * - 其他任何錯誤 → 丟出去，計入「無法判定」，該位使用者這輪不發也不收
+ *
+ * 「合約 revert」在 viem 裡有兩種形狀，兩種都要接：節點回得出 revert data
+ * 時是 `ContractFunctionRevertedError`（解得出 reason），只回一句
+ * `execution reverted` 時是 RPC 層的 `ExecutionRevertedError`。
+ * **沒有 `supportsInterface` 的 V1 錢包走的是後者** —— 也就是這裡最主要
+ * 要接住的那一種。只接前者的話，正常的 V1 錢包會被誤判成「無法判定」。
+ *
+ * 值得多說一句的是最後一條的代價：RPC 掛掉時這支腳本會整批失敗而不是
+ * 整批誤發。那正是要的方向 —— 沒發出去的通知下次重跑就補上了，
+ * 發錯的收不回來。
+ */
 async function walletCanReceive(address: string): Promise<boolean> {
   try {
     const result = (await publicClient.readContract({
@@ -55,9 +97,21 @@ async function walletCanReceive(address: string): Promise<boolean> {
       args: [RECEIVER_INTERFACE_ID as `0x${string}`],
     })) as boolean;
     return result === true;
-  } catch {
+  } catch (error) {
+    const answeredOnChain =
+      error instanceof BaseError &&
+      error.walk(
+        (inner) =>
+          inner instanceof ContractFunctionRevertedError ||
+          inner instanceof ExecutionRevertedError ||
+          inner instanceof ContractFunctionZeroDataError,
+      ) !== null;
     // Info: (20260821 - Luphia) V1 錢包沒有這個函式：revert 就是 false
-    return false;
+    if (answeredOnChain) return false;
+    throw new ProbeUndeterminedError(
+      `探針無法判定：${error instanceof BaseError ? error.shortMessage : String(error)}`,
+      { cause: error },
+    );
   }
 }
 
@@ -89,10 +143,26 @@ async function main(): Promise<void> {
   });
   out(`掃描 ${users.length} 位使用者`);
 
+  /**
+   * Info: (20260825 - Julian) 預演也要答得出「會收掉幾則」。
+   *
+   * 這支腳本重跑時同時做兩件事：發該發的、收該收的。預演原本只講得出
+   * 前者 —— 而它是拿來在 `--commit` 之前確認數字合不合理的，
+   * 少講一半等於它只驗了一半。
+   *
+   * 一支查詢查完整批（不是逐人問）：掃全站時後者是 N 次往返，
+   * 而預演已經要為每個人做一次 eth_call 了，不該再加一層。
+   */
+  const pendingDismissal = await listUsersWithPendingWalletUpgrade({
+    userIds: users.map((user) => user.id),
+  });
+
   let capable = 0;
   let pendingUpgrade = 0;
+  let undetermined = 0;
   let sent = 0;
   let dismissed = 0;
+  let wouldDismiss = 0;
   /**
    * Info: (20260825 - Julian) 逐人 try/catch，失敗記下來繼續跑。
    *
@@ -113,6 +183,8 @@ async function main(): Promise<void> {
             userId: user.id,
             nowMs: Date.now(),
           });
+        } else if (pendingDismissal.has(user.id)) {
+          wouldDismiss += 1;
         }
         continue;
       }
@@ -122,18 +194,37 @@ async function main(): Promise<void> {
         sent += 1;
       }
     } catch (error) {
+      if (error instanceof ProbeUndeterminedError) undetermined += 1;
       failures.push(
         `${user.id}: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
+  // Info: (20260825 - Julian) 三個數字加起來要等於掃描人數，少一個就是有人被漏掉
   out(`已具備接收能力（不發）：${capable}`);
   out(`尚待升級：${pendingUpgrade}`);
+  out(`無法判定（探針沒問到鏈上）：${undetermined}`);
   if (commit) {
     out(`本次新發出：${sent}（其餘為先前已發過，dedupe 擋下）`);
     out(`已升級而收掉的待辦：${dismissed}`);
   } else {
+    out(`將收掉的待辦（已升級但仍掛著）：${wouldDismiss}`);
+    /**
+     * Info: (20260825 - Julian) 「全部人都尚待升級」剩下的那個可疑情況。
+     *
+     * 探針已經會把問不到的情形算進「無法判定」，所以這裡不再是猜的：
+     * 鏈上真的回答了，而答案是所有人都沒升級。剩下最可能的解釋是
+     * 問錯了鏈 —— chainId 或 RPC 指向另一個網路，合約不在那上面，
+     * 回傳空資料同樣被判為 false。
+     */
+    if (users.length > 1 && pendingUpgrade === users.length) {
+      out(
+        "\n⚠️ 鏈上回答了，但所有人都判為尚待升級。先確認 NEXT_PUBLIC_RPC_URL " +
+          "與 NEXT_PUBLIC_ISUNCOIN_CHAIN_ID 指向的是部署錢包合約的那條鏈，" +
+          "再用 --user <已升級的 userId> 單獨驗一次。",
+      );
+    }
     out("\n加上 --commit 才會實際發送。");
   }
 
