@@ -57,6 +57,8 @@ interface IItem {
   type: string;
   payload: Record<string, unknown>;
   createdAt: number;
+  // Info: (20260825 - Julian) 未讀是 null；畫面用它決定要不要點紅點
+  readAt: number | null;
 }
 
 interface IList {
@@ -128,8 +130,15 @@ export default function NotificationBell() {
   }, [user, summary, showToast]);
 
   /**
-   * Info: (20260821 - Luphia) 打開鈴鐺：抓清單並把事件型標為已讀。
-   * 已讀之後完成通知的徽章歸零（待辦仍在，直到來源狀態改變）。
+   * Info: (20260825 - Julian) 打開鈴鐺只抓清單，**不再標記任何東西為已讀**。
+   *
+   * 原本是「打開＝看過了」，事件型一次全標已讀。改掉的理由有兩個，
+   * 而第二個是新的：
+   *
+   * 1. 面板現在留著已讀的通知讓人翻歷史。打開就全讀的話，
+   *    未讀紅點在使用者看清楚之前就全滅了 —— 那顆點會是一個永遠不出現的提示。
+   * 2. 「已讀」現在的意思是「我處理過這一則」，而不是「我瞄過鈴鐺」。
+   *    前者是使用者的動作，後者不是。
    */
   const openList = useCallback(async () => {
     try {
@@ -143,22 +152,66 @@ export default function NotificationBell() {
           hasMoreCompleted: false,
         },
       );
-      await request("/api/v1/user/notifications/read", {
-        method: HTTP_METHOD.POST,
-        body: JSON.stringify({}),
-      });
-      setSummary((previous) =>
-        previous ? { ...previous, completedCount: 0 } : previous,
-      );
-      /**
-       * Info: (20260821 - Luphia) 已讀後把比較基準降回「只剩待辦」：
-       * 不降的話，下一則新通知到達時 total 可能仍小於舊基準，搖鈴會漏一次。
-       */
-      resetBaseline(summary?.todoCount ?? 0);
     } catch {
       setList({ todos: [], completed: [], hasMoreCompleted: false });
     }
-  }, [summary?.todoCount, resetBaseline, setSummary]);
+  }, []);
+
+  /**
+   * Info: (20260825 - Julian) 點擊某一則 → 只有那一則變已讀、徽章 -1。
+   *
+   * 三件事的順序是刻意的：先在本地改（紅點與徽章立刻反應），再送請求。
+   * 這一則同時是 `<Link>`，點下去會導頁 —— 等請求回來再更新畫面的話，
+   * 使用者根本看不到那一步，而 Next 的 client-side 導頁不會中斷 fetch，
+   * 所以不需要 `keepalive`。
+   *
+   * 失敗不回滾：下一次輪詢／重開面板會拿到伺服器的真相，
+   * 而為了一顆紅點做補償邏輯，代價比它糾正的錯誤大。
+   */
+  const markOneRead = useCallback(
+    (item: IItem) => {
+      if (item.readAt !== null) return;
+
+      setList((previous) =>
+        previous
+          ? {
+              ...previous,
+              completed: previous.completed.map((entry) =>
+                entry.id === item.id ? { ...entry, readAt: Date.now() } : entry,
+              ),
+            }
+          : previous,
+      );
+
+      setSummary((previous) =>
+        previous
+          ? {
+              ...previous,
+              completedCount: Math.max(0, previous.completedCount - 1),
+            }
+          : previous,
+      );
+
+      /**
+       * Info: (20260825 - Julian) 未讀變少也要降基準（計畫書 D17 的同一條理由）。
+       *
+       * `hasNewArrival` 比的是總數上升。讀掉一則之後總數變小，
+       * 基準不跟著降的話，下一則新通知會讓總數回到舊基準而**不大於**它 ——
+       * 鈴鐺不搖也不響，而使用者沒有任何方式發現漏掉了一則。
+       */
+      const nextTotal =
+        (summary?.todoCount ?? 0) +
+        Math.max(0, (summary?.completedCount ?? 0) - 1);
+      resetBaseline(nextTotal);
+
+      request(`/api/v1/user/notifications/${item.id}/read`, {
+        method: HTTP_METHOD.POST,
+      }).catch(() => {
+        // Info: (20260825 - Julian) 已讀失敗不值得任何錯誤畫面；下一輪輪詢會校正
+      });
+    },
+    [summary?.todoCount, summary?.completedCount, resetBaseline, setSummary],
+  );
 
   if (!user) return null;
 
@@ -171,6 +224,26 @@ export default function NotificationBell() {
    * 未知型別回 `null` 而不是落到「分析已完成」那一支 —— 原本的 fallback
    * 會把任何新增的型別渲染成一句錯的話，而新增型別的人不會發現。
    */
+  /**
+   * Info: (20260825 - Julian) 報告類別的中文名，取不到就回空字串。
+   *
+   * 直接複用分析頁那份字典（`analysis.categories.*`），不另外存一份標題進
+   * `payload`：同一個類別在兩個地方各有一份名字，改一邊就會不一致，
+   * 而通知那份沒有人會去看。
+   *
+   * `t()` 找不到鍵時回傳鍵本身，所以要給 `defaultValue` 才分得出
+   * 「沒有這個類別」與「這個類別叫做 `analysis.categories.xxx`」——
+   * 常數層有 `JOURNAL_CORRECTION` 而字典裡是 `journal_upload`，
+   * 這個缺口今天就存在。
+   */
+  const titleOf = (item: IItem): string => {
+    const type = item.payload.analysisType;
+    if (typeof type !== "string" || type === "") return "";
+    return t(`analysis.categories.${type.toLowerCase()}`, {
+      defaultValue: "",
+    });
+  };
+
   const messageOf = (item: IItem): string | null => {
     switch (item.type) {
       case NOTIFICATION_TYPE.TEAM_INVITATION:
@@ -180,10 +253,24 @@ export default function NotificationBell() {
         });
       case NOTIFICATION_TYPE.WALLET_UPGRADE:
         return t("notification.wallet_upgrade");
-      case NOTIFICATION_TYPE.ANALYSIS_COMPLETED:
-        return t("notification.analysis_completed");
-      case NOTIFICATION_TYPE.ANALYSIS_FAILED:
-        return t("notification.analysis_failed");
+      /**
+       * Info: (20260825 - Julian) 帶上報告名稱，取不到才退回原本那句。
+       *
+       * 同時跑三份分析時，三則「你的分析工作已完成」在畫面上完全一樣，
+       * 使用者分不出哪則對應哪份報告 —— 而點進去只會落在同一個歷史清單。
+       */
+      case NOTIFICATION_TYPE.ANALYSIS_COMPLETED: {
+        const title = titleOf(item);
+        return title
+          ? t("notification.analysis_completed_named", { title })
+          : t("notification.analysis_completed");
+      }
+      case NOTIFICATION_TYPE.ANALYSIS_FAILED: {
+        const title = titleOf(item);
+        return title
+          ? t("notification.analysis_failed_named", { title })
+          : t("notification.analysis_failed");
+      }
       default:
         return null;
     }
@@ -203,12 +290,29 @@ export default function NotificationBell() {
     const style = NOTIFICATION_TYPE_STYLE[item.type as NotificationType];
     const Icon = style ? ICON_BY_KEY[style.icon] : Bell;
     const href = NOTIFICATION_LINK_PATH[item.type as NotificationType] ?? null;
+    const isUnread = item.readAt === null;
     const body = (
       <>
         <Icon
           className={`mt-0.5 h-4 w-4 shrink-0 ${style?.className ?? "text-text-muted"}`}
         />
-        <span>{message}</span>
+        <span className="flex-1">{message}</span>
+        {/**
+         * Info: (20260825 - Julian) 未讀紅點。
+         *
+         * 已讀的通知留在清單裡當歷史，所以「新的」需要一個看得出來的記號。
+         * 這裡不改文字顏色或粗細：那會讓已讀的看起來像被停用，
+         * 而它們是完全可用的歷史紀錄。
+         *
+         * `sr-only` 的文字是給讀屏的 —— 一顆純色的點對它是不存在的，
+         * 而「哪幾則是新的」正是這個介面要傳達的資訊。
+         */}
+        {isUnread && (
+          <span className="mt-1.5 flex shrink-0 items-center">
+            <span className="bg-danger block size-2 rounded-full" />
+            <span className="sr-only">{t("notification.unread")}</span>
+          </span>
+        )}
       </>
     );
     const shared = "flex items-start gap-2 rounded-md px-3 py-2 text-sm";
@@ -217,6 +321,7 @@ export default function NotificationBell() {
       <Link
         key={item.id}
         href={href}
+        onClick={() => markOneRead(item)}
         className={`hover:bg-surface-hover ${shared}`}
       >
         {body}

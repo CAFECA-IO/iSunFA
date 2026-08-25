@@ -1,7 +1,7 @@
 import { Prisma } from "@/generated";
 import {
   NOTIFICATION_DEDUPE_PREFIX,
-  NOTIFICATION_LIST_LIMIT,
+  NOTIFICATION_HISTORY_LIMIT,
   NOTIFICATION_TODO_LIST_LIMIT,
   NOTIFICATION_TYPE,
   TODO_NOTIFICATION_TYPES,
@@ -81,6 +81,14 @@ export interface INotificationItem {
   type: string;
   payload: Record<string, unknown>;
   createdAt: number;
+  /**
+   * Info: (20260825 - Julian) 已讀時間（epoch ms），未讀是 null。
+   *
+   * 畫面用它決定要不要顯示未讀紅點。回傳時間而不是布林：
+   * 「什麼時候讀的」之後可能要顯示，而從時間退化成布林不用改資料，
+   * 反過來要。
+   */
+  readAt: number | null;
 }
 
 export interface INotificationList {
@@ -191,10 +199,17 @@ export async function listNotifications(params: {
           TODO_NOTIFICATION_TYPES,
           NOTIFICATION_TODO_LIST_LIMIT,
         ),
-        notificationRepo.listUnreadExcludingTypes(
+        /**
+         * Info: (20260825 - Julian) 事件型改成帶回**歷史**（含已讀）。
+         *
+         * 原本只回未讀，於是「已讀」等同「從畫面上消失」——使用者點過一則
+         * 分析完成通知之後就再也找不到它，而那是他唯一一個「哪些報告跑完了」
+         * 的入口。待辦型不變：它的存在條件是「事情還沒做完」，讀過不等於做完。
+         */
+        notificationRepo.listRecentExcludingTypes(
           params.userId,
           TODO_NOTIFICATION_TYPES,
-          NOTIFICATION_LIST_LIMIT,
+          NOTIFICATION_HISTORY_LIMIT,
         ),
       ]);
 
@@ -212,6 +227,8 @@ export async function listNotifications(params: {
           inviterName: invitation.inviter?.name ?? "",
         },
         createdAt: invitation.createdAt.getTime(),
+        // Info: (20260825 - Julian) 活算的待辦沒有已讀概念：它在就是還沒處理
+        readAt: null,
       }));
 
       const toItem = (notification: {
@@ -219,11 +236,13 @@ export async function listNotifications(params: {
         type: string;
         payload: unknown;
         createdAt: Date;
+        readAt: Date | null;
       }): INotificationItem => ({
         id: notification.id,
         type: notification.type,
         payload: (notification.payload ?? {}) as Record<string, unknown>,
         createdAt: notification.createdAt.getTime(),
+        readAt: notification.readAt ? notification.readAt.getTime() : null,
       });
 
       todos.push(...storedTodos.map(toItem));
@@ -265,6 +284,39 @@ export async function markNotificationsRead(params: {
         params.nowMs,
       ),
     { operation: "markNotificationsRead", userId: params.userId },
+  );
+}
+
+/**
+ * Info: (20260825 - Julian) 把**單獨一則**標為已讀（點哪則收哪則）。
+ *
+ * 已讀從「打開鈴鐺」改成「點擊個別通知」的理由：面板現在會留著已讀的通知
+ * 讓人翻歷史，而未讀靠一顆紅點區分。如果打開面板就全部變已讀，
+ * 那顆紅點在使用者能看清楚之前就全滅了 —— 它會是一個永遠不出現的提示。
+ *
+ * `TODO_NOTIFICATION_TYPES` 一樣排除。這裡的排除比 `markNotificationsRead`
+ * 更重要：那一支的輸入只有 userId，而這一支的輸入是**前端傳來的 id** ——
+ * 沒有這道條件，任何人只要湊出一個 id 就能把自己的錢包升級待辦收掉，
+ * 而那則待辦補不回來（D1）。
+ *
+ * @returns 有沒有真的標記到（false = 不存在／不是你的／已讀過／是待辦型）
+ */
+export async function markNotificationRead(params: {
+  userId: string;
+  notificationId: string;
+  nowMs: number;
+}): Promise<boolean> {
+  return guarded(
+    async () => {
+      const count = await notificationRepo.markReadById(
+        params.userId,
+        params.notificationId,
+        TODO_NOTIFICATION_TYPES,
+        params.nowMs,
+      );
+      return count > 0;
+    },
+    { operation: "markNotificationRead", userId: params.userId },
   );
 }
 
@@ -353,12 +405,22 @@ export async function listUsersWithPendingWalletUpgrade(params: {
 export async function notifyAnalysisFailed(params: {
   userId: string;
   orderId: string;
+  /**
+   * Info: (20260825 - Julian) 報告類別，用來組出「『交易市場趨勢』分析失敗了」。
+   *
+   * 可選，因為失敗路徑上 `analysis` 未必存在（結果解析不出來時只有 order）。
+   * 沒有它就退回不帶標題的那句話 —— 少一個詞比顯示 `undefined` 好。
+   */
+  analysisType?: string;
 }): Promise<void> {
   try {
     await notificationRepo.createIfAbsent({
       userId: params.userId,
       type: NOTIFICATION_TYPE.ANALYSIS_FAILED,
-      payload: { orderId: params.orderId } as Prisma.InputJsonObject,
+      payload: {
+        orderId: params.orderId,
+        ...(params.analysisType ? { analysisType: params.analysisType } : {}),
+      } as Prisma.InputJsonObject,
       dedupeKey: `${NOTIFICATION_DEDUPE_PREFIX.ANALYSIS_FAILED}${params.orderId}`,
     });
   } catch (error) {

@@ -54,16 +54,25 @@ export const NOTIFICATION_POLL_INTERVAL_MS = 60_000;
 export const NOTIFICATION_SUMMARY_TOAST_MS = 8_000;
 
 /**
- * Info: (20260821 - Luphia) 清單一次最多帶回幾則（事件型）。
+ * Info: (20260821 - Luphia) 事件型清單一次最多帶回幾則。
  *
  * Info: (20260825 - Julian) 這個上限**只套用在事件型**，而那是靠
- * `listUnreadExcludingTypes` 的型別條件做到的，不是靠這行註解。
+ * `listRecentExcludingTypes` 的型別條件做到的，不是靠這行註解。
  *
  * 原本兩種型別共用一支不帶型別條件的查詢，於是「事件型」三個字只是願望：
  * 一則舊的待辦排在 25 則新分析後面就被 `take` 切掉，
  * 而摘要的計數沒有截斷、照樣算它（計畫書 D4）。
+ *
+ * Info: (20260825 - Julian) 面板改成保留已讀之後，這個數字的意義也變了：
+ * 它不再是「未讀太多時的截斷」，而是「歷史要往回看多遠」。
+ * 因此從 20 提到 30 —— 未讀本來就會佔掉前面幾則，用 20 的話，
+ * 手上有 5 則未讀的人只看得到 15 則歷史。
+ *
+ * 徽章與清單會不會再次分岔？會，但有界且說得出來：徽章數的是**所有**未讀，
+ * 而未讀落在這個上限之外，代表總數已經超過 30 —— 那時 `hasMoreCompleted`
+ * 必為 true，畫面會顯示「還有更多」。分岔永遠伴隨一個看得見的說明。
  */
-export const NOTIFICATION_LIST_LIMIT = 20;
+export const NOTIFICATION_HISTORY_LIMIT = 30;
 
 /**
  * Info: (20260825 - Julian) 待辦型的上限。
@@ -108,15 +117,15 @@ export const NOTIFICATION_TYPE_STYLE: Record<
   /**
    * Info: (20260825 - Julian) 只用 `@theme` 真的定義過的 token。
    *
-   * 可用的語意色只有 `brand` / `brand-soft` / `brand-on-soft` /
-   * `danger` / `danger-soft` 與 text / surface / border 三組 ——
-   * **沒有 `success`**。寫 `text-success` 會產出一個無效 class，
-   * 而 `tsc` 與 `lint` 都不會抱怨（那正是 D3 的成因）。
+   * 寫一個沒定義的名字（`text-success` 在 20260825 之前就是）會產出一個
+   * 無效 class，而 `tsc` 與 `lint` 都不會抱怨 —— 那正是 D3 的成因。
    *
-   * 因此「完成」不用綠色，改由 icon 區分。這符合
-   * `movement_alert_badge.tsx` 的既有規則：顏色 + 文字 + icon 三者並用，
-   * **不靠顏色單獨傳達**。真的需要一個 success 色時，那是往
-   * `globals.css` 的 `@theme` 加 token 的決定，不該由這個模組順手發明。
+   * `success` 是這次為了這個模組加的（`globals.css`）：完成與失敗原本
+   * 共用 brand 橘與 danger 紅，兩者在 16px 圖示下難以分辨。加 token 而不是
+   * 就地寫 `text-green-600`：後者不會跟著深色模式翻，而且在白底只有 3.3:1。
+   *
+   * 顏色仍然不單獨傳達狀態 —— icon 形狀（打勾／驚嘆號）與文案各自也說得出來，
+   * 這是 `movement_alert_badge.tsx` 的既有規則。
    */
   [NOTIFICATION_TYPE.TEAM_INVITATION]: {
     icon: "mail",
@@ -128,7 +137,7 @@ export const NOTIFICATION_TYPE_STYLE: Record<
   },
   [NOTIFICATION_TYPE.ANALYSIS_COMPLETED]: {
     icon: "check",
-    className: "text-brand",
+    className: "text-success",
   },
   [NOTIFICATION_TYPE.ANALYSIS_FAILED]: {
     icon: "alert",

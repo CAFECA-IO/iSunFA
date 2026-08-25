@@ -7,6 +7,7 @@ import {
   getNotificationSummary,
   listUsersWithPendingWalletUpgrade,
   listNotifications,
+  markNotificationRead,
   markNotificationsRead,
   notifyAnalysisCompleted,
   notifyWalletUpgradeRequested,
@@ -14,7 +15,7 @@ import {
 import { notificationRepo } from "@/repositories/notification.repo";
 import { teamRepo } from "@/repositories/team.repo";
 import {
-  NOTIFICATION_LIST_LIMIT,
+  NOTIFICATION_HISTORY_LIMIT,
   NOTIFICATION_TYPE,
 } from "@/constants/notification";
 
@@ -129,6 +130,52 @@ jest.mock("@/repositories/notification.repo", () => {
             items: matched.slice(0, limit),
             hasMore: matched.length > limit,
           };
+        },
+      ),
+
+      /**
+       * Info: (20260825 - Julian) 事件型歷史：與上面那支的差別**只有**不濾 readAt。
+       *
+       * 替身也照這個差別寫，而不是回一份固定清單 —— 否則「service 拿錯支查詢」
+       * （拿只回未讀的那支去組歷史）在測試裡看不出來。
+       */
+      listRecentExcludingTypes: jest.fn(
+        async (
+          userId: string,
+          excludeTypes: readonly string[],
+          limit: number,
+        ) => {
+          const matched = rows
+            .filter(
+              (row) =>
+                row.userId === userId && !excludeTypes.includes(row.type),
+            )
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+          return {
+            items: matched.slice(0, limit),
+            hasMore: matched.length > limit,
+          };
+        },
+      ),
+
+      // Info: (20260825 - Julian) 四個條件全都真的套用（少一個就是一種真實的失效）
+      markReadById: jest.fn(
+        async (
+          userId: string,
+          notificationId: string,
+          excludeTypes: readonly string[],
+          nowMs: number,
+        ) => {
+          const target = rows.find(
+            (row) =>
+              row.id === notificationId &&
+              row.userId === userId &&
+              row.readAt === null &&
+              !excludeTypes.includes(row.type),
+          );
+          if (!target) return 0;
+          target.readAt = new Date(nowMs);
+          return 1;
         },
       ),
 
@@ -417,18 +464,19 @@ describe("清單", () => {
   /**
    * Info: (20260825 - Julian) 徽章與清單不得分岔（計畫書 D4）。
    *
-   * 一則舊的待辦 + 25 則新的完成通知。用一支不帶型別條件的查詢加 `take: 20`
-   * 的話，最新 20 則全是完成通知，待辦被擠掉 —— 而摘要的 groupBy 沒有截斷、
+   * 一則舊的待辦 + 一批新的完成通知。用一支不帶型別條件的查詢加 `take` 的話，
+   * 最新那批全是完成通知，待辦被擠掉 —— 而摘要的 groupBy 沒有截斷、
    * 照樣算它。畫面會說「1 則待辦事項」而待辦區整個不存在。
    */
   it("未讀超過上限時，待辦仍在清單裡，且與摘要一致", async () => {
+    const overflow = NOTIFICATION_HISTORY_LIMIT + 5;
     fakeRepo.__seed([
       row({
         id: "old-wallet",
         type: NOTIFICATION_TYPE.WALLET_UPGRADE,
         createdAt: new Date(NOW_MS - 3 * 86_400_000),
       }),
-      ...Array.from({ length: 25 }, (unused, index) =>
+      ...Array.from({ length: overflow }, (unused, index) =>
         row({ id: `d-${index}`, createdAt: new Date(NOW_MS - index) }),
       ),
     ]);
@@ -440,14 +488,69 @@ describe("清單", () => {
 
     expect(summary).toEqual({
       todoCount: 1,
-      completedCount: 25,
-      // Info: (20260825 - Julian) 25 則裡最新的是 index 0（NOW_MS - 0）
+      completedCount: overflow,
+      // Info: (20260825 - Julian) 這批裡最新的是 index 0（NOW_MS - 0）
       latestUnreadAt: NOW_MS,
     });
     expect(list.todos.map((item) => item.id)).toEqual(["old-wallet"]);
-    expect(list.completed).toHaveLength(NOTIFICATION_LIST_LIMIT);
-    // Info: (20260825 - Julian) 截斷了就要說出來，不能讓畫面把 20 讀成全部
+    expect(list.completed).toHaveLength(NOTIFICATION_HISTORY_LIMIT);
+    // Info: (20260825 - Julian) 截斷了就要說出來，不能讓畫面把 30 讀成全部
     expect(list.hasMoreCompleted).toBe(true);
+  });
+
+  /**
+   * Info: (20260825 - Julian) 已讀的事件型要**留在**清單裡（新需求：可翻歷史）。
+   *
+   * 斷言成對：已讀的還在（證明查詢真的不濾 readAt）**且**它帶著 `readAt`
+   * （證明畫面分得出未讀）。只驗前者的話，「全部回報成未讀」也會通過 ——
+   * 而那會讓每一則歷史都掛著紅點。
+   */
+  it("已讀的事件型留在清單裡，並帶著 readAt", async () => {
+    fakeRepo.__seed([
+      row({ id: "unread-one" }),
+      row({
+        id: "read-one",
+        createdAt: new Date(NOW_MS - 500),
+        readAt: new Date(NOW_MS - 100),
+      }),
+    ]);
+
+    const list = await listNotifications({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(list.completed.map((item) => item.id)).toEqual([
+      "unread-one",
+      "read-one",
+    ]);
+    expect(list.completed[0].readAt).toBeNull();
+    expect(list.completed[1].readAt).toBe(NOW_MS - 100);
+  });
+
+  /**
+   * Info: (20260825 - Julian) 待辦型**不**適用「已讀留著」那條規則。
+   *
+   * 待辦的存在條件是「事情還沒做完」，不是「還沒看過」。收掉的錢包升級待辦
+   * 留在畫面上，會讓一個已經處理完的東西看起來還要處理。
+   */
+  it("已讀的待辦型不留在清單裡", async () => {
+    fakeRepo.__seed([
+      row({
+        id: "done-wallet",
+        type: NOTIFICATION_TYPE.WALLET_UPGRADE,
+        readAt: new Date(NOW_MS - 100),
+      }),
+    ]);
+
+    const list = await listNotifications({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(list.todos).toHaveLength(0);
   });
 });
 
@@ -570,6 +673,103 @@ describe("完成通知的發送", () => {
         analysisType: "CERTIFICATE_ANALYSIS",
       }),
     ).resolves.toBeUndefined();
+  });
+});
+
+describe("逐則標記已讀", () => {
+  /**
+   * Info: (20260825 - Julian) 核心：只動被點的那一則。
+   *
+   * 斷言成對：那一則真的變已讀（證明有做事）**且**另一則還是未讀
+   * （證明沒做過頭）。只驗前者的話，`markReadExcludingTypes` 那支
+   * 「全部標已讀」拿來實作這個功能也會通過 —— 而那正是這次要改掉的行為。
+   */
+  it("只標記被點的那一則", async () => {
+    fakeRepo.__seed([row({ id: "clicked" }), row({ id: "untouched" })]);
+
+    await expect(
+      markNotificationRead({
+        userId: USER,
+        notificationId: "clicked",
+        nowMs: NOW_MS,
+      }),
+    ).resolves.toBe(true);
+
+    const summary = await getNotificationSummary({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+    expect(summary.completedCount).toBe(1);
+
+    const list = await listNotifications({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+    const byId = new Map(list.completed.map((item) => [item.id, item.readAt]));
+    expect(byId.get("clicked")).toBe(NOW_MS);
+    expect(byId.get("untouched")).toBeNull();
+  });
+
+  /**
+   * Info: (20260825 - Julian) 待辦型不能被這條路徑收掉（計畫書 D1）。
+   *
+   * 這一條比「全部標已讀」那支的同名保護更要緊：那一支的輸入只有 userId，
+   * 而這一支的輸入是**前端送來的 id**。少了型別條件，湊出一個 id 就能
+   * 收掉自己的錢包升級待辦，而 `dedupeKey` 是永久唯一鍵、補不回來。
+   */
+  it("待辦型標記不動，且回報沒有標記到", async () => {
+    fakeRepo.__seed([
+      row({ id: "wallet", type: NOTIFICATION_TYPE.WALLET_UPGRADE }),
+    ]);
+
+    await expect(
+      markNotificationRead({
+        userId: USER,
+        notificationId: "wallet",
+        nowMs: NOW_MS,
+      }),
+    ).resolves.toBe(false);
+
+    const summary = await getNotificationSummary({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+    expect(summary.todoCount).toBe(1);
+  });
+
+  /**
+   * Info: (20260825 - Julian) 跨租戶：id 是別人的就標不到。
+   * 檢查清單 §三.1 把「`where` 少一個條件 → 動到別人的資料」列為標準形狀，
+   * 而這支端點的 id 直接來自前端。
+   */
+  it("別人的通知標記不到", async () => {
+    fakeRepo.__seed([row({ id: "theirs", userId: "user-2" })]);
+
+    await expect(
+      markNotificationRead({
+        userId: USER,
+        notificationId: "theirs",
+        nowMs: NOW_MS,
+      }),
+    ).resolves.toBe(false);
+    expect(fakeRepo.__rows()[0].readAt).toBeNull();
+  });
+
+  // Info: (20260825 - Julian) 重複點擊不改寫已讀時間（否則它會變成「最後一次點」）
+  it("已經讀過的再點一次回報沒有標記到", async () => {
+    fakeRepo.__seed([row({ id: "already", readAt: new Date(NOW_MS - 5_000) })]);
+
+    await expect(
+      markNotificationRead({
+        userId: USER,
+        notificationId: "already",
+        nowMs: NOW_MS,
+      }),
+    ).resolves.toBe(false);
+    expect(fakeRepo.__rows()[0].readAt?.getTime()).toBe(NOW_MS - 5_000);
   });
 });
 

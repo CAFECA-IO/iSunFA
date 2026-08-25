@@ -308,6 +308,10 @@ describe("來源與畫面的接線（掃描）", () => {
         "analysis_completed",
         "analysis_failed",
         "has_more_completed",
+        // Info: (20260825 - Julian) 帶報告名稱的版本，與未讀紅點的讀屏文字
+        "analysis_completed_named",
+        "analysis_failed_named",
+        "unread",
       ].forEach((key) => {
         expect(dictionary).toMatch(new RegExp(`\\b${key}:`));
       });
@@ -337,5 +341,27 @@ describe("來源與畫面的接線（掃描）", () => {
 
     expect(bell).toMatch(/arrivalTick === 0/);
     expect(bell).toMatch(/\[arrivalTick\]/);
+  });
+
+  /**
+   * Info: (20260825 - Julian) 打開鈴鐺**不得**再全部標已讀。
+   *
+   * 已讀改成逐則觸發之後，這件事有兩個後果，第二個不明顯：
+   *
+   * 1. 打開就全讀的話，未讀紅點在使用者看清楚之前就全滅了
+   * 2. 而且畫面會顯示一整排已讀的歷史，卻沒有任何一則是新的 ——
+   *    使用者沒有辦法知道剛剛那一聲鈴是為了哪一則響的
+   *
+   * 這一條是字串比對，擋不住所有寫法；真正驗行為的是
+   * `notification_service.test.ts` 的「只標記被點的那一則」。
+   * 這裡擋的是「有人把 openList 的那一行加回去」。
+   */
+  it("打開鈴鐺不標記已讀，點擊個別通知才標記", () => {
+    const bell = codeOf("src", "components", "header", "notification_bell.tsx");
+
+    expect(bell).not.toMatch(/notifications\/read/);
+    expect(bell).toMatch(/notifications\/\$\{item\.id\}\/read/);
+    // Info: (20260825 - Julian) 已讀的要留著，所以紅點靠 readAt 判斷
+    expect(bell).toMatch(/readAt === null/);
   });
 });

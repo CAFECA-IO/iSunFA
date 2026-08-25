@@ -12,6 +12,10 @@ export const notification = {
     "分析ジョブが完了しました。クリックして結果を確認してください",
   analysis_failed:
     "分析ジョブが失敗しました。再送信するかサポートにご連絡ください",
+  // Info: (20260825 - Julian) 帶報告名稱的版本；取不到名稱時退回上面那句
+  analysis_completed_named: "「{{title}}」の分析が完了しました。クリックして結果をご確認ください",
+  analysis_failed_named: "「{{title}}」の分析に失敗しました。再送信するかサポートにご連絡ください",
+  unread: "未読",
   has_more_completed: "未読の通知がまだあります",
   view: "確認",
 };

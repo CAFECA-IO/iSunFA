@@ -272,6 +272,50 @@ describe("NotificationRepository（真資料庫）", () => {
       `${KEY_PREFIX}old-todo`,
     ]);
 
+    /**
+     * Info: (20260825 - Julian) 歷史那支（含已讀）也在同一份資料上驗一次。
+     *
+     * 兩支的差別只有「濾不濾 `readAt`」，而那個差別在假實作裡是我寫的。
+     * 這裡先把 d3 標成已讀，然後同時問兩支：未讀那支要看不到它，
+     * 歷史那支要看得到 —— 只驗其中一支的話，兩支寫成同一個查詢也會通過。
+     */
+    await prisma.notification.updateMany({
+      where: { userId, dedupeKey: `${KEY_PREFIX}d3` },
+      data: { readAt: new Date(NOW_MS) },
+    });
+
+    const history = await notificationRepo.listRecentExcludingTypes(
+      userId,
+      [NOTIFICATION_TYPE.WALLET_UPGRADE],
+      20,
+    );
+    expect(history.items.map((item) => item.dedupeKey)).toEqual([
+      `${KEY_PREFIX}d1`,
+      `${KEY_PREFIX}d2`,
+      `${KEY_PREFIX}d3`,
+    ]);
+    expect(history.hasMore).toBe(false);
+    // Info: (20260825 - Julian) 待辦型仍然不混進來（型別條件是這支自己的）
+    expect(
+      history.items.some(
+        (item) => item.type === NOTIFICATION_TYPE.WALLET_UPGRADE,
+      ),
+    ).toBe(false);
+
+    const historyPage = await notificationRepo.listRecentExcludingTypes(
+      userId,
+      [NOTIFICATION_TYPE.WALLET_UPGRADE],
+      2,
+    );
+    expect(historyPage.items).toHaveLength(2);
+    expect(historyPage.hasMore).toBe(true);
+
+    // Info: (20260825 - Julian) 把 d3 收回未讀，讓下面幾條斷言維持原本的前提
+    await prisma.notification.updateMany({
+      where: { userId, dedupeKey: `${KEY_PREFIX}d3` },
+      data: { readAt: null },
+    });
+
     const page = await notificationRepo.listUnreadExcludingTypes(
       userId,
       [NOTIFICATION_TYPE.WALLET_UPGRADE],
@@ -332,6 +376,75 @@ describe("NotificationRepository（真資料庫）", () => {
         )
       ).size,
     ).toBe(0);
+  });
+
+  /**
+   * Info: (20260825 - Julian) `markReadById` 的四個條件，對真資料庫各驗一次。
+   *
+   * 假實作裡這四個條件是我用 `Array.find` 寫的；真 Prisma 的 `updateMany`
+   * 是不是真的把它們全部放進 `where`，只有真資料庫答得出來。而每漏一個
+   * 都是一種真實的失效：漏 `userId` 是跨租戶、漏 `readAt` 是重複點擊改寫
+   * 已讀時間、漏型別條件是 D1（收掉補不回來的待辦）。
+   */
+  it("markReadById 只動自己的、未讀的、非待辦型的那一則", async () => {
+    const mine = await seed(
+      NOTIFICATION_TYPE.ANALYSIS_COMPLETED,
+      "mark-mine",
+      new Date(NOW_MS),
+    );
+    const sibling = await seed(
+      NOTIFICATION_TYPE.ANALYSIS_COMPLETED,
+      "mark-sibling",
+      new Date(NOW_MS),
+    );
+    const todo = await seed(
+      NOTIFICATION_TYPE.WALLET_UPGRADE,
+      "mark-todo",
+      new Date(NOW_MS),
+    );
+    const theirs = await seed(
+      NOTIFICATION_TYPE.ANALYSIS_COMPLETED,
+      "mark-theirs",
+      new Date(NOW_MS),
+      otherUserId,
+    );
+
+    const excludeTodo = [NOTIFICATION_TYPE.WALLET_UPGRADE];
+
+    // Info: (20260825 - Julian) 正例：標得到，而且只標到一列
+    expect(
+      await notificationRepo.markReadById(userId, mine.id, excludeTodo, NOW_MS),
+    ).toBe(1);
+    // Info: (20260825 - Julian) 重複標記回 0（`readAt: null` 這個條件真的在）
+    expect(
+      await notificationRepo.markReadById(userId, mine.id, excludeTodo, NOW_MS),
+    ).toBe(0);
+    // Info: (20260825 - Julian) 待辦型標不到（D1）
+    expect(
+      await notificationRepo.markReadById(userId, todo.id, excludeTodo, NOW_MS),
+    ).toBe(0);
+    // Info: (20260825 - Julian) 別人的標不到（跨租戶）
+    expect(
+      await notificationRepo.markReadById(
+        userId,
+        theirs.id,
+        excludeTodo,
+        NOW_MS,
+      ),
+    ).toBe(0);
+
+    /**
+     * Info: (20260825 - Julian) 反面：其餘三列都還是未讀。
+     * 沒有這一段的話，「把整個 userId 底下都標成已讀」也會通過上面每一條。
+     */
+    const stillUnread = await prisma.notification.findMany({
+      where: {
+        id: { in: [sibling.id, todo.id, theirs.id] },
+        readAt: null,
+      },
+      select: { id: true },
+    });
+    expect(stillUnread).toHaveLength(3);
   });
 
   /**

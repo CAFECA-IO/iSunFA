@@ -89,6 +89,17 @@ const EXPECTED_BUCKET: Record<string, Record<string, RateLimitBucketEnum>> = {
   "route.ts": { GET: RateLimitBucketEnum.NOTIFICATION_READ },
   "summary/route.ts": { GET: RateLimitBucketEnum.NOTIFICATION_READ },
   "read/route.ts": { POST: RateLimitBucketEnum.NOTIFICATION_WRITE },
+  /**
+   * Info: (20260825 - Julian) 逐則已讀也走 `WRITE`，而且它比全部已讀更需要。
+   *
+   * 全部已讀一次就收乾淨，正常操作不會連打；逐則已讀的正常節奏是
+   * 「一則一次請求」，使用者手上有 30 則歷史時，連點就是 30 次寫入。
+   * 20 次/分的桶對這個節奏是緊的 —— 那是刻意的：真的要一次清空，
+   * 該做的是加一顆「全部標為已讀」，不是讓逐則的桶變寬。
+   */
+  "[notification_id]/read/route.ts": {
+    POST: RateLimitBucketEnum.NOTIFICATION_WRITE,
+  },
 };
 
 describe("小鈴鐺端點的限流覆蓋率", () => {
@@ -140,7 +151,7 @@ describe("小鈴鐺端點的限流覆蓋率", () => {
       const identityAt = handler.body.indexOf("getIdentityFromDeWT(");
       const limitAt = handler.body.indexOf("enforceRateLimit(");
       const serviceAt = handler.body.search(
-        /(getNotificationSummary|listNotifications|markNotificationsRead)\(/,
+        /(getNotificationSummary|listNotifications|markNotificationsRead|markNotificationRead)\(/,
       );
       if (identityAt === -1 || serviceAt === -1) return [];
       return identityAt < limitAt && limitAt < serviceAt
@@ -158,7 +169,7 @@ describe("小鈴鐺端點的限流覆蓋率", () => {
         (handler) =>
           !handler.body.includes("getIdentityFromDeWT(") ||
           handler.body.search(
-            /(getNotificationSummary|listNotifications|markNotificationsRead)\(/,
+            /(getNotificationSummary|listNotifications|markNotificationsRead|markNotificationRead)\(/,
           ) === -1,
       )
       .map((handler) => `${handler.file}:${handler.method}`);

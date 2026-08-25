@@ -89,6 +89,72 @@ export class NotificationRepository {
   }
 
   /**
+   * Info: (20260825 - Julian) 事件型的**歷史**（含已讀），新到舊，附「還有更多」。
+   *
+   * 與 `listUnreadExcludingTypes` 的差別只有一個 —— 不濾 `readAt`。分成兩支
+   * 而不是加一個 `includeRead` 旗標：布林參數的呼叫端讀起來是
+   * `listUnreadExcludingTypes(userId, types, 30, true)`，那個 `true` 在
+   * 呼叫端完全不表意，而它切換的是這支查詢最重要的語意。
+   *
+   * ## 徽章與清單會不會再次分岔（計畫書 D4 的新形狀）
+   *
+   * 會，但有界，而且說得出來：徽章數的是**所有**未讀，這支只取最新 `limit` 則。
+   * 未讀落在 `limit` 之外，代表通知總數已經超過 `limit` —— 那時 `hasMore`
+   * 必為 true，畫面會顯示「還有更多」。所以「徽章比看得到的紅點多」這件事
+   * 永遠伴隨一個看得見的說明，不會是靜默的。
+   */
+  async listRecentExcludingTypes(
+    userId: string,
+    excludeTypes: readonly string[],
+    limit: number,
+  ): Promise<{ items: Notification[]; hasMore: boolean }> {
+    const rows = await prisma.notification.findMany({
+      where: {
+        userId,
+        ...(excludeTypes.length > 0
+          ? { type: { notIn: [...excludeTypes] } }
+          : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      take: limit + 1,
+    });
+    return { items: rows.slice(0, limit), hasMore: rows.length > limit };
+  }
+
+  /**
+   * Info: (20260825 - Julian) 把**單獨一則**標為已讀。
+   *
+   * 三個條件缺一不可，而每一個都對應一種真實的失效：
+   *
+   * - `userId`：少了它，任何人只要有 id 就能標記別人的通知（檢查清單 §三.1）
+   * - `readAt: null`：少了它，重複點擊會一直更新時間戳，已讀時間變成「最後一次點」
+   * - `excludeTypes`：少了它，待辦型可以被前端一個請求收掉 —— 那正是 D1，
+   *   而 `dedupeKey` 是永久唯一鍵，收掉就補不回來
+   *
+   * 回傳筆數而不是 void：0 代表「不存在／不是你的／已經讀過／是待辦型」，
+   * 呼叫端要能分辨「做了一件事」與「什麼都沒做」。
+   */
+  async markReadById(
+    userId: string,
+    notificationId: string,
+    excludeTypes: readonly string[],
+    nowMs: number,
+  ): Promise<number> {
+    const result = await prisma.notification.updateMany({
+      where: {
+        id: notificationId,
+        userId,
+        readAt: null,
+        ...(excludeTypes.length > 0
+          ? { type: { notIn: [...excludeTypes] } }
+          : {}),
+      },
+      data: { readAt: new Date(nowMs) },
+    });
+    return result.count;
+  }
+
+  /**
    * Info: (20260821 - Luphia) 未讀計數，**依型別分組**。
    * 摘要的兩個數字不能拿截斷在 20 則的清單去數——那會把「37 個完成通知」
    * 顯示成 20。count 走索引 (userId, readAt)，便宜。

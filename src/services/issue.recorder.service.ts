@@ -448,6 +448,8 @@ export class IssueRecorderService {
               await notifyAnalysisFailed({
                 userId: order.userId,
                 orderId: order.id,
+                // Info: (20260825 - Julian) 帶上類別，讓通知說得出是哪一份報告
+                analysisType: analysis?.type,
               });
             }
           }
@@ -612,7 +614,7 @@ export class IssueRecorderService {
     }
 
     try {
-      const { order } = await this.resolveAnalysisAndOrder(
+      const { analysis, order } = await this.resolveAnalysisAndOrder(
         params.taskDir,
         params.taskId,
         localContextObj,
@@ -652,6 +654,8 @@ export class IssueRecorderService {
         await notifyAnalysisFailed({
           userId: order.userId,
           orderId: order.id,
+          // Info: (20260825 - Julian) 帶上類別，讓通知說得出是哪一份報告
+          analysisType: analysis?.type,
         });
         console.log(
           `[MissionRecorder] Task ${params.taskId} was given up; Order ${order.id} marked FAILED and the user was notified.`,
