@@ -49,6 +49,17 @@ export interface IPendingImport {
   activityCount: number;
   // Info: (20260717 - Tzuhan) 逐章解析失敗的章節(id 供重試呼叫、title 供顯示;空陣列 = 全部成功)
   failedChapters: { id: string; title: string }[];
+  /**
+   * Info: (20260825 - Luphia) 因為點數用完而**還沒做**的章（issue #6713）。
+   *
+   * 與 `failedChapters` 是兩件不同的事，畫面也要分開說：
+   * 失敗的章是「試過、壞了」，這些章是「一步都沒試」——伺服端在呼叫 LLM 之前
+   * 就因為點數不足擋下，一點都沒扣。把它們混進 failedChapters 會讓使用者
+   * 以為檔案有問題（那正是修正前的行為）。
+   */
+  pausedChapters?: { id: string; title: string }[];
+  // Info: (20260825 - Luphia) 暫停原因（JOB_PAUSE_REASON）；null／undefined＝沒有暫停
+  pauseReason?: string | null;
 }
 
 export interface IImportPreviewProps {

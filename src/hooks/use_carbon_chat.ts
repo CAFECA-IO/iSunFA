@@ -138,6 +138,7 @@ import {
   parsePersonalPaymentRequired,
   isGatewayTimeoutError,
   isQuotaApiError,
+  resolveCreditPauseReason,
   isRateLimitedApiError,
   isTimeoutApiError,
   splitReportMarkdownSections,
@@ -149,6 +150,7 @@ import {
   type ICarbonImportSource,
 } from "@/hooks/use_carbon_chat.helpers";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { type JobPauseReason } from "@/constants/resumable_job";
 import { useAuth } from "@/contexts/auth_context";
 import {
   DEFAULT_SESSION_ID,
@@ -1985,6 +1987,19 @@ export const useCarbonChat = () => {
         units.length,
       ).fill(null);
       const failed: { id: string; title: string }[] = [];
+      /**
+       * Info: (20260825 - Luphia) 點數用完（issue #6713）。
+       *
+       * 在此之前這種情況會落進 `failed` —— 而那些章一步都沒跑過：
+       * 伺服端的 `spendCredits` 在呼叫 LLM **之前**就擋下了，一點都沒扣。
+       * 於是使用者看到「以下章節解析失敗」，按「重新匯入」再撞一次同樣的牆。
+       *
+       * 兩份清單的語意因此必須分開：
+       * - `failed`：真的做壞了（解析出錯、逾時），重試會真的送出去
+       * - `remaining`（下方由 `startedIds` 推導）：一步都沒做，等點數回來才有意義
+       */
+      let pausedBy: JobPauseReason | null = null;
+      const settledChapterIds = new Set<string>();
       let nextIndex = 0;
       let completedCount = 0;
       /**
@@ -2011,6 +2026,14 @@ export const useCarbonChat = () => {
 
       // Info: (20260717 - Tzuhan) worker 以遞迴取號(每 worker 同時只跑一章;深度上限 = 章節數 11,無堆疊風險)
       const processNext = async (): Promise<void> => {
+        /**
+         * Info: (20260825 - Luphia) 已經因為點數用完而暫停就**不再領新單元**。
+         *
+         * 原本會繼續領：剩下每一章都各撞一次 402，全部被列成解析失敗，
+         * 而每一次都白付一趟往返。11 章的報告在第 5 章用完點數時，
+         * 使用者會看到 7 章「解析失敗」——沒有一章真的被解析過。
+         */
+        if (pausedBy !== null) return;
         const index = nextIndex;
         nextIndex += 1;
         if (index >= units.length) return;
@@ -2101,7 +2124,29 @@ export const useCarbonChat = () => {
             "/api/v1/chat/carbon/import",
             { method: "POST", body: formData },
           );
+          // Info: (20260825 - Luphia) 有結果的章才算處理過（暫停的不算，見 pausedBy）
+          settledChapterIds.add(chapter.id);
         } catch (chunkError) {
+          /**
+           * Info: (20260825 - Luphia) 先問「是做不了還是做壞了」（issue #6713）。
+           *
+           * 點數用完＝做不了：這一份一步都沒跑、一點都沒扣，**不進 `failed`**，
+           * 而且整趟就此停下（剩下的章留給補上點數之後接續）。
+           * 併發下可能有兩份同時撞牆，只認第一個原因——兩者通常相同，
+           * 而即使不同，先到的那個就是使用者接下來要處理的事。
+           */
+          const pauseReason = resolveCreditPauseReason(chunkError);
+          if (pauseReason !== null) {
+            if (pausedBy === null) pausedBy = pauseReason;
+            console.info(
+              "[carbon-chat] import paused by credits:",
+              chapter.id,
+              pauseReason,
+            );
+            inFlightCount -= 1;
+            reportProgress();
+            return;
+          }
           console.error(
             "[carbon-chat] import chapter failed:",
             chapter.id,
@@ -2116,6 +2161,7 @@ export const useCarbonChat = () => {
           if (!failed.some((item) => item.id === chapter.id)) {
             failed.push(chapter);
           }
+          settledChapterIds.add(chapter.id);
         }
         completedCount += 1;
         inFlightCount -= 1;
@@ -2174,6 +2220,18 @@ export const useCarbonChat = () => {
         }
       });
 
+      /**
+       * Info: (20260825 - Luphia) 「還沒做」＝**沒有任何結果**的章（issue #6713）。
+       *
+       * 以「有沒有結果」判斷而不是「索引之後」：併發下暫停發生時，另一條 worker
+       * 可能正跑在更前面的索引上，而那一份也沒有結果。同一章被切成多份時，
+       * 只要有一份沒跑完就整章重跑——份與份之間的邊界本來就有重疊，
+       * 重跑整章比補跑單一份安全（與 `failed` 以章去重同一個理由）。
+       */
+      const remaining = pausedBy
+        ? chapters.filter((chapter) => !settledChapterIds.has(chapter.id))
+        : [];
+
       return {
         segments: Array.from(segmentsById.entries()).map(
           ([paragraphId, bucket]) => ({
@@ -2186,6 +2244,8 @@ export const useCarbonChat = () => {
         unmapped,
         activities,
         failed,
+        pausedBy,
+        remaining,
       };
     },
     // Info: (20260806 - Tzuhan) 進度回報改由呼叫端注入 notify,此處不再依賴 setDraftNotice
@@ -2404,6 +2464,14 @@ export const useCarbonChat = () => {
             failedChapters: (pending.failedChapters ?? []).map(
               (chapter) => chapter.title,
             ),
+            /**
+             * Info: (20260825 - Luphia) 點數用完而未解析的章（issue #6713）。
+             * 與 failedChapters 分開送：對話裡是兩句話，
+             * 一句說「試過壞了」，一句說「還沒試、去補點數」。
+             */
+            pausedChapters: (pending.pausedChapters ?? []).map(
+              (chapter) => chapter.title,
+            ),
             language,
           }),
         });
@@ -2503,6 +2571,9 @@ export const useCarbonChat = () => {
           activities: IActivityRecord[];
         };
         let failedChapters: { id: string; title: string }[] = [];
+        // Info: (20260825 - Luphia) 點數用完而還沒做的章（issue #6713）；與 failed 分開
+        let pausedChapters: { id: string; title: string }[] = [];
+        let pauseReason: JobPauseReason | null = null;
 
         if (useChunked) {
           // Info: (20260730 - Tzuhan) 兩階段:先問頁碼索引(一次、輸出極小),再逐章只送對應頁。
@@ -2523,6 +2594,8 @@ export const useCarbonChat = () => {
           );
           payload = result;
           failedChapters = result.failed;
+          pausedChapters = result.remaining;
+          pauseReason = result.pausedBy;
         } else {
           // Info: (20260717 - Tzuhan) 小型文字檔:單發全綱呼叫
           notify({
@@ -2559,7 +2632,17 @@ export const useCarbonChat = () => {
         }
 
         notify(null);
-        if (payload.segments.length === 0 && failedChapters.length === 0) {
+        /**
+         * Info: (20260825 - Luphia) 暫停也算「有事情發生」（issue #6713）：
+         * 第一章就把點數用完時 segments 與 failed 都是空的，而原本會落到
+         * 「檔案裡找不到可匯入的內容」——使用者會回去改檔案，
+         * 而真正的原因是點數不足。
+         */
+        if (
+          payload.segments.length === 0 &&
+          failedChapters.length === 0 &&
+          pauseReason === null
+        ) {
           notify({
             type: "error",
             text: t("carbon_chatbot.import_empty"),
@@ -2590,7 +2673,12 @@ export const useCarbonChat = () => {
           title: string;
           content: string;
         }[] = [];
-        if (missingSectionIds.length > 0) {
+        /**
+         * Info: (20260825 - Luphia) 已經暫停就**不跑草稿補齊**（issue #6713）：
+         * 補齊同樣要花點數，這時送出去必然再撞一次同一面牆，
+         * 而它的失敗會落到「補齊失敗」那條文案——又一則與真相無關的訊息。
+         */
+        if (missingSectionIds.length > 0 && pauseReason === null) {
           draftedSegments = await runGapFillSections(
             importSource,
             missingSectionIds,
@@ -2624,6 +2712,13 @@ export const useCarbonChat = () => {
           unmapped: payload.unmapped,
           activityCount: payload.activities.length,
           failedChapters,
+          /**
+           * Info: (20260825 - Luphia) 暫停的斷點跟著解析結果一起存（issue #6713）：
+           * 這份 blob 本來就會落地（個人會話是端到端加密），因此重新整理頁面
+           * 之後「停在哪裡」還在，不需要另一張表也不需要把內容交給伺服器。
+           */
+          pausedChapters,
+          pauseReason,
         };
         setPendingImportFor(originSessionId, parsedPending);
         /**

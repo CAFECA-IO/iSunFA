@@ -53,6 +53,15 @@ const NoticeCommonShape = {
     .array(z.string().min(1).max(100))
     .max(CARBON_REPORT_CHAPTERS.length)
     .default([]),
+  /**
+   * Info: (20260825 - Luphia) 因點數用完而未解析的章節標題（issue #6713）。
+   * 與 `failedChapters` 分開收：兩者在訊息裡是兩句話，
+   * 混成一個欄位就再也分不出「試過壞了」與「一步都沒試」。
+   */
+  pausedChapters: z
+    .array(z.string().min(1).max(100))
+    .max(CARBON_REPORT_CHAPTERS.length)
+    .default([]),
   language: z.string().min(2).max(10).optional(),
 };
 

@@ -3,12 +3,47 @@
 
 import { ApiError as RequestApiError } from "@/lib/utils/request";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import {
+  JOB_PAUSE_REASON,
+  type JobPauseReason,
+} from "@/constants/resumable_job";
 
 // Info: (20260714 - Tzuhan) 判斷 API 失敗是否為 AI 額度耗盡(IS000011),前端提示稍候重試
 export const isQuotaApiError = (error: unknown): boolean => {
   if (!(error instanceof RequestApiError)) return false;
   const data = error.data as { errorCode?: string } | undefined;
   return data?.errorCode === API_ERRORS.IS_LLM_QUOTA_EXCEEDED.code;
+};
+
+/**
+ * Info: (20260825 - Luphia) 判斷失敗是否為**使用者的點數用完**（issue #6713）。
+ *
+ * 這與上面那支 `isQuotaApiError` 是**兩件不同的事**，而混用它們正是這個 bug 的
+ * 一半成因：
+ *
+ * - `IS_LLM_QUOTA_EXCEEDED`（上面那支）＝ **LLM 供應商**的配額用完。與使用者
+ *   的錢無關，稍後重試就好。
+ * - `TW_QUOTA_EXCEEDED` / `TW_PERSONAL_PAYMENT_REQUIRED`（這支）＝ **使用者的
+ *   點數**用完。重試一百次也一樣，要等額度重置、加購點數或升級方案。
+ *
+ * 在此之前前端只認得前者，於是點數用完會落到「一般失敗」那條路——
+ * 而匯入的一般失敗文案是「章節解析失敗」。
+ *
+ * 回傳暫停原因而不是布林：兩種點數不足的出路不同（一個是等額度／加購，
+ * 一個是要簽章付款），而畫面要說得出使用者接下來能做什麼。
+ */
+export const resolveCreditPauseReason = (
+  error: unknown,
+): JobPauseReason | null => {
+  if (!(error instanceof RequestApiError)) return null;
+  const data = error.data as { errorCode?: string } | undefined;
+  if (data?.errorCode === API_ERRORS.TW_QUOTA_EXCEEDED.code) {
+    return JOB_PAUSE_REASON.CREDITS_EXHAUSTED;
+  }
+  if (data?.errorCode === API_ERRORS.TW_PERSONAL_PAYMENT_REQUIRED.code) {
+    return JOB_PAUSE_REASON.PAYMENT_REQUIRED;
+  }
+  return null;
 };
 
 // Info: (20260716 - Tzuhan) 判斷 API 失敗是否為 AI 回應逾時(IS000012),前端提示重試(#6515)
