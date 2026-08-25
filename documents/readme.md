@@ -31,6 +31,10 @@
    > 7 張新表 + `Employee.user_id` 的套用順序、為何**不需要**回填（空值是正確的初始狀態，不是待填），以及四種做錯順序的症狀 —— 其中最難查的一種完全不報錯：座標用地圖標註值而非實測值，seed 會成功，而主角站在現場打不了卡。
 7. 🚀 **[部署檢查表：計費子系統](engineering_guidelines/deploy_checklist_billing_2026q3.md)**
    > 席次計費與分配點數上鏈的部署順序。本專案沒有 migrations 目錄，欄位新增與資料回填是分開的兩件事，而順序做錯不會噴錯——只會安靜地讓功能停擺或讓點數暫時消失在畫面上。**兩份檢查表屬同一次部署**，見該檔 §4.9。
+8. 🗓️ **[部署檢查表：假勤系統](engineering_guidelines/deploy_checklist_leave_overtime_2026q3.md)**
+   > 15 張新表、19 個新 enum，以及**與上一份最重要的差別：這次不是純新增**。移除了 `enum LeaveType` 與 `leave_request` 的四個欄位，對兩張既有表加了 8 個必填且無 default 的欄位 —— 因此上一份「回滾程式碼不需要回滾 schema」的結論在這裡**不成立**。另有兩種漏做完全不報錯，以及正式環境已有真實假單時的停損點。
+9. 🔔 **[部署檢查表：通知模組](engineering_guidelines/deploy_checklist_notification_2026q3.md)**
+   > **一張新表、零個新 enum、零個新 env**。四份檢查表裡 schema 層最安全的一份（純新增、不需回填、回滾程式碼不需回滾 schema）—— **而風險因此整個移到了「重啟哪些 process」與「上線順序」上**。五種做錯的方式裡有四種完全不報錯，最難查的是：只重啟 `isunfa` 沒重啟 `isunfa-worker`，於是網站正常、AI 任務正常完成、總帳正常入帳，而一則通知都不會產生 —— **而沒有人會抱怨一件他不知道應該發生的事。** §2.1 是跑 `request_wallet_upgrades.ts` 之前的前置條件：探針分三態，「無法判定」不是 0 就不能加 `--commit`。
 
 ### 🐛 已知缺陷 (Known Issues)
 
@@ -76,6 +80,9 @@ _聚焦於四大會計師級別的底層財報與內控實務：_
 - **[團隊錢包與訂閱額度消耗系統 (Team Wallet & Subscription Quota)](architecture/team_wallet_and_subscription_quota.md)**：團隊為計費主體、5 小時 / 週雙視窗訂閱額度、免簽章扣費管線與管理者點數分配。
 - **[團隊席次計費與 Email 邀請 (Team Seat Billing & Email Invitation)](architecture/team_seat_billing_and_email_invitation.md)**：訂閱主體為團隊、依席次計費、期中加人按剩餘天數比例補收（先扣款才寄邀請），以及 email 邀請 → 註冊即入團的流程與 SMTP 設定。
 - **[費思個人化記憶 (Faith Personal Memory)](architecture/ai_and_analytics/faith_personal_memory.md)**：付費訂閱的每位成員專屬記憶——`(userId, teamId)` 隔離、LLM 只做萃取、欄位級加密，以及停止訂閱 90 天後刪除的保留機制。**須於 v0.13.0 釋出前完成**，條款已先行載明。
+- **[出勤模組開發計畫書 (Time & Attendance Module Plan)](architecture/time_attendance_module_plan.md)**：打卡不可變、地理圍欄、班別統一模型與單日出勤判定引擎（純函數）。
+- **[假勤模組開發計畫書 (Leave & Overtime Module Plan)](architecture/leave_and_overtime_module_plan.md)**：假別規則資料化、額度異動帳本、多級簽核鏈快照、加班分段與補休、假勤行事曆。**§3 附已查證的勞基法／性平法法源對照表與 8 項待核對清單，法務複核前不得標記 Production Ready。**
+- **[通知模組開發計畫書 (Notification Module Plan)](architecture/notification_module_plan.md)**：Header 鈴鐺、AI 任務完成推送與 HR 模組的預留。**§2 是 D1–D18 的缺陷總帳**，其中 D17（提示音第二次抵達起永久失效）與 D18（上鏈被拒 3 次後訂單卡住、完成與失敗都不通知）**都躲過了單元測試、e2e 與整份 code review** —— 前者的失效沒有任何觀測量，後者的失效是「什麼都沒發生」。§3 是不要改回去的實作決定（待辦型活算不入庫、只存 `type` + `payload`、`readAt` 而非 enum），§5 是 HR 接線的八項前置，§6 是離「可上線」還差的七件事。
 
 ### 📌 4. 架構決策紀錄 (Architecture Decision Records, ADRs)
 
@@ -98,6 +105,11 @@ _追蹤重大架構變更背後的歷史脈絡與取捨：_
 - **[ADR 018: HR PII Data Classification](architecture/decisions/018_hr_pii_data_classification.md)**：人事模組 13 張表的個資分級與欄位級加密，說明為何不套用碳盤查的 E2EE、也不沿用帳本的明文。
 - **[ADR 019: Splitting ProcessTask](architecture/decisions/019_hr_process_task_split.md)**：以型別結構取代執行期檢查，讓三種非法的任務歸屬狀態在 schema 層就無法表示。
 - **[ADR 020: Severance Pay Estimation](architecture/decisions/020_severance_pay_estimation.md)**：薪資模組上線前的資遣費試算——系統只算它真的知道的部分（年資、基數、法定上限），平均工資留給人填。
+- **[ADR 021: Leave Types as Configurable Data](architecture/decisions/021_leave_policy_as_data_and_accrual_cycle.md)**：假別規則資料化——「行為分類用 enum、參數用欄位」的切法、到職日制與曆年制雙軌並存及規劃中的「不低於週年制」護欄（**尚未接線**，見 ADR 021 §3.1 的狀態說明），以及「半天不是 240 分鐘」的單位基準。
+- **[ADR 022: Append-Only Ledger for Leave Entitlement](architecture/decisions/022_leave_entitlement_append_only_ledger.md)**：假勤額度採批次授予 + append-only 帳本（比照 ADR 015），餘額為可重建的派生快取；帳本單位為分鐘，「日」只出現在授予與折現兩個端點。
+- **[ADR 023: Approval Chain Snapshots and SoD](architecture/decisions/023_leave_approval_chain_snapshot_and_sod.md)**：簽核鏈於送出當下固化成快照，組織異動不改寫歷史；空鏈拒絕送出而非自動核准；額度不預扣，扣減發生在最後一關通過的同一個交易內。
+- **[ADR 024: Overtime Recognition and the Payroll Boundary](architecture/decisions/024_overtime_recognition_premium_tiers_and_module_boundary.md)**：加班認列為「核准 ∩ 打卡事實」取小者；§24 加成切成可稽核分段；補休 1:1 一段一批以保留級距；模組邊界劃在分鐘，不算金額（同 ADR 020）。
+- **[ADR 025: Notification Addressing, Dedupe & Content Boundary](architecture/decisions/025_notification_addressing_and_dedupe.md)**：通知是**投遞**不是軌跡（所以不進 `AuditLog`、也不該成為舉證來源）；收件人恆為 `User` 且必填，「解析不到收件人」是一個看得見的終態而不是零筆；來源用「一個 enum + 一個 id」而不是一排可空外鍵（ADR 019 §1 那三種非法狀態會一字不改地回來）；兩把鍵語意不同不共用（`dedupeKey` 永久去重、`activeUnreadKey` 同時最多一則未讀）；文案只存 i18n key 與非個資參數 —— **姓名雖是 Tier 3 也不存，因為衍生值是第二種真相，而通知沒有 `LeaveApprovalStep` 那種舉證需求**。**§7.1 是第三把鍵，也是這個模組最貴的一課**：提示音的「同一次抵達只響一次」原本沿用了 `dedupeKey`「純內容、不含時間戳」的設計原則，結果數量組合重複時第二次抵達永久靜音 —— 兩者都叫去重，**但去重的維度不同**，一個跨時間、一個只在一次抵達的範圍內。它躲過了單元測試、e2e 與整份 code review，因為失效沒有任何觀測量：搖動照舊、徽章照舊、log 乾淨。
 
 ---
 
