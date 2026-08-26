@@ -2851,13 +2851,33 @@ export const useCarbonChat = () => {
           completedUnits: importUnitTotal - pausedUnits.length,
           failedUnits: failedChapters.length,
           remainingUnits: pausedUnits,
-          nextStepInputChars: importSource.file?.size,
+          /**
+           * Info: (20260826 - Luphia) 用**原始 File** 的大小，不是 `importSource.file`
+           *（自我 review 第五輪）：附件上傳成功就會有 cid，而那時
+           * `importSource.file` 被刻意設為 null 讓瀏覽器回收大檔——也就是
+           * **常態路徑**拿不到大小。少了它，書籤的 `nextStepCost` 是 null，
+           * 掃描行程只能把任務算進 `unknown`，於是整套「額度回來就翻成可以繼續」
+           * 在常態路徑上是死的。
+           */
+          nextStepInputChars: file.size,
         });
       } catch (error) {
         console.error("[carbon-chat] report import failed:", error);
+        /**
+         * Info: (20260826 - Luphia) 這條 catch 也會接到**點數用完**
+         *（自我 review 第五輪）。
+         *
+         * 逐章路徑的暫停由驅動器接住，不會走到這裡；但**小型文字檔是單發呼叫**
+         * ——一次請求就是整份匯入，402 直接拋到這裡，而這裡說的是
+         * 「匯入失敗」。同一份檔案改天點數夠了就會成功，而那句話會讓使用者
+         * 去改檔案。單發沒有「剩餘章節」可談，所以只要把原因說對就夠了。
+         */
         notify({
           type: "error",
-          text: t("carbon_chatbot.import_failed"),
+          text:
+            resolveCreditPauseReason(error) !== null
+              ? t("carbon_chatbot.team_quota_exceeded")
+              : t("carbon_chatbot.import_failed"),
         });
         dismissDraftNoticeAfter(
           CARBON_DRAFT_NOTICE_DISMISS_MS,
@@ -2956,11 +2976,45 @@ export const useCarbonChat = () => {
           checked: existing?.checked ?? true,
         });
       });
+      /**
+       * Info: (20260826 - Luphia) 重試也可能**撞到點數用完**（自我 review 第五輪）。
+       *
+       * 先前這裡是 `failedChapters: result.failed`（整批取代）而完全忽略
+       * `result.pausedBy`。於是「額度已經見底時按重試」會：
+       *
+       * - `result.failed` 是空的（暫停不進 failed，那是對的）
+       * - 取代之後 `failedChapters` 變成空 → 那幾章從畫面上**整批消失**
+       * - 而暫停清單沒有被更新 → 也不在那裡
+       *
+       * 使用者因此同時失去資訊與重試入口，而畫面上什麼都沒說。
+       * 暫停的章要接回暫停清單，沒被處理到的失敗章要留著。
+       */
+      const retriedIds = new Set(failed.map((chapter) => chapter.id));
       const merged: IPendingImport = {
         ...current,
         items: Array.from(itemByParagraph.values()),
         unmapped: [...current.unmapped, ...result.unmapped],
-        failedChapters: result.failed,
+        // Info: (20260826 - Luphia) 只換這次重試過的那幾章，其餘原樣留著
+        failedChapters: [
+          ...current.failedChapters.filter(
+            (chapter) => !retriedIds.has(chapter.id),
+          ),
+          ...result.failed,
+        ],
+        pausedChapters: [
+          ...(current.pausedChapters ?? []).filter(
+            (chapter) => !retriedIds.has(chapter.id),
+          ),
+          ...result.pausedChapters,
+        ],
+        pausedUnits: [
+          ...(current.pausedUnits ?? []).filter(
+            (unit) => !retriedIds.has(unit.chapterId),
+          ),
+          ...result.remainingUnits,
+        ],
+        // Info: (20260826 - Luphia) 這一趟撞牆就記下原因；沒撞就沿用原本的狀態
+        pauseReason: result.pausedBy ?? current.pauseReason ?? null,
       };
       setPendingImportFor(originSessionId, merged);
       void persistPendingImport(
@@ -2970,6 +3024,20 @@ export const useCarbonChat = () => {
         importActivitiesRef.current,
         lastPageIndexRef.current,
       );
+      /**
+       * Info: (20260826 - Luphia) 書籤要跟著更新（自我 review 第五輪）。
+       *
+       * 先前只有主流程寫書籤，於是重試或接續之後伺服器仍以為那份匯入
+       * 停在原地：掃描行程每 5 分鐘照樣評估一次已經跑完的任務，
+       * 而 `GET /user/job` 會回報一個實際上已完成的「未完成任務」。
+       */
+      void saveImportJobBookmark({
+        pauseReason: merged.pauseReason ?? null,
+        totalUnits: merged.pausedUnits?.length ?? 0,
+        completedUnits: 0,
+        failedUnits: merged.failedChapters.length,
+        remainingUnits: merged.pausedUnits ?? [],
+      });
     } catch (error) {
       // Info: (20260806 - Tzuhan) 原本沒有 catch:重試整批拋錯時提示會卡在 loading 不散
       console.error("[carbon-chat] retry failed chapters failed:", error);
@@ -2988,6 +3056,7 @@ export const useCarbonChat = () => {
     isRetryingImport,
     setPendingImportFor,
     persistPendingImport,
+    saveImportJobBookmark,
     t,
   ]);
 
@@ -3066,6 +3135,14 @@ export const useCarbonChat = () => {
         importActivitiesRef.current,
         lastPageIndexRef.current,
       );
+      // Info: (20260826 - Luphia) 書籤跟著更新（理由同 retryFailedImportChapters）
+      void saveImportJobBookmark({
+        pauseReason: result.pausedBy,
+        totalUnits: units.length,
+        completedUnits: units.length - result.remainingUnits.length,
+        failedUnits: result.failed.length,
+        remainingUnits: result.remainingUnits,
+      });
     } catch (error) {
       console.error("[carbon-chat] resume paused chapters failed:", error);
       notify({ type: "error", text: t("carbon_chatbot.import_failed") });
@@ -3082,6 +3159,7 @@ export const useCarbonChat = () => {
     isRetryingImport,
     setPendingImportFor,
     persistPendingImport,
+    saveImportJobBookmark,
     t,
   ]);
 

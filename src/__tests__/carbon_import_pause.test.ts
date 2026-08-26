@@ -243,6 +243,90 @@ describe("暫停單元收斂成章", () => {
 });
 
 /**
+ * Info: (20260826 - Luphia) 第五輪自我 review 抓到的四項（都在同一條主線上）。
+ *
+ * 前三項的共同形狀是：**修好了「暫停」這個狀態，但沒有把它接到所有出入口**。
+ * 第四項是 `nextStepCost` 拿不到值，而那讓整套「額度回來就翻成可以繼續」
+ * 在常態路徑上是死的——最像修好了卻沒有作用的那一種。
+ */
+describe("暫停狀態的其他出入口", () => {
+  const hook = readFileSync(
+    join(process.cwd(), "src", "hooks", "use_carbon_chat.ts"),
+    "utf8",
+  );
+  const scopeOf = (fnName: string, nextFn: string) => {
+    const start = hook.indexOf(fnName);
+    expect(start).toBeGreaterThan(-1);
+    const end = hook.indexOf(nextFn, start);
+    return hook.slice(start, end > start ? end : start + 4000);
+  };
+
+  /**
+   * Info: (20260826 - Luphia) 額度見底時按「重試失敗章節」：`result.failed` 是空的
+   *（暫停不進 failed），先前整批取代之後那幾章從畫面上**消失**——
+   * 既不在失敗清單也不在暫停清單，使用者同時失去資訊與重試入口。
+   */
+  it("重試時撞到點數用完，章節不會從畫面上消失", () => {
+    const scope = scopeOf(
+      "const retryFailedImportChapters",
+      "const resumePausedImportChapters",
+    );
+    // Info: (20260826 - Luphia) 不准整批取代
+    expect(scope).not.toContain("failedChapters: result.failed,");
+    expect(scope).toContain("pausedChapters: [");
+    expect(scope).toContain("pausedUnits: [");
+    expect(scope).toContain(
+      "pauseReason: result.pausedBy ?? current.pauseReason",
+    );
+  });
+
+  /**
+   * Info: (20260826 - Luphia) 重試與接續之後書籤要更新，否則伺服器永遠以為
+   * 那份匯入停在原地：掃描行程每 5 分鐘評估一次已經跑完的任務，
+   * 而 `GET /user/job` 會回報一個實際上已完成的「未完成任務」。
+   */
+  it("重試與接續都會更新書籤", () => {
+    expect(
+      scopeOf(
+        "const retryFailedImportChapters",
+        "const resumePausedImportChapters",
+      ),
+    ).toContain("saveImportJobBookmark({");
+    expect(
+      scopeOf("const resumePausedImportChapters", "const toggleImportItem"),
+    ).toContain("saveImportJobBookmark({");
+  });
+
+  /**
+   * Info: (20260826 - Luphia) 成本要用**原始 File** 的大小。
+   *
+   * 附件上傳成功就會有 cid，而那時 `importSource.file` 被刻意設為 null
+   * 讓瀏覽器回收大檔——也就是**常態路徑**拿不到大小。少了它，
+   * 書籤的 `nextStepCost` 是 null，掃描行程只能算進 `unknown`，
+   * 於是「額度回來就翻成可以繼續」永遠不會發生。
+   */
+  it("下一步成本用原始 File 的大小，不是可能為 null 的那份", () => {
+    expect(hook).toContain("nextStepInputChars: file.size");
+    expect(hook).not.toContain("nextStepInputChars: importSource.file?.size");
+  });
+
+  /**
+   * Info: (20260826 - Luphia) 小型文字檔是**單發**呼叫，402 直接拋到外層 catch，
+   * 而那裡說的是「匯入失敗」。同一份檔案改天點數夠了就會成功，
+   * 而那句話會讓使用者去改檔案。
+   */
+  it("單發匯入撞到點數用完時說對原因", () => {
+    const start = hook.indexOf(
+      'console.error("[carbon-chat] report import failed:',
+    );
+    expect(start).toBeGreaterThan(-1);
+    const scope = hook.slice(start, start + 800);
+    expect(scope).toContain("resolveCreditPauseReason(error) !== null");
+    expect(scope).toContain("carbon_chatbot.team_quota_exceeded");
+  });
+});
+
+/**
  * Info: (20260825 - Luphia) 草稿補齊路徑的同一類缺陷（PR #6716 相容性檢視時發現）。
  *
  * 匯入迴圈把點數用完講成「章節解析失敗」；**單獨按某一節的「生成草稿」也是**——
