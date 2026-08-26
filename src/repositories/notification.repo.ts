@@ -122,6 +122,61 @@ export class NotificationRepository {
   }
 
   /**
+   * Info: (20260826 - Julian) 事件型歷史的**分頁**查詢（`/user/notifications` 頁面）。
+   *
+   * 與 `listRecentExcludingTypes` 的差別是「有沒有終點」：那一支服務的是鈴鐺，
+   * 只要最新的 N 則、用多取一則判斷還有沒有；這一支服務的是完整清單，
+   * 呼叫端要能畫出頁碼，因此需要總數（見 `countHistory`）。
+   *
+   * 沒有把 `skip` 加進舊那支再共用：`take: limit + 1` 的「多取一則」與
+   * `skip` 一起用時，最後一頁的 hasMore 會與總數算出來的頁數對不上，
+   * 而兩個都在畫面上的話，使用者看得到它們互相矛盾。
+   *
+   * 排序給了第二個鍵 `id`：`createdAt` 在同一毫秒內可以重複（腳本造資料、
+   * 同一批 worker 寫入時很常見），而只有單鍵時 Postgres 對相同值的排列
+   * **不保證跨查詢穩定** —— 症狀是翻頁時某一則出現兩次、另一則從未出現，
+   * 而且只在資料剛好撞毫秒時發生。
+   */
+  async listHistoryPage(
+    userId: string,
+    excludeTypes: readonly string[],
+    skip: number,
+    take: number,
+  ): Promise<Notification[]> {
+    return prisma.notification.findMany({
+      where: {
+        userId,
+        ...(excludeTypes.length > 0
+          ? { type: { notIn: [...excludeTypes] } }
+          : {}),
+      },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      skip,
+      take,
+    });
+  }
+
+  /**
+   * Info: (20260826 - Julian) 事件型歷史的總數（頁碼用）。
+   *
+   * 條件必須與 `listHistoryPage` 完全一致 —— 兩邊的 `where` 分岔的話，
+   * 頁數會指向一頁空的清單，而那看起來像「通知不見了」。
+   */
+  async countHistory(
+    userId: string,
+    excludeTypes: readonly string[],
+  ): Promise<number> {
+    return prisma.notification.count({
+      where: {
+        userId,
+        ...(excludeTypes.length > 0
+          ? { type: { notIn: [...excludeTypes] } }
+          : {}),
+      },
+    });
+  }
+
+  /**
    * Info: (20260825 - Julian) 把**單獨一則**標為已讀。
    *
    * 三個條件缺一不可，而每一個都對應一種真實的失效：

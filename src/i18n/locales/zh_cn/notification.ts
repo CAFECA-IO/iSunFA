@@ -12,6 +12,19 @@ export const notification = {
   analysis_completed_named: "「{{title}}」分析已完成，点击查看结果",
   analysis_failed_named: "「{{title}}」分析失败了，请重新送出或联系客服",
   unread: "未读",
-  has_more_completed: "还有更多未读通知",
+  /**
+   * Info: (20260826 - Julian) 由 `has_more_completed` 改名而來。
+   *
+   * 舊鍵是「還有更多未讀通知」，而面板改成保留已讀之後，那個旗標的意思
+   * 變成「歷史超過上限」——於是它會在一個未讀只有 2 則的畫面上宣稱
+   * 還有更多未讀，與徽章互相矛盾。改鍵名而不是只改字串：舊鍵留著的話，
+   * 沒改到的語系會靜默沿用假話，而改名會讓 `tsc` 直接指出漏掉的那一個。
+   */
+  history_capped: "仅显示最近 {{count}} 则",
+  view_all: "查看全部通知",
+  page_title: "通知",
+  history_title: "历史通知",
+  history_empty: "还没有任何工作完成或失败的通知",
+  total_items: "共 {{count}} 则",
   view: "查看",
 };

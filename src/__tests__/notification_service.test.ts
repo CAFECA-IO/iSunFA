@@ -6,6 +6,7 @@ import {
   dismissWalletUpgrade,
   getNotificationSummary,
   listUsersWithPendingWalletUpgrade,
+  listNotificationHistory,
   listNotifications,
   markNotificationRead,
   markNotificationsRead,
@@ -16,6 +17,7 @@ import { notificationRepo } from "@/repositories/notification.repo";
 import { listPendingInvitationsForUser } from "@/services/team_invitation.service";
 import {
   NOTIFICATION_HISTORY_LIMIT,
+  NOTIFICATION_PAGE_SIZE_MAX,
   NOTIFICATION_TYPE,
 } from "@/constants/notification";
 
@@ -156,6 +158,42 @@ jest.mock("@/repositories/notification.repo", () => {
             hasMore: matched.length > limit,
           };
         },
+      ),
+
+      /**
+       * Info: (20260826 - Julian) 分頁歷史：`skip` / `take` 真的套用。
+       *
+       * 排序條件與 `listRecentExcludingTypes` 相同（含已讀），因為真的那支
+       * 也是同一組 —— 替身在這裡走樣的話，「頁面看得到已讀、鈴鐺看不到」
+       * 這種分岔會被替身掩蓋掉。
+       */
+      listHistoryPage: jest.fn(
+        async (
+          userId: string,
+          excludeTypes: readonly string[],
+          skip: number,
+          take: number,
+        ) =>
+          rows
+            .filter(
+              (row) =>
+                row.userId === userId && !excludeTypes.includes(row.type),
+            )
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+            .slice(skip, skip + take),
+      ),
+
+      /**
+       * Info: (20260826 - Julian) 總數從**同一份 rows、同一組條件**算。
+       *
+       * 寫死一個數字的話，「count 與 list 的 where 分岔」正好是這個替身
+       * 該幫忙抓、卻反而會掩蓋的那一種錯 —— 而它的症狀是頁碼指向一頁空清單。
+       */
+      countHistory: jest.fn(
+        async (userId: string, excludeTypes: readonly string[]) =>
+          rows.filter(
+            (row) => row.userId === userId && !excludeTypes.includes(row.type),
+          ).length,
       ),
 
       // Info: (20260825 - Julian) 四個條件全都真的套用（少一個就是一種真實的失效）
@@ -813,5 +851,155 @@ describe("錢包升級待辦的發送", () => {
     await expect(
       notifyWalletUpgradeRequested({ userId: USER }),
     ).rejects.toThrow("db down");
+  });
+});
+
+/**
+ * Info: (20260826 - Julian) 分頁歷史。
+ *
+ * 這一組驗的全部是 **service 自己的**判斷 —— repo 只負責 `skip` / `take`，
+ * 而「第幾頁」「一頁幾則」怎麼算在這裡。e2e（`notification_repo.e2e.test.ts`）
+ * 驗的是另一半：真 Prisma 的排序與 `where` 一致性。
+ */
+describe("分頁歷史", () => {
+  const seedHistory = (count: number) => {
+    fakeRepo.__seed(
+      Array.from({ length: count }, (unused, index) =>
+        row({
+          id: `h-${index}`,
+          createdAt: new Date(NOW_MS - index * 1000),
+        }),
+      ),
+    );
+  };
+
+  it("回的是那一頁的內容，且總數與頁數對得上", async () => {
+    seedHistory(25);
+
+    const page = await listNotificationHistory({
+      userId: USER,
+      page: 2,
+      limit: 10,
+    });
+
+    expect(page.totalItems).toBe(25);
+    expect(page.totalPages).toBe(3);
+    expect(page.currentPage).toBe(2);
+    expect(page.items.map((item) => item.id)).toEqual(
+      Array.from({ length: 10 }, (unused, index) => `h-${index + 10}`),
+    );
+  });
+
+  /**
+   * Info: (20260826 - Julian) 超出範圍夾回最後一頁，而不是回一頁空的。
+   *
+   * `?page=99` 會從書籤進來，也會在「讀掉幾則之後總數變少」時出現。
+   * 兩種情形回一片空白都像是通知不見了，而正確答案就在手上。
+   */
+  it("頁碼超出範圍時夾回最後一頁，並如實回報夾到哪裡", async () => {
+    seedHistory(25);
+
+    const page = await listNotificationHistory({
+      userId: USER,
+      page: 99,
+      limit: 10,
+    });
+
+    expect(page.currentPage).toBe(3);
+    expect(page.items).toHaveLength(5);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 上限在 service 也夾一次。
+   *
+   * 端點的 `parsePositiveInt` 已經夾過，但那是呼叫端的防線 —— 下一個呼叫
+   * 這支函式的人（腳本、另一支端點）不會經過它。斷言的是**筆數**而不是
+   * 「有沒有呼叫 repo」：後者在 `take` 被原樣傳下去時照樣是綠的。
+   */
+  it("limit 超過上限時夾到上限（不是把整張表撈回來）", async () => {
+    seedHistory(150);
+
+    const page = await listNotificationHistory({
+      userId: USER,
+      page: 1,
+      limit: 100_000,
+    });
+
+    expect(page.items).toHaveLength(NOTIFICATION_PAGE_SIZE_MAX);
+    expect(page.totalItems).toBe(150);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 待辦型不在歷史裡（它是活的狀態，不是紀錄）。
+   *
+   * 少了這條排除，錢包升級待辦會出現在歷史頁上，而使用者點它就是
+   * 一則永遠標不掉的通知 —— `markReadById` 對待辦型回 0（D1）。
+   */
+  it("排除待辦型", async () => {
+    fakeRepo.__seed([
+      row({ id: "done" }),
+      row({ id: "todo", type: NOTIFICATION_TYPE.WALLET_UPGRADE }),
+    ]);
+
+    const page = await listNotificationHistory({
+      userId: USER,
+      page: 1,
+      limit: 10,
+    });
+
+    expect(page.items.map((item) => item.id)).toEqual(["done"]);
+    expect(page.totalItems).toBe(1);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 已讀的照樣在歷史裡 —— 那正是這個頁面的用途。
+   *
+   * 這一條與「鈴鐺面板保留已讀」是同一個需求的兩半，而它們走不同的查詢，
+   * 所以要各自釘住。
+   */
+  it("已讀的仍然算進歷史", async () => {
+    fakeRepo.__seed([row({ id: "read", readAt: new Date(NOW_MS) })]);
+
+    const page = await listNotificationHistory({
+      userId: USER,
+      page: 1,
+      limit: 10,
+    });
+
+    expect(page.totalItems).toBe(1);
+    expect(page.items[0]?.readAt).toBe(NOW_MS);
+  });
+
+  // Info: (20260826 - Julian) 空的時候頁數是 1，不是 0（分頁元件吃的是 >= 1）
+  it("沒有任何歷史時 totalPages 是 1", async () => {
+    const page = await listNotificationHistory({
+      userId: USER,
+      page: 1,
+      limit: 10,
+    });
+
+    expect(page).toMatchObject({
+      totalItems: 0,
+      totalPages: 1,
+      currentPage: 1,
+    });
+    expect(page.items).toEqual([]);
+  });
+
+  // Info: (20260826 - Julian) 跨租戶：別人的歷史一則都不能算進來
+  it("只算自己的", async () => {
+    fakeRepo.__seed([
+      row({ id: "mine" }),
+      row({ id: "theirs", userId: "user-2" }),
+    ]);
+
+    const page = await listNotificationHistory({
+      userId: USER,
+      page: 1,
+      limit: 10,
+    });
+
+    expect(page.items.map((item) => item.id)).toEqual(["mine"]);
+    expect(page.totalItems).toBe(1);
   });
 });

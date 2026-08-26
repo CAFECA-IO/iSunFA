@@ -88,6 +88,14 @@ const listHandlers = (): IHandler[] => {
 const EXPECTED_BUCKET: Record<string, Record<string, RateLimitBucketEnum>> = {
   "route.ts": { GET: RateLimitBucketEnum.NOTIFICATION_READ },
   "summary/route.ts": { GET: RateLimitBucketEnum.NOTIFICATION_READ },
+  /**
+   * Info: (20260826 - Julian) 分頁歷史（`/user/notifications` 頁面）走 `READ`。
+   *
+   * 與 summary 同桶是對的：它雖然是「進頁面時取一次」的形狀，
+   * 但翻頁就是一次請求，而 30 次/分足夠人手翻頁，也擋得住腳本
+   * 一頁一頁把整張表抓走。
+   */
+  "history/route.ts": { GET: RateLimitBucketEnum.NOTIFICATION_READ },
   "read/route.ts": { POST: RateLimitBucketEnum.NOTIFICATION_WRITE },
   /**
    * Info: (20260825 - Julian) 逐則已讀也走 `WRITE`，而且它比全部已讀更需要。
@@ -151,7 +159,7 @@ describe("小鈴鐺端點的限流覆蓋率", () => {
       const identityAt = handler.body.indexOf("getIdentityFromDeWT(");
       const limitAt = handler.body.indexOf("enforceRateLimit(");
       const serviceAt = handler.body.search(
-        /(getNotificationSummary|listNotifications|markNotificationsRead|markNotificationRead)\(/,
+        /(getNotificationSummary|listNotificationHistory|listNotifications|markNotificationsRead|markNotificationRead)\(/,
       );
       if (identityAt === -1 || serviceAt === -1) return [];
       return identityAt < limitAt && limitAt < serviceAt
@@ -169,7 +177,7 @@ describe("小鈴鐺端點的限流覆蓋率", () => {
         (handler) =>
           !handler.body.includes("getIdentityFromDeWT(") ||
           handler.body.search(
-            /(getNotificationSummary|listNotifications|markNotificationsRead|markNotificationRead)\(/,
+            /(getNotificationSummary|listNotificationHistory|listNotifications|markNotificationsRead|markNotificationRead)\(/,
           ) === -1,
       )
       .map((handler) => `${handler.file}:${handler.method}`);

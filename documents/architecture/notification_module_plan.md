@@ -14,9 +14,9 @@
 | Schema | `prisma/schema.prisma` — `model Notification`（一張表、零 enum） |
 | 常數 | `src/constants/notification.ts` — 型別、待辦型清單、上限、dedupe 前綴、樣式與去處查表 |
 | Repository | `src/repositories/notification.repo.ts` — 唯一碰 Prisma 的層 |
-| Service | `src/services/notification.service.ts` — 摘要、清單、已讀、四支發射函式 |
-| API | `/api/v1/user/notifications`（GET 清單）、`/summary`（GET）、`/read`（POST 全部）、`/{id}/read`（POST 逐則） |
-| 前端 | `notification_bell.tsx`（渲染與接線）、`use_notification_summary.ts`（輪詢）、`notification_sound.ts`（出聲判斷） |
+| Service | `src/services/notification.service.ts` — 摘要、清單、分頁歷史、已讀、四支發射函式 |
+| API | `/api/v1/user/notifications`（GET 清單）、`/summary`（GET）、`/history`（GET 分頁）、`/read`（POST 全部）、`/{id}/read`（POST 逐則） |
+| 前端 | `notification_bell.tsx`（面板）、`app/user/notifications/page.tsx`（完整清單）、`notification/notification_row.tsx`（**兩者共用的列**）、`use_notification_summary.ts`（輪詢）、`notification_sound.ts`（出聲判斷） |
 | 發射點 | `issue.recorder.service.ts`（分析完成／失敗／放棄）、`scripts/request_wallet_upgrades.ts`（錢包升級待辦） |
 | i18n | `src/i18n/locales/{en,ja,ko,zh_cn,zh_tw}/notification.ts` |
 
@@ -24,6 +24,8 @@
 
 - **待辦型**：團隊邀請（**活算不入庫** —— 邀請被接受／撤回／過期時通知必須同步消失）、錢包升級（入庫，由探針轉 true 收掉）
 - **事件型**：分析完成／失敗。入庫，點擊該則才算已讀，已讀後留在清單裡供翻閱
+
+面板只帶回最近 30 則，超過的部分在 `/user/notifications` 分頁翻閱；面板底部的連結常駐（只在被截斷時才出現的話，這個頁面就只有通知滿 30 則的人發現得了）。兩個畫面的每一列都經過 `notification_row.tsx`：文案、圖示、去處、未讀紅點只有那一個檔案說得算，`notification_bell_wiring.test.ts` 以「消費端不得出現 `NOTIFICATION_TYPE_STYLE` 等符號」把這件事釘住。
 
 團隊邀請的活算來源是 `team_invitation.service.ts` 的 `listPendingInvitationsForUser`，**小鈴鐺與團隊頁共用同一支** —— 鈴鐺上那則通知點下去正是導到團隊頁，兩邊各查一次的話，症狀會是「通知說有一封邀請，點進去那一頁說沒有」。它同時吃兩條路徑：`inviteeAddress` 相符，或 `inviteeEmailKey` 屬於使用者**已驗證**的信箱。
 
@@ -54,10 +56,15 @@
 | D17 | 提示音第二次抵達起永久失效 | 抵達識別值改用伺服器端最新未讀時間 —— 完整理由見 **ADR 025 §7.1** |
 | D18 | 上鏈提交被拒 3 次寫下 `giveup.md` 後，訂單卡在非終態，完成與失敗都不通知 | `IssueRecorder` 也掃 `giveup.md`：標 FAILED 並通知。修在這裡是因為它是全站唯一寫入訂單終態的地方 |
 | D19 | 邀請通知只認 `inviteeAddress`，而 email 邀請那一欄是 NULL —— 已註冊的人被 email 邀請時，**鈴鐺與團隊頁都完全看不到**，而 `TEAM_INVITATION` 一直被列為已支援的型別 | `TeamInvitation.inviteeEmailKey`（canonical、索引）+ 查詢改成位址 **OR** 已驗證信箱。兩個消費者收斂到 `listPendingInvitationsForUser` |
+| D20 | 面板底部「還有更多**未讀**通知」是一句假話，而且沒有出口 —— 清單改成含已讀之後，該旗標的意思已變成「歷史超過 30 則」，於是它會在未讀只有 2 則的畫面上宣稱還有更多未讀，與兩公分外的徽章直接矛盾 | 鍵改名 `has_more_completed` → `history_capped`（「僅顯示最近 N 則」，恆真）；底部加常駐連結通往新的 `/user/notifications` 分頁清單 |
 
 **D17、D18、D19 的共通點值得記著**：三者都躲過了單元測試、e2e 與整份 code review。D17 的失效沒有任何觀測量（搖動照舊、徽章照舊、log 乾淨，唯一症狀是「聽不到聲音」）；D18 與 D19 的失效是「什麼都沒發生」，而沒有人會抱怨一件他不知道應該發生的事。
 
 D19 還多一層：`TEAM_INVITATION` 從第一天就在型別清單、有文案、有去處、有測試，**看起來完全支援** —— 只是那些測試餵給替身的都是位址邀請。「這個型別支援了嗎」的答案是「一半」，而沒有任何地方寫著是哪一半。**三者都是在有人逐條追問接線時才浮出來的。**
+
+**D20 是另一種形狀，值得單獨記**：它不是漏了什麼，是**一句話的意思在它腳下被改掉了**。`hasMoreCompleted` 這個旗標本身從頭到尾都算得對，改的是它的來源查詢（只撈未讀 → 含已讀），而綁在它上面的那句文案沒有人想起要跟著改。五個語系、五份假話，`tsc` 與 `lint` 都不會有意見，既有測試只驗「這個鍵存在」。
+
+可推廣的判準：**改一支查詢的語意時，要一併找出所有「解釋」那支查詢結果的文案**。程式碼的呼叫端編譯器找得到，文案的呼叫端找不到。
 
 ---
 
@@ -116,10 +123,11 @@ HR 引入的是**第一個 fan-out 情境**，而那會把兩樣東西要回來�
 1. **rebase 最新 `develop`** —— 落後 133 個 commit，拖越久衝突越多。`coding_guidelines §4.1` 要求發 MR 前在本地解完。這是剩下工作裡風險最高的一項。
 2. **`forge_out` 的移除要 amend／rebase 進 `74efaee02`** —— `git show --stat 74efaee02` 仍有 130 項，那 95k 行還在歷史裡。
 3. **在 staging 跑一個真的分析**（完成與失敗各一次）—— 見 §6.1。
-4. **產品決策未收** —— 需求寫「展開側邊欄」而實作是桌機下拉／手機全螢幕，算不算收斂？鈴鐺該不該出現在薪資計算機頁？
+4. **產品決策未收** —— 需求寫「展開側邊欄」而實作是桌機下拉／手機全螢幕，算不算收斂？鈴鐺該不該出現在薪資計算機頁？（20260826 補：完整清單已獨立成 `/user/notifications`，「面板放不下」這一半的壓力已經卸掉，剩下的是面板形式本身。）
 5. **五語系文案沒有母語者複核** —— 驗收只驗了「有沒有值」，沒驗通不通順。
 6. **無障礙未驗** —— focus trap、Esc、螢幕閱讀器對徽章數字的朗讀。
-7. **效能沒有量過** —— 每 60 秒 × 在線人數 = 兩趟 DB。D17 的修法刻意沒有讓它變成三趟。
+7. **效能沒有量過** —— 每 60 秒 × 在線人數 = 兩趟 DB。D17 的修法刻意沒有讓它變成三趟。分頁歷史另開一支端點也是同一條考量：`count()` 只由真的要翻頁的人付。
+8. **`/user/notifications` 尚未瀏覽器驗收** —— 翻頁、頁碼夾回最後一頁、待辦區與歷史區同時有資料、空狀態、時間戳格式。同一批未驗的還有未讀紅點、逐則已讀、綠色完成圖示與邀請通知（都是 20260825 之後改的）。
 
 ### 6.1 手動驗收：15 項過 13 項，剩下兩項為什麼非 staging 不可
 

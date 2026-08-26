@@ -307,11 +307,21 @@ describe("來源與畫面的接線（掃描）", () => {
         "wallet_upgrade",
         "analysis_completed",
         "analysis_failed",
-        "has_more_completed",
         // Info: (20260825 - Julian) 帶報告名稱的版本，與未讀紅點的讀屏文字
         "analysis_completed_named",
         "analysis_failed_named",
         "unread",
+        /**
+         * Info: (20260826 - Julian) `has_more_completed` 改名為 `history_capped`
+         * （舊鍵說「還有更多未讀」，但旗標的意思是「歷史超過上限」）。
+         * 以下四個是 `/user/notifications` 頁面新增的。
+         */
+        "history_capped",
+        "view_all",
+        "page_title",
+        "history_title",
+        "history_empty",
+        "total_items",
       ].forEach((key) => {
         expect(dictionary).toMatch(new RegExp(`\\b${key}:`));
       });
@@ -361,7 +371,88 @@ describe("來源與畫面的接線（掃描）", () => {
 
     expect(bell).not.toMatch(/notifications\/read/);
     expect(bell).toMatch(/notifications\/\$\{item\.id\}\/read/);
-    // Info: (20260825 - Julian) 已讀的要留著，所以紅點靠 readAt 判斷
-    expect(bell).toMatch(/readAt === null/);
+
+    /**
+     * Info: (20260826 - Julian) 已讀的不再送第二次請求。
+     *
+     * 少了這道早退，翻歷史時每點一則已讀的通知都是一次 `POST`，
+     * 而那支端點的桶是 20 次/分 —— 使用者會被自己的瀏覽行為限流。
+     *
+     * 紅點怎麼畫的那一條搬到下面的「通知列只有一份實作」：
+     * 那段渲染已經移進 `notification_row.tsx`，繼續在這裡比對鈴鐺的原始碼
+     * 只會驗到一個已經不在這個檔案裡的東西 —— 也就是永遠紅，或者被刪掉。
+     */
+    expect(bell).toMatch(/readAt !== null/);
+  });
+});
+
+/**
+ * Info: (20260826 - Julian) 一則通知怎麼畫，只能有一個地方說得算。
+ *
+ * `/user/notifications` 頁面與鈴鐺畫的是同一種東西。頁面出現時最省事的做法
+ * 是把鈴鐺那 90 行（文案、報告名稱、圖示查表、去處、未讀紅點）複製一份，
+ * 而複製的兩份會分岔 —— 分岔的形狀是「面板上有報告名稱、頁面上是一句通用的話」，
+ * 沒有任何既有測試會紅，也沒有人會回頭同步。
+ *
+ * 這一組把「共用」釘住：兩個消費者都必須經過 `NotificationRow`，
+ * 而決定文案與樣式的那些符號只准出現在那個檔案裡。
+ */
+describe("通知列只有一份實作", () => {
+  const ROW = ["src", "components", "notification", "notification_row.tsx"];
+  const BELL = ["src", "components", "header", "notification_bell.tsx"];
+  const PAGE = ["src", "app", "user", "notifications", "page.tsx"];
+
+  it("鈴鐺與頁面都用 NotificationRow 畫每一列", () => {
+    for (const consumer of [BELL, PAGE]) {
+      const code = codeOf(...consumer);
+      expect(code).toMatch(
+        /from "@\/components\/notification\/notification_row"/,
+      );
+      expect(code).toMatch(/<NotificationRow/);
+    }
+  });
+
+  /**
+   * Info: (20260826 - Julian) 決定「畫成什麼樣子」的符號只准在共用元件裡。
+   *
+   * 驗**不存在**而不是驗存在：複製一份回去不會刪掉 `NotificationRow` 的
+   * import，所以上一條照樣綠。真正會退化的是「有人在消費端又寫了一次
+   * switch (item.type)」，而那一定會用到這幾個符號。
+   */
+  it.each([
+    ["NOTIFICATION_TYPE_STYLE", "圖示與顏色的查表"],
+    ["NOTIFICATION_LINK_PATH", "點下去的去處"],
+    ["analysis_completed_named", "帶報告名稱的文案"],
+    ["notification.unread", "未讀紅點的讀屏文字"],
+  ])("消費端沒有自己一份 %s（%s）", (symbol) => {
+    for (const consumer of [BELL, PAGE]) {
+      expect(codeOf(...consumer)).not.toContain(symbol);
+    }
+    expect(codeOf(...ROW)).toContain(symbol);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 鈴鐺底部那句話必須有出口。
+   *
+   * 它原本是一句沒有任何操作的「還有更多未讀通知」——使用者看得到一個
+   * 承諾，點不到對應的東西。而那句話在面板改成保留已讀之後連內容都不對了。
+   */
+  /**
+   * Info: (20260826 - Julian) 未讀紅點靠 `readAt` 判斷，而不是靠「在不在清單裡」。
+   *
+   * 清單現在含已讀（要能翻歷史），所以「出現＝未讀」這個舊前提已經不成立。
+   * 這一條原本釘在鈴鐺上，隨那段渲染一起搬過來。
+   */
+  it("紅點的判準在共用元件裡", () => {
+    expect(codeOf(...ROW)).toMatch(/readAt === null/);
+  });
+
+  it("鈴鐺底部有通往完整清單的連結", () => {
+    expect(codeOf(...BELL)).toContain('href="/user/notifications"');
+  });
+
+  // Info: (20260826 - Julian) 頁面真的存在（上面那條連結不是指向 404）
+  it("/user/notifications 頁面存在", () => {
+    expect(codeOf(...PAGE)).toMatch(/export default function/);
   });
 });

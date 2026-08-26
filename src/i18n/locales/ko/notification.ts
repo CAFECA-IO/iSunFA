@@ -11,9 +11,24 @@ export const notification = {
   analysis_failed:
     "분석 작업이 실패했습니다. 다시 제출하거나 고객지원에 문의하세요",
   // Info: (20260825 - Julian) 帶報告名稱的版本；取不到名稱時退回上面那句
-  analysis_completed_named: "「{{title}}」 분석이 완료되었습니다. 클릭하여 결과를 확인하세요",
-  analysis_failed_named: "「{{title}}」 분석에 실패했습니다. 다시 제출하거나 고객센터에 문의하세요",
+  analysis_completed_named:
+    "「{{title}}」 분석이 완료되었습니다. 클릭하여 결과를 확인하세요",
+  analysis_failed_named:
+    "「{{title}}」 분석에 실패했습니다. 다시 제출하거나 고객센터에 문의하세요",
   unread: "읽지 않음",
-  has_more_completed: "읽지 않은 알림이 더 있습니다",
+  /**
+   * Info: (20260826 - Julian) 由 `has_more_completed` 改名而來。
+   *
+   * 舊鍵是「還有更多未讀通知」，而面板改成保留已讀之後，那個旗標的意思
+   * 變成「歷史超過上限」——於是它會在一個未讀只有 2 則的畫面上宣稱
+   * 還有更多未讀，與徽章互相矛盾。改鍵名而不是只改字串：舊鍵留著的話，
+   * 沒改到的語系會靜默沿用假話，而改名會讓 `tsc` 直接指出漏掉的那一個。
+   */
+  history_capped: "최근 {{count}}건만 표시합니다",
+  view_all: "전체 알림 보기",
+  page_title: "알림",
+  history_title: "기록",
+  history_empty: "완료 또는 실패한 작업 알림이 아직 없습니다",
+  total_items: "총 {{count}}건",
   view: "보기",
 };

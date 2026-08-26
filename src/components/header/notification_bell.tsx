@@ -2,14 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  AlertTriangle,
-  Bell,
-  CheckCircle2,
-  Mail,
-  Wallet,
-  X,
-} from "lucide-react";
+import { Bell, X } from "lucide-react";
 import {
   Popover,
   PopoverButton,
@@ -22,12 +15,12 @@ import { request } from "@/lib/utils/request";
 import { HTTP_METHOD } from "@/constants/http";
 import { useNotificationSummary } from "@/hooks/use_notification_summary";
 import {
-  NOTIFICATION_LINK_PATH,
+  NOTIFICATION_HISTORY_LIMIT,
   NOTIFICATION_SUMMARY_TOAST_MS,
-  NOTIFICATION_TYPE,
-  NOTIFICATION_TYPE_STYLE,
-  NotificationType,
 } from "@/constants/notification";
+import NotificationRow, {
+  INotificationRowItem,
+} from "@/components/notification/notification_row";
 
 /**
  * Info: (20260821 - Luphia) 小鈴鐺（ADR 021 補充）。
@@ -52,14 +45,11 @@ import {
  * 而那擋不住「把 playChime 搬出 if」這種變異。這裡只剩渲染與接線。
  */
 
-interface IItem {
-  id: string;
-  type: string;
-  payload: Record<string, unknown>;
-  createdAt: number;
-  // Info: (20260825 - Julian) 未讀是 null；畫面用它決定要不要點紅點
-  readAt: number | null;
-}
+/**
+ * Info: (20260826 - Julian) 列的形狀由共用元件定義，這裡只取別名。
+ * 各寫一份的話，加一個欄位就會有一邊漏掉，而 `tsc` 只在傳遞處才會抱怨。
+ */
+type IItem = INotificationRowItem;
 
 interface IList {
   todos: IItem[];
@@ -70,14 +60,6 @@ interface IList {
    */
   hasMoreCompleted: boolean;
 }
-
-// Info: (20260825 - Julian) icon 的查表：樣式決定在常數層，元件只負責畫
-const ICON_BY_KEY = {
-  mail: Mail,
-  wallet: Wallet,
-  check: CheckCircle2,
-  alert: AlertTriangle,
-} as const;
 
 const SUMMARY_SHOWN_KEY = "notification-summary-shown";
 
@@ -219,119 +201,17 @@ export default function NotificationBell() {
     (summary?.todoCount ?? 0) + (summary?.completedCount ?? 0);
 
   /**
-   * Info: (20260825 - Julian) 每一種通知的文案（計畫書 D11）。
+   * Info: (20260826 - Julian) 一則怎麼畫由 `NotificationRow` 決定（共用元件）。
    *
-   * 未知型別回 `null` 而不是落到「分析已完成」那一支 —— 原本的 fallback
-   * 會把任何新增的型別渲染成一句錯的話，而新增型別的人不會發現。
+   * 文案、圖示、去處、未讀紅點原本都寫在這個檔案裡，而 `/user/notifications`
+   * 頁面要畫的是同一種東西。留在這裡的話，那一頁只能複製一份，
+   * 而兩份遲早分岔——分岔時沒有任何測試會紅。
+   *
+   * 這裡只保留「點了要做什麼」：面板要改的是自己那份清單與徽章基準線。
    */
-  /**
-   * Info: (20260825 - Julian) 報告類別的中文名，取不到就回空字串。
-   *
-   * 直接複用分析頁那份字典（`analysis.categories.*`），不另外存一份標題進
-   * `payload`：同一個類別在兩個地方各有一份名字，改一邊就會不一致，
-   * 而通知那份沒有人會去看。
-   *
-   * `t()` 找不到鍵時回傳鍵本身，所以要給 `defaultValue` 才分得出
-   * 「沒有這個類別」與「這個類別叫做 `analysis.categories.xxx`」——
-   * 常數層有 `JOURNAL_CORRECTION` 而字典裡是 `journal_upload`，
-   * 這個缺口今天就存在。
-   */
-  const titleOf = (item: IItem): string => {
-    const type = item.payload.analysisType;
-    if (typeof type !== "string" || type === "") return "";
-    return t(`analysis.categories.${type.toLowerCase()}`, {
-      defaultValue: "",
-    });
-  };
-
-  const messageOf = (item: IItem): string | null => {
-    switch (item.type) {
-      case NOTIFICATION_TYPE.TEAM_INVITATION:
-        return t("notification.team_invitation", {
-          inviterName: String(item.payload.inviterName ?? ""),
-          teamName: String(item.payload.teamName ?? ""),
-        });
-      case NOTIFICATION_TYPE.WALLET_UPGRADE:
-        return t("notification.wallet_upgrade");
-      /**
-       * Info: (20260825 - Julian) 帶上報告名稱，取不到才退回原本那句。
-       *
-       * 同時跑三份分析時，三則「你的分析工作已完成」在畫面上完全一樣，
-       * 使用者分不出哪則對應哪份報告 —— 而點進去只會落在同一個歷史清單。
-       */
-      case NOTIFICATION_TYPE.ANALYSIS_COMPLETED: {
-        const title = titleOf(item);
-        return title
-          ? t("notification.analysis_completed_named", { title })
-          : t("notification.analysis_completed");
-      }
-      case NOTIFICATION_TYPE.ANALYSIS_FAILED: {
-        const title = titleOf(item);
-        return title
-          ? t("notification.analysis_failed_named", { title })
-          : t("notification.analysis_failed");
-      }
-      default:
-        return null;
-    }
-  };
-
-  /**
-   * Info: (20260825 - Julian) 樣式與去處都查表（`src/constants/notification.ts`），
-   * 元件不做決定 —— 比照 `movement_alert_badge.tsx` 的既有規則。
-   *
-   * 沒有去處的型別（目前是錢包升級：全站還沒有升級頁面）渲染成不可點的
-   * `<div>`，而不是一個點了沒反應的連結。
-   */
-  const renderItem = (item: IItem) => {
-    const message = messageOf(item);
-    if (message === null) return null;
-
-    const style = NOTIFICATION_TYPE_STYLE[item.type as NotificationType];
-    const Icon = style ? ICON_BY_KEY[style.icon] : Bell;
-    const href = NOTIFICATION_LINK_PATH[item.type as NotificationType] ?? null;
-    const isUnread = item.readAt === null;
-    const body = (
-      <>
-        <Icon
-          className={`mt-0.5 h-4 w-4 shrink-0 ${style?.className ?? "text-text-muted"}`}
-        />
-        <span className="flex-1">{message}</span>
-        {/**
-         * Info: (20260825 - Julian) 未讀紅點。
-         *
-         * 已讀的通知留在清單裡當歷史，所以「新的」需要一個看得出來的記號。
-         * 這裡不改文字顏色或粗細：那會讓已讀的看起來像被停用，
-         * 而它們是完全可用的歷史紀錄。
-         *
-         * `sr-only` 的文字是給讀屏的 —— 一顆純色的點對它是不存在的，
-         * 而「哪幾則是新的」正是這個介面要傳達的資訊。
-         */}
-        {isUnread && (
-          <span className="mt-1.5 flex shrink-0 items-center">
-            <span className="bg-danger block size-2 rounded-full" />
-            <span className="sr-only">{t("notification.unread")}</span>
-          </span>
-        )}
-      </>
-    );
-    const shared = "flex items-start gap-2 rounded-md px-3 py-2 text-sm";
-
-    return href ? (
-      <Link
-        key={item.id}
-        href={href}
-        onClick={() => markOneRead(item)}
-        className={`hover:bg-surface-hover ${shared}`}
-      >
-        {body}
-      </Link>
-    ) : (
-      <div key={item.id} className={shared}>
-        {body}
-      </div>
-    );
-  };
+  const renderItem = (item: IItem) => (
+    <NotificationRow key={item.id} item={item} onRead={markOneRead} />
+  );
 
   return (
     <Popover className="relative">
@@ -429,12 +309,18 @@ export default function NotificationBell() {
                         </div>
                         {list.completed.map(renderItem)}
                         {/**
-                         * Info: (20260825 - Julian) 截斷了就要說出來（計畫書 D4）。
-                         * 不說的話畫面把 20 則讀成全部，而徽章那時說的是 25。
+                         * Info: (20260826 - Julian) 截斷了就要說出來（計畫書 D4）。
+                         *
+                         * 原本這裡寫的是「還有更多**未讀**通知」，而那句話在面板
+                         * 改成保留已讀之後就成了假話：旗標的意思變成「歷史超過 30 則」，
+                         * 於是一個未讀只有 2 則的畫面會宣稱還有更多未讀——
+                         * 與兩公分外的徽章直接矛盾。現在說的是上限本身，那句話恆真。
                          */}
                         {list.hasMoreCompleted && (
-                          <p className="text-text-muted px-3 py-2 text-center text-xs">
-                            {t("notification.has_more_completed")}
+                          <p className="text-text-muted px-3 pt-2 text-center text-xs">
+                            {t("notification.history_capped", {
+                              count: NOTIFICATION_HISTORY_LIMIT,
+                            })}
                           </p>
                         )}
                       </>
@@ -442,6 +328,25 @@ export default function NotificationBell() {
                   </div>
                 )}
               </div>
+
+              {/**
+               * Info: (20260826 - Julian) 通往完整清單的入口，**常駐**。
+               *
+               * 只在被截斷時才出現的話，這個頁面就只有通知滿 30 則的人
+               * 發現得了——而「我上週那份報告跑完了沒」正是通知不多的人
+               * 也會想回頭查的事。
+               *
+               * 放在捲動區之外（`shrink-0`）：面板有 70vh 上限，
+               * 放在裡面的話，通知一多它就被推到看不見的地方，
+               * 而那正是最需要它的時候。
+               */}
+              <Link
+                href="/user/notifications"
+                onClick={() => close()}
+                className="border-border-default text-text-muted hover:bg-surface-hover hover:text-text-primary shrink-0 border-t px-3 py-2 text-center text-xs"
+              >
+                {t("notification.view_all")}
+              </Link>
             </>
           )}
         </PopoverPanel>

@@ -480,3 +480,113 @@ describe("NotificationRepository（真資料庫）", () => {
     expect(theirs.counts.get(NOTIFICATION_TYPE.ANALYSIS_COMPLETED)).toBe(1);
   });
 });
+
+/**
+ * Info: (20260826 - Julian) 分頁歷史（`/user/notifications` 的來源）。
+ *
+ * 這三件事全部只有真 Prisma 答得出來，而假實作裡的 `skip` / `orderBy`
+ * 語意會是我自己寫的（檢查清單 §一.8）：
+ *
+ * 1. `skip` 真的跳過前一頁，而且**沒有重複也沒有遺漏**
+ * 2. `createdAt` 撞毫秒時，第二排序鍵 `id` 讓翻頁穩定
+ * 3. `countHistory` 的 `where` 與 `listHistoryPage` 一致（都排除待辦型）
+ */
+describe("分頁歷史", () => {
+  /**
+   * Info: (20260826 - Julian) 五則**同一毫秒**的通知，外加一則待辦型。
+   *
+   * 刻意全部同時間：單以 `createdAt` 排序時，Postgres 對相同值的排列
+   * 不保證跨查詢穩定 —— 那正是「翻頁時某一則出現兩次、另一則從未出現」
+   * 的成因，而它只在資料撞毫秒時發作。這裡讓它必然發生。
+   */
+  const SAME_MS = new Date(NOW_MS);
+
+  it("翻完所有頁 = 每一則恰好出現一次", async () => {
+    for (let index = 0; index < 5; index += 1) {
+      await seed(
+        NOTIFICATION_TYPE.ANALYSIS_COMPLETED,
+        `page-${index}`,
+        SAME_MS,
+      );
+    }
+    // Info: (20260826 - Julian) 待辦型也放一則：它必須不出現在歷史裡
+    await seed(NOTIFICATION_TYPE.WALLET_UPGRADE, "page-todo", SAME_MS);
+
+    const total = await notificationRepo.countHistory(userId, [
+      NOTIFICATION_TYPE.WALLET_UPGRADE,
+    ]);
+    expect(total).toBe(5);
+
+    const collected: string[] = [];
+    for (let page = 0; page < 3; page += 1) {
+      const rows = await notificationRepo.listHistoryPage(
+        userId,
+        [NOTIFICATION_TYPE.WALLET_UPGRADE],
+        page * 2,
+        2,
+      );
+      collected.push(...rows.map((row) => row.dedupeKey ?? ""));
+    }
+
+    /**
+     * Info: (20260826 - Julian) 比對**集合**而不是筆數。
+     *
+     * `toHaveLength(5)` 在「第 3 則出現兩次、第 4 則從未出現」時照樣是綠的 ——
+     * 而那正是要抓的缺陷（檢查清單：斷言要對得上失效的形狀）。
+     */
+    expect(collected.sort()).toEqual(
+      [0, 1, 2, 3, 4].map((index) => `${KEY_PREFIX}page-${index}`).sort(),
+    );
+  });
+
+  it("countHistory 與 listHistoryPage 用同一組排除條件", async () => {
+    await seed(NOTIFICATION_TYPE.ANALYSIS_COMPLETED, "count-done", SAME_MS);
+    await seed(NOTIFICATION_TYPE.ANALYSIS_FAILED, "count-failed", SAME_MS);
+    await seed(NOTIFICATION_TYPE.WALLET_UPGRADE, "count-todo", SAME_MS);
+
+    const excluded = [NOTIFICATION_TYPE.WALLET_UPGRADE];
+    const total = await notificationRepo.countHistory(userId, excluded);
+    const rows = await notificationRepo.listHistoryPage(
+      userId,
+      excluded,
+      0,
+      100,
+    );
+
+    /**
+     * Info: (20260826 - Julian) 兩支的 `where` 分岔時，頁數會指向一頁空清單 ——
+     * 而那在畫面上看起來像「通知不見了」。
+     */
+    expect(rows).toHaveLength(total);
+    expect(total).toBe(2);
+  });
+
+  it("已讀的歷史照樣算進去（歷史不是未讀清單）", async () => {
+    const row = await seed(
+      NOTIFICATION_TYPE.ANALYSIS_COMPLETED,
+      "read-history",
+      SAME_MS,
+    );
+    expect(
+      await notificationRepo.markReadById(userId, row.id, [], NOW_MS),
+    ).toBe(1);
+
+    expect(await notificationRepo.countHistory(userId, [])).toBe(1);
+    const rows = await notificationRepo.listHistoryPage(userId, [], 0, 10);
+    expect(rows[0]?.readAt).not.toBeNull();
+  });
+
+  it("只看得到自己的歷史", async () => {
+    await seed(NOTIFICATION_TYPE.ANALYSIS_COMPLETED, "iso-mine", SAME_MS);
+    await seed(
+      NOTIFICATION_TYPE.ANALYSIS_COMPLETED,
+      "iso-theirs",
+      SAME_MS,
+      otherUserId,
+    );
+
+    expect(await notificationRepo.countHistory(userId, [])).toBe(1);
+    const rows = await notificationRepo.listHistoryPage(userId, [], 0, 10);
+    expect(rows.map((r) => r.dedupeKey)).toEqual([`${KEY_PREFIX}iso-mine`]);
+  });
+});

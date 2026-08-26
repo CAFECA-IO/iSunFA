@@ -75,6 +75,24 @@ export const NOTIFICATION_SUMMARY_TOAST_MS = 8_000;
 export const NOTIFICATION_HISTORY_LIMIT = 30;
 
 /**
+ * Info: (20260826 - Julian) `/user/notifications` 每頁幾則。
+ *
+ * 與 `NOTIFICATION_HISTORY_LIMIT`（鈴鐺一次帶回 30 則）是兩個不同的數字，
+ * 刻意不共用：鈴鐺的 30 是「往回看多遠」，這裡的 20 是「一頁畫幾列」。
+ * 綁在一起的話，之後想把面板加長就會連帶改變頁面的分頁大小。
+ */
+export const NOTIFICATION_PAGE_SIZE = 20;
+
+/**
+ * Info: (20260826 - Julian) 單頁筆數的硬上限。
+ *
+ * `?limit=` 由查詢字串進來，沒有上限時 `limit=100000` 就是一次把整張表
+ * 撈進記憶體再序列化 —— 而那不需要任何權限，登入就打得到。
+ * 與其他分頁端點的 `max: 100` 同值。
+ */
+export const NOTIFICATION_PAGE_SIZE_MAX = 100;
+
+/**
  * Info: (20260825 - Julian) 待辦型的上限。
  *
  * 待辦型天然有限（一人最多一則錢包升級），但仍然給一個上限：

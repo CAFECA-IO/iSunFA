@@ -2,6 +2,7 @@ import { Prisma } from "@/generated";
 import {
   NOTIFICATION_DEDUPE_PREFIX,
   NOTIFICATION_HISTORY_LIMIT,
+  NOTIFICATION_PAGE_SIZE_MAX,
   NOTIFICATION_TODO_LIST_LIMIT,
   NOTIFICATION_TYPE,
   TODO_NOTIFICATION_TYPES,
@@ -103,6 +104,26 @@ export interface INotificationList {
 }
 
 /**
+ * Info: (20260826 - Julian) `/user/notifications` 一頁的歷史。
+ *
+ * 欄位名沿用本專案既有的分頁端點（`audit_log` 等）：`items` / `totalItems`
+ * / `totalPages` / `currentPage`。自創一套名字的成本不在這支端點，
+ * 在於前端的分頁元件要為它多一種形狀。
+ */
+export interface INotificationHistoryPage {
+  items: INotificationItem[];
+  totalItems: number;
+  totalPages: number;
+  /**
+   * Info: (20260826 - Julian) **實際回的是哪一頁**，不是呼叫端要求的那一頁。
+   *
+   * 超出範圍時會被夾回最後一頁（見 `listNotificationHistory`），
+   * 而畫面要能反映那件事 —— 否則使用者看到的是「第 99 頁」與一片空白。
+   */
+  currentPage: number;
+}
+
+/**
  * Info: (20260825 - Julian) 待辦型的邀請由 `team_invitation.service` 現算。
  *
  * 不在這裡自己查的理由：團隊頁（`/user/team`）也要回答同一個問題，而鈴鐺上
@@ -166,6 +187,29 @@ export async function getNotificationSummary(params: {
 }
 
 /**
+ * Info: (20260826 - Julian) 通知列 → 前端型別。
+ *
+ * 提到模組層由鈴鐺清單與分頁歷史共用：兩邊各寫一次的話，
+ * 「payload 為 null 時給空物件」這種小決定遲早只有一邊做，
+ * 而症狀是其中一個畫面偶爾整列空白。
+ */
+function toItem(notification: {
+  id: string;
+  type: string;
+  payload: unknown;
+  createdAt: Date;
+  readAt: Date | null;
+}): INotificationItem {
+  return {
+    id: notification.id,
+    type: notification.type,
+    payload: (notification.payload ?? {}) as Record<string, unknown>,
+    createdAt: notification.createdAt.getTime(),
+    readAt: notification.readAt ? notification.readAt.getTime() : null,
+  };
+}
+
+/**
  * Info: (20260821 - Luphia) 鈴鐺展開的清單：待辦與完成分節。
  *
  * Info: (20260825 - Julian) 待辦型與事件型**分兩次查**，不是撈一批再分類。
@@ -219,20 +263,6 @@ export async function listNotifications(params: {
         readAt: null,
       }));
 
-      const toItem = (notification: {
-        id: string;
-        type: string;
-        payload: unknown;
-        createdAt: Date;
-        readAt: Date | null;
-      }): INotificationItem => ({
-        id: notification.id,
-        type: notification.type,
-        payload: (notification.payload ?? {}) as Record<string, unknown>,
-        createdAt: notification.createdAt.getTime(),
-        readAt: notification.readAt ? notification.readAt.getTime() : null,
-      });
-
       todos.push(...storedTodos.map(toItem));
       todos.sort((a, b) => b.createdAt - a.createdAt);
 
@@ -243,6 +273,73 @@ export async function listNotifications(params: {
       };
     },
     { operation: "listNotifications", userId: params.userId },
+  );
+}
+
+/**
+ * Info: (20260826 - Julian) 事件型歷史的分頁查詢（`/user/notifications` 頁面）。
+ *
+ * 為什麼另開一支而不是給 `listNotifications` 加 `page` 參數：那一支是鈴鐺
+ * **每 60 秒**打的端點，而分頁需要一次 `count()`。加參數的話，
+ * 不分頁的呼叫端也要付那次查詢，或者這支函式裡出現一個
+ * 「有沒有要總數」的旗標 —— 而旗標切換的正是它最貴的那一半。
+ *
+ * 待辦型不在這裡：它由 `listNotifications` 現算（邀請是活的狀態），
+ * 而且天然有限，沒有分頁的必要。頁面上兩區各自向對應的端點要資料。
+ */
+export async function listNotificationHistory(params: {
+  userId: string;
+  page: number;
+  limit: number;
+}): Promise<INotificationHistoryPage> {
+  return guarded(
+    async () => {
+      /**
+       * Info: (20260826 - Julian) 上限在 service 再夾一次，不只在端點夾。
+       *
+       * 端點的 `parsePositiveInt` 已經夾過，但那是**呼叫端**的防線；
+       * 下一個呼叫這支函式的人（腳本、另一支端點）不會經過它。
+       * 「不要一次撈整張表」是這支函式自己的性質，就該由它自己保證。
+       */
+      const limit = Math.min(
+        Math.max(1, Math.floor(params.limit)),
+        NOTIFICATION_PAGE_SIZE_MAX,
+      );
+
+      const totalItems = await notificationRepo.countHistory(
+        params.userId,
+        TODO_NOTIFICATION_TYPES,
+      );
+      const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+
+      /**
+       * Info: (20260826 - Julian) 超出範圍夾回最後一頁，而不是回一頁空的。
+       *
+       * `?page=99` 會從兩個地方進來：使用者存的書籤，以及「讀掉幾則之後
+       * 總數變少」。兩種情形下回一片空白都像是通知不見了，而正確的答案
+       * （最後一頁）就在手上。夾完的值回給呼叫端（`currentPage`），
+       * 畫面才不會停在一個它其實沒有顯示的頁碼上。
+       */
+      const currentPage = Math.min(
+        Math.max(1, Math.floor(params.page)),
+        totalPages,
+      );
+
+      const rows = await notificationRepo.listHistoryPage(
+        params.userId,
+        TODO_NOTIFICATION_TYPES,
+        (currentPage - 1) * limit,
+        limit,
+      );
+
+      return {
+        items: rows.map(toItem),
+        totalItems,
+        totalPages,
+        currentPage,
+      };
+    },
+    { operation: "listNotificationHistory", userId: params.userId },
   );
 }
 
