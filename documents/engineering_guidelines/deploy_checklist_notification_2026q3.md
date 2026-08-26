@@ -67,7 +67,9 @@ npx tsx scripts/backfill_invitee_email_key.ts --commit
 npx tsx scripts/request_wallet_upgrades.ts        # 預設預演，不寫入
 ```
 
-三個數字要等於掃描人數。**「無法判定」不是 0 就不要加 `--commit`** —— 那代表正式機連不到 RPC，而這是一次性的 rollout 通知，`dedupeKey` 是永久唯一鍵，**發錯收不回來**。
+三個數字要等於掃描人數，而**掃描人數本身不能是 0** —— `0 + 0 + 0` 也滿足前一句，所以旗標打錯（例如 `--user --commit` 把 `--commit` 吃成 userId）的那一次會空轉通過。腳本已把「掃到 0 人」列為中止條件，看到它就是輸入或連線錯了，不是沒事可做。
+
+**「無法判定」不是 0 就不要加 `--commit`** —— 那代表正式機連不到 RPC，而這是一次性的 rollout 通知，`dedupeKey` 是永久唯一鍵，**發錯收不回來**。
 
 失敗的方向是刻意選的：RPC 掛掉時整批失敗而不是整批誤發。沒發出去的下次重跑就補上了。
 
@@ -98,7 +100,7 @@ npx tsx scripts/request_wallet_upgrades.ts --commit      # 「無法判定」是
 
 **`request_wallet_upgrades.ts` 先前不在這份清單裡**，而照著逐行執行的人不會發出任何 `WALLET_UPGRADE` 待辦 —— 那是這個型別存在的唯一理由，且失效時**完全不報錯**：鈴鐺正常、其他通知正常，只是待辦區永遠空的。與 §5.1（漏重啟 worker）同一族。
 
-它與 `backfill_invitee_email_key.ts` 的容錯方向相反，值得並排記著：回填漏做只是「晚一點生效」，而這一支**做錯不可逆**（`dedupeKey` 永久唯一，發錯收不回）。所以它的 `--commit` 有兩道程式層守門（「無法判定」> 0、以及「全體都判為尚待升級」皆中止），漏做則沒有任何守門 —— 只有這一行。
+它與 `backfill_invitee_email_key.ts` 的容錯方向相反，值得並排記著：回填漏做只是「晚一點生效」，而這一支**做錯不可逆**（`dedupeKey` 永久唯一，發錯收不回）。所以它的 `--commit` 有三道程式層守門（掃到 0 人、「無法判定」> 0、「全體都判為尚待升級」皆中止），漏做則沒有任何守門 —— 只有這一行。
 
 ### 3.1 `db push` 之後的驗證
 

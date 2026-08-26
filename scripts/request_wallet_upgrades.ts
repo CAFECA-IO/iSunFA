@@ -38,6 +38,7 @@ import {
 import { userRepo } from "@/repositories/user.repo";
 import { disconnectPrisma } from "@/repositories/prisma_lifecycle.repo";
 import { publicClient } from "@/lib/viem";
+import { readFlagValue } from "@/lib/utils/script_args";
 import {
   dismissWalletUpgrade,
   listUsersWithPendingWalletUpgrade,
@@ -119,14 +120,20 @@ async function walletCanReceive(address: string): Promise<boolean> {
 async function main(): Promise<void> {
   const argv = process.argv;
   const commit = argv.includes("--commit");
-  const userIndex = argv.indexOf("--user");
-  const onlyUserId = userIndex >= 0 ? argv[userIndex + 1] : undefined;
-  // Info: (20260821 - Luphia) `--user` 少帶值時不要靜默變成全域（同 backfill 腳本的慣例）
-  if (userIndex >= 0 && !onlyUserId) {
-    process.stderr.write("--user 後面必須帶 userId\n");
+  /**
+   * Info: (20260826 - Julian) `--user` 的值走 `readFlagValue`，不要自己 `argv[i + 1]`。
+   *
+   * `--user --commit` 會把 `--commit` 吃成 userId：查詢條件變成
+   * `{ id: "--commit" }` 掃到 0 人，而 `--commit` 也沒被當成旗標 ——
+   * 腳本安靜地什麼都不做並 exit 0。那支函式擋的就是這個形狀。
+   */
+  const userFlag = readFlagValue(argv, "--user");
+  if (!userFlag.ok) {
+    process.stderr.write(`${userFlag.error}\n`);
     process.exitCode = 1;
     return;
   }
+  const onlyUserId = userFlag.value;
 
   const out = (line: string): void => {
     process.stdout.write(`${line}\n`);
@@ -216,6 +223,21 @@ async function main(): Promise<void> {
    * 錯誤的方向必須是「少發」，不能是「發錯」。
    */
   const blockers: string[] = [];
+  /**
+   * Info: (20260826 - Julian) 掃到 0 人是輸入錯了，不是「沒事可做」。
+   *
+   * 少了這道，驗收判準會空轉通過：部署檢查表 §2.3 要的是「三個數字加起來
+   * 等於掃描人數」，而 `0 + 0 + 0 === 0` 也成立 —— 於是旗標打錯的那一次，
+   * 輸出看起來與「全部處理完畢」一模一樣，還 exit 0。
+   * `--user` 給了不存在的 id、或連錯資料庫，都該停下來讓人看一眼。
+   */
+  if (users.length === 0) {
+    blockers.push(
+      onlyUserId
+        ? `--user ${onlyUserId} 找不到對應的使用者，請確認 userId 是否正確。`
+        : "掃描到 0 位使用者。這通常代表連錯資料庫，而不是真的一個人都沒有。",
+    );
+  }
   if (undetermined > 0) {
     blockers.push(
       `有 ${undetermined} 位使用者的探針無法判定。鏈上沒答覆時不能推測，` +

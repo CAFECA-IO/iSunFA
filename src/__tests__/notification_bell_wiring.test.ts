@@ -545,6 +545,38 @@ describe("來源與畫面的接線（掃描）", () => {
   });
 
   /**
+   * Info: (20260826 - Julian) 登入摘要氣泡會自動收合。
+   *
+   * 它沒有關閉鈕、沒有 click-away，而 header 不隨 SPA 換頁卸載 ——
+   * 自動收合失效等於那塊 `w-64 z-50` 的氣泡蓋著頁面直到整頁重載。
+   *
+   * 而失效的方式很安靜：把排程和 `showToast` 放進同一支 effect，
+   * `setShowToast(true)` 會讓 React 先跑 cleanup 清掉剛排好的計時器，
+   * 重跑時又因 `showToast` 已是 true 而早退。沒有任何錯誤、沒有紅燈，
+   * 只有一個永遠不收的氣泡。所以這裡釘的是「排程那支 effect 的 dep」。
+   */
+  it("摘要氣泡的自動收合是獨立 effect，dep 只有 showToast", () => {
+    const bell = codeOf("src", "components", "header", "notification_bell.tsx");
+
+    /**
+     * Info: (20260826 - Julian) 從第一支 `useEffect(` **之後**才開始找那個常數。
+     * 檔案頂端的 import 也有同一個字，從 0 找會定位到 import 行，
+     * 而 import 行沒有 `useEffect(`，往回找會得到 -1。
+     */
+    const firstEffect = bell.indexOf("useEffect(");
+    expect(firstEffect).toBeGreaterThan(-1);
+    const at = bell.indexOf("NOTIFICATION_SUMMARY_TOAST_MS", firstEffect);
+    expect(at).toBeGreaterThan(-1);
+
+    // Info: (20260826 - Julian) 往回找到包住它的那支 effect，再往後讀它的 dep 陣列
+    const start = bell.lastIndexOf("useEffect(", at);
+    expect(start).toBeGreaterThan(-1);
+    const deps = /\}, \[([^\]]*)\]\);/.exec(bell.slice(start));
+    expect(deps).not.toBeNull();
+    expect(deps![1].trim()).toBe("showToast");
+  });
+
+  /**
    * Info: (20260825 - Julian) 打開鈴鐺**不得**再全部標已讀。
    *
    * 已讀改成逐則觸發之後，這件事有兩個後果，第二個不明顯：

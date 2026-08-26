@@ -160,6 +160,47 @@ function givenTask(options: {
   });
 }
 
+const APPROVED_ANALYSIS = {
+  id: "analysis-1",
+  userId: USER_ID,
+  orderId: ORDER_ID,
+  type: "certificate_analysis",
+};
+
+/**
+ * Info: (20260826 - Julian) 擺出一個「跑完了，但結果裡沒有 dbSyncPayload」的任務。
+ *
+ * `category` 是 CERTIFICATE_ANALYSIS 才會觸發那道守門 —— 其他類別缺
+ * `dbSyncPayload` 是正常的，不算失敗。
+ */
+function givenApprovedTask(
+  options: { category?: string; orderStatus?: string } = {},
+) {
+  fsState.taskFiles = [APPROVED_FILE];
+  fsState.existing = new Set<string>();
+  fsState.contents = new Map<string, string>();
+  fsState.written = new Map<string, string>();
+
+  fsState.contents.set(
+    contextPath,
+    JSON.stringify({ orderId: ORDER_ID, analysisId: APPROVED_ANALYSIS.id }),
+  );
+  // Info: (20260826 - Julian) 有結果、但**沒有** dbSyncPayload
+  fsState.contents.set(resultPath, JSON.stringify({ summary: "done" }));
+
+  asMock(orderRepo.findFirst).mockResolvedValue({
+    id: ORDER_ID,
+    userId: USER_ID,
+    status: options.orderStatus ?? ORDER_STATUS.EXECUTING,
+    mission: null,
+    tokens: 0,
+    data: {
+      category: options.category ?? ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS,
+    },
+  });
+  asMock(analysisRepo.findById).mockResolvedValue(APPROVED_ANALYSIS);
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
 });
@@ -268,45 +309,6 @@ describe("IssueRecorder：被放棄的任務（D18）", () => {
  * 替身早就準備好回答「有沒有發完成通知」，只是從來沒有人問。
  */
 describe("IssueRecorder：完成與失敗不得同時發出（B2）", () => {
-  const ANALYSIS = {
-    id: "analysis-1",
-    userId: USER_ID,
-    orderId: ORDER_ID,
-    type: "certificate_analysis",
-  };
-
-  /**
-   * Info: (20260826 - Julian) 擺出一個「跑完了，但結果裡沒有 dbSyncPayload」的任務。
-   *
-   * `category` 是 CERTIFICATE_ANALYSIS 才會觸發那道守門 —— 其他類別缺
-   * `dbSyncPayload` 是正常的，不算失敗。
-   */
-  const givenApprovedTask = (options: { category?: string } = {}) => {
-    fsState.taskFiles = [APPROVED_FILE];
-    fsState.existing = new Set<string>();
-    fsState.contents = new Map<string, string>();
-    fsState.written = new Map<string, string>();
-
-    fsState.contents.set(
-      contextPath,
-      JSON.stringify({ orderId: ORDER_ID, analysisId: ANALYSIS.id }),
-    );
-    // Info: (20260826 - Julian) 有結果、但**沒有** dbSyncPayload
-    fsState.contents.set(resultPath, JSON.stringify({ summary: "done" }));
-
-    asMock(orderRepo.findFirst).mockResolvedValue({
-      id: ORDER_ID,
-      userId: USER_ID,
-      status: ORDER_STATUS.EXECUTING,
-      mission: null,
-      tokens: 0,
-      data: {
-        category: options.category ?? ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS,
-      },
-    });
-    asMock(analysisRepo.findById).mockResolvedValue(ANALYSIS);
-  };
-
   /**
    * Info: (20260826 - Julian) 核心斷言，而且**成對**。
    *
@@ -350,8 +352,8 @@ describe("IssueRecorder：完成與失敗不得同時發出（B2）", () => {
     expect(asMock(notifyAnalysisCompleted)).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: USER_ID,
-        analysisId: ANALYSIS.id,
-        analysisType: ANALYSIS.type,
+        analysisId: APPROVED_ANALYSIS.id,
+        analysisType: APPROVED_ANALYSIS.type,
       }),
     );
     expect(asMock(notifyAnalysisFailed)).not.toHaveBeenCalled();
@@ -431,6 +433,67 @@ describe("IssueRecorder：終態不覆寫", () => {
     await issueRecorderService.processNext();
 
     expect(fsState.written.has(flagPath)).toBe(true);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 成功路徑那一處守門也要有案例（review B-new-4）。
+   *
+   * 上面那組走的是 `recordGiveUp`。成功路徑的守門是另一行程式，而先前
+   * 餵給它的起始狀態只有 `EXECUTING` 與 `FAILED` —— 這兩個在新舊實作下
+   * 結果一模一樣（前者本來就不是終態，後者本來就被舊條件擋著），
+   * 所以把條件改回 `newOrderStatus !== FAILED` 不會有任何測試變紅。
+   *
+   * 這裡的斷言不能是「沒有呼叫 update」：成功路徑**一定**會寫一次
+   *（要累加 tokens）。要驗的是**寫進去的值**沒有被改掉。
+   */
+  it.each([ORDER_STATUS.COMPLETED, ORDER_STATUS.CANCEL])(
+    "成功路徑：訂單已是 %s 時，同步失敗不改寫狀態也不通知",
+    async (status) => {
+      givenApprovedTask({ orderStatus: status });
+
+      await issueRecorderService.processNext();
+
+      expect(asMock(orderRepo.update)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ status }),
+        }),
+      );
+      expect(asMock(notifyAnalysisFailed)).not.toHaveBeenCalled();
+    },
+  );
+
+  /**
+   * Info: (20260826 - Julian) 反面：在途狀態同步失敗時仍然要寫成 FAILED 並通知。
+   *
+   * 少了這條，「把守門寫成永遠不改狀態」會讓上面全綠 —— 而那等於
+   * B2 與 D16 一起失效：同步失敗的訂單永遠停在 EXECUTING，
+   * 使用者既沒有結果也沒有任何說法。
+   */
+  it("成功路徑：在途狀態同步失敗時寫成 FAILED 並通知", async () => {
+    givenApprovedTask({ orderStatus: ORDER_STATUS.EXECUTING });
+
+    await issueRecorderService.processNext();
+
+    expect(asMock(orderRepo.update)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: ORDER_STATUS.FAILED }),
+      }),
+    );
+    expect(asMock(notifyAnalysisFailed)).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 終態訂單也不該收到「完成」通知。
+   *
+   * 同步失敗時 `finalOrderStatus` 是 FAILED，完成通知那道守門看的是它、
+   * 不是訂單狀態 —— 兩道守門看不同的東西是刻意的，這條把它釘住。
+   */
+  it("成功路徑：終態訂單同步失敗時不發完成通知", async () => {
+    givenApprovedTask({ orderStatus: ORDER_STATUS.COMPLETED });
+
+    await issueRecorderService.processNext();
+
+    expect(asMock(notifyAnalysisCompleted)).not.toHaveBeenCalled();
   });
 });
 

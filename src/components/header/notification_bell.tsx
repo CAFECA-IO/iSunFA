@@ -110,7 +110,7 @@ export default function NotificationBell() {
    *（原本首抓與輪詢各有一支 fetch，登入當下會連打兩次）。
    */
   useEffect(() => {
-    if (!user || !summary || showToast) return undefined;
+    if (!user || !summary) return undefined;
     if (summary.todoCount + summary.completedCount === 0) return undefined;
     try {
       if (sessionStorage.getItem(SUMMARY_SHOWN_KEY)) return undefined;
@@ -120,19 +120,29 @@ export default function NotificationBell() {
       return undefined;
     }
     setShowToast(true);
-    /**
-     * Info: (20260826 - Julian) 卸載時要清（review：前端細節）。
-     *
-     * 不清的話，登出或換頁讓元件卸載之後，這個計時器仍會在 8 秒後
-     * 對一個已卸載的元件 `setShowToast` —— React 不會炸，但那是一次
-     * 對死掉元件的寫入，而同一個形狀在有訂閱的元件上就是真的洩漏。
-     */
+    return undefined;
+  }, [user, summary]);
+
+  /**
+   * Info: (20260826 - Julian) 自動收合**必須**是獨立的 effect，dep 只有 showToast。
+   *
+   * 排程與 `showToast` 綁在同一支 effect 的話，計時器排不起來：
+   * `setShowToast(true)` 觸發重繪 → dep 變動 → React 先跑上一輪的 cleanup
+   * 把剛排好的計時器清掉 → 重跑時 `showToast` 已是 true，早退，不再排。
+   * 結果是氣泡掛在鈴鐺下方直到整頁重載（header 不隨 SPA 換頁卸載），
+   * 而它沒有關閉鈕也沒有 click-away。
+   *
+   * 拆開之後這支只有一件事：true 就排一次計時器，false 或卸載就清掉。
+   * 「本次登入只說一次」由上面的 sessionStorage 守，不需要 showToast 參與。
+   */
+  useEffect(() => {
+    if (!showToast) return undefined;
     const timer = window.setTimeout(
       () => setShowToast(false),
       NOTIFICATION_SUMMARY_TOAST_MS,
     );
     return () => window.clearTimeout(timer);
-  }, [user, summary, showToast]);
+  }, [showToast]);
 
   /**
    * Info: (20260825 - Julian) 打開鈴鐺只抓清單，**不再標記任何東西為已讀**。
