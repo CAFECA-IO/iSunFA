@@ -5,7 +5,6 @@ import {
   type QuotaExceededOption,
   QUOTA_WINDOW,
   SPEND_SOURCE,
-  TEAM_PLAN,
   WALLET_OP_OUTCOME,
 } from "@/constants/subscription_quota";
 import {
@@ -17,6 +16,7 @@ import {
 import {
   canAffordSpend,
   resolveQuotaAvailable,
+  usesSharedTeamQuota,
   splitRefund,
   splitSpend,
 } from "@/lib/quota/spend_split";
@@ -453,8 +453,10 @@ export async function spendCredits(
      *
      * 付費方案完全不變（一人一池、成員之間互不阻塞）。
      */
-    const isSharedQuota =
-      resolveEffectivePlanId(subscription, nowSec) === TEAM_PLAN.FREE;
+    // Info: (20260825 - Luphia) 聚合範圍的判準與唯讀試算共用（review #6717 低-1）
+    const isSharedQuota = usesSharedTeamQuota(
+      resolveEffectivePlanId(subscription, nowSec),
+    );
 
     const runWithQuotaLock = <T>(
       operation: (tx: Prisma.TransactionClient) => Promise<T>,

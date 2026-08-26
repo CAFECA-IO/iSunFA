@@ -194,6 +194,9 @@ export const carbonChatbot = {
     "「{{name}}」は解析中です。同時に 2 件実行すると同じ割り当てを奪い合い、どちらも遅くなります。完了を待つか、再読み込みしてからお試しください。",
   import_parsing_chapter:
     "「{{name}}」を章ごとに解析中({{current}}/{{total}} 完了、{{inFlight}} 章を処理中)。完全なレポートは数分かかります…",
+  import_paused_chapters:
+    "クレジットが不足したため、次の章はまだ解析していません：{{chapters}}。クレジットを補充すると、ここから続けてインポートできます（完了した部分は再実行されません）。",
+  import_resume_paused: "続けてインポート",
   import_failed_chapters:
     "次の章は解析に失敗しました。後で再インポートで補完できます:{{chapters}}",
   import_retry_failed: "失敗した章を再試行",

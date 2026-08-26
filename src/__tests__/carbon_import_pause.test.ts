@@ -1,7 +1,10 @@
 import { describe, it, expect } from "@jest/globals";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { resolveCreditPauseReason } from "@/hooks/use_carbon_chat.helpers";
+import {
+  resolveCreditPauseReason,
+  summarisePausedUnits,
+} from "@/hooks/use_carbon_chat.helpers";
 import { ApiError as RequestApiError } from "@/lib/utils/request";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { JOB_PAUSE_REASON } from "@/constants/resumable_job";
@@ -153,12 +156,200 @@ describe("對話通知：兩種情況兩句話", () => {
 });
 
 /**
- * Info: (20260825 - Luphia) 逐章迴圈的接線（issue #6713）。
+ * Info: (20260825 - Luphia) 「一份做完、另一份撞牆」——本 PR 的阻擋級缺陷
+ *（review #6717 阻擋-1）。
  *
- * 掃描原始碼而不是渲染 hook：那支 hook 有 4,000 行與大量 React 狀態相依，
- * 而這裡要釘的три件事都是**控制流**——它們在原始碼上看得見，
- * 而把整個 hook 拉起來測的成本與脆弱度都遠高於它擋到的東西。
- * 判斷本身（什麼算暫停）已由上面那組行為測試涵蓋。
+ * `buildImportUnits` 會把節數多的章切成兩份（實測 11 章 → 14 個單元，
+ * ch1／ch3／ch9 各兩份）。先前這段推導以**章**為單位做正向標記，
+ * 於是任一份成功就把整章排除：那一章既不在暫停名單、也不在失敗名單，
+ * 而合併出來的內容少了一半的節，沒有任何訊息提過。
+ *
+ * 這一組是行為測試，不是掃字串——正是那條掃描測試擋不住的東西。
+ */
+describe("暫停單元收斂成章", () => {
+  const title = (id: string) => `${id} 章名`;
+
+  it("章被切成兩份、一份做完一份撞牆 → 那一章仍在暫停名單", () => {
+    const summary = summarisePausedUnits({
+      // Info: (20260825 - Luphia) ch1 的第一份有結果，第二份沒有（撞牆）
+      remainingUnits: [
+        { chapterId: "ch1", sectionIds: ["1.5"], partIndex: 2, partTotal: 2 },
+      ],
+      failedChapterIds: [],
+      resolveTitle: title,
+    });
+
+    expect(summary.pausedChapters.map((c) => c.id)).toEqual(["ch1"]);
+    // Info: (20260825 - Luphia) 接續只跑沒做完的那一份——做完的不重跑（訊息裡的承諾）
+    expect(summary.pausedUnits).toHaveLength(1);
+    expect(summary.pausedUnits[0].partIndex).toBe(2);
+  });
+
+  it("同一章的兩份都沒做 → 章只列一次，但兩份都要接續", () => {
+    const summary = summarisePausedUnits({
+      remainingUnits: [
+        { chapterId: "ch3", sectionIds: ["3.1"], partIndex: 1, partTotal: 2 },
+        { chapterId: "ch3", sectionIds: ["3.5"], partIndex: 2, partTotal: 2 },
+      ],
+      failedChapterIds: [],
+      resolveTitle: title,
+    });
+
+    expect(summary.pausedChapters).toHaveLength(1);
+    expect(summary.pausedUnits).toHaveLength(2);
+  });
+
+  /**
+   * Info: (20260825 - Luphia) 同一章同時出現在「解析失敗」與「還沒開始解析」
+   * 兩句話裡是自相矛盾的，而使用者無從判斷該信哪一句。失敗優先——
+   * 它有重試入口，而那條路會把整章重跑。
+   */
+  it("已經在失敗名單的章不重複出現在暫停名單", () => {
+    const summary = summarisePausedUnits({
+      remainingUnits: [
+        { chapterId: "ch3", sectionIds: ["3.5"], partIndex: 2, partTotal: 2 },
+        { chapterId: "ch7", sectionIds: ["7.1"], partIndex: 1, partTotal: 1 },
+      ],
+      failedChapterIds: ["ch3"],
+      resolveTitle: title,
+    });
+
+    expect(summary.pausedChapters.map((c) => c.id)).toEqual(["ch7"]);
+    expect(summary.pausedUnits.map((u) => u.chapterId)).toEqual(["ch7"]);
+  });
+
+  it("沒有暫停的單元時兩份清單都是空的", () => {
+    expect(
+      summarisePausedUnits({
+        remainingUnits: [],
+        failedChapterIds: ["ch2"],
+        resolveTitle: title,
+      }),
+    ).toEqual({ pausedUnits: [], pausedChapters: [] });
+  });
+
+  // Info: (20260825 - Luphia) 章名由呼叫端解析：接續時 chapters 只帶要重跑的那幾章
+  it("章名由 resolveTitle 提供", () => {
+    const summary = summarisePausedUnits({
+      remainingUnits: [
+        { chapterId: "ch9", sectionIds: ["9.1"], partIndex: 1, partTotal: 2 },
+      ],
+      failedChapterIds: [],
+      resolveTitle: (id) => (id === "ch9" ? "第九章 附錄" : id),
+    });
+
+    expect(summary.pausedChapters[0].title).toBe("第九章 附錄");
+  });
+});
+
+/**
+ * Info: (20260825 - Luphia) 「接著匯入」的入口（review #6717 高-1）。
+ *
+ * 在此之前訊息（五語言）告訴使用者補上點數後可以「從這裡接著匯入」，
+ * 而畫面上**沒有那個動作**：`pausedChapters` 只在 props interface 裡宣告，
+ * 元件本體一次都沒讀；唯一的重試入口只吃 `failedChapters`。
+ * 使用者唯一走得到的路是整份重新匯入——已解析的章再解析一次、再收一次點數，
+ * 正好是那句承諾的反面。
+ *
+ * 這與這個 PR 自己要修的毛病是同一類：**畫面說了一件與實際能做的事不符的話**。
+ */
+describe("接著匯入的入口", () => {
+  const card = readFileSync(
+    join(
+      process.cwd(),
+      "src",
+      "components",
+      "carbon_chatbot",
+      "import_preview.tsx",
+    ),
+    "utf8",
+  );
+  const page = readFileSync(
+    join(process.cwd(), "src", "app", "user", "carbon_chatbot", "page.tsx"),
+    "utf8",
+  );
+  const hook = readFileSync(
+    join(process.cwd(), "src", "hooks", "use_carbon_chat.ts"),
+    "utf8",
+  );
+
+  it("預覽卡真的讀 pausedChapters，並且與失敗分成兩塊", () => {
+    expect(card).toContain("pendingImport.pausedChapters ?? []).length > 0");
+    expect(card).toContain("carbon_chatbot.import_paused_chapters");
+    // Info: (20260825 - Luphia) 失敗那塊還在——兩者是不同的事實，不可以合併
+    expect(card).toContain("pendingImport.failedChapters.length > 0");
+  });
+
+  it("有一顆接續按鈕，且與重試失敗是不同的動作", () => {
+    expect(card).toContain("onResumePaused");
+    expect(card).toContain("carbon_chatbot.import_resume_paused");
+    expect(page).toContain("onResumePaused={resumePausedImportChapters}");
+  });
+
+  /**
+   * Info: (20260825 - Luphia) 接續要以**份**為粒度送出：以章接續會把已完成的
+   * 那一份再跑一次、再收一次點數，而訊息裡明寫「已完成的部分不會重跑」。
+   */
+  it("接續送出的是單元（份），不是章", () => {
+    const start = hook.indexOf("const resumePausedImportChapters");
+    expect(start).toBeGreaterThan(-1);
+    const scope = hook.slice(start, start + 1600);
+    expect(scope).toContain("pendingImport?.pausedUnits ?? []");
+    // Info: (20260825 - Luphia) 第六個參數就是 resumeUnits（見 runImportChapters 的簽章）
+    expect(scope).toContain("units,\n      );");
+  });
+
+  /**
+   * Info: (20260825 - Luphia) 接續之後三個欄位要一起換：這一趟可能又暫停、
+   * 可能跑完、也可能有章真的壞掉。只換其中一個會讓畫面同時顯示舊的暫停清單
+   * 與新的結果。
+   */
+  it("接續之後暫停狀態整組更新", () => {
+    const start = hook.indexOf("const resumePausedImportChapters");
+    const scope = hook.slice(start, start + 3000);
+    expect(scope).toContain("pausedChapters: result.pausedChapters");
+    expect(scope).toContain("pausedUnits: result.remainingUnits");
+    expect(scope).toContain("pauseReason: result.pausedBy");
+  });
+
+  it("斷點存得回 DB（validator 收得下這三個欄位）", () => {
+    const validator = readFileSync(
+      join(process.cwd(), "src", "validators", "carbon_pending_import.ts"),
+      "utf8",
+    );
+    expect(validator).toContain("pausedChapters:");
+    expect(validator).toContain("pausedUnits:");
+    expect(validator).toContain("pauseReason:");
+    // Info: (20260825 - Luphia) 必須是選填：舊紀錄沒有這些欄位，必填會讓它們存不回去
+    const start = validator.indexOf("pausedUnits:");
+    expect(validator.slice(start, start + 500)).toContain(".optional()");
+  });
+
+  it("五個語言都有暫停清單與接續按鈕的文案", () => {
+    for (const locale of ["zh_tw", "en", "zh_cn", "ja", "ko"]) {
+      const file = readFileSync(
+        join(
+          process.cwd(),
+          "src",
+          "i18n",
+          "locales",
+          locale,
+          "carbon_chatbot.ts",
+        ),
+        "utf8",
+      );
+      expect(file).toContain("import_paused_chapters:");
+      expect(file).toContain("import_resume_paused:");
+    }
+  });
+});
+
+/**
+ * Info: (20260825 - Luphia) 逐章迴圈的接線（issue #6713 / review #6717 阻擋-1）。
+ *
+ * 控制流已經交給共用驅動器（`runResumableJob`，它自己有 12 條不變式測試），
+ * 因此這裡只確認**接上了**：用驅動器、分類函式把點數用完歸為 PAUSE、
+ * 剩餘的推導走那支純函式。掃描測試能回答的就只到這裡（檢查表 §1.11）。
  */
 describe("逐章迴圈的接線", () => {
   const hook = readFileSync(
@@ -166,21 +357,28 @@ describe("逐章迴圈的接線", () => {
     "utf8",
   );
 
-  it("先問是不是點數用完，再決定要不要記成失敗", () => {
-    const start = hook.indexOf("const pauseReason = resolveCreditPauseReason");
+  it("控制流交給共用驅動器，不再手寫迴圈", () => {
+    expect(hook).toContain("runResumableJob<IImportUnit, void>");
+    /**
+     * Info: (20260825 - Luphia) 不准回到手寫的正向標記（那正是阻擋-1 的形狀）。
+     * 只禁**程式碼**，不禁註解——那段歷史說明留著才知道為什麼不能那樣寫。
+     */
+    expect(hook).not.toContain("settledChapterIds.add(");
+    expect(hook).not.toContain("const settledChapterIds");
+  });
+
+  it("點數用完歸類為暫停，其餘歸類為失敗", () => {
+    const start = hook.indexOf("classify: (error) =>");
     expect(start).toBeGreaterThan(-1);
-    const scope = hook.slice(start, start + 700);
-    // Info: (20260825 - Luphia) 暫停要在 failed.push 之前 return，否則兩份清單又混在一起
-    expect(scope).toContain("if (pausedBy === null) pausedBy = pauseReason");
-    expect(scope).toContain("return;");
+    const scope = hook.slice(start, start + 400);
+    expect(scope).toContain("resolveCreditPauseReason");
+    expect(scope).toContain("STEP_OUTCOME.PAUSE");
+    expect(scope).toContain("STEP_OUTCOME.FAIL");
   });
 
-  it("暫停之後不再領新的章", () => {
-    expect(hook).toContain("if (pausedBy !== null) return;");
-  });
-
-  it("剩餘的章以「有沒有結果」判斷，不是索引之後", () => {
-    expect(hook).toContain("!settledChapterIds.has(chapter.id)");
+  it("剩餘的推導走 summarisePausedUnits（份粒度）", () => {
+    expect(hook).toContain("summarisePausedUnits({");
+    expect(hook).toContain("remainingUnits: outcome.remaining");
   });
 
   /**

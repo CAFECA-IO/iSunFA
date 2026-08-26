@@ -144,32 +144,36 @@ model Team {
 }
 
 model TeamMember {
-  id                   String          @id @default(uuid())
-  teamId               String          @map("team_id")
-  team                 Team            @relation(fields: [teamId], references: [id])
-  userId               String          @map("user_id")
-  user                 User            @relation(fields: [userId], references: [id])
-  role                 TeamRole
+  id        String   @id @default(uuid())
+  teamId    String   @map("team_id")
+  team      Team     @relation(fields: [teamId], references: [id])
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  role      TeamRole
   /**
    * Info: (20260818 - Luphia) 這段成員資格由哪一封邀請而來（第六輪第 1 條）。
+   *
    * 為什麼需要它：`TeamInvitation.acceptedEmailMatch` 記下「接受者的已驗證信箱與
    * 受邀信箱是否相符」，而成員清單要據此對管理職顯示標記。問題是「這個標記描述的
    * 是不是**現在**這段成員資格」——同一個人可能被移出再加回，舊邀請的紀錄不該
    * 掛在新的成員資格上。
+   *
    * 先前用時間戳推論（邀請的 `acceptedAt` 對成員的 `createdAt`），而那兩個值來自
    * **兩個時鐘**：`acceptedAt` 是 app 在 route 一開始取的 `Date.now()`，
    * `createdAt` 的預設是資料庫的 `CURRENT_TIMESTAMP`。實測差 +19ms（中間隔著五次
    * 以上查詢），於是比較永遠不成立、標記永遠不顯示；而在 app 與 DB 時鐘有偏移的
    * 部署上它又會零星地出現——比永遠不出現更難查。
+   *
    * 這一欄把那個**關聯**直接寫下來：一次外鍵比對，不看任何時鐘。
+   *
    * NULL 的語意是「這段成員資格不是邀請來的」——以錢包位址直接加入、後台加入、
    * seed 建立的成員都是 NULL，而他們本來就沒有信箱可比對。歷史資料同樣留 NULL
    * （猜一封邀請比留空更糟），因此不需要回填。
    */
   joinedByInvitationId String?         @map("joined_by_invitation_id")
   joinedByInvitation   TeamInvitation? @relation("MembershipOrigin", fields: [joinedByInvitationId], references: [id])
-  createdAt            DateTime        @default(now()) @map("created_at")
-  updatedAt            DateTime        @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([teamId, userId])
   // Info: (20260818 - Luphia) 標記查詢以 (team_id, joined_by_invitation_id) 撈本團隊的成員
@@ -179,6 +183,7 @@ model TeamMember {
 
 /**
  * Info: (20260817 - Luphia) 費思個人化長期記憶（規範 ai_and_analytics/faith_personal_memory.md）。
+ *
  * 作用範圍是 `(userId, teamId)` 而非純 per-user，理由是刪除觸發必須與作用範圍同鍵：
  * 90 天的起算點是「**團隊的**付費訂閱終止」，若記憶為全域 per-user，
  * 一位同時屬於 A（仍在訂閱）與 B（剛終止）兩個團隊的成員，「該不該刪」就沒有
@@ -213,10 +218,12 @@ model FaithMemory {
 
   /**
    * Info: (20260818 - Luphia) 這個期限是**誰排的**（第三輪 C-8）。
+   *
    * 保留期守護行程每 6 小時對帳一次，付費團隊即清掉 `expiresAt`。少了這一欄，
    * 它會把**別人排的**期限一起清掉——例如帳戶終止的 30 天寬限期：
    * 團隊仍在訂閱時，那個期限每 6 小時被清一次，記憶永遠不會被刪，
    * 而條款 §3.7 寫的是「與第 9 條期間並存時以較早屆至者為準」。
+   *
    * 值為 FAITH_MEMORY_DELETION_REASON；對帳只設定與清除自己那一種。
    */
   expiryReason String? @map("expiry_reason")
@@ -251,76 +258,83 @@ model FaithMemoryDeletionLog {
 }
 
 model TeamInvitation {
-  id                 String       @id @default(uuid())
-  teamId             String       @map("team_id")
-  team               Team         @relation(fields: [teamId], references: [id])
-  inviterId          String       @map("inviter_id")
-  inviter            User         @relation("Inviter", fields: [inviterId], references: [id])
+  id             String   @id @default(uuid())
+  teamId         String   @map("team_id")
+  team           Team     @relation(fields: [teamId], references: [id])
+  inviterId      String   @map("inviter_id")
+  inviter        User     @relation("Inviter", fields: [inviterId], references: [id])
   /**
    * Info: (20260815 - Luphia) 錢包位址邀請的受邀者。email 邀請時為 null——
    * 對方還沒註冊，此時不存在位址（接受時才建立成員關係）。
    */
-  inviteeAddress     String?      @map("invitee_address")
+  inviteeAddress String?   @map("invitee_address")
   /**
    * Info: (20260815 - Luphia) Email 邀請（規範 §4 / P4）。
    * 屬個資，僅用於寄送本次邀請（《隱私權政策》§1）。
    */
-  inviteeEmail       String?      @map("invitee_email")
+  inviteeEmail   String?   @map("invitee_email")
   /**
    * Info: (20260815 - Luphia) 邀請 token 的 SHA-256 雜湊。
    * 明文只存在於寄出的那封信裡：資料庫外洩不等於任何人都能加入團隊。
    */
-  tokenHash          String?      @unique @map("token_hash")
+  tokenHash      String?   @unique @map("token_hash")
   // Info: (20260815 - Luphia) 邀請有效期限；逾期即失效（席次不退費但可再用於邀請他人）
-  expiresAt          DateTime?    @map("expires_at")
+  expiresAt      DateTime? @map("expires_at")
   /**
    * Info: (20260816 - Luphia) 「同一團隊、同一對象，同時只能有一封待接受邀請」的唯一鍵。
+   *
    * 值由 `buildPendingInviteKey` 產生（`{teamId}:mail:{email}` 或 `{teamId}:addr:{address}`），
    * **僅在 PENDING 期間有值**，接受後設回 NULL。Postgres 允許多個 NULL，
    * 因此效果等同 partial unique index，而它寫在 schema 裡、`prisma db push` 帶得走。
+   *
    * 取代原本的 `@@unique([teamId, inviteeEmail, status])`：把 status 放進鍵裡
    * 會連歷史列一起約束，於是「離職後再邀請同一個人」在**接受的那一刻**撞上
    * 舊的 ACCEPTED 列，永遠加不進來，而席次費已經扣了。詳見 pending_invite_key.ts。
    */
-  pendingKey         String?      @unique @map("pending_key")
-  role               TeamRole
+  pendingKey     String?   @unique @map("pending_key")
+  role           TeamRole
   // Info: (20260818 - Luphia) TEAM_INVITATION_STATUS：PENDING / ACCEPTED / REJECTED / REVOKED
-  status             String       @default("PENDING")
+  status         String    @default("PENDING")
   /**
    * Info: (20260817 - Luphia) 實際用掉這封邀請的帳號。
+   *
    * 稽核軌跡在此之前是斷的：邀請記的是 email，成員記的是帳號，而兩者之間
    * 沒有任何欄位相連——「邀請 a@x.com」與「成員 0xAb…」是不是同一個人，
    * 從資料庫看不出來。這一欄不宣稱那個帳號屬於該信箱（見下方 acceptedEmailMatch），
    * 只誠實記錄「這封邀請被這個帳號用掉了」。
    */
-  acceptedByUserId   String?      @map("accepted_by_user_id")
-  acceptedBy         User?        @relation("InvitationAcceptor", fields: [acceptedByUserId], references: [id])
+  acceptedByUserId String?  @map("accepted_by_user_id")
+  acceptedBy       User?    @relation("InvitationAcceptor", fields: [acceptedByUserId], references: [id])
   // Info: (20260817 - Luphia) 接受時點。不靠 updatedAt——那一欄任何後續更新都會動
-  acceptedAt         DateTime?    @map("accepted_at")
+  acceptedAt       DateTime? @map("accepted_at")
   /**
    * Info: (20260817 - Luphia) 受邀信箱與接受者已驗證信箱的比對結果（INVITE_EMAIL_MATCH）。
+   *
    * **記錄，不阻擋**：工作信箱收到邀請、用個人 Google 帳號登入是完全正常的行為。
    * 位址邀請（無 inviteeEmail）為 null——不適用，而不是「比對失敗」。
+   *
    * `UNAVAILABLE` 是常態而非異常：本站的 passkey 註冊全程不問 email
    * （`User` 沒有 email 欄位，email 只存在於第三方綁定 `UserIdentity`），
    * 因此以 FIDO2 註冊的受邀者根本沒有可比對的信箱。
    */
-  acceptedEmailMatch String?      @map("accepted_email_match")
+  acceptedEmailMatch String? @map("accepted_email_match")
   /**
    * Info: (20260818 - Luphia) 撤回邀請的稽核（第三輪 D）。
+   *
    * 撤回原本是**實刪除**，於是「曾經邀請過誰、由誰撤回」在撤回之後查不到——
    * 而同一條路徑上的「拒絕」是改狀態，兩者的稽核強度不一致。
    * 邀請一個人是會動到信用卡並對外寄信的動作，它的撤回不該無痕。
+   *
    * 唯一仍該實刪的是**信寄不出去時的回滾**（見 `deleteInvitation`）：
    * 一封沒寄出去的邀請不是歷史紀錄，留著只會佔住 `pendingKey`。
    */
   // Info: (20260818 - Luphia) 由這封邀請開始的成員資格（第六輪第 1 條，通常 0 或 1 段）
-  joinedMembers      TeamMember[] @relation("MembershipOrigin")
-  revokedByUserId    String?      @map("revoked_by_user_id")
-  revokedBy          User?        @relation("InvitationRevoker", fields: [revokedByUserId], references: [id])
-  revokedAt          DateTime?    @map("revoked_at")
-  createdAt          DateTime     @default(now()) @map("created_at")
-  updatedAt          DateTime     @updatedAt @map("updated_at")
+  joinedMembers   TeamMember[] @relation("MembershipOrigin")
+  revokedByUserId String?   @map("revoked_by_user_id")
+  revokedBy       User?     @relation("InvitationRevoker", fields: [revokedByUserId], references: [id])
+  revokedAt       DateTime? @map("revoked_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   // Info: (20260816 - Luphia) 席次占用數的查詢條件（teamId + status + expiresAt），取代舊複合唯一鍵留下的索引
   @@index([teamId, status])
@@ -334,28 +348,29 @@ model TeamInvitation {
  * 金額一律 BigInt 零誤差；TeamWalletLedger 為 append-only，更正僅允許反向分錄。
  */
 model TeamSubscription {
-  id                 String    @id @default(uuid())
-  teamId             String    @unique @map("team_id")
-  team               Team      @relation(fields: [teamId], references: [id])
-  planId             String    @default("free") @map("plan_id") // Info: (20260807 - Luphia) PLAN 常數 (free/team/business)
-  status             String    @default("ACTIVE") // Info: (20260807 - Luphia) TEAM_SUBSCRIPTION_STATUS 常數
-  currentPeriodStart DateTime  @map("current_period_start")
-  currentPeriodEnd   DateTime  @map("current_period_end")
-  autoRenew          Boolean   @default(true) @map("auto_renew")
-  latestOrderId      String?   @map("latest_order_id")
+  id                 String   @id @default(uuid())
+  teamId             String   @unique @map("team_id")
+  team               Team     @relation(fields: [teamId], references: [id])
+  planId             String   @default("free") @map("plan_id") // Info: (20260807 - Luphia) PLAN 常數 (free/team/business)
+  status             String   @default("ACTIVE") // Info: (20260807 - Luphia) TEAM_SUBSCRIPTION_STATUS 常數
+  currentPeriodStart DateTime @map("current_period_start")
+  currentPeriodEnd   DateTime @map("current_period_end")
+  autoRenew          Boolean  @default(true) @map("auto_renew")
+  latestOrderId      String?  @map("latest_order_id")
   // Info: (20260814 - Luphia) 已付費席次數：訂閱以「席次 × 單價」計費，續訂時依當下成員數重算
-  seats              Int       @default(1)
+  seats              Int      @default(1)
   /**
    * Info: (20260814 - Luphia) 本期單價快照（TWD 整數，單一席次）。
    * 快照而非即時查表：期中加人要按「當初買的價格」比例補收，
    * 若期間調過價，用新價補收等於偷偷改了這一期的合約。
    */
-  unitPrice          Int       @default(0) @map("unit_price")
+  unitPrice          Int      @default(0) @map("unit_price")
   /**
    * Info: (20260821 - Luphia) 本期計費週期（BILLING_INTERVAL 常數：month/year）。
    * 先前只存在最後一張訂單的 data 裡，於是「期中加人的補收分母該是幾天」
    * 在資料層答不出來（review #6687 二輪高-1）。快照在這裡，與 unitPrice 同理：
    * 期中補收要按「當初買的週期」算，不是按下一張訂單的。
+   *
    * Info: (20260821 - Luphia) **可為 NULL 且刻意不給預設值**（review #6687 三輪）。
    * 本專案沒有 migrations 目錄，`db push` 之後既有列一律拿到欄位的預設值——
    * 若預設 `"month"`，年繳列會拿到一個**完全合法、只是錯的**值，`quoteSeatAddition`
@@ -364,14 +379,14 @@ model TeamSubscription {
    * NULL 讓現成的守門直接生效（擋下、要求回填），與 `unitPrice` 選
    * `TW_SEAT_PRICE_MISSING` 而不走零元路徑是同一個判斷。
    */
-  billingInterval    String?   @map("billing_interval")
+  billingInterval    String?  @map("billing_interval")
   /**
    * Info: (20260820 - Luphia) 已排程、**於當期屆滿時才生效**的方案（降級用）。
    * 退款政策 §2.1 承諾「取消或降級於當前結算週期結束後自動生效」，因此降級不得
    * 立即改 `planId`——當期權益必須維持原方案（使用者已付到期末）。
    * NULL＝沒有排程中的變更。升級不走這一欄（立即生效）。
    */
-  pendingPlanId      String?   @map("pending_plan_id")
+  pendingPlanId      String?  @map("pending_plan_id")
   /**
    * Info: (20260819 - Luphia) 鏈上訂閱會員卡（DynamicKYCMembership ERC721）的同步狀態。
    * 卡片是訂閱的鏡像：權益判斷一律讀本表其他欄位，不讀鏈（見 constants/subscription_nft）。
@@ -388,8 +403,8 @@ model TeamSubscription {
   // Info: (20260819 - Luphia) 連續失敗次數與最後一次錯誤：達上限即停手等人介入（CLAUDE.md §6）
   nftSyncAttempts    Int       @default(0) @map("nft_sync_attempts")
   nftSyncError       String?   @map("nft_sync_error")
-  createdAt          DateTime  @default(now()) @map("created_at")
-  updatedAt          DateTime  @updatedAt @map("updated_at")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
   @@map("team_subscription")
 }
@@ -574,10 +589,12 @@ model Order {
   tokens          Int?     @default(0)
   /**
    * Info: (20260815 - Luphia) 冪等鍵升格為真欄位並加上唯一約束（PR #6652 第二輪 B-3 / C-9）。
+   *
    * 原本只寫在 `data.idempotencyKey`（JSON path），資料庫層擋不住任何東西：
    * 「先查有沒有、沒有就建一張」在並發下兩邊都會通過——兩位管理員同時邀請同一個位址
    * 就是扣兩次款，後台連點發放點數也是同樣的形狀。
    * 唯一約束讓第二筆在 DB 層直接失敗（P2002），由呼叫端當成重放處理。
+   *
    * 可為 null：不需要冪等保護的訂單（一般購點、分析報告）不帶鍵，
    * 而 Postgres 的唯一約束允許多個 null。
    */
@@ -842,20 +859,20 @@ model AccountBook {
   accountingAccounts AccountingAccount[]
 
   // Info: (20260811 - Julian) 帳本對應的人資 (HR) 資料
-  departments           Department[]
-  jobTitles             JobTitle[]
-  employees             Employee[]
-  employeeEducations    EmployeeEducation[]
-  employeeExperiences   EmployeeExperience[]
-  emergencyContacts     EmergencyContact[]
-  dependents            Dependent[]
-  bankAccounts          BankAccount[]
-  onboardingTasks       OnboardingTask[]
-  offboardingTasks      OffboardingTask[]
-  onboardingProcesses   OnboardingProcess[]
-  probationReviews      ProbationReview[]
-  offboardingProcesses  OffboardingProcess[]
-  employeeDocuments     EmployeeDocument[]
+  departments          Department[]
+  jobTitles            JobTitle[]
+  employees            Employee[]
+  employeeEducations   EmployeeEducation[]
+  employeeExperiences  EmployeeExperience[]
+  emergencyContacts    EmergencyContact[]
+  dependents           Dependent[]
+  bankAccounts         BankAccount[]
+  onboardingTasks      OnboardingTask[]
+  offboardingTasks     OffboardingTask[]
+  onboardingProcesses  OnboardingProcess[]
+  probationReviews     ProbationReview[]
+  offboardingProcesses OffboardingProcess[]
+  employeeDocuments    EmployeeDocument[]
   // Info: (20260818 - Julian) HR 職能的指派紀錄（第三條角色軸線，見該 model 的說明）
   hrFunctionAssignments EmployeeHrFunctionAssignment[]
 
@@ -867,16 +884,16 @@ model AccountBook {
   leaveRequests     LeaveRequest[]
 
   // Info: (20260817 - Julian) 帳本對應的假勤 (Leave & Overtime) 資料
-  leavePolicies                 LeavePolicy[]
-  leaveGrants                   LeaveGrant[]
-  leaveBalances                 LeaveBalance[]
-  leaveApprovalRules            LeaveApprovalRule[]
-  leaveConcurrencyRules         LeaveConcurrencyRule[]
-  leaveCashOutEvents            LeaveCashOutEvent[]
-  overtimeRequests              OvertimeRequest[]
+  leavePolicies         LeavePolicy[]
+  leaveGrants           LeaveGrant[]
+  leaveBalances         LeaveBalance[]
+  leaveApprovalRules    LeaveApprovalRule[]
+  leaveConcurrencyRules LeaveConcurrencyRule[]
+  leaveCashOutEvents    LeaveCashOutEvent[]
+  overtimeRequests      OvertimeRequest[]
   // Info: (20260820 - Julian) §32 IV 認定與撤回的歷史（review 第 3 輪第 2 條）
   overtimeEmergencyDeclarations OvertimeEmergencyDeclaration[]
-  overtimePolicy                OvertimePolicy?
+  overtimePolicy        OvertimePolicy?
 
   @@map("account_book")
 }
@@ -1888,7 +1905,7 @@ model Department {
   managerId String?   @unique @map("manager_id")
   manager   Employee? @relation("DeptManager", fields: [managerId], references: [id], onDelete: SetNull)
 
-  employees             Employee[]             @relation("DeptEmployees")
+  employees Employee[] @relation("DeptEmployees")
   // Info: (20260817 - Julian) 併休上限規則
   leaveConcurrencyRules LeaveConcurrencyRule[]
 
@@ -1927,16 +1944,19 @@ model JobTitle {
 model Employee {
   /**
    * Info: (20260819 - Julian) **刻意沒有 `@default(uuid())`**（review B11）。
+   *
    * 這張表的 id 是 PII 加密 AAD 的一部分
    * （`hr_pii_crypto.ts`：`${table}:${recordId}:${field}:${keyVersion}`），
    * 因此 id 必須由應用層 `randomUUID()` 先產生、再拿去加密、最後與密文
    * 一起寫入。留著 default 的話，任何**不走 service** 的插入路徑
    * （seed、資料遷移、金鑰輪替、未來的端點）都會寫出一列 AAD 與 id 不符的密文。
+   *
    * 那筆資料寫得進去，**讀的時候驗章失敗並拋 `HrPiiDecryptError`，
    * 表現與「密文損毀」完全相同 —— 而它的明文只存在於那一列裡，無法重建。**
+   *
    * 由 `hr_pii_id_no_default.test.ts` 對 `HrPiiTable` 全表掃描釘住。
    */
-  id          String         @id
+  id String @id
   employeeNo  String         @map("employee_no") // Info: (20260810 - Julian) 工號 (例: EMP001)，唯一性以帳本為範圍
   name        String // Info: (20260810 - Julian) 姓名
   englishName String?        @map("english_name") // Info: (20260810 - Julian) 英文名
@@ -1948,10 +1968,13 @@ model Employee {
 
   /**
    * Info: (20260813 - Julian) 綁定的系統帳號。
+   *
    * 員工要能自己打卡、查自己的班表與出勤，就必須能從登入身分找回員工檔 ——
    * 而登入身分是 `User`（Google 登入或 passkey），出勤事實掛在 `Employee`。
+   *
    * 可空：員工檔可能先由 HR 建立、本人尚未登入過。
    * `@unique`：一個系統帳號只能對應一位員工。
+   *
    * 首次綁定以 `UserIdentity.email` 比對本表的 `email`（公司信箱）。
    * **那只是引導，綁定本身是這個欄位** —— 公司信箱可以變更（改名、部門調動），
    * 而打卡歷史不該跟著飄移；且 `personalEmailCipher` 是密文、DB 端查不了，
@@ -2050,8 +2073,8 @@ model Employee {
   attendancePunches AttendancePunch[]
 
   // Info: (20260813 - Julian) 假勤：自己的假單、以核准者身分做過的決定、以主管身分發起的銷假徵詢
-  leaveRequests LeaveRequest[] @relation("LeaveRequestEmployee")
-  leaveRecalls  LeaveRecall[]  @relation("LeaveRecallRequester")
+  leaveRequests  LeaveRequest[] @relation("LeaveRequestEmployee")
+  leaveRecalls   LeaveRecall[]  @relation("LeaveRecallRequester")
 
   // Info: (20260818 - Julian) HR 職能的指派紀錄（見 `EmployeeHrFunctionAssignment`）
   hrFunctions        EmployeeHrFunctionAssignment[] @relation("HrFunctionHolder")
@@ -2086,18 +2109,23 @@ model Employee {
 
 /**
  * Info: (20260818 - Julian) 員工的 HR 職能。**這是第三條軸線，不是 `Role` 也不是 `TeamRole`。**
+ *
  * | | 是什麼 | 掛在哪 |
  * |---|---|---|
  * | `Role`（USER/ADMIN/SUPER_ADMIN） | 平台身分 | `User` |
  * | `TeamRole`（OWNER/ADMIN/EDITOR/VIEWER） | 帳本存取權 | `TeamMember` |
  * | `EmployeeHrFunction` | **公司內的人事職能** | `Employee` |
+ *
  * 平台管理員不是人資，財務的帳本 `ADMIN` 也不是人資。反過來，`Employee.userId`
  * 是可空的 —— 工地的人可能沒有平台帳號，卻仍須出現在簽核鏈上；而帳本的 `OWNER`
  * 可能根本不是這家公司的員工。硬套任一條軸線會同時產生兩種錯誤（ADR 023 §8.3 修訂）。
+ *
  * ## 只有兩個值，因為只有兩個消費者
+ *
  * 每個值都對應一段今天真的會執行的判斷。憑空多列 `PAYROLL` / `AUDITOR`
  * 會讓它看起來像一條生效中的規則，而讀到的人會以為某處在讀它
  * （同 `EMPLOYEE_SCHEDULED_LEAVE_TYPES` 被移除的理由）。
+ *
  * ToDo: (20260818 - Julian) 薪資、教育訓練、稽核等職能等各自的模組要用時再加，
  * 屆時加的是 enum 值與它的消費者，不是這張表的結構。
  */
@@ -2117,18 +2145,26 @@ enum EmployeeHrFunction {
 
 /**
  * Info: (20260818 - Julian) HR 職能的指派。**一列一次指派，撤銷不刪列。**
+ *
  * ## 為什麼是一張表而不是 `Employee` 上的一個 enum 陣列
+ *
  * HR 職能等於「看得到全體個資 + 簽得掉別人的假」。勞動檢查與資安複核問的不是
  * 「現在誰是人資」，而是**「四月那張單被簽核時，誰有這個權限」** —— 一個會被
  * 就地覆寫的欄位答不出那個問題，而 `AuditLog` 只記「誰改過誰」、不記舊值。
+ *
  * 撤銷寫 `revokedAt` 而不是刪列，理由同上：刪掉之後，那段期間的權限狀態就消失了。
+ *
  * ## `activeKey` 的部分唯一索引
+ *
  * 同一人同一職能不得同時有兩列生效。手法比照 `LeaveDay.activeKey`：
  * 生效中填 `employeeId:function`，撤銷時填回 null，讓資料庫來擋而不是靠應用層先查後寫。
+ *
  * ## 為什麼指派者要存快照
+ *
  * `grantedByEmployeeId` 是 `SetNull` —— 指派者離職後外鍵會變 null，
  * 而那正是 ADR 023 §1 第 2 點抱怨的失敗模式（一筆沒有人指派過的權限）。
  * 因此另存當下的工號與姓名，比照 `LeaveApprovalStep` 的處置。
+ *
  * ToDo: (20260818 - Julian) 誰有權指派，尚未決定，因此**目前沒有指派 API**，
  * 只有 seed 與 repository 方法。不能讓 `HR_ADMIN` 自己指派 `HR_ADMIN`
  * （那是一條自我擴權的路），也不能讓它空著（那樣第一個人永遠拿不到職能）。
@@ -2228,16 +2264,19 @@ model EmployeeExperience {
 model EmergencyContact {
   /**
    * Info: (20260819 - Julian) **刻意沒有 `@default(uuid())`**（review B11）。
+   *
    * 這張表的 id 是 PII 加密 AAD 的一部分
    * （`hr_pii_crypto.ts`：`${table}:${recordId}:${field}:${keyVersion}`），
    * 因此 id 必須由應用層 `randomUUID()` 先產生、再拿去加密、最後與密文
    * 一起寫入。留著 default 的話，任何**不走 service** 的插入路徑
    * （seed、資料遷移、金鑰輪替、未來的端點）都會寫出一列 AAD 與 id 不符的密文。
+   *
    * 那筆資料寫得進去，**讀的時候驗章失敗並拋 `HrPiiDecryptError`，
    * 表現與「密文損毀」完全相同 —— 而它的明文只存在於那一列裡，無法重建。**
+   *
    * 由 `hr_pii_id_no_default.test.ts` 對 `HrPiiTable` 全表掃描釘住。
    */
-  id         String   @id
+  id String @id
   employeeId String   @map("employee_id")
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
@@ -2275,16 +2314,19 @@ model EmergencyContact {
 model Dependent {
   /**
    * Info: (20260819 - Julian) **刻意沒有 `@default(uuid())`**（review B11）。
+   *
    * 這張表的 id 是 PII 加密 AAD 的一部分
    * （`hr_pii_crypto.ts`：`${table}:${recordId}:${field}:${keyVersion}`），
    * 因此 id 必須由應用層 `randomUUID()` 先產生、再拿去加密、最後與密文
    * 一起寫入。留著 default 的話，任何**不走 service** 的插入路徑
    * （seed、資料遷移、金鑰輪替、未來的端點）都會寫出一列 AAD 與 id 不符的密文。
+   *
    * 那筆資料寫得進去，**讀的時候驗章失敗並拋 `HrPiiDecryptError`，
    * 表現與「密文損毀」完全相同 —— 而它的明文只存在於那一列裡，無法重建。**
+   *
    * 由 `hr_pii_id_no_default.test.ts` 對 `HrPiiTable` 全表掃描釘住。
    */
-  id         String   @id
+  id String @id
   employeeId String   @map("employee_id")
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
@@ -2319,16 +2361,19 @@ model Dependent {
 model BankAccount {
   /**
    * Info: (20260819 - Julian) **刻意沒有 `@default(uuid())`**（review B11）。
+   *
    * 這張表的 id 是 PII 加密 AAD 的一部分
    * （`hr_pii_crypto.ts`：`${table}:${recordId}:${field}:${keyVersion}`），
    * 因此 id 必須由應用層 `randomUUID()` 先產生、再拿去加密、最後與密文
    * 一起寫入。留著 default 的話，任何**不走 service** 的插入路徑
    * （seed、資料遷移、金鑰輪替、未來的端點）都會寫出一列 AAD 與 id 不符的密文。
+   *
    * 那筆資料寫得進去，**讀的時候驗章失敗並拋 `HrPiiDecryptError`，
    * 表現與「密文損毀」完全相同 —— 而它的明文只存在於那一列裡，無法重建。**
+   *
    * 由 `hr_pii_id_no_default.test.ts` 對 `HrPiiTable` 全表掃描釘住。
    */
-  id         String   @id
+  id String @id
   employeeId String   @map("employee_id")
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
@@ -2673,6 +2718,7 @@ enum PunchVerification {
 
 /**
  * Info: (20260813 - Julian) 排班日的性質。判定引擎依此決定當天是否需要出勤。
+ *
  * Info: (20260817 - Julian) SUSPENDED 已補上（原本 demo 暫借 HOLIDAY）。
  * 分開的理由不只是語意：借用會讓「今年停工幾天」與「今年國定假日幾天」
  * 混在同一個值裡，而前者是工期展延與契約計價的依據；加班級距的判定
@@ -2799,13 +2845,16 @@ model EmployeeShiftDay {
 
   /**
    * Info: (20260817 - Julian) 這天**本來**要上幾分鐘。投影成非上班日之後仍然查得到。
+   *
    * 為什麼需要它：`assertSchedulableDay` 要求非 `WORK` 必無班別（那條規則是對的 ——
    * 休假日掛著班別，排班月曆會畫出一個不存在於任何判定的班次），
    * 於是一旦投影成 `LEAVE` / `HOLIDAY` / `SUSPENDED`，
    * 「這天的應工作分鐘數」在資料庫裡就消失了。
+   *
    * 而那個數字是下游三件事的依據：半天假怎麼換算、額度扣幾分鐘、銷假退幾分鐘。
    * 假勤模組原本靠 `LeaveDay.dayEquivalentMinutes` 在送出當下自己抄一份，
    * 但那只涵蓋走過假勤流程的日子 —— 種子腳本與批次匯入寫成 `LEAVE` 的日子沒有。
+   *
    * Nullable：`WORK` 日不需要它（讀 `shiftPattern.requiredWorkMinutes` 即可，
    * 那才是唯一來源）；投影當下才由投影者填入。
    * ToDo: (20260817 - Julian) 既有資料為 null。回填需要「當時的班別」，而那正是
@@ -2932,13 +2981,16 @@ enum LeaveRecallStatus {
 model LeaveRequest {
   /**
    * Info: (20260819 - Julian) **刻意沒有 `@default(uuid())`**（review B11）。
+   *
    * 這張表的 id 是 PII 加密 AAD 的一部分
    * （`hr_pii_crypto.ts`：`${table}:${recordId}:${field}:${keyVersion}`），
    * 因此 id 必須由應用層 `randomUUID()` 先產生、再拿去加密、最後與密文
    * 一起寫入。留著 default 的話，任何**不走 service** 的插入路徑
    * （seed、資料遷移、金鑰輪替、未來的端點）都會寫出一列 AAD 與 id 不符的密文。
+   *
    * 那筆資料寫得進去，**讀的時候驗章失敗並拋 `HrPiiDecryptError`，
    * 表現與「密文損毀」完全相同 —— 而它的明文只存在於那一列裡，無法重建。**
+   *
    * 由 `hr_pii_id_no_default.test.ts` 對 `HrPiiTable` 全表掃描釘住。
    */
   id String @id
@@ -2949,7 +3001,7 @@ model LeaveRequest {
   employeeId String   @map("employee_id")
   employee   Employee @relation("LeaveRequestEmployee", fields: [employeeId], references: [id], onDelete: Cascade)
 
-  status LeaveRequestStatus @default(PENDING)
+  status    LeaveRequestStatus @default(PENDING)
 
   // Info: (20260817 - Julian) 取代 Demo 版的 leaveType 欄位（ADR 021）。
   // Info: (20260817 - Julian) Restrict：假別被停用不可讓歷史假單靜默失去它的規則來源
@@ -2959,6 +3011,7 @@ model LeaveRequest {
   /**
    * Info: (20260817 - Julian) 請假事由。**密文入庫**（ADR 018 Tier 2）——
    * 病名、家屬狀況、司法事由都寫在這裡，敏感度與 EmergencyContact.altPhoneCipher 同級。
+   *
    * AAD 綁定 `LeaveRequest:{id}:reasonCipher:{keyVersion}`，因此本表的 id
    * **必須由應用層 randomUUID() 產生**，不可依賴 @default(uuid())。
    * 非空：一張沒有理由的假單，事後沒有人能判斷它合不合理。
@@ -2974,10 +3027,12 @@ model LeaveRequest {
 
   /**
    * Info: (20260820 - Julian) `proofDocumentId` 已移除（review 第 6 輪 M18）。
+   *
    * 它落地時是一個 `String?`：沒有 `@relation`、沒有租戶檢查，而
    * `grep proofDocumentId` 全庫唯一的命中就是它自己這一行 —— 零讀取、零寫入。
    * 對照之下 `proofRequirement` / `proofThresholdDays` 那套規則有七八個檔案在讀。
    * 也就是說「需要證明文件」上線了，「文件在哪」永遠是 null。
+   *
    * 留著比拆掉危險：一個永遠 null 的欄位讀起來像「這張單沒附證明」，
    * 而真相是「這個系統從來沒有地方可以附」。真正要做的是一整條上傳路徑
    * （儲存、租戶隔離、Tier 2 加密、保存期限），那不是一個欄位。
@@ -3038,9 +3093,11 @@ model LeaveDay {
 
   /**
    * Info: (20260817 - Julian) 換算當下的 `LEAVE_ENTITLEMENT_ENGINE_VERSION`。
+   *
    * 固化了數值卻沒固化版本，等於固化了一個答案卻丟掉它的依據 ——
    * 引擎改版之後，一筆看起來不對的分鐘數分不出是「當初算錯」還是「規則改了」，
    * 而這兩者的處置完全相反（前者要補償，後者不能動）。
+   *
    * 語意同 `AttendancePunch` 之於判定引擎、`OvertimeSegment.engineVersion`。
    * 這條規則寫在假勤接線守則 §3.1，而假勤自己是第一個違反它的 ——
    * 補上之後它才是那條規則的範例而不是反例。
@@ -3056,7 +3113,7 @@ model LeaveDay {
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  recalls       LeaveRecall[]
+  recalls LeaveRecall[]
   ledgerEntries LeaveLedgerEntry[]
 
   @@unique([leaveRequestId, workDate])
@@ -3118,39 +3175,45 @@ model LeaveRecall {
 
 /**
  * Info: (20260817 - Julian) ========== 假勤模組 (Leave & Overtime) ==========
+ *
  * 貼入位置：`prisma/schema.prisma` 最末（既有簽到系統區塊之後）。
  * 貼入後另需在 `AccountBook` 與 `Employee` 補反向關聯，見本檔末尾的「反向關聯增補」。
+ *
  * ## 五個貫穿本區塊的決策
+ *
  * 1. **假別是規則不是列舉** —— `LeavePolicy` 取代 Demo 期間寫死的 `enum LeaveType`。
- * 「行為分類用 enum、參數用欄位」的切法見 ADR 021：`accrualMethod` / `cycleBasis` /
- * `unitBasis` 的每個值都對應一段不同的程式，新增值必然伴隨新程式碼；而 `annualDays`
- * / `minimumUnitMinutes` 是租戶自己會調的數字。`code` **嚴禁被 if/switch 比對**。
+ *    「行為分類用 enum、參數用欄位」的切法見 ADR 021：`accrualMethod` / `cycleBasis` /
+ *    `unitBasis` 的每個值都對應一段不同的程式，新增值必然伴隨新程式碼；而 `annualDays`
+ *    / `minimumUnitMinutes` 是租戶自己會調的數字。`code` **嚴禁被 if/switch 比對**。
  * 2. **額度是異動的結果不是一個數字** —— `LeaveGrant`（批次，不可變）+
- * `LeaveLedgerEntry`（append-only）為唯一真相，`LeaveBalance` 是可重建的派生快取。
- * 手法比照 ADR 015 的 `TeamWalletLedger`。
+ *    `LeaveLedgerEntry`（append-only）為唯一真相，`LeaveBalance` 是可重建的派生快取。
+ *    手法比照 ADR 015 的 `TeamWalletLedger`。
  * 3. **帳本的單位是分鐘** —— `Int`，整數運算，守恆恆成立。「日」只出現在授予
- * (`grantedDays` × `dayEquivalentMinutes`) 與折現兩個端點，各自固化換算依據。
- * 半小時在 6 小時班別上是 1/12 日，用 Decimal 存日必然捨入、必然累積，
- * 而一條允許誤差的守恆式就不再是守恆式（ADR 022 §3）。
+ *    (`grantedDays` × `dayEquivalentMinutes`) 與折現兩個端點，各自固化換算依據。
+ *    半小時在 6 小時班別上是 1/12 日，用 Decimal 存日必然捨入、必然累積，
+ *    而一條允許誤差的守恆式就不再是守恆式（ADR 022 §3）。
  * 4. **簽核路徑在送出當下固化** —— `LeaveApprovalStep` 存的是快照（含當時的工號與姓名）。
- * 組織異動不改寫歷史單據的簽核路徑（ADR 023）。
+ *    組織異動不改寫歷史單據的簽核路徑（ADR 023）。
  * 5. **本模組不算金額** —— 只輸出分鐘與法定加成級距，折現一律經 `LeaveCashOutEvent`
- * 交棒薪資模組。同 ADR 020 對資遣費的處置（ADR 024 §7）。
+ *    交棒薪資模組。同 ADR 020 對資遣費的處置（ADR 024 §7）。
+ *
  * 完整脈絡見 `documents/architecture/leave_and_overtime_module_plan.md`
  * 與 ADR 021–024。
  */
 
 // Info: (20260817 - Julian) 給假方式。每個值對應一段不同的計算程式，故為 enum 而非設定值（ADR 021 §2）
 enum LeaveAccrualMethod {
-  NONE // Info: (20260817 - Julian) 不給額度（公傷病假、產假：有多少給多少，由事件決定）
-  SENIORITY_TIER // Info: (20260817 - Julian) 依年資級距表給假（特休，勞基法 §38 I）
+  NONE            // Info: (20260817 - Julian) 不給額度（公傷病假、產假：有多少給多少，由事件決定）
+  SENIORITY_TIER  // Info: (20260817 - Julian) 依年資級距表給假（特休，勞基法 §38 I）
   FIXED_PER_CYCLE // Info: (20260817 - Julian) 每週期固定日數（事假 14 日、家庭照顧假 7 日）
-  PER_EVENT // Info: (20260817 - Julian) 逐次事件給假（婚假、喪假：每發生一次給一次）
+  PER_EVENT       // Info: (20260817 - Julian) 逐次事件給假（婚假、喪假：每發生一次給一次）
 }
 
 /**
  * Info: (20260817 - Julian) 給假週期基準。
+ *
  * ToDo: (20260817 - Julian) 授權依據為勞動基準法施行細則 §24，條號待法務複核。
+ *
  * 曆年制是**雇主為了行政方便**而選的制度，這個方便不能由勞工買單 ——
  * `assertCycleNotDisadvantageous` **將**在授予當下同時試算兩制，
  * ToDo: (20260819 - Julian) 尚未接線（review B3）：引擎側的 `compareCycleBasisEntitlement()` 已實作，但沒有任何地方丟 `VA_LEAVE_CYCLE_DISADVANTAGEOUS`。原因是計畫書 §17 缺口 9——現行曆年制比例公式本身會少給，接上護欄會讓 13 個內建假別裡的 11 個曆年制全部授予失敗。在公式修正前，改以 `assertLeavePolicyUnit` 暫時拒絕「年資級距 + 曆年制」這一個危險組合。
@@ -3158,7 +3221,7 @@ enum LeaveAccrualMethod {
  */
 enum LeaveCycleBasis {
   HIRE_ANNIVERSARY // Info: (20260817 - Julian) 週年制：週期起點為到職日
-  CALENDAR_YEAR // Info: (20260817 - Julian) 曆年制：週期起點為 1/1，首年與跨級距年須比例給假
+  CALENDAR_YEAR    // Info: (20260817 - Julian) 曆年制：週期起點為 1/1，首年與跨級距年須比例給假
   // Info: (20260817 - Julian) 曆月制：週期起點為每月 1 日。生理假是「每月得請一日」（性平法 §14），
   // Info: (20260817 - Julian) 用年度額度 12 日會讓一個人在一月請完全年份，那不是這條規定的意思
   CALENDAR_MONTH
@@ -3166,24 +3229,26 @@ enum LeaveCycleBasis {
 
 /**
  * Info: (20260817 - Julian) 最小請假單位的基準。**「半天」不是 240 分鐘。**
+ *
  * 它是「該日應工作分鐘的一半」，而 `ShiftPattern.requiredWorkMinutes` 因班別而異
  * （工地日班與本部行政班就不同）。寫成 240 等於宣稱所有人的一天都是 8 小時 ——
  * 那正是 `ShiftPattern` 拒絕 `shiftType` 的同一種謊（ADR 021 §4）。
  */
 enum LeaveUnitBasis {
   FIXED_MINUTES // Info: (20260817 - Julian) 以 minimumUnitMinutes 為準（半小時 = 30、一小時 = 60）
-  HALF_WORKDAY // Info: (20260817 - Julian) floor(該日班別 requiredWorkMinutes / 2)，餘數由下半天吸收
-  FULL_WORKDAY // Info: (20260817 - Julian) 該日班別 requiredWorkMinutes
+  HALF_WORKDAY  // Info: (20260817 - Julian) floor(該日班別 requiredWorkMinutes / 2)，餘數由下半天吸收
+  FULL_WORKDAY  // Info: (20260817 - Julian) 該日班別 requiredWorkMinutes
 }
 
 /**
  * Info: (20260817 - Julian) 請假時數的捨入方向。
+ *
  * 預設 UP（不足一單位以一單位計）是**對勞工不利**的預設，必須載明於工作規則。
  * 刻意沒有 DOWN：往下捨的結果**將**被 assertCycleNotDisadvantageous 擋掉並 throw（尚未接線，見 review B3），
  * 提供一個必然觸發例外的設定值，只會讓租戶以為那是可用的選項。
  */
 enum LeaveRoundingMode {
-  UP // Info: (20260817 - Julian) 無條件進位至最小單位
+  UP      // Info: (20260817 - Julian) 無條件進位至最小單位
   NEAREST // Info: (20260817 - Julian) 四捨五入至最小單位
 }
 
@@ -3202,43 +3267,46 @@ enum LeaveProofRequirement {
 
 /**
  * Info: (20260817 - Julian) 額度的來源。
+ *
  * OVERTIME_CONVERSION ⟺ `LeaveGrant.overtimeSegmentId != null`（雙向），
  * 由 `assertGrantSource` 擋在 repository。不拆成獨立的補休表：
  * 拆表不會讓非法狀態變少，卻要寫兩套 allocateConsumption、兩套勾稽、兩套重建
  * —— 判準同 ADR 019 與 `EmployeeShiftDay`（ADR 022 §5.2）。
  */
 enum LeaveGrantSource {
-  SENIORITY_ACCRUAL // Info: (20260817 - Julian) 依年資或週期自動授予
-  CARRY_FORWARD // Info: (20260817 - Julian) 上年度遞延（特休，勞基法 §38 IV）
+  SENIORITY_ACCRUAL   // Info: (20260817 - Julian) 依年資或週期自動授予
+  CARRY_FORWARD       // Info: (20260817 - Julian) 上年度遞延（特休，勞基法 §38 IV）
   OVERTIME_CONVERSION // Info: (20260817 - Julian) 加班換補休（勞基法 §32-1，1:1 不乘倍率）
-  MANUAL_ADJUSTMENT // Info: (20260817 - Julian) 人工調整，reason 必填
+  MANUAL_ADJUSTMENT   // Info: (20260817 - Julian) 人工調整，reason 必填
 }
 
 /**
  * Info: (20260817 - Julian) 帳本異動類型。
+ *
  * **撤銷是寫反向的 RESTORE / ADJUST，不是刪列。** 刪掉的話「他曾經被扣過、後來退回」
  * 這個事實就消失了，而那正是勞動檢查會查的東西 —— 理由同 `LeaveDay` 銷假時
  * 把 activeKey 設回 null 而不刪列。
  */
 enum LeaveLedgerEntryType {
-  GRANT // Info: (20260817 - Julian) 授予（正）
-  CONSUME // Info: (20260817 - Julian) 請假扣減（負）
-  RESTORE // Info: (20260817 - Julian) 駁回／撤回／銷假退回（正）
-  EXPIRE // Info: (20260817 - Julian) 到期作廢（負）
+  GRANT    // Info: (20260817 - Julian) 授予（正）
+  CONSUME  // Info: (20260817 - Julian) 請假扣減（負）
+  RESTORE  // Info: (20260817 - Julian) 駁回／撤回／銷假退回（正）
+  EXPIRE   // Info: (20260817 - Julian) 到期作廢（負）
   CASH_OUT // Info: (20260817 - Julian) 折現（負）。cashOutOnExpiry 為真時必須先產事件再 EXPIRE
-  ADJUST // Info: (20260817 - Julian) 人工調整或補償分錄（有號）
+  ADJUST   // Info: (20260817 - Julian) 人工調整或補償分錄（有號）
 }
 
 /**
  * Info: (20260817 - Julian) 簽核節點型別。
+ *
  * 每個值對應一段不同的解析程式（DEPARTMENT_MANAGER 走部門樹、HR 查角色、
  * SPECIFIC_EMPLOYEE 讀外鍵），故為 enum；而門檻天數是資料（ADR 023 §2.1）。
  */
 enum LeaveApprovalNodeKind {
-  DIRECT_MANAGER // Info: (20260817 - Julian) Employee.managerId
+  DIRECT_MANAGER     // Info: (20260817 - Julian) Employee.managerId
   DEPARTMENT_MANAGER // Info: (20260817 - Julian) 沿 Department 樹向上找第一個有 managerId 的節點
-  HR // Info: (20260817 - Julian) 具 HR 角色者，任一人簽核即通過
-  SPECIFIC_EMPLOYEE // Info: (20260817 - Julian) 指名特定員工（小型組織與代理情境）
+  HR                 // Info: (20260817 - Julian) 具 HR 角色者，任一人簽核即通過
+  SPECIFIC_EMPLOYEE  // Info: (20260817 - Julian) 指名特定員工（小型組織與代理情境）
 }
 
 // Info: (20260817 - Julian) 單一簽核節點的狀態。SKIPPED 用於相鄰去重後被併掉的節點
@@ -3251,6 +3319,7 @@ enum LeaveApprovalStepStatus {
 
 /**
  * Info: (20260817 - Julian) 一天請假的時段型態。
+ *
  * MORNING / AFTERNOON 的分界由該日班別的 coreStartMinute 與 requiredWorkMinutes 推出，
  * 不是固定的 12:00 —— 夜班的「上半天」在日曆上是前一天晚上。
  */
@@ -3263,15 +3332,16 @@ enum LeaveDaySegment {
 
 // Info: (20260817 - Julian) 折現事件的成因。每一種都對應一條法源，見 ADR 024 §7
 enum LeaveCashOutReason {
-  OVERTIME_PAYMENT // Info: (20260817 - Julian) 加班選擇領加班費（§24）
-  ANNUAL_YEAR_END // Info: (20260817 - Julian) 特休年度終結未休且未協商遞延（§38 IV）
+  OVERTIME_PAYMENT         // Info: (20260817 - Julian) 加班選擇領加班費（§24）
+  ANNUAL_YEAR_END          // Info: (20260817 - Julian) 特休年度終結未休且未協商遞延（§38 IV）
   ANNUAL_CARRY_FORWARD_END // Info: (20260817 - Julian) 遞延年度終結仍未休（§38 IV）
-  COMPENSATORY_EXPIRED // Info: (20260817 - Julian) 補休期限屆滿未休（§32-1）
-  TERMINATION_SETTLEMENT // Info: (20260817 - Julian) 契約終止結算（§38 IV、§32-1）
+  COMPENSATORY_EXPIRED     // Info: (20260817 - Julian) 補休期限屆滿未休（§32-1）
+  TERMINATION_SETTLEMENT   // Info: (20260817 - Julian) 契約終止結算（§38 IV、§32-1）
 }
 
 /**
  * Info: (20260817 - Julian) 併休超限的處置。
+ *
  * **對特休只能是 WARN。** 勞基法 §38 II 明定期日由勞工排定，雇主只能「協商調整」；
  * 在送出端硬擋等於用技術手段行使一個法律上沒有的否決權（計畫書 §D14）。
  * BLOCK 僅適用於 `LeavePolicy.employerMayReject = true` 的假別。
@@ -3283,23 +3353,25 @@ enum LeaveConcurrencyAction {
 
 /**
  * Info: (20260817 - Julian) 加班申請的時序型態。
+ *
  * 不拆成兩張表：兩者欄位完全相同，差別只在 createdAt 與 workDate 的先後，
  * 而那是可由 `assertOvertimeFilingType` 檢查的。拆表不會讓非法狀態變少，
  * 只會讓「我的加班單」要查兩張表再合併排序（ADR 024 §3）。
  */
 enum OvertimeFilingType {
-  ADVANCE // Info: (20260817 - Julian) 事前申請：createdAt 須早於該日班別的 windowStartMinute
+  ADVANCE  // Info: (20260817 - Julian) 事前申請：createdAt 須早於該日班別的 windowStartMinute
   POST_HOC // Info: (20260817 - Julian) 事後補單
 }
 
 // Info: (20260817 - Julian) 加班的歸戶方式。勞基法 §32-1 要求由**勞工**選擇
 enum OvertimeCompensationMode {
-  PAYMENT // Info: (20260817 - Julian) 領加班費，產生 LeaveCashOutEvent
-  COMPENSATORY_LEAVE // Info: (20260817 - Julian) 換補休，每個分段各產生一筆 LeaveGrant（1:1）
+  PAYMENT             // Info: (20260817 - Julian) 領加班費，產生 LeaveCashOutEvent
+  COMPENSATORY_LEAVE  // Info: (20260817 - Julian) 換補休，每個分段各產生一筆 LeaveGrant（1:1）
 }
 
 /**
  * Info: (20260817 - Julian) 加班時數的佐證來源。
+ *
  * MANUAL_DECLARATION 仍然認列，但強制走完整簽核鏈，且在統計端點與有打卡佐證者
  * **分開統計** —— 勞動檢查會問「有多少加班沒有出勤紀錄佐證」，
  * 而一個答不出這題的系統等於默認全部都是（ADR 024 §2.2）。
@@ -3311,17 +3383,18 @@ enum OvertimeEvidenceBasis {
 
 /**
  * Info: (20260817 - Julian) 法定加成級距。
+ *
  * ToDo: (20260817 - Julian) §24 平日用「加給三分之一」（發給 4/3），休息日用
  * 「**另再**加給一又三分之一」（發給 7/3）。倍率常數以**加給倍率**為準，
  * 但此換算陳述待法務複核 —— 差一個「另再」就差一倍工資。
  */
 enum OvertimePremiumTier {
-  WEEKDAY_FIRST_2H // Info: (20260817 - Julian) 上班日延長前 2 小時，加給 1/3（§24 I ①）
-  WEEKDAY_BEYOND_2H // Info: (20260817 - Julian) 上班日再延長，加給 2/3（§24 I ②）
-  REST_DAY_FIRST_2H // Info: (20260817 - Julian) 休息日前 2 小時，另再加給 4/3（§24 II ①）
+  WEEKDAY_FIRST_2H   // Info: (20260817 - Julian) 上班日延長前 2 小時，加給 1/3（§24 I ①）
+  WEEKDAY_BEYOND_2H  // Info: (20260817 - Julian) 上班日再延長，加給 2/3（§24 I ②）
+  REST_DAY_FIRST_2H  // Info: (20260817 - Julian) 休息日前 2 小時，另再加給 4/3（§24 II ①）
   REST_DAY_BEYOND_2H // Info: (20260817 - Julian) 休息日 2 小時後，另再加給 5/3（§24 II ②）
-  HOLIDAY_DOUBLE // Info: (20260817 - Julian) 休假日經同意出勤，工資加倍發給（§39）
-  EMERGENCY_DOUBLE // Info: (20260817 - Julian) 天災事變等，加倍發給（§24 I ③、§32 IV）
+  HOLIDAY_DOUBLE     // Info: (20260817 - Julian) 休假日經同意出勤，工資加倍發給（§39）
+  EMERGENCY_DOUBLE   // Info: (20260817 - Julian) 天災事變等，加倍發給（§24 I ③、§32 IV）
 }
 
 // Info: (20260817 - Julian) 加班單狀態。與 LeaveRequestStatus 同構，但兩者的簽核鏈不共用
@@ -3334,6 +3407,7 @@ enum OvertimeRequestStatus {
 
 /**
  * Info: (20260817 - Julian) 假別設定。取代 Demo 期間寫死的 `enum LeaveType`。
+ *
  * `code` 是帳本內唯一鍵，供 seed、i18n 與跨帳本統計比對使用。
  * **嚴禁被 if/switch 比對** —— 一旦規則引擎開始讀 code，租戶自訂的假別就會
  * 靜默掉進一段從來沒有為它寫過的分支。以 `leave_policy_no_code_branching.test.ts`
@@ -3356,14 +3430,14 @@ model LeavePolicy {
   annualDays    Decimal?           @map("annual_days")
 
   // Info: (20260817 - Julian) --- 請假單位（「半天」是相對量，不能寫成 240，見 LeaveUnitBasis）---
-  unitBasis             LeaveUnitBasis    @map("unit_basis")
+  unitBasis          LeaveUnitBasis    @map("unit_basis")
   // Info: (20260817 - Julian) **僅 FIXED_MINUTES 有意義，其餘必須為 null。**
   // Info: (20260817 - Julian) 不是「忽略」而是「必須為 null」——留著一個不被讀的值，
   // Info: (20260817 - Julian) 它仍然是一個看起來像設定的謊。由 assertLeavePolicyUnit 擋在 repository
-  minimumUnitMinutes    Int?              @map("minimum_unit_minutes")
-  roundingMode          LeaveRoundingMode @default(UP) @map("rounding_mode")
+  minimumUnitMinutes Int?              @map("minimum_unit_minutes")
+  roundingMode       LeaveRoundingMode @default(UP) @map("rounding_mode")
   // Info: (20260817 - Julian) 比例給假的小數位數。方向固定為無條件進位，不開放設定（ADR 021 §3.2）
-  proratedRoundingScale Int               @default(1) @map("prorated_rounding_scale")
+  proratedRoundingScale Int            @default(1) @map("prorated_rounding_scale")
 
   // Info: (20260817 - Julian) --- 遞延與失效 ---
   // Info: (20260817 - Julian) 特休依 §38 IV 得協商遞延一年 => 12；0 表不可遞延
@@ -3373,9 +3447,9 @@ model LeavePolicy {
 
   // Info: (20260817 - Julian) --- 工資與證明 ---
   /**
-   * /**
    * Info: (20260817 - Julian) 給薪比例（工資照給 = 1、折半發給 = 0.5、不給工資 = 0）。
    * 本模組不算金額，此欄位供薪資模組與畫面提示使用。
+   *
    * **Nullable 且無預設值**：產假的工資取決於年資（受僱六個月以上照給、
    * 未滿六個月減半，勞基法 §50 II），不是一個能寫在假別上的常數。
    * 若給預設 1，seed 會把「要看年資」靜默記成「工資照給」——
@@ -3395,6 +3469,7 @@ model LeavePolicy {
 
   /**
    * Info: (20260817 - Julian) 併入其他假別計算（家庭照顧假併入事假，性平法 §20）。
+   *
    * ToDo: (20260817 - Julian) 生理假逾一定日數併入病假的規則待法務複核；
    * 在核對完成前該假別此欄位留空，UI 顯示「本假別的併計規則尚未設定」，不猜一個數字填進去。
    */
@@ -3403,7 +3478,7 @@ model LeavePolicy {
   mergedFromPolicies LeavePolicy[] @relation("LeavePolicyMerge")
 
   // Info: (20260817 - Julian) 法源記載。字串而非 enum：條號會修法，且它從不參與判斷
-  legalBasis      String? @map("legal_basis")
+  legalBasis String? @map("legal_basis")
   // Info: (20260817 - Julian) 內建假別由 seed 產生，租戶不可刪除（可停用）
   isSystemDefined Boolean @default(false) @map("is_system_defined")
   isActive        Boolean @default(true) @map("is_active")
@@ -3425,10 +3500,13 @@ model LeavePolicy {
 
 /**
  * Info: (20260817 - Julian) 年資級距給假表。
+ *
  * 勞基法 §38 I 的 3/7/10/14/15/+1 至 30 日是**資料不是程式碼** —— 它會修法，
  * 而 2016 年那次修法改的就是這張表。修法時該改的是六列資料，不是一個 switch 的六個 case。
+ *
  * 「十年以上每年加給一日，加至三十日為止」由 `incrementDaysPerYear` 與 `maxDays`
  * 表達，不需要為它列 20 列 —— 它是一條規則不是 20 個特例。
+ *
  * ToDo: (20260817 - Julian) 「每一年加給一日」自滿 10 年當年或次年起算，實務見解不一，
  * 差一日。seed 暫以滿 10 年當年 16 日落地，待法務複核。
  */
@@ -3452,15 +3530,21 @@ model LeaveAccrualTier {
 
 /**
  * Info: (20260817 - Julian) 授予批次。**不可變。**
+ *
  * ## 為什麼是批次而不是一個餘額
+ *
  * §38 IV 的遞延與 §32-1 的補休期限都問「這一批什麼時候給的、什麼時候到期」，
  * 而餘額欄位答不出來。扣減採 FIFO by expiresOn（先到期先扣）：對勞工有利，
  * 且是唯一能讓「還剩幾天不會過期」有確定答案的順序。
+ *
  * ## grantedDays 與 dayEquivalentMinutes 為什麼兩個都要存
+ *
  * 帳本的單位是分鐘（整數、守恆恆成立），法規的面額是日。兩個欄位一起，
  * 任何人事後都能驗算「這 3360 分鐘是 7 日 × 每日 480 分鐘來的」。
  * 少存任何一個，這筆授予就變成一個無從查核的數字。
+ *
  * ## overtimeSegmentId
+ *
  * 僅 source = OVERTIME_CONVERSION 時有值，指回產生它的加班分段 ——
  * 補休屆期折現要「依當日工資計算標準發給」(§32-1)，級距資訊必須跟著這一批走。
  * 由 `assertGrantSource` 擋雙向不變式，並檢查 1:1（grantedMinutes === segment.minutes）。
@@ -3501,10 +3585,12 @@ model LeaveGrant {
 
   /**
    * Info: (20260821 - Julian) 批次被撤銷的時點（review 第 8 輪第 1 條）。
+   *
    * `LeaveGrant` 依 ADR 022 §2.1 是**不可變**的，因此撤銷加班核准時不刪這一列，
    * 只標記它，並在帳本上補一筆反向分錄把該批餘額歸零。刪列的話
    * 「他曾經換到過這批補休、後來被撤銷了」就消失了 —— 而 §2.4 說那正是
    * 主管機關會查的東西。
+   *
    * `consumableGrantWhere` 必須濾掉它：否則一批餘額已經是 0 的批次仍會進入
    * FIFO，症狀是請假時「掃到批次但一分鐘都扣不到」。
    */
@@ -3521,7 +3607,9 @@ model LeaveGrant {
 
 /**
  * Info: (20260817 - Julian) 額度異動帳本。**Append-only，永不 update、永不 delete。**
+ *
  * 手法比照 ADR 015 的 `TeamWalletLedger`：有號 delta、扣後餘額、冪等鍵。
+ *
  * `leaveGrantId` 必填而非可空：一筆不知道從哪一批扣的異動，等於沒有記錄 ——
  * FIFO 扣減會跨批次產生多筆，各自指向自己的那一批。
  */
@@ -3531,18 +3619,18 @@ model LeaveLedgerEntry {
   leaveGrantId String     @map("leave_grant_id")
   leaveGrant   LeaveGrant @relation(fields: [leaveGrantId], references: [id], onDelete: Restrict)
 
-  entryType                LeaveLedgerEntryType @map("entry_type")
+  entryType LeaveLedgerEntryType @map("entry_type")
   // Info: (20260817 - Julian) 有號：GRANT / RESTORE 為正，CONSUME / EXPIRE / CASH_OUT 為負，ADJUST 兩者皆可
-  deltaMinutes             Int                  @map("delta_minutes")
+  deltaMinutes Int @map("delta_minutes")
   // Info: (20260817 - Julian) 該批扣後餘額。冗餘但刻意：勾稽時不必重跑全表即可定位斷點（同 TeamWalletLedger.balanceAfter）
-  grantBalanceAfterMinutes Int                  @map("grant_balance_after_minutes")
+  grantBalanceAfterMinutes Int @map("grant_balance_after_minutes")
 
   // Info: (20260817 - Julian) 來源單據。CONSUME / RESTORE 指向 LeaveDay，CASH_OUT 指向事件
   leaveDayId String?   @map("leave_day_id")
   leaveDay   LeaveDay? @relation(fields: [leaveDayId], references: [id], onDelete: SetNull)
 
-  cashOutEventId String?            @map("cash_out_event_id")
-  cashOutEvent   LeaveCashOutEvent? @relation(fields: [cashOutEventId], references: [id], onDelete: SetNull)
+  cashOutEventId String?             @map("cash_out_event_id")
+  cashOutEvent   LeaveCashOutEvent?  @relation(fields: [cashOutEventId], references: [id], onDelete: SetNull)
 
   // Info: (20260817 - Julian) 冪等鍵。重試、補償、Worker 重跑皆靠它擋重複入帳
   // Info: (20260817 - Julian) 授予格式：grant:<employeeId>:<policyId>:<cycleStartDate>（同 ADR 010 的決定性雜湊手法）
@@ -3554,19 +3642,22 @@ model LeaveLedgerEntry {
 
   /**
    * Info: (20260820 - Julian) 操作者的姓名工號快照（review 第 6 輪 M16）。
+   *
    * `actorEmployeeId` 是 `SetNull`，而讀取端靠 live join 取姓名 ——
    * 那位人資離職之後，這一列的操作者就變成一個永遠答不出來的 null。
    * 額度帳本是 append-only 的稽核來源（ADR 022 §1），「這筆調整是誰做的」
    * 正是它存在的理由之一。
+   *
    * 同 PR 的 `LeaveApprovalStep` 與 `EmployeeHrFunctionAssignment` 都補了
    * 同型的快照並在註解引 ADR 023 §1 —— 三者之中稽核價值最高的這一份漏了。
+   *
    * Nullable：系統排程產生的分錄沒有操作者（那時 `actorEmployeeId` 也是 null，
    * 三欄同進同出，由 `assertLedgerActor` 擋）。
    */
   actorEmployeeNo String? @map("actor_employee_no")
   actorName       String? @map("actor_name")
 
-  reason String?
+  reason          String?
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -3577,10 +3668,12 @@ model LeaveLedgerEntry {
 
 /**
  * Info: (20260817 - Julian) 額度餘額。**派生快取，不是第二個真相。**
+ *
  * 三規矩（比照出勤模組對 AttendancePresence 的處置）：
  * ① 只在寫入異動的同一個 $transaction 內更新
  * ② 可由 rebuildLeaveBalance 完整重建
  * ③ 每日 Worker 勾稽 Σ(deltaMinutes) === remainingMinutes，不符以帳本為準並告警
+ *
  * `reconciledAt` 可為 null，語意是「從未勾稽過」—— 與「勾稽過且相符」是兩件事。
  * 同 AttendancePresence.STALE 的精神：不知道不等於沒問題。
  */
@@ -3597,7 +3690,7 @@ model LeaveBalance {
   leavePolicyId String      @map("leave_policy_id")
   leavePolicy   LeavePolicy @relation(fields: [leavePolicyId], references: [id], onDelete: Cascade)
 
-  remainingMinutes    Int @map("remaining_minutes")
+  remainingMinutes Int @map("remaining_minutes")
   // Info: (20260817 - Julian) 30 日內即將到期的分鐘數。供畫面提示，同樣是派生值
   expiringSoonMinutes Int @default(0) @map("expiring_soon_minutes")
 
@@ -3612,6 +3705,7 @@ model LeaveBalance {
 
 /**
  * Info: (20260817 - Julian) 簽核規則（帳本層級）。門檻天數是**資料**，節點型別是 enum。
+ *
  * 需求的「3 天內直屬主管、3 天以上簽至部門經理或 HR」在 3.0 天處重疊 ——
  * 本專案定為右開區間 `[0, 3)` 與 `[3, ∞)`，即**恰好 3 天走長假規則**。
  * 這種邊界不能留給實作者猜。`assertRuleRangesDisjoint` 保證同帳本內
@@ -3635,9 +3729,11 @@ model LeaveApprovalRule {
 
   /**
    * Info: (20260817 - Julian) **刻意沒有 `priority` 欄位。**
+   *
    * 第一版有。實作 `assertRuleRangesDisjoint` 時發現它永遠不會被讀到：
    * 不變式要求區間不重疊**且**完整覆蓋 `[0, ∞)`，於是任何一個天數
    * 恰好命中一條規則 —— 沒有「同一區間有多條」這種情形可供排序。
+   *
    * 一個永遠不影響結果的欄位，遲早會有人相信它有效
    * （判準同 `ShiftPattern` 拒絕 `shiftType`）。
    */
@@ -3671,14 +3767,19 @@ model LeaveApprovalRuleStep {
 
 /**
  * Info: (20260817 - Julian) 單據上的簽核鏈**快照**。
+ *
  * ## 為什麼要存工號與姓名
+ *
  * 組織會異動。若核准時才查「你的主管是誰」，一次調動就改寫了所有歷史單據的
  * 簽核路徑，而那正是勞動檢查要看的東西。冗餘的是**當下值**不是同一個事實的第二份：
  * `Employee.name` 是「他現在叫什麼」，本表是「他當時叫什麼」，兩者本來就可以不同。
+ *
  * ## pendingKey
+ *
  * 值為 `leaveRequestId`，**僅在本節點為當前待簽時填入**，其餘為 null。
  * Postgres 的 unique index 不約束 NULL，因此已簽與尚未輪到的節點可以有很多筆，
  * 待簽的只能有一筆 —— 手法同 `LeaveDay.activeKey` 與 `LeaveRecall.pendingLeaveDayId`。
+ *
  * 刻意不在 LeaveRequest 上放 currentStepOrder：那會是第二個真相，
  * 且可以與本表的 status 互相矛盾（ADR 019 §1 表格評為「最惡劣」的第 3 種）。
  */
@@ -3703,12 +3804,15 @@ model LeaveApprovalStep {
 
   /**
    * Info: (20260820 - Julian) 展開這條鏈的引擎版本（review 第 6 輪 M15）。
+   *
    * `LEAVE_APPROVAL_CHAIN_VERSION` 的註解從落地那天就寫著「並記於快照」，
    * 而 `grep` 全庫零引用、schema 也沒有這一欄 —— 那句話沒有任何執行者。
    * 對照組兩個都真的落地了：`LeaveDay.entitlementEngineVersion` 與
    * `OvertimeSegment.engineVersion`。三者之中，簽核鏈是勞動檢查最會問的
    * 那一份（「這張單當初依什麼規則決定要幾關、由誰簽」），卻是唯一沒有的。
+   *
    * 非空：每一條落地的鏈都必然由某個版本的展開器產生。
+   *
    * ⚠️ 它屬於**這一張**（`LeaveApprovalStep`，展開的結果），不是
    * `LeaveApprovalRuleStep`（規則的模板）。兩者的欄位開頭幾行長得一模一樣
    * （`order` + `nodeKind`），2026-08-20 第一版就是照那兩行定位而加錯了表 ——
@@ -3721,10 +3825,12 @@ model LeaveApprovalStep {
 
   /**
    * Info: (20260820 - Julian) **實際按下去的那個人**（review 第 6 輪 M19）。
+   *
    * `approverEmployeeId` 是展開當下解析到的人（誰**應該**簽）。`HR` 節點
    * 改成「任一位 HR_ADMIN 都接得了」之後，這兩者會不一樣 ——
    * 而少了這一欄，帳面上會顯示由被指派的那位簽核，事實上是另一位。
    * 那比原本的永久卡住更糟：卡住看得見，簽錯人看不見。
+   *
    * 三欄一組，理由同 `approverEmployeeNo` / `approverName`：
    * `SetNull` 讓離職不刪單，快照讓離職之後仍答得出當時是誰。
    */
@@ -3737,24 +3843,27 @@ model LeaveApprovalStep {
 
   // Info: (20260817 - Julian) 相鄰去重時被併掉的節點型別（例如直屬主管恰好就是部門經理）。
   // Info: (20260817 - Julian) 讓「為什麼這張單只有兩關」查得到，而不是看起來像少簽了一關
-  mergedFromKinds   LeaveApprovalNodeKind[] @map("merged_from_kinds")
+  mergedFromKinds LeaveApprovalNodeKind[] @map("merged_from_kinds")
   /**
    * Info: (20260817 - Julian) 節點解析出申請人本人時自動上升的理由（老闆也要能請假，不 throw）。
+   *
    * Info: (20260820 - Julian) ⚠️ 這是**開發者英文**，不上畫面（review 第 7 輪 M27）：
    * `"HR resolved to the applicant; escalated to DEPARTMENT_MANAGER"`。
    * 它給 log 與勞動檢查看 —— 畫面要顯示的是下面那一欄。
    */
-  escalatedReason   String?                 @map("escalated_reason")
+  escalatedReason String?                 @map("escalated_reason")
   /**
    * Info: (20260820 - Julian) 上升前**原本**是哪一種節點（review 第 7 輪 M27）。
+   *
    * 與這一關最終的 `nodeKind` 比對即得出兩種情形：
    * 相同 → 同型別換了另一個人；不同 → 沿階梯上升到 `nodeKind`。
    * 畫面照這個分岔挑一句可翻譯的文案，不再把英文敘述原封不動印出來。
+   *
    * Nullable：多數節點沒有上升過。既有列也為 null —— 它們的 `escalatedReason`
    * 仍在，只是畫面對舊列顯示不出結構化的說明（不回填：那句英文解析回
    * 節點型別是猜的，而猜錯會在簽核紀錄上留下一個錯的事實）。
    */
-  escalatedFromKind LeaveApprovalNodeKind?  @map("escalated_from_kind")
+  escalatedFromKind LeaveApprovalNodeKind? @map("escalated_from_kind")
 
   decidedAt DateTime? @map("decided_at")
   comment   String?
@@ -3768,6 +3877,7 @@ model LeaveApprovalStep {
 
 /**
  * Info: (20260817 - Julian) 併休上限規則。
+ *
  * maxConcurrentEmployees 與 maxConcurrentRatio **恰有一個為 null**，
  * 由 repository 不變式擋：兩個都填就是兩個互相矛盾的上限，而系統沒有依據判斷該信哪一個。
  */
@@ -3803,6 +3913,7 @@ model LeaveConcurrencyRule {
 
 /**
  * Info: (20260817 - Julian) 併休超限的警示紀錄。**Append-only。**
+ *
  * 對特休不能硬擋（§38 II 期日由勞工排定），但協商必須留痕 ——
  * 「誰在什麼時候看到了什麼警示」是後續協商的起點，也是爭議時唯一的憑據。
  */
@@ -3830,9 +3941,11 @@ model LeaveConcurrencyWarning {
 
 /**
  * Info: (20260817 - Julian) 待折現事件。本模組與薪資模組之間**唯一**的介面。
+ *
  * **沒有金額欄位。** 本模組只保證「幾分鐘、什麼級距、法源哪一條」，
  * 基準時薪與金額屬薪資模組 —— 同 ADR 020 對資遣費的處置：
  * 系統只算它真的知道的部分，其餘留下明確的接口而不是猜。
+ *
  * 兩端的日約當分鐘都存：班別變更會讓「剩餘分鐘換回日數」與當初授予的日數不一致，
  * 那在法律上本來就是有爭議的情形。系統該做的不是選一邊假裝沒事，
  * 而是把兩端的換算依據都記下來，讓爭議發生時有帳可查（ADR 022 §3.3）。
@@ -3849,7 +3962,7 @@ model LeaveCashOutEvent {
 
   reason LeaveCashOutReason
 
-  minutes     Int
+  minutes Int
   // Info: (20260817 - Julian) 僅加班相關的折現有值。補休屆期折現要「依當日工資計算標準發給」(§32-1)
   premiumTier OvertimePremiumTier? @map("premium_tier")
 
@@ -3862,10 +3975,12 @@ model LeaveCashOutEvent {
 
   /**
    * Info: (20260821 - Julian) 加班費折現的來源分段（review 第 7 輪 B1）。
+   *
    * 加班費折現不來自任何額度批次，所以 `sourceGrantIds` 是空陣列 ——
    * 於是在補上這一欄之前，**一筆折現事件說不出它是哪一張加班單產生的**。
    * 兩個後果：撤銷核准時找不到要回收的事件（`revokeApproval` 因此不可能寫），
    * 而勞動檢查問「這筆加班費對應哪一段核准」時也答不出來。
+   *
    * 可為 null：補休屆期折現（§38 IV／§32-1）不來自加班分段。
    * `onDelete: Restrict` —— 分段要先把事件收掉才刪得掉，
    * 順序做錯時是 DB 擋下來，不是靠呼叫端記得。
@@ -3890,6 +4005,7 @@ model LeaveCashOutEvent {
 
 /**
  * Info: (20260817 - Julian) 加班單。記載的是**意圖與核准**，實際分鐘的來源是 AttendancePunch。
+ *
  * recognizedMinutes = min(approvedMinutes, 實際停留於加班區間的打卡分鐘)。
  * 申請 3 小時只待 1 小時就認列 1 小時 —— 系統不發明沒有發生過的加班；
  * 待了 3 小時只核准 1 小時，超出部分不認列但進 `L29 overtime/unapproved`
@@ -3917,7 +4033,7 @@ model OvertimeRequest {
   requestedEndMinute   Int @map("requested_end_minute")
 
   // Info: (20260817 - Julian) 核准分鐘。核准前為 null —— 0 與「還沒核准」是兩件事
-  approvedMinutes   Int? @map("approved_minutes")
+  approvedMinutes Int? @map("approved_minutes")
   // Info: (20260817 - Julian) 認列分鐘 = min(核准, 事實)。Σ segment.minutes 必須等於它
   recognizedMinutes Int? @map("recognized_minutes")
 
@@ -3927,11 +4043,13 @@ model OvertimeRequest {
 
   /**
    * Info: (20260819 - Julian) §32 IV 天災事變等情形，**經報備查者**適用加倍發給。
+   *
    * 這一欄不是申請人填的。它由具 `HR_ADMIN` 職能者在核准當下認定，
    * 且必須同時帶著下面三個欄位 —— 由 `assertOvertimeEmergencyRecord`
    * 雙向把關（review B7）。理由與 `OvertimePolicy.extendedLimitAgreed`
    * 完全相同：**一個沒有記載的「已報備」等於沒有報備**，
    * 而系統會據此把整段加班跳到加倍發給。
+   *
    * 它**不**繞過例假日（`WorkDayType.REGULAR_OFF`）。§40 停止假期走的是
    * 「報當地主管機關**核備**」，與 §32 IV 的「報備查」是兩套程序、
    * 法律效果不同；那一套的記載模型尚未建立，因此例假日一律擋下
@@ -3944,6 +4062,7 @@ model OvertimeRequest {
 
   /**
    * Info: (20260819 - Julian) 報備的時點。
+   *
    * §32 IV 要求「應於延長開始後二十四小時內通知工會；無工會組織者，
    * 應報當地主管機關備查」。逾期通報本身是另一個違章，**不會**讓天災事變
    * 這個事實消失，因此系統記下時點但不以它擋下認定 ——
@@ -3958,16 +4077,21 @@ model OvertimeRequest {
 
   /**
    * Info: (20260821 - Julian) 撤銷核准的稽核三欄（review 第 8 輪第 1 條）。
+   *
    * ## 為什麼一定要留
+   *
    * `revokeApproval` 把單子從 `APPROVED` 移回 `PENDING`，申請人接著可以
    * `withdraw` —— 於是一段**曾經被核准 240 分鐘、曾經進到員工 `LeaveBalance`
    * 裡**的加班，最後長得與「從來沒有人送過」一模一樣。ADR 022 §2.4 的理由
    * 原話是「刪掉的話『他曾經請過、後來被銷了』這個事實就消失了，而那正是
    * 主管機關會查的東西」。
+   *
    * 同一張單上的 §32 IV 認定早就這樣做了（見 `OvertimeEmergencyDeclaration`
    * 的 `revokedAt` / `revokedBy` / `revokeReason`，那裡寫著「兩者都不刪」），
    * 而核准的撤銷先前零留痕 —— 同一張單的兩種撤銷，稽核強度不一樣。
+   *
    * ## `approvalRevokeCount` 不是統計，是冪等鍵的一部分
+   *
    * 撤銷寫的是**反向分錄**（ADR 022 §2.4），而 `LeaveLedgerEntry.idempotencyKey`
    * 是唯一鍵。同一張單被撤銷兩次時，若鍵裡不含次數，第二次會撞上唯一鍵並被
    * 當成重放 —— 而那一次撤銷是真的，帳本會少一筆反向分錄。
@@ -3984,11 +4108,13 @@ model OvertimeRequest {
 
   /**
    * Info: (20260818 - Julian) 撤回理由。**事後補單撤回時必填**，事前申請可為 null。
+   *
    * 兩者的方向不同：撤回一張事前申請是取消一個還沒發生的計畫；撤回一張
    * 事後補單，是收回「我那天加過班」這句對**已發生事實**的陳述 —— 而那個
    * 方向對雇主有利、對勞工不利（同 `assertOvertimeFilingType` 檔頭所說的
    * 「有動機」的地形）。一筆沒有理由的撤回，事後沒有人判斷得出它是自願的
    * 還是被要求的。
+   *
    * 撤回不會湮滅事實：打卡仍在 `AttendancePunch` 裡，那段時間會立刻回到
    * L29 的「未核准時段」（ADR 024 §2.1）。這一欄記的是「為什麼收回這張單」，
    * 不是「那段時間不存在」。
@@ -3999,6 +4125,7 @@ model OvertimeRequest {
 
   /**
    * Info: (20260820 - Julian) §32 IV 認定的歷史（review 第 3 輪第 2 條）。
+   *
    * 上面那三欄是**現況**（誰現在的認定、指向哪份紀錄）；這張表是**經過**。
    * 兩者分開的理由見 `OvertimeEmergencyDeclaration` 的檔頭。
    */
@@ -4014,21 +4141,27 @@ model OvertimeRequest {
 
 /**
  * Info: (20260820 - Julian) §32 IV 認定與撤回的歷史（review 第 3 輪第 2 條）。
+ *
  * ## 為什麼不能只有 `OvertimeRequest` 上那三欄
+ *
  * 那三欄只存得下**一份**認定，而且是可覆寫的。於是兩件事同時做不到：
+ *
  * 1. **重複認定會靜默取代前一份。** 第二次呼叫 `declareEmergency` 蓋掉
- * 連結、時點與認定者，而回傳值仍然是 `DECIDED` —— 看起來像成功的第一次。
- * 事後沒有任何資料說得出「本來報備的是哪一份」。
+ *    連結、時點與認定者，而回傳值仍然是 `DECIDED` —— 看起來像成功的第一次。
+ *    事後沒有任何資料說得出「本來報備的是哪一份」。
  * 2. **撤回只能把三欄一起清空。** `assertOvertimeEmergencyRecord` 的反方向
- * （沒有 `isEmergency` 就不得帶記載）逼出這個動作，而它等於**硬刪一份
- * 對外發生過的紀錄** —— 公司真的通知過工會、真的報過主管機關，
- * 那件事不會因為系統把欄位設成 null 而沒有發生過。
- * 那條不變式的註解自己寫下了正解卻沒有實作：
- * 「前者**應該留下撤回的痕跡**，不是把旗標翻回去就算了。」
+ *    （沒有 `isEmergency` 就不得帶記載）逼出這個動作，而它等於**硬刪一份
+ *    對外發生過的紀錄** —— 公司真的通知過工會、真的報過主管機關，
+ *    那件事不會因為系統把欄位設成 null 而沒有發生過。
+ *    那條不變式的註解自己寫下了正解卻沒有實作：
+ *    「前者**應該留下撤回的痕跡**，不是把旗標翻回去就算了。」
+ *
  * ## 分工
+ *
  * `OvertimeRequest` 的三欄是**現況**（給清單、給分段判定用，一次查詢就讀得到）；
  * 這張表是**經過**（給勞動檢查與事後追查用）。認定寫一列，撤回在同一列上
  * 補 `revokedAt` / `revokedBy` / `revokeReason`，兩者都不刪。
+ *
  * 「同一張單最多只有一份有效認定」由 `OvertimeRequest.isEmergency` 的
  * 附條件更新保證（`where: { isEmergency: false }`），不靠這張表的唯一鍵 ——
  * partial unique index 在 Prisma schema 裡表達不出來，而一個表達不出來的
@@ -4055,16 +4188,18 @@ model OvertimeEmergencyDeclaration {
 
   /**
    * Info: (20260820 - Julian) 撤回的三欄。null 表這份認定仍然有效。
+   *
    * `revokeReason` 與 `revokedAt` 同生共死：一筆沒有理由的撤回，事後分不出是
    * 「報備被主管機關退回」還是「當初認定錯了」，而那兩件事的後續處置完全不同。
+   *
    * 執行者是 `assertEmergencyDeclaration`，兩條寫入路徑都經過它：
    * `overtimeRequestRepo.declareEmergency`（三欄皆 null ＝ 認定仍有效）與
    * `overtimeRequestRepo.revokeEmergency`（讀出有效那一列，把三欄合上去再擋）。
    * 撤回那一側原本沒有呼叫端，這句註解一度是沒有執行者的規則（review 第 4 輪第 4 條）。
    */
-  revokedAt           DateTime? @map("revoked_at")
-  revokedByEmployeeId String?   @map("revoked_by_employee_id")
-  revokeReason        String?   @map("revoke_reason")
+  revokedAt            DateTime? @map("revoked_at")
+  revokedByEmployeeId  String?   @map("revoked_by_employee_id")
+  revokeReason         String?   @map("revoke_reason")
 
   @@index([accountBookId, overtimeRequestId])
   @@map("overtime_emergency_declaration")
@@ -4072,9 +4207,11 @@ model OvertimeEmergencyDeclaration {
 
 /**
  * Info: (20260817 - Julian) 加班的加成分段。
+ *
  * 一次 3 小時平日加班切成 [WEEKDAY_FIRST_2H, 120] 與 [WEEKDAY_BEYOND_2H, 60] 兩筆，
  * **不是一筆 180 分鐘**。合併的那一刻級距資訊就被銷毀，而 §32-1 的補休屆期折現
  * 要求「依當日工資計算標準發給」—— 屆時就算不出金額了。
+ *
  * `engineVersion` 隨每筆落地，語意同 AttendanceDailyResult.engineVersion：
  * 規則改版後，舊資料仍能說明它當初是依哪一版算出來的。
  */
@@ -4084,8 +4221,8 @@ model OvertimeSegment {
   overtimeRequestId String          @map("overtime_request_id")
   overtimeRequest   OvertimeRequest @relation(fields: [overtimeRequestId], references: [id], onDelete: Cascade)
 
-  order   Int
-  tier    OvertimePremiumTier
+  order Int
+  tier  OvertimePremiumTier
   minutes Int
 
   engineVersion Int @map("engine_version")
@@ -4098,22 +4235,29 @@ model OvertimeSegment {
 
   /**
    * Info: (20260821 - Julian) 分段**不再實刪**（review 第 9 輪 B1）。
+   *
    * ## 為什麼非改不可：一個必定 500 的路徑
+   *
    * `LeaveGrant.overtimeSegment` 是 `onDelete: Restrict`，而撤銷核准現在把
    * 批次改成**標記** `revokedAt`（ADR 022 §2.1「不可變」）—— 批次還活著、
    * `overtimeSegmentId` 還指著這一列。此時再 `overtimeSegment.deleteMany`
    * 就是刪一個仍被參照的父列：P2003 → 不是 `AppError` → route 落
    * `IS_DB_FAILED` **500**。
+   *
    * 補休加班單的撤銷因此**必定失敗**，而它正是
    * `VA_OVERTIME_EARLIER_THAN_APPROVED` 官方補救動作的執行者。
+   *
    * 清掉 `LeaveGrant.overtimeSegmentId` 不是選項：
    * `OVERTIME_CONVERSION ⟺ overtimeSegmentId != null` 是**雙向**不變式
    * （見 `LeaveGrantSource` 與 `assertGrantSource`），清掉會讓一筆
    * `OVERTIME_CONVERSION` 的批次說不出自己從哪一段來。
+   *
    * ## `revokeSeq` 是唯一鍵的一部分，不是統計
+   *
    * 保留舊分段與「重新核准要再寫一次 `order = 0`」互斥，因此唯一鍵要能分辨
    * 世代。**現役世代恆為 0**，撤銷時把整組改成該次的 `approvalRevokeCount`
    * （1, 2, 3…）—— 同一時刻最多只有一個世代是 0，唯一性因此成立。
+   *
    * 不用 `@@unique([overtimeRequestId, order, revokedAt])`：PostgreSQL 的
    * NULL 彼此不相等，那樣寫等於對現役分段完全沒有約束。
    */
@@ -4129,6 +4273,7 @@ model OvertimeSegment {
 
 /**
  * Info: (20260817 - Julian) 加班政策（帳本層級）。
+ *
  * 放寬到 54 小時／三個月 138 小時的前提是「經工會同意，如事業單位無工會者，
  * 經勞資會議同意」(§32 III)。因此 extendedLimitAgreed 為真時
  * agreementRecordUrl 與 agreedAt **必填**，由 repository 不變式擋 ——
@@ -4147,10 +4292,12 @@ model OvertimePolicy {
 
   /**
    * Info: (20260818 - Julian) 補休的有效期限（月）。
+   *
    * §32-1 只說「期限由勞雇雙方協商」，**沒有法定日數**，所以這一欄可空而且
    * 沒有預設值 —— 理由同 `LeavePolicy.proofThresholdDays` 一律留 null：
    * 填一個猜來的月數，會讓補休在一個沒有人同意過的日期失效，
    * 而失效的補休依 §32-1 要折現成錢。猜錯的方向是少給。
+   *
    * 未設定時，`compensationMode = COMPENSATORY_LEAVE` 的加班申請一律擋下
    * （`VA_OVERTIME_COMP_EXPIRY_UNSET`）；選 `PAYMENT` 不受影響。
    */

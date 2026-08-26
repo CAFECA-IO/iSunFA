@@ -6,12 +6,19 @@ import {
   type JobPauseReason,
   type JobType,
 } from "@/constants/resumable_job";
-import { TEAM_PLAN } from "@/constants/subscription_quota";
-import { canAffordSpend, resolveQuotaAvailable } from "@/lib/quota/spend_split";
+import {
+  canAffordSpend,
+  resolveQuotaAvailable,
+  usesSharedTeamQuota,
+} from "@/lib/quota/spend_split";
 import { getWindowKey5h, getWindowKeyWeek } from "@/lib/quota/window";
 import { resolveEffectivePlanId } from "@/lib/subscription/plan_rules";
 import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
+import { chatroomRepo } from "@/repositories/chatroom.repo";
+import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
+import { estimateFaithHoldCredits } from "@/lib/faith_billing";
+import { resolveBillingTeamId } from "@/services/carbon_billing.service";
 import { resumableJobRepo } from "@/repositories/resumable_job.repo";
 import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
 import { teamQuotaUsageRepo } from "@/repositories/team_quota_usage.repo";
@@ -91,19 +98,19 @@ export async function canResumeNow(params: {
    * Info: (20260825 - Luphia) 免費方案的額度是全隊共用一份，付費方案一人一池
    *（與 `spendCredits` 同一個判準——聚合範圍錯了，答案就錯了）。
    */
-  const { used5h, usedWeek } =
-    planId === TEAM_PLAN.FREE
-      ? await teamQuotaUsageRepo.sumTeamWindowUsage(
-          teamId,
-          windowKey5h,
-          windowKeyWeek,
-        )
-      : await teamQuotaUsageRepo.sumWindowUsage(
-          teamId,
-          userId,
-          windowKey5h,
-          windowKeyWeek,
-        );
+  // Info: (20260825 - Luphia) 聚合範圍的判準與扣款端共用（review #6717 低-1）
+  const { used5h, usedWeek } = usesSharedTeamQuota(planId)
+    ? await teamQuotaUsageRepo.sumTeamWindowUsage(
+        teamId,
+        windowKey5h,
+        windowKeyWeek,
+      )
+    : await teamQuotaUsageRepo.sumWindowUsage(
+        teamId,
+        userId,
+        windowKey5h,
+        windowKeyWeek,
+      );
 
   const quotaAvailable = resolveQuotaAvailable({
     limit5h: BigInt(quota.per5h),
@@ -158,6 +165,58 @@ export async function saveJobBookmark(params: {
     lastError: params.lastError?.slice(0, 500) ?? null,
   });
   return toView(job);
+}
+
+/**
+ * Info: (20260825 - Luphia) 由 channel 推導付費團隊與下一步成本，然後寫書籤
+ *（issue #6712）。
+ *
+ * 兩個值**都不收呼叫端的**：
+ *
+ * - `teamId` 決定這筆消費算誰的。前端說了算的話，掃描行程會拿別的團隊的額度
+ *   去判斷「現在夠不夠」。推導走 `resolveBillingTeamId`——與扣款端同一支。
+ * - `nextStepCost` 決定要不要把任務翻成「可以繼續」。前端算一份的話，
+ *   它與扣款端的估算遲早分岔，而分岔的症狀是「說可以繼續、按下去又撞牆」。
+ *   估算走 `estimateFaithHoldCredits`——同樣與扣款端同一支。
+ *
+ * 沒有帳本的會話（個人點數路徑）沒有付費團隊：`teamId` 為 null，
+ * 掃描行程會把它算進 `unknown` 而不是猜一個。那條路的暫停原因本來就是
+ * `PAYMENT_REQUIRED`，不由額度翻面。
+ */
+export async function saveJobBookmarkForChannel(params: {
+  userId: string;
+  type: JobType;
+  resourceKey: string;
+  pauseReason: JobPauseReason | null;
+  totalSteps: number;
+  completedSteps: number;
+  failedSteps: number;
+  remainingStepIds: string[];
+  nextStepInputChars?: number;
+  lastError?: string | null;
+  nowMs: number;
+}): Promise<IJobView> {
+  const accountBookId = await chatroomRepo.findAccountBookIdByChannel(
+    params.resourceKey,
+  );
+  const teamId = accountBookId
+    ? await resolveBillingTeamId(accountBookId, params.userId)
+    : null;
+
+  let nextStepCost: string | null = null;
+  if (teamId && params.nextStepInputChars !== undefined) {
+    const billing = await faithBillingSettingRepo.resolveSetting();
+    nextStepCost = String(
+      estimateFaithHoldCredits(params.nextStepInputChars, true, billing),
+    );
+  }
+
+  return saveJobBookmark({
+    ...params,
+    teamId,
+    nextStepCost,
+    lastError: params.lastError ?? null,
+  });
 }
 
 export async function listOpenJobs(userId: string): Promise<IJobView[]> {

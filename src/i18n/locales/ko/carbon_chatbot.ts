@@ -191,6 +191,9 @@ export const carbonChatbot = {
     "「{{name}}」을(를) 아직 분석 중입니다. 두 건을 동시에 실행하면 같은 할당량을 두고 경쟁해 양쪽 모두 느려집니다. 완료를 기다리거나 새로고침 후 다시 시도해 주세요.",
   import_parsing_chapter:
     "「{{name}}」 장별 분석 중({{current}}/{{total}} 완료, {{inFlight}}개 장 처리 중). 전체 보고서는 몇 분 걸립니다…",
+  import_paused_chapters:
+    "크레딧이 모두 소진되어 다음 장은 아직 분석하지 않았습니다: {{chapters}}. 크레딧을 채우면 여기서 이어서 가져올 수 있습니다(완료된 부분은 다시 실행되지 않습니다).",
+  import_resume_paused: "이어서 가져오기",
   import_failed_chapters:
     "다음 장은 분석에 실패했습니다. 나중에 다시 가져오기로 보완할 수 있습니다: {{chapters}}",
   import_retry_failed: "실패한 장 재시도",

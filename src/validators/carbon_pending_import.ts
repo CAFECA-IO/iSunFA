@@ -83,6 +83,37 @@ export const CarbonPendingImportDataSchema = z.object({
         }),
       )
       .max(50),
+    /**
+     * Info: (20260825 - Luphia) 點數用完的斷點（issue #6713）。
+     *
+     * 選填：舊的紀錄沒有這兩個欄位，而它們的缺席就是「沒有暫停」——
+     * 必填會讓既有的待匯入紀錄在下一次保存時被 schema 擋下。
+     *
+     * 章（顯示）與單元（接續）各存一份：`buildImportUnits` 會把節數多的章
+     * 切成兩份，而只有沒跑完的那一份需要重跑（review #6717 阻擋-1）。
+     */
+    pausedChapters: z
+      .array(
+        z.object({
+          id: z.string().min(1).max(50),
+          title: z.string().max(300),
+        }),
+      )
+      .max(50)
+      .optional(),
+    pausedUnits: z
+      .array(
+        z.object({
+          chapterId: z.string().min(1).max(50),
+          sectionIds: z.array(z.string().min(1).max(50)).max(50),
+          partIndex: z.number().int().min(1).max(50),
+          partTotal: z.number().int().min(1).max(50),
+        }),
+      )
+      .max(100)
+      .optional(),
+    // Info: (20260825 - Luphia) JOB_PAUSE_REASON；null／缺席＝沒有暫停
+    pauseReason: z.string().max(50).nullable().optional(),
   }),
   activities: z.array(CarbonActivityRecordSchema).max(500),
   // Info: (20260806 - Tzuhan) Map 無法 JSON 序列化,存成 entry 陣列

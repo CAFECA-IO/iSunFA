@@ -132,6 +132,7 @@ import {
   nextOutlineSectionId,
   resolveUnitPageRange,
   validatePageIndex,
+  type IImportUnit,
 } from "@/lib/carbon_page_slice";
 import {
   getApiErrorCode,
@@ -139,6 +140,7 @@ import {
   isGatewayTimeoutError,
   isQuotaApiError,
   resolveCreditPauseReason,
+  summarisePausedUnits,
   isRateLimitedApiError,
   isTimeoutApiError,
   splitReportMarkdownSections,
@@ -150,7 +152,9 @@ import {
   type ICarbonImportSource,
 } from "@/hooks/use_carbon_chat.helpers";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
-import { type JobPauseReason } from "@/constants/resumable_job";
+import { JOB_TYPE, type JobPauseReason } from "@/constants/resumable_job";
+import { HTTP_METHOD } from "@/constants/http";
+import { runResumableJob, STEP_OUTCOME } from "@/lib/jobs/resumable_job";
 import { useAuth } from "@/contexts/auth_context";
 import {
   DEFAULT_SESSION_ID,
@@ -1961,6 +1965,15 @@ export const useCarbonChat = () => {
       extractActivities: boolean,
       pageIndex: Map<string, number> | undefined,
       notify: (notice: IDraftNotice | null) => void,
+      /**
+       * Info: (20260825 - Luphia) 接續時直接指定要跑的**工作單元**（issue #6713）。
+       *
+       * 粒度是單元而不是章：`buildImportUnits` 會把節數多的章切成兩份
+       *（實測 11 章 → 14 個單元，ch1/ch3/ch9 各兩份），而點數用完時
+       * 很可能是「一份做完、另一份撞牆」。以章接續會把做完的那一份再跑一次，
+       * 而訊息裡明寫「已完成的部分不會重跑」。
+       */
+      resumeUnits?: IImportUnit[],
     ) => {
       interface IImportChunkPayload {
         segments: {
@@ -1979,28 +1992,29 @@ export const useCarbonChat = () => {
        * ch1(7 節)、ch3(6 節)、ch9(5 節)會各切成兩份;
        * 節數少的章維持一份,行為與先前相同。
        */
-      const units = buildImportUnits(
-        CARBON_REPORT_OUTLINE,
-        chapters.map((chapter) => chapter.id),
-      );
+      const units =
+        resumeUnits ??
+        buildImportUnits(
+          CARBON_REPORT_OUTLINE,
+          chapters.map((chapter) => chapter.id),
+        );
       const results: (IImportChunkPayload | null)[] = new Array(
         units.length,
       ).fill(null);
-      const failed: { id: string; title: string }[] = [];
       /**
-       * Info: (20260825 - Luphia) 點數用完（issue #6713）。
+       * Info: (20260825 - Luphia) 控制流交給共用驅動器 `runResumableJob`
+       *（issue #6712 / #6713）。
        *
-       * 在此之前這種情況會落進 `failed` —— 而那些章一步都沒跑過：
-       * 伺服端的 `spendCredits` 在呼叫 LLM **之前**就擋下了，一點都沒扣。
-       * 於是使用者看到「以下章節解析失敗」，按「重新匯入」再撞一次同樣的牆。
+       * 它負責三件這裡曾經手寫、而且寫錯粒度的事：撞牆就停掉整趟、
+       * 把「還沒做」與「做壞了」分成兩份清單、以**有沒有結果**判斷剩餘
+       *（不是「索引之後」——併發下另一條 worker 可能正跑在更前面的索引上）。
        *
-       * 兩份清單的語意因此必須分開：
-       * - `failed`：真的做壞了（解析出錯、逾時），重試會真的送出去
-       * - `remaining`（下方由 `startedIds` 推導）：一步都沒做，等點數回來才有意義
+       * 先前這裡的 `settledChapterIds` 是以**章**為鍵的正向標記，
+       * 於是「一份做完、另一份撞牆」時整章被當成處理過：那一章既不在暫停名單、
+       * 也不在失敗名單，而合併出來的內容少了一半的節，沒有任何訊息提過。
+       * `failed` 那邊「任一份壞掉就整章列入」是安全的，同樣的手法用在正向標記上
+       * 語意剛好翻過來（review #6717 阻擋-1）。
        */
-      let pausedBy: JobPauseReason | null = null;
-      const settledChapterIds = new Set<string>();
-      let nextIndex = 0;
       let completedCount = 0;
       /**
        * Info: (20260804 - Tzuhan) 正在跑的章數。只報「已完成 0/11」會讓開頭那段
@@ -2024,23 +2038,26 @@ export const useCarbonChat = () => {
       };
       reportProgress();
 
-      // Info: (20260717 - Tzuhan) worker 以遞迴取號(每 worker 同時只跑一章;深度上限 = 章節數 11,無堆疊風險)
-      const processNext = async (): Promise<void> => {
-        /**
-         * Info: (20260825 - Luphia) 已經因為點數用完而暫停就**不再領新單元**。
-         *
-         * 原本會繼續領：剩下每一章都各撞一次 402，全部被列成解析失敗，
-         * 而每一次都白付一趟往返。11 章的報告在第 5 章用完點數時，
-         * 使用者會看到 7 章「解析失敗」——沒有一章真的被解析過。
-         */
-        if (pausedBy !== null) return;
-        const index = nextIndex;
-        nextIndex += 1;
-        if (index >= units.length) return;
-        const unit = units[index];
-        const chapter = chapters.find((item) => item.id === unit.chapterId);
-        // Info: (20260807 - Emily) 取不到章就接著取下一個,不要白白少一個 worker
-        if (!chapter) return processNext();
+      /**
+       * Info: (20260825 - Luphia) 章的顯示資訊。接續時 `chapters` 只帶要重跑的那幾章，
+       * 而單元可能屬於別章，因此一律回退到大綱的章名——回一個 id 當標題
+       * 會讓使用者在清單裡看到 `ch3` 這種東西。
+       */
+      const resolveChapterOf = (chapterId: string) =>
+        chapters.find((item) => item.id === chapterId) ??
+        CARBON_REPORT_CHAPTERS.find((item) => item.id === chapterId) ?? {
+          id: chapterId,
+          title: chapterId,
+        };
+
+      /**
+       * Info: (20260825 - Luphia) 單一工作單元的送出（驅動器逐步呼叫）。
+       *
+       * 「暫停就停掉整趟」「剩餘怎麼算」都由驅動器負責，這裡只管做一件事：
+       * 把這一份送出去、把結果放進 `results[index]`。
+       */
+      const runUnit = async (unit: IImportUnit, index: number) => {
+        const chapter = resolveChapterOf(unit.chapterId);
         inFlightCount += 1;
         reportProgress();
         const formData = new FormData();
@@ -2119,57 +2136,69 @@ export const useCarbonChat = () => {
           }
         }
         try {
-          // Info: (20260806 - Tzuhan) 信封裡的失敗轉回拋出:下面的 catch(記進 failed、供重試)照舊
+          // Info: (20260806 - Tzuhan) 信封裡的失敗轉回拋出:驅動器據此分類(暫停/失敗)
           results[index] = await requestEnvelope<IImportChunkPayload>(
             "/api/v1/chat/carbon/import",
             { method: "POST", body: formData },
           );
-          // Info: (20260825 - Luphia) 有結果的章才算處理過（暫停的不算，見 pausedBy）
-          settledChapterIds.add(chapter.id);
-        } catch (chunkError) {
+        } finally {
           /**
-           * Info: (20260825 - Luphia) 先問「是做不了還是做壞了」（issue #6713）。
-           *
-           * 點數用完＝做不了：這一份一步都沒跑、一點都沒扣，**不進 `failed`**，
-           * 而且整趟就此停下（剩下的章留給補上點數之後接續）。
-           * 併發下可能有兩份同時撞牆，只認第一個原因——兩者通常相同，
-           * 而即使不同，先到的那個就是使用者接下來要處理的事。
+           * Info: (20260825 - Luphia) 進度一定要放行（成功、失敗、暫停都算走過一步）：
+           * 放在 finally 而不是各分支各寫一次，漏掉任何一條都會讓
+           * 「N 章解析中」的數字永遠減不回來。
            */
-          const pauseReason = resolveCreditPauseReason(chunkError);
-          if (pauseReason !== null) {
-            if (pausedBy === null) pausedBy = pauseReason;
-            console.info(
-              "[carbon-chat] import paused by credits:",
-              chapter.id,
-              pauseReason,
-            );
-            inFlightCount -= 1;
-            reportProgress();
-            return;
-          }
-          console.error(
-            "[carbon-chat] import chapter failed:",
-            chapter.id,
-            `part ${unit.partIndex}/${unit.partTotal}`,
-            chunkError,
-          );
-          /**
-           * Info: (20260805 - Tzuhan) 以章去重:同一章切成多份時可能失敗兩次,
-           * 而重試的粒度是章 —— 列兩次會讓使用者以為有兩章壞掉。
-           * 重試整章比重試單一份安全:份與份之間的邊界本來就有重疊。
-           */
-          if (!failed.some((item) => item.id === chapter.id)) {
-            failed.push(chapter);
-          }
-          settledChapterIds.add(chapter.id);
+          completedCount += 1;
+          inFlightCount -= 1;
+          reportProgress();
         }
-        completedCount += 1;
-        inFlightCount -= 1;
-        reportProgress();
-        await processNext();
       };
-      // Info: (20260717 - Tzuhan) 並行度 2:11 章耗時約減半;仍留限流餘裕(LLM bucket 12/min)
-      await Promise.all([processNext(), processNext()]);
+
+      /**
+       * Info: (20260825 - Luphia) 併發度 2：11 章耗時約減半，仍留限流餘裕
+       *（LLM bucket 12/min）。停手與剩餘的判斷由驅動器負責（見上方說明）。
+       */
+      const outcome = await runResumableJob<IImportUnit, void>({
+        steps: units,
+        runStep: runUnit,
+        /**
+         * Info: (20260825 - Luphia) 「做不了」與「做壞了」的分界只有這一句
+         *（issue #6713）：點數用完是前者——那一份一步都沒跑、一點都沒扣。
+         */
+        classify: (error) => {
+          const pauseReason = resolveCreditPauseReason(error);
+          if (pauseReason !== null) {
+            return { kind: STEP_OUTCOME.PAUSE, reason: pauseReason };
+          }
+          return { kind: STEP_OUTCOME.FAIL };
+        },
+        concurrency: 2,
+      });
+
+      const pausedBy = outcome.pausedBy;
+      /**
+       * Info: (20260805 - Tzuhan) 以章去重:同一章切成多份時可能失敗兩次,
+       * 而重試的粒度是章 —— 列兩次會讓使用者以為有兩章壞掉。
+       * 重試整章比重試單一份安全:份與份之間的邊界本來就有重疊。
+       */
+      const failed: { id: string; title: string }[] = [];
+      outcome.failed.forEach((unit) => {
+        if (failed.some((item) => item.id === unit.chapterId)) return;
+        failed.push(resolveChapterOf(unit.chapterId));
+      });
+      outcome.failed.forEach((unit) => {
+        console.error(
+          "[carbon-chat] import chapter failed:",
+          unit.chapterId,
+          `part ${unit.partIndex}/${unit.partTotal}`,
+        );
+      });
+      if (pausedBy) {
+        console.info(
+          "[carbon-chat] import paused by credits:",
+          pausedBy,
+          `remaining units: ${outcome.remaining.length}`,
+        );
+      }
 
       const segmentsById = new Map<
         string,
@@ -2221,16 +2250,23 @@ export const useCarbonChat = () => {
       });
 
       /**
-       * Info: (20260825 - Luphia) 「還沒做」＝**沒有任何結果**的章（issue #6713）。
+       * Info: (20260825 - Luphia) 「還沒做」的**工作單元**——粒度是份，不是章
+       *（review #6717 阻擋-1）。
        *
-       * 以「有沒有結果」判斷而不是「索引之後」：併發下暫停發生時，另一條 worker
-       * 可能正跑在更前面的索引上，而那一份也沒有結果。同一章被切成多份時，
-       * 只要有一份沒跑完就整章重跑——份與份之間的邊界本來就有重疊，
-       * 重跑整章比補跑單一份安全（與 `failed` 以章去重同一個理由）。
+       * 驅動器以「有沒有結果」判斷剩餘，因此「一份做完、另一份撞牆」的章
+       * 會有一份留在這裡。先前這裡以章為單位、且用正向標記，
+       * 那種章會被整個排除——內容少一半而沒有任何訊息提過。
+       *
+       * 已經在 `failed` 的章要排除：同一章同時出現在「解析失敗」與
+       * 「還沒開始解析」兩句話裡是自相矛盾的，而使用者無從判斷該信哪一句。
+       * 失敗優先（它有重試入口，且那條路會把整章重跑）。
        */
-      const remaining = pausedBy
-        ? chapters.filter((chapter) => !settledChapterIds.has(chapter.id))
-        : [];
+      const { pausedUnits: remainingUnits, pausedChapters } =
+        summarisePausedUnits({
+          remainingUnits: outcome.remaining,
+          failedChapterIds: failed.map((chapter) => chapter.id),
+          resolveTitle: (chapterId) => resolveChapterOf(chapterId).title,
+        });
 
       return {
         segments: Array.from(segmentsById.entries()).map(
@@ -2245,7 +2281,11 @@ export const useCarbonChat = () => {
         activities,
         failed,
         pausedBy,
-        remaining,
+        // Info: (20260825 - Luphia) 接續用（份粒度）與顯示用（章）各一份
+        remainingUnits,
+        pausedChapters,
+        // Info: (20260825 - Luphia) 書籤的分母：這一趟總共有幾份
+        totalUnits: units.length,
       };
     },
     // Info: (20260806 - Tzuhan) 進度回報改由呼叫端注入 notify,此處不再依賴 setDraftNotice
@@ -2437,6 +2477,57 @@ export const useCarbonChat = () => {
    * 沒有金鑰時不發請求:聊天訊息一律 E2EE,而缺金鑰的請求必定失敗
    * (先前那個 500 就是拿 `0x…` 位址當 xpub 加密炸開的)。
    */
+  /**
+   * Info: (20260825 - Luphia) 把斷點寫進伺服器的**書籤**（issue #6712）。
+   *
+   * 與 `persistPendingImport` 是兩件事，兩者都要：
+   *
+   * - 待匯入結果（那支）存的是**內容**，個人會話是端到端加密的，
+   *   而它只有這個聊天室看得到。
+   * - 書籤（這支）存的是**步驟 id 與計數**，伺服器讀得懂，因此掃描行程
+   *   才能在額度回來時把任務翻成「可以繼續」，而不必解開任何內容。
+   *
+   * 失敗不阻斷主流程：書籤是輔助（畫面上的暫停清單來自待匯入結果），
+   * 掉了最多是「晚點才被通知可以繼續」。但**不靜默**——沒有它就等於
+   * 那個使用者永遠不會被自動通知，而那件事查不出來。
+   */
+  const saveImportJobBookmark = useCallback(
+    async (params: {
+      pauseReason: string | null;
+      totalUnits: number;
+      completedUnits: number;
+      failedUnits: number;
+      remainingUnits: IImportUnit[];
+      nextStepInputChars?: number;
+    }): Promise<void> => {
+      try {
+        await request("/api/v1/user/job/bookmark", {
+          method: HTTP_METHOD.PUT,
+          body: JSON.stringify({
+            type: JOB_TYPE.CARBON_REPORT_IMPORT,
+            resourceKey: chatChannel,
+            pauseReason: params.pauseReason,
+            totalSteps: params.totalUnits,
+            completedSteps: params.completedUnits,
+            failedSteps: params.failedUnits,
+            /**
+             * Info: (20260825 - Luphia) 步驟 id 是「章#第幾份」——粒度必須是份。
+             * 存章 id 就會把「一份做完、另一份撞牆」那個缺陷寫進資料庫
+             *（review #6717 阻擋-1）。
+             */
+            remainingStepIds: params.remainingUnits.map(
+              (unit) => `${unit.chapterId}#${unit.partIndex}`,
+            ),
+            nextStepInputChars: params.nextStepInputChars,
+          }),
+        });
+      } catch (error) {
+        console.error("[carbon-chat] job bookmark failed:", error);
+      }
+    },
+    [chatChannel],
+  );
+
   const postImportParsedNotice = useCallback(
     async (sessionId: string, pending: IPendingImport): Promise<void> => {
       const recipientPublicKey = masterKeyRef.current?.extendedPublicKey;
@@ -2573,7 +2664,17 @@ export const useCarbonChat = () => {
         let failedChapters: { id: string; title: string }[] = [];
         // Info: (20260825 - Luphia) 點數用完而還沒做的章（issue #6713）；與 failed 分開
         let pausedChapters: { id: string; title: string }[] = [];
+        /**
+         * Info: (20260825 - Luphia) 接續要用的**工作單元**（份粒度，review #6717 阻擋-1）：
+         * 一章可能被切成兩份，而只有沒跑完的那一份需要重跑。
+         */
+        let pausedUnits: IImportUnit[] = [];
         let pauseReason: JobPauseReason | null = null;
+        /**
+         * Info: (20260825 - Luphia) 書籤的分母是**單元數**（11 章 → 14 份）：
+         * 用章數當分母會讓「已完成 4／11」與實際做過的份數對不起來。
+         */
+        let importUnitTotal = 0;
 
         if (useChunked) {
           // Info: (20260730 - Tzuhan) 兩階段:先問頁碼索引(一次、輸出極小),再逐章只送對應頁。
@@ -2594,8 +2695,10 @@ export const useCarbonChat = () => {
           );
           payload = result;
           failedChapters = result.failed;
-          pausedChapters = result.remaining;
+          pausedChapters = result.pausedChapters;
+          pausedUnits = result.remainingUnits;
           pauseReason = result.pausedBy;
+          importUnitTotal = result.totalUnits;
         } else {
           // Info: (20260717 - Tzuhan) 小型文字檔:單發全綱呼叫
           notify({
@@ -2718,6 +2821,8 @@ export const useCarbonChat = () => {
            * 之後「停在哪裡」還在，不需要另一張表也不需要把內容交給伺服器。
            */
           pausedChapters,
+          // Info: (20260825 - Luphia) 接續的斷點（份粒度）；顯示用的是上面那份
+          pausedUnits,
           pauseReason,
         };
         setPendingImportFor(originSessionId, parsedPending);
@@ -2736,6 +2841,18 @@ export const useCarbonChat = () => {
           lastPageIndexRef.current,
         );
         void postImportParsedNotice(originSessionId, parsedPending);
+        /**
+         * Info: (20260825 - Luphia) 書籤讓伺服器知道「這個人有一份匯入停著」，
+         * 額度回來時掃描行程才翻得動它（issue #6712 / #6714）。
+         */
+        void saveImportJobBookmark({
+          pauseReason,
+          totalUnits: importUnitTotal,
+          completedUnits: importUnitTotal - pausedUnits.length,
+          failedUnits: failedChapters.length,
+          remainingUnits: pausedUnits,
+          nextStepInputChars: importSource.file?.size,
+        });
       } catch (error) {
         console.error("[carbon-chat] report import failed:", error);
         notify({
@@ -2765,6 +2882,7 @@ export const useCarbonChat = () => {
       setPendingImportFor,
       persistPendingImport,
       postImportParsedNotice,
+      saveImportJobBookmark,
     ],
   );
 
@@ -2859,6 +2977,100 @@ export const useCarbonChat = () => {
       dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, originSessionId);
     } finally {
       // Info: (20260806 - Tzuhan) 成功或失敗都要放行,否則一次失敗就再也重試不了
+      setIsRetryingImport(false);
+    }
+  }, [
+    pendingImport,
+    runImportChapters,
+    activeSessionId,
+    setDraftNotice,
+    dismissDraftNoticeAfter,
+    isRetryingImport,
+    setPendingImportFor,
+    persistPendingImport,
+    t,
+  ]);
+
+  /**
+   * Info: (20260825 - Luphia) 「接著匯入」：只跑點數用完時還沒做的那幾份
+   *（issue #6713 / review #6717 高-1）。
+   *
+   * 與「重試失敗章節」是兩件事，因此是兩顆按鈕：失敗的章試過而壞了，
+   * 這些章一步都沒試。而**接續的粒度是份不是章**——`buildImportUnits`
+   * 會把節數多的章切成兩份，以章接續會把已經做完的那一份再跑一次、
+   * 再收一次點數，正好是訊息裡「已完成的部分不會重跑」的反面。
+   *
+   * 點數還沒補上時按下去會再撞一次牆：那時結果仍是暫停，清單原封不動，
+   * 而使用者看到的訊息仍然是「點數已用完」——沒有一則訊息會變成別的意思。
+   */
+  const resumePausedImportChapters = useCallback(async () => {
+    const source = lastImportSourceRef.current;
+    const units = pendingImport?.pausedUnits ?? [];
+    if (!source || units.length === 0 || !pendingImport) return;
+    // Info: (20260806 - Tzuhan) 進行中不得再次發射（理由同 retryFailedImportChapters）
+    if (isRetryingImport) return;
+    setIsRetryingImport(true);
+
+    const originSessionId = activeSessionId;
+    const notify = (notice: IDraftNotice | null) =>
+      setDraftNotice(notice, originSessionId);
+    try {
+      // Info: (20260730 - Tzuhan) 沿用首次的頁碼索引：重問一次等於再燒一次全文輸入，而索引不會變
+      const result = await runImportChapters(
+        source,
+        pendingImport.pausedChapters ?? [],
+        false,
+        lastPageIndexRef.current,
+        notify,
+        units,
+      );
+      notify(null);
+      // Info: (20260807 - Emily) 保存不能寫在 setState 的 updater 裡（見 retryFailedImportChapters）
+      const current = pendingImportBySessionRef.current[originSessionId];
+      if (!current) return;
+      const itemByParagraph = new Map(
+        current.items.map((item) => [item.paragraphId, item]),
+      );
+      result.segments.forEach((segment) => {
+        const existing = itemByParagraph.get(segment.paragraphId);
+        itemByParagraph.set(segment.paragraphId, {
+          paragraphId: segment.paragraphId,
+          title: segment.title,
+          content: segment.content,
+          hasExisting: existing?.hasExisting ?? false,
+          checked: existing?.checked ?? true,
+        });
+      });
+      /**
+       * Info: (20260825 - Luphia) 三個欄位一起換：這一趟可能又暫停（點數還是不夠）、
+       * 可能跑完（清空）、也可能有章真的壞掉。只換其中一個會讓畫面同時顯示
+       * 舊的暫停清單與新的結果。
+       */
+      const merged: IPendingImport = {
+        ...current,
+        items: Array.from(itemByParagraph.values()),
+        unmapped: [...current.unmapped, ...result.unmapped],
+        failedChapters: [...current.failedChapters, ...result.failed].filter(
+          (chapter, index, list) =>
+            list.findIndex((item) => item.id === chapter.id) === index,
+        ),
+        pausedChapters: result.pausedChapters,
+        pausedUnits: result.remainingUnits,
+        pauseReason: result.pausedBy,
+      };
+      setPendingImportFor(originSessionId, merged);
+      void persistPendingImport(
+        originSessionId,
+        merged,
+        lastImportSourceRef.current,
+        importActivitiesRef.current,
+        lastPageIndexRef.current,
+      );
+    } catch (error) {
+      console.error("[carbon-chat] resume paused chapters failed:", error);
+      notify({ type: "error", text: t("carbon_chatbot.import_failed") });
+      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, originSessionId);
+    } finally {
       setIsRetryingImport(false);
     }
   }, [
@@ -5192,6 +5404,8 @@ export const useCarbonChat = () => {
     // Info: (20260730 - Tzuhan) 手動產生結構圖(治理架構/範疇對應/量化流程);無對應模板的段落呼叫即 no-op
     generateParagraphDiagram,
     retryFailedImportChapters,
+    // Info: (20260825 - Luphia) 「接著匯入」：只跑點數用完時還沒做的那幾份（issue #6713）
+    resumePausedImportChapters,
     // Info: (20260806 - Tzuhan) 重試中:預覽卡據此禁用按鈕並顯示進度(「正在跑」必須看得見)
     isRetryingImport,
     // Info: (20260716 - Tzuhan) #56 匯入導流(聊天附件疑似整份報告)

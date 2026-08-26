@@ -192,6 +192,9 @@ export const carbonChatbot = {
     "\u300c{{name}}\u300d is still being parsed. Running two imports at once makes both slower by competing for the same quota \u2014 please wait for this one to finish, or reload and try again.",
   import_parsing_chapter:
     "Parsing \u300c{{name}}\u300d chapter by chapter ({{current}}/{{total}} done, {{inFlight}} in progress); a full report takes a few minutes\u2026",
+  import_paused_chapters:
+    "You ran out of credits, so these chapters have not been parsed yet: {{chapters}}. Once you have credits again you can carry on from here — the finished parts will not be redone.",
+  import_resume_paused: "Carry on",
   import_failed_chapters:
     "These chapters failed to parse and can be re-imported later: {{chapters}}",
   import_retry_failed: "Retry failed chapters",

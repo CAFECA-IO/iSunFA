@@ -187,6 +187,9 @@ export const carbonChatbot = {
     "「{{name}}」還在解析中。同時跑兩份會互相搶額度、兩邊都變慢,請等這一份跑完或重新整理後再試。",
   import_parsing_chapter:
     "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,{{inFlight}} 章解析中),完整報告約需數分鐘…",
+  import_paused_chapters:
+    "點數已用完,以下章節還沒開始解析:{{chapters}}。補上點數後可以從這裡接著匯入,已完成的部分不會重跑。",
+  import_resume_paused: "接著匯入",
   import_failed_chapters: "以下章節解析失敗,可稍後重新匯入補齊:{{chapters}}",
   import_retry_failed: "重試失敗章節",
   import_retrying: "重試中…",

@@ -7,6 +7,7 @@ import {
   JOB_PAUSE_REASON,
   type JobPauseReason,
 } from "@/constants/resumable_job";
+import { type IImportUnit } from "@/lib/carbon_page_slice";
 
 // Info: (20260714 - Tzuhan) 判斷 API 失敗是否為 AI 額度耗盡(IS000011),前端提示稍候重試
 export const isQuotaApiError = (error: unknown): boolean => {
@@ -387,4 +388,49 @@ export const parsePersonalPaymentRequired = (
     return null;
   }
   return { orderId: payload.orderId, cost: payload.cost };
+};
+
+export interface IPausedUnitSummary {
+  // Info: (20260825 - Luphia) 接續要跑的工作單元（份粒度）
+  pausedUnits: IImportUnit[];
+  // Info: (20260825 - Luphia) 顯示用：收斂成章（使用者認得的是章，不是「第幾份」）
+  pausedChapters: { id: string; title: string }[];
+}
+
+/**
+ * Info: (20260825 - Luphia) 把驅動器回的「還沒做的單元」整理成兩份清單
+ *（review #6717 阻擋-1）。
+ *
+ * 這支存在的理由是一個真的缺陷：先前這段推導寫在迴圈裡，而且以**章**為單位
+ * 做正向標記（成功就 `add(chapter.id)`）。`buildImportUnits` 會把節數多的章
+ * 切成兩份（實測 11 章 → 14 個單元，ch1／ch3／ch9 各兩份），於是
+ * 「一份做完、另一份撞牆」時整章被當成處理過：
+ *
+ * - 不在暫停名單（被正向標記排除）
+ * - 不在失敗名單（暫停刻意不進 failed，那是對的）
+ * - 而合併出來的內容**少了一半的節**，沒有任何訊息提過
+ *
+ * `failed` 以章去重是安全的（任一份壞掉就整章列入），同樣的手法用在正向標記上
+ * 語意剛好翻過來。抽成純函式之後，那個情形是一條可以直接測的斷言。
+ *
+ * 已經在 `failed` 的章要排除：同一章同時出現在「解析失敗」與「還沒開始解析」
+ * 兩句話裡是自相矛盾的，而使用者無從判斷該信哪一句。失敗優先——它有重試入口，
+ * 而那條路會把整章重跑。
+ */
+export const summarisePausedUnits = (params: {
+  remainingUnits: readonly IImportUnit[];
+  failedChapterIds: readonly string[];
+  resolveTitle: (chapterId: string) => string;
+}): IPausedUnitSummary => {
+  const failed = new Set(params.failedChapterIds);
+  const pausedUnits = params.remainingUnits.filter(
+    (unit) => !failed.has(unit.chapterId),
+  );
+  const pausedChapters = Array.from(
+    new Set(pausedUnits.map((unit) => unit.chapterId)),
+  ).map((chapterId) => ({
+    id: chapterId,
+    title: params.resolveTitle(chapterId),
+  }));
+  return { pausedUnits, pausedChapters };
 };

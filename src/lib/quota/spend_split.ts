@@ -1,5 +1,6 @@
 import {
   SPEND_PRIORITY,
+  TEAM_PLAN,
   type SpendPriority,
 } from "@/constants/subscription_quota";
 
@@ -134,4 +135,19 @@ export function canAffordSpend(params: {
   if (cost <= BigInt(0)) return false;
   if (!allowPartial) return quotaAvailable >= cost;
   return quotaAvailable + chainCredits > BigInt(0);
+}
+
+/**
+ * Info: (20260825 - Luphia) 用量的**聚合範圍**：免費方案全隊共用一份、
+ * 付費方案一人一池（review #6717 低-1）。
+ *
+ * 抽出來的理由是它**歷史上會分岔的那一半**：`canAffordSpend` 抽的是最後那個
+ * 大小比較，而比較不會錯；真正會錯的是「該加總誰的用量」——聚合範圍錯了，
+ * 兩個視窗的剩餘量就錯了，而後面的比較再正確也沒有用。
+ *
+ * 只回傳一個布林而不是自己去查：查詢要在扣款端的鎖裡進行（讀與寫必須同一把鎖），
+ * 而唯讀試算沒有鎖。兩邊各自查、共用這個**判準**，是能共用的最大範圍。
+ */
+export function usesSharedTeamQuota(effectivePlanId: string): boolean {
+  return effectivePlanId === TEAM_PLAN.FREE;
 }

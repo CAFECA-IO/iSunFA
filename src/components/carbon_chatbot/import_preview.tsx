@@ -58,6 +58,18 @@ export interface IPendingImport {
    * 以為檔案有問題（那正是修正前的行為）。
    */
   pausedChapters?: { id: string; title: string }[];
+  /**
+   * Info: (20260825 - Luphia) 接續要跑的**工作單元**（份粒度，review #6717 阻擋-1）：
+   * `buildImportUnits` 會把節數多的章切成兩份，而點數用完時很可能是
+   * 「一份做完、另一份撞牆」。以章接續會把做完的那一份再跑一次，
+   * 而訊息裡明寫「已完成的部分不會重跑」。
+   */
+  pausedUnits?: {
+    chapterId: string;
+    sectionIds: string[];
+    partIndex: number;
+    partTotal: number;
+  }[];
   // Info: (20260825 - Luphia) 暫停原因（JOB_PAUSE_REASON）；null／undefined＝沒有暫停
   pauseReason?: string | null;
 }
@@ -76,6 +88,12 @@ export interface IImportPreviewProps {
   onDefer?: () => void;
   // Info: (20260717 - Tzuhan) 只重跑失敗章節並合併進本預覽(檔案由 hook 暫存,無需重選)
   onRetryFailed?: () => void;
+  /**
+   * Info: (20260825 - Luphia) 「接著匯入」：只跑點數用完時還沒做的那幾份
+   *（issue #6713）。與重試失敗分成兩顆按鈕——兩者跑的東西不同，
+   * 而且失敗那顆按下去會真的重送，這顆在點數還沒補上時會再撞一次牆。
+   */
+  onResumePaused?: () => void;
   /**
    * Info: (20260806 - Tzuhan) 重試進行中。
    *
@@ -97,6 +115,7 @@ export function ImportPreview({
   onDiscard,
   onDefer = undefined,
   onRetryFailed = undefined,
+  onResumePaused = undefined,
   isRetrying = false,
   retryNotice = null,
 }: IImportPreviewProps) {
@@ -183,6 +202,49 @@ export function ImportPreview({
                     isRetrying
                       ? "carbon_chatbot.import_retrying"
                       : "carbon_chatbot.import_retry_failed",
+                  )}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/**
+           * Info: (20260825 - Luphia) 點數用完而**還沒解析**的章（issue #6713）。
+           *
+           * 與上面那塊「解析失敗」分開，因為兩者是不同的事實、也是不同的處置：
+           * 失敗的章試過而壞了（重試可能成功），這些章一步都沒試——
+           * 重試一百次也一樣，要先補點數。混成同一塊會讓使用者回去改檔案。
+           *
+           * 這一塊在此之前**不存在**：訊息（五語言）告訴使用者「可以從這裡接著
+           * 匯入」，而畫面上沒有那個動作，唯一走得到的路是整份重新匯入
+           *（已解析的章再解析一次、再收一次點數，正好是那句承諾的反面）。
+           */}
+          {(pendingImport.pausedChapters ?? []).length > 0 && (
+            <div className="flex items-center gap-1.5 rounded-xl bg-blue-50 p-3 text-[11px] font-bold text-blue-700">
+              <AlertTriangle size={12} className="shrink-0" />
+              <span className="min-w-0 flex-1">
+                {t("carbon_chatbot.import_paused_chapters", {
+                  chapters: (pendingImport.pausedChapters ?? [])
+                    .map((chapter) => chapter.title)
+                    .join("、"),
+                })}
+              </span>
+              {onResumePaused && (
+                <button
+                  type="button"
+                  onClick={onResumePaused}
+                  disabled={isRetrying}
+                  className="flex shrink-0 items-center gap-1 rounded-full bg-white px-2.5 py-1 font-bold text-blue-700 ring-1 ring-blue-200 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white"
+                >
+                  {isRetrying ? (
+                    <Loader2 size={11} className="animate-spin" />
+                  ) : (
+                    <RotateCcw size={11} />
+                  )}
+                  {t(
+                    isRetrying
+                      ? "carbon_chatbot.import_retrying"
+                      : "carbon_chatbot.import_resume_paused",
                   )}
                 </button>
               )}
