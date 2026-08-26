@@ -243,6 +243,66 @@ describe("暫停單元收斂成章", () => {
 });
 
 /**
+ * Info: (20260826 - Luphia) 接續必須把活動數據帶回來（review #6717 二輪中-1）。
+ *
+ * 萃取只對證據章 `ch3` 生效，而 ch3 在 11 章裡排第 3、又是被切成兩份的三章之一
+ * ——「點數在它之前用完」是常態。先前接續傳 `false` 且結果也沒併回去，
+ * 於是補上點數之後那一章的活動數據一筆都不會有，`computedLedger` 空、
+ * 所有數據圖表畫不出來，而畫面上沒有任何跡象。
+ */
+describe("接續與活動數據", () => {
+  const hook = readFileSync(
+    join(process.cwd(), "src", "hooks", "use_carbon_chat.ts"),
+    "utf8",
+  );
+  const resumeScope = (() => {
+    const start = hook.indexOf("const resumePausedImportChapters");
+    expect(start).toBeGreaterThan(-1);
+    return hook.slice(start, hook.indexOf("const toggleImportItem", start));
+  })();
+
+  it("接續的單元含證據章時才打開萃取", () => {
+    expect(resumeScope).toContain(
+      "units.some((unit) => unit.chapterId === CARBON_EVIDENCE_CHAPTER_ID)",
+    );
+    // Info: (20260826 - Luphia) 不准回到寫死的 false（那就是中-1 的形狀）
+    expect(resumeScope).not.toContain(
+      "pendingImport.pausedChapters ?? [],\n        false,",
+    );
+  });
+
+  /**
+   * Info: (20260826 - Luphia) 旗標打開但結果沒接回來等於沒抽：
+   * `importActivitiesRef` 是套用時真正會被讀的那一份。
+   * 累加而不是覆蓋——證據章被切成兩份，其中一份可能先跑完了。
+   */
+  it("抽到的活動數據累加回暫存，且數字跟著更新", () => {
+    expect(resumeScope).toContain("importActivitiesRef.current = [");
+    expect(resumeScope).toContain("...result.activities,");
+    expect(resumeScope).toContain(
+      "activityCount: importActivitiesRef.current.length",
+    );
+  });
+
+  /**
+   * Info: (20260826 - Luphia) 重試路徑的書籤分母要是**總份數**：
+   * 先前寫成剩餘份數且完成數恆 0，`GET /user/job` 一接上就會顯示 0/N，
+   * 而 N 還會隨著每次重試變小。
+   */
+  it("重試寫回的書籤分母不是剩餘份數", () => {
+    const retryScope = hook.slice(
+      hook.indexOf("const retryFailedImportChapters"),
+      hook.indexOf("const resumePausedImportChapters"),
+    );
+    expect(retryScope).toContain("const retryTotalUnits = Math.max(");
+    expect(retryScope).not.toContain(
+      "totalUnits: merged.pausedUnits?.length ?? 0",
+    );
+    expect(retryScope).not.toContain("completedUnits: 0,");
+  });
+});
+
+/**
  * Info: (20260826 - Luphia) 第五輪自我 review 抓到的四項（都在同一條主線上）。
  *
  * 前三項的共同形狀是：**修好了「暫停」這個狀態，但沒有把它接到所有出入口**。

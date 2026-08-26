@@ -3066,10 +3066,22 @@ export const useCarbonChat = () => {
        * 停在原地：掃描行程每 5 分鐘照樣評估一次已經跑完的任務，
        * 而 `GET /user/job` 會回報一個實際上已完成的「未完成任務」。
        */
+      /**
+       * Info: (20260826 - Luphia) 分母是**總份數**，不是剩餘份數（review #6717 二輪低-1）。
+       *
+       * 先前 `totalUnits` 寫成剩餘份數、`completedUnits` 恆為 0，於是
+       * `GET /user/job` 一接上畫面就會顯示 0/N，而 N 還會隨著每次重試變小。
+       * 總數用「這份匯入原本切成幾份」（存在書籤裡的話會更好，但目前
+       * 由暫存的章數推導已足夠——重試不改變總份數）。
+       */
+      const retryTotalUnits = Math.max(
+        merged.pausedUnits?.length ?? 0,
+        current.pausedUnits?.length ?? 0,
+      );
       void saveImportJobBookmark({
         pauseReason: merged.pauseReason ?? null,
-        totalUnits: merged.pausedUnits?.length ?? 0,
-        completedUnits: 0,
+        totalUnits: retryTotalUnits,
+        completedUnits: retryTotalUnits - (merged.pausedUnits?.length ?? 0),
         failedUnits: merged.failedChapters.length,
         remainingUnits: merged.pausedUnits ?? [],
       });
@@ -3120,10 +3132,19 @@ export const useCarbonChat = () => {
       setDraftNotice(notice, originSessionId);
     try {
       // Info: (20260730 - Tzuhan) 沿用首次的頁碼索引：重問一次等於再燒一次全文輸入，而索引不會變
+      /**
+       * Info: (20260826 - Luphia) 接續時**要抽活動數據**（review #6717 二輪中-1）。
+       *
+       * 萃取只對證據章（`ch3`）生效，而 ch3 在 11 章裡排第 3、又是被切成兩份的
+       * 三章之一——「點數在它之前用完」是常態而不是邊緣情形。先前接續傳 `false`，
+       * 於是補上點數之後那一章的活動數據**一筆都不會有**，`computedLedger` 是空的，
+       * 所有數據圖表都畫不出來，而畫面上沒有任何跡象。使用者唯一的補救是整份
+       * 重新匯入——正好是這個 PR 要消滅的那件事。
+       */
       const result = await runImportChapters(
         source,
         pendingImport.pausedChapters ?? [],
-        false,
+        units.some((unit) => unit.chapterId === CARBON_EVIDENCE_CHAPTER_ID),
         lastPageIndexRef.current,
         notify,
         units,
@@ -3150,10 +3171,22 @@ export const useCarbonChat = () => {
        * 可能跑完（清空）、也可能有章真的壞掉。只換其中一個會讓畫面同時顯示
        * 舊的暫停清單與新的結果。
        */
+      /**
+       * Info: (20260826 - Luphia) 抽到的活動數據要**併回暫存**（review #6717 二輪中-1）。
+       *
+       * 旗標打開了但結果沒接回來的話，等於沒抽——`importActivitiesRef` 是套用時
+       * 真正會被讀的那一份，而 `activityCount` 是畫面上的數字。累加而不是覆蓋：
+       * 首次匯入可能已經抽到一部分（證據章被切成兩份，其中一份先跑完）。
+       */
+      importActivitiesRef.current = [
+        ...importActivitiesRef.current,
+        ...result.activities,
+      ];
       const merged: IPendingImport = {
         ...current,
         items: Array.from(itemByParagraph.values()),
         unmapped: [...current.unmapped, ...result.unmapped],
+        activityCount: importActivitiesRef.current.length,
         failedChapters: [...current.failedChapters, ...result.failed].filter(
           (chapter, index, list) =>
             list.findIndex((item) => item.id === chapter.id) === index,
