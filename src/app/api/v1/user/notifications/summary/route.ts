@@ -9,7 +9,7 @@ import { getNotificationSummary } from "@/services/notification.service";
 
 /**
  * Info: (20260821 - Luphia) 小鈴鐺的摘要（登入氣泡與 60 秒輪詢都打這一支）。
- * 只回兩個數字——輪詢端點要愈便宜愈好。
+ * 回兩個計數加最新未讀時間（D17），不回清單——輪詢端點要愈便宜愈好。
  */
 export async function GET(request: NextRequest) {
   try {

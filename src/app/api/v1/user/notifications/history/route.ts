@@ -15,12 +15,9 @@ import { listNotificationHistory } from "@/services/notification.service";
 /**
  * Info: (20260826 - Julian) GET /api/v1/user/notifications/history?page=1&limit=20
  *
- * `/user/notifications` 頁面的歷史區。與鈴鐺那支（`../notifications`）分開，
- * 因為兩者要的東西不同：鈴鐺只要最新的一批、每 60 秒問一次；頁面要能翻頁，
- * 因此需要一次 `count()`。合在一起的話，鈴鐺的輪詢會替頁面付那次查詢。
- *
- * 只回**事件型**歷史。待辦型（邀請、錢包升級）是活算的狀態、天然有限，
- * 由鈴鐺那支端點提供，頁面兩區各自去要。
+ * 只回**事件型**歷史，供 `/user/notifications` 頁面翻頁。與鈴鐺那支
+ * （`../notifications`）分開，是因為翻頁需要一次 `count()`，合併會讓 60 秒
+ * 輪詢替頁面付這筆查詢；待辦型是活算的狀態、天然有限，仍由鈴鐺那支提供。
  */
 export async function GET(request: NextRequest) {
   try {
@@ -36,9 +33,8 @@ export async function GET(request: NextRequest) {
     if (limited) return limited;
 
     /**
-     * Info: (20260826 - Julian) 走共用的 `parsePositiveInt`，不要自己 parseInt。
-     * `?limit=abc` 用 `parseInt` 會得到 NaN，一路傳到 Prisma 的 `take` 就是 500——
-     * 使用者打錯一個字元不該讓端點爆炸（見那支函式的說明）。
+     * Info: (20260826 - Julian) 走共用的 `parsePositiveInt`，不要自己 parseInt：
+     * `?limit=abc` 得到的 NaN 一路傳到 Prisma 的 `take` 就是 500。
      */
     const { searchParams } = new URL(request.url);
     const page = parsePositiveInt(searchParams.get("page"), { fallback: 1 });
