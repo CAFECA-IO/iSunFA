@@ -3122,7 +3122,31 @@ export const useCarbonChat = () => {
   const resumePausedImportChapters = useCallback(async () => {
     const source = lastImportSourceRef.current;
     const units = pendingImport?.pausedUnits ?? [];
-    if (!source || units.length === 0 || !pendingImport) return;
+    if (units.length === 0 || !pendingImport) return;
+    /**
+     * Info: (20260826 - Luphia) **換裝置／重載之後原始檔案不在了**（自我 review 第六輪）。
+     *
+     * 暫停清單跟著帳號走（存在 `CarbonPendingImport`，會話層級），但
+     * `lastImportSourceRef` 只在記憶體：換瀏覽器、換裝置、或單純重新整理之後
+     * 使用者看得到清單與按鈕，而 `source` 是 null。先前這裡與其他前置條件
+     * 一起 `return`——按鈕按下去**毫無反應、沒有任何訊息**，而那是最難自救的
+     * 一種失敗（使用者無從判斷是壞了還是自己沒按到）。
+     *
+     * 說出來而不是靜靜返回：接續需要原始檔案（伺服端只收 cid 或檔案本體，
+     * 而 cid 也存在那個 ref 裡）。請使用者重新上傳同一份檔案——已完成的章
+     * 仍然不會重跑，因為要跑的是 `pausedUnits`。
+     */
+    if (!source) {
+      setDraftNotice(
+        {
+          type: "error",
+          text: t("carbon_chatbot.import_resume_needs_file"),
+        },
+        activeSessionId,
+      );
+      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, activeSessionId);
+      return;
+    }
     // Info: (20260806 - Tzuhan) 進行中不得再次發射（理由同 retryFailedImportChapters）
     if (isRetryingImport) return;
     setIsRetryingImport(true);

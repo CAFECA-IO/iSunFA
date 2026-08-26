@@ -243,6 +243,65 @@ describe("暫停單元收斂成章", () => {
 });
 
 /**
+ * Info: (20260826 - Luphia) 換裝置／重載之後的接續（自我 review 第六輪）。
+ *
+ * 暫停清單跟著帳號走（存在 `CarbonPendingImport`），但原始檔案只在記憶體
+ *（`lastImportSourceRef`）。於是使用者在另一台機器上看得到清單與按鈕，
+ * 而按下去**毫無反應、沒有任何訊息**——那是最難自救的一種失敗：
+ * 使用者無從判斷是壞了還是自己沒按到。
+ */
+describe("接續時原始檔案已不在", () => {
+  const hook = readFileSync(
+    join(process.cwd(), "src", "hooks", "use_carbon_chat.ts"),
+    "utf8",
+  );
+  const resumeScope = hook.slice(
+    hook.indexOf("const resumePausedImportChapters"),
+    hook.indexOf("const toggleImportItem"),
+  );
+
+  it("沒有檔案時說出原因，而不是靜靜返回", () => {
+    // Info: (20260826 - Luphia) 不准把 !source 和其他前置條件混在同一個早退裡
+    expect(resumeScope).not.toContain(
+      "if (!source || units.length === 0 || !pendingImport) return;",
+    );
+    expect(resumeScope).toContain("if (!source) {");
+    expect(resumeScope).toContain("carbon_chatbot.import_resume_needs_file");
+  });
+
+  /**
+   * Info: (20260826 - Luphia) 那句話要說「已完成的不會重跑」：
+   * 使用者被要求重新上傳同一份大檔時，第一個念頭是「是不是要重跑一遍、
+   * 再扣一次點數」。
+   */
+  it("五個語言都說得出「已完成的不會重跑」", () => {
+    const marks: Record<string, string> = {
+      zh_tw: "不會重跑",
+      zh_cn: "不会重跑",
+      en: "will not be redone",
+      ja: "再実行されません",
+      ko: "다시 실행되지 않습니다",
+    };
+    for (const [locale, mark] of Object.entries(marks)) {
+      const file = readFileSync(
+        join(
+          process.cwd(),
+          "src",
+          "i18n",
+          "locales",
+          locale,
+          "carbon_chatbot.ts",
+        ),
+        "utf8",
+      );
+      expect(file).toContain("import_resume_needs_file:");
+      const start = file.indexOf("import_resume_needs_file:");
+      expect(file.slice(start, start + 400)).toContain(mark);
+    }
+  });
+});
+
+/**
  * Info: (20260826 - Luphia) 接續必須把活動數據帶回來（review #6717 二輪中-1）。
  *
  * 萃取只對證據章 `ch3` 生效，而 ch3 在 11 章裡排第 3、又是被切成兩份的三章之一
@@ -488,9 +547,17 @@ describe("接著匯入的入口", () => {
    * 那一份再跑一次、再收一次點數，而訊息裡明寫「已完成的部分不會重跑」。
    */
   it("接續送出的是單元（份），不是章", () => {
+    /**
+     * Info: (20260826 - Luphia) 切到**下一個函式**而不是固定位移：
+     * 位移在函式長大時會靜靜地把要檢查的內容切掉，而測試仍然是紅的
+     * ——紅在一個與行為無關的地方（第六輪就發生了）。
+     */
     const start = hook.indexOf("const resumePausedImportChapters");
     expect(start).toBeGreaterThan(-1);
-    const scope = hook.slice(start, start + 1600);
+    const scope = hook.slice(
+      start,
+      hook.indexOf("const toggleImportItem", start),
+    );
     expect(scope).toContain("pendingImport?.pausedUnits ?? []");
     // Info: (20260825 - Luphia) 第六個參數就是 resumeUnits（見 runImportChapters 的簽章）
     expect(scope).toContain("units,\n      );");
@@ -503,7 +570,10 @@ describe("接著匯入的入口", () => {
    */
   it("接續之後暫停狀態整組更新", () => {
     const start = hook.indexOf("const resumePausedImportChapters");
-    const scope = hook.slice(start, start + 3000);
+    const scope = hook.slice(
+      start,
+      hook.indexOf("const toggleImportItem", start),
+    );
     expect(scope).toContain("pausedChapters: result.pausedChapters");
     expect(scope).toContain("pausedUnits: result.remainingUnits");
     expect(scope).toContain("pauseReason: result.pausedBy");
