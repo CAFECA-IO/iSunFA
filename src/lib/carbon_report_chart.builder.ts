@@ -85,6 +85,13 @@ export interface ICarbonChartLabels {
    * 指錯方向的提示比沒有提示更貴:它讓人把時間花在不會有結果的地方。
    */
   importedSankeyNoLedger?: string;
+  /**
+   * Info: (20260825 - Emily) #6667:「取得了表3.8 但勾稽被擋」的說明抬頭。
+   * 與 importedSankeyNoLedger 是兩件事:「沒拿到表」vs「拿到了但數字對不上,
+   * 凍結在門口」—— 後者印前者的文案,使用者會去重匯一章根本沒壞的內容。
+   * 具體被擋的理由(幾列無法解析、差額多少)由呼叫端隨阻擋紀錄帶入,逐條列出。
+   */
+  importedSankeyBlockedLedger?: string;
   /** Info: (20260803 - Tzuhan) 節點過多而降層時的說明 */
   importedSankeyCollapsed?: string;
   /**
@@ -163,6 +170,8 @@ export const CARBON_CHART_DEFAULT_LABELS: ICarbonChartLabels = {
   importedSankeyExcluded: "未畫出的項目(NA/NS 或為零)",
   importedSankeyNoLedger:
     "本報告已匯入,但帳本沒有任何可用數據,因此畫不出排放流向圖。桑基圖與系統數據表格的唯一來源是表3.8(各公司溫室氣體排放量),本次未取得該表。請確認第三章是否解析成功;若該章列為解析失敗,請以預覽卡的「重試失敗章節」重新匯入,並在伺服端日誌查看該表是否被丟棄及其原因。",
+  importedSankeyBlockedLedger:
+    "本報告已取得表3.8,但勾稽未通過,數據凍結在門口、未寫入帳本(半套資料入帳會讓每張圖都錯得很像對的)。被擋的原因如下;修正原文對應表格或重新匯入第三章後,圖表將自動生成。",
   importedSankeyCollapsed: "節點過多,已降為一層(全公司 → 範疇)",
   importedSankeySiteTotals: "各廠址小計(公噸 CO2e/年,占全公司比)",
   importedSankeyGhgMapping: "子代碼與 GHG Protocol 類別的對照",
@@ -897,6 +906,12 @@ export const buildCarbonChartBlock = (
   ledger: IComputedLedger | undefined,
   labels: ICarbonChartLabels = CARBON_CHART_DEFAULT_LABELS,
   tableLabels: ICarbonDataTableLabels = CARBON_DATA_TABLE_DEFAULT_LABELS,
+  /**
+   * Info: (20260825 - Emily) #6667:勾稽阻擋紀錄(state.ledgerImportBlocks)。
+   * 有值且帳本為空時,空帳本的原因是「表拿到了但被擋」——
+   * 要印被擋的理由,不是「未取得該表」。
+   */
+  importBlocks?: readonly { reason: string }[],
 ): string => {
   const wrap = (body: string): string =>
     `${buildChartAnchorStart(templateId)}\n\n${body}\n\n${buildChartAnchorEnd(templateId)}`;
@@ -914,6 +929,15 @@ export const buildCarbonChartBlock = (
       templateId === CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY ||
       templateId === CarbonChartTemplateEnum.IMPORTED_TOP_ITEMS_SANKEY
     ) {
+      // Info: (20260825 - Emily) #6667:「沒拿到表」與「拿到了但勾稽被擋」分開說(見參數註解)
+      if (importBlocks && importBlocks.length > 0) {
+        const reasons = importBlocks
+          .map((block) => `> _- ${block.reason}_`)
+          .join("\n");
+        return wrap(
+          `> _${labels.importedSankeyBlockedLedger ?? CARBON_CHART_DEFAULT_LABELS.importedSankeyBlockedLedger}_\n${reasons}`,
+        );
+      }
       return wrap(
         `> _${labels.importedSankeyNoLedger ?? labels.insufficient}_`,
       );
