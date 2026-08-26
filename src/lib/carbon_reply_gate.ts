@@ -18,12 +18,18 @@
 // Info: (20260825 - Emily)    (「您說的 5000 噸與帳本的 8332.581 公噸不符」),攔掉它會禁止糾錯。
 // Info: (20260825 - Emily)    只收使用者輪次:收 model 輪次會讓漏網的數字下一輪洗白成合法。
 
+import { logger } from "@/lib/utils/logger";
 import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
 
 /**
  * Info: (20260825 - Emily) 排放單位的上下文窗口。數字後方 6 字內出現這些單位即視為排放量斷言。
- * 窗口只看後方:中文計量慣例是「3470.34 公噸」數字在前;
- * 「公噸 CO2e/年」這種單位在前的寫法,其數字已在前一個 match 處理過。
+ *
+ * Info: (20260826 - Emily) 已知漏洞(review 阻擋項,08-26):窗口只看後方,
+ * 「排放了 CO2e 約 3470 左右」這種**單位在前、數字在後**的句式整批漏接 ——
+ * 原註解宣稱「其數字已在前一個 match 處理過」,對表格欄位敘述成立,
+ * 對回覆的自然語句不成立(單位前面根本沒有數字,不存在前一個 match)。
+ * 依「寧漏勿誤殺」此為 v1 地板:漏接句仍有 persona 層在管;
+ * 偵測器換架構(雙向窗口+非排放單位豁免/LLM 萃取取聯集)另票處理,不在本檔硬補。
  */
 const QUANTITY_CLAIM =
   /([0-9][0-9,]*(?:\.[0-9]+)?)(?=[^0-9\n]{0,6}(?:kg\s?CO2e|kgCO2e|tCO2e|公噸|噸|kg\b))/gi;
@@ -99,3 +105,62 @@ export const auditReplyQuantities = (
  */
 export const buildGateBlockedReply = (violations: string[]): string =>
   `系統攔下了一則回覆:其中的排放量數字(${violations.join("、")})無法溯源到帳本事實,依規則不得送出。請重新提問;若您在問的資料尚未匯入帳本,請先完成報告匯入或活動數據計算。`;
+
+/**
+ * Info: (20260826 - Emily) 守門是否上崗,規則只有一條:呼叫端有沒有帶事實包。
+ * - undefined = 呼叫端沒帶(舊呼叫端/招呼詞路徑)→ 跳過
+ * - [](帳本空)→ **照跑**:這一層存在的理由是「指令不是保證」,
+ *   而空包狀態恰好只剩指令,是編造與同業比較最沒有阻力的一格(review 阻擋項,08-25)。
+ * 抽成具名謂詞是為了讓「接線」可測:接線測試釘這個謂詞的三種輸入,
+ * 而不是在 service 裡留一句誰都能改壞的行內判斷(review 阻擋項,08-26)。
+ */
+export const shouldRunReplyGate = (
+  ledgerFacts: IContextFact[] | undefined,
+): ledgerFacts is IContextFact[] => ledgerFacts !== undefined;
+
+/**
+ * Info: (20260826 - Emily) 守門套用結果需要撤銷的訊號欄位。
+ * 一則編數字的回覆,它的「資訊已齊全」「請修訂某段」「請插圖」判斷同樣不可信,
+ * 所以攔下時三個訊號一併歸零;reply 之外的其餘欄位(extraction/usage)原樣保留 ——
+ * extraction 照抄的是使用者訊息、另有逐筆裁決,usage 是已發生的計費事實。
+ */
+interface IGateableSignals {
+  reply: string;
+  readyParagraphId: string | null;
+  revisionParagraphId: string | null;
+  chartRequest: object | null;
+}
+
+/**
+ * Info: (20260826 - Emily) 套用守門(#6707 第三層的「接線」本體)。
+ *
+ * 原本這段住在 chat.service 的 private method 裡 —— 接線邏輯測不到,
+ * 把 `if (!ledgerFacts)` 改成 `if (!ledgerFacts || ledgerFacts.length === 0)`
+ * 全部測試照綠(review 以突變實測證明,08-26)。搬進純函式模組後:
+ * 行為由本檔測試直接釘死,service 端只剩「有沒有呼叫」一件事,
+ * 由掃描測試守(applyReplyGate 呼叫次數 ≥ 結構化/降級兩條路)。
+ *
+ * 通過時**回傳原物件**(同一參照)——「沒攔」與「改了但看起來一樣」是兩件事,
+ * 測試據此用參照相等釘住守門不得夾帶任何改寫。
+ */
+export const applyReplyGate = <T extends IGateableSignals>(
+  structured: T,
+  ledgerFacts: IContextFact[] | undefined,
+  userTexts: string[],
+): T => {
+  if (!shouldRunReplyGate(ledgerFacts)) return structured;
+  const gate = auditReplyQuantities(structured.reply, ledgerFacts, userTexts);
+  if (gate.ok) return structured;
+  logger.warn("carbon reply gate blocked", { violations: gate.violations });
+  /**
+   * Info: (20260826 - Emily) Object.assign 而非 spread:泛型 T 上的欄位覆寫,
+   * spread 字面值不可指派回 T(T 可能把欄位收得更窄),assign 的交集型別可以 ——
+   * 這裡不用 as 斷言,讓編譯器留在崗位上。
+   */
+  return Object.assign({}, structured, {
+    reply: buildGateBlockedReply(gate.violations),
+    readyParagraphId: null,
+    revisionParagraphId: null,
+    chartRequest: null,
+  });
+};

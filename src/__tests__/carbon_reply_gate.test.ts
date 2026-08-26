@@ -2,11 +2,15 @@
 // Info: (20260825 - Emily) 守門的生死線是誤殺率:合法回覆被攔,兩天內守門就會被關掉 ——
 // Info: (20260825 - Emily) 所以「不該攔的」測試與「該攔的」一樣多。
 
+import fs from "fs";
+import path from "path";
 import {
   extractQuantityClaims,
   collectAllowedNumbers,
   auditReplyQuantities,
   buildGateBlockedReply,
+  shouldRunReplyGate,
+  applyReplyGate,
 } from "@/lib/carbon_reply_gate";
 import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
 
@@ -162,5 +166,101 @@ describe("buildGateBlockedReply", () => {
     const text = buildGateBlockedReply(["9999", "500"]);
     expect(text).toContain("9999、500");
     expect(text).toContain("無法溯源");
+  });
+});
+
+// Info: (20260826 - Emily) 以下三組是「接線」測試(review 阻擋項:守門邏輯對,
+// Info: (20260826 - Emily) 但沒有任何測試釘住它有沒有被呼叫、在什麼條件下被呼叫 ——
+// Info: (20260826 - Emily) 把上崗條件突變成 length === 0 全部測試照綠)。
+
+describe("shouldRunReplyGate(上崗規則:看『有沒有帶』,不看『有幾筆』)", () => {
+  it("undefined(呼叫端沒帶事實包)→ 跳過", () => {
+    expect(shouldRunReplyGate(undefined)).toBe(false);
+  });
+
+  it("空陣列(帳本空)→ 上崗:只剩指令的狀態最需要機器判", () => {
+    expect(shouldRunReplyGate([])).toBe(true);
+  });
+
+  it("有事實 → 上崗", () => {
+    expect(shouldRunReplyGate(facts)).toBe(true);
+  });
+});
+
+describe("applyReplyGate(套用結果的成對斷言:攔下改了什麼、通過沒改什麼)", () => {
+  const fabricated = {
+    reply: "貴公司年排放約 9999 公噸,屬業界平均。",
+    readyParagraphId: "ch3-8" as string | null,
+    revisionParagraphId: "ch3-2" as string | null,
+    chartRequest: { templateId: "SCOPE_PIE", paragraphId: "ch3-2" } as {
+      templateId: string;
+      paragraphId: string;
+    } | null,
+    extraction: { company: "測試公司", activities: [] },
+    usage: { inputTokens: 1, outputTokens: 2, totalTokens: 3 },
+  };
+
+  it("攔下:換攔截文案、原回覆消失、三個寫入訊號歸零、extraction/usage 原樣保留", () => {
+    const result = applyReplyGate(fabricated, facts, []);
+    expect(result.reply).toContain("無法溯源");
+    expect(result.reply).toContain("9999");
+    expect(result.reply).not.toContain("業界平均");
+    expect(result.readyParagraphId).toBeNull();
+    expect(result.revisionParagraphId).toBeNull();
+    expect(result.chartRequest).toBeNull();
+    expect(result.extraction).toBe(fabricated.extraction);
+    expect(result.usage).toBe(fabricated.usage);
+  });
+
+  it("帳本空([])也照攔:突變回 length === 0 這條會先紅", () => {
+    const result = applyReplyGate(fabricated, [], []);
+    expect(result.reply).toContain("無法溯源");
+    expect(result.readyParagraphId).toBeNull();
+  });
+
+  it("通過:回傳**同一參照**(沒攔就一個字都不許動)", () => {
+    const clean = {
+      reply: "帳本總排放量為 8332581.1 kgCO2e。",
+      readyParagraphId: "ch3-8" as string | null,
+      revisionParagraphId: null as string | null,
+      chartRequest: null as object | null,
+    };
+    expect(applyReplyGate(clean, facts, [])).toBe(clean);
+  });
+
+  it("undefined(呼叫端沒帶)→ 同一參照,即使回覆帶編造數字", () => {
+    expect(applyReplyGate(fabricated, undefined, [])).toBe(fabricated);
+  });
+});
+
+describe("接線反向掃描:守門在真實呼叫端有沒有接上(掃源碼,不是掃行為)", () => {
+  const CHAT_SERVICE = path.join(process.cwd(), "src/services/chat.service.ts");
+  const CHAT_HOOK = path.join(process.cwd(), "src/hooks/use_carbon_chat.ts");
+
+  it("chat.service:結構化與降級兩條回覆路都呼叫 applyReplyGate(≥2 處)", () => {
+    const source = fs.readFileSync(CHAT_SERVICE, "utf-8");
+    const calls = source.match(/applyReplyGate\(/g) ?? [];
+    expect(calls.length).toBeGreaterThanOrEqual(2);
+    expect(source).toContain('from "@/lib/carbon_reply_gate"');
+  });
+
+  it("chat.service:上崗判斷不得在 service 端重長回來(私有方法/行內空包跳過)", () => {
+    const source = fs.readFileSync(CHAT_SERVICE, "utf-8");
+    /**
+     * Info: (20260826 - Emily) 這兩串是 review 用突變實測打穿的形狀:
+     * 「private applyReplyGate」= 邏輯縮回測不到的地方;
+     * 「ledgerFacts.length === 0」= 空包跳過(帳本空時守門下班)。
+     * persona 的 ledgerFactBlock 用 length > 0 選文案是合法的,不在掃描面。
+     */
+    expect(source).not.toContain("private applyReplyGate");
+    expect(source).not.toContain("ledgerFacts.length === 0");
+  });
+
+  it("hook:事實包無條件隨行(空包也送 [],不得條件式帶欄位)", () => {
+    const source = fs.readFileSync(CHAT_HOOK, "utf-8");
+    expect(source).toContain("buildLedgerFactBundle(");
+    expect(source).toContain("ledgerFacts,");
+    // Info: (20260826 - Emily) 舊形狀:...(ledgerFacts.length > 0 ? { ledgerFacts } : {})
+    expect(source).not.toContain("ledgerFacts.length > 0");
   });
 });

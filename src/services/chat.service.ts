@@ -32,10 +32,7 @@ import { MeasurementUnit } from "@/constants/enums";
 import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
 import { IInventoryExtraction } from "@/types/carbon_chatbot.types";
 import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
-import {
-  auditReplyQuantities,
-  buildGateBlockedReply,
-} from "@/lib/carbon_reply_gate";
+import { applyReplyGate } from "@/lib/carbon_reply_gate";
 import { logger } from "@/lib/utils/logger";
 import { recordLlmUsage } from "@/lib/llm/usage_scope";
 import { SystemSettingKey } from "@/constants/system_setting";
@@ -792,51 +789,6 @@ ${outlineCatalog}${langInstruction}`;
   }
 
   /**
-   * Info: (20260825 - Emily) 回覆出口守門(#6707 第三層)。
-   *
-   * persona 把「清單之外不得有數字」說死了(第二層),但指令不是保證 ——
-   * 委員名單捏造(#6708)就是模型無視約束的實證。這裡機器判:
-   * 回覆中帶排放單位的數字必須屬於「事實包 ∪ 使用者說過的數字」,
-   * 否則整則換成決定性攔截訊息(不經 LLM —— 攔下的原因就是它不可信),
-   * 並撤銷本輪的寫入訊號(readyParagraphId/revision/chartRequest):
-   * 一則編數字的回覆,它的「資訊已齊全」判斷同樣不可信。
-   * extraction 保留 —— 它照抄的是使用者訊息,與回覆裡的數字無關,且另有逐筆裁決。
-   *
-   * 帳本空(事實包為空陣列)時守門**照跑**(review 阻擋項,08-25)。
-   * 第一版在空包時整個跳過 —— 但這一層存在的理由正是「指令不是保證」,
-   * 而空包狀態恰好只剩指令,是最需要機器判的一格:編造與同業比較在這裡
-   * 最沒有阻力。實測空包照跑沒有誤殺:覆述使用者數字仍過(userTexts 來源仍在)、
-   * 純拒答句仍過;舉例性數字(「例如 100 噸」)會被攔,由 persona 的
-   * 無事實分支引導模型不以帶單位數字舉例(見 ledgerFactBlock 的空包句)。
-   * 只在 undefined(呼叫端根本沒帶事實包 —— 舊呼叫端/招呼詞路徑)時跳過。
-   */
-  private applyReplyGate(
-    structured: ICarbonChatStructuredReply,
-    ledgerFacts: IContextFact[] | undefined,
-    history: { role: "user" | "model"; text: string }[],
-  ): ICarbonChatStructuredReply {
-    if (!ledgerFacts) return structured;
-    const gate = auditReplyQuantities(
-      structured.reply,
-      ledgerFacts,
-      history
-        .filter((message) => message.role === "user")
-        .map((message) => message.text),
-    );
-    if (gate.ok) return structured;
-    logger.warn("carbon reply gate blocked", {
-      violations: gate.violations,
-    });
-    return {
-      ...structured,
-      reply: buildGateBlockedReply(gate.violations),
-      readyParagraphId: null,
-      revisionParagraphId: null,
-      chartRequest: null,
-    };
-  }
-
-  /**
    * Info: (20260714 - Tzuhan) 碳會計師結構化回覆
    * 對話內容 + 段落完成訊號(碳盤查對 Gemini 的唯一對話路徑)
    * 解決「無限訪談迴圈」：AI 判斷段落資訊已齊全時回報 readyParagraphId
@@ -868,6 +820,17 @@ ${outlineCatalog}${langInstruction}`;
       role: msg.role,
       parts: [{ text: msg.text }],
     }));
+
+    /**
+     * Info: (20260826 - Emily) #6707 出口守門的合法集合第二來源:使用者自己說過的數字
+     * (AI 覆述使用者的話做對照是正當的,攔掉它會禁止糾錯)。
+     * 只收 user 輪次:收 model 輪次會讓漏網數字下一輪洗白成合法。
+     * 守門本體與上崗規則都在 carbon_reply_gate.ts(applyReplyGate/shouldRunReplyGate),
+     * 這裡只負責「兩條回覆路都呼叫」—— 該接線由掃描測試釘住。
+     */
+    const gateUserTexts = history
+      .filter((message) => message.role === "user")
+      .map((message) => message.text);
 
     // Info: (20260716 - Tzuhan) 同步聊天路徑，45秒逾時 + 用量記錄(#6515)
     const response = await this.invokeGuarded(
@@ -918,8 +881,8 @@ ${outlineCatalog}${langInstruction}`;
               paragraphId: chartCandidate.paragraphId as string,
             }
           : null;
-      // Info: (20260825 - Emily) #6707 出口守門:結構化與降級兩條路都要過(見 applyReplyGate)
-      return this.applyReplyGate(
+      // Info: (20260825 - Emily) #6707 出口守門:結構化與降級兩條路都要過(見 carbon_reply_gate.ts)
+      return applyReplyGate(
         {
           reply: parsed.reply,
           readyParagraphId: isValidParagraph ? parsed.readyParagraphId : null,
@@ -929,10 +892,10 @@ ${outlineCatalog}${langInstruction}`;
           usage,
         },
         ledgerFacts,
-        history,
+        gateUserTexts,
       );
     } catch {
-      return this.applyReplyGate(
+      return applyReplyGate(
         {
           reply: raw,
           readyParagraphId: null,
@@ -942,7 +905,7 @@ ${outlineCatalog}${langInstruction}`;
           usage,
         },
         ledgerFacts,
-        history,
+        gateUserTexts,
       );
     }
   }
