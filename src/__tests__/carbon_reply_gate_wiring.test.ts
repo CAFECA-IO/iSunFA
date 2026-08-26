@@ -19,19 +19,24 @@ import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
 
 // Info: (20260826 - Emily) 每題測試先設定「LLM 這輪會回什麼」;mock 前綴讓 jest 允許工廠引用
 let mockLlmReplyText = "";
+// Info: (20260826 - Emily) 守門 X 萃取器那一次呼叫的回覆(預設:無斷言)
+let mockExtractorText = JSON.stringify({ claims: [] });
 
 /**
  * Info: (20260826 - Emily) mock 掉的是 SDK(外部世界),不是被測程式:
  * generateContent 回傳可控文字,其餘匯出補齊 chat.service 檔頭 import 需要的名字。
  * ChatService 以明確金鑰建構 → ensureClient 短路,不會碰 systemSettingService/DB。
+ * 兩條 LLM 路以**引數形狀**區分(這是 SDK 的真實差異,不是測試的私規):
+ * 聊天路傳 { contents },萃取路傳 Part 陣列。
  */
 jest.mock("@google/generative-ai", () => ({
   GoogleGenerativeAI: class {
     getGenerativeModel() {
       return {
-        generateContent: async () => ({
+        generateContent: async (input: unknown) => ({
           response: {
-            text: () => mockLlmReplyText,
+            text: () =>
+              Array.isArray(input) ? mockExtractorText : mockLlmReplyText,
             usageMetadata: {
               promptTokenCount: 1,
               candidatesTokenCount: 2,
@@ -163,5 +168,44 @@ describe("守門接線:真 ChatService 走完整路徑(LLM 邊界 mock)", () => 
     expect(result.reply).toContain("無法溯源");
     expect(result.reply).toContain("7777");
     expect(result.reply).not.toContain("不是 JSON");
+  });
+
+  it("X 主力在真路徑接上:Y 地板構不到的改述,萃取器抓到 → 攔且訊號歸零", async () => {
+    // Info: (20260826 - Emily) 6666 與排放單位相距 >10 字,Y 的雙向窗構不到 —— 只有 X 能攔
+    mockLlmReplyText = llmJson(
+      "全公司總量為 6666,單位標示於本節末尾的公噸 CO2e 說明。",
+    );
+    mockExtractorText = JSON.stringify({
+      claims: [{ value: "6666", unit: "公噸 CO2e" }],
+    });
+    const service = new ChatService("test-key");
+    const result = await service.generateCarbonChatbotStructuredResponse(
+      HISTORY,
+      undefined,
+      undefined,
+      undefined,
+      facts,
+    );
+    expect(result.reply).toContain("無法溯源");
+    expect(result.reply).toContain("6666");
+    expect(result.reply).not.toContain("本節末尾");
+    expect(result.readyParagraphId).toBeNull();
+    mockExtractorText = JSON.stringify({ claims: [] });
+  });
+
+  it("萃取器輸出壞形狀 → 降級留痕放行(Y 已過),不把壞輸出當成「沒有斷言」", async () => {
+    mockLlmReplyText = llmJson("帳本總排放量為 8332581.1 kgCO2e,已入帳。");
+    mockExtractorText = "不是 JSON";
+    const service = new ChatService("test-key");
+    const result = await service.generateCarbonChatbotStructuredResponse(
+      HISTORY,
+      undefined,
+      undefined,
+      undefined,
+      facts,
+    );
+    expect(result.reply).toBe("帳本總排放量為 8332581.1 kgCO2e,已入帳。");
+    expect(result.readyParagraphId).toBe(OUTLINE_ID);
+    mockExtractorText = JSON.stringify({ claims: [] });
   });
 });

@@ -32,7 +32,7 @@ import { MeasurementUnit } from "@/constants/enums";
 import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
 import { IInventoryExtraction } from "@/types/carbon_chatbot.types";
 import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
-import { applyReplyGate } from "@/lib/carbon_reply_gate";
+import { applyReplyGate, type ClaimExtractor } from "@/lib/carbon_reply_gate";
 import { logger } from "@/lib/utils/logger";
 import { recordLlmUsage } from "@/lib/llm/usage_scope";
 import { SystemSettingKey } from "@/constants/system_setting";
@@ -62,6 +62,37 @@ export interface ICarbonChatStructuredReply {
 
 // Info: (20260714 - Tzuhan) readyParagraphId 的無段落標記(LLM enum 選項之一)
 const NO_READY_PARAGRAPH = "none";
+
+/**
+ * Info: (20260826 - Emily) #6707 守門 X 主力的萃取 schema(round-3 建議方向):
+ * LLM 只回答「這則回覆裡有哪些排放量斷言」,value/unit 原樣照抄 ——
+ * 對錯的裁決權在 TS(carbon_reply_gate.adjudicateExtractedClaims)。
+ * 與 readyParagraphId 同一個模式:LLM 列舉、TS 白名單裁決,永不採信 LLM 的判斷。
+ */
+const EMISSION_CLAIM_EXTRACTION_SCHEMA: Schema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    claims: {
+      type: SchemaType.ARRAY,
+      description: "回覆中所有帶排放單位的數字斷言;沒有時回空陣列",
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          value: {
+            type: SchemaType.STRING,
+            description: "數字原樣照抄(含千分位),嚴禁換算、加總或改寫",
+          },
+          unit: {
+            type: SchemaType.STRING,
+            description: "排放單位原樣照抄(如 公噸 CO2e、kgCO2e、噸)",
+          },
+        },
+        required: ["value", "unit"],
+      },
+    },
+  },
+  required: ["claims"],
+};
 
 // Info: (20260714 - Tzuhan) 判斷 LLM 錯誤是否為額度耗盡(429/RESOURCE_EXHAUSTED)，供呼叫端回專屬錯誤碼
 export const isLlmQuotaError = (error: unknown): boolean => {
@@ -789,6 +820,41 @@ ${outlineCatalog}${langInstruction}`;
   }
 
   /**
+   * Info: (20260826 - Emily) 守門 X 主力的萃取器(#6707 round-3):
+   * 用本 service 自己的 LLM 通道做結構化萃取(temperature 0 + responseSchema),
+   * 回傳形狀在此驗過才交給守門 —— 萃取器輸出不合形狀時拋錯,
+   * 由守門的降級路徑接手(退 Y 地板+留痕),不讓壞輸出被當成「沒有斷言」。
+   */
+  private buildEmissionClaimExtractor(): ClaimExtractor {
+    return async (reply) => {
+      const raw = await this.generateContent(
+        [
+          {
+            text: `你是字串萃取器,不是稽核者。列出下面回覆中所有「排放量斷言」:帶排放單位(公噸 CO2e、kgCO2e、tCO2e、公噸、噸、公斤 CO2e 等)的數字。value 與 unit 都原樣照抄(含千分位),嚴禁換算、加總或判斷對錯。章節號、年份、金額、頁碼、百分比等非排放量數字不要列;沒有排放量斷言就回空的 claims。\n【回覆內容】\n${reply}`,
+          },
+        ],
+        {
+          temperature: 0,
+          responseSchema: EMISSION_CLAIM_EXTRACTION_SCHEMA,
+          timeoutMs: LLM_SYNC_TIMEOUT_MS,
+        },
+      );
+      const parsed: unknown = JSON.parse(raw);
+      const claims = (parsed as { claims?: unknown }).claims;
+      if (!Array.isArray(claims)) {
+        throw new Error("emission claim extractor output has no claims array");
+      }
+      return claims.flatMap((item) => {
+        const candidate = item as { value?: unknown; unit?: unknown };
+        return typeof candidate.value === "string" &&
+          typeof candidate.unit === "string"
+          ? [{ value: candidate.value, unit: candidate.unit }]
+          : [];
+      });
+    };
+  }
+
+  /**
    * Info: (20260714 - Tzuhan) 碳會計師結構化回覆
    * 對話內容 + 段落完成訊號(碳盤查對 Gemini 的唯一對話路徑)
    * 解決「無限訪談迴圈」：AI 判斷段落資訊已齊全時回報 readyParagraphId
@@ -893,6 +959,7 @@ ${outlineCatalog}${langInstruction}`;
         },
         ledgerFacts,
         gateUserTexts,
+        this.buildEmissionClaimExtractor(),
       );
     } catch {
       return applyReplyGate(
@@ -906,6 +973,7 @@ ${outlineCatalog}${langInstruction}`;
         },
         ledgerFacts,
         gateUserTexts,
+        this.buildEmissionClaimExtractor(),
       );
     }
   }
