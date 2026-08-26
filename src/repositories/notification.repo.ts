@@ -223,6 +223,10 @@ export class NotificationRepository {
    * 用 `_max` 併進既有的 groupBy 而不是另開一支查詢：這支是每 60 秒
    * × 在線人數會打的端點，多一趟往返的代價要乘上那個係數。
    * 兩個值本來就來自同一批列，分兩次查反而可能看到不一致的快照。
+   *
+   * Info: (20260826 - Julian) 這裡回的是**入庫列**的最新時間，不是摘要的最終值。
+   * 活算的待辦（團隊邀請）不在這張表裡，由 `getNotificationSummary` 取兩者的
+   * 最大值 —— 只用這一半會讓純邀請使用者的識別值恆為 null（計畫書 D41）。
    */
   async summarizeUnread(userId: string): Promise<{
     counts: Map<string, number>;

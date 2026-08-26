@@ -78,6 +78,20 @@
 | D38 | 手機版面板捲不到底，底部「查看全部通知」點不到 —— 捲動區是 `flex-1 overflow-y-auto` 但少了 `min-h-0`，而 flex item 的 `min-height: auto` 讓它長到跟內容一樣高、把 `h-dvh` 的父層撐破，`overflow-y-auto` 因此永遠不生效 | 加 `min-h-0`；底部連結補 `env(safe-area-inset-bottom)`；兩條掃描測試分別釘住「捲動區有 min-h-0」與「連結在捲動區之外」 |
 | D39 | 為了補 focus trap 加的 `PopoverPanel modal` 讓手機版**完全捲不動** —— 它啟動的 scroll lock 在觸控裝置上靠攔截 `touchmove`，認得 `Dialog` 的面板但未必認得 `PopoverPanel` 的 | 移除 `modal`（focus trap 退回未做，正解是改寫成 `Dialog`）；底部連結改成手機版 `fixed bottom-0` 貼齊螢幕底緣，位置不再依賴任何祖先的高度 |
 | D40 | **手機版面板捲不動、底部按鈕點不到的真正成因**：三個掛鈴鐺的 shell 其 `<header>` 都有 `backdrop-blur-xl`，而 `backdrop-filter` 與 `transform` 一樣會讓元素成為子孫 `position: fixed` 的**包含塊** —— 面板的 `fixed inset-0 h-dvh` 因此相對那個 64px 的 header 定位（實測 top=7742px，視窗高 1083），底部連結跟著跑到清單上方。D38／D39 的兩次修補都只是在症狀上打轉 | 毛玻璃移到 `absolute inset-0 -z-10` 的兄弟層，`<header>` 不再是包含塊；面板回到單純的 flex 版面；底部入口改成品牌色實心按鈕 + 箭頭（先前與分節標題同樣式，使用者讀成列表標題） |
+| D41 | **D17 對活算的邀請根本沒修好**：`latestUnreadAt` 來自 `groupBy({ where: { readAt: null } })`，那是純入庫列，而團隊邀請活算不入庫 —— 純邀請使用者的鍵退化成 `0:todoCount:completedCount`，正是修正前的形狀。序列：邀請 A（`0:1:0`）響 → 接受 A → 邀請 B（又是 `0:1:0`）→ `seenKeys` 擋下 → **第二封起永久靜音**，`ChimeGate` 沒有 reset，唯一出路是整頁重整 | `getNotificationSummary` 取「入庫最新未讀」與「待辦來源時間」的最大值（`invitations` 已在手上，不多一趟 DB）；`arrivalKeyOf` 第一個參數的定義改寫為「最新一則未讀的**來源**時間」；新增三條以真 service 串 `arrivalKeyOf` 與 `ChimeGate` 的序列測試 |
+| D42 | **受邀錢包位址沒有正規化**：email 那一半三處同源，位址這一半只有 `buildPendingInviteKey` 做了 lowercase，`inviteeAddress` 原樣入庫、`isIntendedRecipient` 與 repo 查詢用精確比對、schema 無 citext。而 `isAddress` 的 strict 預設放行全小寫、只擋亂大小寫 —— **放行的正好是兩種會分岔的寫法**。貼小寫 → 扣一席的錢 → 受邀者查不到也接不了；改貼 checksum 再邀 → 重複檢查查不到舊列 → **再扣一次** → 撞 pendingKey 的 P2002 → 500。「已是團隊成員」那道走 `findUserByAddress`（`findUnique`）也一併靜默失效，對已在團隊裡的人重複扣費 | 新增 `lib/team/address_identity.ts`（`canonicalizeAddressForKey` / `isSameAddress` / `addressLookupForms`）；route 驗過格式立刻 `getAddress` 正規化，往下只用那一份；`isIntendedRecipient` 與兩支 repo 查詢改走共用函式；新增 `findUserByAnyAddressForm`（不動另外三十多個傳 `sessionUser.address` 的呼叫端）。**不需要回填**：查詢列出小寫與 checksum 兩種字面形狀，而 strict 的 `isAddress` 只讓這兩種進得了資料庫 |
+
+**D41 是 D17 的第三段，而它躲掉的方式最值得記**：修法本身正確，錯在**修法附帶的那句理由是假的**。程式碼寫著「新邀請一定讓 `todoCount` 上升，任何一個變了 key 就變了」—— 前半句為真，後半句不成立，因為它混淆了兩個不同條件：`hasNewArrival` 要的是「總數**上升**」，`arrivalKeyOf` 要的是「兩次**不同的**抵達鍵不同」。數量上升滿足前者，而數量繞一圈回到原值時鍵就重複了。
+
+測試把這個混淆固定了下來：`arrivalKeyOf(null, 0, 0) !== arrivalKeyOf(null, 1, 0)` 驗的是**同一次抵達的前後兩態**，不是**兩次不同的抵達**。它恆為真，缺陷發生時照樣通過，而它的名字與註解讓人以為活算路徑已被涵蓋。
+
+可推廣的判準：**一個識別值要「不重複」時，測試必須走一段會回到起點的序列**（來 → 收掉 → 再來），不能只比相鄰兩態。相鄰兩態不同是必要條件，不是充分條件；而「純函式測不到來源」的地方，要往上一層用真的來源串一次。
+
+**D42 與 D41 是同一種病的兩個器官**：一個「同一個對象」的判定散在四處，其中**只有一處做對**。而做對的那一處是唯一鍵 —— 也就是最不容易被觀測到的那一處：它沉默地把兩次邀請擋成一次 P2002，於是缺陷的表徵是一個 500，而不是「這兩封邀請是同一個人」。
+
+email 那一半之所以沒事，是因為它有 `email_identity.ts` 這個明確的落點，三個消費者都被迫經過它。位址那一半沒有落點，於是每個呼叫端各自決定要不要 `.toLowerCase()`，而「決定不要」看起來與「沒想到」一模一樣。
+
+可推廣的判準：**一個 canonical 函式一旦存在，就要問「同一類的另一個欄位有沒有」**。這裡的線索早就寫在 `pending_invite_key.ts` 裡 —— 那段註解完整解釋了為什麼位址要 lowercase，而那個理由對查詢與判定同樣成立，只是沒有人把它搬過去。
 
 **D17、D18、D19 的共通點值得記著**：三者都躲過了單元測試、e2e 與整份 code review。D17 的失效沒有任何觀測量（搖動照舊、徽章照舊、log 乾淨，唯一症狀是「聽不到聲音」）；D18 與 D19 的失效是「什麼都沒發生」，而沒有人會抱怨一件他不知道應該發生的事。
 

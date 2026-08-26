@@ -68,8 +68,17 @@ export function hasNewArrival(prev: number | null, next: number): boolean {
  *
  * 修法是把**伺服器端**最新未讀的 createdAt 一起編進去：它由來源決定，
  * 所有分頁看到的是同一個值（滿足 1），而新的通知必然有更晚的時間（滿足 2）。
- * 三個值一起組是為了涵蓋活算的待辦 —— 團隊邀請沒有通知列、沒有 createdAt，
- * 但它一定讓 `todoCount` 變動。
+ *
+ * Info: (20260826 - Julian) `latestUnreadAt` **必須含活算的待辦**（review 1.1）。
+ *
+ * 這段原本寫著「團隊邀請沒有 createdAt，但它一定讓 todoCount 變動」——
+ * 那句話混淆了兩個條件：數量變動滿足的是 `hasNewArrival`（總數上升），
+ * 不是這裡要的第 2 點（兩次**不同的**抵達鍵要不同）。邀請 A 響過、
+ * 被接受、邀請 B 抵達時，`0:1:0` 與 `0:1:0` 字面相同 —— 永久靜音。
+ *
+ * 所以第一個參數的定義是「**最新一則未讀的來源時間**」，
+ * 而不是「最新一則入庫通知的時間」。`getNotificationSummary` 取兩者的最大值，
+ * 那支的說明有完整的失效序列。
  */
 export function arrivalKeyOf(
   latestUnreadAt: number | null,

@@ -267,6 +267,11 @@ model TeamInvitation {
   /**
    * Info: (20260815 - Luphia) 錢包位址邀請的受邀者。email 邀請時為 null——
    * 對方還沒註冊，此時不存在位址（接受時才建立成員關係）。
+   *
+   * Info: (20260826 - Julian) 新列一律存 **EIP-55 checksum**（route 進門處
+   * `getAddress` 正規化，計畫書 D42）。本欄沒有 citext，Postgres 的 `=`
+   * 大小寫敏感，因此查詢一律走 `addressLookupForms`（小寫 + checksum 兩種
+   * 字面形狀）—— 舊列存的是管理員貼進來的原樣，兩者都撈得到，不必回填。
    */
   inviteeAddress String?   @map("invitee_address")
   /**

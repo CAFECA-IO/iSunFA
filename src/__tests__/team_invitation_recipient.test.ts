@@ -166,8 +166,53 @@ describe("isIntendedRecipient", () => {
     ).toBe(false);
   });
 
+  /**
+   * Info: (20260826 - Julian) 位址的大小寫也是同一個人（review 1.2）。
+   *
+   * 這一組原本只有 email 那一半 —— 於是「位址用 `===` 精確比對」
+   * 從來沒有被觀測過。`User.address` 兩種形狀共存（viem 回 EIP-55
+   * checksum，`setup.service.ts` 建的是全小寫），而管理員貼進來的是
+   * 第三個變數。字面比對的後果不是看不到而已：席次費已經扣了，
+   * 受邀者連 accept 都會拿到 403。
+   */
+  it.each([
+    [
+      "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    ],
+    [
+      "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    ],
+    [
+      " 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 ",
+      "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    ],
+  ])("位址 %s 與身分 %s 視為同一個人", (invited, mine) => {
+    expect(
+      isIntendedRecipient(
+        { inviteeAddress: invited, inviteeEmail: null },
+        keysOf({ address: mine, emailKeys: [], verifiedEmails: [] }),
+      ),
+    ).toBe(true);
+  });
+
+  // Info: (20260826 - Julian) 反面：正規化不得把不同的位址合併（否則「一律 true」也會通過）
+  it("不同的位址仍然不是同一個人", () => {
+    expect(
+      isIntendedRecipient(
+        { inviteeAddress: `0x${"1".repeat(40)}`, inviteeEmail: null },
+        keysOf({
+          address: `0x${"2".repeat(40)}`,
+          emailKeys: [],
+          verifiedEmails: [],
+        }),
+      ),
+    ).toBe(false);
+  });
+
   // Info: (20260826 - Julian) 大小寫與前後空白仍然視為同一個（那是投遞層的事實，不是猜測）
-  it("大小寫與空白差異仍視為同一個人", () => {
+  it("信箱的大小寫與空白差異仍視為同一個人", () => {
     expect(
       isIntendedRecipient(
         { inviteeAddress: null, inviteeEmail: "  Alice@Gmail.COM " },

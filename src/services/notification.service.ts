@@ -147,19 +147,41 @@ export async function getNotificationSummary(params: {
           completed += count;
         }
       }
+      /**
+       * Info: (20260826 - Julian) **活算的邀請也要算進來**（review 1.1；D17 的補正）。
+       *
+       * 先前這裡只取入庫通知的時間，理由寫的是「新邀請一定讓 todoCount 上升，
+       * 任何一個變了 key 就變了」—— 那句話混淆了兩個不同的條件：
+       *
+       * - `hasNewArrival` 要的是「總數**上升**」：邀請確實滿足
+       * - `arrivalKeyOf` 要的是「兩次不同的抵達**鍵不同**」：邀請不滿足
+       *
+       * 純邀請使用者的 `latestUnreadAt` 恆為 null，鍵退化成
+       * `0:todoCount:completedCount` —— 正是 D17 修正前的形狀。實際序列：
+       * 邀請 A 抵達（`0:1:0`，響）→ 接受 A（歸零）→ 邀請 B 抵達（又是 `0:1:0`）
+       * → `seenKeys` 記過了 → **搖但不響，且此後永久靜音**（`ChimeGate`
+       * 沒有 reset，`resetBaseline` 只動總數基準，唯一出路是整頁重整）。
+       *
+       * 身上掛著一則收不掉的錢包升級待辦時更容易撞上：數量在
+       * `T:1:0` 與 `T:2:0` 之間來回，兩個值都被記過。
+       *
+       * 併進來不多一趟 DB —— `invitations` 已經在手上。取兩邊的最大值：
+       * 新的東西必然有更晚的時間，這正是 D17 要的「由來源決定、所有分頁一致」。
+       */
+      const latestStoredAt = unread.latestCreatedAt
+        ? unread.latestCreatedAt.getTime()
+        : 0;
+      const latestInvitationAt = invitations.reduce(
+        (latest, invitation) =>
+          Math.max(latest, invitation.createdAt.getTime()),
+        0,
+      );
+
       return {
         todoCount: invitations.length + storedTodos,
         completedCount: completed,
-        /**
-         * Info: (20260825 - Julian) 只看**入庫**的通知，不含活算的邀請。
-         *
-         * 邀請沒有通知列，取不到 createdAt。少了它會不會漏響？不會 ——
-         * 新邀請一定讓 `todoCount` 上升，而識別值是這三個值一起組出來的
-         * （見 `arrivalKeyOf`），任何一個變了 key 就變了。
-         */
-        latestUnreadAt: unread.latestCreatedAt
-          ? unread.latestCreatedAt.getTime()
-          : null,
+        // Info: (20260826 - Julian) 兩者皆無時回 null（`0` 會被誤讀成 epoch）
+        latestUnreadAt: Math.max(latestStoredAt, latestInvitationAt) || null,
       };
     },
     { operation: "getNotificationSummary", userId: params.userId },

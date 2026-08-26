@@ -21,6 +21,7 @@ import {
   canonicalizeEmailForKey,
   normalizeEmailForCompare,
 } from "@/lib/team/email_identity";
+import { isSameAddress } from "@/lib/team/address_identity";
 import { buildPendingInviteKey } from "@/lib/team/pending_invite_key";
 import { resolveInviteEmailMatch } from "@/lib/team/invite_email_match";
 import { userIdentityRepo } from "@/repositories/user_identity.repo";
@@ -442,11 +443,17 @@ export function isIntendedRecipient(
    * 就會讓**任何人**接受一封兩欄皆空的邀請 —— 而那種列今天造不出來，
    * 這行防的是「今天造不出來」哪天不成立。
    */
-  if (
-    Boolean(invitation.inviteeAddress) &&
-    Boolean(keys.address) &&
-    invitation.inviteeAddress === keys.address
-  ) {
+  /**
+   * Info: (20260826 - Julian) 位址以 `isSameAddress` 比，不是 `===`（review 1.2）。
+   *
+   * `User.address` 有兩種形狀共存（viem 回的是 EIP-55 checksum，
+   * `setup.service.ts` 建的是全小寫），而 `inviteeAddress` 原本存的是
+   * 管理員貼進來的字面值。字面比對的後果不是「看不到」而已 ——
+   * 邀請已經扣過席次費，受邀者卻連 accept 都會拿到 403。
+   *
+   * 兩邊都要有值那一層由 `isSameAddress` 自己守（見它的說明）。
+   */
+  if (isSameAddress(invitation.inviteeAddress, keys.address)) {
     return true;
   }
   /**

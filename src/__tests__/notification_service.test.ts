@@ -15,6 +15,7 @@ import {
 } from "@/services/notification.service";
 import { notificationRepo } from "@/repositories/notification.repo";
 import { listPendingInvitationsForUser } from "@/services/team_invitation.service";
+import { arrivalKeyOf, ChimeGate } from "@/lib/notification_sound";
 import {
   NOTIFICATION_DEDUPE_PREFIX,
   NOTIFICATION_HISTORY_LIMIT,
@@ -420,6 +421,148 @@ describe("摘要", () => {
     });
     expect(asMock(notificationRepo.summarizeUnread)).toHaveBeenCalledTimes(1);
     expect(asMock(listPendingInvitationsForUser)).toHaveBeenCalledTimes(1);
+  });
+});
+
+/**
+ * Info: (20260826 - Julian) 提示音的抵達識別值，以**真的 service** 走一遍（review 1.1）。
+ *
+ * `notification_sound.test.ts` 測得了 `arrivalKeyOf` 本身，但測不到這個缺陷：
+ * 那支純函式看不見 `latestUnreadAt` 從哪裡來，而缺陷正在來源
+ *（`getNotificationSummary` 只取入庫通知的時間，活算的邀請零貢獻）。
+ *
+ * 於是純邀請使用者的鍵退化成 `0:todoCount:completedCount` —— D17 修正前的形狀。
+ * 這裡把整條路徑接起來：summary → arrivalKeyOf → ChimeGate，
+ * 因為「會不會出聲」這件事只有在三者串起來時才有意義。
+ */
+describe("提示音的抵達識別值（D17）", () => {
+  const keyOfSummary = async (): Promise<string> => {
+    const summary = await getNotificationSummary({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+    return arrivalKeyOf(
+      summary.latestUnreadAt,
+      summary.todoCount,
+      summary.completedCount,
+    );
+  };
+
+  /**
+   * Info: (20260826 - Julian) 時鐘要會走，否則第二次 claim 會被**節流**擋下，
+   * 而那與這條測試要驗的事無關 —— 測試會綠得或紅得莫名其妙。
+   */
+  const buildClock = () => {
+    let current = 0;
+    return {
+      now: () => current,
+      advance: (ms: number) => {
+        current += ms;
+      },
+    };
+  };
+
+  /**
+   * Info: (20260826 - Julian) 缺陷序列：A 響 → 接受 A → B **搖但不響**。
+   *
+   * 兩次抵達的數量組合一模一樣（`todoCount` 都是 1），差別只有來源時間。
+   * `latestUnreadAt` 不含邀請時兩把鍵都是 `0:1:0`，而 `ChimeGate.seenKeys`
+   * 記得第一把 —— 第二封起永久靜音，且沒有 reset，唯一出路是整頁重整。
+   */
+  it("邀請 A 響過並被收掉之後，邀請 B 仍然出得了聲", async () => {
+    const clock = buildClock();
+    const gate = new ChimeGate({ now: clock.now });
+
+    asMock(listPendingInvitationsForUser).mockResolvedValue([
+      invitation({ id: "inv-a", createdAt: new Date(NOW_MS - 5_000) }),
+    ]);
+    const firstKey = await keyOfSummary();
+    expect(gate.claim(firstKey)).toBe(true);
+
+    // Info: (20260826 - Julian) 接受 A：待辦歸零（這一步不會 claim，總數沒上升）
+    asMock(listPendingInvitationsForUser).mockResolvedValue([]);
+    await keyOfSummary();
+
+    clock.advance(10 * 60 * 1000);
+
+    // Info: (20260826 - Julian) 邀請 B：數量與 A 那次相同，只有來源時間不同
+    asMock(listPendingInvitationsForUser).mockResolvedValue([
+      invitation({ id: "inv-b", createdAt: new Date(NOW_MS - 1_000) }),
+    ]);
+    const secondKey = await keyOfSummary();
+
+    expect(secondKey).not.toBe(firstKey);
+    expect(gate.claim(secondKey)).toBe(true);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 身上掛著收不掉的待辦時更容易撞上。
+   *
+   * 錢包升級待辦讓數量在 `1 ↔ 2` 之間來回，兩個值都會被 `seenKeys` 記過 ——
+   * 也就是說「零入庫通知的使用者」不是這個缺陷的邊界，只是最容易描述的那個。
+   */
+  it("身上有一則錢包升級待辦時，第二封邀請一樣要出聲", async () => {
+    const clock = buildClock();
+    const gate = new ChimeGate({ now: clock.now });
+    fakeRepo.__seed([
+      row({
+        id: "w",
+        type: NOTIFICATION_TYPE.WALLET_UPGRADE,
+        createdAt: new Date(NOW_MS - 90_000),
+      }),
+    ]);
+
+    asMock(listPendingInvitationsForUser).mockResolvedValue([
+      invitation({ id: "inv-a", createdAt: new Date(NOW_MS - 5_000) }),
+    ]);
+    const firstKey = await keyOfSummary();
+    expect(gate.claim(firstKey)).toBe(true);
+
+    asMock(listPendingInvitationsForUser).mockResolvedValue([]);
+    await keyOfSummary();
+    clock.advance(10 * 60 * 1000);
+
+    asMock(listPendingInvitationsForUser).mockResolvedValue([
+      invitation({ id: "inv-b", createdAt: new Date(NOW_MS - 1_000) }),
+    ]);
+    const secondKey = await keyOfSummary();
+
+    expect(secondKey).not.toBe(firstKey);
+    expect(gate.claim(secondKey)).toBe(true);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 反面：入庫通知比邀請新時，取的是入庫那個。
+   *
+   * 少了這條，「把 latestUnreadAt 改成只看邀請」也會讓上面兩條全綠 ——
+   * 而那會把缺陷原封不動搬到另一半（完成通知那一側）。
+   */
+  it("兩種來源都有時取較晚的那一個", async () => {
+    fakeRepo.__seed([row({ id: "d", createdAt: new Date(NOW_MS - 100) })]);
+    asMock(listPendingInvitationsForUser).mockResolvedValue([
+      invitation({ createdAt: new Date(NOW_MS - 9_000) }),
+    ]);
+
+    const later = await getNotificationSummary({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+    expect(later.latestUnreadAt).toBe(NOW_MS - 100);
+
+    fakeRepo.__reset();
+    fakeRepo.__seed([row({ id: "d", createdAt: new Date(NOW_MS - 9_000) })]);
+    asMock(listPendingInvitationsForUser).mockResolvedValue([
+      invitation({ createdAt: new Date(NOW_MS - 100) }),
+    ]);
+
+    const earlier = await getNotificationSummary({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+    expect(earlier.latestUnreadAt).toBe(NOW_MS - 100);
   });
 });
 

@@ -12,6 +12,7 @@ import {
   type InviteEmailMatch,
 } from "@/constants/status";
 import { canonicalizeEmailForKey } from "@/lib/team/email_identity";
+import { addressLookupForms } from "@/lib/team/address_identity";
 
 /**
  * Info: (20260814 - Luphia) 團隊 + 我在其中的角色（null = 資料異常，查得到團隊卻查不到成員身分）。
@@ -319,13 +320,24 @@ export class TeamRepository implements ITeamRepository {
     return { userId: owner.userId, address: owner.user.address };
   }
 
+  /**
+   * Info: (20260826 - Julian) 位址以**兩種字面形狀**查（review 1.2）。
+   *
+   * 這支是「已經有一封待接受的邀請了嗎」的重複檢查，而它原本用精確比對 ——
+   * 管理員第一次貼小寫、第二次貼 checksum 時查不到舊列，於是**再扣一次
+   * 席次費**，然後才撞上 `pendingKey` 的 P2002 變成 500：錢扣了，邀請沒建成。
+   */
   async getTeamInvitation(
     teamId: string,
     inviteeAddress: string,
     status: string,
   ) {
     return prisma.teamInvitation.findFirst({
-      where: { teamId, inviteeAddress, status },
+      where: {
+        teamId,
+        inviteeAddress: { in: addressLookupForms(inviteeAddress) },
+        status,
+      },
     });
   }
 
@@ -525,7 +537,17 @@ export class TeamRepository implements ITeamRepository {
       where: {
         status: TEAM_INVITATION_STATUS.PENDING,
         OR: [
-          { inviteeAddress: params.address },
+          /**
+           * Info: (20260826 - Julian) 位址列出兩種字面形狀（review 1.2）。
+           *
+           * 舊列存的是管理員貼進來的原樣，新列存 checksum；而 session 的
+           * `address` 兩種形狀都可能。精確比對會讓其中一組永遠對不上 ——
+           * 症狀是「席次費扣了，受邀者的鈴鐺什麼都沒有」。
+           *
+           * 撈出來是超集，由 `isIntendedRecipient` 收斂 —— 與 email 那一半
+           * 同樣的分工（走索引撈、精確比對收）。
+           */
+          { inviteeAddress: { in: addressLookupForms(params.address) } },
           { inviteeEmailKey: { in: [...params.emailKeys] } },
         ],
       },
