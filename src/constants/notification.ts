@@ -72,7 +72,9 @@ export const NOTIFICATION_SUMMARY_TOAST_MS = 8_000;
  * 而未讀落在這個上限之外，代表總數已經超過 30 —— 那時 `hasMoreCompleted`
  * 必為 true，畫面會顯示「還有更多」。分岔永遠伴隨一個看得見的說明。
  */
-export const NOTIFICATION_HISTORY_LIMIT = 30;
+
+// Info: (20260826 - Julian) 最多顯示 10 則通知
+export const NOTIFICATION_HISTORY_LIMIT = 10;
 
 /**
  * Info: (20260826 - Julian) `/user/notifications` 每頁幾則。

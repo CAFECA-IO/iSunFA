@@ -1,8 +1,10 @@
-import { describe, it, expect } from "@jest/globals";
+import { describe, it, expect, afterEach } from "@jest/globals";
 import {
   CHIME_THROTTLE_MS,
   ChimeGate,
   arrivalKeyOf,
+  unreadTotalOf,
+  playChime,
   hasNewArrival,
 } from "@/lib/notification_sound";
 
@@ -209,5 +211,111 @@ describe("ChimeGate：跨分頁", () => {
     gate.observePeer("recent");
 
     expect(gate.claim("recent")).toBe(false);
+  });
+});
+
+/**
+ * Info: (20260826 - Julian) 未讀總數不是塌陷值（review T7）。
+ *
+ * 這一行原本住在 `use_notification_summary.ts` 裡，而那支 hook 零測試 ——
+ * 改成 `next.completedCount` 不會讓任何東西變紅，而待辦型的抵達
+ *（團隊邀請、錢包升級）會從此不搖也不響。
+ */
+describe("unreadTotalOf", () => {
+  it("兩個桶都算進去", () => {
+    expect(unreadTotalOf({ todoCount: 2, completedCount: 3 })).toBe(5);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 兩條**單邊**案例才擋得住塌陷。
+   *
+   * 只驗 `{2,3} → 5` 的話，寫成 `todoCount + completedCount` 與寫成
+   * `completedCount + todoCount` 一樣綠，但寫成單一個桶時也只有這一條會紅；
+   * 分開驗「只有待辦」與「只有完成」，任何一邊被拿掉都指得出是哪一邊。
+   */
+  it("只有待辦時也算得出來（拿掉 todoCount 會紅）", () => {
+    expect(unreadTotalOf({ todoCount: 4, completedCount: 0 })).toBe(4);
+  });
+
+  it("只有完成時也算得出來（拿掉 completedCount 會紅）", () => {
+    expect(unreadTotalOf({ todoCount: 0, completedCount: 7 })).toBe(7);
+  });
+
+  it("都是 0 就是 0", () => {
+    expect(unreadTotalOf({ todoCount: 0, completedCount: 0 })).toBe(0);
+  });
+});
+
+/**
+ * Info: (20260826 - Julian) `AudioContext` 是模組層單例（review T8：計畫書 D8）。
+ *
+ * D8 的缺陷是每次 `playChime()` 都 `new AudioContext()`：Chrome 對同一個
+ * 頁面約有 6 個的上限，超過之後**靜默失敗** —— 沒有例外、沒有 log，
+ * 只是再也不出聲。而那個修法先前既沒有測試也沒有掃描。
+ *
+ * `testEnvironment` 是 node，所以這裡自己擺一個最小的 `window`：
+ * 要驗的是「建了幾次」，那不需要真的音訊堆疊。
+ */
+describe("AudioContext 單例（D8）", () => {
+  const originalWindow = (globalThis as { window?: unknown }).window;
+
+  /** Info: (20260826 - Julian) 記得到「被 new 了幾次」的最小替身 */
+  function installFakeWindow(): { constructed: number } {
+    const counter = { constructed: 0 };
+    class FakeAudioContext {
+      state = "running";
+      currentTime = 0;
+      destination = {};
+      constructor() {
+        counter.constructed += 1;
+      }
+      createOscillator() {
+        return {
+          type: "",
+          frequency: { value: 0 },
+          connect: () => ({ connect: () => undefined }),
+          start: () => undefined,
+          stop: () => undefined,
+        };
+      }
+      createGain() {
+        return {
+          gain: {
+            setValueAtTime: () => undefined,
+            exponentialRampToValueAtTime: () => undefined,
+          },
+          connect: () => ({ connect: () => undefined }),
+        };
+      }
+    }
+    (globalThis as { window?: unknown }).window = {
+      AudioContext: FakeAudioContext,
+    };
+    return counter;
+  }
+
+  afterEach(() => {
+    if (originalWindow === undefined) {
+      delete (globalThis as { window?: unknown }).window;
+    } else {
+      (globalThis as { window?: unknown }).window = originalWindow;
+    }
+  });
+
+  /**
+   * Info: (20260826 - Julian) 多次播放只建一個 context。
+   *
+   * 這支測試有一個誠實的限制：`audioContext` 是模組層變數，第一次建立之後
+   * 會沿用到本檔結束。所以它驗得到「第二次之後不再建」，
+   * 而「第一次真的建了一個」由 `constructed >= 1` 一起釘住。
+   */
+  it("連續播放不會每次都 new 一個 AudioContext", () => {
+    const counter = installFakeWindow();
+
+    playChime();
+    playChime();
+    playChime();
+
+    expect(counter.constructed).toBeLessThanOrEqual(1);
   });
 });

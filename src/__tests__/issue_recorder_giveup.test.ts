@@ -433,3 +433,70 @@ describe("IssueRecorder：終態不覆寫", () => {
     expect(fsState.written.has(flagPath)).toBe(true);
   });
 });
+
+/**
+ * Info: (20260826 - Julian) D16 的**條件**：只在轉成 FAILED 的那一次通知（review T3）。
+ *
+ * 先前這條只有字串比對（`toMatch(/becameFailed/)`），而那擋不住把
+ * `order.status !== ORDER_STATUS.FAILED` 改成 `true` —— 改完之後
+ * 每一次重掃都會再發一則「你的分析失敗了」。使用者看到的是同一件事
+ * 被反覆通知，而 `dedupeKey` 只擋得住重複**入庫**，擋不住重複呼叫。
+ *
+ * 這裡走的是成功路徑（`approved.*.md` + 同步失敗），因為那正是
+ * `becameFailed` 所在的分支。
+ */
+describe("IssueRecorder：失敗通知只發在狀態轉換的那一次（D16）", () => {
+  const ANALYSIS = {
+    id: "analysis-r1",
+    userId: USER_ID,
+    orderId: ORDER_ID,
+    type: "certificate_analysis",
+  };
+
+  const givenSyncFailure = (orderStatus: string) => {
+    fsState.taskFiles = ["approved.1.md"];
+    fsState.existing = new Set<string>();
+    fsState.contents = new Map<string, string>();
+    fsState.written = new Map<string, string>();
+    fsState.contents.set(
+      path.join(taskDir, "context.json"),
+      JSON.stringify({ orderId: ORDER_ID, analysisId: ANALYSIS.id }),
+    );
+    // Info: (20260826 - Julian) 有結果但沒有 dbSyncPayload → 同步判定失敗
+    fsState.contents.set(
+      path.join(taskDir, "1.md"),
+      JSON.stringify({ summary: "done" }),
+    );
+    asMock(orderRepo.findFirst).mockResolvedValue({
+      id: ORDER_ID,
+      userId: USER_ID,
+      status: orderStatus,
+      mission: null,
+      tokens: 0,
+      data: { category: ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS },
+    });
+    asMock(analysisRepo.findById).mockResolvedValue(ANALYSIS);
+  };
+
+  it("EXECUTING → FAILED：發一則", async () => {
+    givenSyncFailure(ORDER_STATUS.EXECUTING);
+
+    await issueRecorderService.processNext();
+
+    expect(asMock(notifyAnalysisFailed)).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 已經是 FAILED 的訂單重掃時**不再發**。
+   *
+   * 這是 T3 的 mutation 直接對應的案例：把條件改成 `true` 之後，
+   * 這一條會紅而上一條仍綠 —— 兩條成對才分得出「有發」與「只發該發的那次」。
+   */
+  it("已經是 FAILED：重掃不再發", async () => {
+    givenSyncFailure(ORDER_STATUS.FAILED);
+
+    await issueRecorderService.processNext();
+
+    expect(asMock(notifyAnalysisFailed)).not.toHaveBeenCalled();
+  });
+});

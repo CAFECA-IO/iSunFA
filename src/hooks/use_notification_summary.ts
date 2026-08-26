@@ -20,6 +20,7 @@ import {
   playChime,
   registerAudioUnlock,
   resumeAudio,
+  unreadTotalOf,
 } from "@/lib/notification_sound";
 
 /**
@@ -102,7 +103,8 @@ export function useNotificationSummary(
       if (!next) return;
       setSummary(next);
 
-      const total = next.todoCount + next.completedCount;
+      // Info: (20260826 - Julian) 走共用的純函式，這一行才測得到（review T7）
+      const total = unreadTotalOf(next);
       const last = lastTotalRef.current;
       lastTotalRef.current = total;
       if (!hasNewArrival(last, total)) return;

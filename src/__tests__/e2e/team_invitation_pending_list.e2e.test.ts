@@ -47,6 +47,18 @@ let otherAddress = "";
 
 const mainEmail = `alice_${STAMP}@gmail.com`;
 
+/**
+ * Info: (20260826 - Julian) 每一個建出來的使用者都登記，由 `afterAll` 統一收（review T10）。
+ *
+ * 先前有一則測試在**斷言之後**才 `deleteMany` 自己臨時建的使用者 ——
+ * 斷言一失敗那一行就不會執行，於是資料庫留下一列孤兒，而下一次重跑
+ * 可能因為位址撞鍵而以另一種方式失敗。清理寫在斷言後面，等於
+ * 「只有測試通過時才會清理」，而那正好是最不需要清理的那一次。
+ *
+ * 這與同層 `notification_repo.e2e.test.ts` 改用 `beforeEach` 前置清空是同一條教訓。
+ */
+const createdUserIds: string[] = [];
+
 async function createUser(
   suffix: string,
   email?: string,
@@ -55,6 +67,7 @@ async function createUser(
   const user = await prisma.user.create({
     data: { address, name: `E2E ${suffix}` },
   });
+  createdUserIds.push(user.id);
   if (email) {
     await prisma.userIdentity.create({
       data: {
@@ -122,11 +135,17 @@ afterAll(async () => {
   await prisma.teamInvitation.deleteMany({ where: { teamId } });
   await prisma.teamMember.deleteMany({ where: { teamId } });
   await prisma.team.deleteMany({ where: { id: teamId } });
+  /**
+   * Info: (20260826 - Julian) 以**登記表**收，不是以三個具名變數收。
+   *
+   * 具名清單會隨著測試新增而落後 —— 而落後的症狀是資料庫裡慢慢累積孤兒列，
+   * 沒有任何人會發現。`createdUserIds` 由 `createUser` 自己維護，加不加測試都對。
+   */
   await prisma.userIdentity.deleteMany({
-    where: { userId: { in: [mainUserId, otherUserId] } },
+    where: { userId: { in: createdUserIds } },
   });
   await prisma.user.deleteMany({
-    where: { id: { in: [inviterId, mainUserId, otherUserId] } },
+    where: { id: { in: createdUserIds } },
   });
   await prisma.$disconnect();
 });
@@ -264,9 +283,8 @@ describe("待接受邀請的查詢（真資料庫）", () => {
       nowMs: NOW_MS,
     });
 
+    // Info: (20260826 - Julian) 不在這裡收拾：`createUser` 已登記，由 afterAll 統一刪
     expect(result).toHaveLength(0);
-
-    await prisma.user.deleteMany({ where: { id: noEmail.id } });
   });
 
   // Info: (20260825 - Julian) 非 PENDING 的不算（接受過的邀請不該回到待辦區）

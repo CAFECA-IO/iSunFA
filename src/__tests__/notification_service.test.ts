@@ -11,13 +11,17 @@ import {
   markNotificationRead,
   markNotificationsRead,
   notifyAnalysisCompleted,
+  notifyAnalysisFailed,
   notifyWalletUpgradeRequested,
 } from "@/services/notification.service";
 import { notificationRepo } from "@/repositories/notification.repo";
 import { listPendingInvitationsForUser } from "@/services/team_invitation.service";
 import {
+  NOTIFICATION_DEDUPE_PREFIX,
   NOTIFICATION_HISTORY_LIMIT,
+  NOTIFICATION_PAGE_SIZE,
   NOTIFICATION_PAGE_SIZE_MAX,
+  NOTIFICATION_TODO_LIST_LIMIT,
   NOTIFICATION_TYPE,
 } from "@/constants/notification";
 
@@ -1001,5 +1005,168 @@ describe("分頁歷史", () => {
 
     expect(page.items.map((item) => item.id)).toEqual(["mine"]);
     expect(page.totalItems).toBe(1);
+  });
+});
+
+/**
+ * Info: (20260826 - Julian) 兩支發射函式的 **payload 與 dedupeKey**（review T1/T2）。
+ *
+ * ## 為什麼要單獨一組
+ *
+ * `notifyAnalysisFailed` 先前**零 unit test** —— 它唯一出現的地方是
+ * `issue_recorder_giveup.test.ts`，而那裡它是被 mock 掉的。所以
+ * 「刪掉它的 `dedupeKey`」不會讓任何測試變紅，而後果是 recorder 每重掃
+ * 一次就多發一則失敗通知。
+ *
+ * ## 為什麼用 `toEqual` 而不是 `objectContaining`
+ *
+ * `objectContaining({ type, dedupeKey })` 對 payload 的內容完全不設限，
+ * 而 `toHaveBeenCalledWith` 又會忽略值為 `undefined` 的屬性 —— 兩者疊起來，
+ * 「把 `analysisType` 整個拿掉」是一個沒有任何測試看得到的改動，
+ * 而它會讓附錄 A 的「通知帶得出報告名稱」全站失效。
+ *
+ * 這裡對整個參數物件做精確比對：多一個欄位、少一個欄位都要紅。
+ */
+describe("發射函式的 payload 與 dedupeKey", () => {
+  it("完成通知：payload 帶 analysisId 與 analysisType，dedupeKey 以 analysisId 為鍵", async () => {
+    await notifyAnalysisCompleted({
+      userId: USER,
+      analysisId: "a-1",
+      analysisType: "market_trends",
+    });
+
+    expect(asMock(notificationRepo.createIfAbsent)).toHaveBeenCalledWith({
+      userId: USER,
+      type: NOTIFICATION_TYPE.ANALYSIS_COMPLETED,
+      payload: { analysisId: "a-1", analysisType: "market_trends" },
+      dedupeKey: `${NOTIFICATION_DEDUPE_PREFIX.ANALYSIS_COMPLETED}a-1`,
+    });
+  });
+
+  it("失敗通知：payload 帶 orderId 與 analysisType，dedupeKey 以 orderId 為鍵", async () => {
+    await notifyAnalysisFailed({
+      userId: USER,
+      orderId: "o-1",
+      analysisType: "market_trends",
+    });
+
+    expect(asMock(notificationRepo.createIfAbsent)).toHaveBeenCalledWith({
+      userId: USER,
+      type: NOTIFICATION_TYPE.ANALYSIS_FAILED,
+      payload: { orderId: "o-1", analysisType: "market_trends" },
+      dedupeKey: `${NOTIFICATION_DEDUPE_PREFIX.ANALYSIS_FAILED}o-1`,
+    });
+  });
+
+  /**
+   * Info: (20260826 - Julian) 失敗路徑上 `analysis` 可能不存在。
+   *
+   * 那時 payload 裡**不該有** `analysisType` 這個鍵（而不是有一個 undefined）：
+   * 前端以 `typeof type !== "string"` 判斷要不要帶標題，寫進去一個
+   * `undefined` 會被 JSON 序列化吃掉，行為碰巧一樣 —— 但「碰巧一樣」
+   * 會在下一個讀 payload 的人手上變成不一樣。
+   */
+  it("失敗通知：沒有 analysisType 時 payload 不含該鍵", async () => {
+    await notifyAnalysisFailed({ userId: USER, orderId: "o-2" });
+
+    expect(asMock(notificationRepo.createIfAbsent)).toHaveBeenCalledWith({
+      userId: USER,
+      type: NOTIFICATION_TYPE.ANALYSIS_FAILED,
+      payload: { orderId: "o-2" },
+      dedupeKey: `${NOTIFICATION_DEDUPE_PREFIX.ANALYSIS_FAILED}o-2`,
+    });
+  });
+
+  /**
+   * Info: (20260826 - Julian) dedupeKey 真的擋得住重發（用有狀態的假 repo 驗）。
+   *
+   * 上面三條驗的是「傳了什麼」，這一條驗「傳的東西有沒有用」——
+   * 假 repo 真的 enforce dedupeKey 唯一，所以第二次呼叫不會多一列。
+   * 少了它，把 dedupeKey 改成帶時間戳也會讓前三條全綠。
+   */
+  it("同一張訂單失敗兩次只留一則", async () => {
+    await notifyAnalysisFailed({ userId: USER, orderId: "o-3" });
+    await notifyAnalysisFailed({ userId: USER, orderId: "o-3" });
+
+    expect(
+      fakeRepo
+        .__rows()
+        .filter((r) => r.type === NOTIFICATION_TYPE.ANALYSIS_FAILED),
+    ).toHaveLength(1);
+  });
+
+  // Info: (20260826 - Julian) 不同訂單各發一則（證明上一條不是「永遠只發一則」）
+  it("不同訂單各留一則", async () => {
+    await notifyAnalysisFailed({ userId: USER, orderId: "o-4" });
+    await notifyAnalysisFailed({ userId: USER, orderId: "o-5" });
+
+    expect(
+      fakeRepo
+        .__rows()
+        .filter((r) => r.type === NOTIFICATION_TYPE.ANALYSIS_FAILED),
+    ).toHaveLength(2);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 發通知永遠不該讓主流程失敗（與 `notifyWalletUpgradeRequested` 相反）。
+   *
+   * recorder 在寫完結果之後才發通知；這裡拋出去會讓一個已經成功的分析
+   * 看起來像失敗。兩支的契約刻意不同，所以兩支都要有測試釘住。
+   */
+  it("repo 失敗時不拋（recorder 的主流程不受影響）", async () => {
+    asMock(notificationRepo.createIfAbsent).mockRejectedValueOnce(
+      new Error("db down"),
+    );
+
+    await expect(
+      notifyAnalysisFailed({ userId: USER, orderId: "o-6" }),
+    ).resolves.toBeUndefined();
+  });
+});
+
+/**
+ * Info: (20260826 - Julian) 上限的**值**要以字面值釘住（review T11）。
+ *
+ * 這個檔案其餘的測試用 `NOTIFICATION_HISTORY_LIMIT` 當期望值 —— 那是對的，
+ * 它們驗的是「截斷發生在上限處」這個行為，而把數字寫死會讓它們在調整上限時
+ * 全部一起紅，紅的原因卻與缺陷無關。
+ *
+ * 但那也代表**沒有任何測試在看那個數字本身**：把它改成 3 或 1000，
+ * `npm test` 全綠。而它是使用者看得到的行為（面板往回看多遠、一頁幾則），
+ * 也寫在計畫書與 ADR 裡。
+ *
+ * 同 PR 的 `notification_rate_limit.test.ts` 對限流窗口用的正是字面值
+ *（`[NOTIFICATION_READ, 30, 8_000]`），兩支標準不一致 —— 這裡對齊它。
+ *
+ * **改動請連同 `documents/architecture/notification_module_plan.md` 一起改。**
+ */
+describe("上限常數的對外契約", () => {
+  it.each([
+    ["NOTIFICATION_HISTORY_LIMIT", NOTIFICATION_HISTORY_LIMIT, 30],
+    ["NOTIFICATION_TODO_LIST_LIMIT", NOTIFICATION_TODO_LIST_LIMIT, 20],
+    ["NOTIFICATION_PAGE_SIZE", NOTIFICATION_PAGE_SIZE, 20],
+    ["NOTIFICATION_PAGE_SIZE_MAX", NOTIFICATION_PAGE_SIZE_MAX, 100],
+  ])("%s 是 %i", (unused, actual, expected) => {
+    expect(actual).toBe(expected);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 面板的上限要大於待辦的上限。
+   *
+   * 不是美觀問題：待辦與事件走兩支查詢，而畫面把兩節疊在同一個面板裡。
+   * 待辦上限若大於歷史上限，一個待辦很多的人會把面板整個佔滿，
+   * 而「工作完成」那一節連一則都排不進去。
+   */
+  it("歷史上限大於待辦上限", () => {
+    expect(NOTIFICATION_HISTORY_LIMIT).toBeGreaterThan(
+      NOTIFICATION_TODO_LIST_LIMIT,
+    );
+  });
+
+  // Info: (20260826 - Julian) 單頁預設不得大於硬上限，否則預設值本身就會被夾
+  it("預設頁面大小不超過硬上限", () => {
+    expect(NOTIFICATION_PAGE_SIZE).toBeLessThanOrEqual(
+      NOTIFICATION_PAGE_SIZE_MAX,
+    );
   });
 });

@@ -245,6 +245,46 @@ describe("來源與畫面的接線（掃描）", () => {
   });
 
   /**
+   * Info: (20260826 - Julian) 掃描根要涵蓋**每一個掛得到鈴鐺的 shell**（review T9）。
+   *
+   * 上一條只驗 `user_actions.tsx` 自己 —— 而鈴鐺出現在畫面上需要兩件事：
+   * 那個元件掛了鈴鐺，**而且**外層 shell 掛了那個元件。先前拿掉
+   * `user_header.tsx` 的 `<UserActions>` 之後，整個 `/user/*` 的鈴鐺會消失，
+   * 而兩支測試全綠（檢查清單 §1.1：掃描型測試的價值等於它的掃描根）。
+   *
+   * 這份清單是**現況**：三個 shell 今天都掛著。薪資計算機頁該不該有鈴鐺
+   * 仍是未決的產品決定（計畫書 §6 第 4 項）—— 決定要拿掉的時候，
+   * 這條會紅，而那正是它該做的事：讓移除變成一個決定，不是一次順手。
+   */
+  it.each([
+    ["src", "components", "user", "user_header.tsx"],
+    ["src", "components", "landing_page", "header.tsx"],
+    ["src", "components", "salary_calculator", "calculator_header.tsx"],
+  ])("%s/%s/%s/%s 掛著 UserActions（鈴鐺才到得了畫面）", (...segments) => {
+    const shell = codeOf(...segments);
+
+    expect(shell).toMatch(/<UserActions\b/);
+    expect(shell).not.toMatch(/false\s*&&\s*<UserActions/);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 反面：HR shell **不**掛（產品決定，計畫書 D15）。
+   *
+   * 沒有這一條的話，上面那張清單只證明「有的地方有」，不證明
+   * 「該沒有的地方沒有」—— 而 D15 正是因為 HR 留了一顆假鈴鐺才被記下來。
+   */
+  it("HR shell 不掛 UserActions", () => {
+    const hrHeader = codeOf(
+      "src",
+      "components",
+      "hr_management",
+      "hr_header.tsx",
+    );
+
+    expect(hrHeader).not.toMatch(/<UserActions\b/);
+  });
+
+  /**
    * Info: (20260825 - Julian) HR shell 不留假鈴鐺（計畫書 D15）。
    *
    * 那顆 `disabled` 的 `<Bell />` 提示「功能開發中」，而隔壁 shell 的鈴鐺

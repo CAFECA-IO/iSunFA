@@ -18,6 +18,25 @@ export const CHIME_THROTTLE_MS = 3_000;
 const SEEN_KEY_LIMIT = 32;
 
 /**
+ * Info: (20260826 - Julian) 「未讀總數」——`hasNewArrival` 的輸入（review T7）。
+ *
+ * 抽成函式的理由與 `hasNewArrival`、`arrivalKeyOf` 同一條：它原本是 hook 裡的
+ * 一行 `next.todoCount + next.completedCount`，而那支 hook **零測試**
+ *（repo 沒有 jsdom，`testEnvironment` 是 node）。也就是說把它改成
+ * `next.completedCount` 不會讓任何測試變紅 —— 而後果是待辦型的抵達
+ *（團隊邀請、錢包升級）從此不搖也不響。
+ *
+ * 那個缺陷的形狀是**塌陷值**：兩個數字加起來變成一個，而其中一個消失時
+ * 剩下的那個看起來完全正常。
+ */
+export function unreadTotalOf(summary: {
+  todoCount: number;
+  completedCount: number;
+}): number {
+  return summary.todoCount + summary.completedCount;
+}
+
+/**
  * Info: (20260825 - Julian) 有沒有「新的」通知抵達。
  *
  * 比較的是**總數上升**，不是「有沒有未讀」—— 後者會讓使用者沒收掉的
