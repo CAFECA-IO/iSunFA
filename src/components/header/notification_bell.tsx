@@ -18,9 +18,11 @@ import {
   NOTIFICATION_HISTORY_LIMIT,
   NOTIFICATION_SUMMARY_TOAST_MS,
 } from "@/constants/notification";
-import NotificationRow, {
-  INotificationRowItem,
-} from "@/components/notification/notification_row";
+import NotificationRow from "@/components/notification/notification_row";
+import type {
+  INotificationItem,
+  INotificationList,
+} from "@/interfaces/notification";
 
 /**
  * Info: (20260821 - Luphia) 小鈴鐺（ADR 021 補充）。
@@ -49,17 +51,14 @@ import NotificationRow, {
  * Info: (20260826 - Julian) 列的形狀由共用元件定義，這裡只取別名。
  * 各寫一份的話，加一個欄位就會有一邊漏掉，而 `tsc` 只在傳遞處才會抱怨。
  */
-type IItem = INotificationRowItem;
+type IItem = INotificationItem;
 
-interface IList {
-  todos: IItem[];
-  completed: IItem[];
-  /**
-   * Info: (20260825 - Julian) 完成節被截斷了嗎（計畫書 D4）。
-   * 截斷了不說，畫面就會把 20 則讀成全部 —— 而徽章那時說的是 25。
-   */
-  hasMoreCompleted: boolean;
-}
+/**
+ * Info: (20260826 - Julian) 端點回的形狀用共用型別（review B6）。
+ * 自己再宣告一份的話，`hasMoreCompleted` 改名時這裡不會紅 ——
+ * 畫面只是永遠讀到 `undefined`，「還有更多」那行字從此不出現。
+ */
+type IList = INotificationList;
 
 const SUMMARY_SHOWN_KEY = "notification-summary-shown";
 

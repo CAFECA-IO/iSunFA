@@ -6,9 +6,17 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
 import { HTTP_METHOD } from "@/constants/http";
 import Pagination from "@/components/common/pagination";
-import NotificationRow, {
-  INotificationRowItem,
-} from "@/components/notification/notification_row";
+import NotificationRow from "@/components/notification/notification_row";
+/**
+ * Info: (20260826 - Julian) 端點回的形狀只有一份（review B6）。
+ * 這裡原本自己再宣告 `INotificationList` / `INotificationHistoryPage` 各一份，欄位對得上是
+ * 巧合而不是保證 —— 端點改了不會有任何東西紅。
+ */
+import type {
+  INotificationHistoryPage,
+  INotificationItem,
+  INotificationList,
+} from "@/interfaces/notification";
 
 /**
  * Info: (20260826 - Julian) `/user/notifications`：通知的完整清單。
@@ -26,24 +34,11 @@ import NotificationRow, {
  * 兩者不合成一支端點：鈴鐺每 60 秒打前者，而分頁要多付一次 `count()`。
  */
 
-interface IBellList {
-  todos: INotificationRowItem[];
-  completed: INotificationRowItem[];
-  hasMoreCompleted: boolean;
-}
-
-interface IHistoryPage {
-  items: INotificationRowItem[];
-  totalItems: number;
-  totalPages: number;
-  currentPage: number;
-}
-
 export default function NotificationsPage() {
   const { t } = useTranslation();
 
-  const [todos, setTodos] = useState<INotificationRowItem[]>([]);
-  const [history, setHistory] = useState<IHistoryPage | null>(null);
+  const [todos, setTodos] = useState<INotificationItem[]>([]);
+  const [history, setHistory] = useState<INotificationHistoryPage | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
@@ -55,7 +50,7 @@ export default function NotificationsPage() {
    */
   const loadTodos = useCallback(async () => {
     try {
-      const response = await request<{ payload: IBellList | null }>(
+      const response = await request<{ payload: INotificationList | null }>(
         "/api/v1/user/notifications",
       );
       setTodos(response.payload?.todos ?? []);
@@ -68,9 +63,9 @@ export default function NotificationsPage() {
   const loadHistory = useCallback(async (targetPage: number) => {
     setLoading(true);
     try {
-      const response = await request<{ payload: IHistoryPage | null }>(
-        `/api/v1/user/notifications/history?page=${targetPage}`,
-      );
+      const response = await request<{
+        payload: INotificationHistoryPage | null;
+      }>(`/api/v1/user/notifications/history?page=${targetPage}`);
       setHistory(
         response.payload ?? {
           items: [],
@@ -113,7 +108,7 @@ export default function NotificationsPage() {
    * 而它要修正的是一個至多 60 秒、方向永遠是「徽章偏多」的偏差。
    * 徽章偏多不會讓人漏掉東西——反過來才會。
    */
-  const markOneRead = useCallback((item: INotificationRowItem) => {
+  const markOneRead = useCallback((item: INotificationItem) => {
     if (item.readAt !== null) return;
 
     setHistory((previous) =>

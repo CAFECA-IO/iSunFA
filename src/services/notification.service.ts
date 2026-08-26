@@ -10,6 +10,12 @@ import {
 import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
 import { notificationRepo } from "@/repositories/notification.repo";
+import type {
+  INotificationHistoryPage,
+  INotificationItem,
+  INotificationList,
+  INotificationSummary,
+} from "@/interfaces/notification";
 import { listPendingInvitationsForUser } from "@/services/team_invitation.service";
 
 /**
@@ -52,75 +58,6 @@ async function guarded<T>(
     });
     throw toApiError(API_ERRORS.IS_UNKNOWN);
   }
-}
-
-export interface INotificationSummary {
-  todoCount: number;
-  completedCount: number;
-  /**
-   * Info: (20260825 - Julian) 最新一則未讀通知的建立時間（epoch ms），沒有就是 null。
-   *
-   * 存在的唯一理由是提示音的跨分頁去重（計畫書 D17）。那個機制需要一個
-   * 「這是哪一次抵達」的識別值，而它必須同時滿足兩件事：
-   *
-   * 1. **每個分頁算出來要一樣** —— 否則三個分頁各認為自己是第一個，各響一聲
-   * 2. **不同的抵達要不一樣** —— 否則同一個識別值被記住之後就再也不響
-   *
-   * 原本用的是 `todoCount:completedCount`，它滿足第 1 點但不滿足第 2 點：
-   * 「讀完 → 來一則 → 讀完 → 再來一則」兩次都是同一組數字，第二則搖但不響。
-   *
-   * 用伺服器的 `createdAt` 而不是前端的 `Date.now()`：前者對所有分頁是同一個值，
-   * 後者每個分頁都不同 —— 這與 `dedupeKey` 拒絕 timestamp 是同一條理由
-   * （ADR 010 §1），差別在於這裡要的正是「來源端的時間」。
-   */
-  latestUnreadAt: number | null;
-}
-
-export interface INotificationItem {
-  // Info: (20260821 - Luphia) derived 待辦沒有通知列，以來源 id 合成（見 listNotifications）
-  id: string;
-  type: string;
-  payload: Record<string, unknown>;
-  createdAt: number;
-  /**
-   * Info: (20260825 - Julian) 已讀時間（epoch ms），未讀是 null。
-   *
-   * 畫面用它決定要不要顯示未讀紅點。回傳時間而不是布林：
-   * 「什麼時候讀的」之後可能要顯示，而從時間退化成布林不用改資料，
-   * 反過來要。
-   */
-  readAt: number | null;
-}
-
-export interface INotificationList {
-  todos: INotificationItem[];
-  completed: INotificationItem[];
-  /**
-   * Info: (20260825 - Julian) 完成節被截斷了嗎。
-   * 靜默截斷會被讀成「這就是全部」——徽章說 25 而清單只有 20 的時候，
-   * 使用者沒有任何方式知道少了 5 則。
-   */
-  hasMoreCompleted: boolean;
-}
-
-/**
- * Info: (20260826 - Julian) `/user/notifications` 一頁的歷史。
- *
- * 欄位名沿用本專案既有的分頁端點（`audit_log` 等）：`items` / `totalItems`
- * / `totalPages` / `currentPage`。自創一套名字的成本不在這支端點，
- * 在於前端的分頁元件要為它多一種形狀。
- */
-export interface INotificationHistoryPage {
-  items: INotificationItem[];
-  totalItems: number;
-  totalPages: number;
-  /**
-   * Info: (20260826 - Julian) **實際回的是哪一頁**，不是呼叫端要求的那一頁。
-   *
-   * 超出範圍時會被夾回最後一頁（見 `listNotificationHistory`），
-   * 而畫面要能反映那件事 —— 否則使用者看到的是「第 99 頁」與一片空白。
-   */
-  currentPage: number;
 }
 
 /**

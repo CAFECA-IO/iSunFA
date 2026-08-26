@@ -12,6 +12,7 @@
 | 層 | 檔案 |
 |---|---|
 | Schema | `prisma/schema.prisma` — `model Notification`（一張表、零 enum） |
+| 型別 | `src/interfaces/notification.ts` — **端點 payload 的單一事實來源**（service、hook、三個畫面消費者都讀它；D26） |
 | 常數 | `src/constants/notification.ts` — 型別、待辦型清單、上限、dedupe 前綴、樣式與去處查表 |
 | Repository | `src/repositories/notification.repo.ts` — 唯一碰 Prisma 的層 |
 | Service | `src/services/notification.service.ts` — 摘要、清單、分頁歷史、已讀、四支發射函式 |
@@ -61,6 +62,8 @@
 | D22 | 完成通知在 DB 同步**之前**無條件發出，而同步失敗會把訂單寫成 FAILED 並再發一則失敗通知 —— 同一份工作同時收到「已完成」與「失敗」，兩則的 `dedupeKey` 都是永久唯一鍵，收不回也蓋不掉 | 完成通知移到同步之後，條件為 `finalOrderStatus !== FAILED`（**不是** `newOrderStatus === COMPLETED`，理由見下） |
 | D23 | 點面板裡的團隊邀請會扣錯徽章的桶（`completedCount`，但邀請屬 `todoCount`）、把提示音基準降 1 造出一次幽靈搖動、並對合成 id 打 `POST .../invitation:<uuid>/read` —— 活算待辦的 `readAt` 恆為 null，`markOneRead` 的早退擋不住它 | 判斷抽成 `lib/notification_read.ts` 的 `canMarkReadByClick`（以**待辦型**為準，不是以「活不活算」），由 `notification_row.tsx` 單點決定，與伺服器端 `markReadById` 的 `excludeTypes` 讀同一份常數 |
 | D24 | 執行 D15 時連使用者選單一起刪了：`MenuItems`、**登出按鈕**、員工編號與職稱副標，換成一顆 `disabled` + `feature_pending` 的頭像按鈕。HR shell 因此沒有任何登出路徑（`grep -rn logout` 在 `hr_management` 底下零命中），而共用平板換人時前一個人的 session 會留著 | 依 develop 原樣還原選單，只保留鈴鐺的移除；補三條「留下了什麼」的測試（登出可用、`MenuButton` 不是 disabled、顯示得出員工編號與職稱） |
+| D25 | 限流只有掃描證據，沒有接線證據：刪掉 route 裡的 `if (limited) return limited;`（保留呼叫那行）→ 五支端點限流完全失效，而兩支守門測試全綠。ADR 025 §7 宣稱「本模組自帶 `notification_rate_limit.test.ts`」，那句話當時不成立 | 在同一支測試補行為那一半（照 `invite_route_wiring.test.ts` 的手法）：打滿桶 → 429 **且** service 沒有被多呼叫一次；五支端點以表格驅動，另加「三支讀取共用一桶」與「讀取桶不影響寫入桶」 |
+| D26 | summary 的端點契約沒有守 `latestUnreadAt`：替身只回兩個計數，斷言又用 `toEqual` 把「payload 只有兩個欄位」主動釘住，而 hook 另外重新宣告一份型別再用泛型硬轉。把 route 改成 `jsonOk({ todoCount, completedCount })` → tsc / test / e2e 全綠，**D17 原樣復活** | 型別搬到 `src/interfaces/notification.ts` 當單一事實來源（service、hook、鈴鐺、通知頁、列元件全部改讀它）；替身照實回三個欄位、`toEqual` 連 `latestUnreadAt` 一起釘；另加「hook 真的把它餵給 `arrivalKeyOf`」把鍊子的第二段也接上 |
 
 **D17、D18、D19 的共通點值得記著**：三者都躲過了單元測試、e2e 與整份 code review。D17 的失效沒有任何觀測量（搖動照舊、徽章照舊、log 乾淨，唯一症狀是「聽不到聲音」）；D18 與 D19 的失效是「什麼都沒發生」，而沒有人會抱怨一件他不知道應該發生的事。
 
@@ -89,6 +92,18 @@ D22 沒被測試抓到的原因也值得寫清楚，因為它會影響下一次�
 還有一個可推廣的判準：**兩個消費者犯同一個錯，代表那個判斷不該放在消費端**。B3 在小鈴鐺與 `/user/notifications` 各發生一次，而它們是同一天寫的、由同一個人寫的 —— 判斷留在呼叫端就是留給每一個新呼叫端再錯一次的機會。它被移進 `notification_row.tsx`，與「這一型有沒有去處」並列，因為那是同一類決定。
 
 **D24 是這批裡最便宜也最危險的一個**：它不需要任何巧合就會發生，而後果是一個安全性後果（共用平板上的 session 留給下一個人）。它躲過測試的方式只有一句話：守門的測試只寫了 `expect(hrHeader).not.toMatch(/<Bell\b/)`。
+
+**D25 與 D24 是同一個病的兩種樣子**：測試斷言的是「原始碼長什麼樣」，而不是「系統做了什麼」。D24 驗刪掉了什麼（於是刪過頭不會紅），D25 驗寫了什麼（於是寫了但沒生效不會紅）。兩者都通不過同一個問題：**把這條斷言改成綠的最省力方式，是不是修好了東西？**
+
+掃描與行為兩種測試都要留，因為它們防的是不同的退化：掃描擋得住「新增端點忘了加限流」（行為測試沒列舉到的端點不會紅），行為擋得住「加了但沒 return」（掃描看不出來）。所以 D25 是**補**上另一半，不是把掃描換掉。
+
+行為測試本身也有個容易做成假綠的地方，一併記著：只斷言 429 不夠 —— 「擋下來」與「擋了但還是做了」的回應可以一樣。必須同時斷言 service 的呼叫次數沒有增加。
+
+**D26 是這一批裡最值得記的一個**，因為它示範了「測試不只是沒抓到，而是主動幫忙掩蓋」：`toEqual({ todoCount, completedCount })` 不是漏寫，它是一句**斷言 payload 只有兩個欄位**的話。而端點真的少回一個欄位時，這句話會變成綠的。
+
+判準：**`toEqual` 對著一個手寫的物件字面量，等於把當下的形狀變成契約。** 那正是你要的（契約測試）——但前提是那個字面量與真實回應一致。替身少一個欄位、斷言跟著少一個欄位，兩者自洽而且都與真的不一樣，於是這一組測試從守門人變成幫兇。
+
+第二個判準：**型別重複宣告的地方，就是自動偵測的斷點。** D26 的鍊子有兩段，而兩段都靠型別接住：端點 → payload（service 那份）、payload → `arrivalKeyOf`（hook 那份）。兩份各自宣告時，中間那個接縫誰都不看。這也是為什麼修法是把型別搬到 `interfaces/` 而不是讓 hook 去 import service —— 後者會把一個 client component 的 import 圖連到 Prisma。
 
 **「只驗刪掉了什麼」的測試，擋不住刪過頭。** 每一條這種斷言都要配一條「留下了什麼」——否則把整個檔案清空也是綠的。這一條被誤刪的註解本身就是證據，它原本寫著：
 

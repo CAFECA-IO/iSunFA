@@ -5,6 +5,7 @@ import { AlertTriangle, Bell, CheckCircle2, Mail, Wallet } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { formatDate } from "@/lib/utils/date";
 import { canMarkReadByClick } from "@/lib/notification_read";
+import type { INotificationItem } from "@/interfaces/notification";
 import {
   NOTIFICATION_LINK_PATH,
   NOTIFICATION_TYPE,
@@ -32,14 +33,14 @@ const ICON_BY_KEY = {
   alert: AlertTriangle,
 } as const;
 
-export interface INotificationRowItem {
-  id: string;
-  type: string;
-  payload: Record<string, unknown>;
-  createdAt: number;
-  // Info: (20260825 - Julian) 未讀是 null；畫面用它決定要不要點紅點
-  readAt: number | null;
-}
+/**
+ * Info: (20260826 - Julian) 列的形狀就是端點回的形狀（review B6）。
+ *
+ * 原本這裡另外宣告一份四欄位的 interface，結構上與 `INotificationItem`
+ * 一模一樣 —— 而「結構上一樣」是 TypeScript 不會提醒你的那種重複：
+ * 端點加一個欄位、這裡沒加，畫面就永遠讀不到它，而沒有任何東西會紅。
+ */
+export type INotificationRowItem = INotificationItem;
 
 interface INotificationRowProps {
   item: INotificationRowItem;

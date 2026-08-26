@@ -151,7 +151,7 @@ HR 引入第一個 fan-out 時它就要回來，而理由會更硬：`Employee.u
 |---|---|
 | **分層** | `route.ts` 只做驗身分 → 限流 → service → `jsonOk`/`jsonFail`。Repository 是唯一碰 Prisma 的層，且**可以回答「是什麼」，不可以回答「可不可以」**。⚠️ 這條目前**沒有自動守門人**（`transaction_layering.test.ts` 只存在於另一條分支），靠 review |
 | **回應信封** | `jsonOk()` → `{ powerby, success, code, message, payload }`。前端 `request<T>()` **不拆信封**，必須自己讀 `.payload`。漏拆的症狀：`tsc` 與 `build` 全綠，**只在 API 成功時**於 render 階段炸掉 |
-| **限流** | `enforceRateLimit(identity, bucket)` 排在驗身分之後、業務邏輯之前。⚠️ `attendance_rate_limit.test.ts` 的掃描根只有 HR 目錄，通知路由**登記不進去、缺席也不會變紅** —— 因此本模組自帶 `notification_rate_limit.test.ts` |
+| **限流** | `enforceRateLimit(identity, bucket)` 排在驗身分之後、業務邏輯之前。⚠️ `attendance_rate_limit.test.ts` 的掃描根只有 HR 目錄，通知路由**登記不進去、缺席也不會變紅** —— 因此本模組自帶 `notification_rate_limit.test.ts`。⚠️ 它一度**只有掃描**（`enforceRateLimit(` 出現幾次、bucket 名、`indexOf` 順序），而刪掉 route 裡的 `if (limited) return limited;` 全部照綠 —— 現已補上行為那一半：打滿桶 → 斷言 429 **且** service 沒有被多呼叫一次 |
 | **錯誤碼** | `API_ERRORS` 以鍵索引，**兩個鍵並存不會有型別錯誤，只有 code 字串撞號，而對外契約正是那個字串**。開發前對 base／develop／branch 各取一份算交集（checklist §6.1） |
 | **失敗要留線索** | 把多種上游狀態塌成同一個回傳值，在 log 裡的後果是查不出成因。`IS_UNKNOWN` 不 log 就是這個形狀 |
 | **三個 Error 型別** | `AppError`（`lib/utils/error.ts`）、`ApiError`（`error_dictionary.ts`，本模組用的是這支）、**另一個** `ApiError`（`request.ts`，前端 fetch 失敗時拋出）。前端要 catch 的是最後那支 |

@@ -14,6 +14,7 @@ import {
   listNotifications,
   markNotificationsRead,
 } from "@/services/notification.service";
+import type { INotificationSummary } from "@/interfaces/notification";
 
 /**
  * Info: (20260821 - Luphia) 小鈴鐺的**接線**（checklist §1.7）。
@@ -31,9 +32,22 @@ jest.mock("@/lib/auth/dewt", () => ({
 }));
 
 jest.mock("@/services/notification.service", () => ({
+  /**
+   * Info: (20260826 - Julian) 替身要回**真 service 回的每一個欄位**（review B6）。
+   *
+   * 原本它只回兩個計數，而下面的斷言又用 `toEqual` 把「payload 只有兩個欄位」
+   * 主動釘住 —— 於是把 route 改成 `jsonOk({ todoCount, completedCount })`
+   * 之後 `tsc`、`npm test`、`test:e2e` 全綠，而前端 `arrivalKeyOf` 拿到的
+   * `latestUnreadAt` 變成 `undefined`，抵達識別值退回舊的「數量組合」——
+   * 計畫書 D17 原樣復活，且照它自己的說法「沒有任何觀測量」。
+   *
+   * 給一個**非 null** 的值：`null` 與「欄位不存在」在 `toEqual` 底下分得出來，
+   * 但一個真的時間戳讓「有沒有原封不動送出去」也被驗到。
+   */
   getNotificationSummary: jest.fn(async () => ({
     todoCount: 2,
     completedCount: 1,
+    latestUnreadAt: 1_760_000_000_000,
   })),
   listNotifications: jest.fn(async () => ({
     todos: [],
@@ -65,13 +79,28 @@ beforeEach(() => {
 });
 
 describe("三支 route 的接線", () => {
-  it("summary：驗身分並回兩個數字", async () => {
+  it("summary：驗身分並原封不動回三個欄位", async () => {
     const response = await getSummary(req("/summary"));
     const body = (await response.json()) as {
-      payload: { todoCount: number; completedCount: number };
+      payload: INotificationSummary;
     };
 
-    expect(body.payload).toEqual({ todoCount: 2, completedCount: 1 });
+    /**
+     * Info: (20260826 - Julian) `toEqual` 連 `latestUnreadAt` 一起釘（review B6）。
+     *
+     * 這一行是 D17 唯一的自動守門人：少了它，把那個欄位從 route 拿掉不會有
+     * 任何測試變紅，而症狀是「提示音第二次抵達起永久失效」——一個
+     * 在畫面上完全看不見的失效。
+     *
+     * 型別用 service 那份（`INotificationSummary`），不要在這裡手寫欄位：
+     * 手寫的話，端點加欄位時這個斷言會紅得莫名，而端點**少**欄位時
+     * 手寫的型別剛好幫忙掩蓋。
+     */
+    expect(body.payload).toEqual({
+      todoCount: 2,
+      completedCount: 1,
+      latestUnreadAt: 1_760_000_000_000,
+    });
     expect(asMock(getNotificationSummary)).toHaveBeenCalledWith(
       expect.objectContaining({ userId: "user-1", address: "0xabc" }),
     );
@@ -417,6 +446,43 @@ describe("來源與畫面的接線（掃描）", () => {
    * 真的測（首抓不算、持平不算、下降不算、上升才算）。這裡只剩接線：
    * 元件掛的是 `arrivalTick`，而它從 0 開始，所以首抓不會觸發。
    */
+  /**
+   * Info: (20260826 - Julian) D17 的整條鍊子要接起來（review B6）。
+   *
+   * 上面的 route 契約測試釘住「端點回得出 `latestUnreadAt`」，但那只是第一段。
+   * 第二段是「hook 真的把它餵給 `arrivalKeyOf`」—— 少了它，端點照樣回三個欄位，
+   * 而 hook 改成 `arrivalKeyOf(0, todo, completed)` 就讓 D17 復活，
+   * 且沒有任何測試會紅（`arrivalKeyOf` 自己的單元測試只驗它算得對）。
+   */
+  it("hook 把 latestUnreadAt 餵給 arrivalKeyOf", () => {
+    const hook = codeOf("src", "hooks", "use_notification_summary.ts");
+
+    expect(hook).toMatch(/arrivalKeyOf\(\s*next\.latestUnreadAt/);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 摘要的型別只能有一份（review B6）。
+   *
+   * hook 原本自己宣告一份 `INotificationSummary`，再用 `request<...>` 硬轉。
+   * 兩份宣告之間沒有任何東西比對過，所以端點少回一個欄位時 `tsc` 不會有意見。
+   * 型別是這條路徑上唯一有機會自動發現那件事的東西。
+   */
+  it("hook 不自己宣告 INotificationSummary，改讀共用型別", () => {
+    const hook = codeOf("src", "hooks", "use_notification_summary.ts");
+
+    expect(hook).not.toMatch(/interface INotificationSummary\s*\{/);
+    expect(hook).toMatch(/from "@\/interfaces\/notification"/);
+  });
+
+  // Info: (20260826 - Julian) 畫面端也一樣：三個消費者都讀同一份
+  it.each([
+    ["src", "components", "header", "notification_bell.tsx"],
+    ["src", "app", "user", "notifications", "page.tsx"],
+    ["src", "components", "notification", "notification_row.tsx"],
+  ])("%s 讀共用型別而不是自己宣告一份", (...segments) => {
+    expect(codeOf(...segments)).toMatch(/from "@\/interfaces\/notification"/);
+  });
+
   it("搖動掛在 arrivalTick 上（首抓的 0 不觸發）", () => {
     const bell = codeOf("src", "components", "header", "notification_bell.tsx");
 

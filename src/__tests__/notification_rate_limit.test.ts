@@ -1,7 +1,68 @@
-import { describe, it, expect } from "@jest/globals";
+import { describe, it, expect, beforeEach } from "@jest/globals";
+import type { jest as JestType } from "@jest/globals";
+declare const jest: typeof JestType;
 import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
+import { NextRequest } from "next/server";
 import { RateLimitBucketEnum, RATE_LIMIT_RULES } from "@/constants/rate_limit";
+
+import { GET as getList } from "@/app/api/v1/user/notifications/route";
+import { GET as getSummary } from "@/app/api/v1/user/notifications/summary/route";
+import { GET as getHistory } from "@/app/api/v1/user/notifications/history/route";
+import { POST as postReadAll } from "@/app/api/v1/user/notifications/read/route";
+import { POST as postReadOne } from "@/app/api/v1/user/notifications/[notification_id]/read/route";
+import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import {
+  getNotificationSummary,
+  listNotificationHistory,
+  listNotifications,
+  markNotificationRead,
+  markNotificationsRead,
+} from "@/services/notification.service";
+
+/**
+ * Info: (20260826 - Julian) 限流器用**真的**，只 mock 外部世界（review B5）。
+ *
+ * 這一檔原本全是 `readFileSync` 的原始碼比對：`enforceRateLimit(` 出現幾次、
+ * bucket 名對不對、`indexOf` 的順序。那些都是「有沒有寫」的證據，
+ * 不是「擋不擋得住」的證據 —— reviewer 的 mutation 說明了差別：
+ *
+ *     在 route 裡刪掉 `if (limited) return limited;`（保留呼叫那行）
+ *     → 五支端點限流完全失效，而本檔與 `notification_bell_wiring.test.ts` 全綠
+ *
+ * `/summary` 是每 60 秒 × 在線人數、每次兩趟 DB 的端點，那不是可以只靠
+ * 字串比對守住的東西。而 ADR 025 §7 早就宣稱「本模組自帶
+ * `notification_rate_limit.test.ts`」—— 在補上這一段之前，那句話不成立。
+ *
+ * 手法照抄同 repo 已有的正解 `invite_route_wiring.test.ts`。
+ */
+jest.mock("@/lib/auth/dewt", () => ({
+  getIdentityFromDeWT: jest.fn(async () => ({
+    id: "user-1",
+    address: "0xdefault",
+  })),
+}));
+
+jest.mock("@/services/notification.service", () => ({
+  getNotificationSummary: jest.fn(async () => ({
+    todoCount: 0,
+    completedCount: 0,
+    latestUnreadAt: null,
+  })),
+  listNotifications: jest.fn(async () => ({
+    todos: [],
+    completed: [],
+    hasMoreCompleted: false,
+  })),
+  listNotificationHistory: jest.fn(async () => ({
+    items: [],
+    totalItems: 0,
+    totalPages: 1,
+    currentPage: 1,
+  })),
+  markNotificationsRead: jest.fn(async () => 0),
+  markNotificationRead: jest.fn(async () => false),
+}));
 
 /**
  * Info: (20260825 - Julian) 小鈴鐺端點的限流（計畫書 D2）。
@@ -238,5 +299,185 @@ describe("小鈴鐺 bucket 的窗口設定", () => {
     expect(RATE_LIMIT_RULES[RateLimitBucketEnum.NOTIFICATION_READ]).not.toBe(
       RATE_LIMIT_RULES[RateLimitBucketEnum.READ],
     );
+  });
+});
+
+/**
+ * Info: (20260826 - Julian) 限流真的擋在**使用者走的那條路徑**上（review B5）。
+ *
+ * 上面那組掃描測試證明「寫了」，這一組證明「擋得住」。兩者都要：
+ * 掃描擋得住「新增端點忘了加限流」（行為測試沒列舉到的端點不會紅），
+ * 行為擋得住「加了但沒 return」（掃描看不出來）。
+ *
+ * 每支端點用**獨立位址**：限流器是模組單例，共用位址會讓測試互相影響。
+ */
+const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
+
+const READ_PER_MINUTE =
+  RATE_LIMIT_RULES[RateLimitBucketEnum.NOTIFICATION_READ][0].max;
+const WRITE_PER_MINUTE =
+  RATE_LIMIT_RULES[RateLimitBucketEnum.NOTIFICATION_WRITE][0].max;
+
+function requestAs(address: string, path: string, method = "GET"): NextRequest {
+  asMock(getIdentityFromDeWT).mockResolvedValue({ id: "user-1", address });
+  return new NextRequest(
+    `https://isunfa.com/api/v1/user/notifications${path}`,
+    {
+      method,
+      headers: { authorization: "Bearer dewt" },
+      ...(method === "POST" ? { body: "{}" } : {}),
+    },
+  );
+}
+
+// Info: (20260826 - Julian) 逐則已讀的 handler 需要 params；其餘四支不需要
+const ONE_ID = { params: Promise.resolve({ notification_id: "n-1" }) };
+
+/**
+ * Info: (20260826 - Julian) 五支端點各自的呼叫方式與它守著的 service。
+ *
+ * 以表格驅動而不是抄五遍：抄五遍時漏掉第五支不會紅，
+ * 而「漏掉一支」正是這整組測試要防的事。上面的掃描測試會證明
+ * 這張表沒有漏掉任何一支 route 檔。
+ */
+const ENDPOINTS = [
+  {
+    name: "list",
+    perMinute: READ_PER_MINUTE,
+    service: () => listNotifications,
+    call: (address: string) => getList(requestAs(address, "")),
+  },
+  {
+    name: "summary",
+    perMinute: READ_PER_MINUTE,
+    service: () => getNotificationSummary,
+    call: (address: string) => getSummary(requestAs(address, "/summary")),
+  },
+  {
+    name: "history",
+    perMinute: READ_PER_MINUTE,
+    service: () => listNotificationHistory,
+    call: (address: string) => getHistory(requestAs(address, "/history")),
+  },
+  {
+    name: "read-all",
+    perMinute: WRITE_PER_MINUTE,
+    service: () => markNotificationsRead,
+    call: (address: string) => postReadAll(requestAs(address, "/read", "POST")),
+  },
+  {
+    name: "read-one",
+    perMinute: WRITE_PER_MINUTE,
+    service: () => markNotificationRead,
+    call: (address: string) =>
+      postReadOne(requestAs(address, "/n-1/read", "POST"), ONE_ID),
+  },
+] as const;
+
+describe("限流真的擋在路徑上（行為）", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  /**
+   * Info: (20260826 - Julian) 這張表必須蓋到**每一支** handler。
+   *
+   * 沒有這一條，新增第六支端點時：上面的掃描測試會逼你登記進 `EXPECTED_BUCKET`
+   * （所以不會漏掉限流），但行為測試的表格漏掉它不會紅 —— 於是新端點只有
+   * 「有沒有寫」的證據，沒有「擋不擋得住」的證據，而那正是 D25 的原始形狀。
+   *
+   * 比對的是 `listHandlers()`（每支 route 檔裡每一個 HTTP handler），
+   * 不是 route 檔數：一個檔案日後放兩個 method 時，檔數會對而覆蓋率不對。
+   */
+  it("行為測試的表格蓋到每一支 handler", () => {
+    expect(ENDPOINTS.length).toBe(listHandlers().length);
+  });
+
+  it.each(ENDPOINTS.map((endpoint) => [endpoint.name, endpoint] as const))(
+    "%s：打滿桶之後回 429，且不再進入 service",
+    async (name, endpoint) => {
+      // Info: (20260826 - Julian) 位址含端點名，五支互不干擾
+      const address = `0xrl_${name}`;
+
+      for (let index = 0; index < endpoint.perMinute; index += 1) {
+        const ok = await endpoint.call(address);
+        expect(ok.status).toBe(200);
+      }
+      expect(asMock(endpoint.service())).toHaveBeenCalledTimes(
+        endpoint.perMinute,
+      );
+
+      const blocked = await endpoint.call(address);
+
+      /**
+       * Info: (20260826 - Julian) 兩個斷言缺一不可（檢查清單 §1.7 的成對要求）。
+       *
+       * 回應要是 429，**而且 service 沒有被多呼叫一次** —— 後者才分得出
+       * 「擋下來」與「擋了但還是做了」。刪掉 route 裡的
+       * `if (limited) return limited;` 時，狀態會變成 200 且次數 +1，兩條都紅。
+       */
+      expect(blocked.status).toBe(429);
+      expect(asMock(endpoint.service())).toHaveBeenCalledTimes(
+        endpoint.perMinute,
+      );
+      expect(blocked.headers.get("Retry-After")).toBeTruthy();
+    },
+  );
+
+  /**
+   * Info: (20260826 - Julian) 沒有身分就不進限流，也不進 service。
+   *
+   * 限流的維度是 `user.address` —— 沒有身分就沒有維度。這一條同時證明
+   * 上面那組的 200 不是因為「所有請求都被當成同一個人」。
+   */
+  it("未登入時不進入 service", async () => {
+    asMock(getIdentityFromDeWT).mockResolvedValue(null);
+
+    const response = await getSummary(
+      new NextRequest("https://isunfa.com/api/v1/user/notifications/summary"),
+    );
+
+    expect(response.status).not.toBe(200);
+    expect(asMock(getNotificationSummary)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260826 - Julian) 三支讀取端點**共用**同一個桶。
+   *
+   * 那是刻意的（同一位使用者的讀取總量），而它的後果值得釘住：
+   * 用 `/summary` 打滿桶之後，`/history` 也會被擋。分成三個桶的話，
+   * 輪詢端點的額度就會被翻頁行為以外的東西各自消耗，總量失控。
+   */
+  it("讀取類三支共用同一個桶（跨端點生效）", async () => {
+    const address = "0xrl_shared";
+
+    for (let index = 0; index < READ_PER_MINUTE; index += 1) {
+      const ok = await getSummary(requestAs(address, "/summary"));
+      expect(ok.status).toBe(200);
+    }
+
+    const blockedHistory = await getHistory(requestAs(address, "/history"));
+
+    expect(blockedHistory.status).toBe(429);
+    expect(asMock(listNotificationHistory)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260826 - Julian) 讀取與寫入是**不同**的桶。
+   *
+   * 少了這條，「把兩個 bucket 都指到同一個 enum」也會讓上面全綠 ——
+   * 而那會讓鈴鐺的背景輪詢吃掉使用者標記已讀的額度（D2 的原始理由）。
+   */
+  it("讀取桶打滿不影響寫入桶", async () => {
+    const address = "0xrl_split";
+
+    for (let index = 0; index < READ_PER_MINUTE; index += 1) {
+      await getSummary(requestAs(address, "/summary"));
+    }
+
+    const write = await postReadAll(requestAs(address, "/read", "POST"));
+
+    expect(write.status).toBe(200);
+    expect(asMock(markNotificationsRead)).toHaveBeenCalledTimes(1);
   });
 });

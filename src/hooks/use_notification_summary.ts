@@ -3,6 +3,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { request } from "@/lib/utils/request";
 import { NOTIFICATION_POLL_INTERVAL_MS } from "@/constants/notification";
+/**
+ * Info: (20260826 - Julian) 型別只有一份（review B6）。
+ *
+ * 這裡原本自己宣告一份 `INotificationSummary`，再用 `request<...>` 的泛型
+ * 硬轉端點回應。兩份宣告沒有任何東西比對過 —— 端點少回一個欄位時，
+ * `tsc` 不會有意見，而 `arrivalKeyOf` 拿到 `undefined` 就讓 D17 原樣復活。
+ *
+ * `import type` 在編譯後完全消失，所以這一行不會把 Prisma 拉進 client bundle。
+ */
+import type { INotificationSummary } from "@/interfaces/notification";
 import {
   ChimeGate,
   arrivalKeyOf,
@@ -24,16 +34,6 @@ import {
  * 形狀比照 `src/hooks/use_presence_feed.ts`（**不是** `use_pending_recalls.ts` ——
  * 那支失敗時 `setRecalls([])`，會讓網路抖一下就把畫面清空）。
  */
-
-export interface INotificationSummary {
-  todoCount: number;
-  completedCount: number;
-  /**
-   * Info: (20260825 - Julian) 最新一則未讀通知的建立時間（epoch ms）。
-   * 只用於組出提示音的抵達識別值，畫面不顯示它（見 `arrivalKeyOf`）。
-   */
-  latestUnreadAt: number | null;
-}
 
 export interface INotificationSummaryFeed {
   summary: INotificationSummary | null;
