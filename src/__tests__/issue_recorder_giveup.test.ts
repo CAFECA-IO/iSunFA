@@ -3,7 +3,12 @@ import { describe, it, expect, beforeEach } from "@jest/globals";
 import type { jest as JestType } from "@jest/globals";
 import { issueRecorderService } from "@/services/issue.recorder.service";
 import { orderRepo } from "@/repositories/order.repo";
-import { notifyAnalysisFailed } from "@/services/notification.service";
+import {
+  notifyAnalysisCompleted,
+  notifyAnalysisFailed,
+} from "@/services/notification.service";
+import { analysisRepo } from "@/repositories/analysis.repo";
+import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import { ORDER_STATUS } from "@/constants/status";
 
 /**
@@ -45,6 +50,9 @@ const taskDir = path.join(process.cwd(), ISSUE_DIR, FOLDER);
 const giveupPath = path.join(process.cwd(), MISSION_DIR, FOLDER, "giveup.md");
 const flagPath = path.join(taskDir, "recorded.flag");
 const contextPath = path.join(taskDir, "context.json");
+// Info: (20260826 - Julian) 已核可的結果走的是「成功」那條路（非 giveup）
+const APPROVED_FILE = "approved.1.md";
+const resultPath = path.join(taskDir, "1.md");
 
 /**
  * Info: (20260825 - Julian) 檔案系統的狀態表：測試擺，替身讀。
@@ -238,5 +246,128 @@ describe("IssueRecorder：被放棄的任務（D18）", () => {
 
     expect(asMock(notifyAnalysisFailed)).not.toHaveBeenCalled();
     expect(fsState.written.get(flagPath)).toMatch(/no matching order/i);
+  });
+});
+
+/**
+ * Info: (20260826 - Julian) 同一份工作不得同時通知「完成」與「失敗」（review B2）。
+ *
+ * ## 缺陷長什麼樣
+ *
+ * 完成通知原本緊接在 `updateAnalysisResult` 之後**無條件**發出，而它後面
+ * 那段 DB 同步失敗時會把訂單寫成 FAILED，於是再發一則失敗通知。
+ * CERTIFICATE_ANALYSIS 的結果少了 `dbSyncPayload` 就會走到這裡 ——
+ * 使用者對同一份工作同時收到兩則互相矛盾的通知，而兩則的 `dedupeKey`
+ * 都是永久唯一鍵，收不回也蓋不掉。
+ *
+ * ## 為什麼既有測試看不到
+ *
+ * 這個檔案把 `notification.service` 換成替身是對的（checklist §1.2 允許，
+ * 而 `notification_service.test.ts` 直接測那一支）。看不到的原因不是替身，
+ * 是**沒有任何案例走過 DB 同步失敗那條路** —— 上面五條全都是 giveup 路徑。
+ * 替身早就準備好回答「有沒有發完成通知」，只是從來沒有人問。
+ */
+describe("IssueRecorder：完成與失敗不得同時發出（B2）", () => {
+  const ANALYSIS = {
+    id: "analysis-1",
+    userId: USER_ID,
+    orderId: ORDER_ID,
+    type: "certificate_analysis",
+  };
+
+  /**
+   * Info: (20260826 - Julian) 擺出一個「跑完了，但結果裡沒有 dbSyncPayload」的任務。
+   *
+   * `category` 是 CERTIFICATE_ANALYSIS 才會觸發那道守門 —— 其他類別缺
+   * `dbSyncPayload` 是正常的，不算失敗。
+   */
+  const givenApprovedTask = (options: { category?: string } = {}) => {
+    fsState.taskFiles = [APPROVED_FILE];
+    fsState.existing = new Set<string>();
+    fsState.contents = new Map<string, string>();
+    fsState.written = new Map<string, string>();
+
+    fsState.contents.set(
+      contextPath,
+      JSON.stringify({ orderId: ORDER_ID, analysisId: ANALYSIS.id }),
+    );
+    // Info: (20260826 - Julian) 有結果、但**沒有** dbSyncPayload
+    fsState.contents.set(resultPath, JSON.stringify({ summary: "done" }));
+
+    asMock(orderRepo.findFirst).mockResolvedValue({
+      id: ORDER_ID,
+      userId: USER_ID,
+      status: ORDER_STATUS.EXECUTING,
+      mission: null,
+      tokens: 0,
+      data: {
+        category: options.category ?? ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS,
+      },
+    });
+    asMock(analysisRepo.findById).mockResolvedValue(ANALYSIS);
+  };
+
+  /**
+   * Info: (20260826 - Julian) 核心斷言，而且**成對**。
+   *
+   * 只驗「沒發完成通知」會被一個「什麼都沒發」的實作騙過去；
+   * 只驗「發了失敗通知」則是缺陷發生時本來就成立的那一半。
+   */
+  it("DB 同步失敗時只發失敗通知，不發完成通知", async () => {
+    givenApprovedTask();
+
+    await issueRecorderService.processNext();
+
+    expect(asMock(notifyAnalysisCompleted)).not.toHaveBeenCalled();
+    expect(asMock(notifyAnalysisFailed)).toHaveBeenCalledTimes(1);
+  });
+
+  // Info: (20260826 - Julian) 訂單也要真的被寫成 FAILED（通知與狀態不能分岔）
+  it("DB 同步失敗時訂單寫成 FAILED", async () => {
+    givenApprovedTask();
+
+    await issueRecorderService.processNext();
+
+    expect(asMock(orderRepo.update)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: ORDER_STATUS.FAILED }),
+      }),
+    );
+  });
+
+  /**
+   * Info: (20260826 - Julian) 反面：同步沒失敗時完成通知照發。
+   *
+   * 少了這條，「把完成通知整個刪掉」也會讓上面兩條全綠 —— 而那是
+   * 這次修法最容易不小心做到的事（條件寫錯就等於永遠不發）。
+   */
+  it("同步沒有失敗時照常發出完成通知，且不發失敗通知", async () => {
+    givenApprovedTask({ category: "other_analysis" });
+
+    await issueRecorderService.processNext();
+
+    expect(asMock(notifyAnalysisCompleted)).toHaveBeenCalledTimes(1);
+    expect(asMock(notifyAnalysisCompleted)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: USER_ID,
+        analysisId: ANALYSIS.id,
+        analysisType: ANALYSIS.type,
+      }),
+    );
+    expect(asMock(notifyAnalysisFailed)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260826 - Julian) 結果仍然要寫進 analysis，即使不通知。
+   *
+   * 修法只該改「說不說」，不該改「存不存」—— 使用者被告知失敗之後，
+   * 那份跑出來的結果仍然是他付過錢的東西。
+   */
+  it("同步失敗仍然寫入分析結果（只是不通知完成）", async () => {
+    givenApprovedTask();
+
+    await issueRecorderService.processNext();
+
+    expect(asMock(analysisRepo.updateAnalysisResult)).toHaveBeenCalledTimes(1);
   });
 });

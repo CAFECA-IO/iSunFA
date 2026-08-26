@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AlertTriangle, Bell, CheckCircle2, Mail, Wallet } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { formatDate } from "@/lib/utils/date";
+import { canMarkReadByClick } from "@/lib/notification_read";
 import {
   NOTIFICATION_LINK_PATH,
   NOTIFICATION_TYPE,
@@ -139,6 +140,17 @@ export default function NotificationRow({
   const href = NOTIFICATION_LINK_PATH[item.type as NotificationType] ?? null;
   const isUnread = item.readAt === null;
 
+  /**
+   * Info: (20260826 - Julian) 「點了算不算已讀」由這裡決定，不由呼叫端（review B3）。
+   *
+   * 兩個消費者原本各自把整份清單交給同一支 `markOneRead`，而那支擋不住
+   * 活算的待辦（`readAt` 恆為 null）—— 於是點一下邀請會扣錯徽章的桶、
+   * 造出一次幽靈搖動、並對一個合成 id 打 API。**兩邊犯的是同一個錯**，
+   * 那正是這個判斷不該留在呼叫端的理由：這裡已經在決定「這一型有沒有去處」，
+   * 「這一型點了算不算已讀」是同一類決定。
+   */
+  const readOnClick = canMarkReadByClick(item.type);
+
   const body = (
     <>
       <Icon
@@ -176,7 +188,12 @@ export default function NotificationRow({
   return href ? (
     <Link
       href={href}
-      onClick={() => onRead(item)}
+      /**
+       * Info: (20260826 - Julian) 待辦型仍然可點（要導去處理它），只是不標已讀。
+       * 待辦的消失由「事情真的做完了」驅動 —— 邀請被接受／拒絕、
+       * 錢包探針轉 true，而不是由「使用者看過了」驅動（計畫書 D1）。
+       */
+      onClick={readOnClick ? () => onRead(item) : undefined}
       className={`hover:bg-surface-hover ${shared}`}
     >
       {body}

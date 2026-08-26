@@ -58,6 +58,8 @@
 | D19 | 邀請通知只認 `inviteeAddress`，而 email 邀請那一欄是 NULL —— 已註冊的人被 email 邀請時，**鈴鐺與團隊頁都完全看不到**，而 `TEAM_INVITATION` 一直被列為已支援的型別 | `TeamInvitation.inviteeEmailKey`（canonical、索引）+ **查詢**改成位址 **OR** 已驗證信箱，兩個消費者收斂到 `listPendingInvitationsForUser`。**處置端見 D21** |
 | D20 | 面板底部「還有更多**未讀**通知」是一句假話，而且沒有出口 —— 清單改成含已讀之後，該旗標的意思已變成「歷史超過 30 則」，於是它會在未讀只有 2 則的畫面上宣稱還有更多未讀，與兩公分外的徽章直接矛盾 | 鍵改名 `has_more_completed` → `history_capped`（「僅顯示最近 N 則」，恆真）；底部加常駐連結通往新的 `/user/notifications` 分頁清單 |
 | D21 | D19 只修了查詢那一半：accept／decline 仍是 `inviteeAddress` 比對，而 email 邀請那一欄是 NULL —— 鈴鐺推一則待辦、團隊頁畫兩顆按鈕、兩顆都必定失敗（D12 的形狀）。順帶查出兩支**都沒有逾期檢查** | 抽 `resolveRecipientKeys` + `canActOnInvitation`，查詢／接受／拒絕三處同源；同時補上 `isInviteExpired`；email 路徑的 `emailMatch` 記為 `MATCHED` 而非 null |
+| D22 | 完成通知在 DB 同步**之前**無條件發出，而同步失敗會把訂單寫成 FAILED 並再發一則失敗通知 —— 同一份工作同時收到「已完成」與「失敗」，兩則的 `dedupeKey` 都是永久唯一鍵，收不回也蓋不掉 | 完成通知移到同步之後，條件為 `finalOrderStatus !== FAILED`（**不是** `newOrderStatus === COMPLETED`，理由見下） |
+| D23 | 點面板裡的團隊邀請會扣錯徽章的桶（`completedCount`，但邀請屬 `todoCount`）、把提示音基準降 1 造出一次幽靈搖動、並對合成 id 打 `POST .../invitation:<uuid>/read` —— 活算待辦的 `readAt` 恆為 null，`markOneRead` 的早退擋不住它 | 判斷抽成 `lib/notification_read.ts` 的 `canMarkReadByClick`（以**待辦型**為準，不是以「活不活算」），由 `notification_row.tsx` 單點決定，與伺服器端 `markReadById` 的 `excludeTypes` 讀同一份常數 |
 
 **D17、D18、D19 的共通點值得記著**：三者都躲過了單元測試、e2e 與整份 code review。D17 的失效沒有任何觀測量（搖動照舊、徽章照舊、log 乾淨，唯一症狀是「聽不到聲音」）；D18 與 D19 的失效是「什麼都沒發生」，而沒有人會抱怨一件他不知道應該發生的事。
 
@@ -72,6 +74,18 @@ D19 還多一層：`TEAM_INVITATION` 從第一天就在型別清單、有文案�
 可推廣的判準：**放寬一個查詢的收錄範圍時，要問「查得到的東西，是不是每一個動作都處理得了」**。查詢與處置各自都自洽，分岔只在兩者之間，因此逐檔 review 看不出來 —— 要沿著「使用者看到之後會按什麼」走一遍。
 
 D21 順帶暴露的逾期缺口更是這個形狀的極端：`accept` 從來沒檢查過 `expiresAt`，而它在既有路徑上完全無害（位址邀請不設期限）。**只放寬收件者判定而不補那一道，才會把一個一直存在的死條件變成活的漏洞** —— 逾期三個月的 email 邀請仍可接受並佔掉一個付費席次。
+
+**D22 的修法有一個容易踩的坑，記在這裡**：直覺的對稱寫法是「移到 `orderRepo.update` 之後，條件改成 `newOrderStatus === COMPLETED`」，與失敗那則並排。那樣會修掉矛盾，但**換來一個靜默的漏**：`Analysis.orderId` 沒有唯一約束，一張訂單可以有多個分析（`findByOrderIdAndTaskId` 以 `missionTaskId` 對應），而 recorder 一次只處理一個 task。前幾個 task 完成時 `newOrderStatus` 是 `EXECUTING`，只有最後一個才是 `COMPLETED` —— 前面每一份分析的完成通知都不會發。
+
+兩個通知**本來就不同粒度**：完成是 analysis 級（key 是 `analysisId`），失敗是 order 級（key 是 `orderId`）。「對稱」在這裡是個誤導人的直覺。要判的是「**這一輪**有沒有踩到同步失敗」，那個變數是 `finalOrderStatus`。
+
+D22 沒被測試抓到的原因也值得寫清楚，因為它會影響下一次怎麼補測試：**不是因為 `notification.service` 被 mock 掉了**（那是對的，checklist §1.2 允許，而 `notification_service.test.ts` 直接測那一支）。是因為 `issue_recorder_giveup.test.ts` 的五條案例全都走 giveup 路徑，**沒有任何一條走過 DB 同步失敗**。替身早就準備好回答「有沒有發完成通知」，只是從來沒有人問。
+
+**D23 是 D17 的同族，而且更值得記**：三個錯誤行為沒有一個在畫面上顯示成錯的 —— 徽章少 1（看起來像正常的已讀）、鈴鐺搖一下（看起來像來了新通知）、一個失敗的 POST（沒有任何 UI）。手動驗收之所以看不到，是因為最容易驗的空狀態剛好抵銷：`completedCount` 為 0 時 `Math.max(0, -1)` 還是 0，徽章不動。**幽靈搖動要 `completedCount ≥ 1` 才出得來。**
+
+修法選「待辦型」而不是 review 建議的「活不活算（`derived`）」，理由是後者修不掉錢包升級：它是**入庫的**待辦型，今天碰不到只因為 `NOTIFICATION_LINK_PATH` 給它 `null`；而那一欄的註解寫著「有了升級頁面之後把它填進來」。填進去的那天，同一個缺陷會以 D1 的形式回來 —— 點一下就把一則還沒處理的待辦標成已讀，而 `dedupeKey` 是永久唯一鍵。
+
+還有一個可推廣的判準：**兩個消費者犯同一個錯，代表那個判斷不該放在消費端**。B3 在小鈴鐺與 `/user/notifications` 各發生一次，而它們是同一天寫的、由同一個人寫的 —— 判斷留在呼叫端就是留給每一個新呼叫端再錯一次的機會。它被移進 `notification_row.tsx`，與「這一型有沒有去處」並列，因為那是同一類決定。
 
 ---
 

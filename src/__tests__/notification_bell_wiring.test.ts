@@ -447,6 +447,34 @@ describe("通知列只有一份實作", () => {
     expect(codeOf(...ROW)).toMatch(/readAt === null/);
   });
 
+  /**
+   * Info: (20260826 - Julian) 「點了算不算已讀」只在共用元件裡決定（review B3）。
+   *
+   * 兩個消費者原本各自把整份清單（含待辦區）交給同一支 `markOneRead`，
+   * 而那支的早退條件 `readAt !== null` 擋不住活算的待辦 —— 點一下團隊邀請
+   * 會扣錯徽章的桶、把提示音基準降 1（下一次輪詢就白搖一次）、
+   * 並對合成 id 打 API。**兩邊犯的是同一個錯**，因為兩邊各判一次。
+   *
+   * 這裡驗的是「消費端沒有自己一份判斷」，而不是「有沒有呼叫共用函式」——
+   * 後者擋不住有人加回一個 `if`。
+   */
+  it("待辦型不標已讀的判斷在共用元件裡", () => {
+    expect(codeOf(...ROW)).toMatch(/canMarkReadByClick\(/);
+    // Info: (20260826 - Julian) 待辦型仍然可點（要導去處理），只是 onClick 不接 onRead
+    expect(codeOf(...ROW)).toMatch(
+      /onClick=\{.*\?.*onRead\(item\).*undefined\}/s,
+    );
+  });
+
+  it.each([
+    ["TODO_NOTIFICATION_TYPES", "待辦型清單"],
+    ["canMarkReadByClick", "點了算不算已讀的判斷"],
+  ])("消費端沒有自己一份 %s（%s）", (symbol) => {
+    for (const consumer of [BELL, PAGE]) {
+      expect(codeOf(...consumer)).not.toContain(symbol);
+    }
+  });
+
   it("鈴鐺底部有通往完整清單的連結", () => {
     expect(codeOf(...BELL)).toContain('href="/user/notifications"');
   });

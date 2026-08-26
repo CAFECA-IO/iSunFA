@@ -249,6 +249,15 @@ export async function listNotifications(params: {
         /**
          * Info: (20260821 - Luphia) derived 待辦以來源 id 合成識別：
          * 前端只拿它當 React key 與去重依據，不會拿去打任何 API。
+         *
+         * Info: (20260826 - Julian) 這句話一度不成立（review B3），所以補記
+         * **是什麼在維持它**：`notification_row.tsx` 以 `canMarkReadByClick`
+         * 擋掉待辦型的 onClick，因此合成 id 走不到 `.../{id}/read`。
+         *
+         * 先前它只是一句宣稱：面板改成逐則已讀之後，整份清單（含待辦區）
+         * 都被交給同一支 `markOneRead`，而那支的早退條件是 `readAt !== null` ——
+         * 活算待辦的 `readAt` 恆為 null，於是每點一次邀請就對這個合成 id
+         * 打一次 API。宣稱沒有變，事實變了，而沒有任何東西發現。
          */
         id: `invitation:${invitation.id}`,
         type: NOTIFICATION_TYPE.TEAM_INVITATION,

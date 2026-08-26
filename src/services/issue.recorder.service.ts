@@ -149,7 +149,8 @@ export class IssueRecorderService {
               unknown
             >;
             const usage = parsedResult?.usage as
-              Record<string, unknown> | undefined;
+              | Record<string, unknown>
+              | undefined;
             if (usage?.totalTokens)
               tokensConsumed = MoneyUtil.toDecimal(
                 usage.totalTokens as string | number,
@@ -216,18 +217,6 @@ export class IssueRecorderService {
             }
 
             await analysisRepo.updateAnalysisResult(analysis.id, parsedResult);
-
-            /**
-             * Info: (20260821 - Luphia) 結果落地後通知小鈴鐺（ADR 021 補充）。
-             * `notifyAnalysisCompleted` 永不拋錯且以 dedupeKey 冪等——
-             * recorder 重試同一個 task 不會發第二則，通知失敗也不會
-             * 影響已經寫入的結果。
-             */
-            await notifyAnalysisCompleted({
-              userId: analysis.userId,
-              analysisId: analysis.id,
-              analysisType: analysis.type,
-            });
 
             // Info: (20260420 - Luphia) Save Analysis tags if present
             if (typeof parsedResult === "object" && parsedResult !== null) {
@@ -346,6 +335,48 @@ export class IssueRecorderService {
               `[MissionRecorder] Failed to sync document results to DB for Task ID ${taskId}:`,
               e,
             );
+          }
+
+          /**
+           * Info: (20260826 - Julian) 完成通知移到 DB 同步**之後**（review B2）。
+           *
+           * 原本它緊接在 `updateAnalysisResult` 後面無條件發出，而下面那段
+           * DB 同步失敗時（CERTIFICATE_ANALYSIS 少了 `dbSyncPayload`、
+           * 或同步本身拋錯）會把訂單寫成 FAILED，於是同一份工作再發一則
+           * 失敗通知 —— 使用者**同時**收到「已完成」與「失敗」。兩則的
+           * `dedupeKey` 都是永久唯一鍵，收不回也蓋不掉。
+           *
+           * ## 條件為什麼是 `finalOrderStatus`，不是 `newOrderStatus`
+           *
+           * review 建議移到 `orderRepo.update` 之後、改判
+           * `newOrderStatus === COMPLETED`。那樣會修掉這個缺陷，但同時
+           * **靜默漏掉通知**：`Analysis.orderId` 沒有唯一約束，一張訂單可以有
+           * 多個分析（`findByOrderIdAndTaskId` 以 `missionTaskId` 對應），
+           * 而 recorder 一次只處理一個 task。前面幾個 task 完成時
+           * `newOrderStatus` 是 `EXECUTING`，只有最後一個才是 `COMPLETED` ——
+           * 於是前面每一份分析的完成通知都不會發，而使用者無從得知。
+           *
+           * `finalOrderStatus` 才是「**這一輪**有沒有踩到同步失敗」：它初始為
+           * COMPLETED，只被上面那段同步邏輯改成 FAILED。用它就能既擋掉矛盾，
+           * 又保住逐 task 的粒度。
+           *
+           * ## 為什麼不放進下面的 `if (order)`
+           *
+           * `analysis` 可以在 `order` 為 null 時存在（以 `analysisId` 找到分析，
+           * 但 orderId 反查不到訂單，見 `resolveAnalysisAndOrder`）。
+           * 放進去會讓那個情況連完成通知也一起消失 —— 又是一個靜默的漏。
+           */
+          if (analysis && finalOrderStatus !== ORDER_STATUS.FAILED) {
+            /**
+             * Info: (20260821 - Luphia) `notifyAnalysisCompleted` 永不拋錯且以
+             * dedupeKey 冪等 —— recorder 重試同一個 task 不會發第二則，
+             * 通知失敗也不會影響已經寫入的結果。
+             */
+            await notifyAnalysisCompleted({
+              userId: analysis.userId,
+              analysisId: analysis.id,
+              analysisType: analysis.type,
+            });
           }
 
           if (order) {
