@@ -38,8 +38,18 @@ export const extractQuantityClaims = (text: string): string[] =>
 /**
  * Info: (20260825 - Emily) 從合法來源蒐集全部數字 token(不限帶單位 ——
  * 事實包 value 裡的每一個數字都是合法引用對象,含括號內的公噸換算值)。
+ *
+ * ## 只收 value,而且先剝掉單位字串(review 阻擋項,08-25)
+ *
+ * 第一版連 label 一起收,而 label 帶的是**非數量的數字**:「排放量第 1 大」的 1、
+ * 「勾稽擋下:ch3-8」的 3 和 8。更普遍的是 value 尾端的單位字串本身 ——
+ * 每一筆事實都以 kgCO2e 結尾,而 CO2e 含一個 2。實測後果:
+ * 「2 公噸」「8 公噸」在任何一場對話都過得了守門 —— 合法集合被灌水,
+ * 「每個排放量數字都必須溯源」被靜默放寬。
+ * 修法:label 不收;value 先剝單位 token 再抽數字。
  */
 const ALL_NUMBERS = /[0-9][0-9,]*(?:\.[0-9]+)?/g;
+const UNIT_TOKENS = /kg\s?CO2e|kgCO2e|tCO2e|CO2e/gi;
 export const collectAllowedNumbers = (
   facts: IContextFact[],
   userTexts: string[],
@@ -51,8 +61,7 @@ export const collectAllowedNumbers = (
     });
   };
   facts.forEach((fact) => {
-    collect(fact.value);
-    collect(fact.label);
+    collect(fact.value.replace(UNIT_TOKENS, " "));
   });
   userTexts.forEach(collect);
   return allowed;

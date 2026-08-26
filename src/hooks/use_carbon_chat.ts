@@ -5275,8 +5275,13 @@ export const useCarbonChat = () => {
                * 同一則訊息重送（重試、雙擊）不重複扣點。
                */
               clientMessageId,
-              // Info: (20260825 - Emily) #6707 帳本事實包(組包邏輯見上方 ledgerFacts 的註解)
-              ...(ledgerFacts.length > 0 ? { ledgerFacts } : {}),
+              /**
+               * Info: (20260825 - Emily) #6707 帳本事實包(組包邏輯見上方 ledgerFacts 的註解)。
+               * **空陣列也要送**(review 阻擋項):伺服端憑 [] 與 undefined 區分
+               * 「碳盤查對話、帳本空」(守門照跑)與「呼叫端沒帶事實包」(守門跳過)。
+               * 原本空包不帶欄位,守門在最需要它的狀態(只剩指令、編造最沒阻力)被關掉。
+               */
+              ledgerFacts,
               // Info: (20260714 - Tzuhan) 附件只帶 metadata+cid(檔案已在 Laria)；請求 body 維持輕量
               ...(attachmentsMeta.length > 0
                 ? { attachments: attachmentsMeta }

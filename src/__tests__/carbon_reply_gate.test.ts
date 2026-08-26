@@ -87,7 +87,7 @@ describe("auditReplyQuantities", () => {
 });
 
 describe("collectAllowedNumbers", () => {
-  it("value 與 label 的數字進合法集合(含括號內換算值);source 不進", () => {
+  it("只收 value 的數字(含括號內換算值);source 不進", () => {
     const allowed = collectAllowedNumbers(facts, []);
     expect(allowed.has("8332581.1")).toBe(true);
     expect(allowed.has("3470335.4")).toBe(true);
@@ -98,6 +98,62 @@ describe("collectAllowedNumbers", () => {
      * 收進集合只會讓「3.8 噸」這種編造多一條漏網路徑。
      */
     expect(allowed.has("3.8")).toBe(false);
+  });
+
+  it("label 的數字不收(排名索引/段落 id 不是數量);單位字串的 2 也不收(review 阻擋項)", () => {
+    /**
+     * Info: (20260825 - Emily) review 實測:label「第 1 大」的 1、「ch3-8」的 3 和 8、
+     * 單位 kgCO2e 的 2 全被灌進合法集合 —— 於是「2 公噸」在任何對話都過得了守門。
+     */
+    const polluted: IContextFact[] = [
+      {
+        label: "排放量第 1 大:總公司 外購電力",
+        value: "4000000 kgCO2e",
+        source: "s",
+      },
+      {
+        label: "匯入表格被勾稽擋下:ch3-8",
+        value: "60 列無法解析",
+        source: "s",
+      },
+    ];
+    const allowed = collectAllowedNumbers(polluted, []);
+    expect(allowed.has("4000000")).toBe(true);
+    expect(allowed.has("60")).toBe(true);
+    expect(allowed.has("1")).toBe(false);
+    expect(allowed.has("2")).toBe(false);
+    expect(allowed.has("3")).toBe(false);
+    expect(allowed.has("8")).toBe(false);
+  });
+
+  it("回歸:「2 公噸」不再因單位字串而放行", () => {
+    const result = auditReplyQuantities("該項約 2 公噸。", facts, []);
+    expect(result.ok).toBe(false);
+    expect(result.violations).toEqual(["2"]);
+  });
+});
+
+describe("事實包為空時守門照跑(review 阻擋項:只剩指令的狀態最需要機器判)", () => {
+  it("編造排放量 → 攔;引用同業平均 → 攔", () => {
+    expect(
+      auditReplyQuantities("貴公司年排放約 8332.581 公噸 CO2e。", [], []).ok,
+    ).toBe(false);
+    expect(
+      auditReplyQuantities("同業平均約 5000 公噸,貴公司應相近。", [], []).ok,
+    ).toBe(false);
+  });
+
+  it("覆述使用者的數字 → 過;純拒答 → 過(沒有誤殺的代價)", () => {
+    expect(
+      auditReplyQuantities(
+        "您提到的 5000 公噸,帳本中查無資料。",
+        [],
+        ["我們大概排 5000 公噸吧?"],
+      ).ok,
+    ).toBe(true);
+    expect(
+      auditReplyQuantities("帳本中沒有這項資料,請先完成報告匯入。", [], []).ok,
+    ).toBe(true);
   });
 });
 
