@@ -281,7 +281,7 @@ export default function NotificationBell() {
                   onClick={() => close()}
                   className="text-text-muted hover:text-text-primary rounded-full p-1"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="size-5 shrink-0" />
                 </button>
               </div>
 

@@ -26,7 +26,7 @@
 - **待辦型**：團隊邀請（**活算不入庫** —— 邀請被接受／撤回／過期時通知必須同步消失）、錢包升級（入庫，由探針轉 true 收掉）
 - **事件型**：分析完成／失敗。入庫，點擊該則才算已讀，已讀後留在清單裡供翻閱
 
-面板只帶回最近 30 則，超過的部分在 `/user/notifications` 分頁翻閱；面板底部的連結常駐（只在被截斷時才出現的話，這個頁面就只有通知滿 30 則的人發現得了）。兩個畫面的每一列都經過 `notification_row.tsx`：文案、圖示、去處、未讀紅點只有那一個檔案說得算，`notification_bell_wiring.test.ts` 以「消費端不得出現 `NOTIFICATION_TYPE_STYLE` 等符號」把這件事釘住。
+面板只帶回最近 **10** 則（產品決定 20260826；曾為 20 → 30，理由的變遷見 `constants/notification.ts`），超過的部分在 `/user/notifications` 分頁翻閱；面板底部的連結常駐（只在被截斷時才出現的話，這個頁面就只有通知夠多的人發現得了）。兩個畫面的每一列都經過 `notification_row.tsx`：文案、圖示、去處、未讀紅點只有那一個檔案說得算，`notification_bell_wiring.test.ts` 以「消費端不得出現 `NOTIFICATION_TYPE_STYLE` 等符號」把這件事釘住。
 
 團隊邀請的活算來源是 `team_invitation.service.ts` 的 `listPendingInvitationsForUser`，**小鈴鐺與團隊頁共用同一支** —— 鈴鐺上那則通知點下去正是導到團隊頁，兩邊各查一次的話，症狀會是「通知說有一封邀請，點進去那一頁說沒有」。它同時吃兩條路徑：`inviteeAddress` 相符，或 `inviteeEmailKey` 屬於使用者**已驗證**的信箱。
 
@@ -57,7 +57,7 @@
 | D17 | 提示音第二次抵達起永久失效 | 抵達識別值改用伺服器端最新未讀時間 —— 完整理由見 **ADR 025 §7.1** |
 | D18 | 上鏈提交被拒 3 次寫下 `giveup.md` 後，訂單卡在非終態，完成與失敗都不通知 | `IssueRecorder` 也掃 `giveup.md`：標 FAILED 並通知。修在這裡是因為它是全站唯一寫入訂單終態的地方 |
 | D19 | 邀請通知只認 `inviteeAddress`，而 email 邀請那一欄是 NULL —— 已註冊的人被 email 邀請時，**鈴鐺與團隊頁都完全看不到**，而 `TEAM_INVITATION` 一直被列為已支援的型別 | `TeamInvitation.inviteeEmailKey`（canonical、索引）+ **查詢**改成位址 **OR** 已驗證信箱，兩個消費者收斂到 `listPendingInvitationsForUser`。**處置端見 D21** |
-| D20 | 面板底部「還有更多**未讀**通知」是一句假話，而且沒有出口 —— 清單改成含已讀之後，該旗標的意思已變成「歷史超過 30 則」，於是它會在未讀只有 2 則的畫面上宣稱還有更多未讀，與兩公分外的徽章直接矛盾 | 鍵改名 `has_more_completed` → `history_capped`（「僅顯示最近 N 則」，恆真）；底部加常駐連結通往新的 `/user/notifications` 分頁清單 |
+| D20 | 面板底部「還有更多**未讀**通知」是一句假話，而且沒有出口 —— 清單改成含已讀之後，該旗標的意思已變成「歷史超過上限」，於是它會在未讀只有 2 則的畫面上宣稱還有更多未讀，與兩公分外的徽章直接矛盾 | 鍵改名 `has_more_completed` → `history_capped`（「僅顯示最近 N 則」，恆真）；底部加常駐連結通往新的 `/user/notifications` 分頁清單 |
 | D21 | D19 只修了查詢那一半：accept／decline 仍是 `inviteeAddress` 比對，而 email 邀請那一欄是 NULL —— 鈴鐺推一則待辦、團隊頁畫兩顆按鈕、兩顆都必定失敗（D12 的形狀）。順帶查出兩支**都沒有逾期檢查** | 抽 `resolveRecipientKeys` + `canActOnInvitation`，查詢／接受／拒絕三處同源；同時補上 `isInviteExpired`；email 路徑的 `emailMatch` 記為 `MATCHED` 而非 null |
 | D22 | 完成通知在 DB 同步**之前**無條件發出，而同步失敗會把訂單寫成 FAILED 並再發一則失敗通知 —— 同一份工作同時收到「已完成」與「失敗」，兩則的 `dedupeKey` 都是永久唯一鍵，收不回也蓋不掉 | 完成通知移到同步之後，條件為 `finalOrderStatus !== FAILED`（**不是** `newOrderStatus === COMPLETED`，理由見下） |
 | D23 | 點面板裡的團隊邀請會扣錯徽章的桶（`completedCount`，但邀請屬 `todoCount`）、把提示音基準降 1 造出一次幽靈搖動、並對合成 id 打 `POST .../invitation:<uuid>/read` —— 活算待辦的 `readAt` 恆為 null，`markOneRead` 的早退擋不住它 | 判斷抽成 `lib/notification_read.ts` 的 `canMarkReadByClick`（以**待辦型**為準，不是以「活不活算」），由 `notification_row.tsx` 單點決定，與伺服器端 `markReadById` 的 `excludeTypes` 讀同一份常數 |
@@ -160,7 +160,7 @@ D31 順帶暴露了原本結構的問題：探針與動作寫在同一個迴圈�
 | 通知保留期限 | 表長到影響 `groupBy` 之前。天數走 ADR 017 簽章設定，且 `UNTRUSTED` 下清除 worker **必須拒絕執行**（刪資料不可逆） |
 | 分頁 / `loadMore` | `hasMoreCompleted` 常常是 true 時 |
 | 逐筆深連結 `?analysisId=` | 要動 `HistorySection` |
-| 「全部標為已讀」按鈕 | 使用者抱怨「看過但沒點的通知一直掛著徽章」時。**`POST /notifications/read` 已存在但目前沒有前端呼叫者** —— 加按鈕或刪端點，二選一 |
+| 「全部標為已讀」按鈕 | 使用者抱怨「看過但沒點的通知一直掛著徽章」時。端點與 service **已於 20260826 移除**（逐則已讀上線後零呼叫端，而留著要養限流登記、兩支測試的條目與一段描述已取消行為的註解）。要加回來時：`notificationRepo` 也要補回一支整批標記，且**必須排除待辦型**（D1），並記得逐則已讀的桶是 20/分 —— 這顆按鈕存在的理由之一正是讓使用者不必連點 30 次 |
 | 跨分頁同 tick 競態 | 兩個分頁同時 `claim()` 會都出聲。修它要讓每一聲延遲 150ms，代價不對等（見 `notification_sound.ts`） |
 | **邀請待辦「提醒一次」而不是「持續掛著」** | 有人抱怨放著不處理的邀請讓徽章一直亮。活算的待辦沒有已讀狀態，所以做不到「看過就淡掉」—— 那需要入庫，而入庫要連帶要回 `activeUnreadKey`（ADR 025 §5.1）。**觸發條件是抱怨，不是猜測**：持續掛著對「還沒處理的事」是正確行為 |
 | **以 passkey 註冊的人收不到 email 邀請的站內通知** | `User` 沒有 email 欄位，email 只存在於第三方綁定。這是能力的上限不是缺陷 —— 除非哪天 `User` 有了可驗證的信箱 |

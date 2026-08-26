@@ -9,7 +9,6 @@ import {
   listNotificationHistory,
   listNotifications,
   markNotificationRead,
-  markNotificationsRead,
   notifyAnalysisCompleted,
   notifyAnalysisFailed,
   notifyWalletUpgradeRequested,
@@ -238,23 +237,6 @@ jest.mock("@/repositories/notification.repo", () => {
         });
         return { counts, latestCreatedAt };
       }),
-
-      // Info: (20260825 - Julian) 真的把 readAt 寫進去，後續查詢會少掉那些列
-      markReadExcludingTypes: jest.fn(
-        async (
-          userId: string,
-          excludeTypes: readonly string[],
-          nowMs: number,
-        ) => {
-          const targets = unread(userId).filter(
-            (row) => !excludeTypes.includes(row.type),
-          );
-          targets.forEach((row) => {
-            row.readAt = new Date(nowMs);
-          });
-          return targets.length;
-        },
-      ),
 
       // Info: (20260825 - Julian) 真的依 type 與 userIds 過濾，且回「有未讀的人」不是「未讀的列」
       listUserIdsWithUnread: jest.fn(
@@ -568,36 +550,12 @@ describe("清單", () => {
   });
 });
 
-describe("標記已讀", () => {
-  /**
-   * Info: (20260825 - Julian) D1：打開鈴鐺不得收掉待辦型。
-   *
-   * 斷言成對：完成通知真的被收掉（證明有做事）**且**待辦還在
-   * （證明沒做過頭）。只驗後者的話，「一律不標記」也會通過。
-   */
-  it("只標記事件型，待辦型不受影響", async () => {
-    fakeRepo.__seed([
-      row({ id: "w", type: NOTIFICATION_TYPE.WALLET_UPGRADE }),
-      row({ id: "d1" }),
-      row({ id: "d2" }),
-    ]);
-
-    const marked = await markNotificationsRead({ userId: USER, nowMs: NOW_MS });
-
-    expect(marked).toBe(2);
-    const after = await getNotificationSummary({
-      userId: USER,
-      address: ADDRESS,
-      nowMs: NOW_MS,
-    });
-    expect(after).toEqual({
-      todoCount: 1,
-      completedCount: 0,
-      // Info: (20260825 - Julian) 事件型被標已讀後，剩下的最新未讀是那則待辦
-      latestUnreadAt: NOW_MS - 100,
-    });
-  });
-
+/**
+ * Info: (20260826 - Julian) 「全部標為已讀」的端點與 service 已於 20260826 移除
+ *（逐則已讀上線後零呼叫端），因此這一組只剩**待辦型的關閉路徑** ——
+ * 它由「事情真的做完了」驅動（探針轉 true），與使用者的已讀行為無關。
+ */
+describe("待辦型的關閉", () => {
   /**
    * Info: (20260825 - Julian) 待辦型的關閉路徑：事情做完了才收。
    * 由 `request_wallet_upgrades.ts` 在探針轉 true 時呼叫。
@@ -695,8 +653,9 @@ describe("逐則標記已讀", () => {
    * Info: (20260825 - Julian) 核心：只動被點的那一則。
    *
    * 斷言成對：那一則真的變已讀（證明有做事）**且**另一則還是未讀
-   * （證明沒做過頭）。只驗前者的話，`markReadExcludingTypes` 那支
-   * 「全部標已讀」拿來實作這個功能也會通過 —— 而那正是這次要改掉的行為。
+   * （證明沒做過頭）。只驗前者的話，拿一支「全部標已讀」來實作這個功能
+   * 也會通過 —— 而那正是這次改掉的行為（該端點與 service 已於 20260826
+   * 移除，逐則已讀上線之後它就沒有任何呼叫端）。
    */
   it("只標記被點的那一則", async () => {
     fakeRepo.__seed([row({ id: "clicked" }), row({ id: "untouched" })]);
@@ -1142,7 +1101,7 @@ describe("發射函式的 payload 與 dedupeKey", () => {
  */
 describe("上限常數的對外契約", () => {
   it.each([
-    ["NOTIFICATION_HISTORY_LIMIT", NOTIFICATION_HISTORY_LIMIT, 30],
+    ["NOTIFICATION_HISTORY_LIMIT", NOTIFICATION_HISTORY_LIMIT, 10],
     ["NOTIFICATION_TODO_LIST_LIMIT", NOTIFICATION_TODO_LIST_LIMIT, 20],
     ["NOTIFICATION_PAGE_SIZE", NOTIFICATION_PAGE_SIZE, 20],
     ["NOTIFICATION_PAGE_SIZE_MAX", NOTIFICATION_PAGE_SIZE_MAX, 100],
@@ -1151,17 +1110,18 @@ describe("上限常數的對外契約", () => {
   });
 
   /**
-   * Info: (20260826 - Julian) 面板的上限要大於待辦的上限。
+   * Info: (20260826 - Julian) 這裡原本有一條「歷史上限 > 待辦上限」的斷言，已移除。
    *
-   * 不是美觀問題：待辦與事件走兩支查詢，而畫面把兩節疊在同一個面板裡。
-   * 待辦上限若大於歷史上限，一個待辦很多的人會把面板整個佔滿，
-   * 而「工作完成」那一節連一則都排不進去。
+   * 那是**臆測出來的約束**：我當時的理由是「待辦很多會把完成區擠出面板」，
+   * 但待辦型實際上最多一兩則（邀請 + 錢包升級），20 是安全上限而不是預期值，
+   * 而面板本來就會捲動。歷史上限降到 10 之後那條就紅了 —— 紅的是斷言，
+   * 不是程式。
+   *
+   * 留這段話而不是靜靜刪掉：**寫測試時把「我覺得應該如此」寫成不變式，
+   * 代價是它日後會擋住正確的改動**，而擋住的時候看起來像抓到了缺陷。
+   * 判準是「這條規則違反時，使用者會遇到什麼具體的壞事？」——
+   * 答不出具體後果的，就不該是斷言。
    */
-  it("歷史上限大於待辦上限", () => {
-    expect(NOTIFICATION_HISTORY_LIMIT).toBeGreaterThan(
-      NOTIFICATION_TODO_LIST_LIMIT,
-    );
-  });
 
   // Info: (20260826 - Julian) 單頁預設不得大於硬上限，否則預設值本身就會被夾
   it("預設頁面大小不超過硬上限", () => {

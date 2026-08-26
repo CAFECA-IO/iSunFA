@@ -74,7 +74,7 @@ beforeAll(async () => {
  * 而且兩個都真的發生了：
  *
  * 1. 漏收拾看不出來。第一則測試建的 `dedupe` 那一列沒人刪，於是第三則的
- *    `markReadExcludingTypes` 標到 2 列而不是 1 列 —— 紅的是第三則，
+ *    `markReadExcludingTypes`（當時的整批標記，已隨端點移除）標到 2 列而不是 1 列 —— 紅的是第三則，
  *    錯的是第一則。
  * 2. 收拾寫在測試結尾，斷言失敗就不會執行。第三則一紅，它後面那行
  *    `markReadByType` 沒跑，第四則跟著紅；第四則一紅，第五則再跟著紅。
@@ -162,41 +162,6 @@ describe("NotificationRepository（真資料庫）", () => {
     expect(a).not.toBeNull();
     expect(b).not.toBeNull();
     expect(a?.id).not.toBe(b?.id);
-  });
-
-  /**
-   * Info: (20260825 - Julian) D1 的核心：`notIn` 真的排除待辦型。
-   *
-   * 斷言成對：事件型真的被標記（證明有做事）**且**待辦型還在
-   * （證明沒做過頭）。只驗後者的話，「一律不標記」也會通過。
-   */
-  it("markReadExcludingTypes 不動待辦型", async () => {
-    await seed(NOTIFICATION_TYPE.WALLET_UPGRADE, "todo", new Date(NOW_MS));
-    await seed(NOTIFICATION_TYPE.ANALYSIS_COMPLETED, "done", new Date(NOW_MS));
-
-    const marked = await notificationRepo.markReadExcludingTypes(
-      userId,
-      [NOTIFICATION_TYPE.WALLET_UPGRADE],
-      NOW_MS,
-    );
-
-    expect(marked).toBe(1);
-    const { counts } = await notificationRepo.summarizeUnread(userId);
-    expect(counts.get(NOTIFICATION_TYPE.WALLET_UPGRADE)).toBe(1);
-    expect(counts.get(NOTIFICATION_TYPE.ANALYSIS_COMPLETED)).toBeUndefined();
-
-    // Info: (20260825 - Julian) 待辦型的關閉路徑：指名收掉
-    expect(
-      await notificationRepo.markReadByType(
-        userId,
-        NOTIFICATION_TYPE.WALLET_UPGRADE,
-        NOW_MS,
-      ),
-    ).toBe(1);
-    const cleared = await notificationRepo.summarizeUnread(userId);
-    expect(cleared.counts.size).toBe(0);
-    // Info: (20260825 - Julian) 一則未讀都沒有時要回 null，不是某個殘留的時間
-    expect(cleared.latestCreatedAt).toBeNull();
   });
 
   /**
@@ -471,9 +436,28 @@ describe("NotificationRepository（真資料庫）", () => {
       `${KEY_PREFIX}mine`,
     ]);
 
+    /**
+     * Info: (20260826 - Julian) 改以 `markReadById` 驗跨租戶。
+     *
+     * 原本這裡用 `markReadExcludingTypes`（整批標記），而那支隨著
+     * 「全部標為已讀」端點一起移除了 —— 它自從逐則已讀上線後就沒有呼叫端。
+     * 換成逐則的那一支不是將就：**它才是今天真的會被打到的路徑**，
+     * 而跨租戶的 `where` 條件正是需要驗在活路徑上。
+     */
+    const theirRow = await prisma.notification.findFirst({
+      where: { userId: otherUserId, dedupeKey: `${KEY_PREFIX}theirs` },
+    });
+    expect(theirRow).not.toBeNull();
+
+    // Info: (20260826 - Julian) 拿別人的 id 來標記，必須什麼都不做
     expect(
-      await notificationRepo.markReadExcludingTypes(userId, [], NOW_MS),
-    ).toBe(1);
+      await notificationRepo.markReadById(
+        userId,
+        theirRow?.id ?? "",
+        [],
+        NOW_MS,
+      ),
+    ).toBe(0);
 
     // Info: (20260825 - Julian) 另一位的通知必須原封不動
     const theirs = await notificationRepo.summarizeUnread(otherUserId);

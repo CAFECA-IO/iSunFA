@@ -333,42 +333,13 @@ export async function listNotificationHistory(params: {
 }
 
 /**
- * Info: (20260821 - Luphia) 打開鈴鐺＝看過了：事件型全部標已讀。
- * derived 待辦不受影響（它的消失只由來源狀態決定）。
- *
- * Info: (20260825 - Julian) **入庫的待辦型也不受影響**（計畫書 D1）。
- *
- * 原本 `markAllRead` 不分型別，於是點一下鈴鐺就會把「系統要求升級錢包」
- * 標成已讀 —— 連展開都不必。而它補不回來：`dedupeKey` 是永久唯一鍵，
- * 重跑腳本會撞 P2002 並被回報成「先前已發過」，
- * ADR 021 rollout 第 5 步從此對那個人失效。
- *
- * 待辦型的關閉走 `dismissWalletUpgrade`：由「事情真的做完了」驅動，
- * 不由「使用者看過了」驅動。
- */
-export async function markNotificationsRead(params: {
-  userId: string;
-  nowMs: number;
-}): Promise<number> {
-  return guarded(
-    () =>
-      notificationRepo.markReadExcludingTypes(
-        params.userId,
-        TODO_NOTIFICATION_TYPES,
-        params.nowMs,
-      ),
-    { operation: "markNotificationsRead", userId: params.userId },
-  );
-}
-
-/**
  * Info: (20260825 - Julian) 把**單獨一則**標為已讀（點哪則收哪則）。
  *
  * 已讀從「打開鈴鐺」改成「點擊個別通知」的理由：面板現在會留著已讀的通知
  * 讓人翻歷史，而未讀靠一顆紅點區分。如果打開面板就全部變已讀，
  * 那顆紅點在使用者能看清楚之前就全滅了 —— 它會是一個永遠不出現的提示。
  *
- * `TODO_NOTIFICATION_TYPES` 一樣排除。這裡的排除比 `markNotificationsRead`
+ * `TODO_NOTIFICATION_TYPES` 一樣排除。這裡的排除比「全部已讀」那條路徑
  * 更重要：那一支的輸入只有 userId，而這一支的輸入是**前端傳來的 id** ——
  * 沒有這道條件，任何人只要湊出一個 id 就能把自己的錢包升級待辦收掉，
  * 而那則待辦補不回來（D1）。

@@ -9,7 +9,9 @@
 
 ## 1. 這次新增的 schema
 
-**一張新表、一個既有表的新欄位、零個新 enum、零個新 env、零個媒體資產。**
+**一張新表、一個既有表的新欄位、零個新 enum、零個媒體資產。**
+
+env 有四個 `NOTIFICATION_RL_*`，但它們**全部可省略**（程式碼有保底值），因此部署時不需要設定任何東西。**刻意不進 `.env.example`** —— 理由見 §4，而它們仍要登記進 `env_example_contract.test.ts` 的 `RATE_LIMIT_KEYS`（見 §5.5）。「零個新 env」講的是「不必設定」，不是「程式不讀」。
 
 | 物件 | 說明 |
 |---|---|
@@ -48,7 +50,7 @@ npx tsx scripts/backfill_invitee_email_key.ts --commit
 
 不是「跳過那幾列、其餘照寫」：對不上代表 `canonicalizeEmailForKey` 的行為與寫 `pending_key` 當時不同，那麼其他列算出來的值**也不可信**，它們只是剛好沒踩到有差異的那部分規則（子地址、Gmail 點號）。看到中止就去查那支函式，不要繞過。
 
-### 2.1 `request_wallet_upgrades.ts`：跑之前「無法判定」必須是 0
+### 2.3 `request_wallet_upgrades.ts`：跑之前「無法判定」必須是 0
 
 腳本對每位使用者的錢包 `eth_call supportsInterface(0x150b7a02)`，探針是三態：
 
@@ -86,9 +88,17 @@ pm2 restart isunfa-worker   # ← 兩個都要，見 §5.1
 
 npx tsx scripts/backfill_invitee_email_key.ts            # 預演，看數字
 npx tsx scripts/backfill_invitee_email_key.ts --commit   # 見 §2.2
+
+# ↓ ADR 021 rollout 第 5 步：不做的話，WALLET_UPGRADE 一則都不會發出
+npx tsx scripts/request_wallet_upgrades.ts               # 預演，三個數字要等於掃描人數
+npx tsx scripts/request_wallet_upgrades.ts --commit      # 「無法判定」是 0 才可以，見 §2.3
 ```
 
 回填排在重啟之後是刻意的：它不影響服務起不起得來，而排在前面只會讓一個「晚做也沒關係」的步驟卡住部署。
+
+**`request_wallet_upgrades.ts` 先前不在這份清單裡**，而照著逐行執行的人不會發出任何 `WALLET_UPGRADE` 待辦 —— 那是這個型別存在的唯一理由，且失效時**完全不報錯**：鈴鐺正常、其他通知正常，只是待辦區永遠空的。與 §5.1（漏重啟 worker）同一族。
+
+它與 `backfill_invitee_email_key.ts` 的容錯方向相反，值得並排記著：回填漏做只是「晚一點生效」，而這一支**做錯不可逆**（`dedupeKey` 永久唯一，發錯收不回）。所以它的 `--commit` 有兩道程式層守門（「無法判定」> 0、以及「全體都判為尚待升級」皆中止），漏做則沒有任何守門 —— 只有這一行。
 
 ### 3.1 `db push` 之後的驗證
 
@@ -132,7 +142,7 @@ SELECT count(*) FROM team_invitation
 | `.env` / `.env.example` | `NOTIFICATION_RL_*` 只讀 `process.env`、有程式碼保底值、**不進 `.env.example`** —— 那裡的每個鍵都被視為必填，加進去會讓既有部署重啟後掉進「尚未初始化」狀態，**而該狀態下的部署精靈路徑沒有身分驗證** |
 | `system_setting`（DB） | **絕不要用 SQL 直接改** —— manifest digest 失配會讓快照轉 `UNTRUSTED`，而該狀態下 `get()` 對**每一個**設定丟錯，OAuth、LLM、SMTP 一起停掉 |
 | `AuditLog` | 通知是投遞不是軌跡（ADR 025 §0） |
-| `team_invitation` | 待辦型是活算的，邀請表不需要任何配合欄位 |
+| `team_invitation` 的**既有**欄位 | 待辦型是活算的，不需要通知的副本。但這次**有**一個配合欄位：`invitee_email_key`（見 §1、§2.2、§6）—— 它是查詢用的投影，不是通知的副本，兩件事不要混為一談 |
 
 ---
 
@@ -238,3 +248,5 @@ SELECT user_id, count(*) FROM notification WHERE read_at IS NULL
 | 10 | 設計書與實作一致；不一致時改的是**錯的那一邊** |
 | 11 | 每條驗收判準問過「缺陷發生時它會不會照樣通過？」 |
 | 12 | PR 沒有混入不相關的東西（`forge_out/` 是別的事） |
+| 13 | **§3 的指令清單跑完之後，`WALLET_UPGRADE` 待辦真的發出去了** —— 這一步先前不在清單裡，而漏做完全不報錯（鈴鐺正常、其他通知正常，只有待辦區永遠空的） |
+| 14 | 本檢查表**自己內部**沒有互相矛盾：§4「不要碰的東西」與 §1／§2 的新增欄位對得上、章節編號沒有重複、§3 的指令清單涵蓋所有需要人工執行的腳本 |

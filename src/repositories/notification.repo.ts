@@ -246,35 +246,6 @@ export class NotificationRepository {
   }
 
   /**
-   * Info: (20260825 - Julian) 把**指定型別以外**的未讀標為已讀。
-   *
-   * 以 `readAt: null` 為條件而不是逐 id：小鈴鐺打開就是「我看過了」，
-   * 逐 id 會讓「清單截斷」之外的通知永遠未讀。
-   *
-   * `excludeTypes` 是這次新增的關鍵：待辦型（錢包升級）不能被「打開鈴鐺」
-   * 收掉。它存在 DB、`dedupeKey` 是永久唯一鍵，一旦被誤標已讀，
-   * 重跑 `request_wallet_upgrades.ts` 會撞 P2002 而不補發 ——
-   * 使用者從此不知道自己需要升級，且沒有任何觀測量會顯示這件事（計畫書 D1）。
-   */
-  async markReadExcludingTypes(
-    userId: string,
-    excludeTypes: readonly string[],
-    nowMs: number,
-  ): Promise<number> {
-    const result = await prisma.notification.updateMany({
-      where: {
-        userId,
-        readAt: null,
-        ...(excludeTypes.length > 0
-          ? { type: { notIn: [...excludeTypes] } }
-          : {}),
-      },
-      data: { readAt: new Date(nowMs) },
-    });
-    return result.count;
-  }
-
-  /**
    * Info: (20260825 - Julian) 這批使用者裡，誰有某一型別的未讀（唯讀）。
    *
    * 給預演用：`request_wallet_upgrades.ts` 不帶 `--commit` 時要能回報

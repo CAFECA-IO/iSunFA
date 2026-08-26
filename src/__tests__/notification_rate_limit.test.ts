@@ -9,7 +9,6 @@ import { RateLimitBucketEnum, RATE_LIMIT_RULES } from "@/constants/rate_limit";
 import { GET as getList } from "@/app/api/v1/user/notifications/route";
 import { GET as getSummary } from "@/app/api/v1/user/notifications/summary/route";
 import { GET as getHistory } from "@/app/api/v1/user/notifications/history/route";
-import { POST as postReadAll } from "@/app/api/v1/user/notifications/read/route";
 import { POST as postReadOne } from "@/app/api/v1/user/notifications/[notification_id]/read/route";
 import { GET as getTeamInvitations } from "@/app/api/v1/user/team/invitations/route";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
@@ -18,7 +17,6 @@ import {
   listNotificationHistory,
   listNotifications,
   markNotificationRead,
-  markNotificationsRead,
 } from "@/services/notification.service";
 import { listPendingInvitationsForUser } from "@/services/team_invitation.service";
 
@@ -66,7 +64,6 @@ jest.mock("@/services/notification.service", () => ({
     totalPages: 1,
     currentPage: 1,
   })),
-  markNotificationsRead: jest.fn(async () => 0),
   markNotificationRead: jest.fn(async () => false),
 }));
 
@@ -163,7 +160,6 @@ const EXPECTED_BUCKET: Record<string, Record<string, RateLimitBucketEnum>> = {
    * 一頁一頁把整張表抓走。
    */
   "history/route.ts": { GET: RateLimitBucketEnum.NOTIFICATION_READ },
-  "read/route.ts": { POST: RateLimitBucketEnum.NOTIFICATION_WRITE },
   /**
    * Info: (20260825 - Julian) 逐則已讀也走 `WRITE`，而且它比全部已讀更需要。
    *
@@ -226,7 +222,7 @@ describe("小鈴鐺端點的限流覆蓋率", () => {
       const identityAt = handler.body.indexOf("getIdentityFromDeWT(");
       const limitAt = handler.body.indexOf("enforceRateLimit(");
       const serviceAt = handler.body.search(
-        /(getNotificationSummary|listNotificationHistory|listNotifications|markNotificationsRead|markNotificationRead)\(/,
+        /(getNotificationSummary|listNotificationHistory|listNotifications|markNotificationRead)\(/,
       );
       if (identityAt === -1 || serviceAt === -1) return [];
       return identityAt < limitAt && limitAt < serviceAt
@@ -244,7 +240,7 @@ describe("小鈴鐺端點的限流覆蓋率", () => {
         (handler) =>
           !handler.body.includes("getIdentityFromDeWT(") ||
           handler.body.search(
-            /(getNotificationSummary|listNotificationHistory|listNotifications|markNotificationsRead|markNotificationRead)\(/,
+            /(getNotificationSummary|listNotificationHistory|listNotifications|markNotificationRead)\(/,
           ) === -1,
       )
       .map((handler) => `${handler.file}:${handler.method}`);
@@ -364,12 +360,6 @@ const ENDPOINTS = [
     perMinute: READ_PER_MINUTE,
     service: () => listNotificationHistory,
     call: (address: string) => getHistory(requestAs(address, "/history")),
-  },
-  {
-    name: "read-all",
-    perMinute: WRITE_PER_MINUTE,
-    service: () => markNotificationsRead,
-    call: (address: string) => postReadAll(requestAs(address, "/read", "POST")),
   },
   {
     name: "read-one",
@@ -507,9 +497,11 @@ describe("限流真的擋在路徑上（行為）", () => {
       await getSummary(requestAs(address, "/summary"));
     }
 
-    const write = await postReadAll(requestAs(address, "/read", "POST"));
+    const write = await postReadOne(requestAs(address, "/n-1/read", "POST"), {
+      params: Promise.resolve({ notification_id: "n-1" }),
+    });
 
     expect(write.status).toBe(200);
-    expect(asMock(markNotificationsRead)).toHaveBeenCalledTimes(1);
+    expect(asMock(markNotificationRead)).toHaveBeenCalledTimes(1);
   });
 });

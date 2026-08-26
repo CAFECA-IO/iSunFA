@@ -7,12 +7,12 @@ import { join } from "path";
 
 import { GET as getSummary } from "@/app/api/v1/user/notifications/summary/route";
 import { GET as getList } from "@/app/api/v1/user/notifications/route";
-import { POST as postRead } from "@/app/api/v1/user/notifications/read/route";
+import { POST as postReadOne } from "@/app/api/v1/user/notifications/[notification_id]/read/route";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import {
   getNotificationSummary,
   listNotifications,
-  markNotificationsRead,
+  markNotificationRead,
 } from "@/services/notification.service";
 import type { INotificationSummary } from "@/interfaces/notification";
 
@@ -54,10 +54,23 @@ jest.mock("@/services/notification.service", () => ({
     completed: [],
     hasMoreCompleted: false,
   })),
-  markNotificationsRead: jest.fn(async () => 3),
+  markNotificationRead: jest.fn(async () => true),
 }));
 
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
+
+/**
+ * Info: (20260826 - Julian) 逐則已讀的 handler 需要 `params`。
+ *
+ * 這些測試原本打的是 `POST /notifications/read`（全部標為已讀）—— 那支端點
+ * 與它的 service 已於 20260826 移除：逐則已讀上線之後它就沒有任何呼叫端，
+ * 而留著要養限流登記、兩支測試的條目、以及一段描述已取消行為的註解。
+ *
+ * 這裡把每一條斷言**搬到逐則那支**而不是刪掉：它們驗的是身分來源、
+ * body 不可信、未登入擋下 —— 三件事在新的端點上一樣要成立，
+ * 而它才是今天真的會被打到的路徑。
+ */
+const ONE_ID = { params: Promise.resolve({ notification_id: "n-1" }) };
 
 function req(path: string, method = "GET"): NextRequest {
   return new NextRequest(
@@ -116,7 +129,7 @@ describe("三支 route 的接線", () => {
   it("三支 route 都以 Authorization header 換身分", async () => {
     await getSummary(req("/summary"));
     await getList(req(""));
-    await postRead(req("/read", "POST"));
+    await postReadOne(req("/n-1/read", "POST"), ONE_ID);
 
     expect(asMock(getIdentityFromDeWT)).toHaveBeenCalledTimes(3);
     asMock(getIdentityFromDeWT).mock.calls.forEach((call) => {
@@ -131,13 +144,13 @@ describe("三支 route 的接線", () => {
     expect(asMock(listNotifications)).toHaveBeenCalledTimes(1);
   });
 
-  it("read：委派給 service 並回已讀數", async () => {
-    const response = await postRead(req("/read", "POST"));
-    const body = (await response.json()) as { payload: { read: number } };
+  it("read：委派給 service 並回是否標記成功", async () => {
+    const response = await postReadOne(req("/n-1/read", "POST"), ONE_ID);
+    const body = (await response.json()) as { payload: { read: boolean } };
 
-    expect(body.payload.read).toBe(3);
-    expect(asMock(markNotificationsRead)).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: "user-1" }),
+    expect(body.payload.read).toBe(true);
+    expect(asMock(markNotificationRead)).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: "user-1", notificationId: "n-1" }),
     );
   });
 
@@ -150,16 +163,17 @@ describe("三支 route 的接線", () => {
    * 這條送一個**不同的** userId，讓那個變異無處可躲。
    */
   it("read：body 裡的 userId 一律無效", async () => {
-    const response = await postRead(
-      new NextRequest("https://isunfa.com/api/v1/user/notifications/read", {
+    const response = await postReadOne(
+      new NextRequest("https://isunfa.com/api/v1/user/notifications/n-1/read", {
         method: "POST",
         headers: { authorization: "Bearer dewt" },
         body: JSON.stringify({ userId: "someone-else" }),
       }),
+      ONE_ID,
     );
 
     expect(response.status).toBe(200);
-    expect(asMock(markNotificationsRead)).toHaveBeenCalledWith(
+    expect(asMock(markNotificationRead)).toHaveBeenCalledWith(
       expect.objectContaining({ userId: "user-1" }),
     );
   });
@@ -167,7 +181,7 @@ describe("三支 route 的接線", () => {
   it.each([
     ["summary", () => getSummary(req("/summary"))],
     ["list", () => getList(req(""))],
-    ["read", () => postRead(req("/read", "POST"))],
+    ["read", () => postReadOne(req("/n-1/read", "POST"), ONE_ID)],
   ])("%s：未登入一律擋下", async (_label, call) => {
     asMock(getIdentityFromDeWT).mockResolvedValue(null);
 
@@ -182,7 +196,7 @@ describe("三支 route 的接線", () => {
     expect(response.status).toBe(401);
     expect(asMock(getNotificationSummary)).not.toHaveBeenCalled();
     expect(asMock(listNotifications)).not.toHaveBeenCalled();
-    expect(asMock(markNotificationsRead)).not.toHaveBeenCalled();
+    expect(asMock(markNotificationRead)).not.toHaveBeenCalled();
   });
 });
 
