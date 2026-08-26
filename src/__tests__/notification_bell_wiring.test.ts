@@ -491,18 +491,6 @@ describe("來源與畫面的接線（掃描）", () => {
   );
 
   /**
-   * Info: (20260821 - Luphia) 搖鈴的條件必須是「計數**增加**」：
-   * 拿「有沒有未讀」當條件會讓沒收掉的舊通知每分鐘搖一次鈴。
-   */
-  /**
-   * Info: (20260825 - Julian) 這條原本是對元件原始碼做 `toMatch(/total > last/)`，
-   * 而保留那行文字、把 `playChime()` 搬出 if 就能繞過它。
-   *
-   * 判斷已經搬進 `hasNewArrival`，行為由 `notification_sound.test.ts`
-   * 真的測（首抓不算、持平不算、下降不算、上升才算）。這裡只剩接線：
-   * 元件掛的是 `arrivalTick`，而它從 0 開始，所以首抓不會觸發。
-   */
-  /**
    * Info: (20260826 - Julian) D17 的整條鍊子要接起來（review B6）。
    *
    * 上面的 route 契約測試釘住「端點回得出 `latestUnreadAt`」，但那只是第一段。
@@ -539,6 +527,16 @@ describe("來源與畫面的接線（掃描）", () => {
     expect(codeOf(...segments)).toMatch(/from "@\/interfaces\/notification"/);
   });
 
+  /**
+   * Info: (20260821 - Luphia) 搖鈴的條件必須是「計數**增加**」：
+   * 拿「有沒有未讀」當條件會讓沒收掉的舊通知每分鐘搖一次鈴。
+   *
+   * Info: (20260825 - Julian) 這條原本是對元件原始碼做 `toMatch(/total > last/)`，
+   * 而保留那行文字、把 `playChime()` 搬出 if 就能繞過它。判斷已經搬進
+   * `hasNewArrival`，行為由 `notification_sound.test.ts` 真的測（首抓不算、
+   * 持平不算、下降不算、上升才算）。這裡只剩接線：元件掛的是 `arrivalTick`，
+   * 而它從 0 開始，所以首抓不會觸發。
+   */
   it("搖動掛在 arrivalTick 上（首抓的 0 不觸發）", () => {
     const bell = codeOf("src", "components", "header", "notification_bell.tsx");
 
@@ -615,6 +613,15 @@ describe("通知列只有一份實作", () => {
   const MESSAGE_LIB = ["src", "lib", "notification_message.ts"];
 
   /**
+   * Info: (20260826 - Julian) 取「查看全部通知」那個連結的 class 字串。
+   * 三條樣式測試都要它，各寫一次正規表示式就是三份會分岔的東西。
+   */
+  const viewAllClassOf = (bell: string): string =>
+    /className="([^"]*)"[\s\S]{0,160}?\{t\("notification\.view_all"\)/.exec(
+      bell,
+    )?.[1] ?? "";
+
+  /**
    * Info: (20260826 - Julian) 每一個決定只有一個擁有者，而擁有者不只一個檔案。
    *
    * 樣式與去處在 `notification_row.tsx`（畫面決定），文案在
@@ -648,12 +655,6 @@ describe("通知列只有一份實作", () => {
     expect(row).toMatch(/isNotificationType\(/);
   });
 
-  /**
-   * Info: (20260826 - Julian) 鈴鐺底部那句話必須有出口。
-   *
-   * 它原本是一句沒有任何操作的「還有更多未讀通知」——使用者看得到一個
-   * 承諾，點不到對應的東西。而那句話在面板改成保留已讀之後連內容都不對了。
-   */
   /**
    * Info: (20260826 - Julian) 未讀紅點靠 `readAt` 判斷，而不是靠「在不在清單裡」。
    *
@@ -693,33 +694,6 @@ describe("通知列只有一份實作", () => {
   });
 
   /**
-   * Info: (20260826 - Julian) 手機版面板必須捲得到底（實測回報 20260826）。
-   *
-   * 捲動區是 `flex-1 overflow-y-auto`，而 flex item 的 `min-height` 預設是
-   * `auto`（不得縮到比內容小）—— 少了 `min-h-0`，它會長到跟內容一樣高、
-   * 把 `h-dvh` 的父層撐破，`overflow-y-auto` 則永遠不會生效（溢位的是父層）。
-   *
-   * 後果不是「有點難用」：底下那個常駐的「查看全部通知」被推到視窗外，
-   * 使用者滑不到也點不到 —— 一個為了「讓歷史被發現」而加的入口，
-   * 在通知一多的時候就消失，而那正是最需要它的時候。
-   *
-   * 這條是字串比對，因為 CSS 類別漏掉時 `tsc` 與 `lint` 都不會有意見
-   *（與 D3 同族），而 repo 沒有 jsdom，量不到實際高度。
-   */
-  it("面板的捲動區有 min-h-0（否則捲不到底、底部連結點不到）", () => {
-    const bell = codeOf(...BELL);
-
-    expect(bell).toMatch(/min-h-0[^"]*flex-1[^"]*overflow-y-auto/);
-  });
-
-  /**
-   * Info: (20260826 - Julian) 底部連結必須在捲動區**之外**。
-   *
-   * 放進捲動區的話，通知一多它就被推到看不見的地方 —— 而那與上面那個
-   * 缺陷的症狀一模一樣，只是成因不同。兩條都要，因為修好其中一個
-   * 不會讓另一個變紅。
-   */
-  /**
    * Info: (20260826 - Julian) 掛鈴鐺的 shell **不得**自己帶 `backdrop-filter`（實測 20260826）。
    *
    * 這是手機版面板捲不動、底部按鈕點不到的**真正成因**，而我在找到它之前
@@ -750,26 +724,40 @@ describe("通知列只有一份實作", () => {
   });
 
   /**
-   * Info: (20260826 - Julian) 底部按鈕要**看得出是按鈕**（實測回報 20260826）。
+   * Info: (20260826 - Julian) 底部入口的樣式（實測回報 20260826）。
    *
    * 它先前是一行置中的灰色小字，與上面兩個分節標題（「待辦事項」「工作完成」）
    * 幾乎一樣 —— 使用者的原話是「一點都不像按鈕，反而像列表標題」。
    *
-   * 驗的是三個彼此獨立的可視線索：底色、圓角、以及不是 `text-text-muted`
-   *（那正是兩個分節標題用的顏色）。任何一個掉了都會讓它往「標題」滑回去。
+   * 現在的設計是**兩種尺寸兩種角色**：手機版整條底色填滿（分節標題不會有的
+   * 東西），桌機版切換成面板底部的淡色連結。
+   *
+   * 斷言只驗**結構**（有沒有底色、有沒有隨尺寸切換、是不是與標題同色），
+   * 不驗特定色票 —— 配色是產品隨時可以調的，而把色票寫進斷言，
+   * 換一次顏色就要改一次測試，那種測試最後都會被改成通過而不是被讀懂。
    */
-  it("底部入口有按鈕的樣子，不是分節標題的樣子", () => {
-    const bell = codeOf(...BELL);
-    const linkClass =
-      /className="([^"]*)"[\s\S]{0,120}?\{t\("notification\.view_all"\)/.exec(
-        bell,
-      );
+  it("底部入口在手機版有底色填滿（分節標題不會有）", () => {
+    // Info: (20260826 - Julian) 沒有斷點前綴的 bg-*，也就是手機版就吃得到的底色
+    expect(viewAllClassOf(codeOf(...BELL))).toMatch(/(^|\s)bg-\S+/);
+  });
 
-    expect(linkClass).not.toBeNull();
-    const cls = linkClass?.[1] ?? "";
-    expect(cls).toContain("bg-brand");
-    expect(cls).toContain("rounded-");
-    expect(cls).not.toContain("text-text-muted");
+  it("底部入口在桌機版換一種樣子", () => {
+    const cls = viewAllClassOf(codeOf(...BELL));
+
+    expect(cls).toMatch(/md:bg-\S+/);
+    expect(cls).toMatch(/md:text-\S+/);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 這條才是「像不像標題」的直接判準：
+   * 兩個分節標題用 `bg-gray-100`，這個入口必須是別的東西。
+   */
+  it("底部入口的底色不是分節標題那一種", () => {
+    const bell = codeOf(...BELL);
+
+    // Info: (20260826 - Julian) 前提：分節標題真的還在用那個底色
+    expect(bell).toContain("bg-gray-100");
+    expect(viewAllClassOf(bell)).not.toContain("bg-gray-100");
   });
 
   /**
@@ -794,6 +782,12 @@ describe("通知列只有一份實作", () => {
     expect(codeOf(...BELL)).not.toMatch(/^\s*modal\s*$/m);
   });
 
+  /**
+   * Info: (20260826 - Julian) 鈴鐺底部那句話必須有出口。
+   *
+   * 它原本是一句沒有任何操作的「還有更多未讀通知」——使用者看得到一個
+   * 承諾，點不到對應的東西。而那句話在面板改成保留已讀之後連內容都不對了。
+   */
   it("鈴鐺底部有通往完整清單的連結", () => {
     expect(codeOf(...BELL)).toContain('href="/user/notifications"');
   });
