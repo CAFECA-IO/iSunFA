@@ -1,8 +1,11 @@
 import { ResumableJob } from "@/generated";
+import { isCarbonChatChannelOwnedBy } from "@/constants/carbon_chatbot";
 import {
   JOB_PAUSE_REASON,
   JOB_RESUME_SCAN_BATCH,
+  JOB_SPEND_MODE,
   JOB_STATUS,
+  JOB_TYPE,
   type JobPauseReason,
   type JobType,
 } from "@/constants/resumable_job";
@@ -19,7 +22,10 @@ import { chatroomRepo } from "@/repositories/chatroom.repo";
 import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
 import { estimateFaithHoldCredits } from "@/lib/faith_billing";
 import { resolveBillingTeamId } from "@/services/carbon_billing.service";
-import { resumableJobRepo } from "@/repositories/resumable_job.repo";
+import {
+  ResumableJobOwnershipError,
+  resumableJobRepo,
+} from "@/repositories/resumable_job.repo";
 import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
 import { teamQuotaUsageRepo } from "@/repositories/team_quota_usage.repo";
 import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
@@ -83,9 +89,16 @@ export async function canResumeNow(params: {
   teamId: string;
   userId: string;
   cost: bigint;
+  /**
+   * Info: (20260826 - Luphia) 這種任務**實際的扣點模式**（`JOB_SPEND_MODE`，
+   * review #6717 二輪第 3 條）。用「足額」去判斷一個封頂放行的功能，
+   * 落差不是保守而是永不觸發——實測 2MB PDF 一份估 677 點，而免費／團隊的
+   * 視窗上限是 10／100，那些任務永遠等不到「可以繼續」。
+   */
+  allowPartial: boolean;
   nowSec: number;
 }): Promise<boolean> {
-  const { teamId, userId, cost, nowSec } = params;
+  const { teamId, userId, cost, allowPartial, nowSec } = params;
   if (cost <= BigInt(0)) return false;
 
   const subscription = await teamSubscriptionRepo.getByTeamId(teamId);
@@ -120,15 +133,20 @@ export async function canResumeNow(params: {
   });
 
   /**
-   * Info: (20260825 - Luphia) 以「固定價格」的嚴格判準試算（`allowPartial: false`）：
-   * 額度必須足額。寧可少說「可以繼續」——多說一次的代價是使用者按下去又撞牆，
-   * 而那正是這整套機制要消滅的體驗。
+   * Info: (20260826 - Luphia) 判準跟著該功能的扣點模式（review #6717 二輪第 3 條）。
+   *
+   * 先前一律用「足額」，理由寫的是「寧可少說可以繼續」——方向對，
+   * 但我沒有量過數量級：那讓免費與團隊方案**永遠**等不到翻面，
+   * 整支掃描行程、`RESUMABLE` 狀態與那張表都成了裝飾品。
+   *
+   * 鏈上點數仍不查（一輪 50 筆 RPC 太貴）：少算它的方向依然安全，
+   * 因為它只會讓答案偏向「還不夠」。
    */
   return canAffordSpend({
     quotaAvailable,
     chainCredits: BigInt(0),
     cost,
-    allowPartial: false,
+    allowPartial,
   });
 }
 
@@ -159,12 +177,24 @@ export async function saveJobBookmark(params: {
         ? JOB_STATUS.COMPLETED
         : JOB_STATUS.RUNNING;
 
-  const job = await resumableJobRepo.upsert({
-    ...params,
-    status,
-    lastError: params.lastError?.slice(0, 500) ?? null,
-  });
-  return toView(job);
+  try {
+    const job = await resumableJobRepo.upsert({
+      ...params,
+      status,
+      lastError: params.lastError?.slice(0, 500) ?? null,
+    });
+    return toView(job);
+  } catch (error) {
+    /**
+     * Info: (20260826 - Luphia) Repo 的第二道防線轉成 403（阻擋-1）：
+     * 不讓底層錯誤細節噴到前端（CLAUDE.md §6），也不與「查不到」混用同一個碼
+     * ——這裡確定那一列存在，只是不屬於呼叫者。
+     */
+    if (error instanceof ResumableJobOwnershipError) {
+      throw toApiError(API_ERRORS.AUTH_PERMISSION_DENIED);
+    }
+    throw error;
+  }
 }
 
 /**
@@ -183,8 +213,45 @@ export async function saveJobBookmark(params: {
  * 掃描行程會把它算進 `unknown` 而不是猜一個。那條路的暫停原因本來就是
  * `PAYMENT_REQUIRED`，不由額度翻面。
  */
+/**
+ * Info: (20260826 - Luphia) 資源所有權裁決（review #6717 二輪阻擋-1）。
+ *
+ * 書籤的鍵是 `(resourceKey, type)`，而碳盤查的 `resourceKey` 是**可推導的**
+ * 頻道：`carbon-chat-{錢包位址}-{sessionId}`，位址是鏈上公開資訊、
+ * 預設 sessionId 是常數。少了這一步，任何登入者都能把別人的接續書籤
+ * 覆寫掉（連 `userId` 一起改成自己）——而同一個功能的
+ * `import/notice` 路由早就有這道守門，`chatroom.repo` 的註解也把它寫成前提。
+ *
+ * 用 `switch` 而不是 `if`：新增 `JOB_TYPE` 時 TypeScript 會要求補這一條，
+ * 而下一個型別的 `resourceKey` 不一定是頻道——「這個資源屬於誰」必須
+ * 每一種各自回答，不能靠一條通則。
+ */
+function assertResourceOwnedBy(
+  type: JobType,
+  resourceKey: string,
+  address: string | undefined,
+): void {
+  switch (type) {
+    case JOB_TYPE.CARBON_REPORT_IMPORT: {
+      if (!address || !isCarbonChatChannelOwnedBy(resourceKey, address)) {
+        throw toApiError(API_ERRORS.AUTH_PERMISSION_DENIED);
+      }
+      return;
+    }
+    default: {
+      /**
+       * Info: (20260826 - Luphia) 沒有明確規則就不放行：新型別必須先回答
+       * 「這個資源屬於誰」，而預設值只能是拒絕。
+       */
+      throw toApiError(API_ERRORS.AUTH_PERMISSION_DENIED);
+    }
+  }
+}
+
 export async function saveJobBookmarkForChannel(params: {
   userId: string;
+  // Info: (20260826 - Luphia) 所有權裁決用（阻擋-1）：頻道前綴必須是這個人的位址
+  address: string | undefined;
   type: JobType;
   resourceKey: string;
   pauseReason: JobPauseReason | null;
@@ -196,6 +263,15 @@ export async function saveJobBookmarkForChannel(params: {
   lastError?: string | null;
   nowMs: number;
 }): Promise<IJobView> {
+  /**
+   * Info: (20260826 - Luphia) **先裁決所有權**，再做任何查詢或寫入（阻擋-1）。
+   *
+   * 個人會話（未綁帳本）那條路上 `resolveBillingTeamId` 不會被呼叫，
+   * 因此它原本是唯一的授權來源時等於沒有授權——而個人會話正是這個功能
+   * 主要服務的對象。
+   */
+  assertResourceOwnedBy(params.type, params.resourceKey, params.address);
+
   const accountBookId = await chatroomRepo.findAccountBookIdByChannel(
     params.resourceKey,
   );
@@ -305,11 +381,27 @@ export async function scanResumableJobs(
       summary.unknown += 1;
       continue;
     }
-    if (!job.teamId || !job.nextStepCost) {
+    const spendMode = JOB_SPEND_MODE[job.type as JobType];
+    if (!job.teamId || !spendMode) {
       summary.unknown += 1;
       log.warn("paused job cannot be evaluated", {
         jobId: job.id,
-        reason: !job.teamId ? "no_team" : "no_next_step_cost",
+        reason: !job.teamId ? "no_team" : "unknown_job_type",
+      });
+      continue;
+    }
+    /**
+     * Info: (20260826 - Luphia) 封頂放行的任務**不需要**成本估算就判斷得出來
+     *（只要還有一點可用量就跑得動）。先前一律要求 `nextStepCost`，
+     * 而那個欄位在常態路徑上曾經是 null——兩個問題疊起來就是永遠不翻面。
+     * 足額模式仍然需要它：不知道要多少就無法回答「夠不夠」。
+     */
+    const cost = job.nextStepCost ? BigInt(job.nextStepCost) : BigInt(1);
+    if (!spendMode.allowPartial && !job.nextStepCost) {
+      summary.unknown += 1;
+      log.warn("paused job cannot be evaluated", {
+        jobId: job.id,
+        reason: "no_next_step_cost",
       });
       continue;
     }
@@ -318,7 +410,8 @@ export async function scanResumableJobs(
       const affordable = await canResumeNow({
         teamId: job.teamId,
         userId: job.userId,
-        cost: BigInt(job.nextStepCost),
+        cost,
+        allowPartial: spendMode.allowPartial,
         nowSec,
       });
       if (!affordable) {

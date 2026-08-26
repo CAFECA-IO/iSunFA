@@ -25,6 +25,12 @@ export async function PUT(request: NextRequest) {
 
     const job = await saveJobBookmarkForChannel({
       userId: user.id,
+      /**
+       * Info: (20260826 - Luphia) 所有權裁決在 Service（阻擋-1）：碳盤查的
+       * `resourceKey` 是可推導的頻道，少了它任何登入者都能覆寫別人的書籤。
+       * 與 `import/notice` 同一條規則。
+       */
+      address: user.address,
       ...parsed.data,
       nowMs: Date.now(),
     });

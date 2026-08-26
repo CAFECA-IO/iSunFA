@@ -14,6 +14,7 @@ import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quota.repo";
 import {
   JOB_PAUSE_REASON,
+  JOB_SPEND_MODE,
   JOB_STATUS,
   JOB_TYPE,
 } from "@/constants/resumable_job";
@@ -206,6 +207,8 @@ describe("現在夠不夠（與扣款端同判準）", () => {
         teamId: "team-1",
         userId: "user-1",
         cost: BigInt(50),
+        // Info: (20260826 - Luphia) 足額模式（固定價格功能的語意）
+        allowPartial: false,
         nowSec: NOW_SEC,
       }),
     ).resolves.toBe(true);
@@ -232,6 +235,8 @@ describe("現在夠不夠（與扣款端同判準）", () => {
         teamId: "team-1",
         userId: "user-1",
         cost: BigInt(50),
+        // Info: (20260826 - Luphia) 足額模式（固定價格功能的語意）
+        allowPartial: false,
         nowSec: NOW_SEC,
       }),
     ).resolves.toBe(false);
@@ -249,6 +254,8 @@ describe("現在夠不夠（與扣款端同判準）", () => {
         teamId: "team-1",
         userId: "user-1",
         cost: BigInt(50),
+        // Info: (20260826 - Luphia) 足額模式（固定價格功能的語意）
+        allowPartial: false,
         nowSec: NOW_SEC,
       }),
     ).resolves.toBe(false);
@@ -265,6 +272,8 @@ describe("現在夠不夠（與扣款端同判準）", () => {
       teamId: "team-1",
       userId: "user-1",
       cost: BigInt(1),
+      // Info: (20260826 - Luphia) 足額模式（固定價格功能的語意）
+      allowPartial: false,
       nowSec: NOW_SEC,
     });
     expect(asMock(teamQuotaUsageRepo.sumTeamWindowUsage)).toHaveBeenCalled();
@@ -288,6 +297,8 @@ describe("現在夠不夠（與扣款端同判準）", () => {
       teamId: "team-1",
       userId: "user-1",
       cost: BigInt(1),
+      // Info: (20260826 - Luphia) 足額模式（固定價格功能的語意）
+      allowPartial: false,
       nowSec: NOW_SEC,
     });
     expect(asMock(teamQuotaUsageRepo.sumWindowUsage)).toHaveBeenCalled();
@@ -303,9 +314,112 @@ describe("現在夠不夠（與扣款端同判準）", () => {
         teamId: "team-1",
         userId: "user-1",
         cost: BigInt(0),
+        // Info: (20260826 - Luphia) 足額模式（固定價格功能的語意）
+        allowPartial: false,
         nowSec: NOW_SEC,
       }),
     ).resolves.toBe(false);
+  });
+});
+
+/**
+ * Info: (20260826 - Luphia) 判準必須與該功能**實際的扣點模式**一致
+ *（review #6717 二輪第 3 條）。
+ *
+ * 這一組守的是一個把整套機制變成裝飾品的錯：掃描行程原本一律用「額度足額」，
+ * 而匯入實際是封頂放行。落差不是保守，是**永不觸發**——實測一份 2MB 的 PDF
+ * 單次預扣估算 677 點，而免費視窗上限 10 點、團隊 100 點
+ *（`resolveQuotaAvailable` 取兩個視窗的較小值），永遠不可能足額。
+ */
+describe("判準跟著扣點模式（否則永不觸發）", () => {
+  // Info: (20260826 - Luphia) 這就是那個數量級：估算遠大於任何視窗上限
+  const IMPORT_HOLD = BigInt(677);
+
+  it("封頂放行的功能：只要還有一點可用量就算可以繼續", async () => {
+    asMock(teamQuotaUsageRepo.sumTeamWindowUsage).mockResolvedValue({
+      used5h: BigInt(9),
+      usedWeek: BigInt(9),
+    });
+
+    await expect(
+      canResumeNow({
+        teamId: "team-1",
+        userId: "user-1",
+        cost: IMPORT_HOLD,
+        allowPartial: true,
+        nowSec: NOW_SEC,
+      }),
+    ).resolves.toBe(true);
+  });
+
+  /**
+   * Info: (20260826 - Luphia) 同一組數字用足額判準會回 false——這一條把
+   * 「兩個判準會給出相反答案」釘住。免費方案的視窗是 10 點，
+   * 而匯入一份要 677：足額模式下那個任務永遠等不到翻面。
+   */
+  it("同一組數字在足額模式下會回 false（這就是先前永不觸發的原因）", async () => {
+    asMock(teamQuotaUsageRepo.sumTeamWindowUsage).mockResolvedValue({
+      used5h: BigInt(9),
+      usedWeek: BigInt(9),
+    });
+
+    await expect(
+      canResumeNow({
+        teamId: "team-1",
+        userId: "user-1",
+        cost: IMPORT_HOLD,
+        allowPartial: false,
+        nowSec: NOW_SEC,
+      }),
+    ).resolves.toBe(false);
+  });
+
+  // Info: (20260826 - Luphia) 封頂放行也要真的見底才擋：一點都不剩就是不行
+  it("封頂放行但額度完全見底 → 還不夠", async () => {
+    asMock(teamQuotaUsageRepo.sumTeamWindowUsage).mockResolvedValue({
+      used5h: BigInt(100),
+      usedWeek: BigInt(500),
+    });
+
+    await expect(
+      canResumeNow({
+        teamId: "team-1",
+        userId: "user-1",
+        cost: IMPORT_HOLD,
+        allowPartial: true,
+        nowSec: NOW_SEC,
+      }),
+    ).resolves.toBe(false);
+  });
+
+  /**
+   * Info: (20260826 - Luphia) 匯入登記的就是封頂放行——這一條擋住
+   * 「把它改成足額」那種回歸（那會讓招牌功能重新變成 no-op）。
+   */
+  it("匯入登記為封頂放行", () => {
+    expect(JOB_SPEND_MODE[JOB_TYPE.CARBON_REPORT_IMPORT]).toEqual({
+      allowPartial: true,
+    });
+  });
+
+  /**
+   * Info: (20260826 - Luphia) 封頂放行的任務**不需要**成本估算就判斷得出來。
+   * 先前一律要求 `nextStepCost`，而那個欄位在常態路徑上曾經是 null——
+   * 兩個問題疊起來就是永遠不翻面。
+   */
+  it("封頂放行的任務缺成本估算時仍然評估得出來", async () => {
+    asMock(resumableJobRepo.listPausedForScan).mockResolvedValue([
+      jobRow({ nextStepCost: null }),
+    ]);
+    asMock(teamQuotaUsageRepo.sumTeamWindowUsage).mockResolvedValue({
+      used5h: BigInt(0),
+      usedWeek: BigInt(0),
+    });
+
+    const summary = await scanResumableJobs(NOW_MS);
+
+    expect(summary.released).toBe(1);
+    expect(summary.unknown).toBe(0);
   });
 });
 
@@ -352,13 +466,18 @@ describe("掃描：把暫停中且現在夠了的翻成可以繼續", () => {
   });
 
   /**
-   * Info: (20260825 - Luphia) 缺件（沒有付費團隊／沒有成本估計）要**數得出來**，
-   * 不靜默跳過：那些任務會永遠停在暫停中，而沒有人知道有幾筆。
+   * Info: (20260825 - Luphia) 缺件要**數得出來**，不靜默跳過：那些任務會永遠
+   * 停在暫停中，而沒有人知道有幾筆。
+   *
+   * Info: (20260826 - Luphia) 「缺成本估算」已不再是缺件（review #6717 二輪第 3 條）：
+   * 封頂放行的功能只要還有一點可用量就跑得動，不需要知道要多少。
+   * 真正的缺件只剩「沒有付費團隊」與「認不出的任務型別」——前者無從判斷額度，
+   * 後者連扣點模式都不知道。
    */
-  it("缺付費團隊或成本估計 → 計入 unknown，不猜", async () => {
+  it("缺付費團隊或認不出型別 → 計入 unknown，不猜", async () => {
     asMock(resumableJobRepo.listPausedForScan).mockResolvedValue([
       jobRow({ id: "job-a", teamId: null }),
-      jobRow({ id: "job-b", nextStepCost: null }),
+      jobRow({ id: "job-b", type: "SOMETHING_NEW" }),
     ]);
 
     const summary = await scanResumableJobs(NOW_MS);

@@ -178,6 +178,8 @@ export const carbonChatbot = {
     "「{{name}}」还在解析中。同时跑两份会互相抢额度、两边都变慢,请等这一份跑完或刷新后再试。",
   import_parsing_chapter:
     "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,{{inFlight}} 章解析中),完整报告约需数分钟…",
+  import_requires_book:
+    "这个会话还没绑定账本,无法导入整份报告(逐章导入需要以账本的额度计费)。请先在会话设置选择账本,再重新导入。",
   import_paused_chapters:
     "点数已用完,以下章节还没开始解析:{{chapters}}。补上点数后可以从这里接着导入,已完成的部分不会重跑。",
   import_resume_paused: "接着导入",

@@ -2608,6 +2608,37 @@ export const useCarbonChat = () => {
       const notify = (notice: IDraftNotice | null) =>
         setDraftNotice(notice, originSessionId);
       /**
+       * Info: (20260826 - Luphia) 逐章匯入需要**已綁定帳本**（review #6717 二輪第 2 條）。
+       *
+       * 未綁帳本的會話走的是個人點數：每一次呼叫都先回 402 帶一張待付訂單，
+       * 付掉之後以同一把鍵重送才會放行（見 `handleSendMessage`）。聊天與草稿
+       * 各只有一次呼叫，那條路可行；而逐章匯入是 **14 次**呼叫——那會變成
+       * 14 筆訂單與 14 次簽章，那不是任何人設計過的流程。
+       *
+       * 在此之前這條路的實際行為是：第一章就 402 → 暫停 →「點數已用完」→
+       * 按「接著匯入」再撞一次 → **永久死路**，而訊息說的原因也是錯的
+       *（不是點數用完，是這個會話沒有帳本可扣）。修正後在**送出之前**就說清楚，
+       * 一次呼叫都不發、一毛都不花——連附件上傳都不做。
+       *
+       * 小檔的單發匯入不受限：那條路只有一次呼叫，待付款重送在下方照常運作。
+       */
+      const willChunk =
+        file.type === PDF_MIME_TYPE ||
+        file.size >= CARBON_IMPORT_SINGLE_CALL_MAX_BYTES;
+      if (willChunk && !sessionAccess[chatChannel]?.accountBookId) {
+        notify({
+          type: "error",
+          text: t("carbon_chatbot.import_requires_book"),
+        });
+        dismissDraftNoticeAfter(
+          CARBON_DRAFT_NOTICE_DISMISS_MS,
+          originSessionId,
+        );
+        importInFlightRef.current = null;
+        return;
+      }
+
+      /**
        * Info: (20260806 - Tzuhan) 先把檔案存進 Laria 拿 cid,之後每次呼叫只帶 cid。
        *
        * 一份 64 頁報告要 1 次索引 + 11 章 + 補章共十幾次 `/import`,原本每一次都重送整份 PDF。
@@ -2621,6 +2652,7 @@ export const useCarbonChat = () => {
         type: "loading",
         text: t("carbon_chatbot.import_uploading", { name: file.name }),
       });
+
       let importCid: string | null = null;
       try {
         const uploadForm = new FormData();
@@ -2648,6 +2680,7 @@ export const useCarbonChat = () => {
       const useChunked =
         file.type === PDF_MIME_TYPE ||
         file.size >= CARBON_IMPORT_SINGLE_CALL_MAX_BYTES;
+
       const chapters = useChunked
         ? CARBON_REPORT_CHAPTERS.map((chapter) => ({
             id: chapter.id,
@@ -2903,6 +2936,8 @@ export const useCarbonChat = () => {
       persistPendingImport,
       postImportParsedNotice,
       saveImportJobBookmark,
+      // Info: (20260826 - Luphia) 逐章匯入的帳本前置檢查（review #6717 二輪第 2 條）
+      sessionAccess,
     ],
   );
 

@@ -71,6 +71,29 @@ export const JOB_TYPE = {
 export type JobType = (typeof JOB_TYPE)[keyof typeof JOB_TYPE];
 
 /**
+ * Info: (20260826 - Luphia) 每一種任務**實際的扣點模式**（review #6717 二輪第 3 條）。
+ *
+ * 這張表存在的理由是一個把整套機制變成裝飾品的錯：掃描行程原本用
+ * 「額度足額」判斷「現在能不能繼續」，而匯入實際的扣點是**封頂放行**
+ * （`allowPartial: true`，按 token 計量、結算時追補）。兩個判準的落差不是保守，
+ * 是**永不觸發**——實測一份 2MB 的 PDF 單次預扣估算是 677 點，而
+ * 免費 `min(10, 40)`、團隊 `min(100, 750)` 的視窗**永遠不可能足額**，
+ * 於是那些任務永遠等不到「可以繼續」。只有企業版（或小檔）打得開。
+ *
+ * 判準必須與扣款端同一個模式，否則「可以繼續」與「真的會放行」是兩件事。
+ * 新增任務型別時要在這裡宣告它的模式——那是一個**必須做的決定**，
+ * 不是可以沿用預設值的參數。
+ */
+export const JOB_SPEND_MODE: Record<JobType, { allowPartial: boolean }> = {
+  /**
+   * Info: (20260826 - Luphia) 匯入按 token 計量且有結算步驟，因此餘額不足時
+   * 封頂放行（見 `runBilledCarbonTask` 的 `allowPartial: true`）。
+   * 「有餘額就跑得動」正是它的真實語意——一份跑不完的部分由結算追補。
+   */
+  [JOB_TYPE.CARBON_REPORT_IMPORT]: { allowPartial: true },
+};
+
+/**
  * Info: (20260825 - Luphia) worker 掃描的間隔。
  *
  * 五分鐘：額度視窗的重置是 5 小時級距，而使用者加購點數之後**不必等這個迴圈**

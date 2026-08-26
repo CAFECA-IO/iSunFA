@@ -30,6 +30,19 @@ export interface IUpsertJobInput {
   nowMs: number;
 }
 
+/**
+ * Info: (20260826 - Luphia) 書籤已存在且屬於別人。
+ *
+ * 不是 Prisma 的原始錯誤也不是通用錯誤：呼叫端要能把它轉成 403，
+ * 而 Service 的錯誤邊界規則是「不讓底層錯誤細節噴到前端」（CLAUDE.md §6）。
+ */
+export class ResumableJobOwnershipError extends Error {
+  constructor(resourceKey: string, type: string) {
+    super(`resumable job ${type}@${resourceKey} belongs to another user`);
+    this.name = "ResumableJobOwnershipError";
+  }
+}
+
 export class ResumableJobRepository {
   /**
    * Info: (20260825 - Luphia) 同一個資源的同一種任務只有一筆書籤（`@@unique`）。
@@ -49,8 +62,23 @@ export class ResumableJobRepository {
           type: input.type,
         },
       },
-      select: { status: true, pausedAt: true },
+      select: { status: true, pausedAt: true, userId: true },
     });
+
+    /**
+     * Info: (20260826 - Luphia) **第二道防線**：既有列不屬於這個人就不動它
+     *（review #6717 二輪阻擋-1）。
+     *
+     * 第一道在 Service（資源所有權裁決）。這裡再擋一次，因為那兩件事不同：
+     * 「這個頻道是不是你的」與「這一列任務是不是你的」——`@@unique` 的鍵是
+     * `(resourceKey, type)`，不含 `userId`，而 `update` 會改寫 `userId`。
+     * 也就是說少了這一道，任何能通過第一道的路徑都能把既有列認領走，
+     * 而下一個 `JOB_TYPE` 的 `resourceKey` 不一定是頻道——第一道的規則
+     * 到那時可能就不適用了。
+     */
+    if (existing && existing.userId !== input.userId) {
+      throw new ResumableJobOwnershipError(input.resourceKey, input.type);
+    }
     const enteringPause = isPaused && existing?.status !== JOB_STATUS.PAUSED;
     const pausedAt = isPaused
       ? enteringPause
