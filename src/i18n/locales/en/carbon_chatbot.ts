@@ -295,6 +295,8 @@ export const carbonChatbot = {
   chart_imported_sankey_excluded: "Not shown (NA/NS or zero)",
   chart_imported_sankey_no_ledger:
     'The report was imported but the ledger holds no usable data, so the emission flow cannot be drawn. Table 3.8 (GHG emissions by company) is the only source for the Sankey diagram and the system data table, and it was not obtained this time. Check whether Chapter 3 parsed successfully; if it is listed as failed, re-import it via "Retry failed chapters" on the preview card, and check the server log for whether the table was dropped and why.',
+  chart_imported_sankey_blocked_ledger:
+    "Table 3.8 was obtained, but reconciliation failed, so the data was frozen at the gate and not written to the ledger (half-written data would make every chart wrong in a convincing way). The blocking reasons are listed below; fix the corresponding table in the source or re-import Chapter 3, and the charts will be generated automatically.",
   chart_imported_sankey_collapsed:
     "Too many nodes — reduced to one layer (company → scope)",
   chart_imported_top_items_title:

@@ -1414,6 +1414,18 @@ export const useCarbonChat = () => {
   useEffect(() => {
     computedLedgerRef.current = activeInventoryState?.computedLedger;
   }, [activeInventoryState?.computedLedger]);
+  /**
+   * Info: (20260825 - Emily) #6667:勾稽阻擋紀錄的同步鏡像(與 computedLedgerRef 同一個理由:
+   * 建表發生在 setState 生效之前,當下要同步讀得到)。圖表建置憑它把
+   * 「未取得該表」與「取得了但勾稽被擋」說成兩件事 —— 印錯原因的提示,
+   * 會讓使用者去重匯一章根本沒壞的內容。
+   */
+  const ledgerImportBlocksRef = useRef<ILedgerImportBlock[] | undefined>(
+    undefined,
+  );
+  useEffect(() => {
+    ledgerImportBlocksRef.current = activeInventoryState?.ledgerImportBlocks;
+  }, [activeInventoryState?.ledgerImportBlocks]);
 
   // Info: (20260720 - Tzuhan) #51 圖表文案(i18n;數值本身一律引擎產出,與語言無關)
   const chartLabels: ICarbonChartLabels = useMemo(
@@ -1434,6 +1446,10 @@ export const useCarbonChat = () => {
       // Info: (20260806 - Tzuhan) 匯入了但帳本空:必須指向表3.8/第三章,而不是「補齊活動數據」
       importedSankeyNoLedger: t(
         "carbon_chatbot.chart_imported_sankey_no_ledger",
+      ),
+      // Info: (20260825 - Emily) #6667:「拿到了表但勾稽被擋」與「沒拿到表」分開說
+      importedSankeyBlockedLedger: t(
+        "carbon_chatbot.chart_imported_sankey_blocked_ledger",
       ),
       importedSankeyCollapsed: t(
         "carbon_chatbot.chart_imported_sankey_collapsed",
@@ -1672,6 +1688,8 @@ export const useCarbonChat = () => {
           },
         };
       });
+      // Info: (20260825 - Emily) #6667:ref 同步清除(理由見 ledgerImportBlocksRef 宣告處)
+      ledgerImportBlocksRef.current = undefined;
     },
     [user?.address, activeSessionId],
   );
@@ -3664,6 +3682,8 @@ export const useCarbonChat = () => {
         console.warn("[carbon-chat] imported ledger blocked", blocks);
         // Info: (20260825 - Emily) #6707:留進 channel 狀態,讓「有沒有異常」問得到答案
         recordLedgerImportBlocks(blocks);
+        // Info: (20260825 - Emily) #6667:ref 同步更新 —— 本輪稍後的建表就要用,等不到下一輪 render
+        ledgerImportBlocksRef.current = blocks;
       }
     }
     importActivitiesRef.current = [];
@@ -3898,6 +3918,8 @@ export const useCarbonChat = () => {
         activeInventoryState?.computedLedger,
         chartLabels,
         dataTableLabels,
+        // Info: (20260825 - Emily) #6667:被擋時說被擋的原因,不說「未取得該表」
+        activeInventoryState?.ledgerImportBlocks,
       );
       setSessionsData((prev) => {
         const session = prev[activeSessionId];
@@ -3990,6 +4012,8 @@ export const useCarbonChat = () => {
             ledgerNow,
             chartLabels,
             dataTableLabels,
+            // Info: (20260825 - Emily) #6667:ref 而非 state —— 本輪 setState 還沒生效
+            ledgerImportBlocksRef.current,
           ),
         );
       }
@@ -4215,6 +4239,8 @@ export const useCarbonChat = () => {
             ledger,
             chartLabels,
             dataTableLabels,
+            // Info: (20260825 - Emily) #6667:同上,ref 是同步的權威
+            ledgerImportBlocksRef.current,
           ),
         ),
       target.content,
