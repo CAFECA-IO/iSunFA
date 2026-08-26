@@ -1,5 +1,12 @@
 export const notification = {
   aria: "通知",
+  /**
+   * Info: (20260826 - Julian) 帶未讀數的版本 —— `aria-label` 會**蓋掉**按鈕內容，
+   * 包括那顆徽章。固定字串等於讓讀屏使用者永遠聽不到有幾則。
+   */
+  aria_unread: "通知、未読 {{count}} 件",
+  // Info: (20260826 - Julian) 讀不到時說讀不到，不要退化成「目前沒有通知」
+  load_failed: "通知を読み込めませんでした。しばらくしてからお試しください",
   summary: "未処理 {{todos}} 件、完了通知 {{completed}} 件",
   empty: "通知はありません",
   todos_title: "未処理",
@@ -32,5 +39,4 @@ export const notification = {
   history_title: "履歴",
   history_empty: "完了・失敗の通知はまだありません",
   total_items: "全 {{count}} 件",
-  view: "確認",
 };

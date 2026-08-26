@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, X } from "lucide-react";
+import { Bell, ChevronRight, X } from "lucide-react";
 import {
   Popover,
   PopoverButton,
@@ -67,6 +67,19 @@ export default function NotificationBell() {
   const { t } = useTranslation();
 
   const [list, setList] = useState<IList | null>(null);
+  /**
+   * Info: (20260826 - Julian) 「還沒載到」「載失敗」「真的沒有」是三件事（review）。
+   *
+   * 先前三者共用 `list === null`，於是面板在 API 掛掉時**斬釘截鐵地說
+   * 「目前沒有通知」**，而兩公分外的徽章可能正寫著 5。那與 D20 同族：
+   * 畫面說了一句它沒有依據說的話。
+   *
+   * `openList` 的 catch 也是幫兇 —— 它把失敗寫成一個空清單，
+   * 於是連呼叫端都分不出來。現在失敗就是失敗。
+   */
+  const [listStatus, setListStatus] = useState<
+    "idle" | "loading" | "ready" | "error"
+  >("idle");
   const [shaking, setShaking] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
@@ -97,17 +110,28 @@ export default function NotificationBell() {
    *（原本首抓與輪詢各有一支 fetch，登入當下會連打兩次）。
    */
   useEffect(() => {
-    if (!user || !summary || showToast) return;
-    if (summary.todoCount + summary.completedCount === 0) return;
+    if (!user || !summary || showToast) return undefined;
+    if (summary.todoCount + summary.completedCount === 0) return undefined;
     try {
-      if (sessionStorage.getItem(SUMMARY_SHOWN_KEY)) return;
+      if (sessionStorage.getItem(SUMMARY_SHOWN_KEY)) return undefined;
       sessionStorage.setItem(SUMMARY_SHOWN_KEY, "1");
     } catch {
       // Info: (20260825 - Julian) 隱私模式讀寫 sessionStorage 會拋；氣泡不值得為此中斷
-      return;
+      return undefined;
     }
     setShowToast(true);
-    window.setTimeout(() => setShowToast(false), NOTIFICATION_SUMMARY_TOAST_MS);
+    /**
+     * Info: (20260826 - Julian) 卸載時要清（review：前端細節）。
+     *
+     * 不清的話，登出或換頁讓元件卸載之後，這個計時器仍會在 8 秒後
+     * 對一個已卸載的元件 `setShowToast` —— React 不會炸，但那是一次
+     * 對死掉元件的寫入，而同一個形狀在有訂閱的元件上就是真的洩漏。
+     */
+    const timer = window.setTimeout(
+      () => setShowToast(false),
+      NOTIFICATION_SUMMARY_TOAST_MS,
+    );
+    return () => window.clearTimeout(timer);
   }, [user, summary, showToast]);
 
   /**
@@ -122,6 +146,7 @@ export default function NotificationBell() {
    *    前者是使用者的動作，後者不是。
    */
   const openList = useCallback(async () => {
+    setListStatus("loading");
     try {
       const response = await request<{ payload: IList | null }>(
         "/api/v1/user/notifications",
@@ -133,8 +158,17 @@ export default function NotificationBell() {
           hasMoreCompleted: false,
         },
       );
+      setListStatus("ready");
     } catch {
-      setList({ todos: [], completed: [], hasMoreCompleted: false });
+      /**
+       * Info: (20260826 - Julian) 失敗**不要**寫成空清單（review：前端細節）。
+       *
+       * 原本這裡 `setList({todos:[],completed:[],hasMoreCompleted:false})`，
+       * 而畫面對「空清單」的呈現是「目前沒有通知」—— 於是一次網路錯誤
+       * 變成一句關於使用者資料的斷言。保留上一次成功的內容，狀態標成 error，
+       * 讓畫面說得出「讀不到」而不是「沒有」。
+       */
+      setListStatus("error");
     }
   }, []);
 
@@ -215,7 +249,21 @@ export default function NotificationBell() {
   return (
     <Popover className="relative">
       <PopoverButton
-        aria-label={t("notification.aria")}
+        /**
+         * Info: (20260826 - Julian) `aria-label` 要帶未讀數（review：前端細節）。
+         *
+         * `aria-label` **覆蓋**按鈕的內容，包括那顆徽章 —— 所以固定字串
+         * 等於讓讀屏使用者永遠聽不到有幾則。這正是計畫書 §6 第 6 項
+         *（螢幕閱讀器對徽章數字的朗讀）先前的答案是「沒有」的原因。
+         *
+         * 用兩個鍵而不是一個帶 `{{count}}` 的鍵：零則時「通知」比
+         * 「0 則通知」自然，而讀屏的每一個字都是使用者的時間。
+         */
+        aria-label={
+          unreadTotal > 0
+            ? t("notification.aria_unread", { count: unreadTotal })
+            : t("notification.aria")
+        }
         onClick={openList}
         className="text-text-muted hover:bg-surface-hover hover:text-text-primary relative rounded-full p-2 focus:outline-none"
       >
@@ -267,7 +315,21 @@ export default function NotificationBell() {
         leaveFrom="opacity-100 translate-y-0"
         leaveTo="opacity-0 translate-y-1"
       >
-        <PopoverPanel className="bg-surface-overlay border-border-default fixed inset-0 z-100 flex h-dvh w-full flex-col border shadow-lg md:absolute md:inset-auto md:top-full md:right-0 md:mt-2 md:h-auto md:max-h-[70vh] md:w-80 md:rounded-lg">
+        <PopoverPanel
+          /**
+           * Info: (20260826 - Julian) 這裡曾經加上 `modal` 取 focus trap，**已移除**。
+           *
+           * 加了之後手機版就捲不動了。`modal` 會啟動 HeadlessUI 的 scroll lock，
+           * 而那在觸控裝置上是靠攔截 `touchmove` 做到的 —— 它認得 `Dialog` 的
+           * 面板，未必認得 `PopoverPanel` 的，於是連面板自己的捲動一起擋掉。
+           *
+           * 取捨很清楚：focus trap 是**改善**，捲不動是**壞掉**。要補 focus trap
+           * 的話正解是改寫成 `Dialog`（它本來就管好了 scroll lock 與捲動容器的
+           * 對應關係），那是一次獨立的改動，不該混在這裡順手做。
+           * 計畫書 §6 第 6 項因此退回「未做」，並記下這條已知的死路。
+           */
+          className="bg-surface-overlay border-border-default fixed inset-0 z-100 flex h-dvh w-full flex-col border shadow-lg md:absolute md:inset-auto md:top-full md:right-0 md:mt-2 md:h-auto md:max-h-[70vh] md:w-80 md:rounded-lg"
+        >
           {({ close }) => (
             <>
               {/* Info: (20260825 - Julian) 手機全螢幕時要有出口；桌機點外面就關 */}
@@ -285,9 +347,37 @@ export default function NotificationBell() {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto">
-                {!list ||
-                (list.todos.length === 0 && list.completed.length === 0) ? (
+              {/**
+               * Info: (20260826 - Julian) `min-h-0` 是這個捲動區能捲動的**前提**。
+               *
+               * flex item 的 `min-height` 預設是 `auto`，意思是「不得縮到比內容還小」——
+               * 於是 `flex-1 overflow-y-auto` 會長到跟內容一樣高、把父層撐破，
+               * 而不是自己捲。`overflow-y-auto` 在那種情況下永遠不會生效，
+               * 因為它根本沒有溢位（溢位的是父層）。
+               *
+               * 症狀只在內容夠多時才看得到，而且**手機版才致命**：面板是
+               * `fixed inset-0 h-dvh`，被撐出去的部分連同底下那個
+               * 「查看全部通知」的連結一起跑到視窗外，使用者滑不到、點不到 ——
+               * 一個常駐的入口變成看不見的入口。
+               *
+               * 桌機有 `md:max-h-[70vh]` 也是同一個道理，只是 10 則通常撐不破。
+               */}
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                {listStatus === "loading" && !list ? (
+                  <p className="text-text-muted px-3 py-4 text-center text-sm">
+                    {t("common.loading")}
+                  </p>
+                ) : listStatus === "error" && !list ? (
+                  /**
+                   * Info: (20260826 - Julian) 讀不到就說讀不到，別說「沒有通知」。
+                   * 只有在**沒有任何舊內容可顯示**時才整面換成錯誤訊息；
+                   * 有舊內容的話寧可讓使用者看見上一次的清單（下面那條提示會說它是舊的）。
+                   */
+                  <p className="text-text-muted px-3 py-4 text-center text-sm">
+                    {t("notification.load_failed")}
+                  </p>
+                ) : !list ||
+                  (list.todos.length === 0 && list.completed.length === 0) ? (
                   <p className="text-text-muted px-3 py-4 text-center text-sm">
                     {t("notification.empty")}
                   </p>
@@ -326,6 +416,15 @@ export default function NotificationBell() {
                     )}
                   </div>
                 )}
+                {/**
+                 * Info: (20260826 - Julian) 有舊內容、但這一次沒讀到新的。
+                 * 靜靜顯示過期資料與靜靜顯示「沒有通知」是同一種病。
+                 */}
+                {listStatus === "error" && list && (
+                  <p className="text-text-muted px-3 pt-2 text-center text-xs">
+                    {t("notification.load_failed")}
+                  </p>
+                )}
               </div>
 
               {/**
@@ -339,13 +438,31 @@ export default function NotificationBell() {
                * 放在裡面的話，通知一多它就被推到看不見的地方，
                * 而那正是最需要它的時候。
                */}
-              <Link
-                href="/user/notifications"
-                onClick={() => close()}
-                className="border-border-default text-text-muted hover:bg-surface-hover hover:text-text-primary shrink-0 border-t px-3 py-2 text-center text-xs"
-              >
-                {t("notification.view_all")}
-              </Link>
+              {/**
+               * Info: (20260826 - Julian) 通往完整清單的入口，**常駐**且看得出是按鈕。
+               *
+               * 先前它是一行置中的灰色小字，與上面兩個灰底的分節標題
+               *（「待辦事項」「工作完成」）長得幾乎一樣 —— 實測回報：
+               * 「一點都不像按鈕，反而像列表標題」。標題與可點擊的東西
+               * 用同一種樣式，使用者就得靠猜的。
+               *
+               * 現在是品牌色的實心按鈕加一個箭頭：顏色、圓角、箭頭三者
+               * 都在說同一件事（這裡可以按、按了會去別的地方）。
+               *
+               * 位置回到 flex 的最後一個子項（`shrink-0`）—— header 的
+               * backdrop-filter 修掉之後，面板的 `h-dvh` 終於是相對視窗，
+               * 這一層就自然貼在面板底部，不需要 `fixed` 那種繞法。
+               */}
+              <div className="border-border-default shrink-0 border-t">
+                <Link
+                  href="/user/notifications"
+                  onClick={() => close()}
+                  className="flex w-full items-center justify-center gap-1 bg-orange-500 px-3 py-2.5 text-sm text-white transition-colors hover:text-orange-500 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none md:rounded-b-lg md:bg-white md:py-2 md:text-slate-500"
+                >
+                  {t("notification.view_all")}
+                  <ChevronRight className="size-4 shrink-0" />
+                </Link>
+              </div>
             </>
           )}
         </PopoverPanel>

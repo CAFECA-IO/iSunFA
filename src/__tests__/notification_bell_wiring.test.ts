@@ -470,6 +470,8 @@ describe("來源與畫面的接線（掃描）", () => {
          * （舊鍵說「還有更多未讀」，但旗標的意思是「歷史超過上限」）。
          * 以下四個是 `/user/notifications` 頁面新增的。
          */
+        "aria_unread",
+        "load_failed",
         "history_capped",
         "view_all",
         "page_title",
@@ -610,16 +612,40 @@ describe("通知列只有一份實作", () => {
    * import，所以上一條照樣綠。真正會退化的是「有人在消費端又寫了一次
    * switch (item.type)」，而那一定會用到這幾個符號。
    */
+  const MESSAGE_LIB = ["src", "lib", "notification_message.ts"];
+
+  /**
+   * Info: (20260826 - Julian) 每一個決定只有一個擁有者，而擁有者不只一個檔案。
+   *
+   * 樣式與去處在 `notification_row.tsx`（畫面決定），文案在
+   * `lib/notification_message.ts`（純函式，可逐條測）。表格第三欄記的是
+   * 「這個符號該住在哪裡」—— 先前文案也在 row 裡，搬走之後這張表要跟著改，
+   * 否則它會繼續指著一個已經不在那裡的東西（與 review B6 同一種病）。
+   */
   it.each([
-    ["NOTIFICATION_TYPE_STYLE", "圖示與顏色的查表"],
-    ["NOTIFICATION_LINK_PATH", "點下去的去處"],
-    ["analysis_completed_named", "帶報告名稱的文案"],
-    ["notification.unread", "未讀紅點的讀屏文字"],
-  ])("消費端沒有自己一份 %s（%s）", (symbol) => {
+    ["NOTIFICATION_TYPE_STYLE", "圖示與顏色的查表", ROW],
+    ["NOTIFICATION_LINK_PATH", "點下去的去處", ROW],
+    ["notification.unread", "未讀紅點的讀屏文字", ROW],
+    ["analysis_completed_named", "帶報告名稱的文案", MESSAGE_LIB],
+    ["analysis.categories.", "報告類別的字典查表", MESSAGE_LIB],
+  ])("消費端沒有自己一份 %s（%s）", (symbol, unusedLabel, owner) => {
     for (const consumer of [BELL, PAGE]) {
       expect(codeOf(...consumer)).not.toContain(symbol);
     }
-    expect(codeOf(...ROW)).toContain(symbol);
+    expect(codeOf(...owner)).toContain(symbol);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 型別守衛取代硬轉（review：前端細節）。
+   *
+   * `item.type as NotificationType` 對 API 回來的字串宣稱了一件無法保證的事。
+   * 它先前「剛好安全」，靠的是相隔數行的早退 —— 這條擋的是有人把它加回來。
+   */
+  it("列元件不對 item.type 硬轉型別", () => {
+    const row = codeOf(...ROW);
+
+    expect(row).not.toMatch(/item\.type as NotificationType/);
+    expect(row).toMatch(/isNotificationType\(/);
   });
 
   /**
@@ -664,6 +690,108 @@ describe("通知列只有一份實作", () => {
     for (const consumer of [BELL, PAGE]) {
       expect(codeOf(...consumer)).not.toContain(symbol);
     }
+  });
+
+  /**
+   * Info: (20260826 - Julian) 手機版面板必須捲得到底（實測回報 20260826）。
+   *
+   * 捲動區是 `flex-1 overflow-y-auto`，而 flex item 的 `min-height` 預設是
+   * `auto`（不得縮到比內容小）—— 少了 `min-h-0`，它會長到跟內容一樣高、
+   * 把 `h-dvh` 的父層撐破，`overflow-y-auto` 則永遠不會生效（溢位的是父層）。
+   *
+   * 後果不是「有點難用」：底下那個常駐的「查看全部通知」被推到視窗外，
+   * 使用者滑不到也點不到 —— 一個為了「讓歷史被發現」而加的入口，
+   * 在通知一多的時候就消失，而那正是最需要它的時候。
+   *
+   * 這條是字串比對，因為 CSS 類別漏掉時 `tsc` 與 `lint` 都不會有意見
+   *（與 D3 同族），而 repo 沒有 jsdom，量不到實際高度。
+   */
+  it("面板的捲動區有 min-h-0（否則捲不到底、底部連結點不到）", () => {
+    const bell = codeOf(...BELL);
+
+    expect(bell).toMatch(/min-h-0[^"]*flex-1[^"]*overflow-y-auto/);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 底部連結必須在捲動區**之外**。
+   *
+   * 放進捲動區的話，通知一多它就被推到看不見的地方 —— 而那與上面那個
+   * 缺陷的症狀一模一樣，只是成因不同。兩條都要，因為修好其中一個
+   * 不會讓另一個變紅。
+   */
+  /**
+   * Info: (20260826 - Julian) 掛鈴鐺的 shell **不得**自己帶 `backdrop-filter`（實測 20260826）。
+   *
+   * 這是手機版面板捲不動、底部按鈕點不到的**真正成因**，而我在找到它之前
+   * 猜錯了三次（`min-h-0`、`fixed bottom-0`、`modal`）。
+   *
+   * `backdrop-filter` 與 `transform` 一樣，會讓元素成為子孫 `position: fixed`
+   * 的**包含塊**。三個 shell 的 `<header>` 都有 `backdrop-blur-xl`，於是面板的
+   * `fixed inset-0 h-dvh` 是相對那個 64px 的 header 定位，不是相對視窗。
+   * 瀏覽器實測：面板 top 落在 7742px（視窗高 1083），底部連結跟著跑到
+   * 面板頂端下方 —— 正好是截圖裡「按鈕出現在清單上方」的樣子。
+   *
+   * 修法是把 bg / blur / shadow / ring 移到 `absolute inset-0 -z-10` 的兄弟層：
+   * 視覺相同，而 header 不再是包含塊。這條測試擋的是有人把 blur 搬回
+   * `<header>` 上 —— 那會讓同一個缺陷無聲復發，而它在桌機上完全看不出來。
+   */
+  it.each([
+    ["src", "components", "user", "user_header.tsx"],
+    ["src", "components", "landing_page", "header.tsx"],
+    ["src", "components", "salary_calculator", "calculator_header.tsx"],
+  ])("%s/%s/%s/%s 的 <header> 自己不帶 backdrop-filter", (...segments) => {
+    const shell = codeOf(...segments);
+    const headerTag = /<header className="([^"]*)"/.exec(shell);
+
+    expect(headerTag).not.toBeNull();
+    // Info: (20260826 - Julian) 毛玻璃要在子層，不在 <header> 自己身上
+    expect(headerTag?.[1] ?? "").not.toContain("backdrop-blur");
+    expect(shell).toMatch(/absolute inset-0 -z-10[^"]*backdrop-blur/);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 底部按鈕要**看得出是按鈕**（實測回報 20260826）。
+   *
+   * 它先前是一行置中的灰色小字，與上面兩個分節標題（「待辦事項」「工作完成」）
+   * 幾乎一樣 —— 使用者的原話是「一點都不像按鈕，反而像列表標題」。
+   *
+   * 驗的是三個彼此獨立的可視線索：底色、圓角、以及不是 `text-text-muted`
+   *（那正是兩個分節標題用的顏色）。任何一個掉了都會讓它往「標題」滑回去。
+   */
+  it("底部入口有按鈕的樣子，不是分節標題的樣子", () => {
+    const bell = codeOf(...BELL);
+    const linkClass =
+      /className="([^"]*)"[\s\S]{0,120}?\{t\("notification\.view_all"\)/.exec(
+        bell,
+      );
+
+    expect(linkClass).not.toBeNull();
+    const cls = linkClass?.[1] ?? "";
+    expect(cls).toContain("bg-brand");
+    expect(cls).toContain("rounded-");
+    expect(cls).not.toContain("text-text-muted");
+  });
+
+  /**
+   * Info: (20260826 - Julian) 捲動區仍要有 `min-h-0`。
+   *
+   * 它不是這次的成因（成因是包含塊），但仍是必要條件：flex item 的
+   * `min-height: auto` 會讓 `overflow-y-auto` 永遠不生效。兩件事都對，
+   * 面板才捲得動 —— 所以兩條測試都留著。
+   */
+  it("面板的捲動區有 min-h-0", () => {
+    expect(codeOf(...BELL)).toMatch(/min-h-0[^"]*flex-1[^"]*overflow-y-auto/);
+  });
+
+  /**
+   * Info: (20260826 - Julian) `modal` 不得再被加回 `PopoverPanel`。
+   *
+   * 它給的是 focus trap，但會啟動 HeadlessUI 的 scroll lock，而那在觸控裝置上
+   * 靠攔截 `touchmove` 實作 —— 認得 `Dialog` 的面板，未必認得 `PopoverPanel` 的。
+   * 正解是改寫成 `Dialog`。
+   */
+  it("PopoverPanel 沒有 modal（會擋掉觸控捲動）", () => {
+    expect(codeOf(...BELL)).not.toMatch(/^\s*modal\s*$/m);
   });
 
   it("鈴鐺底部有通往完整清單的連結", () => {

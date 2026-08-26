@@ -7,10 +7,12 @@ import { formatDate } from "@/lib/utils/date";
 import { canMarkReadByClick } from "@/lib/notification_read";
 import type { INotificationItem } from "@/interfaces/notification";
 import {
+  isNotificationType,
+  notificationMessageOf,
+} from "@/lib/notification_message";
+import {
   NOTIFICATION_LINK_PATH,
-  NOTIFICATION_TYPE,
   NOTIFICATION_TYPE_STYLE,
-  NotificationType,
 } from "@/constants/notification";
 
 /**
@@ -69,64 +71,13 @@ export default function NotificationRow({
   const { t } = useTranslation();
 
   /**
-   * Info: (20260825 - Julian) 報告類別的中文名，取不到就回空字串。
+   * Info: (20260826 - Julian) 文案交給純函式（review：前端細節）。
    *
-   * 直接複用分析頁那份字典（`analysis.categories.*`），不另外存一份標題進
-   * `payload`：同一個類別在兩個地方各有一份名字，改一邊就會不一致，
-   * 而通知那份沒有人會去看。
-   *
-   * `t()` 找不到鍵時回傳鍵本身，所以要給 `defaultValue` 才分得出
-   * 「沒有這個類別」與「這個類別叫做 `analysis.categories.xxx`」——
-   * 常數層有 `JOURNAL_CORRECTION` 而字典裡是 `journal_upload`，
-   * 這個缺口今天就存在。
+   * 它原本是這個元件裡一段閉包了 `t` 的 switch —— export 不出去，
+   * 也就一條都測不到。搬到 `lib/notification_message.ts` 之後，
+   * 「哪一種型別顯示哪句話」變成可以逐型別窮舉的東西。
    */
-  const titleOf = (): string => {
-    const type = item.payload.analysisType;
-    if (typeof type !== "string" || type === "") return "";
-    return t(`analysis.categories.${type.toLowerCase()}`, {
-      defaultValue: "",
-    });
-  };
-
-  /**
-   * Info: (20260825 - Julian) 每一種通知的文案（計畫書 D11）。
-   *
-   * 未知型別回 `null` 而不是落到「分析已完成」那一支 —— 原本的 fallback
-   * 會把任何新增的型別渲染成一句錯的話，而新增型別的人不會發現。
-   */
-  const messageOf = (): string | null => {
-    switch (item.type) {
-      case NOTIFICATION_TYPE.TEAM_INVITATION:
-        return t("notification.team_invitation", {
-          inviterName: String(item.payload.inviterName ?? ""),
-          teamName: String(item.payload.teamName ?? ""),
-        });
-      case NOTIFICATION_TYPE.WALLET_UPGRADE:
-        return t("notification.wallet_upgrade");
-      /**
-       * Info: (20260825 - Julian) 帶上報告名稱，取不到才退回原本那句。
-       *
-       * 同時跑三份分析時，三則「你的分析工作已完成」在畫面上完全一樣，
-       * 使用者分不出哪則對應哪份報告 —— 而點進去只會落在同一個歷史清單。
-       */
-      case NOTIFICATION_TYPE.ANALYSIS_COMPLETED: {
-        const title = titleOf();
-        return title
-          ? t("notification.analysis_completed_named", { title })
-          : t("notification.analysis_completed");
-      }
-      case NOTIFICATION_TYPE.ANALYSIS_FAILED: {
-        const title = titleOf();
-        return title
-          ? t("notification.analysis_failed_named", { title })
-          : t("notification.analysis_failed");
-      }
-      default:
-        return null;
-    }
-  };
-
-  const message = messageOf();
+  const message = notificationMessageOf(item, t);
   if (message === null) return null;
 
   /**
@@ -136,9 +87,19 @@ export default function NotificationRow({
    * 沒有去處的型別（目前是錢包升級：全站還沒有升級頁面）渲染成不可點的
    * `<div>`，而不是一個點了沒反應的連結。
    */
-  const style = NOTIFICATION_TYPE_STYLE[item.type as NotificationType];
+  /**
+   * Info: (20260826 - Julian) 以型別守衛收窄，不用 `as NotificationType`（review）。
+   *
+   * `item.type` 是 API 回來的字串。硬轉在這裡「剛好安全」，靠的是上面那行
+   * `message === null` 早退 —— 而那是相隔數行的耦合：有人在早退之前多讀
+   * 一次查表，就會拿到 `undefined` 並在 render 階段炸掉。
+   *
+   * 收窄之後 `style` 與 `href` 的型別是真的，不是宣稱的。
+   */
+  const known = isNotificationType(item.type) ? item.type : null;
+  const style = known ? NOTIFICATION_TYPE_STYLE[known] : undefined;
   const Icon = style ? ICON_BY_KEY[style.icon] : Bell;
-  const href = NOTIFICATION_LINK_PATH[item.type as NotificationType] ?? null;
+  const href = known ? (NOTIFICATION_LINK_PATH[known] ?? null) : null;
   const isUnread = item.readAt === null;
 
   /**

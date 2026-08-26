@@ -1,5 +1,12 @@
 export const notification = {
   aria: "알림",
+  /**
+   * Info: (20260826 - Julian) 帶未讀數的版本 —— `aria-label` 會**蓋掉**按鈕內容，
+   * 包括那顆徽章。固定字串等於讓讀屏使用者永遠聽不到有幾則。
+   */
+  aria_unread: "알림, 읽지 않음 {{count}}건",
+  // Info: (20260826 - Julian) 讀不到時說讀不到，不要退化成「目前沒有通知」
+  load_failed: "알림을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요",
   summary: "할 일 {{todos}}건, 작업 완료 알림 {{completed}}건",
   empty: "알림이 없습니다",
   todos_title: "할 일",
@@ -30,5 +37,4 @@ export const notification = {
   history_title: "기록",
   history_empty: "완료 또는 실패한 작업 알림이 아직 없습니다",
   total_items: "총 {{count}}건",
-  view: "보기",
 };

@@ -1,5 +1,12 @@
 export const notification = {
   aria: "Notifications",
+  /**
+   * Info: (20260826 - Julian) 帶未讀數的版本 —— `aria-label` 會**蓋掉**按鈕內容，
+   * 包括那顆徽章。固定字串等於讓讀屏使用者永遠聽不到有幾則。
+   */
+  aria_unread: "Notifications, {{count}} unread",
+  // Info: (20260826 - Julian) 讀不到時說讀不到，不要退化成「目前沒有通知」
+  load_failed: "Could not load notifications — please try again later",
   summary: "{{todos}} to-dos, {{completed}} completed-job notices",
   empty: "No notifications",
   todos_title: "To-dos",
@@ -31,5 +38,4 @@ export const notification = {
   history_title: "History",
   history_empty: "No completed or failed job notices yet",
   total_items: "{{count}} in total",
-  view: "View",
 };
