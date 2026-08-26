@@ -415,6 +415,36 @@ describe("buildLedgerFactBundle(標準事實包)", () => {
   });
 });
 
+describe("buildLedgerFactBundle × 年度快照(#6719)", () => {
+  it("滿兩年 → 年間比較事實隨包注入(取最近兩年)", () => {
+    const current = ledgerOf([
+      importedEntry({ activityKey: "a", co2eKg: "3400", sourceName: "電力" }),
+    ]);
+    const bundle = buildLedgerFactBundle(current, undefined, {
+      2022: ledgerOf([
+        importedEntry({ activityKey: "x", co2eKg: "999", sourceName: "電力" }),
+      ]),
+      2023: ledgerOf([
+        importedEntry({ activityKey: "x", co2eKg: "1000", sourceName: "電力" }),
+      ]),
+      2024: current,
+    });
+    const yoy = bundle.filter((fact) => fact.label.startsWith("年間"));
+    expect(yoy).toHaveLength(1);
+    expect(yoy[0].value).toContain("2023 年 1000");
+    expect(yoy[0].value).toContain("2024 年 3400");
+    expect(yoy[0].value).not.toContain("2022");
+  });
+
+  it("單一年度 → 無年間事實,也不佔事實包名額(拒答歸空)", () => {
+    const current = ledgerOf([
+      importedEntry({ activityKey: "a", co2eKg: "1" }),
+    ]);
+    const bundle = buildLedgerFactBundle(current, undefined, { 2024: current });
+    expect(bundle.some((fact) => fact.label.startsWith("年間"))).toBe(false);
+  });
+});
+
 describe("toContextFacts", () => {
   it("ok 攤平成 IContextFact;拒答回空陣列(拒答句不給 LLM 填空)", () => {
     const ok = queryTotal(

@@ -378,16 +378,41 @@ export const LEDGER_FACT_TOP_EMITTERS = 5;
  *
  * 帳本空時回空陣列:注入端(persona)對「無事實」另有明確拒答指令,不在這裡造假事實。
  */
+/**
+ * Info: (20260825 - Emily) #6719:從年度快照挑最近兩年做年間比較。
+ * 只有一個年度時回空(queryYearOverYear 的拒答經 toContextFacts 自然歸空)——
+ * 「無法比較」的說明由 persona 的無事實規則處理,不佔事實包名額。
+ */
+const yearOverYearFacts = (
+  ledgerByYear: Record<number, IComputedLedger> | undefined,
+): IContextFact[] => {
+  const years = Object.keys(ledgerByYear ?? {})
+    .map(Number)
+    .sort((a, b) => b - a);
+  if (!ledgerByYear || years.length < 2) return [];
+  return toContextFacts(
+    queryYearOverYear(
+      { year: years[0], ledger: ledgerByYear[years[0]] },
+      { year: years[1], ledger: ledgerByYear[years[1]] },
+    ),
+  );
+};
+
 export const buildLedgerFactBundle = (
   ledger: IComputedLedger | undefined,
   importBlocks?: ILedgerImportBlock[],
+  ledgerByYear?: Record<number, IComputedLedger>,
 ): IContextFact[] => {
   const core = [
     ...toContextFacts(queryTotal(ledger)),
     ...toContextFacts(querySiteSubtotals(ledger)),
     ...toContextFacts(queryTopEmitters(ledger, LEDGER_FACT_TOP_EMITTERS)),
   ];
-  const anomalies = toContextFacts(queryAnomalies(ledger, importBlocks));
+  // Info: (20260825 - Emily) 年間疑點與其他異常同池,一起受上限與「據實申報」規則管
+  const anomalies = [
+    ...toContextFacts(queryAnomalies(ledger, importBlocks)),
+    ...yearOverYearFacts(ledgerByYear),
+  ];
   const budget = LEDGER_FACT_BUNDLE_MAX - core.length - 1;
   if (anomalies.length <= budget + 1) {
     return [...core, ...anomalies];

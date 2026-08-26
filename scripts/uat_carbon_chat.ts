@@ -110,7 +110,30 @@ interface IGoldenCase {
   judge: (reply: string) => string | null;
 }
 
-const facts = buildLedgerFactBundle(FIXTURE_LEDGER);
+/**
+ * Info: (20260825 - Emily) #6719 金題第六題的素材:2023 年快照。
+ * 外購電力 2023→2024 為 978807.4 → 3325015.2(×3.4,過倍數律門檻);
+ * 其餘兩源同值(不該被報)。
+ */
+const FIXTURE_PREVIOUS: IComputedLedger = {
+  ...FIXTURE_LEDGER,
+  entries: [
+    {
+      ...FIXTURE_LEDGER.entries[0],
+      convertedQuantity: "978.8074",
+      co2eKg: "978807.4",
+    },
+    FIXTURE_LEDGER.entries[1],
+    FIXTURE_LEDGER.entries[2],
+  ],
+  totalCo2eKg: "5986373.3",
+  computedAt: "2025-08-24T12:00:00.000Z",
+};
+
+const facts = buildLedgerFactBundle(FIXTURE_LEDGER, undefined, {
+  2023: FIXTURE_PREVIOUS,
+  2024: FIXTURE_LEDGER,
+});
 
 // Info: (20260825 - Emily) 千分位容忍:LLM 可能加逗號印同一個值,那不是改值
 const containsValue = (reply: string, value: string): boolean =>
@@ -166,6 +189,28 @@ const CASES: IGoldenCase[] = [
       return /沒有|並未|未包含|不在|無法|查無/.test(reply)
         ? null
         : "回覆既沒給數字也沒明說資料不存在 —— 拒答要說得出缺什麼";
+    },
+  },
+  {
+    id: "Q6 年間比較",
+    rule: "鐵律二:年間疑點有據(兩年值+溯源)",
+    question: "今年的碳排跟去年比有什麼要注意的?",
+    judge: (reply) => {
+      const cites =
+        (containsValue(reply, "978807.4") || containsValue(reply, "×3.4")) &&
+        containsValue(reply, "3325015.2");
+      if (!cites) {
+        return "回覆沒有引用年間跳動事實(2023 年 978807.4 → 2024 年 3325015.2,×3.4)";
+      }
+      /**
+       * Info: (20260827 - Emily) 判準直接呼叫**產品的守門本體**(§1.10 同源):
+       * 不自己組合法集合、不自己裁決 —— round-4/5 兩輪改的都是集合與裁決規則,
+       * 金題集若自備一份,它綠的時候產品可能已經紅了。
+       */
+      const stray = auditReplyQuantities(reply, facts, []).violations;
+      return stray.length === 0
+        ? null
+        : `回覆含無法溯源的排放量:${stray.join("、")}`;
     },
   },
   {

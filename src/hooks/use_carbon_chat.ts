@@ -1675,14 +1675,25 @@ export const useCarbonChat = () => {
       );
       setInventoryStates((prev) => {
         const base = prev[channel] ?? createEmptyInventoryState();
+        const merged = mergeImportedLedgerEntries(base.computedLedger, entries);
         return {
           ...prev,
           [channel]: {
             ...base,
-            computedLedger: mergeImportedLedgerEntries(
-              base.computedLedger,
-              entries,
-            ),
+            computedLedger: merged,
+            /**
+             * Info: (20260825 - Emily) #6719 年度快照:報告有盤查年度才存
+             * (state.year 由萃取而來;沒有年度的帳本存進去只會製造假比較)。
+             * 同年度重匯覆蓋該年,與同鍵覆蓋語義一致。
+             */
+            ...(base.year !== undefined
+              ? {
+                  ledgerByYear: {
+                    ...base.ledgerByYear,
+                    [base.year]: merged,
+                  },
+                }
+              : {}),
             // Info: (20260825 - Emily) 成功入帳即清除阻擋紀錄:紀錄描述的狀態已不存在
             ledgerImportBlocks: undefined,
           },
@@ -5324,6 +5335,8 @@ export const useCarbonChat = () => {
           inventoryStates[chatChannel]?.computedLedger,
           // Info: (20260825 - Emily) 勾稽阻擋紀錄一併注入:「帳本為什麼是空的」也是可問的事實
           inventoryStates[chatChannel]?.ledgerImportBlocks,
+          // Info: (20260825 - Emily) #6719 年度快照:滿兩年時年間比較事實隨包注入
+          inventoryStates[chatChannel]?.ledgerByYear,
         );
         const sendChatRequest = () =>
           request<{

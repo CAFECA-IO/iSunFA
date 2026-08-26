@@ -362,6 +362,15 @@ export interface ICarbonInventoryState {
    * 下一次匯入成功入帳即清空(見 applyImportedLedgerEntries)。
    */
   ledgerImportBlocks?: ILedgerImportBlock[];
+  /**
+   * Info: (20260825 - Emily) 帳本年度快照(#6719):鍵為盤查年度(state.year)。
+   *
+   * 年間量級跳動偵測器需要「兩個年度的帳本」——年度維度不必等外部資料庫,
+   * 同房匯入第二份年度報告就長出來了。匯入成功入帳時以當時的 state.year 存快照;
+   * 同年度重匯 = 覆蓋該年(與 activityKey 同鍵覆蓋的語義一致)。
+   * `computedLedger` 維持「當前」語義不動 —— 既有消費端(桑基/對帳/事實包)零改動。
+   */
+  ledgerByYear?: Record<number, IComputedLedger>;
   notes?: string[];
   updatedAt: string;
   version: number;
