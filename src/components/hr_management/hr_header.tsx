@@ -2,7 +2,15 @@
 
 import { FC } from "react";
 import Link from "next/link";
-import { Menu, Search, UserCircle2 } from "lucide-react";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+/**
+ * Info: (20260826 - Julian) `Menu as MenuIcon`：headlessui 的 `Menu` 也叫 Menu。
+ *
+ * 先前為了少一個別名，把 headlessui 的 `Menu` 整組拿掉、讓 lucide 的 `Menu`
+ * 直接叫 Menu —— 而使用者選單（以及裡面的登出）就是靠 headlessui 那組畫的。
+ * 別名留著，不要為了省一行字讓兩個 `Menu` 互相排擠（review B4）。
+ */
+import { LogOut, Menu as MenuIcon, Search, UserCircle2 } from "lucide-react";
 import BrandLogoImage from "@/components/common/brand_logo_image";
 import { useAuth } from "@/contexts/auth_context";
 import {
@@ -23,7 +31,7 @@ interface IHrHeaderProps {
  */
 const HrHeader: FC<IHrHeaderProps> = ({ identity, onToggleSidebar }) => {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   /**
    * Info: (20260818 - Julian) 優先顯示**員工檔**姓名，退回登入帳號的名字。
@@ -33,6 +41,12 @@ const HrHeader: FC<IHrHeaderProps> = ({ identity, onToggleSidebar }) => {
    * 兩者不一致時顯示前者，會讓人對著別人的資料以為是自己的。
    */
   const displayName = identity?.name ?? user?.name ?? "";
+
+  /** Info: (20260818 - Julian) 「工地主任・第一工務所」；兩個外鍵都可能是 null */
+  const displayRole =
+    identity === null
+      ? ""
+      : [identity.jobTitle, identity.departmentName].filter(Boolean).join("・");
 
   return (
     <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur">
@@ -44,7 +58,7 @@ const HrHeader: FC<IHrHeaderProps> = ({ identity, onToggleSidebar }) => {
           onClick={onToggleSidebar}
           className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 lg:hidden"
         >
-          <Menu className="size-5 shrink-0" />
+          <MenuIcon className="size-5 shrink-0" />
         </button>
 
         <Link
@@ -81,20 +95,69 @@ const HrHeader: FC<IHrHeaderProps> = ({ identity, onToggleSidebar }) => {
           >
             <Search className="size-5 shrink-0" />
           </button>
-          <button
-            type="button"
-            aria-label={t("hr_management.user_menu_aria")}
-            title={t("hr_management.value.feature_pending")}
-            disabled
-            className={`flex items-center gap-2 rounded-xl p-1.5 transition-colors hover:bg-gray-100 ${HR_PENDING_ACTION_CLASS}`}
-          >
-            <UserCircle2 className="h-7 w-7 text-gray-400" />
-            {displayName && (
-              <span className="hidden max-w-[10rem] truncate text-sm font-medium text-gray-700 lg:inline">
-                {displayName}
-              </span>
-            )}
-          </button>
+          {/**
+           * Info: (20260818 - Julian) 不標 `feature_pending`：灰掉會讓人不去點它，而登出就在裡面。
+           *
+           * Info: (20260826 - Julian) 這段被誤刪過一次（review B4）。D15 要移除的是
+           * 那顆 disabled 的假鈴鐺，而當時連使用者選單、登出、員工編號與職稱副標
+           * 一起刪了，換成一顆 `disabled` + `feature_pending` 的頭像按鈕 ——
+           * **正好是上面這行註解警告過的事**。
+           *
+           * 後果不是少一個入口：HR shell 從此沒有任何登出路徑（`grep -rn logout`
+           * 在整個 hr_management 底下零命中），使用者只能自己改網址回主站，
+           * 而共用平板換人時前一個人的 session 會留著。
+           */}
+          <Menu as="div" className="relative">
+            <MenuButton
+              aria-label={t("hr_management.user_menu_aria")}
+              className="flex items-center gap-2 rounded-xl p-1.5 transition-colors hover:bg-gray-100"
+            >
+              <UserCircle2 className="h-7 w-7 text-gray-400" />
+              {displayName && (
+                <span className="hidden max-w-[12rem] flex-col items-start lg:flex">
+                  <span className="max-w-full truncate text-sm font-medium text-gray-700">
+                    {identity === null
+                      ? displayName
+                      : `${displayName}（${identity.employeeNo}）`}
+                  </span>
+                  {displayRole && (
+                    <span className="max-w-full truncate text-xs text-gray-400">
+                      {displayRole}
+                    </span>
+                  )}
+                </span>
+              )}
+            </MenuButton>
+
+            <MenuItems className="absolute right-0 z-40 mt-2 w-52 origin-top-right rounded-xl bg-white p-1 shadow-lg ring-1 ring-gray-200 focus:outline-none">
+              {/* Info: (20260818 - Julian) 小尺寸按鈕放不下姓名；共用平板換人時，登出前必須先看得到現在是誰 */}
+              {displayName && (
+                <div className="px-3 py-2 lg:hidden">
+                  <div className="truncate text-sm font-medium text-gray-700">
+                    {identity === null
+                      ? displayName
+                      : `${displayName}（${identity.employeeNo}）`}
+                  </div>
+                  {displayRole && (
+                    <div className="truncate text-xs text-gray-400">
+                      {displayRole}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <MenuItem>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 focus:bg-rose-50 focus:outline-none"
+                >
+                  <LogOut className="size-4 shrink-0" />
+                  {t("header.logout")}
+                </button>
+              </MenuItem>
+            </MenuItems>
+          </Menu>
         </div>
       </div>
     </header>

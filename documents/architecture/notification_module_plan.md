@@ -51,7 +51,7 @@
 | D12 | 錢包升級待辦是一個按了沒反應的連結 | `NOTIFICATION_LINK_PATH` 為 `null` → 渲染成不可點的 `<div>`。全站仍無升級頁面 |
 | D13 | commit 混入 130 個 `forge_out/` build artifact（95k 行） | `.gitignore` + `git rm -r --cached`（尚未 amend 進原 commit，見 §6） |
 | D14 | 最嚴重的三個缺陷不會讓任何測試變紅 | repo 替身改成有狀態的假實作；`codeOf` 剝區塊註解；401 驗精確值；i18n 驗元件實際會讀的每一個鍵 |
-| D15 | HR shell 留著一顆 disabled 的假鈴鐺 | 移除（產品決定：這一版 HR 不上鈴鐺） |
+| D15 | HR shell 留著一顆 disabled 的假鈴鐺 | 移除（產品決定：這一版 HR 不上鈴鐺）。**當時刪過頭，見 D24** |
 | D16 | 分析失敗時使用者什麼都收不到 | `ANALYSIS_FAILED`，綁 `Order.status` 轉 FAILED 的那一次轉換（重試中不發） |
 | D17 | 提示音第二次抵達起永久失效 | 抵達識別值改用伺服器端最新未讀時間 —— 完整理由見 **ADR 025 §7.1** |
 | D18 | 上鏈提交被拒 3 次寫下 `giveup.md` 後，訂單卡在非終態，完成與失敗都不通知 | `IssueRecorder` 也掃 `giveup.md`：標 FAILED 並通知。修在這裡是因為它是全站唯一寫入訂單終態的地方 |
@@ -60,6 +60,7 @@
 | D21 | D19 只修了查詢那一半：accept／decline 仍是 `inviteeAddress` 比對，而 email 邀請那一欄是 NULL —— 鈴鐺推一則待辦、團隊頁畫兩顆按鈕、兩顆都必定失敗（D12 的形狀）。順帶查出兩支**都沒有逾期檢查** | 抽 `resolveRecipientKeys` + `canActOnInvitation`，查詢／接受／拒絕三處同源；同時補上 `isInviteExpired`；email 路徑的 `emailMatch` 記為 `MATCHED` 而非 null |
 | D22 | 完成通知在 DB 同步**之前**無條件發出，而同步失敗會把訂單寫成 FAILED 並再發一則失敗通知 —— 同一份工作同時收到「已完成」與「失敗」，兩則的 `dedupeKey` 都是永久唯一鍵，收不回也蓋不掉 | 完成通知移到同步之後，條件為 `finalOrderStatus !== FAILED`（**不是** `newOrderStatus === COMPLETED`，理由見下） |
 | D23 | 點面板裡的團隊邀請會扣錯徽章的桶（`completedCount`，但邀請屬 `todoCount`）、把提示音基準降 1 造出一次幽靈搖動、並對合成 id 打 `POST .../invitation:<uuid>/read` —— 活算待辦的 `readAt` 恆為 null，`markOneRead` 的早退擋不住它 | 判斷抽成 `lib/notification_read.ts` 的 `canMarkReadByClick`（以**待辦型**為準，不是以「活不活算」），由 `notification_row.tsx` 單點決定，與伺服器端 `markReadById` 的 `excludeTypes` 讀同一份常數 |
+| D24 | 執行 D15 時連使用者選單一起刪了：`MenuItems`、**登出按鈕**、員工編號與職稱副標，換成一顆 `disabled` + `feature_pending` 的頭像按鈕。HR shell 因此沒有任何登出路徑（`grep -rn logout` 在 `hr_management` 底下零命中），而共用平板換人時前一個人的 session 會留著 | 依 develop 原樣還原選單，只保留鈴鐺的移除；補三條「留下了什麼」的測試（登出可用、`MenuButton` 不是 disabled、顯示得出員工編號與職稱） |
 
 **D17、D18、D19 的共通點值得記著**：三者都躲過了單元測試、e2e 與整份 code review。D17 的失效沒有任何觀測量（搖動照舊、徽章照舊、log 乾淨，唯一症狀是「聽不到聲音」）；D18 與 D19 的失效是「什麼都沒發生」，而沒有人會抱怨一件他不知道應該發生的事。
 
@@ -86,6 +87,14 @@ D22 沒被測試抓到的原因也值得寫清楚，因為它會影響下一次�
 修法選「待辦型」而不是 review 建議的「活不活算（`derived`）」，理由是後者修不掉錢包升級：它是**入庫的**待辦型，今天碰不到只因為 `NOTIFICATION_LINK_PATH` 給它 `null`；而那一欄的註解寫著「有了升級頁面之後把它填進來」。填進去的那天，同一個缺陷會以 D1 的形式回來 —— 點一下就把一則還沒處理的待辦標成已讀，而 `dedupeKey` 是永久唯一鍵。
 
 還有一個可推廣的判準：**兩個消費者犯同一個錯，代表那個判斷不該放在消費端**。B3 在小鈴鐺與 `/user/notifications` 各發生一次，而它們是同一天寫的、由同一個人寫的 —— 判斷留在呼叫端就是留給每一個新呼叫端再錯一次的機會。它被移進 `notification_row.tsx`，與「這一型有沒有去處」並列，因為那是同一類決定。
+
+**D24 是這批裡最便宜也最危險的一個**：它不需要任何巧合就會發生，而後果是一個安全性後果（共用平板上的 session 留給下一個人）。它躲過測試的方式只有一句話：守門的測試只寫了 `expect(hrHeader).not.toMatch(/<Bell\b/)`。
+
+**「只驗刪掉了什麼」的測試，擋不住刪過頭。** 每一條這種斷言都要配一條「留下了什麼」——否則把整個檔案清空也是綠的。這一條被誤刪的註解本身就是證據，它原本寫著：
+
+> `// Info: (20260818 - Julian) 不標 feature_pending：灰掉會讓人不去點它，而登出就在裡面`
+
+註解被刪掉之後，那個警告只存在於 git 歷史裡，而下一個人看到的是一顆看起來很合理的 disabled 頭像鈕。**寫下理由不足以保住它 —— 理由與程式碼在同一個 diff 裡，會一起被刪。** 能保住它的只有一條會紅的測試，所以那行警告現在同時存在於註解與 `notification_bell_wiring.test.ts`。
 
 ---
 

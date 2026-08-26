@@ -233,6 +233,77 @@ describe("來源與畫面的接線（掃描）", () => {
     expect(hrHeader).not.toMatch(/<Bell\b/);
   });
 
+  /**
+   * Info: (20260826 - Julian) 移除假鈴鐺**不得**順手刪掉旁邊的東西（review B4）。
+   *
+   * 上面那條只驗「Bell 不見了」，於是把整個使用者選單一起刪掉也是綠的 ——
+   * 而那實際發生了：D15 的改動連 `MenuItems`、登出按鈕、員工編號與職稱副標
+   * 一起移除，換成一顆 `disabled` + `feature_pending` 的頭像按鈕。
+   * HR shell 因此**沒有任何登出路徑**，使用者只能自己改網址回主站，
+   * 共用平板換人時前一個人的 session 會留著。
+   *
+   * 「只驗刪掉了什麼」的測試擋不住刪過頭 —— 必須同時驗**留下了什麼**
+   *（檢查清單 §1.11）。這一組就是那另一半。
+   */
+  it("HR header 仍然有可用的登出路徑", () => {
+    const hrHeader = codeOf(
+      "src",
+      "components",
+      "hr_management",
+      "hr_header.tsx",
+    );
+
+    // Info: (20260826 - Julian) 三件缺一不可：拿得到 logout、掛在 onClick 上、有文案
+    expect(hrHeader).toMatch(/useAuth\(\)/);
+    expect(hrHeader).toMatch(/logout/);
+    expect(hrHeader).toMatch(/onClick=\{logout\}/);
+    expect(hrHeader).toMatch(/header\.logout/);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 登出不能被關在一顆 `disabled` 的按鈕後面。
+   *
+   * 這是被誤刪的那行註解原本警告的事：「不標 `feature_pending`：灰掉會讓人
+   * 不去點它，而登出就在裡面」。註解被刪掉之後，那個警告就只存在於 git 歷史裡。
+   *
+   * 驗的是 `MenuButton` 這一段不帶 `disabled` —— 搜尋鈕仍然可以是 disabled
+   * （它真的還沒做，而且裡面沒有任何必要功能）。
+   */
+  it("使用者選單的觸發鈕不是 disabled（登出在裡面）", () => {
+    const hrHeader = codeOf(
+      "src",
+      "components",
+      "hr_management",
+      "hr_header.tsx",
+    );
+
+    const menuButton = /<MenuButton[\s\S]*?>/.exec(hrHeader)?.[0] ?? "";
+
+    // Info: (20260826 - Julian) 前提：真的找到 MenuButton（找不到的話上一行是空字串，恆綠）
+    expect(menuButton).toMatch(/aria-label/);
+    expect(menuButton).not.toMatch(/\bdisabled\b/);
+    expect(menuButton).not.toMatch(/feature_pending/);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 共用平板換人時，登出前要看得出現在是誰。
+   *
+   * 員工編號與職稱副標也在那次一起被刪掉。它們不是裝飾：這個 shell 的
+   * 使用情境就是工地共用平板，而 `useAuth()` 的名字是 Google 帳號顯示名稱，
+   * 與人事系統裡的身分未必相同（原檔註解已經寫過這件事）。
+   */
+  it("HR header 顯示得出員工編號與職稱", () => {
+    const hrHeader = codeOf(
+      "src",
+      "components",
+      "hr_management",
+      "hr_header.tsx",
+    );
+
+    expect(hrHeader).toMatch(/employeeNo/);
+    expect(hrHeader).toMatch(/displayRole/);
+  });
+
   it("搖動動畫的 keyframes 存在", () => {
     const css = readFileSync(
       join(process.cwd(), "src", "app", "globals.css"),
