@@ -8,7 +8,11 @@ import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
 import { bundlerService } from "@/services/bundler.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
-import { TEAM_INVITATION_STATUS } from "@/constants/status";
+import { INVITE_EMAIL_MATCH } from "@/constants/status";
+import {
+  canActOnInvitation,
+  resolveRecipientKeys,
+} from "@/services/team_invitation.service";
 
 export async function POST(
   request: NextRequest,
@@ -27,15 +31,32 @@ export async function POST(
     const { authentication } = body;
 
     // Info: (20260326 - Tzuhan) Validate the invitation
-    const invitation = await teamRepo.getInvitationByIdWithDetails(inviteId);
+    const found = await teamRepo.getInvitationByIdWithDetails(inviteId);
 
-    if (!invitation || invitation.status !== TEAM_INVITATION_STATUS.PENDING) {
-      return jsonFail(API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO);
-    }
-
-    if (invitation.inviteeAddress !== sessionUser.address) {
-      return jsonFail(API_ERRORS.FO_YOU_ARE_NOT_THE_INTENDED_RE);
-    }
+    /**
+     * Info: (20260826 - Julian) 狀態、逾期、收件者三道走共用判定（review B1）。
+     *
+     * 原本是 `invitation.inviteeAddress !== sessionUser.address`，而 email 邀請
+     * 那一欄是 NULL —— 於是 D19 把 email 邀請放進了鈴鐺與團隊頁，
+     * 而這裡讓「接受」必定失敗。列得出來的東西必須是能操作的東西。
+     *
+     * 判定與查詢端同源（`resolveRecipientKeys`），因此不會出現
+     * 「清單說這封是你的、接受時說不是」這種分岔 —— 那正是 B1 的成因。
+     *
+     * 逾期是這次一起補的：這支端點原本完全沒檢查。位址邀請不設 `expiresAt`，
+     * 所以在舊路徑上看不出問題；email 邀請有 7 天期限，只放寬收件者判定
+     * 而不補這一道，等於開放「逾期三個月的邀請仍可接受並佔一個付費席次」。
+     */
+    const check = canActOnInvitation({
+      invitation: found,
+      keys: await resolveRecipientKeys({
+        userId: sessionUser.id,
+        address: sessionUser.address,
+      }),
+      nowMs: Date.now(),
+    });
+    if (!check.ok) return jsonFail(check.error);
+    const invitation = check.invitation;
 
     if (!authentication) {
       return jsonFail(API_ERRORS.VL_MISSING_FIDO2);
@@ -65,11 +86,18 @@ export async function POST(
       role: invitation.role,
       acceptedAt: new Date(),
       /**
-       * Info: (20260817 - Luphia) 位址邀請沒有受邀信箱，因此比對不適用（null）。
-       * 這條路徑的身分本來就綁在位址上——上面已經驗過
-       * `invitation.inviteeAddress === sessionUser.address`，比 email 強得多。
+       * Info: (20260826 - Julian) 稽核值依這次是走哪一條判定而定。
+       *
+       * 位址邀請沒有受邀信箱，比對不適用（null）—— 身分綁在位址上，
+       * 那比 email 強得多，原本的註解在這一半仍然成立。
+       *
+       * email 邀請走的是「已驗證信箱的 canonical key 相符」才會走到這裡
+       *（`isIntendedRecipient`），所以依定義就是 `MATCHED`。留 null 會
+       * 丟掉一個訊號 —— 這是全站**唯一**能斷言「接受者確實擁有受邀信箱」
+       * 的路徑（token 路徑是 bearer，比對結果可能是 MISMATCHED 或
+       * UNAVAILABLE），把它記成「不適用」等於把最強的那筆稽核資料抹掉。
        */
-      emailMatch: null,
+      emailMatch: invitation.inviteeEmail ? INVITE_EMAIL_MATCH.MATCHED : null,
     });
 
     /**

@@ -355,6 +355,147 @@ export interface IInviteByEmailResult {
  * 以 passkey 註冊、從未綁定第三方登入的人**沒有任何 email**（`User` 沒有那個欄位），
  * 所以寄到信箱的邀請對他而言只存在於那封信裡。這是能力的上限，不是疏漏。
  */
+/**
+ * Info: (20260826 - Julian) 「這個人的收件身分」——位址 + 已驗證信箱的 canonical key。
+ *
+ * 抽出來的理由是 review B1：查詢端（鈴鐺、團隊頁）已經改成「位址 **OR**
+ * 已驗證信箱」，而處置端（接受、拒絕）還是純位址比對。於是 email 邀請
+ * **看得到、接不了** —— 兩顆按鈕必定失敗，而使用者沒有任何線索知道
+ * 該去信箱點連結。列出來的東西必須是能操作的東西（checklist §6）。
+ *
+ * 收斂成一支函式而不是在三處各查一次：`emailVerified` 的過濾與
+ * `canonicalizeEmailForKey` 少做一項，兩邊對「這封信是不是給你的」
+ * 就會給出不同答案 —— 而那個分岔的症狀正是現在這一個。
+ */
+export interface IInvitationRecipientKeys {
+  address: string;
+  emailKeys: string[];
+}
+
+export async function resolveRecipientKeys(params: {
+  userId: string;
+  address: string;
+}): Promise<IInvitationRecipientKeys> {
+  const identities = await userIdentityRepo.findByUserId(params.userId);
+  return {
+    address: params.address,
+    /**
+     * Info: (20260826 - Julian) 只採信**已驗證**的信箱。
+     *
+     * 未驗證的 email 是使用者宣稱的字串。在查詢端拿它當依據，是任何人
+     * 宣稱一個信箱就能讀到該信箱的邀請內容；在**處置端**更嚴重 ——
+     * 那會變成宣稱一個信箱就能加入別人的團隊。
+     */
+    emailKeys: identities
+      .filter((identity) => identity.emailVerified && identity.email)
+      .map((identity) => canonicalizeEmailForKey(identity.email as string)),
+  };
+}
+
+/**
+ * Info: (20260826 - Julian) 這封邀請是不是給這個人的。
+ *
+ * ## 為什麼「已驗證信箱」足以當授權依據
+ *
+ * `invite_email_match.ts` 寫著「邀請信箱是**投遞地址，不是身分斷言**」，
+ * 乍看與這裡矛盾，其實方向相反：那句話說的是**不能從持有連結反推身分**
+ *（信會被轉寄，拿著 token 的人未必是收件者）。這裡要的是另一個方向 ——
+ * 這位**已登入**的使用者對該信箱有第三方驗證過的綁定，也就是說他確實
+ * 控制著那封邀請投遞到的信箱，本來就能去點那個連結。
+ *
+ * 所以這條路徑不比 token 弱，反而更強：token 是 bearer，這裡多一層
+ * 已驗證的身分綁定，而且比對用的是與唯一鍵同一支 `canonicalizeEmailForKey`。
+ *
+ * ## 稽核值也因此不同
+ *
+ * 走這條路徑時 `emailMatch` 依定義必為 `MATCHED` —— 它是全站唯一
+ * 「接受者確定擁有受邀信箱」的路徑。呼叫端要照實記下，不要沿用位址路徑的 null。
+ */
+export function isIntendedRecipient(
+  invitation: { inviteeAddress: string | null; inviteeEmailKey: string | null },
+  keys: IInvitationRecipientKeys,
+): boolean {
+  /**
+   * Info: (20260826 - Julian) 兩邊都要有值才算數。
+   *
+   * `inviteeAddress` 與 `inviteeEmailKey` 都是可空欄位（位址邀請沒有信箱、
+   * email 邀請沒有位址）。少了 `Boolean(...)` 這一層，一個 `null === null`
+   * 就會讓**任何人**接受一封兩欄皆空的邀請 —— 而那種列今天造不出來，
+   * 這行防的是「今天造不出來」哪天不成立。
+   */
+  if (
+    Boolean(invitation.inviteeAddress) &&
+    Boolean(keys.address) &&
+    invitation.inviteeAddress === keys.address
+  ) {
+    return true;
+  }
+  return (
+    Boolean(invitation.inviteeEmailKey) &&
+    keys.emailKeys.includes(invitation.inviteeEmailKey as string)
+  );
+}
+
+/**
+ * Info: (20260826 - Julian) 接受／拒絕之前的三道共同檢查。
+ *
+ * 回結果而不是丟例外：兩個呼叫端的錯誤出口不同 —— route 走 `jsonFail`，
+ * service 走 `throw`。而 accept route 的 catch 會把任何例外收成 `IS_UNKNOWN`，
+ * 在那裡丟 ApiError 等於把「不是你的邀請」講成「未知錯誤」。
+ *
+ * **逾期這一道是這次補的**（review B1 順帶查出來的第二個缺口）：
+ * 兩支原本都只檢查 `status !== PENDING`。位址邀請不設 `expiresAt`，
+ * 所以在既有路徑上這個缺口是潛伏的 —— 但 email 邀請有 7 天期限，
+ * 一旦上面的收件者判定放行 email 邀請，「逾期三個月的邀請仍可接受並
+ * 佔掉一個付費席次」就成真了。修法與擴權必須同一次進去。
+ */
+/**
+ * Info: (20260826 - Julian) 成功時把**收窄過的**邀請帶回去。
+ *
+ * 泛型不是為了漂亮：呼叫端拿到的 `invitation` 是 `T | null`，而
+ * `check.ok === true` 沒辦法回頭收窄另一個變數。少了這一手，兩個呼叫端
+ * 都得在檢查之後再寫一次 `if (!invitation) throw` —— 同一件事判斷兩次，
+ * 而第二次遲早會與第一次講的話不一樣。
+ */
+export type IInvitationActionCheck<T> =
+  | { ok: true; invitation: T }
+  | { ok: false; error: IErrorDef };
+
+export function canActOnInvitation<
+  T extends {
+    status: string;
+    expiresAt: Date | null;
+    inviteeAddress: string | null;
+    inviteeEmailKey: string | null;
+  },
+>(params: {
+  invitation: T | null;
+  keys: IInvitationRecipientKeys;
+  nowMs: number;
+}): IInvitationActionCheck<T> {
+  const { invitation, keys, nowMs } = params;
+
+  if (!invitation || invitation.status !== TEAM_INVITATION_STATUS.PENDING) {
+    return { ok: false, error: API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO };
+  }
+
+  /**
+   * Info: (20260826 - Julian) 逾期與「查無邀請」回同一個碼是刻意的。
+   *
+   * 分開回碼會讓未持有邀請的人問得出「這個 id 存在但過期了」——
+   * 而這支端點的 id 是可猜的。畫面上兩者的處置也一樣：重新索取一封。
+   */
+  if (isInviteExpired(invitation.expiresAt, nowMs)) {
+    return { ok: false, error: API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO };
+  }
+
+  if (!isIntendedRecipient(invitation, keys)) {
+    return { ok: false, error: API_ERRORS.FO_YOU_ARE_NOT_THE_INTENDED_RE };
+  }
+
+  return { ok: true, invitation };
+}
+
 export async function listPendingInvitationsForUser(params: {
   userId: string;
   address: string;
@@ -370,14 +511,19 @@ export async function listPendingInvitationsForUser(params: {
    */
   if (!params.address) return [];
 
-  const identities = await userIdentityRepo.findByUserId(params.userId);
-  const emailKeys = identities
-    .filter((identity) => identity.emailVerified && identity.email)
-    .map((identity) => canonicalizeEmailForKey(identity.email as string));
+  /**
+   * Info: (20260826 - Julian) 與 accept／decline 共用同一支（review B1）。
+   * 這裡少過濾一項 `emailVerified`，查詢端與處置端就會對「這封信是不是
+   * 給你的」給出不同答案 —— 而那正是 B1 的形狀。
+   */
+  const keys = await resolveRecipientKeys({
+    userId: params.userId,
+    address: params.address,
+  });
 
   const invitations = await teamRepo.getPendingInvitationsForRecipient({
-    address: params.address,
-    emailKeys,
+    address: keys.address,
+    emailKeys: keys.emailKeys,
   });
 
   return invitations.filter(
@@ -910,26 +1056,35 @@ export interface IDeclineByMemberParams {
   inviteId: string;
   userId: string;
   address: string;
+  // Info: (20260826 - Julian) 逾期判定用（review B1 順帶補上，見 `canActOnInvitation`）
+  nowMs: number;
 }
 
 /**
  * Info: (20260817 - Luphia) 受邀者拒絕以錢包位址寄出的邀請（條款 §3.6）。
  *
  * 同樣由 route 搬進 service（CLAUDE.md §1）。與 token 路徑的差別只在身分來源：
- * 位址邀請的受邀者一定已經有帳號，因此可以、也應該驗「是不是本人」。
+ * 這條路徑的受邀者一定已經有帳號，因此可以、也應該驗「是不是本人」。
+ *
+ * Info: (20260826 - Julian) 收件者判定改走共用的 `canActOnInvitation`（review B1）。
+ *
+ * 原本是 `invitation.inviteeAddress !== address`，而 email 邀請那一欄是 NULL ——
+ * 於是被 email 邀請的人在團隊頁按「拒絕」必定失敗，而那顆按鈕是無條件渲染的。
+ * 不能拒絕的後果不只是體驗：那一席會一直算在邀請方的帳上到逾期為止，
+ * 而這顆按鈕存在的理由正是為了避免這件事。
  */
 export async function declineInvitationByMember(
   params: IDeclineByMemberParams,
 ): Promise<{ id: string; teamId: string }> {
-  const { inviteId, address } = params;
+  const { inviteId, userId, address, nowMs } = params;
 
   const invitation = await teamRepo.getInvitationByIdWithDetails(inviteId);
-  if (!invitation || invitation.status !== TEAM_INVITATION_STATUS.PENDING) {
-    throw toApiError(API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO);
-  }
-  if (invitation.inviteeAddress !== address) {
-    throw toApiError(API_ERRORS.FO_YOU_ARE_NOT_THE_INTENDED_RE);
-  }
+  const check = canActOnInvitation({
+    invitation,
+    keys: await resolveRecipientKeys({ userId, address }),
+    nowMs,
+  });
+  if (!check.ok) throw toApiError(check.error);
 
   /**
    * Info: (20260817 - Luphia) `false` = 這封邀請在讀取之後已經不是 PENDING。
@@ -939,5 +1094,5 @@ export async function declineInvitationByMember(
   const declined = await teamRepo.declineInvitation(inviteId);
   if (!declined) throw toApiError(API_ERRORS.NO_INVITATION_NOT_FOUND_OR_NO);
 
-  return { id: inviteId, teamId: invitation.teamId };
+  return { id: inviteId, teamId: check.invitation.teamId };
 }
