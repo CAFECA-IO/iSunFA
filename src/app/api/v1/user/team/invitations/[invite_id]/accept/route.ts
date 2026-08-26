@@ -8,7 +8,7 @@ import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
 import { bundlerService } from "@/services/bundler.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
-import { INVITE_EMAIL_MATCH } from "@/constants/status";
+import { resolveInviteEmailMatch } from "@/lib/team/invite_email_match";
 import {
   canActOnInvitation,
   resolveRecipientKeys,
@@ -47,12 +47,13 @@ export async function POST(
      * 所以在舊路徑上看不出問題；email 邀請有 7 天期限，只放寬收件者判定
      * 而不補這一道，等於開放「逾期三個月的邀請仍可接受並佔一個付費席次」。
      */
+    const keys = await resolveRecipientKeys({
+      userId: sessionUser.id,
+      address: sessionUser.address,
+    });
     const check = canActOnInvitation({
       invitation: found,
-      keys: await resolveRecipientKeys({
-        userId: sessionUser.id,
-        address: sessionUser.address,
-      }),
+      keys,
       nowMs: Date.now(),
     });
     if (!check.ok) return jsonFail(check.error);
@@ -86,18 +87,28 @@ export async function POST(
       role: invitation.role,
       acceptedAt: new Date(),
       /**
-       * Info: (20260826 - Julian) 稽核值依這次是走哪一條判定而定。
+       * Info: (20260826 - Julian) 稽核值**實際比對一次**，不從欄位有無推論（review R-4）。
        *
-       * 位址邀請沒有受邀信箱，比對不適用（null）—— 身分綁在位址上，
-       * 那比 email 強得多，原本的註解在這一半仍然成立。
+       * 原本寫的是 `invitation.inviteeEmail ? MATCHED : null` —— 拿「受邀信箱
+       * 這一欄有值」代替「這次是靠哪一條判定通過的」。今天造不出兩欄皆有值的
+       * 邀請，所以結論碰巧正確；但 `isIntendedRecipient` 自己就為同一種
+       * 「今天造不出來」寫了防禦（兩欄皆空時的 `Boolean(...)`），
+       * 兩處對同一類假設用兩套標準，遲早有一處被推翻。
        *
-       * email 邀請走的是「已驗證信箱的 canonical key 相符」才會走到這裡
-       *（`isIntendedRecipient`），所以依定義就是 `MATCHED`。留 null 會
-       * 丟掉一個訊號 —— 這是全站**唯一**能斷言「接受者確實擁有受邀信箱」
-       * 的路徑（token 路徑是 bearer，比對結果可能是 MISMATCHED 或
-       * UNAVAILABLE），把它記成「不適用」等於把最強的那筆稽核資料抹掉。
+       * 走與 token 路徑同一支 `resolveInviteEmailMatch`：位址邀請回 null
+       *（沒有受邀信箱，比對不適用），email 邀請依實際比對回值。
+       * 稽核欄位記的是**觀測到的事**，不是從別的欄位推出來的事。
+       *
+       * ToDo: (20260826 - Julian) 這一筆目前是**準純寫入**：
+       * `acceptedEmailMatch` 今天唯一的讀者是 `member_visibility.ts`，
+       * 而它只讀 `MISMATCHED`。這條路徑寫進去的 `MATCHED` 沒有任何查詢、
+       * 畫面或告警看得到 —— 沒有讀者的稽核欄位，稽核價值是零。
+       * 要嘛給它一個讀者，要嘛承認它只是為了讓那一欄不說謊。
        */
-      emailMatch: invitation.inviteeEmail ? INVITE_EMAIL_MATCH.MATCHED : null,
+      emailMatch: resolveInviteEmailMatch(
+        invitation.inviteeEmail,
+        keys.verifiedEmails,
+      ),
     });
 
     /**

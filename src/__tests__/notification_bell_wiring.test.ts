@@ -716,13 +716,68 @@ describe("通知列只有一份實作", () => {
     );
   });
 
-  it.each([
-    ["TODO_NOTIFICATION_TYPES", "待辦型清單"],
-    ["canMarkReadByClick", "點了算不算已讀的判斷"],
-  ])("消費端沒有自己一份 %s（%s）", (symbol) => {
+  /**
+   * Info: (20260826 - Julian) 消費端不得自己列一份待辦型清單。
+   *
+   * 這一條原本連 `canMarkReadByClick` 一起禁，理由是「規則只能有一個答案處」。
+   * 但那禁錯了對象：**呼叫**共用函式不是第二個答案，**重寫**規則才是。
+   * 下面那條現在要求兩個消費端都呼叫它（review R-3），兩條合起來的意思是
+   * 「同一個判準、可以問很多次」。
+   */
+  it("消費端沒有自己一份 TODO_NOTIFICATION_TYPES", () => {
     for (const consumer of [BELL, PAGE]) {
-      expect(codeOf(...consumer)).not.toContain(symbol);
+      expect(codeOf(...consumer)).not.toContain("TODO_NOTIFICATION_TYPES");
     }
+  });
+
+  /**
+   * Info: (20260826 - Julian) `markOneRead` 自己要守門，不能只靠 row 不呼叫（review R-3）。
+   *
+   * 在這之前，兩支 `markOneRead` 的早退只有 `item.readAt !== null` ——
+   * 而活算的待辦（團隊邀請）`readAt` 恆為 null，所以那道擋不住它。
+   * 唯一沒出事的理由是 `NotificationRow` 不把待辦型的 onClick 接上 onRead：
+   * 也就是說，兩支函式的正確性依賴另一個檔案的一個三元運算子。
+   *
+   * 那不是守門，是巧合。多一個呼叫端、或那個三元運算子被改一次，
+   * 缺陷就回來（扣錯徽章的桶、下一次輪詢白搖一次鈴、對合成 id 打 API）。
+   *
+   * 釘的是「守門在 markOneRead 裡面」而不只是「檔案裡有這個字」：
+   * 後者會被一個放在別處的呼叫騙過去。
+   */
+  it.each([
+    [BELL, "鈴鐺"],
+    [PAGE, "通知頁"],
+  ])("%s 的 markOneRead 第一道守門是 canMarkReadByClick", (consumer) => {
+    const code = codeOf(...(consumer as string[]));
+    const at = code.indexOf("markOneRead = useCallback");
+    expect(at).toBeGreaterThan(-1);
+
+    const body = code.slice(at, at + 900);
+    expect(body).toMatch(/canMarkReadByClick\(item\.type\)/);
+    // Info: (20260826 - Julian) 兩道都要留：它們擋的是兩件不同的事
+    expect(body).toMatch(/item\.readAt !== null/);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 「讀不到」不得被畫成「沒有」（review R-2）。
+   *
+   * 鈴鐺這一輪把四態分開了，同一個 PR 的第二個消費者沒有：兩支 catch
+   * 都寫成空資料，而待辦區在空資料時整塊不渲染 ——
+   * 使用者不會知道自己有一封待接受的邀請。
+   *
+   * 釘兩件事：catch 裡不准再出現「寫成空」的形狀，且畫面用得到
+   * `load_failed` 這個鍵（它五個語系都已經有了）。
+   */
+  it.each([
+    [BELL, "鈴鐺"],
+    [PAGE, "通知頁"],
+  ])("%s 讀取失敗時說得出「讀不到」", (consumer) => {
+    const code = codeOf(...(consumer as string[]));
+
+    expect(code).toMatch(/notification\.load_failed/);
+    // Info: (20260826 - Julian) catch 裡把清單寫成空，就是把錯誤說成「沒有」
+    expect(code).not.toMatch(/catch\s*\{[^}]*setTodos\(\[\]\)/s);
+    expect(code).not.toMatch(/catch\s*\{[^}]*totalItems: 0/s);
   });
 
   /**

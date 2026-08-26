@@ -7,6 +7,7 @@ import { request } from "@/lib/utils/request";
 import { HTTP_METHOD } from "@/constants/http";
 import Pagination from "@/components/common/pagination";
 import NotificationRow from "@/components/notification/notification_row";
+import { canMarkReadByClick } from "@/lib/notification_read";
 /**
  * Info: (20260826 - Julian) 端點回的形狀只有一份（review B6）。
  * 這裡原本自己再宣告 `INotificationList` / `INotificationHistoryPage` 各一份，欄位對得上是
@@ -41,6 +42,19 @@ export default function NotificationsPage() {
   const [history, setHistory] = useState<INotificationHistoryPage | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  /**
+   * Info: (20260826 - Julian) 兩區各有自己的「讀不到」狀態（review R-2）。
+   *
+   * 鈴鐺這一輪把四態分開了，這一頁沒有 —— 兩區的 catch 都寫成空資料，
+   * 而畫面對空資料的呈現是「還沒有任何通知」與「整個待辦區不存在」。
+   * 於是一次網路錯誤變成兩句關於使用者資料的斷言，其中一句會讓人
+   * 不知道自己有一封待接受的邀請。
+   *
+   * 分開兩個狀態而不是共用一個：兩支請求會各自失敗，
+   * 一支掛掉不該讓另一支已經拿到的內容也被說成「讀不到」。
+   */
+  const [todosFailed, setTodosFailed] = useState(false);
+  const [historyFailed, setHistoryFailed] = useState(false);
 
   /**
    * Info: (20260826 - Julian) 待辦只抓一次（進頁時），歷史每次換頁抓。
@@ -54,9 +68,14 @@ export default function NotificationsPage() {
         "/api/v1/user/notifications",
       );
       setTodos(response.payload?.todos ?? []);
+      setTodosFailed(false);
     } catch {
-      // Info: (20260826 - Julian) 待辦讀不到不該讓整頁空白：歷史區仍然有用
-      setTodos([]);
+      /**
+       * Info: (20260826 - Julian) 不要寫成空陣列：待辦區在 `todos.length === 0`
+       * 時整塊不渲染，寫空等於「你沒有待辦事項」——而真相是「這次沒問到」。
+       * 保留上一次的內容，另外掛一個旗標讓畫面說得出來。
+       */
+      setTodosFailed(true);
     }
   }, []);
 
@@ -82,8 +101,10 @@ export default function NotificationsPage() {
        * 而「上一頁」按鈕算出來的目標也跟著錯。
        */
       if (response.payload) setPage(response.payload.currentPage);
+      setHistoryFailed(false);
     } catch {
-      setHistory({ items: [], totalItems: 0, totalPages: 1, currentPage: 1 });
+      // Info: (20260826 - Julian) 同上：空的歷史頁會被畫成「還沒有任何通知」
+      setHistoryFailed(true);
     } finally {
       setLoading(false);
     }
@@ -109,6 +130,18 @@ export default function NotificationsPage() {
    * 徽章偏多不會讓人漏掉東西——反過來才會。
    */
   const markOneRead = useCallback((item: INotificationItem) => {
+    /**
+     * Info: (20260826 - Julian) 守門下沉到這裡（review R-3）。
+     *
+     * 今天走不到這一行的唯一理由是 `NotificationRow` 不把待辦型的 onClick
+     * 接上 onRead —— 也就是說，這支的正確性依賴另一個檔案的渲染細節。
+     * 那不是一道守門，是一個巧合：加一個新的呼叫端、或把那個三元運算子
+     * 改一次，缺陷就回來了（扣錯徽章的桶、白搖一次鈴、對合成 id 打 API）。
+     *
+     * `readAt !== null` 擋不住待辦：活算的邀請 `readAt` 恆為 null。
+     * 兩道都留著，因為它們擋的是兩件事。
+     */
+    if (!canMarkReadByClick(item.type)) return;
     if (item.readAt !== null) return;
 
     setHistory((previous) =>
@@ -135,7 +168,11 @@ export default function NotificationsPage() {
         {t("notification.page_title")}
       </h1>
 
-      {todos.length > 0 && (
+      {/**
+       * Info: (20260826 - Julian) 讀不到時這一區要**出現**，並說明原因。
+       * 沒有待辦是「不必顯示」，讀不到是「有東西沒讀到」——後者必須看得見。
+       */}
+      {(todos.length > 0 || todosFailed) && (
         <section className="border-border-default rounded-lg border bg-white">
           <h2 className="text-text-muted border-border-default border-b px-3 py-2 text-xs font-semibold">
             {t("notification.todos_title")}
@@ -149,6 +186,11 @@ export default function NotificationsPage() {
                 showTimestamp
               />
             ))}
+            {todosFailed && (
+              <p className="text-text-muted px-3 py-4 text-center text-sm">
+                {t("notification.load_failed")}
+              </p>
+            )}
           </div>
         </section>
       )}
@@ -168,6 +210,14 @@ export default function NotificationsPage() {
             <Loader2 className="h-5 w-5 animate-spin" />
             <span className="sr-only">{t("common.loading")}</span>
           </div>
+        ) : historyFailed && !history ? (
+          /**
+           * Info: (20260826 - Julian) 沒有任何舊內容可顯示時才整區換成錯誤訊息；
+           * 有舊內容的話寧可讓人看見上一次的清單，下面那條提示會說它是舊的。
+           */
+          <p className="text-text-muted px-3 py-10 text-center text-sm">
+            {t("notification.load_failed")}
+          </p>
         ) : !history || history.items.length === 0 ? (
           <p className="text-text-muted px-3 py-10 text-center text-sm">
             {t("notification.history_empty")}
@@ -183,6 +233,16 @@ export default function NotificationsPage() {
               />
             ))}
           </div>
+        )}
+
+        {/**
+         * Info: (20260826 - Julian) 有舊內容、但這一次沒讀到新的。
+         * 靜靜顯示過期資料與靜靜顯示「沒有通知」是同一種病。
+         */}
+        {historyFailed && history && !loading && (
+          <p className="text-text-muted px-3 pb-2 text-center text-xs">
+            {t("notification.load_failed")}
+          </p>
         )}
       </section>
 

@@ -19,6 +19,7 @@ import {
   NOTIFICATION_SUMMARY_TOAST_MS,
 } from "@/constants/notification";
 import NotificationRow from "@/components/notification/notification_row";
+import { canMarkReadByClick } from "@/lib/notification_read";
 import type {
   INotificationItem,
   INotificationList,
@@ -195,6 +196,18 @@ export default function NotificationBell() {
    */
   const markOneRead = useCallback(
     (item: IItem) => {
+      /**
+       * Info: (20260826 - Julian) 守門下沉到這裡（review R-3）。
+       *
+       * 今天走不到這一行的唯一理由是 `NotificationRow` 不把待辦型的 onClick
+       * 接上 onRead —— 也就是說，這支的正確性依賴另一個檔案的渲染細節。
+       * 那不是一道守門，是一個巧合：加一個新的呼叫端、或把那個三元運算子
+       * 改一次，缺陷就回來了（扣錯徽章的桶、白搖一次鈴、對合成 id 打 API）。
+       *
+       * `readAt !== null` 擋不住待辦：活算的邀請 `readAt` 恆為 null。
+       * 兩道都留著，因為它們擋的是兩件事。
+       */
+      if (!canMarkReadByClick(item.type)) return;
       if (item.readAt !== null) return;
 
       setList((previous) =>
