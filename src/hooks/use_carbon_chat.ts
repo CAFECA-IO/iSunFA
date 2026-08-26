@@ -4361,20 +4361,53 @@ export const useCarbonChat = () => {
           .slice(-CARBON_CHAT_AI_CONTEXT_SIZE)
           .map((msg) => ({ role: msg.sender, text: msg.text }));
 
-        const res = await request<{ payload: IParagraphDraft | null }>(
-          "/api/v1/chat/carbon/draft",
-          {
-            method: "POST",
-            // Info: (20260814 - Luphia) 計費上下文（設計書 §5.5），同段落修訂
-            body: JSON.stringify({
-              paragraphId,
-              conversationContext,
-              language,
-              channel: chatChannel,
-              clientMessageId: crypto.randomUUID(),
-            }),
-          },
-        );
+        /**
+         * Info: (20260825 - Luphia) 冪等鍵在**重送之間必須相同**（issue #6713 延伸）。
+         *
+         * 無帳本會話會先回 402 帶一張待付訂單，付掉之後以同一把鍵重送才會放行。
+         * 先前這個值是 inline 產生的，一旦加上重送就會變成「付了一張、又建一張」
+         *（聊天路徑的註解早就警告過這件事，草稿路徑漏了）。
+         */
+        const clientMessageId = crypto.randomUUID();
+        const requestDraft = () =>
+          request<{ payload: IParagraphDraft | null }>(
+            "/api/v1/chat/carbon/draft",
+            {
+              method: "POST",
+              // Info: (20260814 - Luphia) 計費上下文（設計書 §5.5），同段落修訂
+              body: JSON.stringify({
+                paragraphId,
+                conversationContext,
+                language,
+                channel: chatChannel,
+                clientMessageId,
+              }),
+            },
+          );
+
+        /**
+         * Info: (20260825 - Luphia) 無帳本會話的待付款流程，與聊天路徑同一套
+         *（設計書 §5.5）：付掉那張單後以相同冪等鍵重送即可放行。
+         *
+         * 草稿路徑原本沒有這一段，於是同一個使用者在同一個會話裡，
+         * 送訊息會自動付款繼續、按「生成草稿」卻只看到「草稿生成失敗」——
+         * 而兩者花的是同一份點數。付款失敗（取消簽章、餘額不足）原樣拋出，
+         * 交由下方既有的錯誤處理顯示。
+         */
+        let res: Awaited<ReturnType<typeof requestDraft>>;
+        try {
+          res = await requestDraft();
+        } catch (error) {
+          const pendingPayment = parsePersonalPaymentRequired(error);
+          if (!pendingPayment) throw error;
+          const paid = await payExistingOrder(
+            pendingPayment.orderId,
+            pendingPayment.cost,
+            () => {},
+          );
+          if (!paid) throw error;
+          res = await requestDraft();
+        }
         const draft = res.payload;
         if (!draft) throw new Error("Empty draft payload");
 
@@ -4389,7 +4422,20 @@ export const useCarbonChat = () => {
         let noticeText = t("carbon_chatbot.draft_failed", {
           section: `${section.code} ${section.title}`,
         });
-        if (isQuotaApiError(error)) {
+        /**
+         * Info: (20260825 - Luphia) **使用者的點數用完**要先問（issue #6713 延伸）。
+         *
+         * 這裡原本只認 `isQuotaApiError`——那是 **LLM 供應商**的配額，
+         * 與使用者的錢無關。點數用完會落到「草稿生成失敗」，而使用者會以為
+         * 是這一節的內容有問題，重試一百次也一樣。這與匯入迴圈那個缺陷同一類，
+         * 只是出口不同（那邊是「章節解析失敗」）。
+         *
+         * 需要個人付款的那種上面已經付掉並重送過；走到這裡代表付款也失敗了
+         *（取消簽章、餘額不足），那時「點數不足」仍是最準確的說法。
+         */
+        if (resolveCreditPauseReason(error) !== null) {
+          noticeText = t("carbon_chatbot.team_quota_exceeded");
+        } else if (isQuotaApiError(error)) {
           noticeText = t("carbon_chatbot.ai_quota_exceeded");
         } else if (isTimeoutApiError(error)) {
           noticeText = t("carbon_chatbot.ai_timeout");
@@ -4413,6 +4459,8 @@ export const useCarbonChat = () => {
       jumpToReportParagraph,
       // Info: (20260814 - Luphia) 計費上下文所需：channel 決定這筆消費記到哪個帳本
       chatChannel,
+      // Info: (20260825 - Luphia) 無帳本會話的待付款流程（與聊天路徑同一套）
+      payExistingOrder,
     ],
   );
 

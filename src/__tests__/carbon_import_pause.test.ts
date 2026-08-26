@@ -243,6 +243,59 @@ describe("暫停單元收斂成章", () => {
 });
 
 /**
+ * Info: (20260825 - Luphia) 草稿補齊路徑的同一類缺陷（PR #6716 相容性檢視時發現）。
+ *
+ * 匯入迴圈把點數用完講成「章節解析失敗」；**單獨按某一節的「生成草稿」也是**——
+ * 那條路只認 `isQuotaApiError`（LLM 供應商配額），使用者的點數用完會落到
+ * 「草稿生成失敗」，而使用者會以為是這一節的內容有問題。
+ *
+ * 而它還缺一件聊天路徑早就有的事：無帳本會話的待付款重送。於是同一個使用者
+ * 在同一個會話裡，送訊息會自動付款繼續、按「生成草稿」卻只看到失敗——
+ * 兩者花的是同一份點數。
+ */
+describe("草稿補齊的點數處理", () => {
+  const hook = readFileSync(
+    join(process.cwd(), "src", "hooks", "use_carbon_chat.ts"),
+    "utf8",
+  );
+  const draftScope = (() => {
+    const start = hook.indexOf("const generateParagraphDraft");
+    expect(start).toBeGreaterThan(-1);
+    return hook.slice(start, hook.indexOf("const importBookEsgRecords"));
+  })();
+
+  it("點數用完說「額度用完」，不說「草稿生成失敗」", () => {
+    expect(draftScope).toContain("resolveCreditPauseReason(error) !== null");
+    expect(draftScope).toContain("carbon_chatbot.team_quota_exceeded");
+    /**
+     * Info: (20260825 - Luphia) 判斷順序要在 `isQuotaApiError` **之前**：
+     * 兩者都是 `else if` 鏈上的分支，順序錯了就永遠走不到。
+     */
+    expect(
+      draftScope.indexOf("resolveCreditPauseReason(error) !== null"),
+    ).toBeLessThan(draftScope.indexOf("isQuotaApiError(error)"));
+  });
+
+  it("無帳本會話會付掉待付訂單再重送（與聊天路徑同一套）", () => {
+    expect(draftScope).toContain("parsePersonalPaymentRequired(error)");
+    expect(draftScope).toContain("payExistingOrder(");
+    expect(draftScope).toContain("res = await requestDraft();");
+  });
+
+  /**
+   * Info: (20260825 - Luphia) 冪等鍵在重送之間必須相同，否則是「付了一張、又建一張」。
+   * 先前這個值是 inline 產生的，一旦加上重送就會踩到那個坑
+   *（聊天路徑的註解早就警告過，草稿路徑漏了）。
+   */
+  it("重送用同一把冪等鍵", () => {
+    expect(draftScope).toContain("const clientMessageId = crypto.randomUUID()");
+    expect(draftScope).toContain("clientMessageId,");
+    // Info: (20260825 - Luphia) 不准回到 inline 產生（那會讓重送變成第二張訂單）
+    expect(draftScope).not.toContain("clientMessageId: crypto.randomUUID()");
+  });
+});
+
+/**
  * Info: (20260825 - Luphia) 「接著匯入」的入口（review #6717 高-1）。
  *
  * 在此之前訊息（五語言）告訴使用者補上點數後可以「從這裡接著匯入」，
