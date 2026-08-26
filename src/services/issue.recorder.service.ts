@@ -6,7 +6,7 @@ import {
   notifyAnalysisCompleted,
   notifyAnalysisFailed,
 } from "@/services/notification.service";
-import { ORDER_STATUS } from "@/constants/status";
+import { ORDER_STATUS, isTerminalOrderStatus } from "@/constants/status";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import {
   syncDocumentResultToDatabase,
@@ -384,7 +384,15 @@ export class IssueRecorderService {
             const newTokens = (order.tokens || 0) + tokensConsumed;
 
             let newOrderStatus = order.status;
-            if (newOrderStatus !== ORDER_STATUS.FAILED) {
+            /**
+             * Info: (20260826 - Julian) 終態一律不重算（review）。
+             *
+             * 原本只擋 FAILED，於是已經 `COMPLETED` 的訂單在某個任務的
+             * DB 同步失敗時會被改回 FAILED；已 `CANCEL` 的也會被改成 FAILED。
+             * 這是放棄路徑那個缺陷的**原版** —— 那一處是從這裡複製過去的，
+             * 所以兩處要一起修，否則下次還是會被複製一次。
+             */
+            if (!isTerminalOrderStatus(newOrderStatus)) {
               if (finalOrderStatus === ORDER_STATUS.FAILED) {
                 newOrderStatus = ORDER_STATUS.FAILED;
               } else {
@@ -670,7 +678,17 @@ export class IssueRecorderService {
         return false;
       }
 
-      if (order.status !== ORDER_STATUS.FAILED) {
+      /**
+       * Info: (20260826 - Julian) **已在終態就不動**，而不是「不是 FAILED 就寫成 FAILED」（review）。
+       *
+       * 原本的條件擋得住重複標記，擋不住覆寫：多任務訂單已經 `COMPLETED`、
+       * 或使用者已經 `CANCEL` 時，一個任務被放棄會把整張訂單改成 FAILED
+       * 並發一則「你的分析失敗了」—— 而那兩件事都是把已經定案的事實推翻。
+       *
+       * 用 `isTerminalOrderStatus` 而不是多列幾個 `!==`：同一道守門在成功路徑
+       * 也要有一份（見下方 `becameFailed`），兩處各寫一串比較遲早會分岔。
+       */
+      if (!isTerminalOrderStatus(order.status)) {
         await orderRepo.update({
           where: { id: order.id },
           data: { status: ORDER_STATUS.FAILED },
@@ -693,9 +711,18 @@ export class IssueRecorderService {
         );
       }
 
+      /**
+       * Info: (20260826 - Julian) 旗標要寫**實際發生的事**，不是預期發生的事。
+       *
+       * 這行原本寫死 "set to FAILED"，而訂單已在終態時我們根本沒動它 ——
+       * 那會在檔案系統上留下一句與資料庫不符的紀錄，而這個旗標存在的
+       * 唯一理由就是「事後查得出這筆為什麼這樣處理」。
+       */
       await fs.writeFile(
         flagFile,
-        `Recorded give-up at ${new Date().toISOString()}. Order ${order.id} set to FAILED.`,
+        isTerminalOrderStatus(order.status)
+          ? `Recorded give-up at ${new Date().toISOString()}. Order ${order.id} left untouched (already ${order.status}).`
+          : `Recorded give-up at ${new Date().toISOString()}. Order ${order.id} set to FAILED.`,
         "utf8",
       );
       return true;

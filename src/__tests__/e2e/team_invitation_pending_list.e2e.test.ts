@@ -38,7 +38,7 @@ const NOW_MS = 1_760_000_000_000;
 
 let teamId = "";
 let inviterId = "";
-/** Info: (20260825 - Julian) 有已驗證信箱的受邀者（子地址形式，測正規化） */
+/** Info: (20260826 - Julian) 有已驗證信箱的受邀者（精確比對；子地址另有一條反面測試） */
 let mainUserId = "";
 let mainAddress = "";
 /** Info: (20260825 - Julian) 另一位受邀者，用來證明查詢不會撈到別人的 */
@@ -173,9 +173,8 @@ describe("待接受邀請的查詢（真資料庫）", () => {
    */
   it("位址邀請與 email 邀請都撈得到", async () => {
     const byAddress = await invite({ inviteeAddress: mainAddress });
-    const byEmail = await invite({
-      inviteeEmail: `alice_${STAMP}+isunfa@gmail.com`,
-    });
+    // Info: (20260826 - Julian) 精確相符的信箱（子地址的情形見下一條）
+    const byEmail = await invite({ inviteeEmail: mainEmail });
 
     const result = await listPendingInvitationsForUser({
       userId: mainUserId,
@@ -186,6 +185,41 @@ describe("待接受邀請的查詢（真資料庫）", () => {
     expect(result.map((item) => item.id).sort()).toEqual(
       [byAddress.id, byEmail.id].sort(),
     );
+  });
+
+  /**
+   * Info: (20260826 - Julian) 子地址**不**視為同一個人（review：既有護欄）。
+   *
+   * 這一條先前是反過來寫的 —— 它斷言 `alice+isunfa@gmail.com` 的邀請
+   * 會出現在 `alice@gmail.com` 的清單裡，因為查詢用的是 canonical 的
+   * `inviteeEmailKey`。那個正規化的取捨是為**唯一鍵**評估的（寧可多合併，
+   * 擋得住重複扣款）；拿來決定「這封邀請要不要顯示給你」方向相反：
+   * 自建網域上 `bob+x@corp.com` 與 `bob@corp.com` 可以是兩個人，
+   * 而邀請內容帶著團隊名稱與邀請人姓名，B1 之後還能被接受。
+   *
+   * **索引仍然用 canonical**（canonical 相等是精確相等的必要條件，撈出來
+   * 是超集不會漏），收斂在 service 的 `isIntendedRecipient`。
+   * 這一條同時證明那個收斂真的發生在真資料庫上，而不只是純函式測試裡。
+   */
+  it("子地址的 email 邀請撈不到（canonical 撈得到，判定不放行）", async () => {
+    const created = await invite({
+      inviteeEmail: `alice_${STAMP}+isunfa@gmail.com`,
+    });
+
+    // Info: (20260826 - Julian) 前提：它的 canonical 鍵確實等於本人的鍵（否則這條沒驗到收斂）
+    const row = await prisma.teamInvitation.findUnique({
+      where: { id: created.id },
+      select: { inviteeEmailKey: true },
+    });
+    expect(row?.inviteeEmailKey).toBe(mainEmail);
+
+    const result = await listPendingInvitationsForUser({
+      userId: mainUserId,
+      address: mainAddress,
+      nowMs: NOW_MS,
+    });
+
+    expect(result.map((item) => item.id)).not.toContain(created.id);
   });
 
   /**

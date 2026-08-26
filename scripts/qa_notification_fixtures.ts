@@ -47,6 +47,44 @@ if (process.env.NODE_ENV === "production") {
   throw new Error("🚨 [FATAL] 這支腳本會造假資料，嚴禁在正式機執行。");
 }
 
+/**
+ * Info: (20260826 - Julian) 🛑 第二道：**看的是實際會連上哪個資料庫**（review）。
+ *
+ * `NODE_ENV` 與連線目標是兩件事。`NODE_ENV` 在本機幾乎恆為 `development`，
+ * 而決定連哪個 DB 的是 `DATABASE_URL` —— 於是「在筆電上、把 .env 指向
+ * staging 或正式機」這個最常見的情境，上面那道檢查完全看不到。
+ *
+ * 這支腳本有 `--clear --yes` 的**硬刪**路徑（`deleteMany`，不可逆），
+ * 所以它需要的是「你正要刪的是哪一台的資料」而不是「你自認在哪個環境」。
+ *
+ * 判準取保守方向：只放行明顯是本機的主機名。認不出來就擋下，
+ * 要繞過得明確帶上 `ALLOW_NON_LOCAL_QA_FIXTURES=1` —— 那一步是打字，
+ * 打字的時候人會看一眼自己在做什麼，而這正是這道檢查唯一想爭取的東西。
+ */
+const LOCAL_DB_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
+
+function databaseHost(url: string | undefined): string {
+  if (!url) return "(未設定)";
+  try {
+    return new URL(url).hostname;
+  } catch {
+    // Info: (20260826 - Julian) 解析不出來就當成不安全，不要猜
+    return "(無法解析)";
+  }
+}
+
+const dbHost = databaseHost(process.env.DATABASE_URL);
+if (
+  !LOCAL_DB_HOSTS.has(dbHost) &&
+  process.env.ALLOW_NON_LOCAL_QA_FIXTURES !== "1"
+) {
+  throw new Error(
+    `🚨 [FATAL] DATABASE_URL 指向 "${dbHost}"，不是本機。\n` +
+      "這支腳本會造假資料，且 --clear 會**永久刪除**指定使用者的所有通知。\n" +
+      "確定要對這個資料庫執行的話，加上 ALLOW_NON_LOCAL_QA_FIXTURES=1。",
+  );
+}
+
 const out = (line: string): void => {
   process.stdout.write(`${line}\n`);
 };

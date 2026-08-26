@@ -17,7 +17,10 @@ import {
   isInviteExpired,
   INVITE_TOKEN_TTL_DAYS,
 } from "@/lib/team/invite_token";
-import { canonicalizeEmailForKey } from "@/lib/team/email_identity";
+import {
+  canonicalizeEmailForKey,
+  normalizeEmailForCompare,
+} from "@/lib/team/email_identity";
 import { buildPendingInviteKey } from "@/lib/team/pending_invite_key";
 import { resolveInviteEmailMatch } from "@/lib/team/invite_email_match";
 import { userIdentityRepo } from "@/repositories/user_identity.repo";
@@ -369,7 +372,21 @@ export interface IInviteByEmailResult {
  */
 export interface IInvitationRecipientKeys {
   address: string;
+  /**
+   * Info: (20260826 - Julian) canonical 形式，**只給查詢用**。
+   *
+   * `inviteeEmailKey` 是索引欄位，以它撈是為了走索引；而 canonical 相等是
+   * 精確相等的必要條件，所以撈出來的是超集 —— 不會漏，但會多。
+   */
   emailKeys: string[];
+  /**
+   * Info: (20260826 - Julian) 精確形式（trim + lowercase），**判定用**。
+   *
+   * 判定不能用 canonical：那會把自建網域上的 `bob+x@corp.com` 與
+   * `bob@corp.com` 判成同一個人，而它們可以是兩個人（見 `email_identity.ts`
+   * 的 `normalizeEmailForCompare`）。
+   */
+  verifiedEmails: string[];
 }
 
 export async function resolveRecipientKeys(params: {
@@ -377,6 +394,9 @@ export async function resolveRecipientKeys(params: {
   address: string;
 }): Promise<IInvitationRecipientKeys> {
   const identities = await userIdentityRepo.findByUserId(params.userId);
+  const verified = identities
+    .filter((identity) => identity.emailVerified && identity.email)
+    .map((identity) => identity.email as string);
   return {
     address: params.address,
     /**
@@ -386,9 +406,8 @@ export async function resolveRecipientKeys(params: {
      * 宣稱一個信箱就能讀到該信箱的邀請內容；在**處置端**更嚴重 ——
      * 那會變成宣稱一個信箱就能加入別人的團隊。
      */
-    emailKeys: identities
-      .filter((identity) => identity.emailVerified && identity.email)
-      .map((identity) => canonicalizeEmailForKey(identity.email as string)),
+    emailKeys: verified.map(canonicalizeEmailForKey),
+    verifiedEmails: verified.map(normalizeEmailForCompare),
   };
 }
 
@@ -412,13 +431,13 @@ export async function resolveRecipientKeys(params: {
  * 「接受者確定擁有受邀信箱」的路徑。呼叫端要照實記下，不要沿用位址路徑的 null。
  */
 export function isIntendedRecipient(
-  invitation: { inviteeAddress: string | null; inviteeEmailKey: string | null },
+  invitation: { inviteeAddress: string | null; inviteeEmail: string | null },
   keys: IInvitationRecipientKeys,
 ): boolean {
   /**
    * Info: (20260826 - Julian) 兩邊都要有值才算數。
    *
-   * `inviteeAddress` 與 `inviteeEmailKey` 都是可空欄位（位址邀請沒有信箱、
+   * `inviteeAddress` 與 `inviteeEmail` 都是可空欄位（位址邀請沒有信箱、
    * email 邀請沒有位址）。少了 `Boolean(...)` 這一層，一個 `null === null`
    * 就會讓**任何人**接受一封兩欄皆空的邀請 —— 而那種列今天造不出來，
    * 這行防的是「今天造不出來」哪天不成立。
@@ -430,10 +449,17 @@ export function isIntendedRecipient(
   ) {
     return true;
   }
-  return (
-    Boolean(invitation.inviteeEmailKey) &&
-    keys.emailKeys.includes(invitation.inviteeEmailKey as string)
-  );
+  /**
+   * Info: (20260826 - Julian) 以**精確**信箱比對，不是 canonical（review：既有護欄）。
+   *
+   * `inviteeEmailKey`（canonical）只用來撈候選集；判定必須回到真正的
+   * `inviteeEmail`。用 canonical 判的話，自建網域上有已驗證 `bob@corp.com`
+   * 的人會看到寄給 `bob+x@corp.com` 的邀請，並且（B1 讓 accept 認 email 之後）
+   * 能接受它 —— 而那兩個位址可以是兩個不同的人。
+   */
+  const invited = invitation.inviteeEmail?.trim();
+  if (!invited) return false;
+  return keys.verifiedEmails.includes(normalizeEmailForCompare(invited));
 }
 
 /**
@@ -466,7 +492,7 @@ export function canActOnInvitation<
     status: string;
     expiresAt: Date | null;
     inviteeAddress: string | null;
-    inviteeEmailKey: string | null;
+    inviteeEmail: string | null;
   },
 >(params: {
   invitation: T | null;
@@ -528,7 +554,19 @@ export async function listPendingInvitationsForUser(params: {
 
   return invitations.filter(
     (invitation) =>
-      !invitation.expiresAt || invitation.expiresAt.getTime() > params.nowMs,
+      /**
+       * Info: (20260826 - Julian) 撈出來的是**超集**，這裡收斂（review：既有護欄）。
+       *
+       * 查詢以 canonical 的 `inviteeEmailKey` 走索引，而 canonical 會把
+       * 自建網域上的 `bob+x@corp.com` 與 `bob@corp.com` 合併成同一把鍵。
+       * 不收斂的話，有已驗證 `bob@corp.com` 的人會在鈴鐺與團隊頁看到
+       * 不是寄給他的邀請 —— 而那則通知帶著團隊名稱與邀請人姓名。
+       *
+       * 與 accept／decline 走**同一支** `isIntendedRecipient`：列得出來的
+       * 必須正好是動得了的（B1 的教訓）。
+       */
+      isIntendedRecipient(invitation, keys) &&
+      (!invitation.expiresAt || invitation.expiresAt.getTime() > params.nowMs),
   );
 }
 

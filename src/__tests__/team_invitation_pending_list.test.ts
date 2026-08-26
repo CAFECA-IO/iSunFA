@@ -44,10 +44,21 @@ function identity(overrides: Record<string, unknown> = {}) {
   };
 }
 
+/**
+ * Info: (20260826 - Julian) 替身要長得像**真的那一列**（review：既有護欄）。
+ *
+ * 先前這裡沒有 `inviteeAddress` / `inviteeEmail` —— 那時 service 只濾期限，
+ * 所以省略沒有後果。現在它還會以 `isIntendedRecipient` 收斂（canonical 撈出來
+ * 的是超集），少了收件欄位的替身會被整批濾掉，而那個紅燈指向的是替身而不是程式。
+ *
+ * 預設用位址邀請：這個檔案的多數案例在意的是期限與跨租戶，不是信箱比對。
+ */
 function invitation(overrides: Record<string, unknown> = {}) {
   return {
     id: "inv-1",
     teamId: "team-1",
+    inviteeAddress: ADDRESS,
+    inviteeEmail: null,
     expiresAt: null,
     createdAt: new Date(NOW_MS - 1000),
     team: { name: "T" },
@@ -153,6 +164,43 @@ describe("listPendingInvitationsForUser", () => {
     });
 
     expect(result.map((item) => item.id)).toEqual(["alive", "no-expiry"]);
+  });
+
+  /**
+   * Info: (20260826 - Julian) canonical 撈出來的是超集，service 要收斂（review：既有護欄）。
+   *
+   * 查詢以 `inviteeEmailKey`（canonical）走索引，而 canonical 會把
+   * `alice+x@gmail.com` 與 `alice@gmail.com` 合併成同一把鍵 —— 那個取捨是為
+   * **唯一鍵**評估的。若不收斂，有已驗證 `alice@gmail.com` 的人會看到寄給
+   * `alice+x@` 的邀請，而邀請內容帶著團隊名稱與邀請人姓名。
+   *
+   * 斷言成對：子地址那則**不在**，而精確相符的那則**在** ——
+   * 只驗前者的話，「一律回空」也會通過。
+   */
+  it("canonical 相符但信箱不精確相符的邀請會被濾掉", async () => {
+    asMock(userIdentityRepo.findByUserId).mockResolvedValue([
+      identity({ email: "alice@gmail.com" }),
+    ]);
+    asMock(teamRepo.getPendingInvitationsForRecipient).mockResolvedValue([
+      invitation({
+        id: "subaddress",
+        inviteeAddress: null,
+        inviteeEmail: "alice+x@gmail.com",
+      }),
+      invitation({
+        id: "exact",
+        inviteeAddress: null,
+        inviteeEmail: "alice@gmail.com",
+      }),
+    ]);
+
+    const result = await listPendingInvitationsForUser({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(result.map((item) => item.id)).toEqual(["exact"]);
   });
 
   /**

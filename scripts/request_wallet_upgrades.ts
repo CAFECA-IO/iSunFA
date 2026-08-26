@@ -158,12 +158,24 @@ async function main(): Promise<void> {
     userIds: users.map((user) => user.id),
   });
 
-  let capable = 0;
-  let pendingUpgrade = 0;
+  /**
+   * Info: (20260826 - Julian) **先全部探完，再決定要不要動作**（review）。
+   *
+   * 原本探針與發送寫在同一個迴圈裡，於是「全體都判為尚待升級」這道
+   * 健全性警告只可能出現在**預演**分支 —— 加了 `--commit` 的那一次，
+   * 通知在警告有機會印出來之前就已經發完了。
+   *
+   * 而那正是最需要它的時候：RPC 或 chainId 指錯鏈時，`eth_call` 回 `0x`
+   * 被判為 false（不是「無法判定」），於是這支腳本會對**全站每一個人**
+   * 發一則永久、收不回的待辦（`dedupeKey` 唯一，補不回也撤不掉）。
+   *
+   * 兩段式的代價是要把探針結果留在記憶體裡；那是一個位址一個布林，
+   * 而換到的是「決定」與「動作」分開，兩種模式看到的是同一份判斷。
+   */
+  const capableUsers: { id: string; address: string }[] = [];
+  const pendingUsers: { id: string; address: string }[] = [];
   let undetermined = 0;
-  let sent = 0;
-  let dismissed = 0;
-  let wouldDismiss = 0;
+
   /**
    * Info: (20260825 - Julian) 逐人 try/catch，失敗記下來繼續跑。
    *
@@ -177,22 +189,9 @@ async function main(): Promise<void> {
   for (const user of users) {
     try {
       if (await walletCanReceive(user.address)) {
-        capable += 1;
-        // Info: (20260825 - Julian) 升級完成 → 收掉那則還掛著的待辦（見檔頭）
-        if (commit) {
-          dismissed += await dismissWalletUpgrade({
-            userId: user.id,
-            nowMs: Date.now(),
-          });
-        } else if (pendingDismissal.has(user.id)) {
-          wouldDismiss += 1;
-        }
-        continue;
-      }
-      pendingUpgrade += 1;
-      if (!commit) continue;
-      if (await notifyWalletUpgradeRequested({ userId: user.id })) {
-        sent += 1;
+        capableUsers.push(user);
+      } else {
+        pendingUsers.push(user);
       }
     } catch (error) {
       if (error instanceof ProbeUndeterminedError) undetermined += 1;
@@ -202,30 +201,100 @@ async function main(): Promise<void> {
     }
   }
 
+  const capable = capableUsers.length;
+  const pendingUpgrade = pendingUsers.length;
+
+  /**
+   * Info: (20260826 - Julian) 部署檢查表 §2.1 的規則寫進程式裡（review §1.9）。
+   *
+   * 那份文件寫著「探針分三態，『無法判定』不是 0 就不能加 `--commit`」，
+   * 而先前那句話**只存在於文件裡** —— 一個人記得就成立，忘了就不成立。
+   * 這裡讓它變成不需要有人記得的東西。
+   *
+   * 兩道守門都是**中止**而不是警告後照跑：這支腳本發出的是永久、
+   * 收不回的通知，而它沒發出去的部分下次重跑就補上了。
+   * 錯誤的方向必須是「少發」，不能是「發錯」。
+   */
+  const blockers: string[] = [];
+  if (undetermined > 0) {
+    blockers.push(
+      `有 ${undetermined} 位使用者的探針無法判定。鏈上沒答覆時不能推測，` +
+        `先修好 RPC 再重跑（部署檢查表 §2.1）。`,
+    );
+  }
+  /**
+   * Info: (20260825 - Julian) 「全部人都尚待升級」剩下的那個可疑情況。
+   *
+   * 探針已經會把問不到的情形算進「無法判定」，所以這裡不再是猜的：
+   * 鏈上真的回答了，而答案是所有人都沒升級。剩下最可能的解釋是
+   * 問錯了鏈 —— chainId 或 RPC 指向另一個網路，合約不在那上面，
+   * 回傳空資料同樣被判為 false。
+   */
+  if (users.length > 1 && pendingUpgrade === users.length) {
+    blockers.push(
+      "鏈上回答了，但所有人都判為尚待升級。先確認 NEXT_PUBLIC_RPC_URL 與 " +
+        "NEXT_PUBLIC_ISUNCOIN_CHAIN_ID 指向的是部署錢包合約的那條鏈，" +
+        "再用 --user <已升級的 userId> 單獨驗一次。",
+    );
+  }
+
+  let sent = 0;
+  let dismissed = 0;
+  let wouldDismiss = 0;
+
+  if (blockers.length > 0) {
+    process.stderr.write(
+      `\n🛑 健全性檢查未通過（${commit ? "已中止，未發出任何通知" : "預演"}）：\n`,
+    );
+    blockers.forEach((line) => process.stderr.write(`  - ${line}\n`));
+    process.exitCode = 1;
+  }
+
+  // Info: (20260826 - Julian) 守門沒過就**完全不動作**，連收掉待辦都不做
+  const mayAct = commit && blockers.length === 0;
+
+  if (mayAct) {
+    for (const user of capableUsers) {
+      try {
+        // Info: (20260825 - Julian) 升級完成 → 收掉那則還掛著的待辦（見檔頭）
+        dismissed += await dismissWalletUpgrade({
+          userId: user.id,
+          nowMs: Date.now(),
+        });
+      } catch (error) {
+        failures.push(
+          `${user.id}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+    for (const user of pendingUsers) {
+      try {
+        if (await notifyWalletUpgradeRequested({ userId: user.id })) {
+          sent += 1;
+        }
+      } catch (error) {
+        failures.push(
+          `${user.id}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+  } else if (!commit) {
+    wouldDismiss = capableUsers.filter((user) =>
+      pendingDismissal.has(user.id),
+    ).length;
+  }
+
   // Info: (20260825 - Julian) 三個數字加起來要等於掃描人數，少一個就是有人被漏掉
   out(`已具備接收能力（不發）：${capable}`);
   out(`尚待升級：${pendingUpgrade}`);
   out(`無法判定（探針沒問到鏈上）：${undetermined}`);
-  if (commit) {
+  if (mayAct) {
     out(`本次新發出：${sent}（其餘為先前已發過，dedupe 擋下）`);
     out(`已升級而收掉的待辦：${dismissed}`);
+  } else if (commit) {
+    out("\n（健全性檢查未通過，本次未發出也未收掉任何通知）");
   } else {
     out(`將收掉的待辦（已升級但仍掛著）：${wouldDismiss}`);
-    /**
-     * Info: (20260825 - Julian) 「全部人都尚待升級」剩下的那個可疑情況。
-     *
-     * 探針已經會把問不到的情形算進「無法判定」，所以這裡不再是猜的：
-     * 鏈上真的回答了，而答案是所有人都沒升級。剩下最可能的解釋是
-     * 問錯了鏈 —— chainId 或 RPC 指向另一個網路，合約不在那上面，
-     * 回傳空資料同樣被判為 false。
-     */
-    if (users.length > 1 && pendingUpgrade === users.length) {
-      out(
-        "\n⚠️ 鏈上回答了，但所有人都判為尚待升級。先確認 NEXT_PUBLIC_RPC_URL " +
-          "與 NEXT_PUBLIC_ISUNCOIN_CHAIN_ID 指向的是部署錢包合約的那條鏈，" +
-          "再用 --user <已升級的 userId> 單獨驗一次。",
-      );
-    }
     out("\n加上 --commit 才會實際發送。");
   }
 

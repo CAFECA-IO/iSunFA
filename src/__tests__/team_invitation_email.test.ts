@@ -985,7 +985,7 @@ describe("declineInvitationByMember", () => {
   /**
    * Info: (20260826 - Julian) 兩個新欄位要寫出來，不能靠 `undefined` 剛好成立。
    *
-   * 判定改走 `canActOnInvitation` 之後，它會讀 `expiresAt` 與 `inviteeEmailKey`。
+   * 判定改走 `canActOnInvitation` 之後，它會讀 `expiresAt` 與 `inviteeEmail`。
    * 省略的話 `undefined` 走的分支剛好與 `null` 相同，測試照樣綠 ——
    * 但這份替身就不再長得像真的那一列，而下一個人會照它來理解資料形狀。
    */
@@ -994,7 +994,7 @@ describe("declineInvitationByMember", () => {
     teamId: TEAM.id,
     status: TEAM_INVITATION_STATUS.PENDING,
     inviteeAddress: "0xabc",
-    inviteeEmailKey: null,
+    inviteeEmail: null,
     expiresAt: null,
   };
 
@@ -1038,11 +1038,16 @@ describe("declineInvitationByMember", () => {
     asMock(teamRepo.getInvitationByIdWithDetails).mockResolvedValue({
       ...pending,
       inviteeAddress: null,
-      inviteeEmailKey: "alice@gmail.com",
+      inviteeEmail: "alice@gmail.com",
       expiresAt: new Date(NOW + 1000),
     });
+    /**
+     * Info: (20260826 - Julian) 精確相符（review：既有護欄）。
+     * 原本這裡用 `alice+work@gmail.com` 去對 `alice@gmail.com` 的邀請，
+     * 靠的是 canonical 合併 —— 而判定改成精確比對之後那不再成立，也不該成立。
+     */
     asMock(userIdentityRepo.findByUserId).mockResolvedValue([
-      { email: "alice+work@gmail.com", emailVerified: true },
+      { email: "Alice@Gmail.com", emailVerified: true },
     ]);
 
     const result = await declineInvitationByMember({
@@ -1065,7 +1070,7 @@ describe("declineInvitationByMember", () => {
     asMock(teamRepo.getInvitationByIdWithDetails).mockResolvedValue({
       ...pending,
       inviteeAddress: null,
-      inviteeEmailKey: "alice@gmail.com",
+      inviteeEmail: "alice@gmail.com",
       expiresAt: new Date(NOW + 1000),
     });
     asMock(userIdentityRepo.findByUserId).mockResolvedValue([

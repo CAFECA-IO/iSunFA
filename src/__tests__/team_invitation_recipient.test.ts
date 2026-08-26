@@ -32,10 +32,15 @@ const ADDRESS = "0xabc";
 const EMAIL_KEY = "alice@gmail.com";
 
 const keysOf = (
-  overrides: Partial<{ address: string; emailKeys: string[] }> = {},
+  overrides: Partial<{
+    address: string;
+    emailKeys: string[];
+    verifiedEmails: string[];
+  }> = {},
 ) => ({
   address: ADDRESS,
   emailKeys: [EMAIL_KEY],
+  verifiedEmails: [EMAIL_KEY],
   ...overrides,
 });
 
@@ -44,14 +49,14 @@ function invitation(
     status: string;
     expiresAt: Date | null;
     inviteeAddress: string | null;
-    inviteeEmailKey: string | null;
+    inviteeEmail: string | null;
   }> = {},
 ) {
   return {
     status: TEAM_INVITATION_STATUS.PENDING,
     expiresAt: null,
     inviteeAddress: null,
-    inviteeEmailKey: null,
+    inviteeEmail: null,
     ...overrides,
   };
 }
@@ -60,7 +65,7 @@ describe("isIntendedRecipient", () => {
   it("位址相符 → 是（原本就成立的那一半，不能改壞）", () => {
     expect(
       isIntendedRecipient(
-        { inviteeAddress: ADDRESS, inviteeEmailKey: null },
+        { inviteeAddress: ADDRESS, inviteeEmail: null },
         keysOf(),
       ),
     ).toBe(true);
@@ -72,7 +77,7 @@ describe("isIntendedRecipient", () => {
   it("已驗證信箱的 canonical key 相符 → 是", () => {
     expect(
       isIntendedRecipient(
-        { inviteeAddress: null, inviteeEmailKey: EMAIL_KEY },
+        { inviteeAddress: null, inviteeEmail: EMAIL_KEY },
         keysOf(),
       ),
     ).toBe(true);
@@ -81,7 +86,7 @@ describe("isIntendedRecipient", () => {
   it("別人的位址、別人的信箱 → 否", () => {
     expect(
       isIntendedRecipient(
-        { inviteeAddress: "0xother", inviteeEmailKey: "bob@gmail.com" },
+        { inviteeAddress: "0xother", inviteeEmail: "bob@gmail.com" },
         keysOf(),
       ),
     ).toBe(false);
@@ -96,8 +101,8 @@ describe("isIntendedRecipient", () => {
   it("沒有已驗證信箱的人接不了 email 邀請", () => {
     expect(
       isIntendedRecipient(
-        { inviteeAddress: null, inviteeEmailKey: EMAIL_KEY },
-        keysOf({ emailKeys: [] }),
+        { inviteeAddress: null, inviteeEmail: EMAIL_KEY },
+        keysOf({ emailKeys: [], verifiedEmails: [] }),
       ),
     ).toBe(false);
   });
@@ -112,7 +117,80 @@ describe("isIntendedRecipient", () => {
   it("兩欄皆空 → 任何人都不是收件者", () => {
     expect(isIntendedRecipient(invitation(), keysOf())).toBe(false);
     expect(
-      isIntendedRecipient(invitation(), keysOf({ address: "", emailKeys: [] })),
+      isIntendedRecipient(
+        invitation(),
+        keysOf({ address: "", emailKeys: [], verifiedEmails: [] }),
+      ),
+    ).toBe(false);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 子地址**不**視為同一個人（review：既有護欄）。
+   *
+   * 這是這次修法的正題。`canonicalizeEmailForKey` 一律去除子地址，那個取捨
+   * 是為**唯一鍵**評估的（寧可多合併，擋得住重複扣款）。拿它做授權判定則方向相反：
+   * 自建網域上 `bob+x@corp.com` 與 `bob@corp.com` 可以是兩個人，而多合併的
+   * 後果是「有已驗證 `bob@corp.com` 的人看到、並且能接受寄給另一個人的邀請」。
+   *
+   * 代價是本人被寄到子地址時要改用邀請信裡的連結 —— 兩害相權，
+   * 漏合併只是少一條捷徑，多合併是別人的團隊被陌生人加入。
+   */
+  it("子地址不算同一個人（canonical 合併，判定不合併）", () => {
+    expect(
+      isIntendedRecipient(
+        { inviteeAddress: null, inviteeEmail: "bob+x@corp.com" },
+        keysOf({
+          // Info: (20260826 - Julian) canonical 相同（查詢會撈到它），精確不同
+          emailKeys: ["bob@corp.com"],
+          verifiedEmails: ["bob@corp.com"],
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  /**
+   * Info: (20260826 - Julian) Gmail 的點號同理。
+   *
+   * `canonicalizeEmailForKey` 只對 Gmail 系列去點號，而那同樣是鍵的取捨。
+   * 判定一律以精確字串為準，不必為網域分岔 —— 分岔本身就是下一個缺陷的溫床。
+   */
+  it("Gmail 點號變體不算同一個人", () => {
+    expect(
+      isIntendedRecipient(
+        { inviteeAddress: null, inviteeEmail: "a.lice@gmail.com" },
+        keysOf({
+          emailKeys: ["alice@gmail.com"],
+          verifiedEmails: ["alice@gmail.com"],
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  // Info: (20260826 - Julian) 大小寫與前後空白仍然視為同一個（那是投遞層的事實，不是猜測）
+  it("大小寫與空白差異仍視為同一個人", () => {
+    expect(
+      isIntendedRecipient(
+        { inviteeAddress: null, inviteeEmail: "  Alice@Gmail.COM " },
+        keysOf({ verifiedEmails: ["alice@gmail.com"] }),
+      ),
+    ).toBe(true);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 判定讀 `verifiedEmails`，**不讀** `emailKeys`。
+   *
+   * 這一條釘的是「有沒有真的換一組資料判」：把實作改回讀 `emailKeys`
+   * 的話，上面兩條會紅，而這一條會直接說明原因。
+   */
+  it("emailKeys 相符但 verifiedEmails 不符 → 否", () => {
+    expect(
+      isIntendedRecipient(
+        { inviteeAddress: null, inviteeEmail: "bob+x@corp.com" },
+        keysOf({
+          emailKeys: ["bob@corp.com"],
+          verifiedEmails: ["someone-else@corp.com"],
+        }),
+      ),
     ).toBe(false);
   });
 
@@ -120,8 +198,8 @@ describe("isIntendedRecipient", () => {
   it("身分沒有位址時不得與 inviteeAddress 為 null 的邀請相符", () => {
     expect(
       isIntendedRecipient(
-        { inviteeAddress: null, inviteeEmailKey: "bob@gmail.com" },
-        keysOf({ address: "", emailKeys: [] }),
+        { inviteeAddress: null, inviteeEmail: "bob@gmail.com" },
+        keysOf({ address: "", emailKeys: [], verifiedEmails: [] }),
       ),
     ).toBe(false);
   });
@@ -129,7 +207,7 @@ describe("isIntendedRecipient", () => {
 
 describe("canActOnInvitation", () => {
   it("PENDING、未逾期、是收件者 → 放行，並回收窄過的邀請", () => {
-    const row = invitation({ inviteeEmailKey: EMAIL_KEY });
+    const row = invitation({ inviteeEmail: EMAIL_KEY });
     const check = canActOnInvitation({
       invitation: row,
       keys: keysOf(),
@@ -160,7 +238,7 @@ describe("canActOnInvitation", () => {
     TEAM_INVITATION_STATUS.REVOKED,
   ])("狀態為 %s → NOT_FOUND", (status) => {
     const check = canActOnInvitation({
-      invitation: invitation({ status, inviteeEmailKey: EMAIL_KEY }),
+      invitation: invitation({ status, inviteeEmail: EMAIL_KEY }),
       keys: keysOf(),
       nowMs: NOW_MS,
     });
@@ -178,7 +256,7 @@ describe("canActOnInvitation", () => {
   it("逾期的邀請不得接受，即使收件者正確", () => {
     const check = canActOnInvitation({
       invitation: invitation({
-        inviteeEmailKey: EMAIL_KEY,
+        inviteeEmail: EMAIL_KEY,
         expiresAt: new Date(NOW_MS - 1),
       }),
       keys: keysOf(),
@@ -191,7 +269,7 @@ describe("canActOnInvitation", () => {
   it("尚未逾期的邀請照常放行（證明上一條不是把全部擋掉）", () => {
     const check = canActOnInvitation({
       invitation: invitation({
-        inviteeEmailKey: EMAIL_KEY,
+        inviteeEmail: EMAIL_KEY,
         expiresAt: new Date(NOW_MS + 1),
       }),
       keys: keysOf(),
@@ -210,7 +288,7 @@ describe("canActOnInvitation", () => {
   it("逾期與查無邀請回同一個錯誤碼（不洩漏 id 是否存在）", () => {
     const expired = canActOnInvitation({
       invitation: invitation({
-        inviteeEmailKey: EMAIL_KEY,
+        inviteeEmail: EMAIL_KEY,
         expiresAt: new Date(NOW_MS - 1),
       }),
       keys: keysOf(),

@@ -44,6 +44,49 @@ function toApiError(def: IErrorDef): ApiError {
  * 「塌成同一個值」在驗收裡的後果是偵測不到缺陷，在 log 裡的後果是
  * 查不出成因（檢查清單 §一.9）。
  */
+/**
+ * Info: (20260826 - Julian) 腳本用的匯出：**要拋，但拋自己的型別**（review §5.2）。
+ *
+ * `guarded()` 把任何失敗轉成 `IS_UNKNOWN` 的 `ApiError`，那對 route 是對的
+ * ——端點必須回一個可預期的信封。但 `dismissWalletUpgrade` 與
+ * `listUsersWithPendingWalletUpgrade` 的呼叫端是 CLI 腳本：它們**需要**
+ * 例外往上拋（逐人 try/catch、失敗清單、非 0 exit code 都靠它）。
+ *
+ * 先前的做法是完全不包，於是原始的 Prisma 錯誤被腳本原文印進 stderr ——
+ * 連線字串、資料表結構、有時是欄位值都跟著出去，而排程的 stderr
+ * 通常會進到日誌系統。
+ *
+ * 這裡取中間：包成自有型別、記一行結構化的 log，把原因留在 `cause`
+ * 給需要的人（`--verbose` 之類）而不是預設印出去。
+ */
+export class NotificationOperationError extends Error {
+  constructor(operation: string, cause: unknown) {
+    super(`通知操作失敗：${operation}`);
+    this.name = "NotificationOperationError";
+    this.cause = cause;
+  }
+}
+
+/**
+ * Info: (20260826 - Julian) 與 `guarded` 的差別只有一個：這支**保留可拋性**。
+ * 兩支並存而不是加一個布林參數：那個布林切換的正是呼叫端最該想清楚的事
+ * （這條路徑失敗時，是要回一個信封，還是要讓流程停下來）。
+ */
+async function guardedThrowing<T>(
+  operation: () => Promise<T>,
+  context: { operation: string } & Record<string, unknown>,
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    logger.error("notification operation failed", {
+      ...context,
+      reason: error instanceof Error ? error.message : String(error),
+    });
+    throw new NotificationOperationError(context.operation, error);
+  }
+}
+
 async function guarded<T>(
   operation: () => Promise<T>,
   context: Record<string, unknown>,
@@ -364,10 +407,14 @@ export async function dismissWalletUpgrade(params: {
   userId: string;
   nowMs: number;
 }): Promise<number> {
-  return notificationRepo.markReadByType(
-    params.userId,
-    NOTIFICATION_TYPE.WALLET_UPGRADE,
-    params.nowMs,
+  return guardedThrowing(
+    () =>
+      notificationRepo.markReadByType(
+        params.userId,
+        NOTIFICATION_TYPE.WALLET_UPGRADE,
+        params.nowMs,
+      ),
+    { operation: "dismissWalletUpgrade", userId: params.userId },
   );
 }
 
@@ -412,9 +459,16 @@ export async function notifyAnalysisCompleted(params: {
 export async function listUsersWithPendingWalletUpgrade(params: {
   userIds: readonly string[];
 }): Promise<Set<string>> {
-  return notificationRepo.listUserIdsWithUnread(
-    NOTIFICATION_TYPE.WALLET_UPGRADE,
-    params.userIds,
+  return guardedThrowing(
+    () =>
+      notificationRepo.listUserIdsWithUnread(
+        NOTIFICATION_TYPE.WALLET_UPGRADE,
+        params.userIds,
+      ),
+    {
+      operation: "listUsersWithPendingWalletUpgrade",
+      userCount: params.userIds.length,
+    },
   );
 }
 

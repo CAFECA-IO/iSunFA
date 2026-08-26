@@ -750,6 +750,28 @@ export default function TeamManagementPage() {
                                   {t("team_management.roles." + member.role)}
                                 </span>
                               )}
+                              {/**
+                               * Info: (20260818 - Luphia) 這位成員以「信箱不符」的邀請加入（第三輪 C-2）。
+                               * 接受邀請不綁身分是刻意的（模型是 bearer token），因此這個訊號
+                               * 也不該擋人加入——但管理職有權知道「這個人是這樣進來的」。
+                               * 用中性的黃色與說明文字，而不是紅色的錯誤樣式。
+                               *
+                               * Info: (20260826 - Julian) 這段在版面重排時被順手刪掉過一次（review：既有護欄）。
+                               * 後端 `attachEmailMismatch` 一直在算、五語系文案一直都在、
+                               * `invite_email_mismatch_visibility.test.ts` 也一直全綠 ——
+                               * 只有畫面上那一格不見了，於是這個訊號從「管理職看得到」
+                               * 變成「只存在於 API 回應裡」，而沒有任何東西會紅。
+                               */}
+                              {member.emailMismatch && (
+                                <span
+                                  className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700"
+                                  title={t(
+                                    "team_management.email_mismatch_hint",
+                                  )}
+                                >
+                                  {t("team_management.email_mismatch")}
+                                </span>
+                              )}
                             </div>
                             <div className="min-w-0">
                               <p className="w-full truncate font-mono text-xs text-gray-500">

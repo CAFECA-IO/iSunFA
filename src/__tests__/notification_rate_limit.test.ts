@@ -11,6 +11,7 @@ import { GET as getSummary } from "@/app/api/v1/user/notifications/summary/route
 import { GET as getHistory } from "@/app/api/v1/user/notifications/history/route";
 import { POST as postReadAll } from "@/app/api/v1/user/notifications/read/route";
 import { POST as postReadOne } from "@/app/api/v1/user/notifications/[notification_id]/read/route";
+import { GET as getTeamInvitations } from "@/app/api/v1/user/team/invitations/route";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import {
   getNotificationSummary,
@@ -19,6 +20,7 @@ import {
   markNotificationRead,
   markNotificationsRead,
 } from "@/services/notification.service";
+import { listPendingInvitationsForUser } from "@/services/team_invitation.service";
 
 /**
  * Info: (20260826 - Julian) 限流器用**真的**，只 mock 外部世界（review B5）。
@@ -41,6 +43,10 @@ jest.mock("@/lib/auth/dewt", () => ({
     id: "user-1",
     address: "0xdefault",
   })),
+}));
+
+jest.mock("@/services/team_invitation.service", () => ({
+  listPendingInvitationsForUser: jest.fn(async () => []),
 }));
 
 jest.mock("@/services/notification.service", () => ({
@@ -460,6 +466,32 @@ describe("限流真的擋在路徑上（行為）", () => {
 
     expect(blockedHistory.status).toBe(429);
     expect(asMock(listNotificationHistory)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260826 - Julian) `/team/invitations` 不是 `NOTIFICATION_READ` 的旁路。
+   *
+   * 那支端點與鈴鐺呼叫**同一支** `listPendingInvitationsForUser`、同樣兩趟 DB。
+   * 它原本沒有限流（既有狀態），但兩條路徑合流是通知模組造成的 ——
+   * 不把它收進同一個桶的話，30/分就多了一條完全等價的旁路，那個數字
+   * 也就不再是上限。
+   *
+   * 桶刻意共用而不是另開一個：同一位使用者、同一份成本，分兩個桶等於把上限乘二。
+   */
+  it("/team/invitations 吃同一個讀取桶，不是旁路", async () => {
+    const address = "0xrl_bypass";
+
+    for (let index = 0; index < READ_PER_MINUTE; index += 1) {
+      const ok = await getSummary(requestAs(address, "/summary"));
+      expect(ok.status).toBe(200);
+    }
+
+    const blocked = await getTeamInvitations(
+      requestAs(address, "/team-invitations-placeholder"),
+    );
+
+    expect(blocked.status).toBe(429);
+    expect(asMock(listPendingInvitationsForUser)).not.toHaveBeenCalled();
   });
 
   /**

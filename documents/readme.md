@@ -33,11 +33,8 @@
    > 席次計費與分配點數上鏈的部署順序。本專案沒有 migrations 目錄，欄位新增與資料回填是分開的兩件事，而順序做錯不會噴錯——只會安靜地讓功能停擺或讓點數暫時消失在畫面上。**兩份檢查表屬同一次部署**，見該檔 §4.9。
 8. 🗓️ **[部署檢查表：假勤系統](engineering_guidelines/deploy_checklist_leave_overtime_2026q3.md)**
    > 15 張新表、19 個新 enum，以及**與上一份最重要的差別：這次不是純新增**。移除了 `enum LeaveType` 與 `leave_request` 的四個欄位，對兩張既有表加了 8 個必填且無 default 的欄位 —— 因此上一份「回滾程式碼不需要回滾 schema」的結論在這裡**不成立**。另有兩種漏做完全不報錯，以及正式環境已有真實假單時的停損點。
-   > <<<<<<< HEAD
 9. 🔔 **[部署檢查表：通知模組](engineering_guidelines/deploy_checklist_notification_2026q3.md)**
-   > # **一張新表、零個新 enum、零個新 env**。四份檢查表裡 schema 層最安全的一份（純新增、不需回填、回滾程式碼不需回滾 schema）—— **而風險因此整個移到了「重啟哪些 process」與「上線順序」上**。五種做錯的方式裡有四種完全不報錯，最難查的是：只重啟 `isunfa` 沒重啟 `isunfa-worker`，於是網站正常、AI 任務正常完成、總帳正常入帳，而一則通知都不會產生 —— **而沒有人會抱怨一件他不知道應該發生的事。** §2.1 是跑 `request_wallet_upgrades.ts` 之前的前置條件：探針分三態，「無法判定」不是 0 就不能加 `--commit`。
-   >
-   > > > > > > > develop
+   > **一張新表、零個新 enum、零個新 env**。四份檢查表裡 schema 層最安全的一份（純新增、不需回填、回滾程式碼不需回滾 schema）—— **而風險因此整個移到了「重啟哪些 process」與「上線順序」上**。五種做錯的方式裡有四種完全不報錯，最難查的是：只重啟 `isunfa` 沒重啟 `isunfa-worker`，於是網站正常、AI 任務正常完成、總帳正常入帳，而一則通知都不會產生 —— **而沒有人會抱怨一件他不知道應該發生的事。** §2.1 是跑 `request_wallet_upgrades.ts` 之前的前置條件：探針分三態，「無法判定」不是 0 就不能加 `--commit`。
 
 ### 🐛 已知缺陷 (Known Issues)
 
@@ -94,9 +91,7 @@ _聚焦於四大會計師級別的底層財報與內控實務：_
 - **[費思個人化記憶 (Faith Personal Memory)](architecture/ai_and_analytics/faith_personal_memory.md)**：付費訂閱的每位成員專屬記憶——`(userId, teamId)` 隔離、LLM 只做萃取、欄位級加密，以及停止訂閱 90 天後刪除的保留機制。**須於 v0.13.0 釋出前完成**，條款已先行載明。
 - **[出勤模組開發計畫書 (Time & Attendance Module Plan)](architecture/time_attendance_module_plan.md)**：打卡不可變、地理圍欄、班別統一模型與單日出勤判定引擎（純函數）。
 - **[假勤模組開發計畫書 (Leave & Overtime Module Plan)](architecture/leave_and_overtime_module_plan.md)**：假別規則資料化、額度異動帳本、多級簽核鏈快照、加班分段與補休、假勤行事曆。**§3 附已查證的勞基法／性平法法源對照表與 8 項待核對清單，法務複核前不得標記 Production Ready。**
-  <<<<<<< HEAD
-- # **[通知模組開發計畫書 (Notification Module Plan)](architecture/notification_module_plan.md)**：Header 鈴鐺、AI 任務完成推送與 HR 模組的預留。**§2 是 D1–D18 的缺陷總帳**，其中 D17（提示音第二次抵達起永久失效）與 D18（上鏈被拒 3 次後訂單卡住、完成與失敗都不通知）**都躲過了單元測試、e2e 與整份 code review** —— 前者的失效沒有任何觀測量，後者的失效是「什麼都沒發生」。§3 是不要改回去的實作決定（待辦型活算不入庫、只存 `type` + `payload`、`readAt` 而非 enum），§5 是 HR 接線的八項前置，§6 是離「可上線」還差的七件事。
-  > > > > > > > develop
+- **[通知模組開發計畫書 (Notification Module Plan)](architecture/notification_module_plan.md)**：Header 鈴鐺、AI 任務完成推送與 HR 模組的預留。**§2 是 D1–D26 的缺陷總帳**，其中 D17（提示音第二次抵達起永久失效）與 D18（上鏈被拒 3 次後訂單卡住、完成與失敗都不通知）**都躲過了單元測試、e2e 與整份 code review** —— 前者的失效沒有任何觀測量，後者的失效是「什麼都沒發生」。§3 是不要改回去的實作決定（待辦型活算不入庫、只存 `type` + `payload`、`readAt` 而非 enum），§5 是 HR 接線的八項前置，§6 是離「可上線」還差的七件事。
 
 ### 📌 4. 架構決策紀錄 (Architecture Decision Records, ADRs)
 

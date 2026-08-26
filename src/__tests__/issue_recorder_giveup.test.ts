@@ -371,3 +371,65 @@ describe("IssueRecorder：完成與失敗不得同時發出（B2）", () => {
     expect(asMock(analysisRepo.updateAnalysisResult)).toHaveBeenCalledTimes(1);
   });
 });
+
+/**
+ * Info: (20260826 - Julian) 終態不得被自動流程覆寫（review：決定論）。
+ *
+ * 兩處守門原本都寫成「不是 FAILED 就寫成 FAILED」，那擋得住重複標記，
+ * 擋不住**覆寫**。而覆寫的後果不是多一則通知：
+ *
+ * - 已 `COMPLETED` 的多任務訂單被改回 FAILED → 使用者收到「你的分析失敗了」，
+ *   而他手上已經有跑完的報告
+ * - 已 `CANCEL` 的訂單被改成 FAILED → 系統把使用者的決定推翻
+ *
+ * 放棄路徑那份是從成功路徑複製過去的，所以兩處都要有案例 ——
+ * 只測一處的話，下一次複製又會把缺陷帶到第三處。
+ */
+describe("IssueRecorder：終態不覆寫", () => {
+  it.each([
+    ORDER_STATUS.COMPLETED,
+    ORDER_STATUS.CANCEL,
+    ORDER_STATUS.MINT_FAILED,
+    ORDER_STATUS.PAYMENT_FAILED,
+  ])("放棄路徑：訂單已是 %s 時不改狀態也不通知", async (status) => {
+    givenTask({ gaveUp: true, orderStatus: status });
+
+    await issueRecorderService.processNext();
+
+    expect(asMock(orderRepo.update)).not.toHaveBeenCalled();
+    expect(asMock(notifyAnalysisFailed)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260826 - Julian) 反面：在途狀態仍然要被寫成 FAILED。
+   *
+   * 少了這條，「把守門寫成永遠 return」也會讓上面全綠 —— 而那等於
+   * D18 整個復活（放棄的任務永遠不進終態、使用者什麼都收不到）。
+   */
+  it("放棄路徑：在途狀態仍然標成 FAILED 並通知", async () => {
+    givenTask({ gaveUp: true, orderStatus: ORDER_STATUS.EXECUTING });
+
+    await issueRecorderService.processNext();
+
+    expect(asMock(orderRepo.update)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: ORDER_STATUS.FAILED }),
+      }),
+    );
+    expect(asMock(notifyAnalysisFailed)).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 仍然寫旗標（否則每一輪都重掃這筆，答案永遠一樣）。
+   *
+   * 這一條把「不動訂單」與「不處理這筆」分開 —— 前者是這次要的，
+   * 後者會讓 recorder 每輪都白跑一次資料庫查詢。
+   */
+  it("放棄路徑：終態訂單仍然寫下旗標", async () => {
+    givenTask({ gaveUp: true, orderStatus: ORDER_STATUS.COMPLETED });
+
+    await issueRecorderService.processNext();
+
+    expect(fsState.written.has(flagPath)).toBe(true);
+  });
+});
