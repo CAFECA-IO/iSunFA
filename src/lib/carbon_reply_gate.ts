@@ -20,6 +20,18 @@
 // Info: (20260825 - Emily) 2. 使用者自己說過的數字 —— AI 覆述使用者的話做對照是正當的
 // Info: (20260825 - Emily)    (「您說的 5000 噸與帳本的 8332.581 公噸不符」),攔掉它會禁止糾錯。
 // Info: (20260825 - Emily)    只收使用者輪次:收 model 輪次會讓漏網的數字下一輪洗白成合法。
+//
+// Info: (20260826 - Emily) ## 威脅模型(round-4 review 的範圍說明,照收)
+// Info: (20260826 - Emily) 事實包由呼叫端送上來(帳本 E2EE,伺服端讀不到)。這道守門防的是
+// Info: (20260826 - Emily) **模型編數字**,不是防改過的前端 —— 使用者是自己報告的唯一消費者,
+// Info: (20260826 - Emily) 這是正確的威脅模型。但它因此**不是稽核控制項**:對外文件不得把這一層
+// Info: (20260826 - Emily) 說成「系統保證每個數字都溯源得到」。
+//
+// Info: (20260826 - Emily) ## 數字的寫法邊界
+// Info: (20260826 - Emily) 全形數字/小數點在進守門前 1:1 摺疊成半形(round-4 中-1:
+// Info: (20260826 - Emily) 全形寫法原本同時繞過 Y 與前置過濾)。攔下訊息中的數字以半形正規形呈現。
+// Info: (20260826 - Emily) 中文數字(八千三百)Y 構不到,由 X 的萃取涵蓋(前置過濾認得中文數字,
+// Info: (20260826 - Emily) 會放 X 上崗;萃取出的原樣字串過回覆內容檢查後,查無合法集合即攔)。
 
 import { logger } from "@/lib/utils/logger";
 import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
@@ -52,25 +64,63 @@ const normalizeNumber = (raw: string): string => raw.replace(/,/g, "");
  */
 const ALL_NUMBERS = /[0-9](?:[0-9,]*[0-9])?(?:\.[0-9]+)?/g;
 
+/**
+ * Info: (20260826 - Emily) 全形數字/全形小數點 1:1 摺疊成半形(round-4 中-1)。
+ * 只摺這兩類:等長替換,所有 index 與窗口距離不變。
+ * **不摺全形逗號**:「,」是中文的句讀,摺成半形會讓「9999,5000」被千分位規則
+ * 黏成一個 token。
+ */
+const foldFullWidthDigits = (text: string): string =>
+  text
+    .replace(/[０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+    .replace(/．/g, ".");
+
+/**
+ * Info: (20260826 - Emily) 前置過濾的「含數字」判準:半形、全形、中文數字都算
+ * (round-4 中-1:原本只認 [0-9],全形與中文數字的回覆連 X 都不會上崗)。
+ * 中文數字要求**連續兩字以上**(八千三百/一萬):單一個「一」在中文裡
+ * 太常見(一起/逐一/一併),放單字進判準等於把前置過濾關掉、每則回覆都花一次 X。
+ * 代價:「排放約三噸」這種單字中文數字量不觸發 X —— 據實申報的已知界,
+ * persona 禁用中文數字寫量(數字只能原樣引用事實包,事實包全是半形)。
+ */
+const HAS_NUMERAL = /[0-9０-９]|[〇零一二三四五六七八九十百千萬万億兆]{2,}/;
+
 interface ISpan {
   start: number;
   end: number;
 }
 
 /**
- * Info: (20260826 - Emily) 抽出一段文字裡所有「排放量斷言」的數字(正規化後)—— Y 地板。
+ * Info: (20260826 - Emily) 一則排放量斷言:數字(正規化後)+ 它配對到的單位文字。
+ * Y 與 X 產出同一個形狀,吃同一支裁決(adjudicateQuantityClaims)——
+ * round-4 阻擋-1 的教訓:換算容差只寫在 X,而 Y 先攔短路,
+ * 「8332.581 公噸」(事實包只有 kg 寫法)這個最常見的正確回答被 Y 攔死,
+ * X 的換算永遠執行不到 —— 機制寫出來了,但在真實條件下不成立。
+ */
+export interface IQuantityClaim {
+  /** 數字(可含千分位;裁決端會正規化) */
+  value: string;
+  /** 配對到的單位文字(Y:窗內配對單位串接;X:LLM 原樣照抄) */
+  unit: string;
+}
+
+/**
+ * Info: (20260826 - Emily) 抽出一段文字裡所有「排放量斷言」(數字+配對單位)—— Y 地板。
  *
  * 演算法(review round-3 建議:遮單位 → 雙向窗 → 非排放單位豁免):
- * 1. 先找出排放單位的位置,並在副本上把它們遮成空白 —— 一石二鳥:
+ * 0. 全形數字/小數點先摺半形(round-4 中-1;等長替換,index 不變)。
+ * 1. 找出排放單位的位置,並在副本上把它們遮成空白 —— 一石二鳥:
  *    數字掃描不會把 CO2e 裡的 2 當數字,單位裡的字元也不會干擾距離計算。
  * 2. 在遮罩後文字上掃數字。數字自帶非排放單位(緊隨其後,可隔空白)→ 豁免。
  * 3. 否則,存在一個排放單位與它相距 ≤ 10 字、**且兩者之間沒有別的數字**
- *    (單位配對最近的數字 —— 沒有這條,「第 1 大(3470.3 公噸)」的 1 會被誤殺)→ 斷言。
+ *    (單位配對最近的數字 —— 沒有這條,「第 1 大(3470.3 公噸)」的 1 會被誤殺)→ 斷言,
+ *    並把窗內配對到的單位文字一起帶出(round-4 阻擋-1:Y 也要有單位資訊才換算得成)。
  *
  * 原 v1 只看數字後方 6 字,「排放量(公噸 CO2e):9999」這類單位在前的標準寫法
  * 整批漏接(round-3 實測 5 個 ESCAPES);雙向窗口把那一批收進來。
  */
-export const extractQuantityClaims = (text: string): string[] => {
+export const extractQuantityClaims = (rawText: string): IQuantityClaim[] => {
+  const text = foldFullWidthDigits(rawText);
   const unitSpans: ISpan[] = [...text.matchAll(EMISSION_UNITS)].map((m) => ({
     start: m.index ?? 0,
     end: (m.index ?? 0) + m[0].length,
@@ -83,18 +133,14 @@ export const extractQuantityClaims = (text: string): string[] => {
       masked.slice(span.end);
   });
 
-  const claims: string[] = [];
+  const claims: IQuantityClaim[] = [];
   [...masked.matchAll(ALL_NUMBERS)].forEach((m) => {
     const start = m.index ?? 0;
     const end = start + m[0].length;
     // Info: (20260826 - Emily) 豁免看原文(單位遮掉前):數字自帶的單位緊隨其後
     const tail = text.slice(end).replace(/^[ \t]*/, "");
     if (NON_EMISSION_TAIL.test(tail)) return;
-    const paired = unitSpans.some((unit) => {
-      const gap =
-        unit.start >= end
-          ? masked.slice(end, unit.start)
-          : masked.slice(unit.end, start);
+    const paired = unitSpans.filter((unit) => {
       if (
         unit.start >= end
           ? unit.start - end > UNIT_WINDOW
@@ -102,10 +148,19 @@ export const extractQuantityClaims = (text: string): string[] => {
       ) {
         return false;
       }
+      const gap =
+        unit.start >= end
+          ? masked.slice(end, unit.start)
+          : masked.slice(unit.end, start);
       // Info: (20260826 - Emily) 最近數字配對:數字與單位之間夾著別的數字 → 這顆不算
       return !/[0-9]/.test(gap);
     });
-    if (paired) claims.push(normalizeNumber(m[0]));
+    if (paired.length > 0) {
+      claims.push({
+        value: normalizeNumber(m[0]),
+        unit: paired.map((u) => text.slice(u.start, u.end)).join(" "),
+      });
+    }
   });
   return claims;
 };
@@ -130,7 +185,7 @@ export const collectAllowedNumbers = (
 ): Set<string> => {
   const allowed = new Set<string>();
   const collect = (text: string): void => {
-    [...text.matchAll(ALL_NUMBERS)].forEach((match) => {
+    [...foldFullWidthDigits(text).matchAll(ALL_NUMBERS)].forEach((match) => {
       allowed.add(normalizeNumber(match[0]));
     });
   };
@@ -148,10 +203,15 @@ export interface IReplyGateResult {
 }
 
 /**
- * Info: (20260825 - Emily) Y 地板守門:回覆中每一個排放量斷言的數字都必須屬於合法集合。
- * 比對是**字串精確等值**(去千分位後):「8332.58」不等於「8332.581」——
- * 四捨五入是計算,persona 禁了,守門照攔;要說整數就引用事實包裡有的那個值。
- * (單位換算的容差只給 X:它帶結構化 unit,換算才是決定性的;Y 沒有 unit 資訊。)
+ * Info: (20260825 - Emily) Y 地板守門:回覆中每一個排放量斷言都必須通過裁決 ——
+ * 字串精確等值(去千分位後),或同值異單位的決定性換算(公噸級↔kg 級)。
+ * 「8332.58」不等於「8332.581」:四捨五入是計算,persona 禁了,守門照攔;
+ * 要說整數就引用事實包裡有的那個值。
+ *
+ * Info: (20260826 - Emily) round-4 阻擋-1:換算容差原本只寫在 X,而 Y 先攔短路,
+ * 事實包只有 kg 寫法時「8332.581 公噸」這個最常見的正確回答被 Y 攔死。
+ * 修法照 review 建議 1:Y 的斷言帶配對單位,與 X 吃同一支裁決 ——
+ * 矛盾就此消失,而且不花一次 LLM 呼叫。
  */
 export const auditReplyQuantities = (
   reply: string,
@@ -159,11 +219,10 @@ export const auditReplyQuantities = (
   userTexts: string[],
 ): IReplyGateResult => {
   const allowed = collectAllowedNumbers(facts, userTexts);
-  const violations = [
-    ...new Set(
-      extractQuantityClaims(reply).filter((number) => !allowed.has(number)),
-    ),
-  ];
+  const violations = adjudicateQuantityClaims(
+    extractQuantityClaims(reply),
+    allowed,
+  );
   return { ok: violations.length === 0, violations };
 };
 
@@ -188,20 +247,11 @@ export const shouldRunReplyGate = (
 ): ledgerFacts is IContextFact[] => ledgerFacts !== undefined;
 
 /**
- * Info: (20260826 - Emily) X 主力:LLM 萃取器的介面與裁決。
- * 萃取器由呼叫端注入(chat.service 用自己的 LLM 通道建),
+ * Info: (20260826 - Emily) X 主力:LLM 萃取器的介面。產出形狀與 Y 相同(IQuantityClaim),
+ * 吃同一支裁決。萃取器由呼叫端注入(chat.service 用自己的 LLM 通道建),
  * 本模組保持純函式可測 —— 測試注入假萃取器,不 mock 本模組。
  */
-export interface IExtractedEmissionClaim {
-  /** 數字原樣(可含千分位) */
-  value: string;
-  /** 單位原樣(公噸 CO2e/kgCO2e/噸…) */
-  unit: string;
-}
-
-export type ClaimExtractor = (
-  reply: string,
-) => Promise<IExtractedEmissionClaim[]>;
+export type ClaimExtractor = (reply: string) => Promise<IQuantityClaim[]>;
 
 /**
  * Info: (20260826 - Emily) 十進位字串位移(×10^n / ÷10^n),不經浮點 ——
@@ -228,17 +278,18 @@ const TONNE_SCALE = /公噸|^噸$|噸\s?CO2e|tCO2e|TONNE/i;
 const KG_SCALE = /kg|公斤/i;
 
 /**
- * Info: (20260826 - Emily) X 的裁決(TS 端,決定性):字串等值,或同值異單位的決定性換算
- * (公噸級 ×1000 → kg 級;kg 級 ÷1000 → 公噸級)。review round-3 指出 Y 的字串等值會讓
- * 「8332.581 公噸」與「8332581 公斤」—— 同一事實的兩種正確寫法 —— 一過一不過;
- * X 帶結構化 unit,換算才寫得成規則。容差僅此一條,四捨五入仍然攔。
+ * Info: (20260826 - Emily) 裁決(TS 端,決定性,Y 與 X 共用):字串等值,
+ * 或同值異單位的決定性換算(公噸級 ×1000 → kg 級;kg 級 ÷1000 → 公噸級)。
+ * 事實包的排放量一律是 kg 寫法,而盤查報告與 persona 慣用公噸 ——
+ * 「8332.581 公噸」與「8332581 kgCO2e」是同一事實的兩種正確寫法,
+ * 裁決必須給出同一個答案(round-4 阻擋-1)。容差僅此一條,四捨五入仍然攔。
  */
-export const adjudicateExtractedClaims = (
-  claims: IExtractedEmissionClaim[],
+export const adjudicateQuantityClaims = (
+  claims: IQuantityClaim[],
   allowed: Set<string>,
 ): string[] => {
   const violations = claims
-    .map((claim) => normalizeNumber(claim.value))
+    .map((claim) => normalizeNumber(foldFullWidthDigits(claim.value)))
     .filter((value, index) => {
       if (allowed.has(value)) return false;
       const unit = claims[index].unit;
@@ -258,13 +309,13 @@ export const adjudicateExtractedClaims = (
  * B3 兩趟比對的前提是同一輸入同一答案 —— 這比「相信 temperature 0」可靠。
  * 上限防無界成長;鍵直接用回覆內容(單機行程內,回覆長度有 token 上限)。
  */
-const EXTRACTION_CACHE = new Map<string, IExtractedEmissionClaim[]>();
+const EXTRACTION_CACHE = new Map<string, IQuantityClaim[]>();
 const EXTRACTION_CACHE_MAX = 200;
 
 const cachedExtract = async (
   extractor: ClaimExtractor,
   reply: string,
-): Promise<IExtractedEmissionClaim[]> => {
+): Promise<IQuantityClaim[]> => {
   const hit = EXTRACTION_CACHE.get(reply);
   if (hit) return hit;
   const claims = await extractor(reply);
@@ -333,8 +384,8 @@ export const applyReplyGate = async <T extends IGateableSignals>(
   if (!shouldRunReplyGate(ledgerFacts)) return structured;
   const floor = auditReplyQuantities(structured.reply, ledgerFacts, userTexts);
   if (!floor.ok) return toBlocked(structured, floor.violations, "floor");
-  if (!extractor || !/[0-9]/.test(structured.reply)) return structured;
-  let claims: IExtractedEmissionClaim[];
+  if (!extractor || !HAS_NUMERAL.test(structured.reply)) return structured;
+  let claims: IQuantityClaim[];
   try {
     claims = await cachedExtract(extractor, structured.reply);
   } catch (error) {
@@ -343,8 +394,36 @@ export const applyReplyGate = async <T extends IGateableSignals>(
     });
     return structured;
   }
+  /**
+   * Info: (20260826 - Emily) 回覆內容檢查(round-4 高-1):裁決權全在 TS 的立場
+   * 之前只落實了一半 —— 不信 X 的判斷,卻完全信它的轉錄。轉錄也是 LLM 輸出:
+   * 幻覺斷言(回覆裡根本沒有的數字)或少抄一位,會讓一則完全正確的回覆被攔,
+   * 且攔下訊息報一個使用者從沒見過的數字 —— 最難自救的失敗。
+   *
+   * 比 review 建議的子字串 includes 強一階:「少抄一位」的 833258 是
+   * 8332581 的**子字串**,includes 會誤命中,他的第二個症狀修不掉。
+   * 數值斷言改比「回覆的數字 token 集合」精確等值(千分位與全形先正規化);
+   * 非數值斷言(中文數字「八千三百」,ALL_NUMBERS 掃不到)才用子字串。
+   * 誤差方向安全:被丟掉的只會少攔,少攔的那一半有 Y 地板在守。
+   * 被丟掉的斷言記 log —— 那是萃取器品質的訊號,值得看得到。
+   */
+  const foldedReply = foldFullWidthDigits(structured.reply);
+  const replyNumberTokens = new Set(
+    [...foldedReply.matchAll(ALL_NUMBERS)].map((m) => normalizeNumber(m[0])),
+  );
+  const present = claims.filter((claim) => {
+    const value = normalizeNumber(foldFullWidthDigits(claim.value));
+    return /[0-9]/.test(value)
+      ? replyNumberTokens.has(value)
+      : foldedReply.includes(claim.value);
+  });
+  if (present.length < claims.length) {
+    logger.warn("carbon reply gate extractor claim not in reply, dropped", {
+      dropped: claims.length - present.length,
+    });
+  }
   const allowed = collectAllowedNumbers(ledgerFacts, userTexts);
-  const xViolations = adjudicateExtractedClaims(claims, allowed);
+  const xViolations = adjudicateQuantityClaims(present, allowed);
   if (xViolations.length > 0) {
     return toBlocked(structured, xViolations, "extractor");
   }

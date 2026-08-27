@@ -11,11 +11,16 @@ import {
   buildGateBlockedReply,
   shouldRunReplyGate,
   applyReplyGate,
-  adjudicateExtractedClaims,
+  adjudicateQuantityClaims,
   shiftDecimalString,
-  type IExtractedEmissionClaim,
+  type IQuantityClaim,
 } from "@/lib/carbon_reply_gate";
 import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
+
+// Info: (20260826 - Emily) 斷言形狀是 {value, unit}(round-4 阻擋-1:Y 也要帶單位);
+// Info: (20260826 - Emily) 多數案例只關心抓到哪些數字,用這個投影保持測試可讀
+const values = (text: string): string[] =>
+  extractQuantityClaims(text).map((claim) => claim.value);
 
 const facts: IContextFact[] = [
   {
@@ -33,15 +38,13 @@ const facts: IContextFact[] = [
 describe("extractQuantityClaims(Y 地板:遮單位 → 雙向窗 → 非排放單位豁免)", () => {
   it("抓得到:kgCO2e、公噸、噸、含千分位(單位在後的基本形)", () => {
     expect(
-      extractQuantityClaims(
-        "總量為 8,332,581.1 kgCO2e,約 8332.581 公噸;最大源 3470.34 噸。",
-      ),
+      values("總量為 8,332,581.1 kgCO2e,約 8332.581 公噸;最大源 3470.34 噸。"),
     ).toEqual(["8332581.1", "8332.581", "3470.34"]);
   });
 
   it("不抓:章節號、年份、標準號、步驟編號(附近沒有排放單位)", () => {
     expect(
-      extractQuantityClaims(
+      values(
         "依 ISO 14064-1:2018,請見 3.8 節;2023 年為基準年,第 2 步共 3 筆。",
       ),
     ).toEqual([]);
@@ -52,37 +55,29 @@ describe("extractQuantityClaims(Y 地板:遮單位 → 雙向窗 → 非排放�
    * (「排放量(公噸 CO2e):X」是盤查報告最常見的欄位形),v1 只看數字後方整批漏接。
    */
   it("單位在前(round-3 ESCAPES)全數收進:括號欄位形/為字連接/單位前置宣告/以…計/跨行", () => {
-    expect(extractQuantityClaims("貴公司排放量(公噸 CO2e):9999")).toEqual([
-      "9999",
-    ]);
-    expect(extractQuantityClaims("排放量(公噸CO2e)為 9999")).toEqual(["9999"]);
-    expect(extractQuantityClaims("單位:公噸 CO2e,總量 9999")).toEqual(["9999"]);
-    expect(extractQuantityClaims("以公噸 CO2e 計,全公司總量為 9999")).toEqual([
-      "9999",
-    ]);
-    expect(extractQuantityClaims("甲廠排放量:9999\n公噸 CO2e")).toEqual([
-      "9999",
-    ]);
+    expect(values("貴公司排放量(公噸 CO2e):9999")).toEqual(["9999"]);
+    expect(values("排放量(公噸CO2e)為 9999")).toEqual(["9999"]);
+    expect(values("單位:公噸 CO2e,總量 9999")).toEqual(["9999"]);
+    expect(values("以公噸 CO2e 計,全公司總量為 9999")).toEqual(["9999"]);
+    expect(values("甲廠排放量:9999\n公噸 CO2e")).toEqual(["9999"]);
   });
 
   it("非排放單位豁免:數字自帶元/節/年/%/頁時,窗內有排放單位也不算斷言", () => {
-    expect(extractQuantityClaims("費用 300 元,含 CO2e 查證")).toEqual([]);
-    expect(extractQuantityClaims("第 3 節說明公噸 CO2e 的計算")).toEqual([]);
-    expect(extractQuantityClaims("佔比 39.9%,以公噸 CO2e 計")).toEqual([]);
-    expect(extractQuantityClaims("報告第 42 頁的公噸 CO2e 數據")).toEqual([]);
+    expect(values("費用 300 元,含 CO2e 查證")).toEqual([]);
+    expect(values("第 3 節說明公噸 CO2e 的計算")).toEqual([]);
+    expect(values("佔比 39.9%,以公噸 CO2e 計")).toEqual([]);
+    expect(values("報告第 42 頁的公噸 CO2e 數據")).toEqual([]);
     // Info: (20260826 - Emily) 豁免只救自帶單位的那顆:同句真正的排放量照抓
-    expect(
-      extractQuantityClaims("2023 年為基準年,總量 9999 公噸 CO2e"),
-    ).toEqual(["9999"]);
+    expect(values("2023 年為基準年,總量 9999 公噸 CO2e")).toEqual(["9999"]);
   });
 
   it("最近數字配對:數字與單位之間夾著別的數字時不誤殺(排名索引/清單編號)", () => {
     // Info: (20260826 - Emily) 沒有這條,「第 1 大(3470.3 公噸)」的 1 在 10 字窗內會被判成斷言
-    expect(extractQuantityClaims("第 1 大(3470.3 公噸)")).toEqual(["3470.3"]);
+    expect(values("第 1 大(3470.3 公噸)")).toEqual(["3470.3"]);
   });
 
   it("單位裡的數字不是數字:CO2e 的 2 不會被抓成斷言", () => {
-    expect(extractQuantityClaims("單位為公噸 CO2e。")).toEqual([]);
+    expect(values("單位為公噸 CO2e。")).toEqual([]);
   });
 });
 
@@ -229,35 +224,32 @@ describe("shiftDecimalString(決定性十進位位移,不經浮點)", () => {
   });
 });
 
-describe("adjudicateExtractedClaims(X 的 TS 裁決:等值或決定性換算)", () => {
+describe("adjudicateQuantityClaims(Y/X 共用裁決:等值或決定性換算)", () => {
   const allowed = collectAllowedNumbers(facts, []);
 
   it("等值 → 過;不在集合 → 違規", () => {
     expect(
-      adjudicateExtractedClaims(
+      adjudicateQuantityClaims(
         [{ value: "8,332,581.1", unit: "kgCO2e" }],
         allowed,
       ),
     ).toEqual([]);
     expect(
-      adjudicateExtractedClaims(
-        [{ value: "9999", unit: "公噸 CO2e" }],
-        allowed,
-      ),
+      adjudicateQuantityClaims([{ value: "9999", unit: "公噸 CO2e" }], allowed),
     ).toEqual(["9999"]);
   });
 
   it("同一事實的兩種正確寫法答案一致(round-3 指出 Y 做不到的那格):換算路徑要用「等值救不了」的數字驗", () => {
     // Info: (20260826 - Emily) 8332.5811 不在集合(集合只有 kg 值 8332581.1),公噸級 ×1000 對得上 → 合法
     expect(
-      adjudicateExtractedClaims(
+      adjudicateQuantityClaims(
         [{ value: "8332.5811", unit: "公噸 CO2e" }],
         allowed,
       ),
     ).toEqual([]);
     // Info: (20260826 - Emily) kg 級 ÷1000 對得上公噸級事實 → 合法(集合只有 4000)
     expect(
-      adjudicateExtractedClaims(
+      adjudicateQuantityClaims(
         [{ value: "4000000", unit: "kgCO2e" }],
         collectAllowedNumbers(
           [{ label: "l", value: "4000 tCO2e", source: "s" }],
@@ -267,7 +259,7 @@ describe("adjudicateExtractedClaims(X 的 TS 裁決:等值或決定性換算)", 
     ).toEqual([]);
     // Info: (20260826 - Emily) 換算容差僅此一條:四捨五入仍然攔(×1000 後也對不上)
     expect(
-      adjudicateExtractedClaims([{ value: "3470.34", unit: "公噸" }], allowed),
+      adjudicateQuantityClaims([{ value: "3470.34", unit: "公噸" }], allowed),
     ).toEqual(["3470.34"]);
   });
 });
@@ -275,6 +267,76 @@ describe("adjudicateExtractedClaims(X 的 TS 裁決:等值或決定性換算)", 
 // Info: (20260826 - Emily) 以下是「接線」測試(review 阻擋項:守門邏輯對,
 // Info: (20260826 - Emily) 但沒有任何測試釘住它有沒有被呼叫、在什麼條件下被呼叫 ——
 // Info: (20260826 - Emily) 把上崗條件突變成 length === 0 全部測試照綠)。
+
+describe("round-4 阻擋-1:Y 帶單位 —— 公噸回答對上 kg 事實(X 換算原本執行不到的那格)", () => {
+  // Info: (20260826 - Emily) reviewer 實跑的重現:查詢層每一筆排放量事實都是 kg 寫法,
+  // Info: (20260826 - Emily) 而盤查報告與 persona 慣用公噸。Y 先攔短路,需要換算的數字
+  // Info: (20260826 - Emily) 必然是 Y 的違規 —— X 的換算容差在真實條件下執行不到。
+  const kgOnlyFacts: IContextFact[] = [
+    { label: "全公司總排放量", value: "8332581 kgCO2e", source: "帳本總計欄" },
+  ];
+
+  it("Y 的斷言帶配對單位", () => {
+    const claims = extractQuantityClaims("總量 8332.581 公噸 CO2e。");
+    expect(claims).toHaveLength(1);
+    expect(claims[0].value).toBe("8332.581");
+    expect(claims[0].unit).toContain("公噸");
+  });
+
+  it("「8332.581 公噸」對 kg-only 事實包 → 過(reviewer 的重現案例)", () => {
+    expect(
+      auditReplyQuantities("全公司總排放量 8332.581 公噸。", kgOnlyFacts, [])
+        .ok,
+    ).toBe(true);
+    expect(
+      auditReplyQuantities(
+        "全公司總排放量 8332.581 公噸 CO2e,來源:帳本總計欄。",
+        kgOnlyFacts,
+        [],
+      ).ok,
+    ).toBe(true);
+  });
+
+  it("換算容差不放過四捨五入:8332.58 公噸(×1000=8332580)仍攔", () => {
+    const result = auditReplyQuantities("總量 8332.58 公噸。", kgOnlyFacts, []);
+    expect(result.ok).toBe(false);
+    expect(result.violations).toEqual(["8332.58"]);
+  });
+
+  it("kg 級 ÷1000 方向同樣通(事實包若是公噸級寫法)", () => {
+    const tonneFacts: IContextFact[] = [
+      { label: "l", value: "4000 tCO2e", source: "s" },
+    ];
+    expect(
+      auditReplyQuantities("總量 4000000 kgCO2e。", tonneFacts, []).ok,
+    ).toBe(true);
+  });
+});
+
+describe("round-4 中-1:全形數字摺疊(原本同時繞過 Y 與前置過濾)", () => {
+  it("全形數字/小數點受守門,與半形同一結果", () => {
+    expect(values("總排放量 ８３３２．５８１ 公噸")).toEqual(["8332.581"]);
+    const result = auditReplyQuantities(
+      "總排放量 ８３３２．５８１ 公噸。",
+      facts,
+      [],
+    );
+    // Info: (20260826 - Emily) 8332.581 不在事實包(帳本值是 8332581.1)→ 攔
+    expect(result.ok).toBe(false);
+    expect(result.violations).toEqual(["8332.581"]);
+  });
+
+  it("全形寫法引用合法值(含換算)→ 過;使用者說全形數字,覆述也過", () => {
+    expect(
+      auditReplyQuantities("總排放量 ８３３２５８１.1 kgCO2e。", facts, []).ok,
+    ).toBe(true);
+    expect(
+      auditReplyQuantities("您提到 ５０００ 公噸,帳本查無此值。", facts, [
+        "我們排 5000 公噸吧?",
+      ]).ok,
+    ).toBe(true);
+  });
+});
 
 describe("shouldRunReplyGate(上崗規則:看『有沒有帶』,不看『有幾筆』)", () => {
   it("undefined(呼叫端沒帶事實包)→ 跳過", () => {
@@ -350,7 +412,7 @@ describe("applyReplyGate × X 萃取器(聯集/降級留痕/前置過濾)", () =
       reply: "全公司總量為 9999,單位標示於本節末尾的公噸 CO2e 說明。",
     };
     expect(auditReplyQuantities(structured.reply, facts, []).ok).toBe(true);
-    const extractor = async (): Promise<IExtractedEmissionClaim[]> => [
+    const extractor = async (): Promise<IQuantityClaim[]> => [
       { value: "9999", unit: "公噸 CO2e" },
     ];
     const result = await applyReplyGate(structured, facts, [], extractor);
@@ -363,7 +425,7 @@ describe("applyReplyGate × X 萃取器(聯集/降級留痕/前置過濾)", () =
       ...base,
       reply: "最大源折合公噸級數值,列示於本段末:3470.3354(公噸 CO2e)。",
     };
-    const extractor = async (): Promise<IExtractedEmissionClaim[]> => [
+    const extractor = async (): Promise<IQuantityClaim[]> => [
       { value: "3470.3354", unit: "公噸 CO2e" },
     ];
     expect(await applyReplyGate(structured, facts, [], extractor)).toBe(
@@ -376,7 +438,7 @@ describe("applyReplyGate × X 萃取器(聯集/降級留痕/前置過濾)", () =
       ...base,
       reply: "帳本總排放量為 8332581.1 kgCO2e,細節見上。",
     };
-    const extractor = async (): Promise<IExtractedEmissionClaim[]> => {
+    const extractor = async (): Promise<IQuantityClaim[]> => {
       throw new Error("extractor down");
     };
     expect(await applyReplyGate(structured, facts, [], extractor)).toBe(
@@ -386,7 +448,7 @@ describe("applyReplyGate × X 萃取器(聯集/降級留痕/前置過濾)", () =
 
   it("前置過濾:回覆不含數字就不呼叫 X(拒答句是多數,不花這筆錢)", async () => {
     let calls = 0;
-    const extractor = async (): Promise<IExtractedEmissionClaim[]> => {
+    const extractor = async (): Promise<IQuantityClaim[]> => {
       calls += 1;
       return [];
     };
@@ -400,7 +462,7 @@ describe("applyReplyGate × X 萃取器(聯集/降級留痕/前置過濾)", () =
 
   it("Y 已攔就不再呼叫 X(短路:已經要攔了,不必再花一次萃取)", async () => {
     let calls = 0;
-    const extractor = async (): Promise<IExtractedEmissionClaim[]> => {
+    const extractor = async (): Promise<IQuantityClaim[]> => {
       calls += 1;
       return [];
     };
@@ -412,7 +474,7 @@ describe("applyReplyGate × X 萃取器(聯集/降級留痕/前置過濾)", () =
 
   it("萃取可重放:同一則回覆第二次不再呼叫萃取器(hash 快取)", async () => {
     let calls = 0;
-    const extractor = async (): Promise<IExtractedEmissionClaim[]> => {
+    const extractor = async (): Promise<IQuantityClaim[]> => {
       calls += 1;
       return [];
     };
@@ -424,6 +486,70 @@ describe("applyReplyGate × X 萃取器(聯集/降級留痕/前置過濾)", () =
     await applyReplyGate(structured, facts, [], extractor);
     await applyReplyGate(structured, facts, [], extractor);
     expect(calls).toBe(1);
+  });
+
+  /**
+   * Info: (20260826 - Emily) round-4 高-1:TS 不信 X 的判斷,卻曾完全信它的轉錄。
+   * 幻覺斷言與少抄一位都必須在裁決前被回覆內容檢查丟掉 ——
+   * 且檢查是「數字 token 精確等值」不是子字串:「少抄一位」的 833258
+   * 是 8332581 的子字串,includes 會誤命中,第二個症狀修不掉。
+   */
+  it("X 幻覺斷言(回覆裡沒有的數字)→ 丟掉,正確回覆同一參照放行", async () => {
+    const structured = {
+      ...base,
+      reply: "帳本目前沒有這一項的數據,請先完成活動數據計算。共 1 筆待補。",
+    };
+    const extractor = async (): Promise<IQuantityClaim[]> => [
+      { value: "9999", unit: "公噸" },
+    ];
+    expect(await applyReplyGate(structured, facts, [], extractor)).toBe(
+      structured,
+    );
+  });
+
+  it("X 少抄一位(833258 是 8332581 的子字串)→ 同樣丟掉,不誤攔", async () => {
+    const structured = {
+      ...base,
+      reply: "帳本的全公司總排放量是 8332581.1 kgCO2e,溯源見上。",
+    };
+    const extractor = async (): Promise<IQuantityClaim[]> => [
+      { value: "833258", unit: "kgCO2e" },
+    ];
+    expect(await applyReplyGate(structured, facts, [], extractor)).toBe(
+      structured,
+    );
+  });
+
+  it("回覆裡真的有的違規斷言不因內容檢查而漏:千分位寫法對得上 token", async () => {
+    const structured = {
+      ...base,
+      // Info: (20260826 - Emily) 單位距離 >10 讓 Y 構不到,確保走的是 X 的內容檢查+裁決
+      reply: "另據估算為 9,876,543,詳細單位標註於下方說明的公噸 CO2e 欄。",
+    };
+    expect(auditReplyQuantities(structured.reply, facts, []).ok).toBe(true);
+    const extractor = async (): Promise<IQuantityClaim[]> => [
+      { value: "9876543", unit: "公噸 CO2e" },
+    ];
+    const result = await applyReplyGate(structured, facts, [], extractor);
+    expect(result.reply).toContain("無法溯源");
+    expect(result.reply).toContain("9876543");
+  });
+
+  /**
+   * Info: (20260826 - Emily) round-4 中-1 的中文數字半邊:Y 構不到,由 X 涵蓋 ——
+   * 前置過濾認得連續中文數字,萃取的原樣字串走子字串內容檢查(非數值 token)。
+   */
+  it("中文數字量:前置過濾放 X 上崗,原樣斷言查無合法集合 → 攔", async () => {
+    let calls = 0;
+    const extractor = async (): Promise<IQuantityClaim[]> => {
+      calls += 1;
+      return [{ value: "八千三百", unit: "公噸" }];
+    };
+    const structured = { ...base, reply: "總排放量約八千三百公噸。" };
+    const result = await applyReplyGate(structured, facts, [], extractor);
+    expect(calls).toBe(1);
+    expect(result.reply).toContain("無法溯源");
+    expect(result.reply).toContain("八千三百");
   });
 });
 

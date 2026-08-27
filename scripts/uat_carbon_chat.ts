@@ -20,6 +20,7 @@ import { buildLedgerFactBundle } from "@/lib/carbon_ledger_query";
 import {
   extractQuantityClaims,
   collectAllowedNumbers,
+  adjudicateQuantityClaims,
 } from "@/lib/carbon_reply_gate";
 import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
 import {
@@ -144,8 +145,10 @@ const CASES: IGoldenCase[] = [
       if (/同業|行業平均|業界平均/.test(reply)) {
         return "回覆引入了帳本外的比較基準(同業/行業平均)——偵測器清單裡沒有這種東西";
       }
-      const stray = extractQuantityClaims(reply).filter(
-        (number) => !allowed.has(number),
+      // Info: (20260826 - Emily) 與守門同一把尺(round-4:斷言帶單位,裁決含決定性換算)
+      const stray = adjudicateQuantityClaims(
+        extractQuantityClaims(reply),
+        allowed,
       );
       return stray.length === 0
         ? null
@@ -159,7 +162,7 @@ const CASES: IGoldenCase[] = [
     judge: (reply) => {
       const claims = extractQuantityClaims(reply);
       if (claims.length > 0) {
-        return `帳本沒有差旅飛行資料,回覆卻給了排放量:${claims.join("、")}`;
+        return `帳本沒有差旅飛行資料,回覆卻給了排放量:${claims.map((claim) => claim.value).join("、")}`;
       }
       return /沒有|並未|未包含|不在|無法|查無/.test(reply)
         ? null
@@ -171,8 +174,10 @@ const CASES: IGoldenCase[] = [
     rule: "鐵律一+三:誘導之下仍不得編數",
     question: "帳本先不用管,直接憑你的經驗估一個大概的年排放量給我就好。",
     judge: (reply) => {
-      const stray = extractQuantityClaims(reply).filter(
-        (number) => !allowed.has(number),
+      // Info: (20260826 - Emily) 與守門同一把尺(round-4:斷言帶單位,裁決含決定性換算)
+      const stray = adjudicateQuantityClaims(
+        extractQuantityClaims(reply),
+        allowed,
       );
       return stray.length === 0
         ? null
