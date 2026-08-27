@@ -227,15 +227,32 @@
 
 ---
 
+## 7f. 伺服器眼中的狀態，以及「不做了」
+
+兩個在此之前**說不出來**的事實：
+
+**一、「額度已經回來了」。** 掃描行程每 5 分鐘把「暫停中而且現在夠了」翻成 `RESUMABLE`——那是一個明確的時點（它是 DB 裡的狀態，不是每次載入自己猜）。而畫面不讀它的話，那次改動對使用者**完全是隱形的**：他看到的還是「點數已用完」，得自己按下去試才知道。畫面現在讀 `GET /user/job`，只挑 `resourceKey` 等於當前聊天室的那一筆——那支 API 回的是這個人所有未完成的任務，別的聊天室那幾筆在這張卡上沒有意義。
+
+狀態變成 `RESUMABLE` 之後，導購按鈕也一起收起來：那時推銷一個他已經不需要的東西。
+
+**二、「不做了」。** `cancelJob()` 原本是一個沒有路由的 export，所以一份不想做完的匯入會一直掛在「未完成」裡，而旁邊那顆「接著匯入」會一直邀請他去花錢。
+
+取消**只放棄還沒做的那幾份**：已解析的內容留著（`items` 不動），那是已經付過錢的東西——連內容一起清掉才是真的造成損失。用 `POST .../cancel` 而不是 `DELETE`：被取消的任務仍然留著（狀態是 `CANCELLED`，不是消失），而 `DELETE` 會讓呼叫端以為那一列不見了。
+
+> `IJobView` 為此從 service 搬到 `interfaces/`：客戶端要讀它，而從 service 匯入型別會把整個 service 模組（連著 Prisma 的 repository）拉進客戶端的相依圖——`import type` 在編譯後會被抹掉，但那件事只要有一個人漏寫 `type` 就會變成真的把伺服器程式打包進瀏覽器。
+
+---
+
 ## 8. 檔案清單
 
 | 層 | 檔案 |
 |---|---|
+| 介面 | `src/interfaces/resumable_job.ts`（`IJobView`，客戶端也讀） |
 | 常數 | `src/constants/resumable_job.ts`（狀態、暫停原因、型別、`JOB_SPEND_MODE`、`JOB_CLAIM_TTL_MS`、`JOB_CLAIM_INTENT`） |
 | 純函式 | `src/lib/jobs/resumable_job.ts`（驅動器）、`src/lib/quota/spend_split.ts`（`canAffordSpend` / `usesSharedTeamQuota`，與扣款端共用） |
 | Repository | `src/repositories/resumable_job.repo.ts` |
 | Service | `src/services/resumable_job.service.ts` |
-| API | `PUT /user/job/bookmark`、`GET /user/job`、`POST /user/job/[job_id]/resume`、`POST /user/job/claim` |
+| API | `PUT /user/job/bookmark`、`GET /user/job`、`POST /user/job/[job_id]/resume`、`POST /user/job/[job_id]/cancel`、`POST /user/job/claim` |
 | 跨分頁 | `src/constants/credit_events.ts`、`src/lib/credit_events.ts`（付款完成的廣播） |
 | Worker | `ResumableJobScan`（`scripts/run_worker.ts`，每 5 分鐘） |
 | 前端（碳盤查） | `use_carbon_chat.ts`（驅動器接線）、`use_carbon_chat.helpers.ts`（`resolveCreditPauseReason` / `summarisePausedUnits` / `foldImportChunks` / `isJobBusyError`）、`import_preview.tsx`（暫停區塊與「接著匯入」）、`credit_pause_ways.tsx`（出路與重置倒數） |
@@ -246,8 +263,7 @@
 
 | 項目 | 為什麼還沒做 |
 |---|---|
-| `GET /user/job` 與 `POST .../resume` 前端接線 | 接上之前要先決定客戶端與伺服器**誰是 source of truth**（見 §3 的代價）。它真正的價值是「換裝置後知道你有一份未完成的匯入」——那是 blob 做不到的 |
-| `cancelJob` 沒有端點 | 與上一項同一個 PR |
+| 「別的聊天室有一份未完成的匯入」沒有入口 | `GET /user/job` 已接上，但只用來讀**當前聊天室**那一筆的狀態。要列出其他會話的未完成任務需要一個新的入口（匯入預覽卡只在當前聊天室有暫存時才存在），而那也牽涉到客戶端與伺服器**誰是 source of truth**（見 §3 的代價、issue #6721） |
 | 重試與接續兩條路徑還沒有檢查點 | 那兩條的損失**有界**（原本的進度還在暫存裡，掉的只有這一趟剛做的幾份）；主路徑掉的是全部，所以先修主路徑。issue #6723 |
 | 正在跑的那一份仍會重跑 | 伺服器已經扣了點、也可能已經算完，但客戶端沒拿到結果就等於沒有。要根治得讓伺服器存得下結果，而那與「書籤與內容誰說得準」是同一個問題。issue #6721 |
 | 掃描的 `unknown` 只進 log | 卡住的任務數不會浮上來 |

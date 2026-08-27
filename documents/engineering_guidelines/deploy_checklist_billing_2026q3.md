@@ -384,6 +384,8 @@ FROM resumable_job WHERE status = 'RUNNING' ORDER BY updated_at;
 - [ ] 因點數用完暫停 → 暫停區塊除了「點數用完」，還要顯示重置倒數＋絕對時間、伺服器算好的出路清單、以及購買／升級兩顆按鈕
 - [ ] 單次需求超過視窗上限（例如免費方案匯入 2MB PDF）→ **不顯示倒數**，而是說「等待重置也無法完成」
 - [ ] 中斷（關分頁）造成的「還沒跑完」→ **不顯示**出路與導購按鈕（使用者不需要補點數）
+- [ ] 暫停後等額度視窗重置（或手動把 `resumable_job.status` 改成 `RESUMABLE`）→ 重新載入頁面，橫幅改說「額度已經回來了」，**導購按鈕收起**
+- [ ] 按「不做了」→ 暫停清單消失、已解析的章**仍然留著可以套用**，`resumable_job.status` 變成 `CANCELLED`
 - [ ] 寬限期（PAST_DUE）的團隊按「降級為免費版」：立即生效（`plan_id` = free、`auto_renew` = false），續訂 worker 下一輪不再對它扣款
 - [ ] 訂閱中的團隊按「降級為免費版」：`auto_renew` 轉 false、`pending_plan_id` 保持 NULL、`plan_id` 與週期**不變**；團隊錢包面板出現「自動續訂已關閉…轉為免費版」與「維持目前方案」按鈕（僅 OWNER 看得到），按下後 `auto_renew` 回 true
 - [ ] 降轉到較低付費方案：`pending_plan_id` 寫入且 `auto_renew` 維持 true；期末續訂 cron 以新方案計價（面板顯示「已排定於 X 起改為 Y」）

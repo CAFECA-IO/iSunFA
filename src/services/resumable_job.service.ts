@@ -1,4 +1,11 @@
 import { ResumableJob } from "@/generated";
+/**
+ * Info: (20260827 - Luphia) 對外的檢視型別住在 interfaces（issue #6714）：
+ * 客戶端要讀它，而從 service 匯入型別會把整個 service 模組（連著 Prisma 的
+ * repository）拉進客戶端的相依圖——`import type` 在編譯後會被抹掉，
+ * 但那件事只要有一個人漏寫 `type` 就會變成真的把伺服器程式打包進瀏覽器。
+ */
+import type { IJobView } from "@/interfaces/resumable_job";
 import { isCarbonChatChannelOwnedBy } from "@/constants/carbon_chatbot";
 import {
   JOB_CLAIM_INTENT,
@@ -21,6 +28,8 @@ import { getWindowKey5h, getWindowKeyWeek } from "@/lib/quota/window";
 import { resolveEffectivePlanId } from "@/lib/subscription/plan_rules";
 import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
+
+export type { IJobView };
 import { chatroomRepo } from "@/repositories/chatroom.repo";
 import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
 import { estimateFaithHoldCredits } from "@/lib/faith_billing";
@@ -49,19 +58,6 @@ import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 
 function toApiError(def: IErrorDef): ApiError {
   return new ApiError(def.code, def.message, def.status);
-}
-
-export interface IJobView {
-  id: string;
-  type: string;
-  status: string;
-  resourceKey: string;
-  pauseReason: string | null;
-  totalSteps: number;
-  completedSteps: number;
-  failedSteps: number;
-  remainingStepIds: string[];
-  updatedAt: number;
 }
 
 function toView(job: ResumableJob): IJobView {

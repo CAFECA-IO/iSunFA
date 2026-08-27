@@ -219,6 +219,13 @@ export const carbonChatbot = {
     "Use the credits your team admin allocated to you",
   import_paused_option_use_personal: "Use the credits in your own wallet",
   import_paused_option_upgrade: "Upgrade your plan for a higher quota",
+  // Info: (20260827 - Luphia) 伺服器說「可以繼續了」與「不做了」（issue #6714）
+  import_paused_resumable:
+    "Your quota is back. These chapters have not been parsed yet: {{chapters}}. You can continue now — what is already done will not run again.",
+  import_cancel_paused: "Give up on the rest",
+  import_cancelled:
+    "Gave up on the chapters that were not parsed. What is already done is still here and can still be applied.",
+  import_cancel_failed: "Could not give up on it. Please try again later.",
   import_resume_needs_file:
     "Carrying on needs the original file, and it is no longer in this browser after a reload or on another device. Please upload the same report again — the finished chapters will not be redone.",
   import_resume_paused: "Carry on",

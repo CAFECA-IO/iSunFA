@@ -216,6 +216,13 @@ export const carbonChatbot = {
   import_paused_option_use_allocation: "팀 관리자가 배분한 포인트 사용",
   import_paused_option_use_personal: "내 지갑의 포인트 사용",
   import_paused_option_upgrade: "요금제를 업그레이드해 한도 늘리기",
+  // Info: (20260827 - Luphia) 伺服器說「可以繼續了」與「不做了」（issue #6714）
+  import_paused_resumable:
+    "사용량이 돌아왔습니다. 다음 장은 아직 분석되지 않았습니다: {{chapters}}. 지금 이어서 진행할 수 있으며, 이미 완료된 부분은 다시 실행되지 않습니다.",
+  import_cancel_paused: "나머지는 그만두기",
+  import_cancelled:
+    "분석되지 않은 장을 그만두었습니다. 이미 완료된 부분은 남아 있으며 그대로 적용할 수 있습니다.",
+  import_cancel_failed: "그만두지 못했습니다. 잠시 후 다시 시도해 주세요.",
   import_resume_needs_file:
     "이어서 가져오려면 원본 파일이 필요하지만, 새로 고침하거나 다른 기기에서는 파일이 브라우저에 남아 있지 않습니다. 같은 보고서를 다시 업로드해 주세요(완료된 장은 다시 실행되지 않습니다).",
   import_resume_paused: "이어서 가져오기",

@@ -202,6 +202,12 @@ export const carbonChatbot = {
   import_paused_option_use_allocation: "用团队管理者分配给你的点数",
   import_paused_option_use_personal: "用你自己钱包里的点数",
   import_paused_option_upgrade: "升级方案,拿到更高的额度",
+  // Info: (20260827 - Luphia) 伺服器說「可以繼續了」與「不做了」（issue #6714）
+  import_paused_resumable:
+    "额度已经回来了,以下章节还没解析:{{chapters}}。现在可以接着导入,已完成的部分不会重跑。",
+  import_cancel_paused: "不做了",
+  import_cancelled: "已经放弃还没解析的章节。已完成的部分还留着,仍然可以套用。",
+  import_cancel_failed: "放弃失败,请稍后再试。",
   import_resume_needs_file:
     "接着导入需要原本那份文件,而它在刷新或换设备之后就不在浏览器里了。请重新上传同一份报告——已完成的章节不会重跑。",
   import_resume_paused: "接着导入",

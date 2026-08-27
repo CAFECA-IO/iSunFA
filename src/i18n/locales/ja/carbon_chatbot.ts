@@ -220,6 +220,14 @@ export const carbonChatbot = {
     "チーム管理者から配分されたポイントを使う",
   import_paused_option_use_personal: "自分のウォレットのポイントを使う",
   import_paused_option_upgrade: "プランをアップグレードして上限を上げる",
+  // Info: (20260827 - Luphia) 伺服器說「可以繼續了」與「不做了」（issue #6714）
+  import_paused_resumable:
+    "利用枠が戻りました。次の章はまだ解析されていません：{{chapters}}。いま続けられます。完了済みの部分は再実行されません。",
+  import_cancel_paused: "残りは取りやめる",
+  import_cancelled:
+    "解析されていない章を取りやめました。完了済みの部分は残っており、そのまま適用できます。",
+  import_cancel_failed:
+    "取りやめに失敗しました。しばらくしてからもう一度お試しください。",
   import_resume_needs_file:
     "続けてインポートするには元のファイルが必要ですが、再読み込みや別の端末では、そのファイルはブラウザに残っていません。同じレポートをもう一度アップロードしてください（完了した章は再実行されません）。",
   import_resume_paused: "続けてインポート",

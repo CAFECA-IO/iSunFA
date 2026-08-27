@@ -14,6 +14,7 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
 import type { ICreditPauseDetail } from "@/constants/carbon_chatbot";
+import { JOB_STATUS } from "@/constants/resumable_job";
 import CreditPauseWays from "@/components/carbon_chatbot/credit_pause_ways";
 
 export interface IPendingImportItem {
@@ -103,6 +104,19 @@ export interface IImportPreviewProps {
    */
   onResumePaused?: () => void;
   /**
+   * Info: (20260827 - Luphia) 伺服器眼中的任務狀態（issue #6714）。
+   *
+   * 掃描行程每 5 分鐘會把「暫停中而且現在夠了」翻成 RESUMABLE——那是一個明確的
+   * 時點。畫面不讀它的話，那次改動對使用者完全是隱形的：他看到的還是
+   * 「點數已用完」，得自己按下去試才知道額度已經回來了。
+   */
+  jobStatus?: string | null;
+  /**
+   * Info: (20260827 - Luphia) 放棄還沒解析的章節（issue #6714）。
+   * 只放棄未完成的部分——已解析的內容留著，那是已經付過錢的東西。
+   */
+  onCancelPaused?: () => void;
+  /**
    * Info: (20260806 - Tzuhan) 重試進行中。
    *
    * 原本這張卡對「正在重試」一無所知:按下去毫無變化,按鈕還能再按,
@@ -124,6 +138,8 @@ export function ImportPreview({
   onDefer = undefined,
   onRetryFailed = undefined,
   onResumePaused = undefined,
+  jobStatus = null,
+  onCancelPaused = undefined,
   isRetrying = false,
   retryNotice = null,
 }: IImportPreviewProps) {
@@ -240,9 +256,11 @@ export function ImportPreview({
                    * 是在說謊，而使用者會跑去買他根本不需要的點數。
                    */}
                   {t(
-                    pendingImport.pauseReason
-                      ? "carbon_chatbot.import_paused_chapters"
-                      : "carbon_chatbot.import_interrupted_chapters",
+                    !pendingImport.pauseReason
+                      ? "carbon_chatbot.import_interrupted_chapters"
+                      : jobStatus === JOB_STATUS.RESUMABLE
+                        ? "carbon_chatbot.import_paused_resumable"
+                        : "carbon_chatbot.import_paused_chapters",
                     {
                       chapters: (pendingImport.pausedChapters ?? [])
                         .map((chapter) => chapter.title)
@@ -269,6 +287,22 @@ export function ImportPreview({
                     )}
                   </button>
                 )}
+                {/**
+                 * Info: (20260827 - Luphia) 「不做了」（issue #6714）。
+                 *
+                 * 沒有這顆的話，一份不想做完的匯入會一直掛在「未完成」裡，
+                 * 而旁邊那顆「接著匯入」會一直邀請使用者去花錢。
+                 */}
+                {onCancelPaused && (
+                  <button
+                    type="button"
+                    onClick={onCancelPaused}
+                    disabled={isRetrying}
+                    className="shrink-0 rounded-full px-2 py-1 font-bold text-blue-500 underline transition-colors hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {t("carbon_chatbot.import_cancel_paused")}
+                  </button>
+                )}
               </div>
               {/**
                * Info: (20260827 - Luphia) 出路與重置時間（issue #6714）。
@@ -277,9 +311,11 @@ export function ImportPreview({
                * 使用者只要按「接著匯入」——那時擺一組導購按鈕是在叫他去買
                * 他不需要的東西。
                */}
-              {pendingImport.pauseReason && pendingImport.pauseDetail && (
-                <CreditPauseWays detail={pendingImport.pauseDetail} />
-              )}
+              {pendingImport.pauseReason &&
+                pendingImport.pauseDetail &&
+                jobStatus !== JOB_STATUS.RESUMABLE && (
+                  <CreditPauseWays detail={pendingImport.pauseDetail} />
+                )}
             </div>
           )}
 

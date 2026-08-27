@@ -156,6 +156,7 @@ import {
 } from "@/hooks/use_carbon_chat.helpers";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import type { ICreditPauseDetail } from "@/constants/carbon_chatbot";
+import type { IJobView } from "@/interfaces/resumable_job";
 import { CREDIT_EVENT } from "@/constants/credit_events";
 import { subscribeCreditEvents } from "@/lib/credit_events";
 import {
@@ -2625,6 +2626,112 @@ export const useCarbonChat = () => {
     [chatChannel],
   );
 
+  /**
+   * Info: (20260827 - Luphia) 伺服器眼中的這份匯入（issue #6714）。
+   *
+   * 畫面在此之前只讀得到客戶端自己那份暫存，於是有兩件事說不出來：
+   *
+   * 1. **「額度已經回來了」**。掃描行程（每 5 分鐘）會把暫停中而且現在夠了的任務
+   *    翻成 RESUMABLE——那是一個明確的時點，而畫面不讀它的話，那次改動對使用者
+   *    完全是隱形的：他看到的還是「點數已用完」，得自己按下去試才知道。
+   * 2. **任務 id**。取消需要它，而客戶端手上只有頻道。
+   *
+   * 只挑屬於**當前聊天室**的那一筆：`GET /user/job` 回的是這個人所有未完成的
+   * 任務，而別的聊天室那幾筆在這張卡上沒有意義（那需要另一個入口，見設計書 §9）。
+   */
+  const [importJob, setImportJob] = useState<IJobView | null>(null);
+
+  const refreshImportJob = useCallback(async () => {
+    try {
+      const res = await request<{ payload: { jobs: IJobView[] } | null }>(
+        "/api/v1/user/job",
+      );
+      const jobs = res?.payload?.jobs ?? [];
+      setImportJob(
+        jobs.find(
+          (job) =>
+            job.resourceKey === chatChannel &&
+            job.type === JOB_TYPE.CARBON_REPORT_IMPORT,
+        ) ?? null,
+      );
+    } catch (error) {
+      /**
+       * Info: (20260827 - Luphia) 失敗不阻斷任何事：這一支只讓畫面多說一句話，
+       * 而暫停清單、「接著匯入」按鈕、以及接續本身都不依賴它。
+       */
+      console.error("[carbon-chat] refresh job failed:", error);
+    }
+  }, [chatChannel]);
+
+  /**
+   * Info: (20260827 - Luphia) 進到這個聊天室就問一次伺服器（issue #6714）。
+   *
+   * 這是「換裝置之後看得到狀態」的那一半：內容由加密暫存帶過來，而**狀態**
+   * （是不是已經可以繼續了）只有伺服器知道。
+   */
+  useEffect(() => {
+    void refreshImportJob();
+  }, [refreshImportJob]);
+
+  /**
+   * Info: (20260827 - Luphia) 放棄還沒做的那幾份（issue #6714）。
+   *
+   * **只放棄未完成的部分**：已經解析完的內容留著（那是已經付過錢的東西），
+   * 使用者仍然可以套用它。在此之前 `cancelJob()` 是一個沒有路由的 export，
+   * 也就是說一份不想做完的匯入會一直掛著，而那顆「接著匯入」會一直邀請他花錢。
+   */
+  const cancelImportJob = useCallback(async () => {
+    const jobId = importJob?.id;
+    if (!jobId || !pendingImport) return;
+    try {
+      await request(`/api/v1/user/job/${jobId}/cancel`, {
+        method: HTTP_METHOD.POST,
+      });
+    } catch (error) {
+      console.error("[carbon-chat] cancel job failed:", error);
+      setDraftNotice(
+        { type: "error", text: t("carbon_chatbot.import_cancel_failed") },
+        activeSessionId,
+      );
+      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, activeSessionId);
+      return;
+    }
+    /**
+     * Info: (20260827 - Luphia) 清掉暫停狀態，**保留 items**：那些章已經解析完、
+     * 也已經扣過點。連內容一起清掉才是真的造成損失。
+     */
+    const cleared: IPendingImport = {
+      ...pendingImport,
+      pausedChapters: [],
+      pausedUnits: [],
+      pauseReason: null,
+      pauseDetail: null,
+    };
+    setPendingImportFor(activeSessionId, cleared);
+    void persistPendingImport(
+      activeSessionId,
+      cleared,
+      lastImportSourceRef.current,
+      importActivitiesRef.current,
+      lastPageIndexRef.current,
+    );
+    setImportJob(null);
+    setDraftNotice(
+      { type: "info", text: t("carbon_chatbot.import_cancelled") },
+      activeSessionId,
+    );
+    dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, activeSessionId);
+  }, [
+    importJob,
+    pendingImport,
+    activeSessionId,
+    setPendingImportFor,
+    persistPendingImport,
+    setDraftNotice,
+    dismissDraftNoticeAfter,
+    t,
+  ]);
+
   const postImportParsedNotice = useCallback(
     async (sessionId: string, pending: IPendingImport): Promise<void> => {
       const recipientPublicKey = masterKeyRef.current?.extendedPublicKey;
@@ -3539,6 +3646,11 @@ export const useCarbonChat = () => {
    * 而那一次撞牆在呼叫 LLM 之前就被擋下，一點都不會扣。
    */
   const autoResumeAfterPaymentRef = useRef<(() => void) | null>(null);
+  // Info: (20260827 - Luphia) 理由同下：訂閱只掛一次，會變的東西放 ref
+  const refreshImportJobRef = useRef<(() => Promise<void>) | null>(null);
+  useEffect(() => {
+    refreshImportJobRef.current = refreshImportJob;
+  }, [refreshImportJob]);
   useEffect(() => {
     autoResumeAfterPaymentRef.current = () => {
       if (isRetryingImport) return;
@@ -3576,6 +3688,11 @@ export const useCarbonChat = () => {
     () =>
       subscribeCreditEvents((event) => {
         if (event.type !== CREDIT_EVENT.PAYMENT_SUCCEEDED) return;
+        /**
+         * Info: (20260827 - Luphia) 狀態也刷新一次：即使這一頁沒有暫停中的匯入
+         *（例如暫停的是別的聊天室），伺服器眼中的狀態已經變了。
+         */
+        void refreshImportJobRef.current?.();
         autoResumeAfterPaymentRef.current?.();
       }),
     [],
@@ -5950,6 +6067,10 @@ export const useCarbonChat = () => {
     retryFailedImportChapters,
     // Info: (20260825 - Luphia) 「接著匯入」：只跑點數用完時還沒做的那幾份（issue #6713）
     resumePausedImportChapters,
+    // Info: (20260827 - Luphia) 伺服器眼中的狀態與取消（issue #6714）
+    importJobStatus: importJob?.status ?? null,
+    canCancelImportJob: Boolean(importJob),
+    cancelImportJob,
     // Info: (20260806 - Tzuhan) 重試中:預覽卡據此禁用按鈕並顯示進度(「正在跑」必須看得見)
     isRetryingImport,
     // Info: (20260716 - Tzuhan) #56 匯入導流(聊天附件疑似整份報告)
