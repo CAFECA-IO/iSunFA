@@ -392,7 +392,14 @@ export function ChatInput({
           disabled={isTyping || isLoading}
         />
         <button
-          onClick={onSendMessage}
+          /**
+           * Info: (20260825 - Emily) 不可直接 onClick={onSendMessage}:
+           * onSendMessage 底層是 handleSendMessage(overrideText?),直接綁定會把
+           * MouseEvent 當 overrideText 傳入 → `.trim is not a function` ——
+           * 實測按鈕自此送不出任何訊息(只剩 Enter 可用),且每點一次
+           * 一個 unhandledRejection。包一層丟棄事件參數。
+           */
+          onClick={() => onSendMessage()}
           disabled={disabled}
           aria-label={t("carbon_chatbot.send_message")}
           className="absolute top-1/2 right-2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#ff5a00] text-white shadow-sm transition-colors hover:bg-[#e04f00] disabled:cursor-not-allowed disabled:bg-gray-300"

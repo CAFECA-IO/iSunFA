@@ -15,6 +15,7 @@ import {
   IActivityRecord,
   IComputedLedger,
   IComputedLedgerEntry,
+  ILedgerImportBlock,
   IReportCategory,
   IReportParagraph,
   IReportData,
@@ -82,6 +83,7 @@ import {
   activityDedupeKey,
   stockRecordDedupeKey,
 } from "@/lib/carbon_inventory";
+import { buildLedgerFactBundle } from "@/lib/carbon_ledger_query";
 import {
   loadPendingImport as fetchPendingImportRecord,
   savePendingImport as putPendingImportRecord,
@@ -1646,6 +1648,36 @@ export const useCarbonChat = () => {
               base.computedLedger,
               entries,
             ),
+            // Info: (20260825 - Emily) 成功入帳即清除阻擋紀錄:紀錄描述的狀態已不存在
+            ledgerImportBlocks: undefined,
+          },
+        };
+      });
+    },
+    [user?.address, activeSessionId],
+  );
+
+  /**
+   * Info: (20260825 - Emily) 勾稽阻擋紀錄寫進 channel 狀態(#6707「對帳差異」偵測器)。
+   * 原本只有 console.warn —— 資訊死在開發者工具裡,查詢層看不到,
+   * 使用者問「有沒有異常」時系統說不出「表3.8 被擋,因為 6 列解析失敗」。
+   * 與 applyImportedLedgerEntries 同一把 channel 推導,同一份 E2EE state。
+   */
+  const recordLedgerImportBlocks = useCallback(
+    (blocks: ILedgerImportBlock[]) => {
+      if (blocks.length === 0) return;
+      const channel = buildCarbonChatChannel(
+        user?.address ?? "anonymous",
+        activeSessionId,
+      );
+      setInventoryStates((prev) => {
+        const base = prev[channel] ?? createEmptyInventoryState();
+        return {
+          ...prev,
+          [channel]: {
+            ...base,
+            ledgerImportBlocks: blocks,
+            updatedAt: new Date().toISOString(),
           },
         };
       });
@@ -3592,21 +3624,23 @@ export const useCarbonChat = () => {
        * Info: (20260803 - Tzuhan) 有表卻沒入帳時要留痕跡:對帳說明已寫在報告裡,
        * 但開發時看 log 才分得出「沒有表3.8」與「有表3.8 但勾稽沒過」。
        */
-      const blocked = Array.from(importedLedgerById.entries()).filter(
-        ([, result]) =>
-          result.blockedReason !== null || result.missingLedgerTable,
-      );
-      if (blocked.length > 0) {
-        console.warn(
-          "[carbon-chat] imported ledger blocked",
-          blocked.map(([paragraphId, result]) => ({
-            paragraphId,
-            // Info: (20260804 - Tzuhan) 「該有表3.8 卻沒拿到」與「有表但勾稽沒過」是兩件事
-            reason: result.missingLedgerTable
-              ? `缺少 ${LEDGER_SOURCE_TABLE_NO}(同節有全公司總量表,疑似被頁碼切片切掉)`
-              : result.blockedReason,
-          })),
-        );
+      const blocks = Array.from(importedLedgerById.entries())
+        .filter(
+          ([, result]) =>
+            result.blockedReason !== null || result.missingLedgerTable,
+        )
+        .map(([paragraphId, result]) => ({
+          paragraphId,
+          // Info: (20260804 - Tzuhan) 「該有表3.8 卻沒拿到」與「有表但勾稽沒過」是兩件事
+          reason: result.missingLedgerTable
+            ? `缺少 ${LEDGER_SOURCE_TABLE_NO}(同節有全公司總量表,疑似被頁碼切片切掉)`
+            : (result.blockedReason ?? "未知原因"),
+          blockedAt: new Date().toISOString(),
+        }));
+      if (blocks.length > 0) {
+        console.warn("[carbon-chat] imported ledger blocked", blocks);
+        // Info: (20260825 - Emily) #6707:留進 channel 狀態,讓「有沒有異常」問得到答案
+        recordLedgerImportBlocks(blocks);
       }
     }
     importActivitiesRef.current = [];
@@ -3742,6 +3776,7 @@ export const useCarbonChat = () => {
     dataTableLabels,
     generateParagraphDiagram,
     applyImportedLedgerEntries,
+    recordLedgerImportBlocks,
     t,
     setDraftNotice,
     dismissDraftNoticeAfter,
@@ -5067,7 +5102,14 @@ export const useCarbonChat = () => {
    */
   const handleSendMessage = useCallback(
     async (overrideText?: string) => {
-      const outgoingText = overrideText ?? inputValue;
+      /**
+       * Info: (20260825 - Emily) 型別硬化:呼叫端若誤傳非字串(如把本函式直接綁 onClick,
+       * MouseEvent 進到 overrideText),`??` 擋不住 —— 事件物件不是 nullish,
+       * `.trim` 直接炸,而且是 unhandledRejection(按鈕壞了卻沒有紅字)。
+       * 非字串一律退回輸入框內容:錯誤呼叫降級成正常送出,不是靜默壞死。
+       */
+      const outgoingText =
+        typeof overrideText === "string" ? overrideText : inputValue;
       const readyAttachments = pendingAttachments.filter(
         (a) => a.status === PendingAttachmentStatusEnum.READY,
       );
@@ -5188,6 +5230,17 @@ export const useCarbonChat = () => {
          * 每次重新產生就會變成「付了一張、又建一張」。
          */
         const clientMessageId = crypto.randomUUID();
+        /**
+         * Info: (20260825 - Emily) #6707 帳本事實包(第二層):每則訊息隨行注入。
+         * 帳本是 E2EE 的、伺服端讀不到,事實只能在這裡(解密後的狀態)決定性組出;
+         * LLM 回答數據問題的數字只能來自這一包(persona 端把「清單之外不得有數字」說死)。
+         * 帳本空時為空陣列 —— persona 對「無事實」另有明確拒答指令,這裡不補、不造。
+         */
+        const ledgerFacts = buildLedgerFactBundle(
+          inventoryStates[chatChannel]?.computedLedger,
+          // Info: (20260825 - Emily) 勾稽阻擋紀錄一併注入:「帳本為什麼是空的」也是可問的事實
+          inventoryStates[chatChannel]?.ledgerImportBlocks,
+        );
         const sendChatRequest = () =>
           request<{
             success: boolean;
@@ -5222,6 +5275,13 @@ export const useCarbonChat = () => {
                * 同一則訊息重送（重試、雙擊）不重複扣點。
                */
               clientMessageId,
+              /**
+               * Info: (20260825 - Emily) #6707 帳本事實包(組包邏輯見上方 ledgerFacts 的註解)。
+               * **空陣列也要送**(review 阻擋項):伺服端憑 [] 與 undefined 區分
+               * 「碳盤查對話、帳本空」(守門照跑)與「呼叫端沒帶事實包」(守門跳過)。
+               * 原本空包不帶欄位,守門在最需要它的狀態(只剩指令、編造最沒阻力)被關掉。
+               */
+              ledgerFacts,
               // Info: (20260714 - Tzuhan) 附件只帶 metadata+cid(檔案已在 Laria)；請求 body 維持輕量
               ...(attachmentsMeta.length > 0
                 ? { attachments: attachmentsMeta }

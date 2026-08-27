@@ -36,6 +36,10 @@ import {
   IParagraphDraft,
   IContextFact,
 } from "@/interfaces/carbon_paragraph_draft";
+import {
+  shouldRunReplyGate,
+  auditReplyQuantities,
+} from "@/lib/carbon_reply_gate";
 import type { IEciesEnvelope } from "@/lib/chatroom_ecies";
 
 // Info: (20260708 - Tzuhan) Carbon Chatbot Framework
@@ -78,6 +82,9 @@ export async function POST(request: NextRequest) {
     init,
     attachments,
     clientMessageId,
+    // Info: (20260825 - Emily) #6707 帳本事實包:前端決定性組出(帳本 E2EE,伺服端讀不到),
+    // Info: (20260825 - Emily) 經 Zod 上限驗證後原樣進 persona —— 本路由不加工、不補算
+    ledgerFacts,
   } = parsed.data;
 
   // Info: (20260714 - Tzuhan) 頻道所有權裁決: 只允許讀寫自己 address 前綴的頻道，防跨用戶寫入
@@ -182,6 +189,8 @@ export async function POST(request: NextRequest) {
           historyForAi,
           currentStep,
           language,
+          undefined,
+          ledgerFacts,
         ),
     });
     const {
@@ -321,10 +330,40 @@ export async function POST(request: NextRequest) {
             { role: ChatRoleEnum.AI, text: reply },
           ],
           language,
+          /**
+           * Info: (20260826 - Emily) #6707 帳本事實包一路帶到草稿(review 阻擋 3 的前半):
+           * 這條路徑原本不帶事實 —— 草稿的 LLM 呼叫比對話回覆更下游、
+           * 寫的字直接進報告,卻是唯一一段拿不到合法數字清單的生成。
+           */
+          contextFacts: ledgerFacts,
         });
-        drafts.push(draft);
-        // Info: (20260730 - Tzuhan) 對話蒐集完成的段落同樣完成即推
-        await publishDraftProgress(draft, drafts.length, drafts.length);
+        /**
+         * Info: (20260826 - Emily) 出口守門補到守門後方的生成(review 阻擋 3 的後半):
+         * 對話回覆過了守門,不代表這裡**另一次 LLM 呼叫**的產物也乾淨 ——
+         * 草稿寫進報告,是比對話更嚴重的落地面。同一把尺:
+         * 帶排放單位的數字 ∈ 事實包 ∪ 使用者說過的數字;上崗條件同 shouldRunReplyGate。
+         * 攔下時草稿不落地、標記降級(使用者可用目錄的 AI 撰寫鈕重試),對話不中斷。
+         */
+        const draftGate = shouldRunReplyGate(ledgerFacts)
+          ? auditReplyQuantities(
+              draft.content,
+              ledgerFacts,
+              history
+                .filter((item) => item.role === "user")
+                .map((item) => item.text),
+            )
+          : { ok: true, violations: [] as string[] };
+        if (!draftGate.ok) {
+          logger.warn("carbon draft gate blocked", {
+            paragraphId: readyParagraphId,
+            violations: draftGate.violations,
+          });
+          degraded = true;
+        } else {
+          drafts.push(draft);
+          // Info: (20260730 - Tzuhan) 對話蒐集完成的段落同樣完成即推
+          await publishDraftProgress(draft, drafts.length, drafts.length);
+        }
       } catch (draftError) {
         // Info: (20260714 - Tzuhan) 草稿失敗不阻斷對話，僅標記降級(用戶可用目錄的 AI 撰寫鈕重試)
         logger.error(
