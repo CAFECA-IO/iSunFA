@@ -10,6 +10,7 @@ import {
 import { analysisRepo } from "@/repositories/analysis.repo";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import { ORDER_STATUS } from "@/constants/status";
+import { SystemWorkerSource } from "@/constants/enums";
 
 /**
  * Info: (20260825 - Julian) `jest` 必須是**全域**，不能 `import { jest }`。
@@ -121,8 +122,21 @@ jest.mock("@/skills/utils/document_parser_db_sync", () => ({
   syncDocumentResultToDatabase: jest.fn(async () => ({})),
 }));
 
+/**
+ * Info: (20260827 - Julian) `run` 必須實作（20260827 補）。
+ *
+ * 原本是 `class {}` —— 本檔的多數案例刻意不給 `dbSyncPayload`，走不到
+ * `TransactionRepo.run`，所以空類別夠用。但那讓「同步成功」這個分支
+ * **在這個檔案裡造不出來**：一旦給了 payload，`run` 是 undefined，
+ * TypeError 被外層 try 接住 → `finalOrderStatus` 又變成 FAILED。
+ *
+ * 於是「同步失敗」會偽裝成每一種結果，而那正是本輪 review 抓到的那個形狀：
+ * 兩種狀態被塌成同一個觀測量。
+ */
 jest.mock("@/repositories/transaction.repo", () => ({
-  TransactionRepo: class {},
+  TransactionRepo: {
+    run: jest.fn(async (work: (tx: unknown) => Promise<unknown>) => work({})),
+  },
 }));
 
 /**
@@ -483,17 +497,122 @@ describe("IssueRecorder：終態不覆寫", () => {
   });
 
   /**
-   * Info: (20260826 - Julian) 終態訂單也不該收到「完成」通知。
+   * Info: (20260827 - Julian) 改名：這條測的是**同步失敗**，不是終態訂單。
    *
-   * 同步失敗時 `finalOrderStatus` 是 FAILED，完成通知那道守門看的是它、
-   * 不是訂單狀態 —— 兩道守門看不同的東西是刻意的，這條把它釘住。
+   * 原名是「終態訂單同步失敗時不發完成通知」，而 `givenApprovedTask` 的預設
+   * fixture 是 CERTIFICATE_ANALYSIS 且不給 `dbSyncPayload` —— 同步**必定**失敗，
+   * `finalOrderStatus` 恆為 FAILED。於是「真的有終態守門」與「完全沒有終態守門」
+   * 被塌成同一個觀測量，兩種狀態下這條都綠。
+   *
+   * 實測：把訂單狀態改成 `CANCEL` 而讓同步成功，21 條全綠，
+   * 而 `notifyAnalysisCompleted` 照樣被呼叫一次。
+   *
+   * 名字保留這條（同步失敗那道守門仍然要有人守），終態那件事由下面一組驗。
    */
-  it("成功路徑：終態訂單同步失敗時不發完成通知", async () => {
+  it("成功路徑：同步失敗時不發完成通知", async () => {
     givenApprovedTask({ orderStatus: ORDER_STATUS.COMPLETED });
 
     await issueRecorderService.processNext();
 
     expect(asMock(notifyAnalysisCompleted)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260827 - Julian) 終態訂單不發完成通知（review 阻擋級）。
+   *
+   * 關鍵是 `category: "other_analysis"` —— 它讓**同步成功**，於是
+   * `finalOrderStatus` 是 COMPLETED，唯一還能擋下通知的就只剩終態守門。
+   * 少了這個 category，這一組會退化成上面那條的複製品。
+   *
+   * 三種終態各驗一次而不是只驗一個：`isTerminalOrderStatus` 是一支共用函式，
+   * 而「它到底涵蓋哪幾個狀態」是這道守門的全部內容。
+   */
+  it.each([
+    [ORDER_STATUS.CANCEL],
+    [ORDER_STATUS.COMPLETED],
+    [ORDER_STATUS.FAILED],
+  ])("成功路徑：訂單已在終態 %s 時不發完成通知", async (orderStatus) => {
+    givenApprovedTask({ category: "other_analysis", orderStatus });
+
+    await issueRecorderService.processNext();
+
+    expect(asMock(notifyAnalysisCompleted)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260827 - Julian) 反面：非終態訂單 ＋ 同步成功 → 照發。
+   *
+   * 上面那一組單獨存在時，「把完成通知整個刪掉」也會讓它們全綠。
+   * 這條與 `:347` 那條共同構成對照 —— 兩個變數各動一次，四格裡的三格都有人守。
+   */
+  it.each([[ORDER_STATUS.PAID], [ORDER_STATUS.EXECUTING]])(
+    "成功路徑：訂單在 %s（非終態）且同步成功時照發完成通知",
+    async (orderStatus) => {
+      givenApprovedTask({ category: "other_analysis", orderStatus });
+
+      await issueRecorderService.processNext();
+
+      expect(asMock(notifyAnalysisCompleted)).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  /**
+   * Info: (20260827 - Julian) `order` 為 null 時**照發**（驗收清單 a1e）。
+   *
+   * 終態守門寫成 `!(order && …)` 而不是 `order && !…`，差別就在這條：
+   * 後者會讓 `order` 為 null 的情況連完成通知一起消失。
+   *
+   * ## 這個情境比註解原本說的窄
+   *
+   * 「orderId 反查不到訂單」在一般路徑上**到不了**這裡：上游的 `if (!order)`
+   * 會寫旗標並 `continue`。唯一走得到完成通知而 `order` 仍為 null 的，
+   * 是 `context.json` 帶 `source: AMORTIZATION_WORKER` 的內部任務 ——
+   * 那條路刻意繞過訂單要求（攤銷分錄沒有訂單）。
+   *
+   * 所以這條測試必須把 `source` 一起造出來。少了它，測試會撞上那個
+   * `continue` 而斷言 0 次呼叫 —— 然後有人會「修正」斷言，
+   * 把一個真的守門記成不存在。
+   */
+  it("成功路徑：攤銷任務沒有訂單時，完成通知照發", async () => {
+    givenApprovedTask();
+
+    /**
+     * Info: (20260827 - Julian) 攤銷路徑要三樣東西同時到位，缺一就走不到通知。
+     *
+     * 1. `source: AMORTIZATION_WORKER` —— 否則上游的 `if (!order)` 會寫旗標並
+     *    `continue`，完全到不了通知那一行
+     * 2. `dbSyncPayload` —— 攤銷與 CERTIFICATE_ANALYSIS 共用同一道檢查：
+     *    **缺 payload 就判 `finalOrderStatus = FAILED`**。第一版這條測試只給了
+     *    第 1 點，於是被這道守門擋掉而不是被終態守門擋掉 —— 又是一次
+     *    「兩種原因塌成同一個觀測量」
+     * 3. `accountBookId` 在 context 裡 —— 沒有訂單載荷時，那是帳本 ID 唯一的來源
+     *（`payloadData.accountBookId || orderDataObj.accountBookId || localContextObj.accountBookId`）
+     */
+    fsState.contents.set(
+      contextPath,
+      JSON.stringify({
+        analysisId: APPROVED_ANALYSIS.id,
+        source: SystemWorkerSource.AMORTIZATION_WORKER,
+        accountBookId: "book-1",
+      }),
+    );
+    fsState.contents.set(
+      resultPath,
+      JSON.stringify({
+        summary: "done",
+        dbSyncPayload: {
+          "file-1": { journal: {}, fileId: "file-1" },
+        },
+      }),
+    );
+    asMock(orderRepo.findFirst).mockResolvedValue(null);
+    asMock(orderRepo.findMany).mockResolvedValue([]);
+
+    await issueRecorderService.processNext();
+
+    expect(asMock(notifyAnalysisCompleted)).toHaveBeenCalledTimes(1);
+    // Info: (20260827 - Julian) 沒有訂單就沒有失敗通知的收件人，也不該有
+    expect(asMock(notifyAnalysisFailed)).not.toHaveBeenCalled();
   });
 });
 

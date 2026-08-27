@@ -37,6 +37,10 @@ import { userRepo } from "@/repositories/user.repo";
 import { notificationRepo } from "@/repositories/notification.repo";
 import { disconnectPrisma } from "@/repositories/prisma_lifecycle.repo";
 import {
+  NOTIFICATION_HISTORY_LIMIT,
+  NOTIFICATION_TODO_LIST_LIMIT,
+} from "@/constants/notification";
+import {
   notifyAnalysisCompleted,
   notifyAnalysisFailed,
   notifyWalletUpgradeRequested,
@@ -94,6 +98,15 @@ const out = (line: string): void => {
  * 不用亂數：重跑時想重現同一組會很麻煩，而時間戳看得出先後。
  */
 const STAMP = Date.now();
+
+/**
+ * Info: (20260827 - Julian) `many` 情境造幾則完成通知。
+ *
+ * 要**明顯超過** `NOTIFICATION_HISTORY_LIMIT`，否則驗不到截斷提示。
+ * 抽成常數是為了讓下面印出來的判準與實際造的筆數同源 ——
+ * 兩處各寫一個數字，改一邊就會印出一份對不上的判準。
+ */
+const MANY_COMPLETED = 25;
 
 const SCENARIOS = ["todo", "arrival", "failed", "many"] as const;
 type Scenario = (typeof SCENARIOS)[number];
@@ -198,19 +211,48 @@ async function runScenario(userId: string, scenario: Scenario): Promise<void> {
       await notifyWalletUpgradeRequested({ userId });
       // Info: (20260825 - Julian) 逐則 await 而不是 Promise.all：25 則同時寫
       // 會讓本機 pool 排隊，而這裡不趕時間，逐則失敗也看得出是第幾則
-      for (let index = 0; index < 25; index += 1) {
+      for (let index = 0; index < MANY_COMPLETED; index += 1) {
         await notifyAnalysisCompleted({
           userId,
           analysisId: `qa-${STAMP}-${index}`,
           analysisType: "carbon_footprint",
         });
       }
-      out("已造出 1 則待辦 + 25 則完成 = 26 則未讀。");
-      out("\n驗收第 8 項的判準（三個數字要同時成立）：");
-      out("  徽章 = 26");
-      out("  待辦區 1 則、完成區 20 則");
-      out("  完成區底下出現「還有更多未讀通知」");
-      out("\n少了第三行就是 D4 復發：畫面把 20 則讀成全部，而徽章說 26。");
+      /**
+       * Info: (20260827 - Julian) 判準從**常數**算出來，不寫死數字。
+       *
+       * 這幾行原本寫著「完成區 20 則」與「還有更多未讀通知」——
+       * 而上限已經是 10（曾為 20 → 30 → 10），文案鍵也已改名為
+       * `history_capped`（「僅顯示最近 N 則」）。照著過期的判準驗收，
+       * 會把一個其實正常的行為記成失敗，而那比程式碼裡的舊註解更糟：
+       * 錯的判準會產生錯的缺陷單。
+       *
+       * 契約測試釘得住常數的值，釘不住句子 —— 所以句子改成從常數算。
+       */
+      const todoCount = 1;
+      const badge = todoCount + MANY_COMPLETED;
+      const shownCompleted = Math.min(
+        MANY_COMPLETED,
+        NOTIFICATION_HISTORY_LIMIT,
+      );
+
+      out(
+        `已造出 ${todoCount} 則待辦 + ${MANY_COMPLETED} 則完成 = ${badge} 則未讀。`,
+      );
+      out("\n驗收判準（三個數字要同時成立）：");
+      out(`  徽章 = ${badge}`);
+      out(
+        `  待辦區 ${todoCount} 則（上限 ${NOTIFICATION_TODO_LIST_LIMIT}）、` +
+          `完成區 ${shownCompleted} 則（上限 ${NOTIFICATION_HISTORY_LIMIT}）`,
+      );
+      out(
+        `  完成區底下出現「僅顯示最近 ${NOTIFICATION_HISTORY_LIMIT} 則」，` +
+          "且帶一個通往 /user/notifications 的連結",
+      );
+      out(
+        `\n少了第三行就是 D4／D20 復發：畫面把 ${shownCompleted} 則讀成全部，` +
+          `而徽章說 ${badge}。`,
+      );
       break;
     }
     default:

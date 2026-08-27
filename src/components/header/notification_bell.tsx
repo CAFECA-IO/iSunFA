@@ -63,6 +63,23 @@ type IList = INotificationList;
 
 const SUMMARY_SHOWN_KEY = "notification-summary-shown";
 
+/**
+ * Info: (20260827 - Julian) 「面板開了」這件事的唯一觸發點。
+ *
+ * 存在的理由是 `PopoverButton` 的 `onClick` 分不出開與關 —— 而 `PopoverPanel`
+ * 預設在關閉時卸載，所以一個只在掛載時跑一次的 effect 正好等於「開啟」。
+ *
+ * 拆成元件而不是在鈴鐺裡用 `useEffect` 監看某個 open 狀態：`open` 只存在於
+ * `Popover` 的 render prop 裡，而 hook 不能寫在 render prop 中。
+ */
+function LoadListOnOpen({ onOpen }: { onOpen: () => void }) {
+  useEffect(() => {
+    onOpen();
+  }, [onOpen]);
+
+  return null;
+}
+
 export default function NotificationBell() {
   const { user } = useAuth();
   const { t } = useTranslation();
@@ -287,7 +304,6 @@ export default function NotificationBell() {
             ? t("notification.aria_unread", { count: unreadTotal })
             : t("notification.aria")
         }
-        onClick={openList}
         className="text-text-muted hover:bg-surface-hover hover:text-text-primary relative rounded-full p-2 focus:outline-none"
       >
         <Bell className={`h-5 w-5 ${shaking ? "animate-bell-shake" : ""}`} />
@@ -355,6 +371,18 @@ export default function NotificationBell() {
         >
           {({ close }) => (
             <>
+              {/**
+               * Info: (20260827 - Julian) 抓清單的時機從按鈕的 onClick 換到面板掛載（review）。
+               *
+               * `PopoverButton` 的 `onClick` 在**開**與**關**都會觸發，於是關閉的那一下
+               * 又打了一次 `/api/v1/user/notifications` —— 一次沒有人看的請求，
+               * 而它還吃 `NOTIFICATION_READ` 的限流桶（30/分）。
+               *
+               * `PopoverPanel` 預設在關閉時卸載，所以「掛載」就是「開啟」。
+               * 判斷交給 HeadlessUI 而不是自己記一個 open 狀態：
+               * 少一份需要跟著同步的真相。
+               */}
+              <LoadListOnOpen onOpen={openList} />
               {/* Info: (20260825 - Julian) 手機全螢幕時要有出口；桌機點外面就關 */}
               <div className="border-border-default flex shrink-0 items-center justify-between border-b px-3 pb-2 md:hidden">
                 <p className="text-text-primary text-sm font-semibold">

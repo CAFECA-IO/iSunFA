@@ -360,13 +360,46 @@ export class IssueRecorderService {
            * COMPLETED，只被上面那段同步邏輯改成 FAILED。用它就能既擋掉矛盾，
            * 又保住逐 task 的粒度。
            *
+           * ## 但 `finalOrderStatus` 只看得到這一個任務（review 阻擋級）
+           *
+           * 上面那段論證只在**單一任務內**成立。`finalOrderStatus` 從不讀
+           * `order.status`，所以跨任務、跨訂單狀態的兩種情況它一概看不到：
+           *
+           * 1. 使用者已 `CANCEL` 訂單，之後某個任務的 `approved.*.md` 被記錄、
+           *    同步成功 —— 他收到「你的分析已完成，點擊查看結果」
+           * 2. 多任務訂單的前一個任務同步失敗、訂單已寫成 FAILED 並發過
+           *    「你的分析失敗了」，後一個任務完成時再發一則「已完成」
+           *
+           * 兩則的 `dedupeKey` 都是永久唯一鍵，收不回也蓋不掉 —— 與這段註解
+           * 開頭要修的缺陷是同一種傷害，只是換了一個觸發路徑。
+           *
+           * 所以第三個條件補上終態守門，並刻意用 `isTerminalOrderStatus`
+           * 而不是多列幾個 `!==`：訂單狀態的更新（下方）與放棄路徑都用同一支，
+           * 三處同源。D30 的教訓就是「兩處各寫一串比較遲早會分岔」。
+           *
+           * `COMPLETED` 也擋：訂單已經完成表示使用者已經被通知過了，
+           * 而同一份 analysis 的重複通知本來就由 dedupeKey 擋住 ——
+           * 會走到這裡的只有「同一張訂單、另一份 analysis，而訂單已宣告完成」，
+           * 那個狀態本身就不該存在（`allDone` 要求每個 taskId 都有旗標）。
+           *
            * ## 為什麼不放進下面的 `if (order)`
            *
-           * `analysis` 可以在 `order` 為 null 時存在（以 `analysisId` 找到分析，
-           * 但 orderId 反查不到訂單，見 `resolveAnalysisAndOrder`）。
-           * 放進去會讓那個情況連完成通知也一起消失 —— 又是一個靜默的漏。
+           * `analysis` 可以在 `order` 為 null 時存在，而那個情況**確實走得到這裡**
+           * —— 但比原本這段註解說的窄，值得寫清楚：
+           *
+           * 一般路徑上「orderId 反查不到訂單」到不了這一行，上游的 `if (!order)`
+           * 會寫旗標並 `continue`。唯一走得到、而 `order` 仍為 null 的，是
+           * `context.json` 帶 `source: AMORTIZATION_WORKER` 的內部任務 ——
+           * 那條路刻意繞過訂單要求（攤銷分錄沒有訂單）。
+           *
+           * 所以終態守門寫成 `!(order && …)` 而不是 `order && !…`：
+           * `order` 為 null 時**照發**。後者會讓攤銷任務的完成通知靜靜消失。
            */
-          if (analysis && finalOrderStatus !== ORDER_STATUS.FAILED) {
+          if (
+            analysis &&
+            finalOrderStatus !== ORDER_STATUS.FAILED &&
+            !(order && isTerminalOrderStatus(order.status))
+          ) {
             /**
              * Info: (20260821 - Luphia) `notifyAnalysisCompleted` 永不拋錯且以
              * dedupeKey 冪等 —— recorder 重試同一個 task 不會發第二則，

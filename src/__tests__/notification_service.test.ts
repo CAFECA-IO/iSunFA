@@ -4,6 +4,7 @@ declare const jest: typeof JestType;
 
 import {
   dismissWalletUpgrade,
+  NotificationOperationError,
   getNotificationSummary,
   listUsersWithPendingWalletUpgrade,
   listNotificationHistory,
@@ -943,21 +944,61 @@ describe("錢包升級待辦的發送", () => {
   });
 
   /**
-   * Info: (20260825 - Julian) 這支**會拋**，與 `notifyAnalysisCompleted` 相反。
+   * Info: (20260827 - Julian) 錢包升級那三支的共同契約：**包裝但仍然拋**。
    *
-   * 呼叫端是批次腳本，需要知道哪些人沒發成功才能重跑；吞掉會讓失敗
-   * 變成一個沒有人看得到的數字。這條測試把那個契約釘住 ——
-   * 有人「順手」補上 try/catch 讓兩支一致時，它會紅。
+   * ## 為什麼是三支一起，而不是各驗一次
+   *
+   * `notifyWalletUpgradeRequested` 先前是三支裡唯一沒包 `guardedThrowing` 的，
+   * 於是 Prisma 的原始錯誤（連線字串、表結構）會被批次腳本原文印進 stderr。
+   * 那個遺漏之所以能存在，正是因為契約沒有被**成組**釘住 ——
+   * 逐支各寫一條的話，新增第四支時沒有人會發現又漏了。
+   *
+   * ## 兩件事要同時成立，缺一不可
+   *
+   * 1. **仍然拋**：呼叫端是批次腳本，需要知道哪些人沒發成功才能重跑。
+   *    吞掉會讓失敗變成一個沒有人看得到的數字（這是原本這條測試守的東西）。
+   * 2. **包裝過**：往外拋的是 `NotificationOperationError`，訊息不含內部細節，
+   *    而原因留在 `cause` —— 少了第 2 點就是洩漏，少了第 1 點就是靜默。
+   *
+   * 原本這條斷言 `rejects.toThrow("db down")`，也就是**原始訊息**。
+   * 那個斷言與「要包裝」直接衝突：包了就會紅。所以它改成驗 `cause`，
+   * 而不是把包裝拿掉來讓測試變綠。
    */
-  it("repo 失敗時往上拋（腳本要能逐人接住）", async () => {
-    asMock(notificationRepo.createIfAbsent).mockRejectedValueOnce(
-      new Error("db down"),
-    );
+  it.each([
+    [
+      "notifyWalletUpgradeRequested",
+      "createIfAbsent" as const,
+      () => notifyWalletUpgradeRequested({ userId: USER }),
+    ],
+    [
+      "dismissWalletUpgrade",
+      "markReadByType" as const,
+      () => dismissWalletUpgrade({ userId: USER, nowMs: NOW_MS }),
+    ],
+    [
+      "listUsersWithPendingWalletUpgrade",
+      "listUserIdsWithUnread" as const,
+      () => listUsersWithPendingWalletUpgrade({ userIds: [USER] }),
+    ],
+  ])(
+    "%s：repo 失敗時包成 NotificationOperationError 並保留 cause",
+    async (operation, repoMethod, call) => {
+      const original = new Error("db down");
+      asMock(notificationRepo[repoMethod]).mockRejectedValueOnce(original);
 
-    await expect(
-      notifyWalletUpgradeRequested({ userId: USER }),
-    ).rejects.toThrow("db down");
-  });
+      await expect(call()).rejects.toThrow(NotificationOperationError);
+
+      asMock(notificationRepo[repoMethod]).mockRejectedValueOnce(original);
+      const caught = await call().catch((error: unknown) => error);
+
+      expect(caught).toBeInstanceOf(NotificationOperationError);
+      // Info: (20260827 - Julian) 訊息不得洩漏內部細節，但要說得出是哪一支
+      expect((caught as Error).message).toContain(operation);
+      expect((caught as Error).message).not.toContain("db down");
+      // Info: (20260827 - Julian) 原因仍然拿得到 —— 這是 guardedThrowing 的重點
+      expect((caught as Error).cause).toBe(original);
+    },
+  );
 });
 
 /**

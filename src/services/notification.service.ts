@@ -527,11 +527,25 @@ export async function notifyAnalysisFailed(params: {
 export async function notifyWalletUpgradeRequested(params: {
   userId: string;
 }): Promise<boolean> {
-  const created = await notificationRepo.createIfAbsent({
-    userId: params.userId,
-    type: NOTIFICATION_TYPE.WALLET_UPGRADE,
-    payload: {} as Prisma.InputJsonObject,
-    dedupeKey: `${NOTIFICATION_DEDUPE_PREFIX.WALLET_UPGRADE}${params.userId}`,
-  });
+  /**
+   * Info: (20260827 - Julian) 補上 `guardedThrowing`（review）。
+   *
+   * 這是本檔第三支由腳本呼叫、且**刻意保留可拋性**的函式，而先前只有它沒包。
+   * 於是 Prisma 的原始錯誤訊息（連線字串、表結構）會被批次腳本原文印進 stderr
+   * —— 而 `guardedThrowing` 的檔頭寫的正是「這層包裝就是為了防這件事」。
+   *
+   * 包了之後拋出的是 `NotificationOperationError`，原因留在 `cause`：
+   * 腳本的逐人 try/catch 與非 0 exit code 都還在，只是不再洩漏內部細節。
+   */
+  const created = await guardedThrowing(
+    () =>
+      notificationRepo.createIfAbsent({
+        userId: params.userId,
+        type: NOTIFICATION_TYPE.WALLET_UPGRADE,
+        payload: {} as Prisma.InputJsonObject,
+        dedupeKey: `${NOTIFICATION_DEDUPE_PREFIX.WALLET_UPGRADE}${params.userId}`,
+      }),
+    { operation: "notifyWalletUpgradeRequested", userId: params.userId },
+  );
   return created !== null;
 }

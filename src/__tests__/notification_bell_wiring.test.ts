@@ -725,6 +725,24 @@ describe("通知列只有一份實作", () => {
    * 釘的是那個決定的正確實作：只要條件看了 `completed`，就必須也看 `todos`。
    * 這個形狀擋得住原本那個寫法，又不會讓任何無害的重排變紅。
    */
+  /**
+   * Info: (20260827 - Julian) 抓清單的時機不得掛回按鈕的 onClick（review）。
+   *
+   * `PopoverButton` 的 `onClick` 在**開**與**關**都會觸發，於是關閉的那一下
+   * 又打了一次 `/api/v1/user/notifications` —— 一次沒有人看的請求，
+   * 而它還吃 `NOTIFICATION_READ` 的限流桶（30/分，三支讀取端點共用）。
+   *
+   * 改成由面板掛載時觸發（`PopoverPanel` 預設關閉即卸載）。這條擋的是
+   * 「順手把 onClick 加回去」—— 那個改動不會讓任何工具有意見，
+   * 而多打一次請求在畫面上完全看不出來。
+   */
+  it("清單在面板掛載時抓，不掛在按鈕的 onClick 上", () => {
+    const bell = codeOf(...BELL);
+
+    expect(bell).not.toMatch(/onClick=\{openList\}/);
+    expect(bell).toMatch(/<LoadListOnOpen\s+onOpen=\{openList\}/);
+  });
+
   it("底部的查看全部連結把待辦也算進條件", () => {
     const bell = codeOf(...BELL);
     const link = bell.indexOf('href="/user/notifications"');

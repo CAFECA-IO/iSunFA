@@ -68,6 +68,16 @@ export class NotificationRepository {
    *
    * 多取一則來判斷 hasMore：靜默截斷會被讀成「這就是全部」，而使用者
    * 沒有任何方式發現少了 5 則（檢查清單 §一.1 的同構要求：有上限就要說出來）。
+   *
+   * ⚠️ Info: (20260827 - Julian) **正式程式碼已經沒有呼叫端**（review）。
+   *
+   * 面板改成保留已讀之後，那條路換成了 `listRecentExcludingTypes`（不濾 `readAt`）。
+   * 這支目前只剩 `notification_repo.e2e.test.ts` 在用，所以**不要**照上面那句
+   * 「鈴鐺的兩條查詢」去理解它 —— 它現在不服務任何畫面。
+   *
+   * 保留而不刪：e2e 用它驗「只濾未讀」與「跨使用者不互相看到」，
+   * 而那兩件事換成另一支查詢就驗不到同一個東西了。
+   * 哪天 e2e 也不需要它，連這段註解一起刪。
    */
   async listUnreadExcludingTypes(
     userId: string,

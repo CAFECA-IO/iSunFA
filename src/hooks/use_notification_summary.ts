@@ -162,7 +162,11 @@ export function useNotificationSummary(
     fetchSummary().then((first) => {
       if (!active || !first) return;
       setSummary(first);
-      lastTotalRef.current = first.todoCount + first.completedCount;
+      // Info: (20260827 - Julian) 走 `unreadTotalOf`，不要就地相加（review）。
+      // 兩處各算一次「未讀總數」的話，之後改定義（例如新增第三個桶）
+      // 只會改到其中一處，而症狀是首抓的基準與後續的判斷不同步 ——
+      // 那正是 D17 的形狀：每一個外顯行為都對，只有出聲的時機錯了。
+      lastTotalRef.current = unreadTotalOf(first);
     });
     return () => {
       active = false;
