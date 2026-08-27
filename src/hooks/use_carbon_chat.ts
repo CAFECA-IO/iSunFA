@@ -38,7 +38,6 @@ import {
 import { isImportedEntry } from "@/lib/carbon_table38.ledger";
 import { mergeImportedLedgerEntries } from "@/lib/carbon_ledger_totals";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
-import { CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH } from "@/constants/carbon_source_tables";
 import {
   buildCarbonChartBlock,
   insertCarbonChartBlock,
@@ -149,7 +148,9 @@ import {
   reduceDraftNotice,
   sortSessionsByRecency,
   appendImportSource,
+  foldImportChunks,
   type ICarbonImportSource,
+  type IImportCheckpoint,
 } from "@/hooks/use_carbon_chat.helpers";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { JOB_TYPE, type JobPauseReason } from "@/constants/resumable_job";
@@ -515,6 +516,35 @@ export const useCarbonChat = () => {
   const lastImportSourceRef = useRef<ICarbonImportSource | null>(null);
   // Info: (20260804 - Tzuhan) 進行中的匯入檔名(null 即無);用檔名而非布林,提示才說得出擋的是誰
   const importInFlightRef = useRef<string | null>(null);
+  /**
+   * Info: (20260827 - Luphia) 同一件事的可渲染版本（issue #6723）。
+   *
+   * `importInFlightRef` 是 ref，改它不會重新渲染，所以掛不上 `beforeunload`
+   * 的生命週期。兩者必須同進同退——只更新一邊就會變成「提示常駐」或「提示不出現」。
+   */
+  const [importRunning, setImportRunning] = useState<boolean>(false);
+
+  /**
+   * Info: (20260827 - Luphia) 匯入中離開頁面要先問一聲（issue #6723）。
+   *
+   * 檢查點已經讓「做完的份」撐得過中斷，但離開的代價還是具體的：正在跑的那一份
+   * 沒有結果就會重跑（那一次的點數收不回來），而原始檔案只在記憶體裡——
+   * 回來之後得重新上傳同一份報告才接得下去。
+   *
+   * 只在跑的時候掛、跑完立刻卸下。常駐一個 `beforeunload` 會讓使用者在任何時候
+   * 離開都被問一次，那種提示很快就會被無視（見 `team/allocation_modal.tsx`）。
+   * `preventDefault()` 與 `returnValue` 都設是為了跨瀏覽器。
+   */
+  useEffect(() => {
+    if (!importRunning) return undefined;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+      return "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [importRunning]);
   // Info: (20260730 - Tzuhan) 首次匯入取得的頁碼索引:重試失敗章節時沿用,不重問(索引不會變,重問等於再燒一次全文輸入)
   const lastPageIndexRef = useRef<Map<string, number> | undefined>(undefined);
 
@@ -1974,6 +2004,17 @@ export const useCarbonChat = () => {
        * 而訊息裡明寫「已完成的部分不會重跑」。
        */
       resumeUnits?: IImportUnit[],
+      /**
+       * Info: (20260827 - Luphia) 每做完一份就回報一次檢查點（issue #6723）。
+       *
+       * 先前成果**只在整段跑完之後才落地**：14 份要跑 7～14 分鐘，這段時間內
+       * 關掉分頁、切走頁面、或任何一次非暫停的拋錯，已經扣過點的份全部白費，
+       * 下次從第 1 份重扣（單次預扣估算約 677 點）。
+       *
+       * 「暫停」那條路一直是對的，因為它是**正常結束**——迴圈自己跳出來，
+       * 後面的落地照跑。壞的是其他每一種中斷方式，而測試全都只走前者。
+       */
+      onCheckpoint?: (checkpoint: IImportCheckpoint) => void,
     ) => {
       interface IImportChunkPayload {
         segments: {
@@ -2049,6 +2090,32 @@ export const useCarbonChat = () => {
           id: chapterId,
           title: chapterId,
         };
+
+      /**
+       * Info: (20260827 - Luphia) 目前為止的成果（issue #6723）。
+       *
+       * 剩餘是以**有沒有結果**算的，與驅動器同一個判準——正在跑的那一份還沒有
+       * 結果，因此會被算進剩餘。那是安全的方向：下一次檢查點就會把它補上，
+       * 而反過來（樂觀地算成做完）會讓一份真的沒做的內容永久消失。
+       */
+      const buildCheckpoint = (): IImportCheckpoint => {
+        const folded = foldImportChunks(results);
+        const notSettled = units.filter(
+          (_unit, index) => results[index] === null,
+        );
+        const { pausedUnits, pausedChapters } = summarisePausedUnits({
+          remainingUnits: notSettled,
+          // Info: (20260827 - Luphia) 跑到一半還不知道哪些是真的壞掉，一律算剩餘
+          failedChapterIds: [],
+          resolveTitle: (chapterId) => resolveChapterOf(chapterId).title,
+        });
+        return {
+          ...folded,
+          remainingUnits: pausedUnits,
+          pausedChapters,
+          totalUnits: units.length,
+        };
+      };
 
       /**
        * Info: (20260825 - Luphia) 單一工作單元的送出（驅動器逐步呼叫）。
@@ -2150,6 +2217,12 @@ export const useCarbonChat = () => {
           completedCount += 1;
           inFlightCount -= 1;
           reportProgress();
+          /**
+           * Info: (20260827 - Luphia) 落地也在 finally（issue #6723）：
+           * 失敗與暫停同樣改變了「還剩哪些」，只在成功時存會讓剩餘清單
+           * 落後於事實。呼叫端負責不阻斷主流程。
+           */
+          onCheckpoint?.(buildCheckpoint());
         }
       };
 
@@ -2200,54 +2273,7 @@ export const useCarbonChat = () => {
         );
       }
 
-      const segmentsById = new Map<
-        string,
-        { title: string; parts: string[]; sourceTables: ICarbonSourceTable[] }
-      >();
-      const unmapped: string[] = [];
-      let activities: IActivityRecord[] = [];
-      results.forEach((chunk) => {
-        if (!chunk) return;
-        chunk.segments.forEach((segment) => {
-          const bucket = segmentsById.get(segment.paragraphId) ?? {
-            title: segment.title,
-            parts: [],
-            sourceTables: [],
-          };
-          bucket.parts.push(segment.content);
-          /**
-           * Info: (20260803 - Tzuhan) 表格隨敘述一起累積。以表號去重:
-           * 同一節的內容可能被切成多段回來,同一張表因此可能重複出現,
-           * 而重複的表在報告上是兩張一樣的表 —— 讀者無從判斷哪張才是原文。
-           */
-          (segment.sourceTables ?? []).forEach((table) => {
-            if (
-              bucket.sourceTables.some((kept) => kept.tableNo === table.tableNo)
-            )
-              return;
-            if (
-              bucket.sourceTables.length >=
-              CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH
-            )
-              return;
-            bucket.sourceTables.push(table);
-          });
-          segmentsById.set(segment.paragraphId, bucket);
-        });
-        unmapped.push(...chunk.unmapped);
-        /**
-         * Info: (20260817 - Emily) 累加而不是覆蓋
-         * (`data/issue_drafts/open/46_activity_data_traceability.md`)。
-         *
-         * 原本是 `activities = chunk.activities` —— 賦值。
-         * 排放章(ch3)六節會被切成兩個工作單元,兩次呼叫各自回一份,
-         * **後回來的那份整批蓋掉前一份**。就算兩次都抽到,也只留下一半,
-         * 而現場看到的只是一個偏低的數字,沒有任何跡象顯示發生過覆蓋。
-         */
-        if (chunk.activities && chunk.activities.length > 0) {
-          activities = [...activities, ...chunk.activities];
-        }
-      });
+      const folded = foldImportChunks(results);
 
       /**
        * Info: (20260825 - Luphia) 「還沒做」的**工作單元**——粒度是份，不是章
@@ -2269,16 +2295,9 @@ export const useCarbonChat = () => {
         });
 
       return {
-        segments: Array.from(segmentsById.entries()).map(
-          ([paragraphId, bucket]) => ({
-            paragraphId,
-            title: bucket.title,
-            content: bucket.parts.join("\n\n").trim(),
-            sourceTables: bucket.sourceTables,
-          }),
-        ),
-        unmapped,
-        activities,
+        segments: folded.segments,
+        unmapped: folded.unmapped,
+        activities: folded.activities,
         failed,
         pausedBy,
         // Info: (20260825 - Luphia) 接續用（份粒度）與顯示用（章）各一份
@@ -2615,6 +2634,7 @@ export const useCarbonChat = () => {
         return;
       }
       importInFlightRef.current = file.name;
+      setImportRunning(true);
       /**
        * Info: (20260803 - Tzuhan) 釘住發起匯入的會話(階段二)。
        * 匯入會跑好幾分鐘且不因切房而停 —— 沿用「當前會話」的話,中途切房後
@@ -2653,6 +2673,7 @@ export const useCarbonChat = () => {
           originSessionId,
         );
         importInFlightRef.current = null;
+        setImportRunning(false);
         return;
       }
 
@@ -2727,6 +2748,64 @@ export const useCarbonChat = () => {
          */
         let importUnitTotal = 0;
 
+        /**
+         * Info: (20260827 - Luphia) 提到迴圈之前（issue #6723）：中途的檢查點也要
+         * 算 `hasExisting`。原本在迴圈之後才算，於是檢查點只能猜——猜錯的方向是
+         * 「這一段沒有既有內容」，而那會讓套用時少一次覆蓋提醒。
+         */
+        const paragraphs =
+          sessionsData[activeSessionId]?.reportData?.paragraphs ?? [];
+        const existingIds = new Set(
+          paragraphs.filter((p) => p.content).map((p) => p.id),
+        );
+
+        /**
+         * Info: (20260827 - Luphia) 每做完一份就落地一次（issue #6723）。
+         *
+         * **不動畫面狀態**（不呼叫 `setPendingImportFor`）：預覽在匯入還在跑的時候
+         * 跳出來只會讓人以為做完了。這支的唯一責任是「撐過中斷」，不是報進度——
+         * 進度由 `reportProgress` 負責。
+         *
+         * `pauseReason` 是 null：這不是暫停，是「還沒跑完」。書籤的狀態因此是
+         * RUNNING 而不是 PAUSED（見 `saveJobBookmark` 的狀態推導），掃描行程
+         * 不會去碰它——它本來就不該被翻成「可以繼續」，因為沒人在等額度。
+         */
+        const persistCheckpoint = (checkpoint: IImportCheckpoint) => {
+          const snapshot: IPendingImport = {
+            fileName: file.name,
+            originSessionId: activeSessionId,
+            originSessionTitle:
+              sessionsData[activeSessionId]?.title ?? activeSessionId,
+            items: checkpoint.segments.map((segment) => ({
+              ...segment,
+              hasExisting: existingIds.has(segment.paragraphId),
+              checked: true,
+            })),
+            unmapped: checkpoint.unmapped,
+            activityCount: checkpoint.activities.length,
+            failedChapters: [],
+            pausedChapters: checkpoint.pausedChapters,
+            pausedUnits: checkpoint.remainingUnits,
+            pauseReason: null,
+          };
+          void persistPendingImport(
+            originSessionId,
+            snapshot,
+            importSource,
+            checkpoint.activities,
+            lastPageIndexRef.current,
+          );
+          void saveImportJobBookmark({
+            pauseReason: null,
+            totalUnits: checkpoint.totalUnits,
+            completedUnits:
+              checkpoint.totalUnits - checkpoint.remainingUnits.length,
+            failedUnits: 0,
+            remainingUnits: checkpoint.remainingUnits,
+            nextStepInputChars: file.size,
+          });
+        };
+
         if (useChunked) {
           // Info: (20260730 - Tzuhan) 兩階段:先問頁碼索引(一次、輸出極小),再逐章只送對應頁。
           // Info: (20260730 - Tzuhan) 原本 11 章各送整份文件,實測 64 頁報告耗掉約 44 萬 input token,
@@ -2743,6 +2822,8 @@ export const useCarbonChat = () => {
             true,
             pageIndex,
             notify,
+            undefined,
+            persistCheckpoint,
           );
           payload = result;
           failedChapters = result.failed;
@@ -2840,12 +2921,6 @@ export const useCarbonChat = () => {
           );
           return;
         }
-        const paragraphs =
-          sessionsData[activeSessionId]?.reportData?.paragraphs ?? [];
-        const existingIds = new Set(
-          paragraphs.filter((p) => p.content).map((p) => p.id),
-        );
-
         // Info: (20260727 - Tzuhan) #57 完成全部小節:原樣匯入 + 既有內容之外仍空白的段落,
         // Info: (20260727 - Tzuhan) 依同一份文件補 AI 草稿(預覽中標記,與逐字原文區隔;人工確認才寫入)
         const importedIds = new Set(
@@ -2970,6 +3045,7 @@ export const useCarbonChat = () => {
       } finally {
         // Info: (20260804 - Tzuhan) 成功、失敗、拋錯都要放行,否則一次失敗就再也匯入不了
         importInFlightRef.current = null;
+        setImportRunning(false);
       }
     },
     [

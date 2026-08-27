@@ -8,6 +8,9 @@ import {
   type JobPauseReason,
 } from "@/constants/resumable_job";
 import { type IImportUnit } from "@/lib/carbon_page_slice";
+import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
+import { CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH } from "@/constants/carbon_source_tables";
+import type { IActivityRecord } from "@/types/carbon_chatbot.types";
 
 // Info: (20260714 - Tzuhan) 判斷 API 失敗是否為 AI 額度耗盡(IS000011),前端提示稍候重試
 export const isQuotaApiError = (error: unknown): boolean => {
@@ -433,4 +436,109 @@ export const summarisePausedUnits = (params: {
     title: params.resolveTitle(chapterId),
   }));
   return { pausedUnits, pausedChapters };
+};
+
+/**
+ * Info: (20260827 - Luphia) 把逐章／逐份回來的結果摺成一份（issue #6723）。
+ *
+ * 抽出來的理由不是重用，是**只能有一份**：中途存檔與最後存檔如果各自組一次，
+ * 兩者遲早給出不一樣的形狀，而接續的程式會看到兩種資料。原本這段邏輯寫在
+ * 迴圈之後的行內，於是「中途存檔」這件事根本沒有地方可以接。
+ *
+ * 三個累積各有一個踩過的坑，都在下方的註解裡——它們是這支函式存在的真正代價。
+ */
+export interface IImportChunkLike {
+  segments: {
+    paragraphId: string;
+    title: string;
+    content: string;
+    sourceTables?: ICarbonSourceTable[];
+  }[];
+  unmapped: string[];
+  activities?: IActivityRecord[];
+}
+
+export interface IFoldedImportChunks {
+  segments: {
+    paragraphId: string;
+    title: string;
+    content: string;
+    sourceTables: ICarbonSourceTable[];
+  }[];
+  unmapped: string[];
+  activities: IActivityRecord[];
+}
+
+/**
+ * Info: (20260827 - Luphia) 一次檢查點的內容（issue #6723）。
+ *
+ * 與暫停時寫下的那一份**形狀相同**——接續的程式只認得一種資料，
+ * 而「中斷」與「暫停」的差別只在 `pauseReason` 有沒有值。
+ */
+export interface IImportCheckpoint extends IFoldedImportChunks {
+  remainingUnits: IImportUnit[];
+  pausedChapters: { id: string; title: string }[];
+  totalUnits: number;
+}
+
+export const foldImportChunks = (
+  results: readonly (IImportChunkLike | null)[],
+): IFoldedImportChunks => {
+  const segmentsById = new Map<
+    string,
+    { title: string; parts: string[]; sourceTables: ICarbonSourceTable[] }
+  >();
+  const unmapped: string[] = [];
+  let activities: IActivityRecord[] = [];
+
+  results.forEach((chunk) => {
+    if (!chunk) return;
+    chunk.segments.forEach((segment) => {
+      const bucket = segmentsById.get(segment.paragraphId) ?? {
+        title: segment.title,
+        parts: [],
+        sourceTables: [],
+      };
+      bucket.parts.push(segment.content);
+      /**
+       * Info: (20260803 - Tzuhan) 表格隨敘述一起累積。以表號去重:
+       * 同一節的內容可能被切成多段回來,同一張表因此可能重複出現,
+       * 而重複的表在報告上是兩張一樣的表 —— 讀者無從判斷哪張才是原文。
+       */
+      (segment.sourceTables ?? []).forEach((table) => {
+        if (bucket.sourceTables.some((kept) => kept.tableNo === table.tableNo))
+          return;
+        if (bucket.sourceTables.length >= CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH)
+          return;
+        bucket.sourceTables.push(table);
+      });
+      segmentsById.set(segment.paragraphId, bucket);
+    });
+    unmapped.push(...chunk.unmapped);
+    /**
+     * Info: (20260817 - Emily) 累加而不是覆蓋
+     * (`data/issue_drafts/open/46_activity_data_traceability.md`)。
+     *
+     * 原本是 `activities = chunk.activities` —— 賦值。
+     * 排放章(ch3)六節會被切成兩個工作單元,兩次呼叫各自回一份,
+     * **後回來的那份整批蓋掉前一份**。就算兩次都抽到,也只留下一半,
+     * 而現場看到的只是一個偏低的數字,沒有任何跡象顯示發生過覆蓋。
+     */
+    if (chunk.activities && chunk.activities.length > 0) {
+      activities = [...activities, ...chunk.activities];
+    }
+  });
+
+  return {
+    segments: Array.from(segmentsById.entries()).map(
+      ([paragraphId, bucket]) => ({
+        paragraphId,
+        title: bucket.title,
+        content: bucket.parts.join("\n\n").trim(),
+        sourceTables: bucket.sourceTables,
+      }),
+    ),
+    unmapped,
+    activities,
+  };
 };

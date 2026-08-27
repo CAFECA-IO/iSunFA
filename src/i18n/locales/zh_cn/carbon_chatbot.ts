@@ -182,6 +182,9 @@ export const carbonChatbot = {
     "这个会话还没绑定账本,无法导入整份报告(逐章导入需要以账本的额度计费)。请先在会话设置选择账本,再重新导入。",
   import_paused_chapters:
     "点数已用完,以下章节还没开始解析:{{chapters}}。补上点数后可以从这里接着导入,已完成的部分不会重跑。",
+  // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
+  import_interrupted_chapters:
+    "上一次导入没有跑完,以下章节还没解析:{{chapters}}。可以从这里接着导入,已完成的部分不会重跑、也不会再扣点数。",
   import_resume_needs_file:
     "接着导入需要原本那份文件,而它在刷新或换设备之后就不在浏览器里了。请重新上传同一份报告——已完成的章节不会重跑。",
   import_resume_paused: "接着导入",

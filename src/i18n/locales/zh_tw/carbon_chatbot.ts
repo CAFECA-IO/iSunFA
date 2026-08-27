@@ -191,6 +191,9 @@ export const carbonChatbot = {
     "這個會話還沒綁定帳本,無法匯入整份報告(逐章匯入需要以帳本的額度計費)。請先在會話設定選擇帳本,再重新匯入。",
   import_paused_chapters:
     "點數已用完,以下章節還沒開始解析:{{chapters}}。補上點數後可以從這裡接著匯入,已完成的部分不會重跑。",
+  // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
+  import_interrupted_chapters:
+    "上一次匯入沒有跑完,以下章節還沒解析:{{chapters}}。可以從這裡接著匯入,已完成的部分不會重跑、也不會再扣點數。",
   import_resume_needs_file:
     "接著匯入需要原本那份檔案,而它在重新整理或換裝置之後就不在瀏覽器裡了。請重新上傳同一份報告——已完成的章節不會重跑。",
   import_resume_paused: "接著匯入",

@@ -196,6 +196,9 @@ export const carbonChatbot = {
     "This session is not bound to an account book yet, so a full report cannot be imported (chapter-by-chapter import is billed against the book's quota). Please choose a book in the session settings and try again.",
   import_paused_chapters:
     "You ran out of credits, so these chapters have not been parsed yet: {{chapters}}. Once you have credits again you can carry on from here — the finished parts will not be redone.",
+  // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
+  import_interrupted_chapters:
+    "The last import did not finish. These chapters have not been parsed yet: {{chapters}}. You can continue from here — what is already done will not run again, and will not be charged again.",
   import_resume_needs_file:
     "Carrying on needs the original file, and it is no longer in this browser after a reload or on another device. Please upload the same report again — the finished chapters will not be redone.",
   import_resume_paused: "Carry on",

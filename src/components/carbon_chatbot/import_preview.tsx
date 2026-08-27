@@ -223,11 +223,23 @@ export function ImportPreview({
             <div className="flex items-center gap-1.5 rounded-xl bg-blue-50 p-3 text-[11px] font-bold text-blue-700">
               <AlertTriangle size={12} className="shrink-0" />
               <span className="min-w-0 flex-1">
-                {t("carbon_chatbot.import_paused_chapters", {
-                  chapters: (pendingImport.pausedChapters ?? [])
-                    .map((chapter) => chapter.title)
-                    .join("、"),
-                })}
+                {/**
+                 * Info: (20260827 - Luphia) 兩種停法兩句話（issue #6723）。
+                 *
+                 * 有暫停原因＝點數用完，那句話要說「去補點數」。沒有原因＝
+                 * 上一趟被中斷（關分頁、切走、當掉），那時說「點數已用完」
+                 * 是在說謊，而使用者會跑去買他根本不需要的點數。
+                 */}
+                {t(
+                  pendingImport.pauseReason
+                    ? "carbon_chatbot.import_paused_chapters"
+                    : "carbon_chatbot.import_interrupted_chapters",
+                  {
+                    chapters: (pendingImport.pausedChapters ?? [])
+                      .map((chapter) => chapter.title)
+                      .join("、"),
+                  },
+                )}
               </span>
               {onResumePaused && (
                 <button
