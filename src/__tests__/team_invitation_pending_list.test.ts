@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
+import { readFileSync } from "fs";
+import { join } from "path";
 import type { jest as JestType } from "@jest/globals";
 import { listPendingInvitationsForUser } from "@/services/team_invitation.service";
 import { teamRepo } from "@/repositories/team.repo";
@@ -233,5 +235,36 @@ describe("listPendingInvitationsForUser", () => {
     });
 
     expect(asMock(userIdentityRepo.findByUserId)).toHaveBeenCalledWith(USER);
+  });
+});
+
+/**
+ * Info: (20260827 - Julian) 「被接受之後鈴鐺那則要消失」的落點在**repo 的 where**。
+ *
+ * 待辦型是活算的：邀請被接受、拒絕或撤回之後 `status` 不再是 PENDING，
+ * 那一則就該自然消失 —— 前提是查詢真的濾了 `status`。
+ * 而這個檔案的其他案例都把 repo 換成替身，於是 where 裡少掉 `status`
+ * 這件事在這裡是**看不到**的：替身回什麼就是什麼，全綠。
+ *
+ * 少了它的症狀：一封已經接受的邀請永遠掛在鈴鐺上，點進團隊頁又說沒有待處理的邀請
+ *（計畫書 §1 提過的那個「通知說有一封，點進去那一頁說沒有」的反向版本）。
+ *
+ * 這是掃描而不是行為測試 —— 真的行為由 `notification_repo.e2e.test.ts` 那一層
+ * 的真資料庫負責。掃描在這裡站得住的理由與 `dedupeKey @unique` 同一條：
+ * 拿掉它之後 `tsc`、`lint`、`npm test` 三者都不會有意見。
+ */
+describe("待辦邀請的查詢條件（掃描 repo 原文）", () => {
+  it("getPendingInvitationsForRecipient 的 where 濾 status", () => {
+    const repo = readFileSync(
+      join(process.cwd(), "src", "repositories", "team.repo.ts"),
+      "utf8",
+    );
+    const start = repo.indexOf("async getPendingInvitationsForRecipient(");
+    expect(start).toBeGreaterThan(-1);
+
+    // Info: (20260827 - Julian) 只看這支函式的前段，避免掃到別支的 where
+    const body = repo.slice(start, start + 600);
+
+    expect(body).toMatch(/status:\s*TEAM_INVITATION_STATUS\.PENDING/);
   });
 });

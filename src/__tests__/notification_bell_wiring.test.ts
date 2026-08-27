@@ -246,6 +246,27 @@ describe("來源與畫面的接線（掃描）", () => {
     expect(recorder).toMatch(/notifyAnalysisFailed\(/);
   });
 
+  /**
+   * Info: (20260827 - Julian) 完成通知在 `if (order)` **之外**（驗收清單 a1e）。
+   *
+   * `analysis` 可以在 `order` 為 null 時存在（以 context 的 `analysisId` 找到分析，
+   * 但 orderId 反查不到訂單）。把通知搬進 `if (order)` 會讓那個情況連完成通知
+   * 一起消失 —— 而使用者付了錢、分析跑完了，什麼都收不到。
+   *
+   * 端到端造不出這個情境：`Analysis.orderId` 有外鍵指向 `Order`，資料庫層
+   * 就不允許一筆 analysis 掛在不存在的訂單上。所以這條只能用原文的**位置**來釘。
+   * 掃描型測試在這裡站得住的理由：搬動位置不會讓 `tsc` 或 `lint` 有任何意見。
+   */
+  it("完成通知不在 if (order) 區塊裡", () => {
+    const recorder = codeOf("src", "services", "issue.recorder.service.ts");
+    const notify = recorder.indexOf("notifyAnalysisCompleted(");
+    const orderBlock = recorder.indexOf("if (order) {");
+
+    expect(notify).toBeGreaterThan(-1);
+    expect(orderBlock).toBeGreaterThan(-1);
+    expect(notify).toBeLessThan(orderBlock);
+  });
+
   it("header 真的掛上鈴鐺", () => {
     const header = codeOf("src", "components", "header", "user_actions.tsx");
 
@@ -663,7 +684,14 @@ describe("通知列只有一份實作", () => {
    */
   it.each([
     ["NOTIFICATION_TYPE_STYLE", "圖示與顏色的查表", ROW],
-    ["NOTIFICATION_LINK_PATH", "點下去的去處", ROW],
+    /**
+     * Info: (20260827 - Julian) 去處的擁有者從 ROW 搬到 MESSAGE_LIB（D43）。
+     *
+     * 以型別為鍵的那一行就是缺陷本身，改成純函式之後這一欄要跟著搬 ——
+     * 這正是上方註解說的「表格第三欄記的是這個符號該住在哪裡」。
+     */
+    ["NOTIFICATION_LINK_PATH", "點下去的去處", MESSAGE_LIB],
+    ["ANALYSIS_LINK_PATH_BY_CATEGORY", "分析類別的去處查表", MESSAGE_LIB],
     ["notification.unread", "未讀紅點的讀屏文字", ROW],
     ["analysis_completed_named", "帶報告名稱的文案", MESSAGE_LIB],
     ["analysis.categories.", "報告類別的字典查表", MESSAGE_LIB],
@@ -680,6 +708,80 @@ describe("通知列只有一份實作", () => {
    * `item.type as NotificationType` 對 API 回來的字串宣稱了一件無法保證的事。
    * 它先前「剛好安全」，靠的是相隔數行的早退 —— 這條擋的是有人把它加回來。
    */
+  /**
+   * Info: (20260827 - Julian) 列元件不再自己決定去處（D43）。
+   *
+   * 上面那張表只驗「擁有者含有這個符號」，驗不到「舊的擁有者已經放手」——
+   * 而兩個地方同時查表正是分岔的起點：常數層修好了，元件還讀舊的那一格。
+   */
+  /**
+   * Info: (20260827 - Julian) 底部出口的條件要把**兩種**通知都算進去（D45）。
+   *
+   * 原本是 `list.completed.length > 0 && list.completed.length > 0` ——
+   * 同一個判斷寫兩次，而真正的問題是漏了 `todos`：只有待辦（例如一封待接受的
+   * 邀請）而沒有完成通知的人，完全找不到 `/user/notifications`。
+   *
+   * 「空面板不顯示這個入口」是產品決定，所以這裡**不**釘死「必須無條件顯示」。
+   * 釘的是那個決定的正確實作：只要條件看了 `completed`，就必須也看 `todos`。
+   * 這個形狀擋得住原本那個寫法，又不會讓任何無害的重排變紅。
+   */
+  it("底部的查看全部連結把待辦也算進條件", () => {
+    const bell = codeOf(...BELL);
+    const link = bell.indexOf('href="/user/notifications"');
+
+    expect(link).toBeGreaterThan(-1);
+
+    // Info: (20260827 - Julian) 只看連結前面那段條件式，避免掃到清單本身的判斷
+    const guard = bell.slice(Math.max(0, link - 260), link);
+
+    expect(guard).toMatch(/completed\.length/);
+    expect(guard).toMatch(/todos\.length/);
+  });
+
+  /**
+   * Info: (20260827 - Julian) `aria-label` 要帶未讀數（D35）。
+   *
+   * `aria-label` **覆蓋**按鈕的內容，包括那顆徽章 —— 固定字串會讓讀屏使用者
+   * 永遠聽不到有幾則。i18n 那條測試只驗 `aria_unread` 這個鍵存在字典裡，
+   * 驗不到鈴鐺真的用了它、也驗不到有把 count 傳進去。
+   */
+  it("鈴鐺的 aria-label 帶未讀數", () => {
+    const bell = codeOf(...BELL);
+
+    expect(bell).toMatch(/aria_unread/);
+    expect(bell).toMatch(/notification\.aria_unread"?,\s*\{\s*count/);
+  });
+
+  /**
+   * Info: (20260827 - Julian) 面板的底色與邊框用**定義過的** token（D3）。
+   *
+   * D3 的成因是 `bg-surface` / `border-border` 這兩個不存在的 class ——
+   * 產出無效 class，而 `tsc` 與 `lint` 都不會抱怨，面板就變成透明無邊框。
+   * 所以兩件事要一起驗：面板用的是這兩個名字，而這兩個名字在 `globals.css`
+   * 真的定義過。少驗後者的話，改名之後這條測試會繼續綠。
+   */
+  it("面板的底色與邊框 class 在 globals.css 有定義", () => {
+    const bell = codeOf(...BELL);
+
+    expect(bell).toMatch(/bg-surface-overlay/);
+    expect(bell).toMatch(/border-border-default/);
+
+    const css = readFileSync(
+      join(process.cwd(), "src", "app", "globals.css"),
+      "utf8",
+    );
+
+    expect(css).toMatch(/--color-surface-overlay\s*:/);
+    expect(css).toMatch(/--color-border-default\s*:/);
+  });
+
+  it("列元件改用 notificationHrefOf，不再自己查去處", () => {
+    const row = codeOf(...ROW);
+
+    expect(row).not.toContain("NOTIFICATION_LINK_PATH");
+    expect(row).toMatch(/notificationHrefOf\(item\)/);
+  });
+
   it("列元件不對 item.type 硬轉型別", () => {
     const row = codeOf(...ROW);
 

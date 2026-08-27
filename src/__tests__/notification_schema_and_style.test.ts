@@ -123,3 +123,18 @@ describe("NOTIFICATION_TYPE_STYLE 的 class 都有對應的 token", () => {
     );
   });
 });
+
+/**
+ * Info: (20260827 - Julian) email 邀請的查詢索引只有原文答得出來（D19 的另一半）。
+ *
+ * `getPendingInvitationsForRecipient` 一定同時帶 `status` 與 `inviteeEmailKey`，
+ * 而那支查詢是小鈴鐺每 60 秒一次的輪詢會走到的。少了複合索引不會有任何人報錯 ——
+ * 只是每次輪詢多一次全表掃描，而症狀要等到邀請表長大才看得出來。
+ */
+describe("TeamInvitation 的查詢索引", () => {
+  it("inviteeEmailKey 與 status 有複合索引", () => {
+    const block = modelBlockOf(schemaOf(), "TeamInvitation");
+
+    expect(block).toMatch(/@@index\(\[inviteeEmailKey,\s*status\]\)/);
+  });
+});

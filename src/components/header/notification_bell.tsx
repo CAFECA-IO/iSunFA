@@ -425,21 +425,19 @@ export default function NotificationBell() {
                 )}
               </div>
 
-              {/* Info: (20260826 - Julian) 查看全部通知，無通知的話不會顯示 */}
-              {list &&
-                list.completed.length > 0 &&
-                list.completed.length > 0 && (
-                  <div className="border-border-default shrink-0 border-t">
-                    <Link
-                      href="/user/notifications"
-                      onClick={() => close()}
-                      className="md:bg-surface-overlay flex w-full items-center justify-center gap-1 bg-orange-500 px-3 py-2.5 text-sm text-white transition-colors hover:text-orange-500 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none md:rounded-b-lg md:py-2 md:text-slate-500"
-                    >
-                      {t("notification.view_all")}
-                      <ChevronRight className="size-4 shrink-0" />
-                    </Link>
-                  </div>
-                )}
+              {/* Info: (20260827 - Julian) 有通知才顯示「查看全部」 */}
+              {list && (list.todos.length > 0 || list.completed.length > 0) && (
+                <div className="border-border-default shrink-0 border-t">
+                  <Link
+                    href="/user/notifications"
+                    onClick={() => close()}
+                    className="md:bg-surface-overlay flex w-full items-center justify-center gap-1 bg-orange-500 px-3 py-2.5 text-sm text-white transition-colors hover:text-orange-500 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none md:rounded-b-lg md:py-2 md:text-slate-500"
+                  >
+                    {t("notification.view_all")}
+                    <ChevronRight className="size-4 shrink-0" />
+                  </Link>
+                </div>
+              )}
             </>
           )}
         </PopoverPanel>

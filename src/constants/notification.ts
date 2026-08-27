@@ -1,3 +1,5 @@
+import { ANALYSIS_CATEGORY } from "@/constants/analysis";
+
 /**
  * Info: (20260821 - Luphia) 小鈴鐺通知的常數（ADR 021 補充）。
  *
@@ -201,4 +203,63 @@ export const NOTIFICATION_LINK_PATH: Record<NotificationType, string | null> = {
   [NOTIFICATION_TYPE.WALLET_UPGRADE]: null,
   [NOTIFICATION_TYPE.ANALYSIS_COMPLETED]: "/analysis?tab=history",
   [NOTIFICATION_TYPE.ANALYSIS_FAILED]: "/analysis?tab=history",
+};
+
+/**
+ * Info: (20260827 - Julian) 分析通知的去處，以**類別**為鍵（D43）。
+ *
+ * ## 為什麼需要第二張表
+ *
+ * `NOTIFICATION_LINK_PATH` 以**型別**為鍵，而那對邀請與錢包升級是對的 ——
+ * 它們沒有類別可言。但分析類只有兩格，卻要對應 15 種 `ANALYSIS_CATEGORY`，
+ * 於是「憑證分析失敗」被送到 `/analysis?tab=history`，而那一頁的預設查詢是
+ * `type IN [...CATEGORIES]` —— **不含**憑證分析。使用者落在一個結構上放不下
+ * 那筆紀錄的頁面，而頁面正常載入、其他分析都在，看起來像資料消失了。
+ * 那比 D12 的死連結更難查。
+ *
+ * ## 這張表只列四種
+ *
+ * 只有不在 `CATEGORIES` 裡的那四種需要特例；其餘 11 種的正確去處**就是**
+ * 型別層那一格。不要為了修 4 種把 11 種也寫成特例 —— 那會讓下一個
+ * 加分析類別的人以為每一種都得在這裡登記。
+ *
+ * ## `:token` 的規則
+ *
+ * 路徑裡的 `:foo` 由 `payload.foo` 代入（見 `lib/notification_message.ts`
+ * 的 `notificationHrefOf`）。**任何一個 token 代不進去，整條退化為 `null`**，
+ * 渲染成不可點的列 —— 與 D12 同一個判斷：按了沒反應比帶去錯的地方好，
+ * 而 `/user/account_book/undefined/journal` 兩者皆是。
+ *
+ * 所以 `CERTIFICATE_ANALYSIS` 與 `JOURNAL_CORRECTION` 今天自動是不可點的
+ *（payload 還沒有 `accountBookId`），而 D43 第二步把那個欄位補進 payload 之後，
+ * **這張表不用改就會開始生效**。意圖寫在這裡，能力由 payload 決定。
+ */
+export const ANALYSIS_LINK_PATH_BY_CATEGORY: Record<
+  string,
+  { completed: string | null; failed: string | null }
+> = {
+  /**
+   * Info: (20260827 - Julian) 失敗那格刻意是列表頁，不是逐筆。
+   * `notifyAnalysisFailed` 的 payload 沒有 `analysisId`（失敗路徑上 analysis
+   * 未必存在，而 order 一定在），所以逐筆組不出來 —— 給列表頁而不是給 null，
+   * 因為列表頁對使用者仍然是有用的去處。
+   */
+  [ANALYSIS_CATEGORY.AI_CONSULTING]: {
+    completed: "/ai_consultation_room/:analysisId",
+    failed: "/ai_consultation_room",
+  },
+  [ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT]: {
+    completed: "/transportation_carbon_footprint_calculator",
+    failed: "/transportation_carbon_footprint_calculator",
+  },
+  // Info: (20260827 - Julian) 憑證產出的是日記帳／傳票／碳盤查三種紀錄，
+  // Info: (20260827 - Julian) 指向日記帳：那是使用者送出的東西，另外兩個是衍生物。
+  [ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS]: {
+    completed: "/user/account_book/:accountBookId/journal",
+    failed: "/user/account_book/:accountBookId/journal",
+  },
+  [ANALYSIS_CATEGORY.JOURNAL_CORRECTION]: {
+    completed: "/user/account_book/:accountBookId/journal",
+    failed: "/user/account_book/:accountBookId/journal",
+  },
 };

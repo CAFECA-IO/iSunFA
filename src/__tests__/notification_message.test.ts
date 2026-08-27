@@ -2,10 +2,16 @@ import { describe, it, expect } from "@jest/globals";
 import {
   analysisTitleOf,
   isNotificationType,
+  notificationHrefOf,
   notificationMessageOf,
   type TranslateFn,
 } from "@/lib/notification_message";
-import { NOTIFICATION_TYPE } from "@/constants/notification";
+import {
+  ANALYSIS_LINK_PATH_BY_CATEGORY,
+  NOTIFICATION_LINK_PATH,
+  NOTIFICATION_TYPE,
+} from "@/constants/notification";
+import { ANALYSIS_CATEGORY, CATEGORIES } from "@/constants/analysis";
 
 /**
  * Info: (20260826 - Julian) 「哪一種型別顯示哪句話」（review：前端細節）。
@@ -160,5 +166,172 @@ describe("analysisTitleOf", () => {
     expect(analysisTitleOf({ analysisType: "MARKET_TRENDS" }, t)).toBe(
       "交易市場趨勢",
     );
+  });
+});
+
+/**
+ * Info: (20260827 - Julian) 「點下去要去哪裡」（D43）。
+ *
+ * 這一組測的是**退回那條路**。逐類別的去處寫錯了，下一個加類別的人會發現；
+ * 而 fallback 壞掉是靜默的 —— 那正是 D11／D43 的形狀。
+ */
+describe("notificationHrefOf", () => {
+  const itemOf = (
+    type: string,
+    payload: Record<string, unknown> = {},
+  ): { type: string; payload: Record<string, unknown> } => ({ type, payload });
+
+  const ANALYSIS_HISTORY = NOTIFICATION_LINK_PATH[
+    NOTIFICATION_TYPE.ANALYSIS_COMPLETED
+  ] as string;
+
+  it("未知型別回 null", () => {
+    expect(notificationHrefOf(itemOf("SOMETHING_NEW"))).toBeNull();
+  });
+
+  // Info: (20260827 - Julian) 非分析型別沒有類別可言，一律走型別層
+  it.each([
+    [NOTIFICATION_TYPE.TEAM_INVITATION, "/user/team"],
+    [NOTIFICATION_TYPE.WALLET_UPGRADE, null],
+  ])("非分析型別 %s 走型別層那一格", (type, expected) => {
+    expect(notificationHrefOf(itemOf(type))).toBe(expected);
+  });
+
+  /**
+   * Info: (20260827 - Julian) 這一條是 D43 的反向保護。
+   *
+   * 修法只該影響那四種不在 `CATEGORIES` 裡的類別。11 種原本正確的
+   * 不得被改成特例 —— 表格驅動地把它們全部釘住，加一種就會有人發現。
+   */
+  it.each([...new Set(CATEGORIES)])(
+    "%s 仍然走 /analysis?tab=history",
+    (category) => {
+      expect(
+        notificationHrefOf(
+          itemOf(NOTIFICATION_TYPE.ANALYSIS_COMPLETED, {
+            analysisType: category,
+          }),
+        ),
+      ).toBe(ANALYSIS_HISTORY);
+    },
+  );
+
+  it.each([
+    ["analysisType 缺漏", {}],
+    ["analysisType 是空字串", { analysisType: "" }],
+    ["analysisType 不是字串", { analysisType: 123 }],
+    ["未知的類別字串", { analysisType: "NOT_A_REAL_CATEGORY" }],
+  ])("%s 時退回型別層，不炸掉也不回 undefined", (unusedLabel, payload) => {
+    expect(
+      notificationHrefOf(itemOf(NOTIFICATION_TYPE.ANALYSIS_COMPLETED, payload)),
+    ).toBe(ANALYSIS_HISTORY);
+  });
+
+  it("AI 諮詢完成時落在那一則對話", () => {
+    expect(
+      notificationHrefOf(
+        itemOf(NOTIFICATION_TYPE.ANALYSIS_COMPLETED, {
+          analysisType: ANALYSIS_CATEGORY.AI_CONSULTING,
+          analysisId: "talk-123",
+        }),
+      ),
+    ).toBe("/ai_consultation_room/talk-123");
+  });
+
+  /**
+   * Info: (20260827 - Julian) 失敗的 payload 沒有 `analysisId`（刻意的：
+   * 失敗路徑上 analysis 未必存在，而 order 一定在），所以落在列表頁。
+   */
+  it("AI 諮詢失敗時落在列表頁，不是 null", () => {
+    expect(
+      notificationHrefOf(
+        itemOf(NOTIFICATION_TYPE.ANALYSIS_FAILED, {
+          analysisType: ANALYSIS_CATEGORY.AI_CONSULTING,
+        }),
+      ),
+    ).toBe("/ai_consultation_room");
+  });
+
+  it.each([
+    [NOTIFICATION_TYPE.ANALYSIS_COMPLETED],
+    [NOTIFICATION_TYPE.ANALYSIS_FAILED],
+  ])("運輸碳足跡（%s）落在計算機頁", (type) => {
+    expect(
+      notificationHrefOf(
+        itemOf(type, {
+          analysisType: ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT,
+        }),
+      ),
+    ).toBe("/transportation_carbon_footprint_calculator");
+  });
+
+  /**
+   * Info: (20260827 - Julian) token 代不進去要回 `null`，不是回半條路徑。
+   *
+   * `/user/account_book/undefined/journal` 與 `/user/account_book/:accountBookId/journal`
+   * 都是「看起來有反應」的錯誤去處，而那正是 D43 要修掉的症狀。
+   * D43 第二步把 `accountBookId` 補進 payload 之後，下面第二條會自動改行為 ——
+   * 屆時這兩條測試就是它有沒有真的接上的判準。
+   */
+  it.each([
+    [ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS],
+    [ANALYSIS_CATEGORY.JOURNAL_CORRECTION],
+  ])("%s 缺 accountBookId 時回 null（渲染成不可點）", (category) => {
+    expect(
+      notificationHrefOf(
+        itemOf(NOTIFICATION_TYPE.ANALYSIS_COMPLETED, {
+          analysisType: category,
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it.each([
+    [ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS],
+    [ANALYSIS_CATEGORY.JOURNAL_CORRECTION],
+  ])("%s 有 accountBookId 時組出日記帳頁", (category) => {
+    expect(
+      notificationHrefOf(
+        itemOf(NOTIFICATION_TYPE.ANALYSIS_COMPLETED, {
+          analysisType: category,
+          accountBookId: "book-9",
+        }),
+      ),
+    ).toBe("/user/account_book/book-9/journal");
+  });
+
+  it("代入的值會被 encode，不會逃出路徑", () => {
+    expect(
+      notificationHrefOf(
+        itemOf(NOTIFICATION_TYPE.ANALYSIS_COMPLETED, {
+          analysisType: ANALYSIS_CATEGORY.AI_CONSULTING,
+          analysisId: "a/b?c=1",
+        }),
+      ),
+    ).toBe("/ai_consultation_room/a%2Fb%3Fc%3D1");
+  });
+
+  // Info: (20260827 - Julian) 類別大小寫：常數是大寫，但別依賴呼叫端一定給大寫
+  it("類別字串大小寫不影響查表", () => {
+    expect(
+      notificationHrefOf(
+        itemOf(NOTIFICATION_TYPE.ANALYSIS_FAILED, {
+          analysisType: "ai_consulting",
+        }),
+      ),
+    ).toBe("/ai_consultation_room");
+  });
+
+  /**
+   * Info: (20260827 - Julian) 這張表只該列**不在 `CATEGORIES` 裡**的類別。
+   *
+   * 有人把某個已在 `CATEGORIES` 的類別加進來時，它會同時出現在兩條路上，
+   * 而上面那條「11 種仍走 history」的測試會紅得莫名。這一條說得出原因。
+   */
+  it("類別表不與 CATEGORIES 重疊", () => {
+    const overlap = Object.keys(ANALYSIS_LINK_PATH_BY_CATEGORY).filter(
+      (category) => (CATEGORIES as readonly string[]).includes(category),
+    );
+    expect(overlap).toEqual([]);
   });
 });

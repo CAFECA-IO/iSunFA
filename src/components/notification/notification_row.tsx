@@ -8,12 +8,10 @@ import { canMarkReadByClick } from "@/lib/notification_read";
 import type { INotificationItem } from "@/interfaces/notification";
 import {
   isNotificationType,
+  notificationHrefOf,
   notificationMessageOf,
 } from "@/lib/notification_message";
-import {
-  NOTIFICATION_LINK_PATH,
-  NOTIFICATION_TYPE_STYLE,
-} from "@/constants/notification";
+import { NOTIFICATION_TYPE_STYLE } from "@/constants/notification";
 
 /**
  * Info: (20260826 - Julian) 一則通知怎麼畫，**只有這一個地方說得算**。
@@ -99,7 +97,15 @@ export default function NotificationRow({
   const known = isNotificationType(item.type) ? item.type : null;
   const style = known ? NOTIFICATION_TYPE_STYLE[known] : undefined;
   const Icon = style ? ICON_BY_KEY[style.icon] : Bell;
-  const href = known ? (NOTIFICATION_LINK_PATH[known] ?? null) : null;
+  /**
+   * Info: (20260827 - Julian) 去處改由純函式決定（D43）。
+   *
+   * 這裡原本是 `NOTIFICATION_LINK_PATH[known]` —— 以**型別**為鍵，
+   * 而分析通知的去處實際取決於**類別**。四種不在 `CATEGORIES` 裡的類別
+   * 因此被送到一個結構上放不下那筆紀錄的頁面。
+   * 元件仍然不做決定，只是查表的位置從常數層換成一支能逐類別窮舉的純函式。
+   */
+  const href = notificationHrefOf(item);
   const isUnread = item.readAt === null;
 
   /**

@@ -1,4 +1,9 @@
-import { NOTIFICATION_TYPE, NotificationType } from "@/constants/notification";
+import {
+  ANALYSIS_LINK_PATH_BY_CATEGORY,
+  NOTIFICATION_LINK_PATH,
+  NOTIFICATION_TYPE,
+  NotificationType,
+} from "@/constants/notification";
 import type { INotificationItem } from "@/interfaces/notification";
 
 /**
@@ -101,4 +106,77 @@ export function notificationMessageOf(
     default:
       return null;
   }
+}
+
+/**
+ * Info: (20260827 - Julian) 把路徑樣板裡的 `:token` 用 payload 代入（D43）。
+ *
+ * **任何一個 token 代不進去，整條回 `null`**，不是回半條路徑。
+ * `/user/account_book/undefined/journal` 會載入一個空頁，而那正是 D43
+ * 要修掉的症狀 —— 修法自己再製造一次同樣的東西就沒有意義了。
+ *
+ * 逐段處理而不是整串 replace：整串 replace 遇到取不到的 token 會靜靜留下
+ * 字面的 `:accountBookId`，而那是一條會 404 的合法路徑 —— 又一個
+ * 「看起來有反應」的錯誤去處。
+ */
+function resolvePathTokens(
+  template: string,
+  payload: Record<string, unknown>,
+): string | null {
+  const resolved: string[] = [];
+
+  for (const segment of template.split("/")) {
+    if (!segment.startsWith(":")) {
+      resolved.push(segment);
+      continue;
+    }
+    const value = payload[segment.slice(1)];
+    if (typeof value !== "string" || value === "") return null;
+    resolved.push(encodeURIComponent(value));
+  }
+
+  return resolved.join("/");
+}
+
+/**
+ * Info: (20260827 - Julian) 「這一則通知點下去要去哪裡」——純函式（D43）。
+ *
+ * 這段原本是 `notification_row.tsx` 裡的一行 `NOTIFICATION_LINK_PATH[known]`，
+ * 而那一行就是缺陷本身：去處以型別為鍵，但它實際取決於類別。
+ * 搬進來的理由與 `notificationMessageOf`（D37）同一條 ——
+ * 它是 `(type, payload) → string | null` 的純函式，只有在這裡才逐類別窮舉得了。
+ *
+ * ## 三層退回，順序有意義
+ *
+ * 1. 不是分析類的型別 → 型別層那一格（邀請、錢包升級沒有類別可言）
+ * 2. 是分析類 → 查類別表
+ * 3. 類別不在表裡（含 `analysisType` 缺漏、未知字串）→ **退回**型別層
+ *
+ * 第 3 條是刻意的：其餘 11 種類別的正確去處**就是** `/analysis?tab=history`。
+ * 而「表裡有這個類別、但組不出路徑」與「表裡沒有這個類別」是兩件事 ——
+ * 前者回 `null`（我們知道它該去別的地方，只是還去不了），
+ * 後者回 fallback（那一頁對它是對的）。混成一種的話，
+ * 加類別的人會以為漏登記等於不可點。
+ */
+export function notificationHrefOf(
+  item: Pick<INotificationItem, "type" | "payload">,
+): string | null {
+  if (!isNotificationType(item.type)) return null;
+
+  const fallback = NOTIFICATION_LINK_PATH[item.type] ?? null;
+
+  const isCompleted = item.type === NOTIFICATION_TYPE.ANALYSIS_COMPLETED;
+  const isFailed = item.type === NOTIFICATION_TYPE.ANALYSIS_FAILED;
+  if (!isCompleted && !isFailed) return fallback;
+
+  const category = item.payload.analysisType;
+  if (typeof category !== "string" || category === "") return fallback;
+
+  const entry = ANALYSIS_LINK_PATH_BY_CATEGORY[category.toUpperCase()];
+  if (!entry) return fallback;
+
+  const template = isCompleted ? entry.completed : entry.failed;
+  if (template === null) return null;
+
+  return resolvePathTokens(template, item.payload);
 }
