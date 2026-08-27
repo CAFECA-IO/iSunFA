@@ -179,21 +179,61 @@ export const extractQuantityClaims = (rawText: string): IQuantityClaim[] => {
  * 修法:label 不收;value 先剝單位 token 再抽數字。
  */
 const UNIT_TOKENS = /kg\s?CO2e|kgCO2e|tCO2e|CO2e/gi;
+
+/**
+ * Info: (20260827 - Emily) 裁決用的兩級合法集合(round-5 阻擋項)。
+ *
+ * ## 為什麼要分兩級
+ *
+ * 一筆事實的 value 是渲染給人看的字串,裡面同時有排放量、活動數據與占比:
+ * 「5000000 kgCO2e(1000 立方公尺,占全公司總量 60%)」。
+ * 第一版把整串的每個數字都當成「排放量的合法值」,於是活動數據與占比
+ * 替編造的排放量背書;round-4 加上 kg↔公噸換算之後碰撞面又乘一倍 ——
+ * reviewer 實測「甲廠排放 1 公噸」在有「1000 立方公尺」的帳本裡直接放行,
+ * 而**活動數據常是整數、小整數又正是估算的模型最會吐的東西**。
+ *
+ * 修法:排放量斷言的合法集合裡只該有排放量。事實只要**宣告了 emissionsKg**
+ * (查詢層對每一筆有 co2eKg 的事實都會宣告),就只有它宣告的那些值進 equality,
+ * 它的活動量與占比一律出局;**沒宣告的敘事型事實**(待補說明、勾稽阻擋原因)
+ * 照舊全收其數字 —— 那些字串裡的數字是使用者要能原樣引用的證據
+ * (「差額 700.0005(原文 901.465 vs 加總 201.4645)」),但它們不參與換算
+ * (沒有 unit 資訊,換算沒有依據)。
+ *
+ * 殘留(據實申報):敘事型事實的數字仍可能被以排放單位引用而放行 ——
+ * 面窄(要模型剛好說出那串數字)、且方向是「少攔」而非「錯放特定編造值」。
+ * 徹底解法與此處同一主張:敘事型事實也帶結構(#6707 的後續票)。
+ */
+export interface IAllowedNumbers {
+  /** 字串精確等值可接受的數字(排放量 + 敘事型事實的數字 + 使用者說過的數字) */
+  equality: Set<string>;
+  /** 可參與 kg↔公噸決定性換算的排放量數值(kg 級,只來自宣告 emissionsKg 的事實) */
+  emissionKg: Set<string>;
+}
+
+const addNumbers = (target: Set<string>, text: string): void => {
+  [...foldFullWidthDigits(text).matchAll(ALL_NUMBERS)].forEach((match) => {
+    target.add(normalizeNumber(match[0]));
+  });
+};
+
 export const collectAllowedNumbers = (
   facts: IContextFact[],
   userTexts: string[],
-): Set<string> => {
-  const allowed = new Set<string>();
-  const collect = (text: string): void => {
-    [...foldFullWidthDigits(text).matchAll(ALL_NUMBERS)].forEach((match) => {
-      allowed.add(normalizeNumber(match[0]));
-    });
-  };
+): IAllowedNumbers => {
+  const equality = new Set<string>();
+  const emissionKg = new Set<string>();
   facts.forEach((fact) => {
-    collect(fact.value.replace(UNIT_TOKENS, " "));
+    if (fact.emissionsKg && fact.emissionsKg.length > 0) {
+      fact.emissionsKg.forEach((amount) => {
+        addNumbers(equality, amount);
+        addNumbers(emissionKg, amount);
+      });
+      return;
+    }
+    addNumbers(equality, fact.value.replace(UNIT_TOKENS, " "));
   });
-  userTexts.forEach(collect);
-  return allowed;
+  userTexts.forEach((text) => addNumbers(equality, text));
+  return { equality, emissionKg };
 };
 
 export interface IReplyGateResult {
@@ -275,7 +315,6 @@ export const shiftDecimalString = (value: string, digits: number): string => {
 };
 
 const TONNE_SCALE = /公噸|^噸$|噸\s?CO2e|tCO2e|TONNE/i;
-const KG_SCALE = /kg|公斤/i;
 
 /**
  * Info: (20260826 - Emily) 裁決(TS 端,決定性,Y 與 X 共用):字串等值,
@@ -283,22 +322,33 @@ const KG_SCALE = /kg|公斤/i;
  * 事實包的排放量一律是 kg 寫法,而盤查報告與 persona 慣用公噸 ——
  * 「8332.581 公噸」與「8332581 kgCO2e」是同一事實的兩種正確寫法,
  * 裁決必須給出同一個答案(round-4 阻擋-1)。容差僅此一條,四捨五入仍然攔。
+ *
+ * Info: (20260827 - Emily) round-5:換算**只比對排放量集合**(allowed.emissionKg)。
+ * 對 equality 用的是全集(含敘事型事實與使用者數字),對換算用的是排放量子集 ——
+ * 否則活動數據(1000 立方公尺)與占比(60%)會替「1 公噸」「60 公噸」背書。
  */
 export const adjudicateQuantityClaims = (
   claims: IQuantityClaim[],
-  allowed: Set<string>,
+  allowed: IAllowedNumbers,
 ): string[] => {
   const violations = claims
     .map((claim) => normalizeNumber(foldFullWidthDigits(claim.value)))
     .filter((value, index) => {
-      if (allowed.has(value)) return false;
+      if (allowed.equality.has(value)) return false;
       const unit = claims[index].unit;
-      if (TONNE_SCALE.test(unit) && allowed.has(shiftDecimalString(value, 3))) {
+      if (
+        TONNE_SCALE.test(unit) &&
+        allowed.emissionKg.has(shiftDecimalString(value, 3))
+      ) {
         return false;
       }
-      if (KG_SCALE.test(unit) && allowed.has(shiftDecimalString(value, -3))) {
-        return false;
-      }
+      /**
+       * Info: (20260827 - Emily) 只有「公噸級 → kg」這一個方向。
+       * emissionsKg 依契約是 kg 級,所以 kg 級的斷言必然走 equality 命中,
+       * 反向(kg ÷1000 對上某個公噸級事實)在真實資料裡不存在 ——
+       * 寫了就是永遠執行不到的分支(round-4 的教訓:機制寫出來但真實條件下不成立)。
+       * 使用者說公噸、AI 自己換成公斤,那是計算,persona 禁、守門照攔。
+       */
       return true;
     });
   return [...new Set(violations)];

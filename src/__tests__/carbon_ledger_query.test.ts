@@ -83,6 +83,8 @@ describe("queryTotal", () => {
       label: "SCOPE_2_INDIRECT 小計",
       value: "999 kgCO2e",
       source: "帳本範疇小計欄",
+      // Info: (20260827 - Emily) 排放量本體另以結構標記,供出口守門裁決(見 IContextFact.emissionsKg)
+      emissionsKg: ["999"],
     });
   });
 
@@ -191,11 +193,13 @@ describe("querySiteSubtotals", () => {
         label: "(1) 總公司 排放小計",
         value: "0.3 kgCO2e",
         source: "原文照錄 表3.8 分錄加總(MoneyUtil)",
+        emissionsKg: ["0.3"],
       },
       {
         label: "(2) 台北分公司 排放小計",
         value: "7 kgCO2e",
         source: "原文照錄 表3.8 分錄加總(MoneyUtil)",
+        emissionsKg: ["7"],
       },
     ]);
   });

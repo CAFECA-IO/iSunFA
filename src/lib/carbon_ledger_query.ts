@@ -20,11 +20,16 @@ import type {
 } from "@/types/carbon_chatbot.types";
 import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
 
-/** Info: (20260825 - Emily) 一筆可引用的事實:label/value 供敘事,source 供溯源(表號+位置或帳本欄位) */
+/**
+ * Info: (20260825 - Emily) 一筆可引用的事實:label/value 供敘事,source 供溯源(表號+位置或帳本欄位)。
+ * Info: (20260827 - Emily) emissionsKg:本筆的排放量數值(kg 級),供出口守門裁決 ——
+ * 見 IContextFact.emissionsKg 的註解(渲染字串不當機器裁決的真值來源)。
+ */
 export interface ILedgerFact {
   label: string;
   value: string;
   source: string;
+  emissionsKg?: string[];
 }
 
 /**
@@ -87,11 +92,13 @@ export const queryTotal = (
       label: "全公司總排放量",
       value: `${ledger.totalCo2eKg} kgCO2e`,
       source: `帳本總計欄(${ledger.entries.length} 筆分錄,計算於 ${ledger.computedAt})`,
+      emissionsKg: [ledger.totalCo2eKg],
     },
     ...Object.entries(ledger.scopeSubtotals).map(([scope, subtotal]) => ({
       label: `${scope} 小計`,
       value: `${subtotal} kgCO2e`,
       source: "帳本範疇小計欄",
+      emissionsKg: [subtotal],
     })),
   ];
   return { ok: true, facts };
@@ -139,6 +146,8 @@ export const queryTopEmitters = (
       label: `排放量第 ${index + 1} 大:${entry.sourceName}`,
       value: `${entry.co2eKg} kgCO2e(${entry.convertedQuantity} ${entry.convertedUnit}${share === null ? "" : `,占全公司總量 ${share}%`})`,
       source: traceOf(entry),
+      // Info: (20260827 - Emily) 只有 co2eKg 是排放量:括號裡的活動量與占比不得替排放量斷言背書
+      emissionsKg: [entry.co2eKg],
     };
   });
   return { ok: true, facts };
@@ -182,6 +191,7 @@ export const querySiteSubtotals = (
     label: `${site} 排放小計`,
     value: `${subtotal} kgCO2e`,
     source: `原文照錄 表${[...tableNos].join("、")} 分錄加總(MoneyUtil)`,
+    emissionsKg: [subtotal],
   }));
   return { ok: true, facts };
 };
@@ -305,6 +315,8 @@ export const queryYearOverYear = (
         label: `年間新增排放源:${name}`,
         value: `${previous.year} 年無此排放源,${current.year} 年為 ${entry.co2eKg} kgCO2e —— 可能是新設施,也可能是 ${previous.year} 年漏盤`,
         source: `${current.year}:${traceOf(entry)}`,
+        // Info: (20260827 - Emily) 年份不是排放量:只標排放量本體(見 IContextFact.emissionsKg)
+        emissionsKg: [entry.co2eKg],
       });
       return;
     }
@@ -325,6 +337,8 @@ export const queryYearOverYear = (
       label: `年間量級跳動:${name}`,
       value: `${previous.year} 年 ${prior.co2eKg} kgCO2e → ${current.year} 年 ${entry.co2eKg} kgCO2e(${ratio})`,
       source: `${previous.year}:${traceOf(prior)} / ${current.year}:${traceOf(entry)}`,
+      // Info: (20260827 - Emily) 兩年的排放量都合法可引用;年份與倍數不是排放量
+      emissionsKg: [prior.co2eKg, entry.co2eKg],
     });
   });
 
@@ -334,6 +348,7 @@ export const queryYearOverYear = (
       label: `年間排放源消失:${name}`,
       value: `${previous.year} 年為 ${prior.co2eKg} kgCO2e,${current.year} 年無此排放源 —— 可能是真減排,也可能是漏盤`,
       source: `${previous.year}:${traceOf(prior)}`,
+      emissionsKg: [prior.co2eKg],
     });
   });
 

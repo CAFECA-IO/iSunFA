@@ -22,16 +22,25 @@ import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
 const values = (text: string): string[] =>
   extractQuantityClaims(text).map((claim) => claim.value);
 
+/**
+ * Info: (20260827 - Emily) 形狀取自 carbon_ledger_query 的真實產出(§1.4):
+ * value 是渲染字串(排放量 + 括號裡的換算量/占比),emissionsKg 是決定性標記的
+ * 排放量本體 —— round-5 阻擋項的修法就在這個欄位上(見 IContextFact.emissionsKg)。
+ * 表3.8 匯入分錄的 convertedQuantity 是**同一筆排放量的公噸寫法**(TONNE),
+ * 所以「3470.3354 噸」合法 —— 但它靠的是 ×1000 換算命中 emissionsKg,不是字串等值。
+ */
 const facts: IContextFact[] = [
   {
     label: "全公司總排放量",
     value: "8332581.1 kgCO2e",
     source: "帳本總計欄",
+    emissionsKg: ["8332581.1"],
   },
   {
     label: "排放量第 1 大:總公司 外購電力",
     value: "3470335.4 kgCO2e(3470.3354 TONNE)",
     source: "原文照錄 表3.8",
+    emissionsKg: ["3470335.4"],
   },
 ];
 
@@ -136,18 +145,44 @@ describe("auditReplyQuantities(Y 地板裁決:字串精確等值)", () => {
   });
 });
 
-describe("collectAllowedNumbers", () => {
-  it("只收 value 的數字(含括號內換算值);source 不進", () => {
+describe("collectAllowedNumbers(兩級集合:equality / emissionKg)", () => {
+  it("宣告 emissionsKg 的事實:只有排放量進集合,渲染字串裡的換算量與占比出局", () => {
     const allowed = collectAllowedNumbers(facts, []);
-    expect(allowed.has("8332581.1")).toBe(true);
-    expect(allowed.has("3470335.4")).toBe(true);
-    expect(allowed.has("3470.3354")).toBe(true);
+    expect(allowed.equality.has("8332581.1")).toBe(true);
+    expect(allowed.equality.has("3470335.4")).toBe(true);
+    expect(allowed.emissionKg.has("8332581.1")).toBe(true);
+    expect(allowed.emissionKg.has("3470335.4")).toBe(true);
+    /**
+     * Info: (20260827 - Emily) round-5:3470.3354 是渲染字串裡的公噸寫法,
+     * 不再靠字串等值放行 —— 它由 ×1000 換算命中 3470335.4 才合法。
+     * 同一條規則把活動數據(1000 立方公尺)與占比(60%)一併擋在集合外。
+     */
+    expect(allowed.equality.has("3470.3354")).toBe(false);
     /**
      * Info: (20260825 - Emily) source 裡的表號(表3.8)刻意不收:
      * 「表3.8」後面沒有排放單位,守門本來就不看它;
      * 收進集合只會讓「3.8 噸」這種編造多一條漏網路徑。
      */
-    expect(allowed.has("3.8")).toBe(false);
+    expect(allowed.equality.has("3.8")).toBe(false);
+  });
+
+  it("敘事型事實(沒宣告 emissionsKg)照舊全收其數字,但不進換算集合", () => {
+    /**
+     * Info: (20260827 - Emily) 待補說明與勾稽阻擋原因是**證據字串**,
+     * 使用者要能原樣引用(「差額 700.0005(原文 901.465 vs 加總 201.4645)」);
+     * 但它們沒有結構化的單位,參與換算沒有依據。
+     */
+    const narrative: IContextFact[] = [
+      {
+        label: "匯入表格被勾稽擋下:ch3-8",
+        value: "總公司 差額 700.0005(原文 901.465 vs 加總 201.4645)",
+        source: "匯入勾稽紀錄",
+      },
+    ];
+    const allowed = collectAllowedNumbers(narrative, []);
+    expect(allowed.equality.has("700.0005")).toBe(true);
+    expect(allowed.equality.has("901.465")).toBe(true);
+    expect(allowed.emissionKg.size).toBe(0);
   });
 
   it("label 的數字不收(排名索引/段落 id 不是數量);單位字串的 2 也不收(review 阻擋項)", () => {
@@ -160,6 +195,7 @@ describe("collectAllowedNumbers", () => {
         label: "排放量第 1 大:總公司 外購電力",
         value: "4000000 kgCO2e",
         source: "s",
+        emissionsKg: ["4000000"],
       },
       {
         label: "匯入表格被勾稽擋下:ch3-8",
@@ -168,12 +204,12 @@ describe("collectAllowedNumbers", () => {
       },
     ];
     const allowed = collectAllowedNumbers(polluted, []);
-    expect(allowed.has("4000000")).toBe(true);
-    expect(allowed.has("60")).toBe(true);
-    expect(allowed.has("1")).toBe(false);
-    expect(allowed.has("2")).toBe(false);
-    expect(allowed.has("3")).toBe(false);
-    expect(allowed.has("8")).toBe(false);
+    expect(allowed.equality.has("4000000")).toBe(true);
+    expect(allowed.equality.has("60")).toBe(true);
+    expect(allowed.equality.has("1")).toBe(false);
+    expect(allowed.equality.has("2")).toBe(false);
+    expect(allowed.equality.has("3")).toBe(false);
+    expect(allowed.equality.has("8")).toBe(false);
   });
 
   it("回歸:「2 公噸」不再因單位字串而放行", () => {
@@ -247,20 +283,42 @@ describe("adjudicateQuantityClaims(Y/X 共用裁決:等值或決定性換算)", 
         allowed,
       ),
     ).toEqual([]);
-    // Info: (20260826 - Emily) kg 級 ÷1000 對得上公噸級事實 → 合法(集合只有 4000)
-    expect(
-      adjudicateQuantityClaims(
-        [{ value: "4000000", unit: "kgCO2e" }],
-        collectAllowedNumbers(
-          [{ label: "l", value: "4000 tCO2e", source: "s" }],
-          [],
-        ),
-      ),
-    ).toEqual([]);
     // Info: (20260826 - Emily) 換算容差僅此一條:四捨五入仍然攔(×1000 後也對不上)
     expect(
       adjudicateQuantityClaims([{ value: "3470.34", unit: "公噸" }], allowed),
     ).toEqual(["3470.34"]);
+  });
+
+  /**
+   * Info: (20260827 - Emily) round-5 阻擋項的對照實驗(reviewer 實測表,同一句只差事實包)。
+   * 洞的形狀:合法集合收了整串 value 的每個數字(活動數據、占比),
+   * 換算再把碰撞面乘一倍 —— 而活動數據常是整數,小整數正是估算的模型會吐的東西。
+   */
+  it("小整數排放量不因活動數據/占比而洗白(reviewer 的實測表全部 BLOCK)", () => {
+    const withActivity = collectAllowedNumbers(
+      [
+        {
+          label: "排放量第 1 大:甲廠 外購電力",
+          value: "5000000 kgCO2e(1000 立方公尺,占全公司總量 60%)",
+          source: "s",
+          emissionsKg: ["5000000"],
+        },
+      ],
+      [],
+    );
+    const judge = (value: string, unit: string): string[] =>
+      adjudicateQuantityClaims([{ value, unit }], withActivity);
+    // Info: (20260827 - Emily) ×1000 撞活動量 1000 / 2000 / 5000 / 60000 —— 全部不得放行
+    expect(judge("1", "公噸")).toEqual(["1"]);
+    expect(judge("2", "公噸")).toEqual(["2"]);
+    expect(judge("5", "公噸")).toEqual(["5"]);
+    expect(judge("60", "公噸")).toEqual(["60"]);
+    // Info: (20260827 - Emily) 活動量與占比本身也不得以排放單位被引用(equality 一併收緊)
+    expect(judge("1000", "公噸 CO2e")).toEqual(["1000"]);
+    expect(judge("60", "kgCO2e")).toEqual(["60"]);
+    // Info: (20260827 - Emily) 而真值的兩種正確寫法都過:kg 原值與公噸換算
+    expect(judge("5000000", "kgCO2e")).toEqual([]);
+    expect(judge("5000", "公噸 CO2e")).toEqual([]);
   });
 });
 
@@ -273,7 +331,13 @@ describe("round-4 阻擋-1:Y 帶單位 —— 公噸回答對上 kg 事實(X 換
   // Info: (20260826 - Emily) 而盤查報告與 persona 慣用公噸。Y 先攔短路,需要換算的數字
   // Info: (20260826 - Emily) 必然是 Y 的違規 —— X 的換算容差在真實條件下執行不到。
   const kgOnlyFacts: IContextFact[] = [
-    { label: "全公司總排放量", value: "8332581 kgCO2e", source: "帳本總計欄" },
+    {
+      label: "全公司總排放量",
+      value: "8332581 kgCO2e",
+      source: "帳本總計欄",
+      // Info: (20260827 - Emily) round-5:換算只認宣告的排放量(查詢層每筆都宣告)
+      emissionsKg: ["8332581"],
+    },
   ];
 
   it("Y 的斷言帶配對單位", () => {
@@ -303,13 +367,26 @@ describe("round-4 阻擋-1:Y 帶單位 —— 公噸回答對上 kg 事實(X 換
     expect(result.violations).toEqual(["8332.58"]);
   });
 
-  it("kg 級 ÷1000 方向同樣通(事實包若是公噸級寫法)", () => {
-    const tonneFacts: IContextFact[] = [
-      { label: "l", value: "4000 tCO2e", source: "s" },
+  /**
+   * Info: (20260827 - Emily) round-5:換算只有「公噸級 ×1000 → kg」一個方向,
+   * 因為 emissionsKg 依契約是 kg 級 —— 反向分支在真實資料裡永遠執行不到,
+   * 留著就是 round-4 那個「機制寫出來但真實條件下不成立」再犯一次。
+   * 這條把邊界釘住:沒有結構的敘事型事實不參與換算,公噸寫法照攔。
+   */
+  it("敘事型事實(無 emissionsKg)不參與換算:公噸寫法攔,原樣引用過", () => {
+    const narrative: IContextFact[] = [
+      {
+        label: "匯入表格被勾稽擋下:ch3-8",
+        value: "總公司 差額 700.0005(原文 901.465 vs 加總 201.4645)",
+        source: "匯入勾稽紀錄",
+      },
     ];
     expect(
-      auditReplyQuantities("總量 4000000 kgCO2e。", tonneFacts, []).ok,
+      auditReplyQuantities("差額為 700.0005 公噸。", narrative, []).ok,
     ).toBe(true);
+    expect(
+      auditReplyQuantities("差額為 0.7000005 公噸。", narrative, []).violations,
+    ).toEqual(["0.7000005"]);
   });
 });
 

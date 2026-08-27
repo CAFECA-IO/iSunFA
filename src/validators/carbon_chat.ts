@@ -28,6 +28,12 @@ export const CarbonLedgerFactSchema = z.object({
   label: z.string().min(1).max(200),
   value: z.string().min(1).max(500),
   source: z.string().min(1).max(300),
+  /**
+   * Info: (20260827 - Emily) 本筆的排放量數值(kg 級),出口守門的裁決集合只認這些
+   * (見 IContextFact.emissionsKg)。**選填**:敘事型事實(待補、勾稽阻擋原因)沒有。
+   * 上限 8:單筆事實最多帶兩年 × 少數幾個值;多的是組包端的 bug,打回比靜默裁切好。
+   */
+  emissionsKg: z.array(z.string().min(1).max(40)).max(8).optional(),
 });
 
 export const CarbonChatRequestSchema = z
