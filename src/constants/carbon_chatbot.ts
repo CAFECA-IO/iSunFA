@@ -635,6 +635,15 @@ export interface ICarbonImportParsedSummary {
   /** Info: (20260806 - Tzuhan) 一併解析出的活動數據筆數(尚未入帳) */
   activityCount: number;
   failedChapters: string[];
+  /**
+   * Info: (20260825 - Luphia) 因為**點數用完**而還沒解析的章（issue #6713）。
+   *
+   * 與 `failedChapters` 分成兩個欄位、在訊息裡也分成兩句話：
+   * 失敗的章是「試過、壞了」（可重試），這些章是「一步都沒試」——
+   * 伺服端在呼叫 LLM 之前就因點數不足擋下，一點都沒扣。
+   * 混成一句會讓使用者回去改檔案，而真正要做的是補點數。
+   */
+  pausedChapters?: string[];
 }
 
 const IMPORT_PARSED_TEMPLATES: Record<
@@ -648,6 +657,9 @@ const IMPORT_PARSED_TEMPLATES: Record<
       s.failedChapters.length > 0
         ? `以下章節解析失敗,可在預覽卡重試:${s.failedChapters.join("、")}。`
         : "",
+      (s.pausedChapters ?? []).length > 0
+        ? `點數已用完,以下章節還沒開始解析:${(s.pausedChapters ?? []).join("、")}。額度重置、加購點數或升級方案之後,可以從這裡接著匯入(已完成的部分不會重跑)。`
+        : "",
       "解析結果已保存,尚未寫入報告 —— 你可以現在檢視並匯入,也可以稍後回到這個對話再決定。",
     ]
       .filter(Boolean)
@@ -658,6 +670,9 @@ const IMPORT_PARSED_TEMPLATES: Record<
       `待确认 ${s.pendingCount} 节逐字内容、${s.draftedCount} 节 AI 草稿,另有 ${s.activityCount} 笔活动数据。`,
       s.failedChapters.length > 0
         ? `以下章节解析失败,可在预览卡重试:${s.failedChapters.join("、")}。`
+        : "",
+      (s.pausedChapters ?? []).length > 0
+        ? `点数已用完,以下章节还没开始解析:${(s.pausedChapters ?? []).join("、")}。额度重置、加购点数或升级方案之后,可以从这里接着导入(已完成的部分不会重跑)。`
         : "",
       "解析结果已保存,尚未写入报告 —— 你可以现在查看并导入,也可以稍后回到这个对话再决定。",
     ]
@@ -670,6 +685,9 @@ const IMPORT_PARSED_TEMPLATES: Record<
       s.failedChapters.length > 0
         ? `These chapters failed to parse and can be retried from the preview card: ${s.failedChapters.join(", ")}.`
         : "",
+      (s.pausedChapters ?? []).length > 0
+        ? `You ran out of credits, so these chapters have not been parsed yet: ${(s.pausedChapters ?? []).join(", ")}. Once your quota resets, or you buy credits or upgrade your plan, you can carry on from here — the finished parts will not be redone.`
+        : "",
       "The parsed result is saved but not yet written into the report — review and import it now, or come back to this conversation later.",
     ]
       .filter(Boolean)
@@ -681,6 +699,9 @@ const IMPORT_PARSED_TEMPLATES: Record<
       s.failedChapters.length > 0
         ? `次の章は解析に失敗しました。プレビューから再試行できます：${s.failedChapters.join("、")}。`
         : "",
+      (s.pausedChapters ?? []).length > 0
+        ? `クレジットが不足したため、次の章はまだ解析していません：${(s.pausedChapters ?? []).join("、")}。利用枠のリセット、クレジットの追加購入、またはプランのアップグレード後に、ここから続けてインポートできます（完了した部分は再実行されません）。`
+        : "",
       "解析結果は保存済みですが、報告書にはまだ書き込まれていません。今すぐ確認してインポートするか、後でこの会話に戻って決めることもできます。",
     ]
       .filter(Boolean)
@@ -691,6 +712,9 @@ const IMPORT_PARSED_TEMPLATES: Record<
       `원문 ${s.pendingCount}개 절과 AI 초안 ${s.draftedCount}개 절이 확인을 기다리고 있으며, 활동 데이터는 ${s.activityCount}건입니다.`,
       s.failedChapters.length > 0
         ? `다음 장은 분석에 실패했습니다. 미리보기에서 다시 시도할 수 있습니다: ${s.failedChapters.join(", ")}.`
+        : "",
+      (s.pausedChapters ?? []).length > 0
+        ? `크레딧이 모두 소진되어 다음 장은 아직 분석하지 않았습니다: ${(s.pausedChapters ?? []).join(", ")}. 사용량이 초기화되거나 크레딧을 추가 구매하거나 요금제를 업그레이드하면 여기서 이어서 가져올 수 있습니다(완료된 부분은 다시 실행되지 않습니다).`
         : "",
       "분석 결과는 저장되었지만 아직 보고서에 기록되지 않았습니다 — 지금 확인해 가져오거나, 나중에 이 대화로 돌아와 결정할 수 있습니다.",
     ]

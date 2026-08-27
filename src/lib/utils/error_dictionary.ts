@@ -1253,6 +1253,22 @@ export const API_ERRORS = {
     message: "Subscription has no billing interval on record",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+  /**
+   * Info: (20260825 - Luphia) 可中斷任務的書籤查不到，或不屬於這個使用者
+   *（issue #6712）。兩種情形回同一個碼：對呼叫端而言「不是你的」與「不存在」
+   * 不該分得出來——分得出來就能用它去列舉別人的任務 id。
+   */
+  TW_JOB_NOT_FOUND: {
+    code: "TW000030",
+    message: "Resumable job not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+  // Info: (20260825 - Luphia) 已完成的任務沒有東西可以接續
+  TW_JOB_ALREADY_COMPLETED: {
+    code: "TW000031",
+    message: "Resumable job is already completed",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
   TW_ALLOCATION_REVOKE_DISABLED: {
     code: "TW000020",
     message: "Revoking allocated credits is no longer supported",
