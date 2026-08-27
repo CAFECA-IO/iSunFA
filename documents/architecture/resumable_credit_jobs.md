@@ -137,17 +137,63 @@
 
 ---
 
+## 7b. 檢查點：暫停是正常結束，其他每一種中斷都不是
+
+成果原本**只在整段跑完之後才落地**。「點數用完」那條路一直是對的，因為它是正常結束——迴圈自己跳出來，後面的落地照跑。壞的是其他每一種中斷方式，而測試全都只走前者。
+
+| 中斷方式 | 修正前 | 修正後 |
+|---|---|---|
+| 點數用完（暫停） | 進度有存 ✅ | 不變 |
+| 關掉分頁 / 重新整理 | **全部白做** | 存到最後一份 |
+| 單頁應用內導航 | **全部白做** | 存到最後一份 |
+| 瀏覽器當掉、電腦睡著 | **全部白做** | 存到最後一份 |
+| 非暫停的拋錯 | **全部白做** | 存到最後一份 |
+
+14 份要跑 7～14 分鐘，單次預扣估算約 677 點——商業方案掉 6 份約 4,000 點。
+
+兩個實作上的判斷：
+
+- **剩餘以「有沒有結果」算**，與驅動器同一個判準。正在跑的那一份沒有結果，因此會被算進剩餘：那是安全的方向（下一次檢查點就會補上），而反過來會讓一份真的沒做的內容永久消失。
+- **檢查點的 `pauseReason` 是 null**，所以書籤狀態是 `RUNNING` 而不是 `PAUSED`。掃描行程只看 `PAUSED`，因此不會去碰它——沒有人在等額度，把它翻成「可以繼續」會是一個假承諾。
+
+「中斷」與「暫停」在畫面上是**兩句話**。共用一句的話，中斷時會說「點數已用完」，而使用者會跑去買他根本不需要的點數。
+
+---
+
+## 7c. 執行許可：租約，不是旗標
+
+要防的事很具體：同一個帳號開兩個分頁（很常見——第一個看起來卡住了才開第二個），補點數之後兩邊都跳出「可以繼續」，兩邊都按下去 → 同一批份送兩次 → **點數扣兩次**。`isRetryingImport` 只擋得住同一個分頁。
+
+**租約不需要新欄位**：`status === RUNNING` 加上 `updatedAt` 的新鮮度就是租約，而 §7b 的檢查點每做完一份就寫一次書籤——天然就是續租的心跳。租期 5 分鐘，取法是「必須大於兩次心跳之間的最長間隔」，也就是單一份的最長耗時。
+
+三個非顯而易見的決定：
+
+1. **裁決寫在 `updateMany` 的 `where` 裡**，不是先讀再判斷。先讀後寫之間有窗口，而這把鎖的全部意義就是關掉那個窗口——「先 `findUnique` 判斷再 `update`」在單執行緒的測試裡與正確版本表現一模一樣。前面那次 `findUnique` 只用來**區分失敗的原因**，不參與裁決。
+2. **許可按資源而不是按任務 id**。客戶端手上只有頻道（那是它自己的聊天室），任務 id 在伺服器。要它先查一次 id 再來換許可，等於在最要緊的路徑上多一個往返，而那個往返本身又是一個競態窗口。
+3. **鎖自己壞掉時放行**。這把鎖是為了省錢，不是為了在它自己掛掉的時候把功能一起關掉。取捨的兩邊是「鎖掛掉時可能重複扣一次」與「鎖掛掉時誰都不能匯入」，後者明顯更糟。
+
+租期一定要會過期：分頁被強制關掉、瀏覽器當掉、電腦睡著時，沒有任何人會來釋放——而永久鎖住的症狀是「按了沒反應」，最難自救的一種失敗。
+
+| 意圖 | 沒有任務 | 已完成 | 別人正在跑 |
+|---|---|---|---|
+| `RESUME` | 404 | 400（收起按鈕） | **409（留著按鈕，請他等）** |
+| `START` | 放行 | 放行（覆寫舊書籤） | **409** |
+
+`START` 也要擋：兩個分頁各自從第一份開始匯入同一個聊天室的話，兩份帳都要付。
+
+---
+
 ## 8. 檔案清單
 
 | 層 | 檔案 |
 |---|---|
-| 常數 | `src/constants/resumable_job.ts`（狀態、暫停原因、型別、`JOB_SPEND_MODE`） |
+| 常數 | `src/constants/resumable_job.ts`（狀態、暫停原因、型別、`JOB_SPEND_MODE`、`JOB_CLAIM_TTL_MS`、`JOB_CLAIM_INTENT`） |
 | 純函式 | `src/lib/jobs/resumable_job.ts`（驅動器）、`src/lib/quota/spend_split.ts`（`canAffordSpend` / `usesSharedTeamQuota`，與扣款端共用） |
 | Repository | `src/repositories/resumable_job.repo.ts` |
 | Service | `src/services/resumable_job.service.ts` |
-| API | `PUT /user/job/bookmark`、`GET /user/job`、`POST /user/job/[job_id]/resume` |
+| API | `PUT /user/job/bookmark`、`GET /user/job`、`POST /user/job/[job_id]/resume`、`POST /user/job/claim` |
 | Worker | `ResumableJobScan`（`scripts/run_worker.ts`，每 5 分鐘） |
-| 前端（碳盤查） | `use_carbon_chat.ts`（驅動器接線）、`use_carbon_chat.helpers.ts`（`resolveCreditPauseReason` / `summarisePausedUnits`）、`import_preview.tsx`（暫停區塊與「接著匯入」） |
+| 前端（碳盤查） | `use_carbon_chat.ts`（驅動器接線）、`use_carbon_chat.helpers.ts`（`resolveCreditPauseReason` / `summarisePausedUnits` / `foldImportChunks` / `isJobBusyError`）、`import_preview.tsx`（暫停區塊與「接著匯入」） |
 
 ---
 
@@ -158,5 +204,6 @@
 | `GET /user/job` 與 `POST .../resume` 前端接線 | 接上之前要先決定客戶端與伺服器**誰是 source of truth**（見 §3 的代價）。它真正的價值是「換裝置後知道你有一份未完成的匯入」——那是 blob 做不到的 |
 | `cancelJob` 沒有端點 | 與上一項同一個 PR |
 | 付款成功後自動接續 | 目前靠掃描行程（≤5 分鐘）或手動按鈕 |
-| 兩個分頁同時接續會重複扣點 | `isRetryingImport` 只在單頁內有效；真正的修法是把伺服器端的 job 狀態當鎖，也就是上面第一項 |
+| 重試與接續兩條路徑還沒有檢查點 | 那兩條的損失**有界**（原本的進度還在暫存裡，掉的只有這一趟剛做的幾份）；主路徑掉的是全部，所以先修主路徑。issue #6723 |
+| 正在跑的那一份仍會重跑 | 伺服器已經扣了點、也可能已經算完，但客戶端沒拿到結果就等於沒有。要根治得讓伺服器存得下結果，而那與「書籤與內容誰說得準」是同一個問題。issue #6721 |
 | 掃描的 `unknown` 只進 log | 卡住的任務數不會浮上來 |

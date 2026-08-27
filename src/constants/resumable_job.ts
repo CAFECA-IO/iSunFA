@@ -108,3 +108,38 @@ export const JOB_RESUME_SCAN_INTERVAL_MS = 5 * 60 * 1000;
  * 變成一串同步的 RPC。
  */
 export const JOB_RESUME_SCAN_BATCH = 50;
+
+/**
+ * Info: (20260827 - Luphia) 執行許可的租期（issue #6721）。
+ *
+ * 「誰現在跑得動這個任務」用一把**會過期的**許可，而不是一個布林旗標：
+ * 分頁被強制關掉、瀏覽器當掉、電腦睡著時，沒有任何人會來釋放旗標——
+ * 那會把使用者永久鎖在門外，而症狀是「按了沒反應」，最難自救的一種。
+ *
+ * 租約不需要新欄位：`status === RUNNING` 加上 `updatedAt` 的新鮮度就是租約，
+ * 而檢查點（issue #6723）每做完一份就寫一次書籤，天然就是續租的心跳。
+ *
+ * 5 分鐘的取法：租期必須**大於**兩次心跳之間的最長間隔，也就是單一份的
+ * 最長耗時（實測數十秒，含逾時重試留餘裕）。取太短會讓自己的租約在跑的
+ * 過程中過期，另一個分頁就接手同一份任務——那正是這把鎖要防的事。
+ */
+export const JOB_CLAIM_TTL_MS = 5 * 60 * 1000;
+
+/**
+ * Info: (20260827 - Luphia) 取得執行許可的意圖（issue #6721）。
+ *
+ * 只影響「找不到任務算不算失敗」，不影響裁決——真正的裁決（有沒有人正在跑）
+ * 無論哪種意圖都是同一條：
+ *
+ * - `RESUME`：要有一個沒做完的任務才有意義，找不到就是錯。
+ * - `START`：這個資源上沒有任務、或上一個已經做完，都正常（重新匯入本來就會
+ *   覆寫舊書籤）。但另一個分頁正在跑時一樣要擋，否則兩個分頁各自從第一份開始，
+ *   兩份帳都要付。
+ */
+export const JOB_CLAIM_INTENT = {
+  RESUME: "RESUME",
+  START: "START",
+} as const;
+
+export type JobClaimIntent =
+  (typeof JOB_CLAIM_INTENT)[keyof typeof JOB_CLAIM_INTENT];

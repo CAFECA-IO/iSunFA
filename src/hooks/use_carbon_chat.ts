@@ -149,11 +149,17 @@ import {
   sortSessionsByRecency,
   appendImportSource,
   foldImportChunks,
+  isJobBusyError,
   type ICarbonImportSource,
   type IImportCheckpoint,
 } from "@/hooks/use_carbon_chat.helpers";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
-import { JOB_TYPE, type JobPauseReason } from "@/constants/resumable_job";
+import {
+  JOB_CLAIM_INTENT,
+  JOB_TYPE,
+  type JobClaimIntent,
+  type JobPauseReason,
+} from "@/constants/resumable_job";
 import { HTTP_METHOD } from "@/constants/http";
 import { runResumableJob, STEP_OUTCOME } from "@/lib/jobs/resumable_job";
 import { useAuth } from "@/contexts/auth_context";
@@ -2563,6 +2569,39 @@ export const useCarbonChat = () => {
     [chatChannel],
   );
 
+  /**
+   * Info: (20260827 - Luphia) 換一把執行許可（issue #6721）。
+   *
+   * 要防的事：同一個帳號開兩個分頁（很常見——第一個看起來卡住了才開第二個），
+   * 補點數之後兩邊都跳出「可以繼續」，兩邊都按下去 → 同一批份送兩次 →
+   * **點數扣兩次**（一份 2MB 的 PDF 單次預扣估算約 677 點）。
+   *
+   * 回 false 只有一種意思：**別人正在跑，現在不要跑**。其他失敗（網路斷、
+   * 伺服器掛）一律放行——這把鎖是為了省錢，不是為了在它自己壞掉的時候
+   * 把功能一起關掉。那個取捨的代價是「鎖掛掉時可能重複扣一次」，
+   * 而反過來的代價是「鎖掛掉時誰都不能匯入」，後者明顯更糟。
+   */
+  const claimImportJob = useCallback(
+    async (intent: JobClaimIntent): Promise<boolean> => {
+      try {
+        await request("/api/v1/user/job/claim", {
+          method: HTTP_METHOD.POST,
+          body: JSON.stringify({
+            type: JOB_TYPE.CARBON_REPORT_IMPORT,
+            resourceKey: chatChannel,
+            intent,
+          }),
+        });
+        return true;
+      } catch (error) {
+        if (isJobBusyError(error)) return false;
+        console.error("[carbon-chat] job claim failed, proceeding:", error);
+        return true;
+      }
+    },
+    [chatChannel],
+  );
+
   const postImportParsedNotice = useCallback(
     async (sessionId: string, pending: IPendingImport): Promise<void> => {
       const recipientPublicKey = masterKeyRef.current?.extendedPublicKey;
@@ -2668,6 +2707,23 @@ export const useCarbonChat = () => {
           type: "error",
           text: t("carbon_chatbot.import_requires_book"),
         });
+        dismissDraftNoticeAfter(
+          CARBON_DRAFT_NOTICE_DISMISS_MS,
+          originSessionId,
+        );
+        importInFlightRef.current = null;
+        setImportRunning(false);
+        return;
+      }
+
+      /**
+       * Info: (20260827 - Luphia) 先換一把執行許可（issue #6721）。
+       *
+       * 位置刻意在**附件上傳之前**：擋下來的時候一個 byte 都不該傳、一毛都不該花。
+       * 兩個分頁各自從第一份開始匯入同一個聊天室的話，兩份帳都要付。
+       */
+      if (!(await claimImportJob(JOB_CLAIM_INTENT.START))) {
+        notify({ type: "error", text: t("carbon_chatbot.import_job_busy") });
         dismissDraftNoticeAfter(
           CARBON_DRAFT_NOTICE_DISMISS_MS,
           originSessionId,
@@ -3054,6 +3110,8 @@ export const useCarbonChat = () => {
       activeSessionId,
       language,
       t,
+      // Info: (20260827 - Luphia) 執行許可（issue #6721）
+      claimImportJob,
       runImportChapters,
       runGapFillSections,
       fetchSectionPageIndex,
@@ -3294,6 +3352,22 @@ export const useCarbonChat = () => {
     }
     // Info: (20260806 - Tzuhan) 進行中不得再次發射（理由同 retryFailedImportChapters）
     if (isRetryingImport) return;
+
+    /**
+     * Info: (20260827 - Luphia) 先換一把執行許可（issue #6721）。
+     *
+     * 這是這把鎖最要緊的一個入口：`isRetryingImport` 只擋得住**同一個分頁**，
+     * 而暫停之後「開第二個分頁」正是使用者最常做的事（第一個看起來卡住了）。
+     * 補點數之後兩邊都跳出「可以繼續」，兩邊都按下去 → 同一批份送兩次。
+     */
+    if (!(await claimImportJob(JOB_CLAIM_INTENT.RESUME))) {
+      setDraftNotice(
+        { type: "error", text: t("carbon_chatbot.import_job_busy") },
+        activeSessionId,
+      );
+      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, activeSessionId);
+      return;
+    }
     setIsRetryingImport(true);
 
     const originSessionId = activeSessionId;
@@ -3398,6 +3472,8 @@ export const useCarbonChat = () => {
     persistPendingImport,
     saveImportJobBookmark,
     t,
+    // Info: (20260827 - Luphia) 執行許可（issue #6721）
+    claimImportJob,
   ]);
 
   const toggleImportItem = useCallback(

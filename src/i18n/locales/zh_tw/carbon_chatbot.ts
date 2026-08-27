@@ -194,6 +194,9 @@ export const carbonChatbot = {
   // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
   import_interrupted_chapters:
     "上一次匯入沒有跑完,以下章節還沒解析:{{chapters}}。可以從這裡接著匯入,已完成的部分不會重跑、也不會再扣點數。",
+  // Info: (20260827 - Luphia) 另一個分頁／裝置正在跑（issue #6721）：等一下就好，不是壞了
+  import_job_busy:
+    "另一個分頁或裝置正在跑這份匯入。等它跑完再回來看,或重新整理這一頁——同時跑兩次會重複扣點數。",
   import_resume_needs_file:
     "接著匯入需要原本那份檔案,而它在重新整理或換裝置之後就不在瀏覽器裡了。請重新上傳同一份報告——已完成的章節不會重跑。",
   import_resume_paused: "接著匯入",

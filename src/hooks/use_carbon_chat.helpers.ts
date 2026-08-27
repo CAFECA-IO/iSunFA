@@ -542,3 +542,16 @@ export const foldImportChunks = (
     activities,
   };
 };
+
+/**
+ * Info: (20260827 - Luphia) 「另一個地方正在跑同一個任務」（issue #6721）。
+ *
+ * 與其他失敗分開的理由與 `resolveCreditPauseReason` 相同：處置不一樣。
+ * 這一種**不要**收起按鈕、不要叫使用者去補點數——等一下再按就好。
+ * 落到通用失敗那條路的話，畫面會說「匯入失敗」，而什麼都沒有壞。
+ */
+export const isJobBusyError = (error: unknown): boolean => {
+  if (!(error instanceof RequestApiError)) return false;
+  const data = error.data as { errorCode?: string } | undefined;
+  return data?.errorCode === API_ERRORS.TW_JOB_ALREADY_RUNNING.code;
+};

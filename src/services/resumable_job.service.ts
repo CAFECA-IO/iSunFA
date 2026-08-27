@@ -1,7 +1,10 @@
 import { ResumableJob } from "@/generated";
 import { isCarbonChatChannelOwnedBy } from "@/constants/carbon_chatbot";
 import {
+  JOB_CLAIM_INTENT,
+  JOB_CLAIM_TTL_MS,
   JOB_PAUSE_REASON,
+  type JobClaimIntent,
   JOB_RESUME_SCAN_BATCH,
   JOB_SPEND_MODE,
   JOB_STATUS,
@@ -23,6 +26,7 @@ import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.re
 import { estimateFaithHoldCredits } from "@/lib/faith_billing";
 import { resolveBillingTeamId } from "@/services/carbon_billing.service";
 import {
+  JOB_CLAIM,
   ResumableJobOwnershipError,
   resumableJobRepo,
 } from "@/repositories/resumable_job.repo";
@@ -321,6 +325,83 @@ export async function startJobResume(params: {
   }
   await resumableJobRepo.setStatus(job.id, JOB_STATUS.RUNNING, null);
   return toView({ ...job, status: JOB_STATUS.RUNNING, pauseReason: null });
+}
+
+/**
+ * Info: (20260827 - Luphia) 取得執行許可（issue #6721）。
+ *
+ * 要防的事：同一個帳號開兩個分頁，補點數之後兩邊都跳出「可以繼續」，兩邊都
+ * 按下去 → 同一批份送兩次 → **點數扣兩次**（一份 2MB 的 PDF 單次預扣估算
+ * 約 677 點）。
+ *
+ * 為什麼許可要**按資源**而不是按任務 id：客戶端手上只有頻道（那是它自己的
+ * 聊天室），任務 id 在伺服器。要它先查一次 id 再來換許可，等於在最要緊的
+ * 路徑上多一個往返，而那個往返本身又是一個競態窗口。
+ *
+ * 兩種意圖共用同一把鎖，差別只在「找不到任務」與「已完成」算不算失敗：
+ *
+ * - 接續（`intent = RESUME`）：要有一個沒做完的任務才有意義。
+ * - 新開（`intent = START`）：這個資源上沒有任務、或上一個已經做完，都正常
+ *   ——重新匯入本來就會覆寫舊書籤。但**另一個分頁正在跑**時一樣要擋，
+ *   否則兩個分頁各自從第一份開始，兩份帳都要付。
+ */
+export async function claimJobForChannel(params: {
+  userId: string;
+  address: string | undefined;
+  type: JobType;
+  resourceKey: string;
+  intent: JobClaimIntent;
+  nowMs: number;
+}): Promise<IJobView | null> {
+  // Info: (20260827 - Luphia) 與書籤同一道第一防線，且同樣在任何查詢之前
+  assertResourceOwnedBy(params.type, params.resourceKey, params.address);
+
+  let outcome;
+  try {
+    outcome = await resumableJobRepo.claimIfIdle({
+      resourceKey: params.resourceKey,
+      type: params.type,
+      userId: params.userId,
+      nowMs: params.nowMs,
+      ttlMs: JOB_CLAIM_TTL_MS,
+    });
+  } catch (error) {
+    // Info: (20260827 - Luphia) Repo 的第二道防線轉成 403（與 saveJobBookmark 一致）
+    if (error instanceof ResumableJobOwnershipError) {
+      throw toApiError(API_ERRORS.AUTH_PERMISSION_DENIED);
+    }
+    throw error;
+  }
+
+  switch (outcome.kind) {
+    case JOB_CLAIM.CLAIMED:
+      return toView(outcome.job);
+    /**
+     * Info: (20260827 - Luphia) 別人正在跑：兩種意圖都擋。這是這把鎖唯一
+     * 真正在做的事，其餘分支只是把「為什麼不行」講清楚。
+     */
+    case JOB_CLAIM.BUSY:
+      throw toApiError(API_ERRORS.TW_JOB_ALREADY_RUNNING);
+    case JOB_CLAIM.COMPLETED:
+      /**
+       * Info: (20260827 - Luphia) 新開時「上一個已完成」不是錯——重新匯入
+       * 本來就會覆寫舊書籤。回 null 表示「沒有可接續的任務，但你可以開始」。
+       */
+      if (params.intent === JOB_CLAIM_INTENT.START) return null;
+      throw toApiError(API_ERRORS.TW_JOB_ALREADY_COMPLETED);
+    case JOB_CLAIM.NO_JOB:
+      // Info: (20260827 - Luphia) 新開時還沒有書籤是常態：第一次寫檢查點才會建
+      if (params.intent === JOB_CLAIM_INTENT.START) return null;
+      throw toApiError(API_ERRORS.TW_JOB_NOT_FOUND);
+    default: {
+      /**
+       * Info: (20260827 - Luphia) 窮盡檢查：新增結果種類時 TypeScript 會在這裡
+       * 要求處置，而預設值只能是拒絕——一把鎖的預設值不可以是放行。
+       */
+      const exhaustive: never = outcome;
+      throw new Error(`unhandled claim outcome: ${JSON.stringify(exhaustive)}`);
+    }
+  }
 }
 
 export async function cancelJob(params: {

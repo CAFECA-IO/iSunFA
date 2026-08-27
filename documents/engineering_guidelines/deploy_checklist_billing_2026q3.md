@@ -351,6 +351,15 @@ SELECT id, type, team_id FROM resumable_job
 WHERE status = 'PAUSED' AND (team_id IS NULL OR type <> 'CARBON_REPORT_IMPORT');
 ```
 
+**執行許可（20260827，issue #6721）不需要 schema 變更**：租約是既有的 `status` + `updatedAt`（`@updatedAt`），租期 `JOB_CLAIM_TTL_MS` = 5 分鐘。若上線後有人回報「接著匯入按不下去、說有別的地方在跑」而實際上沒有，先查那一列的 `updated_at`——租約要 5 分鐘才過期：
+
+```sql
+SELECT id, status, updated_at, now() - updated_at AS idle
+FROM resumable_job WHERE status = 'RUNNING' ORDER BY updated_at;
+```
+
+`idle` 超過 5 分鐘還擋著就是缺陷（條件更新沒有生效）；不到 5 分鐘則是設計行為。
+
 **新增任務型別時的義務**：在 `JOB_SPEND_MODE` 宣告它的扣點模式（封頂放行／足額），並在 Service 的 `assertResourceOwnedBy` 補上它的所有權規則——後者是 exhaustive switch，漏了會是 TypeScript 錯誤；前者漏了會讓那種任務永遠停在 `unknown`。
 
 ---
@@ -365,6 +374,10 @@ WHERE status = 'PAUSED' AND (team_id IS NULL OR type <> 'CARBON_REPORT_IMPORT');
 - [ ] 補上點數後按「接著匯入」→ 只送剩下的那幾份（已完成的章不會重跑、不會再扣點）
 - [ ] 未綁帳本的會話匯入 PDF → 在送出前就被擋下並說明要先綁帳本（一次呼叫都不發）
 - [ ] worker log 的 `ResumableJobScan`：`unknown` 不應持續累積；`released` 在額度重置後應該出現非 0
+- [ ] 匯入跑到第 5 份時關掉分頁 → 重新打開看得到「已完成 5 份，剩餘 9 份」，按「接著匯入」只送 9 次（不是 14 次）
+- [ ] 匯入中按重新整理 → 瀏覽器先問「確定要離開嗎」
+- [ ] 同一個聊天室開兩個分頁，兩邊同時按「接著匯入」→ 只有一邊真的送出，另一邊說「另一個分頁或裝置正在跑這份匯入」
+- [ ] 跑到一半強制關掉分頁，等 5 分鐘（`JOB_CLAIM_TTL_MS`）→ 另一個分頁按得下去（沒有被永久鎖住）
 - [ ] 寬限期（PAST_DUE）的團隊按「降級為免費版」：立即生效（`plan_id` = free、`auto_renew` = false），續訂 worker 下一輪不再對它扣款
 - [ ] 訂閱中的團隊按「降級為免費版」：`auto_renew` 轉 false、`pending_plan_id` 保持 NULL、`plan_id` 與週期**不變**；團隊錢包面板出現「自動續訂已關閉…轉為免費版」與「維持目前方案」按鈕（僅 OWNER 看得到），按下後 `auto_renew` 回 true
 - [ ] 降轉到較低付費方案：`pending_plan_id` 寫入且 `auto_renew` 維持 true；期末續訂 cron 以新方案計價（面板顯示「已排定於 X 起改為 Y」）

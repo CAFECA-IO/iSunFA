@@ -199,6 +199,9 @@ export const carbonChatbot = {
   // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
   import_interrupted_chapters:
     "The last import did not finish. These chapters have not been parsed yet: {{chapters}}. You can continue from here — what is already done will not run again, and will not be charged again.",
+  // Info: (20260827 - Luphia) 另一個分頁／裝置正在跑（issue #6721）：等一下就好，不是壞了
+  import_job_busy:
+    "This import is already running in another tab or on another device. Wait for it to finish, or refresh this page — running it twice would charge you twice.",
   import_resume_needs_file:
     "Carrying on needs the original file, and it is no longer in this browser after a reload or on another device. Please upload the same report again — the finished chapters will not be redone.",
   import_resume_paused: "Carry on",
