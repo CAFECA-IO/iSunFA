@@ -2418,6 +2418,22 @@ export const useCarbonChat = () => {
                 unmapped: pending.unmapped,
                 activityCount: pending.activityCount,
                 failedChapters: pending.failedChapters ?? [],
+                /**
+                 * Info: (20260827 - Luphia) 暫停狀態也要落地（issue #6713 目標 5）。
+                 *
+                 * 這份明列先前少了這三個欄位，而還原是 `...restored.pending`
+                 * 的展開——於是重新整理或換裝置之後暫停清單就不見了，
+                 * `import_preview` 的 `pausedChapters.length > 0` 不成立，
+                 * 「接著匯入」那顆按鈕**根本不會出現**。
+                 *
+                 * commit 29f1dd891 的訊息聲稱「暫停清單跟著帳號走（存在
+                 * CarbonPendingImport）」，那句話當時是錯的；它修的
+                 * 「換裝置後按鈕沒反應」其實到不了，因為那時沒有按鈕。
+                 * 檢查表 §1.14。
+                 */
+                pausedChapters: pending.pausedChapters ?? [],
+                pausedUnits: pending.pausedUnits ?? [],
+                pauseReason: pending.pauseReason ?? null,
               },
               activities,
               // Info: (20260806 - Tzuhan) Map 無法 JSON 序列化,存成 entry 陣列

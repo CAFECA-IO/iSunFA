@@ -746,3 +746,42 @@ describe("逐章迴圈的接線", () => {
     expect(hook.slice(start, start + 200)).toContain("pauseReason === null");
   });
 });
+
+/**
+ * Info: (20260827 - Luphia) 暫停狀態要真的落地（issue #6713 目標 5 的補正）。
+ *
+ * `persistPendingImport` 寫進紀錄的 `pending` 是**明列欄位**，而還原是
+ * `...restored.pending` 的展開。明列漏掉的欄位在重新整理之後就不存在了——
+ * 而暫停清單一旦消失，`import_preview` 的 `pausedChapters.length > 0`
+ * 不成立，「接著匯入」那顆按鈕**根本不會出現**。
+ *
+ * 這一條會紅在最容易漏的地方：新增暫停相關欄位卻忘了加進落地的那份明列。
+ */
+describe("暫停狀態要落地，不能只活在記憶體", () => {
+  const hook = readFileSync(
+    join(process.cwd(), "src", "hooks", "use_carbon_chat.ts"),
+    "utf8",
+  );
+  const persistScope = (() => {
+    const start = hook.indexOf("const persistPendingImport = useCallback");
+    expect(start).toBeGreaterThan(-1);
+    const end = hook.indexOf("const clearPersistedPendingImport", start);
+    expect(end).toBeGreaterThan(start);
+    return hook.slice(start, end);
+  })();
+
+  it.each(["pausedChapters", "pausedUnits", "pauseReason"])(
+    "落地的 pending 帶上 %s",
+    (field) => {
+      expect(persistScope).toContain(field);
+    },
+  );
+
+  /**
+   * Info: (20260827 - Luphia) 還原是展開，所以只要寫的時候有帶就會回來。
+   * 這一條釘住「不要把還原改成明列欄位」——那會把同一個缺陷搬到另一端。
+   */
+  it("還原用展開而不是明列欄位", () => {
+    expect(hook).toContain("...restored.pending,");
+  });
+});
