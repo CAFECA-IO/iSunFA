@@ -188,6 +188,9 @@ export const carbonChatbot = {
   // Info: (20260827 - Luphia) 另一個分頁／裝置正在跑（issue #6721）：等一下就好，不是壞了
   import_job_busy:
     "另一个标签页或设备正在跑这份导入。等它跑完再回来看,或刷新这一页——同时跑两次会重复扣点数。",
+  // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
+  import_auto_resuming:
+    "点数已补上,正在接着把剩下的章导入。已完成的部分不会重跑。",
   import_resume_needs_file:
     "接着导入需要原本那份文件,而它在刷新或换设备之后就不在浏览器里了。请重新上传同一份报告——已完成的章节不会重跑。",
   import_resume_paused: "接着导入",

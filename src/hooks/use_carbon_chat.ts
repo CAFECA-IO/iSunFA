@@ -154,8 +154,11 @@ import {
   type IImportCheckpoint,
 } from "@/hooks/use_carbon_chat.helpers";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { CREDIT_EVENT } from "@/constants/credit_events";
+import { subscribeCreditEvents } from "@/lib/credit_events";
 import {
   JOB_CLAIM_INTENT,
+  JOB_PAUSE_REASON,
   JOB_TYPE,
   type JobClaimIntent,
   type JobPauseReason,
@@ -3475,6 +3478,70 @@ export const useCarbonChat = () => {
     // Info: (20260827 - Luphia) 執行許可（issue #6721）
     claimImportJob,
   ]);
+
+  /**
+   * Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）。
+   *
+   * 暫停時畫面上的兩條出路（加購點數、升級方案）都是 `target="_blank"`
+   * 開新分頁，所以**付款一定發生在另一個分頁**。付完錢的人回到這一頁時，
+   * 這一頁對剛剛發生的事一無所知——他得自己再按一次「接著匯入」，
+   * 而他剛剛就是為了那件事付的錢。
+   *
+   * 三道閘門，一道都不能少：
+   *
+   * 1. **這份匯入真的在等點數**：`pauseReason` 必須是「點數用完」。需要簽章付款的
+   *    那種（`PAYMENT_REQUIRED`）不在這裡處理——那條路要使用者本人簽名。
+   * 2. **這一頁沒有在跑**：`isRetryingImport`。
+   * 3. **伺服器同意**：接續本身會先換一把執行許可（issue #6721）。廣播只是
+   *    一個提示，不是授權——同源的任何頁面都寫得進那個頻道。
+   *
+   * 刻意**不**在這裡先問一次「餘額夠不夠」：真正的判斷發生在執行時的扣款，
+   * 而多一次檢查就會有「檢查說夠、扣款說不夠」兩個答案（見
+   * `startJobResume` 的註解）。萬一還是不夠，匯入會再次暫停並說對原因，
+   * 而那一次撞牆在呼叫 LLM 之前就被擋下，一點都不會扣。
+   */
+  const autoResumeAfterPaymentRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    autoResumeAfterPaymentRef.current = () => {
+      if (isRetryingImport) return;
+      const paused = pendingImport?.pausedUnits ?? [];
+      if (paused.length === 0) return;
+      if (pendingImport?.pauseReason !== JOB_PAUSE_REASON.CREDITS_EXHAUSTED) {
+        return;
+      }
+      /**
+       * Info: (20260827 - Luphia) 先說一句話再開跑：畫面自己動起來而沒有任何
+       * 說明，比不動更難理解——使用者剛從另一個分頁回來，不會知道是誰按了什麼。
+       */
+      setDraftNotice(
+        { type: "info", text: t("carbon_chatbot.import_auto_resuming") },
+        activeSessionId,
+      );
+      void resumePausedImportChapters();
+    };
+  }, [
+    isRetryingImport,
+    pendingImport,
+    resumePausedImportChapters,
+    setDraftNotice,
+    activeSessionId,
+    t,
+  ]);
+
+  /**
+   * Info: (20260827 - Luphia) 訂閱只掛一次（空依賴）：依賴放 `pendingImport`
+   * 之類的東西會讓它在每次解析結果變動時重新訂閱，而重新訂閱之間的那個瞬間
+   * 收不到訊息——付款完成的廣播只有一則，錯過就沒有了。
+   * 真正會變的東西放在上面那個 ref 裡。
+   */
+  useEffect(
+    () =>
+      subscribeCreditEvents((event) => {
+        if (event.type !== CREDIT_EVENT.PAYMENT_SUCCEEDED) return;
+        autoResumeAfterPaymentRef.current?.();
+      }),
+    [],
+  );
 
   const toggleImportItem = useCallback(
     (paragraphId: string) => {

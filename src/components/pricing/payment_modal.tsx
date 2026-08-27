@@ -34,6 +34,8 @@ import {
 import { HTTP_METHOD } from "@/constants/http";
 import { IJSONObject } from "@/validators/common";
 import EditCardModal from "@/components/user/billing/edit_card_modal";
+import { CREDIT_EVENT } from "@/constants/credit_events";
+import { publishCreditEvent } from "@/lib/credit_events";
 
 interface IPaymentMethod {
   id: string;
@@ -390,6 +392,12 @@ export default function PaymentModal({
     await refreshAuth();
     setTxHash(payload.txHash ?? "");
     setStep(PaymentStep.success);
+    /**
+     * Info: (20260827 - Luphia) 告訴其他分頁「錢已經進來了」（issue #6714）。
+     * 與簽章付款那條路同一則廣播——兩條路各寫一次判斷的話，其中一條遲早
+     * 會漏掉，而症狀是「用某種付款方式就不會自動接續」。
+     */
+    publishCreditEvent({ type: CREDIT_EVENT.PAYMENT_SUCCEEDED });
     onSuccess(payload.txHash ?? "");
   };
 

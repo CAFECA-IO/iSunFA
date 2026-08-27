@@ -202,6 +202,9 @@ export const carbonChatbot = {
   // Info: (20260827 - Luphia) 另一個分頁／裝置正在跑（issue #6721）：等一下就好，不是壞了
   import_job_busy:
     "This import is already running in another tab or on another device. Wait for it to finish, or refresh this page — running it twice would charge you twice.",
+  // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
+  import_auto_resuming:
+    "Credits are back. Continuing with the remaining chapters — what is already done will not run again.",
   import_resume_needs_file:
     "Carrying on needs the original file, and it is no longer in this browser after a reload or on another device. Please upload the same report again — the finished chapters will not be redone.",
   import_resume_paused: "Carry on",

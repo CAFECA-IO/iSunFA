@@ -183,6 +183,33 @@
 
 ---
 
+## 7d. 付款完成後自動接續：付款一定發生在另一個分頁
+
+暫停時畫面上的兩條出路（加購點數、升級方案）都是 `target="_blank"` 開新分頁——那不是省事，是刻意的：費思是浮動於 `/user` 各頁的常駐視窗，原地跳頁會把尚未送出的訊息與整段對話一起清掉。
+
+於是「付款完成的那一頁」**永遠不是**那個在等點數的頁面。它一無所知，而使用者得自己走回去按一次按鈕——他剛剛就是為了那件事付的錢。
+
+機制是一則 BroadcastChannel 廣播（沿用 `THEME_SYNC_CHANNEL_NAME` 的前例）：
+
+| 付款路徑 | 發佈點 |
+|---|---|
+| 簽章付款（`useOrderTransaction`） | `payment_success` 之後 |
+| 刷卡結帳（`payment_modal`） | 伺服器確認履行之後 |
+| 團隊額度扣抵（`useTeamQuotaPayment`） | `status = success` 之後 |
+
+四個決定：
+
+1. **只廣播「付款成功了」這一件事實**，不廣播金額、也不廣播「去接續」這個指令。頻道是同源共享的，收到的內容是**輸入**而不是指令——認不出的一律忽略，因為那一端接著要做的事是花錢。
+2. **廣播不是授權**。收到的那一頁會再向伺服器換一次執行許可（§7c）。廣播只縮短了「知道」的延遲，沒有繞過任何裁決。
+3. **在伺服器確認之後才發**。發在送出的那一刻等於廣播一個可能不成立的事實。
+4. **不在接續前多問一次「餘額夠不夠」**。真正的判斷在執行時的扣款；多一次檢查就會有「檢查說夠、扣款說不夠」兩個答案，而使用者只相信後者。萬一還是不夠，匯入會再次暫停並說對原因，而那一次撞牆在呼叫 LLM 之前就被擋下，一點都不會扣。
+
+三道閘門：暫停原因必須是「點數用完」（需要簽章的那種要本人簽名，不能代勞）、這一頁沒有在跑、以及伺服器同意。開跑之前先說一句話——畫面自己動起來而沒有任何說明，比不動更難理解。
+
+沒有 BroadcastChannel（SSR、舊瀏覽器、隱私設定關掉）時安靜降級：這是一條**便利路徑**，掃描行程（≤5 分鐘）與手動按鈕都還在。
+
+---
+
 ## 8. 檔案清單
 
 | 層 | 檔案 |
@@ -192,6 +219,7 @@
 | Repository | `src/repositories/resumable_job.repo.ts` |
 | Service | `src/services/resumable_job.service.ts` |
 | API | `PUT /user/job/bookmark`、`GET /user/job`、`POST /user/job/[job_id]/resume`、`POST /user/job/claim` |
+| 跨分頁 | `src/constants/credit_events.ts`、`src/lib/credit_events.ts`（付款完成的廣播） |
 | Worker | `ResumableJobScan`（`scripts/run_worker.ts`，每 5 分鐘） |
 | 前端（碳盤查） | `use_carbon_chat.ts`（驅動器接線）、`use_carbon_chat.helpers.ts`（`resolveCreditPauseReason` / `summarisePausedUnits` / `foldImportChunks` / `isJobBusyError`）、`import_preview.tsx`（暫停區塊與「接著匯入」） |
 
@@ -203,7 +231,6 @@
 |---|---|
 | `GET /user/job` 與 `POST .../resume` 前端接線 | 接上之前要先決定客戶端與伺服器**誰是 source of truth**（見 §3 的代價）。它真正的價值是「換裝置後知道你有一份未完成的匯入」——那是 blob 做不到的 |
 | `cancelJob` 沒有端點 | 與上一項同一個 PR |
-| 付款成功後自動接續 | 目前靠掃描行程（≤5 分鐘）或手動按鈕 |
 | 重試與接續兩條路徑還沒有檢查點 | 那兩條的損失**有界**（原本的進度還在暫存裡，掉的只有這一趟剛做的幾份）；主路徑掉的是全部，所以先修主路徑。issue #6723 |
 | 正在跑的那一份仍會重跑 | 伺服器已經扣了點、也可能已經算完，但客戶端沒拿到結果就等於沒有。要根治得讓伺服器存得下結果，而那與「書籤與內容誰說得準」是同一個問題。issue #6721 |
 | 掃描的 `unknown` 只進 log | 卡住的任務數不會浮上來 |

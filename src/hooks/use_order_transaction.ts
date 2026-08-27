@@ -11,6 +11,8 @@ import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import { request } from "@/lib/utils/request";
 import { IOrderParams } from "@/lib/analysis/pricing";
 import { type OrderType } from "@/constants/status";
+import { CREDIT_EVENT } from "@/constants/credit_events";
+import { publishCreditEvent } from "@/lib/credit_events";
 
 export interface IOrderPayload extends IOrderParams {
   type: OrderType;
@@ -169,6 +171,18 @@ export const useOrderTransaction = () => {
 
       // Info: (20260417 - Luphia) 6. 分析請求已在背景產生 (呼叫 callback 處理 UI 刷新)
       setWorkflowStatus("payment_success");
+
+      /**
+       * Info: (20260827 - Luphia) 告訴其他分頁「錢已經進來了」（issue #6714）。
+       *
+       * 加購點數與升級方案都是從暫停的畫面 `target="_blank"` 開新分頁進來的，
+       * 所以付完錢的這一頁**不是**那個在等點數的頁面。少了這一則廣播，
+       * 使用者得自己走回去按一次「接著匯入」——而他剛剛就是為了那件事付的錢。
+       *
+       * 位置在伺服器確認之後：發在送出的那一刻等於廣播一個可能不成立的事實，
+       * 而收到的那一頁會據此去花錢。
+       */
+      publishCreditEvent({ type: CREDIT_EVENT.PAYMENT_SUCCEEDED });
 
       // Info: (20260419 - Agent) Optimistic UI Update to hide alt-mempool fetch latency
       if (user?.credits !== undefined) {

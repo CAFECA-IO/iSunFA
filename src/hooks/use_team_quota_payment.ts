@@ -9,6 +9,8 @@ import type {
   ITeamSubscriptionView,
   ITeamWalletView,
 } from "@/interfaces/team_wallet";
+import { CREDIT_EVENT } from "@/constants/credit_events";
+import { publishCreditEvent } from "@/lib/credit_events";
 
 /**
  * Info: (20260813 - Luphia) 以團隊額度支付一筆訂單（設計書 §5.6）。
@@ -157,6 +159,11 @@ export const useTeamQuotaPayment = () => {
         });
 
         setStatus("success");
+        /**
+         * Info: (20260827 - Luphia) 團隊額度扣抵也算「錢進來了」（issue #6714）：
+         * 它動的是團隊的可用量，而那正是暫停中的任務在等的東西。
+         */
+        publishCreditEvent({ type: CREDIT_EVENT.PAYMENT_SUCCEEDED });
         /**
          * Info: (20260813 - Luphia) 付款後同步帳戶狀態：團隊額度付款不動個人點數，
          * 但畫面上的餘額與待付訂單來自同一支 me 端點，不重取會停在付款前的數字。
