@@ -370,32 +370,14 @@ export default function NotificationBell() {
                 </button>
               </div>
 
-              {/**
-               * Info: (20260826 - Julian) `min-h-0` 是這個捲動區能捲動的**前提**。
-               *
-               * flex item 的 `min-height` 預設是 `auto`，意思是「不得縮到比內容還小」——
-               * 於是 `flex-1 overflow-y-auto` 會長到跟內容一樣高、把父層撐破，
-               * 而不是自己捲。`overflow-y-auto` 在那種情況下永遠不會生效，
-               * 因為它根本沒有溢位（溢位的是父層）。
-               *
-               * 症狀只在內容夠多時才看得到，而且**手機版才致命**：面板是
-               * `fixed inset-0 h-dvh`，被撐出去的部分連同底下那個
-               * 「查看全部通知」的連結一起跑到視窗外，使用者滑不到、點不到 ——
-               * 一個常駐的入口變成看不見的入口。
-               *
-               * 桌機有 `md:max-h-[70vh]` 也是同一個道理，只是 10 則通常撐不破。
-               */}
+              {/* Info: (20260826 - Julian) `min-h-0` 是這個捲動區能捲動的「前提」，請不要刪除 */}
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 {listStatus === "loading" && !list ? (
                   <p className="text-text-muted px-3 py-4 text-center text-sm">
                     {t("common.loading")}
                   </p>
                 ) : listStatus === "error" && !list ? (
-                  /**
-                   * Info: (20260826 - Julian) 讀不到就說讀不到，別說「沒有通知」。
-                   * 只有在**沒有任何舊內容可顯示**時才整面換成錯誤訊息；
-                   * 有舊內容的話寧可讓使用者看見上一次的清單（下面那條提示會說它是舊的）。
-                   */
+                  /* Info: (20260826 - Julian) 讀不到就說讀不到，別說「沒有通知」 */
                   <p className="text-text-muted px-3 py-4 text-center text-sm">
                     {t("notification.load_failed")}
                   </p>
@@ -420,14 +402,7 @@ export default function NotificationBell() {
                           {t("notification.completed_title")}
                         </div>
                         {list.completed.map(renderItem)}
-                        {/**
-                         * Info: (20260826 - Julian) 截斷了就要說出來（計畫書 D4）。
-                         *
-                         * 原本這裡寫的是「還有更多**未讀**通知」，而那句話在面板
-                         * 改成保留已讀之後就成了假話：旗標的意思變成「歷史超過 30 則」，
-                         * 於是一個未讀只有 2 則的畫面會宣稱還有更多未讀——
-                         * 與兩公分外的徽章直接矛盾。現在說的是上限本身，那句話恆真。
-                         */}
+                        {/* Info: (20260826 - Julian) 更多通知的提示 */}
                         {list.hasMoreCompleted && (
                           <p className="text-text-muted px-3 pt-2 text-center text-xs">
                             {t("notification.history_capped", {
@@ -450,42 +425,21 @@ export default function NotificationBell() {
                 )}
               </div>
 
-              {/**
-               * Info: (20260826 - Julian) 通往完整清單的入口，**常駐**。
-               *
-               * 只在被截斷時才出現的話，這個頁面就只有通知滿 30 則的人
-               * 發現得了——而「我上週那份報告跑完了沒」正是通知不多的人
-               * 也會想回頭查的事。
-               *
-               * 放在捲動區之外（`shrink-0`）：面板有 70vh 上限，
-               * 放在裡面的話，通知一多它就被推到看不見的地方，
-               * 而那正是最需要它的時候。
-               */}
-              {/**
-               * Info: (20260826 - Julian) 通往完整清單的入口，**常駐**且看得出是按鈕。
-               *
-               * 先前它是一行置中的灰色小字，與上面兩個灰底的分節標題
-               *（「待辦事項」「工作完成」）長得幾乎一樣 —— 實測回報：
-               * 「一點都不像按鈕，反而像列表標題」。標題與可點擊的東西
-               * 用同一種樣式，使用者就得靠猜的。
-               *
-               * 現在是品牌色的實心按鈕加一個箭頭：顏色、圓角、箭頭三者
-               * 都在說同一件事（這裡可以按、按了會去別的地方）。
-               *
-               * 位置回到 flex 的最後一個子項（`shrink-0`）—— header 的
-               * backdrop-filter 修掉之後，面板的 `h-dvh` 終於是相對視窗，
-               * 這一層就自然貼在面板底部，不需要 `fixed` 那種繞法。
-               */}
-              <div className="border-border-default shrink-0 border-t">
-                <Link
-                  href="/user/notifications"
-                  onClick={() => close()}
-                  className="flex w-full items-center justify-center gap-1 bg-orange-500 px-3 py-2.5 text-sm text-white transition-colors hover:text-orange-500 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none md:rounded-b-lg md:bg-white md:py-2 md:text-slate-500"
-                >
-                  {t("notification.view_all")}
-                  <ChevronRight className="size-4 shrink-0" />
-                </Link>
-              </div>
+              {/* Info: (20260826 - Julian) 查看全部通知，無通知的話不會顯示 */}
+              {list &&
+                list.completed.length > 0 &&
+                list.completed.length > 0 && (
+                  <div className="border-border-default shrink-0 border-t">
+                    <Link
+                      href="/user/notifications"
+                      onClick={() => close()}
+                      className="md:bg-surface-overlay flex w-full items-center justify-center gap-1 bg-orange-500 px-3 py-2.5 text-sm text-white transition-colors hover:text-orange-500 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none md:rounded-b-lg md:py-2 md:text-slate-500"
+                    >
+                      {t("notification.view_all")}
+                      <ChevronRight className="size-4 shrink-0" />
+                    </Link>
+                  </div>
+                )}
             </>
           )}
         </PopoverPanel>
