@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
+import type { ICreditPauseDetail } from "@/constants/carbon_chatbot";
+import CreditPauseWays from "@/components/carbon_chatbot/credit_pause_ways";
 
 export interface IPendingImportItem {
   paragraphId: string;
@@ -72,6 +74,12 @@ export interface IPendingImport {
   }[];
   // Info: (20260825 - Luphia) 暫停原因（JOB_PAUSE_REASON）；null／undefined＝沒有暫停
   pauseReason?: string | null;
+  /**
+   * Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）：
+   * 重置時間與伺服器算好的出路。缺席時只說原因、不說出路——
+   * 那比顯示一個空的出路清單好。
+   */
+  pauseDetail?: ICreditPauseDetail | null;
 }
 
 export interface IImportPreviewProps {
@@ -220,45 +228,57 @@ export function ImportPreview({
            *（已解析的章再解析一次、再收一次點數，正好是那句承諾的反面）。
            */}
           {(pendingImport.pausedChapters ?? []).length > 0 && (
-            <div className="flex items-center gap-1.5 rounded-xl bg-blue-50 p-3 text-[11px] font-bold text-blue-700">
-              <AlertTriangle size={12} className="shrink-0" />
-              <span className="min-w-0 flex-1">
-                {/**
-                 * Info: (20260827 - Luphia) 兩種停法兩句話（issue #6723）。
-                 *
-                 * 有暫停原因＝點數用完，那句話要說「去補點數」。沒有原因＝
-                 * 上一趟被中斷（關分頁、切走、當掉），那時說「點數已用完」
-                 * 是在說謊，而使用者會跑去買他根本不需要的點數。
-                 */}
-                {t(
-                  pendingImport.pauseReason
-                    ? "carbon_chatbot.import_paused_chapters"
-                    : "carbon_chatbot.import_interrupted_chapters",
-                  {
-                    chapters: (pendingImport.pausedChapters ?? [])
-                      .map((chapter) => chapter.title)
-                      .join("、"),
-                  },
-                )}
-              </span>
-              {onResumePaused && (
-                <button
-                  type="button"
-                  onClick={onResumePaused}
-                  disabled={isRetrying}
-                  className="flex shrink-0 items-center gap-1 rounded-full bg-white px-2.5 py-1 font-bold text-blue-700 ring-1 ring-blue-200 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white"
-                >
-                  {isRetrying ? (
-                    <Loader2 size={11} className="animate-spin" />
-                  ) : (
-                    <RotateCcw size={11} />
-                  )}
+            <div className="rounded-xl bg-blue-50 p-3 text-[11px] font-bold text-blue-700">
+              <div className="flex items-center gap-1.5">
+                <AlertTriangle size={12} className="shrink-0" />
+                <span className="min-w-0 flex-1">
+                  {/**
+                   * Info: (20260827 - Luphia) 兩種停法兩句話（issue #6723）。
+                   *
+                   * 有暫停原因＝點數用完，那句話要說「去補點數」。沒有原因＝
+                   * 上一趟被中斷（關分頁、切走、當掉），那時說「點數已用完」
+                   * 是在說謊，而使用者會跑去買他根本不需要的點數。
+                   */}
                   {t(
-                    isRetrying
-                      ? "carbon_chatbot.import_retrying"
-                      : "carbon_chatbot.import_resume_paused",
+                    pendingImport.pauseReason
+                      ? "carbon_chatbot.import_paused_chapters"
+                      : "carbon_chatbot.import_interrupted_chapters",
+                    {
+                      chapters: (pendingImport.pausedChapters ?? [])
+                        .map((chapter) => chapter.title)
+                        .join("、"),
+                    },
                   )}
-                </button>
+                </span>
+                {onResumePaused && (
+                  <button
+                    type="button"
+                    onClick={onResumePaused}
+                    disabled={isRetrying}
+                    className="flex shrink-0 items-center gap-1 rounded-full bg-white px-2.5 py-1 font-bold text-blue-700 ring-1 ring-blue-200 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white"
+                  >
+                    {isRetrying ? (
+                      <Loader2 size={11} className="animate-spin" />
+                    ) : (
+                      <RotateCcw size={11} />
+                    )}
+                    {t(
+                      isRetrying
+                        ? "carbon_chatbot.import_retrying"
+                        : "carbon_chatbot.import_resume_paused",
+                    )}
+                  </button>
+                )}
+              </div>
+              {/**
+               * Info: (20260827 - Luphia) 出路與重置時間（issue #6714）。
+               *
+               * 只在**點數用完**那種暫停顯示：中斷（關分頁、切走）不需要補點數，
+               * 使用者只要按「接著匯入」——那時擺一組導購按鈕是在叫他去買
+               * 他不需要的東西。
+               */}
+              {pendingImport.pauseReason && pendingImport.pauseDetail && (
+                <CreditPauseWays detail={pendingImport.pauseDetail} />
               )}
             </div>
           )}

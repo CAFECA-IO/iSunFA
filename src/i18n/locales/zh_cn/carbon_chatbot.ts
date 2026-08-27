@@ -191,6 +191,17 @@ export const carbonChatbot = {
   // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
   import_auto_resuming:
     "点数已补上,正在接着把剩下的章导入。已完成的部分不会重跑。",
+  // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）：伺服器算好的出路與重置時間
+  import_paused_reset_hint:
+    "额度将于 {{countdown}} 后({{resetAt}})重置,届时可以接着导入。",
+  import_paused_reset_ready: "额度已经重置,现在可以接着导入了。",
+  import_paused_over_window_limit:
+    "这份报告单次需要的点数,高于方案在单一时段的额度上限——等待重置也无法完成。请改用个人点数或升级方案。",
+  import_paused_ways_title: "接下来可以:",
+  import_paused_option_wait_reset: "等额度重置(上面有时间)",
+  import_paused_option_use_allocation: "用团队管理者分配给你的点数",
+  import_paused_option_use_personal: "用你自己钱包里的点数",
+  import_paused_option_upgrade: "升级方案,拿到更高的额度",
   import_resume_needs_file:
     "接着导入需要原本那份文件,而它在刷新或换设备之后就不在浏览器里了。请重新上传同一份报告——已完成的章节不会重跑。",
   import_resume_paused: "接着导入",

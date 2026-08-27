@@ -715,7 +715,14 @@ describe("逐章迴圈的接線", () => {
   it("點數用完歸類為暫停，其餘歸類為失敗", () => {
     const start = hook.indexOf("classify: (error) =>");
     expect(start).toBeGreaterThan(-1);
-    const scope = hook.slice(start, start + 400);
+    /**
+     * Info: (20260827 - Luphia) 切到下一個選項而不是固定位移（`start + 400`）。
+     * 固定位移會在有人往 classify 裡加註解時把要檢查的內容推出窗外——
+     * 測試會紅，但紅在一個與行為無關的地方（這個坑在本檔踩過第二次了）。
+     */
+    const end = hook.indexOf("concurrency:", start);
+    expect(end).toBeGreaterThan(start);
+    const scope = hook.slice(start, end);
     expect(scope).toContain("resolveCreditPauseReason");
     expect(scope).toContain("STEP_OUTCOME.PAUSE");
     expect(scope).toContain("STEP_OUTCOME.FAIL");

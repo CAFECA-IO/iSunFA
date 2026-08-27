@@ -148,12 +148,14 @@ import {
   reduceDraftNotice,
   sortSessionsByRecency,
   appendImportSource,
+  extractCreditPauseDetail,
   foldImportChunks,
   isJobBusyError,
   type ICarbonImportSource,
   type IImportCheckpoint,
 } from "@/hooks/use_carbon_chat.helpers";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import type { ICreditPauseDetail } from "@/constants/carbon_chatbot";
 import { CREDIT_EVENT } from "@/constants/credit_events";
 import { subscribeCreditEvents } from "@/lib/credit_events";
 import {
@@ -2065,6 +2067,8 @@ export const useCarbonChat = () => {
        * `failed` 那邊「任一份壞掉就整章列入」是安全的，同樣的手法用在正向標記上
        * 語意剛好翻過來（review #6717 阻擋-1）。
        */
+      // Info: (20260827 - Luphia) 第一次撞牆時 402 帶的出路與重置時間（issue #6714）
+      let pauseDetail: ICreditPauseDetail | null = null;
       let completedCount = 0;
       /**
        * Info: (20260804 - Tzuhan) 正在跑的章數。只報「已完成 0/11」會讓開頭那段
@@ -2249,6 +2253,18 @@ export const useCarbonChat = () => {
         classify: (error) => {
           const pauseReason = resolveCreditPauseReason(error);
           if (pauseReason !== null) {
+            /**
+             * Info: (20260827 - Luphia) 順手把「接下來能做什麼」留下來
+             *（issue #6714）。伺服器的 402 早就算好了出路與重置時間，
+             * 而這裡是這一趟裡**唯一**碰得到那個回應的地方——不在這裡取，
+             * 之後就再也拿不到了（驅動器只傳遞分類結果，不傳遞錯誤本身）。
+             *
+             * 第一次撞牆的那份留著就好：後面每一份都被同一面牆擋下，
+             * 內容一樣，而覆寫會讓 resetAt 一直往後跳幾毫秒。
+             */
+            if (pauseDetail === null) {
+              pauseDetail = extractCreditPauseDetail(error);
+            }
             return { kind: STEP_OUTCOME.PAUSE, reason: pauseReason };
           }
           return { kind: STEP_OUTCOME.FAIL };
@@ -2309,6 +2325,8 @@ export const useCarbonChat = () => {
         activities: folded.activities,
         failed,
         pausedBy,
+        // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）
+        pauseDetail,
         // Info: (20260825 - Luphia) 接續用（份粒度）與顯示用（章）各一份
         remainingUnits,
         pausedChapters,
@@ -2462,6 +2480,8 @@ export const useCarbonChat = () => {
                 pausedChapters: pending.pausedChapters ?? [],
                 pausedUnits: pending.pausedUnits ?? [],
                 pauseReason: pending.pauseReason ?? null,
+                // Info: (20260827 - Luphia) 出路與重置時間也要撐過重載（issue #6714）
+                pauseDetail: pending.pauseDetail ?? null,
               },
               activities,
               // Info: (20260806 - Tzuhan) Map 無法 JSON 序列化,存成 entry 陣列
@@ -2801,6 +2821,8 @@ export const useCarbonChat = () => {
          */
         let pausedUnits: IImportUnit[] = [];
         let pauseReason: JobPauseReason | null = null;
+        // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）
+        let pauseDetail: ICreditPauseDetail | null = null;
         /**
          * Info: (20260825 - Luphia) 書籤的分母是**單元數**（11 章 → 14 份）：
          * 用章數當分母會讓「已完成 4／11」與實際做過的份數對不起來。
@@ -2846,6 +2868,12 @@ export const useCarbonChat = () => {
             pausedChapters: checkpoint.pausedChapters,
             pausedUnits: checkpoint.remainingUnits,
             pauseReason: null,
+            /**
+             * Info: (20260827 - Luphia) 中斷不是暫停，沒有出路可談（issue #6723）：
+             * 使用者不需要補點數，他只要按「接著匯入」。留一份出路清單在這裡
+             * 會讓畫面叫他去買他不需要的點數。
+             */
+            pauseDetail: null,
           };
           void persistPendingImport(
             originSessionId,
@@ -2889,6 +2917,7 @@ export const useCarbonChat = () => {
           pausedChapters = result.pausedChapters;
           pausedUnits = result.remainingUnits;
           pauseReason = result.pausedBy;
+          pauseDetail = result.pauseDetail;
           importUnitTotal = result.totalUnits;
         } else {
           // Info: (20260717 - Tzuhan) 小型文字檔:單發全綱呼叫
@@ -3042,6 +3071,7 @@ export const useCarbonChat = () => {
           // Info: (20260825 - Luphia) 接續的斷點（份粒度）；顯示用的是上面那份
           pausedUnits,
           pauseReason,
+          pauseDetail,
         };
         setPendingImportFor(originSessionId, parsedPending);
         /**
@@ -3256,6 +3286,12 @@ export const useCarbonChat = () => {
         ],
         // Info: (20260826 - Luphia) 這一趟撞牆就記下原因；沒撞就沿用原本的狀態
         pauseReason: result.pausedBy ?? current.pauseReason ?? null,
+        /**
+         * Info: (20260827 - Luphia) 出路也跟著更新（issue #6714）：這一趟撞牆的
+         * 402 是**比較新**的一份，重置時間可能已經往前推。沒撞牆就沿用舊的
+         * ——沿用一份過時的 resetAt 比沒有好，倒數歸零時卡片會自己改口。
+         */
+        pauseDetail: result.pauseDetail ?? current.pauseDetail ?? null,
       };
       setPendingImportFor(originSessionId, merged);
       void persistPendingImport(
@@ -3440,6 +3476,8 @@ export const useCarbonChat = () => {
         pausedChapters: result.pausedChapters,
         pausedUnits: result.remainingUnits,
         pauseReason: result.pausedBy,
+        // Info: (20260827 - Luphia) 出路也跟著更新（理由同 retryFailedImportChapters）
+        pauseDetail: result.pauseDetail ?? current.pauseDetail ?? null,
       };
       setPendingImportFor(originSessionId, merged);
       void persistPendingImport(

@@ -8,6 +8,11 @@ import {
   type JobPauseReason,
 } from "@/constants/resumable_job";
 import { type IImportUnit } from "@/lib/carbon_page_slice";
+import type { ICreditPauseDetail } from "@/constants/carbon_chatbot";
+import {
+  parseQuotaExceededError,
+  resolveQuotaResetAt,
+} from "@/lib/quota/quota_notice";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
 import { CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH } from "@/constants/carbon_source_tables";
 import type { IActivityRecord } from "@/types/carbon_chatbot.types";
@@ -554,4 +559,30 @@ export const isJobBusyError = (error: unknown): boolean => {
   if (!(error instanceof RequestApiError)) return false;
   const data = error.data as { errorCode?: string } | undefined;
   return data?.errorCode === API_ERRORS.TW_JOB_ALREADY_RUNNING.code;
+};
+
+/**
+ * Info: (20260827 - Luphia) 從 402 取出「接下來能做什麼」（issue #6714）。
+ *
+ * 伺服器已經算好了，這裡只負責搬——**不重算**。前端自己推導出路的話，
+ * 它與扣款端遲早分岔，而分岔的症狀是畫面很有說服力地指錯方向
+ *（檢查表 §1.10）。
+ *
+ * 取不到就回 null（例如需要簽章付款那種 402，它沒有額度視窗可談）：
+ * 呼叫端據此退回「只說原因、不說出路」，而不是顯示一個空的出路清單。
+ */
+export const extractCreditPauseDetail = (
+  error: unknown,
+): ICreditPauseDetail | null => {
+  const payload = parseQuotaExceededError(error);
+  if (!payload) return null;
+  return {
+    /**
+     * Info: (20260827 - Luphia) 超過視窗上限時**不給** resetAt：等重置永遠不會好，
+     * 而一個倒數本身就是「等一下就能用」的承諾。
+     */
+    resetAt: payload.exceedsWindowLimit ? null : resolveQuotaResetAt(payload),
+    options: [...payload.options],
+    exceedsWindowLimit: payload.exceedsWindowLimit,
+  };
 };

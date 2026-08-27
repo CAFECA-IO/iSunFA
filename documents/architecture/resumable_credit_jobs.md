@@ -210,6 +210,23 @@
 
 ---
 
+## 7e. 「接下來能做什麼」：伺服器早就算好了
+
+修正前，暫停的畫面只說「點數已用完，以下章節還沒開始解析」——**沒有一個字**說得出接下來能做什麼。而伺服器的 402 回應一直帶著出路（`options`）、雙視窗的 `resetAt`、以及「這一筆本身就超過視窗上限」的旗標，前端一個欄位都沒有讀。解析層（`lib/quota/quota_notice.ts`）與倒數也早就寫好且有測試。
+
+四個決定：
+
+1. **搬，不重算**。前端自己推導出路的話，它與扣款端遲早分岔，而分岔的症狀是畫面很有說服力地指錯方向（§5 那一課的另一面）。
+2. **倒數與絕對時間並列**。倒數回答「還要多久」，絕對時間回答「是幾點」，只給一種都會有人算錯。
+3. **超過視窗上限時不給 `resetAt`**。那種情況等重置永遠不會好，而一個倒數本身就是「等一下就能用」的承諾——這裡把「不顯示」寫進資料（`resetAt: null`）而不是只在畫面上分支，因為那個判斷會被落地、被重載後的畫面再讀一次。
+4. **不存也不顯示 `limit` / `used`**。那兩個數字在重新整理之後就過時了，而使用者會據此判斷還能不能跑——顯示一個過時的儀表比不顯示更糟。
+
+只在**點數用完**那種暫停顯示：中斷（關分頁、切走，§7b）不需要補點數，那時擺一組導購按鈕是在叫使用者去買他不需要的東西。
+
+出路的文案用**查表**而不是 `switch`：`options` 來自網路，而伺服器可能比這一版的前端更新——認不出的值要被濾掉，不是變成畫面上的 `undefined`。
+
+---
+
 ## 8. 檔案清單
 
 | 層 | 檔案 |
@@ -221,7 +238,7 @@
 | API | `PUT /user/job/bookmark`、`GET /user/job`、`POST /user/job/[job_id]/resume`、`POST /user/job/claim` |
 | 跨分頁 | `src/constants/credit_events.ts`、`src/lib/credit_events.ts`（付款完成的廣播） |
 | Worker | `ResumableJobScan`（`scripts/run_worker.ts`，每 5 分鐘） |
-| 前端（碳盤查） | `use_carbon_chat.ts`（驅動器接線）、`use_carbon_chat.helpers.ts`（`resolveCreditPauseReason` / `summarisePausedUnits` / `foldImportChunks` / `isJobBusyError`）、`import_preview.tsx`（暫停區塊與「接著匯入」） |
+| 前端（碳盤查） | `use_carbon_chat.ts`（驅動器接線）、`use_carbon_chat.helpers.ts`（`resolveCreditPauseReason` / `summarisePausedUnits` / `foldImportChunks` / `isJobBusyError`）、`import_preview.tsx`（暫停區塊與「接著匯入」）、`credit_pause_ways.tsx`（出路與重置倒數） |
 
 ---
 

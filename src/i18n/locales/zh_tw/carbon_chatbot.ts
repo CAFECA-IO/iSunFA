@@ -200,6 +200,17 @@ export const carbonChatbot = {
   // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
   import_auto_resuming:
     "點數已補上,正在接著把剩下的章匯入。已完成的部分不會重跑。",
+  // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）：伺服器算好的出路與重置時間
+  import_paused_reset_hint:
+    "額度將於 {{countdown}} 後({{resetAt}})重置,屆時可以接著匯入。",
+  import_paused_reset_ready: "額度已經重置,現在可以接著匯入了。",
+  import_paused_over_window_limit:
+    "這份報告單次需要的點數,高於方案在單一時段的額度上限——等待重置也無法完成。請改用個人點數或升級方案。",
+  import_paused_ways_title: "接下來可以:",
+  import_paused_option_wait_reset: "等額度重置(上面有時間)",
+  import_paused_option_use_allocation: "用團隊管理者分配給你的點數",
+  import_paused_option_use_personal: "用你自己錢包裡的點數",
+  import_paused_option_upgrade: "升級方案,拿到更高的額度",
   import_resume_needs_file:
     "接著匯入需要原本那份檔案,而它在重新整理或換裝置之後就不在瀏覽器裡了。請重新上傳同一份報告——已完成的章節不會重跑。",
   import_resume_paused: "接著匯入",

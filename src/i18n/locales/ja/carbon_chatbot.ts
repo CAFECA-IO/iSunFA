@@ -207,6 +207,19 @@ export const carbonChatbot = {
   // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
   import_auto_resuming:
     "ポイントが補充されました。残りの章を続けてインポートしています。完了済みの部分は再実行されません。",
+  // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）：伺服器算好的出路與重置時間
+  import_paused_reset_hint:
+    "利用枠は {{countdown}} 後（{{resetAt}}）にリセットされます。そのあとインポートを続けられます。",
+  import_paused_reset_ready:
+    "利用枠がリセットされました。いまインポートを続けられます。",
+  import_paused_over_window_limit:
+    "このレポートは一回の処理に必要なポイントが、プランの単一期間の上限を超えています——リセットを待っても完了しません。個人ポイントを使うか、プランをアップグレードしてください。",
+  import_paused_ways_title: "次にできること：",
+  import_paused_option_wait_reset: "利用枠のリセットを待つ（時刻は上に表示）",
+  import_paused_option_use_allocation:
+    "チーム管理者から配分されたポイントを使う",
+  import_paused_option_use_personal: "自分のウォレットのポイントを使う",
+  import_paused_option_upgrade: "プランをアップグレードして上限を上げる",
   import_resume_needs_file:
     "続けてインポートするには元のファイルが必要ですが、再読み込みや別の端末では、そのファイルはブラウザに残っていません。同じレポートをもう一度アップロードしてください（完了した章は再実行されません）。",
   import_resume_paused: "続けてインポート",

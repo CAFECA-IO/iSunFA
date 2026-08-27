@@ -205,6 +205,20 @@ export const carbonChatbot = {
   // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
   import_auto_resuming:
     "Credits are back. Continuing with the remaining chapters — what is already done will not run again.",
+  // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）：伺服器算好的出路與重置時間
+  import_paused_reset_hint:
+    "Your quota resets in {{countdown}} ({{resetAt}}). You can continue the import then.",
+  import_paused_reset_ready:
+    "Your quota has reset. You can continue the import now.",
+  import_paused_over_window_limit:
+    "This report needs more credits in one go than your plan allows in a single window — waiting for the reset will not help. Use your personal credits or upgrade your plan.",
+  import_paused_ways_title: "What you can do:",
+  import_paused_option_wait_reset:
+    "Wait for the quota to reset (time shown above)",
+  import_paused_option_use_allocation:
+    "Use the credits your team admin allocated to you",
+  import_paused_option_use_personal: "Use the credits in your own wallet",
+  import_paused_option_upgrade: "Upgrade your plan for a higher quota",
   import_resume_needs_file:
     "Carrying on needs the original file, and it is no longer in this browser after a reload or on another device. Please upload the same report again — the finished chapters will not be redone.",
   import_resume_paused: "Carry on",

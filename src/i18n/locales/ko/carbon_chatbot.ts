@@ -204,6 +204,18 @@ export const carbonChatbot = {
   // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
   import_auto_resuming:
     "포인트가 충전되었습니다. 남은 장을 이어서 가져오는 중입니다. 이미 완료된 부분은 다시 실행되지 않습니다.",
+  // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）：伺服器算好的出路與重置時間
+  import_paused_reset_hint:
+    "사용량이 {{countdown}} 후({{resetAt}})에 초기화됩니다. 그때 가져오기를 이어서 진행할 수 있습니다.",
+  import_paused_reset_ready:
+    "사용량이 초기화되었습니다. 지금 가져오기를 이어서 진행할 수 있습니다.",
+  import_paused_over_window_limit:
+    "이 보고서는 한 번에 필요한 포인트가 요금제의 단일 구간 한도를 초과합니다 — 초기화를 기다려도 완료되지 않습니다. 개인 포인트를 사용하거나 요금제를 업그레이드하세요.",
+  import_paused_ways_title: "다음으로 할 수 있는 것:",
+  import_paused_option_wait_reset: "사용량 초기화를 기다리기(시간은 위에 표시)",
+  import_paused_option_use_allocation: "팀 관리자가 배분한 포인트 사용",
+  import_paused_option_use_personal: "내 지갑의 포인트 사용",
+  import_paused_option_upgrade: "요금제를 업그레이드해 한도 늘리기",
   import_resume_needs_file:
     "이어서 가져오려면 원본 파일이 필요하지만, 새로 고침하거나 다른 기기에서는 파일이 브라우저에 남아 있지 않습니다. 같은 보고서를 다시 업로드해 주세요(완료된 장은 다시 실행되지 않습니다).",
   import_resume_paused: "이어서 가져오기",
