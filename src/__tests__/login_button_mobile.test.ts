@@ -82,6 +82,27 @@ describe("手機版的登入按鈕不會被壓成一個圓", () => {
    * `gap-x-6`：那是 24px × 4 個間距 = 96px，而 320px 下整排只有 10px 可用。
    * 這一條擋住「順手改回統一間距」。
    */
+  /**
+   * Info: (20260827 - Luphia) 品牌 logo 在手機版矮一格。
+   *
+   * 這是三處讓步裡最後補上的一處：光靠縮間距與按鈕內距，320px 下仍差 14px。
+   * `w-auto` 表示寬度由高度與原始比例決定，所以 `h-8`→`h-7` 就是把品牌區
+   * 從 104px 降到 88px。
+   */
+  it("logo 手機版矮一格，桌機不變", () => {
+    const brand = readFileSync(
+      join(process.cwd(), "src", "components", "header", "brand_logo.tsx"),
+      "utf8",
+    );
+    const at = brand.indexOf("<BrandLogoImage");
+    expect(at).toBeGreaterThan(-1);
+    const tag = brand.slice(at, brand.indexOf("/>", at));
+    expect(tag).toContain("h-7");
+    expect(tag).toContain("sm:h-8");
+    // Info: (20260827 - Luphia) w-auto 是「改高度就是改寬度」的依據
+    expect(tag).toContain("w-auto");
+  });
+
   it("header 右側群組的手機間距遠小於桌機", () => {
     expect(headerGroupClass).toMatch(/gap-x-(1|1\.5|2)\s/);
     expect(headerGroupClass).toContain("sm:gap-x-6");
