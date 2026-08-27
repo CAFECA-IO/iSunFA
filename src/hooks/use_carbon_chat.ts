@@ -2620,7 +2620,9 @@ export const useCarbonChat = () => {
        *（不是點數用完，是這個會話沒有帳本可扣）。修正後在**送出之前**就說清楚，
        * 一次呼叫都不發、一毛都不花——連附件上傳都不做。
        *
-       * 小檔的單發匯入不受限：那條路只有一次呼叫，待付款重送在下方照常運作。
+       * 小檔的單發匯入不受限：那條路只有一次呼叫，因此走「付掉待付訂單再重送」
+       * 那條既有流程（與聊天、草稿同一套；20260826 補上，先前這裡的註解聲稱
+       * 它已經存在——那是錯的）。
        */
       const willChunk =
         file.type === PDF_MIME_TYPE ||
@@ -2744,16 +2746,49 @@ export const useCarbonChat = () => {
           // Info: (20260813 - Luphia) 計費上下文（設計書 §5.5）：帳本由 channel 推導，冪等鍵防重試重複扣點
           formData.append("channel", chatChannel);
           formData.append("clientMessageId", crypto.randomUUID());
-          const chunk = await requestEnvelope<{
-            segments: {
-              paragraphId: string;
-              title: string;
-              content: string;
-              sourceTables?: ICarbonSourceTable[];
-            }[];
-            unmapped: string[];
-            activities: IActivityRecord[];
-          }>("/api/v1/chat/carbon/import", { method: "POST", body: formData });
+          const postSingleCall = () =>
+            requestEnvelope<{
+              segments: {
+                paragraphId: string;
+                title: string;
+                content: string;
+                sourceTables?: ICarbonSourceTable[];
+              }[];
+              unmapped: string[];
+              activities: IActivityRecord[];
+            }>("/api/v1/chat/carbon/import", {
+              method: "POST",
+              body: formData,
+            });
+
+          /**
+           * Info: (20260826 - Luphia) 未綁帳本的會話：付掉待付訂單再重送
+           *（與聊天、草稿同一套，設計書 §5.5）。
+           *
+           * 這一段先前**不存在**，而上面那道帳本前置檢查的註解卻寫著
+           * 「小檔的單發匯入不受限：待付款重送在下方照常運作」——那句話是錯的。
+           * 逐章匯入擋掉的理由是「14 次呼叫就是 14 筆訂單」，而單發只有一次，
+           * 所以它本來就該走這條路；缺了它，未綁帳本的小檔匯入會落到外層 catch，
+           * 顯示「點數已用完」——訊息看起來合理，而真正的原因是這個會話沒有
+           * 帳本可扣，補多少點數都不會變。
+           *
+           * `clientMessageId` 已經寫進 `formData`，重送同一個物件就是同一把
+           * 冪等鍵——不會變成「付了一張、又建一張」（草稿路徑踩過那個坑）。
+           */
+          let chunk: Awaited<ReturnType<typeof postSingleCall>>;
+          try {
+            chunk = await postSingleCall();
+          } catch (error) {
+            const pendingPayment = parsePersonalPaymentRequired(error);
+            if (!pendingPayment) throw error;
+            const paid = await payExistingOrder(
+              pendingPayment.orderId,
+              pendingPayment.cost,
+              () => {},
+            );
+            if (!paid) throw error;
+            chunk = await postSingleCall();
+          }
           /**
            * Info: (20260806 - Tzuhan) 信封裡的失敗轉回拋出。
            * 這一支特別要緊:原本 `?? { segments: [] … }` 會把失敗變成「空匯入」,
@@ -2938,6 +2973,8 @@ export const useCarbonChat = () => {
       saveImportJobBookmark,
       // Info: (20260826 - Luphia) 逐章匯入的帳本前置檢查（review #6717 二輪第 2 條）
       sessionAccess,
+      // Info: (20260826 - Luphia) 單發匯入的待付款重送（未綁帳本的會話）
+      payExistingOrder,
     ],
   );
 
@@ -2971,10 +3008,17 @@ export const useCarbonChat = () => {
       setDraftNotice(notice, originSessionId);
     try {
       // Info: (20260730 - Tzuhan) 重試沿用首次的頁碼索引:重問一次索引等於再燒一次全文輸入,而索引不會變
+      /**
+       * Info: (20260826 - Luphia) 重試也要抽活動數據（與接續同一個理由）。
+       *
+       * 萃取只對證據章（`ch3`）生效，而重試的觸發是「那一章真的解析失敗」——
+       * 若失敗的正是 ch3，傳 `false` 就等於重試成功了但活動數據仍是 0 筆，
+       * `computedLedger` 空、所有數據圖表畫不出來，而畫面上沒有任何跡象。
+       */
       const result = await runImportChapters(
         source,
         failed,
-        false,
+        failed.some((chapter) => chapter.id === CARBON_EVIDENCE_CHAPTER_ID),
         lastPageIndexRef.current,
         notify,
       );
@@ -3024,11 +3068,20 @@ export const useCarbonChat = () => {
        * 使用者因此同時失去資訊與重試入口，而畫面上什麼都沒說。
        * 暫停的章要接回暫停清單，沒被處理到的失敗章要留著。
        */
+      /**
+       * Info: (20260826 - Luphia) 抽到的活動數據累加回暫存（與接續同一條線）：
+       * `importActivitiesRef` 是套用時真正會被讀的那一份。
+       */
+      importActivitiesRef.current = [
+        ...importActivitiesRef.current,
+        ...result.activities,
+      ];
       const retriedIds = new Set(failed.map((chapter) => chapter.id));
       const merged: IPendingImport = {
         ...current,
         items: Array.from(itemByParagraph.values()),
         unmapped: [...current.unmapped, ...result.unmapped],
+        activityCount: importActivitiesRef.current.length,
         // Info: (20260826 - Luphia) 只換這次重試過的那幾章，其餘原樣留著
         failedChapters: [
           ...current.failedChapters.filter(

@@ -331,6 +331,28 @@ UPDATE team_subscription SET pending_plan_id = NULL, auto_renew = false
 WHERE pending_plan_id = 'free';
 ```
 
+### 3.11 可中斷任務的書籤表（2026-08-26）— **`db push` 即可，不需要回填**
+
+`resumable_job` 是新表（PR #6717，設計見 `architecture/resumable_credit_jobs.md`）。**不需要回填**：沒有書籤就等於「沒有未完成的任務」，而那對既有資料是對的答案。
+
+上線後要看兩件事，兩者都在 worker 的 log 裡（`ResumableJobScan`）：
+
+- **`unknown` 持續不為 0**：那些暫停中的任務**永遠不會**被翻成「可以繼續」。目前只有兩個成因會落在這裡——沒有付費團隊（無帳本會話，那條路本來就不由額度翻面）與認不出的任務型別（部署了新型別卻沒在 `JOB_SPEND_MODE` 宣告）。後者是缺件，要修。
+- **`released` 永遠是 0 而 `stillShort` 一直有數字**：判準可能又與扣款端分岔了（見設計書 §5.1——足額判準對免費／團隊方案永遠是 false，那個缺陷讓整套機制在上線後三天都沒有人發現）。
+
+```sql
+-- 暫停中的任務（含停多久）
+SELECT type, status, pause_reason, paused_at, total_steps, completed_steps
+FROM resumable_job WHERE status IN ('PAUSED', 'RESUMABLE')
+ORDER BY paused_at;
+
+-- 缺件：認不出的型別或沒有付費團隊
+SELECT id, type, team_id FROM resumable_job
+WHERE status = 'PAUSED' AND (team_id IS NULL OR type <> 'CARBON_REPORT_IMPORT');
+```
+
+**新增任務型別時的義務**：在 `JOB_SPEND_MODE` 宣告它的扣點模式（封頂放行／足額），並在 Service 的 `assertResourceOwnedBy` 補上它的所有權規則——後者是 exhaustive switch，漏了會是 TypeScript 錯誤；前者漏了會讓那種任務永遠停在 `unknown`。
+
 ---
 
 ## 4. 部署後驗證
@@ -339,6 +361,10 @@ WHERE pending_plan_id = 'free';
 - [ ] 剩餘超過 30 天的付費團隊按**同方案**「延長方案」：付款前顯示「暫不開放購買延長」的說明，送出則被 `TW000028` 擋下；剩餘 30 天內照常建單
 - [ ] 同一個團隊按**升級**（換較高方案）：不受 30 天閘門限制，付款前顯示「舊方案剩餘期間將按已付金額折抵為新方案天數」；付款後 `current_period_end` = 今天 + 一期 + 折抵天數（年繳團隊剩 335 天升月繳企業 ≈ 今天 + 30 + 78.7 天）
 - [ ] 展延或折抵之後跨距超過一期的團隊仍可加人（上限已按跨距縮放，不會誤擋 `TW000016`）
+- [ ] 智能溫盤：把額度調到只夠跑三、四份，匯入一份 11 章的報告 → 畫面說「點數已用完，還沒開始解析：…」而**不是**「章節解析失敗」；伺服器只收到「成功份數 + 1」次請求，不是 14 次
+- [ ] 補上點數後按「接著匯入」→ 只送剩下的那幾份（已完成的章不會重跑、不會再扣點）
+- [ ] 未綁帳本的會話匯入 PDF → 在送出前就被擋下並說明要先綁帳本（一次呼叫都不發）
+- [ ] worker log 的 `ResumableJobScan`：`unknown` 不應持續累積；`released` 在額度重置後應該出現非 0
 - [ ] 寬限期（PAST_DUE）的團隊按「降級為免費版」：立即生效（`plan_id` = free、`auto_renew` = false），續訂 worker 下一輪不再對它扣款
 - [ ] 訂閱中的團隊按「降級為免費版」：`auto_renew` 轉 false、`pending_plan_id` 保持 NULL、`plan_id` 與週期**不變**；團隊錢包面板出現「自動續訂已關閉…轉為免費版」與「維持目前方案」按鈕（僅 OWNER 看得到），按下後 `auto_renew` 回 true
 - [ ] 降轉到較低付費方案：`pending_plan_id` 寫入且 `auto_renew` 維持 true；期末續訂 cron 以新方案計價（面板顯示「已排定於 X 起改為 Y」）

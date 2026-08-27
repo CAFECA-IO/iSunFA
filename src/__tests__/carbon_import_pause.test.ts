@@ -243,6 +243,84 @@ describe("暫停單元收斂成章", () => {
 });
 
 /**
+ * Info: (20260826 - Luphia) 三條路徑對「未綁帳本」的處理必須一致。
+ *
+ * 未綁帳本的會話走個人點數：每次呼叫先回 402 帶一張待付訂單，付掉才放行。
+ * 聊天、草稿、**單發匯入**各只有一次呼叫，都該走那條路；逐章匯入是 14 次
+ * 呼叫＝14 筆訂單，所以它在送出前就被擋下。
+ *
+ * 這一組的由來是一句寫錯的註解：帳本前置檢查原本聲稱「單發匯入的待付款重送
+ * 在下方照常運作」——而那段程式當時根本不存在。註解說謊比缺功能更難查，
+ * 因為下一個人會相信它。
+ */
+describe("未綁帳本時三條路徑的一致性", () => {
+  const hook = readFileSync(
+    join(process.cwd(), "src", "hooks", "use_carbon_chat.ts"),
+    "utf8",
+  );
+
+  it("單發匯入會付掉待付訂單再重送", () => {
+    const start = hook.indexOf("const postSingleCall = () =>");
+    expect(start).toBeGreaterThan(-1);
+    const scope = hook.slice(start, start + 1400);
+    expect(scope).toContain("parsePersonalPaymentRequired(error)");
+    expect(scope).toContain("payExistingOrder(");
+    expect(scope).toContain("chunk = await postSingleCall();");
+  });
+
+  /**
+   * Info: (20260826 - Luphia) 重送要用同一把冪等鍵。單發路徑的
+   * `clientMessageId` 已經寫進 `formData`，重送同一個物件即同一把鍵——
+   * 這一條釘住「不要改成每次重建 formData」。
+   */
+  it("單發重送沿用同一個 formData（同一把冪等鍵）", () => {
+    const start = hook.indexOf("const postSingleCall = () =>");
+    const scope = hook.slice(start, start + 1400);
+    expect(scope).toContain("body: formData,");
+    expect(scope).not.toContain("new FormData()");
+  });
+
+  // Info: (20260826 - Luphia) 逐章仍然擋下：那條路是 14 次呼叫
+  it("逐章匯入仍在送出前擋下", () => {
+    expect(hook).toContain(
+      "willChunk && !sessionAccess[chatChannel]?.accountBookId",
+    );
+  });
+});
+
+/**
+ * Info: (20260826 - Luphia) 重試失敗章節也要抽活動數據。
+ *
+ * 萃取只對證據章 `ch3` 生效，而重試的觸發正是「那一章真的解析失敗」——
+ * 若失敗的正是 ch3，傳 `false` 等於重試成功了但活動數據仍是 0 筆，
+ * `computedLedger` 空、所有數據圖表畫不出來，而畫面上沒有任何跡象。
+ */
+describe("重試與活動數據", () => {
+  const hook = readFileSync(
+    join(process.cwd(), "src", "hooks", "use_carbon_chat.ts"),
+    "utf8",
+  );
+  const retryScope = hook.slice(
+    hook.indexOf("const retryFailedImportChapters"),
+    hook.indexOf("const resumePausedImportChapters"),
+  );
+
+  it("重試的章含證據章時才打開萃取", () => {
+    expect(retryScope).toContain(
+      "failed.some((chapter) => chapter.id === CARBON_EVIDENCE_CHAPTER_ID)",
+    );
+  });
+
+  it("抽到的活動數據累加回暫存，且數字跟著更新", () => {
+    expect(retryScope).toContain("importActivitiesRef.current = [");
+    expect(retryScope).toContain("...result.activities,");
+    expect(retryScope).toContain(
+      "activityCount: importActivitiesRef.current.length",
+    );
+  });
+});
+
+/**
  * Info: (20260826 - Luphia) 換裝置／重載之後的接續（自我 review 第六輪）。
  *
  * 暫停清單跟著帳號走（存在 `CarbonPendingImport`），但原始檔案只在記憶體
