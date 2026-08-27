@@ -186,8 +186,14 @@ export const NOTIFICATION_TYPE_STYLE: Record<
  * `WALLET_UPGRADE` 目前是 null：**全站沒有任何升級錢包的頁面**
  * （`grep upgrade src/app` 零命中），有了之後把它填進來。
  *
- * 分析類指向 `?tab=history`：`analysis_view.tsx` 讀 `searchParams.get("tab")`
- * 初始化分頁，所以這個參數今天就有效，使用者會直接落在歷史報告清單。
+ * 分析類指向 `?tab=history`：`analysis_view.tsx` 的分頁**由網址導出**，
+ * 所以使用者會直接落在歷史報告清單。
+ *
+ * Info: (20260827 - Julian) 這句話一度只有一半成立。那一頁原本把分頁存在
+ * state 裡、只在掛載時讀一次網址，於是「人已經在 /analysis 且停在別的分頁」
+ * 時點這個連結，網址跳一下就被元件改回去 —— 連結完全沒有作用。
+ * 契約由 `analysis_tab_url.test.ts` 守著：那支測試會在任一邊改名時變紅。
+ *
  * 逐筆的 `?analysisId=` 要動 `HistorySection`，留待後續。
  */
 export const NOTIFICATION_LINK_PATH: Record<NotificationType, string | null> = {
