@@ -198,11 +198,36 @@ export class ResumableJobRepository {
    * `updateMany` 帶 `status: PAUSED` 的條件是刻意的：使用者可能在掃描行程讀取
    * 之後、寫入之前按了「繼續」（那時列已是 RUNNING），或是取消了任務。
    * 無條件覆寫會把那些狀態蓋回去——把一個正在跑的任務標成「等著被繼續」。
+   *
+   * Info: (20260828 - Julian) 一併清掉 `pauseReason` 與 `pausedAt`。
+   *
+   * schema 給 `pauseReason` 的定義是「**null＝不是暫停狀態**」，而 `RESUMABLE`
+   * 不是暫停狀態。先前這裡只改 `status`，於是翻面後的列同時是
+   * 「可以繼續」又「因為額度用盡而暫停」—— 正是 `saveJobBookmark` 的註解
+   * 說要避免的那種自相矛盾的組合，只是從另一個寫入路徑漏進來。
+   *
+   * 另外兩支寫入的 `pausedAt` 都已經維持這個不變式（`upsert` 的
+   * `isPaused ? … : null`、`setStatus` 的三元），這裡是唯一的例外；
+   * 而它們的 `pauseReason` 是原封不動收呼叫端的——保證在上一層
+   *（`saveJobBookmark` 由原因推導狀態、`setStatus` 的兩個呼叫端都明寫 null）。
+   *
+   * 三支各寫一次、其中兩支的保證還在別層的東西，漏掉一格不會有任何人發現
+   * —— 所以 `resumable_job_write_invariants.test.ts` 把三支連同那兩層
+   * 一起釘住。
+   *
+   * 今天沒有人讀 `RESUMABLE` 狀態下的 `pauseReason`（前端 `import_preview.tsx`
+   * 宣告了那個 prop 但沒有用它），所以這是預防性的修正而不是修 bug。
+   * 但它會擋掉一種具體的未來錯誤：有人想用 `pauseReason` 決定文案
+   *（「額度已重置」vs「款項已到帳」）時，讀到的會是一個過期的值。
    */
   async markResumable(id: string): Promise<boolean> {
     const result = await prisma.resumableJob.updateMany({
       where: { id, status: JOB_STATUS.PAUSED },
-      data: { status: JOB_STATUS.RESUMABLE },
+      data: {
+        status: JOB_STATUS.RESUMABLE,
+        pauseReason: null,
+        pausedAt: null,
+      },
     });
     return result.count === 1;
   }

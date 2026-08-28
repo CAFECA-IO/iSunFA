@@ -20,14 +20,14 @@
 
 ## 2. 現況：狀態機已經備好了，缺的是最後一哩
 
-| 元件 | 狀態 |
-|---|---|
-| `ResumableJob` 資料表（`@@unique([resourceKey, type])`、`@@index([userId, status])`） | ✅ |
-| `PAUSED` / `RESUMABLE` 兩個狀態 | ✅ |
-| `scanResumableJobs`（每 5 分鐘、一輪 50 筆，已掛在 `run_worker.ts`） | ✅ 團隊額度那半邊 |
-| `markResumable()`（條件更新，只有真的翻面才回 `true`） | ✅ |
-| 個人點數的翻面 | ❌ 掃描明確跳過 |
-| **告訴使用者** | ❌ |
+| 元件                                                                                  | 狀態              |
+| ------------------------------------------------------------------------------------- | ----------------- |
+| `ResumableJob` 資料表（`@@unique([resourceKey, type])`、`@@index([userId, status])`） | ✅                |
+| `PAUSED` / `RESUMABLE` 兩個狀態                                                       | ✅                |
+| `scanResumableJobs`（每 5 分鐘、一輪 50 筆，已掛在 `run_worker.ts`）                  | ✅ 團隊額度那半邊 |
+| `markResumable()`（條件更新，只有真的翻面才回 `true`）                                | ✅                |
+| 個人點數的翻面                                                                        | ❌ 掃描明確跳過   |
+| **告訴使用者**                                                                        | ❌                |
 
 `RESUMABLE` 這個狀態存在的理由，常數註解自己說了：
 
@@ -93,12 +93,16 @@
 
 ## 5. 兩條觸發路徑，機制不同
 
-| | 觸發 | 落點 | 現況 |
-|---|---|---|---|
-| 團隊額度 `CREDITS_EXHAUSTED` | 每 5 分鐘輪詢 | `scanResumableJobs` 裡 `markResumable` 回 `true` 之後 | 機制已有，只缺通知 |
-| 個人點數 `PAYMENT_REQUIRED` | `TxTracker` 確認付款 | **新增**：訂單轉 `PAID` 後查該 user 的暫停任務 | 機制要新做 |
+|                              | 觸發                 | 落點                                                  | 現況               |
+| ---------------------------- | -------------------- | ----------------------------------------------------- | ------------------ |
+| 團隊額度 `CREDITS_EXHAUSTED` | 每 5 分鐘輪詢        | `scanResumableJobs` 裡 `markResumable` 回 `true` 之後 | 機制已有，只缺通知 |
+| 個人點數 `PAYMENT_REQUIRED`  | `TxTracker` 確認付款 | **新增**：訂單轉 `PAID` 後查該 user 的暫停任務        | 機制要新做         |
 
 ### 5.1 團隊額度：**不用改任何程式碼**
+
+> **20260828 再補。** 這一節（與 §2）把「等重置／加購點數／升級方案」並列成
+> 三條出路，而**加購那條在今天是不存在的**。實測就是在這裡白等了一輪。
+> 理由與落點見 §13.2。
 
 > **20260828 修正。** 這一節原本寫著「`markResumable` 回 `true` 之後發通知」，
 > 而那是把活算當成事件型在想。
@@ -232,20 +236,20 @@ order.tracker.service.ts 標 PAID 之後呼叫它     ← 只是一行接線
 
 ## 8. 落點清單
 
-| 檔案 | 改什麼 |
-|---|---|
-| `src/constants/notification.ts` | 新增 `JOB_RESUMABLE` 型別；加進 `TODO_NOTIFICATION_TYPES`；`NOTIFICATION_TYPE_STYLE` 與 `NOTIFICATION_LINK_PATH` 各補一格 |
-| `src/lib/notification_message.ts` | 文案分支（帶 `completed/total` 進度） |
-| `src/components/notification/notification_row.tsx` | `ICON_BY_KEY` 加 `play`（見 §12 的理由） |
-| `src/constants/resumable_job.ts` | 新增 `JOB_RESUMABLE_NOTICE_LIMIT` |
-| `src/repositories/resumable_job.repo.ts` | 新增「某使用者的 `RESUMABLE` 任務」（活算來源）與「某使用者 `PAYMENT_REQUIRED` 的 `PAUSED` 任務」 |
-| `src/services/notification.service.ts` | `listNotifications` / `getNotificationSummary` 加第三個活算來源 |
-| `src/services/resumable_job.service.ts` | **新增** `releasePaymentBlockedJobs()` —— 個人付款後的翻面與通知，可測 |
-| `src/services/order.tracker.service.ts` | 兩處標 `PAID` 之後各呼叫一次上面那支（只有一行接線） |
-| `src/__tests__/notification_service.test.ts` | **先加** `jest.mock("@/repositories/resumable_job.repo")`（見 §7.1），再加四條活算來源的測試 |
-| `src/__tests__/resumable_job_service.test.ts` | repo mock 補 `listPaymentBlockedByUser`；`releasePaymentBlockedJobs` 三條測試 |
-| `src/__tests__/notification_bell_wiring.test.ts` | 掃描：TxTracker 標 PAID 之後真的呼叫了 `releasePaymentBlockedJobs` |
-| `src/i18n/locales/{en,ja,ko,zh_cn,zh_tw}/notification.ts` | 五語系文案 |
+| 檔案                                                      | 改什麼                                                                                                                    |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `src/constants/notification.ts`                           | 新增 `JOB_RESUMABLE` 型別；加進 `TODO_NOTIFICATION_TYPES`；`NOTIFICATION_TYPE_STYLE` 與 `NOTIFICATION_LINK_PATH` 各補一格 |
+| `src/lib/notification_message.ts`                         | 文案分支（帶 `completed/total` 進度）                                                                                     |
+| `src/components/notification/notification_row.tsx`        | `ICON_BY_KEY` 加 `play`（見 §12 的理由）                                                                                  |
+| `src/constants/resumable_job.ts`                          | 新增 `JOB_RESUMABLE_NOTICE_LIMIT`                                                                                         |
+| `src/repositories/resumable_job.repo.ts`                  | 新增「某使用者的 `RESUMABLE` 任務」（活算來源）與「某使用者 `PAYMENT_REQUIRED` 的 `PAUSED` 任務」                         |
+| `src/services/notification.service.ts`                    | `listNotifications` / `getNotificationSummary` 加第三個活算來源                                                           |
+| `src/services/resumable_job.service.ts`                   | **新增** `releasePaymentBlockedJobs()` —— 個人付款後的翻面與通知，可測                                                    |
+| `src/services/order.tracker.service.ts`                   | 兩處標 `PAID` 之後各呼叫一次上面那支（只有一行接線）                                                                      |
+| `src/__tests__/notification_service.test.ts`              | **先加** `jest.mock("@/repositories/resumable_job.repo")`（見 §7.1），再加四條活算來源的測試                              |
+| `src/__tests__/resumable_job_service.test.ts`             | repo mock 補 `listPaymentBlockedByUser`；`releasePaymentBlockedJobs` 三條測試                                             |
+| `src/__tests__/notification_bell_wiring.test.ts`          | 掃描：TxTracker 標 PAID 之後真的呼叫了 `releasePaymentBlockedJobs`                                                        |
+| `src/i18n/locales/{en,ja,ko,zh_cn,zh_tw}/notification.ts` | 五語系文案                                                                                                                |
 
 ---
 
@@ -265,7 +269,8 @@ order.tracker.service.ts 標 PAID 之後呼叫它     ← 只是一行接線
 
 ### 9.2 只有真的跑一次才算數
 
-- [ ] 團隊額度補回後，下一輪掃描（最多 5 分鐘）鈴鐺出現那一則
+- [ ] 團隊額度**視窗重置或方案升級**後，下一輪掃描（最多 5 分鐘）鈴鐺出現那一則
+      —— **不是「加購點數後」**，加購改變不了判準裡的任何一個數（§13.2）
 - [ ] 個人付款確認後**立即**出現，不等 5 分鐘
 - [ ] 與那個任務無關的加購點數也會觸發重查
 - [ ] 使用者按「繼續」後（`status → RUNNING`），鈴鐺那則**同步消失**
@@ -291,11 +296,11 @@ order.tracker.service.ts 標 PAID 之後呼叫它     ← 只是一行接線
 
 **待決定**：
 
-| 項目 | 說明 |
-|---|---|
-| 摘要多的那一趟 DB 要不要優化 | **已經是三趟了**（實作照原設計走）。見 §4；可能的替代是與現有查詢合併，或只在待辦計數非零時才查明細。**先量再決定** |
-| 換裝置後要重新上傳檔案，通知要不要先講 | 伺服器不知道使用者的 ref 還在不在，講了可能是多餘的、不講則是「點進去才發現還要做別的事」 |
-| 深連結到單一聊天室 | 需要 `/user/carbon_chatbot` 支援 searchParams |
+| 項目                                   | 說明                                                                                                                |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| 摘要多的那一趟 DB 要不要優化           | **已經是三趟了**（實作照原設計走）。見 §4；可能的替代是與現有查詢合併，或只在待辦計數非零時才查明細。**先量再決定** |
+| 換裝置後要重新上傳檔案，通知要不要先講 | 伺服器不知道使用者的 ref 還在不在，講了可能是多餘的、不講則是「點進去才發現還要做別的事」                           |
+| 深連結到單一聊天室                     | 需要 `/user/carbon_chatbot` 支援 searchParams                                                                       |
 
 ---
 
@@ -314,9 +319,9 @@ order.tracker.service.ts 標 PAID 之後呼叫它     ← 只是一行接線
 
 ### 12.1 兩處計劃修正
 
-| 原本寫的 | 實際 |
-|---|---|
-| §5.1「`markResumable` 回 `true` 後發通知」 | **團隊路徑 0 行改動** —— 活算讓翻面本身就是通知 |
+| 原本寫的                                     | 實際                                                              |
+| -------------------------------------------- | ----------------------------------------------------------------- |
+| §5.1「`markResumable` 回 `true` 後發通知」   | **團隊路徑 0 行改動** —— 活算讓翻面本身就是通知                   |
 | §7.1「`resumable_job_service.test.ts` 會炸」 | **炸的是 `notification_service.test.ts`** —— 相依方向被活算搬走了 |
 
 兩處都源於同一個思考習慣：把活算的來源當成事件型在想。
@@ -346,3 +351,105 @@ order.tracker.service.ts 標 PAID 之後呼叫它     ← 只是一行接線
 - 換裝置後要重新上傳檔案：文案沒有先講
 - 深連結到單一聊天室：`NOTIFICATION_LINK_PATH` 仍是頁面層級。
   payload 已經帶 `resourceKey`，那一頁支援 searchParams 之後改一格就會生效
+
+---
+
+## 13. 實測發現（20260828）
+
+實測沒有走完 —— 卡在「補了點數卻沒有通知」。追下去發現接線是好的，
+壞的是這份計劃書對「點數補回」的理解。三件事，各有落點。
+
+### 13.1 那一次 `stillShort` 的追查
+
+測試帳號的書籤：免費方案、全隊共用池、`0/14`、`CREDITS_EXHAUSTED`、
+`next_step_cost` 為 null（因此 `cost` 取 fallback 的 1）。掃描摘要是
+
+```
+resumable job scan finished {"scanned":1,"released":0,"stillShort":1,"unknown":0}
+```
+
+`stillShort` 這一格本身就排掉了一半的可能：能走到它，代表那一列存在、
+`pauseReason` 是 `CREDITS_EXHAUSTED`、`teamId` 不是 null、`type` 查得到扣點模式 ——
+它一路走到 `canResumeNow()` 才被判否。實際的數字是：
+
+|            | limit | used | remaining |
+| ---------- | ----- | ---- | --------- |
+| 5 小時視窗 | 10    | 47   | 0         |
+| 每週視窗   | 40    | 47   | 0         |
+
+`resolveQuotaAvailable` 取的是兩者的**較小值**，所以 5 小時視窗重置之後
+`quotaAvailable` 仍然是 0 —— 這一列要等三天後的週視窗重置才會自己翻面。
+
+追查時我一度只看 5 小時那一格就要下結論，那會給出一個錯的等待時間。
+**「等重置」不是一個時刻，是兩個視窗中較晚的那一個**，而 402 的 payload
+早就把兩個都算好了（`quota5h.resetAt` / `quotaWeek.resetAt`，見 §13.3）。
+
+（`used 47 > limit 40` 不是資料錯亂：預扣封頂之後實耗大於預扣，差額按設計
+記回額度，額度是軟上限。免費方案又是全隊共用一份，那 47 點是整隊所有功能的
+用量，不只這次匯入 —— 這一列的 `steps` 是 `0/14`，它一步都還沒跑。）
+
+### 13.2 缺陷 A：「加購點數」是一條不存在的出路
+
+§2 與 §5.1 把「等重置／加購點數／升級方案」並列，說三條最後都收斂成
+「現在的餘額夠不夠做下一步」。前後兩條成立，中間那條不成立：
+
+- `canResumeNow()` 的 `chainCredits` 是**字面量 0**；
+- 加購的點數在 ADR 015 之後鑄到成員錢包，正是 `isChainCreditSpendable()`
+  回 false 時扣不動、一律讀成 0 的那一筆；
+- 加購也不會改變 `per5h` / `perWeek` —— 那兩個值只來自方案。
+
+也就是說，加購改變不了判準裡的**任何一個數**。
+
+**不要單獨修 `canResumeNow`。** 讓它把鏈上餘額算進去，任務會翻成「可以繼續」，
+而使用者按下去撞的是 `spendCredits` 的同一道 402 —— 那正是兩邊共用判準
+要防的「說可以繼續、按下去又撞牆」。兩邊必須同時改，而那件事的前提是
+第二層扣款恢復（走 `ensurePersonalCreditCharge()` 的持有人簽章路徑，
+不是已停用的平台側 burn）。
+
+落點分兩層：
+
+| 時機         | 做什麼                                                                                                                    |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| 現在         | 把「加購點數」從承諾裡拿掉：本文 §2 / §5.1 的敘述（已補警語）、暫停畫面給的出路。今天只有「等視窗重置」與「升級方案」兩條 |
+| 第二層恢復時 | `canResumeNow` 的 `chainCredits: BigInt(0)` 與 `spendCredits` 的 `chainCredits` **同一次**改                              |
+
+**一個現在就能釘的釘子。** 兩邊今天一致，是因為**都是 0**，不是因為有什麼
+機制保證它們一致 —— 那是巧合，而巧合不會在它失效的那天發出聲音。
+`spend_second_layer_inert.test.ts` 的職責正好是「旗標翻回 true 時，
+以下每一條都要紅」，把這條加進那一檔：
+
+> 旗標為 true 時，`resumable_job.service.ts` 不得再把字面量 `BigInt(0)`
+> 傳給 `canAffordSpend` 的 `chainCredits`。
+
+成本是一個 `it`，換掉的是「第二層恢復了、掃描卻還當它不存在」這種無聲的分岔。
+
+### 13.3 缺陷 B：暫停畫面沒有說要等到哪一天
+
+伺服器那邊事實是齊的。`buildQuotaExceededPayload` 回的 402 payload 已經帶著：
+
+- `exceeded`：哪一個視窗先卡；
+- `quota5h` / `quotaWeek`：各自的 `limit` / `used` / `resetAt`；
+- `exceedsWindowLimit`：單筆金額就超過視窗上限時，**等重置永遠不會好**；
+- `allocationBalance`：第二層停用後誠實讀成 0。
+
+丟掉它的是前端：`resolveCreditPauseReason()` 只取 `errorCode`，其餘整包不看；
+`import_preview.tsx` 連 `pauseReason` 那個 prop 都宣告了卻沒讀。於是三種處置
+完全不同的情況，使用者看到的是同一句「點數不足」：
+
+| 事實                 | 該說的話                                                   |
+| -------------------- | ---------------------------------------------------------- |
+| 5 小時視窗卡住       | 「今天的額度用完了，◯◯:◯◯ 重置」                           |
+| 週視窗卡住           | 「本週額度已用完，X 月 X 日重置」                          |
+| `exceedsWindowLimit` | 「這份檔案單次就超過方案上限，等重置不會有幫助」→ 只給升級 |
+
+落點在碳盤查匯入畫面，不在通知模組，建議另開 issue。但它與本文同源：
+**暫停不是失敗，而不是失敗的東西必須說得出怎麼繼續。**
+
+### 13.4 附帶發現
+
+- `subscriptionPlanQuotaRepo.upsertQuota()` **沒有任何呼叫端**。註解寫「後台調整
+  額度用」，但 `src/app` 與 `src/components` 都搜不到 —— 今天要調方案額度只能
+  直接下 SQL。是要補後台介面還是刪掉這支，需要產品決定。
+- 實測環境要製造「額度回來了」，最實際的做法是把 `subscription_plan_quota`
+  的那一列調大（等同 `upsertQuota`），而不是等視窗重置或加購。
+  走的仍然是完整的真實路徑：掃描 → `canResumeNow` → `markResumable` → 活算通知。
