@@ -140,6 +140,19 @@ export function notificationMessageOf(
        * 但 payload 來自資料庫，欄位不保證在。「還有 0 章沒有匯入，可以接著做了」
        * 是一句自相矛盾的話 —— 兩句裡挑一句對的，比算出一個荒謬的數字好。
        */
+      /**
+       * Info: (20260828 - Julian) **尚未做**：帶上那份報告的名字。
+       *
+       * 現在說的是「還有 11 章」，而不是「『某某報告』還有 11 章」。
+       * 深連結（`NOTIFICATION_LINK_PATH`）已經回答了「是哪一份」——
+       * 落地就在那個會話裡，所以名字目前只是錦上添花；它真正有價值的情境
+       * 是「同時有兩份暫停的匯入」，而那還沒發生。
+       *
+       * 要做的時候：`ResumableJob` 加一個 nullable 的 `resource_label`
+       *（不要叫 `file_name`，下一種 `JOB_TYPE` 的標籤未必是檔案），
+       * 由 `saveImportJobBookmark` 帶上來、`listNotifications` 放進 payload。
+       * 取捨見 `resumable_job_resume_landing_and_copy.md` §10.3。
+       */
       if (completed <= 0 || remaining <= 0) {
         return t("notification.job_resumable_fresh");
       }

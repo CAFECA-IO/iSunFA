@@ -194,6 +194,7 @@ export const carbonChatbot = {
     "Parsing \u300c{{name}}\u300d chapter by chapter ({{current}}/{{total}} done, {{inFlight}} in progress); a full report takes a few minutes\u2026",
   import_requires_book:
     "This session is not bound to an account book yet, so a full report cannot be imported (chapter-by-chapter import is billed against the book's quota). Please choose a book in the session settings and try again.",
+  // Info: (20260828 - Julian) Same as zh_tw: two known defects in this copy, not yet fixed (plan §4)
   import_paused_chapters:
     "You ran out of credits, so these chapters have not been parsed yet: {{chapters}}. Once you have credits again you can carry on from here — the finished parts will not be redone.",
   import_resume_needs_file:

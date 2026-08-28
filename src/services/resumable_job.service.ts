@@ -141,6 +141,19 @@ export async function canResumeNow(params: {
    *
    * 鏈上點數仍不查（一輪 50 筆 RPC 太貴）：少算它的方向依然安全，
    * 因為它只會讓答案偏向「還不夠」。
+   *
+   * Info: (20260828 - Julian) **這個字面量 0 與扣款端今天一致，是巧合。**
+   *
+   * `spendCredits` 的 `chainCredits` 也是 0，但那是 `isChainCreditSpendable()`
+   * 回 false 推出來的；這裡是寫死的。第二層扣款一旦恢復，兩邊就會分岔，
+   * 而分岔的症狀是「掃描說還不夠、使用者其實付得起」——沒有人會發現。
+   *
+   * 連帶的產品後果已經記在 `resumable_job_resume_notification.md` §13.2：
+   * 「加購點數」在今天是一條**不存在的出路**，只有等視窗重置與升級方案有效。
+   *
+   * **尚未做**：在 `spend_second_layer_inert.test.ts`（那一檔的職責就是
+   * 「旗標翻回 true 時以下每一條都要紅」）加一條 —— 旗標為 true 時，
+   * 這個檔案不得再把字面量 `BigInt(0)` 傳給 `canAffordSpend`。
    */
   return canAffordSpend({
     quotaAvailable,

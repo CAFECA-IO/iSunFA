@@ -407,3 +407,38 @@ GET /api/v1/chat/carbon/pending-import  → 7 個全部 pendingImport: null
 
 **這件事本身就是 §10.7（二）的證據**：一個功能可以在完全沒有 bug 的情況下，
 因為訊息送到看不見的地方，而被使用者合理地判定為「壞掉」。
+
+---
+
+## 11. 這支 branch 沒有做的事（收尾清單）
+
+每一條在**程式碼裡也有對應的註解**，所以不看文件的人也會在改到那一行時撞見。
+
+| 沒做的事                                                                                                                            | 文件                            | 程式碼裡的落點                                                                                |
+| ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | --------------------------------------------------------------------------------------------- |
+| 暫停畫面的文案：拆成「今天的額度／本週的額度／單筆超過上限」三句，並拿掉「補上點數後」                                              | §4、`..._notification.md` §13.3 | `use_carbon_chat.helpers.ts` 的 `resolveCreditPauseReason`、五語系的 `import_paused_chapters` |
+| `resolveCreditPauseReason` 改成回傳 `{ reason, quota }`（把 402 的 payload 帶下來）                                                 | §4                              | 同上                                                                                          |
+| 第二層扣款恢復時，`canResumeNow` 與 `spendCredits` 的 `chainCredits` 要同一次改；並在 `spend_second_layer_inert.test.ts` 加一條釘子 | `..._notification.md` §13.2     | `resumable_job.service.ts` 的 `canResumeNow`                                                  |
+| 書籤存 `resource_label`，讓通知說得出報告名字                                                                                       | §10.3                           | `notification_message.ts` 的 `JOB_RESUMABLE` 分支                                             |
+| 把待匯入的橘色列移出解鎖閘（目前只補了進度與一顆開卡按鈕）                                                                          | §10.7                           | `carbon_chatbot/page.tsx` 解鎖分支                                                            |
+| 摘要端點的第三趟 DB 要不要優化：**先量再決定**                                                                                      | `..._notification.md` §10       | —（實作照原設計走）                                                                           |
+| 換裝置後要重新上傳原始檔案，通知要不要先講                                                                                          | `..._notification.md` §10、§3   | —（產品決定）                                                                                 |
+| `resumedBy`：要分辨「額度回來了」與「款項到帳」才需要                                                                               | §5                              | `resumable_job.repo.ts` 的 `markResumable` 註解                                               |
+| `subscriptionPlanQuotaRepo.upsertQuota()` 沒有呼叫端：補後台介面還是刪掉                                                            | `..._notification.md` §13.4     | —                                                                                             |
+
+### 還沒用眼睛驗過的（§8 與 `..._notification.md` §9.2）
+
+- 通知點下去落在**正確的會話**且卡是開著的 —— 深連結修過三輪，最後一輪還沒實機跑完
+- 個人付款確認後**立即**出現（不等 5 分鐘掃描）：需要真的付一次款
+- 按「接著匯入」後鈴鐺那則同步消失、取消任務後同樣消失
+- 同一個任務暫停 → 繼續 → 再暫停 → 再補額度，第二次仍然出現（「不要入庫」那個決定的判準）
+- 摘要端點的 DB 往返次數：現在是三趟，量一次記下數字
+
+> **實機驗收前要先做一件事**：把 `subscription_plan_quota` 的 free 方案調回
+> `per_5h=10, per_week=40`，重新匯入讓它撞牆，再調大。舊那筆書籤是在
+> §10.6 的缺陷還在時寫下的，它的待匯入紀錄本來就沒有斷點資料，救不回來。
+
+### 通知模組本身仍開著的項目
+
+D44（批次粒度）依使用者的意見暫不實作，帳仍記在
+`notification_module_plan.md` 的缺陷表與 `notification_batch_granularity.md`。
