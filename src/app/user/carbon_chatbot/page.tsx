@@ -371,6 +371,37 @@ export default function CarbonChatbotPage() {
                 {unlockError}
               </p>
             ) : null}
+            {/*
+              Info: (20260828 - Julian) 匯入的狀態在鎖著的時候也要說得出來。
+
+              這與上面那段解鎖失敗的訊息是**同一個病的第二次發作**：那次是
+              「失敗只 appendMessageLocally() 到還鎖著的聊天區，使用者的體驗是
+              點了完全沒有反應」。這次是匯入 —— 進度、每一條早退的原因
+              （「已經有一份匯入在跑」「這個會話還沒綁定帳本」）與解析完成的提示，
+              全都只掛在 `ChatInput` 上，而它在 `isUnlocked` 為 false 時整個不渲染。
+
+              而「匯入報告」的入口在報告工具列上，帳本綁定的會話**不需要解鎖**
+              就能匯入。於是使用者按下匯入、等了幾分鐘，畫面上一個字都沒有。
+
+              這裡只補最小的兩件事：正在發生什麼、以及有一份結果等著看。
+            */}
+            {draftNotice ? (
+              <p
+                role="status"
+                className="max-w-sm text-sm font-medium text-gray-600"
+              >
+                {draftNotice.text}
+              </p>
+            ) : null}
+            {pendingImport && !isImportPreviewOpen ? (
+              <button
+                type="button"
+                onClick={openImportPreview}
+                className="rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-xs font-bold text-orange-700 transition-colors hover:bg-orange-100"
+              >
+                {t("carbon_chatbot.import_pending_open")}
+              </button>
+            ) : null}
           </div>
         )}
 

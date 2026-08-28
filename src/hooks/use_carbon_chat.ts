@@ -71,6 +71,7 @@ import {
 } from "@/interfaces/carbon_paragraph_draft";
 import { IPendingRevision } from "@/components/carbon_chatbot/revision_preview";
 import { IPendingImport } from "@/components/carbon_chatbot/import_preview";
+import { buildPendingImportRecord } from "@/lib/carbon_pending_import_record";
 import {
   createDefaultSessions,
   createChatSession,
@@ -164,7 +165,6 @@ import {
   buildCarbonChatChannel,
   CarbonImportReconciliationStateEnum,
   CarbonImportNoticeKindEnum,
-  CARBON_PENDING_IMPORT_STORAGE_VERSION,
   CARBON_CHAT_REPLY_TIMEOUT_MS,
   CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS,
   CARBON_IMPORT_SINGLE_CALL_MAX_BYTES,
@@ -2446,30 +2446,23 @@ export const useCarbonChat = () => {
       const run = async (): Promise<void> => {
         try {
           const version = pendingImportVersionsRef.current.get(channel) ?? 0;
+          /**
+           * Info: (20260828 - Julian) 形狀抽成純函式（`buildPendingImportRecord`）。
+           *
+           * 原本這裡是一個逐欄位手寫的物件字面量，而它漏掉了 #6713 加的三個
+           * 斷點欄位 —— 存出去的紀錄因此在重載後失去「哪幾章還沒跑」，
+           * 接續按鈕整個消失。抽出去是為了那件事測得到（純函式、不碰時鐘）。
+           */
           const nextVersion = await putPendingImportRecord(
             channel,
             master,
-            {
-              storageVersion: CARBON_PENDING_IMPORT_STORAGE_VERSION,
-              savedAt: new Date().toISOString(),
-              source: {
-                cid: source?.cid ?? null,
-                fileName: source?.fileName ?? pending.fileName,
-                mimeType: source?.mimeType ?? "",
-              },
-              pending: {
-                fileName: pending.fileName,
-                originSessionId: pending.originSessionId,
-                originSessionTitle: pending.originSessionTitle,
-                items: pending.items,
-                unmapped: pending.unmapped,
-                activityCount: pending.activityCount,
-                failedChapters: pending.failedChapters ?? [],
-              },
+            buildPendingImportRecord({
+              pending,
+              source,
               activities,
-              // Info: (20260806 - Tzuhan) Map 無法 JSON 序列化,存成 entry 陣列
-              pageIndex: pageIndex ? Array.from(pageIndex.entries()) : [],
-            },
+              pageIndex,
+              savedAt: new Date().toISOString(),
+            }),
             version,
             bookId,
           );
@@ -2906,6 +2899,25 @@ export const useCarbonChat = () => {
           pauseReason,
         };
         setPendingImportFor(originSessionId, parsedPending);
+        /**
+         * Info: (20260828 - Julian) 新的解析結果要**取消收起**（實機發現）。
+         *
+         * `deferredPreviewSessions` 記的是「使用者把那張卡收起來了」，
+         * 但它只以 session 為鍵 —— 於是那個旗標會沾到**下一份**解析結果上。
+         *
+         * 而它幾乎一定是開著的：重載時的還原一律以收起狀態進來
+         *（見 `pendingImport` 的還原段），所以任何「這個會話以前匯入過」的情形，
+         * 重新整理之後再匯入一份，卡片就再也不會自己打開 ——
+         * 使用者按下匯入、等了幾分鐘、畫面上什麼都沒有。
+         *
+         * 收起的是**那一張卡**，不是這個會話往後的每一張。
+         */
+        setDeferredPreviewSessions((prev) => {
+          if (!prev[originSessionId]) return prev;
+          const rest = { ...prev };
+          delete rest[originSessionId];
+          return rest;
+        });
         /**
          * Info: (20260806 - Tzuhan) 解析結果落地(DB)+ 對話留痕,兩件事都不阻斷主流程。
          *
