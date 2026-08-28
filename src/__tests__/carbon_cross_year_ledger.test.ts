@@ -1,4 +1,6 @@
 import { describe, it, expect } from "@jest/globals";
+import fs from "fs";
+import path from "path";
 import {
   UNDATED_IMPORTED_PENDING_KEY,
   buildYearSnapshot,
@@ -244,5 +246,54 @@ describe("年度快照存那份報告的分錄(review R1 第二項)", () => {
       importedEntry("(1) 總公司", "1000000", 2023),
     ]);
     expect(snapshot.pending).toEqual([]);
+  });
+});
+
+/**
+ * Info: (20260827 - Emily) 年度的**接線**(PR #6725 round-2 §1.7)。
+ *
+ * 上面 12 條都直接餵分錄給純函式 —— 它們證明「合併規則對」,
+ * 但把 `year: inventoryYearRef.current` 改成 `year: undefined` 之後它們全綠:
+ * 分錄根本不會經過 hook。而年度沒被帶進去的後果,正好等於這個修法不存在
+ * (每一筆都變成年度未知 → 規則 3 永遠不成立 → 孤兒列照留)。
+ *
+ * 沒有 jsdom 就跑不了 hook,所以判準取源碼的接線形狀 ——
+ * 這條回答的是「有沒有接上」,不宣稱驗了行為(§1.11)。
+ */
+describe("年度的接線:hook 真的把年度帶進匯入(round-2 §1.7)", () => {
+  const hook = fs.readFileSync(
+    path.join(process.cwd(), "src/hooks/use_carbon_chat.ts"),
+    "utf-8",
+  );
+
+  it("buildImportedLedger 收到 inventoryYearRef 的當下值", () => {
+    expect(hook).toContain("year: inventoryYearRef.current");
+  });
+
+  it("inventoryYearRef 有鏡像 activeInventoryState.year(否則它永遠是 undefined)", () => {
+    expect(hook).toContain(
+      "inventoryYearRef.current = activeInventoryState?.year",
+    );
+  });
+
+  it("年度快照存那份報告的分錄,不是累積後的帳本(R1 第二項的接線)", () => {
+    expect(hook).toContain("buildYearSnapshot(entries)");
+    // Info: (20260827 - Emily) 舊形狀:[base.year]: merged —— 存累積結果會讓 2023 的快照含 2024
+    expect(hook).not.toContain("[base.year]: merged");
+  });
+
+  it("阻擋紀錄不在「完全沒入帳」的分支裡收集(round-2 低-1)", () => {
+    /**
+     * Info: (20260827 - Emily) 舊形狀是 `else { const blocks = ... }`。
+     * 收集必須在條件之外,否則部分成功時被擋那半一筆紀錄都不留。
+     */
+    const applyIndex = hook.indexOf(
+      "applyImportedLedgerEntries(importedEntries)",
+    );
+    const blocksIndex = hook.indexOf(
+      "const blocks = Array.from(importedLedgerById.entries())",
+    );
+    expect(blocksIndex).toBeGreaterThan(0);
+    expect(blocksIndex).toBeLessThan(applyIndex);
   });
 });
