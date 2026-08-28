@@ -297,9 +297,25 @@ export const queryYearOverYear = (
   previous: IYearLedger | undefined,
 ): ILedgerQueryResult => {
   if (!current || !previous || !hasEntries(current.ledger)) {
+    /**
+     * Info: (20260827 - Emily) 拒答的說明**只在年度已知時**指示「再匯一年」
+     * (PR #6725 review R1)。
+     *
+     * 原本一律那樣說,而 reviewer 追出來的後果是:年度未知時,
+     * 跨年度匯入會在帳本裡留下「只有前一年有」的孤兒列並算進總量
+     * (去重鍵不含年度;年度未知時合併端無從分辨,只能退回舊行為)。
+     * 也就是系統會主動叫使用者去做一件安靜弄髒總量的事 —— 而那份總量
+     * 會流進事實包、LLM 引用、數據表與桑基圖,最後進到送查證的文件。
+     *
+     * 年度已知時那句話是安全的:合併是「換鍋」,上一年的分錄住進年度快照。
+     * 年度未知時只說狀態、不指示動作 —— 先讓使用者把年度補上。
+     */
+    const yearKnown = current?.year !== undefined;
     return refuse(
       LedgerRefusalReasonEnum.DIMENSION_ABSENT,
-      "帳本只有單一年度,年間比較無從進行:匯入另一年度的盤查報告後即可比對",
+      yearKnown
+        ? "帳本只有單一年度,年間比較無從進行:匯入另一年度的盤查報告後即可比對"
+        : "本帳本沒有標註盤查年度,年間比較無從進行:請先確認報告的盤查年度(未標註年度時匯入第二份報告無法分辨年度歸屬)",
     );
   }
   const byName = (ledger: IComputedLedger): Map<string, IComputedLedgerEntry> =>

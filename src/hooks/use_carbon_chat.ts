@@ -37,7 +37,10 @@ import {
   type IImportedLedgerResult,
 } from "@/lib/carbon_table38.pipeline";
 import { isImportedEntry } from "@/lib/carbon_table38.ledger";
-import { mergeImportedLedgerEntries } from "@/lib/carbon_ledger_totals";
+import {
+  buildYearSnapshot,
+  mergeImportedLedgerEntries,
+} from "@/lib/carbon_ledger_totals";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
 import { CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH } from "@/constants/carbon_source_tables";
 import {
@@ -1426,6 +1429,15 @@ export const useCarbonChat = () => {
   useEffect(() => {
     ledgerImportBlocksRef.current = activeInventoryState?.ledgerImportBlocks;
   }, [activeInventoryState?.ledgerImportBlocks]);
+  /**
+   * Info: (20260827 - Emily) 盤查年度的同步鏡像(PR #6725 review R1;
+   * 與 computedLedgerRef 同一個理由:匯入分錄在 setState 生效之前就要標上年度)。
+   * 沒有年度就是沒有 —— 不由旁證推測,合併端會退回「不判年度」的舊行為。
+   */
+  const inventoryYearRef = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    inventoryYearRef.current = activeInventoryState?.year;
+  }, [activeInventoryState?.year]);
 
   // Info: (20260720 - Tzuhan) #51 圖表文案(i18n;數值本身一律引擎產出,與語言無關)
   const chartLabels: ICarbonChartLabels = useMemo(
@@ -1685,12 +1697,18 @@ export const useCarbonChat = () => {
              * Info: (20260825 - Emily) #6719 年度快照:報告有盤查年度才存
              * (state.year 由萃取而來;沒有年度的帳本存進去只會製造假比較)。
              * 同年度重匯覆蓋該年,與同鍵覆蓋語義一致。
+             *
+             * Info: (20260827 - Emily) 快照存**那份報告的分錄**,不是累積後的帳本
+             * (PR #6725 review R1 第二項)。存累積結果會讓「2023 的快照」
+             * 含有 2024 匯入的東西 —— 年間比較於是拿自己跟自己比,
+             * 而那正是這個欄位存在的理由被抵銷掉的方式。
+             * 小計與總計走同一支 summarizeLedgerEntries(不另外累加)。
              */
             ...(base.year !== undefined
               ? {
                   ledgerByYear: {
                     ...base.ledgerByYear,
-                    [base.year]: merged,
+                    [base.year]: buildYearSnapshot(entries),
                   },
                 }
               : {}),
@@ -3557,7 +3575,15 @@ export const useCarbonChat = () => {
     selected.forEach((item) => {
       const tables = sourceTablesById.get(item.paragraphId) ?? [];
       if (tables.length === 0) return;
-      const result = buildImportedLedger({ sourceTables: tables });
+      /**
+       * Info: (20260827 - Emily) 年度隨分錄走(PR #6725 review R1):
+       * 沒有年度的匯入項在跨年度合併時無從分辨,會留下孤兒列被算進總量。
+       * 年度取自盤查狀態(由萃取而來);沒有就不帶,合併端會退回舊行為。
+       */
+      const result = buildImportedLedger({
+        sourceTables: tables,
+        year: inventoryYearRef.current,
+      });
       if (result.disclosure === null) return;
       importedLedgerById.set(item.paragraphId, result);
     });

@@ -296,6 +296,18 @@ export interface IComputedLedgerEntry {
     isoCategory: Iso14064Category;
     subCategory: string;
     tableNo: string;
+    /**
+     * Info: (20260827 - Emily) 這筆分錄屬於哪一個盤查年度(PR #6725 review R1)。
+     *
+     * 為什麼非有不可:去重鍵 `imported:{basis}:{site}:{subCategory}` **不含年度**,
+     * 所以跨年度再匯一份報告時,只有前一年有的排放源(關廠、廠址改名、
+     * ISO 子類別編號改版)會變成**孤兒列留在帳本裡並被算進總量** ——
+     * reviewer 實測虛增 28.6%,而每一筆孤兒列都有合法溯源(表3.8+廠址+子類別),
+     * 單看帳本挑不出來。有了年度,合併才能分辨「同年覆蓋」與「換年換鍋」。
+     *
+     * 無值 = 該份報告沒有可萃取的盤查年度(視為與當前帳本同年度,維持舊行為)。
+     */
+    year?: number;
   };
   /**
    * Info: (20260806 - Tzuhan) 交易日期(Unix 秒),自 `IActivityRecord.tradingTimestamp` 帶過。
