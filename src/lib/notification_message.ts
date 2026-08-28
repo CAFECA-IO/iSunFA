@@ -51,9 +51,12 @@ export function isNotificationType(type: string): type is NotificationType {
  * 而通知那份沒有人會去看。
  *
  * `t()` 找不到鍵時回傳鍵本身，所以要給 `defaultValue` 才分得出
- * 「沒有這個類別」與「這個類別叫做 `analysis.categories.xxx`」——
- * 常數層有 `JOURNAL_CORRECTION` 而字典裡是 `journal_upload`，
- * 這個缺口今天就存在。
+ * 「沒有這個類別」與「這個類別叫做 `analysis.categories.xxx`」。
+ *
+ * Info: (20260828 - Julian) 那個缺口曾經真的存在：常數是 `JOURNAL_CORRECTION`，
+ * 而字典鍵是 `journal_upload`（沒有任何消費者的死鍵），於是日記帳修正的通知
+ * 退回不帶標題的通用句。字典鍵已改名對齊常數，`defaultValue` 這條路仍然保留 ——
+ * 它守的是**下一個**新增類別卻忘了補字典的人。
  */
 export function analysisTitleOf(
   payload: Record<string, unknown>,

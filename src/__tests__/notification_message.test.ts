@@ -117,7 +117,7 @@ describe("notificationMessageOf", () => {
   /**
    * Info: (20260826 - Julian) 查不到類別名 → 退回不帶標題那句（不是顯示鍵名）。
    *
-   * 常數層有 `JOURNAL_CORRECTION` 而字典裡是 `journal_upload`，
+   * （20260828 起這個缺口已修：字典鍵 `journal_upload` 改名為 `journal_correction`）
    * 這個缺口今天就存在 —— 所以這條不是假想的情境。
    */
   it.each([
@@ -268,7 +268,8 @@ describe("notificationHrefOf", () => {
   /**
    * Info: (20260827 - Julian) token 代不進去要回 `null`，不是回半條路徑。
    *
-   * `/user/account_book/undefined/journal` 與 `/user/account_book/:accountBookId/journal`
+   * `/user/account_book/undefined/journal?tab=list` 與
+   * `/user/account_book/:accountBookId/journal?tab=list`
    * 都是「看起來有反應」的錯誤去處，而那正是 D43 要修掉的症狀。
    * D43 第二步把 `accountBookId` 補進 payload 之後，下面第二條會自動改行為 ——
    * 屆時這兩條測試就是它有沒有真的接上的判準。
@@ -297,7 +298,7 @@ describe("notificationHrefOf", () => {
           accountBookId: "book-9",
         }),
       ),
-    ).toBe("/user/account_book/book-9/journal");
+    ).toBe("/user/account_book/book-9/journal?tab=list");
   });
 
   it("代入的值會被 encode，不會逃出路徑", () => {

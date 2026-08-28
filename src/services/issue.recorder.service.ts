@@ -166,6 +166,22 @@ export class IssueRecorderService {
             }
           }
 
+          /**
+           * Info: (20260516 - Luphia) Extract accountBookId dynamically from the original order
+           *
+           * Info: (20260529 - Tzuhan)
+           * 作為最終的 Fallback 機制。專門為了沒有實體 Order Payload 的內部背景任務設計（例如：AMORTIZATION_WORKER），
+           * 確保從本地上下文中依然能萃取出正確的帳本 ID。
+           *
+           * Info: (20260827 - Julian) 三層 fallback 搬進 `resolveAccountBookId`，
+           * 因為通知也要用同一個答案（D43 第二步）。
+           *
+           * Info: (20260828 - Julian) 宣告點提到這裡（原本在下方 DB 同步的 `try` 內）。
+           * 那個位置只涵蓋同步那一段，而完成通知與失敗通知都在它之外 ——
+           * `tsc` 會直接報 TS2304，而不是安靜地拿到 undefined。
+           */
+          const dbAccountBookId = resolveAccountBookId(order, localContextObj);
+
           // Info: (20260420 - Luphia) Read the actual result text
           const resultContent = await fs.readFile(resultFile, "utf8");
 
@@ -266,21 +282,6 @@ export class IssueRecorderService {
                 unknown
               >;
             } catch {}
-
-            /**
-             * Info: (20260516 - Luphia) Extract accountBookId dynamically from the original order
-             *
-             * Info: (20260529 - Tzuhan)
-             * 作為最終的 Fallback 機制。專門為了沒有實體 Order Payload 的內部背景任務設計（例如：AMORTIZATION_WORKER），
-             * 確保從本地上下文中依然能萃取出正確的帳本 ID。
-             *
-             * Info: (20260827 - Julian) 三層 fallback 搬進 `resolveAccountBookId`，
-             * 因為通知也要用同一個答案（D43 第二步）。
-             */
-            const dbAccountBookId = resolveAccountBookId(
-              order,
-              localContextObj,
-            );
 
             if (
               parsedResult &&

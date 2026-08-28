@@ -226,13 +226,20 @@ export const NOTIFICATION_LINK_PATH: Record<NotificationType, string | null> = {
  * ## `:token` 的規則
  *
  * 路徑裡的 `:foo` 由 `payload.foo` 代入（見 `lib/notification_message.ts`
- * 的 `notificationHrefOf`）。**任何一個 token 代不進去，整條退化為 `null`**，
+ * 的 `notificationHrefOf`）。代入是**逐段**做的（以 `/` 切），所以尾巴的
+ * query string（`?tab=list`）只是最後一段的一部分，不會被當成 token，
+ * 也不會被 encode。**任何一個 token 代不進去，整條退化為 `null`**，
  * 渲染成不可點的列 —— 與 D12 同一個判斷：按了沒反應比帶去錯的地方好，
  * 而 `/user/account_book/undefined/journal` 兩者皆是。
  *
- * 所以 `CERTIFICATE_ANALYSIS` 與 `JOURNAL_CORRECTION` 今天自動是不可點的
- *（payload 還沒有 `accountBookId`），而 D43 第二步把那個欄位補進 payload 之後，
- * **這張表不用改就會開始生效**。意圖寫在這裡，能力由 payload 決定。
+ * D43 第二步（20260827）已把 `accountBookId` 補進兩支發射函式的 payload，
+ * 所以 `CERTIFICATE_ANALYSIS` 與 `JOURNAL_CORRECTION` 現在組得出去處了。
+ * 在那之前它們自動是不可點的 —— 這張表當時**不用改**就跟著生效，
+ * 因為意圖寫在這裡，能力由 payload 決定。
+ *
+ * 那個性質仍然成立：`resolveAccountBookId` 的三層 fallback 全部落空時
+ * （舊資料、或沒有帳本的內部任務），這一條照樣退化為不可點，不會產出
+ * 一條 404 的合法路徑。
  */
 export const ANALYSIS_LINK_PATH_BY_CATEGORY: Record<
   string,
@@ -255,11 +262,11 @@ export const ANALYSIS_LINK_PATH_BY_CATEGORY: Record<
   // Info: (20260827 - Julian) 憑證產出的是日記帳／傳票／碳盤查三種紀錄，
   // Info: (20260827 - Julian) 指向日記帳：那是使用者送出的東西，另外兩個是衍生物。
   [ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS]: {
-    completed: "/user/account_book/:accountBookId/journal",
-    failed: "/user/account_book/:accountBookId/journal",
+    completed: "/user/account_book/:accountBookId/journal?tab=list",
+    failed: "/user/account_book/:accountBookId/journal?tab=list",
   },
   [ANALYSIS_CATEGORY.JOURNAL_CORRECTION]: {
-    completed: "/user/account_book/:accountBookId/journal",
-    failed: "/user/account_book/:accountBookId/journal",
+    completed: "/user/account_book/:accountBookId/journal?tab=list",
+    failed: "/user/account_book/:accountBookId/journal?tab=list",
   },
 };
