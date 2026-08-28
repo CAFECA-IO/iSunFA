@@ -76,6 +76,8 @@ export async function POST(request: NextRequest) {
             draftedCount: parsed.data.draftedCount,
             activityCount: parsed.data.activityCount,
             failedChapters: parsed.data.failedChapters,
+            // Info: (20260825 - Luphia) 點數用完而未解析的章（issue #6713）
+            pausedChapters: parsed.data.pausedChapters,
           })
         : buildImportSummaryNotice(language, {
             fileName: parsed.data.fileName,

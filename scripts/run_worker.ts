@@ -15,6 +15,8 @@ import { runFaithMemoryRetention } from "@/services/cron/faith_memory_retention.
 import { syncPendingSubscriptionCards } from "@/services/subscription_nft.service";
 import { SUBSCRIPTION_CARD_SYNC_INTERVAL_MS } from "@/constants/subscription_nft";
 import { runLeaveBalanceReconcile } from "@/services/cron/leave_balance_reconcile.cron";
+import { scanResumableJobs } from "@/services/resumable_job.service";
+import { JOB_RESUME_SCAN_INTERVAL_MS } from "@/constants/resumable_job";
 import {
   installWorkerShutdownHandlers,
   isShuttingDown,
@@ -123,6 +125,20 @@ async function runWorker() {
       "LeaveBalanceReconcile",
       () => runLeaveBalanceReconcile(),
       60 * 60 * 1000,
+    ),
+    /**
+     * Info: (20260825 - Luphia) 暫停中的高耗點任務：額度回來了就翻成「可以繼續」
+     *（issue #6714）。
+     *
+     * 等重置／加購點數／升級方案三條出路最後都收斂成同一句話——現在的餘額
+     * 夠不夠做下一步。因此只有這一支迴圈，而不是三套偵測。
+     * 加購與升級的使用者甚至不必等它：付款完成的那一頁會直接接續；
+     * 這支是為了「人已經離開頁面」的情形，晚幾分鐘沒有差別。
+     */
+    startServiceLoop(
+      "ResumableJobScan",
+      () => scanResumableJobs(Date.now()),
+      JOB_RESUME_SCAN_INTERVAL_MS,
     ),
   ]);
 

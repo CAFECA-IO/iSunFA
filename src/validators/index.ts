@@ -14,6 +14,7 @@ export * from "@/validators/carbon_import_notice";
 export * from "@/validators/carbon_report_storage";
 export * from "@/validators/carbon_inventory";
 export * from "@/validators/carbon_pending_import";
+export * from "@/validators/resumable_job";
 export * from "@/validators/ledger";
 export * from "@/validators/report";
 export * from "@/validators/carbon_report_pdf";
