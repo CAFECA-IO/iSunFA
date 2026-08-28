@@ -7,8 +7,9 @@
 // Info: (20260825 - Emily) 三條產品鐵律在這一層的落點:
 // Info: (20260825 - Emily) 1. 數字不憑空捏造 —— 數值只從 ledger 欄位取,總計/小計讀既存欄位不重算
 // Info: (20260825 - Emily)    (summarizeLedgerEntries 是唯一累加實作;這裡連 add 都盡量不做)。
-// Info: (20260825 - Emily) 2. 異常只來自列舉過的偵測器 —— queryAnomalies 只讀 pending 與
-// Info: (20260825 - Emily)    articulation.violations 兩個既存的決定性裁決,不發明新的「疑點」。
+// Info: (20260825 - Emily) 2. 異常只來自列舉過的偵測器 —— queryAnomalies 只讀既存的決定性裁決
+// Info: (20260825 - Emily)    (匯入阻擋/pending/articulation 的 violations 與 warnings/年度標註),
+// Info: (20260825 - Emily)    不發明新的「疑點」;新偵測器要先開票、定義證據鏈、進這個列舉。
 // Info: (20260825 - Emily) 3. 拒答是一等公民 —— 資料不在帳本裡回 refused + 缺什麼,不改寫題目。
 
 import { MoneyUtil } from "@/lib/utils/money";
@@ -17,6 +18,7 @@ import type {
   IComputedLedger,
   IComputedLedgerEntry,
   ILedgerImportBlock,
+  ILedgerYearWarning,
 } from "@/types/carbon_chatbot.types";
 import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
 
@@ -199,12 +201,17 @@ export const querySiteSubtotals = (
 /**
  * Info: (20260825 - Emily) 疑點(「這間公司的碳排是否異常?」的素材)。
  *
- * **列舉制**:只讀四個既存的決定性裁決 ——
+ * **列舉制**:只讀五個既存的決定性裁決 ——
  * 1. importBlocks:匯入表格被勾稽擋下的紀錄(「對帳差異」偵測器;
  *    存在 state 不在 ledger,因為被擋時帳本可能整本是空的)
  * 2. pending:決定論引擎判「無法裁決」的活動(絕不猜值的那批)
  * 3. articulation.violations:質量守恆勾稽的缺口(期初+採購-期末 ≠ 帳上消耗)
  * 4. articulation.warnings:合理性警示(數量超出物理量級邊界;僅警示不凍結)
+ * 5. yearWarning:年度標註不完整(detectUndatedImportedEntries 的決定性判斷;
+ *    同 importBlocks 住在 state 不在 ledger —— 它是「這次匯入與既有帳本的關係」,
+ *    不是帳本自身的一筆資料。**刻意不塞進 pending**(PR #6725 round-2 追加回饋):
+ *    pending 的語意是「活動數據待補」,借用它就是從既有桶子偷渡偵測器,
+ *    而且 label 會變成「待補項」、待補計數會被污染)
  *
  * 這裡**不發明新偵測器**(不能為了找錯而找):新的偵測器要先開票、
  * 定義證據鏈、進這個列舉,才輪得到出現在回答裡。
@@ -216,21 +223,37 @@ export const querySiteSubtotals = (
 export const queryAnomalies = (
   ledger: IComputedLedger | undefined,
   importBlocks?: ILedgerImportBlock[],
+  yearWarning?: ILedgerYearWarning,
 ): ILedgerQueryResult => {
   const blockFacts: ILedgerFact[] = (importBlocks ?? []).map((block) => ({
     label: `匯入表格被勾稽擋下:${block.paragraphId}`,
     value: block.reason,
     source: `匯入勾稽紀錄(${block.blockedAt})`,
   }));
+  /**
+   * Info: (20260828 - Emily) 第五個偵測器:年度標註不完整。
+   * label 講實話 —— 它不是待補項,而是「帳本裡有分錄無法判斷年度歸屬」;
+   * 沒有 activityKey 可寫,source 因此指向這次匯入的年度(證據鏈)。
+   */
+  const yearFacts: ILedgerFact[] = yearWarning
+    ? [
+        {
+          label: `年度標註不完整:${yearWarning.undatedCount} 筆匯入分錄沒有盤查年度`,
+          value: `這些分錄在系統開始記錄盤查年度之前匯入,無法判斷屬於哪一年;若它們不屬於 ${yearWarning.incomingYear} 年,帳本總量會虛增。清空帳本後逐年重新匯入即可確定歸屬。`,
+          source: `帳本年度歸屬檢查(本次匯入年度 ${yearWarning.incomingYear})`,
+        },
+      ]
+    : [];
+  const signalFacts = [...blockFacts, ...yearFacts];
   if (!hasEntries(ledger)) {
-    if (blockFacts.length > 0) return { ok: true, facts: blockFacts };
+    if (signalFacts.length > 0) return { ok: true, facts: signalFacts };
     return refuse(
       LedgerRefusalReasonEnum.LEDGER_EMPTY,
       "帳本中沒有任何排放分錄,無從評估異常:請先匯入盤查報告",
     );
   }
   const facts: ILedgerFact[] = [
-    ...blockFacts,
+    ...signalFacts,
     ...ledger.pending.map((item) => ({
       label: `待補項:${item.sourceName}`,
       value: item.reason,
@@ -264,7 +287,7 @@ export const toContextFacts = (result: ILedgerQueryResult): IContextFact[] =>
     : [];
 
 /**
- * Info: (20260825 - Emily) 年間量級跳動的門檻:×3 或 ÷3(#6707 第五偵測器)。
+ * Info: (20260825 - Emily) 年間量級跳動的門檻:×3 或 ÷3(#6707 的年間偵測器)。
  *
  * 為什麼是倍數不是百分比:需求原話是「量級跳動」—— ±30% 是正常年間波動
  * (產能、天氣、係數改版),報了就是「為了找錯而找」;跨一個量級
@@ -279,7 +302,8 @@ export interface IYearLedger {
 }
 
 /**
- * Info: (20260825 - Emily) 年間量級跳動偵測器(列舉制第五個;`open/63` 的查詢層半件)。
+ * Info: (20260825 - Emily) 年間量級跳動偵測器(獨立入口,不在 queryAnomalies 的列舉裡 ——
+ * 它吃的是兩個年度的帳本快照,不是當前帳本;`open/63` 的查詢層半件)。
  *
  * 配對鍵用 sourceName(廠址+排放源,兩種 provenance 都有這個欄位)——
  * activityKey 含 basis 前綴與 esgRecordId,同一排放源兩年的 key 不保證相等。
@@ -418,6 +442,7 @@ export const buildLedgerFactBundle = (
   ledger: IComputedLedger | undefined,
   importBlocks?: ILedgerImportBlock[],
   ledgerByYear?: Record<number, IComputedLedger>,
+  yearWarning?: ILedgerYearWarning,
 ): IContextFact[] => {
   const core = [
     ...toContextFacts(queryTotal(ledger)),
@@ -426,7 +451,7 @@ export const buildLedgerFactBundle = (
   ];
   // Info: (20260825 - Emily) 年間疑點與其他異常同池,一起受上限與「據實申報」規則管
   const anomalies = [
-    ...toContextFacts(queryAnomalies(ledger, importBlocks)),
+    ...toContextFacts(queryAnomalies(ledger, importBlocks, yearWarning)),
     ...yearOverYearFacts(ledgerByYear),
   ];
   const budget = LEDGER_FACT_BUNDLE_MAX - core.length - 1;

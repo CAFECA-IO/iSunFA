@@ -39,6 +39,7 @@ import {
 import { isImportedEntry } from "@/lib/carbon_table38.ledger";
 import {
   buildYearSnapshot,
+  detectUndatedImportedEntries,
   mergeImportedLedgerEntries,
 } from "@/lib/carbon_ledger_totals";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
@@ -1463,6 +1464,12 @@ export const useCarbonChat = () => {
       importedSankeyBlockedLedger: t(
         "carbon_chatbot.chart_imported_sankey_blocked_ledger",
       ),
+      /**
+       * Info: (20260828 - Emily) 部分入帳的圖旁附註(round-2 低-1 第二半)。
+       * ⚠ 必接 i18n:`chartLabels` 是完整字面值、沒有 spread 預設值,
+       * builder 加了文案而這裡沒接 = 紙上什麼都不會印(見本檔 20260819 那則註解)。
+       */
+      partialImportBlocked: t("carbon_chatbot.chart_partial_import_blocked"),
       importedSankeyCollapsed: t(
         "carbon_chatbot.chart_imported_sankey_collapsed",
       ),
@@ -1688,6 +1695,18 @@ export const useCarbonChat = () => {
       setInventoryStates((prev) => {
         const base = prev[channel] ?? createEmptyInventoryState();
         const merged = mergeImportedLedgerEntries(base.computedLedger, entries);
+        /**
+         * Info: (20260828 - Emily) 年度標註不完整的警示(PR #6725 round-2 追加回饋)。
+         *
+         * 與 merge 吃同一份輸入(base + entries),所以「被留下來的無年度分錄」
+         * 這個判斷與實際入帳結果必然一致 —— 兩邊各算一次就會不一致。
+         * 每次匯入無條件覆寫:這次沒有無年度分錄就寫回 undefined
+         * (警示描述的狀態已不存在,與 ledgerImportBlocks 清除同一個立場)。
+         */
+        const yearWarning = detectUndatedImportedEntries(
+          base.computedLedger,
+          entries,
+        );
         return {
           ...prev,
           [channel]: {
@@ -1714,6 +1733,7 @@ export const useCarbonChat = () => {
               : {}),
             // Info: (20260825 - Emily) 成功入帳即清除阻擋紀錄:紀錄描述的狀態已不存在
             ledgerImportBlocks: undefined,
+            ledgerYearWarning: yearWarning ?? undefined,
           },
         };
       });
@@ -5374,6 +5394,8 @@ export const useCarbonChat = () => {
           inventoryStates[chatChannel]?.ledgerImportBlocks,
           // Info: (20260825 - Emily) #6719 年度快照:滿兩年時年間比較事實隨包注入
           inventoryStates[chatChannel]?.ledgerByYear,
+          // Info: (20260828 - Emily) 年度標註不完整:列舉制第五個偵測器(round-2 追加回饋)
+          inventoryStates[chatChannel]?.ledgerYearWarning,
         );
         const sendChatRequest = () =>
           request<{

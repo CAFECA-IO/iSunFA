@@ -383,9 +383,32 @@ export interface ICarbonInventoryState {
    * `computedLedger` 維持「當前」語義不動 —— 既有消費端(桑基/對帳/事實包)零改動。
    */
   ledgerByYear?: Record<number, IComputedLedger>;
+  /**
+   * Info: (20260828 - Emily) 年度標註不完整的警示(PR #6725 round-2 追加回饋)。
+   *
+   * 住在 state 不住 ledger,照 ledgerImportBlocks 的先例 ——
+   * 它描述的是「這次匯入與既有帳本的年度關係」,不是帳本自身的一筆資料;
+   * 而且塞進 `computedLedger.pending` 會冒用「活動數據待補」的語意
+   * (label 變「待補項」、待補計數被污染),那正是 queryAnomalies
+   * 列舉制註解禁止的「從既有桶子偷渡偵測器」。
+   * 每次匯入成功入帳時以 detectUndatedImportedEntries 的結果覆寫(含清空)。
+   */
+  ledgerYearWarning?: ILedgerYearWarning;
   notes?: string[];
   updatedAt: string;
   version: number;
+}
+
+/**
+ * Info: (20260828 - Emily) 「年度標註不完整」訊號(queryAnomalies 列舉制的第五個偵測器)。
+ *
+ * 定義在 types 而不是 carbon_ledger_totals:偵測器的產物要同時被
+ * 查詢層(carbon_ledger_query)與 state 讀到,型別放在 lib 會讓
+ * types → lib → types 繞一圈。判斷邏輯仍在 detectUndatedImportedEntries。
+ */
+export interface ILedgerYearWarning {
+  incomingYear: number;
+  undatedCount: number;
 }
 
 // Info: (20260825 - Emily) 單筆勾稽阻擋紀錄:reason 沿用匯入端組好的字句(含差額/列數,即證據鏈)

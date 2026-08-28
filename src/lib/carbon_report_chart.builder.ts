@@ -92,6 +92,17 @@ export interface ICarbonChartLabels {
    * 具體被擋的理由(幾列無法解析、差額多少)由呼叫端隨阻擋紀錄帶入,逐條列出。
    */
   importedSankeyBlockedLedger?: string;
+  /**
+   * Info: (20260828 - Emily) 「部分入帳」的圖旁附註(PR #6725 round-2 低-1 第二半)。
+   *
+   * 與 importedSankeyBlockedLedger 是不同情境:那句是**取代圖**(帳本整本空,
+   * 沒有圖可畫);這句是**附在圖旁**(一份報告兩個段落,一個成功一個被擋 ——
+   * 成功那半的圖仍然有意義,但它不是全貌)。
+   *
+   * 沒有這一句時的實際後果:圖照畫、數字照印,而被擋的那半在紙上完全不存在;
+   * 讀者看到一張自我一致的桑基圖,無從得知總量少了一塊。
+   */
+  partialImportBlocked?: string;
   /** Info: (20260803 - Tzuhan) 節點過多而降層時的說明 */
   importedSankeyCollapsed?: string;
   /**
@@ -172,6 +183,8 @@ export const CARBON_CHART_DEFAULT_LABELS: ICarbonChartLabels = {
     "本報告已匯入,但帳本沒有任何可用數據,因此畫不出排放流向圖。桑基圖與系統數據表格的唯一來源是表3.8(各公司溫室氣體排放量),本次未取得該表。請確認第三章是否解析成功;若該章列為解析失敗,請以預覽卡的「重試失敗章節」重新匯入,並在伺服端日誌查看該表是否被丟棄及其原因。",
   importedSankeyBlockedLedger:
     "本報告已取得表3.8,但勾稽未通過,數據凍結在門口、未寫入帳本(半套資料入帳會讓每張圖都錯得很像對的)。被擋的原因如下;修正原文對應表格或重新匯入第三章後,圖表將自動生成。",
+  partialImportBlocked:
+    "⚠ 本圖只含成功入帳的部分:本次匯入另有表格被勾稽擋下、未寫入帳本,因此圖中的總量與占比不是全公司全貌。被擋的原因如下;修正原文對應表格或重新匯入後,圖表將自動重算。",
   importedSankeyCollapsed: "節點過多,已降為一層(全公司 → 範疇)",
   importedSankeySiteTotals: "各廠址小計(公噸 CO2e/年,占全公司比)",
   importedSankeyGhgMapping: "子代碼與 GHG Protocol 類別的對照",
@@ -910,11 +923,32 @@ export const buildCarbonChartBlock = (
    * Info: (20260825 - Emily) #6667:勾稽阻擋紀錄(state.ledgerImportBlocks)。
    * 有值且帳本為空時,空帳本的原因是「表拿到了但被擋」——
    * 要印被擋的理由,不是「未取得該表」。
+   *
+   * Info: (20260828 - Emily) 帳本**非空**時也要用(round-2 低-1 第二半):
+   * 部分成功部分被擋是常態(一份報告多個段落),那時圖有意義但不是全貌 ——
+   * 附註在圖旁(見 blockedNote),不取代圖。
    */
   importBlocks?: readonly { reason: string }[],
 ): string => {
   const wrap = (body: string): string =>
     `${buildChartAnchorStart(templateId)}\n\n${body}\n\n${buildChartAnchorEnd(templateId)}`;
+  /**
+   * Info: (20260828 - Emily) 有阻擋紀錄就要說 —— 帳本非空時是**附註**不是取代
+   * (PR #6725 round-2 低-1 第二半)。呼叫端已改為無條件收集阻擋紀錄,
+   * 但只改收集看不到:部分成功時走的是下面的 switch,
+   * 而 switch 原本一個字都不提被擋的那半。
+   */
+  const blockedNote = (): string => {
+    if (!importBlocks || importBlocks.length === 0) return "";
+    const heading =
+      labels.partialImportBlocked ??
+      CARBON_CHART_DEFAULT_LABELS.partialImportBlocked;
+    const reasons = importBlocks
+      .map((block) => `> _- ${block.reason}_`)
+      .join("\n");
+    return `\n\n> _${heading}_\n${reasons}`;
+  };
+  const wrapChart = (body: string): string => wrap(`${body}${blockedNote()}`);
 
   if (ledger?.articulation?.status === ArticulationStatusEnum.VIOLATED) {
     return wrap(`> ${labels.frozen}`);
@@ -947,19 +981,19 @@ export const buildCarbonChartBlock = (
 
   switch (templateId) {
     case CarbonChartTemplateEnum.SCOPE_PIE:
-      return wrap(buildScopePie(ledger, labels));
+      return wrapChart(buildScopePie(ledger, labels));
     case CarbonChartTemplateEnum.SCOPE_BAR:
-      return wrap(buildScopeBar(ledger, labels));
+      return wrapChart(buildScopeBar(ledger, labels));
     case CarbonChartTemplateEnum.EMISSION_SANKEY:
-      return wrap(buildEmissionSankey(ledger, labels));
+      return wrapChart(buildEmissionSankey(ledger, labels));
     case CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY:
-      return wrap(buildImportedSankey(ledger, labels));
+      return wrapChart(buildImportedSankey(ledger, labels));
     case CarbonChartTemplateEnum.IMPORTED_TOP_ITEMS_SANKEY:
-      return wrap(buildImportedTopItemsSankey(ledger, labels));
+      return wrapChart(buildImportedTopItemsSankey(ledger, labels));
     case CarbonChartTemplateEnum.SOURCE_TABLE:
     default:
       // Info: (20260720 - Tzuhan) 明細表復用 #23 產生器(去其外層錨點,改包本模板錨點避免雙重替換)
-      return wrap(
+      return wrapChart(
         buildCarbonDataTable(ledger, tableLabels)
           .split("\n")
           .filter((line) => !line.startsWith("<!-- carbon-data-table"))

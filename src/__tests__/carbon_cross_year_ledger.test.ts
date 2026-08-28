@@ -2,10 +2,11 @@ import { describe, it, expect } from "@jest/globals";
 import fs from "fs";
 import path from "path";
 import {
-  UNDATED_IMPORTED_PENDING_KEY,
   buildYearSnapshot,
+  detectUndatedImportedEntries,
   mergeImportedLedgerEntries,
 } from "@/lib/carbon_ledger_totals";
+import { queryAnomalies } from "@/lib/carbon_ledger_query";
 import { buildImportedActivityKey } from "@/lib/carbon_table38.ledger";
 import {
   EmissionBasisEnum,
@@ -152,9 +153,14 @@ describe("跨年度匯入的帳本歸屬(PR #6725 review R1)", () => {
  * `importedOrigin.year` 是新增的選填欄位,而帳本住在客戶端的 E2EE 草稿裡、
  * **沒有回填路徑** —— 所以每一個既有帳本的匯入分錄都是年度未知,
  * 升版後再匯一年就 100% 走進孤兒列那條路,而 #6719 的引導句正把他們送過去。
- * 規則 3 因此在這一格留一項待補:把靜默的虛增換成看得見的決定。
+ *
+ * Info: (20260828 - Emily) 說的方式改掉了(round-2 追加回饋):**不走 pending**。
+ * pending 的語意是「活動數據待補」,借用它就是從既有桶子偷渡第五個偵測器 ——
+ * 而 queryAnomalies 的列舉制註解明文禁止那件事。改為獨立訊號
+ * (detectUndatedImportedEntries → state.ledgerYearWarning → 列舉的第五個偵測器),
+ * 所以這一組測試同時釘住「有說」與「沒有借用 pending」。
  */
-describe("既有帳本(年度未知)再匯一年時要留下待補(round-2 高-1)", () => {
+describe("既有帳本(年度未知)再匯一年時要說出來(round-2 高-1 + 追加回饋)", () => {
   const undated2023 = [
     importedEntry("(1) 總公司", "1000000"),
     importedEntry("(2) 舊廠", "400000"),
@@ -164,20 +170,28 @@ describe("既有帳本(年度未知)再匯一年時要留下待補(round-2 高-1
     importedEntry("(3) 新廠", "300000", 2024),
   ];
 
-  it("留下一項待補,說出「總量可能虛增」與下一步", () => {
+  it("偵測器回報本次年度與無年度分錄的筆數", () => {
     const base = mergeImportedLedgerEntries(undefined, undated2023);
-    const after = mergeImportedLedgerEntries(base, dated2024);
-
-    const item = after.pending.find(
-      (entry) => entry.activityKey === UNDATED_IMPORTED_PENDING_KEY,
-    );
-    expect(item).toBeDefined();
-    expect(item?.reason).toContain("虛增");
-    expect(item?.reason).toContain("2024");
-    expect(item?.sourceName).toContain("1 筆");
+    expect(detectUndatedImportedEntries(base, dated2024)).toEqual({
+      incomingYear: 2024,
+      undatedCount: 1,
+    });
   });
 
-  it("待補只是提示,不改變合併行為(不猜年度 → 舊廠仍在、總量仍是舊規則)", () => {
+  it("被本次取代的那筆不算(它已經有年度了,不是懸而未決的)", () => {
+    const base = mergeImportedLedgerEntries(undefined, undated2023);
+    const warning = detectUndatedImportedEntries(base, dated2024);
+    // Info: (20260828 - Emily) 總公司被同鍵取代,只剩舊廠 —— 算 2 筆就是把已解決的也報出來
+    expect(warning?.undatedCount).toBe(1);
+  });
+
+  it("**不借用 pending**:合併結果的待補清單一項都不多(追加回饋)", () => {
+    const base = mergeImportedLedgerEntries(undefined, undated2023);
+    const after = mergeImportedLedgerEntries(base, dated2024);
+    expect(after.pending).toEqual([]);
+  });
+
+  it("警示不改變合併行為(不猜年度 → 舊廠仍在、總量仍是舊規則)", () => {
     const base = mergeImportedLedgerEntries(undefined, undated2023);
     const after = mergeImportedLedgerEntries(base, dated2024);
 
@@ -187,42 +201,77 @@ describe("既有帳本(年度未知)再匯一年時要留下待補(round-2 高-1
     expect(after.totalCo2eKg).toBe("1800000");
   });
 
-  it("重匯不會讓待補愈積愈多(固定鍵取代)", () => {
+  it("重匯不會愈積愈多(它是一個狀態,不是一份清單)", () => {
     const base = mergeImportedLedgerEntries(undefined, undated2023);
     const once = mergeImportedLedgerEntries(base, dated2024);
-    const twice = mergeImportedLedgerEntries(once, dated2024);
-
-    expect(
-      twice.pending.filter(
-        (entry) => entry.activityKey === UNDATED_IMPORTED_PENDING_KEY,
-      ),
-    ).toHaveLength(1);
+    expect(detectUndatedImportedEntries(once, dated2024)).toEqual({
+      incomingYear: 2024,
+      undatedCount: 1,
+    });
   });
 
-  it("本次匯入也沒有年度時不提(那是舊世界的正常狀態,不是待補)", () => {
+  it("本次匯入也沒有年度時不提(那是舊世界的正常狀態,不是異常)", () => {
     const base = mergeImportedLedgerEntries(undefined, undated2023);
-    const after = mergeImportedLedgerEntries(base, [
-      importedEntry("(1) 總公司", "1100000"),
-    ]);
-
     expect(
-      after.pending.some(
-        (entry) => entry.activityKey === UNDATED_IMPORTED_PENDING_KEY,
-      ),
-    ).toBe(false);
+      detectUndatedImportedEntries(base, [
+        importedEntry("(1) 總公司", "1100000"),
+      ]),
+    ).toBeNull();
   });
 
   it("帳本裡每一筆都有年度時不提(修法生效的正常路徑)", () => {
     const base = mergeImportedLedgerEntries(undefined, [
       importedEntry("(1) 總公司", "1000000", 2023),
     ]);
-    const after = mergeImportedLedgerEntries(base, dated2024);
+    expect(detectUndatedImportedEntries(base, dated2024)).toBeNull();
+  });
+});
 
+/**
+ * Info: (20260828 - Emily) 第五個偵測器要進 queryAnomalies 的列舉(追加回饋)。
+ *
+ * 「問得到」才算說出來:偵測器的產物若只存在 state 裡而沒進事實包,
+ * 使用者問「有沒有異常」時系統仍然答不出來 —— 那就回到修法之前。
+ */
+describe("年度標註不完整是列舉制的第五個偵測器(追加回饋)", () => {
+  const ledger = mergeImportedLedgerEntries(undefined, [
+    importedEntry("(1) 總公司", "1000000"),
+  ]);
+
+  it("有警示時答得出來,而且 label 講實話(不是「待補項」)", () => {
+    const result = queryAnomalies(ledger, undefined, {
+      incomingYear: 2024,
+      undatedCount: 1,
+    });
+    expect(result.ok).toBe(true);
+    const fact = result.ok
+      ? result.facts.find((item) => item.label.includes("年度標註不完整"))
+      : undefined;
+    expect(fact).toBeDefined();
+    expect(fact?.label).not.toContain("待補項");
+    expect(fact?.value).toContain("虛增");
+    expect(fact?.value).toContain("2024");
+    expect(fact?.source).toContain("年度歸屬");
+  });
+
+  it("沒有警示時不生事實(「查過而無異常」與「沒查」要分得出來)", () => {
+    const result = queryAnomalies(ledger);
+    expect(result.ok).toBe(true);
     expect(
-      after.pending.some(
-        (entry) => entry.activityKey === UNDATED_IMPORTED_PENDING_KEY,
-      ),
+      result.ok &&
+        result.facts.some((item) => item.label.includes("年度標註不完整")),
     ).toBe(false);
+  });
+
+  it("不佔用待補計數(pending 的語意沒被冒用)", () => {
+    const result = queryAnomalies(ledger, undefined, {
+      incomingYear: 2024,
+      undatedCount: 1,
+    });
+    expect(
+      result.ok &&
+        result.facts.filter((item) => item.label.startsWith("待補項")),
+    ).toHaveLength(0);
   });
 });
 
@@ -252,7 +301,7 @@ describe("年度快照存那份報告的分錄(review R1 第二項)", () => {
 /**
  * Info: (20260827 - Emily) 年度的**接線**(PR #6725 round-2 §1.7)。
  *
- * 上面 12 條都直接餵分錄給純函式 —— 它們證明「合併規則對」,
+ * 上面那些條目都直接餵分錄給純函式 —— 它們證明「合併規則對」,
  * 但把 `year: inventoryYearRef.current` 改成 `year: undefined` 之後它們全綠:
  * 分錄根本不會經過 hook。而年度沒被帶進去的後果,正好等於這個修法不存在
  * (每一筆都變成年度未知 → 規則 3 永遠不成立 → 孤兒列照留)。
@@ -282,6 +331,15 @@ describe("年度的接線:hook 真的把年度帶進匯入(round-2 §1.7)", () =
     expect(hook).not.toContain("[base.year]: merged");
   });
 
+  it("年度警示存進 state 而不是 ledger.pending(追加回饋的接線)", () => {
+    expect(hook).toContain("detectUndatedImportedEntries(");
+    expect(hook).toContain("ledgerYearWarning: yearWarning ?? undefined");
+  });
+
+  it("年度警示隨事實包注入(否則問「有沒有異常」還是答不出來)", () => {
+    expect(hook).toContain("?.ledgerYearWarning,");
+  });
+
   it("阻擋紀錄不在「完全沒入帳」的分支裡收集(round-2 低-1)", () => {
     /**
      * Info: (20260827 - Emily) 舊形狀是 `else { const blocks = ... }`。
@@ -295,5 +353,23 @@ describe("年度的接線:hook 真的把年度帶進匯入(round-2 §1.7)", () =
     );
     expect(blocksIndex).toBeGreaterThan(0);
     expect(blocksIndex).toBeLessThan(applyIndex);
+  });
+
+  /**
+   * Info: (20260828 - Emily) 低-1 的第二半(追加回饋):無條件收集只改了一半 ——
+   * 部分成功時圖表走的是 switch,而 switch 原本一個字都不提被擋的那半。
+   * 這條釘「圖表路徑吃得到附註」與「文案接了 i18n」——
+   * 後者是本專案踩過兩次的坑:只改 default 沒接 i18n = 紙上什麼都不印。
+   */
+  it("圖表在有阻擋紀錄時會附註,且文案接了 i18n(低-1 第二半)", () => {
+    const builder = fs.readFileSync(
+      path.join(process.cwd(), "src/lib/carbon_report_chart.builder.ts"),
+      "utf-8",
+    );
+    expect(builder).toContain("const wrapChart = ");
+    expect(builder).toContain("partialImportBlocked");
+    // Info: (20260828 - Emily) 舊形狀:switch 的每一格直接 wrap(...),附註沒有落點
+    expect(builder).not.toContain("return wrap(buildScopePie(");
+    expect(hook).toContain("carbon_chatbot.chart_partial_import_blocked");
   });
 });
