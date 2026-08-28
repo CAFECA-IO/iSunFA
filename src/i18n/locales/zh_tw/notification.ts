@@ -13,8 +13,10 @@ export const notification = {
   completed_title: "工作完成",
   team_invitation: "「{{inviterName}}」邀請你加入團隊「{{teamName}}」",
   wallet_upgrade: "系統要求升級你的錢包，以支援收取會員卡等鏈上憑證",
-  job_resumable:
-    "點數已補回，「{{completed}}/{{total}}」的匯入可以繼續了 —— 回到智能溫盤按「繼續匯入」",
+  // Info: (20260828 - Julian) 已經做了一部分；剩餘章數比「3/14」直觀（見計劃 §3）
+  job_resumable: "額度已恢復，還有 {{remaining}} 章沒有匯入，可以接著做了",
+  // Info: (20260828 - Julian) 一步都還沒跑：說「繼續」會讓人以為已經做過一半
+  job_resumable_fresh: "額度已恢復，報告的匯入可以開始了",
   analysis_completed: "你的分析工作已完成，點擊查看結果",
   analysis_failed: "你的分析工作失敗了，請重新送出或聯繫客服",
   // Info: (20260825 - Julian) 帶報告名稱的版本；取不到名稱時退回上面那句

@@ -41,6 +41,33 @@ function placeholdersOf(text: string): string[] {
 const REFERENCE = zhTw;
 const REFERENCE_KEYS = Object.keys(REFERENCE) as (keyof typeof REFERENCE)[];
 
+/**
+ * Info: (20260828 - Julian) 「可以繼續了」那兩句**不得提到點數**
+ *（見 `resumable_job_resume_notification.md` §13.2）。
+ *
+ * 原本的文案是「點數已補回」，而那是一件沒有發生的事：翻面的判準只看
+ * 訂閱方案的視窗額度（`canResumeNow` 的 `chainCredits` 是字面量 0，
+ * 因為第二層扣款停用中），加購的點數**改變不了判準裡的任何一個數**。
+ *
+ * 實測時我們照著那句話去加購，白等了一輪 —— 這一條擋的就是它回來。
+ * 只掃中文兩個語系：那是產品文案的來源語言，其他三個是從它翻的。
+ */
+describe("可繼續通知不指向那條不存在的出路", () => {
+  it.each([
+    ["zh_tw", zhTw, "點數"],
+    ["zh_cn", zhCn, "点数"],
+  ])("%s 的 job_resumable 兩句都不提點數", (unusedLocale, dictionary, word) => {
+    const sentences = [
+      dictionary.job_resumable,
+      dictionary.job_resumable_fresh,
+    ];
+
+    sentences.forEach((sentence) => {
+      expect(sentence).not.toContain(word);
+    });
+  });
+});
+
 describe("通知文案的五語系一致性", () => {
   /**
    * Info: (20260826 - Julian) 前提：基準語系真的有帶插值的鍵。

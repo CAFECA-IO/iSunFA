@@ -98,6 +98,67 @@ describe("notificationMessageOf", () => {
     expect(message).not.toContain("undefined");
   });
 
+  /**
+   * Info: (20260828 - Julian) 「可以繼續了」的兩句（計劃 §3）。
+   *
+   * 分成兩句的理由是 `0/14` 那一格：一步都還沒跑，而「繼續」會讓使用者
+   * 以為已經做過一半。實測時畫面長的是這樣：
+   *
+   * > 點數已補回，「0/14」的匯入可以繼續了
+   *
+   * 帶的數字也換了：剩餘章數是一個**決定**（現在值不值得回去），
+   * `completed/total` 只是一個狀態。
+   */
+  it("做了一部分時帶剩餘章數", () => {
+    expect(
+      notificationMessageOf(
+        itemOf(NOTIFICATION_TYPE.JOB_RESUMABLE, {
+          completedSteps: 3,
+          totalSteps: 14,
+        }),
+        t,
+      ),
+    ).toBe("notification.job_resumable(remaining=11)");
+  });
+
+  it("一步都還沒跑時換一句，且不帶數字", () => {
+    expect(
+      notificationMessageOf(
+        itemOf(NOTIFICATION_TYPE.JOB_RESUMABLE, {
+          completedSteps: 0,
+          totalSteps: 14,
+        }),
+        t,
+      ),
+    ).toBe("notification.job_resumable_fresh");
+  });
+
+  /**
+   * Info: (20260828 - Julian) 進度缺漏時走「還沒開始」那句，不是算出負數或 NaN。
+   *
+   * payload 是資料庫來的，欄位不保證在。`total - completed` 在缺漏時會是
+   * `NaN` 或負數，而那會變成畫面上的「還有 NaN 章」。
+   */
+  it.each([
+    ["兩個都缺", {}],
+    ["只有 total", { totalSteps: 14 }],
+    [
+      "completed 大於 total（不該發生，但別算出負數）",
+      {
+        completedSteps: 20,
+        totalSteps: 14,
+      },
+    ],
+  ])("%s", (unusedLabel, payload) => {
+    const message = notificationMessageOf(
+      itemOf(NOTIFICATION_TYPE.JOB_RESUMABLE, payload),
+      t,
+    );
+
+    expect(message).not.toContain("NaN");
+    expect(message).not.toContain("-");
+  });
+
   it("錢包升級沒有插值", () => {
     expect(
       notificationMessageOf(itemOf(NOTIFICATION_TYPE.WALLET_UPGRADE), t),
@@ -321,6 +382,62 @@ describe("notificationHrefOf", () => {
         }),
       ),
     ).toBe("/ai_consultation_room");
+  });
+
+  /**
+   * Info: (20260828 - Julian) **型別層的去處也要跑 token 代入**（§13.5 的回歸）。
+   *
+   * 這一條在寫下來的當下是紅的。`notificationHrefOf` 只有在分析類那條分支
+   * 才呼叫 `resolvePathTokens`，其餘型別直接回原始字串 —— 於是型別層的樣板
+   * 一旦帶了 token，`:sessionId` 會原封不動出現在 `href` 裡。
+   *
+   * 那是一條**合法但錯的**路徑，正是 D43 的症狀。而「只有分析類需要 token」
+   * 是今天的巧合不是規則：`JOB_RESUMABLE` 要深連結到會話，它就需要。
+   *
+   * 表格從常數自己長出來，所以下一個帶 token 的型別不必記得回來加測試。
+   */
+  const tokensOf = (template: string): string[] =>
+    [...template.matchAll(/:([A-Za-z0-9_]+)/g)].map((match) => match[1]);
+
+  it.each(
+    Object.entries(NOTIFICATION_LINK_PATH).filter(
+      ([, template]) => typeof template === "string",
+    ) as [string, string][],
+  )(
+    "%s 的型別層去處：token 全部代得進去，不留下字面的 :token",
+    (type, template) => {
+      const payload = Object.fromEntries(
+        tokensOf(template).map((name) => [name, `v-${name}`]),
+      );
+
+      const href = notificationHrefOf(itemOf(type, payload));
+
+      expect(href).not.toBeNull();
+      expect(href).not.toMatch(/:[A-Za-z]/);
+    },
+  );
+
+  /**
+   * Info: (20260828 - Julian) 深連結的兩面（§13.5）。
+   *
+   * 「回到智能溫盤按繼續匯入」這句話要能兌現，落地就必須是**那一個會話**——
+   * 側欄同時有數個盤查對話，頁面層級的去處等於把辨認的工作丟回給使用者。
+   *
+   * 第二條是同一個不變式的另一半：切不出 `sessionId` 時整條回 `null`
+   *（渲染成不可點），而不是去到 `/user/carbon_chatbot?session=:sessionId`。
+   */
+  it("JOB_RESUMABLE 帶著會話落地，並要求到站就開卡", () => {
+    expect(
+      notificationHrefOf(
+        itemOf(NOTIFICATION_TYPE.JOB_RESUMABLE, { sessionId: "sess-1" }),
+      ),
+    ).toBe("/user/carbon_chatbot?session=sess-1&openImport=1");
+  });
+
+  it("JOB_RESUMABLE 缺 sessionId 時回 null（渲染成不可點）", () => {
+    expect(
+      notificationHrefOf(itemOf(NOTIFICATION_TYPE.JOB_RESUMABLE, {})),
+    ).toBeNull();
   });
 
   /**

@@ -3,7 +3,8 @@
 // Info: (20260714 - Tzuhan) 版面改為「session 列表 + 報告」雙欄並排(報告為主視圖),
 // Info: (20260714 - Tzuhan) 聊天改為 FaithAgent 式浮動視窗(CarbonChatWidget 殼 + 原碳盤查聊天引擎),ChatHeader 移除
 
-import { useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCarbonChat } from "@/hooks/use_carbon_chat";
 import {
   MOBILE_MEDIA_QUERY,
@@ -31,6 +32,117 @@ const RecordTabModal = dynamic(
   { ssr: false },
 );
 
+/**
+ * Info: (20260828 - Julian) 通知的深連結落地：切到那一個會話，並把待匯入的卡打開
+ *（計劃 `resumable_job_resume_landing_and_copy.md` §2.3）。
+ *
+ * 「可以繼續了」那則通知的整個價值在於**把人放在能動手的地方**。少了這一段，
+ * 使用者落在頁面層級，還要自己從側欄認出是哪一個盤查對話、切到聊天視圖、
+ * 展開待匯入的卡 —— 四層，而通知只說了一句「回去按一下」。
+ *
+ * ## 為什麼是一個只回 null 的子元件
+ *
+ * `useSearchParams()` 需要一個 Suspense 邊界（否則整頁在建置時被逼成動態渲染），
+ * 而頁面元件自己包不住自己。同一個做法見 `(landing)/analysis/page.tsx`。
+ *
+ * ## 為什麼用完就把 query 清掉
+ *
+ * 這是一次**指令**，不是狀態。留著的話有兩個症狀：重新整理會再開一次卡，
+ * 而且使用者手動切到別的會話時，任何依 `searchParams` 重跑的 effect
+ * 都會把他拉回來 —— 那是在跟使用者搶方向盤。
+ *
+ * 用 ref 記「這組參數處理過了」而不是只靠清 query：`router.replace` 是非同步的，
+ * 在它生效之前 effect 還會再跑幾次。
+ */
+function ImportDeepLink({
+  sessionIds,
+  sessionsSettled,
+  activeSessionId,
+  onSelectSession,
+  hasPendingImport,
+  onOpenImport,
+}: {
+  sessionIds: string[];
+  sessionsSettled: boolean;
+  activeSessionId: string;
+  onSelectSession: (sessionId: string) => void;
+  hasPendingImport: boolean;
+  onOpenImport: () => void;
+}) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const appliedRef = useRef<string | null>(null);
+
+  const sessionParam = searchParams.get("session");
+  const openImportParam = searchParams.get("openImport");
+
+  useEffect(() => {
+    if (sessionParam === null && openImportParam === null) return;
+
+    const instruction = `${sessionParam ?? ""}|${openImportParam ?? ""}`;
+    if (appliedRef.current === instruction) return;
+
+    const done = () => {
+      appliedRef.current = instruction;
+      router.replace(pathname, { scroll: false });
+    };
+
+    if (sessionParam !== null) {
+      /**
+       * Info: (20260828 - Julian) 等清單**問完**，不是等它非空（實測 §10.5）。
+       *
+       * 會話清單是非同步問伺服器的，在它回來之前 `sessionsData` 裡只有預設
+       * 會話 —— 非空，但不完整。原本這裡用 `length === 0` 當「還沒載好」，
+       * 於是深連結指向非預設會話時，判斷會在清單補齊之前就跑完、
+       * 得到「查無此會話」而放棄，使用者落在預設會話上，什麼也沒發生。
+       */
+      if (!sessionsSettled) return;
+      /**
+       * Info: (20260828 - Julian) 問完了還是沒有就**放棄**（不新建、不猜）。
+       *
+       * 會走到這裡的情境是換了帳號、或會話已封存／刪除。
+       * 猜一個最接近的會讓使用者在別人的報告上按「接著匯入」。
+       */
+      if (!sessionIds.includes(sessionParam)) {
+        done();
+        return;
+      }
+      if (activeSessionId !== sessionParam) {
+        onSelectSession(sessionParam);
+        return;
+      }
+    }
+
+    if (openImportParam === "1") {
+      /**
+       * Info: (20260828 - Julian) 待匯入的內容是從伺服器還原的（端到端加密、
+       * 逐 channel），到站當下不一定在手上 —— 等它，不要把卡打開成空的。
+       *
+       * 還原不出來（紀錄不存在、或金鑰沒解開）時這裡就一直等，
+       * 而「一直等」在這裡等於什麼都不做：使用者仍然在正確的會話裡。
+       */
+      if (!hasPendingImport) return;
+      onOpenImport();
+    }
+
+    done();
+  }, [
+    sessionParam,
+    openImportParam,
+    sessionIds,
+    sessionsSettled,
+    activeSessionId,
+    hasPendingImport,
+    onSelectSession,
+    onOpenImport,
+    router,
+    pathname,
+  ]);
+
+  return null;
+}
+
 export default function CarbonChatbotPage() {
   const { t } = useTranslation();
   // Info: (20260812 - Luphia) custody 決定解鎖說明給的是哪一種保證（見下方 unlock 提示）
@@ -51,6 +163,7 @@ export default function CarbonChatbotPage() {
   const isCustodial = user?.custody === WalletCustodyType.CUSTODIAL;
   const {
     sessionsList,
+    sessionsIndexSettled,
     activeSession,
     activeSessionId,
     setActiveSessionId,
@@ -166,6 +279,17 @@ export default function CarbonChatbotPage() {
 
   return (
     <div className="flex h-[calc(100vh-170px)] min-h-0 overflow-hidden rounded-2xl border border-gray-200 bg-white text-sm shadow-[0_4px_20px_rgb(0,0,0,0.05)]">
+      {/* Info: (20260828 - Julian) 通知的深連結；不畫任何東西，只在落地時做兩件事 */}
+      <Suspense fallback={null}>
+        <ImportDeepLink
+          sessionIds={sessionsList.map((session) => session.id)}
+          sessionsSettled={sessionsIndexSettled}
+          activeSessionId={activeSessionId}
+          onSelectSession={setActiveSessionId}
+          hasPendingImport={pendingImport !== null}
+          onOpenImport={openImportPreview}
+        />
+      </Suspense>
       {/* Info: (20260708 - Tzuhan) 左欄：專案與會話列表 (Desktop Only) */}
       <ChatSidebar
         sessionsList={sessionsList}

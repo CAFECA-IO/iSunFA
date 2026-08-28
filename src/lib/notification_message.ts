@@ -118,12 +118,41 @@ export function notificationMessageOf(
     case NOTIFICATION_TYPE.JOB_RESUMABLE: {
       const completed = Number(item.payload.completedSteps ?? 0);
       const total = Number(item.payload.totalSteps ?? 0);
-      return t("notification.job_resumable", { completed, total });
+
+      /**
+       * Info: (20260828 - Julian) 兩句而不是一句帶 `{{completed}}/{{total}}`
+       *（計劃 §3）。原本的文案把分數塞進引號裡，畫面上長這樣：
+       *
+       * > 點數已補回，「0/14」的匯入可以繼續了
+       *
+       * 那對引號本來是留給名稱的位置，塞進一個分數就變成「有個東西叫 0/14」。
+       * 而 `0/14` 這一格更麻煩：一步都還沒跑，「繼續」會讓人以為做過一半。
+       *
+       * 改成剩餘章數：「還有 14 章」是一個**決定**（現在值不值得回去），
+       * 「0/14」只是一個狀態。
+       */
+      const remaining = total - completed;
+
+      /**
+       * Info: (20260828 - Julian) 算不出「還有幾章」時退回另一句，而不是說「還有 0 章」。
+       *
+       * `remaining <= 0` 在正常情況下不會發生（沒有剩就不會是 `RESUMABLE`），
+       * 但 payload 來自資料庫，欄位不保證在。「還有 0 章沒有匯入，可以接著做了」
+       * 是一句自相矛盾的話 —— 兩句裡挑一句對的，比算出一個荒謬的數字好。
+       */
+      if (completed <= 0 || remaining <= 0) {
+        return t("notification.job_resumable_fresh");
+      }
+
+      return t("notification.job_resumable", { remaining });
     }
     default:
       return null;
   }
 }
+
+// Info: (20260828 - Julian) `:token`；不含 `://` 那種冒號（其後不是英數）
+const TOKEN_PATTERN = /:([A-Za-z0-9_]+)/g;
 
 /**
  * Info: (20260827 - Julian) 把路徑樣板裡的 `:token` 用 payload 代入（D43）。
@@ -132,27 +161,38 @@ export function notificationMessageOf(
  * `/user/account_book/undefined/journal` 會載入一個空頁，而那正是 D43
  * 要修掉的症狀 —— 修法自己再製造一次同樣的東西就沒有意義了。
  *
- * 逐段處理而不是整串 replace：整串 replace 遇到取不到的 token 會靜靜留下
- * 字面的 `:accountBookId`，而那是一條會 404 的合法路徑 —— 又一個
- * 「看起來有反應」的錯誤去處。
+ * 用 `replace` 而不是自己拼字串，但**取不到就記下來、最後整條丟掉**：
+ * 放任 `replace` 留下字面的 `:accountBookId` 會得到一條會 404 的合法路徑，
+ * 又一個「看起來有反應」的錯誤去處。
+ *
+ * Info: (20260828 - Julian) 從「逐段」改成「逐 token」（§13.5）。
+ *
+ * 原本是 `split("/")` 之後看 `segment.startsWith(":")`，也就是**整段就是
+ * 一個 token** 才算數。那對 `/user/account_book/:accountBookId/journal` 夠用，
+ * 但深連結要代的是 query 裡的值（`?session=:sessionId`）—— 那個 token 住在
+ * 一段的中間，舊寫法會靜靜地跳過它。
+ *
+ * 不變式沒有變，只是判斷的粒度變小了：任何一個 token 代不出來，整條回 `null`。
  */
 function resolvePathTokens(
   template: string,
   payload: Record<string, unknown>,
 ): string | null {
-  const resolved: string[] = [];
+  let missing = false;
 
-  for (const segment of template.split("/")) {
-    if (!segment.startsWith(":")) {
-      resolved.push(segment);
-      continue;
-    }
-    const value = payload[segment.slice(1)];
-    if (typeof value !== "string" || value === "") return null;
-    resolved.push(encodeURIComponent(value));
-  }
+  const resolved = template.replace(
+    TOKEN_PATTERN,
+    (unusedMatch, name: string) => {
+      const value = payload[name];
+      if (typeof value !== "string" || value === "") {
+        missing = true;
+        return "";
+      }
+      return encodeURIComponent(value);
+    },
+  );
 
-  return resolved.join("/");
+  return missing ? null : resolved;
 }
 
 /**
@@ -180,7 +220,20 @@ export function notificationHrefOf(
 ): string | null {
   if (!isNotificationType(item.type)) return null;
 
-  const fallback = NOTIFICATION_LINK_PATH[item.type] ?? null;
+  /**
+   * Info: (20260828 - Julian) 型別層的樣板**也要**代入 token（§13.5）。
+   *
+   * 這裡原本直接回常數字串。當時型別層沒有任何樣板帶 token，所以它是對的 ——
+   * 但那是巧合而不是規則：`JOB_RESUMABLE` 要深連結到單一會話，它就需要。
+   * 少了這一步，`:sessionId` 會原封不動出現在 `href` 裡，
+   * 而 `/user/carbon_chatbot?session=:sessionId` 是一條合法但錯的路徑，
+   * 正是 D43 的症狀。
+   */
+  const fallbackTemplate = NOTIFICATION_LINK_PATH[item.type] ?? null;
+  const fallback =
+    fallbackTemplate === null
+      ? null
+      : resolvePathTokens(fallbackTemplate, item.payload);
 
   const isCompleted = item.type === NOTIFICATION_TYPE.ANALYSIS_COMPLETED;
   const isFailed = item.type === NOTIFICATION_TYPE.ANALYSIS_FAILED;

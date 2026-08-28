@@ -20,6 +20,38 @@ export const buildCarbonChatChannel = (
   sessionId: string,
 ): string => `${CARBON_CHAT_CHANNEL_PREFIX}-${address}-${sessionId}`;
 
+/**
+ * Info: (20260828 - Julian) 反函式：從頻道切回 `{ address, sessionId }`。
+ *
+ * 存在的理由是通知要深連結到**單一會話**：書籤只存 `resourceKey`，
+ * 而那個字串裡就有 sessionId（見 `resumable_job_resume_landing_and_copy.md` §2.2）。
+ *
+ * 放在 `buildCarbonChatChannel` 旁邊而不是解析的那一端（通知服務），
+ * 有兩個理由：格式改了兩支要一起改，放在一起才看得見；
+ * 而且 round-trip（`parse(build(a, s))`）只有在同一個檔案裡才釘得住。
+ *
+ * 切在**第一個** `-`：位址是 hex（不含 `-`），sessionId 則可能含
+ * （使用者的會話 id 不保證是 `2025` 那種）。用 `lastIndexOf` 反過來切，
+ * 遇到帶 `-` 的 sessionId 就會靜靜地切錯 —— 而切錯的結果是一條
+ * 「看起來有反應」的深連結，導到別人的會話或不存在的會話。
+ */
+export const parseCarbonChatChannel = (
+  channel: string,
+): { address: string; sessionId: string } | null => {
+  const prefix = `${CARBON_CHAT_CHANNEL_PREFIX}-`;
+  if (!channel.startsWith(prefix)) return null;
+
+  const rest = channel.slice(prefix.length);
+  const separator = rest.indexOf("-");
+  if (separator <= 0) return null;
+
+  const address = rest.slice(0, separator);
+  const sessionId = rest.slice(separator + 1);
+  if (sessionId === "") return null;
+
+  return { address, sessionId };
+};
+
 // Info: (20260715 - Luphia) 位址為 hex，EIP-55 checksum 僅差在大小寫；兩端統一轉小寫比對，避免 checksum 格式差異誤拒合法擁有者
 export const isCarbonChatChannelOwnedBy = (
   channel: string,

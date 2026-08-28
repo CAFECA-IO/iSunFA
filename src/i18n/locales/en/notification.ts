@@ -14,8 +14,11 @@ export const notification = {
   team_invitation: "{{inviterName}} invited you to join team {{teamName}}",
   wallet_upgrade:
     "The system requests a wallet upgrade so it can receive on-chain credentials such as your membership card",
+  // Info: (20260828 - Julian) Some chapters are done; "chapters left" reads better than "3/14"
   job_resumable:
-    "Credits are back. Your import ({{completed}}/{{total}}) can continue — go to Smart GHG Inventory and tap Resume.",
+    "Your quota is back. {{remaining}} chapters are still waiting to be imported.",
+  // Info: (20260828 - Julian) Nothing ran yet — "resume" would imply progress that does not exist
+  job_resumable_fresh: "Your quota is back. The report import can start now.",
   analysis_completed:
     "Your analysis job has finished — click to view the result",
   analysis_failed:

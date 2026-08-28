@@ -292,6 +292,8 @@ jest.mock("@/repositories/resumable_job.repo", () => ({
 }));
 
 import { resumableJobRepo } from "@/repositories/resumable_job.repo";
+import { buildCarbonChatChannel } from "@/constants/carbon_chatbot";
+import { notificationHrefOf } from "@/lib/notification_message";
 
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
 const fakeRepo = notificationRepo as unknown as {
@@ -1388,6 +1390,57 @@ describe("可以繼續的任務（活算待辦）", () => {
         totalSteps: 11,
       }),
     );
+  });
+
+  /**
+   * Info: (20260828 - Julian) 深連結的**跨模組契約**（計劃 §2.2）。
+   *
+   * 服務端從 `resourceKey` 切出 `sessionId` 放進 payload，連結端用它代入
+   * `NOTIFICATION_LINK_PATH` 的樣板。兩邊各測各的都會綠，而它們對不上的
+   * 形狀是「payload 放 `chatSessionId`、樣板要 `:sessionId`」——
+   * 沒有任何型別擋得住，症狀是通知靜靜地變成不可點。
+   *
+   * 所以這一條把真的 `notificationHrefOf` 接上去，斷言的是**組得出那條路**。
+   */
+  it("resourceKey 是碳盤查頻道時，深連結組得出來", async () => {
+    asMock(resumableJobRepo.listResumableByUser).mockResolvedValue([
+      jobRow({ resourceKey: buildCarbonChatChannel(ADDRESS, "sess-9") }),
+    ]);
+
+    const list = await listNotifications({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(list.todos[0].payload).toEqual(
+      expect.objectContaining({ sessionId: "sess-9" }),
+    );
+    expect(notificationHrefOf(list.todos[0])).toBe(
+      "/user/carbon_chatbot?session=sess-9&openImport=1",
+    );
+  });
+
+  /**
+   * Info: (20260828 - Julian) 切不出來就**不放那個鍵**，那一則因此不可點。
+   *
+   * 放空字串會讓 `resolvePathTokens` 的判斷從「取不到」變成「取到一個空值」，
+   * 今天兩者結果相同 —— 但空字串是一個看起來有值的值，下一個讀 payload 的人
+   * 會被它騙。未來的非碳盤查 `JOB_TYPE` 也會落在這條路上。
+   */
+  it("resourceKey 不是頻道格式時不放 sessionId，通知不可點", async () => {
+    asMock(resumableJobRepo.listResumableByUser).mockResolvedValue([
+      jobRow({ resourceKey: "something-else" }),
+    ]);
+
+    const list = await listNotifications({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(list.todos[0].payload).not.toHaveProperty("sessionId");
+    expect(notificationHrefOf(list.todos[0])).toBeNull();
   });
 
   it("算進 todoCount，不算進 completedCount", async () => {

@@ -15,8 +15,12 @@ export const notification = {
     "「{{inviterName}}」がチーム「{{teamName}}」への参加に招待しています",
   wallet_upgrade:
     "会員カードなどのオンチェーン証明を受け取るため、ウォレットのアップグレードが必要です",
+  // Info: (20260828 - Julian) 一部完了；残り章数のほうが「3/14」より分かりやすい
   job_resumable:
-    "ポイントが補充されました。インポート（{{completed}}/{{total}}）を再開できます —— スマート GHG インベントリで「再開」を押してください。",
+    "利用枠が回復しました。あと {{remaining}} 章がインポート待ちです。",
+  // Info: (20260828 - Julian) まだ 1 章も実行していない：「再開」は誤解を招く
+  job_resumable_fresh:
+    "利用枠が回復しました。レポートのインポートを開始できます。",
   analysis_completed:
     "分析ジョブが完了しました。クリックして結果を確認してください",
   analysis_failed:

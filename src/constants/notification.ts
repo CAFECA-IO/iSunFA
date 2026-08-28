@@ -248,7 +248,17 @@ export const NOTIFICATION_LINK_PATH: Record<NotificationType, string | null> = {
    * payload 仍然帶 `resourceKey`，等那一頁支援 searchParams 之後，
    * 把這一格改成 `/user/carbon_chatbot?session=:resourceKey` 就會生效（同 D43 的 :token）。
    */
-  [NOTIFICATION_TYPE.JOB_RESUMABLE]: "/user/carbon_chatbot",
+  /**
+   * Info: (20260828 - Julian) 深連結到**那一個會話**，並要求到站就把預覽卡打開
+   *（§13.5）。頁面層級的去處等於把「是哪一份匯入」丟回給使用者判斷，
+   * 而側欄同時會有數個盤查對話。
+   *
+   * `sessionId` 由 `notification.service.ts` 從 `resourceKey` 切出來放進 payload；
+   * 切不出來時那個鍵不存在，`resolvePathTokens` 會讓整條回 `null`（不可點）——
+   * 那比讓人點到一條 `?session=:sessionId` 好。
+   */
+  [NOTIFICATION_TYPE.JOB_RESUMABLE]:
+    "/user/carbon_chatbot?session=:sessionId&openImport=1",
 };
 
 /**

@@ -2,6 +2,9 @@
 
 > 前情：`resumable_job_resume_notification.md` §13 的三個實測發現
 > （13.2 加購那條出路不存在、13.3 暫停畫面沒說等到哪一天、13.5 落地後找不到按鈕）。
+>
+> **現況（20260828）**：決定一（深連結）與決定二（通知文案）**已實作**，
+> `npm run test` 全綠；決定三（暫停畫面文案）**未做**。實作紀錄在 §10。
 
 ---
 
@@ -30,7 +33,8 @@
 [NOTIFICATION_TYPE.JOB_RESUMABLE]: "/user/carbon_chatbot",
 ```
 
-改成帶 token 的樣板就好。但今天的程式碼會讓它**靜靜地壞掉**，有兩道：
+改成帶 token 的樣板就好。但**當時**的程式碼會讓它靜靜地壞掉，有兩道
+（兩道都已連帶修掉，實測紀錄見 §10.1）：
 
 **（a）型別層的去處根本不跑 token 代入。**
 `notificationHrefOf()` 只有在 `ANALYSIS_COMPLETED` / `ANALYSIS_FAILED`
@@ -43,7 +47,7 @@
 它 `template.split("/")` 之後判斷 `segment.startsWith(":")`，
 所以 `?session=:sessionId` 裡的 token 不會被代入（那一段以 `carbon_chatbot?` 開頭）。
 
-兩道的修法：
+兩道的修法（已實作）：
 
 |     | 修法                                                                          | 為什麼不選另一種                                                                                        |
 | --- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
@@ -59,7 +63,7 @@ payload 已經有 `resourceKey`，而它就是 `carbon-chat-{address}-{sessionId
 但**不要在 `notification_message.ts` 裡切字串**：那一層不該懂碳盤查的頻道格式，
 今天懂了，下一個 `JOB_TYPE` 出現時它就要懂第二種。
 
-落點：在 `@/constants/carbon_chatbot` 加 `parseCarbonChatChannel()`，
+做法（已實作）：在 `@/constants/carbon_chatbot` 加 `parseCarbonChatChannel()`，
 與 `buildCarbonChatChannel()` **放在一起**——兩支互為反函數，
 放在一起才測得出 round-trip（`parse(build(a, s))` 必須回得來）。
 然後由 `notification.service.ts` 組 todo 時把 `sessionId` 放進 payload，
@@ -73,7 +77,7 @@ payload 已經有 `resourceKey`，而它就是 `carbon-chat-{address}-{sessionId
 深連結只解決了「哪一個會話」。第 2、3、4 層（切到聊天視圖、
 輸入列上方的「檢視並匯入」、卡片裡的「接著匯入」）仍然要使用者自己走。
 
-`/user/carbon_chatbot` 支援 `?openImport=1`：載入該會話的 `pendingImport`
+`/user/carbon_chatbot` 支援 `?openImport=1`（已實作）：載入該會話的 `pendingImport`
 之後直接 `openImportPreview()`。那份紀錄本來就會從伺服器還原
 （`fetchPendingImportRecord`，端到端加密、逐 channel），所以這一步不需要新的資料。
 
@@ -83,7 +87,7 @@ payload 已經有 `resourceKey`，而它就是 `carbon-chat-{address}-{sessionId
 
 ## 3. 決定二：通知文案
 
-現在：
+原本：
 
 ```
 點數已補回，「{{completed}}/{{total}}」的匯入可以繼續了 —— 回到智能溫盤按「繼續匯入」
@@ -94,10 +98,10 @@ payload 已經有 `resourceKey`，而它就是 `carbon-chat-{address}-{sessionId
 
 改後（五語系一起）：
 
-| 情況              | 文案                                                              |
-| ----------------- | ----------------------------------------------------------------- |
-| `completed > 0`   | 額度已恢復，「{{name}}」還有 {{remaining}} 章沒匯入，可以接著做了 |
-| `completed === 0` | 額度已恢復，「{{name}}」的匯入可以開始了                          |
+| 情況                              | 文案                                                    |
+| --------------------------------- | ------------------------------------------------------- |
+| `completed > 0`                   | 額度已恢復，還有 {{remaining}} 章沒有匯入，可以接著做了 |
+| `completed === 0`／算不出剩餘章數 | 額度已恢復，報告的匯入可以開始了                        |
 
 三個決定：
 
@@ -106,10 +110,9 @@ payload 已經有 `resourceKey`，而它就是 `carbon-chat-{address}-{sessionId
 - **不指名按鈕。** 深連結（決定一）落地就是能動手的地方，
   通知不需要教路。指名按鈕是把 UI 的字串複製到另一個模組 ——
   改按鈕的人不會知道要回來改通知。
-- **帶檔名而不是分數。** `{{name}}` 讓使用者認得出是哪一份；
-  剩幾章用 `{{remaining}}`（`total - completed`）比 `0/14` 直觀
-  ——「還有 14 章」是決定，「0/14」是狀態。
-  檔名要進 payload（書籤目前沒存，見落點表）。
+- **帶剩餘章數而不是分數。**「還有 14 章」是一個**決定**（現在值不值得回去），
+  `0/14` 只是一個狀態，而且那對引號本來是留給名稱的位置。
+  原本這裡還打算帶檔名，**沒有做** —— 理由見 §10.3。
 
 ---
 
@@ -155,47 +158,48 @@ payload 已經有 `resourceKey`，而它就是 `carbon-chat-{address}-{sessionId
 
 ## 6. 落點清單
 
-| 檔案                                   | 改什麼                                                                                      | 屬於                |
-| -------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------- |
-| `src/lib/notification_message.ts`      | `notificationHrefOf` 的 fallback 也走 `resolvePathTokens`；`resolvePathTokens` 認段內 token | 決定一 (a)(b)       |
-| `src/constants/carbon_chatbot.ts`      | 新增 `parseCarbonChatChannel()`                                                             | 決定一 2.2          |
-| `src/services/notification.service.ts` | todo 的 payload 加 `sessionId`、`fileName`                                                  | 決定一 2.2 / 決定二 |
-| `src/constants/notification.ts`        | `NOTIFICATION_LINK_PATH[JOB_RESUMABLE]` 改成帶 token 的樣板                                 | 決定一              |
-| `src/app/user/carbon_chatbot/page.tsx` | 支援 `?session=` 與 `?openImport=1`                                                         | 決定一 2.3          |
-| `src/hooks/use_carbon_chat.ts`         | 書籤多存檔名；`resolveCreditPauseReason` 改回傳結構                                         | 決定二 / 三         |
-| `src/i18n/locales/*/notification.ts`   | `job_resumable` 拆兩句（五語系）                                                            | 決定二              |
-| `src/i18n/locales/*/carbon_chatbot.ts` | `import_paused_chapters` 拆三句（五語系）                                                   | 決定三              |
-
-**書籤要多存檔名**是這份計劃唯一的資料改動（`ResumableJob` 加一欄，或塞進
-既有的 JSON 欄位）。沒有它，通知只能說「那份報告」而不是名字，
-而使用者側欄裡有數個會話——那正是 §13.5 第 1 層的問題再來一次。
+| 檔案                                   | 改什麼                                                                                      | 狀態               |
+| -------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------ |
+| `src/lib/notification_message.ts`      | `notificationHrefOf` 的 fallback 也走 `resolvePathTokens`；`resolvePathTokens` 認段內 token | 已做               |
+| `src/constants/carbon_chatbot.ts`      | 新增 `parseCarbonChatChannel()`                                                             | 已做               |
+| `src/services/notification.service.ts` | todo 的 payload 加 `sessionId`                                                              | 已做               |
+| `src/constants/notification.ts`        | `NOTIFICATION_LINK_PATH[JOB_RESUMABLE]` 改成帶 token 的樣板                                 | 已做               |
+| `src/app/user/carbon_chatbot/page.tsx` | 支援 `?session=` 與 `?openImport=1`                                                         | 已做               |
+| `src/i18n/locales/*/notification.ts`   | `job_resumable` 拆兩句（五語系）                                                            | 已做               |
+| `src/hooks/use_carbon_chat.ts`         | `resolveCreditPauseReason` 改回傳結構（帶下 402 payload）                                   | **未做**（決定三） |
+| `src/i18n/locales/*/carbon_chatbot.ts` | `import_paused_chapters` 拆三句（五語系）                                                   | **未做**（決定三） |
+| `prisma/schema.prisma` + 書籤          | 存一個給人看的標籤（原本寫的是「檔名」）                                                    | **未做**，見 §10.3 |
 
 ---
 
 ## 7. 測試落點
 
-| 要釘的事                                                         | 檔案                                     |
-| ---------------------------------------------------------------- | ---------------------------------------- |
-| `parse(build(address, sessionId))` round-trip；格式變了要紅      | 新增或併入既有的 carbon channel 測試     |
-| 型別層的去處也會代入 token（回歸：`:sessionId` 不得出現在 href） | `notification_message.test.ts`           |
-| 段內 token 代得進去；任一代不出來整條回 `null`                   | 同上                                     |
-| `JOB_RESUMABLE` 的 payload 有 `sessionId` 與 `fileName`          | `notification_service.test.ts`           |
-| 五語系的新鍵齊全、placeholder 一致                               | `notification_i18n_placeholders.test.ts` |
-| 暫停文案依 402 的哪一格選句                                      | `carbon_import_pause.test.ts`            |
+| 要釘的事                                                         | 檔案                                     | 狀態               |
+| ---------------------------------------------------------------- | ---------------------------------------- | ------------------ |
+| `parse(build(address, sessionId))` round-trip；格式變了要紅      | `carbon_chat_channel.test.ts`（新增）    | 已做               |
+| 型別層的去處也會代入 token（回歸：`:sessionId` 不得出現在 href） | `notification_message.test.ts`           | 已做               |
+| 段內 token 代得進去；任一代不出來整條回 `null`                   | 同上                                     | 已做               |
+| `JOB_RESUMABLE` 的 payload 有 `sessionId`，且深連結組得出來      | `notification_service.test.ts`           | 已做               |
+| 五語系的新鍵齊全、placeholder 一致                               | `notification_i18n_placeholders.test.ts` | 已做               |
+| 文案不得再提「點數」（中文兩語系）                               | 同上                                     | 已做               |
+| 暫停文案依 402 的哪一格選句                                      | `carbon_import_pause.test.ts`            | **未做**（決定三） |
 
-其中第二條是**回歸測試**：它今天就會紅（因為 fallback 不跑代入），
-所以先寫它，再改 `notification_message.ts`。
+第二條是**回歸測試，先寫先跑**：改之前它是紅的（fallback 不跑代入），
+那一步確認了 §2.1 (a) 是真的，不是讀錯。
 
 ---
 
 ## 8. 驗收判準
 
 - [ ] 通知點下去，落在**正確的那個會話**，且預覽卡是開著的
-- [ ] `sessionId` 切不出來時，那一則**不可點**（不是點了去到 `:sessionId`）
-- [ ] 文案沒有出現任何按鈕名稱
-- [ ] 文案沒有出現「補上點數」「點數已補回」
+      —— 程式碼完成，**待實機驗**（唯一還要用眼睛確認的一條）
+- [x] `sessionId` 切不出來時，那一則**不可點**（不是點了去到 `:sessionId`）
+      —— service 與 message 各一條測試
+- [x] 文案沒有出現任何按鈕名稱
+- [x] 文案沒有出現「補上點數」「點數已補回」—— 並由 i18n 測試釘住
 - [ ] 暫停畫面三種情況各說各的話，`exceedsWindowLimit` 時不提「等重置」
-- [ ] 五語系都改到
+      —— **未做**（決定三）
+- [x] 五語系都改到 —— 鍵集合與插值由既有測試比對
 
 ---
 
@@ -208,3 +212,82 @@ payload 已經有 `resourceKey`，而它就是 `carbon-chat-{address}-{sessionId
   而那句話會在按鈕改名時再次過期。
 - **不要為了分辨兩條路而保留 `pauseReason`。** 見 §5，
   也見 `markResumable` 的註解：`null＝不是暫停狀態`是 schema 的定義。
+
+---
+
+## 10. 實作紀錄（20260828）
+
+**決定一（深連結）與決定二（通知文案）已實作；決定三（暫停畫面文案）尚未動。**
+`npm run test` 全綠；逐檔 prettier、ESLint、tsc 皆零（唯一的 tsc 錯誤是
+`map_viewer.tsx` 對 `maplibre-gl.css` 的 side-effect import —— 既有問題，
+與這批無關，`next build` 處理得了而裸 tsc 不行）。
+
+### 10.1 §2.1 的兩道確認為真
+
+回歸測試先寫、先跑，確認不是我讀錯：改之前 `notificationHrefOf` 對
+`JOB_RESUMABLE` 回的是 `"/user/carbon_chatbot"` —— 帶不帶 `sessionId` 都一樣，
+也就是說 token 完全沒有被代入。修完同一組輸入回
+`"/user/carbon_chatbot?session=sess-1&openImport=1"` 與 `null`。
+
+`resolvePathTokens` 從「逐段」改成「逐 token」之後，既有的五種去處
+（憑證帶／不帶 `accountBookId`、AI 諮詢的 encode、邀請、分析類退回）行為不變。
+
+### 10.2 三個實作時的決定
+
+**`ImportDeepLink` 是一個只回 `null` 的子元件。** `useSearchParams()` 需要
+Suspense 邊界，而頁面元件包不住自己（同 `(landing)/analysis/page.tsx` 的做法）。
+
+**用完就把 query 清掉，並用 ref 記「這組參數處理過了」。** 這是一次*指令*
+不是狀態：留著的話重新整理會再開一次卡，而任何依 `searchParams` 重跑的 effect
+會在使用者手動切會話時把他拉回來。`router.replace` 是非同步的，
+所以光靠清 query 不夠，還要 ref。
+
+**文案分兩句而不是一句帶分數。** `0/14` 那一格是主因（一步都沒跑，
+「繼續」會讓人以為做過一半）。另外 `remaining <= 0` 也退回「還沒開始」那句 ——
+「還有 0 章沒有匯入，可以接著做了」是一句自相矛盾的話。
+
+### 10.3 沒做的一件事：書籤不存檔名
+
+§3 原本打算讓文案帶檔名，**沒有做**，所以它說的是
+「還有 11 章沒有匯入」而不是「『某某報告』還有 11 章」。
+
+理由是它需要一個 schema 欄位（`ResumableJob` 沒有可放的地方），
+而深連結已經回答了「是哪一份」這個問題 —— 落地就在那個會話裡。
+檔名剩下的價值是「同時有兩份暫停的匯入時，通知列上分得出來」，
+那是一個還沒發生的情境。
+
+**要做的時候**：加一個 nullable 的 `resource_label`（不要叫 `file_name`——
+下一種 `JOB_TYPE` 的標籤未必是檔案），由 `saveImportJobBookmark` 帶上來，
+`listNotifications` 放進 payload，文案再加一格插值。
+
+### 10.5 實機第一次就沒過：清單「非空」不等於「載好了」
+
+實測結果：點通知之後人落在**預設會話**上，待匯入的卡沒有打開。
+
+根因在 `ImportDeepLink` 的一行守衛。原本寫的是
+
+```ts
+if (sessionIds.length === 0) return; // 清單還沒載進來，等下一輪
+```
+
+而會話清單是**非同步**問伺服器的（`GET /api/v1/chat/carbon/sessions`）。
+在它回來之前 `sessionsData` 裡已經有預設會話 —— **非空，但不完整**。
+於是這個守衛放行，下一行的 `sessionIds.includes(sessionParam)` 得到 false，
+判定「查無此會話」而放棄，順手把 query 清掉。使用者看到的就是
+「什麼也沒發生，而且網址裡的參數不見了」。
+
+**這是一個典型的「兩種狀態被壓成同一個觀察值」**：
+「還沒問到」與「問過了，沒有」在 `sessionIds` 這個陣列上長得一樣
+（都是「裡面沒有那個 id」），而它們的正確處置相反 —— 一個要等，一個要放棄。
+
+修法是讓那兩件事分開：`use_carbon_chat` 多回一個 `sessionsIndexSettled`，
+在那支 request 的 `.finally()` 設成 true（成功或失敗都算問完 ——
+失敗時清單不會再補了，繼續等就變成永遠不動作）。深連結改成等這個旗標。
+
+**不要用 `sessionsIndexLoadedRef`**：它是「請求發過了」的去重旗標，
+在 `request()` 之前就設成 true，拿它當「載好了」會犯一模一樣的錯。
+
+順帶記下另一個實機才看得到的細節：E2EE 的會話落地時是**鎖著的**，
+`pendingImport` 要等使用者解鎖之後才還原得出來。深連結的 effect 本來就會等
+（`hasPendingImport` 在相依裡），所以解鎖後才開卡是預期行為 ——
+前提是它沒有在那之前就放棄。

@@ -11,6 +11,7 @@ import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
 import { notificationRepo } from "@/repositories/notification.repo";
 import { resumableJobRepo } from "@/repositories/resumable_job.repo";
+import { parseCarbonChatChannel } from "@/constants/carbon_chatbot";
 import type {
   INotificationHistoryPage,
   INotificationItem,
@@ -312,21 +313,39 @@ export async function listNotifications(params: {
        * 會沉在最底下 —— 而它正是這一刻最需要被看到的那一則。
        */
       todos.push(
-        ...resumableJobs.map((job) => ({
-          // Info: (20260828 - Julian) 合成 id，理由同上方邀請那段（不會拿去打 API）
-          id: `job:${job.id}`,
-          type: NOTIFICATION_TYPE.JOB_RESUMABLE,
-          payload: {
-            jobId: job.id,
-            jobType: job.type,
-            resourceKey: job.resourceKey,
-            completedSteps: job.completedSteps,
-            totalSteps: job.totalSteps,
-          },
-          createdAt: job.updatedAt.getTime(),
-          // Info: (20260828 - Julian) 活算的待辦沒有已讀概念：它在就是還沒處理
-          readAt: null,
-        })),
+        ...resumableJobs.map((job) => {
+          /**
+           * Info: (20260828 - Julian) 深連結要的 `sessionId` 在這裡切出來
+           *（計劃 `resumable_job_resume_landing_and_copy.md` §2.2）。
+           *
+           * 切在這一層而不是 `notification_message.ts`：那一層是
+           *「型別 × payload → 去處」的純函式，不該懂任何一種 `JOB_TYPE`
+           * 的資源格式 —— 今天懂了碳盤查的頻道，下一種任務出現時它就要懂第二種。
+           *
+           * 切不出來時**不放這個鍵**（不是放空字串）：`resolvePathTokens`
+           * 的約定是「任一 token 代不出來就整條回 null」，於是那一則渲染成
+           * 不可點。未來若有非碳盤查的 `JOB_TYPE`，它會落在這條路上 ——
+           * 不可點是誠實的預設，導到一個猜出來的會話不是。
+           */
+          const channel = parseCarbonChatChannel(job.resourceKey);
+
+          return {
+            // Info: (20260828 - Julian) 合成 id，理由同上方邀請那段（不會拿去打 API）
+            id: `job:${job.id}`,
+            type: NOTIFICATION_TYPE.JOB_RESUMABLE,
+            payload: {
+              jobId: job.id,
+              jobType: job.type,
+              resourceKey: job.resourceKey,
+              completedSteps: job.completedSteps,
+              totalSteps: job.totalSteps,
+              ...(channel === null ? {} : { sessionId: channel.sessionId }),
+            },
+            createdAt: job.updatedAt.getTime(),
+            // Info: (20260828 - Julian) 活算的待辦沒有已讀概念：它在就是還沒處理
+            readAt: null,
+          };
+        }),
       );
 
       todos.push(...storedTodos.map(toItem));

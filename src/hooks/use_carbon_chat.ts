@@ -700,6 +700,19 @@ export const useCarbonChat = () => {
   // Info: (20260714 - Tzuhan) sessions 以 DB Chatroom 為 single source of truth(換裝置/清瀏覽器不再出現殭屍房間)
   // Info: (20260714 - Tzuhan) 標題衍生自密文首訊(server 讀不到),localStorage 索引降級為標題快取
   const sessionsIndexLoadedRef = useRef<boolean>(false);
+  /**
+   * Info: (20260828 - Julian) 清單**問完了沒有**——與 `sessionsIndexLoadedRef` 不同。
+   *
+   * 那支 ref 是「請求發過了」的去重旗標，在 `request()` 之前就設成 true。
+   * 中間那段時間 `sessionsData` 裡只有預設會話，**非空但不完整** ——
+   * 而「非空」正是通知深連結原本用來判斷「清單載好了」的依據，
+   * 於是它在清單補齊之前就判定「查無此會話」而放棄
+   *（見 `resumable_job_resume_landing_and_copy.md` §10.5）。
+   *
+   * 任何「這個 id 不存在」的判斷都要等這個旗標，失敗也要等 ——
+   * 失敗時清單就是不會再補了，繼續等只會變成永遠不動作。
+   */
+  const [sessionsIndexSettled, setSessionsIndexSettled] = useState(false);
   useEffect(() => {
     if (!user?.address || sessionsIndexLoadedRef.current) return;
     sessionsIndexLoadedRef.current = true;
@@ -763,7 +776,9 @@ export const useCarbonChat = () => {
       .catch((error) => {
         // Info: (20260714 - Tzuhan) 列表載入失敗不阻斷(仍可用預設 session 對話)
         console.error("[carbon-chat] failed to load sessions:", error);
-      });
+      })
+      // Info: (20260828 - Julian) 成功或失敗都算「問完了」，理由見旗標的說明
+      .finally(() => setSessionsIndexSettled(true));
   }, [user?.address, t]);
 
   // Info: (20260716 - Tzuhan) #52 載入可綁定帳本(失敗不阻斷:僅影響新增對話的帳本選單)
@@ -5603,6 +5618,8 @@ export const useCarbonChat = () => {
 
   return {
     sessionsList: sortedSessionsList,
+    // Info: (20260828 - Julian) 給深連結用：清單問完了沒有（非空 ≠ 完整）
+    sessionsIndexSettled,
     activeSession,
     activeSessionId,
     // Info: (20260714 - Tzuhan) 對外的切換入口為 switchSession(重置跨室暫態 UI)，沿用原名稱以維持呼叫端不變
