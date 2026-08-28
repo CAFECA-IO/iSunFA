@@ -107,4 +107,14 @@ export const JOB_RESUME_SCAN_INTERVAL_MS = 5 * 60 * 1000;
  * 每一筆都要讀一次額度（含一次鏈上餘額查詢），不設上限會讓一次積壓
  * 變成一串同步的 RPC。
  */
+/**
+ * Info: (20260828 - Julian) 小鈴鐺一次帶回幾則「可以繼續了」的待辦。
+ *
+ * 待辦型天然有限（一個聊天室一筆，`@@unique([resourceKey, type])`），但仍然給上限 ——
+ * 「天然有限」是今天的事實，不是資料庫層的約束，而這支查詢會被每 60 秒的摘要輪詢打到。
+ * 比 `NOTIFICATION_TODO_LIST_LIMIT`（20）小：一個人同時卡著五份匯入已經是異常，
+ * 列更多不會幫他做決定。
+ */
+export const JOB_RESUMABLE_NOTICE_LIMIT = 5;
+
 export const JOB_RESUME_SCAN_BATCH = 50;

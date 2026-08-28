@@ -29,6 +29,18 @@ export const NOTIFICATION_TYPE = {
    * 歸在事件型而不是待辦型：它沒有「處理完」這個狀態，看過就過去了。
    */
   ANALYSIS_FAILED: "ANALYSIS_FAILED",
+  /**
+   * Info: (20260828 - Julian) 待辦：一個因為點數不足而暫停的任務**可以繼續了**。
+   *
+   * 歸在待辦型而不是事件型：它不是「一件事發生了」，是「有一件事等你做」——
+   * 而且伺服器**做不到**替使用者完成它。智能溫盤的匯入內容是端到端加密的，
+   * 逐章迴圈跑在瀏覽器裡，所以接續一定要使用者本人回到那個聊天室按下去。
+   *
+   * 因此文案不得寫「已為你繼續」（見 `notification_message.ts`），
+   * 而它的消失時機是使用者真的按了繼續、或取消了任務 —— 那是活狀態，
+   * 所以這一型**活算不入庫**（理由同團隊邀請，見下方 TODO_NOTIFICATION_TYPES）。
+   */
+  JOB_RESUMABLE: "JOB_RESUMABLE",
 } as const;
 
 export type NotificationType =
@@ -41,6 +53,14 @@ export type NotificationType =
 export const TODO_NOTIFICATION_TYPES: readonly NotificationType[] = [
   NOTIFICATION_TYPE.TEAM_INVITATION,
   NOTIFICATION_TYPE.WALLET_UPGRADE,
+  /**
+   * Info: (20260828 - Julian) 與邀請同樣是**活算**的：來源是 `ResumableJob.status`，
+   * 而它本身就是活狀態（按繼續轉 RUNNING、取消轉 CANCELLED）。
+   *
+   * 不入庫的具體理由：同一個 `resourceKey` 會暫停 → 繼續 → 再暫停，
+   * 而 `dedupeKey` 是永久唯一鍵，入庫的話第二次就發不出來。
+   */
+  NOTIFICATION_TYPE.JOB_RESUMABLE,
 ] as const;
 
 /**
@@ -147,7 +167,10 @@ export const NOTIFICATION_DEDUPE_PREFIX = {
  */
 export const NOTIFICATION_TYPE_STYLE: Record<
   NotificationType,
-  { icon: "mail" | "wallet" | "check" | "alert"; className: string }
+  {
+    icon: "mail" | "wallet" | "check" | "alert" | "play";
+    className: string;
+  }
 > = {
   /**
    * Info: (20260825 - Julian) 只用 `@theme` 真的定義過的 token。
@@ -178,6 +201,17 @@ export const NOTIFICATION_TYPE_STYLE: Record<
     icon: "alert",
     className: "text-danger",
   },
+  /**
+   * Info: (20260828 - Julian) 用 `play` 而不是沿用 `check`。
+   *
+   * `check` 說的是「做完了」，而這一則說的是「可以開始了」——
+   * 兩者在 16px 的圖示下如果長得一樣，使用者會以為匯入已經完成而不去按。
+   * 顏色用 brand：它不是成功也不是警告，是一個邀請。
+   */
+  [NOTIFICATION_TYPE.JOB_RESUMABLE]: {
+    icon: "play",
+    className: "text-brand",
+  },
 };
 
 /**
@@ -203,6 +237,18 @@ export const NOTIFICATION_LINK_PATH: Record<NotificationType, string | null> = {
   [NOTIFICATION_TYPE.WALLET_UPGRADE]: null,
   [NOTIFICATION_TYPE.ANALYSIS_COMPLETED]: "/analysis?tab=history",
   [NOTIFICATION_TYPE.ANALYSIS_FAILED]: "/analysis?tab=history",
+  /**
+   * Info: (20260828 - Julian) 頁面層級，**不是**逐一深連結。
+   *
+   * `/user/carbon_chatbot` 不吃任何 searchParams，所以現在做不到
+   * 「點通知直接開那一個聊天室」。與 D43 的情況要分清楚：那次的錯是把人帶到
+   * 一個**結構上放不下那筆紀錄**的頁面；這裡那一頁就是匯入所在的地方，
+   * 只是不夠精準 —— 所以可點，而不是退化為 null。
+   *
+   * payload 仍然帶 `resourceKey`，等那一頁支援 searchParams 之後，
+   * 把這一格改成 `/user/carbon_chatbot?session=:resourceKey` 就會生效（同 D43 的 :token）。
+   */
+  [NOTIFICATION_TYPE.JOB_RESUMABLE]: "/user/carbon_chatbot",
 };
 
 /**

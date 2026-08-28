@@ -355,6 +355,59 @@ export interface IJobResumeScanSummary {
  * 加購與升級的使用者甚至不必等這支迴圈：付款完成的那一頁會直接接續。
  * 這支是為了「人已經離開頁面」的情形。
  */
+/**
+ * Info: (20260828 - Julian) 個人付款完成後，把卡在「等付款」的任務翻成可以繼續。
+ *
+ * ## 為什麼不放進 `scanResumableJobs`
+ *
+ * 那支刻意跳過 `PAYMENT_REQUIRED`，兩層理由都仍然成立：
+ *
+ * 1. **判斷不出來**：個人點數在鏈上，要問就得發 RPC。掃描一輪 50 筆、每 5 分鐘
+ *    一次，那是每 5 分鐘 50 次鏈上查詢。
+ * 2. **就算查得出來也不該翻**：那個暫停原因不是「餘額不夠」，是「這筆錢需要你簽章」。
+ *    沒付款就是不能繼續，翻成「可以繼續」是一個假承諾。
+ *
+ * 所以這條路是**事件驅動**：`TxTracker` 確認入帳、把訂單標成 `PAID` 的那一刻
+ * 呼叫這裡。一次付款確認配一次 DB 查詢，零額外 RPC，而且比 5 分鐘輪詢更即時。
+ *
+ * ## 為什麼不再確認一次餘額
+ *
+ * 與 `POST /v1/user/job/[job_id]/resume` 一致 —— 它的檔頭寫著：先檢查一次會出現
+ * 「檢查說夠、扣款說不夠」兩個答案，而使用者只會相信後者。付款確認過就翻面，
+ * 夠不夠讓實際扣款說了算；還是不夠的話它會再暫停一次，那條路徑本來就在。
+ *
+ * ## 通知在哪裡
+ *
+ * 不在這裡 —— `JOB_RESUMABLE` 是**活算**的待辦（見 `TODO_NOTIFICATION_TYPES`）。
+ * 翻成 `RESUMABLE` 這件事本身就是通知：小鈴鐺下一次輪詢就會從
+ * `listResumableByUser` 讀到它。這裡不需要、也不該呼叫任何發射函式。
+ *
+ * @returns 真的翻面的筆數（給呼叫端記 log；沒有暫停任務時是 0，那是常態）
+ */
+export async function releasePaymentBlockedJobs(params: {
+  userId: string;
+}): Promise<number> {
+  const log = logger.child({ service: "ResumableJobRelease" });
+  const jobs = await resumableJobRepo.listPaymentBlockedByUser(params.userId);
+  if (jobs.length === 0) return 0;
+
+  let released = 0;
+  for (const job of jobs) {
+    /**
+     * Info: (20260828 - Julian) 條件更新：使用者可能在付款與這一刻之間
+     * 自己按了繼續或取消。無條件覆寫會把那個狀態蓋回「等著被繼續」。
+     */
+    if (await resumableJobRepo.markResumable(job.id)) released += 1;
+  }
+
+  log.info("payment-blocked jobs released", {
+    userId: params.userId,
+    found: jobs.length,
+    released,
+  });
+  return released;
+}
+
 export async function scanResumableJobs(
   nowMs: number,
   batchSize: number = JOB_RESUME_SCAN_BATCH,

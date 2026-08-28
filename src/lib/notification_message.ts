@@ -106,6 +106,20 @@ export function notificationMessageOf(
         ? t("notification.analysis_failed_named", { title })
         : t("notification.analysis_failed");
     }
+    /**
+     * Info: (20260828 - Julian) 「可以繼續了」——**不是**「已為你繼續」。
+     *
+     * 伺服器做不到替他繼續：智能溫盤的匯入內容是端到端加密的，逐章迴圈跑在
+     * 瀏覽器裡（`use_carbon_chat.ts` 的 `runResumableJob`），伺服器沒有金鑰。
+     * 所以文案要明說「回去按一下」，否則使用者會以為它自己會跑完。
+     *
+     * 帶進度是為了讓他判斷值不值得現在回去：剩兩章與剩三十章是不同的決定。
+     */
+    case NOTIFICATION_TYPE.JOB_RESUMABLE: {
+      const completed = Number(item.payload.completedSteps ?? 0);
+      const total = Number(item.payload.totalSteps ?? 0);
+      return t("notification.job_resumable", { completed, total });
+    }
     default:
       return null;
   }

@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { ResumableJob } from "@/generated";
 import {
   JOB_OPEN_STATUSES,
+  JOB_PAUSE_REASON,
+  JOB_RESUMABLE_NOTICE_LIMIT,
   JOB_STATUS,
   type JobPauseReason,
   type JobStatus,
@@ -134,6 +136,45 @@ export class ResumableJobRepository {
     return prisma.resumableJob.findMany({
       where: { userId, status: { in: [...JOB_OPEN_STATUSES] } },
       orderBy: { updatedAt: "desc" },
+    });
+  }
+
+  /**
+   * Info: (20260828 - Julian) 小鈴鐺的活算來源：這位使用者「可以繼續」的任務。
+   *
+   * 只撈 `RESUMABLE`，不撈 `PAUSED` —— 後者是「還不能繼續」，推一則待辦給他
+   * 只會是一個他做不到的要求。也不撈 `RUNNING`：那是他已經按下去了。
+   *
+   * 活算而不入庫的理由見 `TODO_NOTIFICATION_TYPES`：狀態一離開 `RESUMABLE`
+   *（按繼續轉 RUNNING、取消轉 CANCELLED），那則通知就該自然消失。
+   *
+   * 這支會被每 60 秒的摘要輪詢打到，所以只選畫面用得到的欄位，
+   * 並且靠 `@@index([userId, status])`。
+   */
+  async listResumableByUser(userId: string): Promise<ResumableJob[]> {
+    return prisma.resumableJob.findMany({
+      where: { userId, status: JOB_STATUS.RESUMABLE },
+      orderBy: { updatedAt: "desc" },
+      take: JOB_RESUMABLE_NOTICE_LIMIT,
+    });
+  }
+
+  /**
+   * Info: (20260828 - Julian) 個人付款那條路要翻的：這位使用者卡在**等付款**的任務。
+   *
+   * 與 `listPausedForScan` 分開的理由是兩者的觸發完全不同：那支是 5 分鐘輪詢、
+   * 跨使用者、看團隊額度；這支是**付款確認後**針對單一使用者查一次。
+   * 合成一支會讓「掃描要不要處理 PAYMENT_REQUIRED」這個已經回答過的問題重新打開
+   *（答案是不要 —— 見 `resumable_job.service.ts` 的 `scanResumableJobs`）。
+   */
+  async listPaymentBlockedByUser(userId: string): Promise<ResumableJob[]> {
+    return prisma.resumableJob.findMany({
+      where: {
+        userId,
+        status: JOB_STATUS.PAUSED,
+        pauseReason: JOB_PAUSE_REASON.PAYMENT_REQUIRED,
+      },
+      orderBy: { updatedAt: "asc" },
     });
   }
 

@@ -277,6 +277,22 @@ jest.mock("@/services/team_invitation.service", () => ({
   listPendingInvitationsForUser: jest.fn(async () => []),
 }));
 
+/**
+ * Info: (20260828 - Julian) 第三個活算來源（`JOB_RESUMABLE`）。
+ *
+ * 這個 mock 是**必要的**，不是保險：`notification.service` 現在 import
+ * `resumableJobRepo`，少了它這一整支測試會拉進真的 Prisma。
+ * 與 20260828 那次 `TransactionRepo: class {}` 同一種傷 ——
+ * mock 只覆蓋了「當時走得到的路」，新相依一接上就炸。
+ */
+jest.mock("@/repositories/resumable_job.repo", () => ({
+  resumableJobRepo: {
+    listResumableByUser: jest.fn(async () => []),
+  },
+}));
+
+import { resumableJobRepo } from "@/repositories/resumable_job.repo";
+
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
 const fakeRepo = notificationRepo as unknown as {
   __reset: () => void;
@@ -1312,5 +1328,109 @@ describe("上限常數的對外契約", () => {
     expect(NOTIFICATION_PAGE_SIZE).toBeLessThanOrEqual(
       NOTIFICATION_PAGE_SIZE_MAX,
     );
+  });
+});
+
+/**
+ * Info: (20260828 - Julian) 第三個活算來源：可以繼續的暫停任務（`JOB_RESUMABLE`）。
+ *
+ * 與邀請同一個形狀，所以這一組驗的也是同樣三件事：進待辦節、算進 `todoCount`、
+ * 以及**抵達時間取得到**（D17：`arrivalKeyOf` 要的是「兩次不同的抵達鍵不同」）。
+ *
+ * 第三條特別重要：任務用 `updatedAt` 而不是 `createdAt`。同一份匯入
+ * 暫停 → 補點數 → 再暫停 → 再補點數，`createdAt` 兩次一樣，
+ * 鍵就會撞上 `seenKeys` 而**搖但不響**，且此後永久靜音。
+ */
+describe("可以繼續的任務（活算待辦）", () => {
+  const JOB_UPDATED_AT = new Date(NOW_MS - 60_000);
+
+  const jobRow = (overrides: Record<string, unknown> = {}) => ({
+    id: "job-1",
+    userId: USER,
+    type: "CARBON_REPORT_IMPORT",
+    status: "RESUMABLE",
+    resourceKey: "channel-1",
+    completedSteps: 3,
+    totalSteps: 11,
+    updatedAt: JOB_UPDATED_AT,
+    createdAt: new Date(NOW_MS - 86_400_000),
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    asMock(resumableJobRepo.listResumableByUser).mockResolvedValue([]);
+  });
+
+  it("進待辦節，並帶得出進度", async () => {
+    asMock(resumableJobRepo.listResumableByUser).mockResolvedValue([jobRow()]);
+
+    const list = await listNotifications({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(list.todos).toHaveLength(1);
+    expect(list.todos[0]).toEqual(
+      expect.objectContaining({
+        id: "job:job-1",
+        type: NOTIFICATION_TYPE.JOB_RESUMABLE,
+        // Info: (20260828 - Julian) 活算的待辦沒有已讀概念
+        readAt: null,
+        createdAt: JOB_UPDATED_AT.getTime(),
+      }),
+    );
+    expect(list.todos[0].payload).toEqual(
+      expect.objectContaining({
+        jobId: "job-1",
+        resourceKey: "channel-1",
+        completedSteps: 3,
+        totalSteps: 11,
+      }),
+    );
+  });
+
+  it("算進 todoCount，不算進 completedCount", async () => {
+    asMock(resumableJobRepo.listResumableByUser).mockResolvedValue([
+      jobRow(),
+      jobRow({ id: "job-2", resourceKey: "channel-2" }),
+    ]);
+
+    const summary = await getNotificationSummary({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(summary.todoCount).toBe(2);
+    expect(summary.completedCount).toBe(0);
+  });
+
+  /**
+   * Info: (20260828 - Julian) 這條擋的是「用 createdAt」那個寫法。
+   *
+   * 改成 `createdAt` 之後，上面兩條照樣綠 —— 而 D17 會以那個路徑復活。
+   */
+  it("抵達時間取 updatedAt（這一次翻面），不是 createdAt（開始匯入）", async () => {
+    asMock(resumableJobRepo.listResumableByUser).mockResolvedValue([jobRow()]);
+
+    const summary = await getNotificationSummary({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(summary.latestUnreadAt).toBe(JOB_UPDATED_AT.getTime());
+  });
+
+  it("沒有可繼續的任務時，摘要與清單都不受影響", async () => {
+    const summary = await getNotificationSummary({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(summary.todoCount).toBe(0);
+    expect(summary.latestUnreadAt).toBeNull();
   });
 });

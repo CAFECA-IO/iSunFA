@@ -257,6 +257,31 @@ describe("來源與畫面的接線（掃描）", () => {
    * 就不允許一筆 analysis 掛在不存在的訂單上。所以這條只能用原文的**位置**來釘。
    * 掃描型測試在這裡站得住的理由：搬動位置不會讓 `tsc` 或 `lint` 有任何意見。
    */
+  /**
+   * Info: (20260828 - Julian) 付款到帳之後要釋放「等付款」的可接續任務。
+   *
+   * 邏輯放在 `releasePaymentBlockedJobs`（可測），TxTracker 只有一行接線 ——
+   * 因為 `order.tracker.service.ts` 沒有測試檔，而它 import `publicClient` 與
+   * `viem`，為它寫第一支測試是替既有服務補課，範圍會失控。
+   *
+   * 所以這裡掃描「那一行在不在」。**它證明不了真的付款時會走到那裡** ——
+   * 那一項要在跑得動鏈上流程的環境真的付一次款，與驗收清單的 `p1` 同一種形狀。
+   */
+  it("TxTracker 標 PAID 之後呼叫 releasePaymentBlockedJobs", () => {
+    const tracker = codeOf("src", "services", "order.tracker.service.ts");
+    const paid = tracker.indexOf("ORDER_STATUS.PAID");
+    const release = tracker.indexOf("releasePaymentBlockedJobs(");
+
+    expect(paid).toBeGreaterThan(-1);
+    expect(release).toBeGreaterThan(paid);
+
+    /**
+     * Info: (20260828 - Julian) 不擋主流程：訂單已經標成 PAID 了，
+     * 這一步失敗不該讓整輪追蹤中止（後面的訂單會跟著停在 PENDING）。
+     */
+    expect(tracker).toMatch(/try \{[\s\S]{0,120}releasePaymentBlockedJobs\(/);
+  });
+
   it("完成通知不在 if (order) 區塊裡", () => {
     const recorder = codeOf("src", "services", "issue.recorder.service.ts");
     const notify = recorder.indexOf("notifyAnalysisCompleted(");

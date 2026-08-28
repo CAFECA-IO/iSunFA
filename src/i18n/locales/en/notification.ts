@@ -14,6 +14,8 @@ export const notification = {
   team_invitation: "{{inviterName}} invited you to join team {{teamName}}",
   wallet_upgrade:
     "The system requests a wallet upgrade so it can receive on-chain credentials such as your membership card",
+  job_resumable:
+    "Credits are back. Your import ({{completed}}/{{total}}) can continue — go to Smart GHG Inventory and tap Resume.",
   analysis_completed:
     "Your analysis job has finished — click to view the result",
   analysis_failed:

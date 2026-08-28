@@ -15,6 +15,8 @@ export const notification = {
     "「{{inviterName}}」がチーム「{{teamName}}」への参加に招待しています",
   wallet_upgrade:
     "会員カードなどのオンチェーン証明を受け取るため、ウォレットのアップグレードが必要です",
+  job_resumable:
+    "ポイントが補充されました。インポート（{{completed}}/{{total}}）を再開できます —— スマート GHG インベントリで「再開」を押してください。",
   analysis_completed:
     "分析ジョブが完了しました。クリックして結果を確認してください",
   analysis_failed:

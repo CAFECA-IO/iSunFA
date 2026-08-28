@@ -13,6 +13,8 @@ export const notification = {
   completed_title: "工作完成",
   team_invitation: "「{{inviterName}}」邀请你加入团队「{{teamName}}」",
   wallet_upgrade: "系统要求升级你的钱包，以支持接收会员卡等链上凭证",
+  job_resumable:
+    "点数已补回，「{{completed}}/{{total}}」的导入可以继续了 —— 回到智能温盘按「继续导入」",
   analysis_completed: "你的分析工作已完成，点击查看结果",
   analysis_failed: "你的分析工作失败了，请重新送出或联系客服",
   // Info: (20260825 - Julian) 帶報告名稱的版本；取不到名稱時退回上面那句
