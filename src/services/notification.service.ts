@@ -422,6 +422,15 @@ export async function notifyAnalysisCompleted(params: {
   userId: string;
   analysisId: string;
   analysisType: string;
+  /**
+   * Info: (20260827 - Julian) 帳本 id，`:accountBookId` 的來源（D43 第二步）。
+   *
+   * 可選：只有憑證分析與日記帳修正的去處需要它，其餘類別的路徑沒有 token。
+   * 缺了它 `notificationHrefOf` 會讓整條路徑退化為 `null`（不可點），
+   * 而不是組出 `/user/account_book/undefined/journal` —— 那是 D43 要修掉的
+   * 症狀本身，修法不該再製造一次。
+   */
+  accountBookId?: string;
 }): Promise<void> {
   try {
     await notificationRepo.createIfAbsent({
@@ -430,6 +439,17 @@ export async function notifyAnalysisCompleted(params: {
       payload: {
         analysisId: params.analysisId,
         analysisType: params.analysisType,
+        /**
+         * Info: (20260827 - Julian) 沒有值時**不寫這個鍵**，不要寫 null。
+         *
+         * `resolvePathTokens` 判斷的是「型別是不是非空字串」，null 與缺鍵
+         * 對它一樣；但 payload 是永久保存的資料，一個恆為 null 的欄位
+         * 會讓之後查資料的人以為「這筆分析沒有帳本」，而事實是
+         * 「發通知的當下取不到」。與 `analysisType` 同一種寫法。
+         */
+        ...(params.accountBookId
+          ? { accountBookId: params.accountBookId }
+          : {}),
       } as Prisma.InputJsonObject,
       dedupeKey: `${NOTIFICATION_DEDUPE_PREFIX.ANALYSIS_COMPLETED}${params.analysisId}`,
     });
@@ -490,6 +510,8 @@ export async function notifyAnalysisFailed(params: {
    * 沒有它就退回不帶標題的那句話 —— 少一個詞比顯示 `undefined` 好。
    */
   analysisType?: string;
+  // Info: (20260827 - Julian) 同上（D43 第二步）；失敗路徑從 `order.data` 取得
+  accountBookId?: string;
 }): Promise<void> {
   try {
     await notificationRepo.createIfAbsent({
@@ -498,6 +520,9 @@ export async function notifyAnalysisFailed(params: {
       payload: {
         orderId: params.orderId,
         ...(params.analysisType ? { analysisType: params.analysisType } : {}),
+        ...(params.accountBookId
+          ? { accountBookId: params.accountBookId }
+          : {}),
       } as Prisma.InputJsonObject,
       dedupeKey: `${NOTIFICATION_DEDUPE_PREFIX.ANALYSIS_FAILED}${params.orderId}`,
     });
