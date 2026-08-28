@@ -4297,33 +4297,44 @@ export const useCarbonChat = () => {
     if (activities.length > 0) {
       applyInventoryExtraction({ activities });
     }
+    /**
+     * Info: (20260827 - Emily) 阻擋紀錄**無條件收集**(PR #6725 round-2 低-1)。
+     *
+     * 原本它在 `else` 裡 —— 也就是「完全沒有任何分錄入帳」才收。
+     * 一份報告若有兩個段落各自產生分錄、其中一個勾稽被擋另一個成功,
+     * 就會走 apply 分支,而被擋那半**一筆紀錄都不留**:
+     * 帳本只有成功的一半,畫面上卻沒有任何地方提過另一半被擋 ——
+     * 圖表於是用半套資料畫出一張桑基圖,而本 PR 新增的那句文案自己在警告這件事
+     * (「半套資料入帳會讓每張圖都錯得很像對的」)。
+     */
+    const blocks = Array.from(importedLedgerById.entries())
+      .filter(
+        ([, result]) =>
+          result.blockedReason !== null || result.missingLedgerTable,
+      )
+      .map(([paragraphId, result]) => ({
+        paragraphId,
+        // Info: (20260804 - Tzuhan) 「該有表3.8 卻沒拿到」與「有表但勾稽沒過」是兩件事
+        reason: result.missingLedgerTable
+          ? `缺少 ${LEDGER_SOURCE_TABLE_NO}(同節有全公司總量表,疑似被頁碼切片切掉)`
+          : (result.blockedReason ?? "未知原因"),
+        blockedAt: new Date().toISOString(),
+      }));
     if (importedEntries.length > 0) {
       applyImportedLedgerEntries(importedEntries);
-    } else {
+    }
+    if (blocks.length > 0) {
+      console.warn("[carbon-chat] imported ledger blocked", blocks);
       /**
-       * Info: (20260803 - Tzuhan) 有表卻沒入帳時要留痕跡:對帳說明已寫在報告裡,
-       * 但開發時看 log 才分得出「沒有表3.8」與「有表3.8 但勾稽沒過」。
+       * Info: (20260825 - Emily) #6707:留進 channel 狀態,讓「有沒有異常」問得到答案。
+       * Info: (20260827 - Emily) 順序有意義(round-2 低-1):
+       * `applyImportedLedgerEntries` 成功入帳時會清掉阻擋紀錄
+       * (「紀錄描述的狀態已不存在」),而部分成功部分被擋時那句話只對成功那半成立 ——
+       * 所以這次的紀錄要在 apply **之後**寫回去,兩個 setState 依序生效,後者為準。
        */
-      const blocks = Array.from(importedLedgerById.entries())
-        .filter(
-          ([, result]) =>
-            result.blockedReason !== null || result.missingLedgerTable,
-        )
-        .map(([paragraphId, result]) => ({
-          paragraphId,
-          // Info: (20260804 - Tzuhan) 「該有表3.8 卻沒拿到」與「有表但勾稽沒過」是兩件事
-          reason: result.missingLedgerTable
-            ? `缺少 ${LEDGER_SOURCE_TABLE_NO}(同節有全公司總量表,疑似被頁碼切片切掉)`
-            : (result.blockedReason ?? "未知原因"),
-          blockedAt: new Date().toISOString(),
-        }));
-      if (blocks.length > 0) {
-        console.warn("[carbon-chat] imported ledger blocked", blocks);
-        // Info: (20260825 - Emily) #6707:留進 channel 狀態,讓「有沒有異常」問得到答案
-        recordLedgerImportBlocks(blocks);
-        // Info: (20260825 - Emily) #6667:ref 同步更新 —— 本輪稍後的建表就要用,等不到下一輪 render
-        ledgerImportBlocksRef.current = blocks;
-      }
+      recordLedgerImportBlocks(blocks);
+      // Info: (20260825 - Emily) #6667:ref 同步更新 —— 本輪稍後的建表就要用,等不到下一輪 render
+      ledgerImportBlocksRef.current = blocks;
     }
     importActivitiesRef.current = [];
     /**

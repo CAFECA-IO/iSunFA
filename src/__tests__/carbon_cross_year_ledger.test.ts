@@ -1,5 +1,6 @@
 import { describe, it, expect } from "@jest/globals";
 import {
+  UNDATED_IMPORTED_PENDING_KEY,
   buildYearSnapshot,
   mergeImportedLedgerEntries,
 } from "@/lib/carbon_ledger_totals";
@@ -140,6 +141,86 @@ describe("跨年度匯入的帳本歸屬(PR #6725 review R1)", () => {
       ),
     ).toBe(true);
     expect(after.totalCo2eKg).toBe("1450000");
+  });
+});
+
+/**
+ * Info: (20260827 - Emily) 「年度未知」不猜,但要說出來(PR #6725 round-2 高-1)。
+ *
+ * `importedOrigin.year` 是新增的選填欄位,而帳本住在客戶端的 E2EE 草稿裡、
+ * **沒有回填路徑** —— 所以每一個既有帳本的匯入分錄都是年度未知,
+ * 升版後再匯一年就 100% 走進孤兒列那條路,而 #6719 的引導句正把他們送過去。
+ * 規則 3 因此在這一格留一項待補:把靜默的虛增換成看得見的決定。
+ */
+describe("既有帳本(年度未知)再匯一年時要留下待補(round-2 高-1)", () => {
+  const undated2023 = [
+    importedEntry("(1) 總公司", "1000000"),
+    importedEntry("(2) 舊廠", "400000"),
+  ];
+  const dated2024 = [
+    importedEntry("(1) 總公司", "1100000", 2024),
+    importedEntry("(3) 新廠", "300000", 2024),
+  ];
+
+  it("留下一項待補,說出「總量可能虛增」與下一步", () => {
+    const base = mergeImportedLedgerEntries(undefined, undated2023);
+    const after = mergeImportedLedgerEntries(base, dated2024);
+
+    const item = after.pending.find(
+      (entry) => entry.activityKey === UNDATED_IMPORTED_PENDING_KEY,
+    );
+    expect(item).toBeDefined();
+    expect(item?.reason).toContain("虛增");
+    expect(item?.reason).toContain("2024");
+    expect(item?.sourceName).toContain("1 筆");
+  });
+
+  it("待補只是提示,不改變合併行為(不猜年度 → 舊廠仍在、總量仍是舊規則)", () => {
+    const base = mergeImportedLedgerEntries(undefined, undated2023);
+    const after = mergeImportedLedgerEntries(base, dated2024);
+
+    expect(
+      after.entries.some((entry) => entry.importedOrigin?.site === "(2) 舊廠"),
+    ).toBe(true);
+    expect(after.totalCo2eKg).toBe("1800000");
+  });
+
+  it("重匯不會讓待補愈積愈多(固定鍵取代)", () => {
+    const base = mergeImportedLedgerEntries(undefined, undated2023);
+    const once = mergeImportedLedgerEntries(base, dated2024);
+    const twice = mergeImportedLedgerEntries(once, dated2024);
+
+    expect(
+      twice.pending.filter(
+        (entry) => entry.activityKey === UNDATED_IMPORTED_PENDING_KEY,
+      ),
+    ).toHaveLength(1);
+  });
+
+  it("本次匯入也沒有年度時不提(那是舊世界的正常狀態,不是待補)", () => {
+    const base = mergeImportedLedgerEntries(undefined, undated2023);
+    const after = mergeImportedLedgerEntries(base, [
+      importedEntry("(1) 總公司", "1100000"),
+    ]);
+
+    expect(
+      after.pending.some(
+        (entry) => entry.activityKey === UNDATED_IMPORTED_PENDING_KEY,
+      ),
+    ).toBe(false);
+  });
+
+  it("帳本裡每一筆都有年度時不提(修法生效的正常路徑)", () => {
+    const base = mergeImportedLedgerEntries(undefined, [
+      importedEntry("(1) 總公司", "1000000", 2023),
+    ]);
+    const after = mergeImportedLedgerEntries(base, dated2024);
+
+    expect(
+      after.pending.some(
+        (entry) => entry.activityKey === UNDATED_IMPORTED_PENDING_KEY,
+      ),
+    ).toBe(false);
   });
 });
 
