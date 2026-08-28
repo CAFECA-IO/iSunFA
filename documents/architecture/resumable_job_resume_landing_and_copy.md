@@ -410,7 +410,7 @@ GET /api/v1/chat/carbon/pending-import  → 7 個全部 pendingImport: null
 
 ---
 
-## 11. 這支 branch 沒有做的事（收尾清單）
+## 11. 待辦清單
 
 每一條在**程式碼裡也有對應的註解**，所以不看文件的人也會在改到那一行時撞見。
 
