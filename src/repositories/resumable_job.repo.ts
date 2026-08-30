@@ -54,6 +54,12 @@ export const JOB_CLAIM = {
   CLAIMED: "CLAIMED",
   BUSY: "BUSY",
   COMPLETED: "COMPLETED",
+  /**
+   * Info: (20260828 - Luphia) 使用者已經放棄這個任務（review #6726 高-1）。
+   * 與 `COMPLETED` 分成兩種結果：呼叫端要說得出「已經做完」與「你說不做的」
+   * 是兩件不同的事。
+   */
+  CANCELLED: "CANCELLED",
   NO_JOB: "NO_JOB",
 } as const;
 
@@ -63,6 +69,7 @@ export type JobClaimOutcome =
   | { kind: typeof JOB_CLAIM.CLAIMED; job: ResumableJob }
   | { kind: typeof JOB_CLAIM.BUSY; job: ResumableJob; heldUntil: Date }
   | { kind: typeof JOB_CLAIM.COMPLETED; job: ResumableJob }
+  | { kind: typeof JOB_CLAIM.CANCELLED; job: ResumableJob }
   | { kind: typeof JOB_CLAIM.NO_JOB };
 
 export class ResumableJobRepository {
@@ -226,13 +233,34 @@ export class ResumableJobRepository {
     if (existing.status === JOB_STATUS.COMPLETED) {
       return { kind: JOB_CLAIM.COMPLETED, job: existing };
     }
+    /**
+     * Info: (20260828 - Luphia) 已取消的任務不可以被搶去跑（review #6726 高-1）。
+     *
+     * 先前只擋 `COMPLETED`，而 `CANCELLED` 既不是 `COMPLETED` 也不是 `RUNNING`
+     * ——兩個條件同時成立，於是**取消會被撤銷**：狀態寫回 `RUNNING`、
+     * `pauseReason` 清掉，那批份真的跑、點數真的扣。
+     * 使用者明確說不要做的事被做了，而且沒有任何畫面提過。
+     */
+    if (existing.status === JOB_STATUS.CANCELLED) {
+      return { kind: JOB_CLAIM.CANCELLED, job: existing };
+    }
 
     const staleBefore = new Date(params.nowMs - params.ttlMs);
     const claimed = await prisma.resumableJob.updateMany({
       where: {
         id: existing.id,
         userId: params.userId,
-        status: { not: JOB_STATUS.COMPLETED },
+        /**
+         * Info: (20260828 - Luphia) 兩種**終局**狀態都不可以被搶（高-1）。
+         *
+         * 狀態集合只有五個（RUNNING / PAUSED / RESUMABLE / COMPLETED /
+         * CANCELLED），排除這兩個之後這個判斷就**完備**了——不會再有第三個
+         * 「不該被搶」的狀態漏掉。上面那次 `findUnique` 只用來區分失敗的原因，
+         * **裁決在這裡**：先讀後寫之間有窗口，而這把鎖的全部意義就是關掉它。
+         */
+        status: {
+          notIn: [JOB_STATUS.COMPLETED, JOB_STATUS.CANCELLED],
+        },
         /**
          * Info: (20260827 - Luphia) 可以搶的兩種情況：沒有人在跑（狀態不是
          * RUNNING），或上一個持有者的租約過期了。`updatedAt` 是 `@updatedAt`，

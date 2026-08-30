@@ -158,7 +158,7 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import type { ICreditPauseDetail } from "@/constants/carbon_chatbot";
 import type { IJobView } from "@/interfaces/resumable_job";
 import { CREDIT_EVENT } from "@/constants/credit_events";
-import { subscribeCreditEvents } from "@/lib/credit_events";
+import { publishCreditEvent, subscribeCreditEvents } from "@/lib/credit_events";
 import {
   JOB_CLAIM_INTENT,
   JOB_PAUSE_REASON,
@@ -2716,6 +2716,18 @@ export const useCarbonChat = () => {
       lastPageIndexRef.current,
     );
     setImportJob(null);
+    /**
+     * Info: (20260828 - Luphia) 告訴其他分頁「這個任務不做了」（review #6726 高-1）。
+     *
+     * 那顆「接著匯入」在別的分頁上是用客戶端狀態判斷要不要顯示的——沒有這則
+     * 廣播，它會一直留在那裡邀請使用者去花他剛剛才說不要花的點數。
+     * 帶上 `resourceKey`：不帶的話，這個聊天室的取消會把別的聊天室的暫停
+     * 清單一起清掉。
+     */
+    publishCreditEvent({
+      type: CREDIT_EVENT.JOB_CANCELLED,
+      resourceKey: chatChannel,
+    });
     setDraftNotice(
       { type: "info", text: t("carbon_chatbot.import_cancelled") },
       activeSessionId,
@@ -2725,6 +2737,8 @@ export const useCarbonChat = () => {
     importJob,
     pendingImport,
     activeSessionId,
+    // Info: (20260828 - Luphia) 取消的廣播要帶這一間聊天室的 resourceKey
+    chatChannel,
     setPendingImportFor,
     persistPendingImport,
     setDraftNotice,
@@ -3646,6 +3660,35 @@ export const useCarbonChat = () => {
    * 而那一次撞牆在呼叫 LLM 之前就被擋下，一點都不會扣。
    */
   const autoResumeAfterPaymentRef = useRef<(() => void) | null>(null);
+  /**
+   * Info: (20260828 - Luphia) 別的分頁取消了這份匯入（review #6726 高-1）。
+   *
+   * 只清掉**暫停狀態**，`items` 原封不動——那些章已經解析完、也已經扣過點，
+   * 連內容一起清掉才是真的造成損失（與 `cancelImportJob` 同一個立場）。
+   *
+   * 不落地：發起取消的那個分頁已經寫過一次了，這裡再寫一次只會多一次
+   * 樂觀鎖衝突。這一支的責任只有「把那顆會花錢的按鈕收起來」。
+   */
+  const onJobCancelledElsewhereRef = useRef<
+    ((resourceKey?: string) => void) | null
+  >(null);
+  useEffect(() => {
+    onJobCancelledElsewhereRef.current = (resourceKey) => {
+      // Info: (20260828 - Luphia) 別的聊天室的取消不該動到這一間
+      if (resourceKey !== chatChannel) return;
+      if (!pendingImport) return;
+      if ((pendingImport.pausedUnits ?? []).length === 0) return;
+      setPendingImportFor(activeSessionId, {
+        ...pendingImport,
+        pausedChapters: [],
+        pausedUnits: [],
+        pauseReason: null,
+        pauseDetail: null,
+      });
+      setImportJob(null);
+    };
+  }, [chatChannel, pendingImport, activeSessionId, setPendingImportFor]);
+
   // Info: (20260827 - Luphia) 理由同下：訂閱只掛一次，會變的東西放 ref
   const refreshImportJobRef = useRef<(() => Promise<void>) | null>(null);
   useEffect(() => {
@@ -3687,6 +3730,10 @@ export const useCarbonChat = () => {
   useEffect(
     () =>
       subscribeCreditEvents((event) => {
+        if (event.type === CREDIT_EVENT.JOB_CANCELLED) {
+          onJobCancelledElsewhereRef.current?.(event.resourceKey);
+          return;
+        }
         if (event.type !== CREDIT_EVENT.PAYMENT_SUCCEEDED) return;
         /**
          * Info: (20260827 - Luphia) 狀態也刷新一次：即使這一頁沒有暫停中的匯入

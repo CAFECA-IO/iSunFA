@@ -41,6 +41,7 @@ jest.mock("@/repositories/resumable_job.repo", () => {
       CLAIMED: "CLAIMED",
       BUSY: "BUSY",
       COMPLETED: "COMPLETED",
+      CANCELLED: "CANCELLED",
       NO_JOB: "NO_JOB",
     },
     ResumableJobOwnershipError: OwnershipError,
@@ -159,6 +160,39 @@ describe("執行許可：四種結果對應四種處置", () => {
     await expect(claim({ intent: JOB_CLAIM_INTENT.START })).resolves.toBeNull();
   });
 
+  /**
+   * Info: (20260828 - Luphia) **取消過的任務不可以被搶去跑**（review #6726 高-1）。
+   *
+   * 缺陷的四段鏈條：分頁 A 按「不做了」→ 分頁 B（早就開著、沒重新整理）那顆
+   * 「接著匯入」還在 → 按下去 → 許可放行 → 那批份真的跑、點數真的扣
+   *（一份 2MB 的 PDF 單次預扣估算約 677 點）。**使用者明確說不要做的事被做了。**
+   *
+   * 這一條特別要緊，因為 `cancel/route.ts` 的註解自己寫著「畫面上那顆『接著匯入』
+   * 會一直邀請他去花錢」——而取消之後它在另一個分頁裡仍然邀請得到。
+   * 那是一句描述了未達成保證的註解（檢查表 §1.14）。
+   */
+  it("取消過的任務：接續是錯，新開時不是", async () => {
+    asMock(resumableJobRepo.claimIfIdle).mockResolvedValue({
+      kind: JOB_CLAIM.CANCELLED,
+      job: jobRow({ status: JOB_STATUS.CANCELLED }),
+    });
+    await expect(
+      claim({ intent: JOB_CLAIM_INTENT.RESUME }),
+    ).rejects.toMatchObject({ code: API_ERRORS.TW_JOB_CANCELLED.code });
+    await expect(claim({ intent: JOB_CLAIM_INTENT.START })).resolves.toBeNull();
+  });
+
+  /**
+   * Info: (20260828 - Luphia) 「已取消」與「已完成」用不同的錯誤碼：兩者的
+   * 下一步不同——已完成是「沒有東西可做了」，已取消是「你自己說不做的」，
+   * 而後者若顯示成前者，使用者會以為系統把它跑完了。
+   */
+  it("「已取消」與「已完成」不是同一個錯誤碼", () => {
+    expect(API_ERRORS.TW_JOB_CANCELLED.code).not.toBe(
+      API_ERRORS.TW_JOB_ALREADY_COMPLETED.code,
+    );
+  });
+
   it("接續已完成的任務是錯，新開時不是（重新匯入會覆寫舊書籤）", async () => {
     asMock(resumableJobRepo.claimIfIdle).mockResolvedValue({
       kind: JOB_CLAIM.COMPLETED,
@@ -267,10 +301,19 @@ describe("租約的實作性質", () => {
     expect(whereScope).toContain("OR: [");
   });
 
-  // Info: (20260827 - Luphia) 已完成的列不可以被搶去跑
-  it("條件排除已完成", () => {
+  /**
+   * Info: (20260828 - Luphia) 已完成**與已取消**的列都不可以被搶去跑
+   *（review #6726 高-1）。
+   *
+   * 狀態集合只有五個（RUNNING / PAUSED / RESUMABLE / COMPLETED / CANCELLED），
+   * 所以排除這兩個之後這個判斷就**完備**了——不會再有第三個「不該被搶」的
+   * 狀態漏掉。這一條同時釘住那個完備性。
+   */
+  it("條件排除已完成與已取消", () => {
     const whereScope = claimScope.slice(claimScope.indexOf("updateMany("));
-    expect(whereScope).toContain("status: { not: JOB_STATUS.COMPLETED }");
+    expect(whereScope).toContain("JOB_STATUS.COMPLETED");
+    expect(whereScope).toContain("JOB_STATUS.CANCELLED");
+    expect(whereScope).toContain("notIn:");
   });
 
   /**

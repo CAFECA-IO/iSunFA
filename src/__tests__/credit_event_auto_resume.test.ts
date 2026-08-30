@@ -232,8 +232,15 @@ describe("收到之後的三道閘門", () => {
   it("訂閱的依賴是空陣列", () => {
     const subAt = hook.indexOf("subscribeCreditEvents((event)");
     expect(subAt).toBeGreaterThan(-1);
-    const after = hook.slice(subAt, subAt + 400);
-    expect(after).toContain("[],");
+    /**
+     * Info: (20260828 - Luphia) 切到這個 `useEffect` 的結尾，不用固定位移
+     *（原本是 `subAt + 400`）。在 effect 裡多加一個事件分支就會把依賴陣列
+     * 推出窗外，於是測試紅在一個與行為無關的地方——這個坑在本專案已經踩到
+     * 第三次（`carbon_import_pause`、`credit_pause_ways` 各一次）。
+     */
+    const end = hook.indexOf("const toggleImportItem", subAt);
+    expect(end).toBeGreaterThan(subAt);
+    expect(hook.slice(subAt, end)).toContain("[],");
   });
 
   it.each(["zh_tw", "zh_cn", "en", "ja", "ko"])(
@@ -253,4 +260,96 @@ describe("收到之後的三道閘門", () => {
       expect(file).toContain("import_auto_resuming:");
     },
   );
+});
+
+/**
+ * Info: (20260828 - Luphia) 取消要跨分頁（review #6726 高-1）。
+ *
+ * 分頁 A 按「不做了」，而分頁 B 那顆「接著匯入」是用**客戶端狀態**判斷要不要
+ * 顯示的——沒有這則廣播，它會一直留在那裡邀請使用者去花他剛剛才說不要花的點數。
+ *
+ * 這是**體驗**不是保證：真正擋住的是伺服器端的執行許可（已取消的任務拿不到許可，
+ * 見 `resumable_job_claim.test.ts`）。BroadcastChannel 不可用時只有那道擋得住。
+ */
+describe("取消要跨分頁", () => {
+  const original = (globalThis as Record<string, unknown>).BroadcastChannel;
+  beforeEach(() => {
+    FakeBroadcastChannel.reset();
+    (globalThis as Record<string, unknown>).BroadcastChannel =
+      FakeBroadcastChannel;
+  });
+  afterEach(() => {
+    (globalThis as Record<string, unknown>).BroadcastChannel = original;
+  });
+
+  it("帶得動 resourceKey", () => {
+    const seen: (string | undefined)[] = [];
+    const stop = subscribeCreditEvents((event) => seen.push(event.resourceKey));
+    publishCreditEvent({
+      type: CREDIT_EVENT.JOB_CANCELLED,
+      resourceKey: "carbon-chat-0xabc-default",
+    });
+    expect(seen).toEqual(["carbon-chat-0xabc-default"]);
+    stop();
+  });
+
+  /**
+   * Info: (20260828 - Luphia) `resourceKey` 形狀不對就整則丟掉。收到的那一端
+   * 會拿它比對聊天室，而一個不是字串的值會讓比對永遠不成立或炸開。
+   */
+  it("resourceKey 不是字串就整則丟掉", () => {
+    const seen: string[] = [];
+    const stop = subscribeCreditEvents((event) => seen.push(event.type));
+    const channel = new FakeBroadcastChannel(CREDIT_EVENT_CHANNEL_NAME);
+    channel.postMessage({ type: CREDIT_EVENT.JOB_CANCELLED, resourceKey: 42 });
+    expect(seen).toEqual([]);
+    stop();
+  });
+
+  // Info: (20260828 - Luphia) 付款事件不帶 resourceKey，缺席是合法的
+  it("缺席的 resourceKey 是合法的", () => {
+    const seen: string[] = [];
+    const stop = subscribeCreditEvents((event) => seen.push(event.type));
+    publishCreditEvent({ type: CREDIT_EVENT.PAYMENT_SUCCEEDED });
+    expect(seen).toEqual([CREDIT_EVENT.PAYMENT_SUCCEEDED]);
+    stop();
+  });
+});
+
+describe("取消在客戶端的兩端接線", () => {
+  const hook = readFileSync(
+    join(process.cwd(), "src", "hooks", "use_carbon_chat.ts"),
+    "utf8",
+  );
+
+  it("取消成功後廣播，且帶這一間聊天室的 resourceKey", () => {
+    const start = hook.indexOf("const cancelImportJob = useCallback");
+    expect(start).toBeGreaterThan(-1);
+    const end = hook.indexOf("const postImportParsedNotice", start);
+    const scope = hook.slice(start, end);
+    expect(scope).toContain("CREDIT_EVENT.JOB_CANCELLED");
+    expect(scope).toContain("resourceKey: chatChannel");
+    /**
+     * Info: (20260828 - Luphia) 廣播要排在伺服器確認之後——那條路徑上
+     * 失敗會先 `return`，所以廣播必須在那個 return 之後。
+     */
+    const failAt = scope.indexOf("import_cancel_failed");
+    expect(failAt).toBeGreaterThan(-1);
+    expect(scope.indexOf("CREDIT_EVENT.JOB_CANCELLED")).toBeGreaterThan(failAt);
+  });
+
+  /**
+   * Info: (20260828 - Luphia) 別的聊天室的取消不該動到這一間——不比對的話，
+   * A 聊天室按取消會把 B 聊天室的暫停清單一起清掉。
+   */
+  it("收到時比對聊天室，且只清暫停狀態不清內容", () => {
+    const start = hook.indexOf("onJobCancelledElsewhereRef.current = (");
+    expect(start).toBeGreaterThan(-1);
+    const scope = hook.slice(start, start + 900);
+    expect(scope).toContain("if (resourceKey !== chatChannel) return;");
+    expect(scope).toContain("pausedUnits: [],");
+    expect(scope).toContain("pauseReason: null,");
+    // Info: (20260828 - Luphia) items 是已經扣過點的東西，不可以清
+    expect(scope).not.toContain("items: []");
+  });
 });

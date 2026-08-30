@@ -385,6 +385,19 @@ export async function claimJobForChannel(params: {
        */
       if (params.intent === JOB_CLAIM_INTENT.START) return null;
       throw toApiError(API_ERRORS.TW_JOB_ALREADY_COMPLETED);
+    /**
+     * Info: (20260828 - Luphia) 使用者已經放棄這個任務（review #6726 高-1）。
+     *
+     * 接續要**明確報錯**，而不是安靜放行：那顆「接著匯入」可能還留在另一個
+     * 早就開著的分頁上，而按下去會花掉他剛剛才說不要花的點數。錯誤碼與
+     * 「已完成」分開，因為兩者的下一步不同——已完成是「沒有東西可做了」，
+     * 已取消是「你自己說不做的」。
+     *
+     * 新開仍然放行：重新匯入本來就會覆寫舊書籤，與 `COMPLETED` 同一個處置。
+     */
+    case JOB_CLAIM.CANCELLED:
+      if (params.intent === JOB_CLAIM_INTENT.START) return null;
+      throw toApiError(API_ERRORS.TW_JOB_CANCELLED);
     case JOB_CLAIM.NO_JOB:
       // Info: (20260827 - Luphia) 新開時還沒有書籤是常態：第一次寫檢查點才會建
       if (params.intent === JOB_CLAIM_INTENT.START) return null;

@@ -17,6 +17,14 @@ import {
 
 export interface ICreditEvent {
   type: CreditEventType;
+  /**
+   * Info: (20260828 - Luphia) 事件牽涉的資源（碳盤查是聊天室 channel）。
+   *
+   * `JOB_CANCELLED` 一定要帶：沒有它的話，A 聊天室的取消會把 B 聊天室的
+   * 暫停清單一起清掉——那是另一種「使用者沒有要求的事被做了」。
+   * `PAYMENT_SUCCEEDED` 不帶（付款不屬於任何一個聊天室）。
+   */
+  resourceKey?: string;
 }
 
 const CREDIT_EVENT_TYPES: readonly string[] = Object.values(CREDIT_EVENT);
@@ -32,6 +40,17 @@ function toCreditEvent(value: unknown): ICreditEvent | null {
   const candidate = value as Record<string, unknown>;
   if (typeof candidate.type !== "string") return null;
   if (!CREDIT_EVENT_TYPES.includes(candidate.type)) return null;
+  /**
+   * Info: (20260828 - Luphia) `resourceKey` 缺席是合法的（付款事件不帶），
+   * 但**出現時必須是字串**——認不出的形狀一律丟掉，理由同上：那一端接著要花錢。
+   */
+  if (candidate.resourceKey !== undefined) {
+    if (typeof candidate.resourceKey !== "string") return null;
+    return {
+      type: candidate.type as CreditEventType,
+      resourceKey: candidate.resourceKey,
+    };
+  }
   return { type: candidate.type as CreditEventType };
 }
 
