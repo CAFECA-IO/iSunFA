@@ -18,6 +18,24 @@ export type CarbonChatAttachmentPayload = z.infer<
   typeof CarbonChatAttachmentSchema
 >;
 
+/**
+ * Info: (20260825 - Emily) #6707 帳本事實(第二層):前端由 buildLedgerFactBundle 決定性組出,
+ * 是 LLM 回答數據問題的唯一合法數字來源。帳本是 E2EE 的、伺服端讀不到,
+ * 所以事實只能隨請求帶上來 —— 上限與 LEDGER_FACT_BUNDLE_MAX 同值(80),
+ * 超了是前端組包的 bug,打回比靜默裁切好。
+ */
+export const CarbonLedgerFactSchema = z.object({
+  label: z.string().min(1).max(200),
+  value: z.string().min(1).max(500),
+  source: z.string().min(1).max(300),
+  /**
+   * Info: (20260827 - Emily) 本筆的排放量數值(kg 級),出口守門的裁決集合只認這些
+   * (見 IContextFact.emissionsKg)。**選填**:敘事型事實(待補、勾稽阻擋原因)沒有。
+   * 上限 8:單筆事實最多帶兩年 × 少數幾個值;多的是組包端的 bug,打回比靜默裁切好。
+   */
+  emissionsKg: z.array(z.string().min(1).max(40)).max(8).optional(),
+});
+
 export const CarbonChatRequestSchema = z
   .object({
     init: z.boolean().optional(),
@@ -40,6 +58,8 @@ export const CarbonChatRequestSchema = z
       .array(CarbonChatAttachmentSchema)
       .max(CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE)
       .optional(),
+    // Info: (20260825 - Emily) #6707 帳本事實包(見 CarbonLedgerFactSchema 的註解)
+    ledgerFacts: z.array(CarbonLedgerFactSchema).max(80).optional(),
   })
   // Info: (20260714 - Emily) init 模式必須有 channel + recipientPublicKey;一般模式必須有 history
   .refine((body) => (body.init ? true : Array.isArray(body.history)), {
