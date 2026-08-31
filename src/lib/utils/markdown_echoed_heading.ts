@@ -63,21 +63,42 @@ const toSectionLabel = (raw: string): ISectionLabel => {
  * Info: (20260827 - Emily) 這一行是否為「被標題涵蓋的原文標題」(#6705)。
  *
  * 三個條件同時成立才算:
- * 1. 有錨 —— 兩行的節號相同(且非空),或這一行本身是 ATX 標頭
+ * 1. 有錨 —— 兩行的節號**相同且非空**
  * 2. 文字非空,且是標題文字的子串(去空白/NFKC 後)—— 沒有原文獨有的字
  * 3. 不是完整句子 —— 帶句末標點的一行是內文,不是標題
+ *
+ * Info: (20260831 - Emily) 錨只認節號:「這一行本身是 ATX 標頭」**不構成錨**
+ * (PR #6729 review 高-1)。
+ *
+ * 第一版寫成 `lineIsHeading || 節號相同`,而那條旁路把節號比對整個繞過 ——
+ * reviewer 拿本函式編譯後實跑的兩個案例:
+ *   `## 1.5 組織邊界設定方法` + `### 1.5.1 組織邊界`      → 子節標題被剝掉
+ *   `## 3.2 排放源鑑別與量化方法` + `### 排放源鑑別`        → 子節標題被剝掉
+ * `1.5.1 ≠ 1.5`,但因為那一行是 `###` 就過了錨,接著文字又是子串 → 剝。
+ *
+ * 而 1.5 / 1.5.1 這種父子節、且「節標題後緊接第一個子節標題、中間沒有內文」
+ * 是盤查報告最普通的排版。命中之後子節標題從紙上消失、底下的內文留著,
+ * 讀者會把 1.5.1 的內容讀成 1.5 的內容;而剝除只在渲染端,草稿裡還在、
+ * 紙上沒有,對外送查證的是紙本 —— 稽核者比對原文時會發現少一個節。全程無聲。
+ *
+ * **一行是 ATX 標頭,代表它更可能是原文真正的結構節點,不是被回聲的標題** ——
+ * 錨本來要防「刪內容」,那條旁路偏偏在最像真標題的一格失守。
+ *
+ * 若日後真的遇到「回聲以 ATX 形式出現且節號對不上」而需要放寬,正確的收法是
+ * **加深度條件**(ATX 深度比大綱標題更深的一行是子節,不是回聲),
+ * 而不是拿掉節號比對;在有實例之前不先寫。
+ * 節號相同的 ATX 回聲(`## 1.5 組織邊界設定方法` + `### 1.5 組織邊界`)
+ * 仍然由節號那條錨接住,沒有因為這次收緊而漏掉。
  */
 const SENTENCE_TAIL = /[。!?!?;;]$/;
 
 const isCoveredByHeading = (
   heading: ISectionLabel,
   line: ISectionLabel,
-  lineIsHeading: boolean,
 ): boolean => {
   if (line.text.length === 0) return false;
   if (SENTENCE_TAIL.test(line.text)) return false;
-  const anchored =
-    lineIsHeading || (line.number.length > 0 && line.number === heading.number);
+  const anchored = line.number.length > 0 && line.number === heading.number;
   if (!anchored) return false;
   return heading.text.includes(line.text);
 };
@@ -116,11 +137,7 @@ export const stripEchoedSectionHeadings = (content: string): string => {
     const squeezed = squeezeForMatch(raw);
     if (pendingSqueezed !== null && pendingHeading !== null) {
       const identical = squeezed === pendingSqueezed;
-      const covered = isCoveredByHeading(
-        pendingHeading,
-        toSectionLabel(raw),
-        Boolean(heading),
-      );
+      const covered = isCoveredByHeading(pendingHeading, toSectionLabel(raw));
       if (identical || covered) return;
     }
     pendingHeading = heading ? toSectionLabel(raw) : null;
