@@ -54,8 +54,32 @@ describe("手機版的登入按鈕不會被壓成一個圓", () => {
    * Info: (20260827 - Luphia) `shrink-0` 是這顆按鈕維持形狀的**全部依據**。
    * 拿掉它，中文介面的手機版就會回到圓形。
    */
-  it("按鈕不可被 flex 壓縮", () => {
-    expect(buttonClass).toContain("shrink-0");
+  /**
+   * Info: (20260831 - Luphia) 約束在 **header 的使用端**，不在共用元件裡
+   *（review #6726 高-1）。
+   *
+   * 這顆按鈕有 7 個使用端，而 `shrink-0` 讓內容尺寸取 max-content：文字不再
+   * 換行、容器不夠寬時**溢出**。實測 `analysis_view` 那一格（可用 256px、
+   * 英文長標籤）加上 `shrink-0` 後溢出 73px——把「醜」換成「整頁水平捲動」。
+   */
+  it("共用元件本身不帶 shrink-0", () => {
+    expect(buttonClass).not.toContain("shrink-0");
+  });
+
+  it("header 的使用端才有 shrink-0", () => {
+    const userActions = readFileSync(
+      join(process.cwd(), "src", "components", "header", "user_actions.tsx"),
+      "utf8",
+    );
+    /**
+     * Info: (20260831 - Luphia) 對**實際的 JSX** 斷言，不是對按鈕前面那一段
+     * 文字。上面那段註解本身就寫著 `shrink-0`（它在解釋為什麼要有），所以
+     * 「往前找 200 字看有沒有 shrink-0」會在包裝層被拿掉之後**照樣通過**——
+     * 這個坑在本檔已經踩過一次（見 `classOf` 的註解），這是第二次。
+     */
+    expect(userActions).toMatch(
+      /<div className="shrink-0">\s*<LoginButton \/>\s*<\/div>/,
+    );
   });
 
   /**

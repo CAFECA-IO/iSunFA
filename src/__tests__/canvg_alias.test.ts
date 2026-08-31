@@ -1,5 +1,5 @@
 import { describe, it, expect } from "@jest/globals";
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
 import { Canvg } from "@/lib/stubs/canvg_unused";
 
@@ -58,11 +58,26 @@ describe("canvg 的替身", () => {
    * 升為真正的相依並移除別名，而不是刪掉這條測試。
    */
   it("專案沒有任何地方呼叫 addSvgAsImage（替身成立的前提）", () => {
-    const pdfExport = readFileSync(
-      join(process.cwd(), "src", "lib", "utils", "pdf_export.ts"),
-      "utf8",
-    );
-    expect(pdfExport).not.toContain("addSvgAsImage");
-    expect(pdfExport).toContain("addImage");
+    /**
+     * Info: (20260831 - Luphia) 掃**整個 `src/`**，不是只掃被修的那一個檔
+     *（review #6726 低-2，檢查表 §1.1）。
+     *
+     * 原本只掃 `pdf_export.ts`——剛好是當時被看的那個檔案。日後有人在別處
+     * （例如新的圖表匯出工具）呼叫 `addSvgAsImage`，這條會照綠，而使用者按下
+     * 匯出時才拿到替身拋的錯。訊息寫得好所以不會靜默失敗，但 CI 本來可以更早攔下。
+     */
+    const walk = (dir: string): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) return walk(full);
+        return /\.(ts|tsx)$/.test(entry.name) ? [full] : [];
+      });
+    const offenders = walk(join(process.cwd(), "src")).filter((file) => {
+      // Info: (20260831 - Luphia) 排除本檔與替身本身：它們談論這個名字是應該的
+      if (file.endsWith("canvg_alias.test.ts")) return false;
+      if (file.endsWith("canvg_unused.ts")) return false;
+      return readFileSync(file, "utf8").includes("addSvgAsImage");
+    });
+    expect(offenders).toEqual([]);
   });
 });

@@ -15,25 +15,33 @@ export default function LoginButton({ label = undefined }: { label?: string }) {
       <button
         onClick={() => setAuthModalOpen(true)}
         /**
-         * Info: (20260827 - Luphia) `shrink-0` 是這顆按鈕在手機版能維持形狀的
-         * 全部依據。
+         * Info: (20260831 - Luphia) `shrink-0` **不在這裡**，在 header 的使用端
+         *（`header/user_actions.tsx`）——review #6726 高-1。
          *
-         * 它是 header 右側 flex 群組的直接子項。中文**每一個字之間都是合法斷點**，
-         * 所以 flex 算出的 min-content 只有一個字的寬度——空間不足時按鈕被壓到
-         * 一個字寬，`rounded-full` 於是變成一個圓，「登入」兩字上下疊著。
-         * 英文不會有這個症狀（"Login" 是一個不可斷的詞），所以只看英文介面
-         * 檢查不出來。
+         * 它原本加在這裡，而這顆按鈕有 **7 個使用端**。`flex-shrink: 0` 讓項目
+         * 不會被壓到 flex-basis 以下，而 basis 是 `auto` → 內容尺寸取
+         * **max-content**：文字不再換行，容器不夠寬時**溢出**。
          *
-         * 手機版的水平內距小一格（`px-4 sm:px-5`）：header 右側那一排在 320px
-         * 下差 14px 才擠得進去，而差額必須有地方吸收——否則被壓縮的群組會讓
-         * 這顆 `shrink-0` 的按鈕溢出去，變成整頁 2px 的水平捲動。
+         * 實測（`user/analysis/analysis_view.tsx` 那一格，卡片內可用寬度 256px，
+         * 英文介面標籤 "Please login to generate the analysis report"）：
          *
-         * 刻意**不加** `whitespace-nowrap`：實測 `shrink-0` 已經足夠保住形狀，
-         * 而這顆按鈕有 7 個使用端，其中幾個傳的是長標籤
-         *（如 `analysis.login_to_generate`、"Please login to comment"）——
-         * 那些地方在窄容器裡需要換行，禁止換行只會把裁切換成溢出。
+         * | | 按鈕寬 | 行數 | 溢出 |
+         * |---|---|---|---|
+         * | 沒有 `shrink-0` | 256 | 2 行 | 0 |
+         * | 有 `shrink-0` | **329** | 1 行 | **73px** |
+         *
+         * 也就是把一個「醜」換成一個「整頁水平捲動」，而後者正是那個 PR 要消滅的
+         * 東西。**下面那段拒絕 `whitespace-nowrap` 的理由，一字不改就適用於
+         * `shrink-0`**——寫下那段話的時候沒有把它套用到隔壁那個 class 上。
+         *
+         * 手機版的水平內距小一格（`px-4 sm:px-5`）留著：那是純粹的內距，
+         * 不改變換行行為，對長標籤只有好處。
+         *
+         * 刻意**不加** `whitespace-nowrap`：這顆按鈕的標籤由呼叫端傳入，
+         * 其中幾個相當長（`analysis.login_to_generate`、"Please login to comment"）
+         * ——那些地方在窄容器裡需要換行，禁止換行只會把裁切換成溢出。
          */
-        className="shrink-0 rounded-full bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:scale-105 hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 active:scale-95 sm:px-5"
+        className="rounded-full bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:scale-105 hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 active:scale-95 sm:px-5"
       >
         {btnLabel}
       </button>
