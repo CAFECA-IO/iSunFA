@@ -1,4 +1,4 @@
-import { useState, FC, ChangeEvent } from 'react';
+import { useState, FC, ChangeEvent } from "react";
 import { Mail, X } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
@@ -32,7 +32,7 @@ const SendingPaySlipModal: FC<{ modalVisibleHandler: () => void }> = ({
 
   return (
     <div className="font-barlow fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="bg-surface-neutral-surface-lv2 relative flex w-[90vw] flex-col rounded-sm md:w-fit">
+      <div className="bg-surface-neutral-surface-lv2 relative flex w-[90vw] flex-col rounded-2xl md:w-fit">
         {/* Info: (20250723 - Julian) Modal Header */}
         <div className="relative flex items-start justify-center px-10 py-4">
           <h2 className="text-card-text-primary text-lg font-bold">
@@ -65,7 +65,7 @@ const SendingPaySlipModal: FC<{ modalVisibleHandler: () => void }> = ({
             </span>
           </p>
           <div
-            className={`bg-input-surface-input-background flex items-center divide-x rounded-sm border ${isValidEmail ? "divide-input-stroke-input border-input-stroke-input" : "divide-input-stroke-error border-input-stroke-error"}`}
+            className={`bg-input-surface-input-background flex items-center divide-x rounded-lg border ${isValidEmail ? "divide-input-stroke-input border-input-stroke-input" : "divide-input-stroke-error border-input-stroke-error"}`}
           >
             <div className="flex items-center gap-2 px-3 py-2.5">
               <Mail

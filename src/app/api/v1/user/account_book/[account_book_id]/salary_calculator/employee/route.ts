@@ -62,7 +62,7 @@ export async function GET(
  * Info: (20260831 - Julian) 新增員工。
  * POST /api/v1/user/account_book/:account_book_id/salary_calculator/employee
  *
- * Email 在本帳本重複時回 409（`CF_SALARY_EMPLOYEE_EMAIL_TAKEN`），
+ * 員工編號在本帳本重複時回 409（`CF_SALARY_EMPLOYEE_NUMBER_TAKEN`），
  * 由 service 把 repository 的具名錯誤轉過來 —— P2002 不會冒到前端。
  */
 export async function POST(

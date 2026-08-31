@@ -162,6 +162,52 @@ export const calculator = {
     all: "全部",
   },
   // Info: (20260831 - Julian) 公开版通往账本版的入口
+  // Info: (20260831 - Julian) 计算器 Step 1 的员工连结状态
+  employee_link: {
+    linked_hint: "已连结员工，本薪与伙食费已带入",
+    unlink: "解除连结",
+  },
+  // Info: (20260831 - Julian) 计算器页的直接保存与两个例外
+  save_record: {
+    save: "保存薪资记录",
+    saving: "保存中…",
+    saved: "已存为 {{name}} {{year}} 年 {{month}} 月的薪资记录",
+    view_record: "查看",
+    save_failed: "保存失败，请稍后再试",
+    overwrite_title: "覆盖既有的薪资记录？",
+    overwrite_content:
+      "{{name}} 的 {{year}} 年 {{month}} 月已经有一笔记录（实发 {{amount}} 元）。保存会直接覆盖它，旧的数字不会留下。",
+    overwrite_submit: "覆盖并保存",
+    unlinked_title: "这笔试算要存给谁？",
+    unlinked_content: "「{{name}}」还不在这本账的员工列表里。",
+    create_and_save: "新增「{{name}}」并保存",
+    create_and_save_hint: "用计算器上的姓名、Email 与本薪建立员工",
+    create_needs_number: "需要先在基本资料填写员工编号",
+    pick_from_list: "从员工列表选一位",
+    pick_from_list_hint: "这次试算会改连结到选中的员工",
+  },
+  // Info: (20260831 - Julian) 薪资记录查阅
+  records: {
+    main_title: "薪资记录",
+    pay_period: "给付期间",
+    pay_period_value: "{{year}} 年 {{month}} 月",
+    employee: "员工",
+    net_pay: "实发金额",
+    taxable: "扣缴凭单金额",
+    action: "操作",
+    view: "查看薪资单",
+    load_back: "载回计算器",
+    delete: "删除",
+    all_employees: "全部员工",
+    all_years: "全部年度",
+    year: "年度",
+    total_count: "共 {{count}} 笔",
+    previous_page: "上一页",
+    next_page: "下一页",
+    empty_title: "还没有薪资记录",
+    empty_desc: "在计算器算完之后按下「保存薪资记录」，这里就会出现。",
+    load_failed: "薪资记录加载失败，请稍后再试",
+  },
   account_book_entry: {
     title: "想把这次的试算保存下来吗？",
     hint_save: "账本版可以保存薪资记录、管理员工列表。",
@@ -170,6 +216,7 @@ export const calculator = {
     button: "前往账本版计算器",
   },
   button: {
+    disabled_hint: "完成全部四个步骤后，才能下载或保存薪资单",
     download: "保存为 PNG",
     send: "发送薪资单",
     reset: "重置",
@@ -181,6 +228,21 @@ export const calculator = {
     salary_error_title: "薪资输入有误",
     salary_error_content:
       "基本工资（应税）＋伙食补贴（免税）＋其他津贴（应税）＋其他津贴（免税）必须等于或高于最低工资标准。",
+    base_salary: "本薪",
+    total_count: "共 {{count}} 位员工",
+    filtered_count: "{{count}} / {{total}} 位员工",
+    empty_title: "这本账还没有员工",
+    empty_desc:
+      "建立员工之后，计算器可以直接带入他的本薪与伙食费，算完的结果也才存得成薪资记录。",
+    no_search_result: "没有符合「{{keyword}}」的员工",
+    clear_search: "清除搜索",
+    load_failed: "员工列表加载失败，请稍后再试",
+    save_failed: "保存失败，请稍后再试",
+    remove_failed: "移除失败，请稍后再试",
+    number_taken: "这个员工编号已经有其他员工在使用",
+    save_changes: "保存更改",
+    remove_employee_records_kept:
+      "这位员工已经存下的薪资记录会保留，之后仍然查得到；只是他不会再出现在员工列表与计算器的选单里。",
     remove_employee_title: "移除员工",
     remove_employee_content: "您确定要从员工列表中移除 {{name}} 吗？",
     remove_employee_submit_btn: "是的，移除员工。",

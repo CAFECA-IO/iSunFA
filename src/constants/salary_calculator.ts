@@ -29,3 +29,12 @@ export const SALARY_CALCULATOR_VERSION = "2026.1";
  */
 export const SALARY_INPUT_MAX_AMOUNT = 1_000_000_000;
 export const SALARY_INPUT_MAX_HOURS = 744;
+
+/**
+ * Info: (20260831 - Julian) 薪資基準天數的計算方式。
+ * 原本是 context 裡的字串陣列 ['FIXED', 'ACTUAL'] 與散落的 === 'FIXED' 比對。
+ */
+export enum PayrollDaysBase {
+  FIXED = "FIXED",
+  ACTUAL = "ACTUAL",
+}

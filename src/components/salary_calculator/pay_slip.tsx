@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC } from "react";
 // import Image from 'next/image';
 import { useTranslation } from "@/i18n/i18n_context";
 import ResultBlock from "@/components/salary_calculator/result_block";
@@ -248,7 +248,7 @@ const PaySlip: FC<IPaySlipProps> = ({
           </p>
         </div>
         {/* Info: (20250708 - Julian) 薪資合計 */}
-        {/* <div className="flex items-end justify-end gap-8px text-28px font-bold text-text-brand-primary-lv2">
+        {/* <div className="flex items-end justify-end gap-[8px] text-[28px] font-bold text-text-brand-primary-lv2">
           <Image src="/icons/money_bag.svg" alt="salary_icon" width={32} height={32} />
           <p>NT ${numberWithCommas(totalSalary)}</p>
         </div> */}

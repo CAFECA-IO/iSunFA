@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FC, KeyboardEvent, Dispatch, SetStateAction } from 'react';
+import { useState, FC, KeyboardEvent, Dispatch, SetStateAction } from "react";
 
 import { useTranslation } from "@/i18n/i18n_context";
 import { Calendar, Download, DollarSign } from "lucide-react";

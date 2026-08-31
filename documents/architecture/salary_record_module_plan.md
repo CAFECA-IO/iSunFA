@@ -123,16 +123,19 @@ ADR 020 §4 已經替**正式薪資模組**開好規格：以 `(employeeId, 年�
 員工被刪掉不能讓歷史紀錄一起消失或變成孤兒。
 `code_review_checklist.md §3.4` 要求「硬刪 vs 改狀態」的選擇必須明說 —— 這就是那段說明。
 
-**衍生問題**：`@@unique([accountBookId, email])` 配 soft delete，
-會導致「刪掉的員工，同 Email 無法重新加入」。
+**衍生問題**：唯一鍵配 soft delete，會導致「刪掉的員工，同一個身分無法重新加入」。
 Prisma 表達不了 partial unique index，依 `code_review_checklist.md §5.3` 的指引，
 用 **nullable 唯一欄位**替代：
 
-- `email String` — 一律保留，顯示與寄送用
-- `activeEmail String?` — 在存活期間等於 `email`，soft delete 時設為 `null`
-- `@@unique([accountBookId, activeEmail])`
+- `number String` — 員工編號，身分鍵，一律保留
+- `activeNumber String?` — 在存活期間等於 `number`，soft delete 時設為 `null`
+- `@@unique([accountBookId, activeNumber])`
 
 寫入路徑集中在 repository，不讓 service 自己維護這組不變式（配 §8.2 的不變式測試）。
+
+**身分鍵為什麼是編號不是 Email**（PR 4 修正）：第一版用 Email。但同一個人可以換
+Email，而公司內部本來就用編號指涉員工；更實際的是不少中小企業的員工根本沒有公司
+Email，用 Email 當必填會擋住整批人。於是 `number` 改為必填、`email` 改為可空。
 
 ### 2.4 路由拆分：公開版與登入版是兩條路由
 
@@ -209,20 +212,22 @@ Prisma 表達不了 partial unique index，依 `code_review_checklist.md §5.3` 
 // 且 PII 要走 AES-256-GCM（ADR 018）—— 讓試算工具背上那套流程並不合理。
 // `employeeId` 是日後與 HR 員工檔合併的接點，現階段一律為 null。
 model SalaryCalculatorEmployee {
-  id     String  @id @default(uuid())
-  name   String
-  number String? @map("employee_number")
+  id   String @id @default(uuid())
+  name String
 
-  // Info: (20260831 - Julian) 顯示與寄送用，soft delete 後仍保留
-  email String
+  // Info: (20260831 - Julian) 員工編號：帳本內的身分鍵，必填
+  number String @map("employee_number")
+
+  // Info: (20260831 - Julian) 顯示與寄送用，可空（不少員工沒有公司 Email）
+  email String? @map("email")
 
   /**
-   * Info: (20260831 - Julian) 帳本內「存活中」員工的 Email 唯一性。
+   * Info: (20260831 - Julian) 帳本內「存活中」員工的編號唯一性。
    * Prisma 表達不了 partial unique index，依 code_review_checklist §5.3
-   * 改用 nullable 唯一欄位：存活時等於 email，soft delete 時設為 null，
-   * 好讓同一個 Email 之後能重新加入。維護點只在 repository。
+   * 改用 nullable 唯一欄位：存活時等於 number，soft delete 時設為 null，
+   * 好讓同一個編號之後能重新啟用。維護點只在 repository。
    */
-  activeEmail String? @map("active_email")
+  activeNumber String? @map("active_number")
 
   baseSalary    BigInt @map("base_salary")
   mealAllowance BigInt @default(0) @map("meal_allowance")
@@ -241,7 +246,7 @@ model SalaryCalculatorEmployee {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  @@unique([accountBookId, activeEmail])
+  @@unique([accountBookId, activeNumber])
   @@index([accountBookId])
   @@map("salary_calculator_employee")
 }
@@ -447,8 +452,8 @@ export const salaryRecordQuerySchema = z.object({
   且一律 `deletedAt: null`
 - `getEmployeeById(accountBookId, id)` — **帳本 id 一定要進 where**，
   不可以只用 id 查再比對（`route_params_contract.test.ts` 的成因就是這類跨租戶洩漏）
-- `createEmployee(...)` / `updateEmployee(...)` — 同步維護 `activeEmail = email`
-- `softDeleteEmployee(...)` — 同時設 `deletedAt = new Date()` 與 `activeEmail = null`
+- `createEmployee(...)` / `updateEmployee(...)` — 同步維護 `activeNumber = number`
+- `softDeleteEmployee(...)` — 同時設 `deletedAt = new Date()` 與 `activeNumber = null`
 - `transformToFrontendFormat()` — `BigInt → number`（薪資是整數元，
   用 `MoneyUtil.toDecimal(v).toNumber()`，不用裸 `Number()`）
 
@@ -770,7 +775,7 @@ loadFromSnapshot: (input: ISalaryCalculatorOptions) => void;
 |---|---|---|
 | `salary_snapshot_roundtrip.test.ts` | 純函式 | `getSalaryCalculatorOptions()` ↔ `loadFromSnapshot()` 來回不失真，35 個欄位一個不漏（用 `Object.keys` 對拍，新增欄位忘了接就會紅） |
 | `salary_record_service.test.ts` | service | 覆寫語意（同員工同年月只留一筆）、跨帳本員工被拒（`NF_SALARY_CALCULATOR_EMPLOYEE`）、非整數金額 fail fast |
-| `salary_employee_invariant.test.ts` | 不變式 | `activeEmail` 與 `deletedAt` 的配對：存活時 `activeEmail === email`、刪除時為 `null`（§2.3） |
+| `salary_employee_invariant.test.ts` | 不變式 | `activeNumber` 與 `deletedAt` 的配對：存活時 `activeNumber === number`、刪除時為 `null`（§2.3） |
 | `salary_route_wiring.test.ts` | route | 照抄 `leave_route_wiring.test.ts`：無票回 401、限流兩行都在且回 429 時 service 呼叫次數沒增加、`params` 鍵名是 `account_book_id`、`userId` 來自 DeWT 而非 request body |
 | `salary_schema_defaults.test.ts` | 掃描 | 讀 `prisma/schema.prisma` 原文，釘住 `mealAllowance @default(0)` 等預設值（checklist §1.12：沒有 migrations 時的唯一例外） |
 | `app_route_auth_guard.test.ts` | 既有 | **不需修改**：`user` 已在 `GUARDED_ROOTS`、`salary_calculator` 已在 `PUBLIC_ROOTS`，而本模組不新增任何 `layout.tsx`。若有人替公開側加了 `src/app/salary_calculator/layout.tsx`，這支會紅 —— 那是預期的護欄 |
@@ -840,6 +845,12 @@ npx prisma generate
 > 差別只有外框與那顆入口按鈕。分成獨立 PR 是為了讓路由改動可以單獨 review 與回退。
 
 ### PR 4 — 員工列表與儲存查閱
+
+> **實作時的方向修正（20260831）**：第一版把儲存做成一張獨立表單，會再問一次員工與年月 ——
+> 而那兩件事使用者在 Step 1 就填過了。改成「計算機是主場」：
+> 連結員工在 Step 1（`selectedEmployeeId`），按下儲存直接用畫面上的年月存，
+> Modal 降級成兩個例外（覆蓋確認、未連結員工）。設計稿與 §8.3 以此為準。
+
 - 新增 `salary_calculator_api.ts`
 - 新增 `/user/account_book/[account_book_id]/salary_calculator/records` 頁
 - `employee_list.tsx` / `employee_action_modal.tsx` / `employee_list_modal.tsx` 接 API

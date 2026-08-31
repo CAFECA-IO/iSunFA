@@ -2171,14 +2171,15 @@ export const API_ERRORS = {
   } as IErrorDef,
 
   /**
-   * Info: (20260831 - Julian) 這個 Email 在本帳本已經有存活中的員工在用。
+   * Info: (20260831 - Julian) 這個員工編號在本帳本已經有存活中的員工在用。
    *
-   * 丟具名錯誤而不是讓 P2002 冒出去：Email 重複是使用者的輸入問題，
+   * 丟具名錯誤而不是讓 P2002 冒出去：編號重複是使用者的輸入問題，
    * 而原始的 Prisma 錯誤讀起來像故障（coding_guidelines §5.2）。
    */
-  CF_SALARY_EMPLOYEE_EMAIL_TAKEN: {
+  CF_SALARY_EMPLOYEE_NUMBER_TAKEN: {
     code: "CF000014",
-    message: "That email is already used by an employee in this account book",
+    message:
+      "That employee number is already used by an employee in this account book",
     status: ApiCode.CONFLICT,
   } as IErrorDef,
 

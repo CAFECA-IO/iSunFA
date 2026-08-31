@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, FC } from 'react';
+import { useEffect, useState, FC } from "react";
 
 import Image from "next/image";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -96,7 +96,7 @@ const ResendingPaySlipModal: FC<IResendingPaySlipModalProps> = ({
 
   return (
     <div className="font-barlow fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="bg-surface-neutral-surface-lv2 relative flex min-h-[200px] w-[90vw] flex-col rounded-sm md:w-[350px]">
+      <div className="bg-surface-neutral-surface-lv2 relative flex min-h-[200px] w-[90vw] flex-col rounded-2xl md:w-[350px]">
         {/* Info: (20250723 - Julian) Modal Header */}
         <div className="relative flex items-start justify-center px-10 py-4">
           <h2 className="text-card-text-primary text-lg font-bold">

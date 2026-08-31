@@ -2,6 +2,7 @@
 
 import { FC, ReactNode } from "react";
 import CalculatorHeader from "@/components/salary_calculator/calculator_header";
+import AccountBookCalculatorNav from "@/components/salary_calculator/account_book_calculator_nav";
 
 interface ISalaryCalculatorShellProps {
   /**
@@ -33,7 +34,19 @@ const SalaryCalculatorShell: FC<ISalaryCalculatorShellProps> = ({
   children,
 }) => {
   if (accountBookId !== null) {
-    return <div className="w-full">{children}</div>;
+    /**
+     * Info: (20260831 - Julian) 帳本版：外框由 UserLayout 提供，這裡只補一列導覽。
+     *
+     * 那一列存在的理由是「計算說明」—— 它原本掛在 CalculatorHeader 上，
+     * 而帳本版不渲染那顆 header，於是解釋每個數字怎麼來的唯一入口就不見了。
+     * 順帶把三個頁面之間的切換也放進來。
+     */
+    return (
+      <div className="flex w-full flex-col gap-[24px]">
+        <AccountBookCalculatorNav accountBookId={accountBookId} />
+        {children}
+      </div>
+    );
   }
 
   return (

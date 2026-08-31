@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, FC } from 'react';
+import { useRef, useState, FC } from "react";
 
 import { toPng } from "html-to-image";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -18,6 +18,15 @@ interface IViewPaySlipModal {
   modalCloseHandler: () => void;
   sentDate?: number; // Info: (20250725 - Julian) 用於判斷是否為已發送的薪資單
   sentTo?: string; // Info: (20250725 - Julian) 發送對象
+  /**
+   * Info: (20260831 - Julian) 這張薪資單是誰的。
+   *
+   * 不給就沿用舊行為（顯示登入者），那是「我的薪資單」頁的情境。
+   * 薪資紀錄頁看的是別人的單子，必須把名字與編號傳進來 ——
+   * 原本編號寫死 `"123456"`（ToDo 掛在那裡），順手一併解決。
+   */
+  employeeName?: string;
+  employeeNumber?: string;
 }
 
 const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
@@ -27,6 +36,8 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
   modalCloseHandler,
   sentDate = undefined,
   sentTo = undefined,
+  employeeName = undefined,
+  employeeNumber = undefined,
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -36,9 +47,8 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
 
   const isSentRecord = !!sentDate && !!sentTo;
 
-  const username = user?.name;
-  const employeeName = username ?? "-";
-  const employeeNumber = "123456"; // ToDo: (20250806 - Julian) 取得員工編號
+  const displayedEmployeeName = employeeName ?? user?.name ?? "-";
+  const displayedEmployeeNumber = employeeNumber ?? "-";
 
   // const formattedMonth = monthStr.length > 3 ? `${monthStr.slice(0, 3)}.` : monthStr;
   const monthWithI18n = t(
@@ -78,9 +88,9 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
 
   return (
     <div className="font-barlow fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="w-90vw bg-surface-neutral-surface-lv2 md:w-670px relative flex flex-col rounded-sm">
+      <div className="bg-surface-neutral-surface-lv2 relative flex w-[90vw] flex-col rounded-2xl md:w-[670px]">
         {/* Info: (20250725 - Julian) Modal Header */}
-        <div className="px-40px py-16px relative flex items-start justify-center">
+        <div className="relative flex items-start justify-center px-[40px] py-[16px]">
           <h2 className="text-card-text-primary text-lg font-bold">
             {isSentRecord
               ? t("calculator.my_pay_slip.pay_slip")
@@ -89,7 +99,7 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
           <button
             type="button"
             onClick={modalCloseHandler}
-            className="right-20px absolute"
+            className="absolute right-[20px]"
           >
             <X size={24} />
           </button>
@@ -98,18 +108,18 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
         <div
           id="download-area"
           ref={downloadRef}
-          className="h-600px flex w-full flex-col overflow-y-auto"
+          className="flex h-[600px] w-full flex-col overflow-y-auto"
         >
           <PaySlip
-            employeeName={employeeName}
-            employeeNumber={employeeNumber}
+            employeeName={displayedEmployeeName}
+            employeeNumber={displayedEmployeeNumber}
             selectedMonth={monthStr}
             selectedYear={yearStr}
             resultData={paySlipData}
-            className="px-40px py-24px"
+            className="px-[40px] py-[24px]"
           />
           {isSentRecord && (
-            <div className="gap-8px px-40px flex items-center text-sm">
+            <div className="flex items-center gap-[8px] px-[40px] text-sm">
               <Send size={16} className="text-text-neutral-tertiary" />
               <p className="text-text-neutral-secondary font-medium">
                 {t("calculator.my_pay_slip.sent_on")}:{" "}
@@ -119,7 +129,7 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
           )}
         </div>
         {/* Info: (20250725 - Julian) Button */}
-        <div className="gap-12px px-20px py-16px flex items-center">
+        <div className="flex items-center gap-[12px] px-[20px] py-[16px]">
           {/* Info: (20250725 - Julian) Download Btn */}
           <button type="button" onClick={downloadPng} className="w-full">
             {t("calculator.button.download")} <Download size={20} />

@@ -11,7 +11,7 @@ import {
 import {
   ISalaryCalculatorEmployeeRepository,
   salaryCalculatorEmployeeRepo,
-  SalaryEmployeeEmailTakenError,
+  SalaryEmployeeNumberTakenError,
 } from "@/repositories/salary_calculator_employee.repo";
 import {
   ISalaryRecordRepository,
@@ -90,8 +90,8 @@ export class SalaryRecordService {
     try {
       return await this.employees.createEmployee({ accountBookId, input });
     } catch (error) {
-      if (error instanceof SalaryEmployeeEmailTakenError) {
-        throw new AppError(API_ERRORS.CF_SALARY_EMPLOYEE_EMAIL_TAKEN);
+      if (error instanceof SalaryEmployeeNumberTakenError) {
+        throw new AppError(API_ERRORS.CF_SALARY_EMPLOYEE_NUMBER_TAKEN);
       }
       throw error;
     }
@@ -117,8 +117,8 @@ export class SalaryRecordService {
       }
       return updated;
     } catch (error) {
-      if (error instanceof SalaryEmployeeEmailTakenError) {
-        throw new AppError(API_ERRORS.CF_SALARY_EMPLOYEE_EMAIL_TAKEN);
+      if (error instanceof SalaryEmployeeNumberTakenError) {
+        throw new AppError(API_ERRORS.CF_SALARY_EMPLOYEE_NUMBER_TAKEN);
       }
       throw error;
     }

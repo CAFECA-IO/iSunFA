@@ -353,6 +353,32 @@ describe("驗證：形狀不對就進不了 service", () => {
     expect(serviceMocks.saveRecord).not.toHaveBeenCalled();
   });
 
+  it("缺少員工編號時回 400 —— 編號是帳本內的身分鍵，不能靠後端撿", async () => {
+    const { number, ...withoutNumber } = employeeBody;
+    expect(number).toBe("A001");
+
+    const response = await employeeCreate(
+      send("POST", withoutNumber, "0xno-number"),
+      { params: bookParams() },
+    );
+
+    expect(response.status).toBe(httpOf(API_ERRORS.VA_INVALID_INPUT_DATA));
+    expect(serviceMocks.createEmployee).not.toHaveBeenCalled();
+  });
+
+  it("沒有 Email 也建得起來 —— 它只在寄薪資單時要用", async () => {
+    const { email, ...withoutEmail } = employeeBody;
+    expect(email).toBe("ming@example.com");
+
+    const response = await employeeCreate(
+      send("POST", withoutEmail, "0xno-email"),
+      { params: bookParams() },
+    );
+
+    expect(response.status).toBe(200);
+    expect(serviceMocks.createEmployee).toHaveBeenCalledTimes(1);
+  });
+
   it("Email 格式不對時回 400", async () => {
     const response = await employeeCreate(
       send("POST", { ...employeeBody, email: "not-an-email" }, "0xbad-email"),

@@ -38,7 +38,7 @@ const SalaryCalculatorPageBody: FC<ISalaryCalculatorPageBodyProps> = ({
 
   return (
     <SalaryCalculatorShell accountBookId={accountBookId}>
-      {/* Info: (20260831 - Julian) 公開版通往帳本版的入口。 */}
+      {/* Info: (20260831 - Julian) 公開版通往帳本版的入口 */}
       {accountBookId === null && user && (
         <div className="flex flex-col gap-3 bg-orange-50 p-4 ring-1 ring-orange-100">
           <p className="text-base font-bold text-orange-900">
@@ -63,11 +63,11 @@ const SalaryCalculatorPageBody: FC<ISalaryCalculatorPageBodyProps> = ({
       )}
 
       {/* Info: (20250887 - Julian) Main Content Desktop */}
-      <div className="hidden gap-[84px] overflow-x-auto p-[80px] lg:flex">
+      <div className="hidden gap-[84px] overflow-x-auto p-[40px] lg:flex">
         {/* Info: (20250708 - Julian) Form Part */}
-        <SalaryFormSection />
+        <SalaryFormSection accountBookId={accountBookId} />
         {/* Info: (20250708 - Julian) Result Part */}
-        <SalaryResultSection />
+        <SalaryResultSection accountBookId={accountBookId} />
       </div>
 
       {/* Info: (20250887 - Julian) Main Content Mobile */}
@@ -102,12 +102,12 @@ const SalaryCalculatorPageBody: FC<ISalaryCalculatorPageBodyProps> = ({
           </button>
         </div>
         {/* Info: (20250828 - Julian) Form Part */}
-        {isCalculatorTab && <SalaryFormSection />}
+        {isCalculatorTab && <SalaryFormSection accountBookId={accountBookId} />}
         {/* Info: (20250828 - Julian) Result Part */}
         {isPaySlipTab && (
           <div className="flex flex-col gap-7">
             <ProgressBar />
-            <SalaryResultSection />
+            <SalaryResultSection accountBookId={accountBookId} />
           </div>
         )}
       </div>

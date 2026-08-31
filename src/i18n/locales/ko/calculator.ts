@@ -165,6 +165,52 @@ export const calculator = {
     all: "모두",
   },
   // Info: (20260831 - Julian) 공개 버전에서 장부 버전으로 가는 입구
+  // Info: (20260831 - Julian) 계산기 Step 1의 직원 연결 상태
+  employee_link: {
+    linked_hint: "직원과 연결됨 — 기본급과 식대를 불러왔습니다",
+    unlink: "연결 해제",
+  },
+  // Info: (20260831 - Julian) 계산기 페이지에서 바로 저장, 그리고 두 가지 예외
+  save_record: {
+    save: "급여 기록 저장",
+    saving: "저장 중…",
+    saved: "{{name}}의 {{year}}년 {{month}}월 급여 기록으로 저장했습니다",
+    view_record: "보기",
+    save_failed: "저장하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    overwrite_title: "기존 급여 기록을 덮어쓸까요?",
+    overwrite_content:
+      "{{name}}의 {{year}}년 {{month}}월에는 이미 기록이 있습니다(실수령 {{amount}}원). 저장하면 덮어쓰며 이전 숫자는 남지 않습니다.",
+    overwrite_submit: "덮어쓰고 저장",
+    unlinked_title: "이번 계산은 누구의 기록인가요?",
+    unlinked_content: "「{{name}}」은(는) 아직 이 장부의 직원 목록에 없습니다.",
+    create_and_save: "「{{name}}」 추가하고 저장",
+    create_and_save_hint: "계산기의 이름, 이메일, 기본급으로 직원을 만듭니다",
+    create_needs_number: "먼저 기본 정보에서 사번을 입력해 주세요",
+    pick_from_list: "직원 목록에서 선택",
+    pick_from_list_hint: "이번 계산은 선택한 직원에 연결됩니다",
+  },
+  // Info: (20260831 - Julian) 급여 기록 조회
+  records: {
+    main_title: "급여 기록",
+    pay_period: "지급 기간",
+    pay_period_value: "{{year}}년 {{month}}월",
+    employee: "직원",
+    net_pay: "실수령액",
+    taxable: "원천징수 금액",
+    action: "작업",
+    view: "급여명세서 보기",
+    load_back: "계산기로 불러오기",
+    delete: "삭제",
+    all_employees: "전체 직원",
+    all_years: "전체 연도",
+    year: "연도",
+    total_count: "총 {{count}}건",
+    previous_page: "이전 페이지",
+    next_page: "다음 페이지",
+    empty_title: "아직 급여 기록이 없습니다",
+    empty_desc: "계산을 마친 뒤 「급여 기록 저장」을 누르면 여기에 표시됩니다.",
+    load_failed: "급여 기록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  },
   account_book_entry: {
     title: "이번 계산을 저장할까요?",
     hint_save:
@@ -176,6 +222,8 @@ export const calculator = {
     button: "장부 버전 계산기로 이동",
   },
   button: {
+    disabled_hint:
+      "네 단계를 모두 마쳐야 급여명세서를 내려받거나 저장할 수 있습니다",
     download: "PNG 로 다운로드",
     send: "급여 명세서 발송",
     reset: "초기화",
@@ -187,6 +235,21 @@ export const calculator = {
     salary_error_title: "급여 입력 오류",
     salary_error_content:
       "기본급(과세) + 식대(비과세) + 기타 수당(과세) + 기타 수당(비과세) 합계는 최저 임금 이상이어야 합니다.",
+    base_salary: "기본급",
+    total_count: "직원 {{count}}명",
+    filtered_count: "{{count}} / {{total}}명",
+    empty_title: "이 장부에는 아직 직원이 없습니다",
+    empty_desc:
+      "직원을 등록하면 계산기에 기본급과 식대를 바로 불러올 수 있고, 계산 결과를 급여 기록으로 저장할 수 있습니다.",
+    no_search_result: "「{{keyword}}」와 일치하는 직원이 없습니다",
+    clear_search: "검색 지우기",
+    load_failed: "직원 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    save_failed: "저장하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    remove_failed: "삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    number_taken: "이 사번은 다른 직원이 사용 중입니다",
+    save_changes: "변경 사항 저장",
+    remove_employee_records_kept:
+      "이 직원의 저장된 급여 기록은 그대로 남아 나중에도 볼 수 있습니다. 직원 목록과 계산기 선택 항목에만 표시되지 않습니다.",
     remove_employee_title: "직원 삭제",
     remove_employee_content: "직원 목록에서 {{name}} 님을 삭제하시겠습니까?",
     remove_employee_submit_btn: "네, 직원을 삭제합니다.",

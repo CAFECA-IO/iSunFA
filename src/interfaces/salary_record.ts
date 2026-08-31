@@ -21,11 +21,15 @@ export interface ISalaryCalculatorEmployee {
   mealAllowance: number;
 }
 
-// Info: (20260831 - Julian) 新增／編輯員工的輸入
+/**
+ * Info: (20260831 - Julian) 新增／編輯員工的輸入。
+ *
+ * `number` 是身分（帳本內唯一），因此必填；`email` 只在寄薪資單時才需要，可省略。
+ */
 export interface ISalaryCalculatorEmployeeWriteInput {
   name: string;
-  number?: string;
-  email: string;
+  number: string;
+  email?: string;
   baseSalary: number;
   mealAllowance: number;
 }

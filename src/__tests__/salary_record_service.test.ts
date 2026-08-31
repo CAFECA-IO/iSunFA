@@ -15,7 +15,7 @@ import {
 } from "@/interfaces/salary_record";
 import {
   ISalaryCalculatorEmployeeRepository,
-  SalaryEmployeeEmailTakenError,
+  SalaryEmployeeNumberTakenError,
 } from "@/repositories/salary_calculator_employee.repo";
 import { ISalaryRecordRepository } from "@/repositories/salary_record.repo";
 import { SalaryRecordService } from "@/services/salary_record.service";
@@ -97,7 +97,7 @@ class FakeEmployeeRepo implements ISalaryCalculatorEmployeeRepository {
   // Info: (20260831 - Julian) key 是 `${accountBookId}|${employeeId}`，天然表達租戶隔離
   private readonly rows = new Map<string, ISalaryCalculatorEmployee>();
 
-  public emailTaken = false;
+  public numberTaken = false;
 
   public updateCalls = 0;
 
@@ -122,7 +122,8 @@ class FakeEmployeeRepo implements ISalaryCalculatorEmployeeRepository {
     accountBookId: string;
     input: ISalaryCalculatorEmployeeWriteInput;
   }) {
-    if (this.emailTaken) throw new SalaryEmployeeEmailTakenError(input.email);
+    if (this.numberTaken)
+      throw new SalaryEmployeeNumberTakenError(input.number);
     const created = employeeOf({ ...input, number: input.number ?? "" });
     this.seed(accountBookId, created);
     return created;
@@ -138,7 +139,8 @@ class FakeEmployeeRepo implements ISalaryCalculatorEmployeeRepository {
     input: ISalaryCalculatorEmployeeWriteInput;
   }) {
     this.updateCalls += 1;
-    if (this.emailTaken) throw new SalaryEmployeeEmailTakenError(input.email);
+    if (this.numberTaken)
+      throw new SalaryEmployeeNumberTakenError(input.number);
     const existing = this.rows.get(`${accountBookId}|${employeeId}`);
     if (!existing) return null;
     const updated = { ...existing, ...input, number: input.number ?? "" };
@@ -374,8 +376,8 @@ describe("讀取與刪除薪資紀錄", () => {
 });
 
 describe("員工名單", () => {
-  it("Email 撞號時回 409，而不是把 Prisma 的 P2002 噴到前端", async () => {
-    employees.emailTaken = true;
+  it("員工編號撞號時回 409，而不是把 Prisma 的 P2002 噴到前端", async () => {
+    employees.numberTaken = true;
 
     await expectAppError(
       () =>
@@ -383,12 +385,13 @@ describe("員工名單", () => {
           accountBookId: BOOK,
           input: {
             name: "李小華",
-            email: "ming@example.com",
+            number: "A001",
+            email: "hua@example.com",
             baseSalary: 30000,
             mealAllowance: 0,
           },
         }),
-      API_ERRORS.CF_SALARY_EMPLOYEE_EMAIL_TAKEN,
+      API_ERRORS.CF_SALARY_EMPLOYEE_NUMBER_TAKEN,
     );
   });
 
@@ -400,6 +403,7 @@ describe("員工名單", () => {
           employeeId: EMPLOYEE_ID,
           input: {
             name: "李小華",
+            number: "A002",
             email: "hua@example.com",
             baseSalary: 30000,
             mealAllowance: 0,

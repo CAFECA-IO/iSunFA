@@ -165,6 +165,53 @@ export const calculator = {
     all: "すべて",
   },
   // Info: (20260831 - Julian) 公開版から帳簿版への導線
+  // Info: (20260831 - Julian) 計算機の Step 1 における従業員の紐付け状態
+  employee_link: {
+    linked_hint: "従業員と紐付け済み。基本給と食事手当を引き継ぎました",
+    unlink: "紐付けを解除",
+  },
+  // Info: (20260831 - Julian) 計算機ページからの保存と、2 つの例外
+  save_record: {
+    save: "給与記録を保存",
+    saving: "保存中…",
+    saved: "{{name}} の {{year}} 年 {{month}} 月の給与記録として保存しました",
+    view_record: "表示",
+    save_failed: "保存できませんでした。しばらくしてからお試しください。",
+    overwrite_title: "既存の給与記録を上書きしますか？",
+    overwrite_content:
+      "{{name}} の {{year}} 年 {{month}} 月にはすでに記録があります（手取り {{amount}} 元）。保存すると上書きされ、以前の数値は残りません。",
+    overwrite_submit: "上書きして保存",
+    unlinked_title: "この試算は誰の記録ですか？",
+    unlinked_content: "「{{name}}」はまだこの帳簿の従業員リストにいません。",
+    create_and_save: "「{{name}}」を追加して保存",
+    create_and_save_hint: "計算機の氏名・メール・基本給から従業員を作成します",
+    create_needs_number: "先に基本情報で従業員番号を入力してください",
+    pick_from_list: "従業員リストから選ぶ",
+    pick_from_list_hint: "この試算は選んだ従業員に紐付け直されます",
+  },
+  // Info: (20260831 - Julian) 給与記録の閲覧
+  records: {
+    main_title: "給与記録",
+    pay_period: "支給対象期間",
+    pay_period_value: "{{year}} 年 {{month}} 月",
+    employee: "従業員",
+    net_pay: "手取り額",
+    taxable: "源泉徴収票の金額",
+    action: "操作",
+    view: "給与明細を表示",
+    load_back: "計算機に読み込む",
+    delete: "削除",
+    all_employees: "すべての従業員",
+    all_years: "すべての年度",
+    year: "年度",
+    total_count: "全 {{count}} 件",
+    previous_page: "前のページ",
+    next_page: "次のページ",
+    empty_title: "給与記録はまだありません",
+    empty_desc: "計算後に「給与記録を保存」を押すと、ここに表示されます。",
+    load_failed:
+      "給与記録を読み込めませんでした。しばらくしてからお試しください。",
+  },
   account_book_entry: {
     title: "この試算を保存しますか？",
     hint_save: "帳簿版では給与記録の保存と従業員リストの管理ができます。",
@@ -174,6 +221,8 @@ export const calculator = {
     button: "帳簿版の計算機へ",
   },
   button: {
+    disabled_hint:
+      "4 つのステップをすべて終えると、ダウンロードと保存ができます",
     download: "PNG としてダウンロード",
     send: "給与明細を送信",
     reset: "リセット",
@@ -185,6 +234,22 @@ export const calculator = {
     salary_error_title: "給与入力エラー",
     salary_error_content:
       "基本給（課税）＋ 食事手当（非課税）＋ その他の手当（課税）＋ その他の手当（非課税）は最低賃金以上である必要があります。",
+    base_salary: "基本給",
+    total_count: "従業員 {{count}} 名",
+    filtered_count: "{{count}} / {{total}} 名",
+    empty_title: "この帳簿にはまだ従業員がいません",
+    empty_desc:
+      "従業員を登録すると、計算機に基本給と食事手当を引き継げるようになり、計算結果を給与記録として保存できます。",
+    no_search_result: "「{{keyword}}」に一致する従業員はいません",
+    clear_search: "検索をクリア",
+    load_failed:
+      "従業員リストを読み込めませんでした。しばらくしてからお試しください。",
+    save_failed: "保存できませんでした。しばらくしてからお試しください。",
+    remove_failed: "削除できませんでした。しばらくしてからお試しください。",
+    number_taken: "この従業員番号は他の従業員が使用しています",
+    save_changes: "変更を保存",
+    remove_employee_records_kept:
+      "この従業員の保存済みの給与記録は残り、後からでも参照できます。従業員リストと計算機の選択肢に表示されなくなるだけです。",
     remove_employee_title: "従業員の削除",
     remove_employee_content: "本当に従業員リストから {{name}} を削除しますか？",
     remove_employee_submit_btn: "はい、削除します。",

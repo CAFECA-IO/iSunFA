@@ -10,7 +10,12 @@ import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { useTranslation } from "@/i18n/i18n_context";
 import { getMinimumWage } from "@/lib/utils/salary_calculator";
 
-const SalaryFormSection: FC = () => {
+interface ISalaryFormSectionProps {
+  // Info: (20260831 - Julian) 傳給 BasicInfoForm 決定要不要顯示「員工列表」入口（計劃書 §2.4）
+  accountBookId: string | null;
+}
+
+const SalaryFormSection: FC<ISalaryFormSectionProps> = ({ accountBookId }) => {
   const {
     currentStep,
     baseSalary,
@@ -29,7 +34,7 @@ const SalaryFormSection: FC = () => {
 
   const displayedForm =
     currentStep === 1 ? (
-      <BasicInfoForm />
+      <BasicInfoForm accountBookId={accountBookId} />
     ) : currentStep === 2 ? (
       <BasePayForm />
     ) : currentStep === 3 ? (

@@ -25,7 +25,7 @@ const SCHEMA = fs.readFileSync(
  * Info: (20260831 - Julian) 取出單一 model 的區塊並**去掉註解**。
  *
  * 去註解是必要的，不是潔癖：這兩個 model 的註解裡會出現被否定的宣告
- * （例如 activeEmail 的說明就寫著「沒有這一欄的話 `@@unique([accountBookId, email])` 會…」），
+ * （例如 activeNumber 的說明就寫著「沒有這一欄的話 `@@unique([accountBookId, number])` 會…」），
  * 而 `not.toContain` 會把那段散文當成宣告。
  */
 const stripComments = (text: string): string =>
@@ -59,13 +59,18 @@ describe("SalaryCalculatorEmployee", () => {
     expect(block).toContain('deletedAt DateTime? @map("deleted_at")');
   });
 
-  it("存活員工的 Email 唯一性掛在 activeEmail 上，不是 email", () => {
-    expect(block).toContain("@@unique([accountBookId, activeEmail])");
-    expect(block).not.toContain("@@unique([accountBookId, email])");
+  it("存活員工的唯一性掛在 activeNumber 上，不是 number", () => {
+    expect(block).toContain("@@unique([accountBookId, activeNumber])");
+    expect(block).not.toContain("@@unique([accountBookId, number])");
   });
 
-  it("activeEmail 可空：Postgres 的唯一索引不約束 NULL，被刪的列才不會互相打架", () => {
-    expect(block).toContain('activeEmail String? @map("active_email")');
+  it("activeNumber 可空：Postgres 的唯一索引不約束 NULL，被刪的列才不會互相打架", () => {
+    expect(block).toContain('activeNumber String? @map("active_number")');
+  });
+
+  it("員工編號必填、Email 可空 —— 身分是編號不是信箱", () => {
+    expect(block).toContain('number String @map("employee_number")');
+    expect(block).toContain('email String? @map("email")');
   });
 
   it("掛在帳本之下，且有帳本索引", () => {

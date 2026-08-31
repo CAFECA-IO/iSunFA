@@ -162,6 +162,52 @@ export const calculator = {
     all: "全部",
   },
   // Info: (20260831 - Julian) 公開版通往帳本版的入口
+  // Info: (20260831 - Julian) 計算機 Step 1 的員工連結狀態
+  employee_link: {
+    linked_hint: "已連結員工，本薪與伙食費已帶入",
+    unlink: "解除連結",
+  },
+  // Info: (20260831 - Julian) 計算機頁的直接儲存與兩個例外
+  save_record: {
+    save: "儲存薪資紀錄",
+    saving: "儲存中…",
+    saved: "已存為 {{name}} {{year}} 年 {{month}} 月的薪資紀錄",
+    view_record: "查看",
+    save_failed: "儲存失敗，請稍後再試",
+    overwrite_title: "覆蓋既有的薪資紀錄？",
+    overwrite_content:
+      "{{name}} 的 {{year}} 年 {{month}} 月已經有一筆紀錄（實發 {{amount}} 元）。儲存會直接覆蓋它，舊的數字不會留下。",
+    overwrite_submit: "覆蓋並儲存",
+    unlinked_title: "這筆試算要存給誰？",
+    unlinked_content: "「{{name}}」還不在這本帳的員工列表裡。",
+    create_and_save: "新增「{{name}}」並儲存",
+    create_and_save_hint: "用計算機上的姓名、Email 與本薪建立員工",
+    create_needs_number: "需要先在基本資料填寫員工編號",
+    pick_from_list: "從員工列表選一位",
+    pick_from_list_hint: "這次試算會改連結到選中的員工",
+  },
+  // Info: (20260831 - Julian) 薪資紀錄查閱
+  records: {
+    main_title: "薪資紀錄",
+    pay_period: "給付期間",
+    pay_period_value: "{{year}} 年 {{month}} 月",
+    employee: "員工",
+    net_pay: "實發金額",
+    taxable: "扣繳憑單金額",
+    action: "操作",
+    view: "檢視薪資單",
+    load_back: "載回計算機",
+    delete: "刪除",
+    all_employees: "全部員工",
+    all_years: "全部年度",
+    year: "年度",
+    total_count: "共 {{count}} 筆",
+    previous_page: "上一頁",
+    next_page: "下一頁",
+    empty_title: "還沒有薪資紀錄",
+    empty_desc: "在計算機算完之後按下「儲存薪資紀錄」，這裡就會出現。",
+    load_failed: "薪資紀錄載入失敗，請稍後再試",
+  },
   account_book_entry: {
     title: "想把這次的試算存起來嗎？",
     hint_save: "帳本版可以儲存薪資紀錄、管理員工列表。",
@@ -170,6 +216,7 @@ export const calculator = {
     button: "前往帳本版計算機",
   },
   button: {
+    disabled_hint: "完成全部四個步驟後，才能下載或儲存薪資單",
     download: "下載為 PNG",
     send: "寄出薪資單",
     reset: "重置",
@@ -181,6 +228,21 @@ export const calculator = {
     salary_error_title: "薪資輸入有誤",
     salary_error_content:
       "本薪（應稅）＋伙食費（免稅）＋其他加給（應稅）＋其他加給（免稅）必須高於或等於最低工資。",
+    base_salary: "本薪",
+    total_count: "共 {{count}} 位員工",
+    filtered_count: "{{count}} / {{total}} 位員工",
+    empty_title: "這本帳還沒有員工",
+    empty_desc:
+      "建立員工之後，計算機可以直接帶入他的本薪與伙食費，算完的結果也才存得成薪資紀錄。",
+    no_search_result: "沒有符合「{{keyword}}」的員工",
+    clear_search: "清除搜尋",
+    load_failed: "員工列表載入失敗，請稍後再試",
+    save_failed: "儲存失敗，請稍後再試",
+    remove_failed: "移除失敗，請稍後再試",
+    number_taken: "這個員工編號已經有其他員工在使用",
+    save_changes: "儲存變更",
+    remove_employee_records_kept:
+      "這位員工已經存下的薪資紀錄會保留，之後仍然查得到；只是他不會再出現在員工列表與計算機的選單裡。",
     remove_employee_title: "移除員工",
     remove_employee_content: "您確定要從員工列表中移除 {{name}} 嗎？",
     remove_employee_submit_btn: "是的，移除員工。",

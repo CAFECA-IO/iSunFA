@@ -50,10 +50,11 @@ const hoursSchema = z
 const resultAmountSchema = z.number().finite();
 
 // Info: (20260831 - Julian) 員工名單：新增與編輯共用
+// Info: (20260831 - Julian) 編號是身分（帳本內唯一）故必填；Email 只在寄薪資單時要用，可省略
 export const salaryCalculatorEmployeeWriteSchema = z.object({
   name: z.string().trim().min(1).max(100),
-  number: z.string().trim().max(50).optional(),
-  email: z.email().max(254),
+  number: z.string().trim().min(1).max(50),
+  email: z.email().max(254).optional(),
   baseSalary: amountSchema,
   mealAllowance: amountSchema,
 });

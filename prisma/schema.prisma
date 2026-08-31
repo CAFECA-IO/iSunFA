@@ -4403,25 +4403,30 @@ model ResumableJob {
  * 詳見 documents/architecture/salary_record_module_plan.md §2.3。
  */
 model SalaryCalculatorEmployee {
-  id     String  @id @default(uuid())
-  name   String
-  number String? @map("employee_number")
-
-  // Info: (20260831 - Julian) 顯示與寄送用；soft delete 之後仍然保留
-  email String
+  id   String @id @default(uuid())
+  name String
 
   /**
-   * Info: (20260831 - Julian) 「存活中的員工，帳本內 Email 不得重複」。
+   * Info: (20260831 - Julian) 員工編號是這張表的身分 —— 薪資實務上認的是編號，不是信箱。
+   * 帳本內唯一（見下方 activeNumber），因此必填。
+   */
+  number String @map("employee_number")
+
+  // Info: (20260831 - Julian) 寄薪資單用。不是每個帳本都替員工建信箱，因此可空
+  email String? @map("email")
+
+  /**
+   * Info: (20260831 - Julian) 「存活中的員工，帳本內編號不得重複」。
    *
    * Prisma 表達不了 partial unique index，依 code_review_checklist §5.3
-   * 改用 nullable 唯一欄位：存活時等於 `email`，soft delete 時設為 null。
-   * 沒有這一欄的話，`@@unique([accountBookId, email])` 會讓一個被刪掉的員工
-   * 永久佔住那個 Email，而使用者看到的是「這個人明明不在名單上卻加不進來」。
+   * 改用 nullable 唯一欄位：存活時等於 `number`，soft delete 時設為 null。
+   * 沒有這一欄的話，`@@unique([accountBookId, number])` 會讓一個被刪掉的員工
+   * 永久佔住那個編號，而使用者看到的是「這個人明明不在名單上卻加不進來」。
    *
    * 維護點只在 repository（salary_calculator_employee.repo.ts），
    * 由 salary_employee_invariant.test.ts 釘住。
    */
-  activeEmail String? @map("active_email")
+  activeNumber String? @map("active_number")
 
   // Info: (20260831 - Julian) 金額一律 BigInt（元），不用 Int：precision guideline §1
   baseSalary    BigInt @map("base_salary")
@@ -4442,7 +4447,7 @@ model SalaryCalculatorEmployee {
   // Info: (20260831 - Julian) 這張表用 soft delete（與 Department / JobTitle / Employee 相反）：薪資紀錄是對外憑據，員工被刪不能讓歷史一起消失
   deletedAt DateTime? @map("deleted_at")
 
-  @@unique([accountBookId, activeEmail])
+  @@unique([accountBookId, activeNumber])
   @@index([accountBookId])
   @@map("salary_calculator_employee")
 }

@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, FC } from 'react';
+import { Dispatch, SetStateAction, FC } from "react";
 import { Plus, Minus } from "lucide-react";
 import NumericInput from "@/components/common/numeric_input";
 

@@ -1,14 +1,15 @@
 /**
- * Info: (20260831 - Julian) `SalaryCalculatorEmployee` 的 `activeEmail` 不變式。
+ * Info: (20260831 - Julian) `SalaryCalculatorEmployee` 的 `activeNumber` 不變式。
  *
  * ## 這一欄在做什麼
  *
- * 需求是「同一本帳裡，**存活中的**員工 Email 不得重複」。
+ * 需求是「同一本帳裡，**存活中的**員工編號不得重複」——
+ * 員工編號是這張表的身分，薪資實務上認的是編號而不是信箱（信箱可空）。
  * Prisma 表達不了 partial unique index，因此依 `code_review_checklist §5.3`
- * 改用 nullable 唯一欄位：`@@unique([accountBookId, activeEmail])`，
- * 存活時 `activeEmail === email`，soft delete 時 `activeEmail === null`
+ * 改用 nullable 唯一欄位：`@@unique([accountBookId, activeNumber])`，
+ * 存活時 `activeNumber === number`，soft delete 時 `activeNumber === null`
  * （Postgres 的唯一索引不約束 NULL，所以刪掉的列不會互相打架，
- * 同一個 Email 也能重新加入）。
+ * 同一個編號也能重新加入）。
  *
  * ## 為什麼抽成獨立模組
  *
@@ -20,8 +21,8 @@
 
 // Info: (20260831 - Julian) 判斷不變式所需的最小欄位集合
 export interface ISalaryEmployeeActiveState {
-  email: string;
-  activeEmail: string | null;
+  number: string;
+  activeNumber: string | null;
   deletedAt: Date | null;
 }
 
@@ -33,36 +34,36 @@ export class SalaryEmployeeInvariantError extends Error {
 }
 
 /**
- * Info: (20260831 - Julian) 由存活狀態推出 `activeEmail` 應有的值。
- * 這是唯一該產生這個值的地方 —— repository 不自己寫 `activeEmail: email`。
+ * Info: (20260831 - Julian) 由存活狀態推出 `activeNumber` 應有的值。
+ * 這是唯一該產生這個值的地方 —— repository 不自己寫 `activeNumber: number`。
  */
-export const activeEmailFor = (
-  email: string,
+export const activeNumberFor = (
+  employeeNumber: string,
   deletedAt: Date | null,
-): string | null => (deletedAt === null ? email : null);
+): string | null => (deletedAt === null ? employeeNumber : null);
 
 /**
  * Info: (20260831 - Julian) 落地前的最後一道檢查。
  *
- * 存活的列 `activeEmail` 必須等於 `email`；已刪除的列必須是 null。
- * 兩者都違反時，唯一鍵擋不住的是「同一個 Email 出現兩筆存活列」——
- * 那會讓寄薪資單這件事變成擲骰子。
+ * 存活的列 `activeNumber` 必須等於 `number`；已刪除的列必須是 null。
+ * 兩者都違反時，唯一鍵擋不住的是「同一個編號出現兩筆存活列」——
+ * 那會讓「這個月的薪資紀錄屬於誰」變成擲骰子。
  */
-export const assertActiveEmailPairing = (
+export const assertActiveNumberPairing = (
   state: ISalaryEmployeeActiveState,
 ): void => {
   if (state.deletedAt === null) {
-    if (state.activeEmail !== state.email) {
+    if (state.activeNumber !== state.number) {
       throw new SalaryEmployeeInvariantError(
-        `a live employee must carry activeEmail === email (email=${state.email}, activeEmail=${String(state.activeEmail)})`,
+        `a live employee must carry activeNumber === number (number=${state.number}, activeNumber=${String(state.activeNumber)})`,
       );
     }
     return;
   }
 
-  if (state.activeEmail !== null) {
+  if (state.activeNumber !== null) {
     throw new SalaryEmployeeInvariantError(
-      `a deleted employee must carry activeEmail === null (email=${state.email}, activeEmail=${String(state.activeEmail)})`,
+      `a deleted employee must carry activeNumber === null (number=${state.number}, activeNumber=${String(state.activeNumber)})`,
     );
   }
 };

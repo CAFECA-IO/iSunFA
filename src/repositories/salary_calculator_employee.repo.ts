@@ -6,8 +6,8 @@ import {
   ISalaryCalculatorEmployeeWriteInput,
 } from "@/interfaces/salary_record";
 import {
-  activeEmailFor,
-  assertActiveEmailPairing,
+  activeNumberFor,
+  assertActiveNumberPairing,
 } from "@/repositories/salary_calculator_employee_invariant";
 
 /**
@@ -42,15 +42,17 @@ export interface ISalaryCalculatorEmployeeRepository {
 }
 
 /**
- * Info: (20260831 - Julian) Email 在這個帳本已經有存活中的員工在用。
+ * Info: (20260831 - Julian) 員工編號在這個帳本已經有存活中的員工在用。
  *
- * 丟具名型別而不是讓 P2002 冒出去：Email 重複是使用者的輸入問題，
+ * 丟具名型別而不是讓 P2002 冒出去：編號重複是使用者的輸入問題，
  * 而原始的 Prisma 錯誤讀起來像故障（coding_guidelines §5.2）。
  */
-export class SalaryEmployeeEmailTakenError extends Error {
-  constructor(public readonly email: string) {
-    super(`SalaryCalculatorEmployee: email already used (email=${email})`);
-    this.name = "SalaryEmployeeEmailTakenError";
+export class SalaryEmployeeNumberTakenError extends Error {
+  constructor(public readonly employeeNumber: string) {
+    super(
+      `SalaryCalculatorEmployee: employee number already used (number=${employeeNumber})`,
+    );
+    this.name = "SalaryEmployeeNumberTakenError";
   }
 }
 
@@ -75,9 +77,10 @@ const toFrontendFormat = (
 ): ISalaryCalculatorEmployee => ({
   id: row.id,
   name: row.name,
-  // Info: (20260831 - Julian) null 打平成空字串，沿用 IVoucher.note 的既有慣例
-  number: row.number ?? "",
-  email: row.email,
+  // Info: (20260831 - Julian) 編號是身分鍵，schema 上是必填，直接帶出
+  number: row.number,
+  // Info: (20260831 - Julian) Email 可空，null 打平成空字串（沿用 IVoucher.note 的既有慣例）
+  email: row.email ?? "",
   baseSalary: toAmount(row.baseSalary),
   mealAllowance: toAmount(row.mealAllowance),
 });
@@ -115,16 +118,16 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
     const data: Prisma.SalaryCalculatorEmployeeUncheckedCreateInput = {
       accountBookId,
       name: input.name,
-      number: input.number ?? null,
-      email: input.email,
-      activeEmail: activeEmailFor(input.email, null),
+      number: input.number,
+      email: input.email ?? null,
+      activeNumber: activeNumberFor(input.number, null),
       baseSalary: BigInt(input.baseSalary),
       mealAllowance: BigInt(input.mealAllowance),
     };
 
-    assertActiveEmailPairing({
-      email: data.email,
-      activeEmail: data.activeEmail ?? null,
+    assertActiveNumberPairing({
+      number: data.number,
+      activeNumber: data.activeNumber ?? null,
       deletedAt: null,
     });
 
@@ -133,7 +136,7 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
       return toFrontendFormat(row);
     } catch (error) {
       if (isUniqueViolation(error)) {
-        throw new SalaryEmployeeEmailTakenError(input.email);
+        throw new SalaryEmployeeNumberTakenError(input.number);
       }
       throw error;
     }
@@ -148,9 +151,9 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
     employeeId: string;
     input: ISalaryCalculatorEmployeeWriteInput;
   }): Promise<ISalaryCalculatorEmployee | null> {
-    assertActiveEmailPairing({
-      email: input.email,
-      activeEmail: activeEmailFor(input.email, null),
+    assertActiveNumberPairing({
+      number: input.number,
+      activeNumber: activeNumberFor(input.number, null),
       deletedAt: null,
     });
 
@@ -164,9 +167,9 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
         where: { accountBookId, id: employeeId, deletedAt: null },
         data: {
           name: input.name,
-          number: input.number ?? null,
-          email: input.email,
-          activeEmail: activeEmailFor(input.email, null),
+          number: input.number,
+          email: input.email ?? null,
+          activeNumber: activeNumberFor(input.number, null),
           baseSalary: BigInt(input.baseSalary),
           mealAllowance: BigInt(input.mealAllowance),
         },
@@ -177,7 +180,7 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
       return await this.getEmployeeById(accountBookId, employeeId);
     } catch (error) {
       if (isUniqueViolation(error)) {
-        throw new SalaryEmployeeEmailTakenError(input.email);
+        throw new SalaryEmployeeNumberTakenError(input.number);
       }
       throw error;
     }
@@ -192,17 +195,17 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
   }): Promise<boolean> {
     const deletedAt = new Date();
 
-    assertActiveEmailPairing({
-      // Info: (20260831 - Julian) 刪除路徑不碰 email 本身，這裡只是把不變式的兩邊擺出來檢查
-      email: "",
-      activeEmail: activeEmailFor("", deletedAt),
+    assertActiveNumberPairing({
+      // Info: (20260831 - Julian) 刪除路徑不碰 number 本身，這裡只是把不變式的兩邊擺出來檢查
+      number: "",
+      activeNumber: activeNumberFor("", deletedAt),
       deletedAt,
     });
 
     const result = await prisma.salaryCalculatorEmployee.updateMany({
       where: { accountBookId, id: employeeId, deletedAt: null },
-      // Info: (20260831 - Julian) 讓出 activeEmail，同一個 Email 之後才能重新加入
-      data: { deletedAt, activeEmail: null },
+      // Info: (20260831 - Julian) 讓出 activeNumber，同一個編號之後才能重新加入
+      data: { deletedAt, activeNumber: null },
     });
 
     return result.count > 0;
