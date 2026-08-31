@@ -33,3 +33,5 @@ export * from "@/validators/leave_balance";
 export * from "@/validators/leave_policy";
 // Info: (20260818 - Julian) 加班模組（L24–L30）
 export * from "@/validators/overtime";
+// Info: (20260831 - Julian) 薪資計算機（員工名單與薪資紀錄）
+export * from "@/validators/salary_record";

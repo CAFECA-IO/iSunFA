@@ -132,6 +132,18 @@ export enum RateLimitBucketEnum {
    * 掛在寫入桶會讓即時預覽在正常填單過程中就撞牆。
    */
   LEAVE_WRITE = "LEAVE_WRITE",
+
+  /**
+   * Info: (20260831 - Julian) 薪資計算機的寫入（員工名單 CRUD、儲存薪資紀錄）。
+   *
+   * **不與 `SAVE` 共用。** 那個桶的 60/min 是為碳排報告的 autosave debounce 訂的，
+   * 而薪資的寫入是使用者按下按鈕才發生的離散動作 —— 兩件事的成本屬性無關，
+   * 共用一個預算的後果是其中一邊的正常節奏會把另一邊擠掉
+   * （同 `LEAVE_WRITE` 不與 `ATTENDANCE_WRITE` 共用的理由）。
+   *
+   * 讀取（員工清單、薪資紀錄清單與明細）沿用既有的 `READ`。
+   */
+  SALARY_WRITE = "SALARY_WRITE",
 }
 
 export interface IRateLimitWindow {
@@ -219,6 +231,10 @@ export const RATE_LIMIT_RULES: Record<RateLimitBucketEnum, IRateLimitWindow[]> =
     [RateLimitBucketEnum.LEAVE_WRITE]: [
       { windowMs: MINUTE_MS, max: envInt("LEAVE_RL_WRITE_PER_MINUTE", 30) },
       { windowMs: DAY_MS, max: envInt("LEAVE_RL_WRITE_PER_DAY", 500) },
+    ],
+    [RateLimitBucketEnum.SALARY_WRITE]: [
+      { windowMs: MINUTE_MS, max: envInt("SALARY_RL_WRITE_PER_MINUTE", 30) },
+      { windowMs: DAY_MS, max: envInt("SALARY_RL_WRITE_PER_DAY", 300) },
     ],
     [RateLimitBucketEnum.ATTENDANCE_EXPORT]: [
       {

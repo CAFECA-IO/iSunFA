@@ -1,0 +1,433 @@
+import { describe, it, expect, beforeEach } from "@jest/globals";
+import { AppError } from "@/lib/utils/error";
+import { API_ERRORS, IErrorDef } from "@/lib/utils/error_dictionary";
+import {
+  defaultSalaryCalculatorResult,
+  ISalaryCalculatorOptions,
+  ISalaryCalculatorUI,
+} from "@/interfaces/salary_calculator";
+import {
+  ISalaryCalculatorEmployee,
+  ISalaryCalculatorEmployeeWriteInput,
+  ISalaryRecordDetail,
+  ISalaryRecordPageResult,
+  ISalaryRecordQueryOptions,
+} from "@/interfaces/salary_record";
+import {
+  ISalaryCalculatorEmployeeRepository,
+  SalaryEmployeeEmailTakenError,
+} from "@/repositories/salary_calculator_employee.repo";
+import { ISalaryRecordRepository } from "@/repositories/salary_record.repo";
+import { SalaryRecordService } from "@/services/salary_record.service";
+
+/**
+ * Info: (20260831 - Julian) 薪資紀錄 service 的編排。
+ *
+ * ## 為什麼用手寫的假 repository 而不是 mock Prisma
+ *
+ * 沿用本專案既有的慣例（`leave_request_service.test.ts` 有明文）：
+ * 「有沒有真的寫進去」是 repository 的事，那需要整合測試；
+ * 這裡驗的是 service 的判斷 —— 誰擋得住、誰被允許、金額怎麼抽出來。
+ * service 的 constructor 本來就開放注入，不需要動到模組系統。
+ *
+ * 假的紀錄 repository 用一個 Map 模擬
+ * `@@unique([accountBookId, employeeId, year, month])`，
+ * 讓「重存即覆寫」這件事在測試裡真的成立，而不是只斷言 upsert 被呼叫過。
+ */
+
+const BOOK = "book-a";
+const OTHER_BOOK = "book-b";
+const USER = "user-1";
+const EMPLOYEE_ID = "11111111-1111-4111-8111-111111111111";
+
+const employeeOf = (
+  overrides: Partial<ISalaryCalculatorEmployee> = {},
+): ISalaryCalculatorEmployee => ({
+  id: EMPLOYEE_ID,
+  name: "王小明",
+  number: "A001",
+  email: "ming@example.com",
+  baseSalary: 30000,
+  mealAllowance: 3000,
+  ...overrides,
+});
+
+const optionsOf = (): ISalaryCalculatorOptions => ({
+  year: 2026,
+  month: 8,
+  baseSalaryTaxable: 30000,
+  baseSalaryTaxFree: 3000,
+});
+
+const resultOf = (
+  overrides: Partial<ISalaryCalculatorUI> = {},
+): ISalaryCalculatorUI => ({
+  ...defaultSalaryCalculatorResult,
+  totalPayment: 31000,
+  totalSalaryTaxable: 30000,
+  employerContribution: {
+    ...defaultSalaryCalculatorResult.employerContribution,
+    totalEmployerCost: 36000,
+  },
+  ...overrides,
+});
+
+const writeInputOf = (overrides = {}) => ({
+  employeeId: EMPLOYEE_ID,
+  year: 2026,
+  month: 8,
+  input: optionsOf(),
+  result: resultOf(),
+  calculatorVersion: "2026.1",
+  ...overrides,
+});
+
+// Info: (20260831 - Julian) 斷言錯誤是「哪一個」API 錯誤，而不是只斷言「有丟東西」
+const expectAppError = async (
+  run: () => Promise<unknown>,
+  def: IErrorDef,
+): Promise<void> => {
+  await expect(run()).rejects.toThrow(AppError);
+  await run().catch((error: unknown) => {
+    expect((error as AppError).apiCode).toBe(def.code);
+  });
+};
+
+class FakeEmployeeRepo implements ISalaryCalculatorEmployeeRepository {
+  // Info: (20260831 - Julian) key 是 `${accountBookId}|${employeeId}`，天然表達租戶隔離
+  private readonly rows = new Map<string, ISalaryCalculatorEmployee>();
+
+  public emailTaken = false;
+
+  public updateCalls = 0;
+
+  public seed(accountBookId: string, employee: ISalaryCalculatorEmployee) {
+    this.rows.set(`${accountBookId}|${employee.id}`, employee);
+  }
+
+  public async listEmployees(accountBookId: string) {
+    return [...this.rows.entries()]
+      .filter(([key]) => key.startsWith(`${accountBookId}|`))
+      .map(([, value]) => value);
+  }
+
+  public async getEmployeeById(accountBookId: string, employeeId: string) {
+    return this.rows.get(`${accountBookId}|${employeeId}`) ?? null;
+  }
+
+  public async createEmployee({
+    accountBookId,
+    input,
+  }: {
+    accountBookId: string;
+    input: ISalaryCalculatorEmployeeWriteInput;
+  }) {
+    if (this.emailTaken) throw new SalaryEmployeeEmailTakenError(input.email);
+    const created = employeeOf({ ...input, number: input.number ?? "" });
+    this.seed(accountBookId, created);
+    return created;
+  }
+
+  public async updateEmployee({
+    accountBookId,
+    employeeId,
+    input,
+  }: {
+    accountBookId: string;
+    employeeId: string;
+    input: ISalaryCalculatorEmployeeWriteInput;
+  }) {
+    this.updateCalls += 1;
+    if (this.emailTaken) throw new SalaryEmployeeEmailTakenError(input.email);
+    const existing = this.rows.get(`${accountBookId}|${employeeId}`);
+    if (!existing) return null;
+    const updated = { ...existing, ...input, number: input.number ?? "" };
+    this.rows.set(`${accountBookId}|${employeeId}`, updated);
+    return updated;
+  }
+
+  public async softDeleteEmployee({
+    accountBookId,
+    employeeId,
+  }: {
+    accountBookId: string;
+    employeeId: string;
+  }) {
+    return this.rows.delete(`${accountBookId}|${employeeId}`);
+  }
+}
+
+class FakeRecordRepo implements ISalaryRecordRepository {
+  // Info: (20260831 - Julian) 模擬 @@unique([accountBookId, employeeId, year, month])
+  public readonly rows = new Map<string, ISalaryRecordDetail>();
+
+  public upsertCalls = 0;
+
+  public async upsertRecord(params: {
+    accountBookId: string;
+    employeeId: string;
+    createdByUserId: string;
+    year: number;
+    month: number;
+    input: ISalaryCalculatorOptions;
+    result: ISalaryCalculatorUI;
+    calculatorVersion: string;
+    totalPayment: bigint;
+    totalSalaryTaxable: bigint;
+    totalEmployerCost: bigint;
+  }) {
+    this.upsertCalls += 1;
+    const key = `${params.accountBookId}|${params.employeeId}|${params.year}|${params.month}`;
+    const detail: ISalaryRecordDetail = {
+      id: key,
+      year: params.year,
+      month: params.month,
+      employee: { id: params.employeeId, name: "王小明", number: "A001" },
+      totalPayment: Number(params.totalPayment),
+      totalSalaryTaxable: Number(params.totalSalaryTaxable),
+      totalEmployerCost: Number(params.totalEmployerCost),
+      calculatorVersion: params.calculatorVersion,
+      createdAt: 0,
+      updatedAt: 0,
+      input: params.input,
+      result: params.result,
+    };
+    this.rows.set(key, detail);
+    return detail;
+  }
+
+  public async listRecords(
+    options: ISalaryRecordQueryOptions,
+  ): Promise<ISalaryRecordPageResult> {
+    const data = [...this.rows.values()];
+    return {
+      data,
+      page: options.page,
+      pageSize: options.pageSize,
+      totalCount: data.length,
+      totalPages: 1,
+    };
+  }
+
+  public async getRecordById(accountBookId: string, recordId: string) {
+    const row = this.rows.get(recordId);
+    return row && recordId.startsWith(`${accountBookId}|`) ? row : null;
+  }
+
+  public async deleteRecord({
+    accountBookId,
+    recordId,
+  }: {
+    accountBookId: string;
+    recordId: string;
+  }) {
+    if (!recordId.startsWith(`${accountBookId}|`)) return false;
+    return this.rows.delete(recordId);
+  }
+}
+
+let employees: FakeEmployeeRepo;
+let records: FakeRecordRepo;
+let service: SalaryRecordService;
+
+beforeEach(() => {
+  employees = new FakeEmployeeRepo();
+  records = new FakeRecordRepo();
+  employees.seed(BOOK, employeeOf());
+  service = new SalaryRecordService(employees, records);
+});
+
+describe("儲存薪資紀錄", () => {
+  it("同一位員工、同一個年月存第二次是覆寫，不是新增一筆", async () => {
+    await service.saveRecord({
+      accountBookId: BOOK,
+      userId: USER,
+      input: writeInputOf(),
+    });
+    await service.saveRecord({
+      accountBookId: BOOK,
+      userId: USER,
+      input: writeInputOf({ result: resultOf({ totalPayment: 45000 }) }),
+    });
+
+    expect(records.upsertCalls).toBe(2);
+    expect(records.rows.size).toBe(1);
+    expect([...records.rows.values()][0].totalPayment).toBe(45000);
+  });
+
+  it("換一個月就是另一筆紀錄", async () => {
+    await service.saveRecord({
+      accountBookId: BOOK,
+      userId: USER,
+      input: writeInputOf(),
+    });
+    await service.saveRecord({
+      accountBookId: BOOK,
+      userId: USER,
+      input: writeInputOf({ month: 9 }),
+    });
+
+    expect(records.rows.size).toBe(2);
+  });
+
+  it("三個抽出的金額分別取自 totalPayment、totalSalaryTaxable、雇主總負擔", async () => {
+    const saved = await service.saveRecord({
+      accountBookId: BOOK,
+      userId: USER,
+      input: writeInputOf(),
+    });
+
+    expect(saved.totalPayment).toBe(31000);
+    expect(saved.totalSalaryTaxable).toBe(30000);
+    expect(saved.totalEmployerCost).toBe(36000);
+  });
+
+  it("員工屬於別的帳本時擋下來，而且沒有寫入任何東西", async () => {
+    await expectAppError(
+      () =>
+        service.saveRecord({
+          accountBookId: OTHER_BOOK,
+          userId: USER,
+          input: writeInputOf(),
+        }),
+      API_ERRORS.NF_SALARY_CALCULATOR_EMPLOYEE,
+    );
+
+    expect(records.upsertCalls).toBe(0);
+  });
+
+  it("金額不是整數時 fail fast，不靜默 truncate", async () => {
+    await expectAppError(
+      () =>
+        service.saveRecord({
+          accountBookId: BOOK,
+          userId: USER,
+          input: writeInputOf({ result: resultOf({ totalPayment: 31000.5 }) }),
+        }),
+      API_ERRORS.VA_SALARY_AMOUNT_NOT_INTEGER,
+    );
+
+    expect(records.upsertCalls).toBe(0);
+  });
+
+  it("雇主總負擔不是整數也一樣擋（三個欄位都要走同一道檢查）", async () => {
+    await expectAppError(
+      () =>
+        service.saveRecord({
+          accountBookId: BOOK,
+          userId: USER,
+          input: writeInputOf({
+            result: resultOf({
+              employerContribution: {
+                ...defaultSalaryCalculatorResult.employerContribution,
+                totalEmployerCost: 36000.25,
+              },
+            }),
+          }),
+        }),
+      API_ERRORS.VA_SALARY_AMOUNT_NOT_INTEGER,
+    );
+
+    expect(records.upsertCalls).toBe(0);
+  });
+});
+
+describe("讀取與刪除薪資紀錄", () => {
+  it("讀不到別的帳本的紀錄", async () => {
+    const saved = await service.saveRecord({
+      accountBookId: BOOK,
+      userId: USER,
+      input: writeInputOf(),
+    });
+
+    await expectAppError(
+      () =>
+        service.getRecord({ accountBookId: OTHER_BOOK, recordId: saved.id }),
+      API_ERRORS.NF_SALARY_RECORD,
+    );
+  });
+
+  it("刪不到別的帳本的紀錄，而且那一筆還在", async () => {
+    const saved = await service.saveRecord({
+      accountBookId: BOOK,
+      userId: USER,
+      input: writeInputOf(),
+    });
+
+    await expectAppError(
+      () =>
+        service.deleteRecord({
+          accountBookId: OTHER_BOOK,
+          recordId: saved.id,
+        }),
+      API_ERRORS.NF_SALARY_RECORD,
+    );
+    expect(records.rows.size).toBe(1);
+  });
+
+  it("刪除不存在的紀錄回 404 而不是靜默成功", async () => {
+    await expectAppError(
+      () => service.deleteRecord({ accountBookId: BOOK, recordId: "nope" }),
+      API_ERRORS.NF_SALARY_RECORD,
+    );
+  });
+});
+
+describe("員工名單", () => {
+  it("Email 撞號時回 409，而不是把 Prisma 的 P2002 噴到前端", async () => {
+    employees.emailTaken = true;
+
+    await expectAppError(
+      () =>
+        service.createEmployee({
+          accountBookId: BOOK,
+          input: {
+            name: "李小華",
+            email: "ming@example.com",
+            baseSalary: 30000,
+            mealAllowance: 0,
+          },
+        }),
+      API_ERRORS.CF_SALARY_EMPLOYEE_EMAIL_TAKEN,
+    );
+  });
+
+  it("編輯別的帳本的員工回 404", async () => {
+    await expectAppError(
+      () =>
+        service.updateEmployee({
+          accountBookId: OTHER_BOOK,
+          employeeId: EMPLOYEE_ID,
+          input: {
+            name: "李小華",
+            email: "hua@example.com",
+            baseSalary: 30000,
+            mealAllowance: 0,
+          },
+        }),
+      API_ERRORS.NF_SALARY_CALCULATOR_EMPLOYEE,
+    );
+  });
+
+  it("刪除別的帳本的員工回 404，而且那一筆還在", async () => {
+    await expectAppError(
+      () =>
+        service.deleteEmployee({
+          accountBookId: OTHER_BOOK,
+          employeeId: EMPLOYEE_ID,
+        }),
+      API_ERRORS.NF_SALARY_CALCULATOR_EMPLOYEE,
+    );
+
+    expect(await service.listEmployees(BOOK)).toHaveLength(1);
+  });
+
+  it("列表只回本帳本的員工", async () => {
+    employees.seed(OTHER_BOOK, employeeOf({ id: "other", name: "別人" }));
+
+    const list = await service.listEmployees(BOOK);
+
+    expect(list).toHaveLength(1);
+    expect(list[0].name).toBe("王小明");
+  });
+});
