@@ -148,7 +148,7 @@ export async function canResumeNow(params: {
    * 回 false 推出來的；這裡是寫死的。第二層扣款一旦恢復，兩邊就會分岔，
    * 而分岔的症狀是「掃描說還不夠、使用者其實付得起」——沒有人會發現。
    *
-   * 連帶的產品後果已經記在 `resumable_job_resume_notification.md` §13.2：
+   * 連帶的產品後果已經記在 `resumable_job_resume_notification.md` §6.2：
    * 「加購點數」在今天是一條**不存在的出路**，只有等視窗重置與升級方案有效。
    *
    * 這件事由 `spend_second_layer_inert.test.ts` 的 D 類釘住（20260831 補上，

@@ -707,7 +707,7 @@ export const useCarbonChat = () => {
    * 中間那段時間 `sessionsData` 裡只有預設會話，**非空但不完整** ——
    * 而「非空」正是通知深連結原本用來判斷「清單載好了」的依據，
    * 於是它在清單補齊之前就判定「查無此會話」而放棄
-   *（見 `resumable_job_resume_landing_and_copy.md` §10.5）。
+   *（見 `resumable_job_resume_landing_and_copy.md` §6.1）。
    *
    * 任何「這個 id 不存在」的判斷都要等這個旗標，失敗也要等 ——
    * 失敗時清單就是不會再補了，繼續等只會變成永遠不動作。

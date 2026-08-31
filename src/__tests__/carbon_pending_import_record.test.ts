@@ -5,7 +5,7 @@ import type { IPendingImport } from "@/components/carbon_chatbot/import_preview"
 
 /**
  * Info: (20260828 - Julian) 存出去的待匯入紀錄**不得漏掉斷點**（實測發現，見
- * `resumable_job_resume_landing_and_copy.md` §10.6）。
+ * `resumable_job_resume_landing_and_copy.md` §6.2）。
  *
  * 這一檔的由來是一個沉默的資料遺失：`persistPendingImport` 逐欄位手寫存檔的
  * 形狀，而 #6713 加的 `pausedChapters` / `pausedUnits` / `pauseReason`

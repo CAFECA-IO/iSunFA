@@ -195,7 +195,7 @@ export const carbonChatbot = {
    *
    * 1.「補上點數後」指向一條**不存在的出路**：翻面的判準只看訂閱方案的視窗額度，
    *    加購的點數改變不了裡面任何一個數（見 `resumable_job_resume_notification.md`
-   *    §13.2）。實測時我們照這句話去加購，白等了一輪。
+   *    §6.2）。實測時我們照這句話去加購，白等了一輪。
    * 2. 沒有說**要等到哪一天**。402 的 payload 已經算好了兩個視窗的 `resetAt`，
    *    也標了 `exceedsWindowLimit`（等重置永遠不會好的那種），丟掉它的是前端
    *    `resolveCreditPauseReason()`。

@@ -1393,7 +1393,7 @@ describe("可以繼續的任務（活算待辦）", () => {
   });
 
   /**
-   * Info: (20260828 - Julian) 深連結的**跨模組契約**（計劃 §2.2）。
+   * Info: (20260828 - Julian) 深連結的**跨模組契約**（計劃 §2）。
    *
    * 服務端從 `resourceKey` 切出 `sessionId` 放進 payload，連結端用它代入
    * `NOTIFICATION_LINK_PATH` 的樣板。兩邊各測各的都會綠，而它們對不上的

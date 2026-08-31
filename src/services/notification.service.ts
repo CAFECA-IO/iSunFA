@@ -316,7 +316,7 @@ export async function listNotifications(params: {
         ...resumableJobs.map((job) => {
           /**
            * Info: (20260828 - Julian) 深連結要的 `sessionId` 在這裡切出來
-           *（計劃 `resumable_job_resume_landing_and_copy.md` §2.2）。
+           *（計劃 `resumable_job_resume_landing_and_copy.md` §2）。
            *
            * 切在這一層而不是 `notification_message.ts`：那一層是
            *「型別 × payload → 去處」的純函式，不該懂任何一種 `JOB_TYPE`

@@ -49,7 +49,7 @@ const REFERENCE_KEYS = Object.keys(REFERENCE) as (keyof typeof REFERENCE)[];
  * - **點數**：原本寫「點數已補回」，而那是一件沒有發生的事 —— 翻面的判準只看
  *   訂閱方案的視窗額度（`canResumeNow` 的 `chainCredits` 是字面量 0，因為第二層
  *   扣款停用中），加購的點數改變不了判準裡的任何一個數。實測時我們照著那句話
- *   去加購，白等了一輪（見 `resumable_job_resume_notification.md` §13.2）。
+ *   去加購，白等了一輪（見 `resumable_job_resume_notification.md` §6.2）。
  * - **額度**：改成「額度已恢復」之後仍然只對一半 —— 個人付款那條路恢復的
  *   不是額度，是那筆款項付掉了（review #6732 的 1-A）。
  *

@@ -34,7 +34,7 @@ const RecordTabModal = dynamic(
 
 /**
  * Info: (20260828 - Julian) 通知的深連結落地：切到那一個會話，並把待匯入的卡打開
- *（計劃 `resumable_job_resume_landing_and_copy.md` §2.3）。
+ *（計劃 `resumable_job_resume_landing_and_copy.md` §2.2）。
  *
  * 「可以繼續了」那則通知的整個價值在於**把人放在能動手的地方**。少了這一段，
  * 使用者落在頁面層級，還要自己從側欄認出是哪一個盤查對話、切到聊天視圖、
@@ -410,7 +410,7 @@ export default function CarbonChatbotPage() {
 
               這裡只補最小的兩件事：正在發生什麼、以及有一份結果等著看。
               **尚未做**：把那條「已保存待匯入的解析結果」的橘色列也移出解鎖閘
-              （它現在仍然只活在 `ChatInput` 裡）。見計劃書 §10.7 與 §11。
+              （它現在仍然只活在 `ChatInput` 裡）。見計劃書 §6.3 與 §8。
             */}
             {draftNotice ? (
               <p

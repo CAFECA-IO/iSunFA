@@ -35,7 +35,7 @@ export const isQuotaApiError = (error: unknown): boolean => {
  */
 /**
  * Info: (20260828 - Julian) **尚未做**：把 402 的 payload 一起帶下來
- *（計劃 `resumable_job_resume_landing_and_copy.md` §4「決定三」）。
+ *（計劃 `resumable_job_resume_landing_and_copy.md` §4）。
  *
  * 這支現在只取 `errorCode`，其餘整包丟掉。而伺服器那邊事實是齊的：
  * `buildQuotaExceededPayload` 回的 402 帶著 `exceeded`（哪個視窗先卡）、

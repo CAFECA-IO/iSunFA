@@ -151,7 +151,7 @@ export function notificationMessageOf(
        * 要做的時候：`ResumableJob` 加一個 nullable 的 `resource_label`
        *（不要叫 `file_name`，下一種 `JOB_TYPE` 的標籤未必是檔案），
        * 由 `saveImportJobBookmark` 帶上來、`listNotifications` 放進 payload。
-       * 取捨見 `resumable_job_resume_landing_and_copy.md` §10.3。
+       * 取捨見 `resumable_job_resume_landing_and_copy.md` §8。
        */
       if (completed <= 0 || remaining <= 0) {
         return t("notification.job_resumable_fresh");

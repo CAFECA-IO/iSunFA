@@ -24,7 +24,7 @@ export const buildCarbonChatChannel = (
  * Info: (20260828 - Julian) 反函式：從頻道切回 `{ address, sessionId }`。
  *
  * 存在的理由是通知要深連結到**單一會話**：書籤只存 `resourceKey`，
- * 而那個字串裡就有 sessionId（見 `resumable_job_resume_landing_and_copy.md` §2.2）。
+ * 而那個字串裡就有 sessionId（見 `resumable_job_resume_landing_and_copy.md` §2）。
  *
  * 放在 `buildCarbonChatChannel` 旁邊而不是解析的那一端（通知服務），
  * 有兩個理由：格式改了兩支要一起改，放在一起才看得見；
