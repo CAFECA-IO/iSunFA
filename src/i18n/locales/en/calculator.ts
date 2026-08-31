@@ -167,6 +167,17 @@ export const calculator = {
     sent_on: "Sent On",
     all: "All",
   },
+  // Info: (20260831 - Julian) Entry point from the public calculator to the account book one
+  account_book_entry: {
+    title: "Want to keep this calculation?",
+    hint_save:
+      "The account book version saves payroll records and manages your employee list.",
+    hint_select:
+      "You pick an account book first; the data is stored under that book.",
+    hint_no_carry:
+      "What you entered here will not carry over — you will need to enter it again.",
+    button: "Go to the account book calculator",
+  },
   button: {
     download: "Download as PNG",
     send: "Send Pay Slip",

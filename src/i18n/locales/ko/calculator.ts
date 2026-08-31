@@ -164,6 +164,17 @@ export const calculator = {
     sent_on: "발송일",
     all: "모두",
   },
+  // Info: (20260831 - Julian) 공개 버전에서 장부 버전으로 가는 입구
+  account_book_entry: {
+    title: "이번 계산을 저장할까요?",
+    hint_save:
+      "장부 버전에서는 급여 기록을 저장하고 직원 목록을 관리할 수 있습니다.",
+    hint_select:
+      "먼저 장부를 선택해야 하며, 데이터는 해당 장부 아래에 저장됩니다.",
+    hint_no_carry:
+      "여기에 입력한 내용은 넘어가지 않으므로 장부 버전에서 다시 입력해야 합니다.",
+    button: "장부 버전 계산기로 이동",
+  },
   button: {
     download: "PNG 로 다운로드",
     send: "급여 명세서 발송",

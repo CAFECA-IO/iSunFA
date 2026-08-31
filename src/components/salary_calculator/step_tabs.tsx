@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { CircleCheck } from "lucide-react";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
@@ -117,7 +117,7 @@ const StepTabs: FC = () => {
   });
 
   return (
-    <div className="grid min-w-[350px] grid-cols-2 gap-3 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 md:min-w-[350px] md:grid-cols-4">
       {tabs}
     </div>
   );

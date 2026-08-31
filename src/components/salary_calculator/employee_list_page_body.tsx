@@ -1,16 +1,22 @@
-import { FC } from 'react';
+"use client";
+
+import { FC } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
-import CalculatorHeader from "@/components/salary_calculator/calculator_header";
+import SalaryCalculatorShell from "@/components/salary_calculator/salary_calculator_shell";
 import EmployeeList from "@/components/salary_calculator/employee_list";
 
-const EmployeeListPageBody: FC = () => {
+interface IEmployeeListPageBodyProps {
+  // Info: (20260831 - Julian) 員工列表只存在於帳本版，因此這裡不可為 null（計劃書 §2.4）
+  accountBookId: string;
+}
+
+const EmployeeListPageBody: FC<IEmployeeListPageBodyProps> = ({
+  accountBookId,
+}) => {
   const { t } = useTranslation();
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-white">
-      {/* Info: (20250715 - Julian) Header */}
-      <CalculatorHeader />
-
+    <SalaryCalculatorShell accountBookId={accountBookId}>
       {/* Info: (20250715 - Julian) Main Content */}
       <div className="gap-56px px-240px py-56px flex flex-col items-stretch">
         <h1 className="text-32px text-text-brand-primary-lv1 text-center font-bold">
@@ -19,7 +25,7 @@ const EmployeeListPageBody: FC = () => {
 
         <EmployeeList />
       </div>
-    </main>
+    </SalaryCalculatorShell>
   );
 };
 

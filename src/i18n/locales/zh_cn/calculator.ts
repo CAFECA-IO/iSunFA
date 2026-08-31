@@ -161,6 +161,14 @@ export const calculator = {
     sent_on: "发送日期",
     all: "全部",
   },
+  // Info: (20260831 - Julian) 公开版通往账本版的入口
+  account_book_entry: {
+    title: "想把这次的试算保存下来吗？",
+    hint_save: "账本版可以保存薪资记录、管理员工列表。",
+    hint_select: "需要先选择一个账本，数据会存在该账本之下。",
+    hint_no_carry: "这次填写的内容不会带过去，到账本版需要重新输入。",
+    button: "前往账本版计算器",
+  },
   button: {
     download: "保存为 PNG",
     send: "发送薪资单",

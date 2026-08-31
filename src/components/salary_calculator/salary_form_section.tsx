@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC } from "react";
 import { AlertCircle } from "lucide-react";
 import ProgressBar from "@/components/salary_calculator/progress_bar";
 import StepTabs from "@/components/salary_calculator/step_tabs";
@@ -17,13 +17,13 @@ const SalaryFormSection: FC = () => {
     mealAllowance,
     selectedYear,
     totalTaxableHours,
-    totalNonTaxableHours
+    totalNonTaxableHours,
   } = useCalculatorCtx();
   const { t } = useTranslation();
 
   const minimumWage = getMinimumWage(parseInt(selectedYear));
-  const isSalaryBelowMinimum = (baseSalary + mealAllowance) < minimumWage;
-  const isOvertimeExceeded = (totalTaxableHours + totalNonTaxableHours) > 46;
+  const isSalaryBelowMinimum = baseSalary + mealAllowance < minimumWage;
+  const isOvertimeExceeded = totalTaxableHours + totalNonTaxableHours > 46;
 
   const showWarning = isSalaryBelowMinimum || isOvertimeExceeded;
 
@@ -52,7 +52,11 @@ const SalaryFormSection: FC = () => {
           </div>
           <ul className="list-inside list-disc pl-6 text-red-700">
             {isSalaryBelowMinimum && (
-              <li>{t("calculator.warnings.salary_below_minimum", { minimumWage: minimumWage.toLocaleString() })}</li>
+              <li>
+                {t("calculator.warnings.salary_below_minimum", {
+                  minimumWage: minimumWage.toLocaleString(),
+                })}
+              </li>
             )}
             {isOvertimeExceeded && (
               <li>{t("calculator.warnings.overtime_exceeded")}</li>

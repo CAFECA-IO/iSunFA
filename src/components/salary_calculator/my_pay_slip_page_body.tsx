@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, Fragment, FC, ChangeEvent } from 'react';
+import { useState, useMemo, Fragment, FC, ChangeEvent } from "react";
 
 import { useTranslation } from "@/i18n/i18n_context";
 import {
@@ -11,7 +11,7 @@ import {
   Transition,
 } from "@headlessui/react";
 import { ChevronDown, Search } from "lucide-react";
-import CalculatorHeader from "@/components/salary_calculator/calculator_header";
+import SalaryCalculatorShell from "@/components/salary_calculator/salary_calculator_shell";
 import ReceivedTab from "@/components/salary_calculator/pay_slip_received_tab";
 import SentTab from "@/components/salary_calculator/pay_slip_sent_tab";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
@@ -149,7 +149,12 @@ const FilterSection: FC<{
   );
 };
 
-const MyPaySlipPageBody: FC = () => {
+interface IMyPaySlipPageBodyProps {
+  // Info: (20260831 - Julian) 薪資單頁只存在於帳本版，因此這裡不可為 null（計劃書 §2.4）
+  accountBookId: string;
+}
+
+const MyPaySlipPageBody: FC<IMyPaySlipPageBodyProps> = ({ accountBookId }) => {
   const { t } = useTranslation();
 
   // ToDo: (20260225 - Julian) should replace with real data
@@ -266,10 +271,7 @@ const MyPaySlipPageBody: FC = () => {
   const clickSentTab = () => setCurrentTab("sent");
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-white">
-      {/* Info: (20250718 - Julian) Header */}
-      <CalculatorHeader />
-
+    <SalaryCalculatorShell accountBookId={accountBookId}>
       {/* Info: (20250718 - Julian) Main Content */}
       <div className="gap-56px px-240px py-56px flex flex-col items-stretch">
         <h1 className="text-32px text-text-brand-primary-lv1 text-center font-bold">
@@ -323,7 +325,7 @@ const MyPaySlipPageBody: FC = () => {
           )}
         </div>
       </div>
-    </main>
+    </SalaryCalculatorShell>
   );
 };
 

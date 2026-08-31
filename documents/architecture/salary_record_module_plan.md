@@ -154,11 +154,13 @@ Prisma 表達不了 partial unique index，依 `code_review_checklist.md §5.3` 
 | `/salary_calculator/operating_mechanism` | 否 | `CalculatorHeader` | 計算說明（純內容，留在公開側） |
 | `/user/account_book/[account_book_id]/salary_calculator` | 是 | `UserLayout` | 試算 ＋ 儲存 |
 | `.../salary_calculator/employee_list` | 是 | `UserLayout` | 員工列表 |
-| `.../salary_calculator/records` | 是 | `UserLayout` | 薪資紀錄查閱 |
+| `.../salary_calculator/pay_slip` | 是 | `UserLayout` | 我的薪資單（內容仍為 dummy，見 §12） |
+| `.../salary_calculator/records` | 是 | `UserLayout` | 薪資紀錄查閱（PR 4 才建立） |
 
-**刪除** `/salary_calculator/pay_slip` 與 `/salary_calculator/employee_list`：
-它們的導覽連結本來就被註解（`calculator_header.tsx:50-65`），只能靠直接打網址進入，
-內容全是 dummy —— 這是刪掉沒人在用的死路由，不是搬遷功能。
+`/salary_calculator/pay_slip` 與 `/salary_calculator/employee_list` 從公開側**搬走**
+（不是刪功能）：它們的導覽連結本來就被註解（`calculator_header.tsx:50-65`），
+只能靠直接打網址進入，而兩者都需要一本帳才有意義。
+`src/app/sitemap.ts` 裡對應的兩條也要移除 —— 留著等於對搜尋引擎宣告兩個 404。
 
 `src/constants/url.ts` 的四條常數隨之拆成兩組：公開側的兩條維持常數，
 帳本側的三條改成 `salaryCalculatorUrlOf(accountBookId)` 函式
@@ -579,10 +581,18 @@ export async function POST(
 ```
 src/app/user/account_book/[account_book_id]/salary_calculator/page.tsx
 src/app/user/account_book/[account_book_id]/salary_calculator/employee_list/page.tsx
-src/app/user/account_book/[account_book_id]/salary_calculator/records/page.tsx
+src/app/user/account_book/[account_book_id]/salary_calculator/pay_slip/page.tsx
 ```
 
-刪除：`src/app/salary_calculator/pay_slip/`、`src/app/salary_calculator/employee_list/`（理由見 §2.4）
+刪除：`src/app/salary_calculator/pay_slip/`、`src/app/salary_calculator/employee_list/`，
+並從 `src/app/sitemap.ts` 移除對應的兩條（理由見 §2.4）。
+`records` 頁在 PR 4 才建立 —— 在薪資紀錄 API 接上之前，那個路由沒有內容可顯示。
+
+三個 page body（計算機、員工列表、薪資單）的外框長得一模一樣
+（`<main>` + `<CalculatorHeader />` + 內容），因此抽成共用的
+`salary_calculator_shell.tsx`：公開版出整頁外框與 `CalculatorHeader`，
+帳本版只出內容（`UserLayout` 已經提供 `UserHeader` / `UserFooter` / `<main>`，
+再包一層會產生巢狀 `<main>`，BrandLogo 與語言選擇器也會出現兩次）。
 
 **本模組不新增任何 `layout.tsx`。** 帳本版的登入閘來自 `src/app/user/layout.tsx:24`，
 帳本 id 的解析來自 `src/app/user/account_book/[account_book_id]/layout.tsx:22`，兩者都已存在。
@@ -814,21 +824,29 @@ npx prisma generate
 
 ### PR 3 — 路由拆分
 - 新增三支 `/user/account_book/[account_book_id]/salary_calculator/**` page
+  （計算機、員工列表、薪資單）
 - 刪除 `/salary_calculator/pay_slip/`、`/salary_calculator/employee_list/`
+  與 `src/app/sitemap.ts` 對應的兩條
+- 新增 `salary_calculator_shell.tsx`，三個 page body 共用
 - `SalaryCalculatorPageBody` 加 `accountBookId` prop，公開版傳 `null`
-- `src/constants/url.ts` 拆兩組常數、新增 `salary_calculator_api.ts`
+- `src/constants/url.ts` 拆兩組常數（公開常數 + `salaryCalculatorUrlOf`）
 - 公開頁的「到帳本版」入口與說明文案
 - i18n 五語系（`account_book_entry`）
+
+> `salary_calculator_api.ts` 移到 PR 4：在員工列表接上 API 之前它沒有消費者，
+> 先建等於留一個沒人用的常數檔。
 
 > 這個 PR 之後，帳本版與公開版渲染的是**同一份**計算機，功能完全一樣；
 > 差別只有外框與那顆入口按鈕。分成獨立 PR 是為了讓路由改動可以單獨 review 與回退。
 
 ### PR 4 — 員工列表與儲存查閱
+- 新增 `salary_calculator_api.ts`
+- 新增 `/user/account_book/[account_book_id]/salary_calculator/records` 頁
 - `employee_list.tsx` / `employee_action_modal.tsx` / `employee_list_modal.tsx` 接 API
 - 移除 `IEmployeeForCalc`、`dummyEmployeeForCalc`、`basic_info_form.tsx:210` 的 `&& false`
 - Context 的 `loadFromSnapshot()` + `salary_snapshot_roundtrip.test.ts`
 - 儲存按鈕 + `save_salary_record_modal.tsx`
-- `records` 頁面 + `UserHeader` 導覽入口
+- `UserHeader` 導覽入口
 - i18n 五語系（`save_record`、`records`）
 
 ---

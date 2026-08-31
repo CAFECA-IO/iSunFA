@@ -1,4 +1,4 @@
-import { useRef, useState, FC } from 'react';
+import { useRef, useState, FC } from "react";
 import { toPng } from "html-to-image";
 import { Download /* Send */ } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -6,11 +6,9 @@ import SendingPaySlipModal from "@/components/salary_calculator/sending_pay_slip
 import AuthModal from "@/components/auth/auth_modal";
 import PaySlip from "@/components/salary_calculator/pay_slip";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
-// import { useAuth } from "@/contexts/auth_context";
 
 const SalaryResultSection: FC = () => {
   const { t } = useTranslation();
-  // const { user } = useAuth();
 
   const {
     employeeName,

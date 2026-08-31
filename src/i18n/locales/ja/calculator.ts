@@ -164,6 +164,15 @@ export const calculator = {
     sent_on: "送信日",
     all: "すべて",
   },
+  // Info: (20260831 - Julian) 公開版から帳簿版への導線
+  account_book_entry: {
+    title: "この試算を保存しますか？",
+    hint_save: "帳簿版では給与記録の保存と従業員リストの管理ができます。",
+    hint_select: "先に帳簿を選びます。データはその帳簿の下に保存されます。",
+    hint_no_carry:
+      "ここで入力した内容は引き継がれません。帳簿版で入力し直してください。",
+    button: "帳簿版の計算機へ",
+  },
   button: {
     download: "PNG としてダウンロード",
     send: "給与明細を送信",

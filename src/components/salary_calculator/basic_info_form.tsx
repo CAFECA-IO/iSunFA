@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Fragment, FC, ChangeEvent } from 'react';
+import { useState, Fragment, FC, ChangeEvent } from "react";
 
 import { useTranslation } from "@/i18n/i18n_context";
 import {
@@ -87,9 +87,7 @@ const BasicInfoForm: FC = () => {
   const handleEmployeeNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     changeEmployeeName(e.target.value);
   };
-  const handleEmployeeNumberChange = (
-    e: ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleEmployeeNumberChange = (e: ChangeEvent<HTMLInputElement>) => {
     changeEmployeeNumber(e.target.value);
   };
 
@@ -170,9 +168,9 @@ const BasicInfoForm: FC = () => {
   return (
     <>
       {/* Info: (20250711 - Julian) 員工基本資料表單 */}
-      <form className="grid grid-cols-2 gap-x-8 gap-y-6">
+      <form className="grid grid-cols-2 gap-x-8 gap-y-4 md:gap-y-6">
         {/* Info: (20250708 - Julian) 員工姓名 & 就業類型 */}
-        <div className="col-span-2 flex flex-wrap items-end gap-8">
+        <div className="col-span-2 flex flex-wrap items-end gap-4 md:gap-8">
           <div className="flex flex-1 flex-col gap-2">
             <label
               htmlFor="input-employee-name"

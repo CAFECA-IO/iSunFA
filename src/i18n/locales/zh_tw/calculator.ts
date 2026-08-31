@@ -161,6 +161,14 @@ export const calculator = {
     sent_on: "寄出日期",
     all: "全部",
   },
+  // Info: (20260831 - Julian) 公開版通往帳本版的入口
+  account_book_entry: {
+    title: "想把這次的試算存起來嗎？",
+    hint_save: "帳本版可以儲存薪資紀錄、管理員工列表。",
+    hint_select: "需要先選擇一個帳本，資料會存在該帳本底下。",
+    hint_no_carry: "這次填的內容不會帶過去，到帳本版要重新輸入。",
+    button: "前往帳本版計算機",
+  },
   button: {
     download: "下載為 PNG",
     send: "寄出薪資單",
