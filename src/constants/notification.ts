@@ -314,6 +314,17 @@ export const ANALYSIS_LINK_PATH_BY_CATEGORY: Record<
   },
   // Info: (20260827 - Julian) 憑證產出的是日記帳／傳票／碳盤查三種紀錄，
   // Info: (20260827 - Julian) 指向日記帳：那是使用者送出的東西，另外兩個是衍生物。
+  /**
+   * Info: (20260831 - Julian) **待辦（review #6732 R1）：帳本軟刪除之後這條去處會說謊。**
+   *
+   * `AccountBook.deletedAt` 存在，所以 `onDelete: Cascade` 永遠不會觸發 ——
+   * 帳本被軟刪除之後，既有的完成通知仍然連到這裡，而 `:accountBookId` 指向
+   * 一本查不到的帳本。通知本身看起來完全正常，症狀只在點下去之後出現。
+   *
+   * ADR 025 §4 早就寫著「真的出現時要一併決定帳本軟刪除後通知怎麼辦」，
+   * 而 `accountBookId` 20260827 進 payload 時**沒有人觸發那個決定**。
+   * 三個選項與傾向記在 ADR 025 §4 的「未決」段；產品決定，不在 #6732 範圍。
+   */
   [ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS]: {
     completed: "/user/account_book/:accountBookId/journal?tab=list",
     failed: "/user/account_book/:accountBookId/journal?tab=list",

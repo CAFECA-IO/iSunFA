@@ -126,8 +126,16 @@ describe("使用者自己的未完成任務（畫面橫幅）", () => {
  */
 const REPO_FILE = join("src", "repositories", "resumable_job.repo.ts");
 
-// Info: (20260831 - Julian) 已知且刻意跨使用者的讀取；新增請連同理由一起加
+/**
+ * Info: (20260831 - Julian) 已知且刻意跨使用者的讀取，**逐項附理由**。
+ *
+ * - `listPausedForScan`：掃描行程要看全站暫停中的任務，跨使用者是它的職責本身。
+ *   它不回傳給任何人，結果只餵給 `canResumeNow` 與 `markResumable`。
+ */
 const CROSS_USER_READS = ["listPausedForScan"];
+
+// Info: (20260831 - Julian) 這份清單的上限；要放寬必須改這個數字，見下方測試
+const CROSS_USER_READS_MAX = 1;
 
 // Info: (20260831 - Julian) 查詢條件從 `findMany(` 那一行往下這麼多行內判定
 const QUERY_HEAD_LINES = 10;
@@ -172,5 +180,19 @@ function readsWithoutUserId(): string[] {
 describe("沒有第四支未限定使用者的讀取", () => {
   it("每一支 findMany 不是帶 userId，就是登記過的跨使用者查詢", () => {
     expect(readsWithoutUserId()).toEqual([]);
+  });
+
+  /**
+   * Info: (20260831 - Julian) 例外清單**只能變短**（review #6732 R3）。
+   *
+   * 上面那一條只做了檢查清單 §1.1 的一半：明列例外。少了另一半的話，
+   * 下一個人寫了一支不帶 `userId` 的讀取，**把名字加進那個陣列就靜默放行了** ——
+   * 沒有任何東西會紅，而那正是這一檔要防的缺陷（跨租戶外洩）。
+   *
+   * 這一條讓「放寬」變成一個要動手改數字、因而會出現在 diff 上、
+   * 需要在 review 裡說明理由的動作。清單縮短時它照樣綠 —— 方向是單向的。
+   */
+  it("跨使用者的例外清單沒有變長", () => {
+    expect(CROSS_USER_READS.length).toBeLessThanOrEqual(CROSS_USER_READS_MAX);
   });
 });

@@ -264,20 +264,38 @@ schema 加一個選填欄位、存檔的字面量忘了跟上，而選填讓驗�
 
 ---
 
+### 7.1 第二輪（20260831）
+
+四條新發現：兩條是文件、兩條是**界的描述**，沒有一條是新的程式缺陷。
+
+| 條  | 做了什麼                                                                                                                                                                                                                                                                                              |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | ADR 025 §4 改寫（`accountBookId` 已於 20260827 進 payload、型別已 5 種），並把它下面那個**沒有被觸發的待辦**寫成明確的未決：帳本軟刪除後通知的去處會指向查不到的帳本。三個選項與傾向記在 ADR，程式碼那一格也留了 ToDo 註解                                                                            |
+| R2  | 部署檢查表補 §5.3（在途的等付款訂單付了款也不會被釋放 —— 不報錯、只安靜停擺，含部署前先數的 SQL 與補救方式）、§3.1 驗證 ⑥（`Order.data->>'resourceKey'` 與 `ResumableJob.resourceKey` 對得起來）、§7 的觀測 log。服務端補一行 `payment-blocked release found nothing` —— 那是這條靜默路徑唯一的觀測量 |
+| R3  | 例外清單補上「只能變短」那一半：`CROSS_USER_READS_MAX` + 一條測試，讓放寬變成必須改數字、會出現在 diff 上的動作                                                                                                                                                                                       |
+| R4  | 把放寬後的界寫進 notification 文件 §4.2 與 `releasePaymentBlockedJobs` 的檔頭                                                                                                                                                                                                                         |
+
+> R1 的形狀值得記：**過期的文件不只是不準，它會讓掛在它下面的待辦失去觸發條件。**
+> 「`accountBookId` 目前沒有」那句話下面接著「真的出現時要一併決定軟刪除怎麼辦」——
+> 於是 `accountBookId` 真的出現時，沒有人回頭看那句話。
+
+---
+
 ## 8. 尚未實作的事
 
 每一條在**程式碼裡也有對應的註解**，所以不看文件的人也會在改到那一行時撞見。
 
-| 沒做的事                                                                      | 節                | 程式碼落點                                                                                    |
-| ----------------------------------------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------- |
-| 暫停畫面文案拆成三句，並拿掉「補上點數後」                                    | §4                | `use_carbon_chat.helpers.ts` 的 `resolveCreditPauseReason`、五語系的 `import_paused_chapters` |
-| 待匯入的橘色列移出解鎖閘（目前只補了進度與一顆開卡按鈕）                      | §6.3              | `carbon_chatbot/page.tsx` 解鎖分支                                                            |
-| 書籤存 `resource_label`，讓通知說得出報告名字（**不要**命名為 `file_name`）   | —                 | `notification_message.ts` 的 `JOB_RESUMABLE` 分支                                             |
-| `resumedBy`：要分辨「額度回來了」與「款項到帳」才需要                         | §5                | `resumable_job.repo.ts` 的 `markResumable`                                                    |
-| 第二層扣款恢復時，`canResumeNow` 與 `spendCredits` 的 `chainCredits` 同一次改 | notification §6.2 | `resumable_job.service.ts`（釘子已在，旗標翻面時會紅）                                        |
-| 摘要端點的第三趟 DB：**先量再決定**                                           | notification §3   | —（實作照原設計走）                                                                           |
-| 換裝置後要重新上傳原始檔案，通知要不要先講                                    | notification §2   | —（產品決定）                                                                                 |
-| `subscriptionPlanQuotaRepo.upsertQuota()` 沒有呼叫端：補後台介面還是刪掉      | notification §6.3 | —                                                                                             |
+| 沒做的事                                                                                  | 節                    | 程式碼落點                                                                                    |
+| ----------------------------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------- |
+| 暫停畫面文案拆成三句，並拿掉「補上點數後」                                                | §4                    | `use_carbon_chat.helpers.ts` 的 `resolveCreditPauseReason`、五語系的 `import_paused_chapters` |
+| 待匯入的橘色列移出解鎖閘（目前只補了進度與一顆開卡按鈕）                                  | §6.3                  | `carbon_chatbot/page.tsx` 解鎖分支                                                            |
+| 書籤存 `resource_label`，讓通知說得出報告名字（**不要**命名為 `file_name`）               | —                     | `notification_message.ts` 的 `JOB_RESUMABLE` 分支                                             |
+| `resumedBy`：要分辨「額度回來了」與「款項到帳」才需要                                     | §5                    | `resumable_job.repo.ts` 的 `markResumable`                                                    |
+| 第二層扣款恢復時，`canResumeNow` 與 `spendCredits` 的 `chainCredits` 同一次改             | notification §6.2     | `resumable_job.service.ts`（釘子已在，旗標翻面時會紅）                                        |
+| 摘要端點的第三趟 DB：**先量再決定**                                                       | notification §3       | —（實作照原設計走）                                                                           |
+| 換裝置後要重新上傳原始檔案，通知要不要先講                                                | notification §2       | —（產品決定）                                                                                 |
+| `subscriptionPlanQuotaRepo.upsertQuota()` 沒有呼叫端：補後台介面還是刪掉                  | notification §6.3     | —                                                                                             |
+| **帳本軟刪除後，指向帳本的通知去處會說謊**（`deletedAt` 讓 `onDelete: Cascade` 永不觸發） | ADR 025 §4 的「未決」 | `constants/notification.ts` 的 `CERTIFICATE_ANALYSIS` 那一格                                  |
 
 ### 還沒用眼睛驗過的
 

@@ -417,6 +417,20 @@ function resourceKeyOfOrderData(orderData: unknown): string | null {
  * 一份任務」是業務判斷，而呼叫端（`order.tracker.service.ts`）是一支
  * 測不到的檔案（它 import `publicClient` 與 `viem`）。放在這裡才釘得住。
  *
+ * ## 放寬後的界（review #6732 R4）
+ *
+ * `runBilledCarbonTask` 對**所有**碳盤查任務（對話、草稿、結構圖、匯入）都傳同一個
+ * `channel`，而 `resourceKey` 就是它。所以現在最多能發生的壞事是：
+ *
+ * > 同一個會話內任何一筆個人付款，都會翻面該會話的匯入任務。
+ *
+ * 使用者在會話 X 付了一則對話的錢（5 點），會話 X 裡那份需要 50 點的匯入也會被
+ * 翻成 `RESUMABLE` 並發一則「這份匯入可以接著做了」，按下去再撞一次 402。
+ *
+ * 比修正前窄非常多（限同一會話，不再是這個人的全部），而且文案已經不宣稱原因，
+ * 所以留著。真要收斂的話，下一格是**比對消費類別**（`Order.data.category` 是
+ * `featureCode`，而暫停只由匯入產生），或在 402 建單時把 `jobId` 一起寫進去。
+ *
  * 取不到 `resourceKey` 時**什麼都不翻**，不是退回「翻這個人全部的」——
  * 那正是 1-A 的缺陷：一次付款會把他所有等付款的任務都翻成「可以繼續」，
  * 而其中只有一筆是真的付過的。fail-closed 的代價是舊訂單（改動之前建的、
@@ -442,7 +456,26 @@ export async function releasePaymentBlockedJobs(params: {
     params.userId,
     resourceKey,
   );
-  if (jobs.length === 0) return 0;
+  if (jobs.length === 0) {
+    /**
+     * Info: (20260831 - Julian) 「有鍵但查無任務」要留一行（review #6732 R2）。
+     *
+     * 這個修法完全押在**訂單的 `resourceKey` 等於任務的 `resourceKey`**。
+     * 今天成立，是因為前端 `chatChannel` 同一個變數同時餵給扣費的 `channel`
+     * 與書籤的 `resourceKey`；伺服器端沒有任何東西斷言這兩個值一致。
+     *
+     * 它們一旦分岔，失敗是**靜默的**：查不到 → 回 0 → 不翻面 → 沒有通知、
+     * 沒有錯誤。這一行是那件事唯一的觀測量。
+     *
+     * 常態也會走到這裡（付的是與可接續任務無關的錢，例如一則對話），
+     * 所以是 `info` 不是 `warn` —— 要看的是「同一個 resourceKey 反覆出現」。
+     */
+    log.info("payment-blocked release found nothing", {
+      userId: params.userId,
+      resourceKey,
+    });
+    return 0;
+  }
 
   let released = 0;
   for (const job of jobs) {
