@@ -84,18 +84,54 @@ describe("聊天輸入的 state 局部性(#6718)", () => {
     expect(start).toBeGreaterThan(0);
     expect(end).toBeGreaterThan(start);
     const keyBlock = source.slice(start, end);
-    const restores = keyBlock.match(/commandInput\(outgoingText\)/g) ?? [];
+    // Info: (20260831 - Emily) `[,)]` 而不是 `\)`:還原帶第二個參數("restore"),
+    // 寫死右括號會在加參數的那一刻紅,而那不是缺陷(review 第二輪點出的)
+    const restores = keyBlock.match(/commandInput\(outgoingText[,)]/g) ?? [];
     expect(restores).toHaveLength(2);
+    // Info: (20260831 - Emily) 兩處都必須是「歸還」而不是「指令」
+    expect(
+      keyBlock.match(/commandInput\(outgoingText, "restore"\)/g),
+    ).toHaveLength(2);
     expect(keyBlock).toContain("device_unsupported");
     expect(keyBlock).toContain("system_error");
   });
 
-  it("組字中的 Enter 不送出(照兄弟元件的寫法)", () => {
+  it("組字中的 Enter 不送出(照同類元件的寫法)", () => {
     const source = read(CHAT_INPUT);
     expect(source).toContain("e.nativeEvent.isComposing");
-    const sibling = read("src/components/chat/chat_input.tsx");
-    // Info: (20260831 - Emily) 全庫已有四處這樣寫;碳盤查這個原本是唯一的例外
-    expect(sibling).toContain("isComposing");
+    /**
+     * Info: (20260831 - Emily) 判準是**同類**而不是多數(review 第二輪的更正)。
+     *
+     * 全 repo 有 30 個檔判 `key === "Enter"`,只有 4 個擋組字 ——
+     * 所以「大家都擋了、這裡是唯一例外」是錯的說法(我第一版的註解照抄了
+     * 那個錯,連同元件那邊一起改掉;只改一處正是低-1 的形狀)。
+     * 真正同類的是「自由輸入的中文長句、Enter 即送出」,本 repo 兩個,
+     * 兩個都擋了 —— 這條就釘那兩個。
+     */
+    expect(read("src/components/chat/chat_input.tsx")).toContain("isComposing");
+    expect(
+      read("src/components/ai_consultation_room/comment_post_input.tsx"),
+    ).toContain("isComposing");
+  });
+
+  /**
+   * Info: (20260831 - Emily) 歸還不得搶掉使用者手上打的字(review 第二輪)。
+   *
+   * 金鑰那段時間輸入框沒有被 disabled,所以「還原」與「使用者正在打的字」
+   * 會撞在一起。分辨的資訊只有元件有(框裡現在有沒有字),
+   * 所以判斷放在元件、`mode` 只負責帶語意。
+   */
+  it("prefill 分「指令」與「歸還」,歸還在框裡有字時不覆寫", () => {
+    const hook = read(HOOK);
+    expect(hook).toContain('mode: "set" | "restore"');
+    expect(hook).toContain('mode: "set" | "restore" = "set"');
+
+    const source = read(CHAT_INPUT);
+    // Info: (20260831 - Emily) functional updater:不把 text 加進 deps(那會讓每次打字都重跑 effect)
+    expect(source).toContain("setText((current) =>");
+    expect(source).toContain('prefill.mode === "restore"');
+    expect(source).toContain("current.trim().length > 0");
+    expect(source).not.toContain("}, [prefill, text]);");
   });
 
   it("hook 的送出不再退回輸入框內容(它已經沒有那份 state)", () => {

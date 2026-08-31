@@ -256,11 +256,27 @@ export const useCarbonChat = () => {
   const [inputPrefill, setInputPrefill] = useState<{
     value: string;
     nonce: number;
-  }>({ value: "", nonce: 0 });
+    mode: "set" | "restore";
+  }>({ value: "", nonce: 0, mode: "set" });
 
-  const commandInput = useCallback((value: string) => {
-    setInputPrefill((prev) => ({ value, nonce: prev.nonce + 1 }));
-  }, []);
+  /**
+   * Info: (20260831 - Emily) 兩種語意,分開講(PR #6730 review 第二輪)。
+   *
+   * - `set`(預設):**指令** —— 切房清空、跳段預填、送出後清空。該覆寫框裡的東西。
+   * - `restore`:**歸還** —— 送不出去,把那句話還給使用者。
+   *   框裡已經有字就沒有什麼要還的(見 ChatInput 的 effect)。
+   *
+   * 為什麼歸還要與指令分開:歧義的來源是「hook 不知道框裡現在有沒有字」,
+   * 而那個資訊只有元件有。與其在 hook 這邊加一個「金鑰準備中」的鎖去
+   * 讓那個狀態不出現(鎖的失效模式是輸入框永久打不了字,比它要修的缺陷嚴重),
+   * 不如讓歸還本身變成不歧義的 —— 資訊留在有它的那一端判斷。
+   */
+  const commandInput = useCallback(
+    (value: string, mode: "set" | "restore" = "set") => {
+      setInputPrefill((prev) => ({ value, nonce: prev.nonce + 1, mode }));
+    },
+    [],
+  );
   // Info: (20260714 - Tzuhan) 等待 AI 回覆的 session 集合(per-session 隔離: 舊房等待中不影響新房輸入與指示)
   const [busySessionIds, setBusySessionIds] = useState<Set<string>>(new Set());
   const [isError, setIsError] = useState<boolean>(false);
@@ -5120,9 +5136,14 @@ export const useCarbonChat = () => {
   /**
    * Info: (20260806 - Tzuhan) `overrideText` 供「後續建議」按鈕直接送出既定的一句話。
    *
-   * 為什麼不是 setInputValue 之後再送:setState 要到下一輪 render 才生效,
-   * 此刻讀 `inputValue` 拿到的還是空字串 —— 按鈕會變成「按了沒反應」。
+   * 為什麼不是「先把文字寫進輸入框、再送出」:那需要跨一輪 render
+   * (setState 要到下一輪才生效),此刻讀回來的還是舊值 —— 按鈕會變成「按了沒反應」。
    * 讓文字從參數進來,送出的內容就與按鈕上的字完全一致。
+   *
+   * Info: (20260831 - Emily) 原文以 `setInputValue` / `inputValue` 當論據,
+   * 而 #6718 之後這個 hook 裡兩個符號都不存在了(PR #6730 review 低-1)——
+   * 推理仍然成立,但拿被刪掉的符號舉例會讓讀者 grep 不到,
+   * 然後分不出「註解過時」與「程式壞了」。已改成用行為描述。
    */
   const handleSendMessage = useCallback(
     async (overrideText?: string) => {
@@ -5130,14 +5151,19 @@ export const useCarbonChat = () => {
        * Info: (20260825 - Emily) 型別硬化:呼叫端若誤傳非字串(如把本函式直接綁 onClick,
        * MouseEvent 進到 overrideText),`??` 擋不住 —— 事件物件不是 nullish,
        * `.trim` 直接炸,而且是 unhandledRejection(按鈕壞了卻沒有紅字)。
-       * 非字串一律退回輸入框內容:錯誤呼叫降級成正常送出,不是靜默壞死。
-       */
-      /**
+       *
        * Info: (20260827 - Emily) #6718:文字一律由呼叫端帶進來
        * (ChatInput 送出時上交、後續建議按鈕帶按鈕上的字)。
-       * hook 這裡不再有 `inputValue` 可退 —— 非字串時退成空字串,
+       * hook 這裡不再有 `inputValue` 可退 —— 非字串時**退成空字串**,
        * 下面「無文字且無就緒附件即不送」的既有 guard 會擋掉,
        * 也就是錯誤呼叫降級成「不送出」而不是拿到 MouseEvent 去 `.trim`。
+       *
+       * Info: (20260831 - Emily) 這裡原本是**兩段結論相反的 docblock**
+       * (舊的寫「非字串一律退回輸入框內容 → 降級成正常送出」,而且排在前面先被讀到),
+       * 08-27 那輪只 append 了新的、沒刪舊的(PR #6730 review 低-1)。
+       * 已刪。後果不是美觀問題:讀到舊結論的人會去找「退回輸入框內容」那條退路,
+       * 找不到之後可能把它「修回來」—— 而現在 hook 沒有輸入框內容可退,
+       * 唯一的修回形狀是重新持有文字 state,那等於把 #6718 整個推翻。
        */
       const outgoingText = typeof overrideText === "string" ? overrideText : "";
       const readyAttachments = pendingAttachments.filter(
@@ -5171,9 +5197,26 @@ export const useCarbonChat = () => {
          * 非輸入框發起的送出(後續建議按鈕、跳段自動送出)失敗時,
          * 那句話會被放進輸入框 —— 那是刻意的:比靜默丟掉使用者的動作好,
          * 而且再按一次就送得出去。
+         *
+         * Info: (20260831 - Emily) 為什麼帶 `"restore"`(review 第二輪):
+         * `isLoading` 是 `isTyping`,而 `markSessionBusy(true)` 在金鑰步驟**之後** ——
+         * 金鑰那段時間輸入框沒有被 disabled,使用者可能已經在框裡打了新的字。
+         * 無條件覆寫會蓋掉它,而那是另一種形狀的「字消失」。
+         *
+         * `restore` 的語意讓這件事**不可能**發生:框裡有字就不還
+         * (那句話的去處由使用者決定,不是由我們搶回來)。
+         * 不用「金鑰準備中」旗標去讓那個狀態消失 —— 鎖的失效模式
+         * (任一路徑忘了清 → 輸入框永久打不了字,而使用者看不出原因)
+         * 比它要修的缺陷嚴重,而且 `ensureMasterKeyCached` 另有一個呼叫端。
+         *
+         * 剩下的那半不是這裡能收的:成功路徑的 `commandInput("")` **必須**清
+         * (後續建議按鈕那條路徑,框裡的字就是該清的),而 hook 分不出
+         * 「框裡是我要送的字」與「使用者剛打的字」——
+         * 那半需要鎖,已另開票(`data/scratch/issue_drafts/open/67`),
+         * 且該讓鎖自己走一輪 review。
          */
         if (keyError instanceof ChatroomUnsupportedDeviceError) {
-          commandInput(outgoingText);
+          commandInput(outgoingText, "restore");
           appendMessageLocally(
             {
               id: crypto.randomUUID(),
@@ -5184,7 +5227,7 @@ export const useCarbonChat = () => {
           );
           return;
         }
-        commandInput(outgoingText);
+        commandInput(outgoingText, "restore");
         console.error(
           "[carbon-chat] failed to prepare encryption key:",
           keyError,
