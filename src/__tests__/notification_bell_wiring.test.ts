@@ -267,19 +267,60 @@ describe("來源與畫面的接線（掃描）", () => {
    * 所以這裡掃描「那一行在不在」。**它證明不了真的付款時會走到那裡** ——
    * 那一項要在跑得動鏈上流程的環境真的付一次款，與驗收清單的 `p1` 同一種形狀。
    */
-  it("TxTracker 標 PAID 之後呼叫 releasePaymentBlockedJobs", () => {
+  /**
+   * Info: (20260831 - Julian) 改成**計次**而不是 `indexOf`（review #6732 的 1-C）。
+   *
+   * 原本比的是「第一個 `releasePaymentBlockedJobs(` 在第一個 `ORDER_STATUS.PAID`
+   * 之後」。`order.tracker.service.ts` 有**兩個**標 PAID 的分支
+   *（ANALYSIS 一個、其餘型別一個），而 `indexOf` 只看得到第一個 ——
+   * 實跑過的 mutation：刪掉第二個分支的整段接線，527 個測試全綠。
+   *
+   * 今天走的恆是第一個分支（解除 `PAYMENT_REQUIRED` 的那筆付款必為
+   * `ANALYSIS` + `ICP`，見 `personal_credit.service.ts`），所以第二處是加保險；
+   * 但「加保險的那一半可以被刪掉而沒人發現」本身就是缺口。
+   */
+  it("TxTracker 每一個標 PAID 的分支都接了 releasePaymentBlockedJobs", () => {
     const tracker = codeOf("src", "services", "order.tracker.service.ts");
-    const paid = tracker.indexOf("ORDER_STATUS.PAID");
-    const release = tracker.indexOf("releasePaymentBlockedJobs(");
+    const paidWrites = tracker.match(/status: ORDER_STATUS\.PAID/g) ?? [];
+    const releases = tracker.match(/releasePaymentBlockedJobs\(\{/g) ?? [];
 
-    expect(paid).toBeGreaterThan(-1);
-    expect(release).toBeGreaterThan(paid);
+    expect(paidWrites.length).toBeGreaterThan(0);
+    expect(releases.length).toBe(paidWrites.length);
+  });
+
+  it("接線包在 try 裡，不擋主流程", () => {
+    const tracker = codeOf("src", "services", "order.tracker.service.ts");
 
     /**
      * Info: (20260828 - Julian) 不擋主流程：訂單已經標成 PAID 了，
      * 這一步失敗不該讓整輪追蹤中止（後面的訂單會跟著停在 PENDING）。
+     *
+     * Info: (20260831 - Julian) 每一處都要包，不是「有一處包了」就算數。
      */
-    expect(tracker).toMatch(/try \{[\s\S]{0,120}releasePaymentBlockedJobs\(/);
+    const guarded =
+      tracker.match(/try \{[\s\S]{0,160}releasePaymentBlockedJobs\(\{/g) ?? [];
+    const releases = tracker.match(/releasePaymentBlockedJobs\(\{/g) ?? [];
+
+    expect(releases.length).toBeGreaterThan(0);
+    expect(guarded.length).toBe(releases.length);
+  });
+
+  /**
+   * Info: (20260831 - Julian) 接線要把**整包 `order.data`** 交下去（1-A）。
+   *
+   * 只傳 `userId` 就是 1-A 的缺陷：一次付款會翻掉這個人所有等付款的任務。
+   * 判斷放在服務層（測得到），但「有沒有把判斷需要的事實遞過去」只有這裡看得到。
+   */
+  it("接線把 order.data 一起交給服務層", () => {
+    const tracker = codeOf("src", "services", "order.tracker.service.ts");
+    const withOrderData =
+      tracker.match(
+        /releasePaymentBlockedJobs\(\{[\s\S]{0,120}orderData: order\.data/g,
+      ) ?? [];
+    const releases = tracker.match(/releasePaymentBlockedJobs\(\{/g) ?? [];
+
+    expect(releases.length).toBeGreaterThan(0);
+    expect(withOrderData.length).toBe(releases.length);
   });
 
   it("完成通知不在 if (order) 區塊裡", () => {

@@ -238,17 +238,6 @@ export const NOTIFICATION_LINK_PATH: Record<NotificationType, string | null> = {
   [NOTIFICATION_TYPE.ANALYSIS_COMPLETED]: "/analysis?tab=history",
   [NOTIFICATION_TYPE.ANALYSIS_FAILED]: "/analysis?tab=history",
   /**
-   * Info: (20260828 - Julian) 頁面層級，**不是**逐一深連結。
-   *
-   * `/user/carbon_chatbot` 不吃任何 searchParams，所以現在做不到
-   * 「點通知直接開那一個聊天室」。與 D43 的情況要分清楚：那次的錯是把人帶到
-   * 一個**結構上放不下那筆紀錄**的頁面；這裡那一頁就是匯入所在的地方，
-   * 只是不夠精準 —— 所以可點，而不是退化為 null。
-   *
-   * payload 仍然帶 `resourceKey`，等那一頁支援 searchParams 之後，
-   * 把這一格改成 `/user/carbon_chatbot?session=:resourceKey` 就會生效（同 D43 的 :token）。
-   */
-  /**
    * Info: (20260828 - Julian) 深連結到**那一個會話**，並要求到站就把預覽卡打開
    *（§13.5）。頁面層級的去處等於把「是哪一份匯入」丟回給使用者判斷，
    * 而側欄同時會有數個盤查對話。
@@ -282,9 +271,17 @@ export const NOTIFICATION_LINK_PATH: Record<NotificationType, string | null> = {
  * ## `:token` 的規則
  *
  * 路徑裡的 `:foo` 由 `payload.foo` 代入（見 `lib/notification_message.ts`
- * 的 `notificationHrefOf`）。代入是**逐段**做的（以 `/` 切），所以尾巴的
- * query string（`?tab=list`）只是最後一段的一部分，不會被當成 token，
- * 也不會被 encode。**任何一個 token 代不進去，整條退化為 `null`**，
+ * 的 `notificationHrefOf`）。
+ *
+ * Info: (20260831 - Julian) 代入是**逐 token**做的（`/:([A-Za-z0-9_]+)/g`），
+ * 不是逐段。這一段原本寫「以 `/` 切，所以 query string 不會被當成 token」——
+ * 20260828 的深連結把它改掉了，`?session=:sessionId` 正是靠段內代入生效。
+ *
+ * 後果值得記在這裡：query string 裡的**冒號字面值**現在會被當成 token。
+ * 寫出 `?t=12:30` 這種值時，`:30` 代不出來 → 整條回 `null` → 那一則通知
+ * 變成不可點，而且沒有任何錯誤訊息。要放冒號請先 encode（`%3A`）。
+ *
+ * **任何一個 token 代不進去，整條退化為 `null`**，
  * 渲染成不可點的列 —— 與 D12 同一個判斷：按了沒反應比帶去錯的地方好，
  * 而 `/user/account_book/undefined/journal` 兩者皆是。
  *

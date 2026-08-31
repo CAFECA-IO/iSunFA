@@ -414,17 +414,17 @@ GET /api/v1/chat/carbon/pending-import  → 7 個全部 pendingImport: null
 
 每一條在**程式碼裡也有對應的註解**，所以不看文件的人也會在改到那一行時撞見。
 
-| 沒做的事                                                                                                                            | 文件                            | 程式碼裡的落點                                                                                |
-| ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | --------------------------------------------------------------------------------------------- |
-| 暫停畫面的文案：拆成「今天的額度／本週的額度／單筆超過上限」三句，並拿掉「補上點數後」                                              | §4、`..._notification.md` §13.3 | `use_carbon_chat.helpers.ts` 的 `resolveCreditPauseReason`、五語系的 `import_paused_chapters` |
-| `resolveCreditPauseReason` 改成回傳 `{ reason, quota }`（把 402 的 payload 帶下來）                                                 | §4                              | 同上                                                                                          |
-| 第二層扣款恢復時，`canResumeNow` 與 `spendCredits` 的 `chainCredits` 要同一次改；並在 `spend_second_layer_inert.test.ts` 加一條釘子 | `..._notification.md` §13.2     | `resumable_job.service.ts` 的 `canResumeNow`                                                  |
-| 書籤存 `resource_label`，讓通知說得出報告名字                                                                                       | §10.3                           | `notification_message.ts` 的 `JOB_RESUMABLE` 分支                                             |
-| 把待匯入的橘色列移出解鎖閘（目前只補了進度與一顆開卡按鈕）                                                                          | §10.7                           | `carbon_chatbot/page.tsx` 解鎖分支                                                            |
-| 摘要端點的第三趟 DB 要不要優化：**先量再決定**                                                                                      | `..._notification.md` §10       | —（實作照原設計走）                                                                           |
-| 換裝置後要重新上傳原始檔案，通知要不要先講                                                                                          | `..._notification.md` §10、§3   | —（產品決定）                                                                                 |
-| `resumedBy`：要分辨「額度回來了」與「款項到帳」才需要                                                                               | §5                              | `resumable_job.repo.ts` 的 `markResumable` 註解                                               |
-| `subscriptionPlanQuotaRepo.upsertQuota()` 沒有呼叫端：補後台介面還是刪掉                                                            | `..._notification.md` §13.4     | —                                                                                             |
+| 沒做的事                                                                                                                      | 文件                            | 程式碼裡的落點                                                                                |
+| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | --------------------------------------------------------------------------------------------- |
+| 暫停畫面的文案：拆成「今天的額度／本週的額度／單筆超過上限」三句，並拿掉「補上點數後」                                        | §4、`..._notification.md` §13.3 | `use_carbon_chat.helpers.ts` 的 `resolveCreditPauseReason`、五語系的 `import_paused_chapters` |
+| `resolveCreditPauseReason` 改成回傳 `{ reason, quota }`（把 402 的 payload 帶下來）                                           | §4                              | 同上                                                                                          |
+| 第二層扣款恢復時，`canResumeNow` 與 `spendCredits` 的 `chainCredits` 要同一次改（**釘子已於 20260831 補上**，旗標翻面時會紅） | `..._notification.md` §13.2     | `resumable_job.service.ts` 的 `canResumeNow`、`spend_second_layer_inert.test.ts` 的 D 類      |
+| 書籤存 `resource_label`，讓通知說得出報告名字                                                                                 | §10.3                           | `notification_message.ts` 的 `JOB_RESUMABLE` 分支                                             |
+| 把待匯入的橘色列移出解鎖閘（目前只補了進度與一顆開卡按鈕）                                                                    | §10.7                           | `carbon_chatbot/page.tsx` 解鎖分支                                                            |
+| 摘要端點的第三趟 DB 要不要優化：**先量再決定**                                                                                | `..._notification.md` §10       | —（實作照原設計走）                                                                           |
+| 換裝置後要重新上傳原始檔案，通知要不要先講                                                                                    | `..._notification.md` §10、§3   | —（產品決定）                                                                                 |
+| `resumedBy`：要分辨「額度回來了」與「款項到帳」才需要                                                                         | §5                              | `resumable_job.repo.ts` 的 `markResumable` 註解                                               |
+| `subscriptionPlanQuotaRepo.upsertQuota()` 沒有呼叫端：補後台介面還是刪掉                                                      | `..._notification.md` §13.4     | —                                                                                             |
 
 ### 還沒用眼睛驗過的（§8 與 `..._notification.md` §9.2）
 
@@ -442,3 +442,71 @@ GET /api/v1/chat/carbon/pending-import  → 7 個全部 pendingImport: null
 
 D44（批次粒度）依使用者的意見暫不實作，帳仍記在
 `notification_module_plan.md` 的缺陷表與 `notification_batch_granularity.md`。
+
+---
+
+## 12. Code review #6732 的修正（20260831）
+
+review 報告在 `code_review_pr6732.md`。§一那八條全部處理完，其中兩條「應修」值得記下**為什麼原本會漏**。
+
+### 12.1 1-A：釋放與付款沒有關聯
+
+`releasePaymentBlockedJobs` 撈的是使用者**全部**的 `PAUSED + PAYMENT_REQUIRED`，
+沒有任何條件把它綁回「觸發它的那一筆付款」。一位使用者身上 N 筆等付款的任務，
+會在他任何一次 ICP 訂單轉 `PAID` 時全部翻面、各發一則「可以繼續了」——
+其中只有一筆是真的付過的，其餘按下去會再撞一次 402；而下一筆付款又會把它們
+全部翻一次（`markResumable` 刷新 `updatedAt` → 新的抵達鍵），噪音沒有上限。
+
+**漏掉的原因是我把「這個人付了款」當成「這件事可以繼續了」**，
+中間少了一步：**哪一件事**。設計時只有一份匯入，兩者剛好等價。
+
+修法沒有動 schema：`runBilledCarbonTask` 呼叫 `ensurePersonalCreditCharge` 時
+`channel` 就在手上（那就是任務的 `resourceKey`），把它寫進 `Order.data.resourceKey`，
+釋放時以 `(userId, resourceKey)` 查。取不到就**什麼都不翻**（fail-closed）——
+退回「翻全部」等於把缺陷留著。
+
+判斷放在服務層而不是 `order.tracker.service.ts`：後者測不到（它 import
+`publicClient` 與 `viem`），所以它只負責把整包 `order.data` 遞過去。
+
+### 12.2 1-A 的另一半：文案不再宣稱原因
+
+翻面有兩條路（額度視窗重置／方案升級、個人付款到帳），而它們共用一句文案。
+原本寫「額度已恢復」—— 對付款那條路是假的：恢復的不是額度，是那筆款項付掉了。
+
+改成只說**做得到的下一步**（「這份匯入可以接著做了」）。要分辨原因得先做
+`resumedBy`（§5），因為翻面時 `pauseReason` 已被清成 null。
+`notification_i18n_placeholders.test.ts` 現在同時禁「點數」與「額度」兩個詞 ——
+哪天真的做了 `resumedBy` 並拆成兩句，那一條會紅，要求回來重新決定。
+
+### 12.3 1-B：兩支讀取查詢沒有守門
+
+把 `listResumableByUser` 的 `where: { userId, status }` 改成 `where: { status }`，
+**527 個測試全綠**。原因不是沒人測到，是兩個消費端都把整支 repo 整包 mock 掉了，
+而 repo 自己沒有測試。掉了 `userId` 的後果是外洩：任何人打開小鈴鐺會看到
+全站所有人的可繼續任務，payload 帶著別人的錢包位址與會話 id。
+
+新增 `resumable_job_read_scope.test.ts`：mock 的是 `prisma`，斷言**交給資料庫的條件**。
+最後一條由原始碼長出來 —— repo 裡每一支 `findMany` 都必須帶 `userId`，
+或登記在 `CROSS_USER_READS`（今天只有 `listPausedForScan`）。
+寫這條掃描時第一版自己就犯了錯（用 `indexOf(line)` 回頭找位置，而每一支的
+`findMany(` 是同一個字串，於是每一支都拿第一支的條件來檢查，永遠是綠的），
+改成逐行走並在 `});` 收邊之後，兩個 mutation 都抓得到。
+
+### 12.4 其餘六條
+
+| 條  | 做了什麼                                                                                                                                                                         |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1-C | 接線掃描從 `indexOf`（只驗第一個呼叫點）改成**計次**：`releasePaymentBlockedJobs(` 的次數要等於 `status: ORDER_STATUS.PAID` 的次數，且每一處都包在 `try` 裡、都帶著 `order.data` |
+| 1-D | 補上本 PR 自己承諾的釘子（`spend_second_layer_inert.test.ts` 的 D 類）                                                                                                           |
+| 1-E | 刪掉 `NOTIFICATION_LINK_PATH` 上那塊「那一頁不吃 searchParams」的過期註解 —— 照著它寫會產出帶他人錢包位址的網址                                                                  |
+| 1-F | 「代入是逐段做的」改成逐 token，並記下新的坑：query string 裡的冒號字面值（`?t=12:30`）會被當成 token，整條退化為不可點                                                          |
+| 1-G | ADR 025 補 `JOB_RESUMABLE` 與它的兩個決定；計畫書的發射點欄補 `order.tracker.service.ts`，並註明活算來源不在該欄；`documents/readme.md` 登記兩份設計文件                         |
+| 1-H | 深連結參數**讀完就抹**，未完成的指令改用 ref 撐著 —— 網址上的參數不該取決於後續有沒有成功                                                                                        |
+
+另外補了 review 表格裡標為「次要」的 §1.13：`CATEGORIES` 與
+`ANALYSIS_LINK_PATH_BY_CATEGORY` 的**聯集**必須蓋滿 15 種 `ANALYSIS_CATEGORY`
+（新增第 16 種而兩張表都沒加，它會靜靜落到 `/analysis?tab=history`，正是 D43 的症狀）。
+
+§3.5（payload 的 `jobId`／`jobType`／`resourceKey` 目前無消費者）**沒有動**：
+`resourceKey` 現在是 `sessionId` 的來源、`jobId` 是接續 API 的參數，
+留著是為了下一個消費者，不是稽核殘留。

@@ -17,10 +17,9 @@ export const notification = {
     "会員カードなどのオンチェーン証明を受け取るため、ウォレットのアップグレードが必要です",
   // Info: (20260828 - Julian) 一部完了；残り章数のほうが「3/14」より分かりやすい
   job_resumable:
-    "利用枠が回復しました。あと {{remaining}} 章がインポート待ちです。",
+    "このインポートを再開できます。あと {{remaining}} 章が残っています。",
   // Info: (20260828 - Julian) まだ 1 章も実行していない：「再開」は誤解を招く
-  job_resumable_fresh:
-    "利用枠が回復しました。レポートのインポートを開始できます。",
+  job_resumable_fresh: "このレポートのインポートを開始できます。",
   analysis_completed:
     "分析ジョブが完了しました。クリックして結果を確認してください",
   analysis_failed:

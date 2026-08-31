@@ -13,10 +13,22 @@ export const notification = {
   completed_title: "工作完成",
   team_invitation: "「{{inviterName}}」邀請你加入團隊「{{teamName}}」",
   wallet_upgrade: "系統要求升級你的錢包，以支援收取會員卡等鏈上憑證",
+  /**
+   * Info: (20260831 - Julian) **不講原因**（review #6732 的 1-A）。
+   *
+   * 這一句原本開頭是「額度已恢復」，而翻面有兩條路：團隊額度視窗重置／方案升級，
+   * 以及個人付款到帳。後者恢復的不是額度，是那筆款項付掉了 ——
+   * 對那條路而言「額度已恢復」是一句假話，而通知說假話比少說一句嚴重。
+   *
+   * 兩條路共用同一句，是因為翻面時 `pauseReason` 已經被清成 null
+   *（schema 的定義：null＝不是暫停狀態）。要分辨就得另存 `resumedBy`，
+   * 見 `resumable_job_resume_landing_and_copy.md` §5 —— 那件事還沒做，
+   * 所以現在只說**做得到的下一步**，不說原因。
+   */
   // Info: (20260828 - Julian) 已經做了一部分；剩餘章數比「3/14」直觀（見計劃 §3）
-  job_resumable: "額度已恢復，還有 {{remaining}} 章沒有匯入，可以接著做了",
+  job_resumable: "這份匯入可以接著做了，還有 {{remaining}} 章沒有匯入",
   // Info: (20260828 - Julian) 一步都還沒跑：說「繼續」會讓人以為已經做過一半
-  job_resumable_fresh: "額度已恢復，報告的匯入可以開始了",
+  job_resumable_fresh: "這份報告的匯入可以開始了",
   analysis_completed: "你的分析工作已完成，點擊查看結果",
   analysis_failed: "你的分析工作失敗了，請重新送出或聯繫客服",
   // Info: (20260825 - Julian) 帶報告名稱的版本；取不到名稱時退回上面那句

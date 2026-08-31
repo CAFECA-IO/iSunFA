@@ -139,12 +139,19 @@ export async function scanPendingTransactions() {
                * 把邏輯放進來等於讓它測不到。接線本身由
                * `notification_bell_wiring.test.ts` 的掃描釘住。
                *
+               * Info: (20260831 - Julian) 整包 `order.data` 交下去，不在這裡挑欄位
+               *（review #6732 的 1-A）：「這張訂單是為哪一份任務付的」是業務判斷，
+               * 而這個檔案測不到。這裡只負責把事實遞過去。
+               *
                * **不擋主流程**：訂單已經標成 PAID 了，這一步失敗不該讓
                * 整輪追蹤中止 —— 那會讓後面的訂單也停在 PENDING。
                * 下一次付款或使用者自己回到頁面仍然救得回來。
                */
               try {
-                await releasePaymentBlockedJobs({ userId: order.userId });
+                await releasePaymentBlockedJobs({
+                  userId: order.userId,
+                  orderData: order.data,
+                });
               } catch (error) {
                 console.error(
                   `[TxTracker] releasePaymentBlockedJobs failed for user ${order.userId}:`,
@@ -211,12 +218,19 @@ export async function scanPendingTransactions() {
                * 把邏輯放進來等於讓它測不到。接線本身由
                * `notification_bell_wiring.test.ts` 的掃描釘住。
                *
+               * Info: (20260831 - Julian) 整包 `order.data` 交下去，不在這裡挑欄位
+               *（review #6732 的 1-A）：「這張訂單是為哪一份任務付的」是業務判斷，
+               * 而這個檔案測不到。這裡只負責把事實遞過去。
+               *
                * **不擋主流程**：訂單已經標成 PAID 了，這一步失敗不該讓
                * 整輪追蹤中止 —— 那會讓後面的訂單也停在 PENDING。
                * 下一次付款或使用者自己回到頁面仍然救得回來。
                */
               try {
-                await releasePaymentBlockedJobs({ userId: order.userId });
+                await releasePaymentBlockedJobs({
+                  userId: order.userId,
+                  orderData: order.data,
+                });
               } catch (error) {
                 console.error(
                   `[TxTracker] releasePaymentBlockedJobs failed for user ${order.userId}:`,

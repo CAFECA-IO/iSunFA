@@ -42,30 +42,49 @@ const REFERENCE = zhTw;
 const REFERENCE_KEYS = Object.keys(REFERENCE) as (keyof typeof REFERENCE)[];
 
 /**
- * Info: (20260828 - Julian) 「可以繼續了」那兩句**不得提到點數**
- *（見 `resumable_job_resume_notification.md` §13.2）。
+ * Info: (20260828 - Julian) 「可以繼續了」那兩句**不得宣稱翻面的原因**。
  *
- * 原本的文案是「點數已補回」，而那是一件沒有發生的事：翻面的判準只看
- * 訂閱方案的視窗額度（`canResumeNow` 的 `chainCredits` 是字面量 0，
- * 因為第二層扣款停用中），加購的點數**改變不了判準裡的任何一個數**。
+ * 兩個被禁的詞各有來歷：
  *
- * 實測時我們照著那句話去加購，白等了一輪 —— 這一條擋的就是它回來。
+ * - **點數**：原本寫「點數已補回」，而那是一件沒有發生的事 —— 翻面的判準只看
+ *   訂閱方案的視窗額度（`canResumeNow` 的 `chainCredits` 是字面量 0，因為第二層
+ *   扣款停用中），加購的點數改變不了判準裡的任何一個數。實測時我們照著那句話
+ *   去加購，白等了一輪（見 `resumable_job_resume_notification.md` §13.2）。
+ * - **額度**：改成「額度已恢復」之後仍然只對一半 —— 個人付款那條路恢復的
+ *   不是額度，是那筆款項付掉了（review #6732 的 1-A）。
+ *
+ * 兩條路共用一句，是因為翻面時 `pauseReason` 已被清成 null。要分辨原因得先做
+ * `resumedBy`（計劃 §5）；在那之前，文案只說**做得到的下一步**。
+ * 哪天真的做了並拆成兩句，這一條會紅 —— 那時它要求的是回來重新決定，
+ * 而不是預設沿用。
+ *
  * 只掃中文兩個語系：那是產品文案的來源語言，其他三個是從它翻的。
  */
-describe("可繼續通知不指向那條不存在的出路", () => {
+describe("可繼續通知不宣稱原因", () => {
   it.each([
-    ["zh_tw", zhTw, "點數"],
-    ["zh_cn", zhCn, "点数"],
-  ])("%s 的 job_resumable 兩句都不提點數", (unusedLocale, dictionary, word) => {
-    const sentences = [
-      dictionary.job_resumable,
-      dictionary.job_resumable_fresh,
-    ];
+    ["zh_tw", zhTw, ["點數", "額度"]],
+    ["zh_cn", zhCn, ["点数", "额度"]],
+  ])(
+    "%s 的 job_resumable 兩句都不提原因",
+    (unusedLocale, dictionary, forbidden) => {
+      const sentences = [
+        dictionary.job_resumable,
+        dictionary.job_resumable_fresh,
+      ];
 
-    sentences.forEach((sentence) => {
-      expect(sentence).not.toContain(word);
-    });
-  });
+      sentences.forEach((sentence) => {
+        forbidden.forEach((word) => {
+          expect({ sentence, word, contains: sentence.includes(word) }).toEqual(
+            {
+              sentence,
+              word,
+              contains: false,
+            },
+          );
+        });
+      });
+    },
+  );
 });
 
 describe("通知文案的五語系一致性", () => {

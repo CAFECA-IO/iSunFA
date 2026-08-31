@@ -16,9 +16,9 @@ export const notification = {
     "The system requests a wallet upgrade so it can receive on-chain credentials such as your membership card",
   // Info: (20260828 - Julian) Some chapters are done; "chapters left" reads better than "3/14"
   job_resumable:
-    "Your quota is back. {{remaining}} chapters are still waiting to be imported.",
+    "This import can continue — {{remaining}} chapters are still waiting.",
   // Info: (20260828 - Julian) Nothing ran yet — "resume" would imply progress that does not exist
-  job_resumable_fresh: "Your quota is back. The report import can start now.",
+  job_resumable_fresh: "This report import can start now.",
   analysis_completed:
     "Your analysis job has finished — click to view the result",
   analysis_failed:

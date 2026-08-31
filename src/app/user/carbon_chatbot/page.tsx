@@ -72,7 +72,23 @@ function ImportDeepLink({
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const appliedRef = useRef<string | null>(null);
+
+  /**
+   * Info: (20260831 - Julian) 參數**讀完就抹**，指令留在 ref 裡（review #6732 的 1-H）。
+   *
+   * 原本是做完才 `router.replace`，於是還原不出待匯入內容時（金鑰未解鎖、
+   * 紀錄已刪）那一步永遠不執行，`?session=…&openImport=1` 就一直留在網址列
+   * 與瀏覽器歷史裡。今天留的是不透明的 sessionId，不算秘密；
+   * 但「參數在網址上停留多久」不該取決於**後續有沒有成功**。
+   *
+   * 抹掉之後，未完成的指令由這個 ref 撐著 —— 它不觸發重繪，
+   * 而下面那支 effect 本來就會因為清單載入或解鎖而重跑，那時再讀它。
+   */
+  const instructionRef = useRef<{
+    sessionId: string | null;
+    openImport: boolean;
+  } | null>(null);
+  const consumedRef = useRef<string | null>(null);
 
   const sessionParam = searchParams.get("session");
   const openImportParam = searchParams.get("openImport");
@@ -81,14 +97,26 @@ function ImportDeepLink({
     if (sessionParam === null && openImportParam === null) return;
 
     const instruction = `${sessionParam ?? ""}|${openImportParam ?? ""}`;
-    if (appliedRef.current === instruction) return;
+    if (consumedRef.current === instruction) return;
+    consumedRef.current = instruction;
 
-    const done = () => {
-      appliedRef.current = instruction;
-      router.replace(pathname, { scroll: false });
+    instructionRef.current = {
+      sessionId: sessionParam,
+      openImport: openImportParam === "1",
+    };
+    router.replace(pathname, { scroll: false });
+  }, [sessionParam, openImportParam, router, pathname]);
+
+  useEffect(() => {
+    const instruction = instructionRef.current;
+    if (instruction === null) return;
+
+    // Info: (20260831 - Julian) 做完或放棄都是「這道指令結束了」，兩者都清掉
+    const finish = () => {
+      instructionRef.current = null;
     };
 
-    if (sessionParam !== null) {
+    if (instruction.sessionId !== null) {
       /**
        * Info: (20260828 - Julian) 等清單**問完**，不是等它非空（實測 §10.5）。
        *
@@ -104,40 +132,37 @@ function ImportDeepLink({
        * 會走到這裡的情境是換了帳號、或會話已封存／刪除。
        * 猜一個最接近的會讓使用者在別人的報告上按「接著匯入」。
        */
-      if (!sessionIds.includes(sessionParam)) {
-        done();
+      if (!sessionIds.includes(instruction.sessionId)) {
+        finish();
         return;
       }
-      if (activeSessionId !== sessionParam) {
-        onSelectSession(sessionParam);
+      if (activeSessionId !== instruction.sessionId) {
+        onSelectSession(instruction.sessionId);
         return;
       }
     }
 
-    if (openImportParam === "1") {
+    if (instruction.openImport) {
       /**
        * Info: (20260828 - Julian) 待匯入的內容是從伺服器還原的（端到端加密、
        * 逐 channel），到站當下不一定在手上 —— 等它，不要把卡打開成空的。
        *
        * 還原不出來（紀錄不存在、或金鑰沒解開）時這裡就一直等，
-       * 而「一直等」在這裡等於什麼都不做：使用者仍然在正確的會話裡。
+       * 而「一直等」在這裡等於什麼都不做：使用者仍然在正確的會話裡，
+       * 而網址已經抹乾淨了（見上方 ref 的說明）。
        */
       if (!hasPendingImport) return;
       onOpenImport();
     }
 
-    done();
+    finish();
   }, [
-    sessionParam,
-    openImportParam,
     sessionIds,
     sessionsSettled,
     activeSessionId,
     hasPendingImport,
     onSelectSession,
     onOpenImport,
-    router,
-    pathname,
   ]);
 
   return null;

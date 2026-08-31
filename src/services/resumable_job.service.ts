@@ -151,9 +151,8 @@ export async function canResumeNow(params: {
    * 連帶的產品後果已經記在 `resumable_job_resume_notification.md` §13.2：
    * 「加購點數」在今天是一條**不存在的出路**，只有等視窗重置與升級方案有效。
    *
-   * **尚未做**：在 `spend_second_layer_inert.test.ts`（那一檔的職責就是
-   * 「旗標翻回 true 時以下每一條都要紅」）加一條 —— 旗標為 true 時，
-   * 這個檔案不得再把字面量 `BigInt(0)` 傳給 `canAffordSpend`。
+   * 這件事由 `spend_second_layer_inert.test.ts` 的 D 類釘住（20260831 補上，
+   * review #6732 的 1-D）：旗標一翻成 true，那一條就會紅並指向這一行。
    */
   return canAffordSpend({
     quotaAvailable,
@@ -369,6 +368,23 @@ export interface IJobResumeScanSummary {
  * 這支是為了「人已經離開頁面」的情形。
  */
 /**
+ * Info: (20260831 - Julian) 從 `Order.data` 取出這筆付款綁定的資源鍵。
+ *
+ * `Order.data` 是 `Json`，型別上是 `unknown`：它同時裝著訂閱、席次、加購與
+ * 個人消費四種形狀，硬轉成某一種等於宣稱一件查不到的事。所以逐層檢查，
+ * 取不到就回 `null` —— 而 `null` 的意思是「這張訂單沒有指向任何任務」，
+ * 不是「出錯了」。
+ *
+ * 寫入端是 `ensurePersonalCreditCharge`（見那裡的 `resourceKey` 說明）。
+ */
+function resourceKeyOfOrderData(orderData: unknown): string | null {
+  if (typeof orderData !== "object" || orderData === null) return null;
+
+  const value = (orderData as Record<string, unknown>).resourceKey;
+  return typeof value === "string" && value !== "" ? value : null;
+}
+
+/**
  * Info: (20260828 - Julian) 個人付款完成後，把卡在「等付款」的任務翻成可以繼續。
  *
  * ## 為什麼不放進 `scanResumableJobs`
@@ -395,13 +411,37 @@ export interface IJobResumeScanSummary {
  * 翻成 `RESUMABLE` 這件事本身就是通知：小鈴鐺下一次輪詢就會從
  * `listResumableByUser` 讀到它。這裡不需要、也不該呼叫任何發射函式。
  *
- * @returns 真的翻面的筆數（給呼叫端記 log；沒有暫停任務時是 0，那是常態）
+ * ## 只翻**這筆付款對應的**那一份（review #6732 的 1-A）
+ *
+ * 收的是整包 `Order.data` 而不是已經取好的字串：判斷「這張訂單有沒有指向
+ * 一份任務」是業務判斷，而呼叫端（`order.tracker.service.ts`）是一支
+ * 測不到的檔案（它 import `publicClient` 與 `viem`）。放在這裡才釘得住。
+ *
+ * 取不到 `resourceKey` 時**什麼都不翻**，不是退回「翻這個人全部的」——
+ * 那正是 1-A 的缺陷：一次付款會把他所有等付款的任務都翻成「可以繼續」，
+ * 而其中只有一筆是真的付過的。fail-closed 的代價是舊訂單（改動之前建的、
+ * 沒有這個鍵）不會自動釋放，使用者仍可自己回到頁面按繼續。
+ *
+ * @returns 真的翻面的筆數（給呼叫端記 log；沒有對應的暫停任務時是 0，那是常態）
  */
 export async function releasePaymentBlockedJobs(params: {
   userId: string;
+  orderData: unknown;
 }): Promise<number> {
   const log = logger.child({ service: "ResumableJobRelease" });
-  const jobs = await resumableJobRepo.listPaymentBlockedByUser(params.userId);
+
+  const resourceKey = resourceKeyOfOrderData(params.orderData);
+  if (resourceKey === null) {
+    log.info("paid order carries no resource key; nothing to release", {
+      userId: params.userId,
+    });
+    return 0;
+  }
+
+  const jobs = await resumableJobRepo.listPaymentBlockedByResource(
+    params.userId,
+    resourceKey,
+  );
   if (jobs.length === 0) return 0;
 
   let released = 0;
@@ -415,6 +455,7 @@ export async function releasePaymentBlockedJobs(params: {
 
   log.info("payment-blocked jobs released", {
     userId: params.userId,
+    resourceKey,
     found: jobs.length,
     released,
   });

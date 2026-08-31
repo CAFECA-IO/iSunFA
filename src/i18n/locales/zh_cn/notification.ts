@@ -14,9 +14,9 @@ export const notification = {
   team_invitation: "「{{inviterName}}」邀请你加入团队「{{teamName}}」",
   wallet_upgrade: "系统要求升级你的钱包，以支持接收会员卡等链上凭证",
   // Info: (20260828 - Julian) 已经做了一部分；剩余章数比「3/14」直观（见计划 §3）
-  job_resumable: "额度已恢复，还有 {{remaining}} 章没有导入，可以接着做了",
+  job_resumable: "这份导入可以接着做了，还有 {{remaining}} 章没有导入",
   // Info: (20260828 - Julian) 一步都还没跑：说「继续」会让人以为已经做过一半
-  job_resumable_fresh: "额度已恢复，报告的导入可以开始了",
+  job_resumable_fresh: "这份报告的导入可以开始了",
   analysis_completed: "你的分析工作已完成，点击查看结果",
   analysis_failed: "你的分析工作失败了，请重新送出或联系客服",
   // Info: (20260825 - Julian) 帶報告名稱的版本；取不到名稱時退回上面那句

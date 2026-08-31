@@ -44,7 +44,7 @@ jest.mock("@/repositories/resumable_job.repo", () => ({
     listOpenByUser: jest.fn(async () => []),
     listPausedForScan: jest.fn(async () => []),
     // Info: (20260828 - Julian) 個人付款那條路用的（`releasePaymentBlockedJobs`）
-    listPaymentBlockedByUser: jest.fn(async () => []),
+    listPaymentBlockedByResource: jest.fn(async () => []),
     markResumable: jest.fn(async () => true),
     setStatus: jest.fn(async () => undefined),
   },
@@ -600,25 +600,83 @@ describe("releasePaymentBlockedJobs", () => {
     updatedAt: new Date(),
   });
 
+  // Info: (20260831 - Julian) 這張訂單就是為這個資源付的（review #6732 的 1-A）
+  const PAID_ORDER_DATA = {
+    category: "CARBON_CHAT",
+    idempotencyKey: "idem-1",
+    amount: "-100",
+    resourceKey: "channel-job-1",
+  };
+
   beforeEach(() => {
-    asMock(resumableJobRepo.listPaymentBlockedByUser).mockResolvedValue([]);
+    asMock(resumableJobRepo.listPaymentBlockedByResource).mockResolvedValue([]);
     asMock(resumableJobRepo.markResumable).mockResolvedValue(true);
   });
 
   it("沒有等付款的任務時回 0，且不寫任何東西", async () => {
-    const released = await releasePaymentBlockedJobs({ userId: "user-1" });
+    const released = await releasePaymentBlockedJobs({
+      userId: "user-1",
+      orderData: PAID_ORDER_DATA,
+    });
 
     expect(released).toBe(0);
     expect(asMock(resumableJobRepo.markResumable)).not.toHaveBeenCalled();
   });
 
-  it("把每一筆等付款的任務翻成可以繼續", async () => {
-    asMock(resumableJobRepo.listPaymentBlockedByUser).mockResolvedValue([
+  /**
+   * Info: (20260831 - Julian) 只翻**這筆付款對應的**那一份（review #6732 的 1-A）。
+   *
+   * 原本的條件只有 `userId`，於是「使用者付了一筆款」被當成「他所有等付款的
+   * 任務都付過了」。這一條釘的是查詢真的帶著資源鍵 —— 少了它，一位使用者
+   * 身上 N 筆等付款的任務會在他任何一次付款成功時全部翻面，各發一則
+   * 「可以繼續了」，而其中只有一筆是真的付過的。
+   */
+  it("查詢帶著 userId 與這筆付款的資源鍵", async () => {
+    await releasePaymentBlockedJobs({
+      userId: "user-1",
+      orderData: PAID_ORDER_DATA,
+    });
+
+    expect(
+      asMock(resumableJobRepo.listPaymentBlockedByResource),
+    ).toHaveBeenCalledWith("user-1", "channel-job-1");
+  });
+
+  /**
+   * Info: (20260831 - Julian) 訂單沒有指向任何資源時**什麼都不翻**（fail-closed）。
+   *
+   * 走到這裡的是與可接續任務無關的個人付款（例如單則對話），
+   * 以及本次改動之前建立的舊訂單。退回「翻這個人全部的」就是 1-A 本身。
+   */
+  it.each([
+    ["沒有 resourceKey", { category: "FAITH_CHAT", idempotencyKey: "i" }],
+    ["resourceKey 是空字串", { resourceKey: "" }],
+    ["resourceKey 不是字串", { resourceKey: 123 }],
+    ["data 是 null", null],
+    ["data 不是物件", "carbon-chat-0xabc-2025"],
+  ])("%s：不查也不翻，回 0", async (unusedLabel, orderData) => {
+    const released = await releasePaymentBlockedJobs({
+      userId: "user-1",
+      orderData,
+    });
+
+    expect(released).toBe(0);
+    expect(
+      asMock(resumableJobRepo.listPaymentBlockedByResource),
+    ).not.toHaveBeenCalled();
+    expect(asMock(resumableJobRepo.markResumable)).not.toHaveBeenCalled();
+  });
+
+  it("把查到的每一筆翻成可以繼續", async () => {
+    asMock(resumableJobRepo.listPaymentBlockedByResource).mockResolvedValue([
       blockedJob("job-1"),
       blockedJob("job-2"),
     ]);
 
-    const released = await releasePaymentBlockedJobs({ userId: "user-1" });
+    const released = await releasePaymentBlockedJobs({
+      userId: "user-1",
+      orderData: PAID_ORDER_DATA,
+    });
 
     expect(released).toBe(2);
     expect(asMock(resumableJobRepo.markResumable)).toHaveBeenCalledWith(
@@ -637,7 +695,7 @@ describe("releasePaymentBlockedJobs", () => {
    * 而那個改動會把一個正在跑的任務標成「等著被繼續」。
    */
   it("翻不動的（使用者已自行繼續或取消）不算進釋放數", async () => {
-    asMock(resumableJobRepo.listPaymentBlockedByUser).mockResolvedValue([
+    asMock(resumableJobRepo.listPaymentBlockedByResource).mockResolvedValue([
       blockedJob("job-1"),
       blockedJob("job-2"),
     ]);
@@ -645,6 +703,11 @@ describe("releasePaymentBlockedJobs", () => {
       .mockResolvedValueOnce(true)
       .mockResolvedValueOnce(false);
 
-    expect(await releasePaymentBlockedJobs({ userId: "user-1" })).toBe(1);
+    expect(
+      await releasePaymentBlockedJobs({
+        userId: "user-1",
+        orderData: PAID_ORDER_DATA,
+      }),
+    ).toBe(1);
   });
 });

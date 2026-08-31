@@ -446,6 +446,27 @@ describe("notificationHrefOf", () => {
    * 有人把某個已在 `CATEGORIES` 的類別加進來時，它會同時出現在兩條路上，
    * 而上面那條「11 種仍走 history」的測試會紅得莫名。這一條說得出原因。
    */
+  /**
+   * Info: (20260831 - Julian) 兩張表**合起來**要蓋滿 15 種類別（review #6732 §1.13）。
+   *
+   * 去處由兩張表分工：`CATEGORIES` 那 11 種走型別層的 `/analysis?tab=history`，
+   * 其餘的在 `ANALYSIS_LINK_PATH_BY_CATEGORY` 各自登記。分工本身沒問題，
+   * 但沒有任何東西保證兩邊的聯集等於 `ANALYSIS_CATEGORY` ——
+   * 新增第 16 種類別而兩張表都沒加，它會**靜靜地**落到 `/analysis?tab=history`，
+   * 而那正是 D43 的症狀：頁面正常載入、其他分析都在，只有這一種看起來像資料消失了。
+   */
+  it("兩張表合起來蓋滿所有分析類別", () => {
+    const covered = new Set([
+      ...(CATEGORIES as readonly string[]),
+      ...Object.keys(ANALYSIS_LINK_PATH_BY_CATEGORY),
+    ]);
+    const missing = Object.values(ANALYSIS_CATEGORY).filter(
+      (category) => !covered.has(category),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
   it("類別表不與 CATEGORIES 重疊", () => {
     const overlap = Object.keys(ANALYSIS_LINK_PATH_BY_CATEGORY).filter(
       (category) => (CATEGORIES as readonly string[]).includes(category),

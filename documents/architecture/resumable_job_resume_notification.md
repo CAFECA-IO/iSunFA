@@ -417,7 +417,7 @@ resumable job scan finished {"scanned":1,"released":0,"stillShort":1,"unknown":0
 | 現在（**尚未做**）       | `carbon_chatbot.import_paused_chapters` 那句「補上點數後可以從這裡接著匯入」（五語系，見 §13.3）。今天的出路只有「等視窗重置」與「升級方案」兩條 |
 | 第二層恢復時             | `canResumeNow` 的 `chainCredits: BigInt(0)` 與 `spendCredits` 的 `chainCredits` **同一次**改                                                     |
 
-**一個現在就能釘的釘子（尚未做）。** 兩邊今天一致，是因為**都是 0**，不是因為有什麼
+**一個現在就能釘的釘子（20260831 已補，見 `spend_second_layer_inert.test.ts` 的 D 類）。** 兩邊今天一致，是因為**都是 0**，不是因為有什麼
 機制保證它們一致 —— 那是巧合，而巧合不會在它失效的那天發出聲音。
 `spend_second_layer_inert.test.ts` 的職責正好是「旗標翻回 true 時，
 以下每一條都要紅」，把這條加進那一檔：

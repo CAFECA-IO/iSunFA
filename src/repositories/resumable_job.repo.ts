@@ -166,11 +166,27 @@ export class ResumableJobRepository {
    * 跨使用者、看團隊額度；這支是**付款確認後**針對單一使用者查一次。
    * 合成一支會讓「掃描要不要處理 PAYMENT_REQUIRED」這個已經回答過的問題重新打開
    *（答案是不要 —— 見 `resumable_job.service.ts` 的 `scanResumableJobs`）。
+   *
+   * Info: (20260831 - Julian) 條件加上 `resourceKey`（review #6732 的 1-A）。
+   *
+   * 原本只以 `userId` 為條件，於是「使用者付了一筆款」被當成
+   * 「他所有等付款的任務都付過了」。一位使用者身上 N 筆等付款的任務，
+   * 會在他**任何一次** ICP 訂單轉 `PAID` 時全部翻面、各發一則
+   * 「可以繼續了」—— 其中只有一筆是真的付過的，其餘按下去會再撞一次 402，
+   * 而下一筆付款又會把它們全部翻一次（`markResumable` 刷新 `updatedAt`
+   * 就會產生新的抵達鍵），形成沒有上限的通知噪音。
+   *
+   * `userId` 仍然留著：`resourceKey` 是可推導的字串（見
+   * `buildCarbonChatChannel`），單靠它等於讓查詢跨租戶。兩個條件都要。
    */
-  async listPaymentBlockedByUser(userId: string): Promise<ResumableJob[]> {
+  async listPaymentBlockedByResource(
+    userId: string,
+    resourceKey: string,
+  ): Promise<ResumableJob[]> {
     return prisma.resumableJob.findMany({
       where: {
         userId,
+        resourceKey,
         status: JOB_STATUS.PAUSED,
         pauseReason: JOB_PAUSE_REASON.PAYMENT_REQUIRED,
       },
