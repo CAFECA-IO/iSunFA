@@ -38,11 +38,28 @@ function ElapsedSince({ startedAt }: { startedAt: number }) {
 }
 
 export interface IChatInputProps {
-  inputValue: string;
+  /**
+   * Info: (20260827 - Emily) 輸入中的文字**住在本元件**(#6718)。
+   *
+   * 原本住在 `use_carbon_chat`(5700 行的 hook)的 state 裡,而頁面整棵樹都消費那個 hook ——
+   * 於是**每一個按鍵都重渲染整頁**:訊息列表 + 報告預覽(實測 59 頁、19 張表)
+   * + 所有 mermaid 圖。報告愈大每鍵愈貴,實測伴生
+   * 「Mermaid rendering failed: Maximum update depth exceeded」。
+   *
+   * 外部只剩兩種需求,各對應一個 prop:
+   * - **預填/清空**(跳段指引、切房、送出後)→ `prefill`(nonce 變動才覆寫)
+   * - **取得文字**(送出)→ `onSendMessage(text)` 把文字上交
+   * 打字因此完全不出這個元件。
+   */
+  prefill?: { value: string; nonce: number };
   isTyping: boolean;
   isLoading: boolean;
-  onInputChange: (value: string) => void;
-  onSendMessage: () => void;
+  /**
+   * Info: (20260827 - Emily) 送出時把當下文字上交(#6718)。
+   * `handleSendMessage(overrideText?)` 本來就支援帶文字進來
+   * (#6806 的「後續建議」按鈕就是這樣用),所以這裡不需要新機制。
+   */
+  onSendMessage: (text: string) => void;
   pendingAttachments?: IPendingAttachment[];
   attachmentError?: string | null;
   onAddFiles?: (files: File[]) => void;
@@ -87,10 +104,9 @@ export interface IChatInputProps {
 }
 
 export function ChatInput({
-  inputValue,
+  prefill = undefined,
   isTyping,
   isLoading,
-  onInputChange,
   onSendMessage,
   pendingAttachments = [],
   attachmentError = null,
@@ -111,6 +127,24 @@ export function ChatInput({
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
+  /**
+   * Info: (20260827 - Emily) 輸入文字的所有者(#6718)。打字只重渲染本元件。
+   */
+  const [text, setText] = useState<string>(prefill?.value ?? "");
+  /**
+   * Info: (20260827 - Emily) 預填以 **nonce** 觸發,不以值比對:
+   * 「清空」的值是空字串,而使用者自己打字後又刪空也是空字串 ——
+   * 用值比對分不出「外部要求清空」與「使用者剛好刪空」,
+   * 後者會在每次 render 被覆寫回去(打字卡住的另一種形狀)。
+   * nonce 只在外部真的下指令時變動,所以 effect 只在那時跑。
+   */
+  const appliedPrefillRef = useRef<number | undefined>(prefill?.nonce);
+  useEffect(() => {
+    if (prefill === undefined) return;
+    if (appliedPrefillRef.current === prefill.nonce) return;
+    appliedPrefillRef.current = prefill.nonce;
+    setText(prefill.value);
+  }, [prefill]);
 
   const hasReadyAttachment = pendingAttachments.some(
     (a) => a.status === PendingAttachmentStatusEnum.READY,
@@ -121,14 +155,42 @@ export function ChatInput({
 
   // Info: (20260714 - Tzuhan) 有文字或有就緒附件即可送出;附件讀取中暫不可送,避免漏附件
   const disabled =
-    (!inputValue.trim() && !hasReadyAttachment) ||
+    (!text.trim() && !hasReadyAttachment) ||
     isTyping ||
     isLoading ||
     isReadingAttachment;
 
+  /**
+   * Info: (20260827 - Emily) 送出:把文字上交後**自己清空**(#6718)。
+   * 清空必須在這裡做 —— 文字的所有者是本元件,外部沒有它的 setter。
+   * 上交在清空之前:`onSendMessage` 是 async,清空不等它完成
+   * (等它完成才清,使用者會看到自己的字停在框裡好幾秒)。
+   */
+  const submit = () => {
+    if (disabled) return;
+    const outgoing = text;
+    setText("");
+    onSendMessage(outgoing);
+  };
+
+  /**
+   * Info: (20260831 - Emily) 組字中的 Enter 是**選字**,不是送出(PR #6730 review 中-2)。
+   *
+   * 注音/拼音打字時按 Enter 選字會同時觸發送出,半句話就送出去了 ——
+   * 中文介面的日常操作,不是邊角案例。
+   *
+   * 這不是 #6718 引入的(develop 上同一個 handler 也沒擋),但這張票正在改這一行,
+   * 補一個條件的邊際成本接近零;而且本 repo 另外四個輸入元件都已經處理了,
+   * 包括另一個聊天輸入框 `src/components/chat/chat_input.tsx`(20260213 Julian)——
+   * 碳盤查這個是唯一的例外。留著它,下一個人會以為沒擋是刻意的。
+   *
+   * 本元件是單行 `<input type="text">`,所以不需要兄弟元件那條 `!e.shiftKey`
+   * (那是 textarea 為了換行才要的)。
+   */
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.nativeEvent.isComposing) return;
     if (e.key === "Enter" && !disabled) {
-      onSendMessage();
+      submit();
     }
   };
 
@@ -379,8 +441,8 @@ export function ChatInput({
 
         <input
           type="text"
-          value={inputValue}
-          onChange={(e) => onInputChange(e.target.value)}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           onDragOver={handleDragOver}
           onDragLeave={() => setIsDragOver(false)}
@@ -399,7 +461,7 @@ export function ChatInput({
            * 實測按鈕自此送不出任何訊息(只剩 Enter 可用),且每點一次
            * 一個 unhandledRejection。包一層丟棄事件參數。
            */
-          onClick={() => onSendMessage()}
+          onClick={submit}
           disabled={disabled}
           aria-label={t("carbon_chatbot.send_message")}
           className="absolute top-1/2 right-2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#ff5a00] text-white shadow-sm transition-colors hover:bg-[#e04f00] disabled:cursor-not-allowed disabled:bg-gray-300"
