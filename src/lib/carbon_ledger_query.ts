@@ -331,15 +331,22 @@ export const queryYearOverYear = (
      * 也就是系統會主動叫使用者去做一件安靜弄髒總量的事 —— 而那份總量
      * 會流進事實包、LLM 引用、數據表與桑基圖,最後進到送查證的文件。
      *
-     * 年度已知時那句話是安全的:合併是「換鍋」,上一年的分錄住進年度快照。
-     * 年度未知時只說狀態、不指示動作 —— 先讓使用者把年度補上。
+     * Info: (20260831 - Emily) R1 更正:兩態**都**改成只說狀態(不再分安全與否)。
+     *
+     * 規則 3(換鍋)上線後,年度已知時再匯一年確實是安全的 —— 但那不構成
+     * 系統該指示使用者去做的理由。拒答的職責是說明「為什麼答不出來」,
+     * 不是替使用者決定下一步;要不要匯第二年是他的決定,真的匯了,
+     * 合併規則與年度標註偵測器會接住。
+     *
+     * 界線不是「祈使句一律不准」:帳本為空時的「請先匯入盤查報告」照留,
+     * 那個動作沒有任何既有資料可以弄髒。要擋的是**指示一個會動到既有帳本的動作**。
      */
     const yearKnown = current?.year !== undefined;
     return refuse(
       LedgerRefusalReasonEnum.DIMENSION_ABSENT,
       yearKnown
-        ? "帳本只有單一年度,年間比較無從進行:匯入另一年度的盤查報告後即可比對"
-        : "本帳本沒有標註盤查年度,年間比較無從進行:請先確認報告的盤查年度(未標註年度時匯入第二份報告無法分辨年度歸屬)",
+        ? "帳本只有單一年度,年間比較無從進行(年間比較需要兩個年度各自的帳本快照)"
+        : "本帳本沒有標註盤查年度,年間比較無從進行(年度快照以盤查年度為鍵,未標註年度時建立不了快照)",
     );
   }
   const byName = (ledger: IComputedLedger): Map<string, IComputedLedgerEntry> =>
@@ -420,8 +427,9 @@ export const LEDGER_FACT_TOP_EMITTERS = 5;
  */
 /**
  * Info: (20260825 - Emily) #6719:從年度快照挑最近兩年做年間比較。
- * 只有一個年度時回空(queryYearOverYear 的拒答經 toContextFacts 自然歸空)——
- * 「無法比較」的說明由 persona 的無事實規則處理,不佔事實包名額。
+ * Info: (20260831 - Emily) 不滿兩個年度時仍然回空 —— 但「為什麼比不了」改由
+ * yearComparisonUnavailableFact 送進 core(舊註解說「由 persona 的無事實規則處理」
+ * 是錯的:帳本有分錄時 persona 走的是**有事實**分支,那條規則不會生效)。
  */
 const yearOverYearFacts = (
   ledgerByYear: Record<number, IComputedLedger> | undefined,
@@ -438,6 +446,40 @@ const yearOverYearFacts = (
   );
 };
 
+/**
+ * Info: (20260831 - Emily) 年間比較做不成時的**說明**(PR #6725 R1 更正時追出來的缺口)。
+ *
+ * persona 有一條「使用者問跟去年比 → 照清單中的說明原文轉述」,而拒答經
+ * toContextFacts 一律不產生事實、yearOverYearFacts 又在不滿兩個年度時早退 ——
+ * 清單裡從來沒有那筆。模型被要求轉述一段不存在的文字,而 persona 的其他條文
+ * 正在禁止它自行發揮。兩端各自看起來都正確,錯在它們之間。
+ *
+ * **它進 core 不進 anomalies**,兩個理由,都是昨天那條回饋的同一把尺:
+ * 1. 它不是疑點。放進異常池會讓「另有 N 條異常事實未列出」把它算進去 ——
+ *    那是拿別的桶子的語意來裝自己的東西(pending 那格剛因為同樣的理由被否決)。
+ * 2. 異常池會被上限裁掉,而「為什麼比不了」正好在帳本最忙的時候最該說得出來。
+ *
+ * 帳本本身空的時候不送:那時每個查詢都拒答,persona 走「無事實」分支,
+ * 多這一條只會讓空帳本的畫面更吵。
+ */
+const yearComparisonUnavailableFact = (
+  ledgerByYear: Record<number, IComputedLedger> | undefined,
+  ledger: IComputedLedger | undefined,
+): IContextFact[] => {
+  const years = Object.keys(ledgerByYear ?? {}).map(Number);
+  if (years.length >= 2 || !hasEntries(ledger)) return [];
+  return [
+    {
+      label: "年間比較:無法進行",
+      value:
+        years.length === 1
+          ? `年間比較需要兩個年度各自的帳本快照,目前只有 ${years[0]} 年這一份`
+          : "年間比較需要兩個年度各自的帳本快照,目前一份都沒有(年度快照以盤查年度為鍵,帳本尚未標註盤查年度)",
+      source: `帳本年度快照(目前 ${years.length} 個年度)`,
+    },
+  ];
+};
+
 export const buildLedgerFactBundle = (
   ledger: IComputedLedger | undefined,
   importBlocks?: ILedgerImportBlock[],
@@ -448,6 +490,7 @@ export const buildLedgerFactBundle = (
     ...toContextFacts(queryTotal(ledger)),
     ...toContextFacts(querySiteSubtotals(ledger)),
     ...toContextFacts(queryTopEmitters(ledger, LEDGER_FACT_TOP_EMITTERS)),
+    ...yearComparisonUnavailableFact(ledgerByYear, ledger),
   ];
   // Info: (20260825 - Emily) 年間疑點與其他異常同池,一起受上限與「據實申報」規則管
   const anomalies = [
