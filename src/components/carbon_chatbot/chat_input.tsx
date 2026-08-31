@@ -173,7 +173,22 @@ export function ChatInput({
     onSendMessage(outgoing);
   };
 
+  /**
+   * Info: (20260831 - Emily) 組字中的 Enter 是**選字**,不是送出(PR #6730 review 中-2)。
+   *
+   * 注音/拼音打字時按 Enter 選字會同時觸發送出,半句話就送出去了 ——
+   * 中文介面的日常操作,不是邊角案例。
+   *
+   * 這不是 #6718 引入的(develop 上同一個 handler 也沒擋),但這張票正在改這一行,
+   * 補一個條件的邊際成本接近零;而且本 repo 另外四個輸入元件都已經處理了,
+   * 包括另一個聊天輸入框 `src/components/chat/chat_input.tsx`(20260213 Julian)——
+   * 碳盤查這個是唯一的例外。留著它,下一個人會以為沒擋是刻意的。
+   *
+   * 本元件是單行 `<input type="text">`,所以不需要兄弟元件那條 `!e.shiftKey`
+   * (那是 textarea 為了換行才要的)。
+   */
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.nativeEvent.isComposing) return;
     if (e.key === "Enter" && !disabled) {
       submit();
     }

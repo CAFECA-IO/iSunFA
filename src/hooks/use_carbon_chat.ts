@@ -5152,7 +5152,28 @@ export const useCarbonChat = () => {
       try {
         masterKey = await ensureMasterKeyCached();
       } catch (keyError) {
+        /**
+         * Info: (20260831 - Emily) 送不出去就把字**還給使用者**(PR #6730 review 中-1)。
+         *
+         * #6718 把清空搬進 ChatInput(文字的所有者),而清空發生在
+         * `onSendMessage` 之前 —— 對成功路徑是對的(等 async 完成才清,
+         * 使用者會看到自己的字停在框裡好幾秒),但金鑰這兩條早退在清空之後,
+         * 於是使用者打完的一句話直接消失,要重打。
+         *
+         * develop 上不是這樣:舊的 `setInputValue("")` 位置在所有早退之後,
+         * 金鑰失敗時字留在框裡 —— 這個保護是本 PR 弄掉的,所以本 PR 補回來。
+         *
+         * 最日常的觸發是**取消生物辨識提示**(按錯手指、誤觸、想先確認別的事),
+         * 不是罕見的裝置問題。
+         *
+         * 還原走既有的 `commandInput` 通道(nonce +1 → 元件的 effect 覆寫回去),
+         * 不需要回傳值、不必改 prop 介面。
+         * 非輸入框發起的送出(後續建議按鈕、跳段自動送出)失敗時,
+         * 那句話會被放進輸入框 —— 那是刻意的:比靜默丟掉使用者的動作好,
+         * 而且再按一次就送得出去。
+         */
         if (keyError instanceof ChatroomUnsupportedDeviceError) {
+          commandInput(outgoingText);
           appendMessageLocally(
             {
               id: crypto.randomUUID(),
@@ -5163,6 +5184,7 @@ export const useCarbonChat = () => {
           );
           return;
         }
+        commandInput(outgoingText);
         console.error(
           "[carbon-chat] failed to prepare encryption key:",
           keyError,

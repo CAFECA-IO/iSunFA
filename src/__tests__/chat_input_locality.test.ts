@@ -67,6 +67,37 @@ describe("聊天輸入的 state 局部性(#6718)", () => {
     expect(source).toContain("onSendMessage: (text: string) => void");
   });
 
+  /**
+   * Info: (20260831 - Emily) 送不出去要把字還回去(review 中-1)。
+   *
+   * 這是 #6718 自己引入的迴歸:清空搬進元件、而清空在 `onSendMessage` 之前,
+   * 於是金鑰那兩條早退(不支援裝置 / 取消生物辨識)之後,使用者打的字沒了。
+   * develop 上舊的 `setInputValue("")` 在所有早退之後,所以本來有這個保護。
+   *
+   * 沒有 jsdom,所以釘的是「還原呼叫落在 catch 區塊裡、且兩條路徑都有」——
+   * 掃描只回答「條文在不在」,實際體驗由人工驗收那份清單負責。
+   */
+  it("金鑰失敗的兩條早退都把文字還回輸入框", () => {
+    const source = read(HOOK);
+    const start = source.indexOf("masterKey = await ensureMasterKeyCached();");
+    const end = source.indexOf("const attachmentsMeta", start);
+    expect(start).toBeGreaterThan(0);
+    expect(end).toBeGreaterThan(start);
+    const keyBlock = source.slice(start, end);
+    const restores = keyBlock.match(/commandInput\(outgoingText\)/g) ?? [];
+    expect(restores).toHaveLength(2);
+    expect(keyBlock).toContain("device_unsupported");
+    expect(keyBlock).toContain("system_error");
+  });
+
+  it("組字中的 Enter 不送出(照兄弟元件的寫法)", () => {
+    const source = read(CHAT_INPUT);
+    expect(source).toContain("e.nativeEvent.isComposing");
+    const sibling = read("src/components/chat/chat_input.tsx");
+    // Info: (20260831 - Emily) 全庫已有四處這樣寫;碳盤查這個原本是唯一的例外
+    expect(sibling).toContain("isComposing");
+  });
+
   it("hook 的送出不再退回輸入框內容(它已經沒有那份 state)", () => {
     const source = read(HOOK);
     /**
