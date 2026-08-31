@@ -71,8 +71,16 @@ jest.mock("@/services/salary_record.service", () => ({
   },
 }));
 
+/**
+ * Info: (20260831 - Julian) 參數寫 `unknown[]` 而不是 `never[]`。
+ *
+ * `never[]` 會讓 jest-mock 30.5 起的 `ResolveType<T> = ReturnType<T> extends
+ * PromiseLike<infer U> ? U : never` 整條塌成 `never`，於是 `mockResolvedValue`
+ * 只收得下 `never` —— 症狀是本機（30.4）綠、CI（`npm i` 抓到 30.5）紅。
+ * 這些 mock 都是 `as unknown as` 轉進來的，呼叫端不靠這個型別，用 `unknown[]` 沒有損失。
+ */
 type IAnyMock = ReturnType<
-  typeof jest.fn<(...args: never[]) => Promise<unknown>>
+  typeof jest.fn<(...args: unknown[]) => Promise<unknown>>
 >;
 
 const dewtMock = getIdentityFromDeWT as unknown as ReturnType<

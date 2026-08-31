@@ -240,7 +240,7 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
 
   return (
     <SalaryCalculatorShell accountBookId={accountBookId}>
-      <div className="mx-auto flex max-w-[1120px] flex-col gap-[24px] px-[32px] py-[32px]">
+      <div className="flex flex-col gap-[24px] px-[32px] py-[32px]">
         <h1 className="text-text-brand-primary-lv1 text-2xl font-bold">
           {t("calculator.records.main_title")}
         </h1>

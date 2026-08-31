@@ -54,7 +54,7 @@ const resultAmountSchema = z.number().finite();
 export const salaryCalculatorEmployeeWriteSchema = z.object({
   name: z.string().trim().min(1).max(100),
   number: z.string().trim().min(1).max(50),
-  email: z.email().max(254).optional(),
+  email: z.string().email().max(254).optional(),
   baseSalary: amountSchema,
   mealAllowance: amountSchema,
 });
@@ -150,7 +150,7 @@ export const salaryCalculatorUiSchema = z.object({
 });
 
 export const salaryRecordWriteSchema = z.object({
-  employeeId: z.uuid(),
+  employeeId: z.string().uuid(),
   year: z.number().int().min(2020).max(2100),
   month: z.number().int().min(1).max(12),
   input: salaryCalculatorOptionsSchema,
@@ -159,7 +159,7 @@ export const salaryRecordWriteSchema = z.object({
 });
 
 export const salaryRecordQuerySchema = z.object({
-  employeeId: z.uuid().optional(),
+  employeeId: z.string().uuid().optional(),
   year: z.coerce.number().int().min(2020).max(2100).optional(),
   month: z.coerce.number().int().min(1).max(12).optional(),
   page: z.coerce.number().int().min(1).default(1),

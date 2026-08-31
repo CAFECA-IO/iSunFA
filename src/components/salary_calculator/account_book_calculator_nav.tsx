@@ -33,7 +33,7 @@ const AccountBookCalculatorNav: FC<IAccountBookCalculatorNavProps> = ({
   const urls = salaryCalculatorUrlOf(accountBookId);
 
   const linkStyle =
-    "flex h-[36px] items-center gap-[6px] rounded-lg border px-[14px] text-sm font-semibold transition-colors";
+    "flex h-[36px] items-center gap-[6px] rounded-lg border px-[14px] text-xs md:text-sm font-semibold transition-colors";
   const activeStyle =
     "border-stroke-neutral-quaternary bg-surface-brand-primary-soft text-text-brand-primary-lv1";
   const idleStyle =
