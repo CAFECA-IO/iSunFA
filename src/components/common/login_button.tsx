@@ -34,8 +34,11 @@ export default function LoginButton({ label = undefined }: { label?: string }) {
          * 東西。**下面那段拒絕 `whitespace-nowrap` 的理由，一字不改就適用於
          * `shrink-0`**——寫下那段話的時候沒有把它套用到隔壁那個 class 上。
          *
-         * 手機版的水平內距小一格（`px-4 sm:px-5`）留著：那是純粹的內距，
-         * 不改變換行行為，對長標籤只有好處。
+         * 手機版的水平內距小一格（`px-4 sm:px-5`）留著，但**它不是 header 擠得下
+         * 的必要條件**——實測改回 `px-5` 之後 320px 仍然不溢出（品牌區多壓 2.4px
+         * 吸收掉，見 `landing_page/header.tsx` 的矩陣）。留著的理由只有一個：
+         * 對長標籤的使用端來說，內距小一格是純粹的好處。
+         * 08-27 那版註解把它說成必要條件，那是錯的（review #6731 二輪高-1）。
          *
          * 刻意**不加** `whitespace-nowrap`：這顆按鈕的標籤由呼叫端傳入，
          * 其中幾個相當長（`analysis.login_to_generate`、"Please login to comment"）

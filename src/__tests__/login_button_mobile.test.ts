@@ -113,6 +113,51 @@ describe("手機版的登入按鈕不會被壓成一個圓", () => {
    * `w-auto` 表示寬度由高度與原始比例決定，所以 `h-8`→`h-7` 就是把品牌區
    * 從 104px 降到 88px。
    */
+  /**
+   * Info: (20260831 - Luphia) **宣告的 `width` / `height` 必須與 SVG 的內建比例
+   * 一致**（review #6731 二輪高-1）。
+   *
+   * `next/image` 把那兩個數字放進 `<img>` 屬性，UA 樣式因此是
+   * `aspect-ratio: auto W/H`——`auto` 表示圖片載入後以內建比例為準，屬性只用來
+   * 預留載入前的版位。兩者不一致的後果是 logo 在載入瞬間跳一次寬度
+   *（實測 87.5 → 98），而且**所有拿那兩個數字去推算版面的人都會算錯**——
+   * 08-27 那版註解的 104 / 88 就是這樣來的。
+   *
+   * 這一條掃**所有**呼叫端，不是只掃被修的那一個：`desk_board` 目前是
+   * 500×128（比例 3.906），也會被這條抓到。
+   */
+  it("所有呼叫端宣告的比例與 SVG 內建比例一致", () => {
+    const svg = readFileSync(
+      join(process.cwd(), "public", "isunfa_logo.svg"),
+      "utf8",
+    );
+    const viewBox = /viewBox="0 0 (\d+) (\d+)"/.exec(svg);
+    expect(viewBox).not.toBeNull();
+    const intrinsic = Number(viewBox![1]) / Number(viewBox![2]);
+
+    const callers = [
+      "src/components/header/brand_logo.tsx",
+      "src/components/hr_management/hr_header.tsx",
+      "src/app/cafeca/desk_board/page.tsx",
+    ];
+    const mismatched = callers.flatMap((file) => {
+      const source = readFileSync(join(process.cwd(), file), "utf8");
+      const at = source.indexOf("<BrandLogoImage");
+      if (at === -1) return [];
+      const tag = source.slice(at, source.indexOf("/>", at));
+      const w = /width=\{(\d+)\}/.exec(tag);
+      const h = /height=\{(\d+)\}/.exec(tag);
+      if (!w || !h) return [`${file}: 缺 width/height`];
+      const ratio = Number(w[1]) / Number(h[1]);
+      return Math.abs(ratio - intrinsic) < 0.001
+        ? []
+        : [
+            `${file}: ${w[1]}/${h[1]} = ${ratio.toFixed(3)}（應為 ${intrinsic}）`,
+          ];
+    });
+    expect(mismatched).toEqual([]);
+  });
+
   it("logo 手機版矮一格，桌機不變", () => {
     const brand = readFileSync(
       join(process.cwd(), "src", "components", "header", "brand_logo.tsx"),
