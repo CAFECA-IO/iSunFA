@@ -203,23 +203,23 @@ export const calculator = {
       "{{name}} already has a record for {{month}}/{{year}} (net pay {{amount}}). Saving replaces it and the old figures are not kept.",
     overwrite_submit: "Overwrite and save",
     unlinked_title: "Who is this calculation for?",
-    unlinked_content:
-      '"{{name}}" is not in this account book\'s employee list yet.',
+    unlinked_content: "This calculation isn't linked to an employee yet.",
     create_and_save: 'Add "{{name}}" and save',
     create_and_save_hint:
       "Creates the employee from the name, employee number and base salary on the calculator",
-    create_needs_number:
-      "Add an employee number in the basic information step first",
     pick_from_list: "Pick from the employee list",
     pick_from_list_hint: "This calculation will link to the employee you pick",
     save_to_existing: "Save to {{name}} instead",
     save_to_existing_hint:
       "Uses the employee this number already belongs to, without creating a new one",
     unlinked_conflict_content:
-      "\u201c{{name}}\u201d is not in this account book yet, and employee number {{number}} already belongs to {{existingName}}.",
+      "Employee number {{number}} already belongs to \u201c{{existingName}}\u201d. It cannot be used for a new employee.",
     edit_number: "Fix the employee number",
     edit_number_hint:
       "Takes you back to step 1 if \u201c{{name}}\u201d should have a different number",
+    fill_number: "Fill in the employee number",
+    fill_number_hint:
+      "An employee number is required. Takes you back to step 1 to add one.",
   },
   // Info: (20260831 - Julian) Payroll records
   records: {

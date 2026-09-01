@@ -348,14 +348,27 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     <>
       <div className="flex flex-col gap-6 lg:w-fit">
         {/* Info: (20250708 - Julian) Result */}
-        <div ref={downloadRef} className="w-full shrink-0 lg:w-[650px]">
-          <PaySlip
-            employeeName={showingName}
-            employeeNumber={employeeNumber}
-            selectedMonth={formattedMonth}
-            selectedYear={selectedYear}
-            resultData={salaryCalculatorResult}
-          />
+        {/**
+         * Info: (20260901 - Julian) 卡片外框在**外層**，`downloadRef` 在內層。
+         *
+         * 畫面上的薪資單仍然是一張卡片（外框、圓角、陰影都在外層那個 div），
+         * 但下載截的是內層 —— 於是存出來的 PNG 只有內容與留白，沒有懸空的框和陰影。
+         * 那張圖是要寄給員工看的，一道浮在白底上的陰影只會像去背沒去乾淨。
+         *
+         * 內距放在內層（截圖的那一層），不能放外層：放外層的話 PNG 會變成
+         * 內容整個貼齊邊緣。
+         */}
+        <div className="w-full shrink-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl lg:w-[650px]">
+          <div ref={downloadRef} className="bg-white p-6">
+            <PaySlip
+              employeeName={showingName}
+              employeeNumber={employeeNumber}
+              selectedMonth={formattedMonth}
+              selectedYear={selectedYear}
+              resultData={salaryCalculatorResult}
+              variant="plain"
+            />
+          </div>
         </div>
         {/* Info: (20250708 - Julian) Buttons */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

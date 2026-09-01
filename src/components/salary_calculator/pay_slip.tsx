@@ -12,6 +12,18 @@ interface IPaySlipProps {
   selectedYear: string;
   resultData: ISalaryCalculatorUI;
   className?: string;
+  /**
+   * Info: (20260901 - Julian) 薪資單自己要不要長得像一張卡片。
+   *
+   * `card`（預設）：計算機頁面上它是獨立的一塊，要圓角、外框與陰影。
+   * `plain`：外層已經是一張卡片了（例如 `view_pay_slip_modal` 的彈窗），
+   * 再套一層框會變成卡中卡，看起來像兩個不相干的區塊被硬湊在一起。
+   *
+   * 做成 prop 而不是讓呼叫端用 `className` 蓋掉：Tailwind 同權重的 class
+   * 誰贏取決於產生順序，不是字串裡的先後 —— 用 `border-0 shadow-none` 去蓋
+   * 能不能生效是碰運氣的。
+   */
+  variant?: "card" | "plain";
 }
 
 const PaySlip: FC<IPaySlipProps> = ({
@@ -21,6 +33,7 @@ const PaySlip: FC<IPaySlipProps> = ({
   selectedYear,
   resultData,
   className = "",
+  variant = "card",
 }) => {
   const { t } = useTranslation();
 
@@ -227,7 +240,11 @@ const PaySlip: FC<IPaySlipProps> = ({
   return (
     <div
       id="payslip-download"
-      className={`relative flex flex-col gap-6 overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-xl ${className}`}
+      className={`relative flex flex-col gap-6 bg-white ${
+        variant === "card"
+          ? "overflow-hidden rounded-2xl border border-gray-200 p-6 shadow-xl"
+          : ""
+      } ${className}`}
     >
       <div className="absolute top-0 left-0 h-1 w-full" />
       {/* Info: (20250708 - Julian) Title */}

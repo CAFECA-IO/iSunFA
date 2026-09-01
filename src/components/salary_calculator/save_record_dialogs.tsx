@@ -148,9 +148,17 @@ export const UnlinkedEmployeeModal: FC<IUnlinkedEmployeeModalProps> = ({
    */
   const isConflict = conflictEmployee !== null;
 
-  const createHint = canCreate
-    ? t("calculator.save_record.create_and_save_hint")
-    : t("calculator.save_record.create_needs_number");
+  /**
+   * Info: (20260901 - Julian) 「直接新增」走不通的兩種情況，一律不渲染那顆按鈕。
+   *
+   * 撞號 → 後端必定 409；沒填編號 → 編號是必填。兩種都不是「按了會失敗」，
+   * 而是「這條路現在不存在」。畫面上留一顆按不動的按鈕，等於要使用者自己
+   * 看懂為什麼不能按 —— 換成一顆真的能按、且能解決問題的按鈕。
+   */
+  const showCreate = canCreate && !isConflict;
+
+  // Info: (20260901 - Julian) 兩種情況都把人送回 Step 1 的編號欄，只是說法與主次不同
+  const showNumberAction = isConflict || !canCreate;
 
   return (
     <div className={modalShell}>
@@ -164,19 +172,20 @@ export const UnlinkedEmployeeModal: FC<IUnlinkedEmployeeModalProps> = ({
 
         <div className="flex flex-col gap-[14px] px-[20px] pb-[24px] md:px-[40px]">
           {/**
-           * Info: (20260901 - Julian) 衝突的事實在這裡講完，而不是掛在一顆按不動的按鈕底下。
-           * 說明文字本來就是交代狀況的地方，講在這裡三條選項才都是「能按的」。
+           * Info: (20260901 - Julian) 只陳述**確定知道**的事，不推論姓名在不在名單裡。
+           *
+           * 這個對話框的觸發條件是「沒有連結到員工」（`selectedEmployeeId === null`），
+           * 不是「這個姓名不存在」—— 使用者手打一個確實存在的姓名而沒從列表選，
+           * 一樣會走到這裡。舊文案寫「『某某』還不在這本帳的員工列表裡」，
+           * 在那個情境下是假的。撞號時更明顯：被擋下的原因是編號，與姓名無關。
            */}
           <p className="text-text-neutral-secondary text-sm leading-relaxed">
             {isConflict
               ? t("calculator.save_record.unlinked_conflict_content", {
-                  name: employeeName,
                   number: employeeNumber,
                   existingName: conflictEmployee.name,
                 })
-              : t("calculator.save_record.unlinked_content", {
-                  name: employeeName,
-                })}
+              : t("calculator.save_record.unlinked_content")}
           </p>
 
           {/**
@@ -208,11 +217,11 @@ export const UnlinkedEmployeeModal: FC<IUnlinkedEmployeeModalProps> = ({
             </button>
           )}
 
-          {!isConflict && (
+          {showCreate && (
             <button
               type="button"
               onClick={createHandler}
-              disabled={!canCreate || isSaving}
+              disabled={isSaving}
               className="bg-surface-brand-primary-soft flex items-center gap-[12px] rounded-lg px-[16px] py-[14px] text-left disabled:opacity-60"
             >
               <span className="flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-full bg-orange-600 text-white">
@@ -225,7 +234,7 @@ export const UnlinkedEmployeeModal: FC<IUnlinkedEmployeeModalProps> = ({
                   })}
                 </span>
                 <span className="text-text-neutral-secondary text-xs leading-relaxed">
-                  {createHint}
+                  {t("calculator.save_record.create_and_save_hint")}
                 </span>
               </span>
             </button>
@@ -257,24 +266,38 @@ export const UnlinkedEmployeeModal: FC<IUnlinkedEmployeeModalProps> = ({
            * 而且改完還可能撞到第二個已被使用的編號、再彈一次。
            * 這裡只把人送回那個唯一的欄位。
            */}
-          {isConflict && (
+          {showNumberAction && (
             <button
               type="button"
               onClick={editNumberHandler}
               disabled={isSaving}
-              className="border-stroke-neutral-quaternary flex items-center gap-[12px] rounded-lg border px-[16px] py-[14px] text-left disabled:opacity-60"
+              className={`flex items-center gap-[12px] rounded-lg px-[16px] py-[14px] text-left disabled:opacity-60 ${
+                isConflict
+                  ? "border-stroke-neutral-quaternary border"
+                  : "bg-surface-brand-primary-soft"
+              }`}
             >
-              <span className="bg-surface-hover text-text-neutral-secondary flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-full">
+              <span
+                className={`flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-full ${
+                  isConflict
+                    ? "bg-surface-hover text-text-neutral-secondary"
+                    : "bg-orange-600 text-white"
+                }`}
+              >
                 <Pencil size={18} />
               </span>
               <span className="flex flex-col gap-[3px]">
                 <span className="text-text-neutral-primary text-sm font-bold">
-                  {t("calculator.save_record.edit_number")}
+                  {isConflict
+                    ? t("calculator.save_record.edit_number")
+                    : t("calculator.save_record.fill_number")}
                 </span>
                 <span className="text-text-neutral-secondary text-xs leading-relaxed">
-                  {t("calculator.save_record.edit_number_hint", {
-                    name: employeeName,
-                  })}
+                  {isConflict
+                    ? t("calculator.save_record.edit_number_hint", {
+                        name: employeeName,
+                      })
+                    : t("calculator.save_record.fill_number_hint")}
                 </span>
               </span>
             </button>

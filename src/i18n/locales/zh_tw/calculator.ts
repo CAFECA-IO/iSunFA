@@ -195,18 +195,19 @@ export const calculator = {
       "{{name}} 的 {{year}} 年 {{month}} 月已經有一筆紀錄（實發 {{amount}} 元）。儲存會直接覆蓋它，舊的數字不會留下。",
     overwrite_submit: "覆蓋並儲存",
     unlinked_title: "這筆試算要存給誰？",
-    unlinked_content: "「{{name}}」還不在這本帳的員工列表裡。",
+    unlinked_content: "這次試算還沒有連結到員工。",
     create_and_save: "新增「{{name}}」並儲存",
     create_and_save_hint: "用計算機上的姓名、員工編號與本薪建立員工",
-    create_needs_number: "需要先在基本資料填寫員工編號",
     pick_from_list: "從員工列表選一位",
     pick_from_list_hint: "這次試算會改連結到選中的員工",
     save_to_existing: "改存給 {{name}}",
     save_to_existing_hint: "沿用這個編號既有的員工，不建立新的",
     unlinked_conflict_content:
-      "「{{name}}」還不在這本帳的員工列表裡，而員工編號 {{number}} 已經是 {{existingName}} 的。",
+      "員工編號 {{number}} 已經是「{{existingName}}」的。無法用這個編號建立新員工。",
     edit_number: "修改員工編號",
     edit_number_hint: "如果「{{name}}」的編號是別的，回到步驟 1 修改",
+    fill_number: "填寫員工編號",
+    fill_number_hint: "員工編號是必填的。回到步驟 1 補上。",
   },
   // Info: (20260831 - Julian) 薪資紀錄查閱
   records: {

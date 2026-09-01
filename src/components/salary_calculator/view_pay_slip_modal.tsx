@@ -79,12 +79,7 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
 
   return (
     <div className="font-barlow fixed inset-0 z-70 flex items-center justify-center bg-black/50 p-[16px]">
-      {/**
-       * Info: (20260901 - Julian) `max-h-[90vh]` + 內層 `flex-1 min-h-0` 取代原本寫死的
-       * `h-[600px]`：寫死高度在視窗比 Modal 矮的時候會讓整張卡片溢出畫面，
-       * 而外層是 `fixed inset-0`，頁面本身不會捲，於是溢出的部分永遠看不到。
-       */}
-      <div className="bg-surface-neutral-surface-lv2 relative flex max-h-[90vh] w-[90vw] flex-col rounded-2xl md:w-[670px]">
+      <div className="bg-surface-neutral-surface-lv2 relative flex max-h-[80vh] w-[90vw] flex-col rounded-2xl md:w-[670px]">
         {/* Info: (20250725 - Julian) Modal Header */}
         <div className="relative flex shrink-0 items-start justify-center px-[40px] py-[16px]">
           <h2 className="text-card-text-primary text-lg font-bold">
@@ -120,6 +115,7 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
             selectedMonth={monthStr}
             selectedYear={yearStr}
             resultData={paySlipData}
+            variant="plain"
             className="shrink-0 px-[40px] py-[24px]"
           />
           {isSentRecord && (
