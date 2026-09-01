@@ -13,7 +13,12 @@
  * 而產品的 body 是 Arial/Helvetica、`font-mono` 解析到 next/font 的 Geist Mono。
  * CJK 的「登入」寬度不受影響（表意字寬 = 字級 × 字數），但**版號字串的地板**
  * 是用另一套等寬字量的——`verW` 的絕對值有個位數 px 的字型誤差，
- * 測試端以 `ctaW` 區間斷言守住 CJK 字型真的存在（沒有 CJK 字型時是 tofu，寬度不同）。
+ * 測試端以 `ctaW` 區間斷言守住 CJK 字型真的存在。
+ *
+ * 那個區間的鑑別力是**量出來的**（review 五輪低-2）：在 node:22-slim 容器裡
+ * 實測——不裝 fonts-noto-cjk 時 tofu 的 `ctaW = 48.81`（帶外，會紅），
+ * 裝了之後 `ctaW = 60.00`（帶內）。且兩種情況 `scrollWidth` 都是 320——
+ * 溢出斷言抓不到字型缺席，只有這一條抓得到。
  * 本腳本只輸出一行 JSON 到 stdout；任何雜訊都走 stderr。
  */
 import { readFileSync } from "fs";
@@ -54,6 +59,23 @@ if (!gapMatch || !logoMatch) {
 
 const GAP_PX = spacingPx(gapMatch[1]);
 const LOGO_H_PX = Number(logoMatch[1]) * 4;
+
+/**
+ * Info: (20260901 - Luphia) 釘住的控件幾何，**具名常數餵進 HTML、原樣回報進
+ * premise**（review 五輪中-2）：rig 用的數字與 premise 回報的數字是同一份，
+ * 測試端以精確斷言比對——rig 被調校、換算寫錯、class 變了，三邊各自會紅。
+ * 每個數字對應的來源 class 由 header_layout_320.test.ts 的計數斷言守著。
+ */
+const ICON_5 = 20; // size-5
+const ICON_4 = 16; // size-4
+const MENU_PAD_X = 8; // px-2（header_nav 的 MenuButton）
+const CTRL = {
+  nav: MENU_PAD_X * 2 + ICON_5, // 36
+  theme: 13 * 4, // h-7 w-13 shrink-0 → 52
+  lang: ICON_5 + 4 + ICON_4, // size-5 + gap-1 + size-4 → 40
+  pill: 4 + 32 + 8 + ICON_4 + 12, // pl-1 + size-8 + gap-x-2 + size-4 + pr-3 → 72
+};
+const NAV_PAD_PX = 12; // p-3（三個 header 的 nav 共同）
 const SVG_URI = `data:image/svg+xml;base64,${Buffer.from(logoSvg).toString("base64")}`;
 
 // Info: (20260901 - Luphia) 真的登入按鈕：字、字級、內距與 login_button.tsx 一致
@@ -66,8 +88,7 @@ const LOGIN_BUTTON =
  * 名字在 <sm 是 hidden。三輪 review 點名「登入態的寬度這個 PR 沒有量過」——
  * 這個情境補那一刀。
  */
-const LOGGED_IN_PILL =
-  '<button id="cta" style="display:flex;align-items:center;column-gap:8px;border-radius:9999px;padding:4px 12px 4px 4px;flex-shrink:0"><span style="width:32px;height:32px;border-radius:9999px;background:#fed7aa;flex-shrink:0"></span><span style="width:16px;height:16px;flex-shrink:0;background:#888"></span></button>';
+const LOGGED_IN_PILL = `<button id="cta" style="display:flex;align-items:center;column-gap:8px;border-radius:9999px;padding:4px 12px 4px 4px;flex-shrink:0"><span style="width:32px;height:32px;border-radius:9999px;background:#fed7aa;flex-shrink:0"></span><span style="width:${ICON_4}px;height:${ICON_4}px;flex-shrink:0;background:#888"></span></button>`;
 
 function headerHtml({ actionsHtml, versionText, gapPx = GAP_PX }) {
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width"><style>
@@ -78,7 +99,7 @@ function headerHtml({ actionsHtml, versionText, gapPx = GAP_PX }) {
     button{font:inherit;background:none;color:inherit}
     body{font-family:'Noto Sans CJK TC','PingFang TC',sans-serif}
   </style></head><body>
-  <header><nav style="display:flex;align-items:center;justify-content:space-between;padding:12px">
+  <header><nav style="display:flex;align-items:center;justify-content:space-between;padding:${NAV_PAD_PX}px">
     <div style="display:flex">
       <a style="display:flex;flex-direction:column;align-items:flex-end">
         <img src="${SVG_URI}" style="height:${LOGO_H_PX}px;width:auto" id="logo">
@@ -86,12 +107,12 @@ function headerHtml({ actionsHtml, versionText, gapPx = GAP_PX }) {
       </a>
     </div>
     <div style="display:flex;align-items:center;column-gap:${gapPx}px" id="group">
-      <!-- Info: 選單鈕＝px-2(16) + size-5 icon(20)＝36 -->
-      <button style="display:flex;align-items:center;padding:4px 8px"><span style="width:20px;height:20px;flex-shrink:0;background:#888"></span></button>
-      <!-- Info: 主題開關＝h-7 w-13 shrink-0＝52 -->
-      <button style="height:28px;width:52px;flex-shrink:0;border-radius:14px;background:#ddd"></button>
-      <!-- Info: 語言選擇＝size-5(20)+gap-1(4)+size-4(16)＝40 -->
-      <button style="display:flex;align-items:center;column-gap:4px"><span style="width:20px;height:20px;flex-shrink:0;background:#888"></span><span style="width:16px;height:16px;flex-shrink:0;background:#888"></span></button>
+      <!-- Info: 選單鈕＝px-2 ×2 + size-5 icon＝CTRL.nav -->
+      <button style="display:flex;align-items:center;padding:4px ${MENU_PAD_X}px"><span style="width:${ICON_5}px;height:${ICON_5}px;flex-shrink:0;background:#888"></span></button>
+      <!-- Info: 主題開關＝h-7 w-13 shrink-0＝CTRL.theme -->
+      <button style="height:28px;width:${CTRL.theme}px;flex-shrink:0;border-radius:14px;background:#ddd"></button>
+      <!-- Info: 語言選擇＝size-5 + gap-1 + size-4＝CTRL.lang -->
+      <button style="display:flex;align-items:center;column-gap:4px"><span style="width:${ICON_5}px;height:${ICON_5}px;flex-shrink:0;background:#888"></span><span style="width:${ICON_4}px;height:${ICON_4}px;flex-shrink:0;background:#888"></span></button>
       ${actionsHtml}
     </div>
   </nav></header></body></html>`;
@@ -123,7 +144,7 @@ try {
   };
 
   const result = {
-    premise: { gapPx: GAP_PX, logoHPx: LOGO_H_PX, version },
+    premise: { gapPx: GAP_PX, logoHPx: LOGO_H_PX, version, ctrl: CTRL, navPadPx: NAV_PAD_PX },
     loggedOut: await measure(
       headerHtml({ actionsHtml: LOGIN_BUTTON, versionText: version }),
     ),

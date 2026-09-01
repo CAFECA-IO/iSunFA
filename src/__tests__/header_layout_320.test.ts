@@ -55,7 +55,13 @@ interface IMeasurement {
 }
 
 interface IResult {
-  premise: { gapPx: number; logoHPx: number; version: string };
+  premise: {
+    gapPx: number;
+    logoHPx: number;
+    version: string;
+    ctrl: { nav: number; theme: number; lang: number; pill: number };
+    navPadPx: number;
+  };
   loggedOut: IMeasurement;
   loggedIn: IMeasurement;
   gap24: IMeasurement;
@@ -145,14 +151,24 @@ describe("重現的前提（改了這些，上面的重現就過期）", () => {
       gapPx: 6,
       logoHPx: 28,
       version: pkg.version,
+      /**
+       * Info: (20260901 - Luphia) rig 側的常數（review 五輪中-2）：腳本把這些
+       * 數字餵進 HTML 並原樣回報，這裡精確比對——rig 被調校、換算寫錯、
+       * class 變了，三邊各自會紅。來源 class 由下方的計數斷言守著。
+       */
+      ctrl: { nav: 36, theme: 52, lang: 40, pill: 72 },
+      navPadPx: 12,
     });
   });
 
   /**
-   * Info: (20260901 - Luphia) CJK 字型真的存在的證據（review 四輪低-1）：
-   * 「登入」在 14px 表意字下是 28px，加 `px-4` 的 32px 內距＝60。字型沒裝成
-   * （tofu）或回退到非 CJK 字族時寬度會偏離——workflow 的註解寫著「沒有 CJK
-   * 字型量出來的寬度是錯的」，這一條把那句話變成斷言。
+   * Info: (20260901 - Luphia) CJK 字型真的存在的證據（review 四輪低-1）。
+   *
+   * 帶寬的鑑別力是**量出來的**，不是推的（review 五輪低-2）：在 node:22-slim
+   * 容器裡實測——不裝 fonts-noto-cjk 時 tofu 的 `ctaW = 48.81`（**帶外，會紅**），
+   * 裝了之後 `ctaW = 60.00`（帶內，與「28px 字寬＋32px 內距」的推導一致）。
+   * 且兩種情況 `scrollWidth` 都是 320——溢出斷言抓不到字型缺席，只有這一條
+   * 抓得到，所以它是載重的。
    */
   it("登入按鈕的字寬證明 CJK 字型存在（56–64px）", () => {
     expect(result.loggedOut.ctaW).toBeGreaterThanOrEqual(56);
@@ -167,32 +183,31 @@ describe("重現的前提（改了這些，上面的重現就過期）", () => {
    * 已經改成從原始碼 parse；這三個元件的幾何寫在 class 裡，這裡以掃描斷言釘住
    * 對應關係（class 一變這裡先紅，紅的訊息指著量測腳本要一起改）。
    */
+  /**
+   * Info: (20260901 - Luphia) **精確計數**而不是 `toContain`（review 五輪低-1）：
+   * `px-2` 在 header_nav 出現兩次（連結與 MenuButton）、`size-5` 兩次、
+   * `size-4` 在 language_selector 兩次——`toContain` 之下「兩處之一被改掉」
+   * 照綠，而 320px 的餘裕只有 2px。計數一少一多都會紅。
+   * 計數帶邊界（`(?![\d.-])`）：`px-2` 不可誤中 `px-2.5`。
+   */
+  const countOf = (source: string, token: string) => {
+    const escaped = token.replace(/[.*+?^$\{\}()|[\]\\]/g, "\\$&");
+    return (source.match(new RegExp(`${escaped}(?![\\d.-])`, "g")) ?? [])
+      .length;
+  };
+
   it.each([
-    [
-      "src/components/header/theme_toggle.tsx",
-      ["h-7 w-13 shrink-0"],
-      "主題開關 52×28",
-    ],
-    [
-      "src/components/header/language_selector.tsx",
-      ["size-5", "size-4"],
-      "語言選擇 20+4+16=40",
-    ],
-    [
-      "src/components/header/header_nav.tsx",
-      ["px-2", "size-5"],
-      "選單鈕 16+20=36",
-    ],
-    [
-      "src/components/header/user_actions.tsx",
-      ["py-1 pr-3 pl-1", "size-8", "gap-x-2"],
-      "登入態膠囊 4+32+8+16+12=72",
-    ],
-  ])("釘住的幾何與 %s 一致（%s → %s）", (file, tokens) => {
+    ["src/components/header/theme_toggle.tsx", "h-7 w-13 shrink-0", 1],
+    ["src/components/header/language_selector.tsx", "size-5", 1],
+    ["src/components/header/language_selector.tsx", "size-4", 2],
+    ["src/components/header/header_nav.tsx", "px-2", 2],
+    ["src/components/header/header_nav.tsx", "size-5", 2],
+    ["src/components/header/user_actions.tsx", "py-1 pr-3 pl-1", 1],
+    ["src/components/header/user_actions.tsx", "size-8", 1],
+    ["src/components/header/user_actions.tsx", "gap-x-2", 1],
+  ])("釘住的幾何：%s 的 %s 恰好 %i 處", (file, token, expected) => {
     const source = readFileSync(join(process.cwd(), file as string), "utf8");
-    (tokens as string[]).forEach((token) => {
-      expect(source).toContain(token);
-    });
+    expect(countOf(source, token as string)).toBe(expected);
   });
 
   /**
