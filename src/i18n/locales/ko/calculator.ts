@@ -200,10 +200,18 @@ export const calculator = {
     unlinked_title: "이번 계산은 누구의 기록인가요?",
     unlinked_content: "「{{name}}」은(는) 아직 이 장부의 직원 목록에 없습니다.",
     create_and_save: "「{{name}}」 추가하고 저장",
-    create_and_save_hint: "계산기의 이름, 이메일, 기본급으로 직원을 만듭니다",
+    create_and_save_hint: "계산기의 이름, 사번을, 기본급으로 직원을 만듭니다",
     create_needs_number: "먼저 기본 정보에서 사번을 입력해 주세요",
     pick_from_list: "직원 목록에서 선택",
     pick_from_list_hint: "이번 계산은 선택한 직원에 연결됩니다",
+    save_to_existing: "{{name}} 에게 저장하기",
+    save_to_existing_hint:
+      "이 사번의 기존 직원을 사용하고 새로 만들지 않습니다",
+    unlinked_conflict_content:
+      "「{{name}}」은(는) 아직 이 장부의 직원 목록에 없고, 사번 {{number}} 은(는) 이미 {{existingName}} 의 것입니다.",
+    edit_number: "사번 수정하기",
+    edit_number_hint:
+      "「{{name}}」의 사번이 다르다면 1단계로 돌아가 수정합니다",
   },
   // Info: (20260831 - Julian) 급여 기록 조회
   records: {

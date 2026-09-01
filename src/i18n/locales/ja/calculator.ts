@@ -201,10 +201,18 @@ export const calculator = {
     unlinked_title: "この試算は誰の記録ですか？",
     unlinked_content: "「{{name}}」はまだこの帳簿の従業員リストにいません。",
     create_and_save: "「{{name}}」を追加して保存",
-    create_and_save_hint: "計算機の氏名・メール・基本給から従業員を作成します",
+    create_and_save_hint:
+      "計算機の氏名・従業員番号・基本給から従業員を作成します",
     create_needs_number: "先に基本情報で従業員番号を入力してください",
     pick_from_list: "従業員リストから選ぶ",
     pick_from_list_hint: "この試算は選んだ従業員に紐付け直されます",
+    save_to_existing: "{{name}} に保存する",
+    save_to_existing_hint: "この番号の既存の従業員を使い、新規作成はしません",
+    unlinked_conflict_content:
+      "「{{name}}」はこの帳簿の従業員一覧にまだなく、従業員番号 {{number}} はすでに {{existingName}} のものです。",
+    edit_number: "従業員番号を修正する",
+    edit_number_hint:
+      "「{{name}}」の番号が別のものなら、ステップ 1 に戻って直します",
   },
   // Info: (20260831 - Julian) 給与記録の閲覧
   records: {

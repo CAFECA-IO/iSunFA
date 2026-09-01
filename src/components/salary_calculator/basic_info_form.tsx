@@ -19,6 +19,7 @@ import {
   TaxResidencyStatus,
 } from "@/interfaces/salary_calculator";
 import { INDUSTRY_CATEGORY_OPTIONS } from "@/constants/industry_category";
+import { EMPLOYEE_NUMBER_INPUT_ID } from "@/constants/salary_calculator";
 
 interface IBasicInfoFormProps {
   // Info: (20260831 - Julian) null = 公開試算模式，沒有帳本就沒有員工名單可選（計劃書 §2.4）
@@ -251,15 +252,15 @@ const BasicInfoForm: FC<IBasicInfoFormProps> = ({ accountBookId }) => {
         {/* Info: (20250708 - Julian) 員工編號 */}
         <div className="col-span-2 flex flex-col gap-2">
           <label
-            htmlFor="input-employee-number"
+            htmlFor={EMPLOYEE_NUMBER_INPUT_ID}
             className="text-sm font-bold text-gray-700"
           >
             {t("calculator.basic_info_form.employee_number")}
           </label>
           <div className="flex h-[44px] items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all focus-within:ring-orange-300">
             <input
-              id="input-employee-number"
-              name="input-employee-number"
+              id={EMPLOYEE_NUMBER_INPUT_ID}
+              name={EMPLOYEE_NUMBER_INPUT_ID}
               type="text"
               aria-label={t("calculator.basic_info_form.employee_number")}
               className="flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900 outline-none placeholder:text-gray-400"

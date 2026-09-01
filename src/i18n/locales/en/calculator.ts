@@ -207,11 +207,19 @@ export const calculator = {
       '"{{name}}" is not in this account book\'s employee list yet.',
     create_and_save: 'Add "{{name}}" and save',
     create_and_save_hint:
-      "Creates the employee from the name, email and base salary on the calculator",
+      "Creates the employee from the name, employee number and base salary on the calculator",
     create_needs_number:
       "Add an employee number in the basic information step first",
     pick_from_list: "Pick from the employee list",
     pick_from_list_hint: "This calculation will link to the employee you pick",
+    save_to_existing: "Save to {{name}} instead",
+    save_to_existing_hint:
+      "Uses the employee this number already belongs to, without creating a new one",
+    unlinked_conflict_content:
+      "\u201c{{name}}\u201d is not in this account book yet, and employee number {{number}} already belongs to {{existingName}}.",
+    edit_number: "Fix the employee number",
+    edit_number_hint:
+      "Takes you back to step 1 if \u201c{{name}}\u201d should have a different number",
   },
   // Info: (20260831 - Julian) Payroll records
   records: {

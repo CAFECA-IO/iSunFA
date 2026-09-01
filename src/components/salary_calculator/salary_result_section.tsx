@@ -17,8 +17,11 @@ import { useSalaryEmployees } from "@/hooks/use_salary_employees";
 import { useSalaryRecordSave } from "@/hooks/use_salary_record_save";
 import { MONTHS } from "@/constants/month";
 import { salaryCalculatorUrlOf } from "@/constants/url";
+import { EMPLOYEE_NUMBER_INPUT_ID } from "@/constants/salary_calculator";
 import { downloadNodeAsPng } from "@/lib/utils/pay_slip_download";
 import { ISalaryRecordSummary } from "@/interfaces/salary_record";
+import { ApiError } from "@/lib/utils/request";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
 
 interface ISalaryResultSectionProps {
   // Info: (20260831 - Julian) null = 公開試算模式，儲存按鈕整顆不出現（計劃書 §2.4）
@@ -56,13 +59,35 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
   const bookId = accountBookId ?? "";
   const { isSaving, savedRecord, hasError, findExisting, save, clearSaved } =
     useSalaryRecordSave(bookId);
-  const { createEmployee, reload } = useSalaryEmployees(bookId);
+  const { employees, createEmployee, reload } = useSalaryEmployees(bookId);
 
-  const [existingRecord, setExistingRecord] =
-    useState<ISalaryRecordSummary | null>(null);
+  /**
+   * Info: (20260901 - Julian) 待確認覆蓋的那一筆，連「要存給誰」一起記。
+   *
+   * 原本只記紀錄、確認時再去讀 context 的 `selectedEmployeeId`。
+   * 從員工列表選完人就直接儲存之後，那個 id 有可能還沒進到 context
+   * （`linkEmployee` 是 setState）—— 把它跟紀錄綁在一起，就不必去猜當下讀不讀得到。
+   */
+  const [pendingOverwrite, setPendingOverwrite] = useState<{
+    employeeId: string;
+    existing: ISalaryRecordSummary;
+  } | null>(null);
   const [isShowUnlinkedModal, setIsShowUnlinkedModal] =
     useState<boolean>(false);
   const [isShowPickModal, setIsShowPickModal] = useState<boolean>(false);
+
+  /**
+   * Info: (20260901 - Julian) 「探有沒有既有紀錄」那一段的忙碌狀態。
+   *
+   * `isSaving` 只涵蓋 POST，不含前面那次 GET。從員工列表選完人的那條路上，
+   * 彈窗一關就進到這段 —— 沒有它的話畫面會有一小段完全沒有反應，
+   * 而「按了沒反應」正是這個流程原本的問題。
+   */
+  const [isPreparing, setIsPreparing] = useState<boolean>(false);
+  const isBusy = isPreparing || isSaving;
+
+  // Info: (20260901 - Julian) 例外 B 對話框裡的錯誤訊息（名單過期時後端仍會擋下來）
+  const [unlinkedError, setUnlinkedError] = useState<string | null>(null);
 
   const selectedMonthNumber =
     MONTHS.findIndex((month) => month.name === selectedMonth.name) + 1;
@@ -77,9 +102,52 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
       input: getSalaryCalculatorOptions(),
       result: salaryCalculatorResult,
     });
-    setExistingRecord(null);
+    setPendingOverwrite(null);
     setIsShowUnlinkedModal(false);
+    setIsShowPickModal(false);
   };
+
+  /**
+   * Info: (20260901 - Julian) 「要存給誰」確定之後的共用流程：先探再存。
+   *
+   * 三條路（已連結、從列表選、直接新增）最後都走這裡，
+   * 所以「同年月已有紀錄要先問一句」這件事不會因為走哪一條而漏掉。
+   * 員工 id 由參數傳入而不是讀 context —— 從列表選的那條路上，
+   * `linkEmployee` 的 setState 還沒生效。
+   */
+  const proceedSaveFor = async (employeeId: string) => {
+    setIsPreparing(true);
+    try {
+      const existing = await findExisting({
+        employeeId,
+        year: selectedYearNumber,
+        month: selectedMonthNumber,
+      });
+
+      if (existing) {
+        setPendingOverwrite({ employeeId, existing });
+        return;
+      }
+
+      await saveRecordFor(employeeId);
+    } finally {
+      setIsPreparing(false);
+    }
+  };
+
+  /**
+   * Info: (20260901 - Julian) 計算機上這個編號是不是已經有人在用。
+   *
+   * 編號在帳本內唯一，所以「直接新增員工」用一個已存在的編號一定會被後端以 409 擋下。
+   * 先從已載入的名單問出答案，就能在按下去之前把人指出來，而不是撞牆之後才解釋。
+   * 名單可能過期（別人剛新增），所以 `createAndSaveHandler` 仍然要接住 409。
+   */
+  const trimmedNumber = employeeNumber.trim();
+  const numberConflict =
+    trimmedNumber === ""
+      ? null
+      : (employees.find((employee) => employee.number === trimmedNumber) ??
+        null);
 
   /**
    * Info: (20260831 - Julian) 按下「儲存薪資紀錄」。
@@ -89,29 +157,61 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
    */
   const clickSaveHandler = async () => {
     clearSaved();
+    setUnlinkedError(null);
 
     if (selectedEmployeeId === null) {
       setIsShowUnlinkedModal(true);
       return;
     }
 
-    const existing = await findExisting({
-      employeeId: selectedEmployeeId,
-      year: selectedYearNumber,
-      month: selectedMonthNumber,
-    });
+    await proceedSaveFor(selectedEmployeeId);
+  };
 
-    if (existing) {
-      setExistingRecord(existing);
-      return;
-    }
+  /**
+   * Info: (20260901 - Julian) 例外 B 的次要路徑：從員工列表選一位，選完就直接存。
+   *
+   * 原本選完只是把人灌進計算機、關掉彈窗，使用者還要再按一次儲存 ——
+   * 而他按下儲存才走到這裡，意圖早就表達過了，不該再要求一次。
+   */
+  const pickedEmployeeHandler = async (employeeId: string) => {
+    setIsShowPickModal(false);
+    await proceedSaveFor(employeeId);
+  };
 
-    await saveRecordFor(selectedEmployeeId);
+  /**
+   * Info: (20260901 - Julian) 編號撞號時的出路：改存給編號原本的那位員工。
+   *
+   * 一樣走 `proceedSaveFor`，所以「他這個年月已經有紀錄」還是會先問一句。
+   */
+  const useConflictEmployeeHandler = async () => {
+    if (numberConflict === null) return;
+    linkEmployee(numberConflict);
+    setIsShowUnlinkedModal(false);
+    await proceedSaveFor(numberConflict.id);
+  };
+
+  /**
+   * Info: (20260901 - Julian) 第三條路：編號打錯了，回去改。
+   *
+   * 關掉對話框，把畫面帶回 Step 1 的編號欄並聚焦。那個 id 本來就存在
+   * （`basic_info_form.tsx:261`），所以這裡不需要另外拉一條 ref 或 context。
+   * `block: "center"` 是因為欄位可能在視窗上緣之外，只 focus 的話畫面不會動。
+   */
+  const editNumberHandler = () => {
+    setIsShowUnlinkedModal(false);
+    setUnlinkedError(null);
+
+    const input = document.getElementById(EMPLOYEE_NUMBER_INPUT_ID);
+    if (!(input instanceof HTMLInputElement)) return;
+
+    input.scrollIntoView({ behavior: "smooth", block: "center" });
+    input.focus({ preventScroll: true });
+    input.select();
   };
 
   const confirmOverwriteHandler = async () => {
-    if (selectedEmployeeId === null) return;
-    await saveRecordFor(selectedEmployeeId);
+    if (pendingOverwrite === null) return;
+    await saveRecordFor(pendingOverwrite.employeeId);
   };
 
   /**
@@ -121,23 +221,56 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
    * POST 的回應也有 id，但走同一份名單可以確保畫面與資料一致。
    */
   const createAndSaveHandler = async () => {
-    await createEmployee({
-      name: employeeName.trim(),
-      number: employeeNumber.trim(),
-      email: employeeEmail.trim() || undefined,
-      baseSalary,
-      mealAllowance,
-    });
+    // Info: (20260901 - Julian) 建立 + 重抓名單這段也要鎖住，否則連按兩次會送出兩次 POST
+    setIsPreparing(true);
+    setUnlinkedError(null);
+    try {
+      await createEmployee({
+        name: employeeName.trim(),
+        number: employeeNumber.trim(),
+        email: employeeEmail.trim() || undefined,
+        baseSalary,
+        mealAllowance,
+      });
 
-    const refreshed = await reload();
-    // Info: (20260831 - Julian) 用編號找回剛建立的那一筆 —— 它是帳本內唯一的那一欄
-    const created = refreshed.find(
-      (employee) => employee.number === employeeNumber.trim(),
-    );
-    if (!created) return;
+      const refreshed = await reload();
+      // Info: (20260831 - Julian) 用編號找回剛建立的那一筆 —— 它是帳本內唯一的那一欄
+      const created = refreshed.find(
+        (employee) => employee.number === employeeNumber.trim(),
+      );
+      if (!created) return;
 
-    linkEmployee(created);
-    await saveRecordFor(created.id);
+      linkEmployee(created);
+      /**
+       * Info: (20260901 - Julian) 剛建立的員工不可能已經有這個年月的紀錄，
+       * 所以直接存，不必再探一次。
+       */
+      await saveRecordFor(created.id);
+    } catch (error) {
+      /**
+       * Info: (20260901 - Julian) 撞號的保險。
+       *
+       * 正常情況 `numberConflict` 會先把「直接新增」擋掉，走不到這裡；
+       * 但名單是進頁面時抓的，別人在這段期間新增了同編號的員工就會漏過去。
+       * 沒有這一段的話，錯誤會變成沒人接的 rejection —— 對話框留在原地、
+       * 什麼也沒發生，使用者只會覺得按鈕壞了。
+       */
+      const isNumberTaken =
+        error instanceof ApiError &&
+        (error.data as { errorCode?: string } | null)?.errorCode ===
+          API_ERRORS.CF_SALARY_EMPLOYEE_NUMBER_TAKEN.code;
+
+      setUnlinkedError(
+        isNumberTaken
+          ? t("calculator.employee_list.number_taken")
+          : t("calculator.save_record.save_failed"),
+      );
+
+      // Info: (20260901 - Julian) 重抓名單，下一次 render 就會出現「改存給他」那條路
+      await reload();
+    } finally {
+      setIsPreparing(false);
+    }
   };
 
   /**
@@ -215,13 +348,13 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
             <button
               type="button"
               onClick={clickSaveHandler}
-              disabled={btnDisabled || isSaving}
+              disabled={btnDisabled || isBusy}
               className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-600 text-sm font-bold text-white transition-colors hover:bg-orange-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
             >
-              {isSaving
+              {isBusy
                 ? t("calculator.save_record.saving")
                 : t("calculator.save_record.save")}
-              {isSaving ? (
+              {isBusy ? (
                 <Loader2 size={20} className="animate-spin" />
               ) : (
                 <Save size={20} />
@@ -285,11 +418,11 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
       )}
 
       {/* Info: (20260831 - Julian) 例外 A：同員工同年月已經有紀錄 */}
-      {existingRecord && (
+      {pendingOverwrite && (
         <OverwriteConfirmModal
-          existing={existingRecord}
-          isSaving={isSaving}
-          closeHandler={() => setExistingRecord(null)}
+          existing={pendingOverwrite.existing}
+          isSaving={isBusy}
+          closeHandler={() => setPendingOverwrite(null)}
           confirmHandler={confirmOverwriteHandler}
         />
       )}
@@ -298,14 +431,23 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
       {isShowUnlinkedModal && (
         <UnlinkedEmployeeModal
           employeeName={employeeName}
-          canCreate={employeeNumber.trim() !== ""}
-          isSaving={isSaving}
-          closeHandler={() => setIsShowUnlinkedModal(false)}
+          employeeNumber={trimmedNumber}
+          canCreate={trimmedNumber !== ""}
+          isSaving={isBusy}
+          conflictEmployee={numberConflict}
+          errorMessage={unlinkedError}
+          closeHandler={() => {
+            setIsShowUnlinkedModal(false);
+            setUnlinkedError(null);
+          }}
           createHandler={createAndSaveHandler}
           pickHandler={() => {
             setIsShowUnlinkedModal(false);
+            setUnlinkedError(null);
             setIsShowPickModal(true);
           }}
+          useConflictHandler={useConflictEmployeeHandler}
+          editNumberHandler={editNumberHandler}
         />
       )}
 
@@ -313,6 +455,7 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
         <EmployeeListModal
           accountBookId={accountBookId}
           modalVisibleHandler={() => setIsShowPickModal(false)}
+          onPicked={(employee) => pickedEmployeeHandler(employee.id)}
         />
       )}
     </>

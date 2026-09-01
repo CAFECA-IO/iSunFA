@@ -132,15 +132,21 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
    *
    * 除了灌輸入快照，也把員工重新連結起來 —— 否則載回來之後按儲存會被當成
    * 「未連結」而多問一次，而這筆紀錄本來就知道自己屬於誰。
+   *
+   * **順序不能倒過來。** `linkEmployee` 除了姓名／編號／Email 之外，
+   * 還會把本薪與伙食費設成該員工**現在**的值；`loadFromSnapshot` 灌的則是
+   * 這筆紀錄**當時**的值。先連結、後灌快照，快照才會贏 ——
+   * 反過來的話，載回三個月前的紀錄會靜靜地換成今天的本薪，
+   * 畫面上沒有任何提示，重新計算的結果卻和原始薪資單對不起來。
    */
   const loadBackHandler = async (record: ISalaryRecordSummary) => {
     const detail = await fetchDetail(record.id);
     if (!detail) return;
 
-    loadFromSnapshot(detail.input);
-
     const employee = employees.find((item) => item.id === detail.employee.id);
     if (employee) linkEmployee(employee);
+
+    loadFromSnapshot(detail.input);
 
     router.push(salaryCalculatorUrlOf(accountBookId).CALCULATOR);
   };

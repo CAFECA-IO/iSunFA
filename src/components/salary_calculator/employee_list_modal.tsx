@@ -13,6 +13,14 @@ import RemoveEmployeeModal from "@/components/salary_calculator/remove_employee_
 interface IEmployeeListModalProps {
   accountBookId: string;
   modalVisibleHandler: () => void;
+  /**
+   * Info: (20260901 - Julian) 選完人之後要接著做的事（例如：直接把這次試算存給他）。
+   *
+   * 員工本身**直接傳出去**，不要呼叫端自己去讀 context 的 `selectedEmployeeId` ——
+   * `linkEmployee` 是 setState，同一個 tick 內讀到的還是舊值（多半是 null）。
+   * 不傳這個 prop 就是原本的行為：選完只灌值、關閉彈窗。
+   */
+  onPicked?: (employee: ISalaryCalculatorEmployee) => void;
 }
 
 const iconBtnStyle =
@@ -91,6 +99,7 @@ const EmployeeItem: FC<{
 const EmployeeListModal: FC<IEmployeeListModalProps> = ({
   accountBookId,
   modalVisibleHandler,
+  onPicked = undefined,
 }) => {
   const { t } = useTranslation();
 
@@ -210,6 +219,7 @@ const EmployeeListModal: FC<IEmployeeListModalProps> = ({
         pickHandler={() => {
           linkEmployee(employee);
           modalVisibleHandler();
+          onPicked?.(employee);
         }}
         editHandler={() => setEditing(employee)}
         removeHandler={() => setEmployeeToRemove(employee)}

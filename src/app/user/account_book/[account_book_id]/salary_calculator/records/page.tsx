@@ -1,11 +1,11 @@
 import SalaryRecordsPageBody from "@/components/salary_calculator/salary_records_page_body";
-import { CalculatorProvider } from "@/contexts/calculator_context";
 
 /**
  * Info: (20260831 - Julian) 薪資紀錄查閱。
  *
- * 包在 `CalculatorProvider` 裡是因為「載回計算機」要透過 context 的
- * `loadFromSnapshot` 把輸入快照灌回去 —— 那個 provider 也是計算機頁用的同一個。
+ * 「載回計算機」透過 context 的 `loadFromSnapshot` 把輸入快照灌回去，
+ * 而那顆 provider 在 `../layout.tsx` —— 必須與計算機頁共用同一個實例，
+ * 否則導頁的當下就連同 state 一起卸載了。
  */
 export default async function AccountBookSalaryRecordsPage({
   params,
@@ -14,9 +14,5 @@ export default async function AccountBookSalaryRecordsPage({
 }) {
   const { account_book_id: accountBookId } = await params;
 
-  return (
-    <CalculatorProvider>
-      <SalaryRecordsPageBody accountBookId={accountBookId} />
-    </CalculatorProvider>
-  );
+  return <SalaryRecordsPageBody accountBookId={accountBookId} />;
 }

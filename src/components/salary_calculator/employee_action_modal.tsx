@@ -113,10 +113,11 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
   };
 
   return (
-    <div className="font-barlow fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="bg-surface-neutral-surface-lv2 relative flex w-[90vw] flex-col rounded-2xl md:w-[450px]">
+    <div className="font-barlow fixed inset-0 z-70 flex items-center justify-center bg-black/50 p-[16px]">
+      {/* Info: (20260901 - Julian) 五個欄位在矮視窗會超出畫面，比照其他彈窗限高 + 內容可捲 */}
+      <div className="bg-surface-neutral-surface-lv2 relative flex max-h-[90vh] w-[90vw] flex-col rounded-2xl md:w-[450px]">
         {/* Info: (20250715 - Julian) Modal Header */}
-        <div className="relative flex items-start justify-center px-[40px] py-[16px]">
+        <div className="relative flex shrink-0 items-start justify-center px-[40px] py-[16px]">
           <h2 className="text-card-text-primary text-lg font-bold">
             {titleStr}
           </h2>
@@ -129,7 +130,7 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
           </button>
         </div>
         {/* Info: (20250715 - Julian) Modal Body */}
-        <div className="flex flex-col gap-[24px] px-[40px] py-[24px]">
+        <div className="flex min-h-0 flex-1 flex-col gap-[24px] overflow-y-auto px-[40px]">
           {/* Info: (20250715 - Julian) Employee Name Input */}
           <div className="flex flex-col gap-[8px]">
             <p className="text-input-text-primary text-sm font-semibold">
@@ -153,7 +154,9 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
           {/* Info: (20250715 - Julian) Employee Number Input */}
           <div className="flex flex-col gap-[8px]">
             <p className="text-input-text-primary text-sm font-semibold">
-              {t("calculator.employee_list.number")}
+              {t("calculator.employee_list.number")}{" "}
+              {/* Info: (20260901 - Julian) 編號改成身分鍵之後就是必填，星號要跟著搬過來 */}
+              <span className="text-text-state-error">*</span>
             </p>
             <div className="border-input-stroke-input flex items-center rounded-lg border">
               <input
@@ -188,8 +191,8 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
           {/* Info: (20250715 - Julian) Email Input */}
           <div className="flex flex-col gap-[8px]">
             <p className="text-input-text-primary text-sm font-semibold">
-              {t("calculator.employee_list.email")}{" "}
-              <span className="text-text-state-error">*</span>
+              {/* Info: (20260901 - Julian) Email 改成可空（不少員工沒有公司信箱），不再標必填 */}
+              {t("calculator.employee_list.email")}
             </p>
             <div
               className={`flex items-center rounded-lg border ${isEmailValid ? "border-input-stroke-input" : "border-text-state-error text-input-text-error"}`}
@@ -217,10 +220,17 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
           </p>
         )}
         {/* Info: (20250715 - Julian) Modal Footer */}
-        <div className="flex items-center gap-[12px] px-[20px] py-[16px]">
+        {/**
+         * Info: (20260901 - Julian) 這兩顆原本只有 `w-full`，沒有任何樣式。
+         *
+         * Tailwind preflight 把 `svg` 設成 `display: block`，於是「＋」圖示自成一行，
+         * 文字掉到下面 —— 與 view_pay_slip_modal / sending / resending 是同一個成因，
+         * 樣式也取自同一套（`salary_result_section` 的兩顆主要按鈕）。
+         */}
+        <div className="flex shrink-0 items-center gap-[12px] px-[20px] py-[16px]">
           <button
             type="button"
-            className="w-full"
+            className="text-text-neutral-secondary ring-stroke-neutral-quaternary hover:bg-surface-hover flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold ring-1 transition-colors disabled:opacity-60"
             onClick={modalVisibleHandler}
             disabled={isSubmitting}
           >
@@ -228,7 +238,7 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
           </button>
           <button
             type="button"
-            className="w-full"
+            className="flex h-11 w-full items-center justify-center gap-[8px] rounded-xl bg-orange-600 text-sm font-bold text-white transition-colors hover:bg-orange-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
             disabled={submitDisabled}
             onClick={clickSubmitHandler}
           >

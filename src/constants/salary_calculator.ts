@@ -31,6 +31,15 @@ export const SALARY_CALCULATOR_VERSION = "2026.1";
 export const SALARY_RECORD_MIN_YEAR = 2020;
 
 /**
+ * Info: (20260901 - Julian) Step 1 員工編號輸入框的 DOM id。
+ *
+ * 儲存流程在「編號撞號」時要把使用者送回這個欄位（`salary_result_section`），
+ * 而欄位本身在 `basic_info_form` —— 兩個檔案共用一個字面值遲早會有一邊改掉，
+ * 症狀是按鈕按了沒反應且不噴錯（`getElementById` 找不到只會回 null）。
+ */
+export const EMPLOYEE_NUMBER_INPUT_ID = "input-employee-number";
+
+/**
  * Info: (20260831 - Julian) 輸入驗證的健全性上界（sanity bound），**不是業務規則**。
  *
  * 業務規則（伙食費上限、加班時數上限）在上面各有常數，也在 UI 擋。

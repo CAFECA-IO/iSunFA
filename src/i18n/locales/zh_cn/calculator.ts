@@ -197,10 +197,16 @@ export const calculator = {
     unlinked_title: "这笔试算要存给谁？",
     unlinked_content: "「{{name}}」还不在这本账的员工列表里。",
     create_and_save: "新增「{{name}}」并保存",
-    create_and_save_hint: "用计算器上的姓名、Email 与本薪建立员工",
+    create_and_save_hint: "用计算器上的姓名、员工编号与本薪建立员工",
     create_needs_number: "需要先在基本资料填写员工编号",
     pick_from_list: "从员工列表选一位",
     pick_from_list_hint: "这次试算会改连结到选中的员工",
+    save_to_existing: "改存给 {{name}}",
+    save_to_existing_hint: "沿用这个编号既有的员工，不建立新的",
+    unlinked_conflict_content:
+      "「{{name}}」还不在这本账的员工列表里，而员工编号 {{number}} 已经是 {{existingName}} 的。",
+    edit_number: "修改员工编号",
+    edit_number_hint: "如果「{{name}}」的编号是别的，回到步骤 1 修改",
   },
   // Info: (20260831 - Julian) 薪资记录查阅
   records: {

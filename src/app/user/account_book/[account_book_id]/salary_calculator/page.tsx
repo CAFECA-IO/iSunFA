@@ -1,5 +1,4 @@
 import SalaryCalculatorPageBody from "@/components/salary_calculator/salary_calculator_page_body";
-import { CalculatorProvider } from "@/contexts/calculator_context";
 
 /**
  * Info: (20260831 - Julian) 帳本版薪資計算機。
@@ -19,9 +18,5 @@ export default async function AccountBookSalaryCalculatorPage({
 }) {
   const { account_book_id: accountBookId } = await params;
 
-  return (
-    <CalculatorProvider>
-      <SalaryCalculatorPageBody accountBookId={accountBookId} />
-    </CalculatorProvider>
-  );
+  return <SalaryCalculatorPageBody accountBookId={accountBookId} />;
 }
