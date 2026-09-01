@@ -3,13 +3,14 @@
 import { FC } from "react";
 import Link from "next/link";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-import {
-  Bell,
-  LogOut,
-  Menu as MenuIcon,
-  Search,
-  UserCircle2,
-} from "lucide-react";
+/**
+ * Info: (20260826 - Julian) `Menu as MenuIcon`：headlessui 的 `Menu` 也叫 Menu。
+ *
+ * 先前為了少一個別名，把 headlessui 的 `Menu` 整組拿掉、讓 lucide 的 `Menu`
+ * 直接叫 Menu —— 而使用者選單（以及裡面的登出）就是靠 headlessui 那組畫的。
+ * 別名留著，不要為了省一行字讓兩個 `Menu` 互相排擠（review B4）。
+ */
+import { LogOut, Menu as MenuIcon, Search, UserCircle2 } from "lucide-react";
 import BrandLogoImage from "@/components/common/brand_logo_image";
 import { useAuth } from "@/contexts/auth_context";
 import {
@@ -94,18 +95,18 @@ const HrHeader: FC<IHrHeaderProps> = ({ identity, onToggleSidebar }) => {
           >
             <Search className="size-5 shrink-0" />
           </button>
-
-          <button
-            type="button"
-            aria-label={t("hr_management.notification_aria")}
-            title={t("hr_management.value.feature_pending")}
-            disabled
-            className={`relative rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 ${HR_PENDING_ACTION_CLASS}`}
-          >
-            <Bell className="size-5 shrink-0" />
-          </button>
-
-          {/* Info: (20260818 - Julian) 不標 `feature_pending`：灰掉會讓人不去點它，而登出就在裡面 */}
+          {/**
+           * Info: (20260818 - Julian) 不標 `feature_pending`：灰掉會讓人不去點它，而登出就在裡面。
+           *
+           * Info: (20260826 - Julian) 這段被誤刪過一次（review B4）。D15 要移除的是
+           * 那顆 disabled 的假鈴鐺，而當時連使用者選單、登出、員工編號與職稱副標
+           * 一起刪了，換成一顆 `disabled` + `feature_pending` 的頭像按鈕 ——
+           * **正好是上面這行註解警告過的事**。
+           *
+           * 後果不是少一個入口：HR shell 從此沒有任何登出路徑（`grep -rn logout`
+           * 在整個 hr_management 底下零命中），使用者只能自己改網址回主站，
+           * 而共用平板換人時前一個人的 session 會留著。
+           */}
           <Menu as="div" className="relative">
             <MenuButton
               aria-label={t("hr_management.user_menu_aria")}

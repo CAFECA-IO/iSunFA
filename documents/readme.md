@@ -33,6 +33,8 @@
    > 席次計費與分配點數上鏈的部署順序。本專案沒有 migrations 目錄，欄位新增與資料回填是分開的兩件事，而順序做錯不會噴錯——只會安靜地讓功能停擺或讓點數暫時消失在畫面上。**兩份檢查表屬同一次部署**，見該檔 §4.9。
 8. 🗓️ **[部署檢查表：假勤系統](engineering_guidelines/deploy_checklist_leave_overtime_2026q3.md)**
    > 15 張新表、19 個新 enum，以及**與上一份最重要的差別：這次不是純新增**。移除了 `enum LeaveType` 與 `leave_request` 的四個欄位，對兩張既有表加了 8 個必填且無 default 的欄位 —— 因此上一份「回滾程式碼不需要回滾 schema」的結論在這裡**不成立**。另有兩種漏做完全不報錯，以及正式環境已有真實假單時的停損點。
+9. 🔔 **[部署檢查表：通知模組](engineering_guidelines/deploy_checklist_notification_2026q3.md)**
+   > **一張新表、零個新 enum、零個新 env**。四份檢查表裡 schema 層最安全的一份（純新增、不需回填、回滾程式碼不需回滾 schema）—— **而風險因此整個移到了「重啟哪些 process」與「上線順序」上**。五種做錯的方式裡有四種完全不報錯，最難查的是：只重啟 `isunfa` 沒重啟 `isunfa-worker`，於是網站正常、AI 任務正常完成、總帳正常入帳，而一則通知都不會產生 —— **而沒有人會抱怨一件他不知道應該發生的事。** §2.1 是跑 `request_wallet_upgrades.ts` 之前的前置條件：探針分三態，「無法判定」不是 0 就不能加 `--commit`。
 
 ### 🐛 已知缺陷 (Known Issues)
 
@@ -47,10 +49,12 @@ _尚未修復、但會影響開發判斷的系統性缺陷；動到相關區域�
 - ⚠️ **[`/admin/settings` 的輪替與撤銷對 MissionExecutor 無效](engineering_guidelines/known_issues/executor_settings_isolation.md)**：無主資料庫權限的節點認的是部署環境裡的金鑰，撤銷後背景任務仍可能繼續呼叫 LLM —— 設計取捨（隔離是防提示詞注入的基礎），但與管理員的預期相反。
 
 - 🔴 **[簽到模組仍是 Demo，但它已經是上游](engineering_guidelines/known_issues/attendance_demo_as_upstream.md)**
+
   > 簽到模組是有意識地做成 demo 的（三張判定結果表不建、無權限矩陣、政策參數是常數而非表），**但假勤已接了上去，薪資與工程計價之後也會接**，而「它是 demo」沒有寫在任何一支 API 的簽名上。文件列出十項不可依賴的東西與各自的處置、七項可放心依賴的東西，以及依「不補會怎樣」分級的待辦。**任何模組接簽到之前必讀。**
   > 其中 §3.5 的 `Employee` 角色缺口成因不同——它是整個 HR 模組共用的地基，簽到只是第一個繞過它的模組。
 
 - 🔴 **[整合測試指南所描述的 harness 已不在 repo 中](engineering_guidelines/known_issues/integration_test_harness_missing.md)**
+
   > `integration_test_guide.md` 描述的 `APITestHelper` / `TestClient` / `test_data_factory` / 整個 `src/tests/` 目錄在 `3b40b6ae1`（歷史重寫）被一次移除，`supertest` 也不在依賴裡。`npm test` 帶著 `--passWithNoTests`，所以「一支整合測試都沒有」不會讓 CI 變紅——**缺口是無聲的**。復原 / 改寫成 App Router 版 / 併入 bot 腳本三案未決。
 
 - ⚠️ **[列印環境缺少中文字型導致 PDF 中文變空心方框](engineering_guidelines/known_issues/pdf_cjk_font_missing.md)**（已解決，但維運前置條件持續有效）
@@ -88,6 +92,7 @@ _聚焦於四大會計師級別的底層財報與內控實務：_
 - **[費思個人化記憶 (Faith Personal Memory)](architecture/ai_and_analytics/faith_personal_memory.md)**：付費訂閱的每位成員專屬記憶——`(userId, teamId)` 隔離、LLM 只做萃取、欄位級加密，以及停止訂閱 90 天後刪除的保留機制。**須於 v0.13.0 釋出前完成**，條款已先行載明。
 - **[出勤模組開發計畫書 (Time & Attendance Module Plan)](architecture/time_attendance_module_plan.md)**：打卡不可變、地理圍欄、班別統一模型與單日出勤判定引擎（純函數）。
 - **[假勤模組開發計畫書 (Leave & Overtime Module Plan)](architecture/leave_and_overtime_module_plan.md)**：假別規則資料化、額度異動帳本、多級簽核鏈快照、加班分段與補休、假勤行事曆。**§3 附已查證的勞基法／性平法法源對照表與 8 項待核對清單，法務複核前不得標記 Production Ready。**
+- **[通知模組開發計畫書 (Notification Module Plan)](architecture/notification_module_plan.md)**：Header 鈴鐺、AI 任務完成推送與 HR 模組的預留。**§2 是 D1–D26 的缺陷總帳**，其中 D17（提示音第二次抵達起永久失效）與 D18（上鏈被拒 3 次後訂單卡住、完成與失敗都不通知）**都躲過了單元測試、e2e 與整份 code review** —— 前者的失效沒有任何觀測量，後者的失效是「什麼都沒發生」。§3 是不要改回去的實作決定（待辦型活算不入庫、只存 `type` + `payload`、`readAt` 而非 enum），§5 是 HR 接線的八項前置，§6 是離「可上線」還差的七件事。
 
 ### 📌 4. 架構決策紀錄 (Architecture Decision Records, ADRs)
 
@@ -114,6 +119,7 @@ _追蹤重大架構變更背後的歷史脈絡與取捨：_
 - **[ADR 022: Append-Only Ledger for Leave Entitlement](architecture/decisions/022_leave_entitlement_append_only_ledger.md)**：假勤額度採批次授予 + append-only 帳本（比照 ADR 015），餘額為可重建的派生快取；帳本單位為分鐘，「日」只出現在授予與折現兩個端點。
 - **[ADR 023: Approval Chain Snapshots and SoD](architecture/decisions/023_leave_approval_chain_snapshot_and_sod.md)**：簽核鏈於送出當下固化成快照，組織異動不改寫歷史；空鏈拒絕送出而非自動核准；額度不預扣，扣減發生在最後一關通過的同一個交易內。
 - **[ADR 024: Overtime Recognition and the Payroll Boundary](architecture/decisions/024_overtime_recognition_premium_tiers_and_module_boundary.md)**：加班認列為「核准 ∩ 打卡事實」取小者；§24 加成切成可稽核分段；補休 1:1 一段一批以保留級距；模組邊界劃在分鐘，不算金額（同 ADR 020）。
+- **[ADR 025: Notification Addressing, Dedupe & Content Boundary](architecture/decisions/025_notification_addressing_and_dedupe.md)**：通知是**投遞**不是軌跡（所以不進 `AuditLog`、也不該成為舉證來源）；收件人恆為 `User` 且必填，「解析不到收件人」是一個看得見的終態而不是零筆；來源用「一個 enum + 一個 id」而不是一排可空外鍵（ADR 019 §1 那三種非法狀態會一字不改地回來）；兩把鍵語意不同不共用（`dedupeKey` 永久去重、`activeUnreadKey` 同時最多一則未讀）；文案只存 i18n key 與非個資參數 —— **姓名雖是 Tier 3 也不存，因為衍生值是第二種真相，而通知沒有 `LeaveApprovalStep` 那種舉證需求**。**§7.1 是第三把鍵，也是這個模組最貴的一課**：提示音的「同一次抵達只響一次」原本沿用了 `dedupeKey`「純內容、不含時間戳」的設計原則，結果數量組合重複時第二次抵達永久靜音 —— 兩者都叫去重，**但去重的維度不同**，一個跨時間、一個只在一次抵達的範圍內。它躲過了單元測試、e2e 與整份 code review，因為失效沒有任何觀測量：搖動照舊、徽章照舊、log 乾淨。
 
 ---
 

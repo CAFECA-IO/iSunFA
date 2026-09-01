@@ -1,4 +1,5 @@
 import { canonicalizeEmailForKey } from "@/lib/team/email_identity";
+import { canonicalizeAddressForKey } from "@/lib/team/address_identity";
 /**
  * Info: (20260816 - Luphia) 「同一團隊、同一對象、同時只能有一封待接受邀請」的唯一鍵。
  *
@@ -44,8 +45,14 @@ export function buildPendingInviteKey(params: {
    * Info: (20260816 - Luphia) 位址一律轉小寫比對。
    * EIP-55 的檢查碼大小寫是同一個位址的兩種寫法，
    * 照原樣當鍵會讓 `0xAb…` 與 `0xab…` 各佔一席。
+   *
+   * Info: (20260826 - Julian) 這一行原本是全站唯一做對正規化的地方，
+   * 而查詢那三處都沒做（review 1.2）—— 於是唯一鍵認得出同一個人、
+   * 查詢認不出。改走共用函式，兩邊不會再分岔。
    */
-  const address = inviteeAddress?.trim().toLowerCase();
+  const address = inviteeAddress?.trim()
+    ? canonicalizeAddressForKey(inviteeAddress)
+    : "";
   if (address) return `${teamId}:addr:${address}`;
 
   return null;

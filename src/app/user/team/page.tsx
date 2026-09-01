@@ -713,12 +713,12 @@ export default function TeamManagementPage() {
                         key={member.id}
                         className="group relative block rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-orange-500"
                       >
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="rounded-lg bg-orange-50 p-2 transition-colors group-hover:bg-orange-50">
-                              <UserCircle2 className="size-6 shrink-0 text-orange-500" />
-                            </div>
-                            <div>
+                        <div className="flex items-start gap-x-4">
+                          <div className="rounded-lg bg-orange-50 p-2 transition-colors group-hover:bg-orange-50">
+                            <UserCircle2 className="size-6 shrink-0 text-orange-500" />
+                          </div>
+                          <div className="flex min-w-0 flex-1 flex-col gap-y-1">
+                            <div className="flex items-center justify-between">
                               <h3 className="text-sm font-medium text-gray-900 transition-colors group-hover:text-orange-600">
                                 {member.user?.name || "Anonymous"}
                                 {member.user?.address === user?.address && (
@@ -727,9 +727,58 @@ export default function TeamManagementPage() {
                                   </span>
                                 )}
                               </h3>
-                              <p className="mt-1 w-32 truncate font-mono text-xs break-all text-gray-500">
+                              {isOwner &&
+                              member.user?.address !== user?.address &&
+                              member.role !== "OWNER" ? (
+                                <select
+                                  aria-label="Role"
+                                  value={member.role}
+                                  onChange={(e) =>
+                                    handleChangeRole(member.id, e.target.value)
+                                  }
+                                  className="rounded-md border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                                >
+                                  <option value="EDITOR">
+                                    {t("team_management.roles.EDITOR")}
+                                  </option>
+                                  <option value="VIEWER">
+                                    {t("team_management.roles.VIEWER")}
+                                  </option>
+                                </select>
+                              ) : (
+                                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
+                                  {t("team_management.roles." + member.role)}
+                                </span>
+                              )}
+                              {/**
+                               * Info: (20260818 - Luphia) 這位成員以「信箱不符」的邀請加入（第三輪 C-2）。
+                               * 接受邀請不綁身分是刻意的（模型是 bearer token），因此這個訊號
+                               * 也不該擋人加入——但管理職有權知道「這個人是這樣進來的」。
+                               * 用中性的黃色與說明文字，而不是紅色的錯誤樣式。
+                               *
+                               * Info: (20260826 - Julian) 這段在版面重排時被順手刪掉過一次（review：既有護欄）。
+                               * 後端 `attachEmailMismatch` 一直在算、五語系文案一直都在、
+                               * `invite_email_mismatch_visibility.test.ts` 也一直全綠 ——
+                               * 只有畫面上那一格不見了，於是這個訊號從「管理職看得到」
+                               * 變成「只存在於 API 回應裡」，而沒有任何東西會紅。
+                               */}
+                              {member.emailMismatch && (
+                                <span
+                                  className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700"
+                                  title={t(
+                                    "team_management.email_mismatch_hint",
+                                  )}
+                                >
+                                  {t("team_management.email_mismatch")}
+                                </span>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="w-full truncate font-mono text-xs text-gray-500">
                                 {member.user?.address}
                               </p>
+                            </div>
+                            <div className="flex items-center justify-between">
                               {/* Info: (20260809 - Luphia) 分配點數 badge：管理者見全員、成員僅見自己（與後端回傳一致） */}
                               {canSeeAllocation(member.userId) && (
                                 <p
@@ -742,80 +791,43 @@ export default function TeamManagementPage() {
                                   {allocationOf(member.userId)}
                                 </p>
                               )}
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end space-y-2">
-                            {isOwner &&
-                            member.user?.address !== user?.address &&
-                            member.role !== "OWNER" ? (
-                              <select
-                                aria-label="Role"
-                                value={member.role}
-                                onChange={(e) =>
-                                  handleChangeRole(member.id, e.target.value)
-                                }
-                                className="rounded-md border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-                              >
-                                <option value="EDITOR">
-                                  {t("team_management.roles.EDITOR")}
-                                </option>
-                                <option value="VIEWER">
-                                  {t("team_management.roles.VIEWER")}
-                                </option>
-                              </select>
-                            ) : (
-                              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
-                                {t("team_management.roles." + member.role)}
-                              </span>
-                            )}
-                            {/**
-                             * Info: (20260818 - Luphia) 信箱不符的標記（第三輪 C-2）。
-                             *
-                             * 接受邀請不綁身分是刻意的，所以這件事本身不是錯誤，
-                             * 也不該擋人加入——但管理職有權知道「這個人是這樣進來的」。
-                             * 用中性的黃色與說明文字，而不是紅色的錯誤樣式。
-                             */}
-                            {member.emailMismatch && (
-                              <span
-                                className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700"
-                                title={t("team_management.email_mismatch_hint")}
-                              >
-                                {t("team_management.email_mismatch")}
-                              </span>
-                            )}
-                            <div className="flex items-center space-x-1">
-                              {/**
-                               * Info: (20260809 - Luphia) 分配入口移至成員卡片（產品調整 20260809），
-                               * 開啟輸入點數的確認視窗。
-                               *
-                               * Info: (20260818 - Luphia) **收回按鈕已移除**（產品決定 20260818）：
-                               * 分配即撥入成員自己的區塊鏈錢包，點數一旦入袋就收不回來了。
-                               * 留一顆按不動的按鈕，比沒有那顆按鈕更糟。
-                               */}
-                              {isOwnerOrAdmin && (
-                                <button
-                                  onClick={() =>
-                                    setAllocationModal({
-                                      member,
-                                      direction: ALLOCATION_DIRECTION.ALLOCATE,
-                                    })
-                                  }
-                                  className="p-1 text-gray-400 transition-colors hover:text-orange-600"
-                                  title={t("team_management.wallet.allocate")}
-                                >
-                                  <PlusCircle className="size-3.5 shrink-0" />
-                                </button>
-                              )}
-                              {(isOwner ||
-                                member.user?.address === user?.address) && (
-                                <button
-                                  onClick={() => handleRemoveMember(member.id)}
-                                  className="p-1 text-gray-400 transition-colors hover:text-red-500"
-                                  title="Remove Member"
-                                >
-                                  <Trash2 className="size-3.5 shrink-0" />
-                                </button>
-                              )}
+                              <div className="flex items-center gap-x-1">
+                                {/**
+                                 * Info: (20260809 - Luphia) 分配入口移至成員卡片（產品調整 20260809），
+                                 * 開啟輸入點數的確認視窗。
+                                 *
+                                 * Info: (20260818 - Luphia) **收回按鈕已移除**（產品決定 20260818）：
+                                 * 分配即撥入成員自己的區塊鏈錢包，點數一旦入袋就收不回來了。
+                                 * 留一顆按不動的按鈕，比沒有那顆按鈕更糟。
+                                 */}
+                                {isOwnerOrAdmin && (
+                                  <button
+                                    onClick={() =>
+                                      setAllocationModal({
+                                        member,
+                                        direction:
+                                          ALLOCATION_DIRECTION.ALLOCATE,
+                                      })
+                                    }
+                                    className="p-1 text-gray-400 transition-colors hover:text-orange-600"
+                                    title={t("team_management.wallet.allocate")}
+                                  >
+                                    <PlusCircle className="size-3.5 shrink-0" />
+                                  </button>
+                                )}
+                                {(isOwner ||
+                                  member.user?.address === user?.address) && (
+                                  <button
+                                    onClick={() =>
+                                      handleRemoveMember(member.id)
+                                    }
+                                    className="p-1 text-gray-400 transition-colors hover:text-red-500"
+                                    title="Remove Member"
+                                  >
+                                    <Trash2 className="size-3.5 shrink-0" />
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>

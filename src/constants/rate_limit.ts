@@ -95,6 +95,30 @@ export enum RateLimitBucketEnum {
   ATTENDANCE_PUNCH = "ATTENDANCE_PUNCH",
 
   /**
+   * Info: (20260825 - Julian) 小鈴鐺的讀取（摘要輪詢與展開清單）。
+   *
+   * **刻意不與 `READ` 共用。** 那個桶的尺寸是為「進頁面時取一次」訂的，
+   * 而摘要端點是**每 60 秒被每個開著分頁的使用者打一次**的背景行為。
+   * 共用等於把一個背景成本轉嫁到使用者的前景操作上：鈴鐺輪詢用掉額度，
+   * 而使用者按下的那次讀取撞牆 —— 那是可用性事故，成因還很難猜。
+   *
+   * 同 `PRF` 當初必須與 `SIGNING` 分開的理由：不是成本量級不同，
+   * 是**呼叫節奏的性質**不同。
+   *
+   * 尺寸要容得下多分頁：一個人開四個分頁 = 每分鐘 4 次，
+   * 加上手動展開清單，30/min 有足夠餘裕而仍擋得住腳本。
+   */
+  NOTIFICATION_READ = "NOTIFICATION_READ",
+
+  /**
+   * Info: (20260825 - Julian) 小鈴鐺的寫入（標記已讀）。
+   *
+   * 尺寸可以緊：正常操作是「開鈴鐺、按一顆按鈕」。與讀取分桶是因為
+   * 讀取的正常節奏比寫入高一個數量級，共用會讓寫入的上限失去意義。
+   */
+  NOTIFICATION_WRITE = "NOTIFICATION_WRITE",
+
+  /**
    * Info: (20260817 - Luphia) 出勤的狀態變更（排班寫入、發起銷假徵詢、回應徵詢）。
    *
    * 不與 carbon 的 `SAVE` 共用：那個桶的尺寸是為報表 autosave（debounce 2s ≈ 30/min）
@@ -226,6 +250,25 @@ export const RATE_LIMIT_RULES: Record<RateLimitBucketEnum, IRateLimitWindow[]> =
         max: envInt("ATTENDANCE_RL_EXPORT_PER_MINUTE", 6),
       },
       { windowMs: DAY_MS, max: envInt("ATTENDANCE_RL_EXPORT_PER_DAY", 60) },
+    ],
+    /**
+     * Info: (20260825 - Julian) 每日窗算得出來：60 秒輪詢 × 24 小時 = 1440 次，
+     * 四個分頁就是 5760 次。8000 容得下多分頁加上手動展開，
+     * 而它擋得住「拿到 DeWT 後整天全速打」。
+     */
+    [RateLimitBucketEnum.NOTIFICATION_READ]: [
+      {
+        windowMs: MINUTE_MS,
+        max: envInt("NOTIFICATION_RL_READ_PER_MINUTE", 30),
+      },
+      { windowMs: DAY_MS, max: envInt("NOTIFICATION_RL_READ_PER_DAY", 8_000) },
+    ],
+    [RateLimitBucketEnum.NOTIFICATION_WRITE]: [
+      {
+        windowMs: MINUTE_MS,
+        max: envInt("NOTIFICATION_RL_WRITE_PER_MINUTE", 20),
+      },
+      { windowMs: DAY_MS, max: envInt("NOTIFICATION_RL_WRITE_PER_DAY", 500) },
     ],
   };
 

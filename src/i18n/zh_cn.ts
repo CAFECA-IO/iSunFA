@@ -74,10 +74,12 @@ import { carbonChatbot } from "@/i18n/locales/zh_cn/carbon_chatbot";
 import { hrManagement } from "@/i18n/locales/zh_cn/hr_management";
 import { paymentSource } from "@/i18n/locales/zh_cn/payment_source";
 import { purchaseTarget } from "@/i18n/locales/zh_cn/purchase_target";
+import { notification } from "@/i18n/locales/zh_cn/notification";
 
 export const zhCn = {
   payment_source: paymentSource,
   purchase_target: purchaseTarget,
+  notification,
   digital_product_passport: digitalProductPassport,
   logistics,
   dpp_urban_mining: dppUrbanMining,

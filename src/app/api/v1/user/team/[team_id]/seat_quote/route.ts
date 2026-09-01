@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
+import { logger } from "@/lib/utils/logger";
 import { isTeamManagerRole } from "@/constants/team";
 import { teamRepo } from "@/repositories/team.repo";
 import { quoteSeatAddition } from "@/services/team_seat.service";
@@ -21,12 +22,20 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ team_id: string }> },
 ) {
+  /**
+   * Info: (20260826 - Julian) `teamId` 提到 try 之外，讓 catch 講得出「哪一團」。
+   *
+   * 解析 `params` 本身也可能失敗，所以初值不是空字串而是一個看得出
+   * 「還沒解析到」的字面值 —— 空字串在日誌裡與「解析到了但team_id 是空的」
+   * 長得一樣，而那是兩種不同的故障。
+   */
+  let teamId = "(unresolved)";
   try {
     const authHeader = request.headers.get("Authorization");
     const sessionUser = await getIdentityFromDeWT(authHeader);
     if (!sessionUser) return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
 
-    const { team_id: teamId } = await params;
+    ({ team_id: teamId } = await params);
 
     /**
      * Info: (20260818 - Luphia) 權限與邀請端點同一道（OWNER / ADMIN）。
@@ -71,6 +80,33 @@ export async function GET(
         status: error.status,
       });
     }
+    /**
+     * Info: (20260826 - Julian) 沒有預期到的例外，**先留下痕跡再回泛用碼**。
+     *
+     * 原本這一行直接回 `TW_OPERATION_FAILED` 就結束。那個回覆是一個 500 加上
+     * 「Team wallet operation failed」，而它蓋掉的是任何東西：Prisma 連不上、
+     * 訂閱列的 `current_period_start` 是 NULL、比例計價算出 NaN、`params`
+     * 解析失敗。十幾種原因塌成同一個字串，而**沒有任何地方留下原本的例外** ——
+     * 使用者回報這個錯誤時，伺服器端可查的資料是零（計畫書 D10 的形狀）。
+     *
+     * 這裡不改錯誤碼：`TW000009` 已經寫進 `SEAT_BLOCKING_ERRORS` 與
+     * `seat_quote_contract.test.ts` 的對照表，換碼是另一件事。但要記下來的是
+     * 這個碼指錯了子系統 —— 加席走的是付款方式與訂單，`TeamWallet`（點數錢包）
+     * 從頭到尾沒被碰到，於是照著錯誤碼查的人會先去讀 `team_wallet.repo.ts`
+     * 而那裡什麼都沒有。
+     */
+    logger.error("seat quote failed unexpectedly", {
+      teamId,
+      seats: request.nextUrl.searchParams.get("seats") ?? "(default)",
+      errorName: error instanceof Error ? error.name : typeof error,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      // Info: (20260826 - Julian) Prisma 的錯誤碼（P2021 等）比訊息好查，有就記
+      prismaCode:
+        typeof error === "object" && error !== null
+          ? ((error as { code?: string }).code ?? null)
+          : null,
+      stack: error instanceof Error ? (error.stack ?? null) : null,
+    });
     return jsonFail(API_ERRORS.TW_OPERATION_FAILED);
   }
 }

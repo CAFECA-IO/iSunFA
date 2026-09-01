@@ -31,6 +31,7 @@ export async function POST(
       inviteId,
       userId: sessionUser.id,
       address: sessionUser.address,
+      nowMs: Date.now(),
     });
     return jsonOk(result);
   } catch (error) {
