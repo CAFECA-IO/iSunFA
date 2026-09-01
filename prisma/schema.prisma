@@ -63,6 +63,7 @@ model User {
   esgRecords            EsgRecord[]
   checkins              Checkin[]
   reportShareTokens     ReportShareToken[]     @relation("ReportSharer")
+  resumableJobs         ResumableJob[]
   campaignRegistrations CampaignRegistration[]
   coupons               Coupon[]
   pdfEditorDocuments    PdfEditorDocument[]    @relation("PdfEditorDocumentCreator")
@@ -4362,4 +4363,76 @@ model OvertimePolicy {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("overtime_policy")
+}
+
+/**
+ * Info: (20260825 - Luphia) 可中斷任務的**書籤**（issue #6712）。
+ * 高耗點的功能（逐章匯入報告、批次分析）會在中途把點數用完。在此之前那種情況
+ * 被當成「工作失敗」——而那些步驟一步都沒做、一點都沒扣。這張表記下
+ * 「做到哪、還剩哪些、為什麼停」，讓補上點數之後從原地接續。
+ * ## 它刻意**不存內容**
+ * 只放步驟 id 與計數。個人會話的內容是端到端加密的（見 `CarbonPendingImport`），
+ * 伺服器沒有金鑰也不該有；把內容搬進來等於為了「可續跑」破掉 E2EE。
+ * 因此這張表是**書籤，不是容器**：內容仍留在各功能原本的儲存，
+ * 這裡只回答「接下來要做哪幾步」。
+ * 也因此它對「伺服器自己把剩下的跑完」只做到一半——那需要內容。
+ * 目前的分工是：伺服器負責「什麼時候可以繼續」，執行仍由持有金鑰的那一端進行。
+ */
+model ResumableJob {
+  id String @id @default(uuid())
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  /**
+   * Info: (20260825 - Luphia) 由哪個團隊付費。判斷「現在的餘額夠不夠」要用它，
+   * 而那個判斷與扣款端同一套（見 `spendCredits`）。
+   */
+  teamId String? @map("team_id")
+
+  // Info: (20260825 - Luphia) JOB_TYPE 常數
+  type String
+
+  // Info: (20260825 - Luphia) JOB_STATUS 常數
+  status String @default("RUNNING")
+
+  /**
+   * Info: (20260825 - Luphia) 這個任務綁在哪個資源上（碳盤查是聊天室 channel）。
+   * 與 `type` 一起唯一：同一個資源的同一種任務只會有一筆書籤，
+   * 重新匯入時覆寫它——留著舊的會讓畫面同時顯示兩個「未完成的匯入」。
+   */
+  resourceKey String @map("resource_key")
+
+  // Info: (20260825 - Luphia) JOB_PAUSE_REASON 常數；null＝不是暫停狀態
+  pauseReason String?   @map("pause_reason")
+  pausedAt    DateTime? @map("paused_at")
+
+  totalSteps     Int @default(0) @map("total_steps")
+  completedSteps Int @default(0) @map("completed_steps")
+  failedSteps    Int @default(0) @map("failed_steps")
+
+  /**
+   * Info: (20260825 - Luphia) 還沒做的步驟 id（字串陣列）。**不是**「失敗的步驟」——
+   * 兩者的處置相反：失敗要重試，還沒做的要等點數。
+   */
+  remainingStepIds Json @map("remaining_step_ids")
+
+  /**
+   * Info: (20260825 - Luphia) 下一步的**估計**成本（點數，字串存以避免 JSON number 精度陷阱）。
+   * 供掃描行程判斷「現在夠不夠」；估計值只決定要不要把狀態翻成可以繼續，
+   * 真正的扣款仍在執行時發生，不以這個值為準。
+   */
+  nextStepCost String? @map("next_step_cost")
+
+  // Info: (20260825 - Luphia) 最後一次的錯誤摘要（截斷）；給診斷用，不對外顯示
+  lastError String? @map("last_error")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([resourceKey, type])
+  // Info: (20260825 - Luphia) 掃描行程的查詢條件：狀態 + 最久沒動的先處理
+  @@index([status, updatedAt])
+  @@index([userId, status])
+  @@map("resumable_job")
 }

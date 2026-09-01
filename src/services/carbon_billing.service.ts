@@ -78,7 +78,12 @@ export interface IBilledCarbonTaskResult<T> {
   };
 }
 
-async function resolveBillingTeamId(
+/**
+ * Info: (20260825 - Luphia) 匯出供可中斷任務的書籤使用（issue #6712）：
+ * 書籤要記「這筆消費算誰的」，而那個推導只能有一份——另寫一份的話，
+ * 掃描行程會拿另一個團隊的額度去判斷「現在夠不夠」。
+ */
+export async function resolveBillingTeamId(
   accountBookId: string,
   userId: string,
 ): Promise<string> {

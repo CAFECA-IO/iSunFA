@@ -353,9 +353,25 @@ export interface ICarbonInventoryState {
   stockRecords?: IMaterialStockRecord[];
   // Info: (20260716 - Tzuhan) #6519 決定論引擎的計算總表(隨 state E2EE 入庫)
   computedLedger?: IComputedLedger;
+  /**
+   * Info: (20260825 - Emily) 匯入表格被勾稽擋下的紀錄(#6707「對帳差異」偵測器的資料源)。
+   *
+   * 原本這個資訊死在前端 console.warn:使用者問「有沒有異常」,
+   * 系統只答得出「帳本沒資料」,說不出「表3.8 有 6 列解析失敗被擋」——
+   * 帳本為空的**原因**正是最該浮出的疑點。隨 state E2EE 入庫;
+   * 下一次匯入成功入帳即清空(見 applyImportedLedgerEntries)。
+   */
+  ledgerImportBlocks?: ILedgerImportBlock[];
   notes?: string[];
   updatedAt: string;
   version: number;
+}
+
+// Info: (20260825 - Emily) 單筆勾稽阻擋紀錄:reason 沿用匯入端組好的字句(含差額/列數,即證據鏈)
+export interface ILedgerImportBlock {
+  paragraphId: string;
+  reason: string;
+  blockedAt: string;
 }
 
 export interface IChatSession {

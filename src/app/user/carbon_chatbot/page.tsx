@@ -59,8 +59,7 @@ export default function CarbonChatbotPage() {
     renameSession,
     renameReportDocument,
     updateReportIdentity,
-    inputValue,
-    setInputValue,
+    inputPrefill,
     isTyping,
     isLoading,
     isUnlocked,
@@ -104,6 +103,7 @@ export default function CarbonChatbotPage() {
     deferImportPreview,
     openImportPreview,
     retryFailedImportChapters,
+    resumePausedImportChapters,
     isRetryingImport,
     importFollowUpPrompts,
     importCandidate,
@@ -296,10 +296,9 @@ export default function CarbonChatbotPage() {
               focusedMessageId={focusedMessageId}
             />
             <ChatInput
-              inputValue={inputValue}
+              prefill={inputPrefill}
               isTyping={isTyping}
               isLoading={isLoading}
-              onInputChange={setInputValue}
               onSendMessage={handleSendMessage}
               pendingAttachments={pendingAttachments}
               attachmentError={attachmentError}
@@ -386,6 +385,8 @@ export default function CarbonChatbotPage() {
           onDiscard={discardPendingImport}
           onDefer={deferImportPreview}
           onRetryFailed={retryFailedImportChapters}
+          // Info: (20260825 - Luphia) 點數用完而還沒做的章：接著匯入（issue #6713）
+          onResumePaused={resumePausedImportChapters}
           isRetrying={isRetryingImport}
           // Info: (20260806 - Tzuhan) 進度沿用同一份 draftNotice:輸入列被本 modal(z-[90])蓋住,
           // Info: (20260806 - Tzuhan) 重試時使用者看得到的只有卡片內那一處

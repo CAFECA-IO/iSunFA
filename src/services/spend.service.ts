@@ -5,7 +5,6 @@ import {
   type QuotaExceededOption,
   QUOTA_WINDOW,
   SPEND_SOURCE,
-  TEAM_PLAN,
   WALLET_OP_OUTCOME,
 } from "@/constants/subscription_quota";
 import {
@@ -15,7 +14,9 @@ import {
   getWindowKeyWeek,
 } from "@/lib/quota/window";
 import {
+  canAffordSpend,
   resolveQuotaAvailable,
+  usesSharedTeamQuota,
   splitRefund,
   splitSpend,
 } from "@/lib/quota/spend_split";
@@ -452,8 +453,10 @@ export async function spendCredits(
      *
      * 付費方案完全不變（一人一池、成員之間互不阻塞）。
      */
-    const isSharedQuota =
-      resolveEffectivePlanId(subscription, nowSec) === TEAM_PLAN.FREE;
+    // Info: (20260825 - Luphia) 聚合範圍的判準與唯讀試算共用（review #6717 低-1）
+    const isSharedQuota = usesSharedTeamQuota(
+      resolveEffectivePlanId(subscription, nowSec),
+    );
 
     const runWithQuotaLock = <T>(
       operation: (tx: Prisma.TransactionClient) => Promise<T>,
@@ -494,14 +497,25 @@ export async function spendCredits(
        * 不再因為「預扣上界塞不進剩餘額度」而把有餘額的用戶整筆擋死。
        */
       const split = splitSpend(cost, quotaAvailable, BigInt(0));
-      const available = quotaAvailable + chainCredits;
 
       /**
        * Info: (20260813 - Luphia) 固定價格的消費不接受封頂（allowPartial = false）：
        * 沒有結算步驟就沒有人補收差額，放行等於少收。此時與「完全無餘額」同樣回 402，
        * 前端據此提示不足並停用支付按鈕。
        */
-      if (!allowPartial && quotaAvailable < cost) {
+      /**
+       * Info: (20260825 - Luphia) 判準抽到 `canAffordSpend`（issue #6714）：
+       * 可中斷任務的「現在夠不夠」試算讀同一支，兩邊不會分岔。
+       * 這裡的兩個 402 分別對應那支的兩條判準。
+       */
+      const affordable = canAffordSpend({
+        quotaAvailable,
+        chainCredits,
+        cost,
+        allowPartial: Boolean(allowPartial),
+      });
+
+      if (!allowPartial && !affordable) {
         throw new QuotaExceededError(
           API_ERRORS.TW_QUOTA_EXCEEDED,
           buildQuotaExceededPayload({
@@ -515,7 +529,7 @@ export async function spendCredits(
         );
       }
 
-      if (available <= BigInt(0)) {
+      if (!affordable) {
         // Info: (20260814 - Luphia) 訂閱額度與個人鏈上點數同時見底才是真的用盡 → 402
         throw new QuotaExceededError(
           API_ERRORS.TW_QUOTA_EXCEEDED,
