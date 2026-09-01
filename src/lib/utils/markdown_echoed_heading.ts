@@ -26,6 +26,21 @@
 // Info: (20260827 - Emily) 那是刪內容,不是去重複。節號相同是「這一行在講同一節」的證據。
 //
 // Info: (20260819 - Emily) `content` 本身不變(ADR 014 的逐字照錄),剝除只發生在渲染。
+//
+// Info: (20260831 - Emily) **涵蓋範圍(以輸入空間描述)與最壞後果**(PR #6729 review §2.5)。
+//
+// 這個模組把剝除從「兩行完全相同」放寬到「被標題涵蓋」,而放寬護欄要說得出
+// 「現在最多能發生多壞」與「在什麼輸入上成立」。寫成 when 子句:
+//
+//   **當一行的節號取自章節編號(而非有序清單標記),且它不是完整句子時**,
+//   涵蓋判定只會剝掉「沒有原文獨有文字」的那一行。
+//
+// 那個 when 子句本身就是判準的邊界 —— 第一版沒有寫它,而漏掉的正是括號裡那半:
+// `1. 溫室氣體` 的 `1.` 被讀成節號,清單首項被當回聲刪掉(review 高-2)。
+//
+// **最壞後果**:誤剝 = 從紙上刪掉一行原文,而且無聲(草稿裡還在、紙上沒有,
+// 對外送查證的是紙本)。因此所有取捨一律往「保留」倒:
+// 分不出是回聲還是內容時保留,漏剝只是同一句印兩次。
 
 import { FENCE_PATTERN } from "@/lib/utils/markdown_comment";
 // Info: (20260820 - Emily) 比對用正規化走 canonical 那一支(PR review B1)
@@ -48,14 +63,41 @@ interface ISectionLabel {
   text: string;
 }
 
+/**
+ * Info: (20260831 - Emily) 有序清單標記**不是**節號(PR #6729 review 高-2)。
+ *
+ * 連接標點的字元類含 `.`,於是 markdown 的 `1. 溫室氣體` 被讀成
+ * 「節號 1 + 文字 溫室氣體」—— 清單項於是變成「在講第 1 節的一行」,
+ * 文字又是標題的子串,結果**清單首項被當成回聲標題刪掉**:
+ *
+ *   "## 1 溫室氣體盤查範圍\n1. 溫室氣體\n2. 邊界" → 首項消失,清單從 2. 開始
+ *
+ * 三個觸發條件都是日常形狀:章節標題 `## 1 X` 後面接一個從 `1.` 開始的清單時
+ * 節號必然相同;盤查報告的標題常是「清單項＋修飾語」;清單項通常沒有句末標點。
+ * 與這輪修掉的高-1 是**同一類缺陷從另一個門進來** —— 我補了 ATX 那個旁路,
+ * 卻沒有回頭問「還有什麼會被誤認成節號」。
+ *
+ * 分辨的資訊本來就在手上:`SECTION_NUMBER_PATTERN` 對 `1.` 只吃到 `1`,
+ * 是後面那個 replace 把「後面跟著一個點」這件事丟掉的。
+ * 節號的點**後面必須有數字**(`1.5`),清單標記的點後面不是數字(`1.` / `1)`)。
+ *
+ * 失效方向是刻意的:寫成有序清單形式的**真回聲**(`1. 溫室氣體盤查範圍`)
+ * 從此不會被剝。誤剝是刪內容、漏剝只是印兩次,兩者代價不對等。
+ */
+const LIST_MARKER_AFTER_NUMBER = /^[.)](?:[^0-9]|$)/;
+
 const toSectionLabel = (raw: string): ISectionLabel => {
   const squeezed = squeezeForMatch(raw);
   const matched = SECTION_NUMBER_PATTERN.exec(squeezed);
   if (!matched) return { number: "", text: squeezed };
+  const rest = squeezed.slice(matched[1].length);
+  // Info: (20260831 - Emily) `1.` / `1)` 是清單標記 → 這一行沒有節號,錨不成立(高-2)
+  if (LIST_MARKER_AFTER_NUMBER.test(rest))
+    return { number: "", text: squeezed };
   return {
     number: matched[1],
     // Info: (20260827 - Emily) 節號後常見的連接標點一併去掉(「1.5、組織邊界」)
-    text: squeezed.slice(matched[1].length).replace(/^[、,,::.。\-—－]+/, ""),
+    text: rest.replace(/^[、,,::.。\-—－]+/, ""),
   };
 };
 

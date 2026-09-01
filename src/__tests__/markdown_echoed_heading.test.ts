@@ -79,8 +79,33 @@ describe("stripEchoedSectionHeadings", () => {
     expect(stripEchoedSectionHeadings(md)).toBe(md);
   });
 
-  it("帶句末標點的一行是內文,不是標題 → 保留", () => {
+  /**
+   * Info: (20260831 - Emily) ⚠ 這一條**守不到 SENTENCE_TAIL**(PR #6729 review 中-1)。
+   *
+   * reviewer 實測:把 `SENTENCE_TAIL` 整行拿掉,22 條全綠。原因是這個素材
+   * 通過的理由不是那道守門 —— `line.text` 是「組織邊界。」,而
+   * `heading.text.includes("組織邊界。")` 對「組織邊界設定方法」本來就是 false,
+   * 子串那一關已經擋掉了,守門一次都沒參與裁決。
+   * 斷言的結果對,但案例不足以區分「守門在」與「守門不在」(§1.9)。
+   *
+   * 留著它是因為它記錄了一個真實形狀;真正守住那道門的是下面那一條。
+   */
+  it("帶句末標點的一行是內文,不是標題 → 保留(此例由子串那關擋下)", () => {
     const md = "### 1.5 組織邊界設定方法\n\n1.5 組織邊界。\n本公司…\n";
+
+    expect(stripEchoedSectionHeadings(md)).toBe(md);
+  });
+
+  /**
+   * Info: (20260831 - Emily) 這一條才真的守 `SENTENCE_TAIL`(review 中-1 的修法)。
+   *
+   * 要輪到那道守門裁決,**標題文字自己必須含句末標點** ——
+   * 這時子串那關會成立(「排放源有哪些?」⊂「排放源有哪些?類別說明」)、
+   * 節號也相同,唯一擋住剝除的就是句末標點。拿掉守門這條會紅。
+   */
+  it("標題自己含句末標點時,句末標點那道守門才是唯一擋下的理由", () => {
+    const md =
+      "### 3.1 排放源有哪些？類別說明\n\n3.1 排放源有哪些？\n本節逐項說明。\n";
 
     expect(stripEchoedSectionHeadings(md)).toBe(md);
   });
@@ -121,6 +146,43 @@ describe("stripEchoedSectionHeadings", () => {
     expect(stripEchoedSectionHeadings(md)).toBe(
       "## 1.5 組織邊界設定方法\n本公司…\n",
     );
+  });
+
+  /**
+   * Info: (20260831 - Emily) 有序清單的首項不是回聲標題(PR #6729 review 高-2)。
+   *
+   * reviewer 實測:`## 1 溫室氣體盤查範圍` + `1. 溫室氣體` → 首項消失,
+   * 清單從「2.」開始。成因是 `1.` 的點被當成節號後的連接標點吃掉,
+   * 於是清單項變成「在講第 1 節的一行」。
+   * 觸發條件三個都是日常形狀(章節標題後接從 1. 開始的清單、
+   * 標題是「清單項＋修飾語」、清單項沒有句末標點)。
+   */
+  it("有序清單首項不得被當成回聲標題剝掉(1. 溫室氣體)", () => {
+    const md = "## 1 溫室氣體盤查範圍\n1. 溫室氣體\n2. 邊界\n";
+
+    expect(stripEchoedSectionHeadings(md)).toBe(md);
+  });
+
+  it("整個清單只有一項時也不得被剝(2. 盤查邊界)", () => {
+    const md = "## 2 盤查邊界與範疇\n2. 盤查邊界\n";
+
+    expect(stripEchoedSectionHeadings(md)).toBe(md);
+  });
+
+  /**
+   * Info: (20260831 - Emily) 連續多項會被連續剝(`pendingHeading` 不因剝除而清空),
+   * 所以最壞情況不是掉一行而是掉一整段清單 —— 這條釘住整段都在。
+   */
+  it("連續多項符合時整段清單都要留著", () => {
+    const md = "## 1 溫室氣體盤查範圍\n1. 溫室氣體\n1. 溫室\n1. 氣體\n";
+
+    expect(stripEchoedSectionHeadings(md)).toBe(md);
+  });
+
+  it("`1)` 形式的清單標記同樣不算節號", () => {
+    const md = "## 1 溫室氣體盤查範圍\n1) 溫室氣體\n";
+
+    expect(stripEchoedSectionHeadings(md)).toBe(md);
   });
 
   it("不吃子節編號", () => {
