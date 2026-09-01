@@ -15,6 +15,8 @@ env:
   ISUNCOIN_ADDRESS: ${{ secrets.ISUNCOIN_ADDRESS }}
   ISUNCOIN_PRIVATE_KEY: ${{ secrets.ISUNCOIN_PRIVATE_KEY }}
   PUPPETEER_SKIP_DOWNLOAD: "true"
+  # Info: (20260901 - Luphia) 用系統的 Chromium（上面 skip 了 puppeteer 自帶的下載）
+  PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
 
 jobs:
   # Your job configurations here
@@ -44,6 +46,15 @@ jobs:
     steps:
       - name: Set up openssl
         run: apt-get update -y && apt-get install -y openssl
+
+      # Info: (20260901 - Luphia) header 版面測試（header_layout_320.test.ts）要在
+      # 真的 Chromium 裡量 320px 的 scrollWidth（review #6731 三輪中-1）。
+      # 本 job 的容器是 node:22-slim 且 PUPPETEER_SKIP_DOWNLOAD=true，原本沒有任何
+      # 瀏覽器——沒有這一步，那條測試在 CI 是行程層級的 fail-open。
+      # fonts-noto-cjk 不是裝飾：CJK 字寬正是那個缺陷的成因（中文逐字可斷），
+      # 沒有 CJK 字型量出來的「登入」寬度是錯的。
+      - name: Set up Chromium for layout tests
+        run: apt-get install -y --no-install-recommends chromium fonts-noto-cjk
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v4
