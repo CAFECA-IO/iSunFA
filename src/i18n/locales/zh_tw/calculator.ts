@@ -232,6 +232,15 @@ export const calculator = {
     period: "給付期間",
     all_periods: "全部期間",
     no_result_desc: "換個關鍵字、員工或給付期間再試試。",
+    delete_title: "刪除薪資紀錄",
+    delete_content:
+      "確定要刪除「{{name}}」{{year}} 年 {{month}} 月的薪資紀錄嗎？",
+    delete_irreversible:
+      "薪資紀錄不做軟刪除，刪掉之後無法復原，也無法從其他地方找回。",
+    delete_submit_btn: "確定刪除",
+    delete_failed: "刪除失敗，請稍後再試",
+    view_failed: "薪資單載入失敗，請稍後再試",
+    load_back_failed: "載回計算機失敗，請稍後再試",
   },
   account_book_entry: {
     title: "想把這次的試算存起來嗎？",

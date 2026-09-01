@@ -16,7 +16,7 @@ import {
  * 現在多了一個反方向的需求（把存下來的薪資紀錄載回計算機），而兩個方向**必須成對維護**：
  * 引擎加一個欄位、只改了其中一邊，症狀是「載回來的紀錄少一項」，而且是靜默的。
  *
- * 抽成純函式之後 `salary_snapshot_roundtrip.test.ts` 才驗得到 ——
+ * 抽成純函式之後 `salary_snapshot_roundtrip.tz.test.ts` 才驗得到 ——
  * 本專案的測試不 render React，留在 context 裡就等於沒有守門人。
  */
 

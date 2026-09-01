@@ -126,6 +126,23 @@ describe("SalaryRecord", () => {
     expect(block).not.toContain("deletedAt");
   });
 
+  /**
+   * Info: (20260901 - Julian) 這一條守的是**員工那張表的軟刪除設計**，不是這張表自己的。
+   *
+   * `SalaryCalculatorEmployee` 用 `deletedAt` 軟刪，理由寫在它那一段的
+   * 「薪資紀錄不能因為刪員工而變孤兒」。但軟刪只是**應用層**的約定 ——
+   * 只要這條關聯掛上 `onDelete: Cascade`，任何一次繞過應用層的硬刪
+   * （手動 SQL、資料修補腳本、日後有人加一支真刪的 API）都會把那個人
+   * 名下所有薪資紀錄一起帶走，而薪資單是對外憑據。
+   *
+   * 預設就是 `Restrict`，所以這裡問的是「有沒有人手動加上去」。
+   * 實測：在 `employee` 那一行補上 `onDelete: Cascade` → 這支測試原本全綠，
+   * 補了這一條之後才會紅。這是這支掃描測試唯一問得到卻沒問的那一格。
+   */
+  it("員工關聯不得 Cascade：硬刪員工列不能連坐刪掉薪資紀錄", () => {
+    expect(block).not.toContain("onDelete: Cascade");
+  });
+
   it("列表的主要查詢條件有索引", () => {
     expect(block).toContain("@@index([accountBookId, year, month])");
   });

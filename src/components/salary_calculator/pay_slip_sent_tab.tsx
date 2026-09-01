@@ -118,7 +118,7 @@ const SentTab: FC<{
             <div className={cellStyle}>{t("calculator.my_pay_slip.to")}</div>
             <div className={cellStyle}>
               <SortingButton
-                string={t("calculator.my_pay_slip.payslip_issued_date")}
+                string={t("calculator.my_pay_slip.pay_slip_issued_date")}
                 sortOrder={issuedDateSortOrder}
                 setSortOrder={setIssuedDateSortOrder}
               />

@@ -53,7 +53,9 @@
 - **schema 完全沒有薪資 model**（ADR 020 §1 已確認）。HR `Employee` 系列存在且完整。
 - 帳本是 `AccountBook`（`prisma/schema.prisma:811`），權限鏈 `User →(TeamMember)→ Team → AccountBook`。
 - 授權收斂點**已存在**：`assertAccountBookMember(accountBookId, userId)`
-  （`src/services/account_book_access.guard.ts:20`），附帶 `mapServiceError()`。
+  （`src/services/account_book_access.guard.ts`），附帶 `mapServiceError()`。
+  **注意它只回答「是不是成員」，不分角色** —— `OWNER / EDITOR / VIEWER` 一視同仁。
+  薪資模組另外掛一層角色矩陣（見 §6.3 與 §13 第 3 點）。
 - 登入一律走 `Authorization: Bearer <DeWT>` → `getIdentityFromDeWT(authHeader)`（`src/lib/auth/dewt.ts:101`）。
   **沒有 cookie session**。
 - 帳本清單端點**已存在**：`GET /api/v1/user/account_book`（回登入者可存取的帳本）。
@@ -65,7 +67,8 @@
 HR 模組的 route 用它把登入者換成 `Employee`，但它在「這個帳本沒有你的員工檔」時
 丟 `NF_EMPLOYEE_FOR_USER`（404）。
 薪資計算機的使用者是帳本的**團隊成員**（老闆／會計），不必是 HR 員工檔上的人。
-本模組一律用 `assertAccountBookMember()`。
+本模組一律走團隊成員身分（`assertSalaryAccountBookAccess()`，內部用
+`resolveAccountBookMembership()` 拿到角色再比對 `SALARY_ACCESS_ROLES`）。
 
 **已經做好的：`/user/account_book/default/<module>` 的帳本解析鏈。**
 
@@ -506,8 +509,20 @@ export class SalaryRecordService {
 }
 ```
 
-**授權不在 service 內做**，統一在 route 呼叫既有的 `assertAccountBookMember()`
-（`src/services/account_book_access.guard.ts:20`），與現有寫法一致。
+**授權不在 service 內做**，統一在 route 呼叫 `assertSalaryAccountBookAccess()`
+（`src/services/salary_record.service.ts`），與現有寫法一致。
+
+它比既有的 `assertAccountBookMember()` 多問一個問題：**這個角色可不可以做這件事**。
+八支 route 各自傳入 `SalaryAccess.READ` 或 `SalaryAccess.WRITE`（沒有預設值 ——
+漏填會編譯失敗，而不是靜靜落到寬鬆的那一邊），實際的角色清單只有一份，
+在 `src/constants/salary_access.ts` 的 `SALARY_ACCESS_ROLES`：
+
+| 層級 | 角色 | 涵蓋端點 |
+|---|---|---|
+| `READ` | `OWNER` / `EDITOR` / `VIEWER` | `GET employee`、`GET record`、`GET record/:id` |
+| `WRITE` | `OWNER` / `EDITOR` | `POST employee`、`PUT/DELETE employee/:id`、`POST record`、`DELETE record/:id` |
+
+讀取範圍是維持現狀而非新決定，見 §13 第 3 點。
 
 ### 6.4 錯誤字典（`src/lib/utils/error_dictionary.ts`）
 
@@ -572,7 +587,11 @@ export async function POST(
     if (!parsed.success) return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
 
     const { account_book_id: accountBookId } = await params;
-    await assertAccountBookMember(accountBookId, sessionUser.id);
+    await assertSalaryAccountBookAccess(
+      accountBookId,
+      sessionUser.id,
+      SalaryAccess.WRITE,
+    );
 
     return jsonOk(
       await salaryRecordService.save({ accountBookId, userId: sessionUser.id, input: parsed.data }),
@@ -587,10 +606,12 @@ export async function POST(
 }
 ```
 
-`assertAccountBookMember` 丟的是裸 `Error`（不是 `AppError`），
-所以 catch 要先過一次 `mapServiceError(error)` 再包，或在 service 層改丟 `AppError` ——
-**建議後者**：在 `salary_record.service.ts` 內包一層 `assertMemberOrThrow()`，
+`resolveAccountBookMembership` 丟的是裸 `Error`（不是 `AppError`），
+所以 catch 要先過一次 `mapServiceError(error)` 再包 —— 實作上採「在 service 層改丟
+`AppError`」：`salary_record.service.ts` 的 `assertSalaryAccountBookAccess()`
 把 `SERVICE_ERROR.*` 轉成 `AppError`，讓 route 的 catch 維持與其他 route 一字不差。
+角色不足時它直接丟 `AppError(AUTH_PERMISSION_DENIED)`，並在 catch 裡原樣往上 ——
+再包一層會把 403 變成 500。
 
 ---
 
@@ -864,9 +885,16 @@ unlinkEmployee: () => void;
 
 **順手修掉既有的 i18n 壞 key**（獨立 commit，與本模組無關但都在動到的檔案附近）：
 
-- `resending_pay_slip_modal.tsx:71-103` 用 `calculator.MESSAGE.RESEND_PAY_SLIP_*`，字典是 `calculator.message.re_send_pay_slip_*`
-- `pay_slip_sent_tab.tsx:123` 用 `payslip_issued_date`，字典是 `pay_slip_issued_date`
-- `pay_slip_received_tab.tsx:142` 表頭 `Action` 硬編碼英文
+- `resending_pay_slip_modal.tsx` 用 `calculator.MESSAGE.RESEND_PAY_SLIP_*`（8 個），字典是 `calculator.message.re_send_pay_slip_*` ✅ 20260901
+- `pay_slip_sent_tab.tsx` 用 `payslip_issued_date`，字典是 `pay_slip_issued_date` ✅ 20260901
+- `pay_slip_received_tab.tsx` 表頭 `Action` 硬編碼英文 ✅ 20260901（改用 `calculator.my_pay_slip.action`）
+
+**同時把守門機制補上**：`attendance_i18n_keys.test.ts` 的 regex 原本寫死
+`hr_management\.` 一個命名空間，`calculator.*` 完全不在守備範圍 ——
+掃描根是整個 `src` 沒錯，但問的問題只涵蓋一個模組（checklist §1.1 在字典側的化身）。
+已改名為 `i18n_keys.test.ts` 並參數化成 `NAMESPACES` 登記表，
+加入 `calculator` 之後立刻抓到上面全部 9 條，以及一個沒登記的動態鍵群
+與一個四語系空值（`joined_this_month_2`，屬刻意留空，已登記在例外清單）。
 
 ---
 
@@ -877,12 +905,15 @@ unlinkEmployee: () => void;
 
 | 測試檔 | 型別 | 釘住什麼 |
 |---|---|---|
-| `salary_snapshot_roundtrip.test.ts` | 純函式 | `toCalculatorOptions()` ↔ `fromCalculatorOptions()`（`lib/utils/salary_calculator_snapshot.ts`）來回不失真，`ISalaryCalculatorFormState` 的 34 個欄位一個不漏（用 `Object.keys` 對拍，新增欄位忘了接就會紅） |
+| `salary_snapshot_roundtrip.tz.test.ts` | 純函式 | `toCalculatorOptions()` ↔ `fromCalculatorOptions()`（`lib/utils/salary_calculator_snapshot.ts`）來回不失真，`ISalaryCalculatorFormState` 的欄位一個不漏（用 `Object.keys` 對拍，新增欄位忘了接就會紅）。**檔名帶 `.tz`**：其中「離職日回得來、不會退一天」那一條在 UTC 與 UTC+8 都分不出 `getDate()` 與 `getUTCDate()`，必須由 `scripts/jest_tz.mjs` 釘在 `America/New_York` 再跑一次才驗得到（checklist §1.3） |
 | `salary_record_service.test.ts` | service | 覆寫語意（同員工同年月只留一筆）、跨帳本員工被拒（`NF_SALARY_CALCULATOR_EMPLOYEE`）、讀取與刪除的跨租戶隔離、找不到紀錄回 404、員工編號撞號回 409、非整數金額 fail fast |
 | `salary_provider_scope.test.ts` | 掃描 | 帳本版三個頁面共用同一個 `CalculatorProvider`：`layout.tsx` 真的把 `children` 包起來（光 import 不算），且三支 page 都沒有自己再包一顆（包了會蓋掉外層那顆，等於沒修）|
 | `amount_input.test.ts` | 純函式 | 金額輸入框的游標與格式化（先於 PR 1 落地，`4d6a23a83`）|
 | `salary_employee_invariant.test.ts` | 不變式 | `activeNumber` 與 `deletedAt` 的配對：存活時 `activeNumber === number`、刪除時為 `null`（§2.3） |
-| `salary_route_wiring.test.ts` | route | 照抄 `leave_route_wiring.test.ts`：無票回 401、限流兩行都在且回 429 時 service 呼叫次數沒增加、`params` 鍵名是 `account_book_id`、`userId` 來自 DeWT 而非 request body、八支端點每一支都過授權閘；另外釘住身分鍵改動：缺員工編號回 400、沒有 Email 也建得起來 |
+| `salary_route_wiring.test.ts` | route | 照抄 `leave_route_wiring.test.ts`：無票回 401、限流兩行都在且回 429 時 service 呼叫次數沒增加、`params` 鍵名是 `account_book_id`、`userId` 來自 DeWT 而非 request body、八支端點每一支都過授權閘；另外釘住身分鍵改動：缺員工編號回 400、沒有 Email 也建得起來。**20260901 起三條主要斷言都以 `ENDPOINTS` 表走完八支**（先前 401 走八支、授權只驗 2 支、限流只驗 1 支 —— 把 `employee/route.ts` 兩處 `if (limited) return limited;` 註解掉全綠），並加驗每一支向授權閘要求的 `SalaryAccess` 層級 |
+| `salary_access_roles.test.ts` | 純函式 | 薪資模組的角色矩陣：`VIEWER` 不能寫、`OWNER`/`EDITOR` 可以寫、表外的角色（含已停用的 `ADMIN` 殘列、空字串、`null`）一律擋、寫入集合是讀取的子集 |
+| `salary_repo.e2e.test.ts` | e2e（真資料庫） | 兩支 repository 的 `where` 子句與唯一索引：租戶過濾（別本帳拿對的 uuid 也讀不到／改不動／刪不掉）、`deletedAt` 過濾（軟刪後那一列還在但查不到）、`activeNumber` 讓出與同編號重新加入（部分唯一索引，只有 Postgres 答得出來）、upsert 覆寫不新增列且不動 `createdByUserId`、分頁 `skip`/`take`、關鍵字比對不跨帳本。**這 486 行先前零測試**：七處防線同時拿掉，原有測試全綠 —— 因為假 repo 用 `${accountBookId}\|${id}` 當 key，天生就是隔離的（checklist §1.8） |
+| `i18n_keys.test.ts` | 掃描（既有，本次擴充） | 原名 `attendance_i18n_keys.test.ts`，regex 寫死 `hr_management.` 一個命名空間。改成 `NAMESPACES` 登記表並加入 `calculator` 之後，立刻抓到 9 個既有壞 key（§8.8） |
 | `salary_schema_defaults.test.ts` | 掃描 | 讀 `prisma/schema.prisma` 原文，釘住 `mealAllowance @default(0)` 等預設值（checklist §1.12：沒有 migrations 時的唯一例外） |
 | `app_route_auth_guard.test.ts` | 既有 | **不需修改**：`user` 已在 `GUARDED_ROOTS`、`salary_calculator` 已在 `PUBLIC_ROOTS`。本模組後來確實新增了一支巢狀的 `salary_calculator/layout.tsx`（§8.1），但那支測試只掃 `src/app/` 的第一層路由根，掃不到巢狀 layout。若有人替公開側加了 `src/app/salary_calculator/layout.tsx`，這支會紅 —— 那是預期的護欄 |
 | `route_params_contract.test.ts` | 既有 | **不需修改**，但新增的三支 page 與八支 route 都會被它掃：`params` 的鍵名必須是 `account_book_id`，不能寫成 `accountBookId` |
@@ -891,7 +922,8 @@ unlinkEmployee: () => void;
 
 ```bash
 npx tsc --noEmit
-npm run test
+npm run test          # Info: 內含 npm run test:tz，會跑到 *.tz.test.ts
+npm run test:e2e      # Info: 需要真資料庫，CI 於 test 之後另跑一步
 npm run test:no-dotenv
 ```
 
@@ -961,7 +993,7 @@ npx prisma generate
 - 新增 `/user/account_book/[account_book_id]/salary_calculator/records` 頁
 - `employee_list.tsx` / `employee_action_modal.tsx` / `employee_list_modal.tsx` 接 API
 - 移除 `IEmployeeForCalc`、`dummyEmployeeForCalc`、`basic_info_form.tsx` 的 `&& false`
-- Context 的 `loadFromSnapshot()` + `salary_snapshot_roundtrip.test.ts`
+- Context 的 `loadFromSnapshot()` + `salary_snapshot_roundtrip.tz.test.ts`
 - 儲存按鈕 + `save_record_dialogs.tsx`（規劃時寫的是 `save_salary_record_modal.tsx`，
   方向修正後不是一張表單而是兩個例外對話框）
 - ~~`UserHeader` 導覽入口~~ → 改成 `account_book_calculator_nav.tsx`（理由見 §8.6）
@@ -994,7 +1026,7 @@ npx prisma generate
 - `my_pay_slip_page_body.tsx` 的收/發件匣接真 API
 - `EmployeeHrFunction` 加 `PAYROLL` 值、與 HR `Employee` 的實際合併（ADR 020 正式模組的事）
 - 薪資項目的「經常性給與」旗標、「取平均工資」查詢（ADR 020 §4.2 / §4.3）
-- 薪資紀錄的 PII 加密（ADR 018）—— 見 §13
+- 薪資紀錄的 PII 加密與**薪資欄位的分級決策**（ADR 018 目前未涵蓋薪資）—— 見 §13
 - **把公開版的試算內容帶進帳本版**（跨路由搬 34 個輸入欄位）。需要序列化進 query 或 sessionStorage，
   且要處理「帶過去的值與帳本裡的員工本薪不一致」的取捨 —— 是獨立議題，§8.2 的說明文案會誠實告知不會帶
 
@@ -1002,24 +1034,68 @@ npx prisma generate
 
 ## 13. 待確認風險
 
-1. **薪資快照的加密：已決議「先明文，上線前再決定」（20260831）。**
-   ADR 018 把薪資列為高敏感 PII，`Employee` 的電話／身分證／地址都是 `*Cipher` 欄位；
-   本模組的 `inputSnapshot` / `resultSnapshot` 先存明文 Json，靠 `accountBookId` 租戶隔離
-   與 `assertAccountBookMember` 授權把關。
+1. **薪資欄位的分級尚未拍板；快照與金額欄位先明文入庫（20260831 決議「先明文，上線前再決定」）。**
+
+   **先更正一件事：ADR 018 並沒有把薪資列為高敏感 PII。**
+   逐字查過 `018_hr_pii_data_classification.md`：三個 Tier 的欄位清單裡
+   （Tier 1 身分證／銀行帳號、Tier 2 生日／地址／電話／個人信箱／打卡座標、
+   Tier 3 員工編號／公司信箱／姓名⋯⋯）**沒有任何薪資欄位**；全文提到「薪資」只有一次，
+   在第 25 行，說的是「13 張表⋯⋯也成為後續**薪資**、考勤、績效模組抄襲的樣板」。
+   也就是說 ADR 018 是**樣板**，不是已經涵蓋薪資的裁決。
+   （這句錯誤歸因原本被抄進本文件、部署檢查表與 PR 描述共三處，2026-09-01 一併更正。）
+
+   所以真正要做的不是「照 ADR 018 執行」，而是**替薪資補一段分級決策** ——
+   形式比照 ADR 018 的「補充決策（2026-08-14 review）：打卡座標列入 Tier 2」那一段。
+
+   **拍板時的參考點（強度排序目前是反的）**：`HrPiiTable` 已有 6 張表，其中
+   `LeaveRequest.reasonCipher`（請假事由）被評為 Tier 2 並加密。請假事由要加密，
+   而投保級距、本薪、各項扣除、實發金額明文 —— 這個排序需要被明確地選擇，不是預設。
+
+   **明文的範圍不只快照兩欄**（護欄要用輸入空間描述，checklist §2.5）：
+   - `SalaryRecord.inputSnapshot` / `resultSnapshot`（Json）
+   - `SalaryRecord.totalPayment` / `totalSalaryTaxable` / `totalEmployerCost`（BigInt 純量）
+   - **`SalaryCalculatorEmployee.baseSalary` / `mealAllowance`（BigInt 純量）** ——
+     這兩欄也是明文薪資，而且是純量、比 Json 更好查
+
+   目前靠 `accountBookId` 租戶隔離與 `assertSalaryAccountBookAccess` 授權把關。
 
    理由是這樣可逆：目前沒有正式資料，schema 又走 `prisma db push`，
-   日後要轉成 `*Cipher` + `piiKeyVersion` 只是改兩個欄位與 repository 的一層編解碼，
-   §2.2 抽出來的三個金額欄位本來就獨立、不受影響。
+   日後要轉成 `*Cipher` + `piiKeyVersion` 只是改欄位與 repository 的一層編解碼。
+   但要注意 §2.2 抽出來的三個金額欄位**不是不受影響**：它們是排序與篩選的維度，
+   一旦加密就排不了序也篩不了，那是分級決策要一併回答的取捨
+   （同 ADR 018 對 `leavePolicyId`「加密後行事曆與統計都查不了」的處理）。
 
    **這是部署檢查表的阻擋項**：正式上線前必須由 Luphia 或安全負責人拍板。
-   若判定要加密，同時要確認 `SalaryRecord` 是否納入 `HrPiiTable`
-   （`src/repositories/hr_pii_invariant.ts`）—— 那會要求 `id` 不得有 `@default`。
+   若判定要加密，同時要確認 `SalaryRecord` 與 `SalaryCalculatorEmployee` 是否納入
+   `HrPiiTable`（`src/constants/hr_pii.ts`、`src/repositories/hr_pii_invariant.ts`）
+   —— 那會要求 `id` 不得有 `@default`。
 
-2. **是否要寫 `AuditLog`。**
+2. **是否要寫 `AuditLog`；以及 `createdByUserId` 目前沒有任何讀者。**
    `AuditLog` model（`prisma/schema.prisma:902`）有 `dataType: EMPLOYEE_PII` / `action: READ`。
    薪資紀錄的讀取是否要留稽核軌跡，取決於第 1 點的結論。
 
-3. **`calculatorVersion` 的 bump 紀律靠人。**
+   **另一半是寫入側。** 全 repo grep `createdByUserId`：它只出現在 repository 的
+   寫入路徑與 schema 掃描測試裡 —— 不在 `ISalaryRecordSummary` / `ISalaryRecordDetail`、
+   不在任何 API 回應、不在任何畫面、不在任何告警。覆寫時刻意不更新它
+   （理由成立：那一欄記的是來源），但也沒有 `updatedByUserId`。
+   加上薪資紀錄**不做軟刪**，「這筆薪資是誰改的／誰刪的」目前無法回答。
+   checklist §3.5：稽核欄位沒有讀者，稽核價值就是零。
+
+   兩條路擇一，與第 1 點一起拍板：
+   - 給它讀者：明細回應帶 `createdBy`，畫面上顯示，可見範圍比照
+     `SALARY_ACCESS_ROLES`（或更緊）；
+   - 或連同本點一起改寫 `AuditLog`，並補 `updatedByUserId` / 刪除軌跡。
+
+3. **薪資模組的角色範圍：寫入已收斂，讀取待拍板（20260901）。**
+   八支端點原本只掛「是不是帳本所屬團隊的成員」，`OWNER / EDITOR / VIEWER`
+   一視同仁 —— 亦即受邀當 `VIEWER` 的外部顧問可以讀寫刪全公司薪資。
+   已改為 `src/constants/salary_access.ts` 的 `SALARY_ACCESS_ROLES`：
+   寫入限 `OWNER / EDITOR`（會計、記帳士通常是 `EDITOR`，收到 `OWNER` 一人
+   會把這個模組要服務的人擋在門外），讀取維持全體成員 —— **後者是維持現狀，
+   不是一個新決定**，要與第 1 點的資料分級一起拍板。屆時改的是那一張表，
+   不是八支 route。
+
+4. **`calculatorVersion` 的 bump 紀律靠人。**
    忘了 bump 不會有任何症狀，直到某天要回答「這張薪資單是哪一版算的」才發現對不上。
    可考慮加一支掃描測試：`src/constants/salary_levels/` 有異動時要求 `SALARY_CALCULATOR_VERSION` 一併變 ——
    但那需要比對 git diff，非本次範圍，先靠 code review。

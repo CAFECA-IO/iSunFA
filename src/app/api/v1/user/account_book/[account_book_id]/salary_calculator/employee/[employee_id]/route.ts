@@ -6,6 +6,7 @@ import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { enforceRateLimit } from "@/lib/rate_limiter";
+import { SalaryAccess } from "@/constants/salary_access";
 import {
   assertSalaryAccountBookAccess,
   salaryRecordService,
@@ -46,7 +47,11 @@ export async function PUT(
 
     const { account_book_id: accountBookId, employee_id: employeeId } =
       await params;
-    await assertSalaryAccountBookAccess(accountBookId, sessionUser.id);
+    await assertSalaryAccountBookAccess(
+      accountBookId,
+      sessionUser.id,
+      SalaryAccess.WRITE,
+    );
 
     return jsonOk(
       await salaryRecordService.updateEmployee({
@@ -97,7 +102,11 @@ export async function DELETE(
 
     const { account_book_id: accountBookId, employee_id: employeeId } =
       await params;
-    await assertSalaryAccountBookAccess(accountBookId, sessionUser.id);
+    await assertSalaryAccountBookAccess(
+      accountBookId,
+      sessionUser.id,
+      SalaryAccess.WRITE,
+    );
 
     await salaryRecordService.deleteEmployee({ accountBookId, employeeId });
 

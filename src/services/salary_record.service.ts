@@ -18,14 +18,18 @@ import {
   salaryRecordRepo,
 } from "@/repositories/salary_record.repo";
 import {
-  assertAccountBookMember,
   mapServiceError,
+  resolveAccountBookMembership,
 } from "@/services/account_book_access.guard";
+import {
+  isSalaryAccessAllowed,
+  SalaryAccess,
+} from "@/constants/salary_access";
 
 /**
  * Info: (20260831 - Julian) 薪資計算機的員工名單與薪資紀錄。
  *
- * ## 授權用 `assertAccountBookMember`，不用 `resolveEmployee`
+ * ## 授權用團隊成員身分，不用 `resolveEmployee`
  *
  * 帳本底下的 HR 端點都用 `attendanceIdentityService.resolveEmployee()`
  * 把登入者換成 `Employee`，而它在「這個帳本沒有你的員工檔」時丟
@@ -33,22 +37,40 @@ import {
  *
  * 薪資計算機的使用者是帳本的**團隊成員**（老闆、會計、記帳士），
  * 不必是 HR 員工檔上的人 —— 照抄那一套會把正確的使用者全部擋在門外。
+ *
+ * 「是成員」只回答了誰進得來，**沒有回答哪些角色可以做什麼** ——
+ * 那一半由下面的 `SALARY_ACCESS_ROLES` 回答，八支 route 各自宣告
+ * 自己要的是讀還是寫。
  */
 
 /**
  * Info: (20260831 - Julian) 授權閘的薄包裝。
  *
- * `assertAccountBookMember` 丟的是裸 `Error`（哨兵字串），
+ * `resolveAccountBookMembership` 丟的是裸 `Error`（哨兵字串），
  * 而 route 的 catch 只認得 `AppError`。在這裡轉一次，
  * 每支 route 的 catch 才能與其他模組一字不差。
+ *
+ * Info: (20260901 - Julian) `access` **沒有預設值**，八支 route 各自要講出來。
+ * 給預設值的話，新增端點時漏填會靜靜地落到比較寬鬆的那一邊，
+ * 而漏填是最容易發生的事（§4.3：「拼錯的方向通常是放寬」）。
  */
 export async function assertSalaryAccountBookAccess(
   accountBookId: string,
   userId: string,
+  access: SalaryAccess,
 ): Promise<void> {
   try {
-    await assertAccountBookMember(accountBookId, userId);
+    const { member } = await resolveAccountBookMembership(
+      accountBookId,
+      userId,
+    );
+
+    if (!isSalaryAccessAllowed(member.role, access)) {
+      throw new AppError(API_ERRORS.AUTH_PERMISSION_DENIED);
+    }
   } catch (error) {
+    // Info: (20260901 - Julian) 已經是 AppError 的（角色不足）原樣往上，不要被再包一層變成 500
+    if (error instanceof AppError) throw error;
     throw new AppError(mapServiceError(error));
   }
 }

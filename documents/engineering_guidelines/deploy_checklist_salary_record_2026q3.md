@@ -61,6 +61,25 @@ PR 4 改成用 **員工編號**。差異：
   的 `name` / `number` 做 `contains`（關聯過濾）。以「一本帳數十位員工」的量級不是問題，
   但如果哪天單一帳本的員工數上千，這裡會是第一個變慢的查詢。
 
+## 2.2 行為變更：薪資寫入不再開放給 `VIEWER`（不是 schema，但會被使用者看到）
+
+八支端點原本只驗「是不是帳本所屬團隊的成員」，`OWNER / EDITOR / VIEWER` 一視同仁。
+20260901 起改為 `src/constants/salary_access.ts` 的 `SALARY_ACCESS_ROLES`：
+
+| 層級 | 角色 | 端點 |
+|---|---|---|
+| `READ` | `OWNER` / `EDITOR` / `VIEWER` | `GET employee`、`GET record`、`GET record/:id` |
+| `WRITE` | `OWNER` / `EDITOR` | `POST employee`、`PUT/DELETE employee/:id`、`POST record`、`DELETE record/:id` |
+
+- **不需要資料遷移**：判斷是讀 `team_member.role` 當場算出來的，沒有新欄位。
+- **會被看到的差異**：目前是 `VIEWER` 的人，上線後按「儲存薪資紀錄」或
+  新增／編輯員工會收到 403。上線前確認沒有以 `VIEWER` 身分在跑薪資作業的帳號 ——
+  有的話請 `OWNER` 把他改成 `EDITOR`，那是這個角色本來就該有的層級。
+- **`ADMIN` 不在任何一張清單裡**：產品已於 20260819 取消 `ADMIN`，
+  既有成員由 `scripts/backfill_remove_team_admin.ts` 降為 `EDITOR`。
+  萬一資料庫裡還有殘留的 `ADMIN` 列，它讀寫都會被擋 —— 這是刻意的
+  （表外一律擋，不是一律放行），但上線前值得先查一次還有沒有這種列。
+
 ## 3. 部署步驟
 
 ```bash
@@ -94,14 +113,34 @@ npx prisma generate
 
 ## 5. 上線前的阻擋項
 
-- [ ] **薪資快照要不要加密入庫**（計劃書 §13 第 1 點）。
-      目前 `input_snapshot` / `result_snapshot` 是明文 Json，靠 `account_book_id`
-      租戶隔離與 `assertAccountBookMember` 授權把關。
-      ADR 018 把薪資列為高敏感 PII，**正式上線前必須由 Luphia 或安全負責人拍板**。
-      若判定要加密：兩欄改成 `*_cipher` + `pii_key_version`，
-      三個金額欄位維持明文供查詢，並確認 `SalaryRecord` 是否納入 `HrPiiTable`
-      （`src/repositories/hr_pii_invariant.ts` 會要求 `id` 不得有 `@default`）。
-- [ ] 若上一點判定要加密，**在有任何正式資料之前**改完 —— 這是它現在可逆的唯一原因。
+- [ ] **替薪資欄位補一段資料分級決策**（計劃書 §13 第 1 點）。
+
+      **注意：ADR 018 並未涵蓋薪資。** 它的三個 Tier 欄位清單裡沒有任何薪資欄位，
+      全文提到「薪資」只有一次（第 25 行），說的是薪資模組將來要照這個樣板辦。
+      所以這一項不是「照 ADR 018 執行」，而是**補一段新的分級決策** ——
+      形式比照 ADR 018 的「補充決策（2026-08-14 review）：打卡座標列入 Tier 2」。
+      **正式上線前必須由 Luphia 或安全負責人拍板。**
+
+      拍板時的參考點：`HrPiiTable` 已有 6 張表，其中 `LeaveRequest.reasonCipher`
+      （請假事由）被評為 Tier 2 並加密。請假事由要加密，而投保級距、本薪、
+      各項扣除、實發金額明文 —— 這個強度排序需要被明確選擇，不是預設。
+
+- [ ] **範圍：目前明文入庫的薪資欄位共 7 個，不只快照那兩欄。**
+      - `salary_record.input_snapshot` / `result_snapshot`（Json）
+      - `salary_record.total_payment` / `total_salary_taxable` / `total_employer_cost`（BigInt）
+      - `salary_calculator_employee.base_salary` / `meal_allowance`（BigInt）——
+        **這兩欄容易被漏掉**：它們不在 `salary_record` 表上，但同樣是明文薪資，
+        而且是純量、比 Json 更好查
+
+      目前靠 `account_book_id` 租戶隔離與 `assertSalaryAccountBookAccess` 授權把關。
+
+- [ ] 若判定要加密：對應欄位改成 `*_cipher` + `pii_key_version`，並確認
+      `SalaryRecord` 與 `SalaryCalculatorEmployee` 是否納入 `HrPiiTable`
+      （`src/constants/hr_pii.ts`；`src/repositories/hr_pii_invariant.ts`
+      會要求 `id` 不得有 `@default`）。
+      三個金額欄位是列表的排序與篩選維度，加密後兩者都做不到 ——
+      這個取捨要一併回答，不能預設「維持明文供查詢」。
+- [ ] 若判定要加密，**在有任何正式資料之前**改完 —— 這是它現在可逆的唯一原因。
 
 ## 6. 送審前必跑
 

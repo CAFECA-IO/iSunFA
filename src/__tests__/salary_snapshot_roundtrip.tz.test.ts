@@ -24,6 +24,20 @@ import {
  *
  * 這也是把那段對應從 `calculator_context` 抽成純函式的唯一理由 ——
  * 留在 context 裡的話，只有 render React 才驗得到，而本專案不 render React。
+ *
+ * ## 檔名為什麼是 `.tz.test.ts`
+ *
+ * 下面「離職日回得來，且不會退一天」那一條，寫入端 `toCalculatorOptions` 產生的是
+ * UTC 午夜的 `Date`，讀取端 `fromCalculatorOptions` 必須用 `getUTCDate()` 取回。
+ * 用 `getDate()` 的話在 UTC 以西的時區會退一天 —— 而**在 UTC 或 UTC+8 都測不出來**：
+ * 兩者取出的日期相同，判準完全分不出成功與失敗（checklist §1.3）。
+ *
+ * `scripts/jest_tz.mjs` 會把 `*.tz.test.ts` 釘在 `America/New_York`（UTC-5/-4，
+ * 且有日光節約）再跑一次，`jest.config.mjs` 則把同一組排除在預設執行之外，
+ * 所以這支不會重跑也不會漏跑，`npm run test` 依然會走到它。
+ *
+ * 實測：把讀取端改成 `getDate()` → `TZ=UTC` 8 passed（測不出來）、
+ * `TZ=America/New_York` 2 failed。改的只是一個檔名，判準才真的睜開眼睛。
  */
 
 const FORM: ISalaryCalculatorFormState = {

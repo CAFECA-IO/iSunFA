@@ -1,6 +1,6 @@
 import { describe, it, expect } from "@jest/globals";
-import { readFileSync, existsSync } from "fs";
-import { join } from "path";
+import { readdirSync, readFileSync, existsSync } from "fs";
+import { join, sep } from "path";
 
 /**
  * Info: (20260901 - Julian) 帳本版薪資計算機的三個頁面必須共用同一個 CalculatorProvider。
@@ -32,12 +32,23 @@ const SALARY_DIR = join(
   "salary_calculator",
 );
 
-// Info: (20260901 - Julian) 共用 provider 的三個頁面（employee_list 已移除）
-const PAGES: readonly string[] = [
-  "page.tsx",
-  "records/page.tsx",
-  "pay_slip/page.tsx",
-];
+/**
+ * Info: (20260901 - Julian) 走訪目錄，不是寫死清單。
+ *
+ * 原本這裡是 `["page.tsx", "records/page.tsx", "pay_slip/page.tsx"]` ——
+ * 掃描根等於「剛好被修的那幾個檔案」，而這一條要擋的缺陷正是**下一個人新增頁面**
+ * 時原樣重演（checklist §1.1）。實測：加第四個 `page.tsx` 並自己包一顆
+ * `<CalculatorProvider>` → 寫死清單那版全綠，症狀是「按鈕按下去毫無反應且不噴錯」。
+ *
+ * 走訪之後，只要有人在這個路由底下新增頁面就自動納入守備範圍，不必記得回來改陣列。
+ */
+const collectPages = (): string[] =>
+  readdirSync(SALARY_DIR, { recursive: true, encoding: "utf-8" })
+    .map((entry) => entry.split(sep).join("/"))
+    .filter((entry) => entry.endsWith("page.tsx"))
+    .sort();
+
+const PAGES: readonly string[] = collectPages();
 
 const read = (relativePath: string): string =>
   readFileSync(join(SALARY_DIR, relativePath), "utf-8");
@@ -52,6 +63,15 @@ const stripComments = (text: string): string =>
   text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
 describe("帳本版薪資計算機的 CalculatorProvider 掛在 layout", () => {
+  /**
+   * Info: (20260901 - Julian) 走訪撈不到東西時，下面的 `it.each` 會靜靜地零個案例。
+   * 一支「一條都沒跑」的測試看起來和「全部通過」一模一樣 —— 先把這件事釘住。
+   */
+  it("走訪真的撈到頁面（掃描根空掉時 it.each 會靜默跳過）", () => {
+    expect(PAGES.length).toBeGreaterThanOrEqual(3);
+    expect(PAGES).toContain("page.tsx");
+  });
+
   it("layout.tsx 存在，而且真的渲染 CalculatorProvider", () => {
     expect(existsSync(join(SALARY_DIR, "layout.tsx"))).toBe(true);
 

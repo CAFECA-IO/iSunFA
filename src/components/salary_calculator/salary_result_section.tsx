@@ -60,11 +60,20 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
   const toggleShowLoginModal = () => setIsShowLoginModal((prev) => !prev);
   const toggleShowSendingModal = () => setIsShowSendingModal((prev) => !prev);
 
-  // Info: (20260831 - Julian) 公開版沒有帳本，這兩支 hook 拿到空字串也不會被呼叫到
+  /**
+   * Info: (20260901 - Julian) 公開版沒有帳本。
+   *
+   * `useSalaryRecordSave` 裡沒有任何 mount effect，它的每一支都要有人按按鈕才會動，
+   * 而公開版的儲存按鈕根本不存在 —— 所以空字串進去不會被呼叫到。
+   * `useSalaryEmployees` 不一樣：它有一支無條件的 mount effect，
+   * 空字串會讓匿名訪客一打開頁面就打一支 `account_book//...` 的請求，
+   * 所以那一支收 `null`（理由寫在該 hook 的檔頭）。
+   */
   const bookId = accountBookId ?? "";
   const { isSaving, savedRecord, hasError, findExisting, save, clearSaved } =
     useSalaryRecordSave(bookId);
-  const { employees, createEmployee, reload } = useSalaryEmployees(bookId);
+  const { employees, createEmployee, reload } =
+    useSalaryEmployees(accountBookId);
 
   /**
    * Info: (20260901 - Julian) 待確認覆蓋的那一筆，連「要存給誰」一起記。

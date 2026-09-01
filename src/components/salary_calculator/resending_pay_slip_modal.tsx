@@ -56,19 +56,19 @@ const ResendingPaySlipModal: FC<IResendingPaySlipModalProps> = ({
     <>
       {/* Info: (20250723 - Julian) Modal Content */}
       <div className="text-card-text-secondary px-5 py-2">
-        {t("calculator.MESSAGE.RESEND_PAY_SLIP_CONTENT_1")}
+        {t("calculator.message.re_send_pay_slip_content_1")}
         <span className="font-bold">
-          {t("calculator.MESSAGE.RESEND_PAY_SLIP_CONTENT_BOLD_1", {
+          {t("calculator.message.re_send_pay_slip_content_bold_1", {
             month: monthName,
           })}
         </span>
-        {t("calculator.MESSAGE.RESEND_PAY_SLIP_CONTENT_2")}
+        {t("calculator.message.re_send_pay_slip_content_2")}
         <span className="font-bold">
-          {t("calculator.MESSAGE.RESEND_PAY_SLIP_CONTENT_BOLD_2", {
+          {t("calculator.message.re_send_pay_slip_content_bold_2", {
             name: sentToName,
           })}
         </span>
-        {t("calculator.MESSAGE.RESEND_PAY_SLIP_CONTENT_3")}
+        {t("calculator.message.re_send_pay_slip_content_3")}
       </div>
       {/* Info: (20250723 - Julian) Buttons */}
       <div className="grid grid-cols-2 gap-3 px-5 py-4">
@@ -77,14 +77,14 @@ const ResendingPaySlipModal: FC<IResendingPaySlipModalProps> = ({
           className="text-text-neutral-secondary ring-stroke-neutral-quaternary hover:bg-surface-hover flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold ring-1 transition-colors"
           onClick={modalVisibleHandler}
         >
-          {t("calculator.MESSAGE.RESEND_PAY_SLIP_CANCEL_BTN")}
+          {t("calculator.message.re_send_pay_slip_cancel_btn")}
         </button>
         <button
           type="button"
           className="flex h-11 w-full items-center justify-center rounded-xl bg-orange-600 text-sm font-bold text-white transition-colors hover:bg-orange-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
           onClick={resendPaySlip}
         >
-          {t("calculator.MESSAGE.RESEND_PAY_SLIP_SUBMIT_BTN")}
+          {t("calculator.message.re_send_pay_slip_submit_btn")}
         </button>
       </div>
     </>
@@ -96,7 +96,7 @@ const ResendingPaySlipModal: FC<IResendingPaySlipModalProps> = ({
         {/* Info: (20250723 - Julian) Modal Header */}
         <div className="relative flex items-start justify-center px-10 py-4">
           <h2 className="text-card-text-primary text-lg font-bold">
-            {t("calculator.MESSAGE.RESEND_PAY_SLIP_TITLE")}
+            {t("calculator.message.re_send_pay_slip_title")}
           </h2>
           <button
             type="button"

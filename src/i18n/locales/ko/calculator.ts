@@ -237,6 +237,16 @@ export const calculator = {
     period: "지급 기간",
     all_periods: "전체 기간",
     no_result_desc: "검색어·직원·지급 기간을 바꿔 다시 시도해 보세요.",
+    delete_title: "급여 기록 삭제",
+    delete_content:
+      "「{{name}}」님의 {{year}}년 {{month}}월 급여 기록을 삭제하시겠습니까?",
+    delete_irreversible:
+      "급여 기록은 소프트 삭제되지 않습니다. 삭제하면 복구할 수 없으며 다른 곳에서도 되찾을 수 없습니다.",
+    delete_submit_btn: "삭제",
+    delete_failed: "삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    view_failed: "급여명세서를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    load_back_failed:
+      "계산기로 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
   },
   account_book_entry: {
     title: "이번 계산을 저장할까요?",

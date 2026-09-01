@@ -139,7 +139,7 @@ const ReceivedTab: FC<{
             <div
               className={`${cellStyle} text-text-neutral-primary w-[50px] text-center`}
             >
-              Action
+              {t("calculator.my_pay_slip.action")}
             </div>
           </div>
         </div>

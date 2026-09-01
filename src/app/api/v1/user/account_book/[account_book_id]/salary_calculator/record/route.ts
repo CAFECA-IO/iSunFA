@@ -6,6 +6,7 @@ import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { enforceRateLimit } from "@/lib/rate_limiter";
+import { SalaryAccess } from "@/constants/salary_access";
 import {
   assertSalaryAccountBookAccess,
   salaryRecordService,
@@ -52,7 +53,11 @@ export async function GET(
     if (!parsed.success) return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
 
     const { account_book_id: accountBookId } = await params;
-    await assertSalaryAccountBookAccess(accountBookId, sessionUser.id);
+    await assertSalaryAccountBookAccess(
+      accountBookId,
+      sessionUser.id,
+      SalaryAccess.READ,
+    );
 
     return jsonOk(
       await salaryRecordService.listRecords({
@@ -105,7 +110,11 @@ export async function POST(
     if (!parsed.success) return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
 
     const { account_book_id: accountBookId } = await params;
-    await assertSalaryAccountBookAccess(accountBookId, sessionUser.id);
+    await assertSalaryAccountBookAccess(
+      accountBookId,
+      sessionUser.id,
+      SalaryAccess.WRITE,
+    );
 
     return jsonOk(
       await salaryRecordService.saveRecord({

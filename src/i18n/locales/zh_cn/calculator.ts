@@ -232,6 +232,15 @@ export const calculator = {
     period: "给付期间",
     all_periods: "全部期间",
     no_result_desc: "换个关键字、员工或给付期间再试试。",
+    delete_title: "删除薪资记录",
+    delete_content:
+      "确定要删除「{{name}}」{{year}} 年 {{month}} 月的薪资记录吗？",
+    delete_irreversible:
+      "薪资记录不做软删除，删掉之后无法恢复，也无法从其他地方找回。",
+    delete_submit_btn: "确定删除",
+    delete_failed: "删除失败，请稍后再试",
+    view_failed: "薪资单加载失败，请稍后再试",
+    load_back_failed: "载回计算器失败，请稍后再试",
   },
   account_book_entry: {
     title: "想把这次的试算保存下来吗？",

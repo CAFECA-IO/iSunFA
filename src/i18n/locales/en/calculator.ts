@@ -245,6 +245,16 @@ export const calculator = {
     period: "Period",
     all_periods: "All periods",
     no_result_desc: "Try a different keyword, employee or pay period.",
+    delete_title: "Delete payroll record",
+    delete_content:
+      'Delete the {{month}}/{{year}} payroll record for "{{name}}"?',
+    delete_irreversible:
+      "Payroll records are not soft-deleted. Once removed, this record cannot be restored or recovered from anywhere else.",
+    delete_submit_btn: "Delete",
+    delete_failed: "Could not delete the record. Please try again later.",
+    view_failed: "Could not load the payslip. Please try again later.",
+    load_back_failed:
+      "Could not load this record into the calculator. Please try again later.",
   },
   account_book_entry: {
     title: "Want to keep this calculation?",

@@ -239,6 +239,17 @@ export const calculator = {
     period: "対象期間",
     all_periods: "すべての期間",
     no_result_desc: "キーワード・従業員・対象期間を変えてお試しください。",
+    delete_title: "給与記録の削除",
+    delete_content:
+      "「{{name}}」さんの {{year}} 年 {{month}} 月の給与記録を削除しますか？",
+    delete_irreversible:
+      "給与記録は論理削除ではありません。削除すると復元できず、他の場所からも取り戻せません。",
+    delete_submit_btn: "削除する",
+    delete_failed: "削除できませんでした。しばらくしてからお試しください。",
+    view_failed:
+      "給与明細を読み込めませんでした。しばらくしてからお試しください。",
+    load_back_failed:
+      "計算機に読み込めませんでした。しばらくしてからお試しください。",
   },
   account_book_entry: {
     title: "この試算を保存しますか？",

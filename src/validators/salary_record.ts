@@ -150,14 +150,36 @@ export const salaryCalculatorUiSchema = z.object({
   totalSalaryTaxable: resultAmountSchema,
 });
 
-export const salaryRecordWriteSchema = z.object({
-  employeeId: z.string().uuid(),
-  year: z.number().int().min(SALARY_RECORD_MIN_YEAR).max(2100),
-  month: z.number().int().min(1).max(12),
-  input: salaryCalculatorOptionsSchema,
-  result: salaryCalculatorUiSchema,
-  calculatorVersion: z.string().trim().min(1).max(20),
-});
+export const salaryRecordWriteSchema = z
+  .object({
+    employeeId: z.string().uuid(),
+    year: z.number().int().min(SALARY_RECORD_MIN_YEAR).max(2100),
+    month: z.number().int().min(1).max(12),
+    input: salaryCalculatorOptionsSchema,
+    result: salaryCalculatorUiSchema,
+    calculatorVersion: z.string().trim().min(1).max(20),
+  })
+  /**
+   * Info: (20260901 - Julian) 年月在這個 payload 裡出現兩次，而且兩邊的用途完全不同。
+   *
+   * 外層的 `year`/`month` 是 `(帳本, 員工, 年, 月)` 唯一鍵的一半 —— 它決定
+   * **覆寫哪一筆**；`input.year`/`input.month` 是快照，決定**載回計算機時顯示哪個月**。
+   * 呼叫端（`salary_result_section.tsx` 與 `salary_calculator_snapshot.ts`）
+   * 各自算一次，目前同源所以必然相等 —— 但那是巧合，不是約束（checklist §2.2：
+   * 「兩邊各算一次就是『算的是 A、送的是 B』，而巧合能掩蓋很久」）。
+   *
+   * 它們不一致時的症狀最難查：紀錄掛在 8 月底下、載回來畫面寫著 9 月，
+   * 兩個畫面對同一筆紀錄講不同的話，而且完全靜默。API 是對外的，
+   * 所以這一條在伺服器端擋，不是在前端。
+   */
+  .refine((data) => data.year === data.input.year, {
+    message: "year 與 input.year 必須一致",
+    path: ["input", "year"],
+  })
+  .refine((data) => data.month === data.input.month, {
+    message: "month 與 input.month 必須一致",
+    path: ["input", "month"],
+  });
 
 export const salaryRecordQuerySchema = z.object({
   employeeId: z.string().uuid().optional(),

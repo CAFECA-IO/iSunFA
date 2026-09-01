@@ -22,6 +22,7 @@ import { useSalaryEmployees } from "@/hooks/use_salary_employees";
 import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import SalaryCalculatorShell from "@/components/salary_calculator/salary_calculator_shell";
 import ViewPaySlipModal from "@/components/salary_calculator/view_pay_slip_modal";
+import DeleteRecordModal from "@/components/salary_calculator/delete_record_modal";
 
 const inputStyle =
   "w-full rounded-xl border border-gray-200 bg-white py-2 pr-3 pl-9 text-sm text-gray-700 transition-all placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none";
@@ -58,8 +59,9 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
 }) => {
   const { t } = useTranslation();
   const router = useRouter();
-  const { loadFromSnapshot, linkEmployee } = useCalculatorCtx();
-  const { employees } = useSalaryEmployees(accountBookId);
+  const { loadFromSnapshot, linkEmployee, unlinkEmployee } = useCalculatorCtx();
+  const { employees, isLoading: isEmployeesLoading } =
+    useSalaryEmployees(accountBookId);
 
   const [page, setPage] = useState<number>(1);
   const [employeeId, setEmployeeId] = useState<string>("");
@@ -71,6 +73,15 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [hasError, setHasError] = useState<boolean>(false);
   const [viewing, setViewing] = useState<ISalaryRecordDetail | null>(null);
+  const [deleting, setDeleting] = useState<ISalaryRecordSummary | null>(null);
+  /**
+   * Info: (20260901 - Julian) 列上那三顆圖示鈕的失敗訊息。
+   *
+   * 這三顆都是 async 且都可能失敗（403、被別人先刪掉、瞬斷）。
+   * 沒有這一條的話，失敗看起來就是「按了沒反應」—— 而讀取失敗有 `hasError`、
+   * 儲存失敗有錯誤列，只有這三顆是靜默的。
+   */
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -123,8 +134,14 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
   };
 
   const viewHandler = async (record: ISalaryRecordSummary) => {
-    const detail = await fetchDetail(record.id);
-    if (detail) setViewing(detail);
+    setActionError(null);
+    try {
+      const detail = await fetchDetail(record.id);
+      if (detail) setViewing(detail);
+      else setActionError(t("calculator.records.view_failed"));
+    } catch {
+      setActionError(t("calculator.records.view_failed"));
+    }
   };
 
   /**
@@ -138,17 +155,44 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
    * 這筆紀錄**當時**的值。先連結、後灌快照，快照才會贏 ——
    * 反過來的話，載回三個月前的紀錄會靜靜地換成今天的本薪，
    * 畫面上沒有任何提示，重新計算的結果卻和原始薪資單對不起來。
+   *
+   * ## 名單裡找不到這個人時，一定要 `unlinkEmployee()`
+   *
+   * `CalculatorProvider` 掛在 layout，跨頁不重置，所以 `selectedEmployeeId`
+   * 保留的是**上一次**連結的那個人。少了 `else` 這一支的話：
+   * 使用者載回李四的紀錄 → 找不到李四 → 連結還停在張三 →
+   * 按「儲存薪資紀錄」時 `selectedEmployeeId !== null`，直接存進
+   * `(帳本, 張三, 年, 月)`，而那是 upsert —— **覆寫張三該月原有的紀錄**。
+   * 畫面上的姓名是李四，全程沒有任何提示。
+   *
+   * 而「找不到」不是例外，是常態，三條路都會走到：
+   * 名單那支 GET 還在飛（與薪資紀錄是兩支並行請求）、
+   * 該員工已被軟刪（名單一律 `deletedAt: null`，但他的薪資紀錄還在）、
+   * 名單那支 GET 失敗（hook 把錯誤吞成 `[]`）。
+   * 第一條由下面的 `disabled={isEmployeesLoading}` 擋掉，後兩條靠這個 `else`。
    */
   const loadBackHandler = async (record: ISalaryRecordSummary) => {
-    const detail = await fetchDetail(record.id);
-    if (!detail) return;
+    setActionError(null);
+    try {
+      const detail = await fetchDetail(record.id);
+      if (!detail) {
+        setActionError(t("calculator.records.load_back_failed"));
+        return;
+      }
 
-    const employee = employees.find((item) => item.id === detail.employee.id);
-    if (employee) linkEmployee(employee);
+      const employee = employees.find((item) => item.id === detail.employee.id);
+      if (employee) {
+        linkEmployee(employee);
+      } else {
+        unlinkEmployee();
+      }
 
-    loadFromSnapshot(detail.input);
+      loadFromSnapshot(detail.input);
 
-    router.push(salaryCalculatorUrlOf(accountBookId).CALCULATOR);
+      router.push(salaryCalculatorUrlOf(accountBookId).CALCULATOR);
+    } catch {
+      setActionError(t("calculator.records.load_back_failed"));
+    }
   };
 
   const deleteHandler = async (record: ISalaryRecordSummary) => {
@@ -248,20 +292,26 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
           >
             <Eye className="size-4" />
           </button>
+          {/**
+           * Info: (20260901 - Julian) 員工名單還在飛的時候不能按 ——
+           * 那時 `employees` 是 `[]`，載回來的人一定找不到（理由見 `loadBackHandler`）
+           */}
           <button
             type="button"
             aria-label={t("calculator.records.load_back")}
             title={t("calculator.records.load_back")}
             onClick={() => loadBackHandler(record)}
-            className={`${iconBtnStyle} text-gray-400 hover:bg-gray-100 hover:text-gray-600`}
+            disabled={isEmployeesLoading}
+            className={`${iconBtnStyle} text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent`}
           >
             <RotateCcw className="size-4" />
           </button>
+          {/* Info: (20260901 - Julian) 硬刪且不可復原，所以先開確認彈窗 */}
           <button
             type="button"
             aria-label={t("calculator.records.delete")}
             title={t("calculator.records.delete")}
-            onClick={() => deleteHandler(record)}
+            onClick={() => setDeleting(record)}
             className={`${iconBtnStyle} text-gray-400 hover:bg-red-50 hover:text-red-600`}
           >
             <Trash className="size-4" />
@@ -389,6 +439,20 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
           </div>
         </div>
 
+        {actionError !== null && (
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm font-medium text-red-600">{actionError}</p>
+            <button
+              type="button"
+              aria-label={t("common.close")}
+              onClick={() => setActionError(null)}
+              className="flex size-6 shrink-0 items-center justify-center rounded-md text-red-400 transition-colors hover:bg-red-100 hover:text-red-600"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        )}
+
         {hasError ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-white px-8 py-16 text-center shadow-sm">
             <p className="text-sm font-medium text-red-600">
@@ -412,6 +476,14 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
           />
         )}
       </div>
+
+      {deleting && (
+        <DeleteRecordModal
+          record={deleting}
+          closeHandler={() => setDeleting(null)}
+          deleteHandler={() => deleteHandler(deleting)}
+        />
+      )}
 
       {viewing && (
         <ViewPaySlipModal

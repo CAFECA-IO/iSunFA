@@ -30,6 +30,7 @@ declare const jest: typeof JestType;
 
 import { NextRequest } from "next/server";
 import { RateLimitBucketEnum, RATE_LIMIT_RULES } from "@/constants/rate_limit";
+import { SalaryAccess } from "@/constants/salary_access";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { AppError } from "@/lib/utils/error";
 import { HTTP_MAP } from "@/lib/utils/status";
@@ -187,6 +188,125 @@ const employeeParams = () =>
 const recordParams = () =>
   Promise.resolve({ account_book_id: BOOK, record_id: RECORD_ID });
 
+/**
+ * Info: (20260901 - Julian) 八支端點的清單，三個 `it.each` 共用同一份。
+ *
+ * ## 為什麼要有這張表
+ *
+ * 上一版的三個 describe 各自手寫案例，結果是：401 走完八支，
+ * 「授權閘擋得住」只驗了 2 支，限流只驗了 1 支。檔頭卻宣稱守著八支。
+ * 實測：把 `employee/route.ts` 兩處 `if (limited) return limited;` 全部註解掉
+ * → `npx jest salary_route_wiring` → **23 passed，一條都沒紅**；
+ * 把 `POST employee` 的 `await assertSalaryAccountBookAccess(...)` 改成
+ * `void ...`（忘了 await ＝ 永遠放行）→ 同樣全綠 ——
+ * 而「換閘忘了 await」正是這個檔頭第 16 行自己寫下要防的缺陷。
+ *
+ * 涵蓋範圍變成一張表之後，新增端點時漏掉的成本是「表裡少一列」，
+ * 而下面「表涵蓋了每一支被匯入的 handler」那條會把它抓出來。
+ *
+ * `bucket` 與 `service` 必須與 route 實際使用的一致 —— 填錯會讓限流那條
+ * 用錯的額度去灌，症狀是灌不滿而測試變成在測別的東西，所以下面另有一條
+ * 「READ 與 SALARY_WRITE 的額度不同」把兩者的前提釘住。
+ */
+interface IEndpointCase {
+  label: string;
+  /**
+   * Info: (20260901 - Julian) 純 ASCII 的識別字，用來組限流測試的 `Authorization` 值。
+   * 不能拿 `label` 來組：它含中文，而 header 值要能轉成 ByteString
+   * （字碼 > 255 會直接丟 `TypeError`，而且是在建 request 時炸，不是在斷言時）。
+   */
+  key: string;
+  bucket: RateLimitBucketEnum;
+  /**
+   * Info: (20260901 - Julian) 這支端點該向授權閘要求的層級。
+   * 讀寫填反了就等於把寫入放寬給 `VIEWER`，而那是 §4.3
+   * 「拼錯的方向通常是放寬」最典型的一格 —— 所以它要有斷言。
+   */
+  access: SalaryAccess;
+  service: IAnyMock;
+  run: (address: string | null) => Promise<Response>;
+}
+
+const ENDPOINTS: IEndpointCase[] = [
+  {
+    label: "GET employee（員工清單）",
+    key: "employee-list",
+    access: SalaryAccess.READ,
+    bucket: RateLimitBucketEnum.READ,
+    service: serviceMocks.listEmployees,
+    run: (address) => employeeList(get(address), { params: bookParams() }),
+  },
+  {
+    label: "POST employee（新增員工）",
+    key: "employee-create",
+    access: SalaryAccess.WRITE,
+    bucket: RateLimitBucketEnum.SALARY_WRITE,
+    service: serviceMocks.createEmployee,
+    run: (address) =>
+      employeeCreate(send("POST", employeeBody, address), {
+        params: bookParams(),
+      }),
+  },
+  {
+    label: "PUT employee/:id（編輯員工）",
+    key: "employee-update",
+    access: SalaryAccess.WRITE,
+    bucket: RateLimitBucketEnum.SALARY_WRITE,
+    service: serviceMocks.updateEmployee,
+    run: (address) =>
+      employeeUpdate(send("PUT", employeeBody, address), {
+        params: employeeParams(),
+      }),
+  },
+  {
+    label: "DELETE employee/:id（移除員工）",
+    key: "employee-delete",
+    access: SalaryAccess.WRITE,
+    bucket: RateLimitBucketEnum.SALARY_WRITE,
+    service: serviceMocks.deleteEmployee,
+    run: (address) =>
+      employeeDelete(send("DELETE", undefined, address), {
+        params: employeeParams(),
+      }),
+  },
+  {
+    label: "GET record（薪資紀錄清單）",
+    key: "record-list",
+    access: SalaryAccess.READ,
+    bucket: RateLimitBucketEnum.READ,
+    service: serviceMocks.listRecords,
+    run: (address) => recordList(get(address), { params: bookParams() }),
+  },
+  {
+    label: "POST record（儲存薪資紀錄）",
+    key: "record-save",
+    access: SalaryAccess.WRITE,
+    bucket: RateLimitBucketEnum.SALARY_WRITE,
+    service: serviceMocks.saveRecord,
+    run: (address) =>
+      recordSave(send("POST", recordBody, address), { params: bookParams() }),
+  },
+  {
+    label: "GET record/:id（薪資紀錄明細）",
+    key: "record-detail",
+    access: SalaryAccess.READ,
+    bucket: RateLimitBucketEnum.READ,
+    service: serviceMocks.getRecord,
+    run: (address) => recordDetail(get(address), { params: recordParams() }),
+  },
+  {
+    label: "DELETE record/:id（刪除薪資紀錄）",
+    key: "record-delete",
+    access: SalaryAccess.WRITE,
+    bucket: RateLimitBucketEnum.SALARY_WRITE,
+    service: serviceMocks.deleteRecord,
+    run: (address) =>
+      recordDelete(send("DELETE", undefined, address), {
+        params: recordParams(),
+      }),
+  },
+];
+
 beforeEach(() => {
   dewtMock.mockReset();
   guardMock.mockReset();
@@ -204,81 +324,51 @@ beforeEach(() => {
 });
 
 describe("身分閘：沒有 token 就到不了業務邏輯", () => {
-  it.each([
-    ["員工清單", () => employeeList(get(null), { params: bookParams() })],
-    [
-      "新增員工",
-      () =>
-        employeeCreate(send("POST", employeeBody, null), {
-          params: bookParams(),
-        }),
-    ],
-    [
-      "編輯員工",
-      () =>
-        employeeUpdate(send("PUT", employeeBody, null), {
-          params: employeeParams(),
-        }),
-    ],
-    [
-      "刪除員工",
-      () =>
-        employeeDelete(send("DELETE", undefined, null), {
-          params: employeeParams(),
-        }),
-    ],
-    ["薪資紀錄清單", () => recordList(get(null), { params: bookParams() })],
-    [
-      "儲存薪資紀錄",
-      () =>
-        recordSave(send("POST", recordBody, null), { params: bookParams() }),
-    ],
-    ["薪資紀錄明細", () => recordDetail(get(null), { params: recordParams() })],
-    [
-      "刪除薪資紀錄",
-      () =>
-        recordDelete(send("DELETE", undefined, null), {
-          params: recordParams(),
-        }),
-    ],
-  ])("%s：回 401，且授權閘與 service 都沒被碰到", async (_label, run) => {
-    const response = await run();
-
-    expect(response.status).toBe(httpOf(API_ERRORS.AUTH_INVALID_TOKEN));
-    expect(guardMock).not.toHaveBeenCalled();
-    for (const mock of Object.values(serviceMocks)) {
-      expect(mock).not.toHaveBeenCalled();
-    }
+  it("端點表涵蓋了全部八支端點（表短了，下面三條就會靜靜地少驗幾支）", () => {
+    expect(ENDPOINTS).toHaveLength(8);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.label)).size).toBe(8);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.key)).size).toBe(8);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.service)).size).toBe(8);
   });
+
+  it.each(ENDPOINTS)(
+    "$label：回 401，且授權閘與 service 都沒被碰到",
+    async ({ run }) => {
+      const response = await run(null);
+
+      expect(response.status).toBe(httpOf(API_ERRORS.AUTH_INVALID_TOKEN));
+      expect(guardMock).not.toHaveBeenCalled();
+      for (const mock of Object.values(serviceMocks)) {
+        expect(mock).not.toHaveBeenCalled();
+      }
+    },
+  );
 });
 
 describe("授權閘：不是這本帳的成員就寫不進去", () => {
-  it("閘丟 403 時 route 如實回 403，而且 service 沒有被呼叫", async () => {
-    guardMock.mockRejectedValue(
-      new AppError(API_ERRORS.AUTH_PERMISSION_DENIED),
-    );
+  /**
+   * Info: (20260901 - Julian) 八支全走一遍，而且斷言成對。
+   *
+   * 只斷言「回 403」的話，`void assertSalaryAccountBookAccess(...)`
+   * （忘了 await）不會紅 —— 未被 await 的 rejection 不影響回傳值，
+   * route 照樣把 service 的結果回出去；只斷言「service 沒被呼叫」的話，
+   * 「閘擋下來但回錯狀態碼」也不會紅。兩條合起來才等於「這道閘接上了」。
+   *
+   * 讀取路徑也在表裡 —— 唯讀不等於公開，薪資讀取尤其不是。
+   */
+  it.each(ENDPOINTS)(
+    "$label：閘丟 403 時如實回 403，且 service 沒有被呼叫",
+    async ({ run, service }) => {
+      guardMock.mockRejectedValue(
+        new AppError(API_ERRORS.AUTH_PERMISSION_DENIED),
+      );
 
-    const response = await recordSave(
-      send("POST", recordBody, "0xguard-write"),
-      { params: bookParams() },
-    );
+      const response = await run("0xguard-blocked");
 
-    expect(response.status).toBe(httpOf(API_ERRORS.AUTH_PERMISSION_DENIED));
-    expect(serviceMocks.saveRecord).not.toHaveBeenCalled();
-  });
-
-  it("讀取路徑同樣過閘（唯讀不等於公開）", async () => {
-    guardMock.mockRejectedValue(
-      new AppError(API_ERRORS.AUTH_PERMISSION_DENIED),
-    );
-
-    const response = await recordList(get("0xguard-read"), {
-      params: bookParams(),
-    });
-
-    expect(response.status).toBe(httpOf(API_ERRORS.AUTH_PERMISSION_DENIED));
-    expect(serviceMocks.listRecords).not.toHaveBeenCalled();
-  });
+      expect(response.status).toBe(httpOf(API_ERRORS.AUTH_PERMISSION_DENIED));
+      expect(service).not.toHaveBeenCalled();
+    },
+  );
 
   it("八支端點每一支都呼叫過授權閘，而且帶的是路徑上的帳本", async () => {
     const calls: Promise<unknown>[] = [
@@ -306,6 +396,40 @@ describe("授權閘：不是這本帳的成員就寫不進去", () => {
       expect(call[0]).toBe(BOOK);
       expect(call[1]).toBe(USER_ID);
     }
+  });
+
+  /**
+   * Info: (20260901 - Julian) 每一支要求的層級都與它實際做的事相符。
+   *
+   * 上面那條只證明「閘被呼叫過」，不管它被要求了什麼。少了這一條，
+   * 把 `DELETE record/:id` 填成 `SalaryAccess.READ` 不會有任何紅燈 ——
+   * 而那正好等於「唯讀成員可以硬刪薪資紀錄」，也就是這次要修掉的缺陷本身。
+   *
+   * 逐支分開跑而不是一次八支併發：`guardMock.mock.calls` 的順序在
+   * `Promise.all` 之下不保證與陣列順序相同，比對就會比錯格。
+   */
+  it.each(ENDPOINTS)(
+    "$label：向授權閘要求的層級正確（讀是讀、寫是寫）",
+    async ({ run, access }) => {
+      await run("0xaccess-level");
+
+      expect(guardMock).toHaveBeenCalledTimes(1);
+      expect(guardMock.mock.calls[0][2]).toBe(access);
+    },
+  );
+
+  it("寫入端點就是那五支（三讀五寫，換一種分法都要有人重新想過）", () => {
+    const writes = ENDPOINTS.filter(
+      (endpoint) => endpoint.access === SalaryAccess.WRITE,
+    ).map((endpoint) => endpoint.key);
+
+    expect(writes).toEqual([
+      "employee-create",
+      "employee-update",
+      "employee-delete",
+      "record-save",
+      "record-delete",
+    ]);
   });
 });
 
@@ -407,33 +531,60 @@ describe("驗證：形狀不對就進不了 service", () => {
 });
 
 describe("限流真的擋得住（不是只有那兩行的順序對）", () => {
-  it("儲存薪資紀錄：超限回 429，且 service 沒有被多呼叫一次", async () => {
-    const address = "0xrl-record-save";
-    const limit = perMinuteLimit(RateLimitBucketEnum.SALARY_WRITE);
+  /**
+   * Info: (20260901 - Julian) 八支端點各自灌滿自己的桶，斷言成對。
+   *
+   * 上一版只有 `POST record` 這一支。實測：把 `employee/route.ts` 兩處
+   * `if (limited) return limited;` 註解掉 → 全套 23 條一條都沒紅。
+   * 換句話說，八支裡有七支的限流接線沒有任何東西守著。
+   *
+   * **每一支用不同的 `address`**：限流器以身分分桶，共用同一個位址的話
+   * 前一支灌滿會直接把後一支擋掉，那時候測到的是「桶是共用的」，
+   * 不是「這一支自己接上了限流」（checklist §1.9：
+   * 選到的觀測量要能區分成功與失敗）。
+   *
+   * 兩條斷言的分工：
+   * ① 使用者看得到的結果 —— 429 且帶 `Retry-After`。
+   *    刪掉 `if (limited) return limited;` 只有這條會紅。
+   * ② 業務邏輯沒有被執行 —— service 的呼叫次數沒有再增加。
+   *    改成「做完事再回 429」只有這條會紅。
+   */
+  it.each(ENDPOINTS)(
+    "$label：超限回 429，且 service 沒有被多呼叫一次",
+    async ({ run, bucket, service, key }) => {
+      const address = `0xrl-${key}`;
+      const limit = perMinuteLimit(bucket);
 
-    for (let i = 0; i < limit; i += 1) {
-      const response = await recordSave(send("POST", recordBody, address), {
-        params: bookParams(),
-      });
-      expect(response.status).toBe(200);
-    }
-    const callsBefore = serviceMocks.saveRecord.mock.calls.length;
-    expect(callsBefore).toBe(limit);
+      for (let i = 0; i < limit; i += 1) {
+        const response = await run(address);
+        expect(response.status).toBe(200);
+      }
 
-    const blocked = await recordSave(send("POST", recordBody, address), {
-      params: bookParams(),
-    });
+      const callsBefore = service.mock.calls.length;
+      expect(callsBefore).toBe(limit);
 
-    // Info: (20260831 - Julian) ① 使用者看得到的結果
-    expect(blocked.status).toBe(httpOf(API_ERRORS.IS_RATE_LIMITED));
-    expect(blocked.headers.get("Retry-After")).not.toBeNull();
+      const blocked = await run(address);
 
-    /**
-     * Info: (20260831 - Julian) ② 業務邏輯沒有被執行。
-     * 刪掉 route 的 `if (limited) return limited;` 之後只有 ① 會紅；
-     * 改成「做完事再回 429」則只有 ② 會紅。兩條合起來才等於「擋住了」。
-     */
-    expect(serviceMocks.saveRecord.mock.calls.length).toBe(callsBefore);
+      // Info: (20260901 - Julian) ① 使用者看得到的結果
+      expect(blocked.status).toBe(httpOf(API_ERRORS.IS_RATE_LIMITED));
+      expect(blocked.headers.get("Retry-After")).not.toBeNull();
+
+      // Info: (20260901 - Julian) ② 業務邏輯沒有被執行
+      expect(service.mock.calls.length).toBe(callsBefore);
+    },
+  );
+
+  /**
+   * Info: (20260901 - Julian) 上面那條的前提：兩個桶的額度必須不同。
+   *
+   * 若 `READ` 與 `SALARY_WRITE` 的每分鐘上限碰巧相同，端點表裡的 `bucket`
+   * 填錯也灌得滿、測試照樣綠 —— 那時候上面驗到的就不是它宣稱的那件事。
+   * 這一條在額度被調成一樣時會紅，提醒改用別的方式區分。
+   */
+  it("READ 與 SALARY_WRITE 的每分鐘額度不同（上面那條靠這個區分桶填錯）", () => {
+    expect(perMinuteLimit(RateLimitBucketEnum.READ)).not.toBe(
+      perMinuteLimit(RateLimitBucketEnum.SALARY_WRITE),
+    );
   });
 
   it("新增員工用的是同一個寫入桶（不是各自為政）", async () => {

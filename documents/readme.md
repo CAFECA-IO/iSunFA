@@ -33,6 +33,8 @@
    > 席次計費與分配點數上鏈的部署順序。本專案沒有 migrations 目錄，欄位新增與資料回填是分開的兩件事，而順序做錯不會噴錯——只會安靜地讓功能停擺或讓點數暫時消失在畫面上。**兩份檢查表屬同一次部署**，見該檔 §4.9。
 8. 🗓️ **[部署檢查表：假勤系統](engineering_guidelines/deploy_checklist_leave_overtime_2026q3.md)**
    > 15 張新表、19 個新 enum，以及**與上一份最重要的差別：這次不是純新增**。移除了 `enum LeaveType` 與 `leave_request` 的四個欄位，對兩張既有表加了 8 個必填且無 default 的欄位 —— 因此上一份「回滾程式碼不需要回滾 schema」的結論在這裡**不成立**。另有兩種漏做完全不報錯，以及正式環境已有真實假單時的停損點。
+9. 💰 **[部署檢查表：薪資紀錄](engineering_guidelines/deploy_checklist_salary_record_2026q3.md)**
+   > 2 張新表、無 enum 變更、純新增，所以套用順序本身不難 —— 難的是**上線前的兩個阻擋項**：薪資欄位的資料分級尚未拍板（ADR 018 並未涵蓋薪資，需補一段新決策），以及 7 個明文入庫的薪資欄位中有 2 個不在 `salary_record` 表上、最容易被漏掉。另含存活員工唯一性走 `active_number` 部分唯一索引的驗證步驟。
 
 ### 🐛 已知缺陷 (Known Issues)
 
@@ -87,6 +89,7 @@ _聚焦於四大會計師級別的底層財報與內控實務：_
 - **[費思個人化記憶 (Faith Personal Memory)](architecture/ai_and_analytics/faith_personal_memory.md)**：付費訂閱的每位成員專屬記憶——`(userId, teamId)` 隔離、LLM 只做萃取、欄位級加密，以及停止訂閱 90 天後刪除的保留機制。**須於 v0.13.0 釋出前完成**，條款已先行載明。
 - **[出勤模組開發計畫書 (Time & Attendance Module Plan)](architecture/time_attendance_module_plan.md)**：打卡不可變、地理圍欄、班別統一模型與單日出勤判定引擎（純函數）。
 - **[假勤模組開發計畫書 (Leave & Overtime Module Plan)](architecture/leave_and_overtime_module_plan.md)**：假別規則資料化、額度異動帳本、多級簽核鏈快照、加班分段與補休、假勤行事曆。**§3 附已查證的勞基法／性平法法源對照表與 8 項待核對清單，法務複核前不得標記 Production Ready。**
+- **[薪資紀錄模組開發計畫書 (Salary Record Module Plan)](architecture/salary_record_module_plan.md)**：把既有的公開版薪資計算機接上帳本 —— 員工名冊（身分鍵是**員工編號**不是 Email，存活唯一性走 `active_number` 部分唯一索引）、`(帳本, 員工, 年, 月)` 唯一鍵與「重存即覆寫」、輸入／結果雙快照與 `calculator_version`。**§13 的薪資資料分級尚未拍板，上線前為阻擋項。**
 
 ### 📌 4. 架構決策紀錄 (Architecture Decision Records, ADRs)
 
