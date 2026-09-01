@@ -71,7 +71,7 @@ const SalaryCalculatorPageBody: FC<ISalaryCalculatorPageBodyProps> = ({
       </div>
 
       {/* Info: (20250887 - Julian) Main Content Mobile */}
-      <div className="flex flex-col gap-4 px-5 py-7 md:gap-7 lg:hidden">
+      <div className="flex flex-col gap-4 py-3 md:gap-7 lg:hidden lg:px-5 lg:py-7">
         {/* Info: (20250828 - Julian) Mobile Tabs */}
         <div className="grid grid-cols-2 gap-4">
           <button

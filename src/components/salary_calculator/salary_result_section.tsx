@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, FC } from "react";
+import { useEffect, useRef, useState, FC } from "react";
 import Link from "next/link";
 import { CheckCircle2, Download, Loader2, Save /* Send */ } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -35,6 +35,7 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
 
   const {
     completeSteps,
+    switchStep,
     employeeName,
     employeeNumber,
     employeeEmail,
@@ -88,6 +89,9 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
 
   // Info: (20260901 - Julian) 例外 B 對話框裡的錯誤訊息（名單過期時後端仍會擋下來）
   const [unlinkedError, setUnlinkedError] = useState<string | null>(null);
+
+  // Info: (20260901 - Julian) 「修改員工編號」按下之後，等 Step 1 掛上來再聚焦
+  const [isFocusingNumber, setIsFocusingNumber] = useState<boolean>(false);
 
   const selectedMonthNumber =
     MONTHS.findIndex((month) => month.name === selectedMonth.name) + 1;
@@ -193,13 +197,31 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
   /**
    * Info: (20260901 - Julian) 第三條路：編號打錯了，回去改。
    *
-   * 關掉對話框，把畫面帶回 Step 1 的編號欄並聚焦。那個 id 本來就存在
-   * （`basic_info_form.tsx:261`），所以這裡不需要另外拉一條 ref 或 context。
-   * `block: "center"` 是因為欄位可能在視窗上緣之外，只 focus 的話畫面不會動。
+   * **必須先 `switchStep(1)`。** 表單一次只掛一個步驟
+   * （`salary_form_section.tsx:37` 是 `currentStep === 1 ? <BasicInfoForm/> : …`），
+   * 而儲存鈕要四個步驟都完成才亮，所以按下去的當下使用者多半停在 Step 4 ——
+   * 那時 `#input-employee-number` 根本不在 DOM 裡，`getElementById` 回 null，
+   * 對話框關掉之後什麼也不會發生。
+   *
+   * 聚焦因此不能寫在這裡：切步驟是 setState，欄位要等下一次 commit 才存在。
+   * 立旗標、交給下面的 effect 做。
    */
   const editNumberHandler = () => {
     setIsShowUnlinkedModal(false);
     setUnlinkedError(null);
+    switchStep(1);
+    setIsFocusingNumber(true);
+  };
+
+  /**
+   * Info: (20260901 - Julian) 等 Step 1 真的掛上來之後才捲動並聚焦。
+   *
+   * effect 跑在 commit 之後，此時 `BasicInfoForm` 已經在畫面上。
+   * `block: "center"` 是因為欄位常在視窗上緣之外，只 focus 的話畫面不會動。
+   */
+  useEffect(() => {
+    if (!isFocusingNumber) return;
+    setIsFocusingNumber(false);
 
     const input = document.getElementById(EMPLOYEE_NUMBER_INPUT_ID);
     if (!(input instanceof HTMLInputElement)) return;
@@ -207,7 +229,7 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     input.scrollIntoView({ behavior: "smooth", block: "center" });
     input.focus({ preventScroll: true });
     input.select();
-  };
+  }, [isFocusingNumber]);
 
   const confirmOverwriteHandler = async () => {
     if (pendingOverwrite === null) return;

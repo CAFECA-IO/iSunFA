@@ -162,7 +162,7 @@ export const UnlinkedEmployeeModal: FC<IUnlinkedEmployeeModalProps> = ({
           <CloseButton onClick={closeHandler} label={t("common.cancel")} />
         </div>
 
-        <div className="flex flex-col gap-[14px] px-[40px] pb-[24px]">
+        <div className="flex flex-col gap-[14px] px-[20px] pb-[24px] md:px-[40px]">
           {/**
            * Info: (20260901 - Julian) 衝突的事實在這裡講完，而不是掛在一顆按不動的按鈕底下。
            * 說明文字本來就是交代狀況的地方，講在這裡三條選項才都是「能按的」。

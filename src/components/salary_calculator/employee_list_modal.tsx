@@ -46,7 +46,7 @@ const EmployeeItem: FC<{
       <button
         type="button"
         onClick={pickHandler}
-        className="flex flex-1 items-center gap-[8px] px-[24px] py-[12px] text-left"
+        className="flex flex-1 items-center gap-[8px] px-[12px] py-[12px] text-left md:px-[24px]"
       >
         <User
           size={16}
@@ -67,7 +67,7 @@ const EmployeeItem: FC<{
         </span>
       </button>
 
-      <div className="flex items-center gap-[4px] pr-[16px]">
+      <div className="flex items-center gap-[4px] pr-[8px] md:pr-[16px]">
         <button
           type="button"
           aria-label={`${employee.name} ${t("calculator.employee_list.edit_employee")}`}
@@ -181,7 +181,7 @@ const EmployeeListModal: FC<IEmployeeListModalProps> = ({
     if (employees.length === 0) {
       return (
         <div className="flex flex-col items-center gap-[14px] px-[24px] py-[40px] text-center">
-          <User size={28} className="text-text-brand-primary-lv1" />
+          <User size={28} className="text-text-brand-primary-lv1 shrink-0" />
           <p className="text-text-neutral-primary font-bold">
             {t("calculator.employee_list.empty_title")}
           </p>
@@ -250,9 +250,9 @@ const EmployeeListModal: FC<IEmployeeListModalProps> = ({
 
           {/* Info: (20250711 - Julian) Search bar */}
           {hasAnyEmployee && (
-            <div className="flex shrink-0 items-center gap-[12px] px-[24px] pb-[16px]">
+            <div className="flex w-full flex-col gap-[12px] px-[24px] pb-[16px] md:flex-row md:items-center">
               <div className="border-input-stroke-input flex flex-1 items-center rounded-lg border">
-                <div className="text-icon-surface-single-color-primary px-[12px] py-[10px]">
+                <div className="text-icon-surface-single-color-primary shrink-0 px-[12px] py-[10px]">
                   <Search size={16} />
                 </div>
                 <input
@@ -268,7 +268,7 @@ const EmployeeListModal: FC<IEmployeeListModalProps> = ({
                     type="button"
                     aria-label={t("calculator.employee_list.clear_search")}
                     onClick={clearKeyword}
-                    className={`text-text-neutral-tertiary mr-[6px] ${iconBtnStyle}`}
+                    className={`text-text-neutral-tertiary mr-[6px] shrink-0 ${iconBtnStyle}`}
                   >
                     <X size={16} />
                   </button>

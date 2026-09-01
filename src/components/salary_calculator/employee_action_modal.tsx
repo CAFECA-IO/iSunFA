@@ -130,7 +130,7 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
           </button>
         </div>
         {/* Info: (20250715 - Julian) Modal Body */}
-        <div className="flex min-h-0 flex-1 flex-col gap-[24px] overflow-y-auto px-[40px]">
+        <div className="flex min-h-0 flex-1 flex-col gap-[24px] overflow-y-auto px-[20px] md:px-[40px]">
           {/* Info: (20250715 - Julian) Employee Name Input */}
           <div className="flex flex-col gap-[8px]">
             <p className="text-input-text-primary text-sm font-semibold">
