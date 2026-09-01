@@ -254,6 +254,26 @@ describe("手機版的登入按鈕不會被壓成一個圓", () => {
     expect(source).not.toContain("<UserActions />");
   });
 
+  /**
+   * Info: (20260901 - Luphia) 上界：**全 `src` 只有 `header_actions.tsx` 能持有
+   * 那一列控件**（review 四輪中-4）。
+   *
+   * 上面那條 it.each 是寫死的三檔清單——正是這個 PR 這一輪剛在比例守門上修掉
+   * 的形狀（三輪高-2）：新增第四個 header（`hr_header` 哪天把 `<UserActions />`
+   * 加進去）不在清單裡，照綠，再分岔一次——而分岔正是這一輪事故的成因。
+   * it.each 留著當下界（已知的三個不得退回手寫），這一條補上界。
+   */
+  it("全 src 只有 header_actions.tsx 持有 <UserActions />", () => {
+    const holders = walkSource()
+      .filter(
+        (file) =>
+          !file.includes("__tests__") &&
+          readFileSync(file, "utf8").includes("<UserActions />"),
+      )
+      .map((file) => file.replace(`${process.cwd()}/`, ""));
+    expect(holders).toEqual(["src/components/header/header_actions.tsx"]);
+  });
+
   it("header 右側群組的手機間距遠小於桌機", () => {
     expect(headerGroupClass).toMatch(/gap-x-(1|1\.5|2)\s/);
     expect(headerGroupClass).toContain("sm:gap-x-6");

@@ -26,7 +26,9 @@ import { join } from "path";
  *  （真的字「登入」＋真的內距）、間距與 logo 高度（**從原始碼 parse**，改了
  *   class 量的東西跟著變）、flex 結構與 preflight 的 `img{max-width:100%}`。
  * - **釘的**：三個純圖示控件的外框（選單 36、主題 52、語言 40，由各元件的固定
- *   幾何推得）。它們是剛性葉節點；會動的變數全是真的。
+ *   幾何推得，下方掃描斷言釘住對應的 class）、登入態膠囊（72）、nav 內距（12）、
+ *   **字型**（Noto Sans CJK／系統等寬字；產品是 Arial + next/font 的 Geist Mono
+ *   ——CJK 表意字寬不受字族影響，但版號地板的絕對值有個位數 px 的字型誤差）。
  *
  * 忠實度的證據：重現量到的 `logoW = 95.42`、`verW = 66.23`、`gap24 → 338`
  * 與真實頁面（dev server 實測）及三輪 reviewer 的獨立容器重現**三方一致**。
@@ -49,6 +51,7 @@ interface IMeasurement {
   logoNaturalW: number;
   verW: number;
   ctaRight: number;
+  ctaW: number;
 }
 
 interface IResult {
@@ -125,10 +128,71 @@ describe("重現的前提（改了這些，上面的重現就過期）", () => {
     "utf8",
   );
 
-  it("間距與 logo 高度是腳本從原始碼 parse 的，不是寫死的", () => {
-    // Info: (20260901 - Luphia) premise 由腳本回報——它 parse 失敗會以 exit 2 直接讓 beforeAll 炸掉
-    expect(result.premise.gapPx).toBeGreaterThan(0);
-    expect(result.premise.logoHPx).toBeGreaterThan(0);
+  it("premise 是精確值：gap 6px、logo 28px、版號同一份", () => {
+    /**
+     * Info: (20260901 - Luphia) 精確相等，不是 `> 0`（review 四輪中-2）：
+     * 「大於 0」與「寫死一個正數」相容——那正是 §1.9 的形狀。改 `gap-x-*` 或
+     * `h-*` 時一併更新這裡，**這一條的用途就是逼你重新量一次**。
+     *
+     * 它的價值當場驗證過一次：腳本的 regex 改壞成貪婪版本（抓到 `lg:gap-x-8`、
+     * 量出 32px）的那一刻，就是這條把它攔下來的——`> 0` 會照綠。
+     * `version` 一起比，順便釘住「腳本讀的 package.json 與測試讀的是同一份」。
+     */
+    const pkg = JSON.parse(
+      readFileSync(join(process.cwd(), "package.json"), "utf8"),
+    ) as { version: string };
+    expect(result.premise).toEqual({
+      gapPx: 6,
+      logoHPx: 28,
+      version: pkg.version,
+    });
+  });
+
+  /**
+   * Info: (20260901 - Luphia) CJK 字型真的存在的證據（review 四輪低-1）：
+   * 「登入」在 14px 表意字下是 28px，加 `px-4` 的 32px 內距＝60。字型沒裝成
+   * （tofu）或回退到非 CJK 字族時寬度會偏離——workflow 的註解寫著「沒有 CJK
+   * 字型量出來的寬度是錯的」，這一條把那句話變成斷言。
+   */
+  it("登入按鈕的字寬證明 CJK 字型存在（56–64px）", () => {
+    expect(result.loggedOut.ctaW).toBeGreaterThanOrEqual(56);
+    expect(result.loggedOut.ctaW).toBeLessThanOrEqual(64);
+  });
+
+  /**
+   * Info: (20260901 - Luphia) 釘住的控件幾何要與元件原始碼一致（review 四輪中-1）。
+   *
+   * 量測腳本裡選單 36／主題 52／語言 40／膠囊 72／nav 內距 12 是**手抄**的常數，
+   * 只有數量守門擋不住「任一控件變寬」——而這個版面的餘裕是 2px。間距與 logo
+   * 已經改成從原始碼 parse；這三個元件的幾何寫在 class 裡，這裡以掃描斷言釘住
+   * 對應關係（class 一變這裡先紅，紅的訊息指著量測腳本要一起改）。
+   */
+  it.each([
+    [
+      "src/components/header/theme_toggle.tsx",
+      ["h-7 w-13 shrink-0"],
+      "主題開關 52×28",
+    ],
+    [
+      "src/components/header/language_selector.tsx",
+      ["size-5", "size-4"],
+      "語言選擇 20+4+16=40",
+    ],
+    [
+      "src/components/header/header_nav.tsx",
+      ["px-2", "size-5"],
+      "選單鈕 16+20=36",
+    ],
+    [
+      "src/components/header/user_actions.tsx",
+      ["py-1 pr-3 pl-1", "size-8", "gap-x-2"],
+      "登入態膠囊 4+32+8+16+12=72",
+    ],
+  ])("釘住的幾何與 %s 一致（%s → %s）", (file, tokens) => {
+    const source = readFileSync(join(process.cwd(), file as string), "utf8");
+    (tokens as string[]).forEach((token) => {
+      expect(source).toContain(token);
+    });
   });
 
   /**

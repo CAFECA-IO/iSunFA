@@ -91,6 +91,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "puppeteer": "^25.1.0",
     "@next/eslint-plugin-next": "^16.1.1",
     "@tailwindcss/postcss": "^4",
     "@types/csv-parse": "^1.1.12",

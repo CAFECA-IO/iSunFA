@@ -15,8 +15,6 @@ env:
   ISUNCOIN_ADDRESS: ${{ secrets.ISUNCOIN_ADDRESS }}
   ISUNCOIN_PRIVATE_KEY: ${{ secrets.ISUNCOIN_PRIVATE_KEY }}
   PUPPETEER_SKIP_DOWNLOAD: "true"
-  # Info: (20260901 - Luphia) 用系統的 Chromium（上面 skip 了 puppeteer 自帶的下載）
-  PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
 
 jobs:
   # Your job configurations here
@@ -26,6 +24,11 @@ jobs:
     runs-on: ubuntu-latest
     # Docker Hub image that `container-job` executes in
     container: node:22-slim
+    env:
+      # Info: (20260901 - Luphia) 只在本 job 生效（review 四輪低-3）：設在 workflow
+      # 層級會讓日後新增的 job 一律繼承，而那些 job 不會裝 chromium——症狀是
+      # 「puppeteer 指著一個不存在的路徑」。
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
 
     # Service containers to run with `container-job`
     services:

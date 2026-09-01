@@ -8,6 +8,12 @@
  * jest 只執行本腳本並對輸出的 JSON 斷言（`src/__tests__/header_layout_320.test.ts`）。
  *
  * 重現的忠實度（哪些是真的、哪些是釘的）寫在該測試檔的檔頭。
+ *
+ * **字型也是釘的**（review 四輪中-1 附帶）：這裡用 Noto Sans CJK / 系統等寬字，
+ * 而產品的 body 是 Arial/Helvetica、`font-mono` 解析到 next/font 的 Geist Mono。
+ * CJK 的「登入」寬度不受影響（表意字寬 = 字級 × 字數），但**版號字串的地板**
+ * 是用另一套等寬字量的——`verW` 的絕對值有個位數 px 的字型誤差，
+ * 測試端以 `ctaW` 區間斷言守住 CJK 字型真的存在（沒有 CJK 字型時是 tofu，寬度不同）。
  * 本腳本只輸出一行 JSON 到 stdout；任何雜訊都走 stderr。
  */
 import { readFileSync } from "fs";
@@ -21,7 +27,20 @@ const read = (rel) => readFileSync(join(root, rel), "utf8");
 const spacingPx = (n) => Number(n) * 4;
 
 const headerActionsSource = read("src/components/header/header_actions.tsx");
-const gapMatch = /(?:^|[" ])gap-x-([\d.]+)/.exec(headerActionsSource);
+/**
+ * Info: (20260901 - Luphia) 分兩步：先取出 `className="…"` 的字串，再在字串內取
+ * **無前綴的** `gap-x-` token（review 四輪中-3）。
+ *
+ * 兩個坑都真的踩過：掃整個檔案會被註解裡的 `gap-x-`（出現 15 次）咬到——這一族
+ * 在本 PR 已是第三個現場；而 `className="[^"]*\bgap-x-` 這種一步到位的寫法，
+ * `[^"]*` 是**貪婪**的，會抓到同一個字串裡最後的 `lg:gap-x-8`（量出 32px）——
+ * 我改成那樣的當下就被 premise 的精確斷言抓下來。
+ */
+const classAttrs = [...headerActionsSource.matchAll(/className="([^"]*)"/g)].map(
+  (m) => m[1],
+);
+const gapClass = classAttrs.find((c) => /(?:^| )gap-x-[\d.]/.test(c));
+const gapMatch = gapClass ? /(?:^| )gap-x-([\d.]+)/.exec(gapClass) : null;
 const brandSource = read("src/components/header/brand_logo.tsx");
 const logoMatch = /className="h-(\d+) w-auto/.exec(brandSource);
 const version = JSON.parse(read("package.json")).version;
@@ -98,6 +117,7 @@ try {
         logoNaturalW: logo.naturalWidth,
         verW: document.getElementById("ver").getBoundingClientRect().width,
         ctaRight: document.getElementById("cta").getBoundingClientRect().right,
+        ctaW: document.getElementById("cta").getBoundingClientRect().width,
       };
     });
   };

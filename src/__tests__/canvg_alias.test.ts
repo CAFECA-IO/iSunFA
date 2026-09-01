@@ -1,7 +1,7 @@
 import { describe, it, expect } from "@jest/globals";
 import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
-import { Canvg } from "@/lib/stubs/canvg_unused";
+import guarded, { Canvg } from "@/lib/stubs/canvg_unused";
 
 /**
  * Info: (20260828 - Luphia) `jspdf` 的 optional 相依 `canvg` 解不到就整個建置失敗
@@ -39,6 +39,26 @@ describe("canvg 的替身", () => {
   it("真的被用到時拋出說得出原因的錯誤", () => {
     expect(() => Canvg.from()).toThrow(/addSvgAsImage/);
     expect(() => new Canvg()).toThrow(/addSvgAsImage/);
+  });
+
+  /**
+   * Info: (20260901 - Luphia) Proxy 的兩個行為都要釘住（review 四輪低-4）：
+   * 替身存在的全部理由是「大聲失敗而不是靜默回 undefined」，而上一輪新增的
+   * 這條大聲失敗路徑沒有任何測試守著。
+   */
+  it("未知屬性存取拋同一句（jspdf 換用別的匯出時不靜默）", () => {
+    expect(() => (guarded as Record<string, unknown>).presets).toThrow(
+      /addSvgAsImage/,
+    );
+  });
+
+  /**
+   * Info: (20260901 - Luphia) `then` 的放行是刻意的設計決定：這個模組被
+   * `import("canvg")` 動態載入，Promise 解析會讀 `then`——拋錯的話模組還沒被
+   * 使用就先炸。釘住它，否則下一個人會「順手」把放行拿掉。
+   */
+  it("then 放行（動態 import 的 Promise 解析需要）", () => {
+    expect((guarded as Record<string, unknown>).then).toBeUndefined();
   });
 
   it("錯誤訊息說得出怎麼解除這個限制", () => {
