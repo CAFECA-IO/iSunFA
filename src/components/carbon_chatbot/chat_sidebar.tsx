@@ -306,12 +306,31 @@ export function ChatSidebar({
                       </div>
                     )}
                     <div className="mt-1.5 flex items-center justify-between">
-                      <span className="flex items-center gap-1 text-[11px] font-medium text-gray-400">
+                      {/**
+                       * Info: (20260827 - Luphia) 這一列有三個 flex 子項，而只有
+                       * 帳本 chip 該被壓縮（它備好了 `min-w-0` 與 `truncate`）。
+                       *
+                       * 日期與狀態徽章都要 `shrink-0`：中文**每個字之間都是合法
+                       * 斷點**，所以 flex 算出的 min-content 只有一個字寬。
+                       * 空間不足時徽章被壓到一字寬，「進行中」變成上下三行，
+                       * 而 `rounded-full` 讓那個結果成為一個團塊——正是回報的畫面。
+                       *
+                       * 有綁帳本的會話才會擠：chip 不存在時兩個子項綽綽有餘，
+                       * 所以個人會話那幾列一直是正常的（回報的截圖裡第一列正常、
+                       * 下面兩列壞掉，差別就在這裡）。
+                       *
+                       * 這裡加 `whitespace-nowrap` 是安全的，而
+                       * `common/login_button.tsx` 刻意不加——差別在標籤的來源：
+                       * 狀態徽章的字串來自一組固定的短標籤，而那顆按鈕的標籤由
+                       * 呼叫端傳入，其中有幾個相當長（"Please login to comment"），
+                       * 對它們禁止換行只會把裁切換成溢出。
+                       */}
+                      <span className="flex shrink-0 items-center gap-1 text-[11px] font-medium text-gray-400">
                         <Clock className="h-3 w-3" />
                         {s.time}
                       </span>
                       <span
-                        className={`rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider ${s.statusColor}`}
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider whitespace-nowrap ${s.statusColor}`}
                       >
                         {s.status}
                       </span>

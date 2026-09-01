@@ -6,11 +6,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ISUNFA_ROUTE } from "@/constants/url";
-import LanguageSelector from "@/components/header/language_selector";
-import ThemeToggle from "@/components/header/theme_toggle";
 import BrandLogo from "@/components/header/brand_logo";
-import UserActions from "@/components/header/user_actions";
-import HeaderNav from "@/components/header/header_nav";
+import HeaderActions from "@/components/header/header_actions";
 import MechanismModal from "@/components/salary_calculator/mechanism_modal";
 // import { useAuth } from "@/contexts/auth_context";
 
@@ -79,15 +76,8 @@ const CalculatorHeader: FC = () => {
           )} */}
         </div>
 
-        <div className="flex items-center gap-x-4 lg:gap-x-8">
-          <HeaderNav />
-          {/* Info: (20260825 - Julian) xl 以下這兩個收進漢堡選單（見 header_nav.tsx） */}
-          <div className="hidden items-center gap-x-4 lg:gap-x-8 xl:flex">
-            <ThemeToggle />
-            <LanguageSelector />
-          </div>
-          <UserActions />
-        </div>
+        {/* Info: (20260901 - Luphia) 右側控件列共用 HeaderActions（review #6731 三輪高-2）。develop 側這一列是 gap-x-4，統一後為 gap-x-6——與另兩個 header 一致，行為差異已在 PR 描述申報 */}
+        <HeaderActions />
       </nav>
 
       <MechanismModal
