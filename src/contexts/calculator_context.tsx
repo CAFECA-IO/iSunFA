@@ -8,7 +8,7 @@ import {
   SetStateAction,
   ReactNode,
 } from "react";
-import { PayrollDaysBase } from "@/constants/salary_calculator";
+import { CalcTab, PayrollDaysBase } from "@/constants/salary_calculator";
 import { ISalaryCalculatorEmployee } from "@/interfaces/salary_record";
 import {
   fromCalculatorOptions,
@@ -53,6 +53,8 @@ interface ICalculatorContext {
   currentStep: number;
   completeSteps: TabStep[]; // Info: (20250710 - Julian) 已完成的步驟
   switchStep: (step: number) => void;
+  activeTab: CalcTab; // Info: (20260901 - Julian) 手機版目前顯示哪一個分頁（表單／結果）
+  switchTab: (tab: CalcTab) => void;
   resetFormHandler: () => void;
   salaryCalculatorResult: ISalaryCalculatorUI;
 
@@ -213,6 +215,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [completeSteps, setCompleteSteps] =
     useState<TabStep[]>(defaultTabSteps);
+  const [activeTab, setActiveTab] = useState<CalcTab>(CalcTab.CALCULATOR);
 
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state
   const [employeeName, setEmployeeName] = useState<string>(defaultEmployeeName);
@@ -420,6 +423,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setCurrentStep(targetStep);
   };
 
+  const switchTab = (tab: CalcTab) => setActiveTab(tab);
+
   // Info: (20250709 - Julian) 重置表單
   const resetFormHandler = () => {
     // Info: (20250710 - Julian) 清空 input 欄位
@@ -604,6 +609,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     completeSteps,
     salaryCalculatorResult: getSalaryCalculatorResult(),
     switchStep,
+    activeTab,
+    switchTab,
     resetFormHandler,
     selectedEmployeeId,
     linkEmployee,

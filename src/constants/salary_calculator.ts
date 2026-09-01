@@ -40,6 +40,17 @@ export const SALARY_RECORD_MIN_YEAR = 2020;
 export const EMPLOYEE_NUMBER_INPUT_ID = "input-employee-number";
 
 /**
+ * Info: (20260901 - Julian) 手機版的兩個分頁。
+ *
+ * `CALCULATOR` 是**表單**（Step 1 的員工編號欄在它底下），
+ * `PAY_SLIP` 是**結果**（儲存按鈕在它底下）。
+ */
+export enum CalcTab {
+  CALCULATOR = "calculator",
+  PAY_SLIP = "paySlip",
+}
+
+/**
  * Info: (20260831 - Julian) 輸入驗證的健全性上界（sanity bound），**不是業務規則**。
  *
  * 業務規則（伙食費上限、加班時數上限）在上面各有常數，也在 UI 擋。

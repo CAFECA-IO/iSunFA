@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FC } from "react";
+import { FC } from "react";
 import Image from "next/image";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ArrowRight } from "lucide-react";
@@ -10,31 +10,36 @@ import SalaryFormSection from "@/components/salary_calculator/salary_form_sectio
 import SalaryCalculatorShell from "@/components/salary_calculator/salary_calculator_shell";
 import ProgressBar from "@/components/salary_calculator/progress_bar";
 import { useAuth } from "@/contexts/auth_context";
+import { useCalculatorCtx } from "@/contexts/calculator_context";
+import { CalcTab } from "@/constants/salary_calculator";
 import Link from "next/link";
 
-enum CalcTab {
-  CALCULATOR = "calculator",
-  PAY_SLIP = "paySlip",
-}
-
 interface ISalaryCalculatorPageBodyProps {
-  // Info: (20260831 - Julian) null = 公開試算模式；有值 = 帳本版（計劃書 §2.4）
+  // Info: (20260831 - Julian) null = 公開試算模式；有值 = 帳本版
   accountBookId: string | null;
+  mobileStyle?: string;
 }
 
 const SalaryCalculatorPageBody: FC<ISalaryCalculatorPageBodyProps> = ({
   accountBookId,
+  mobileStyle = "",
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
 
-  const [currentTab, setCurrentTab] = useState<CalcTab>(CalcTab.CALCULATOR);
+  /**
+   * Info: (20260901 - Julian) 分頁狀態收在 calculator context 而不是這裡的區域 state。
+   *
+   * `salary_result_section` 的「修改員工編號」要把使用者帶回表單那一頁 ——
+   * 手機版上結果與表單是兩個分頁，只切 Step 不切分頁的話，編號欄仍然不在 DOM 裡。
+   */
+  const { activeTab, switchTab } = useCalculatorCtx();
 
-  const isCalculatorTab = currentTab === CalcTab.CALCULATOR;
-  const isPaySlipTab = currentTab === CalcTab.PAY_SLIP;
+  const isCalculatorTab = activeTab === CalcTab.CALCULATOR;
+  const isPaySlipTab = activeTab === CalcTab.PAY_SLIP;
 
-  const calculatorClickHandler = () => setCurrentTab(CalcTab.CALCULATOR);
-  const paySlipClickHandler = () => setCurrentTab(CalcTab.PAY_SLIP);
+  const calculatorClickHandler = () => switchTab(CalcTab.CALCULATOR);
+  const paySlipClickHandler = () => switchTab(CalcTab.PAY_SLIP);
 
   return (
     <SalaryCalculatorShell accountBookId={accountBookId}>
@@ -62,7 +67,7 @@ const SalaryCalculatorPageBody: FC<ISalaryCalculatorPageBodyProps> = ({
         </div>
       )}
 
-      {/* Info: (20250887 - Julian) Main Content Desktop */}
+      {/* Info: (20260831 - Julian) Main Content Desktop */}
       <div className="hidden gap-[84px] overflow-x-auto p-[40px] lg:flex">
         {/* Info: (20250708 - Julian) Form Part */}
         <SalaryFormSection accountBookId={accountBookId} />
@@ -70,8 +75,8 @@ const SalaryCalculatorPageBody: FC<ISalaryCalculatorPageBodyProps> = ({
         <SalaryResultSection accountBookId={accountBookId} />
       </div>
 
-      {/* Info: (20250887 - Julian) Main Content Mobile */}
-      <div className="flex flex-col gap-4 py-3 md:gap-7 lg:hidden lg:px-5 lg:py-7">
+      {/* Info: (20260831 - Julian) Main Content Mobile */}
+      <div className={`${mobileStyle} flex flex-col gap-4 py-7 lg:hidden`}>
         {/* Info: (20250828 - Julian) Mobile Tabs */}
         <div className="grid grid-cols-2 gap-4">
           <button

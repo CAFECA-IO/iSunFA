@@ -24,8 +24,8 @@ export default function SalaryCalculatorPage() {
       </Head>
 
       {/* Info: (20260831 - Julian) null = 公開試算模式。帳本版走
-          /user/account_book/[account_book_id]/salary_calculator，兩者渲染同一份元件（計劃書 §2.4） */}
-      <SalaryCalculatorPageBody accountBookId={null} />
+          /user/account_book/[account_book_id]/salary_calculator，兩者渲染同一份元件 */}
+      <SalaryCalculatorPageBody accountBookId={null} mobileStyle="px-4 py-7" />
     </CalculatorProvider>
   );
 }

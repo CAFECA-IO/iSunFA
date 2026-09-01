@@ -17,7 +17,10 @@ import { useSalaryEmployees } from "@/hooks/use_salary_employees";
 import { useSalaryRecordSave } from "@/hooks/use_salary_record_save";
 import { MONTHS } from "@/constants/month";
 import { salaryCalculatorUrlOf } from "@/constants/url";
-import { EMPLOYEE_NUMBER_INPUT_ID } from "@/constants/salary_calculator";
+import {
+  CalcTab,
+  EMPLOYEE_NUMBER_INPUT_ID,
+} from "@/constants/salary_calculator";
 import { downloadNodeAsPng } from "@/lib/utils/pay_slip_download";
 import { ISalaryRecordSummary } from "@/interfaces/salary_record";
 import { ApiError } from "@/lib/utils/request";
@@ -36,6 +39,7 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
   const {
     completeSteps,
     switchStep,
+    switchTab,
     employeeName,
     employeeNumber,
     employeeEmail,
@@ -197,24 +201,28 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
   /**
    * Info: (20260901 - Julian) 第三條路：編號打錯了，回去改。
    *
-   * **必須先 `switchStep(1)`。** 表單一次只掛一個步驟
-   * （`salary_form_section.tsx:37` 是 `currentStep === 1 ? <BasicInfoForm/> : …`），
-   * 而儲存鈕要四個步驟都完成才亮，所以按下去的當下使用者多半停在 Step 4 ——
-   * 那時 `#input-employee-number` 根本不在 DOM 裡，`getElementById` 回 null，
-   * 對話框關掉之後什麼也不會發生。
+   * 編號欄被**兩層**條件渲染擋著，兩層都要打開，少一層就又是「按了沒反應」：
    *
-   * 聚焦因此不能寫在這裡：切步驟是 setState，欄位要等下一次 commit 才存在。
+   * 1. **分頁**（只有手機版有）：結果與表單是兩個分頁，而儲存鈕在
+   *    `PAY_SLIP` 那一頁；編號欄在 `CALCULATOR` 那一頁。桌機版兩塊並排，
+   *    切了也無害。
+   * 2. **步驟**：表單一次只掛一個步驟（`salary_form_section.tsx` 是
+   *    `currentStep === 1 ? <BasicInfoForm/> : …`），而儲存鈕要四步都完成才亮，
+   *    所以按下去的當下使用者多半停在 Step 4。
+   *
+   * 聚焦因此不能寫在這裡：兩個切換都是 setState，欄位要等下一次 commit 才存在。
    * 立旗標、交給下面的 effect 做。
    */
   const editNumberHandler = () => {
     setIsShowUnlinkedModal(false);
     setUnlinkedError(null);
+    switchTab(CalcTab.CALCULATOR);
     switchStep(1);
     setIsFocusingNumber(true);
   };
 
   /**
-   * Info: (20260901 - Julian) 等 Step 1 真的掛上來之後才捲動並聚焦。
+   * Info: (20260901 - Julian) 等表單分頁與 Step 1 真的掛上來之後才捲動並聚焦。
    *
    * effect 跑在 commit 之後，此時 `BasicInfoForm` 已經在畫面上。
    * `block: "center"` 是因為欄位常在視窗上緣之外，只 focus 的話畫面不會動。
