@@ -62,6 +62,12 @@ describe("影像轉錄鐵律的條文(#6708)", () => {
 
   it("兩個 prompt 組裝點都帶入這段指令(接線,不只是條文存在)", () => {
     const calls = source.match(/buildImagePagesInstruction\(source\)/g) ?? [];
-    expect(calls.length).toBeGreaterThanOrEqual(2);
+    /**
+     * Info: (20260831 - Emily) 精確值不是門檻(review I2,§1.6)。
+     * `>= 2` 的失效方式:未來多一個 prompt 組裝點卻忘了帶入這段指令,
+     * 兩個舊的還在 → 照樣綠。**新增組裝點時請一併更新這個數字**,
+     * 而那次更新就是「有沒有帶入」被複查的時機。
+     */
+    expect(calls).toHaveLength(2);
   });
 });
