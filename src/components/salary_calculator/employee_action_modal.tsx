@@ -220,13 +220,6 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
           </p>
         )}
         {/* Info: (20250715 - Julian) Modal Footer */}
-        {/**
-         * Info: (20260901 - Julian) 這兩顆原本只有 `w-full`，沒有任何樣式。
-         *
-         * Tailwind preflight 把 `svg` 設成 `display: block`，於是「＋」圖示自成一行，
-         * 文字掉到下面 —— 與 view_pay_slip_modal / sending / resending 是同一個成因，
-         * 樣式也取自同一套（`salary_result_section` 的兩顆主要按鈕）。
-         */}
         <div className="flex shrink-0 items-center gap-[12px] px-[20px] py-[16px]">
           <button
             type="button"

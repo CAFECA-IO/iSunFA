@@ -14,8 +14,7 @@ interface IRemoveEmployeeModalProps {
 /**
  * Info: (20260831 - Julian) 移除員工的確認。
  *
- * 自製而不是走共用的 Modal 系統：`src/contexts/modal_context` 已經不存在了
- * （計算機底下好幾個檔案還留著 `useModalContext` 的註解，指向一個被移除的模組）。
+ * 自製而不是走共用的 Modal 系統：`src/contexts/modal_context` 已經不存在了。
  * 這裡沿用 `progress_bar.tsx` 重置確認的作法 —— 自己畫一個。
  */
 const RemoveEmployeeModal: FC<IRemoveEmployeeModalProps> = ({

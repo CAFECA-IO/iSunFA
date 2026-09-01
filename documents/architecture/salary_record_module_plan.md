@@ -30,6 +30,10 @@
 
 ## 1. 現況盤點（實作前必須知道的事實）
 
+> **這一節是 20260831 動工前的快照**，保留它是為了解釋後面的設計為什麼長這樣。
+> 裡面的行號、檔案與數字都停在那一刻 —— 例如 `employee_list.tsx` 後來被移除（§8.5）。
+> 要看今天的樣子請往下讀 §8。
+
 ### 1.1 前端
 
 - 計算機的全部狀態在 `src/contexts/calculator_context.tsx`（752 行）。輸入欄位 **35 個**，
@@ -41,8 +45,8 @@
   「從紀錄載回計算機」必須新增批次入口。
 - 現有頁面全是假資料：`employee_list.tsx` 用 `dummyEmployeeForCalc`、`my_pay_slip_page_body.tsx`
   用 `dummyReceivedData/dummySentData`、`employee_action_modal.tsx` 的新增/編輯只有 `console.log`。
-- `basic_info_form.tsx` L210 的員工選單被 `&& false` 硬性關閉；
-  `salary_result_section.tsx` L102–111 的「寄出薪資單」按鈕整段被註解。
+- `basic_info_form.tsx` 的員工選單被 `&& false` 硬性關閉；
+  `salary_result_section.tsx` 的「寄出薪資單」按鈕整段被註解。
 
 ### 1.2 後端
 
@@ -105,7 +109,7 @@ ADR 020 §4 已經替**正式薪資模組**開好規格：以 `(employeeId, 年�
 | schema 體積 | 兩張表 +69 欄 | 兩張表 +2 欄 |
 | 演進成本 | 計算機每加一個欄位就要改 schema + 回填 | 型別改了就好 |
 
-採 JSON 的理由：`ISalaryCalculatorOptions`（34 欄）與 `ISalaryCalculatorResult`（34 欄）
+採 JSON 的理由：`ISalaryCalculatorOptions`（21 欄）與 `ISalaryCalculatorResult`（33 欄）
 是**計算引擎的契約**，會隨法規年度演進；把它攤成 69 個欄位等於把引擎契約焊進 DB schema，
 而這個專案沒有 migrations，每次演進都要手寫回填 SQL。
 
@@ -119,7 +123,8 @@ ADR 020 §4 已經替**正式薪資模組**開好規格：以 `(employeeId, 年�
 ### 2.3 為什麼輕量員工表要用 soft delete（與 HR Employee 相反）
 
 `Department` / `JobTitle` / `Employee` 都沒有 `deletedAt`（改用狀態欄位）。
-本表刻意不同：`employee_list.tsx` 現在就有刪除按鈕，而薪資紀錄是對外憑據，
+本表刻意不同：員工名單上有刪除按鈕（現在在 `employee_list_modal.tsx` 的每一列），
+而薪資紀錄是對外憑據，
 員工被刪掉不能讓歷史紀錄一起消失或變成孤兒。
 `code_review_checklist.md §3.4` 要求「硬刪 vs 改狀態」的選擇必須明說 —— 這就是那段說明。
 
@@ -156,13 +161,16 @@ Email，用 Email 當必填會擋住整批人。於是 `number` 改為必填、`
 | `/salary_calculator` | 否 | `CalculatorHeader` | 試算（現狀）＋ 登入者可見的「到帳本版」入口 |
 | `/salary_calculator/operating_mechanism` | 否 | `CalculatorHeader` | 計算說明（純內容，留在公開側） |
 | `/user/account_book/[account_book_id]/salary_calculator` | 是 | `UserLayout` | 試算 ＋ 儲存 |
-| `.../salary_calculator/employee_list` | 是 | `UserLayout` | 員工列表 |
 | `.../salary_calculator/pay_slip` | 是 | `UserLayout` | 我的薪資單（內容仍為 dummy，見 §12） |
 | `.../salary_calculator/records` | 是 | `UserLayout` | 薪資紀錄查閱（PR 4 才建立） |
 
 `/salary_calculator/pay_slip` 與 `/salary_calculator/employee_list` 從公開側**搬走**
 （不是刪功能）：它們的導覽連結本來就被註解（`calculator_header.tsx:50-65`），
 只能靠直接打網址進入，而兩者都需要一本帳才有意義。
+
+> **後續（PR 5）**：員工列表**頁**接著被整個移除，管理功能併進計算機的挑人彈窗
+> `employee_list_modal.tsx`。搬走的是 `pay_slip`，員工列表是搬走之後又拆掉。
+> 詳見 §8.5。
 `src/app/sitemap.ts` 裡對應的兩條也要移除 —— 留著等於對搜尋引擎宣告兩個 404。
 
 `src/constants/url.ts` 的四條常數隨之拆成兩組：公開側的兩條維持常數，
@@ -261,7 +269,7 @@ model SalaryRecord {
 
   /**
    * Info: (20260831 - Julian) 輸入與結果的完整快照。
-   * 形狀分別是 ISalaryCalculatorOptions（34 欄）與 ISalaryCalculatorUI，
+   * 形狀分別是 ISalaryCalculatorOptions（21 欄）與 ISalaryCalculatorUI，
    * 入庫前一律過 salaryRecordSnapshotSchema 驗證（決策見計劃書 §2.2）。
    */
   inputSnapshot  Json @map("input_snapshot")
@@ -355,8 +363,8 @@ export interface ISalaryCalculatorEmployee {
 // Info: (20260831 - Julian) 新增/編輯員工的輸入
 export interface ISalaryCalculatorEmployeeWriteInput {
   name: string;
-  number?: string;
-  email: string;
+  number: string;
+  email?: string;
   baseSalary: number;
   mealAllowance: number;
 }
@@ -392,9 +400,9 @@ export interface ISalaryRecordWriteInput {
 }
 ```
 
-**同時要處理的既有型別債**：`src/interfaces/employees.ts:52` 的 `IEmployeeForCalc.id` 是 `number`，
-與 uuid 對不上。`employee_list.tsx` / `employee_list_modal.tsx` / `employee_action_modal.tsx`
-改接 `ISalaryCalculatorEmployee` 後，`IEmployeeForCalc` 與 `dummyEmployeeForCalc` 一併移除。
+**同時要處理的既有型別債**：`src/interfaces/employees.ts` 的 `IEmployeeForCalc.id` 是 `number`，
+與 uuid 對不上。`employee_list_modal.tsx` / `employee_action_modal.tsx`
+改接 `ISalaryCalculatorEmployee` 後，`IEmployeeForCalc` 與 `dummyEmployeeForCalc` 一併移除（已完成）。
 
 `calculatorVersion` 的來源：新增 `SALARY_CALCULATOR_VERSION` 到
 `src/constants/salary_calculator.ts`，格式 `"2026.1"`（級距表年度 + 引擎修訂號），
@@ -409,15 +417,15 @@ CLAUDE.md §2：Zod schema 嚴禁寫在 `route.ts`，一律放 `src/validators/`
 ```ts
 export const salaryCalculatorEmployeeWriteSchema = z.object({
   name: z.string().trim().min(1).max(100),
-  number: z.string().trim().max(50).optional(),
-  email: z.string().trim().email(),
+  number: z.string().trim().min(1).max(50),
+  email: z.string().email().max(254).optional(),
   baseSalary: z.number().int().nonnegative(),
   mealAllowance: z.number().int().nonnegative(),
 });
 
 // Info: (20260831 - Julian) 快照是 Json 欄位，DB 不會替我們檢查形狀，
 // 因此這裡逐欄釘死 —— 這是 Json 欄位唯一的守門人。
-export const salaryCalculatorOptionsSchema = z.object({ /* 34 欄逐一列出 */ });
+export const salaryCalculatorOptionsSchema = z.object({ /* 21 欄逐一列出 */ });
 export const salaryCalculatorUiSchema = z.object({ /* 四個區塊 + 兩個頂層金額 */ });
 
 export const salaryRecordWriteSchema = z.object({
@@ -431,7 +439,7 @@ export const salaryRecordWriteSchema = z.object({
 
 export const salaryRecordQuerySchema = z.object({
   employeeId: z.string().uuid().optional(),
-  year: z.coerce.number().int().optional(),
+  year: z.coerce.number().int().min(SALARY_RECORD_MIN_YEAR).max(2100).optional(),
   month: z.coerce.number().int().min(1).max(12).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
@@ -461,12 +469,21 @@ export const salaryRecordQuerySchema = z.object({
 
 - `upsertRecord({...})` — 用 `prisma.salaryRecord.upsert` 搭
   `@@unique([accountBookId, employeeId, year, month])` 的複合鍵，這是 D3「重存即覆寫」的落地點
-- `listRecords(options)` / `countRecords(options)` — 手刻 `skip`/`take`（專案沒有共用分頁工具）
+- `listRecords(options)` — 一次 `Promise.all` 做三件事：`findMany`（`skip`/`take` 手刻）、
+  `count`，以及期間下拉的選項來源 `groupBy(['year','month'])`。
+  沒有獨立的 `countRecords`
 - `getRecordById(accountBookId, id)`
 - `deleteRecord(accountBookId, id)`
 
 回應形狀採 `ILedgerPageResult` 那一套（`data / page / pageSize / totalCount / totalPages`），
-它是專案裡最近新寫、且明說「與 route 回應結構一致」的分頁形狀。
+它是專案裡最近新寫、且明說「與 route 回應結構一致」的分頁形狀，
+再加上本模組獨有的第六個欄位 `periods`。
+
+`periods` 是「這本帳實際存在紀錄的年月」，供期間篩選的下拉使用。
+它的 `where` **只看 `accountBookId`、不套其他篩選條件** —— 套了的話，
+選定一個期間之後選單裡就只剩它自己，使用者換不回去也看不到還有哪些月份。
+不從當前這一頁推導、也不用「現在往前推 N 個月」硬湊：兩者都會讓
+「紀錄在第 3 頁」或「三年前的那一筆」變成選不到、因此篩不到的資料。
 
 ### 6.3 `src/services/salary_record.service.ts`
 
@@ -500,7 +517,7 @@ export class SalaryRecordService {
 |---|---|---|
 | `NF_SALARY_CALCULATOR_EMPLOYEE` | NF | `NOT_FOUND` |
 | `NF_SALARY_RECORD` | NF | `NOT_FOUND` |
-| `CF_SALARY_EMPLOYEE_EMAIL_DUPLICATED` | CF | `CONFLICT` |
+| `CF_SALARY_EMPLOYEE_NUMBER_TAKEN` | CF | `CONFLICT` |
 | `VA_SALARY_AMOUNT_NOT_INTEGER` | VA | `VALIDATION_ERROR` |
 
 ### 6.5 限流（`src/constants/rate_limit.ts`）
@@ -529,7 +546,7 @@ export class SalaryRecordService {
 | POST | `/employee` | `SALARY_WRITE` | 新增員工 |
 | PUT | `/employee/[employee_id]` | `SALARY_WRITE` | 編輯員工 |
 | DELETE | `/employee/[employee_id]` | `SALARY_WRITE` | soft delete |
-| GET | `/record` | `READ` | 薪資紀錄列表（可篩 employeeId / year / month，分頁） |
+| GET | `/record` | `READ` | 薪資紀錄列表（可篩 employeeId / year / month / keyword，分頁；另回傳 `periods` 供期間下拉） |
 | POST | `/record` | `SALARY_WRITE` | 儲存（upsert，D3 覆寫） |
 | GET | `/record/[record_id]` | `READ` | 單筆詳細（含快照，供載回計算機） |
 | DELETE | `/record/[record_id]` | `SALARY_WRITE` | 刪除 |
@@ -584,25 +601,35 @@ export async function POST(
 新增：
 
 ```
+src/app/user/account_book/[account_book_id]/salary_calculator/layout.tsx
 src/app/user/account_book/[account_book_id]/salary_calculator/page.tsx
-src/app/user/account_book/[account_book_id]/salary_calculator/employee_list/page.tsx
 src/app/user/account_book/[account_book_id]/salary_calculator/pay_slip/page.tsx
+src/app/user/account_book/[account_book_id]/salary_calculator/records/page.tsx
 ```
 
 刪除：`src/app/salary_calculator/pay_slip/`、`src/app/salary_calculator/employee_list/`，
 並從 `src/app/sitemap.ts` 移除對應的兩條（理由見 §2.4）。
 `records` 頁在 PR 4 才建立 —— 在薪資紀錄 API 接上之前，那個路由沒有內容可顯示。
 
-三個 page body（計算機、員工列表、薪資單）的外框長得一模一樣
+三個 page body（計算機、薪資紀錄、薪資單）的外框長得一模一樣
 （`<main>` + `<CalculatorHeader />` + 內容），因此抽成共用的
 `salary_calculator_shell.tsx`：公開版出整頁外框與 `CalculatorHeader`，
 帳本版只出內容（`UserLayout` 已經提供 `UserHeader` / `UserFooter` / `<main>`，
 再包一層會產生巢狀 `<main>`，BrandLogo 與語言選擇器也會出現兩次）。
 
-**本模組不新增任何 `layout.tsx`。** 帳本版的登入閘來自 `src/app/user/layout.tsx:24`，
-帳本 id 的解析來自 `src/app/user/account_book/[account_book_id]/layout.tsx:22`，兩者都已存在。
+**本模組的 `layout.tsx` 不做登入閘，只提供 context。**
+帳本版的登入閘來自 `src/app/user/layout.tsx`，
+帳本 id 的解析（含 `"default"`）來自 `src/app/user/account_book/[account_book_id]/layout.tsx`，
+兩者都已存在，這一層不重複。
 
-每支 page 只做三件事，照 `/user/account_book/[account_book_id]/dashboard/page.tsx` 的形狀：
+> **這支 layout 是後來補的（PR 5）。** 原本三支 page 各自包一層 `CalculatorProvider` ——
+> 同一份程式碼、三個互不相干的實例。薪資紀錄頁的「載回計算機」把快照寫進紀錄頁那一顆，
+> 而 `router.push` 導到計算機頁時那一顆隨頁面卸載，計算機頁掛的是全新的預設值：
+> 按鈕按下去毫無反應，也不噴任何錯誤。
+> App Router 的 layout 在同層路由之間切換時不會重新掛載，provider 提到這一層之後
+> state 才跨得過那次導頁。`salary_provider_scope.test.ts` 把它釘住。
+
+每支 page 只做兩件事，照 `/user/account_book/[account_book_id]/dashboard/page.tsx` 的形狀：
 
 ```tsx
 export default async function SalaryCalculatorPage({
@@ -613,11 +640,8 @@ export default async function SalaryCalculatorPage({
 }) {
   const { account_book_id: accountBookId } = await params;
 
-  return (
-    <CalculatorProvider>
-      <SalaryCalculatorPageBody accountBookId={accountBookId} />
-    </CalculatorProvider>
-  );
+  // Info: (20260901 - Julian) provider 在 layout.tsx，page 不可以再包一層（會蓋掉外層那顆）
+  return <SalaryCalculatorPageBody accountBookId={accountBookId} />;
 }
 ```
 
@@ -646,7 +670,8 @@ interface ISalaryCalculatorPageBodyProps {
 
 ### 8.2 公開頁的「到帳本版」入口
 
-位置：`salary_result_section.tsx`，條件 `accountBookId === null && user`。
+位置：`salary_calculator_page_body.tsx`，條件 `accountBookId === null && user`。
+（原本規劃放在 `salary_result_section.tsx`，實作時移到 page body。）
 未登入時整塊不出現 —— 公開頁對未登入者維持一模一樣的行為（需求第 4 點）。
 
 ```tsx
@@ -669,7 +694,8 @@ export const SALARY_CALCULATOR_ACCOUNT_BOOK_ENTRY =
 
 1. 帳本版可以儲存薪資紀錄、管理員工列表
 2. 需要先選一個帳本，資料會存在該帳本底下
-3. **這次試算的內容不會帶過去** —— 跨路由搬 34 個輸入欄位要序列化進 query
+3. **這次試算的內容不會帶過去** —— 跨路由搬 34 個表單欄位（`ISalaryCalculatorFormState`，
+   與引擎輸入 `ISalaryCalculatorOptions` 的 21 欄不是同一組）要序列化進 query
    或 sessionStorage，是另一個議題，本次不做（列在 §12）
 
 ### 8.3 儲存按鈕（帳本版）
@@ -679,15 +705,30 @@ export const SALARY_CALCULATOR_ACCOUNT_BOOK_ENTRY =
 但**不要**順手把它打開，那超出本次範圍。
 
 因為已經在 `AuthGuard` 底下、帳本 id 由路由保證存在，
-按鈕只有**兩態**：可按 / 儲存中。
-（第一版設計的「未登入 → 開 AuthModal」「已登入但沒帳本 → disabled」兩個分支，
-連同 `AuthModal` 的引入一起消失。）
+「未登入 → 開 AuthModal」「已登入但沒帳本 → disabled」兩個分支不需要存在。
+實際的按鈕狀態有三種：
 
-儲存 Modal（新 `save_salary_record_modal.tsx`）：
+- **disabled** —— 姓名未填，或四個步驟沒有全部完成。灰掉時底下要寫一行說明還缺什麼
+  （`calculator.button.disabled_hint`），否則使用者只會看到一顆不能按的按鈕。
+  下載鈕吃同一個條件：半成品的薪資單不該被下載，更不該被存成正式紀錄。
+- **忙碌** —— 涵蓋「探有沒有既有紀錄」的 GET 與儲存的 POST 兩段
+  （`isPreparing || isSaving`）。只蓋後者的話，選完員工到真的送出之間會有一段
+  完全沒有反應的空白。
+- **可按**。
 
-- 員工下拉（來自員工列表 API；可直接開 `EmployeeActionModal` 新增）
-- 年／月預帶 context 的 `selectedYear` / `selectedMonth`
-- 若該員工該年月**已有紀錄**，Modal 要明說「將覆蓋既有紀錄」（把 D3 攤在使用者眼前）
+**沒有儲存 Modal。** 按下去就存完，成功後在按鈕下方就地顯示綠色回饋列，
+不導頁、不跳 Modal —— 使用者多半還要繼續調數字存下一個月。
+員工與年月在 Step 1 就填過了，再問一次等於要求他把剛做過的事做第二遍。
+
+Modal 降級成 `save_record_dialogs.tsx` 裡的兩個**例外**（不是 `save_salary_record_modal.tsx`）：
+
+- `OverwriteConfirmModal` —— 同員工同年月已有紀錄。一句話 + 兩顆按鈕，不是表單。
+  先打 GET 探一筆而不是「存了再說」：唯一鍵是重存即覆寫（D3），而薪資單是對外憑據。
+- `UnlinkedEmployeeModal` —— 姓名是手打的、沒有對應員工。三條路：直接新增並儲存、
+  從員工列表選一位（選完就直接存，不必再按一次儲存）、或者當編號已經有人在用時，
+  改存給編號原本的那位員工／回 Step 1 修改編號。
+  編號撞號會先從已載入的名單問出答案，在按下去之前就把人指出來，
+  而不是讓後端回 409 之後才解釋；名單可能過期，所以仍然要接住那個 409。
 
 ### 8.4 API 常數（`src/constants/salary_calculator_api.ts`）
 
@@ -711,45 +752,108 @@ export const salaryRecordItemApi = (accountBookId: string, recordId: string): st
 這就是 HR 那四個 `*_api.ts` 的 `Deprecated` 標記所指向的解法（「帳本可切換時改成
 `leaveApiOf(accountBookId)`，呼叫端從常數改為函式呼叫」），日後可回頭抄。
 
-### 8.5 員工列表接真 API
+### 8.5 員工名單接真 API
 
-`employee_list.tsx`（現在 L99 用 `dummyEmployeeForCalc`）：
+> **PR 4 的規劃是「員工列表頁接真 API」，PR 5 把那一頁整個移除了。**
+> 理由：員工列表頁與薪資紀錄頁看的是同一批人，只是一個以「人」為單位、
+> 一個以「人 × 月份」為單位。名單本身放在挑人的地方就夠了，不值得一個獨立頁面。
+> 以下描述的是移除之後的現況。
 
-- 列表改打 `GET /employee`
-- L111–113 的 `keyword` state **目前完全沒有過濾作用**（L123 直接 map 全部）→ 一併補上
-- L37–49 被註解成空函式的刪除 handler → 接 `DELETE`
-- Pagination（L187–191 被註解）→ 接上分頁
+`employee_list_modal.tsx`（Step 1 姓名欄旁的挑人彈窗，儲存流程的「從列表選」也用它）
+是員工名單**唯一**的入口，兼管理：
 
-`employee_action_modal.tsx`：L66–105 的 `console.log` → 接 `POST` / `PUT`，
-順手修掉 L225「編輯模式仍顯示『新增員工』文案」的 bug。
+- 列表打 `GET /employee`（經 `use_salary_employees.ts`，與其他呼叫端共用同一份名單）
+- 關鍵字過濾（前端，比對姓名與編號 —— 名單不分頁，數十人的量級一次取回再過濾就夠）
+- 每一列有編輯與刪除，工具列有新增，都沿用既有的 `employee_action_modal.tsx`
+  與 `remove_employee_modal.tsx`，沒有新的對話框
+- 兩種空狀態分開處理：「一位員工都沒有」給一條建立第一位的路，
+  「搜尋不到」留一條清除搜尋的路
 
-`employee_list_modal.tsx`（計算機內選員工）改打同一支 API；
-`basic_info_form.tsx:210` 的 `&& false` 移除，讓選單重新可用 ——
+不併進來的話，員工建立之後就再也改不動 —— 名字打錯、本薪調整都只能進資料庫，
+而 `PUT` / `DELETE` 兩支 API 會變成沒有入口的死碼。
+
+`employee_action_modal.tsx`：原本新增/編輯只有 `console.log` → 接 `POST` / `PUT`，
+編號撞號指回欄位而不是丟通用錯誤，並修掉「編輯模式仍顯示『新增員工』文案」的 bug。
+
+`basic_info_form.tsx` 的 `&& false` 移除，讓選單重新可用 ——
 但這個元件只在帳本版有帳本 id，所以改成 `accountBookId !== null && (`。
 
 ### 8.6 薪資紀錄查閱頁
 
 `/user/account_book/[account_book_id]/salary_calculator/records`：
 
-- 列表欄位：年月、員工、實發金額、扣繳憑單金額、建立時間、操作
-- 篩選：員工／年／月；分頁
+- 列表欄位：給付期間、員工（姓名 + 編號）、實發金額、扣繳憑單金額、操作
+  （原規劃有「建立時間」，實作時拿掉 —— 對查閱薪資單的人沒有意義）
+- 用專案共用的 `@/components/common/data_table`，分頁由它內部的
+  `@/components/common/pagination` 負責，不自己畫上下頁
+- 篩選一排（手機垂直堆疊）：關鍵字、員工、給付期間
+  - **關鍵字做在伺服器端**（比對員工姓名與編號，300ms debounce）。
+    列表是分頁的，前端過濾只會濾掉當前那 20 筆 —— 要找的人在第 3 頁就會得到「查無資料」。
+    走員工關聯過濾而不是把姓名冗餘存進 `salary_record`：員工改名之後，
+    冗餘欄位會變成「用舊名字才搜得到、畫面上卻顯示新名字」。
+  - **年與月合併成一個「給付期間」下拉**（值 `YYYY-M`）。實務上沒有
+    「所有年度的 8 月」這種需求，拆成兩個下拉只是多點一次，還能選出必定沒有資料的組合。
+    選項來自回應的 `periods`（見 §6.2），所以不會出現選了也沒資料的期間。
+- 「還沒有紀錄」與「這組條件找不到」是兩種空狀態，不能共用一句話 ——
+  後者會讓正在搜尋的人以為資料掉了
 - 點列開 `ViewPaySlipModal`，把 `resultSnapshot` 直接餵給既有的 `<PaySlip>` ——
   **那個元件完全不用改**（它本來就吃 `resultData: ISalaryCalculatorUI` prop）
 - 「載回計算機」按鈕 → 呼叫 §8.7 的批次載入後導向同帳本的計算機頁
 
-`UserHeader` 的導覽要加薪資計算機的入口（帳本版），
-沿用該元件現有的選單結構，不另建導覽。
+> **實作時走了相反的路。** 原規劃是「`UserHeader` 的導覽加薪資計算機的入口，
+> 沿用該元件現有的選單結構，不另建導覽」。實際上 `UserHeader` 沒有動，
+> 改成新增 `account_book_calculator_nav.tsx`，掛在 `salary_calculator_shell.tsx`
+> 的帳本版分支上，兩個頁面（計算機／薪資紀錄）共用一列。
+>
+> 原因是「計算說明」：帳本版不渲染 `CalculatorHeader`，而計算說明原本掛在那顆 header 上 ——
+> 不補回來的話，解釋每個數字怎麼來的唯一入口在帳本版就消失了。
+> 既然要有一列，頁面切換就一起放進來。分頁圖示取自 `PUBLIC_MODULES` 的
+> `Wallet`（`HeaderNav` 就是拿那一份渲染的），免得同一個模組在兩個地方長得不一樣。
 
-### 8.7 Context 新增批次載入入口
+### 8.7 Context 新增的東西
 
 `calculator_context.tsx` 新增：
 
 ```ts
 // Info: (20260831 - Julian) 從薪資紀錄載回計算機。
-// 是 getSalaryCalculatorOptions()（L282）的反函式，兩者必須成對維護；
+// 是 getSalaryCalculatorOptions() 的反函式，兩者必須成對維護；
 // §9 的 round-trip 測試就是釘這件事。
 loadFromSnapshot: (input: ISalaryCalculatorOptions) => void;
+
+// Info: (20260831 - Julian) 「按下儲存會存到誰身上」。從員工列表選人時設，手改姓名時清掉
+selectedEmployeeId: string | null;
+linkEmployee: (employee: ISalaryCalculatorEmployee) => void;
+unlinkEmployee: () => void;
 ```
+
+表單狀態 ↔ 引擎輸入的**映射本身不在 context**，抽到
+`src/lib/utils/salary_calculator_snapshot.ts` 的 `toCalculatorOptions` /
+`fromCalculatorOptions` 兩支純函式。留在 context 裡就只有 render React 才驗得到，
+而本專案不 render React（§9）。
+
+呼叫端要注意兩件事（兩個都踩過）：
+
+- **`linkEmployee` 會把本薪與伙食費設成該員工「現在」的值**，
+  而 `loadFromSnapshot` 灌的是紀錄「當時」的值。薪資紀錄的「載回計算機」
+  必須**先連結、後灌快照**，否則載回三個月前的紀錄會靜靜換成今天的本薪。
+- **`linkEmployee` 是 setState**，同一個 tick 內讀 `selectedEmployeeId` 還是舊值。
+  「從員工列表選完就直接儲存」那條路要把員工**直接當參數傳**，不能回頭讀 context。
+
+### 8.7.1 本模組新增的其他前端檔案
+
+規劃時沒有列出、但實作後存在的檔案（避免下一個人以為它們是別的模組的）：
+
+| 檔案 | 作用 |
+|---|---|
+| `hooks/use_salary_employees.ts` | 帳本底下的員工名單，挑人彈窗與儲存流程共用同一份 |
+| `hooks/use_salary_record_save.ts` | 「先探再存」：`findExisting` + `save` + `clearSaved` |
+| `lib/utils/salary_calculator_snapshot.ts` | 表單狀態 ↔ 引擎輸入的雙向映射（§8.7） |
+| `lib/utils/pay_slip_download.ts` | 薪資單存成 PNG。尺寸取 `scrollWidth`/`scrollHeight` 而不是 `html-to-image` 預設的 `clientHeight`，否則捲動區外的內容會被裁掉 |
+| `components/salary_calculator/account_book_calculator_nav.tsx` | 帳本版的分頁列與計算說明入口（§8.6） |
+| `components/salary_calculator/save_record_dialogs.tsx` | 儲存路徑上的兩個例外對話框（§8.3） |
+| `components/salary_calculator/remove_employee_modal.tsx` | 移除員工確認，含「薪資紀錄會保留」的說明 |
+| `constants/salary_calculator.ts` 的 `SALARY_RECORD_MIN_YEAR` | 年度下限，validator 三處與薪資紀錄頁共用 |
+| `constants/salary_calculator.ts` 的 `EMPLOYEE_NUMBER_INPUT_ID` | Step 1 編號欄的 DOM id。儲存流程在編號撞號時要把使用者送回那個欄位，兩個檔案共用一個字面值遲早有一邊改掉，而症狀是按鈕沒反應且不噴錯 |
 
 ### 8.8 i18n
 
@@ -773,12 +877,14 @@ loadFromSnapshot: (input: ISalaryCalculatorOptions) => void;
 
 | 測試檔 | 型別 | 釘住什麼 |
 |---|---|---|
-| `salary_snapshot_roundtrip.test.ts` | 純函式 | `getSalaryCalculatorOptions()` ↔ `loadFromSnapshot()` 來回不失真，35 個欄位一個不漏（用 `Object.keys` 對拍，新增欄位忘了接就會紅） |
-| `salary_record_service.test.ts` | service | 覆寫語意（同員工同年月只留一筆）、跨帳本員工被拒（`NF_SALARY_CALCULATOR_EMPLOYEE`）、非整數金額 fail fast |
+| `salary_snapshot_roundtrip.test.ts` | 純函式 | `toCalculatorOptions()` ↔ `fromCalculatorOptions()`（`lib/utils/salary_calculator_snapshot.ts`）來回不失真，`ISalaryCalculatorFormState` 的 34 個欄位一個不漏（用 `Object.keys` 對拍，新增欄位忘了接就會紅） |
+| `salary_record_service.test.ts` | service | 覆寫語意（同員工同年月只留一筆）、跨帳本員工被拒（`NF_SALARY_CALCULATOR_EMPLOYEE`）、讀取與刪除的跨租戶隔離、找不到紀錄回 404、員工編號撞號回 409、非整數金額 fail fast |
+| `salary_provider_scope.test.ts` | 掃描 | 帳本版三個頁面共用同一個 `CalculatorProvider`：`layout.tsx` 真的把 `children` 包起來（光 import 不算），且三支 page 都沒有自己再包一顆（包了會蓋掉外層那顆，等於沒修）|
+| `amount_input.test.ts` | 純函式 | 金額輸入框的游標與格式化（先於 PR 1 落地，`4d6a23a83`）|
 | `salary_employee_invariant.test.ts` | 不變式 | `activeNumber` 與 `deletedAt` 的配對：存活時 `activeNumber === number`、刪除時為 `null`（§2.3） |
-| `salary_route_wiring.test.ts` | route | 照抄 `leave_route_wiring.test.ts`：無票回 401、限流兩行都在且回 429 時 service 呼叫次數沒增加、`params` 鍵名是 `account_book_id`、`userId` 來自 DeWT 而非 request body |
+| `salary_route_wiring.test.ts` | route | 照抄 `leave_route_wiring.test.ts`：無票回 401、限流兩行都在且回 429 時 service 呼叫次數沒增加、`params` 鍵名是 `account_book_id`、`userId` 來自 DeWT 而非 request body、八支端點每一支都過授權閘；另外釘住身分鍵改動：缺員工編號回 400、沒有 Email 也建得起來 |
 | `salary_schema_defaults.test.ts` | 掃描 | 讀 `prisma/schema.prisma` 原文，釘住 `mealAllowance @default(0)` 等預設值（checklist §1.12：沒有 migrations 時的唯一例外） |
-| `app_route_auth_guard.test.ts` | 既有 | **不需修改**：`user` 已在 `GUARDED_ROOTS`、`salary_calculator` 已在 `PUBLIC_ROOTS`，而本模組不新增任何 `layout.tsx`。若有人替公開側加了 `src/app/salary_calculator/layout.tsx`，這支會紅 —— 那是預期的護欄 |
+| `app_route_auth_guard.test.ts` | 既有 | **不需修改**：`user` 已在 `GUARDED_ROOTS`、`salary_calculator` 已在 `PUBLIC_ROOTS`。本模組後來確實新增了一支巢狀的 `salary_calculator/layout.tsx`（§8.1），但那支測試只掃 `src/app/` 的第一層路由根，掃不到巢狀 layout。若有人替公開側加了 `src/app/salary_calculator/layout.tsx`，這支會紅 —— 那是預期的護欄 |
 | `route_params_contract.test.ts` | 既有 | **不需修改**，但新增的三支 page 與八支 route 都會被它掃：`params` 的鍵名必須是 `account_book_id`，不能寫成 `accountBookId` |
 
 送審前必跑（`code_review_checklist.md:364`）：
@@ -812,7 +918,7 @@ npx prisma generate
 
 ---
 
-## 11. 實作順序（建議拆四個可獨立送審的 PR）
+## 11. 實作順序（規劃四個 PR，實際落地五個）
 
 ### PR 1 — 資料層與後端骨架
 - `prisma/schema.prisma` 兩個 model + 三處反向關聯
@@ -829,7 +935,7 @@ npx prisma generate
 
 ### PR 3 — 路由拆分
 - 新增三支 `/user/account_book/[account_book_id]/salary_calculator/**` page
-  （計算機、員工列表、薪資單）
+  （計算機、員工列表、薪資單）—— 員工列表頁在 PR 5 被移除，見下
 - 刪除 `/salary_calculator/pay_slip/`、`/salary_calculator/employee_list/`
   與 `src/app/sitemap.ts` 對應的兩條
 - 新增 `salary_calculator_shell.tsx`，三個 page body 共用
@@ -854,11 +960,30 @@ npx prisma generate
 - 新增 `salary_calculator_api.ts`
 - 新增 `/user/account_book/[account_book_id]/salary_calculator/records` 頁
 - `employee_list.tsx` / `employee_action_modal.tsx` / `employee_list_modal.tsx` 接 API
-- 移除 `IEmployeeForCalc`、`dummyEmployeeForCalc`、`basic_info_form.tsx:210` 的 `&& false`
+- 移除 `IEmployeeForCalc`、`dummyEmployeeForCalc`、`basic_info_form.tsx` 的 `&& false`
 - Context 的 `loadFromSnapshot()` + `salary_snapshot_roundtrip.test.ts`
-- 儲存按鈕 + `save_salary_record_modal.tsx`
-- `UserHeader` 導覽入口
+- 儲存按鈕 + `save_record_dialogs.tsx`（規劃時寫的是 `save_salary_record_modal.tsx`，
+  方向修正後不是一張表單而是兩個例外對話框）
+- ~~`UserHeader` 導覽入口~~ → 改成 `account_book_calculator_nav.tsx`（理由見 §8.6）
 - i18n 五語系（`save_record`、`records`）
+- PR 4 進行中另外改了**身分鍵**：員工編號取代 Email 成為帳本內的唯一鍵
+  （`number` 必填、`email` 可空、`activeNumber`）。理由與 schema 差異見 §2.3 與部署檢查表 §1.1
+
+### PR 5 — 收斂與修正（規劃時沒有，實際做了）
+
+這個 PR 沒有在原計劃裡，是上線前試用之後的一輪收斂。**不動 schema。**
+
+- **移除員工列表頁**（`employee_list/page.tsx`、`employee_list.tsx`、
+  `employee_list_page_body.tsx`、`salaryCalculatorUrlOf().EMPLOYEE_LIST`）。
+  管理功能併進挑人彈窗 `employee_list_modal.tsx`（§8.5）
+- 薪資紀錄頁：伺服器端關鍵字搜尋、年月合併成「給付期間」、回應新增 `periods`、
+  改用共用的 `data_table` 與 `pagination`（§8.6、§6.2）
+- **`CalculatorProvider` 提到 `layout.tsx`**（§8.1）—— 原本三支 page 各包一顆，
+  「載回計算機」寫進去的 state 導頁時就沒了。新增 `salary_provider_scope.test.ts` 釘住
+- 修復預覽薪資單：捲不動（PaySlip 在 flex 欄裡被壓縮再用自己的 `overflow-hidden` 裁掉）、
+  下載的 PNG 被切斷（`html-to-image` 的畫布尺寸取 `clientHeight` 而不是內容高度）、
+  以及多個只有 `className="w-full"` 的裸按鈕
+- 儲存流程：從列表選完員工就直接儲存；編號撞號改成事前偵測 + 接住 409（§8.3）
 
 ---
 

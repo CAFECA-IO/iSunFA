@@ -298,7 +298,7 @@ const EmployeeListModal: FC<IEmployeeListModalProps> = ({
         </div>
       </div>
 
-      {/* Info: (20260901 - Julian) 新增／編輯員工：沿用員工列表頁原本用的那一個 */}
+      {/* Info: (20260901 - Julian) 新增／編輯員工 */}
       {editing !== null && (
         <EmployeeActionModal
           type={editing === "add" ? "add" : "edit"}

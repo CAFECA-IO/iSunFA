@@ -3,7 +3,9 @@
 > 對應：`documents/architecture/salary_record_module_plan.md`
 > 撰寫：20260831 - Julian
 > 涵蓋 PR 1（資料層與後端骨架）與 PR 4 的「員工編號成為身分鍵」schema 調整。
-> API 端點（PR 2）與路由拆分（PR 3）不改 schema，
+> API 端點（PR 2）、路由拆分（PR 3）與 PR 5（移除員工列表頁、薪資紀錄的篩選與視覺、
+> 預覽薪資單修復）**都不改 schema** —— 所以這份檢查表到今天仍然是完整的，
+> 不需要因為那些 PR 而補步驟。
 > 但**版號 bump 每個 PR 都要做**（`code_review_checklist §6.2`）。
 
 ---
@@ -50,6 +52,14 @@ PR 4 改成用 **員工編號**。差異：
   `active_email` 欄會隨著改名一起消失，不需要另外處理。
 
 `salary_record` 兩次都是全新的表，沒有回填問題。
+
+## 2.1 索引現況（不是待辦，是提醒）
+
+- 期間下拉的 `groupBy(['year','month'])` 與列表的排序都吃
+  `salary_record` 的 `@@index([accountBookId])` 加上複合唯一鍵，現階段夠用。
+- **薪資紀錄的關鍵字搜尋沒有支援索引**：它是對 `salary_calculator_employee`
+  的 `name` / `number` 做 `contains`（關聯過濾）。以「一本帳數十位員工」的量級不是問題，
+  但如果哪天單一帳本的員工數上千，這裡會是第一個變慢的查詢。
 
 ## 3. 部署步驟
 

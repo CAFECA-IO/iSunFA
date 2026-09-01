@@ -11,7 +11,7 @@ import {
  * 時間戳的 `DateTime` 在這裡是 Unix 秒。
  */
 
-// Info: (20260831 - Julian) 輕量員工。id 是 uuid，取代舊的 IEmployeeForCalc（number id）
+// Info: (20260831 - Julian) 輕量員工。id 是 uuid
 export interface ISalaryCalculatorEmployee {
   id: string;
   name: string;

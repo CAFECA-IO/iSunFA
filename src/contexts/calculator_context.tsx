@@ -263,7 +263,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     useState<number>(0);
   const [twoAndTwoThirdsHoursForNonTax, setTwoAndTwoThirdsHoursForNonTax] =
     useState<number>(0);
-  // const [totalNonTaxableHours, setTotalNonTaxableHours] = useState<number>(0);
   const [oneAndOneThirdHoursForTaxable, setOneAndOneThirdsHoursForTaxable] =
     useState<number>(0);
   const [oneAndTwoThirdsHoursForTaxable, setOneAndTwoThirdsHoursForTaxable] =
@@ -273,7 +272,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     useState<number>(0);
   const [twoAndTwoThirdsHoursForTaxable, setTwoAndTwoThirdsHoursForTaxable] =
     useState<number>(0);
-  // const [totalTaxableHours, setTotalTaxableHours] = useState<number>(0);
   const [sickLeaveHours, setSickLeaveHours] = useState<number>(0);
   const [personalLeaveHours, setPersonalLeaveHours] = useState<number>(0);
   const [leavePayoutHours, setLeavePayoutHours] = useState<number>(0);
@@ -288,40 +286,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [otherAdjustments, setOtherAdjustments] = useState<number>(0);
   const [voluntaryPensionContribution, setVoluntaryPensionContribution] =
     useState<number>(0);
-
-  // useEffect(() => {
-  //   // Info: (20250710 - Julian) 計算總免稅加班時數
-  //   const totalHours =
-  //     oneAndOneThirdsHoursForNonTax +
-  //     oneAndTwoThirdsHoursForNonTax +
-  //     twoHoursForNonTax +
-  //     twoAndOneThirdsHoursForNonTax +
-  //     twoAndTwoThirdsHoursForNonTax;
-  //   setTotalNonTaxableHours(totalHours);
-  // }, [
-  //   oneAndOneThirdsHoursForNonTax,
-  //   oneAndTwoThirdsHoursForNonTax,
-  //   twoHoursForNonTax,
-  //   twoAndOneThirdsHoursForNonTax,
-  //   twoAndTwoThirdsHoursForNonTax,
-  // ]);
-
-  // useEffect(() => {
-  //   // Info: (20250710 - Julian) 計算總應稅加班時數
-  //   const totalHours =
-  //     oneAndOneThirdHoursForTaxable +
-  //     oneAndTwoThirdsHoursForTaxable +
-  //     twoHoursForTaxable +
-  //     twoAndOneThirdsHoursForTaxable +
-  //     twoAndTwoThirdsHoursForTaxable;
-  //   setTotalTaxableHours(totalHours);
-  // }, [
-  //   oneAndOneThirdHoursForTaxable,
-  //   oneAndTwoThirdsHoursForTaxable,
-  //   twoHoursForTaxable,
-  //   twoAndOneThirdsHoursForTaxable,
-  //   twoAndTwoThirdsHoursForTaxable,
-  // ]);
 
   // Info: (20250710 - Julian) 直接計算總時數，不要用 useEffect，避免二次渲染
   const totalNonTaxableHours =
@@ -482,13 +446,11 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setTwoHoursForNonTax(0);
     setTwoAndOneThirdsHoursForNonTax(0);
     setTwoAndTwoThirdsHoursForNonTax(0);
-    // setTotalNonTaxableHours(0);
     setOneAndOneThirdsHoursForTaxable(0);
     setOneAndTwoThirdsHoursForTaxable(0);
     setTwoHoursForTaxable(0);
     setTwoAndOneThirdsHoursForTaxable(0);
     setTwoAndTwoThirdsHoursForTaxable(0);
-    // setTotalTaxableHours(0);
     setSickLeaveHours(0);
     setPersonalLeaveHours(0);
     setLeavePayoutHours(0);
@@ -503,8 +465,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     // Info: (20260831 - Julian) 重置也要解除員工連結，否則下一筆試算會掛到上一個人身上
     setSelectedEmployeeId(null);
     // Info: (20250710 - Julian) 重置計算機狀態
-    // setSalaryCalculatorResult(defaultSalaryCalculatorResult);
-    // Info: (20250710 - Julian) 重置步驟狀態
     setCompleteSteps(defaultTabSteps);
     setCurrentStep(1);
     setIsNameError(false);
@@ -635,145 +595,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const changeVoluntaryPensionContribution = (contribution: number) => {
     setVoluntaryPensionContribution(contribution);
   };
-
-  // const value = useMemo(
-  //   () => ({
-  //     yearOptions,
-  //     monthOptions,
-  //     payrollDaysBaseOptions,
-  //     currentStep,
-  //     completeSteps,
-  //     salaryCalculatorResult,
-  //     switchStep,
-  //     resetFormHandler,
-  //     employeeName,
-  //     changeEmployeeName,
-  //     employeeNumber,
-  //     changeEmployeeNumber,
-  //     employmentType,
-  //     changeEmploymentType,
-  //     taxResidencyStatus,
-  //     changeTaxResidencyStatus,
-  //     industryCategory,
-  //     changeIndustryCategory,
-  //     employeeEmail,
-  //     changeEmployeeEmail,
-  //     selectedYear,
-  //     changeSelectedYear,
-  //     selectedMonth,
-  //     changeSelectedMonth,
-  //     payrollDaysBase,
-  //     changePayrollDaysBase,
-  //     isJoined,
-  //     toggleJoined,
-  //     dayOfJoining,
-  //     changeJoinedDay,
-  //     isLeft,
-  //     toggleLeft,
-  //     dayOfLeaving,
-  //     changeLeavingDay,
-  //     baseSalary,
-  //     setBaseSalary,
-  //     mealAllowance,
-  //     setMealAllowance,
-  //     otherAllowanceWithTax,
-  //     setOtherAllowanceWithTax,
-  //     otherAllowanceWithoutTax,
-  //     setOtherAllowanceWithoutTax,
-  //     isNameError,
-  //     setIsNameError,
-  //     oneAndOneThirdsHoursForNonTax,
-  //     setOneAndOneThirdsHoursForNonTax,
-  //     oneAndTwoThirdsHoursForNonTax,
-  //     setOneAndTwoThirdsHoursForNonTax,
-  //     twoHoursForNonTax,
-  //     setTwoHoursForNonTax,
-  //     twoAndOneThirdsHoursForNonTax,
-  //     setTwoAndOneThirdsHoursForNonTax,
-  //     twoAndTwoThirdsHoursForNonTax,
-  //     setTwoAndTwoThirdsHoursForNonTax,
-  //     totalNonTaxableHours,
-  //     oneAndOneThirdHoursForTaxable,
-  //     setOneAndOneThirdsHoursForTaxable,
-  //     oneAndTwoThirdsHoursForTaxable,
-  //     setOneAndTwoThirdsHoursForTaxable,
-  //     twoHoursForTaxable,
-  //     setTwoHoursForTaxable,
-  //     twoAndOneThirdsHoursForTaxable,
-  //     setTwoAndOneThirdsHoursForTaxable,
-  //     twoAndTwoThirdsHoursForTaxable,
-  //     setTwoAndTwoThirdsHoursForTaxable,
-  //     totalTaxableHours,
-  //     sickLeaveHours,
-  //     setSickLeaveHours,
-  //     personalLeaveHours,
-  //     setPersonalLeaveHours,
-  //     leavePayoutHours,
-  //     setLeavePayoutHours,
-  //     isLaborInsurance,
-  //     toggleLaborInsurance,
-  //     isNHI,
-  //     toggleNHI,
-  //     isLaborPension,
-  //     toggleLaborPension,
-  //     numberOfDependents,
-  //     setNumberOfDependents,
-  //     nhiBackPremium,
-  //     setNhiBackPremium,
-  //     secondGenNhiTax,
-  //     setSecondGenNhiTax,
-  //     otherAdjustments,
-  //     setOtherAdjustments,
-  //     voluntaryPensionContribution,
-  //     changeVoluntaryPensionContribution,
-  //   }),
-  //   [
-  //     yearOptions,
-  //     monthOptions,
-  //     payrollDaysBaseOptions,
-  //     currentStep,
-  //     completeSteps,
-  //     salaryCalculatorResult,
-  //     employeeName,
-  //     employeeNumber,
-  //     employeeEmail,
-  //     selectedYear,
-  //     selectedMonth,
-  //     payrollDaysBase,
-  //     isJoined,
-  //     dayOfJoining,
-  //     isLeft,
-  //     dayOfLeaving,
-  //     baseSalary,
-  //     mealAllowance,
-  //     otherAllowanceWithTax,
-  //     otherAllowanceWithoutTax,
-  //     isNameError,
-  //     oneAndOneThirdsHoursForNonTax,
-  //     oneAndTwoThirdsHoursForNonTax,
-  //     twoHoursForNonTax,
-  //     twoAndOneThirdsHoursForNonTax,
-  //     twoAndTwoThirdsHoursForNonTax,
-  //     totalNonTaxableHours,
-  //     oneAndOneThirdHoursForTaxable,
-  //     oneAndTwoThirdsHoursForTaxable,
-  //     twoHoursForTaxable,
-  //     twoAndOneThirdsHoursForTaxable,
-  //     twoAndTwoThirdsHoursForTaxable,
-  //     totalTaxableHours,
-  //     sickLeaveHours,
-  //     personalLeaveHours,
-  //     leavePayoutHours,
-  //     isLaborInsurance,
-  //     isNHI,
-  //     isLaborPension,
-  //     numberOfDependents,
-  //     nhiBackPremium,
-  //     secondGenNhiTax,
-  //     otherAdjustments,
-  //     voluntaryPensionContribution,
-  //   ]
-  // );
 
   const value = {
     yearOptions,

@@ -5,8 +5,6 @@ import { useEffect, useState, FC } from "react";
 import Image from "next/image";
 import { useTranslation } from "@/i18n/i18n_context";
 import { X } from "lucide-react";
-// import { useModalContext } from '@/contexts/modal_context';
-// import { MessageType } from '@/interfaces/message_modal';
 
 interface IResendingPaySlipModalProps {
   monthName: string;
@@ -23,22 +21,12 @@ const ResendingPaySlipModal: FC<IResendingPaySlipModalProps> = ({
   const [isSending, setIsSending] = useState<boolean>(false);
   const [resendSuccess, setResendSuccess] = useState<boolean>(false);
 
-  // ToDo: (20260224 - Julian) =========== 這邊要實作 Modal
-  // const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
-
   useEffect(() => {
     if (resendSuccess) {
-      // Info: (20250725 - Julian) 顯示訊息 Modal
-      // messageModalDataHandler({
-      //   messageType: MessageType.SUCCESS,
-      //   title: t('calculator.MESSAGE.RESEND_SUCCESS_TITLE'),
-      //   content: t('calculator.MESSAGE.RESEND_SUCCESS_CONTENT'),
-      //   submitBtnStr: t('common:COMMON.CLOSE'),
-      //   submitBtnFunction: messageModalVisibilityHandler,
-      // });
-      // messageModalVisibilityHandler();
-      // // Info: (20250725 - Julian) 關閉 Modal
-      // modalVisibleHandler();
+      /**
+       * ToDo: (20260224 - Julian) 重寄成功之後要顯示訊息 Modal 並關閉本視窗。
+       * 原本的實作依賴 `src/contexts/modal_context`，那個模組已經不存在，要另尋做法。
+       */
     }
   }, [resendSuccess]);
 
@@ -83,7 +71,6 @@ const ResendingPaySlipModal: FC<IResendingPaySlipModalProps> = ({
         {t("calculator.MESSAGE.RESEND_PAY_SLIP_CONTENT_3")}
       </div>
       {/* Info: (20250723 - Julian) Buttons */}
-      {/* Info: (20260901 - Julian) 這兩顆原本只有 `w-full`，沒有任何樣式（同 view_pay_slip_modal） */}
       <div className="grid grid-cols-2 gap-3 px-5 py-4">
         <button
           type="button"

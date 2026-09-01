@@ -97,7 +97,6 @@ const SendingPaySlipModal: FC<{ modalVisibleHandler: () => void }> = ({
           )}
         </div>
         {/* Info: (20250723 - Julian) Buttons */}
-        {/* Info: (20260901 - Julian) 這兩顆原本只有 `w-full`，沒有任何樣式（同 view_pay_slip_modal） */}
         <div className="grid grid-cols-2 gap-3 px-5 py-4">
           <button
             type="button"

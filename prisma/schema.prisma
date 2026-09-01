@@ -4469,9 +4469,9 @@ model SalaryRecord {
 
   /**
    * Info: (20260831 - Julian) 輸入與結果的完整快照，形狀分別是
-   * `ISalaryCalculatorOptions`（35 欄）與 `ISalaryCalculatorUI`。
+   * `ISalaryCalculatorOptions`（21 欄）與 `ISalaryCalculatorUI`。
    *
-   * 用 Json 而不是攤成 69 個純量欄位：那兩個型別是**計算引擎的契約**，
+   * 用 Json 而不是攤成幾十個純量欄位：那兩個型別是**計算引擎的契約**，
    * 會隨法規年度演進，而本專案沒有 migrations —— 攤平的代價是每次演進
    * 都要手寫回填 SQL。代價是 Json 內的數字繞過 Database Boundary Guard，
    * 因此入庫前一律過 `salaryRecordWriteSchema` 逐欄驗證（計劃書 §2.2）。

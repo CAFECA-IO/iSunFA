@@ -45,13 +45,6 @@ const AccountBookCalculatorNav: FC<IAccountBookCalculatorNavProps> = ({
   return (
     <>
       <nav className="flex flex-wrap items-center gap-[8px]">
-        {/**
-         * Info: (20260901 - Julian) 圖示與 header 取同一個來源。
-         *
-         * `PUBLIC_MODULES` 裡 salary_calculator 的 icon 是 `Wallet`
-         * （constants/modules.ts:73），`HeaderNav` 就是拿那一份渲染的。
-         * 這裡原本自己挑了 `BookText`，於是同一個模組在 header 與分頁列長得不一樣。
-         */}
         <Link href={urls.CALCULATOR} className={styleOf(urls.CALCULATOR)}>
           <Wallet size={16} />
           {t("calculator.header.main_title")}

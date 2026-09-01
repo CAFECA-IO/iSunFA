@@ -50,7 +50,6 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
   const displayedEmployeeName = employeeName ?? user?.name ?? "-";
   const displayedEmployeeNumber = employeeNumber ?? "-";
 
-  // const formattedMonth = monthStr.length > 3 ? `${monthStr.slice(0, 3)}.` : monthStr;
   const monthWithI18n = t(
     `date.month_name.${monthStr.toLowerCase().slice(0, 3)}`,
   );
@@ -105,8 +104,8 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
         {/**
          * Info: (20260901 - Julian) 子元素一律 `shrink-0`。
          *
-         * 這一格是 flex 欄，子項預設 `flex-shrink: 1`；而 PaySlip 自己帶著
-         * `overflow-hidden`（pay_slip.tsx:231），於是自動最小尺寸不生效 ——
+         * 這一格是 flex 欄，子項預設 `flex-shrink: 1`；而 `PaySlip` 的根元素自己帶著
+         * `overflow-hidden`，於是自動最小尺寸不生效 ——
          * 它會被壓縮成容器的高度，再用自己的 overflow 把超出的部分裁掉。
          * 結果是 scrollHeight 等於 clientHeight：畫面看起來被切一半，卻捲不動。
          */}
@@ -134,11 +133,11 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
           )}
         </div>
         {/**
-         * Info: (20260901 - Julian) 這兩顆按鈕原本只有 `w-full`，沒有任何樣式。
+         * Info: (20260901 - Julian) 圖示按鈕的容器一定要是 flex。
          *
-         * Tailwind 的 preflight 把 `svg` 設成 `display: block`，所以圖示會自成一行
-         * 靠左貼齊，文字則置中在上面 —— 那就是截圖裡看到的破版。
-         * 樣式取自 `salary_result_section.tsx` 的兩顆主要按鈕，維持同一套詞彙。
+         * Tailwind preflight 把 `svg` 設成 `display: block`，所以在非 flex 的按鈕裡，
+         * 圖示會自成一行靠左貼齊、文字置中在上面。本模組的按鈕樣式統一取自
+         * `salary_result_section.tsx` 的那兩顆。
          */}
         <div className="flex shrink-0 items-center gap-[12px] px-[20px] py-[16px]">
           {/* Info: (20250725 - Julian) Download Btn */}
