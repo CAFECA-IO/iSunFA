@@ -179,14 +179,43 @@ describe("全專案型別檢查的涵蓋範圍(#6577)", () => {
    * tsc 不會抱怨(它只是少檢查一批檔),而涵蓋守衛也不會紅,
    * 因為那批檔已經不在檔案系統上、走不到正向那條。結果是靜默少一塊檢查面。
    *
-   * `.next` 底下的兩條是建置產物,乾淨 checkout 上本來就不存在,明文排除在本條之外。
+   * **建置產物例外,而且「是不是建置產物」要可驗證**:
+   * 不存在時,只有該進入點**列在 `.gitignore` 裡**才放過 ——
+   * 不進版控就代表乾淨 checkout 上本來就沒有。真正的錯(改了資料夾名、
+   * include 打錯字)不會出現在 `.gitignore` 裡,所以照樣紅。
+   *
+   * Info: (20260831 - Emily) 這一條**第一版在 CI 紅了**,值得留著當記錄:
+   * 我原本只硬寫排除 `.next/`,而 `next-env.d.ts`(Next 產生、`.gitignore` 第 49 行)
+   * 在本機存在、在 CI 的乾淨 checkout 不存在 —— 於是同一份程式碼本機綠、CI 紅。
+   * 錯在寫斷言時只問「路徑存不存在」,沒問「這些路徑裡哪些是產生出來的」;
+   * 而我當時**已經在處理 `.next` 這個建置產物**,卻只想到一個。
+   * 改成單一機制(問 `.gitignore`)而不是繼續列白名單:白名單會再漏第三個。
    */
-  it("include 的每一個進入點都真的存在(反向:不是只驗檔案系統那一邊)", () => {
+  it("include 的每一個進入點都真的存在,或不進版控(反向裁決)", () => {
+    const ignored = new Set(
+      fs
+        .readFileSync(path.join(ROOT, ".gitignore"), "utf-8")
+        .split("\n")
+        .map((line) => line.trim().replace(/^\/+|\/+$/g, ""))
+        .filter((line) => line.length > 0 && !line.startsWith("#")),
+    );
     const missing = include
-      .filter((pattern) => !pattern.startsWith(".next/"))
       .map((pattern) => pattern.split("/")[0])
-      .filter((entry) => !fs.existsSync(path.join(ROOT, entry)));
+      .filter(
+        (entry) =>
+          !fs.existsSync(path.join(ROOT, entry)) && !ignored.has(entry),
+      );
     expect(missing).toEqual([]);
+  });
+
+  /**
+   * Info: (20260831 - Emily) 上一條的例外機制本身也要有下限:
+   * `.gitignore` 若哪天不再忽略這些建置產物,例外就不該繼續成立。
+   */
+  it("被當成建置產物放過的進入點,確實列在 .gitignore 裡", () => {
+    const gitignore = fs.readFileSync(path.join(ROOT, ".gitignore"), "utf-8");
+    expect(gitignore).toContain("next-env.d.ts");
+    expect(gitignore).toContain(".next/");
   });
 
   /**
