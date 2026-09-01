@@ -205,9 +205,15 @@ describe("出路的畫面", () => {
    * 預覽卡把它傳下去、頁面把 `refreshImportJob` 接上來。
    */
   it("倒數歸零時通知外層刷新（三節接線都在）", () => {
-    // Info: (20260901 - Luphia) 元件：轉為歸零那一刻通知一次（ref 擋重複）
+    /**
+     * Info: (20260901 - Luphia) 元件：轉為歸零那一刻通知一次。去重以 `resetAt`
+     * 為鍵而不是布林（自我 review 自-2）：布林版在同一次掛載內第二次暫停
+     * 歸零時會靜默。
+     */
     expect(component).toContain("onCountdownExpired?.();");
-    expect(component).toContain("expiredNotifiedRef.current = true;");
+    expect(component).toContain(
+      "notifiedResetAtRef.current === detail.resetAt",
+    );
     // Info: (20260901 - Luphia) 預覽卡：把時點傳給 CreditPauseWays
     expect(preview).toContain("onCountdownExpired={onCountdownExpired}");
     // Info: (20260901 - Luphia) 頁面：接上 refreshImportJob

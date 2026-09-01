@@ -85,14 +85,19 @@ export function CreditPauseWays({
    * 中-3）：掛載時就已經歸零的（重新整理回來的頁面）也算——那正是狀態
    * 最可能已經變了的情形。ref 擋重複：countdown 物件每秒都是新的，
    * 依賴 `expired` 布林本身。
+   *
+   * Info: (20260901 - Luphia) ref 記的是**通知過的那個 `resetAt`**，不是布林
+   *（自我 review 自-2）：布林版在同一次掛載內只會通知第一次——第二次暫停
+   *（新的重置窗）歸零時就靜默了，而元件在卡片裡沒有 key、React 會沿用實例。
    */
-  const expiredNotifiedRef = useRef(false);
+  const notifiedResetAtRef = useRef<number | null>(null);
   const expired = countdown?.expired ?? false;
   useEffect(() => {
-    if (!expired || expiredNotifiedRef.current) return;
-    expiredNotifiedRef.current = true;
+    if (!expired || detail.resetAt == null) return;
+    if (notifiedResetAtRef.current === detail.resetAt) return;
+    notifiedResetAtRef.current = detail.resetAt;
     onCountdownExpired?.();
-  }, [expired, onCountdownExpired]);
+  }, [expired, detail.resetAt, onCountdownExpired]);
 
   /**
    * Info: (20260827 - Luphia) 絕對時間以瀏覽器時區呈現：`resetAt` 是 epoch 秒

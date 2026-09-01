@@ -78,11 +78,17 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Info: (20260901 - Luphia) 只清自己建的列（前綴指名），然後斷線
+  /**
+   * Info: (20260901 - Luphia) 只清自己建的列（前綴指名），然後斷線。
+   * userId 為空表示 beforeAll 沒走完（自我 review 自-3）——那時沒有東西可刪，
+   * 對空 id 執行 delete 只會把真正的失敗原因蓋在一層 P2025 底下。
+   */
   await prisma.resumableJob.deleteMany({
     where: { resourceKey: { startsWith: KEY_PREFIX } },
   });
-  await prisma.user.delete({ where: { id: userId } });
+  if (userId) {
+    await prisma.user.delete({ where: { id: userId } });
+  }
   await prisma.$disconnect();
 });
 

@@ -473,14 +473,25 @@ describe("兩個入口都會先拿許可", () => {
   /**
    * Info: (20260901 - Luphia) 終局判決要讓卡片改口（review #6726 阻-1）：
    * BUSY 以外的判決代表伺服器眼中的狀態已經與按鈕分岔了。
+   *
+   * Info: (20260901 - Luphia) **光刷新不夠**（自我 review 自-1）：
+   * 「接著匯入」由 `pendingImport.pausedChapters` 驅動，而 `GET /user/job`
+   * 不回取消過的任務——刷新之後按鈕照樣在。跨裝置沒有 JOB_CANCELLED 廣播，
+   * 唯一知道「已取消」的時點就是判決當下，所以這裡也要清暫停狀態
+   *（與廣播 handler 同語意）。這兩條斷言分開釘：少任何一半都是半個修法。
    */
-  it("接續被終局判決擋下時會刷新伺服器狀態", () => {
+  it("接續被終局判決擋下時：刷新伺服器狀態，且 CANCELLED 要清暫停狀態", () => {
     const at = hook.indexOf("claimImportJob(JOB_CLAIM_INTENT.RESUME)");
     expect(at).toBeGreaterThan(-1);
-    const scope = hook.slice(at, at + 900);
+    const scope = hook.slice(at, at + 2000);
     expect(scope).toContain(
       "if (resumeDenial !== JOB_CLAIM_DENIAL.BUSY) void refreshImportJob();",
     );
+    expect(scope).toContain(
+      "if (resumeDenial === JOB_CLAIM_DENIAL.CANCELLED && pendingImport) {",
+    );
+    expect(scope).toContain("pausedChapters: [],");
+    expect(scope).toContain("setImportJob(null);");
   });
 
   it.each(["zh_tw", "zh_cn", "en", "ja", "ko"])(
