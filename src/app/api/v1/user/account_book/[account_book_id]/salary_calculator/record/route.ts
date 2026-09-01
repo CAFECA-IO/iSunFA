@@ -45,6 +45,7 @@ export async function GET(
       employeeId: searchParams.get("employeeId") ?? undefined,
       year: searchParams.get("year") ?? undefined,
       month: searchParams.get("month") ?? undefined,
+      keyword: searchParams.get("keyword") ?? undefined,
       page: searchParams.get("page") ?? undefined,
       pageSize: searchParams.get("pageSize") ?? undefined,
     });

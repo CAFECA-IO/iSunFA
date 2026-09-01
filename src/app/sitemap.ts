@@ -118,12 +118,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "daily",
       priority: 0.8,
     },
-    /**
-     * Info: (20260831 - Julian) salary_calculator/employee_list 與 salary_calculator/pay_slip
-     * 已搬到 /user/account_book/[account_book_id]/salary_calculator 之下（需登入），
-     * 從 sitemap 移除 —— 留著等於對搜尋引擎宣告兩個 404。
-     * 需登入的頁面本來就不該出現在 sitemap 裡。
-     */
     {
       url: "salary_calculator/operating_mechanism",
       lastModified: new Date(),

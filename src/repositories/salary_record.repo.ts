@@ -117,6 +117,22 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
     if (options.year !== undefined) where.year = options.year;
     if (options.month !== undefined) where.month = options.month;
 
+    /**
+     * Info: (20260901 - Julian) 關鍵字比對員工的姓名與編號。
+     *
+     * 走關聯過濾而不是把姓名冗餘存進 salary_record：員工改名之後，
+     * 冗餘欄位會讓舊紀錄用舊名字才搜得到，而畫面上顯示的是現在的名字。
+     * `mode: "insensitive"` 是 PostgreSQL 專屬的，本專案的資料庫就是 PostgreSQL。
+     */
+    if (options.keyword !== undefined && options.keyword !== "") {
+      where.employee = {
+        OR: [
+          { name: { contains: options.keyword, mode: "insensitive" } },
+          { number: { contains: options.keyword, mode: "insensitive" } },
+        ],
+      };
+    }
+
     return where;
   }
 
@@ -190,7 +206,7 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
     const where = this.buildWhereClause(options);
     const skip = (options.page - 1) * options.pageSize;
 
-    const [rows, totalCount] = await Promise.all([
+    const [rows, totalCount, periodRows] = await Promise.all([
       prisma.salaryRecord.findMany({
         where,
         include: { employee: true },
@@ -199,6 +215,17 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
         take: options.pageSize,
       }),
       prisma.salaryRecord.count({ where }),
+      /**
+       * Info: (20260901 - Julian) 期間篩選的選項來源。
+       *
+       * 只看 `accountBookId`，**不套 where** —— 套了的話，選定一個期間之後
+       * 選單裡就只剩那一個期間，使用者換不回去也看不到還有哪些月份。
+       */
+      prisma.salaryRecord.groupBy({
+        by: ["year", "month"],
+        where: { accountBookId: options.accountBookId },
+        orderBy: [{ year: "desc" }, { month: "desc" }],
+      }),
     ]);
 
     return {
@@ -207,6 +234,7 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
       pageSize: options.pageSize,
       totalCount,
       totalPages: Math.ceil(totalCount / options.pageSize),
+      periods: periodRows.map((row) => ({ year: row.year, month: row.month })),
     };
   }
 

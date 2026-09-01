@@ -22,6 +22,15 @@ export const MAX_LEAVE_HOURS = 200;
 export const SALARY_CALCULATOR_VERSION = "2026.1";
 
 /**
+ * Info: (20260901 - Julian) 薪資紀錄年度的下限。
+ *
+ * 與 `salaryRecordQuerySchema` / `salaryRecordWriteSchema` 的 `year.min(2020)` 是同一個值；
+ * 薪資紀錄頁的年度下拉用它產生選項，寫成常數是為了讓「改了一邊忘了另一邊」變成
+ * 一次搜尋就找得到的事。
+ */
+export const SALARY_RECORD_MIN_YEAR = 2020;
+
+/**
  * Info: (20260831 - Julian) 輸入驗證的健全性上界（sanity bound），**不是業務規則**。
  *
  * 業務規則（伙食費上限、加班時數上限）在上面各有常數，也在 UI 擋。

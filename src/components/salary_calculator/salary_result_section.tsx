@@ -2,7 +2,6 @@
 
 import { useRef, useState, FC } from "react";
 import Link from "next/link";
-import { toPng } from "html-to-image";
 import { CheckCircle2, Download, Loader2, Save /* Send */ } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import SendingPaySlipModal from "@/components/salary_calculator/sending_pay_slip_modal";
@@ -18,6 +17,7 @@ import { useSalaryEmployees } from "@/hooks/use_salary_employees";
 import { useSalaryRecordSave } from "@/hooks/use_salary_record_save";
 import { MONTHS } from "@/constants/month";
 import { salaryCalculatorUrlOf } from "@/constants/url";
+import { downloadNodeAsPng } from "@/lib/utils/pay_slip_download";
 import { ISalaryRecordSummary } from "@/interfaces/salary_record";
 
 interface ISalaryResultSectionProps {
@@ -160,31 +160,16 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
       : selectedMonth.name;
   const formattedDate = `${formattedMonth}${selectedYear}`;
 
-  // ToDo: (20260224 - Julian) ============ 這裡要實作下載圖片功能
   // Info: (20250710 - Julian) 下載圖片功能
   const downloadPng = () => {
     if (!downloadRef.current) return;
 
-    toPng(downloadRef.current, {
-      pixelRatio: 2,
-      style: {
-        width: "100%",
-        height: "auto",
-        overflowY: "visible", // Info: (20250725 - Julian) 取消滾動條
-      },
-    })
-      .then((dataUrl) => {
-        // Info: (20250710 - Julian) 下載圖片
-        const link = document.createElement("a");
-        link.href = dataUrl;
-        link.download = `${employeeName}_${formattedDate}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      })
-      .catch((err) => {
-        console.error("oops, something went wrong!", err);
-      });
+    downloadNodeAsPng(
+      downloadRef.current,
+      `${employeeName}_${formattedDate}.png`,
+    ).catch((err) => {
+      console.error("oops, something went wrong!", err);
+    });
   };
 
   // Info: (20250723 - Julian) 登入才能使用寄出薪資單的功能

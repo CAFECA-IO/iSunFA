@@ -2,7 +2,7 @@
 
 import { FC, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Eye, RotateCcw, Trash } from "lucide-react";
+import { Eye, FileStack, RotateCcw, Search, Trash, X } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { request, IEnvelopeLike } from "@/lib/utils/request";
 import { numberWithCommas } from "@/lib/utils/common";
@@ -19,16 +19,35 @@ import {
 import { MONTHS } from "@/constants/month";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { useSalaryEmployees } from "@/hooks/use_salary_employees";
+import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import SalaryCalculatorShell from "@/components/salary_calculator/salary_calculator_shell";
 import ViewPaySlipModal from "@/components/salary_calculator/view_pay_slip_modal";
 
-const cellStyle =
-  "table-cell align-middle border-b border-stroke-neutral-quaternary px-[24px] py-[12px]";
-const headerStyle = `${cellStyle} text-text-neutral-primary font-semibold`;
+const inputStyle =
+  "w-full rounded-xl border border-gray-200 bg-white py-2 pr-3 pl-9 text-sm text-gray-700 transition-all placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none";
+const selectStyle =
+  "shrink-0 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition-all focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none lg:w-44";
 const iconBtnStyle =
-  "flex h-[32px] w-[32px] items-center justify-center rounded-md transition-colors hover:bg-surface-hover";
+  "flex size-8 items-center justify-center rounded-md transition-colors shrink-0";
 
 const PAGE_SIZE = 20;
+
+// Info: (20260901 - Julian) 打字停下來才送出，否則每按一個鍵就是一次查詢
+const KEYWORD_DEBOUNCE_MS = 300;
+
+/**
+ * Info: (20260901 - Julian) 期間篩選的值格式：`YYYY-M`，空字串代表全部。
+ *
+ * 年與月合成一個選單而不是兩個 —— 實務上沒有「所有年度的 8 月」這種需求，
+ * 拆成兩個下拉只是讓使用者多點一次，還能選出必定沒有資料的組合。
+ */
+const periodValueOf = (year: number, month: number) => `${year}-${month}`;
+
+const parsePeriod = (value: string): { year?: number; month?: number } => {
+  if (value === "") return {};
+  const [year, month] = value.split("-");
+  return { year: Number(year), month: Number(month) };
+};
 
 interface ISalaryRecordsPageBodyProps {
   accountBookId: string;
@@ -44,16 +63,30 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
 
   const [page, setPage] = useState<number>(1);
   const [employeeId, setEmployeeId] = useState<string>("");
-  const [year, setYear] = useState<string>("");
+  const [period, setPeriod] = useState<string>("");
+  // Info: (20260901 - Julian) 輸入框的值與真正送出的值分開，中間隔一個 debounce
+  const [keywordInput, setKeywordInput] = useState<string>("");
+  const [keyword, setKeyword] = useState<string>("");
   const [result, setResult] = useState<ISalaryRecordPageResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [hasError, setHasError] = useState<boolean>(false);
   const [viewing, setViewing] = useState<ISalaryRecordDetail | null>(null);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setKeyword(keywordInput.trim());
+      // Info: (20260901 - Julian) 換條件就回第一頁，否則會停在一個不存在的頁碼上
+      setPage(1);
+    }, KEYWORD_DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+  }, [keywordInput]);
+
   const reload = useCallback(async () => {
     setIsLoading(true);
     setHasError(false);
     try {
+      const { year, month } = parsePeriod(period);
       const response = await request<IEnvelopeLike<ISalaryRecordPageResult>>(
         salaryCalculatorApiOf(accountBookId).RECORD,
         {
@@ -62,7 +95,9 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
             pageSize: PAGE_SIZE,
             // Info: (20260831 - Julian) 空字串代表「全部」，不送這個條件
             employeeId: employeeId === "" ? undefined : employeeId,
-            year: year === "" ? undefined : year,
+            year,
+            month,
+            keyword: keyword === "" ? undefined : keyword,
           },
         },
       );
@@ -72,7 +107,7 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [accountBookId, page, employeeId, year]);
+  }, [accountBookId, page, employeeId, period, keyword]);
 
   useEffect(() => {
     reload();
@@ -123,135 +158,184 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
     setPage(1);
   };
 
-  const years = Array.from(
-    new Set((result?.data ?? []).map((record) => record.year)),
-  ).sort((a, b) => b - a);
+  const hasActiveFilter =
+    keywordInput !== "" || employeeId !== "" || period !== "";
 
-  const rows = (result?.data ?? []).map((record) => (
-    <div key={record.id} className="table-row">
-      <div className={`${cellStyle} text-text-neutral-primary font-semibold`}>
-        {t("calculator.records.pay_period_value", {
-          year: record.year,
-          month: record.month,
-        })}
-      </div>
-      <div className={cellStyle}>
-        {record.employee.name}
-        {record.employee.number !== "" && (
-          <span className="text-text-neutral-tertiary">
-            {` · ${record.employee.number}`}
+  const clearFilters = () => {
+    setKeywordInput("");
+    setEmployeeId("");
+    setPeriod("");
+    setPage(1);
+  };
+
+  const totalPages = result?.totalPages ?? 1;
+  const totalCount = result?.totalCount ?? 0;
+
+  /**
+   * Info: (20260901 - Julian) 不包 `useMemo`。
+   *
+   * 這些 render 關住了 `deleteHandler`，而它會呼叫綁著當下篩選條件的 `reload`。
+   * 一旦 memo 沒跟著更新，刪除之後就會用舊條件重抓 —— 畫面回到上一組篩選結果，
+   * 而且完全靜默。五個物件每次重建的成本，遠低於維護這串依賴。
+   */
+  const columns: IDataTableColumn<ISalaryRecordSummary>[] = [
+    {
+      key: "period",
+      label: t("calculator.records.pay_period"),
+      render: (record) => (
+        <span className="font-semibold text-gray-900">
+          {t("calculator.records.pay_period_value", {
+            year: record.year,
+            month: record.month,
+          })}
+        </span>
+      ),
+    },
+    {
+      key: "employee",
+      label: t("calculator.records.employee"),
+      render: (record) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-gray-700">
+            {record.employee.name}
           </span>
-        )}
-      </div>
-      <div
-        className={`${cellStyle} text-text-neutral-primary text-right font-semibold`}
-      >
-        {numberWithCommas(record.totalPayment)}
-      </div>
-      <div className={`${cellStyle} text-right`}>
-        {numberWithCommas(record.totalSalaryTaxable)}
-      </div>
-      <div className={cellStyle}>
-        <div className="flex items-center justify-end gap-[8px]">
+          {record.employee.number !== "" && (
+            <span className="font-mono text-xs text-gray-400">
+              {record.employee.number}
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "netPay",
+      label: t("calculator.records.net_pay"),
+      align: "right",
+      render: (record) => (
+        <span className="font-semibold text-gray-900">
+          {numberWithCommas(record.totalPayment)}
+        </span>
+      ),
+    },
+    {
+      key: "taxable",
+      label: t("calculator.records.taxable"),
+      align: "right",
+      render: (record) => (
+        <span className="text-gray-500">
+          {numberWithCommas(record.totalSalaryTaxable)}
+        </span>
+      ),
+    },
+    {
+      key: "action",
+      label: t("calculator.records.action"),
+      align: "right",
+      render: (record) => (
+        <div className="flex items-center justify-end gap-1">
           <button
             type="button"
             aria-label={t("calculator.records.view")}
+            title={t("calculator.records.view")}
             onClick={() => viewHandler(record)}
-            className={`text-text-neutral-secondary ${iconBtnStyle}`}
+            className={`${iconBtnStyle} text-gray-400 hover:bg-gray-100 hover:text-gray-600`}
           >
-            <Eye size={16} />
+            <Eye className="size-4" />
           </button>
           <button
             type="button"
             aria-label={t("calculator.records.load_back")}
+            title={t("calculator.records.load_back")}
             onClick={() => loadBackHandler(record)}
-            className={`text-text-neutral-secondary ${iconBtnStyle}`}
+            className={`${iconBtnStyle} text-gray-400 hover:bg-gray-100 hover:text-gray-600`}
           >
-            <RotateCcw size={16} />
+            <RotateCcw className="size-4" />
           </button>
           <button
             type="button"
             aria-label={t("calculator.records.delete")}
+            title={t("calculator.records.delete")}
             onClick={() => deleteHandler(record)}
-            className={`text-text-state-error ${iconBtnStyle}`}
+            className={`${iconBtnStyle} text-gray-400 hover:bg-red-50 hover:text-red-600`}
           >
-            <Trash size={16} />
+            <Trash className="size-4" />
           </button>
         </div>
-      </div>
+      ),
+    },
+  ];
+
+  /**
+   * Info: (20260901 - Julian) 「還沒有紀錄」與「這組條件找不到」是兩件事。
+   * 兩者共用一句「還沒有薪資紀錄」會讓正在搜尋的人以為資料掉了。
+   */
+  const emptyState = hasActiveFilter ? (
+    <div className="flex flex-col items-center justify-center">
+      <Search className="mb-4 h-12 w-12 text-gray-300" />
+      <h3 className="mb-2 text-lg font-medium text-gray-900">
+        {t("calculator.records.no_result_title")}
+      </h3>
+      <p className="mb-6 max-w-sm text-center text-gray-500">
+        {t("calculator.records.no_result_desc")}
+      </p>
+      <button
+        type="button"
+        onClick={clearFilters}
+        className="inline-flex items-center justify-center rounded-lg border border-transparent bg-gray-100 px-5 py-2.5 text-sm font-bold text-gray-700 shadow-sm transition-colors hover:bg-gray-200"
+      >
+        {t("common.clear_filters")}
+      </button>
     </div>
-  ));
-
-  const body = (() => {
-    if (isLoading) {
-      return (
-        <p className="text-text-neutral-tertiary py-[48px] text-center text-sm">
-          {t("common.loading")}
-        </p>
-      );
-    }
-    if (hasError) {
-      return (
-        <p className="text-text-state-error py-[48px] text-center text-sm">
-          {t("calculator.records.load_failed")}
-        </p>
-      );
-    }
-    if ((result?.totalCount ?? 0) === 0) {
-      return (
-        <div className="bg-surface-neutral-surface-lv2 border-stroke-neutral-quaternary flex flex-col items-center gap-[12px] rounded-lg border px-[32px] py-[56px] text-center">
-          <p className="text-text-neutral-primary text-lg font-bold">
-            {t("calculator.records.empty_title")}
-          </p>
-          <p className="text-text-neutral-secondary text-sm leading-relaxed">
-            {t("calculator.records.empty_desc")}
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="bg-surface-neutral-surface-lv2 text-text-neutral-secondary table w-full text-sm font-medium">
-        <div className="table-header-group">
-          <div className="table-row">
-            <div className={headerStyle}>
-              {t("calculator.records.pay_period")}
-            </div>
-            <div className={headerStyle}>
-              {t("calculator.records.employee")}
-            </div>
-            <div className={`${headerStyle} text-right`}>
-              {t("calculator.records.net_pay")}
-            </div>
-            <div className={`${headerStyle} text-right`}>
-              {t("calculator.records.taxable")}
-            </div>
-            <div className={`${headerStyle} text-right`}>
-              {t("calculator.records.action")}
-            </div>
-          </div>
-        </div>
-        <div className="table-row-group">{rows}</div>
-      </div>
-    );
-  })();
-
-  const totalPages = result?.totalPages ?? 1;
+  ) : (
+    <div className="flex flex-col items-center justify-center">
+      <FileStack className="mb-4 h-12 w-12 text-gray-300" />
+      <h3 className="mb-2 text-lg font-medium text-gray-900">
+        {t("calculator.records.empty_title")}
+      </h3>
+      <p className="mb-6 max-w-sm text-center text-gray-500">
+        {t("calculator.records.empty_desc")}
+      </p>
+    </div>
+  );
 
   return (
     <SalaryCalculatorShell accountBookId={accountBookId}>
-      <div className="flex flex-col gap-[24px] px-[32px] py-[32px]">
-        <h1 className="text-text-brand-primary-lv1 text-2xl font-bold">
+      {/* Info: (20260901 - Julian) 外距由 user/layout.tsx 的 <main> 提供，這裡不再補 px/py */}
+      <div className="flex flex-col gap-6">
+        <h1 className="text-2xl font-bold text-gray-900">
           {t("calculator.records.main_title")}
         </h1>
 
-        {/* Info: (20260831 - Julian) 篩選：員工與年度。月份靠年度加排序就夠，不再多一個下拉 */}
-        <div className="grid grid-cols-1 gap-[16px] md:grid-cols-2">
+        {/* Info: (20260901 - Julian) 篩選列：桌機一排，手機垂直堆疊 */}
+        <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center">
+          {/* Info: (20260901 - Julian) 關鍵字：比對員工姓名與編號，由後端過濾（列表是分頁的） */}
+          <div className="relative lg:max-w-xs lg:flex-1">
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 shrink-0 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              aria-label={t("calculator.records.search_placeholder")}
+              placeholder={t("calculator.records.search_placeholder")}
+              value={keywordInput}
+              onChange={(e) => setKeywordInput(e.target.value)}
+              className={inputStyle}
+            />
+            {keywordInput !== "" && (
+              <button
+                type="button"
+                aria-label={t("calculator.records.clear_search")}
+                onClick={() => setKeywordInput("")}
+                className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
+
           <select
             aria-label={t("calculator.records.employee")}
             value={employeeId}
             onChange={(e) => changeFilter(setEmployeeId)(e.target.value)}
-            className="border-input-stroke-input h-[44px] rounded-lg border bg-transparent px-[12px] outline-none"
+            className={selectStyle}
           >
             <option value="">{t("calculator.records.all_employees")}</option>
             {employees.map((employee) => (
@@ -261,54 +345,65 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
             ))}
           </select>
 
+          {/* Info: (20260901 - Julian) 期間：選項來自實際有紀錄的年月，不是硬湊的區間 */}
           <select
-            aria-label={t("calculator.records.year")}
-            value={year}
-            onChange={(e) => changeFilter(setYear)(e.target.value)}
-            className="border-input-stroke-input h-[44px] rounded-lg border bg-transparent px-[12px] outline-none"
+            aria-label={t("calculator.records.period")}
+            value={period}
+            onChange={(e) => changeFilter(setPeriod)(e.target.value)}
+            className={selectStyle}
           >
-            <option value="">{t("calculator.records.all_years")}</option>
-            {years.map((item) => (
-              <option key={item} value={item}>
-                {item}
+            <option value="">{t("calculator.records.all_periods")}</option>
+            {(result?.periods ?? []).map((item) => (
+              <option
+                key={periodValueOf(item.year, item.month)}
+                value={periodValueOf(item.year, item.month)}
+              >
+                {t("calculator.records.pay_period_value", {
+                  year: item.year,
+                  month: item.month,
+                })}
               </option>
             ))}
           </select>
+
+          <div className="flex shrink-0 items-center justify-between gap-3 lg:ml-auto lg:justify-end">
+            <span className="text-xs text-gray-400">
+              {t("calculator.records.total_count", { count: totalCount })}
+            </span>
+            {hasActiveFilter && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+              >
+                <X className="size-3" />
+                {t("common.clear_filters")}
+              </button>
+            )}
+          </div>
         </div>
 
-        {body}
-
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between">
-            <p className="text-text-neutral-tertiary text-sm">
-              {t("calculator.records.total_count", {
-                count: result?.totalCount ?? 0,
-              })}
+        {hasError ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-white px-8 py-16 text-center shadow-sm">
+            <p className="text-sm font-medium text-red-600">
+              {t("calculator.records.load_failed")}
             </p>
-            <div className="flex items-center gap-[6px]">
-              <button
-                type="button"
-                aria-label={t("calculator.records.previous_page")}
-                disabled={page <= 1}
-                onClick={() => setPage((prev) => prev - 1)}
-                className="border-stroke-neutral-quaternary text-text-neutral-secondary flex h-[34px] w-[34px] items-center justify-center rounded-md border disabled:opacity-40"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <p className="text-text-neutral-secondary px-[8px] text-sm font-semibold">
-                {`${page} / ${totalPages}`}
-              </p>
-              <button
-                type="button"
-                aria-label={t("calculator.records.next_page")}
-                disabled={page >= totalPages}
-                onClick={() => setPage((prev) => prev + 1)}
-                className="border-stroke-neutral-quaternary text-text-neutral-secondary flex h-[34px] w-[34px] items-center justify-center rounded-md border disabled:opacity-40"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
           </div>
+        ) : (
+          <DataTable<ISalaryRecordSummary>
+            columns={columns}
+            data={result?.data ?? []}
+            loading={isLoading}
+            rowKey={(record) => record.id}
+            pagination={{
+              page,
+              limit: PAGE_SIZE,
+              totalPages,
+              totalElements: totalCount,
+            }}
+            onPageChange={setPage}
+            emptyStateText={emptyState}
+          />
         )}
       </div>
 

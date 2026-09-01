@@ -39,7 +39,7 @@ const SalaryCalculatorShell: FC<ISalaryCalculatorShellProps> = ({
      *
      * 那一列存在的理由是「計算說明」—— 它原本掛在 CalculatorHeader 上，
      * 而帳本版不渲染那顆 header，於是解釋每個數字怎麼來的唯一入口就不見了。
-     * 順帶把三個頁面之間的切換也放進來。
+     * 順帶把兩個頁面之間的切換也放進來。
      */
     return (
       <div className="flex w-full flex-col gap-[24px]">

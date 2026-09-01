@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   SALARY_INPUT_MAX_AMOUNT,
   SALARY_INPUT_MAX_HOURS,
+  SALARY_RECORD_MIN_YEAR,
 } from "@/constants/salary_calculator";
 import {
   ISalaryCalculatorEmployeeWriteInput,
@@ -66,7 +67,7 @@ export const salaryCalculatorEmployeeWriteSchema = z.object({
  * 引擎那邊加欄位時，這裡沒跟上會在 `toSalaryRecordWriteInput` 的回傳型別上編譯失敗。
  */
 export const salaryCalculatorOptionsSchema = z.object({
-  year: z.number().int().min(2020).max(2100),
+  year: z.number().int().min(SALARY_RECORD_MIN_YEAR).max(2100),
   month: z.number().int().min(1).max(12),
   foreignWorker: z.boolean().optional(),
   job: z.number().int().positive().optional(),
@@ -151,7 +152,7 @@ export const salaryCalculatorUiSchema = z.object({
 
 export const salaryRecordWriteSchema = z.object({
   employeeId: z.string().uuid(),
-  year: z.number().int().min(2020).max(2100),
+  year: z.number().int().min(SALARY_RECORD_MIN_YEAR).max(2100),
   month: z.number().int().min(1).max(12),
   input: salaryCalculatorOptionsSchema,
   result: salaryCalculatorUiSchema,
@@ -160,8 +161,20 @@ export const salaryRecordWriteSchema = z.object({
 
 export const salaryRecordQuerySchema = z.object({
   employeeId: z.string().uuid().optional(),
-  year: z.coerce.number().int().min(2020).max(2100).optional(),
+  year: z.coerce
+    .number()
+    .int()
+    .min(SALARY_RECORD_MIN_YEAR)
+    .max(2100)
+    .optional(),
   month: z.coerce.number().int().min(1).max(12).optional(),
+  /**
+   * Info: (20260901 - Julian) 關鍵字：比對員工姓名與編號。
+   *
+   * 之所以在伺服器端做而不是前端過濾：這份列表是分頁的，
+   * 前端過濾只會濾掉當前這 20 筆，使用者搜第 3 頁的人會得到「查無資料」。
+   */
+  keyword: z.string().trim().max(100).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });

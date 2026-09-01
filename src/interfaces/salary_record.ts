@@ -79,6 +79,8 @@ export interface ISalaryRecordQueryOptions {
   employeeId?: string;
   year?: number;
   month?: number;
+  // Info: (20260901 - Julian) 比對員工姓名或編號，空字串視同沒有這個條件
+  keyword?: string;
   page: number;
   pageSize: number;
 }
@@ -95,4 +97,19 @@ export interface ISalaryRecordPageResult {
   pageSize: number;
   totalCount: number;
   totalPages: number;
+  /**
+   * Info: (20260901 - Julian) 這本帳實際存在紀錄的年月，新到舊。
+   *
+   * 給期間篩選的下拉用。不從當前這一頁推導，也不用「現在往前推 N 個月」硬湊 ——
+   * 兩者都會讓「紀錄在第 3 頁」或「三年前的那一筆」變成選不到、因此篩不到的資料。
+   * 這份清單只看 `accountBookId`，不套其他篩選條件，所以選了一個期間之後
+   * 其他期間仍然留在選單裡（否則選完就只剩自己，換不回去）。
+   */
+  periods: ISalaryRecordPeriod[];
+}
+
+// Info: (20260901 - Julian) 一個給付期間（年 + 月），供期間篩選使用
+export interface ISalaryRecordPeriod {
+  year: number;
+  month: number;
 }

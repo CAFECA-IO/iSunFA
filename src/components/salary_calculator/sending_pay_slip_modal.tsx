@@ -97,17 +97,18 @@ const SendingPaySlipModal: FC<{ modalVisibleHandler: () => void }> = ({
           )}
         </div>
         {/* Info: (20250723 - Julian) Buttons */}
+        {/* Info: (20260901 - Julian) 這兩顆原本只有 `w-full`，沒有任何樣式（同 view_pay_slip_modal） */}
         <div className="grid grid-cols-2 gap-3 px-5 py-4">
           <button
             type="button"
-            className="w-full"
+            className="text-text-neutral-secondary ring-stroke-neutral-quaternary hover:bg-surface-hover flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold ring-1 transition-colors"
             onClick={modalVisibleHandler}
           >
             {t("common.cancel")}
           </button>
           <button
             type="button"
-            className="w-full"
+            className="flex h-11 w-full items-center justify-center rounded-xl bg-orange-600 text-sm font-bold text-white transition-colors hover:bg-orange-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
             disabled={!isValidEmail || emailInput.trim() === ""}
             onClick={sendPaySlip}
           >

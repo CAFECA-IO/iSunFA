@@ -33,7 +33,6 @@ export const ISUNFA_ROUTE = {
 export const salaryCalculatorUrlOf = (accountBookId: string) =>
   ({
     CALCULATOR: `/user/account_book/${accountBookId}/salary_calculator`,
-    EMPLOYEE_LIST: `/user/account_book/${accountBookId}/salary_calculator/employee_list`,
     PAY_SLIP: `/user/account_book/${accountBookId}/salary_calculator/pay_slip`,
     RECORDS: `/user/account_book/${accountBookId}/salary_calculator/records`,
   }) as const;

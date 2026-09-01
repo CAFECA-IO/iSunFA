@@ -208,6 +208,7 @@ class FakeRecordRepo implements ISalaryRecordRepository {
       pageSize: options.pageSize,
       totalCount: data.length,
       totalPages: 1,
+      periods: data.map((row) => ({ year: row.year, month: row.month })),
     };
   }
 

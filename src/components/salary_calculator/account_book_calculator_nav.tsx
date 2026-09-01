@@ -3,7 +3,7 @@
 import { FC, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookText, FileText, HelpCircle, Users } from "lucide-react";
+import { FileText, HelpCircle, Wallet } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { salaryCalculatorUrlOf } from "@/constants/url";
 import MechanismModal from "@/components/salary_calculator/mechanism_modal";
@@ -20,7 +20,7 @@ interface IAccountBookCalculatorNavProps {
  * 少了它，帳本版的使用者看不到計算說明 —— 那是解釋每個數字怎麼來的唯一入口。
  *
  * 所以這一列補回那兩件事，掛在 `SalaryCalculatorShell` 的帳本版分支上，
- * 三個頁面（計算機／員工列表／薪資紀錄）共用同一列。
+ * 兩個頁面（計算機／薪資紀錄）共用同一列。
  */
 const AccountBookCalculatorNav: FC<IAccountBookCalculatorNavProps> = ({
   accountBookId,
@@ -35,7 +35,7 @@ const AccountBookCalculatorNav: FC<IAccountBookCalculatorNavProps> = ({
   const linkStyle =
     "flex h-[36px] items-center gap-[6px] rounded-lg border px-[14px] text-xs md:text-sm font-semibold transition-colors";
   const activeStyle =
-    "border-stroke-neutral-quaternary bg-surface-brand-primary-soft text-text-brand-primary-lv1";
+    "border-text-brand-primary-lv1 bg-surface-brand-primary-soft text-text-brand-primary-lv1";
   const idleStyle =
     "border-stroke-neutral-quaternary text-text-neutral-secondary hover:text-text-brand-primary-lv1";
 
@@ -45,13 +45,16 @@ const AccountBookCalculatorNav: FC<IAccountBookCalculatorNavProps> = ({
   return (
     <>
       <nav className="flex flex-wrap items-center gap-[8px]">
+        {/**
+         * Info: (20260901 - Julian) 圖示與 header 取同一個來源。
+         *
+         * `PUBLIC_MODULES` 裡 salary_calculator 的 icon 是 `Wallet`
+         * （constants/modules.ts:73），`HeaderNav` 就是拿那一份渲染的。
+         * 這裡原本自己挑了 `BookText`，於是同一個模組在 header 與分頁列長得不一樣。
+         */}
         <Link href={urls.CALCULATOR} className={styleOf(urls.CALCULATOR)}>
-          <BookText size={16} />
+          <Wallet size={16} />
           {t("calculator.header.main_title")}
-        </Link>
-        <Link href={urls.EMPLOYEE_LIST} className={styleOf(urls.EMPLOYEE_LIST)}>
-          <Users size={16} />
-          {t("calculator.employee_list.main_title")}
         </Link>
         <Link href={urls.RECORDS} className={styleOf(urls.RECORDS)}>
           <FileText size={16} />
