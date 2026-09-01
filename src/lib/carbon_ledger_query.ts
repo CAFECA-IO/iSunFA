@@ -399,6 +399,36 @@ export const queryYearOverYear = (
     });
   });
 
+  /**
+   * Info: (20260831 - Emily) 兩個年度都在、什麼都沒跨門檻時**也要有結論**
+   * (PR #6725 review R4 的殘留半)。
+   *
+   * 這是本函式檔頭自己寫的那條規矩:「『無法比較』與『比較過沒異常』必須分得出來」。
+   * 原本 facts 為空就回空 —— 於是事實包裡零筆年間事實,與「只有一個年度」
+   * 在下游**完全同形**,而 persona 被指示去轉述一筆不存在的「無法進行」說明
+   * (reviewer 實測:年增 10% 的主要路徑上,清單裡年間事實 0 筆)。
+   *
+   * 三種上游狀態現在有三種可觀測值:
+   *   不滿兩個年度      → yearComparisonUnavailableFact 的「無法進行」(進 core)
+   *   兩年且有跳動/增減 → 逐筆疑點(進異常池,排在最前面)
+   *   兩年且都沒跨門檻 → 這一筆「查過而無異常」
+   *
+   * 不省這一筆的理由與拒答一等公民同源:沉默無法區分「查過」與「沒查」,
+   * 而 LLM 對沉默的處理方式沒有人保證。
+   */
+  if (facts.length === 0) {
+    return {
+      ok: true,
+      facts: [
+        {
+          label: "年間比較:各排放源皆未跨門檻",
+          value: `${previous.year} 年與 ${current.year} 年逐排放源比對,無任何一項達到 ×${YEAR_OVER_YEAR_JUMP_FACTOR} 或 ÷${YEAR_OVER_YEAR_JUMP_FACTOR} 的量級跳動,也沒有排放源新增或消失`,
+          source: `帳本年度快照(${previous.year} / ${current.year})`,
+        },
+      ],
+    };
+  }
+
   return { ok: true, facts };
 };
 
@@ -492,10 +522,24 @@ export const buildLedgerFactBundle = (
     ...toContextFacts(queryTopEmitters(ledger, LEDGER_FACT_TOP_EMITTERS)),
     ...yearComparisonUnavailableFact(ledgerByYear, ledger),
   ];
-  // Info: (20260825 - Emily) 年間疑點與其他異常同池,一起受上限與「據實申報」規則管
+  /**
+   * Info: (20260825 - Emily) 年間疑點與其他異常同池,一起受上限與「據實申報」規則管。
+   *
+   * Info: (20260831 - Emily) 年間事實排在**最前面**(PR #6725 review R4)。
+   *
+   * 上限裁的是尾巴(`slice(0, budget)`),而年間事實原本排在最後 ——
+   * 也就是這一池裡**訊號最強的東西第一個被丟掉**:待補清單沒有上限,
+   * 一份待補很多的帳本會把「某個排放源的排放量翻了三倍」擠掉,
+   * 而 LLM 只讀到「另有 N 條異常事實未列出」,它會理解成 N 條待補項,
+   * 不會理解成「排放量翻了三倍而我沒說」。
+   *
+   * 排序是唯一需要的修法:量級跳動是跨年度的結構性變化(可能是關廠、
+   * 可能是漏盤、也可能是真的成長),而待補項是單筆活動數據缺係數 ——
+   * 前者值得人看一眼,後者是清單工作。
+   */
   const anomalies = [
-    ...toContextFacts(queryAnomalies(ledger, importBlocks, yearWarning)),
     ...yearOverYearFacts(ledgerByYear),
+    ...toContextFacts(queryAnomalies(ledger, importBlocks, yearWarning)),
   ];
   const budget = LEDGER_FACT_BUNDLE_MAX - core.length - 1;
   if (anomalies.length <= budget + 1) {

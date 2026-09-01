@@ -3986,8 +3986,24 @@ export const useCarbonChat = () => {
         activeInventoryState?.computedLedger,
         chartLabels,
         dataTableLabels,
-        // Info: (20260825 - Emily) #6667:被擋時說被擋的原因,不說「未取得該表」
-        activeInventoryState?.ledgerImportBlocks,
+        /**
+         * Info: (20260825 - Emily) #6667:被擋時說被擋的原因,不說「未取得該表」。
+         *
+         * Info: (20260831 - Emily) 讀 **ref** 不讀 state(PR #6725 review R2)。
+         *
+         * 原本讀 `activeInventoryState?.ledgerImportBlocks`,而它不在這個
+         * useCallback 的 dep 陣列裡(eslint 一直在報 exhaustive-deps)——
+         * 那不是型別噪音,是真的失效路徑:被擋時 `computedLedger` **依定義不變**
+         * (整批凍結在門口、沒寫進帳本),於是五個 dep 一個都沒變、閉包不重建,
+         * 讀到的是舊的 `undefined` → 插圖印「未取得該表」,
+         * 把使用者送去重匯一個根本沒壞的章節。
+         *
+         * 另外兩個呼叫端(3.6 桑基圖、跳段插圖)早就用 `ledgerImportBlocksRef.current`,
+         * 理由寫在 ref 的宣告處:本輪 setState 還沒生效,ref 才是同步的權威。
+         * 三條路徑有兩條是對的,就這一條讀 state —— 改成一致,順帶消掉那條 warning
+         * (ref 不需要進 dep 陣列,因為它的身分不變)。
+         */
+        ledgerImportBlocksRef.current,
       );
       setSessionsData((prev) => {
         const session = prev[activeSessionId];

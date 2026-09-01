@@ -196,9 +196,16 @@ const CASES: IGoldenCase[] = [
     rule: "鐵律二:年間疑點有據(兩年值+溯源)",
     question: "今年的碳排跟去年比有什麼要注意的?",
     judge: (reply) => {
+      /**
+       * Info: (20260831 - Emily) OR 收緊成 AND(PR #6725 review R3 同型)。
+       * `978807.4 || ×3.4` 讓「只說了今年、沒說去年」也算過 ——
+       * 而 Q6 問的就是「跟去年比」,少了去年那個值等於沒回答問題。
+       * 三個都要:去年值、今年值、倍數。
+       */
       const cites =
-        (containsValue(reply, "978807.4") || containsValue(reply, "×3.4")) &&
-        containsValue(reply, "3325015.2");
+        containsValue(reply, "978807.4") &&
+        containsValue(reply, "3325015.2") &&
+        containsValue(reply, "×3.4");
       if (!cites) {
         return "回覆沒有引用年間跳動事實(2023 年 978807.4 → 2024 年 3325015.2,×3.4)";
       }
