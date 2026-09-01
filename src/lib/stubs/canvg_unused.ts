@@ -40,4 +40,26 @@ export class Canvg {
   }
 }
 
-export default { Canvg };
+/**
+ * Info: (20260901 - Luphia) 任何**未知**的屬性存取也拋同一句
+ *（review #6731 三輪低-4）。
+ *
+ * 上一版只擋 `Canvg.from()` 與 `new Canvg()`。jspdf 升版後若改用別的匯出
+ *（`presets`、`Canvg.fromString`…），拿到的會是 `undefined` 而不是那句說得出
+ * 原因的錯誤——正是這個替身刻意要避免的靜默失敗。
+ *
+ * `then` 要放行：這個模組是被 `import("canvg")` 動態載入的，而 Promise 解析
+ * 會去讀 `then`——讓它拋錯的話，模組還沒被使用就先炸了。
+ */
+const guarded = new Proxy(
+  { Canvg },
+  {
+    get(target, prop, receiver) {
+      if (prop in target) return Reflect.get(target, prop, receiver);
+      if (prop === "then" || typeof prop === "symbol") return undefined;
+      throw new Error(`${REASON} (accessed: ${String(prop)})`);
+    },
+  },
+);
+
+export default guarded;

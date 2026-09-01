@@ -108,4 +108,24 @@ describe("側欄的狀態徽章不會被壓成一個團塊", () => {
       expect(label.length).toBeLessThanOrEqual(4);
     });
   });
+
+  /**
+   * Info: (20260901 - Luphia) 上面那條量的是 **enum 成員**，而畫面渲染的必須是
+   * **同一個字**，否則觀測量與被守護的東西脫鉤（review #6731 三輪中-2，
+   * 檢查表 §1.9）。
+   *
+   * 這件事已經排定要變：`SessionStatusEnum` 把中文寫死當 enum 值，已另立案要
+   * i18n 化。那張票落地時 `{s.status}` 會換成 `t(...)`，畫面上的字變成
+   * "In Progress"（11 字）、"진행 중"、德文 "In Bearbeitung"（14 字），而上面
+   * 那條仍然讀 enum、仍然全綠——`whitespace-nowrap` 就從保護變成撐開整列。
+   *
+   * 這一條讓那一天**先紅在這裡**，而紅的位置正是要重新決定 `nowrap` 的位置。
+   */
+  it("渲染的就是 enum 值本身（i18n 化當天這條要先紅）", () => {
+    expect(sidebar).toContain("{s.status}");
+    const at = sidebar.indexOf("{s.status}");
+    const scope = sidebar.slice(Math.max(0, at - 300), at);
+    // Info: (20260901 - Luphia) 一旦改成譯值，這裡會出現 t( 而這條就紅了
+    expect(scope).not.toMatch(/\bt\(/);
+  });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "@jest/globals";
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
 
 /**
@@ -18,13 +18,21 @@ import { join } from "path";
  * 為什麼 review 不容易抓到：**英文介面完全正常**（"Login" 是一個不可斷的詞），
  * 而 desktop 也完全正常（空間夠，不會觸發壓縮）。
  */
+/**
+ * Info: (20260901 - Luphia) 走遍整個 `src/`——掃描根不可以是「剛好被修的那幾個
+ * 檔案」（檢查表 §1.1）。與 `canvg_alias.test.ts` 同一個手法。
+ */
+function walkSource(dir = join(process.cwd(), "src")): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) return walkSource(full);
+    return /\.(ts|tsx)$/.test(entry.name) ? [full] : [];
+  });
+}
+
 describe("手機版的登入按鈕不會被壓成一個圓", () => {
   const button = readFileSync(
     join(process.cwd(), "src", "components", "common", "login_button.tsx"),
-    "utf8",
-  );
-  const header = readFileSync(
-    join(process.cwd(), "src", "components", "landing_page", "header.tsx"),
     "utf8",
   );
 
@@ -36,18 +44,40 @@ describe("手機版的登入按鈕不會被壓成一個圓", () => {
    * 這個坑寫這一組測試時當場踩到了。
    */
   const classOf = (source: string): string => {
-    const at = source.indexOf('className="');
+    /**
+     * Info: (20260901 - Luphia) 語意錨：抓那顆**按鈕**的 `className`，不是檔案裡
+     * 第一個 `className=`（review #6731 三輪低-1）。
+     *
+     * 位置錨today 剛好對，但只要在 button 之前加任何帶 class 的元素（包裝
+     * `<span>`、loading 狀態），「共用元件本身不帶 shrink-0」就會改成斷言那個新
+     * 元素——按鈕上真的加了 `shrink-0` 也照綠。
+     */
+    const at = source.indexOf("<button");
     expect(at).toBeGreaterThan(-1);
-    const start = at + 'className="'.length;
+    const cls = source.indexOf('className="', at);
+    expect(cls).toBeGreaterThan(-1);
+    const start = cls + 'className="'.length;
     return source.slice(start, source.indexOf('"', start));
   };
   const buttonClass = classOf(button);
+  /**
+   * Info: (20260901 - Luphia) 間距現在只有**一個**來源：共用的 `HeaderActions`
+   *（review #6731 三輪高-1）。三個 header 先前各自手寫，間距分成
+   * `gap-x-1.5` / `gap-x-4` / `gap-x-6` 三種，而 `shrink-0` 對三個同時生效。
+   *
+   * 錨在「同時含 `gap-x-` 與 `sm:gap-x-`」的那個 class，不綁 Tailwind 的排序
+   *（低-2：`user_header` 先前就寫成 `flex gap-x-6 ... items-center`）。
+   */
+  const headerActions = readFileSync(
+    join(process.cwd(), "src", "components", "header", "header_actions.tsx"),
+    "utf8",
+  );
   const headerGroupClass = (() => {
-    // Info: (20260827 - Luphia) 錨在 `gap-x-`：只寫 `flex items-center` 會抓到 nav
-    const at = header.indexOf('className="flex items-center gap-x-');
-    expect(at).toBeGreaterThan(-1);
-    const start = at + 'className="'.length;
-    return header.slice(start, header.indexOf('"', start));
+    const m = /className="([^"]*\bgap-x-[^"]*\bsm:gap-x-[^"]*)"/.exec(
+      headerActions,
+    );
+    expect(m).not.toBeNull();
+    return m![1];
   })();
 
   /**
@@ -126,34 +156,70 @@ describe("手機版的登入按鈕不會被壓成一個圓", () => {
    * 這一條掃**所有**呼叫端，不是只掃被修的那一個：`desk_board` 目前是
    * 500×128（比例 3.906），也會被這條抓到。
    */
+  /**
+   * Info: (20260901 - Luphia) 掃**整個 `src/`**，不是一份寫死的呼叫端清單
+   *（review #6731 三輪高-2）。
+   *
+   * 上一版把三個檔名寫死，而且 `if (at === -1) return []`——**找不到標籤就靜默
+   * 跳過**。同一條判準對「有標籤但缺 width/height」是 fail-closed，對「整個標籤
+   * 不見了」卻是 fail-open，兩種缺席走相反的通道（檢查表 §1.13）。
+   *
+   * 那讓它在最需要的兩個時刻是綠的：有人新增第四個呼叫端（不在清單裡），
+   * 或有人把呼叫包進中介元件（`indexOf` 回 -1）。
+   *
+   * 兩份 SVG 都驗：`BrandLogoImage` 以 `dark:` 互斥渲染 light / color 兩個檔，
+   * 只驗一份的話，哪天只換了另一份，這條會對著錯的檔案說「一致」。
+   */
   it("所有呼叫端宣告的比例與 SVG 內建比例一致", () => {
-    const svg = readFileSync(
-      join(process.cwd(), "public", "isunfa_logo.svg"),
-      "utf8",
-    );
-    const viewBox = /viewBox="0 0 (\d+) (\d+)"/.exec(svg);
-    expect(viewBox).not.toBeNull();
-    const intrinsic = Number(viewBox![1]) / Number(viewBox![2]);
+    const ratioOf = (file: string) => {
+      const svg = readFileSync(join(process.cwd(), "public", file), "utf8");
+      const viewBox = /viewBox="0 0 (\d+(?:\.\d+)?) (\d+(?:\.\d+)?)"/.exec(svg);
+      expect(viewBox).not.toBeNull();
+      return Number(viewBox![1]) / Number(viewBox![2]);
+    };
+    const light = ratioOf("isunfa_logo.svg");
+    const color = ratioOf("isunfa_logo_color.svg");
+    // Info: (20260901 - Luphia) 兩份必須同比例，否則「一致」這個判準沒有唯一解
+    expect(color).toBeCloseTo(light, 5);
 
-    const callers = [
-      "src/components/header/brand_logo.tsx",
-      "src/components/hr_management/hr_header.tsx",
-      "src/app/cafeca/desk_board/page.tsx",
-    ];
+    const callers = walkSource().filter(
+      (file) =>
+        // Info: (20260901 - Luphia) 測試檔談論這個標籤是應該的，不是呼叫端
+        !file.includes("__tests__") &&
+        readFileSync(file, "utf8").includes("<BrandLogoImage"),
+    );
+    /**
+     * Info: (20260901 - Luphia) **下界**：已知的呼叫端不得從掃描結果消失。
+     *
+     * 走遍 `src/` 補的是上界（新增的呼叫端會被抓到），但它擋不住「有人把掃描
+     * 換回一份只含合格檔案的短清單」——那時剩下的都合格，測試照綠。突變驗證
+     * 當場證實了這一點，所以下界要另外釘。
+     *
+     * 這兩句合起來才是完整的判準：清單只能變長，不能變短。
+     */
+    const rel = callers.map((f) => f.replace(`${process.cwd()}/`, ""));
+    expect(rel).toEqual(
+      expect.arrayContaining([
+        "src/components/header/brand_logo.tsx",
+        "src/components/hr_management/hr_header.tsx",
+        "src/app/cafeca/desk_board/page.tsx",
+      ]),
+    );
+
     const mismatched = callers.flatMap((file) => {
-      const source = readFileSync(join(process.cwd(), file), "utf8");
-      const at = source.indexOf("<BrandLogoImage");
-      if (at === -1) return [];
-      const tag = source.slice(at, source.indexOf("/>", at));
+      const tag = (() => {
+        const source = readFileSync(file, "utf8");
+        const at = source.indexOf("<BrandLogoImage");
+        return source.slice(at, source.indexOf("/>", at));
+      })();
       const w = /width=\{(\d+)\}/.exec(tag);
       const h = /height=\{(\d+)\}/.exec(tag);
-      if (!w || !h) return [`${file}: 缺 width/height`];
+      const name = file.replace(`${process.cwd()}/`, "");
+      if (!w || !h) return [`${name}: 缺 width/height`];
       const ratio = Number(w[1]) / Number(h[1]);
-      return Math.abs(ratio - intrinsic) < 0.001
+      return Math.abs(ratio - light) < 0.001
         ? []
-        : [
-            `${file}: ${w[1]}/${h[1]} = ${ratio.toFixed(3)}（應為 ${intrinsic}）`,
-          ];
+        : [`${name}: ${w[1]}/${h[1]} = ${ratio.toFixed(3)}（應為 ${light}）`];
     });
     expect(mismatched).toEqual([]);
   });
@@ -170,6 +236,22 @@ describe("手機版的登入按鈕不會被壓成一個圓", () => {
     expect(tag).toContain("sm:h-8");
     // Info: (20260827 - Luphia) w-auto 是「改高度就是改寬度」的依據
     expect(tag).toContain("w-auto");
+  });
+
+  /**
+   * Info: (20260901 - Luphia) 三個 header 都必須用共用元件，不可以自己手寫那一列
+   *（review #6731 三輪高-1）。實測 `/salary_calculator` 在 320px 未登入時，
+   * 手寫的 `gap-x-4` 加上 `shrink-0` 會讓登入按鈕被切掉、logo 完全消失。
+   */
+  it.each([
+    "src/components/landing_page/header.tsx",
+    "src/components/salary_calculator/calculator_header.tsx",
+    "src/components/user/user_header.tsx",
+  ])("%s 用共用的 HeaderActions，不自己手寫", (file) => {
+    const source = readFileSync(join(process.cwd(), file), "utf8");
+    expect(source).toContain("<HeaderActions />");
+    // Info: (20260901 - Luphia) 手寫那一列就會再分岔一次
+    expect(source).not.toContain("<UserActions />");
   });
 
   it("header 右側群組的手機間距遠小於桌機", () => {

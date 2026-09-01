@@ -1,16 +1,13 @@
 "use client";
 
-import { useState, FC } from 'react';
+import { useState, FC } from "react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ISUNFA_ROUTE } from "@/constants/url";
-import LanguageSelector from "@/components/header/language_selector";
-import ThemeToggle from "@/components/header/theme_toggle";
 import BrandLogo from "@/components/header/brand_logo";
-import UserActions from "@/components/header/user_actions";
-import HeaderNav from "@/components/header/header_nav";
+import HeaderActions from "@/components/header/header_actions";
 import MechanismModal from "@/components/salary_calculator/mechanism_modal";
 // import { useAuth } from "@/contexts/auth_context";
 
@@ -25,7 +22,7 @@ const CalculatorHeader: FC = () => {
   // const isSlip = pathname === ISUNFA_ROUTE.PAY_SLIP;
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-surface-raised/90 shadow-sm ring-1 ring-border-default backdrop-blur-xl">
+    <header className="bg-surface-raised/90 ring-border-default sticky top-0 z-50 w-full shadow-sm ring-1 backdrop-blur-xl">
       <nav
         className="flex items-center justify-between p-3 lg:px-8"
         aria-label="Global"
@@ -35,14 +32,14 @@ const CalculatorHeader: FC = () => {
           <div className="hidden items-center gap-x-4 lg:flex">
             <Link
               href={ISUNFA_ROUTE.SALARY_CALCULATOR}
-              className={`text-sm font-medium transition-colors hover:text-brand ${isCalc ? "text-brand" : "text-text-secondary"}`}
+              className={`hover:text-brand text-sm font-medium transition-colors ${isCalc ? "text-brand" : "text-text-secondary"}`}
             >
               {t("calculator.header.main_title")}
             </Link>
-            
+
             <button
               onClick={() => setIsMechanismModalOpen(true)}
-              className="text-xs font-semibold text-text-muted hover:text-brand transition-colors bg-transparent border-none cursor-pointer"
+              className="text-text-muted hover:text-brand cursor-pointer border-none bg-transparent text-xs font-semibold transition-colors"
             >
               {t("calculator.header.how_it_works")}
             </button>
@@ -65,17 +62,12 @@ const CalculatorHeader: FC = () => {
           )} */}
         </div>
 
-        <div className="flex items-center gap-x-4 lg:gap-x-8">
-          <HeaderNav />
-          <ThemeToggle />
-          <LanguageSelector />
-          <UserActions />
-        </div>
+        <HeaderActions />
       </nav>
 
-      <MechanismModal 
-        isOpen={isMechanismModalOpen} 
-        onClose={() => setIsMechanismModalOpen(false)} 
+      <MechanismModal
+        isOpen={isMechanismModalOpen}
+        onClose={() => setIsMechanismModalOpen(false)}
       />
     </header>
   );

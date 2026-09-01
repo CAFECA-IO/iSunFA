@@ -16,6 +16,11 @@ const nextConfig: NextConfig = {
    * 相依在冷安裝時可能不存在——症狀是「有 build cache 的建置綠、全新分支的
    * 第一次建置紅」，也就是每一條新分支的第一次 Vercel 建置都會失敗。
    *
+   * **涵蓋範圍（when 子句）**：這個別名只在**以 Turbopack 建置時**生效。
+   * Next 16 的 `next build` 預設走 Turbopack，所以現況是完整的；但 `--webpack`
+   * 逃生口存在，走那條路時這個別名不會被套用，`canvg` 會回到「冷安裝時可能
+   * 解不到」的狀態（review #6731 三輪低-5）。
+   *
    * 用替身而不是把 `canvg` 升為直接相依：它只服務 `jsPDF.addSvgAsImage()`，
    * 而這個專案一次都沒有呼叫過（`pdf_export.ts` 只用 `addImage` /
    * `addPage` / `output`）。理由與替身本身寫在 `src/lib/stubs/canvg_unused.ts`。
