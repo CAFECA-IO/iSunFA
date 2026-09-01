@@ -152,7 +152,7 @@ import {
   appendImportSource,
   extractCreditPauseDetail,
   foldImportChunks,
-  isJobBusyError,
+  resolveJobClaimDenial,
   type ICarbonImportSource,
   type IImportCheckpoint,
 } from "@/hooks/use_carbon_chat.helpers";
@@ -162,9 +162,12 @@ import type { IJobView } from "@/interfaces/resumable_job";
 import { CREDIT_EVENT } from "@/constants/credit_events";
 import { publishCreditEvent, subscribeCreditEvents } from "@/lib/credit_events";
 import {
+  JOB_CLAIM_DENIAL,
   JOB_CLAIM_INTENT,
+  JOB_CLAIM_TTL_MS,
   JOB_PAUSE_REASON,
   JOB_TYPE,
+  type JobClaimDenial,
   type JobClaimIntent,
   type JobPauseReason,
 } from "@/constants/resumable_job";
@@ -239,6 +242,20 @@ const resolveSession = (
   sessions: Record<string, IChatSession>,
   sessionId: string,
 ): IChatSession | null => sessions[sessionId] ?? null;
+
+/**
+ * Info: (20260901 - Luphia) 判決對應的話（review #6726 阻-1）。
+ *
+ * 已取消 ≠ 已完成 ≠ 有人在跑——這正是錯誤碼分成三個的理由，一句
+ * `import_job_busy` 蓋在三種判決上會讓使用者對著錯的原因等待。
+ * 查表而不是 switch：認不出的判決種類在編譯期就會被 `Record` 擋下。
+ */
+const JOB_CLAIM_DENIAL_TEXT_KEY: Record<JobClaimDenial, string> = {
+  [JOB_CLAIM_DENIAL.BUSY]: "carbon_chatbot.import_job_busy",
+  [JOB_CLAIM_DENIAL.CANCELLED]: "carbon_chatbot.import_job_cancelled",
+  [JOB_CLAIM_DENIAL.COMPLETED]: "carbon_chatbot.import_job_completed_already",
+  [JOB_CLAIM_DENIAL.FORBIDDEN]: "carbon_chatbot.import_job_forbidden",
+};
 
 export const useCarbonChat = () => {
   const { t, language } = useTranslation();
@@ -2611,6 +2628,23 @@ export const useCarbonChat = () => {
    * 掉了最多是「晚點才被通知可以繼續」。但**不靜默**——沒有它就等於
    * 那個使用者永遠不會被自動通知，而那件事查不出來。
    */
+  /**
+   * Info: (20260901 - Luphia) 書籤 PUT 走 per-channel 佇列（review #6726 中-1）。
+   *
+   * 驅動器 `concurrency = 2`，而檢查點在每一份的 `finally` 都寫一次書籤
+   *（`pauseReason: null` → 伺服器記 RUNNING）；暫停的收尾另外寫一次
+   *（`PAUSED`）。沒有佇列時這是**兩個沒有排序保證的 PUT**——檢查點那筆
+   * 後到的話，書籤停在 RUNNING：`scanResumableJobs` 只掃 PAUSED，這一筆
+   * **永遠翻不成 RESUMABLE**（「額度回來自動翻牌」對它失效），而且租約
+   * 未過期前使用者自己按「接著匯入」只會拿到 BUSY。
+   *
+   * 佇列與 `persistPendingImport` 的同一套（呼叫順序＝落地順序）：收尾在
+   * 迴圈結束後才呼叫，必然排在所有檢查點之後，於是 PAUSED 一定最後落地。
+   * 用**自己的**佇列而不是共用 `persistPendingQueueRef`：兩者的失敗互不
+   * 相干，串在一起只是讓書籤等內容加密（每次數百 ms）陪跑。
+   */
+  const bookmarkQueueRef = useRef<Map<string, Promise<void>>>(new Map());
+
   const saveImportJobBookmark = useCallback(
     async (params: {
       pauseReason: string | null;
@@ -2620,30 +2654,39 @@ export const useCarbonChat = () => {
       remainingUnits: IImportUnit[];
       nextStepInputChars?: number;
     }): Promise<void> => {
-      try {
-        await request("/api/v1/user/job/bookmark", {
-          method: HTTP_METHOD.PUT,
-          body: JSON.stringify({
-            type: JOB_TYPE.CARBON_REPORT_IMPORT,
-            resourceKey: chatChannel,
-            pauseReason: params.pauseReason,
-            totalSteps: params.totalUnits,
-            completedSteps: params.completedUnits,
-            failedSteps: params.failedUnits,
-            /**
-             * Info: (20260825 - Luphia) 步驟 id 是「章#第幾份」——粒度必須是份。
-             * 存章 id 就會把「一份做完、另一份撞牆」那個缺陷寫進資料庫
-             *（review #6717 阻擋-1）。
-             */
-            remainingStepIds: params.remainingUnits.map(
-              (unit) => `${unit.chapterId}#${unit.partIndex}`,
-            ),
-            nextStepInputChars: params.nextStepInputChars,
-          }),
-        });
-      } catch (error) {
-        console.error("[carbon-chat] job bookmark failed:", error);
-      }
+      const run = async () => {
+        try {
+          await request("/api/v1/user/job/bookmark", {
+            method: HTTP_METHOD.PUT,
+            body: JSON.stringify({
+              type: JOB_TYPE.CARBON_REPORT_IMPORT,
+              resourceKey: chatChannel,
+              pauseReason: params.pauseReason,
+              totalSteps: params.totalUnits,
+              completedSteps: params.completedUnits,
+              failedSteps: params.failedUnits,
+              /**
+               * Info: (20260825 - Luphia) 步驟 id 是「章#第幾份」——粒度必須是份。
+               * 存章 id 就會把「一份做完、另一份撞牆」那個缺陷寫進資料庫
+               *（review #6717 阻擋-1）。
+               */
+              remainingStepIds: params.remainingUnits.map(
+                (unit) => `${unit.chapterId}#${unit.partIndex}`,
+              ),
+              nextStepInputChars: params.nextStepInputChars,
+            }),
+          });
+        } catch (error) {
+          console.error("[carbon-chat] job bookmark failed:", error);
+        }
+      };
+
+      // Info: (20260901 - Luphia) 接到同一 channel 的佇列尾端；previous 已 catch 過，鏈不會斷（機制同 persistPendingImport）
+      const previous =
+        bookmarkQueueRef.current.get(chatChannel) ?? Promise.resolve();
+      const task = previous.then(run);
+      bookmarkQueueRef.current.set(chatChannel, task);
+      await task;
     },
     [chatChannel],
   );
@@ -2655,13 +2698,19 @@ export const useCarbonChat = () => {
    * 補點數之後兩邊都跳出「可以繼續」，兩邊都按下去 → 同一批份送兩次 →
    * **點數扣兩次**（一份 2MB 的 PDF 單次預扣估算約 677 點）。
    *
-   * 回 false 只有一種意思：**別人正在跑，現在不要跑**。其他失敗（網路斷、
-   * 伺服器掛）一律放行——這把鎖是為了省錢，不是為了在它自己壞掉的時候
-   * 把功能一起關掉。那個取捨的代價是「鎖掛掉時可能重複扣一次」，
-   * 而反過來的代價是「鎖掛掉時誰都不能匯入」，後者明顯更糟。
+   * Info: (20260901 - Luphia) 回**判決**而不是布林（review #6726 阻-1）。
+   *
+   * 舊版註解說「回 false 只有一種意思」——那句話讓 catch 把
+   * `TW_JOB_CANCELLED`／`TW_JOB_ALREADY_COMPLETED`／403 全部當成
+   * 「鎖自己壞掉」放行：伺服器明確說「不要跑」的判決被吞掉，剩下那幾份
+   * 照送、**點數照扣**——高-1 只修了伺服器那一半，這裡是另一半。
+   * 判斷本體在 `resolveJobClaimDenial`（純函式，有自己的單元測試）；
+   * 只有它回 `null`（網路斷、伺服器自己壞掉）才放行——這把鎖是為了省錢，
+   * 不是為了在它自己壞掉的時候把功能一起關掉。那個取捨的代價是「鎖掛掉時
+   * 可能重複扣一次」，而反過來的代價是「鎖掛掉時誰都不能匯入」，後者更糟。
    */
   const claimImportJob = useCallback(
-    async (intent: JobClaimIntent): Promise<boolean> => {
+    async (intent: JobClaimIntent): Promise<JobClaimDenial | null> => {
       try {
         await request("/api/v1/user/job/claim", {
           method: HTTP_METHOD.POST,
@@ -2671,11 +2720,12 @@ export const useCarbonChat = () => {
             intent,
           }),
         });
-        return true;
+        return null;
       } catch (error) {
-        if (isJobBusyError(error)) return false;
+        const denial = resolveJobClaimDenial(error);
+        if (denial) return denial;
         console.error("[carbon-chat] job claim failed, proceeding:", error);
-        return true;
+        return null;
       }
     },
     [chatChannel],
@@ -2921,8 +2971,21 @@ export const useCarbonChat = () => {
        * 位置刻意在**附件上傳之前**：擋下來的時候一個 byte 都不該傳、一毛都不該花。
        * 兩個分頁各自從第一份開始匯入同一個聊天室的話，兩份帳都要付。
        */
-      if (!(await claimImportJob(JOB_CLAIM_INTENT.START))) {
-        notify({ type: "error", text: t("carbon_chatbot.import_job_busy") });
+      /**
+       * Info: (20260901 - Luphia) 判決逐字上畫面（review #6726 阻-1）：
+       * 新開時伺服器對「已取消／已完成」回的是放行（重新匯入本來就會覆寫
+       * 舊書籤），所以這裡實際會出現的判決是 BUSY 或 FORBIDDEN——
+       * 但處置統一走查表，將來 service 改判也不會落回吞掉。
+       */
+      const startDenial = await claimImportJob(JOB_CLAIM_INTENT.START);
+      if (startDenial) {
+        notify({
+          type: "error",
+          // Info: (20260901 - Luphia) minutes 綁 TTL 常數：租期改了文案跟著對（中-2）
+          text: t(JOB_CLAIM_DENIAL_TEXT_KEY[startDenial], {
+            minutes: JOB_CLAIM_TTL_MS / 60_000,
+          }),
+        });
         dismissDraftNoticeAfter(
           CARBON_DRAFT_NOTICE_DISMISS_MS,
           originSessionId,
@@ -3575,12 +3638,25 @@ export const useCarbonChat = () => {
      * 而暫停之後「開第二個分頁」正是使用者最常做的事（第一個看起來卡住了）。
      * 補點數之後兩邊都跳出「可以繼續」，兩邊都按下去 → 同一批份送兩次。
      */
-    if (!(await claimImportJob(JOB_CLAIM_INTENT.RESUME))) {
+    const resumeDenial = await claimImportJob(JOB_CLAIM_INTENT.RESUME);
+    if (resumeDenial) {
       setDraftNotice(
-        { type: "error", text: t("carbon_chatbot.import_job_busy") },
+        {
+          type: "error",
+          // Info: (20260901 - Luphia) minutes 綁 TTL 常數：租期改了文案跟著對（中-2）
+          text: t(JOB_CLAIM_DENIAL_TEXT_KEY[resumeDenial], {
+            minutes: JOB_CLAIM_TTL_MS / 60_000,
+          }),
+        },
         activeSessionId,
       );
       dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, activeSessionId);
+      /**
+       * Info: (20260901 - Luphia) BUSY 以外的判決是**終局的**（已取消／已完成／
+       * 不是你的）——伺服器眼中的狀態已經與這張卡上的按鈕分岔了，刷新一次
+       * 讓卡片改口，而不是留著一顆按下去永遠報錯的按鈕。
+       */
+      if (resumeDenial !== JOB_CLAIM_DENIAL.BUSY) void refreshImportJob();
       return;
     }
     setIsRetryingImport(true);
@@ -3691,6 +3767,8 @@ export const useCarbonChat = () => {
     t,
     // Info: (20260827 - Luphia) 執行許可（issue #6721）
     claimImportJob,
+    // Info: (20260901 - Luphia) 終局判決讓卡片改口（review #6726 阻-1）
+    refreshImportJob,
   ]);
 
   /**
@@ -6235,6 +6313,8 @@ export const useCarbonChat = () => {
     importJobStatus: importJob?.status ?? null,
     canCancelImportJob: Boolean(importJob),
     cancelImportJob,
+    // Info: (20260901 - Luphia) 倒數歸零時畫面自己再問一次伺服器（review #6726 中-3）
+    refreshImportJob,
     // Info: (20260806 - Tzuhan) 重試中:預覽卡據此禁用按鈕並顯示進度(「正在跑」必須看得見)
     isRetryingImport,
     // Info: (20260716 - Tzuhan) #56 匯入導流(聊天附件疑似整份報告)

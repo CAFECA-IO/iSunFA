@@ -185,9 +185,14 @@ export const carbonChatbot = {
   // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
   import_interrupted_chapters:
     "上一次导入没有跑完,以下章节还没解析:{{chapters}}。可以从这里接着导入,已完成的部分不会重跑、也不会再扣点数。",
-  // Info: (20260827 - Luphia) 另一個分頁／裝置正在跑（issue #6721）：等一下就好，不是壞了
+  // Info: (20260901 - Luphia) 「可能」不是贅字（review #6726 中-2）：BUSY 也可能是自己的分頁崩潰後租約未過期
   import_job_busy:
-    "另一个标签页或设备正在跑这份导入。等它跑完再回来看,或刷新这一页——同时跑两次会重复扣点数。",
+    "这份导入可能正在另一个标签页或设备上跑,也可能上一次没有正常结束——后者最多 {{minutes}} 分钟后就能再试。同时跑两次会重复扣点数。",
+  // Info: (20260901 - Luphia) 三個終局判決各說各的話（review #6726 阻-1）
+  import_job_cancelled:
+    "这份导入已经取消,不会继续、也不会再扣点数。要重新开始,请再上传一次文件。",
+  import_job_completed_already: "这份导入已经完成了,没有需要继续的部分。",
+  import_job_forbidden: "这个账号没有这份导入的权限。",
   // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
   import_auto_resuming:
     "点数已补上,正在接着把剩下的章导入。已完成的部分不会重跑。",

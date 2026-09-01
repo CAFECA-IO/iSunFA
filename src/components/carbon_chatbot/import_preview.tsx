@@ -112,6 +112,12 @@ export interface IImportPreviewProps {
    */
   jobStatus?: string | null;
   /**
+   * Info: (20260901 - Luphia) 倒數歸零時往上通報（review #6726 中-3）：
+   * 這張卡自己沒有 `refreshImportJob`，只把 CreditPauseWays 的時點傳出去，
+   * 問什麼由持有那支函式的頁面決定。
+   */
+  onCountdownExpired?: () => void;
+  /**
    * Info: (20260827 - Luphia) 放棄還沒解析的章節（issue #6714）。
    * 只放棄未完成的部分——已解析的內容留著，那是已經付過錢的東西。
    */
@@ -139,6 +145,7 @@ export function ImportPreview({
   onRetryFailed = undefined,
   onResumePaused = undefined,
   jobStatus = null,
+  onCountdownExpired = undefined,
   onCancelPaused = undefined,
   isRetrying = false,
   retryNotice = null,
@@ -314,7 +321,10 @@ export function ImportPreview({
               {pendingImport.pauseReason &&
                 pendingImport.pauseDetail &&
                 jobStatus !== JOB_STATUS.RESUMABLE && (
-                  <CreditPauseWays detail={pendingImport.pauseDetail} />
+                  <CreditPauseWays
+                    detail={pendingImport.pauseDetail}
+                    onCountdownExpired={onCountdownExpired}
+                  />
                 )}
             </div>
           )}

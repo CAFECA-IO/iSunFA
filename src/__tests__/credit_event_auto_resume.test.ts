@@ -269,7 +269,11 @@ describe("收到之後的三道閘門", () => {
  * 顯示的——沒有這則廣播，它會一直留在那裡邀請使用者去花他剛剛才說不要花的點數。
  *
  * 這是**體驗**不是保證：真正擋住的是伺服器端的執行許可（已取消的任務拿不到許可，
- * 見 `resumable_job_claim.test.ts`）。BroadcastChannel 不可用時只有那道擋得住。
+ * 見 `resumable_job_claim.test.ts` 與 `e2e/resumable_job_claim.e2e.test.ts`）
+ * ——而客戶端要**逐字執行**那個判決：`TW_JOB_CANCELLED` 不放行
+ *（`resolveJobClaimDenial`，review #6726 阻-1；之前 catch 把它當成
+ * 「鎖壞了」吞掉，這句話在客戶端那條路上不成立）。
+ * BroadcastChannel 不可用時只剩「許可＋判決」那條路擋得住。
  */
 describe("取消要跨分頁", () => {
   const original = (globalThis as Record<string, unknown>).BroadcastChannel;

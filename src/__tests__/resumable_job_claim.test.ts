@@ -11,6 +11,7 @@ import {
   resumableJobRepo,
 } from "@/repositories/resumable_job.repo";
 import {
+  JOB_CLAIM_DENIAL,
   JOB_CLAIM_INTENT,
   JOB_CLAIM_TTL_MS,
   JOB_STATUS,
@@ -18,6 +19,11 @@ import {
 } from "@/constants/resumable_job";
 import { buildCarbonChatChannel } from "@/constants/carbon_chatbot";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { ApiError as RequestApiError } from "@/lib/utils/request";
+import {
+  isJobBusyError,
+  resolveJobClaimDenial,
+} from "@/hooks/use_carbon_chat.helpers";
 
 /**
  * Info: (20260827 - Luphia) 執行許可（issue #6721）。
@@ -382,30 +388,103 @@ describe("兩個入口都會先拿許可", () => {
   it.each([
     "claimImportJob(JOB_CLAIM_INTENT.START)",
     "claimImportJob(JOB_CLAIM_INTENT.RESUME)",
-  ])("被擋下時說人話而不是「匯入失敗」（%s）", (call) => {
+  ])("被擋下時逐判決說話而不是「匯入失敗」（%s）", (call) => {
     const at = hook.indexOf(call);
     expect(at).toBeGreaterThan(-1);
-    const scope = hook.slice(at, at + 500);
-    expect(scope).toContain("carbon_chatbot.import_job_busy");
+    const scope = hook.slice(at, at + 700);
+    /**
+     * Info: (20260901 - Luphia) 文案走判決查表（review #6726 阻-1）：
+     * 一句 `import_job_busy` 蓋在三種判決上，會讓「已取消」顯示成
+     * 「有人在跑」——使用者對著錯的原因等待。
+     */
+    expect(scope).toContain("JOB_CLAIM_DENIAL_TEXT_KEY[");
     expect(scope).not.toContain("carbon_chatbot.import_failed");
   });
 
   /**
-   * Info: (20260827 - Luphia) 鎖自己壞掉時要放行。這把鎖是為了省錢，不是為了
-   * 在它自己掛掉的時候把功能一起關掉——「鎖掛掉時可能重複扣一次」比
-   * 「鎖掛掉時誰都不能匯入」好。
+   * Info: (20260901 - Luphia) 判斷本體是**純函式**（review #6726 阻-1 與同份
+   * review 的「觀察」）：`resolveJobClaimDenial` 直接以真的 ApiError 實例測，
+   * 不 mock；掃描只降級為「hook 真的呼叫了它」（下一條）。
+   *
+   * 舊版 catch 把 `TW_JOB_CANCELLED`／`TW_JOB_ALREADY_COMPLETED`／403 全部
+   * 當成「鎖自己壞掉」放行——伺服器明確說「不要跑」的判決被吞掉，剩下那幾份
+   * 照送、點數照扣。BroadcastChannel 不可用、或舊分頁開在另一台裝置上時，
+   * 沒有任何一道擋得住。
    */
-  it("只有「別人正在跑」會擋，其他失敗放行", () => {
+  describe("判決的純函式：四種擋、其餘放行", () => {
+    const apiError = (errorCode: string, status: number) =>
+      new RequestApiError("denied", status, { errorCode });
+
+    it.each([
+      [API_ERRORS.TW_JOB_ALREADY_RUNNING.code, 409, JOB_CLAIM_DENIAL.BUSY],
+      [API_ERRORS.TW_JOB_CANCELLED.code, 400, JOB_CLAIM_DENIAL.CANCELLED],
+      [
+        API_ERRORS.TW_JOB_ALREADY_COMPLETED.code,
+        400,
+        JOB_CLAIM_DENIAL.COMPLETED,
+      ],
+      [API_ERRORS.AUTH_PERMISSION_DENIED.code, 403, JOB_CLAIM_DENIAL.FORBIDDEN],
+    ])("錯誤碼 %s（HTTP %i）→ 有判決", (code, status, denial) => {
+      expect(
+        resolveJobClaimDenial(apiError(code as string, status as number)),
+      ).toBe(denial);
+    });
+
+    it("網路錯誤（不是 ApiError）→ null（放行）", () => {
+      expect(resolveJobClaimDenial(new Error("fetch failed"))).toBeNull();
+    });
+
+    it("伺服器自己壞掉（500、無錯誤碼）→ null（放行）", () => {
+      expect(
+        resolveJobClaimDenial(new RequestApiError("boom", 500)),
+      ).toBeNull();
+    });
+
+    it("認不得的錯誤碼 → null（放行：新判決要先教會 resolver）", () => {
+      expect(resolveJobClaimDenial(apiError("TW999999", 400))).toBeNull();
+    });
+
+    // Info: (20260901 - Luphia) isJobBusyError 是同一份判準的投影，不得分岔
+    it("isJobBusyError 建立在同一份判準上", () => {
+      expect(
+        isJobBusyError(apiError(API_ERRORS.TW_JOB_ALREADY_RUNNING.code, 409)),
+      ).toBe(true);
+      expect(
+        isJobBusyError(apiError(API_ERRORS.TW_JOB_CANCELLED.code, 400)),
+      ).toBe(false);
+    });
+  });
+
+  /**
+   * Info: (20260901 - Luphia) 掃描降級為接線：判斷已收斂進純函式（上一組直接
+   * 測它），這裡只守「hook 真的把 catch 交給那支函式，而且只對 null 放行」。
+   */
+  it("claimImportJob 的 catch 交給 resolveJobClaimDenial，只對 null 放行", () => {
     const start = hook.indexOf("const claimImportJob = useCallback");
     expect(start).toBeGreaterThan(-1);
-    const end = hook.indexOf("const postImportParsedNotice", start);
+    const end = hook.indexOf("const [importJob, setImportJob]", start);
     const scope = hook.slice(start, end);
-    expect(scope).toContain("if (isJobBusyError(error)) return false;");
-    expect(scope).toContain("return true;");
+    expect(scope).toContain("const denial = resolveJobClaimDenial(error);");
+    expect(scope).toContain("if (denial) return denial;");
+    // Info: (20260901 - Luphia) fail-open 只剩一條：resolver 回 null（網路／伺服器壞掉）
+    expect(scope).not.toContain("return true;");
+  });
+
+  /**
+   * Info: (20260901 - Luphia) 終局判決要讓卡片改口（review #6726 阻-1）：
+   * BUSY 以外的判決代表伺服器眼中的狀態已經與按鈕分岔了。
+   */
+  it("接續被終局判決擋下時會刷新伺服器狀態", () => {
+    const at = hook.indexOf("claimImportJob(JOB_CLAIM_INTENT.RESUME)");
+    expect(at).toBeGreaterThan(-1);
+    const scope = hook.slice(at, at + 900);
+    expect(scope).toContain(
+      "if (resumeDenial !== JOB_CLAIM_DENIAL.BUSY) void refreshImportJob();",
+    );
   });
 
   it.each(["zh_tw", "zh_cn", "en", "ja", "ko"])(
-    "%s 有被擋下的文案",
+    "%s 有四種判決的文案",
     (locale) => {
       const file = readFileSync(
         join(
@@ -419,6 +498,12 @@ describe("兩個入口都會先拿許可", () => {
         "utf8",
       );
       expect(file).toContain("import_job_busy:");
+      // Info: (20260901 - Luphia) 三個終局判決各說各的話（review #6726 阻-1）
+      expect(file).toContain("import_job_cancelled:");
+      expect(file).toContain("import_job_completed_already:");
+      expect(file).toContain("import_job_forbidden:");
+      // Info: (20260901 - Luphia) busy 的等待時間綁 TTL 常數，不寫死（中-2）
+      expect(file).toContain("{{minutes}}");
     },
   );
 });

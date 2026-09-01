@@ -107,6 +107,7 @@ export default function CarbonChatbotPage() {
     importJobStatus,
     canCancelImportJob,
     cancelImportJob,
+    refreshImportJob,
     isRetryingImport,
     importFollowUpPrompts,
     importCandidate,
@@ -391,6 +392,8 @@ export default function CarbonChatbotPage() {
           // Info: (20260825 - Luphia) 點數用完而還沒做的章：接著匯入（issue #6713）
           onResumePaused={resumePausedImportChapters}
           jobStatus={importJobStatus}
+          // Info: (20260901 - Luphia) 倒數歸零＝該再問一次伺服器的時點（review #6726 中-3）
+          onCountdownExpired={refreshImportJob}
           onCancelPaused={canCancelImportJob ? cancelImportJob : undefined}
           isRetrying={isRetryingImport}
           // Info: (20260806 - Tzuhan) 進度沿用同一份 draftNotice:輸入列被本 modal(z-[90])蓋住,

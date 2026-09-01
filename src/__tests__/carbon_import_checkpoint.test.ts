@@ -164,6 +164,34 @@ describe("檢查點的接線", () => {
   });
 
   /**
+   * Info: (20260901 - Luphia) 書籤 PUT 走 per-channel 佇列（review #6726 中-1）。
+   *
+   * 驅動器 `concurrency = 2`，檢查點在每一份的 `finally` 寫書籤（RUNNING），
+   * 暫停收尾另外寫一次（PAUSED）——沒有佇列時是兩個沒有排序保證的 PUT。
+   * 檢查點那筆後到的話，書籤停在 RUNNING：`scanResumableJobs` 只掃 PAUSED，
+   * 這一筆**永遠翻不成 RESUMABLE**，「額度回來自動翻牌」對它失效，且租約
+   * 未過期前使用者自己按「接著匯入」只會拿到 BUSY。
+   *
+   * 佇列讓呼叫順序＝落地順序：收尾在迴圈結束後才呼叫，必然排在所有
+   * 檢查點之後。這裡守的是「書籤的送出真的接在佇列尾端」。
+   */
+  it("書籤 PUT 走 per-channel 佇列（收尾的 PAUSED 一定最後落地）", () => {
+    const start = hook.indexOf("const saveImportJobBookmark = useCallback");
+    expect(start).toBeGreaterThan(-1);
+    const end = hook.indexOf("const claimImportJob = useCallback", start);
+    const scope = hook.slice(start, end);
+    expect(scope).toContain(
+      "bookmarkQueueRef.current.get(chatChannel) ?? Promise.resolve()",
+    );
+    expect(scope).toContain("const task = previous.then(run);");
+    expect(scope).toContain("bookmarkQueueRef.current.set(chatChannel, task);");
+    // Info: (20260901 - Luphia) 真的送出的那次 request 必須在 run 裡（被佇列包住）
+    expect(
+      scope.indexOf('request("/api/v1/user/job/bookmark"'),
+    ).toBeGreaterThan(scope.indexOf("const run = async ()"));
+  });
+
+  /**
    * Info: (20260827 - Luphia) 檢查點**不動畫面狀態**：預覽在匯入還在跑的時候
    * 跳出來，會讓人以為做完了。
    */

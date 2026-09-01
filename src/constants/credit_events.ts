@@ -32,8 +32,10 @@ export const CREDIT_EVENT = {
    * 使用者去花他剛剛才說不要花的點數。
    *
    * 這是**體驗**不是保證：真正擋住的是伺服器端的執行許可（已取消的任務拿不到
-   * 許可）。BroadcastChannel 不可用時（SSR／舊瀏覽器／隱私設定，見本檔開頭）
-   * 只有那道擋得住，所以兩件都要有。
+   * 許可），而客戶端**逐字執行**那個判決（`resolveJobClaimDenial`——
+   * `TW_JOB_CANCELLED` 不放行，review #6726 阻-1）。BroadcastChannel 不可用時
+   *（SSR／舊瀏覽器／隱私設定，見本檔開頭）只剩那條「許可＋判決」的路擋得住，
+   * 所以兩件都要有。阻-1 之前這句話只對了一半：許可有擋，判決被 catch 吞掉。
    */
   JOB_CANCELLED: "JOB_CANCELLED",
 } as const;

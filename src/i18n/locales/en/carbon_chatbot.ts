@@ -199,9 +199,15 @@ export const carbonChatbot = {
   // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
   import_interrupted_chapters:
     "The last import did not finish. These chapters have not been parsed yet: {{chapters}}. You can continue from here — what is already done will not run again, and will not be charged again.",
-  // Info: (20260827 - Luphia) 另一個分頁／裝置正在跑（issue #6721）：等一下就好，不是壞了
+  // Info: (20260901 - Luphia) 「可能」不是贅字（review #6726 中-2）：BUSY 也可能是自己的分頁崩潰後租約未過期
   import_job_busy:
-    "This import is already running in another tab or on another device. Wait for it to finish, or refresh this page — running it twice would charge you twice.",
+    "This import may be running in another tab or on another device, or the last run did not end cleanly — in that case you can retry in at most {{minutes}} minutes. Running it twice would charge you twice.",
+  // Info: (20260901 - Luphia) 三個終局判決各說各的話（review #6726 阻-1）
+  import_job_cancelled:
+    "This import has been cancelled. It will not resume and no more credits will be charged. To start over, upload the file again.",
+  import_job_completed_already:
+    "This import is already complete — there is nothing left to resume.",
+  import_job_forbidden: "This account does not have access to this import.",
   // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
   import_auto_resuming:
     "Credits are back. Continuing with the remaining chapters — what is already done will not run again.",

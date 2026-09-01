@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Coins, Rocket } from "lucide-react";
 import type { ICreditPauseDetail } from "@/constants/carbon_chatbot";
@@ -30,6 +30,15 @@ import { useTranslation } from "@/i18n/i18n_context";
 
 interface ICreditPauseWaysProps {
   detail: ICreditPauseDetail;
+  /**
+   * Info: (20260901 - Luphia) 倒數歸零的那一刻（review #6726 中-3）。
+   *
+   * 「等重置」這條出路**沒有付款事件**：掃描行程把任務翻成 RESUMABLE 之後，
+   * 一個開著的分頁不會收到任何廣播——`refreshImportJob` 只在掛載與
+   * PAYMENT_SUCCEEDED 時跑，於是畫面要重新載入才會改口。倒數歸零正是
+   * 「該去再問一次伺服器」的時點，由持有那支函式的外層決定問什麼。
+   */
+  onCountdownExpired?: () => void;
 }
 
 const pad2 = (value: number) => String(value).padStart(2, "0");
@@ -50,7 +59,10 @@ const OPTION_LABEL_KEYS: Record<string, string> = {
     "carbon_chatbot.import_paused_option_upgrade",
 };
 
-export function CreditPauseWays({ detail }: ICreditPauseWaysProps) {
+export function CreditPauseWays({
+  detail,
+  onCountdownExpired = undefined,
+}: ICreditPauseWaysProps) {
   const { t, language } = useTranslation();
   const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000));
 
@@ -67,6 +79,20 @@ export function CreditPauseWays({ detail }: ICreditPauseWaysProps) {
     );
     return () => clearInterval(timer);
   }, [countdown]);
+
+  /**
+   * Info: (20260901 - Luphia) 只在**轉為歸零**的那一刻通知一次（review #6726
+   * 中-3）：掛載時就已經歸零的（重新整理回來的頁面）也算——那正是狀態
+   * 最可能已經變了的情形。ref 擋重複：countdown 物件每秒都是新的，
+   * 依賴 `expired` 布林本身。
+   */
+  const expiredNotifiedRef = useRef(false);
+  const expired = countdown?.expired ?? false;
+  useEffect(() => {
+    if (!expired || expiredNotifiedRef.current) return;
+    expiredNotifiedRef.current = true;
+    onCountdownExpired?.();
+  }, [expired, onCountdownExpired]);
 
   /**
    * Info: (20260827 - Luphia) 絕對時間以瀏覽器時區呈現：`resetAt` 是 epoch 秒

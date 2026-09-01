@@ -143,3 +143,31 @@ export const JOB_CLAIM_INTENT = {
 
 export type JobClaimIntent =
   (typeof JOB_CLAIM_INTENT)[keyof typeof JOB_CLAIM_INTENT];
+
+/**
+ * Info: (20260901 - Luphia) 客戶端對「換許可失敗」的判決分類（review #6726 阻-1）。
+ *
+ * 高-1 修了伺服器那一半（已取消的任務拿不到許可），而客戶端的 catch 把
+ * `TW_JOB_CANCELLED`、`TW_JOB_ALREADY_COMPLETED`、403 全部當成「鎖自己壞掉」
+ * 放行——伺服器明確說「不要跑」的判決被吞掉，剩下那幾份照送、點數照扣。
+ * BroadcastChannel 不可用、或舊分頁開在另一台裝置上時，沒有任何一道擋得住。
+ *
+ * 四種判決的處置各不相同（這正是錯誤碼分成四個的理由）：
+ *
+ * - `BUSY`：別人正在跑——等一下再按，按鈕留著。
+ * - `CANCELLED`：使用者自己說不做的——不跑，並讓畫面改口。
+ * - `COMPLETED`：沒有東西可接續——不跑，並讓畫面改口。
+ * - `FORBIDDEN`：這不是你的任務——不跑。
+ *
+ * **只有不在此列的失敗**（網路斷、伺服器自己壞掉）才放行：這把鎖是為了省錢，
+ * 不是為了在它自己壞掉時把功能一起關掉。
+ */
+export const JOB_CLAIM_DENIAL = {
+  BUSY: "BUSY",
+  CANCELLED: "CANCELLED",
+  COMPLETED: "COMPLETED",
+  FORBIDDEN: "FORBIDDEN",
+} as const;
+
+export type JobClaimDenial =
+  (typeof JOB_CLAIM_DENIAL)[keyof typeof JOB_CLAIM_DENIAL];

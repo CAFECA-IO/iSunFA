@@ -4,7 +4,9 @@
 import { ApiError as RequestApiError } from "@/lib/utils/request";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
+  JOB_CLAIM_DENIAL,
   JOB_PAUSE_REASON,
+  type JobClaimDenial,
   type JobPauseReason,
 } from "@/constants/resumable_job";
 import { type IImportUnit } from "@/lib/carbon_page_slice";
@@ -549,17 +551,47 @@ export const foldImportChunks = (
 };
 
 /**
+ * Info: (20260901 - Luphia) 換許可失敗時，伺服器的判決是什麼（review #6726 阻-1）。
+ *
+ * **純函式**，不碰網路也不碰 React——判斷收斂在這裡，hook 只負責呼叫它
+ *（同一份 review 的「觀察」：判斷抽成純函式，掃描測試降級為「元件真的呼叫了
+ * 這支函式」）。四種判決的處置寫在 `JOB_CLAIM_DENIAL` 的註解。
+ *
+ * 回 `null` 表示「這不是一個判決」——網路斷、伺服器自己壞掉、或一個這一版
+ * 前端不認得的錯誤碼。呼叫端對 `null` 放行（fail-open）：這把鎖是為了省錢，
+ * 不是為了在它自己壞掉時把功能一起關掉。**認不得的錯誤碼也放行**與這個
+ * 立場一致：新的拒絕理由要先教會這裡，否則它的處置只能是「當作鎖壞了」。
+ */
+export const resolveJobClaimDenial = (
+  error: unknown,
+): JobClaimDenial | null => {
+  if (!(error instanceof RequestApiError)) return null;
+  const data = error.data as { errorCode?: string } | undefined;
+  switch (data?.errorCode) {
+    case API_ERRORS.TW_JOB_ALREADY_RUNNING.code:
+      return JOB_CLAIM_DENIAL.BUSY;
+    case API_ERRORS.TW_JOB_CANCELLED.code:
+      return JOB_CLAIM_DENIAL.CANCELLED;
+    case API_ERRORS.TW_JOB_ALREADY_COMPLETED.code:
+      return JOB_CLAIM_DENIAL.COMPLETED;
+    case API_ERRORS.AUTH_PERMISSION_DENIED.code:
+      return JOB_CLAIM_DENIAL.FORBIDDEN;
+    default:
+      return null;
+  }
+};
+
+/**
  * Info: (20260827 - Luphia) 「另一個地方正在跑同一個任務」（issue #6721）。
  *
  * 與其他失敗分開的理由與 `resolveCreditPauseReason` 相同：處置不一樣。
  * 這一種**不要**收起按鈕、不要叫使用者去補點數——等一下再按就好。
  * 落到通用失敗那條路的話，畫面會說「匯入失敗」，而什麼都沒有壞。
+ * Info: (20260901 - Luphia) 改為建立在 `resolveJobClaimDenial` 之上：
+ * 兩份判準分岔的話，「busy」在兩個呼叫端會是兩種東西。
  */
-export const isJobBusyError = (error: unknown): boolean => {
-  if (!(error instanceof RequestApiError)) return false;
-  const data = error.data as { errorCode?: string } | undefined;
-  return data?.errorCode === API_ERRORS.TW_JOB_ALREADY_RUNNING.code;
-};
+export const isJobBusyError = (error: unknown): boolean =>
+  resolveJobClaimDenial(error) === JOB_CLAIM_DENIAL.BUSY;
 
 /**
  * Info: (20260827 - Luphia) 從 402 取出「接下來能做什麼」（issue #6714）。

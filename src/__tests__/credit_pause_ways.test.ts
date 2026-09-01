@@ -195,6 +195,29 @@ describe("出路的畫面", () => {
   });
 
   // Info: (20260827 - Luphia) 導購開新視窗：原地跳頁會清掉幾分鐘的解析結果
+  /**
+   * Info: (20260901 - Luphia) 倒數歸零時要再問一次伺服器（review #6726 中-3）。
+   *
+   * 「等重置」這條出路**沒有付款事件**：掃描行程翻成 RESUMABLE 之後，
+   * 開著的分頁收不到任何廣播——`refreshImportJob` 只在掛載與
+   * PAYMENT_SUCCEEDED 跑，畫面要重新載入才會改口。倒數歸零正是
+   * 「該去再問一次」的時點。守三節接線：元件在歸零時發通知、
+   * 預覽卡把它傳下去、頁面把 `refreshImportJob` 接上來。
+   */
+  it("倒數歸零時通知外層刷新（三節接線都在）", () => {
+    // Info: (20260901 - Luphia) 元件：轉為歸零那一刻通知一次（ref 擋重複）
+    expect(component).toContain("onCountdownExpired?.();");
+    expect(component).toContain("expiredNotifiedRef.current = true;");
+    // Info: (20260901 - Luphia) 預覽卡：把時點傳給 CreditPauseWays
+    expect(preview).toContain("onCountdownExpired={onCountdownExpired}");
+    // Info: (20260901 - Luphia) 頁面：接上 refreshImportJob
+    const page = readFileSync(
+      join(process.cwd(), "src", "app", "user", "carbon_chatbot", "page.tsx"),
+      "utf8",
+    );
+    expect(page).toContain("onCountdownExpired={refreshImportJob}");
+  });
+
   it("導購連結開新視窗", () => {
     expect(component).toContain('target="_blank"');
     expect(component).toContain('rel="noopener noreferrer"');
