@@ -33,6 +33,7 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { IAccountBook } from "@/interfaces/account_book";
 import QrCodeModal from "@/components/common/qr_code_modal";
+import NotificationBell from "@/components/header/notification_bell";
 
 export default function UserActions() {
   const { user, logout, refreshAuth } = useAuth();
@@ -238,6 +239,8 @@ export default function UserActions() {
 
   return (
     <div className="flex items-center gap-x-4">
+      {/* Info: (20260821 - Luphia) 小鈴鐺：待辦與工作完成通知（ADR 021 補充） */}
+      <NotificationBell />
       {accountBook && (
         <div className="hidden flex-col md:flex">
           <p className="text-text-muted text-[10px]">

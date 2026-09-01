@@ -86,6 +86,8 @@ jest.mock("@/repositories/webauthn.repo", () => ({
       currentChallenge: "challenge",
     })),
     findUserByAddress: jest.fn(async () => null),
+    // Info: (20260826 - Julian) 位址來自使用者輸入時走這一支（review 1.2）
+    findUserByAnyAddressForm: jest.fn(async () => null),
     clearChallenge: jest.fn(),
   },
 }));

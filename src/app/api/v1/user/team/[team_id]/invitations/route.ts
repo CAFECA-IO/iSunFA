@@ -11,7 +11,8 @@ import { webAuthnService } from "@/services/webauthn.service";
 import { bundlerService } from "@/services/bundler.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { TEAM_INVITATION_STATUS } from "@/constants/status";
-import { isAddress } from "viem";
+import { getAddress, isAddress } from "viem";
+import { canonicalizeAddressForKey } from "@/lib/team/address_identity";
 import { buildPendingInviteKey } from "@/lib/team/pending_invite_key";
 import { canGrantRole, isTeamManagerRole, TeamRole } from "@/constants/team";
 import { chargeSeatAddition } from "@/services/team_seat.service";
@@ -71,6 +72,21 @@ export async function POST(
     if (!address || typeof address !== "string" || !isAddress(address)) {
       return jsonFail(API_ERRORS.VL_INVALID_ADDRESS);
     }
+
+    /**
+     * Info: (20260826 - Julian) 驗過格式**立刻正規化**，往下一律用這一份（review 1.2）。
+     *
+     * `isAddress` 的 strict 預設放行全小寫、只擋亂大小寫 —— 放行的正好是
+     * 兩種會分岔的寫法。原本 `address` 帶著管理員貼進來的字面值一路走完
+     * 「已是成員」檢查、重複邀請檢查、扣款、入庫，而那三處都是精確比對：
+     * 貼小寫時三道全部落空，扣了錢、發了一封受邀者看不到也接不了的邀請。
+     *
+     * 取 EIP-55 checksum 而不是小寫：它同樣是決定性的（同一個位址只有一個
+     * checksum），但它是 viem 與 `User.address` 的主要形狀，存進去之後
+     * 畫面上顯示的與使用者在別處看到的是同一串。
+     * 唯一鍵那一側仍是小寫 —— 那是既有資料的形狀，不能改（見 `buildPendingInviteKey`）。
+     */
+    const inviteeAddress = getAddress(address);
 
     if (!authentication) {
       return jsonFail(API_ERRORS.VL_MISSING_FIDO2);
@@ -141,7 +157,9 @@ export async function POST(
     }
 
     // Info: (20260325 - Tzuhan) Validate if the address is already a member
-    const targetUser = await webAuthnRepo.findUserByAddress(address);
+    // Info: (20260826 - Julian) 使用者輸入的位址要兩種形狀都查（review 1.2）
+    const targetUser =
+      await webAuthnRepo.findUserByAnyAddressForm(inviteeAddress);
     if (targetUser) {
       const existingMember = await teamRepo.getTeamMember(
         targetUser.id,
@@ -155,7 +173,7 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Validate if an invitation already exists and is pending
     const existingInvite = await teamRepo.getTeamInvitation(
       teamId,
-      address,
+      inviteeAddress,
       TEAM_INVITATION_STATUS.PENDING,
     );
 
@@ -166,7 +184,7 @@ export async function POST(
     // Info: (20260325 - Tzuhan) Fetch team needed for the contract message
     const team = await teamRepo.getTeamById(teamId);
     const inviterName = sessionUser.name || sessionUser.address;
-    const inviteeName = targetUser?.name || address;
+    const inviteeName = targetUser?.name || inviteeAddress;
     const teamName = team?.name || "Unknown Team";
     const contractMessage = `契約: ${inviterName} 發起讓 ${inviteeName} 加入 ${teamName} 團隊`;
 
@@ -225,7 +243,7 @@ export async function POST(
        * Info: (20260814 - Luphia) 以「團隊 + 受邀位址」為冪等鍵（第二輪 B-3）：
        * 建立邀請失敗後客戶端重試同一位址時，不會再扣一次款。
        */
-      idempotencyKey: `invite:${teamId}:${address.toLowerCase()}`,
+      idempotencyKey: `invite:${teamId}:${canonicalizeAddressForKey(inviteeAddress)}`,
     });
 
     // Info: (20260325 - Tzuhan) Create the TeamInvitation
@@ -234,7 +252,7 @@ export async function POST(
       newInvitation = await teamRepo.createTeamInvitation({
         teamId,
         inviterId: sessionUser.id,
-        inviteeAddress: address,
+        inviteeAddress,
         role: assignedRole,
         status: TEAM_INVITATION_STATUS.PENDING,
         /**
@@ -242,7 +260,7 @@ export async function POST(
          * 舊的複合鍵連 ACCEPTED 的歷史列一起約束，於是「移出團隊後再邀請同一個人」
          * 會在接受的那一刻撞鍵、永遠加不進來（見 pending_invite_key.ts）。
          */
-        pendingKey: buildPendingInviteKey({ teamId, inviteeAddress: address }),
+        pendingKey: buildPendingInviteKey({ teamId, inviteeAddress }),
       });
     } catch (createError) {
       /**
@@ -254,7 +272,7 @@ export async function POST(
       if (seatCharge.orderId) {
         await paymentRepo.updateOrderMintFailed(
           seatCharge.orderId,
-          { teamId, inviteeAddress: address },
+          { teamId, inviteeAddress },
           {} as IOenCallbackData,
           `invitation creation failed: ${
             createError instanceof Error

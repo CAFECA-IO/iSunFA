@@ -56,6 +56,8 @@ model User {
   revokedInvitations    TeamInvitation[]       @relation("InvitationRevoker")
   // Info: (20260817 - Luphia) 費思長期記憶（一個團隊一份，見 FaithMemory）
   faithMemories         FaithMemory[]
+  // Info: (20260821 - Luphia) 小鈴鐺的事件型通知（ADR 021 補充）
+  notifications         Notification[]
   auditLogs             AuditLog[]
   vouchers              Voucher[]
   esgRecords            EsgRecord[]
@@ -266,6 +268,11 @@ model TeamInvitation {
   /**
    * Info: (20260815 - Luphia) 錢包位址邀請的受邀者。email 邀請時為 null——
    * 對方還沒註冊，此時不存在位址（接受時才建立成員關係）。
+   *
+   * Info: (20260826 - Julian) 新列一律存 **EIP-55 checksum**（route 進門處
+   * `getAddress` 正規化，計畫書 D42）。本欄沒有 citext，Postgres 的 `=`
+   * 大小寫敏感，因此查詢一律走 `addressLookupForms`（小寫 + checksum 兩種
+   * 字面形狀）—— 舊列存的是管理員貼進來的原樣，兩者都撈得到，不必回填。
    */
   inviteeAddress String?   @map("invitee_address")
   /**
@@ -273,6 +280,25 @@ model TeamInvitation {
    * 屬個資，僅用於寄送本次邀請（《隱私權政策》§1）。
    */
   inviteeEmail   String?   @map("invitee_email")
+  /**
+   * Info: (20260825 - Julian) `inviteeEmail` 的正規化形式（`canonicalizeEmailForKey`）。
+   *
+   * 存在的理由是**查得動**：小鈴鐺要回答「有沒有邀請寄到我已驗證的信箱」，
+   * 而那個判斷必須與 `pendingKey` 用同一套正規化 —— 否則唯一鍵認定
+   * `alice+x@gmail.com` 與 `alice@gmail.com` 是同一個人，通知卻認定不是。
+   * canonical 值本來就存在（`pendingKey` 是 `{teamId}:mail:{canonical}`），
+   * 這一欄只是把它放成可以下 `IN` 條件的形狀。
+   *
+   * **不變式：恆等於 `canonicalizeEmailForKey(inviteeEmail)`，與 `status` 無關。**
+   * 這與 `pendingKey` 只在 PENDING 期間有值刻意不同 —— 那一欄編碼的是政策
+   * （哪些列參與唯一約束），這一欄是 `inviteeEmail` 的純函數，沒有政策在裡面。
+   *
+   * 不加唯一鍵：唯一性是 `pendingKey` 的職責，這裡純粹是查詢用的投影。
+   *
+   * ⚠️ 它是 `inviteeEmail` 的衍生副本。日後若有清除邀請信箱的排程，
+   * **兩欄要一起清**。
+   */
+  inviteeEmailKey String?   @map("invitee_email_key")
   /**
    * Info: (20260815 - Luphia) 邀請 token 的 SHA-256 雜湊。
    * 明文只存在於寄出的那封信裡：資料庫外洩不等於任何人都能加入團隊。
@@ -338,6 +364,8 @@ model TeamInvitation {
 
   // Info: (20260816 - Luphia) 席次占用數的查詢條件（teamId + status + expiresAt），取代舊複合唯一鍵留下的索引
   @@index([teamId, status])
+  // Info: (20260825 - Julian) 小鈴鐺：以已驗證信箱反查待接受邀請（查詢一定同時帶 status）
+  @@index([inviteeEmailKey, status])
   @@map("team_invitation")
 }
 
@@ -347,6 +375,34 @@ model TeamInvitation {
  * 團隊點數採離鏈決定論帳本（C 案混合制：離鏈營運 + 每日 merkle 鏈上錨定），
  * 金額一律 BigInt 零誤差；TeamWalletLedger 為 append-only，更正僅允許反向分錄。
  */
+/**
+ * Info: (20260821 - Luphia) 使用者通知（小鈴鐺，ADR 021 補充）。
+ *
+ * 只存**事件型**通知（工作完成、系統要求升級錢包）。**待辦型**（待接受的
+ * 團隊邀請）刻意不存——那是活的狀態，邀請被接受／撤回時通知必須同步消失，
+ * 存一份副本就多一個會過期的地方；小鈴鐺讀取時向邀請表現算。
+ *
+ * `dedupeKey` 唯一：worker 重試、腳本重跑都不會發出第二則同一件事的通知
+ *（與訂單 idempotencyKey 同一個形狀）。
+ */
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id])
+  // Info: (20260821 - Luphia) NOTIFICATION_TYPE 常數；畫面依 type 決定文案與連結
+  type      String
+  // Info: (20260821 - Luphia) type 專屬的資料（analysisId、teamId…），畫面插值用
+  payload   Json
+  dedupeKey String?   @unique @map("dedupe_key")
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  // Info: (20260821 - Luphia) 小鈴鐺的兩條查詢：未讀計數與清單（新到舊）
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@map("notification")
+}
+
 model TeamSubscription {
   id                 String   @id @default(uuid())
   teamId             String   @unique @map("team_id")
