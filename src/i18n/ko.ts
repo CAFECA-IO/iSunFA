@@ -74,10 +74,12 @@ import { carbonChatbot } from "@/i18n/locales/ko/carbon_chatbot";
 import { hrManagement } from "@/i18n/locales/ko/hr_management";
 import { paymentSource } from "@/i18n/locales/ko/payment_source";
 import { purchaseTarget } from "@/i18n/locales/ko/purchase_target";
+import { notification } from "@/i18n/locales/ko/notification";
 
 export const ko = {
   payment_source: paymentSource,
   purchase_target: purchaseTarget,
+  notification,
   digital_product_passport: digitalProductPassport,
   logistics,
   dpp_urban_mining: dppUrbanMining,

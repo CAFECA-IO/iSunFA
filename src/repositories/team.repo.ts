@@ -11,6 +11,8 @@ import {
   TEAM_INVITATION_STATUS,
   type InviteEmailMatch,
 } from "@/constants/status";
+import { canonicalizeEmailForKey } from "@/lib/team/email_identity";
+import { addressLookupForms } from "@/lib/team/address_identity";
 
 /**
  * Info: (20260814 - Luphia) 團隊 + 我在其中的角色（null = 資料異常，查得到團隊卻查不到成員身分）。
@@ -98,7 +100,10 @@ export interface ITeamRepository {
       | "createdAt"
     >[]
   >;
-  getPendingInvitationsByAddress(address: string): Promise<
+  getPendingInvitationsForRecipient(params: {
+    address: string;
+    emailKeys: readonly string[];
+  }): Promise<
     Prisma.TeamInvitationGetPayload<{
       include: {
         team: true;
@@ -315,13 +320,24 @@ export class TeamRepository implements ITeamRepository {
     return { userId: owner.userId, address: owner.user.address };
   }
 
+  /**
+   * Info: (20260826 - Julian) 位址以**兩種字面形狀**查（review 1.2）。
+   *
+   * 這支是「已經有一封待接受的邀請了嗎」的重複檢查，而它原本用精確比對 ——
+   * 管理員第一次貼小寫、第二次貼 checksum 時查不到舊列，於是**再扣一次
+   * 席次費**，然後才撞上 `pendingKey` 的 P2002 變成 500：錢扣了，邀請沒建成。
+   */
   async getTeamInvitation(
     teamId: string,
     inviteeAddress: string,
     status: string,
   ) {
     return prisma.teamInvitation.findFirst({
-      where: { teamId, inviteeAddress, status },
+      where: {
+        teamId,
+        inviteeAddress: { in: addressLookupForms(inviteeAddress) },
+        status,
+      },
     });
   }
 
@@ -336,8 +352,26 @@ export class TeamRepository implements ITeamRepository {
     });
   }
 
+  /**
+   * Info: (20260825 - Julian) `inviteeEmailKey` 在**這裡**算，不由呼叫端傳。
+   *
+   * 它是 `inviteeEmail` 的純函數（schema 的不變式），沒有政策在裡面 ——
+   * 這與 `pendingKey` 由呼叫端算刻意不同：那一欄要看 status，是政策。
+   *
+   * 交給呼叫端就是兩個可以忘記的地方（位址 route 與 `inviteMemberByEmail`），
+   * 而忘記的症狀是「那個人就是收不到通知」，不會有任何測試變紅。
+   */
   async createTeamInvitation(data: Prisma.TeamInvitationUncheckedCreateInput) {
-    return prisma.teamInvitation.create({ data });
+    const inviteeEmail =
+      typeof data.inviteeEmail === "string" ? data.inviteeEmail.trim() : "";
+    return prisma.teamInvitation.create({
+      data: {
+        ...data,
+        inviteeEmailKey: inviteeEmail
+          ? canonicalizeEmailForKey(inviteeEmail)
+          : null,
+      },
+    });
   }
 
   /**
@@ -475,11 +509,47 @@ export class TeamRepository implements ITeamRepository {
     });
   }
 
-  async getPendingInvitationsByAddress(address: string) {
+  /**
+   * Info: (20260825 - Julian) 一個人的待接受邀請 —— 位址邀請**與** email 邀請。
+   *
+   * 取代原本的 `getPendingInvitationsByAddress`。舊的只查 `inviteeAddress`，
+   * 而 email 邀請的那一欄是 NULL（對方可能還沒註冊時就寄出了），於是
+   * 「已註冊的人被 email 邀請」在小鈴鐺與團隊頁上都完全看不到。
+   * 舊的那支已刪除：留著就是一支「只看得到一半」的查詢等著被誤用。
+   *
+   * `emailKeys` 的兩個約定，呼叫端要負責：
+   *
+   * 1. **已經 canonical**（`canonicalizeEmailForKey`）—— 與 `pendingKey` 同一套，
+   *    否則唯一鍵認定 `alice+x@` 與 `alice@` 是同一個人，這裡卻認定不是
+   * 2. **只含已驗證的信箱** —— 未驗證的 email 是使用者宣稱的字串，拿它當
+   *    「這封邀請是給我的」的依據，等於宣稱一個信箱就能讀到別人團隊的名稱與邀請人姓名
+   *
+   * `emailKeys` 為空時 `in: []` 在 Prisma 是「永不匹配」，所以 `OR` 會退化成
+   * 只剩位址那一條 —— 安全。這一行寫下來是因為那個語意不該靠讀者去記得：
+   * 若哪天改成「空陣列時省略這個條件」，查詢就變成「列出全站待接受邀請」，
+   * 而那是跨租戶外洩的標準形狀（同 `listPendingInvitations` 的空 address 早退）。
+   */
+  async getPendingInvitationsForRecipient(params: {
+    address: string;
+    emailKeys: readonly string[];
+  }) {
     return prisma.teamInvitation.findMany({
       where: {
-        inviteeAddress: address,
         status: TEAM_INVITATION_STATUS.PENDING,
+        OR: [
+          /**
+           * Info: (20260826 - Julian) 位址列出兩種字面形狀（review 1.2）。
+           *
+           * 舊列存的是管理員貼進來的原樣，新列存 checksum；而 session 的
+           * `address` 兩種形狀都可能。精確比對會讓其中一組永遠對不上 ——
+           * 症狀是「席次費扣了，受邀者的鈴鐺什麼都沒有」。
+           *
+           * 撈出來是超集，由 `isIntendedRecipient` 收斂 —— 與 email 那一半
+           * 同樣的分工（走索引撈、精確比對收）。
+           */
+          { inviteeAddress: { in: addressLookupForms(params.address) } },
+          { inviteeEmailKey: { in: [...params.emailKeys] } },
+        ],
       },
       include: {
         team: true,
@@ -492,6 +562,37 @@ export class TeamRepository implements ITeamRepository {
         },
       },
       orderBy: { createdAt: "desc" },
+    });
+  }
+
+  /**
+   * Info: (20260825 - Julian) 還沒算出 `inviteeEmailKey` 的 email 邀請（回填用）。
+   *
+   * 一併帶 `pendingKey`：回填腳本要拿它的後綴對照重算的結果 ——
+   * PENDING 的 email 邀請，`pendingKey` 就是 `{teamId}:mail:{canonical}`，
+   * 兩者不一致代表正規化規則在某個時間點分岔了，那時要中止而不是靜靜寫入。
+   */
+  async listInvitationsMissingEmailKey() {
+    return prisma.teamInvitation.findMany({
+      where: { inviteeEmailKey: null, inviteeEmail: { not: null } },
+      select: {
+        id: true,
+        status: true,
+        inviteeEmail: true,
+        pendingKey: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  // Info: (20260825 - Julian) 回填單列（逐列寫，失敗的那一列才報得出是哪一列）
+  async setInvitationEmailKey(
+    inviteId: string,
+    inviteeEmailKey: string,
+  ): Promise<void> {
+    await prisma.teamInvitation.update({
+      where: { id: inviteId },
+      data: { inviteeEmailKey },
     });
   }
 

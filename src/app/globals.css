@@ -95,6 +95,13 @@
   --danger-soft-light: #fef2f2;
   --danger-dark: #f87171;
   --danger-soft-dark: #450a0a;
+
+  /* Info: (20260825 - Julian) 成功／完成。與 danger 同一條對比標準：
+     green-600 於白底僅 3.30:1 不合格，green-700 為 5.02:1 通過 WCAG AA；
+     深色面板上 green-400 為 7.46:1。加這一組是因為小鈴鐺的「完成」與「失敗」
+     原本共用 brand 橘與 danger 紅，兩者在小圖示尺寸下難以分辨 */
+  --success-light: #15803d;
+  --success-dark: #4ade80;
 }
 
 /**
@@ -137,6 +144,7 @@
   --t-brand-on-soft: var(--brand-on-soft-light);
   --t-danger: var(--danger-light);
   --t-danger-soft: var(--danger-soft-light);
+  --t-success: var(--success-light);
   --t-page: var(--neutral-light-50);
   --t-card: #ffffff;
   --t-overlay: #ffffff;
@@ -542,6 +550,7 @@
   --t-brand-on-soft: var(--brand-on-soft-dark);
   --t-danger: var(--danger-dark);
   --t-danger-soft: var(--danger-soft-dark);
+  --t-success: var(--success-dark);
   --t-page: var(--neutral-dark-50);
   --t-card: var(--neutral-dark-100);
   --t-overlay: var(--neutral-dark-200);
@@ -1299,6 +1308,7 @@
     --t-brand-on-soft: var(--brand-on-soft-dark);
     --t-danger: var(--danger-dark);
     --t-danger-soft: var(--danger-soft-dark);
+    --t-success: var(--success-dark);
     --t-page: var(--neutral-dark-50);
     --t-card: var(--neutral-dark-100);
     --t-overlay: var(--neutral-dark-200);
@@ -1738,6 +1748,7 @@
     --t-brand-on-soft: var(--brand-on-soft-light);
     --t-danger: var(--danger-light);
     --t-danger-soft: var(--danger-soft-light);
+    --t-success: var(--success-light);
     --t-page: var(--neutral-light-50);
     --t-card: #ffffff;
     --t-overlay: #ffffff;
@@ -1841,6 +1852,7 @@
   --brand-on-soft: var(--t-brand-on-soft);
   --danger: var(--t-danger);
   --danger-soft: var(--t-danger-soft);
+  --success: var(--t-success);
 
   /* Info: (20260801 - Luphia) 保留原有變數名，既有引用不致失效 */
   --background: var(--surface-base);
@@ -1946,6 +1958,7 @@
   --color-brand-on-soft: var(--brand-on-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
 
   /**
    * Info: (20260802 - Luphia) 舊設計系統的 token 別名。
@@ -3354,5 +3367,48 @@ input[type="color" i]::-moz-color-swatch {
   textarea::placeholder {
     color: var(--text-muted);
     opacity: 1;
+  }
+}
+
+/* Info: (20260821 - Luphia) 小鈴鐺的搖動動畫（發現新通知時觸發一次，見 notification_bell.tsx） */
+@keyframes bell-shake {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  15% {
+    transform: rotate(14deg);
+  }
+  30% {
+    transform: rotate(-12deg);
+  }
+  45% {
+    transform: rotate(9deg);
+  }
+  60% {
+    transform: rotate(-6deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
+
+.animate-bell-shake {
+  animation: bell-shake 0.9s ease-in-out;
+  transform-origin: top center;
+}
+
+/**
+ * Info: (20260825 - Julian) 尊重系統的「減少動態效果」偏好（計畫書 §4）。
+ *
+ * 這條**不受使用者偏好覆寫**：使用者偏好管的是「要不要搖」，
+ * 系統偏好管的是「這台機器上不要動」，後者優先。前庭功能障礙的人
+ * 不該為了收到通知而付出頭暈的代價。
+ *
+ * 動畫關掉之後未讀徽章仍在 —— 資訊不靠動畫傳達，動畫只是提示。
+ */
+@media (prefers-reduced-motion: reduce) {
+  .animate-bell-shake {
+    animation: none;
   }
 }

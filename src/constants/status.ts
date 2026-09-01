@@ -10,6 +10,40 @@ export const ORDER_STATUS = {
   CANCEL: "CANCEL",
 } as const;
 
+/**
+ * Info: (20260826 - Julian) 訂單的**終態**：到了這裡就不該再被自動流程改寫（review）。
+ *
+ * `IssueRecorder` 是全站唯一寫入訂單終態的地方，而它的兩處守門原本都寫成
+ * 「不是 FAILED 就寫成 FAILED」——那個條件擋得住重複標記，擋不住**覆寫**：
+ *
+ * - 多任務訂單已經 `COMPLETED`，其中一個任務的檔案後來被判定放棄
+ *   → 整張訂單被改回 FAILED，並發一則「你的分析失敗了」
+ * - 使用者已經 `CANCEL`
+ *   → 一樣被改成 FAILED，等於系統把使用者的決定推翻
+ * - `MINT_FAILED` 是**完成之後**上鏈那一步失敗
+ *   → 覆寫成 FAILED 會抹掉「分析其實跑完了」這個事實
+ *
+ * 反過來說，`PENDING` / `PAYING` / `PAID` / `EXECUTING` 是在途狀態，
+ * 本來就等著被寫成終態 —— 那條路徑不能被這道守門擋住。
+ *
+ * 列舉終態而不是列舉在途狀態：新增一個在途狀態時，忘了登記的後果是
+ * 「訂單卡住不動」（看得見）；新增一個終態時忘了登記的後果是
+ * 「終態被安靜覆寫」（看不見）。讓看不見的那一種需要主動維護。
+ */
+export const TERMINAL_ORDER_STATUSES: readonly string[] = [
+  ORDER_STATUS.COMPLETED,
+  ORDER_STATUS.FAILED,
+  ORDER_STATUS.CANCEL,
+  ORDER_STATUS.PAYMENT_FAILED,
+  ORDER_STATUS.MINT_FAILED,
+] as const;
+
+export function isTerminalOrderStatus(
+  status: string | null | undefined,
+): boolean {
+  return typeof status === "string" && TERMINAL_ORDER_STATUSES.includes(status);
+}
+
 export const PAYMENT_TRANSACTION_STATUS = {
   PENDING: "PENDING",
   SUCCESS: "SUCCESS",

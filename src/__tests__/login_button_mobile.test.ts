@@ -62,23 +62,14 @@ describe("手機版的登入按鈕不會被壓成一個圓", () => {
   const buttonClass = classOf(button);
   /**
    * Info: (20260901 - Luphia) 間距現在只有**一個**來源：共用的 `HeaderActions`
-   *（review #6731 三輪高-1）。三個 header 先前各自手寫，間距分成
-   * `gap-x-1.5` / `gap-x-4` / `gap-x-6` 三種，而 `shrink-0` 對三個同時生效。
+   *（review #6731 三輪高-1）。三個 header 先前各自手寫，間距分岔過三種，
+   * 而 `shrink-0` 對三個同時生效。
    *
-   * 錨在「同時含 `gap-x-` 與 `sm:gap-x-`」的那個 class，不綁 Tailwind 的排序
-   *（低-2：`user_header` 先前就寫成 `flex gap-x-6 ... items-center`）。
+   * 原本這裡另有一條「手機間距遠小於桌機（gap-x-1.5）」的守門——合併 #6701
+   * 之後那個約束不存在了：xl 以下主題與語言收進漢堡選單，320px 擠得下的
+   * 承重牆換成收合層，間距回到 24px。間距與收合層現在由
+   * `header_layout_320.test.ts` 的 premise 精確斷言與計數斷言釘住。
    */
-  const headerActions = readFileSync(
-    join(process.cwd(), "src", "components", "header", "header_actions.tsx"),
-    "utf8",
-  );
-  const headerGroupClass = (() => {
-    const m = /className="([^"]*\bgap-x-[^"]*\bsm:gap-x-[^"]*)"/.exec(
-      headerActions,
-    );
-    expect(m).not.toBeNull();
-    return m![1];
-  })();
 
   /**
    * Info: (20260827 - Luphia) `shrink-0` 是這顆按鈕維持形狀的**全部依據**。
@@ -123,8 +114,12 @@ describe("手機版的登入按鈕不會被壓成一個圓", () => {
   });
 
   /**
-   * Info: (20260827 - Luphia) 手機版的內距要小一格。320px 下 header 右側那一排
-   * 差 14px 才擠得進去，而差額必須有地方吸收。
+   * Info: (20260827 - Luphia) 手機版的內距小一格。
+   *
+   * Info: (20260901 - Luphia) 合併 #6701 之後這**不再是** header 擠得下的必要
+   * 條件（收合層才是，見 header_layout_320.test.ts）。留著的理由是純益：
+   * 對長標籤的使用端（analysis_view 等 7 處）內距小一格就是多一點換行空間。
+   * 這條釘住現狀，改回 `px-5` 前先讀 login_button.tsx 的註解。
    */
   it("手機版的水平內距小一格", () => {
     expect(buttonClass).toContain("px-4");
@@ -132,16 +127,11 @@ describe("手機版的登入按鈕不會被壓成一個圓", () => {
   });
 
   /**
-   * Info: (20260827 - Luphia) header 右側群組的間距在手機版必須遠小於
-   * `gap-x-6`：那是 24px × 4 個間距 = 96px，而 320px 下整排只有 10px 可用。
-   * 這一條擋住「順手改回統一間距」。
-   */
-  /**
-   * Info: (20260827 - Luphia) 品牌 logo 在手機版矮一格。
+   * Info: (20260827 - Luphia) 品牌 logo 在手機版矮一格（`h-8`→`h-7`）。
    *
-   * 這是三處讓步裡最後補上的一處：光靠縮間距與按鈕內距，320px 下仍差 14px。
-   * `w-auto` 表示寬度由高度與原始比例決定，所以 `h-8`→`h-7` 就是把品牌區
-   * 從 104px 降到 88px。
+   * Info: (20260901 - Luphia) 同 px-4：合併 #6701 之後不再是擠得下的必要條件，
+   * 留著是小螢幕上的比例取捨；量測 rig 從原始碼 parse 這個值，改了它
+   * header_layout_320 的 premise 會逼你重新量。
    */
   /**
    * Info: (20260831 - Luphia) **宣告的 `width` / `height` 必須與 SVG 的內建比例
@@ -272,10 +262,5 @@ describe("手機版的登入按鈕不會被壓成一個圓", () => {
       )
       .map((file) => file.replace(`${process.cwd()}/`, ""));
     expect(holders).toEqual(["src/components/header/header_actions.tsx"]);
-  });
-
-  it("header 右側群組的手機間距遠小於桌機", () => {
-    expect(headerGroupClass).toMatch(/gap-x-(1|1\.5|2)\s/);
-    expect(headerGroupClass).toContain("sm:gap-x-6");
   });
 });
