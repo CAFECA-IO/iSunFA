@@ -17,6 +17,10 @@ import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { matchesDeclaredMimeType } from "@/lib/file_signature";
 import { describeError } from "@/lib/utils/error_message";
 import { ReportImportService } from "@/services/report_import.service";
+import {
+  resolveCarbonAccess,
+  CarbonAccessLevelEnum,
+} from "@/services/carbon_access.guard";
 import { storageService } from "@/services/storage.service";
 import {
   CARBON_CHAT_MAX_ATTACHMENT_BYTES,
@@ -80,6 +84,34 @@ export async function POST(request: NextRequest) {
      */
     const channelRaw = formData.get("channel");
     const channel = typeof channelRaw === "string" ? channelRaw : undefined;
+    /**
+     * Info: (20260831 - Emily) channel 要過歸屬裁決(#6625 的 A 半)。
+     *
+     * `channel` 唯一的用途是推導帳本來計費(`runBilledCarbonTask` →
+     * `chatroomRepo.findAccountBookIdByChannel`),而這裡原本**沒有任何裁決** ——
+     * 也就是帶別人的 channel 就是拿別人的團隊額度付自己的匯入
+     * (匯入單章實測達 5 萬 tokens),而且順便繞過自己的個人點數扣款。
+     * 碳盤查的其他五個端點(report / inventory / pending-import /
+     * esg-records / sessions)都經過這道 guard,只有匯入這條沒有。
+     *
+     * 用 **EDIT** 而不是 VIEW:花掉帳本的額度是寫入行為,不是閱覽。
+     * 帳本會話的 VIEWER 因此不能用團隊額度匯入 —— 與「VIEWER 不能寫報告」一致,
+     * 他本來也改不了匯入的結果。
+     *
+     * `channel` 未帶時**不擋**:那是「無帳本會話」的合法狀態,
+     * 由 runBilledCarbonTask 走個人鏈上點數那條路(產品拍板 20260813)。
+     * 這裡不替它決定要不要有帳本,只確認「宣稱的帳本你有權動」。
+     */
+    if (channel) {
+      const access = await resolveCarbonAccess(
+        sessionUser.address,
+        channel,
+        CarbonAccessLevelEnum.EDIT,
+      );
+      if (!access.allowed) {
+        return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
+      }
+    }
     const clientMessageIdRaw = formData.get("clientMessageId");
     const clientMessageId =
       typeof clientMessageIdRaw === "string" ? clientMessageIdRaw : undefined;
