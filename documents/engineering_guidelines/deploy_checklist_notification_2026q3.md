@@ -138,19 +138,31 @@ SELECT count(*) FROM team_invitation
 **與 PR #6732 一起上線時，再加這一條**（`Order.data->>'resourceKey'` 與 `ResumableJob.resourceKey` 必須對得起來）：
 
 ```sql
--- ⑥ 新建的個人付款訂單，其 resourceKey 要找得到對應的任務書籤
-SELECT o.id, o.data->>'resourceKey' AS order_resource_key
-  FROM "order" o
- WHERE o.created_at > now() - interval '1 day'
-   AND o.unit = 'ICP'
-   AND o.data->>'resourceKey' IS NOT NULL
-   AND NOT EXISTS (
-         SELECT 1 FROM resumable_job j
-          WHERE j.user_id = o.user_id
-            AND j.resource_key = o.data->>'resourceKey'
-       );
--- 期望：0 列（有列＝那筆付款到帳時不會釋放任何東西，而且不會報錯）
+-- ⑥ 錢到帳了，任務卻還停在等付款
+--
+-- 這一條抓的是「訂單的 resourceKey 與書籤的 resourceKey 分岔」的**後果**，
+-- 而不是分岔本身。理由見下方「為什麼不從訂單那一側查」。
+SELECT j.id, j.resource_key, j.paused_at, o.id AS order_id, o.status
+  FROM resumable_job j
+  JOIN "order" o
+    ON o.user_id = j.user_id
+   AND o.data->>'resourceKey' = j.resource_key
+ WHERE j.status = 'PAUSED'
+   AND o.status IN ('PAID', 'COMPLETED')
+   AND o.created_at > j.paused_at;
+-- 期望：0 列（有列＝那筆付款到帳時沒有翻面，而且不會報錯）
 ```
+
+**為什麼不從訂單那一側查**（前一版是這樣寫的，而它在常態下必然非 0）：
+`resourceKey` 是寫給**所有**碳盤查個人扣費的（chat / draft / diagram / import 五個呼叫端），
+而 `resumable_job` 只有匯入會建列。所以「有 `resourceKey`、卻找不到書籤」的訂單在常態下大量存在
+—— 使用者在未綁帳本的會話送一則對話就是一筆。想用 `data->>'category'` 濾掉非匯入也不行：
+那一格取自 `runBilledCarbonTask` 的 `featureCode`，而**五個呼叫端一個都沒傳**，今天恆為同一個值。
+
+一條在常態下恆紅的驗證，上線第一天就會教維運忽略它 —— 而它是唯一被指定用來抓這件事的事前檢查
+（清單 §1.10：會亂叫的驗收沒有人會再看它）。所以改成從**任務**那一側查：
+「這個人為這個 resourceKey 付過錢，而任務還停在 PAUSED」是一個今天就分得出真假的問題，
+而且它正是分岔真正會造成的傷害。
 
 **為什麼要驗這一條**：整個修法押在「訂單的 `resourceKey` 等於任務的 `resourceKey`」上。今天成立，是因為前端 `chatChannel` **同一個變數**同時餵給 `formData.append("channel", …)`（決定訂單那一邊）與 `POST /v1/user/job/bookmark` 的 `resourceKey`（決定書籤那一邊）。伺服器端沒有任何東西斷言兩者一致 —— 它們一旦分岔，失敗是靜默的（查不到 → 回 0 → 不翻面 → 沒有通知、沒有錯誤）。
 
@@ -261,9 +273,9 @@ SELECT read_at IS NULL AS unread, count(*) FROM notification GROUP BY 1;
 SELECT count(*) FROM notification
  WHERE type = 'WALLET_UPGRADE' AND read_at IS NOT NULL;
 
--- ⑤ D4 的觸發條件：有沒有人的未讀超過 30
+-- ⑤ D4 的觸發條件：有沒有人的未讀超過面板上限（NOTIFICATION_HISTORY_LIMIT）
 SELECT user_id, count(*) FROM notification WHERE read_at IS NULL
- GROUP BY 1 HAVING count(*) > 30;
+ GROUP BY 1 HAVING count(*) > 10;
 ```
 
 **與 PR #6732 一起上線時另外看一行 log**（`JOB_RESUMABLE` 是活算的，資料庫裡沒有列可以數，所以它不會出現在上面任何一條 SQL 裡）：

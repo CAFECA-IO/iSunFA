@@ -385,7 +385,7 @@ describe("notificationHrefOf", () => {
   });
 
   /**
-   * Info: (20260828 - Julian) **型別層的去處也要跑 token 代入**（§13.5 的回歸）。
+   * Info: (20260828 - Julian) **型別層的去處也要跑 token 代入**（`resumable_job_resume_landing_and_copy.md` §2.1 的回歸）。
    *
    * 這一條在寫下來的當下是紅的。`notificationHrefOf` 只有在分析類那條分支
    * 才呼叫 `resolvePathTokens`，其餘型別直接回原始字串 —— 於是型別層的樣板
@@ -418,7 +418,7 @@ describe("notificationHrefOf", () => {
   );
 
   /**
-   * Info: (20260828 - Julian) 深連結的兩面（§13.5）。
+   * Info: (20260828 - Julian) 深連結的兩面（`resumable_job_resume_landing_and_copy.md` §2.1／§2.2）。
    *
    * 「回到智能溫盤按繼續匯入」這句話要能兌現，落地就必須是**那一個會話**——
    * 側欄同時有數個盤查對話，頁面層級的去處等於把辨認的工作丟回給使用者。

@@ -178,7 +178,7 @@ const TOKEN_PATTERN = /:([A-Za-z0-9_]+)/g;
  * 放任 `replace` 留下字面的 `:accountBookId` 會得到一條會 404 的合法路徑，
  * 又一個「看起來有反應」的錯誤去處。
  *
- * Info: (20260828 - Julian) 從「逐段」改成「逐 token」（§13.5）。
+ * Info: (20260828 - Julian) 從「逐段」改成「逐 token」（`resumable_job_resume_landing_and_copy.md` §2.1）。
  *
  * 原本是 `split("/")` 之後看 `segment.startsWith(":")`，也就是**整段就是
  * 一個 token** 才算數。那對 `/user/account_book/:accountBookId/journal` 夠用，
@@ -234,7 +234,7 @@ export function notificationHrefOf(
   if (!isNotificationType(item.type)) return null;
 
   /**
-   * Info: (20260828 - Julian) 型別層的樣板**也要**代入 token（§13.5）。
+   * Info: (20260828 - Julian) 型別層的樣板**也要**代入 token（`resumable_job_resume_landing_and_copy.md` §2.1）。
    *
    * 這裡原本直接回常數字串。當時型別層沒有任何樣板帶 token，所以它是對的 ——
    * 但那是巧合而不是規則：`JOB_RESUMABLE` 要深連結到單一會話，它就需要。

@@ -87,6 +87,16 @@ function ImportDeepLink({
   const instructionRef = useRef<{
     sessionId: string | null;
     openImport: boolean;
+    /**
+     * Info: (20260902 - Julian) 切換會話這一步做過了沒（review R3 的 A1）。
+     *
+     * 沒有這個旗標時，「等待待匯入內容還原」與「把使用者拉回目標會話」
+     * 分不開：使用者等不到、改去看別份報告，而這支 effect 每次重繪都跑，
+     * 於是每點一次側欄就被彈回去一次 —— 側欄看起來「點不動」，
+     * 而畫面上沒有任何說明。這一格讓第二次進來時知道
+     * 「他現在人在別的會話」是他自己的選擇，不是還沒切過去。
+     */
+    selected: boolean;
   } | null>(null);
   const consumedRef = useRef<string | null>(null);
 
@@ -96,6 +106,19 @@ function ImportDeepLink({
   useEffect(() => {
     if (sessionParam === null && openImportParam === null) return;
 
+    /**
+     * Info: (20260902 - Julian) **先抹，再去重**（review R3 的 A3）。
+     *
+     * 原本 `consumedRef` 命中時直接 return，於是 `router.replace` 沒跑：
+     * 使用者在這一頁時再點一次同一則通知（任務還是 RESUMABLE，他還沒按下
+     * 接著匯入），query 就一直留在網址列、瀏覽器歷史，並隨任何外連送出
+     * `Referer`。上一輪的結論是「參數讀完就抹，不該取決於後續有沒有成功」——
+     * 那句話對「後續」成立，對「這一次算不算重複」也該成立。
+     *
+     * 去重仍然由 `consumedRef` 負責，只是它不再順便決定要不要抹網址。
+     */
+    router.replace(pathname, { scroll: false });
+
     const instruction = `${sessionParam ?? ""}|${openImportParam ?? ""}`;
     if (consumedRef.current === instruction) return;
     consumedRef.current = instruction;
@@ -103,22 +126,33 @@ function ImportDeepLink({
     instructionRef.current = {
       sessionId: sessionParam,
       openImport: openImportParam === "1",
+      selected: false,
     };
-    router.replace(pathname, { scroll: false });
   }, [sessionParam, openImportParam, router, pathname]);
 
   useEffect(() => {
     const instruction = instructionRef.current;
     if (instruction === null) return;
 
-    // Info: (20260831 - Julian) 做完或放棄都是「這道指令結束了」，兩者都清掉
+    /**
+     * Info: (20260831 - Julian) 做完或放棄都是「這道指令結束了」，兩者都清掉。
+     *
+     * Info: (20260902 - Julian) 連 `consumedRef` 一起清（review R3 的 A3）。
+     *
+     * 不清的話，同一則通知的第二次點擊會被去重擋掉而什麼都不做 ——
+     * 而那是使用者的一次全新動作，不是同一次的重複觸發。
+     * 去重要防的是「這支 effect 因為重繪又跑了一次」，那個窗口在
+     * 這道指令結束之後就關了。
+     */
     const finish = () => {
       instructionRef.current = null;
+      consumedRef.current = null;
     };
 
     if (instruction.sessionId !== null) {
       /**
-       * Info: (20260828 - Julian) 等清單**問完**，不是等它非空（實測 §10.5）。
+       * Info: (20260828 - Julian) 等清單**問完**，不是等它非空（實測見
+       * `resumable_job_resume_landing_and_copy.md` §6.1）。
        *
        * 會話清單是非同步問伺服器的，在它回來之前 `sessionsData` 裡只有預設
        * 會話 —— 非空，但不完整。原本這裡用 `length === 0` 當「還沒載好」，
@@ -137,6 +171,21 @@ function ImportDeepLink({
         return;
       }
       if (activeSessionId !== instruction.sessionId) {
+        /**
+         * Info: (20260902 - Julian) 切換**只做一次**（review R3 的 A1）。
+         *
+         * 切過之後使用者人又不在目標會話，只有一種解釋：他自己走開了。
+         * 那時再把他拉回來就是在跟他搶方向盤 —— 症狀是側欄點不動，
+         * 每點一次被彈回一次，唯一出路是整頁重整。
+         *
+         * 這一格同時是「等不到就放手」的那個出口：下面等待還原的早退
+         * 只在**人還留在目標會話**時才成立，一旦他走開，指令就結束。
+         */
+        if (instruction.selected) {
+          finish();
+          return;
+        }
+        instructionRef.current = { ...instruction, selected: true };
         onSelectSession(instruction.sessionId);
         return;
       }

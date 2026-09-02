@@ -239,7 +239,7 @@ export const NOTIFICATION_LINK_PATH: Record<NotificationType, string | null> = {
   [NOTIFICATION_TYPE.ANALYSIS_FAILED]: "/analysis?tab=history",
   /**
    * Info: (20260828 - Julian) 深連結到**那一個會話**，並要求到站就把預覽卡打開
-   *（§13.5）。頁面層級的去處等於把「是哪一份匯入」丟回給使用者判斷，
+   *（`resumable_job_resume_landing_and_copy.md` §2.2）。頁面層級的去處等於把「是哪一份匯入」丟回給使用者判斷，
    * 而側欄同時會有數個盤查對話。
    *
    * `sessionId` 由 `notification.service.ts` 從 `resourceKey` 切出來放進 payload；

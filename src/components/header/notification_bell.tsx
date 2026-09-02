@@ -435,7 +435,15 @@ export default function NotificationBell() {
                         */}
                         {list.hasMoreTodos && (
                           <p className="text-text-muted px-3 pt-2 text-center text-xs">
-                            {t("notification.todos_capped")}
+                            {t("notification.todos_capped")}{" "}
+                            {/* Info: (20260902 - Julian) 說明後面接一個出口（review R3 的 A2），完整理由在字典的 todos_capped_action 上 */}
+                            <Link
+                              href="/user/carbon_chatbot"
+                              onClick={() => close()}
+                              className="text-brand underline underline-offset-2"
+                            >
+                              {t("notification.todos_capped_action")}
+                            </Link>
                           </p>
                         )}
                       </>

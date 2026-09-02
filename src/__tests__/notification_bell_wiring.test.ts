@@ -1158,4 +1158,88 @@ describe("截斷提示的接線", () => {
     expect(code).not.toContain("JOB_RESUMABLE_NOTICE_LIMIT");
     expect(code).toMatch(/t\("notification\.todos_capped"\)/);
   });
+
+  /**
+   * Info: (20260902 - Julian) 截斷的說明要**帶一個出口**（review #6732 R3 的 A2）。
+   *
+   * 先前兩個畫面都只有一句純文字：第 6 份可以繼續的匯入起在兩處都不存在，
+   * 也沒有任何路徑到得了 —— 而被藏起來的是 `updatedAt` 排最後、等最久的那幾份。
+   * 這個模組自己的不變式是「分岔永遠伴隨一個看得見的說明**與一個出口**」，
+   * 完成側有（`view_all`），待辦側先前沒有。
+   *
+   * 釘的是「那個出口在截斷那一段裡」，不是「檔案裡有這個網址」——
+   * 後者會被頁面別處任何一個連結騙過去。
+   */
+  it.each([
+    ["鈴鐺面板", BELL],
+    ["/user/notifications", PAGE],
+  ])("%s 的 todos_capped 帶得出出口", (unusedName, consumer) => {
+    const code = codeOf(...(consumer as string[]));
+    const at = code.indexOf("notification.todos_capped");
+    expect(at).toBeGreaterThan(-1);
+
+    const block = code.slice(at, at + 700);
+    expect(block).toContain("notification.todos_capped_action");
+    expect(block).toContain('href="/user/carbon_chatbot"');
+  });
+});
+
+/**
+ * Info: (20260902 - Julian) 深連結落地的兩道回歸（review #6732 R3 的 A1／A3）。
+ *
+ * 兩者都是上一輪修法帶進來的：把 query「讀完就抹、指令留在 ref」之後，
+ * 方向盤改由 `instructionRef` 搶。
+ *
+ * ⚠️ 這一組是**掃描**，只證明那兩行還在（§1.11）。落地半邊的五態判斷仍然
+ * 沒有行為測試 —— reviewer 的 C4 開的處方是把它抽成回
+ * `{action: "wait"|"giveUp"|"select"|"open"}` 的純函式再逐條測，
+ * 那是另一支 PR 的事。這裡先把**已知會重演的那兩個形狀**擋住。
+ */
+describe("深連結落地", () => {
+  const PAGE_FILE = ["src", "app", "user", "carbon_chatbot", "page.tsx"];
+
+  /**
+   * Info: (20260902 - Julian) A1：切換會話只做一次。
+   *
+   * 沒有這道，使用者等不到待匯入內容而改點側欄的別的會話時，
+   * 這支 effect 每次重繪都會把他拉回目標會話 —— 側欄看起來點不動，
+   * 唯一出路是整頁重整。
+   */
+  it("切過一次之後不再把使用者拉回目標會話", () => {
+    const code = codeOf(...PAGE_FILE);
+
+    expect(code).toMatch(/selected: boolean/);
+    expect(code).toMatch(/if \(instruction\.selected\) \{\s*finish\(\);/);
+    expect(code).toMatch(
+      /instructionRef\.current = \{ \.\.\.instruction, selected: true \}/,
+    );
+  });
+
+  /**
+   * Info: (20260902 - Julian) A3：先抹網址，再去重。
+   *
+   * `consumedRef` 命中時直接 return 的話，`router.replace` 沒跑：
+   * 同一則通知的第二次點擊會把 `?session=…&openImport=1` 永久留在網址列、
+   * 瀏覽器歷史，並隨任何外連送出 `Referer`。
+   */
+  it("router.replace 在 consumedRef 判斷之前", () => {
+    const code = codeOf(...PAGE_FILE);
+    const replaceAt = code.indexOf("router.replace(pathname");
+    const dedupeAt = code.indexOf("if (consumedRef.current === instruction)");
+
+    expect(replaceAt).toBeGreaterThan(-1);
+    expect(dedupeAt).toBeGreaterThan(-1);
+    expect(replaceAt).toBeLessThan(dedupeAt);
+  });
+
+  // Info: (20260902 - Julian) 指令結束時連去重鍵一起清，否則第二次點擊沒反應
+  it("finish 同時清掉 instructionRef 與 consumedRef", () => {
+    const code = codeOf(...PAGE_FILE);
+    const at = code.indexOf("const finish = () => {");
+    expect(at).toBeGreaterThan(-1);
+
+    const body = code.slice(at, at + 200);
+    expect(body).toContain("instructionRef.current = null");
+    expect(body).toContain("consumedRef.current = null");
+  });
 });

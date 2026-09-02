@@ -59,6 +59,19 @@ export const notification = {
    *（多一次 `summarizeResumable` 與未截斷的入庫計數），那是另一個決定。
    */
   todos_capped: "還有更多待辦沒有顯示",
+  /**
+   * Info: (20260902 - Julian) 截斷要有**出口**，不只有說明（review R3 的 A2）。
+   *
+   * 原本只有上面那一句純文字：第 6 份可以繼續的匯入起，在鈴鐺與
+   * `/user/notifications` 兩個畫面上都不存在，也沒有任何路徑到得了 ——
+   * 而被藏起來的正是 `updatedAt` 排最後、等最久的那幾份。
+   *
+   * 這個模組自己寫下的不變式是「分岔永遠伴隨一個看得見的說明**與一個出口**」，
+   * 完成側有（`view_all` → 分頁清單），待辦側先前沒有。
+   * 去處是盤查對話清單而不是通知分頁：可接續的匯入本來就一個會話一筆
+   *（`@@unique([resourceKey, type])`），那份清單就是完整的待辦清單。
+   */
+  todos_capped_action: "到盤查對話查看",
   view_all: "查看全部通知",
   page_title: "通知",
   history_title: "歷史通知",

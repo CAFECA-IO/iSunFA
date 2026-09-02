@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
+import { readFileSync } from "fs";
+import { join } from "path";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
 
@@ -1317,6 +1319,14 @@ describe("上限常數的對外契約", () => {
     ["NOTIFICATION_TODO_LIST_LIMIT", NOTIFICATION_TODO_LIST_LIMIT, 20],
     ["NOTIFICATION_PAGE_SIZE", NOTIFICATION_PAGE_SIZE, 20],
     ["NOTIFICATION_PAGE_SIZE_MAX", NOTIFICATION_PAGE_SIZE_MAX, 100],
+    /**
+     * Info: (20260902 - Julian) 可接續任務的畫面上限（review R3 的 A8）。
+     *
+     * 它被 6 個地方引用 —— 五個語系字典的 `todos_capped` 註解與計畫書 §1
+     * 的「可接續 5 筆」。改成 50 之後 `npm run test` 全綠，而那五份字典
+     * 與計畫書會一起說謊，因為沒有任何東西把數字與文字綁在一起。
+     */
+    ["JOB_RESUMABLE_NOTICE_LIMIT", JOB_RESUMABLE_NOTICE_LIMIT, 5],
   ])("%s 是 %i", (unused, actual, expected) => {
     expect(actual).toBe(expected);
   });
@@ -1340,6 +1350,36 @@ describe("上限常數的對外契約", () => {
     expect(NOTIFICATION_PAGE_SIZE).toBeLessThanOrEqual(
       NOTIFICATION_PAGE_SIZE_MAX,
     );
+  });
+
+  /**
+   * Info: (20260902 - Julian) 文件裡寫死的那幾個數字也要對得上（review R3 的 A8）。
+   *
+   * 上面那組釘的是「常數是這個值」，擋不住「常數改了、文件沒跟上」——
+   * 而文件的呼叫端編譯器找不到，沒有人會被提醒。這個不一致**今天就已經在了**：
+   * 部署檢查表 §7 的 D4 偵測 SQL 寫的是 `HAVING count(*) > 30`，而歷史上限是 10（本輪一併改掉）。
+   * 照那條 SQL 去數 D4 復發的人幾乎不可能命中，得到一個「查過了、沒事」的假結論。
+   *
+   * 掃的是**數字出現在哪一句話裡**，不是全文比對：只釘住那些「把上限寫成
+   * 字面值」的句子，其餘文字改寫不會誤傷。
+   */
+  it.each([
+    [
+      "documents/engineering_guidelines/deploy_checklist_notification_2026q3.md",
+      /D4 的觸發條件[\s\S]*?HAVING count\(\*\) > (\d+)/,
+      NOTIFICATION_HISTORY_LIMIT,
+    ],
+    [
+      "documents/architecture/notification_module_plan.md",
+      /可接續 (\d+) 筆/,
+      JOB_RESUMABLE_NOTICE_LIMIT,
+    ],
+  ])("%s 裡寫死的上限與常數相符", (file, pattern, expected) => {
+    const text = readFileSync(join(process.cwd(), file), "utf8");
+    const found = pattern.exec(text);
+
+    expect(found).not.toBeNull();
+    expect(Number(found?.[1])).toBe(expected);
   });
 });
 

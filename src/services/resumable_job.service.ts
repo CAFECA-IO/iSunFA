@@ -523,6 +523,25 @@ function resourceKeyOfOrderData(orderData: unknown): string | null {
  * 所以留著。真要收斂的話，下一格是**比對消費類別**（`Order.data.category` 是
  * `featureCode`，而暫停只由匯入產生），或在 402 建單時把 `jobId` 一起寫進去。
  *
+ * ## 這條路今天走 UI 到不了（review #6732 R3 的 A5）
+ *
+ * `PAYMENT_REQUIRED` 只由**個人付款**產生，而個人付款只在「會話沒綁帳本」時發生
+ *（`carbon_billing.service.ts` 的 `!accountBookId` 分支）。但唯一會寫
+ * `CARBON_REPORT_IMPORT` 書籤的路徑是逐章匯入，而 `use_carbon_chat.ts` 在**送出之前**
+ * 就擋掉未綁帳本的逐章匯入；單發匯入的 402 落在 catch，不寫書籤。
+ * 綁了帳本就走團隊額度，402 是 `TW_QUOTA_EXCEEDED`，暫停原因恆為 `CREDITS_EXHAUSTED`。
+ *
+ * 唯一的窄縫是**客戶端認為已綁、伺服器認為未綁**（另一個分頁解綁、帳本被刪，
+ * 而這個分頁的 `sessionAccess` 是快取）—— 那時逐章驅動器會把 402 映成
+ * `PAYMENT_REQUIRED` 並寫進書籤。這一支守的就是那條窄縫。
+ *
+ * 寫下來是因為它會誤導下一個人：整套接線（`Order.data.resourceKey`、TxTracker
+ * 兩處、部署檢查表 §5.3）看起來守著一個常見狀態，實際上守著一條今天幾乎走不到的路。
+ * **另有一件真的會出事的事**：釋放的觸發點是 `PAID`，而 `ensurePersonalCreditCharge`
+ * 放行的判準是 `COMPLETED`（兩者都在 develop，本 PR 沒動）。使用者收到
+ * 「這份匯入可以接著做了」之後按下去，可能會再撞一次 402 —— 那是一句做不到的承諾。
+ * 判準同源是另一張票，見 PR 描述。
+ *
  * 取不到 `resourceKey` 時**什麼都不翻**，不是退回「翻這個人全部的」——
  * 那正是 1-A 的缺陷：一次付款會把他所有等付款的任務都翻成「可以繼續」，
  * 而其中只有一筆是真的付過的。fail-closed 的代價是舊訂單（改動之前建的、

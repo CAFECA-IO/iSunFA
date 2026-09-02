@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
 
 import { resumableJobRepo } from "@/repositories/resumable_job.repo";
@@ -185,6 +185,85 @@ const CROSS_USER_READS = ["listPausedForScan"];
 // Info: (20260831 - Julian) 這份清單的上限；要放寬必須改這個數字，見下方測試
 const CROSS_USER_READS_MAX = 1;
 
+/**
+ * Info: (20260902 - Julian) **每一個讀取動詞**，不只 `findMany`（review R3 的 A6）。
+ *
+ * 上一版只認 `findMany`，而 repo 現在的讀取是 `findMany`×4、`findUnique`×3、
+ * `aggregate`×1。reviewer 實跑過那個 mutation：加一支不帶 `userId` 的
+ * `aggregate`（`where: { status: RESUMABLE }`）→ **這一檔 13 條全綠**。
+ *
+ * 會走到那裡的情境很具體：下一個人要做「全站有幾份可接續的匯入」的營運數字，
+ * 最省事就是複製 `summarizeResumable` 去掉 `userId` —— 跨租戶計數外洩，
+ * 順手回 `_max.updatedAt` 就連活動時間一起外洩。
+ *
+ * 這正是本檔檔頭記的那個 mutation 換一個動詞重演：**下界寫對了、上界只認一個動詞**，
+ * 而檢查清單 §1.15 要的是兩側成對。列舉而不是 `[A-Za-z]+`：`create`／`update`
+ * 也符合後者，而那些是寫入，歸另一支測試管。
+ */
+const READ_VERBS =
+  /prisma\.resumableJob\.(findMany|findFirst|findUnique|aggregate|count|groupBy)\(/;
+
+const SERVICE_FILE = join("src", "services", "resumable_job.service.ts");
+
+/**
+ * Info: (20260902 - Julian) 以唯一鍵讀、由**明確的擁有者比對**把關的那幾支。
+ *
+ * 加動詞之後浮出來三支，而它們不是「刻意跨使用者」—— 那是另一回事。
+ * 它們以主鍵或 `(resourceKey, type)` 唯一鍵讀一列，然後在程式裡比對
+ * `userId` 並拒絕，也就是**範圍限定在查詢之外**。
+ *
+ * 混進 `CROSS_USER_READS` 會弄壞那份清單的意思（它的上限是 1，而那個 1
+ * 是「掃描行程」這唯一一個真的跨使用者的職責）。所以分開一份，
+ * 並且**逐支斷言那道比對真的存在** —— 只列名字就只是放行，不是把關。
+ */
+const OWNERSHIP_CHECKED: { method: string; file: string; guard: RegExp }[] = [
+  // Info: (20260902 - Julian) 讀完立刻拒絕別人的列（`upsert` 的第二防線同一條）
+  {
+    method: "claimIfIdle",
+    file: REPO_FILE,
+    guard: /existing\.userId !== params\.userId/,
+  },
+  // Info: (20260902 - Julian) 兩個呼叫端（開始接續、取消）都比對過才動它
+  {
+    method: "findById",
+    file: SERVICE_FILE,
+    guard: /job\.userId !== params\.userId/,
+  },
+];
+
+/**
+ * Info: (20260902 - Julian) `findByResource` 今天**沒有生產呼叫端**。
+ *
+ * 它以 `(resourceKey, type)` 讀一列而完全不看 `userId`，所以它一旦有呼叫端，
+ * 那個呼叫端就必須自己比對擁有者。與其現在猜一套規則，先把「沒有人用它」
+ * 釘住 —— 加第一個呼叫端的人會看到這條紅，那時再決定要哪一種把關。
+ */
+const UNUSED_READS = ["findByResource"];
+
+/**
+ * Info: (20260902 - Julian) 走 `src` 找生產程式碼裡的引用（排除測試與 generated）。
+ * 與 `resumable_job_write_invariants.test.ts` 的同名函式同一套做法。
+ */
+function productionFilesMentioning(needle: string): string[] {
+  const hits: string[] = [];
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === "__tests__" || entry.name === "generated") continue;
+        walk(full);
+        continue;
+      }
+      if (!entry.name.endsWith(".ts") && !entry.name.endsWith(".tsx")) continue;
+      const relative = full.slice(process.cwd().length + 1);
+      if (relative === REPO_FILE) continue;
+      if (readFileSync(full, "utf8").includes(needle)) hits.push(relative);
+    }
+  };
+  walk(join(process.cwd(), "src"));
+  return hits.sort();
+}
+
 // Info: (20260831 - Julian) 查詢條件從 `findMany(` 那一行往下這麼多行內判定
 const QUERY_HEAD_LINES = 10;
 
@@ -206,7 +285,7 @@ function readsWithoutUserId(): string[] {
   lines.forEach((line, index) => {
     const declaration = /^\s*async\s+([A-Za-z][A-Za-z0-9_]*)\s*\(/.exec(line);
     if (declaration) current = declaration[1];
-    if (!/prisma\.resumableJob\.findMany\(/.test(line)) return;
+    if (!READ_VERBS.test(line)) return;
 
     /**
      * Info: (20260831 - Julian) 只看到這支查詢自己的結尾（`});`）為止。
@@ -219,14 +298,21 @@ function readsWithoutUserId(): string[] {
     const end = window.findIndex((entry) => entry.trim().startsWith("});"));
     const head = window.slice(0, end === -1 ? window.length : end).join("\n");
     const scoped = head.includes("userId");
-    if (!scoped && !CROSS_USER_READS.includes(current)) offenders.push(current);
+    if (
+      !scoped &&
+      !CROSS_USER_READS.includes(current) &&
+      !OWNERSHIP_CHECKED.some((entry) => entry.method === current) &&
+      !UNUSED_READS.includes(current)
+    ) {
+      offenders.push(current);
+    }
   });
 
   return offenders;
 }
 
 describe("沒有第四支未限定使用者的讀取", () => {
-  it("每一支 findMany 不是帶 userId，就是登記過的跨使用者查詢", () => {
+  it("每一支讀取不是帶 userId，就是登記過的跨使用者查詢", () => {
     expect(readsWithoutUserId()).toEqual([]);
   });
 
@@ -242,6 +328,30 @@ describe("沒有第四支未限定使用者的讀取", () => {
    */
   it("跨使用者的例外清單沒有變長", () => {
     expect(CROSS_USER_READS.length).toBeLessThanOrEqual(CROSS_USER_READS_MAX);
+  });
+
+  /**
+   * Info: (20260902 - Julian) 登記「範圍在查詢之外」的那幾支，比對必須真的在。
+   *
+   * 少了這一條，那份清單就是一個放行名單：把方法名加進去、順手刪掉那行
+   * `job.userId !== params.userId`，掃描照樣綠，而外洩是靜默的。
+   */
+  it.each(OWNERSHIP_CHECKED)(
+    "$method 的擁有者比對存在於 $file",
+    ({ file, guard }) => {
+      expect(readFileSync(join(process.cwd(), file), "utf8")).toMatch(guard);
+    },
+  );
+
+  /**
+   * Info: (20260902 - Julian) 宣稱沒有呼叫端的那幾支，真的沒有。
+   *
+   * 這是那份清單成立的唯一前提。有人加了第一個呼叫端時這條會紅，
+   * 而紅的訊息就是「請決定這支要哪一種把關」。
+   */
+  it.each(UNUSED_READS)("%s 沒有生產呼叫端", (method) => {
+    const hits = productionFilesMentioning(`resumableJobRepo.${method}(`);
+    expect(hits).toEqual([]);
   });
 });
 
