@@ -57,6 +57,17 @@ export const EMPLOYEE_PROFILE_KEYS = Object.keys(
 // Info: (20260902 - Julian) 落地存的是 EmploymentType 的鍵，不是顯示字串。值域只有這兩個
 export const EMPLOYMENT_TYPE_KEYS = Object.keys(EmploymentType);
 
+/**
+ * Info: (20260902 - Julian) 僱用型態的 i18n 路徑，**只在這裡組一次**。
+ *
+ * `i18n_keys.test.ts` 的掃描器認的是字面，所以每個自己組這個樣板的檔案
+ * 都要在 `DYNAMIC_KEY_EXPANSIONS` 登記一次 —— 而變數名不同（`type` / `key` / `value`）
+ * 就算不同的樣板。三個呼叫端就是三筆登記，少登記一筆那一組鍵就沒人守。
+ * 收斂成一支函式之後，字面只有這一個，登記也只有一筆。
+ */
+export const employmentTypeI18nKey = (key: string): string =>
+  `calculator.basic_info_form.${key.toLowerCase()}`;
+
 export interface IJoinLeaveState {
   isJoined: boolean;
   dayOfJoining: string;
@@ -230,4 +241,71 @@ export const DEFAULT_EMPLOYEE_PROFILE: ISalaryEmployeeProfile = {
   voluntaryPensionRate: 0,
   hireDate: null,
   resignDate: null,
+};
+
+/**
+ * Info: (20260902 - Julian) Unix 秒 ↔ `<input type="date">` 的 `YYYY-MM-DD`。
+ *
+ * `input[type=date]` 收發的是一個沒有時區的日曆日字串，而我們存的是 UTC 午夜的時間戳
+ * —— 兩者之間只差一次格式化，但**必須走 UTC**：
+ *
+ * - `new Date(ts).toISOString().slice(0, 10)` 在 UTC-5 會把 2026-08-15T00:00:00Z
+ *   顯示成 2026-08-15（對），而 `toLocaleDateString()` 會顯示 2026-08-14（錯）
+ * - 反方向 `new Date("2026-08-15")` 本來就被當成 UTC 午夜解析，所以 `Date.parse` 是對的；
+ *   `new Date(2026, 7, 15)` 則是本地午夜，存進去會偏移
+ *
+ * 判準在 `salary_employee_profile.tz.test.ts`（釘 `America/New_York`）——
+ * 這一對在 UTC 與 UTC+8 都看不出差別。
+ */
+export const toDateInputValue = (timestamp: number | null): string => {
+  if (timestamp === null) return "";
+
+  const date = new Date(timestamp * 1000);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toISOString().slice(0, 10);
+};
+
+// Info: (20260902 - Julian) 空字串代表「清掉這個日期」，回 null 而不是 0（1970 年是一個合法但錯的日期）
+export const fromDateInputValue = (value: string): number | null => {
+  if (value === "") return null;
+
+  const parsed = Date.parse(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(parsed)) return null;
+
+  return parsed / 1000;
+};
+
+/**
+ * Info: (20260902 - Julian) 每個常態欄位的顯示名稱（i18n 路徑）。
+ *
+ * 給「儲存前的差異對話框」用 —— 它要寫得出「扶養人數 0 → 1」，
+ * 而不是「要不要更新員工資料」。後者使用者無從判斷，於是每次都按同一個鍵，
+ * 那道確認就等於不存在。
+ *
+ * 值一律是**字面字串**而不是組出來的路徑：`i18n_keys.test.ts` 掃的是字面，
+ * 組出來的鍵它看不到，而看不到就等於沒有守。
+ *
+ * 型別是 `Record<keyof ISalaryEmployeeProfile, string>` —— 介面加一欄
+ * 而這裡沒加會編譯失敗，對話框不會出現一個沒有名字的欄位。
+ */
+export const PROFILE_FIELD_I18N_KEY: Record<
+  keyof ISalaryEmployeeProfile,
+  string
+> = {
+  baseSalary: "calculator.base_pay_form.base_salary",
+  mealAllowance: "calculator.base_pay_form.meal_allowance",
+  otherAllowanceTaxable: "calculator.employee_list.other_allowance_taxable",
+  otherAllowanceTaxFree: "calculator.employee_list.other_allowance_tax_free",
+  industryCode: "calculator.basic_info_form.industry_category",
+  isForeignWorker: "calculator.basic_info_form.tax_residency_status",
+  employmentType: "calculator.employee_list.employment_type",
+  baseSalary30Days: "calculator.basic_info_form.payroll_days_base",
+  isLaborInsured: "calculator.others_form.option_labor_insurance",
+  isHealthInsured: "calculator.others_form.option_nhi",
+  isPensionInsured: "calculator.others_form.option_labor_pension",
+  dependentsCount: "calculator.others_form.number_of_dependents",
+  voluntaryPensionRate: "calculator.employee_list.voluntary_pension_rate",
+  hireDate: "calculator.employee_list.hire_date",
+  resignDate: "calculator.employee_list.resign_date",
 };

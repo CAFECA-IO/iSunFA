@@ -1,5 +1,10 @@
 import { describe, it, expect } from "@jest/globals";
-import { deriveJoinLeave } from "@/lib/utils/salary_employee_profile";
+import {
+  composeJoinLeaveDates,
+  deriveJoinLeave,
+  fromDateInputValue,
+  toDateInputValue,
+} from "@/lib/utils/salary_employee_profile";
 
 /**
  * Info: (20260902 - Julian) 員工檔上的到職／離職日 → 計算機的「這個月第幾號」。
@@ -137,5 +142,93 @@ describe("壞資料不讓表單變成非受控元件", () => {
     expect(
       deriveJoinLeave({ hireDate: Number.NaN, resignDate: null }, AUG_2026),
     ).toMatchObject({ isJoined: false, dayOfJoining: "01" });
+  });
+});
+
+describe("完整日期 ↔ 「這個月第幾號」的來回", () => {
+  /**
+   * Info: (20260902 - Julian) 計算機那四個欄位是推導值，使用者改「第幾號」時要組回日期。
+   *
+   * 來回一趟必須回到原點，否則症狀是「改了一次日期就跳掉一天」——
+   * 而那在 UTC 與 UTC+8 都看不出來。
+   */
+  it.each(["01", "15", "28", "31"])("八月 %s 號組成日期再推導回來一致", (day) => {
+    const composed = composeJoinLeaveDates(
+      { isJoined: true, dayOfJoining: day, isLeft: false, dayOfLeaving: "01" },
+      AUG_2026,
+    );
+
+    expect(deriveJoinLeave(composed, AUG_2026)).toMatchObject({
+      isJoined: true,
+      dayOfJoining: day,
+    });
+  });
+
+  /**
+   * Info: (20260902 - Julian) 日超過該月天數時夾到最後一天，不是滾到下個月。
+   *
+   * 計算機的日期下拉是固定的 1–31，使用者在二月選得到 31 號。
+   * `Date.UTC(2026, 1, 31)` 會滾到 3/3 —— 於是「二月底離職」變成「三月初離職」，
+   * 一個完全合法、只是錯的日期，而畫面上不會有任何提示。
+   */
+  it("二月的 31 號夾到 28 號，不會滾到三月", () => {
+    const composed = composeJoinLeaveDates(
+      { isJoined: false, dayOfJoining: "01", isLeft: true, dayOfLeaving: "31" },
+      { year: 2026, month: 2 },
+    );
+
+    expect(deriveJoinLeave(composed, { year: 2026, month: 2 })).toMatchObject({
+      isLeft: true,
+      dayOfLeaving: "28",
+    });
+  });
+
+  it("閏年的二月可以到 29 號", () => {
+    const composed = composeJoinLeaveDates(
+      { isJoined: true, dayOfJoining: "31", isLeft: false, dayOfLeaving: "01" },
+      { year: 2028, month: 2 },
+    );
+
+    expect(deriveJoinLeave(composed, { year: 2028, month: 2 })).toMatchObject({
+      dayOfJoining: "29",
+    });
+  });
+
+  // Info: (20260902 - Julian) 關掉開關＝沒有這個日期，不是留著一個不算數的值
+  it("沒有勾選時組出來是 null", () => {
+    expect(
+      composeJoinLeaveDates(
+        { isJoined: false, dayOfJoining: "15", isLeft: false, dayOfLeaving: "20" },
+        AUG_2026,
+      ),
+    ).toEqual({ hireDate: null, resignDate: null });
+  });
+});
+
+describe("Unix 秒 ↔ input[type=date] 的 YYYY-MM-DD", () => {
+  /**
+   * Info: (20260902 - Julian) 這一對是員工表單上兩個日期欄的全部。
+   *
+   * 用 `toLocaleDateString()` 或 `new Date(y, m, d)` 的話，在 UTC 以西會差一天 ——
+   * 使用者填 8/15、存好、重開表單看到 8/14。而在 UTC 與 UTC+8 都測不出來。
+   */
+  it.each([
+    ["2026-08-15", at("2026-08-15")],
+    ["2026-01-01", at("2026-01-01")],
+    ["2026-12-31", at("2026-12-31")],
+    ["2028-02-29", at("2028-02-29")],
+  ])("%s 來回不失真", (text, stamp) => {
+    expect(toDateInputValue(stamp)).toBe(text);
+    expect(fromDateInputValue(text)).toBe(stamp);
+  });
+
+  it("空字串代表清掉日期，回 null 而不是 1970", () => {
+    expect(fromDateInputValue("")).toBeNull();
+    expect(toDateInputValue(null)).toBe("");
+  });
+
+  it("壞字串回 null，不會變成 Invalid Date 存進去", () => {
+    expect(fromDateInputValue("not-a-date")).toBeNull();
+    expect(toDateInputValue(Number.NaN)).toBe("");
   });
 });

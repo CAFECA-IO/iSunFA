@@ -27,6 +27,7 @@ export const calculator = {
     tax_residency_status: "税务居住状况",
     residency_option_taiwan: "台湾居民",
     residency_option_non_taiwan: "非台湾居民",
+    date_from_employee: "来自员工资料",
     industry_category: "所属行业",
     year: "年度",
     month: "月份",
@@ -67,6 +68,19 @@ export const calculator = {
     voluntary_pension_contribution: "自愿提缴劳退",
   },
   employee_list: {
+    section_identity: "身分",
+    section_pay: "薪资",
+    section_insurance: "投保与劳退",
+    section_other: "其他",
+    other_allowance_taxable: "其他加给（应税）",
+    other_allowance_tax_free: "其他加给（免税）",
+    other_allowance_hint:
+      "这里填的是每个月固定的职务加给。当月一次性的奖金请直接在计算器上输入，填在这里下个月会跟着带出来。",
+    voluntary_pension_rate: "自提劳退比例",
+    employment_type: "雇用型态",
+    hire_date: "到职日",
+    resign_date: "离职日",
+    date_order_error: "离职日不得早于到职日",
     main_title: "员工列表",
     name: "员工姓名",
     number: "员工编号",
@@ -185,6 +199,17 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) 计算器页的直接保存与两个例外
   save_record: {
+    profile_diff_title: "顺便更新员工资料吗？",
+    profile_diff_content:
+      "计算器上的设置与「{{name}}」的员工资料不一样。以下是差异：",
+    profile_diff_hint:
+      "这次的薪资记录一定会照计算器上的值保存，这里问的只是要不要把员工资料也一起改掉。选「只存这一次」的话，员工资料维持原样。",
+    profile_diff_update_btn: "更新员工资料并保存",
+    profile_diff_skip_btn: "只存这一次",
+    profile_diff_failed: "更新失败，请稍后再试",
+    profile_value_on: "有",
+    profile_value_off: "无",
+    profile_value_none: "未设置",
     save: "保存薪资记录",
     saving: "保存中…",
     saved: "已存为 {{name}} {{year}} 年 {{month}} 月的薪资记录",

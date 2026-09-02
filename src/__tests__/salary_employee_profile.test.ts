@@ -1,10 +1,14 @@
 import { describe, it, expect } from "@jest/globals";
 import { EmploymentType } from "@/interfaces/salary_calculator";
 import { ISalaryEmployeeProfile } from "@/interfaces/salary_record";
+import { readFileSync } from "fs";
+import { join } from "path";
 import {
+  DEFAULT_EMPLOYEE_PROFILE,
   diffEmployeeProfile,
   EMPLOYEE_PROFILE_KEYS,
   EMPLOYMENT_TYPE_KEYS,
+  PROFILE_FIELD_I18N_KEY,
 } from "@/lib/utils/salary_employee_profile";
 
 /**
@@ -238,5 +242,175 @@ describe("diffEmployeeProfile", () => {
     expect(
       diffEmployeeProfile({ ...PROFILE, hireDate: 1756684800 }, PROFILE),
     ).toHaveLength(1);
+  });
+});
+
+describe("DEFAULT_EMPLOYEE_PROFILE 與 schema 的 @default 一致", () => {
+  const schema = readFileSync(
+    join(process.cwd(), "prisma", "schema.prisma"),
+    "utf-8",
+  );
+  const block = schema.slice(
+    schema.indexOf("model SalaryCalculatorEmployee"),
+    schema.indexOf("model SalaryRecord"),
+  );
+
+  /**
+   * Info: (20260902 - Julian) 三個地方各有一份預設值：schema 的 `@default`、
+   * 這支常數、以及計算機的初始 state。schema 那一份沒辦法引用 TS 常數，
+   * 所以只能用掃描對拍 —— 不同步的症狀是「從員工列表新增的人」與
+   * 「直接寫進資料庫的人」預設值不同，而兩邊都不會報錯。
+   */
+  it.each([
+    ["industryCode", "Int @default(42)"],
+    ["isForeignWorker", "Boolean @default(false)"],
+    ["employmentType", 'String @default("FULL_TIME")'],
+    ["baseSalary30Days", "Boolean @default(true)"],
+    ["isLaborInsured", "Boolean @default(true)"],
+    ["isHealthInsured", "Boolean @default(true)"],
+    ["isPensionInsured", "Boolean @default(true)"],
+    ["dependentsCount", "Int @default(0)"],
+    ["voluntaryPensionRate", "Int @default(0)"],
+  ])("%s 的常數與 schema 對得起來", (field, declaration) => {
+    /**
+     * Info: (20260902 - Julian) 用 regex 不是 `toContain`：prisma format 會把欄位對齊，
+     * 於是 `isLaborInsured` 與 `Boolean` 之間有三個空白而 `isPensionInsured` 只有一個。
+     * 寫死單一空白的話，這條會隨「哪一個欄位名最長」而時紅時綠。
+     */
+    expect(block).toMatch(
+      new RegExp(
+        `${field}\\s+${declaration.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
+      ),
+    );
+
+    const value = DEFAULT_EMPLOYEE_PROFILE[
+      field as keyof typeof DEFAULT_EMPLOYEE_PROFILE
+    ];
+    const inSchema = declaration.slice(
+      declaration.indexOf("(") + 1,
+      declaration.lastIndexOf(")"),
+    );
+
+    expect(`${typeof value === "string" ? `"${value}"` : value}`).toBe(inSchema);
+  });
+
+  // Info: (20260902 - Julian) 兩個日期欄沒有 default，常數這邊也必須是 null 而不是 0
+  it("到職／離職日的預設是 null（0 是 1970 年，一個合法但錯的日期）", () => {
+    expect(DEFAULT_EMPLOYEE_PROFILE.hireDate).toBeNull();
+    expect(DEFAULT_EMPLOYEE_PROFILE.resignDate).toBeNull();
+  });
+
+  it("預設的 employmentType 是合法的鍵", () => {
+    expect(EMPLOYMENT_TYPE_KEYS).toContain(
+      DEFAULT_EMPLOYEE_PROFILE.employmentType,
+    );
+  });
+});
+
+const SRC = join(process.cwd(), "src");
+
+const stripComments = (text: string): string =>
+  text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+
+const readSource = (...segments: string[]): string =>
+  stripComments(readFileSync(join(SRC, ...segments), "utf-8"));
+
+describe("15 個欄位在三條路徑上都沒有被漏掉", () => {
+  /**
+   * Info: (20260902 - Julian) 對話框要寫得出每一欄的名字。
+   *
+   * 型別上 `Record<keyof ISalaryEmployeeProfile, string>` 已經擋住「少一欄」，
+   * 這一條擋的是另一半：路徑打錯字。字典裡沒有的話，畫面上會直接顯示
+   * `calculator.xxx.yyy` 這串字 —— 而 `i18n_keys.test.ts` 掃得到它，
+   * 前提是這裡的值是字面字串而不是組出來的。
+   */
+  it("每一欄都有 i18n 路徑，且都是字面字串", () => {
+    expect(Object.keys(PROFILE_FIELD_I18N_KEY).sort()).toEqual(
+      [...EMPLOYEE_PROFILE_KEYS].sort(),
+    );
+
+    for (const path of Object.values(PROFILE_FIELD_I18N_KEY)) {
+      expect(path).toMatch(/^calculator\.[a-z_]+\.[a-z0-9_]+$/);
+    }
+  });
+
+  /**
+   * Info: (20260902 - Julian) 「直接新增員工」必須帶計算機當下的值。
+   *
+   * 帶 `DEFAULT_EMPLOYEE_PROFILE` 的話會編譯通過但語意錯了：使用者剛把
+   * 14 個欄位設好，建出來的檔卻是預設值，下個月選他就把設定洗掉。
+   * 型別擋不住這件事，所以用掃描。
+   */
+  it("直接新增員工帶的是 getEmployeeProfile()，不是預設值", () => {
+    const section = readSource(
+      "components",
+      "salary_calculator",
+      "salary_result_section.tsx",
+    );
+
+    expect(section).toContain("...getEmployeeProfile(),");
+    expect(section).not.toContain("DEFAULT_EMPLOYEE_PROFILE");
+  });
+
+  /**
+   * Info: (20260902 - Julian) 編輯員工不能弄丟沒有介面的欄位。
+   *
+   * 這張表單把 13 欄放進一個 `profile` state 再整組送出。
+   * 改成逐欄列舉的話，漏掉的那一欄會落到 schema 的 `@default` ——
+   * 也就是「改個名字順便重設投保狀態」，而畫面上沒有任何提示。
+   */
+  it("員工表單整組送出 profile，不是逐欄列舉", () => {
+    const modal = readSource(
+      "components",
+      "salary_calculator",
+      "employee_action_modal.tsx",
+    );
+
+    expect(modal).toContain("...profile,");
+    // Info: (20260902 - Julian) 新增時的初值來自 DEFAULT，編輯時來自 data
+    expect(modal).toContain("data ?? DEFAULT_EMPLOYEE_PROFILE");
+  });
+
+  /**
+   * Info: (20260902 - Julian) 連結員工之後，到職／離職日在計算機上是唯讀的。
+   *
+   * 產品決策（20260902）。留成可改的話，同一格會有兩種語意
+   * 「改這次試算」與「改這個人的到職日」，而使用者無從分辨。
+   * **未連結時仍然可改** —— 公開版沒有員工檔，無條件唯讀會讓那兩格永遠設不了。
+   */
+  it("到職／離職日在連結員工時唯讀，未連結時仍可編輯", () => {
+    const form = readSource(
+      "components",
+      "salary_calculator",
+      "basic_info_form.tsx",
+    );
+
+    expect(form).toContain("const isJoinLeaveLocked = selectedEmployeeId !== null");
+    // Info: (20260902 - Julian) 開關要停用，但仍然看得到狀態（藏起來會讓人看不出有沒有中途到職）
+    expect(form).toContain("disabled={isJoinLeaveLocked}");
+    // Info: (20260902 - Julian) 兩個分支都要在：只有唯讀那一支的話公開版就設不了
+    expect(form).toContain("isJoined && isJoinLeaveLocked");
+    expect(form).toContain("isJoined && !isJoinLeaveLocked");
+    expect(form).toContain("isLeft && isJoinLeaveLocked");
+    expect(form).toContain("isLeft && !isJoinLeaveLocked");
+  });
+
+  /**
+   * Info: (20260902 - Julian) 到職／離職日的來源是 state 上的完整日期，不是畫面上的推導值。
+   *
+   * `getEmployeeProfile()` 若從 `isJoined`/`dayOfJoining` 反推回去，
+   * 「員工 8/15 到職、使用者切到九月試算」會推出 `hireDate: null` ——
+   * 而那個值會被拿去比對差異甚至回寫，於是算一次九月的薪水就把到職日洗掉了。
+   */
+  it("getEmployeeProfile 直接帶日期，不從當月推導值反推", () => {
+    const context = readSource("contexts", "calculator_context.tsx");
+    const profileBlock = context.slice(
+      context.indexOf("const getEmployeeProfile"),
+      context.indexOf("const getSalaryCalculatorOptions"),
+    );
+
+    expect(profileBlock).toContain("hireDate,");
+    expect(profileBlock).toContain("resignDate,");
+    expect(profileBlock).not.toContain("composeJoinLeaveDates");
   });
 });
