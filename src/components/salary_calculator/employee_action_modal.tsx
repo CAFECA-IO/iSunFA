@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FC, ChangeEvent, ReactNode } from "react";
+import { useState, FC, ChangeEvent } from "react";
 import { ISalaryEmployeeProfile } from "@/interfaces/salary_record";
 import {
   DEFAULT_EMPLOYEE_PROFILE,
@@ -25,17 +25,63 @@ import {
 import AmountInput from "@/components/salary_calculator/amount_input";
 import { User, X, Plus, Check, Loader2 } from "lucide-react";
 
-// Info: (20260902 - Julian) 欄位元件
-const FormSection: FC<{ title: string; children: ReactNode }> = ({
-  title,
-  children,
-}) => (
-  <div className="flex flex-col gap-[16px]">
-    <p className="text-text-neutral-tertiary border-stroke-neutral-quaternary border-b pb-[6px] text-xs font-bold tracking-wide">
-      {title}
-    </p>
-    {children}
-  </div>
+/**
+ * Info: (20260902 - Julian) 這張表單從 5 欄長到 19 欄，所以切成四個分頁。
+ *
+ * ## 分頁帶來的問題，與它的解法
+ *
+ * 必填欄位散在不同分頁：姓名／編號在「身分」、本薪在「薪資」、
+ * 日期順序錯誤在「其他」。切成分頁之後，使用者站在第三個分頁看到送出鈕是灰的，
+ * **卻看不到原因** —— 那比往下捲更糟，因為捲動至少找得到。
+ *
+ * 所以下面兩件事是這個設計的一部分，不是裝飾：
+ * 1. 有問題的分頁標紅點（`tabIssues`）——「該去哪裡看」
+ * 2. 送出鈕上方寫出第一個問題（`blockingReason`）——「要改什麼」
+ */
+const TAB_KEYS = ["identity", "pay", "insurance", "other"] as const;
+type TabKey = (typeof TAB_KEYS)[number];
+
+/**
+ * Info: (20260902 - Julian) 分頁標籤的 i18n 路徑，**字面字串**。
+ *
+ * 寫成 `` t(`calculator.employee_list.section_${key}`) `` 也會動，
+ * 但 `i18n_keys.test.ts` 的掃描器認的是字面 —— 樣板鍵要另外登記在展開表裡，
+ * 而那張表每多一筆就多一個「忘了登記就沒人守」的機會。
+ * 四個值域固定的鍵，直接列出來比較便宜。
+ */
+const TAB_LABEL_KEY: Record<TabKey, string> = {
+  identity: "calculator.employee_list.section_identity",
+  pay: "calculator.employee_list.section_pay",
+  insurance: "calculator.employee_list.section_insurance",
+  other: "calculator.employee_list.section_other",
+};
+
+const TabButton: FC<{
+  label: string;
+  isActive: boolean;
+  hasIssue: boolean;
+  onClick: () => void;
+}> = ({ label, isActive, hasIssue, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-current={isActive}
+    className={`relative shrink-0 rounded-lg px-[14px] py-[8px] text-sm font-semibold transition-colors ${
+      isActive
+        ? "bg-surface-brand-primary-soft text-text-brand-primary-lv1"
+        : "text-text-neutral-tertiary hover:bg-surface-hover"
+    }`}
+  >
+    {label}
+    {/**
+     * Info: (20260902 - Julian) 紅點是分頁化的必要配套，不是提示的裝飾：
+     * 必填欄位散在不同分頁，沒有它就會出現
+     * 「送出鈕是灰的，但當下這一頁看不出哪裡有問題」。
+     */}
+    {hasIssue && (
+      <span className="bg-text-state-error absolute top-[6px] right-[6px] size-[6px] rounded-full" />
+    )}
+  </button>
 );
 
 const FieldLabel: FC<{ text: string; required?: boolean }> = ({
@@ -101,6 +147,9 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
    */
   const [profile, setProfile] = useState<ISalaryEmployeeProfile>(baseProfile);
 
+  // Info: (20260902 - Julian) 一律從「身分」開起：新增時那是唯一非填不可的一頁
+  const [activeTab, setActiveTab] = useState<TabKey>("identity");
+
   const patchProfile = (patch: Partial<ISalaryEmployeeProfile>) =>
     setProfile((prev) => ({ ...prev, ...patch }));
 
@@ -135,13 +184,63 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
     profile.resignDate !== null &&
     profile.resignDate < profile.hireDate;
 
-  const submitDisabled =
-    !nameInput ||
-    !numberInput ||
-    !isEmailValid ||
-    baseSalaryInput === 0 ||
-    isDateOrderInvalid ||
-    isSubmitting;
+  /**
+   * Info: (20260902 - Julian) 每一個擋住送出的問題，連同它住在哪一個分頁。
+   *
+   * 這一張表同時是三件事的來源：分頁上的紅點、送出鈕上方那一句原因、
+   * 以及 `submitDisabled` 本身。分開寫三份的話，日後加一個必填欄位
+   * 一定會有一份忘了改 —— 而忘掉的若是紅點那一份，症狀就是
+   * 「按鈕永遠灰的，四個分頁看起來都沒問題」。
+   *
+   * 順序就是要求使用者處理的順序，所以 `blockingReason` 取第一筆。
+   */
+  const issues: { tab: TabKey; message: string }[] = [
+    ...(nameInput.trim() === ""
+      ? [
+          {
+            tab: "identity" as TabKey,
+            message: t("calculator.employee_list.issue_name_required"),
+          },
+        ]
+      : []),
+    ...(numberInput.trim() === ""
+      ? [
+          {
+            tab: "identity" as TabKey,
+            message: t("calculator.employee_list.issue_number_required"),
+          },
+        ]
+      : []),
+    ...(!isEmailValid
+      ? [
+          {
+            tab: "identity" as TabKey,
+            message: t("calculator.employee_list.email_valid"),
+          },
+        ]
+      : []),
+    ...(baseSalaryInput === 0
+      ? [
+          {
+            tab: "pay" as TabKey,
+            message: t("calculator.employee_list.issue_base_salary_required"),
+          },
+        ]
+      : []),
+    ...(isDateOrderInvalid
+      ? [
+          {
+            tab: "other" as TabKey,
+            message: t("calculator.employee_list.date_order_error"),
+          },
+        ]
+      : []),
+  ];
+
+  const tabIssues = new Set(issues.map((issue) => issue.tab));
+  const blockingReason = issues[0]?.message ?? null;
+
+  const submitDisabled = issues.length > 0 || isSubmitting;
 
   // Info: (20250715 - Julian) 根據 type 設定標題文字
   const isAdd = type === "add";
@@ -225,8 +324,28 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
           </button>
         </div>
         {/* Info: (20250715 - Julian) Modal Body */}
-        <div className="flex min-h-0 flex-1 flex-col gap-[28px] overflow-y-auto px-[20px] pb-[8px] md:px-[40px]">
-          <FormSection title={t("calculator.employee_list.section_identity")}>
+        {/**
+         * Info: (20260902 - Julian) 分頁列。手機版橫向可捲（`overflow-x-auto` + 每顆 `shrink-0`）
+         * 而不是換行 —— 換行會讓彈窗高度隨語系跳動，韓文與日文的標籤長度差很多。
+         */}
+        <div className="border-stroke-neutral-quaternary flex shrink-0 gap-[4px] overflow-x-auto border-b px-[20px] pb-[8px] md:px-[40px]">
+          {TAB_KEYS.map((key) => (
+            <TabButton
+              key={key}
+              label={t(TAB_LABEL_KEY[key])}
+              isActive={activeTab === key}
+              hasIssue={tabIssues.has(key)}
+              onClick={() => setActiveTab(key)}
+            />
+          ))}
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col gap-[16px] overflow-y-auto px-[20px] py-[16px] md:px-[40px]">
+          <div
+            className={
+              activeTab === "identity" ? "flex flex-col gap-[16px]" : "hidden"
+            }
+          >
             {/* Info: (20250715 - Julian) Employee Name Input */}
             <div className="flex flex-col gap-[8px]">
               <p className="text-input-text-primary text-sm font-semibold">
@@ -289,10 +408,14 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
                 {t("calculator.employee_list.email_valid")}
               </p>
             </div>
-          </FormSection>
+          </div>
 
           {/* Info: (20260902 - Julian) 薪資：四個會被自動帶進計算機的金額 */}
-          <FormSection title={t("calculator.employee_list.section_pay")}>
+          <div
+            className={
+              activeTab === "pay" ? "flex flex-col gap-[16px]" : "hidden"
+            }
+          >
             <AmountInput
               title={t("calculator.base_pay_form.base_salary")}
               value={baseSalaryInput}
@@ -325,10 +448,14 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
             <p className="text-text-neutral-tertiary text-xs leading-relaxed">
               {t("calculator.employee_list.other_allowance_hint")}
             </p>
-          </FormSection>
+          </div>
 
           {/* Info: (20260902 - Julian) 投保與勞退 */}
-          <FormSection title={t("calculator.employee_list.section_insurance")}>
+          <div
+            className={
+              activeTab === "insurance" ? "flex flex-col gap-[16px]" : "hidden"
+            }
+          >
             <ToggleSwitch
               isOn={profile.isLaborInsured}
               handleToggle={() =>
@@ -402,10 +529,14 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
                 ))}
               </select>
             </div>
-          </FormSection>
+          </div>
 
           {/* Info: (20260902 - Julian) 其他常態屬性 */}
-          <FormSection title={t("calculator.employee_list.section_other")}>
+          <div
+            className={
+              activeTab === "other" ? "flex flex-col gap-[16px]" : "hidden"
+            }
+          >
             <div className="flex flex-col gap-[8px]">
               <FieldLabel
                 text={t("calculator.basic_info_form.industry_category")}
@@ -528,8 +659,20 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
                 {t("calculator.employee_list.date_order_error")}
               </p>
             )}
-          </FormSection>
+          </div>
         </div>
+        {/**
+         * Info: (20260902 - Julian) 送出鈕為什麼是灰的 —— 寫在按鈕旁邊，不是只靠紅點。
+         *
+         * 紅點回答「該去哪一頁」，這一句回答「要改什麼」。少了它，
+         * 使用者得逐頁點過去找那個紅點，而在手機上四個分頁不一定同時看得到。
+         * 送出中不顯示（那時按鈕本來就該是灰的，不是使用者的問題）。
+         */}
+        {blockingReason !== null && !isSubmitting && (
+          <p className="text-text-neutral-tertiary border-stroke-neutral-quaternary border-t px-[20px] py-[4px] text-xs md:px-[40px]">
+            {blockingReason}
+          </p>
+        )}
         {/* Info: (20260831 - Julian) 送出失敗的訊息就地顯示，不依賴不存在的 Toast 系統 */}
         {submitError && (
           <p className="text-text-state-error px-[40px] text-sm font-medium">
@@ -537,7 +680,7 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
           </p>
         )}
         {/* Info: (20250715 - Julian) Modal Footer */}
-        <div className="flex shrink-0 items-center gap-[12px] px-[20px] py-[16px]">
+        <div className="flex shrink-0 items-center gap-[12px] px-[20px] pt-[6px] pb-[16px]">
           <button
             type="button"
             className="text-text-neutral-secondary ring-stroke-neutral-quaternary hover:bg-surface-hover flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold ring-1 transition-colors disabled:opacity-60"

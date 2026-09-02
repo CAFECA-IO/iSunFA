@@ -68,6 +68,9 @@ export const calculator = {
     voluntary_pension_contribution: "자발적 연금 기여",
   },
   employee_list: {
+    issue_name_required: "「신원」에서 직원 이름을 입력하세요",
+    issue_number_required: "「신원」에서 사번을 입력하세요",
+    issue_base_salary_required: "「급여」에서 기본급을 입력하세요",
     section_identity: "신원",
     section_pay: "급여",
     section_insurance: "보험·퇴직연금",

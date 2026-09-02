@@ -68,6 +68,9 @@ export const calculator = {
     voluntary_pension_contribution: "任意労働年金拠出",
   },
   employee_list: {
+    issue_name_required: "「基本情報」で従業員名を入力してください",
+    issue_number_required: "「基本情報」で従業員番号を入力してください",
+    issue_base_salary_required: "「給与」で基本給を入力してください",
     section_identity: "基本情報",
     section_pay: "給与",
     section_insurance: "社会保険・年金",

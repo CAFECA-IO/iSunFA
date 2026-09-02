@@ -414,3 +414,77 @@ describe("15 個欄位在三條路徑上都沒有被漏掉", () => {
     expect(profileBlock).not.toContain("composeJoinLeaveDates");
   });
 });
+
+describe("員工表單的分頁與必填提示不會各說各話", () => {
+  const modal = readSource(
+    "components",
+    "salary_calculator",
+    "employee_action_modal.tsx",
+  );
+
+  /**
+   * Info: (20260902 - Julian) 分頁化之後，必填欄位散在四個分頁裡。
+   *
+   * 「送出鈕是灰的、但當下這一頁看不出哪裡有問題」是分頁天生會帶進來的缺陷，
+   * 而它完全靜默 —— 使用者只會覺得按鈕壞了。兩道配套缺一不可：
+   * 分頁上的紅點（該去哪一頁）與按鈕旁的原因（要改什麼）。
+   *
+   * 本專案不 render React，所以這裡用掃描守「三者同源」——
+   * 真正的判準是下面那條：`submitDisabled` 必須從 `issues` 推導，
+   * 不能自己再寫一次條件。
+   */
+  it("停用條件、紅點、原因三者同源（issues 一張表推出來）", () => {
+    expect(modal).toContain("const submitDisabled = issues.length > 0 || isSubmitting");
+    expect(modal).toContain("const tabIssues = new Set(issues.map((issue) => issue.tab))");
+    expect(modal).toContain("const blockingReason = issues[0]?.message ?? null");
+  });
+
+  /**
+   * Info: (20260902 - Julian) `submitDisabled` 不得自己再列一次條件。
+   *
+   * 這是這一組最容易走樣的地方：日後加一個必填欄位，只改 `submitDisabled`
+   * 而忘了加進 `issues` —— 症狀就是按鈕永遠灰的、四個分頁都沒有紅點。
+   */
+  it("停用條件沒有繞過 issues 自己判斷", () => {
+    const block = modal.slice(
+      modal.indexOf("const submitDisabled"),
+      modal.indexOf("const isAdd"),
+    );
+
+    expect(block).not.toContain("nameInput");
+    expect(block).not.toContain("numberInput");
+    expect(block).not.toContain("baseSalaryInput");
+    expect(block).not.toContain("isEmailValid");
+  });
+
+  /**
+   * Info: (20260902 - Julian) 四個分頁都要有標籤鍵，否則那一頁的標題會是空的。
+   *
+   * 期望值用 `join(".")` 組而不是寫成 `` `calculator.employee_list.section_${tab}` ``：
+   * 這個檔案自己也在 `i18n_keys.test.ts` 的掃描根裡，寫成完整的樣板會被當成
+   * 一個未登記的動態鍵而讓那一支紅。
+   */
+  it.each(["identity", "pay", "insurance", "other"])(
+    "分頁 %s 在標籤字典裡有對應的字面鍵",
+    (tab) => {
+      expect(modal).toContain(
+        ["calculator", "employee_list", `section_${tab}`].join("."),
+      );
+    },
+  );
+
+  /**
+   * Info: (20260902 - Julian) 非當前分頁用 `hidden` 藏起來，不是解除掛載。
+   *
+   * 解除掛載的話 `AmountInput` 會重新初始化 —— 它的 `displayValue` 是由
+   * `value` 推導的，所以值不會掉，但使用者「打到一半切分頁再切回來」
+   * 的中途狀態（例如 `1.`）會被抹掉。四個分頁一起掛著的成本遠低於這個。
+   */
+  it("非當前分頁是 hidden 而不是解除掛載", () => {
+    for (const tab of ["identity", "pay", "insurance", "other"]) {
+      expect(modal).toContain(
+        `activeTab === "${tab}" ? "flex flex-col gap-[16px]" : "hidden"`,
+      );
+    }
+  });
+});

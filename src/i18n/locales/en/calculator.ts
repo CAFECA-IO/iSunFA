@@ -68,6 +68,9 @@ export const calculator = {
     voluntary_pension_contribution: "Voluntary Pension Contribution",
   },
   employee_list: {
+    issue_name_required: "Enter the employee name under Identity",
+    issue_number_required: "Enter the employee number under Identity",
+    issue_base_salary_required: "Enter the base salary under Pay",
     section_identity: "Identity",
     section_pay: "Pay",
     section_insurance: "Insurance & pension",

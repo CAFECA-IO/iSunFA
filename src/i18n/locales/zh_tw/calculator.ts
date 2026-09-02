@@ -68,6 +68,9 @@ export const calculator = {
     voluntary_pension_contribution: "自提勞退",
   },
   employee_list: {
+    issue_name_required: "請在「身分」填寫員工姓名",
+    issue_number_required: "請在「身分」填寫員工編號",
+    issue_base_salary_required: "請在「薪資」填寫本薪",
     section_identity: "身分",
     section_pay: "薪資",
     section_insurance: "投保與勞退",
