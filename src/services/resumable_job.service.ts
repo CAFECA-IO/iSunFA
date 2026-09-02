@@ -520,8 +520,20 @@ function resourceKeyOfOrderData(orderData: unknown): string | null {
  * 翻成 `RESUMABLE` 並發一則「這份匯入可以接著做了」，按下去再撞一次 402。
  *
  * 比修正前窄非常多（限同一會話，不再是這個人的全部），而且文案已經不宣稱原因，
- * 所以留著。真要收斂的話，下一格是**比對消費類別**（`Order.data.category` 是
- * `featureCode`，而暫停只由匯入產生），或在 402 建單時把 `jobId` 一起寫進去。
+ * 所以留著。
+ *
+ * Info: (20260902 - Julian) 收斂的下一格**不是**比對消費類別（review R3 二輪的 N2）。
+ *
+ * 這裡原本寫著「下一格是比對 `Order.data.category`（它是 `featureCode`，
+ * 而暫停只由匯入產生）」—— 那句話今天不成立：`runBilledCarbonTask` 的
+ * **五個呼叫端一個都沒傳 `featureCode`**，全吃預設值，所以那個鑑別子恆為
+ * 同一個值。照著做會寫出一個永遠 false 的條件，釋放路徑靜默失效，
+ * 而測試餵的是自己編的 `orderData`，不會紅。
+ *
+ * 真正的下一格是二選一：**讓那五個呼叫端各自傳出自己的 `featureCode`**
+ *（然後才輪得到比對類別），或在 402 建單時把 `jobId` 一起寫進 `Order.data`
+ *（更直接：不必推導，付的就是那一份）。
+ * 部署檢查表 §3.1 的驗證 ⑥ 也因為同一個事實而改成從任務那一側查。
  *
  * ## 這條路今天走 UI 到不了（review #6732 R3 的 A5）
  *

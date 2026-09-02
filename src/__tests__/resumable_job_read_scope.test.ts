@@ -216,18 +216,36 @@ const SERVICE_FILE = join("src", "services", "resumable_job.service.ts");
  * 是「掃描行程」這唯一一個真的跨使用者的職責）。所以分開一份，
  * 並且**逐支斷言那道比對真的存在** —— 只列名字就只是放行，不是把關。
  */
-const OWNERSHIP_CHECKED: { method: string; file: string; guard: RegExp }[] = [
+const OWNERSHIP_CHECKED: {
+  method: string;
+  file: string;
+  guard: RegExp;
+  /**
+   * Info: (20260902 - Julian) **要幾道**，不是「有沒有」（review R3 二輪的 N1）。
+   *
+   * 上一版用 `toMatch`，而 `findById` 有兩個呼叫端（開始接續、取消）——
+   * 刪掉其中一個的比對，`toMatch` 照樣綠。檢查清單 §1.15 寫著
+   * 「計數比包含強」，而這裡正是那個形狀：註解宣稱「兩個呼叫端都比對過」，
+   * 斷言只證明了「至少有一個」。
+   *
+   * 今天刪掉一道不會立刻外洩（`jobId` 是 uuid，不可枚舉），
+   * 所以這是守門的缺口而不是現行缺陷 —— 但那也正是它會被安靜刪掉的原因。
+   */
+  guards: number;
+}[] = [
   // Info: (20260902 - Julian) 讀完立刻拒絕別人的列（`upsert` 的第二防線同一條）
   {
     method: "claimIfIdle",
     file: REPO_FILE,
-    guard: /existing\.userId !== params\.userId/,
+    guard: /existing\.userId !== params\.userId/g,
+    guards: 1,
   },
   // Info: (20260902 - Julian) 兩個呼叫端（開始接續、取消）都比對過才動它
   {
     method: "findById",
     file: SERVICE_FILE,
-    guard: /job\.userId !== params\.userId/,
+    guard: /job\.userId !== params\.userId/g,
+    guards: 2,
   },
 ];
 
@@ -337,9 +355,11 @@ describe("沒有第四支未限定使用者的讀取", () => {
    * `job.userId !== params.userId`，掃描照樣綠，而外洩是靜默的。
    */
   it.each(OWNERSHIP_CHECKED)(
-    "$method 的擁有者比對存在於 $file",
-    ({ file, guard }) => {
-      expect(readFileSync(join(process.cwd(), file), "utf8")).toMatch(guard);
+    "$method 的擁有者比對在 $file 裡有 $guards 道",
+    ({ file, guard, guards }) => {
+      const text = readFileSync(join(process.cwd(), file), "utf8");
+      // Info: (20260902 - Julian) 精確筆數：少一道會紅，多一道也會（多的那道要有人解釋）
+      expect(text.match(guard) ?? []).toHaveLength(guards);
     },
   );
 
