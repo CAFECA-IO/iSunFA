@@ -14,7 +14,6 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
 import { HTTP_METHOD } from "@/constants/http";
 import { useNotificationSummary } from "@/hooks/use_notification_summary";
-import { JOB_RESUMABLE_NOTICE_LIMIT } from "@/constants/resumable_job";
 import {
   NOTIFICATION_HISTORY_LIMIT,
   NOTIFICATION_SUMMARY_TOAST_MS,
@@ -424,18 +423,19 @@ export default function NotificationBell() {
                           {t("notification.todos_title")}
                         </div>
                         {list.todos.map(renderItem)}
-                        {/**
-                         * Info: (20260901 - Julian) 待辦節也會被截斷（review：D4）。
-                         *
-                         * 徽章數的是全部（`summarizeResumable`），這裡只帶回上限內的
-                         * 幾筆。少了這一句，第 6 份可以繼續的匯入起就是靜默消失，
-                         * 而使用者沒有任何方式知道 —— 與完成節那一句同一條理由。
-                         */}
+                        {/*
+                          Info: (20260901 - Julian) 待辦節也會被截斷（review：D4）。
+                          徽章數的是全部（`summarizeResumable`），這裡只帶回上限內
+                          的幾筆。少了這一句，第 6 份可以繼續的匯入起就是靜默消失。
+
+                          Info: (20260902 - Julian) 這一句**不帶數字**（review #6742）：
+                          待辦節有三個來源，而 `hasMoreTodos` 只反映可接續那一支，
+                          寫死的 5 會與畫面實際列出的則數、以及徽章的總數三者分岔。
+                          完整理由寫在五個語系字典的 `todos_capped` 上。
+                        */}
                         {list.hasMoreTodos && (
                           <p className="text-text-muted px-3 pt-2 text-center text-xs">
-                            {t("notification.todos_capped", {
-                              count: JOB_RESUMABLE_NOTICE_LIMIT,
-                            })}
+                            {t("notification.todos_capped")}
                           </p>
                         )}
                       </>

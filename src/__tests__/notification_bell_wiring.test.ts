@@ -53,6 +53,12 @@ jest.mock("@/services/notification.service", () => ({
     todos: [],
     completed: [],
     hasMoreCompleted: false,
+    /**
+     * Info: (20260902 - Julian) 替身要回**真 service 回的每一個欄位**（B6／§1.8）。
+     * `hasMoreTodos` 是 20260901 新增的，而這兩支替身當時沒跟上 —— 同一份檔案
+     * 上面那段註解記的正是這個形狀：少一個欄位時 route 把它弄丟也不會有人紅。
+     */
+    hasMoreTodos: false,
   })),
   markNotificationRead: jest.fn(async () => true),
 }));
@@ -560,6 +566,8 @@ describe("來源與畫面的接線（掃描）", () => {
         "aria_unread",
         "load_failed",
         "history_capped",
+        // Info: (20260902 - Julian) 待辦節的截斷提示（review #6742 補進這份清單）
+        "todos_capped",
         "view_all",
         "page_title",
         "history_title",
@@ -1068,5 +1076,68 @@ describe("通知列只有一份實作", () => {
   // Info: (20260826 - Julian) 頁面真的存在（上面那條連結不是指向 404）
   it("/user/notifications 頁面存在", () => {
     expect(codeOf(...PAGE)).toMatch(/export default function/);
+  });
+});
+
+/**
+ * Info: (20260902 - Julian) 截斷提示的**接線**（review #6742）。
+ *
+ * 這一段補的是一個實跑過的缺口：把鈴鐺與 `/user/notifications` 兩處
+ * `hasMoreTodos && (…)` 整塊刪掉，`notification_*` 八個檔 **281 條全綠**。
+ * service 那一側有行為斷言（`notification_service.test.ts` 驗
+ * `list.hasMoreTodos` 的真假），但沒有任何東西驗那個旗標有沒有走到畫面上 ——
+ * 而「使用者說得出來」正是那次修正的全部價值。檢查清單 §1.7 的形狀：
+ * **行為測到了函式，沒測到接線。**
+ *
+ * 掃描只證明「接線存在」（§1.11），答案對不對由 service 那一側負責 ——
+ * 兩邊分開，這裡不重複驗第二次。
+ */
+describe("截斷提示的接線", () => {
+  const BELL = ["src", "components", "header", "notification_bell.tsx"];
+  const PAGE = ["src", "app", "user", "notifications", "page.tsx"];
+
+  it.each([
+    ["鈴鐺面板", BELL],
+    ["/user/notifications", PAGE],
+  ])("%s 讀 hasMoreTodos 並渲染 todos_capped", (unusedName, consumer) => {
+    const code = codeOf(...(consumer as string[]));
+
+    expect(code).toMatch(/hasMoreTodos && \(/);
+    expect(code).toContain("notification.todos_capped");
+  });
+
+  /**
+   * Info: (20260902 - Julian) 完成節那一句同樣沒有接線測試 —— 一起釘。
+   *
+   * 它不是這次改到的，但它的涵蓋範圍從來沒有人量過（§2.5）：
+   *「那一道沒有動」不等於「那一道夠」。
+   */
+  it("鈴鐺面板讀 hasMoreCompleted 並渲染 history_capped", () => {
+    const bell = codeOf(...BELL);
+
+    expect(bell).toMatch(/hasMoreCompleted && \(/);
+    expect(bell).toContain("notification.history_capped");
+  });
+
+  /**
+   * Info: (20260902 - Julian) 待辦那一句**不得帶數字**（review #6742）。
+   *
+   * 待辦節有三個來源（邀請不截斷、可接續最多 `JOB_RESUMABLE_NOTICE_LIMIT`
+   * 筆、入庫待辦最多 `NOTIFICATION_TODO_LIST_LIMIT` 筆），而 `hasMoreTodos`
+   * 只反映中間那一支 —— 任何寫死的數字都會與畫面實際列出的則數、以及徽章
+   * 的總數分岔。初版的 `count: JOB_RESUMABLE_NOTICE_LIMIT` 在 2 封邀請 +
+   * 8 份可接續時：畫面 **7** 則、文案說 **5**、徽章說 **10**，三個數字互不相符。
+   *
+   * 反面也要釘（§1.11 的最後一條）：下一個人「順手」把數字加回去時，
+   * 要有一條紅色的斷言，而不是沒有人知道。
+   */
+  it.each([
+    ["鈴鐺面板", BELL],
+    ["/user/notifications", PAGE],
+  ])("%s 的 todos_capped 不帶插值", (unusedName, consumer) => {
+    const code = codeOf(...(consumer as string[]));
+
+    expect(code).not.toContain("JOB_RESUMABLE_NOTICE_LIMIT");
+    expect(code).toMatch(/t\("notification\.todos_capped"\)/);
   });
 });

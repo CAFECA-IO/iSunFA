@@ -7,7 +7,6 @@ import { request } from "@/lib/utils/request";
 import { HTTP_METHOD } from "@/constants/http";
 import Pagination from "@/components/common/pagination";
 import NotificationRow from "@/components/notification/notification_row";
-import { JOB_RESUMABLE_NOTICE_LIMIT } from "@/constants/resumable_job";
 import { canMarkReadByClick } from "@/lib/notification_read";
 /**
  * Info: (20260826 - Julian) 端點回的形狀只有一份（review B6）。
@@ -192,11 +191,10 @@ export default function NotificationsPage() {
                 showTimestamp
               />
             ))}
+            {/* Info: (20260902 - Julian) 不帶數字，理由同鈴鐺面板（review #6742） */}
             {hasMoreTodos && (
               <p className="text-text-muted px-3 pt-2 text-center text-xs">
-                {t("notification.todos_capped", {
-                  count: JOB_RESUMABLE_NOTICE_LIMIT,
-                })}
+                {t("notification.todos_capped")}
               </p>
             )}
             {todosFailed && (

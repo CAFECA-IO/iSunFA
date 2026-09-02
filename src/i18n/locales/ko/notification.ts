@@ -38,12 +38,20 @@ export const notification = {
    */
   history_capped: "최근 {{count}}건만 표시합니다",
   /**
-   * Info: (20260901 - Julian) 待辦節被截斷時的說明（review：D4）。
+   * Info: (20260902 - Julian) 待辦節被截斷時的說明（review #6742）。
    *
-   * 與 `history_capped` 成對：徽章數的是全部，而清單只帶回上限內的幾筆。
-   * 分岔本身可以接受，靜默的分岔不行。
+   * **不帶數字，也不說「最近幾則」**：這一節有三個來源（邀請不截斷、可接續
+   * 最多 `JOB_RESUMABLE_NOTICE_LIMIT` 筆、入庫待辦最多
+   * `NOTIFICATION_TODO_LIST_LIMIT` 筆），而這個旗標只反映中間那一支。初版把
+   * 數字寫死成 5，於是 2 封邀請 + 8 份可接續時，畫面列出 7 則、文案說 5、
+   * 徽章說 10 —— 三個數字互不相符。「最近」也不成立：被藏起來的是可接續
+   * 任務裡最舊的那幾份，而它們仍可能比某封列出來的舊邀請更新。
+   *
+   * 與 `history_capped` 的差別在此：那一節只有一支查詢，說得出「最近 N 則」；
+   * 這一節說得出的只有「還有更多」。要給得出數字，得讓這支端點也數得出全部
+   *（多一次 `summarizeResumable` 與未截斷的入庫計數），那是另一個決定。
    */
-  todos_capped: "할 일은 최근 {{count}}건만 표시합니다",
+  todos_capped: "표시되지 않은 할 일이 더 있습니다",
   view_all: "전체 알림 보기",
   page_title: "알림",
   history_title: "기록",
