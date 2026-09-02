@@ -21,6 +21,12 @@ import type { IPendingImport } from "@/components/carbon_chatbot/import_preview"
 
 const CHAPTER = { id: "ch-5", title: "第五章 範疇二排放" };
 
+const DETAIL = {
+  resetAt: 1_760_000_000_000,
+  options: ["TOP_UP", "WAIT_RESET"],
+  exceedsWindowLimit: false,
+};
+
 const UNIT = {
   chapterId: "ch-5",
   sectionIds: ["s-1", "s-2"],
@@ -128,6 +134,7 @@ describe("schema 認得的欄位，一個都不能漏", () => {
       pausedChapters: [CHAPTER],
       pausedUnits: [UNIT],
       pauseReason: "PAYMENT_REQUIRED",
+      pauseDetail: DETAIL,
     });
     const record = build(full);
 

@@ -27,13 +27,20 @@ import {
  * 資料不會有症狀——直到有人拿它決定文案（「額度已重置」vs「款項已到帳」），
  * 讀到一個過期的值，而那時錯的是三個月前的一次寫入。
  *
- * 所以這一檔的職責是**把三支一起釘住**，並且釘住的是各自真正的執行點：
+ * Info: (20260828 - Julian) `claimIfIdle`（issue #6721 的租約）是**第四支**。
+ *
+ * 它在搶到執行許可時把狀態寫成 `RUNNING` 並清掉兩個暫停欄位，所以不變式成立 ——
+ * 但「成立」不等於「被守著」：下面那條列舉測試紅了才讓人發現它存在，而那正是
+ * 這一檔存在的理由。加進名單的同時補一條行為測試，否則名單只是放行，不是把關。
+ *
+ * 所以這一檔的職責是**把四支一起釘住**，並且釘住的是各自真正的執行點：
  *
  * | 寫入路徑        | `pausedAt` 由誰保證 | `pauseReason` 由誰保證              |
  * | --------------- | ------------------- | ----------------------------------- |
  * | `upsert`        | repo 的三元         | `saveJobBookmark` 由原因推導狀態    |
  * | `setStatus`     | repo 的三元         | 呼叫端（預設 null，兩處都明寫 null）|
  * | `markResumable` | repo（本次補上）    | repo（本次補上）                    |
+ * | `claimIfIdle`   | repo（寫死 null）   | repo（寫死 null）                   |
  *
  * `upsert` 與 `setStatus` 的 `pauseReason` 不在 repo 裡把關，所以光測 repo
  * 會漏——那兩格的測試在最後一段用掃描補，掃的是**保證所在的那一層**。
@@ -90,7 +97,7 @@ function argsOf(fn: ReturnType<typeof jest.fn>, call = 0) {
 }
 
 /**
- * Info: (20260828 - Julian) 不變式本身，寫成一個函式讓三支共用。
+ * Info: (20260828 - Julian) 不變式本身，寫成一個函式讓四支共用。
  *
  * `PAUSED` 那一側刻意也檢查（要有原因、要有時間），否則「全部清成 null」
  * 也會是綠的——而那會讓掃描行程永遠算不出「停了多久」。
@@ -151,6 +158,42 @@ describe("markResumable：翻面時把暫停的痕跡一起清掉", () => {
   it("沒翻到任何列時回 false（掃描行程據此不發通知）", async () => {
     updateMany.mockResolvedValue({ count: 0 });
     await expect(resumableJobRepo.markResumable("job-1")).resolves.toBe(false);
+  });
+});
+
+/**
+ * Info: (20260828 - Julian) `claimIfIdle` 搶到執行許可時也在寫這張表（issue #6721）。
+ *
+ * 它把狀態寫成 `RUNNING`，所以兩個暫停欄位都必須清成 `null` —— 少清的話，
+ * 一列會同時是「正在跑」又「因為額度用盡而暫停」，而那正是 `markResumable`
+ * 漏過的同一種形狀（翻面時只改 status）。
+ */
+describe("claimIfIdle：搶到許可時把暫停的痕跡一起清掉", () => {
+  const EXISTING = {
+    id: "job-1",
+    userId: "user-1",
+    status: JOB_STATUS.PAUSED,
+    updatedAt: new Date(NOW_MS - 60_000),
+  };
+
+  it("寫入的資料符合不變式（RUNNING 且兩欄皆 null）", async () => {
+    findUnique.mockResolvedValueOnce(EXISTING);
+    findUnique.mockResolvedValueOnce({
+      ...EXISTING,
+      status: JOB_STATUS.RUNNING,
+    });
+
+    await resumableJobRepo.claimIfIdle({
+      resourceKey: "res-1",
+      type: JOB_TYPE.CARBON_REPORT_IMPORT,
+      userId: "user-1",
+      nowMs: NOW_MS,
+      ttlMs: 30_000,
+    });
+
+    const data = argsOf(updateMany).data as IWrittenRow;
+    expect(data.status).toBe(JOB_STATUS.RUNNING);
+    expectPauseFieldsConsistent(data, "claimIfIdle");
   });
 });
 
@@ -303,9 +346,20 @@ function writingMethods(): string[] {
   return [...found].sort();
 }
 
-describe("沒有第四支寫入偷偷長出來", () => {
-  it("寫 resumableJob 的方法就是這三支", () => {
-    expect(writingMethods()).toEqual(["markResumable", "setStatus", "upsert"]);
+describe("沒有第五支寫入偷偷長出來", () => {
+  /**
+   * Info: (20260828 - Julian) 名單從三支變四支（`claimIfIdle`，issue #6721）。
+   *
+   * 加名字之前先確認它守得住不變式，並在上面補了行為測試 ——
+   * 只把名字加進來就是把守門改成放行，而這一條的全部價值就是「有人得看一眼」。
+   */
+  it("寫 resumableJob 的方法就是這四支", () => {
+    expect(writingMethods()).toEqual([
+      "claimIfIdle",
+      "markResumable",
+      "setStatus",
+      "upsert",
+    ]);
   });
 });
 

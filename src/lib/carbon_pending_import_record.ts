@@ -54,6 +54,17 @@ export function buildPendingImportRecord(params: {
       pausedChapters: pending.pausedChapters,
       pausedUnits: pending.pausedUnits,
       pauseReason: pending.pauseReason ?? null,
+      /**
+       * Info: (20260828 - Julian) `pauseDetail` 也要帶（issue #6714）。
+       *
+       * 這一欄是在抽出這支純函式**之後**才進 schema 的，而它漏掉的方式
+       * 與當初那三個一模一樣 —— 選填讓驗證閉嘴、記憶體裡有值所以當下正常、
+       * 還原是 spread 所以還原端也正常，只有「寫出去」那一步丟掉。
+       *
+       * 與 `pauseReason` 同一組（畫面上是 `pauseReason && pauseDetail` 才渲染），
+       * 所以預設也跟它一樣是 `null` 而不是 `undefined`。
+       */
+      pauseDetail: pending.pauseDetail ?? null,
     },
     activities,
     // Info: (20260806 - Tzuhan) Map 無法 JSON 序列化,存成 entry 陣列
