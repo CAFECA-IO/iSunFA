@@ -182,6 +182,37 @@ export const carbonChatbot = {
     "这个会话还没绑定账本,无法导入整份报告(逐章导入需要以账本的额度计费)。请先在会话设置选择账本,再重新导入。",
   import_paused_chapters:
     "点数已用完,以下章节还没开始解析:{{chapters}}。补上点数后可以从这里接着导入,已完成的部分不会重跑。",
+  // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
+  import_interrupted_chapters:
+    "上一次导入没有跑完,以下章节还没解析:{{chapters}}。可以从这里接着导入,已完成的部分不会重跑、也不会再扣点数。",
+  // Info: (20260901 - Luphia) 「可能」不是贅字（review #6726 中-2）：BUSY 也可能是自己的分頁崩潰後租約未過期
+  import_job_busy:
+    "这份导入可能正在另一个标签页或设备上跑,也可能上一次没有正常结束——后者最多 {{minutes}} 分钟后就能再试。同时跑两次会重复扣点数。",
+  // Info: (20260901 - Luphia) 三個終局判決各說各的話（review #6726 阻-1）
+  import_job_cancelled:
+    "这份导入已经取消,不会继续、也不会再扣点数。要重新开始,请再上传一次文件。",
+  import_job_completed_already: "这份导入已经完成了,没有需要继续的部分。",
+  import_job_forbidden: "这个账号没有这份导入的权限。",
+  // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
+  import_auto_resuming:
+    "点数已补上,正在接着把剩下的章导入。已完成的部分不会重跑。",
+  // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）：伺服器算好的出路與重置時間
+  import_paused_reset_hint:
+    "额度将于 {{countdown}} 后({{resetAt}})重置,届时可以接着导入。",
+  import_paused_reset_ready: "额度已经重置,现在可以接着导入了。",
+  import_paused_over_window_limit:
+    "这份报告单次需要的点数,高于方案在单一时段的额度上限——等待重置也无法完成。请改用个人点数或升级方案。",
+  import_paused_ways_title: "接下来可以:",
+  import_paused_option_wait_reset: "等额度重置(上面有时间)",
+  import_paused_option_use_allocation: "用团队管理者分配给你的点数",
+  import_paused_option_use_personal: "用你自己钱包里的点数",
+  import_paused_option_upgrade: "升级方案,拿到更高的额度",
+  // Info: (20260827 - Luphia) 伺服器說「可以繼續了」與「不做了」（issue #6714）
+  import_paused_resumable:
+    "额度已经回来了,以下章节还没解析:{{chapters}}。现在可以接着导入,已完成的部分不会重跑。",
+  import_cancel_paused: "不做了",
+  import_cancelled: "已经放弃还没解析的章节。已完成的部分还留着,仍然可以套用。",
+  import_cancel_failed: "放弃失败,请稍后再试。",
   import_resume_needs_file:
     "接着导入需要原本那份文件,而它在刷新或换设备之后就不在浏览器里了。请重新上传同一份报告——已完成的章节不会重跑。",
   import_resume_paused: "接着导入",

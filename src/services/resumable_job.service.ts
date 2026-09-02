@@ -1,7 +1,17 @@
 import { ResumableJob } from "@/generated";
+/**
+ * Info: (20260827 - Luphia) 對外的檢視型別住在 interfaces（issue #6714）：
+ * 客戶端要讀它，而從 service 匯入型別會把整個 service 模組（連著 Prisma 的
+ * repository）拉進客戶端的相依圖——`import type` 在編譯後會被抹掉，
+ * 但那件事只要有一個人漏寫 `type` 就會變成真的把伺服器程式打包進瀏覽器。
+ */
+import type { IJobView } from "@/interfaces/resumable_job";
 import { isCarbonChatChannelOwnedBy } from "@/constants/carbon_chatbot";
 import {
+  JOB_CLAIM_INTENT,
+  JOB_CLAIM_TTL_MS,
   JOB_PAUSE_REASON,
+  type JobClaimIntent,
   JOB_RESUME_SCAN_BATCH,
   JOB_SPEND_MODE,
   JOB_STATUS,
@@ -18,11 +28,14 @@ import { getWindowKey5h, getWindowKeyWeek } from "@/lib/quota/window";
 import { resolveEffectivePlanId } from "@/lib/subscription/plan_rules";
 import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
+
+export type { IJobView };
 import { chatroomRepo } from "@/repositories/chatroom.repo";
 import { faithBillingSettingRepo } from "@/repositories/faith_billing_setting.repo";
 import { estimateFaithHoldCredits } from "@/lib/faith_billing";
 import { resolveBillingTeamId } from "@/services/carbon_billing.service";
 import {
+  JOB_CLAIM,
   ResumableJobOwnershipError,
   resumableJobRepo,
 } from "@/repositories/resumable_job.repo";
@@ -45,19 +58,6 @@ import { teamSubscriptionRepo } from "@/repositories/team_subscription.repo";
 
 function toApiError(def: IErrorDef): ApiError {
   return new ApiError(def.code, def.message, def.status);
-}
-
-export interface IJobView {
-  id: string;
-  type: string;
-  status: string;
-  resourceKey: string;
-  pauseReason: string | null;
-  totalSteps: number;
-  completedSteps: number;
-  failedSteps: number;
-  remainingStepIds: string[];
-  updatedAt: number;
 }
 
 function toView(job: ResumableJob): IJobView {
@@ -323,6 +323,96 @@ export async function startJobResume(params: {
   return toView({ ...job, status: JOB_STATUS.RUNNING, pauseReason: null });
 }
 
+/**
+ * Info: (20260827 - Luphia) 取得執行許可（issue #6721）。
+ *
+ * 要防的事：同一個帳號開兩個分頁，補點數之後兩邊都跳出「可以繼續」，兩邊都
+ * 按下去 → 同一批份送兩次 → **點數扣兩次**（一份 2MB 的 PDF 單次預扣估算
+ * 約 677 點）。
+ *
+ * 為什麼許可要**按資源**而不是按任務 id：客戶端手上只有頻道（那是它自己的
+ * 聊天室），任務 id 在伺服器。要它先查一次 id 再來換許可，等於在最要緊的
+ * 路徑上多一個往返，而那個往返本身又是一個競態窗口。
+ *
+ * 兩種意圖共用同一把鎖，差別只在「找不到任務」與「已完成」算不算失敗：
+ *
+ * - 接續（`intent = RESUME`）：要有一個沒做完的任務才有意義。
+ * - 新開（`intent = START`）：這個資源上沒有任務、或上一個已經做完，都正常
+ *   ——重新匯入本來就會覆寫舊書籤。但**另一個分頁正在跑**時一樣要擋，
+ *   否則兩個分頁各自從第一份開始，兩份帳都要付。
+ */
+export async function claimJobForChannel(params: {
+  userId: string;
+  address: string | undefined;
+  type: JobType;
+  resourceKey: string;
+  intent: JobClaimIntent;
+  nowMs: number;
+}): Promise<IJobView | null> {
+  // Info: (20260827 - Luphia) 與書籤同一道第一防線，且同樣在任何查詢之前
+  assertResourceOwnedBy(params.type, params.resourceKey, params.address);
+
+  let outcome;
+  try {
+    outcome = await resumableJobRepo.claimIfIdle({
+      resourceKey: params.resourceKey,
+      type: params.type,
+      userId: params.userId,
+      nowMs: params.nowMs,
+      ttlMs: JOB_CLAIM_TTL_MS,
+    });
+  } catch (error) {
+    // Info: (20260827 - Luphia) Repo 的第二道防線轉成 403（與 saveJobBookmark 一致）
+    if (error instanceof ResumableJobOwnershipError) {
+      throw toApiError(API_ERRORS.AUTH_PERMISSION_DENIED);
+    }
+    throw error;
+  }
+
+  switch (outcome.kind) {
+    case JOB_CLAIM.CLAIMED:
+      return toView(outcome.job);
+    /**
+     * Info: (20260827 - Luphia) 別人正在跑：兩種意圖都擋。這是這把鎖唯一
+     * 真正在做的事，其餘分支只是把「為什麼不行」講清楚。
+     */
+    case JOB_CLAIM.BUSY:
+      throw toApiError(API_ERRORS.TW_JOB_ALREADY_RUNNING);
+    case JOB_CLAIM.COMPLETED:
+      /**
+       * Info: (20260827 - Luphia) 新開時「上一個已完成」不是錯——重新匯入
+       * 本來就會覆寫舊書籤。回 null 表示「沒有可接續的任務，但你可以開始」。
+       */
+      if (params.intent === JOB_CLAIM_INTENT.START) return null;
+      throw toApiError(API_ERRORS.TW_JOB_ALREADY_COMPLETED);
+    /**
+     * Info: (20260828 - Luphia) 使用者已經放棄這個任務（review #6726 高-1）。
+     *
+     * 接續要**明確報錯**，而不是安靜放行：那顆「接著匯入」可能還留在另一個
+     * 早就開著的分頁上，而按下去會花掉他剛剛才說不要花的點數。錯誤碼與
+     * 「已完成」分開，因為兩者的下一步不同——已完成是「沒有東西可做了」，
+     * 已取消是「你自己說不做的」。
+     *
+     * 新開仍然放行：重新匯入本來就會覆寫舊書籤，與 `COMPLETED` 同一個處置。
+     */
+    case JOB_CLAIM.CANCELLED:
+      if (params.intent === JOB_CLAIM_INTENT.START) return null;
+      throw toApiError(API_ERRORS.TW_JOB_CANCELLED);
+    case JOB_CLAIM.NO_JOB:
+      // Info: (20260827 - Luphia) 新開時還沒有書籤是常態：第一次寫檢查點才會建
+      if (params.intent === JOB_CLAIM_INTENT.START) return null;
+      throw toApiError(API_ERRORS.TW_JOB_NOT_FOUND);
+    default: {
+      /**
+       * Info: (20260827 - Luphia) 窮盡檢查：新增結果種類時 TypeScript 會在這裡
+       * 要求處置，而預設值只能是拒絕——一把鎖的預設值不可以是放行。
+       */
+      const exhaustive: never = outcome;
+      throw new Error(`unhandled claim outcome: ${JSON.stringify(exhaustive)}`);
+    }
+  }
+}
+
 export async function cancelJob(params: {
   jobId: string;
   userId: string;
@@ -351,9 +441,11 @@ export interface IJobResumeScanSummary {
  * Info: (20260825 - Luphia) 掃描行程：把「暫停中且現在夠了」的任務翻成可以繼續。
  *
  * 三條出路（等重置／加購點數／升級方案）最後都收斂成同一句話——
- * **現在的餘額夠不夠做下一步**。因此不需要為三條路各寫一套偵測；
- * 加購與升級的使用者甚至不必等這支迴圈：付款完成的那一頁會直接接續。
- * 這支是為了「人已經離開頁面」的情形。
+ * **現在的餘額夠不夠做下一步**。因此不需要為三條路各寫一套偵測。
+ *
+ * ToDo: (20260827 - Luphia) 這支只做「翻牌」（PAUSED → RESUMABLE），真正把剩下
+ * 幾份跑完的是使用者按下「接著匯入」。這條註解原本聲稱「付款完成的那一頁會直接
+ * 接續」——那段程式不存在，已改正（issue #6714 續作）。
  */
 export async function scanResumableJobs(
   nowMs: number,

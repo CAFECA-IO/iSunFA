@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { JOB_PAUSE_REASON, JOB_TYPE } from "@/constants/resumable_job";
+import {
+  JOB_CLAIM_INTENT,
+  JOB_PAUSE_REASON,
+  JOB_TYPE,
+} from "@/constants/resumable_job";
 
 /**
  * Info: (20260825 - Luphia) 可中斷任務書籤的寫入（issue #6712）。
@@ -32,3 +36,22 @@ export const jobBookmarkPutSchema = z.object({
 });
 
 export type JobBookmarkPutPayload = z.infer<typeof jobBookmarkPutSchema>;
+
+/**
+ * Info: (20260827 - Luphia) 取得執行許可（issue #6721）。
+ *
+ * 按**資源**而不是按任務 id：客戶端手上只有頻道（那是它自己的聊天室），
+ * 任務 id 在伺服器。要它先查一次 id 再換許可，等於在最要緊的路徑上多一個
+ * 往返，而那個往返本身又是一個競態窗口。
+ *
+ * `intent` 收呼叫端的值是安全的：它只影響「找不到任務算不算失敗」，
+ * 不影響裁決。真正的裁決（有沒有人正在跑）由伺服器的條件更新決定，
+ * 而那一條無論哪種意圖都一樣。
+ */
+export const jobClaimPostSchema = z.object({
+  type: z.enum([JOB_TYPE.CARBON_REPORT_IMPORT]),
+  resourceKey: z.string().min(1).max(200),
+  intent: z.enum([JOB_CLAIM_INTENT.RESUME, JOB_CLAIM_INTENT.START]),
+});
+
+export type JobClaimPostPayload = z.infer<typeof jobClaimPostSchema>;

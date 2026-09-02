@@ -114,6 +114,20 @@ export const CarbonPendingImportDataSchema = z.object({
       .optional(),
     // Info: (20260825 - Luphia) JOB_PAUSE_REASON；null／缺席＝沒有暫停
     pauseReason: z.string().max(50).nullable().optional(),
+    /**
+     * Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）。
+     * 只有三個欄位：出路與重置時間是**決定要說哪句話**的依據，而額度的
+     * limit / used 刻意不收——那兩個數字在重新整理之後就過時了，
+     * 顯示一個過時的儀表比不顯示更糟。
+     */
+    pauseDetail: z
+      .object({
+        resetAt: z.number().int().nullable(),
+        options: z.array(z.string().max(50)).max(10),
+        exceedsWindowLimit: z.boolean(),
+      })
+      .nullable()
+      .optional(),
   }),
   activities: z.array(CarbonActivityRecordSchema).max(500),
   // Info: (20260806 - Tzuhan) Map 無法 JSON 序列化,存成 entry 陣列
