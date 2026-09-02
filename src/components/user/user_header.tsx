@@ -1,10 +1,7 @@
 "use client";
 
 import BrandLogo from "@/components/header/brand_logo";
-import HeaderNav from "@/components/header/header_nav";
-import LanguageSelector from "@/components/header/language_selector";
-import ThemeToggle from "@/components/header/theme_toggle";
-import UserActions from "@/components/header/user_actions";
+import HeaderActions from "@/components/header/header_actions";
 
 export default function UserHeader() {
   return (
@@ -28,15 +25,8 @@ export default function UserHeader() {
         aria-label="Global"
       >
         <BrandLogo />
-        <div className="flex items-center gap-x-6 lg:gap-x-8">
-          <HeaderNav />
-          {/* Info: (20260825 - Julian) xl 以下這兩個收進漢堡選單（見 header_nav.tsx） */}
-          <div className="hidden items-center gap-x-6 lg:gap-x-8 xl:flex">
-            <ThemeToggle />
-            <LanguageSelector />
-          </div>
-          <UserActions />
-        </div>
+        {/* Info: (20260901 - Luphia) 右側控件列共用 HeaderActions（review #6731 三輪高-2：三個 header 不再各自手寫、各自分岔） */}
+        <HeaderActions />
       </nav>
     </header>
   );

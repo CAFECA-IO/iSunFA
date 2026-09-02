@@ -45,6 +45,35 @@ export class ResumableJobOwnershipError extends Error {
   }
 }
 
+/**
+ * Info: (20260827 - Luphia) 取得執行許可的四種結果（issue #6721）。
+ *
+ * 不用布林：呼叫端對四種情況的處置全都不同（沒有任務→404、別人正在跑→
+ * 留著按鈕請他等、已完成→收起按鈕、拿到→開跑），而布林會把它們壓成一句
+ * 「失敗」，於是畫面只能說一句放之四海的錯誤訊息。
+ */
+export const JOB_CLAIM = {
+  CLAIMED: "CLAIMED",
+  BUSY: "BUSY",
+  COMPLETED: "COMPLETED",
+  /**
+   * Info: (20260828 - Luphia) 使用者已經放棄這個任務（review #6726 高-1）。
+   * 與 `COMPLETED` 分成兩種結果：呼叫端要說得出「已經做完」與「你說不做的」
+   * 是兩件不同的事。
+   */
+  CANCELLED: "CANCELLED",
+  NO_JOB: "NO_JOB",
+} as const;
+
+export type JobClaimKind = (typeof JOB_CLAIM)[keyof typeof JOB_CLAIM];
+
+export type JobClaimOutcome =
+  | { kind: typeof JOB_CLAIM.CLAIMED; job: ResumableJob }
+  | { kind: typeof JOB_CLAIM.BUSY; job: ResumableJob; heldUntil: Date }
+  | { kind: typeof JOB_CLAIM.COMPLETED; job: ResumableJob }
+  | { kind: typeof JOB_CLAIM.CANCELLED; job: ResumableJob }
+  | { kind: typeof JOB_CLAIM.NO_JOB };
+
 export class ResumableJobRepository {
   /**
    * Info: (20260825 - Luphia) 同一個資源的同一種任務只有一筆書籤（`@@unique`）。
@@ -294,6 +323,106 @@ export class ResumableJobRepository {
       },
     });
     return result.count === 1;
+  }
+
+  /**
+   * Info: (20260827 - Luphia) 取得執行許可（issue #6721）。
+   *
+   * 要防的事很具體：同一個帳號開兩個分頁（很常見——第一個看起來卡住了才開
+   * 第二個），補點數之後兩邊都跳出「可以繼續」，兩邊都按下去，於是同一批份
+   * 送兩次、**點數扣兩次**。一份 2MB 的 PDF 單次預扣估算約 677 點。
+   *
+   * 租約而不是旗標：`status === RUNNING` 且 `updatedAt` 還新鮮＝有人正在跑。
+   * 過期就可以搶——分頁被強制關掉時沒有任何人會來釋放旗標，而永久鎖住的
+   * 症狀是「按了沒反應」。
+   *
+   * 條件寫在 `updateMany` 的 `where` 裡而不是先讀再判斷：先讀後寫之間有窗口，
+   * 而這把鎖的全部意義就是關掉那個窗口。前面那次 `findUnique` 只用來
+   * **區分失敗的原因**（沒有任務／別人的／已完成），不參與裁決。
+   */
+  async claimIfIdle(params: {
+    resourceKey: string;
+    type: JobType;
+    userId: string;
+    nowMs: number;
+    ttlMs: number;
+  }): Promise<JobClaimOutcome> {
+    const existing = await prisma.resumableJob.findUnique({
+      where: {
+        resourceKey_type: {
+          resourceKey: params.resourceKey,
+          type: params.type,
+        },
+      },
+    });
+    if (!existing) return { kind: JOB_CLAIM.NO_JOB };
+    // Info: (20260827 - Luphia) 與 `upsert` 同一道第二防線：別人的列不動它
+    if (existing.userId !== params.userId) {
+      throw new ResumableJobOwnershipError(params.resourceKey, params.type);
+    }
+    if (existing.status === JOB_STATUS.COMPLETED) {
+      return { kind: JOB_CLAIM.COMPLETED, job: existing };
+    }
+    /**
+     * Info: (20260828 - Luphia) 已取消的任務不可以被搶去跑（review #6726 高-1）。
+     *
+     * 先前只擋 `COMPLETED`，而 `CANCELLED` 既不是 `COMPLETED` 也不是 `RUNNING`
+     * ——兩個條件同時成立，於是**取消會被撤銷**：狀態寫回 `RUNNING`、
+     * `pauseReason` 清掉，那批份真的跑、點數真的扣。
+     * 使用者明確說不要做的事被做了，而且沒有任何畫面提過。
+     */
+    if (existing.status === JOB_STATUS.CANCELLED) {
+      return { kind: JOB_CLAIM.CANCELLED, job: existing };
+    }
+
+    const staleBefore = new Date(params.nowMs - params.ttlMs);
+    const claimed = await prisma.resumableJob.updateMany({
+      where: {
+        id: existing.id,
+        userId: params.userId,
+        /**
+         * Info: (20260828 - Luphia) 兩種**終局**狀態都不可以被搶（高-1）。
+         *
+         * 狀態集合只有五個（RUNNING / PAUSED / RESUMABLE / COMPLETED /
+         * CANCELLED），排除這兩個之後這個判斷就**完備**了——不會再有第三個
+         * 「不該被搶」的狀態漏掉。上面那次 `findUnique` 只用來區分失敗的原因，
+         * **裁決在這裡**：先讀後寫之間有窗口，而這把鎖的全部意義就是關掉它。
+         */
+        status: {
+          notIn: [JOB_STATUS.COMPLETED, JOB_STATUS.CANCELLED],
+        },
+        /**
+         * Info: (20260827 - Luphia) 可以搶的兩種情況：沒有人在跑（狀態不是
+         * RUNNING），或上一個持有者的租約過期了。`updatedAt` 是 `@updatedAt`，
+         * 這次寫入本身就會續租。
+         */
+        OR: [
+          { status: { not: JOB_STATUS.RUNNING } },
+          { updatedAt: { lt: staleBefore } },
+        ],
+      },
+      data: {
+        status: JOB_STATUS.RUNNING,
+        pauseReason: null,
+        pausedAt: null,
+      },
+    });
+    if (claimed.count === 0) {
+      return {
+        kind: JOB_CLAIM.BUSY,
+        job: existing,
+        heldUntil: new Date(existing.updatedAt.getTime() + params.ttlMs),
+      };
+    }
+    const fresh = await prisma.resumableJob.findUnique({
+      where: { id: existing.id },
+    });
+    /**
+     * Info: (20260827 - Luphia) 剛剛才成功更新過，讀不回來只可能是同時被刪除。
+     * 回 NO_JOB 而不是硬給一個 job：呼叫端對 NO_JOB 有明確的處置。
+     */
+    if (!fresh) return { kind: JOB_CLAIM.NO_JOB };
+    return { kind: JOB_CLAIM.CLAIMED, job: fresh };
   }
 
   // Info: (20260825 - Luphia) 接續／取消：狀態與暫停原因一起換，不留下孤立的原因

@@ -13,6 +13,9 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
+import type { ICreditPauseDetail } from "@/constants/carbon_chatbot";
+import { JOB_STATUS } from "@/constants/resumable_job";
+import CreditPauseWays from "@/components/carbon_chatbot/credit_pause_ways";
 
 export interface IPendingImportItem {
   paragraphId: string;
@@ -72,6 +75,12 @@ export interface IPendingImport {
   }[];
   // Info: (20260825 - Luphia) 暫停原因（JOB_PAUSE_REASON）；null／undefined＝沒有暫停
   pauseReason?: string | null;
+  /**
+   * Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）：
+   * 重置時間與伺服器算好的出路。缺席時只說原因、不說出路——
+   * 那比顯示一個空的出路清單好。
+   */
+  pauseDetail?: ICreditPauseDetail | null;
 }
 
 export interface IImportPreviewProps {
@@ -95,6 +104,25 @@ export interface IImportPreviewProps {
    */
   onResumePaused?: () => void;
   /**
+   * Info: (20260827 - Luphia) 伺服器眼中的任務狀態（issue #6714）。
+   *
+   * 掃描行程每 5 分鐘會把「暫停中而且現在夠了」翻成 RESUMABLE——那是一個明確的
+   * 時點。畫面不讀它的話，那次改動對使用者完全是隱形的：他看到的還是
+   * 「點數已用完」，得自己按下去試才知道額度已經回來了。
+   */
+  jobStatus?: string | null;
+  /**
+   * Info: (20260901 - Luphia) 倒數歸零時往上通報（review #6726 中-3）：
+   * 這張卡自己沒有 `refreshImportJob`，只把 CreditPauseWays 的時點傳出去，
+   * 問什麼由持有那支函式的頁面決定。
+   */
+  onCountdownExpired?: () => void;
+  /**
+   * Info: (20260827 - Luphia) 放棄還沒解析的章節（issue #6714）。
+   * 只放棄未完成的部分——已解析的內容留著，那是已經付過錢的東西。
+   */
+  onCancelPaused?: () => void;
+  /**
    * Info: (20260806 - Tzuhan) 重試進行中。
    *
    * 原本這張卡對「正在重試」一無所知:按下去毫無變化,按鈕還能再按,
@@ -116,6 +144,9 @@ export function ImportPreview({
   onDefer = undefined,
   onRetryFailed = undefined,
   onResumePaused = undefined,
+  jobStatus = null,
+  onCountdownExpired = undefined,
+  onCancelPaused = undefined,
   isRetrying = false,
   retryNotice = null,
 }: IImportPreviewProps) {
@@ -220,34 +251,81 @@ export function ImportPreview({
            *（已解析的章再解析一次、再收一次點數，正好是那句承諾的反面）。
            */}
           {(pendingImport.pausedChapters ?? []).length > 0 && (
-            <div className="flex items-center gap-1.5 rounded-xl bg-blue-50 p-3 text-[11px] font-bold text-blue-700">
-              <AlertTriangle size={12} className="shrink-0" />
-              <span className="min-w-0 flex-1">
-                {t("carbon_chatbot.import_paused_chapters", {
-                  chapters: (pendingImport.pausedChapters ?? [])
-                    .map((chapter) => chapter.title)
-                    .join("、"),
-                })}
-              </span>
-              {onResumePaused && (
-                <button
-                  type="button"
-                  onClick={onResumePaused}
-                  disabled={isRetrying}
-                  className="flex shrink-0 items-center gap-1 rounded-full bg-white px-2.5 py-1 font-bold text-blue-700 ring-1 ring-blue-200 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white"
-                >
-                  {isRetrying ? (
-                    <Loader2 size={11} className="animate-spin" />
-                  ) : (
-                    <RotateCcw size={11} />
-                  )}
+            <div className="rounded-xl bg-blue-50 p-3 text-[11px] font-bold text-blue-700">
+              <div className="flex items-center gap-1.5">
+                <AlertTriangle size={12} className="shrink-0" />
+                <span className="min-w-0 flex-1">
+                  {/**
+                   * Info: (20260827 - Luphia) 兩種停法兩句話（issue #6723）。
+                   *
+                   * 有暫停原因＝點數用完，那句話要說「去補點數」。沒有原因＝
+                   * 上一趟被中斷（關分頁、切走、當掉），那時說「點數已用完」
+                   * 是在說謊，而使用者會跑去買他根本不需要的點數。
+                   */}
                   {t(
-                    isRetrying
-                      ? "carbon_chatbot.import_retrying"
-                      : "carbon_chatbot.import_resume_paused",
+                    !pendingImport.pauseReason
+                      ? "carbon_chatbot.import_interrupted_chapters"
+                      : jobStatus === JOB_STATUS.RESUMABLE
+                        ? "carbon_chatbot.import_paused_resumable"
+                        : "carbon_chatbot.import_paused_chapters",
+                    {
+                      chapters: (pendingImport.pausedChapters ?? [])
+                        .map((chapter) => chapter.title)
+                        .join("、"),
+                    },
                   )}
-                </button>
-              )}
+                </span>
+                {onResumePaused && (
+                  <button
+                    type="button"
+                    onClick={onResumePaused}
+                    disabled={isRetrying}
+                    className="flex shrink-0 items-center gap-1 rounded-full bg-white px-2.5 py-1 font-bold text-blue-700 ring-1 ring-blue-200 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white"
+                  >
+                    {isRetrying ? (
+                      <Loader2 size={11} className="animate-spin" />
+                    ) : (
+                      <RotateCcw size={11} />
+                    )}
+                    {t(
+                      isRetrying
+                        ? "carbon_chatbot.import_retrying"
+                        : "carbon_chatbot.import_resume_paused",
+                    )}
+                  </button>
+                )}
+                {/**
+                 * Info: (20260827 - Luphia) 「不做了」（issue #6714）。
+                 *
+                 * 沒有這顆的話，一份不想做完的匯入會一直掛在「未完成」裡，
+                 * 而旁邊那顆「接著匯入」會一直邀請使用者去花錢。
+                 */}
+                {onCancelPaused && (
+                  <button
+                    type="button"
+                    onClick={onCancelPaused}
+                    disabled={isRetrying}
+                    className="shrink-0 rounded-full px-2 py-1 font-bold text-blue-500 underline transition-colors hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {t("carbon_chatbot.import_cancel_paused")}
+                  </button>
+                )}
+              </div>
+              {/**
+               * Info: (20260827 - Luphia) 出路與重置時間（issue #6714）。
+               *
+               * 只在**點數用完**那種暫停顯示：中斷（關分頁、切走）不需要補點數，
+               * 使用者只要按「接著匯入」——那時擺一組導購按鈕是在叫他去買
+               * 他不需要的東西。
+               */}
+              {pendingImport.pauseReason &&
+                pendingImport.pauseDetail &&
+                jobStatus !== JOB_STATUS.RESUMABLE && (
+                  <CreditPauseWays
+                    detail={pendingImport.pauseDetail}
+                    onCountdownExpired={onCountdownExpired}
+                  />
+                )}
             </div>
           )}
 

@@ -362,17 +362,35 @@ describe("來源與畫面的接線（掃描）", () => {
    * 這份清單是**現況**：三個 shell 今天都掛著。薪資計算機頁該不該有鈴鐺
    * 仍是未決的產品決定（計畫書 §6 第 4 項）—— 決定要拿掉的時候，
    * 這條會紅，而那正是它該做的事：讓移除變成一個決定，不是一次順手。
+   *
+   * Info: (20260901 - Luphia) 合併 PR #6731 之後鏈條多一節：三個 shell 掛的是
+   * 共用的 `HeaderActions`（三處手寫分岔過、出過事，見該檔註解），`UserActions`
+   * 在它裡面。接線斷言跟著走完整條鏈——兩節任何一節斷（或被 `false &&` 關掉），
+   * 鈴鐺一樣到不了畫面，這條一樣要紅。`header_actions.tsx` 是唯一持有
+   * `<UserActions />` 的檔案這件事，由 login_button_mobile.test.ts 的上界守著。
    */
   it.each([
     ["src", "components", "user", "user_header.tsx"],
     ["src", "components", "landing_page", "header.tsx"],
     ["src", "components", "salary_calculator", "calculator_header.tsx"],
-  ])("%s/%s/%s/%s 掛著 UserActions（鈴鐺才到得了畫面）", (...segments) => {
-    const shell = codeOf(...segments);
+  ])(
+    "%s/%s/%s/%s 掛著 HeaderActions→UserActions（鈴鐺才到得了畫面）",
+    (...segments) => {
+      const shell = codeOf(...segments);
 
-    expect(shell).toMatch(/<UserActions\b/);
-    expect(shell).not.toMatch(/false\s*&&\s*<UserActions/);
-  });
+      expect(shell).toMatch(/<HeaderActions\b/);
+      expect(shell).not.toMatch(/false\s*&&\s*<HeaderActions/);
+
+      const actionsRow = codeOf(
+        "src",
+        "components",
+        "header",
+        "header_actions.tsx",
+      );
+      expect(actionsRow).toMatch(/<UserActions\b/);
+      expect(actionsRow).not.toMatch(/false\s*&&\s*<UserActions/);
+    },
+  );
 
   /**
    * Info: (20260826 - Julian) 反面：HR shell **不**掛（產品決定，計畫書 D15）。

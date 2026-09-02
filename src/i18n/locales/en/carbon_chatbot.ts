@@ -197,6 +197,42 @@ export const carbonChatbot = {
   // Info: (20260828 - Julian) Same as zh_tw: two known defects in this copy, not yet fixed (plan §4)
   import_paused_chapters:
     "You ran out of credits, so these chapters have not been parsed yet: {{chapters}}. Once you have credits again you can carry on from here — the finished parts will not be redone.",
+  // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
+  import_interrupted_chapters:
+    "The last import did not finish. These chapters have not been parsed yet: {{chapters}}. You can continue from here — what is already done will not run again, and will not be charged again.",
+  // Info: (20260901 - Luphia) 「可能」不是贅字（review #6726 中-2）：BUSY 也可能是自己的分頁崩潰後租約未過期
+  import_job_busy:
+    "This import may be running in another tab or on another device, or the last run did not end cleanly — in that case you can retry in at most {{minutes}} minutes. Running it twice would charge you twice.",
+  // Info: (20260901 - Luphia) 三個終局判決各說各的話（review #6726 阻-1）
+  import_job_cancelled:
+    "This import has been cancelled. It will not resume and no more credits will be charged. To start over, upload the file again.",
+  import_job_completed_already:
+    "This import is already complete — there is nothing left to resume.",
+  import_job_forbidden: "This account does not have access to this import.",
+  // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
+  import_auto_resuming:
+    "Credits are back. Continuing with the remaining chapters — what is already done will not run again.",
+  // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）：伺服器算好的出路與重置時間
+  import_paused_reset_hint:
+    "Your quota resets in {{countdown}} ({{resetAt}}). You can continue the import then.",
+  import_paused_reset_ready:
+    "Your quota has reset. You can continue the import now.",
+  import_paused_over_window_limit:
+    "This report needs more credits in one go than your plan allows in a single window — waiting for the reset will not help. Use your personal credits or upgrade your plan.",
+  import_paused_ways_title: "What you can do:",
+  import_paused_option_wait_reset:
+    "Wait for the quota to reset (time shown above)",
+  import_paused_option_use_allocation:
+    "Use the credits your team admin allocated to you",
+  import_paused_option_use_personal: "Use the credits in your own wallet",
+  import_paused_option_upgrade: "Upgrade your plan for a higher quota",
+  // Info: (20260827 - Luphia) 伺服器說「可以繼續了」與「不做了」（issue #6714）
+  import_paused_resumable:
+    "Your quota is back. These chapters have not been parsed yet: {{chapters}}. You can continue now — what is already done will not run again.",
+  import_cancel_paused: "Give up on the rest",
+  import_cancelled:
+    "Gave up on the chapters that were not parsed. What is already done is still here and can still be applied.",
+  import_cancel_failed: "Could not give up on it. Please try again later.",
   import_resume_needs_file:
     "Carrying on needs the original file, and it is no longer in this browser after a reload or on another device. Please upload the same report again — the finished chapters will not be redone.",
   import_resume_paused: "Carry on",

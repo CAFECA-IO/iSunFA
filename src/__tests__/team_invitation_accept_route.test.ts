@@ -150,7 +150,10 @@ describe("接受邀請的 handler", () => {
       { email: "bob@corp.com", emailVerified: true },
     ]);
     asMock(teamRepo.getInvitationByIdWithDetails).mockResolvedValue(
-      invitation({ inviteeEmail: "Bob@Corp.com", expiresAt: new Date(NOW + 3 * DAY) }),
+      invitation({
+        inviteeEmail: "Bob@Corp.com",
+        expiresAt: new Date(NOW + 3 * DAY),
+      }),
     );
 
     const { body } = await accept();
@@ -190,7 +193,10 @@ describe("接受邀請的 handler", () => {
       { email: "bob@corp.com", emailVerified: true },
     ]);
     asMock(teamRepo.getInvitationByIdWithDetails).mockResolvedValue(
-      invitation({ inviteeEmail: "bob@corp.com", expiresAt: new Date(NOW - DAY) }),
+      invitation({
+        inviteeEmail: "bob@corp.com",
+        expiresAt: new Date(NOW - DAY),
+      }),
     );
 
     const { body } = await accept();
@@ -227,7 +233,10 @@ describe("接受邀請的 handler", () => {
       { email: "bob@corp.com", emailVerified: false },
     ]);
     asMock(teamRepo.getInvitationByIdWithDetails).mockResolvedValue(
-      invitation({ inviteeEmail: "bob@corp.com", expiresAt: new Date(NOW + 3 * DAY) }),
+      invitation({
+        inviteeEmail: "bob@corp.com",
+        expiresAt: new Date(NOW + 3 * DAY),
+      }),
     );
 
     const { body } = await accept();
@@ -248,7 +257,10 @@ describe("接受邀請的 handler", () => {
       { email: "bob@corp.com", emailVerified: true },
     ]);
     asMock(teamRepo.getInvitationByIdWithDetails).mockResolvedValue(
-      invitation({ inviteeEmail: "bob+x@corp.com", expiresAt: new Date(NOW + 3 * DAY) }),
+      invitation({
+        inviteeEmail: "bob+x@corp.com",
+        expiresAt: new Date(NOW + 3 * DAY),
+      }),
     );
 
     const { body } = await accept();

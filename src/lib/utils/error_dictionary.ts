@@ -1269,6 +1269,30 @@ export const API_ERRORS = {
     message: "Resumable job is already completed",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  /**
+   * Info: (20260827 - Luphia) 另一個地方正在跑同一個任務（issue #6721）。
+   *
+   * 與 `TW_JOB_ALREADY_COMPLETED` 分開：那個是「沒有東西可以做了」，
+   * 這個是「等一下再來」——前者要收起按鈕，後者要留著。
+   * 用 CONFLICT 而不是 VALIDATION_ERROR：請求本身沒有錯，是時機衝突。
+   */
+  TW_JOB_ALREADY_RUNNING: {
+    code: "TW000032",
+    message: "Resumable job is already running elsewhere",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+  /**
+   * Info: (20260828 - Luphia) 這個任務已經被使用者放棄了（issue #6714、
+   * review #6726 高-1）。
+   *
+   * 與 `TW_JOB_ALREADY_COMPLETED` 分開：那個是「沒有東西可做了」，這個是
+   * 「你自己說不做的」。後者若顯示成前者，使用者會以為系統把它跑完了。
+   */
+  TW_JOB_CANCELLED: {
+    code: "TW000033",
+    message: "Resumable job has been cancelled",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
   TW_ALLOCATION_REVOKE_DISABLED: {
     code: "TW000020",
     message: "Revoking allocated credits is no longer supported",

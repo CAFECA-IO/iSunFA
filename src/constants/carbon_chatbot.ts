@@ -658,6 +658,34 @@ const IMPORT_SUMMARY_TEMPLATES: Record<
  * 重載後對話裡沒有任何痕跡,而那幾分鐘的 LLM 呼叫也白燒了。
  * 訊息入庫(E2EE)+ 待匯入結果入庫,兩者一起才讓「稍後再決定」真的可行。
  */
+/**
+ * Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）。
+ *
+ * 伺服器的 402 回應早就把這些算好了（`options`、雙視窗的 `resetAt`、
+ * 以及「這一筆本身就超過視窗上限」的旗標），而前端在此之前**一個欄位都沒有讀**
+ * ——畫面只說「點數用完」，沒說去哪裡補。
+ *
+ * 刻意只留三個欄位，不存整份 payload：
+ *
+ * - `resetAt` 與 `exceedsWindowLimit` 是**決定要說哪句話**的依據，非有不可。
+ * - 額度的 `limit` / `used` 沒有留：那兩個數字在重新整理之後就過時了，
+ *   而顯示一個過時的儀表比不顯示更糟——使用者會據此判斷還能不能跑。
+ */
+export interface ICreditPauseDetail {
+  /**
+   * Info: (20260827 - Luphia) 被擋下的那個視窗的重置時間（epoch 秒）。
+   * null 表示「等重置不會有幫助」（需要付款那種，或超過視窗上限）。
+   */
+  resetAt: number | null;
+  // Info: (20260827 - Luphia) QUOTA_EXCEEDED_OPTION 的值；伺服器算好的出路，前端不重算
+  options: string[];
+  /**
+   * Info: (20260827 - Luphia) 這一筆需要的點數高於整個視窗的上限。
+   * 這種情況**等重置永遠不會好**，倒數與「等一下再來」都是謊話。
+   */
+  exceedsWindowLimit: boolean;
+}
+
 export interface ICarbonImportParsedSummary {
   fileName: string;
   /** Info: (20260806 - Tzuhan) 待確認的逐字段落數 */

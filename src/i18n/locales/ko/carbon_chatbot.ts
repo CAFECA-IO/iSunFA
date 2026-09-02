@@ -196,6 +196,40 @@ export const carbonChatbot = {
   // Info: (20260828 - Julian) zh_tw와 동일: 이 문구에는 알려진 오류가 2개 있음 (계획 §4, 미수정)
   import_paused_chapters:
     "크레딧이 모두 소진되어 다음 장은 아직 분석하지 않았습니다: {{chapters}}. 크레딧을 채우면 여기서 이어서 가져올 수 있습니다(완료된 부분은 다시 실행되지 않습니다).",
+  // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
+  import_interrupted_chapters:
+    "지난번 가져오기가 끝나지 않았습니다. 다음 장은 아직 분석되지 않았습니다: {{chapters}}. 여기서 이어서 진행할 수 있으며, 이미 완료된 부분은 다시 실행되지 않고 포인트도 다시 차감되지 않습니다.",
+  // Info: (20260901 - Luphia) 「可能」不是贅字（review #6726 中-2）：BUSY 也可能是自己的分頁崩潰後租約未過期
+  import_job_busy:
+    "이 가져오기는 다른 탭 또는 다른 기기에서 실행 중일 수 있습니다. 또는 지난 실행이 정상적으로 끝나지 않았을 수도 있으며, 그 경우 최대 {{minutes}}분 후 다시 시도할 수 있습니다. 두 번 실행하면 포인트도 두 번 차감됩니다.",
+  // Info: (20260901 - Luphia) 三個終局判決各說各的話（review #6726 阻-1）
+  import_job_cancelled:
+    "이 가져오기는 취소되었습니다. 재개되지 않으며 포인트도 더 이상 차감되지 않습니다. 다시 시작하려면 파일을 다시 업로드하세요.",
+  import_job_completed_already:
+    "이 가져오기는 이미 완료되었습니다. 재개할 내용이 없습니다.",
+  import_job_forbidden: "이 계정에는 이 가져오기에 대한 권한이 없습니다.",
+  // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
+  import_auto_resuming:
+    "포인트가 충전되었습니다. 남은 장을 이어서 가져오는 중입니다. 이미 완료된 부분은 다시 실행되지 않습니다.",
+  // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）：伺服器算好的出路與重置時間
+  import_paused_reset_hint:
+    "사용량이 {{countdown}} 후({{resetAt}})에 초기화됩니다. 그때 가져오기를 이어서 진행할 수 있습니다.",
+  import_paused_reset_ready:
+    "사용량이 초기화되었습니다. 지금 가져오기를 이어서 진행할 수 있습니다.",
+  import_paused_over_window_limit:
+    "이 보고서는 한 번에 필요한 포인트가 요금제의 단일 구간 한도를 초과합니다 — 초기화를 기다려도 완료되지 않습니다. 개인 포인트를 사용하거나 요금제를 업그레이드하세요.",
+  import_paused_ways_title: "다음으로 할 수 있는 것:",
+  import_paused_option_wait_reset: "사용량 초기화를 기다리기(시간은 위에 표시)",
+  import_paused_option_use_allocation: "팀 관리자가 배분한 포인트 사용",
+  import_paused_option_use_personal: "내 지갑의 포인트 사용",
+  import_paused_option_upgrade: "요금제를 업그레이드해 한도 늘리기",
+  // Info: (20260827 - Luphia) 伺服器說「可以繼續了」與「不做了」（issue #6714）
+  import_paused_resumable:
+    "사용량이 돌아왔습니다. 다음 장은 아직 분석되지 않았습니다: {{chapters}}. 지금 이어서 진행할 수 있으며, 이미 완료된 부분은 다시 실행되지 않습니다.",
+  import_cancel_paused: "나머지는 그만두기",
+  import_cancelled:
+    "분석되지 않은 장을 그만두었습니다. 이미 완료된 부분은 남아 있으며 그대로 적용할 수 있습니다.",
+  import_cancel_failed: "그만두지 못했습니다. 잠시 후 다시 시도해 주세요.",
   import_resume_needs_file:
     "이어서 가져오려면 원본 파일이 필요하지만, 새로 고침하거나 다른 기기에서는 파일이 브라우저에 남아 있지 않습니다. 같은 보고서를 다시 업로드해 주세요(완료된 장은 다시 실행되지 않습니다).",
   import_resume_paused: "이어서 가져오기",
