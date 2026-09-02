@@ -287,11 +287,21 @@ jest.mock("@/services/team_invitation.service", () => ({
  */
 jest.mock("@/repositories/resumable_job.repo", () => ({
   resumableJobRepo: {
-    listResumableByUser: jest.fn(async () => []),
+    /**
+     * Info: (20260901 - Julian) 替身要照實模擬新的回傳形狀（§1.8）。
+     * 清單回 `{ items, hasMore }`，摘要另有一支不截斷的 `summarizeResumable`
+     * —— 兩支分開正是這一輪要修的東西，替身併成一支就測不到了。
+     */
+    listResumableByUser: jest.fn(async () => ({ items: [], hasMore: false })),
+    summarizeResumable: jest.fn(async () => ({
+      count: 0,
+      latestUpdatedAt: null,
+    })),
   },
 }));
 
 import { resumableJobRepo } from "@/repositories/resumable_job.repo";
+import { JOB_RESUMABLE_NOTICE_LIMIT } from "@/constants/resumable_job";
 import { buildCarbonChatChannel } from "@/constants/carbon_chatbot";
 import { notificationHrefOf } from "@/lib/notification_message";
 
@@ -1359,12 +1369,34 @@ describe("可以繼續的任務（活算待辦）", () => {
     ...overrides,
   });
 
+  /**
+   * Info: (20260901 - Julian) 清單與摘要是**兩支**查詢，但打的是同一批列。
+   *
+   * 替身分開餵會讓「徽章數的是全部、清單只有上限內那幾筆」這件事測不到，
+   * 也可能造出一個資料庫不可能給出的世界（§1.8）。這支把兩邊綁在一起：
+   * `count` 恆為整批的長度，清單則照上限截斷。
+   */
+  const givenResumable = (rows: ReturnType<typeof jobRow>[]) => {
+    asMock(resumableJobRepo.listResumableByUser).mockResolvedValue({
+      items: rows.slice(0, JOB_RESUMABLE_NOTICE_LIMIT),
+      hasMore: rows.length > JOB_RESUMABLE_NOTICE_LIMIT,
+    });
+    asMock(resumableJobRepo.summarizeResumable).mockResolvedValue({
+      count: rows.length,
+      latestUpdatedAt: rows.reduce<Date | null>(
+        (latest, row) =>
+          latest === null || row.updatedAt > latest ? row.updatedAt : latest,
+        null,
+      ),
+    });
+  };
+
   beforeEach(() => {
-    asMock(resumableJobRepo.listResumableByUser).mockResolvedValue([]);
+    givenResumable([]);
   });
 
   it("進待辦節，並帶得出進度", async () => {
-    asMock(resumableJobRepo.listResumableByUser).mockResolvedValue([jobRow()]);
+    givenResumable([jobRow()]);
 
     const list = await listNotifications({
       userId: USER,
@@ -1403,7 +1435,7 @@ describe("可以繼續的任務（活算待辦）", () => {
    * 所以這一條把真的 `notificationHrefOf` 接上去，斷言的是**組得出那條路**。
    */
   it("resourceKey 是碳盤查頻道時，深連結組得出來", async () => {
-    asMock(resumableJobRepo.listResumableByUser).mockResolvedValue([
+    givenResumable([
       jobRow({ resourceKey: buildCarbonChatChannel(ADDRESS, "sess-9") }),
     ]);
 
@@ -1429,9 +1461,7 @@ describe("可以繼續的任務（活算待辦）", () => {
    * 會被它騙。未來的非碳盤查 `JOB_TYPE` 也會落在這條路上。
    */
   it("resourceKey 不是頻道格式時不放 sessionId，通知不可點", async () => {
-    asMock(resumableJobRepo.listResumableByUser).mockResolvedValue([
-      jobRow({ resourceKey: "something-else" }),
-    ]);
+    givenResumable([jobRow({ resourceKey: "something-else" })]);
 
     const list = await listNotifications({
       userId: USER,
@@ -1444,7 +1474,7 @@ describe("可以繼續的任務（活算待辦）", () => {
   });
 
   it("算進 todoCount，不算進 completedCount", async () => {
-    asMock(resumableJobRepo.listResumableByUser).mockResolvedValue([
+    givenResumable([
       jobRow(),
       jobRow({ id: "job-2", resourceKey: "channel-2" }),
     ]);
@@ -1460,12 +1490,72 @@ describe("可以繼續的任務（活算待辦）", () => {
   });
 
   /**
+   * Info: (20260901 - Julian) 徽章數的是**全部**，不是清單上限（review：D4）。
+   *
+   * 先前 `todoCount` 直接拿 `listResumableByUser` 的 `length`，而那支帶
+   * `take: JOB_RESUMABLE_NOTICE_LIMIT`。於是第 6 份可以繼續的匯入起，
+   * 徽章與清單一起停在 5 —— 而同一行的另外兩個加數都沒有截斷
+   *（邀請沒有 `take`、入庫待辦走 `groupBy`）。三個加數混一個截斷值，
+   * 症狀是徽章少算且毫無提示，正是 `notification.repo.ts` 記過的 D4
+   *（「把 37 個完成通知顯示成 20」）換一個來源重演。
+   *
+   * 這一條與下面那條成對：計數要對，而清單的截斷要說得出來。
+   * 少了任一條，把 `summarizeResumable` 換回清單查詢都不會有人發現。
+   */
+  it("超過清單上限時，徽章仍然數得出全部", async () => {
+    const overflow = JOB_RESUMABLE_NOTICE_LIMIT + 3;
+    givenResumable(
+      Array.from({ length: overflow }, (unused, index) =>
+        jobRow({ id: `job-${index}`, resourceKey: `channel-${index}` }),
+      ),
+    );
+
+    const summary = await getNotificationSummary({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(summary.todoCount).toBe(overflow);
+  });
+
+  it("超過清單上限時，清單截斷而且說得出來", async () => {
+    const overflow = JOB_RESUMABLE_NOTICE_LIMIT + 3;
+    givenResumable(
+      Array.from({ length: overflow }, (unused, index) =>
+        jobRow({ id: `job-${index}`, resourceKey: `channel-${index}` }),
+      ),
+    );
+
+    const list = await listNotifications({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(list.todos).toHaveLength(JOB_RESUMABLE_NOTICE_LIMIT);
+    expect(list.hasMoreTodos).toBe(true);
+  });
+
+  it("沒有超過上限時不宣稱有更多", async () => {
+    givenResumable([jobRow()]);
+
+    const list = await listNotifications({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(list.hasMoreTodos).toBe(false);
+  });
+
+  /**
    * Info: (20260828 - Julian) 這條擋的是「用 createdAt」那個寫法。
    *
    * 改成 `createdAt` 之後，上面兩條照樣綠 —— 而 D17 會以那個路徑復活。
    */
   it("抵達時間取 updatedAt（這一次翻面），不是 createdAt（開始匯入）", async () => {
-    asMock(resumableJobRepo.listResumableByUser).mockResolvedValue([jobRow()]);
+    givenResumable([jobRow()]);
 
     const summary = await getNotificationSummary({
       userId: USER,

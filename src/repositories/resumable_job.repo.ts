@@ -151,12 +151,60 @@ export class ResumableJobRepository {
    * 這支會被每 60 秒的摘要輪詢打到，所以只選畫面用得到的欄位，
    * 並且靠 `@@index([userId, status])`。
    */
-  async listResumableByUser(userId: string): Promise<ResumableJob[]> {
-    return prisma.resumableJob.findMany({
+  async listResumableByUser(
+    userId: string,
+  ): Promise<{ items: ResumableJob[]; hasMore: boolean }> {
+    /**
+     * Info: (20260901 - Julian) 多取一則來判斷 hasMore（review：D4）。
+     *
+     * 與 `notificationRepo.listRecentExcludingTypes` 同一個慣用法。靜默截斷
+     * 會被讀成「這就是全部」，而使用者沒有任何方式發現少了幾份可以繼續的匯入。
+     */
+    const rows = await prisma.resumableJob.findMany({
       where: { userId, status: JOB_STATUS.RESUMABLE },
       orderBy: { updatedAt: "desc" },
-      take: JOB_RESUMABLE_NOTICE_LIMIT,
+      take: JOB_RESUMABLE_NOTICE_LIMIT + 1,
     });
+    return {
+      items: rows.slice(0, JOB_RESUMABLE_NOTICE_LIMIT),
+      hasMore: rows.length > JOB_RESUMABLE_NOTICE_LIMIT,
+    };
+  }
+
+  /**
+   * Info: (20260901 - Julian) 摘要用的計數與最新翻面時間（review：D4）。
+   *
+   * ## 為什麼摘要不能用 `listResumableByUser`
+   *
+   * 那一支帶 `take`，而摘要的 `todoCount` 是**徽章上的數字**。先前直接拿
+   * 它的 `length` 當計數，於是第 6 份可以繼續的匯入起，徽章與清單一起
+   * 停在 5 —— 而同一行的另外兩個加數都沒有截斷（邀請的查詢沒有 `take`、
+   * 入庫待辦走 `groupBy` 計數）。三個加數裡混一個截斷值，症狀是徽章
+   * 少算而且沒有任何提示，正是 `notification.repo.ts` 記過的 D4
+   *（「把 37 個完成通知顯示成 20」）換一個來源重演。
+   *
+   * ## 為什麼是 `aggregate` 而不是 `count` 加一支查詢
+   *
+   * 摘要同時要「幾筆」與「最新一次翻面是什麼時候」（後者是提示音的抵達鍵，
+   * 見 `arrivalKeyOf`）。兩件事來自同一批列，分兩次查不只多一趟往返，
+   * 還可能看到不一致的快照 —— 與 `summarizeUnread` 把 `_count` 與 `_max`
+   * 併進同一個 `groupBy` 是同一條理由。
+   *
+   * 走 `@@index([userId, status])`，不撈任何欄位。
+   */
+  async summarizeResumable(userId: string): Promise<{
+    count: number;
+    latestUpdatedAt: Date | null;
+  }> {
+    const result = await prisma.resumableJob.aggregate({
+      where: { userId, status: JOB_STATUS.RESUMABLE },
+      _count: { _all: true },
+      _max: { updatedAt: true },
+    });
+    return {
+      count: result._count._all,
+      latestUpdatedAt: result._max.updatedAt,
+    };
   }
 
   /**

@@ -34,11 +34,19 @@ jest.mock("@/lib/prisma", () => ({
   prisma: {
     resumableJob: {
       findMany: jest.fn(async () => []),
+      aggregate: jest.fn(async () => ({
+        _count: { _all: 0 },
+        _max: { updatedAt: null },
+      })),
     },
   },
 }));
 
 const findMany = prisma.resumableJob.findMany as unknown as ReturnType<
+  typeof jest.fn
+>;
+
+const aggregate = prisma.resumableJob.aggregate as unknown as ReturnType<
   typeof jest.fn
 >;
 
@@ -52,6 +60,10 @@ function whereOf(call = 0): Record<string, unknown> {
 beforeEach(() => {
   jest.clearAllMocks();
   findMany.mockResolvedValue([]);
+  aggregate.mockResolvedValue({
+    _count: { _all: 0 },
+    _max: { updatedAt: null },
+  });
 });
 
 describe("小鈴鐺的活算來源：只撈這個人的", () => {
@@ -68,13 +80,49 @@ describe("小鈴鐺的活算來源：只撈這個人的", () => {
    * Info: (20260831 - Julian) 上限與排序一起釘：這支會被每 60 秒的摘要輪詢打到。
    * 少了 `take`，一個累積了幾百筆的帳號會讓每一次輪詢都拖著整包資料。
    */
-  it("依 updatedAt 由新到舊，且帶上限", async () => {
+  it("依 updatedAt 由新到舊，且多取一則以判斷截斷", async () => {
+    /**
+     * Info: (20260901 - Julian) `take` 是**上限 + 1**（review：D4）。
+     *
+     * 多取的那一則不會進清單，它只用來回答「還有沒有更多」。少了它，
+     * 截斷就是靜默的 —— 而徽章數的是全部（`summarizeResumable`），
+     * 兩者分岔時畫面必須說得出一句話。
+     */
     await resumableJobRepo.listResumableByUser(USER);
 
     expect(findMany.mock.calls[0][0]).toMatchObject({
       orderBy: { updatedAt: "desc" },
-      take: JOB_RESUMABLE_NOTICE_LIMIT,
+      take: JOB_RESUMABLE_NOTICE_LIMIT + 1,
     });
+  });
+
+  /**
+   * Info: (20260901 - Julian) 截斷要說得出來，而且多取的那一則不得外流。
+   */
+  it("超過上限時只回上限內的筆數，並回報 hasMore", async () => {
+    const rows = Array.from(
+      { length: JOB_RESUMABLE_NOTICE_LIMIT + 1 },
+      (unused, index) => ({ id: `job-${index}` }),
+    );
+    findMany.mockResolvedValueOnce(rows);
+
+    const page = await resumableJobRepo.listResumableByUser(USER);
+
+    expect(page.items).toHaveLength(JOB_RESUMABLE_NOTICE_LIMIT);
+    expect(page.hasMore).toBe(true);
+  });
+
+  it("剛好等於上限時不算截斷", async () => {
+    const rows = Array.from(
+      { length: JOB_RESUMABLE_NOTICE_LIMIT },
+      (unused, index) => ({ id: `job-${index}` }),
+    );
+    findMany.mockResolvedValueOnce(rows);
+
+    const page = await resumableJobRepo.listResumableByUser(USER);
+
+    expect(page.items).toHaveLength(JOB_RESUMABLE_NOTICE_LIMIT);
+    expect(page.hasMore).toBe(false);
   });
 });
 
@@ -194,5 +242,64 @@ describe("沒有第四支未限定使用者的讀取", () => {
    */
   it("跨使用者的例外清單沒有變長", () => {
     expect(CROSS_USER_READS.length).toBeLessThanOrEqual(CROSS_USER_READS_MAX);
+  });
+});
+
+/**
+ * Info: (20260901 - Julian) 摘要那一支也要釘住條件（review：D4 的修正本身）。
+ *
+ * 這一組是實跑一次 mutation 之後補的：把 `summarizeResumable` 的
+ * `where: { userId, status }` 改成 `where: { userId }`，**5,057 條全綠**。
+ *
+ * 綠的原因與這個檔案開頭記的那一次一模一樣 —— 兩個消費端都把 repo 整包
+ * mock 掉，而新加的這支 repo 方法沒有任何測試碰過它交給 Prisma 的條件。
+ * 修一個 D4 的同時開一個新的同型缺口，正是檢查清單 §2.5 說的
+ *「放寬（或新增）一道之後，其他護欄的涵蓋範圍要重新量過」。
+ *
+ * 掉了 `status` 的後果：徽章把 PAUSED／RUNNING／CANCELLED 全部算進去，
+ * 於是它說 9 而清單只有 2 —— 徽章與清單分岔，而這正是這次修正要消滅的東西。
+ * 掉了 `userId` 的後果更糟：那是一個跨租戶的計數外洩。
+ */
+describe("摘要的活算來源：計數不得截斷，條件不得放寬", () => {
+  it("條件帶 userId 與 RESUMABLE", async () => {
+    await resumableJobRepo.summarizeResumable(USER);
+
+    expect(aggregate.mock.calls[0][0]).toMatchObject({
+      where: { userId: USER, status: JOB_STATUS.RESUMABLE },
+    });
+  });
+
+  /**
+   * Info: (20260901 - Julian) **不得帶 `take`。** 這一支存在的唯一理由就是
+   * 「徽章要數全部」——帶了上限就退回原本的缺陷，而且看起來完全正常。
+   */
+  it("不帶任何上限", async () => {
+    await resumableJobRepo.summarizeResumable(USER);
+
+    expect(aggregate.mock.calls[0][0]).not.toHaveProperty("take");
+  });
+
+  /**
+   * Info: (20260901 - Julian) 計數與最新翻面時間必須來自**同一次**查詢。
+   * 分兩次查不只多一趟往返，還可能看到不一致的快照（同 `summarizeUnread`）。
+   */
+  it("計數與最新 updatedAt 一次查完", async () => {
+    aggregate.mockResolvedValueOnce({
+      _count: { _all: 7 },
+      _max: { updatedAt: new Date(1_700_000_000_000) },
+    });
+
+    const result = await resumableJobRepo.summarizeResumable(USER);
+
+    expect(aggregate).toHaveBeenCalledTimes(1);
+    expect(result.count).toBe(7);
+    expect(result.latestUpdatedAt).toEqual(new Date(1_700_000_000_000));
+  });
+
+  it("一筆都沒有時回 0 與 null", async () => {
+    const result = await resumableJobRepo.summarizeResumable(USER);
+
+    expect(result.count).toBe(0);
+    expect(result.latestUpdatedAt).toBeNull();
   });
 });

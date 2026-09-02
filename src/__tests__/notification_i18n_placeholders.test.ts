@@ -102,6 +102,28 @@ describe("通知文案的五語系一致性", () => {
     expect(withPlaceholders.length).toBeGreaterThan(2);
   });
 
+  /**
+   * Info: (20260902 - Julian) `todos_capped` **不得帶任何插值**（review #6742）。
+   *
+   * 待辦節有三個來源（邀請不截斷、可接續最多 `JOB_RESUMABLE_NOTICE_LIMIT`
+   * 筆、入庫待辦最多 `NOTIFICATION_TODO_LIST_LIMIT` 筆），而旗標只反映中間
+   * 那一支 —— 任何數字都會與畫面實際列出的則數、以及徽章的總數分岔。
+   * 初版寫死成 5：2 封邀請 + 8 份可接續時，畫面 7 則、文案 5、徽章 10。
+   *
+   * 上面那條「鍵集合與基準一致」擋不住這件事：五個語系一起把 `{{count}}`
+   * 加回去時，兩邊的插值集合仍然相同 —— 逐鍵比對只看得見**分岔**，
+   * 看不見**一致地錯**。所以這一條直接對著那個鍵斷言。
+   *
+   * 元件那一側的對應斷言在 `notification_bell_wiring.test.ts`
+   *（不得出現 `JOB_RESUMABLE_NOTICE_LIMIT`）。兩側都要有：只擋文案的話
+   * 元件仍可以自己拼一個數字進去，只擋元件的話文案可以自己寫死一個。
+   */
+  it.each(Object.keys(LOCALES))("%s 的 todos_capped 不帶插值", (locale) => {
+    const dictionary = LOCALES[locale as keyof typeof LOCALES];
+
+    expect(placeholdersOf(dictionary.todos_capped)).toEqual([]);
+  });
+
   it.each(Object.keys(LOCALES))("%s 的鍵集合與基準完全一致", (locale) => {
     const dictionary = LOCALES[locale as keyof typeof LOCALES];
 

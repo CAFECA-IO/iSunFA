@@ -41,6 +41,8 @@ export default function NotificationsPage() {
   const { t } = useTranslation();
 
   const [todos, setTodos] = useState<INotificationItem[]>([]);
+  // Info: (20260901 - Julian) 待辦節被截斷了嗎（review：D4，理由同鈴鐺面板）
+  const [hasMoreTodos, setHasMoreTodos] = useState(false);
   const [history, setHistory] = useState<INotificationHistoryPage | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -70,6 +72,7 @@ export default function NotificationsPage() {
         "/api/v1/user/notifications",
       );
       setTodos(response.payload?.todos ?? []);
+      setHasMoreTodos(response.payload?.hasMoreTodos ?? false);
       setTodosFailed(false);
     } catch {
       /**
@@ -188,6 +191,12 @@ export default function NotificationsPage() {
                 showTimestamp
               />
             ))}
+            {/* Info: (20260902 - Julian) 不帶數字，理由同鈴鐺面板（review #6742） */}
+            {hasMoreTodos && (
+              <p className="text-text-muted px-3 pt-2 text-center text-xs">
+                {t("notification.todos_capped")}
+              </p>
+            )}
             {todosFailed && (
               <p className="text-text-muted px-3 py-4 text-center text-sm">
                 {t("notification.load_failed")}
