@@ -315,14 +315,41 @@ describe("年度的接線:hook 真的把年度帶進匯入(round-2 §1.7)", () =
     "utf-8",
   );
 
-  it("buildImportedLedger 收到 inventoryYearRef 的當下值", () => {
-    expect(hook).toContain("year: inventoryYearRef.current");
+  /**
+   * Info: (20260902 - Emily) 這兩條原本釘的是**缺陷本身**(issue_drafts/open/69)。
+   *
+   * 舊斷言:`year: inventoryYearRef.current` 與
+   * `inventoryYearRef.current = activeInventoryState?.year` ——
+   * 它們證明「年度有被帶進去」,而帶進去的那個值是**房間層**的 write-once
+   * `state.year`,不是那份報告的年度。兩份不同年度的報告因此拿到同一個值,
+   * 規則 3 恆不成立、快照恆只有一個鍵,而這兩條測試全綠。
+   *
+   * 這是本週第四次同一個形狀:照著當時的實作寫斷言,而不是照著判準寫。
+   * 判準是「年度必須來自那份報告」,所以現在釘的是**來源**:
+   * 取自預覽卡確認過的 `pendingImport.inventoryYear`,
+   * 而房間層那條鏡像必須已經不存在。
+   */
+  it("buildImportedLedger 的年度取自那份報告(預覽卡確認值)", () => {
+    expect(hook).toContain("year: pendingImport.inventoryYear");
   });
 
-  it("inventoryYearRef 有鏡像 activeInventoryState.year(否則它永遠是 undefined)", () => {
-    expect(hook).toContain(
+  it("房間層年度的鏡像已經拿掉(它是這張票要修掉的來源)", () => {
+    expect(hook).not.toContain("inventoryYearRef");
+    expect(hook).not.toContain(
       "inventoryYearRef.current = activeInventoryState?.year",
     );
+  });
+
+  it("快照鍵與規則 3 用同一個年度來源(三處各自判年度會出現錯鍋)", () => {
+    expect(hook).toContain("resolveIncomingYear(entries)");
+    expect(hook).toContain("[incomingYear]: buildYearSnapshot(entries)");
+    // Info: (20260902 - Emily) 舊形狀:[base.year] —— 房間層年度當鍵,兩份報告存進同一格
+    expect(hook).not.toContain("[base.year]:");
+  });
+
+  it("確認值跟著待匯入紀錄落地(重載後不必再填一次)", () => {
+    expect(hook).toContain("inventoryYear: pending.inventoryYear");
+    expect(hook).toContain("inventoryYear: payload.inventoryYear");
   });
 
   it("年度快照存那份報告的分錄,不是累積後的帳本(R1 第二項的接線)", () => {

@@ -344,6 +344,14 @@ export const CarbonReportImportLlmOutputSchema = z.object({
   segments: z.array(z.unknown()).max(100),
   unmapped: z.array(z.string().max(50_000)).max(100),
   activities: z.array(z.unknown()).max(50).optional(),
+  /**
+   * Info: (20260902 - Emily) 這份報告的盤查年度(issue_drafts/open/69)。
+   *
+   * 收字串而不是數字,理由與 activities 的 quantity 相同:模型會回
+   * 「2024」「2024年」「113」這些形狀,而**哪些收哪些退**是裁決,不是型別。
+   * 型別只擋「完全跑掉」(超長字串),裁決留給 normalizeInventoryYear。
+   */
+  inventoryYear: z.string().max(40).optional(),
 });
 export type CarbonReportImportLlmOutput = z.infer<
   typeof CarbonReportImportLlmOutputSchema

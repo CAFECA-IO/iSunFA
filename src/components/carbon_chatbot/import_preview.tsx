@@ -11,8 +11,11 @@ import {
   Loader2,
   Clock,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
+// Info: (20260902 - Emily) 表號取自產帳本的那支純函式,不在這裡再寫一份字串
+import { LEDGER_SOURCE_TABLE_NO } from "@/lib/carbon_table38.pipeline";
 
 export interface IPendingImportItem {
   paragraphId: string;
@@ -47,6 +50,17 @@ export interface IPendingImport {
   unmapped: string[];
   // Info: (20260716 - Tzuhan) 匯入的活動數據筆數(顯示用;實際合併於確認時執行)
   activityCount: number;
+  /**
+   * Info: (20260902 - Emily) 這份報告的盤查年度(issue_drafts/open/69)。
+   *
+   * 語意是「**這份報告**是哪一年」,與 `ICarbonInventoryState.year`
+   *(「**這個房間**在談哪一年」,write-once)是兩件事。在這張票之前帳本的年度
+   * 取自後者,於是同一間房匯入兩份不同年度的報告會拿到同一個值,
+   * 跨年度換鍋與年間比較全部空轉。
+   *
+   * 初值是萃取的預填(抽不到就 undefined),最終值由使用者在本卡確認。
+   */
+  inventoryYear?: number;
   // Info: (20260717 - Tzuhan) 逐章解析失敗的章節(id 供重試呼叫、title 供顯示;空陣列 = 全部成功)
   failedChapters: { id: string; title: string }[];
   /**
@@ -77,6 +91,13 @@ export interface IPendingImport {
 export interface IImportPreviewProps {
   pendingImport: IPendingImport;
   onToggleItem: (paragraphId: string) => void;
+  /**
+   * Info: (20260902 - Emily) 盤查年度的確認(issue_drafts/open/69)。
+   *
+   * 與 `onToggleItem` 同樣把值寫回 pending 而不是留在本元件的 state:
+   * 這張卡有「稍後再說」這條路,值留在元件裡等於關卡就丟。
+   */
+  onChangeInventoryYear: (year: number | undefined) => void;
   onApply: () => void;
   onDiscard: () => void;
   /**
@@ -111,6 +132,7 @@ export interface IImportPreviewProps {
 export function ImportPreview({
   pendingImport,
   onToggleItem,
+  onChangeInventoryYear,
   onApply,
   onDiscard,
   onDefer = undefined,
@@ -121,6 +143,45 @@ export function ImportPreview({
 }: IImportPreviewProps) {
   const { t } = useTranslation();
   const checkedCount = pendingImport.items.filter((i) => i.checked).length;
+  /**
+   * Info: (20260902 - Emily) 年度的編輯緩衝(issue_drafts/open/69)。
+   *
+   * 直接把 `pendingImport.inventoryYear`(number)當受控值不行:打第一個字
+   * 「2」不是合法年度,值會變 undefined,輸入框當場被清成空的,使用者根本打不完。
+   * 所以文字留在這裡、**只有裁決成功的數字往上送**。
+   */
+  const [yearText, setYearText] = useState<string>(
+    () => pendingImport.inventoryYear?.toString() ?? "",
+  );
+  /**
+   * Info: (20260902 - Emily) 萃取的預填晚到時才補（重試合併後才拿到年度）——
+   * 但**框裡已經有字就不動它**。這是 #6730 review 第二輪那條「歸還與指令要分開」
+   * 的同一個形狀:晚到的預填是建議,不是指令,不該蓋掉使用者手上打的字。
+   */
+  useEffect(() => {
+    const prefill = pendingImport.inventoryYear;
+    if (prefill === undefined) return;
+    setYearText((current) =>
+      current.trim().length > 0 ? current : String(prefill),
+    );
+  }, [pendingImport.inventoryYear]);
+  /**
+   * Info: (20260902 - Emily) 年度只在「這次匯入真的會產生帳本分錄」時是必填。
+   *
+   * 判準用表號而不是「有沒有表格」:帳本只由 `LEDGER_SOURCE_TABLE_NO` 產生
+   *(見 buildImportedLedger),別的表格入不了帳,年度對它們沒有作用。
+   * 一律必填會讓純文字章節的匯入被一個與它無關的欄位擋住 —— 那是新的缺陷,
+   * 不是更嚴格的把關。
+   */
+  const ledgerBearingChecked = pendingImport.items.some(
+    (item) =>
+      item.checked &&
+      (item.sourceTables ?? []).some(
+        (table) => table.tableNo === LEDGER_SOURCE_TABLE_NO,
+      ),
+  );
+  const yearMissing =
+    ledgerBearingChecked && pendingImport.inventoryYear === undefined;
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/30 p-4">
@@ -281,6 +342,46 @@ export function ImportPreview({
           )}
         </div>
 
+        {/* Info: (20260902 - Emily) 盤查年度:抽到當預填、抽不到要求填(issue_drafts/open/69) */}
+        <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 px-5 py-3">
+          <label
+            htmlFor="carbon-import-inventory-year"
+            className="text-xs font-bold text-gray-500"
+          >
+            {t("carbon_chatbot.import_inventory_year")}
+          </label>
+          <input
+            id="carbon-import-inventory-year"
+            type="text"
+            inputMode="numeric"
+            value={yearText}
+            onChange={(e) => {
+              const next = e.target.value.trim();
+              setYearText(e.target.value);
+              /**
+               * Info: (20260902 - Emily) 只有四位數字才往上送,其餘一律 undefined ——
+               * 「打到一半」與「沒填」在這裡必須是同一個結果,否則帳本會拿到 `20`。
+               */
+              onChangeInventoryYear(
+                /^\d{4}$/.test(next) ? Number(next) : undefined,
+              );
+            }}
+            placeholder={t("carbon_chatbot.import_inventory_year_placeholder")}
+            className={`w-24 rounded-lg border px-2 py-1 text-sm ${
+              yearMissing
+                ? "border-red-300 bg-red-50 text-red-700"
+                : "border-gray-200 text-gray-700"
+            }`}
+          />
+          <span
+            className={`text-[11px] ${yearMissing ? "text-red-500" : "text-gray-400"}`}
+          >
+            {yearMissing
+              ? t("carbon_chatbot.import_inventory_year_required")
+              : t("carbon_chatbot.import_inventory_year_hint")}
+          </span>
+        </div>
+
         <div className="flex items-center justify-between gap-2 border-t border-gray-100 px-5 py-3">
           {/* Info: (20260716 - Tzuhan) 匯入即重置查核 + 數字重勾稽:對使用者明示,非隱性行為 */}
           <span className="text-[11px] text-gray-400">
@@ -311,7 +412,7 @@ export function ImportPreview({
             <button
               type="button"
               onClick={onApply}
-              disabled={checkedCount === 0}
+              disabled={checkedCount === 0 || yearMissing}
               className="flex items-center gap-1.5 rounded-full bg-[#ff5a00] px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#e04f00] disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               <Check size={14} />

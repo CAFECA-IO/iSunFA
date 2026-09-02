@@ -91,6 +91,18 @@ export interface IReportImportResult {
   unmapped: string[];
   // Info: (20260716 - Tzuhan) 報告中的活動數據(已裁決):進帳本後由 /calculate 重新勾稽
   activities: IActivityRecord[];
+  /**
+   * Info: (20260902 - Emily) 這份報告的盤查年度,**只當預填**(issue_drafts/open/69)。
+   *
+   * 它是「這份報告是哪一年」,不是「這個房間在談哪一年」。前者隨報告走、
+   * 一間房可以有兩個;後者是 `ICarbonInventoryState.year`,write-once。
+   * 在這張票之前帳本的年度取自後者,於是同一間房匯入兩份不同年度的報告會拿到
+   * 同一個年度值 —— 跨年度換鍋、`ledgerByYear` 快照、年間比較三個機制一起空轉。
+   *
+   * 抽不到就是 `undefined`,不猜:歸屬抽錯比抽不到嚴重,錯的年度會靜默改變
+   * 哪些分錄被剔除。最終生效的年度一律是使用者在預覽卡上確認過的那個值。
+   */
+  inventoryYear?: number;
 }
 
 /**
@@ -187,12 +199,57 @@ const buildImportResponseSchema = (
         required: ["scopeCategory", "sourceName", "quantity", "unit"],
       },
     };
+    /**
+     * Info: (20260902 - Emily) 盤查年度與 activities 同掛在第一次呼叫
+     * (issue_drafts/open/69):逐章匯入會呼叫十一次,十一次各回一個年度
+     * 只會讓「以哪一個為準」變成新的裁決題,而報告的盤查年度全份只有一個。
+     *
+     * 型別是 STRING 不是 NUMBER:模型抽到的是封面上的字樣,而封面寫法不一
+     * (民國/西元/「盤查年度」/「報導期間」)。要它先照抄再由我們裁決,
+     * 比要它回一個數字然後我們無從分辨它是抄的還是算的要好。
+     */
+    properties.inventoryYear = {
+      type: SchemaType.STRING,
+      description:
+        "這份報告的盤查年度,西元四位數(如 2024)。原文若寫民國年(如 民國113年)請換算為西元。" +
+        "報導期間跨兩個年度時填**盤查年度**那一個;報告沒有明確寫出盤查年度就回空字串,嚴禁推測。",
+    };
   }
   return {
     type: SchemaType.OBJECT,
     properties,
     required: ["segments", "unmapped"],
   };
+};
+
+// Info: (20260902 - Emily) 盤查報告不會早於這一年(issue_drafts/open/69 的範圍下限)
+export const INVENTORY_YEAR_MIN = 1990;
+
+/**
+ * Info: (20260902 - Emily) 盤查年度的裁決(issue_drafts/open/69)。
+ *
+ * 收下模型抄回來的字樣,只在**能唯一確定**時給出數字,其餘一律 `undefined`:
+ * - `2024` / `2024年` / ` 2024 ` → 2024(前後的非數字字樣不影響唯一性)
+ * - `113`(民國年)→ 退回。**不在這裡 +1911**:三位數字也可能是頁碼、
+ *   表號或模型截斷的產物,而換算會把「抄錯」變成一個看起來很正常的年度。
+ *   prompt 已要求模型自己換算;它沒照做就是沒抽到,交給使用者填。
+ * - `2023-2024` / `2023、2024` → 退回:兩個年度代表這份報告的歸屬本身有歧義,
+ *   由使用者裁決而不是由我們挑一個。
+ * - 範圍外(過早或未來太遠)→ 退回。盤查報告不會早於 1990,也不會晚於明年。
+ *
+ * 判準是「抽錯比抽不到嚴重」:抽不到會在預覽卡上要求使用者填,
+ * 抽錯則會靜默改變跨年度合併時哪些分錄被剔除,而畫面上看不出異狀。
+ */
+export const normalizeInventoryYear = (
+  raw: string | undefined,
+  currentYear: number = new Date().getFullYear(),
+): number | undefined => {
+  if (raw === undefined) return undefined;
+  const matched = /^\D*(\d{4})\D*$/.exec(raw.trim());
+  if (matched === null) return undefined;
+  const year = Number(matched[1]);
+  if (year < INVENTORY_YEAR_MIN || year > currentYear + 1) return undefined;
+  return year;
 };
 
 // Info: (20260727 - Tzuhan) #57 草稿補齊 responseSchema:段落 id 以 enum 鎖死;內容為「依據原文撰寫的草稿」
@@ -800,7 +857,7 @@ ${source.data}`;
 【對應規則】
 1. content 逐字照抄原文,嚴禁改寫、摘要、翻譯或補充任何文字。
 2. paragraphId 只能從下方大綱挑選;對不上任何段落的內容放入 unmapped(同樣原樣照抄)。
-3. ${withActivities ? "activities:報告中的活動數據(用電量、油耗等),quantity 原樣照抄為字串,嚴禁換算;單位對不上列舉就整筆省略。" : "本次呼叫不需要萃取活動數據。"}
+3. ${withActivities ? "activities:報告中的活動數據(用電量、油耗等),quantity 原樣照抄為字串,嚴禁換算;單位對不上列舉就整筆省略。inventoryYear:這份報告的盤查年度,西元四位數(原文寫民國年請換算;報導期間跨兩年時填盤查年度那一個);**報告沒有明確寫出就回空字串,嚴禁推測**。" : "本次呼叫不需要萃取活動數據,也不需要回報盤查年度。"}
 4. 語言:${language ?? "zh-TW"}(僅影響你對標題語意的理解,內容一律照抄)。${scopeRule}
 
 【表格規則】
@@ -1330,7 +1387,21 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
       rawSample: JSON.stringify(parsed.activities ?? null).slice(0, 200),
     });
 
-    return { segments, unmapped, activities };
+    /**
+     * Info: (20260902 - Emily) 盤查年度的裁決結果留痕(issue_drafts/open/69)。
+     *
+     * 與 activities 的被拒紀錄同一個理由:預覽卡上年度是空的時候,現場要分得開
+     * 「模型回了空字串」與「模型回了東西但被裁決退掉」—— 後者才需要回頭看
+     * 封面寫法是不是我們沒涵蓋到的形狀。只在模型真的回了非空字串時印。
+     */
+    const inventoryYear = normalizeInventoryYear(parsed.inventoryYear);
+    if ((parsed.inventoryYear ?? "").trim().length > 0) {
+      logger.info("[ReportImportService] inventory year adjudicated", {
+        raw: String(parsed.inventoryYear).slice(0, 40),
+        accepted: inventoryYear ?? null,
+      });
+    }
+    return { segments, unmapped, activities, inventoryYear };
   }
 
   /**

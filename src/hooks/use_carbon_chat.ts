@@ -40,6 +40,7 @@ import { isImportedEntry } from "@/lib/carbon_table38.ledger";
 import {
   buildYearSnapshot,
   detectUndatedImportedEntries,
+  resolveIncomingYear,
   mergeImportedLedgerEntries,
 } from "@/lib/carbon_ledger_totals";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
@@ -438,6 +439,27 @@ export const useCarbonChat = () => {
       });
     },
     [],
+  );
+
+  /**
+   * Info: (20260902 - Emily) 預覽卡上確認的盤查年度(issue_drafts/open/69)。
+   *
+   * 寫回 pending 而不是另存一份 state:它要跟著待匯入紀錄一起入庫
+   *(「稍後再說」與重載之後仍在),而 pending 已經是那份紀錄的唯一真值來源。
+   * 這裡只寫記憶體;落地由 persistPendingImport 那條既有的路負責。
+   */
+  const setPendingInventoryYear = useCallback(
+    (year: number | undefined) => {
+      setPendingImportBySession((prev) => {
+        const current = prev[activeSessionId];
+        if (!current || current.inventoryYear === year) return prev;
+        return {
+          ...prev,
+          [activeSessionId]: { ...current, inventoryYear: year },
+        };
+      });
+    },
+    [activeSessionId],
   );
 
   /**
@@ -1430,16 +1452,6 @@ export const useCarbonChat = () => {
   useEffect(() => {
     ledgerImportBlocksRef.current = activeInventoryState?.ledgerImportBlocks;
   }, [activeInventoryState?.ledgerImportBlocks]);
-  /**
-   * Info: (20260827 - Emily) 盤查年度的同步鏡像(PR #6725 review R1;
-   * 與 computedLedgerRef 同一個理由:匯入分錄在 setState 生效之前就要標上年度)。
-   * 沒有年度就是沒有 —— 不由旁證推測,合併端會退回「不判年度」的舊行為。
-   */
-  const inventoryYearRef = useRef<number | undefined>(undefined);
-  useEffect(() => {
-    inventoryYearRef.current = activeInventoryState?.year;
-  }, [activeInventoryState?.year]);
-
   // Info: (20260720 - Tzuhan) #51 圖表文案(i18n;數值本身一律引擎產出,與語言無關)
   const chartLabels: ICarbonChartLabels = useMemo(
     () => ({
@@ -1707,6 +1719,8 @@ export const useCarbonChat = () => {
           base.computedLedger,
           entries,
         );
+        // Info: (20260902 - Emily) 快照鍵與規則 3 用同一個年度(issue_drafts/open/69)
+        const incomingYear = resolveIncomingYear(entries);
         return {
           ...prev,
           [channel]: {
@@ -1714,7 +1728,7 @@ export const useCarbonChat = () => {
             computedLedger: merged,
             /**
              * Info: (20260825 - Emily) #6719 年度快照:報告有盤查年度才存
-             * (state.year 由萃取而來;沒有年度的帳本存進去只會製造假比較)。
+             *(沒有年度的帳本存進去只會製造假比較)。
              * 同年度重匯覆蓋該年,與同鍵覆蓋語義一致。
              *
              * Info: (20260827 - Emily) 快照存**那份報告的分錄**,不是累積後的帳本
@@ -1722,12 +1736,19 @@ export const useCarbonChat = () => {
              * 含有 2024 匯入的東西 —— 年間比較於是拿自己跟自己比,
              * 而那正是這個欄位存在的理由被抵銷掉的方式。
              * 小計與總計走同一支 summarizeLedgerEntries(不另外累加)。
+             *
+             * Info: (20260902 - Emily) 鍵改用**這批分錄自己的年度**
+             *(issue_drafts/open/69),不再用 `base.year`。
+             * `base.year` 是房間層、write-once,兩份不同年度的報告會存進同一個鍵 ——
+             * 這個 Record 於是永遠只有一個鍵,而年間比較需要兩個。
+             * 與規則 3 的剔除、年度警示共用 `resolveIncomingYear`:三處若各自
+             * 判年度,就會出現「剔除了 2023、快照卻存到 2024」這種帳面正常的錯鍋。
              */
-            ...(base.year !== undefined
+            ...(incomingYear !== undefined
               ? {
                   ledgerByYear: {
                     ...base.ledgerByYear,
-                    [base.year]: buildYearSnapshot(entries),
+                    [incomingYear]: buildYearSnapshot(entries),
                   },
                 }
               : {}),
@@ -2108,6 +2129,15 @@ export const useCarbonChat = () => {
         }[];
         unmapped: string[];
         activities?: IActivityRecord[];
+        /**
+         * Info: (20260902 - Emily) 這份報告的盤查年度(issue_drafts/open/69)。
+         *
+         * **這裡不宣告就等於沒有**:與上面 sourceTables 同一個坑 ——
+         * API 一直有回,而逐章合併只搬它認得的欄位,
+         * 漏宣告的欄位會被靜默丟棄,畫面上毫無異狀。
+         * 只有第一次呼叫(extractActivities)會帶,其餘章節是 undefined。
+         */
+        inventoryYear?: number;
       }
       /**
        * Info: (20260805 - Tzuhan) 把章切成「單次呼叫跑得完」的工作單元。
@@ -2327,6 +2357,8 @@ export const useCarbonChat = () => {
         { title: string; parts: string[]; sourceTables: ICarbonSourceTable[] }
       >();
       const unmapped: string[] = [];
+      // Info: (20260902 - Emily) 盤查年度:第一個抽到的為準(見下方合併處的理由)
+      let inventoryYear: number | undefined;
       let activities: IActivityRecord[] = [];
       results.forEach((chunk) => {
         if (!chunk) return;
@@ -2369,6 +2401,19 @@ export const useCarbonChat = () => {
         if (chunk.activities && chunk.activities.length > 0) {
           activities = [...activities, ...chunk.activities];
         }
+        /**
+         * Info: (20260902 - Emily) 年度取**第一個抽到的**,後到的不覆蓋
+         *(issue_drafts/open/69)。
+         *
+         * 一份報告的盤查年度只有一個,而只有第一次呼叫會要求模型回它 ——
+         * 其餘章節一律 undefined。寫成賦值(`inventoryYear = chunk.inventoryYear`)
+         * 就會被後面十次的 undefined 蓋掉,而那正好等於這張票沒做:
+         * 年度回到未知 → 規則 3 不成立 → 孤兒列照留。
+         * 這與 activities 那條「累加而不是覆蓋」是同一個教訓的另一半。
+         */
+        if (inventoryYear === undefined && chunk.inventoryYear !== undefined) {
+          inventoryYear = chunk.inventoryYear;
+        }
       });
 
       /**
@@ -2401,6 +2446,7 @@ export const useCarbonChat = () => {
         ),
         unmapped,
         activities,
+        inventoryYear,
         failed,
         pausedBy,
         // Info: (20260825 - Luphia) 接續用（份粒度）與顯示用（章）各一份
@@ -2539,6 +2585,8 @@ export const useCarbonChat = () => {
                 items: pending.items,
                 unmapped: pending.unmapped,
                 activityCount: pending.activityCount,
+                // Info: (20260902 - Emily) 確認過的年度跟著紀錄走,重載後不必再填一次
+                inventoryYear: pending.inventoryYear,
                 failedChapters: pending.failedChapters ?? [],
               },
               activities,
@@ -2815,6 +2863,8 @@ export const useCarbonChat = () => {
           segments: { paragraphId: string; title: string; content: string }[];
           unmapped: string[];
           activities: IActivityRecord[];
+          // Info: (20260902 - Emily) 盤查年度的預填(issue_drafts/open/69);抽不到就是 undefined
+          inventoryYear?: number;
         };
         let failedChapters: { id: string; title: string }[] = [];
         // Info: (20260825 - Luphia) 點數用完而還沒做的章（issue #6713）；與 failed 分開
@@ -2875,6 +2925,8 @@ export const useCarbonChat = () => {
             }[];
             unmapped: string[];
             activities: IActivityRecord[];
+            // Info: (20260902 - Emily) 單發全綱同樣是「第一次呼叫」,年度就在這一份回應裡
+            inventoryYear?: number;
           }>("/api/v1/chat/carbon/import", { method: "POST", body: formData });
           /**
            * Info: (20260806 - Tzuhan) 信封裡的失敗轉回拋出。
@@ -2969,6 +3021,11 @@ export const useCarbonChat = () => {
           ],
           unmapped: payload.unmapped,
           activityCount: payload.activities.length,
+          /**
+           * Info: (20260902 - Emily) 萃取到的盤查年度只當**預填**(issue_drafts/open/69):
+           * 抽不到就是 undefined,預覽卡會要求使用者填(而不是拿房間層的年度頂替)。
+           */
+          inventoryYear: payload.inventoryYear,
           failedChapters,
           /**
            * Info: (20260825 - Luphia) 暫停的斷點跟著解析結果一起存（issue #6713）：
@@ -3598,11 +3655,17 @@ export const useCarbonChat = () => {
       /**
        * Info: (20260827 - Emily) 年度隨分錄走(PR #6725 review R1):
        * 沒有年度的匯入項在跨年度合併時無從分辨,會留下孤兒列被算進總量。
-       * 年度取自盤查狀態(由萃取而來);沒有就不帶,合併端會退回舊行為。
+       *
+       * Info: (20260902 - Emily) 年度取自**這份報告**在預覽卡上被確認的值
+       *(issue_drafts/open/69),不再取自房間層的 `state.year`。
+       * 那個欄位是「這個房間在談哪一年」且 write-once,同一間房匯入兩份不同年度的
+       * 報告會拿到同一個值 —— `entryYear === incomingYear` 恆成立,不剔除,
+       * 孤兒列照留,而跨年度換鍋、`ledgerByYear` 快照、年間比較三個機制一起空轉。
+       * 沒確認就不帶(預覽卡在有排放總量表時已擋住送出),合併端退回舊行為。
        */
       const result = buildImportedLedger({
         sourceTables: tables,
-        year: inventoryYearRef.current,
+        year: pendingImport.inventoryYear,
       });
       if (result.disclosure === null) return;
       importedLedgerById.set(item.paragraphId, result);
@@ -5837,6 +5900,8 @@ export const useCarbonChat = () => {
     pendingImport,
     importReportFile,
     toggleImportItem,
+    // Info: (20260902 - Emily) 預覽卡上確認盤查年度(issue_drafts/open/69)
+    setPendingInventoryYear,
     applyPendingImport,
     discardPendingImport,
     /**

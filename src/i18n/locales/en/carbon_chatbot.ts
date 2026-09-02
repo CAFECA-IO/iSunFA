@@ -184,6 +184,12 @@ export const carbonChatbot = {
     "Parsed result saved for {{name}} — {{count}} section(s), not yet written into the report",
   import_pending_open: "Review and import",
   import_pending_discard: "Discard",
+  import_inventory_year: "Inventory year",
+  import_inventory_year_placeholder: "2024",
+  import_inventory_year_hint:
+    "The inventory year of this report. Used to tell which ledger entries belong to which year across imports",
+  import_inventory_year_required:
+    "This import includes the emissions total table — enter the inventory year of this report",
   import_reset_note:
     "Verification resets for imported paragraphs; {{activities}} activity records will be re-reconciled",
   import_apply: "Import selected ({{count}})",
