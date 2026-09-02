@@ -304,20 +304,26 @@ const linkEmployee = (employee: ISalaryCalculatorEmployee) => {
 
 | 測試檔 | 型別 | 釘住什麼 |
 |---|---|---|
-| `salary_employee_profile.test.ts` | 純函式 | **這次的主判準**：`applyEmployeeProfile` 蓋掉 14 個常態欄位、**一個當月變動欄位都不碰**（用 `Object.keys` 對拍分類表，新增欄位忘了分類就會紅）；`diffEmployeeProfile` 對 14 個欄位各測一格 |
-| `salary_employee_profile.tz.test.ts` | 純函式（釘時區） | `hireDate` ↔ `isJoined`/`dayOfJoining` 的推導。**必須在 `America/New_York` 跑**：`getDate()` 與 `getUTCDate()` 在 UTC 與 UTC+8 都分不出來（§2.3） |
-| `salary_pension_rate.test.ts` | 純函式 | 費率 ↔ 百分點來回不失真，0.06 → 6 → 0.06；並釘住「不是 BigInt」（§2.2） |
-| `salary_repo.e2e.test.ts` | e2e（擴充既有） | 13 個新欄位的預設值真的生效（既有列讀出來是預設值不是 null）；`hire_date` 存進去讀回來同一天 |
+| `salary_employee_profile.test.ts` | 純函式 | **這次的主判準**：34 個表單欄位的三份分類清單恰好蓋滿且互不重疊、**16 個當月變動欄位一個都沒混進員工檔**、常態 16 → 員工檔 15 的對照沒有漏接；`diffEmployeeProfile` 逐欄列出 before/after，浮點誤差不算差異但差一塊錢要算。分類清單**手寫、不從程式碼推導** —— 推導的話有人把加班時數搬進去，兩邊同時變而測試全綠 |
+| `salary_employee_profile.tz.test.ts` | 純函式（釘時區） | `hireDate` ↔ `isJoined`/`dayOfJoining` 的推導，含每月 1 號／31 號、跨月、跨年、只有離職日、NaN。**實跑 mutation**：三個 `getUTC*` 改成本地版本 → `TZ=UTC` 11 passed、`TZ=Asia/Taipei` 11 passed、`TZ=America/New_York` **7 failed** —— 檔名帶 `.tz` 不是形式 |
+| `salary_pension_rate.test.ts` | 純函式 | 費率 ↔ 百分點的七個檔位逐格釘死（只驗來回的話，一對「都乘以 10」的函式也會全綠）；讀取路徑的異常值夾到合法檔位。**附帶更正**：0–6 這個值域裡 `i * 0.01 * 100` 其實是精確的，原本設想的「0.03 浮點漂移」不成立，該條已改成用一個 UI 產不出來的值去區分 `round` 與 `trunc` |
+| `salary_repo.e2e.test.ts` | e2e（擴充既有） | 15 欄存進去原樣讀回來（create 的回傳、重新查詢、列表三邊一致）；`voluntary_pension_rate` 存 6 讀回來還是 6 且型別是 number 不是 bigint；`hire_date` 來回不差一天；更新會改到 15 欄而不只是金額；**既有列**（繞過 repository 只建必填欄位）讀出來是預設值不是 null |
 | `salary_schema_defaults.test.ts` | 掃描（擴充既有） | 13 欄各自的 `@default` 都在 —— 少一個就會讓既有列 push 失敗 |
 | `salary_route_wiring.test.ts` | route（擴充既有） | `POST`/`PUT employee` 的新必填欄位缺一個就回 400 |
 | `salary_validators.test.ts` | 純函式（擴充既有） | `voluntaryPensionRate` 值域 0–6 且必須是整數；`employmentType` 值域等於 `Object.keys(EmploymentType)` |
 | `salary_load_back_identity.test.ts` | 掃描（擴充既有） | `loadBackHandler` 的「先連結後灌快照」順序（§4.1）；「直接新增員工」帶的是完整 profile（§4.3） |
 
-**每一條都要實跑 mutation 確認會紅**（checklist §7.2.1）。最重要的三個 mutation：
+**每一條都要實跑 mutation 確認會紅**（checklist §7.2.1）。已實跑：
 
-1. 把一個加班時數欄位加進 `ISalaryEmployeeProfile` → 分類對拍那條要紅
-2. `hireDate` 推導改用 `getDate()` → `TZ=America/New_York` 要紅、`TZ=UTC` 綠（證明檔名帶 `.tz` 是必要的）
-3. 「直接新增員工」改回只帶 5 個欄位 → 要紅
+| mutation | 結果 |
+|---|---|
+| `dayInMonth` 的三個 `getUTC*` → `getFullYear`/`getMonth`/`getDate` | `TZ=UTC` 11 passed、`TZ=Asia/Taipei` 11 passed、**`TZ=America/New_York` 7 failed** ✅ |
+
+待實跑（B 落地後或本 PR 收尾時）：
+
+1. 把 `sickLeaveHours` 加進 `ISalaryEmployeeProfile` 與分類表 → 「當月變動一個都沒混進來」要紅
+2. 「直接新增員工」改回只帶 5 個欄位 → 要紅（目前靠型別擋，但型別擋不住有人補一個 `DEFAULT_EMPLOYEE_PROFILE` 上去）
+3. 拿掉任一欄的 `@default` → `salary_schema_defaults` 要紅
 
 ---
 
@@ -327,11 +333,24 @@ const linkEmployee = (employee: ISalaryCalculatorEmployee) => {
 
 | PR | 內容 | 可獨立 merge |
 |---|---|---|
-| **A：資料層** | schema 13 欄 + repo + service + validator + API + `ISalaryEmployeeProfile` + 費率／日期兩支純函式與其測試 + e2e 擴充 | ✅ UI 完全不動，行為零變化 |
-| **B：前端** | `linkEmployee` 擴充、`employee_action_modal` 19 欄表單、「直接新增」帶完整 profile、`ProfileDiffModal`、五語系 | 依賴 A |
+| **A：資料層** | schema 13 欄 + repo + service + validator + API + `ISalaryEmployeeProfile` + 三支純函式與其測試 + e2e 擴充 + **兩個寫入呼叫端** | ✅ 沒有新 UI |
+| **B：前端** | `linkEmployee` 擴充（載入）、`employee_action_modal` 19 欄表單、`ProfileDiffModal`（回寫）、五語系 | 依賴 A |
 
-A 是「多了 13 個沒人讀的欄位」，B 才讓功能出現。這樣切的好處是 A 的 review 面是純資料層、
-B 的 review 面是純 UI，而 review 一支 82 檔的 PR 是什麼下場，#6737 已經示範過（§7.2.10）。
+**實作時 A / B 的界線往 A 移了一格**（20260902）：原本打算把「直接新增員工」
+與「編輯員工」留給 B，但 `ISalaryCalculatorEmployeeWriteInput` 整組必填之後，
+那兩個呼叫端在 A 就會編譯失敗 —— 而讓它們編譯通過的**唯一正確做法**就是把值帶對：
+
+- `employee_action_modal`：13 個沒有介面的欄位**原樣帶回去**（編輯取現值、新增取預設值）。
+  少了這個，「改個名字」會順便把那個人的投保狀態、扶養人數、到職日全部重設。
+- `salary_result_section` 的「直接新增並儲存」：帶 `getEmployeeProfile()`，也就是
+  計算機當下的 15 個欄位。少了這個就是 §4.3 那個坑 —— 而那是一個**已知會靜默毀資料**的缺陷，
+  不能用「下一支 PR 會修」帶過。
+
+換句話說：型別把「這個功能不能做一半」變成了編譯期的事實。A 因此比原計畫多動兩個元件，
+但**沒有新的輸入介面**，行為上只多了「新增員工時會帶上計算機當下的設定」這一項改善。
+
+A 的 review 面仍是資料層 + 兩個很短的呼叫端，B 才是 UI。
+review 一支 82 檔的 PR 是什麼下場，#6737 已經示範過（§7.2.10）。
 
 ---
 

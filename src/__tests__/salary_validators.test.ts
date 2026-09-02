@@ -1,6 +1,7 @@
 import { describe, it, expect } from "@jest/globals";
 import { defaultSalaryCalculatorResult } from "@/interfaces/salary_calculator";
 import { SALARY_RECORD_MIN_YEAR } from "@/constants/salary_calculator";
+import { DEFAULT_INDUSTRY_CODE } from "@/constants/industry_category";
 import {
   salaryCalculatorEmployeeWriteSchema,
   salaryRecordQuerySchema,
@@ -154,6 +155,19 @@ describe("salaryCalculatorEmployeeWriteSchema：身分鍵是編號不是 Email",
     email: "ming@example.com",
     baseSalary: 30000,
     mealAllowance: 3000,
+    otherAllowanceTaxable: 2000,
+    otherAllowanceTaxFree: 0,
+    industryCode: DEFAULT_INDUSTRY_CODE,
+    isForeignWorker: false,
+    employmentType: "FULL_TIME",
+    baseSalary30Days: true,
+    isLaborInsured: true,
+    isHealthInsured: true,
+    isPensionInsured: true,
+    dependentsCount: 0,
+    voluntaryPensionRate: 0,
+    hireDate: null,
+    resignDate: null,
   };
 
   it("基準線通過", () => {
@@ -199,6 +213,143 @@ describe("salaryCalculatorEmployeeWriteSchema：身分鍵是編號不是 Email",
         }).success,
       ).toBe(false);
     }
+  });
+
+  /**
+   * Info: (20260902 - Julian) 常態屬性整組必填 —— 這一條守的是「少一欄」。
+   *
+   * 少一欄不會有任何症狀：後端照收，落到 schema 的 `@default`，
+   * 而使用者在計算機設好的那一欄就這樣不見了，下個月選這個人才發現。
+   * 逐欄拿掉一次，每一次都必須被擋下來。
+   */
+  it.each([
+    "baseSalary",
+    "mealAllowance",
+    "otherAllowanceTaxable",
+    "otherAllowanceTaxFree",
+    "industryCode",
+    "isForeignWorker",
+    "employmentType",
+    "baseSalary30Days",
+    "isLaborInsured",
+    "isHealthInsured",
+    "isPensionInsured",
+    "dependentsCount",
+    "voluntaryPensionRate",
+    "hireDate",
+    "resignDate",
+  ])("少了 %s 就擋下來（不能靜靜落到 schema 的 @default）", (field) => {
+    expect(
+      salaryCalculatorEmployeeWriteSchema.safeParse(
+        omitKey(VALID_EMPLOYEE, field as keyof typeof VALID_EMPLOYEE),
+      ).success,
+    ).toBe(false);
+  });
+
+  /**
+   * Info: (20260902 - Julian) 自提勞退費率是**百分點整數 0–6**，不是 0.06 那個小數。
+   *
+   * `0.06` 送進來必須被擋 —— 那正是呼叫端忘了走 `toPensionRatePercent()` 的症狀。
+   * 放行的話資料庫會同時存在「6」與「0.06」兩種寫法，而讀回來的人無從分辨。
+   */
+  it.each([
+    ["UI 的小數費率", 0.06],
+    ["超過上限", 7],
+    ["負數", -1],
+  ])("自提勞退費率：%s 擋下來", (_label, voluntaryPensionRate) => {
+    expect(
+      salaryCalculatorEmployeeWriteSchema.safeParse({
+        ...VALID_EMPLOYEE,
+        voluntaryPensionRate,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("自提勞退費率收 0–6 的整數", () => {
+    for (const percent of [0, 1, 2, 3, 4, 5, 6]) {
+      expect(
+        salaryCalculatorEmployeeWriteSchema.safeParse({
+          ...VALID_EMPLOYEE,
+          voluntaryPensionRate: percent,
+        }).success,
+      ).toBe(true);
+    }
+  });
+
+  /**
+   * Info: (20260902 - Julian) 行業別的值域來自選項清單，不是一個手寫的 min/max。
+   *
+   * 代碼不連續（清單是 1–55 但中間有跳號），寫死區間會放進不存在的代碼，
+   * 而引擎查表落空之後算出來的結果沒有任何提示。
+   */
+  it("行業別代碼必須真的在選項清單裡", () => {
+    expect(
+      salaryCalculatorEmployeeWriteSchema.safeParse({
+        ...VALID_EMPLOYEE,
+        industryCode: 9999,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("employmentType 只收 EmploymentType 的鍵，不收顯示字串", () => {
+    expect(
+      salaryCalculatorEmployeeWriteSchema.safeParse({
+        ...VALID_EMPLOYEE,
+        employmentType: "PART_TIME",
+      }).success,
+    ).toBe(true);
+
+    // Info: (20260902 - Julian) "Full-time" 是那個 enum 的**值**，不是鍵
+    expect(
+      salaryCalculatorEmployeeWriteSchema.safeParse({
+        ...VALID_EMPLOYEE,
+        employmentType: "Full-time",
+      }).success,
+    ).toBe(false);
+  });
+
+  /**
+   * Info: (20260902 - Julian) 離職日不得早於到職日。
+   *
+   * 兩個值都合法、只是順序反了 —— 引擎不會報錯，它會算出一個
+   * 「上個月離職但這個月才到職」的薪資，而薪資單是對外憑據。
+   */
+  it("離職日不得早於到職日，相等可以", () => {
+    const hireDate = Date.parse("2026-08-15T00:00:00.000Z") / 1000;
+
+    expect(
+      salaryCalculatorEmployeeWriteSchema.safeParse({
+        ...VALID_EMPLOYEE,
+        hireDate,
+        resignDate: hireDate - 86400,
+      }).success,
+    ).toBe(false);
+
+    expect(
+      salaryCalculatorEmployeeWriteSchema.safeParse({
+        ...VALID_EMPLOYEE,
+        hireDate,
+        resignDate: hireDate,
+      }).success,
+    ).toBe(true);
+  });
+
+  // Info: (20260902 - Julian) 只有一邊有日期時不比較 —— 那是完全正常的狀態
+  it("只有到職日或只有離職日都合法", () => {
+    const stamp = Date.parse("2026-08-15T00:00:00.000Z") / 1000;
+
+    expect(
+      salaryCalculatorEmployeeWriteSchema.safeParse({
+        ...VALID_EMPLOYEE,
+        hireDate: stamp,
+      }).success,
+    ).toBe(true);
+    expect(
+      salaryCalculatorEmployeeWriteSchema.safeParse({
+        ...VALID_EMPLOYEE,
+        resignDate: stamp,
+      }).success,
+    ).toBe(true);
   });
 });
 

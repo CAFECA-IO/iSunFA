@@ -45,11 +45,10 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     employeeEmail,
     selectedYear,
     selectedMonth,
-    baseSalary,
-    mealAllowance,
     selectedEmployeeId,
     linkEmployee,
     getSalaryCalculatorOptions,
+    getEmployeeProfile,
     salaryCalculatorResult,
   } = useCalculatorCtx();
 
@@ -264,12 +263,19 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     setIsPreparing(true);
     setUnlinkedError(null);
     try {
+      /**
+       * Info: (20260902 - Julian) 帶的是**計算機當下的 15 個常態欄位**，不是預設值。
+       *
+       * 使用者剛在計算機把投保狀態、扶養人數、自提比例、到職日都設好了，
+       * 這顆按鈕的語意就是「把這個人連同這些設定建起來」。
+       * 只帶姓名與兩個金額的話，建出來的檔其餘欄位全是 schema 的 `@default` ——
+       * 下個月選這個人，那些預設值會覆蓋掉他今天設好的東西，而且完全靜默。
+       */
       await createEmployee({
+        ...getEmployeeProfile(),
         name: employeeName.trim(),
         number: employeeNumber.trim(),
         email: employeeEmail.trim() || undefined,
-        baseSalary,
-        mealAllowance,
       });
 
       const refreshed = await reload();

@@ -17,6 +17,7 @@ import {
   ISalaryCalculatorEmployeeRepository,
   SalaryEmployeeNumberTakenError,
 } from "@/repositories/salary_calculator_employee.repo";
+import { DEFAULT_EMPLOYEE_PROFILE } from "@/lib/utils/salary_employee_profile";
 import { ISalaryRecordRepository } from "@/repositories/salary_record.repo";
 import { SalaryRecordService } from "@/services/salary_record.service";
 
@@ -43,12 +44,32 @@ const EMPLOYEE_ID = "11111111-1111-4111-8111-111111111111";
 const employeeOf = (
   overrides: Partial<ISalaryCalculatorEmployee> = {},
 ): ISalaryCalculatorEmployee => ({
+  // Info: (20260902 - Julian) 常態屬性整組必填；這一支測的是 service 的編排，用預設值即可。
+  // 放在最前面，下面幾行才蓋得掉它的 baseSalary / mealAllowance
+  ...DEFAULT_EMPLOYEE_PROFILE,
   id: EMPLOYEE_ID,
   name: "王小明",
   number: "A001",
   email: "ming@example.com",
   baseSalary: 30000,
   mealAllowance: 3000,
+  ...overrides,
+});
+
+/**
+ * Info: (20260902 - Julian) 新增／編輯員工的輸入：身分三欄 + 整組常態屬性。
+ *
+ * 名字帶 `employee` 前綴 —— 這個檔案下面已經有一支給**薪資紀錄**用的 `writeInputOf`。
+ */
+const employeeWriteInputOf = (
+  overrides: Partial<ISalaryCalculatorEmployeeWriteInput> = {},
+): ISalaryCalculatorEmployeeWriteInput => ({
+  ...DEFAULT_EMPLOYEE_PROFILE,
+  name: "李小華",
+  number: "A001",
+  email: "hua@example.com",
+  baseSalary: 30000,
+  mealAllowance: 0,
   ...overrides,
 });
 
@@ -384,13 +405,7 @@ describe("員工名單", () => {
       () =>
         service.createEmployee({
           accountBookId: BOOK,
-          input: {
-            name: "李小華",
-            number: "A001",
-            email: "hua@example.com",
-            baseSalary: 30000,
-            mealAllowance: 0,
-          },
+          input: employeeWriteInputOf(),
         }),
       API_ERRORS.CF_SALARY_EMPLOYEE_NUMBER_TAKEN,
     );
@@ -402,13 +417,7 @@ describe("員工名單", () => {
         service.updateEmployee({
           accountBookId: OTHER_BOOK,
           employeeId: EMPLOYEE_ID,
-          input: {
-            name: "李小華",
-            number: "A002",
-            email: "hua@example.com",
-            baseSalary: 30000,
-            mealAllowance: 0,
-          },
+          input: employeeWriteInputOf({ number: "A002" }),
         }),
       API_ERRORS.NF_SALARY_CALCULATOR_EMPLOYEE,
     );

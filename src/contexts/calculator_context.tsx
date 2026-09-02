@@ -9,7 +9,12 @@ import {
   ReactNode,
 } from "react";
 import { CalcTab, PayrollDaysBase } from "@/constants/salary_calculator";
-import { ISalaryCalculatorEmployee } from "@/interfaces/salary_record";
+import {
+  ISalaryCalculatorEmployee,
+  ISalaryEmployeeProfile,
+} from "@/interfaces/salary_record";
+import { composeJoinLeaveDates } from "@/lib/utils/salary_employee_profile";
+import { toPensionRatePercent } from "@/lib/utils/salary_pension_rate";
 import {
   fromCalculatorOptions,
   toCalculatorOptions,
@@ -27,7 +32,10 @@ import {
   salaryCalculator,
   getMinimumWage,
 } from "@/lib/utils/salary_calculator";
-import { INDUSTRY_CATEGORY_OPTIONS } from "@/constants/industry_category";
+import {
+  DEFAULT_INDUSTRY_CODE,
+  industryCategoryOf,
+} from "@/constants/industry_category";
 
 type TabStep = {
   step: number;
@@ -43,10 +51,9 @@ const defaultTabSteps: TabStep[] = [
   { step: 4, completed: false },
 ];
 
+// Info: (20260902 - Julian) 預設行業別的來源收斂到 constants，不再在這裡寫死 42
 const defaultIndustryCategory: IndustryCategoryItem =
-  INDUSTRY_CATEGORY_OPTIONS.sort((a, b) => a.CODE - b.CODE).find(
-    (item) => item.CODE === 42,
-  )!; // Info: (20251113 - Julian) 預設為「42 電腦程式設計、諮詢及相關服務業、資訊服務業」
+  industryCategoryOf(DEFAULT_INDUSTRY_CODE);
 
 interface ICalculatorContext {
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
@@ -79,6 +86,7 @@ interface ICalculatorContext {
 
   // Info: (20260831 - Julian) 目前表單對應的引擎輸入。儲存薪資紀錄時要把它整份存下來
   getSalaryCalculatorOptions: () => ISalaryCalculatorOptions;
+  getEmployeeProfile: () => ISalaryEmployeeProfile;
 
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state 和 functions
   employeeName: string;
@@ -314,6 +322,49 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
    * `fromCalculatorOptions` 必須成對維護，而留在這裡的話只有 render React 才測得到
    * （本專案的測試不 render React）。
    */
+  /**
+   * Info: (20260902 - Julian) 計算機當下的值 → 員工檔的常態屬性。
+   *
+   * 給兩條路用：「直接新增員工」（使用者剛把欄位填好，要帶的是當下的值，
+   * 不是預設值 —— 否則建出來的檔是空的，下個月選他反而把設定洗掉），
+   * 以及儲存前的差異偵測（產品決策 D2）。
+   *
+   * **只取 15 個常態欄位。** 加班、請假、溢扣那 16 個不在這裡 ——
+   * 分類表在 `lib/utils/salary_employee_profile.ts`，理由在 schema 註解上。
+   *
+   * 到職／離職日走 `composeJoinLeaveDates`：計算機那四個欄位是
+   * 「這個月第幾號」，員工檔要的是完整日期，年月取自當下選定的期間。
+   */
+  const getEmployeeProfile = (): ISalaryEmployeeProfile => ({
+    baseSalary,
+    mealAllowance,
+    otherAllowanceTaxable: otherAllowanceWithTax,
+    otherAllowanceTaxFree: otherAllowanceWithoutTax,
+    industryCode: industryCategory.CODE,
+    isForeignWorker: taxResidencyStatus === TaxResidencyStatus.NON_TAIWAN,
+    // Info: (20260902 - Julian) 存鍵不存顯示字串，所以要反查 —— enum 的值才是畫面上那串
+    employmentType:
+      Object.keys(EmploymentType).find(
+        (key) =>
+          EmploymentType[key as keyof typeof EmploymentType] === employmentType,
+      ) ?? "FULL_TIME",
+    baseSalary30Days: payrollDaysBase === PayrollDaysBase.FIXED,
+    isLaborInsured: isLaborInsurance,
+    isHealthInsured: isNHI,
+    isPensionInsured: isLaborPension,
+    dependentsCount: numberOfDependents,
+    // Info: (20260902 - Julian) UI 是小數費率、落地是百分點整數
+    voluntaryPensionRate: toPensionRatePercent(voluntaryPensionContribution),
+    ...composeJoinLeaveDates(
+      { isJoined, dayOfJoining, isLeft, dayOfLeaving },
+      {
+        year: parseInt(selectedYear, 10),
+        month:
+          MONTHS.findIndex((item) => item.name === selectedMonth.name) + 1,
+      },
+    ),
+  });
+
   const getSalaryCalculatorOptions = (): ISalaryCalculatorOptions =>
     toCalculatorOptions({
       selectedYear,
@@ -661,6 +712,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     applyRecordEmployee,
     loadFromSnapshot,
     getSalaryCalculatorOptions,
+    getEmployeeProfile,
     employeeName,
     changeEmployeeName,
     employeeNumber,

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, FC, ChangeEvent } from "react";
+import { ISalaryEmployeeProfile } from "@/interfaces/salary_record";
+import { DEFAULT_EMPLOYEE_PROFILE } from "@/lib/utils/salary_employee_profile";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ApiError } from "@/lib/utils/request";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
@@ -33,6 +35,15 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
   const defaultBaseSalary = data?.baseSalary || 0;
   const defaultMealAllowance = data?.mealAllowance || 0;
   const defaultEmail = data?.email || "";
+
+  /**
+   * Info: (20260902 - Julian) 這張表單沒有介面的那 13 個常態欄位。
+   *
+   * 編輯：取這個人現在的值；新增：取預設值。兩者都只是**原樣帶回去**，
+   * 因為 `ISalaryCalculatorEmployeeWriteInput` 是整組必填（少一欄會靜靜落到
+   * schema 的 `@default`）。`baseSalary` / `mealAllowance` 由下面的輸入框覆蓋。
+   */
+  const baseProfile: ISalaryEmployeeProfile = data ?? DEFAULT_EMPLOYEE_PROFILE;
 
   const [nameInput, setNameInput] = useState<string>(defaultName);
   const [numberInput, setNumberInput] = useState<string>(defaultNumber);
@@ -85,7 +96,16 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
     setSubmitError("");
 
     try {
+      /**
+       * Info: (20260902 - Julian) 這張表單只編輯身分與兩個金額，其餘 13 個常態欄位
+       * **原樣帶回去**（編輯時是這個人現在的值，新增時是預設值）。
+       *
+       * 省略它們的話後端會落到 schema 的 `@default` —— 也就是「改個名字，
+       * 順便把他的投保狀態、扶養人數、到職日全部重設」，而畫面上沒有任何提示。
+       * 這 13 欄的輸入介面是下一支 PR 的事；在那之前，這裡負責不要弄丟它們。
+       */
       await submitHandler({
+        ...baseProfile,
         name: nameInput.trim(),
         number: numberInput.trim(),
         email: emailInput.trim() || undefined,

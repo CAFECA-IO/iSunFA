@@ -1,4 +1,5 @@
 import { describe, it, expect } from "@jest/globals";
+import { DEFAULT_INDUSTRY_CODE } from "@/constants/industry_category";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -78,6 +79,76 @@ describe("SalaryCalculatorEmployee", () => {
       'accountBookId String      @map("account_book_id")',
     );
     expect(block).toContain("@@index([accountBookId])");
+  });
+
+  /**
+   * Info: (20260902 - Julian) 常態屬性 13 欄，**每一欄都要有 @default**。
+   *
+   * 本專案沒有 `prisma/migrations/`，schema 走 `prisma db push`。
+   * 加一個必填且無 default 的欄位，會讓既有的員工列直接 push 失敗 ——
+   * 而那不是「上線時才發現」，是「開發機 push 就爆」，所以症狀看得見。
+   * 真正要守的是反面：有人為了「讓它必填」把某一欄的 default 拿掉，
+   * 而那一欄剛好是布林 —— 那時候 push 會失敗，但錯誤訊息只會說某一欄不能是 null，
+   * 不會說是誰把 default 拿掉的。
+   *
+   * 兩個日期欄是可空的（`DateTime?`），沒有 default —— 那是對的：
+   * 「沒有到職日」是一個真實狀態，不是一個要被填上的預設值。
+   */
+  it.each([
+    ["industryCode", "Int @default(42)"],
+    ["isForeignWorker", "Boolean @default(false)"],
+    ["employmentType", 'String @default("FULL_TIME")'],
+    ["baseSalary30Days", "Boolean @default(true)"],
+    ["otherAllowanceTaxable", "BigInt @default(0)"],
+    ["otherAllowanceTaxFree", "BigInt @default(0)"],
+    ["isLaborInsured", "Boolean @default(true)"],
+    ["isHealthInsured", "Boolean @default(true)"],
+    ["isPensionInsured", "Boolean @default(true)"],
+    ["dependentsCount", "Int @default(0)"],
+    ["voluntaryPensionRate", "Int @default(0)"],
+  ])("%s 有預設值（既有員工列才 push 得上去）", (field, declaration) => {
+    expect(block).toMatch(
+      new RegExp(
+        `${field}\\s+${declaration.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
+      ),
+    );
+  });
+
+  /**
+   * Info: (20260902 - Julian) `voluntaryPensionRate` 是 Int，**不是 BigInt**。
+   *
+   * 它是費率的百分點（0–6），不是金額。旁邊四個金額欄都是 BigInt，
+   * 而引擎那一側的欄位叫 `employeeBurdenPensionInsurance`（讀起來像金額）——
+   * 照抄成 BigInt 之後，`BigInt(0.06)` 丟 RangeError、
+   * `BigInt(Math.round(0.06))` 靜靜變成 0。這一條把型別釘死。
+   */
+  it("自提勞退費率是 Int 不是 BigInt（它是費率不是金額）", () => {
+    expect(block).toMatch(/voluntaryPensionRate\s+Int/);
+    expect(block).not.toMatch(/voluntaryPensionRate\s+BigInt/);
+  });
+
+  /**
+   * Info: (20260902 - Julian) 到職／離職日可空且**沒有** default。
+   *
+   * 給它 `@default(now())` 的話，既有員工會全部變成「今天到職」——
+   * 而那會讓這個月的薪水全部按「當月中途到職」計算。
+   */
+  it("到職／離職日可空，且不得有預設值", () => {
+    expect(block).toMatch(/hireDate\s+DateTime\?/);
+    expect(block).toMatch(/resignDate\s+DateTime\?/);
+    expect(block).not.toMatch(/hireDate\s+DateTime\?[^\n]*@default/);
+    expect(block).not.toMatch(/resignDate\s+DateTime\?[^\n]*@default/);
+  });
+
+  /**
+   * Info: (20260902 - Julian) schema 的 `@default(42)` 與 TS 常數必須是同一個值。
+   *
+   * Prisma 的 `@default` 沒辦法引用 TS 常數，所以這是**唯一**能讓兩邊
+   * 不同步時紅起來的地方。不同步的症狀：新增員工不指定行業別時，
+   * 資料庫給 42、計算機顯示另一個 —— 而兩邊都不會報錯。
+   */
+  it("行業別的 schema 預設值等於 DEFAULT_INDUSTRY_CODE", () => {
+    expect(block).toContain(`industryCode Int @default(${DEFAULT_INDUSTRY_CODE})`);
   });
 
   it("與 HR 員工檔的接點是可空的，且正式員工檔被刪時只斷開不連坐", () => {

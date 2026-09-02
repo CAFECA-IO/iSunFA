@@ -134,12 +134,37 @@ const perMinuteLimit = (bucket: RateLimitBucketEnum): number => {
   return minute.max;
 };
 
+/**
+ * Info: (20260902 - Julian) 員工檔的常態屬性整組必填（`ISalaryEmployeeProfile`）。
+ *
+ * 少一欄就會落到 schema 的 `@default`，而那是靜默的：使用者在計算機設好、
+ * 按「直接新增員工」，建出來的檔卻是預設值，下個月選他就把設定洗掉。
+ * 所以 validator 那一側是整組必填，這裡的 fixture 也要整組帶齊。
+ */
+const employeeProfileBody = {
+  baseSalary: 30000,
+  mealAllowance: 3000,
+  otherAllowanceTaxable: 2000,
+  otherAllowanceTaxFree: 0,
+  industryCode: 42,
+  isForeignWorker: false,
+  employmentType: "FULL_TIME",
+  baseSalary30Days: true,
+  isLaborInsured: true,
+  isHealthInsured: true,
+  isPensionInsured: true,
+  dependentsCount: 0,
+  // Info: (20260902 - Julian) 百分點整數（0–6），不是 0.06
+  voluntaryPensionRate: 6,
+  hireDate: null,
+  resignDate: null,
+};
+
 const employeeBody = {
   name: "王小明",
   number: "A001",
   email: "ming@example.com",
-  baseSalary: 30000,
-  mealAllowance: 3000,
+  ...employeeProfileBody,
   // Info: (20260831 - Julian) 使用者送得出來、但不該被採信的東西
   userId: SPOOFED_USER_ID,
   accountBookId: OTHER_BOOK,

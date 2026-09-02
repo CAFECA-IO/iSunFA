@@ -171,7 +171,7 @@ interface ISalaryCalculatorOptions {
   year: number; // Info: (20250727 - Luphia) 計薪年度
   month: number; // Info: (20250727 - Luphia) 計薪月份
   foreignWorker?: boolean; // Info: (20250727 - Luphia) 外籍員工或課稅年度內在中華民國境內居住不滿31天
-  job?: number; // Info: (20250727 - Luphia) 行業別代碼，預設 41 電腦程式設計、諮詢及相關服務業、資訊服務業
+  job?: number; // Info: (20260902 - Julian) 行業別代碼，預設 DEFAULT_INDUSTRY_CODE＝42「電腦程式設計、諮詢及相關服務業、資訊服務業」（原註解寫 41，與三處實作皆不符）
   employeeStartDate?: number; // Info: (20250727 - Luphia) 員工入職日期
   employeeEndDate?: number; // Info: (20250727 - Luphia) 員工離職日期
   baseSalaryTaxable: number; // Info: (20250727 - Luphia) 當月應稅基本工資（本薪）

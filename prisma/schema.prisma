@@ -4488,6 +4488,90 @@ model SalaryCalculatorEmployee {
   baseSalary    BigInt @map("base_salary")
   mealAllowance BigInt @default(0) @map("meal_allowance")
 
+  /**
+   * Info: (20260902 - Julian) 選了員工就自動匯入計算機的常態屬性。
+   *
+   * ## 這裡放什麼、不放什麼
+   *
+   * 只放「這個人一直都是這樣」的東西。**當月變動一律不進這張表** ——
+   * 加班時數、請假時數、健保補收、二代健保、其他溢扣共 16 個欄位留在薪資紀錄的
+   * `input_snapshot` 裡。分錯方向的代價不對稱：
+   *
+   * - 該存沒存 → 使用者每個月重打一次（吵，但看得見）
+   * - **不該存卻存了 → 下個月選了員工就自動帶上個月的加班時數，
+   *   畫面完全正常而薪水是錯的（靜默）**
+   *
+   * 完整的 35 欄分類表在 `documents/architecture/salary_employee_profile_plan.md` §1，
+   * 而 `salary_employee_profile.test.ts` 會拿那張表與 `ISalaryEmployeeProfile`
+   * 對拍 —— 新增欄位忘了分類就會紅。
+   *
+   * ## 每一欄都有 @default，兩個日期欄可空
+   *
+   * 本專案沒有 `prisma/migrations/`，schema 走 `prisma db push`。
+   * 加一個必填且無 default 的欄位，會讓既有的員工列直接 push 失敗
+   * （部署檢查表對假勤模組寫過同一件事）。
+   * 這些 default 全部等於計算機目前的預設值，所以既有員工套用後行為不變。
+   */
+
+  // Info: (20260902 - Julian) 行業別代碼（引擎的 `job`）。預設值來源：DEFAULT_INDUSTRY_CODE
+  industryCode Int @default(42) @map("industry_code")
+
+  // Info: (20260902 - Julian) 引擎收的是 `foreignWorker` 布林，不是 TaxResidencyStatus 列舉
+  isForeignWorker Boolean @default(false) @map("is_foreign_worker")
+
+  /**
+   * Info: (20260902 - Julian) 僱用型態，存 `EmploymentType` 的**鍵**（"FULL_TIME" / "PART_TIME"）。
+   *
+   * 不存值：那個 enum 的值是顯示字串（"Full-time"），哪天有人把它改成「全職」，
+   * 資料庫裡就會同時存在兩種寫法而沒有任何東西會紅。
+   * 值域由 `salary_validators.test.ts` 對 `Object.keys(EmploymentType)` 守著。
+   */
+  employmentType String @default("FULL_TIME") @map("employment_type")
+
+  // Info: (20260902 - Julian) 引擎收的是 `baseSalary30Days` 布林，對應 UI 的「固定 30 天／實際天數」
+  baseSalary30Days Boolean @default(true) @map("base_salary_30_days")
+
+  // Info: (20260902 - Julian) 固定職務加給（產品決策 20260902）。當月獎金不走這裡，走計算機當次輸入
+  otherAllowanceTaxable BigInt @default(0) @map("other_allowance_taxable")
+  otherAllowanceTaxFree BigInt @default(0) @map("other_allowance_tax_free")
+
+  // Info: (20260902 - Julian) 三個投保狀態。預設全投保，與計算機的預設值一致
+  isLaborInsured   Boolean @default(true) @map("is_labor_insured")
+  isHealthInsured  Boolean @default(true) @map("is_health_insured")
+  isPensionInsured Boolean @default(true) @map("is_pension_insured")
+
+  dependentsCount Int @default(0) @map("dependents_count")
+
+  /**
+   * Info: (20260902 - Julian) 自提勞退**費率**，存百分點（0–6）。**這一欄不是金額。**
+   *
+   * UI 的選項是 0、0.01 … 0.06（`others_form.tsx` 的七顆單選鈕），
+   * 而引擎那一側的欄位叫 `employeeBurdenPensionInsurance`（「個人自願提繳退休金」）——
+   * 名字讀起來像金額，於是照著上面幾欄寫成 BigInt 是很自然的錯：
+   * `BigInt(0.06)` 直接丟 RangeError，`BigInt(Math.round(0.06))` 則靜靜變成 0，
+   * 使用者設了 6% 存進去是 0，載回來也是 0，而單選鈕顯示「0%」像是他自己沒選。
+   *
+   * 也不用 Float：0.06 沒有精確的二進位表示，而這個值會參與金額計算
+   * （precision guideline §1 的同一條理由）。轉換集中在 `lib/utils/salary_pension_rate.ts`。
+   */
+  voluntaryPensionRate Int @default(0) @map("voluntary_pension_rate")
+
+  /**
+   * Info: (20260902 - Julian) 到職／離職日，存**完整日期**，不是「當月第幾號」。
+   *
+   * 計算機那一側是 `isJoined`（布林）+ `dayOfJoining`（1–31），
+   * 而 `toCalculatorOptions` 是拿**選定的年月**加上那個日組出時間戳 ——
+   * 也就是說引擎只關心「這一個月裡有沒有中途到職」，兩個欄位都沒有真正的來源。
+   * 症狀：八月中途到職的人，切到九月照樣被算成九月中途到職。
+   *
+   * 這裡存真實日期，載入時比對選定年月當場推導（`deriveJoinLeave`），
+   * 切月份時答案自己會對。讀寫一律 `getUTC*` —— 寫入端組的是
+   * `new Date("2026-08-15")`（UTC 午夜），用 `getDate()` 在 UTC 以西會退一天，
+   * 而那個錯在 UTC 與 UTC+8 都測不出來，所以判準在 `*.tz.test.ts` 那一組。
+   */
+  hireDate   DateTime? @map("hire_date")
+  resignDate DateTime? @map("resign_date")
+
   // Info: (20260831 - Julian) 隸屬的帳本 (租戶 Root Node)
   accountBookId String      @map("account_book_id")
   accountBook   AccountBook @relation(fields: [accountBookId], references: [id])

@@ -230,3 +230,29 @@ export const INDUSTRY_CATEGORY_OPTIONS: IndustryCategoryItem[] = [
     INDUSTRY: "未分類其他服務業",
   },
 ];
+
+/**
+ * Info: (20260902 - Julian) 預設行業別：42 電腦程式設計、諮詢及相關服務業、資訊服務業。
+ *
+ * 這個 42 原本寫死在三個地方：`calculator_context.tsx` 的字面量、
+ * `salary_calculator_snapshot.ts` 的區域常數 `DEFAULT_INDUSTRY_CODE`，
+ * 以及 `prisma/schema.prisma` 的 `@default(42)`；
+ * 而 `interfaces/salary_calculator.ts` 的註解寫的是「預設 41」—— **四處，其中一處是錯的**。
+ *
+ * 收斂到這裡。schema 的 `@default` 沒辦法引用 TS 常數，
+ * 因此那一處由 `salary_schema_defaults.test.ts` 與這個常數對拍，
+ * 兩邊不同步就會紅。
+ */
+export const DEFAULT_INDUSTRY_CODE = 42;
+
+/**
+ * Info: (20260902 - Julian) 代碼 → 選項。查不到時退回預設，再退回第一個。
+ *
+ * 「查不到」是真的會發生的：行業別清單改版之後，舊薪資紀錄的快照裡
+ * 可能留著一個已被移除的代碼。回 `undefined` 會讓下拉選單變成非受控元件，
+ * 所以這裡一定要給得出一個值。
+ */
+export const industryCategoryOf = (code: number): IndustryCategoryItem =>
+  INDUSTRY_CATEGORY_OPTIONS.find((item) => item.CODE === code) ??
+  INDUSTRY_CATEGORY_OPTIONS.find((item) => item.CODE === DEFAULT_INDUSTRY_CODE) ??
+  INDUSTRY_CATEGORY_OPTIONS[0];

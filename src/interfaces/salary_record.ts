@@ -11,27 +11,83 @@ import {
  * 時間戳的 `DateTime` 在這裡是 Unix 秒。
  */
 
+/**
+ * Info: (20260902 - Julian) 員工檔上「選了人就自動匯入計算機」的那一組常態屬性。
+ *
+ * ## 為什麼要單獨一個型別
+ *
+ * 這一組會同時出現在四條路徑上：載入（員工 → 計算機）、回寫（計算機 → 員工）、
+ * 差異偵測（儲存前問一句）、以及新增員工時要帶的初值。
+ * 各自列一次欄位的話，新增一欄就有四個地方要記得改，而漏掉的那一邊是靜默的
+ * —— 例如「直接新增員工」少帶一欄，那個人的檔上就是預設值，
+ * 下個月選他反而把畫面洗掉。抽成一個型別，四邊會一起編譯失敗。
+ *
+ * ## 這裡放什麼、不放什麼
+ *
+ * 只放「這個人一直都是這樣」的東西。**當月變動一律不進來** ——
+ * 加班時數、請假時數、健保補收、二代健保、其他溢扣共 16 欄留在薪資紀錄的快照裡。
+ * 完整分類表在 `documents/architecture/salary_employee_profile_plan.md` §1，
+ * 而 `salary_employee_profile.test.ts` 拿那張表與這個型別對拍。
+ */
+export interface ISalaryEmployeeProfile {
+  baseSalary: number;
+  mealAllowance: number;
+
+  // Info: (20260902 - Julian) 固定職務加給（產品決策 20260902）；當月獎金不走這裡
+  otherAllowanceTaxable: number;
+  otherAllowanceTaxFree: number;
+
+  // Info: (20260902 - Julian) 引擎的 `job`
+  industryCode: number;
+  // Info: (20260902 - Julian) 引擎的 `foreignWorker`；UI 那一側是 TaxResidencyStatus 列舉
+  isForeignWorker: boolean;
+  // Info: (20260902 - Julian) `EmploymentType` 的**鍵**（"FULL_TIME" / "PART_TIME"），不是顯示字串
+  employmentType: string;
+  // Info: (20260902 - Julian) 引擎的 `baseSalary30Days`；UI 那一側是「固定 30 天／實際天數」
+  baseSalary30Days: boolean;
+
+  isLaborInsured: boolean;
+  isHealthInsured: boolean;
+  isPensionInsured: boolean;
+  dependentsCount: number;
+
+  /**
+   * Info: (20260902 - Julian) 自提勞退**費率的百分點**（0–6），不是金額也不是 0.06 那個小數。
+   * 轉換一律走 `lib/utils/salary_pension_rate.ts`，理由見該檔與 schema 註解。
+   */
+  voluntaryPensionRate: number;
+
+  /**
+   * Info: (20260902 - Julian) 到職／離職日，Unix 秒，**完整日期**不是「當月第幾號」。
+   * 計算機那兩個欄位（`isJoined` + `dayOfJoining`）由 `deriveJoinLeave` 依選定年月推導。
+   */
+  hireDate: number | null;
+  resignDate: number | null;
+}
+
 // Info: (20260831 - Julian) 輕量員工。id 是 uuid
-export interface ISalaryCalculatorEmployee {
+export interface ISalaryCalculatorEmployee extends ISalaryEmployeeProfile {
   id: string;
   name: string;
   number: string;
   email: string;
-  baseSalary: number;
-  mealAllowance: number;
 }
 
 /**
  * Info: (20260831 - Julian) 新增／編輯員工的輸入。
  *
  * `number` 是身分（帳本內唯一），因此必填；`email` 只在寄薪資單時才需要，可省略。
+ *
+ * Info: (20260902 - Julian) 常態屬性整組必填 —— 少一欄就會落到 schema 的 `@default`，
+ * 而那是靜默的：使用者在計算機設好 14 個欄位、按「直接新增員工」，
+ * 建出來的檔卻是預設值，下個月選他就把設定洗掉。要「不改這一欄」的呼叫端
+ * 應該把讀到的現值原樣帶回來，而不是省略它。
  */
-export interface ISalaryCalculatorEmployeeWriteInput {
+export interface ISalaryCalculatorEmployeeWriteInput
+  extends ISalaryEmployeeProfile {
   name: string;
   number: string;
   email?: string;
-  baseSalary: number;
-  mealAllowance: number;
 }
 
 /**

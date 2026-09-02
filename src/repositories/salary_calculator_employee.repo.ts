@@ -4,6 +4,7 @@ import { MoneyUtil } from "@/lib/utils/money";
 import {
   ISalaryCalculatorEmployee,
   ISalaryCalculatorEmployeeWriteInput,
+  ISalaryEmployeeProfile,
 } from "@/interfaces/salary_record";
 import {
   activeNumberFor,
@@ -72,6 +73,64 @@ const isUniqueViolation = (error: unknown): boolean =>
 const toAmount = (value: bigint): number =>
   MoneyUtil.toDecimal(value.toString()).toNumber();
 
+// Info: (20260902 - Julian) DateTime → Unix 秒（沿用 IVoucher 的前端時間戳慣例），null 原樣帶出
+const toUnixSecondsOrNull = (value: Date | null): number | null =>
+  value === null ? null : Math.floor(value.getTime() / 1000);
+
+// Info: (20260902 - Julian) Unix 秒 → DateTime。null 是「沒有這個日期」，不是 1970
+const toDateOrNull = (value: number | null): Date | null =>
+  value === null ? null : new Date(value * 1000);
+
+/**
+ * Info: (20260902 - Julian) 員工檔的常態屬性 → 前端格式。
+ *
+ * 與 `toWriteData` 成對維護：這 15 欄任何一邊漏接，症狀都是
+ * 「選了員工，某一欄沒被帶進計算機」—— 而畫面上那一欄會是計算機的預設值，
+ * 看起來完全正常。`ISalaryEmployeeProfile` 是把兩邊綁在一起的型別。
+ */
+const toProfile = (row: SalaryCalculatorEmployee): ISalaryEmployeeProfile => ({
+  baseSalary: toAmount(row.baseSalary),
+  mealAllowance: toAmount(row.mealAllowance),
+  otherAllowanceTaxable: toAmount(row.otherAllowanceTaxable),
+  otherAllowanceTaxFree: toAmount(row.otherAllowanceTaxFree),
+  industryCode: row.industryCode,
+  isForeignWorker: row.isForeignWorker,
+  employmentType: row.employmentType,
+  baseSalary30Days: row.baseSalary30Days,
+  isLaborInsured: row.isLaborInsured,
+  isHealthInsured: row.isHealthInsured,
+  isPensionInsured: row.isPensionInsured,
+  dependentsCount: row.dependentsCount,
+  // Info: (20260902 - Julian) 落地是百分點整數，前端也是百分點整數；轉小數是 UI 那一層的事
+  voluntaryPensionRate: row.voluntaryPensionRate,
+  hireDate: toUnixSecondsOrNull(row.hireDate),
+  resignDate: toUnixSecondsOrNull(row.resignDate),
+});
+
+// Info: (20260902 - Julian) 寫入方向。與 toProfile 成對，理由見該函式
+const toWriteData = (input: ISalaryCalculatorEmployeeWriteInput) => ({
+  baseSalary: BigInt(input.baseSalary),
+  mealAllowance: BigInt(input.mealAllowance),
+  otherAllowanceTaxable: BigInt(input.otherAllowanceTaxable),
+  otherAllowanceTaxFree: BigInt(input.otherAllowanceTaxFree),
+  industryCode: input.industryCode,
+  isForeignWorker: input.isForeignWorker,
+  employmentType: input.employmentType,
+  baseSalary30Days: input.baseSalary30Days,
+  isLaborInsured: input.isLaborInsured,
+  isHealthInsured: input.isHealthInsured,
+  isPensionInsured: input.isPensionInsured,
+  dependentsCount: input.dependentsCount,
+  /**
+   * Info: (20260902 - Julian) **不是 BigInt。** 這一欄是費率的百分點（0–6）。
+   * 寫成 `BigInt(input.voluntaryPensionRate)` 在型別上會過（它是 number），
+   * 但 schema 那一欄是 Int —— Prisma 會在執行期才抱怨，而且訊息不會提到「費率」。
+   */
+  voluntaryPensionRate: input.voluntaryPensionRate,
+  hireDate: toDateOrNull(input.hireDate),
+  resignDate: toDateOrNull(input.resignDate),
+});
+
 const toFrontendFormat = (
   row: SalaryCalculatorEmployee,
 ): ISalaryCalculatorEmployee => ({
@@ -81,8 +140,7 @@ const toFrontendFormat = (
   number: row.number,
   // Info: (20260831 - Julian) Email 可空，null 打平成空字串（沿用 IVoucher.note 的既有慣例）
   email: row.email ?? "",
-  baseSalary: toAmount(row.baseSalary),
-  mealAllowance: toAmount(row.mealAllowance),
+  ...toProfile(row),
 });
 
 export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmployeeRepository {
@@ -121,8 +179,7 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
       number: input.number,
       email: input.email ?? null,
       activeNumber: activeNumberFor(input.number, null),
-      baseSalary: BigInt(input.baseSalary),
-      mealAllowance: BigInt(input.mealAllowance),
+      ...toWriteData(input),
     };
 
     assertActiveNumberPairing({
@@ -170,8 +227,7 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
           number: input.number,
           email: input.email ?? null,
           activeNumber: activeNumberFor(input.number, null),
-          baseSalary: BigInt(input.baseSalary),
-          mealAllowance: BigInt(input.mealAllowance),
+          ...toWriteData(input),
         },
       });
 
