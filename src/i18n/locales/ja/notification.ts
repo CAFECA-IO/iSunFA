@@ -39,6 +39,13 @@ export const notification = {
    * 沒改到的語系會靜默沿用假話，而改名會讓 `tsc` 直接指出漏掉的那一個。
    */
   history_capped: "最新 {{count}} 件のみ表示しています",
+  /**
+   * Info: (20260901 - Julian) 待辦節被截斷時的說明（review：D4）。
+   *
+   * 與 `history_capped` 成對：徽章數的是全部，而清單只帶回上限內的幾筆。
+   * 分岔本身可以接受，靜默的分岔不行。
+   */
+  todos_capped: "未処理は最新 {{count}} 件のみ表示しています",
   view_all: "すべての通知を表示",
   page_title: "通知",
   history_title: "履歴",

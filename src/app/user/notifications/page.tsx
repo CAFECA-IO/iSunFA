@@ -7,6 +7,7 @@ import { request } from "@/lib/utils/request";
 import { HTTP_METHOD } from "@/constants/http";
 import Pagination from "@/components/common/pagination";
 import NotificationRow from "@/components/notification/notification_row";
+import { JOB_RESUMABLE_NOTICE_LIMIT } from "@/constants/resumable_job";
 import { canMarkReadByClick } from "@/lib/notification_read";
 /**
  * Info: (20260826 - Julian) 端點回的形狀只有一份（review B6）。
@@ -41,6 +42,8 @@ export default function NotificationsPage() {
   const { t } = useTranslation();
 
   const [todos, setTodos] = useState<INotificationItem[]>([]);
+  // Info: (20260901 - Julian) 待辦節被截斷了嗎（review：D4，理由同鈴鐺面板）
+  const [hasMoreTodos, setHasMoreTodos] = useState(false);
   const [history, setHistory] = useState<INotificationHistoryPage | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -70,6 +73,7 @@ export default function NotificationsPage() {
         "/api/v1/user/notifications",
       );
       setTodos(response.payload?.todos ?? []);
+      setHasMoreTodos(response.payload?.hasMoreTodos ?? false);
       setTodosFailed(false);
     } catch {
       /**
@@ -188,6 +192,13 @@ export default function NotificationsPage() {
                 showTimestamp
               />
             ))}
+            {hasMoreTodos && (
+              <p className="text-text-muted px-3 pt-2 text-center text-xs">
+                {t("notification.todos_capped", {
+                  count: JOB_RESUMABLE_NOTICE_LIMIT,
+                })}
+              </p>
+            )}
             {todosFailed && (
               <p className="text-text-muted px-3 py-4 text-center text-sm">
                 {t("notification.load_failed")}

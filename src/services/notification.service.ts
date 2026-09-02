@@ -139,10 +139,14 @@ export async function getNotificationSummary(params: {
        * ⚠️ 這一支讓摘要從兩趟 DB 變三趟，而它每 60 秒被每個在線使用者打一次。
        * 計畫書 §6 第 7 項說效能從來沒量過 —— 加了這一支之後**要量**。
        */
-      const [invitations, unread, resumableJobs] = await Promise.all([
+      const [invitations, unread, resumable] = await Promise.all([
         listPendingInvitations(params.userId, params.address, params.nowMs),
         notificationRepo.summarizeUnread(params.userId),
-        resumableJobRepo.listResumableByUser(params.userId),
+        /**
+         * Info: (20260901 - Julian) 用 `summarizeResumable` 而不是那支帶 `take`
+         * 的清單查詢（review：D4）。徽章要的是**全部**，不是畫面上看得到的那幾筆。
+         */
+        resumableJobRepo.summarizeResumable(params.userId),
       ]);
       const unreadByType = unread.counts;
       /**
@@ -198,13 +202,12 @@ export async function getNotificationSummary(params: {
        *
        * `updatedAt` 在每次狀態轉換都會動，正是「這一次翻面」的時間。
        */
-      const latestResumableAt = resumableJobs.reduce(
-        (latest, job) => Math.max(latest, job.updatedAt.getTime()),
-        0,
-      );
+      const latestResumableAt = resumable.latestUpdatedAt
+        ? resumable.latestUpdatedAt.getTime()
+        : 0;
 
       return {
-        todoCount: invitations.length + resumableJobs.length + storedTodos,
+        todoCount: invitations.length + resumable.count + storedTodos,
         completedCount: completed,
         // Info: (20260826 - Julian) 兩者皆無時回 null（`0` 會被誤讀成 epoch）
         latestUnreadAt:
@@ -254,7 +257,7 @@ export async function listNotifications(params: {
 }): Promise<INotificationList> {
   return guarded(
     async () => {
-      const [invitations, storedTodos, completedPage, resumableJobs] =
+      const [invitations, storedTodos, completedPage, resumablePage] =
         await Promise.all([
           listPendingInvitations(params.userId, params.address, params.nowMs),
           notificationRepo.listUnreadByTypes(
@@ -313,7 +316,7 @@ export async function listNotifications(params: {
        * 會沉在最底下 —— 而它正是這一刻最需要被看到的那一則。
        */
       todos.push(
-        ...resumableJobs.map((job) => {
+        ...resumablePage.items.map((job) => {
           /**
            * Info: (20260828 - Julian) 深連結要的 `sessionId` 在這裡切出來
            *（計劃 `resumable_job_resume_landing_and_copy.md` §2）。
@@ -355,6 +358,15 @@ export async function listNotifications(params: {
         todos,
         completed: completedPage.items.map(toItem),
         hasMoreCompleted: completedPage.hasMore,
+        /**
+         * Info: (20260901 - Julian) 待辦節也會被截斷，而先前沒有人說得出來
+         *（review：D4）。徽章數的是全部（`summarizeResumable`），這裡只帶回
+         * 最新的 `JOB_RESUMABLE_NOTICE_LIMIT` 筆 —— 兩者分岔時畫面必須說一句話。
+         *
+         * 只反映可接續任務那一支：邀請的查詢沒有上限，而入庫待辦的計數走
+         * `groupBy`（未截斷），今天也只有「錢包升級」一種、一人一則。
+         */
+        hasMoreTodos: resumablePage.hasMore,
       };
     },
     { operation: "listNotifications", userId: params.userId },
