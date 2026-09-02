@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { JOB_CLAIM, resumableJobRepo } from "@/repositories/resumable_job.repo";
 import {
   JOB_CLAIM_TTL_MS,
+  JOB_PAUSE_REASON,
   JOB_STATUS,
   JOB_TYPE,
 } from "@/constants/resumable_job";
@@ -48,13 +49,14 @@ const KEY_PREFIX = `e2e-job-claim-${STAMP}:`;
 
 let userId = "";
 
-const createJob = (suffix: string, status: string) =>
+const createJob = (suffix: string, status: string, pauseReason?: string) =>
   prisma.resumableJob.create({
     data: {
       userId,
       type: JOB_TYPE.CARBON_REPORT_IMPORT,
       resourceKey: `${KEY_PREFIX}${suffix}`,
       status,
+      pauseReason: pauseReason ?? null,
       totalSteps: 4,
       completedSteps: 1,
       remainingStepIds: ["ch3#0", "ch3#1", "ch4#0"],
@@ -148,7 +150,13 @@ describe("claimIfIdle 對真資料庫", () => {
     [JOB_STATUS.COMPLETED, JOB_CLAIM.COMPLETED],
   ])("終局狀態 %s：租約過期也搶不到，列不被改寫", async (status, expected) => {
     const suffix = `terminal-${status}`;
-    await createJob(suffix, status);
+    /**
+     * Info: (20260902 - Luphia) pauseReason 給**哨兵值**（review #6726 二輪
+     * 低-2、§1.5）：第一版斷言 `toBeNull()`，而建列時本來就是 null——
+     * `claimIfIdle` 真的把它寫成 null 的世界裡照樣綠，證明不了「沒被改寫」。
+     * 哨兵值之下，被搶走的那次寫入（`pauseReason: null`）會讓這句真的紅。
+     */
+    await createJob(suffix, status, JOB_PAUSE_REASON.CREDITS_EXHAUSTED);
 
     const outcome = await claim(suffix, Date.now() + JOB_CLAIM_TTL_MS * 2);
     expect(outcome.kind).toBe(expected);
@@ -163,6 +171,6 @@ describe("claimIfIdle 對真資料庫", () => {
     });
     // Info: (20260901 - Luphia) 裁決沒有動它：狀態仍是終局，不是 RUNNING
     expect(row?.status).toBe(status);
-    expect(row?.pauseReason).toBeNull();
+    expect(row?.pauseReason).toBe(JOB_PAUSE_REASON.CREDITS_EXHAUSTED);
   });
 });

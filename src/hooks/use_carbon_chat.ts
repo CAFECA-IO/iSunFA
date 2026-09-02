@@ -3658,21 +3658,29 @@ export const useCarbonChat = () => {
        * Info: (20260901 - Luphia) 但**光刷新不會讓按鈕消失**（自我 review 自-1，
        * §1.14——第一版的註解宣稱「刷新讓卡片改口」，那是過度宣稱）：
        * 「接著匯入」由 `pendingImport.pausedChapters` 驅動，而
-       * `GET /user/job` 只回未完成的任務，取消過的那筆**根本不在回應裡**。
-       * 同裝置的取消由 JOB_CANCELLED 廣播的 handler 清暫停狀態；**跨裝置**
-       * 沒有廣播，唯一知道「已取消」的時點就是這裡——所以這裡做同一件事
-       *（與 `onJobCancelledElsewhereRef` 的 handler 同語意：清暫停、留內容）。
+       * `GET /user/job` 只回未完成的任務（`listOpenByUser`），終局的那筆
+       * **根本不在回應裡**。同裝置的取消由 JOB_CANCELLED 廣播的 handler 清
+       * 暫停狀態；**跨裝置**沒有廣播，唯一知道判決的時點就是這裡——所以
+       * 這裡做同一件事（與 `onJobCancelledElsewhereRef` 同語意：清暫停、留內容）。
+       *
+       * Info: (20260902 - Luphia) 清狀態的條件是「終局」而不是只有 CANCELLED
+       *（review #6726 二輪低-1）：自-1 的推理對 COMPLETED 一字不差成立——
+       * 分頁 A 跑完、分頁 B 還留著暫停清單，按下去永遠報「已完成」。
+       * FORBIDDEN 一起清也是安全的：那本來就不是你的任務。設計書 §7c 的
+       * 「已完成 → 收起按鈕」自此對客戶端也是實話。
        */
-      if (resumeDenial !== JOB_CLAIM_DENIAL.BUSY) void refreshImportJob();
-      if (resumeDenial === JOB_CLAIM_DENIAL.CANCELLED && pendingImport) {
-        setPendingImportFor(activeSessionId, {
-          ...pendingImport,
-          pausedChapters: [],
-          pausedUnits: [],
-          pauseReason: null,
-          pauseDetail: null,
-        });
-        setImportJob(null);
+      if (resumeDenial !== JOB_CLAIM_DENIAL.BUSY) {
+        void refreshImportJob();
+        if (pendingImport) {
+          setPendingImportFor(activeSessionId, {
+            ...pendingImport,
+            pausedChapters: [],
+            pausedUnits: [],
+            pauseReason: null,
+            pauseDetail: null,
+          });
+          setImportJob(null);
+        }
       }
       return;
     }
