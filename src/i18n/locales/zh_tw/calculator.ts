@@ -241,6 +241,10 @@ export const calculator = {
     delete_failed: "刪除失敗，請稍後再試",
     view_failed: "薪資單載入失敗，請稍後再試",
     load_back_failed: "載回計算機失敗，請稍後再試",
+    employee_list_failed:
+      "員工名單載入失敗，這時候載回計算機無法建立員工連結。",
+    load_back_unlinked:
+      "這位員工已不在名單上。姓名與編號已依這筆紀錄填入，但沒有建立員工連結 —— 儲存時會再問一次要存給誰。",
   },
   account_book_entry: {
     title: "想把這次的試算存起來嗎？",

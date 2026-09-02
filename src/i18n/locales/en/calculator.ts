@@ -255,6 +255,10 @@ export const calculator = {
     view_failed: "Could not load the payslip. Please try again later.",
     load_back_failed:
       "Could not load this record into the calculator. Please try again later.",
+    employee_list_failed:
+      "Could not load the employee list. Loading a record into the calculator cannot link it to an employee right now.",
+    load_back_unlinked:
+      "This employee is no longer on the list. The name and number were filled in from this record, but no employee link was made — you will be asked who to save it for.",
   },
   account_book_entry: {
     title: "Want to keep this calculation?",

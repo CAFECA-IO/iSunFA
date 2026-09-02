@@ -21,7 +21,27 @@ const CalculatorHeader: FC = () => {
   const isCalc = pathname === ISUNFA_ROUTE.SALARY_CALCULATOR;
 
   return (
-    <header className="bg-surface-raised/90 ring-border-default sticky top-0 z-50 w-full shadow-sm ring-1 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full">
+      {/**
+       * Info: (20260826 - Julian) 毛玻璃移到**子層**，`<header>` 自己不帶 backdrop-filter。
+       *
+       * `backdrop-filter` 與 `transform` 一樣會讓元素成為子孫 `position: fixed`
+       * 的**包含塊** —— 於是小鈴鐺面板的 `fixed inset-0 h-dvh` 不是相對視窗，
+       * 而是相對這個 64px 高的 header 定位。實測（20260826）：面板 top 落在
+       * 7742px、底部連結跟著跑到面板頂端下方，手機版因此既捲不到底、
+       * 也點不到「查看全部通知」。
+       *
+       * 把 bg / blur / shadow / ring 放進一個 `absolute inset-0 -z-10` 的兄弟層，
+       * 視覺完全相同，而 header 不再是包含塊。這比在面板那端補位移可靠 ——
+       * 位移要猜 header 有多高、banner 在不在，而這個做法把前提直接拿掉。
+       *
+       * Info: (20260901 - Julian) 這一段是從 `origin/develop`（#6701）搬過來的，
+       * 本分支尚未 rebase。先搬是因為兩邊都改了這個檔案，而解衝突時「取本分支這一側」
+       * 是直覺選擇 —— 那會把上面那個修補靜默回退，而症狀出現在通知鈴鐺、不在薪資頁，
+       * 沒有人會回頭懷疑這支 PR（checklist §6.1：缺陷的形狀是**沒有出現**的變更）。
+       * 兩邊現在寫的是同一件事，rebase 時這一塊不再是一個要做判斷的衝突。
+       */}
+      <div className="bg-surface-raised/90 ring-border-default absolute inset-0 -z-10 shadow-sm ring-1 backdrop-blur-xl" />
       <nav
         className="flex items-center justify-between p-3 lg:px-8"
         aria-label="Global"

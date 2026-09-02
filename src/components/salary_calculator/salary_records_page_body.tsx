@@ -19,6 +19,7 @@ import {
 import { MONTHS } from "@/constants/month";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { useSalaryEmployees } from "@/hooks/use_salary_employees";
+import { resolveLoadBackIdentity } from "@/lib/utils/salary_load_back";
 import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import SalaryCalculatorShell from "@/components/salary_calculator/salary_calculator_shell";
 import ViewPaySlipModal from "@/components/salary_calculator/view_pay_slip_modal";
@@ -59,9 +60,22 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
 }) => {
   const { t } = useTranslation();
   const router = useRouter();
-  const { loadFromSnapshot, linkEmployee, unlinkEmployee } = useCalculatorCtx();
-  const { employees, isLoading: isEmployeesLoading } =
-    useSalaryEmployees(accountBookId);
+  const { loadFromSnapshot, linkEmployee, applyRecordEmployee } =
+    useCalculatorCtx();
+  /**
+   * Info: (20260901 - Julian) `hasError` 一定要解構出來。
+   *
+   * 名單那支 GET 失敗時 hook 把錯誤吞成 `[]` 並把 `isLoading` 設回 false ——
+   * 只看 `isLoading` 的話，「名單載入中」與「名單掛了」在畫面上完全一樣，
+   * 而 `employees.find(...)` 回 `undefined` 的兩種語意
+   * （「這個人被軟刪了」vs「名單根本沒載到」）會被折成同一個無聲分支。
+   */
+  const {
+    employees,
+    isLoading: isEmployeesLoading,
+    hasError: hasEmployeesError,
+    reload: reloadEmployees,
+  } = useSalaryEmployees(accountBookId);
 
   const [page, setPage] = useState<number>(1);
   const [employeeId, setEmployeeId] = useState<string>("");
@@ -156,20 +170,32 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
    * 反過來的話，載回三個月前的紀錄會靜靜地換成今天的本薪，
    * 畫面上沒有任何提示，重新計算的結果卻和原始薪資單對不起來。
    *
-   * ## 名單裡找不到這個人時，一定要 `unlinkEmployee()`
+   * ## 名單裡找不到這個人時，兩件事都要做
    *
-   * `CalculatorProvider` 掛在 layout，跨頁不重置，所以 `selectedEmployeeId`
-   * 保留的是**上一次**連結的那個人。少了 `else` 這一支的話：
-   * 使用者載回李四的紀錄 → 找不到李四 → 連結還停在張三 →
-   * 按「儲存薪資紀錄」時 `selectedEmployeeId !== null`，直接存進
-   * `(帳本, 張三, 年, 月)`，而那是 upsert —— **覆寫張三該月原有的紀錄**。
-   * 畫面上的姓名是李四，全程沒有任何提示。
+   * `CalculatorProvider` 掛在 layout，跨頁不重置，所以**上一個人的東西全部還在**：
+   * `selectedEmployeeId` 是他、姓名／編號／Email 也是他。
+   * 兩者要分開處理，少做任何一半都會留下一種錯：
+   *
+   * 1. **連結不能留著。** 少了這個分支的話，按「儲存薪資紀錄」時
+   *    `selectedEmployeeId !== null` → 直接存進 `(帳本, 張三, 年, 月)`，
+   *    而那是 upsert —— **覆寫張三該月原有的紀錄**，全程沒有任何提示。
+   * 2. **身分欄位不能留著。** 只解除連結、不補寫姓名的話，覆寫是擋住了，
+   *    但薪資單預覽與 PNG 檔名 `${employeeName}_${date}.png` 印的是**張三**
+   *    配上李四這一筆真實的薪資數字；沒連結過任何人時甚至是預設的「王小明」。
+   *    而且儲存流程的「直接新增員工」用的就是 `employeeName`，
+   *    會把李四的資料建成一個叫張三的新員工。
+   *
+   * `applyRecordEmployee(detail.employee)` 同時做完這兩件事：依紀錄補寫身分、
+   * 連結留空。薪資單是對外憑據，「這筆屬於誰」必須永遠有答案。
    *
    * 而「找不到」不是例外，是常態，三條路都會走到：
    * 名單那支 GET 還在飛（與薪資紀錄是兩支並行請求）、
-   * 該員工已被軟刪（名單一律 `deletedAt: null`，但他的薪資紀錄還在）、
-   * 名單那支 GET 失敗（hook 把錯誤吞成 `[]`）。
-   * 第一條由下面的 `disabled={isEmployeesLoading}` 擋掉，後兩條靠這個 `else`。
+   * 名單那支 GET 失敗（hook 把錯誤吞成 `[]`）、
+   * 該員工已被軟刪（名單一律 `deletedAt: null`，但他的薪資紀錄還在）。
+   *
+   * 前兩條是**假的找不到** —— 那個人其實好好地在名單上，只是這一刻看不到 ——
+   * 所以由按鈕的 `disabled={isEmployeesLoading || hasEmployeesError}` 擋在門外，
+   * 而不是讓它們走進這個分支。真正屬於這個分支的只有第三條。
    */
   const loadBackHandler = async (record: ISalaryRecordSummary) => {
     setActionError(null);
@@ -180,11 +206,20 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
         return;
       }
 
-      const employee = employees.find((item) => item.id === detail.employee.id);
-      if (employee) {
-        linkEmployee(employee);
+      const identity = resolveLoadBackIdentity(employees, detail.employee);
+
+      if (identity.kind === "linked") {
+        linkEmployee(identity.employee);
       } else {
-        unlinkEmployee();
+        /**
+         * Info: (20260901 - Julian) 名單裡沒有這個人（已被軟刪）。
+         *
+         * 不能只解除連結 —— 那樣連結是斷了，姓名／編號卻還留著上一個人的，
+         * 薪資單預覽與 PNG 檔名會印錯的人配這一筆的金額。
+         * 依紀錄本身補寫身分，連結留空，儲存時再依編號問一次。
+         */
+        applyRecordEmployee(identity.employee);
+        setActionError(t("calculator.records.load_back_unlinked"));
       }
 
       loadFromSnapshot(detail.input);
@@ -293,15 +328,19 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
             <Eye className="size-4" />
           </button>
           {/**
-           * Info: (20260901 - Julian) 員工名單還在飛的時候不能按 ——
-           * 那時 `employees` 是 `[]`，載回來的人一定找不到（理由見 `loadBackHandler`）
+           * Info: (20260901 - Julian) 名單還在飛、或名單掛了，都不能按。
+           *
+           * 兩種情況下 `employees` 都是 `[]`，載回來的人一定「找不到」——
+           * 但那是假的找不到（他其實好好地在名單上），於是會走進
+           * 「補寫身分、不建立連結」那條路，白白讓使用者少掉一次正確的連結。
+           * 掛掉不是死路：上面的橫幅有重試鈕，那是這顆按鈕唯一的解鎖方式。
            */}
           <button
             type="button"
             aria-label={t("calculator.records.load_back")}
             title={t("calculator.records.load_back")}
             onClick={() => loadBackHandler(record)}
-            disabled={isEmployeesLoading}
+            disabled={isEmployeesLoading || hasEmployeesError}
             className={`${iconBtnStyle} text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent`}
           >
             <RotateCcw className="size-4" />
@@ -438,6 +477,27 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
             )}
           </div>
         </div>
+
+        {/**
+         * Info: (20260901 - Julian) 名單掛了要說出來。
+         *
+         * 沒有這一條的話，畫面上的症狀是「員工篩選下拉是空的、載回鈕是灰的」，
+         * 而兩者都沒有解釋，也沒有任何重試的入口。
+         */}
+        {hasEmployeesError && (
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <p className="text-sm font-medium text-amber-700">
+              {t("calculator.records.employee_list_failed")}
+            </p>
+            <button
+              type="button"
+              onClick={() => reloadEmployees()}
+              className="shrink-0 rounded-lg border border-amber-300 bg-white px-3 py-1 text-xs font-bold text-amber-700 transition-colors hover:bg-amber-100"
+            >
+              {t("common.retry")}
+            </button>
+          </div>
+        )}
 
         {actionError !== null && (
           <div className="flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">

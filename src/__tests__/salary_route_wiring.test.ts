@@ -24,6 +24,8 @@
  */
 
 import { describe, it, expect, beforeEach } from "@jest/globals";
+import { readdirSync, readFileSync } from "fs";
+import { join, sep } from "path";
 import type { jest as JestType } from "@jest/globals";
 
 declare const jest: typeof JestType;
@@ -216,6 +218,11 @@ interface IEndpointCase {
    * （字碼 > 255 會直接丟 `TypeError`，而且是在建 request 時炸，不是在斷言時）。
    */
   key: string;
+  /**
+   * Info: (20260901 - Julian) 這支 handler 在 API 目錄裡的位置，格式 `METHOD 相對路徑`。
+   * 下面「端點表涵蓋 API 目錄底下每一支 handler」那條靠它與走訪結果對拍。
+   */
+  source: string;
   bucket: RateLimitBucketEnum;
   /**
    * Info: (20260901 - Julian) 這支端點該向授權閘要求的層級。
@@ -223,14 +230,73 @@ interface IEndpointCase {
    * 「拼錯的方向通常是放寬」最典型的一格 —— 所以它要有斷言。
    */
   access: SalaryAccess;
+  /**
+   * Info: (20260901 - Julian) 有 request body 的端點才有這一支：送一個形狀不對的 body。
+   *
+   * 沒有 body 的端點（GET / DELETE）留 `undefined`，下面的 `it.each` 會濾掉。
+   * 這一格存在的理由是 `PUT employee/:id` 先前完全沒有驗證測試 ——
+   * 把它的 `if (!parsed.success) return jsonFail(...)` 改成 `return jsonOk(null)`
+   * （通得過型別、驗證失敗回 200）→ 55 passed 全綠。
+   */
+  runInvalid?: (address: string) => Promise<Response>;
   service: IAnyMock;
   run: (address: string | null) => Promise<Response>;
 }
+
+/**
+ * Info: (20260901 - Julian) API 目錄的走訪，用來確認上面那張表沒有短少。
+ *
+ * `expect(ENDPOINTS).toHaveLength(8)` 只擋得住「表變短」，擋不住「目錄變長」——
+ * 掃描根等於剛好被修的那幾個檔案（checklist §1.1）。實測：新增第九支
+ * `salary_calculator/employee/bulk/route.ts`（無 DeWT、無限流、無授權閘）
+ * → 56 passed 全綠，而 `app_route_auth_guard.test.ts` 幫不上忙
+ * （`api` 在它的 `PUBLIC_ROOTS` 裡）。
+ *
+ * 同一輪已把 `salary_provider_scope.test.ts` 從寫死清單改成目錄走訪 ——
+ * 前端做了，API 側沒做。這裡補上，做法照抄。
+ */
+const API_DIR = join(
+  process.cwd(),
+  "src",
+  "app",
+  "api",
+  "v1",
+  "user",
+  "account_book",
+  "[account_book_id]",
+  "salary_calculator",
+);
+
+// Info: (20260901 - Julian) App Router 的 handler 一律是具名 export，方法名就是 HTTP 動詞
+const HANDLER_RE = /export\s+async\s+function\s+(GET|POST|PUT|PATCH|DELETE)\s*\(/g;
+
+/**
+ * Info: (20260901 - Julian) 去掉註解再掃。
+ * 註解裡引用 `export async function GET` 當例子是正常寫法，
+ * 而被註解掉的 handler 不該被當成一支還活著的端點（同 `salary_provider_scope` 的作法）。
+ */
+const stripComments = (source: string): string =>
+  source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^[ \t]*\/\/[^\n]*/gm, "");
+
+const collectHandlers = (): string[] =>
+  readdirSync(API_DIR, { recursive: true, encoding: "utf-8" })
+    .map((entry) => entry.split(sep).join("/"))
+    .filter((entry) => entry.endsWith("route.ts"))
+    .flatMap((relativePath) => {
+      const source = stripComments(
+        readFileSync(join(API_DIR, relativePath), "utf8"),
+      );
+      return [...source.matchAll(HANDLER_RE)].map(
+        (match) => `${match[1]} ${relativePath}`,
+      );
+    })
+    .sort();
 
 const ENDPOINTS: IEndpointCase[] = [
   {
     label: "GET employee（員工清單）",
     key: "employee-list",
+    source: "GET employee/route.ts",
     access: SalaryAccess.READ,
     bucket: RateLimitBucketEnum.READ,
     service: serviceMocks.listEmployees,
@@ -239,6 +305,7 @@ const ENDPOINTS: IEndpointCase[] = [
   {
     label: "POST employee（新增員工）",
     key: "employee-create",
+    source: "POST employee/route.ts",
     access: SalaryAccess.WRITE,
     bucket: RateLimitBucketEnum.SALARY_WRITE,
     service: serviceMocks.createEmployee,
@@ -246,10 +313,15 @@ const ENDPOINTS: IEndpointCase[] = [
       employeeCreate(send("POST", employeeBody, address), {
         params: bookParams(),
       }),
+    runInvalid: (address) =>
+      employeeCreate(send("POST", { name: "" }, address), {
+        params: bookParams(),
+      }),
   },
   {
     label: "PUT employee/:id（編輯員工）",
     key: "employee-update",
+    source: "PUT employee/[employee_id]/route.ts",
     access: SalaryAccess.WRITE,
     bucket: RateLimitBucketEnum.SALARY_WRITE,
     service: serviceMocks.updateEmployee,
@@ -257,10 +329,15 @@ const ENDPOINTS: IEndpointCase[] = [
       employeeUpdate(send("PUT", employeeBody, address), {
         params: employeeParams(),
       }),
+    runInvalid: (address) =>
+      employeeUpdate(send("PUT", { name: "" }, address), {
+        params: employeeParams(),
+      }),
   },
   {
     label: "DELETE employee/:id（移除員工）",
     key: "employee-delete",
+    source: "DELETE employee/[employee_id]/route.ts",
     access: SalaryAccess.WRITE,
     bucket: RateLimitBucketEnum.SALARY_WRITE,
     service: serviceMocks.deleteEmployee,
@@ -272,6 +349,7 @@ const ENDPOINTS: IEndpointCase[] = [
   {
     label: "GET record（薪資紀錄清單）",
     key: "record-list",
+    source: "GET record/route.ts",
     access: SalaryAccess.READ,
     bucket: RateLimitBucketEnum.READ,
     service: serviceMocks.listRecords,
@@ -280,15 +358,22 @@ const ENDPOINTS: IEndpointCase[] = [
   {
     label: "POST record（儲存薪資紀錄）",
     key: "record-save",
+    source: "POST record/route.ts",
     access: SalaryAccess.WRITE,
     bucket: RateLimitBucketEnum.SALARY_WRITE,
     service: serviceMocks.saveRecord,
     run: (address) =>
       recordSave(send("POST", recordBody, address), { params: bookParams() }),
+    runInvalid: (address) =>
+      recordSave(
+        send("POST", { ...recordBody, result: { totalPayment: 1 } }, address),
+        { params: bookParams() },
+      ),
   },
   {
     label: "GET record/:id（薪資紀錄明細）",
     key: "record-detail",
+    source: "GET record/[record_id]/route.ts",
     access: SalaryAccess.READ,
     bucket: RateLimitBucketEnum.READ,
     service: serviceMocks.getRecord,
@@ -297,6 +382,7 @@ const ENDPOINTS: IEndpointCase[] = [
   {
     label: "DELETE record/:id（刪除薪資紀錄）",
     key: "record-delete",
+    source: "DELETE record/[record_id]/route.ts",
     access: SalaryAccess.WRITE,
     bucket: RateLimitBucketEnum.SALARY_WRITE,
     service: serviceMocks.deleteRecord,
@@ -329,6 +415,23 @@ describe("身分閘：沒有 token 就到不了業務邏輯", () => {
     expect(new Set(ENDPOINTS.map((endpoint) => endpoint.label)).size).toBe(8);
     expect(new Set(ENDPOINTS.map((endpoint) => endpoint.key)).size).toBe(8);
     expect(new Set(ENDPOINTS.map((endpoint) => endpoint.service)).size).toBe(8);
+  });
+
+  /**
+   * Info: (20260901 - Julian) 表與**目錄**對拍，不是與一個寫死的數字對拍。
+   *
+   * 上一條只問「表有沒有變短」。這一條問「目錄有沒有變長」——
+   * 新增一支 route 而沒登記進表裡，這裡會紅並直接指出是哪一支，
+   * 而不是讓它靜靜地待在 API 底下不受任何裝配測試檢查。
+   */
+  it("端點表涵蓋 API 目錄底下每一支 handler（新增 route 沒登記就會紅）", () => {
+    const handlers = collectHandlers();
+
+    // Info: (20260901 - Julian) 走訪撈到空氣的話，下面那條會變成兩個空陣列相等
+    expect(handlers.length).toBeGreaterThan(0);
+    expect(handlers).toEqual(
+      ENDPOINTS.map((endpoint) => endpoint.source).sort(),
+    );
   });
 
   it.each(ENDPOINTS)(
@@ -519,6 +622,33 @@ describe("驗證：形狀不對就進不了 service", () => {
 
     expect(response.status).toBe(httpOf(API_ERRORS.VA_INVALID_INPUT_DATA));
     expect(serviceMocks.createEmployee).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260901 - Julian) 三支帶 body 的端點都要擋得住形狀不對的輸入。
+   *
+   * 上面那幾條手寫案例只涵蓋 `POST record` 與 `POST employee`，
+   * `PUT employee/:id` 一條都沒有 —— 而它是唯一一支「改既有資料」的端點。
+   * 斷言成對：回 400 **且** service 沒被呼叫。只驗前者的話，
+   * 「先寫進去再回 400」會通過；只驗後者的話，「驗證失敗卻回 200」會通過
+   * （那正是這一條實測到的假綠形狀）。
+   */
+  it.each(ENDPOINTS.filter((endpoint) => endpoint.runInvalid !== undefined))(
+    "$label：body 形狀不對時回 400，且 service 沒有被呼叫",
+    async ({ runInvalid, service }) => {
+      const response = await runInvalid!("0xbad-body");
+
+      expect(response.status).toBe(httpOf(API_ERRORS.VA_INVALID_INPUT_DATA));
+      expect(service).not.toHaveBeenCalled();
+    },
+  );
+
+  it("帶 body 的端點就是那三支（少一支代表有人把驗證拿掉了）", () => {
+    expect(
+      ENDPOINTS.filter((endpoint) => endpoint.runInvalid !== undefined).map(
+        (endpoint) => endpoint.key,
+      ),
+    ).toEqual(["employee-create", "employee-update", "record-save"]);
   });
 
   it("驗證失敗時連授權閘都不必打擾（順序：驗證在前）", async () => {

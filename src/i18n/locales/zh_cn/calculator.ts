@@ -241,6 +241,10 @@ export const calculator = {
     delete_failed: "删除失败，请稍后再试",
     view_failed: "薪资单加载失败，请稍后再试",
     load_back_failed: "载回计算器失败，请稍后再试",
+    employee_list_failed:
+      "员工名单加载失败，这时候载回计算器无法建立员工连结。",
+    load_back_unlinked:
+      "这位员工已不在名单上。姓名与编号已依这笔记录填入，但没有建立员工连结 —— 保存时会再问一次要存给谁。",
   },
   account_book_entry: {
     title: "想把这次的试算保存下来吗？",

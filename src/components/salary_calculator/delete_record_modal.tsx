@@ -57,11 +57,20 @@ const DeleteRecordModal: FC<IDeleteRecordModalProps> = ({
           <h2 className="text-text-neutral-primary text-lg font-bold">
             {t("calculator.records.delete_title")}
           </h2>
+          {/**
+           * Info: (20260901 - Julian) X 也要在刪除進行中鎖住，與下方兩顆鈕一致。
+           *
+           * 少了這一行的話：按確定 → DELETE 還在飛 → 點 X → 彈窗卸載 →
+           * 回來的 `setHasError` 落在已卸載的元件上，**失敗訊息永遠不會出現**，
+           * 列表也不會重整。使用者以為刪掉了，那一列還在。
+           * 這是硬刪，代價比 `remove_employee_modal` 的軟刪高。
+           */}
           <button
             type="button"
             aria-label={t("common.cancel")}
             onClick={closeHandler}
-            className="text-text-neutral-secondary absolute right-[16px] flex h-[32px] w-[32px] items-center justify-center rounded-md"
+            disabled={isDeleting}
+            className="text-text-neutral-secondary absolute right-[16px] flex h-[32px] w-[32px] items-center justify-center rounded-md disabled:cursor-not-allowed disabled:opacity-40"
           >
             <X size={20} />
           </button>

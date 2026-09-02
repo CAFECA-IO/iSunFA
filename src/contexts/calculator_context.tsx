@@ -72,6 +72,7 @@ interface ICalculatorContext {
   selectedEmployeeId: string | null;
   linkEmployee: (employee: ISalaryCalculatorEmployee) => void;
   unlinkEmployee: () => void;
+  applyRecordEmployee: (employee: { name: string; number: string }) => void;
 
   // Info: (20260831 - Julian) 把存下來的薪資紀錄載回計算機（薪資紀錄頁的「載回計算機」）
   loadFromSnapshot: (input: ISalaryCalculatorOptions) => void;
@@ -492,7 +493,49 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setSelectedEmployeeId(employee.id);
   };
 
+  /**
+   * Info: (20260831 - Julian) 只解除連結，**不清空姓名／編號／Email**。
+   *
+   * 這一支的呼叫端是 Step 1 那顆「解除連結」—— 使用者要的是「這次不要存到他身上」，
+   * 不是「把我剛剛看到的資料清掉」。清空會讓畫面在按下去的瞬間整片變空。
+   *
+   * 因此「載回一筆紀錄，但名單裡找不到那個人」不能只呼叫這一支：
+   * 那樣連結是斷了，姓名／編號／Email 卻還留著**上一個人**的。
+   * 那條路要走 `applyRecordEmployee()`。
+   */
   const unlinkEmployee = () => setSelectedEmployeeId(null);
+
+  /**
+   * Info: (20260901 - Julian) 依一筆薪資紀錄補寫「這筆屬於誰」，但**不建立連結**。
+   *
+   * ## 為什麼需要這一支
+   *
+   * `loadFromSnapshot` 刻意不動姓名／編號／Email 與員工連結（見下方註解）——
+   * 那四樣由呼叫端依紀錄上的員工另外設定。而「名單裡找不到這個人」那條路
+   * （員工已被軟刪、或名單那支 GET 失敗）沒有可以 `linkEmployee` 的對象，
+   * 只呼叫 `unlinkEmployee()` 的話：覆寫是擋住了，但畫面上仍是**上一個人**的姓名
+   * —— 沒有連結過任何人時甚至是預設的「王小明」。
+   *
+   * 後果不只是看起來怪：`salary_result_section` 的薪資單預覽與
+   * PNG 下載檔名 `${employeeName}_${date}.png` 都讀 `employeeName`，
+   * 於是印出來的是**錯的人配上這一筆真實的薪資數字**，而薪資單是對外憑據。
+   * 儲存時的「直接新增員工」也用 `employeeName`，會把李四的資料建成一個叫張三的員工。
+   *
+   * ## Email 為什麼是清空而不是保留
+   *
+   * 薪資紀錄的回應只有 `name` 與 `number`，沒有 Email（`ISalaryRecordSummary`）。
+   * 留著上一個人的 Email 比空著危險得多 —— 那一欄的用途是把薪資單寄出去。
+   *
+   * 連結一律留 `null`：這裡拿到的是紀錄上的員工，而不是名單上的員工，
+   * 「要存給誰」交給儲存流程的例外 B 對話框依編號再問一次。
+   */
+  const applyRecordEmployee = (employee: { name: string; number: string }) => {
+    setEmployeeName(employee.name);
+    setIsNameError(employee.name === "");
+    setEmployeeNumber(employee.number);
+    setEmployeeEmail("");
+    setSelectedEmployeeId(null);
+  };
 
   /**
    * Info: (20260831 - Julian) 把一筆薪資紀錄的輸入快照載回計算機。
@@ -615,6 +658,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     selectedEmployeeId,
     linkEmployee,
     unlinkEmployee,
+    applyRecordEmployee,
     loadFromSnapshot,
     getSalaryCalculatorOptions,
     employeeName,
