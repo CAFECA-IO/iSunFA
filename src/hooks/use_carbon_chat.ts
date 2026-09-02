@@ -241,7 +241,26 @@ export const useCarbonChat = () => {
   >(() => createDefaultSessions());
   const [activeSessionId, setActiveSessionId] =
     useState<string>(DEFAULT_SESSION_ID);
-  const [inputValue, setInputValue] = useState<string>("");
+  /**
+   * Info: (20260827 - Emily) 輸入文字**不再住在這裡**(#6718)。
+   *
+   * 頁面整棵樹都消費這個 hook,所以文字放在這裡等於「每個按鍵重渲染整頁」——
+   * 訊息列表 + 報告預覽(實測 59 頁、19 張表)+ 所有 mermaid 圖都跟著重畫。
+   * 文字現在住在 `ChatInput`;這裡只保留**外部對輸入框下的指令**:
+   * 預填(跳段指引)與清空(切房、送出後)。
+   *
+   * 以 nonce 而非值來傳遞:清空的值是空字串,而使用者自己刪空也是空字串 ——
+   * 用值比對分不出「外部要求清空」與「剛好刪空」,後者會被每次 render 覆寫回去。
+   * nonce 只在真的下指令時 +1,所以 state 變動次數 = 指令次數(不是按鍵次數)。
+   */
+  const [inputPrefill, setInputPrefill] = useState<{
+    value: string;
+    nonce: number;
+  }>({ value: "", nonce: 0 });
+
+  const commandInput = useCallback((value: string) => {
+    setInputPrefill((prev) => ({ value, nonce: prev.nonce + 1 }));
+  }, []);
   // Info: (20260714 - Tzuhan) 等待 AI 回覆的 session 集合(per-session 隔離: 舊房等待中不影響新房輸入與指示)
   const [busySessionIds, setBusySessionIds] = useState<Set<string>>(new Set());
   const [isError, setIsError] = useState<boolean>(false);
@@ -1770,49 +1789,53 @@ export const useCarbonChat = () => {
 
   // Info: (20260714 - Tzuhan) 切換聊天室: 各室訊息/報告/等待狀態彼此隔離，僅重置跨室共用的暫態 UI
   // Info: (20260714 - Tzuhan) (輸入框、附件、高亮、跳段目標為輸入層暫態；busy/計時器 per-session 不需重置)
-  const switchSession = useCallback((sessionId: string) => {
-    setActiveSessionId(sessionId);
-    setActiveParagraphId(null);
-    setHighlightedParagraphId(null);
-    setFocusedMessageId(null);
-    setInputValue("");
-    setPendingAttachments([]);
-    setAttachmentError(null);
-    setSaveStatus(null);
-    setIsError(false);
-    /**
-     * Info: (20260811 - Emily) 這裡刻意**不再清除** draftNotice(#6624)。
-     *
-     * 這一行是 per-session 之前留下的:當時提示只有一格,「切房就清掉」本身就是隔離機制。
-     * 改成一房一格之後(20260806),隔離已由 `draftNoticeBySession[activeSessionId]` 完成,
-     * 這一行剩下的作用只有刪除 —— 而且刪的是**正要離開的那一房**:
-     * 省略 sessionId 的 `setDraftNotice` 讀 `activeSessionIdRef`,該 ref 由 effect 同步,
-     * 上一行的 `setActiveSessionId` 要到 commit 後才反映到 ref。
-     * 於是「A 房匯入中 → 切到 B 房」把 A 房的進度從 map 裡刪掉,
-     * 切回 A 房畫面是空的,要等下一次進度事件(可能好幾分鐘)才重新有字 ——
-     * 那正是 #6624 描述的「不會立刻出現」。
-     *
-     * 與下方 pendingImportBySession(20260805 - Luphia)同一個故事:
-     * 那次改了預覽卡,提示這一份漏了。
-     *
-     * 「匯入已結束才切回不得殘留假的進行中訊息」由匯入端保證:
-     * 每一條終止路徑都以 originSessionId 明確收尾
-     * (成功 `notify(null)`;失敗 `notify(error)` + `dismissDraftNoticeAfter`)。
-     */
-    setPendingRevision(null);
-    /**
-     * Info: (20260805 - Luphia) 這裡刻意**不動** pendingImportBySession。
-     * 它已經以發起匯入的會話 id 為鍵,切房本來就不需要重設任何東西 ——
-     * 而原本沿用「清掉唯一那筆」的舊語意去清空整個 map,恰好抵銷了 per-session 的全部意義:
-     * 在 A 房啟動匯入 → 切到 B 房等 → 匯入完成落成 { A: preview } → 點回 A 房
-     * → switchSession('A') 把 map 清成 {} → 預覽卡消失。
-     * 數分鐘的 LLM 工作與整份報告的配額靜默丟棄,連 retryFailedImportChapters 都救不回來
-     * (它需要 pendingImport)。
-     *
-     * 生命週期正確的清除點是「會話消失」而不是「切走」,故改在 archiveSession 移除該鍵。
-     */
-    pendingDraftParagraphIdRef.current = null;
-  }, []);
+  const switchSession = useCallback(
+    (sessionId: string) => {
+      setActiveSessionId(sessionId);
+      setActiveParagraphId(null);
+      setHighlightedParagraphId(null);
+      setFocusedMessageId(null);
+      // Info: (20260827 - Emily) #6718:切房清空輸入框(文字在 ChatInput,經 nonce 下指令)
+      commandInput("");
+      setPendingAttachments([]);
+      setAttachmentError(null);
+      setSaveStatus(null);
+      setIsError(false);
+      /**
+       * Info: (20260811 - Emily) 這裡刻意**不再清除** draftNotice(#6624)。
+       *
+       * 這一行是 per-session 之前留下的:當時提示只有一格,「切房就清掉」本身就是隔離機制。
+       * 改成一房一格之後(20260806),隔離已由 `draftNoticeBySession[activeSessionId]` 完成,
+       * 這一行剩下的作用只有刪除 —— 而且刪的是**正要離開的那一房**:
+       * 省略 sessionId 的 `setDraftNotice` 讀 `activeSessionIdRef`,該 ref 由 effect 同步,
+       * 上一行的 `setActiveSessionId` 要到 commit 後才反映到 ref。
+       * 於是「A 房匯入中 → 切到 B 房」把 A 房的進度從 map 裡刪掉,
+       * 切回 A 房畫面是空的,要等下一次進度事件(可能好幾分鐘)才重新有字 ——
+       * 那正是 #6624 描述的「不會立刻出現」。
+       *
+       * 與下方 pendingImportBySession(20260805 - Luphia)同一個故事:
+       * 那次改了預覽卡,提示這一份漏了。
+       *
+       * 「匯入已結束才切回不得殘留假的進行中訊息」由匯入端保證:
+       * 每一條終止路徑都以 originSessionId 明確收尾
+       * (成功 `notify(null)`;失敗 `notify(error)` + `dismissDraftNoticeAfter`)。
+       */
+      setPendingRevision(null);
+      /**
+       * Info: (20260805 - Luphia) 這裡刻意**不動** pendingImportBySession。
+       * 它已經以發起匯入的會話 id 為鍵,切房本來就不需要重設任何東西 ——
+       * 而原本沿用「清掉唯一那筆」的舊語意去清空整個 map,恰好抵銷了 per-session 的全部意義:
+       * 在 A 房啟動匯入 → 切到 B 房等 → 匯入完成落成 { A: preview } → 點回 A 房
+       * → switchSession('A') 把 map 清成 {} → 預覽卡消失。
+       * 數分鐘的 LLM 工作與整份報告的配額靜默丟棄,連 retryFailedImportChapters 都救不回來
+       * (它需要 pendingImport)。
+       *
+       * 生命週期正確的清除點是「會話消失」而不是「切走」,故改在 archiveSession 移除該鍵。
+       */
+      pendingDraftParagraphIdRef.current = null;
+    },
+    [commandInput],
+  );
 
   // Info: (20260716 - Tzuhan) 對話改名:設自訂旗標(首訊衍生不再覆蓋);sessions 索引 effect 自動持久化
   const renameSession = useCallback((sessionId: string, title: string) => {
@@ -4473,13 +4496,14 @@ export const useCarbonChat = () => {
         return { ...prev, [activeSessionId]: updatedSession };
       });
 
-      setInputValue(
+      // Info: (20260827 - Emily) #6718:跳段預填(同上,經 nonce 下指令)
+      commandInput(
         t("carbon_chatbot.jump_prompt", {
           section: `${section.code} ${section.title}`,
         }),
       );
     },
-    [activeSessionId, t],
+    [activeSessionId, commandInput, t],
   );
 
   // Info: (20260714 - Tzuhan) 反向連動: 點報告段落 → 捲動至最近一則關聯訊息並閃爍；無關聯訊息則 fallback 為跳段引導
@@ -5108,8 +5132,14 @@ export const useCarbonChat = () => {
        * `.trim` 直接炸,而且是 unhandledRejection(按鈕壞了卻沒有紅字)。
        * 非字串一律退回輸入框內容:錯誤呼叫降級成正常送出,不是靜默壞死。
        */
-      const outgoingText =
-        typeof overrideText === "string" ? overrideText : inputValue;
+      /**
+       * Info: (20260827 - Emily) #6718:文字一律由呼叫端帶進來
+       * (ChatInput 送出時上交、後續建議按鈕帶按鈕上的字)。
+       * hook 這裡不再有 `inputValue` 可退 —— 非字串時退成空字串,
+       * 下面「無文字且無就緒附件即不送」的既有 guard 會擋掉,
+       * 也就是錯誤呼叫降級成「不送出」而不是拿到 MouseEvent 去 `.trim`。
+       */
+      const outgoingText = typeof overrideText === "string" ? overrideText : "";
       const readyAttachments = pendingAttachments.filter(
         (a) => a.status === PendingAttachmentStatusEnum.READY,
       );
@@ -5122,7 +5152,28 @@ export const useCarbonChat = () => {
       try {
         masterKey = await ensureMasterKeyCached();
       } catch (keyError) {
+        /**
+         * Info: (20260831 - Emily) 送不出去就把字**還給使用者**(PR #6730 review 中-1)。
+         *
+         * #6718 把清空搬進 ChatInput(文字的所有者),而清空發生在
+         * `onSendMessage` 之前 —— 對成功路徑是對的(等 async 完成才清,
+         * 使用者會看到自己的字停在框裡好幾秒),但金鑰這兩條早退在清空之後,
+         * 於是使用者打完的一句話直接消失,要重打。
+         *
+         * develop 上不是這樣:舊的 `setInputValue("")` 位置在所有早退之後,
+         * 金鑰失敗時字留在框裡 —— 這個保護是本 PR 弄掉的,所以本 PR 補回來。
+         *
+         * 最日常的觸發是**取消生物辨識提示**(按錯手指、誤觸、想先確認別的事),
+         * 不是罕見的裝置問題。
+         *
+         * 還原走既有的 `commandInput` 通道(nonce +1 → 元件的 effect 覆寫回去),
+         * 不需要回傳值、不必改 prop 介面。
+         * 非輸入框發起的送出(後續建議按鈕、跳段自動送出)失敗時,
+         * 那句話會被放進輸入框 —— 那是刻意的:比靜默丟掉使用者的動作好,
+         * 而且再按一次就送得出去。
+         */
         if (keyError instanceof ChatroomUnsupportedDeviceError) {
+          commandInput(outgoingText);
           appendMessageLocally(
             {
               id: crypto.randomUUID(),
@@ -5133,6 +5184,7 @@ export const useCarbonChat = () => {
           );
           return;
         }
+        commandInput(outgoingText);
         console.error(
           "[carbon-chat] failed to prepare encryption key:",
           keyError,
@@ -5185,7 +5237,13 @@ export const useCarbonChat = () => {
         return { ...prev, [activeSessionId]: updatedSession };
       });
 
-      setInputValue("");
+      /**
+       * Info: (20260827 - Emily) #6718:送出後清空。
+       * `ChatInput` 送出時已自行清空(它是文字的所有者),這裡再下一次指令
+       * 是為了**非輸入框發起的送出**(後續建議按鈕、跳段後自動送出)——
+       * 那些路徑不經過元件的 submit,框裡的字不會自己消失。
+       */
+      commandInput("");
       setPendingAttachments([]);
       setAttachmentError(null);
       markSessionBusy(activeSessionId, true);
@@ -5419,7 +5477,7 @@ export const useCarbonChat = () => {
     },
     [
       payExistingOrder,
-      inputValue,
+      commandInput,
       isLoading,
       pendingAttachments,
       activeSession,
@@ -5613,8 +5671,7 @@ export const useCarbonChat = () => {
     renameSession,
     renameReportDocument,
     updateReportIdentity,
-    inputValue,
-    setInputValue,
+    inputPrefill,
     isTyping,
     isLoading,
     isError,

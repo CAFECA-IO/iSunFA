@@ -5,6 +5,7 @@ import { NextRequest } from "next/server";
 import { POST as addressInvite } from "@/app/api/v1/user/team/[team_id]/invitations/route";
 import { POST as emailInvite } from "@/app/api/v1/user/team/[team_id]/invitations/email/route";
 import { teamRepo } from "@/repositories/team.repo";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { inviteMemberByEmail } from "@/services/team_invitation.service";
 import { chargeSeatAddition } from "@/services/team_seat.service";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
@@ -57,6 +58,8 @@ jest.mock("@/repositories/webauthn.repo", () => ({
     })),
     // Info: (20260819 - Luphia) 位址邀請會查受邀者是否已有帳號（回 null＝還沒有）
     findUserByAddress: jest.fn(async () => null),
+    // Info: (20260826 - Julian) 位址來自使用者輸入時走這一支（review 1.2）
+    findUserByAnyAddressForm: jest.fn(async () => null),
     clearChallenge: jest.fn(),
   },
 }));
@@ -179,7 +182,7 @@ function useOperator(address: string): void {
   asMock(getIdentityFromDeWT).mockResolvedValue({ id: "user-1", address });
 }
 
-function addressRequest(): NextRequest {
+function addressRequest(address = `0x${"1".repeat(40)}`): NextRequest {
   return new NextRequest(
     "https://isunfa.com/api/v1/user/team/team-1/invitations",
     {
@@ -189,7 +192,7 @@ function addressRequest(): NextRequest {
         authorization: "Bearer dewt",
       },
       body: JSON.stringify({
-        address: `0x${"1".repeat(40)}`,
+        address,
         role: "VIEWER",
         authentication: { id: "cred" },
         // Info: (20260819 - Luphia) 見上方說明（#6682 之後為必填）
@@ -328,5 +331,108 @@ describe("邀請寄送端的量控接線", () => {
 
     expect(response.status).not.toBe(200);
     expect(asMock(inviteMemberByEmail)).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Info: (20260826 - Julian) 受邀位址在**進門處**就正規化（review 1.2）。
+ *
+ * 這一組住在這裡而不是自成一檔，是因為它要的東西這一檔已經架好了：
+ * 真的 route handler、teamRepo 與 webAuthnRepo 的替身。複製一份 120 行的
+ * mock 邊界只會多一份要同步維護的東西。
+ *
+ * 缺陷的形狀：`isAddress` 的 strict 預設放行全小寫、只擋亂大小寫，
+ * 而下游三處都是精確比對（已是成員、重複邀請、`isIntendedRecipient`）。
+ * 管理員貼小寫位址 → 三道全部落空 → **扣了席次費**，發出一封受邀者
+ * 看不到也接不了的邀請；改貼 checksum 再邀一次 → 重複檢查仍查不到舊列
+ * → **再扣一次** → 撞 `pendingKey` 的 P2002 → 500。錢扣了，邀請沒建成。
+ */
+describe("受邀位址的正規化", () => {
+  // Info: (20260826 - Julian) 有大小寫差異的真實位址（全數字的測不出這件事）
+  const CHECKSUM = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+  const LOWER = CHECKSUM.toLowerCase();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    asMock(teamRepo.getTeamMember).mockResolvedValue({ role: "OWNER" });
+    asMock(teamRepo.getTeamInvitation).mockResolvedValue(null);
+    asMock(teamRepo.createTeamInvitation).mockResolvedValue({ id: "inv-1" });
+    asMock(teamRepo.countPendingInvitations).mockResolvedValue(0);
+    asMock(teamRepo.countInvitationsCreatedSince).mockResolvedValue(0);
+    asMock(teamRepo.findLastInvitationSentAt).mockResolvedValue(null);
+    asMock(teamRepo.getTeamById).mockResolvedValue({
+      id: "team-1",
+      name: "E2E Team",
+    });
+  });
+
+  /**
+   * Info: (20260826 - Julian) 貼小寫與貼 checksum 必須產生**同一個** pendingKey。
+   *
+   * 這是全站唯一能擋住重複扣款的東西（唯一鍵），而它原本是正規化做對的
+   * 那一處 —— 只是查詢那三處沒跟上。這條把「兩種寫法是同一個對象」
+   * 從唯一鍵那一側也釘住。
+   */
+  it("貼小寫與貼 checksum 建出同一把 pendingKey", async () => {
+    useOperator("0xaddr-norm-1");
+    await addressInvite(addressRequest(LOWER), {
+      params: Promise.resolve({ team_id: "team-1" }),
+    });
+    const first = asMock(teamRepo.createTeamInvitation).mock
+      .calls[0][0] as Record<string, unknown>;
+
+    asMock(teamRepo.createTeamInvitation).mockClear();
+
+    useOperator("0xaddr-norm-2");
+    await addressInvite(addressRequest(CHECKSUM), {
+      params: Promise.resolve({ team_id: "team-1" }),
+    });
+    const second = asMock(teamRepo.createTeamInvitation).mock
+      .calls[0][0] as Record<string, unknown>;
+
+    expect(first.pendingKey).toBe(second.pendingKey);
+    // Info: (20260826 - Julian) 鍵是小寫的（既有資料的形狀，不能改）
+    expect(first.pendingKey).toBe(`team-1:addr:${LOWER}`);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 入庫的 `inviteeAddress` 也要是正規化過的。
+   *
+   * 只修唯一鍵不夠：`isIntendedRecipient` 與鈴鐺的查詢讀的是這一欄。
+   * 存管理員貼進來的字面值的話，受邀者的鈴鐺查不到、accept 一律 403 ——
+   * 而席次費已經扣了。
+   */
+  it("入庫的受邀位址不是使用者貼進來的字面值", async () => {
+    useOperator("0xaddr-norm-3");
+    await addressInvite(addressRequest(LOWER), {
+      params: Promise.resolve({ team_id: "team-1" }),
+    });
+
+    const created = asMock(teamRepo.createTeamInvitation).mock
+      .calls[0][0] as Record<string, unknown>;
+    expect(created.inviteeAddress).toBe(CHECKSUM);
+  });
+
+  /**
+   * Info: (20260826 - Julian) 下游的兩道檢查都要拿到正規化後的值。
+   *
+   * 「已是團隊成員」那道走 `findUserByAnyAddressForm`（`findUserByAddress`
+   * 是 `findUnique`，精確比對）—— 它靜默失效的後果是對已經在團隊裡的人
+   * 重複發邀請並重複扣費，那是會計後果，不只是體驗。
+   */
+  it("成員檢查與重複檢查都拿到正規化後的位址", async () => {
+    useOperator("0xaddr-norm-4");
+    await addressInvite(addressRequest(LOWER), {
+      params: Promise.resolve({ team_id: "team-1" }),
+    });
+
+    expect(asMock(webAuthnRepo.findUserByAnyAddressForm)).toHaveBeenCalledWith(
+      CHECKSUM,
+    );
+    expect(asMock(teamRepo.getTeamInvitation)).toHaveBeenCalledWith(
+      "team-1",
+      CHECKSUM,
+      "PENDING",
+    );
   });
 });

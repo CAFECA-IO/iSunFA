@@ -982,11 +982,20 @@ describe("revokeInvitation", () => {
 });
 
 describe("declineInvitationByMember", () => {
+  /**
+   * Info: (20260826 - Julian) 兩個新欄位要寫出來，不能靠 `undefined` 剛好成立。
+   *
+   * 判定改走 `canActOnInvitation` 之後，它會讀 `expiresAt` 與 `inviteeEmail`。
+   * 省略的話 `undefined` 走的分支剛好與 `null` 相同，測試照樣綠 ——
+   * 但這份替身就不再長得像真的那一列，而下一個人會照它來理解資料形狀。
+   */
   const pending = {
     id: "inv-1",
     teamId: TEAM.id,
     status: TEAM_INVITATION_STATUS.PENDING,
     inviteeAddress: "0xabc",
+    inviteeEmail: null,
+    expiresAt: null,
   };
 
   beforeEach(() => {
@@ -999,6 +1008,7 @@ describe("declineInvitationByMember", () => {
       inviteId: "inv-1",
       userId: "user-2",
       address: "0xabc",
+      nowMs: NOW,
     });
     expect(result.teamId).toBe(TEAM.id);
   });
@@ -1010,6 +1020,69 @@ describe("declineInvitationByMember", () => {
         inviteId: "inv-1",
         userId: "user-3",
         address: "0xdef",
+        nowMs: NOW,
+      }),
+    ).rejects.toThrow();
+    expect(asMock(teamRepo.declineInvitation)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260826 - Julian) email 邀請的受邀者也能拒絕（review B1）。
+   *
+   * 判定本身在 `team_invitation_recipient.test.ts` 窮舉；這一條驗的是**接線** ——
+   * 這支函式真的去查了身分的已驗證信箱，而不是只把純函式擺在那裡。
+   * 少了它，把 `resolveRecipientKeys` 的呼叫刪掉、改回傳空 emailKeys，
+   * 那支純函式的測試會全綠而這條路徑照樣壞。
+   */
+  it("被 email 邀請的人也能拒絕", async () => {
+    asMock(teamRepo.getInvitationByIdWithDetails).mockResolvedValue({
+      ...pending,
+      inviteeAddress: null,
+      inviteeEmail: "alice@gmail.com",
+      expiresAt: new Date(NOW + 1000),
+    });
+    /**
+     * Info: (20260826 - Julian) 精確相符（review：既有護欄）。
+     * 原本這裡用 `alice+work@gmail.com` 去對 `alice@gmail.com` 的邀請，
+     * 靠的是 canonical 合併 —— 而判定改成精確比對之後那不再成立，也不該成立。
+     */
+    asMock(userIdentityRepo.findByUserId).mockResolvedValue([
+      { email: "Alice@Gmail.com", emailVerified: true },
+    ]);
+
+    const result = await declineInvitationByMember({
+      inviteId: "inv-1",
+      userId: "user-2",
+      address: "0xabc",
+      nowMs: NOW,
+    });
+
+    expect(result.teamId).toBe(TEAM.id);
+  });
+
+  /**
+   * Info: (20260826 - Julian) **未驗證**的信箱不算數。
+   *
+   * 這是放寬收件者判定時唯一真正危險的方向：未驗證的 email 只是使用者
+   * 宣稱的字串，採信它等於宣稱一個信箱就能處置寄給該信箱的邀請。
+   */
+  it("信箱未驗證時不能拒絕 email 邀請", async () => {
+    asMock(teamRepo.getInvitationByIdWithDetails).mockResolvedValue({
+      ...pending,
+      inviteeAddress: null,
+      inviteeEmail: "alice@gmail.com",
+      expiresAt: new Date(NOW + 1000),
+    });
+    asMock(userIdentityRepo.findByUserId).mockResolvedValue([
+      { email: "alice@gmail.com", emailVerified: false },
+    ]);
+
+    await expect(
+      declineInvitationByMember({
+        inviteId: "inv-1",
+        userId: "user-2",
+        address: "0xabc",
+        nowMs: NOW,
       }),
     ).rejects.toThrow();
     expect(asMock(teamRepo.declineInvitation)).not.toHaveBeenCalled();
@@ -1027,6 +1100,7 @@ describe("declineInvitationByMember", () => {
         inviteId: "inv-1",
         userId: "user-2",
         address: "0xabc",
+        nowMs: NOW,
       }),
     ).rejects.toThrow();
   });

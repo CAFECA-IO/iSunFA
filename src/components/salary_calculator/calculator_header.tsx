@@ -6,11 +6,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/i18n/i18n_context";
 import { ISUNFA_ROUTE } from "@/constants/url";
-import LanguageSelector from "@/components/header/language_selector";
-import ThemeToggle from "@/components/header/theme_toggle";
 import BrandLogo from "@/components/header/brand_logo";
-import UserActions from "@/components/header/user_actions";
-import HeaderNav from "@/components/header/header_nav";
+import HeaderActions from "@/components/header/header_actions";
 import MechanismModal from "@/components/salary_calculator/mechanism_modal";
 
 const CalculatorHeader: FC = () => {
@@ -34,12 +31,6 @@ const CalculatorHeader: FC = () => {
        * 把 bg / blur / shadow / ring 放進一個 `absolute inset-0 -z-10` 的兄弟層，
        * 視覺完全相同，而 header 不再是包含塊。這比在面板那端補位移可靠 ——
        * 位移要猜 header 有多高、banner 在不在，而這個做法把前提直接拿掉。
-       *
-       * Info: (20260901 - Julian) 這一段是從 `origin/develop`（#6701）搬過來的，
-       * 本分支尚未 rebase。先搬是因為兩邊都改了這個檔案，而解衝突時「取本分支這一側」
-       * 是直覺選擇 —— 那會把上面那個修補靜默回退，而症狀出現在通知鈴鐺、不在薪資頁，
-       * 沒有人會回頭懷疑這支 PR（checklist §6.1：缺陷的形狀是**沒有出現**的變更）。
-       * 兩邊現在寫的是同一件事，rebase 時這一塊不再是一個要做判斷的衝突。
        */}
       <div className="bg-surface-raised/90 ring-border-default absolute inset-0 -z-10 shadow-sm ring-1 backdrop-blur-xl" />
       <nav
@@ -71,12 +62,8 @@ const CalculatorHeader: FC = () => {
           */}
         </div>
 
-        <div className="flex items-center gap-x-4 lg:gap-x-8">
-          <HeaderNav />
-          <ThemeToggle />
-          <LanguageSelector />
-          <UserActions />
-        </div>
+        {/* Info: (20260901 - Luphia) 右側控件列共用 HeaderActions（review #6731 三輪高-2）。develop 側這一列是 gap-x-4，統一後為 gap-x-6——與另兩個 header 一致，行為差異已在 PR 描述申報 */}
+        <HeaderActions />
       </nav>
 
       <MechanismModal

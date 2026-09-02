@@ -6,6 +6,9 @@ export const header = {
   login: "로그인",
   credits: "크레딧",
   logout: "로그아웃",
+  // Info: (20260825 - Julian) 手機版漢堡選單裡的分區標題（見 header_nav.tsx）
+  appearance: "화면 모드",
+  language: "언어",
   theme_system: "시스템 설정",
   theme_switch_to_dark: "다크로 전환",
   theme_switch_to_light: "라이트로 전환",

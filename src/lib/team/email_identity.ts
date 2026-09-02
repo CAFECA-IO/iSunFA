@@ -71,3 +71,33 @@ export function canonicalizeEmailForKey(email: string): string {
 
   return `${canonicalLocal}@${domain}`;
 }
+
+/**
+ * Info: (20260826 - Julian) **授權用**的信箱比對：只做 trim + lowercase。
+ *
+ * ## 為什麼不能沿用 `canonicalizeEmailForKey`
+ *
+ * 上面那支的檔頭已經寫過「這個取捨對鍵與稽核比對的方向其實相反」。
+ * 授權是**第三個**用途，而它的方向比稽核更嚴：
+ *
+ * - 鍵：寧可多合併（`bob+x@` 與 `bob@` 視為同一人）→ 擋得住重複扣款
+ * - 稽核：多合併會漏報一次不符 → 可接受
+ * - **授權：多合併 = 把別人的邀請顯示給你，而且（B1 之後）讓你接受它**
+ *
+ * 子地址一律去除是為鍵評估的取捨，理由是「幾乎所有服務商都支援」。
+ * 但**自建網域上 `bob+x@corp.com` 與 `bob@corp.com` 可以是兩個人** ——
+ * 那時 `bob@corp.com` 只要有一個已驗證信箱，就會看到不是寄給他的邀請
+ * （團隊名稱、邀請人姓名），並且能接受它、佔掉那個付費席次。
+ *
+ * 「漏合併只是少擋一次」在鍵那一側成立，在這一側不成立：這裡漏合併的代價
+ * 是「本人要改用邀請信裡的連結」，而多合併的代價是**別人的團隊被陌生人加入**。
+ *
+ * ## 那查詢怎麼辦
+ *
+ * `inviteeEmailKey`（canonical）仍然是查詢用的索引欄位 —— canonical 相等是
+ * 精確相等的**必要條件**，所以以它撈出來的集合是超集，不會漏。
+ * 撈完之後再用這一支做精確比對收斂，索引與正確性兩者都拿得到。
+ */
+export function normalizeEmailForCompare(email: string): string {
+  return email.trim().toLowerCase();
+}

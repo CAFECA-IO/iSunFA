@@ -11,7 +11,35 @@ import {
 import { Globe, ChevronDown, Check } from "lucide-react";
 import { useTranslation, Language } from "@/i18n/i18n_context";
 
-export default function LanguageSelector() {
+/**
+ * Info: (20260825 - Julian) 語言清單提到模組層級。
+ *
+ * 手機版把語言收進漢堡選單之後，這份清單有兩個消費者（下拉與平舖）。
+ * 抄第二份的話，新增語言時只改到其中一個，而漏掉的那個不會有人發現 ——
+ * 它只是少一個選項，不會壞掉。
+ */
+export const SUPPORTED_LANGUAGES: { code: Language; label: string }[] = [
+  { code: "zh-TW", label: "繁體中文" },
+  { code: "zh-CN", label: "简体中文" },
+  { code: "en", label: "English" },
+  { code: "ko", label: "한국어" },
+  { code: "ja", label: "日本語" },
+];
+
+interface ILanguageSelectorProps {
+  /**
+   * Info: (20260825 - Julian) `inline` 給漢堡選單用：平舖的膠囊按鈕，不是下拉。
+   *
+   * 不共用下拉的原因是它會變成「選單裡的選單」—— Headless UI 的 `MenuItems`
+   * 已經接管了焦點，再嵌一層 `Menu` 進去，鍵盤操作與關閉行為都會打架。
+   * 全螢幕選單本來就有空間直接把五個選項攤開。
+   */
+  variant?: "dropdown" | "inline";
+}
+
+export default function LanguageSelector({
+  variant = "dropdown",
+}: ILanguageSelectorProps) {
   const { language, setLanguage } = useTranslation();
   const [mounted, setMounted] = useState(false);
 
@@ -19,18 +47,38 @@ export default function LanguageSelector() {
     setMounted(true);
   }, []);
 
-  const languages: { code: Language; label: string }[] = [
-    { code: "zh-TW", label: "繁體中文" },
-    { code: "zh-CN", label: "简体中文" },
-    { code: "en", label: "English" },
-    { code: "ko", label: "한국어" },
-    { code: "ja", label: "日本語" },
-  ];
+  const languages = SUPPORTED_LANGUAGES;
 
   const currentLangLabel =
     languages.find((l) => l.code === language)?.label || "Language";
 
   if (!mounted) return null;
+
+  if (variant === "inline") {
+    return (
+      <div className="flex flex-wrap gap-2">
+        {languages.map((lang) => {
+          const isCurrent = language === lang.code;
+          return (
+            <button
+              key={lang.code}
+              type="button"
+              // Info: (20260825 - Julian) 選中狀態不只靠顏色：aria-pressed 給讀屏，粗體給視覺
+              aria-pressed={isCurrent}
+              onClick={() => setLanguage(lang.code)}
+              className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                isCurrent
+                  ? "border-brand bg-brand-soft text-brand font-semibold"
+                  : "border-border-default text-text-secondary hover:text-brand"
+              }`}
+            >
+              {lang.label}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <Menu as="div" className="relative">

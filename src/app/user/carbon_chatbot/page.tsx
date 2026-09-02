@@ -59,8 +59,7 @@ export default function CarbonChatbotPage() {
     renameSession,
     renameReportDocument,
     updateReportIdentity,
-    inputValue,
-    setInputValue,
+    inputPrefill,
     isTyping,
     isLoading,
     isUnlocked,
@@ -297,10 +296,9 @@ export default function CarbonChatbotPage() {
               focusedMessageId={focusedMessageId}
             />
             <ChatInput
-              inputValue={inputValue}
+              prefill={inputPrefill}
               isTyping={isTyping}
               isLoading={isLoading}
-              onInputChange={setInputValue}
               onSendMessage={handleSendMessage}
               pendingAttachments={pendingAttachments}
               attachmentError={attachmentError}
