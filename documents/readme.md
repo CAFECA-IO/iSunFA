@@ -89,6 +89,7 @@ _聚焦於四大會計師級別的底層財報與內控實務：_
 
 - **[分類帳與試算表整合施行計劃 (Ledger & Trial Balance Integration Plan)](architecture/ledger_and_trial_balance_integration_plan.md)**：於既有報表引擎慣例上新增兩支唯讀報表（樹狀溯源 + MoneyUtil + 懸記納入）。
 - **[團隊錢包與訂閱額度消耗系統 (Team Wallet & Subscription Quota)](architecture/team_wallet_and_subscription_quota.md)**：團隊為計費主體、5 小時 / 週雙視窗訂閱額度、免簽章扣費管線與管理者點數分配。
+- **[可中斷／可接續的高耗點任務 (Resumable Credit Jobs)](architecture/resumable_credit_jobs.md)**：點數在中途用完時「暫停而不是失敗」的通用契約——書籤在伺服器、內容在客戶端（E2EE），以及「判準必須與扣款端同一個」那一課。
 - **[團隊席次計費與 Email 邀請 (Team Seat Billing & Email Invitation)](architecture/team_seat_billing_and_email_invitation.md)**：訂閱主體為團隊、依席次計費、期中加人按剩餘天數比例補收（先扣款才寄邀請），以及 email 邀請 → 註冊即入團的流程與 SMTP 設定。
 - **[費思個人化記憶 (Faith Personal Memory)](architecture/ai_and_analytics/faith_personal_memory.md)**：付費訂閱的每位成員專屬記憶——`(userId, teamId)` 隔離、LLM 只做萃取、欄位級加密，以及停止訂閱 90 天後刪除的保留機制。**須於 v0.13.0 釋出前完成**，條款已先行載明。
 - **[出勤模組開發計畫書 (Time & Attendance Module Plan)](architecture/time_attendance_module_plan.md)**：打卡不可變、地理圍欄、班別統一模型與單日出勤判定引擎（純函數）。

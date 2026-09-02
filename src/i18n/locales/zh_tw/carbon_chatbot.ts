@@ -191,6 +191,41 @@ export const carbonChatbot = {
     "這個會話還沒綁定帳本,無法匯入整份報告(逐章匯入需要以帳本的額度計費)。請先在會話設定選擇帳本,再重新匯入。",
   import_paused_chapters:
     "點數已用完,以下章節還沒開始解析:{{chapters}}。補上點數後可以從這裡接著匯入,已完成的部分不會重跑。",
+  // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
+  import_interrupted_chapters:
+    "上一次匯入沒有跑完,以下章節還沒解析:{{chapters}}。可以從這裡接著匯入,已完成的部分不會重跑、也不會再扣點數。",
+  /**
+   * Info: (20260901 - Luphia) 「可能」不是贅字（review #6726 中-2）：BUSY 也可能
+   * 是自己的分頁崩潰後租約還沒過期——那時沒有任何地方在跑，說死「正在執行中」
+   * 是一句不實的話。{{minutes}} 綁 JOB_CLAIM_TTL_MS，租期改了文案跟著對。
+   */
+  import_job_busy:
+    "這份匯入可能正在另一個分頁或裝置上跑,也可能上一次沒有正常結束——後者最多 {{minutes}} 分鐘後就能再試。同時跑兩次會重複扣點數。",
+  // Info: (20260901 - Luphia) 三個終局判決各說各的話（review #6726 阻-1）：已取消 ≠ 已完成 ≠ 沒有權限
+  import_job_cancelled:
+    "這份匯入已經取消,不會接續、也不會再扣點數。要重新開始,請再上傳一次檔案。",
+  import_job_completed_already: "這份匯入已經完成了,沒有需要接續的部分。",
+  import_job_forbidden: "這個帳號沒有這份匯入的權限。",
+  // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
+  import_auto_resuming:
+    "點數已補上,正在接著把剩下的章匯入。已完成的部分不會重跑。",
+  // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）：伺服器算好的出路與重置時間
+  import_paused_reset_hint:
+    "額度將於 {{countdown}} 後({{resetAt}})重置,屆時可以接著匯入。",
+  import_paused_reset_ready: "額度已經重置,現在可以接著匯入了。",
+  import_paused_over_window_limit:
+    "這份報告單次需要的點數,高於方案在單一時段的額度上限——等待重置也無法完成。請改用個人點數或升級方案。",
+  import_paused_ways_title: "接下來可以:",
+  import_paused_option_wait_reset: "等額度重置(上面有時間)",
+  import_paused_option_use_allocation: "用團隊管理者分配給你的點數",
+  import_paused_option_use_personal: "用你自己錢包裡的點數",
+  import_paused_option_upgrade: "升級方案,拿到更高的額度",
+  // Info: (20260827 - Luphia) 伺服器說「可以繼續了」與「不做了」（issue #6714）
+  import_paused_resumable:
+    "額度已經回來了,以下章節還沒解析:{{chapters}}。現在可以接著匯入,已完成的部分不會重跑。",
+  import_cancel_paused: "不做了",
+  import_cancelled: "已經放棄還沒解析的章節。已完成的部分還留著,仍然可以套用。",
+  import_cancel_failed: "放棄失敗,請稍後再試。",
   import_resume_needs_file:
     "接著匯入需要原本那份檔案,而它在重新整理或換裝置之後就不在瀏覽器裡了。請重新上傳同一份報告——已完成的章節不會重跑。",
   import_resume_paused: "接著匯入",

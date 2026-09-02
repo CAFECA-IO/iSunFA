@@ -331,6 +331,37 @@ UPDATE team_subscription SET pending_plan_id = NULL, auto_renew = false
 WHERE pending_plan_id = 'free';
 ```
 
+### 3.11 可中斷任務的書籤表（2026-08-26）— **`db push` 即可，不需要回填**
+
+`resumable_job` 是新表（PR #6717，設計見 `architecture/resumable_credit_jobs.md`）。**不需要回填**：沒有書籤就等於「沒有未完成的任務」，而那對既有資料是對的答案。
+
+上線後要看兩件事，兩者都在 worker 的 log 裡（`ResumableJobScan`）：
+
+- **`unknown` 持續不為 0**：那些暫停中的任務**永遠不會**被翻成「可以繼續」。目前只有兩個成因會落在這裡——沒有付費團隊（無帳本會話，那條路本來就不由額度翻面）與認不出的任務型別（部署了新型別卻沒在 `JOB_SPEND_MODE` 宣告）。後者是缺件，要修。
+- **`released` 永遠是 0 而 `stillShort` 一直有數字**：判準可能又與扣款端分岔了（見設計書 §5.1——足額判準對免費／團隊方案永遠是 false，那個缺陷讓整套機制在上線後三天都沒有人發現）。
+
+```sql
+-- 暫停中的任務（含停多久）
+SELECT type, status, pause_reason, paused_at, total_steps, completed_steps
+FROM resumable_job WHERE status IN ('PAUSED', 'RESUMABLE')
+ORDER BY paused_at;
+
+-- 缺件：認不出的型別或沒有付費團隊
+SELECT id, type, team_id FROM resumable_job
+WHERE status = 'PAUSED' AND (team_id IS NULL OR type <> 'CARBON_REPORT_IMPORT');
+```
+
+**執行許可（20260827，issue #6721）不需要 schema 變更**：租約是既有的 `status` + `updatedAt`（`@updatedAt`），租期 `JOB_CLAIM_TTL_MS` = 5 分鐘。若上線後有人回報「接著匯入按不下去、說有別的地方在跑」而實際上沒有，先查那一列的 `updated_at`——租約要 5 分鐘才過期：
+
+```sql
+SELECT id, status, updated_at, now() - updated_at AS idle
+FROM resumable_job WHERE status = 'RUNNING' ORDER BY updated_at;
+```
+
+`idle` 超過 5 分鐘還擋著就是缺陷（條件更新沒有生效）；不到 5 分鐘則是設計行為。
+
+**新增任務型別時的義務**：在 `JOB_SPEND_MODE` 宣告它的扣點模式（封頂放行／足額），並在 Service 的 `assertResourceOwnedBy` 補上它的所有權規則——後者是 exhaustive switch，漏了會是 TypeScript 錯誤；前者漏了會讓那種任務永遠停在 `unknown`。
+
 ---
 
 ## 4. 部署後驗證
@@ -339,6 +370,22 @@ WHERE pending_plan_id = 'free';
 - [ ] 剩餘超過 30 天的付費團隊按**同方案**「延長方案」：付款前顯示「暫不開放購買延長」的說明，送出則被 `TW000028` 擋下；剩餘 30 天內照常建單
 - [ ] 同一個團隊按**升級**（換較高方案）：不受 30 天閘門限制，付款前顯示「舊方案剩餘期間將按已付金額折抵為新方案天數」；付款後 `current_period_end` = 今天 + 一期 + 折抵天數（年繳團隊剩 335 天升月繳企業 ≈ 今天 + 30 + 78.7 天）
 - [ ] 展延或折抵之後跨距超過一期的團隊仍可加人（上限已按跨距縮放，不會誤擋 `TW000016`）
+- [ ] 智能溫盤：把額度調到只夠跑三、四份，匯入一份 11 章的報告 → 畫面說「點數已用完，還沒開始解析：…」而**不是**「章節解析失敗」；伺服器只收到「成功份數 + 1」次請求，不是 14 次
+- [ ] 補上點數後按「接著匯入」→ 只送剩下的那幾份（已完成的章不會重跑、不會再扣點）
+- [ ] 未綁帳本的會話匯入 PDF → 在送出前就被擋下並說明要先綁帳本（一次呼叫都不發）
+- [ ] worker log 的 `ResumableJobScan`：`unknown` 不應持續累積；`released` 在額度重置後應該出現非 0
+- [ ] 匯入跑到第 5 份時關掉分頁 → 重新打開看得到「已完成 5 份，剩餘 9 份」，按「接著匯入」只送 9 次（不是 14 次）
+- [ ] 匯入中按重新整理 → 瀏覽器先問「確定要離開嗎」
+- [ ] 同一個聊天室開兩個分頁，兩邊同時按「接著匯入」→ 只有一邊真的送出，另一邊說「另一個分頁或裝置正在跑這份匯入」
+- [ ] 跑到一半強制關掉分頁，等 5 分鐘（`JOB_CLAIM_TTL_MS`）→ 另一個分頁按得下去（沒有被永久鎖住）
+- [ ] 匯入因點數用完暫停 → 在**另一個分頁**加購點數 → 回到匯入那一頁，它**自己**接著跑（不必按任何按鈕），且先出現「點數已補上，正在接著匯入」
+- [ ] 同上但用刷卡付款 → 行為相同（三條付款路徑都會發廣播）
+- [ ] 瀏覽器關掉 BroadcastChannel（或用不支援的瀏覽器）→ 自動接續不會發生，但手動按鈕與掃描行程照常（不可以噴任何錯誤）
+- [ ] 因點數用完暫停 → 暫停區塊除了「點數用完」，還要顯示重置倒數＋絕對時間、伺服器算好的出路清單、以及購買／升級兩顆按鈕
+- [ ] 單次需求超過視窗上限（例如免費方案匯入 2MB PDF）→ **不顯示倒數**，而是說「等待重置也無法完成」
+- [ ] 中斷（關分頁）造成的「還沒跑完」→ **不顯示**出路與導購按鈕（使用者不需要補點數）
+- [ ] 暫停後等額度視窗重置（或手動把 `resumable_job.status` 改成 `RESUMABLE`）→ 重新載入頁面，橫幅改說「額度已經回來了」，**導購按鈕收起**
+- [ ] 按「不做了」→ 暫停清單消失、已解析的章**仍然留著可以套用**，`resumable_job.status` 變成 `CANCELLED`
 - [ ] 寬限期（PAST_DUE）的團隊按「降級為免費版」：立即生效（`plan_id` = free、`auto_renew` = false），續訂 worker 下一輪不再對它扣款
 - [ ] 訂閱中的團隊按「降級為免費版」：`auto_renew` 轉 false、`pending_plan_id` 保持 NULL、`plan_id` 與週期**不變**；團隊錢包面板出現「自動續訂已關閉…轉為免費版」與「維持目前方案」按鈕（僅 OWNER 看得到），按下後 `auto_renew` 回 true
 - [ ] 降轉到較低付費方案：`pending_plan_id` 寫入且 `auto_renew` 維持 true；期末續訂 cron 以新方案計價（面板顯示「已排定於 X 起改為 Y」）
