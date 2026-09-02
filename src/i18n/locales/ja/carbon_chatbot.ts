@@ -185,6 +185,12 @@ export const carbonChatbot = {
     "インポート待ちの解析結果を保存しています：{{name}}（{{count}} セクション、報告書には未記入）",
   import_pending_open: "確認してインポート",
   import_pending_discard: "破棄",
+  import_inventory_year: "算定年度",
+  import_inventory_year_placeholder: "2024",
+  import_inventory_year_hint:
+    "この報告書の算定年度(西暦)。年度をまたぐインポートで、どの仕訳がどの年度に属するかの判定に使います",
+  import_inventory_year_required:
+    "今回のインポートには排出量合計表が含まれます。この報告書の算定年度を入力してください",
   import_reset_note:
     "インポートした段落の検証状態はリセットされます。{{activities}} 件の活動データは再照合されます",
   import_apply: "選択をインポート({{count}})",

@@ -45,6 +45,16 @@ export function buildPendingImportRecord(params: {
       items: pending.items,
       unmapped: pending.unmapped,
       activityCount: pending.activityCount,
+      /**
+       * Info: (20260903 - Luphia) 確認過的盤查年度也要帶(#6743 / open/69)。
+       *
+       * 這支函式的檔頭已經記過兩次同一個坑(斷點三欄位、`pauseDetail`):
+       * 逐欄位手寫 + schema 選填 + 還原是 spread = **只有寫出去那一步丟掉**,
+       * 而症狀要重載才看得到。年度是第三個,失效方式一模一樣 ——
+       * 使用者填過的年度重載後不見了,他會再填一次或忘記填,
+       * 而那個值決定跨年度合併時哪些分錄被剔除。
+       */
+      inventoryYear: pending.inventoryYear,
       failedChapters: pending.failedChapters ?? [],
       /**
        * Info: (20260828 - Julian) 斷點三欄位。缺席＝沒有暫停，所以

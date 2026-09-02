@@ -170,6 +170,12 @@ export const carbonChatbot = {
     "已保存待导入的解析结果:{{name}}(共 {{count}} 节,尚未写入报告)",
   import_pending_open: "查看并导入",
   import_pending_discard: "舍弃",
+  import_inventory_year: "盘查年度",
+  import_inventory_year_placeholder: "2024",
+  import_inventory_year_hint:
+    "这份报告的盘查年度(公元)。跨年度导入时用它分辨哪些分录属于哪一年",
+  import_inventory_year_required:
+    "这次导入含排放总量表,请填写这份报告的盘查年度",
   import_reset_note:
     "导入段落的核对状态将重置;{{activities}} 笔活动数据将入账并重新核对",
   import_apply: "导入勾选({{count}})",

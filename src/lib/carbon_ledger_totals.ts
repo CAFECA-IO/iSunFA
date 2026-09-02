@@ -45,8 +45,15 @@ export function summarizeLedgerEntries(
  *    附加會讓總量每匯入一次就翻一倍。
  * 2. **只換 IMPORTED 的部分**,COMPUTED 項目原樣保留 ——
  *    憑證算出來的東西不該因為匯入一份外部報告而消失。
- * 3. **跨年度是換鍋,不是合併**(PR #6725 review R1):本次匯入帶年度、
- *    而帳本裡的匯入分錄屬於**別的年度**時,那些分錄整批剔除。
+ * 3. **兩份報告帶不同年度時,跨年度不留孤兒列**(PR #6725 review R1)——
+ *    本次匯入帶年度、而帳本裡的匯入分錄屬於別的年度時,那些分錄整批剔除。
+ *
+ *    Info: (20260902 - Emily) 涵蓋範圍照 §2.5 寫成輸入空間(when 子句)而不是
+ *    程式碼描述(「跨年度是換鍋不是合併」)。差別不是文字風格:寫成 when 子句,
+ *    「兩份報告帶不同年度」這個前件自己會問「真實路徑上兩份報告拿得到不同年度嗎」
+ *    —— 而在 `issue_drafts/open/69` 修好之前答案是不會(年度取自房間層的
+ *    write-once `state.year`),整條規則因此空轉了一個版本。
+ *    用程式碼描述的寫法擋不住這個問題,因為程式碼確實照它寫的做了。
  *
  *    理由是實測出來的:去重鍵 `imported:{basis}:{site}:{subCategory}` 不含年度,
  *    所以規則 1 只換得掉「兩年都有」的排放源;**只有前一年有的**
@@ -85,13 +92,29 @@ export function summarizeLedgerEntries(
  * 而年度未知的舊分錄可能屬於別的年度、正在虛增總量(規則 3 不猜,所以不剔除)。
  * 純函式、決定性,與 merge 同一份輸入算出來,呼叫端負責把它存進 state。
  */
+/**
+ * Info: (20260902 - Emily) 這批匯入分錄的盤查年度(issue_drafts/open/69)。
+ *
+ * 取第一筆帶年度的即可 —— 一次匯入來自同一份報告,年度必然一致;
+ * 沒有任何一筆帶年度即「年度未知」,呼叫端一律退回「不判年度」的舊行為。
+ *
+ * 抽成單一實作而不是各處各寫一次:規則 3 的剔除、年度警示的判斷、
+ * 以及 `ledgerByYear` 的快照鍵**必須是同一個年度**。三處各自 `find` 一次
+ * 就是三個會各自漂移的真值來源,而漂移的表現是「剔除了但快照存到別的年度」
+ * —— 帳面上完全正常,年間比較拿到的卻是錯的鍋。
+ */
+export function resolveIncomingYear(
+  entries: IComputedLedgerEntry[],
+): number | undefined {
+  return entries.find((entry) => entry.importedOrigin?.year !== undefined)
+    ?.importedOrigin?.year;
+}
+
 export function detectUndatedImportedEntries(
   base: IComputedLedger | undefined,
   incoming: IComputedLedgerEntry[],
 ): ILedgerYearWarning | null {
-  const incomingYear = incoming.find(
-    (entry) => entry.importedOrigin?.year !== undefined,
-  )?.importedOrigin?.year;
+  const incomingYear = resolveIncomingYear(incoming);
   if (incomingYear === undefined) return null;
   const incomingKeys = new Set(incoming.map((entry) => entry.activityKey));
   const undatedCount = (base?.entries ?? []).filter(
@@ -131,14 +154,8 @@ export function mergeImportedLedgerEntries(
   incoming: IComputedLedgerEntry[],
 ): IComputedLedger {
   const incomingKeys = new Set(incoming.map((entry) => entry.activityKey));
-  /**
-   * Info: (20260827 - Emily) 本次匯入的年度(規則 3)。
-   * 取第一筆即可 —— 一次匯入來自同一份報告,年度必然一致;
-   * 沒有任何一筆帶年度即「年度未知」,退回舊行為。
-   */
-  const incomingYear = incoming.find(
-    (entry) => entry.importedOrigin?.year !== undefined,
-  )?.importedOrigin?.year;
+  // Info: (20260827 - Emily) 本次匯入的年度(規則 3);單一實作見 resolveIncomingYear
+  const incomingYear = resolveIncomingYear(incoming);
   const kept = (base?.entries ?? []).filter((entry) => {
     if (!isImportedEntry(entry)) return true;
     if (incomingKeys.has(entry.activityKey)) return false;
