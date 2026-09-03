@@ -250,7 +250,7 @@ export const overtimeLimitsOf = (
  *
  * 與 `LEAVE_POLICY_I18N_KEY` 同型：級距是 enum（六個法定值，不會由租戶新增），
  * 因此可以寫死對照而不必像假別那樣回退到資料庫的名稱。
- * 新增成員時五個語系都要補，由 `attendance_i18n_keys.test.ts` 掃描守著。
+ * 新增成員時五個語系都要補，由 `i18n_keys.test.ts` 掃描守著。
  */
 export const OVERTIME_TIER_I18N_KEY: Record<OvertimePremiumTier, string> = {
   [OvertimePremiumTier.WEEKDAY_FIRST_2H]:

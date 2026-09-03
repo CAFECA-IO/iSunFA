@@ -9,17 +9,13 @@ import { ISUNFA_ROUTE } from "@/constants/url";
 import BrandLogo from "@/components/header/brand_logo";
 import HeaderActions from "@/components/header/header_actions";
 import MechanismModal from "@/components/salary_calculator/mechanism_modal";
-// import { useAuth } from "@/contexts/auth_context";
 
 const CalculatorHeader: FC = () => {
   const { t } = useTranslation();
   const pathname = usePathname();
   const [isMechanismModalOpen, setIsMechanismModalOpen] = useState(false);
-  // const { user } = useAuth();
 
   const isCalc = pathname === ISUNFA_ROUTE.SALARY_CALCULATOR;
-  // const isList = pathname === ISUNFA_ROUTE.EMPLOYEE_LIST;
-  // const isSlip = pathname === ISUNFA_ROUTE.PAY_SLIP;
 
   return (
     <header className="sticky top-0 z-50 w-full">
@@ -58,22 +54,12 @@ const CalculatorHeader: FC = () => {
               {t("calculator.header.how_it_works")}
             </button>
           </div>
-          {/* {user && (
-            <div className="hidden md:flex items-center gap-x-4">
-              <Link
-                href={ISUNFA_ROUTE.PAY_SLIP}
-                className={`text-sm font-medium transition-colors hover:text-orange-600 ${isSlip ? "text-orange-600" : "text-gray-600"}`}
-              >
-                {t("calculator.header.pay_slip")}
-              </Link>
-              <Link
-                href={ISUNFA_ROUTE.EMPLOYEE_LIST}
-                className={`text-sm font-medium transition-colors hover:text-orange-600 ${isList ? "text-orange-600" : "text-gray-600"}`}
-              >
-                {t("calculator.header.employee_list")}
-              </Link>
-            </div>
-          )} */}
+          {/*
+            Info: (20260831 - Julian) 這裡原本有兩條指向 /salary_calculator/pay_slip
+            與 /salary_calculator/employee_list 的導覽連結（被註解掉）。
+            那兩個頁面已經搬到 /user/account_book/[account_book_id]/salary_calculator 之下，
+            公開版的 header 不該有入口 —— 帳本版的導覽由 UserHeader 負責。
+          */}
         </div>
 
         {/* Info: (20260901 - Luphia) 右側控件列共用 HeaderActions（review #6731 三輪高-2）。develop 側這一列是 gap-x-4，統一後為 gap-x-6——與另兩個 header 一致，行為差異已在 PR 描述申報 */}

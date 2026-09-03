@@ -1,4 +1,4 @@
-import { useState, FC, ChangeEvent } from 'react';
+import { useState, FC, ChangeEvent } from "react";
 import { Mail, X } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
@@ -32,7 +32,7 @@ const SendingPaySlipModal: FC<{ modalVisibleHandler: () => void }> = ({
 
   return (
     <div className="font-barlow fixed inset-0 z-70 flex items-center justify-center bg-black/50">
-      <div className="bg-surface-neutral-surface-lv2 relative flex w-[90vw] flex-col rounded-sm md:w-fit">
+      <div className="bg-surface-neutral-surface-lv2 relative flex w-[90vw] flex-col rounded-2xl md:w-fit">
         {/* Info: (20250723 - Julian) Modal Header */}
         <div className="relative flex items-start justify-center px-10 py-4">
           <h2 className="text-card-text-primary text-lg font-bold">
@@ -65,7 +65,7 @@ const SendingPaySlipModal: FC<{ modalVisibleHandler: () => void }> = ({
             </span>
           </p>
           <div
-            className={`bg-input-surface-input-background flex items-center divide-x rounded-sm border ${isValidEmail ? "divide-input-stroke-input border-input-stroke-input" : "divide-input-stroke-error border-input-stroke-error"}`}
+            className={`bg-input-surface-input-background flex items-center divide-x rounded-lg border ${isValidEmail ? "divide-input-stroke-input border-input-stroke-input" : "divide-input-stroke-error border-input-stroke-error"}`}
           >
             <div className="flex items-center gap-2 px-3 py-2.5">
               <Mail
@@ -100,14 +100,14 @@ const SendingPaySlipModal: FC<{ modalVisibleHandler: () => void }> = ({
         <div className="grid grid-cols-2 gap-3 px-5 py-4">
           <button
             type="button"
-            className="w-full"
+            className="text-text-neutral-secondary ring-stroke-neutral-quaternary hover:bg-surface-hover flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold ring-1 transition-colors"
             onClick={modalVisibleHandler}
           >
             {t("common.cancel")}
           </button>
           <button
             type="button"
-            className="w-full"
+            className="flex h-11 w-full items-center justify-center rounded-xl bg-orange-600 text-sm font-bold text-white transition-colors hover:bg-orange-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
             disabled={!isValidEmail || emailInput.trim() === ""}
             onClick={sendPaySlip}
           >

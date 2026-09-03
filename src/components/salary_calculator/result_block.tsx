@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC } from "react";
 import { numberWithCommas } from "@/lib/utils/common";
 import { RowItem } from "@/interfaces/salary_calculator";
 
@@ -7,10 +7,7 @@ interface IResultBlockProps {
   rowItems: RowItem[];
 }
 
-const ResultBlock: FC<IResultBlockProps> = ({
-  backgroundColor,
-  rowItems,
-}) => {
+const ResultBlock: FC<IResultBlockProps> = ({ backgroundColor, rowItems }) => {
   // Info: (20250708 - Julian) 項目總計：取出 rowItems 的最後一個項目
   const totalItem = rowItems.slice(-1)[0];
   const displayTotalRowItem = totalItem && (

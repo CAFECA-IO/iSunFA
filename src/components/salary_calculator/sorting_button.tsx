@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC } from "react";
 import { ArrowUpDown } from "lucide-react";
 import { SortOrder } from "@/constants/sort";
 
@@ -8,7 +8,13 @@ const SortingButton: FC<{
   setSortOrder: (sortOrder: null | SortOrder) => void;
   handleReset?: () => void;
   className?: string;
-}> = ({ string, sortOrder, setSortOrder, handleReset = undefined, className = "" }) => {
+}> = ({
+  string,
+  sortOrder,
+  setSortOrder,
+  handleReset = undefined,
+  className = "",
+}) => {
   const clickHandler = () => {
     // Info: (20250724 - Julian) 如果有 handleReset，則執行，用於清除其他排序狀態
     if (handleReset) {
@@ -36,7 +42,7 @@ const SortingButton: FC<{
     <button
       type="button"
       onClick={clickHandler}
-      className={`gap-8px flex items-center ${className}`}
+      className={`flex items-center gap-[8px] ${className}`}
     >
       <p
         className={

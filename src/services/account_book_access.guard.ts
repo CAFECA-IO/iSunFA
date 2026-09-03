@@ -20,6 +20,29 @@ export async function assertAccountBookMember(
   accountBookId: string,
   userId: string,
 ) {
+  const { accountBook } = await resolveAccountBookMembership(
+    accountBookId,
+    userId,
+  );
+  return accountBook;
+}
+
+/**
+ * Info: (20260901 - Julian) 同一道閘，但把成員本身也交出來 —— 呼叫端才問得到**角色**。
+ *
+ * `assertAccountBookMember` 只回答「是不是成員」，於是所有以它為唯一閘的端點
+ * 對 `OWNER / EDITOR / VIEWER` 一視同仁。薪資模組需要再分一級
+ * （見 `salary_record.service.ts` 的 `SALARY_ACCESS_ROLES`），
+ * 而「帳本存在 + 是團隊成員」這兩步不該為此再抄一份 ——
+ * 抄出去的那一份會走樣，而走樣的方向是放寬（checklist §4.3）。
+ *
+ * 回傳 `member` 而不是只回傳 `member.role`：呼叫端日後要問到期日、
+ * 加入時間之類的東西時不必再改這個簽名。
+ */
+export async function resolveAccountBookMembership(
+  accountBookId: string,
+  userId: string,
+) {
   const accountBook = await accountBookRepo.getAccountBookById(accountBookId);
   if (!accountBook) {
     throw new Error(SERVICE_ERROR.NF_ACCOUNT_BOOK);
@@ -30,7 +53,7 @@ export async function assertAccountBookMember(
     throw new Error(SERVICE_ERROR.AUTH_PERMISSION_DENIED);
   }
 
-  return accountBook;
+  return { accountBook, member };
 }
 
 /**

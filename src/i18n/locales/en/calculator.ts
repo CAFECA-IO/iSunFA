@@ -71,7 +71,6 @@ export const calculator = {
     name: "Employee Name",
     number: "Employee Number",
     email: "Email",
-    action: "Action",
     search_placeholder: "Search Employee",
     add_employee: "Add New Employee",
     edit_employee: "Edit Employee",
@@ -79,9 +78,27 @@ export const calculator = {
     number_placeholder: "Please enter employee number",
     email_placeholder: "Please enter employee email",
     email_valid: "Please enter a valid email address",
-    no_data: "No employee found",
     add_success_toast: "Employee added successfully",
     edit_success_toast: "Employee data updated successfully",
+    base_salary: "Base salary",
+    total_count: "{{count}} employees",
+    filtered_count: "{{count}} of {{total}} employees",
+    empty_title: "No employees in this account book yet",
+    empty_desc:
+      "Once an employee exists, the calculator can fill in their base salary and meal allowance, and results can be saved as payroll records.",
+    no_search_result: 'No employee matches "{{keyword}}"',
+    clear_search: "Clear search",
+    load_failed: "Could not load the employee list. Please try again later.",
+    save_failed: "Could not save. Please try again later.",
+    remove_failed: "Could not remove. Please try again later.",
+    number_taken: "That employee number is already used by another employee",
+    save_changes: "Save changes",
+    remove_employee_records_kept:
+      "Payroll records already saved for this employee are kept and stay viewable — they will just no longer appear in the employee list or the calculator picker.",
+    remove_employee_title: "Remove Employee",
+    remove_employee_content:
+      "Are you sure you want to remove {{name}} from the employee list?",
+    remove_employee_submit_btn: "Yes, Remove Employee",
   },
   result: {
     base_salary_with_tax: "Base Salary (Taxable)",
@@ -167,7 +184,95 @@ export const calculator = {
     sent_on: "Sent On",
     all: "All",
   },
+  // Info: (20260831 - Julian) Entry point from the public calculator to the account book one
+  // Info: (20260831 - Julian) The employee link shown in Step 1 of the calculator
+  employee_link: {
+    linked_hint:
+      "Linked to an employee — base salary and meal allowance filled in",
+    unlink: "Unlink",
+  },
+  // Info: (20260831 - Julian) Saving from the calculator page, plus its two exceptions
+  save_record: {
+    save: "Save payroll record",
+    saving: "Saving…",
+    saved: "Saved as {{name}}'s payroll record for {{month}}/{{year}}",
+    view_record: "View",
+    save_failed: "Could not save. Please try again later.",
+    overwrite_title: "Overwrite the existing payroll record?",
+    overwrite_content:
+      "{{name}} already has a record for {{month}}/{{year}} (net pay {{amount}}). Saving replaces it and the old figures are not kept.",
+    overwrite_submit: "Overwrite and save",
+    unlinked_title: "Who is this calculation for?",
+    unlinked_content: "This calculation isn't linked to an employee yet.",
+    create_and_save: 'Add "{{name}}" and save',
+    create_and_save_hint:
+      "Creates the employee from the name, employee number and base salary on the calculator",
+    pick_from_list: "Pick from the employee list",
+    pick_from_list_hint: "This calculation will link to the employee you pick",
+    save_to_existing: "Save to {{name}} instead",
+    save_to_existing_hint:
+      "Uses the employee this number already belongs to, without creating a new one",
+    unlinked_conflict_content:
+      "Employee number {{number}} already belongs to \u201c{{existingName}}\u201d. It cannot be used for a new employee.",
+    edit_number: "Fix the employee number",
+    edit_number_hint:
+      "Takes you back to step 1 if \u201c{{name}}\u201d should have a different number",
+    fill_number: "Fill in the employee number",
+    fill_number_hint:
+      "An employee number is required. Takes you back to step 1 to add one.",
+  },
+  // Info: (20260831 - Julian) Payroll records
+  records: {
+    main_title: "Payroll records",
+    pay_period: "Pay period",
+    pay_period_value: "{{month}}/{{year}}",
+    employee: "Employee",
+    net_pay: "Net pay",
+    taxable: "Withholding statement",
+    action: "Action",
+    view: "View payslip",
+    load_back: "Load into calculator",
+    delete: "Delete",
+    all_employees: "All employees",
+    total_count: "{{count}} records",
+    empty_title: "No payroll records yet",
+    empty_desc:
+      'Finish a calculation and press "Save payroll record" — it will show up here.',
+    load_failed: "Could not load payroll records. Please try again later.",
+    search_placeholder: "Search by employee name or number",
+    clear_search: "Clear search",
+    no_result_title: "No payroll records match these filters",
+    period: "Period",
+    all_periods: "All periods",
+    no_result_desc: "Try a different keyword, employee or pay period.",
+    delete_title: "Delete payroll record",
+    delete_content:
+      'Delete the {{month}}/{{year}} payroll record for "{{name}}"?',
+    delete_irreversible:
+      "Payroll records are not soft-deleted. Once removed, this record cannot be restored or recovered from anywhere else.",
+    delete_submit_btn: "Delete",
+    delete_failed: "Could not delete the record. Please try again later.",
+    view_failed: "Could not load the payslip. Please try again later.",
+    load_back_failed:
+      "Could not load this record into the calculator. Please try again later.",
+    employee_list_failed:
+      "Could not load the employee list. Loading a record into the calculator cannot link it to an employee right now.",
+    load_back_unlinked:
+      "This employee is no longer on the list. The name and number were filled in from this record, but no employee link was made — you will be asked who to save it for.",
+  },
+  account_book_entry: {
+    title: "Want to keep this calculation?",
+    hint_save:
+      "The account book version saves payroll records and manages your employee list.",
+    hint_select:
+      "You pick an account book first; the data is stored under that book.",
+    hint_no_carry:
+      "What you entered here will not carry over — you will need to enter it again.",
+    button: "Go to the account book calculator",
+  },
   button: {
+    disabled_hint:
+      "Finish all four steps before downloading or saving the payslip",
     download: "Download as PNG",
     send: "Send Pay Slip",
     reset: "Reset",
@@ -180,10 +285,6 @@ export const calculator = {
     salary_error_title: "Base Salary is not Filled",
     salary_error_content:
       "Base Salary must be greater than or equal to the minimum wage.",
-    remove_employee_title: "Remove Employee",
-    remove_employee_content:
-      "Are you sure you want to remove {{name}} from the employee list?",
-    remove_employee_submit_btn: "Yes, Remove Employee",
     re_send_pay_slip_title: "Resend Pay Slip",
     re_send_pay_slip_content_1: "You have already sent",
     re_send_pay_slip_content_bold_1: " {{month}} 's pay slip",
