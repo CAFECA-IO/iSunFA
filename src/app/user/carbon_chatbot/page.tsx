@@ -3,7 +3,8 @@
 // Info: (20260714 - Tzuhan) 版面改為「session 列表 + 報告」雙欄並排(報告為主視圖),
 // Info: (20260714 - Tzuhan) 聊天改為 FaithAgent 式浮動視窗(CarbonChatWidget 殼 + 原碳盤查聊天引擎),ChatHeader 移除
 
-import { useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCarbonChat } from "@/hooks/use_carbon_chat";
 import {
   MOBILE_MEDIA_QUERY,
@@ -31,6 +32,191 @@ const RecordTabModal = dynamic(
   { ssr: false },
 );
 
+/**
+ * Info: (20260828 - Julian) 通知的深連結落地：切到那一個會話，並把待匯入的卡打開
+ *（計劃 `resumable_job_resume_landing_and_copy.md` §2.2）。
+ *
+ * 「可以繼續了」那則通知的整個價值在於**把人放在能動手的地方**。少了這一段，
+ * 使用者落在頁面層級，還要自己從側欄認出是哪一個盤查對話、切到聊天視圖、
+ * 展開待匯入的卡 —— 四層，而通知只說了一句「回去按一下」。
+ *
+ * ## 為什麼是一個只回 null 的子元件
+ *
+ * `useSearchParams()` 需要一個 Suspense 邊界（否則整頁在建置時被逼成動態渲染），
+ * 而頁面元件自己包不住自己。同一個做法見 `(landing)/analysis/page.tsx`。
+ *
+ * ## 為什麼用完就把 query 清掉
+ *
+ * 這是一次**指令**，不是狀態。留著的話有兩個症狀：重新整理會再開一次卡，
+ * 而且使用者手動切到別的會話時，任何依 `searchParams` 重跑的 effect
+ * 都會把他拉回來 —— 那是在跟使用者搶方向盤。
+ *
+ * 用 ref 記「這組參數處理過了」而不是只靠清 query：`router.replace` 是非同步的，
+ * 在它生效之前 effect 還會再跑幾次。
+ */
+function ImportDeepLink({
+  sessionIds,
+  sessionsSettled,
+  activeSessionId,
+  onSelectSession,
+  hasPendingImport,
+  onOpenImport,
+}: {
+  sessionIds: string[];
+  sessionsSettled: boolean;
+  activeSessionId: string;
+  onSelectSession: (sessionId: string) => void;
+  hasPendingImport: boolean;
+  onOpenImport: () => void;
+}) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  /**
+   * Info: (20260831 - Julian) 參數**讀完就抹**，指令留在 ref 裡（review #6732 的 1-H）。
+   *
+   * 原本是做完才 `router.replace`，於是還原不出待匯入內容時（金鑰未解鎖、
+   * 紀錄已刪）那一步永遠不執行，`?session=…&openImport=1` 就一直留在網址列
+   * 與瀏覽器歷史裡。今天留的是不透明的 sessionId，不算秘密；
+   * 但「參數在網址上停留多久」不該取決於**後續有沒有成功**。
+   *
+   * 抹掉之後，未完成的指令由這個 ref 撐著 —— 它不觸發重繪，
+   * 而下面那支 effect 本來就會因為清單載入或解鎖而重跑，那時再讀它。
+   */
+  const instructionRef = useRef<{
+    sessionId: string | null;
+    openImport: boolean;
+    /**
+     * Info: (20260902 - Julian) 切換會話這一步做過了沒（review R3 的 A1）。
+     *
+     * 沒有這個旗標時，「等待待匯入內容還原」與「把使用者拉回目標會話」
+     * 分不開：使用者等不到、改去看別份報告，而這支 effect 每次重繪都跑，
+     * 於是每點一次側欄就被彈回去一次 —— 側欄看起來「點不動」，
+     * 而畫面上沒有任何說明。這一格讓第二次進來時知道
+     * 「他現在人在別的會話」是他自己的選擇，不是還沒切過去。
+     */
+    selected: boolean;
+  } | null>(null);
+  const consumedRef = useRef<string | null>(null);
+
+  const sessionParam = searchParams.get("session");
+  const openImportParam = searchParams.get("openImport");
+
+  useEffect(() => {
+    if (sessionParam === null && openImportParam === null) return;
+
+    /**
+     * Info: (20260902 - Julian) **先抹，再去重**（review R3 的 A3）。
+     *
+     * 原本 `consumedRef` 命中時直接 return，於是 `router.replace` 沒跑：
+     * 使用者在這一頁時再點一次同一則通知（任務還是 RESUMABLE，他還沒按下
+     * 接著匯入），query 就一直留在網址列、瀏覽器歷史，並隨任何外連送出
+     * `Referer`。上一輪的結論是「參數讀完就抹，不該取決於後續有沒有成功」——
+     * 那句話對「後續」成立，對「這一次算不算重複」也該成立。
+     *
+     * 去重仍然由 `consumedRef` 負責，只是它不再順便決定要不要抹網址。
+     */
+    router.replace(pathname, { scroll: false });
+
+    const instruction = `${sessionParam ?? ""}|${openImportParam ?? ""}`;
+    if (consumedRef.current === instruction) return;
+    consumedRef.current = instruction;
+
+    instructionRef.current = {
+      sessionId: sessionParam,
+      openImport: openImportParam === "1",
+      selected: false,
+    };
+  }, [sessionParam, openImportParam, router, pathname]);
+
+  useEffect(() => {
+    const instruction = instructionRef.current;
+    if (instruction === null) return;
+
+    /**
+     * Info: (20260831 - Julian) 做完或放棄都是「這道指令結束了」，兩者都清掉。
+     *
+     * Info: (20260902 - Julian) 連 `consumedRef` 一起清（review R3 的 A3）。
+     *
+     * 不清的話，同一則通知的第二次點擊會被去重擋掉而什麼都不做 ——
+     * 而那是使用者的一次全新動作，不是同一次的重複觸發。
+     * 去重要防的是「這支 effect 因為重繪又跑了一次」，那個窗口在
+     * 這道指令結束之後就關了。
+     */
+    const finish = () => {
+      instructionRef.current = null;
+      consumedRef.current = null;
+    };
+
+    if (instruction.sessionId !== null) {
+      /**
+       * Info: (20260828 - Julian) 等清單**問完**，不是等它非空（實測見
+       * `resumable_job_resume_landing_and_copy.md` §6.1）。
+       *
+       * 會話清單是非同步問伺服器的，在它回來之前 `sessionsData` 裡只有預設
+       * 會話 —— 非空，但不完整。原本這裡用 `length === 0` 當「還沒載好」，
+       * 於是深連結指向非預設會話時，判斷會在清單補齊之前就跑完、
+       * 得到「查無此會話」而放棄，使用者落在預設會話上，什麼也沒發生。
+       */
+      if (!sessionsSettled) return;
+      /**
+       * Info: (20260828 - Julian) 問完了還是沒有就**放棄**（不新建、不猜）。
+       *
+       * 會走到這裡的情境是換了帳號、或會話已封存／刪除。
+       * 猜一個最接近的會讓使用者在別人的報告上按「接著匯入」。
+       */
+      if (!sessionIds.includes(instruction.sessionId)) {
+        finish();
+        return;
+      }
+      if (activeSessionId !== instruction.sessionId) {
+        /**
+         * Info: (20260902 - Julian) 切換**只做一次**（review R3 的 A1）。
+         *
+         * 切過之後使用者人又不在目標會話，只有一種解釋：他自己走開了。
+         * 那時再把他拉回來就是在跟他搶方向盤 —— 症狀是側欄點不動，
+         * 每點一次被彈回一次，唯一出路是整頁重整。
+         *
+         * 這一格同時是「等不到就放手」的那個出口：下面等待還原的早退
+         * 只在**人還留在目標會話**時才成立，一旦他走開，指令就結束。
+         */
+        if (instruction.selected) {
+          finish();
+          return;
+        }
+        instructionRef.current = { ...instruction, selected: true };
+        onSelectSession(instruction.sessionId);
+        return;
+      }
+    }
+
+    if (instruction.openImport) {
+      /**
+       * Info: (20260828 - Julian) 待匯入的內容是從伺服器還原的（端到端加密、
+       * 逐 channel），到站當下不一定在手上 —— 等它，不要把卡打開成空的。
+       *
+       * 還原不出來（紀錄不存在、或金鑰沒解開）時這裡就一直等，
+       * 而「一直等」在這裡等於什麼都不做：使用者仍然在正確的會話裡，
+       * 而網址已經抹乾淨了（見上方 ref 的說明）。
+       */
+      if (!hasPendingImport) return;
+      onOpenImport();
+    }
+
+    finish();
+  }, [
+    sessionIds,
+    sessionsSettled,
+    activeSessionId,
+    hasPendingImport,
+    onSelectSession,
+    onOpenImport,
+  ]);
+
+  return null;
+}
+
 export default function CarbonChatbotPage() {
   const { t } = useTranslation();
   // Info: (20260812 - Luphia) custody 決定解鎖說明給的是哪一種保證（見下方 unlock 提示）
@@ -51,6 +237,7 @@ export default function CarbonChatbotPage() {
   const isCustodial = user?.custody === WalletCustodyType.CUSTODIAL;
   const {
     sessionsList,
+    sessionsIndexSettled,
     activeSession,
     activeSessionId,
     setActiveSessionId,
@@ -169,6 +356,17 @@ export default function CarbonChatbotPage() {
 
   return (
     <div className="flex h-[calc(100vh-170px)] min-h-0 overflow-hidden rounded-2xl border border-gray-200 bg-white text-sm shadow-[0_4px_20px_rgb(0,0,0,0.05)]">
+      {/* Info: (20260828 - Julian) 通知的深連結；不畫任何東西，只在落地時做兩件事 */}
+      <Suspense fallback={null}>
+        <ImportDeepLink
+          sessionIds={sessionsList.map((session) => session.id)}
+          sessionsSettled={sessionsIndexSettled}
+          activeSessionId={activeSessionId}
+          onSelectSession={setActiveSessionId}
+          hasPendingImport={pendingImport !== null}
+          onOpenImport={openImportPreview}
+        />
+      </Suspense>
       {/* Info: (20260708 - Tzuhan) 左欄：專案與會話列表 (Desktop Only) */}
       <ChatSidebar
         sessionsList={sessionsList}
@@ -249,6 +447,39 @@ export default function CarbonChatbotPage() {
               >
                 {unlockError}
               </p>
+            ) : null}
+            {/*
+              Info: (20260828 - Julian) 匯入的狀態在鎖著的時候也要說得出來。
+
+              這與上面那段解鎖失敗的訊息是**同一個病的第二次發作**：那次是
+              「失敗只 appendMessageLocally() 到還鎖著的聊天區，使用者的體驗是
+              點了完全沒有反應」。這次是匯入 —— 進度、每一條早退的原因
+              （「已經有一份匯入在跑」「這個會話還沒綁定帳本」）與解析完成的提示，
+              全都只掛在 `ChatInput` 上，而它在 `isUnlocked` 為 false 時整個不渲染。
+
+              而「匯入報告」的入口在報告工具列上，帳本綁定的會話**不需要解鎖**
+              就能匯入。於是使用者按下匯入、等了幾分鐘，畫面上一個字都沒有。
+
+              這裡只補最小的兩件事：正在發生什麼、以及有一份結果等著看。
+              **尚未做**：把那條「已保存待匯入的解析結果」的橘色列也移出解鎖閘
+              （它現在仍然只活在 `ChatInput` 裡）。見計劃書 §6.3 與 §8。
+            */}
+            {draftNotice ? (
+              <p
+                role="status"
+                className="max-w-sm text-sm font-medium text-gray-600"
+              >
+                {draftNotice.text}
+              </p>
+            ) : null}
+            {pendingImport && !isImportPreviewOpen ? (
+              <button
+                type="button"
+                onClick={openImportPreview}
+                className="rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-xs font-bold text-orange-700 transition-colors hover:bg-orange-100"
+              >
+                {t("carbon_chatbot.import_pending_open")}
+              </button>
             ) : null}
           </div>
         )}

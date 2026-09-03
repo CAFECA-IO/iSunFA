@@ -70,6 +70,7 @@ import {
 } from "@/interfaces/carbon_paragraph_draft";
 import { IPendingRevision } from "@/components/carbon_chatbot/revision_preview";
 import { IPendingImport } from "@/components/carbon_chatbot/import_preview";
+import { buildPendingImportRecord } from "@/lib/carbon_pending_import_record";
 import {
   createDefaultSessions,
   createChatSession,
@@ -180,7 +181,6 @@ import {
   buildCarbonChatChannel,
   CarbonImportReconciliationStateEnum,
   CarbonImportNoticeKindEnum,
-  CARBON_PENDING_IMPORT_STORAGE_VERSION,
   CARBON_CHAT_REPLY_TIMEOUT_MS,
   CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS,
   CARBON_IMPORT_SINGLE_CALL_MAX_BYTES,
@@ -778,6 +778,19 @@ export const useCarbonChat = () => {
   // Info: (20260714 - Tzuhan) sessions 以 DB Chatroom 為 single source of truth(換裝置/清瀏覽器不再出現殭屍房間)
   // Info: (20260714 - Tzuhan) 標題衍生自密文首訊(server 讀不到),localStorage 索引降級為標題快取
   const sessionsIndexLoadedRef = useRef<boolean>(false);
+  /**
+   * Info: (20260828 - Julian) 清單**問完了沒有**——與 `sessionsIndexLoadedRef` 不同。
+   *
+   * 那支 ref 是「請求發過了」的去重旗標，在 `request()` 之前就設成 true。
+   * 中間那段時間 `sessionsData` 裡只有預設會話，**非空但不完整** ——
+   * 而「非空」正是通知深連結原本用來判斷「清單載好了」的依據，
+   * 於是它在清單補齊之前就判定「查無此會話」而放棄
+   *（見 `resumable_job_resume_landing_and_copy.md` §6.1）。
+   *
+   * 任何「這個 id 不存在」的判斷都要等這個旗標，失敗也要等 ——
+   * 失敗時清單就是不會再補了，繼續等只會變成永遠不動作。
+   */
+  const [sessionsIndexSettled, setSessionsIndexSettled] = useState(false);
   useEffect(() => {
     if (!user?.address || sessionsIndexLoadedRef.current) return;
     sessionsIndexLoadedRef.current = true;
@@ -841,7 +854,9 @@ export const useCarbonChat = () => {
       .catch((error) => {
         // Info: (20260714 - Tzuhan) 列表載入失敗不阻斷(仍可用預設 session 對話)
         console.error("[carbon-chat] failed to load sessions:", error);
-      });
+      })
+      // Info: (20260828 - Julian) 成功或失敗都算「問完了」，理由見旗標的說明
+      .finally(() => setSessionsIndexSettled(true));
   }, [user?.address, t]);
 
   // Info: (20260716 - Tzuhan) #52 載入可綁定帳本(失敗不阻斷:僅影響新增對話的帳本選單)
@@ -2518,48 +2533,23 @@ export const useCarbonChat = () => {
       const run = async (): Promise<void> => {
         try {
           const version = pendingImportVersionsRef.current.get(channel) ?? 0;
+          /**
+           * Info: (20260828 - Julian) 形狀抽成純函式（`buildPendingImportRecord`）。
+           *
+           * 原本這裡是一個逐欄位手寫的物件字面量，而它漏掉了 #6713 加的三個
+           * 斷點欄位 —— 存出去的紀錄因此在重載後失去「哪幾章還沒跑」，
+           * 接續按鈕整個消失。抽出去是為了那件事測得到（純函式、不碰時鐘）。
+           */
           const nextVersion = await putPendingImportRecord(
             channel,
             master,
-            {
-              storageVersion: CARBON_PENDING_IMPORT_STORAGE_VERSION,
-              savedAt: new Date().toISOString(),
-              source: {
-                cid: source?.cid ?? null,
-                fileName: source?.fileName ?? pending.fileName,
-                mimeType: source?.mimeType ?? "",
-              },
-              pending: {
-                fileName: pending.fileName,
-                originSessionId: pending.originSessionId,
-                originSessionTitle: pending.originSessionTitle,
-                items: pending.items,
-                unmapped: pending.unmapped,
-                activityCount: pending.activityCount,
-                failedChapters: pending.failedChapters ?? [],
-                /**
-                 * Info: (20260827 - Luphia) 暫停狀態也要落地（issue #6713 目標 5）。
-                 *
-                 * 這份明列先前少了這三個欄位，而還原是 `...restored.pending`
-                 * 的展開——於是重新整理或換裝置之後暫停清單就不見了，
-                 * `import_preview` 的 `pausedChapters.length > 0` 不成立，
-                 * 「接著匯入」那顆按鈕**根本不會出現**。
-                 *
-                 * commit 29f1dd891 的訊息聲稱「暫停清單跟著帳號走（存在
-                 * CarbonPendingImport）」，那句話當時是錯的；它修的
-                 * 「換裝置後按鈕沒反應」其實到不了，因為那時沒有按鈕。
-                 * 檢查表 §1.14。
-                 */
-                pausedChapters: pending.pausedChapters ?? [],
-                pausedUnits: pending.pausedUnits ?? [],
-                pauseReason: pending.pauseReason ?? null,
-                // Info: (20260827 - Luphia) 出路與重置時間也要撐過重載（issue #6714）
-                pauseDetail: pending.pauseDetail ?? null,
-              },
+            buildPendingImportRecord({
+              pending,
+              source,
               activities,
-              // Info: (20260806 - Tzuhan) Map 無法 JSON 序列化,存成 entry 陣列
-              pageIndex: pageIndex ? Array.from(pageIndex.entries()) : [],
-            },
+              pageIndex,
+              savedAt: new Date().toISOString(),
+            }),
             version,
             bookId,
           );
@@ -3313,6 +3303,25 @@ export const useCarbonChat = () => {
           pauseDetail,
         };
         setPendingImportFor(originSessionId, parsedPending);
+        /**
+         * Info: (20260828 - Julian) 新的解析結果要**取消收起**（實機發現）。
+         *
+         * `deferredPreviewSessions` 記的是「使用者把那張卡收起來了」，
+         * 但它只以 session 為鍵 —— 於是那個旗標會沾到**下一份**解析結果上。
+         *
+         * 而它幾乎一定是開著的：重載時的還原一律以收起狀態進來
+         *（見 `pendingImport` 的還原段），所以任何「這個會話以前匯入過」的情形，
+         * 重新整理之後再匯入一份，卡片就再也不會自己打開 ——
+         * 使用者按下匯入、等了幾分鐘、畫面上什麼都沒有。
+         *
+         * 收起的是**那一張卡**，不是這個會話往後的每一張。
+         */
+        setDeferredPreviewSessions((prev) => {
+          if (!prev[originSessionId]) return prev;
+          const rest = { ...prev };
+          delete rest[originSessionId];
+          return rest;
+        });
         /**
          * Info: (20260806 - Tzuhan) 解析結果落地(DB)+ 對話留痕,兩件事都不阻斷主流程。
          *
@@ -6254,6 +6263,8 @@ export const useCarbonChat = () => {
 
   return {
     sessionsList: sortedSessionsList,
+    // Info: (20260828 - Julian) 給深連結用：清單問完了沒有（非空 ≠ 完整）
+    sessionsIndexSettled,
     activeSession,
     activeSessionId,
     // Info: (20260714 - Tzuhan) 對外的切換入口為 switchSession(重置跨室暫態 UI)，沿用原名稱以維持呼叫端不變

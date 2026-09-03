@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, Bell, CheckCircle2, Mail, Wallet } from "lucide-react";
+import {
+  AlertTriangle,
+  Bell,
+  CheckCircle2,
+  Mail,
+  PlayCircle,
+  Wallet,
+} from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { formatDate } from "@/lib/utils/date";
 import { canMarkReadByClick } from "@/lib/notification_read";
@@ -31,6 +38,8 @@ const ICON_BY_KEY = {
   wallet: Wallet,
   check: CheckCircle2,
   alert: AlertTriangle,
+  // Info: (20260828 - Julian) 「可以繼續了」——與 check（做完了）刻意分開
+  play: PlayCircle,
 } as const;
 
 /**

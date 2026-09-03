@@ -155,6 +155,9 @@ function givenTask(options: {
   gaveUp?: boolean;
   alreadyRecorded?: boolean;
   orderStatus?: string;
+  // Info: (20260827 - Julian) 帳本 id 的三個來源，各測一條（D43 第二步）
+  orderData?: Record<string, unknown>;
+  contextExtra?: Record<string, unknown>;
 }) {
   fsState.taskFiles = options.files ?? [];
   fsState.existing = new Set<string>();
@@ -163,7 +166,10 @@ function givenTask(options: {
 
   if (options.gaveUp) fsState.existing.add(giveupPath);
   if (options.alreadyRecorded) fsState.existing.add(flagPath);
-  fsState.contents.set(contextPath, JSON.stringify({ orderId: ORDER_ID }));
+  fsState.contents.set(
+    contextPath,
+    JSON.stringify({ orderId: ORDER_ID, ...(options.contextExtra ?? {}) }),
+  );
 
   asMock(orderRepo.findFirst).mockResolvedValue({
     id: ORDER_ID,
@@ -171,6 +177,7 @@ function givenTask(options: {
     status: options.orderStatus ?? ORDER_STATUS.EXECUTING,
     mission: null,
     tokens: 0,
+    ...(options.orderData ? { data: options.orderData } : {}),
   });
 }
 
@@ -188,7 +195,12 @@ const APPROVED_ANALYSIS = {
  * `dbSyncPayload` 是正常的，不算失敗。
  */
 function givenApprovedTask(
-  options: { category?: string; orderStatus?: string } = {},
+  options: {
+    category?: string;
+    orderStatus?: string;
+    orderData?: Record<string, unknown>;
+    contextExtra?: Record<string, unknown>;
+  } = {},
 ) {
   fsState.taskFiles = [APPROVED_FILE];
   fsState.existing = new Set<string>();
@@ -197,7 +209,11 @@ function givenApprovedTask(
 
   fsState.contents.set(
     contextPath,
-    JSON.stringify({ orderId: ORDER_ID, analysisId: APPROVED_ANALYSIS.id }),
+    JSON.stringify({
+      orderId: ORDER_ID,
+      analysisId: APPROVED_ANALYSIS.id,
+      ...(options.contextExtra ?? {}),
+    }),
   );
   // Info: (20260826 - Julian) 有結果、但**沒有** dbSyncPayload
   fsState.contents.set(resultPath, JSON.stringify({ summary: "done" }));
@@ -210,6 +226,7 @@ function givenApprovedTask(
     tokens: 0,
     data: {
       category: options.category ?? ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS,
+      ...(options.orderData ?? {}),
     },
   });
   asMock(analysisRepo.findById).mockResolvedValue(APPROVED_ANALYSIS);
@@ -680,5 +697,102 @@ describe("IssueRecorder：失敗通知只發在狀態轉換的那一次（D16）
     await issueRecorderService.processNext();
 
     expect(asMock(notifyAnalysisFailed)).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Info: (20260827 - Julian) 通知帶得出帳本 id（D43 第二步的**接線**）。
+ *
+ * `notification_message.test.ts` 已經證明「payload 有 `accountBookId` 時
+ * 組得出日記帳頁」，但那是純函式 —— 它證明不了**有沒有人把那個欄位放進去**。
+ * 少了這一組，把 recorder 那一行刪掉不會有任何測試變紅，而症狀是
+ * 憑證分析的通知永遠不可點：畫面上看起來就只是「這一則沒有連結」，
+ * 與刻意設計的錢包升級（D12）長得一模一樣。
+ *
+ * 三層 fallback 各一條：它們是為不同的來單路徑設計的（一般訂單、
+ * 舊格式訂單、沒有實體 Order payload 的背景任務），共用一份斷言會讓
+ * 其中兩層失效時仍然全綠。
+ */
+describe("IssueRecorder：通知帶得出帳本 id（D43）", () => {
+  const bookOf = (mock: unknown): unknown =>
+    (asMock(mock).mock.calls[0][0] as Record<string, unknown>).accountBookId;
+
+  it.each([
+    ["order.data.data", { data: { accountBookId: "book-a" } }, {}, "book-a"],
+    ["order.data", { accountBookId: "book-b" }, {}, "book-b"],
+    ["context.json", {}, { accountBookId: "book-c" }, "book-c"],
+  ])(
+    "完成通知從 %s 取得帳本 id",
+    async (unusedLabel, orderData, contextExtra, expected) => {
+      givenApprovedTask({
+        category: "other_analysis",
+        orderData: orderData as Record<string, unknown>,
+        contextExtra: contextExtra as Record<string, unknown>,
+      });
+
+      await issueRecorderService.processNext();
+
+      expect(asMock(notifyAnalysisCompleted)).toHaveBeenCalledTimes(1);
+      expect(bookOf(notifyAnalysisCompleted)).toBe(expected);
+    },
+  );
+
+  /**
+   * Info: (20260827 - Julian) 優先序：訂單裡的值贏過 context.json。
+   *
+   * 少了這一條，把三層 fallback 的順序寫反也會讓上面三條全綠 ——
+   * 而 context.json 是任務執行當下寫的，訂單才是使用者下單時說的。
+   */
+  it("訂單裡的帳本 id 優先於 context.json", async () => {
+    givenApprovedTask({
+      category: "other_analysis",
+      orderData: { data: { accountBookId: "from-order" } },
+      contextExtra: { accountBookId: "from-context" },
+    });
+
+    await issueRecorderService.processNext();
+
+    expect(bookOf(notifyAnalysisCompleted)).toBe("from-order");
+  });
+
+  /**
+   * Info: (20260827 - Julian) 三處都沒有時**不帶這個鍵**，不是帶 undefined。
+   *
+   * payload 是永久保存的資料。寫一個恆為 null 的欄位會讓之後查資料的人
+   * 以為「這筆分析沒有帳本」，而事實是「發通知的當下取不到」。
+   */
+  it("取不到時 payload 不帶 accountBookId", async () => {
+    givenApprovedTask({ category: "other_analysis" });
+
+    await issueRecorderService.processNext();
+
+    const payload = asMock(notifyAnalysisCompleted).mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
+    expect(payload.accountBookId).toBeUndefined();
+  });
+
+  // Info: (20260827 - Julian) 失敗通知走的是另一行程式，要各自釘住
+  it("成功路徑的失敗通知也帶得出帳本 id", async () => {
+    givenApprovedTask({ orderData: { accountBookId: "book-failed" } });
+
+    await issueRecorderService.processNext();
+
+    expect(asMock(notifyAnalysisFailed)).toHaveBeenCalledTimes(1);
+    expect(bookOf(notifyAnalysisFailed)).toBe("book-failed");
+  });
+
+  it("放棄路徑的失敗通知也帶得出帳本 id", async () => {
+    givenTask({
+      gaveUp: true,
+      orderStatus: ORDER_STATUS.EXECUTING,
+      orderData: { accountBookId: "book-giveup" },
+    });
+
+    await issueRecorderService.processNext();
+
+    expect(asMock(notifyAnalysisFailed)).toHaveBeenCalledTimes(1);
+    expect(bookOf(notifyAnalysisFailed)).toBe("book-giveup");
   });
 });

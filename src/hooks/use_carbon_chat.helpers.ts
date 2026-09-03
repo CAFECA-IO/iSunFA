@@ -43,6 +43,21 @@ export const isQuotaApiError = (error: unknown): boolean => {
  * 回傳暫停原因而不是布林：兩種點數不足的出路不同（一個是等額度／加購，
  * 一個是要簽章付款），而畫面要說得出使用者接下來能做什麼。
  */
+/**
+ * Info: (20260828 - Julian) **尚未做**：把 402 的 payload 一起帶下來
+ *（計劃 `resumable_job_resume_landing_and_copy.md` §4）。
+ *
+ * 這支現在只取 `errorCode`，其餘整包丟掉。而伺服器那邊事實是齊的：
+ * `buildQuotaExceededPayload` 回的 402 帶著 `exceeded`（哪個視窗先卡）、
+ * 兩個視窗各自的 `limit`/`used`/`resetAt`、以及 `exceedsWindowLimit`
+ *（單筆金額就超過方案上限時，**等重置永遠不會好**）。
+ *
+ * 少了它，三種處置完全不同的情況在畫面上是同一句「點數已用完」：
+ * 今天的額度用完（等幾小時）、本週用完（等到重置日）、單筆超過上限（只能升級）。
+ *
+ * 改法是回傳 `{ reason, quota }` 而不是只回 `reason`。
+ * **不要另寫一支解析函式**：同一個錯誤被解析兩次，兩次的判準遲早分岔。
+ */
 export const resolveCreditPauseReason = (
   error: unknown,
 ): JobPauseReason | null => {

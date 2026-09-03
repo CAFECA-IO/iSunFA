@@ -180,6 +180,7 @@ export const carbonChatbot = {
     "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,{{inFlight}} 章解析中),完整报告约需数分钟…",
   import_requires_book:
     "这个会话还没绑定账本,无法导入整份报告(逐章导入需要以账本的额度计费)。请先在会话设置选择账本,再重新导入。",
+  // Info: (20260828 - Julian) 同 zh_tw：这句话有两个已知的错，尚未修（见计划 §4）
   import_paused_chapters:
     "点数已用完,以下章节还没开始解析:{{chapters}}。补上点数后可以从这里接着导入,已完成的部分不会重跑。",
   // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）

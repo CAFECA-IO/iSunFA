@@ -189,6 +189,19 @@ export const carbonChatbot = {
     "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,{{inFlight}} 章解析中),完整報告約需數分鐘…",
   import_requires_book:
     "這個會話還沒綁定帳本,無法匯入整份報告(逐章匯入需要以帳本的額度計費)。請先在會話設定選擇帳本,再重新匯入。",
+  /**
+   * Info: (20260828 - Julian) **這句話有兩個已知的錯，尚未修**
+   *（計劃 `resumable_job_resume_landing_and_copy.md` §4）。
+   *
+   * 1.「補上點數後」指向一條**不存在的出路**：翻面的判準只看訂閱方案的視窗額度，
+   *    加購的點數改變不了裡面任何一個數（見 `resumable_job_resume_notification.md`
+   *    §6.2）。實測時我們照這句話去加購，白等了一輪。
+   * 2. 沒有說**要等到哪一天**。402 的 payload 已經算好了兩個視窗的 `resetAt`，
+   *    也標了 `exceedsWindowLimit`（等重置永遠不會好的那種），丟掉它的是前端
+   *    `resolveCreditPauseReason()`。
+   *
+   * 要拆成三句：5 小時視窗卡住／週視窗卡住／單筆超過上限（只給升級）。五語系一起。
+   */
   import_paused_chapters:
     "點數已用完,以下章節還沒開始解析:{{chapters}}。補上點數後可以從這裡接著匯入,已完成的部分不會重跑。",
   // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）

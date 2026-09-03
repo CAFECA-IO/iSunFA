@@ -1,6 +1,7 @@
 import { describe, it, expect } from "@jest/globals";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { buildPendingImportRecord } from "@/lib/carbon_pending_import_record";
 import {
   resolveCreditPauseReason,
   summarisePausedUnits,
@@ -769,20 +770,55 @@ describe("暫停狀態要落地，不能只活在記憶體", () => {
     join(process.cwd(), "src", "hooks", "use_carbon_chat.ts"),
     "utf8",
   );
-  const persistScope = (() => {
-    const start = hook.indexOf("const persistPendingImport = useCallback");
-    expect(start).toBeGreaterThan(-1);
-    const end = hook.indexOf("const clearPersistedPendingImport", start);
-    expect(end).toBeGreaterThan(start);
-    return hook.slice(start, end);
-  })();
+
+  /**
+   * Info: (20260828 - Julian) 存檔的形狀已經抽成純函式，所以這幾條改成
+   * **驗它的輸出**，不再掃 `persistPendingImport` 的原始碼。
+   *
+   * 原本掃的是那個 useCallback 裡的物件字面量。字面量搬走之後掃描全紅，
+   * 而程式其實是對的 —— 掃描測試的老問題：它綁的是「這段字寫在哪裡」，
+   * 不是「這件事有沒有做到」。改成呼叫真的建構函式之後，欄位搬到哪裡都不影響。
+   */
+  const persisted = buildPendingImportRecord({
+    pending: {
+      fileName: "報告書.pdf",
+      originSessionId: "sess-1",
+      originSessionTitle: "盤查對話",
+      items: [],
+      unmapped: [],
+      activityCount: 0,
+      failedChapters: [],
+      pausedChapters: [{ id: "ch-5", title: "第五章" }],
+      pausedUnits: [
+        { chapterId: "ch-5", sectionIds: ["s-1"], partIndex: 1, partTotal: 2 },
+      ],
+      pauseReason: "PAYMENT_REQUIRED",
+    },
+    source: null,
+    activities: [],
+    pageIndex: undefined,
+    savedAt: "2026-08-28T00:00:00.000Z",
+  }).pending as Record<string, unknown>;
 
   it.each(["pausedChapters", "pausedUnits", "pauseReason"])(
     "落地的 pending 帶上 %s",
     (field) => {
-      expect(persistScope).toContain(field);
+      expect(persisted[field]).toBeDefined();
     },
   );
+
+  /**
+   * Info: (20260828 - Julian) 而 hook 真的要走那支建構函式（接線那一半）。
+   *
+   * 少了這一條，上面幾條會在「純函式完全正確、但沒有人呼叫它」時全綠 ——
+   * 那正是把行為抽出去之後最容易留下的洞。
+   */
+  it("persistPendingImport 走 buildPendingImportRecord", () => {
+    const start = hook.indexOf("const persistPendingImport = useCallback");
+    expect(start).toBeGreaterThan(-1);
+    const end = hook.indexOf("const clearPersistedPendingImport", start);
+    expect(hook.slice(start, end)).toContain("buildPendingImportRecord(");
+  });
 
   /**
    * Info: (20260827 - Luphia) 還原是展開，所以只要寫的時候有帶就會回來。

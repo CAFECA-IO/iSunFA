@@ -40,6 +40,20 @@ export interface IPersonalChargeParams {
   idempotencyKey: string;
   // Info: (20260813 - Luphia) 消費分類，寫入 data.category 供點數歷程顯示
   category: string;
+  /**
+   * Info: (20260831 - Julian) 這筆消費綁在哪個資源上（碳盤查是聊天室 channel），
+   * 寫進 `Order.data.resourceKey`（review #6732 的 1-A）。
+   *
+   * 存在的理由是**付款與任務的關聯在付款完成時已經不在手上了**：
+   * `TxTracker` 看到的是一張轉 `PAID` 的訂單，而「這筆錢是為哪一份匯入付的」
+   * 只有建單當下知道。沒有它，釋放只能以 `userId` 為條件 ——
+   * 於是一位使用者身上每一筆等付款的任務，都會在他任何一次付款成功時
+   * 一起被翻成「可以繼續」，而其中只有一筆是真的付過的。
+   *
+   * 選填：不是每一種個人付款都對應一個可接續任務（例如單則對話）。
+   * 缺席時釋放端**什麼都不翻**（fail-closed），不會退回「翻全部」。
+   */
+  resourceKey?: string | null;
 }
 
 export interface IPersonalChargeResult {
@@ -61,7 +75,7 @@ function toApiError(def: IErrorDef): ApiError {
 export async function ensurePersonalCreditCharge(
   params: IPersonalChargeParams,
 ): Promise<IPersonalChargeResult> {
-  const { userId, credits, idempotencyKey, category } = params;
+  const { userId, credits, idempotencyKey, category, resourceKey } = params;
 
   if (!Number.isInteger(credits) || credits <= 0) {
     throw toApiError(API_ERRORS.TW_INVALID_SPEND_AMOUNT);
@@ -85,6 +99,8 @@ export async function ensurePersonalCreditCharge(
     idempotencyKey,
     amount: (-credits).toString(),
     timestamp: new Date().toISOString(),
+    // Info: (20260831 - Julian) 缺席就不寫這個鍵，不要寫成空字串（見型別上的說明）
+    ...(resourceKey ? { resourceKey } : {}),
   };
 
   /**

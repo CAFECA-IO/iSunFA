@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
+import { readFileSync } from "fs";
+import { join } from "path";
 import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
 
@@ -276,6 +278,34 @@ jest.mock("@/repositories/notification.repo", () => {
 jest.mock("@/services/team_invitation.service", () => ({
   listPendingInvitationsForUser: jest.fn(async () => []),
 }));
+
+/**
+ * Info: (20260828 - Julian) 第三個活算來源（`JOB_RESUMABLE`）。
+ *
+ * 這個 mock 是**必要的**，不是保險：`notification.service` 現在 import
+ * `resumableJobRepo`，少了它這一整支測試會拉進真的 Prisma。
+ * 與 20260828 那次 `TransactionRepo: class {}` 同一種傷 ——
+ * mock 只覆蓋了「當時走得到的路」，新相依一接上就炸。
+ */
+jest.mock("@/repositories/resumable_job.repo", () => ({
+  resumableJobRepo: {
+    /**
+     * Info: (20260901 - Julian) 替身要照實模擬新的回傳形狀（§1.8）。
+     * 清單回 `{ items, hasMore }`，摘要另有一支不截斷的 `summarizeResumable`
+     * —— 兩支分開正是這一輪要修的東西，替身併成一支就測不到了。
+     */
+    listResumableByUser: jest.fn(async () => ({ items: [], hasMore: false })),
+    summarizeResumable: jest.fn(async () => ({
+      count: 0,
+      latestUpdatedAt: null,
+    })),
+  },
+}));
+
+import { resumableJobRepo } from "@/repositories/resumable_job.repo";
+import { JOB_RESUMABLE_NOTICE_LIMIT } from "@/constants/resumable_job";
+import { buildCarbonChatChannel } from "@/constants/carbon_chatbot";
+import { notificationHrefOf } from "@/lib/notification_message";
 
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
 const fakeRepo = notificationRepo as unknown as {
@@ -1289,6 +1319,14 @@ describe("上限常數的對外契約", () => {
     ["NOTIFICATION_TODO_LIST_LIMIT", NOTIFICATION_TODO_LIST_LIMIT, 20],
     ["NOTIFICATION_PAGE_SIZE", NOTIFICATION_PAGE_SIZE, 20],
     ["NOTIFICATION_PAGE_SIZE_MAX", NOTIFICATION_PAGE_SIZE_MAX, 100],
+    /**
+     * Info: (20260902 - Julian) 可接續任務的畫面上限（review R3 的 A8）。
+     *
+     * 它被 6 個地方引用 —— 五個語系字典的 `todos_capped` 註解與計畫書 §1
+     * 的「可接續 5 筆」。改成 50 之後 `npm run test` 全綠，而那五份字典
+     * 與計畫書會一起說謊，因為沒有任何東西把數字與文字綁在一起。
+     */
+    ["JOB_RESUMABLE_NOTICE_LIMIT", JOB_RESUMABLE_NOTICE_LIMIT, 5],
   ])("%s 是 %i", (unused, actual, expected) => {
     expect(actual).toBe(expected);
   });
@@ -1312,5 +1350,270 @@ describe("上限常數的對外契約", () => {
     expect(NOTIFICATION_PAGE_SIZE).toBeLessThanOrEqual(
       NOTIFICATION_PAGE_SIZE_MAX,
     );
+  });
+
+  /**
+   * Info: (20260902 - Julian) 文件裡寫死的那幾個數字也要對得上（review R3 的 A8）。
+   *
+   * 上面那組釘的是「常數是這個值」，擋不住「常數改了、文件沒跟上」——
+   * 而文件的呼叫端編譯器找不到，沒有人會被提醒。這個不一致**今天就已經在了**：
+   * 部署檢查表 §7 的 D4 偵測 SQL 寫的是 `HAVING count(*) > 30`，而歷史上限是 10（本輪一併改掉）。
+   * 照那條 SQL 去數 D4 復發的人幾乎不可能命中，得到一個「查過了、沒事」的假結論。
+   *
+   * 掃的是**數字出現在哪一句話裡**，不是全文比對：只釘住那些「把上限寫成
+   * 字面值」的句子，其餘文字改寫不會誤傷。
+   */
+  it.each([
+    [
+      "documents/engineering_guidelines/deploy_checklist_notification_2026q3.md",
+      /D4 的觸發條件[\s\S]*?HAVING count\(\*\) > (\d+)/,
+      NOTIFICATION_HISTORY_LIMIT,
+    ],
+    [
+      "documents/architecture/notification_module_plan.md",
+      /可接續 (\d+) 筆/,
+      JOB_RESUMABLE_NOTICE_LIMIT,
+    ],
+  ])("%s 裡寫死的上限與常數相符", (file, pattern, expected) => {
+    const text = readFileSync(join(process.cwd(), file), "utf8");
+    const found = pattern.exec(text);
+
+    expect(found).not.toBeNull();
+    expect(Number(found?.[1])).toBe(expected);
+  });
+});
+
+/**
+ * Info: (20260828 - Julian) 第三個活算來源：可以繼續的暫停任務（`JOB_RESUMABLE`）。
+ *
+ * 與邀請同一個形狀，所以這一組驗的也是同樣三件事：進待辦節、算進 `todoCount`、
+ * 以及**抵達時間取得到**（D17：`arrivalKeyOf` 要的是「兩次不同的抵達鍵不同」）。
+ *
+ * 第三條特別重要：任務用 `updatedAt` 而不是 `createdAt`。同一份匯入
+ * 暫停 → 補點數 → 再暫停 → 再補點數，`createdAt` 兩次一樣，
+ * 鍵就會撞上 `seenKeys` 而**搖但不響**，且此後永久靜音。
+ */
+describe("可以繼續的任務（活算待辦）", () => {
+  const JOB_UPDATED_AT = new Date(NOW_MS - 60_000);
+
+  const jobRow = (overrides: Record<string, unknown> = {}) => ({
+    id: "job-1",
+    userId: USER,
+    type: "CARBON_REPORT_IMPORT",
+    status: "RESUMABLE",
+    resourceKey: "channel-1",
+    completedSteps: 3,
+    totalSteps: 11,
+    updatedAt: JOB_UPDATED_AT,
+    createdAt: new Date(NOW_MS - 86_400_000),
+    ...overrides,
+  });
+
+  /**
+   * Info: (20260901 - Julian) 清單與摘要是**兩支**查詢，但打的是同一批列。
+   *
+   * 替身分開餵會讓「徽章數的是全部、清單只有上限內那幾筆」這件事測不到，
+   * 也可能造出一個資料庫不可能給出的世界（§1.8）。這支把兩邊綁在一起：
+   * `count` 恆為整批的長度，清單則照上限截斷。
+   */
+  const givenResumable = (rows: ReturnType<typeof jobRow>[]) => {
+    asMock(resumableJobRepo.listResumableByUser).mockResolvedValue({
+      items: rows.slice(0, JOB_RESUMABLE_NOTICE_LIMIT),
+      hasMore: rows.length > JOB_RESUMABLE_NOTICE_LIMIT,
+    });
+    asMock(resumableJobRepo.summarizeResumable).mockResolvedValue({
+      count: rows.length,
+      latestUpdatedAt: rows.reduce<Date | null>(
+        (latest, row) =>
+          latest === null || row.updatedAt > latest ? row.updatedAt : latest,
+        null,
+      ),
+    });
+  };
+
+  beforeEach(() => {
+    givenResumable([]);
+  });
+
+  it("進待辦節，並帶得出進度", async () => {
+    givenResumable([jobRow()]);
+
+    const list = await listNotifications({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(list.todos).toHaveLength(1);
+    expect(list.todos[0]).toEqual(
+      expect.objectContaining({
+        id: "job:job-1",
+        type: NOTIFICATION_TYPE.JOB_RESUMABLE,
+        // Info: (20260828 - Julian) 活算的待辦沒有已讀概念
+        readAt: null,
+        createdAt: JOB_UPDATED_AT.getTime(),
+      }),
+    );
+    expect(list.todos[0].payload).toEqual(
+      expect.objectContaining({
+        jobId: "job-1",
+        resourceKey: "channel-1",
+        completedSteps: 3,
+        totalSteps: 11,
+      }),
+    );
+  });
+
+  /**
+   * Info: (20260828 - Julian) 深連結的**跨模組契約**（計劃 §2）。
+   *
+   * 服務端從 `resourceKey` 切出 `sessionId` 放進 payload，連結端用它代入
+   * `NOTIFICATION_LINK_PATH` 的樣板。兩邊各測各的都會綠，而它們對不上的
+   * 形狀是「payload 放 `chatSessionId`、樣板要 `:sessionId`」——
+   * 沒有任何型別擋得住，症狀是通知靜靜地變成不可點。
+   *
+   * 所以這一條把真的 `notificationHrefOf` 接上去，斷言的是**組得出那條路**。
+   */
+  it("resourceKey 是碳盤查頻道時，深連結組得出來", async () => {
+    givenResumable([
+      jobRow({ resourceKey: buildCarbonChatChannel(ADDRESS, "sess-9") }),
+    ]);
+
+    const list = await listNotifications({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(list.todos[0].payload).toEqual(
+      expect.objectContaining({ sessionId: "sess-9" }),
+    );
+    expect(notificationHrefOf(list.todos[0])).toBe(
+      "/user/carbon_chatbot?session=sess-9&openImport=1",
+    );
+  });
+
+  /**
+   * Info: (20260828 - Julian) 切不出來就**不放那個鍵**，那一則因此不可點。
+   *
+   * 放空字串會讓 `resolvePathTokens` 的判斷從「取不到」變成「取到一個空值」，
+   * 今天兩者結果相同 —— 但空字串是一個看起來有值的值，下一個讀 payload 的人
+   * 會被它騙。未來的非碳盤查 `JOB_TYPE` 也會落在這條路上。
+   */
+  it("resourceKey 不是頻道格式時不放 sessionId，通知不可點", async () => {
+    givenResumable([jobRow({ resourceKey: "something-else" })]);
+
+    const list = await listNotifications({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(list.todos[0].payload).not.toHaveProperty("sessionId");
+    expect(notificationHrefOf(list.todos[0])).toBeNull();
+  });
+
+  it("算進 todoCount，不算進 completedCount", async () => {
+    givenResumable([
+      jobRow(),
+      jobRow({ id: "job-2", resourceKey: "channel-2" }),
+    ]);
+
+    const summary = await getNotificationSummary({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(summary.todoCount).toBe(2);
+    expect(summary.completedCount).toBe(0);
+  });
+
+  /**
+   * Info: (20260901 - Julian) 徽章數的是**全部**，不是清單上限（review：D4）。
+   *
+   * 先前 `todoCount` 直接拿 `listResumableByUser` 的 `length`，而那支帶
+   * `take: JOB_RESUMABLE_NOTICE_LIMIT`。於是第 6 份可以繼續的匯入起，
+   * 徽章與清單一起停在 5 —— 而同一行的另外兩個加數都沒有截斷
+   *（邀請沒有 `take`、入庫待辦走 `groupBy`）。三個加數混一個截斷值，
+   * 症狀是徽章少算且毫無提示，正是 `notification.repo.ts` 記過的 D4
+   *（「把 37 個完成通知顯示成 20」）換一個來源重演。
+   *
+   * 這一條與下面那條成對：計數要對，而清單的截斷要說得出來。
+   * 少了任一條，把 `summarizeResumable` 換回清單查詢都不會有人發現。
+   */
+  it("超過清單上限時，徽章仍然數得出全部", async () => {
+    const overflow = JOB_RESUMABLE_NOTICE_LIMIT + 3;
+    givenResumable(
+      Array.from({ length: overflow }, (unused, index) =>
+        jobRow({ id: `job-${index}`, resourceKey: `channel-${index}` }),
+      ),
+    );
+
+    const summary = await getNotificationSummary({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(summary.todoCount).toBe(overflow);
+  });
+
+  it("超過清單上限時，清單截斷而且說得出來", async () => {
+    const overflow = JOB_RESUMABLE_NOTICE_LIMIT + 3;
+    givenResumable(
+      Array.from({ length: overflow }, (unused, index) =>
+        jobRow({ id: `job-${index}`, resourceKey: `channel-${index}` }),
+      ),
+    );
+
+    const list = await listNotifications({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(list.todos).toHaveLength(JOB_RESUMABLE_NOTICE_LIMIT);
+    expect(list.hasMoreTodos).toBe(true);
+  });
+
+  it("沒有超過上限時不宣稱有更多", async () => {
+    givenResumable([jobRow()]);
+
+    const list = await listNotifications({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(list.hasMoreTodos).toBe(false);
+  });
+
+  /**
+   * Info: (20260828 - Julian) 這條擋的是「用 createdAt」那個寫法。
+   *
+   * 改成 `createdAt` 之後，上面兩條照樣綠 —— 而 D17 會以那個路徑復活。
+   */
+  it("抵達時間取 updatedAt（這一次翻面），不是 createdAt（開始匯入）", async () => {
+    givenResumable([jobRow()]);
+
+    const summary = await getNotificationSummary({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(summary.latestUnreadAt).toBe(JOB_UPDATED_AT.getTime());
+  });
+
+  it("沒有可繼續的任務時，摘要與清單都不受影響", async () => {
+    const summary = await getNotificationSummary({
+      userId: USER,
+      address: ADDRESS,
+      nowMs: NOW_MS,
+    });
+
+    expect(summary.todoCount).toBe(0);
+    expect(summary.latestUnreadAt).toBeNull();
   });
 });

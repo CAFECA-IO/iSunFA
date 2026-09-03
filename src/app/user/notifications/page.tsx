@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { request } from "@/lib/utils/request";
@@ -41,6 +42,8 @@ export default function NotificationsPage() {
   const { t } = useTranslation();
 
   const [todos, setTodos] = useState<INotificationItem[]>([]);
+  // Info: (20260901 - Julian) 待辦節被截斷了嗎（review：D4，理由同鈴鐺面板）
+  const [hasMoreTodos, setHasMoreTodos] = useState(false);
   const [history, setHistory] = useState<INotificationHistoryPage | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -70,6 +73,7 @@ export default function NotificationsPage() {
         "/api/v1/user/notifications",
       );
       setTodos(response.payload?.todos ?? []);
+      setHasMoreTodos(response.payload?.hasMoreTodos ?? false);
       setTodosFailed(false);
     } catch {
       /**
@@ -188,6 +192,25 @@ export default function NotificationsPage() {
                 showTimestamp
               />
             ))}
+            {/*
+              Info: (20260902 - Julian) 不帶數字，理由同鈴鐺面板（review #6742）。
+
+              Info: (20260902 - Julian) 說明後面接一個出口（review R3 的 A2）。
+              這一頁的歷史區有分頁，待辦區沒有 —— 待辦是活算的、來源有三支，
+              分頁要另一套契約。所以出口給的是盤查對話清單，那份清單本身
+              就是完整的可接續匯入清單。
+            */}
+            {hasMoreTodos && (
+              <p className="text-text-muted px-3 pt-2 text-center text-xs">
+                {t("notification.todos_capped")}{" "}
+                <Link
+                  href="/user/carbon_chatbot"
+                  className="text-brand underline underline-offset-2"
+                >
+                  {t("notification.todos_capped_action")}
+                </Link>
+              </p>
+            )}
             {todosFailed && (
               <p className="text-text-muted px-3 py-4 text-center text-sm">
                 {t("notification.load_failed")}

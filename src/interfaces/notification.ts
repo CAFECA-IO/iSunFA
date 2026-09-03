@@ -68,6 +68,15 @@ export interface INotificationList {
    * 使用者沒有任何方式知道少了 5 則。
    */
   hasMoreCompleted: boolean;
+  /**
+   * Info: (20260901 - Julian) 待辦節被截斷了嗎（review：D4）。
+   *
+   * 與 `hasMoreCompleted` 同一條理由，只是先前漏了這一半：可接續任務那支
+   * 查詢帶 `JOB_RESUMABLE_NOTICE_LIMIT`，而徽章數的是全部
+   *（`summarizeResumable`）。兩者分岔時畫面要說得出來，否則第 6 份
+   * 可以繼續的匯入起就是靜默消失 —— 使用者只能逐一打開聊天室才找得到。
+   */
+  hasMoreTodos: boolean;
 }
 
 /**

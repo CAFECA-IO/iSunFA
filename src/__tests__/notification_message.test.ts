@@ -98,6 +98,67 @@ describe("notificationMessageOf", () => {
     expect(message).not.toContain("undefined");
   });
 
+  /**
+   * Info: (20260828 - Julian) 「可以繼續了」的兩句（計劃 §3）。
+   *
+   * 分成兩句的理由是 `0/14` 那一格：一步都還沒跑，而「繼續」會讓使用者
+   * 以為已經做過一半。實測時畫面長的是這樣：
+   *
+   * > 點數已補回，「0/14」的匯入可以繼續了
+   *
+   * 帶的數字也換了：剩餘章數是一個**決定**（現在值不值得回去），
+   * `completed/total` 只是一個狀態。
+   */
+  it("做了一部分時帶剩餘章數", () => {
+    expect(
+      notificationMessageOf(
+        itemOf(NOTIFICATION_TYPE.JOB_RESUMABLE, {
+          completedSteps: 3,
+          totalSteps: 14,
+        }),
+        t,
+      ),
+    ).toBe("notification.job_resumable(remaining=11)");
+  });
+
+  it("一步都還沒跑時換一句，且不帶數字", () => {
+    expect(
+      notificationMessageOf(
+        itemOf(NOTIFICATION_TYPE.JOB_RESUMABLE, {
+          completedSteps: 0,
+          totalSteps: 14,
+        }),
+        t,
+      ),
+    ).toBe("notification.job_resumable_fresh");
+  });
+
+  /**
+   * Info: (20260828 - Julian) 進度缺漏時走「還沒開始」那句，不是算出負數或 NaN。
+   *
+   * payload 是資料庫來的，欄位不保證在。`total - completed` 在缺漏時會是
+   * `NaN` 或負數，而那會變成畫面上的「還有 NaN 章」。
+   */
+  it.each([
+    ["兩個都缺", {}],
+    ["只有 total", { totalSteps: 14 }],
+    [
+      "completed 大於 total（不該發生，但別算出負數）",
+      {
+        completedSteps: 20,
+        totalSteps: 14,
+      },
+    ],
+  ])("%s", (unusedLabel, payload) => {
+    const message = notificationMessageOf(
+      itemOf(NOTIFICATION_TYPE.JOB_RESUMABLE, payload),
+      t,
+    );
+
+    expect(message).not.toContain("NaN");
+    expect(message).not.toContain("-");
+  });
+
   it("錢包升級沒有插值", () => {
     expect(
       notificationMessageOf(itemOf(NOTIFICATION_TYPE.WALLET_UPGRADE), t),
@@ -117,7 +178,7 @@ describe("notificationMessageOf", () => {
   /**
    * Info: (20260826 - Julian) 查不到類別名 → 退回不帶標題那句（不是顯示鍵名）。
    *
-   * 常數層有 `JOURNAL_CORRECTION` 而字典裡是 `journal_upload`，
+   * （20260828 起這個缺口已修：字典鍵 `journal_upload` 改名為 `journal_correction`）
    * 這個缺口今天就存在 —— 所以這條不是假想的情境。
    */
   it.each([
@@ -268,7 +329,8 @@ describe("notificationHrefOf", () => {
   /**
    * Info: (20260827 - Julian) token 代不進去要回 `null`，不是回半條路徑。
    *
-   * `/user/account_book/undefined/journal` 與 `/user/account_book/:accountBookId/journal`
+   * `/user/account_book/undefined/journal?tab=list` 與
+   * `/user/account_book/:accountBookId/journal?tab=list`
    * 都是「看起來有反應」的錯誤去處，而那正是 D43 要修掉的症狀。
    * D43 第二步把 `accountBookId` 補進 payload 之後，下面第二條會自動改行為 ——
    * 屆時這兩條測試就是它有沒有真的接上的判準。
@@ -297,7 +359,7 @@ describe("notificationHrefOf", () => {
           accountBookId: "book-9",
         }),
       ),
-    ).toBe("/user/account_book/book-9/journal");
+    ).toBe("/user/account_book/book-9/journal?tab=list");
   });
 
   it("代入的值會被 encode，不會逃出路徑", () => {
@@ -323,11 +385,88 @@ describe("notificationHrefOf", () => {
   });
 
   /**
+   * Info: (20260828 - Julian) **型別層的去處也要跑 token 代入**（`resumable_job_resume_landing_and_copy.md` §2.1 的回歸）。
+   *
+   * 這一條在寫下來的當下是紅的。`notificationHrefOf` 只有在分析類那條分支
+   * 才呼叫 `resolvePathTokens`，其餘型別直接回原始字串 —— 於是型別層的樣板
+   * 一旦帶了 token，`:sessionId` 會原封不動出現在 `href` 裡。
+   *
+   * 那是一條**合法但錯的**路徑，正是 D43 的症狀。而「只有分析類需要 token」
+   * 是今天的巧合不是規則：`JOB_RESUMABLE` 要深連結到會話，它就需要。
+   *
+   * 表格從常數自己長出來，所以下一個帶 token 的型別不必記得回來加測試。
+   */
+  const tokensOf = (template: string): string[] =>
+    [...template.matchAll(/:([A-Za-z0-9_]+)/g)].map((match) => match[1]);
+
+  it.each(
+    Object.entries(NOTIFICATION_LINK_PATH).filter(
+      ([, template]) => typeof template === "string",
+    ) as [string, string][],
+  )(
+    "%s 的型別層去處：token 全部代得進去，不留下字面的 :token",
+    (type, template) => {
+      const payload = Object.fromEntries(
+        tokensOf(template).map((name) => [name, `v-${name}`]),
+      );
+
+      const href = notificationHrefOf(itemOf(type, payload));
+
+      expect(href).not.toBeNull();
+      expect(href).not.toMatch(/:[A-Za-z]/);
+    },
+  );
+
+  /**
+   * Info: (20260828 - Julian) 深連結的兩面（`resumable_job_resume_landing_and_copy.md` §2.1／§2.2）。
+   *
+   * 「回到智能溫盤按繼續匯入」這句話要能兌現，落地就必須是**那一個會話**——
+   * 側欄同時有數個盤查對話，頁面層級的去處等於把辨認的工作丟回給使用者。
+   *
+   * 第二條是同一個不變式的另一半：切不出 `sessionId` 時整條回 `null`
+   *（渲染成不可點），而不是去到 `/user/carbon_chatbot?session=:sessionId`。
+   */
+  it("JOB_RESUMABLE 帶著會話落地，並要求到站就開卡", () => {
+    expect(
+      notificationHrefOf(
+        itemOf(NOTIFICATION_TYPE.JOB_RESUMABLE, { sessionId: "sess-1" }),
+      ),
+    ).toBe("/user/carbon_chatbot?session=sess-1&openImport=1");
+  });
+
+  it("JOB_RESUMABLE 缺 sessionId 時回 null（渲染成不可點）", () => {
+    expect(
+      notificationHrefOf(itemOf(NOTIFICATION_TYPE.JOB_RESUMABLE, {})),
+    ).toBeNull();
+  });
+
+  /**
    * Info: (20260827 - Julian) 這張表只該列**不在 `CATEGORIES` 裡**的類別。
    *
    * 有人把某個已在 `CATEGORIES` 的類別加進來時，它會同時出現在兩條路上，
    * 而上面那條「11 種仍走 history」的測試會紅得莫名。這一條說得出原因。
    */
+  /**
+   * Info: (20260831 - Julian) 兩張表**合起來**要蓋滿 15 種類別（review #6732 §1.13）。
+   *
+   * 去處由兩張表分工：`CATEGORIES` 那 11 種走型別層的 `/analysis?tab=history`，
+   * 其餘的在 `ANALYSIS_LINK_PATH_BY_CATEGORY` 各自登記。分工本身沒問題，
+   * 但沒有任何東西保證兩邊的聯集等於 `ANALYSIS_CATEGORY` ——
+   * 新增第 16 種類別而兩張表都沒加，它會**靜靜地**落到 `/analysis?tab=history`，
+   * 而那正是 D43 的症狀：頁面正常載入、其他分析都在，只有這一種看起來像資料消失了。
+   */
+  it("兩張表合起來蓋滿所有分析類別", () => {
+    const covered = new Set([
+      ...(CATEGORIES as readonly string[]),
+      ...Object.keys(ANALYSIS_LINK_PATH_BY_CATEGORY),
+    ]);
+    const missing = Object.values(ANALYSIS_CATEGORY).filter(
+      (category) => !covered.has(category),
+    );
+
+    expect(missing).toEqual([]);
+  });
+
   it("類別表不與 CATEGORIES 重疊", () => {
     const overlap = Object.keys(ANALYSIS_LINK_PATH_BY_CATEGORY).filter(
       (category) => (CATEGORIES as readonly string[]).includes(category),

@@ -13,10 +13,20 @@
 
 ## 1. 待辦型活算，事件型入庫
 
-| 類別 | 來源 | 例 |
-|---|---|---|
-| **待辦型** | 有活來源的：讀取時向來源表**現算**，不存副本。沒有活來源的：存 DB | `TEAM_INVITATION`（活算）、`WALLET_UPGRADE`（入庫） |
-| **事件型** | 發生時寫入 DB | `ANALYSIS_COMPLETED`、`ANALYSIS_FAILED` |
+| 類別       | 來源                                                              | 例                                                                           |
+| ---------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| **待辦型** | 有活來源的：讀取時向來源表**現算**，不存副本。沒有活來源的：存 DB | `TEAM_INVITATION`（活算）、`JOB_RESUMABLE`（活算）、`WALLET_UPGRADE`（入庫） |
+| **事件型** | 發生時寫入 DB                                                     | `ANALYSIS_COMPLETED`、`ANALYSIS_FAILED`                                      |
+
+**`JOB_RESUMABLE`（20260828 新增，PR #6732）套用同一個判準的結果**：可接續任務的
+`ResumableJob` 就是活來源，狀態一離開 `RESUMABLE`（按繼續轉 `RUNNING`、取消轉
+`CANCELLED`）那則待辦就該消失 —— 與邀請同一個形狀，所以活算。
+
+它還額外撞到 dedupe 的邊界：同一個 `resourceKey` 會**反覆**暫停→繼續→再暫停，
+而 `dedupeKey` 是永久鍵（§3），入庫的話第二次以後永遠發不出來。
+連帶地它的抵達鍵取 `updatedAt`（這一次翻面）而不是 `createdAt`（開始匯入）——
+用後者的話同一份匯入的第二次「可以繼續」會算出同一個鍵，鈴鐺搖而不響且此後靜音。
+完整取捨見 [`../resumable_job_resume_notification.md`](../resumable_job_resume_notification.md)。
 
 **為什麼邀請不入庫**：邀請被接受、撤回、過期時，通知必須**同步**消失。存副本就要在 accept / decline / revoke / expire 四條路徑上都記得改它，漏一條就是一則永遠掛著、點進去接受不了的假待辦。活算沒有這個同步問題，代價只是一次 `teamInvitation.findMany`。
 
@@ -73,7 +83,23 @@ payload Json     // type 專屬資料（analysisId、analysisType…），畫面
 
 **未來需要員工維度的通知時：拆表**（`EmployeeNotification`），比照 ADR 019 對 `ProcessTask` 的處置。代價是兩支查詢 + 合併排序，而 ADR 019 §5 已經替這個代價背書。
 
-**`accountBookId` 目前沒有**，而這是對的：現有三種型別沒有一個是帳本層的事。真的出現時要一併決定「帳本**軟刪除**後通知怎麼辦」—— `AccountBook.deletedAt` 存在，所以 `onDelete: Cascade` 永遠不會觸發。
+**`accountBookId` 不是欄位，但它已經在 `payload` 裡**（20260827，D43 第二步 / PR #6732）。
+
+原文寫的是「目前沒有，而這是對的：現有三種型別沒有一個是帳本層的事」。兩句都已經不再為真 —— 型別是 5 種（見 §1），而憑證分析與傳票更正的去處就是 `/user/account_book/:accountBookId/journal?tab=list`，`accountBookId` 由發射函式放進 payload。
+
+**收件維度沒有變**：通知仍然只發給 `User`，`accountBookId` 是**去處的參數**，不是收件人的一部分，所以不需要欄位、不需要外鍵。這個區分要保住 —— 一旦有人把它升成欄位，ADR 019 §1 那三種非法狀態就會以另一種形狀回來。
+
+**但原文掛在這句話下面的那個待辦被跳過了**：「真的出現時要一併決定『帳本**軟刪除**後通知怎麼辦』」。它出現了，而沒有人決定。
+
+> **未決（20260831，review #6732 R1）**：`AccountBook.deletedAt` 存在，所以 `onDelete: Cascade` 永遠不會觸發 —— 帳本軟刪除之後，既有的完成通知仍然連到 `/user/account_book/<已刪除的 id>/journal?tab=list`。使用者點進去會落在一個查不到那本帳本的頁面，而通知本身看起來完全正常。
+>
+> 三個選項與各自的代價：
+>
+> 1. **渲染時檢查**（`notificationHrefOf` 之外多一次查詢）—— 最準，但那一層目前是純函式，加查詢等於讓每一列都吃一次 DB。
+> 2. **軟刪除時一併處理該帳本的通知**（標記或改寫去處）—— 一次性成本，但要找出「哪些通知指向這本帳本」，而 payload 是 JSON，沒有索引。
+> 3. **落地頁自己說**（那一頁本來就要處理「查無此帳本」）—— 最便宜，症狀從「通知說謊」降級成「點進去看到一句話」。
+>
+> **傾向第 3 個**，理由與 D12／D43 一致：與其讓通知宣稱一件它查不起的事，不如讓落地的地方誠實。但這是產品決定，不在 #6732 的範圍。
 
 ---
 
@@ -147,18 +173,18 @@ HR 引入第一個 fan-out 時它就要回來，而理由會更硬：`Employee.u
 
 每一條都有既知的失效樣本，不是風格偏好。
 
-| 契約 | 內容 |
-|---|---|
-| **分層** | `route.ts` 只做驗身分 → 限流 → service → `jsonOk`/`jsonFail`。Repository 是唯一碰 Prisma 的層，且**可以回答「是什麼」，不可以回答「可不可以」**。⚠️ 這條目前**沒有自動守門人**（`transaction_layering.test.ts` 只存在於另一條分支），靠 review |
-| **回應信封** | `jsonOk()` → `{ powerby, success, code, message, payload }`。前端 `request<T>()` **不拆信封**，必須自己讀 `.payload`。漏拆的症狀：`tsc` 與 `build` 全綠，**只在 API 成功時**於 render 階段炸掉 |
-| **限流** | `enforceRateLimit(identity, bucket)` 排在驗身分之後、業務邏輯之前。⚠️ `attendance_rate_limit.test.ts` 的掃描根只有 HR 目錄，通知路由**登記不進去、缺席也不會變紅** —— 因此本模組自帶 `notification_rate_limit.test.ts`。⚠️ 它一度**只有掃描**（`enforceRateLimit(` 出現幾次、bucket 名、`indexOf` 順序），而刪掉 route 裡的 `if (limited) return limited;` 全部照綠 —— 現已補上行為那一半：打滿桶 → 斷言 429 **且** service 沒有被多呼叫一次 |
-| **錯誤碼** | `API_ERRORS` 以鍵索引，**兩個鍵並存不會有型別錯誤，只有 code 字串撞號，而對外契約正是那個字串**。開發前對 base／develop／branch 各取一份算交集（checklist §6.1） |
-| **失敗要留線索** | 把多種上游狀態塌成同一個回傳值，在 log 裡的後果是查不出成因。`IS_UNKNOWN` 不 log 就是這個形狀 |
-| **三個 Error 型別** | `AppError`（`lib/utils/error.ts`）、`ApiError`（`error_dictionary.ts`，本模組用的是這支）、**另一個** `ApiError`（`request.ts`，前端 fetch 失敗時拋出）。前端要 catch 的是最後那支 |
-| **註解** | `// Info: (YYYYMMDD - 作者) …`；只有 `Info:` / `ToDo:` / `Deprecated:`；JSX 內 `{/* Info: … */}` |
-| **命名** | 檔名 `snake_case`（ESLint `check-file` 強制）、interface `^I[A-Z]`、匯入一律 `@/` |
-| **樣式 token** | 只用 `@theme` 真的定義過的名字。裸的 `--color-surface` / `--color-border` 不存在 —— 用了就是無效 class，而 `tsc` 與 `lint` 全綠（D3）。`success` 是 20260825 為本模組新加的 |
-| **沒有 migrations** | `prisma db push`；欄位新增與資料回填是兩件事，**順序做錯不會噴錯，只會安靜停擺** |
+| 契約                | 內容                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **分層**            | `route.ts` 只做驗身分 → 限流 → service → `jsonOk`/`jsonFail`。Repository 是唯一碰 Prisma 的層，且**可以回答「是什麼」，不可以回答「可不可以」**。⚠️ 這條目前**沒有自動守門人**（`transaction_layering.test.ts` 只存在於另一條分支），靠 review                                                                                                                                                                                               |
+| **回應信封**        | `jsonOk()` → `{ powerby, success, code, message, payload }`。前端 `request<T>()` **不拆信封**，必須自己讀 `.payload`。漏拆的症狀：`tsc` 與 `build` 全綠，**只在 API 成功時**於 render 階段炸掉                                                                                                                                                                                                                                               |
+| **限流**            | `enforceRateLimit(identity, bucket)` 排在驗身分之後、業務邏輯之前。⚠️ `attendance_rate_limit.test.ts` 的掃描根只有 HR 目錄，通知路由**登記不進去、缺席也不會變紅** —— 因此本模組自帶 `notification_rate_limit.test.ts`。⚠️ 它一度**只有掃描**（`enforceRateLimit(` 出現幾次、bucket 名、`indexOf` 順序），而刪掉 route 裡的 `if (limited) return limited;` 全部照綠 —— 現已補上行為那一半：打滿桶 → 斷言 429 **且** service 沒有被多呼叫一次 |
+| **錯誤碼**          | `API_ERRORS` 以鍵索引，**兩個鍵並存不會有型別錯誤，只有 code 字串撞號，而對外契約正是那個字串**。開發前對 base／develop／branch 各取一份算交集（checklist §6.1）                                                                                                                                                                                                                                                                             |
+| **失敗要留線索**    | 把多種上游狀態塌成同一個回傳值，在 log 裡的後果是查不出成因。`IS_UNKNOWN` 不 log 就是這個形狀                                                                                                                                                                                                                                                                                                                                                |
+| **三個 Error 型別** | `AppError`（`lib/utils/error.ts`）、`ApiError`（`error_dictionary.ts`，本模組用的是這支）、**另一個** `ApiError`（`request.ts`，前端 fetch 失敗時拋出）。前端要 catch 的是最後那支                                                                                                                                                                                                                                                           |
+| **註解**            | `// Info: (YYYYMMDD - 作者) …`；只有 `Info:` / `ToDo:` / `Deprecated:`；JSX 內 `{/* Info: … */}`                                                                                                                                                                                                                                                                                                                                             |
+| **命名**            | 檔名 `snake_case`（ESLint `check-file` 強制）、interface `^I[A-Z]`、匯入一律 `@/`                                                                                                                                                                                                                                                                                                                                                            |
+| **樣式 token**      | 只用 `@theme` 真的定義過的名字。裸的 `--color-surface` / `--color-border` 不存在 —— 用了就是無效 class，而 `tsc` 與 `lint` 全綠（D3）。`success` 是 20260825 為本模組新加的                                                                                                                                                                                                                                                                  |
+| **沒有 migrations** | `prisma db push`；欄位新增與資料回填是兩件事，**順序做錯不會噴錯，只會安靜停擺**                                                                                                                                                                                                                                                                                                                                                             |
 
 ---
 
