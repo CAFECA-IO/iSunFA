@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FC, KeyboardEvent, Dispatch, SetStateAction } from 'react';
+import { useState, FC, KeyboardEvent, Dispatch, SetStateAction } from "react";
 
 import { User, Calendar, Send } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -11,7 +11,7 @@ import SortingButton from "@/components/salary_calculator/sorting_button";
 import ViewPaySlipModal from "@/components/salary_calculator/view_pay_slip_modal";
 
 const cellStyle =
-  "table-cell border-b border-stroke-neutral-quaternary px-24px py-12px align-middle";
+  "table-cell border-b border-stroke-neutral-quaternary px-[24px] py-[12px] align-middle";
 
 const SentItem: FC<{
   record: ISentRecord;
@@ -35,25 +35,25 @@ const SentItem: FC<{
       onKeyDown={keyDownHandler}
       role="button"
       tabIndex={0}
-      className="h-50px hover:bg-surface-brand-primary-30 table-row hover:cursor-pointer"
+      className="hover:bg-surface-brand-primary-30 table-row h-[50px] hover:cursor-pointer"
     >
       {/* Info: (20250723 - Julian) Pay Period */}
       <div className={cellStyle}>
-        <div className="gap-8px flex items-center">
+        <div className="flex items-center gap-[8px]">
           <Calendar size={16} className="text-text-neutral-tertiary" />
           <p>{periodStr}</p>
         </div>
       </div>
       {/* Info: (20250723 - Julian) From */}
       <div className={cellStyle}>
-        <div className="gap-8px flex items-center">
+        <div className="flex items-center gap-[8px]">
           <User size={16} className="text-text-neutral-tertiary" />
           <p>{toEmail}</p>
         </div>
       </div>
       {/* Info: (20250723 - Julian) Net Pay */}
       <div className={cellStyle}>
-        <div className="gap-8px flex items-center">
+        <div className="flex items-center gap-[8px]">
           <Send size={16} className="text-text-neutral-tertiary" />
           <p>{timestampToString(issuedDate).dateWithSlash}</p>
         </div>
@@ -67,9 +67,7 @@ const SentTab: FC<{
   payPeriodSortOrder: SortOrder | null;
   setPayPeriodSortOrder: Dispatch<SetStateAction<SortOrder | null>>;
   issuedDateSortOrder: SortOrder | null;
-  setIssuedDateSortOrder: Dispatch<
-    SetStateAction<SortOrder | null>
-  >;
+  setIssuedDateSortOrder: Dispatch<SetStateAction<SortOrder | null>>;
 }> = ({
   sentRecords,
   payPeriodSortOrder,
@@ -120,7 +118,7 @@ const SentTab: FC<{
             <div className={cellStyle}>{t("calculator.my_pay_slip.to")}</div>
             <div className={cellStyle}>
               <SortingButton
-                string={t("calculator.my_pay_slip.payslip_issued_date")}
+                string={t("calculator.my_pay_slip.pay_slip_issued_date")}
                 sortOrder={issuedDateSortOrder}
                 setSortOrder={setIssuedDateSortOrder}
               />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Fragment, FC, ChangeEvent } from 'react';
+import { useState, Fragment, FC, ChangeEvent } from "react";
 
 import { useTranslation } from "@/i18n/i18n_context";
 import {
@@ -10,19 +10,23 @@ import {
   ListboxOptions,
   Transition,
 } from "@headlessui/react";
-import { ChevronDown, Search, User } from "lucide-react";
+import { Check, ChevronDown, Search, User } from "lucide-react";
 import EmployeeListModal from "@/components/salary_calculator/employee_list_modal";
 import ToggleSwitch from "@/components/salary_calculator/toggle_switch";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
-import { useAuth } from "@/contexts/auth_context";
 import {
   EmploymentType,
   TaxResidencyStatus,
 } from "@/interfaces/salary_calculator";
 import { INDUSTRY_CATEGORY_OPTIONS } from "@/constants/industry_category";
+import { EMPLOYEE_NUMBER_INPUT_ID } from "@/constants/salary_calculator";
 
-const BasicInfoForm: FC = () => {
-  const { user } = useAuth();
+interface IBasicInfoFormProps {
+  // Info: (20260831 - Julian) null = 公開試算模式，沒有帳本就沒有員工名單可選（計劃書 §2.4）
+  accountBookId: string | null;
+}
+
+const BasicInfoForm: FC<IBasicInfoFormProps> = ({ accountBookId }) => {
   const { t } = useTranslation();
 
   const [isShowEmployeeListModal, setIsShowEmployeeListModal] =
@@ -33,6 +37,8 @@ const BasicInfoForm: FC = () => {
     monthOptions,
     employeeName,
     changeEmployeeName,
+    selectedEmployeeId,
+    unlinkEmployee,
     employmentType,
     changeEmploymentType,
     taxResidencyStatus,
@@ -58,8 +64,6 @@ const BasicInfoForm: FC = () => {
     dayOfLeaving,
     changeLeavingDay,
   } = useCalculatorCtx();
-
-  const isSignIn = !!user;
 
   // Info: (20250806 - Julian) 生成日期字串
   const selectedMonthNum =
@@ -87,9 +91,7 @@ const BasicInfoForm: FC = () => {
   const handleEmployeeNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     changeEmployeeName(e.target.value);
   };
-  const handleEmployeeNumberChange = (
-    e: ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleEmployeeNumberChange = (e: ChangeEvent<HTMLInputElement>) => {
     changeEmployeeNumber(e.target.value);
   };
 
@@ -170,9 +172,9 @@ const BasicInfoForm: FC = () => {
   return (
     <>
       {/* Info: (20250711 - Julian) 員工基本資料表單 */}
-      <form className="grid grid-cols-2 gap-x-8 gap-y-6">
+      <form className="grid grid-cols-2 gap-x-8 gap-y-4 md:gap-y-6">
         {/* Info: (20250708 - Julian) 員工姓名 & 就業類型 */}
-        <div className="col-span-2 flex flex-wrap items-end gap-8">
+        <div className="col-span-2 flex flex-wrap items-end gap-4 md:gap-8">
           <div className="flex flex-1 flex-col gap-2">
             <label
               htmlFor="input-employee-name"
@@ -207,7 +209,13 @@ const BasicInfoForm: FC = () => {
                 required
               />
               {/* Info: (20250711 - Julian) 登入時才顯示員工列表按鈕，暫時關閉此功能 */}
-              {isSignIn && false && (
+              {/**
+               * Info: (20260831 - Julian) 連結員工的入口。
+               *
+               * 原本是 `isSignIn && false` —— 硬性關閉。帳本版把它打開：
+               * 這裡是「這次試算屬於誰」的決定點，儲存時不再問一次（計劃書 §2.4）。
+               */}
+              {accountBookId !== null && (
                 <button
                   type="button"
                   onClick={toggleEmployeeListModal}
@@ -220,6 +228,22 @@ const BasicInfoForm: FC = () => {
                 </button>
               )}
             </div>
+            {/* Info: (20260831 - Julian) 連結狀態：按下儲存會存到誰身上，答案在這一行 */}
+            {accountBookId !== null && selectedEmployeeId !== null && (
+              <div className="bg-surface-brand-primary-soft flex items-center gap-2 rounded-lg px-3 py-2">
+                <Check size={16} className="text-text-brand-primary-lv1" />
+                <p className="text-text-neutral-secondary flex-1 text-xs font-semibold">
+                  {t("calculator.employee_link.linked_hint")}
+                </p>
+                <button
+                  type="button"
+                  onClick={unlinkEmployee}
+                  className="text-text-brand-primary-lv1 text-xs font-semibold underline"
+                >
+                  {t("calculator.employee_link.unlink")}
+                </button>
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap items-end gap-x-8">
             {employmentRadioBtn}
@@ -228,15 +252,15 @@ const BasicInfoForm: FC = () => {
         {/* Info: (20250708 - Julian) 員工編號 */}
         <div className="col-span-2 flex flex-col gap-2">
           <label
-            htmlFor="input-employee-number"
+            htmlFor={EMPLOYEE_NUMBER_INPUT_ID}
             className="text-sm font-bold text-gray-700"
           >
             {t("calculator.basic_info_form.employee_number")}
           </label>
-          <div className="h-44px flex items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all focus-within:ring-orange-300">
+          <div className="flex h-[44px] items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all focus-within:ring-orange-300">
             <input
-              id="input-employee-number"
-              name="input-employee-number"
+              id={EMPLOYEE_NUMBER_INPUT_ID}
+              name={EMPLOYEE_NUMBER_INPUT_ID}
               type="text"
               aria-label={t("calculator.basic_info_form.employee_number")}
               className="flex-1 bg-transparent px-3 py-2 text-sm font-medium text-gray-900 outline-none placeholder:text-gray-400"
@@ -268,7 +292,7 @@ const BasicInfoForm: FC = () => {
           </p>
           <Listbox value={industryCategory} onChange={changeIndustryCategory}>
             <div className="relative">
-              <ListboxButton className="h-44px flex w-full items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all hover:ring-orange-300 focus:outline-none data-open:ring-orange-300">
+              <ListboxButton className="flex h-[44px] w-full items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all hover:ring-orange-300 focus:outline-none data-open:ring-orange-300">
                 <div className="flex-1 truncate bg-transparent px-3 py-2 text-left text-sm font-medium text-gray-900">
                   {industryCategory.CODE} - {industryCategory.INDUSTRY}
                 </div>
@@ -309,7 +333,7 @@ const BasicInfoForm: FC = () => {
           </p>
           <Listbox value={selectedYear} onChange={changeSelectedYear}>
             <div className="relative">
-              <ListboxButton className="h-44px flex w-full items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all hover:ring-orange-300 focus:outline-none data-open:ring-orange-300">
+              <ListboxButton className="flex h-[44px] w-full items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all hover:ring-orange-300 focus:outline-none data-open:ring-orange-300">
                 <div className="flex-1 bg-transparent px-3 py-2 text-left text-sm font-medium text-gray-900">
                   {selectedYear}
                 </div>
@@ -347,7 +371,7 @@ const BasicInfoForm: FC = () => {
           </p>
           <Listbox value={selectedMonth} onChange={changeSelectedMonth}>
             <div className="relative">
-              <ListboxButton className="h-44px flex w-full items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all hover:ring-orange-300 focus:outline-none data-open:ring-orange-300">
+              <ListboxButton className="flex h-[44px] w-full items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all hover:ring-orange-300 focus:outline-none data-open:ring-orange-300">
                 <div className="flex-1 bg-transparent px-3 py-2 text-left text-sm font-medium text-gray-900">
                   {t(
                     `date.month_name.${selectedMonth.name.slice(0, 3).toLowerCase()}`,
@@ -389,7 +413,7 @@ const BasicInfoForm: FC = () => {
           </p>
           <Listbox value={payrollDaysBase} onChange={changePayrollDaysBase}>
             <div className="relative">
-              <ListboxButton className="h-44px flex w-full items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all hover:ring-orange-300 focus:outline-none data-open:ring-orange-300">
+              <ListboxButton className="flex h-[44px] w-full items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all hover:ring-orange-300 focus:outline-none data-open:ring-orange-300">
                 <div className="flex-1 bg-transparent px-3 py-2 text-left text-sm font-medium text-gray-900">
                   {t(
                     `calculator.basic_info_form.payroll_option_${payrollDaysBase.toLowerCase()}`,
@@ -427,7 +451,7 @@ const BasicInfoForm: FC = () => {
         </div>
 
         {/* Info: (20250806 - Julian) 到職日 */}
-        <div className="gap-x-40px gap-y-lv-3 col-span-2 flex flex-row items-center justify-between">
+        <div className="gap-y-lv-3 col-span-2 flex flex-row items-center justify-between gap-x-[40px]">
           <ToggleSwitch
             isOn={isJoined}
             handleToggle={toggleJoined}
@@ -440,7 +464,7 @@ const BasicInfoForm: FC = () => {
               </p>
               <Listbox value={dayOfJoining} onChange={handleJoinedDayChange}>
                 <div className="relative">
-                  <ListboxButton className="h-44px w-90px flex items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all hover:ring-orange-300 focus:outline-none data-open:ring-orange-300">
+                  <ListboxButton className="flex h-[44px] w-[90px] items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all hover:ring-orange-300 focus:outline-none data-open:ring-orange-300">
                     <div className="flex-1 bg-transparent px-3 py-2 text-left text-sm font-medium text-gray-900">
                       {dayOfJoining}
                     </div>
@@ -476,7 +500,7 @@ const BasicInfoForm: FC = () => {
         </div>
 
         {/* Info: (20250806 - Julian) 離職日 */}
-        <div className="gap-x-40px gap-y-lv-3 col-span-2 flex flex-col items-start justify-between sm:h-10 sm:flex-row sm:items-center">
+        <div className="gap-y-lv-3 col-span-2 flex flex-col items-start justify-between gap-x-[40px] sm:h-10 sm:flex-row sm:items-center">
           <ToggleSwitch
             isOn={isLeft}
             handleToggle={toggleLeft}
@@ -489,7 +513,7 @@ const BasicInfoForm: FC = () => {
               </p>
               <Listbox value={dayOfLeaving} onChange={changeLeavingDay}>
                 <div className="relative">
-                  <ListboxButton className="h-44px w-90px flex items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all hover:ring-orange-300 focus:outline-none data-open:ring-orange-300">
+                  <ListboxButton className="flex h-[44px] w-[90px] items-center rounded-lg bg-white ring-2 ring-gray-200 transition-all hover:ring-orange-300 focus:outline-none data-open:ring-orange-300">
                     <div className="flex-1 bg-transparent px-3 py-2 text-left text-sm font-medium text-gray-900">
                       {dayOfLeaving}
                     </div>
@@ -525,8 +549,11 @@ const BasicInfoForm: FC = () => {
         </div>
       </form>
       {/* Info: (20250711 - Julian) 員工列表 Modal */}
-      {isShowEmployeeListModal && (
-        <EmployeeListModal modalVisibleHandler={toggleEmployeeListModal} />
+      {isShowEmployeeListModal && accountBookId !== null && (
+        <EmployeeListModal
+          accountBookId={accountBookId}
+          modalVisibleHandler={toggleEmployeeListModal}
+        />
       )}
     </>
   );

@@ -21,7 +21,7 @@ import { hrManagement as zhTw } from "@/i18n/locales/zh_tw/hr_management";
  *
  * ## 為什麼 i18n 掃描抓不到這個缺口
  *
- * `attendance_i18n_keys.test.ts` 掃的是「`src` 裡出現的 key 字面量在五個語系
+ * `i18n_keys.test.ts` 掃的是「`src` 裡出現的 key 字面量在五個語系
  * 都有值」。它抓不到**把對照整筆刪掉**：key 不再出現在 `src` 裡，
  * 掃描器就不再掃它，一切照綠。`attendance_error_message.test.ts:14-20`
  * 已經把這個失效模式寫下來，並實測確認過（拿掉限流那一筆，全套測試沒有反應）——

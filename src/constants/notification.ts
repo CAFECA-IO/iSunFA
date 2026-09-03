@@ -29,6 +29,18 @@ export const NOTIFICATION_TYPE = {
    * 歸在事件型而不是待辦型：它沒有「處理完」這個狀態，看過就過去了。
    */
   ANALYSIS_FAILED: "ANALYSIS_FAILED",
+  /**
+   * Info: (20260828 - Julian) 待辦：一個因為點數不足而暫停的任務**可以繼續了**。
+   *
+   * 歸在待辦型而不是事件型：它不是「一件事發生了」，是「有一件事等你做」——
+   * 而且伺服器**做不到**替使用者完成它。智能溫盤的匯入內容是端到端加密的，
+   * 逐章迴圈跑在瀏覽器裡，所以接續一定要使用者本人回到那個聊天室按下去。
+   *
+   * 因此文案不得寫「已為你繼續」（見 `notification_message.ts`），
+   * 而它的消失時機是使用者真的按了繼續、或取消了任務 —— 那是活狀態，
+   * 所以這一型**活算不入庫**（理由同團隊邀請，見下方 TODO_NOTIFICATION_TYPES）。
+   */
+  JOB_RESUMABLE: "JOB_RESUMABLE",
 } as const;
 
 export type NotificationType =
@@ -41,6 +53,14 @@ export type NotificationType =
 export const TODO_NOTIFICATION_TYPES: readonly NotificationType[] = [
   NOTIFICATION_TYPE.TEAM_INVITATION,
   NOTIFICATION_TYPE.WALLET_UPGRADE,
+  /**
+   * Info: (20260828 - Julian) 與邀請同樣是**活算**的：來源是 `ResumableJob.status`，
+   * 而它本身就是活狀態（按繼續轉 RUNNING、取消轉 CANCELLED）。
+   *
+   * 不入庫的具體理由：同一個 `resourceKey` 會暫停 → 繼續 → 再暫停，
+   * 而 `dedupeKey` 是永久唯一鍵，入庫的話第二次就發不出來。
+   */
+  NOTIFICATION_TYPE.JOB_RESUMABLE,
 ] as const;
 
 /**
@@ -147,7 +167,10 @@ export const NOTIFICATION_DEDUPE_PREFIX = {
  */
 export const NOTIFICATION_TYPE_STYLE: Record<
   NotificationType,
-  { icon: "mail" | "wallet" | "check" | "alert"; className: string }
+  {
+    icon: "mail" | "wallet" | "check" | "alert" | "play";
+    className: string;
+  }
 > = {
   /**
    * Info: (20260825 - Julian) 只用 `@theme` 真的定義過的 token。
@@ -178,6 +201,17 @@ export const NOTIFICATION_TYPE_STYLE: Record<
     icon: "alert",
     className: "text-danger",
   },
+  /**
+   * Info: (20260828 - Julian) 用 `play` 而不是沿用 `check`。
+   *
+   * `check` 說的是「做完了」，而這一則說的是「可以開始了」——
+   * 兩者在 16px 的圖示下如果長得一樣，使用者會以為匯入已經完成而不去按。
+   * 顏色用 brand：它不是成功也不是警告，是一個邀請。
+   */
+  [NOTIFICATION_TYPE.JOB_RESUMABLE]: {
+    icon: "play",
+    className: "text-brand",
+  },
 };
 
 /**
@@ -203,6 +237,17 @@ export const NOTIFICATION_LINK_PATH: Record<NotificationType, string | null> = {
   [NOTIFICATION_TYPE.WALLET_UPGRADE]: null,
   [NOTIFICATION_TYPE.ANALYSIS_COMPLETED]: "/analysis?tab=history",
   [NOTIFICATION_TYPE.ANALYSIS_FAILED]: "/analysis?tab=history",
+  /**
+   * Info: (20260828 - Julian) 深連結到**那一個會話**，並要求到站就把預覽卡打開
+   *（`resumable_job_resume_landing_and_copy.md` §2.2）。頁面層級的去處等於把「是哪一份匯入」丟回給使用者判斷，
+   * 而側欄同時會有數個盤查對話。
+   *
+   * `sessionId` 由 `notification.service.ts` 從 `resourceKey` 切出來放進 payload；
+   * 切不出來時那個鍵不存在，`resolvePathTokens` 會讓整條回 `null`（不可點）——
+   * 那比讓人點到一條 `?session=:sessionId` 好。
+   */
+  [NOTIFICATION_TYPE.JOB_RESUMABLE]:
+    "/user/carbon_chatbot?session=:sessionId&openImport=1",
 };
 
 /**
@@ -226,13 +271,28 @@ export const NOTIFICATION_LINK_PATH: Record<NotificationType, string | null> = {
  * ## `:token` 的規則
  *
  * 路徑裡的 `:foo` 由 `payload.foo` 代入（見 `lib/notification_message.ts`
- * 的 `notificationHrefOf`）。**任何一個 token 代不進去，整條退化為 `null`**，
+ * 的 `notificationHrefOf`）。
+ *
+ * Info: (20260831 - Julian) 代入是**逐 token**做的（`/:([A-Za-z0-9_]+)/g`），
+ * 不是逐段。這一段原本寫「以 `/` 切，所以 query string 不會被當成 token」——
+ * 20260828 的深連結把它改掉了，`?session=:sessionId` 正是靠段內代入生效。
+ *
+ * 後果值得記在這裡：query string 裡的**冒號字面值**現在會被當成 token。
+ * 寫出 `?t=12:30` 這種值時，`:30` 代不出來 → 整條回 `null` → 那一則通知
+ * 變成不可點，而且沒有任何錯誤訊息。要放冒號請先 encode（`%3A`）。
+ *
+ * **任何一個 token 代不進去，整條退化為 `null`**，
  * 渲染成不可點的列 —— 與 D12 同一個判斷：按了沒反應比帶去錯的地方好，
  * 而 `/user/account_book/undefined/journal` 兩者皆是。
  *
- * 所以 `CERTIFICATE_ANALYSIS` 與 `JOURNAL_CORRECTION` 今天自動是不可點的
- *（payload 還沒有 `accountBookId`），而 D43 第二步把那個欄位補進 payload 之後，
- * **這張表不用改就會開始生效**。意圖寫在這裡，能力由 payload 決定。
+ * D43 第二步（20260827）已把 `accountBookId` 補進兩支發射函式的 payload，
+ * 所以 `CERTIFICATE_ANALYSIS` 與 `JOURNAL_CORRECTION` 現在組得出去處了。
+ * 在那之前它們自動是不可點的 —— 這張表當時**不用改**就跟著生效，
+ * 因為意圖寫在這裡，能力由 payload 決定。
+ *
+ * 那個性質仍然成立：`resolveAccountBookId` 的三層 fallback 全部落空時
+ * （舊資料、或沒有帳本的內部任務），這一條照樣退化為不可點，不會產出
+ * 一條 404 的合法路徑。
  */
 export const ANALYSIS_LINK_PATH_BY_CATEGORY: Record<
   string,
@@ -254,12 +314,23 @@ export const ANALYSIS_LINK_PATH_BY_CATEGORY: Record<
   },
   // Info: (20260827 - Julian) 憑證產出的是日記帳／傳票／碳盤查三種紀錄，
   // Info: (20260827 - Julian) 指向日記帳：那是使用者送出的東西，另外兩個是衍生物。
+  /**
+   * Info: (20260831 - Julian) **待辦（review #6732 R1）：帳本軟刪除之後這條去處會說謊。**
+   *
+   * `AccountBook.deletedAt` 存在，所以 `onDelete: Cascade` 永遠不會觸發 ——
+   * 帳本被軟刪除之後，既有的完成通知仍然連到這裡，而 `:accountBookId` 指向
+   * 一本查不到的帳本。通知本身看起來完全正常，症狀只在點下去之後出現。
+   *
+   * ADR 025 §4 早就寫著「真的出現時要一併決定帳本軟刪除後通知怎麼辦」，
+   * 而 `accountBookId` 20260827 進 payload 時**沒有人觸發那個決定**。
+   * 三個選項與傾向記在 ADR 025 §4 的「未決」段；產品決定，不在 #6732 範圍。
+   */
   [ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS]: {
-    completed: "/user/account_book/:accountBookId/journal",
-    failed: "/user/account_book/:accountBookId/journal",
+    completed: "/user/account_book/:accountBookId/journal?tab=list",
+    failed: "/user/account_book/:accountBookId/journal?tab=list",
   },
   [ANALYSIS_CATEGORY.JOURNAL_CORRECTION]: {
-    completed: "/user/account_book/:accountBookId/journal",
-    failed: "/user/account_book/:accountBookId/journal",
+    completed: "/user/account_book/:accountBookId/journal?tab=list",
+    failed: "/user/account_book/:accountBookId/journal?tab=list",
   },
 };

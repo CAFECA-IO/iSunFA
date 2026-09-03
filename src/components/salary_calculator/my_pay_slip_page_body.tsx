@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, Fragment, FC, ChangeEvent } from 'react';
+import { useState, useMemo, Fragment, FC, ChangeEvent } from "react";
 
 import { useTranslation } from "@/i18n/i18n_context";
 import {
@@ -11,7 +11,7 @@ import {
   Transition,
 } from "@headlessui/react";
 import { ChevronDown, Search } from "lucide-react";
-import CalculatorHeader from "@/components/salary_calculator/calculator_header";
+import SalaryCalculatorShell from "@/components/salary_calculator/salary_calculator_shell";
 import ReceivedTab from "@/components/salary_calculator/pay_slip_received_tab";
 import SentTab from "@/components/salary_calculator/pay_slip_sent_tab";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
@@ -56,18 +56,18 @@ const FilterSection: FC<{
   };
 
   return (
-    <div className="gap-24px grid grid-cols-2 items-center">
-      <div className="gap-12px grid grid-cols-2 items-center">
+    <div className="grid grid-cols-2 items-center gap-[24px]">
+      <div className="grid grid-cols-2 items-center gap-[12px]">
         {/* Info: (20250722 - Julian) Year Selection */}
         <Listbox value={selectedYear} onChange={setSelectedYear}>
           <div className="relative">
-            <ListboxButton className="border-input-stroke-input bg-input-surface-input-background hover:border-input-stroke-input-hover hover:divide-input-stroke-input-hover data-open:border-input-stroke-input-hover data-open:divide-input-stroke-input-hover flex w-full items-center divide-x rounded-sm border transition-colors focus:outline-none">
-              <div className="px-12px py-10px text-input-text-input-placeholder text-base font-medium">
+            <ListboxButton className="border-input-stroke-input bg-input-surface-input-background hover:border-input-stroke-input-hover hover:divide-input-stroke-input-hover data-open:border-input-stroke-input-hover data-open:divide-input-stroke-input-hover flex w-full items-center divide-x rounded-lg border transition-colors focus:outline-none">
+              <div className="text-input-text-input-placeholder px-[12px] py-[10px] text-base font-medium">
                 {t("calculator.basic_info_form.year")}
               </div>
-              <div className="py-10px text-input-text-input-filled flex flex-1 items-center text-right text-base font-medium">
-                <div className="px-12px flex-1">{yearStr(selectedYear)}</div>
-                <div className="px-12px text-icon-surface-single-color-primary">
+              <div className="text-input-text-input-filled flex flex-1 items-center py-[10px] text-right text-base font-medium">
+                <div className="flex-1 px-[12px]">{yearStr(selectedYear)}</div>
+                <div className="text-icon-surface-single-color-primary px-[12px]">
                   <ChevronDown size={16} />
                 </div>
               </div>
@@ -78,12 +78,12 @@ const FilterSection: FC<{
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <ListboxOptions className="border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS absolute z-10 mt-1 flex w-full flex-col overflow-auto rounded-sm border focus:outline-none">
+              <ListboxOptions className="border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS absolute z-10 mt-1 flex w-full flex-col overflow-auto rounded-lg border focus:outline-none">
                 {yearOptions.map((year, index) => (
                   <ListboxOption
                     key={year}
                     value={year}
-                    className="px-12px py-10px hover:bg-input-surface-input-hover cursor-pointer text-base font-medium transition-colors data-selected:bg-orange-50 data-selected:text-orange-900"
+                    className="hover:bg-input-surface-input-hover cursor-pointer px-[12px] py-[10px] text-base font-medium transition-colors data-selected:bg-orange-50 data-selected:text-orange-900"
                   >
                     {index === 0 ? t("calculator.my_pay_slip.all") : year}
                   </ListboxOption>
@@ -96,13 +96,15 @@ const FilterSection: FC<{
         {/* Info: (20250722 - Julian) Month Selection */}
         <Listbox value={selectedMonth} onChange={setSelectedMonth}>
           <div className="relative">
-            <ListboxButton className="border-input-stroke-input bg-input-surface-input-background hover:border-input-stroke-input-hover hover:divide-input-stroke-input-hover data-open:border-input-stroke-input-hover data-open:divide-input-stroke-input-hover flex w-full items-center divide-x rounded-sm border transition-colors focus:outline-none">
-              <div className="px-12px py-10px text-input-text-input-placeholder text-base font-medium">
+            <ListboxButton className="border-input-stroke-input bg-input-surface-input-background hover:border-input-stroke-input-hover hover:divide-input-stroke-input-hover data-open:border-input-stroke-input-hover data-open:divide-input-stroke-input-hover flex w-full items-center divide-x rounded-lg border transition-colors focus:outline-none">
+              <div className="text-input-text-input-placeholder px-[12px] py-[10px] text-base font-medium">
                 {t("calculator.basic_info_form.month")}
               </div>
-              <div className="py-10px text-input-text-input-filled flex flex-1 items-center text-right text-base font-medium">
-                <div className="px-12px flex-1">{monthStr(selectedMonth)}</div>
-                <div className="px-12px text-icon-surface-single-color-primary">
+              <div className="text-input-text-input-filled flex flex-1 items-center py-[10px] text-right text-base font-medium">
+                <div className="flex-1 px-[12px]">
+                  {monthStr(selectedMonth)}
+                </div>
+                <div className="text-icon-surface-single-color-primary px-[12px]">
                   <ChevronDown size={16} />
                 </div>
               </div>
@@ -113,12 +115,12 @@ const FilterSection: FC<{
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <ListboxOptions className="border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS absolute z-10 mt-1 flex w-full flex-col overflow-auto rounded-sm border focus:outline-none">
+              <ListboxOptions className="border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled shadow-Dropshadow_XS absolute z-10 mt-1 flex w-full flex-col overflow-auto rounded-lg border focus:outline-none">
                 {monthOptions.map((month) => (
                   <ListboxOption
                     key={month}
                     value={month}
-                    className="px-12px py-10px hover:bg-input-surface-input-hover cursor-pointer text-base font-medium transition-colors data-selected:bg-orange-50 data-selected:text-orange-900"
+                    className="hover:bg-input-surface-input-hover cursor-pointer px-[12px] py-[10px] text-base font-medium transition-colors data-selected:bg-orange-50 data-selected:text-orange-900"
                   >
                     {month === "All"
                       ? t("calculator.my_pay_slip.all")
@@ -132,8 +134,8 @@ const FilterSection: FC<{
       </div>
 
       {/* Info: (20250722 - Julian) Search bar */}
-      <div className="border-input-stroke-input bg-input-surface-input-background flex flex-1 items-center rounded-sm border">
-        <div className="px-12px py-10px text-icon-surface-single-color-primary">
+      <div className="border-input-stroke-input bg-input-surface-input-background flex flex-1 items-center rounded-lg border">
+        <div className="text-icon-surface-single-color-primary px-[12px] py-[10px]">
           <Search size={16} />
         </div>
         <input
@@ -142,14 +144,19 @@ const FilterSection: FC<{
           onChange={changeSearchQuery}
           aria-label={t("calculator.my_pay_slip.search_placeholder")}
           placeholder={t("calculator.my_pay_slip.search_placeholder")}
-          className="px-12px py-10px placeholder:text-input-text-input-placeholder flex-1 bg-transparent text-base font-medium outline-none"
+          className="placeholder:text-input-text-input-placeholder flex-1 bg-transparent px-[12px] py-[10px] text-base font-medium outline-none"
         />
       </div>
     </div>
   );
 };
 
-const MyPaySlipPageBody: FC = () => {
+interface IMyPaySlipPageBodyProps {
+  // Info: (20260831 - Julian) 薪資單頁只存在於帳本版，因此這裡不可為 null（計劃書 §2.4）
+  accountBookId: string;
+}
+
+const MyPaySlipPageBody: FC<IMyPaySlipPageBodyProps> = ({ accountBookId }) => {
   const { t } = useTranslation();
 
   // ToDo: (20260225 - Julian) should replace with real data
@@ -266,36 +273,33 @@ const MyPaySlipPageBody: FC = () => {
   const clickSentTab = () => setCurrentTab("sent");
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-white">
-      {/* Info: (20250718 - Julian) Header */}
-      <CalculatorHeader />
-
+    <SalaryCalculatorShell accountBookId={accountBookId}>
       {/* Info: (20250718 - Julian) Main Content */}
-      <div className="gap-56px px-240px py-56px flex flex-col items-stretch">
-        <h1 className="text-32px text-text-brand-primary-lv1 text-center font-bold">
+      <div className="flex flex-col items-stretch gap-[56px] px-[240px] py-[56px]">
+        <h1 className="text-text-brand-primary-lv1 text-center text-[32px] font-bold">
           {t("calculator.my_pay_slip.main_title")}
         </h1>
 
         {/* Info: (20250718 - Julian) Tabs */}
-        <div className="gap-16px grid grid-cols-2">
+        <div className="grid grid-cols-2 gap-[16px]">
           <button
             type="button"
             onClick={clickReceivedTab}
-            className={`${receivedStyle} px-12px py-8px w-full border-b-2`}
+            className={`${receivedStyle} w-full border-b-2 px-[12px] py-[8px]`}
           >
             {t("calculator.my_pay_slip.tab_received")}
           </button>
           <button
             type="button"
             onClick={clickSentTab}
-            className={`${sentStyle} px-12px py-8px w-full border-b-2`}
+            className={`${sentStyle} w-full border-b-2 px-[12px] py-[8px]`}
           >
             {t("calculator.my_pay_slip.tab_sent")}
           </button>
         </div>
 
         {/* Info: (20250718 - Julian) List */}
-        <div className="gap-24px flex w-full flex-col">
+        <div className="flex w-full flex-col gap-[24px]">
           <FilterSection
             selectedYear={selectedYear}
             setSelectedYear={setSelectedYear}
@@ -323,7 +327,7 @@ const MyPaySlipPageBody: FC = () => {
           )}
         </div>
       </div>
-    </main>
+    </SalaryCalculatorShell>
   );
 };
 

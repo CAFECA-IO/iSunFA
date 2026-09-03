@@ -57,6 +57,12 @@ jest.mock("@/services/notification.service", () => ({
     todos: [],
     completed: [],
     hasMoreCompleted: false,
+    /**
+     * Info: (20260902 - Julian) 替身要回**真 service 回的每一個欄位**（B6／§1.8）。
+     * `hasMoreTodos` 是 20260901 新增的，而這兩支替身當時沒跟上 —— 同一份檔案
+     * 上面那段註解記的正是這個形狀：少一個欄位時 route 把它弄丟也不會有人紅。
+     */
+    hasMoreTodos: false,
   })),
   listNotificationHistory: jest.fn(async () => ({
     items: [],

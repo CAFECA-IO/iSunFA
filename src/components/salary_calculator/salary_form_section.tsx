@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC } from "react";
 import { AlertCircle } from "lucide-react";
 import ProgressBar from "@/components/salary_calculator/progress_bar";
 import StepTabs from "@/components/salary_calculator/step_tabs";
@@ -10,26 +10,31 @@ import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { useTranslation } from "@/i18n/i18n_context";
 import { getMinimumWage } from "@/lib/utils/salary_calculator";
 
-const SalaryFormSection: FC = () => {
+interface ISalaryFormSectionProps {
+  // Info: (20260831 - Julian) 傳給 BasicInfoForm 決定要不要顯示「員工列表」入口（計劃書 §2.4）
+  accountBookId: string | null;
+}
+
+const SalaryFormSection: FC<ISalaryFormSectionProps> = ({ accountBookId }) => {
   const {
     currentStep,
     baseSalary,
     mealAllowance,
     selectedYear,
     totalTaxableHours,
-    totalNonTaxableHours
+    totalNonTaxableHours,
   } = useCalculatorCtx();
   const { t } = useTranslation();
 
   const minimumWage = getMinimumWage(parseInt(selectedYear));
-  const isSalaryBelowMinimum = (baseSalary + mealAllowance) < minimumWage;
-  const isOvertimeExceeded = (totalTaxableHours + totalNonTaxableHours) > 46;
+  const isSalaryBelowMinimum = baseSalary + mealAllowance < minimumWage;
+  const isOvertimeExceeded = totalTaxableHours + totalNonTaxableHours > 46;
 
   const showWarning = isSalaryBelowMinimum || isOvertimeExceeded;
 
   const displayedForm =
     currentStep === 1 ? (
-      <BasicInfoForm />
+      <BasicInfoForm accountBookId={accountBookId} />
     ) : currentStep === 2 ? (
       <BasePayForm />
     ) : currentStep === 3 ? (
@@ -52,7 +57,11 @@ const SalaryFormSection: FC = () => {
           </div>
           <ul className="list-inside list-disc pl-6 text-red-700">
             {isSalaryBelowMinimum && (
-              <li>{t("calculator.warnings.salary_below_minimum", { minimumWage: minimumWage.toLocaleString() })}</li>
+              <li>
+                {t("calculator.warnings.salary_below_minimum", {
+                  minimumWage: minimumWage.toLocaleString(),
+                })}
+              </li>
             )}
             {isOvertimeExceeded && (
               <li>{t("calculator.warnings.overtime_exceeded")}</li>

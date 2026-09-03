@@ -11,7 +11,7 @@
 
 **一張新表、一個既有表的新欄位、零個新 enum、零個媒體資產。**
 
-env 有四個 `NOTIFICATION_RL_*`，但它們**全部可省略**（程式碼有保底值），因此部署時不需要設定任何東西。**刻意不進 `.env.example`** —— 理由見 §4，而它們仍要登記進 `env_example_contract.test.ts` 的 `RATE_LIMIT_KEYS`（見 §5.5）。「零個新 env」講的是「不必設定」，不是「程式不讀」。
+env 有四個 `NOTIFICATION_RL_*`，但它們**全部可省略**（程式碼有保底值），因此部署時不需要設定任何東西。**刻意不進 `.env.example`** —— 理由見 §4，而它們仍要登記進 `env_example_contract.test.ts` 的 `RATE_LIMIT_KEYS`（見 §5.6）。「零個新 env」講的是「不必設定」，不是「程式不讀」。
 
 | 物件 | 說明 |
 |---|---|
@@ -135,6 +135,39 @@ SELECT count(*) FROM team_invitation
 -- 期望：0
 ```
 
+**與 PR #6732 一起上線時，再加這一條**（`Order.data->>'resourceKey'` 與 `ResumableJob.resourceKey` 必須對得起來）：
+
+```sql
+-- ⑥ 錢到帳了，任務卻還停在等付款
+--
+-- 這一條抓的是「訂單的 resourceKey 與書籤的 resourceKey 分岔」的**後果**，
+-- 而不是分岔本身。理由見下方「為什麼不從訂單那一側查」。
+SELECT j.id, j.resource_key, j.paused_at, o.id AS order_id, o.status
+  FROM resumable_job j
+  JOIN "order" o
+    ON o.user_id = j.user_id
+   AND o.data->>'resourceKey' = j.resource_key
+ WHERE j.status = 'PAUSED'
+   AND o.status IN ('PAID', 'COMPLETED')
+   AND o.created_at > j.paused_at;
+-- 期望：0 列（有列＝那筆付款到帳時沒有翻面，而且不會報錯）
+```
+
+**為什麼不從訂單那一側查**（前一版是這樣寫的，而它在常態下必然非 0）：
+`resourceKey` 是寫給**所有**碳盤查個人扣費的（chat / draft / diagram / import 五個呼叫端），
+而 `resumable_job` 只有匯入會建列。所以「有 `resourceKey`、卻找不到書籤」的訂單在常態下大量存在
+—— 使用者在未綁帳本的會話送一則對話就是一筆。想用 `data->>'category'` 濾掉非匯入也不行：
+那一格取自 `runBilledCarbonTask` 的 `featureCode`，而**五個呼叫端一個都沒傳**，今天恆為同一個值。
+
+一條在常態下恆紅的驗證，上線第一天就會教維運忽略它 —— 而它是唯一被指定用來抓這件事的事前檢查
+（清單 §1.10：會亂叫的驗收沒有人會再看它）。所以改成從**任務**那一側查：
+「這個人為這個 resourceKey 付過錢，而任務還停在 PAUSED」是一個今天就分得出真假的問題，
+而且它正是分岔真正會造成的傷害。
+
+**為什麼要驗這一條**：整個修法押在「訂單的 `resourceKey` 等於任務的 `resourceKey`」上。今天成立，是因為前端 `chatChannel` **同一個變數**同時餵給 `formData.append("channel", …)`（決定訂單那一邊）與 `POST /v1/user/job/bookmark` 的 `resourceKey`（決定書籤那一邊）。伺服器端沒有任何東西斷言兩者一致 —— 它們一旦分岔，失敗是靜默的（查不到 → 回 0 → 不翻面 → 沒有通知、沒有錯誤）。
+
+服務端會為這種情形留一行 log（`payment-blocked release found nothing`，帶 `resourceKey`），所以 §7 的觀測也看得到；但那是事後，這條 SQL 是事前。
+
 ---
 
 ## 4. 不要碰的東西
@@ -175,15 +208,34 @@ SELECT count(*) FROM notification
 
 補救要把那些列**刪除**（不是把 `read_at` 設回 null 就好也可以，但刪除更乾淨），並先確認哪些人真的還沒升級 —— 不是全部一起處理。
 
-### 5.3 ⚠️ 無效的樣式 class（`tsc` 與 `lint` 全綠）
+### 5.3 ⚠️ 在途的等付款訂單，付了款也不會被釋放（完全不報錯）
+
+**只有 PR #6732 一起上線時才存在**，而它是一個對**在途資料**的行為變更。
+
+那次改動把「付款到帳 → 釋放可接續任務」從「翻這個人全部等付款的任務」收斂成「只翻這筆付款對應的那一份」，關聯鍵是 `Order.data->>'resourceKey'`（建單時寫入）。**部署當下已經建立、還沒付款的舊訂單沒有這個鍵**：使用者付了款 → `releasePaymentBlockedJobs` 取不到鍵 → 回 0 → **任務不翻面、通知不發、沒有任何錯誤**。
+
+fail-closed 是刻意的（退回「翻全部」就是那個缺陷本身），但症狀屬於本節這一類：做錯順序不會噴錯，只會安靜停擺。使用者仍可自己回到碳盤查頁面按「接著匯入」，所以**不需要回滾**，但要知道它會發生、範圍有多大：
+
+```sql
+-- 部署前先數：有多少在途訂單會落在這個窗口
+SELECT count(*) FROM "order" o
+ WHERE o.status IN ('PENDING', 'PAYING')
+   AND o.unit = 'ICP'
+   AND o.data->>'resourceKey' IS NULL;
+-- 期望：越接近 0 越好。非 0 時記下數字，那就是「付了款卻沒收到通知」的人數上限
+```
+
+要補救的話，對那些人手動翻面即可（`resumable_job` 的 `status` `PAUSED` → `RESUMABLE`，`pause_reason` 與 `paused_at` 一併清成 NULL —— 三個欄位要一起改，理由見 `resumable_job.repo.ts` 的 `markResumable`）。
+
+### 5.4 ⚠️ 無效的樣式 class（`tsc` 與 `lint` 全綠）
 
 `@theme` 沒有定義的名字會產出一個不生效的 class，而型別檢查與 lint 都不會抱怨（D3 的成因）。**這是唯一一個在 staging 上用眼睛就會發現的缺陷**，前提是有人真的去點開面板。列入上線後的目視檢查。
 
-### 5.4 ⚠️ `dedupe_key` 被建成 NOT NULL
+### 5.5 ⚠️ `dedupe_key` 被建成 NOT NULL
 
 不帶去重鍵的通知寫不進去。目前每一種都帶鍵，所以今天不會發生 —— 但新增一種不需去重的型別時會，而症狀是「那一種通知從來沒出現過」，看起來像 §5.1。§3.1 的驗證 ② 就是為這個而存在。
 
-### 5.5 ⚠️ 把限流閾值寫進 `.env.example`
+### 5.6 ⚠️ 把限流閾值寫進 `.env.example`
 
 見 §4。並且要主動去登記：`src/__tests__/env_example_contract.test.ts` 的 `RATE_LIMIT_KEYS` 是一份**手抄的**清單，`NOTIFICATION_RL_*` 要加進去，否則這道保護對新鍵不生效 —— 而它是唯一會抓到這個錯的東西。
 
@@ -221,15 +273,20 @@ SELECT read_at IS NULL AS unread, count(*) FROM notification GROUP BY 1;
 SELECT count(*) FROM notification
  WHERE type = 'WALLET_UPGRADE' AND read_at IS NOT NULL;
 
--- ⑤ D4 的觸發條件：有沒有人的未讀超過 30
+-- ⑤ D4 的觸發條件：有沒有人的未讀超過面板上限（NOTIFICATION_HISTORY_LIMIT）
 SELECT user_id, count(*) FROM notification WHERE read_at IS NULL
- GROUP BY 1 HAVING count(*) > 30;
+ GROUP BY 1 HAVING count(*) > 10;
 ```
+
+**與 PR #6732 一起上線時另外看一行 log**（`JOB_RESUMABLE` 是活算的，資料庫裡沒有列可以數，所以它不會出現在上面任何一條 SQL 裡）：
+
+- `payment-blocked release found nothing`（`ResumableJobRelease`）—— 付款到帳但查不到對應的任務。**常態也會出現**（付的是與可接續任務無關的錢），要看的是**同一個 `resourceKey` 反覆出現**：那代表訂單與書籤的鍵分岔了，而那條路上的失敗是靜默的（見 §3.1 的驗證 ⑥ 與 §5.3）。
 
 非 SQL 的三項：
 
 - [ ] `pm2 describe isunfa-worker` 的 uptime 晚於部署時間（§5.1）
-- [ ] **用眼睛點開一次通知面板**，確認有背景色與邊框（§5.3）
+- [ ] **用眼睛點開一次通知面板**，確認有背景色與邊框（§5.4）
+- [ ] （與 PR #6732 同行時）**部署前**先數在途的等付款訂單（§5.3 的 SQL），上線後跑 §3.1 的驗證 ⑥，並在 §7 的觀測裡留意 `payment-blocked release found nothing`
 - [ ] 開三個獨立視窗，確認一則新通知只響一次
 
 ---

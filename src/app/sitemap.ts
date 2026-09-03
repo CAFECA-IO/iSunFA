@@ -119,18 +119,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
-      url: "salary_calculator/employee_list",
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.7,
-    },
-    {
-      url: "salary_calculator/pay_slip",
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.7,
-    },
-    {
       url: "salary_calculator/operating_mechanism",
       lastModified: new Date(),
       changeFrequency: "weekly",

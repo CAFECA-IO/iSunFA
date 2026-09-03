@@ -33,8 +33,10 @@
    > 席次計費與分配點數上鏈的部署順序。本專案沒有 migrations 目錄，欄位新增與資料回填是分開的兩件事，而順序做錯不會噴錯——只會安靜地讓功能停擺或讓點數暫時消失在畫面上。**兩份檢查表屬同一次部署**，見該檔 §4.9。
 8. 🗓️ **[部署檢查表：假勤系統](engineering_guidelines/deploy_checklist_leave_overtime_2026q3.md)**
    > 15 張新表、19 個新 enum，以及**與上一份最重要的差別：這次不是純新增**。移除了 `enum LeaveType` 與 `leave_request` 的四個欄位，對兩張既有表加了 8 個必填且無 default 的欄位 —— 因此上一份「回滾程式碼不需要回滾 schema」的結論在這裡**不成立**。另有兩種漏做完全不報錯，以及正式環境已有真實假單時的停損點。
-9. 🔔 **[部署檢查表：通知模組](engineering_guidelines/deploy_checklist_notification_2026q3.md)**
-   > **一張新表、零個新 enum、零個新 env**。四份檢查表裡 schema 層最安全的一份（純新增、不需回填、回滾程式碼不需回滾 schema）—— **而風險因此整個移到了「重啟哪些 process」與「上線順序」上**。五種做錯的方式裡有四種完全不報錯，最難查的是：只重啟 `isunfa` 沒重啟 `isunfa-worker`，於是網站正常、AI 任務正常完成、總帳正常入帳，而一則通知都不會產生 —— **而沒有人會抱怨一件他不知道應該發生的事。** §2.1 是跑 `request_wallet_upgrades.ts` 之前的前置條件：探針分三態，「無法判定」不是 0 就不能加 `--commit`。
+9. 💰 **[部署檢查表：薪資紀錄](engineering_guidelines/deploy_checklist_salary_record_2026q3.md)**
+   > 2 張新表、無 enum 變更、純新增，所以套用順序本身不難 —— 難的是**上線前的兩個阻擋項**：薪資欄位的資料分級尚未拍板（ADR 018 並未涵蓋薪資，需補一段新決策），以及 7 個明文入庫的薪資欄位中有 2 個不在 `salary_record` 表上、最容易被漏掉。另含存活員工唯一性走 `active_number` 部分唯一索引的驗證步驟。
+10. 🔔 **[部署檢查表：通知模組](engineering_guidelines/deploy_checklist_notification_2026q3.md)**
+    > **一張新表、零個新 enum、零個新 env**。四份檢查表裡 schema 層最安全的一份（純新增、不需回填、回滾程式碼不需回滾 schema）—— **而風險因此整個移到了「重啟哪些 process」與「上線順序」上**。五種做錯的方式裡有四種完全不報錯，最難查的是：只重啟 `isunfa` 沒重啟 `isunfa-worker`，於是網站正常、AI 任務正常完成、總帳正常入帳，而一則通知都不會產生 —— **而沒有人會抱怨一件他不知道應該發生的事。** §2.1 是跑 `request_wallet_upgrades.ts` 之前的前置條件：探針分三態，「無法判定」不是 0 就不能加 `--commit`。
 
 ### 🐛 已知缺陷 (Known Issues)
 
@@ -87,11 +89,14 @@ _聚焦於四大會計師級別的底層財報與內控實務：_
 
 - **[分類帳與試算表整合施行計劃 (Ledger & Trial Balance Integration Plan)](architecture/ledger_and_trial_balance_integration_plan.md)**：於既有報表引擎慣例上新增兩支唯讀報表（樹狀溯源 + MoneyUtil + 懸記納入）。
 - **[團隊錢包與訂閱額度消耗系統 (Team Wallet & Subscription Quota)](architecture/team_wallet_and_subscription_quota.md)**：團隊為計費主體、5 小時 / 週雙視窗訂閱額度、免簽章扣費管線與管理者點數分配。
+- **[可中斷／可接續的高耗點任務 (Resumable Credit Jobs)](architecture/resumable_credit_jobs.md)**：點數在中途用完時「暫停而不是失敗」的通用契約——書籤在伺服器、內容在客戶端（E2EE），以及「判準必須與扣款端同一個」那一課。
 - **[團隊席次計費與 Email 邀請 (Team Seat Billing & Email Invitation)](architecture/team_seat_billing_and_email_invitation.md)**：訂閱主體為團隊、依席次計費、期中加人按剩餘天數比例補收（先扣款才寄邀請），以及 email 邀請 → 註冊即入團的流程與 SMTP 設定。
 - **[費思個人化記憶 (Faith Personal Memory)](architecture/ai_and_analytics/faith_personal_memory.md)**：付費訂閱的每位成員專屬記憶——`(userId, teamId)` 隔離、LLM 只做萃取、欄位級加密，以及停止訂閱 90 天後刪除的保留機制。**須於 v0.13.0 釋出前完成**，條款已先行載明。
 - **[出勤模組開發計畫書 (Time & Attendance Module Plan)](architecture/time_attendance_module_plan.md)**：打卡不可變、地理圍欄、班別統一模型與單日出勤判定引擎（純函數）。
 - **[假勤模組開發計畫書 (Leave & Overtime Module Plan)](architecture/leave_and_overtime_module_plan.md)**：假別規則資料化、額度異動帳本、多級簽核鏈快照、加班分段與補休、假勤行事曆。**§3 附已查證的勞基法／性平法法源對照表與 8 項待核對清單，法務複核前不得標記 Production Ready。**
-- **[通知模組開發計畫書 (Notification Module Plan)](architecture/notification_module_plan.md)**：Header 鈴鐺、AI 任務完成推送與 HR 模組的預留。**§2 是 D1–D26 的缺陷總帳**，其中 D17（提示音第二次抵達起永久失效）與 D18（上鏈被拒 3 次後訂單卡住、完成與失敗都不通知）**都躲過了單元測試、e2e 與整份 code review** —— 前者的失效沒有任何觀測量，後者的失效是「什麼都沒發生」。§3 是不要改回去的實作決定（待辦型活算不入庫、只存 `type` + `payload`、`readAt` 而非 enum），§5 是 HR 接線的八項前置，§6 是離「可上線」還差的七件事。
+- **[薪資紀錄模組開發計畫書 (Salary Record Module Plan)](architecture/salary_record_module_plan.md)**：把既有的公開版薪資計算機接上帳本 —— 員工名冊（身分鍵是**員工編號**不是 Email，存活唯一性走 `active_number` 部分唯一索引）、`(帳本, 員工, 年, 月)` 唯一鍵與「重存即覆寫」、輸入／結果雙快照與 `calculator_version`。**§13 的薪資資料分級尚未拍板，上線前為阻擋項。**
+- **[通知模組開發計畫書 (Notification Module Plan)](architecture/notification_module_plan.md)**：Header 鈴鐺、AI 任務完成推送與 HR 模組的預留。**§2 是 D1–D45 的缺陷總帳**，其中 D17（提示音第二次抵達起永久失效）與 D18（上鏈被拒 3 次後訂單卡住、完成與失敗都不通知）**都躲過了單元測試、e2e 與整份 code review** —— 前者的失效沒有任何觀測量，後者的失效是「什麼都沒發生」。§3 是不要改回去的實作決定（待辦型活算不入庫、只存 `type` + `payload`、`readAt` 而非 enum），§5 是 HR 接線的八項前置，§6 是離「可上線」還差的七件事。
+- **[可接續任務的「可以繼續了」通知 (Resumable Job Resume Notification)](architecture/resumable_job_resume_notification.md)**：點數／額度補回時通知使用者那份中斷的匯入可以繼續。兩個關鍵決定與通知模組其餘四種型別不同，值得單獨看：`JOB_RESUMABLE` **活算不入庫**（同一個資源會反覆暫停，而 `dedupeKey` 是永久鍵），抵達鍵取 `updatedAt` 而非 `createdAt`（否則第二次「可以繼續」搖而不響、此後永久靜音）。**§6 是實測發現**，其中「加購點數」曾被寫進文案，而它是一條不存在的出路 —— 翻面的判準只看訂閱方案的視窗額度。落地與文案的修改計畫另見 [`resumable_job_resume_landing_and_copy.md`](architecture/resumable_job_resume_landing_and_copy.md)，它記著一個典型的形狀：**功能全部正確，但訊息送到使用者看不見的元件裡，於是被合理地判定為壞掉**。
 
 ### 📌 4. 架構決策紀錄 (Architecture Decision Records, ADRs)
 
