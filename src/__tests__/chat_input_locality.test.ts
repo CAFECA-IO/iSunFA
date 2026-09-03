@@ -134,6 +134,31 @@ describe("聊天輸入的 state 局部性(#6718)", () => {
     expect(source).not.toContain("}, [prefill, text]);");
   });
 
+  /**
+   * Info: (20260903 - Luphia) 送出成功**不清空**輸入框(review 阻-1/阻-2)。
+   *
+   * 原本成功路徑有一個無條件的 `commandInput("")`,而它服務的唯一路徑
+   *(後續建議按鈕,繞過元件 submit)框裡放的是使用者自己的草稿 ——
+   * 清掉它就是刪使用者的東西,而且不需要任何時間窗:
+   * 打半句話 → 點一下 chip → 草稿消失。註解裡另外那條「跳段後自動送出」不存在。
+   *
+   * 判準用**精確筆數**而不是門檻或區間掃描:
+   * - 門檻(`>= 1`)擋不住「又多加了一處」
+   * - 區間掃描(`slice(start, start + N)`)對「附近加註解」是脆的
+   *   (本 repo 的 `carbon_import_pause` 就因此被推出窗外過)
+   * 剩下的那一處是切房(`switchSession`)—— 那是真正的指令。
+   * **要新增第二處,請先說得出它為什麼是指令而不是在刪使用者的字。**
+   */
+  it("set 模式的清空只剩切房一處(送出成功不清)", () => {
+    const hook = read(HOOK);
+    const statements = hook.match(/^ {6}commandInput\(""\);$/gm) ?? [];
+    expect(statements).toHaveLength(1);
+    // Info: (20260903 - Luphia) 反面:歸還那兩處必須帶 mode,不能退化成 set
+    const restores =
+      hook.match(/commandInput\(outgoingText, "restore"\)/g) ?? [];
+    expect(restores).toHaveLength(2);
+  });
+
   it("hook 的送出不再退回輸入框內容(它已經沒有那份 state)", () => {
     const source = read(HOOK);
     /**

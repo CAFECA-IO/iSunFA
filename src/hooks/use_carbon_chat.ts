@@ -6033,11 +6033,10 @@ export const useCarbonChat = () => {
          * (任一路徑忘了清 → 輸入框永久打不了字,而使用者看不出原因)
          * 比它要修的缺陷嚴重,而且 `ensureMasterKeyCached` 另有一個呼叫端。
          *
-         * 剩下的那半不是這裡能收的:成功路徑的 `commandInput("")` **必須**清
-         * (後續建議按鈕那條路徑,框裡的字就是該清的),而 hook 分不出
-         * 「框裡是我要送的字」與「使用者剛打的字」——
-         * 那半需要鎖,已另開票(`data/scratch/issue_drafts/open/67`),
-         * 且該讓鎖自己走一輪 review。
+         * Info: (20260903 - Luphia) 原文接著寫「剩下的那半需要鎖」(成功路徑的
+         * `commandInput("")` 必須清)—— 前提對(hook 分不出框裡是誰的字),
+         * 結論不成立:那一行本來就不該清(理由見下方送出成功處的註解)。
+         * 拿掉它之後這條路徑沒有殘留問題,也不需要鎖。
          */
         if (keyError instanceof ChatroomUnsupportedDeviceError) {
           commandInput(outgoingText, "restore");
@@ -6105,12 +6104,33 @@ export const useCarbonChat = () => {
       });
 
       /**
-       * Info: (20260827 - Emily) #6718:送出後清空。
-       * `ChatInput` 送出時已自行清空(它是文字的所有者),這裡再下一次指令
-       * 是為了**非輸入框發起的送出**(後續建議按鈕、跳段後自動送出)——
-       * 那些路徑不經過元件的 submit,框裡的字不會自己消失。
+       * Info: (20260903 - Luphia) 送出成功後**刻意不清空輸入框**(review 阻-1/阻-2)。
+       *
+       * 這裡原本是無條件的 `commandInput("")`,理由寫「為了非輸入框發起的送出
+       *(後續建議按鈕、跳段後自動送出)」—— 那個理由有兩個問題:
+       *
+       * 1. **「跳段後自動送出」不存在**(阻-2)。跳段那支 callback 只做
+       *    `commandInput(t("carbon_chatbot.jump_prompt", …))` 預填,而
+       *    `handleSendMessage` 在這個 hook 內**沒有任何呼叫端**(只有宣告與導出)。
+       *    多出來的那條路徑讓這一行看起來服務兩個對象、因此比實際更必要。
+       * 2. 剩下那個真的對象(後續建議按鈕)**不該清**(阻-1)。那顆按鈕走
+       *    `onClick={() => onSendFollowUp(prompt)}`,繞過元件的 submit,
+       *    所以框裡的字還在 —— 而框裡那些字是使用者自己打的草稿,
+       *    與他點的建議無關。清掉它就是刪掉使用者的東西,而且**不需要任何時間窗**:
+       *    打半句話 → 點一下 chip → 草稿消失。
+       *
+       * 那正是本 PR 標題那件事(歸還與指令分開)的同一類缺陷,只是換了一條路徑。
+       *
+       * 為什麼不改成「只清掉我送出去的那句」:那需要第三個 mode,而清空這件事
+       * 在這條路徑上本來就沒有正當理由 —— 讓 `commandInput` 收斂成
+       * 「指令(set)／歸還(restore)」兩種語意,比多長一種好。
+       *
+       * 元件自己的 submit 仍然清(它是文字的所有者,而且只清它剛送出去的那份),
+       * 所以「打字送出後框裡是空的」這個體驗沒有變。
+       *
+       * 連帶讓 `issue_drafts/open/67`(「成功路徑需要一個金鑰準備中的鎖」)不再必要:
+       * 那張票的前提是「`commandInput("")` 必須清」,而它不必。
        */
-      commandInput("");
       setPendingAttachments([]);
       setAttachmentError(null);
       markSessionBusy(activeSessionId, true);
