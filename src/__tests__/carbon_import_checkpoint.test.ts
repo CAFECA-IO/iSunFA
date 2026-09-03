@@ -22,6 +22,47 @@ const chunk = (over: Partial<NonNullable<Chunk>> = {}): Chunk => ({
   ...over,
 });
 
+/**
+ * Info: (20260903 - Luphia) 盤查年度的摺疊(#6743 / open/69;rebase 到 develop 時搬進來)。
+ *
+ * 只有第一次呼叫(帶 activities 那次)會要求模型回年度,其餘十次是 undefined。
+ * 寫成賦值就會被後到的 undefined 蓋掉,而那等於 #6743 沒做:
+ * 年度回到未知 → 合併規則 3 不成立 → 跨年度孤兒列照留(虛增總量)。
+ * 與上面 activities 那條「累加而不是覆蓋」是同一個教訓的另一半。
+ */
+describe("foldImportChunks:盤查年度取第一個抽到的", () => {
+  it("後到的 undefined 不覆蓋", () => {
+    const folded = foldImportChunks([
+      chunk({ inventoryYear: 2024 }),
+      chunk(),
+      chunk(),
+    ]);
+    expect(folded.inventoryYear).toBe(2024);
+  });
+
+  it("第一個抽到的優先,後到的不同值也不覆蓋(一份報告只有一個年度)", () => {
+    const folded = foldImportChunks([
+      chunk({ inventoryYear: 2024 }),
+      chunk({ inventoryYear: 2023 }),
+    ]);
+    expect(folded.inventoryYear).toBe(2024);
+  });
+
+  it("前面幾份沒抽到,後面抽到仍然收下", () => {
+    const folded = foldImportChunks([
+      chunk(),
+      chunk(),
+      chunk({ inventoryYear: 2023 }),
+    ]);
+    expect(folded.inventoryYear).toBe(2023);
+  });
+
+  it("全部都沒抽到就是未知(不猜:預覽卡會要求使用者填)", () => {
+    expect(foldImportChunks([chunk(), chunk()]).inventoryYear).toBeUndefined();
+    expect(foldImportChunks([null, null]).inventoryYear).toBeUndefined();
+  });
+});
+
 describe("foldImportChunks：中途與最後共用同一支摺疊", () => {
   it("同一段落的多份內容依序接起來", () => {
     const folded = foldImportChunks([

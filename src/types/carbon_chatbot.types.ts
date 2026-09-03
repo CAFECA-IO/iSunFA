@@ -296,6 +296,18 @@ export interface IComputedLedgerEntry {
     isoCategory: Iso14064Category;
     subCategory: string;
     tableNo: string;
+    /**
+     * Info: (20260827 - Emily) 這筆分錄屬於哪一個盤查年度(PR #6725 review R1)。
+     *
+     * 為什麼非有不可:去重鍵 `imported:{basis}:{site}:{subCategory}` **不含年度**,
+     * 所以跨年度再匯一份報告時,只有前一年有的排放源(關廠、廠址改名、
+     * ISO 子類別編號改版)會變成**孤兒列留在帳本裡並被算進總量** ——
+     * reviewer 實測虛增 28.6%,而每一筆孤兒列都有合法溯源(表3.8+廠址+子類別),
+     * 單看帳本挑不出來。有了年度,合併才能分辨「同年覆蓋」與「換年換鍋」。
+     *
+     * 無值 = 該份報告沒有可萃取的盤查年度(視為與當前帳本同年度,維持舊行為)。
+     */
+    year?: number;
   };
   /**
    * Info: (20260806 - Tzuhan) 交易日期(Unix 秒),自 `IActivityRecord.tradingTimestamp` 帶過。
@@ -362,9 +374,49 @@ export interface ICarbonInventoryState {
    * 下一次匯入成功入帳即清空(見 applyImportedLedgerEntries)。
    */
   ledgerImportBlocks?: ILedgerImportBlock[];
+  /**
+   * Info: (20260825 - Emily) 帳本年度快照(#6719):鍵為**那份報告的**盤查年度。
+   *
+   * 年間量級跳動偵測器需要「兩個年度的帳本」——年度維度不必等外部資料庫,
+   * 匯入第二份**帶不同年度**的報告就長出來了。
+   *
+   * Info: (20260902 - Emily) 鍵的來源在 `issue_drafts/open/69` 修好了。
+   * 在那之前鍵是 `state.year` —— 房間層級、write-once
+   * (`carbon_inventory.ts` 的 `state.year ?? extraction.year`),而匯入路徑
+   * 完全不帶年度進來,所以同一間房匯兩份報告會拿到**同一個年度值**:
+   * 這個 Record 永遠只有一個鍵,規則 3 的跨年度換鍋也永遠不觸發。
+   * 現在年度來自那份報告本身(萃取預填 + 匯入預覽卡確認),
+   * 快照鍵、規則 3 的剔除與年度警示三者共用 `resolveIncomingYear`。
+   * 同年度重匯 = 覆蓋該年(與 activityKey 同鍵覆蓋的語義一致)。
+   * `computedLedger` 維持「當前」語義不動 —— 既有消費端(桑基/對帳/事實包)零改動。
+   */
+  ledgerByYear?: Record<number, IComputedLedger>;
+  /**
+   * Info: (20260828 - Emily) 年度標註不完整的警示(PR #6725 round-2 追加回饋)。
+   *
+   * 住在 state 不住 ledger,照 ledgerImportBlocks 的先例 ——
+   * 它描述的是「這次匯入與既有帳本的年度關係」,不是帳本自身的一筆資料;
+   * 而且塞進 `computedLedger.pending` 會冒用「活動數據待補」的語意
+   * (label 變「待補項」、待補計數被污染),那正是 queryAnomalies
+   * 列舉制註解禁止的「從既有桶子偷渡偵測器」。
+   * 每次匯入成功入帳時以 detectUndatedImportedEntries 的結果覆寫(含清空)。
+   */
+  ledgerYearWarning?: ILedgerYearWarning;
   notes?: string[];
   updatedAt: string;
   version: number;
+}
+
+/**
+ * Info: (20260828 - Emily) 「年度標註不完整」訊號(queryAnomalies 列舉制的第五個偵測器)。
+ *
+ * 定義在 types 而不是 carbon_ledger_totals:偵測器的產物要同時被
+ * 查詢層(carbon_ledger_query)與 state 讀到,型別放在 lib 會讓
+ * types → lib → types 繞一圈。判斷邏輯仍在 detectUndatedImportedEntries。
+ */
+export interface ILedgerYearWarning {
+  incomingYear: number;
+  undatedCount: number;
 }
 
 // Info: (20260825 - Emily) 單筆勾稽阻擋紀錄:reason 沿用匯入端組好的字句(含差額/列數,即證據鏈)

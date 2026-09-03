@@ -135,6 +135,8 @@ describe("schema 認得的欄位，一個都不能漏", () => {
       pausedUnits: [UNIT],
       pauseReason: "PAYMENT_REQUIRED",
       pauseDetail: DETAIL,
+      // Info: (20260903 - Luphia) #6743 加的第三個「逐欄位手寫」欄位(open/69)
+      inventoryYear: 2024,
     });
     const record = build(full);
 
