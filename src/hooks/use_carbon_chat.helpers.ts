@@ -478,6 +478,11 @@ export interface IImportChunkLike {
   }[];
   unmapped: string[];
   activities?: IActivityRecord[];
+  /**
+   * Info: (20260903 - Luphia) 這一份回應帶回來的盤查年度(#6743 / open/69)。
+   * 只有第一次呼叫(帶 activities 那次)會有,其餘章節一律 undefined。
+   */
+  inventoryYear?: number;
 }
 
 export interface IFoldedImportChunks {
@@ -489,6 +494,11 @@ export interface IFoldedImportChunks {
   }[];
   unmapped: string[];
   activities: IActivityRecord[];
+  /**
+   * Info: (20260903 - Luphia) 摺疊後的盤查年度:**第一個抽到的為準**。
+   * 缺席 = 這份報告沒有可萃取的年度,由使用者在預覽卡上填。
+   */
+  inventoryYear?: number;
 }
 
 /**
@@ -512,6 +522,8 @@ export const foldImportChunks = (
   >();
   const unmapped: string[] = [];
   let activities: IActivityRecord[] = [];
+  // Info: (20260903 - Luphia) 盤查年度:第一個抽到的為準(理由見下方迴圈內)
+  let inventoryYear: number | undefined;
 
   results.forEach((chunk) => {
     if (!chunk) return;
@@ -549,6 +561,19 @@ export const foldImportChunks = (
     if (chunk.activities && chunk.activities.length > 0) {
       activities = [...activities, ...chunk.activities];
     }
+    /**
+     * Info: (20260902 - Emily) 年度取**第一個抽到的**,後到的不覆蓋
+     *(issue_drafts/open/69)。
+     *
+     * 一份報告的盤查年度只有一個,而只有第一次呼叫會要求模型回它 ——
+     * 其餘章節一律 undefined。寫成賦值(`inventoryYear = chunk.inventoryYear`)
+     * 就會被後面十次的 undefined 蓋掉,而那正好等於這張票沒做:
+     * 年度回到未知 → 規則 3 不成立 → 孤兒列照留。
+     * 這與上面 activities 那條「累加而不是覆蓋」是同一個教訓的另一半。
+     */
+    if (inventoryYear === undefined && chunk.inventoryYear !== undefined) {
+      inventoryYear = chunk.inventoryYear;
+    }
   });
 
   return {
@@ -562,6 +587,7 @@ export const foldImportChunks = (
     ),
     unmapped,
     activities,
+    inventoryYear,
   };
 };
 

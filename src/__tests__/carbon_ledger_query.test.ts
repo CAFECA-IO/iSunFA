@@ -1,6 +1,8 @@
 // Info: (20260825 - Emily) 帳本確定性查詢層的測試(#6707 第一層)。
 // Info: (20260825 - Emily) 形狀取自 run G 的真實帳本(高興昌三廠址),數字縮小以便肉眼驗算。
 
+import fs from "fs";
+import path from "path";
 import {
   queryTotal,
   queryTopEmitters,
@@ -315,7 +317,7 @@ describe("queryAnomalies(列舉制)", () => {
   });
 });
 
-describe("queryYearOverYear(年間量級跳動,列舉制第五偵測器)", () => {
+describe("queryYearOverYear(年間量級跳動;獨立入口,不在 queryAnomalies 的列舉裡)", () => {
   const yearOf = (year: number, entries: IComputedLedgerEntry[]) => ({
     year,
     ledger: ledgerOf(entries),
@@ -332,7 +334,15 @@ describe("queryYearOverYear(年間量級跳動,列舉制第五偵測器)", () =>
     expect(result.refusal.reason).toBe(
       LedgerRefusalReasonEnum.DIMENSION_ABSENT,
     );
-    expect(result.refusal.missing).toContain("另一年度");
+    /**
+     * Info: (20260831 - Emily) 這一行原本斷言 missing 必須含「另一年度」——
+     * 也就是把「匯入另一年度的盤查報告後即可比對」那句**指示**釘成了正確
+     * (PR #6725 R1 更正:系統不得指示一個會動到既有帳本的動作)。
+     * 拒答要說得出缺口,但缺口是「少一個年度的快照」這個狀態,不是一條指令。
+     */
+    expect(result.refusal.missing).toContain("兩個年度");
+    expect(result.refusal.missing).toContain("快照");
+    expect(result.refusal.missing).not.toContain("即可");
   });
 
   it("×3.4 報跳動、×2 不報(門檻是量級不是波動),證據鏈含兩年值與兩邊溯源", () => {
@@ -349,9 +359,19 @@ describe("queryYearOverYear(年間量級跳動,列舉制第五偵測器)", () =>
     if (!result.ok) throw new Error("should be ok");
     expect(result.facts).toHaveLength(1);
     expect(result.facts[0].label).toBe("年間量級跳動:屏東 外購電力");
-    expect(result.facts[0].value).toContain("2023 年 1000");
-    expect(result.facts[0].value).toContain("2024 年 3400");
-    expect(result.facts[0].value).toContain("×3.4");
+    /**
+     * Info: (20260831 - Emily) **整串精確比對**,不用子字串(PR #6725 review R3)。
+     *
+     * reviewer 實測:把 `queryYearOverYear(current, previous)` 兩個引數互換,
+     * 跑全套 4660/5 與 baseline 逐字相同 —— 方向反轉沒有任何測試會紅。
+     * 原因是三條斷言都是子字串:`value` 的格式是
+     * `${previous.year} 年 X → ${current.year} 年 Y(${ratio})`,
+     * 互換之後兩個年份與倍數的子字串**都還在**,只有箭頭兩側與倍數反了。
+     * 而「哪一年在前」正是這個事實的全部意義。
+     */
+    expect(result.facts[0].value).toBe(
+      "2023 年 1000 kgCO2e → 2024 年 3400 kgCO2e(×3.4)",
+    );
     expect(result.facts[0].source).toContain("2023:");
     expect(result.facts[0].source).toContain("2024:");
   });
@@ -412,6 +432,262 @@ describe("buildLedgerFactBundle(標準事實包)", () => {
       fact.label.startsWith("待補項"),
     ).length;
     expect(overflow.value).toBe(`另有 ${120 - kept} 條異常事實未列出`);
+  });
+});
+
+describe("buildLedgerFactBundle × 年度快照(#6719)", () => {
+  it("滿兩年 → 年間比較事實隨包注入(取最近兩年)", () => {
+    const current = ledgerOf([
+      importedEntry({ activityKey: "a", co2eKg: "3400", sourceName: "電力" }),
+    ]);
+    const bundle = buildLedgerFactBundle(current, undefined, {
+      2022: ledgerOf([
+        importedEntry({ activityKey: "x", co2eKg: "999", sourceName: "電力" }),
+      ]),
+      2023: ledgerOf([
+        importedEntry({ activityKey: "x", co2eKg: "1000", sourceName: "電力" }),
+      ]),
+      2024: current,
+    });
+    const yoy = bundle.filter((fact) => fact.label.startsWith("年間"));
+    expect(yoy).toHaveLength(1);
+    // Info: (20260831 - Emily) 同 R3:整串比對,方向反了要紅
+    expect(yoy[0].value).toBe(
+      "2023 年 1000 kgCO2e → 2024 年 3400 kgCO2e(×3.4)",
+    );
+    expect(yoy[0].value).not.toContain("2022");
+  });
+
+  /**
+   * Info: (20260831 - Emily) 這一格原本斷言「單一年度 → 一條年間事實都沒有」,
+   * 而那正是缺陷本身(PR #6725 R1 更正時追出來的):
+   * persona 有一條「使用者問跟去年比 → 照清單中拒答說明的原文轉述」,
+   * 清單裡卻永遠沒有那則說明 —— 模型被要求轉述一段不存在的文字,
+   * 而它下一步會做什麼沒有人保證。舊測試把這個狀態釘成了「正確」。
+   */
+  it("說明進 core 不進異常池:不佔「另有 N 條異常事實未列出」的計數", () => {
+    /**
+     * Info: (20260831 - Emily) 第一版我把它放進 anomalies —— 兩個後果:
+     * 異常池被上限裁掉時它會第一個消失(而帳本最忙時最該說得出為什麼比不了),
+     * 且逾上限那句會把它算成一條「異常事實」。與 pending 那格同一種錯。
+     */
+    const manyPending = Array.from({ length: 120 }, (_, i) => ({
+      activityKey: `p${i}`,
+      sourceName: `來源${i}`,
+      reason: "無對應係數",
+    }));
+    const ledger = ledgerOf(
+      [importedEntry({ activityKey: "a", co2eKg: "1" })],
+      {
+        pending: manyPending,
+      },
+    );
+    const bundle = buildLedgerFactBundle(ledger);
+    expect(bundle.some((fact) => fact.label === "年間比較:無法進行")).toBe(
+      true,
+    );
+    const overflow = bundle[bundle.length - 1];
+    const kept = bundle.filter((fact) =>
+      fact.label.startsWith("待補項"),
+    ).length;
+    expect(overflow.value).toBe(`另有 ${120 - kept} 條異常事實未列出`);
+  });
+
+  it("單一年度 → 送出一條說明(「無法比較」與「沒查過」要分得出來)", () => {
+    const current = ledgerOf([
+      importedEntry({ activityKey: "a", co2eKg: "1" }),
+    ]);
+    const bundle = buildLedgerFactBundle(current, undefined, { 2024: current });
+    const explain = bundle.filter((fact) => fact.label === "年間比較:無法進行");
+    expect(explain).toHaveLength(1);
+    expect(explain[0].value).toContain("2024");
+    expect(explain[0].source).toContain("1 個年度");
+  });
+
+  it("沒有任何年度快照但帳本有分錄 → 說明指向「沒有標註盤查年度」", () => {
+    const current = ledgerOf([
+      importedEntry({ activityKey: "a", co2eKg: "1" }),
+    ]);
+    const bundle = buildLedgerFactBundle(current);
+    const explain = bundle.filter((fact) => fact.label === "年間比較:無法進行");
+    expect(explain).toHaveLength(1);
+    expect(explain[0].value).toContain("盤查年度");
+  });
+
+  it("帳本空時不送這條(那時每個查詢都拒答,persona 走無事實分支)", () => {
+    expect(buildLedgerFactBundle(undefined)).toEqual([]);
+    expect(buildLedgerFactBundle(ledgerOf([]))).toEqual([]);
+  });
+
+  /**
+   * Info: (20260831 - Emily) R1 更正的核心:**系統不得指示一個會動到既有帳本的動作**。
+   *
+   * 原文是「匯入另一年度的盤查報告後即可比對」,而在規則 3 之前那個動作
+   * 會安靜地把總量弄髒(孤兒列虛增 28.6%)。規則 3 之後那條路安全了,
+   * 但這句話仍然不該由系統說 —— 拒答的職責是說明為什麼答不出來。
+   *
+   * 斷言錨在短詞上(不整句比對):出現「匯入…即可」這種指示形狀就紅。
+   */
+  it("說明只描述狀態,不指示使用者去匯第二份報告", () => {
+    const current = ledgerOf([
+      importedEntry({ activityKey: "a", co2eKg: "1" }),
+    ]);
+    const bundle = buildLedgerFactBundle(current, undefined, { 2024: current });
+    const explain = bundle.find((fact) => fact.label === "年間比較:無法進行");
+    expect(explain?.value).not.toContain("即可");
+    expect(explain?.value).not.toContain("匯入另一年度");
+    expect(explain?.value).not.toContain("請先");
+  });
+});
+
+/**
+ * Info: (20260831 - Emily) 同一條立場在拒答本體上也要成立(PR #6725 R1 更正)。
+ * 界線不是「祈使句一律不准」:帳本為空時的「請先匯入盤查報告」照留 ——
+ * 那個動作沒有任何既有資料可以弄髒。要擋的是指示一個會動到既有帳本的動作。
+ */
+describe("queryYearOverYear 的拒答說明不指示動作(R1 更正)", () => {
+  const oneYear = {
+    year: 2024,
+    ledger: ledgerOf([importedEntry({ activityKey: "a", co2eKg: "1" })]),
+  };
+
+  it("兩態都只說狀態", () => {
+    const refused = queryYearOverYear(oneYear, undefined);
+    expect(refused.ok).toBe(false);
+    const missing = refused.ok ? "" : refused.refusal.missing;
+    expect(missing).toContain("快照");
+    expect(missing).not.toContain("即可");
+    expect(missing).not.toContain("匯入另一年度");
+  });
+
+  it("帳本為空的拒答仍然可以說「請先匯入」(沒有既有資料可弄髒)", () => {
+    const refused = queryTotal(undefined);
+    expect(refused.ok).toBe(false);
+    expect(refused.ok ? "" : refused.refusal.missing).toContain("請先匯入");
+  });
+});
+
+/**
+ * Info: (20260831 - Emily) persona 與查詢層的**同一個標籤**要對得上(R1 更正)。
+ *
+ * 這條掃描守的是這次追出來的那種缺陷:persona 指示模型「照清單中的說明轉述」,
+ * 而清單裡根本沒有那筆 —— 兩端各自看起來都正確,錯在它們之間。
+ * 掃描只回答「兩端字面對不對得上」,不宣稱驗了模型行為(§1.11)。
+ */
+describe("persona 引用的標籤與查詢層產出的一致(R1 更正)", () => {
+  const service = fs.readFileSync(
+    path.join(process.cwd(), "src/services/chat.service.ts"),
+    "utf-8",
+  );
+
+  /**
+   * Info: (20260831 - Emily) **兩側都要走**(PR #6725 review §1.13)。
+   *
+   * 上一版只驗「單一年度」那一側 —— 迭代誰的鍵,就只看得見誰。
+   * 兩個年度那一側(有跳動 / 沒跳動)的 label 沒有任何檢查,
+   * 而 persona 原本指名的是單一年度那個 label,兩年穩定時它不存在。
+   */
+  it("persona 指名的前綴涵蓋事實包的每一種年間 label(兩側都驗)", () => {
+    const one = ledgerOf([importedEntry({ activityKey: "a", co2eKg: "1" })]);
+    const noJumpCurrent = ledgerOf([
+      importedEntry({ activityKey: "k", co2eKg: "1100", sourceName: "電力" }),
+    ]);
+    const jumpCurrent = ledgerOf([
+      importedEntry({ activityKey: "k", co2eKg: "3400", sourceName: "電力" }),
+    ]);
+    const prior = ledgerOf([
+      importedEntry({ activityKey: "k", co2eKg: "1000", sourceName: "電力" }),
+    ]);
+
+    const labelsOf = (
+      ledger: typeof one,
+      byYear?: Record<number, typeof one>,
+    ): string[] =>
+      buildLedgerFactBundle(ledger, undefined, byYear)
+        .map((fact) => fact.label)
+        .filter((label) => label.startsWith("年間"));
+
+    const single = labelsOf(one, { 2024: one });
+    const noJump = labelsOf(noJumpCurrent, {
+      2023: prior,
+      2024: noJumpCurrent,
+    });
+    const jumped = labelsOf(jumpCurrent, { 2023: prior, 2024: jumpCurrent });
+
+    // Info: (20260831 - Emily) 三種上游狀態各自都要有一筆,沒有一種是沉默
+    expect(single).toHaveLength(1);
+    expect(noJump).toHaveLength(1);
+    expect(jumped).toHaveLength(1);
+    // Info: (20260831 - Emily) persona 引用的是前綴,所以前綴必須真的涵蓋三種
+    [...single, ...noJump, ...jumped].forEach((label) => {
+      expect(label.startsWith("年間")).toBe(true);
+    });
+    expect(service).toContain("以「年間」開頭的事實");
+  });
+
+  it("persona 明說不得指示使用者再匯一份報告", () => {
+    expect(service).toContain("不要自行指示使用者去做任何動作");
+    expect(service).toContain("再匯一份報告");
+  });
+});
+
+/**
+ * Info: (20260831 - Emily) 三種上游狀態要有三種可觀測值(PR #6725 review R4 殘留半)。
+ *
+ * reviewer 實測的兩格塌陷:
+ *   PROBE-B 兩個年度 + 年增 10%(不跨門檻)→ 事實包裡年間事實 **0 筆**,
+ *           而 persona 被指示去轉述一筆不存在的「無法進行」說明
+ *   PROBE-C 兩個年度 + ×3.4 跳動 + 異常池溢出 → 跳動事實 **0 筆**
+ *           (排在池尾,被 slice 裁掉),LLM 只讀到「另有 45 條異常事實未列出」
+ */
+describe("年間比較的三種狀態各有可觀測值(review R4)", () => {
+  const named = (sourceName: string, co2eKg: string) =>
+    importedEntry({ activityKey: `k:${sourceName}`, co2eKg, sourceName });
+
+  it("兩年都在、什麼都沒跨門檻 → 回「查過而無異常」,不是沉默", () => {
+    const result = queryYearOverYear(
+      { year: 2024, ledger: ledgerOf([named("屏東 外購電力", "1100")]) },
+      { year: 2023, ledger: ledgerOf([named("屏東 外購電力", "1000")]) },
+    );
+    expect(result.ok).toBe(true);
+    const facts = result.ok ? result.facts : [];
+    expect(facts).toHaveLength(1);
+    expect(facts[0].label).toBe("年間比較:各排放源皆未跨門檻");
+    expect(facts[0].value).toContain("2023");
+    expect(facts[0].value).toContain("2024");
+    // Info: (20260831 - Emily) 沉默與「查過」必須分得出來,所以這一筆不能被省
+    expect(facts[0].source).toContain("年度快照");
+  });
+
+  it("年增 10% 的主要路徑上,事實包裡確實有以「年間」開頭的事實", () => {
+    const current = ledgerOf([named("屏東 外購電力", "1100")]);
+    const bundle = buildLedgerFactBundle(current, undefined, {
+      2023: ledgerOf([named("屏東 外購電力", "1000")]),
+      2024: current,
+    });
+    expect(bundle.some((fact) => fact.label.startsWith("年間"))).toBe(true);
+  });
+
+  it("異常池溢出時,年間事實不會被裁掉(它排在最前面)", () => {
+    const manyPending = Array.from({ length: 120 }, (_, i) => ({
+      activityKey: `p${i}`,
+      sourceName: `來源${i}`,
+      reason: "無對應係數",
+    }));
+    const current = ledgerOf([named("屏東 外購電力", "3400")], {
+      pending: manyPending,
+    });
+    const bundle = buildLedgerFactBundle(current, undefined, {
+      2023: ledgerOf([named("屏東 外購電力", "1000")]),
+      2024: current,
+    });
+    const yoy = bundle.filter((fact) => fact.label.startsWith("年間"));
+    expect(yoy).toHaveLength(1);
+    expect(yoy[0].value).toBe(
+      "2023 年 1000 kgCO2e → 2024 年 3400 kgCO2e(×3.4)",
+    );
+    // Info: (20260831 - Emily) 逾上限那句仍在(據實申報沒有被這次排序改掉)
+    expect(bundle[bundle.length - 1].label).toBe("異常事實逾上限");
   });
 });
 

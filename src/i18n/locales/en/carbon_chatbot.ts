@@ -184,6 +184,14 @@ export const carbonChatbot = {
     "Parsed result saved for {{name}} — {{count}} section(s), not yet written into the report",
   import_pending_open: "Review and import",
   import_pending_discard: "Discard",
+  import_inventory_year: "Inventory year",
+  import_inventory_year_placeholder: "2024",
+  import_inventory_year_hint:
+    "The inventory year of this report. Used to tell which ledger entries belong to which year across imports",
+  import_inventory_year_required:
+    "This import includes the emissions total table — enter the inventory year of this report",
+  import_inventory_year_invalid:
+    "Enter a four-digit inventory year (1990 through next year). A year outside that range makes the ledger unreadable on the next load",
   import_reset_note:
     "Verification resets for imported paragraphs; {{activities}} activity records will be re-reconciled",
   import_apply: "Import selected ({{count}})",
@@ -332,6 +340,10 @@ export const carbonChatbot = {
   chart_imported_sankey_excluded: "Not shown (NA/NS or zero)",
   chart_imported_sankey_no_ledger:
     'The report was imported but the ledger holds no usable data, so the emission flow cannot be drawn. Table 3.8 (GHG emissions by company) is the only source for the Sankey diagram and the system data table, and it was not obtained this time. Check whether Chapter 3 parsed successfully; if it is listed as failed, re-import it via "Retry failed chapters" on the preview card, and check the server log for whether the table was dropped and why.',
+  chart_imported_sankey_blocked_ledger:
+    "Table 3.8 was obtained, but reconciliation failed, so the data was frozen at the gate and not written to the ledger (half-written data would make every chart wrong in a convincing way). The blocking reasons are listed below; fix the corresponding table in the source or re-import Chapter 3, and the charts will be generated automatically.",
+  chart_partial_import_blocked:
+    "⚠ This chart covers only the part that was written to the ledger: another table in this import failed reconciliation and was not recorded, so the totals and shares shown here are not the full company picture. The blocking reasons are listed below; fix the corresponding table in the source or re-import, and the charts will be recalculated automatically.",
   chart_imported_sankey_collapsed:
     "Too many nodes — reduced to one layer (company → scope)",
   chart_imported_top_items_title:
