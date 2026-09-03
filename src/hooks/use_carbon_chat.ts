@@ -96,6 +96,7 @@ import {
   activityDedupeKey,
   stockRecordDedupeKey,
 } from "@/lib/carbon_inventory";
+import { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
 import { buildLedgerFactBundle } from "@/lib/carbon_ledger_query";
 import {
   loadPendingImport as fetchPendingImportRecord,
@@ -1773,6 +1774,36 @@ export const useCarbonChat = () => {
       });
   }, [activeInventoryState, chatChannel]);
 
+  /**
+   * Info: (20260903 - Emily) 揭露框架的選擇(#6688-A)。
+   *
+   * 寫進盤查狀態而不是另存一份:它要隨 state 一起 E2EE 入庫
+   *(完成判準是「選 IFRS 後**重載**仍是 IFRS」),而 state 已經是那份紀錄的
+   * 唯一真值來源。這裡只寫記憶體,落地由既有的 autosave 那條路負責 ——
+   * 所以「無實質變化不換參考」這個守門要照 applyInventoryExtraction 的先例做,
+   * 否則每次點同一個選項都會觸發一次無意義的存檔。
+   *
+   * channel 在呼叫當下綁定(與 applyInventoryExtraction 同一個理由):
+   * 在途的請求不該把選擇寫進切換後的那一間房。
+   */
+  const setDisclosureFramework = useCallback(
+    (framework: CarbonDisclosureFrameworkEnum) => {
+      const channel = buildCarbonChatChannel(
+        user?.address ?? "anonymous",
+        activeSessionId,
+      );
+      setInventoryStates((prev) => {
+        const base = prev[channel] ?? createEmptyInventoryState();
+        if (base.disclosureFramework === framework) return prev;
+        return {
+          ...prev,
+          [channel]: { ...base, disclosureFramework: framework },
+        };
+      });
+    },
+    [user?.address, activeSessionId],
+  );
+
   // Info: (20260716 - Tzuhan) #6518 合併萃取結果進狀態帳本(去重/推進由 lib/carbon_inventory 決定性裁決)
   // Info: (20260716 - Tzuhan) 閉包綁定建立當下的 channel: 在途回覆寫回原房
   const applyInventoryExtraction = useCallback(
@@ -1940,6 +1971,14 @@ export const useCarbonChat = () => {
             language,
             existingContent: paragraph.content,
             instruction,
+            /**
+             * Info: (20260903 - Emily) 揭露框架跟著請求走(#6688-A)。
+             *
+             * 兩個 /draft 呼叫端都要帶:修訂與生成走的是同一個服務,
+             * 而 `carbonFrameworkView` 決定角色句與 guidance ——
+             * 只帶其中一個,會出現「生成是 IFRS 版、修訂又回到盤查版」。
+             */
+            framework: activeInventoryState?.disclosureFramework,
             channel: chatChannel,
             clientMessageId: crypto.randomUUID(),
           }),
@@ -1969,6 +2008,17 @@ export const useCarbonChat = () => {
       t,
       setDraftNotice,
       dismissDraftNoticeAfter,
+      /**
+       * Info: (20260903 - Emily) 揭露框架進 deps 而不是另做一個 ref 鏡像(#6688-A)。
+       *
+       * eslint 這條警告是真的缺陷(#6730 review 第二輪那次的同一個形狀:
+       * 讀了 state 卻沒進 deps → 陳舊閉包 → 送出去的是使用者選之前的值)。
+       * 這裡選「加 deps」而不是 ref:這個值只在使用者動選單時變,而這兩個
+       * callback 本來就依賴 `sessionsData` / `activeSession`,那些變得比它頻繁得多,
+       * 所以重建次數實際上沒有增加。ref 會多一個要同步的真值來源,
+       * 而它要解的問題(在同一輪 render 的 setState updater 裡讀值)這裡不存在。
+       */
+      activeInventoryState?.disclosureFramework,
       // Info: (20260814 - Luphia) 計費上下文所需：channel 決定這筆消費記到哪個帳本
       chatChannel,
     ],
@@ -5448,6 +5498,8 @@ export const useCarbonChat = () => {
                 paragraphId,
                 conversationContext,
                 language,
+                // Info: (20260903 - Emily) 揭露框架跟著請求走(#6688-A;理由見修訂路徑那一處)
+                framework: activeInventoryState?.disclosureFramework,
                 channel: chatChannel,
                 clientMessageId,
               }),
@@ -5526,6 +5578,17 @@ export const useCarbonChat = () => {
       t,
       applyDraftToReport,
       jumpToReportParagraph,
+      /**
+       * Info: (20260903 - Emily) 揭露框架進 deps 而不是另做一個 ref 鏡像(#6688-A)。
+       *
+       * eslint 這條警告是真的缺陷(#6730 review 第二輪那次的同一個形狀:
+       * 讀了 state 卻沒進 deps → 陳舊閉包 → 送出去的是使用者選之前的值)。
+       * 這裡選「加 deps」而不是 ref:這個值只在使用者動選單時變,而這兩個
+       * callback 本來就依賴 `sessionsData` / `activeSession`,那些變得比它頻繁得多,
+       * 所以重建次數實際上沒有增加。ref 會多一個要同步的真值來源,
+       * 而它要解的問題(在同一輪 render 的 setState updater 裡讀值)這裡不存在。
+       */
+      activeInventoryState?.disclosureFramework,
       // Info: (20260814 - Luphia) 計費上下文所需：channel 決定這筆消費記到哪個帳本
       chatChannel,
       // Info: (20260825 - Luphia) 無帳本會話的待付款流程（與聊天路徑同一套）
@@ -6612,6 +6675,8 @@ export const useCarbonChat = () => {
     pendingRevision,
     applyPendingRevision,
     discardPendingRevision,
+    // Info: (20260903 - Emily) #6688-A 揭露框架的選擇入口
+    setDisclosureFramework,
     // Info: (20260716 - Tzuhan) #56 報告匯入(逐段勾選確認)
     pendingImport,
     importReportFile,

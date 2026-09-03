@@ -74,6 +74,11 @@ export const adminMissionBoard = {
       prepared_by: "Prepared by",
       verified_by: "Verified by",
       issued_on: "Last updated",
+      framework_label: "Disclosure framework",
+      framework_inventory_only: "Inventory report only",
+      framework_ifrs: "Structured to {{name}}",
+      framework_hint:
+        "The report will print \u201c{{alignment}}\u201d together with its mandatory \u201c{{disclaimer}}\u201d. That is a statement about the document\u2019s structure, not an entity-level compliance claim",
       unfilled: "Not filled in",
       name_suffix: "GHG Inventory Report",
       hint: "The verifier cannot be derived from the report content and must be entered",

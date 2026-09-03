@@ -2,6 +2,7 @@
 // Info: (20260708 - Tzuhan) Define enterprise-grade types and enums for the Carbon Chatbot domain.
 
 import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
+import { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
 import {
   EmissionBasisEnum,
   LedgerProvenanceEnum,
@@ -402,6 +403,19 @@ export interface ICarbonInventoryState {
    * 每次匯入成功入帳時以 detectUndatedImportedEntries 的結果覆寫(含清空)。
    */
   ledgerYearWarning?: ILedgerYearWarning;
+  /**
+   * Info: (20260903 - Emily) 揭露框架(#6688-A):使用者可以選的只有**揭露層**。
+   *
+   * 「ISO 14064-1 還是 GHG Protocol」在頂層是分類錯誤而不是選項 ——
+   * 計算層(GHG Protocol)與查證層(ISO 14064-1/-3)是骨幹,
+   * 這個欄位只決定「要不要把報告包成 IFRS S1/S2 的架構」。
+   * 理由見 `constants/carbon_report_framework.ts` 的檔頭。
+   *
+   * 省略 = `INVENTORY_ONLY`(現行行為,只出盤查報告書、不印任何揭露框架字樣)。
+   * 隨 state E2EE 入庫,所以**同時在 `CarbonInventoryStateSchema` 裡宣告** ——
+   * 少了那一行,重載後這個選擇就消失(見那個檔案 08-07 與 09-03 兩段註解)。
+   */
+  disclosureFramework?: CarbonDisclosureFrameworkEnum;
   notes?: string[];
   updatedAt: string;
   version: number;

@@ -2,6 +2,7 @@
 // Info: (20260716 - Tzuhan) LLM 萃取結果的白名單護欄(enum 鎖死) + E2EE 狀態封裝的形狀驗證
 
 import { z } from "zod";
+import { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
 import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
 import {
   EmissionBasisEnum,
@@ -310,6 +311,32 @@ export const CarbonInventoryStateSchema = z.object({
         .max(INVENTORY_YEAR_STORAGE_MAX),
       undatedCount: z.number().int().min(0),
     })
+    .optional(),
+  /**
+   * Info: (20260903 - Emily) 揭露框架的選擇(#6688-A)。
+   *
+   * **型別加了、schema 沒加,等於沒做**:`loadInventoryState` 回傳
+   * `safeParse(...).data`,而 zod 預設剝掉未宣告的鍵 ——
+   * 完成判準「選 IFRS 後重載仍是 IFRS」會靜默失效。
+   * 這個檔案已經被同一件事咬過兩次(見上面 08-07 那段與 `importedOrigin.year`),
+   * 所以這一行與型別那一行是同一個工作,不是兩件事。
+   */
+  disclosureFramework: z.nativeEnum(CarbonDisclosureFrameworkEnum).optional(),
+  /**
+   * Info: (20260903 - Emily) 勾稽阻擋紀錄(#6707 帶進來的欄位,型別有、schema 一直沒有)。
+   *
+   * 它會自癒(下一次匯入重算),所以不像年度那樣毀資料;但「帳本為空的原因」
+   * 在重新整理之後就說不出來 —— 那正是 #6707 宣稱交付的能力。
+   */
+  ledgerImportBlocks: z
+    .array(
+      z.object({
+        paragraphId: z.string().max(50),
+        reason: z.string().max(500),
+        blockedAt: z.string().max(50),
+      }),
+    )
+    .max(50)
     .optional(),
   notes: z.array(z.string().max(500)).optional(),
   updatedAt: z.string().max(50),

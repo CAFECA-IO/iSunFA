@@ -71,6 +71,11 @@ export const adminMissionBoard = {
       prepared_by: "製作單位",
       verified_by: "查證單位",
       issued_on: "更新日期",
+      framework_label: "揭露框架",
+      framework_inventory_only: "只出盤查報告書",
+      framework_ifrs: "包成 {{name}} 架構",
+      framework_hint:
+        "選了之後報告上會印「{{alignment}}」與必附的「{{disclaimer}}」。那是關於文件結構的陳述,不是企業層級的合規宣告",
       unfilled: "未填寫",
       name_suffix: "溫室氣體盤查報告書",
       hint: "查證單位無法從報告內容推導，需人工填寫",

@@ -75,6 +75,11 @@ export const adminMissionBoard = {
       prepared_by: "作成部署",
       verified_by: "検証機関",
       issued_on: "更新日",
+      framework_label: "開示フレームワーク",
+      framework_inventory_only: "算定報告書のみ",
+      framework_ifrs: "{{name}} の構成に合わせる",
+      framework_hint:
+        "選択すると報告書に「{{alignment}}」と必須の「{{disclaimer}}」が印字されます。これは文書構成に関する記述であり、企業レベルの準拠宣言ではありません",
       unfilled: "未記入",
       name_suffix: "温室効果ガス算定報告書",
       hint: "検証機関は報告内容から導出できないため、手入力が必要です",

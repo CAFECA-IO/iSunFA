@@ -35,6 +35,7 @@ import {
 import { CarbonDataBadgeStateEnum } from "@/lib/carbon_report_table.builder";
 import { ReportToolbar } from "@/components/carbon_chatbot/report_toolbar";
 import { ReportIdentityFields } from "@/components/carbon_chatbot/report_identity_fields";
+import { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
 import { OutlineRail } from "@/components/carbon_chatbot/outline_rail";
 import { OutlineDrawer } from "@/components/carbon_chatbot/outline_drawer";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -68,6 +69,15 @@ interface ICarbonReportPreviewProps {
    * 省略即不顯示那塊面板 —— 唯讀或尚未支援的使用端不該看到一個填不了的表單。
    */
   onUpdateIdentity?: (patch: ICarbonReportIdentity) => void;
+  /**
+   * Info: (20260903 - Emily) 揭露框架(#6688-A):與 identity 同一塊面板、不同儲存體。
+   * 值來自盤查狀態(`ICarbonInventoryState.disclosureFramework`),
+   * 所以由 hook 給值、由 hook 收寫入,這裡只負責把它接到面板上。
+   */
+  disclosureFramework?: CarbonDisclosureFrameworkEnum;
+  onChangeDisclosureFramework?: (
+    framework: CarbonDisclosureFrameworkEnum,
+  ) => void;
   // Info: (20260720 - Tzuhan) #23 數據段落勾稽三態(透傳 OutlineDrawer → OutlineTree)
   dataBadgeState?: CarbonDataBadgeStateEnum;
 }
@@ -152,6 +162,8 @@ export default function CarbonReportPreview({
   onImportReport = undefined,
   onRenameDocument = undefined,
   onUpdateIdentity = undefined,
+  disclosureFramework = undefined,
+  onChangeDisclosureFramework = undefined,
   dataBadgeState = undefined,
 }: ICarbonReportPreviewProps) {
   const { t } = useTranslation();
@@ -393,6 +405,8 @@ export default function CarbonReportPreview({
         <ReportIdentityFields
           identity={identity}
           onChange={onUpdateIdentity}
+          framework={disclosureFramework}
+          onChangeFramework={onChangeDisclosureFramework}
           readOnly={readOnly}
         />
       )}

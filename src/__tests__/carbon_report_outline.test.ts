@@ -460,6 +460,19 @@ describe("指名這份大綱或這份報告的檔案,不得宣告 IFRS（機械�
     "src/lib/carbon_framework_view.ts",
     "src/__tests__/carbon_framework_view.test.ts",
     /**
+     * Info: (20260903 - Emily) 揭露框架**選擇入口**的測試(#6688-A)。
+     *
+     * 與上面那兩個同一類:它必須同時指名這份報告(它驗的是盤查狀態與
+     * 段落草稿請求的 schema)與 IFRS(它驗的是選了 IFRS 之後那個值撐不撐過重載)。
+     * 沒有這個入口,`carbon_framework_view` 的 IFRS 分支在真實路徑上零觸發 ——
+     * 所以「能不能選到 IFRS」本身要有測試,而那份測試寫不出不含 IFRS 字樣的版本。
+     *
+     * 界線:被允許的是**測試**,不是產品文案。同一輪把 IFRS 字樣從五個語系檔
+     * 移回 `constants/carbon_report_framework.ts`(以插值帶進介面)——
+     * 語系檔不是宣告的出處,所以它不該進這張清單。
+     */
+    "src/__tests__/carbon_disclosure_framework_entry.test.ts",
+    /**
      * Info: (20260819 - Emily) IFRS 揭露版的 guidance。裡面的 IFRS 字樣是**內容**,
      * 不是誤植 —— 那份檔案存在的理由就是保存 IFRS S1/S2 那一套指引。
      *
