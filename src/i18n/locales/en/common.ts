@@ -27,6 +27,9 @@ export const common = {
     // Info: (20260811 - Luphia) A missing font is fixed by ops installing one, not by retrying
     pdf_font_unavailable:
       "The print server has no Chinese font installed, so the export was stopped before it produced a report of empty boxes. Retrying will not help — ask ops to install a CJK font.",
+    // Info: (20260903 - Emily) A content red line is not a system fault: retrying changes nothing, the sentence has to go
+    pdf_framework_claim:
+      "The report text claims the company complies with {{name}}. The export was stopped, because a PDF leaves the system for good once it exists. Remove that sentence and export again \u2014 a statement about the document\u2019s structure is still allowed.",
     pdf_download_needs_preview:
       "Switch to PDF preview before downloading — the download is exactly what the preview shows",
     default: "System error, please try again later",

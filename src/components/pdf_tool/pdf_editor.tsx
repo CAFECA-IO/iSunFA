@@ -44,6 +44,7 @@ import {
   createColorSafeComputedStyle,
 } from "@/lib/utils/pdf_color_safety";
 import {
+  isFrameworkComplianceClaimError,
   isPdfFontUnavailableError,
   requestCarbonReportPdf,
   saveBlobAs,
@@ -53,6 +54,8 @@ import {
   CARBON_PDF_FOOTER_TITLE,
   CarbonPdfExportModeEnum,
 } from "@/constants/carbon_pdf";
+// Info: (20260903 - Emily) 揭露層的顯示名稱從常數來,不抄進語系檔(見該常數的註解)
+import { FRAMEWORK_DISCLOSURE_LABEL } from "@/constants/carbon_report_framework";
 
 // Info: (20260604 - Julian) 定義預設 md 內容與 storage key
 const DEFAULT_CONTENT =
@@ -948,12 +951,23 @@ export default function PdfEditor({
          * 字型缺失重試一萬次都一樣,唯一的解法是由維運安裝字型。那條分類原本在
          * 這個 catch 裡消失,使用者看到的是一句與成因無關的「下載失敗」。
          */
-        message: isPdfFontUnavailableError(error)
-          ? t("common.error.pdf_font_unavailable")!
-          : error instanceof PdfBlankOutputError ||
-              error instanceof PdfNotLaidOutError
-            ? t("common.error.pdf_blank_output")!
-            : t("common.error.download_failed")!,
+        /**
+         * Info: (20260903 - Emily) 紙面合規宣告被擋也要說得出是被擋(#6688-B)。
+         *
+         * 同一條標準:伺服端把它與通用列印失敗分成兩個錯誤碼,因為處置相反 ——
+         * 這一條重試一萬次都一樣,唯一的解法是把那句宣告從報告裡拿掉。
+         * 排在字型之前沒有語意,兩者互斥;順序只是照著錯誤碼加上來的時間。
+         */
+        message: isFrameworkComplianceClaimError(error)
+          ? t("common.error.pdf_framework_claim", {
+              name: FRAMEWORK_DISCLOSURE_LABEL,
+            })!
+          : isPdfFontUnavailableError(error)
+            ? t("common.error.pdf_font_unavailable")!
+            : error instanceof PdfBlankOutputError ||
+                error instanceof PdfNotLaidOutError
+              ? t("common.error.pdf_blank_output")!
+              : t("common.error.download_failed")!,
       });
     } finally {
       setIsGenerating(false);

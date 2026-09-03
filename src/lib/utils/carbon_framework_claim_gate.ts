@@ -175,21 +175,53 @@ export interface ICarbonPaperTextParts {
   title?: string;
   identity?: ReadonlyArray<{ label: string; value: string }>;
   /**
+   * Info: (20260903 - Emily) 每一頁頁尾印的那行報告名稱。
+   *
+   * 與 `title`(封面的 doc-title)是**兩個槽**,不是同一個值:實測
+   * `carbon_report_pdf.service.ts` 頁尾印的是 `input.title ?? input.fileName`,
+   * 也就是省略 title 時**下載檔名**會被印到每一頁頁尾。呼叫端要帶進來的是
+   * 「實際會印的那個值(含 fallback)」,不是把封面標題帶第二次。
+   */
+  footer?: string;
+  /**
    * Info: (20260903 - Emily) 文件外殼的聲明行。今天恆空(見檔頭),
    * #6688-C 把印出點做出來之後由伺服端從常數組出來填進這裡。
    */
   shellClaims?: ReadonlyArray<string>;
 }
 
+/**
+ * Info: (20260903 - Emily) 槽與槽之間用**句界**分隔,不是換行。
+ *
+ * 第一版用 `\n` join,而 `auditFrameworkClaims` 收原始文字後自己壓
+ * `squeezeForMatch` —— 那支把 `\s+` 全部刪掉(含換行)。於是換行在判準眼裡
+ * 根本不存在,相鄰兩槽會**熔成一句**。實測(2026-09-03):markdown 結尾
+ * 「本報告已通過第三方查證」接上標題「IFRS S1/S2 揭露報告」,壓過之後命中
+ * `通過第三方查證IFRS` —— 兩個各自乾淨的槽合成一句合規宣告,
+ * 一份沒有問題的報告因此印不出來(而使用者在紙上找不到那句話)。
+ *
+ * 這與 `carbon_report_framework.ts` 檔頭記的冒號事故是同一個洞的同一種形狀:
+ * 那次是跨句排除類漏了一個字元,這次是分隔字元被壓掉。修法因此相同 ——
+ * 用排除類裡**不是空白**的字元當界。`。` 同時滿足兩條(不受 NFKC 影響、在排除類內),
+ * 後面的 `\n` 只為了讓人讀 paperText 時仍看得出分行。
+ */
+const PAPER_SLOT_SEPARATOR = "。\n";
+
 export const composeCarbonPaperText = (parts: ICarbonPaperTextParts): string =>
   [
     parts.markdown,
     parts.title ?? "",
-    ...(parts.identity ?? []).map((row) => `${row.label} ${row.value}`),
+    parts.footer ?? "",
+    /*
+     * Info: (20260903 - Emily) label 與 value 也各自成槽:那兩個字串在紙上是
+     * dt/dd 兩個元素,片語跨不過去。合成一行(`label value`)之後空白會被壓掉,
+     * 於是它們也會熔 —— 與上面 PAPER_SLOT_SEPARATOR 記的同一回事。
+     */
+    ...(parts.identity ?? []).flatMap((row) => [row.label, row.value]),
     ...(parts.shellClaims ?? []),
   ]
     .filter((line) => line.length > 0)
-    .join("\n");
+    .join(PAPER_SLOT_SEPARATOR);
 
 export interface ICarbonFrameworkClaimFinding {
   rule: CarbonFrameworkClaimRuleEnum;

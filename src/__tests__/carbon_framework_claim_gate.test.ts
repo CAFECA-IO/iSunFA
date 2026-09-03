@@ -197,7 +197,66 @@ describe("什麼上紙就審什麼:識別欄位的自由輸入也在內", () => 
     expect(gateFrameworkClaims(paperText, PDF_EXPORT).blocked).toHaveLength(1);
   });
 
+  it("頁尾那行也在內 —— 它每一頁都印,而它的值可能是下載檔名", () => {
+    /**
+     * Info: (20260903 - Emily) `carbon_report_pdf.service.ts` 的頁尾印的是
+     * `input.title ?? input.fileName`,與封面標題是兩個槽。省略標題時被印到
+     * 每一頁的是**檔名** —— 一個從沒人審過、而且使用者可以自己命名的字串。
+     */
+    const paperText = composeCarbonPaperText({
+      markdown: "1.1 組織邊界",
+      footer: "本公司符合 IFRS S1 之查證報告",
+    });
+    expect(gateFrameworkClaims(paperText, PDF_EXPORT).blocked).toHaveLength(1);
+  });
+
   it("空欄位不會製造空行(判準是字面比對,雜訊會讓失敗訊息難讀)", () => {
     expect(composeCarbonPaperText({ markdown: "只有正文" })).toBe("只有正文");
+  });
+});
+
+describe("槽界:相鄰兩槽不得熔成一句", () => {
+  /**
+   * Info: (20260903 - Emily) 反向驗過:把 `PAPER_SLOT_SEPARATOR` 改回 `"\n"`
+   * 這兩條就紅(第一條擋了一份乾淨的報告,第二條的原因見下)。
+   *
+   * `auditFrameworkClaims` 收原始文字後自己壓 `squeezeForMatch`,而那支把
+   * `\s+` 全部刪掉 —— 換行在判準眼裡不存在,於是換行當分隔等於沒有分隔。
+   */
+  it("正文結尾的動詞接上標題開頭的框架名稱,不是一句合規宣告", () => {
+    const paperText = composeCarbonPaperText({
+      markdown: "3.2 查證\n\n本報告已通過第三方查證",
+      title: "IFRS S1/S2 揭露報告",
+    });
+    const { blocked, audit } = gateFrameworkClaims(paperText, PDF_EXPORT);
+    /*
+     * Info: (20260903 - Emily) 先釘住判準本身:條 4 一筆都不該命中。
+     * 只斷言 blocked 為空會被「條 4 沒接上出口」這種壞法蒙過去。
+     */
+    expect(audit.complianceClaims).toEqual([]);
+    expect(blocked).toEqual([]);
+  });
+
+  it("識別欄位的 label 與 value 之間也是槽界(紙上是 dt/dd 兩個元素)", () => {
+    const paperText = composeCarbonPaperText({
+      markdown: "1.1 組織邊界",
+      identity: [{ label: "查證結論已通過", value: "IFRS 對照表見附錄" }],
+    });
+    expect(
+      gateFrameworkClaims(paperText, PDF_EXPORT).audit.complianceClaims,
+    ).toEqual([]);
+  });
+
+  it("同一個槽裡的宣告仍然抓得到(槽界不是把判準關掉)", () => {
+    /**
+     * Info: (20260903 - Emily) 這一條是上面兩條的配對:分隔字元換成句界之後,
+     * 「宣告被切開所以抓不到」與「宣告不存在」在測試上會長得一樣 ——
+     * 所以要有一條證明判準還活著,而且活在**同一個 compose 出來的字串**上。
+     */
+    const paperText = composeCarbonPaperText({
+      markdown: "3.2 查證\n\n本公司已通過 IFRS S1 之要求",
+      title: "高興昌鋼鐵股份有限公司",
+    });
+    expect(gateFrameworkClaims(paperText, PDF_EXPORT).blocked).toHaveLength(1);
   });
 });

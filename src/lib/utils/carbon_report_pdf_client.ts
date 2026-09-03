@@ -133,6 +133,22 @@ export const isPdfFontUnavailableError = (error: unknown): boolean => {
   return data?.errorCode === API_ERRORS.IS_PDF_FONT_UNAVAILABLE.code;
 };
 
+/**
+ * Info: (20260903 - Emily) 紙面合規宣告被擋下的失敗要能被單獨認出來(#6688-B)。
+ *
+ * 與缺字型那條同一個判準、同一個形狀:兩者的**處置相反**。字型缺失要維運安裝,
+ * 列印故障值得重試,而這一條是**內容紅線** —— 重試一萬次都一樣,
+ * 唯一的解法是把那句主體合規宣告從報告裡拿掉。共用一句「下載失敗」等於沒說,
+ * 而使用者會合理地以為是系統壞了,再按幾次。
+ *
+ * 讀 `data.errorCode`:這條回 422,與其他驗證錯誤同一個狀態碼,狀態分不出來。
+ */
+export const isFrameworkComplianceClaimError = (error: unknown): boolean => {
+  if (!(error instanceof RequestApiError)) return false;
+  const data = error.data as { errorCode?: string } | undefined;
+  return data?.errorCode === API_ERRORS.VA_FRAMEWORK_COMPLIANCE_CLAIM.code;
+};
+
 /** Info: (20260810 - Emily) 觸發瀏覽器下載;URL 用完即撤,否則整份 PDF 會留在記憶體 */
 export const saveBlobAs = (blob: Blob, fileName: string): void => {
   const url = URL.createObjectURL(blob);
