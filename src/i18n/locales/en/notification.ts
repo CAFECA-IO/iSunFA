@@ -14,6 +14,11 @@ export const notification = {
   team_invitation: "{{inviterName}} invited you to join team {{teamName}}",
   wallet_upgrade:
     "The system requests a wallet upgrade so it can receive on-chain credentials such as your membership card",
+  // Info: (20260828 - Julian) Some chapters are done; "chapters left" reads better than "3/14"
+  job_resumable:
+    "This import can continue — {{remaining}} chapters are still waiting.",
+  // Info: (20260828 - Julian) Nothing ran yet — "resume" would imply progress that does not exist
+  job_resumable_fresh: "This report import can start now.",
   analysis_completed:
     "Your analysis job has finished — click to view the result",
   analysis_failed:
@@ -33,6 +38,34 @@ export const notification = {
    * 沒改到的語系會靜默沿用假話，而改名會讓 `tsc` 直接指出漏掉的那一個。
    */
   history_capped: "Showing the latest {{count}} only",
+  /**
+   * Info: (20260902 - Julian) 待辦節被截斷時的說明（review #6742）。
+   *
+   * **不帶數字，也不說「最近幾則」**：這一節有三個來源（邀請不截斷、可接續
+   * 最多 `JOB_RESUMABLE_NOTICE_LIMIT` 筆、入庫待辦最多
+   * `NOTIFICATION_TODO_LIST_LIMIT` 筆），而這個旗標只反映中間那一支。初版把
+   * 數字寫死成 5，於是 2 封邀請 + 8 份可接續時，畫面列出 7 則、文案說 5、
+   * 徽章說 10 —— 三個數字互不相符。「最近」也不成立：被藏起來的是可接續
+   * 任務裡最舊的那幾份，而它們仍可能比某封列出來的舊邀請更新。
+   *
+   * 與 `history_capped` 的差別在此：那一節只有一支查詢，說得出「最近 N 則」；
+   * 這一節說得出的只有「還有更多」。要給得出數字，得讓這支端點也數得出全部
+   *（多一次 `summarizeResumable` 與未截斷的入庫計數），那是另一個決定。
+   */
+  todos_capped: "More to-dos are not shown",
+  /**
+   * Info: (20260902 - Julian) 截斷要有**出口**，不只有說明（review R3 的 A2）。
+   *
+   * 原本只有上面那一句純文字：第 6 份可以繼續的匯入起，在鈴鐺與
+   * `/user/notifications` 兩個畫面上都不存在，也沒有任何路徑到得了 ——
+   * 而被藏起來的正是 `updatedAt` 排最後、等最久的那幾份。
+   *
+   * 這個模組自己寫下的不變式是「分岔永遠伴隨一個看得見的說明**與一個出口**」，
+   * 完成側有（`view_all` → 分頁清單），待辦側先前沒有。
+   * 去處是盤查對話清單而不是通知分頁：可接續的匯入本來就一個會話一筆
+   *（`@@unique([resourceKey, type])`），那份清單就是完整的待辦清單。
+   */
+  todos_capped_action: "Open carbon sessions",
   view_all: "View all notifications",
   page_title: "Notifications",
   history_title: "History",

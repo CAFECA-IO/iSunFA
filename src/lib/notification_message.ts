@@ -51,9 +51,12 @@ export function isNotificationType(type: string): type is NotificationType {
  * 而通知那份沒有人會去看。
  *
  * `t()` 找不到鍵時回傳鍵本身，所以要給 `defaultValue` 才分得出
- * 「沒有這個類別」與「這個類別叫做 `analysis.categories.xxx`」——
- * 常數層有 `JOURNAL_CORRECTION` 而字典裡是 `journal_upload`，
- * 這個缺口今天就存在。
+ * 「沒有這個類別」與「這個類別叫做 `analysis.categories.xxx`」。
+ *
+ * Info: (20260828 - Julian) 那個缺口曾經真的存在：常數是 `JOURNAL_CORRECTION`，
+ * 而字典鍵是 `journal_upload`（沒有任何消費者的死鍵），於是日記帳修正的通知
+ * 退回不帶標題的通用句。字典鍵已改名對齊常數，`defaultValue` 這條路仍然保留 ——
+ * 它守的是**下一個**新增類別卻忘了補字典的人。
  */
 export function analysisTitleOf(
   payload: Record<string, unknown>,
@@ -103,10 +106,66 @@ export function notificationMessageOf(
         ? t("notification.analysis_failed_named", { title })
         : t("notification.analysis_failed");
     }
+    /**
+     * Info: (20260828 - Julian) 「可以繼續了」——**不是**「已為你繼續」。
+     *
+     * 伺服器做不到替他繼續：智能溫盤的匯入內容是端到端加密的，逐章迴圈跑在
+     * 瀏覽器裡（`use_carbon_chat.ts` 的 `runResumableJob`），伺服器沒有金鑰。
+     * 所以文案要明說「回去按一下」，否則使用者會以為它自己會跑完。
+     *
+     * 帶進度是為了讓他判斷值不值得現在回去：剩兩章與剩三十章是不同的決定。
+     */
+    case NOTIFICATION_TYPE.JOB_RESUMABLE: {
+      const completed = Number(item.payload.completedSteps ?? 0);
+      const total = Number(item.payload.totalSteps ?? 0);
+
+      /**
+       * Info: (20260828 - Julian) 兩句而不是一句帶 `{{completed}}/{{total}}`
+       *（計劃 §3）。原本的文案把分數塞進引號裡，畫面上長這樣：
+       *
+       * > 點數已補回，「0/14」的匯入可以繼續了
+       *
+       * 那對引號本來是留給名稱的位置，塞進一個分數就變成「有個東西叫 0/14」。
+       * 而 `0/14` 這一格更麻煩：一步都還沒跑，「繼續」會讓人以為做過一半。
+       *
+       * 改成剩餘章數：「還有 14 章」是一個**決定**（現在值不值得回去），
+       * 「0/14」只是一個狀態。
+       */
+      const remaining = total - completed;
+
+      /**
+       * Info: (20260828 - Julian) 算不出「還有幾章」時退回另一句，而不是說「還有 0 章」。
+       *
+       * `remaining <= 0` 在正常情況下不會發生（沒有剩就不會是 `RESUMABLE`），
+       * 但 payload 來自資料庫，欄位不保證在。「還有 0 章沒有匯入，可以接著做了」
+       * 是一句自相矛盾的話 —— 兩句裡挑一句對的，比算出一個荒謬的數字好。
+       */
+      /**
+       * Info: (20260828 - Julian) **尚未做**：帶上那份報告的名字。
+       *
+       * 現在說的是「還有 11 章」，而不是「『某某報告』還有 11 章」。
+       * 深連結（`NOTIFICATION_LINK_PATH`）已經回答了「是哪一份」——
+       * 落地就在那個會話裡，所以名字目前只是錦上添花；它真正有價值的情境
+       * 是「同時有兩份暫停的匯入」，而那還沒發生。
+       *
+       * 要做的時候：`ResumableJob` 加一個 nullable 的 `resource_label`
+       *（不要叫 `file_name`，下一種 `JOB_TYPE` 的標籤未必是檔案），
+       * 由 `saveImportJobBookmark` 帶上來、`listNotifications` 放進 payload。
+       * 取捨見 `resumable_job_resume_landing_and_copy.md` §8。
+       */
+      if (completed <= 0 || remaining <= 0) {
+        return t("notification.job_resumable_fresh");
+      }
+
+      return t("notification.job_resumable", { remaining });
+    }
     default:
       return null;
   }
 }
+
+// Info: (20260828 - Julian) `:token`；不含 `://` 那種冒號（其後不是英數）
+const TOKEN_PATTERN = /:([A-Za-z0-9_]+)/g;
 
 /**
  * Info: (20260827 - Julian) 把路徑樣板裡的 `:token` 用 payload 代入（D43）。
@@ -115,27 +174,38 @@ export function notificationMessageOf(
  * `/user/account_book/undefined/journal` 會載入一個空頁，而那正是 D43
  * 要修掉的症狀 —— 修法自己再製造一次同樣的東西就沒有意義了。
  *
- * 逐段處理而不是整串 replace：整串 replace 遇到取不到的 token 會靜靜留下
- * 字面的 `:accountBookId`，而那是一條會 404 的合法路徑 —— 又一個
- * 「看起來有反應」的錯誤去處。
+ * 用 `replace` 而不是自己拼字串，但**取不到就記下來、最後整條丟掉**：
+ * 放任 `replace` 留下字面的 `:accountBookId` 會得到一條會 404 的合法路徑，
+ * 又一個「看起來有反應」的錯誤去處。
+ *
+ * Info: (20260828 - Julian) 從「逐段」改成「逐 token」（`resumable_job_resume_landing_and_copy.md` §2.1）。
+ *
+ * 原本是 `split("/")` 之後看 `segment.startsWith(":")`，也就是**整段就是
+ * 一個 token** 才算數。那對 `/user/account_book/:accountBookId/journal` 夠用，
+ * 但深連結要代的是 query 裡的值（`?session=:sessionId`）—— 那個 token 住在
+ * 一段的中間，舊寫法會靜靜地跳過它。
+ *
+ * 不變式沒有變，只是判斷的粒度變小了：任何一個 token 代不出來，整條回 `null`。
  */
 function resolvePathTokens(
   template: string,
   payload: Record<string, unknown>,
 ): string | null {
-  const resolved: string[] = [];
+  let missing = false;
 
-  for (const segment of template.split("/")) {
-    if (!segment.startsWith(":")) {
-      resolved.push(segment);
-      continue;
-    }
-    const value = payload[segment.slice(1)];
-    if (typeof value !== "string" || value === "") return null;
-    resolved.push(encodeURIComponent(value));
-  }
+  const resolved = template.replace(
+    TOKEN_PATTERN,
+    (unusedMatch, name: string) => {
+      const value = payload[name];
+      if (typeof value !== "string" || value === "") {
+        missing = true;
+        return "";
+      }
+      return encodeURIComponent(value);
+    },
+  );
 
-  return resolved.join("/");
+  return missing ? null : resolved;
 }
 
 /**
@@ -163,7 +233,20 @@ export function notificationHrefOf(
 ): string | null {
   if (!isNotificationType(item.type)) return null;
 
-  const fallback = NOTIFICATION_LINK_PATH[item.type] ?? null;
+  /**
+   * Info: (20260828 - Julian) 型別層的樣板**也要**代入 token（`resumable_job_resume_landing_and_copy.md` §2.1）。
+   *
+   * 這裡原本直接回常數字串。當時型別層沒有任何樣板帶 token，所以它是對的 ——
+   * 但那是巧合而不是規則：`JOB_RESUMABLE` 要深連結到單一會話，它就需要。
+   * 少了這一步，`:sessionId` 會原封不動出現在 `href` 裡，
+   * 而 `/user/carbon_chatbot?session=:sessionId` 是一條合法但錯的路徑，
+   * 正是 D43 的症狀。
+   */
+  const fallbackTemplate = NOTIFICATION_LINK_PATH[item.type] ?? null;
+  const fallback =
+    fallbackTemplate === null
+      ? null
+      : resolvePathTokens(fallbackTemplate, item.payload);
 
   const isCompleted = item.type === NOTIFICATION_TYPE.ANALYSIS_COMPLETED;
   const isFailed = item.type === NOTIFICATION_TYPE.ANALYSIS_FAILED;

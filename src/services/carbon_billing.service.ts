@@ -145,6 +145,14 @@ export async function runBilledCarbonTask<T>(
       credits: Number(holdCredits),
       idempotencyKey,
       category: featureCode,
+      /**
+       * Info: (20260831 - Julian) 把 channel 記進訂單（review #6732 的 1-A）。
+       *
+       * 可接續任務的 `resourceKey` 就是 channel，所以付款到帳時翻得出
+       * 「這筆錢是為哪一份匯入付的」。這是唯一還握著這個關聯的地方 ——
+       * `TxTracker` 那頭只看得到一張訂單。
+       */
+      resourceKey: channel ?? null,
     });
     if (!charge.paid) {
       logger.info("carbon task awaiting personal credit payment", {

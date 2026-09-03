@@ -20,6 +20,38 @@ export const buildCarbonChatChannel = (
   sessionId: string,
 ): string => `${CARBON_CHAT_CHANNEL_PREFIX}-${address}-${sessionId}`;
 
+/**
+ * Info: (20260828 - Julian) 反函式：從頻道切回 `{ address, sessionId }`。
+ *
+ * 存在的理由是通知要深連結到**單一會話**：書籤只存 `resourceKey`，
+ * 而那個字串裡就有 sessionId（見 `resumable_job_resume_landing_and_copy.md` §2）。
+ *
+ * 放在 `buildCarbonChatChannel` 旁邊而不是解析的那一端（通知服務），
+ * 有兩個理由：格式改了兩支要一起改，放在一起才看得見；
+ * 而且 round-trip（`parse(build(a, s))`）只有在同一個檔案裡才釘得住。
+ *
+ * 切在**第一個** `-`：位址是 hex（不含 `-`），sessionId 則可能含
+ * （使用者的會話 id 不保證是 `2025` 那種）。用 `lastIndexOf` 反過來切，
+ * 遇到帶 `-` 的 sessionId 就會靜靜地切錯 —— 而切錯的結果是一條
+ * 「看起來有反應」的深連結，導到別人的會話或不存在的會話。
+ */
+export const parseCarbonChatChannel = (
+  channel: string,
+): { address: string; sessionId: string } | null => {
+  const prefix = `${CARBON_CHAT_CHANNEL_PREFIX}-`;
+  if (!channel.startsWith(prefix)) return null;
+
+  const rest = channel.slice(prefix.length);
+  const separator = rest.indexOf("-");
+  if (separator <= 0) return null;
+
+  const address = rest.slice(0, separator);
+  const sessionId = rest.slice(separator + 1);
+  if (sessionId === "") return null;
+
+  return { address, sessionId };
+};
+
 // Info: (20260715 - Luphia) 位址為 hex，EIP-55 checksum 僅差在大小寫；兩端統一轉小寫比對，避免 checksum 格式差異誤拒合法擁有者
 export const isCarbonChatChannelOwnedBy = (
   channel: string,
@@ -626,6 +658,34 @@ const IMPORT_SUMMARY_TEMPLATES: Record<
  * 重載後對話裡沒有任何痕跡,而那幾分鐘的 LLM 呼叫也白燒了。
  * 訊息入庫(E2EE)+ 待匯入結果入庫,兩者一起才讓「稍後再決定」真的可行。
  */
+/**
+ * Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）。
+ *
+ * 伺服器的 402 回應早就把這些算好了（`options`、雙視窗的 `resetAt`、
+ * 以及「這一筆本身就超過視窗上限」的旗標），而前端在此之前**一個欄位都沒有讀**
+ * ——畫面只說「點數用完」，沒說去哪裡補。
+ *
+ * 刻意只留三個欄位，不存整份 payload：
+ *
+ * - `resetAt` 與 `exceedsWindowLimit` 是**決定要說哪句話**的依據，非有不可。
+ * - 額度的 `limit` / `used` 沒有留：那兩個數字在重新整理之後就過時了，
+ *   而顯示一個過時的儀表比不顯示更糟——使用者會據此判斷還能不能跑。
+ */
+export interface ICreditPauseDetail {
+  /**
+   * Info: (20260827 - Luphia) 被擋下的那個視窗的重置時間（epoch 秒）。
+   * null 表示「等重置不會有幫助」（需要付款那種，或超過視窗上限）。
+   */
+  resetAt: number | null;
+  // Info: (20260827 - Luphia) QUOTA_EXCEEDED_OPTION 的值；伺服器算好的出路，前端不重算
+  options: string[];
+  /**
+   * Info: (20260827 - Luphia) 這一筆需要的點數高於整個視窗的上限。
+   * 這種情況**等重置永遠不會好**，倒數與「等一下再來」都是謊話。
+   */
+  exceedsWindowLimit: boolean;
+}
+
 export interface ICarbonImportParsedSummary {
   fileName: string;
   /** Info: (20260806 - Tzuhan) 待確認的逐字段落數 */
