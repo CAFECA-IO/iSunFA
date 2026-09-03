@@ -284,6 +284,7 @@ export default function CarbonChatbotPage() {
     pendingImport,
     importReportFile,
     toggleImportItem,
+    setPendingInventoryYear,
     applyPendingImport,
     discardPendingImport,
     isImportPreviewOpen,
@@ -616,6 +617,8 @@ export default function CarbonChatbotPage() {
         <ImportPreview
           pendingImport={pendingImport}
           onToggleItem={toggleImportItem}
+          // Info: (20260902 - Emily) 盤查年度的確認(issue_drafts/open/69)
+          onChangeInventoryYear={setPendingInventoryYear}
           onApply={applyPendingImport}
           onDiscard={discardPendingImport}
           onDefer={deferImportPreview}

@@ -50,6 +50,76 @@ const buildLedger = (
   ...overrides,
 });
 
+/**
+ * Info: (20260828 - Emily) 部分入帳時圖照畫,但要說出「這不是全貌」
+ * (PR #6725 round-2 低-1 的第二半)。
+ *
+ * 實際情境:一份報告兩個段落各自產生分錄,一個勾稽通過、一個被擋 ——
+ * 走的是 apply 分支(帳本非空),於是圖照畫、數字照印,
+ * 而被擋那半在紙上完全不存在。讀者看到一張自我一致的桑基圖,
+ * 無從得知總量少了一塊 —— 「半套資料入帳會讓每張圖都錯得很像對的」。
+ */
+describe("有阻擋紀錄時的圖旁附註(round-2 低-1 第二半)", () => {
+  const blocks = [
+    { reason: "表3.8 有 6 列無法解析(差額 12,345 kgCO2e)" },
+  ] as const;
+
+  it("帳本非空時是**附註**,不是取代:圖仍然在,附註也在", () => {
+    const block = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      buildLedger(),
+      CARBON_CHART_DEFAULT_LABELS,
+      undefined,
+      blocks,
+    );
+    expect(block).toContain("```mermaid");
+    expect(block).toContain('"SCOPE_2_INDIRECT" : 1235000');
+    expect(block).toContain("不是全公司全貌");
+    expect(block).toContain("表3.8 有 6 列無法解析");
+  });
+
+  it("附註排在圖之後(先給圖,再說它缺了什麼)", () => {
+    const block = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      buildLedger(),
+      CARBON_CHART_DEFAULT_LABELS,
+      undefined,
+      blocks,
+    );
+    expect(block.indexOf("```mermaid")).toBeLessThan(
+      block.indexOf("不是全公司全貌"),
+    );
+  });
+
+  it("明細表與桑基圖同樣附註(不是只有一種模板)", () => {
+    const table = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.SOURCE_TABLE,
+      buildLedger(),
+      CARBON_CHART_DEFAULT_LABELS,
+      undefined,
+      blocks,
+    );
+    expect(table).toContain("| 外購電力 |");
+    expect(table).toContain("不是全公司全貌");
+  });
+
+  it("沒有阻擋紀錄時一個字都不多(逐字與原本相同)", () => {
+    const plain = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      buildLedger(),
+    );
+    const withEmpty = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      buildLedger(),
+      CARBON_CHART_DEFAULT_LABELS,
+      undefined,
+      [],
+    );
+    expect(withEmpty).toBe(plain);
+    expect(plain).not.toContain("不是全公司全貌");
+  });
+});
+
 describe("buildCarbonChartBlock", () => {
   it("should render a mermaid pie with engine figures verbatim (deterministic)", () => {
     const block = buildCarbonChartBlock(

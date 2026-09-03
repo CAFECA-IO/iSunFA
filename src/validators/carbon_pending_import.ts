@@ -6,6 +6,10 @@ import { CarbonReportDraftPutSchema } from "@/validators/carbon_report_storage";
 import { CarbonActivityRecordSchema } from "@/validators/carbon_inventory";
 import { CarbonSourceTableSchema } from "@/validators/carbon_source_table";
 import { CARBON_PENDING_IMPORT_STORAGE_VERSION } from "@/constants/carbon_chatbot";
+import {
+  INVENTORY_YEAR_MIN,
+  INVENTORY_YEAR_STORAGE_MAX,
+} from "@/constants/carbon_chatbot";
 
 // Info: (20260806 - Tzuhan) PUT 封裝與報告草稿完全同形(envelope / plainContent 擇一 + 樂觀鎖),共用 schema
 export const CarbonPendingImportPutSchema = CarbonReportDraftPutSchema;
@@ -75,6 +79,26 @@ export const CarbonPendingImportDataSchema = z.object({
     items: z.array(PendingImportItemSchema).max(100),
     unmapped: z.array(z.string().max(50_000)).max(100),
     activityCount: z.number().int().min(0),
+    /**
+     * Info: (20260902 - Emily) 使用者在預覽卡上確認過的盤查年度(issue_drafts/open/69)。
+     *
+     * 選填的理由與 pausedChapters 相同:既有紀錄沒有這個欄位,必填會讓它們在
+     * 下一次保存時被 schema 擋下。缺席的語意是「還沒確認」,不是「沒有年度」。
+     *
+     * 存在這裡而不是只放記憶體:預覽卡有「稍後再說」這條路,而重載之後
+     * 使用者填過的年度若不見了,他會再填一次(或忘記填),
+     * 而那個值決定跨年度合併時哪些分錄被剔除。
+     *
+     * 上限寫死 2100 而不是「今年 + 1」:schema 是儲存格式,不該隨時間改變判定
+     *(那會讓舊紀錄在某一天忽然讀不出來)。收窄到「今年 + 1」的裁決在
+     * `normalizeInventoryYear`,那是萃取端的事。
+     */
+    inventoryYear: z
+      .number()
+      .int()
+      .min(INVENTORY_YEAR_MIN)
+      .max(INVENTORY_YEAR_STORAGE_MAX)
+      .optional(),
     failedChapters: z
       .array(
         z.object({
