@@ -190,6 +190,8 @@ export const carbonChatbot = {
     "The inventory year of this report. Used to tell which ledger entries belong to which year across imports",
   import_inventory_year_required:
     "This import includes the emissions total table — enter the inventory year of this report",
+  import_inventory_year_invalid:
+    "Enter a four-digit inventory year (1990 through next year). A year outside that range makes the ledger unreadable on the next load",
   import_reset_note:
     "Verification resets for imported paragraphs; {{activities}} activity records will be re-reconciled",
   import_apply: "Import selected ({{count}})",

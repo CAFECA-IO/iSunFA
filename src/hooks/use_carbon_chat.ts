@@ -37,6 +37,14 @@ import {
   type IImportedLedgerResult,
 } from "@/lib/carbon_table38.pipeline";
 import { isImportedEntry } from "@/lib/carbon_table38.ledger";
+/**
+ * Info: (20260903 - Luphia) 年度的兩個判斷都在 lib(review):hook 裡的判斷
+ * 在這個 repo 測不到(node 環境無 jsdom),抽出去才守得住。
+ */
+import {
+  isStorableInventoryYear,
+  resolveIdentityYearPrefill,
+} from "@/lib/utils/inventory_year";
 import {
   buildYearSnapshot,
   detectUndatedImportedEntries,
@@ -450,12 +458,25 @@ export const useCarbonChat = () => {
    */
   const setPendingInventoryYear = useCallback(
     (year: number | undefined) => {
+      /**
+       * Info: (20260903 - Luphia) 範圍外一律不收(review)。
+       *
+       * 擋在**寫入點**而不是只擋在畫面上:這裡是 `pendingImport.inventoryYear`
+       * 的唯一寫入者,而範圍外的年度會一路寫進 `importedOrigin.year`、存檔成功
+       *(寫路徑不過 schema),然後在下次載入時讓 `CarbonInventoryStateSchema`
+       * 的 `safeParse` 失敗 —— `loadInventoryState` 是 fail-fast 丟棄,
+       * **整份盤查狀態(帳本、活動數據、待補項)一起消失**,而存的當下毫無異狀。
+       *
+       * 最日常的觸發是打錯一個字:`1024`(`2024` 的手滑)是四位數字、
+       * 通過畫面上的「有沒有填」檢查,而它比下限小。
+       */
+      const accepted = isStorableInventoryYear(year) ? year : undefined;
       setPendingImportBySession((prev) => {
         const current = prev[activeSessionId];
-        if (!current || current.inventoryYear === year) return prev;
+        if (!current || current.inventoryYear === accepted) return prev;
         return {
           ...prev,
-          [activeSessionId]: { ...current, inventoryYear: year },
+          [activeSessionId]: { ...current, inventoryYear: accepted },
         };
       });
     },
@@ -3606,6 +3627,45 @@ export const useCarbonChat = () => {
     }
     const selected = pendingImport.items.filter((item) => item.checked);
     if (selected.length === 0) return;
+    /**
+     * Info: (20260903 - Luphia) 報告識別的盤查年度**空的時候**用確認值預填(review)。
+     *
+     * 為什麼是兩個欄位:識別那格是自由文字、逐字印在報告第一頁
+     *(`carbon_report_title.ts` 讀它組標題;「2023 年度」這種寫法要原樣留著),
+     * 這裡的 `inventoryYear` 是數字、決定跨年度合併時哪些分錄被剔除。
+     * 兩件事,所以不合併成一個欄位。
+     *
+     * 但同一個事實不該問使用者兩次而且允許兩個答案 —— 識別那格是空的就預填,
+     * **單向、不覆蓋已經填的字**(形狀與預覽卡的晚到預填一致:預填是建議不是指令)。
+     */
+    if (pendingImport.inventoryYear !== undefined) {
+      /**
+       * Info: (20260903 - Luphia) 在 updater 裡讀「現在是空的嗎」而不是讀渲染時的
+       * 快照:這個判斷決定要不要動使用者要印出去的字,讀舊值就可能蓋掉他剛填的內容。
+       */
+      setSessionsData((prev) => {
+        const session = prev[activeSessionId];
+        if (!session?.reportData) return prev;
+        const prefill = resolveIdentityYearPrefill(
+          session.reportData.identity?.inventoryYear,
+          pendingImport.inventoryYear,
+        );
+        if (prefill === undefined) return prev;
+        return {
+          ...prev,
+          [activeSessionId]: {
+            ...session,
+            reportData: {
+              ...session.reportData,
+              identity: {
+                ...session.reportData.identity,
+                inventoryYear: prefill,
+              },
+            },
+          },
+        };
+      });
+    }
     /**
      * Info: (20260806 - Tzuhan) 釘住套用當下的會話。
      * 上面剛確認 `pendingImport.originSessionId === activeSessionId`,所以此刻兩者相同 ——

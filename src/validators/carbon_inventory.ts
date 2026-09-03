@@ -8,7 +8,11 @@ import {
   LedgerProvenanceEnum,
 } from "@/constants/imported_quantity";
 import { MeasurementUnit } from "@/constants/enums";
-import { CarbonInventoryStep } from "@/constants/carbon_chatbot";
+import {
+  CarbonInventoryStep,
+  INVENTORY_YEAR_MIN,
+  INVENTORY_YEAR_STORAGE_MAX,
+} from "@/constants/carbon_chatbot";
 import { CARBON_CALCULATE_MAX_ACTIVITIES } from "@/constants/carbon_calculation";
 import {
   CARBON_ARTICULATION_MAX_STOCK_RECORDS,
@@ -93,7 +97,12 @@ export const CarbonStockRecordSchema = z.object({
 // Info: (20260716 - Tzuhan) LLM 萃取輸出: year 為字串原樣，由此決定性轉數字(1990-2100 合理性邊界)
 export const CarbonInventoryExtractionSchema = z.object({
   company: z.string().min(1).max(100).optional(),
-  year: z.coerce.number().int().min(1990).max(2100).optional(),
+  year: z.coerce
+    .number()
+    .int()
+    .min(INVENTORY_YEAR_MIN)
+    .max(INVENTORY_YEAR_STORAGE_MAX)
+    .optional(),
   boundaryApproach: z
     .enum(["operational_control", "financial_control", "equity_share"])
     .optional(),
@@ -201,7 +210,12 @@ export const ComputedLedgerSchema = z.object({
            * 範圍與頂層 `year` 對齊(1990–2100):schema 是儲存格式,不隨時間收窄,
            * 否則舊紀錄會在某一天忽然讀不出來。
            */
-          year: z.number().int().min(1990).max(2100).optional(),
+          year: z
+            .number()
+            .int()
+            .min(INVENTORY_YEAR_MIN)
+            .max(INVENTORY_YEAR_STORAGE_MAX)
+            .optional(),
         })
         .optional(),
       // Info: (20260720 - Tzuhan) #53 證據引用(憑證匯入的活動才有)
@@ -258,7 +272,12 @@ export const ComputedLedgerSchema = z.object({
 export const CarbonInventoryStateSchema = z.object({
   step: z.nativeEnum(CarbonInventoryStep),
   company: z.string().max(100).optional(),
-  year: z.number().int().min(1990).max(2100).optional(),
+  year: z
+    .number()
+    .int()
+    .min(INVENTORY_YEAR_MIN)
+    .max(INVENTORY_YEAR_STORAGE_MAX)
+    .optional(),
   boundaryApproach: z
     .enum(["operational_control", "financial_control", "equity_share"])
     .optional(),
@@ -284,7 +303,11 @@ export const CarbonInventoryStateSchema = z.object({
   ledgerByYear: z.record(z.coerce.number(), ComputedLedgerSchema).optional(),
   ledgerYearWarning: z
     .object({
-      incomingYear: z.number().int().min(1990).max(2100),
+      incomingYear: z
+        .number()
+        .int()
+        .min(INVENTORY_YEAR_MIN)
+        .max(INVENTORY_YEAR_STORAGE_MAX),
       undatedCount: z.number().int().min(0),
     })
     .optional(),

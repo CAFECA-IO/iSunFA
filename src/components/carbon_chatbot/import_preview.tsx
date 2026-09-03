@@ -16,6 +16,11 @@ import { useTranslation } from "@/i18n/i18n_context";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
 // Info: (20260902 - Emily) 表號取自產帳本的那支純函式,不在這裡再寫一份字串
 import { LEDGER_SOURCE_TABLE_NO } from "@/lib/carbon_table38.pipeline";
+/**
+ * Info: (20260903 - Luphia) 年度的裁決與萃取端**同一支**(review)。
+ * 各寫一份就是兩個會分岔的判準,而分岔的症狀是「畫面收下了、儲存讀不回來」。
+ */
+import { normalizeInventoryYear } from "@/lib/utils/inventory_year";
 
 export interface IPendingImportItem {
   paragraphId: string;
@@ -182,6 +187,18 @@ export function ImportPreview({
   );
   const yearMissing =
     ledgerBearingChecked && pendingImport.inventoryYear === undefined;
+  /**
+   * Info: (20260903 - Luphia) 「填了但裁決不收」要與「沒填」分開說(review)。
+   *
+   * 框裡有字而上面拿到的是 `undefined`,就是這一格 —— 打到一半(`202`)、
+   * 或四位數但超出範圍(`1024`)。兩者都不該靜默:使用者看到 Apply 是灰的
+   * 卻不知道為什麼,只會再打一次同樣的東西。
+   *
+   * 這一格**不擋送出**:年度非必填時填錯不該連純文字章節都匯不進去,
+   * 但紅字要在。必填那格由 `yearMissing` 擋。
+   */
+  const yearRejected =
+    yearText.trim().length > 0 && pendingImport.inventoryYear === undefined;
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/30 p-4">
@@ -356,29 +373,37 @@ export function ImportPreview({
             inputMode="numeric"
             value={yearText}
             onChange={(e) => {
-              const next = e.target.value.trim();
               setYearText(e.target.value);
               /**
-               * Info: (20260902 - Emily) 只有四位數字才往上送,其餘一律 undefined ——
-               * 「打到一半」與「沒填」在這裡必須是同一個結果,否則帳本會拿到 `20`。
+               * Info: (20260902 - Emily) 只有裁決收下的年度才往上送,其餘一律 undefined
+               * —— 「打到一半」與「沒填」在這裡必須是同一個結果,否則帳本會拿到 `20`。
+               *
+               * Info: (20260903 - Luphia) 裁決改用 `normalizeInventoryYear`(review):
+               * 原本這裡自己寫了一個**沒有範圍**的四位數判斷,而下游每一道都有範圍
+               *(萃取端 1990..明年、兩支儲存 schema 1990..2100)——
+               * 唯一沒有範圍的那一道正是產出生效值的這一道(萃取只是預填)。
+               * 實測 `1024`(`2024` 的手滑)會一路寫進帳本並存檔成功,
+               * 然後在下次載入時讓整份盤查狀態被 fail-fast 丟棄。
+               * 現在畫面與儲存讀同一支裁決:畫面收下的集合是儲存讀得回的子集。
                */
-              onChangeInventoryYear(
-                /^\d{4}$/.test(next) ? Number(next) : undefined,
-              );
+              onChangeInventoryYear(normalizeInventoryYear(e.target.value));
             }}
             placeholder={t("carbon_chatbot.import_inventory_year_placeholder")}
             className={`w-24 rounded-lg border px-2 py-1 text-sm ${
-              yearMissing
+              yearMissing || yearRejected
                 ? "border-red-300 bg-red-50 text-red-700"
                 : "border-gray-200 text-gray-700"
             }`}
           />
           <span
-            className={`text-[11px] ${yearMissing ? "text-red-500" : "text-gray-400"}`}
+            className={`text-[11px] ${yearMissing || yearRejected ? "text-red-500" : "text-gray-400"}`}
           >
-            {yearMissing
-              ? t("carbon_chatbot.import_inventory_year_required")
-              : t("carbon_chatbot.import_inventory_year_hint")}
+            {/* Info: (20260903 - Luphia) 三態:填了不合理 → 必填但沒填 → 一般說明(review) */}
+            {yearRejected
+              ? t("carbon_chatbot.import_inventory_year_invalid")
+              : yearMissing
+                ? t("carbon_chatbot.import_inventory_year_required")
+                : t("carbon_chatbot.import_inventory_year_hint")}
           </span>
         </div>
 

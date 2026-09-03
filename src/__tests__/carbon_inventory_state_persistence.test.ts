@@ -2,6 +2,7 @@ import { describe, it, expect } from "@jest/globals";
 import fs from "fs";
 import path from "path";
 import { CarbonInventoryStateSchema } from "@/validators";
+import { normalizeInventoryYear } from "@/lib/utils/inventory_year";
 import { CarbonInventoryStep } from "@/constants/carbon_chatbot";
 import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
@@ -179,5 +180,83 @@ describe("盤查狀態的往返:序列化 → schema → 必須一模一樣", ()
     const i = src.indexOf("export const CarbonInventoryStateSchema");
     expect(i).toBeGreaterThan(-1);
     expect(src.slice(i, i + 4000)).not.toContain("passthrough");
+  });
+});
+
+/**
+ * Info: (20260903 - Luphia) 輸入端與儲存端的**值域關係**(review;PR #6743 阻-2)。
+ *
+ * 這是本檔往返判準的延伸,也是那條缺陷唯一測得出來的形狀:
+ * 缺陷不在任何一支函式裡,而在兩道閘的**值域**上 ——
+ * 預覽卡原本只驗 `/^\d{4}$/`(無範圍),而儲存 schema 是 1990..2100,
+ * 於是 `1024`(`2024` 的手滑)存得進去、下次 `safeParse` 失敗、
+ * `loadInventoryState` fail-fast 回 null,**整份盤查狀態被丟棄**。
+ *
+ * 判準寫成不變式而不是逐案例斷言:**輸入端能產出的年度,儲存端一定讀得回來。**
+ * 這樣下一個人改寬任何一邊都會紅,而不必先想到 `1024` 這個例子。
+ *
+ * 反向驗過:把預覽卡的裁決換回 `/^\d{4}$/`(或拿掉 normalizeInventoryYear
+ * 的範圍檢查)→ 這一條紅。
+ */
+describe("輸入端的值域 ⊆ 儲存端的值域(年度)", () => {
+  const TYPED = [
+    "",
+    "2",
+    "202",
+    "0000",
+    "1024",
+    "1989",
+    "1990",
+    "2024",
+    "2100",
+    "9999",
+    "2024年",
+    "民國113年",
+    "2023-2024",
+  ];
+
+  it("預覽卡能送出的每一個年度,過完 schema 都讀得回來", () => {
+    const accepted = TYPED.map((typed) =>
+      normalizeInventoryYear(typed, 2026),
+    ).filter((year): year is number => year !== undefined);
+    // Info: (20260903 - Luphia) 至少要有一個被收下,否則這條會空跑而看起來是綠的
+    expect(accepted.length).toBeGreaterThan(0);
+    accepted.forEach((year) => {
+      const state = {
+        ...fullState,
+        computedLedger: {
+          ...ledger,
+          entries: [
+            {
+              ...importedEntry,
+              importedOrigin: { ...importedEntry.importedOrigin, year },
+            },
+          ],
+        },
+        ledgerByYear: undefined,
+      };
+      expect(() => roundTrip(state)).not.toThrow();
+    });
+  });
+
+  it("超出儲存範圍的年度確實會讓整份狀態被拒(這條紅字是那個後果的證據)", () => {
+    [0, 1989, 2101, 9999].forEach((year) => {
+      const state = {
+        ...fullState,
+        computedLedger: {
+          ...ledger,
+          entries: [
+            {
+              ...importedEntry,
+              importedOrigin: { ...importedEntry.importedOrigin, year },
+            },
+          ],
+        },
+        ledgerByYear: undefined,
+      };
+      expect(() => roundTrip(state)).toThrow();
+      // Info: (20260903 - Luphia) 而且它們送不出預覽卡 —— 兩件事一起才算守住
+      expect(normalizeInventoryYear(String(year), 2026)).toBeUndefined();
+    });
   });
 });

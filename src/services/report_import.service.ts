@@ -69,6 +69,11 @@ import {
   unmappedPrivateUseChars,
 } from "@/lib/utils/office_symbol_chars";
 import { padTableHeaderToWidest } from "@/lib/utils/markdown_table_columns";
+/**
+ * Info: (20260903 - Luphia) 年度的裁決搬到 lib(review):萃取端與預覽卡
+ * 必須用同一支,而元件不得 import service。見 inventory_year.ts 的註解。
+ */
+import { normalizeInventoryYear } from "@/lib/utils/inventory_year";
 import { logger } from "@/lib/utils/logger";
 import { IActivityRecord } from "@/types/carbon_chatbot.types";
 
@@ -220,36 +225,6 @@ const buildImportResponseSchema = (
     properties,
     required: ["segments", "unmapped"],
   };
-};
-
-// Info: (20260902 - Emily) 盤查報告不會早於這一年(issue_drafts/open/69 的範圍下限)
-export const INVENTORY_YEAR_MIN = 1990;
-
-/**
- * Info: (20260902 - Emily) 盤查年度的裁決(issue_drafts/open/69)。
- *
- * 收下模型抄回來的字樣,只在**能唯一確定**時給出數字,其餘一律 `undefined`:
- * - `2024` / `2024年` / ` 2024 ` → 2024(前後的非數字字樣不影響唯一性)
- * - `113`(民國年)→ 退回。**不在這裡 +1911**:三位數字也可能是頁碼、
- *   表號或模型截斷的產物,而換算會把「抄錯」變成一個看起來很正常的年度。
- *   prompt 已要求模型自己換算;它沒照做就是沒抽到,交給使用者填。
- * - `2023-2024` / `2023、2024` → 退回:兩個年度代表這份報告的歸屬本身有歧義,
- *   由使用者裁決而不是由我們挑一個。
- * - 範圍外(過早或未來太遠)→ 退回。盤查報告不會早於 1990,也不會晚於明年。
- *
- * 判準是「抽錯比抽不到嚴重」:抽不到會在預覽卡上要求使用者填,
- * 抽錯則會靜默改變跨年度合併時哪些分錄被剔除,而畫面上看不出異狀。
- */
-export const normalizeInventoryYear = (
-  raw: string | undefined,
-  currentYear: number = new Date().getFullYear(),
-): number | undefined => {
-  if (raw === undefined) return undefined;
-  const matched = /^\D*(\d{4})\D*$/.exec(raw.trim());
-  if (matched === null) return undefined;
-  const year = Number(matched[1]);
-  if (year < INVENTORY_YEAR_MIN || year > currentYear + 1) return undefined;
-  return year;
 };
 
 // Info: (20260727 - Tzuhan) #57 草稿補齊 responseSchema:段落 id 以 enum 鎖死;內容為「依據原文撰寫的草稿」

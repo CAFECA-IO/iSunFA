@@ -185,6 +185,8 @@ export const carbonChatbot = {
     "這份報告的盤查年度(西元)。跨年度匯入時用它分辨哪些分錄屬於哪一年",
   import_inventory_year_required:
     "這次匯入含排放總量表,請填寫這份報告的盤查年度",
+  import_inventory_year_invalid:
+    "請填西元四位數的盤查年度(1990 年至明年);超出範圍的年度會讓帳本下次載入時讀不回來",
   import_reset_note:
     "匯入段落的查核狀態將重置;{{activities}} 筆活動數據將入帳並重新勾稽",
   import_apply: "匯入勾選({{count}})",

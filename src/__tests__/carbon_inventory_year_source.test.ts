@@ -2,9 +2,14 @@ import { describe, it, expect } from "@jest/globals";
 import fs from "fs";
 import path from "path";
 import {
-  INVENTORY_YEAR_MIN,
+  isStorableInventoryYear,
   normalizeInventoryYear,
-} from "@/services/report_import.service";
+  resolveIdentityYearPrefill,
+} from "@/lib/utils/inventory_year";
+import {
+  INVENTORY_YEAR_MIN,
+  INVENTORY_YEAR_STORAGE_MAX,
+} from "@/constants/carbon_chatbot";
 import { buildImportedLedger } from "@/lib/carbon_table38.pipeline";
 import {
   buildYearSnapshot,
@@ -327,13 +332,95 @@ describe("年度的來源接線", () => {
     expect(preview).toContain("disabled={checkedCount === 0 || yearMissing}");
   });
 
+  /**
+   * Info: (20260903 - Luphia) 兩個判斷都在 lib,hook 只負責呼叫(review)。
+   * 判斷本身的逐條測試在下方兩個 describe;這裡只回答「有沒有接上」(§1.11)。
+   */
+  it("寫入點呼叫共用的守門,不在 hook 裡自己寫一份界", () => {
+    const hook = fs.readFileSync(
+      path.join(process.cwd(), "src/hooks/use_carbon_chat.ts"),
+      "utf-8",
+    );
+    expect(hook).toContain("isStorableInventoryYear(year)");
+    expect(hook).toContain("resolveIdentityYearPrefill(");
+    // Info: (20260903 - Luphia) 反面:hook 裡再出現界的比較就是又寫了一份
+    expect(hook).not.toContain("year >= INVENTORY_YEAR_MIN");
+  });
+
   it("晚到的預填不蓋掉使用者手上打的字(#6730 第二輪那條的同一個形狀)", () => {
     expect(preview).toContain("current.trim().length > 0 ? current :");
   });
 
-  it("打到一半不會被當成年度送進帳本", () => {
+  /**
+   * Info: (20260903 - Luphia) 這一條原本斷言 `/^\d{4}$/` —— 也就是把缺陷釘成了正確
+   *(review 阻-2)。那個閘沒有範圍,而下游每一道都有,於是 `1024` 存得進去、
+   * 下次載入時整份盤查狀態被 fail-fast 丟棄。
+   *
+   * 現在釘的是「畫面與萃取端**共用同一支裁決**」;值域關係本身由
+   * `carbon_inventory_state_persistence.test.ts` 的不變式測試守
+   *(輸入端能產出的年度,儲存端一定讀得回來)。掃描只回答接線,不回答值域。
+   */
+  it("打到一半不會被當成年度送進帳本,而且裁決與萃取端同一支", () => {
     expect(preview).toContain(
-      "/^\\d{4}$/.test(next) ? Number(next) : undefined",
+      "onChangeInventoryYear(normalizeInventoryYear(e.target.value))",
     );
+    expect(preview).toContain('from "@/lib/utils/inventory_year"');
+    /**
+     * Info: (20260903 - Luphia) 反面也要釘:元件自己再寫一份無範圍的四位數判斷就是缺陷本身。
+     * 錨在**呼叫**形狀(`.test(`)而不是 regex 本身 —— 註解裡會引用它來說明
+     * 為什麼不這樣寫,而那不該讓這一條紅(§1.14 那條「錨在短而獨特的子字串」)。
+     */
+    expect(preview).not.toContain("/^\\d{4}$/.test(");
+  });
+});
+
+/**
+ * Info: (20260903 - Luphia) 寫入點的守門與識別欄位的預填(review 阻-2 與不阻擋項)。
+ *
+ * 兩個判斷原本寫在 hook 裡,而 hook 在這個 repo 測不到(jest 是 node 環境、
+ * 沒有 jsdom),於是把它們改壞不會有任何測試變紅 —— mutation 實測全綠。
+ * 抽成純函式之後逐條測得到;hook 只剩「有沒有呼叫」由下方掃描守。
+ */
+describe("寫入點的守門:儲存讀得回來的年度才收", () => {
+  it("範圍內收下", () => {
+    expect(isStorableInventoryYear(INVENTORY_YEAR_MIN)).toBe(true);
+    expect(isStorableInventoryYear(2024)).toBe(true);
+    expect(isStorableInventoryYear(INVENTORY_YEAR_STORAGE_MAX)).toBe(true);
+  });
+
+  it("範圍外退回(這幾個值會讓整份盤查狀態在下次載入時被丟棄)", () => {
+    [0, 1989, 2101, 9999].forEach((year) => {
+      expect(isStorableInventoryYear(year)).toBe(false);
+    });
+  });
+
+  it("非整數與未填退回", () => {
+    expect(isStorableInventoryYear(2024.5)).toBe(false);
+    expect(isStorableInventoryYear(Number.NaN)).toBe(false);
+    expect(isStorableInventoryYear(undefined)).toBe(false);
+  });
+});
+
+describe("報告識別那格的單向預填", () => {
+  it("空的才填", () => {
+    expect(resolveIdentityYearPrefill(undefined, 2024)).toBe("2024");
+    expect(resolveIdentityYearPrefill("", 2024)).toBe("2024");
+    expect(resolveIdentityYearPrefill("   ", 2024)).toBe("2024");
+  });
+
+  /**
+   * Info: (20260903 - Luphia) 這一條是本組唯一真正需要守的行為:
+   * 那格是自由文字、逐字印在報告第一頁,「2023 年度」是合法寫法。
+   * 覆蓋它等於替使用者改掉要印出去的字。
+   */
+  it("已經有字就不動它(即使兩者不一致)", () => {
+    expect(resolveIdentityYearPrefill("2023", 2024)).toBeUndefined();
+    expect(resolveIdentityYearPrefill("2023 年度", 2023)).toBeUndefined();
+    expect(resolveIdentityYearPrefill("民國112年", 2023)).toBeUndefined();
+  });
+
+  it("沒有確認過的年度就不寫", () => {
+    expect(resolveIdentityYearPrefill(undefined, undefined)).toBeUndefined();
+    expect(resolveIdentityYearPrefill("", undefined)).toBeUndefined();
   });
 });
