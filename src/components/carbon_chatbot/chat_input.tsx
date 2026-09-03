@@ -51,7 +51,7 @@ export interface IChatInputProps {
    * - **取得文字**(送出)→ `onSendMessage(text)` 把文字上交
    * 打字因此完全不出這個元件。
    */
-  prefill?: { value: string; nonce: number };
+  prefill?: { value: string; nonce: number; mode?: "set" | "restore" };
   isTyping: boolean;
   isLoading: boolean;
   /**
@@ -137,13 +137,28 @@ export function ChatInput({
    * 用值比對分不出「外部要求清空」與「使用者剛好刪空」,
    * 後者會在每次 render 被覆寫回去(打字卡住的另一種形狀)。
    * nonce 只在外部真的下指令時變動,所以 effect 只在那時跑。
+   *
+   * Info: (20260831 - Emily) `mode` 分「指令」與「歸還」(PR #6730 review 第二輪)。
+   *
+   * `set`(預設,含 undefined 的舊形狀)是指令 —— 切房清空、跳段預填、
+   * 送出後清空,一律覆寫。`restore` 是歸還:送不出去把那句話還回來,
+   * 而框裡已經有字就不還 —— 使用者在金鑰步驟期間打的字不該被搶掉
+   * (金鑰那段時間輸入框沒有被 disabled)。
+   *
+   * 用 functional updater 讀當下的值,而不是把 `text` 加進 deps 或另鏡一份 ref:
+   * 加 deps 會讓這個 effect 每次打字都重跑(那正是 #6718 要消滅的東西),
+   * 鏡一份 ref 則是多一個要同步的真值來源。
    */
   const appliedPrefillRef = useRef<number | undefined>(prefill?.nonce);
   useEffect(() => {
     if (prefill === undefined) return;
     if (appliedPrefillRef.current === prefill.nonce) return;
     appliedPrefillRef.current = prefill.nonce;
-    setText(prefill.value);
+    setText((current) =>
+      prefill.mode === "restore" && current.trim().length > 0
+        ? current
+        : prefill.value,
+    );
   }, [prefill]);
 
   const hasReadyAttachment = pendingAttachments.some(
@@ -180,12 +195,22 @@ export function ChatInput({
    * 中文介面的日常操作,不是邊角案例。
    *
    * 這不是 #6718 引入的(develop 上同一個 handler 也沒擋),但這張票正在改這一行,
-   * 補一個條件的邊際成本接近零;而且本 repo 另外四個輸入元件都已經處理了,
-   * 包括另一個聊天輸入框 `src/components/chat/chat_input.tsx`(20260213 Julian)——
-   * 碳盤查這個是唯一的例外。留著它,下一個人會以為沒擋是刻意的。
+   * 補一個條件的邊際成本接近零。
    *
-   * 本元件是單行 `<input type="text">`,所以不需要兄弟元件那條 `!e.shiftKey`
-   * (那是 textarea 為了換行才要的)。
+   * 理由是**同類比較**,不是多數:全 repo 有 30 個檔判 `key === "Enter"`,
+   * 只有 4 個擋組字 —— 所以「大家都擋了」是錯的說法(review 第二輪自己更正了這點,
+   * 而我第一版的註解照抄了那個錯,一併改掉)。
+   * 真正同類的是「自由輸入的中文長句、Enter 即送出」,那一類在本 repo 只有
+   * `src/components/chat/chat_input.tsx` 與 `ai_consultation_room/comment_post_input.tsx`,
+   * **兩個都擋了**。其餘 20 多個是分頁、篩選、數字欄位、彈窗確認 ——
+   * 那些欄位裡按 Enter 選字的代價接近零,沒擋不代表慣例是不擋。
+   *
+   * 兄弟元件那兩樣**刻意沒照抄**,理由各自具體:
+   * - `!e.shiftKey`:那是 textarea 為了 Shift+Enter 換行才要的;本元件是單行
+   *   `<input type="text">`,沒有換行可插入。
+   * - `e.preventDefault()`:它在 textarea 是為了阻止換行字元落進值裡;
+   *   本元件不在任何 `<form>` 內(已確認),Enter 沒有預設行為可阻止 ——
+   *   照抄只會多一行「看起來對稱但無作用」的程式碼。
    */
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.nativeEvent.isComposing) return;
