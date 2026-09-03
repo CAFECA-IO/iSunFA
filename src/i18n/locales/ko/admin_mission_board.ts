@@ -78,7 +78,7 @@ export const adminMissionBoard = {
       framework_inventory_only: "산정 보고서만",
       framework_ifrs: "{{name}} 구조로 구성",
       framework_hint:
-        "선택하면 보고서에 「{{alignment}}」와 필수 「{{disclaimer}}」가 인쇄됩니다. 이는 문서 구조에 관한 진술이며, 기업 수준의 준수 선언이 아닙니다",
+        "선택하면 초안이 {{name}} 구조에 맞춰 작성됩니다. 이는 문서 구조에 관한 진술이며 기업 수준의 준수 선언이 아닙니다 \u2014 후자는 적용 시기와 무관하게 보고서에 나타날 수 없습니다",
       unfilled: "미기입",
       name_suffix: "온실가스 배출량 산정 보고서",
       hint: "검증 기관은 보고서 내용에서 도출할 수 없어 직접 입력해야 합니다",

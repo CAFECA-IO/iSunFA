@@ -28,8 +28,6 @@ import {
 } from "@/lib/utils/carbon_report_identity";
 import {
   CarbonDisclosureFrameworkEnum,
-  FRAMEWORK_ALIGNMENT_PHRASE,
-  FRAMEWORK_DISCLAIMER_PHRASE,
   FRAMEWORK_DISCLOSURE_LABEL,
 } from "@/constants/carbon_report_framework";
 
@@ -165,18 +163,24 @@ export function ReportIdentityFields({
             「本公司符合 IFRS」—— 後者是金管會適用時程未到就宣告的紅線。
             理由見 constants/carbon_report_framework.ts 的檔頭。
           */}
+          {/*
+            Info: (20260903 - Emily) 這句提示**刻意不引用**那兩句原文
+            (架構對齊聲明與免責句),因為今天沒有任何地方把它們印出來:
+            `carbon_framework_view.ts` 的 `shellClaims` 組出來之後**零消費端**
+            (2026-09-03 實測:那兩句的字面字串在 src/ 與 documents/ 只有常數定義與測試)。
+            第一版寫成「報告上會印『…』與『…』」,那是一個沒有兌現的承諾 ——
+            使用者同意的內容與紙面不一致,而那正是這一格存在要防的事。
+
+            現在說的是**今天為真**的部分:選了之後草稿依該架構撰寫
+            (`paragraph_draft.service.ts` 的角色句與 guidance 確實會換),
+            以及那條界線本身(架構對齊 ≠ 企業合規宣告)。
+
+            #6688-C 把伺服端的印出點做出來之後,這句才該回頭引用
+            `FRAMEWORK_ALIGNMENT_PHRASE` / `FRAMEWORK_DISCLAIMER_PHRASE`
+            —— 引用的理由是「提示與紙面必須是同一份字串」,而那個理由要等紙面存在才成立。
+          */}
           <span className="text-[11px] leading-snug text-gray-500">
-            {/*
-              Info: (20260903 - Emily) 兩句話從 constants 插值進來,不寫在語系檔裡。
-              兩個理由:一是那兩句是**要印在報告上的原文**,提示與紙面必須是同一份字串
-              (否則使用者同意的與印出來的可能不一樣);二是把它們抄進語系檔會踩到
-              `carbon_report_outline.test.ts` 那道掃描,而那道掃描是對的 ——
-              宣告要有唯一的出處,語系檔不是那個出處。
-            */}
-            {t(`${base}.framework_hint`, {
-              alignment: FRAMEWORK_ALIGNMENT_PHRASE,
-              disclaimer: FRAMEWORK_DISCLAIMER_PHRASE,
-            })}
+            {t(`${base}.framework_hint`, { name: FRAMEWORK_DISCLOSURE_LABEL })}
           </span>
         </label>
       )}

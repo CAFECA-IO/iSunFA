@@ -78,7 +78,7 @@ export const adminMissionBoard = {
       framework_inventory_only: "Inventory report only",
       framework_ifrs: "Structured to {{name}}",
       framework_hint:
-        "The report will print \u201c{{alignment}}\u201d together with its mandatory \u201c{{disclaimer}}\u201d. That is a statement about the document\u2019s structure, not an entity-level compliance claim",
+        "Drafts will then be written to the {{name}} structure. That is a statement about document structure, not an entity-level compliance claim \u2014 the latter must never appear in the report, whatever the phase-in date",
       unfilled: "Not filled in",
       name_suffix: "GHG Inventory Report",
       hint: "The verifier cannot be derived from the report content and must be entered",

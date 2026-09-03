@@ -79,7 +79,7 @@ export const adminMissionBoard = {
       framework_inventory_only: "算定報告書のみ",
       framework_ifrs: "{{name}} の構成に合わせる",
       framework_hint:
-        "選択すると報告書に「{{alignment}}」と必須の「{{disclaimer}}」が印字されます。これは文書構成に関する記述であり、企業レベルの準拠宣言ではありません",
+        "選択すると、草案は {{name}} の構成に沿って作成されます。これは文書構成に関する記述であり、企業レベルの準拠宣言ではありません \u2014 後者は適用時期にかかわらず報告書に記載できません",
       unfilled: "未記入",
       name_suffix: "温室効果ガス算定報告書",
       hint: "検証機関は報告内容から導出できないため、手入力が必要です",
