@@ -6,6 +6,10 @@ import { CarbonReportDraftPutSchema } from "@/validators/carbon_report_storage";
 import { CarbonActivityRecordSchema } from "@/validators/carbon_inventory";
 import { CarbonSourceTableSchema } from "@/validators/carbon_source_table";
 import { CARBON_PENDING_IMPORT_STORAGE_VERSION } from "@/constants/carbon_chatbot";
+import {
+  INVENTORY_YEAR_MIN,
+  INVENTORY_YEAR_STORAGE_MAX,
+} from "@/constants/carbon_chatbot";
 
 // Info: (20260806 - Tzuhan) PUT 封裝與報告草稿完全同形(envelope / plainContent 擇一 + 樂觀鎖),共用 schema
 export const CarbonPendingImportPutSchema = CarbonReportDraftPutSchema;
@@ -89,7 +93,12 @@ export const CarbonPendingImportDataSchema = z.object({
      *(那會讓舊紀錄在某一天忽然讀不出來)。收窄到「今年 + 1」的裁決在
      * `normalizeInventoryYear`,那是萃取端的事。
      */
-    inventoryYear: z.number().int().min(1990).max(2100).optional(),
+    inventoryYear: z
+      .number()
+      .int()
+      .min(INVENTORY_YEAR_MIN)
+      .max(INVENTORY_YEAR_STORAGE_MAX)
+      .optional(),
     failedChapters: z
       .array(
         z.object({

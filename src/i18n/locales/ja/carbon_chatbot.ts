@@ -191,6 +191,8 @@ export const carbonChatbot = {
     "この報告書の算定年度(西暦)。年度をまたぐインポートで、どの仕訳がどの年度に属するかの判定に使います",
   import_inventory_year_required:
     "今回のインポートには排出量合計表が含まれます。この報告書の算定年度を入力してください",
+  import_inventory_year_invalid:
+    "算定年度は西暦4桁(1990年〜翌年)で入力してください。範囲外の年度は次回の読み込み時に台帳が復元できなくなります",
   import_reset_note:
     "インポートした段落の検証状態はリセットされます。{{activities}} 件の活動データは再照合されます",
   import_apply: "選択をインポート({{count}})",

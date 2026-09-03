@@ -189,6 +189,8 @@ export const carbonChatbot = {
     "이 보고서의 산정 연도(서기). 연도가 다른 가져오기에서 어느 분개가 어느 연도에 속하는지 구분하는 데 사용됩니다",
   import_inventory_year_required:
     "이번 가져오기에는 배출 총량표가 포함됩니다. 이 보고서의 산정 연도를 입력하세요",
+  import_inventory_year_invalid:
+    "산정 연도는 서기 네 자리(1990년~내년)로 입력하세요. 범위를 벗어난 연도는 다음 로드 시 원장을 복원할 수 없게 만듭니다",
   import_reset_note:
     "가져온 단락의 검증 상태는 초기화됩니다. 활동 데이터 {{activities}}건은 재대사됩니다",
   import_apply: "선택 항목 가져오기({{count}})",
