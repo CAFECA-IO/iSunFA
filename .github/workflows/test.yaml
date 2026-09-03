@@ -24,6 +24,11 @@ jobs:
     runs-on: ubuntu-latest
     # Docker Hub image that `container-job` executes in
     container: node:22-slim
+    env:
+      # Info: (20260901 - Luphia) 只在本 job 生效（review 四輪低-3）：設在 workflow
+      # 層級會讓日後新增的 job 一律繼承，而那些 job 不會裝 chromium——症狀是
+      # 「puppeteer 指著一個不存在的路徑」。
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
 
     # Service containers to run with `container-job`
     services:
@@ -44,6 +49,20 @@ jobs:
     steps:
       - name: Set up openssl
         run: apt-get update -y && apt-get install -y openssl
+
+      # Info: (20260901 - Luphia) header 版面測試（header_layout_320.test.ts）要在
+      # 真的 Chromium 裡量 320px 的 scrollWidth（review #6731 三輪中-1）。
+      # 本 job 的容器是 node:22-slim 且 PUPPETEER_SKIP_DOWNLOAD=true，原本沒有任何
+      # 瀏覽器——沒有這一步，那條測試在 CI 是行程層級的 fail-open。
+      # fonts-noto-cjk 不是裝飾：CJK 字寬正是那個缺陷的成因（中文逐字可斷），
+      # 沒有 CJK 字型量出來的「登入」寬度是錯的。
+      - name: Set up Chromium for layout tests
+        # Info: (20260901 - Luphia) 自帶 update（review 四輪低-2／五輪低-3）：
+        # 不隱含依賴前一步跑過 apt-get update——步驟被重排或前一步被移除時，
+        # 症狀會是「Unable to locate package chromium」，看起來像套件的問題。
+        # 四輪聲稱修了這一條，實際上那次編輯被腳本的例外吃掉、檔案沒寫入——
+        # 這次改完直接 grep 驗檔。
+        run: apt-get update -y && apt-get install -y --no-install-recommends chromium fonts-noto-cjk
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v4

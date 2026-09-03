@@ -1269,6 +1269,30 @@ export const API_ERRORS = {
     message: "Resumable job is already completed",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+  /**
+   * Info: (20260827 - Luphia) 另一個地方正在跑同一個任務（issue #6721）。
+   *
+   * 與 `TW_JOB_ALREADY_COMPLETED` 分開：那個是「沒有東西可以做了」，
+   * 這個是「等一下再來」——前者要收起按鈕，後者要留著。
+   * 用 CONFLICT 而不是 VALIDATION_ERROR：請求本身沒有錯，是時機衝突。
+   */
+  TW_JOB_ALREADY_RUNNING: {
+    code: "TW000032",
+    message: "Resumable job is already running elsewhere",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+  /**
+   * Info: (20260828 - Luphia) 這個任務已經被使用者放棄了（issue #6714、
+   * review #6726 高-1）。
+   *
+   * 與 `TW_JOB_ALREADY_COMPLETED` 分開：那個是「沒有東西可做了」，這個是
+   * 「你自己說不做的」。後者若顯示成前者，使用者會以為系統把它跑完了。
+   */
+  TW_JOB_CANCELLED: {
+    code: "TW000033",
+    message: "Resumable job has been cancelled",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
   TW_ALLOCATION_REVOKE_DISABLED: {
     code: "TW000020",
     message: "Revoking allocated credits is no longer supported",
@@ -2147,5 +2171,52 @@ export const API_ERRORS = {
     code: "FO000011",
     message: "This action is limited to department managers",
     status: ApiCode.FORBIDDEN,
+  } as IErrorDef,
+
+  // Info: (20260831 - Julian) ===== 薪資計算機 =====
+
+  /**
+   * Info: (20260831 - Julian) 這個帳本裡沒有這位（薪資計算機的）員工。
+   *
+   * 「員工不存在」與「員工屬於別的帳本」回同一個錯誤是刻意的：
+   * 分開會讓呼叫端有辦法問出「這個 id 在別的帳本存不存在」，
+   * 而那是跨租戶的資訊洩漏（同 `resolveEmployee` 一律回 404 的理由）。
+   */
+  NF_SALARY_CALCULATOR_EMPLOYEE: {
+    code: "NF000029",
+    message: "Salary calculator employee not found in this account book",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  NF_SALARY_RECORD: {
+    code: "NF000030",
+    message: "Salary record not found in this account book",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260831 - Julian) 這個員工編號在本帳本已經有存活中的員工在用。
+   *
+   * 丟具名錯誤而不是讓 P2002 冒出去：編號重複是使用者的輸入問題，
+   * 而原始的 Prisma 錯誤讀起來像故障（coding_guidelines §5.2）。
+   */
+  CF_SALARY_EMPLOYEE_NUMBER_TAKEN: {
+    code: "CF000014",
+    message:
+      "That employee number is already used by an employee in this account book",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260831 - Julian) 要落地成 BigInt 的金額不是整數。
+   *
+   * 計算引擎對外的金額都經過 Math.round，但那是引擎的內部承諾。
+   * 非整數代表引擎改了而落地這一側沒跟上 —— 讓它在寫入前就爆，
+   * 不要靜默 truncate 出一筆對不起來的薪資（CLAUDE.md §6 Fail Fast）。
+   */
+  VA_SALARY_AMOUNT_NOT_INTEGER: {
+    code: "VA000083",
+    message: "Salary amount must be a whole number",
+    status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
 };

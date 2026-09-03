@@ -211,6 +211,22 @@ describe("runBilledCarbonTask", () => {
     ).rejects.toMatchObject({ data: { orderId: "order-1", cost: 6 } });
     expect(run).not.toHaveBeenCalled();
     expect(spendCredits).not.toHaveBeenCalled();
+
+    /**
+     * Info: (20260902 - Julian) `resourceKey` 要真的傳下去（review R3 的 A7）。
+     *
+     * 這是「付款 → 釋放任務」那條鏈的**第一節**，而它先前零守門：
+     * 這一檔只 mock 了 `ensurePersonalCreditCharge` 的回傳、從不看傳進去的參數。
+     * reviewer 實跑過那個 mutation：刪掉 `resourceKey: channel ?? null` 這一行
+     * → 訂單不帶 `resourceKey` → `resourceKeyOfOrderData` 恆回 null
+     * → 釋放恆回 0 → **5253 條全綠**。
+     *
+     * 唯一的觀測量是一行 `paid order carries no resource key` 的 log，
+     * 而它與常態（付的是一則對話）長得一模一樣，分不出來。
+     */
+    expect(ensurePersonalCreditCharge).toHaveBeenCalledWith(
+      expect.objectContaining({ resourceKey: BASE_PARAMS.channel }),
+    );
   });
 
   /**

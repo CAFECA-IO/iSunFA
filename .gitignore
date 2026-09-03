@@ -53,6 +53,18 @@ next-env.d.ts
 /cache
 /typechain-types
 
+# Info: (20260825 - Julian) foundry (forge build) 的編譯輸出：ABI 與 bytecode JSON。
+# 與上面三個 hardhat 產物同一類 —— 每次 `forge build` 都會重寫，沒有任何
+# src 或 scripts 引用它（實測 grep 零命中），而它一旦進版控就會在每個 PR 裡
+# 冒出幾萬行 diff 稀釋 review 表面。
+/forge_out
+# Info: (20260826 - Julian) forge 的**編譯快取**，與 /forge_out 同一次產生（review 版控衛生）。
+# 上一輪只擋了輸出、漏了快取 —— 於是 `forge_cache/solidity-files-cache.json`
+# （4,476 行、內容是絕對路徑與檔案雜湊）照樣進了版控，而 develop 側零命中。
+# 「同一類 build artifact」要一次擋完：漏掉的那一個不會有人發現，
+# 它只是每次 build 之後安靜地出現在 `git status` 裡，然後被 `git add .` 收走。
+/forge_cache
+
 # lock files
 package-lock.json
 yarn.lock

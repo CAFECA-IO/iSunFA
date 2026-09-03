@@ -29,7 +29,7 @@ import { LEAVE_POLICY_CODE } from "@/constants/leave_policy";
  *
  * 這些檔案的註解密度很高，而註解裡**必須**寫得出 `code`、`ANNUAL` 這些字
  * （上面這段就是）。正則掃描要先去註解，而去註解本身是一個會出錯的小剖析器
- * （`attendance_i18n_keys.test.ts` 的檔頭記著它踩過的那次：測試拿自己的
+ * （`i18n_keys.test.ts` 的檔頭記著它踩過的那次：測試拿自己的
  * 檔頭註解當違規來源）。AST 根本看不到註解，這裡不必付那個代價。
  */
 

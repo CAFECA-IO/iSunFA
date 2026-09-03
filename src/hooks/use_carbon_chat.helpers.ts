@@ -4,10 +4,20 @@
 import { ApiError as RequestApiError } from "@/lib/utils/request";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
+  JOB_CLAIM_DENIAL,
   JOB_PAUSE_REASON,
+  type JobClaimDenial,
   type JobPauseReason,
 } from "@/constants/resumable_job";
 import { type IImportUnit } from "@/lib/carbon_page_slice";
+import type { ICreditPauseDetail } from "@/constants/carbon_chatbot";
+import {
+  parseQuotaExceededError,
+  resolveQuotaResetAt,
+} from "@/lib/quota/quota_notice";
+import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
+import { CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH } from "@/constants/carbon_source_tables";
+import type { IActivityRecord } from "@/types/carbon_chatbot.types";
 
 // Info: (20260714 - Tzuhan) 判斷 API 失敗是否為 AI 額度耗盡(IS000011),前端提示稍候重試
 export const isQuotaApiError = (error: unknown): boolean => {
@@ -32,6 +42,21 @@ export const isQuotaApiError = (error: unknown): boolean => {
  *
  * 回傳暫停原因而不是布林：兩種點數不足的出路不同（一個是等額度／加購，
  * 一個是要簽章付款），而畫面要說得出使用者接下來能做什麼。
+ */
+/**
+ * Info: (20260828 - Julian) **尚未做**：把 402 的 payload 一起帶下來
+ *（計劃 `resumable_job_resume_landing_and_copy.md` §4）。
+ *
+ * 這支現在只取 `errorCode`，其餘整包丟掉。而伺服器那邊事實是齊的：
+ * `buildQuotaExceededPayload` 回的 402 帶著 `exceeded`（哪個視窗先卡）、
+ * 兩個視窗各自的 `limit`/`used`/`resetAt`、以及 `exceedsWindowLimit`
+ *（單筆金額就超過方案上限時，**等重置永遠不會好**）。
+ *
+ * 少了它，三種處置完全不同的情況在畫面上是同一句「點數已用完」：
+ * 今天的額度用完（等幾小時）、本週用完（等到重置日）、單筆超過上限（只能升級）。
+ *
+ * 改法是回傳 `{ reason, quota }` 而不是只回 `reason`。
+ * **不要另寫一支解析函式**：同一個錯誤被解析兩次，兩次的判準遲早分岔。
  */
 export const resolveCreditPauseReason = (
   error: unknown,
@@ -433,4 +458,178 @@ export const summarisePausedUnits = (params: {
     title: params.resolveTitle(chapterId),
   }));
   return { pausedUnits, pausedChapters };
+};
+
+/**
+ * Info: (20260827 - Luphia) 把逐章／逐份回來的結果摺成一份（issue #6723）。
+ *
+ * 抽出來的理由不是重用，是**只能有一份**：中途存檔與最後存檔如果各自組一次，
+ * 兩者遲早給出不一樣的形狀，而接續的程式會看到兩種資料。原本這段邏輯寫在
+ * 迴圈之後的行內，於是「中途存檔」這件事根本沒有地方可以接。
+ *
+ * 三個累積各有一個踩過的坑，都在下方的註解裡——它們是這支函式存在的真正代價。
+ */
+export interface IImportChunkLike {
+  segments: {
+    paragraphId: string;
+    title: string;
+    content: string;
+    sourceTables?: ICarbonSourceTable[];
+  }[];
+  unmapped: string[];
+  activities?: IActivityRecord[];
+}
+
+export interface IFoldedImportChunks {
+  segments: {
+    paragraphId: string;
+    title: string;
+    content: string;
+    sourceTables: ICarbonSourceTable[];
+  }[];
+  unmapped: string[];
+  activities: IActivityRecord[];
+}
+
+/**
+ * Info: (20260827 - Luphia) 一次檢查點的內容（issue #6723）。
+ *
+ * 與暫停時寫下的那一份**形狀相同**——接續的程式只認得一種資料，
+ * 而「中斷」與「暫停」的差別只在 `pauseReason` 有沒有值。
+ */
+export interface IImportCheckpoint extends IFoldedImportChunks {
+  remainingUnits: IImportUnit[];
+  pausedChapters: { id: string; title: string }[];
+  totalUnits: number;
+}
+
+export const foldImportChunks = (
+  results: readonly (IImportChunkLike | null)[],
+): IFoldedImportChunks => {
+  const segmentsById = new Map<
+    string,
+    { title: string; parts: string[]; sourceTables: ICarbonSourceTable[] }
+  >();
+  const unmapped: string[] = [];
+  let activities: IActivityRecord[] = [];
+
+  results.forEach((chunk) => {
+    if (!chunk) return;
+    chunk.segments.forEach((segment) => {
+      const bucket = segmentsById.get(segment.paragraphId) ?? {
+        title: segment.title,
+        parts: [],
+        sourceTables: [],
+      };
+      bucket.parts.push(segment.content);
+      /**
+       * Info: (20260803 - Tzuhan) 表格隨敘述一起累積。以表號去重:
+       * 同一節的內容可能被切成多段回來,同一張表因此可能重複出現,
+       * 而重複的表在報告上是兩張一樣的表 —— 讀者無從判斷哪張才是原文。
+       */
+      (segment.sourceTables ?? []).forEach((table) => {
+        if (bucket.sourceTables.some((kept) => kept.tableNo === table.tableNo))
+          return;
+        if (bucket.sourceTables.length >= CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH)
+          return;
+        bucket.sourceTables.push(table);
+      });
+      segmentsById.set(segment.paragraphId, bucket);
+    });
+    unmapped.push(...chunk.unmapped);
+    /**
+     * Info: (20260817 - Emily) 累加而不是覆蓋
+     * (`data/issue_drafts/open/46_activity_data_traceability.md`)。
+     *
+     * 原本是 `activities = chunk.activities` —— 賦值。
+     * 排放章(ch3)六節會被切成兩個工作單元,兩次呼叫各自回一份,
+     * **後回來的那份整批蓋掉前一份**。就算兩次都抽到,也只留下一半,
+     * 而現場看到的只是一個偏低的數字,沒有任何跡象顯示發生過覆蓋。
+     */
+    if (chunk.activities && chunk.activities.length > 0) {
+      activities = [...activities, ...chunk.activities];
+    }
+  });
+
+  return {
+    segments: Array.from(segmentsById.entries()).map(
+      ([paragraphId, bucket]) => ({
+        paragraphId,
+        title: bucket.title,
+        content: bucket.parts.join("\n\n").trim(),
+        sourceTables: bucket.sourceTables,
+      }),
+    ),
+    unmapped,
+    activities,
+  };
+};
+
+/**
+ * Info: (20260901 - Luphia) 換許可失敗時，伺服器的判決是什麼（review #6726 阻-1）。
+ *
+ * **純函式**，不碰網路也不碰 React——判斷收斂在這裡，hook 只負責呼叫它
+ *（同一份 review 的「觀察」：判斷抽成純函式，掃描測試降級為「元件真的呼叫了
+ * 這支函式」）。四種判決的處置寫在 `JOB_CLAIM_DENIAL` 的註解。
+ *
+ * 回 `null` 表示「這不是一個判決」——網路斷、伺服器自己壞掉、或一個這一版
+ * 前端不認得的錯誤碼。呼叫端對 `null` 放行（fail-open）：這把鎖是為了省錢，
+ * 不是為了在它自己壞掉時把功能一起關掉。**認不得的錯誤碼也放行**與這個
+ * 立場一致：新的拒絕理由要先教會這裡，否則它的處置只能是「當作鎖壞了」。
+ */
+export const resolveJobClaimDenial = (
+  error: unknown,
+): JobClaimDenial | null => {
+  if (!(error instanceof RequestApiError)) return null;
+  const data = error.data as { errorCode?: string } | undefined;
+  switch (data?.errorCode) {
+    case API_ERRORS.TW_JOB_ALREADY_RUNNING.code:
+      return JOB_CLAIM_DENIAL.BUSY;
+    case API_ERRORS.TW_JOB_CANCELLED.code:
+      return JOB_CLAIM_DENIAL.CANCELLED;
+    case API_ERRORS.TW_JOB_ALREADY_COMPLETED.code:
+      return JOB_CLAIM_DENIAL.COMPLETED;
+    case API_ERRORS.AUTH_PERMISSION_DENIED.code:
+      return JOB_CLAIM_DENIAL.FORBIDDEN;
+    default:
+      return null;
+  }
+};
+
+/**
+ * Info: (20260827 - Luphia) 「另一個地方正在跑同一個任務」（issue #6721）。
+ *
+ * 與其他失敗分開的理由與 `resolveCreditPauseReason` 相同：處置不一樣。
+ * 這一種**不要**收起按鈕、不要叫使用者去補點數——等一下再按就好。
+ * 落到通用失敗那條路的話，畫面會說「匯入失敗」，而什麼都沒有壞。
+ * Info: (20260901 - Luphia) 改為建立在 `resolveJobClaimDenial` 之上：
+ * 兩份判準分岔的話，「busy」在兩個呼叫端會是兩種東西。
+ */
+export const isJobBusyError = (error: unknown): boolean =>
+  resolveJobClaimDenial(error) === JOB_CLAIM_DENIAL.BUSY;
+
+/**
+ * Info: (20260827 - Luphia) 從 402 取出「接下來能做什麼」（issue #6714）。
+ *
+ * 伺服器已經算好了，這裡只負責搬——**不重算**。前端自己推導出路的話，
+ * 它與扣款端遲早分岔，而分岔的症狀是畫面很有說服力地指錯方向
+ *（檢查表 §1.10）。
+ *
+ * 取不到就回 null（例如需要簽章付款那種 402，它沒有額度視窗可談）：
+ * 呼叫端據此退回「只說原因、不說出路」，而不是顯示一個空的出路清單。
+ */
+export const extractCreditPauseDetail = (
+  error: unknown,
+): ICreditPauseDetail | null => {
+  const payload = parseQuotaExceededError(error);
+  if (!payload) return null;
+  return {
+    /**
+     * Info: (20260827 - Luphia) 超過視窗上限時**不給** resetAt：等重置永遠不會好，
+     * 而一個倒數本身就是「等一下就能用」的承諾。
+     */
+    resetAt: payload.exceedsWindowLimit ? null : resolveQuotaResetAt(payload),
+    options: [...payload.options],
+    exceedsWindowLimit: payload.exceedsWindowLimit,
+  };
 };

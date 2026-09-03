@@ -1,16 +1,26 @@
 import { describe, it, expect } from "@jest/globals";
 import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
-import { hrManagement as en } from "@/i18n/locales/en/hr_management";
-import { hrManagement as ja } from "@/i18n/locales/ja/hr_management";
-import { hrManagement as ko } from "@/i18n/locales/ko/hr_management";
-import { hrManagement as zhCn } from "@/i18n/locales/zh_cn/hr_management";
-import { hrManagement as zhTw } from "@/i18n/locales/zh_tw/hr_management";
+import { hrManagement as hrEn } from "@/i18n/locales/en/hr_management";
+import { hrManagement as hrJa } from "@/i18n/locales/ja/hr_management";
+import { hrManagement as hrKo } from "@/i18n/locales/ko/hr_management";
+import { hrManagement as hrZhCn } from "@/i18n/locales/zh_cn/hr_management";
+import { hrManagement as hrZhTw } from "@/i18n/locales/zh_tw/hr_management";
+import { calculator as calcEn } from "@/i18n/locales/en/calculator";
+import { calculator as calcJa } from "@/i18n/locales/ja/calculator";
+import { calculator as calcKo } from "@/i18n/locales/ko/calculator";
+import { calculator as calcZhCn } from "@/i18n/locales/zh_cn/calculator";
+import { calculator as calcZhTw } from "@/i18n/locales/zh_tw/calculator";
 import {
   WorkDayType,
   WORK_DAY_TYPE_SHORT_I18N_KEY,
 } from "@/constants/attendance";
 import { ATTENDANCE_SUMMARY_COLUMNS } from "@/lib/utils/attendance_result_view";
+import { PayrollDaysBase } from "@/constants/salary_calculator";
+import {
+  EmploymentType,
+  TaxResidencyStatus,
+} from "@/interfaces/salary_calculator";
 
 /**
  * Info: (20260814 - Julian) 常數裡的 i18n 路徑必須真的存在。
@@ -43,18 +53,58 @@ import { ATTENDANCE_SUMMARY_COLUMNS } from "@/lib/utils/attendance_result_view";
  * 做法比照 `theme_css_blocks.test.ts` 的 `stripComments`，成因與代價相同。
  *
  * 實測代價：全 `src` 掃出 768 個鍵，去註解後 767 個 —— 少的正是上面那一個。
+ *
+ * Info: (20260901 - Julian) 命名空間從一個變成一張表（檔名同時從
+ * `attendance_i18n_keys.test.ts` 改成 `i18n_keys.test.ts`）。
+ *
+ * 上一版的 regex 把 `hr_management\.` 寫死在裡面 —— 掃描根是整個 `src` 沒錯，
+ * 但**問的問題**只涵蓋一個命名空間。這是 §1.1 在字典側的化身：
+ * 涵蓋範圍看起來是「全專案」，實際上是「剛好壞過的那個模組」。
+ *
+ * 代價實測：把 `calculator` 加進表裡，立刻抓到 9 個既有壞鍵
+ * （`resending_pay_slip_modal.tsx` 的 8 個 `calculator.MESSAGE.RESEND_*` ——
+ * 那是還沒改成 snake_case 之前的舊鍵，加上 `pay_slip_sent_tab.tsx` 的
+ * `payslip_issued_date`（字典裡是 `pay_slip_issued_date`））。
+ * 使用者打開「我的薪資單 → 已寄出 → 重寄」時，畫面直接顯示
+ * `calculator.MESSAGE.RESEND_PAY_SLIP_TITLE` 這串字，沒有任何 console 警告。
+ *
+ * 新增命名空間的成本是 `NAMESPACES` 加一列；沒有一列是「以後再說」，
+ * 因為加進來會立刻紅並要求把該模組的壞鍵補齊 —— 這正是這支測試的用途。
  */
 
 const SRC_DIR = join(process.cwd(), "src");
 const LOCALES_SEGMENT = join("i18n", "locales");
 
-const DICTIONARIES: Record<string, Record<string, unknown>> = {
-  en,
-  ja,
-  ko,
-  zh_cn: zhCn,
-  zh_tw: zhTw,
+/**
+ * Info: (20260901 - Julian) 受守護的命名空間 → 五個語系的字典。
+ *
+ * 鍵名必須與 i18n 路徑的第一段完全相同（`hr_management.x.y` 的 `hr_management`），
+ * 下面的 regex 直接由這張表的鍵組出來，不另外寫一份。
+ */
+const NAMESPACES: Record<string, Record<string, Record<string, unknown>>> = {
+  hr_management: {
+    en: hrEn,
+    ja: hrJa,
+    ko: hrKo,
+    zh_cn: hrZhCn,
+    zh_tw: hrZhTw,
+  },
+  calculator: {
+    en: calcEn,
+    ja: calcJa,
+    ko: calcKo,
+    zh_cn: calcZhCn,
+    zh_tw: calcZhTw,
+  },
 };
+
+const LANGUAGES = ["en", "ja", "ko", "zh_cn", "zh_tw"] as const;
+
+// Info: (20260901 - Julian) `hr_management|calculator` —— 由上表組出來，不會兩邊不同步
+const NAMESPACE_ALTERNATION = Object.keys(NAMESPACES).join("|");
+
+const dictionariesOf = (path: string): Record<string, Record<string, unknown>> =>
+  NAMESPACES[path.split(".")[0]];
 
 /**
  * Info: (20260817 - Luphia) 動態組出來的鍵：掃描器看得到樣板但看不到值域，
@@ -63,11 +113,48 @@ const DICTIONARIES: Record<string, Record<string, unknown>> = {
  * 登記表與掃描結果必須完全一致（見「樣板鍵都已登記」那條）——
  * 新增一個動態鍵而不登記就會紅，否則掃描器會靜靜略過它，
  * 而那正是「看起來掃過了」最貴的一種假綠。
+ *
+ * Info: (20260901 - Julian) 這張表**自己也在掃描根裡**（`src/__tests__` 也是 `src`）。
+ * 所以右邊展開用的樣板必須與左邊的鍵**逐字相同**，連 lambda 參數名都要一樣 ——
+ * 用 `(value) => ...payroll_option_${value.toLowerCase()}` 去展開
+ * `...payroll_option_${option.toLowerCase()}`，掃描器會把它當成第五個未登記的樣板鍵而紅。
+ * 也不要改用字串相接：`"calculator.basic_info_form.payroll_option_"` 會被當成一個
+ * 靜態鍵掃走，然後抱怨字典裡沒有這個以底線結尾的鍵。
  */
 const DYNAMIC_KEY_EXPANSIONS: Record<string, string[]> = {
   "hr_management.attendance_result.col_${column.key}":
     ATTENDANCE_SUMMARY_COLUMNS.map(
       (column) => `hr_management.attendance_result.col_${column.key}`,
+    ),
+
+  /**
+   * Info: (20260901 - Julian) 計算機的四張單選／下拉，值域全部來自 enum。
+   *
+   * 注意兩種取法不同、而且都要照著登記：
+   * 僱用型態與稅務居民身分用的是 enum 的**鍵**（`FULL_TIME` → `full_time`），
+   * 給薪天數基準用的是 enum 的**值**（`PayrollDaysBase.FIXED === "FIXED"` → `fixed`）。
+   * 哪天有人把 enum 的鍵值改成不一樣的字，這裡展開出來的鍵就會對不上字典而紅。
+   */
+  "calculator.basic_info_form.${type.toLowerCase()}": Object.keys(
+    EmploymentType,
+  ).map((type) => `calculator.basic_info_form.${type.toLowerCase()}`),
+
+  "calculator.basic_info_form.residency_option_${type.toLowerCase()}":
+    Object.keys(TaxResidencyStatus).map(
+      (type) =>
+        `calculator.basic_info_form.residency_option_${type.toLowerCase()}`,
+    ),
+
+  "calculator.basic_info_form.payroll_option_${payrollDaysBase.toLowerCase()}":
+    Object.values(PayrollDaysBase).map(
+      (payrollDaysBase) =>
+        `calculator.basic_info_form.payroll_option_${payrollDaysBase.toLowerCase()}`,
+    ),
+
+  "calculator.basic_info_form.payroll_option_${option.toLowerCase()}":
+    Object.values(PayrollDaysBase).map(
+      (option) =>
+        `calculator.basic_info_form.payroll_option_${option.toLowerCase()}`,
     ),
 };
 
@@ -82,6 +169,20 @@ const DYNAMIC_KEY_EXPANSIONS: Record<string, string[]> = {
  */
 const INTENTIONALLY_EMPTY: Record<string, string[]> = {
   "hr_management.organization.unit_department": ["en"],
+
+  /**
+   * Info: (20260901 - Julian) 「到職日 On 8/15」的那個介係詞。
+   *
+   * 英文需要 "On"，中日韓的語序把日期直接接在標籤後面，沒有對應的詞 ——
+   * 硬填一個字會變成「到職日 於 8/15」這種沒人這樣寫的句子。
+   * 四個語系目前是一個半形空白（作為與日期之間的間隔），`trim()` 後為空。
+   */
+  "calculator.basic_info_form.joined_this_month_2": [
+    "ja",
+    "ko",
+    "zh_cn",
+    "zh_tw",
+  ],
 };
 
 const listSourceFiles = (dir: string): string[] =>
@@ -97,9 +198,15 @@ const listSourceFiles = (dir: string): string[] =>
 const SOURCE_FILES = listSourceFiles(SRC_DIR);
 
 // Info: (20260817 - Luphia) 引號或反引號包住、且不含 `${` 的完整鍵
-const STATIC_KEY_RE = /["'`](hr_management\.[A-Za-z0-9_.]+)["'`]/g;
+const STATIC_KEY_RE = new RegExp(
+  `["'\`]((?:${NAMESPACE_ALTERNATION})\\.[A-Za-z0-9_.]+)["'\`]`,
+  "g",
+);
 // Info: (20260817 - Luphia) 反引號且含 `${`：值域在程式碼裡，只能靠登記表
-const DYNAMIC_KEY_RE = /`(hr_management\.[^`]*\$\{[^`]*)`/g;
+const DYNAMIC_KEY_RE = new RegExp(
+  `\`((?:${NAMESPACE_ALTERNATION})\\.[^\`]*\\$\\{[^\`]*)\``,
+  "g",
+);
 
 /**
  * Info: (20260817 - Luphia) 排除以 `.ts` / `.tsx` 結尾的比對結果 ——
@@ -156,7 +263,7 @@ const resolve = (dictionary: Record<string, unknown>, path: string): unknown =>
 const missingLocalesOf = (path: string): string[] => {
   const allowedEmpty = INTENTIONALLY_EMPTY[path] ?? [];
 
-  return Object.entries(DICTIONARIES)
+  return Object.entries(dictionariesOf(path))
     .filter(([language, dictionary]) => {
       const value = resolve(dictionary, path);
       if (typeof value !== "string") return true;
@@ -166,11 +273,24 @@ const missingLocalesOf = (path: string): string[] => {
     .map(([language]) => language);
 };
 
-describe("hr_management 的 i18n 路徑（掃描根＝整個 src）", () => {
+describe("受守護命名空間的 i18n 路徑（掃描根＝整個 src）", () => {
   // Info: (20260817 - Luphia) 掃描根沒有掃到空氣：檔案數與鍵數都必須不為零
   it("掃到了檔案與鍵", () => {
     expect(SOURCE_FILES.length).toBeGreaterThan(0);
     expect(STATIC_KEYS.length).toBeGreaterThan(0);
+  });
+
+  /**
+   * Info: (20260901 - Julian) 每一個登記的命名空間都真的掃到東西。
+   *
+   * 沒有這一條的話，命名空間名字打錯（`calc` 而不是 `calculator`）
+   * 只會讓那個命名空間一個鍵都掃不到 —— 而「零個違規」與「全部通過」
+   * 在輸出上長得一模一樣。這是登記表版本的「掃描根沒有掃到空氣」。
+   */
+  it.each(Object.keys(NAMESPACES))("%s 這個命名空間有掃到鍵", (namespace) => {
+    expect(
+      STATIC_KEYS.filter((key) => key.startsWith(`${namespace}.`)).length,
+    ).toBeGreaterThan(0);
   });
 
   /**
@@ -194,7 +314,7 @@ describe("hr_management 的 i18n 路徑（掃描根＝整個 src）", () => {
     const noLongerEmpty = Object.entries(INTENTIONALLY_EMPTY).flatMap(
       ([path, languages]) =>
         languages.flatMap((language) => {
-          const value = resolve(DICTIONARIES[language], path);
+          const value = resolve(dictionariesOf(path)[language], path);
           return typeof value === "string" && value.trim().length === 0
             ? []
             : [`${path} 的 ${language} 已不是空字串，請把它從例外清單移除`];
@@ -240,8 +360,8 @@ describe("hr_management 的 i18n 路徑（掃描根＝整個 src）", () => {
  * regular off 與 suspended 都想用 "S"。日型別從五種變六種，這條不需要改。
  */
 describe("排班月曆的日型別縮寫", () => {
-  it.each(Object.keys(DICTIONARIES))("%s 的日型別縮寫互不相同", (lang) => {
-    const dictionary = DICTIONARIES[lang];
+  it.each(LANGUAGES)("%s 的日型別縮寫互不相同", (lang) => {
+    const dictionary = NAMESPACES.hr_management[lang];
     const labels = Object.values(WorkDayType).map((dayType) =>
       resolve(dictionary, WORK_DAY_TYPE_SHORT_I18N_KEY[dayType]),
     );

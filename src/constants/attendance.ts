@@ -269,7 +269,7 @@ export const ATTENDANCE_FILTER_EXCEPTION_ONLY = "__EXCEPTION_ONLY__";
  * 那是同一種錯的第二次：韓文的「휴무일」（休息日）與「휴가」（請假）首字都是「휴」，
  * 兩種日型別會在格子上長得一模一樣，而畫面看起來完全正常。
  * 縮寫是每個語系各自的取捨，不是能從全名推導出來的東西（同班別簡稱的處置）。
- * 五語系各自互不相同由 `attendance_i18n_keys.test.ts` 保證。
+ * 五語系各自互不相同由 `i18n_keys.test.ts` 保證。
  */
 export const WORK_DAY_TYPE_SHORT_I18N_KEY: Record<WorkDayType, string> = {
   [WorkDayType.WORK]: "hr_management.attendance_result.day_type_short_work",

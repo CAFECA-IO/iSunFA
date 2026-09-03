@@ -56,6 +56,8 @@ model User {
   revokedInvitations    TeamInvitation[]       @relation("InvitationRevoker")
   // Info: (20260817 - Luphia) 費思長期記憶（一個團隊一份，見 FaithMemory）
   faithMemories         FaithMemory[]
+  // Info: (20260821 - Luphia) 小鈴鐺的事件型通知（ADR 021 補充）
+  notifications         Notification[]
   auditLogs             AuditLog[]
   vouchers              Voucher[]
   esgRecords            EsgRecord[]
@@ -71,6 +73,8 @@ model User {
   custodialKey          UserCustodialKey?
   // Info: (20260813 - Julian) 綁定的員工檔。員工要能自己打卡就必須從登入身分找回它
   employee              Employee?
+  // Info: (20260831 - Julian) 按下薪資計算機「儲存」的人
+  createdSalaryRecords  SalaryRecord[]
 
   @@index([address])
   @@map("user")
@@ -266,6 +270,11 @@ model TeamInvitation {
   /**
    * Info: (20260815 - Luphia) 錢包位址邀請的受邀者。email 邀請時為 null——
    * 對方還沒註冊，此時不存在位址（接受時才建立成員關係）。
+   *
+   * Info: (20260826 - Julian) 新列一律存 **EIP-55 checksum**（route 進門處
+   * `getAddress` 正規化，計畫書 D42）。本欄沒有 citext，Postgres 的 `=`
+   * 大小寫敏感，因此查詢一律走 `addressLookupForms`（小寫 + checksum 兩種
+   * 字面形狀）—— 舊列存的是管理員貼進來的原樣，兩者都撈得到，不必回填。
    */
   inviteeAddress String?   @map("invitee_address")
   /**
@@ -273,6 +282,25 @@ model TeamInvitation {
    * 屬個資，僅用於寄送本次邀請（《隱私權政策》§1）。
    */
   inviteeEmail   String?   @map("invitee_email")
+  /**
+   * Info: (20260825 - Julian) `inviteeEmail` 的正規化形式（`canonicalizeEmailForKey`）。
+   *
+   * 存在的理由是**查得動**：小鈴鐺要回答「有沒有邀請寄到我已驗證的信箱」，
+   * 而那個判斷必須與 `pendingKey` 用同一套正規化 —— 否則唯一鍵認定
+   * `alice+x@gmail.com` 與 `alice@gmail.com` 是同一個人，通知卻認定不是。
+   * canonical 值本來就存在（`pendingKey` 是 `{teamId}:mail:{canonical}`），
+   * 這一欄只是把它放成可以下 `IN` 條件的形狀。
+   *
+   * **不變式：恆等於 `canonicalizeEmailForKey(inviteeEmail)`，與 `status` 無關。**
+   * 這與 `pendingKey` 只在 PENDING 期間有值刻意不同 —— 那一欄編碼的是政策
+   * （哪些列參與唯一約束），這一欄是 `inviteeEmail` 的純函數，沒有政策在裡面。
+   *
+   * 不加唯一鍵：唯一性是 `pendingKey` 的職責，這裡純粹是查詢用的投影。
+   *
+   * ⚠️ 它是 `inviteeEmail` 的衍生副本。日後若有清除邀請信箱的排程，
+   * **兩欄要一起清**。
+   */
+  inviteeEmailKey String?   @map("invitee_email_key")
   /**
    * Info: (20260815 - Luphia) 邀請 token 的 SHA-256 雜湊。
    * 明文只存在於寄出的那封信裡：資料庫外洩不等於任何人都能加入團隊。
@@ -338,6 +366,8 @@ model TeamInvitation {
 
   // Info: (20260816 - Luphia) 席次占用數的查詢條件（teamId + status + expiresAt），取代舊複合唯一鍵留下的索引
   @@index([teamId, status])
+  // Info: (20260825 - Julian) 小鈴鐺：以已驗證信箱反查待接受邀請（查詢一定同時帶 status）
+  @@index([inviteeEmailKey, status])
   @@map("team_invitation")
 }
 
@@ -347,6 +377,34 @@ model TeamInvitation {
  * 團隊點數採離鏈決定論帳本（C 案混合制：離鏈營運 + 每日 merkle 鏈上錨定），
  * 金額一律 BigInt 零誤差；TeamWalletLedger 為 append-only，更正僅允許反向分錄。
  */
+/**
+ * Info: (20260821 - Luphia) 使用者通知（小鈴鐺，ADR 021 補充）。
+ *
+ * 只存**事件型**通知（工作完成、系統要求升級錢包）。**待辦型**（待接受的
+ * 團隊邀請）刻意不存——那是活的狀態，邀請被接受／撤回時通知必須同步消失，
+ * 存一份副本就多一個會過期的地方；小鈴鐺讀取時向邀請表現算。
+ *
+ * `dedupeKey` 唯一：worker 重試、腳本重跑都不會發出第二則同一件事的通知
+ *（與訂單 idempotencyKey 同一個形狀）。
+ */
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id])
+  // Info: (20260821 - Luphia) NOTIFICATION_TYPE 常數；畫面依 type 決定文案與連結
+  type      String
+  // Info: (20260821 - Luphia) type 專屬的資料（analysisId、teamId…），畫面插值用
+  payload   Json
+  dedupeKey String?   @unique @map("dedupe_key")
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  // Info: (20260821 - Luphia) 小鈴鐺的兩條查詢：未讀計數與清單（新到舊）
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@map("notification")
+}
+
 model TeamSubscription {
   id                 String   @id @default(uuid())
   teamId             String   @unique @map("team_id")
@@ -894,6 +952,10 @@ model AccountBook {
   // Info: (20260820 - Julian) §32 IV 認定與撤回的歷史（review 第 3 輪第 2 條）
   overtimeEmergencyDeclarations OvertimeEmergencyDeclaration[]
   overtimePolicy        OvertimePolicy?
+
+  // Info: (20260831 - Julian) 薪資計算機（輕量員工名單與薪資紀錄）
+  salaryCalculatorEmployees SalaryCalculatorEmployee[]
+  salaryRecords             SalaryRecord[]
 
   @@map("account_book")
 }
@@ -2097,6 +2159,9 @@ model Employee {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([accountBookId, employeeNo])
+  // Info: (20260831 - Julian) 薪資計算機的輕量員工名單若已對應到這一筆正式員工檔
+  salaryCalculatorEmployee SalaryCalculatorEmployee?
+
   @@unique([accountBookId, email])
   // Info: (20260811 - Julian) 身分證的帳本內唯一改掛盲索引，不是取消 —— 理由見 nationalIdHash 欄位註解
   @@unique([accountBookId, nationalIdHash])
@@ -4379,4 +4444,126 @@ model ResumableJob {
   @@index([status, updatedAt])
   @@index([userId, status])
   @@map("resumable_job")
+}
+
+/**
+ * Info: (20260831 - Julian) 薪資計算機的輕量員工名單。
+ *
+ * 與 HR `Employee` 分離而不是共用：計算機只需要姓名／編號／Email／本薪／伙食費，
+ * 而 `Employee` 的 `employeeNo`、`gender`、`hireDate`、`phoneCipher` 都是必填，
+ * 且 PII 一律要走 AES-256-GCM（ADR 018）。讓一個試算工具背上那整套流程，
+ * 換來的不是嚴謹，是沒有人願意建員工。
+ *
+ * `employeeId` 是日後與正式員工檔合併的接點，現階段一律為 null。
+ *
+ * 詳見 documents/architecture/salary_record_module_plan.md §2.3。
+ */
+model SalaryCalculatorEmployee {
+  id   String @id @default(uuid())
+  name String
+
+  /**
+   * Info: (20260831 - Julian) 員工編號是這張表的身分 —— 薪資實務上認的是編號，不是信箱。
+   * 帳本內唯一（見下方 activeNumber），因此必填。
+   */
+  number String @map("employee_number")
+
+  // Info: (20260831 - Julian) 寄薪資單用。不是每個帳本都替員工建信箱，因此可空
+  email String? @map("email")
+
+  /**
+   * Info: (20260831 - Julian) 「存活中的員工，帳本內編號不得重複」。
+   *
+   * Prisma 表達不了 partial unique index，依 code_review_checklist §5.3
+   * 改用 nullable 唯一欄位：存活時等於 `number`，soft delete 時設為 null。
+   * 沒有這一欄的話，`@@unique([accountBookId, number])` 會讓一個被刪掉的員工
+   * 永久佔住那個編號，而使用者看到的是「這個人明明不在名單上卻加不進來」。
+   *
+   * 維護點只在 repository（salary_calculator_employee.repo.ts），
+   * 由 salary_employee_invariant.test.ts 釘住。
+   */
+  activeNumber String? @map("active_number")
+
+  // Info: (20260831 - Julian) 金額一律 BigInt（元），不用 Int：precision guideline §1
+  baseSalary    BigInt @map("base_salary")
+  mealAllowance BigInt @default(0) @map("meal_allowance")
+
+  // Info: (20260831 - Julian) 隸屬的帳本 (租戶 Root Node)
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  // Info: (20260831 - Julian) 與 HR 正式員工檔的接點，未合併前為 null
+  employeeId String?   @unique @map("employee_id")
+  employee   Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+
+  salaryRecords SalaryRecord[]
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  // Info: (20260831 - Julian) 這張表用 soft delete（與 Department / JobTitle / Employee 相反）：薪資紀錄是對外憑據，員工被刪不能讓歷史一起消失
+  deletedAt DateTime? @map("deleted_at")
+
+  @@unique([accountBookId, activeNumber])
+  @@index([accountBookId])
+  @@map("salary_calculator_employee")
+}
+
+/**
+ * Info: (20260831 - Julian) 一位員工在某個年月的薪資紀錄。
+ *
+ * `(帳本, 員工, 年, 月)` 唯一，重存即覆寫（計劃書 D3）。需要改動軌跡時走 `AuditLog`，
+ * 不在這張表堆版本 —— 那會讓「這個月的薪資是多少」變成一個要先排序才答得出來的問題。
+ *
+ * 不做 soft delete：刪掉就是刪掉，沒有「刪了還要看得到」的情境。
+ */
+model SalaryRecord {
+  id String @id @default(uuid())
+
+  // Info: (20260831 - Julian) 給付期間。不用 timestamp：薪資的鍵本來就是年月，不是某一個時刻
+  year  Int
+  month Int
+
+  /**
+   * Info: (20260831 - Julian) 輸入與結果的完整快照，形狀分別是
+   * `ISalaryCalculatorOptions`（21 欄）與 `ISalaryCalculatorUI`。
+   *
+   * 用 Json 而不是攤成幾十個純量欄位：那兩個型別是**計算引擎的契約**，
+   * 會隨法規年度演進，而本專案沒有 migrations —— 攤平的代價是每次演進
+   * 都要手寫回填 SQL。代價是 Json 內的數字繞過 Database Boundary Guard，
+   * 因此入庫前一律過 `salaryRecordWriteSchema` 逐欄驗證（計劃書 §2.2）。
+   */
+  inputSnapshot  Json @map("input_snapshot")
+  resultSnapshot Json @map("result_snapshot")
+
+  // Info: (20260831 - Julian) 需要排序／篩選／對帳的三個金額抽成純量欄位，走精度守衛
+  totalPayment       BigInt @map("total_payment")
+  totalSalaryTaxable BigInt @map("total_salary_taxable")
+  totalEmployerCost  BigInt @map("total_employer_cost")
+
+  /**
+   * Info: (20260831 - Julian) 產生這筆紀錄時的級距表年度與引擎修訂號
+   * （`SALARY_CALCULATOR_VERSION`）。法規年度更新之後，這一欄是
+   * 「這張薪資單當初是用哪一版算出來的」唯一的依據。
+   */
+  calculatorVersion String @map("calculator_version")
+
+  employeeId String                   @map("employee_id")
+  employee   SalaryCalculatorEmployee @relation(fields: [employeeId], references: [id])
+
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  // Info: (20260831 - Julian) 誰按下的儲存
+  createdByUserId String @map("created_by_user_id")
+  createdBy       User   @relation(fields: [createdByUserId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([accountBookId, employeeId, year, month])
+  @@index([accountBookId])
+  @@index([employeeId])
+  // Info: (20260831 - Julian) 列表的主要查詢條件：某本帳的某個年月
+  @@index([accountBookId, year, month])
+  @@map("salary_record")
 }

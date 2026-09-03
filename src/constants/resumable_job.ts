@@ -107,4 +107,77 @@ export const JOB_RESUME_SCAN_INTERVAL_MS = 5 * 60 * 1000;
  * 每一筆都要讀一次額度（含一次鏈上餘額查詢），不設上限會讓一次積壓
  * 變成一串同步的 RPC。
  */
+/**
+ * Info: (20260828 - Julian) 小鈴鐺一次帶回幾則「可以繼續了」的待辦。
+ *
+ * 待辦型天然有限（一個聊天室一筆，`@@unique([resourceKey, type])`），但仍然給上限 ——
+ * 「天然有限」是今天的事實，不是資料庫層的約束，而這支查詢會被每 60 秒的摘要輪詢打到。
+ * 比 `NOTIFICATION_TODO_LIST_LIMIT`（20）小：一個人同時卡著五份匯入已經是異常，
+ * 列更多不會幫他做決定。
+ */
+export const JOB_RESUMABLE_NOTICE_LIMIT = 5;
+
 export const JOB_RESUME_SCAN_BATCH = 50;
+
+/**
+ * Info: (20260827 - Luphia) 執行許可的租期（issue #6721）。
+ *
+ * 「誰現在跑得動這個任務」用一把**會過期的**許可，而不是一個布林旗標：
+ * 分頁被強制關掉、瀏覽器當掉、電腦睡著時，沒有任何人會來釋放旗標——
+ * 那會把使用者永久鎖在門外，而症狀是「按了沒反應」，最難自救的一種。
+ *
+ * 租約不需要新欄位：`status === RUNNING` 加上 `updatedAt` 的新鮮度就是租約，
+ * 而檢查點（issue #6723）每做完一份就寫一次書籤，天然就是續租的心跳。
+ *
+ * 5 分鐘的取法：租期必須**大於**兩次心跳之間的最長間隔，也就是單一份的
+ * 最長耗時（實測數十秒，含逾時重試留餘裕）。取太短會讓自己的租約在跑的
+ * 過程中過期，另一個分頁就接手同一份任務——那正是這把鎖要防的事。
+ */
+export const JOB_CLAIM_TTL_MS = 5 * 60 * 1000;
+
+/**
+ * Info: (20260827 - Luphia) 取得執行許可的意圖（issue #6721）。
+ *
+ * 只影響「找不到任務算不算失敗」，不影響裁決——真正的裁決（有沒有人正在跑）
+ * 無論哪種意圖都是同一條：
+ *
+ * - `RESUME`：要有一個沒做完的任務才有意義，找不到就是錯。
+ * - `START`：這個資源上沒有任務、或上一個已經做完，都正常（重新匯入本來就會
+ *   覆寫舊書籤）。但另一個分頁正在跑時一樣要擋，否則兩個分頁各自從第一份開始，
+ *   兩份帳都要付。
+ */
+export const JOB_CLAIM_INTENT = {
+  RESUME: "RESUME",
+  START: "START",
+} as const;
+
+export type JobClaimIntent =
+  (typeof JOB_CLAIM_INTENT)[keyof typeof JOB_CLAIM_INTENT];
+
+/**
+ * Info: (20260901 - Luphia) 客戶端對「換許可失敗」的判決分類（review #6726 阻-1）。
+ *
+ * 高-1 修了伺服器那一半（已取消的任務拿不到許可），而客戶端的 catch 把
+ * `TW_JOB_CANCELLED`、`TW_JOB_ALREADY_COMPLETED`、403 全部當成「鎖自己壞掉」
+ * 放行——伺服器明確說「不要跑」的判決被吞掉，剩下那幾份照送、點數照扣。
+ * BroadcastChannel 不可用、或舊分頁開在另一台裝置上時，沒有任何一道擋得住。
+ *
+ * 四種判決的處置各不相同（這正是錯誤碼分成四個的理由）：
+ *
+ * - `BUSY`：別人正在跑——等一下再按，按鈕留著。
+ * - `CANCELLED`：使用者自己說不做的——不跑，並讓畫面改口。
+ * - `COMPLETED`：沒有東西可接續——不跑，並讓畫面改口。
+ * - `FORBIDDEN`：這不是你的任務——不跑。
+ *
+ * **只有不在此列的失敗**（網路斷、伺服器自己壞掉）才放行：這把鎖是為了省錢，
+ * 不是為了在它自己壞掉時把功能一起關掉。
+ */
+export const JOB_CLAIM_DENIAL = {
+  BUSY: "BUSY",
+  CANCELLED: "CANCELLED",
+  COMPLETED: "COMPLETED",
+  FORBIDDEN: "FORBIDDEN",
+} as const;
+
+export type JobClaimDenial =
+  (typeof JOB_CLAIM_DENIAL)[keyof typeof JOB_CLAIM_DENIAL];

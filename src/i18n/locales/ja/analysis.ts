@@ -128,7 +128,7 @@ export const analysis = {
     carbon_health_check: "カーボンヘルスチェック",
     net_zero_emissions: "ネットゼロエミッション",
     ai_consulting: "AI コンサルティング",
-    journal_upload: "仕訳アップロード",
+    journal_correction: "仕訳修正",
     certificate_analysis: "証憑分析",
     transportation_carbon_footprint: "輸送カーボンフットプリント",
   },
