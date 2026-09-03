@@ -181,6 +181,27 @@ export const ComputedLedgerSchema = z.object({
           isoCategory: z.nativeEnum(Iso14064Category),
           subCategory: z.string().max(50),
           tableNo: z.string().max(50),
+          /**
+           * Info: (20260903 - Emily) 盤查年度必須跟著分錄一起存。
+           *
+           * 這一行是補上本 PR 自己的漏:R1 把 `year` 加進 `IImportedOrigin`,
+           * 卻沒有加進這個 schema —— 而漏的位置就在上面那段(08-07)的正下方,
+           * 那段字寫的正是這個失敗模式。
+           *
+           * 後果比 08-07 那次更重:寫路徑是 `JSON.stringify(state)` **不過 schema**,
+           * 所以年度存得進去;讀路徑剝掉它;而 hook 把 `parsed.data` 直接放進 state,
+           * 於是**重載後的第一次存檔會把剝掉年度的版本寫回伺服器** ——
+           * 年度從此永久消失,事後補 schema 也救不回來。
+           *
+           * 而規則 3 在那之後拿到的 `entryYear` 全是 undefined → 不剔除 →
+           * 跨年度孤兒列全部保留 → 實測 28.6% 虛增原樣回來。也就是本 PR 的主張
+           * 原本只在「同一個 session 內連續匯兩份」成立,而真實情境
+           *(去年的報告、今年的報告)本來就跨天。
+           *
+           * 範圍與頂層 `year` 對齊(1990–2100):schema 是儲存格式,不隨時間收窄,
+           * 否則舊紀錄會在某一天忽然讀不出來。
+           */
+          year: z.number().int().min(1990).max(2100).optional(),
         })
         .optional(),
       // Info: (20260720 - Tzuhan) #53 證據引用(憑證匯入的活動才有)
@@ -250,6 +271,23 @@ export const CarbonInventoryStateSchema = z.object({
   // Info: (20260720 - Tzuhan) #6520 物料庫存紀錄(隨 state E2EE 保存)
   stockRecords: z.array(CarbonStockRecordSchema).optional(),
   computedLedger: ComputedLedgerSchema.optional(),
+  /**
+   * Info: (20260903 - Emily) 年度快照與年度警示同樣要存得下來。
+   *
+   * `ledgerByYear` 的鍵在型別上是 `number`,而 JSON 序列化之後是字串 ——
+   * 用 `z.coerce.number()` 當鍵 schema,讓還原後的型別對得上介面。
+   *
+   * `ledgerYearWarning` 只在匯入時寫入(載入路徑不重算),所以它一旦被剝掉
+   * 就不會自己回來;而剝掉年度之後的下一次匯入又會對**全部**分錄發警示 ——
+   * 兩個方向都錯。
+   */
+  ledgerByYear: z.record(z.coerce.number(), ComputedLedgerSchema).optional(),
+  ledgerYearWarning: z
+    .object({
+      incomingYear: z.number().int().min(1990).max(2100),
+      undatedCount: z.number().int().min(0),
+    })
+    .optional(),
   notes: z.array(z.string().max(500)).optional(),
   updatedAt: z.string().max(50),
   version: z.number().int().min(0),
