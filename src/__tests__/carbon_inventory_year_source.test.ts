@@ -313,13 +313,24 @@ describe("年度的來源接線", () => {
      * 寫成賦值就會被蓋掉,而那等於這張票沒做(年度回到未知 → 規則 3 不成立)。
      * 與 activities 那條「累加而不是覆蓋」是同一個教訓的另一半。
      */
+    /**
+     * Info: (20260903 - Luphia) 摺疊搬進 `use_carbon_chat.helpers`(rebase 到 develop):
+     * develop 把那段 inline 迴圈抽成 `foldImportChunks`,規則因此住在 helper 裡 ——
+     * 掃描要跟著搬,否則它守的是一段不存在的程式碼。
+     */
+    const helpers = fs.readFileSync(
+      path.join(process.cwd(), "src/hooks/use_carbon_chat.helpers.ts"),
+      "utf-8",
+    );
+    expect(helpers).toContain(
+      "if (inventoryYear === undefined && chunk.inventoryYear !== undefined)",
+    );
+    // Info: (20260903 - Luphia) 摺疊結果要真的被用上,否則規則住在 helper 也沒人讀
     const hook = fs.readFileSync(
       path.join(process.cwd(), "src/hooks/use_carbon_chat.ts"),
       "utf-8",
     );
-    expect(hook).toContain(
-      "if (inventoryYear === undefined && chunk.inventoryYear !== undefined)",
-    );
+    expect(hook).toContain("inventoryYear: folded.inventoryYear");
   });
 
   it("預覽卡只在這次匯入會產生帳本分錄時要求年度", () => {

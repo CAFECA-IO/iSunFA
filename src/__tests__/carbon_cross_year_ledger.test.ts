@@ -347,8 +347,18 @@ describe("年度的接線:hook 真的把年度帶進匯入(round-2 §1.7)", () =
     expect(hook).not.toContain("[base.year]:");
   });
 
+  /**
+   * Info: (20260903 - Luphia) 落地的形狀搬進 `carbon_pending_import_record`
+   *(rebase 到 develop:develop 把那個物件字面量抽成純函式)。掃描跟著搬 ——
+   * 而欄位真的被帶出去,由該檔測試那條「schema 認得的欄位一個都不能漏」
+   * 逐欄位驗,那條比掃描強(它在新增 schema 欄位時會逼人補)。
+   */
   it("確認值跟著待匯入紀錄落地(重載後不必再填一次)", () => {
-    expect(hook).toContain("inventoryYear: pending.inventoryYear");
+    const record = fs.readFileSync(
+      path.join(process.cwd(), "src/lib/carbon_pending_import_record.ts"),
+      "utf-8",
+    );
+    expect(record).toContain("inventoryYear: pending.inventoryYear");
     expect(hook).toContain("inventoryYear: payload.inventoryYear");
   });
 

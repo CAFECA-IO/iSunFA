@@ -3298,7 +3298,6 @@ export const useCarbonChat = () => {
               }[];
               unmapped: string[];
               activities: IActivityRecord[];
-              // Info: (20260902 - Emily) 單發全綱同樣是「第一次呼叫」,年度就在這一份回應裡
               inventoryYear?: number;
             }>("/api/v1/chat/carbon/import", {
               method: "POST",
