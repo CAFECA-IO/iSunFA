@@ -673,7 +673,26 @@ describe("接線反向掃描:守門在真實呼叫端有沒有接上(掃源碼,�
       "utf-8",
     );
     expect(source).toContain("contextFacts: ledgerFacts");
-    expect(source).toContain("shouldRunReplyGate(ledgerFacts)");
-    expect(source).toContain("auditReplyQuantities(");
+    /**
+     * Info: (20260904 - Emily) #6745 把守門**搬進了 `generateParagraphDraft` 本體**
+     * (單一咽喉,三個入口共用),route 不再自己接一段。判準沒變、換了住址:
+     * 原本這裡斷言 route 含 `shouldRunReplyGate(ledgerFacts)` 與 `auditReplyQuantities(`,
+     * 現在斷言 route **不**含後者(否則就是第二份判準)、而服務含兩者。
+     * route 那端剩下的是認錯誤:攔下 → warn + degraded,語意與搬家前相同。
+     */
+    expect(source).not.toContain("auditReplyQuantities(");
+    expect(source).toContain("isDraftQuantityGateError(draftError)");
+    const service = fs.readFileSync(
+      path.join(process.cwd(), "src/services/paragraph_draft.service.ts"),
+      "utf-8",
+    );
+    expect(service).toContain("shouldRunReplyGate(input.contextFacts)");
+    /*
+     * Info: (20260904 - Emily) 用對空白寬容的 regex:prettier 會把這串參數折成多行,
+     * 字面比對會在下一次格式化時無故變紅。
+     */
+    expect(service).toMatch(
+      /auditReplyQuantities\(\s*content,\s*input\.contextFacts,\s*allowedTexts,?\s*\)/,
+    );
   });
 });
