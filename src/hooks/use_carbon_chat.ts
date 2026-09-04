@@ -103,6 +103,7 @@ import {
   discardPendingImport as deletePendingImportRecord,
 } from "@/lib/carbon_pending_import_storage";
 import {
+  isInventoryStateUnsavableError,
   loadInventoryState,
   saveInventoryState,
 } from "@/lib/carbon_inventory_storage";
@@ -1708,12 +1709,34 @@ export const useCarbonChat = () => {
               "[carbon-chat] inventory version conflict:",
               chatChannel,
             );
-          } else {
-            console.error(
-              "[carbon-chat] failed to save inventory state:",
-              error,
-            );
+            return;
           }
+          /**
+           * Info: (20260904 - Emily) 「這一版存不進去」必須說得出來(open/73)。
+           *
+           * 與版本衝突的處置相反:衝突是暫時的、下一輪 autosave 就過了;
+           * 這一條是**狀態本身不符合儲存格式**,每一次 autosave 都會失敗同一次,
+           * 而盤查狀態**沒有本機備份** —— 使用者不知道的話,那些活動數據與帳本
+           * 會在關掉分頁的那一刻消失,而畫面上一切正常。
+           *
+           * 原本這裡只有 `console.error`,而看得到 console 的人不是在做盤查的那個人。
+           * 只記欄位路徑不記值:載荷是使用者的盤查資料。
+           */
+          if (isInventoryStateUnsavableError(error)) {
+            console.error("[carbon-chat] inventory state unsavable:", {
+              channel: chatChannel,
+              paths: error.paths,
+            });
+            setDraftNotice(
+              {
+                type: "error",
+                text: t("carbon_chatbot.inventory_unsavable")!,
+              },
+              activeSessionId,
+            );
+            return;
+          }
+          console.error("[carbon-chat] failed to save inventory state:", error);
         });
     }, CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS);
     return () => {
@@ -1721,7 +1744,21 @@ export const useCarbonChat = () => {
         clearTimeout(inventoryAutosaveTimerRef.current);
       }
     };
-  }, [activeInventoryState, chatChannel, isUnlocked, sessionAccess]);
+    /*
+     * Info: (20260904 - Emily) 依賴多了 `t` / `setDraftNotice` / `activeSessionId`:
+     * 上面那個 catch 分支要組通知。與 #6730 review R2 同一個判斷 —— 補依賴而不是
+     * 改讀 ref:這個 effect 的重跑成本是一次 debounce 計時器的重設,而 ref 會讓
+     * 通知落在切換 session 之前的那一則上。
+     */
+  }, [
+    activeInventoryState,
+    chatChannel,
+    isUnlocked,
+    sessionAccess,
+    t,
+    setDraftNotice,
+    activeSessionId,
+  ]);
 
   // Info: (20260716 - Tzuhan) #6519 決定論 CO2e 計算:活動集合變更時呼叫 /calculate,結果掛回 state
   // Info: (20260716 - Tzuhan) 簽章 guard 防迴圈:applyComputedLedger 只回填係數不改活動鍵,簽章不變不重算

@@ -134,6 +134,9 @@ export const carbonChatbot = {
     "The latest changes were not saved to the cloud: the draft was updated in another tab or device. Reload to get the latest version, then reapply your edit.",
   save_failed_too_large:
     "The latest changes were not saved to the cloud: this draft exceeds the per-report size limit. Remove some verbatim source tables, or import in smaller parts.",
+  // Info: (20260904 - Emily) Not a transient failure: every autosave will fail the same way, and there is no local backup
+  inventory_unsavable:
+    "This version of the inventory data was not saved: one of its fields does not fit the storage format. What you see is still on screen, but closing or reloading this tab loses it. This is a fault on our side \u2014 please report it.",
   save_local_quota:
     "Local storage is full, so the offline backup was not updated (the cloud copy was saved).",
   save_local_quota_only:
