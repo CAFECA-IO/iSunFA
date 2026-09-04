@@ -701,3 +701,108 @@ describe("toContextFacts", () => {
     expect(toContextFacts(queryTotal(undefined))).toEqual([]);
   });
 });
+
+/**
+ * Info: (20260904 - Emily) 「不指示一個會動到既有帳本的動作」擴到**所有事實值**。
+ *
+ * 這條界線在 PR #6725 R1 就立好了,但當時只套在 refusal 的 `missing` 上
+ *(見上面那兩組)。而第五個偵測器(年度標註不完整)把
+ * 「清空帳本後逐年重新匯入即可確定歸屬」寫進了 `ILedgerFact.value` ——
+ * **同一條界線的另一半沒有守衛,所以它安靜地穿過去、跟著合併進 develop。**
+ *
+ * 事實值會被逐字帶進敘事(`toContextFacts` → 注入層 → LLM),
+ * 所以紙面上讀起來就是系統的建議。而「清空帳本」會連非匯入的憑證計算分錄
+ * 一起丟掉,「逐年重新匯入」預設使用者手上還留著每一份原始報告。
+ *
+ * ## 為什麼是走完六個入口,而不是再補一條專屬於年度警示的斷言
+ *
+ * 補一條專屬的,第三個偵測器還是會再寫一次 —— 這已經是第二次了。
+ * 這一條走完所有會產出 `ILedgerFact` 的入口,新偵測器一加進來就自動被涵蓋。
+ *
+ * ## 錨在哪些詞,為什麼
+ *
+ * `清空` / `刪除` / `重新匯入` 是動到既有帳本的動作;`即可` 是指示的句型
+ *(上面兩組已經在用同一個錨)。**不是「祈使句一律不准」**:帳本為空時的
+ * 「請先匯入盤查報告」照留,那個動作沒有任何既有資料可以弄髒 —— 那條界線
+ * 由上面「帳本為空的拒答仍然可以說『請先匯入』」那一條守著,兩條互為界線。
+ */
+describe("所有事實值都不得指示一個會動到既有帳本的動作(R1 的另一半)", () => {
+  const DESTRUCTIVE_ANCHORS = ["清空", "刪除", "重新匯入", "即可"];
+
+  const ledger = ledgerOf(
+    [
+      importedEntry({ activityKey: "site-a", co2eKg: "100" }),
+      importedEntry({ activityKey: "site-b", co2eKg: "50" }),
+    ],
+    {
+      pending: [
+        {
+          activityKey: "pending-a",
+          sourceName: "柴油",
+          reason: "缺少活動數據",
+        },
+      ],
+    },
+  );
+
+  /** Info: (20260904 - Emily) 六個入口全走一遍;新增入口要記得加進這裡 */
+  const allFactValues = (): string[] => {
+    const yearWarning = { incomingYear: 2024, undatedCount: 6 };
+    const blocks = [
+      {
+        paragraphId: "3.8",
+        reason: "6 列無法解析",
+        blockedAt: "2026-09-04T00:00:00.000Z",
+      },
+    ];
+    const results = [
+      queryTotal(ledger),
+      queryTopEmitters(ledger, 3),
+      querySiteSubtotals(ledger),
+      queryAnomalies(ledger, blocks, yearWarning),
+      queryYearOverYear(
+        { year: 2024, ledger },
+        { year: 2023, ledger: ledgerOf([]) },
+      ),
+    ];
+    return [
+      ...results.flatMap((result) =>
+        result.ok ? result.facts.map((fact) => fact.value) : [],
+      ),
+      ...buildLedgerFactBundle(
+        ledger,
+        blocks,
+        { 2024: ledger },
+        yearWarning,
+      ).map((fact) => fact.value),
+    ];
+  };
+
+  it("六個入口產出的事實值都沒有破壞性指示", () => {
+    const values = allFactValues();
+    // Info: (20260904 - Emily) 反空集合:入口都拒答時這條會空轉而看起來很綠
+    expect(values.length).toBeGreaterThan(3);
+    values.forEach((value) => {
+      DESTRUCTIVE_ANCHORS.forEach((anchor) => {
+        expect(value).not.toContain(anchor);
+      });
+    });
+  });
+
+  it("年度警示仍然說得出代價(拿掉指示不等於拿掉資訊)", () => {
+    /**
+     * Info: (20260904 - Emily) 這一條是上一條的配對。只斷言「沒有指示」的話,
+     * 把整句話刪掉也會綠 —— 而那會讓 #6707 的第五個偵測器變成一個沒有內容的警示。
+     */
+    const result = queryAnomalies(ledger, undefined, {
+      incomingYear: 2024,
+      undatedCount: 6,
+    });
+    const fact = result.ok
+      ? result.facts.find((item) => item.label.includes("年度標註不完整"))
+      : undefined;
+    expect(fact?.value).toContain("虛增");
+    expect(fact?.value).toContain("2024");
+    expect(fact?.value).toContain("無法確定");
+  });
+});
