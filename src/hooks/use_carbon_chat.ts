@@ -665,6 +665,27 @@ export const useCarbonChat = () => {
   const [inventoryStates, setInventoryStates] = useState<
     Record<string, ICarbonInventoryState>
   >({});
+  /**
+   * Info: (20260904 - Emily) 該房的帳本事實包,**唯一**的組包點(#6745)。
+   *
+   * 原本只有對話路徑組(#6707 第二層),草稿與修訂兩條 `/draft` 路各自不帶或帶不全,
+   * 於是服務層的守門對它們是「呼叫端沒帶 → 跳過」。三條會生成文字的路現在共用這一支:
+   * 帳本是 E2EE 的、伺服端讀不到,事實只能在這裡(解密後的狀態)決定性組出。
+   * 帳本空時回空陣列 —— 守門對空陣列**照跑**(那正是編造最沒阻力的一格),不補、不造。
+   */
+  const buildChannelLedgerFacts = useCallback(
+    (channel: string): IContextFact[] =>
+      buildLedgerFactBundle(
+        inventoryStates[channel]?.computedLedger,
+        // Info: (20260825 - Emily) 勾稽阻擋紀錄一併注入:「帳本為什麼是空的」也是可問的事實
+        inventoryStates[channel]?.ledgerImportBlocks,
+        // Info: (20260825 - Emily) #6719 年度快照:滿兩年時年間比較事實隨包注入
+        inventoryStates[channel]?.ledgerByYear,
+        // Info: (20260828 - Emily) 年度標註不完整:列舉制第五個偵測器(round-2 追加回饋)
+        inventoryStates[channel]?.ledgerYearWarning,
+      ),
+    [inventoryStates],
+  );
   const inventoryVersionsRef = useRef<Map<string, number>>(new Map());
   /**
    * Info: (20260806 - Tzuhan) 還原的「試過」與「成功」拆成兩個集合
@@ -1936,7 +1957,14 @@ export const useCarbonChat = () => {
           body: JSON.stringify({
             paragraphId,
             conversationContext: [],
-            contextFacts: facts,
+            /**
+             * Info: (20260904 - Emily) #6745:那則訊息的事實 ∪ 該房帳本事實包。
+             * 原本只帶前者 —— 修訂稿引用帳本的量會被守門當成編造,而帳本才是
+             * 排放量的唯一合法來源。這裡的事實包是用戶端自報:這道門防的是
+             * **LLM 編造**,不是惡意用戶端(那個人本來就能直接改段落文字),
+             * 別把它當成授權邊界。
+             */
+            contextFacts: [...facts, ...buildChannelLedgerFacts(chatChannel)],
             language,
             existingContent: paragraph.content,
             instruction,
@@ -1971,6 +1999,7 @@ export const useCarbonChat = () => {
       dismissDraftNoticeAfter,
       // Info: (20260814 - Luphia) 計費上下文所需：channel 決定這筆消費記到哪個帳本
       chatChannel,
+      buildChannelLedgerFacts,
     ],
   );
 
@@ -5447,6 +5476,12 @@ export const useCarbonChat = () => {
               body: JSON.stringify({
                 paragraphId,
                 conversationContext,
+                /**
+                 * Info: (20260904 - Emily) #6745:這條路原本**不帶事實包**,於是服務層的守門
+                 * 對它永遠是「呼叫端沒帶 → 跳過」—— 而它正是主入口攔下之後官方指定的重試路。
+                 * 不補這一行,守門搬進服務等於沒搬。
+                 */
+                contextFacts: buildChannelLedgerFacts(chatChannel),
                 language,
                 channel: chatChannel,
                 clientMessageId,
@@ -5530,6 +5565,7 @@ export const useCarbonChat = () => {
       chatChannel,
       // Info: (20260825 - Luphia) 無帳本會話的待付款流程（與聊天路徑同一套）
       payExistingOrder,
+      buildChannelLedgerFacts,
     ],
   );
 
@@ -6181,15 +6217,8 @@ export const useCarbonChat = () => {
          * LLM 回答數據問題的數字只能來自這一包(persona 端把「清單之外不得有數字」說死)。
          * 帳本空時為空陣列 —— persona 對「無事實」另有明確拒答指令,這裡不補、不造。
          */
-        const ledgerFacts = buildLedgerFactBundle(
-          inventoryStates[chatChannel]?.computedLedger,
-          // Info: (20260825 - Emily) 勾稽阻擋紀錄一併注入:「帳本為什麼是空的」也是可問的事實
-          inventoryStates[chatChannel]?.ledgerImportBlocks,
-          // Info: (20260825 - Emily) #6719 年度快照:滿兩年時年間比較事實隨包注入
-          inventoryStates[chatChannel]?.ledgerByYear,
-          // Info: (20260828 - Emily) 年度標註不完整:列舉制第五個偵測器(round-2 追加回饋)
-          inventoryStates[chatChannel]?.ledgerYearWarning,
-        );
+        // Info: (20260904 - Emily) #6745:三條會生成文字的路(對話、草稿、修訂)共用同一支組包
+        const ledgerFacts = buildChannelLedgerFacts(chatChannel);
         const sendChatRequest = () =>
           request<{
             success: boolean;
@@ -6383,10 +6412,11 @@ export const useCarbonChat = () => {
       ensureMasterKeyCached,
       markSessionBusy,
       applyInventoryExtraction,
-      inventoryStates,
       requestParagraphRevision,
       insertChartIntoParagraph,
       setDraftNotice,
+      inventoryStates,
+      buildChannelLedgerFacts,
     ],
   );
 

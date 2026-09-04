@@ -178,3 +178,121 @@ describe("CarbonParagraphDraftRequestSchema", () => {
     expect(result.success).toBe(false);
   });
 });
+
+/**
+ * Info: (20260904 - Emily) 產物守門搬進服務本體(#6745;PR #6716 round-3 阻擋 3 的完整版)。
+ *
+ * 三個入口(對話 readyParagraphId、`/draft` 生成與修訂、附件管線)原本只有第一個
+ * 在 route 裡接了一段守門,另外兩個**零檢查** —— 主入口攔下的東西,重試一次就從沒門的路進來。
+ * 守門放在生成本體,呼叫端想繞都繞不掉;這一組直接對服務逼:攔/不攔成對。
+ */
+describe("產物守門:帶排放單位的數字必須溯源到事實包(#6745)", () => {
+  const fabricated = JSON.stringify({
+    content: "本公司 2024 年度總排放量為 12,345.67 公噸 CO2e。",
+    citedFacts: [],
+  });
+  const facts = [
+    { label: "總排放量", value: "8,332.581 公噸 CO2e", source: "帳本" },
+  ];
+
+  it("事實包裡沒有那個數字 → 攔下,拋具名錯誤,草稿不落地", async () => {
+    const service = new ParagraphDraftService(buildMockChatService(fabricated));
+    await expect(
+      service.generateParagraphDraft({ ...baseInput, contextFacts: facts }),
+    ).rejects.toMatchObject({
+      code: API_ERRORS.VA_DRAFT_QUANTITY_UNSOURCED.code,
+    });
+  });
+
+  it("數字在事實包裡 → 放行(否則「攔掉一切」也會讓上面那條綠)", async () => {
+    const sourced = JSON.stringify({
+      content: "本公司 2024 年度總排放量為 8,332.581 公噸 CO2e。",
+      citedFacts: ["總排放量"],
+    });
+    const service = new ParagraphDraftService(buildMockChatService(sourced));
+    const draft = await service.generateParagraphDraft({
+      ...baseInput,
+      contextFacts: facts,
+    });
+    expect(draft.content).toContain("8,332.581");
+  });
+
+  it("呼叫端沒帶事實包(undefined)→ 跳過,與回覆守門同一個上崗條件", async () => {
+    /**
+     * Info: (20260904 - Emily) 這一條是**界**,不是放行的理由:它意味著 `/draft`
+     * 的前端若不帶事實包,這道門對它永遠是跳過 —— 所以前端那半是本票的必要條件,
+     * 由 hook 的接線掃描守。
+     */
+    const service = new ParagraphDraftService(buildMockChatService(fabricated));
+    await expect(
+      service.generateParagraphDraft(baseInput),
+    ).resolves.toMatchObject({ paragraphId: VALID_PARAGRAPH_ID });
+  });
+
+  it("帶了空陣列 → 照跑(帳本空正是編造最沒阻力的一格)", async () => {
+    const service = new ParagraphDraftService(buildMockChatService(fabricated));
+    await expect(
+      service.generateParagraphDraft({ ...baseInput, contextFacts: [] }),
+    ).rejects.toMatchObject({
+      code: API_ERRORS.VA_DRAFT_QUANTITY_UNSOURCED.code,
+    });
+  });
+
+  it("使用者自己說過的數字算合法(與回覆守門同一對來源)", async () => {
+    const service = new ParagraphDraftService(buildMockChatService(fabricated));
+    await expect(
+      service.generateParagraphDraft({
+        ...baseInput,
+        conversationContext: [
+          { role: ChatRoleEnum.USER, text: "我們去年總量 12,345.67 公噸" },
+        ],
+        contextFacts: [],
+      }),
+    ).resolves.toMatchObject({ paragraphId: VALID_PARAGRAPH_ID });
+  });
+
+  it("修訂模式:原文既有的數字算合法(修訂不該因原文本來就有的數字被攔)", async () => {
+    const service = new ParagraphDraftService(buildMockChatService(fabricated));
+    await expect(
+      service.generateParagraphDraft({
+        ...baseInput,
+        contextFacts: [],
+        existingContent: "本公司總排放量 12,345.67 公噸 CO2e,較去年下降。",
+        instruction: "把語氣改得更正式",
+      }),
+    ).resolves.toMatchObject({ paragraphId: VALID_PARAGRAPH_ID });
+  });
+
+  it("AI 輪次的數字**不**算合法(否則模型可以先在對話裡編、再在草稿裡引用自己)", async () => {
+    const service = new ParagraphDraftService(buildMockChatService(fabricated));
+    await expect(
+      service.generateParagraphDraft({
+        ...baseInput,
+        conversationContext: [
+          { role: ChatRoleEnum.AI, text: "貴公司去年總量約 12,345.67 公噸" },
+        ],
+        contextFacts: [],
+      }),
+    ).rejects.toMatchObject({
+      code: API_ERRORS.VA_DRAFT_QUANTITY_UNSOURCED.code,
+    });
+  });
+
+  it("被攔下的錯誤能被型別守衛認出,且與生成失敗分得開", async () => {
+    const { isDraftQuantityGateError } =
+      await import("@/services/paragraph_draft.service");
+    const gateError = new ApiError(
+      API_ERRORS.VA_DRAFT_QUANTITY_UNSOURCED.code,
+      "x",
+      API_ERRORS.VA_DRAFT_QUANTITY_UNSOURCED.status,
+    );
+    const failure = new ApiError(
+      API_ERRORS.IS_PARAGRAPH_DRAFT_FAILED.code,
+      "x",
+      API_ERRORS.IS_PARAGRAPH_DRAFT_FAILED.status,
+    );
+    expect(isDraftQuantityGateError(gateError)).toBe(true);
+    expect(isDraftQuantityGateError(failure)).toBe(false);
+    expect(isDraftQuantityGateError(new Error("x"))).toBe(false);
+  });
+});
