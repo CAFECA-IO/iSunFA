@@ -131,6 +131,68 @@ export function useSalaryPaySlipDelivery(accountBookId: string | null) {
 }
 
 /**
+ * Info: (20260904 - Julian) 某一筆薪資紀錄的寄送歷史。
+ *
+ * ## 為什麼要問伺服器，不由呼叫端自己記
+ *
+ * 預覽彈窗要在打開的當下決定按鈕寫「寄出」還是「重新寄送」。
+ * 「這一筆寄過沒有」是一個只有伺服器答得出來的問題 —— 同事可能十分鐘前
+ * 才剛寄過，而這個瀏覽器上的清單是更早以前抓的。
+ *
+ * `recordId` 為 `null` 時不發請求（同 `accountBookId` 的處置）：
+ * 彈窗在沒有紀錄可指的情況下也會被掛起來（「我收到的薪資單」分頁）。
+ */
+export function useSalaryRecordDeliveries(
+  accountBookId: string | null,
+  recordId: string | null,
+) {
+  const [deliveries, setDeliveries] = useState<ISalaryPaySlipDelivery[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(
+    accountBookId !== null && recordId !== null,
+  );
+
+  const reload = useCallback(async (): Promise<void> => {
+    if (accountBookId === null || recordId === null) return;
+
+    setIsLoading(true);
+    try {
+      const response = await request<IEnvelopeLike<ISalaryPaySlipDelivery[]>>(
+        salaryRecordDeliverApi(accountBookId, recordId),
+      );
+      setDeliveries(response.payload ?? []);
+    } catch {
+      /**
+       * Info: (20260904 - Julian) 抓不到就當作「沒寄過」。
+       *
+       * 這一段的用途是決定按鈕的字，不是決定能不能寄 —— 猜錯的代價是
+       * 使用者看到「寄出」而其實寄過了，而重寄本來就是合法的（計畫書 §2.3）。
+       * 為此在彈窗上多一塊錯誤區塊，代價比收益大。
+       */
+      setDeliveries([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [accountBookId, recordId]);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  /**
+   * Info: (20260904 - Julian) 最近一次**成功**的寄送。
+   *
+   * 清單是新的在前，所以第一筆 SENT 就是最近一次。
+   * 失敗的列不算「寄過」—— 對方沒有收到任何東西，按鈕該寫「寄出」。
+   */
+  const lastSent =
+    deliveries.find(
+      (delivery) => delivery.status === SALARY_DELIVERY_STATUS.SENT,
+    ) ?? null;
+
+  return { deliveries, lastSent, isLoading, reload };
+}
+
+/**
  * Info: (20260904 - Julian) 「已寄出」分頁的資料。
  *
  * 只回中繼資料 —— 點開某一列時由彈窗自己去取那一筆的薪資單快照。

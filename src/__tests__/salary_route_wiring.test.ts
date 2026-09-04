@@ -1,5 +1,5 @@
 /**
- * Info: (20260831 - Julian) 裝配測試：薪資計算機的十支端點真的接上了身分閘、
+ * Info: (20260831 - Julian) 裝配測試：薪資計算機的十一支端點真的接上了身分閘、
  * 限流器與授權閘。
  *
  * 形式與理由完全照 `leave_route_wiring.test.ts`：直接 `import` 真的 handler，
@@ -63,7 +63,10 @@ import {
   GET as recordDetail,
   DELETE as recordDelete,
 } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/record/[record_id]/route";
-import { POST as recordDeliver } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/record/[record_id]/deliver/route";
+import {
+  GET as recordDeliveryHistory,
+  POST as recordDeliver,
+} from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/record/[record_id]/deliver/route";
 import { GET as deliveryList } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/delivery/route";
 
 jest.mock("@/lib/auth/dewt", () => ({ getIdentityFromDeWT: jest.fn() }));
@@ -123,6 +126,8 @@ const serviceMocks = {
   deliver: salaryPaySlipDeliveryService.deliver as unknown as IAnyMock,
   deliveryList:
     salaryPaySlipDeliveryService.listByAccountBook as unknown as IAnyMock,
+  deliveryHistory:
+    salaryPaySlipDeliveryService.listByRecord as unknown as IAnyMock,
 };
 
 const BOOK = "book-1";
@@ -237,7 +242,7 @@ const recordParams = () =>
   Promise.resolve({ account_book_id: BOOK, record_id: RECORD_ID });
 
 /**
- * Info: (20260901 - Julian) 十支端點的清單，三個 `it.each` 共用同一份。
+ * Info: (20260901 - Julian) 十一支端點的清單，三個 `it.each` 共用同一份。
  *
  * ## 為什麼要有這張表
  *
@@ -468,6 +473,23 @@ const ENDPOINTS: IEndpointCase[] = [
     service: serviceMocks.deliveryList,
     run: (address) => deliveryList(get(address), { params: bookParams() }),
   },
+  /**
+   * Info: (20260904 - Julian) 第十一支：某一筆的寄送歷史。
+   *
+   * 與 `POST` 同一個檔案、同一條路徑，但**層級與桶都不同** ——
+   * 目錄走訪那條會把同一個檔案裡的兩個 handler 各算一支，
+   * 所以「同檔就沿用同一組設定」這種順手的錯有地方會紅。
+   */
+  {
+    label: "GET record/:id/deliver（這一筆的寄送歷史）",
+    key: "delivery-history",
+    source: "GET record/[record_id]/deliver/route.ts",
+    access: SalaryAccess.READ,
+    bucket: RateLimitBucketEnum.READ,
+    service: serviceMocks.deliveryHistory,
+    run: (address) =>
+      recordDeliveryHistory(get(address), { params: recordParams() }),
+  },
   {
     label: "POST record/:id/deliver（寄出薪資單）",
     key: "record-deliver",
@@ -499,12 +521,12 @@ beforeEach(() => {
 });
 
 describe("身分閘：沒有 token 就到不了業務邏輯", () => {
-  it("端點表涵蓋了全部十支端點（表短了，下面三條就會靜靜地少驗幾支）", () => {
-    expect(ENDPOINTS).toHaveLength(10);
-    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.label)).size).toBe(10);
-    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.key)).size).toBe(10);
+  it("端點表涵蓋了全部十一支端點（表短了，下面三條就會靜靜地少驗幾支）", () => {
+    expect(ENDPOINTS).toHaveLength(11);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.label)).size).toBe(11);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.key)).size).toBe(11);
     expect(new Set(ENDPOINTS.map((endpoint) => endpoint.service)).size).toBe(
-      10,
+      11,
     );
   });
 
@@ -612,7 +634,7 @@ describe("授權閘：不是這本帳的成員就寫不進去", () => {
     },
   );
 
-  it("寫入端點就是那六支（四讀六寫，換一種分法都要有人重新想過）", () => {
+  it("寫入端點就是那六支（五讀六寫，換一種分法都要有人重新想過）", () => {
     const writes = ENDPOINTS.filter(
       (endpoint) => endpoint.access === SalaryAccess.WRITE,
     ).map((endpoint) => endpoint.key);

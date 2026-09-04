@@ -313,11 +313,12 @@ export const calculator = {
     send: "給与明細を送信",
     reset: "リセット",
     re_send: "給与明細を再送信",
-    send_disabled_incomplete:
-      "4つのステップをすべて完了すると給与明細を送信できます",
     send_disabled_unsaved: "給与記録を保存すると給与明細を送信できます",
     send_disabled_no_email:
       "この従業員にはメールアドレスがありません。先に従業員一覧で追加してください",
+    send_disabled_employee_gone:
+      "この従業員は一覧から削除されているため、給与明細を送信できません",
+    send_disabled_loading: "従業員一覧を確認しています...",
   },
   message: {
     name_error_title: "従業員名が未入力です",

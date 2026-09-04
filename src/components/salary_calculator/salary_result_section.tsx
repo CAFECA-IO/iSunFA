@@ -438,19 +438,26 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
   const sendingBtnClickHandler = () => toggleShowSendingModal();
 
   /**
-   * Info: (20260904 - Julian) 停用的原因要說得出來，而且三種原因不一樣。
+   * Info: (20260904 - Julian) 寄出**專屬**的停用原因。
    *
-   * 「沒填完」「還沒存」「這位員工沒有信箱」的下一步完全不同。
-   * 共用一句「請完成必填欄位」的話，沒有信箱的那個人會回頭一格一格檢查
-   * 一張已經填完的表（同員工表單分頁那一組紅點的處置：停用的按鈕一定要說得出為什麼）。
+   * 「還沒存」與「這位員工沒有信箱」的下一步完全不同，所以分開講：
+   * 共用一句的話，沒有信箱的那個人會回頭一格一格檢查一張已經填完的表
+   * （同員工表單分頁那一組紅點的處置：停用的按鈕一定要說得出為什麼）。
+   *
+   * **「四個步驟沒填完」不在這裡** —— 下面那條 `disabled_hint` 已經在講它了，
+   * 而且它同時管著下載與儲存。初版把它也列進來，結果是畫面上疊出兩行
+   * 只差三個字的句子（「才能寄出薪資單」／「才能下載或儲存薪資單」），
+   * 講的是同一個成因、同一個下一步。原因相同時，一句就夠。
    */
   const sendDisabledReason = (() => {
-    if (btnDisabled) return "calculator.button.send_disabled_incomplete";
     if (!savedRecord) return "calculator.button.send_disabled_unsaved";
     if (employeeEmail.trim() === "")
       return "calculator.button.send_disabled_no_email";
     return null;
   })();
+
+  // Info: (20260904 - Julian) 按鈕的停用條件仍然包含「沒填完」，只是那件事由共用的提示來講
+  const sendDisabled = btnDisabled || sendDisabledReason !== null;
 
   return (
     <>
@@ -522,7 +529,7 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
             <button
               type="button"
               onClick={sendingBtnClickHandler}
-              disabled={sendDisabledReason !== null}
+              disabled={sendDisabled}
               className="col-span-1 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white text-sm font-bold text-orange-600 ring-1 ring-orange-600 transition-colors hover:bg-orange-50 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:ring-0 lg:col-span-2"
             >
               {t("calculator.button.send")} <Send size={20} />
@@ -530,12 +537,19 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
           )}
         </div>
 
-        {/* Info: (20260904 - Julian) 為什麼寄不出去。三種原因的下一步不同，所以分開講 */}
-        {accountBookId !== null && sendDisabledReason !== null && (
-          <p className="text-text-neutral-tertiary text-xs">
-            {t(sendDisabledReason)}
-          </p>
-        )}
+        {/**
+         * Info: (20260904 - Julian) 為什麼寄不出去 —— 只講下面那條提示沒涵蓋的原因。
+         *
+         * `btnDisabled` 時讓位給共用的 `disabled_hint`：兩者同時出現的話，
+         * 畫面上會疊出兩行只差三個字、成因完全相同的句子。
+         */}
+        {accountBookId !== null &&
+          !btnDisabled &&
+          sendDisabledReason !== null && (
+            <p className="text-text-neutral-tertiary text-xs">
+              {t(sendDisabledReason)}
+            </p>
+          )}
 
         {/* Info: (20260831 - Julian) 講清楚為什麼按鈕是灰的，否則使用者只會看到一顆不能按的按鈕 */}
         {btnDisabled && (

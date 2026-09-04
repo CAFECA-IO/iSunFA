@@ -312,12 +312,13 @@ export const calculator = {
     send: "급여 명세서 발송",
     reset: "초기화",
     re_send: "급여 명세서 재발송",
-    send_disabled_incomplete:
-      "네 단계를 모두 완료해야 급여명세서를 보낼 수 있습니다",
     send_disabled_unsaved:
       "급여 기록을 먼저 저장해야 급여명세서를 보낼 수 있습니다",
     send_disabled_no_email:
       "이 직원에게 이메일 주소가 없습니다. 먼저 직원 목록에서 추가해 주세요",
+    send_disabled_employee_gone:
+      "이 직원은 목록에서 삭제되어 급여명세서를 보낼 수 없습니다",
+    send_disabled_loading: "직원 목록을 확인하는 중...",
   },
   message: {
     name_error_title: "직원 이름 미입력",

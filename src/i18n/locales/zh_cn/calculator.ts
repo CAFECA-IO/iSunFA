@@ -298,9 +298,10 @@ export const calculator = {
     send: "发送薪资单",
     reset: "重置",
     re_send: "重新发送薪资单",
-    send_disabled_incomplete: "完成全部四个步骤后，才能寄出薪资单",
     send_disabled_unsaved: "请先储存薪资记录，才能寄出薪资单",
     send_disabled_no_email: "这位员工的资料里没有电子邮件，请先到员工列表补上",
+    send_disabled_employee_gone: "这位员工已从名单移除，无法寄出薪资单",
+    send_disabled_loading: "正在确认员工名单…",
   },
   message: {
     name_error_title: "未填写员工姓名",

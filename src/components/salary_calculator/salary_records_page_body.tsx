@@ -87,6 +87,43 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [hasError, setHasError] = useState<boolean>(false);
   const [viewing, setViewing] = useState<ISalaryRecordDetail | null>(null);
+
+  /**
+   * Info: (20260904 - Julian) 這一筆的薪資單寄不寄得出去，以及寄不出去的原因。
+   *
+   * 收件信箱不在薪資紀錄裡（`ISalaryRecordDetail.employee` 只有 id / name / number），
+   * 要從這一頁已經載入的員工名單查。而查不到有兩種意思，**下一步完全不同**：
+   *
+   * - 查得到但 email 是空的 → 去員工列表補一個信箱
+   * - 查不到這個人 → 他已經從名單移除了（軟刪）。薪資紀錄仍在（那是刻意的：
+   *   薪資單是對外憑據，員工被刪不能讓歷史一起消失），但伺服器的 `getEmployeeById`
+   *   會過濾掉 `deletedAt`，寄送必然回 404 —— 叫使用者去補信箱只會白跑一趟。
+   *
+   * 名單還在載入、或名單根本沒載到時**不下結論**，但也不放行：那時每個人都
+   * 「查不到」，而「他被刪了」與「名單掛了」是完全不同的事 ——
+   * 這一頁上面那段註解記的正是這個歧義，不該在這裡又折一次。
+   * 這種情況給的是「還在確認」，不是猜一個成因說給使用者聽。
+   */
+  const viewingSendTarget = ((): {
+    email?: string;
+    blockedReason?: string;
+  } => {
+    if (!viewing) return {};
+    if (isEmployeesLoading || hasEmployeesError) {
+      return { blockedReason: "calculator.button.send_disabled_loading" };
+    }
+
+    const employee = employees.find(
+      (candidate) => candidate.id === viewing.employee.id,
+    );
+    if (!employee) {
+      return { blockedReason: "calculator.button.send_disabled_employee_gone" };
+    }
+    if (employee.email.trim() === "") {
+      return { blockedReason: "calculator.button.send_disabled_no_email" };
+    }
+    return { email: employee.email };
+  })();
   const [deleting, setDeleting] = useState<ISalaryRecordSummary | null>(null);
   /**
    * Info: (20260901 - Julian) 列上那三顆圖示鈕的失敗訊息。
@@ -553,6 +590,11 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
           employeeName={viewing.employee.name}
           employeeNumber={viewing.employee.number}
           modalCloseHandler={() => setViewing(null)}
+          accountBookId={accountBookId}
+          recordId={viewing.id}
+          employeeEmail={viewingSendTarget.email}
+          sendBlockedReason={viewingSendTarget.blockedReason}
+          onResent={() => setViewing(null)}
         />
       )}
     </SalaryCalculatorShell>

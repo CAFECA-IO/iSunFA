@@ -320,12 +320,13 @@ export const calculator = {
     send: "Send Pay Slip",
     reset: "Reset",
     re_send: "Resend Pay Slip",
-    send_disabled_incomplete:
-      "Finish all four steps before sending the pay slip",
     send_disabled_unsaved:
       "Save the salary record first, then you can send the pay slip",
     send_disabled_no_email:
       "This employee has no email address — add one in the employee list first",
+    send_disabled_employee_gone:
+      "This employee is no longer on the list — the pay slip cannot be sent",
+    send_disabled_loading: "Checking the employee list...",
   },
   message: {
     name_error_title: "Employee’s Name is not Filled",

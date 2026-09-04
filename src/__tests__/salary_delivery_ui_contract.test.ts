@@ -277,15 +277,36 @@ describe("計算機頁的寄出按鈕", () => {
     expect(source).toContain('employeeEmail.trim() === ""');
   });
 
-  it("停用的三種原因各有各的文案", () => {
-    const reasons = [
-      "send_disabled_incomplete",
-      "send_disabled_unsaved",
-      "send_disabled_no_email",
-    ];
+  it("寄出專屬的兩種原因各有各的文案", () => {
+    const reasons = ["send_disabled_unsaved", "send_disabled_no_email"];
 
     reasons.forEach((reason) => expect(source).toContain(reason));
     expect(new Set(reasons).size).toBe(reasons.length);
+  });
+
+  /**
+   * Info: (20260904 - Julian) 「四個步驟沒填完」由共用的 `disabled_hint` 講，
+   * 它同時管著下載與儲存。初版讓寄出也講一次，畫面上就疊出兩行只差三個字的句子
+   * （「才能寄出薪資單」／「才能下載或儲存薪資單」）—— 同一個成因、同一個下一步。
+   *
+   * 這一條釘住「原因相同時只講一句」：兩個提示的顯示條件必須互斥。
+   */
+  it("沒填完時不再重複講一次（讓位給共用的 disabled_hint）", () => {
+    expect(source).not.toContain("send_disabled_incomplete");
+    /**
+     * Info: (20260904 - Julian) 用 regex 而不是 `toContain`：prettier 會依行寬
+     * 把長條件折行，而折點會隨著周圍的縮排變動 —— 寫死一整行的字串，
+     * 這條測試會在某次無關的排版變動後紅掉，然後被人改成寬鬆的版本。
+     */
+    expect(source).toMatch(/!btnDisabled &&\s*sendDisabledReason !== null/);
+    expect(source).toMatch(/\{btnDisabled &&\s*\(/);
+  });
+
+  it("按鈕的停用條件仍然包含「沒填完」，只是那件事由別人講", () => {
+    expect(source).toMatch(
+      /const sendDisabled =\s*btnDisabled \|\| sendDisabledReason !== null;/,
+    );
+    expect(source).toContain("disabled={sendDisabled}");
   });
 
   /**
@@ -301,7 +322,7 @@ describe("計算機頁的寄出按鈕", () => {
   });
 });
 
-describe("預覽彈窗的重寄按鈕", () => {
+describe("預覽彈窗的寄送入口", () => {
   const source = stripComments(
     read("components/salary_calculator/view_pay_slip_modal.tsx"),
   );
@@ -313,10 +334,133 @@ describe("預覽彈窗的重寄按鈕", () => {
    *
    *「我收到的薪資單」分頁正是這種情況：它看的是別人寄來的單子，沒有 `recordId`。
    */
-  it("拿不到 recordId 就不顯示重寄按鈕", () => {
-    expect(source).toContain(
-      "const canResend = !!accountBookId && !!recordId;",
+  it("拿不到 recordId 就沒有寄送入口", () => {
+    expect(source).toContain("const canSend = !!accountBookId && !!recordId;");
+    expect(source).toMatch(/\{canSend && \(/);
+  });
+
+  /**
+   * Info: (20260904 - Julian) 「這一筆寄過沒有」問伺服器，不看 props。
+   *
+   * 同事可能十分鐘前才剛寄過，而呼叫端手上的清單是更早以前抓的。
+   * 薪資紀錄頁尤其如此：那一頁根本不知道任何一筆寄過沒有 ——
+   * 它連 `sentDate` / `sentTo` 都傳不出來。
+   */
+  it("寄過沒有是問伺服器來的，不是靠 props 推的", () => {
+    expect(source).toContain("useSalaryRecordDeliveries");
+    expect(source).toContain("lastSent");
+  });
+
+  /**
+   * Info: (20260904 - Julian) 一顆按鈕兩種字，而不是兩顆按鈕其中一顆永遠停用 ——
+   * 停用的按鈕使用者得先讀懂才知道不用理它。
+   */
+  it("同一顆按鈕依「寄過沒有」換字，不是兩顆", () => {
+    expect(source).toMatch(
+      /lastSent\s*\?\s*t\("calculator\.button\.re_send"\)\s*:\s*t\("calculator\.button\.send"\)/,
     );
-    expect(source).toMatch(/isSentRecord = .*canResend/);
+  });
+
+  it("寄過的走重寄確認，沒寄過的走寄出確認", () => {
+    expect(source).toMatch(/lastSent && \(\s*<ResendingPaySlipModal/);
+    expect(source).toMatch(/!lastSent && \(\s*<SendingPaySlipModal/);
+  });
+
+  /**
+   * Info: (20260904 - Julian) 只有「還沒寄過」那條路會被擋：重寄不需要收件信箱
+   * （伺服器自己推導），也不受員工被移除影響 —— 那時它本來就會 404，
+   * 而畫面已經有一次成功寄送的紀錄可以顯示。
+   */
+  it("停用只發生在還沒寄過的情況，而且說得出為什麼", () => {
+    expect(source).toContain("sendBlockedReason");
+
+    /**
+     * Info: (20260904 - Julian) **按鈕的 `disabled` 與提示文字要分開驗。**
+     *
+     * 初版只驗了提示那一段的條件，於是把 `disabled` 裡的守衛整個拿掉
+     * 仍然全綠 —— 而那個狀態是：畫面寫著「這位員工沒有信箱」，
+     * 按鈕卻按得下去，按下去開一個必然失敗的彈窗。
+     * 提示與停用是兩件事，兩件都要釘。
+     */
+    expect(source).toMatch(
+      /disabled=\{\s*isLoadingHistory \|\|\s*\(!lastSent && sendBlockedReason !== undefined\)\s*\}/,
+    );
+    expect(source).toMatch(
+      /\{canSend && !lastSent && sendBlockedReason !== undefined && \(/,
+    );
+  });
+});
+
+describe("薪資紀錄頁的寄送入口", () => {
+  const source = stripComments(
+    read("components/salary_calculator/salary_records_page_body.tsx"),
+  );
+
+  /**
+   * Info: (20260904 - Julian) 計畫書 §6.1 的第三列，PR C 初版漏掉了。
+   *
+   * 缺了它，「從薪資紀錄列表點開一筆從沒寄過的」這條路寄不出去 ——
+   * 而那大概是最自然的入口：計算機頁只能寄剛剛存的那一筆，
+   * 「已寄出」分頁只能重寄寄過的。
+   */
+  it("預覽彈窗拿得到帳本與紀錄 id", () => {
+    expect(source).toContain("accountBookId={accountBookId}");
+    expect(source).toContain("recordId={viewing.id}");
+  });
+
+  /**
+   * Info: (20260904 - Julian) 查不到員工有兩種意思，**下一步完全不同**：
+   * 「有這個人但沒填信箱」要去員工列表補；「查不到這個人」是他已被軟刪 ——
+   * 薪資紀錄仍在（薪資單是對外憑據），但伺服器的 `getEmployeeById` 會過濾
+   * `deletedAt`，寄送必然回 404。叫使用者去補信箱只會白跑一趟。
+   */
+  it("沒信箱與員工已移除是兩種不同的理由", () => {
+    expect(source).toContain("send_disabled_no_email");
+    expect(source).toContain("send_disabled_employee_gone");
+  });
+
+  /**
+   * Info: (20260904 - Julian) 名單載入中或名單掛了的時候，每個人都「查不到」——
+   * 這一頁上面那段註解記的正是這個歧義。那時不下結論，但也不放行。
+   */
+  it("名單還沒確定時不猜成因，也不放行", () => {
+    expect(source).toMatch(
+      /isEmployeesLoading \|\| hasEmployeesError.*\n?.*send_disabled_loading/s,
+    );
+  });
+});
+
+describe("listByRecord 有讀者", () => {
+  /**
+   * Info: (20260904 - Julian) 計畫書 §6.3 的教訓：`SalaryRecord.createdByUserId`
+   * 加了欄位卻沒有任何讀者，稽核價值等於零。同樣的道理適用於方法 ——
+   * 一支沒有呼叫端的 repository 方法只是還沒被發現的死碼。
+   *
+   * PR C 初版就是這樣：repo 與 service 都實作了 `listByRecord`，
+   * 而它本來是為了「已寄過的顯示 Resending」寫的，那一列卻沒做。
+   */
+  it("端點與前端都真的用到它", () => {
+    const route = stripComments(
+      read(
+        "app/api/v1/user/account_book/[account_book_id]/salary_calculator/record/[record_id]/deliver/route.ts",
+      ),
+    );
+    const hook = stripComments(read("hooks/use_salary_pay_slip_delivery.ts"));
+
+    expect(route).toContain("listByRecord");
+    expect(route).toContain("export async function GET(");
+    expect(hook).toContain("useSalaryRecordDeliveries");
+  });
+
+  /**
+   * Info: (20260904 - Julian) 失敗的列不算「寄過」—— 對方沒有收到任何東西，
+   * 按鈕該寫「寄出」而不是「重新寄送」。
+   */
+  it("只有成功的那些算寄過", () => {
+    const hook = stripComments(read("hooks/use_salary_pay_slip_delivery.ts"));
+
+    expect(hook).toMatch(
+      /lastSent =\s*deliveries\.find\([\s\S]*?SALARY_DELIVERY_STATUS\.SENT/,
+    );
   });
 });
