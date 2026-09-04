@@ -93,6 +93,9 @@ const recordOf = (
   calculatorVersion: "2026.1",
   createdAt: 1_756_000_000,
   updatedAt: 1_756_000_000,
+  // Info: (20260904 - Julian) 這一支測的是寄送編排，預設當作「還沒寄過」
+  lastSentAt: null,
+  lastSentTo: null,
   input: { year: 2026, month: 9 } as unknown as ISalaryCalculatorOptions,
   result: {
     ...defaultSalaryCalculatorResult,

@@ -430,6 +430,116 @@ describe("薪資紀錄頁的寄送入口", () => {
   });
 });
 
+describe("薪資紀錄列表的寄出狀態", () => {
+  const page = stripComments(
+    read("components/salary_calculator/salary_records_page_body.tsx"),
+  );
+  const repo = stripComments(read("repositories/salary_record.repo.ts"));
+
+  it("每一列顯示寄出狀態，未寄出與已寄出是兩種樣子", () => {
+    expect(page).toContain("calculator.records.delivery_status");
+    expect(page).toContain("calculator.records.not_sent");
+    expect(page).toContain("record.lastSentAt === null");
+  });
+
+  it("已寄出那一格帶著日期與當初的收件信箱", () => {
+    expect(page).toContain("timestampToString(record.lastSentAt)");
+    expect(page).toContain("record.lastSentTo");
+  });
+
+  /**
+   * Info: (20260904 - Julian) **狀態必須由伺服器算。**
+   *
+   * 看似可以拿整本帳的寄送清單（`GET salary_calculator/delivery`）在前端
+   * index 起來比對 —— 但那一支有 200 筆上限且是全帳本新的在前，於是一本
+   * 累積久了的帳，**舊紀錄會靜靜地顯示成「未寄出」**。使用者看到那個字
+   * 會再寄一次，而對方已經收過了。錯的答案長得跟對的一樣。
+   *
+   * 這一條釘住那條路沒有被走回去。
+   */
+  it("狀態不是拿整本帳的寄送清單在前端對照出來的", () => {
+    expect(page).not.toContain("useSalaryPaySlipDeliveries");
+    /**
+     * Info: (20260904 - Julian) 只擋整本帳的寄送清單那一支，不是所有 API ——
+     * 這一頁本來就要用 `salaryCalculatorApiOf(...).RECORD` 抓薪資紀錄。
+     * 初版寫成擋 `salaryCalculatorApiOf` 整個名字，那是一條會擋住正確做法的假限制。
+     */
+    expect(page).not.toContain(".DELIVERY");
+  });
+
+  /**
+   * Info: (20260904 - Julian) 三個 include 站點都要帶上關聯。
+   *
+   * 少帶一個的話，那條路徑回來的 `lastSentAt` 是 `null` —— 而 `null` 的意思是
+   * 「從未寄出」，不是「這次沒問」。兩者在型別上長得一模一樣，而畫面會照著它寫字。
+   */
+  it("repository 的每一條讀取路徑都帶上最近一次寄送", () => {
+    expect(repo).not.toContain("include: { employee: true }");
+    expect(repo.match(/include: RECORD_INCLUDE/g) ?? []).toHaveLength(3);
+  });
+
+  it("只有成功的那一次算「已寄出」", () => {
+    expect(repo).toMatch(/where: \{ status: SALARY_DELIVERY_STATUS\.SENT \}/);
+    expect(repo).toContain("take: 1");
+  });
+});
+
+describe("薪資紀錄列表的寄出按鈕", () => {
+  const page = stripComments(
+    read("components/salary_calculator/salary_records_page_body.tsx"),
+  );
+
+  it("列上就能寄，不必先點開預覽", () => {
+    expect(page).toContain("onClick={() => setSending(record)}");
+    expect(page).toContain("<SendingPaySlipModal");
+    expect(page).toContain("<ResendingPaySlipModal");
+  });
+
+  it("寄過的走重寄，沒寄過的走寄出", () => {
+    expect(page).toMatch(
+      /sending\.lastSentAt === null && \(\s*<SendingPaySlipModal/,
+    );
+    expect(page).toMatch(
+      /sending\.lastSentAt !== null && \(\s*<ResendingPaySlipModal/,
+    );
+  });
+
+  /**
+   * Info: (20260904 - Julian) 圖示按鈕沒有文字，停用之後畫面上沒有地方說得出
+   * 為什麼（列表沒有空間放一行說明）—— 所以理由掛在 `title` 上。
+   */
+  it("停用時 title 換成原因，而不是只留一個灰掉的圖示", () => {
+    expect(page).toContain("blockedReason !== undefined");
+    expect(page).toContain("send_disabled_employee_gone");
+    expect(page).toContain("send_disabled_no_email");
+  });
+
+  /**
+   * Info: (20260904 - Julian) 已經寄過的那些不受阻擋：重寄不需要收件信箱
+   * （伺服器自己推導），也不受員工被移除影響。
+   */
+  it("阻擋只發生在還沒寄過的那些", () => {
+    expect(page).toMatch(
+      /disabled=\{\s*record\.lastSentAt === null &&\s*sendTargetOf\(record\.employee\.id\)\.blockedReason !== undefined\s*\}/,
+    );
+  });
+
+  it("寄出成功之後重抓，那一列才會從「未寄出」變成日期", () => {
+    expect(page).toMatch(/onSent=\{\(\) => \{[\s\S]{0,200}?reload\(\);/);
+    expect(page).toMatch(/onResent=\{\(\) => \{[\s\S]{0,200}?reload\(\);/);
+  });
+
+  /**
+   * Info: (20260904 - Julian) 預覽彈窗與列表問的是同一個問題，
+   * 答案不該有兩套推導 —— 兩邊各寫一次的話，改一邊忘了另一邊是必然。
+   */
+  it("列表與預覽彈窗共用同一支寄送目標推導", () => {
+    expect(page).toContain("const sendTargetOf = (");
+    expect(page).toContain("sendTargetOf(viewing.employee.id)");
+    expect(page).toContain("sendTargetOf(record.employee.id)");
+  });
+});
+
 describe("listByRecord 有讀者", () => {
   /**
    * Info: (20260904 - Julian) 計畫書 §6.3 的教訓：`SalaryRecord.createdByUserId`

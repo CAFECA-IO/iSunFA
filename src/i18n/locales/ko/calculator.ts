@@ -294,6 +294,8 @@ export const calculator = {
       "직원 명단을 불러오지 못했습니다. 이 상태에서는 계산기로 불러와도 직원과 연결할 수 없습니다.",
     load_back_unlinked:
       "이 직원은 명단에 없습니다. 이름과 사번은 이 기록에서 채웠지만 직원 연결은 만들어지지 않았습니다 — 저장할 때 대상을 다시 확인합니다.",
+    delivery_status: "발송 상태",
+    not_sent: "미발송",
   },
   account_book_entry: {
     title: "이번 계산을 저장할까요?",

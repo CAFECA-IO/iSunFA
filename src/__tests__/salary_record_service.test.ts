@@ -212,6 +212,12 @@ class FakeRecordRepo implements ISalaryRecordRepository {
       calculatorVersion: params.calculatorVersion,
       createdAt: 0,
       updatedAt: 0,
+      /**
+       * Info: (20260904 - Julian) 假 repo 不模擬寄送 —— 這一支測的是儲存的編排。
+       * `null` 在這裡是誠實的：這個假的資料庫裡確實沒有任何寄送紀錄。
+       */
+      lastSentAt: null,
+      lastSentTo: null,
       input: params.input,
       result: params.result,
     };

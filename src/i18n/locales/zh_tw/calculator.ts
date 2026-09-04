@@ -284,6 +284,8 @@ export const calculator = {
       "員工名單載入失敗，這時候載回計算機無法建立員工連結。",
     load_back_unlinked:
       "這位員工已不在名單上。姓名與編號已依這筆紀錄填入，但沒有建立員工連結 —— 儲存時會再問一次要存給誰。",
+    delivery_status: "寄送狀態",
+    not_sent: "未寄出",
   },
   account_book_entry: {
     title: "想把這次的試算存起來嗎？",

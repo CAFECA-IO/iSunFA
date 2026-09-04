@@ -302,6 +302,8 @@ export const calculator = {
       "Could not load the employee list. Loading a record into the calculator cannot link it to an employee right now.",
     load_back_unlinked:
       "This employee is no longer on the list. The name and number were filled in from this record, but no employee link was made — you will be asked who to save it for.",
+    delivery_status: "Delivery",
+    not_sent: "Not sent",
   },
   account_book_entry: {
     title: "Want to keep this calculation?",

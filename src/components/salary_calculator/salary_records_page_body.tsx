@@ -2,10 +2,19 @@
 
 import { FC, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, FileStack, RotateCcw, Search, Trash, X } from "lucide-react";
+import {
+  Eye,
+  FileStack,
+  MailCheck,
+  RotateCcw,
+  Search,
+  Send,
+  Trash,
+  X,
+} from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { request, IEnvelopeLike } from "@/lib/utils/request";
-import { numberWithCommas } from "@/lib/utils/common";
+import { numberWithCommas, timestampToString } from "@/lib/utils/common";
 import {
   salaryCalculatorApiOf,
   salaryRecordItemApi,
@@ -21,6 +30,8 @@ import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { useSalaryEmployees } from "@/hooks/use_salary_employees";
 import { resolveLoadBackIdentity } from "@/lib/utils/salary_load_back";
 import DataTable, { IDataTableColumn } from "@/components/common/data_table";
+import SendingPaySlipModal from "@/components/salary_calculator/sending_pay_slip_modal";
+import ResendingPaySlipModal from "@/components/salary_calculator/resending_pay_slip_modal";
 import SalaryCalculatorShell from "@/components/salary_calculator/salary_calculator_shell";
 import ViewPaySlipModal from "@/components/salary_calculator/view_pay_slip_modal";
 import DeleteRecordModal from "@/components/salary_calculator/delete_record_modal";
@@ -89,9 +100,9 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
   const [viewing, setViewing] = useState<ISalaryRecordDetail | null>(null);
 
   /**
-   * Info: (20260904 - Julian) 這一筆的薪資單寄不寄得出去，以及寄不出去的原因。
+   * Info: (20260904 - Julian) 某一筆的薪資單寄不寄得出去，以及寄不出去的原因。
    *
-   * 收件信箱不在薪資紀錄裡（`ISalaryRecordDetail.employee` 只有 id / name / number），
+   * 收件信箱不在薪資紀錄裡（`ISalaryRecordSummary.employee` 只有 id / name / number），
    * 要從這一頁已經載入的員工名單查。而查不到有兩種意思，**下一步完全不同**：
    *
    * - 查得到但 email 是空的 → 去員工列表補一個信箱
@@ -103,18 +114,19 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
    * 「查不到」，而「他被刪了」與「名單掛了」是完全不同的事 ——
    * 這一頁上面那段註解記的正是這個歧義，不該在這裡又折一次。
    * 這種情況給的是「還在確認」，不是猜一個成因說給使用者聽。
+   *
+   * 收成一支吃 `employeeId` 的函式（原本只服務預覽彈窗那一筆）——
+   * 列表每一列的寄出按鈕問的是同一個問題，答案不該有兩套推導。
    */
-  const viewingSendTarget = ((): {
-    email?: string;
-    blockedReason?: string;
-  } => {
-    if (!viewing) return {};
+  const sendTargetOf = (
+    employeeIdOfRecord: string,
+  ): { email?: string; blockedReason?: string } => {
     if (isEmployeesLoading || hasEmployeesError) {
       return { blockedReason: "calculator.button.send_disabled_loading" };
     }
 
     const employee = employees.find(
-      (candidate) => candidate.id === viewing.employee.id,
+      (candidate) => candidate.id === employeeIdOfRecord,
     );
     if (!employee) {
       return { blockedReason: "calculator.button.send_disabled_employee_gone" };
@@ -123,7 +135,19 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
       return { blockedReason: "calculator.button.send_disabled_no_email" };
     }
     return { email: employee.email };
-  })();
+  };
+
+  const viewingSendTarget = viewing ? sendTargetOf(viewing.employee.id) : {};
+
+  /**
+   * Info: (20260904 - Julian) 列表上正在寄送的那一筆。
+   *
+   * 連 `summary` 一起記而不是只記 id：彈窗要顯示期間與姓名，
+   * 而按下按鈕之後那一頁可能已經因為別的操作重抓過（`records` 換了一份陣列），
+   * 用 id 回頭找有機會找不到 —— 那時彈窗會無聲消失。
+   */
+  const [sending, setSending] = useState<ISalaryRecordSummary | null>(null);
+  const sendingTarget = sending ? sendTargetOf(sending.employee.id) : {};
   const [deleting, setDeleting] = useState<ISalaryRecordSummary | null>(null);
   /**
    * Info: (20260901 - Julian) 列上那三顆圖示鈕的失敗訊息。
@@ -350,11 +374,71 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
       ),
     },
     {
+      key: "delivery",
+      label: t("calculator.records.delivery_status"),
+      /**
+       * Info: (20260904 - Julian) 「已寄出」帶著日期與收件信箱。
+       *
+       * 只寫「已寄出」的話，使用者接著要問的一定是「寄給誰、什麼時候」——
+       * 而那兩個答案就在同一筆資料裡，沒有理由讓他再點一次。
+       * 信箱是**當初寄出時的快照**，不是員工檔的現值（見 `lastSentTo`）。
+       */
+      render: (record) =>
+        record.lastSentAt === null ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+            {t("calculator.records.not_sent")}
+          </span>
+        ) : (
+          <div className="flex flex-col gap-0.5">
+            <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+              <MailCheck className="size-3" />
+              {timestampToString(record.lastSentAt).dateWithDash}
+            </span>
+            {record.lastSentTo !== null && (
+              <span className="font-mono text-xs break-all text-gray-400">
+                {record.lastSentTo}
+              </span>
+            )}
+          </div>
+        ),
+    },
+    {
       key: "action",
       label: t("calculator.records.action"),
       align: "right",
       render: (record) => (
         <div className="flex items-center justify-end gap-1">
+          {/**
+           * Info: (20260904 - Julian) 直接從列上寄，不必先點開預覽。
+           *
+           * `title` 在寄不出去的時候換成原因 —— 圖示按鈕沒有文字，
+           * 停用之後畫面上完全沒有地方說得出為什麼（列表沒有空間放一行說明）。
+           * 這是本模組唯一一處用 `title` 承載原因的地方，因為它是唯一一處
+           * 停用的控制項旁邊放不下文字的。
+           */}
+          <button
+            type="button"
+            aria-label={
+              record.lastSentAt === null
+                ? t("calculator.button.send")
+                : t("calculator.button.re_send")
+            }
+            title={
+              sendTargetOf(record.employee.id).blockedReason !== undefined
+                ? t(sendTargetOf(record.employee.id).blockedReason as string)
+                : record.lastSentAt === null
+                  ? t("calculator.button.send")
+                  : t("calculator.button.re_send")
+            }
+            onClick={() => setSending(record)}
+            disabled={
+              record.lastSentAt === null &&
+              sendTargetOf(record.employee.id).blockedReason !== undefined
+            }
+            className={`${iconBtnStyle} text-gray-400 enabled:hover:bg-gray-100 enabled:hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent`}
+          >
+            <Send className="size-4" />
+          </button>
           <button
             type="button"
             aria-label={t("calculator.records.view")}
@@ -579,6 +663,47 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
           record={deleting}
           closeHandler={() => setDeleting(null)}
           deleteHandler={() => deleteHandler(deleting)}
+        />
+      )}
+
+      {/**
+       * Info: (20260904 - Julian) 寄過的走重寄確認，沒寄過的走寄出確認 ——
+       * 與預覽彈窗裡那一顆同一套判斷，只是這裡的「寄過沒有」來自列表資料
+       * （`lastSentAt` 由伺服器算），不必再問一次歷史。
+       */}
+      {sending && sending.lastSentAt === null && (
+        <SendingPaySlipModal
+          accountBookId={accountBookId}
+          recordId={sending.id}
+          employeeName={sending.employee.name}
+          employeeEmail={sendingTarget.email ?? ""}
+          monthLabel={t("calculator.records.pay_period_value", {
+            year: sending.year,
+            month: sending.month,
+          })}
+          modalVisibleHandler={() => setSending(null)}
+          onSent={() => {
+            setSending(null);
+            // Info: (20260904 - Julian) 重抓才會看到那一列從「未寄出」變成日期
+            reload();
+          }}
+        />
+      )}
+
+      {sending && sending.lastSentAt !== null && (
+        <ResendingPaySlipModal
+          accountBookId={accountBookId}
+          recordId={sending.id}
+          monthName={t("calculator.records.pay_period_value", {
+            year: sending.year,
+            month: sending.month,
+          })}
+          sentToName={sending.lastSentTo ?? "-"}
+          modalVisibleHandler={() => setSending(null)}
+          onResent={() => {
+            setSending(null);
+            reload();
+          }}
         />
       )}
 

@@ -284,6 +284,8 @@ export const calculator = {
       "员工名单加载失败，这时候载回计算器无法建立员工连结。",
     load_back_unlinked:
       "这位员工已不在名单上。姓名与编号已依这笔记录填入，但没有建立员工连结 —— 保存时会再问一次要存给谁。",
+    delivery_status: "寄送状态",
+    not_sent: "未寄出",
   },
   account_book_entry: {
     title: "想把这次的试算保存下来吗？",

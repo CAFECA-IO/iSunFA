@@ -316,6 +316,94 @@ describe("租戶過濾", () => {
   });
 });
 
+describe("薪資紀錄帶得出最近一次成功寄送", () => {
+  /**
+   * Info: (20260904 - Julian) 薪資紀錄列表每一列要顯示「已寄出／未寄出」。
+   * 那個值由 `listRecords` 的關聯 `take: 1` 算出來，只有真資料庫驗得到 ——
+   * 假 repo 沒有關聯可以查。
+   */
+  it("從未寄過的紀錄回 null", async () => {
+    const fresh = await salaryRecordRepo.upsertRecord({
+      accountBookId: BOOK_ID,
+      employeeId,
+      createdByUserId: userId,
+      year: 2026,
+      month: 7,
+      input: optionsFor(2026, 7),
+      result: defaultSalaryCalculatorResult,
+      calculatorVersion: "e2e",
+      totalPayment: 1n,
+      totalSalaryTaxable: 1n,
+      totalEmployerCost: 1n,
+    });
+
+    expect(fresh.lastSentAt).toBeNull();
+    expect(fresh.lastSentTo).toBeNull();
+  });
+
+  it("寄過的紀錄回最近一次成功的時間與當初的信箱", async () => {
+    await salaryPaySlipDeliveryRepo.createDelivery({
+      accountBookId: BOOK_ID,
+      salaryRecordId: recordId,
+      sentByUserId: userId,
+      recipientEmail: ORIGINAL_EMAIL,
+      status: SALARY_DELIVERY_STATUS.SENT,
+    });
+
+    const detail = await salaryRecordRepo.getRecordById(BOOK_ID, recordId);
+
+    expect(detail?.lastSentAt).toBeGreaterThan(0);
+    expect(detail?.lastSentTo).toBe(ORIGINAL_EMAIL);
+  });
+
+  /**
+   * Info: (20260904 - Julian) 失敗的列不算「已寄出」—— 對方什麼都沒收到。
+   * 把 `where: { status: SENT }` 拿掉的話這一條會紅。
+   */
+  it("只有失敗紀錄的那一筆仍然算「從未寄出」", async () => {
+    const failedOnly = await salaryRecordRepo.upsertRecord({
+      accountBookId: BOOK_ID,
+      employeeId,
+      createdByUserId: userId,
+      year: 2026,
+      month: 6,
+      input: optionsFor(2026, 6),
+      result: defaultSalaryCalculatorResult,
+      calculatorVersion: "e2e",
+      totalPayment: 1n,
+      totalSalaryTaxable: 1n,
+      totalEmployerCost: 1n,
+    });
+
+    await salaryPaySlipDeliveryRepo.createDelivery({
+      accountBookId: BOOK_ID,
+      salaryRecordId: failedOnly.id,
+      sentByUserId: userId,
+      recipientEmail: ORIGINAL_EMAIL,
+      status: SALARY_DELIVERY_STATUS.FAILED,
+      failureReason: "Error: smtp down",
+    });
+
+    const reloaded = await salaryRecordRepo.getRecordById(
+      BOOK_ID,
+      failedOnly.id,
+    );
+
+    expect(reloaded?.lastSentAt).toBeNull();
+  });
+
+  it("列表那條路徑也帶得出來（三個 include 站點各自獨立）", async () => {
+    const page = await salaryRecordRepo.listRecords({
+      accountBookId: BOOK_ID,
+      page: 1,
+      pageSize: 50,
+    });
+
+    const listed = page.data.find((row) => row.id === recordId);
+    expect(listed?.lastSentTo).toBe(ORIGINAL_EMAIL);
+  });
+});
+
 describe("recipientEmail 是快照，不是 join", () => {
   /**
    * Info: (20260904 - Julian) **這是本檔最重要的一條。**
