@@ -16,6 +16,8 @@ import {
   composeCarbonPaperText,
   gateFrameworkClaims,
 } from "@/lib/utils/carbon_framework_claim_gate";
+import { carbonFrameworkView } from "@/lib/carbon_framework_view";
+import { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
 import { CARBON_TOC_PAGE_HEADING_HITS } from "@/constants/carbon_pdf";
 import { extractPdfTextLayer, splitTextByPages } from "@/lib/pdf_text_layer";
 import { assertCjkRenderable } from "@/lib/utils/pdf_font_guard";
@@ -61,7 +63,14 @@ export interface ICarbonReportPdfInput {
    * Info: (20260811 - Emily) 文件外殼的文案(頁首／頁尾),由用戶端帶上來。
    * 省略即不印外殼 —— 舊的用戶端不會因此壞掉。
    */
-  shell?: Omit<ICarbonReportShell, "logoDataUrl">;
+  shell?: Omit<ICarbonReportShell, "logoDataUrl" | "claims">;
+  /**
+   * Info: (20260904 - Emily) 揭露框架(#6688-C)。收 **enum**,聲明行由本服務導出。
+   *
+   * `shell` 的型別因此排除 `claims`:那不是用戶端可以給的東西。
+   * 理由見 `ICarbonReportShell.claims` 的註解 —— 能塞字串就能繞過守衛。
+   */
+  framework?: CarbonDisclosureFrameworkEnum;
 }
 
 export interface IGeneratedCarbonPdf {
@@ -276,13 +285,39 @@ export class CarbonReportPdfService {
    *(符合/遵循/…× IFRS/TIFRS/國際財務報導準則),不是使用者的自由輸入。
    * 片語只回給送出這份報告的人(拋出的訊息),不進伺服端的 log。
    */
-  private static gatePaperClaims(input: ICarbonReportPdfInput): void {
+  /**
+   * Info: (20260904 - Emily) 這份紙上要印的聲明行(#6688-C)。
+   *
+   * 從 enum 導出而不是收字串(理由見 `ICarbonReportShell.claims`)。
+   * **沒有外殼就回空陣列**:`buildCarbonReportHtml` 在 `shell` 為 undefined 時
+   * 整個外殼都不印,那份紙面上沒有聲明行的位置 —— 回非空會讓閘門審到
+   * 一段不會被印出來的文字(而條 3 會因此對一份沒有對齊聲明的紙面叫)。
+   */
+  private static shellClaimsOf(
+    input: ICarbonReportPdfInput,
+  ): ReadonlyArray<string> {
+    if (!input.shell) return [];
+    return carbonFrameworkView(
+      input.framework ?? CarbonDisclosureFrameworkEnum.INVENTORY_ONLY,
+    ).shellClaims;
+  }
+
+  private static gatePaperClaims(
+    input: ICarbonReportPdfInput,
+    claims: ReadonlyArray<string>,
+  ): void {
     const paperText = composeCarbonPaperText({
       markdown: input.markdown,
       title: input.shell?.title,
       // Info: (20260903 - Emily) 頁尾實際印的值含 fallback,見 footerTemplate 那行
       footer: input.title ?? input.fileName,
       identity: input.shell?.identity,
+      /*
+       * Info: (20260904 - Emily) #6688-C:審的與印的是同一組聲明行。
+       * 這一格填上之後,分流表的條 2(沒宣告對齊卻有 IFRS)與條 3(印了對齊缺免責)
+       * 才第一次有訊號可讀 —— 那正是那兩格 basis 寫的觸發條件。
+       */
+      shellClaims: claims,
     });
     const { blocked, warned } = gateFrameworkClaims(
       paperText,
@@ -335,12 +370,18 @@ export class CarbonReportPdfService {
 
   async generate(input: ICarbonReportPdfInput): Promise<IGeneratedCarbonPdf> {
     const started = Date.now();
-    CarbonReportPdfService.gatePaperClaims(input);
+    /*
+     * Info: (20260904 - Emily) 先導出聲明行,審與印共用同一份 —— 兩次各算一次
+     * 就會有「審過的那份」與「印出的那份」兩個真值來源,而它們的分歧是靜默的。
+     */
+    const claims = CarbonReportPdfService.shellClaimsOf(input);
+    CarbonReportPdfService.gatePaperClaims(input, claims);
     const html = buildCarbonReportHtml(
       input.markdown,
       input.shell
         ? {
             ...input.shell,
+            claims,
             logoDataUrl: CarbonReportPdfService.logoDataUrl(),
           }
         : undefined,

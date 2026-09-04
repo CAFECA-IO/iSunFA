@@ -362,6 +362,19 @@ const printStyle = (): string => {
   .doc-identity dd { margin: 0; color: rgb(15, 23, 42); font-weight: 600; }
 
   /*
+   * Info: (20260904 - Emily) 揭露框架的聲明行(#6688-C)。
+   * break-inside: avoid 是承重的(反引號不能出現在這個樣式表裡,它在 template literal 內):
+   * 那兩句是一組,被分頁切開的紙面上
+   * 讀者會先看到對齊聲明、翻頁才看到免責句 —— 而「不得只印其中一句」
+   * 正是這一組存在的理由(見 FRAMEWORK_DISCLAIMER_PHRASE 的註解)。
+   */
+  .doc-claims {
+    margin: 4mm 0 0; font-size: 8.5pt; color: rgb(71, 85, 105);
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .doc-claims p { margin: 0 0 1.2mm; }
+
+  /*
    * Info: (20260812 - Emily) 目錄。整塊自成一頁：目錄橫跨兩頁而中間夾著正文
    * 會讓人以為目錄結束了。項目用 flex 讓引導點自動撐開，頁碼靠右對齊。
    */
@@ -457,6 +470,20 @@ export interface ICarbonReportShell {
    * 省略整個欄位即不印這一區(例如公開分享頁那種不需要識別資訊的場合)。
    */
   identity?: ReadonlyArray<{ readonly label: string; readonly value: string }>;
+  /**
+   * Info: (20260904 - Emily) 揭露框架的聲明行(#6688-C)。
+   *
+   * **由伺服端從 `CarbonDisclosureFrameworkEnum` 導出,不由用戶端帶字串進來** ——
+   * `CarbonReportShellSchema` 刻意沒有這個欄位。理由是驗收端的
+   * `auditFrameworkClaims` 用 `alignmentDeclared`(紙上有沒有印對齊聲明)當分流依據,
+   * 而那個訊號只有在「印出的字串與判準比對的字串同一份常數」時才可信。
+   * 用戶端能塞字串的話,它可以印一句長得像對齊聲明但不是的話,
+   * 於是條 2 被關掉而條 3 也不會叫 —— 守衛被自己要守的東西繞過。
+   *
+   * 兩行**原子**:有就全印、順序照傳進來的順序。免責句必須緊跟對齊聲明,
+   * 分開印會讓讀者先看到聲明、把「架構對齊」讀成「合規」(見常數檔頭)。
+   */
+  claims?: ReadonlyArray<string>;
   /** Info: (20260812 - Emily) 目錄抬頭;省略即不印目錄 */
   tocTitle?: string;
 }
@@ -592,6 +619,23 @@ const shellIdentity = (identity: ICarbonReportShell["identity"]): string =>
         "</dl>",
       ].join("");
 
+/**
+ * Info: (20260904 - Emily) 聲明行:全印或不印,不做任何挑選(#6688-C)。
+ *
+ * 這裡刻意**沒有** 「只印第一句」或「缺免責句就補一句」這種邏輯 ——
+ * 那會把「印了對齊卻缺免責」這個違規變成印不出來的狀態,
+ * 於是驗收端的條 3 永遠不會叫,而它是唯一會發現配對壞掉的地方。
+ * 壞掉要看得見,不要在這裡被補好。
+ */
+const shellClaimLines = (claims: ICarbonReportShell["claims"]): string =>
+  claims === undefined || claims.length === 0
+    ? ""
+    : [
+        '<section class="doc-claims">',
+        ...claims.map((line) => `<p>${escapeHtml(line)}</p>`),
+        "</section>",
+      ].join("");
+
 const shellHeader = (shell: ICarbonReportShell): string =>
   [
     '<header class="doc-shell-header">',
@@ -608,6 +652,7 @@ const shellHeader = (shell: ICarbonReportShell): string =>
     `<p class="line">${escapeHtml(SHELL_VENDOR)} <span class="dot">•</span> ${escapeHtml(shell.issuedAt)}</p>`,
     shell.title ? `<h1 class="doc-title">${escapeHtml(shell.title)}</h1>` : "",
     shellIdentity(shell.identity),
+    shellClaimLines(shell.claims),
     "</section>",
   ].join("");
 

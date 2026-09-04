@@ -18,7 +18,14 @@
  * 「忘記接」與「刻意不評估」在表上長得一樣。所以四條 × 兩個出口 = 八格全部列出,
  * 由測試釘住完整性。
  *
- * ## 條 2 / 條 3 今天為什麼不評估(2026-09-03 實測)
+ * ## 條 2 / 條 3 的狀態(2026-09-03 實測 → 2026-09-04 #6688-C 之後改變)
+ *
+ * **PDF 出口那兩格已經翻回來了**(條 2 → WARN、條 3 → BLOCK):#6688-C 讓伺服端
+ * 從 enum 導出 shellClaims 並印在外殼上,而閘門審的文字含那個區塊,
+ * 所以 `alignmentDeclared` 第一次是真訊號。存檔端仍然不評估 ——
+ * 草稿裡沒有外殼(聲明行是列印時才組的),那不是漏接。逐格理由見表上的 `basis`。
+ *
+ * 以下是 09-03 當時的實測記錄,留著是因為它解釋了那兩格為什麼曾經不評估:
  *
  * 兩條都依賴 `alignmentDeclared`,而那個訊號來自「紙上有沒有印架構對齊聲明」。
  * 實測:`carbon_framework_view.ts:66` 組出 `shellClaims: [對齊聲明, 免責句]`,
@@ -133,34 +140,46 @@ export const CARBON_FRAMEWORK_CLAIM_ROUTING: ReadonlyArray<ICarbonFrameworkClaim
       exit: DRAFT_SAVE,
       action: NOT_EVALUATED,
       basis:
-        "本條依賴 alignmentDeclared,而 2026-09-03 實測:對齊聲明**零印出點**" +
-        "(shellClaims 零非測試消費端,兩句字面字串在 src/ 與 documents/ 只有常數與測試)。" +
-        "於是本條對任何含 IFRS 字樣的文字恆真 —— 而匯入的原文照錄正好會含。" +
-        "翻回評估的觸發條件:#6688-C 讓伺服端印出 shellClaims,且閘門審的文字含那個區塊。",
+        "本條依賴 alignmentDeclared,而**存檔端審的文字不含外殼**:聲明行是列印時" +
+        "由伺服端從 enum 導出的(#6688-C),草稿裡沒有那個區塊,也不該有 —— " +
+        "存下去的是使用者的內容,外殼是產出時才組的。所以在這個出口本條恆真" +
+        "(對任何含 IFRS 字樣的草稿),而匯入的原文照錄正好會含。" +
+        "翻回評估的觸發條件:草稿本身開始帶外殼(今天沒有這個設計),或判準收窄到「系統印的區塊」。",
     },
     {
       rule: IFRS_WITHOUT_ALIGNMENT,
       exit: PDF_EXPORT,
-      action: NOT_EVALUATED,
-      basis: "同 DRAFT_SAVE 那格:訊號不存在,不是訊號為 false。觸發條件同上。",
+      action: WARN,
+      basis:
+        "2026-09-04(#6688-C)翻回評估:伺服端已從 enum 印出 shellClaims,而閘門審的文字含那個區塊," +
+        "所以 alignmentDeclared 第一次是真訊號 —— 選了 IFRS 就為真,本條自然關閉;" +
+        "沒選(INVENTORY_ONLY)而紙上出現 IFRS 字樣才叫。" +
+        "**不接成 BLOCK 的理由是判準檔頭列的已知洞 #2**:條 2 抓不出「這句 IFRS 是誰寫的」," +
+        "而匯入路徑會把客戶原文逐字落地。已量:客戶原文與三份產出裡 IFRS 皆 0 次,所以今天不會誤報;" +
+        "翻成 BLOCK 的觸發條件是把判準收窄到「系統印的區塊」而不是整份紙面。",
     },
     {
       rule: ALIGNMENT_WITHOUT_DISCLAIMER,
       exit: DRAFT_SAVE,
       action: NOT_EVALUATED,
       basis:
-        "同樣依賴 alignmentDeclared,而它今天恆為 false,所以本條恆假 —— 接上去是接死碼。" +
-        "翻回評估的觸發條件與條 2 相同;此外主守衛應是「shellClaims 兩行原子印出」的測試," +
-        "而那要等印出點存在才寫得出來。",
+        "同樣依賴 alignmentDeclared,而存檔端審的文字不含外殼(見條 2 那格)," +
+        "所以在這個出口本條恆假 —— 接上去是接死碼。" +
+        "配對的真守衛在 PDF 出口那一格(2026-09-04 已翻成 BLOCK)加上" +
+        "「shellClaims 兩行原子印出」的測試 —— 紙面的配對由印出端與那個出口守,不由存檔端守。" +
+        "翻回評估的觸發條件與條 2 那格相同:草稿本身開始帶外殼(今天沒有這個設計)。" +
+        "在那之前接上去是接死碼,而且會對「在正文裡打出那句對齊聲明」的使用者誤擋。",
     },
     {
       rule: ALIGNMENT_WITHOUT_DISCLAIMER,
       exit: PDF_EXPORT,
-      action: NOT_EVALUATED,
+      action: BLOCK,
       basis:
-        "同 DRAFT_SAVE 那格恆假的理由。" +
-        "翻回評估的觸發條件:印出點落地之後這一格應改為 BLOCK —— " +
-        "不得讓「印了對齊聲明卻缺免責句」的 PDF 出門(那是紙面上不可逆的一半承諾)。",
+        "2026-09-04(#6688-C)按上一版 basis 寫的觸發條件翻成 BLOCK:印出點已落地," +
+        "不得讓「印了對齊聲明卻缺免責句」的 PDF 出門 —— 那是紙面上不可逆的一半承諾," +
+        "讀者會把「架構對齊」讀成「合規」(見 FRAMEWORK_DISCLAIMER_PHRASE 的註解)。" +
+        "今天伺服端把那兩句當一組原子印出,所以本條**只在配對壞掉時才會叫** —— " +
+        "它是那個原子性的守衛,不是日常會踩到的路徑;會叫就代表印出端被改壞了。",
     },
   ];
 

@@ -462,6 +462,12 @@ export default function CarbonReportPreview({
             reportTitle={reportTitle}
             identityRows={identityRows}
             /*
+             * Info: (20260904 - Emily) #6688-C:框架往下送到伺服端列印。
+             * 與上面 report_identity_fields 收到的是同一個值 ——
+             * 使用者選的那個框架決定紙上印哪一套聲明行。
+             */
+            disclosureFramework={disclosureFramework}
+            /*
              * Info: (20260812 - Emily) 既有草稿內容裡那行 `# <會話名>` 在**渲染時**剝掉。
              * 儲存的內容不動 —— 見上方 legacyHeading 那段。
              */

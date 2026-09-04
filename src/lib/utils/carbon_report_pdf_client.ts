@@ -1,6 +1,7 @@
 import { request, ApiError as RequestApiError } from "@/lib/utils/request";
 import type { IApiResponse } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import type { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
 import { base64ToBytes } from "@/lib/utils/logistics_report_client";
 
 /**
@@ -84,6 +85,14 @@ export const requestCarbonReportPdf = async (params: {
   fileName: string;
   title?: string;
   shell?: ICarbonPdfShell;
+  /**
+   * Info: (20260904 - Emily) 揭露框架(#6688-C):送 **enum 不送字串**。
+   *
+   * 聲明行由伺服端從這個值導出並印在外殼上。用戶端能送字串的話,
+   * 它就能印一句長得像對齊聲明但不是的話 —— 而驗收端拿
+   * `alignmentDeclared` 當分流依據,那等於守衛被自己要守的東西繞過。
+   */
+  framework?: CarbonDisclosureFrameworkEnum;
 }): Promise<ICarbonPdfResult> => {
   /*
    * Info: (20260810 - Emily) request() 回的是整個信封而不是 payload,

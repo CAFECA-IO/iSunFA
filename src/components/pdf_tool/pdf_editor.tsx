@@ -55,7 +55,10 @@ import {
   CarbonPdfExportModeEnum,
 } from "@/constants/carbon_pdf";
 // Info: (20260903 - Emily) 揭露層的顯示名稱從常數來,不抄進語系檔(見該常數的註解)
-import { FRAMEWORK_DISCLOSURE_LABEL } from "@/constants/carbon_report_framework";
+import {
+  FRAMEWORK_DISCLOSURE_LABEL,
+  type CarbonDisclosureFrameworkEnum,
+} from "@/constants/carbon_report_framework";
 
 // Info: (20260604 - Julian) 定義預設 md 內容與 storage key
 const DEFAULT_CONTENT =
@@ -382,6 +385,11 @@ interface IPdfEditorProps {
    * 與 `shell` 那組文案同一個立場。
    */
   identityRows?: ReadonlyArray<{ label: string; value: string }>;
+  /**
+   * Info: (20260904 - Emily) 揭露框架(#6688-C)。**只往伺服端送 enum**,
+   * 聲明行由伺服端導出 —— 這個元件不知道也不該知道那兩句話長什麼樣。
+   */
+  disclosureFramework?: CarbonDisclosureFrameworkEnum;
   isEmbedded?: boolean;
   value?: string;
   onChange?: (val: string) => void;
@@ -430,6 +438,7 @@ export default function PdfEditor({
   layout = "split",
   reportTitle = "",
   identityRows = undefined,
+  disclosureFramework = undefined,
   isEmbedded = false,
   value = undefined,
   onChange = undefined,
@@ -741,6 +750,11 @@ export default function PdfEditor({
        * i18n key,同一份文件的頁首若有兩處來源,遲早一邊改一邊沒改。
        * 日期也在此格式化 —— 伺服端不知道使用者的地區設定。
        */
+      /*
+       * Info: (20260904 - Emily) #6688-C:框架送 enum,聲明行由伺服端導出後印在外殼上。
+       * 這裡不組那兩句字串 —— 印出的與驗收比對的必須是同一份常數。
+       */
+      framework: disclosureFramework,
       shell: {
         brand: t("admin_mission_board.pdf_editor.brand")!,
         internalDocument: t(

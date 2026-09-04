@@ -11,6 +11,10 @@ import {
   gateFrameworkClaims,
 } from "@/lib/utils/carbon_framework_claim_gate";
 import { auditFrameworkClaims } from "@/lib/utils/carbon_framework_claims";
+import {
+  FRAMEWORK_ALIGNMENT_PHRASE,
+  FRAMEWORK_DISCLAIMER_PHRASE,
+} from "@/constants/carbon_report_framework";
 
 /**
  * Info: (20260903 - Emily) 出口閘門的分流(#6688-B)。
@@ -131,34 +135,85 @@ describe("條 1:提示而不擋(量完之前)", () => {
   });
 });
 
-describe("條 2 / 條 3:不評估 —— 而稽核函式仍然會報它們", () => {
+describe("條 2 / 條 3:存檔端不評估、PDF 端 #6688-C 之後翻回來了", () => {
   /**
-   * Info: (20260903 - Emily) 這一組是「不評估」與「訊號為 false」的差別本身。
-   * 稽核函式對這份文字**確實**回報條 2 命中(因為對齊聲明沒印),
-   * 而閘門在兩個出口都不把它變成 blocked/warned。
-   * 若哪天有人把那兩格從 NOT_EVALUATED 改成 WARN 而沒有先做印出點,
-   * 這裡會紅 —— 那正是要攔的。
+   * Info: (20260903 - Emily) 這一組原本是「不評估」與「訊號為 false」的差別本身。
+   *
+   * Info: (20260904 - Emily) #6688-C 讓伺服端從 enum 印出 shellClaims、
+   * 而閘門審的文字含那個區塊,於是 `alignmentDeclared` 第一次是真訊號 ——
+   * PDF 那兩格因此翻成 WARN / BLOCK(逐格理由見表上的 basis)。
+   * **存檔端仍然不評估**:草稿裡沒有外殼,聲明行是列印時才組的。
+   * 兩個出口在這裡分岔,所以這一組不再用 `forEach` 掃兩個出口。
    */
   const paper = "3.1 揭露架構\n\n本節依 IFRS S2 之氣候相關揭露編排。";
 
-  it("稽核函式回報條 2 命中(前提成立,否則下面兩條是空轉)", () => {
+  it("稽核函式回報條 2 命中(前提成立,否則下面幾條是空轉)", () => {
     expect(auditFrameworkClaims(paper).ifrsWithoutAlignment).toEqual(["IFRS"]);
     expect(auditFrameworkClaims(paper).alignmentDeclared).toBe(false);
   });
 
-  it("閘門在兩個出口都不評估它", () => {
-    [DRAFT_SAVE, PDF_EXPORT].forEach((exit) => {
-      const result = gateFrameworkClaims(paper, exit);
-      const rules = [...result.blocked, ...result.warned].map(
-        (finding) => finding.rule,
-      );
-      expect(rules).not.toContain(
-        CarbonFrameworkClaimRuleEnum.IFRS_WITHOUT_ALIGNMENT,
-      );
-      expect(rules).not.toContain(
-        CarbonFrameworkClaimRuleEnum.ALIGNMENT_WITHOUT_DISCLAIMER,
-      );
-    });
+  it("存檔端不評估這兩條(草稿沒有外殼)", () => {
+    const rules = [
+      ...gateFrameworkClaims(paper, DRAFT_SAVE).blocked,
+      ...gateFrameworkClaims(paper, DRAFT_SAVE).warned,
+    ].map((finding) => finding.rule);
+    expect(rules).not.toContain(
+      CarbonFrameworkClaimRuleEnum.IFRS_WITHOUT_ALIGNMENT,
+    );
+    expect(rules).not.toContain(
+      CarbonFrameworkClaimRuleEnum.ALIGNMENT_WITHOUT_DISCLAIMER,
+    );
+  });
+
+  it("PDF 端的條 2 是提示不是擋(已知的洞 #2:抓不出這句 IFRS 是誰寫的)", () => {
+    const result = gateFrameworkClaims(paper, PDF_EXPORT);
+    expect(result.blocked).toHaveLength(0);
+    expect(result.warned.map((finding) => finding.rule)).toContain(
+      CarbonFrameworkClaimRuleEnum.IFRS_WITHOUT_ALIGNMENT,
+    );
+  });
+
+  it("印了對齊聲明之後,條 2 自己關閉(它的 when 子句就是這個)", () => {
+    const declared = gateFrameworkClaims(
+      composeCarbonPaperText({
+        markdown: paper,
+        shellClaims: [FRAMEWORK_ALIGNMENT_PHRASE, FRAMEWORK_DISCLAIMER_PHRASE],
+      }),
+      PDF_EXPORT,
+    );
+    expect(declared.blocked).toHaveLength(0);
+    expect(declared.warned).toHaveLength(0);
+  });
+
+  it("PDF 端的條 3 擋:印了對齊聲明卻缺免責句", () => {
+    /**
+     * Info: (20260904 - Emily) 這一格是紙面配對的下游守衛。今天伺服端把兩句
+     * 當一組原子印出(見 `carbon_report_html.test.ts` 的那一組),
+     * 所以這條只在印出端被改壞時才會叫 —— 它守的是那個原子性。
+     */
+    const half = gateFrameworkClaims(
+      composeCarbonPaperText({
+        markdown: "1.1 組織邊界",
+        shellClaims: [FRAMEWORK_ALIGNMENT_PHRASE],
+      }),
+      PDF_EXPORT,
+    );
+    expect(half.blocked.map((finding) => finding.rule)).toContain(
+      CarbonFrameworkClaimRuleEnum.ALIGNMENT_WITHOUT_DISCLAIMER,
+    );
+  });
+
+  it("存檔端不會因為草稿裡剛好有那句對齊聲明就擋(它不是外殼)", () => {
+    /**
+     * Info: (20260904 - Emily) 使用者可以在草稿正文裡打出那句話。
+     * 存檔端對條 3 不評估,所以不擋 —— 而紙面那端會擋(因為外殼會補上免責句,
+     * 或配對壞掉時由條 3 叫)。兩個出口的分工在這裡看得最清楚。
+     */
+    const inBody = gateFrameworkClaims(
+      `1.1 組織邊界\n${FRAMEWORK_ALIGNMENT_PHRASE}`,
+      DRAFT_SAVE,
+    );
+    expect(inBody.blocked).toHaveLength(0);
   });
 });
 

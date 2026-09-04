@@ -3,6 +3,7 @@ import type { jest as JestType } from "@jest/globals";
 declare const jest: typeof JestType;
 import { CarbonReportPdfService } from "@/services/carbon_report_pdf.service";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
+import { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
 
 /**
  * Info: (20260903 - Emily) PDF 出口的接線(#6688-B)。
@@ -151,6 +152,67 @@ describe("PDF 出口:紙面出現主體合規宣告就不出門", () => {
         markdown: `${CLEAN_MARKDOWN}\n本報告依 IFRS S1/S2 之架構編製。\n本報告不構成 IFRS S1/S2 之合規聲明。\n`,
         fileName: "report.pdf",
         shell: shell(),
+      }),
+    ).rejects.toMatchObject({
+      code: API_ERRORS.IS_PDF_GENERATION_FAILED.code,
+    });
+    expect(getPrintBrowserMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("#6688-C:聲明行由伺服端從 enum 導出", () => {
+  /**
+   * Info: (20260904 - Emily) 用戶端送的是 enum,聲明行的字串由服務導出並印在外殼上。
+   * `ICarbonReportPdfInput.shell` 的型別排除 `claims`,所以「用戶端塞字串」
+   * 這件事由 tsc 擋;本組驗的是**導出之後的行為**。
+   */
+  it("選了 IFRS 的乾淨報告出得去(條 3 因為外殼補上免責句而滿足)", async () => {
+    const service = new CarbonReportPdfService();
+    await expect(
+      service.generate({
+        markdown: CLEAN_MARKDOWN,
+        fileName: "report.pdf",
+        framework: CarbonDisclosureFrameworkEnum.IFRS_S1_S2,
+        shell: shell({ title: "高興昌鋼鐵股份有限公司" }),
+      }),
+    ).rejects.toMatchObject({
+      code: API_ERRORS.IS_PDF_GENERATION_FAILED.code,
+    });
+    expect(getPrintBrowserMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("沒選框架而正文提到 IFRS:提示而不擋(條 2 的已知洞 #2)", async () => {
+    /**
+     * Info: (20260904 - Emily) 匯入會把客戶原文逐字落地,而客戶自己的報告可能提到 IFRS。
+     * 這一條釘住那個判斷:條 2 在 PDF 出口是 WARN 不是 BLOCK。
+     * 翻成 BLOCK 就會擋掉每一份提到 IFRS 的匯入報告。
+     */
+    const service = new CarbonReportPdfService();
+    await expect(
+      service.generate({
+        markdown: `${CLEAN_MARKDOWN}\n本節依 IFRS S2 之氣候相關揭露編排。`,
+        fileName: "report.pdf",
+        shell: shell(),
+      }),
+    ).rejects.toMatchObject({
+      code: API_ERRORS.IS_PDF_GENERATION_FAILED.code,
+    });
+    expect(getPrintBrowserMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("沒有外殼就沒有印出點,聲明行不進審的文字", async () => {
+    /**
+     * Info: (20260904 - Emily) `buildCarbonReportHtml` 在 shell 為 undefined 時
+     * 整個外殼都不印。若 `shellClaimsOf` 仍回兩句,閘門會審到一段不會被印出來的文字 ——
+     * 而條 3 會因此對一份**沒有**對齊聲明的紙面判定「印了對齊卻缺免責」。
+     * 這一條釘住那個空回傳。
+     */
+    const service = new CarbonReportPdfService();
+    await expect(
+      service.generate({
+        markdown: CLEAN_MARKDOWN,
+        fileName: "report.pdf",
+        framework: CarbonDisclosureFrameworkEnum.IFRS_S1_S2,
       }),
     ).rejects.toMatchObject({
       code: API_ERRORS.IS_PDF_GENERATION_FAILED.code,
