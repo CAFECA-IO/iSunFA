@@ -76,6 +76,8 @@ const employeeFindMany = prisma.salaryCalculatorEmployee
   .findMany as unknown as Mock;
 const employeeUpdateMany = prisma.salaryCalculatorEmployee
   .updateMany as unknown as Mock;
+const employeeCreate = prisma.salaryCalculatorEmployee
+  .create as unknown as Mock;
 const recordFindFirst = prisma.salaryRecord.findFirst as unknown as Mock;
 const recordFindMany = prisma.salaryRecord.findMany as unknown as Mock;
 const recordCount = prisma.salaryRecord.count as unknown as Mock;
@@ -269,5 +271,124 @@ describe("軟刪除讓出 activeNumber", () => {
 
     expect(data.activeNumber).toBe("A012");
     expect(data.number).toBe("A012");
+  });
+});
+
+/**
+ * Info: (20260902 - Julian) 15 個常態屬性真的被交給資料庫。
+ *
+ * ## 這一組是一次真實回退的產物
+ *
+ * 20260902 把 develop 併進本支時，`updateEmployee` 組 `data` 的那一段被
+ * `9dc404ff0`（把斷言接到真正的寫入）整塊取代，而那一版寫在 15 個常態屬性
+ * 落地**之前** —— `...toWriteData(input)` 就這樣不見了。後果是編輯員工只
+ * 寫得進姓名、編號、Email 與兩個金額，行業別、投保狀態、扶養人數、
+ * 自提比例、到離職日全部原地不動。
+ *
+ * **症狀完全靜默**：`updateEmployee` 回傳的是重新查出來的那一列，
+ * 所以畫面顯示「更新成功」，使用者要到下次打開表單才發現沒存進去。
+ *
+ * 當時全套測試只有 `salary_repo.e2e.test.ts` 紅 —— 而那一支需要真資料庫、
+ * 只在 CI 的獨立步驟跑。這一組把同一件事搬進預設套件：這個檔案本來就在
+ * 斷言「交給資料庫的那個物件」，多問 15 欄幾乎不花成本。
+ *
+ * 新增與更新**各守一次**：那次回退只吃掉 `updateEmployee`，
+ * `createEmployee` 毫髮無傷 —— 而那是因為兩邊本來就是兩段獨立的程式碼，
+ * 不是因為有人守著。
+ */
+describe("員工的常態屬性交給資料庫", () => {
+  const HIRE_DATE = Date.parse("2026-08-15T00:00:00.000Z") / 1000;
+
+  const CHANGED = {
+    industryCode: 41,
+    isForeignWorker: true,
+    employmentType: "PART_TIME",
+    baseSalary30Days: false,
+    otherAllowanceTaxable: 1500,
+    otherAllowanceTaxFree: 300,
+    isLaborInsured: false,
+    isHealthInsured: false,
+    isPensionInsured: false,
+    dependentsCount: 3,
+    voluntaryPensionRate: 6,
+    hireDate: HIRE_DATE,
+    resignDate: null,
+  };
+
+  /**
+   * Info: (20260902 - Julian) 逐欄斷言，不是 `toMatchObject(CHANGED)`。
+   *
+   * 後者在 `toWriteData` 整支消失時會因為金額欄的型別差異紅得莫名其妙，
+   * 而逐欄列出時「哪一欄沒被寫進去」直接寫在失敗訊息上。
+   * 金額落地是 `BigInt`、費率是 `Int`、日期是 `Date` —— 三種型別各驗一次。
+   */
+  const expectProfileIn = (data: Record<string, unknown>) => {
+    expect(data.industryCode).toBe(41);
+    expect(data.isForeignWorker).toBe(true);
+    expect(data.employmentType).toBe("PART_TIME");
+    expect(data.baseSalary30Days).toBe(false);
+    expect(data.otherAllowanceTaxable).toBe(1500n);
+    expect(data.otherAllowanceTaxFree).toBe(300n);
+    expect(data.isLaborInsured).toBe(false);
+    expect(data.isHealthInsured).toBe(false);
+    expect(data.isPensionInsured).toBe(false);
+    expect(data.dependentsCount).toBe(3);
+    // Info: (20260902 - Julian) 費率是 Int 百分點，不是 BigInt 金額
+    expect(data.voluntaryPensionRate).toBe(6);
+    expect(data.hireDate).toEqual(new Date("2026-08-15T00:00:00.000Z"));
+    expect(data.resignDate).toBeNull();
+  };
+
+  it("updateEmployee 把 15 欄一起交出去", async () => {
+    await salaryCalculatorEmployeeRepo.updateEmployee({
+      accountBookId: BOOK,
+      employeeId: OTHER_EMPLOYEE,
+      input: employeeInputOf(CHANGED),
+    });
+
+    expectProfileIn(argOf(employeeUpdateMany).data as Record<string, unknown>);
+  });
+
+  it("createEmployee 把 15 欄一起交出去", async () => {
+    /**
+     * Info: (20260902 - Julian) `create` 的替身預設回 null，而 `createEmployee`
+     * 會把回傳值餵給 `toFrontendFormat` —— 不給一列的話會炸在讀 `row.id`，
+     * 而那個錯誤與這一條要驗的事無關。這裡只需要它不炸，
+     * 斷言的對象仍然是**傳進去的參數**。
+     */
+    employeeCreate.mockResolvedValueOnce({
+      id: OTHER_EMPLOYEE,
+      name: "王小明",
+      number: "A012",
+      email: null,
+      activeNumber: "A012",
+      accountBookId: BOOK,
+      employeeId: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+      baseSalary: 40000n,
+      mealAllowance: 2400n,
+      otherAllowanceTaxable: 1500n,
+      otherAllowanceTaxFree: 300n,
+      industryCode: 41,
+      isForeignWorker: true,
+      employmentType: "PART_TIME",
+      baseSalary30Days: false,
+      isLaborInsured: false,
+      isHealthInsured: false,
+      isPensionInsured: false,
+      dependentsCount: 3,
+      voluntaryPensionRate: 6,
+      hireDate: new Date("2026-08-15T00:00:00.000Z"),
+      resignDate: null,
+    });
+
+    await salaryCalculatorEmployeeRepo.createEmployee({
+      accountBookId: BOOK,
+      input: employeeInputOf(CHANGED),
+    });
+
+    expectProfileIn(argOf(employeeCreate).data as Record<string, unknown>);
   });
 });

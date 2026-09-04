@@ -216,13 +216,26 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
      * 不是真的要寫進去的值 —— 那種斷言在寫入被改壞時照樣通過。
      * `createEmployee` 一直是這樣做的，這裡與軟刪除是後來才對齊的。
      */
+    /**
+     * Info: (20260902 - Julian) `...toWriteData(input)` 曾經在這裡被 merge 靜默吃掉。
+     *
+     * 20260902 把 develop 併進來時，這一段被 `9dc404ff0`（把斷言接到真正的寫入）
+     * 整塊取代，而那一版是在 15 個常態屬性落地**之前**寫的 ——
+     * 於是編輯員工只寫得進姓名、編號、Email 與兩個金額，
+     * 行業別、投保狀態、扶養人數、自提比例、到離職日全部原地不動。
+     *
+     * 症狀完全靜默：`updateEmployee` 回傳的是重新查出來的那一列，所以畫面
+     * 「更新成功」；使用者要等到下次打開員工表單才發現剛才改的東西沒進去。
+     * 抓到它的是 `salary_repo.e2e.test.ts` 的「更新會把 15 欄一起改掉」——
+     * 而那一支只在 CI 的獨立步驟跑。`salary_repo_scope.test.ts` 現在也守著
+     * 交給資料庫的 `data`，那一支在預設套件裡。
+     */
     const data = {
       name: input.name,
       number: input.number,
       email: input.email ?? null,
       activeNumber: activeNumberFor(input.number, null),
-      baseSalary: BigInt(input.baseSalary),
-      mealAllowance: BigInt(input.mealAllowance),
+      ...toWriteData(input),
     };
 
     assertActiveNumberPairing({
