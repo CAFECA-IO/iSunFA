@@ -27,6 +27,17 @@ interface IViewPaySlipModal {
    */
   employeeName?: string;
   employeeNumber?: string;
+  /**
+   * Info: (20260904 - Julian) 重寄需要的兩個東西。**兩個都給了才會出現重寄按鈕。**
+   *
+   * 「我收到的薪資單」分頁看的是別人寄來的單子，那裡沒有 `recordId`
+   * 也不該有重寄的能力 —— 它不是這本帳的擁有者。用兩個可選 prop 而不是一個
+   * `canResend` 布林：能不能重寄不是一個獨立的判斷，
+   * 而是「有沒有東西可以拿去重寄」的直接結果。
+   */
+  accountBookId?: string;
+  recordId?: string;
+  onResent?: () => void;
 }
 
 const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
@@ -38,6 +49,9 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
   sentTo = undefined,
   employeeName = undefined,
   employeeNumber = undefined,
+  accountBookId = undefined,
+  recordId = undefined,
+  onResent = undefined,
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -45,7 +59,16 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
 
   const [isShowModal, setIsShowModal] = useState<boolean>(false);
 
-  const isSentRecord = !!sentDate && !!sentTo;
+  /**
+   * Info: (20260904 - Julian) 重寄按鈕的出現條件多了「拿得到 recordId」。
+   *
+   * 上一版只看 `sentDate && sentTo` —— 那兩個是**顯示用**的資料，
+   * 有它們不代表這個畫面有能力去呼叫寄送 API。假資料時代看不出差別
+   * （反正按下去只是 `console.log`），接上真 API 之後就是一顆
+   * 按下去必然失敗的按鈕。
+   */
+  const canResend = !!accountBookId && !!recordId;
+  const isSentRecord = !!sentDate && !!sentTo && canResend;
 
   const displayedEmployeeName = employeeName ?? user?.name ?? "-";
   const displayedEmployeeNumber = employeeNumber ?? "-";
@@ -158,11 +181,14 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
       </div>
 
       {/* Info: (20250725 - Julian) Resend Confirmation Modal */}
-      {isShowModal && (
+      {isShowModal && accountBookId && recordId && (
         <ResendingPaySlipModal
+          accountBookId={accountBookId}
+          recordId={recordId}
           monthName={monthWithI18n}
           sentToName={sentTo ?? "-"}
           modalVisibleHandler={modalVisibleHandler}
+          onResent={onResent}
         />
       )}
     </div>

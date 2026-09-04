@@ -46,3 +46,13 @@ export const truncateFailureReason = (
   if (reason === null || reason === undefined || reason === "") return null;
   return reason.slice(0, SALARY_DELIVERY_FAILURE_REASON_MAX_LENGTH);
 };
+
+/**
+ * Info: (20260904 - Julian) 「已寄出」分頁一次取幾列。
+ *
+ * 上限由伺服器決定，不是由查詢字串決定：`?limit=999999` 會讓一本累積了
+ * 幾年寄送紀錄的帳本在一次請求裡把整張表撈出來。
+ * 200 遠大於任何一本帳一個月的寄送量，而它擋得住「把整張表當成一次查詢」。
+ */
+export const SALARY_DELIVERY_LIST_DEFAULT_LIMIT = 50;
+export const SALARY_DELIVERY_LIST_MAX_LIMIT = 200;

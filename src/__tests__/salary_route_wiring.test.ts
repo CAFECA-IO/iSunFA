@@ -1,5 +1,5 @@
 /**
- * Info: (20260831 - Julian) 裝配測試：薪資計算機的九支端點真的接上了身分閘、
+ * Info: (20260831 - Julian) 裝配測試：薪資計算機的十支端點真的接上了身分閘、
  * 限流器與授權閘。
  *
  * 形式與理由完全照 `leave_route_wiring.test.ts`：直接 `import` 真的 handler，
@@ -33,6 +33,10 @@ declare const jest: typeof JestType;
 import { NextRequest } from "next/server";
 import { RateLimitBucketEnum, RATE_LIMIT_RULES } from "@/constants/rate_limit";
 import { SalaryAccess } from "@/constants/salary_access";
+import {
+  SALARY_DELIVERY_LIST_DEFAULT_LIMIT,
+  SALARY_DELIVERY_LIST_MAX_LIMIT,
+} from "@/constants/salary_delivery";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { AppError } from "@/lib/utils/error";
 import { HTTP_MAP } from "@/lib/utils/status";
@@ -60,6 +64,7 @@ import {
   DELETE as recordDelete,
 } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/record/[record_id]/route";
 import { POST as recordDeliver } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/record/[record_id]/deliver/route";
+import { GET as deliveryList } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/delivery/route";
 
 jest.mock("@/lib/auth/dewt", () => ({ getIdentityFromDeWT: jest.fn() }));
 /**
@@ -69,6 +74,7 @@ jest.mock("@/lib/auth/dewt", () => ({ getIdentityFromDeWT: jest.fn() }));
 jest.mock("@/services/salary_pay_slip_delivery.service", () => ({
   salaryPaySlipDeliveryService: {
     deliver: jest.fn(),
+    listByAccountBook: jest.fn(),
     listByRecord: jest.fn(),
   },
 }));
@@ -115,6 +121,8 @@ const serviceMocks = {
   saveRecord: salaryRecordService.saveRecord as unknown as IAnyMock,
   deleteRecord: salaryRecordService.deleteRecord as unknown as IAnyMock,
   deliver: salaryPaySlipDeliveryService.deliver as unknown as IAnyMock,
+  deliveryList:
+    salaryPaySlipDeliveryService.listByAccountBook as unknown as IAnyMock,
 };
 
 const BOOK = "book-1";
@@ -229,7 +237,7 @@ const recordParams = () =>
   Promise.resolve({ account_book_id: BOOK, record_id: RECORD_ID });
 
 /**
- * Info: (20260901 - Julian) 九支端點的清單，三個 `it.each` 共用同一份。
+ * Info: (20260901 - Julian) 十支端點的清單，三個 `it.each` 共用同一份。
  *
  * ## 為什麼要有這張表
  *
@@ -444,6 +452,22 @@ const ENDPOINTS: IEndpointCase[] = [
    *
    * Body 為空是刻意的（計畫書 D3），所以沒有 `runInvalid`。
    */
+  /**
+   * Info: (20260904 - Julian) 第十支：這本帳的寄送歷史。
+   *
+   * `access` 是 `READ` 而不是 `WRITE` —— 寄送把資料送出組織邊界，
+   * **看紀錄不會**。它與「看薪資紀錄清單」是同一類動作，
+   * 沿用同一個層級與同一個限流桶。
+   */
+  {
+    label: "GET delivery（寄送歷史）",
+    key: "delivery-list",
+    source: "GET delivery/route.ts",
+    access: SalaryAccess.READ,
+    bucket: RateLimitBucketEnum.READ,
+    service: serviceMocks.deliveryList,
+    run: (address) => deliveryList(get(address), { params: bookParams() }),
+  },
   {
     label: "POST record/:id/deliver（寄出薪資單）",
     key: "record-deliver",
@@ -475,11 +499,13 @@ beforeEach(() => {
 });
 
 describe("身分閘：沒有 token 就到不了業務邏輯", () => {
-  it("端點表涵蓋了全部九支端點（表短了，下面三條就會靜靜地少驗幾支）", () => {
-    expect(ENDPOINTS).toHaveLength(9);
-    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.label)).size).toBe(9);
-    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.key)).size).toBe(9);
-    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.service)).size).toBe(9);
+  it("端點表涵蓋了全部十支端點（表短了，下面三條就會靜靜地少驗幾支）", () => {
+    expect(ENDPOINTS).toHaveLength(10);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.label)).size).toBe(10);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.key)).size).toBe(10);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.service)).size).toBe(
+      10,
+    );
   });
 
   /**
@@ -586,7 +612,7 @@ describe("授權閘：不是這本帳的成員就寫不進去", () => {
     },
   );
 
-  it("寫入端點就是那六支（三讀六寫，換一種分法都要有人重新想過）", () => {
+  it("寫入端點就是那六支（四讀六寫，換一種分法都要有人重新想過）", () => {
     const writes = ENDPOINTS.filter(
       (endpoint) => endpoint.access === SalaryAccess.WRITE,
     ).map((endpoint) => endpoint.key);
@@ -655,6 +681,32 @@ describe("租戶與操作者只能來自不可偽造的來源", () => {
     expect(payload.accountBookId).toBe(BOOK);
     expect(payload.accountBookId).not.toBe(OTHER_BOOK);
     expect(payload.recordId).toBe(RECORD_ID);
+  });
+
+  /**
+   * Info: (20260904 - Julian) `limit` 是使用者送得出來、而不該被完全採信的東西。
+   * 沒有夾住上限的話，一本累積了幾年寄送紀錄的帳本會在一次請求裡被整張撈出來。
+   */
+  it("寄送歷史的 limit 被伺服器的上限夾住", async () => {
+    await deliveryList(get("0xdelivery-limit", "?limit=999999"), {
+      params: bookParams(),
+    });
+
+    const [args] = serviceMocks.deliveryList.mock.calls;
+    expect((args[0] as { limit: number }).limit).toBe(
+      SALARY_DELIVERY_LIST_MAX_LIMIT,
+    );
+  });
+
+  it("寄送歷史的 limit 給了垃圾就退回預設值，而不是報錯或撈全部", async () => {
+    await deliveryList(get("0xdelivery-nan", "?limit=abc"), {
+      params: bookParams(),
+    });
+
+    const [args] = serviceMocks.deliveryList.mock.calls;
+    expect((args[0] as { limit: number }).limit).toBe(
+      SALARY_DELIVERY_LIST_DEFAULT_LIMIT,
+    );
   });
 
   it("列表的 accountBookId 取自路徑，query string 蓋不掉", async () => {

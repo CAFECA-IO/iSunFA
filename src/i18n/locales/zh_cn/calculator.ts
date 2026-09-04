@@ -175,9 +175,15 @@ export const calculator = {
     content_2: "给",
     content_bold_2: " {{employeeName}} 吗？",
     email: "电子邮件",
-    email_placeholder: "请输入员工的电子邮件",
-    invalid_email_hint: "电子邮件格式错误，请再检查一遍。",
     submit: "发送薪资单",
+    email_from_profile: "来自员工资料",
+    email_missing: "这位员工没有电子邮件",
+    sending: "寄送中…",
+    error_no_email: "这位员工的资料里没有电子邮件，请先到员工列表补上。",
+    error_not_configured: "系统尚未设置寄信服务，请联络系统管理员。",
+    error_font_missing:
+      "服务器缺少中文字体，无法生成薪资单，请联络系统管理员。",
+    error_generic: "薪资单寄送失败，请稍后再试一次。",
   },
   my_pay_slip: {
     main_title: "我的薪资单",
@@ -193,6 +199,11 @@ export const calculator = {
     pay_slip: "薪资单",
     sent_on: "发送日期",
     all: "全部",
+    employee: "员工",
+    sent_by: "寄送者",
+    unknown_sender: "未具名",
+    sent_empty: "这本账本还没有寄出过薪资单",
+    sent_load_failed: "读取寄送记录失败，请重新整理再试一次",
   },
   // Info: (20260831 - Julian) 公开版通往账本版的入口
   // Info: (20260831 - Julian) 计算器 Step 1 的员工连结状态
@@ -287,6 +298,9 @@ export const calculator = {
     send: "发送薪资单",
     reset: "重置",
     re_send: "重新发送薪资单",
+    send_disabled_incomplete: "完成全部四个步骤后，才能寄出薪资单",
+    send_disabled_unsaved: "请先储存薪资记录，才能寄出薪资单",
+    send_disabled_no_email: "这位员工的资料里没有电子邮件，请先到员工列表补上",
   },
   message: {
     name_error_title: "未填写员工姓名",

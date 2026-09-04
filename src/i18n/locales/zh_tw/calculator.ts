@@ -175,9 +175,15 @@ export const calculator = {
     content_2: "給",
     content_bold_2: " {{employeeName}} 嗎？",
     email: "電子郵件",
-    email_placeholder: "請輸入員工的電子郵件",
-    invalid_email_hint: "電子郵件格式錯誤，請再檢查一遍。",
     submit: "寄送薪資單",
+    email_from_profile: "來自員工資料",
+    email_missing: "這位員工沒有電子郵件",
+    sending: "寄送中…",
+    error_no_email: "這位員工的資料裡沒有電子郵件，請先到員工列表補上。",
+    error_not_configured: "系統尚未設定寄信服務，請聯絡系統管理員。",
+    error_font_missing:
+      "伺服器缺少中文字型，無法產生薪資單，請聯絡系統管理員。",
+    error_generic: "薪資單寄送失敗，請稍後再試一次。",
   },
   my_pay_slip: {
     main_title: "我的薪資單",
@@ -193,6 +199,11 @@ export const calculator = {
     pay_slip: "薪資單",
     sent_on: "寄出日期",
     all: "全部",
+    employee: "員工",
+    sent_by: "寄送者",
+    unknown_sender: "未具名",
+    sent_empty: "這本帳本還沒有寄出過薪資單",
+    sent_load_failed: "讀取寄送紀錄失敗，請重新整理再試一次",
   },
   // Info: (20260831 - Julian) 公開版通往帳本版的入口
   // Info: (20260831 - Julian) 計算機 Step 1 的員工連結狀態
@@ -287,6 +298,9 @@ export const calculator = {
     send: "寄出薪資單",
     reset: "重置",
     re_send: "重新寄送薪資單",
+    send_disabled_incomplete: "完成全部四個步驟後，才能寄出薪資單",
+    send_disabled_unsaved: "請先儲存薪資紀錄，才能寄出薪資單",
+    send_disabled_no_email: "這位員工的資料裡沒有電子郵件，請先到員工列表補上",
   },
   message: {
     name_error_title: "員工姓名未填寫",

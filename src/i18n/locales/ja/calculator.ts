@@ -178,10 +178,18 @@ export const calculator = {
     content_2: "を",
     content_bold_2: " {{employeeName}} ",
     email: "Eメール",
-    email_placeholder: "従業員のEメールを入力してください",
-    invalid_email_hint:
-      "Eメールの形式が正しくありません。もう一度ご確認ください。",
     submit: "給与明細を送信",
+    email_from_profile: "従業員データより",
+    email_missing: "メールアドレスが未登録です",
+    sending: "送信中...",
+    error_no_email:
+      "この従業員にはメールアドレスが登録されていません。先に従業員一覧で追加してください。",
+    error_not_configured:
+      "メール送信がまだ設定されていません。システム管理者にご連絡ください。",
+    error_font_missing:
+      "サーバーに中国語フォントがないため、給与明細を生成できません。システム管理者にご連絡ください。",
+    error_generic:
+      "給与明細を送信できませんでした。しばらくしてからもう一度お試しください。",
   },
   my_pay_slip: {
     main_title: "私の給与明細",
@@ -197,6 +205,12 @@ export const calculator = {
     pay_slip: "給与明細",
     sent_on: "送信日",
     all: "すべて",
+    employee: "従業員",
+    sent_by: "送信者",
+    unknown_sender: "名前なし",
+    sent_empty: "この帳簿からはまだ給与明細が送信されていません",
+    sent_load_failed:
+      "送信履歴を読み込めませんでした。再読み込みしてお試しください",
   },
   // Info: (20260831 - Julian) 公開版から帳簿版への導線
   // Info: (20260831 - Julian) 計算機の Step 1 における従業員の紐付け状態
@@ -213,7 +227,8 @@ export const calculator = {
       "今回の給与記録はどちらを選んでも計算機の値で保存されます。ここで聞いているのは従業員データも変更するかどうかだけです。「今回だけ保存」を選ぶと従業員データはそのままです。",
     profile_diff_update_btn: "従業員データを更新して保存",
     profile_diff_skip_btn: "今回だけ保存",
-    profile_diff_failed: "更新できませんでした。しばらくしてからお試しください。",
+    profile_diff_failed:
+      "更新できませんでした。しばらくしてからお試しください。",
     profile_value_on: "あり",
     profile_value_off: "なし",
     profile_value_none: "未設定",
@@ -298,6 +313,11 @@ export const calculator = {
     send: "給与明細を送信",
     reset: "リセット",
     re_send: "給与明細を再送信",
+    send_disabled_incomplete:
+      "4つのステップをすべて完了すると給与明細を送信できます",
+    send_disabled_unsaved: "給与記録を保存すると給与明細を送信できます",
+    send_disabled_no_email:
+      "この従業員にはメールアドレスがありません。先に従業員一覧で追加してください",
   },
   message: {
     name_error_title: "従業員名が未入力です",

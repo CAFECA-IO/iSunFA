@@ -6,6 +6,7 @@ import {
 } from "@/constants/salary_delivery";
 import {
   ISalaryPaySlipDelivery,
+  ISalaryPaySlipDeliveryListItem,
   ISalaryPaySlipDeliveryWriteInput,
 } from "@/interfaces/salary_pay_slip_delivery";
 
@@ -37,7 +38,7 @@ export interface ISalaryPaySlipDeliveryRepository {
   listByAccountBook(params: {
     accountBookId: string;
     limit: number;
-  }): Promise<ISalaryPaySlipDelivery[]>;
+  }): Promise<ISalaryPaySlipDeliveryListItem[]>;
 }
 
 type DeliveryWithSender = SalaryPaySlipDelivery & { sentBy: User };
@@ -117,15 +118,41 @@ export class SalaryPaySlipDeliveryRepository implements ISalaryPaySlipDeliveryRe
   }: {
     accountBookId: string;
     limit: number;
-  }): Promise<ISalaryPaySlipDelivery[]> {
+  }): Promise<ISalaryPaySlipDeliveryListItem[]> {
     const rows = await prisma.salaryPaySlipDelivery.findMany({
       where: { accountBookId },
-      include: { sentBy: SENDER_SELECT },
+      include: {
+        sentBy: SENDER_SELECT,
+        /**
+         * Info: (20260904 - Julian) 只取期間與員工的三欄，**不取兩份快照**。
+         *
+         * `inputSnapshot` / `resultSnapshot` 是整份薪資明細。清單一次撈 50 列，
+         * 帶上快照等於把整本帳的薪資結構送進瀏覽器，而畫面上只用得到年月。
+         * 點開某一列時再走 `GET record/:record_id`。
+         */
+        salaryRecord: {
+          select: {
+            year: true,
+            month: true,
+            employee: { select: { id: true, name: true, number: true } },
+          },
+        },
+      },
       orderBy: { createdAt: "desc" },
       take: limit,
     });
 
-    return rows.map((row) => toDelivery(row as DeliveryWithSender));
+    return rows.map((row) => ({
+      ...toDelivery(row as unknown as DeliveryWithSender),
+      year: row.salaryRecord.year,
+      month: row.salaryRecord.month,
+      employee: {
+        id: row.salaryRecord.employee.id,
+        name: row.salaryRecord.employee.name,
+        // Info: (20260904 - Julian) 員工編號可空（軟刪後讓出 activeNumber），空字串比 null 好用
+        number: row.salaryRecord.employee.number ?? "",
+      },
+    }));
   }
 }
 

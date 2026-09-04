@@ -5,7 +5,10 @@ import {
   SALARY_DELIVERY_STATUS,
   SalaryDeliveryStatus,
 } from "@/constants/salary_delivery";
-import { ISalaryPaySlipDelivery } from "@/interfaces/salary_pay_slip_delivery";
+import {
+  ISalaryPaySlipDelivery,
+  ISalaryPaySlipDeliveryListItem,
+} from "@/interfaces/salary_pay_slip_delivery";
 import {
   ISalaryCalculatorEmployeeRepository,
   salaryCalculatorEmployeeRepo,
@@ -262,6 +265,22 @@ export class SalaryPaySlipDeliveryService {
         reason: describeError(writeError),
       });
     }
+  }
+
+  /**
+   * Info: (20260904 - Julian) 「已寄出」分頁。
+   *
+   * `limit` 由呼叫端給且有上限（見 route）—— 不給上限的話，一本累積了幾年
+   * 寄送紀錄的帳本會在開啟分頁時把全部列一次撈出來。
+   */
+  public async listByAccountBook({
+    accountBookId,
+    limit,
+  }: {
+    accountBookId: string;
+    limit: number;
+  }): Promise<ISalaryPaySlipDeliveryListItem[]> {
+    return this.deliveries.listByAccountBook({ accountBookId, limit });
   }
 
   public async listByRecord({

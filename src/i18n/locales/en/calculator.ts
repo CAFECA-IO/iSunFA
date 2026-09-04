@@ -182,9 +182,17 @@ export const calculator = {
     content_2: "to",
     content_bold_2: " {{employeeName}} ?",
     email: "Email",
-    email_placeholder: "Please enter employee email",
-    invalid_email_hint: "Invalid email format, please check again.",
     submit: "Send Pay Slip",
+    email_from_profile: "From employee profile",
+    email_missing: "No email address on file",
+    sending: "Sending...",
+    error_no_email:
+      "This employee has no email address. Add one in the employee list first.",
+    error_not_configured:
+      "Email delivery is not set up yet. Please contact your system administrator.",
+    error_font_missing:
+      "The server is missing Chinese fonts, so the pay slip cannot be generated. Please contact your system administrator.",
+    error_generic: "Could not send the pay slip. Please try again in a moment.",
   },
   my_pay_slip: {
     main_title: "My Pay Slip",
@@ -200,6 +208,12 @@ export const calculator = {
     pay_slip: "Pay Slip",
     sent_on: "Sent On",
     all: "All",
+    employee: "Employee",
+    sent_by: "Sent by",
+    unknown_sender: "Unnamed",
+    sent_empty: "No pay slip has been sent from this account book yet",
+    sent_load_failed:
+      "Could not load the delivery history. Please refresh and try again",
   },
   // Info: (20260831 - Julian) Entry point from the public calculator to the account book one
   // Info: (20260831 - Julian) The employee link shown in Step 1 of the calculator
@@ -214,10 +228,11 @@ export const calculator = {
     profile_diff_content:
       'The calculator settings differ from the employee record for "{{name}}". Here is what changed:',
     profile_diff_hint:
-      "This payroll record is saved with the calculator values either way. The question is only whether the employee record should change as well. Choose \"Save this one only\" to leave it untouched.",
+      'This payroll record is saved with the calculator values either way. The question is only whether the employee record should change as well. Choose "Save this one only" to leave it untouched.',
     profile_diff_update_btn: "Update employee and save",
     profile_diff_skip_btn: "Save this one only",
-    profile_diff_failed: "Could not update the employee. Please try again later.",
+    profile_diff_failed:
+      "Could not update the employee. Please try again later.",
     profile_value_on: "Yes",
     profile_value_off: "No",
     profile_value_none: "Not set",
@@ -305,6 +320,12 @@ export const calculator = {
     send: "Send Pay Slip",
     reset: "Reset",
     re_send: "Resend Pay Slip",
+    send_disabled_incomplete:
+      "Finish all four steps before sending the pay slip",
+    send_disabled_unsaved:
+      "Save the salary record first, then you can send the pay slip",
+    send_disabled_no_email:
+      "This employee has no email address — add one in the employee list first",
   },
   message: {
     name_error_title: "Employee’s Name is not Filled",

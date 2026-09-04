@@ -14,6 +14,7 @@ import {
 } from "@/interfaces/salary_record";
 import {
   ISalaryPaySlipDelivery,
+  ISalaryPaySlipDeliveryListItem,
   ISalaryPaySlipDeliveryWriteInput,
 } from "@/interfaces/salary_pay_slip_delivery";
 import {
@@ -187,7 +188,7 @@ class FakeDeliveryRepo implements ISalaryPaySlipDeliveryRepository {
     return [];
   }
 
-  async listByAccountBook(): Promise<ISalaryPaySlipDelivery[]> {
+  async listByAccountBook(): Promise<ISalaryPaySlipDeliveryListItem[]> {
     return [];
   }
 }

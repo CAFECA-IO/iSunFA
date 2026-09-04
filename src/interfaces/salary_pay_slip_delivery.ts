@@ -27,6 +27,35 @@ export interface ISalaryPaySlipDelivery {
   createdAt: number;
 }
 
+/**
+ * Info: (20260904 - Julian) 「已寄出」分頁一列所需的東西。
+ *
+ * ## 為什麼不帶薪資單快照
+ *
+ * 前一版的假資料（`ISentRecord`）每一列都掛著一整份 `ISalaryCalculatorUI`，
+ * 因為那時它只是硬編的兩筆。接真資料之後那個形狀會變成：
+ * **把整本帳每一位員工的完整薪資明細一次送到瀏覽器**，只為了畫一張
+ * 「期間／收件人／寄出日」的表格 —— 而使用者一次只會點開其中一列。
+ *
+ * 所以清單只回中繼資料，點開某一列時再用既有的
+ * `GET record/:record_id` 取那一筆的快照。多一次請求，換掉一整份
+ * 不該離開伺服器的資料。
+ *
+ * ## 為什麼帶 employee
+ *
+ * `recipientEmail` 是當初的信箱，答得出「寄到哪」但答不出「這是誰的薪資單」——
+ * 而同一個人換過信箱之後，光看信箱會以為是兩個人。
+ */
+export interface ISalaryPaySlipDeliveryListItem extends ISalaryPaySlipDelivery {
+  year: number;
+  month: number;
+  employee: {
+    id: string;
+    name: string;
+    number: string;
+  };
+}
+
 export interface ISalaryPaySlipDeliveryWriteInput {
   accountBookId: string;
   salaryRecordId: string;
