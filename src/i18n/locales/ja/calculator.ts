@@ -116,6 +116,12 @@ export const calculator = {
     remove_employee_title: "従業員の削除",
     remove_employee_content: "本当に従業員リストから {{name}} を削除しますか？",
     remove_employee_submit_btn: "はい、削除します。",
+    no_email: "未入力",
+    missing_email_banner:
+      "{{count}} 名のメールアドレスが未入力です。給与明細を送信できません",
+    only_missing_email: "該当者のみ表示",
+    show_all: "すべて表示",
+    no_filter_result: "条件に一致する従業員がいません",
   },
   result: {
     base_salary_with_tax: "基本給（課税対象）",

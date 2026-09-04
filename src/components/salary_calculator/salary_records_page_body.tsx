@@ -15,7 +15,8 @@ import {
   X,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { request, IEnvelopeLike } from "@/lib/utils/request";
+import { request, requestFile, IEnvelopeLike } from "@/lib/utils/request";
+import { hasNoEmail } from "@/lib/utils/salary_employee_filter";
 import { numberWithCommas, timestampToString } from "@/lib/utils/common";
 import {
   isPageAllPicked,
@@ -24,11 +25,10 @@ import {
   togglePick,
 } from "@/lib/utils/salary_export_selection";
 import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
-import { salaryRecordExportApi } from "@/constants/salary_calculator_api";
-import { requestFile } from "@/lib/utils/request";
 import { saveDownloadedFile } from "@/lib/utils/download_file";
 import {
   salaryCalculatorApiOf,
+  salaryRecordExportApi,
   salaryRecordItemApi,
 } from "@/constants/salary_calculator_api";
 import { salaryCalculatorUrlOf } from "@/constants/url";
@@ -143,7 +143,7 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
     if (!employee) {
       return { blockedReason: "calculator.button.send_disabled_employee_gone" };
     }
-    if (employee.email.trim() === "") {
+    if (hasNoEmail(employee)) {
       return { blockedReason: "calculator.button.send_disabled_no_email" };
     }
     return { email: employee.email };

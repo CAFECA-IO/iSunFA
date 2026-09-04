@@ -116,6 +116,12 @@ export const calculator = {
     remove_employee_content:
       "Are you sure you want to remove {{name}} from the employee list?",
     remove_employee_submit_btn: "Yes, Remove Employee",
+    no_email: "Not set",
+    missing_email_banner:
+      "{{count}} employees have no email address — their pay slips cannot be sent",
+    only_missing_email: "Show only these",
+    show_all: "Show all employees",
+    no_filter_result: "No employee matches the current filter",
   },
   result: {
     base_salary_with_tax: "Base Salary (Taxable)",

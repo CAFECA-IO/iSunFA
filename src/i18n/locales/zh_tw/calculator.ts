@@ -115,6 +115,11 @@ export const calculator = {
     remove_employee_title: "移除員工",
     remove_employee_content: "您確定要從員工列表中移除 {{name}} 嗎？",
     remove_employee_submit_btn: "是的，移除員工。",
+    no_email: "未填寫",
+    missing_email_banner: "{{count}} 位員工沒有電子郵件，寄不出薪資單",
+    only_missing_email: "只看這幾位",
+    show_all: "顯示全部員工",
+    no_filter_result: "沒有符合目前條件的員工",
   },
   result: {
     base_salary_with_tax: "本薪（應稅）",

@@ -115,6 +115,12 @@ export const calculator = {
     remove_employee_title: "직원 삭제",
     remove_employee_content: "직원 목록에서 {{name}} 님을 삭제하시겠습니까?",
     remove_employee_submit_btn: "네, 직원을 삭제합니다.",
+    no_email: "미입력",
+    missing_email_banner:
+      "{{count}}명의 이메일이 비어 있어 급여명세서를 보낼 수 없습니다",
+    only_missing_email: "해당 직원만 보기",
+    show_all: "전체 보기",
+    no_filter_result: "조건에 맞는 직원이 없습니다",
   },
   result: {
     base_salary_with_tax: "기본급(과세 대상)",

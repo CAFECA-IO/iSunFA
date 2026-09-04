@@ -115,6 +115,11 @@ export const calculator = {
     remove_employee_title: "移除员工",
     remove_employee_content: "您确定要从员工列表中移除 {{name}} 吗？",
     remove_employee_submit_btn: "是的，移除员工。",
+    no_email: "未填写",
+    missing_email_banner: "{{count}} 位员工没有电子邮件，寄不出薪资单",
+    only_missing_email: "只看这几位",
+    show_all: "显示全部员工",
+    no_filter_result: "没有符合目前条件的员工",
   },
   result: {
     base_salary_with_tax: "基本工资（应税）",
