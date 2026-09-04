@@ -1,0 +1,318 @@
+# 薪資單電子郵件寄送計畫（限帳本版）
+
+- 撰寫：20260902 - Julian
+- 相關：`salary_record_module_plan.md`、`salary_employee_profile_plan.md`、ADR 017（系統設定）、ADR 018（HR PII 分級）
+- 前置：`feature/salary_calculator_employee` 需先 merge —— 收件信箱來自本次落地的 `SalaryCalculatorEmployee.email`
+
+---
+
+## 0. 既有基礎設施（已逐一確認，不是假設）
+
+| 東西 | 位置 | 狀態 |
+|---|---|---|
+| `nodemailer` | `package.json` `^9.0.5` + `@types/nodemailer` | ✅ 已安裝 |
+| 寄信入口 | `src/services/mail.service.ts`（96 行） | ✅ `sendMail({to, subject, html, text})` |
+| SMTP 設定 | DB 系統設定（ADR 017）：`SMTP_HOST/PORT/USER/PASSWORD/FROM` | ✅ 後台可調、不需重啟 |
+| 未設定的處置 | `MailNotConfiguredError`，**明確失敗不靜靜略過** | ✅ 現成的正確行為 |
+| 既有消費者 | **只有一個**：`team_invitation.service.ts` | ⚠️ 見 §3.4 |
+| **附件支援** | `IMailMessage` 只有 `to/subject/html/text` | ❌ **要擴充** |
+| 伺服器端 PDF | `pdf_browser.ts`（共用 Chrome 實例）＋ `pdf_font_guard.ts`（CJK fail fast） | ✅ 兩個既有使用者（碳盤查、物流報告） |
+| 寄送紀錄 model | 無 | ❌ **要新增** |
+| 郵件錯誤碼 | `TW000018` 未設定 / `TW000019` 邀請信寄送失敗 | ✅ 可比照 |
+| 限流前例 | `TEAM_INVITE_SEND`（10/分、100/日） | ✅ 可比照 |
+| 現有寄送 UI | `sending_pay_slip_modal.tsx` 是 `console.log` stub | ❌ 要接真 API |
+| 「已寄出」分頁 | `my_pay_slip_page_body.tsx` 讀 `dummySentData` | ❌ 要接真資料 |
+
+**關於 `mail.service` 的 log**：它刻意只記收件者與主旨、不記內文（邀請信帶一次性 token）。
+本功能會讓這個決定更重要 —— 薪資單的內容絕不能進 log，附件更不能。
+
+---
+
+## 1. 三個已拍板的決策
+
+| # | 問題 | 決定 |
+|---|---|---|
+| **D1** | 信件形式 | **PDF 附件**。信件本文只寫「您的 X 月薪資單」，金額全在附件裡 |
+| **D2** | 寄送紀錄 | **落地一張 `SalaryPaySlipDelivery`**，本次範圍內。同時解決重寄文案、已寄出分頁、稽核軌跡三件事 |
+| **D3** | 收件信箱 | **固定用員工檔上的 `email`**，寄送前顯示但不可改；沒填 email 的員工直接擋下並指向員工列表 |
+
+D3 與「到離職日唯讀」是同一個原則：**這個欄位的來源是員工檔，改它要去改員工檔。**
+允許當場修改的話，薪資單可以被寄到任意地址，而改掉的那一次不會留在員工檔上 ——
+事後查不出當初寄去哪。（`SalaryPaySlipDelivery` 仍會記下實際收件信箱，見 §2。）
+
+---
+
+## 2. 資料模型：`SalaryPaySlipDelivery`
+
+```prisma
+/// Info: (20260902 - Julian) 一次薪資單寄送。成功與失敗都留一列。
+model SalaryPaySlipDelivery {
+  id String @id @default(uuid())
+
+  // Info: (20260902 - Julian) 寄的是哪一筆薪資紀錄
+  salaryRecordId String      @map("salary_record_id")
+  salaryRecord   SalaryRecord @relation(fields: [salaryRecordId], references: [id])
+
+  // Info: (20260902 - Julian) 租戶 Root Node，與薪資紀錄一致；查詢一律以它為第一個 where
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  /**
+   * Info: (20260902 - Julian) **實際**收件信箱的快照，不是 join 員工檔取現值。
+   *
+   * 員工的 email 之後會被改。查「這封三月的薪資單當初寄到哪」時，
+   * join 出來的是今天的信箱 —— 而那正是稽核最需要答案的那一格。
+   * 收件人固定取自員工檔（D3），但取到的那個值要留在這裡。
+   */
+  recipientEmail String @map("recipient_email")
+
+  // Info: (20260902 - Julian) DELIVERY_STATUS 常數：SENT / FAILED
+  status String
+
+  /**
+   * Info: (20260902 - Julian) 失敗原因的摘要（截斷）。給診斷用，不對外顯示。
+   * 不記信件內文與附件 —— 那等於把薪資單留在第二個地方。
+   */
+  failureReason String? @map("failure_reason")
+
+  // Info: (20260902 - Julian) 誰按下的寄送。這一欄一定要有讀者（見 §6.3）
+  sentByUserId String @map("sent_by_user_id")
+  sentBy       User   @relation(fields: [sentByUserId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([accountBookId])
+  @@index([salaryRecordId])
+  @@map("salary_pay_slip_delivery")
+}
+```
+
+### 2.1 為什麼失敗也留一列
+
+「寄不出去就當作沒發生」會讓兩件事查不出來：**寄了幾次**（重試三次都失敗與從未寄過，
+在畫面上長得一樣），以及**薪資資料曾經嘗試離開組織**。團隊邀請那一側的處置相反
+（寄失敗就刪掉邀請），但那是因為邀請本身沒有寄出去就沒有意義；薪資紀錄不一樣，
+它獨立存在，寄送只是它的一個事件。
+
+### 2.2 為什麼不做狀態機
+
+只有 `SENT` / `FAILED` 兩個終局，沒有 `PENDING`。理由：本次是**同步寄送**
+（API 等 SMTP 回來才回應），不進佇列。加一個 `PENDING` 只會製造一種
+「永遠停在 PENDING 而沒有人去收」的狀態 —— 那需要一支 reaper，而我們還沒有需要它的量。
+
+若日後改成非同步（見 §10.4），這一欄再擴充。
+
+### 2.3 沒有唯一鍵：重寄是合法的
+
+同一筆薪資紀錄可以有多列 delivery。「已經寄過了，還要再寄嗎」是**前端問一句**，
+不是資料庫約束 —— 補寄、改了信箱再寄、對方說沒收到，都是真實情境。
+
+---
+
+## 3. 後端流程
+
+### 3.1 端點
+
+```
+POST /api/v1/user/account_book/[account_book_id]/salary_calculator/record/[record_id]/deliver
+```
+
+掛在薪資紀錄底下而不是另開一個 `/pay_slip/send`：寄送的對象**就是**那一筆紀錄，
+`record_id` 是它唯一需要的輸入。Body 為空 —— 收件人、金額、期間全部由伺服器從那一筆推導，
+沒有任何一項可以由前端指定（D3 的落地形式）。
+
+### 3.2 授權：`SalaryAccess.WRITE`
+
+歸寫入而不是讀取，即使它不改薪資紀錄本身。理由：**它把薪資資料送出組織邊界**，
+那件事的份量高於「看得到」。`VIEWER` 讀得到薪資單但寄不出去。
+
+第九支端點，`salary_route_wiring.test.ts` 的 `ENDPOINTS` 表要跟著長一列 ——
+那支測試已改成與 API 目錄走訪對拍，忘了登記會直接紅。
+
+### 3.3 限流：新增 `SALARY_MAIL_SEND` 桶
+
+比照 `TEAM_INVITE_SEND`，但更緊：**每分鐘 5、每日 50**。
+寄薪資單是人工動作（一次一位員工），正常一個月一輪；
+而它每一次都會啟動一次 PDF 列印與一次 SMTP 連線，兩者都比一般寫入昂貴得多。
+
+不與 `SALARY_WRITE` 共用桶：儲存薪資紀錄是高頻的（試算過程中會存好幾次），
+共用的話「今天存太多次紀錄」會把寄送額度吃光，而那兩件事的成本結構完全不同。
+
+### 3.4 流程與失敗處置
+
+```
+1. 授權（WRITE）+ 限流
+2. 讀薪資紀錄（租戶過濾）—— 找不到回 404
+3. 讀員工檔取 email —— 空的回 422「這位員工沒有信箱」（不是 500）
+4. 產生 PDF（§4）
+5. sendMail（§5）
+6. 落地 SalaryPaySlipDelivery（SENT）
+7. 回傳這一列
+```
+
+**第 4、5 步失敗時，落地一列 `FAILED` 再把錯誤丟出去。** 順序不能倒：
+先丟錯誤就永遠不會有那一列，而「寄失敗過」正是最需要被記下來的事。
+
+**SMTP 未設定**（`MailNotConfiguredError`）**不落地 `FAILED`**：那是環境問題不是這一次寄送的事實，
+記下來只會在管理員設好 SMTP 之後留一堆與員工無關的失敗紀錄。直接回 `TW000018`。
+
+---
+
+## 4. PDF 產生
+
+### 4.1 不能重用現有的 `PaySlip` 元件
+
+`pay_slip.tsx` 是 React + Tailwind（flex、CSS 變數、`text-text-*` token）。
+產 PDF 走的是 headless Chrome 的 `page.setContent(html)` —— 那裡沒有 Tailwind 的建置產物，
+也沒有 `globals.css` 的 token 定義。**要另寫一份自帶樣式的 HTML**，
+比照 `logistics_report_html.ts`（630 行，同樣的處境）。
+
+新增 `src/lib/utils/pay_slip_html.ts`：純函式，收 `ISalaryRecordDetail` 回一段完整 HTML
+（含 `<style>`）。純函式意味著它有判準 —— 金額格式、月份、姓名逃逸都測得到，
+不必啟動 Chrome。
+
+### 4.2 **必須過 `assertCjkRenderable`**
+
+`pdf_font_guard.ts` 的檔頭記著一次真實事故：伺服器沒有 CJK 字型時，Chrome 會靜默 fallback
+到 `.notdef`，產出一份**地點名稱全是空心方框**的報告 —— **而流程回報「成功」**。
+
+薪資單全是中文（姓名、項目名稱），這條路一模一樣，而後果更糟：
+使用者收到一份看不懂的薪資單，但系統告訴發薪的人「已寄出」。
+**這一步不是可選的**，`salary_pay_slip_pdf.service.ts` 一定要呼叫它。
+
+### 4.3 效能
+
+`pdf_browser.ts` 的共用 Chrome 實例：首次請求付冷啟動（實測 4.6s），之後重用。
+一次寄一位員工的節奏下這是可接受的；批次寄送（§10.5）會讓它變成主要成本。
+
+---
+
+## 5. 擴充 `mail.service` 支援附件
+
+```ts
+export interface IMailMessage {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  /**
+   * Info: (20260902 - Julian) 選填。nodemailer 的附件格式，只開放需要的三個欄位。
+   *
+   * 直接把 nodemailer 的 `Attachment` 型別露出去會讓呼叫端用得到
+   * `path`（從磁碟讀檔）與 `href`（從網址抓）—— 兩者都是把「寄什麼」的控制權
+   * 交給呼叫端的字串，而這支服務的收件者是由別處決定的。
+   */
+  attachments?: {
+    filename: string;
+    content: Buffer;
+    contentType: string;
+  }[];
+}
+```
+
+`sendMail` 把它原樣交給 `transporter.sendMail`。**log 那一行不動** ——
+它只記收件者與主旨，附件連檔名都不記（檔名會帶員工姓名與月份）。
+
+這是 `mail.service` 自二月以來的第一次擴充，而它目前只有一個消費者。
+擴充成選填欄位，團隊邀請那一側完全不受影響。
+
+---
+
+## 6. 前端
+
+### 6.1 寄送入口
+
+| 位置 | 變更 |
+|---|---|
+| `salary_result_section.tsx` | 「寄出薪資單」按鈕：公開版維持隱藏，帳本版且**已儲存**才啟用（沒有 `record_id` 就無從寄起） |
+| `sending_pay_slip_modal.tsx` | 移除 `console.log` stub，接真 API。收件信箱**唯讀顯示**（D3），旁邊標「來自員工資料」 |
+| `view_pay_slip_modal.tsx` | 薪資紀錄頁的預覽彈窗加「寄送」；已寄過的顯示 `ResendingPaySlipModal` |
+| `resending_pay_slip_modal.tsx` | 「您已經將 X 月的薪資單寄送給 Y」改由最近一筆 delivery 提供，不再是寫死的文案 |
+| `my_pay_slip_page_body.tsx` | 「已寄出」分頁改讀真 API，`dummySentData` 移除 |
+
+### 6.2 沒有信箱的員工
+
+`SalaryCalculatorEmployee.email` 可空（那是刻意的：不少帳本不替員工建信箱）。
+寄送按鈕在這種情況下**停用並說明原因**，而不是按下去才回 422 ——
+比照員工表單分頁那一組「紅點 + 原因」的處置：停用的按鈕一定要說得出為什麼。
+
+### 6.3 `sentByUserId` 要有讀者
+
+母計畫 §13.2 記著一個未解的問題：`SalaryRecord.createdByUserId` **沒有任何讀者**，
+稽核價值等於零。這次不要重蹈覆轍 —— 「已寄出」分頁的每一列都顯示寄送者，
+API 回應帶 `sentBy.name`。加一個欄位就要同時決定誰看得到它。
+
+---
+
+## 7. 錯誤碼
+
+| 代碼 | 情境 |
+|---|---|
+| `NF_SALARY_RECORD` | 既有，紀錄不存在或不屬於這本帳 |
+| `VA_SALARY_EMPLOYEE_NO_EMAIL`（新增） | 員工檔沒有信箱。**422 不是 500** —— 這是資料狀態，不是故障 |
+| `TW_MAIL_NOT_CONFIGURED` | 既有 `TW000018` |
+| `TW_SALARY_PAY_SLIP_MAIL_FAILED`（新增） | SMTP 或 PDF 失敗 |
+| `IS_PDF_FONT_MISSING` | 既有（`pdf_font_guard` 丟的），伺服器缺 CJK 字型 |
+
+---
+
+## 8. 測試計畫
+
+| 測試檔 | 型別 | 釘住什麼 |
+|---|---|---|
+| `salary_pay_slip_html.test.ts` | 純函式 | HTML 產生：金額千分位、期間、**姓名的 HTML 逃逸**（員工姓名由使用者輸入，直接插進 HTML 等於把信件版面交給對方）、免稅與應稅分項齊全 |
+| `salary_delivery_service.test.ts` | service（手寫假 repo） | 沒有 email 回 422 而非 500；PDF 失敗與 SMTP 失敗都**落地 FAILED 再丟錯**；`MailNotConfiguredError` **不**落地；`recipientEmail` 存的是當下的值不是 join |
+| `salary_route_wiring.test.ts` | route（擴充） | 第九支端點：401、`SalaryAccess.WRITE`、限流 429 成對。`ENDPOINTS` 表與目錄走訪對拍，忘了登記就紅 |
+| `salary_delivery_repo.e2e.test.ts` | e2e（真 DB） | 租戶過濾、失敗列真的落地、`recipientEmail` 快照在員工改信箱之後**不跟著變** |
+| `mail_attachments.test.ts` | 純函式 | `sendMail` 把 `attachments` 原樣交給 transporter；**沒有附件時不送出該欄位**（nodemailer 對空陣列與 undefined 的處理不同）；log 不含附件檔名 |
+| `salary_pdf_font_guard.test.ts` | 掃描 | `salary_pay_slip_pdf.service.ts` 真的呼叫了 `assertCjkRenderable` —— §4.2 那個缺陷完全靜默，只有掃描守得住 |
+
+**必跑的 mutation**：
+
+1. 拿掉 `assertCjkRenderable` → 掃描測試要紅
+2. 失敗時先 throw 再落地（順序倒過來）→ service 測試要紅
+3. `recipientEmail` 改成查詢時 join 員工檔 → e2e 要紅
+4. 端點的 `SalaryAccess` 改成 `READ` → wiring 要紅
+
+---
+
+## 9. PR 切法
+
+| PR | 內容 | 可獨立 merge |
+|---|---|---|
+| **A：能力層** | `mail.service` 支援附件 + `pay_slip_html.ts` + `salary_pay_slip_pdf.service.ts` + 其測試 | ✅ 沒有入口，行為零變化 |
+| **B：資料層與端點** | `SalaryPaySlipDelivery` schema + repo + service + 第九支端點 + 錯誤碼 + e2e | 依賴 A |
+| **C：前端** | 四個彈窗接真 API、已寄出分頁接真資料、`dummySentData` 移除 | 依賴 B |
+
+A 可以先驗證「這台伺服器產得出中文 PDF」——**那是整個功能最大的環境風險**，
+而它與資料模型無關，值得先單獨落地確認。
+
+---
+
+## 10. 風險與待決事項
+
+1. **⚠️ 這是薪資資料第一次離開組織邊界，而分級決策仍未拍板。**
+   `salary_employee_profile_plan.md` §9.1 與母計畫 §13 都記著同一件事：
+   ADR 018 未涵蓋薪資，需要補一段分級決策。
+   在此之前，明文 PDF 經由明文 SMTP 寄出是一個**尚未被授權的動作**。
+   **建議：本功能的上線與那個決策綁在一起，不要各自為政。**
+
+2. **收件人無法驗證。** `SalaryCalculatorEmployee` 不是 `User`，沒有信箱驗證流程。
+   員工檔上的 email 打錯一個字，薪資單就寄給陌生人，而系統回報「已寄出」。
+   D3 把「當場改」擋掉了，但擋不掉「員工檔上本來就打錯」。
+   可考慮的緩解：寄送前的確認對話框把完整信箱大字顯示（不是一行小字）。
+
+3. **附件不加密。** 密碼保護的 PDF 是一個選項，但「密碼怎麼給員工」會把問題推到另一個管道
+   （簡訊？口頭？），而那個管道也要設計。**本次不做，登記在此。**
+
+4. **同步寄送的時間成本。** PDF 冷啟動 4.6s + SMTP 往返，單次請求可能超過 10 秒。
+   Next 的 serverless 逾時要確認。若成為問題，`ResumableJob` 已存在但形狀不合
+   （它是客戶端驅動的續傳），需要的是一個真正的伺服器端佇列 —— 那是另一個決策。
+
+5. **批次寄送（一次寄整個月的所有員工）不在本次範圍。**
+   它會讓 §4.3 的 Chrome 冷啟動與 §3.3 的限流都變成主要限制，
+   而且「30 封裡有 3 封失敗」的 UI 與單筆寄送完全不同。
+
+6. **`dummyReceivedData`（已收到分頁）本次不動。** 員工不是本站使用者，
+   「收到的薪資單」要成立需要先有員工登入的概念 —— 那是比本功能大得多的題目。
+   本次只讓「已寄出」那一半接上真資料，並在文件裡註明另一半仍是假資料。
