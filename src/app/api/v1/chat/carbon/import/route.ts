@@ -91,8 +91,11 @@ export async function POST(request: NextRequest) {
      * `chatroomRepo.findAccountBookIdByChannel`),而這裡原本**沒有任何裁決** ——
      * 也就是帶別人的 channel 就是拿別人的團隊額度付自己的匯入
      * (匯入單章實測達 5 萬 tokens),而且順便繞過自己的個人點數扣款。
-     * 碳盤查的其他五個端點(report / inventory / pending-import /
-     * esg-records / sessions)都經過這道 guard,只有匯入這條沒有。
+     * 對照(20260904 掃 develop `ef4b8bcd0`,含未合併分支):碳盤查另外**四個**
+     * 端點(sessions / inventory / report / pending-import)走 `resolveCarbonAccess`,
+     * `esg-records` 走同一個模組的 `canViewAccountBook`(它收 accountBookId,
+     * 不是 channel;`sessions` 列帳本會話那一路也用它)—— 只有匯入這條
+     * 一個裁決都沒有。「五個端點都用這道 guard」是原本的寫法,不準確。
      *
      * 用 **EDIT** 而不是 VIEW:花掉帳本的額度是寫入行為,不是閱覽。
      * 帳本會話的 VIEWER 因此不能用團隊額度匯入 —— 與「VIEWER 不能寫報告」一致,
@@ -192,6 +195,11 @@ export async function POST(request: NextRequest) {
      *
      * 仍保留 `file` 一路:cid 尚未上傳成功時前端會退回直傳,
      * 而「上傳失敗就整個匯入不能做」是不必要的脆弱。
+     *
+     * Info: (20260904 - Emily) 上面那道 guard 只裁決 `channel`(帳本額度的歸屬),
+     * **沒有**裁決 `cid`:知道別人的 cid 就能經 `recoverLaria` 把那份檔案取回來,
+     * 那一半是 #6748,不在這支 PR 的範圍。留這句是因為讀到這裡的人
+     * 很容易以為「匯入端點已經有授權了」。
      */
     const cidRaw = formData.get("cid");
     const cid = typeof cidRaw === "string" && cidRaw.length > 0 ? cidRaw : null;
