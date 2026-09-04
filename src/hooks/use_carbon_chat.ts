@@ -158,6 +158,7 @@ import {
   resolveCreditPauseReason,
   summarisePausedUnits,
   isRateLimitedApiError,
+  describeImportFailure,
   isTimeoutApiError,
   splitReportMarkdownSections,
   alignReportSections,
@@ -2395,6 +2396,10 @@ export const useCarbonChat = () => {
        * 「暫停就停掉整趟」「剩餘怎麼算」都由驅動器負責，這裡只管做一件事：
        * 把這一份送出去、把結果放進 `results[index]`。
        */
+      // Info: (20260904 - Emily) 份 → 失敗原因;印 log 時查表(理由見 runUnit 的 catch)
+      const failureReasons = new Map<string, string>();
+      const unitKeyOf = (unit: IImportUnit): string =>
+        `${unit.chapterId}#${unit.partIndex}/${unit.partTotal}`;
       const runUnit = async (unit: IImportUnit, index: number) => {
         const chapter = resolveChapterOf(unit.chapterId);
         inFlightCount += 1;
@@ -2480,6 +2485,14 @@ export const useCarbonChat = () => {
             "/api/v1/chat/carbon/import",
             { method: "POST", body: formData },
           );
+        } catch (error) {
+          /**
+           * Info: (20260904 - Emily) 把失敗原因留下來再往上拋(#6746)。
+           * 這裡是這一趟裡**唯一**同時拿得到「哪一份」與「什麼錯」的地方:
+           * 驅動器只傳遞分類結果,`outcome.failed` 回來時錯誤已經不在了。
+           */
+          failureReasons.set(unitKeyOf(unit), describeImportFailure(error));
+          throw error;
         } finally {
           /**
            * Info: (20260825 - Luphia) 進度一定要放行（成功、失敗、暫停都算走過一步）：
@@ -2543,10 +2556,16 @@ export const useCarbonChat = () => {
         failed.push(resolveChapterOf(unit.chapterId));
       });
       outcome.failed.forEach((unit) => {
+        /**
+         * Info: (20260904 - Emily) 帶原因(#6746):原本只印 chapterId 與 part,
+         * 整份 log 看得到「ch5 失敗」看不到「因為訂閱額度用完」。
+         * `reason` 是 errorCode 或錯誤名稱,不是整個 error 物件(body 可能含使用者內容)。
+         */
         console.error(
           "[carbon-chat] import chapter failed:",
           unit.chapterId,
           `part ${unit.partIndex}/${unit.partTotal}`,
+          `reason=${failureReasons.get(unitKeyOf(unit)) ?? "unknown"}`,
         );
       });
       if (pausedBy) {

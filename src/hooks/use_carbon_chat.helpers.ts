@@ -104,6 +104,30 @@ export const getApiErrorCode = (error: unknown): string | null => {
   return data?.errorCode ?? null;
 };
 
+/**
+ * Info: (20260904 - Emily) 一次匯入單元失敗的**可記錄原因**(#6746 我們這半)。
+ *
+ * 章節失敗的 log 原本只印 chapterId 與 part x/y,**不印 error** —— 因為 `outcome.failed`
+ * 是驅動器回的步驟清單,錯誤本身在分類之後就丟了。於是 2026-08-27 那次
+ * 「團隊訂閱額度用完」在 log 裡只看得到「ch5 失敗」,真因要從別的行反推,耗掉約一小時。
+ *
+ * 優先給 `errorCode`(API 錯誤的分類碼,穩定、可 grep);沒有碼才退回錯誤名稱與訊息第一行。
+ * **不印整個 error 物件**:RequestApiError 的 `data` 是回應 body,可能含使用者內容。
+ */
+export const describeImportFailure = (error: unknown): string => {
+  const code = getApiErrorCode(error);
+  if (code !== null) return code;
+  if (error instanceof Error) {
+    const firstLine =
+      error.message
+        .split("\n")
+        .map((line) => line.trim())
+        .find((line) => line.length > 0) ?? "";
+    return firstLine ? `${error.name}: ${firstLine}` : error.name;
+  }
+  return String(error);
+};
+
 // Info: (20260716 - Tzuhan) 判斷 API 失敗是否為限流(IS000013/HTTP 429),前端提示放慢操作(#6516)
 export const isRateLimitedApiError = (error: unknown): boolean => {
   if (!(error instanceof RequestApiError)) return false;
