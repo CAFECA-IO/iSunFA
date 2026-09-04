@@ -155,6 +155,10 @@ class FakeRecordRepo implements ISalaryRecordRepository {
     throw new Error("not used in these tests");
   }
 
+  async listRecordsByIds(): Promise<ISalaryRecordDetail[]> {
+    throw new Error("not used in these tests");
+  }
+
   async getRecordById(
     accountBookId: string,
     recordId: string,

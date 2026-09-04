@@ -2249,6 +2249,19 @@ export const API_ERRORS = {
    * 送到這裡，**不會被蓋成本代碼**：缺字型的唯一解法是裝字型，
    * 埋在一個看起來值得重試的錯誤裡等於讓維運只能靠猜。
    */
+  /**
+   * Info: (20260904 - Julian) 一次匯出的筆數超過上限。
+   *
+   * 上限存在的理由不是效能，是**這是一次批次擷取**：不設限的話，
+   * 一個請求就能把整本帳所有年月的完整薪資明細打包帶走。
+   * 這是資料狀態不是故障，給 4xx。
+   */
+  VA_SALARY_EXPORT_TOO_MANY: {
+    code: "VA000085",
+    message: "Too many salary records requested in one export",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
   TW_SALARY_PAY_SLIP_MAIL_FAILED: {
     code: "TW000034",
     message: "Failed to deliver the pay slip email",

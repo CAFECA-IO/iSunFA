@@ -1,5 +1,5 @@
 /**
- * Info: (20260831 - Julian) 裝配測試：薪資計算機的十一支端點真的接上了身分閘、
+ * Info: (20260831 - Julian) 裝配測試：薪資計算機的十二支端點真的接上了身分閘、
  * 限流器與授權閘。
  *
  * 形式與理由完全照 `leave_route_wiring.test.ts`：直接 `import` 真的 handler，
@@ -68,6 +68,7 @@ import {
   POST as recordDeliver,
 } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/record/[record_id]/deliver/route";
 import { GET as deliveryList } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/delivery/route";
+import { POST as recordExport } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/record/export/route";
 
 jest.mock("@/lib/auth/dewt", () => ({ getIdentityFromDeWT: jest.fn() }));
 /**
@@ -92,6 +93,7 @@ jest.mock("@/services/salary_record.service", () => ({
     getRecord: jest.fn(),
     saveRecord: jest.fn(),
     deleteRecord: jest.fn(),
+    exportRecordsCsv: jest.fn(),
   },
 }));
 
@@ -123,6 +125,7 @@ const serviceMocks = {
   getRecord: salaryRecordService.getRecord as unknown as IAnyMock,
   saveRecord: salaryRecordService.saveRecord as unknown as IAnyMock,
   deleteRecord: salaryRecordService.deleteRecord as unknown as IAnyMock,
+  exportRecords: salaryRecordService.exportRecordsCsv as unknown as IAnyMock,
   deliver: salaryPaySlipDeliveryService.deliver as unknown as IAnyMock,
   deliveryList:
     salaryPaySlipDeliveryService.listByAccountBook as unknown as IAnyMock,
@@ -242,7 +245,7 @@ const recordParams = () =>
   Promise.resolve({ account_book_id: BOOK, record_id: RECORD_ID });
 
 /**
- * Info: (20260901 - Julian) 十一支端點的清單，三個 `it.each` 共用同一份。
+ * Info: (20260901 - Julian) 十二支端點的清單，三個 `it.each` 共用同一份。
  *
  * ## 為什麼要有這張表
  *
@@ -474,6 +477,33 @@ const ENDPOINTS: IEndpointCase[] = [
     run: (address) => deliveryList(get(address), { params: bookParams() }),
   },
   /**
+   * Info: (20260904 - Julian) 第十二支：匯出 CSV。
+   *
+   * `access` 是 `READ`：匯出的每一格，使用者在畫面上點開薪資單都看得到 ——
+   * CSV 沒有給他任何新的讀取能力，只是換一個格式。這與「寄出薪資單」不同，
+   * 那個把資料送到組織外的信箱，所以歸 `WRITE`。
+   *
+   * `bucket` 是專屬的 `SALARY_EXPORT` 而不是共用 `READ`：一次列表請求回的是
+   * 一頁中繼資料，一次匯出會把多筆完整薪資明細組成檔案帶走 ——
+   * 前者是瀏覽，後者是批次擷取（同 `ATTENDANCE_EXPORT` 的處置）。
+   *
+   * 回應是 CSV 不是 JSON 信封，所以它沒有 `runInvalid`：那組測試斷言的是
+   * 驗證失敗要回 4xx 的 JSON，而這支成功時根本不回 JSON。
+   * 驗證失敗的行為由下面「匯出的 recordIds 形狀不對就擋下」單獨守。
+   */
+  {
+    label: "POST record/export（匯出 CSV）",
+    key: "record-export",
+    source: "POST record/export/route.ts",
+    access: SalaryAccess.READ,
+    bucket: RateLimitBucketEnum.SALARY_EXPORT,
+    service: serviceMocks.exportRecords,
+    run: (address) =>
+      recordExport(send("POST", { recordIds: [RECORD_ID] }, address), {
+        params: bookParams(),
+      }),
+  },
+  /**
    * Info: (20260904 - Julian) 第十一支：某一筆的寄送歷史。
    *
    * 與 `POST` 同一個檔案、同一條路徑，但**層級與桶都不同** ——
@@ -521,12 +551,12 @@ beforeEach(() => {
 });
 
 describe("身分閘：沒有 token 就到不了業務邏輯", () => {
-  it("端點表涵蓋了全部十一支端點（表短了，下面三條就會靜靜地少驗幾支）", () => {
-    expect(ENDPOINTS).toHaveLength(11);
-    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.label)).size).toBe(11);
-    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.key)).size).toBe(11);
+  it("端點表涵蓋了全部十二支端點（表短了，下面三條就會靜靜地少驗幾支）", () => {
+    expect(ENDPOINTS).toHaveLength(12);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.label)).size).toBe(12);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.key)).size).toBe(12);
     expect(new Set(ENDPOINTS.map((endpoint) => endpoint.service)).size).toBe(
-      11,
+      12,
     );
   });
 
@@ -634,7 +664,7 @@ describe("授權閘：不是這本帳的成員就寫不進去", () => {
     },
   );
 
-  it("寫入端點就是那六支（五讀六寫，換一種分法都要有人重新想過）", () => {
+  it("寫入端點就是那六支（六讀六寫，換一種分法都要有人重新想過）", () => {
     const writes = ENDPOINTS.filter(
       (endpoint) => endpoint.access === SalaryAccess.WRITE,
     ).map((endpoint) => endpoint.key);
@@ -729,6 +759,52 @@ describe("租戶與操作者只能來自不可偽造的來源", () => {
     expect((args[0] as { limit: number }).limit).toBe(
       SALARY_DELIVERY_LIST_DEFAULT_LIMIT,
     );
+  });
+
+  /**
+   * Info: (20260904 - Julian) `recordIds` 的形狀在門口就要擋下。
+   *
+   * 這組 id 直接進 `where: { id: { in: [...] } }`，而 Prisma 對格式不符的
+   * uuid 會丟出讀起來像故障的錯誤 —— 那是使用者送得出來的東西，
+   * 不該變成 500。
+   */
+  it("匯出的 recordIds 形狀不對就擋下，不進到 service", async () => {
+    const response = await recordExport(
+      send("POST", { recordIds: ["not-a-uuid"] }, "0xexport-bad"),
+      { params: bookParams() },
+    );
+
+    expect(response.status).toBe(httpOf(API_ERRORS.VA_INVALID_INPUT_DATA));
+    expect(serviceMocks.exportRecords).not.toHaveBeenCalled();
+  });
+
+  it("匯出的 recordIds 是空陣列也擋下（那只會產出一個空檔案）", async () => {
+    const response = await recordExport(
+      send("POST", { recordIds: [] }, "0xexport-empty"),
+      { params: bookParams() },
+    );
+
+    expect(response.status).toBe(httpOf(API_ERRORS.VA_INVALID_INPUT_DATA));
+    expect(serviceMocks.exportRecords).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260904 - Julian) 帳本來自路徑、id 來自 body。
+   * repository 以帳本過濾，所以猜到別的帳本的 recordId 也讀不到 ——
+   * 但前提是這裡真的把路徑上的帳本傳下去。
+   */
+  it("匯出的 accountBookId 取自路徑，不是 body", async () => {
+    await recordExport(
+      send(
+        "POST",
+        { recordIds: [RECORD_ID], accountBookId: OTHER_BOOK },
+        "0xexport-book",
+      ),
+      { params: bookParams() },
+    );
+
+    const [args] = serviceMocks.exportRecords.mock.calls;
+    expect((args[0] as { accountBookId: string }).accountBookId).toBe(BOOK);
   });
 
   it("列表的 accountBookId 取自路徑，query string 蓋不掉", async () => {

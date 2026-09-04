@@ -37,3 +37,12 @@ export const salaryRecordDeliverApi = (
   accountBookId: string,
   recordId: string,
 ): string => `${salaryRecordItemApi(accountBookId, recordId)}/deliver`;
+
+/**
+ * Info: (20260904 - Julian) 把勾選的薪資紀錄匯出成 CSV。
+ *
+ * 掛在 `record` 底下而不是另開一層：匯出的對象就是薪資紀錄，
+ * 而它與列表共用同一組租戶與授權判斷。
+ */
+export const salaryRecordExportApi = (accountBookId: string): string =>
+  `${salaryCalculatorApiOf(accountBookId).RECORD}/export`;

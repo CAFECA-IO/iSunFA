@@ -266,7 +266,7 @@ export const calculator = {
     employee: "従業員",
     net_pay: "手取り額",
     taxable: "源泉徴収票の金額",
-    action: "操作",
+    action: "送信/表示/再計算/削除",
     view: "給与明細を表示",
     load_back: "計算機に読み込む",
     delete: "削除",
@@ -299,6 +299,14 @@ export const calculator = {
       "この従業員は名簿にありません。氏名と従業員番号はこの記録から入力しましたが、従業員との紐づけは行われていません —— 保存時に対象をもう一度確認します。",
     delivery_status: "送信状況",
     not_sent: "未送信",
+    select_page: "このページの全行を選択",
+    select_row: "この記録を選択",
+    selected_count: "{{count}} 件を選択中",
+    export_csv: "CSV をエクスポート",
+    export_too_many:
+      "1 回のエクスポートは最大 {{max}} 件です。選択を減らしてください",
+    export_failed:
+      "エクスポートに失敗しました。しばらくしてからお試しください。",
   },
   account_book_entry: {
     title: "この試算を保存しますか？",

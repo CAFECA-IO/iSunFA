@@ -239,6 +239,21 @@ class FakeRecordRepo implements ISalaryRecordRepository {
     };
   }
 
+  /**
+   * Info: (20260904 - Julian) 依 id 取多筆。**租戶過濾比照真 repo**：
+   * 這個假物件的 key 帶著 accountBookId 前綴，所以「拿別的帳本的 id 來匯出」
+   * 在測試裡是真的問得出答案的 —— 若這裡不比對前綴，那條案例會永遠綠。
+   */
+  public async listRecordsByIds(
+    accountBookId: string,
+    recordIds: readonly string[],
+  ): Promise<ISalaryRecordDetail[]> {
+    return recordIds
+      .filter((id) => id.startsWith(`${accountBookId}|`))
+      .map((id) => this.rows.get(id))
+      .filter((row): row is ISalaryRecordDetail => row !== undefined);
+  }
+
   public async getRecordById(accountBookId: string, recordId: string) {
     const row = this.rows.get(recordId);
     return row && recordId.startsWith(`${accountBookId}|`) ? row : null;

@@ -1,4 +1,6 @@
 import { AppError } from "@/lib/utils/error";
+import { buildSalaryRecordCsv } from "@/lib/utils/salary_record_csv";
+import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
   ISalaryCalculatorEmployee,
@@ -21,10 +23,7 @@ import {
   mapServiceError,
   resolveAccountBookMembership,
 } from "@/services/account_book_access.guard";
-import {
-  isSalaryAccessAllowed,
-  SalaryAccess,
-} from "@/constants/salary_access";
+import { isSalaryAccessAllowed, SalaryAccess } from "@/constants/salary_access";
 
 /**
  * Info: (20260831 - Julian) 薪資計算機的員工名單與薪資紀錄。
@@ -221,6 +220,44 @@ export class SalaryRecordService {
         input.result.employerContribution.totalEmployerCost,
       ),
     });
+  }
+
+  /**
+   * Info: (20260904 - Julian) 把選定的幾筆薪資紀錄變成一份 CSV。
+   *
+   * ## 為什麼在伺服器產，而不是前端組
+   *
+   * CSV 要的是薪資單上的每一格，而列表刻意不帶 `resultSnapshot`
+   * （見 `ISalaryPaySlipDeliveryListItem` 的同一個理由：那會把整本帳的
+   * 薪資明細送進瀏覽器）。前端要自己組就得先把每一筆的明細抓下來 ——
+   * 那正是我們避開的東西。
+   *
+   * ## 找不到的 id 直接略過，不報錯
+   *
+   * 勾選之後、按下匯出之前，別人可能刪掉了其中一筆。為此整個匯出失敗，
+   * 使用者要重新勾一次十幾筆而畫面不會告訴他是哪一筆不見了。
+   * 少一列是看得出來的（`requested` 與實際列數不符），整份失敗不是。
+   */
+  public async exportRecordsCsv({
+    accountBookId,
+    recordIds,
+  }: {
+    accountBookId: string;
+    recordIds: readonly string[];
+  }): Promise<{ csv: string; exported: number; requested: number }> {
+    if (recordIds.length > SALARY_EXPORT_MAX_RECORDS) {
+      throw new AppError(API_ERRORS.VA_SALARY_EXPORT_TOO_MANY);
+    }
+
+    // Info: (20260904 - Julian) 重複的 id 只取一次，否則同一筆會在 CSV 裡出現兩列
+    const unique = [...new Set(recordIds)];
+    const records = await this.records.listRecordsByIds(accountBookId, unique);
+
+    return {
+      csv: buildSalaryRecordCsv(records),
+      exported: records.length,
+      requested: unique.length,
+    };
   }
 
   public async deleteRecord({

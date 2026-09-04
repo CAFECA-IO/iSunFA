@@ -264,7 +264,7 @@ export const calculator = {
     employee: "직원",
     net_pay: "실수령액",
     taxable: "원천징수 금액",
-    action: "작업",
+    action: "발송/보기/재계산/삭제",
     view: "급여명세서 보기",
     load_back: "계산기로 불러오기",
     delete: "삭제",
@@ -296,6 +296,13 @@ export const calculator = {
       "이 직원은 명단에 없습니다. 이름과 사번은 이 기록에서 채웠지만 직원 연결은 만들어지지 않았습니다 — 저장할 때 대상을 다시 확인합니다.",
     delivery_status: "발송 상태",
     not_sent: "미발송",
+    select_page: "이 페이지의 모든 행 선택",
+    select_row: "이 기록 선택",
+    selected_count: "{{count}}건 선택됨",
+    export_csv: "CSV 내보내기",
+    export_too_many:
+      "한 번에 최대 {{max}}건까지 내보낼 수 있습니다. 선택을 줄여 주세요",
+    export_failed: "내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.",
   },
   account_book_entry: {
     title: "이번 계산을 저장할까요?",

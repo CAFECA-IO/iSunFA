@@ -474,8 +474,20 @@ describe("薪資紀錄列表的寄出狀態", () => {
    * 「從未寄出」，不是「這次沒問」。兩者在型別上長得一模一樣，而畫面會照著它寫字。
    */
   it("repository 的每一條讀取路徑都帶上最近一次寄送", () => {
+    /**
+     * Info: (20260904 - Julian) 釘的是**不變量**，不是站點數量。
+     *
+     * 初版寫死「恰好 3 處」，而 CSV 匯出加了第 4 條讀取路徑（`listRecordsByIds`）
+     * 之後它就紅了 —— 但那次改動是對的（新路徑有帶 include），
+     * 紅的是測試的形式。數字形式只能一直往上調，而調它的人不會去想
+     * 「新加的那一條有沒有帶」；問「每一個 include 是不是都用共用常數」
+     * 才是原本要守的事，而且新增讀取路徑時自動納入。
+     */
     expect(repo).not.toContain("include: { employee: true }");
-    expect(repo.match(/include: RECORD_INCLUDE/g) ?? []).toHaveLength(3);
+
+    const includes = repo.match(/include:\s*[^,\n]+/g) ?? [];
+    expect(includes.length).toBeGreaterThan(2);
+    includes.forEach((site) => expect(site).toContain("RECORD_INCLUDE"));
   });
 
   it("只有成功的那一次算「已寄出」", () => {
@@ -537,6 +549,97 @@ describe("薪資紀錄列表的寄出按鈕", () => {
     expect(page).toContain("const sendTargetOf = (");
     expect(page).toContain("sendTargetOf(viewing.employee.id)");
     expect(page).toContain("sendTargetOf(record.employee.id)");
+  });
+});
+
+describe("薪資紀錄列表的匯出入口", () => {
+  const page = stripComments(
+    read("components/salary_calculator/salary_records_page_body.tsx"),
+  );
+
+  /**
+   * Info: (20260904 - Julian) **匯出鈕不可以藏在勾選後面。**
+   *
+   * 初版寫成 `{picked.size > 0 && ( ...匯出鈕... )}`，動機是不想擺一顆
+   * 永遠灰著的按鈕。那個判斷是反的：這顆按鈕是匯出功能唯一的入口，
+   * 而「先勾幾筆」是只有已經知道有匯出的人才會做的動作 ——
+   * 對其他人來說，這個功能在畫面上不存在。
+   *
+   * 這一條釘的是「永遠 render」。它會在有人為了版面清爽而把工具列
+   * 包回條件式裡的那一刻轉紅，而那個改動在手動點過時看起來完全正常
+   * （測試的人本來就知道要先勾選）。
+   */
+  it("匯出鈕永遠顯示，不是勾了才出現", () => {
+    expect(page).toContain("calculator.records.export_csv");
+    expect(page).not.toMatch(/\{\s*picked\.size > 0 && \(/);
+  });
+
+  /**
+   * Info: (20260904 - Julian) 永遠顯示的前提是「沒選就按不下去」。
+   * 少了這個守衛，空選會送出一個 `recordIds: []` 的請求 ——
+   * 伺服器擋得下（回 400），但使用者看到的是「按了、失敗了」。
+   */
+  it("一筆都沒選時是停用的", () => {
+    /**
+     * Info: (20260904 - Julian) 綁在 `exportDisabled` 這個定義上，
+     * 不是全檔搜 `picked.size === 0` —— `exportHandler` 裡也有一句同形的
+     * 保險，寫寬了會讓「按鈕拿掉守衛」這個 mutation 靜靜地通過（試過了）。
+     */
+    expect(page).toMatch(/const exportDisabled =[^;]*picked\.size === 0/);
+    expect(page).toContain("disabled={exportDisabled}");
+  });
+
+  /**
+   * Info: (20260904 - Julian) 匯出中要擋住第二次點擊，超過上限也要擋 ——
+   * 後者若放行，使用者會等一趟往返才知道被拒絕。
+   */
+  it("匯出中與超過上限一樣擋下", () => {
+    expect(page).toMatch(/const exportDisabled =[^;]*isExporting/);
+    expect(page).toMatch(/const exportDisabled =[^;]*tooManyPicked/);
+    expect(page).toContain("SALARY_EXPORT_MAX_RECORDS");
+  });
+
+  /**
+   * Info: (20260904 - Julian) 上限是多少只有程式知道，所以停用的理由要說出數字；
+   * 而「還沒選」看筆數就知道，不需要再寫一句。理由掛 `title`，
+   * 與列表的寄出鈕同一種做法。
+   */
+  it("超過上限時 title 說得出上限，沒選則不囉嗦", () => {
+    expect(page).toMatch(
+      /exportDisabledReason = tooManyPicked[\s\S]{0,200}?export_too_many/,
+    );
+    expect(page).toContain("title={exportDisabledReason ?? undefined}");
+    expect(page).not.toContain("export_disabled_no_selection");
+  });
+
+  /**
+   * Info: (20260904 - Julian) 失敗必須看得見。
+   * 只靠 `title` 的話，按下去、轉一圈、什麼都沒發生 ——
+   * 而使用者的下一個動作是再按一次。
+   */
+  it("匯出失敗有畫面上的訊息，不是只寫進 console", () => {
+    expect(page).toMatch(
+      /exportFailed && \([\s\S]{0,200}?calculator\.records\.export_failed/,
+    );
+  });
+
+  /**
+   * Info: (20260904 - Julian) CSV 不是 JSON 信封。用 `request` 會把它丟進
+   * `JSON.parse`，錯誤訊息會指向一個與成因無關的位置。
+   */
+  it("走 requestFile 而不是 request", () => {
+    expect(page).toContain("requestFile(salaryRecordExportApi(");
+    expect(page).toContain("saveDownloadedFile(");
+  });
+
+  /**
+   * Info: (20260904 - Julian) 成功之後清空勾選：留著的話，使用者換一組條件
+   * 再按一次會把上一批也一起帶走，而檔案已經下載，他不會回頭數裡面有幾列。
+   */
+  it("匯出成功後清空勾選", () => {
+    expect(page).toMatch(
+      /saveDownloadedFile\([\s\S]{0,200}?setPicked\(new Set\(\)\)/,
+    );
   });
 });
 

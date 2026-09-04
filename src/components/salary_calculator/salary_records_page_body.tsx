@@ -6,6 +6,8 @@ import {
   Eye,
   FileStack,
   MailCheck,
+  Download,
+  Loader2,
   RotateCcw,
   Search,
   Send,
@@ -15,6 +17,16 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { request, IEnvelopeLike } from "@/lib/utils/request";
 import { numberWithCommas, timestampToString } from "@/lib/utils/common";
+import {
+  isPageAllPicked,
+  isPagePartiallyPicked,
+  setPagePicked,
+  togglePick,
+} from "@/lib/utils/salary_export_selection";
+import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
+import { salaryRecordExportApi } from "@/constants/salary_calculator_api";
+import { requestFile } from "@/lib/utils/request";
+import { saveDownloadedFile } from "@/lib/utils/download_file";
 import {
   salaryCalculatorApiOf,
   salaryRecordItemApi,
@@ -147,6 +159,71 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
    * 用 id 回頭找有機會找不到 —— 那時彈窗會無聲消失。
    */
   const [sending, setSending] = useState<ISalaryRecordSummary | null>(null);
+
+  /**
+   * Info: (20260904 - Julian) 要匯出哪幾筆。**跨頁保留。**
+   *
+   * 只存 id：CSV 的內容由伺服器依 id 產生（列表刻意不帶 `resultSnapshot`），
+   * 所以前端不需要、也不該持有那些明細。
+   *
+   * 換頁不清空 —— 要匯出的十個人散在兩頁時，清空等於逼使用者分兩次匯出、
+   * 自己合併兩個 CSV。判斷邏輯抽在 `salary_export_selection.ts`（純函式，
+   * 本專案的測試不 render React）。
+   */
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [exportFailed, setExportFailed] = useState<boolean>(false);
+
+  const pageIds = (result?.data ?? []).map((record) => record.id);
+  const pageAllPicked = isPageAllPicked(picked, pageIds);
+  const pagePartiallyPicked = isPagePartiallyPicked(picked, pageIds);
+  const tooManyPicked = picked.size > SALARY_EXPORT_MAX_RECORDS;
+
+  /**
+   * Info: (20260904 - Julian) 停用的理由只在「使用者無從得知」時才給。
+   *
+   * 一筆都沒勾是看得出來的（筆數就在按鈕旁邊），寫一句「請先選取」是廢話；
+   * 超過上限不是 —— 上限是多少只有程式知道，所以那一句要說出數字。
+   * 兩者都用 `title` 而不是版面上的文字，維持列表的寄出鈕已經有的做法。
+   */
+  const exportDisabledReason = tooManyPicked
+    ? t("calculator.records.export_too_many", {
+        max: SALARY_EXPORT_MAX_RECORDS,
+      })
+    : null;
+  const exportDisabled = picked.size === 0 || isExporting || tooManyPicked;
+
+  /**
+   * Info: (20260904 - Julian) 匯出走 `requestFile` 而不是 `request`。
+   *
+   * 回應是 CSV 不是 JSON —— 用 `request` 會拿它去 `JSON.parse` 然後炸在
+   * 一個與成因無關的地方（「Unexpected token 期」）。
+   */
+  const exportHandler = async () => {
+    if (picked.size === 0 || tooManyPicked) return;
+
+    setIsExporting(true);
+    setExportFailed(false);
+    try {
+      const file = await requestFile(salaryRecordExportApi(accountBookId), {
+        method: "POST",
+        body: JSON.stringify({ recordIds: [...picked] }),
+        headers: { "Content-Type": "application/json" },
+      });
+      saveDownloadedFile(file, "salary-records.csv");
+      /**
+       * Info: (20260904 - Julian) 成功之後清空勾選。
+       *
+       * 留著的話，使用者接著換一組條件、再按一次匯出，會把上一批也一起帶走 ——
+       * 而檔案已經下載了，他不會回頭核對裡面有幾列。
+       */
+      setPicked(new Set());
+    } catch {
+      setExportFailed(true);
+    } finally {
+      setIsExporting(false);
+    }
+  };
   const sendingTarget = sending ? sendTargetOf(sending.employee.id) : {};
   const [deleting, setDeleting] = useState<ISalaryRecordSummary | null>(null);
   /**
@@ -325,6 +402,41 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
    * 而且完全靜默。五個物件每次重建的成本，遠低於維護這串依賴。
    */
   const columns: IDataTableColumn<ISalaryRecordSummary>[] = [
+    {
+      key: "pick",
+      /**
+       * Info: (20260904 - Julian) 表頭的全選**只作用於當前頁**。
+       *
+       * 它旁邊沒有寫「幾筆」，使用者按下去的時候看到的就是眼前這一頁。
+       * 讓它一次勾走幾百筆看不見的紀錄，是把「我知道我選了什麼」直接打破 ——
+       * 而匯出的是薪資。半選狀態用 `indeterminate`：沒有它的話，
+       * 三筆裡勾了一筆與一筆都沒勾，表頭長得一模一樣。
+       */
+      label: (
+        <input
+          type="checkbox"
+          aria-label={t("calculator.records.select_page")}
+          checked={pageAllPicked}
+          ref={(node) => {
+            if (node) node.indeterminate = pagePartiallyPicked;
+          }}
+          onChange={(e) =>
+            setPicked(setPagePicked(picked, pageIds, e.target.checked))
+          }
+          className="size-4 cursor-pointer accent-orange-600"
+        />
+      ),
+      render: (record) => (
+        <input
+          type="checkbox"
+          aria-label={t("calculator.records.select_row")}
+          checked={picked.has(record.id)}
+          onChange={() => setPicked(togglePick(picked, record.id))}
+          onClick={(e) => e.stopPropagation()}
+          className="size-4 cursor-pointer accent-orange-600"
+        />
+      ),
+    },
     {
       key: "period",
       label: t("calculator.records.pay_period"),
@@ -597,6 +709,51 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
               </button>
             )}
           </div>
+        </div>
+
+        {/**
+         * Info: (20260904 - Julian) 匯出工具列**永遠顯示**。
+         *
+         * 初版是「勾了才出現」，理由是不想擺一顆永遠灰著的按鈕。那是錯的：
+         * 這個功能唯一的入口就是這顆按鈕，而它藏在一個使用者得先做出
+         * 「勾選」這個動作才會看到的地方 —— 不知道有匯出的人，
+         * 正好就是不會先去勾選的人。功能等於不存在。
+         *
+         * 停用狀態自己會說話：按鈕在、筆數是 0，「要先選幾筆」是看得出來的，
+         * 不需要再寫一句話解釋。停用的**理由**放在 `title`（同列表的寄出鈕），
+         * 只有超過上限那種需要看到數字的情況才用得上。
+         */}
+        <div className="flex items-center justify-end gap-3">
+          <span className="text-sm font-medium text-gray-500">
+            {t("calculator.records.selected_count", { count: picked.size })}
+          </span>
+
+          {/**
+           * Info: (20260904 - Julian) 匯出失敗要看得見。
+           *
+           * 這不是說明文字而是結果 —— 沒有它的話，按下去、轉一圈、
+           * 什麼都沒發生，而使用者只會再按一次。
+           */}
+          {exportFailed && (
+            <span className="text-xs font-medium text-rose-700">
+              {t("calculator.records.export_failed")}
+            </span>
+          )}
+
+          <button
+            type="button"
+            onClick={exportHandler}
+            disabled={exportDisabled}
+            title={exportDisabledReason ?? undefined}
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+          >
+            {isExporting ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Download className="size-4" />
+            )}
+            {t("calculator.records.export_csv")}
+          </button>
         </div>
 
         {/**

@@ -181,6 +181,18 @@ export enum RateLimitBucketEnum {
    * 寄薪資單是人工動作，一次一位員工，正常一個月一輪。
    */
   SALARY_MAIL_SEND = "SALARY_MAIL_SEND",
+
+  /**
+   * Info: (20260904 - Julian) 薪資紀錄匯出 CSV。
+   *
+   * 與讀取分開：一次列表請求回的是一頁的中繼資料，而一次匯出會把
+   * **多筆完整薪資明細**組成一個檔案帶走。前者是瀏覽，後者是批次擷取，
+   * 兩件事的成本與敏感度都不同（同 `ATTENDANCE_EXPORT` 不與 `READ` 共用）。
+   *
+   * 尺寸沿用 `ATTENDANCE_EXPORT`：匯出是人按一下、然後去開檔案的動作，
+   * 正常節奏一分鐘不會超過幾次。
+   */
+  SALARY_EXPORT = "SALARY_EXPORT",
 }
 
 export interface IRateLimitWindow {
@@ -272,6 +284,10 @@ export const RATE_LIMIT_RULES: Record<RateLimitBucketEnum, IRateLimitWindow[]> =
     [RateLimitBucketEnum.SALARY_WRITE]: [
       { windowMs: MINUTE_MS, max: envInt("SALARY_RL_WRITE_PER_MINUTE", 30) },
       { windowMs: DAY_MS, max: envInt("SALARY_RL_WRITE_PER_DAY", 300) },
+    ],
+    [RateLimitBucketEnum.SALARY_EXPORT]: [
+      { windowMs: MINUTE_MS, max: envInt("SALARY_RL_EXPORT_PER_MINUTE", 6) },
+      { windowMs: DAY_MS, max: envInt("SALARY_RL_EXPORT_PER_DAY", 60) },
     ],
     // Info: (20260904 - Julian) 數值取自 salary_pay_slip_delivery_plan §3.3，不是重新發明的
     [RateLimitBucketEnum.SALARY_MAIL_SEND]: [

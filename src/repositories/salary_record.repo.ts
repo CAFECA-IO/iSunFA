@@ -36,6 +36,17 @@ export interface ISalaryRecordRepository {
   listRecords(
     options: ISalaryRecordQueryOptions,
   ): Promise<ISalaryRecordPageResult>;
+  /**
+   * Info: (20260904 - Julian) 依 id 取多筆完整紀錄（CSV 匯出）。
+   *
+   * 與 `getRecordById` 一樣以 `accountBookId` 為 where 的第一個 key ——
+   * 匯出是**一次讀走多筆**，租戶過濾在這裡漏掉的後果比單筆嚴重得多。
+   * 回傳順序與傳入的 id 無關，由呼叫端決定要不要排序。
+   */
+  listRecordsByIds(
+    accountBookId: string,
+    recordIds: readonly string[],
+  ): Promise<ISalaryRecordDetail[]>;
   getRecordById(
     accountBookId: string,
     recordId: string,
@@ -271,6 +282,23 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
       totalPages: Math.ceil(totalCount / options.pageSize),
       periods: periodRows.map((row) => ({ year: row.year, month: row.month })),
     };
+  }
+
+  public async listRecordsByIds(
+    accountBookId: string,
+    recordIds: readonly string[],
+  ): Promise<ISalaryRecordDetail[]> {
+    // Info: (20260904 - Julian) 空清單不打資料庫 —— `in: []` 是合法查詢，但它是一次白跑
+    if (recordIds.length === 0) return [];
+
+    const rows = await prisma.salaryRecord.findMany({
+      // Info: (20260904 - Julian) 租戶過濾永遠是 where 的第一個 key
+      where: { accountBookId, id: { in: [...recordIds] } },
+      include: RECORD_INCLUDE,
+      orderBy: [{ year: "desc" }, { month: "desc" }, { createdAt: "desc" }],
+    });
+
+    return rows.map(toDetail);
   }
 
   public async getRecordById(
