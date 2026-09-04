@@ -61,6 +61,39 @@ PR 4 改成用 **員工編號**。差異：
   的 `name` / `number` 做 `contains`（關聯過濾）。以「一本帳數十位員工」的量級不是問題，
   但如果哪天單一帳本的員工數上千，這裡會是第一個變慢的查詢。
 
+## 1.2 PR A：員工檔擴充 13 欄（20260902）
+
+`salary_calculator_employee` 新增 13 個欄位，讓「選好員工就自動匯入計算機」有地方存：
+
+| 欄位 | 型別 | 預設 |
+|---|---|---|
+| `industry_code` | `Int` | `42` |
+| `is_foreign_worker` | `Boolean` | `false` |
+| `employment_type` | `String` | `"FULL_TIME"` |
+| `base_salary_30_days` | `Boolean` | `true` |
+| `other_allowance_taxable` | `BigInt` | `0` |
+| `other_allowance_tax_free` | `BigInt` | `0` |
+| `is_labor_insured` | `Boolean` | `true` |
+| `is_health_insured` | `Boolean` | `true` |
+| `is_pension_insured` | `Boolean` | `true` |
+| `dependents_count` | `Int` | `0` |
+| `voluntary_pension_rate` | `Int` | `0` |
+| `hire_date` | `DateTime?` | 無（可空） |
+| `resign_date` | `DateTime?` | 無（可空） |
+
+- **純新增，不需要回填。** 11 欄都有 `@default`，兩個日期欄可空 ——
+  既有員工列套用後落在「本國籍、全職、三保都投、0 扶養、0 自提、30 天基準、無其他加給」，
+  那是計算機目前的預設值，**行為與現在完全相同**。
+- **`voluntary_pension_rate` 是 `Int` 不是 `BigInt`**：它是費率的百分點（0–6），不是金額。
+  旁邊四個金額欄都是 BigInt，而引擎那一側的欄位叫 `employeeBurdenPensionInsurance`
+  （讀起來像金額）—— 改成 BigInt 的話 `BigInt(0.06)` 丟 RangeError、
+  `BigInt(Math.round(0.06))` 靜靜變成 0。`salary_schema_defaults.test.ts` 有一條在守。
+- **`hire_date` / `resign_date` 不得有 `@default`。** 給 `@default(now())` 的話，
+  既有員工會全部變成「今天到職」，這個月的薪水全部按「當月中途到職」計算。
+- **API 是破壞性變更**：`POST` / `PUT .../salary_calculator/employee` 的 body
+  新增 15 個必填欄位（含既有的 `baseSalary` / `mealAllowance`）。
+  目前沒有外部消費者，但前端與 API 必須同時上線。
+
 ## 2.2 行為變更：薪資寫入不再開放給 `VIEWER`（不是 schema，但會被使用者看到）
 
 八支端點原本只驗「是不是帳本所屬團隊的成員」，`OWNER / EDITOR / VIEWER` 一視同仁。
@@ -125,12 +158,21 @@ npx prisma generate
       （請假事由）被評為 Tier 2 並加密。請假事由要加密，而投保級距、本薪、
       各項扣除、實發金額明文 —— 這個強度排序需要被明確選擇，不是預設。
 
-- [ ] **範圍：目前明文入庫的薪資欄位共 7 個，不只快照那兩欄。**
+- [ ] **範圍：目前明文入庫的欄位共 20 個**（20260902 由 7 個擴大），不只快照那兩欄。
       - `salary_record.input_snapshot` / `result_snapshot`（Json）
       - `salary_record.total_payment` / `total_salary_taxable` / `total_employer_cost`（BigInt）
-      - `salary_calculator_employee.base_salary` / `meal_allowance`（BigInt）——
-        **這兩欄容易被漏掉**：它們不在 `salary_record` 表上，但同樣是明文薪資，
-        而且是純量、比 Json 更好查
+      - `salary_calculator_employee.base_salary` / `meal_allowance` /
+        `other_allowance_taxable` / `other_allowance_tax_free`（BigInt 金額）
+      - **`salary_calculator_employee` 的另外 9 欄不是金額，是個人身分資訊**：
+        `dependents_count`（扶養人數）、`is_labor_insured` / `is_health_insured` /
+        `is_pension_insured`（投保狀態）、`voluntary_pension_rate`、
+        `is_foreign_worker`（外籍身分）、`employment_type`、
+        `hire_date` / `resign_date`（到離職日）
+
+      **這一段是分級決策要新增回答的部分。** ADR 018 的 Tier 3 明列
+      `Employee.hireDate` 不加密，可以直接沿用；但**扶養人數、投保狀態、外籍身分
+      在 ADR 018 裡從未出現過** —— 前兩者可反推家庭狀況與勞動身分，
+      不要預設它們與金額同級，也不要預設它們無關緊要。
 
       目前靠 `account_book_id` 租戶隔離與 `assertSalaryAccountBookAccess` 授權把關。
 

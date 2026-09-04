@@ -27,6 +27,7 @@ export const calculator = {
     tax_residency_status: "稅務居住狀況",
     residency_option_taiwan: "臺灣居民",
     residency_option_non_taiwan: "非臺灣居民",
+    date_from_employee: "來自員工資料",
     industry_category: "行業別",
     year: "年度",
     month: "月份",
@@ -67,6 +68,22 @@ export const calculator = {
     voluntary_pension_contribution: "自提勞退",
   },
   employee_list: {
+    issue_name_required: "請在「身分」填寫員工姓名",
+    issue_number_required: "請在「身分」填寫員工編號",
+    issue_base_salary_required: "請在「薪資」填寫本薪",
+    section_identity: "身分",
+    section_pay: "薪資",
+    section_insurance: "投保與勞退",
+    section_other: "其他",
+    other_allowance_taxable: "其他加給（應稅）",
+    other_allowance_tax_free: "其他加給（免稅）",
+    other_allowance_hint:
+      "這裡填的是每個月固定的職務加給。當月一次性的獎金請直接在計算機上輸入，填在這裡下個月會跟著帶出來。",
+    voluntary_pension_rate: "自提勞退比例",
+    employment_type: "僱用型態",
+    hire_date: "到職日",
+    resign_date: "離職日",
+    date_order_error: "離職日不得早於到職日",
     main_title: "員工列表",
     name: "員工姓名",
     number: "員工編號",
@@ -185,6 +202,17 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) 計算機頁的直接儲存與兩個例外
   save_record: {
+    profile_diff_title: "順便更新員工資料嗎？",
+    profile_diff_content:
+      "計算機上的設定與「{{name}}」的員工資料不一樣。以下是差異：",
+    profile_diff_hint:
+      "這次的薪資紀錄一定會照計算機上的值儲存，這裡問的只是要不要把員工資料也一起改掉。選「只存這一次」的話，員工資料維持原樣。",
+    profile_diff_update_btn: "更新員工資料並儲存",
+    profile_diff_skip_btn: "只存這一次",
+    profile_diff_failed: "更新失敗，請稍後再試",
+    profile_value_on: "有",
+    profile_value_off: "無",
+    profile_value_none: "未設定",
     save: "儲存薪資紀錄",
     saving: "儲存中…",
     saved: "已存為 {{name}} {{year}} 年 {{month}} 月的薪資紀錄",

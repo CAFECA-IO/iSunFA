@@ -4,6 +4,12 @@ import {
   SALARY_INPUT_MAX_HOURS,
   SALARY_RECORD_MIN_YEAR,
 } from "@/constants/salary_calculator";
+import { INDUSTRY_CATEGORY_OPTIONS } from "@/constants/industry_category";
+import {
+  MAX_PENSION_RATE_PERCENT,
+  MIN_PENSION_RATE_PERCENT,
+} from "@/lib/utils/salary_pension_rate";
+import { EMPLOYMENT_TYPE_KEYS } from "@/lib/utils/salary_employee_profile";
 import {
   ISalaryCalculatorEmployeeWriteInput,
   ISalaryRecordWriteInput,
@@ -52,13 +58,92 @@ const resultAmountSchema = z.number().finite();
 
 // Info: (20260831 - Julian) 員工名單：新增與編輯共用
 // Info: (20260831 - Julian) 編號是身分（帳本內唯一）故必填；Email 只在寄薪資單時要用，可省略
-export const salaryCalculatorEmployeeWriteSchema = z.object({
-  name: z.string().trim().min(1).max(100),
-  number: z.string().trim().min(1).max(50),
-  email: z.string().email().max(254).optional(),
+/**
+ * Info: (20260902 - Julian) 行業別代碼的值域來自選項清單本身，不是一個手寫的 min/max。
+ *
+ * 代碼不連續（清單是 1–55 但中間有跳號），寫 `min(1).max(55)` 會放進不存在的代碼，
+ * 而那會讓引擎查表落空。清單改版時這一條自己會跟著改。
+ */
+const industryCodeSchema = z
+  .number()
+  .int()
+  .refine(
+    (code) => INDUSTRY_CATEGORY_OPTIONS.some((item) => item.CODE === code),
+    { message: "行業別代碼不在 INDUSTRY_CATEGORY_OPTIONS 裡" },
+  );
+
+/**
+ * Info: (20260902 - Julian) 自提勞退費率，**百分點整數 0–6**，不是 0.06 那個小數。
+ *
+ * 收 `int()` 是這一條的重點：`0.06` 送進來會被擋下，而那正是呼叫端忘了走
+ * `toPensionRatePercent()` 的症狀。若這裡放行小數，資料庫會同時存在
+ * 「6」與「0.06」兩種寫法，而讀回來的人無從分辨。
+ */
+const pensionRatePercentSchema = z
+  .number()
+  .int()
+  .min(MIN_PENSION_RATE_PERCENT)
+  .max(MAX_PENSION_RATE_PERCENT);
+
+/**
+ * Info: (20260902 - Julian) 到職／離職日：Unix 秒，可為 null。
+ *
+ * `nullable()` 而不是 `optional()`：「沒有到職日」是一個要被明確送出來的狀態
+ * （員工檔上真的沒填），而 `optional` 會讓「忘了帶這一欄」與「這個人沒有到職日」
+ * 長得一模一樣 —— 那是 checklist §1.11 的「完全合法、只是錯的值」。
+ */
+const timestampSchema = z.number().int().nonnegative().nullable();
+
+/**
+ * Info: (20260902 - Julian) 員工檔上會被自動匯入計算機的常態屬性。
+ *
+ * 整組必填。少一欄就會落到 schema 的 `@default`，而那是靜默的：
+ * 使用者在計算機設好、按「直接新增員工」，建出來的檔卻是預設值，
+ * 下個月選他就把設定洗掉（計畫書 §4.3）。
+ */
+const employeeProfileShape = {
   baseSalary: amountSchema,
   mealAllowance: amountSchema,
-});
+  otherAllowanceTaxable: amountSchema,
+  otherAllowanceTaxFree: amountSchema,
+  industryCode: industryCodeSchema,
+  isForeignWorker: z.boolean(),
+  // Info: (20260902 - Julian) 值域取自 enum 的鍵，不寫死字串 —— 兩邊不會不同步
+  employmentType: z.string().refine((key) => EMPLOYMENT_TYPE_KEYS.includes(key), {
+    message: "employmentType 必須是 EmploymentType 的鍵",
+  }),
+  baseSalary30Days: z.boolean(),
+  isLaborInsured: z.boolean(),
+  isHealthInsured: z.boolean(),
+  isPensionInsured: z.boolean(),
+  // Info: (20260902 - Julian) 扶養人數上限取 20：超過的話多半是打錯，而它會直接放大免稅額
+  dependentsCount: z.number().int().min(0).max(20),
+  voluntaryPensionRate: pensionRatePercentSchema,
+  hireDate: timestampSchema,
+  resignDate: timestampSchema,
+};
+
+export const salaryCalculatorEmployeeWriteSchema = z
+  .object({
+    name: z.string().trim().min(1).max(100),
+    number: z.string().trim().min(1).max(50),
+    email: z.string().email().max(254).optional(),
+    ...employeeProfileShape,
+  })
+  /**
+   * Info: (20260902 - Julian) 離職日不得早於到職日。
+   *
+   * 兩者都合法、只是順序反了 —— 引擎不會報錯，它會算出一個「當月到職又當月離職」
+   * 或「上個月離職但這個月才到職」的薪資，而那張薪資單是對外憑據。
+   * 相等是允許的：當天到職當天離職雖然罕見，但它是一個真實的狀態。
+   */
+  .refine(
+    (data) =>
+      data.hireDate === null ||
+      data.resignDate === null ||
+      data.resignDate >= data.hireDate,
+    { message: "離職日不得早於到職日", path: ["resignDate"] },
+  );
 
 /**
  * Info: (20260831 - Julian) 計算引擎的輸入契約（`ISalaryCalculatorOptions`）。

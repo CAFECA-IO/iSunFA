@@ -27,6 +27,7 @@ export const calculator = {
     tax_residency_status: "Tax Residency Status",
     residency_option_taiwan: "Taiwan Resident",
     residency_option_non_taiwan: "Non-Taiwan Resident",
+    date_from_employee: "From employee record",
     industry_category: "Industry Category",
     year: "Year",
     month: "Month",
@@ -67,6 +68,22 @@ export const calculator = {
     voluntary_pension_contribution: "Voluntary Pension Contribution",
   },
   employee_list: {
+    issue_name_required: "Enter the employee name under Identity",
+    issue_number_required: "Enter the employee number under Identity",
+    issue_base_salary_required: "Enter the base salary under Pay",
+    section_identity: "Identity",
+    section_pay: "Pay",
+    section_insurance: "Insurance & pension",
+    section_other: "Other",
+    other_allowance_taxable: "Other allowance (taxable)",
+    other_allowance_tax_free: "Other allowance (tax-free)",
+    other_allowance_hint:
+      "This is the recurring monthly allowance. Enter one-off bonuses in the calculator instead — anything set here carries over to next month.",
+    voluntary_pension_rate: "Voluntary pension contribution",
+    employment_type: "Employment type",
+    hire_date: "Hire date",
+    resign_date: "Resignation date",
+    date_order_error: "Resignation date cannot be earlier than the hire date",
     main_title: "Employee List",
     name: "Employee Name",
     number: "Employee Number",
@@ -193,6 +210,17 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) Saving from the calculator page, plus its two exceptions
   save_record: {
+    profile_diff_title: "Update the employee record too?",
+    profile_diff_content:
+      'The calculator settings differ from the employee record for "{{name}}". Here is what changed:',
+    profile_diff_hint:
+      "This payroll record is saved with the calculator values either way. The question is only whether the employee record should change as well. Choose \"Save this one only\" to leave it untouched.",
+    profile_diff_update_btn: "Update employee and save",
+    profile_diff_skip_btn: "Save this one only",
+    profile_diff_failed: "Could not update the employee. Please try again later.",
+    profile_value_on: "Yes",
+    profile_value_off: "No",
+    profile_value_none: "Not set",
     save: "Save payroll record",
     saving: "Saving…",
     saved: "Saved as {{name}}'s payroll record for {{month}}/{{year}}",

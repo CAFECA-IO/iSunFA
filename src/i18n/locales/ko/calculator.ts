@@ -27,6 +27,7 @@ export const calculator = {
     tax_residency_status: "세무 거주 상태",
     residency_option_taiwan: "대만 거주자",
     residency_option_non_taiwan: "비 대만 거주자",
+    date_from_employee: "직원 정보에서",
     industry_category: "업종",
     year: "연도",
     month: "월",
@@ -67,6 +68,22 @@ export const calculator = {
     voluntary_pension_contribution: "자발적 연금 기여",
   },
   employee_list: {
+    issue_name_required: "「신원」에서 직원 이름을 입력하세요",
+    issue_number_required: "「신원」에서 사번을 입력하세요",
+    issue_base_salary_required: "「급여」에서 기본급을 입력하세요",
+    section_identity: "신원",
+    section_pay: "급여",
+    section_insurance: "보험·퇴직연금",
+    section_other: "기타",
+    other_allowance_taxable: "기타 수당（과세）",
+    other_allowance_tax_free: "기타 수당（비과세）",
+    other_allowance_hint:
+      "매월 고정으로 지급되는 수당을 입력하세요. 당월 일회성 상여는 계산기에서 입력합니다 — 여기에 넣으면 다음 달에도 따라옵니다.",
+    voluntary_pension_rate: "퇴직연금 자율 부담률",
+    employment_type: "고용 형태",
+    hire_date: "입사일",
+    resign_date: "퇴사일",
+    date_order_error: "퇴사일은 입사일보다 이를 수 없습니다",
     main_title: "직원 목록",
     name: "직원 이름",
     number: "사원 번호",
@@ -188,6 +205,17 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) 계산기 페이지에서 바로 저장, 그리고 두 가지 예외
   save_record: {
+    profile_diff_title: "직원 정보도 함께 업데이트할까요？",
+    profile_diff_content:
+      "계산기 설정이 「{{name}}」님의 직원 정보와 다릅니다. 차이는 다음과 같습니다：",
+    profile_diff_hint:
+      "이번 급여 기록은 어느 쪽을 선택해도 계산기의 값으로 저장됩니다. 여기서 묻는 것은 직원 정보도 바꿀지 여부뿐입니다. 「이번만 저장」을 선택하면 직원 정보는 그대로 유지됩니다.",
+    profile_diff_update_btn: "직원 정보 업데이트 후 저장",
+    profile_diff_skip_btn: "이번만 저장",
+    profile_diff_failed: "업데이트하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    profile_value_on: "있음",
+    profile_value_off: "없음",
+    profile_value_none: "미설정",
     save: "급여 기록 저장",
     saving: "저장 중…",
     saved: "{{name}}의 {{year}}년 {{month}}월 급여 기록으로 저장했습니다",

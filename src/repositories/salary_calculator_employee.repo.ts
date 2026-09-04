@@ -4,6 +4,7 @@ import { MoneyUtil } from "@/lib/utils/money";
 import {
   ISalaryCalculatorEmployee,
   ISalaryCalculatorEmployeeWriteInput,
+  ISalaryEmployeeProfile,
 } from "@/interfaces/salary_record";
 import {
   activeNumberFor,
@@ -72,6 +73,64 @@ const isUniqueViolation = (error: unknown): boolean =>
 const toAmount = (value: bigint): number =>
   MoneyUtil.toDecimal(value.toString()).toNumber();
 
+// Info: (20260902 - Julian) DateTime → Unix 秒（沿用 IVoucher 的前端時間戳慣例），null 原樣帶出
+const toUnixSecondsOrNull = (value: Date | null): number | null =>
+  value === null ? null : Math.floor(value.getTime() / 1000);
+
+// Info: (20260902 - Julian) Unix 秒 → DateTime。null 是「沒有這個日期」，不是 1970
+const toDateOrNull = (value: number | null): Date | null =>
+  value === null ? null : new Date(value * 1000);
+
+/**
+ * Info: (20260902 - Julian) 員工檔的常態屬性 → 前端格式。
+ *
+ * 與 `toWriteData` 成對維護：這 15 欄任何一邊漏接，症狀都是
+ * 「選了員工，某一欄沒被帶進計算機」—— 而畫面上那一欄會是計算機的預設值，
+ * 看起來完全正常。`ISalaryEmployeeProfile` 是把兩邊綁在一起的型別。
+ */
+const toProfile = (row: SalaryCalculatorEmployee): ISalaryEmployeeProfile => ({
+  baseSalary: toAmount(row.baseSalary),
+  mealAllowance: toAmount(row.mealAllowance),
+  otherAllowanceTaxable: toAmount(row.otherAllowanceTaxable),
+  otherAllowanceTaxFree: toAmount(row.otherAllowanceTaxFree),
+  industryCode: row.industryCode,
+  isForeignWorker: row.isForeignWorker,
+  employmentType: row.employmentType,
+  baseSalary30Days: row.baseSalary30Days,
+  isLaborInsured: row.isLaborInsured,
+  isHealthInsured: row.isHealthInsured,
+  isPensionInsured: row.isPensionInsured,
+  dependentsCount: row.dependentsCount,
+  // Info: (20260902 - Julian) 落地是百分點整數，前端也是百分點整數；轉小數是 UI 那一層的事
+  voluntaryPensionRate: row.voluntaryPensionRate,
+  hireDate: toUnixSecondsOrNull(row.hireDate),
+  resignDate: toUnixSecondsOrNull(row.resignDate),
+});
+
+// Info: (20260902 - Julian) 寫入方向。與 toProfile 成對，理由見該函式
+const toWriteData = (input: ISalaryCalculatorEmployeeWriteInput) => ({
+  baseSalary: BigInt(input.baseSalary),
+  mealAllowance: BigInt(input.mealAllowance),
+  otherAllowanceTaxable: BigInt(input.otherAllowanceTaxable),
+  otherAllowanceTaxFree: BigInt(input.otherAllowanceTaxFree),
+  industryCode: input.industryCode,
+  isForeignWorker: input.isForeignWorker,
+  employmentType: input.employmentType,
+  baseSalary30Days: input.baseSalary30Days,
+  isLaborInsured: input.isLaborInsured,
+  isHealthInsured: input.isHealthInsured,
+  isPensionInsured: input.isPensionInsured,
+  dependentsCount: input.dependentsCount,
+  /**
+   * Info: (20260902 - Julian) **不是 BigInt。** 這一欄是費率的百分點（0–6）。
+   * 寫成 `BigInt(input.voluntaryPensionRate)` 在型別上會過（它是 number），
+   * 但 schema 那一欄是 Int —— Prisma 會在執行期才抱怨，而且訊息不會提到「費率」。
+   */
+  voluntaryPensionRate: input.voluntaryPensionRate,
+  hireDate: toDateOrNull(input.hireDate),
+  resignDate: toDateOrNull(input.resignDate),
+});
+
 const toFrontendFormat = (
   row: SalaryCalculatorEmployee,
 ): ISalaryCalculatorEmployee => ({
@@ -81,8 +140,7 @@ const toFrontendFormat = (
   number: row.number,
   // Info: (20260831 - Julian) Email 可空，null 打平成空字串（沿用 IVoucher.note 的既有慣例）
   email: row.email ?? "",
-  baseSalary: toAmount(row.baseSalary),
-  mealAllowance: toAmount(row.mealAllowance),
+  ...toProfile(row),
 });
 
 export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmployeeRepository {
@@ -121,8 +179,7 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
       number: input.number,
       email: input.email ?? null,
       activeNumber: activeNumberFor(input.number, null),
-      baseSalary: BigInt(input.baseSalary),
-      mealAllowance: BigInt(input.mealAllowance),
+      ...toWriteData(input),
     };
 
     assertActiveNumberPairing({
@@ -159,13 +216,26 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
      * 不是真的要寫進去的值 —— 那種斷言在寫入被改壞時照樣通過。
      * `createEmployee` 一直是這樣做的，這裡與軟刪除是後來才對齊的。
      */
+    /**
+     * Info: (20260902 - Julian) `...toWriteData(input)` 曾經在這裡被 merge 靜默吃掉。
+     *
+     * 20260902 把 develop 併進來時，這一段被 `9dc404ff0`（把斷言接到真正的寫入）
+     * 整塊取代，而那一版是在 15 個常態屬性落地**之前**寫的 ——
+     * 於是編輯員工只寫得進姓名、編號、Email 與兩個金額，
+     * 行業別、投保狀態、扶養人數、自提比例、到離職日全部原地不動。
+     *
+     * 症狀完全靜默：`updateEmployee` 回傳的是重新查出來的那一列，所以畫面
+     * 「更新成功」；使用者要等到下次打開員工表單才發現剛才改的東西沒進去。
+     * 抓到它的是 `salary_repo.e2e.test.ts` 的「更新會把 15 欄一起改掉」——
+     * 而那一支只在 CI 的獨立步驟跑。`salary_repo_scope.test.ts` 現在也守著
+     * 交給資料庫的 `data`，那一支在預設套件裡。
+     */
     const data = {
       name: input.name,
       number: input.number,
       email: input.email ?? null,
       activeNumber: activeNumberFor(input.number, null),
-      baseSalary: BigInt(input.baseSalary),
-      mealAllowance: BigInt(input.mealAllowance),
+      ...toWriteData(input),
     };
 
     assertActiveNumberPairing({

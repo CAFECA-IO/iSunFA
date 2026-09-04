@@ -64,12 +64,29 @@ const OTHER_BOOK_ID = `e2e-book-salary-other-${STAMP}`;
 let teamId = "";
 let userId = "";
 
+const HIRE_DATE = Date.parse("2026-08-15T00:00:00.000Z") / 1000;
+
 const EMPLOYEE_INPUT = {
   name: "E2E 王小明",
   number: "E2E-A001",
   email: `e2e.salary.${STAMP}@e2e.invalid`,
   baseSalary: 36000,
   mealAllowance: 3000,
+  // Info: (20260902 - Julian) 常態屬性整組必填（ISalaryEmployeeProfile），刻意全部與預設值不同
+  otherAllowanceTaxable: 2000,
+  otherAllowanceTaxFree: 500,
+  industryCode: 41,
+  isForeignWorker: true,
+  employmentType: "PART_TIME",
+  baseSalary30Days: false,
+  isLaborInsured: false,
+  isHealthInsured: false,
+  isPensionInsured: false,
+  dependentsCount: 2,
+  // Info: (20260902 - Julian) 百分點整數（0–6），不是 0.06
+  voluntaryPensionRate: 6,
+  hireDate: HIRE_DATE,
+  resignDate: null,
 };
 
 const optionsFor = (year: number, month: number): ISalaryCalculatorOptions => ({
@@ -134,6 +151,170 @@ afterAll(async () => {
   await prisma.user.deleteMany({ where: { id: userId } });
   // Info: (20260901 - Julian) 不關連線 jest 會抱怨有未結束的非同步操作
   await prisma.$disconnect();
+});
+
+/**
+ * Info: (20260902 - Julian) 常態屬性 15 欄的來回。
+ *
+ * `salary_employee_profile.test.ts` 守的是「哪些欄位屬於員工」，
+ * `salary_validators.test.ts` 守的是「送進來的形狀對不對」——
+ * 這一支守的是**真的存進去、真的讀得回來**，而那是前兩者都碰不到的一段。
+ *
+ * 三個具體風險：`voluntaryPensionRate` 被當成金額寫成 BigInt（RangeError 或靜靜變 0）、
+ * `hireDate` 存進去讀回來差一天（時區）、以及 13 個新欄位裡有人漏接一欄
+ * （`toProfile` 與 `toWriteData` 是手寫的兩張對照表）。
+ */
+describe("員工檔的常態屬性存得進去也讀得回來", () => {
+  it("15 欄全部原樣回來，一欄不漏", async () => {
+    const number = `${EMPLOYEE_INPUT.number}-PF1`;
+    const created = await salaryCalculatorEmployeeRepo.createEmployee({
+      accountBookId: BOOK_ID,
+      input: { ...EMPLOYEE_INPUT, number },
+    });
+
+    const expected = {
+      baseSalary: 36000,
+      mealAllowance: 3000,
+      otherAllowanceTaxable: 2000,
+      otherAllowanceTaxFree: 500,
+      industryCode: 41,
+      isForeignWorker: true,
+      employmentType: "PART_TIME",
+      baseSalary30Days: false,
+      isLaborInsured: false,
+      isHealthInsured: false,
+      isPensionInsured: false,
+      dependentsCount: 2,
+      voluntaryPensionRate: 6,
+      hireDate: HIRE_DATE,
+      resignDate: null,
+    };
+
+    expect(created).toMatchObject(expected);
+
+    // Info: (20260902 - Julian) 成對：create 的回傳與重新讀出來的必須一致（前者可能是記憶體裡的值）
+    const reloaded = await salaryCalculatorEmployeeRepo.getEmployeeById(
+      BOOK_ID,
+      created.id,
+    );
+    expect(reloaded).toMatchObject(expected);
+
+    const [listed] = (
+      await salaryCalculatorEmployeeRepo.listEmployees(BOOK_ID)
+    ).filter((row) => row.id === created.id);
+    expect(listed).toMatchObject(expected);
+  });
+
+  /**
+   * Info: (20260902 - Julian) 費率是 Int 不是 BigInt，而且 6 不能變成 0。
+   *
+   * 寫成 BigInt 的話這一條會在 create 就炸（Prisma 拒收），
+   * 寫成 `BigInt(Math.round(0.06))` 則會靜靜存成 0 —— 後者只有這一條抓得到。
+   */
+  it("自提勞退費率存 6 讀回來還是 6", async () => {
+    const created = await salaryCalculatorEmployeeRepo.createEmployee({
+      accountBookId: BOOK_ID,
+      input: { ...EMPLOYEE_INPUT, number: `${EMPLOYEE_INPUT.number}-PF2`, voluntaryPensionRate: 6 },
+    });
+
+    const raw = await prisma.salaryCalculatorEmployee.findUniqueOrThrow({
+      where: { id: created.id },
+    });
+    expect(raw.voluntaryPensionRate).toBe(6);
+    expect(typeof raw.voluntaryPensionRate).toBe("number");
+  });
+
+  /**
+   * Info: (20260902 - Julian) 到職日存進去讀回來是同一天。
+   *
+   * 「差一天」是這一欄唯一會出的錯，而它在 UTC 與 UTC+8 都看不出來 ——
+   * 純函式那一側由 `salary_employee_profile.tz.test.ts` 守，
+   * 這裡守的是**資料庫來回**那一段（Prisma 的 DateTime 轉換）。
+   */
+  it("到職日來回不差一天", async () => {
+    const created = await salaryCalculatorEmployeeRepo.createEmployee({
+      accountBookId: BOOK_ID,
+      input: { ...EMPLOYEE_INPUT, number: `${EMPLOYEE_INPUT.number}-PF3` },
+    });
+
+    expect(created.hireDate).toBe(HIRE_DATE);
+
+    const raw = await prisma.salaryCalculatorEmployee.findUniqueOrThrow({
+      where: { id: created.id },
+    });
+    expect(raw.hireDate?.toISOString()).toBe("2026-08-15T00:00:00.000Z");
+  });
+
+  it("更新會把 15 欄一起改掉，不是只改到金額", async () => {
+    const number = `${EMPLOYEE_INPUT.number}-PF4`;
+    const created = await salaryCalculatorEmployeeRepo.createEmployee({
+      accountBookId: BOOK_ID,
+      input: { ...EMPLOYEE_INPUT, number },
+    });
+
+    const updated = await salaryCalculatorEmployeeRepo.updateEmployee({
+      accountBookId: BOOK_ID,
+      employeeId: created.id,
+      input: {
+        ...EMPLOYEE_INPUT,
+        number,
+        dependentsCount: 0,
+        isLaborInsured: true,
+        voluntaryPensionRate: 0,
+        industryCode: 42,
+        hireDate: null,
+      },
+    });
+
+    expect(updated).toMatchObject({
+      dependentsCount: 0,
+      isLaborInsured: true,
+      voluntaryPensionRate: 0,
+      industryCode: 42,
+      hireDate: null,
+    });
+  });
+
+  /**
+   * Info: (20260902 - Julian) 既有員工（本次之前建立的列）讀出來是預設值，不是 null。
+   *
+   * 13 欄都有 `@default`，所以 `prisma db push` 之後既有列會被填上預設值。
+   * 這一條用一列「繞過 repository 直接建的最小資料」模擬那個狀態 ——
+   * 若哪一欄的 default 被拿掉，這裡會讀到 null 並炸在型別轉換上。
+   */
+  it("既有列（只有必填欄位）讀出來是預設值不是 null", async () => {
+    const legacy = await prisma.salaryCalculatorEmployee.create({
+      data: {
+        accountBookId: BOOK_ID,
+        name: "E2E 舊資料",
+        number: `${EMPLOYEE_INPUT.number}-LEGACY`,
+        activeNumber: `${EMPLOYEE_INPUT.number}-LEGACY`,
+        baseSalary: 30000n,
+      },
+    });
+
+    const read = await salaryCalculatorEmployeeRepo.getEmployeeById(
+      BOOK_ID,
+      legacy.id,
+    );
+
+    expect(read).toMatchObject({
+      mealAllowance: 0,
+      otherAllowanceTaxable: 0,
+      otherAllowanceTaxFree: 0,
+      industryCode: 42,
+      isForeignWorker: false,
+      employmentType: "FULL_TIME",
+      baseSalary30Days: true,
+      isLaborInsured: true,
+      isHealthInsured: true,
+      isPensionInsured: true,
+      dependentsCount: 0,
+      voluntaryPensionRate: 0,
+      hireDate: null,
+      resignDate: null,
+    });
+  });
 });
 
 describe("員工名單：租戶過濾與軟刪除過濾", () => {

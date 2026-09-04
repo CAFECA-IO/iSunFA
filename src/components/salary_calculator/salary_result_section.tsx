@@ -14,6 +14,11 @@ import {
 } from "@/components/salary_calculator/save_record_dialogs";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { useSalaryEmployees } from "@/hooks/use_salary_employees";
+import {
+  diffEmployeeProfile,
+  IProfileDiffEntry,
+} from "@/lib/utils/salary_employee_profile";
+import ProfileDiffModal from "@/components/salary_calculator/profile_diff_modal";
 import { useSalaryRecordSave } from "@/hooks/use_salary_record_save";
 import { MONTHS } from "@/constants/month";
 import { salaryCalculatorUrlOf } from "@/constants/url";
@@ -22,7 +27,10 @@ import {
   EMPLOYEE_NUMBER_INPUT_ID,
 } from "@/constants/salary_calculator";
 import { downloadNodeAsPng } from "@/lib/utils/pay_slip_download";
-import { ISalaryRecordSummary } from "@/interfaces/salary_record";
+import {
+  ISalaryCalculatorEmployee,
+  ISalaryRecordSummary,
+} from "@/interfaces/salary_record";
 import { ApiError } from "@/lib/utils/request";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 
@@ -45,11 +53,10 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     employeeEmail,
     selectedYear,
     selectedMonth,
-    baseSalary,
-    mealAllowance,
     selectedEmployeeId,
     linkEmployee,
     getSalaryCalculatorOptions,
+    getEmployeeProfile,
     salaryCalculatorResult,
   } = useCalculatorCtx();
 
@@ -72,7 +79,7 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
   const bookId = accountBookId ?? "";
   const { isSaving, savedRecord, hasError, findExisting, save, clearSaved } =
     useSalaryRecordSave(bookId);
-  const { employees, createEmployee, reload } =
+  const { employees, createEmployee, updateEmployee, reload } =
     useSalaryEmployees(accountBookId);
 
   /**
@@ -105,6 +112,17 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
 
   // Info: (20260901 - Julian) 「修改員工編號」按下之後，等 Step 1 掛上來再聚焦
   const [isFocusingNumber, setIsFocusingNumber] = useState<boolean>(false);
+
+  /**
+   * Info: (20260902 - Julian) 計算機上的常態屬性與員工檔不一致時待確認的那一筆。
+   *
+   * 連員工一起記，理由同 `pendingOverwrite`：確認的那一刻再去讀 context
+   * 有可能讀到還沒生效的 setState。
+   */
+  const [pendingProfileDiff, setPendingProfileDiff] = useState<{
+    employee: ISalaryCalculatorEmployee;
+    diff: IProfileDiffEntry[];
+  } | null>(null);
 
   const selectedMonthNumber =
     MONTHS.findIndex((month) => month.name === selectedMonth.name) + 1;
@@ -172,6 +190,16 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
    * 已連結員工 → 先探這個年月有沒有紀錄，有就先問一句，沒有就直接存完。
    * 未連結 → 開例外 B 問要存給誰。兩條路都不會要求使用者重填員工或年月。
    */
+  /**
+   * Info: (20260902 - Julian) 儲存前的三道問句，順序是定死的：
+   *
+   * 1. **要存給誰**（未連結員工）—— 沒有答案的話後面兩題沒有意義
+   * 2. **員工檔要不要跟著更新**（常態屬性有差異）—— 產品決策 D2 的「問一句」
+   * 3. **要不要覆蓋既有紀錄**（同年月已有一筆）—— 在 `proceedSaveFor` 裡
+   *
+   * 三者可能同時成立。順序倒過來的話，使用者會先被問「要覆蓋嗎」，
+   * 而那時候連「存給誰」都還沒確定。
+   */
   const clickSaveHandler = async () => {
     clearSaved();
     setUnlinkedError(null);
@@ -181,7 +209,51 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
       return;
     }
 
+    /**
+     * Info: (20260902 - Julian) 名單上找不到這個人時**不問**，直接存。
+     *
+     * 那代表名單還在飛或抓失敗（hook 把錯誤吞成 `[]`）——
+     * 此時 `diff` 會拿計算機的值去跟「什麼都沒有」比，列出 15 條全部是差異，
+     * 而那是假的。沒有可信的對照組就不要問。
+     */
+    const stored = employees.find(
+      (employee) => employee.id === selectedEmployeeId,
+    );
+
+    if (stored !== undefined) {
+      const diff = diffEmployeeProfile(getEmployeeProfile(), stored);
+      if (diff.length > 0) {
+        setPendingProfileDiff({ employee: stored, diff });
+        return;
+      }
+    }
+
     await proceedSaveFor(selectedEmployeeId);
+  };
+
+  // Info: (20260902 - Julian) 「更新員工檔並儲存」：先 PUT 員工，再走原本的儲存流程
+  const updateProfileAndSaveHandler = async () => {
+    if (pendingProfileDiff === null) return;
+
+    const { employee } = pendingProfileDiff;
+    await updateEmployee(employee.id, {
+      ...getEmployeeProfile(),
+      name: employee.name,
+      number: employee.number,
+      email: employee.email || undefined,
+    });
+
+    setPendingProfileDiff(null);
+    await proceedSaveFor(employee.id);
+  };
+
+  // Info: (20260902 - Julian) 「只存這一次」：員工檔不動，這次的值仍然照樣進快照
+  const saveWithoutProfileUpdateHandler = async () => {
+    if (pendingProfileDiff === null) return;
+
+    const { employee } = pendingProfileDiff;
+    setPendingProfileDiff(null);
+    await proceedSaveFor(employee.id);
   };
 
   /**
@@ -264,12 +336,19 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     setIsPreparing(true);
     setUnlinkedError(null);
     try {
+      /**
+       * Info: (20260902 - Julian) 帶的是**計算機當下的 15 個常態欄位**，不是預設值。
+       *
+       * 使用者剛在計算機把投保狀態、扶養人數、自提比例、到職日都設好了，
+       * 這顆按鈕的語意就是「把這個人連同這些設定建起來」。
+       * 只帶姓名與兩個金額的話，建出來的檔其餘欄位全是 schema 的 `@default` ——
+       * 下個月選這個人，那些預設值會覆蓋掉他今天設好的東西，而且完全靜默。
+       */
       await createEmployee({
+        ...getEmployeeProfile(),
         name: employeeName.trim(),
         number: employeeNumber.trim(),
         email: employeeEmail.trim() || undefined,
-        baseSalary,
-        mealAllowance,
       });
 
       const refreshed = await reload();
@@ -500,6 +579,16 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
           }}
           useConflictHandler={useConflictEmployeeHandler}
           editNumberHandler={editNumberHandler}
+        />
+      )}
+
+      {pendingProfileDiff !== null && (
+        <ProfileDiffModal
+          employeeName={pendingProfileDiff.employee.name}
+          diff={pendingProfileDiff.diff}
+          closeHandler={() => setPendingProfileDiff(null)}
+          updateAndSaveHandler={updateProfileAndSaveHandler}
+          saveOnlyHandler={saveWithoutProfileUpdateHandler}
         />
       )}
 

@@ -27,6 +27,7 @@ export const calculator = {
     tax_residency_status: "税務居住状況",
     residency_option_taiwan: "台湾居住者",
     residency_option_non_taiwan: "非台湾居住者",
+    date_from_employee: "従業員データより",
     industry_category: "業種",
     year: "年度",
     month: "月",
@@ -67,6 +68,22 @@ export const calculator = {
     voluntary_pension_contribution: "任意労働年金拠出",
   },
   employee_list: {
+    issue_name_required: "「基本情報」で従業員名を入力してください",
+    issue_number_required: "「基本情報」で従業員番号を入力してください",
+    issue_base_salary_required: "「給与」で基本給を入力してください",
+    section_identity: "基本情報",
+    section_pay: "給与",
+    section_insurance: "社会保険・年金",
+    section_other: "その他",
+    other_allowance_taxable: "その他手当（課税）",
+    other_allowance_tax_free: "その他手当（非課税）",
+    other_allowance_hint:
+      "毎月固定の手当を入力してください。当月限りの賞与は計算機側で入力します —— ここに入れると翌月も引き継がれます。",
+    voluntary_pension_rate: "年金の自己拠出率",
+    employment_type: "雇用形態",
+    hire_date: "入社日",
+    resign_date: "退職日",
+    date_order_error: "退職日は入社日より前にはできません",
     main_title: "従業員リスト",
     name: "従業員名",
     number: "従業員番号",
@@ -189,6 +206,17 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) 計算機ページからの保存と、2 つの例外
   save_record: {
+    profile_diff_title: "従業員データも更新しますか？",
+    profile_diff_content:
+      "計算機の設定が「{{name}}」さんの従業員データと異なります。差分は以下のとおりです：",
+    profile_diff_hint:
+      "今回の給与記録はどちらを選んでも計算機の値で保存されます。ここで聞いているのは従業員データも変更するかどうかだけです。「今回だけ保存」を選ぶと従業員データはそのままです。",
+    profile_diff_update_btn: "従業員データを更新して保存",
+    profile_diff_skip_btn: "今回だけ保存",
+    profile_diff_failed: "更新できませんでした。しばらくしてからお試しください。",
+    profile_value_on: "あり",
+    profile_value_off: "なし",
+    profile_value_none: "未設定",
     save: "給与記録を保存",
     saving: "保存中…",
     saved: "{{name}} の {{year}} 年 {{month}} 月の給与記録として保存しました",
