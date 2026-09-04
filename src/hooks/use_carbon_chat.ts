@@ -157,6 +157,7 @@ import {
   resolveCreditPauseReason,
   summarisePausedUnits,
   isRateLimitedApiError,
+  rateLimitBackoffMs,
   isTimeoutApiError,
   splitReportMarkdownSections,
   alignReportSections,
@@ -187,6 +188,7 @@ import {
 } from "@/constants/resumable_job";
 import { HTTP_METHOD } from "@/constants/http";
 import { runResumableJob, STEP_OUTCOME } from "@/lib/jobs/resumable_job";
+import { minIntervalMsFor, RateLimitBucketEnum } from "@/constants/rate_limit";
 import { useAuth } from "@/contexts/auth_context";
 import {
   DEFAULT_SESSION_ID,
@@ -2465,6 +2467,7 @@ export const useCarbonChat = () => {
        * Info: (20260825 - Luphia) 併發度 2：11 章耗時約減半，仍留限流餘裕
        *（LLM bucket 12/min）。停手與剩餘的判斷由驅動器負責（見上方說明）。
        */
+      const llmStartIntervalMs = minIntervalMsFor(RateLimitBucketEnum.LLM);
       const outcome = await runResumableJob<IImportUnit, void>({
         steps: units,
         runStep: runUnit,
@@ -2489,9 +2492,38 @@ export const useCarbonChat = () => {
             }
             return { kind: STEP_OUTCOME.PAUSE, reason: pauseReason };
           }
+          /**
+           * Info: (20260904 - Emily) 429 是「稍後再試」,不是「做壞了」(#6744)。
+           *
+           * 原本這裡把限流歸進 FAIL:章節被列成「解析失敗」,而重試按鈕把全部失敗章
+           * **一次再送** —— 撞第二次。而 `isRateLimitedApiError` 這支早就存在、
+           * 在對話那端用著,匯入的分類器沒有用它。
+           *
+           * 退避秒數拿伺服端算好的 `Retry-After`;退回值是一個發出間隔,
+           * 不另外寫一個秒數。
+           */
+          if (isRateLimitedApiError(error)) {
+            return {
+              kind: STEP_OUTCOME.RETRY,
+              afterMs: rateLimitBackoffMs(error, llmStartIntervalMs),
+            };
+          }
           return { kind: STEP_OUTCOME.FAIL };
         },
+        /**
+         * Info: (20260904 - Emily) 三次而不是預設的一次:退避之後再撞的情境是
+         * 「同一分鐘裡對話那端也在用同一個 bucket」,一次重試接不住。
+         * 三次仍然接不住就是真的擋住了,那時列成失敗是對的。
+         * 這個上限只影響 RETRY,而本分類器唯一會回 RETRY 的就是 429。
+         */
+        maxRetriesPerStep: 3,
         concurrency: 2,
+        /**
+         * Info: (20260904 - Emily) 發出間隔從限流規則推出(單一來源),
+         * 讓一趟匯入自己排隊跑完 —— 慢,但一定完成(票上的驗收條款)。
+         * `concurrency: 2` 留著:它限的是同時在飛的數量,與這裡限的速率是兩件事。
+         */
+        minStartIntervalMs: llmStartIntervalMs,
       });
 
       const pausedBy = outcome.pausedBy;
