@@ -43,6 +43,21 @@ export const isQuotaApiError = (error: unknown): boolean => {
  * 回傳暫停原因而不是布林：兩種點數不足的出路不同（一個是等額度／加購，
  * 一個是要簽章付款），而畫面要說得出使用者接下來能做什麼。
  */
+/**
+ * Info: (20260828 - Julian) **尚未做**：把 402 的 payload 一起帶下來
+ *（計劃 `resumable_job_resume_landing_and_copy.md` §4）。
+ *
+ * 這支現在只取 `errorCode`，其餘整包丟掉。而伺服器那邊事實是齊的：
+ * `buildQuotaExceededPayload` 回的 402 帶著 `exceeded`（哪個視窗先卡）、
+ * 兩個視窗各自的 `limit`/`used`/`resetAt`、以及 `exceedsWindowLimit`
+ *（單筆金額就超過方案上限時，**等重置永遠不會好**）。
+ *
+ * 少了它，三種處置完全不同的情況在畫面上是同一句「點數已用完」：
+ * 今天的額度用完（等幾小時）、本週用完（等到重置日）、單筆超過上限（只能升級）。
+ *
+ * 改法是回傳 `{ reason, quota }` 而不是只回 `reason`。
+ * **不要另寫一支解析函式**：同一個錯誤被解析兩次，兩次的判準遲早分岔。
+ */
 export const resolveCreditPauseReason = (
   error: unknown,
 ): JobPauseReason | null => {
@@ -463,6 +478,11 @@ export interface IImportChunkLike {
   }[];
   unmapped: string[];
   activities?: IActivityRecord[];
+  /**
+   * Info: (20260903 - Luphia) 這一份回應帶回來的盤查年度(#6743 / open/69)。
+   * 只有第一次呼叫(帶 activities 那次)會有,其餘章節一律 undefined。
+   */
+  inventoryYear?: number;
 }
 
 export interface IFoldedImportChunks {
@@ -474,6 +494,11 @@ export interface IFoldedImportChunks {
   }[];
   unmapped: string[];
   activities: IActivityRecord[];
+  /**
+   * Info: (20260903 - Luphia) 摺疊後的盤查年度:**第一個抽到的為準**。
+   * 缺席 = 這份報告沒有可萃取的年度,由使用者在預覽卡上填。
+   */
+  inventoryYear?: number;
 }
 
 /**
@@ -497,6 +522,8 @@ export const foldImportChunks = (
   >();
   const unmapped: string[] = [];
   let activities: IActivityRecord[] = [];
+  // Info: (20260903 - Luphia) 盤查年度:第一個抽到的為準(理由見下方迴圈內)
+  let inventoryYear: number | undefined;
 
   results.forEach((chunk) => {
     if (!chunk) return;
@@ -534,6 +561,19 @@ export const foldImportChunks = (
     if (chunk.activities && chunk.activities.length > 0) {
       activities = [...activities, ...chunk.activities];
     }
+    /**
+     * Info: (20260902 - Emily) 年度取**第一個抽到的**,後到的不覆蓋
+     *(issue_drafts/open/69)。
+     *
+     * 一份報告的盤查年度只有一個,而只有第一次呼叫會要求模型回它 ——
+     * 其餘章節一律 undefined。寫成賦值(`inventoryYear = chunk.inventoryYear`)
+     * 就會被後面十次的 undefined 蓋掉,而那正好等於這張票沒做:
+     * 年度回到未知 → 規則 3 不成立 → 孤兒列照留。
+     * 這與上面 activities 那條「累加而不是覆蓋」是同一個教訓的另一半。
+     */
+    if (inventoryYear === undefined && chunk.inventoryYear !== undefined) {
+      inventoryYear = chunk.inventoryYear;
+    }
   });
 
   return {
@@ -547,6 +587,7 @@ export const foldImportChunks = (
     ),
     unmapped,
     activities,
+    inventoryYear,
   };
 };
 

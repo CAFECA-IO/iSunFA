@@ -84,18 +84,79 @@ describe("聊天輸入的 state 局部性(#6718)", () => {
     expect(start).toBeGreaterThan(0);
     expect(end).toBeGreaterThan(start);
     const keyBlock = source.slice(start, end);
-    const restores = keyBlock.match(/commandInput\(outgoingText\)/g) ?? [];
+    // Info: (20260831 - Emily) `[,)]` 而不是 `\)`:還原帶第二個參數("restore"),
+    // 寫死右括號會在加參數的那一刻紅,而那不是缺陷(review 第二輪點出的)
+    const restores = keyBlock.match(/commandInput\(outgoingText[,)]/g) ?? [];
     expect(restores).toHaveLength(2);
+    // Info: (20260831 - Emily) 兩處都必須是「歸還」而不是「指令」
+    expect(
+      keyBlock.match(/commandInput\(outgoingText, "restore"\)/g),
+    ).toHaveLength(2);
     expect(keyBlock).toContain("device_unsupported");
     expect(keyBlock).toContain("system_error");
   });
 
-  it("組字中的 Enter 不送出(照兄弟元件的寫法)", () => {
+  it("組字中的 Enter 不送出(照同類元件的寫法)", () => {
     const source = read(CHAT_INPUT);
     expect(source).toContain("e.nativeEvent.isComposing");
-    const sibling = read("src/components/chat/chat_input.tsx");
-    // Info: (20260831 - Emily) 全庫已有四處這樣寫;碳盤查這個原本是唯一的例外
-    expect(sibling).toContain("isComposing");
+    /**
+     * Info: (20260831 - Emily) 判準是**同類**而不是多數(review 第二輪的更正)。
+     *
+     * 全 repo 有 30 個檔判 `key === "Enter"`,只有 4 個擋組字 ——
+     * 所以「大家都擋了、這裡是唯一例外」是錯的說法(我第一版的註解照抄了
+     * 那個錯,連同元件那邊一起改掉;只改一處正是低-1 的形狀)。
+     * 真正同類的是「自由輸入的中文長句、Enter 即送出」,本 repo 兩個,
+     * 兩個都擋了 —— 這條就釘那兩個。
+     */
+    expect(read("src/components/chat/chat_input.tsx")).toContain("isComposing");
+    expect(
+      read("src/components/ai_consultation_room/comment_post_input.tsx"),
+    ).toContain("isComposing");
+  });
+
+  /**
+   * Info: (20260831 - Emily) 歸還不得搶掉使用者手上打的字(review 第二輪)。
+   *
+   * 金鑰那段時間輸入框沒有被 disabled,所以「還原」與「使用者正在打的字」
+   * 會撞在一起。分辨的資訊只有元件有(框裡現在有沒有字),
+   * 所以判斷放在元件、`mode` 只負責帶語意。
+   */
+  it("prefill 分「指令」與「歸還」,歸還在框裡有字時不覆寫", () => {
+    const hook = read(HOOK);
+    expect(hook).toContain('mode: "set" | "restore"');
+    expect(hook).toContain('mode: "set" | "restore" = "set"');
+
+    const source = read(CHAT_INPUT);
+    // Info: (20260831 - Emily) functional updater:不把 text 加進 deps(那會讓每次打字都重跑 effect)
+    expect(source).toContain("setText((current) =>");
+    expect(source).toContain('prefill.mode === "restore"');
+    expect(source).toContain("current.trim().length > 0");
+    expect(source).not.toContain("}, [prefill, text]);");
+  });
+
+  /**
+   * Info: (20260903 - Luphia) 送出成功**不清空**輸入框(review 阻-1/阻-2)。
+   *
+   * 原本成功路徑有一個無條件的 `commandInput("")`,而它服務的唯一路徑
+   *(後續建議按鈕,繞過元件 submit)框裡放的是使用者自己的草稿 ——
+   * 清掉它就是刪使用者的東西,而且不需要任何時間窗:
+   * 打半句話 → 點一下 chip → 草稿消失。註解裡另外那條「跳段後自動送出」不存在。
+   *
+   * 判準用**精確筆數**而不是門檻或區間掃描:
+   * - 門檻(`>= 1`)擋不住「又多加了一處」
+   * - 區間掃描(`slice(start, start + N)`)對「附近加註解」是脆的
+   *   (本 repo 的 `carbon_import_pause` 就因此被推出窗外過)
+   * 剩下的那一處是切房(`switchSession`)—— 那是真正的指令。
+   * **要新增第二處,請先說得出它為什麼是指令而不是在刪使用者的字。**
+   */
+  it("set 模式的清空只剩切房一處(送出成功不清)", () => {
+    const hook = read(HOOK);
+    const statements = hook.match(/^ {6}commandInput\(""\);$/gm) ?? [];
+    expect(statements).toHaveLength(1);
+    // Info: (20260903 - Luphia) 反面:歸還那兩處必須帶 mode,不能退化成 set
+    const restores =
+      hook.match(/commandInput\(outgoingText, "restore"\)/g) ?? [];
+    expect(restores).toHaveLength(2);
   });
 
   it("hook 的送出不再退回輸入框內容(它已經沒有那份 state)", () => {

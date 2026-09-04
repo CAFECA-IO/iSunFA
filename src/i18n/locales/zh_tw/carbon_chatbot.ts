@@ -179,6 +179,14 @@ export const carbonChatbot = {
     "已保存待匯入的解析結果:{{name}}(共 {{count}} 節,尚未寫入報告)",
   import_pending_open: "檢視並匯入",
   import_pending_discard: "捨棄",
+  import_inventory_year: "盤查年度",
+  import_inventory_year_placeholder: "2024",
+  import_inventory_year_hint:
+    "這份報告的盤查年度(西元)。跨年度匯入時用它分辨哪些分錄屬於哪一年",
+  import_inventory_year_required:
+    "這次匯入含排放總量表,請填寫這份報告的盤查年度",
+  import_inventory_year_invalid:
+    "請填西元四位數的盤查年度(1990 年至明年);超出範圍的年度會讓帳本下次載入時讀不回來",
   import_reset_note:
     "匯入段落的查核狀態將重置;{{activities}} 筆活動數據將入帳並重新勾稽",
   import_apply: "匯入勾選({{count}})",
@@ -189,6 +197,19 @@ export const carbonChatbot = {
     "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,{{inFlight}} 章解析中),完整報告約需數分鐘…",
   import_requires_book:
     "這個會話還沒綁定帳本,無法匯入整份報告(逐章匯入需要以帳本的額度計費)。請先在會話設定選擇帳本,再重新匯入。",
+  /**
+   * Info: (20260828 - Julian) **這句話有兩個已知的錯，尚未修**
+   *（計劃 `resumable_job_resume_landing_and_copy.md` §4）。
+   *
+   * 1.「補上點數後」指向一條**不存在的出路**：翻面的判準只看訂閱方案的視窗額度，
+   *    加購的點數改變不了裡面任何一個數（見 `resumable_job_resume_notification.md`
+   *    §6.2）。實測時我們照這句話去加購，白等了一輪。
+   * 2. 沒有說**要等到哪一天**。402 的 payload 已經算好了兩個視窗的 `resetAt`，
+   *    也標了 `exceedsWindowLimit`（等重置永遠不會好的那種），丟掉它的是前端
+   *    `resolveCreditPauseReason()`。
+   *
+   * 要拆成三句：5 小時視窗卡住／週視窗卡住／單筆超過上限（只給升級）。五語系一起。
+   */
   import_paused_chapters:
     "點數已用完,以下章節還沒開始解析:{{chapters}}。補上點數後可以從這裡接著匯入,已完成的部分不會重跑。",
   // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
@@ -316,6 +337,10 @@ export const carbonChatbot = {
   chart_imported_sankey_excluded: "未畫出的項目（NA/NS 或為零）",
   chart_imported_sankey_no_ledger:
     "本報告已匯入，但帳本沒有任何可用數據，因此畫不出排放流向圖。桑基圖與系統數據表格的唯一來源是表3.8（各公司溫室氣體排放量），本次未取得該表。請確認第三章是否解析成功；若該章列為解析失敗，請以預覽卡的「重試失敗章節」重新匯入，並在伺服端日誌查看該表是否被丟棄及其原因。",
+  chart_imported_sankey_blocked_ledger:
+    "本報告已取得表3.8，但勾稽未通過，數據凍結在門口、未寫入帳本（半套資料入帳會讓每張圖都錯得很像對的）。被擋的原因列於下方；修正原文對應表格或重新匯入第三章後，圖表將自動生成。",
+  chart_partial_import_blocked:
+    "⚠ 本圖只含成功入帳的部分：本次匯入另有表格被勾稽擋下、未寫入帳本，因此圖中的總量與占比不是全公司全貌。被擋的原因如下；修正原文對應表格或重新匯入後，圖表將自動重算。",
   chart_imported_sankey_collapsed: "節點過多,已降為一層(全公司 → 範疇)",
   chart_imported_top_items_title:
     "排放去向：全公司 → 前九大排放項目與其他（原文照錄，所在地基準，公噸 CO2e/年）",

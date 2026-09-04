@@ -4,6 +4,7 @@ declare const jest: typeof JestType;
 
 import {
   canResumeNow,
+  releasePaymentBlockedJobs,
   saveJobBookmark,
   scanResumableJobs,
   startJobResume,
@@ -42,6 +43,8 @@ jest.mock("@/repositories/resumable_job.repo", () => ({
     findByResource: jest.fn(),
     listOpenByUser: jest.fn(async () => []),
     listPausedForScan: jest.fn(async () => []),
+    // Info: (20260828 - Julian) 個人付款那條路用的（`releasePaymentBlockedJobs`）
+    listPaymentBlockedByResource: jest.fn(async () => []),
     markResumable: jest.fn(async () => true),
     setStatus: jest.fn(async () => undefined),
   },
@@ -564,5 +567,147 @@ describe("接續與擁有權", () => {
     await expect(
       startJobResume({ jobId: "job-1", userId: "user-1" }),
     ).rejects.toMatchObject({ code: "TW000031" });
+  });
+});
+
+/**
+ * Info: (20260828 - Julian) 個人付款完成後釋放「等付款」的任務。
+ *
+ * 這條路與 `scanResumableJobs` 是兩件事：那支是 5 分鐘輪詢、跨使用者、看團隊額度；
+ * 這支由 `TxTracker` 確認入帳時針對單一使用者呼叫一次。
+ *
+ * **這裡不發任何通知**，那是刻意的：`JOB_RESUMABLE` 是活算的待辦，
+ * 翻成 `RESUMABLE` 本身就是通知（小鈴鐺下一次輪詢會從 `listResumableByUser` 讀到）。
+ * 所以這一組不需要 mock notification service —— 少了那個相依才是對的。
+ */
+describe("releasePaymentBlockedJobs", () => {
+  const blockedJob = (id: string) => ({
+    id,
+    userId: "user-1",
+    teamId: null,
+    type: JOB_TYPE.CARBON_REPORT_IMPORT,
+    status: JOB_STATUS.PAUSED,
+    pauseReason: JOB_PAUSE_REASON.PAYMENT_REQUIRED,
+    resourceKey: `channel-${id}`,
+    remainingStepIds: [],
+    totalSteps: 11,
+    completedSteps: 3,
+    failedSteps: 0,
+    nextStepCost: null,
+    lastError: null,
+    pausedAt: new Date(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  // Info: (20260831 - Julian) 這張訂單就是為這個資源付的（review #6732 的 1-A）
+  const PAID_ORDER_DATA = {
+    category: "CARBON_CHAT",
+    idempotencyKey: "idem-1",
+    amount: "-100",
+    resourceKey: "channel-job-1",
+  };
+
+  beforeEach(() => {
+    asMock(resumableJobRepo.listPaymentBlockedByResource).mockResolvedValue([]);
+    asMock(resumableJobRepo.markResumable).mockResolvedValue(true);
+  });
+
+  it("沒有等付款的任務時回 0，且不寫任何東西", async () => {
+    const released = await releasePaymentBlockedJobs({
+      userId: "user-1",
+      orderData: PAID_ORDER_DATA,
+    });
+
+    expect(released).toBe(0);
+    expect(asMock(resumableJobRepo.markResumable)).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260831 - Julian) 只翻**這筆付款對應的**那一份（review #6732 的 1-A）。
+   *
+   * 原本的條件只有 `userId`，於是「使用者付了一筆款」被當成「他所有等付款的
+   * 任務都付過了」。這一條釘的是查詢真的帶著資源鍵 —— 少了它，一位使用者
+   * 身上 N 筆等付款的任務會在他任何一次付款成功時全部翻面，各發一則
+   * 「可以繼續了」，而其中只有一筆是真的付過的。
+   */
+  it("查詢帶著 userId 與這筆付款的資源鍵", async () => {
+    await releasePaymentBlockedJobs({
+      userId: "user-1",
+      orderData: PAID_ORDER_DATA,
+    });
+
+    expect(
+      asMock(resumableJobRepo.listPaymentBlockedByResource),
+    ).toHaveBeenCalledWith("user-1", "channel-job-1");
+  });
+
+  /**
+   * Info: (20260831 - Julian) 訂單沒有指向任何資源時**什麼都不翻**（fail-closed）。
+   *
+   * 走到這裡的是與可接續任務無關的個人付款（例如單則對話），
+   * 以及本次改動之前建立的舊訂單。退回「翻這個人全部的」就是 1-A 本身。
+   */
+  it.each([
+    ["沒有 resourceKey", { category: "FAITH_CHAT", idempotencyKey: "i" }],
+    ["resourceKey 是空字串", { resourceKey: "" }],
+    ["resourceKey 不是字串", { resourceKey: 123 }],
+    ["data 是 null", null],
+    ["data 不是物件", "carbon-chat-0xabc-2025"],
+  ])("%s：不查也不翻，回 0", async (unusedLabel, orderData) => {
+    const released = await releasePaymentBlockedJobs({
+      userId: "user-1",
+      orderData,
+    });
+
+    expect(released).toBe(0);
+    expect(
+      asMock(resumableJobRepo.listPaymentBlockedByResource),
+    ).not.toHaveBeenCalled();
+    expect(asMock(resumableJobRepo.markResumable)).not.toHaveBeenCalled();
+  });
+
+  it("把查到的每一筆翻成可以繼續", async () => {
+    asMock(resumableJobRepo.listPaymentBlockedByResource).mockResolvedValue([
+      blockedJob("job-1"),
+      blockedJob("job-2"),
+    ]);
+
+    const released = await releasePaymentBlockedJobs({
+      userId: "user-1",
+      orderData: PAID_ORDER_DATA,
+    });
+
+    expect(released).toBe(2);
+    expect(asMock(resumableJobRepo.markResumable)).toHaveBeenCalledWith(
+      "job-1",
+    );
+    expect(asMock(resumableJobRepo.markResumable)).toHaveBeenCalledWith(
+      "job-2",
+    );
+  });
+
+  /**
+   * Info: (20260828 - Julian) 使用者在付款與這一刻之間自己按了繼續或取消。
+   *
+   * `markResumable` 是帶 `status: PAUSED` 的條件更新，翻不動時回 `false` ——
+   * 那一筆不該被算成釋放。少了這條，把條件更新改成無條件覆寫也會全綠，
+   * 而那個改動會把一個正在跑的任務標成「等著被繼續」。
+   */
+  it("翻不動的（使用者已自行繼續或取消）不算進釋放數", async () => {
+    asMock(resumableJobRepo.listPaymentBlockedByResource).mockResolvedValue([
+      blockedJob("job-1"),
+      blockedJob("job-2"),
+    ]);
+    asMock(resumableJobRepo.markResumable)
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false);
+
+    expect(
+      await releasePaymentBlockedJobs({
+        userId: "user-1",
+        orderData: PAID_ORDER_DATA,
+      }),
+    ).toBe(1);
   });
 });

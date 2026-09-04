@@ -37,7 +37,20 @@ import {
   type IImportedLedgerResult,
 } from "@/lib/carbon_table38.pipeline";
 import { isImportedEntry } from "@/lib/carbon_table38.ledger";
-import { mergeImportedLedgerEntries } from "@/lib/carbon_ledger_totals";
+/**
+ * Info: (20260903 - Luphia) 年度的兩個判斷都在 lib(review):hook 裡的判斷
+ * 在這個 repo 測不到(node 環境無 jsdom),抽出去才守得住。
+ */
+import {
+  isStorableInventoryYear,
+  resolveIdentityYearPrefill,
+} from "@/lib/utils/inventory_year";
+import {
+  buildYearSnapshot,
+  detectUndatedImportedEntries,
+  resolveIncomingYear,
+  mergeImportedLedgerEntries,
+} from "@/lib/carbon_ledger_totals";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
 import {
   buildCarbonChartBlock,
@@ -70,6 +83,7 @@ import {
 } from "@/interfaces/carbon_paragraph_draft";
 import { IPendingRevision } from "@/components/carbon_chatbot/revision_preview";
 import { IPendingImport } from "@/components/carbon_chatbot/import_preview";
+import { buildPendingImportRecord } from "@/lib/carbon_pending_import_record";
 import {
   createDefaultSessions,
   createChatSession,
@@ -180,7 +194,6 @@ import {
   buildCarbonChatChannel,
   CarbonImportReconciliationStateEnum,
   CarbonImportNoticeKindEnum,
-  CARBON_PENDING_IMPORT_STORAGE_VERSION,
   CARBON_CHAT_REPLY_TIMEOUT_MS,
   CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS,
   CARBON_IMPORT_SINGLE_CALL_MAX_BYTES,
@@ -286,11 +299,27 @@ export const useCarbonChat = () => {
   const [inputPrefill, setInputPrefill] = useState<{
     value: string;
     nonce: number;
-  }>({ value: "", nonce: 0 });
+    mode: "set" | "restore";
+  }>({ value: "", nonce: 0, mode: "set" });
 
-  const commandInput = useCallback((value: string) => {
-    setInputPrefill((prev) => ({ value, nonce: prev.nonce + 1 }));
-  }, []);
+  /**
+   * Info: (20260831 - Emily) 兩種語意,分開講(PR #6730 review 第二輪)。
+   *
+   * - `set`(預設):**指令** —— 切房清空、跳段預填、送出後清空。該覆寫框裡的東西。
+   * - `restore`:**歸還** —— 送不出去,把那句話還給使用者。
+   *   框裡已經有字就沒有什麼要還的(見 ChatInput 的 effect)。
+   *
+   * 為什麼歸還要與指令分開:歧義的來源是「hook 不知道框裡現在有沒有字」,
+   * 而那個資訊只有元件有。與其在 hook 這邊加一個「金鑰準備中」的鎖去
+   * 讓那個狀態不出現(鎖的失效模式是輸入框永久打不了字,比它要修的缺陷嚴重),
+   * 不如讓歸還本身變成不歧義的 —— 資訊留在有它的那一端判斷。
+   */
+  const commandInput = useCallback(
+    (value: string, mode: "set" | "restore" = "set") => {
+      setInputPrefill((prev) => ({ value, nonce: prev.nonce + 1, mode }));
+    },
+    [],
+  );
   // Info: (20260714 - Tzuhan) 等待 AI 回覆的 session 集合(per-session 隔離: 舊房等待中不影響新房輸入與指示)
   const [busySessionIds, setBusySessionIds] = useState<Set<string>>(new Set());
   const [isError, setIsError] = useState<boolean>(false);
@@ -464,6 +493,40 @@ export const useCarbonChat = () => {
       });
     },
     [],
+  );
+
+  /**
+   * Info: (20260902 - Emily) 預覽卡上確認的盤查年度(issue_drafts/open/69)。
+   *
+   * 寫回 pending 而不是另存一份 state:它要跟著待匯入紀錄一起入庫
+   *(「稍後再說」與重載之後仍在),而 pending 已經是那份紀錄的唯一真值來源。
+   * 這裡只寫記憶體;落地由 persistPendingImport 那條既有的路負責。
+   */
+  const setPendingInventoryYear = useCallback(
+    (year: number | undefined) => {
+      /**
+       * Info: (20260903 - Luphia) 範圍外一律不收(review)。
+       *
+       * 擋在**寫入點**而不是只擋在畫面上:這裡是 `pendingImport.inventoryYear`
+       * 的唯一寫入者,而範圍外的年度會一路寫進 `importedOrigin.year`、存檔成功
+       *(寫路徑不過 schema),然後在下次載入時讓 `CarbonInventoryStateSchema`
+       * 的 `safeParse` 失敗 —— `loadInventoryState` 是 fail-fast 丟棄,
+       * **整份盤查狀態(帳本、活動數據、待補項)一起消失**,而存的當下毫無異狀。
+       *
+       * 最日常的觸發是打錯一個字:`1024`(`2024` 的手滑)是四位數字、
+       * 通過畫面上的「有沒有填」檢查,而它比下限小。
+       */
+      const accepted = isStorableInventoryYear(year) ? year : undefined;
+      setPendingImportBySession((prev) => {
+        const current = prev[activeSessionId];
+        if (!current || current.inventoryYear === accepted) return prev;
+        return {
+          ...prev,
+          [activeSessionId]: { ...current, inventoryYear: accepted },
+        };
+      });
+    },
+    [activeSessionId],
   );
 
   /**
@@ -778,6 +841,19 @@ export const useCarbonChat = () => {
   // Info: (20260714 - Tzuhan) sessions 以 DB Chatroom 為 single source of truth(換裝置/清瀏覽器不再出現殭屍房間)
   // Info: (20260714 - Tzuhan) 標題衍生自密文首訊(server 讀不到),localStorage 索引降級為標題快取
   const sessionsIndexLoadedRef = useRef<boolean>(false);
+  /**
+   * Info: (20260828 - Julian) 清單**問完了沒有**——與 `sessionsIndexLoadedRef` 不同。
+   *
+   * 那支 ref 是「請求發過了」的去重旗標，在 `request()` 之前就設成 true。
+   * 中間那段時間 `sessionsData` 裡只有預設會話，**非空但不完整** ——
+   * 而「非空」正是通知深連結原本用來判斷「清單載好了」的依據，
+   * 於是它在清單補齊之前就判定「查無此會話」而放棄
+   *（見 `resumable_job_resume_landing_and_copy.md` §6.1）。
+   *
+   * 任何「這個 id 不存在」的判斷都要等這個旗標，失敗也要等 ——
+   * 失敗時清單就是不會再補了，繼續等只會變成永遠不動作。
+   */
+  const [sessionsIndexSettled, setSessionsIndexSettled] = useState(false);
   useEffect(() => {
     if (!user?.address || sessionsIndexLoadedRef.current) return;
     sessionsIndexLoadedRef.current = true;
@@ -841,7 +917,9 @@ export const useCarbonChat = () => {
       .catch((error) => {
         // Info: (20260714 - Tzuhan) 列表載入失敗不阻斷(仍可用預設 session 對話)
         console.error("[carbon-chat] failed to load sessions:", error);
-      });
+      })
+      // Info: (20260828 - Julian) 成功或失敗都算「問完了」，理由見旗標的說明
+      .finally(() => setSessionsIndexSettled(true));
   }, [user?.address, t]);
 
   // Info: (20260716 - Tzuhan) #52 載入可綁定帳本(失敗不阻斷:僅影響新增對話的帳本選單)
@@ -1473,7 +1551,18 @@ export const useCarbonChat = () => {
   useEffect(() => {
     computedLedgerRef.current = activeInventoryState?.computedLedger;
   }, [activeInventoryState?.computedLedger]);
-
+  /**
+   * Info: (20260825 - Emily) #6667:勾稽阻擋紀錄的同步鏡像(與 computedLedgerRef 同一個理由:
+   * 建表發生在 setState 生效之前,當下要同步讀得到)。圖表建置憑它把
+   * 「未取得該表」與「取得了但勾稽被擋」說成兩件事 —— 印錯原因的提示,
+   * 會讓使用者去重匯一章根本沒壞的內容。
+   */
+  const ledgerImportBlocksRef = useRef<ILedgerImportBlock[] | undefined>(
+    undefined,
+  );
+  useEffect(() => {
+    ledgerImportBlocksRef.current = activeInventoryState?.ledgerImportBlocks;
+  }, [activeInventoryState?.ledgerImportBlocks]);
   // Info: (20260720 - Tzuhan) #51 圖表文案(i18n;數值本身一律引擎產出,與語言無關)
   const chartLabels: ICarbonChartLabels = useMemo(
     () => ({
@@ -1494,6 +1583,16 @@ export const useCarbonChat = () => {
       importedSankeyNoLedger: t(
         "carbon_chatbot.chart_imported_sankey_no_ledger",
       ),
+      // Info: (20260825 - Emily) #6667:「拿到了表但勾稽被擋」與「沒拿到表」分開說
+      importedSankeyBlockedLedger: t(
+        "carbon_chatbot.chart_imported_sankey_blocked_ledger",
+      ),
+      /**
+       * Info: (20260828 - Emily) 部分入帳的圖旁附註(round-2 低-1 第二半)。
+       * ⚠ 必接 i18n:`chartLabels` 是完整字面值、沒有 spread 預設值,
+       * builder 加了文案而這裡沒接 = 紙上什麼都不會印(見本檔 20260819 那則註解)。
+       */
+      partialImportBlocked: t("carbon_chatbot.chart_partial_import_blocked"),
       importedSankeyCollapsed: t(
         "carbon_chatbot.chart_imported_sankey_collapsed",
       ),
@@ -1718,19 +1817,60 @@ export const useCarbonChat = () => {
       );
       setInventoryStates((prev) => {
         const base = prev[channel] ?? createEmptyInventoryState();
+        const merged = mergeImportedLedgerEntries(base.computedLedger, entries);
+        /**
+         * Info: (20260828 - Emily) 年度標註不完整的警示(PR #6725 round-2 追加回饋)。
+         *
+         * 與 merge 吃同一份輸入(base + entries),所以「被留下來的無年度分錄」
+         * 這個判斷與實際入帳結果必然一致 —— 兩邊各算一次就會不一致。
+         * 每次匯入無條件覆寫:這次沒有無年度分錄就寫回 undefined
+         * (警示描述的狀態已不存在,與 ledgerImportBlocks 清除同一個立場)。
+         */
+        const yearWarning = detectUndatedImportedEntries(
+          base.computedLedger,
+          entries,
+        );
+        // Info: (20260902 - Emily) 快照鍵與規則 3 用同一個年度(issue_drafts/open/69)
+        const incomingYear = resolveIncomingYear(entries);
         return {
           ...prev,
           [channel]: {
             ...base,
-            computedLedger: mergeImportedLedgerEntries(
-              base.computedLedger,
-              entries,
-            ),
+            computedLedger: merged,
+            /**
+             * Info: (20260825 - Emily) #6719 年度快照:報告有盤查年度才存
+             *(沒有年度的帳本存進去只會製造假比較)。
+             * 同年度重匯覆蓋該年,與同鍵覆蓋語義一致。
+             *
+             * Info: (20260827 - Emily) 快照存**那份報告的分錄**,不是累積後的帳本
+             * (PR #6725 review R1 第二項)。存累積結果會讓「2023 的快照」
+             * 含有 2024 匯入的東西 —— 年間比較於是拿自己跟自己比,
+             * 而那正是這個欄位存在的理由被抵銷掉的方式。
+             * 小計與總計走同一支 summarizeLedgerEntries(不另外累加)。
+             *
+             * Info: (20260902 - Emily) 鍵改用**這批分錄自己的年度**
+             *(issue_drafts/open/69),不再用 `base.year`。
+             * `base.year` 是房間層、write-once,兩份不同年度的報告會存進同一個鍵 ——
+             * 這個 Record 於是永遠只有一個鍵,而年間比較需要兩個。
+             * 與規則 3 的剔除、年度警示共用 `resolveIncomingYear`:三處若各自
+             * 判年度,就會出現「剔除了 2023、快照卻存到 2024」這種帳面正常的錯鍋。
+             */
+            ...(incomingYear !== undefined
+              ? {
+                  ledgerByYear: {
+                    ...base.ledgerByYear,
+                    [incomingYear]: buildYearSnapshot(entries),
+                  },
+                }
+              : {}),
             // Info: (20260825 - Emily) 成功入帳即清除阻擋紀錄:紀錄描述的狀態已不存在
             ledgerImportBlocks: undefined,
+            ledgerYearWarning: yearWarning ?? undefined,
           },
         };
       });
+      // Info: (20260825 - Emily) #6667:ref 同步清除(理由見 ledgerImportBlocksRef 宣告處)
+      ledgerImportBlocksRef.current = undefined;
     },
     [user?.address, activeSessionId],
   );
@@ -2111,6 +2251,15 @@ export const useCarbonChat = () => {
         }[];
         unmapped: string[];
         activities?: IActivityRecord[];
+        /**
+         * Info: (20260902 - Emily) 這份報告的盤查年度(issue_drafts/open/69)。
+         *
+         * **這裡不宣告就等於沒有**:與上面 sourceTables 同一個坑 ——
+         * API 一直有回,而逐章合併只搬它認得的欄位,
+         * 漏宣告的欄位會被靜默丟棄,畫面上毫無異狀。
+         * 只有第一次呼叫(extractActivities)會帶,其餘章節是 undefined。
+         */
+        inventoryYear?: number;
       }
       /**
        * Info: (20260805 - Tzuhan) 把章切成「單次呼叫跑得完」的工作單元。
@@ -2396,6 +2545,14 @@ export const useCarbonChat = () => {
         segments: folded.segments,
         unmapped: folded.unmapped,
         activities: folded.activities,
+        /**
+         * Info: (20260903 - Luphia) 年度隨摺疊結果走(rebase 到 develop 時解衝突)。
+         *
+         * develop 把這段 inline 迴圈抽成 `foldImportChunks`,而「第一個抽到的為準」
+         * 那條規則因此要住在 helper 裡 —— 留在這裡就等於沒有摺疊,
+         * 而它的失效方式正是 #6743 修掉的那一個:年度回到未知 → 規則 3 不成立 → 孤兒列照留。
+         */
+        inventoryYear: folded.inventoryYear,
         failed,
         pausedBy,
         // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）
@@ -2518,48 +2675,23 @@ export const useCarbonChat = () => {
       const run = async (): Promise<void> => {
         try {
           const version = pendingImportVersionsRef.current.get(channel) ?? 0;
+          /**
+           * Info: (20260828 - Julian) 形狀抽成純函式（`buildPendingImportRecord`）。
+           *
+           * 原本這裡是一個逐欄位手寫的物件字面量，而它漏掉了 #6713 加的三個
+           * 斷點欄位 —— 存出去的紀錄因此在重載後失去「哪幾章還沒跑」，
+           * 接續按鈕整個消失。抽出去是為了那件事測得到（純函式、不碰時鐘）。
+           */
           const nextVersion = await putPendingImportRecord(
             channel,
             master,
-            {
-              storageVersion: CARBON_PENDING_IMPORT_STORAGE_VERSION,
-              savedAt: new Date().toISOString(),
-              source: {
-                cid: source?.cid ?? null,
-                fileName: source?.fileName ?? pending.fileName,
-                mimeType: source?.mimeType ?? "",
-              },
-              pending: {
-                fileName: pending.fileName,
-                originSessionId: pending.originSessionId,
-                originSessionTitle: pending.originSessionTitle,
-                items: pending.items,
-                unmapped: pending.unmapped,
-                activityCount: pending.activityCount,
-                failedChapters: pending.failedChapters ?? [],
-                /**
-                 * Info: (20260827 - Luphia) 暫停狀態也要落地（issue #6713 目標 5）。
-                 *
-                 * 這份明列先前少了這三個欄位，而還原是 `...restored.pending`
-                 * 的展開——於是重新整理或換裝置之後暫停清單就不見了，
-                 * `import_preview` 的 `pausedChapters.length > 0` 不成立，
-                 * 「接著匯入」那顆按鈕**根本不會出現**。
-                 *
-                 * commit 29f1dd891 的訊息聲稱「暫停清單跟著帳號走（存在
-                 * CarbonPendingImport）」，那句話當時是錯的；它修的
-                 * 「換裝置後按鈕沒反應」其實到不了，因為那時沒有按鈕。
-                 * 檢查表 §1.14。
-                 */
-                pausedChapters: pending.pausedChapters ?? [],
-                pausedUnits: pending.pausedUnits ?? [],
-                pauseReason: pending.pauseReason ?? null,
-                // Info: (20260827 - Luphia) 出路與重置時間也要撐過重載（issue #6714）
-                pauseDetail: pending.pauseDetail ?? null,
-              },
+            buildPendingImportRecord({
+              pending,
+              source,
               activities,
-              // Info: (20260806 - Tzuhan) Map 無法 JSON 序列化,存成 entry 陣列
-              pageIndex: pageIndex ? Array.from(pageIndex.entries()) : [],
-            },
+              pageIndex,
+              savedAt: new Date().toISOString(),
+            }),
             version,
             bookId,
           );
@@ -3050,6 +3182,8 @@ export const useCarbonChat = () => {
           segments: { paragraphId: string; title: string; content: string }[];
           unmapped: string[];
           activities: IActivityRecord[];
+          // Info: (20260902 - Emily) 盤查年度的預填(issue_drafts/open/69);抽不到就是 undefined
+          inventoryYear?: number;
         };
         let failedChapters: { id: string; title: string }[] = [];
         // Info: (20260825 - Luphia) 點數用完而還沒做的章（issue #6713）；與 failed 分開
@@ -3180,6 +3314,7 @@ export const useCarbonChat = () => {
               }[];
               unmapped: string[];
               activities: IActivityRecord[];
+              inventoryYear?: number;
             }>("/api/v1/chat/carbon/import", {
               method: "POST",
               body: formData,
@@ -3300,6 +3435,11 @@ export const useCarbonChat = () => {
           ],
           unmapped: payload.unmapped,
           activityCount: payload.activities.length,
+          /**
+           * Info: (20260902 - Emily) 萃取到的盤查年度只當**預填**(issue_drafts/open/69):
+           * 抽不到就是 undefined,預覽卡會要求使用者填(而不是拿房間層的年度頂替)。
+           */
+          inventoryYear: payload.inventoryYear,
           failedChapters,
           /**
            * Info: (20260825 - Luphia) 暫停的斷點跟著解析結果一起存（issue #6713）：
@@ -3313,6 +3453,25 @@ export const useCarbonChat = () => {
           pauseDetail,
         };
         setPendingImportFor(originSessionId, parsedPending);
+        /**
+         * Info: (20260828 - Julian) 新的解析結果要**取消收起**（實機發現）。
+         *
+         * `deferredPreviewSessions` 記的是「使用者把那張卡收起來了」，
+         * 但它只以 session 為鍵 —— 於是那個旗標會沾到**下一份**解析結果上。
+         *
+         * 而它幾乎一定是開著的：重載時的還原一律以收起狀態進來
+         *（見 `pendingImport` 的還原段），所以任何「這個會話以前匯入過」的情形，
+         * 重新整理之後再匯入一份，卡片就再也不會自己打開 ——
+         * 使用者按下匯入、等了幾分鐘、畫面上什麼都沒有。
+         *
+         * 收起的是**那一張卡**，不是這個會話往後的每一張。
+         */
+        setDeferredPreviewSessions((prev) => {
+          if (!prev[originSessionId]) return prev;
+          const rest = { ...prev };
+          delete rest[originSessionId];
+          return rest;
+        });
         /**
          * Info: (20260806 - Tzuhan) 解析結果落地(DB)+ 對話留痕,兩件事都不阻斷主流程。
          *
@@ -4076,6 +4235,45 @@ export const useCarbonChat = () => {
     const selected = pendingImport.items.filter((item) => item.checked);
     if (selected.length === 0) return;
     /**
+     * Info: (20260903 - Luphia) 報告識別的盤查年度**空的時候**用確認值預填(review)。
+     *
+     * 為什麼是兩個欄位:識別那格是自由文字、逐字印在報告第一頁
+     *(`carbon_report_title.ts` 讀它組標題;「2023 年度」這種寫法要原樣留著),
+     * 這裡的 `inventoryYear` 是數字、決定跨年度合併時哪些分錄被剔除。
+     * 兩件事,所以不合併成一個欄位。
+     *
+     * 但同一個事實不該問使用者兩次而且允許兩個答案 —— 識別那格是空的就預填,
+     * **單向、不覆蓋已經填的字**(形狀與預覽卡的晚到預填一致:預填是建議不是指令)。
+     */
+    if (pendingImport.inventoryYear !== undefined) {
+      /**
+       * Info: (20260903 - Luphia) 在 updater 裡讀「現在是空的嗎」而不是讀渲染時的
+       * 快照:這個判斷決定要不要動使用者要印出去的字,讀舊值就可能蓋掉他剛填的內容。
+       */
+      setSessionsData((prev) => {
+        const session = prev[activeSessionId];
+        if (!session?.reportData) return prev;
+        const prefill = resolveIdentityYearPrefill(
+          session.reportData.identity?.inventoryYear,
+          pendingImport.inventoryYear,
+        );
+        if (prefill === undefined) return prev;
+        return {
+          ...prev,
+          [activeSessionId]: {
+            ...session,
+            reportData: {
+              ...session.reportData,
+              identity: {
+                ...session.reportData.identity,
+                inventoryYear: prefill,
+              },
+            },
+          },
+        };
+      });
+    }
+    /**
      * Info: (20260806 - Tzuhan) 釘住套用當下的會話。
      * 上面剛確認 `pendingImport.originSessionId === activeSessionId`,所以此刻兩者相同 ——
      * 但結構圖階段最長會跑近兩分鐘,期間切房的話「當前」就變了,
@@ -4121,7 +4319,21 @@ export const useCarbonChat = () => {
     selected.forEach((item) => {
       const tables = sourceTablesById.get(item.paragraphId) ?? [];
       if (tables.length === 0) return;
-      const result = buildImportedLedger({ sourceTables: tables });
+      /**
+       * Info: (20260827 - Emily) 年度隨分錄走(PR #6725 review R1):
+       * 沒有年度的匯入項在跨年度合併時無從分辨,會留下孤兒列被算進總量。
+       *
+       * Info: (20260902 - Emily) 年度取自**這份報告**在預覽卡上被確認的值
+       *(issue_drafts/open/69),不再取自房間層的 `state.year`。
+       * 那個欄位是「這個房間在談哪一年」且 write-once,同一間房匯入兩份不同年度的
+       * 報告會拿到同一個值 —— `entryYear === incomingYear` 恆成立,不剔除,
+       * 孤兒列照留,而跨年度換鍋、`ledgerByYear` 快照、年間比較三個機制一起空轉。
+       * 沒確認就不帶(預覽卡在有排放總量表時已擋住送出),合併端退回舊行為。
+       */
+      const result = buildImportedLedger({
+        sourceTables: tables,
+        year: pendingImport.inventoryYear,
+      });
       if (result.disclosure === null) return;
       importedLedgerById.set(item.paragraphId, result);
     });
@@ -4233,31 +4445,44 @@ export const useCarbonChat = () => {
     if (activities.length > 0) {
       applyInventoryExtraction({ activities });
     }
+    /**
+     * Info: (20260827 - Emily) 阻擋紀錄**無條件收集**(PR #6725 round-2 低-1)。
+     *
+     * 原本它在 `else` 裡 —— 也就是「完全沒有任何分錄入帳」才收。
+     * 一份報告若有兩個段落各自產生分錄、其中一個勾稽被擋另一個成功,
+     * 就會走 apply 分支,而被擋那半**一筆紀錄都不留**:
+     * 帳本只有成功的一半,畫面上卻沒有任何地方提過另一半被擋 ——
+     * 圖表於是用半套資料畫出一張桑基圖,而本 PR 新增的那句文案自己在警告這件事
+     * (「半套資料入帳會讓每張圖都錯得很像對的」)。
+     */
+    const blocks = Array.from(importedLedgerById.entries())
+      .filter(
+        ([, result]) =>
+          result.blockedReason !== null || result.missingLedgerTable,
+      )
+      .map(([paragraphId, result]) => ({
+        paragraphId,
+        // Info: (20260804 - Tzuhan) 「該有表3.8 卻沒拿到」與「有表但勾稽沒過」是兩件事
+        reason: result.missingLedgerTable
+          ? `缺少 ${LEDGER_SOURCE_TABLE_NO}(同節有全公司總量表,疑似被頁碼切片切掉)`
+          : (result.blockedReason ?? "未知原因"),
+        blockedAt: new Date().toISOString(),
+      }));
     if (importedEntries.length > 0) {
       applyImportedLedgerEntries(importedEntries);
-    } else {
+    }
+    if (blocks.length > 0) {
+      console.warn("[carbon-chat] imported ledger blocked", blocks);
       /**
-       * Info: (20260803 - Tzuhan) 有表卻沒入帳時要留痕跡:對帳說明已寫在報告裡,
-       * 但開發時看 log 才分得出「沒有表3.8」與「有表3.8 但勾稽沒過」。
+       * Info: (20260825 - Emily) #6707:留進 channel 狀態,讓「有沒有異常」問得到答案。
+       * Info: (20260827 - Emily) 順序有意義(round-2 低-1):
+       * `applyImportedLedgerEntries` 成功入帳時會清掉阻擋紀錄
+       * (「紀錄描述的狀態已不存在」),而部分成功部分被擋時那句話只對成功那半成立 ——
+       * 所以這次的紀錄要在 apply **之後**寫回去,兩個 setState 依序生效,後者為準。
        */
-      const blocks = Array.from(importedLedgerById.entries())
-        .filter(
-          ([, result]) =>
-            result.blockedReason !== null || result.missingLedgerTable,
-        )
-        .map(([paragraphId, result]) => ({
-          paragraphId,
-          // Info: (20260804 - Tzuhan) 「該有表3.8 卻沒拿到」與「有表但勾稽沒過」是兩件事
-          reason: result.missingLedgerTable
-            ? `缺少 ${LEDGER_SOURCE_TABLE_NO}(同節有全公司總量表,疑似被頁碼切片切掉)`
-            : (result.blockedReason ?? "未知原因"),
-          blockedAt: new Date().toISOString(),
-        }));
-      if (blocks.length > 0) {
-        console.warn("[carbon-chat] imported ledger blocked", blocks);
-        // Info: (20260825 - Emily) #6707:留進 channel 狀態,讓「有沒有異常」問得到答案
-        recordLedgerImportBlocks(blocks);
-      }
+      recordLedgerImportBlocks(blocks);
+      // Info: (20260825 - Emily) #6667:ref 同步更新 —— 本輪稍後的建表就要用,等不到下一輪 render
+      ledgerImportBlocksRef.current = blocks;
     }
     importActivitiesRef.current = [];
     /**
@@ -4491,6 +4716,24 @@ export const useCarbonChat = () => {
         activeInventoryState?.computedLedger,
         chartLabels,
         dataTableLabels,
+        /**
+         * Info: (20260825 - Emily) #6667:被擋時說被擋的原因,不說「未取得該表」。
+         *
+         * Info: (20260831 - Emily) 讀 **ref** 不讀 state(PR #6725 review R2)。
+         *
+         * 原本讀 `activeInventoryState?.ledgerImportBlocks`,而它不在這個
+         * useCallback 的 dep 陣列裡(eslint 一直在報 exhaustive-deps)——
+         * 那不是型別噪音,是真的失效路徑:被擋時 `computedLedger` **依定義不變**
+         * (整批凍結在門口、沒寫進帳本),於是五個 dep 一個都沒變、閉包不重建,
+         * 讀到的是舊的 `undefined` → 插圖印「未取得該表」,
+         * 把使用者送去重匯一個根本沒壞的章節。
+         *
+         * 另外兩個呼叫端(3.6 桑基圖、跳段插圖)早就用 `ledgerImportBlocksRef.current`,
+         * 理由寫在 ref 的宣告處:本輪 setState 還沒生效,ref 才是同步的權威。
+         * 三條路徑有兩條是對的,就這一條讀 state —— 改成一致,順帶消掉那條 warning
+         * (ref 不需要進 dep 陣列,因為它的身分不變)。
+         */
+        ledgerImportBlocksRef.current,
       );
       setSessionsData((prev) => {
         const session = prev[activeSessionId];
@@ -4583,6 +4826,8 @@ export const useCarbonChat = () => {
             ledgerNow,
             chartLabels,
             dataTableLabels,
+            // Info: (20260825 - Emily) #6667:ref 而非 state —— 本輪 setState 還沒生效
+            ledgerImportBlocksRef.current,
           ),
         );
       }
@@ -4808,6 +5053,8 @@ export const useCarbonChat = () => {
             ledger,
             chartLabels,
             dataTableLabels,
+            // Info: (20260825 - Emily) #6667:同上,ref 是同步的權威
+            ledgerImportBlocksRef.current,
           ),
         ),
       target.content,
@@ -5713,9 +5960,14 @@ export const useCarbonChat = () => {
   /**
    * Info: (20260806 - Tzuhan) `overrideText` 供「後續建議」按鈕直接送出既定的一句話。
    *
-   * 為什麼不是 setInputValue 之後再送:setState 要到下一輪 render 才生效,
-   * 此刻讀 `inputValue` 拿到的還是空字串 —— 按鈕會變成「按了沒反應」。
+   * 為什麼不是「先把文字寫進輸入框、再送出」:那需要跨一輪 render
+   * (setState 要到下一輪才生效),此刻讀回來的還是舊值 —— 按鈕會變成「按了沒反應」。
    * 讓文字從參數進來,送出的內容就與按鈕上的字完全一致。
+   *
+   * Info: (20260831 - Emily) 原文以 `setInputValue` / `inputValue` 當論據,
+   * 而 #6718 之後這個 hook 裡兩個符號都不存在了(PR #6730 review 低-1)——
+   * 推理仍然成立,但拿被刪掉的符號舉例會讓讀者 grep 不到,
+   * 然後分不出「註解過時」與「程式壞了」。已改成用行為描述。
    */
   const handleSendMessage = useCallback(
     async (overrideText?: string) => {
@@ -5723,14 +5975,19 @@ export const useCarbonChat = () => {
        * Info: (20260825 - Emily) 型別硬化:呼叫端若誤傳非字串(如把本函式直接綁 onClick,
        * MouseEvent 進到 overrideText),`??` 擋不住 —— 事件物件不是 nullish,
        * `.trim` 直接炸,而且是 unhandledRejection(按鈕壞了卻沒有紅字)。
-       * 非字串一律退回輸入框內容:錯誤呼叫降級成正常送出,不是靜默壞死。
-       */
-      /**
+       *
        * Info: (20260827 - Emily) #6718:文字一律由呼叫端帶進來
        * (ChatInput 送出時上交、後續建議按鈕帶按鈕上的字)。
-       * hook 這裡不再有 `inputValue` 可退 —— 非字串時退成空字串,
+       * hook 這裡不再有 `inputValue` 可退 —— 非字串時**退成空字串**,
        * 下面「無文字且無就緒附件即不送」的既有 guard 會擋掉,
        * 也就是錯誤呼叫降級成「不送出」而不是拿到 MouseEvent 去 `.trim`。
+       *
+       * Info: (20260831 - Emily) 這裡原本是**兩段結論相反的 docblock**
+       * (舊的寫「非字串一律退回輸入框內容 → 降級成正常送出」,而且排在前面先被讀到),
+       * 08-27 那輪只 append 了新的、沒刪舊的(PR #6730 review 低-1)。
+       * 已刪。後果不是美觀問題:讀到舊結論的人會去找「退回輸入框內容」那條退路,
+       * 找不到之後可能把它「修回來」—— 而現在 hook 沒有輸入框內容可退,
+       * 唯一的修回形狀是重新持有文字 state,那等於把 #6718 整個推翻。
        */
       const outgoingText = typeof overrideText === "string" ? overrideText : "";
       const readyAttachments = pendingAttachments.filter(
@@ -5764,9 +6021,25 @@ export const useCarbonChat = () => {
          * 非輸入框發起的送出(後續建議按鈕、跳段自動送出)失敗時,
          * 那句話會被放進輸入框 —— 那是刻意的:比靜默丟掉使用者的動作好,
          * 而且再按一次就送得出去。
+         *
+         * Info: (20260831 - Emily) 為什麼帶 `"restore"`(review 第二輪):
+         * `isLoading` 是 `isTyping`,而 `markSessionBusy(true)` 在金鑰步驟**之後** ——
+         * 金鑰那段時間輸入框沒有被 disabled,使用者可能已經在框裡打了新的字。
+         * 無條件覆寫會蓋掉它,而那是另一種形狀的「字消失」。
+         *
+         * `restore` 的語意讓這件事**不可能**發生:框裡有字就不還
+         * (那句話的去處由使用者決定,不是由我們搶回來)。
+         * 不用「金鑰準備中」旗標去讓那個狀態消失 —— 鎖的失效模式
+         * (任一路徑忘了清 → 輸入框永久打不了字,而使用者看不出原因)
+         * 比它要修的缺陷嚴重,而且 `ensureMasterKeyCached` 另有一個呼叫端。
+         *
+         * Info: (20260903 - Luphia) 原文接著寫「剩下的那半需要鎖」(成功路徑的
+         * `commandInput("")` 必須清)—— 前提對(hook 分不出框裡是誰的字),
+         * 結論不成立:那一行本來就不該清(理由見下方送出成功處的註解)。
+         * 拿掉它之後這條路徑沒有殘留問題,也不需要鎖。
          */
         if (keyError instanceof ChatroomUnsupportedDeviceError) {
-          commandInput(outgoingText);
+          commandInput(outgoingText, "restore");
           appendMessageLocally(
             {
               id: crypto.randomUUID(),
@@ -5777,7 +6050,7 @@ export const useCarbonChat = () => {
           );
           return;
         }
-        commandInput(outgoingText);
+        commandInput(outgoingText, "restore");
         console.error(
           "[carbon-chat] failed to prepare encryption key:",
           keyError,
@@ -5831,12 +6104,33 @@ export const useCarbonChat = () => {
       });
 
       /**
-       * Info: (20260827 - Emily) #6718:送出後清空。
-       * `ChatInput` 送出時已自行清空(它是文字的所有者),這裡再下一次指令
-       * 是為了**非輸入框發起的送出**(後續建議按鈕、跳段後自動送出)——
-       * 那些路徑不經過元件的 submit,框裡的字不會自己消失。
+       * Info: (20260903 - Luphia) 送出成功後**刻意不清空輸入框**(review 阻-1/阻-2)。
+       *
+       * 這裡原本是無條件的 `commandInput("")`,理由寫「為了非輸入框發起的送出
+       *(後續建議按鈕、跳段後自動送出)」—— 那個理由有兩個問題:
+       *
+       * 1. **「跳段後自動送出」不存在**(阻-2)。跳段那支 callback 只做
+       *    `commandInput(t("carbon_chatbot.jump_prompt", …))` 預填,而
+       *    `handleSendMessage` 在這個 hook 內**沒有任何呼叫端**(只有宣告與導出)。
+       *    多出來的那條路徑讓這一行看起來服務兩個對象、因此比實際更必要。
+       * 2. 剩下那個真的對象(後續建議按鈕)**不該清**(阻-1)。那顆按鈕走
+       *    `onClick={() => onSendFollowUp(prompt)}`,繞過元件的 submit,
+       *    所以框裡的字還在 —— 而框裡那些字是使用者自己打的草稿,
+       *    與他點的建議無關。清掉它就是刪掉使用者的東西,而且**不需要任何時間窗**:
+       *    打半句話 → 點一下 chip → 草稿消失。
+       *
+       * 那正是本 PR 標題那件事(歸還與指令分開)的同一類缺陷,只是換了一條路徑。
+       *
+       * 為什麼不改成「只清掉我送出去的那句」:那需要第三個 mode,而清空這件事
+       * 在這條路徑上本來就沒有正當理由 —— 讓 `commandInput` 收斂成
+       * 「指令(set)／歸還(restore)」兩種語意,比多長一種好。
+       *
+       * 元件自己的 submit 仍然清(它是文字的所有者,而且只清它剛送出去的那份),
+       * 所以「打字送出後框裡是空的」這個體驗沒有變。
+       *
+       * 連帶讓 `issue_drafts/open/67`(「成功路徑需要一個金鑰準備中的鎖」)不再必要:
+       * 那張票的前提是「`commandInput("")` 必須清」,而它不必。
        */
-      commandInput("");
       setPendingAttachments([]);
       setAttachmentError(null);
       markSessionBusy(activeSessionId, true);
@@ -5891,6 +6185,10 @@ export const useCarbonChat = () => {
           inventoryStates[chatChannel]?.computedLedger,
           // Info: (20260825 - Emily) 勾稽阻擋紀錄一併注入:「帳本為什麼是空的」也是可問的事實
           inventoryStates[chatChannel]?.ledgerImportBlocks,
+          // Info: (20260825 - Emily) #6719 年度快照:滿兩年時年間比較事實隨包注入
+          inventoryStates[chatChannel]?.ledgerByYear,
+          // Info: (20260828 - Emily) 年度標註不完整:列舉制第五個偵測器(round-2 追加回饋)
+          inventoryStates[chatChannel]?.ledgerYearWarning,
         );
         const sendChatRequest = () =>
           request<{
@@ -6254,6 +6552,8 @@ export const useCarbonChat = () => {
 
   return {
     sessionsList: sortedSessionsList,
+    // Info: (20260828 - Julian) 給深連結用：清單問完了沒有（非空 ≠ 完整）
+    sessionsIndexSettled,
     activeSession,
     activeSessionId,
     // Info: (20260714 - Tzuhan) 對外的切換入口為 switchSession(重置跨室暫態 UI)，沿用原名稱以維持呼叫端不變
@@ -6316,6 +6616,8 @@ export const useCarbonChat = () => {
     pendingImport,
     importReportFile,
     toggleImportItem,
+    // Info: (20260902 - Emily) 預覽卡上確認盤查年度(issue_drafts/open/69)
+    setPendingInventoryYear,
     applyPendingImport,
     discardPendingImport,
     /**

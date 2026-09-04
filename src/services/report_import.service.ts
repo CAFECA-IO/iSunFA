@@ -69,6 +69,11 @@ import {
   unmappedPrivateUseChars,
 } from "@/lib/utils/office_symbol_chars";
 import { padTableHeaderToWidest } from "@/lib/utils/markdown_table_columns";
+/**
+ * Info: (20260903 - Luphia) 年度的裁決搬到 lib(review):萃取端與預覽卡
+ * 必須用同一支,而元件不得 import service。見 inventory_year.ts 的註解。
+ */
+import { normalizeInventoryYear } from "@/lib/utils/inventory_year";
 import { logger } from "@/lib/utils/logger";
 import { IActivityRecord } from "@/types/carbon_chatbot.types";
 
@@ -91,6 +96,18 @@ export interface IReportImportResult {
   unmapped: string[];
   // Info: (20260716 - Tzuhan) 報告中的活動數據(已裁決):進帳本後由 /calculate 重新勾稽
   activities: IActivityRecord[];
+  /**
+   * Info: (20260902 - Emily) 這份報告的盤查年度,**只當預填**(issue_drafts/open/69)。
+   *
+   * 它是「這份報告是哪一年」,不是「這個房間在談哪一年」。前者隨報告走、
+   * 一間房可以有兩個;後者是 `ICarbonInventoryState.year`,write-once。
+   * 在這張票之前帳本的年度取自後者,於是同一間房匯入兩份不同年度的報告會拿到
+   * 同一個年度值 —— 跨年度換鍋、`ledgerByYear` 快照、年間比較三個機制一起空轉。
+   *
+   * 抽不到就是 `undefined`,不猜:歸屬抽錯比抽不到嚴重,錯的年度會靜默改變
+   * 哪些分錄被剔除。最終生效的年度一律是使用者在預覽卡上確認過的那個值。
+   */
+  inventoryYear?: number;
 }
 
 /**
@@ -186,6 +203,21 @@ const buildImportResponseSchema = (
         },
         required: ["scopeCategory", "sourceName", "quantity", "unit"],
       },
+    };
+    /**
+     * Info: (20260902 - Emily) 盤查年度與 activities 同掛在第一次呼叫
+     * (issue_drafts/open/69):逐章匯入會呼叫十一次,十一次各回一個年度
+     * 只會讓「以哪一個為準」變成新的裁決題,而報告的盤查年度全份只有一個。
+     *
+     * 型別是 STRING 不是 NUMBER:模型抽到的是封面上的字樣,而封面寫法不一
+     * (民國/西元/「盤查年度」/「報導期間」)。要它先照抄再由我們裁決,
+     * 比要它回一個數字然後我們無從分辨它是抄的還是算的要好。
+     */
+    properties.inventoryYear = {
+      type: SchemaType.STRING,
+      description:
+        "這份報告的盤查年度,西元四位數(如 2024)。原文若寫民國年(如 民國113年)請換算為西元。" +
+        "報導期間跨兩個年度時填**盤查年度**那一個;報告沒有明確寫出盤查年度就回空字串,嚴禁推測。",
     };
   }
   return {
@@ -295,6 +327,17 @@ const buildLlmImageParts = (
  * 不知道那幾張圖屬於哪一節，也不知道為什麼文字裡找不到對應內容。
  * 明講頁碼：文字層帶著 `-- p.N/總頁 --` 標記，模型可以據此把圖對回原文位置。
  */
+/**
+ * Info: (20260825 - Emily) #6708 之後的版本。原版結尾寫「無法辨識就照既有規則標示,
+ * 不要臆造」—— 但沒有給「怎麼寫『讀不出』」的具體格式,於是 08-24 run G 實測:
+ * 模型讀不動架構圖下排的直式小字(16 名組員),就從第一章沿革撈了三個真人名、
+ * 再用同姓氏編了九個「協理」,湊出一份結構完整、成員大半不實的委員名單 ——
+ * 送第三方查證的文件印著捏造的真人名字。
+ *
+ * 修法是把「讀不出」變成一條**有明確輸出格式的合法出路**,並把兩條逃生門封死:
+ * 禁止從文件其他章節撈人名補進圖的轉錄、禁止依姓氏/職稱慣例生成人名。
+ * 驗收:重匯高興昌 → §1.4 無「呂麗」開頭人名;不可辨識時出現「無法逐一辨識」字樣。
+ */
 const buildImagePagesInstruction = (source: IReportImportSource): string => {
   if (!source.visionPages) return "";
   return `\n\n【附帶頁面影像】
@@ -302,7 +345,15 @@ const buildImagePagesInstruction = (source: IReportImportSource): string => {
 這幾頁的內容**主要以圖片呈現**，文字層幾乎抽不到字 ——
 文字少不代表那一節沒有內容，請直接讀圖，把其中的文字（姓名、職稱、地址、
 組織層級關係等）逐字抄進對應段落，與讀原文文字時的照錄要求相同。
-若圖的內容確實無法辨識，照既有規則標示，不要臆造。`;
+【影像轉錄的鐵律】抄得出來的才寫；一個字都不得補。
+- 影像中的姓名、職稱、數字**只能逐字抄自該影像本身**。嚴禁從文件其他章節
+  （如公司沿革、負責人欄位）撈人名補進來，嚴禁依姓氏或職稱慣例生成任何名字 ——
+  寫出影像裡沒有的真人名字，比留白嚴重得多。
+- 影像局部無法辨識（字太小、直式排版、解析度不足）時，寫出可辨識的部分，
+  其餘用這個格式明說：「（本圖另有約 N 名人員／若干欄位，字跡無法逐一辨識，
+  見原文第 X 頁）」。數量估不出來就寫「若干」。
+- 整張圖都無法辨識時，該段寫：「（本節內容為圖片，無法辨識文字，見原文第 X 頁）」。
+寧可留白並註明，不可補全。`;
 };
 
 export interface IReportImportSource {
@@ -781,7 +832,7 @@ ${source.data}`;
 【對應規則】
 1. content 逐字照抄原文,嚴禁改寫、摘要、翻譯或補充任何文字。
 2. paragraphId 只能從下方大綱挑選;對不上任何段落的內容放入 unmapped(同樣原樣照抄)。
-3. ${withActivities ? "activities:報告中的活動數據(用電量、油耗等),quantity 原樣照抄為字串,嚴禁換算;單位對不上列舉就整筆省略。" : "本次呼叫不需要萃取活動數據。"}
+3. ${withActivities ? "activities:報告中的活動數據(用電量、油耗等),quantity 原樣照抄為字串,嚴禁換算;單位對不上列舉就整筆省略。inventoryYear:這份報告的盤查年度,西元四位數(原文寫民國年請換算;報導期間跨兩年時填盤查年度那一個);**報告沒有明確寫出就回空字串,嚴禁推測**。" : "本次呼叫不需要萃取活動數據,也不需要回報盤查年度。"}
 4. 語言:${language ?? "zh-TW"}(僅影響你對標題語意的理解,內容一律照抄)。${scopeRule}
 
 【表格規則】
@@ -1311,7 +1362,21 @@ ${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${sou
       rawSample: JSON.stringify(parsed.activities ?? null).slice(0, 200),
     });
 
-    return { segments, unmapped, activities };
+    /**
+     * Info: (20260902 - Emily) 盤查年度的裁決結果留痕(issue_drafts/open/69)。
+     *
+     * 與 activities 的被拒紀錄同一個理由:預覽卡上年度是空的時候,現場要分得開
+     * 「模型回了空字串」與「模型回了東西但被裁決退掉」—— 後者才需要回頭看
+     * 封面寫法是不是我們沒涵蓋到的形狀。只在模型真的回了非空字串時印。
+     */
+    const inventoryYear = normalizeInventoryYear(parsed.inventoryYear);
+    if ((parsed.inventoryYear ?? "").trim().length > 0) {
+      logger.info("[ReportImportService] inventory year adjudicated", {
+        raw: String(parsed.inventoryYear).slice(0, 40),
+        accepted: inventoryYear ?? null,
+      });
+    }
+    return { segments, unmapped, activities, inventoryYear };
   }
 
   /**

@@ -53,6 +53,12 @@ jest.mock("@/services/notification.service", () => ({
     todos: [],
     completed: [],
     hasMoreCompleted: false,
+    /**
+     * Info: (20260902 - Julian) 替身要回**真 service 回的每一個欄位**（B6／§1.8）。
+     * `hasMoreTodos` 是 20260901 新增的，而這兩支替身當時沒跟上 —— 同一份檔案
+     * 上面那段註解記的正是這個形狀：少一個欄位時 route 把它弄丟也不會有人紅。
+     */
+    hasMoreTodos: false,
   })),
   markNotificationRead: jest.fn(async () => true),
 }));
@@ -257,6 +263,72 @@ describe("來源與畫面的接線（掃描）", () => {
    * 就不允許一筆 analysis 掛在不存在的訂單上。所以這條只能用原文的**位置**來釘。
    * 掃描型測試在這裡站得住的理由：搬動位置不會讓 `tsc` 或 `lint` 有任何意見。
    */
+  /**
+   * Info: (20260828 - Julian) 付款到帳之後要釋放「等付款」的可接續任務。
+   *
+   * 邏輯放在 `releasePaymentBlockedJobs`（可測），TxTracker 只有一行接線 ——
+   * 因為 `order.tracker.service.ts` 沒有測試檔，而它 import `publicClient` 與
+   * `viem`，為它寫第一支測試是替既有服務補課，範圍會失控。
+   *
+   * 所以這裡掃描「那一行在不在」。**它證明不了真的付款時會走到那裡** ——
+   * 那一項要在跑得動鏈上流程的環境真的付一次款，與驗收清單的 `p1` 同一種形狀。
+   */
+  /**
+   * Info: (20260831 - Julian) 改成**計次**而不是 `indexOf`（review #6732 的 1-C）。
+   *
+   * 原本比的是「第一個 `releasePaymentBlockedJobs(` 在第一個 `ORDER_STATUS.PAID`
+   * 之後」。`order.tracker.service.ts` 有**兩個**標 PAID 的分支
+   *（ANALYSIS 一個、其餘型別一個），而 `indexOf` 只看得到第一個 ——
+   * 實跑過的 mutation：刪掉第二個分支的整段接線，527 個測試全綠。
+   *
+   * 今天走的恆是第一個分支（解除 `PAYMENT_REQUIRED` 的那筆付款必為
+   * `ANALYSIS` + `ICP`，見 `personal_credit.service.ts`），所以第二處是加保險；
+   * 但「加保險的那一半可以被刪掉而沒人發現」本身就是缺口。
+   */
+  it("TxTracker 每一個標 PAID 的分支都接了 releasePaymentBlockedJobs", () => {
+    const tracker = codeOf("src", "services", "order.tracker.service.ts");
+    const paidWrites = tracker.match(/status: ORDER_STATUS\.PAID/g) ?? [];
+    const releases = tracker.match(/releasePaymentBlockedJobs\(\{/g) ?? [];
+
+    expect(paidWrites.length).toBeGreaterThan(0);
+    expect(releases.length).toBe(paidWrites.length);
+  });
+
+  it("接線包在 try 裡，不擋主流程", () => {
+    const tracker = codeOf("src", "services", "order.tracker.service.ts");
+
+    /**
+     * Info: (20260828 - Julian) 不擋主流程：訂單已經標成 PAID 了，
+     * 這一步失敗不該讓整輪追蹤中止（後面的訂單會跟著停在 PENDING）。
+     *
+     * Info: (20260831 - Julian) 每一處都要包，不是「有一處包了」就算數。
+     */
+    const guarded =
+      tracker.match(/try \{[\s\S]{0,160}releasePaymentBlockedJobs\(\{/g) ?? [];
+    const releases = tracker.match(/releasePaymentBlockedJobs\(\{/g) ?? [];
+
+    expect(releases.length).toBeGreaterThan(0);
+    expect(guarded.length).toBe(releases.length);
+  });
+
+  /**
+   * Info: (20260831 - Julian) 接線要把**整包 `order.data`** 交下去（1-A）。
+   *
+   * 只傳 `userId` 就是 1-A 的缺陷：一次付款會翻掉這個人所有等付款的任務。
+   * 判斷放在服務層（測得到），但「有沒有把判斷需要的事實遞過去」只有這裡看得到。
+   */
+  it("接線把 order.data 一起交給服務層", () => {
+    const tracker = codeOf("src", "services", "order.tracker.service.ts");
+    const withOrderData =
+      tracker.match(
+        /releasePaymentBlockedJobs\(\{[\s\S]{0,120}orderData: order\.data/g,
+      ) ?? [];
+    const releases = tracker.match(/releasePaymentBlockedJobs\(\{/g) ?? [];
+
+    expect(releases.length).toBeGreaterThan(0);
+    expect(withOrderData.length).toBe(releases.length);
+  });
+
   it("完成通知不在 if (order) 區塊裡", () => {
     const recorder = codeOf("src", "services", "issue.recorder.service.ts");
     const notify = recorder.indexOf("notifyAnalysisCompleted(");
@@ -512,6 +584,8 @@ describe("來源與畫面的接線（掃描）", () => {
         "aria_unread",
         "load_failed",
         "history_capped",
+        // Info: (20260902 - Julian) 待辦節的截斷提示（review #6742 補進這份清單）
+        "todos_capped",
         "view_all",
         "page_title",
         "history_title",
@@ -1020,5 +1094,152 @@ describe("通知列只有一份實作", () => {
   // Info: (20260826 - Julian) 頁面真的存在（上面那條連結不是指向 404）
   it("/user/notifications 頁面存在", () => {
     expect(codeOf(...PAGE)).toMatch(/export default function/);
+  });
+});
+
+/**
+ * Info: (20260902 - Julian) 截斷提示的**接線**（review #6742）。
+ *
+ * 這一段補的是一個實跑過的缺口：把鈴鐺與 `/user/notifications` 兩處
+ * `hasMoreTodos && (…)` 整塊刪掉，`notification_*` 八個檔 **281 條全綠**。
+ * service 那一側有行為斷言（`notification_service.test.ts` 驗
+ * `list.hasMoreTodos` 的真假），但沒有任何東西驗那個旗標有沒有走到畫面上 ——
+ * 而「使用者說得出來」正是那次修正的全部價值。檢查清單 §1.7 的形狀：
+ * **行為測到了函式，沒測到接線。**
+ *
+ * 掃描只證明「接線存在」（§1.11），答案對不對由 service 那一側負責 ——
+ * 兩邊分開，這裡不重複驗第二次。
+ */
+describe("截斷提示的接線", () => {
+  const BELL = ["src", "components", "header", "notification_bell.tsx"];
+  const PAGE = ["src", "app", "user", "notifications", "page.tsx"];
+
+  it.each([
+    ["鈴鐺面板", BELL],
+    ["/user/notifications", PAGE],
+  ])("%s 讀 hasMoreTodos 並渲染 todos_capped", (unusedName, consumer) => {
+    const code = codeOf(...(consumer as string[]));
+
+    expect(code).toMatch(/hasMoreTodos && \(/);
+    expect(code).toContain("notification.todos_capped");
+  });
+
+  /**
+   * Info: (20260902 - Julian) 完成節那一句同樣沒有接線測試 —— 一起釘。
+   *
+   * 它不是這次改到的，但它的涵蓋範圍從來沒有人量過（§2.5）：
+   *「那一道沒有動」不等於「那一道夠」。
+   */
+  it("鈴鐺面板讀 hasMoreCompleted 並渲染 history_capped", () => {
+    const bell = codeOf(...BELL);
+
+    expect(bell).toMatch(/hasMoreCompleted && \(/);
+    expect(bell).toContain("notification.history_capped");
+  });
+
+  /**
+   * Info: (20260902 - Julian) 待辦那一句**不得帶數字**（review #6742）。
+   *
+   * 待辦節有三個來源（邀請不截斷、可接續最多 `JOB_RESUMABLE_NOTICE_LIMIT`
+   * 筆、入庫待辦最多 `NOTIFICATION_TODO_LIST_LIMIT` 筆），而 `hasMoreTodos`
+   * 只反映中間那一支 —— 任何寫死的數字都會與畫面實際列出的則數、以及徽章
+   * 的總數分岔。初版的 `count: JOB_RESUMABLE_NOTICE_LIMIT` 在 2 封邀請 +
+   * 8 份可接續時：畫面 **7** 則、文案說 **5**、徽章說 **10**，三個數字互不相符。
+   *
+   * 反面也要釘（§1.11 的最後一條）：下一個人「順手」把數字加回去時，
+   * 要有一條紅色的斷言，而不是沒有人知道。
+   */
+  it.each([
+    ["鈴鐺面板", BELL],
+    ["/user/notifications", PAGE],
+  ])("%s 的 todos_capped 不帶插值", (unusedName, consumer) => {
+    const code = codeOf(...(consumer as string[]));
+
+    expect(code).not.toContain("JOB_RESUMABLE_NOTICE_LIMIT");
+    expect(code).toMatch(/t\("notification\.todos_capped"\)/);
+  });
+
+  /**
+   * Info: (20260902 - Julian) 截斷的說明要**帶一個出口**（review #6732 R3 的 A2）。
+   *
+   * 先前兩個畫面都只有一句純文字：第 6 份可以繼續的匯入起在兩處都不存在，
+   * 也沒有任何路徑到得了 —— 而被藏起來的是 `updatedAt` 排最後、等最久的那幾份。
+   * 這個模組自己的不變式是「分岔永遠伴隨一個看得見的說明**與一個出口**」，
+   * 完成側有（`view_all`），待辦側先前沒有。
+   *
+   * 釘的是「那個出口在截斷那一段裡」，不是「檔案裡有這個網址」——
+   * 後者會被頁面別處任何一個連結騙過去。
+   */
+  it.each([
+    ["鈴鐺面板", BELL],
+    ["/user/notifications", PAGE],
+  ])("%s 的 todos_capped 帶得出出口", (unusedName, consumer) => {
+    const code = codeOf(...(consumer as string[]));
+    const at = code.indexOf("notification.todos_capped");
+    expect(at).toBeGreaterThan(-1);
+
+    const block = code.slice(at, at + 700);
+    expect(block).toContain("notification.todos_capped_action");
+    expect(block).toContain('href="/user/carbon_chatbot"');
+  });
+});
+
+/**
+ * Info: (20260902 - Julian) 深連結落地的兩道回歸（review #6732 R3 的 A1／A3）。
+ *
+ * 兩者都是上一輪修法帶進來的：把 query「讀完就抹、指令留在 ref」之後，
+ * 方向盤改由 `instructionRef` 搶。
+ *
+ * ⚠️ 這一組是**掃描**，只證明那兩行還在（§1.11）。落地半邊的五態判斷仍然
+ * 沒有行為測試 —— reviewer 的 C4 開的處方是把它抽成回
+ * `{action: "wait"|"giveUp"|"select"|"open"}` 的純函式再逐條測，
+ * 那是另一支 PR 的事。這裡先把**已知會重演的那兩個形狀**擋住。
+ */
+describe("深連結落地", () => {
+  const PAGE_FILE = ["src", "app", "user", "carbon_chatbot", "page.tsx"];
+
+  /**
+   * Info: (20260902 - Julian) A1：切換會話只做一次。
+   *
+   * 沒有這道，使用者等不到待匯入內容而改點側欄的別的會話時，
+   * 這支 effect 每次重繪都會把他拉回目標會話 —— 側欄看起來點不動，
+   * 唯一出路是整頁重整。
+   */
+  it("切過一次之後不再把使用者拉回目標會話", () => {
+    const code = codeOf(...PAGE_FILE);
+
+    expect(code).toMatch(/selected: boolean/);
+    expect(code).toMatch(/if \(instruction\.selected\) \{\s*finish\(\);/);
+    expect(code).toMatch(
+      /instructionRef\.current = \{ \.\.\.instruction, selected: true \}/,
+    );
+  });
+
+  /**
+   * Info: (20260902 - Julian) A3：先抹網址，再去重。
+   *
+   * `consumedRef` 命中時直接 return 的話，`router.replace` 沒跑：
+   * 同一則通知的第二次點擊會把 `?session=…&openImport=1` 永久留在網址列、
+   * 瀏覽器歷史，並隨任何外連送出 `Referer`。
+   */
+  it("router.replace 在 consumedRef 判斷之前", () => {
+    const code = codeOf(...PAGE_FILE);
+    const replaceAt = code.indexOf("router.replace(pathname");
+    const dedupeAt = code.indexOf("if (consumedRef.current === instruction)");
+
+    expect(replaceAt).toBeGreaterThan(-1);
+    expect(dedupeAt).toBeGreaterThan(-1);
+    expect(replaceAt).toBeLessThan(dedupeAt);
+  });
+
+  // Info: (20260902 - Julian) 指令結束時連去重鍵一起清，否則第二次點擊沒反應
+  it("finish 同時清掉 instructionRef 與 consumedRef", () => {
+    const code = codeOf(...PAGE_FILE);
+    const at = code.indexOf("const finish = () => {");
+    expect(at).toBeGreaterThan(-1);
+
+    const body = code.slice(at, at + 200);
+    expect(body).toContain("instructionRef.current = null");
+    expect(body).toContain("consumedRef.current = null");
   });
 });

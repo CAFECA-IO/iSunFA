@@ -94,10 +94,9 @@ _聚焦於四大會計師級別的底層財報與內控實務：_
 - **[費思個人化記憶 (Faith Personal Memory)](architecture/ai_and_analytics/faith_personal_memory.md)**：付費訂閱的每位成員專屬記憶——`(userId, teamId)` 隔離、LLM 只做萃取、欄位級加密，以及停止訂閱 90 天後刪除的保留機制。**須於 v0.13.0 釋出前完成**，條款已先行載明。
 - **[出勤模組開發計畫書 (Time & Attendance Module Plan)](architecture/time_attendance_module_plan.md)**：打卡不可變、地理圍欄、班別統一模型與單日出勤判定引擎（純函數）。
 - **[假勤模組開發計畫書 (Leave & Overtime Module Plan)](architecture/leave_and_overtime_module_plan.md)**：假別規則資料化、額度異動帳本、多級簽核鏈快照、加班分段與補休、假勤行事曆。**§3 附已查證的勞基法／性平法法源對照表與 8 項待核對清單，法務複核前不得標記 Production Ready。**
-  <<<<<<< HEAD
-- # **[薪資紀錄模組開發計畫書 (Salary Record Module Plan)](architecture/salary_record_module_plan.md)**：把既有的公開版薪資計算機接上帳本 —— 員工名冊（身分鍵是**員工編號**不是 Email，存活唯一性走 `active_number` 部分唯一索引）、`(帳本, 員工, 年, 月)` 唯一鍵與「重存即覆寫」、輸入／結果雙快照與 `calculator_version`。**§13 的薪資資料分級尚未拍板，上線前為阻擋項。**
-- **[通知模組開發計畫書 (Notification Module Plan)](architecture/notification_module_plan.md)**：Header 鈴鐺、AI 任務完成推送與 HR 模組的預留。**§2 是 D1–D26 的缺陷總帳**，其中 D17（提示音第二次抵達起永久失效）與 D18（上鏈被拒 3 次後訂單卡住、完成與失敗都不通知）**都躲過了單元測試、e2e 與整份 code review** —— 前者的失效沒有任何觀測量，後者的失效是「什麼都沒發生」。§3 是不要改回去的實作決定（待辦型活算不入庫、只存 `type` + `payload`、`readAt` 而非 enum），§5 是 HR 接線的八項前置，§6 是離「可上線」還差的七件事。
-  > > > > > > > develop
+- **[薪資紀錄模組開發計畫書 (Salary Record Module Plan)](architecture/salary_record_module_plan.md)**：把既有的公開版薪資計算機接上帳本 —— 員工名冊（身分鍵是**員工編號**不是 Email，存活唯一性走 `active_number` 部分唯一索引）、`(帳本, 員工, 年, 月)` 唯一鍵與「重存即覆寫」、輸入／結果雙快照與 `calculator_version`。**§13 的薪資資料分級尚未拍板，上線前為阻擋項。**
+- **[通知模組開發計畫書 (Notification Module Plan)](architecture/notification_module_plan.md)**：Header 鈴鐺、AI 任務完成推送與 HR 模組的預留。**§2 是 D1–D45 的缺陷總帳**，其中 D17（提示音第二次抵達起永久失效）與 D18（上鏈被拒 3 次後訂單卡住、完成與失敗都不通知）**都躲過了單元測試、e2e 與整份 code review** —— 前者的失效沒有任何觀測量，後者的失效是「什麼都沒發生」。§3 是不要改回去的實作決定（待辦型活算不入庫、只存 `type` + `payload`、`readAt` 而非 enum），§5 是 HR 接線的八項前置，§6 是離「可上線」還差的七件事。
+- **[可接續任務的「可以繼續了」通知 (Resumable Job Resume Notification)](architecture/resumable_job_resume_notification.md)**：點數／額度補回時通知使用者那份中斷的匯入可以繼續。兩個關鍵決定與通知模組其餘四種型別不同，值得單獨看：`JOB_RESUMABLE` **活算不入庫**（同一個資源會反覆暫停，而 `dedupeKey` 是永久鍵），抵達鍵取 `updatedAt` 而非 `createdAt`（否則第二次「可以繼續」搖而不響、此後永久靜音）。**§6 是實測發現**，其中「加購點數」曾被寫進文案，而它是一條不存在的出路 —— 翻面的判準只看訂閱方案的視窗額度。落地與文案的修改計畫另見 [`resumable_job_resume_landing_and_copy.md`](architecture/resumable_job_resume_landing_and_copy.md)，它記著一個典型的形狀：**功能全部正確，但訊息送到使用者看不見的元件裡，於是被合理地判定為壞掉**。
 
 ### 📌 4. 架構決策紀錄 (Architecture Decision Records, ADRs)
 

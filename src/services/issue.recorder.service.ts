@@ -18,6 +18,33 @@ import { MoneyUtil } from "@/lib/utils/money";
 import { SystemWorkerSource } from "@/constants/enums";
 import { TransactionRepo } from "@/repositories/transaction.repo";
 
+/**
+ * Info: (20260827 - Julian) 「這筆任務屬於哪一本帳本」——三處共用（D43 第二步）。
+ *
+ * 三層 fallback 是既有的（`order.data.data` → `order.data` → `context.json`），
+ * 最後那層是給沒有實體 Order payload 的背景任務用的（見原註解）。
+ * 抽出來的理由是它現在有**三個**呼叫端：DB 同步、完成通知、失敗通知。
+ * 留在原地就得複製兩份，而那正是 D30 被複製到第二處的形狀。
+ *
+ * 回 `string | undefined` 而不是 `unknown`：呼叫端要的是「能不能組出路徑」，
+ * 而空字串組出來的是 `/user/account_book//journal` —— 一條會 404 的合法路徑。
+ * 沿用 `||` 而不是 `??`，讓空字串繼續往下一個候選找（與原本的行為一致）。
+ */
+function resolveAccountBookId(
+  order: { data: unknown } | null,
+  localContextObj: Record<string, unknown>,
+): string | undefined {
+  const orderData = (order?.data as Record<string, unknown>) || {};
+  const payloadData = (orderData.data as Record<string, unknown>) || {};
+  const candidate =
+    payloadData.accountBookId ||
+    orderData.accountBookId ||
+    localContextObj.accountBookId;
+  return typeof candidate === "string" && candidate !== ""
+    ? candidate
+    : undefined;
+}
+
 export class IssueRecorderService {
   async processNext() {
     console.log(
@@ -139,6 +166,22 @@ export class IssueRecorderService {
             }
           }
 
+          /**
+           * Info: (20260516 - Luphia) Extract accountBookId dynamically from the original order
+           *
+           * Info: (20260529 - Tzuhan)
+           * 作為最終的 Fallback 機制。專門為了沒有實體 Order Payload 的內部背景任務設計（例如：AMORTIZATION_WORKER），
+           * 確保從本地上下文中依然能萃取出正確的帳本 ID。
+           *
+           * Info: (20260827 - Julian) 三層 fallback 搬進 `resolveAccountBookId`，
+           * 因為通知也要用同一個答案（D43 第二步）。
+           *
+           * Info: (20260828 - Julian) 宣告點提到這裡（原本在下方 DB 同步的 `try` 內）。
+           * 那個位置只涵蓋同步那一段，而完成通知與失敗通知都在它之外 ——
+           * `tsc` 會直接報 TS2304，而不是安靜地拿到 undefined。
+           */
+          const dbAccountBookId = resolveAccountBookId(order, localContextObj);
+
           // Info: (20260420 - Luphia) Read the actual result text
           const resultContent = await fs.readFile(resultFile, "utf8");
 
@@ -239,22 +282,6 @@ export class IssueRecorderService {
                 unknown
               >;
             } catch {}
-
-            // Info: (20260516 - Luphia) Extract accountBookId dynamically from the original order
-            const orderDataObj = order
-              ? (order.data as Record<string, unknown>) || {}
-              : {};
-            const payloadData =
-              (orderDataObj.data as Record<string, unknown>) || {};
-            /**
-             * Info: (20260529 - Tzuhan)
-             * 作為最終的 Fallback 機制。專門為了沒有實體 Order Payload 的內部背景任務設計（例如：AMORTIZATION_WORKER），
-             * 確保從本地上下文中依然能萃取出正確的帳本 ID。
-             */
-            const dbAccountBookId =
-              payloadData.accountBookId ||
-              orderDataObj.accountBookId ||
-              localContextObj.accountBookId;
 
             if (
               parsedResult &&
@@ -409,6 +436,13 @@ export class IssueRecorderService {
               userId: analysis.userId,
               analysisId: analysis.id,
               analysisType: analysis.type,
+              /**
+               * Info: (20260827 - Julian) 憑證分析與日記帳修正的去處需要它（D43）。
+               *
+               * 取不到就不帶，去處會退化成不可點 —— 那是刻意的：
+               * `/user/account_book/undefined/journal` 比按了沒反應更糟。
+               */
+              accountBookId: dbAccountBookId,
             });
           }
 
@@ -522,6 +556,8 @@ export class IssueRecorderService {
                 orderId: order.id,
                 // Info: (20260825 - Julian) 帶上類別，讓通知說得出是哪一份報告
                 analysisType: analysis?.type,
+                // Info: (20260827 - Julian) 與完成通知同一個來源（D43）
+                accountBookId: dbAccountBookId,
               });
             }
           }
@@ -738,6 +774,8 @@ export class IssueRecorderService {
           orderId: order.id,
           // Info: (20260825 - Julian) 帶上類別，讓通知說得出是哪一份報告
           analysisType: analysis?.type,
+          // Info: (20260827 - Julian) 放棄路徑也要帶（D43）；來源與另外兩處同一支
+          accountBookId: resolveAccountBookId(order, localContextObj),
         });
         console.log(
           `[MissionRecorder] Task ${params.taskId} was given up; Order ${order.id} marked FAILED and the user was notified.`,

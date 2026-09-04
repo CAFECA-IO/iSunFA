@@ -39,6 +39,11 @@ export interface IToLedgerOptions {
   /** Info: (20260803 - Tzuhan) 來源表號,寫進 factor.source 與 importedOrigin 供溯源 */
   tableNo: string;
   basis?: EmissionBasisEnum;
+  /**
+   * Info: (20260827 - Emily) 該份報告的盤查年度,寫進 importedOrigin.year
+   * (見該欄位註解:跨年度合併會留孤兒列)。無值即「年度未知」。
+   */
+  year?: number;
 }
 
 export interface IToLedgerResult {
@@ -107,6 +112,8 @@ export function toLedgerEntries(
         isoCategory: row.isoCategory,
         subCategory: row.subCategory,
         tableNo: options.tableNo,
+        // Info: (20260827 - Emily) 年度隨分錄走(見 importedOrigin.year 註解:跨年合併的孤兒列)
+        ...(options.year !== undefined ? { year: options.year } : {}),
       },
     }));
 

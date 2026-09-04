@@ -183,6 +183,14 @@ export const carbonChatbot = {
     "가져오기 대기 중인 분석 결과를 저장했습니다: {{name}} ({{count}}개 절, 보고서에 미기록)",
   import_pending_open: "확인하고 가져오기",
   import_pending_discard: "버리기",
+  import_inventory_year: "산정 연도",
+  import_inventory_year_placeholder: "2024",
+  import_inventory_year_hint:
+    "이 보고서의 산정 연도(서기). 연도가 다른 가져오기에서 어느 분개가 어느 연도에 속하는지 구분하는 데 사용됩니다",
+  import_inventory_year_required:
+    "이번 가져오기에는 배출 총량표가 포함됩니다. 이 보고서의 산정 연도를 입력하세요",
+  import_inventory_year_invalid:
+    "산정 연도는 서기 네 자리(1990년~내년)로 입력하세요. 범위를 벗어난 연도는 다음 로드 시 원장을 복원할 수 없게 만듭니다",
   import_reset_note:
     "가져온 단락의 검증 상태는 초기화됩니다. 활동 데이터 {{activities}}건은 재대사됩니다",
   import_apply: "선택 항목 가져오기({{count}})",
@@ -193,6 +201,7 @@ export const carbonChatbot = {
     "「{{name}}」 장별 분석 중({{current}}/{{total}} 완료, {{inFlight}}개 장 처리 중). 전체 보고서는 몇 분 걸립니다…",
   import_requires_book:
     "이 세션은 아직 장부에 연결되지 않아 보고서 전체를 가져올 수 없습니다(장별 가져오기는 장부의 사용량으로 과금됩니다). 세션 설정에서 장부를 선택한 뒤 다시 시도해 주세요.",
+  // Info: (20260828 - Julian) zh_tw와 동일: 이 문구에는 알려진 오류가 2개 있음 (계획 §4, 미수정)
   import_paused_chapters:
     "크레딧이 모두 소진되어 다음 장은 아직 분석하지 않았습니다: {{chapters}}. 크레딧을 채우면 여기서 이어서 가져올 수 있습니다(완료된 부분은 다시 실행되지 않습니다).",
   // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
@@ -326,6 +335,10 @@ export const carbonChatbot = {
   chart_imported_sankey_excluded: "그래프에 없는 항목(NA/NS 또는 0)",
   chart_imported_sankey_no_ledger:
     "보고서는 가져왔지만 원장에 사용할 수 있는 데이터가 없어 배출 흐름도를 그릴 수 없습니다. 생키 다이어그램과 시스템 집계표의 유일한 출처는 표3.8(회사별 온실가스 배출량)이며 이번에는 가져오지 못했습니다. 제3장이 정상적으로 분석되었는지 확인해 주세요. 분석 실패로 표시된 경우 미리보기 카드의 「실패한 장 재시도」로 다시 가져오고, 서버 로그에서 해당 표가 폐기된 이유를 확인해 주세요.",
+  chart_imported_sankey_blocked_ledger:
+    "표3.8은 가져왔지만 대사(勾稽)를 통과하지 못해 데이터가 입구에서 동결되어 원장에 기록되지 않았습니다(불완전한 데이터를 기장하면 모든 차트가 그럴듯하게 틀립니다). 차단 사유는 아래에 나열되어 있습니다. 원문의 해당 표를 수정하거나 제3장을 다시 가져오면 차트가 자동으로 생성됩니다.",
+  chart_partial_import_blocked:
+    "⚠ 이 차트는 원장에 기록된 부분만 포함합니다: 이번 가져오기에서 다른 표가 대사를 통과하지 못해 기록되지 않았으므로, 차트의 총량과 비중은 전사 전체가 아닙니다. 차단 사유는 아래에 나열되어 있습니다. 원문의 해당 표를 수정하거나 다시 가져오면 차트가 자동으로 재계산됩니다.",
   chart_imported_sankey_collapsed:
     "노드가 너무 많아 1개 층으로 축소했습니다 (전사 → 스코프)",
   chart_imported_top_items_title:

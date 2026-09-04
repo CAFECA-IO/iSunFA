@@ -208,9 +208,26 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
     employeeId: string;
     input: ISalaryCalculatorEmployeeWriteInput;
   }): Promise<ISalaryCalculatorEmployee | null> {
-    assertActiveNumberPairing({
+    /**
+     * Info: (20260901 - Luphia) 先組 `data`，再拿**它**餵斷言（review 異常 2）。
+     *
+     * 斷言與寫入必須讀同一個物件。分開寫時兩邊各自呼叫一次
+     * `activeNumberFor(input.number, null)`，於是斷言驗的是它自己算的值、
+     * 不是真的要寫進去的值 —— 那種斷言在寫入被改壞時照樣通過。
+     * `createEmployee` 一直是這樣做的，這裡與軟刪除是後來才對齊的。
+     */
+    const data = {
+      name: input.name,
       number: input.number,
+      email: input.email ?? null,
       activeNumber: activeNumberFor(input.number, null),
+      baseSalary: BigInt(input.baseSalary),
+      mealAllowance: BigInt(input.mealAllowance),
+    };
+
+    assertActiveNumberPairing({
+      number: data.number,
+      activeNumber: data.activeNumber,
       deletedAt: null,
     });
 
@@ -222,13 +239,7 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
        */
       const result = await prisma.salaryCalculatorEmployee.updateMany({
         where: { accountBookId, id: employeeId, deletedAt: null },
-        data: {
-          name: input.name,
-          number: input.number,
-          email: input.email ?? null,
-          activeNumber: activeNumberFor(input.number, null),
-          ...toWriteData(input),
-        },
+        data,
       });
 
       if (result.count === 0) return null;
@@ -251,17 +262,37 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
   }): Promise<boolean> {
     const deletedAt = new Date();
 
-    assertActiveNumberPairing({
-      // Info: (20260831 - Julian) 刪除路徑不碰 number 本身，這裡只是把不變式的兩邊擺出來檢查
-      number: "",
-      activeNumber: activeNumberFor("", deletedAt),
+    /**
+     * Info: (20260901 - Luphia) 斷言讀的是**要寫出去的那個物件**（review 異常 2）。
+     *
+     * 這裡原本傳的是三個就地造出來的常數（`number: ""`、
+     * `activeNumberFor("", deletedAt)`、`deletedAt`），與下面的 `data` 沒有
+     * 任何關係 —— 而 `activeNumberFor` 在 `deletedAt` 非空時恆回 `null`，
+     * 所以那個斷言恆真。實測：把 `activeNumber: null` 從 `data` 拿掉，
+     * 斷言照樣通過、5,441 條測試全綠。
+     *
+     * 寫對與寫錯被同一個觀測量塌成同一個值，正是檢查清單 §1.9 的形狀；
+     * 而它守的那件事有具體後果：`activeNumber` 沒讓出，同一個編號就
+     * 再也加不回來，使用者看到的是「這個人明明不在名單上卻加不進來」。
+     *
+     * `number` 仍傳空字串：刪除路徑本來就不碰它，而不變式在已刪除的分支
+     * 只看 `activeNumber`（`number` 只進錯誤訊息）。真正要綁住的是下面那一欄。
+     */
+    const data = {
       deletedAt,
+      // Info: (20260831 - Julian) 讓出 activeNumber，同一個編號之後才能重新加入
+      activeNumber: activeNumberFor("", deletedAt),
+    };
+
+    assertActiveNumberPairing({
+      number: "",
+      activeNumber: data.activeNumber,
+      deletedAt: data.deletedAt,
     });
 
     const result = await prisma.salaryCalculatorEmployee.updateMany({
       where: { accountBookId, id: employeeId, deletedAt: null },
-      // Info: (20260831 - Julian) 讓出 activeNumber，同一個編號之後才能重新加入
-      data: { deletedAt, activeNumber: null },
+      data,
     });
 
     return result.count > 0;

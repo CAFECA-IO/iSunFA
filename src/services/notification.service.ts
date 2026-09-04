@@ -10,6 +10,8 @@ import {
 import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import { logger } from "@/lib/utils/logger";
 import { notificationRepo } from "@/repositories/notification.repo";
+import { resumableJobRepo } from "@/repositories/resumable_job.repo";
+import { parseCarbonChatChannel } from "@/constants/carbon_chatbot";
 import type {
   INotificationHistoryPage,
   INotificationItem,
@@ -128,9 +130,23 @@ export async function getNotificationSummary(params: {
 }): Promise<INotificationSummary> {
   return guarded(
     async () => {
-      const [invitations, unread] = await Promise.all([
+      /**
+       * Info: (20260828 - Julian) 第三個活算來源：可以繼續的暫停任務。
+       *
+       * 與邀請同一個形狀（來源本身是活狀態，不入庫），所以也放進這個
+       * `Promise.all` —— 三支查詢並行，往返次數多一次但不多一輪等待。
+       *
+       * ⚠️ 這一支讓摘要從兩趟 DB 變三趟，而它每 60 秒被每個在線使用者打一次。
+       * 計畫書 §6 第 7 項說效能從來沒量過 —— 加了這一支之後**要量**。
+       */
+      const [invitations, unread, resumable] = await Promise.all([
         listPendingInvitations(params.userId, params.address, params.nowMs),
         notificationRepo.summarizeUnread(params.userId),
+        /**
+         * Info: (20260901 - Julian) 用 `summarizeResumable` 而不是那支帶 `take`
+         * 的清單查詢（review：D4）。徽章要的是**全部**，不是畫面上看得到的那幾筆。
+         */
+        resumableJobRepo.summarizeResumable(params.userId),
       ]);
       const unreadByType = unread.counts;
       /**
@@ -176,12 +192,27 @@ export async function getNotificationSummary(params: {
           Math.max(latest, invitation.createdAt.getTime()),
         0,
       );
+      /**
+       * Info: (20260828 - Julian) 任務用 `updatedAt` 而不是 `createdAt`。
+       *
+       * 上面那段（D17 的補正）要的是「兩次不同的抵達，鍵要不同」。
+       * 任務的 `createdAt` 是**開始匯入**的時間，而它在暫停與翻面之間不會變 ——
+       * 用它的話，同一個任務暫停 → 補點數 → 再暫停 → 再補點數，
+       * 兩次「可以繼續了」會算出同一個鍵，第二次搖而不響（D17 的形狀）。
+       *
+       * `updatedAt` 在每次狀態轉換都會動，正是「這一次翻面」的時間。
+       */
+      const latestResumableAt = resumable.latestUpdatedAt
+        ? resumable.latestUpdatedAt.getTime()
+        : 0;
 
       return {
-        todoCount: invitations.length + storedTodos,
+        todoCount: invitations.length + resumable.count + storedTodos,
         completedCount: completed,
         // Info: (20260826 - Julian) 兩者皆無時回 null（`0` 會被誤讀成 epoch）
-        latestUnreadAt: Math.max(latestStoredAt, latestInvitationAt) || null,
+        latestUnreadAt:
+          Math.max(latestStoredAt, latestInvitationAt, latestResumableAt) ||
+          null,
       };
     },
     { operation: "getNotificationSummary", userId: params.userId },
@@ -226,26 +257,29 @@ export async function listNotifications(params: {
 }): Promise<INotificationList> {
   return guarded(
     async () => {
-      const [invitations, storedTodos, completedPage] = await Promise.all([
-        listPendingInvitations(params.userId, params.address, params.nowMs),
-        notificationRepo.listUnreadByTypes(
-          params.userId,
-          TODO_NOTIFICATION_TYPES,
-          NOTIFICATION_TODO_LIST_LIMIT,
-        ),
-        /**
-         * Info: (20260825 - Julian) 事件型改成帶回**歷史**（含已讀）。
-         *
-         * 原本只回未讀，於是「已讀」等同「從畫面上消失」——使用者點過一則
-         * 分析完成通知之後就再也找不到它，而那是他唯一一個「哪些報告跑完了」
-         * 的入口。待辦型不變：它的存在條件是「事情還沒做完」，讀過不等於做完。
-         */
-        notificationRepo.listRecentExcludingTypes(
-          params.userId,
-          TODO_NOTIFICATION_TYPES,
-          NOTIFICATION_HISTORY_LIMIT,
-        ),
-      ]);
+      const [invitations, storedTodos, completedPage, resumablePage] =
+        await Promise.all([
+          listPendingInvitations(params.userId, params.address, params.nowMs),
+          notificationRepo.listUnreadByTypes(
+            params.userId,
+            TODO_NOTIFICATION_TYPES,
+            NOTIFICATION_TODO_LIST_LIMIT,
+          ),
+          /**
+           * Info: (20260825 - Julian) 事件型改成帶回**歷史**（含已讀）。
+           *
+           * 原本只回未讀，於是「已讀」等同「從畫面上消失」——使用者點過一則
+           * 分析完成通知之後就再也找不到它，而那是他唯一一個「哪些報告跑完了」
+           * 的入口。待辦型不變：它的存在條件是「事情還沒做完」，讀過不等於做完。
+           */
+          notificationRepo.listRecentExcludingTypes(
+            params.userId,
+            TODO_NOTIFICATION_TYPES,
+            NOTIFICATION_HISTORY_LIMIT,
+          ),
+          // Info: (20260828 - Julian) 第三個活算來源，理由同 getNotificationSummary
+          resumableJobRepo.listResumableByUser(params.userId),
+        ]);
 
       const todos: INotificationItem[] = invitations.map((invitation) => ({
         /**
@@ -274,6 +308,49 @@ export async function listNotifications(params: {
         readAt: null,
       }));
 
+      /**
+       * Info: (20260828 - Julian) 可以繼續的任務 —— 與邀請同一個活算形狀。
+       *
+       * `createdAt` 取 `updatedAt`：那是**這一次翻面**的時間，而不是開始匯入的時間。
+       * 清單依 `createdAt` 排序，用開始時間的話，一份放了三天才補到點數的匯入
+       * 會沉在最底下 —— 而它正是這一刻最需要被看到的那一則。
+       */
+      todos.push(
+        ...resumablePage.items.map((job) => {
+          /**
+           * Info: (20260828 - Julian) 深連結要的 `sessionId` 在這裡切出來
+           *（計劃 `resumable_job_resume_landing_and_copy.md` §2）。
+           *
+           * 切在這一層而不是 `notification_message.ts`：那一層是
+           *「型別 × payload → 去處」的純函式，不該懂任何一種 `JOB_TYPE`
+           * 的資源格式 —— 今天懂了碳盤查的頻道，下一種任務出現時它就要懂第二種。
+           *
+           * 切不出來時**不放這個鍵**（不是放空字串）：`resolvePathTokens`
+           * 的約定是「任一 token 代不出來就整條回 null」，於是那一則渲染成
+           * 不可點。未來若有非碳盤查的 `JOB_TYPE`，它會落在這條路上 ——
+           * 不可點是誠實的預設，導到一個猜出來的會話不是。
+           */
+          const channel = parseCarbonChatChannel(job.resourceKey);
+
+          return {
+            // Info: (20260828 - Julian) 合成 id，理由同上方邀請那段（不會拿去打 API）
+            id: `job:${job.id}`,
+            type: NOTIFICATION_TYPE.JOB_RESUMABLE,
+            payload: {
+              jobId: job.id,
+              jobType: job.type,
+              resourceKey: job.resourceKey,
+              completedSteps: job.completedSteps,
+              totalSteps: job.totalSteps,
+              ...(channel === null ? {} : { sessionId: channel.sessionId }),
+            },
+            createdAt: job.updatedAt.getTime(),
+            // Info: (20260828 - Julian) 活算的待辦沒有已讀概念：它在就是還沒處理
+            readAt: null,
+          };
+        }),
+      );
+
       todos.push(...storedTodos.map(toItem));
       todos.sort((a, b) => b.createdAt - a.createdAt);
 
@@ -281,6 +358,15 @@ export async function listNotifications(params: {
         todos,
         completed: completedPage.items.map(toItem),
         hasMoreCompleted: completedPage.hasMore,
+        /**
+         * Info: (20260901 - Julian) 待辦節也會被截斷，而先前沒有人說得出來
+         *（review：D4）。徽章數的是全部（`summarizeResumable`），這裡只帶回
+         * 最新的 `JOB_RESUMABLE_NOTICE_LIMIT` 筆 —— 兩者分岔時畫面必須說一句話。
+         *
+         * 只反映可接續任務那一支：邀請的查詢沒有上限，而入庫待辦的計數走
+         * `groupBy`（未截斷），今天也只有「錢包升級」一種、一人一則。
+         */
+        hasMoreTodos: resumablePage.hasMore,
       };
     },
     { operation: "listNotifications", userId: params.userId },
@@ -422,6 +508,15 @@ export async function notifyAnalysisCompleted(params: {
   userId: string;
   analysisId: string;
   analysisType: string;
+  /**
+   * Info: (20260827 - Julian) 帳本 id，`:accountBookId` 的來源（D43 第二步）。
+   *
+   * 可選：只有憑證分析與日記帳修正的去處需要它，其餘類別的路徑沒有 token。
+   * 缺了它 `notificationHrefOf` 會讓整條路徑退化為 `null`（不可點），
+   * 而不是組出 `/user/account_book/undefined/journal` —— 那是 D43 要修掉的
+   * 症狀本身，修法不該再製造一次。
+   */
+  accountBookId?: string;
 }): Promise<void> {
   try {
     await notificationRepo.createIfAbsent({
@@ -430,6 +525,17 @@ export async function notifyAnalysisCompleted(params: {
       payload: {
         analysisId: params.analysisId,
         analysisType: params.analysisType,
+        /**
+         * Info: (20260827 - Julian) 沒有值時**不寫這個鍵**，不要寫 null。
+         *
+         * `resolvePathTokens` 判斷的是「型別是不是非空字串」，null 與缺鍵
+         * 對它一樣；但 payload 是永久保存的資料，一個恆為 null 的欄位
+         * 會讓之後查資料的人以為「這筆分析沒有帳本」，而事實是
+         * 「發通知的當下取不到」。與 `analysisType` 同一種寫法。
+         */
+        ...(params.accountBookId
+          ? { accountBookId: params.accountBookId }
+          : {}),
       } as Prisma.InputJsonObject,
       dedupeKey: `${NOTIFICATION_DEDUPE_PREFIX.ANALYSIS_COMPLETED}${params.analysisId}`,
     });
@@ -490,6 +596,8 @@ export async function notifyAnalysisFailed(params: {
    * 沒有它就退回不帶標題的那句話 —— 少一個詞比顯示 `undefined` 好。
    */
   analysisType?: string;
+  // Info: (20260827 - Julian) 同上（D43 第二步）；失敗路徑從 `order.data` 取得
+  accountBookId?: string;
 }): Promise<void> {
   try {
     await notificationRepo.createIfAbsent({
@@ -498,6 +606,9 @@ export async function notifyAnalysisFailed(params: {
       payload: {
         orderId: params.orderId,
         ...(params.analysisType ? { analysisType: params.analysisType } : {}),
+        ...(params.accountBookId
+          ? { accountBookId: params.accountBookId }
+          : {}),
       } as Prisma.InputJsonObject,
       dedupeKey: `${NOTIFICATION_DEDUPE_PREFIX.ANALYSIS_FAILED}${params.orderId}`,
     });

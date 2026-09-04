@@ -141,6 +141,18 @@ export async function canResumeNow(params: {
    *
    * 鏈上點數仍不查（一輪 50 筆 RPC 太貴）：少算它的方向依然安全，
    * 因為它只會讓答案偏向「還不夠」。
+   *
+   * Info: (20260828 - Julian) **這個字面量 0 與扣款端今天一致，是巧合。**
+   *
+   * `spendCredits` 的 `chainCredits` 也是 0，但那是 `isChainCreditSpendable()`
+   * 回 false 推出來的；這裡是寫死的。第二層扣款一旦恢復，兩邊就會分岔，
+   * 而分岔的症狀是「掃描說還不夠、使用者其實付得起」——沒有人會發現。
+   *
+   * 連帶的產品後果已經記在 `resumable_job_resume_notification.md` §6.2：
+   * 「加購點數」在今天是一條**不存在的出路**，只有等視窗重置與升級方案有效。
+   *
+   * 這件事由 `spend_second_layer_inert.test.ts` 的 D 類釘住（20260831 補上，
+   * review #6732 的 1-D）：旗標一翻成 true，那一條就會紅並指向這一行。
    */
   return canAffordSpend({
     quotaAvailable,
@@ -447,6 +459,165 @@ export interface IJobResumeScanSummary {
  * 幾份跑完的是使用者按下「接著匯入」。這條註解原本聲稱「付款完成的那一頁會直接
  * 接續」——那段程式不存在，已改正（issue #6714 續作）。
  */
+/**
+ * Info: (20260831 - Julian) 從 `Order.data` 取出這筆付款綁定的資源鍵。
+ *
+ * `Order.data` 是 `Json`，型別上是 `unknown`：它同時裝著訂閱、席次、加購與
+ * 個人消費四種形狀，硬轉成某一種等於宣稱一件查不到的事。所以逐層檢查，
+ * 取不到就回 `null` —— 而 `null` 的意思是「這張訂單沒有指向任何任務」，
+ * 不是「出錯了」。
+ *
+ * 寫入端是 `ensurePersonalCreditCharge`（見那裡的 `resourceKey` 說明）。
+ */
+function resourceKeyOfOrderData(orderData: unknown): string | null {
+  if (typeof orderData !== "object" || orderData === null) return null;
+
+  const value = (orderData as Record<string, unknown>).resourceKey;
+  return typeof value === "string" && value !== "" ? value : null;
+}
+
+/**
+ * Info: (20260828 - Julian) 個人付款完成後，把卡在「等付款」的任務翻成可以繼續。
+ *
+ * ## 為什麼不放進 `scanResumableJobs`
+ *
+ * 那支刻意跳過 `PAYMENT_REQUIRED`，兩層理由都仍然成立：
+ *
+ * 1. **判斷不出來**：個人點數在鏈上，要問就得發 RPC。掃描一輪 50 筆、每 5 分鐘
+ *    一次，那是每 5 分鐘 50 次鏈上查詢。
+ * 2. **就算查得出來也不該翻**：那個暫停原因不是「餘額不夠」，是「這筆錢需要你簽章」。
+ *    沒付款就是不能繼續，翻成「可以繼續」是一個假承諾。
+ *
+ * 所以這條路是**事件驅動**：`TxTracker` 確認入帳、把訂單標成 `PAID` 的那一刻
+ * 呼叫這裡。一次付款確認配一次 DB 查詢，零額外 RPC，而且比 5 分鐘輪詢更即時。
+ *
+ * ## 為什麼不再確認一次餘額
+ *
+ * 與 `POST /v1/user/job/[job_id]/resume` 一致 —— 它的檔頭寫著：先檢查一次會出現
+ * 「檢查說夠、扣款說不夠」兩個答案，而使用者只會相信後者。付款確認過就翻面，
+ * 夠不夠讓實際扣款說了算；還是不夠的話它會再暫停一次，那條路徑本來就在。
+ *
+ * ## 通知在哪裡
+ *
+ * 不在這裡 —— `JOB_RESUMABLE` 是**活算**的待辦（見 `TODO_NOTIFICATION_TYPES`）。
+ * 翻成 `RESUMABLE` 這件事本身就是通知：小鈴鐺下一次輪詢就會從
+ * `listResumableByUser` 讀到它。這裡不需要、也不該呼叫任何發射函式。
+ *
+ * ## 只翻**這筆付款對應的**那一份（review #6732 的 1-A）
+ *
+ * 收的是整包 `Order.data` 而不是已經取好的字串：判斷「這張訂單有沒有指向
+ * 一份任務」是業務判斷，而呼叫端（`order.tracker.service.ts`）是一支
+ * 測不到的檔案（它 import `publicClient` 與 `viem`）。放在這裡才釘得住。
+ *
+ * ## 放寬後的界（review #6732 R4）
+ *
+ * `runBilledCarbonTask` 對**所有**碳盤查任務（對話、草稿、結構圖、匯入）都傳同一個
+ * `channel`，而 `resourceKey` 就是它。所以現在最多能發生的壞事是：
+ *
+ * > 同一個會話內任何一筆個人付款，都會翻面該會話的匯入任務。
+ *
+ * 使用者在會話 X 付了一則對話的錢（5 點），會話 X 裡那份需要 50 點的匯入也會被
+ * 翻成 `RESUMABLE` 並發一則「這份匯入可以接著做了」，按下去再撞一次 402。
+ *
+ * 比修正前窄非常多（限同一會話，不再是這個人的全部），而且文案已經不宣稱原因，
+ * 所以留著。
+ *
+ * Info: (20260902 - Julian) 收斂的下一格**不是**比對消費類別（review R3 二輪的 N2）。
+ *
+ * 這裡原本寫著「下一格是比對 `Order.data.category`（它是 `featureCode`，
+ * 而暫停只由匯入產生）」—— 那句話今天不成立：`runBilledCarbonTask` 的
+ * **五個呼叫端一個都沒傳 `featureCode`**，全吃預設值，所以那個鑑別子恆為
+ * 同一個值。照著做會寫出一個永遠 false 的條件，釋放路徑靜默失效，
+ * 而測試餵的是自己編的 `orderData`，不會紅。
+ *
+ * 真正的下一格是二選一：**讓那五個呼叫端各自傳出自己的 `featureCode`**
+ *（然後才輪得到比對類別），或在 402 建單時把 `jobId` 一起寫進 `Order.data`
+ *（更直接：不必推導，付的就是那一份）。
+ * 部署檢查表 §3.1 的驗證 ⑥ 也因為同一個事實而改成從任務那一側查。
+ *
+ * ## 這條路今天走 UI 到不了（review #6732 R3 的 A5）
+ *
+ * `PAYMENT_REQUIRED` 只由**個人付款**產生，而個人付款只在「會話沒綁帳本」時發生
+ *（`carbon_billing.service.ts` 的 `!accountBookId` 分支）。但唯一會寫
+ * `CARBON_REPORT_IMPORT` 書籤的路徑是逐章匯入，而 `use_carbon_chat.ts` 在**送出之前**
+ * 就擋掉未綁帳本的逐章匯入；單發匯入的 402 落在 catch，不寫書籤。
+ * 綁了帳本就走團隊額度，402 是 `TW_QUOTA_EXCEEDED`，暫停原因恆為 `CREDITS_EXHAUSTED`。
+ *
+ * 唯一的窄縫是**客戶端認為已綁、伺服器認為未綁**（另一個分頁解綁、帳本被刪，
+ * 而這個分頁的 `sessionAccess` 是快取）—— 那時逐章驅動器會把 402 映成
+ * `PAYMENT_REQUIRED` 並寫進書籤。這一支守的就是那條窄縫。
+ *
+ * 寫下來是因為它會誤導下一個人：整套接線（`Order.data.resourceKey`、TxTracker
+ * 兩處、部署檢查表 §5.3）看起來守著一個常見狀態，實際上守著一條今天幾乎走不到的路。
+ * **另有一件真的會出事的事**：釋放的觸發點是 `PAID`，而 `ensurePersonalCreditCharge`
+ * 放行的判準是 `COMPLETED`（兩者都在 develop，本 PR 沒動）。使用者收到
+ * 「這份匯入可以接著做了」之後按下去，可能會再撞一次 402 —— 那是一句做不到的承諾。
+ * 判準同源是另一張票，見 PR 描述。
+ *
+ * 取不到 `resourceKey` 時**什麼都不翻**，不是退回「翻這個人全部的」——
+ * 那正是 1-A 的缺陷：一次付款會把他所有等付款的任務都翻成「可以繼續」，
+ * 而其中只有一筆是真的付過的。fail-closed 的代價是舊訂單（改動之前建的、
+ * 沒有這個鍵）不會自動釋放，使用者仍可自己回到頁面按繼續。
+ *
+ * @returns 真的翻面的筆數（給呼叫端記 log；沒有對應的暫停任務時是 0，那是常態）
+ */
+export async function releasePaymentBlockedJobs(params: {
+  userId: string;
+  orderData: unknown;
+}): Promise<number> {
+  const log = logger.child({ service: "ResumableJobRelease" });
+
+  const resourceKey = resourceKeyOfOrderData(params.orderData);
+  if (resourceKey === null) {
+    log.info("paid order carries no resource key; nothing to release", {
+      userId: params.userId,
+    });
+    return 0;
+  }
+
+  const jobs = await resumableJobRepo.listPaymentBlockedByResource(
+    params.userId,
+    resourceKey,
+  );
+  if (jobs.length === 0) {
+    /**
+     * Info: (20260831 - Julian) 「有鍵但查無任務」要留一行（review #6732 R2）。
+     *
+     * 這個修法完全押在**訂單的 `resourceKey` 等於任務的 `resourceKey`**。
+     * 今天成立，是因為前端 `chatChannel` 同一個變數同時餵給扣費的 `channel`
+     * 與書籤的 `resourceKey`；伺服器端沒有任何東西斷言這兩個值一致。
+     *
+     * 它們一旦分岔，失敗是**靜默的**：查不到 → 回 0 → 不翻面 → 沒有通知、
+     * 沒有錯誤。這一行是那件事唯一的觀測量。
+     *
+     * 常態也會走到這裡（付的是與可接續任務無關的錢，例如一則對話），
+     * 所以是 `info` 不是 `warn` —— 要看的是「同一個 resourceKey 反覆出現」。
+     */
+    log.info("payment-blocked release found nothing", {
+      userId: params.userId,
+      resourceKey,
+    });
+    return 0;
+  }
+
+  let released = 0;
+  for (const job of jobs) {
+    /**
+     * Info: (20260828 - Julian) 條件更新：使用者可能在付款與這一刻之間
+     * 自己按了繼續或取消。無條件覆寫會把那個狀態蓋回「等著被繼續」。
+     */
+    if (await resumableJobRepo.markResumable(job.id)) released += 1;
+  }
+
+  log.info("payment-blocked jobs released", {
+    userId: params.userId,
+    resourceKey,
+    found: jobs.length,
+    released,
+  });
+  return released;
+}
+
 export async function scanResumableJobs(
   nowMs: number,
   batchSize: number = JOB_RESUME_SCAN_BATCH,

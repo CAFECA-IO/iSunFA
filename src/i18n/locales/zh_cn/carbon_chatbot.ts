@@ -170,6 +170,14 @@ export const carbonChatbot = {
     "已保存待导入的解析结果:{{name}}(共 {{count}} 节,尚未写入报告)",
   import_pending_open: "查看并导入",
   import_pending_discard: "舍弃",
+  import_inventory_year: "盘查年度",
+  import_inventory_year_placeholder: "2024",
+  import_inventory_year_hint:
+    "这份报告的盘查年度(公元)。跨年度导入时用它分辨哪些分录属于哪一年",
+  import_inventory_year_required:
+    "这次导入含排放总量表,请填写这份报告的盘查年度",
+  import_inventory_year_invalid:
+    "请填公元四位数的盘查年度(1990 年至明年);超出范围的年度会让账本下次加载时读不回来",
   import_reset_note:
     "导入段落的核对状态将重置;{{activities}} 笔活动数据将入账并重新核对",
   import_apply: "导入勾选({{count}})",
@@ -180,6 +188,7 @@ export const carbonChatbot = {
     "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,{{inFlight}} 章解析中),完整报告约需数分钟…",
   import_requires_book:
     "这个会话还没绑定账本,无法导入整份报告(逐章导入需要以账本的额度计费)。请先在会话设置选择账本,再重新导入。",
+  // Info: (20260828 - Julian) 同 zh_tw：这句话有两个已知的错，尚未修（见计划 §4）
   import_paused_chapters:
     "点数已用完,以下章节还没开始解析:{{chapters}}。补上点数后可以从这里接着导入,已完成的部分不会重跑。",
   // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
@@ -303,6 +312,10 @@ export const carbonChatbot = {
   chart_imported_sankey_excluded: "未画出的项目（NA/NS 或为零）",
   chart_imported_sankey_no_ledger:
     "本报告已导入，但账本没有任何可用数据，因此画不出排放流向图。桑基图与系统数据表格的唯一来源是表3.8（各公司温室气体排放量），本次未取得该表。请确认第三章是否解析成功；若该章列为解析失败，请以预览卡的「重试失败章节」重新导入，并在服务端日志查看该表是否被丢弃及其原因。",
+  chart_imported_sankey_blocked_ledger:
+    "本报告已取得表3.8，但勾稽未通过，数据冻结在门口、未写入账本（半套数据入账会让每张图都错得很像对的）。被挡的原因列于下方；修正原文对应表格或重新导入第三章后，图表将自动生成。",
+  chart_partial_import_blocked:
+    "⚠ 本图只含成功入账的部分：本次导入另有表格被勾稽挡下、未写入账本，因此图中的总量与占比不是全公司全貌。被挡的原因如下；修正原文对应表格或重新导入后，图表将自动重算。",
   chart_imported_sankey_collapsed: "节点过多,已降为一层(全公司 → 范畴)",
   chart_imported_top_items_title:
     "排放去向：全公司 → 前九大排放项目与其他（原文照录，所在地基准，公吨 CO2e/年）",

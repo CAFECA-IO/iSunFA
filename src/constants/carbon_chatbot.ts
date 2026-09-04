@@ -20,6 +20,38 @@ export const buildCarbonChatChannel = (
   sessionId: string,
 ): string => `${CARBON_CHAT_CHANNEL_PREFIX}-${address}-${sessionId}`;
 
+/**
+ * Info: (20260828 - Julian) 反函式：從頻道切回 `{ address, sessionId }`。
+ *
+ * 存在的理由是通知要深連結到**單一會話**：書籤只存 `resourceKey`，
+ * 而那個字串裡就有 sessionId（見 `resumable_job_resume_landing_and_copy.md` §2）。
+ *
+ * 放在 `buildCarbonChatChannel` 旁邊而不是解析的那一端（通知服務），
+ * 有兩個理由：格式改了兩支要一起改，放在一起才看得見；
+ * 而且 round-trip（`parse(build(a, s))`）只有在同一個檔案裡才釘得住。
+ *
+ * 切在**第一個** `-`：位址是 hex（不含 `-`），sessionId 則可能含
+ * （使用者的會話 id 不保證是 `2025` 那種）。用 `lastIndexOf` 反過來切，
+ * 遇到帶 `-` 的 sessionId 就會靜靜地切錯 —— 而切錯的結果是一條
+ * 「看起來有反應」的深連結，導到別人的會話或不存在的會話。
+ */
+export const parseCarbonChatChannel = (
+  channel: string,
+): { address: string; sessionId: string } | null => {
+  const prefix = `${CARBON_CHAT_CHANNEL_PREFIX}-`;
+  if (!channel.startsWith(prefix)) return null;
+
+  const rest = channel.slice(prefix.length);
+  const separator = rest.indexOf("-");
+  if (separator <= 0) return null;
+
+  const address = rest.slice(0, separator);
+  const sessionId = rest.slice(separator + 1);
+  if (sessionId === "") return null;
+
+  return { address, sessionId };
+};
+
 // Info: (20260715 - Luphia) 位址為 hex，EIP-55 checksum 僅差在大小寫；兩端統一轉小寫比對，避免 checksum 格式差異誤拒合法擁有者
 export const isCarbonChatChannelOwnedBy = (
   channel: string,
@@ -789,3 +821,21 @@ export const buildImportSummaryNotice = (
     "\n",
   );
 };
+
+/**
+ * Info: (20260903 - Luphia) 盤查年度的界（review 收斂:原本硬編在五處 schema 與服務層）。
+ *
+ * 兩個界的語意不同,不可互換:
+ * - `INVENTORY_YEAR_MIN`:盤查報告不會早於這一年。輸入與儲存共用同一個下限。
+ * - `INVENTORY_YEAR_STORAGE_MAX`:**儲存格式**的上限。schema 不隨時間收窄 ——
+ *   否則今天存得下的紀錄會在某一年忽然讀不出來,而讀路徑是 fail-fast 丟棄整份狀態。
+ *   輸入端另外收窄到「今年 + 1」(見 `normalizeInventoryYear`),那是裁決不是格式。
+ *
+ * 不變式:**輸入端能產出的年度集合必須是儲存端能讀回的子集。**
+ * 反過來的後果實測過:年度 0 或 9999 存得進去(寫路徑不過 schema)、
+ * 下次 `CarbonInventoryStateSchema.safeParse` 失敗、`loadInventoryState` 回 null,
+ * **整份盤查狀態(帳本、活動數據、待補項)被丟棄**,而當下畫面毫無異狀。
+ * 守這條不變式的是 `carbon_inventory_state_persistence.test.ts` 的往返測試。
+ */
+export const INVENTORY_YEAR_MIN = 1990;
+export const INVENTORY_YEAR_STORAGE_MAX = 2100;

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "@jest/globals";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { buildPendingImportRecord } from "@/lib/carbon_pending_import_record";
 
 import { extractCreditPauseDetail } from "@/hooks/use_carbon_chat.helpers";
 import { ApiError as RequestApiError } from "@/lib/utils/request";
@@ -240,10 +241,49 @@ describe("出路要撐過重新整理", () => {
     "utf8",
   );
 
-  it("落地的明列帶上 pauseDetail", () => {
+  /**
+   * Info: (20260828 - Julian) 存檔的形狀已抽成純函式，所以驗它的輸出。
+   *
+   * 原本掃的是 `persistPendingImport` 裡的物件字面量；字面量搬走之後
+   * 掃描會紅在一個其實正確的實作上。改成呼叫真的建構函式 ——
+   * 而它一開始**確實**漏了 `pauseDetail`（與當初漏掉那三個同一種漏法：
+   * 選填讓驗證閉嘴、記憶體裡有值所以當下正常），這一條抓得住。
+   */
+  it("落地的 pending 帶上 pauseDetail", () => {
+    const record = buildPendingImportRecord({
+      pending: {
+        fileName: "報告書.pdf",
+        originSessionId: "sess-1",
+        originSessionTitle: "盤查對話",
+        items: [],
+        unmapped: [],
+        activityCount: 0,
+        failedChapters: [],
+        pauseReason: "PAYMENT_REQUIRED",
+        pauseDetail: {
+          resetAt: 1_760_000_000_000,
+          options: ["TOP_UP"],
+          exceedsWindowLimit: false,
+        },
+      },
+      source: null,
+      activities: [],
+      pageIndex: undefined,
+      savedAt: "2026-08-28T00:00:00.000Z",
+    });
+
+    expect(record.pending.pauseDetail).toEqual({
+      resetAt: 1_760_000_000_000,
+      options: ["TOP_UP"],
+      exceedsWindowLimit: false,
+    });
+  });
+
+  // Info: (20260828 - Julian) 接線那一半：hook 真的要走那支建構函式
+  it("persistPendingImport 走 buildPendingImportRecord", () => {
     const start = hook.indexOf("const persistPendingImport = useCallback");
     const end = hook.indexOf("const clearPersistedPendingImport", start);
-    expect(hook.slice(start, end)).toContain("pauseDetail");
+    expect(hook.slice(start, end)).toContain("buildPendingImportRecord(");
   });
 
   it("驗證器接受 pauseDetail，且不收會過時的額度數字", () => {

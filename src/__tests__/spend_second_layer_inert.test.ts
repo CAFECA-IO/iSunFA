@@ -17,6 +17,8 @@ import { isChainCreditSpendable } from "@/lib/quota/personal_chain_credits";
 
 const GATE_FILE = join("src", "lib", "quota", "personal_chain_credits.ts");
 const SPEND_SERVICE = join("src", "services", "spend.service.ts");
+// Info: (20260831 - Julian) 可接續任務的「現在夠不夠」試算（review #6732 的 1-D）
+const RESUMABLE_SERVICE = join("src", "services", "resumable_job.service.ts");
 
 function codeOf(relative: string): string {
   return readFileSync(join(process.cwd(), relative), "utf8");
@@ -122,6 +124,45 @@ describe("第二層停用期間的事實（集中標記的依據）", () => {
     expect(code).toMatch(/refundAllocationPartial\(/);
     expect(code).toMatch(/records\.walletHeld/);
     expect(code).toMatch(/records\.walletRefunded/);
+  });
+
+  /**
+   * Info: (20260831 - Julian) D 類：可接續任務的試算與扣款端**同源**（review #6732 的 1-D）。
+   *
+   * `canResumeNow()` 傳給 `canAffordSpend` 的 `chainCredits` 是字面量 `BigInt(0)`；
+   * `spendCredits` 傳的也是 0，但那是 `isChainCreditSpendable()` 推出來的。
+   * 兩邊今天一致**是巧合，不是機制**。
+   *
+   * 第二層恢復的那一天，扣款端會開始把鏈上餘額算進去，而掃描端仍然當它不存在 ——
+   * 症狀是「掃描說還不夠、使用者其實付得起」，任務永遠不翻面，
+   * 而沒有任何測試會紅（那個判斷只在真實餘額非零時才會分岔）。
+   *
+   * 這一條是本 PR 自己在 `canResumeNow` 的註解裡承諾要加、而當時沒有加的那個釘子。
+   * 旗標關著時它確認字面量還在（否則這條測試自己就失去意義）；
+   * 旗標一翻成 true，它就會紅，並指向該一起改的那一行。
+   */
+  it("D：可接續任務的試算跟著旗標走", () => {
+    const code = codeOf(RESUMABLE_SERVICE);
+    const usesLiteralZero = /chainCredits: BigInt\(0\)/.test(code);
+
+    if (isChainCreditSpendable()) {
+      expect({
+        note: "第二層已恢復：canResumeNow 不得再假設鏈上餘額為 0",
+        usesLiteralZero,
+      }).toEqual({
+        note: "第二層已恢復：canResumeNow 不得再假設鏈上餘額為 0",
+        usesLiteralZero: false,
+      });
+      return;
+    }
+
+    expect({
+      note: "旗標仍關著：字面量 0 是對的，這條測試在等它翻面",
+      usesLiteralZero,
+    }).toEqual({
+      note: "旗標仍關著：字面量 0 是對的，這條測試在等它翻面",
+      usesLiteralZero: true,
+    });
   });
 
   // Info: (20260818 - Luphia) 集中標記本身要在那個檔案裡，且指得出恢復條件
