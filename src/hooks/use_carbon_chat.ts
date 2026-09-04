@@ -96,7 +96,15 @@ import {
   activityDedupeKey,
   stockRecordDedupeKey,
 } from "@/lib/carbon_inventory";
-import { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
+import {
+  CarbonDisclosureFrameworkEnum,
+  FRAMEWORK_DISCLOSURE_LABEL,
+} from "@/constants/carbon_report_framework";
+import {
+  CarbonFrameworkClaimExitEnum,
+  composeReportDraftPaperText,
+  gateFrameworkClaims,
+} from "@/lib/utils/carbon_framework_claim_gate";
 import { buildLedgerFactBundle } from "@/lib/carbon_ledger_query";
 import {
   loadPendingImport as fetchPendingImportRecord,
@@ -1235,6 +1243,69 @@ export const useCarbonChat = () => {
   }, [isUnlocked, chatChannel, activeSessionId, sessionAccess]);
 
   /**
+   * Info: (20260904 - Emily) 存檔出口的宣告守門(#6688-B 後半)。
+   *
+   * 接在 `flushReportDraftSave` 的入口:那是所有段落寫入(AI 草稿、修訂、匯入、
+   * 手動編輯)最後匯流成一次 PUT 的地方,所以一個判斷蓋住全部路徑。
+   *
+   * ## 三個設計問題,量過之後的答案
+   *
+   * **一、爆炸半徑:整份,而且這是唯一可得的粒度。** `saveReportDraft` 一次送一整份
+   * `reportData` 並帶樂觀鎖版本 —— 產品裡沒有「單段存檔」這件事。所以擋的單位只能是整份。
+   *
+   * **二、擋雲端存檔不會毀掉使用者的成果,所以本地備份不擋。** 自動保存那個 effect 在
+   * 進入任何雲端 guard **之前**就無條件 `saveLocalDraftBackup`,而還原時
+   * `preferBackup = localBackup.draftVersion >= loaded.version` 會優先取本機。
+   * 也就是被擋之後那一版仍然在本機、重載仍讀得回來 —— 代價是「沒上雲、不跨裝置」,
+   * 不是「消失」。反過來把本地備份也擋掉才是唯一真正破壞性的選項
+   *(那一版哪裡都不存在),而本機快取**不是紙面**,擋它換不到任何東西。
+   *
+   * **三、`saveStatus` 不需要新狀態。** 既有的 `"local"` 語意正是
+   * 「僅暫存本機、未上雲」,而那正是被擋之後的真實狀態 —— 為它新增一個狀態
+   * 會讓工具列多一種要解釋的顏色,而它要表達的事既有的那個已經表達了。
+   * 原因走 `draftNotice`:照 #6624 立的分工,**事件走通知、持續的那面走 saveStatus**。
+   * 通知照既有失敗路徑一樣自動消失 —— 不自動消失的版本要求「存檔成功時清掉通知」,
+   * 而今天的成功路徑只 `setSaveStatus("saved")`、不清通知,那一版會在使用者改好之後留著。
+   */
+  const blockedByFrameworkClaim = useCallback(
+    (channel: string, sessionId: string): boolean => {
+      const pending = latestReportDataRef.current.get(channel);
+      if (!pending) return false;
+      /*
+       * Info: (20260904 - Emily) 四個槽怎麼取、為什麼,住在 `composeReportDraftPaperText`
+       * (純函式,各有一條測試)。這一層只有接線 —— hook 逼不出行為測試,
+       * 所以判準不留在這裡。
+       */
+      const { blocked, warned } = gateFrameworkClaims(
+        composeReportDraftPaperText(pending),
+        CarbonFrameworkClaimExitEnum.DRAFT_SAVE,
+      );
+      if (warned.length > 0) {
+        // Info: (20260904 - Emily) 只記規則與筆數,不記片段 —— 那是使用者的報告內容
+        console.warn("[carbon-chat] framework claim warnings on save", {
+          channel,
+          rules: warned.map((finding) => finding.rule),
+          counts: warned.map((finding) => finding.matches.length),
+        });
+      }
+      if (blocked.length === 0) return false;
+      setSaveStatus("local");
+      setDraftNotice(
+        {
+          type: "error",
+          text: t("carbon_chatbot.save_blocked_framework_claim", {
+            name: FRAMEWORK_DISCLOSURE_LABEL,
+          })!,
+        },
+        sessionId,
+      );
+      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, sessionId);
+      return true;
+    },
+    [t, setDraftNotice, dismissDraftNoticeAfter],
+  );
+
+  /**
    * Info: (20260807 - Emily) 送出一輪雲端保存,直到送出去的就是當下最新的那一份。
    *
    * 兩件事被綁在一起,因為它們是同一個不變式的兩半:
@@ -1253,6 +1324,7 @@ export const useCarbonChat = () => {
       accountBookId: string | null,
     ): Promise<void> => {
       if (savingChannelsRef.current.has(channel)) return;
+      if (blockedByFrameworkClaim(channel, sessionId)) return;
       savingChannelsRef.current.add(channel);
       setSaveStatus("saving");
       try {
@@ -1310,7 +1382,7 @@ export const useCarbonChat = () => {
         savingChannelsRef.current.delete(channel);
       }
     },
-    [t, setDraftNotice, dismissDraftNoticeAfter],
+    [t, setDraftNotice, dismissDraftNoticeAfter, blockedByFrameworkClaim],
   );
 
   // Info: (20260714 - Tzuhan) 報告草稿 debounce 自動保存(前端加密 → PUT)；還原完成前不保存，避免空骨架覆蓋既有草稿

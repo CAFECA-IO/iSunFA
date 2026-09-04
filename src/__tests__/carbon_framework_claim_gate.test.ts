@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import { describe, it, expect } from "@jest/globals";
 import {
   CARBON_FRAMEWORK_CLAIM_ROUTING,
@@ -5,6 +7,7 @@ import {
   CarbonFrameworkClaimExitEnum,
   CarbonFrameworkClaimRuleEnum,
   composeCarbonPaperText,
+  composeReportDraftPaperText,
   gateFrameworkClaims,
 } from "@/lib/utils/carbon_framework_claim_gate";
 import { auditFrameworkClaims } from "@/lib/utils/carbon_framework_claims";
@@ -258,5 +261,163 @@ describe("槽界:相鄰兩槽不得熔成一句", () => {
       title: "高興昌鋼鐵股份有限公司",
     });
     expect(gateFrameworkClaims(paperText, PDF_EXPORT).blocked).toHaveLength(1);
+  });
+});
+
+describe("存檔出口:那一份紙面文字怎麼組(#6688-B 後半)", () => {
+  /**
+   * Info: (20260904 - Emily) 判準抽出 hook 才逼得出行為測試。
+   * 本專案 testEnvironment 是 node、沒有 jsdom,hook 只能用掃描守接線;
+   * 而「哪幾格算紙面」是判準,判準要有行為測試 —— 所以它住在純函式裡。
+   */
+  it("rawMarkdown 優先於逐段串接(它是全文的權威來源)", () => {
+    const text = composeReportDraftPaperText({
+      rawMarkdown: "使用者改過的全文",
+      paragraphs: [{ content: "舊的逐段內容" }],
+    });
+    expect(text).toContain("使用者改過的全文");
+    expect(text).not.toContain("舊的逐段內容");
+  });
+
+  it("沒有 rawMarkdown 才退回逐段串接(舊草稿也要能審)", () => {
+    const { blocked } = gateFrameworkClaims(
+      composeReportDraftPaperText({
+        paragraphs: [
+          { content: "1.1 組織邊界" },
+          { content: "本公司符合 IFRS S1 之各項規定。" },
+        ],
+      }),
+      DRAFT_SAVE,
+    );
+    expect(blocked).toHaveLength(1);
+  });
+
+  it("段落之間是句界,不是換行 —— 否則相鄰兩段會熔成一句", () => {
+    /**
+     * Info: (20260904 - Emily) 與 PAPER_SLOT_SEPARATOR 同一件事:
+     * `squeezeForMatch` 把換行刪掉,所以段落串接若用 `\n`,
+     * 前一段結尾的動詞會接上下一段開頭的框架名稱。
+     */
+    const { audit } = gateFrameworkClaims(
+      composeReportDraftPaperText({
+        paragraphs: [
+          { content: "3.2 查證\n\n本報告已通過第三方查證" },
+          { content: "IFRS S1/S2 對照表見附錄" },
+        ],
+      }),
+      DRAFT_SAVE,
+    );
+    expect(audit.complianceClaims).toEqual([]);
+  });
+
+  it("報告名稱與識別欄位的值都在審的範圍內", () => {
+    expect(
+      gateFrameworkClaims(
+        composeReportDraftPaperText({
+          rawMarkdown: "1.1 組織邊界",
+          reportName: "本公司遵循 TIFRS S2 之揭露報告",
+        }),
+        DRAFT_SAVE,
+      ).blocked,
+    ).toHaveLength(1);
+    expect(
+      gateFrameworkClaims(
+        composeReportDraftPaperText({
+          rawMarkdown: "1.1 組織邊界",
+          identity: { verifiedBy: "本公司已達成 IFRS S1 要求" },
+        }),
+        DRAFT_SAVE,
+      ).blocked,
+    ).toHaveLength(1);
+  });
+
+  it("識別欄位只送 value,不送我們自己的 i18n 標籤", () => {
+    /**
+     * Info: (20260904 - Emily) 標籤住在預覽元件、由 `t` 取。把那四個字搬進這一層
+     * 會變成第二份文案來源 —— 而它們不可能含使用者的宣告,審它換不到東西。
+     */
+    const text = composeReportDraftPaperText({
+      rawMarkdown: "1.1 組織邊界",
+      identity: { preparedBy: "溫室氣體盤查小組" },
+    });
+    expect(text).toContain("溫室氣體盤查小組");
+    expect(text).not.toContain("製作單位");
+  });
+
+  it("乾淨的草稿不被擋(否則「擋掉一切」也會讓上面幾條綠)", () => {
+    expect(
+      gateFrameworkClaims(
+        composeReportDraftPaperText({
+          rawMarkdown:
+            "1.1 組織邊界\n\n本公司採用營運控制法。\n本報告依 IFRS S1/S2 之架構編製。\n本報告不構成 IFRS S1/S2 之合規聲明。",
+          reportName: "高興昌鋼鐵股份有限公司 2024 年度溫室氣體報告",
+          identity: { inventoryYear: "2024", preparedBy: "永續發展部" },
+        }),
+        DRAFT_SAVE,
+      ).blocked,
+    ).toEqual([]);
+  });
+});
+
+describe("存檔出口的接線(掃描 —— hook 沒有 jsdom,行為由上一組純函式守)", () => {
+  const hook = fs.readFileSync(
+    path.join(process.cwd(), "src/hooks/use_carbon_chat.ts"),
+    "utf-8",
+  );
+
+  it("守門接在 flushReportDraftSave 的入口,而且在送出之前", () => {
+    /**
+     * Info: (20260904 - Emily) `flushReportDraftSave` 是所有段落寫入
+     *(AI 草稿、修訂、匯入、手動編輯)匯流成一次 PUT 的地方。
+     * 接在它入口 = 一個判斷蓋住全部路徑;接在任何一個呼叫端 = 漏掉其他的。
+     */
+    const guard = hook.indexOf(
+      "if (blockedByFrameworkClaim(channel, sessionId)) return;",
+    );
+    const enqueue = hook.indexOf("savingChannelsRef.current.add(channel);");
+    expect(guard).toBeGreaterThan(-1);
+    expect(enqueue).toBeGreaterThan(-1);
+    expect(guard).toBeLessThan(enqueue);
+  });
+
+  it("用的是 DRAFT_SAVE 出口(不是把 PDF 那格的分流套過來)", () => {
+    expect(hook).toContain("CarbonFrameworkClaimExitEnum.DRAFT_SAVE");
+    expect(hook).not.toContain("CarbonFrameworkClaimExitEnum.PDF_EXPORT");
+  });
+
+  it("本地備份**不**被擋 —— 它在守門之前就寫了", () => {
+    /**
+     * Info: (20260904 - Emily) 這是三個設計決定裡唯一有破壞性風險的那一個。
+     * 自動保存的 effect 在進入任何雲端 guard 之前就 `saveLocalDraftBackup`,
+     * 所以被擋之後那一版仍在本機、重載讀得回來 —— 代價是「沒上雲」不是「消失」。
+     * 把備份也擋掉才是唯一真正毀東西的選項,而本機快取不是紙面。
+     */
+    const backup = hook.indexOf("const backedUp = saveLocalDraftBackup(");
+    const guardDefinition = hook.indexOf(
+      "const blockedByFrameworkClaim = useCallback(",
+    );
+    expect(backup).toBeGreaterThan(-1);
+    expect(guardDefinition).toBeGreaterThan(-1);
+    expect(
+      hook.slice(guardDefinition, hook.indexOf("const flushReportDraftSave")),
+    ).not.toContain("saveLocalDraftBackup");
+  });
+
+  it('被擋時沿用既有的 saveStatus "local",不新增狀態', () => {
+    /**
+     * Info: (20260904 - Emily) `"local"` 的語意就是「僅暫存本機、未上雲」,
+     * 而那正是被擋之後的真實狀態。新增一種狀態會讓工具列多一種要解釋的顏色,
+     * 而它要說的事既有的那個已經說了。原因走 draftNotice(#6624 立的分工)。
+     */
+    const guard = hook.slice(
+      hook.indexOf("const blockedByFrameworkClaim = useCallback("),
+      hook.indexOf("const flushReportDraftSave"),
+    );
+    expect(guard).toContain('setSaveStatus("local")');
+    expect(guard).toContain("carbon_chatbot.save_blocked_framework_claim");
+    const statuses = /"saving" \| "saved" \| "error" \| "local" \| null/.test(
+      hook,
+    );
+    expect(statuses).toBe(true);
   });
 });

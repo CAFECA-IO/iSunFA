@@ -44,6 +44,10 @@ import {
   type ICarbonFrameworkClaimAudit,
 } from "@/lib/utils/carbon_framework_claims";
 import { COMPLIANCE_CLAIM_PATTERNS } from "@/constants/carbon_report_framework";
+import {
+  CARBON_REPORT_IDENTITY_FIELDS,
+  type ICarbonReportIdentity,
+} from "@/lib/utils/carbon_report_identity";
 
 /** Info: (20260903 - Emily) 會上紙的兩個出口 */
 export enum CarbonFrameworkClaimExitEnum {
@@ -222,6 +226,41 @@ export const composeCarbonPaperText = (parts: ICarbonPaperTextParts): string =>
   ]
     .filter((line) => line.length > 0)
     .join(PAPER_SLOT_SEPARATOR);
+
+/**
+ * Info: (20260904 - Emily) 存檔出口的那一份紙面文字(#6688-B 後半)。
+ *
+ * 存在的理由是**讓判斷離開 hook**:接線可以用掃描守,但「哪幾格算紙面」是判準,
+ * 而 hook 沒有辦法用行為測試逼它(本專案 testEnvironment 是 node,沒有 jsdom)。
+ * 抽成純函式之後,四個槽的取法各有一條測試。
+ *
+ * `rawMarkdown` 優先於逐段串接:它是全文的權威來源(見 `IReportData` 的註解),
+ * 使用者所見即所存。**沒有它才**退回段落串接 —— 反過來取會審到一份與存下去的
+ * 不同的文字(舊草稿沒有 rawMarkdown,新草稿有,兩者都要能審)。
+ *
+ * 識別欄位只送 value 不送 label:label 是我們自己的 i18n 標籤,不可能含使用者的宣告,
+ * 而把那四個標籤搬進這一層會變成第二份文案來源(它們住在預覽元件、由 `t` 取)。
+ * PDF 那端的 label 是用戶端實際印在紙上的字串,所以那端連 label 一起審 ——
+ * 兩端審的都是「那個出口真的會印/會存的東西」,不是同一組欄位。
+ */
+export const composeReportDraftPaperText = (draft: {
+  readonly rawMarkdown?: string;
+  readonly paragraphs?: ReadonlyArray<{ readonly content: string }>;
+  readonly reportName?: string;
+  readonly identity?: ICarbonReportIdentity;
+}): string =>
+  composeCarbonPaperText({
+    markdown:
+      draft.rawMarkdown ??
+      (draft.paragraphs ?? [])
+        .map((paragraph) => paragraph.content)
+        .join(PAPER_SLOT_SEPARATOR),
+    title: draft.reportName,
+    identity: CARBON_REPORT_IDENTITY_FIELDS.map((field) => ({
+      label: "",
+      value: draft.identity?.[field] ?? "",
+    })),
+  });
 
 export interface ICarbonFrameworkClaimFinding {
   rule: CarbonFrameworkClaimRuleEnum;

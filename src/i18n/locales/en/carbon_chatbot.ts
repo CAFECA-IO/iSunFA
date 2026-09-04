@@ -134,6 +134,9 @@ export const carbonChatbot = {
     "The latest changes were not saved to the cloud: the draft was updated in another tab or device. Reload to get the latest version, then reapply your edit.",
   save_failed_too_large:
     "The latest changes were not saved to the cloud: this draft exceeds the per-report size limit. Remove some verbatim source tables, or import in smaller parts.",
+  // Info: (20260904 - Emily) A refusal, not a failure: retrying changes nothing until the sentence goes
+  save_blocked_framework_claim:
+    "The report claims the company complies with {{name}}, so this version was not saved to the cloud \u2014 that sentence must never appear in a report you send out. Your work is still on this device; remove the sentence and it will save again. A statement about the document\u2019s structure is still allowed.",
   save_local_quota:
     "Local storage is full, so the offline backup was not updated (the cloud copy was saved).",
   save_local_quota_only:
