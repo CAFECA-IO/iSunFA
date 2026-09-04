@@ -168,6 +168,19 @@ export enum RateLimitBucketEnum {
    * 讀取（員工清單、薪資紀錄清單與明細）沿用既有的 `READ`。
    */
   SALARY_WRITE = "SALARY_WRITE",
+
+  /**
+   * Info: (20260904 - Julian) 用電子郵件寄出薪資單。
+   *
+   * **不與 `SALARY_WRITE` 共用。** 儲存薪資紀錄是高頻的（試算過程中會存好幾次），
+   * 共用一個預算的話「今天存太多次紀錄」會把寄送額度吃光 ——
+   * 而那兩件事的成本結構完全不同：寄送每一次都會啟動一次 headless Chrome 列印
+   * 與一次 SMTP 連線，兩者都比一般寫入昂貴得多。
+   *
+   * 比照 `TEAM_INVITE_SEND`（同樣是「按一下就寄一封信」），但**更緊**：
+   * 寄薪資單是人工動作，一次一位員工，正常一個月一輪。
+   */
+  SALARY_MAIL_SEND = "SALARY_MAIL_SEND",
 }
 
 export interface IRateLimitWindow {
@@ -259,6 +272,11 @@ export const RATE_LIMIT_RULES: Record<RateLimitBucketEnum, IRateLimitWindow[]> =
     [RateLimitBucketEnum.SALARY_WRITE]: [
       { windowMs: MINUTE_MS, max: envInt("SALARY_RL_WRITE_PER_MINUTE", 30) },
       { windowMs: DAY_MS, max: envInt("SALARY_RL_WRITE_PER_DAY", 300) },
+    ],
+    // Info: (20260904 - Julian) 數值取自 salary_pay_slip_delivery_plan §3.3，不是重新發明的
+    [RateLimitBucketEnum.SALARY_MAIL_SEND]: [
+      { windowMs: MINUTE_MS, max: envInt("SALARY_RL_MAIL_PER_MINUTE", 5) },
+      { windowMs: DAY_MS, max: envInt("SALARY_RL_MAIL_PER_DAY", 50) },
     ],
     [RateLimitBucketEnum.ATTENDANCE_EXPORT]: [
       {

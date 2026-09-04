@@ -75,6 +75,8 @@ model User {
   employee              Employee?
   // Info: (20260831 - Julian) 按下薪資計算機「儲存」的人
   createdSalaryRecords  SalaryRecord[]
+  // Info: (20260904 - Julian) 按下「寄出薪資單」的人
+  sentPaySlipDeliveries SalaryPaySlipDelivery[]
 
   @@index([address])
   @@map("user")
@@ -956,6 +958,7 @@ model AccountBook {
   // Info: (20260831 - Julian) 薪資計算機（輕量員工名單與薪資紀錄）
   salaryCalculatorEmployees SalaryCalculatorEmployee[]
   salaryRecords             SalaryRecord[]
+  salaryPaySlipDeliveries   SalaryPaySlipDelivery[]
 
   @@map("account_book")
 }
@@ -4644,10 +4647,95 @@ model SalaryRecord {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  // Info: (20260904 - Julian) 這一筆的寄送事件（成功與失敗都留一列）
+  paySlipDeliveries SalaryPaySlipDelivery[]
+
   @@unique([accountBookId, employeeId, year, month])
   @@index([accountBookId])
   @@index([employeeId])
   // Info: (20260831 - Julian) 列表的主要查詢條件：某本帳的某個年月
   @@index([accountBookId, year, month])
   @@map("salary_record")
+}
+
+/**
+ * Info: (20260904 - Julian) 一次薪資單寄送。**成功與失敗都留一列。**
+ *
+ * ## 為什麼失敗也要留
+ *
+ * 「寄不出去就當作沒發生」會讓兩件事永遠查不出來：寄了幾次
+ * （重試三次都失敗，與從未寄過，在畫面上長得一模一樣），
+ * 以及**薪資資料曾經嘗試離開組織**。
+ *
+ * 團隊邀請那一側的處置相反（寄失敗就把邀請刪掉），但那是因為邀請本身
+ * 沒寄出去就沒有意義；薪資紀錄不一樣 —— 它獨立存在，寄送只是它的一個事件。
+ *
+ * ## 為什麼沒有狀態機
+ *
+ * 只有 SENT / FAILED 兩個終局，沒有 PENDING。本次是同步寄送
+ * （API 等 SMTP 回來才回應），不進佇列。加一個 PENDING 只會製造一種
+ * 「永遠停在 PENDING 而沒有人去收」的狀態 —— 那需要一支 reaper，
+ * 而我們還沒有需要它的量（計畫書 §2.2）。
+ *
+ * ## 為什麼沒有唯一鍵
+ *
+ * 同一筆薪資紀錄可以有多列。補寄、改了信箱再寄、對方說沒收到，
+ * 都是真實情境 ——「已經寄過了，還要再寄嗎」是前端問一句，不是資料庫約束。
+ */
+model SalaryPaySlipDelivery {
+  id String @id @default(uuid())
+
+  /**
+   * Info: (20260904 - Julian) 寄的是哪一筆薪資紀錄。
+   *
+   * `onDelete: Cascade` 是配合 `SalaryRecord` 的硬刪（它刻意不做 soft delete）：
+   * 不串接的話，刪一筆已寄過的薪資紀錄會撞上外鍵而失敗 ——
+   * 也就是既有的 DELETE 端點會在「寄過的紀錄」上壞掉。
+   *
+   * **代價要講明：刪掉薪資紀錄，它的寄送軌跡會跟著消失。**
+   * 那與 §2.1「薪資資料曾經嘗試離開組織要留得下來」是有張力的。
+   * 本次接受它，理由是薪資紀錄本來就沒有「刪了還看得到」的設計，
+   * 而讓寄送紀錄單獨活下來會產生一堆指不到紀錄的孤兒列。
+   * 真要保留跨刪除的軌跡，該做的是 `AuditLog`，不是把這張表變成半個歷史表。
+   */
+  salaryRecordId String       @map("salary_record_id")
+  salaryRecord   SalaryRecord @relation(fields: [salaryRecordId], references: [id], onDelete: Cascade)
+
+  // Info: (20260904 - Julian) 租戶 Root Node，與薪資紀錄一致；查詢一律以它為 where 的第一個 key
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  /**
+   * Info: (20260904 - Julian) **實際**收件信箱的快照，不是查詢時 join 員工檔取現值。
+   *
+   * 員工的 email 之後會被改。查「這封三月的薪資單當初寄到哪」時，
+   * join 出來的是今天的信箱 —— 而那正是稽核最需要答案的那一格。
+   * 收件人固定取自員工檔（計畫書 D3），但取到的那個值要留在這裡。
+   */
+  recipientEmail String @map("recipient_email")
+
+  // Info: (20260904 - Julian) SALARY_DELIVERY_STATUS：SENT / FAILED
+  status String
+
+  /**
+   * Info: (20260904 - Julian) 失敗原因的摘要（截斷至 500 字）。給診斷用，不對外顯示。
+   * 不記信件內文與附件 —— 那等於把薪資單留在第二個地方。
+   */
+  failureReason String? @map("failure_reason")
+
+  /**
+   * Info: (20260904 - Julian) 誰按下的寄送。
+   *
+   * 這一欄一定要有讀者：母計畫 §13.2 記著 `SalaryRecord.createdByUserId`
+   * 沒有任何讀者、稽核價值等於零。這裡不重蹈覆轍 ——「已寄出」分頁的
+   * 每一列都顯示寄送者，API 回應帶 `sentBy.name`（計畫書 §6.3）。
+   */
+  sentByUserId String @map("sent_by_user_id")
+  sentBy       User   @relation(fields: [sentByUserId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([accountBookId])
+  @@index([salaryRecordId])
+  @@map("salary_pay_slip_delivery")
 }

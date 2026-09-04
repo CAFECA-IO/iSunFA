@@ -2219,4 +2219,39 @@ export const API_ERRORS = {
     message: "Salary amount must be a whole number",
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
+
+  /**
+   * Info: (20260904 - Julian) 要寄薪資單，但員工檔上沒有信箱。
+   *
+   * **這是資料狀態，不是故障** —— 給 4xx 而不是 500：使用者沒有做錯任何事，
+   * 要動的是員工資料。`SalaryCalculatorEmployee.email` 可空是刻意的
+   * （不少帳本不替員工建信箱）。
+   *
+   * 計畫書 §7 原本寫 422，但本專案的 `ApiCode` 沒有 422 這一格
+   * （`HTTP_MAP` 只有 400/401/402/403/404/409/429/499/500）。
+   * 為了一支端點在共用的狀態碼表上新增一格，會影響每一支 route 的對應表 ——
+   * 而 400 已經滿足計畫書真正在意的那一句「不是 500」。
+   */
+  VA_SALARY_EMPLOYEE_NO_EMAIL: {
+    code: "VA000084",
+    message: "This employee has no email address on file",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260904 - Julian) 薪資單寄送失敗（PDF 產生或 SMTP）。
+   *
+   * 與 `TW_MAIL_NOT_CONFIGURED`（TW000018）分開，理由同 TW000019 之於 TW000018：
+   * 處置不同。未設定要去後台設 SMTP，這個重試可能就會過。
+   *
+   * 也與 `IS_PDF_FONT_UNAVAILABLE` 分開 —— 那一個由 `pdf_font_guard` 丟出，
+   * 經 `salary_pay_slip_delivery.service` 的 `toAppError` 原樣轉成 AppError
+   * 送到這裡，**不會被蓋成本代碼**：缺字型的唯一解法是裝字型，
+   * 埋在一個看起來值得重試的錯誤裡等於讓維運只能靠猜。
+   */
+  TW_SALARY_PAY_SLIP_MAIL_FAILED: {
+    code: "TW000034",
+    message: "Failed to deliver the pay slip email",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
 };
