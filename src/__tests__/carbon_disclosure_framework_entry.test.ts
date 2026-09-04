@@ -85,7 +85,19 @@ describe("完成判準:選了 IFRS,重載之後仍然是 IFRS", () => {
     expect(parsed.success).toBe(false);
   });
 
-  it("勾稽阻擋紀錄一併撐過重載(#6707 的欄位,型別有、schema 一直沒有)", () => {
+  it("勾稽阻擋紀錄**仍然**不撐過重載 —— 界沒量完之前不宣告(open/73)", () => {
+    /**
+     * Info: (20260904 - Emily) 這一條的方向是反的,而那是刻意的。
+     *
+     * 本檔一度宣告過 `ledgerImportBlocks`(`reason: max(500)`),而它的寫入端
+     * `blockedReason` 值域無上界(筆數隨廠址 × 類別成長、subject 是客戶原文)。
+     * 猜一個上界比不宣告更糟:超界那次存得進去,下一次載入
+     * `safeParse` 失敗 → `loadInventoryState` 回 null → **整份 state 被丟棄**。
+     *
+     * 所以現在釘住「它還沒被持久化」這個**已知的缺口**,並指向那張票 ——
+     * 沒有這一條,下一個人補上宣告時不會知道要先量寫入端。
+     * open/73 做完時這一條要改成正向斷言(連同截斷的不變式)。
+     */
     const state = {
       ...baseState,
       ledgerImportBlocks: [
@@ -96,7 +108,7 @@ describe("完成判準:選了 IFRS,重載之後仍然是 IFRS", () => {
         },
       ],
     };
-    expect(roundTrip(state)).toEqual(JSON.parse(JSON.stringify(state)));
+    expect(roundTrip(state)).not.toHaveProperty("ledgerImportBlocks");
   });
 });
 
