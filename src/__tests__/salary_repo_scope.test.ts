@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach } from "@jest/globals";
 import { prisma } from "@/lib/prisma";
 import { salaryCalculatorEmployeeRepo } from "@/repositories/salary_calculator_employee.repo";
 import { salaryRecordRepo } from "@/repositories/salary_record.repo";
+import { ISalaryCalculatorEmployeeWriteInput } from "@/interfaces/salary_record";
+import { DEFAULT_EMPLOYEE_PROFILE } from "@/lib/utils/salary_employee_profile";
 
 /**
  * Info: (20260901 - Luphia) 薪資兩支 repository **交給資料庫的條件**。
@@ -84,6 +86,31 @@ const BOOK = "book-1";
 const OTHER_EMPLOYEE = "employee-9";
 const RECORD = "record-1";
 
+/**
+ * Info: (20260902 - Julian) 員工寫入的最小輸入。
+ *
+ * 這一檔驗的是**交給資料庫的 `where` 與 `data`**，與 15 個常態屬性
+ * （行業別、投保狀態、到職日⋯⋯）無關。但 `ISalaryCalculatorEmployeeWriteInput`
+ * 是整組必填 —— 少一欄會靜靜落到 schema 的 `@default`，也就是
+ * 「改個名字順便把他的投保狀態與到職日重設」。
+ *
+ * 所以這裡用預設值補齊，只留下真正被斷言的那幾欄（`number` / `activeNumber`）。
+ * 用 `DEFAULT_EMPLOYEE_PROFILE` 而不是手寫 15 個值：那份常數與 schema 的
+ * `@default` 由 `salary_employee_profile.test.ts` 對拍，手寫的話這一檔會變成
+ * 第三份要同步的預設值。
+ */
+const employeeInputOf = (
+  overrides: Partial<ISalaryCalculatorEmployeeWriteInput> = {},
+): ISalaryCalculatorEmployeeWriteInput => ({
+  ...DEFAULT_EMPLOYEE_PROFILE,
+  name: "王小明",
+  number: "A012",
+  email: undefined,
+  baseSalary: 40000,
+  mealAllowance: 2400,
+  ...overrides,
+});
+
 const argOf = (mock: Mock, call = 0): Record<string, unknown> =>
   mock.mock.calls[call][0] as Record<string, unknown>;
 
@@ -138,13 +165,7 @@ describe("薪資 repository 的租戶隔離", () => {
     await salaryCalculatorEmployeeRepo.updateEmployee({
       accountBookId: BOOK,
       employeeId: OTHER_EMPLOYEE,
-      input: {
-        name: "王小明",
-        number: "A012",
-        email: undefined,
-        baseSalary: 40000,
-        mealAllowance: 2400,
-      },
+      input: employeeInputOf(),
     });
 
     expect(whereOf(employeeUpdateMany)).toEqual({
@@ -241,13 +262,7 @@ describe("軟刪除讓出 activeNumber", () => {
     await salaryCalculatorEmployeeRepo.updateEmployee({
       accountBookId: BOOK,
       employeeId: OTHER_EMPLOYEE,
-      input: {
-        name: "王小明",
-        number: "A012",
-        email: undefined,
-        baseSalary: 40000,
-        mealAllowance: 2400,
-      },
+      input: employeeInputOf(),
     });
 
     const data = argOf(employeeUpdateMany).data as Record<string, unknown>;
