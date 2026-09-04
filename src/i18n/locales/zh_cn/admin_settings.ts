@@ -18,6 +18,8 @@ export const adminSettings = {
   },
   env_only_hint:
     "此项目目前仅存在于环境变量，尚未纳入数据库保管与签章；保存后才会受保护。",
+  env_shadowed_hint:
+    "此项目在环境变量里有值，但**不会被读取**：本部署的设置已由数据库签章保管，环境变量一律不再参照。请在此填入并签章。",
   fallback_hint: "未设置，系统目前采用保底值「{{value}}」。",
   history_title: "变更历史",
   history_version: "版本",

@@ -57,7 +57,14 @@ export const buildPaySlipMail = (
   const text = [
     `${name} 您好：`,
     "",
-    `隨信附上您 ${period} 的薪資單，內容為 PDF 附件。`,
+    /**
+     * Info: (20260904 - Julian) `${period}` 之後不留空格。
+     *
+     * 期間字串以「月」結尾，接著是「的」—— 兩個都是全形中文字，中間加空白
+     * 會在畫面上開一個洞。前面那個空格要留：它隔開的是「您」與阿拉伯數字，
+     * 中英數之間留白是慣例（盤古之白）。
+     */
+    `隨信附上您 ${period}的薪資單，內容為 PDF 附件。`,
     "",
     "若附件無法開啟，或內容與您的認知有出入，請與貴公司的人資或會計聯繫。",
     "本信件由系統自動寄出，請勿直接回覆。",
@@ -72,7 +79,7 @@ export const buildPaySlipMail = (
    */
   const html = [
     `<p>${escapeHtml(name)} 您好：</p>`,
-    `<p>隨信附上您 <strong>${period}</strong> 的薪資單，內容為 PDF 附件。</p>`,
+    `<p>隨信附上您 <strong>${period}</strong>的薪資單，內容為 PDF 附件。</p>`,
     "<p>若附件無法開啟，或內容與您的認知有出入，請與貴公司的人資或會計聯繫。</p>",
     '<p style="color:#6b7280;font-size:12px">本信件由系統自動寄出，請勿直接回覆。<br />iSunFA</p>',
   ].join("\n");

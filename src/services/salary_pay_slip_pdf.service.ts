@@ -123,6 +123,12 @@ export class SalaryPaySlipPdfService {
          * 他不會來問「是不是字型壞了」，他會認為公司寄了一份亂碼給他。
          * 這個缺陷完全靜默，型別與單元測試都看不到，只有掃描測試守得住
          * （見 `salary_pdf_font_guard.test.ts`）。
+         *
+         * Info: (20260904 - Julian) **「我們寄成功過了」不能當作這一項已驗證。**
+         * 同日在 macOS 開發機做過一次端到端寄送，PDF 完全正確 ——
+         * 但那台機器本來就有中文字型。`pdf_font_guard.ts` 檔頭記的那次事故
+         * 發生在**伺服器**上（`fc-list :lang=zh` 只有 X11 點陣字）。
+         * 這一行要防的環境，至今一次都沒有被測到過。
          */
         await assertCjkRenderable(page, html, {
           scope: "SalaryPaySlipPdfService",
