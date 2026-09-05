@@ -53,7 +53,7 @@ interface IViewPaySlipModal {
    *
    * 由呼叫端判斷而不是這裡：兩個成因都只有呼叫端知道 ——
    * 「員工沒填信箱」與「員工已從名單移除」（軟刪之後薪資紀錄仍在，
-   * 但伺服器的 `getEmployeeById` 會過濾掉 `deletedAt`，寄送必然回 404）。
+   * 但伺服器的 `getActiveEmployeeById` 會過濾掉 `deletedAt`，寄送必然回 404）。
    * 兩者的下一步完全不同：一個是去補信箱，一個是那個人已經不在了。
    */
   sendBlockedReason?: string;

@@ -197,7 +197,7 @@ export class SalaryRecordService {
     userId: string;
     input: ISalaryRecordWriteInput;
   }): Promise<ISalaryRecordDetail> {
-    const employee = await this.employees.getEmployeeById(
+    const employee = await this.employees.getActiveEmployeeById(
       accountBookId,
       input.employeeId,
     );

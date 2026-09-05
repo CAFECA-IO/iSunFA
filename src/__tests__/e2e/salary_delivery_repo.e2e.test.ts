@@ -431,7 +431,7 @@ describe("recipientEmail 是快照，不是 join", () => {
     });
 
     // Info: (20260904 - Julian) 先確認員工檔真的變了，否則下面那條會是空歡喜
-    const employee = await salaryCalculatorEmployeeRepo.getEmployeeById(
+    const employee = await salaryCalculatorEmployeeRepo.getActiveEmployeeById(
       BOOK_ID,
       employeeId,
     );

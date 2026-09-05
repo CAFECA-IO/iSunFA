@@ -125,7 +125,7 @@ export class SalaryPaySlipDeliveryService {
      * 沒有 email —— 而 email 正是這裡唯一必要的新資訊。
      * 順帶得到的是租戶再確認一次：這一支也是以 `accountBookId` 為第一個條件。
      */
-    const employee = await this.employees.getEmployeeById(
+    const employee = await this.employees.getActiveEmployeeById(
       accountBookId,
       record.employee.id,
     );

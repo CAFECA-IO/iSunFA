@@ -2,6 +2,9 @@ import { describe, it, expect, beforeEach } from "@jest/globals";
 import { prisma } from "@/lib/prisma";
 import { salaryCalculatorEmployeeRepo } from "@/repositories/salary_calculator_employee.repo";
 import { salaryRecordRepo } from "@/repositories/salary_record.repo";
+import { salaryPaySlipDeliveryRepo } from "@/repositories/salary_pay_slip_delivery.repo";
+import { readFileSync } from "fs";
+import { join } from "path";
 import { ISalaryCalculatorEmployeeWriteInput } from "@/interfaces/salary_record";
 import { DEFAULT_EMPLOYEE_PROFILE } from "@/lib/utils/salary_employee_profile";
 
@@ -54,6 +57,10 @@ jest.mock("@/lib/prisma", () => ({
       upsert: jest.fn(async () => null),
       deleteMany: jest.fn(async () => ({ count: 1 })),
     },
+    salaryPaySlipDelivery: {
+      findMany: jest.fn(async () => []),
+      create: jest.fn(async () => null),
+    },
   },
 }));
 
@@ -83,6 +90,10 @@ const recordFindMany = prisma.salaryRecord.findMany as unknown as Mock;
 const recordCount = prisma.salaryRecord.count as unknown as Mock;
 const recordDeleteMany = prisma.salaryRecord.deleteMany as unknown as Mock;
 const recordGroupBy = prisma.salaryRecord.groupBy as unknown as Mock;
+const recordUpsert = prisma.salaryRecord.upsert as unknown as Mock;
+const deliveryFindMany = prisma.salaryPaySlipDelivery
+  .findMany as unknown as Mock;
+const deliveryCreate = prisma.salaryPaySlipDelivery.create as unknown as Mock;
 
 const BOOK = "book-1";
 const OTHER_EMPLOYEE = "employee-9";
@@ -119,6 +130,43 @@ const argOf = (mock: Mock, call = 0): Record<string, unknown> =>
 const whereOf = (mock: Mock, call = 0): Record<string, unknown> =>
   argOf(mock, call).where as Record<string, unknown>;
 
+/**
+ * Info: (20260905 - Luphia) 兩個寫入路徑的替身回傳值。
+ *
+ * 只補到「mapper 走得完」為止 —— 這一檔驗的是**交給資料庫的參數**，
+ * 回傳值只是為了讓呼叫不炸在無關的地方。
+ */
+const salaryRowFixture = () => ({
+  id: "r-1",
+  year: 2026,
+  month: 8,
+  accountBookId: BOOK,
+  employeeId: "e-9",
+  createdByUserId: "u-1",
+  calculatorVersion: "v1",
+  totalPayment: BigInt(0),
+  totalSalaryTaxable: BigInt(0),
+  totalEmployerCost: BigInt(0),
+  inputSnapshot: {},
+  resultSnapshot: {},
+  createdAt: new Date(0),
+  updatedAt: new Date(0),
+  employee: { id: "e-9", name: "王小明", number: "A012", email: null },
+  // Info: (20260905 - Luphia) `toSummary` 會讀這個關聯算「最近一次寄出」
+  paySlipDeliveries: [],
+});
+
+const deliveryRowFixture = () => ({
+  id: "d-1",
+  salaryRecordId: RECORD,
+  accountBookId: BOOK,
+  recipientEmail: "a@b.c",
+  status: "SENT",
+  failureReason: null,
+  sentBy: { id: "u-1", name: "Luphia" },
+  createdAt: new Date(0),
+});
+
 beforeEach(() => {
   jest.clearAllMocks();
   employeeFindFirst.mockResolvedValue(null);
@@ -129,6 +177,347 @@ beforeEach(() => {
   recordCount.mockResolvedValue(0);
   recordDeleteMany.mockResolvedValue({ count: 1 });
   recordGroupBy.mockResolvedValue([]);
+  /**
+   * Info: (20260905 - Luphia) 替身要回得了 mapper 走得完的列（§1.8）。
+   *
+   * 回一個空物件的話，失敗會發生在 `toDetail` 而不是斷言上 —— 那時看到的
+   * 是一個與被測行為無關的 TypeError，而真正要驗的「交出去的條件」
+   * 根本還沒被檢查。
+   */
+  recordUpsert.mockResolvedValue(salaryRowFixture());
+  deliveryFindMany.mockResolvedValue([]);
+  deliveryCreate.mockResolvedValue(deliveryRowFixture());
+});
+
+/**
+ * Info: (20260905 - Luphia) 從**列舉**改成**規則**（review #6769）。
+ *
+ * ## 上一版守不住什麼
+ *
+ * 這一檔原本逐支列出七條 `it`，涵蓋範圍等於「我當時想得到的那幾支」。
+ * 三支 repo 現在有 13 支 public 方法，而其中六支從來沒被驗過 ——
+ * `upsertRecord` 甚至是這個檔案誕生時就在外面的，不需要有人新增方法
+ * 才會出現缺口。實測：把 `listRecordsByIds` 的 `accountBookId` 拿掉，
+ * 5,927 條全綠。
+ *
+ * 差別只有一個字：**預設**。列舉是 opt-in（新方法自動在外面），
+ * 規則是 opt-out（新方法自動在裡面，要排除得主動登記並說明理由）。
+ * 安全性質的守門必須是後者 —— 漏掉的那一支不會有人發現，
+ * 它只是安靜地跨租戶。這正是檢查清單 §1.1 的處方。
+ *
+ * ## 兩個不變式分開宣告
+ *
+ * 上一版把「帶 `accountBookId`」與「濾 `deletedAt`」寫在同一條斷言裡，
+ * 而它們是兩件事、兩個理由：
+ *
+ * - **租戶隔離**對每一支都成立，沒有例外
+ * - **生命週期**是逐支的選擇：動作路徑只認存活中的，顯示路徑可以要全部
+ *
+ * 焊在一起的後果是「想加一支列出已刪除員工的查詢」時，最順手的動作
+ * 是把 `deletedAt` 從既有方法拿掉 —— 而那會讓「替已移除的員工建薪資紀錄」
+ * 與「把薪資單寄給已經離開的人」一起靜靜變成可能。
+ * 分開之後，新增 `findEmployeeById`（任何狀態）只需要在下面宣告
+ * `ANY_STATE`，不必也不該動到現有的動作路徑。
+ */
+
+const REPO_FILES = [
+  "src/repositories/salary_record.repo.ts",
+  "src/repositories/salary_calculator_employee.repo.ts",
+  "src/repositories/salary_pay_slip_delivery.repo.ts",
+] as const;
+
+/**
+ * Info: (20260905 - Luphia) 生命週期語意：這一支看得到已軟刪除的列嗎。
+ *
+ * `ACTIVE_ONLY` 的方法必須在 `where` 帶 `deletedAt: null`。
+ * `ANY_STATE` 是刻意要看到全部（歷史清單之類），必須寫明理由。
+ * 只有 `SalaryCalculatorEmployee` 有軟刪除；另外兩張表沒有 `deletedAt`，
+ * 所以標 `NO_SOFT_DELETE`。
+ */
+const LIFECYCLE: Record<
+  string,
+  "ACTIVE_ONLY" | "ANY_STATE" | "NO_SOFT_DELETE"
+> = {
+  // Info: (20260905 - Luphia) 動作路徑：saveRecord 與寄薪資單都不該認已刪除的員工
+  getActiveEmployeeById: "ACTIVE_ONLY",
+  // Info: (20260905 - Luphia) 挑人彈窗與名單：選得到的人就是還在的人
+  listEmployees: "ACTIVE_ONLY",
+  updateEmployee: "ACTIVE_ONLY",
+  softDeleteEmployee: "ACTIVE_ONLY",
+  // Info: (20260905 - Luphia) 建立時那一列還不存在，沒有 deletedAt 可濾
+  createEmployee: "NO_SOFT_DELETE",
+  upsertRecord: "NO_SOFT_DELETE",
+  listRecords: "NO_SOFT_DELETE",
+  listRecordsByIds: "NO_SOFT_DELETE",
+  getRecordById: "NO_SOFT_DELETE",
+  deleteRecord: "NO_SOFT_DELETE",
+  createDelivery: "NO_SOFT_DELETE",
+  listByRecord: "NO_SOFT_DELETE",
+  listByAccountBook: "NO_SOFT_DELETE",
+};
+
+/**
+ * Info: (20260905 - Luphia) 不需要帶 `accountBookId` 的方法。
+ *
+ * **今天是空的，而且應該一直是空的** —— 三支 repo 服務的都是帳本底下的資料。
+ * 留這個出口是為了讓「真的有例外」時它出現在 diff 上、需要在 review 裡
+ * 被解釋，而不是靜靜地不被守。長度由下一條測試釘住，只能變短。
+ */
+const TENANT_EXEMPT: Record<string, string> = {};
+const TENANT_EXEMPT_MAX = 0;
+
+const publicMethodsOf = (relativePath: string): string[] => {
+  const source = readFileSync(join(process.cwd(), relativePath), "utf-8");
+  return [...source.matchAll(/^ {2}public async ([A-Za-z0-9_]+)\(/gm)].map(
+    (match) => match[1],
+  );
+};
+
+const ALL_METHODS = REPO_FILES.flatMap(publicMethodsOf).sort();
+
+describe("覆蓋率本身：每一支方法都要被分類過", () => {
+  /**
+   * Info: (20260905 - Luphia) 掃描根沒有掃到空氣 —— 正則寫錯時這一條先紅。
+   */
+  it("三支 repo 都掃得到 public 方法", () => {
+    for (const file of REPO_FILES) {
+      expect(publicMethodsOf(file).length).toBeGreaterThan(0);
+    }
+  });
+
+  /**
+   * Info: (20260905 - Luphia) **新增第 14 支方法時，這一條會紅。**
+   *
+   * 訊息直接說出是哪一支沒分類，作者只有兩條路：補一條行為斷言，
+   * 或登記進 `TENANT_EXEMPT` 並寫下理由 —— 而後者會出現在 diff 上。
+   */
+  it("沒有未分類的方法", () => {
+    const classified = new Set([
+      ...Object.keys(LIFECYCLE),
+      ...Object.keys(TENANT_EXEMPT),
+    ]);
+    expect(ALL_METHODS.filter((name) => !classified.has(name))).toEqual([]);
+  });
+
+  // Info: (20260905 - Luphia) 反面：分類表裡不該有已經不存在的方法（改名會留下孤兒）
+  it("分類表沒有指向不存在的方法", () => {
+    const actual = new Set(ALL_METHODS);
+    expect(Object.keys(LIFECYCLE).filter((n) => !actual.has(n))).toEqual([]);
+  });
+
+  it("租戶豁免清單沒有變長", () => {
+    expect(Object.keys(TENANT_EXEMPT).length).toBeLessThanOrEqual(
+      TENANT_EXEMPT_MAX,
+    );
+  });
+});
+
+/**
+ * Info: (20260905 - Luphia) 租戶隔離：**每一支都要帶 `accountBookId`，沒有例外**。
+ *
+ * `accountBookId` 在這裡做的是**授權**不是識別 —— `employeeId` / `recordId`
+ * 都是 uuid 主鍵，拿它就找得到列；帶帳本才讓「別人家的那一列」變成查無此人。
+ * 而這不是理論：`saveRecord` 的 `employeeId` 來自 request body，
+ * `exportRecordsCsv` 的 `recordIds` 也是。
+ *
+ * 拿掉之後正確性得搬到呼叫端（`if (row.accountBookId !== accountBookId)`），
+ * 也就是把一個地方的判斷變成 N 個呼叫端各記得一次。
+ */
+describe("租戶隔離：每一支交給資料庫的條件都帶帳本", () => {
+  const call = async (name: string): Promise<void> => {
+    const employeeInput = employeeInputOf();
+    switch (name) {
+      case "getActiveEmployeeById":
+        await salaryCalculatorEmployeeRepo.getActiveEmployeeById(BOOK, "e-9");
+        return;
+      case "listEmployees":
+        await salaryCalculatorEmployeeRepo.listEmployees(BOOK);
+        return;
+      case "createEmployee":
+        await salaryCalculatorEmployeeRepo.createEmployee({
+          accountBookId: BOOK,
+          input: employeeInput,
+        });
+        return;
+      case "updateEmployee":
+        await salaryCalculatorEmployeeRepo.updateEmployee({
+          accountBookId: BOOK,
+          employeeId: "e-9",
+          input: employeeInput,
+        });
+        return;
+      case "softDeleteEmployee":
+        await salaryCalculatorEmployeeRepo.softDeleteEmployee({
+          accountBookId: BOOK,
+          employeeId: "e-9",
+        });
+        return;
+      case "listRecords":
+        await salaryRecordRepo.listRecords({
+          accountBookId: BOOK,
+          page: 1,
+          pageSize: 20,
+        });
+        return;
+      case "listRecordsByIds":
+        await salaryRecordRepo.listRecordsByIds(BOOK, ["r-1"]);
+        return;
+      case "getRecordById":
+        await salaryRecordRepo.getRecordById(BOOK, RECORD);
+        return;
+      case "deleteRecord":
+        await salaryRecordRepo.deleteRecord({
+          accountBookId: BOOK,
+          recordId: RECORD,
+        });
+        return;
+      case "listByRecord":
+        await salaryPaySlipDeliveryRepo.listByRecord({
+          accountBookId: BOOK,
+          salaryRecordId: RECORD,
+        });
+        return;
+      case "listByAccountBook":
+        await salaryPaySlipDeliveryRepo.listByAccountBook({
+          accountBookId: BOOK,
+          limit: 20,
+        });
+        return;
+      default:
+        throw new Error(`未接線的方法：${name}`);
+    }
+  };
+
+  /**
+   * Info: (20260905 - Luphia) `upsertRecord` 與 `createDelivery` 是**寫入**：
+   * 帳本進的是 `data` 不是 `where`，所以另外驗（見下方）。
+   */
+  const WHERE_METHODS = ALL_METHODS.filter(
+    (name) =>
+      !["upsertRecord", "createDelivery", "createEmployee"].includes(name),
+  );
+
+  it.each(WHERE_METHODS)("%s 的 where 帶 accountBookId", async (name) => {
+    jest.clearAllMocks();
+    await call(name);
+
+    const everyCall = [
+      employeeFindFirst,
+      employeeFindMany,
+      employeeUpdateMany,
+      recordFindFirst,
+      recordFindMany,
+      recordCount,
+      recordGroupBy,
+      recordDeleteMany,
+      deliveryFindMany,
+    ].flatMap((mock) => mock.mock.calls.map((args) => args[0]));
+
+    expect(everyCall.length).toBeGreaterThan(0);
+    for (const arg of everyCall) {
+      const where = (arg as { where?: Record<string, unknown> }).where;
+      expect(where?.accountBookId).toBe(BOOK);
+    }
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 寫入路徑：帳本要進 `data`，否則那一列不屬於任何帳本
+   *（或屬於錯的那一本）。`upsert` 的 `where` 是複合唯一鍵，也含帳本。
+   */
+  it("upsertRecord 的 where 與 data 都帶 accountBookId", async () => {
+    jest.clearAllMocks();
+    await salaryRecordRepo.upsertRecord({
+      accountBookId: BOOK,
+      employeeId: "e-9",
+      createdByUserId: "u-1",
+      year: 2026,
+      month: 8,
+      input: {} as never,
+      result: {} as never,
+      calculatorVersion: "v1",
+      totalPayment: BigInt(0),
+      totalSalaryTaxable: BigInt(0),
+      totalEmployerCost: BigInt(0),
+    });
+
+    const arg = argOf(recordUpsert);
+    const where = arg.where as Record<string, Record<string, unknown>>;
+    const create = arg.create as Record<string, unknown>;
+
+    expect(where.accountBookId_employeeId_year_month.accountBookId).toBe(BOOK);
+    expect(create.accountBookId).toBe(BOOK);
+  });
+
+  it("createDelivery 的 data 帶 accountBookId", async () => {
+    jest.clearAllMocks();
+    await salaryPaySlipDeliveryRepo.createDelivery({
+      accountBookId: BOOK,
+      salaryRecordId: RECORD,
+      recipientEmail: "a@b.c",
+      status: "SENT" as never,
+      failureReason: null,
+      sentByUserId: "u-1",
+    });
+
+    const data = argOf(deliveryCreate).data as Record<string, unknown>;
+    expect(data.accountBookId).toBe(BOOK);
+  });
+});
+
+/**
+ * Info: (20260905 - Luphia) 生命週期：宣告成 `ACTIVE_ONLY` 的就必須真的濾。
+ *
+ * 與租戶那一組分開，因為它們是兩個不變式。這一組讓「我要一支看得到
+ * 已刪除員工的查詢」變成一個**加一行宣告**的動作，而不是「把既有方法的
+ * 條件拿掉」——後者會連帶鬆掉寄薪資單與存薪資紀錄兩條動作路徑。
+ */
+describe("生命週期：ACTIVE_ONLY 的方法真的濾掉軟刪除", () => {
+  const ACTIVE_ONLY = Object.keys(LIFECYCLE).filter(
+    (name) => LIFECYCLE[name] === "ACTIVE_ONLY",
+  );
+
+  it("至少有一支是 ACTIVE_ONLY（否則下面整組空過）", () => {
+    expect(ACTIVE_ONLY.length).toBeGreaterThan(0);
+  });
+
+  it.each(ACTIVE_ONLY)("%s 的 where 帶 deletedAt: null", async (name) => {
+    jest.clearAllMocks();
+    switch (name) {
+      case "getActiveEmployeeById":
+        await salaryCalculatorEmployeeRepo.getActiveEmployeeById(BOOK, "e-9");
+        break;
+      case "listEmployees":
+        await salaryCalculatorEmployeeRepo.listEmployees(BOOK);
+        break;
+      case "updateEmployee":
+        await salaryCalculatorEmployeeRepo.updateEmployee({
+          accountBookId: BOOK,
+          employeeId: "e-9",
+          input: employeeInputOf(),
+        });
+        break;
+      case "softDeleteEmployee":
+        await salaryCalculatorEmployeeRepo.softDeleteEmployee({
+          accountBookId: BOOK,
+          employeeId: "e-9",
+        });
+        break;
+      default:
+        throw new Error(`未接線的方法：${name}`);
+    }
+
+    const everyCall = [
+      employeeFindFirst,
+      employeeFindMany,
+      employeeUpdateMany,
+    ].flatMap((mock) => mock.mock.calls.map((args) => args[0]));
+
+    expect(everyCall.length).toBeGreaterThan(0);
+    for (const arg of everyCall) {
+      const where = (arg as { where?: Record<string, unknown> }).where;
+      expect(where?.deletedAt).toBeNull();
+    }
+  });
 });
 
 /**
@@ -138,8 +527,11 @@ beforeEach(() => {
  * 而漏掉的那一支不會有人發現 —— 它只是安靜地跨租戶。
  */
 describe("薪資 repository 的租戶隔離", () => {
-  it("getEmployeeById 帶 accountBookId 與 deletedAt", async () => {
-    await salaryCalculatorEmployeeRepo.getEmployeeById(BOOK, OTHER_EMPLOYEE);
+  it("getActiveEmployeeById 帶 accountBookId 與 deletedAt", async () => {
+    await salaryCalculatorEmployeeRepo.getActiveEmployeeById(
+      BOOK,
+      OTHER_EMPLOYEE,
+    );
 
     expect(whereOf(employeeFindFirst)).toEqual({
       accountBookId: BOOK,

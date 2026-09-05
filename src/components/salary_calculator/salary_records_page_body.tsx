@@ -119,7 +119,7 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
    *
    * - 查得到但 email 是空的 → 去員工列表補一個信箱
    * - 查不到這個人 → 他已經從名單移除了（軟刪）。薪資紀錄仍在（那是刻意的：
-   *   薪資單是對外憑據，員工被刪不能讓歷史一起消失），但伺服器的 `getEmployeeById`
+   *   薪資單是對外憑據，員工被刪不能讓歷史一起消失），但伺服器的 `getActiveEmployeeById`
    *   會過濾掉 `deletedAt`，寄送必然回 404 —— 叫使用者去補信箱只會白跑一趟。
    *
    * 名單還在載入、或名單根本沒載到時**不下結論**，但也不放行：那時每個人都

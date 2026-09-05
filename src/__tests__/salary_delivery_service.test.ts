@@ -118,7 +118,7 @@ class FakeEmployeeRepo implements ISalaryCalculatorEmployeeRepository {
     return [...this.rows.values()];
   }
 
-  async getEmployeeById(
+  async getActiveEmployeeById(
     accountBookId: string,
     employeeId: string,
   ): Promise<ISalaryCalculatorEmployee | null> {
