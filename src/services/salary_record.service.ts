@@ -1,4 +1,8 @@
 import { AppError } from "@/lib/utils/error";
+import {
+  missingSalaryPeriods,
+  type ISalaryPeriod,
+} from "@/lib/utils/salary_coverage";
 import { buildSalaryRecordCsv } from "@/lib/utils/salary_record_csv";
 import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
@@ -95,10 +99,44 @@ export class SalaryRecordService {
     private readonly records: ISalaryRecordRepository,
   ) {}
 
+  /**
+   * Info: (20260905 - Luphia) 名單，並帶上每個人缺哪幾個月（#6774）。
+   *
+   * 兩支查詢並行：名單一支、整本帳的年月分佈一支。**不逐位員工問** ——
+   * 一百位員工的帳本那樣會打一百次 DB，而這一頁是進去就會載入的。
+   *
+   * 完整度算不出來時（沒有到職日、範圍超過上限）回空陣列，畫面就不標示。
+   * 「不知道」與「完整」對使用者的處置相同，而猜一個起點會讓舊資料
+   * 全部被標成缺一大片。
+   */
   public async listEmployees(
     accountBookId: string,
   ): Promise<ISalaryCalculatorEmployee[]> {
-    return this.employees.listEmployees(accountBookId);
+    const [employees, covered] = await Promise.all([
+      this.employees.listEmployees(accountBookId),
+      this.records.listCoveredPeriods(accountBookId),
+    ]);
+
+    const byEmployee = new Map<string, ISalaryPeriod[]>();
+    for (const row of covered) {
+      const list = byEmployee.get(row.employeeId) ?? [];
+      list.push({ year: row.year, month: row.month });
+      byEmployee.set(row.employeeId, list);
+    }
+
+    const nowMs = Date.now();
+
+    return employees.map((employee) => ({
+      ...employee,
+      missingPeriods: missingSalaryPeriods({
+        hireDate: employee.hireDate,
+        resignDate: employee.resignDate,
+        leaveStartDate: employee.leaveStartDate,
+        leaveEndDate: employee.leaveEndDate,
+        existing: byEmployee.get(employee.id) ?? [],
+        nowMs,
+      }),
+    }));
   }
 
   public async createEmployee({

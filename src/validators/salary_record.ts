@@ -126,12 +126,25 @@ const employeeProfileShape = {
   resignDate: timestampSchema,
 };
 
+/**
+ * Info: (20260905 - Luphia) 留職停薪的起訖（#6774）。
+ *
+ * 與 profile 分開一組，理由見 `ISalaryEmployeeLeave`：它不是計算機的輸入。
+ * 一樣整組必填 —— 可選的話，「編輯員工」少帶這兩欄就會把留停紀錄清成 null，
+ * 而那是靜默的（畫面上留停區間就這樣不見了，下個月那幾個月變成缺漏）。
+ */
+const employeeLeaveShape = {
+  leaveStartDate: timestampSchema,
+  leaveEndDate: timestampSchema,
+};
+
 export const salaryCalculatorEmployeeWriteSchema = z
   .object({
     name: z.string().trim().min(1).max(100),
     number: z.string().trim().min(1).max(50),
     email: z.string().email().max(254).optional(),
     ...employeeProfileShape,
+    ...employeeLeaveShape,
   })
   /**
    * Info: (20260902 - Julian) 離職日不得早於到職日。
@@ -146,6 +159,36 @@ export const salaryCalculatorEmployeeWriteSchema = z
       data.resignDate === null ||
       data.resignDate >= data.hireDate,
     { message: "離職日不得早於到職日", path: ["resignDate"] },
+  )
+  /**
+   * Info: (20260905 - Luphia) 復職日不得早於留停起日（#6774）。
+   *
+   * 順序反了的話 `missingSalaryPeriods` 的區間是空的 —— 留停那幾個月不會被扣掉，
+   * 於是每一個月都被標成「缺薪資單」。誤報的提示比沒有提示更糟：
+   * 使用者會拿它去補一張本來就不該有的薪資單。
+   *
+   * `leaveStartDate` 為 null 而 `leaveEndDate` 有值不在這裡擋 —— 見下一條。
+   */
+  .refine(
+    (data) =>
+      data.leaveStartDate === null ||
+      data.leaveEndDate === null ||
+      data.leaveEndDate >= data.leaveStartDate,
+    { message: "復職日不得早於留職停薪起日", path: ["leaveEndDate"] },
+  )
+  /**
+   * Info: (20260905 - Luphia) 有復職日就必須有留停起日。
+   *
+   * 只填復職日是一個沒有意義的狀態，但它**不會報錯**：
+   * `missingSalaryPeriods` 看 `leaveStartDate === null` 就整段跳過，
+   * 那個復職日於是靜靜地不起作用。使用者以為登記好了。
+   */
+  .refine(
+    (data) => data.leaveEndDate === null || data.leaveStartDate !== null,
+    {
+      message: "有復職日就必須填留職停薪起日",
+      path: ["leaveStartDate"],
+    },
   );
 
 /**

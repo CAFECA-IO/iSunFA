@@ -84,6 +84,12 @@ export const calculator = {
     hire_date: "입사일",
     resign_date: "퇴사일",
     date_order_error: "퇴사일은 입사일보다 이를 수 없습니다",
+    leave_start_date: "휴직 시작일",
+    leave_end_date: "복직일",
+    leave_hint:
+      "휴직 기간의 월은 급여명세서 누락으로 보지 않습니다. 아직 복직하지 않았다면 비워 두세요.",
+    leave_order_error: "복직일은 휴직 시작일보다 이를 수 없습니다",
+    leave_start_required: "휴직 시작일도 입력하세요",
     main_title: "직원 목록",
     name: "직원 이름",
     number: "사원 번호",
@@ -119,6 +125,11 @@ export const calculator = {
     missing_email_banner:
       "{{count}}명의 이메일이 비어 있어 급여명세서를 보낼 수 없습니다",
     only_missing_email: "해당 직원만 보기",
+    missing_records_badge: "{{count}}개월 누락",
+    missing_records_more: "{{periods}} 외 {{count}}개월",
+    missing_records_banner:
+      "{{count}}명의 직원에게 급여명세서가 없는 달이 있습니다",
+    only_missing_records: "이 직원만 보기",
     show_all: "전체 보기",
     no_filter_result: "조건에 맞는 직원이 없습니다",
   },

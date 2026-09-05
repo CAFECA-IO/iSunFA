@@ -19,12 +19,19 @@ import { ISalaryCalculatorEmployee } from "@/interfaces/salary_record";
  */
 type IEmployeeLike = Pick<
   ISalaryCalculatorEmployee,
-  "name" | "number" | "email"
+  "name" | "number" | "email" | "missingPeriods"
 >;
 
 export interface IEmployeeListFilter {
   keyword: string;
   onlyMissingEmail: boolean;
+  /**
+   * Info: (20260905 - Luphia) 只看有薪資單缺漏的人（#6774）。
+   *
+   * 與 `onlyMissingEmail` 各自獨立、可以同時打開：兩個問題不同
+   *（收不到 vs 沒有東西可收），而「兩個都有問題的那幾位」正是最該先處理的。
+   */
+  onlyMissingRecords: boolean;
 }
 
 /**
@@ -50,12 +57,13 @@ export const countMissingEmail = (
 
 export const filterEmployees = <T extends IEmployeeLike>(
   employees: readonly T[],
-  { keyword, onlyMissingEmail }: IEmployeeListFilter,
+  { keyword, onlyMissingEmail, onlyMissingRecords }: IEmployeeListFilter,
 ): T[] => {
   const trimmed = keyword.trim().toLowerCase();
 
   return employees.filter((employee) => {
     if (onlyMissingEmail && !hasNoEmail(employee)) return false;
+    if (onlyMissingRecords && !hasMissingPeriods(employee)) return false;
     if (trimmed === "") return true;
 
     return (
@@ -63,4 +71,43 @@ export const filterEmployees = <T extends IEmployeeLike>(
       employee.number.toLowerCase().includes(trimmed)
     );
   });
+};
+
+/**
+ * Info: (20260905 - Luphia) 這位員工有沒有月份漏掉薪資單（#6774）。
+ *
+ * 判斷只看陣列長度 —— 空陣列同時代表「完整」與「算不出來」（沒有到職日、
+ * 超過掃描上限），而兩者對畫面的處置一樣：不標示。理由見
+ * `missingSalaryPeriods`：不知道就不要說。
+ */
+export const hasMissingPeriods = (
+  employee: Pick<ISalaryCalculatorEmployee, "missingPeriods">,
+): boolean => employee.missingPeriods.length > 0;
+
+export const countMissingRecords = (
+  employees: readonly IEmployeeLike[],
+): number => employees.filter(hasMissingPeriods).length;
+
+/**
+ * Info: (20260905 - Luphia) 缺漏的月份 → 一行字（#6774）。
+ *
+ * `2026/03、2026/06` 這個形狀：年份不能省，因為缺漏經常跨年
+ *（去年 11 月到職、今年才開始建薪資單）。
+ *
+ * 超過 `limit` 個就截斷並回報剩幾個 —— 一個到職三年沒建過薪資單的人
+ * 會有 36 個月份，那串字會把整列擠爆。截斷的是**顯示**不是判斷，
+ * 所以與 `missingSalaryPeriods` 的「超過上限就回空」不衝突。
+ */
+export const MISSING_PERIOD_PREVIEW_LIMIT = 6;
+
+export const formatMissingPeriods = (
+  periods: readonly { year: number; month: number }[],
+  limit: number = MISSING_PERIOD_PREVIEW_LIMIT,
+): { text: string; restCount: number } => {
+  const shown = periods.slice(0, limit);
+  const text = shown
+    .map(({ year, month }) => `${year}/${month.toString().padStart(2, "0")}`)
+    .join("、");
+
+  return { text, restCount: periods.length - shown.length };
 };

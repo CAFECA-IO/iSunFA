@@ -6,7 +6,10 @@ import { salaryPaySlipDeliveryRepo } from "@/repositories/salary_pay_slip_delive
 import { readFileSync } from "fs";
 import { join } from "path";
 import { ISalaryCalculatorEmployeeWriteInput } from "@/interfaces/salary_record";
-import { DEFAULT_EMPLOYEE_PROFILE } from "@/lib/utils/salary_employee_profile";
+import {
+  DEFAULT_EMPLOYEE_LEAVE,
+  DEFAULT_EMPLOYEE_PROFILE,
+} from "@/lib/utils/salary_employee_profile";
 
 /**
  * Info: (20260901 - Luphia) 薪資兩支 repository **交給資料庫的條件**。
@@ -102,13 +105,13 @@ const RECORD = "record-1";
 /**
  * Info: (20260902 - Julian) 員工寫入的最小輸入。
  *
- * 這一檔驗的是**交給資料庫的 `where` 與 `data`**，與 15 個常態屬性
+ * 這一檔驗的是**交給資料庫的 `where` 與 `data`**，與那 17 個員工檔欄位
  * （行業別、投保狀態、到職日⋯⋯）無關。但 `ISalaryCalculatorEmployeeWriteInput`
  * 是整組必填 —— 少一欄會靜靜落到 schema 的 `@default`，也就是
  * 「改個名字順便把他的投保狀態與到職日重設」。
  *
  * 所以這裡用預設值補齊，只留下真正被斷言的那幾欄（`number` / `activeNumber`）。
- * 用 `DEFAULT_EMPLOYEE_PROFILE` 而不是手寫 15 個值：那份常數與 schema 的
+ * 用 `DEFAULT_EMPLOYEE_PROFILE` 而不是手寫一堆值：那份常數與 schema 的
  * `@default` 由 `salary_employee_profile.test.ts` 對拍，手寫的話這一檔會變成
  * 第三份要同步的預設值。
  */
@@ -116,6 +119,7 @@ const employeeInputOf = (
   overrides: Partial<ISalaryCalculatorEmployeeWriteInput> = {},
 ): ISalaryCalculatorEmployeeWriteInput => ({
   ...DEFAULT_EMPLOYEE_PROFILE,
+  ...DEFAULT_EMPLOYEE_LEAVE,
   name: "王小明",
   number: "A012",
   email: undefined,
@@ -250,6 +254,15 @@ const LIFECYCLE: Record<
   listRecords: "NO_SOFT_DELETE",
   listRecordsByIds: "NO_SOFT_DELETE",
   getRecordById: "NO_SOFT_DELETE",
+  /**
+   * Info: (20260905 - Luphia) 完整度警示要的年月分佈（#6774）。
+   *
+   * `SalaryRecord` 沒有 `deletedAt`（刪除是真的刪），所以是 `NO_SOFT_DELETE`。
+   * 值得一提的是**員工**那一側有軟刪除，但這一支查的是薪資紀錄 ——
+   * 已刪除員工的紀錄仍然回得來，而呼叫端拿的名單只有存活中的人，
+   * 對不上的那些自然被忽略。
+   */
+  listCoveredPeriods: "NO_SOFT_DELETE",
   deleteRecord: "NO_SOFT_DELETE",
   createDelivery: "NO_SOFT_DELETE",
   listByRecord: "NO_SOFT_DELETE",
@@ -440,6 +453,9 @@ describe("租戶隔離：每一支交給資料庫的條件都帶帳本", () => {
         return;
       case "listRecordsByIds":
         await salaryRecordRepo.listRecordsByIds(BOOK, ["r-1"]);
+        return;
+      case "listCoveredPeriods":
+        await salaryRecordRepo.listCoveredPeriods(BOOK);
         return;
       case "getRecordById":
         await salaryRecordRepo.getRecordById(BOOK, RECORD);
@@ -761,7 +777,7 @@ describe("軟刪除讓出 activeNumber", () => {
  *
  * 當時全套測試只有 `salary_repo.e2e.test.ts` 紅 —— 而那一支需要真資料庫、
  * 只在 CI 的獨立步驟跑。這一組把同一件事搬進預設套件：這個檔案本來就在
- * 斷言「交給資料庫的那個物件」，多問 15 欄幾乎不花成本。
+ * 斷言「交給資料庫的那個物件」，多問這 17 欄幾乎不花成本。
  *
  * 新增與更新**各守一次**：那次回退只吃掉 `updateEmployee`，
  * `createEmployee` 毫髮無傷 —— 而那是因為兩邊本來就是兩段獨立的程式碼，
@@ -769,6 +785,7 @@ describe("軟刪除讓出 activeNumber", () => {
  */
 describe("員工的常態屬性交給資料庫", () => {
   const HIRE_DATE = Date.parse("2026-08-15T00:00:00.000Z") / 1000;
+  const LEAVE_START = Date.parse("2026-10-01T00:00:00.000Z") / 1000;
 
   const CHANGED = {
     industryCode: 41,
@@ -784,6 +801,9 @@ describe("員工的常態屬性交給資料庫", () => {
     voluntaryPensionRate: 6,
     hireDate: HIRE_DATE,
     resignDate: null,
+    // Info: (20260905 - Luphia) 留職停薪也走同一條寫入路徑（#6774）
+    leaveStartDate: LEAVE_START,
+    leaveEndDate: null,
   };
 
   /**
@@ -808,9 +828,15 @@ describe("員工的常態屬性交給資料庫", () => {
     expect(data.voluntaryPensionRate).toBe(6);
     expect(data.hireDate).toEqual(new Date("2026-08-15T00:00:00.000Z"));
     expect(data.resignDate).toBeNull();
+    /**
+     * Info: (20260905 - Luphia) 留停兩欄（#6774）。與到離職日分屬兩張對照表
+     *（`toProfile` / `toLeave`），所以漏接是各自獨立的事。
+     */
+    expect(data.leaveStartDate).toEqual(new Date("2026-10-01T00:00:00.000Z"));
+    expect(data.leaveEndDate).toBeNull();
   };
 
-  it("updateEmployee 把 15 欄一起交出去", async () => {
+  it("updateEmployee 把 17 欄一起交出去", async () => {
     await salaryCalculatorEmployeeRepo.updateEmployee({
       accountBookId: BOOK,
       employeeId: OTHER_EMPLOYEE,
@@ -820,7 +846,7 @@ describe("員工的常態屬性交給資料庫", () => {
     expectProfileIn(argOf(employeeUpdateMany).data as Record<string, unknown>);
   });
 
-  it("createEmployee 把 15 欄一起交出去", async () => {
+  it("createEmployee 把 17 欄一起交出去", async () => {
     /**
      * Info: (20260902 - Julian) `create` 的替身預設回 null，而 `createEmployee`
      * 會把回傳值餵給 `toFrontendFormat` —— 不給一列的話會炸在讀 `row.id`，
@@ -853,6 +879,8 @@ describe("員工的常態屬性交給資料庫", () => {
       voluntaryPensionRate: 6,
       hireDate: new Date("2026-08-15T00:00:00.000Z"),
       resignDate: null,
+      leaveStartDate: null,
+      leaveEndDate: null,
     });
 
     await salaryCalculatorEmployeeRepo.createEmployee({

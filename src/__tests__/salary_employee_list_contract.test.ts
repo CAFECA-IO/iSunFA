@@ -152,6 +152,114 @@ describe("信箱欄與缺信箱提示", () => {
   });
 });
 
+/**
+ * Info: (20260905 - Luphia) 薪資紀錄缺漏的標示接上去了（#6774）。
+ *
+ * 判斷本身由純函式守（`salary_employee_filter.test.ts` 與
+ * `salary_coverage.tz.test.ts`）—— 這一組只回答「元件真的有呼叫它們」，
+ * 也就是 §1.11 明文的降級用法。
+ *
+ * 為什麼非有不可：把標示與橫幅整段刪掉之後，全套 5,983 條測試**全綠**。
+ * 純函式測得再細，沒有人接上去的話畫面上什麼都不會出現 ——
+ * 這正是 #6742 踩過的那個洞。
+ */
+describe("薪資紀錄缺漏的標示", () => {
+  const listComponent = stripComments(
+    read("components/salary_calculator/employee_list.tsx"),
+  );
+
+  it("列上的標示來自共用的純函式，不是元件自己數陣列", () => {
+    expect(listComponent).toContain("hasMissingPeriods(employee)");
+    expect(listComponent).toContain("formatMissingPeriods(");
+    expect(listComponent).toContain("missing_records_badge");
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 標示**兩種 variant 都有**（與信箱欄相反）。
+   *
+   * 綁上 `withEmail` 的話，計算機 Step 1 挑人時看不到「這個人缺六月」——
+   * 而那正是最有用的時機：使用者當下就在挑人算薪水，補的路就在他手上。
+   */
+  it("標示沒有被綁在整頁版上", () => {
+    /**
+     * Info: (20260905 - Luphia) 看的是那一行**之前**的字，不是之後。
+     *
+     * 守門長在左邊（`{withEmail && hasMissingPeriods(...)`），
+     * 從 `hasMissingPeriods` 往後切的話那個 `withEmail` 剛好被切掉 ——
+     * 判準會對「加上 withEmail」這個改動完全無感。
+     */
+    const at = listComponent.indexOf("hasMissingPeriods(employee)");
+    expect(at).toBeGreaterThan(-1);
+    expect(listComponent.slice(Math.max(0, at - 120), at)).not.toContain(
+      "withEmail",
+    );
+  });
+
+  it("提示裡帶的是月份清單，不只是一個數字", () => {
+    expect(listComponent).toContain("missing_records_more");
+    expect(listComponent).toMatch(/title=\{missingTitle\}/);
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 橫幅與「只看這幾位」是一組：有數字就給得起
+   * 篩選，因為使用者接下來要做的正是逐一補完。
+   */
+  it("整頁版有橫幅與只看這幾位", () => {
+    expect(listComponent).toContain("countMissingRecords(employees)");
+    expect(listComponent).toContain("missing_records_banner");
+    expect(listComponent).toContain("only_missing_records");
+    expect(listComponent).toContain("setOnlyMissingRecords");
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 「清除搜尋」要把**兩個**篩選都關掉。
+   *
+   * 只關掉其中一個的話，使用者按了「清除」卻還是篩不到人 ——
+   * 而畫面上已經沒有任何東西指出還有一個條件開著。
+   */
+  it("清除搜尋把兩個篩選都關掉", () => {
+    const clear = listComponent.slice(listComponent.indexOf("clearKeyword();"));
+    expect(clear.slice(0, 200)).toContain("setOnlyMissingEmail(false)");
+    expect(clear.slice(0, 200)).toContain("setOnlyMissingRecords(false)");
+  });
+});
+
+/**
+ * Info: (20260905 - Luphia) 留職停薪有編輯入口（#6774）。
+ *
+ * 沒有入口的話那兩欄永遠是 null，扣除留停的分支等於不存在 ——
+ * 而純函式那一側會一直是綠的。
+ */
+describe("留職停薪的編輯入口", () => {
+  const actionModal = stripComments(
+    read("components/salary_calculator/employee_action_modal.tsx"),
+  );
+
+  it("表單有留停起訖兩格，而且送得出去", () => {
+    expect(actionModal).toContain("leave_start_date");
+    expect(actionModal).toContain("leave_end_date");
+    expect(actionModal).toContain("patchLeave({");
+    // Info: (20260905 - Luphia) 少了這一行，畫面填得進去但送出的 body 沒有它們
+    expect(actionModal).toMatch(/\.\.\.leave,/);
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 計算機回寫員工檔時要**原樣帶回**留停兩欄。
+   *
+   * 帶預設值的話，使用者按「更新員工檔並儲存」就會把已登記的留停清成 null
+   * —— 而畫面上什麼都不會說。
+   */
+  it("計算機回寫時把留停原樣帶回，新建才用預設", () => {
+    const resultSection = stripComments(
+      read("components/salary_calculator/salary_result_section.tsx"),
+    );
+
+    expect(resultSection).toContain("leaveStartDate: employee.leaveStartDate");
+    expect(resultSection).toContain("leaveEndDate: employee.leaveEndDate");
+    expect(resultSection).toContain("...DEFAULT_EMPLOYEE_LEAVE");
+  });
+});
+
 describe("寄送與名單對「沒有信箱」的定義一致", () => {
   /**
    * Info: (20260904 - Julian) 薪資紀錄的寄出鈕與員工列表的缺信箱標示問的是
