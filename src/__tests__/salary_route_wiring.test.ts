@@ -1,5 +1,5 @@
 /**
- * Info: (20260831 - Julian) 裝配測試：薪資計算機的八支端點真的接上了身分閘、
+ * Info: (20260831 - Julian) 裝配測試：薪資計算機的十二支端點真的接上了身分閘、
  * 限流器與授權閘。
  *
  * 形式與理由完全照 `leave_route_wiring.test.ts`：直接 `import` 真的 handler，
@@ -33,6 +33,10 @@ declare const jest: typeof JestType;
 import { NextRequest } from "next/server";
 import { RateLimitBucketEnum, RATE_LIMIT_RULES } from "@/constants/rate_limit";
 import { SalaryAccess } from "@/constants/salary_access";
+import {
+  SALARY_DELIVERY_LIST_DEFAULT_LIMIT,
+  SALARY_DELIVERY_LIST_MAX_LIMIT,
+} from "@/constants/salary_delivery";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { AppError } from "@/lib/utils/error";
 import { HTTP_MAP } from "@/lib/utils/status";
@@ -42,6 +46,7 @@ import {
   assertSalaryAccountBookAccess,
   salaryRecordService,
 } from "@/services/salary_record.service";
+import { salaryPaySlipDeliveryService } from "@/services/salary_pay_slip_delivery.service";
 import {
   GET as employeeList,
   POST as employeeCreate,
@@ -58,8 +63,25 @@ import {
   GET as recordDetail,
   DELETE as recordDelete,
 } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/record/[record_id]/route";
+import {
+  GET as recordDeliveryHistory,
+  POST as recordDeliver,
+} from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/record/[record_id]/deliver/route";
+import { GET as deliveryList } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/delivery/route";
+import { POST as recordExport } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/record/export/route";
 
 jest.mock("@/lib/auth/dewt", () => ({ getIdentityFromDeWT: jest.fn() }));
+/**
+ * Info: (20260904 - Julian) 寄送走的是另一支 service，但授權閘仍來自
+ * `salary_record.service` —— 九支端點共用同一道閘是刻意的（見檔頭第 2 點）。
+ */
+jest.mock("@/services/salary_pay_slip_delivery.service", () => ({
+  salaryPaySlipDeliveryService: {
+    deliver: jest.fn(),
+    listByAccountBook: jest.fn(),
+    listByRecord: jest.fn(),
+  },
+}));
 jest.mock("@/services/salary_record.service", () => ({
   assertSalaryAccountBookAccess: jest.fn(),
   salaryRecordService: {
@@ -71,6 +93,7 @@ jest.mock("@/services/salary_record.service", () => ({
     getRecord: jest.fn(),
     saveRecord: jest.fn(),
     deleteRecord: jest.fn(),
+    exportRecordsCsv: jest.fn(),
   },
 }));
 
@@ -102,6 +125,12 @@ const serviceMocks = {
   getRecord: salaryRecordService.getRecord as unknown as IAnyMock,
   saveRecord: salaryRecordService.saveRecord as unknown as IAnyMock,
   deleteRecord: salaryRecordService.deleteRecord as unknown as IAnyMock,
+  exportRecords: salaryRecordService.exportRecordsCsv as unknown as IAnyMock,
+  deliver: salaryPaySlipDeliveryService.deliver as unknown as IAnyMock,
+  deliveryList:
+    salaryPaySlipDeliveryService.listByAccountBook as unknown as IAnyMock,
+  deliveryHistory:
+    salaryPaySlipDeliveryService.listByRecord as unknown as IAnyMock,
 };
 
 const BOOK = "book-1";
@@ -216,7 +245,7 @@ const recordParams = () =>
   Promise.resolve({ account_book_id: BOOK, record_id: RECORD_ID });
 
 /**
- * Info: (20260901 - Julian) 八支端點的清單，三個 `it.each` 共用同一份。
+ * Info: (20260901 - Julian) 十二支端點的清單，三個 `it.each` 共用同一份。
  *
  * ## 為什麼要有這張表
  *
@@ -293,7 +322,8 @@ const API_DIR = join(
 );
 
 // Info: (20260901 - Julian) App Router 的 handler 一律是具名 export，方法名就是 HTTP 動詞
-const HANDLER_RE = /export\s+async\s+function\s+(GET|POST|PUT|PATCH|DELETE)\s*\(/g;
+const HANDLER_RE =
+  /export\s+async\s+function\s+(GET|POST|PUT|PATCH|DELETE)\s*\(/g;
 
 /**
  * Info: (20260901 - Julian) 去掉註解再掃。
@@ -416,6 +446,92 @@ const ENDPOINTS: IEndpointCase[] = [
         params: recordParams(),
       }),
   },
+  /**
+   * Info: (20260904 - Julian) 第九支：寄出薪資單。
+   *
+   * `access` 是 `WRITE` 而不是 `READ` —— 它不改薪資紀錄本身，但**它把薪資資料
+   * 送出組織邊界**，那件事的份量高於「看得到」。填成 `READ` 就是把寄信的能力
+   * 開放給 `VIEWER`（外部顧問、實習生），而下面「$label 要求 $access」那條
+   * 是唯一會因此變紅的地方。
+   *
+   * `bucket` 是專屬的 `SALARY_MAIL_SEND`（5/分）：與 `SALARY_WRITE`（30/分）
+   * 共用的話，「試算時存了幾次紀錄」會把寄送額度吃光。下面另有一條
+   * 釘住這兩個桶的額度確實不同 —— 否則填錯了桶也灌得滿，測試就變成在測別的東西。
+   *
+   * Body 為空是刻意的（計畫書 D3），所以沒有 `runInvalid`。
+   */
+  /**
+   * Info: (20260904 - Julian) 第十支：這本帳的寄送歷史。
+   *
+   * `access` 是 `READ` 而不是 `WRITE` —— 寄送把資料送出組織邊界，
+   * **看紀錄不會**。它與「看薪資紀錄清單」是同一類動作，
+   * 沿用同一個層級與同一個限流桶。
+   */
+  {
+    label: "GET delivery（寄送歷史）",
+    key: "delivery-list",
+    source: "GET delivery/route.ts",
+    access: SalaryAccess.READ,
+    bucket: RateLimitBucketEnum.READ,
+    service: serviceMocks.deliveryList,
+    run: (address) => deliveryList(get(address), { params: bookParams() }),
+  },
+  /**
+   * Info: (20260904 - Julian) 第十二支：匯出 CSV。
+   *
+   * `access` 是 `READ`：匯出的每一格，使用者在畫面上點開薪資單都看得到 ——
+   * CSV 沒有給他任何新的讀取能力，只是換一個格式。這與「寄出薪資單」不同，
+   * 那個把資料送到組織外的信箱，所以歸 `WRITE`。
+   *
+   * `bucket` 是專屬的 `SALARY_EXPORT` 而不是共用 `READ`：一次列表請求回的是
+   * 一頁中繼資料，一次匯出會把多筆完整薪資明細組成檔案帶走 ——
+   * 前者是瀏覽，後者是批次擷取（同 `ATTENDANCE_EXPORT` 的處置）。
+   *
+   * 回應是 CSV 不是 JSON 信封，所以它沒有 `runInvalid`：那組測試斷言的是
+   * 驗證失敗要回 4xx 的 JSON，而這支成功時根本不回 JSON。
+   * 驗證失敗的行為由下面「匯出的 recordIds 形狀不對就擋下」單獨守。
+   */
+  {
+    label: "POST record/export（匯出 CSV）",
+    key: "record-export",
+    source: "POST record/export/route.ts",
+    access: SalaryAccess.READ,
+    bucket: RateLimitBucketEnum.SALARY_EXPORT,
+    service: serviceMocks.exportRecords,
+    run: (address) =>
+      recordExport(send("POST", { recordIds: [RECORD_ID] }, address), {
+        params: bookParams(),
+      }),
+  },
+  /**
+   * Info: (20260904 - Julian) 第十一支：某一筆的寄送歷史。
+   *
+   * 與 `POST` 同一個檔案、同一條路徑，但**層級與桶都不同** ——
+   * 目錄走訪那條會把同一個檔案裡的兩個 handler 各算一支，
+   * 所以「同檔就沿用同一組設定」這種順手的錯有地方會紅。
+   */
+  {
+    label: "GET record/:id/deliver（這一筆的寄送歷史）",
+    key: "delivery-history",
+    source: "GET record/[record_id]/deliver/route.ts",
+    access: SalaryAccess.READ,
+    bucket: RateLimitBucketEnum.READ,
+    service: serviceMocks.deliveryHistory,
+    run: (address) =>
+      recordDeliveryHistory(get(address), { params: recordParams() }),
+  },
+  {
+    label: "POST record/:id/deliver（寄出薪資單）",
+    key: "record-deliver",
+    source: "POST record/[record_id]/deliver/route.ts",
+    access: SalaryAccess.WRITE,
+    bucket: RateLimitBucketEnum.SALARY_MAIL_SEND,
+    service: serviceMocks.deliver,
+    run: (address) =>
+      recordDeliver(send("POST", undefined, address), {
+        params: recordParams(),
+      }),
+  },
 ];
 
 beforeEach(() => {
@@ -435,11 +551,13 @@ beforeEach(() => {
 });
 
 describe("身分閘：沒有 token 就到不了業務邏輯", () => {
-  it("端點表涵蓋了全部八支端點（表短了，下面三條就會靜靜地少驗幾支）", () => {
-    expect(ENDPOINTS).toHaveLength(8);
-    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.label)).size).toBe(8);
-    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.key)).size).toBe(8);
-    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.service)).size).toBe(8);
+  it("端點表涵蓋了全部十二支端點（表短了，下面三條就會靜靜地少驗幾支）", () => {
+    expect(ENDPOINTS).toHaveLength(12);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.label)).size).toBe(12);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.key)).size).toBe(12);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.service)).size).toBe(
+      12,
+    );
   });
 
   /**
@@ -546,17 +664,26 @@ describe("授權閘：不是這本帳的成員就寫不進去", () => {
     },
   );
 
-  it("寫入端點就是那五支（三讀五寫，換一種分法都要有人重新想過）", () => {
+  it("寫入端點就是那六支（六讀六寫，換一種分法都要有人重新想過）", () => {
     const writes = ENDPOINTS.filter(
       (endpoint) => endpoint.access === SalaryAccess.WRITE,
     ).map((endpoint) => endpoint.key);
 
+    /**
+     * Info: (20260904 - Julian) `record-deliver` 在這張清單裡是一個決定，不是分類。
+     *
+     * 它不改薪資紀錄的任何一個欄位 —— 照「有沒有改資料」分，它屬於讀。
+     * 放進寫是因為**它把薪資資料送出組織邊界**，而那件事的份量高於「看得到」。
+     * 哪天有人覺得「寄一封信而已，為什麼要 EDITOR」，這一行會擋住他，
+     * 而上面那段註解說得出為什麼。
+     */
     expect(writes).toEqual([
       "employee-create",
       "employee-update",
       "employee-delete",
       "record-save",
       "record-delete",
+      "record-deliver",
     ]);
   });
 });
@@ -578,6 +705,105 @@ describe("租戶與操作者只能來自不可偽造的來源", () => {
     });
 
     const [args] = serviceMocks.saveRecord.mock.calls;
+    expect((args[0] as { accountBookId: string }).accountBookId).toBe(BOOK);
+  });
+
+  /**
+   * Info: (20260904 - Julian) 寄送者是稽核欄位，落地成 `sentByUserId`。
+   * 它若能由請求指定，「誰把這位員工的薪資單寄出去的」這個問題就沒有答案了。
+   */
+  it("寄送時的 userId 與 accountBookId 取自 DeWT 與路徑，不是 body", async () => {
+    await recordDeliver(
+      send(
+        "POST",
+        { userId: SPOOFED_USER_ID, accountBookId: OTHER_BOOK },
+        "0xspoof-deliver",
+      ),
+      { params: recordParams() },
+    );
+
+    const [args] = serviceMocks.deliver.mock.calls;
+    const payload = args[0] as {
+      userId: string;
+      accountBookId: string;
+      recordId: string;
+    };
+    expect(payload.userId).toBe(USER_ID);
+    expect(payload.userId).not.toBe(SPOOFED_USER_ID);
+    expect(payload.accountBookId).toBe(BOOK);
+    expect(payload.accountBookId).not.toBe(OTHER_BOOK);
+    expect(payload.recordId).toBe(RECORD_ID);
+  });
+
+  /**
+   * Info: (20260904 - Julian) `limit` 是使用者送得出來、而不該被完全採信的東西。
+   * 沒有夾住上限的話，一本累積了幾年寄送紀錄的帳本會在一次請求裡被整張撈出來。
+   */
+  it("寄送歷史的 limit 被伺服器的上限夾住", async () => {
+    await deliveryList(get("0xdelivery-limit", "?limit=999999"), {
+      params: bookParams(),
+    });
+
+    const [args] = serviceMocks.deliveryList.mock.calls;
+    expect((args[0] as { limit: number }).limit).toBe(
+      SALARY_DELIVERY_LIST_MAX_LIMIT,
+    );
+  });
+
+  it("寄送歷史的 limit 給了垃圾就退回預設值，而不是報錯或撈全部", async () => {
+    await deliveryList(get("0xdelivery-nan", "?limit=abc"), {
+      params: bookParams(),
+    });
+
+    const [args] = serviceMocks.deliveryList.mock.calls;
+    expect((args[0] as { limit: number }).limit).toBe(
+      SALARY_DELIVERY_LIST_DEFAULT_LIMIT,
+    );
+  });
+
+  /**
+   * Info: (20260904 - Julian) `recordIds` 的形狀在門口就要擋下。
+   *
+   * 這組 id 直接進 `where: { id: { in: [...] } }`，而 Prisma 對格式不符的
+   * uuid 會丟出讀起來像故障的錯誤 —— 那是使用者送得出來的東西，
+   * 不該變成 500。
+   */
+  it("匯出的 recordIds 形狀不對就擋下，不進到 service", async () => {
+    const response = await recordExport(
+      send("POST", { recordIds: ["not-a-uuid"] }, "0xexport-bad"),
+      { params: bookParams() },
+    );
+
+    expect(response.status).toBe(httpOf(API_ERRORS.VA_INVALID_INPUT_DATA));
+    expect(serviceMocks.exportRecords).not.toHaveBeenCalled();
+  });
+
+  it("匯出的 recordIds 是空陣列也擋下（那只會產出一個空檔案）", async () => {
+    const response = await recordExport(
+      send("POST", { recordIds: [] }, "0xexport-empty"),
+      { params: bookParams() },
+    );
+
+    expect(response.status).toBe(httpOf(API_ERRORS.VA_INVALID_INPUT_DATA));
+    expect(serviceMocks.exportRecords).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Info: (20260904 - Julian) 帳本來自路徑、id 來自 body。
+   * repository 以帳本過濾，所以猜到別的帳本的 recordId 也讀不到 ——
+   * 但前提是這裡真的把路徑上的帳本傳下去。
+   */
+  it("匯出的 accountBookId 取自路徑，不是 body", async () => {
+    await recordExport(
+      send(
+        "POST",
+        { recordIds: [RECORD_ID], accountBookId: OTHER_BOOK },
+        "0xexport-book",
+      ),
+      { params: bookParams() },
+    );
+
+    const [args] = serviceMocks.exportRecords.mock.calls;
     expect((args[0] as { accountBookId: string }).accountBookId).toBe(BOOK);
   });
 
@@ -736,7 +962,29 @@ describe("限流真的擋得住（不是只有那兩行的順序對）", () => {
    * 填錯也灌得滿、測試照樣綠 —— 那時候上面驗到的就不是它宣稱的那件事。
    * 這一條在額度被調成一樣時會紅，提醒改用別的方式區分。
    */
-  it("READ 與 SALARY_WRITE 的每分鐘額度不同（上面那條靠這個區分桶填錯）", () => {
+  /**
+   * Info: (20260904 - Julian) 三個桶的每分鐘額度必須兩兩不同。
+   *
+   * 上面那條逐支灌到 429 的測試，是拿 `endpoint.bucket` 的額度去灌的。
+   * 若兩個桶的數字剛好一樣，桶填錯了也灌得滿 —— 測試依然全綠，
+   * 而它測到的已經不是「這支端點用的是那個桶」。
+   *
+   * `SALARY_MAIL_SEND` 加進來之後這件事更要緊：它是三者中最緊的（5/分），
+   * 一旦有人「順手統一」成 `SALARY_WRITE` 的 30/分，寄信就跟著鬆掉六倍。
+   */
+  it("READ / SALARY_WRITE / SALARY_MAIL_SEND 的每分鐘額度兩兩不同（上面那條靠這個區分桶填錯）", () => {
+    const limits = [
+      perMinuteLimit(RateLimitBucketEnum.READ),
+      perMinuteLimit(RateLimitBucketEnum.SALARY_WRITE),
+      perMinuteLimit(RateLimitBucketEnum.SALARY_MAIL_SEND),
+    ];
+    expect(new Set(limits).size).toBe(3);
+
+    // Info: (20260904 - Julian) 方向也要對：寄信是三者中最貴的動作，額度應該最小
+    expect(perMinuteLimit(RateLimitBucketEnum.SALARY_MAIL_SEND)).toBeLessThan(
+      perMinuteLimit(RateLimitBucketEnum.SALARY_WRITE),
+    );
+
     expect(perMinuteLimit(RateLimitBucketEnum.READ)).not.toBe(
       perMinuteLimit(RateLimitBucketEnum.SALARY_WRITE),
     );

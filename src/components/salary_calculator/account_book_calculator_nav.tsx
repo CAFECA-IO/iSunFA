@@ -3,7 +3,7 @@
 import { FC, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, HelpCircle, Wallet } from "lucide-react";
+import { FileText, HelpCircle, Users, Wallet } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { salaryCalculatorUrlOf } from "@/constants/url";
 import MechanismModal from "@/components/salary_calculator/mechanism_modal";
@@ -52,6 +52,18 @@ const AccountBookCalculatorNav: FC<IAccountBookCalculatorNavProps> = ({
         <Link href={urls.RECORDS} className={styleOf(urls.RECORDS)}>
           <FileText size={16} />
           {t("calculator.records.main_title")}
+        </Link>
+        {/**
+         * Info: (20260904 - Julian) 員工列表（20260904 補回）。
+         *
+         * 20260901 移除時的判斷是「名單放在挑人的地方就夠了」。之後這個模組
+         * 長出了以「人」為單位的狀態 —— 寄薪資單要 email，沒填的人寄不出去 ——
+         * 而彈窗只有 560px，放不下那一欄，也不該在「挑一個人出來算薪水」
+         * 的當下談整份名單的完整度。
+         */}
+        <Link href={urls.EMPLOYEE_LIST} className={styleOf(urls.EMPLOYEE_LIST)}>
+          <Users size={16} />
+          {t("calculator.employee_list.main_title")}
         </Link>
 
         {/* Info: (20260831 - Julian) 計算說明：帳本版原本沒有入口，這裡補回來 */}
