@@ -26,7 +26,9 @@ export function isChainCreditConfigured(): boolean {
  *
  * `chargeChainCredits` 走的是平台側 burn：代理帳號直接呼叫合約把成員錢包裡的代幣
  * 銷毀。`CreditPoint` 沒有那個函式（只有 `burnAndUnlock(uint256)`，燒 `msg.sender`
- * 自己的餘額），而 `ABIS.CREDIT_POINT` 卻宣告了它——所以這條扣款從來沒有成功過。
+ * 自己的餘額），而 `ABIS.CREDIT_POINT` 曾經宣告過它——所以這條扣款從來沒有成功過。
+ * 那條宣告已刪除（見 `config/contracts.ts`），`abi_contract_parity.test.ts` 會擋下
+ * 同一類新增。
  *
  * 在此之前的行為是 fail-**open**：`spendCredits` 把鏈上餘額加進 `available` 當作
  * 放行依據，而扣款必定失敗、餘額永遠不會減少——於是一個持有 ≥1 點的成員可以

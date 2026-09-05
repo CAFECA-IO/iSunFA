@@ -37,15 +37,22 @@ export const ABIS = {
     "event AccountCreated(address indexed scw, uint256 pubKeyX, uint256 pubKeyY, uint256 salt, string credentialId, string username, string imageUrl)",
     "function getAddress(bytes calldata credentialId, uint256 pubKeyX, uint256 pubKeyY, uint256 salt) public view returns (address)",
     "function createAccount(bytes calldata credentialId, uint256 pubKeyX, uint256 pubKeyY, uint256 salt, string calldata username, string calldata imageUrl) external returns (address)",
-    "event CompanyCreated(address indexed scw, uint256[][] owners, uint256 threshold, uint256 salt, string name, string imageUrl)",
-    "function createCompanyAccount(uint256[][] owners, uint256 threshold, uint256 salt, string name, string imageUrl) external returns (address)",
-    "function getCompanyAddress(uint256[][] owners, uint256 threshold, uint256 salt) public view returns (address)",
+    /**
+     * Info: (20260818 - Luphia) 刪掉公司帳戶的三條宣告（`createCompanyAccount`、
+     * `getCompanyAddress`、`CompanyCreated` 事件）：部署的 `Fido2AccountFactory` 只有
+     * 個人帳戶（`createAccount` / `getAddress` / `getAccountByCredentialId`），
+     * 公司帳戶尚未上鏈。全 repo 沒有任何呼叫端。
+     */
   ]),
 
-  // Info: (20251230 - Tzuhan) Smart Contract Wallet (Personal/Company)
+  /**
+   * Info: (20251230 - Tzuhan) Smart Contract Wallet (Personal/Company)
+   *
+   * Info: (20260818 - Luphia) 刪掉 `isValidSignature`：`Fido2Account` 沒有實作 ERC-1271
+   * （合約與繼承鏈裡都沒有這支），沒有呼叫端。要支援 ERC-1271 得先改合約。
+   */
   SCW: parseAbi([
     "function execute(address dest, uint256 value, bytes func) external",
-    "function isValidSignature(bytes32 hash, bytes memory signature) public view returns (bytes4)",
   ]),
 
   // Info: (20260418 - Luphia) Evolved RWA Identity Registry & NFT Card
@@ -86,27 +93,33 @@ export const ABIS = {
     "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
   ]),
 
-  // Info: (20251230 - Tzuhan) Credit Point Token
+  /**
+   * Info: (20251230 - Tzuhan) Credit Point Token
+   *
+   * Info: (20260818 - Luphia) 刪掉 13 條 `CreditPoint` 沒有的宣告（ERC-3643 樣板抄來的
+   * `burn(address,uint256)` / `forcedTransfer` / 凍結 / pause / `compliance` 等，以及
+   * `mint`——實際上是需要 ISC 抵押的 `collateralizedMint`）。
+   *
+   * 那份宣告不是無害的文件誤差：它讓「平台可以直接扣成員錢包」看起來成立，扣費第二層
+   * 因此走了平台側 burn，而 viem 只在**送出交易時**才失敗。連帶的錯誤診斷（「合約層面
+   * 做不到、要改合約」）抄進了六個檔案與五份文件，見 `lib/quota/personal_chain_credits.ts`
+   * 的更正段。`abi_contract_parity.test.ts` 現在會擋下同一類新增。
+   *
+   * 補上四條**合約真的有、而且程式已經在用**的：先前這些散落在各處的 inline `parseAbi`
+   * 裡重新宣告一次（`token.service` 的 `collateralizedMint` / `kycRegistry`、
+   * `user_op_builder` 的 `transfer`），而重新宣告正是繞過這份 ABI 的做法。
+   */
   CREDIT_POINT: parseAbi([
-    "function mint(address to, uint256 amount) external",
+    "function collateralizedMint(address to, uint256 amount) external payable",
+    "function burnAndUnlock(uint256 amount) external",
     "function setKYCRegistry(address _kycRegistry) external",
-    "function burn(address userAddress, uint256 amount) external",
-    "function forcedTransfer(address from, address to, uint256 amount) external returns (bool)",
-    "function freezePartialTokens(address userAddress, uint256 amount) external",
-    "function unfreezePartialTokens(address userAddress, uint256 amount) external",
-    "function setAddressFrozen(address userAddress, bool freeze) external",
-    "function isFrozen(address userAddress) external view returns (bool)",
-    "function getFrozenTokens(address userAddress) external view returns (uint256)",
-    "function pause() external",
-    "function unpause() external",
-    "function paused() external view returns (bool)",
+    "function kycRegistry() external view returns (address)",
+    "function transfer(address to, uint256 amount) external returns (bool)",
     "function balanceOf(address account) view returns (uint256)",
     "function decimals() view returns (uint8)",
     "function name() view returns (string)",
     "function symbol() view returns (string)",
     "function totalSupply() view returns (uint256)",
-    "function compliance() external view returns (address)",
-    "function identityRegistry() external view returns (address)",
   ]),
 
   // Info: (20260807 - Luphia) 每日 Ledger merkle 錨定（ADR 015 C 案 Phase 1）

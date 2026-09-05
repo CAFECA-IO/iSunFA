@@ -135,8 +135,9 @@ describe("收回分配點數已停用", () => {
  * Info: (20260818 - Luphia) 平台無權單方面銷毀成員錢包裡的代幣（調查 20260818）。
  *
  * `CreditPoint` 只有 `burnAndUnlock(uint256)`，燒的是 `msg.sender` 自己的餘額；
- * 沒有 `burn(address, uint256)`，而 `ABIS.CREDIT_POINT` 卻宣告了那個函式——
- * ABI 與部署的合約不一致，那正是 `chargeChainCredits` 當初看起來合理的原因。
+ * 沒有 `burn(address, uint256)`。`ABIS.CREDIT_POINT` 曾經宣告過那個函式，那正是
+ * `chargeChainCredits` 當初看起來合理的原因；該宣告已刪除，並由
+ * `abi_contract_parity.test.ts` 擋下同一類新增。
  *
  * 這一條釘住的是**平台權限的邊界**，不是「扣個人點數做不到」：扣款由持有人簽章
  * 就做得到，產品裡已經在用（`ensurePersonalCreditCharge` 的兩段式訂單 → 成員錢包
