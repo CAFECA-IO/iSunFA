@@ -285,6 +285,8 @@ export default function CarbonChatbotPage() {
     importReportFile,
     toggleImportItem,
     setPendingInventoryYear,
+    // Info: (20260903 - Emily) #6688-A 揭露框架:值來自盤查狀態,寫入口由 hook 提供
+    setDisclosureFramework,
     applyPendingImport,
     discardPendingImport,
     isImportPreviewOpen,
@@ -411,6 +413,8 @@ export default function CarbonChatbotPage() {
             onImportReport={importReportFile}
             onRenameDocument={renameReportDocument}
             onUpdateIdentity={updateReportIdentity}
+            disclosureFramework={inventoryState.disclosureFramework}
+            onChangeDisclosureFramework={setDisclosureFramework}
             dataBadgeState={dataBadgeState}
           />
         ) : (

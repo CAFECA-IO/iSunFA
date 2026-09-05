@@ -36,6 +36,16 @@ export enum CarbonDisclosureFrameworkEnum {
  * Info: (20260821 - Emily) 架構對齊聲明。印它就等於宣告「本報告走揭露層」，
  * 因此它同時是驗收端判斷「這份報告該不該出現 IFRS 字樣」的依據。
  */
+/**
+ * Info: (20260903 - Emily) 揭露層的顯示名稱(#6688-A)。
+ *
+ * 存在的理由是**讓 i18n 不必寫這個字**:選擇入口要讓使用者看得懂自己在選什麼,
+ * 但把它抄進五個語系檔會踩到 `carbon_report_outline.test.ts` 那道掃描
+ *(「指名這份報告的檔案不得宣告 IFRS」)—— 而那道掃描是對的:
+ * 宣告要有唯一的出處,語系檔不是。所以介面文案用插值,名稱從這裡來。
+ */
+export const FRAMEWORK_DISCLOSURE_LABEL = "IFRS S1/S2";
+
 export const FRAMEWORK_ALIGNMENT_PHRASE = "本報告依 IFRS S1/S2 之架構編製";
 
 /**

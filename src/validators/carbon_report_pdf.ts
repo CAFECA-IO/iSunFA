@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CARBON_PDF_MAX_MARKDOWN_BYTES } from "@/constants/carbon_pdf";
+import { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
 
 /**
  * Info: (20260810 - Emily) 碳盤查報告伺服端列印的請求結構。
@@ -72,6 +73,18 @@ export const CarbonReportPdfRequestSchema = z.object({
   fileName: z.string().min(1).max(160),
   title: z.string().max(200).optional(),
   shell: CarbonReportShellSchema.optional(),
+  /**
+   * Info: (20260904 - Emily) 揭露框架(#6688-C)。收 **enum 不收字串**。
+   *
+   * 聲明行由伺服端從這個值導出(`carbonFrameworkView(framework).shellClaims`),
+   * 所以 `CarbonReportShellSchema` 裡**沒有** claims 欄位 —— 那不是漏了。
+   * 用戶端若能帶字串,它就能印一句長得像對齊聲明但不是的話,
+   * 於是 `alignmentDeclared` 為真、條 2 被關掉、條 3 也不會叫:
+   * 守衛被自己要守的東西繞過。
+   *
+   * 省略 = `INVENTORY_ONLY`(現行行為,不印任何揭露框架字樣)。
+   */
+  framework: z.nativeEnum(CarbonDisclosureFrameworkEnum).optional(),
 });
 
 export type ICarbonReportPdfRequest = z.infer<

@@ -11,6 +11,13 @@ import {
   countLeadingTocPages,
 } from "@/lib/utils/carbon_toc_pages";
 import { squeezeForMatch } from "@/lib/utils/squeeze_for_match";
+import {
+  CarbonFrameworkClaimExitEnum,
+  composeCarbonPaperText,
+  gateFrameworkClaims,
+} from "@/lib/utils/carbon_framework_claim_gate";
+import { carbonFrameworkView } from "@/lib/carbon_framework_view";
+import { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
 import { CARBON_TOC_PAGE_HEADING_HITS } from "@/constants/carbon_pdf";
 import { extractPdfTextLayer, splitTextByPages } from "@/lib/pdf_text_layer";
 import { assertCjkRenderable } from "@/lib/utils/pdf_font_guard";
@@ -56,7 +63,14 @@ export interface ICarbonReportPdfInput {
    * Info: (20260811 - Emily) 文件外殼的文案(頁首／頁尾),由用戶端帶上來。
    * 省略即不印外殼 —— 舊的用戶端不會因此壞掉。
    */
-  shell?: Omit<ICarbonReportShell, "logoDataUrl">;
+  shell?: Omit<ICarbonReportShell, "logoDataUrl" | "claims">;
+  /**
+   * Info: (20260904 - Emily) 揭露框架(#6688-C)。收 **enum**,聲明行由本服務導出。
+   *
+   * `shell` 的型別因此排除 `claims`:那不是用戶端可以給的東西。
+   * 理由見 `ICarbonReportShell.claims` 的註解 —— 能塞字串就能繞過守衛。
+   */
+  framework?: CarbonDisclosureFrameworkEnum;
 }
 
 export interface IGeneratedCarbonPdf {
@@ -248,13 +262,126 @@ export class CarbonReportPdfService {
     return { filled: numbers.length - missing, missing };
   }
 
+  /**
+   * Info: (20260903 - Emily) 出口閘門:紙面上不得出現主體合規宣告(#6688-B)。
+   *
+   * ## 為什麼接在這裡
+   *
+   * 在 `buildCarbonReportHtml` 與 `getPrintBrowser` **之前**。被擋的那份連
+   * 瀏覽器都不開(拒絕不需要排版),而且審的是與印的**同一份 `input`** ——
+   * 不是另外組一份文字。判準審輸入而不是組好的 HTML:標籤會把片語切開
+   *(`本公司<span>符合</span>IFRS`),而判準是字面比對。
+   *
+   * ## 為什麼 PDF 這端是擋而不是提示
+   *
+   * 分流表的依據欄寫著:PDF 是不可逆的出口 —— 那份檔案會離開系統,
+   * 印出去之後改不掉。條 1(未對齊框架)在同一個出口只提示,理由也在表裡。
+   *
+   * ## 為什麼 log 不記命中的片語
+   *
+   * 本產品線的既有立場:載荷是使用者的報告內容(見 report_pdf route 的
+   * schema 拒絕分支「只記路徑與代碼,不記值」)。所以 log 只記規則、筆數與**兩軸**,
+   * 而兩軸取自 `COMPLIANCE_CLAIM_PATTERNS` 的捕獲群 —— 那是封閉字彙
+   *(符合/遵循/…× IFRS/TIFRS/國際財務報導準則),不是使用者的自由輸入。
+   * 片語只回給送出這份報告的人(拋出的訊息),不進伺服端的 log。
+   */
+  /**
+   * Info: (20260904 - Emily) 這份紙上要印的聲明行(#6688-C)。
+   *
+   * 從 enum 導出而不是收字串(理由見 `ICarbonReportShell.claims`)。
+   * **沒有外殼就回空陣列**:`buildCarbonReportHtml` 在 `shell` 為 undefined 時
+   * 整個外殼都不印,那份紙面上沒有聲明行的位置 —— 回非空會讓閘門審到
+   * 一段不會被印出來的文字(而條 3 會因此對一份沒有對齊聲明的紙面叫)。
+   */
+  private static shellClaimsOf(
+    input: ICarbonReportPdfInput,
+  ): ReadonlyArray<string> {
+    if (!input.shell) return [];
+    return carbonFrameworkView(
+      input.framework ?? CarbonDisclosureFrameworkEnum.INVENTORY_ONLY,
+    ).shellClaims;
+  }
+
+  private static gatePaperClaims(
+    input: ICarbonReportPdfInput,
+    claims: ReadonlyArray<string>,
+  ): void {
+    const paperText = composeCarbonPaperText({
+      markdown: input.markdown,
+      title: input.shell?.title,
+      // Info: (20260903 - Emily) 頁尾實際印的值含 fallback,見 footerTemplate 那行
+      footer: input.title ?? input.fileName,
+      identity: input.shell?.identity,
+      /*
+       * Info: (20260904 - Emily) #6688-C:審的與印的是同一組聲明行。
+       * 這一格填上之後,分流表的條 2(沒宣告對齊卻有 IFRS)與條 3(印了對齊缺免責)
+       * 才第一次有訊號可讀 —— 那正是那兩格 basis 寫的觸發條件。
+       */
+      shellClaims: claims,
+    });
+    const { blocked, warned } = gateFrameworkClaims(
+      paperText,
+      CarbonFrameworkClaimExitEnum.PDF_EXPORT,
+    );
+
+    if (warned.length > 0) {
+      logger.warn("[CarbonReportPdfService] framework claim warnings", {
+        ref: input.fileName,
+        rules: warned.map((finding) => finding.rule),
+        counts: warned.map((finding) => finding.matches.length),
+      });
+    }
+
+    if (blocked.length === 0) return;
+
+    const axes = blocked.flatMap((finding) => finding.axes ?? []);
+    logger.error("[CarbonReportPdfService] framework claim blocked export", {
+      ref: input.fileName,
+      rules: blocked.map((finding) => finding.rule),
+      counts: blocked.map((finding) => finding.matches.length),
+      // Info: (20260903 - Emily) 封閉字彙的兩軸可以記,命中片語不行(見上)
+      axes: axes.map(({ verb, name }) => `${verb}/${name}`),
+    });
+
+    /**
+     * Info: (20260903 - Emily) 訊息帶上命中的片語與兩軸。
+     *
+     * 只說「被擋」使用者會不知道要改哪一句 —— 一份 33 節的報告裡找一個片語
+     * 等於重讀整份。片語回給的是**送出這份報告的那個人**(它就是他剛剛打的字),
+     * 與上面「不進 log」不衝突:那條管的是伺服端留存。
+     *
+     * 界(誠實寫出):使用者眼前的那句話由前端的 i18n 決定
+     *(`common.error.pdf_framework_claim`),它**不指名片語** ——
+     * 指名要有結構化的欄位通道,而今天這條路只有 `errorCode` 與英文 `message`。
+     * 要把片語送到介面上,得先讓失敗回應帶 payload(屬另一張票,不在 B 的範圍)。
+     */
+    throw new ApiError(
+      API_ERRORS.VA_FRAMEWORK_COMPLIANCE_CLAIM.code,
+      `${API_ERRORS.VA_FRAMEWORK_COMPLIANCE_CLAIM.message} [${blocked
+        .flatMap((finding) => finding.matches)
+        .join(" | ")}]${
+        axes.length > 0
+          ? ` axes=${axes.map(({ verb, name }) => `${verb}/${name}`).join(",")}`
+          : ""
+      }`,
+      API_ERRORS.VA_FRAMEWORK_COMPLIANCE_CLAIM.status,
+    );
+  }
+
   async generate(input: ICarbonReportPdfInput): Promise<IGeneratedCarbonPdf> {
     const started = Date.now();
+    /*
+     * Info: (20260904 - Emily) 先導出聲明行,審與印共用同一份 —— 兩次各算一次
+     * 就會有「審過的那份」與「印出的那份」兩個真值來源,而它們的分歧是靜默的。
+     */
+    const claims = CarbonReportPdfService.shellClaimsOf(input);
+    CarbonReportPdfService.gatePaperClaims(input, claims);
     const html = buildCarbonReportHtml(
       input.markdown,
       input.shell
         ? {
             ...input.shell,
+            claims,
             logoDataUrl: CarbonReportPdfService.logoDataUrl(),
           }
         : undefined,

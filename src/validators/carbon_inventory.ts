@@ -2,6 +2,7 @@
 // Info: (20260716 - Tzuhan) LLM 萃取結果的白名單護欄(enum 鎖死) + E2EE 狀態封裝的形狀驗證
 
 import { z } from "zod";
+import { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
 import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
 import {
   EmissionBasisEnum,
@@ -311,6 +312,35 @@ export const CarbonInventoryStateSchema = z.object({
       undatedCount: z.number().int().min(0),
     })
     .optional(),
+  /**
+   * Info: (20260903 - Emily) 揭露框架的選擇(#6688-A)。
+   *
+   * **型別加了、schema 沒加,等於沒做**:`loadInventoryState` 回傳
+   * `safeParse(...).data`,而 zod 預設剝掉未宣告的鍵 ——
+   * 完成判準「選 IFRS 後重載仍是 IFRS」會靜默失效。
+   * 這個檔案已經被同一件事咬過兩次(見上面 08-07 那段與 `importedOrigin.year`),
+   * 所以這一行與型別那一行是同一個工作,不是兩件事。
+   */
+  disclosureFramework: z.nativeEnum(CarbonDisclosureFrameworkEnum).optional(),
+  /*
+   * Info: (20260904 - Emily) `ledgerImportBlocks` **刻意不在這裡宣告**,理由見
+   * `data/scratch/issue_drafts/open/73_ledger_import_blocks_bound.md`。
+   *
+   * 這個欄位(#6707)確實少了持久化 —— 型別有、schema 沒有,所以重載之後
+   * 「帳本為空的原因」說不出來。但它的寫入端 `blockedReason` 是
+   * `checks.filter(未通過).map(...).join(";")`,而 `checks` 的筆數隨報告的
+   * 廠址 × 類別數成長、`subject` 是客戶報告裡的自由字串 —— **寫入端的值域無上界**。
+   *
+   * 給它一個猜的上界(本檔一度寫過 `reason: max(500)`)比不宣告更糟:
+   * 寫路徑是 `JSON.stringify(state)`(不過 schema),讀路徑是
+   * `parsed.success ? parsed.data : null` —— 超界的那一次存得進去、
+   * **下一次載入整份盤查狀態(帳本、活動數據、待補項)一起被丟棄**。
+   * 這正是 PR #6725 review 阻-2 抓到的同一個形狀(年度 `1024` 手滑毀整份 state)。
+   *
+   * 所以先量寫入端能產出多長、再決定是截斷還是放寬,而截斷要放在唯一的寫入者
+   *(`recordLedgerImportBlocks`)並配一條「寫入端能產出的,儲存端一定讀得回來」
+   * 的不變式測試。量完之前不宣告 —— 與分流表那四格的立場一致。
+   */
   notes: z.array(z.string().max(500)).optional(),
   updatedAt: z.string().max(50),
   version: z.number().int().min(0),

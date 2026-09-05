@@ -1728,6 +1728,31 @@ export const API_ERRORS = {
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
 
+  /**
+   * Info: (20260903 - Emily) 紙面上出現主體合規宣告,拒絕產出 PDF(#6688-B)。
+   *
+   * 與一般的驗證錯誤分開一碼,因為處置完全不同:這不是格式錯誤而是**內容紅線** ——
+   * 金管會的 IFRS S1/S2 適用時程分階段,未到期的企業在報告上宣告合規是實質風險,
+   * 而那份 PDF 一旦產出就會離開系統。訊息要指名命中的片語與兩軸
+   *(動詞軸/名稱軸),否則使用者只知道被擋、不知道要改哪一句。
+   *
+   * 取 84。**原本取 83,而那個依據在 review 之前就過期了**:當時掃過 develop /
+   * #6725 / #6625-A 三支,VA 系列最大號皆為 VA000082(2026-09-03);當天 develop
+   * 併入 #6737(salary_calculator)之後 VA000083 已被 `VA_SALARY_AMOUNT_NOT_INTEGER`
+   * 佔用。rebase **沒有報衝突** —— 兩筆插在檔案的不同位置,git 眼裡沒有衝突,
+   * 於是兩個處置完全不同的錯誤共用一個碼,而那是靜默的。
+   *
+   * 所以這個依據要連**掃描時間**一起寫(照本檔既有慣例):它會過期,
+   * 而過期的表現不是紅燈。往後在這個檔案取碼,rebase 之後要重掃一次。
+   * 2026-09-03 重掃:develop 併四支之後全庫最大號 VA000083,84 全空。
+   */
+  VA_FRAMEWORK_COMPLIANCE_CLAIM: {
+    code: "VA000084",
+    message:
+      "the report text contains an entity-level framework compliance claim, which must never be printed; remove the claim and export again",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
   VA_OVERTIME_NOT_APPROVED: {
     code: "VA000080",
     message:
