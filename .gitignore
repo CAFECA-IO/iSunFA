@@ -85,3 +85,7 @@ pdfs/
 
 # PDF 光柵化驗證工具的相依（README 指示在該目錄 npm i；playwright 會拉數百 MB）
 tools/pdf_harness/node_modules/
+
+# Info: (20260821 - Luphia) forge test 的產物（見 foundry.toml）
+/forge_out
+/forge_cache
