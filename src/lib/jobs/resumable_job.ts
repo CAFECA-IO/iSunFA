@@ -34,7 +34,14 @@ export type StepOutcomeKind = (typeof STEP_OUTCOME)[keyof typeof STEP_OUTCOME];
 
 export type StepOutcome =
   | { kind: typeof STEP_OUTCOME.PAUSE; reason: JobPauseReason }
-  | { kind: typeof STEP_OUTCOME.RETRY }
+  /**
+   * Info: (20260904 - Emily) `afterMs`:至少等這麼久再重試(#6744)。
+   * 429 的 `Retry-After` 走這裡。**它推的是整趟的閘門,不只是這一步**:
+   * 限流是以身分計的共用 bucket,一步撞牆代表所有 worker 都該退 ——
+   * 讓另一條 worker 立刻補上只會再撞一次,而且把 retryAfter 越推越大
+   *(實測一路升到 46 秒)。
+   */
+  | { kind: typeof STEP_OUTCOME.RETRY; afterMs?: number }
   | { kind: typeof STEP_OUTCOME.FAIL };
 
 export interface IResumableJobRun<TStep, TResult> {
@@ -56,6 +63,23 @@ export interface IResumableJobRun<TStep, TResult> {
   concurrency?: number;
   // Info: (20260825 - Luphia) 每完成一步回報一次（畫面進度條用）
   onProgress?: (done: number, total: number) => void;
+  /**
+   * Info: (20260904 - Emily) 步驟**開始**之間的最小間隔,跨所有 worker(#6744)。
+   *
+   * `concurrency` 限的是「同時在飛」的數量,**不限「每分鐘發出」的速率** ——
+   * 每一步幾百毫秒回來(來源快取命中時),下一步立刻補上,一秒內就能發出十幾步,
+   * 而 LLM bucket 是 12/分鐘。同一份檔第二次匯入因此必掛(第一次過得了,
+   * 是因為每章都要等 PDF 抽字,呼叫被自然拉開)。
+   *
+   * 重試也是一次「開始」,同樣過這道閘。省略或 0 = 不節流(既有行為不變)。
+   */
+  minStartIntervalMs?: number;
+  /**
+   * Info: (20260904 - Emily) 時鐘與睡眠可注入,讓節流與退避**測得到**而不必碰 fake timers。
+   * 純函式的立場不變:預設就是 Date.now 與 setTimeout,呼叫端不需要知道這兩個欄位。
+   */
+  now?: () => number;
+  sleep?: (ms: number) => Promise<void>;
 }
 
 export interface IResumableJobOutcome<TStep, TResult> {
@@ -73,6 +97,10 @@ export interface IResumableJobOutcome<TStep, TResult> {
 
 const DEFAULT_CONCURRENCY = 2;
 const DEFAULT_MAX_RETRIES = 1;
+const defaultSleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 
 export async function runResumableJob<TStep, TResult>(
   params: IResumableJobRun<TStep, TResult>,
@@ -84,6 +112,9 @@ export async function runResumableJob<TStep, TResult>(
     maxRetriesPerStep = DEFAULT_MAX_RETRIES,
     concurrency = DEFAULT_CONCURRENCY,
     onProgress,
+    minStartIntervalMs = 0,
+    now = Date.now,
+    sleep = defaultSleep,
   } = params;
 
   const results: { step: TStep; result: TResult }[] = [];
@@ -93,6 +124,40 @@ export async function runResumableJob<TStep, TResult>(
   let pausedBy: JobPauseReason | null = null;
   let cursor = 0;
   let done = 0;
+
+  /**
+   * Info: (20260904 - Emily) 全趟共用的閘門:`gateOpenAt` 之前誰都不能開始下一步。
+   *
+   * ## 為什麼是「醒來再看一次」而不是「先佔位再睡」
+   *
+   * 第一版寫成佔位(把時刻往後推)之後睡到自己的位子。那有一個洞,測試抓到的:
+   * worker B 佔了 t=100 的位子在睡,worker A 在 t=0 撞 429、把閘門推到 t=1000 ——
+   * B 在 100 醒來照樣送出去,因為它的位子是撞牆**之前**佔的。生產環境的表現是
+   * 每一次撞牆多付一次 429(上限 = 併發數),而伺服端的 retryAfter 被越推越大。
+   *
+   * 改成迴圈:醒來之後**重看**閘門,沒開就再睡到它開。同一瞬間兩條 worker 都醒,
+   * 先跑的那條把閘門推走,後跑的看到沒開、再睡一段 —— 節流靠的是這個順序,
+   * 不靠任何鎖。`minStartIntervalMs` 為 0 時閘門推到「現在」,等於不節流,
+   * 但退避仍然有效:honor `Retry-After` 不該以有沒有開節流為前提。
+   */
+  let gateOpenAt = 0;
+  const waitForStartSlot = async (): Promise<void> => {
+    for (;;) {
+      const current = now();
+      if (current >= gateOpenAt) {
+        gateOpenAt = current + minStartIntervalMs;
+        return;
+      }
+      await sleep(gateOpenAt - current);
+    }
+  };
+  /**
+   * Info: (20260904 - Emily) 撞牆的退避推的是**整趟**的閘門(理由見 StepOutcome.afterMs)。
+   * 只往後推不往前拉:兩步同時撞、回報不同秒數時,取較晚的那個。
+   */
+  const backOffAll = (afterMs: number): void => {
+    gateOpenAt = Math.max(gateOpenAt, now() + afterMs);
+  };
 
   const worker = async (): Promise<void> => {
     for (;;) {
@@ -106,6 +171,10 @@ export async function runResumableJob<TStep, TResult>(
 
       let attempt = 0;
       for (;;) {
+        // Info: (20260904 - Emily) 每一次開始(含重試)都過同一道閘
+        await waitForStartSlot();
+        // Info: (20260904 - Emily) 排隊期間別人撞牆暫停了,這一步就不要再送出去
+        if (pausedBy !== null) return;
         try {
           const result = await runStep(step, index);
           results.push({ step, result });
@@ -130,6 +199,9 @@ export async function runResumableJob<TStep, TResult>(
             attempt < maxRetriesPerStep
           ) {
             attempt += 1;
+            if (outcome.afterMs !== undefined && outcome.afterMs > 0) {
+              backOffAll(outcome.afterMs);
+            }
             continue;
           }
           failed.push(step);

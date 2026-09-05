@@ -1728,6 +1728,23 @@ export const API_ERRORS = {
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
 
+  /**
+   * Info: (20260904 - Emily) 段落草稿裡出現無法溯源的排放量數字,草稿不得落地(#6745)。
+   *
+   * 與 IS_PARAGRAPH_DRAFT_FAILED 分開一碼:那個是「生成壞了,可以重試」,
+   * 這個是「生成成功但產物不可信」—— 重試同一個 prompt 大概率再編一次,
+   * 呼叫端要能分辨才能決定降級語意(對話路徑標 degraded、/draft 路徑回給使用者說明)。
+   *
+   * 取 85:develop 最大 VA000083;**VA000084 在 PR #6754 上(未合入)**。
+   * 本檔的取碼依據會過期(2026-09-04 上午 VA000083 撞碼的教訓),所以連未合入的分支一起掃。
+   */
+  VA_DRAFT_QUANTITY_UNSOURCED: {
+    code: "VA000085",
+    message:
+      "the paragraph draft asserts emission quantities that cannot be traced to the ledger facts; the draft was not saved",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
   VA_OVERTIME_NOT_APPROVED: {
     code: "VA000080",
     message:

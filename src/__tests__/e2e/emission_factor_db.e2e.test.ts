@@ -2,11 +2,52 @@ import { describe, it, beforeAll, afterAll, expect } from "@jest/globals";
 import { prisma } from "@/lib/prisma";
 import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
 
+/**
+ * Info: (20260904 - Emily) 搬進 `e2e/` 並改名(#6752)。
+ *
+ * 這支連的是**真資料庫**(`127.0.0.1:20021`),而它原本住在預設套件裡 ——
+ * `jest.config.mjs` 只排除 `*.e2e.test.ts`,於是 docker 沒起的機器上 `npm test`
+ *(husky pre-commit 會跑)就有五條紅,錯誤訊息是 `Can't reach database server`。
+ *
+ * 紅燈沒有分類,現場就會拿它去猜:2026-09-02 這五條紅被誤判成 `prisma generate`
+ * 造成的 schema 漂移,差一步就去 `db push` 改一個根本沒問題的資料庫。
+ * `reports/ui_test_plan.md` 早就記著「你本機 DB 起著的話應該會過」——
+ * 也就是它是**已知**的,但處置是寫在文件裡叫人記得,不是讓工具自己分得開。
+ *
+ * 現在它與同層的 e2e 一樣:`npm test` 不跑、`npm run test:e2e` 明確執行。
+ * 預設套件裡「非 e2e 卻真連 DB」的情況由 `db_tests_isolated.test.ts` 掃描釘住。
+ */
+
+// Info: (20260904 - Emily) 🛑 正式機實體隔離(與同層 e2e 一致):這支會建立與刪除 coefficient 列
+if (process.env.NODE_ENV === "production") {
+  throw new Error(
+    "🚨 [FATAL] 嚴禁在正式機 (Production) 環境執行 E2E 測試,以免污染真實係數資料!",
+  );
+}
+
 describe("EmissionFactorRepo Database Operations Test", () => {
   const createdIds: string[] = [];
 
   beforeAll(async () => {
-    // Info: (20260608 - Luphia) Ensure clean state before testing
+    /**
+     * Info: (20260904 - Emily) 先探一次連線,讓「DB 沒起」是一句看得懂的話,
+     * 不是五條各自帶著 Prisma 堆疊的斷言失敗(#6752 的完成判準之一)。
+     */
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+    } catch (error) {
+      throw new Error(
+        "這支 e2e 需要真資料庫(DATABASE_URL 指向的 postgres),但連不上 —— " +
+          "先把 docker 起來再跑 `npm run test:e2e`。原始錯誤:" +
+          // Info: (20260904 - Emily) Prisma 的訊息以換行開頭,取第一個非空行才是真正的原因
+          (error instanceof Error
+            ? (error.message
+                .split("\n")
+                .map((line) => line.trim())
+                .find((line) => line.length > 0) ?? error.name)
+            : String(error)),
+      );
+    }
   });
 
   afterAll(async () => {

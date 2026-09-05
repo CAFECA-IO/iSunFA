@@ -103,6 +103,7 @@ import {
   discardPendingImport as deletePendingImportRecord,
 } from "@/lib/carbon_pending_import_storage";
 import {
+  isInventoryStateUnsavableError,
   loadInventoryState,
   saveInventoryState,
 } from "@/lib/carbon_inventory_storage";
@@ -157,6 +158,8 @@ import {
   resolveCreditPauseReason,
   summarisePausedUnits,
   isRateLimitedApiError,
+  describeImportFailure,
+  rateLimitBackoffMs,
   isTimeoutApiError,
   splitReportMarkdownSections,
   alignReportSections,
@@ -187,6 +190,7 @@ import {
 } from "@/constants/resumable_job";
 import { HTTP_METHOD } from "@/constants/http";
 import { runResumableJob, STEP_OUTCOME } from "@/lib/jobs/resumable_job";
+import { minIntervalMsFor, RateLimitBucketEnum } from "@/constants/rate_limit";
 import { useAuth } from "@/contexts/auth_context";
 import {
   DEFAULT_SESSION_ID,
@@ -665,6 +669,27 @@ export const useCarbonChat = () => {
   const [inventoryStates, setInventoryStates] = useState<
     Record<string, ICarbonInventoryState>
   >({});
+  /**
+   * Info: (20260904 - Emily) 該房的帳本事實包,**唯一**的組包點(#6745)。
+   *
+   * 原本只有對話路徑組(#6707 第二層),草稿與修訂兩條 `/draft` 路各自不帶或帶不全,
+   * 於是服務層的守門對它們是「呼叫端沒帶 → 跳過」。三條會生成文字的路現在共用這一支:
+   * 帳本是 E2EE 的、伺服端讀不到,事實只能在這裡(解密後的狀態)決定性組出。
+   * 帳本空時回空陣列 —— 守門對空陣列**照跑**(那正是編造最沒阻力的一格),不補、不造。
+   */
+  const buildChannelLedgerFacts = useCallback(
+    (channel: string): IContextFact[] =>
+      buildLedgerFactBundle(
+        inventoryStates[channel]?.computedLedger,
+        // Info: (20260825 - Emily) 勾稽阻擋紀錄一併注入:「帳本為什麼是空的」也是可問的事實
+        inventoryStates[channel]?.ledgerImportBlocks,
+        // Info: (20260825 - Emily) #6719 年度快照:滿兩年時年間比較事實隨包注入
+        inventoryStates[channel]?.ledgerByYear,
+        // Info: (20260828 - Emily) 年度標註不完整:列舉制第五個偵測器(round-2 追加回饋)
+        inventoryStates[channel]?.ledgerYearWarning,
+      ),
+    [inventoryStates],
+  );
   const inventoryVersionsRef = useRef<Map<string, number>>(new Map());
   /**
    * Info: (20260806 - Tzuhan) 還原的「試過」與「成功」拆成兩個集合
@@ -1708,12 +1733,34 @@ export const useCarbonChat = () => {
               "[carbon-chat] inventory version conflict:",
               chatChannel,
             );
-          } else {
-            console.error(
-              "[carbon-chat] failed to save inventory state:",
-              error,
-            );
+            return;
           }
+          /**
+           * Info: (20260904 - Emily) 「這一版存不進去」必須說得出來(open/73)。
+           *
+           * 與版本衝突的處置相反:衝突是暫時的、下一輪 autosave 就過了;
+           * 這一條是**狀態本身不符合儲存格式**,每一次 autosave 都會失敗同一次,
+           * 而盤查狀態**沒有本機備份** —— 使用者不知道的話,那些活動數據與帳本
+           * 會在關掉分頁的那一刻消失,而畫面上一切正常。
+           *
+           * 原本這裡只有 `console.error`,而看得到 console 的人不是在做盤查的那個人。
+           * 只記欄位路徑不記值:載荷是使用者的盤查資料。
+           */
+          if (isInventoryStateUnsavableError(error)) {
+            console.error("[carbon-chat] inventory state unsavable:", {
+              channel: chatChannel,
+              paths: error.paths,
+            });
+            setDraftNotice(
+              {
+                type: "error",
+                text: t("carbon_chatbot.inventory_unsavable")!,
+              },
+              activeSessionId,
+            );
+            return;
+          }
+          console.error("[carbon-chat] failed to save inventory state:", error);
         });
     }, CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS);
     return () => {
@@ -1721,7 +1768,21 @@ export const useCarbonChat = () => {
         clearTimeout(inventoryAutosaveTimerRef.current);
       }
     };
-  }, [activeInventoryState, chatChannel, isUnlocked, sessionAccess]);
+    /*
+     * Info: (20260904 - Emily) 依賴多了 `t` / `setDraftNotice` / `activeSessionId`:
+     * 上面那個 catch 分支要組通知。與 #6730 review R2 同一個判斷 —— 補依賴而不是
+     * 改讀 ref:這個 effect 的重跑成本是一次 debounce 計時器的重設,而 ref 會讓
+     * 通知落在切換 session 之前的那一則上。
+     */
+  }, [
+    activeInventoryState,
+    chatChannel,
+    isUnlocked,
+    sessionAccess,
+    t,
+    setDraftNotice,
+    activeSessionId,
+  ]);
 
   // Info: (20260716 - Tzuhan) #6519 決定論 CO2e 計算:活動集合變更時呼叫 /calculate,結果掛回 state
   // Info: (20260716 - Tzuhan) 簽章 guard 防迴圈:applyComputedLedger 只回填係數不改活動鍵,簽章不變不重算
@@ -1936,7 +1997,14 @@ export const useCarbonChat = () => {
           body: JSON.stringify({
             paragraphId,
             conversationContext: [],
-            contextFacts: facts,
+            /**
+             * Info: (20260904 - Emily) #6745:那則訊息的事實 ∪ 該房帳本事實包。
+             * 原本只帶前者 —— 修訂稿引用帳本的量會被守門當成編造,而帳本才是
+             * 排放量的唯一合法來源。這裡的事實包是用戶端自報:這道門防的是
+             * **LLM 編造**,不是惡意用戶端(那個人本來就能直接改段落文字),
+             * 別把它當成授權邊界。
+             */
+            contextFacts: [...facts, ...buildChannelLedgerFacts(chatChannel)],
             language,
             existingContent: paragraph.content,
             instruction,
@@ -1971,6 +2039,7 @@ export const useCarbonChat = () => {
       dismissDraftNoticeAfter,
       // Info: (20260814 - Luphia) 計費上下文所需：channel 決定這筆消費記到哪個帳本
       chatChannel,
+      buildChannelLedgerFacts,
     ],
   );
 
@@ -2358,6 +2427,10 @@ export const useCarbonChat = () => {
        * 「暫停就停掉整趟」「剩餘怎麼算」都由驅動器負責，這裡只管做一件事：
        * 把這一份送出去、把結果放進 `results[index]`。
        */
+      // Info: (20260904 - Emily) 份 → 失敗原因;印 log 時查表(理由見 runUnit 的 catch)
+      const failureReasons = new Map<string, string>();
+      const unitKeyOf = (unit: IImportUnit): string =>
+        `${unit.chapterId}#${unit.partIndex}/${unit.partTotal}`;
       const runUnit = async (unit: IImportUnit, index: number) => {
         const chapter = resolveChapterOf(unit.chapterId);
         inFlightCount += 1;
@@ -2443,6 +2516,14 @@ export const useCarbonChat = () => {
             "/api/v1/chat/carbon/import",
             { method: "POST", body: formData },
           );
+        } catch (error) {
+          /**
+           * Info: (20260904 - Emily) 把失敗原因留下來再往上拋(#6746)。
+           * 這裡是這一趟裡**唯一**同時拿得到「哪一份」與「什麼錯」的地方:
+           * 驅動器只傳遞分類結果,`outcome.failed` 回來時錯誤已經不在了。
+           */
+          failureReasons.set(unitKeyOf(unit), describeImportFailure(error));
+          throw error;
         } finally {
           /**
            * Info: (20260825 - Luphia) 進度一定要放行（成功、失敗、暫停都算走過一步）：
@@ -2465,6 +2546,7 @@ export const useCarbonChat = () => {
        * Info: (20260825 - Luphia) 併發度 2：11 章耗時約減半，仍留限流餘裕
        *（LLM bucket 12/min）。停手與剩餘的判斷由驅動器負責（見上方說明）。
        */
+      const llmStartIntervalMs = minIntervalMsFor(RateLimitBucketEnum.LLM);
       const outcome = await runResumableJob<IImportUnit, void>({
         steps: units,
         runStep: runUnit,
@@ -2489,9 +2571,38 @@ export const useCarbonChat = () => {
             }
             return { kind: STEP_OUTCOME.PAUSE, reason: pauseReason };
           }
+          /**
+           * Info: (20260904 - Emily) 429 是「稍後再試」,不是「做壞了」(#6744)。
+           *
+           * 原本這裡把限流歸進 FAIL:章節被列成「解析失敗」,而重試按鈕把全部失敗章
+           * **一次再送** —— 撞第二次。而 `isRateLimitedApiError` 這支早就存在、
+           * 在對話那端用著,匯入的分類器沒有用它。
+           *
+           * 退避秒數拿伺服端算好的 `Retry-After`;退回值是一個發出間隔,
+           * 不另外寫一個秒數。
+           */
+          if (isRateLimitedApiError(error)) {
+            return {
+              kind: STEP_OUTCOME.RETRY,
+              afterMs: rateLimitBackoffMs(error, llmStartIntervalMs),
+            };
+          }
           return { kind: STEP_OUTCOME.FAIL };
         },
+        /**
+         * Info: (20260904 - Emily) 三次而不是預設的一次:退避之後再撞的情境是
+         * 「同一分鐘裡對話那端也在用同一個 bucket」,一次重試接不住。
+         * 三次仍然接不住就是真的擋住了,那時列成失敗是對的。
+         * 這個上限只影響 RETRY,而本分類器唯一會回 RETRY 的就是 429。
+         */
+        maxRetriesPerStep: 3,
         concurrency: 2,
+        /**
+         * Info: (20260904 - Emily) 發出間隔從限流規則推出(單一來源),
+         * 讓一趟匯入自己排隊跑完 —— 慢,但一定完成(票上的驗收條款)。
+         * `concurrency: 2` 留著:它限的是同時在飛的數量,與這裡限的速率是兩件事。
+         */
+        minStartIntervalMs: llmStartIntervalMs,
       });
 
       const pausedBy = outcome.pausedBy;
@@ -2506,10 +2617,16 @@ export const useCarbonChat = () => {
         failed.push(resolveChapterOf(unit.chapterId));
       });
       outcome.failed.forEach((unit) => {
+        /**
+         * Info: (20260904 - Emily) 帶原因(#6746):原本只印 chapterId 與 part,
+         * 整份 log 看得到「ch5 失敗」看不到「因為訂閱額度用完」。
+         * `reason` 是 errorCode 或錯誤名稱,不是整個 error 物件(body 可能含使用者內容)。
+         */
         console.error(
           "[carbon-chat] import chapter failed:",
           unit.chapterId,
           `part ${unit.partIndex}/${unit.partTotal}`,
+          `reason=${failureReasons.get(unitKeyOf(unit)) ?? "unknown"}`,
         );
       });
       if (pausedBy) {
@@ -5447,6 +5564,12 @@ export const useCarbonChat = () => {
               body: JSON.stringify({
                 paragraphId,
                 conversationContext,
+                /**
+                 * Info: (20260904 - Emily) #6745:這條路原本**不帶事實包**,於是服務層的守門
+                 * 對它永遠是「呼叫端沒帶 → 跳過」—— 而它正是主入口攔下之後官方指定的重試路。
+                 * 不補這一行,守門搬進服務等於沒搬。
+                 */
+                contextFacts: buildChannelLedgerFacts(chatChannel),
                 language,
                 channel: chatChannel,
                 clientMessageId,
@@ -5530,6 +5653,7 @@ export const useCarbonChat = () => {
       chatChannel,
       // Info: (20260825 - Luphia) 無帳本會話的待付款流程（與聊天路徑同一套）
       payExistingOrder,
+      buildChannelLedgerFacts,
     ],
   );
 
@@ -6181,15 +6305,8 @@ export const useCarbonChat = () => {
          * LLM 回答數據問題的數字只能來自這一包(persona 端把「清單之外不得有數字」說死)。
          * 帳本空時為空陣列 —— persona 對「無事實」另有明確拒答指令,這裡不補、不造。
          */
-        const ledgerFacts = buildLedgerFactBundle(
-          inventoryStates[chatChannel]?.computedLedger,
-          // Info: (20260825 - Emily) 勾稽阻擋紀錄一併注入:「帳本為什麼是空的」也是可問的事實
-          inventoryStates[chatChannel]?.ledgerImportBlocks,
-          // Info: (20260825 - Emily) #6719 年度快照:滿兩年時年間比較事實隨包注入
-          inventoryStates[chatChannel]?.ledgerByYear,
-          // Info: (20260828 - Emily) 年度標註不完整:列舉制第五個偵測器(round-2 追加回饋)
-          inventoryStates[chatChannel]?.ledgerYearWarning,
-        );
+        // Info: (20260904 - Emily) #6745:三條會生成文字的路(對話、草稿、修訂)共用同一支組包
+        const ledgerFacts = buildChannelLedgerFacts(chatChannel);
         const sendChatRequest = () =>
           request<{
             success: boolean;
@@ -6383,10 +6500,11 @@ export const useCarbonChat = () => {
       ensureMasterKeyCached,
       markSessionBusy,
       applyInventoryExtraction,
-      inventoryStates,
       requestParagraphRevision,
       insertChartIntoParagraph,
       setDraftNotice,
+      inventoryStates,
+      buildChannelLedgerFacts,
     ],
   );
 
