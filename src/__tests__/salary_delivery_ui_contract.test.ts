@@ -36,6 +36,14 @@ const read = (relativePath: string): string =>
 const stripComments = (source: string): string =>
   source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
 
+/**
+ * Info: (20260905 - Luphia) 寄送判斷已搬到 `resolveSendTarget`（#6775）。
+ *
+ * 這一份原始碼給那幾條「判斷本身」的斷言用。元件那一側改成只釘
+ * 「有呼叫它」—— 判斷該釘在它真正住的地方，否則搬一次家就要改一次掃描。
+ */
+const sendTargetSource = stripComments(read("lib/utils/salary_send_target.ts"));
+
 const apiErrorOf = (errorCode: string): ApiError =>
   new ApiError("failed", 500, { errorCode });
 
@@ -272,15 +280,29 @@ describe("計算機頁的寄出按鈕", () => {
     expect(source).toMatch(/if \(!savedRecord\) return/);
   });
 
-  it("沒有信箱也寄不出去，而且說得出為什麼", () => {
-    expect(source).toContain("send_disabled_no_email");
-    expect(source).toContain('employeeEmail.trim() === ""');
+  /**
+   * Info: (20260905 - Luphia) 判斷搬到 `resolveSendTarget` 了（#6775），掃描跟著搬。
+   *
+   * 這一條原本斷言計算機頁的原始碼裡有 `employeeEmail.trim() === ""` ——
+   * 而那正是缺陷本身：讀 `linkEmployee()` 選人當下抄的副本，補完信箱不會更新。
+   * 現在兩頁共用一支吃即時名單的純函式，所以這裡改成釘「有呼叫它」，
+   * 「回什麼」由 `salary_send_target.test.ts` 逐分支驗。
+   */
+  it("沒有信箱也寄不出去 —— 判斷走共用的 resolveSendTarget", () => {
+    expect(source).toContain("resolveSendTarget(");
+    expect(source).not.toMatch(/employeeEmail\.trim\(\)\s*===\s*""/);
   });
 
   it("寄出專屬的兩種原因各有各的文案", () => {
     const reasons = ["send_disabled_unsaved", "send_disabled_no_email"];
 
-    reasons.forEach((reason) => expect(source).toContain(reason));
+    /**
+     * Info: (20260905 - Luphia) `send_disabled_unsaved` 仍在元件裡（它問的是
+     * 「存過了沒」，與員工無關）；`send_disabled_no_email` 搬進了共用函式。
+     * 兩個文案鍵仍然各有各的，只是住在不同檔案。
+     */
+    expect(source).toContain(reasons[0]);
+    expect(sendTargetSource).toContain(reasons[1]);
     expect(new Set(reasons).size).toBe(reasons.length);
   });
 
@@ -414,9 +436,17 @@ describe("薪資紀錄頁的寄送入口", () => {
    * 薪資紀錄仍在（薪資單是對外憑據），但伺服器的 `getActiveEmployeeById` 會過濾
    * `deletedAt`，寄送必然回 404。叫使用者去補信箱只會白跑一趟。
    */
+  /**
+   * Info: (20260905 - Luphia) 三種理由都搬進 `resolveSendTarget` 了（#6775），
+   * 所以斷言跟著搬。元件那一側改釘「有呼叫它」（見下一條）。
+   */
   it("沒信箱與員工已移除是兩種不同的理由", () => {
-    expect(source).toContain("send_disabled_no_email");
-    expect(source).toContain("send_disabled_employee_gone");
+    expect(sendTargetSource).toContain("send_disabled_no_email");
+    expect(sendTargetSource).toContain("send_disabled_employee_gone");
+  });
+
+  it("薪資紀錄頁確實呼叫了共用的判斷", () => {
+    expect(source).toContain("resolveSendTarget(");
   });
 
   /**
@@ -424,8 +454,8 @@ describe("薪資紀錄頁的寄送入口", () => {
    * 這一頁上面那段註解記的正是這個歧義。那時不下結論，但也不放行。
    */
   it("名單還沒確定時不猜成因，也不放行", () => {
-    expect(source).toMatch(
-      /isEmployeesLoading \|\| hasEmployeesError.*\n?.*send_disabled_loading/s,
+    expect(sendTargetSource).toMatch(
+      /list\.isLoading \|\| list\.hasError[\s\S]*?send_disabled_loading/,
     );
   });
 });
@@ -522,8 +552,8 @@ describe("薪資紀錄列表的寄出按鈕", () => {
    */
   it("停用時 title 換成原因，而不是只留一個灰掉的圖示", () => {
     expect(page).toContain("blockedReason !== undefined");
-    expect(page).toContain("send_disabled_employee_gone");
-    expect(page).toContain("send_disabled_no_email");
+    expect(sendTargetSource).toContain("send_disabled_employee_gone");
+    expect(sendTargetSource).toContain("send_disabled_no_email");
   });
 
   /**

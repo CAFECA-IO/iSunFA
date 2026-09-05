@@ -14,6 +14,7 @@ import {
 } from "@/components/salary_calculator/save_record_dialogs";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { useSalaryEmployees } from "@/hooks/use_salary_employees";
+import { resolveSendTarget } from "@/lib/utils/salary_send_target";
 import {
   diffEmployeeProfile,
   IProfileDiffEntry,
@@ -79,8 +80,21 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
   const bookId = accountBookId ?? "";
   const { isSaving, savedRecord, hasError, findExisting, save, clearSaved } =
     useSalaryRecordSave(bookId);
-  const { employees, createEmployee, updateEmployee, reload } =
-    useSalaryEmployees(accountBookId);
+  const {
+    employees,
+    createEmployee,
+    updateEmployee,
+    reload,
+    /**
+     * Info: (20260905 - Luphia) 名單狀態要拿進來（#6775）。
+     *
+     * 寄送判斷改讀即時名單之後，就必須分得出「名單還沒問完」與
+     * 「這個人真的沒信箱」—— 少了這兩個旗標，名單載入中的那一瞬間
+     * 每個人都會被說成「沒有電子郵件」。
+     */
+    isLoading: isEmployeesLoading,
+    hasError: hasEmployeesError,
+  } = useSalaryEmployees(accountBookId);
 
   /**
    * Info: (20260901 - Julian) 待確認覆蓋的那一筆，連「要存給誰」一起記。
@@ -451,9 +465,27 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
    */
   const sendDisabledReason = (() => {
     if (!savedRecord) return "calculator.button.send_disabled_unsaved";
-    if (employeeEmail.trim() === "")
-      return "calculator.button.send_disabled_no_email";
-    return null;
+    /**
+     * Info: (20260905 - Luphia) 改讀**即時名單**，不再讀 context 的副本（#6775）。
+     *
+     * 原本是 `employeeEmail.trim() === ""`，而 `employeeEmail` 是
+     * `linkEmployee()` 在選人那一刻抄下的值 —— 使用者接著在挑人彈窗裡
+     * 補上信箱（那個彈窗同時是員工管理入口）、存檔、回來按寄出，
+     * 看到的還是「請先到員工列表補上」，而那正是他剛做完的事。
+     *
+     * `calculator_context.tsx` 沒有任何 effect 會重新同步那份副本，
+     * 而 `linkEmployee()` 只在重新點選員工時執行 —— 所以那個狀態
+     * 會一直卡著，直到他碰巧再選一次。
+     *
+     * 現在與薪資紀錄頁讀同一支 `resolveSendTarget`，兩頁不會再分岔。
+     */
+    return (
+      resolveSendTarget(selectedEmployeeId, {
+        employees,
+        isLoading: isEmployeesLoading,
+        hasError: hasEmployeesError,
+      }).blockedReason ?? null
+    );
   })();
 
   // Info: (20260904 - Julian) 按鈕的停用條件仍然包含「沒填完」，只是那件事由共用的提示來講

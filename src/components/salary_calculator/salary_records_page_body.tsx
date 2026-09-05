@@ -16,7 +16,10 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { request, requestFile, IEnvelopeLike } from "@/lib/utils/request";
-import { hasNoEmail } from "@/lib/utils/salary_employee_filter";
+import {
+  resolveSendTarget,
+  type ISalarySendTarget,
+} from "@/lib/utils/salary_send_target";
 import { numberWithCommas, timestampToString } from "@/lib/utils/common";
 import {
   isPageAllPicked,
@@ -130,24 +133,18 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
    * 收成一支吃 `employeeId` 的函式（原本只服務預覽彈窗那一筆）——
    * 列表每一列的寄出按鈕問的是同一個問題，答案不該有兩套推導。
    */
-  const sendTargetOf = (
-    employeeIdOfRecord: string,
-  ): { email?: string; blockedReason?: string } => {
-    if (isEmployeesLoading || hasEmployeesError) {
-      return { blockedReason: "calculator.button.send_disabled_loading" };
-    }
-
-    const employee = employees.find(
-      (candidate) => candidate.id === employeeIdOfRecord,
-    );
-    if (!employee) {
-      return { blockedReason: "calculator.button.send_disabled_employee_gone" };
-    }
-    if (hasNoEmail(employee)) {
-      return { blockedReason: "calculator.button.send_disabled_no_email" };
-    }
-    return { email: employee.email };
-  };
+  /**
+   * Info: (20260905 - Luphia) 改用共用的 `resolveSendTarget`（#6775）。
+   *
+   * 這一段原本住在這個檔案裡，而計算機頁另有一套讀 context 副本的推導 ——
+   * 同一位員工在兩頁得到相反的答案。判斷本身沒有變，只是搬到測得到的地方。
+   */
+  const sendTargetOf = (employeeIdOfRecord: string): ISalarySendTarget =>
+    resolveSendTarget(employeeIdOfRecord, {
+      employees,
+      isLoading: isEmployeesLoading,
+      hasError: hasEmployeesError,
+    });
 
   const viewingSendTarget = viewing ? sendTargetOf(viewing.employee.id) : {};
 
