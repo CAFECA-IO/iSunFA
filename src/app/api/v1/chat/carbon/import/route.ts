@@ -17,6 +17,10 @@ import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { matchesDeclaredMimeType } from "@/lib/file_signature";
 import { describeError } from "@/lib/utils/error_message";
 import { ReportImportService } from "@/services/report_import.service";
+import {
+  resolveCarbonAccess,
+  CarbonAccessLevelEnum,
+} from "@/services/carbon_access.guard";
 import { storageService } from "@/services/storage.service";
 import {
   CARBON_CHAT_MAX_ATTACHMENT_BYTES,
@@ -80,6 +84,37 @@ export async function POST(request: NextRequest) {
      */
     const channelRaw = formData.get("channel");
     const channel = typeof channelRaw === "string" ? channelRaw : undefined;
+    /**
+     * Info: (20260831 - Emily) channel 要過歸屬裁決(#6625 的 A 半)。
+     *
+     * `channel` 唯一的用途是推導帳本來計費(`runBilledCarbonTask` →
+     * `chatroomRepo.findAccountBookIdByChannel`),而這裡原本**沒有任何裁決** ——
+     * 也就是帶別人的 channel 就是拿別人的團隊額度付自己的匯入
+     * (匯入單章實測達 5 萬 tokens),而且順便繞過自己的個人點數扣款。
+     * 對照(20260904 掃 develop `ef4b8bcd0`,含未合併分支):碳盤查另外**四個**
+     * 端點(sessions / inventory / report / pending-import)走 `resolveCarbonAccess`,
+     * `esg-records` 走同一個模組的 `canViewAccountBook`(它收 accountBookId,
+     * 不是 channel;`sessions` 列帳本會話那一路也用它)—— 只有匯入這條
+     * 一個裁決都沒有。「五個端點都用這道 guard」是原本的寫法,不準確。
+     *
+     * 用 **EDIT** 而不是 VIEW:花掉帳本的額度是寫入行為,不是閱覽。
+     * 帳本會話的 VIEWER 因此不能用團隊額度匯入 —— 與「VIEWER 不能寫報告」一致,
+     * 他本來也改不了匯入的結果。
+     *
+     * `channel` 未帶時**不擋**:那是「無帳本會話」的合法狀態,
+     * 由 runBilledCarbonTask 走個人鏈上點數那條路(產品拍板 20260813)。
+     * 這裡不替它決定要不要有帳本,只確認「宣稱的帳本你有權動」。
+     */
+    if (channel) {
+      const access = await resolveCarbonAccess(
+        sessionUser.address,
+        channel,
+        CarbonAccessLevelEnum.EDIT,
+      );
+      if (!access.allowed) {
+        return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
+      }
+    }
     const clientMessageIdRaw = formData.get("clientMessageId");
     const clientMessageId =
       typeof clientMessageIdRaw === "string" ? clientMessageIdRaw : undefined;
@@ -160,6 +195,11 @@ export async function POST(request: NextRequest) {
      *
      * 仍保留 `file` 一路:cid 尚未上傳成功時前端會退回直傳,
      * 而「上傳失敗就整個匯入不能做」是不必要的脆弱。
+     *
+     * Info: (20260904 - Emily) 上面那道 guard 只裁決 `channel`(帳本額度的歸屬),
+     * **沒有**裁決 `cid`:知道別人的 cid 就能經 `recoverLaria` 把那份檔案取回來,
+     * 那一半是 #6748,不在這支 PR 的範圍。留這句是因為讀到這裡的人
+     * 很容易以為「匯入端點已經有授權了」。
      */
     const cidRaw = formData.get("cid");
     const cid = typeof cidRaw === "string" && cidRaw.length > 0 ? cidRaw : null;
