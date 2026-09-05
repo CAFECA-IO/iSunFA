@@ -1,7 +1,13 @@
 import { describe, it, expect } from "@jest/globals";
 import type { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
-import { SystemSettingService } from "@/services/system_setting.service";
-import { SystemSettingKey } from "@/constants/system_setting";
+import {
+  resolveSettingVisibility,
+  SystemSettingService,
+} from "@/services/system_setting.service";
+import {
+  SystemSettingKey,
+  SystemSettingSource,
+} from "@/constants/system_setting";
 import type {
   IPersistableManifest,
   IPersistableSetting,
@@ -231,5 +237,103 @@ describe("system setting write guard", () => {
     ).rejects.toThrow();
 
     expect(repo.replaceCalls).toBe(0);
+  });
+});
+
+/**
+ * Info: (20260904 - Julian) 設定頁的可視性推導（`resolveSettingVisibility`）。
+ *
+ * ## 這裡守的是另一次真實誤判
+ *
+ * 20260904：管理員照 `.env.example` 的說明把 SMTP 五項填進 `.env`，
+ * 寄信仍然回報「尚未設定」。成因是 `get()` 在快照為 TRUSTED 之後
+ * **完全不讀 env**（那是刻意的：否則一次驗簽失敗就能讓系統改用 .env 裡
+ * 輪替前的舊憑證）。
+ *
+ * 而當時的設定頁把那種情況顯示成 `source: ENV` + 「僅存在於環境變數，
+ * 儲存後才會受保護」—— 讀起來像「現在能用，之後再搬」，
+ * 實際上它**當下就已經失效**。畫面與執行期互相矛盾，而畫面那一側看起來正常。
+ *
+ * ## 為什麼測純函式而不是 `listForAdmin`
+ *
+ * 要讓 `listForAdmin` 走進 TRUSTED 分支，得偽造一份通過驗簽的快照 ——
+ * 那需要 super admin 的憑證與 P-256 簽章。抽成純函式之後，
+ * 那個反直覺的格子（已簽章 + env 有值 = 沒值）就直接測得到。
+ */
+describe("system setting visibility", () => {
+  it("資料庫有值：來源是 DB", () => {
+    expect(
+      resolveSettingVisibility({ trusted: true, dbValue: "smtp.example.com" }),
+    ).toEqual({
+      source: SystemSettingSource.DB,
+      hasValue: true,
+      envValueShadowed: false,
+    });
+  });
+
+  it("遷移期（尚未簽章）且 env 有值：來源是 ENV，而且它真的在生效", () => {
+    expect(
+      resolveSettingVisibility({
+        trusted: false,
+        envValue: "smtp.example.com",
+      }),
+    ).toEqual({
+      source: SystemSettingSource.ENV,
+      hasValue: true,
+      envValueShadowed: false,
+    });
+  });
+
+  /**
+   * Info: (20260904 - Julian) **本檔最重要的一格。**
+   *
+   * 已簽章、DB 沒這一項、env 有值 —— 執行期拿到的是空的。
+   * 顯示成「有值」會讓管理員停在一個他以為已經設好的畫面前。
+   */
+  it("已簽章而 DB 沒有這一項：env 的值是死的，不算有值", () => {
+    expect(
+      resolveSettingVisibility({ trusted: true, envValue: "smtp.example.com" }),
+    ).toEqual({
+      source: SystemSettingSource.NONE,
+      hasValue: false,
+      envValueShadowed: true,
+    });
+  });
+
+  it("兩邊都沒有：未設定，而且不是被遮蔽", () => {
+    expect(resolveSettingVisibility({ trusted: true })).toEqual({
+      source: SystemSettingSource.NONE,
+      hasValue: false,
+      envValueShadowed: false,
+    });
+    expect(resolveSettingVisibility({ trusted: false })).toEqual({
+      source: SystemSettingSource.NONE,
+      hasValue: false,
+      envValueShadowed: false,
+    });
+  });
+
+  /**
+   * Info: (20260904 - Julian) 空字串與未設定是同一件事。
+   * `SMTP_HOST=` 這種留空的寫法在 `get()` 那一側是 falsy，這裡也必須是。
+   */
+  it("空字串等同未設定，兩側一致", () => {
+    expect(
+      resolveSettingVisibility({ trusted: true, dbValue: "", envValue: "" }),
+    ).toEqual({
+      source: SystemSettingSource.NONE,
+      hasValue: false,
+      envValueShadowed: false,
+    });
+  });
+
+  it("DB 有值時 env 不算被遮蔽（那是正常的覆蓋，不是故障）", () => {
+    expect(
+      resolveSettingVisibility({
+        trusted: true,
+        dbValue: "db.example.com",
+        envValue: "env.example.com",
+      }).envValueShadowed,
+    ).toBe(false);
   });
 });

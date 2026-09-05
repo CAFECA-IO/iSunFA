@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, FC } from "react";
 import Link from "next/link";
-import { CheckCircle2, Download, Loader2, Save /* Send */ } from "lucide-react";
+import { CheckCircle2, Download, Loader2, Save, Send } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import SendingPaySlipModal from "@/components/salary_calculator/sending_pay_slip_modal";
 import AuthModal from "@/components/auth/auth_modal";
@@ -423,14 +423,41 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     });
   };
 
-  // Info: (20250723 - Julian) 登入才能使用寄出薪資單的功能
-  // const sendingBtnClickHandler = () => {
-  //   if (isSignIn) {
-  //     toggleShowSendingModal();
-  //   } else {
-  //     toggleShowLoginModal();
-  //   }
-  // };
+  /**
+   * Info: (20260904 - Julian) 寄出薪資單。**要先存過才寄得出去。**
+   *
+   * 寄送的對象是一筆薪資紀錄（`record_id` 是端點唯一的輸入），
+   * 而計算機畫面上的數字在按下「儲存」之前不是任何一筆紀錄 ——
+   * 沒有 `savedRecord` 就沒有東西可以寄。
+   *
+   * 上一版這一段連同按鈕一起被註解掉（`ToDo: (20260225) 暫時隱藏按鈕`），
+   * 因為那時後端還沒有寄送端點。現在有了。
+   *
+   * 登入判斷不必自己做：這一整顆按鈕只在帳本版出現，而帳本版本來就要登入。
+   */
+  const sendingBtnClickHandler = () => toggleShowSendingModal();
+
+  /**
+   * Info: (20260904 - Julian) 寄出**專屬**的停用原因。
+   *
+   * 「還沒存」與「這位員工沒有信箱」的下一步完全不同，所以分開講：
+   * 共用一句的話，沒有信箱的那個人會回頭一格一格檢查一張已經填完的表
+   * （同員工表單分頁那一組紅點的處置：停用的按鈕一定要說得出為什麼）。
+   *
+   * **「四個步驟沒填完」不在這裡** —— 下面那條 `disabled_hint` 已經在講它了，
+   * 而且它同時管著下載與儲存。初版把它也列進來，結果是畫面上疊出兩行
+   * 只差三個字的句子（「才能寄出薪資單」／「才能下載或儲存薪資單」），
+   * 講的是同一個成因、同一個下一步。原因相同時，一句就夠。
+   */
+  const sendDisabledReason = (() => {
+    if (!savedRecord) return "calculator.button.send_disabled_unsaved";
+    if (employeeEmail.trim() === "")
+      return "calculator.button.send_disabled_no_email";
+    return null;
+  })();
+
+  // Info: (20260904 - Julian) 按鈕的停用條件仍然包含「沒填完」，只是那件事由共用的提示來講
+  const sendDisabled = btnDisabled || sendDisabledReason !== null;
 
   return (
     <>
@@ -492,17 +519,37 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
               )}
             </button>
           )}
-          {/* ToDo: (20260225 - Julian) 暫時隱藏按鈕 */}
-          {/* <button
-            type="button"
-            onClick={sendingBtnClickHandler}
-            disabled={btnDisabled}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-400 text-sm font-bold text-white shadow-md shadow-orange-100 transition-all duration-200 hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none"
-          >
-            {t("calculator.button.send")} <Send size={20} />
-          </button>
-          */}
+          {/**
+           * Info: (20260904 - Julian) 寄出薪資單：**帳本版限定**，且要先存過。
+           *
+           * 公開版沒有帳本也沒有員工檔，寄不出去也不該看得到這顆按鈕
+           * （同上面那顆「儲存」的處置）。
+           */}
+          {accountBookId !== null && (
+            <button
+              type="button"
+              onClick={sendingBtnClickHandler}
+              disabled={sendDisabled}
+              className="col-span-1 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white text-sm font-bold text-orange-600 ring-1 ring-orange-600 transition-colors hover:bg-orange-50 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:ring-0 lg:col-span-2"
+            >
+              {t("calculator.button.send")} <Send size={20} />
+            </button>
+          )}
         </div>
+
+        {/**
+         * Info: (20260904 - Julian) 為什麼寄不出去 —— 只講下面那條提示沒涵蓋的原因。
+         *
+         * `btnDisabled` 時讓位給共用的 `disabled_hint`：兩者同時出現的話，
+         * 畫面上會疊出兩行只差三個字、成因完全相同的句子。
+         */}
+        {accountBookId !== null &&
+          !btnDisabled &&
+          sendDisabledReason !== null && (
+            <p className="text-text-neutral-tertiary text-xs">
+              {t(sendDisabledReason)}
+            </p>
+          )}
 
         {/* Info: (20260831 - Julian) 講清楚為什麼按鈕是灰的，否則使用者只會看到一顆不能按的按鈕 */}
         {btnDisabled && (
@@ -544,8 +591,18 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
       <AuthModal isOpen={isShowLoginModal} onClose={toggleShowLoginModal} />
 
       {/* Info: (20250723 - Julian) Sending Pay Slip Modal */}
-      {isShowSendingModal && (
-        <SendingPaySlipModal modalVisibleHandler={toggleShowSendingModal} />
+      {isShowSendingModal && accountBookId !== null && savedRecord && (
+        <SendingPaySlipModal
+          accountBookId={accountBookId}
+          /* Info: (20260904 - Julian) 寄的是剛存下來的那一筆，不是畫面上的數字 */
+          recordId={savedRecord.id}
+          employeeName={savedRecord.employee.name}
+          employeeEmail={employeeEmail}
+          monthLabel={t(
+            `date.month_name.${selectedMonth.name.toLowerCase().slice(0, 3)}`,
+          )}
+          modalVisibleHandler={toggleShowSendingModal}
+        />
       )}
 
       {/* Info: (20260831 - Julian) 例外 A：同員工同年月已經有紀錄 */}

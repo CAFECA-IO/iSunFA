@@ -83,8 +83,7 @@ export interface ISalaryCalculatorEmployee extends ISalaryEmployeeProfile {
  * 建出來的檔卻是預設值，下個月選他就把設定洗掉。要「不改這一欄」的呼叫端
  * 應該把讀到的現值原樣帶回來，而不是省略它。
  */
-export interface ISalaryCalculatorEmployeeWriteInput
-  extends ISalaryEmployeeProfile {
+export interface ISalaryCalculatorEmployeeWriteInput extends ISalaryEmployeeProfile {
   name: string;
   number: string;
   email?: string;
@@ -111,6 +110,29 @@ export interface ISalaryRecordSummary {
   calculatorVersion: string;
   createdAt: number;
   updatedAt: number;
+  /**
+   * Info: (20260904 - Julian) 最近一次**成功**寄出的時間（Unix 秒）。`null` = 從未成功寄出。
+   *
+   * ## 為什麼由伺服器算，不由前端對照
+   *
+   * 薪資紀錄列表要在每一列顯示「已寄出／未寄出」。看似可以拿整本帳的寄送清單
+   * （`GET salary_calculator/delivery`）在前端 index 起來比對 —— 但那一支有
+   * 200 筆上限且是全帳本新的在前，於是一本累積久了的帳，**舊紀錄會靜靜地
+   * 顯示成「未寄出」**。使用者看到那個字會再寄一次，而對方已經收過了。
+   *
+   * 錯的答案長得跟對的一樣，所以只能在有完整資料的那一側算。
+   *
+   * ## 為什麼是「成功」寄出
+   *
+   * 失敗的列存在是為了稽核（計畫書 §2.1），但對方什麼都沒收到 ——
+   * 那一列不該讓畫面顯示「已寄出」。
+   */
+  lastSentAt: number | null;
+  /**
+   * Info: (20260904 - Julian) 最近一次成功寄出的收件信箱（當初的快照）。
+   * 與 `lastSentAt` 同進同出：有時間就有信箱。
+   */
+  lastSentTo: string | null;
 }
 
 // Info: (20260831 - Julian) 單筆詳細，含快照，供「載回計算機」與檢視薪資單
