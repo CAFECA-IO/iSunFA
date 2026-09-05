@@ -266,10 +266,61 @@ const LIFECYCLE: Record<
 const TENANT_EXEMPT: Record<string, string> = {};
 const TENANT_EXEMPT_MAX = 0;
 
+/**
+ * Info: (20260905 - Luphia) 方法宣告的形狀（review 第二輪：這條 regex 自己有洞）。
+ *
+ * 初版是 `/^ {2}public async ([A-Za-z0-9_]+)\(/`，也就是只認得
+ * 「`public` + `async` + 非泛型」那一種。實測：加一支
+ * `public async leakAll<T>(): Promise<T[]>`，5,951 條全綠 ——
+ * 上一輪才把這支測試從列舉改成規則，而規則本身的涵蓋範圍比它宣稱的窄。
+ *
+ * 這正是檢查清單 §2.5 說的「護欄的涵蓋範圍要用**輸入空間**描述，
+ * 不要用護欄的程式碼描述」。寫成「public 方法」是願望；
+ * 寫成「**非泛型的** public async 方法」才是事實，而寫出後者的當下
+ * 那個 when 子句自己就把反例喊出來了。
+ *
+ * 現在三段都放寬，各自對應一種真的寫得出來的宣告：
+ *
+ * - `public` 可省略 —— TypeScript 的 class 成員預設就是 public，
+ *   `async foo(` 與 `public async foo(` 對外沒有差別
+ * - `async` 可省略 —— 回 Promise 但不標 async 的方法完全合法
+ * - `<T>` 泛型參數 —— 就是上面實測逃掉的那一種
+ *
+ * 仍然不認得的：`private` / `protected`（那是刻意的，它們不是對外介面）、
+ * 以及箭頭函式屬性（`foo = async () => {}`）。後者今天三支 repo 都沒有用，
+ * 而它一旦出現，下面那條「掃描根沒有掃到空氣」不會紅 —— 所以另有一條
+ * 反面斷言釘住「檔案裡不得出現那種寫法」。
+ */
+const PUBLIC_METHOD_PATTERN =
+  /^ {2}(?:public\s+)?(?:async\s+)?([A-Za-z0-9_]+)\s*(?:<[^>]*>)?\s*\(/gm;
+
+/** Info: (20260905 - Luphia) 這條 regex 認不得的寫法，出現了要當場擋下來 */
+const ARROW_METHOD_PATTERN =
+  /^ {2}(?:public\s+)?[A-Za-z0-9_]+\s*=\s*(?:async\s*)?\(/gm;
+
 const publicMethodsOf = (relativePath: string): string[] => {
   const source = readFileSync(join(process.cwd(), relativePath), "utf-8");
-  return [...source.matchAll(/^ {2}public async ([A-Za-z0-9_]+)\(/gm)].map(
-    (match) => match[1],
+  return (
+    [...source.matchAll(PUBLIC_METHOD_PATTERN)]
+      .map((match) => match[1])
+      /**
+       * Info: (20260905 - Luphia) 放寬之後會掃到 `constructor` 與私有輔助函式
+       * 以外的雜訊嗎 —— 會，所以濾掉語言關鍵字。清單短且固定，
+       * 漏一個的後果是多分類一支（要在 LIFECYCLE 裡登記），不是少守一支。
+       */
+      .filter(
+        (name) =>
+          !["constructor", "if", "for", "while", "switch", "catch"].includes(
+            name,
+          ),
+      )
+  );
+};
+
+const arrowMethodsOf = (relativePath: string): string[] => {
+  const source = readFileSync(join(process.cwd(), relativePath), "utf-8");
+  return [...source.matchAll(ARROW_METHOD_PATTERN)].map((match) =>
+    match[0].trim(),
   );
 };
 
@@ -279,6 +330,34 @@ describe("覆蓋率本身：每一支方法都要被分類過", () => {
   /**
    * Info: (20260905 - Luphia) 掃描根沒有掃到空氣 —— 正則寫錯時這一條先紅。
    */
+  /**
+   * Info: (20260905 - Luphia) regex 自己也要被測（review 第二輪）。
+   *
+   * 上一輪的洞就在這裡：規則測試綠著，而規則認不得泛型方法。
+   * 這一條直接餵四種真的寫得出來的宣告給它 —— 少一種都會紅。
+   */
+  it("四種宣告形狀都認得", () => {
+    const sample = [
+      "  public async plain(",
+      "  public async generic<T>(",
+      "  async noModifier(",
+      "  public syncMethod(",
+    ].join("\n");
+    const found = [...sample.matchAll(PUBLIC_METHOD_PATTERN)].map((m) => m[1]);
+    expect(found).toEqual(["plain", "generic", "noModifier", "syncMethod"]);
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 認不得的那一種要擋在門口，不要靜靜漏掉。
+   * 箭頭函式屬性（`foo = async () => {}`）不在 regex 的涵蓋範圍內，
+   * 而它一旦出現，上面那條規則不會紅 —— 所以在這裡直接禁掉。
+   */
+  it("repo 不得用箭頭函式屬性宣告方法（regex 認不得）", () => {
+    for (const file of REPO_FILES) {
+      expect(arrowMethodsOf(file)).toEqual([]);
+    }
+  });
+
   it("三支 repo 都掃得到 public 方法", () => {
     for (const file of REPO_FILES) {
       expect(publicMethodsOf(file).length).toBeGreaterThan(0);
