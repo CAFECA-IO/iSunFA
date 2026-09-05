@@ -54,7 +54,7 @@
     "csv-stringify": "^6.7.0",
     "decimal.js": "^10.6.0",
     "dotenv": "^17.2.3",
-    "dotenv-expand": "^13.0.0",
+    "dotenv-expand": "^1000.0.0",
     "ethers": "^6.16.0",
     "file-saver": "^2.0.5",
     "html-to-image": "^1.11.13",
