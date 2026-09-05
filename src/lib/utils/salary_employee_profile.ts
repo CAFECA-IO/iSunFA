@@ -1,6 +1,9 @@
 import { EmploymentType } from "@/interfaces/salary_calculator";
 import { DEFAULT_INDUSTRY_CODE } from "@/constants/industry_category";
-import { ISalaryEmployeeProfile } from "@/interfaces/salary_record";
+import {
+  ISalaryEmployeeLeave,
+  ISalaryEmployeeProfile,
+} from "@/interfaces/salary_record";
 
 /**
  * Info: (20260902 - Julian) 員工檔常態屬性的分類表、到離職日推導與差異偵測。
@@ -241,6 +244,21 @@ export const DEFAULT_EMPLOYEE_PROFILE: ISalaryEmployeeProfile = {
   voluntaryPensionRate: 0,
   hireDate: null,
   resignDate: null,
+};
+
+/**
+ * Info: (20260905 - Luphia) 新增員工時的留職停薪初值：沒有（#6774）。
+ *
+ * 與 `DEFAULT_EMPLOYEE_PROFILE` 分開一個常數，不是併進去 —— 併進去
+ * `ISalaryEmployeeProfile` 就得多兩欄，而那個型別是「自動匯入計算機」的契約
+ *（見 `EMPLOYEE_PROFILE_FIELDS` 上方）。
+ *
+ * 兩欄都是 null 而不是 0：0 在 Unix 秒是 1970-01-01，那會被當成
+ * 「1970 年開始留停、至今未復職」，於是這個人每一個月都不算缺漏。
+ */
+export const DEFAULT_EMPLOYEE_LEAVE: ISalaryEmployeeLeave = {
+  leaveStartDate: null,
+  leaveEndDate: null,
 };
 
 /**

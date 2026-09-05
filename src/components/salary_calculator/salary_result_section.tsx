@@ -15,6 +15,7 @@ import {
 import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { useSalaryEmployees } from "@/hooks/use_salary_employees";
 import {
+  DEFAULT_EMPLOYEE_LEAVE,
   diffEmployeeProfile,
   IProfileDiffEntry,
 } from "@/lib/utils/salary_employee_profile";
@@ -236,8 +237,17 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     if (pendingProfileDiff === null) return;
 
     const { employee } = pendingProfileDiff;
+    /**
+     * Info: (20260905 - Luphia) 留停兩欄**原樣帶回**（#6774）。
+     *
+     * 計算機沒有這兩格，而寫入契約是整組必填 —— 帶 `DEFAULT_EMPLOYEE_LEAVE`
+     * 會在使用者按「更新員工檔並儲存」時把已登記的留停區間清成 null，
+     * 而畫面上什麼都不會說。
+     */
     await updateEmployee(employee.id, {
       ...getEmployeeProfile(),
+      leaveStartDate: employee.leaveStartDate,
+      leaveEndDate: employee.leaveEndDate,
       name: employee.name,
       number: employee.number,
       email: employee.email || undefined,
@@ -346,6 +356,8 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
        */
       await createEmployee({
         ...getEmployeeProfile(),
+        // Info: (20260905 - Luphia) 新建的人沒有留停紀錄（#6774）；要登記走員工列表的編輯
+        ...DEFAULT_EMPLOYEE_LEAVE,
         name: employeeName.trim(),
         number: employeeNumber.trim(),
         email: employeeEmail.trim() || undefined,

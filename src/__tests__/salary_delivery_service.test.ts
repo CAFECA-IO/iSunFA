@@ -22,7 +22,10 @@ import {
   SALARY_DELIVERY_STATUS,
   truncateFailureReason,
 } from "@/constants/salary_delivery";
-import { DEFAULT_EMPLOYEE_PROFILE } from "@/lib/utils/salary_employee_profile";
+import {
+  DEFAULT_EMPLOYEE_LEAVE,
+  DEFAULT_EMPLOYEE_PROFILE,
+} from "@/lib/utils/salary_employee_profile";
 import type { ISalaryCalculatorEmployeeRepository } from "@/repositories/salary_calculator_employee.repo";
 import type { ISalaryRecordRepository } from "@/repositories/salary_record.repo";
 import type { ISalaryPaySlipDeliveryRepository } from "@/repositories/salary_pay_slip_delivery.repo";
@@ -73,6 +76,9 @@ const employeeOf = (
   overrides: Partial<ISalaryCalculatorEmployee> = {},
 ): ISalaryCalculatorEmployee => ({
   ...DEFAULT_EMPLOYEE_PROFILE,
+  ...DEFAULT_EMPLOYEE_LEAVE,
+  // Info: (20260905 - Luphia) 完整度預設「沒有缺漏」；要驗警示的案例自己覆蓋（#6774）
+  missingPeriods: [],
   id: EMPLOYEE_ID,
   name: "王小明",
   number: "A001",
@@ -145,6 +151,13 @@ class FakeEmployeeRepo implements ISalaryCalculatorEmployeeRepository {
 }
 
 class FakeRecordRepo implements ISalaryRecordRepository {
+  // Info: (20260905 - Luphia) 替身要跟上介面（#6774）；本檔不驗完整度，回空即可
+  public async listCoveredPeriods(): Promise<
+    { employeeId: string; year: number; month: number }[]
+  > {
+    return [];
+  }
+
   constructor(private readonly rows: Map<string, ISalaryRecordDetail>) {}
 
   async upsertRecord(): Promise<ISalaryRecordDetail> {

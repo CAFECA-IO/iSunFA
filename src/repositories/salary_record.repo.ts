@@ -43,6 +43,9 @@ export interface ISalaryRecordRepository {
    * 匯出是**一次讀走多筆**，租戶過濾在這裡漏掉的後果比單筆嚴重得多。
    * 回傳順序與傳入的 id 無關，由呼叫端決定要不要排序。
    */
+  listCoveredPeriods(
+    accountBookId: string,
+  ): Promise<{ employeeId: string; year: number; month: number }[]>;
   listRecordsByIds(
     accountBookId: string,
     recordIds: readonly string[],
@@ -282,6 +285,31 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
       totalPages: Math.ceil(totalCount / options.pageSize),
       periods: periodRows.map((row) => ({ year: row.year, month: row.month })),
     };
+  }
+
+  /**
+   * Info: (20260905 - Luphia) 整本帳的「誰在哪個年月有薪資紀錄」（#6774）。
+   *
+   * **一支查詢拿回全部**，不逐位員工問。員工列表要對名單上每一位算完整度，
+   * 逐人一支查詢就是 N 次往返 —— 一百位員工的帳本會讓那一頁打一百次 DB。
+   *
+   * 只取 `employeeId` / `year` / `month` 三欄（`groupBy` 本來就只回分組鍵），
+   * 不碰快照與金額：這支的用途是「有沒有」，不是「是多少」。
+   * 走 `@@index([accountBookId, year, month])`。
+   */
+  public async listCoveredPeriods(
+    accountBookId: string,
+  ): Promise<{ employeeId: string; year: number; month: number }[]> {
+    const rows = await prisma.salaryRecord.groupBy({
+      by: ["employeeId", "year", "month"],
+      where: { accountBookId },
+    });
+
+    return rows.map((row) => ({
+      employeeId: row.employeeId,
+      year: row.year,
+      month: row.month,
+    }));
   }
 
   public async listRecordsByIds(

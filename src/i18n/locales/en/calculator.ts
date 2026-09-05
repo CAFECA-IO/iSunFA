@@ -84,6 +84,13 @@ export const calculator = {
     hire_date: "Hire date",
     resign_date: "Resignation date",
     date_order_error: "Resignation date cannot be earlier than the hire date",
+    leave_start_date: "Leave start date",
+    leave_end_date: "Return-to-work date",
+    leave_hint:
+      "Leave without pay: months in this range are not expected to have a pay slip. Leave the return date empty if the employee has not returned yet.",
+    leave_order_error:
+      "Return-to-work date cannot be earlier than the leave start date",
+    leave_start_required: "Enter the leave start date as well",
     main_title: "Employee List",
     name: "Employee Name",
     number: "Employee Number",
@@ -120,6 +127,11 @@ export const calculator = {
     missing_email_banner:
       "{{count}} employees have no email address — their pay slips cannot be sent",
     only_missing_email: "Show only these",
+    missing_records_badge: "{{count}} month(s) missing",
+    missing_records_more: "{{periods}} and {{count}} more month(s)",
+    missing_records_banner:
+      "{{count}} employee(s) have months with no pay slip on record",
+    only_missing_records: "Show only these",
     show_all: "Show all employees",
     no_filter_result: "No employee matches the current filter",
   },

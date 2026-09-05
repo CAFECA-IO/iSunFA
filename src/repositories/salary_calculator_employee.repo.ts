@@ -4,6 +4,7 @@ import { MoneyUtil } from "@/lib/utils/money";
 import {
   ISalaryCalculatorEmployee,
   ISalaryCalculatorEmployeeWriteInput,
+  ISalaryEmployeeLeave,
   ISalaryEmployeeProfile,
 } from "@/interfaces/salary_record";
 import {
@@ -107,6 +108,18 @@ const toProfile = (row: SalaryCalculatorEmployee): ISalaryEmployeeProfile => ({
   resignDate: toUnixSecondsOrNull(row.resignDate),
 });
 
+/**
+ * Info: (20260905 - Luphia) 留職停薪的起訖 → 前端格式（#6774）。
+ *
+ * 與 `toProfile` 分開：那一組是「自動匯入計算機」的契約（見
+ * `ISalaryEmployeeProfile`），留停不在其中。合併會讓那個型別
+ * 與計算機表單的對拍測試變紅。
+ */
+const toLeave = (row: SalaryCalculatorEmployee): ISalaryEmployeeLeave => ({
+  leaveStartDate: toUnixSecondsOrNull(row.leaveStartDate),
+  leaveEndDate: toUnixSecondsOrNull(row.leaveEndDate),
+});
+
 // Info: (20260902 - Julian) 寫入方向。與 toProfile 成對，理由見該函式
 const toWriteData = (input: ISalaryCalculatorEmployeeWriteInput) => ({
   baseSalary: BigInt(input.baseSalary),
@@ -129,6 +142,9 @@ const toWriteData = (input: ISalaryCalculatorEmployeeWriteInput) => ({
   voluntaryPensionRate: input.voluntaryPensionRate,
   hireDate: toDateOrNull(input.hireDate),
   resignDate: toDateOrNull(input.resignDate),
+  // Info: (20260905 - Luphia) 留職停薪（#6774）。與 toLeave 成對
+  leaveStartDate: toDateOrNull(input.leaveStartDate),
+  leaveEndDate: toDateOrNull(input.leaveEndDate),
 });
 
 const toFrontendFormat = (
@@ -141,6 +157,16 @@ const toFrontendFormat = (
   // Info: (20260831 - Julian) Email 可空，null 打平成空字串（沿用 IVoucher.note 的既有慣例）
   email: row.email ?? "",
   ...toProfile(row),
+  ...toLeave(row),
+  /**
+   * Info: (20260905 - Luphia) 完整度是**跨表**的問題（要對照薪資紀錄的分佈），
+   * 而這一層一次只看得到員工這一列。空陣列是「還沒算」，由 service 覆蓋
+   *（`salary_record.service.ts` 的 `listEmployees`）。
+   *
+   * 給預設而不是讓它可選：可選的話，忘了覆蓋的那條路徑會是 `undefined`，
+   * 而畫面上 `undefined` 與「完整」長得一模一樣。
+   */
+  missingPeriods: [],
 });
 
 export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmployeeRepository {

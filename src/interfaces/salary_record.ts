@@ -1,3 +1,4 @@
+import type { ISalaryPeriod } from "@/lib/utils/salary_coverage";
 import {
   ISalaryCalculatorOptions,
   ISalaryCalculatorUI,
@@ -65,12 +66,52 @@ export interface ISalaryEmployeeProfile {
   resignDate: number | null;
 }
 
+/**
+ * Info: (20260905 - Luphia) 留職停薪的起訖，Unix 秒（#6774）。
+ *
+ * ## 為什麼不併進 `ISalaryEmployeeProfile`
+ *
+ * 那個介面有一條明確的界線：「選了員工就自動匯入計算機」的那 15 欄，
+ * 而 `salary_employee_profile.test.ts` 拿它與 `ISalaryCalculatorFormState`
+ * 的鍵對拍 —— 計算機沒有留職停薪這兩格，併進去會直接紅。
+ *
+ * 界線本身也對：留職停薪不是「這個月薪水怎麼算」的輸入，
+ * 它回答的是**這個月該不該有薪資單**。同一份事實的另一種用途。
+ *
+ * ## 為什麼是日期區間而不是一個「留停中」的狀態欄
+ *
+ * 狀態欄答得出「他現在在留停嗎」，答不出「他八月在留停嗎」——
+ * 而完整度警示問的正是後者。復職之後狀態欄會被改回在職，
+ * 那幾個月就會重新變成缺漏。
+ *
+ * **已知限制**：一個人只存得下一段留停。二度留停會覆蓋前一段，
+ * 而被覆蓋的那幾個月會重新被算成缺漏（誤報，但不是靜默的錯）。
+ * 要支援多段就得另開一張表，等真的有人二度留停再說。
+ */
+export interface ISalaryEmployeeLeave {
+  leaveStartDate: number | null;
+  // Info: (20260905 - Luphia) null = 還沒復職（不是「沒有留停」——那是 start 為 null）
+  leaveEndDate: number | null;
+}
+
 // Info: (20260831 - Julian) 輕量員工。id 是 uuid
-export interface ISalaryCalculatorEmployee extends ISalaryEmployeeProfile {
+export interface ISalaryCalculatorEmployee
+  extends ISalaryEmployeeProfile, ISalaryEmployeeLeave {
   id: string;
   name: string;
   number: string;
   email: string;
+  /**
+   * Info: (20260905 - Luphia) 缺少薪資紀錄的月份，由舊到新（#6774）。
+   *
+   * **由伺服器算**，不是前端拿名單與紀錄自己對 —— 那需要前端先把整本帳的
+   * 薪資紀錄全部撈下來，而它今天只拿得到當前分頁的那一批。
+   *
+   * 空陣列有兩種意思：真的完整，或**算不出來**（沒有到職日、超過掃描上限）。
+   * 兩者對畫面的處置相同（不標示），所以不分開 —— 而「算不出來」時
+   * 不標示是刻意的：不知道就不要說。
+   */
+  missingPeriods: ISalaryPeriod[];
 }
 
 /**
@@ -83,7 +124,8 @@ export interface ISalaryCalculatorEmployee extends ISalaryEmployeeProfile {
  * 建出來的檔卻是預設值，下個月選他就把設定洗掉。要「不改這一欄」的呼叫端
  * 應該把讀到的現值原樣帶回來，而不是省略它。
  */
-export interface ISalaryCalculatorEmployeeWriteInput extends ISalaryEmployeeProfile {
+export interface ISalaryCalculatorEmployeeWriteInput
+  extends ISalaryEmployeeProfile, ISalaryEmployeeLeave {
   name: string;
   number: string;
   email?: string;

@@ -2,13 +2,26 @@
 
 import { ChangeEvent, FC, useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { Hash, Mail, Pencil, Plus, Search, Trash, User, X } from "lucide-react";
+import {
+  CalendarX,
+  Hash,
+  Mail,
+  Pencil,
+  Plus,
+  Search,
+  Trash,
+  User,
+  X,
+} from "lucide-react";
 import { numberWithCommas } from "@/lib/utils/common";
 import { useSalaryEmployees } from "@/hooks/use_salary_employees";
 import { ISalaryCalculatorEmployee } from "@/interfaces/salary_record";
 import {
   countMissingEmail,
+  countMissingRecords,
   filterEmployees,
+  formatMissingPeriods,
+  hasMissingPeriods,
   hasNoEmail,
 } from "@/lib/utils/salary_employee_filter";
 import EmployeeActionModal from "@/components/salary_calculator/employee_action_modal";
@@ -58,6 +71,24 @@ const EmployeeRow: FC<{
   const { t } = useTranslation();
   const missingEmail = hasNoEmail(employee);
 
+  /**
+   * Info: (20260905 - Luphia) 缺薪資單的標示（#6774）。
+   *
+   * 與缺信箱的那一格並排，但兩者說的不是同一件事：缺信箱是「寄不出去」，
+   * 缺薪資單是「根本沒有那個月的東西」。同一個人可能只中其中一個。
+   *
+   * `title` 帶的是月份清單而不是只有數字 —— 使用者接下來要做的是
+   * 「回計算機把那幾個月補起來」，只知道「缺 3 個月」還得自己去對。
+   */
+  const missing = formatMissingPeriods(employee.missingPeriods);
+  const missingTitle =
+    missing.restCount > 0
+      ? t("calculator.employee_list.missing_records_more", {
+          periods: missing.text,
+          count: missing.restCount,
+        })
+      : missing.text;
+
   const emailCell = missingEmail ? (
     /**
      * Info: (20260904 - Julian) 缺信箱的那一格**本身就是補上的入口**。
@@ -99,6 +130,23 @@ const EmployeeRow: FC<{
       {withEmail && (
         <span className="hidden w-[220px] justify-start md:flex">
           {emailCell}
+        </span>
+      )}
+      {/**
+       * Info: (20260905 - Luphia) 缺薪資單的標記（#6774）。**兩種 variant 都顯示。**
+       *
+       * 與信箱欄不同：挑人彈窗裡看到「這個人缺六月」正是最有用的時機 ——
+       * 使用者當下就在挑人算薪水，補的路就在他手上。
+       */}
+      {hasMissingPeriods(employee) && (
+        <span
+          title={missingTitle}
+          className="flex shrink-0 items-center gap-[4px] rounded-md bg-amber-50 px-[6px] py-[2px] text-sm font-medium text-amber-600"
+        >
+          <CalendarX size={14} className="shrink-0" />
+          {t("calculator.employee_list.missing_records_badge", {
+            count: employee.missingPeriods.length,
+          })}
         </span>
       )}
       <span
@@ -177,6 +225,8 @@ const EmployeeList: FC<IEmployeeListProps> = ({
 
   const [keyword, setKeyword] = useState<string>("");
   const [onlyMissingEmail, setOnlyMissingEmail] = useState<boolean>(false);
+  // Info: (20260905 - Luphia) 只看有薪資單缺漏的人（#6774）。與上面那個各自獨立
+  const [onlyMissingRecords, setOnlyMissingRecords] = useState<boolean>(false);
   const {
     employees,
     isLoading,
@@ -203,8 +253,10 @@ const EmployeeList: FC<IEmployeeListProps> = ({
   const filteredEmployees = filterEmployees(employees, {
     keyword,
     onlyMissingEmail,
+    onlyMissingRecords,
   });
   const missingEmailCount = countMissingEmail(employees);
+  const missingRecordsCount = countMissingRecords(employees);
 
   const changeKeyword = (e: ChangeEvent<HTMLInputElement>) =>
     setKeyword(e.target.value);
@@ -275,6 +327,8 @@ const EmployeeList: FC<IEmployeeListProps> = ({
             onClick={() => {
               clearKeyword();
               setOnlyMissingEmail(false);
+              // Info: (20260905 - Luphia) 兩個條件都要清，否則按了還是篩不到（#6774）
+              setOnlyMissingRecords(false);
             }}
             className="text-text-brand-primary-lv1 text-sm font-semibold underline"
           >
@@ -356,6 +410,32 @@ const EmployeeList: FC<IEmployeeListProps> = ({
             {onlyMissingEmail
               ? t("calculator.employee_list.show_all")
               : t("calculator.employee_list.only_missing_email")}
+          </button>
+        </div>
+      )}
+
+      {/**
+       * Info: (20260905 - Luphia) 薪資紀錄缺漏的提示（#6774）。**整頁版才有。**
+       *
+       * 與缺信箱的橫幅分開兩條，不是併成一句「N 位員工資料不完整」——
+       * 兩者要做的事不同：缺信箱是回頭編輯員工，缺薪資單是回計算機補那幾個月。
+       * 併成一句的話，使用者點進去才發現不是自己以為的那件事。
+       */}
+      {withEmail && hasAnyEmployee && missingRecordsCount > 0 && (
+        <div className="mx-[24px] mb-[16px] flex shrink-0 flex-col gap-[8px] rounded-lg border border-amber-200 bg-amber-50 px-[16px] py-[10px] md:flex-row md:items-center">
+          <p className="flex-1 text-sm font-medium text-amber-800">
+            {t("calculator.employee_list.missing_records_banner", {
+              count: missingRecordsCount,
+            })}
+          </p>
+          <button
+            type="button"
+            onClick={() => setOnlyMissingRecords((prev) => !prev)}
+            className="shrink-0 text-sm font-semibold text-amber-800 underline underline-offset-2 hover:text-amber-900"
+          >
+            {onlyMissingRecords
+              ? t("calculator.employee_list.show_all")
+              : t("calculator.employee_list.only_missing_records")}
           </button>
         </div>
       )}
