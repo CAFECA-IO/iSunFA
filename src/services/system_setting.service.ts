@@ -55,6 +55,74 @@ interface ISettingsSnapshot {
   loadedAt: number;
 }
 
+/**
+ * Info: (20260904 - Julian) 一項設定在畫面上該怎麼呈現。
+ *
+ * ## 為什麼抽成純函式
+ *
+ * 它要回答的是「(已簽章嗎, DB 有值嗎, env 有值嗎) → 使用者看到什麼」，
+ * 而這裡有一格是反直覺的：**已簽章之後 env 有值等於沒值**。
+ * 留在 `listForAdmin` 裡的話，要驗它就得偽造一份通過驗簽的快照 ——
+ * 那需要 super admin 的憑證與簽章，於是這個判斷實際上不會有測試。
+ */
+export interface ISettingVisibility {
+  source: SystemSettingSource;
+  /** Info: (20260904 - Julian) 執行期**真的取得到值**，不是「畫面上有東西」 */
+  hasValue: boolean;
+  /**
+   * Info: (20260904 - Julian) `.env` 有值，但因為已簽章而**不會被讀取**。
+   *
+   * 這是 20260904 一次真實誤判的成因：管理員照 `.env.example` 的說明把 SMTP
+   * 五項填進 `.env`，寄信仍然回報「尚未設定」。而設定頁那時把這種情況顯示成
+   * `source: ENV` + 「僅存在於環境變數，儲存後才會受保護」—— 讀起來像
+   * 「現在能用，之後再搬」，實際上它**當下就已經失效**。
+   *
+   * 兩者的下一步完全相反：一個是「有空再搬」，一個是「現在就得填」。
+   */
+  envValueShadowed: boolean;
+}
+
+/**
+ * Info: (20260904 - Julian) `get()` 的讀取優先序在畫面上的鏡像。
+ *
+ * 必須與 `get()` 一致：那裡在 TRUSTED 時完全不看 `process.env`
+ * （見該函式與 `loadSnapshot` 的說明）。畫面若自己另算一套，
+ * 就會出現「設定頁說有值、執行期說沒設定」這種互相矛盾的狀態。
+ */
+export const resolveSettingVisibility = ({
+  trusted,
+  dbValue,
+  envValue,
+}: {
+  trusted: boolean;
+  dbValue?: string;
+  envValue?: string;
+}): ISettingVisibility => {
+  if (dbValue) {
+    return {
+      source: SystemSettingSource.DB,
+      hasValue: true,
+      envValueShadowed: false,
+    };
+  }
+
+  // Info: (20260904 - Julian) 遷移期（EMPTY / UNAVAILABLE）：env 真的在生效
+  if (!trusted && envValue) {
+    return {
+      source: SystemSettingSource.ENV,
+      hasValue: true,
+      envValueShadowed: false,
+    };
+  }
+
+  return {
+    source: SystemSettingSource.NONE,
+    hasValue: false,
+    // Info: (20260904 - Julian) 已簽章而 DB 沒這一項，但 env 有 —— 那個值是死的
+    envValueShadowed: Boolean(trusted && envValue),
+  };
+};
+
 export interface ISettingView {
   key: SystemSettingKey;
   group: string;
@@ -71,6 +139,8 @@ export interface ISettingView {
    * 管理員按下儲存後那一項會被靜默丟棄，等哪天清理 .env 時服務才會掛掉。
    */
   storedInDb: boolean;
+  /** Info: (20260904 - Julian) 見 `ISettingVisibility.envValueShadowed` */
+  envValueShadowed: boolean;
   // Info: (20260809 - Luphia) 未設定時系統實際會採用的保底值，讓管理員知道現在跑的是什麼
   fallback?: string;
 }
@@ -318,7 +388,25 @@ export class SystemSettingService {
     const snapshot = await this.loadSnapshot();
 
     if (snapshot.state === SettingSnapshotState.TRUSTED) {
-      return snapshot.values.get(key) || SYSTEM_SETTING_FALLBACKS[key];
+      const value = snapshot.values.get(key) || SYSTEM_SETTING_FALLBACKS[key];
+
+      /**
+       * Info: (20260904 - Julian) 取不到值、而 `.env` 卻有 —— 對外告警。
+       *
+       * 這是設定錯地方的唯一伺服端訊號。沒有它的話，症狀是某個功能回報
+       * 「尚未設定」，而管理員手上的 `.env` 明明填好了，兩邊都不會解釋為什麼
+       * （20260904 的薪資單寄送就是這樣卡住的）。
+       *
+       * 只記鍵名，不記值：這些鍵有一半是秘密。
+       */
+      if (!value && process.env[SYSTEM_SETTING_DEFINITIONS[key].envKey]) {
+        logger.warn("[SystemSetting] env value ignored: settings are signed", {
+          key,
+          envKey: SYSTEM_SETTING_DEFINITIONS[key].envKey,
+        });
+      }
+
+      return value;
     }
 
     /**
@@ -381,19 +469,28 @@ export class SystemSettingService {
       const definition = SYSTEM_SETTING_DEFINITIONS[key];
       const dbValue = trusted ? snapshot.values.get(key) : undefined;
       const envValue = process.env[definition.envKey];
-      const resolved = dbValue || envValue || "";
+      const visibility = resolveSettingVisibility({
+        trusted,
+        dbValue,
+        envValue,
+      });
 
-      let source = SystemSettingSource.NONE;
-      if (dbValue) source = SystemSettingSource.DB;
-      else if (envValue) source = SystemSettingSource.ENV;
+      /**
+       * Info: (20260904 - Julian) 被遮蔽的 env 值**不顯示**。
+       *
+       * 顯示它（或它的 ********）會讓管理員以為這一項已經有設定 ——
+       * 而執行期拿到的是空的。空白加上下面那句提示，才問得出正確的下一步。
+       */
+      const resolved = visibility.hasValue ? dbValue || envValue || "" : "";
 
       return {
         key,
         group: definition.group,
         value: definition.isSecret && resolved ? SECRET_MASK : resolved,
         isSecret: definition.isSecret,
-        hasValue: Boolean(resolved),
-        source,
+        hasValue: visibility.hasValue,
+        source: visibility.source,
+        envValueShadowed: visibility.envValueShadowed,
         /**
          * Info: (20260811 - Luphia) 讓畫面能區分「已納入資料庫保管」與「只是 env 還有值」。
          * 兩者都顯示 ********，但後者不在簽章承諾內；不標示出來的話，管理員會以為

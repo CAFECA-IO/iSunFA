@@ -2,12 +2,33 @@
 
 import { FC, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, FileStack, RotateCcw, Search, Trash, X } from "lucide-react";
+import {
+  Eye,
+  FileStack,
+  MailCheck,
+  Download,
+  Loader2,
+  RotateCcw,
+  Search,
+  Send,
+  Trash,
+  X,
+} from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { request, IEnvelopeLike } from "@/lib/utils/request";
-import { numberWithCommas } from "@/lib/utils/common";
+import { request, requestFile, IEnvelopeLike } from "@/lib/utils/request";
+import { hasNoEmail } from "@/lib/utils/salary_employee_filter";
+import { numberWithCommas, timestampToString } from "@/lib/utils/common";
+import {
+  isPageAllPicked,
+  isPagePartiallyPicked,
+  setPagePicked,
+  togglePick,
+} from "@/lib/utils/salary_export_selection";
+import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
+import { saveDownloadedFile } from "@/lib/utils/download_file";
 import {
   salaryCalculatorApiOf,
+  salaryRecordExportApi,
   salaryRecordItemApi,
 } from "@/constants/salary_calculator_api";
 import { salaryCalculatorUrlOf } from "@/constants/url";
@@ -21,6 +42,8 @@ import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { useSalaryEmployees } from "@/hooks/use_salary_employees";
 import { resolveLoadBackIdentity } from "@/lib/utils/salary_load_back";
 import DataTable, { IDataTableColumn } from "@/components/common/data_table";
+import SendingPaySlipModal from "@/components/salary_calculator/sending_pay_slip_modal";
+import ResendingPaySlipModal from "@/components/salary_calculator/resending_pay_slip_modal";
 import SalaryCalculatorShell from "@/components/salary_calculator/salary_calculator_shell";
 import ViewPaySlipModal from "@/components/salary_calculator/view_pay_slip_modal";
 import DeleteRecordModal from "@/components/salary_calculator/delete_record_modal";
@@ -87,6 +110,121 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [hasError, setHasError] = useState<boolean>(false);
   const [viewing, setViewing] = useState<ISalaryRecordDetail | null>(null);
+
+  /**
+   * Info: (20260904 - Julian) 某一筆的薪資單寄不寄得出去，以及寄不出去的原因。
+   *
+   * 收件信箱不在薪資紀錄裡（`ISalaryRecordSummary.employee` 只有 id / name / number），
+   * 要從這一頁已經載入的員工名單查。而查不到有兩種意思，**下一步完全不同**：
+   *
+   * - 查得到但 email 是空的 → 去員工列表補一個信箱
+   * - 查不到這個人 → 他已經從名單移除了（軟刪）。薪資紀錄仍在（那是刻意的：
+   *   薪資單是對外憑據，員工被刪不能讓歷史一起消失），但伺服器的 `getActiveEmployeeById`
+   *   會過濾掉 `deletedAt`，寄送必然回 404 —— 叫使用者去補信箱只會白跑一趟。
+   *
+   * 名單還在載入、或名單根本沒載到時**不下結論**，但也不放行：那時每個人都
+   * 「查不到」，而「他被刪了」與「名單掛了」是完全不同的事 ——
+   * 這一頁上面那段註解記的正是這個歧義，不該在這裡又折一次。
+   * 這種情況給的是「還在確認」，不是猜一個成因說給使用者聽。
+   *
+   * 收成一支吃 `employeeId` 的函式（原本只服務預覽彈窗那一筆）——
+   * 列表每一列的寄出按鈕問的是同一個問題，答案不該有兩套推導。
+   */
+  const sendTargetOf = (
+    employeeIdOfRecord: string,
+  ): { email?: string; blockedReason?: string } => {
+    if (isEmployeesLoading || hasEmployeesError) {
+      return { blockedReason: "calculator.button.send_disabled_loading" };
+    }
+
+    const employee = employees.find(
+      (candidate) => candidate.id === employeeIdOfRecord,
+    );
+    if (!employee) {
+      return { blockedReason: "calculator.button.send_disabled_employee_gone" };
+    }
+    if (hasNoEmail(employee)) {
+      return { blockedReason: "calculator.button.send_disabled_no_email" };
+    }
+    return { email: employee.email };
+  };
+
+  const viewingSendTarget = viewing ? sendTargetOf(viewing.employee.id) : {};
+
+  /**
+   * Info: (20260904 - Julian) 列表上正在寄送的那一筆。
+   *
+   * 連 `summary` 一起記而不是只記 id：彈窗要顯示期間與姓名，
+   * 而按下按鈕之後那一頁可能已經因為別的操作重抓過（`records` 換了一份陣列），
+   * 用 id 回頭找有機會找不到 —— 那時彈窗會無聲消失。
+   */
+  const [sending, setSending] = useState<ISalaryRecordSummary | null>(null);
+
+  /**
+   * Info: (20260904 - Julian) 要匯出哪幾筆。**跨頁保留。**
+   *
+   * 只存 id：CSV 的內容由伺服器依 id 產生（列表刻意不帶 `resultSnapshot`），
+   * 所以前端不需要、也不該持有那些明細。
+   *
+   * 換頁不清空 —— 要匯出的十個人散在兩頁時，清空等於逼使用者分兩次匯出、
+   * 自己合併兩個 CSV。判斷邏輯抽在 `salary_export_selection.ts`（純函式，
+   * 本專案的測試不 render React）。
+   */
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [exportFailed, setExportFailed] = useState<boolean>(false);
+
+  const pageIds = (result?.data ?? []).map((record) => record.id);
+  const pageAllPicked = isPageAllPicked(picked, pageIds);
+  const pagePartiallyPicked = isPagePartiallyPicked(picked, pageIds);
+  const tooManyPicked = picked.size > SALARY_EXPORT_MAX_RECORDS;
+
+  /**
+   * Info: (20260904 - Julian) 停用的理由只在「使用者無從得知」時才給。
+   *
+   * 一筆都沒勾是看得出來的（筆數就在按鈕旁邊），寫一句「請先選取」是廢話；
+   * 超過上限不是 —— 上限是多少只有程式知道，所以那一句要說出數字。
+   * 兩者都用 `title` 而不是版面上的文字，維持列表的寄出鈕已經有的做法。
+   */
+  const exportDisabledReason = tooManyPicked
+    ? t("calculator.records.export_too_many", {
+        max: SALARY_EXPORT_MAX_RECORDS,
+      })
+    : null;
+  const exportDisabled = picked.size === 0 || isExporting || tooManyPicked;
+
+  /**
+   * Info: (20260904 - Julian) 匯出走 `requestFile` 而不是 `request`。
+   *
+   * 回應是 CSV 不是 JSON —— 用 `request` 會拿它去 `JSON.parse` 然後炸在
+   * 一個與成因無關的地方（「Unexpected token 期」）。
+   */
+  const exportHandler = async () => {
+    if (picked.size === 0 || tooManyPicked) return;
+
+    setIsExporting(true);
+    setExportFailed(false);
+    try {
+      const file = await requestFile(salaryRecordExportApi(accountBookId), {
+        method: "POST",
+        body: JSON.stringify({ recordIds: [...picked] }),
+        headers: { "Content-Type": "application/json" },
+      });
+      saveDownloadedFile(file, "salary-records.csv");
+      /**
+       * Info: (20260904 - Julian) 成功之後清空勾選。
+       *
+       * 留著的話，使用者接著換一組條件、再按一次匯出，會把上一批也一起帶走 ——
+       * 而檔案已經下載了，他不會回頭核對裡面有幾列。
+       */
+      setPicked(new Set());
+    } catch {
+      setExportFailed(true);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+  const sendingTarget = sending ? sendTargetOf(sending.employee.id) : {};
   const [deleting, setDeleting] = useState<ISalaryRecordSummary | null>(null);
   /**
    * Info: (20260901 - Julian) 列上那三顆圖示鈕的失敗訊息。
@@ -265,6 +403,41 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
    */
   const columns: IDataTableColumn<ISalaryRecordSummary>[] = [
     {
+      key: "pick",
+      /**
+       * Info: (20260904 - Julian) 表頭的全選**只作用於當前頁**。
+       *
+       * 它旁邊沒有寫「幾筆」，使用者按下去的時候看到的就是眼前這一頁。
+       * 讓它一次勾走幾百筆看不見的紀錄，是把「我知道我選了什麼」直接打破 ——
+       * 而匯出的是薪資。半選狀態用 `indeterminate`：沒有它的話，
+       * 三筆裡勾了一筆與一筆都沒勾，表頭長得一模一樣。
+       */
+      label: (
+        <input
+          type="checkbox"
+          aria-label={t("calculator.records.select_page")}
+          checked={pageAllPicked}
+          ref={(node) => {
+            if (node) node.indeterminate = pagePartiallyPicked;
+          }}
+          onChange={(e) =>
+            setPicked(setPagePicked(picked, pageIds, e.target.checked))
+          }
+          className="size-4 cursor-pointer accent-orange-600"
+        />
+      ),
+      render: (record) => (
+        <input
+          type="checkbox"
+          aria-label={t("calculator.records.select_row")}
+          checked={picked.has(record.id)}
+          onChange={() => setPicked(togglePick(picked, record.id))}
+          onClick={(e) => e.stopPropagation()}
+          className="size-4 cursor-pointer accent-orange-600"
+        />
+      ),
+    },
+    {
       key: "period",
       label: t("calculator.records.pay_period"),
       render: (record) => (
@@ -313,11 +486,71 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
       ),
     },
     {
+      key: "delivery",
+      label: t("calculator.records.delivery_status"),
+      /**
+       * Info: (20260904 - Julian) 「已寄出」帶著日期與收件信箱。
+       *
+       * 只寫「已寄出」的話，使用者接著要問的一定是「寄給誰、什麼時候」——
+       * 而那兩個答案就在同一筆資料裡，沒有理由讓他再點一次。
+       * 信箱是**當初寄出時的快照**，不是員工檔的現值（見 `lastSentTo`）。
+       */
+      render: (record) =>
+        record.lastSentAt === null ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+            {t("calculator.records.not_sent")}
+          </span>
+        ) : (
+          <div className="flex flex-col gap-0.5">
+            <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+              <MailCheck className="size-3" />
+              {timestampToString(record.lastSentAt).dateWithDash}
+            </span>
+            {record.lastSentTo !== null && (
+              <span className="font-mono text-xs break-all text-gray-400">
+                {record.lastSentTo}
+              </span>
+            )}
+          </div>
+        ),
+    },
+    {
       key: "action",
       label: t("calculator.records.action"),
       align: "right",
       render: (record) => (
         <div className="flex items-center justify-end gap-1">
+          {/**
+           * Info: (20260904 - Julian) 直接從列上寄，不必先點開預覽。
+           *
+           * `title` 在寄不出去的時候換成原因 —— 圖示按鈕沒有文字，
+           * 停用之後畫面上完全沒有地方說得出為什麼（列表沒有空間放一行說明）。
+           * 這是本模組唯一一處用 `title` 承載原因的地方，因為它是唯一一處
+           * 停用的控制項旁邊放不下文字的。
+           */}
+          <button
+            type="button"
+            aria-label={
+              record.lastSentAt === null
+                ? t("calculator.button.send")
+                : t("calculator.button.re_send")
+            }
+            title={
+              sendTargetOf(record.employee.id).blockedReason !== undefined
+                ? t(sendTargetOf(record.employee.id).blockedReason as string)
+                : record.lastSentAt === null
+                  ? t("calculator.button.send")
+                  : t("calculator.button.re_send")
+            }
+            onClick={() => setSending(record)}
+            disabled={
+              record.lastSentAt === null &&
+              sendTargetOf(record.employee.id).blockedReason !== undefined
+            }
+            className={`${iconBtnStyle} text-gray-400 enabled:hover:bg-gray-100 enabled:hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent`}
+          >
+            <Send className="size-4" />
+          </button>
           <button
             type="button"
             aria-label={t("calculator.records.view")}
@@ -479,6 +712,51 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
         </div>
 
         {/**
+         * Info: (20260904 - Julian) 匯出工具列**永遠顯示**。
+         *
+         * 初版是「勾了才出現」，理由是不想擺一顆永遠灰著的按鈕。那是錯的：
+         * 這個功能唯一的入口就是這顆按鈕，而它藏在一個使用者得先做出
+         * 「勾選」這個動作才會看到的地方 —— 不知道有匯出的人，
+         * 正好就是不會先去勾選的人。功能等於不存在。
+         *
+         * 停用狀態自己會說話：按鈕在、筆數是 0，「要先選幾筆」是看得出來的，
+         * 不需要再寫一句話解釋。停用的**理由**放在 `title`（同列表的寄出鈕），
+         * 只有超過上限那種需要看到數字的情況才用得上。
+         */}
+        <div className="flex items-center justify-end gap-3">
+          <span className="text-sm font-medium text-gray-500">
+            {t("calculator.records.selected_count", { count: picked.size })}
+          </span>
+
+          {/**
+           * Info: (20260904 - Julian) 匯出失敗要看得見。
+           *
+           * 這不是說明文字而是結果 —— 沒有它的話，按下去、轉一圈、
+           * 什麼都沒發生，而使用者只會再按一次。
+           */}
+          {exportFailed && (
+            <span className="text-xs font-medium text-rose-700">
+              {t("calculator.records.export_failed")}
+            </span>
+          )}
+
+          <button
+            type="button"
+            onClick={exportHandler}
+            disabled={exportDisabled}
+            title={exportDisabledReason ?? undefined}
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-orange-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+          >
+            {isExporting ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Download className="size-4" />
+            )}
+            {t("calculator.records.export_csv")}
+          </button>
+        </div>
+
+        {/**
          * Info: (20260901 - Julian) 名單掛了要說出來。
          *
          * 沒有這一條的話，畫面上的症狀是「員工篩選下拉是空的、載回鈕是灰的」，
@@ -545,6 +823,47 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
         />
       )}
 
+      {/**
+       * Info: (20260904 - Julian) 寄過的走重寄確認，沒寄過的走寄出確認 ——
+       * 與預覽彈窗裡那一顆同一套判斷，只是這裡的「寄過沒有」來自列表資料
+       * （`lastSentAt` 由伺服器算），不必再問一次歷史。
+       */}
+      {sending && sending.lastSentAt === null && (
+        <SendingPaySlipModal
+          accountBookId={accountBookId}
+          recordId={sending.id}
+          employeeName={sending.employee.name}
+          employeeEmail={sendingTarget.email ?? ""}
+          monthLabel={t("calculator.records.pay_period_value", {
+            year: sending.year,
+            month: sending.month,
+          })}
+          modalVisibleHandler={() => setSending(null)}
+          onSent={() => {
+            setSending(null);
+            // Info: (20260904 - Julian) 重抓才會看到那一列從「未寄出」變成日期
+            reload();
+          }}
+        />
+      )}
+
+      {sending && sending.lastSentAt !== null && (
+        <ResendingPaySlipModal
+          accountBookId={accountBookId}
+          recordId={sending.id}
+          monthName={t("calculator.records.pay_period_value", {
+            year: sending.year,
+            month: sending.month,
+          })}
+          sentToName={sending.lastSentTo ?? "-"}
+          modalVisibleHandler={() => setSending(null)}
+          onResent={() => {
+            setSending(null);
+            reload();
+          }}
+        />
+      )}
+
       {viewing && (
         <ViewPaySlipModal
           monthStr={MONTHS[viewing.month - 1].name}
@@ -553,6 +872,11 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
           employeeName={viewing.employee.name}
           employeeNumber={viewing.employee.number}
           modalCloseHandler={() => setViewing(null)}
+          accountBookId={accountBookId}
+          recordId={viewing.id}
+          employeeEmail={viewingSendTarget.email}
+          sendBlockedReason={viewingSendTarget.blockedReason}
+          onResent={() => setViewing(null)}
         />
       )}
     </SalaryCalculatorShell>

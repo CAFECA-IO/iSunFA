@@ -27,6 +27,7 @@ export const calculator = {
     tax_residency_status: "税務居住状況",
     residency_option_taiwan: "台湾居住者",
     residency_option_non_taiwan: "非台湾居住者",
+    date_from_employee: "従業員データより",
     industry_category: "業種",
     year: "年度",
     month: "月",
@@ -67,6 +68,22 @@ export const calculator = {
     voluntary_pension_contribution: "任意労働年金拠出",
   },
   employee_list: {
+    issue_name_required: "「基本情報」で従業員名を入力してください",
+    issue_number_required: "「基本情報」で従業員番号を入力してください",
+    issue_base_salary_required: "「給与」で基本給を入力してください",
+    section_identity: "基本情報",
+    section_pay: "給与",
+    section_insurance: "社会保険・年金",
+    section_other: "その他",
+    other_allowance_taxable: "その他手当（課税）",
+    other_allowance_tax_free: "その他手当（非課税）",
+    other_allowance_hint:
+      "毎月固定の手当を入力してください。当月限りの賞与は計算機側で入力します —— ここに入れると翌月も引き継がれます。",
+    voluntary_pension_rate: "年金の自己拠出率",
+    employment_type: "雇用形態",
+    hire_date: "入社日",
+    resign_date: "退職日",
+    date_order_error: "退職日は入社日より前にはできません",
     main_title: "従業員リスト",
     name: "従業員名",
     number: "従業員番号",
@@ -99,6 +116,12 @@ export const calculator = {
     remove_employee_title: "従業員の削除",
     remove_employee_content: "本当に従業員リストから {{name}} を削除しますか？",
     remove_employee_submit_btn: "はい、削除します。",
+    no_email: "未入力",
+    missing_email_banner:
+      "{{count}} 名のメールアドレスが未入力です。給与明細を送信できません",
+    only_missing_email: "該当者のみ表示",
+    show_all: "すべて表示",
+    no_filter_result: "条件に一致する従業員がいません",
   },
   result: {
     base_salary_with_tax: "基本給（課税対象）",
@@ -161,10 +184,18 @@ export const calculator = {
     content_2: "を",
     content_bold_2: " {{employeeName}} ",
     email: "Eメール",
-    email_placeholder: "従業員のEメールを入力してください",
-    invalid_email_hint:
-      "Eメールの形式が正しくありません。もう一度ご確認ください。",
     submit: "給与明細を送信",
+    email_from_profile: "従業員データより",
+    email_missing: "メールアドレスが未登録です",
+    sending: "送信中...",
+    error_no_email:
+      "この従業員にはメールアドレスが登録されていません。先に従業員一覧で追加してください。",
+    error_not_configured:
+      "メール送信がまだ設定されていません。システム管理者にご連絡ください。",
+    error_font_missing:
+      "サーバーに中国語フォントがないため、給与明細を生成できません。システム管理者にご連絡ください。",
+    error_generic:
+      "給与明細を送信できませんでした。しばらくしてからもう一度お試しください。",
   },
   my_pay_slip: {
     main_title: "私の給与明細",
@@ -180,6 +211,12 @@ export const calculator = {
     pay_slip: "給与明細",
     sent_on: "送信日",
     all: "すべて",
+    employee: "従業員",
+    sent_by: "送信者",
+    unknown_sender: "名前なし",
+    sent_empty: "この帳簿からはまだ給与明細が送信されていません",
+    sent_load_failed:
+      "送信履歴を読み込めませんでした。再読み込みしてお試しください",
   },
   // Info: (20260831 - Julian) 公開版から帳簿版への導線
   // Info: (20260831 - Julian) 計算機の Step 1 における従業員の紐付け状態
@@ -189,6 +226,18 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) 計算機ページからの保存と、2 つの例外
   save_record: {
+    profile_diff_title: "従業員データも更新しますか？",
+    profile_diff_content:
+      "計算機の設定が「{{name}}」さんの従業員データと異なります。差分は以下のとおりです：",
+    profile_diff_hint:
+      "今回の給与記録はどちらを選んでも計算機の値で保存されます。ここで聞いているのは従業員データも変更するかどうかだけです。「今回だけ保存」を選ぶと従業員データはそのままです。",
+    profile_diff_update_btn: "従業員データを更新して保存",
+    profile_diff_skip_btn: "今回だけ保存",
+    profile_diff_failed:
+      "更新できませんでした。しばらくしてからお試しください。",
+    profile_value_on: "あり",
+    profile_value_off: "なし",
+    profile_value_none: "未設定",
     save: "給与記録を保存",
     saving: "保存中…",
     saved: "{{name}} の {{year}} 年 {{month}} 月の給与記録として保存しました",
@@ -223,7 +272,7 @@ export const calculator = {
     employee: "従業員",
     net_pay: "手取り額",
     taxable: "源泉徴収票の金額",
-    action: "操作",
+    action: "送信/表示/再計算/削除",
     view: "給与明細を表示",
     load_back: "計算機に読み込む",
     delete: "削除",
@@ -254,6 +303,16 @@ export const calculator = {
       "従業員名簿を読み込めませんでした。この状態では計算機に読み込んでも従業員と紐づけできません。",
     load_back_unlinked:
       "この従業員は名簿にありません。氏名と従業員番号はこの記録から入力しましたが、従業員との紐づけは行われていません —— 保存時に対象をもう一度確認します。",
+    delivery_status: "送信状況",
+    not_sent: "未送信",
+    select_page: "このページの全行を選択",
+    select_row: "この記録を選択",
+    selected_count: "{{count}} 件を選択中",
+    export_csv: "CSV をエクスポート",
+    export_too_many:
+      "1 回のエクスポートは最大 {{max}} 件です。選択を減らしてください",
+    export_failed:
+      "エクスポートに失敗しました。しばらくしてからお試しください。",
   },
   account_book_entry: {
     title: "この試算を保存しますか？",
@@ -270,6 +329,12 @@ export const calculator = {
     send: "給与明細を送信",
     reset: "リセット",
     re_send: "給与明細を再送信",
+    send_disabled_unsaved: "給与記録を保存すると給与明細を送信できます",
+    send_disabled_no_email:
+      "この従業員にはメールアドレスがありません。先に従業員一覧で追加してください",
+    send_disabled_employee_gone:
+      "この従業員は一覧から削除されているため、給与明細を送信できません",
+    send_disabled_loading: "従業員一覧を確認しています...",
   },
   message: {
     name_error_title: "従業員名が未入力です",

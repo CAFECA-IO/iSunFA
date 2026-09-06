@@ -9,7 +9,18 @@ import {
   ReactNode,
 } from "react";
 import { CalcTab, PayrollDaysBase } from "@/constants/salary_calculator";
-import { ISalaryCalculatorEmployee } from "@/interfaces/salary_record";
+import {
+  ISalaryCalculatorEmployee,
+  ISalaryEmployeeProfile,
+} from "@/interfaces/salary_record";
+import {
+  composeJoinLeaveDates,
+  deriveJoinLeave,
+} from "@/lib/utils/salary_employee_profile";
+import {
+  fromPensionRatePercent,
+  toPensionRatePercent,
+} from "@/lib/utils/salary_pension_rate";
 import {
   fromCalculatorOptions,
   toCalculatorOptions,
@@ -27,7 +38,10 @@ import {
   salaryCalculator,
   getMinimumWage,
 } from "@/lib/utils/salary_calculator";
-import { INDUSTRY_CATEGORY_OPTIONS } from "@/constants/industry_category";
+import {
+  DEFAULT_INDUSTRY_CODE,
+  industryCategoryOf,
+} from "@/constants/industry_category";
 
 type TabStep = {
   step: number;
@@ -43,10 +57,9 @@ const defaultTabSteps: TabStep[] = [
   { step: 4, completed: false },
 ];
 
+// Info: (20260902 - Julian) 預設行業別的來源收斂到 constants，不再在這裡寫死 42
 const defaultIndustryCategory: IndustryCategoryItem =
-  INDUSTRY_CATEGORY_OPTIONS.sort((a, b) => a.CODE - b.CODE).find(
-    (item) => item.CODE === 42,
-  )!; // Info: (20251113 - Julian) 預設為「42 電腦程式設計、諮詢及相關服務業、資訊服務業」
+  industryCategoryOf(DEFAULT_INDUSTRY_CODE);
 
 interface ICalculatorContext {
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
@@ -79,6 +92,7 @@ interface ICalculatorContext {
 
   // Info: (20260831 - Julian) 目前表單對應的引擎輸入。儲存薪資紀錄時要把它整份存下來
   getSalaryCalculatorOptions: () => ISalaryCalculatorOptions;
+  getEmployeeProfile: () => ISalaryEmployeeProfile;
 
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state 和 functions
   employeeName: string;
@@ -234,10 +248,18 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [payrollDaysBase, setPayrollDaysBase] = useState<string>(
     payrollDaysBaseOptions[0],
   ); // Info: (20250710 - Julian) 基準天數選項
-  const [isJoined, setIsJoined] = useState<boolean>(false);
-  const [dayOfJoining, setDayOfJoining] = useState<string>("01"); // Info: (20250709 - Julian) 入職日期
-  const [isLeft, setIsLeft] = useState<boolean>(false);
-  const [dayOfLeaving, setDayOfLeaving] = useState<string>("01"); // Info: (20250709 - Julian) 離職日期
+  /**
+   * Info: (20260902 - Julian) 到職／離職日的**單一來源**：完整日期（Unix 秒），不是「當月第幾號」。
+   *
+   * 原本是四個 state（`isJoined` + `dayOfJoining` + `isLeft` + `dayOfLeaving`），
+   * 而那四個是純 UI 狀態、沒有來源 —— 使用者換一個月份它們原封不動，
+   * 於是**八月中途到職的人切到九月照樣被算成九月中途到職**，九月的薪水少算半個月。
+   *
+   * 改成存真實日期之後，那四個變成推導值（見下方 `joinLeave`），切月份時答案自己會對。
+   * 員工檔上存的也是同一種東西，兩邊不必再轉一次語意。
+   */
+  const [hireDate, setHireDate] = useState<number | null>(null);
+  const [resignDate, setResignDate] = useState<number | null>(null);
 
   // Info: (20251002 - Julian) 取得當前年份的最低基本薪資
   const defaultBasicSalary = getMinimumWage(parseInt(selectedYear));
@@ -314,6 +336,66 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
    * `fromCalculatorOptions` 必須成對維護，而留在這裡的話只有 render React 才測得到
    * （本專案的測試不 render React）。
    */
+  // Info: (20260902 - Julian) 當下選定的期間，到離職日的推導與組合都以它為準
+  const selectedPeriod = {
+    year: parseInt(selectedYear, 10),
+    month: MONTHS.findIndex((item) => item.name === selectedMonth.name) + 1,
+  };
+
+  /**
+   * Info: (20260902 - Julian) 由完整日期推導出「這個月有沒有中途到職／離職，第幾號」。
+   *
+   * 引擎只關心這個月，所以這四個值是**畫面與引擎共用的推導結果**，不是 state。
+   * 留成 state 的話，切月份時它們不會自己更新 —— 那正是原本的缺陷。
+   */
+  const joinLeave = deriveJoinLeave({ hireDate, resignDate }, selectedPeriod);
+  const { isJoined, dayOfJoining, isLeft, dayOfLeaving } = joinLeave;
+
+  /**
+   * Info: (20260902 - Julian) 計算機當下的值 → 員工檔的常態屬性。
+   *
+   * 給兩條路用：「直接新增員工」（使用者剛把欄位填好，要帶的是當下的值，
+   * 不是預設值 —— 否則建出來的檔是空的，下個月選他反而把設定洗掉），
+   * 以及儲存前的差異偵測（產品決策 D2）。
+   *
+   * **只取 15 個常態欄位。** 加班、請假、溢扣那 16 個不在這裡 ——
+   * 分類表在 `lib/utils/salary_employee_profile.ts`，理由在 schema 註解上。
+   *
+   * 到職／離職日走 `composeJoinLeaveDates`：計算機那四個欄位是
+   * 「這個月第幾號」，員工檔要的是完整日期，年月取自當下選定的期間。
+   */
+  const getEmployeeProfile = (): ISalaryEmployeeProfile => ({
+    baseSalary,
+    mealAllowance,
+    otherAllowanceTaxable: otherAllowanceWithTax,
+    otherAllowanceTaxFree: otherAllowanceWithoutTax,
+    industryCode: industryCategory.CODE,
+    isForeignWorker: taxResidencyStatus === TaxResidencyStatus.NON_TAIWAN,
+    // Info: (20260902 - Julian) 存鍵不存顯示字串，所以要反查 —— enum 的值才是畫面上那串
+    employmentType:
+      Object.keys(EmploymentType).find(
+        (key) =>
+          EmploymentType[key as keyof typeof EmploymentType] === employmentType,
+      ) ?? "FULL_TIME",
+    baseSalary30Days: payrollDaysBase === PayrollDaysBase.FIXED,
+    isLaborInsured: isLaborInsurance,
+    isHealthInsured: isNHI,
+    isPensionInsured: isLaborPension,
+    dependentsCount: numberOfDependents,
+    // Info: (20260902 - Julian) UI 是小數費率、落地是百分點整數
+    voluntaryPensionRate: toPensionRatePercent(voluntaryPensionContribution),
+    /**
+     * Info: (20260902 - Julian) 直接帶日期，**不從畫面上那四個推導值反推回去**。
+     *
+     * 反推的話會踩到一個很難查的坑：員工的到職日是 8/15，使用者切到九月試算，
+     * 推導出來的 `isJoined` 是 false（正確），反推回去就變成 `hireDate: null`
+     * —— 而這個值會被拿去比對差異、甚至回寫員工檔，於是「算了一次九月的薪水」
+     * 就把那個人的到職日洗掉了。日期是 state，這裡原樣交出去。
+     */
+    hireDate,
+    resignDate,
+  });
+
   const getSalaryCalculatorOptions = (): ISalaryCalculatorOptions =>
     toCalculatorOptions({
       selectedYear,
@@ -438,10 +520,9 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setSelectedYear(yearOptions[0]);
     setSelectedMonth(defaultMonth);
     setPayrollDaysBase(payrollDaysBaseOptions[0]);
-    setIsJoined(false);
-    setIsLeft(false);
-    setDayOfJoining("01");
-    setDayOfLeaving("01");
+    // Info: (20260902 - Julian) 重置＝沒有到職／離職日
+    setHireDate(null);
+    setResignDate(null);
     setBaseSalary(defaultBasicSalary);
     setMealAllowance(0);
     setOtherAllowanceWithTax(0);
@@ -477,6 +558,53 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   };
 
   /**
+   * Info: (20260902 - Julian) 把員工檔上的 15 個常態屬性灌進計算機。
+   *
+   * ## 覆蓋，不是「只填空白」（產品決策 D3）
+   *
+   * 「選好員工姓名後就能自動匯入資料」最直覺的解釋就是覆蓋。
+   * 「只填空白」聽起來貼心，但「0 算不算空白」沒有好答案 ——
+   * 本薪 0 是空白、扶養人數 0 是真的填了 0，兩者在型別上一模一樣。
+   *
+   * ## 當月變動的 16 個欄位不會被動到
+   *
+   * 加班時數、請假時數、健保補收、二代健保、其他溢扣不在員工檔上，
+   * 所以「全部覆蓋」不等於「整張表單重置」—— 使用者剛打的加班時數還在。
+   * 分類表在 `lib/utils/salary_employee_profile.ts`。
+   */
+  const applyEmployeeProfile = (profile: ISalaryEmployeeProfile) => {
+    setBaseSalary(profile.baseSalary);
+    setMealAllowance(profile.mealAllowance);
+    setOtherAllowanceWithTax(profile.otherAllowanceTaxable);
+    setOtherAllowanceWithoutTax(profile.otherAllowanceTaxFree);
+    setIndustryCategory(industryCategoryOf(profile.industryCode));
+    setTaxResidencyStatus(
+      profile.isForeignWorker
+        ? TaxResidencyStatus.NON_TAIWAN
+        : TaxResidencyStatus.TAIWAN,
+    );
+    // Info: (20260902 - Julian) 落地存的是 enum 的鍵，畫面上的 state 存的是值
+    setEmploymentType(
+      EmploymentType[profile.employmentType as keyof typeof EmploymentType] ??
+        EmploymentType.FULL_TIME,
+    );
+    setPayrollDaysBase(
+      profile.baseSalary30Days ? PayrollDaysBase.FIXED : PayrollDaysBase.ACTUAL,
+    );
+    setIsLaborInsurance(profile.isLaborInsured);
+    setIsNHI(profile.isHealthInsured);
+    setIsLaborPension(profile.isPensionInsured);
+    setNumberOfDependents(profile.dependentsCount);
+    // Info: (20260902 - Julian) 落地是百分點整數，畫面上是小數費率
+    setVoluntaryPensionContribution(
+      fromPensionRatePercent(profile.voluntaryPensionRate),
+    );
+    // Info: (20260902 - Julian) 日期原樣帶進來，「這個月第幾號」由 joinLeave 推導
+    setHireDate(profile.hireDate);
+    setResignDate(profile.resignDate);
+  };
+
+  /**
    * Info: (20260831 - Julian) 從員工名單選一位，把他的資料帶進計算機。
    *
    * 除了灌欄位還要記住 id —— 那才是「按下儲存會存到誰身上」的答案。
@@ -487,9 +615,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setIsNameError(employee.name === "");
     setEmployeeNumber(employee.number);
     setEmployeeEmail(employee.email);
-    setBaseSalary(employee.baseSalary);
-    // Info: (20260831 - Julian) 伙食費原本漏了沒帶，補上（employee_list_modal 的舊行為）
-    setMealAllowance(employee.mealAllowance);
+    applyEmployeeProfile(employee);
     setSelectedEmployeeId(employee.id);
   };
 
@@ -550,10 +676,12 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setSelectedMonth(form.selectedMonth);
     setIndustryCategory(form.industryCategory);
     setTaxResidencyStatus(form.taxResidencyStatus);
-    setIsJoined(form.isJoined);
-    setDayOfJoining(form.dayOfJoining);
-    setIsLeft(form.isLeft);
-    setDayOfLeaving(form.dayOfLeaving);
+    /**
+     * Info: (20260902 - Julian) 快照裡的 `employeeStartDate` / `employeeEndDate` 本來就是
+     * 完整時間戳（寫入時由那筆紀錄的年月組成），直接還原成日期，不必再繞一次「第幾號」。
+     */
+    setHireDate(input.employeeStartDate ?? null);
+    setResignDate(input.employeeEndDate ?? null);
     setPayrollDaysBase(form.payrollDaysBase);
 
     setBaseSalary(form.baseSalary);
@@ -627,14 +755,45 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const changePayrollDaysBase = (base: string) => {
     setPayrollDaysBase(base);
   };
+  /**
+   * Info: (20260902 - Julian) 畫面上改「第幾號」→ 用當下選定的年月組成完整日期。
+   *
+   * 這四支只在**未連結員工**時會被呼叫：連結之後那兩格是唯讀的，
+   * 日期的來源是員工檔（見 `basic_info_form`）。公開版沒有員工檔，所以照舊可編輯。
+   */
   const changeJoinedDay = (day: string) => {
-    setDayOfJoining(day);
+    setHireDate(
+      composeJoinLeaveDates(
+        { ...joinLeave, isJoined: true, dayOfJoining: day },
+        selectedPeriod,
+      ).hireDate,
+    );
   };
   const changeLeavingDay = (day: string) => {
-    setDayOfLeaving(day);
+    setResignDate(
+      composeJoinLeaveDates(
+        { ...joinLeave, isLeft: true, dayOfLeaving: day },
+        selectedPeriod,
+      ).resignDate,
+    );
   };
-  const toggleJoined = () => setIsJoined((prev) => !prev);
-  const toggleLeft = () => setIsLeft((prev) => !prev);
+  // Info: (20260902 - Julian) 關掉＝沒有這個日期（null），不是「留著日期但不算」
+  const toggleJoined = () =>
+    setHireDate(
+      isJoined
+        ? null
+        : composeJoinLeaveDates(
+            { ...joinLeave, isJoined: true },
+            selectedPeriod,
+          ).hireDate,
+    );
+  const toggleLeft = () =>
+    setResignDate(
+      isLeft
+        ? null
+        : composeJoinLeaveDates({ ...joinLeave, isLeft: true }, selectedPeriod)
+            .resignDate,
+    );
 
   // Info: (20250710 - Julian) =========== 其他相關 state 和 functions ===========
   const toggleLaborInsurance = () => setIsLaborInsurance((prev) => !prev);
@@ -661,6 +820,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     applyRecordEmployee,
     loadFromSnapshot,
     getSalaryCalculatorOptions,
+    getEmployeeProfile,
     employeeName,
     changeEmployeeName,
     employeeNumber,

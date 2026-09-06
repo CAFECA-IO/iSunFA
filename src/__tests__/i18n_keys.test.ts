@@ -139,6 +139,17 @@ const DYNAMIC_KEY_EXPANSIONS: Record<string, string[]> = {
     EmploymentType,
   ).map((type) => `calculator.basic_info_form.${type.toLowerCase()}`),
 
+  /**
+   * Info: (20260902 - Julian) `employmentTypeI18nKey()` 組出來的那一組。
+   *
+   * 它是僱用型態 i18n 路徑的**唯一**字面來源（`lib/utils/salary_employee_profile.ts`）——
+   * 收斂成一支函式之前，三個呼叫端各自組一次、變數名各不相同，
+   * 而掃描器認字面，於是同一組值域要登記三筆。
+   */
+  "calculator.basic_info_form.${key.toLowerCase()}": Object.keys(
+    EmploymentType,
+  ).map((key) => `calculator.basic_info_form.${key.toLowerCase()}`),
+
   "calculator.basic_info_form.residency_option_${type.toLowerCase()}":
     Object.keys(TaxResidencyStatus).map(
       (type) =>

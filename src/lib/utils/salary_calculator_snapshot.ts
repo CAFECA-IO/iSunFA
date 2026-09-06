@@ -1,5 +1,8 @@
 import { MONTHS, MonthType } from "@/constants/month";
-import { INDUSTRY_CATEGORY_OPTIONS } from "@/constants/industry_category";
+import {
+  DEFAULT_INDUSTRY_CODE,
+  industryCategoryOf,
+} from "@/constants/industry_category";
 import { PayrollDaysBase } from "@/constants/salary_calculator";
 import {
   ISalaryCalculatorFormState,
@@ -21,7 +24,6 @@ import {
  */
 
 // Info: (20260831 - Julian) 沒有對應到任何行業別時的退路，與 context 的預設一致
-const DEFAULT_INDUSTRY_CODE = 42;
 
 const toDayString = (timestampInSeconds: number): string =>
   new Date(timestampInSeconds * 1000).getUTCDate().toString().padStart(2, "0");
@@ -99,17 +101,10 @@ export function fromCalculatorOptions(
   input: ISalaryCalculatorOptions,
   fallbackMonth: MonthType,
 ): ISalaryCalculatorFormState {
-  const industryCategory =
-    INDUSTRY_CATEGORY_OPTIONS.find((item) => item.CODE === input.job) ??
-    INDUSTRY_CATEGORY_OPTIONS.find(
-      (item) => item.CODE === DEFAULT_INDUSTRY_CODE,
-    ) ??
-    INDUSTRY_CATEGORY_OPTIONS[0];
-
   return {
     selectedYear: input.year.toString(),
     selectedMonth: MONTHS[input.month - 1] ?? fallbackMonth,
-    industryCategory,
+    industryCategory: industryCategoryOf(input.job ?? DEFAULT_INDUSTRY_CODE),
     taxResidencyStatus: input.foreignWorker
       ? TaxResidencyStatus.NON_TAIWAN
       : TaxResidencyStatus.TAIWAN,

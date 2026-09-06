@@ -13,6 +13,8 @@ export const salaryCalculatorApiOf = (accountBookId: string) =>
   ({
     EMPLOYEE: `${salaryCalculatorApiBase(accountBookId)}/employee`,
     RECORD: `${salaryCalculatorApiBase(accountBookId)}/record`,
+    // Info: (20260904 - Julian) 「已寄出」分頁：整本帳的薪資單寄送歷史
+    DELIVERY: `${salaryCalculatorApiBase(accountBookId)}/delivery`,
   }) as const;
 
 export const salaryEmployeeItemApi = (
@@ -24,3 +26,23 @@ export const salaryRecordItemApi = (
   accountBookId: string,
   recordId: string,
 ): string => `${salaryCalculatorApiOf(accountBookId).RECORD}/${recordId}`;
+
+/**
+ * Info: (20260904 - Julian) 寄出某一筆薪資紀錄的薪資單。
+ *
+ * 掛在紀錄底下而不是另開一支：寄送的對象就是那一筆，`recordId` 是它唯一需要的輸入。
+ * 收件人由伺服器從那一筆推導，前端指定不了（計畫書 D3）。
+ */
+export const salaryRecordDeliverApi = (
+  accountBookId: string,
+  recordId: string,
+): string => `${salaryRecordItemApi(accountBookId, recordId)}/deliver`;
+
+/**
+ * Info: (20260904 - Julian) 把勾選的薪資紀錄匯出成 CSV。
+ *
+ * 掛在 `record` 底下而不是另開一層：匯出的對象就是薪資紀錄，
+ * 而它與列表共用同一組租戶與授權判斷。
+ */
+export const salaryRecordExportApi = (accountBookId: string): string =>
+  `${salaryCalculatorApiOf(accountBookId).RECORD}/export`;

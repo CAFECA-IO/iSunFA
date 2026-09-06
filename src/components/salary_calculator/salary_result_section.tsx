@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, FC } from "react";
 import Link from "next/link";
-import { CheckCircle2, Download, Loader2, Save /* Send */ } from "lucide-react";
+import { CheckCircle2, Download, Loader2, Save, Send } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import SendingPaySlipModal from "@/components/salary_calculator/sending_pay_slip_modal";
 import AuthModal from "@/components/auth/auth_modal";
@@ -14,6 +14,11 @@ import {
 } from "@/components/salary_calculator/save_record_dialogs";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { useSalaryEmployees } from "@/hooks/use_salary_employees";
+import {
+  diffEmployeeProfile,
+  IProfileDiffEntry,
+} from "@/lib/utils/salary_employee_profile";
+import ProfileDiffModal from "@/components/salary_calculator/profile_diff_modal";
 import { useSalaryRecordSave } from "@/hooks/use_salary_record_save";
 import { MONTHS } from "@/constants/month";
 import { salaryCalculatorUrlOf } from "@/constants/url";
@@ -22,7 +27,10 @@ import {
   EMPLOYEE_NUMBER_INPUT_ID,
 } from "@/constants/salary_calculator";
 import { downloadNodeAsPng } from "@/lib/utils/pay_slip_download";
-import { ISalaryRecordSummary } from "@/interfaces/salary_record";
+import {
+  ISalaryCalculatorEmployee,
+  ISalaryRecordSummary,
+} from "@/interfaces/salary_record";
 import { ApiError } from "@/lib/utils/request";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 
@@ -45,11 +53,10 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     employeeEmail,
     selectedYear,
     selectedMonth,
-    baseSalary,
-    mealAllowance,
     selectedEmployeeId,
     linkEmployee,
     getSalaryCalculatorOptions,
+    getEmployeeProfile,
     salaryCalculatorResult,
   } = useCalculatorCtx();
 
@@ -72,7 +79,7 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
   const bookId = accountBookId ?? "";
   const { isSaving, savedRecord, hasError, findExisting, save, clearSaved } =
     useSalaryRecordSave(bookId);
-  const { employees, createEmployee, reload } =
+  const { employees, createEmployee, updateEmployee, reload } =
     useSalaryEmployees(accountBookId);
 
   /**
@@ -105,6 +112,17 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
 
   // Info: (20260901 - Julian) 「修改員工編號」按下之後，等 Step 1 掛上來再聚焦
   const [isFocusingNumber, setIsFocusingNumber] = useState<boolean>(false);
+
+  /**
+   * Info: (20260902 - Julian) 計算機上的常態屬性與員工檔不一致時待確認的那一筆。
+   *
+   * 連員工一起記，理由同 `pendingOverwrite`：確認的那一刻再去讀 context
+   * 有可能讀到還沒生效的 setState。
+   */
+  const [pendingProfileDiff, setPendingProfileDiff] = useState<{
+    employee: ISalaryCalculatorEmployee;
+    diff: IProfileDiffEntry[];
+  } | null>(null);
 
   const selectedMonthNumber =
     MONTHS.findIndex((month) => month.name === selectedMonth.name) + 1;
@@ -172,6 +190,16 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
    * 已連結員工 → 先探這個年月有沒有紀錄，有就先問一句，沒有就直接存完。
    * 未連結 → 開例外 B 問要存給誰。兩條路都不會要求使用者重填員工或年月。
    */
+  /**
+   * Info: (20260902 - Julian) 儲存前的三道問句，順序是定死的：
+   *
+   * 1. **要存給誰**（未連結員工）—— 沒有答案的話後面兩題沒有意義
+   * 2. **員工檔要不要跟著更新**（常態屬性有差異）—— 產品決策 D2 的「問一句」
+   * 3. **要不要覆蓋既有紀錄**（同年月已有一筆）—— 在 `proceedSaveFor` 裡
+   *
+   * 三者可能同時成立。順序倒過來的話，使用者會先被問「要覆蓋嗎」，
+   * 而那時候連「存給誰」都還沒確定。
+   */
   const clickSaveHandler = async () => {
     clearSaved();
     setUnlinkedError(null);
@@ -181,7 +209,51 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
       return;
     }
 
+    /**
+     * Info: (20260902 - Julian) 名單上找不到這個人時**不問**，直接存。
+     *
+     * 那代表名單還在飛或抓失敗（hook 把錯誤吞成 `[]`）——
+     * 此時 `diff` 會拿計算機的值去跟「什麼都沒有」比，列出 15 條全部是差異，
+     * 而那是假的。沒有可信的對照組就不要問。
+     */
+    const stored = employees.find(
+      (employee) => employee.id === selectedEmployeeId,
+    );
+
+    if (stored !== undefined) {
+      const diff = diffEmployeeProfile(getEmployeeProfile(), stored);
+      if (diff.length > 0) {
+        setPendingProfileDiff({ employee: stored, diff });
+        return;
+      }
+    }
+
     await proceedSaveFor(selectedEmployeeId);
+  };
+
+  // Info: (20260902 - Julian) 「更新員工檔並儲存」：先 PUT 員工，再走原本的儲存流程
+  const updateProfileAndSaveHandler = async () => {
+    if (pendingProfileDiff === null) return;
+
+    const { employee } = pendingProfileDiff;
+    await updateEmployee(employee.id, {
+      ...getEmployeeProfile(),
+      name: employee.name,
+      number: employee.number,
+      email: employee.email || undefined,
+    });
+
+    setPendingProfileDiff(null);
+    await proceedSaveFor(employee.id);
+  };
+
+  // Info: (20260902 - Julian) 「只存這一次」：員工檔不動，這次的值仍然照樣進快照
+  const saveWithoutProfileUpdateHandler = async () => {
+    if (pendingProfileDiff === null) return;
+
+    const { employee } = pendingProfileDiff;
+    setPendingProfileDiff(null);
+    await proceedSaveFor(employee.id);
   };
 
   /**
@@ -264,12 +336,19 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     setIsPreparing(true);
     setUnlinkedError(null);
     try {
+      /**
+       * Info: (20260902 - Julian) 帶的是**計算機當下的 15 個常態欄位**，不是預設值。
+       *
+       * 使用者剛在計算機把投保狀態、扶養人數、自提比例、到職日都設好了，
+       * 這顆按鈕的語意就是「把這個人連同這些設定建起來」。
+       * 只帶姓名與兩個金額的話，建出來的檔其餘欄位全是 schema 的 `@default` ——
+       * 下個月選這個人，那些預設值會覆蓋掉他今天設好的東西，而且完全靜默。
+       */
       await createEmployee({
+        ...getEmployeeProfile(),
         name: employeeName.trim(),
         number: employeeNumber.trim(),
         email: employeeEmail.trim() || undefined,
-        baseSalary,
-        mealAllowance,
       });
 
       const refreshed = await reload();
@@ -344,14 +423,41 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     });
   };
 
-  // Info: (20250723 - Julian) 登入才能使用寄出薪資單的功能
-  // const sendingBtnClickHandler = () => {
-  //   if (isSignIn) {
-  //     toggleShowSendingModal();
-  //   } else {
-  //     toggleShowLoginModal();
-  //   }
-  // };
+  /**
+   * Info: (20260904 - Julian) 寄出薪資單。**要先存過才寄得出去。**
+   *
+   * 寄送的對象是一筆薪資紀錄（`record_id` 是端點唯一的輸入），
+   * 而計算機畫面上的數字在按下「儲存」之前不是任何一筆紀錄 ——
+   * 沒有 `savedRecord` 就沒有東西可以寄。
+   *
+   * 上一版這一段連同按鈕一起被註解掉（`ToDo: (20260225) 暫時隱藏按鈕`），
+   * 因為那時後端還沒有寄送端點。現在有了。
+   *
+   * 登入判斷不必自己做：這一整顆按鈕只在帳本版出現，而帳本版本來就要登入。
+   */
+  const sendingBtnClickHandler = () => toggleShowSendingModal();
+
+  /**
+   * Info: (20260904 - Julian) 寄出**專屬**的停用原因。
+   *
+   * 「還沒存」與「這位員工沒有信箱」的下一步完全不同，所以分開講：
+   * 共用一句的話，沒有信箱的那個人會回頭一格一格檢查一張已經填完的表
+   * （同員工表單分頁那一組紅點的處置：停用的按鈕一定要說得出為什麼）。
+   *
+   * **「四個步驟沒填完」不在這裡** —— 下面那條 `disabled_hint` 已經在講它了，
+   * 而且它同時管著下載與儲存。初版把它也列進來，結果是畫面上疊出兩行
+   * 只差三個字的句子（「才能寄出薪資單」／「才能下載或儲存薪資單」），
+   * 講的是同一個成因、同一個下一步。原因相同時，一句就夠。
+   */
+  const sendDisabledReason = (() => {
+    if (!savedRecord) return "calculator.button.send_disabled_unsaved";
+    if (employeeEmail.trim() === "")
+      return "calculator.button.send_disabled_no_email";
+    return null;
+  })();
+
+  // Info: (20260904 - Julian) 按鈕的停用條件仍然包含「沒填完」，只是那件事由共用的提示來講
+  const sendDisabled = btnDisabled || sendDisabledReason !== null;
 
   return (
     <>
@@ -413,17 +519,37 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
               )}
             </button>
           )}
-          {/* ToDo: (20260225 - Julian) 暫時隱藏按鈕 */}
-          {/* <button
-            type="button"
-            onClick={sendingBtnClickHandler}
-            disabled={btnDisabled}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-400 text-sm font-bold text-white shadow-md shadow-orange-100 transition-all duration-200 hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none"
-          >
-            {t("calculator.button.send")} <Send size={20} />
-          </button>
-          */}
+          {/**
+           * Info: (20260904 - Julian) 寄出薪資單：**帳本版限定**，且要先存過。
+           *
+           * 公開版沒有帳本也沒有員工檔，寄不出去也不該看得到這顆按鈕
+           * （同上面那顆「儲存」的處置）。
+           */}
+          {accountBookId !== null && (
+            <button
+              type="button"
+              onClick={sendingBtnClickHandler}
+              disabled={sendDisabled}
+              className="col-span-1 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white text-sm font-bold text-orange-600 ring-1 ring-orange-600 transition-colors hover:bg-orange-50 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:ring-0 lg:col-span-2"
+            >
+              {t("calculator.button.send")} <Send size={20} />
+            </button>
+          )}
         </div>
+
+        {/**
+         * Info: (20260904 - Julian) 為什麼寄不出去 —— 只講下面那條提示沒涵蓋的原因。
+         *
+         * `btnDisabled` 時讓位給共用的 `disabled_hint`：兩者同時出現的話，
+         * 畫面上會疊出兩行只差三個字、成因完全相同的句子。
+         */}
+        {accountBookId !== null &&
+          !btnDisabled &&
+          sendDisabledReason !== null && (
+            <p className="text-text-neutral-tertiary text-xs">
+              {t(sendDisabledReason)}
+            </p>
+          )}
 
         {/* Info: (20260831 - Julian) 講清楚為什麼按鈕是灰的，否則使用者只會看到一顆不能按的按鈕 */}
         {btnDisabled && (
@@ -465,8 +591,18 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
       <AuthModal isOpen={isShowLoginModal} onClose={toggleShowLoginModal} />
 
       {/* Info: (20250723 - Julian) Sending Pay Slip Modal */}
-      {isShowSendingModal && (
-        <SendingPaySlipModal modalVisibleHandler={toggleShowSendingModal} />
+      {isShowSendingModal && accountBookId !== null && savedRecord && (
+        <SendingPaySlipModal
+          accountBookId={accountBookId}
+          /* Info: (20260904 - Julian) 寄的是剛存下來的那一筆，不是畫面上的數字 */
+          recordId={savedRecord.id}
+          employeeName={savedRecord.employee.name}
+          employeeEmail={employeeEmail}
+          monthLabel={t(
+            `date.month_name.${selectedMonth.name.toLowerCase().slice(0, 3)}`,
+          )}
+          modalVisibleHandler={toggleShowSendingModal}
+        />
       )}
 
       {/* Info: (20260831 - Julian) 例外 A：同員工同年月已經有紀錄 */}
@@ -500,6 +636,16 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
           }}
           useConflictHandler={useConflictEmployeeHandler}
           editNumberHandler={editNumberHandler}
+        />
+      )}
+
+      {pendingProfileDiff !== null && (
+        <ProfileDiffModal
+          employeeName={pendingProfileDiff.employee.name}
+          diff={pendingProfileDiff.diff}
+          closeHandler={() => setPendingProfileDiff(null)}
+          updateAndSaveHandler={updateProfileAndSaveHandler}
+          saveOnlyHandler={saveWithoutProfileUpdateHandler}
         />
       )}
 

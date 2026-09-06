@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { ISalaryCalculatorEmployee } from "@/interfaces/salary_record";
 import { resolveLoadBackIdentity } from "@/lib/utils/salary_load_back";
+import { DEFAULT_EMPLOYEE_PROFILE } from "@/lib/utils/salary_employee_profile";
 
 /**
  * Info: (20260901 - Julian) 「載回計算機」時這筆紀錄屬於誰。
@@ -32,6 +33,8 @@ import { resolveLoadBackIdentity } from "@/lib/utils/salary_load_back";
 const employeeOf = (
   overrides: Partial<ISalaryCalculatorEmployee> = {},
 ): ISalaryCalculatorEmployee => ({
+  // Info: (20260902 - Julian) 常態屬性整組必填；放最前面，下面幾行才蓋得掉它
+  ...DEFAULT_EMPLOYEE_PROFILE,
   id: "emp-1",
   name: "張三",
   number: "A001",

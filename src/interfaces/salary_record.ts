@@ -11,27 +11,82 @@ import {
  * 時間戳的 `DateTime` 在這裡是 Unix 秒。
  */
 
+/**
+ * Info: (20260902 - Julian) 員工檔上「選了人就自動匯入計算機」的那一組常態屬性。
+ *
+ * ## 為什麼要單獨一個型別
+ *
+ * 這一組會同時出現在四條路徑上：載入（員工 → 計算機）、回寫（計算機 → 員工）、
+ * 差異偵測（儲存前問一句）、以及新增員工時要帶的初值。
+ * 各自列一次欄位的話，新增一欄就有四個地方要記得改，而漏掉的那一邊是靜默的
+ * —— 例如「直接新增員工」少帶一欄，那個人的檔上就是預設值，
+ * 下個月選他反而把畫面洗掉。抽成一個型別，四邊會一起編譯失敗。
+ *
+ * ## 這裡放什麼、不放什麼
+ *
+ * 只放「這個人一直都是這樣」的東西。**當月變動一律不進來** ——
+ * 加班時數、請假時數、健保補收、二代健保、其他溢扣共 16 欄留在薪資紀錄的快照裡。
+ * 完整分類表在 `documents/architecture/salary_employee_profile_plan.md` §1，
+ * 而 `salary_employee_profile.test.ts` 拿那張表與這個型別對拍。
+ */
+export interface ISalaryEmployeeProfile {
+  baseSalary: number;
+  mealAllowance: number;
+
+  // Info: (20260902 - Julian) 固定職務加給（產品決策 20260902）；當月獎金不走這裡
+  otherAllowanceTaxable: number;
+  otherAllowanceTaxFree: number;
+
+  // Info: (20260902 - Julian) 引擎的 `job`
+  industryCode: number;
+  // Info: (20260902 - Julian) 引擎的 `foreignWorker`；UI 那一側是 TaxResidencyStatus 列舉
+  isForeignWorker: boolean;
+  // Info: (20260902 - Julian) `EmploymentType` 的**鍵**（"FULL_TIME" / "PART_TIME"），不是顯示字串
+  employmentType: string;
+  // Info: (20260902 - Julian) 引擎的 `baseSalary30Days`；UI 那一側是「固定 30 天／實際天數」
+  baseSalary30Days: boolean;
+
+  isLaborInsured: boolean;
+  isHealthInsured: boolean;
+  isPensionInsured: boolean;
+  dependentsCount: number;
+
+  /**
+   * Info: (20260902 - Julian) 自提勞退**費率的百分點**（0–6），不是金額也不是 0.06 那個小數。
+   * 轉換一律走 `lib/utils/salary_pension_rate.ts`，理由見該檔與 schema 註解。
+   */
+  voluntaryPensionRate: number;
+
+  /**
+   * Info: (20260902 - Julian) 到職／離職日，Unix 秒，**完整日期**不是「當月第幾號」。
+   * 計算機那兩個欄位（`isJoined` + `dayOfJoining`）由 `deriveJoinLeave` 依選定年月推導。
+   */
+  hireDate: number | null;
+  resignDate: number | null;
+}
+
 // Info: (20260831 - Julian) 輕量員工。id 是 uuid
-export interface ISalaryCalculatorEmployee {
+export interface ISalaryCalculatorEmployee extends ISalaryEmployeeProfile {
   id: string;
   name: string;
   number: string;
   email: string;
-  baseSalary: number;
-  mealAllowance: number;
 }
 
 /**
  * Info: (20260831 - Julian) 新增／編輯員工的輸入。
  *
  * `number` 是身分（帳本內唯一），因此必填；`email` 只在寄薪資單時才需要，可省略。
+ *
+ * Info: (20260902 - Julian) 常態屬性整組必填 —— 少一欄就會落到 schema 的 `@default`，
+ * 而那是靜默的：使用者在計算機設好 14 個欄位、按「直接新增員工」，
+ * 建出來的檔卻是預設值，下個月選他就把設定洗掉。要「不改這一欄」的呼叫端
+ * 應該把讀到的現值原樣帶回來，而不是省略它。
  */
-export interface ISalaryCalculatorEmployeeWriteInput {
+export interface ISalaryCalculatorEmployeeWriteInput extends ISalaryEmployeeProfile {
   name: string;
   number: string;
   email?: string;
-  baseSalary: number;
-  mealAllowance: number;
 }
 
 /**
@@ -55,6 +110,29 @@ export interface ISalaryRecordSummary {
   calculatorVersion: string;
   createdAt: number;
   updatedAt: number;
+  /**
+   * Info: (20260904 - Julian) 最近一次**成功**寄出的時間（Unix 秒）。`null` = 從未成功寄出。
+   *
+   * ## 為什麼由伺服器算，不由前端對照
+   *
+   * 薪資紀錄列表要在每一列顯示「已寄出／未寄出」。看似可以拿整本帳的寄送清單
+   * （`GET salary_calculator/delivery`）在前端 index 起來比對 —— 但那一支有
+   * 200 筆上限且是全帳本新的在前，於是一本累積久了的帳，**舊紀錄會靜靜地
+   * 顯示成「未寄出」**。使用者看到那個字會再寄一次，而對方已經收過了。
+   *
+   * 錯的答案長得跟對的一樣，所以只能在有完整資料的那一側算。
+   *
+   * ## 為什麼是「成功」寄出
+   *
+   * 失敗的列存在是為了稽核（計畫書 §2.1），但對方什麼都沒收到 ——
+   * 那一列不該讓畫面顯示「已寄出」。
+   */
+  lastSentAt: number | null;
+  /**
+   * Info: (20260904 - Julian) 最近一次成功寄出的收件信箱（當初的快照）。
+   * 與 `lastSentAt` 同進同出：有時間就有信箱。
+   */
+  lastSentTo: string | null;
 }
 
 // Info: (20260831 - Julian) 單筆詳細，含快照，供「載回計算機」與檢視薪資單

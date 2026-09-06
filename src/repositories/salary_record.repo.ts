@@ -1,5 +1,6 @@
 import { Prisma, SalaryCalculatorEmployee, SalaryRecord } from "@/generated";
 import { prisma } from "@/lib/prisma";
+import { SALARY_DELIVERY_STATUS } from "@/constants/salary_delivery";
 import { MoneyUtil } from "@/lib/utils/money";
 import {
   ISalaryCalculatorOptions,
@@ -35,6 +36,17 @@ export interface ISalaryRecordRepository {
   listRecords(
     options: ISalaryRecordQueryOptions,
   ): Promise<ISalaryRecordPageResult>;
+  /**
+   * Info: (20260904 - Julian) 依 id 取多筆完整紀錄（CSV 匯出）。
+   *
+   * 與 `getRecordById` 一樣以 `accountBookId` 為 where 的第一個 key ——
+   * 匯出是**一次讀走多筆**，租戶過濾在這裡漏掉的後果比單筆嚴重得多。
+   * 回傳順序與傳入的 id 無關，由呼叫端決定要不要排序。
+   */
+  listRecordsByIds(
+    accountBookId: string,
+    recordIds: readonly string[],
+  ): Promise<ISalaryRecordDetail[]>;
   getRecordById(
     accountBookId: string,
     recordId: string,
@@ -48,6 +60,13 @@ export interface ISalaryRecordRepository {
 
 type SalaryRecordWithEmployee = SalaryRecord & {
   employee: SalaryCalculatorEmployee;
+  /**
+   * Info: (20260904 - Julian) 最近一次成功寄送，0 或 1 筆（查詢端已 `take: 1`）。
+   *
+   * 型別寫成陣列而不是可選的單一物件，是因為 Prisma 的關聯就是陣列 ——
+   * 在型別上假裝它是單數，只會讓 `toSummary` 那一行的取法與實際回傳對不上。
+   */
+  paySlipDeliveries: { createdAt: Date; recipientEmail: string }[];
 };
 
 // Info: (20260831 - Julian) BigInt → number（薪資是整數元），統一走 MoneyUtil
@@ -80,6 +99,28 @@ const toJsonSnapshot = (value: object): Prisma.InputJsonValue =>
 const fromJsonSnapshot = <T>(value: Prisma.JsonValue): T =>
   value as unknown as T;
 
+/**
+ * Info: (20260904 - Julian) 每一筆紀錄最近一次**成功**的寄送。
+ *
+ * 用關聯的 `take: 1` 而不是先撈紀錄再逐筆查寄送：後者是 N+1，
+ * 一頁 20 列就是 21 次查詢。這一段由資料庫在同一次查詢裡完成。
+ *
+ * **三個 include 站點都要帶上它。** 少帶一個的話，那條路徑回來的
+ * `lastSentAt` 會是 `null` —— 而 `null` 的意思是「從未寄出」，
+ * 不是「這次沒問」。兩者在型別上長得一模一樣，而畫面會照著它寫字。
+ */
+const LAST_SENT_INCLUDE = {
+  where: { status: SALARY_DELIVERY_STATUS.SENT },
+  orderBy: { createdAt: "desc" },
+  take: 1,
+  select: { createdAt: true, recipientEmail: true },
+} as const;
+
+const RECORD_INCLUDE = {
+  employee: true,
+  paySlipDeliveries: LAST_SENT_INCLUDE,
+} as const;
+
 const toSummary = (row: SalaryRecordWithEmployee): ISalaryRecordSummary => ({
   id: row.id,
   year: row.year,
@@ -95,6 +136,11 @@ const toSummary = (row: SalaryRecordWithEmployee): ISalaryRecordSummary => ({
   calculatorVersion: row.calculatorVersion,
   createdAt: toUnixSeconds(row.createdAt),
   updatedAt: toUnixSeconds(row.updatedAt),
+  // Info: (20260904 - Julian) 關聯已在查詢時限定 SENT 且只取一筆，這裡取的就是「最近一次成功」
+  lastSentAt: row.paySlipDeliveries[0]
+    ? toUnixSeconds(row.paySlipDeliveries[0].createdAt)
+    : null,
+  lastSentTo: row.paySlipDeliveries[0]?.recipientEmail ?? null,
 });
 
 const toDetail = (row: SalaryRecordWithEmployee): ISalaryRecordDetail => ({
@@ -194,7 +240,7 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
       },
       // Info: (20260831 - Julian) 覆寫時不改 createdByUserId：那一欄記的是這筆紀錄的來源，不是最後動它的人
       update: snapshot,
-      include: { employee: true },
+      include: RECORD_INCLUDE,
     });
 
     return toDetail(row);
@@ -209,7 +255,7 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
     const [rows, totalCount, periodRows] = await Promise.all([
       prisma.salaryRecord.findMany({
         where,
-        include: { employee: true },
+        include: RECORD_INCLUDE,
         orderBy: [{ year: "desc" }, { month: "desc" }, { createdAt: "desc" }],
         skip,
         take: options.pageSize,
@@ -238,13 +284,30 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
     };
   }
 
+  public async listRecordsByIds(
+    accountBookId: string,
+    recordIds: readonly string[],
+  ): Promise<ISalaryRecordDetail[]> {
+    // Info: (20260904 - Julian) 空清單不打資料庫 —— `in: []` 是合法查詢，但它是一次白跑
+    if (recordIds.length === 0) return [];
+
+    const rows = await prisma.salaryRecord.findMany({
+      // Info: (20260904 - Julian) 租戶過濾永遠是 where 的第一個 key
+      where: { accountBookId, id: { in: [...recordIds] } },
+      include: RECORD_INCLUDE,
+      orderBy: [{ year: "desc" }, { month: "desc" }, { createdAt: "desc" }],
+    });
+
+    return rows.map(toDetail);
+  }
+
   public async getRecordById(
     accountBookId: string,
     recordId: string,
   ): Promise<ISalaryRecordDetail | null> {
     const row = await prisma.salaryRecord.findFirst({
       where: { accountBookId, id: recordId },
-      include: { employee: true },
+      include: RECORD_INCLUDE,
     });
 
     return row ? toDetail(row) : null;
