@@ -24,6 +24,10 @@ import { SALARY_COVERAGE_MAX_SCAN_MONTHS } from "@/constants/salary_coverage";
  * 離職之後、到職之前、留職停薪期間。少扣任何一種都是誤報，而誤報的提示
  * 比沒有提示更糟 —— 使用者會拿它去推理（#6742 的教訓）。
  *
+ * 三種都以**月**為單位，而判準是同一條：**那個月有沒有上班日**。
+ * 到職月、離職月、留停起月、復職月都有上班日，所以四者都照算 ——
+ * 不滿月的薪水仍然是薪水。
+ *
  * ## 為什麼是純函式
  *
  * 本專案的測試不 render React。逐月展開、跨年、到職當月、離職當月、
@@ -122,13 +126,44 @@ export const missingSalaryPeriods = (
   const covered = new Set(input.existing.map(toOrdinal));
 
   /**
-   * Info: (20260905 - Luphia) 留職停薪的區間也要扣掉。
-   * `leaveEndDate` 為 null = 還沒復職，扣到範圍的終點為止。
+   * Info: (20260905 - Luphia) 留職停薪的區間也要扣掉，而**起訖當月照算**。
+   *
+   * ## 規則只有一條：那個月有沒有上班日
+   *
+   * 這與到職月、離職月是同一條規則 —— 8/20 到職的人八月有薪水（12 天），
+   * 8/20 離職的人八月也有薪水（20 天）。8/20 起留停的人，八月上了 19 天班，
+   * 一樣該有一張八月的薪資單。
+   *
+   * 這一段原本寫成 `>= leaveStart && <= leaveEnd`，把起訖兩個月整月扣掉
+   * （review 阻-1）。後果是**漏報**：中途留停的人，起訖兩個月各有一次
+   * 漏建薪資單不會被標示的機會 —— 而那正是這個功能存在的理由。
+   *
+   * ## 兩端各差一個月，理由不同
+   *
+   * - **起日**：`leaveStartDate` 是留停的第一天。不是 1 號的話，那個月
+   *   前面幾天他還在上班 —— 從**下個月**才開始扣。
+   * - **復職日**：`leaveEndDate` 是回來上班的第一天（欄位標籤就是「復職日」），
+   *   所以那個月一定有上班日，一律扣到**前一個月**為止。
+   *
+   * 兩者相減之後 `leaveStart > leaveEnd` 是完全正常的狀態，代表
+   * 「整段留停都落在同一個月裡」（例如 8/5 留停、8/20 復職）——
+   * 那個月八月照樣要有薪資單，`onLeave` 對每一個月都回 false，正是要的結果。
    */
+  const dayOfMonth = (unixSeconds: number): number =>
+    new Date(unixSeconds * 1000).getUTCDate();
+
   const leaveStart =
-    input.leaveStartDate === null ? null : ordinalOf(input.leaveStartDate);
+    input.leaveStartDate === null
+      ? null
+      : ordinalOf(input.leaveStartDate) +
+        (dayOfMonth(input.leaveStartDate) > 1 ? 1 : 0);
+
+  /**
+   * Info: (20260905 - Luphia) `null` = 還沒復職 —— 扣到範圍的終點為止。
+   * 這與「復職日在未來」不同：後者有日期，照樣是 `復職月 - 1`。
+   */
   const leaveEnd =
-    input.leaveEndDate === null ? end : ordinalOf(input.leaveEndDate);
+    input.leaveEndDate === null ? end : ordinalOf(input.leaveEndDate) - 1;
 
   const onLeave = (ordinal: number): boolean =>
     leaveStart !== null && ordinal >= leaveStart && ordinal <= leaveEnd;

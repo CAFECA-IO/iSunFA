@@ -86,7 +86,8 @@ export const calculator = {
     date_order_error: "离职日不得早于到职日",
     leave_start_date: "停薪留职起日",
     leave_end_date: "复职日",
-    leave_hint: "停薪留职期间的月份不会被算成缺工资单；尚未复职就留空。",
+    leave_hint:
+      "停薪留职：完整落在这段区间里的月份不会被算成缺工资单。起日填停薪第一天、复职日填回来上班的第一天 —— 这两个月仍会计入，因为那个月有上班日。尚未复职就留空。",
     leave_order_error: "复职日不得早于停薪留职起日",
     leave_start_required: "请一并填写停薪留职起日",
     main_title: "员工列表",

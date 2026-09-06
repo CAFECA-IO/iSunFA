@@ -87,7 +87,7 @@ export const calculator = {
     leave_start_date: "Leave start date",
     leave_end_date: "Return-to-work date",
     leave_hint:
-      "Leave without pay: months in this range are not expected to have a pay slip. Leave the return date empty if the employee has not returned yet.",
+      "Leave without pay: months fully inside this range are not expected to have a pay slip. Enter the first day of leave and the first day back at work — those two months still count, because the employee worked part of them. Leave the return date empty if they have not returned yet.",
     leave_order_error:
       "Return-to-work date cannot be earlier than the leave start date",
     leave_start_required: "Enter the leave start date as well",

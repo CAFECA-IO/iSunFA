@@ -107,8 +107,9 @@ describe("三種「本來就不該有」要扣掉", () => {
     const missing = missingSalaryPeriods({
       ...base,
       hireDate: utc(2026, 3, 1),
+      // Info: (20260905 - Luphia) 5/1 起留停、8/1 復職 → 5、6、7 三個整月都沒有上班日
       leaveStartDate: utc(2026, 5, 1),
-      leaveEndDate: utc(2026, 7, 31),
+      leaveEndDate: utc(2026, 8, 1),
       existing: periodsOf([2026, 3], [2026, 4], [2026, 8]),
     });
 
@@ -116,8 +117,120 @@ describe("三種「本來就不該有」要扣掉", () => {
   });
 
   /**
+   * Info: (20260905 - Luphia) **起訖當月照算**（review 阻-1）。
+   *
+   * 判準與到職月、離職月是同一條：那個月有沒有上班日。
+   * 8/20 起留停的人八月上了 19 天班、10/5 復職的人十月上了 27 天班，
+   * 兩個月都該有薪資單。
+   *
+   * 這一條與下面兩條是**唯一**能區分兩種語意的判準：前一版的實作把
+   * 起訖兩個月整月扣掉，而所有留停測試都用月初／月底對齊的日期，
+   * 於是把實作改成哪一種都不會紅（tz 99 條 + service 22 條全綠）。
+   */
+  it("月中起留停 → 那個月仍要算（他上了 19 天班）", () => {
+    expect(
+      missingSalaryPeriods({
+        ...base,
+        hireDate: utc(2026, 3, 1),
+        leaveStartDate: utc(2026, 8, 20),
+        existing: periodsOf(
+          [2026, 3],
+          [2026, 4],
+          [2026, 5],
+          [2026, 6],
+          [2026, 7],
+        ),
+      }),
+    ).toEqual(periodsOf([2026, 8]));
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 復職月同理。`leaveEndDate` 是**回來上班的第一天**
+   *（欄位標籤就是「復職日」），所以那個月一定有上班日 —— 一律扣到前一個月為止。
+   */
+  it("月中復職 → 那個月仍要算", () => {
+    expect(
+      missingSalaryPeriods({
+        ...base,
+        hireDate: utc(2026, 3, 1),
+        leaveStartDate: utc(2026, 5, 1),
+        leaveEndDate: utc(2026, 8, 5),
+        existing: periodsOf([2026, 3], [2026, 4]),
+      }),
+    ).toEqual(periodsOf([2026, 8]));
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 整段留停落在同一個月裡 —— 那個月照樣要有薪資單。
+   *
+   * 這是上面兩條相減之後 `leaveStart > leaveEnd` 的情況，而它是正常狀態
+   * 不是壞掉：8/5 留停、8/20 復職的人，八月前 4 天與後 12 天都在上班。
+   */
+  it("留停與復職在同一個月內 → 那個月不被扣掉", () => {
+    expect(
+      missingSalaryPeriods({
+        ...base,
+        hireDate: utc(2026, 3, 1),
+        leaveStartDate: utc(2026, 8, 5),
+        leaveEndDate: utc(2026, 8, 20),
+        existing: periodsOf(
+          [2026, 3],
+          [2026, 4],
+          [2026, 5],
+          [2026, 6],
+          [2026, 7],
+        ),
+      }),
+    ).toEqual(periodsOf([2026, 8]));
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 對照組：同一個 8/20，換成離職日與到職日。
+   *
+   * 三者的答案必須一致 —— 不一致就是規則分岔了，而分岔的那一邊會是靜默的。
+   */
+  it("8/20 起留停、8/20 離職、8/20 到職：八月都要算", () => {
+    const august = periodsOf([2026, 8]);
+    const before = periodsOf(
+      [2026, 3],
+      [2026, 4],
+      [2026, 5],
+      [2026, 6],
+      [2026, 7],
+    );
+
+    expect(
+      missingSalaryPeriods({
+        ...base,
+        hireDate: utc(2026, 3, 1),
+        leaveStartDate: utc(2026, 8, 20),
+        existing: before,
+      }),
+    ).toEqual(august);
+
+    expect(
+      missingSalaryPeriods({
+        ...base,
+        hireDate: utc(2026, 3, 1),
+        resignDate: utc(2026, 8, 20),
+        existing: before,
+      }),
+    ).toEqual(august);
+
+    expect(
+      missingSalaryPeriods({
+        ...base,
+        hireDate: utc(2026, 8, 20),
+        existing: [],
+      }),
+    ).toEqual(august);
+  });
+
+  /**
    * Info: (20260905 - Luphia) `leaveEndDate` 為 null = 還沒復職。
    * 扣到範圍終點為止，否則「留職停薪中」的人每個月都會多一筆缺漏。
+   *
+   * 這與「復職日填在未來」不同 —— 後者有日期，照樣是「復職月的前一個月」為止。
    */
   it("還沒復職 → 從留停起算到最後都不算", () => {
     expect(
