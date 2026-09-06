@@ -294,7 +294,12 @@ describe("計算機頁的寄出按鈕", () => {
   });
 
   it("寄出專屬的兩種原因各有各的文案", () => {
-    const reasons = ["send_disabled_unsaved", "send_disabled_no_email"];
+    const reasons = [
+      "send_disabled_unsaved",
+      "send_disabled_no_email",
+      // Info: (20260906 - Luphia) 「沒有連到員工」的專屬理由（review #6776 應修-B）
+      "send_disabled_unlinked",
+    ];
 
     /**
      * Info: (20260905 - Luphia) `send_disabled_unsaved` 仍在元件裡（它問的是
@@ -303,6 +308,7 @@ describe("計算機頁的寄出按鈕", () => {
      */
     expect(source).toContain(reasons[0]);
     expect(sendTargetSource).toContain(reasons[1]);
+    expect(sendTargetSource).toContain(reasons[2]);
     expect(new Set(reasons).size).toBe(reasons.length);
   });
 

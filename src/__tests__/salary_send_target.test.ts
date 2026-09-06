@@ -33,7 +33,7 @@ const listOf = (employees: ISalaryCalculatorEmployee[]) => ({
   hasError: false,
 });
 
-describe("resolveSendTarget 的四個分支", () => {
+describe("resolveSendTarget 的五個分支", () => {
   it("有信箱 → 回信箱，不擋", () => {
     const result = resolveSendTarget("e-1", listOf([employeeOf()]));
 
@@ -87,10 +87,41 @@ describe("resolveSendTarget 的四個分支", () => {
     );
   });
 
-  it("還沒選人 → 擋下", () => {
-    expect(
-      resolveSendTarget(null, listOf([employeeOf()])).email,
-    ).toBeUndefined();
+  /**
+   * Info: (20260906 - Luphia) 沒有連到員工**有自己的理由**（review #6776 應修-B）。
+   *
+   * 初版只驗了「擋下來」（`email` 是 undefined），沒驗理由 —— 於是把它改成
+   * 回「沒有電子郵件」或「已從名單移除」都照樣綠，而畫面上那句話是使用者
+   * 唯一的線索。四種理由的下一步完全不同，那正是這支回 key 不回布林的理由。
+   */
+  it("沒有連到員工 → 擋下並說「請重新選擇員工」", () => {
+    const result = resolveSendTarget(null, listOf([employeeOf()]));
+
+    expect(result.email).toBeUndefined();
+    expect(result.blockedReason).toBe(
+      "calculator.button.send_disabled_unlinked",
+    );
+  });
+
+  /**
+   * Info: (20260906 - Luphia) 四種理由兩兩不同 —— 任兩種塌成同一句，
+   * 使用者就會被送去做一件解決不了問題的事。
+   */
+  it("四種理由沒有任何兩種撞在一起", () => {
+    const reasons = [
+      resolveSendTarget(null, listOf([employeeOf()])).blockedReason,
+      resolveSendTarget("e-1", {
+        employees: [],
+        isLoading: true,
+        hasError: false,
+      }).blockedReason,
+      resolveSendTarget("e-9", listOf([employeeOf()])).blockedReason,
+      resolveSendTarget("e-1", listOf([employeeOf({ email: "" })]))
+        .blockedReason,
+    ];
+
+    expect(reasons.every((reason) => reason !== undefined)).toBe(true);
+    expect(new Set(reasons).size).toBe(4);
   });
 });
 
