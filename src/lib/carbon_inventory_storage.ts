@@ -22,6 +22,30 @@ export interface ILoadedInventoryState {
   accountBookId: string | null;
 }
 
+/**
+ * Info: (20260904 - Emily) 這一版的盤查狀態**存不進去** —— 有欄位不符合儲存格式。
+ *
+ * 形狀沿用 `CarbonDraftTooLargeError`(具名錯誤 + 型別守衛),理由相同:
+ * 呼叫端要能把這種失敗與版本衝突分開處置,而自由字串做不到。
+ *
+ * `paths` 只帶**欄位路徑與 zod 的錯誤碼,不帶值** —— 載荷是使用者的盤查資料,
+ * 與 report_pdf route 的 schema 拒絕分支同一個立場(「只記路徑與代碼,不記值」)。
+ */
+export class InventoryStateUnsavableError extends Error {
+  readonly paths: ReadonlyArray<string>;
+
+  constructor(paths: ReadonlyArray<string>) {
+    super(`carbon inventory state failed its own schema: ${paths.join(", ")}`);
+    this.name = "InventoryStateUnsavableError";
+    this.paths = paths;
+  }
+}
+
+export const isInventoryStateUnsavableError = (
+  error: unknown,
+): error is InventoryStateUnsavableError =>
+  error instanceof InventoryStateUnsavableError;
+
 const INVENTORY_STATE_API = "/api/v1/chat/carbon/inventory";
 
 // Info: (20260716 - Tzuhan) 三態: null = 無記錄(版本 0 可首存);state null = 有記錄但不可讀(版本仍真實)
@@ -86,6 +110,45 @@ export const saveInventoryState = async (
   // Info: (20260803 - Tzuhan) 加密模式沒有金鑰就無從加密,必須在這裡失敗而不是送出空密文
   if (!accountBookId && !masterKey) {
     throw new Error("masterKey is required for encrypted mode");
+  }
+  /**
+   * Info: (20260904 - Emily) **寫路徑也過 schema**(`issue_drafts/open/73`)。
+   *
+   * ## 為什麼:兩端原本不對稱,而不對稱的代價是整份消失
+   *
+   *     save: JSON.stringify(state)                     ← 原本完全不驗
+   *     load: parsed.success ? parsed.data : null       ← 驗,失敗就整份丟
+   *
+   * 於是一個超界的欄位值(例如手滑打成 `1024` 的盤查年度、或一則超過上限的
+   * 阻擋原因)**存得進去**,而下一次載入 `safeParse` 失敗 → `loadInventoryState`
+   * 回 `state: null` → **整份盤查狀態(帳本、活動數據、待補項、年度快照)一起被丟棄**。
+   *
+   * 而盤查狀態**沒有本機備份**(本檔零個 localStorage;報告草稿那邊有
+   * `saveLocalDraftBackup`,這邊沒有)—— 也就是沒有任何副本可以救回來。
+   *
+   * 驗在這裡,那件事就變成**存檔當下的一句錯誤**:狀態還在記憶體裡、畫面上看得到,
+   * 而使用者知道這一版沒有進去。實際案例:PR #6725 review 阻-2(年度 `1024`)。
+   *
+   * ## 它抓得到的只有一半,說清楚
+   *
+   * `safeParse` 抓的是**已宣告欄位的超界值**。**未宣告的鍵** zod 預設剝掉、
+   * `safeParse` 會**成功** —— 那一半(「型別加了、schema 沒加」)仍然只有
+   * `carbon_inventory_state_persistence.test.ts` 的 round-trip 守得到。
+   * 兩個守衛管的是不同的洞,不要以為有了這個就不需要那個。
+   *
+   * ## 為什麼存原件而不是存 `parsed.data`
+   *
+   * 存 `parsed.data` 會把「未宣告鍵的遺失」從「下次載入」提前到「這次存檔」——
+   * 那不是修好,是加速。驗完存原件:通過的內容與原本送出的**位元完全相同**,
+   * 這一段因此不改變任何既有行為,只是多一道會說話的閘。
+   */
+  const validated = CarbonInventoryStateSchema.safeParse(state);
+  if (!validated.success) {
+    throw new InventoryStateUnsavableError(
+      validated.error.issues
+        .slice(0, 10)
+        .map((issue) => `${issue.path.join(".") || "(root)"}:${issue.code}`),
+    );
   }
   const serialized = JSON.stringify(state);
   const body = accountBookId

@@ -325,3 +325,24 @@ export const RATE_LIMIT_RULES: Record<RateLimitBucketEnum, IRateLimitWindow[]> =
 // Info: (20260716 - Emily) 記憶體防護:追蹤 key 數上限與清掃節奏(lazy sweep,無常駐 timer)
 export const RATE_LIMIT_MAX_TRACKED_KEYS = 50_000;
 export const RATE_LIMIT_SWEEP_EVERY_N_CHECKS = 1_000;
+
+/**
+ * Info: (20260904 - Emily) 某個 bucket 的「分鐘窗口」推出來的**最小發出間隔**(#6744)。
+ *
+ * 用戶端要自我節流時用這個,而不是自己寫一個 5000:間隔的唯一來源是這張規則表,
+ * 規則調了間隔跟著變。
+ *
+ * **界(誠實寫出)**:用戶端在瀏覽器裡執行,`envInt` 讀不到伺服端的 env 覆寫,
+ * 所以推出來的是**預設值**的間隔。伺服端把上限調高時,用戶端只是多保守;
+ * 調低時仍會撞 429 —— 那一層由 `Retry-After` 退避接住。兩層互補,不是重複。
+ *
+ * 沒有分鐘窗口的 bucket 回 0(不節流)。
+ */
+export const minIntervalMsFor = (bucket: RateLimitBucketEnum): number => {
+  const perMinute = RATE_LIMIT_RULES[bucket].find(
+    (window) => window.windowMs === MINUTE_MS,
+  );
+  return perMinute && perMinute.max > 0
+    ? Math.ceil(MINUTE_MS / perMinute.max)
+    : 0;
+};
