@@ -23,14 +23,39 @@ function notifyUnauthorized(): void {
 export class ApiError extends Error {
   public status: number;
   public data: unknown;
+  /**
+   * Info: (20260904 - Emily) 429 的 `Retry-After` 表頭(秒),沒有就是 undefined(#6744)。
+   *
+   * 伺服端限流器把退避秒數**只放在表頭**(`enforceRateLimit` 的 jsonFail 不帶 payload),
+   * 而這裡原本只保留 body —— 於是用戶端知道自己被限流,卻不知道要等多久,
+   * 只能猜或立刻重撞。有了它,匯入的驅動器才能真的 honor 伺服端算好的那個數字。
+   */
+  public retryAfterSeconds?: number;
 
-  constructor(message: string, status: number, data?: unknown) {
+  constructor(
+    message: string,
+    status: number,
+    data?: unknown,
+    retryAfterSeconds?: number,
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.data = data;
+    this.retryAfterSeconds = retryAfterSeconds;
   }
 }
+
+/**
+ * Info: (20260904 - Emily) 解析 `Retry-After`。只收「秒數」那種寫法;
+ * HTTP 也允許 HTTP-date,但我們的限流器只發秒數(`rate_limiter.ts`),
+ * 收到解析不了的值就當沒有 —— 不猜。
+ */
+const parseRetryAfterSeconds = (header: string | null): number | undefined => {
+  if (header === null) return undefined;
+  const seconds = Number.parseInt(header, 10);
+  return Number.isFinite(seconds) && seconds >= 0 ? seconds : undefined;
+};
 
 interface IRequestOptions extends RequestInit {
   query?: Record<string, string | number | boolean | undefined>;
@@ -123,6 +148,7 @@ export async function request<T = unknown>(
         errorData?.message || response.statusText || "Request failed",
         response.status,
         data,
+        parseRetryAfterSeconds(response.headers.get("Retry-After")),
       );
     }
 

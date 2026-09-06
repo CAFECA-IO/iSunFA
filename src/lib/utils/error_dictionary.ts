@@ -1761,6 +1761,35 @@ export const API_ERRORS = {
     status: ApiCode.VALIDATION_ERROR,
   } as IErrorDef,
 
+  /**
+   * Info: (20260904 - Emily) 段落草稿裡出現無法溯源的排放量數字,草稿不得落地(#6745)。
+   *
+   * 與 IS_PARAGRAPH_DRAFT_FAILED 分開一碼:那個是「生成壞了,可以重試」,
+   * 這個是「生成成功但產物不可信」—— 重試同一個 prompt 大概率再編一次,
+   * 呼叫端要能分辨才能決定降級語意(對話路徑標 degraded、/draft 路徑回給使用者說明)。
+   *
+   * 取 86。**原本取 85,而那個依據在同步 develop 之前就過期了**(2026-09-06 review):
+   * 09-04 掃的時候 develop 最大 VA000083、VA000084 在 PR #6754 上,於是取 85;
+   * 而 develop 之後併入薪資那條線,VA000084 與 VA000085 都被拿走 ——
+   * `VA000085` 於是同時是 `VA_SALARY_EXPORT_TOO_MANY` 與本鍵。
+   *
+   * 兩筆插在檔案的不同位置,所以 **git 合併不報衝突、TypeScript 也不報錯**
+   *(`API_ERRORS` 以鍵索引,兩個鍵並存合法),只有對外的 code 字串撞在一起 ——
+   * 前端照 errorCode 分流的話,「薪資匯出筆數過多」與「草稿含無法溯源的排放量」
+   * 會走進同一條處置,而後者是不准落地的內容紅線。
+   * 撞號由同檔的 `error_dictionary_codes.test.ts` 接住,但它是**合併之後**才紅。
+   *
+   * 這是本檔第二次踩同一件事(見 VA_FRAMEWORK_COMPLIANCE_CLAIM 那則的第一次),
+   * 而兩次的成因相同:**取碼依據會過期,而過期不會亮紅燈**。
+   * 2026-09-06 同步 develop 後重掃:全分支(含未合入)VA 最大 VA000085,86 起全空。
+   */
+  VA_DRAFT_QUANTITY_UNSOURCED: {
+    code: "VA000086",
+    message:
+      "the paragraph draft asserts emission quantities that cannot be traced to the ledger facts; the draft was not saved",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
   VA_OVERTIME_NOT_APPROVED: {
     code: "VA000080",
     message:
