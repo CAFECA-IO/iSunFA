@@ -13,6 +13,7 @@ import {
 import { squeezeForMatch } from "@/lib/utils/squeeze_for_match";
 import {
   CarbonFrameworkClaimExitEnum,
+  carbonShellPaperSlots,
   composeCarbonPaperText,
   gateFrameworkClaims,
 } from "@/lib/utils/carbon_framework_claim_gate";
@@ -318,6 +319,17 @@ export class CarbonReportPdfService {
        * 才第一次有訊號可讀 —— 那正是那兩格 basis 寫的觸發條件。
        */
       shellClaims: claims,
+      /*
+       * Info: (20260906 - Luphia) 外殼其餘會上紙的自由字串(review 阻-1)。
+       *
+       * `brand`／`internalDocument`／`systemReport`／`issuedAt`／`footerTitle`／
+       * `footerText`／`tocTitle` 七個都收在 `CarbonReportShellSchema`、都印在紙上,
+       * 而頁首頁尾那幾個是**逐頁重複**的 —— 在此之前它們一個都沒被審。
+       * 用泛型走訪不逐欄位列舉,理由見 `carbonShellPaperSlots`。
+       */
+      shellStrings: carbonShellPaperSlots(
+        input.shell as Readonly<Record<string, unknown>> | undefined,
+      ),
     });
     const { blocked, warned } = gateFrameworkClaims(
       paperText,

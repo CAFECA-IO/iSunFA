@@ -4,6 +4,7 @@ import { MoneyUtil } from "@/lib/utils/money";
 import {
   ISalaryCalculatorEmployee,
   ISalaryCalculatorEmployeeWriteInput,
+  ISalaryEmployeeProfile,
 } from "@/interfaces/salary_record";
 import {
   activeNumberFor,
@@ -21,7 +22,7 @@ import {
  */
 export interface ISalaryCalculatorEmployeeRepository {
   listEmployees(accountBookId: string): Promise<ISalaryCalculatorEmployee[]>;
-  getEmployeeById(
+  getActiveEmployeeById(
     accountBookId: string,
     employeeId: string,
   ): Promise<ISalaryCalculatorEmployee | null>;
@@ -72,6 +73,64 @@ const isUniqueViolation = (error: unknown): boolean =>
 const toAmount = (value: bigint): number =>
   MoneyUtil.toDecimal(value.toString()).toNumber();
 
+// Info: (20260902 - Julian) DateTime → Unix 秒（沿用 IVoucher 的前端時間戳慣例），null 原樣帶出
+const toUnixSecondsOrNull = (value: Date | null): number | null =>
+  value === null ? null : Math.floor(value.getTime() / 1000);
+
+// Info: (20260902 - Julian) Unix 秒 → DateTime。null 是「沒有這個日期」，不是 1970
+const toDateOrNull = (value: number | null): Date | null =>
+  value === null ? null : new Date(value * 1000);
+
+/**
+ * Info: (20260902 - Julian) 員工檔的常態屬性 → 前端格式。
+ *
+ * 與 `toWriteData` 成對維護：這 15 欄任何一邊漏接，症狀都是
+ * 「選了員工，某一欄沒被帶進計算機」—— 而畫面上那一欄會是計算機的預設值，
+ * 看起來完全正常。`ISalaryEmployeeProfile` 是把兩邊綁在一起的型別。
+ */
+const toProfile = (row: SalaryCalculatorEmployee): ISalaryEmployeeProfile => ({
+  baseSalary: toAmount(row.baseSalary),
+  mealAllowance: toAmount(row.mealAllowance),
+  otherAllowanceTaxable: toAmount(row.otherAllowanceTaxable),
+  otherAllowanceTaxFree: toAmount(row.otherAllowanceTaxFree),
+  industryCode: row.industryCode,
+  isForeignWorker: row.isForeignWorker,
+  employmentType: row.employmentType,
+  baseSalary30Days: row.baseSalary30Days,
+  isLaborInsured: row.isLaborInsured,
+  isHealthInsured: row.isHealthInsured,
+  isPensionInsured: row.isPensionInsured,
+  dependentsCount: row.dependentsCount,
+  // Info: (20260902 - Julian) 落地是百分點整數，前端也是百分點整數；轉小數是 UI 那一層的事
+  voluntaryPensionRate: row.voluntaryPensionRate,
+  hireDate: toUnixSecondsOrNull(row.hireDate),
+  resignDate: toUnixSecondsOrNull(row.resignDate),
+});
+
+// Info: (20260902 - Julian) 寫入方向。與 toProfile 成對，理由見該函式
+const toWriteData = (input: ISalaryCalculatorEmployeeWriteInput) => ({
+  baseSalary: BigInt(input.baseSalary),
+  mealAllowance: BigInt(input.mealAllowance),
+  otherAllowanceTaxable: BigInt(input.otherAllowanceTaxable),
+  otherAllowanceTaxFree: BigInt(input.otherAllowanceTaxFree),
+  industryCode: input.industryCode,
+  isForeignWorker: input.isForeignWorker,
+  employmentType: input.employmentType,
+  baseSalary30Days: input.baseSalary30Days,
+  isLaborInsured: input.isLaborInsured,
+  isHealthInsured: input.isHealthInsured,
+  isPensionInsured: input.isPensionInsured,
+  dependentsCount: input.dependentsCount,
+  /**
+   * Info: (20260902 - Julian) **不是 BigInt。** 這一欄是費率的百分點（0–6）。
+   * 寫成 `BigInt(input.voluntaryPensionRate)` 在型別上會過（它是 number），
+   * 但 schema 那一欄是 Int —— Prisma 會在執行期才抱怨，而且訊息不會提到「費率」。
+   */
+  voluntaryPensionRate: input.voluntaryPensionRate,
+  hireDate: toDateOrNull(input.hireDate),
+  resignDate: toDateOrNull(input.resignDate),
+});
+
 const toFrontendFormat = (
   row: SalaryCalculatorEmployee,
 ): ISalaryCalculatorEmployee => ({
@@ -81,8 +140,7 @@ const toFrontendFormat = (
   number: row.number,
   // Info: (20260831 - Julian) Email 可空，null 打平成空字串（沿用 IVoucher.note 的既有慣例）
   email: row.email ?? "",
-  baseSalary: toAmount(row.baseSalary),
-  mealAllowance: toAmount(row.mealAllowance),
+  ...toProfile(row),
 });
 
 export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmployeeRepository {
@@ -97,7 +155,27 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
     return rows.map(toFrontendFormat);
   }
 
-  public async getEmployeeById(
+  /**
+   * Info: (20260905 - Luphia) 名稱說出承諾：**存活中**的員工（review #6769）。
+   *
+   * 原名 `getEmployeeById` 沒有講出 `deletedAt: null` 這一半，於是
+   * 「為什麼要濾軟刪除」變成一件要讀實作才知道的事 —— 而讀不到的人
+   * 想放寬顯示範圍時，最順手的動作是把那個條件拿掉。
+   *
+   * 它今天的兩個呼叫端都是**動作**路徑：
+   *
+   * - `saveRecord`：替已移除的員工建立新的薪資紀錄
+   * - `deliver`：把薪資單 PDF 寄給已經離開的人
+   *
+   * 兩者都不該對已刪除的員工成立，所以這一支恆濾。要列出含已刪除的
+   * 員工（歷史清單之類）請另開一支 `findEmployeeById`，不要放寬這一支 ——
+   * 放寬的話上面兩件事會一起靜靜變成可能，而畫面上看不出來。
+   *
+   * `accountBookId` 是**授權**不是識別：`employeeId` 是 uuid 主鍵，
+   * 拿它就找得到列；帶帳本才讓「別人家的員工」變成查無此人。
+   * `saveRecord` 的 `employeeId` 來自 request body，所以這一層是走得到的。
+   */
+  public async getActiveEmployeeById(
     accountBookId: string,
     employeeId: string,
   ): Promise<ISalaryCalculatorEmployee | null> {
@@ -121,8 +199,7 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
       number: input.number,
       email: input.email ?? null,
       activeNumber: activeNumberFor(input.number, null),
-      baseSalary: BigInt(input.baseSalary),
-      mealAllowance: BigInt(input.mealAllowance),
+      ...toWriteData(input),
     };
 
     assertActiveNumberPairing({
@@ -159,13 +236,26 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
      * 不是真的要寫進去的值 —— 那種斷言在寫入被改壞時照樣通過。
      * `createEmployee` 一直是這樣做的，這裡與軟刪除是後來才對齊的。
      */
+    /**
+     * Info: (20260902 - Julian) `...toWriteData(input)` 曾經在這裡被 merge 靜默吃掉。
+     *
+     * 20260902 把 develop 併進來時，這一段被 `9dc404ff0`（把斷言接到真正的寫入）
+     * 整塊取代，而那一版是在 15 個常態屬性落地**之前**寫的 ——
+     * 於是編輯員工只寫得進姓名、編號、Email 與兩個金額，
+     * 行業別、投保狀態、扶養人數、自提比例、到離職日全部原地不動。
+     *
+     * 症狀完全靜默：`updateEmployee` 回傳的是重新查出來的那一列，所以畫面
+     * 「更新成功」；使用者要等到下次打開員工表單才發現剛才改的東西沒進去。
+     * 抓到它的是 `salary_repo.e2e.test.ts` 的「更新會把 15 欄一起改掉」——
+     * 而那一支只在 CI 的獨立步驟跑。`salary_repo_scope.test.ts` 現在也守著
+     * 交給資料庫的 `data`，那一支在預設套件裡。
+     */
     const data = {
       name: input.name,
       number: input.number,
       email: input.email ?? null,
       activeNumber: activeNumberFor(input.number, null),
-      baseSalary: BigInt(input.baseSalary),
-      mealAllowance: BigInt(input.mealAllowance),
+      ...toWriteData(input),
     };
 
     assertActiveNumberPairing({
@@ -187,7 +277,7 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
 
       if (result.count === 0) return null;
 
-      return await this.getEmployeeById(accountBookId, employeeId);
+      return await this.getActiveEmployeeById(accountBookId, employeeId);
     } catch (error) {
       if (isUniqueViolation(error)) {
         throw new SalaryEmployeeNumberTakenError(input.number);

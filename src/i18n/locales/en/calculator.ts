@@ -27,6 +27,7 @@ export const calculator = {
     tax_residency_status: "Tax Residency Status",
     residency_option_taiwan: "Taiwan Resident",
     residency_option_non_taiwan: "Non-Taiwan Resident",
+    date_from_employee: "From employee record",
     industry_category: "Industry Category",
     year: "Year",
     month: "Month",
@@ -67,6 +68,22 @@ export const calculator = {
     voluntary_pension_contribution: "Voluntary Pension Contribution",
   },
   employee_list: {
+    issue_name_required: "Enter the employee name under Identity",
+    issue_number_required: "Enter the employee number under Identity",
+    issue_base_salary_required: "Enter the base salary under Pay",
+    section_identity: "Identity",
+    section_pay: "Pay",
+    section_insurance: "Insurance & pension",
+    section_other: "Other",
+    other_allowance_taxable: "Other allowance (taxable)",
+    other_allowance_tax_free: "Other allowance (tax-free)",
+    other_allowance_hint:
+      "This is the recurring monthly allowance. Enter one-off bonuses in the calculator instead — anything set here carries over to next month.",
+    voluntary_pension_rate: "Voluntary pension contribution",
+    employment_type: "Employment type",
+    hire_date: "Hire date",
+    resign_date: "Resignation date",
+    date_order_error: "Resignation date cannot be earlier than the hire date",
     main_title: "Employee List",
     name: "Employee Name",
     number: "Employee Number",
@@ -99,6 +116,12 @@ export const calculator = {
     remove_employee_content:
       "Are you sure you want to remove {{name}} from the employee list?",
     remove_employee_submit_btn: "Yes, Remove Employee",
+    no_email: "Not set",
+    missing_email_banner:
+      "{{count}} employees have no email address — their pay slips cannot be sent",
+    only_missing_email: "Show only these",
+    show_all: "Show all employees",
+    no_filter_result: "No employee matches the current filter",
   },
   result: {
     base_salary_with_tax: "Base Salary (Taxable)",
@@ -165,9 +188,17 @@ export const calculator = {
     content_2: "to",
     content_bold_2: " {{employeeName}} ?",
     email: "Email",
-    email_placeholder: "Please enter employee email",
-    invalid_email_hint: "Invalid email format, please check again.",
     submit: "Send Pay Slip",
+    email_from_profile: "From employee profile",
+    email_missing: "No email address on file",
+    sending: "Sending...",
+    error_no_email:
+      "This employee has no email address. Add one in the employee list first.",
+    error_not_configured:
+      "Email delivery is not set up yet. Please contact your system administrator.",
+    error_font_missing:
+      "The server is missing Chinese fonts, so the pay slip cannot be generated. Please contact your system administrator.",
+    error_generic: "Could not send the pay slip. Please try again in a moment.",
   },
   my_pay_slip: {
     main_title: "My Pay Slip",
@@ -183,6 +214,12 @@ export const calculator = {
     pay_slip: "Pay Slip",
     sent_on: "Sent On",
     all: "All",
+    employee: "Employee",
+    sent_by: "Sent by",
+    unknown_sender: "Unnamed",
+    sent_empty: "No pay slip has been sent from this account book yet",
+    sent_load_failed:
+      "Could not load the delivery history. Please refresh and try again",
   },
   // Info: (20260831 - Julian) Entry point from the public calculator to the account book one
   // Info: (20260831 - Julian) The employee link shown in Step 1 of the calculator
@@ -193,6 +230,18 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) Saving from the calculator page, plus its two exceptions
   save_record: {
+    profile_diff_title: "Update the employee record too?",
+    profile_diff_content:
+      'The calculator settings differ from the employee record for "{{name}}". Here is what changed:',
+    profile_diff_hint:
+      'This payroll record is saved with the calculator values either way. The question is only whether the employee record should change as well. Choose "Save this one only" to leave it untouched.',
+    profile_diff_update_btn: "Update employee and save",
+    profile_diff_skip_btn: "Save this one only",
+    profile_diff_failed:
+      "Could not update the employee. Please try again later.",
+    profile_value_on: "Yes",
+    profile_value_off: "No",
+    profile_value_none: "Not set",
     save: "Save payroll record",
     saving: "Saving…",
     saved: "Saved as {{name}}'s payroll record for {{month}}/{{year}}",
@@ -229,7 +278,7 @@ export const calculator = {
     employee: "Employee",
     net_pay: "Net pay",
     taxable: "Withholding statement",
-    action: "Action",
+    action: "Send/View/Recalculate/Delete",
     view: "View payslip",
     load_back: "Load into calculator",
     delete: "Delete",
@@ -259,6 +308,14 @@ export const calculator = {
       "Could not load the employee list. Loading a record into the calculator cannot link it to an employee right now.",
     load_back_unlinked:
       "This employee is no longer on the list. The name and number were filled in from this record, but no employee link was made — you will be asked who to save it for.",
+    delivery_status: "Delivery",
+    not_sent: "Not sent",
+    select_page: "Select all rows on this page",
+    select_row: "Select this record",
+    selected_count: "{{count}} selected",
+    export_csv: "Export CSV",
+    export_too_many: "At most {{max}} records per export — deselect some first",
+    export_failed: "Export failed. Please try again in a moment.",
   },
   account_book_entry: {
     title: "Want to keep this calculation?",
@@ -277,6 +334,13 @@ export const calculator = {
     send: "Send Pay Slip",
     reset: "Reset",
     re_send: "Resend Pay Slip",
+    send_disabled_unsaved:
+      "Save the salary record first, then you can send the pay slip",
+    send_disabled_no_email:
+      "This employee has no email address — add one in the employee list first",
+    send_disabled_employee_gone:
+      "This employee is no longer on the list — the pay slip cannot be sent",
+    send_disabled_loading: "Checking the employee list...",
   },
   message: {
     name_error_title: "Employee’s Name is not Filled",

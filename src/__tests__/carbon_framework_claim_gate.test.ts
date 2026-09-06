@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { describe, it, expect } from "@jest/globals";
 import {
+  carbonShellPaperSlots,
   CARBON_FRAMEWORK_CLAIM_ROUTING,
   CarbonFrameworkClaimActionEnum,
   CarbonFrameworkClaimExitEnum,
@@ -426,13 +427,33 @@ describe("存檔出口的接線(掃描 —— hook 沒有 jsdom,行為由上一�
      *(AI 草稿、修訂、匯入、手動編輯)匯流成一次 PUT 的地方。
      * 接在它入口 = 一個判斷蓋住全部路徑;接在任何一個呼叫端 = 漏掉其他的。
      */
-    const guard = hook.indexOf(
-      "if (blockedByFrameworkClaim(channel, sessionId)) return;",
-    );
+    const guard = hook.indexOf("blockedByFrameworkClaim(");
     const enqueue = hook.indexOf("savingChannelsRef.current.add(channel);");
     expect(guard).toBeGreaterThan(-1);
     expect(enqueue).toBeGreaterThan(-1);
     expect(guard).toBeLessThan(enqueue);
+  });
+
+  /**
+   * Info: (20260906 - Luphia) **迴圈的每一輪都要審**(review 阻-2)。
+   *
+   * 那個迴圈的設計是「存完之後如果發現又改了,就把最新的再存一次」——
+   * 所以進迴圈前查一次擋不住第二輪:使用者在加密與雲端往返的那幾秒內
+   * 打進一句合規宣告,第一輪存乾淨版本通過,第二輪把它送上去,
+   * 而畫面照樣顯示「已儲存」。條 4 在這個出口是 BLOCK,而它被繞過了。
+   *
+   * 判準釘三件:守門收的是「要寫出去的那一版」而不是自己讀 ref、
+   * 迴圈內真的有一次、以及被擋而中止時不得落到 `setSaveStatus("saved")`。
+   */
+  it("存檔迴圈的每一輪都審過要寫出去的那一版(review 阻-2)", () => {
+    // Info: (20260906 - Luphia) 收要寫的那一版,不自己讀 ref —— 否則迴圈第二輪就漏掉
+    expect(hook).toContain(
+      "blockedByFrameworkClaim(inflight, channel, sessionId)",
+    );
+    // Info: (20260906 - Luphia) 反面:舊的自讀形狀回來就是缺陷本身
+    expect(hook).not.toContain("blockedByFrameworkClaim(channel, sessionId)");
+    // Info: (20260906 - Luphia) 被擋中止不得覆寫成 saved(守門已設 local)
+    expect(hook).toContain('if (!blockedMidway) setSaveStatus("saved");');
   });
 
   it("用的是 DRAFT_SAVE 出口(不是把 PDF 那格的分流套過來)", () => {
@@ -474,5 +495,96 @@ describe("存檔出口的接線(掃描 —— hook 沒有 jsdom,行為由上一�
       hook,
     );
     expect(statuses).toBe(true);
+  });
+});
+
+/**
+ * Info: (20260906 - Luphia) 外殼上每一個會上紙的字串都要進被審的文字
+ *(review 阻-1;產品決定:七個槽全部納入)。
+ *
+ * 在此之前閘門只審 markdown／title／footer／identity／shellClaims,
+ * 而外殼還印著 brand／internalDocument／systemReport／issuedAt／
+ * footerTitle／footerText／tocTitle —— 七個都是用戶端帶上來的自由字串,
+ * 而頁首頁尾那幾個是**逐頁重複印**的。
+ *
+ * 最日常的觸發不是手工請求:那七個值來自語系檔,把 `pdf_editor.footer_title`
+ * 改寫成一句合規宣告是**文案工作、不是程式改動**,而它會印在每一頁頁尾。
+ *
+ * ## 判準用哨兵值,不列清單
+ *
+ * 列一份「哪些槽要審」的清單會與 `CarbonReportShellSchema` 分岔 ——
+ * 這個 repo 這幾週已經有三次「清單短了」(見 `carbon_report_outline.test.ts` 檔頭)。
+ * 這一條餵一份**每個字串欄位都填不同哨兵**的外殼,斷言每個哨兵都出現在
+ * 被審的文字裡:**外殼新增欄位而忘記納入檢查,這條會紅**,不必有人記得更新清單。
+ */
+describe("外殼上會上紙的字串都進被審的文字(review 阻-1)", () => {
+  const SHELL = {
+    brand: "SENTINEL_BRAND",
+    internalDocument: "SENTINEL_BADGE",
+    systemReport: "SENTINEL_TAG",
+    issuedAt: "SENTINEL_ISSUED",
+    footerTitle: "SENTINEL_FOOTER_TITLE",
+    footerText: "SENTINEL_FOOTER_TEXT",
+    title: "SENTINEL_TITLE",
+    tocTitle: "SENTINEL_TOC",
+    logoDataUrl: "data:image/svg+xml;base64,SENTINEL_LOGO",
+    identity: [{ label: "SENTINEL_LABEL", value: "SENTINEL_VALUE" }],
+    claims: ["SENTINEL_CLAIM_A", "SENTINEL_CLAIM_B"],
+  };
+
+  it("每一個字串欄位的哨兵都出現在紙面文字裡", () => {
+    const paperText = composeCarbonPaperText({
+      markdown: "內文",
+      shellStrings: carbonShellPaperSlots(SHELL),
+    });
+    const sentinels = [
+      "SENTINEL_BRAND",
+      "SENTINEL_BADGE",
+      "SENTINEL_TAG",
+      "SENTINEL_ISSUED",
+      "SENTINEL_FOOTER_TITLE",
+      "SENTINEL_FOOTER_TEXT",
+      "SENTINEL_TITLE",
+      "SENTINEL_TOC",
+      "SENTINEL_LABEL",
+      "SENTINEL_VALUE",
+      "SENTINEL_CLAIM_A",
+      "SENTINEL_CLAIM_B",
+    ];
+    sentinels.forEach((sentinel) => {
+      expect(paperText).toContain(sentinel);
+    });
+  });
+
+  /**
+   * Info: (20260906 - Luphia) logo 明文排除:那是 data URL 不是紙上的文字,
+   * 把幾十 KB 的 base64 丟進判準只會製造機率性的誤判(而誤判的後果是印不出來)。
+   */
+  it("logo 的 data URL 不進紙面文字", () => {
+    const paperText = composeCarbonPaperText({
+      markdown: "內文",
+      shellStrings: carbonShellPaperSlots(SHELL),
+    });
+    expect(paperText).not.toContain("SENTINEL_LOGO");
+  });
+
+  /**
+   * Info: (20260906 - Luphia) 這一條是上面那條的配對:哨兵都在**不等於**
+   * 判準看得到它們 —— 槽與槽之間若熔成一句,反而會製造誤判。
+   * 所以再驗一次「塞在頁尾標語裡的合規宣告會被抓到」這件事本身。
+   */
+  it("塞在頁尾標語裡的合規宣告會被抓到(這一格原本是開的)", () => {
+    const paperText = composeCarbonPaperText({
+      markdown: "本報告依 ISO 14064-1 編製。",
+      shellStrings: carbonShellPaperSlots({
+        ...SHELL,
+        footerTitle: "本公司符合 IFRS S1 之各項規定",
+      }),
+    });
+    const { blocked } = gateFrameworkClaims(
+      paperText,
+      CarbonFrameworkClaimExitEnum.PDF_EXPORT,
+    );
+    expect(blocked.length).toBeGreaterThan(0);
   });
 });

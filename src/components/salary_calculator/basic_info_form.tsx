@@ -83,6 +83,18 @@ const BasicInfoForm: FC<IBasicInfoFormProps> = ({ accountBookId }) => {
     return day >= joiningDay;
   });
 
+  /**
+   * Info: (20260902 - Julian) 連結員工之後，到職／離職日改唯讀。
+   *
+   * 那兩個日期的來源是**員工檔**（`hireDate` / `resignDate`），不是這一次試算。
+   * 留成可改的話，畫面上會有兩種語意疊在同一格：「改這次試算」與「改這個人的到職日」，
+   * 而使用者無從分辨自己剛剛做了哪一件 —— 改完切個月份又跳回去，看起來像沒存到。
+   *
+   * **未連結時仍然可改**：公開版計算機沒有帳本、沒有員工檔，
+   * 無條件唯讀會讓那兩格永遠設不了，中途到職的試算就做不出來。
+   */
+  const isJoinLeaveLocked = selectedEmployeeId !== null;
+
   // Info: (20250711 - Julian) 員工列表開關
   const toggleEmployeeListModal = () =>
     setIsShowEmployeeListModal((prev) => !prev);
@@ -455,9 +467,21 @@ const BasicInfoForm: FC<IBasicInfoFormProps> = ({ accountBookId }) => {
           <ToggleSwitch
             isOn={isJoined}
             handleToggle={toggleJoined}
+            disabled={isJoinLeaveLocked}
             title={t("calculator.basic_info_form.joined_this_month_1")}
           />
-          {isJoined && (
+          {isJoined && isJoinLeaveLocked && (
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-bold text-gray-700">
+                {t("calculator.basic_info_form.joined_this_month_2")} {dateStr}
+                {dayOfJoining}
+              </p>
+              <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500">
+                {t("calculator.basic_info_form.date_from_employee")}
+              </span>
+            </div>
+          )}
+          {isJoined && !isJoinLeaveLocked && (
             <div className="flex items-center gap-2">
               <p className="text-sm font-bold text-gray-700">
                 {t("calculator.basic_info_form.joined_this_month_2")} {dateStr}
@@ -504,9 +528,21 @@ const BasicInfoForm: FC<IBasicInfoFormProps> = ({ accountBookId }) => {
           <ToggleSwitch
             isOn={isLeft}
             handleToggle={toggleLeft}
+            disabled={isJoinLeaveLocked}
             title={t("calculator.basic_info_form.left_this_month")}
           />
-          {isLeft && (
+          {isLeft && isJoinLeaveLocked && (
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-bold text-gray-700">
+                {t("calculator.basic_info_form.joined_this_month_2")} {dateStr}
+                {dayOfLeaving}
+              </p>
+              <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500">
+                {t("calculator.basic_info_form.date_from_employee")}
+              </span>
+            </div>
+          )}
+          {isLeft && !isJoinLeaveLocked && (
             <div className="flex items-center gap-2">
               <p className="text-sm font-bold text-gray-700">
                 {t("calculator.basic_info_form.joined_this_month_2")} {dateStr}

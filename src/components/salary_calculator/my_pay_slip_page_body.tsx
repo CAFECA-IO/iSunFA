@@ -15,7 +15,9 @@ import SalaryCalculatorShell from "@/components/salary_calculator/salary_calcula
 import ReceivedTab from "@/components/salary_calculator/pay_slip_received_tab";
 import SentTab from "@/components/salary_calculator/pay_slip_sent_tab";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
-import { dummyReceivedData, dummySentData } from "@/interfaces/pay_slip";
+import { dummyReceivedData } from "@/interfaces/pay_slip";
+import { useSalaryPaySlipDeliveries } from "@/hooks/use_salary_pay_slip_delivery";
+import { MONTHS } from "@/constants/month";
 import { SortOrder } from "@/constants/sort";
 import { timestampToString } from "@/lib/utils/common";
 
@@ -159,9 +161,27 @@ interface IMyPaySlipPageBodyProps {
 const MyPaySlipPageBody: FC<IMyPaySlipPageBodyProps> = ({ accountBookId }) => {
   const { t } = useTranslation();
 
-  // ToDo: (20260225 - Julian) should replace with real data
+  /**
+   * ToDo: (20260904 - Julian) 「我收到的薪資單」仍是假資料，本次不動。
+   *
+   * 它要成立需要先有「員工能登入本站」的概念 —— 而
+   * `SalaryCalculatorEmployee` 不是 `User`，沒有登入身分也沒有信箱驗證。
+   * 那是比薪資單寄送大得多的題目（計畫書 §10.6）。
+   */
   const receivedRecords = dummyReceivedData;
-  const sentRecords = dummySentData;
+
+  /**
+   * Info: (20260904 - Julian) 「我寄出的薪資單」接真資料。
+   *
+   * 只列寄成功的：失敗的列存在是為了稽核與診斷（計畫書 §2.1），
+   * 不是為了給使用者看 —— 這張表若混進沒寄成功的，使用者會以為對方收到了。
+   */
+  const {
+    sentDeliveries,
+    isLoading: isLoadingSent,
+    hasError: hasSentError,
+    reload: reloadSent,
+  } = useSalaryPaySlipDeliveries(accountBookId);
 
   const [currentTab, setCurrentTab] = useState<"received" | "sent">("received");
 
@@ -221,38 +241,53 @@ const MyPaySlipPageBody: FC<IMyPaySlipPageBodyProps> = ({ accountBookId }) => {
   ]);
 
   const filteredSortedSent = useMemo(() => {
-    let result = [...sentRecords];
+    let result = [...sentDeliveries];
 
-    // Info: (20260225 - Julian) 搜尋與篩選
+    /**
+     * Info: (20260904 - Julian) 期間改用 `(year, month)` 而不是時間戳。
+     *
+     * 假資料時代這一欄是 `payPeriod`（一個 unix 秒數），要靠
+     * `timestampToString` 轉回年月才比得了 —— 而那條路徑會受時區影響：
+     * 一個「2026 年 1 月」的期間在 UTC-8 的瀏覽器上可能被讀成 2025 年 12 月。
+     * 薪資紀錄的鍵本來就是年月而不是某一個時刻，真資料直接帶著它，
+     * 篩選與排序都不必再繞一次時間。
+     */
     if (selectedYear !== "All") {
-      result = result.filter(
-        (r) => timestampToString(r.payPeriod).year === selectedYear,
-      );
+      result = result.filter((d) => `${d.year}` === selectedYear);
     }
     if (selectedMonth !== "All") {
       result = result.filter(
-        (r) => timestampToString(r.payPeriod).monthName === selectedMonth,
+        (d) => MONTHS[d.month - 1]?.name === selectedMonth,
       );
     }
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter((r) => r.toEmail.toLowerCase().includes(query));
+      // Info: (20260904 - Julian) 信箱是當初的快照，同一個人換過信箱就搜不到 —— 姓名與編號也要能搜
+      result = result.filter(
+        (d) =>
+          d.recipientEmail.toLowerCase().includes(query) ||
+          d.employee.name.toLowerCase().includes(query) ||
+          d.employee.number.toLowerCase().includes(query),
+      );
     }
+
+    // Info: (20260904 - Julian) 年月合成一個可比大小的數字，跨年才排得對
+    const periodOf = (d: (typeof result)[number]) => d.year * 100 + d.month;
 
     // Info: (20260225 - Julian) 排序
     return result.sort((a, b) => {
       if (sentPayPeriodSortOrder === SortOrder.ASC)
-        return a.payPeriod - b.payPeriod;
+        return periodOf(a) - periodOf(b);
       if (sentPayPeriodSortOrder === SortOrder.DESC)
-        return b.payPeriod - a.payPeriod;
+        return periodOf(b) - periodOf(a);
       if (sentIssuedDateSortOrder === SortOrder.ASC)
-        return a.issuedDate - b.issuedDate;
+        return a.createdAt - b.createdAt;
       if (sentIssuedDateSortOrder === SortOrder.DESC)
-        return b.issuedDate - a.issuedDate;
+        return b.createdAt - a.createdAt;
       return 0;
     });
   }, [
-    sentRecords,
+    sentDeliveries,
     sentPayPeriodSortOrder,
     sentIssuedDateSortOrder,
     selectedYear,
@@ -318,11 +353,16 @@ const MyPaySlipPageBody: FC<IMyPaySlipPageBodyProps> = ({ accountBookId }) => {
             />
           ) : (
             <SentTab
-              sentRecords={filteredSortedSent}
+              accountBookId={accountBookId}
+              deliveries={filteredSortedSent}
+              isLoading={isLoadingSent}
+              hasError={hasSentError}
               payPeriodSortOrder={sentPayPeriodSortOrder}
               setPayPeriodSortOrder={setSentPayPeriodSortOrder}
               issuedDateSortOrder={sentIssuedDateSortOrder}
               setIssuedDateSortOrder={setSentIssuedDateSortOrder}
+              /* Info: (20260904 - Julian) 重寄成功之後重抓，新的那一列才會出現在這張表上 */
+              onResent={reloadSent}
             />
           )}
         </div>

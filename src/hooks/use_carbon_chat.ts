@@ -1268,8 +1268,26 @@ export const useCarbonChat = () => {
    * 而今天的成功路徑只 `setSaveStatus("saved")`、不清通知,那一版會在使用者改好之後留著。
    */
   const blockedByFrameworkClaim = useCallback(
-    (channel: string, sessionId: string): boolean => {
-      const pending = latestReportDataRef.current.get(channel);
+    (
+      pending: IReportData | undefined,
+      channel: string,
+      sessionId: string,
+    ): boolean => {
+      /**
+       * Info: (20260906 - Luphia) 收「**要寫出去的那一版**」,不自己讀 ref
+       *(review 阻-2)。
+       *
+       * 原本是進迴圈前讀一次 ref 查一次,而下面那個迴圈的設計是
+       * 「存完之後如果發現又改了,就把最新的再存一次」——
+       * 於是第二輪之後寫上雲端的是**守門沒看過的版本**。
+       *
+       * 觸發不需要任何巧合:自動存檔要加密再送雲端,那幾秒內繼續打字是常態。
+       * 第一輪存乾淨版本、通過;第二輪把含宣告的版本送上去,而畫面照樣顯示
+       * 「已儲存」——沒有通知、沒有 log。條 4 在這個出口是 BLOCK,理由是
+       * 「主體合規宣告永遠禁止上紙」,而那個 BLOCK 在一個常見時序下被繞過。
+       *
+       * 改成由呼叫端把「這一輪要寫什麼」交進來,判斷就跟著那個選擇走。
+       */
       if (!pending) return false;
       /*
        * Info: (20260904 - Emily) 四個槽怎麼取、為什麼,住在 `composeReportDraftPaperText`
@@ -1324,12 +1342,38 @@ export const useCarbonChat = () => {
       accountBookId: string | null,
     ): Promise<void> => {
       if (savingChannelsRef.current.has(channel)) return;
-      if (blockedByFrameworkClaim(channel, sessionId)) return;
+      /*
+       * Info: (20260906 - Luphia) 前置檢查留著只為了「不要先閃一下 saving 再變 local」——
+       * 真正把洞補起來的是下面迴圈裡那一次(review 阻-2)。
+       */
+      if (
+        blockedByFrameworkClaim(
+          latestReportDataRef.current.get(channel),
+          channel,
+          sessionId,
+        )
+      ) {
+        return;
+      }
       savingChannelsRef.current.add(channel);
       setSaveStatus("saving");
       try {
         let inflight = latestReportDataRef.current.get(channel);
+        /*
+         * Info: (20260906 - Luphia) 被擋而中止時**不得**落到下面的
+         * `setSaveStatus("saved")` —— 守門已經把它設成 "local"(僅暫存本機)。
+         */
+        let blockedMidway = false;
         while (inflight) {
+          /*
+           * Info: (20260906 - Luphia) **每一輪都審**(review 阻-2)。
+           * 這個迴圈會把「存檔期間又改出來的最新版」再送一次,
+           * 而那一版沒有經過進迴圈前那次檢查。判斷要跟著「這一輪要寫什麼」走。
+           */
+          if (blockedByFrameworkClaim(inflight, channel, sessionId)) {
+            blockedMidway = true;
+            break;
+          }
           const expectedVersion = draftVersionsRef.current.get(channel) ?? 0;
           // Info: (20260716 - Tzuhan) #52 帳本會話走明文保存(模型 A);個人會話維持 E2EE
           const newVersion = await saveReportDraft(
@@ -1354,7 +1398,7 @@ export const useCarbonChat = () => {
           if (latest === inflight) break;
           inflight = latest;
         }
-        setSaveStatus("saved");
+        if (!blockedMidway) setSaveStatus("saved");
       } catch (error) {
         /**
          * Info: (20260807 - Emily) 保存失敗必須說得出**是哪一種**失敗,而不是共用一個小圖示。

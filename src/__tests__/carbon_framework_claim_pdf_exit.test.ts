@@ -100,6 +100,50 @@ describe("PDF 出口:紙面出現主體合規宣告就不出門", () => {
     expect(getPrintBrowserMock).not.toHaveBeenCalled();
   });
 
+  /**
+   * Info: (20260906 - Luphia) 頁尾標語裡的宣告也要被擋(review 阻-1)。
+   *
+   * 這一格原本是開的:閘門審 markdown／title／footer／identity／shellClaims 五格,
+   * 而外殼還印著 brand／internalDocument／systemReport／issuedAt／footerTitle／
+   * footerText／tocTitle —— 七個都是用戶端帶上來的自由字串,而頁首頁尾那幾個
+   * 是**逐頁重複印**的。正文出現一次,頁尾每一頁都有。
+   *
+   * 最日常的觸發不是手工請求:那七個值來自語系檔,把 `pdf_editor.footer_title`
+   * 改寫成一句合規宣告是**文案工作、不是程式改動**。
+   *
+   * 這條是**行為**測試不是掃描:`composeCarbonPaperText` 支援那些槽是一回事,
+   * 「PDF 出口真的把它們帶進去」是另一回事 —— 第一版只有前者,
+   * 而把 `shellStrings:` 那一行從服務裡拿掉,所有測試照樣全綠(§1.7)。
+   */
+  it("塞在頁尾標語的宣告一樣被擋(逐頁重複印,而它原本沒被審)", async () => {
+    const service = new CarbonReportPdfService();
+    await expect(
+      service.generate({
+        markdown: CLEAN_MARKDOWN,
+        fileName: "report.pdf",
+        shell: shell({
+          footerTitle: "本公司符合 IFRS S1 之各項規定",
+        }),
+      }),
+    ).rejects.toMatchObject({
+      code: API_ERRORS.VA_FRAMEWORK_COMPLIANCE_CLAIM.code,
+    });
+    expect(getPrintBrowserMock).not.toHaveBeenCalled();
+  });
+
+  it("塞在頁首品牌字的宣告一樣被擋", async () => {
+    const service = new CarbonReportPdfService();
+    await expect(
+      service.generate({
+        markdown: CLEAN_MARKDOWN,
+        fileName: "report.pdf",
+        shell: shell({ brand: "本公司遵循 IFRS S1" }),
+      }),
+    ).rejects.toMatchObject({
+      code: API_ERRORS.VA_FRAMEWORK_COMPLIANCE_CLAIM.code,
+    });
+  });
+
   it("被印到頁尾的下載檔名也在審的範圍內", async () => {
     /**
      * Info: (20260903 - Emily) 頁尾印的是 `input.title ?? input.fileName` ——

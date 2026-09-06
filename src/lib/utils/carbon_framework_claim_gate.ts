@@ -211,7 +211,53 @@ export interface ICarbonPaperTextParts {
    * #6688-C 把印出點做出來之後由伺服端從常數組出來填進這裡。
    */
   shellClaims?: ReadonlyArray<string>;
+  /**
+   * Info: (20260906 - Luphia) 文件外殼上**其餘所有會印在紙上的自由字串**
+   *(review 阻-1;產品決定:七個槽全部納入檢查)。
+   *
+   * 在此之前閘門只審 markdown／title／footer／identity/shellClaims 五格,
+   * 而外殼還印著 brand／internalDocument／systemReport／issuedAt／
+   * footerTitle／footerText／tocTitle —— 七個都收在 `CarbonReportShellSchema`、
+   * 都是用戶端帶上來的自由字串,而且頁首頁尾那幾個是**逐頁重複印**的。
+   *
+   * 檔頭那句「什麼上紙就審什麼」因此曾經不成立。最日常的觸發不是有人手工打 API:
+   * 那七個值來自語系檔,把 `pdf_editor.footer_title` 改寫成一句合規宣告是
+   * **文案工作、不是程式改動**,而它會印在每一頁的頁尾。
+   *
+   * 由 `carbonShellPaperSlots` 泛型走訪產出,不在這裡逐欄位列舉 —— 理由見那支。
+   */
+  shellStrings?: ReadonlyArray<string>;
 }
+
+/**
+ * Info: (20260906 - Luphia) 把文件外殼攤成「會上紙的字串」清單(review 阻-1)。
+ *
+ * **泛型走訪而不是逐欄位列舉。** 列舉一份「哪些槽要審」的清單,它會與
+ * `CarbonReportShellSchema` 分岔 —— 而這個 repo 這幾週已經有三次「清單短了」
+ *(見 `carbon_report_outline.test.ts` 檔頭記的三次)。走訪則是:外殼多一個
+ * 字串欄位,它自動被審;而「自動被審」正是這一格要的性質。
+ *
+ * 兩種形狀都收:字串本身,以及字串陣列/物件陣列(identity 的 label/value、
+ * claims 的兩行)。`logoDataUrl` 明文排除 —— 那是 data URL 不是紙上的文字,
+ * 把幾十 KB 的 base64 丟進判準只會製造機率性的誤判。
+ */
+export const carbonShellPaperSlots = (
+  shell: Readonly<Record<string, unknown>> | undefined,
+): string[] => {
+  if (shell === undefined) return [];
+  return Object.entries(shell).flatMap(([key, value]) => {
+    if (key === "logoDataUrl") return [];
+    if (typeof value === "string") return [value];
+    if (!Array.isArray(value)) return [];
+    return value.flatMap((row) => {
+      if (typeof row === "string") return [row];
+      if (row === null || typeof row !== "object") return [];
+      return Object.values(row as Record<string, unknown>).filter(
+        (field): field is string => typeof field === "string",
+      );
+    });
+  });
+};
 
 /**
  * Info: (20260903 - Emily) 槽與槽之間用**句界**分隔,不是換行。
@@ -242,6 +288,8 @@ export const composeCarbonPaperText = (parts: ICarbonPaperTextParts): string =>
      */
     ...(parts.identity ?? []).flatMap((row) => [row.label, row.value]),
     ...(parts.shellClaims ?? []),
+    // Info: (20260906 - Luphia) 外殼其餘的自由字串(review 阻-1);各自成槽,理由同上
+    ...(parts.shellStrings ?? []),
   ]
     .filter((line) => line.length > 0)
     .join(PAPER_SLOT_SEPARATOR);
