@@ -253,16 +253,40 @@ describe("三種「本來就不該有」要扣掉", () => {
 describe("上限", () => {
   /**
    * Info: (20260905 - Luphia) 超過上限**回空**，不是回一個截斷的清單。
-   * 「缺這 120 個月」既沒用也不對，而那多半代表到職日填錯了。
+   * 「缺這 600 個月」既沒用也不對，而那多半代表到職日填錯了。
+   *
+   * Info: (20260906 - Luphia) 上限從 120（十年）放寬到 600（五十年）。
+   * 十年年資在台灣一點都不罕見，而超過上限的人是**完全不標示**的 ——
+   * 所以這裡拿來當「離譜」的樣本改成 1900 年，那才是真的填錯。
    */
   it("到職日離譜地早 → 不下結論", () => {
     expect(
       missingSalaryPeriods({
         ...base,
-        hireDate: utc(1990, 1, 1),
+        hireDate: utc(1900, 1, 1),
         existing: [],
       }),
     ).toEqual([]);
+  });
+
+  /**
+   * Info: (20260906 - Luphia) **十年年資的人算得出來**（review #6777 應修-2）。
+   *
+   * 這一條釘住的是那次放寬本身：上限退回 120 的話，一位十五年前到職的
+   * 資深同仁會回空陣列 —— 畫面完全不標示，而且沒有任何地方說得出為什麼。
+   * 那是一個以「什麼都沒發生」表現的失效。
+   */
+  it("十五年年資的員工仍然算得出來", () => {
+    const hire = new Date(NOW);
+    hire.setUTCFullYear(hire.getUTCFullYear() - 15);
+
+    expect(
+      missingSalaryPeriods({
+        ...base,
+        hireDate: hire.getTime() / 1000,
+        existing: [],
+      }).length,
+    ).toBeGreaterThan(120);
   });
 
   it("剛好在上限內仍然算得出來", () => {
@@ -277,6 +301,25 @@ describe("上限", () => {
     });
 
     expect(missing).toHaveLength(months);
+  });
+
+  /**
+   * Info: (20260906 - Luphia) 上限外一個月就不下結論 —— 邊界兩側各釘一條。
+   * 只釘「剛好在內」的話，把判斷寫成 `>=` 或 `>` 都不會紅。
+   */
+  it("超出上限一個月就回空", () => {
+    const start = new Date(NOW);
+    start.setUTCMonth(
+      start.getUTCMonth() - SALARY_COVERAGE_MAX_SCAN_MONTHS - 1,
+    );
+
+    expect(
+      missingSalaryPeriods({
+        ...base,
+        hireDate: start.getTime() / 1000,
+        existing: [],
+      }),
+    ).toEqual([]);
   });
 });
 

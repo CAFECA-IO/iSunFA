@@ -128,6 +128,9 @@ export const calculator = {
     missing_records_more: "{{periods}} 等 {{count}} 个月",
     missing_records_banner: "{{count}} 位员工有月份没有工资单记录",
     only_missing_records: "只看这几位",
+    missing_hire_date_banner:
+      "{{count}} 位员工没有到职日，补上之后才看得出他们缺哪几个月的工资单",
+    only_missing_hire_date: "只看这几位",
     show_all: "显示全部员工",
     no_filter_result: "没有符合目前条件的员工",
   },

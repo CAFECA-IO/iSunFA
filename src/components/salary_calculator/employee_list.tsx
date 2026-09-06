@@ -18,6 +18,7 @@ import { useSalaryEmployees } from "@/hooks/use_salary_employees";
 import { ISalaryCalculatorEmployee } from "@/interfaces/salary_record";
 import {
   countMissingEmail,
+  countMissingHireDate,
   countMissingRecords,
   filterEmployees,
   formatMissingPeriods,
@@ -227,6 +228,9 @@ const EmployeeList: FC<IEmployeeListProps> = ({
   const [onlyMissingEmail, setOnlyMissingEmail] = useState<boolean>(false);
   // Info: (20260905 - Luphia) 只看有薪資單缺漏的人（#6774）。與上面那個各自獨立
   const [onlyMissingRecords, setOnlyMissingRecords] = useState<boolean>(false);
+  // Info: (20260906 - Luphia) 只看沒有到職日的人 —— 上游的問題，見下方橫幅
+  const [onlyMissingHireDate, setOnlyMissingHireDate] =
+    useState<boolean>(false);
   const {
     employees,
     isLoading,
@@ -254,9 +258,11 @@ const EmployeeList: FC<IEmployeeListProps> = ({
     keyword,
     onlyMissingEmail,
     onlyMissingRecords,
+    onlyMissingHireDate,
   });
   const missingEmailCount = countMissingEmail(employees);
   const missingRecordsCount = countMissingRecords(employees);
+  const missingHireDateCount = countMissingHireDate(employees);
 
   const changeKeyword = (e: ChangeEvent<HTMLInputElement>) =>
     setKeyword(e.target.value);
@@ -327,8 +333,9 @@ const EmployeeList: FC<IEmployeeListProps> = ({
             onClick={() => {
               clearKeyword();
               setOnlyMissingEmail(false);
-              // Info: (20260905 - Luphia) 兩個條件都要清，否則按了還是篩不到（#6774）
+              // Info: (20260905 - Luphia) 條件都要清，否則按了還是篩不到（#6774）
               setOnlyMissingRecords(false);
+              setOnlyMissingHireDate(false);
             }}
             className="text-text-brand-primary-lv1 text-sm font-semibold underline"
           >
@@ -410,6 +417,44 @@ const EmployeeList: FC<IEmployeeListProps> = ({
             {onlyMissingEmail
               ? t("calculator.employee_list.show_all")
               : t("calculator.employee_list.only_missing_email")}
+          </button>
+        </div>
+      )}
+
+      {/**
+       * Info: (20260906 - Luphia) 沒有到職日的提示（#6774）。**整頁版才有。**
+       *
+       * ## 為什麼這一條非有不可
+       *
+       * 完整度是從到職日往後推的，沒有到職日就算不出來 —— 而算不出來時
+       * 這一頁**什麼都不顯示**，與「大家都很完整」長得一模一樣。
+       *
+       * `hire_date` 是 20260902 才加的可空欄位、沒有回填，所以既有帳本的
+       * 員工全部是空的。少了這一條，功能上線那天使用者打開這一頁看到一片
+       * 空白，結論會是「這功能沒做」或「我們資料很完整」—— 兩個都不對。
+       *
+       * 「不知道就不要說」是對的，但要補上另外半句：**說出為什麼不知道**。
+       *
+       * ## 排在缺薪資單那條的上面
+       *
+       * 兩者是一前一後不是兩種看法：這些人補完到職日之後，才可能出現在
+       * 下面那一條裡。順序反過來的話，使用者會先去處理一份還不完整的名單。
+       */}
+      {withEmail && hasAnyEmployee && missingHireDateCount > 0 && (
+        <div className="mx-[24px] mb-[16px] flex shrink-0 flex-col gap-[8px] rounded-lg border border-sky-200 bg-sky-50 px-[16px] py-[10px] md:flex-row md:items-center">
+          <p className="flex-1 text-sm font-medium text-sky-800">
+            {t("calculator.employee_list.missing_hire_date_banner", {
+              count: missingHireDateCount,
+            })}
+          </p>
+          <button
+            type="button"
+            onClick={() => setOnlyMissingHireDate((prev) => !prev)}
+            className="shrink-0 text-sm font-semibold text-sky-800 underline underline-offset-2 hover:text-sky-900"
+          >
+            {onlyMissingHireDate
+              ? t("calculator.employee_list.show_all")
+              : t("calculator.employee_list.only_missing_hire_date")}
           </button>
         </div>
       )}

@@ -1,11 +1,13 @@
 import { describe, it, expect } from "@jest/globals";
 import {
   countMissingEmail,
+  countMissingHireDate,
   countMissingRecords,
   filterEmployees,
   formatMissingPeriods,
   hasMissingPeriods,
   hasNoEmail,
+  hasNoHireDate,
 } from "@/lib/utils/salary_employee_filter";
 import { ISalaryPeriod } from "@/lib/utils/salary_coverage";
 
@@ -22,7 +24,11 @@ interface IRosterEntry {
   number: string;
   email: string;
   missingPeriods: ISalaryPeriod[];
+  hireDate: number | null;
 }
+
+// Info: (20260906 - Luphia) 2026-03-01 UTC。有沒有值才是重點，是哪一天不影響這一檔
+const HIRE_DATE = Math.floor(Date.UTC(2026, 2, 1) / 1000);
 
 const employee = (
   name: string,
@@ -30,27 +36,32 @@ const employee = (
   email: string,
   // Info: (20260905 - Luphia) 預設沒有缺漏；要驗警示的名單自己帶（#6774）
   missingPeriods: ISalaryPeriod[] = [],
+  // Info: (20260906 - Luphia) 預設**有**到職日；沒有到職日是要另外指定的例外
+  hireDate: number | null = HIRE_DATE,
 ): IRosterEntry => ({
   name,
   number,
   email,
   missingPeriods,
+  hireDate,
 });
 
 const ROSTER = [
   employee("王小明", "A001", "ming@example.com", [{ year: 2026, month: 6 }]),
-  employee("Lin Ada", "A002", ""),
+  // Info: (20260906 - Luphia) 舊資料的形狀：到職日是空的（那一欄 20260902 才加）
+  employee("Lin Ada", "A002", "", [], null),
   employee("陳大文", "B010", "   ", [
     { year: 2025, month: 11 },
     { year: 2026, month: 1 },
   ]),
-  employee("李小美", "b011", "mei@example.com"),
+  employee("李小美", "b011", "mei@example.com", [], null),
 ];
 
 const NO_FILTER = {
   keyword: "",
   onlyMissingEmail: false,
   onlyMissingRecords: false,
+  onlyMissingHireDate: false,
 };
 
 describe("hasNoEmail", () => {
@@ -325,5 +336,84 @@ describe("formatMissingPeriods", () => {
 
   it("空陣列給空字串", () => {
     expect(formatMissingPeriods([])).toEqual({ text: "", restCount: 0 });
+  });
+});
+
+/**
+ * Info: (20260906 - Luphia) 「沒有到職日」是**上游**的問題（#6774）。
+ *
+ * 沒有到職日就算不出完整度，而算不出來時 `missingPeriods` 是空陣列 ——
+ * 與「真的沒有缺漏」長得一模一樣。`hire_date` 是 20260902 才加的可空欄位、
+ * 沒有回填腳本，所以既有帳本的員工全部是 null：這個功能上線那天，
+ * 畫面上會是一片空白，而使用者的結論會是「這功能沒做」或「我們資料很完整」。
+ */
+describe("hasNoHireDate", () => {
+  it("null 就是沒有", () => {
+    expect(hasNoHireDate({ hireDate: null })).toBe(true);
+  });
+
+  /**
+   * Info: (20260906 - Luphia) **0 不算沒有。**
+   *
+   * 0 在 Unix 秒是 1970-01-01 —— 那是一個（離譜但）確實存在的日期，
+   * 與「這一欄沒有值」是兩件事。寫成 `!employee.hireDate` 會把兩者
+   * 判成同一種，而那個人會被歸到「請補到職日」，補了也還是那樣。
+   */
+  it("0 是 1970-01-01，不是「沒有」", () => {
+    expect(hasNoHireDate({ hireDate: 0 })).toBe(false);
+  });
+
+  it("有值就是有", () => {
+    expect(hasNoHireDate({ hireDate: HIRE_DATE })).toBe(false);
+  });
+});
+
+describe("countMissingHireDate", () => {
+  it("數出沒有到職日的人數", () => {
+    expect(countMissingHireDate(ROSTER)).toBe(2);
+  });
+
+  it("全部都有就是 0", () => {
+    expect(countMissingHireDate([ROSTER[0], ROSTER[2]])).toBe(0);
+  });
+
+  it("空名單是 0", () => {
+    expect(countMissingHireDate([])).toBe(0);
+  });
+});
+
+describe("只看沒有到職日", () => {
+  it("只留下沒有到職日的那些", () => {
+    const result = filterEmployees(ROSTER, {
+      ...NO_FILTER,
+      onlyMissingHireDate: true,
+    });
+    expect(result.map((e) => e.number)).toEqual(["A002", "b011"]);
+  });
+
+  /**
+   * Info: (20260906 - Luphia) 與「只看缺薪資單」是**且**，而兩者的交集
+   * 恆為空 —— 沒有到職日的人算不出缺漏，所以永遠不會有 `missingPeriods`。
+   *
+   * 這一條把那件事寫下來：交集為空不是巧合，是「算不出來就不下結論」
+   * 這個選擇的直接後果。兩個篩選是一前一後，不是兩種看法。
+   */
+  it("與只看缺薪資單同時打開會是空的 —— 兩者本來就不重疊", () => {
+    expect(
+      filterEmployees(ROSTER, {
+        ...NO_FILTER,
+        onlyMissingRecords: true,
+        onlyMissingHireDate: true,
+      }),
+    ).toEqual([]);
+  });
+
+  it("與關鍵字同時生效", () => {
+    const result = filterEmployees(ROSTER, {
+      ...NO_FILTER,
+      keyword: "Ada",
+      onlyMissingHireDate: true,
+    });
+    expect(result.map((e) => e.number)).toEqual(["A002"]);
   });
 });

@@ -130,6 +130,9 @@ export const calculator = {
     missing_records_banner:
       "{{count}}명의 직원에게 급여명세서가 없는 달이 있습니다",
     only_missing_records: "이 직원만 보기",
+    missing_hire_date_banner:
+      "{{count}}명의 직원에게 입사일이 없습니다. 입력하면 어느 달의 급여명세서가 누락되었는지 확인할 수 있습니다",
+    only_missing_hire_date: "이 직원만 보기",
     show_all: "전체 보기",
     no_filter_result: "조건에 맞는 직원이 없습니다",
   },

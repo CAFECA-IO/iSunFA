@@ -217,10 +217,38 @@ describe("薪資紀錄缺漏的標示", () => {
    * 只關掉其中一個的話，使用者按了「清除」卻還是篩不到人 ——
    * 而畫面上已經沒有任何東西指出還有一個條件開著。
    */
-  it("清除搜尋把兩個篩選都關掉", () => {
+  it("清除搜尋把每一個篩選都關掉", () => {
     const clear = listComponent.slice(listComponent.indexOf("clearKeyword();"));
-    expect(clear.slice(0, 200)).toContain("setOnlyMissingEmail(false)");
-    expect(clear.slice(0, 200)).toContain("setOnlyMissingRecords(false)");
+    expect(clear.slice(0, 260)).toContain("setOnlyMissingEmail(false)");
+    expect(clear.slice(0, 260)).toContain("setOnlyMissingRecords(false)");
+    expect(clear.slice(0, 260)).toContain("setOnlyMissingHireDate(false)");
+  });
+
+  /**
+   * Info: (20260906 - Luphia) 「沒有到職日」的提示（review #6777 應修-1）。
+   *
+   * 這一條守的是一個**以空白呈現**的失效：既有帳本的員工全部沒有到職日
+   *（那一欄 20260902 才加、沒有回填），於是完整度算不出來、畫面什麼都不顯示，
+   * 而那與「大家都很完整」長得一模一樣。把這段刪掉不會有任何測試變紅 ——
+   * 除了這一條。
+   */
+  it("沒有到職日的人數有講出來，而且給得起篩選", () => {
+    expect(listComponent).toContain("countMissingHireDate(employees)");
+    expect(listComponent).toContain("missing_hire_date_banner");
+    expect(listComponent).toContain("only_missing_hire_date");
+    expect(listComponent).toContain("setOnlyMissingHireDate");
+  });
+
+  /**
+   * Info: (20260906 - Luphia) 兩條橫幅的**順序**：到職日在前、缺薪資單在後。
+   *
+   * 兩者是一前一後不是兩種看法 —— 沒有到職日的人補完之後，才可能出現在
+   * 缺薪資單那一條裡。顛倒的話，使用者會先去處理一份還不完整的名單。
+   */
+  it("到職日的提示排在缺薪資單的提示之前", () => {
+    expect(listComponent.indexOf("missing_hire_date_banner")).toBeLessThan(
+      listComponent.indexOf("missing_records_banner"),
+    );
   });
 });
 

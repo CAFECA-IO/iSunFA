@@ -130,6 +130,9 @@ export const calculator = {
     missing_records_more: "{{periods}} ほか {{count}} か月",
     missing_records_banner: "{{count}} 名の従業員に給与明細のない月があります",
     only_missing_records: "この従業員のみ表示",
+    missing_hire_date_banner:
+      "{{count}} 名の従業員に入社日がありません。入力すると、どの月の給与明細が不足しているか確認できます",
+    only_missing_hire_date: "この従業員のみ表示",
     show_all: "すべて表示",
     no_filter_result: "条件に一致する従業員がいません",
   },

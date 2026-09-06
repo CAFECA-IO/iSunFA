@@ -132,6 +132,9 @@ export const calculator = {
     missing_records_banner:
       "{{count}} employee(s) have months with no pay slip on record",
     only_missing_records: "Show only these",
+    missing_hire_date_banner:
+      "{{count}} employee(s) have no hire date — coverage cannot be checked for them until it is filled in",
+    only_missing_hire_date: "Show only these",
     show_all: "Show all employees",
     no_filter_result: "No employee matches the current filter",
   },
