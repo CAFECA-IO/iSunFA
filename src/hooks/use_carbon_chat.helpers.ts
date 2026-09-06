@@ -104,11 +104,54 @@ export const getApiErrorCode = (error: unknown): string | null => {
   return data?.errorCode ?? null;
 };
 
+/**
+ * Info: (20260904 - Emily) 一次匯入單元失敗的**可記錄原因**(#6746 我們這半)。
+ *
+ * 章節失敗的 log 原本只印 chapterId 與 part x/y,**不印 error** —— 因為 `outcome.failed`
+ * 是驅動器回的步驟清單,錯誤本身在分類之後就丟了。於是 2026-08-27 那次
+ * 「團隊訂閱額度用完」在 log 裡只看得到「ch5 失敗」,真因要從別的行反推,耗掉約一小時。
+ *
+ * 優先給 `errorCode`(API 錯誤的分類碼,穩定、可 grep);沒有碼才退回錯誤名稱與訊息第一行。
+ * **不印整個 error 物件**:RequestApiError 的 `data` 是回應 body,可能含使用者內容。
+ */
+export const describeImportFailure = (error: unknown): string => {
+  const code = getApiErrorCode(error);
+  if (code !== null) return code;
+  if (error instanceof Error) {
+    const firstLine =
+      error.message
+        .split("\n")
+        .map((line) => line.trim())
+        .find((line) => line.length > 0) ?? "";
+    return firstLine ? `${error.name}: ${firstLine}` : error.name;
+  }
+  return String(error);
+};
+
 // Info: (20260716 - Tzuhan) 判斷 API 失敗是否為限流(IS000013/HTTP 429),前端提示放慢操作(#6516)
 export const isRateLimitedApiError = (error: unknown): boolean => {
   if (!(error instanceof RequestApiError)) return false;
   const data = error.data as { errorCode?: string } | undefined;
   return data?.errorCode === API_ERRORS.IS_RATE_LIMITED.code;
+};
+
+/**
+ * Info: (20260904 - Emily) 限流之後要等多久(毫秒),給匯入的驅動器退避用(#6744)。
+ *
+ * 優先拿伺服端算好的 `Retry-After`(`request()` 從表頭帶上來的 `retryAfterSeconds`):
+ * 那個數字是限流器對這個身分的窗口實際算出來的,實測從 5 秒一路升到 46 秒 ——
+ * 猜一個固定值不是太短(再撞)就是太長(白等)。
+ *
+ * 表頭沒有(舊伺服端、或中間層剝掉了)才退回 `fallbackMs`,由呼叫端給
+ *(匯入端給的是一個發出間隔,見 minIntervalMsFor)。不在這裡寫死任何秒數。
+ */
+export const rateLimitBackoffMs = (
+  error: unknown,
+  fallbackMs: number,
+): number => {
+  if (!(error instanceof RequestApiError)) return fallbackMs;
+  const seconds = error.retryAfterSeconds;
+  return seconds !== undefined && seconds > 0 ? seconds * 1000 : fallbackMs;
 };
 
 /**

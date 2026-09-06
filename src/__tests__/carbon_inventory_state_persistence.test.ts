@@ -1,7 +1,14 @@
-import { describe, it, expect } from "@jest/globals";
+import { describe, it, expect, beforeEach } from "@jest/globals";
+import type { jest as JestType } from "@jest/globals";
+declare const jest: typeof JestType;
 import fs from "fs";
 import path from "path";
 import { CarbonInventoryStateSchema } from "@/validators";
+import {
+  InventoryStateUnsavableError,
+  isInventoryStateUnsavableError,
+  saveInventoryState,
+} from "@/lib/carbon_inventory_storage";
 import { normalizeInventoryYear } from "@/lib/utils/inventory_year";
 import { CarbonInventoryStep } from "@/constants/carbon_chatbot";
 import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
@@ -10,6 +17,17 @@ import {
   EmissionBasisEnum,
   LedgerProvenanceEnum,
 } from "@/constants/imported_quantity";
+
+/*
+ * Info: (20260904 - Emily) `request` 的替身。工廠裡用箭頭間接呼叫:
+ * `jest.mock` 會被提升到 import 之前,而工廠在被 mock 的模組第一次被 require 時
+ * 就執行 —— 那一刻下面的 const 還沒初始化(同 llm_usage_reporting.test.ts)。
+ */
+const requestMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+jest.mock("@/lib/utils/request", () => ({
+  request: (...args: unknown[]) => requestMock(...args),
+  ApiError: class ApiError extends Error {},
+}));
 
 /**
  * Info: (20260903 - Emily) 盤查狀態存得下來 —— 以「往返」為判準。
@@ -258,5 +276,92 @@ describe("輸入端的值域 ⊆ 儲存端的值域(年度)", () => {
       // Info: (20260903 - Luphia) 而且它們送不出預覽卡 —— 兩件事一起才算守住
       expect(normalizeInventoryYear(String(year), 2026)).toBeUndefined();
     });
+  });
+});
+
+/**
+ * Info: (20260904 - Emily) **寫路徑也過 schema**(`issue_drafts/open/73`)。
+ *
+ * 上面那組守的是「忘記宣告 → 靜默剝掉」;這一組守的是另一半:
+ * **已宣告欄位的超界值原本存得進去,而下一次載入會丟掉整份狀態。**
+ *
+ *     save: JSON.stringify(state)                 ← 原本完全不驗
+ *     load: parsed.success ? parsed.data : null   ← 驗,失敗就整份丟
+ *
+ * 而盤查狀態**沒有本機備份**(`carbon_inventory_storage.ts` 零個 localStorage),
+ * 所以那一份帳本、活動數據、待補項、年度快照沒有任何副本可以救回來。
+ * 實際案例:PR #6725 review 阻-2 —— 年度手滑打成 1024。
+ *
+ * 這一組**故意不用 `roundTrip`**:要驗的是 `saveInventoryState` 這支函式的行為
+ *(拋不拋、拋什麼、有沒有在拋之前就送出網路請求),而不是 schema 本身。
+ */
+describe("寫路徑:存不進去的狀態要在存檔當下就說,不要等下次載入", () => {
+  beforeEach(() => {
+    requestMock.mockReset();
+    requestMock.mockResolvedValue({ payload: { version: 2 } });
+  });
+
+  it("超界的年度被擋在送出之前(阻-2 那個 1024)", async () => {
+    const bad = { ...fullState, year: 1024 };
+    await expect(
+      saveInventoryState("ch-1", null, bad as never, 1, "book-1"),
+    ).rejects.toBeInstanceOf(InventoryStateUnsavableError);
+    /*
+     * Info: (20260904 - Emily) 「擋在送出之前」是承重的:送出去之後才發現
+     * 等於伺服器上已經有一份讀不回來的紀錄,而樂觀鎖的版本也已經前進了。
+     */
+    expect(requestMock).not.toHaveBeenCalled();
+  });
+
+  it("錯誤只帶欄位路徑與錯誤碼,不帶值(載荷是使用者的盤查資料)", async () => {
+    const bad = { ...fullState, year: 1024, company: "x".repeat(200) };
+    const caught = await saveInventoryState(
+      "ch-1",
+      null,
+      bad as never,
+      1,
+      "book-1",
+    ).catch((error: unknown) => error);
+    expect(isInventoryStateUnsavableError(caught)).toBe(true);
+    const error = caught as InventoryStateUnsavableError;
+    expect(error.paths.join(" ")).toContain("year");
+    expect(error.paths.join(" ")).toContain("company");
+    expect(error.message).not.toContain("1024");
+    expect(error.message).not.toContain("xxx");
+  });
+
+  it("合法的狀態照送,而且送出去的位元與原件相同(不是 parsed.data)", async () => {
+    /**
+     * Info: (20260904 - Emily) 存 `parsed.data` 會把「未宣告鍵的遺失」
+     * 從「下次載入」提前到「這次存檔」—— 那不是修好,是加速。
+     * 所以驗完存原件,而這一條釘住那件事:body 裡的 plainContent
+     * 必須與 JSON.stringify(原件) 位元相同。
+     */
+    const withUndeclared = {
+      ...fullState,
+      futureField: "還沒進 schema 的欄位",
+    };
+    await expect(
+      saveInventoryState("ch-1", null, withUndeclared as never, 1, "book-1"),
+    ).resolves.toBe(2);
+    expect(requestMock).toHaveBeenCalledTimes(1);
+    const body = JSON.parse(
+      (requestMock.mock.calls[0][1] as { body: string }).body,
+    ) as { plainContent: string };
+    expect(body.plainContent).toBe(JSON.stringify(withUndeclared));
+  });
+
+  it("它抓得到的只有一半 —— 未宣告的鍵仍然過得去(所以上面那組不能刪)", () => {
+    /**
+     * Info: (20260904 - Emily) 這一條刻意釘住這道閘的**界**。
+     * zod 預設剝掉未宣告的鍵而 safeParse **成功**,所以寫路徑守門
+     * 對「型別加了、schema 沒加」完全無感 —— 那一半由上面的往返測試守。
+     * 沒有這一條,下一個人會以為有了寫路徑驗證就不需要往返測試了。
+     */
+    const withUndeclared = { ...fullState, futureField: "x" };
+    expect(CarbonInventoryStateSchema.safeParse(withUndeclared).success).toBe(
+      true,
+    );
+    expect(roundTrip(withUndeclared)).not.toHaveProperty("futureField");
   });
 });
