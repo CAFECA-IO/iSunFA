@@ -1735,11 +1735,23 @@ export const API_ERRORS = {
    * 這個是「生成成功但產物不可信」—— 重試同一個 prompt 大概率再編一次,
    * 呼叫端要能分辨才能決定降級語意(對話路徑標 degraded、/draft 路徑回給使用者說明)。
    *
-   * 取 85:develop 最大 VA000083;**VA000084 在 PR #6754 上(未合入)**。
-   * 本檔的取碼依據會過期(2026-09-04 上午 VA000083 撞碼的教訓),所以連未合入的分支一起掃。
+   * 取 86。**原本取 85,而那個依據在同步 develop 之前就過期了**(2026-09-06 review):
+   * 09-04 掃的時候 develop 最大 VA000083、VA000084 在 PR #6754 上,於是取 85;
+   * 而 develop 之後併入薪資那條線,VA000084 與 VA000085 都被拿走 ——
+   * `VA000085` 於是同時是 `VA_SALARY_EXPORT_TOO_MANY` 與本鍵。
+   *
+   * 兩筆插在檔案的不同位置,所以 **git 合併不報衝突、TypeScript 也不報錯**
+   *(`API_ERRORS` 以鍵索引,兩個鍵並存合法),只有對外的 code 字串撞在一起 ——
+   * 前端照 errorCode 分流的話,「薪資匯出筆數過多」與「草稿含無法溯源的排放量」
+   * 會走進同一條處置,而後者是不准落地的內容紅線。
+   * 撞號由同檔的 `error_dictionary_codes.test.ts` 接住,但它是**合併之後**才紅。
+   *
+   * 這是本檔第二次踩同一件事(見 VA_FRAMEWORK_COMPLIANCE_CLAIM 那則的第一次),
+   * 而兩次的成因相同:**取碼依據會過期,而過期不會亮紅燈**。
+   * 2026-09-06 同步 develop 後重掃:全分支(含未合入)VA 最大 VA000085,86 起全空。
    */
   VA_DRAFT_QUANTITY_UNSOURCED: {
-    code: "VA000085",
+    code: "VA000086",
     message:
       "the paragraph draft asserts emission quantities that cannot be traced to the ledger facts; the draft was not saved",
     status: ApiCode.VALIDATION_ERROR,
@@ -2235,5 +2247,53 @@ export const API_ERRORS = {
     code: "VA000083",
     message: "Salary amount must be a whole number",
     status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260904 - Julian) 要寄薪資單，但員工檔上沒有信箱。
+   *
+   * **這是資料狀態，不是故障** —— 給 4xx 而不是 500：使用者沒有做錯任何事，
+   * 要動的是員工資料。`SalaryCalculatorEmployee.email` 可空是刻意的
+   * （不少帳本不替員工建信箱）。
+   *
+   * 計畫書 §7 原本寫 422，但本專案的 `ApiCode` 沒有 422 這一格
+   * （`HTTP_MAP` 只有 400/401/402/403/404/409/429/499/500）。
+   * 為了一支端點在共用的狀態碼表上新增一格，會影響每一支 route 的對應表 ——
+   * 而 400 已經滿足計畫書真正在意的那一句「不是 500」。
+   */
+  VA_SALARY_EMPLOYEE_NO_EMAIL: {
+    code: "VA000084",
+    message: "This employee has no email address on file",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  /**
+   * Info: (20260904 - Julian) 薪資單寄送失敗（PDF 產生或 SMTP）。
+   *
+   * 與 `TW_MAIL_NOT_CONFIGURED`（TW000018）分開，理由同 TW000019 之於 TW000018：
+   * 處置不同。未設定要去後台設 SMTP，這個重試可能就會過。
+   *
+   * 也與 `IS_PDF_FONT_UNAVAILABLE` 分開 —— 那一個由 `pdf_font_guard` 丟出，
+   * 經 `salary_pay_slip_delivery.service` 的 `toAppError` 原樣轉成 AppError
+   * 送到這裡，**不會被蓋成本代碼**：缺字型的唯一解法是裝字型，
+   * 埋在一個看起來值得重試的錯誤裡等於讓維運只能靠猜。
+   */
+  /**
+   * Info: (20260904 - Julian) 一次匯出的筆數超過上限。
+   *
+   * 上限存在的理由不是效能，是**這是一次批次擷取**：不設限的話，
+   * 一個請求就能把整本帳所有年月的完整薪資明細打包帶走。
+   * 這是資料狀態不是故障，給 4xx。
+   */
+  VA_SALARY_EXPORT_TOO_MANY: {
+    code: "VA000085",
+    message: "Too many salary records requested in one export",
+    status: ApiCode.VALIDATION_ERROR,
+  } as IErrorDef,
+
+  TW_SALARY_PAY_SLIP_MAIL_FAILED: {
+    code: "TW000034",
+    message: "Failed to deliver the pay slip email",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
 };

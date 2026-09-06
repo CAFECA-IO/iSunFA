@@ -22,7 +22,7 @@ import {
  */
 export interface ISalaryCalculatorEmployeeRepository {
   listEmployees(accountBookId: string): Promise<ISalaryCalculatorEmployee[]>;
-  getEmployeeById(
+  getActiveEmployeeById(
     accountBookId: string,
     employeeId: string,
   ): Promise<ISalaryCalculatorEmployee | null>;
@@ -155,7 +155,27 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
     return rows.map(toFrontendFormat);
   }
 
-  public async getEmployeeById(
+  /**
+   * Info: (20260905 - Luphia) 名稱說出承諾：**存活中**的員工（review #6769）。
+   *
+   * 原名 `getEmployeeById` 沒有講出 `deletedAt: null` 這一半，於是
+   * 「為什麼要濾軟刪除」變成一件要讀實作才知道的事 —— 而讀不到的人
+   * 想放寬顯示範圍時，最順手的動作是把那個條件拿掉。
+   *
+   * 它今天的兩個呼叫端都是**動作**路徑：
+   *
+   * - `saveRecord`：替已移除的員工建立新的薪資紀錄
+   * - `deliver`：把薪資單 PDF 寄給已經離開的人
+   *
+   * 兩者都不該對已刪除的員工成立，所以這一支恆濾。要列出含已刪除的
+   * 員工（歷史清單之類）請另開一支 `findEmployeeById`，不要放寬這一支 ——
+   * 放寬的話上面兩件事會一起靜靜變成可能，而畫面上看不出來。
+   *
+   * `accountBookId` 是**授權**不是識別：`employeeId` 是 uuid 主鍵，
+   * 拿它就找得到列；帶帳本才讓「別人家的員工」變成查無此人。
+   * `saveRecord` 的 `employeeId` 來自 request body，所以這一層是走得到的。
+   */
+  public async getActiveEmployeeById(
     accountBookId: string,
     employeeId: string,
   ): Promise<ISalaryCalculatorEmployee | null> {
@@ -257,7 +277,7 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
 
       if (result.count === 0) return null;
 
-      return await this.getEmployeeById(accountBookId, employeeId);
+      return await this.getActiveEmployeeById(accountBookId, employeeId);
     } catch (error) {
       if (isUniqueViolation(error)) {
         throw new SalaryEmployeeNumberTakenError(input.number);

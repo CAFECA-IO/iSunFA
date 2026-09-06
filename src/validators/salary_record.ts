@@ -14,6 +14,7 @@ import {
   ISalaryCalculatorEmployeeWriteInput,
   ISalaryRecordWriteInput,
 } from "@/interfaces/salary_record";
+import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
 
 /**
  * Info: (20260831 - Julian) 薪資計算機的 Payload 驗證。
@@ -109,9 +110,11 @@ const employeeProfileShape = {
   industryCode: industryCodeSchema,
   isForeignWorker: z.boolean(),
   // Info: (20260902 - Julian) 值域取自 enum 的鍵，不寫死字串 —— 兩邊不會不同步
-  employmentType: z.string().refine((key) => EMPLOYMENT_TYPE_KEYS.includes(key), {
-    message: "employmentType 必須是 EmploymentType 的鍵",
-  }),
+  employmentType: z
+    .string()
+    .refine((key) => EMPLOYMENT_TYPE_KEYS.includes(key), {
+      message: "employmentType 必須是 EmploymentType 的鍵",
+    }),
   baseSalary30Days: z.boolean(),
   isLaborInsured: z.boolean(),
   isHealthInsured: z.boolean(),
@@ -285,6 +288,27 @@ export const salaryRecordQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
+
+/**
+ * Info: (20260904 - Julian) CSV 匯出：要匯出哪幾筆。
+ *
+ * `uuid()` 而不是任意字串：這組 id 直接進 `where: { id: { in: [...] } }`，
+ * 而 Prisma 對格式不符的 uuid 會丟出讀起來像故障的錯誤 —— 那是使用者
+ * 送得出來的東西，該在門口擋下，不是讓它變成 500。
+ *
+ * `min(1)`：空清單匯出一個只有表頭的檔案，那不是使用者要的東西 ——
+ * 前端也擋（沒勾就停用按鈕），但那是體驗，這裡是保證。
+ *
+ * `max()` 與 service 的檢查都保留：schema 擋的是形狀，service 擋的是額度，
+ * 而 service 是唯一被單元測試覆蓋的那一層。
+ */
+export const salaryRecordExportSchema = z.object({
+  recordIds: z.array(z.string().uuid()).min(1).max(SALARY_EXPORT_MAX_RECORDS),
+});
+
+export type ISalaryRecordExportPayload = z.infer<
+  typeof salaryRecordExportSchema
+>;
 
 export type ISalaryCalculatorEmployeeWritePayload = z.infer<
   typeof salaryCalculatorEmployeeWriteSchema

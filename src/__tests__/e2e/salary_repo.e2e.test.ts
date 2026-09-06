@@ -24,7 +24,7 @@ import { salaryRecordRepo } from "@/repositories/salary_record.repo";
  *   2. `deleteRecord` 的 `deleteMany` 拿掉 `accountBookId`
  *   3. `listRecords` 的 where builder 拿掉 `accountBookId`
  *   4. `listRecords` 拿掉 `skip` / `take`
- *   5. `getEmployeeById` / `listEmployees` 拿掉 `deletedAt: null`
+ *   5. `getActiveEmployeeById` / `listEmployees` 拿掉 `deletedAt: null`
  *   6. `updateEmployee` / `softDeleteEmployee` 拿掉 `accountBookId`
  *   7. `softDeleteEmployee` 不再把 `activeNumber` 設成 null
  *
@@ -193,7 +193,7 @@ describe("員工檔的常態屬性存得進去也讀得回來", () => {
     expect(created).toMatchObject(expected);
 
     // Info: (20260902 - Julian) 成對：create 的回傳與重新讀出來的必須一致（前者可能是記憶體裡的值）
-    const reloaded = await salaryCalculatorEmployeeRepo.getEmployeeById(
+    const reloaded = await salaryCalculatorEmployeeRepo.getActiveEmployeeById(
       BOOK_ID,
       created.id,
     );
@@ -293,7 +293,7 @@ describe("員工檔的常態屬性存得進去也讀得回來", () => {
       },
     });
 
-    const read = await salaryCalculatorEmployeeRepo.getEmployeeById(
+    const read = await salaryCalculatorEmployeeRepo.getActiveEmployeeById(
       BOOK_ID,
       legacy.id,
     );
@@ -330,7 +330,7 @@ describe("員工名單：租戶過濾與軟刪除過濾", () => {
      * 真 repo 靠的是 `where` 裡的 `accountBookId`，而那一行可以被刪掉。
      */
     expect(
-      await salaryCalculatorEmployeeRepo.getEmployeeById(OTHER_BOOK_ID, mine.id),
+      await salaryCalculatorEmployeeRepo.getActiveEmployeeById(OTHER_BOOK_ID, mine.id),
     ).toBeNull();
 
     expect(
@@ -349,7 +349,7 @@ describe("員工名單：租戶過濾與軟刪除過濾", () => {
     ).toBe(false);
 
     // Info: (20260901 - Julian) 成對斷言：不只「回 null」，那一列本身也必須沒被動到
-    const untouched = await salaryCalculatorEmployeeRepo.getEmployeeById(
+    const untouched = await salaryCalculatorEmployeeRepo.getActiveEmployeeById(
       BOOK_ID,
       mine.id,
     );
@@ -380,7 +380,7 @@ describe("員工名單：租戶過濾與軟刪除過濾", () => {
     ).toBe(true);
 
     expect(
-      await salaryCalculatorEmployeeRepo.getEmployeeById(BOOK_ID, employee.id),
+      await salaryCalculatorEmployeeRepo.getActiveEmployeeById(BOOK_ID, employee.id),
     ).toBeNull();
 
     const listed = await salaryCalculatorEmployeeRepo.listEmployees(BOOK_ID);

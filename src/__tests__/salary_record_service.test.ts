@@ -20,6 +20,7 @@ import {
 import { DEFAULT_EMPLOYEE_PROFILE } from "@/lib/utils/salary_employee_profile";
 import { ISalaryRecordRepository } from "@/repositories/salary_record.repo";
 import { SalaryRecordService } from "@/services/salary_record.service";
+import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
 
 /**
  * Info: (20260831 - Julian) 薪資紀錄 service 的編排。
@@ -132,7 +133,10 @@ class FakeEmployeeRepo implements ISalaryCalculatorEmployeeRepository {
       .map(([, value]) => value);
   }
 
-  public async getEmployeeById(accountBookId: string, employeeId: string) {
+  public async getActiveEmployeeById(
+    accountBookId: string,
+    employeeId: string,
+  ) {
     return this.rows.get(`${accountBookId}|${employeeId}`) ?? null;
   }
 
@@ -212,6 +216,12 @@ class FakeRecordRepo implements ISalaryRecordRepository {
       calculatorVersion: params.calculatorVersion,
       createdAt: 0,
       updatedAt: 0,
+      /**
+       * Info: (20260904 - Julian) 假 repo 不模擬寄送 —— 這一支測的是儲存的編排。
+       * `null` 在這裡是誠實的：這個假的資料庫裡確實沒有任何寄送紀錄。
+       */
+      lastSentAt: null,
+      lastSentTo: null,
       input: params.input,
       result: params.result,
     };
@@ -231,6 +241,21 @@ class FakeRecordRepo implements ISalaryRecordRepository {
       totalPages: 1,
       periods: data.map((row) => ({ year: row.year, month: row.month })),
     };
+  }
+
+  /**
+   * Info: (20260904 - Julian) 依 id 取多筆。**租戶過濾比照真 repo**：
+   * 這個假物件的 key 帶著 accountBookId 前綴，所以「拿別的帳本的 id 來匯出」
+   * 在測試裡是真的問得出答案的 —— 若這裡不比對前綴，那條案例會永遠綠。
+   */
+  public async listRecordsByIds(
+    accountBookId: string,
+    recordIds: readonly string[],
+  ): Promise<ISalaryRecordDetail[]> {
+    return recordIds
+      .filter((id) => id.startsWith(`${accountBookId}|`))
+      .map((id) => this.rows.get(id))
+      .filter((row): row is ISalaryRecordDetail => row !== undefined);
   }
 
   public async getRecordById(accountBookId: string, recordId: string) {
@@ -394,6 +419,60 @@ describe("讀取與刪除薪資紀錄", () => {
       () => service.deleteRecord({ accountBookId: BOOK, recordId: "nope" }),
       API_ERRORS.NF_SALARY_RECORD,
     );
+  });
+});
+
+/**
+ * Info: (20260905 - Luphia) 匯出的筆數上限（review #6769 異常 2）。
+ *
+ * 這道守門是「一次能帶走多少薪資明細」的**唯一上界** —— 端點那一層只有
+ * 限流（6/分、60/日），而限流管的是頻率不是單次體積。上限一旦失效，
+ * 一個請求就能把整本帳所有年月的完整薪資明細打包帶走，
+ * 而 `constants/salary_export.ts` 的註解寫的正是這句話。
+ *
+ * 實測（修正前）：把那段 `throw` 整段拿掉，5,927 條全綠。
+ *
+ * 兩條成對：只驗「超過會擋」的話，把上限改成 0 也會通過，
+ * 而那會讓匯出功能整個不能用 —— 這種方向的失效同樣沒有人擋得住。
+ */
+describe("匯出的筆數上限", () => {
+  it(`超過 ${SALARY_EXPORT_MAX_RECORDS} 筆就擋下來`, async () => {
+    await expectAppError(
+      () =>
+        service.exportRecordsCsv({
+          accountBookId: BOOK,
+          recordIds: Array.from(
+            { length: SALARY_EXPORT_MAX_RECORDS + 1 },
+            (unused, index) => `r-${index}`,
+          ),
+        }),
+      API_ERRORS.VA_SALARY_EXPORT_TOO_MANY,
+    );
+  });
+
+  it(`剛好 ${SALARY_EXPORT_MAX_RECORDS} 筆放行`, async () => {
+    const result = await service.exportRecordsCsv({
+      accountBookId: BOOK,
+      recordIds: Array.from(
+        { length: SALARY_EXPORT_MAX_RECORDS },
+        (unused, index) => `r-${index}`,
+      ),
+    });
+
+    expect(result.requested).toBe(SALARY_EXPORT_MAX_RECORDS);
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 重複的 id 只算一次 —— 否則使用者可以用
+   * 同一個 id 重複 501 次來試探上限，而那本來就不是 501 筆資料。
+   */
+  it("重複的 id 只算一次", async () => {
+    const result = await service.exportRecordsCsv({
+      accountBookId: BOOK,
+      recordIds: ["r-1", "r-1", "r-1"],
+    });
+
+    expect(result.requested).toBe(1);
   });
 });
 

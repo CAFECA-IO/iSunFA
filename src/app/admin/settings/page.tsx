@@ -49,6 +49,7 @@ interface ISettingRow {
    * 只存在於 .env 的秘密同樣顯示 ********，不標示出來的話管理員會以為它已受保護。
    */
   storedInDb: boolean;
+  envValueShadowed: boolean;
   fallback?: string;
 }
 
@@ -379,6 +380,20 @@ export default function AdminSettingsPage() {
                       {row.hasValue && !row.storedInDb && (
                         <p className="text-xs text-amber-700">
                           {t("admin_settings.env_only_hint")}
+                        </p>
+                      )}
+
+                      {/**
+                       * Info: (20260904 - Julian) `.env` 有值但已被資料庫的簽章設定遮蔽。
+                       *
+                       * 與上面那句是**相反的處境**，所以不能共用：那一句說的是
+                       * 「現在靠 env 在跑，儲存後才受保護」，這一句說的是
+                       * 「env 根本沒被讀，現在就是壞的」。用紅色而不是琥珀色，
+                       * 因為它不是待辦事項，是當下的故障。
+                       */}
+                      {row.envValueShadowed && (
+                        <p className="text-xs font-medium text-rose-700">
+                          {t("admin_settings.env_shadowed_hint")}
                         </p>
                       )}
 

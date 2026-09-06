@@ -246,6 +246,18 @@ export const queryAnomalies = (
    *
    * 改成**陳述代價然後停住**。刻意不給出路:可逆的出路是「逐筆補年度」,
    * 而那個能力今天不存在 —— 不存在就不要寫在紙上(事實值會被逐字帶進敘事)。
+   *
+   * Info: (20260906 - Luphia) 這次改寫把 `undatedCount` 從 label 搬進 value,
+   * 而**出口守門的合法數字集合只讀 `fact.value`、不讀 `fact.label`**
+   *(`carbon_reply_gate.ts` 的 `buildAllowedNumbers`)。所以這是一次放寬,
+   * 照 §2.5 記下「現在最多能發生多壞」:
+   *
+   * 一個 1–50 的小整數(無年度分錄的筆數)成為合法數字,LLM 可以把它印在
+   * 回覆的任何位置,包括當成排放量而不被攔下。**與既有同級**:那個集合裡
+   * 本來就有占比百分比、年間倍數、活動量這些同量級的小數字,所以這不是
+   * 新增一個類別,是多一個同類成員 —— 換來的是使用者看得到虛增的量級。
+   *
+   * 下一個要把數字塞進 value 的人請先讀這一段:label 不進合法集合,value 會。
    */
   const yearFacts: ILedgerFact[] = yearWarning
     ? [

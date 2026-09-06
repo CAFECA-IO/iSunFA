@@ -115,6 +115,12 @@ export const calculator = {
     remove_employee_title: "직원 삭제",
     remove_employee_content: "직원 목록에서 {{name}} 님을 삭제하시겠습니까?",
     remove_employee_submit_btn: "네, 직원을 삭제합니다.",
+    no_email: "미입력",
+    missing_email_banner:
+      "{{count}}명의 이메일이 비어 있어 급여명세서를 보낼 수 없습니다",
+    only_missing_email: "해당 직원만 보기",
+    show_all: "전체 보기",
+    no_filter_result: "조건에 맞는 직원이 없습니다",
   },
   result: {
     base_salary_with_tax: "기본급(과세 대상)",
@@ -177,10 +183,18 @@ export const calculator = {
     content_2: "→",
     content_bold_2: " {{employeeName}} 님에게",
     email: "이메일",
-    email_placeholder: "직원의 이메일을 입력하세요",
-    invalid_email_hint:
-      "이메일 형식이 올바르지 않습니다. 다시 한 번 확인해 주세요.",
     submit: "급여 명세서 발송",
+    email_from_profile: "직원 데이터에서",
+    email_missing: "등록된 이메일 주소가 없습니다",
+    sending: "보내는 중...",
+    error_no_email:
+      "이 직원에게 등록된 이메일 주소가 없습니다. 먼저 직원 목록에서 추가해 주세요.",
+    error_not_configured:
+      "메일 발송이 아직 설정되지 않았습니다. 시스템 관리자에게 문의하세요.",
+    error_font_missing:
+      "서버에 중국어 글꼴이 없어 급여명세서를 만들 수 없습니다. 시스템 관리자에게 문의하세요.",
+    error_generic:
+      "급여명세서를 보내지 못했습니다. 잠시 후 다시 시도해 주세요.",
   },
   my_pay_slip: {
     main_title: "내 급여 명세서",
@@ -196,6 +210,12 @@ export const calculator = {
     pay_slip: "급여 명세서",
     sent_on: "발송일",
     all: "모두",
+    employee: "직원",
+    sent_by: "보낸 사람",
+    unknown_sender: "이름 없음",
+    sent_empty: "이 장부에서 아직 급여명세서를 보낸 적이 없습니다",
+    sent_load_failed:
+      "발송 기록을 불러오지 못했습니다. 새로 고침 후 다시 시도해 주세요",
   },
   // Info: (20260831 - Julian) 공개 버전에서 장부 버전으로 가는 입구
   // Info: (20260831 - Julian) 계산기 Step 1의 직원 연결 상태
@@ -250,7 +270,7 @@ export const calculator = {
     employee: "직원",
     net_pay: "실수령액",
     taxable: "원천징수 금액",
-    action: "작업",
+    action: "발송/보기/재계산/삭제",
     view: "급여명세서 보기",
     load_back: "계산기로 불러오기",
     delete: "삭제",
@@ -272,13 +292,23 @@ export const calculator = {
       "급여 기록은 소프트 삭제되지 않습니다. 삭제하면 복구할 수 없으며 다른 곳에서도 되찾을 수 없습니다.",
     delete_submit_btn: "삭제",
     delete_failed: "삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.",
-    view_failed: "급여명세서를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    view_failed:
+      "급여명세서를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
     load_back_failed:
       "계산기로 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
     employee_list_failed:
       "직원 명단을 불러오지 못했습니다. 이 상태에서는 계산기로 불러와도 직원과 연결할 수 없습니다.",
     load_back_unlinked:
       "이 직원은 명단에 없습니다. 이름과 사번은 이 기록에서 채웠지만 직원 연결은 만들어지지 않았습니다 — 저장할 때 대상을 다시 확인합니다.",
+    delivery_status: "발송 상태",
+    not_sent: "미발송",
+    select_page: "이 페이지의 모든 행 선택",
+    select_row: "이 기록 선택",
+    selected_count: "{{count}}건 선택됨",
+    export_csv: "CSV 내보내기",
+    export_too_many:
+      "한 번에 최대 {{max}}건까지 내보낼 수 있습니다. 선택을 줄여 주세요",
+    export_failed: "내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.",
   },
   account_book_entry: {
     title: "이번 계산을 저장할까요?",
@@ -297,6 +327,13 @@ export const calculator = {
     send: "급여 명세서 발송",
     reset: "초기화",
     re_send: "급여 명세서 재발송",
+    send_disabled_unsaved:
+      "급여 기록을 먼저 저장해야 급여명세서를 보낼 수 있습니다",
+    send_disabled_no_email:
+      "이 직원에게 이메일 주소가 없습니다. 먼저 직원 목록에서 추가해 주세요",
+    send_disabled_employee_gone:
+      "이 직원은 목록에서 삭제되어 급여명세서를 보낼 수 없습니다",
+    send_disabled_loading: "직원 목록을 확인하는 중...",
   },
   message: {
     name_error_title: "직원 이름 미입력",

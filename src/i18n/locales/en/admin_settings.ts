@@ -19,6 +19,8 @@ export const adminSettings = {
   },
   env_only_hint:
     "This value currently lives only in the environment file. It is not yet stored in the database or covered by the signature — save to bring it under protection.",
+  env_shadowed_hint:
+    "This value exists in the environment file but is NOT being read: this deployment's settings are stored and signed in the database, which takes over completely. Enter the value here and sign it.",
   fallback_hint: 'Not configured — the system currently uses "{{value}}".',
   history_title: "Change history",
   history_version: "Version",
