@@ -96,6 +96,15 @@ import {
   activityDedupeKey,
   stockRecordDedupeKey,
 } from "@/lib/carbon_inventory";
+import {
+  CarbonDisclosureFrameworkEnum,
+  FRAMEWORK_DISCLOSURE_LABEL,
+} from "@/constants/carbon_report_framework";
+import {
+  CarbonFrameworkClaimExitEnum,
+  composeReportDraftPaperText,
+  gateFrameworkClaims,
+} from "@/lib/utils/carbon_framework_claim_gate";
 import { buildLedgerFactBundle } from "@/lib/carbon_ledger_query";
 import {
   loadPendingImport as fetchPendingImportRecord,
@@ -1259,6 +1268,87 @@ export const useCarbonChat = () => {
   }, [isUnlocked, chatChannel, activeSessionId, sessionAccess]);
 
   /**
+   * Info: (20260904 - Emily) 存檔出口的宣告守門(#6688-B 後半)。
+   *
+   * 接在 `flushReportDraftSave` 的入口:那是所有段落寫入(AI 草稿、修訂、匯入、
+   * 手動編輯)最後匯流成一次 PUT 的地方,所以一個判斷蓋住全部路徑。
+   *
+   * ## 三個設計問題,量過之後的答案
+   *
+   * **一、爆炸半徑:整份,而且這是唯一可得的粒度。** `saveReportDraft` 一次送一整份
+   * `reportData` 並帶樂觀鎖版本 —— 產品裡沒有「單段存檔」這件事。所以擋的單位只能是整份。
+   *
+   * **二、擋雲端存檔不會毀掉使用者的成果,所以本地備份不擋。** 自動保存那個 effect 在
+   * 進入任何雲端 guard **之前**就無條件 `saveLocalDraftBackup`,而還原時
+   * `preferBackup = localBackup.draftVersion >= loaded.version` 會優先取本機。
+   * 也就是被擋之後那一版仍然在本機、重載仍讀得回來 —— 代價是「沒上雲、不跨裝置」,
+   * 不是「消失」。反過來把本地備份也擋掉才是唯一真正破壞性的選項
+   *(那一版哪裡都不存在),而本機快取**不是紙面**,擋它換不到任何東西。
+   *
+   * **三、`saveStatus` 不需要新狀態。** 既有的 `"local"` 語意正是
+   * 「僅暫存本機、未上雲」,而那正是被擋之後的真實狀態 —— 為它新增一個狀態
+   * 會讓工具列多一種要解釋的顏色,而它要表達的事既有的那個已經表達了。
+   * 原因走 `draftNotice`:照 #6624 立的分工,**事件走通知、持續的那面走 saveStatus**。
+   * 通知照既有失敗路徑一樣自動消失 —— 不自動消失的版本要求「存檔成功時清掉通知」,
+   * 而今天的成功路徑只 `setSaveStatus("saved")`、不清通知,那一版會在使用者改好之後留著。
+   */
+  const blockedByFrameworkClaim = useCallback(
+    (
+      pending: IReportData | undefined,
+      channel: string,
+      sessionId: string,
+    ): boolean => {
+      /**
+       * Info: (20260906 - Luphia) 收「**要寫出去的那一版**」,不自己讀 ref
+       *(review 阻-2)。
+       *
+       * 原本是進迴圈前讀一次 ref 查一次,而下面那個迴圈的設計是
+       * 「存完之後如果發現又改了,就把最新的再存一次」——
+       * 於是第二輪之後寫上雲端的是**守門沒看過的版本**。
+       *
+       * 觸發不需要任何巧合:自動存檔要加密再送雲端,那幾秒內繼續打字是常態。
+       * 第一輪存乾淨版本、通過;第二輪把含宣告的版本送上去,而畫面照樣顯示
+       * 「已儲存」——沒有通知、沒有 log。條 4 在這個出口是 BLOCK,理由是
+       * 「主體合規宣告永遠禁止上紙」,而那個 BLOCK 在一個常見時序下被繞過。
+       *
+       * 改成由呼叫端把「這一輪要寫什麼」交進來,判斷就跟著那個選擇走。
+       */
+      if (!pending) return false;
+      /*
+       * Info: (20260904 - Emily) 四個槽怎麼取、為什麼,住在 `composeReportDraftPaperText`
+       * (純函式,各有一條測試)。這一層只有接線 —— hook 逼不出行為測試,
+       * 所以判準不留在這裡。
+       */
+      const { blocked, warned } = gateFrameworkClaims(
+        composeReportDraftPaperText(pending),
+        CarbonFrameworkClaimExitEnum.DRAFT_SAVE,
+      );
+      if (warned.length > 0) {
+        // Info: (20260904 - Emily) 只記規則與筆數,不記片段 —— 那是使用者的報告內容
+        console.warn("[carbon-chat] framework claim warnings on save", {
+          channel,
+          rules: warned.map((finding) => finding.rule),
+          counts: warned.map((finding) => finding.matches.length),
+        });
+      }
+      if (blocked.length === 0) return false;
+      setSaveStatus("local");
+      setDraftNotice(
+        {
+          type: "error",
+          text: t("carbon_chatbot.save_blocked_framework_claim", {
+            name: FRAMEWORK_DISCLOSURE_LABEL,
+          })!,
+        },
+        sessionId,
+      );
+      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, sessionId);
+      return true;
+    },
+    [t, setDraftNotice, dismissDraftNoticeAfter],
+  );
+
+  /**
    * Info: (20260807 - Emily) 送出一輪雲端保存,直到送出去的就是當下最新的那一份。
    *
    * 兩件事被綁在一起,因為它們是同一個不變式的兩半:
@@ -1277,11 +1367,38 @@ export const useCarbonChat = () => {
       accountBookId: string | null,
     ): Promise<void> => {
       if (savingChannelsRef.current.has(channel)) return;
+      /*
+       * Info: (20260906 - Luphia) 前置檢查留著只為了「不要先閃一下 saving 再變 local」——
+       * 真正把洞補起來的是下面迴圈裡那一次(review 阻-2)。
+       */
+      if (
+        blockedByFrameworkClaim(
+          latestReportDataRef.current.get(channel),
+          channel,
+          sessionId,
+        )
+      ) {
+        return;
+      }
       savingChannelsRef.current.add(channel);
       setSaveStatus("saving");
       try {
         let inflight = latestReportDataRef.current.get(channel);
+        /*
+         * Info: (20260906 - Luphia) 被擋而中止時**不得**落到下面的
+         * `setSaveStatus("saved")` —— 守門已經把它設成 "local"(僅暫存本機)。
+         */
+        let blockedMidway = false;
         while (inflight) {
+          /*
+           * Info: (20260906 - Luphia) **每一輪都審**(review 阻-2)。
+           * 這個迴圈會把「存檔期間又改出來的最新版」再送一次,
+           * 而那一版沒有經過進迴圈前那次檢查。判斷要跟著「這一輪要寫什麼」走。
+           */
+          if (blockedByFrameworkClaim(inflight, channel, sessionId)) {
+            blockedMidway = true;
+            break;
+          }
           const expectedVersion = draftVersionsRef.current.get(channel) ?? 0;
           // Info: (20260716 - Tzuhan) #52 帳本會話走明文保存(模型 A);個人會話維持 E2EE
           const newVersion = await saveReportDraft(
@@ -1306,7 +1423,7 @@ export const useCarbonChat = () => {
           if (latest === inflight) break;
           inflight = latest;
         }
-        setSaveStatus("saved");
+        if (!blockedMidway) setSaveStatus("saved");
       } catch (error) {
         /**
          * Info: (20260807 - Emily) 保存失敗必須說得出**是哪一種**失敗,而不是共用一個小圖示。
@@ -1334,7 +1451,7 @@ export const useCarbonChat = () => {
         savingChannelsRef.current.delete(channel);
       }
     },
-    [t, setDraftNotice, dismissDraftNoticeAfter],
+    [t, setDraftNotice, dismissDraftNoticeAfter, blockedByFrameworkClaim],
   );
 
   // Info: (20260714 - Tzuhan) 報告草稿 debounce 自動保存(前端加密 → PUT)；還原完成前不保存，避免空骨架覆蓋既有草稿
@@ -1834,6 +1951,36 @@ export const useCarbonChat = () => {
       });
   }, [activeInventoryState, chatChannel]);
 
+  /**
+   * Info: (20260903 - Emily) 揭露框架的選擇(#6688-A)。
+   *
+   * 寫進盤查狀態而不是另存一份:它要隨 state 一起 E2EE 入庫
+   *(完成判準是「選 IFRS 後**重載**仍是 IFRS」),而 state 已經是那份紀錄的
+   * 唯一真值來源。這裡只寫記憶體,落地由既有的 autosave 那條路負責 ——
+   * 所以「無實質變化不換參考」這個守門要照 applyInventoryExtraction 的先例做,
+   * 否則每次點同一個選項都會觸發一次無意義的存檔。
+   *
+   * channel 在呼叫當下綁定(與 applyInventoryExtraction 同一個理由):
+   * 在途的請求不該把選擇寫進切換後的那一間房。
+   */
+  const setDisclosureFramework = useCallback(
+    (framework: CarbonDisclosureFrameworkEnum) => {
+      const channel = buildCarbonChatChannel(
+        user?.address ?? "anonymous",
+        activeSessionId,
+      );
+      setInventoryStates((prev) => {
+        const base = prev[channel] ?? createEmptyInventoryState();
+        if (base.disclosureFramework === framework) return prev;
+        return {
+          ...prev,
+          [channel]: { ...base, disclosureFramework: framework },
+        };
+      });
+    },
+    [user?.address, activeSessionId],
+  );
+
   // Info: (20260716 - Tzuhan) #6518 合併萃取結果進狀態帳本(去重/推進由 lib/carbon_inventory 決定性裁決)
   // Info: (20260716 - Tzuhan) 閉包綁定建立當下的 channel: 在途回覆寫回原房
   const applyInventoryExtraction = useCallback(
@@ -2008,6 +2155,14 @@ export const useCarbonChat = () => {
             language,
             existingContent: paragraph.content,
             instruction,
+            /**
+             * Info: (20260903 - Emily) 揭露框架跟著請求走(#6688-A)。
+             *
+             * 兩個 /draft 呼叫端都要帶:修訂與生成走的是同一個服務,
+             * 而 `carbonFrameworkView` 決定角色句與 guidance ——
+             * 只帶其中一個,會出現「生成是 IFRS 版、修訂又回到盤查版」。
+             */
+            framework: activeInventoryState?.disclosureFramework,
             channel: chatChannel,
             clientMessageId: crypto.randomUUID(),
           }),
@@ -2037,6 +2192,17 @@ export const useCarbonChat = () => {
       t,
       setDraftNotice,
       dismissDraftNoticeAfter,
+      /**
+       * Info: (20260903 - Emily) 揭露框架進 deps 而不是另做一個 ref 鏡像(#6688-A)。
+       *
+       * eslint 這條警告是真的缺陷(#6730 review 第二輪那次的同一個形狀:
+       * 讀了 state 卻沒進 deps → 陳舊閉包 → 送出去的是使用者選之前的值)。
+       * 這裡選「加 deps」而不是 ref:這個值只在使用者動選單時變,而這兩個
+       * callback 本來就依賴 `sessionsData` / `activeSession`,那些變得比它頻繁得多,
+       * 所以重建次數實際上沒有增加。ref 會多一個要同步的真值來源,
+       * 而它要解的問題(在同一輪 render 的 setState updater 裡讀值)這裡不存在。
+       */
+      activeInventoryState?.disclosureFramework,
       // Info: (20260814 - Luphia) 計費上下文所需：channel 決定這筆消費記到哪個帳本
       chatChannel,
       buildChannelLedgerFacts,
@@ -5571,6 +5737,8 @@ export const useCarbonChat = () => {
                  */
                 contextFacts: buildChannelLedgerFacts(chatChannel),
                 language,
+                // Info: (20260903 - Emily) 揭露框架跟著請求走(#6688-A;理由見修訂路徑那一處)
+                framework: activeInventoryState?.disclosureFramework,
                 channel: chatChannel,
                 clientMessageId,
               }),
@@ -5649,6 +5817,17 @@ export const useCarbonChat = () => {
       t,
       applyDraftToReport,
       jumpToReportParagraph,
+      /**
+       * Info: (20260903 - Emily) 揭露框架進 deps 而不是另做一個 ref 鏡像(#6688-A)。
+       *
+       * eslint 這條警告是真的缺陷(#6730 review 第二輪那次的同一個形狀:
+       * 讀了 state 卻沒進 deps → 陳舊閉包 → 送出去的是使用者選之前的值)。
+       * 這裡選「加 deps」而不是 ref:這個值只在使用者動選單時變,而這兩個
+       * callback 本來就依賴 `sessionsData` / `activeSession`,那些變得比它頻繁得多,
+       * 所以重建次數實際上沒有增加。ref 會多一個要同步的真值來源,
+       * 而它要解的問題(在同一輪 render 的 setState updater 裡讀值)這裡不存在。
+       */
+      activeInventoryState?.disclosureFramework,
       // Info: (20260814 - Luphia) 計費上下文所需：channel 決定這筆消費記到哪個帳本
       chatChannel,
       // Info: (20260825 - Luphia) 無帳本會話的待付款流程（與聊天路徑同一套）
@@ -6730,6 +6909,8 @@ export const useCarbonChat = () => {
     pendingRevision,
     applyPendingRevision,
     discardPendingRevision,
+    // Info: (20260903 - Emily) #6688-A 揭露框架的選擇入口
+    setDisclosureFramework,
     // Info: (20260716 - Tzuhan) #56 報告匯入(逐段勾選確認)
     pendingImport,
     importReportFile,
