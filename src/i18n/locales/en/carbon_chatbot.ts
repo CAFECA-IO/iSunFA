@@ -146,6 +146,8 @@ export const carbonChatbot = {
     "encrypted and the current key cannot open it",
   inventory_unreadable_reason_schema_rejected:
     "does not match the current storage format",
+  inventory_unreadable_reason_load_failed:
+    "could not be loaded right now (network or server); nothing has been confirmed yet",
   inventory_unsavable:
     "This version of the inventory data was not saved: one of its fields does not fit the storage format. What you see is still on screen, but closing or reloading this tab loses it. This is a fault on our side \u2014 please report it.",
   save_local_quota:

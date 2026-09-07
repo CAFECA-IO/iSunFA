@@ -146,6 +146,8 @@ export const carbonChatbot = {
     "暗号化されており、現在の鍵では復号できません",
   inventory_unreadable_reason_schema_rejected:
     "現在のバージョンの保存形式に合いません",
+  inventory_unreadable_reason_load_failed:
+    "現在読み込めません(ネットワークまたはサーバー)。内容は未確認です",
   inventory_unsavable:
     "インベントリデータのこの版は保存されていません。保存形式に合わないフィールドがあります。表示されている内容はまだ画面上にありますが、このタブを閉じる・再読み込みすると失われます。こちらの不具合です。ご報告いただけると助かります。",
   save_local_quota:

@@ -41,6 +41,11 @@ export enum InventoryLoadReasonEnum {
   DECRYPT_FAILED = "DECRYPT_FAILED",
   /** 解開了但不符合儲存格式(寫路徑守門上線前留下的、或未來欄位)—— 資料在,只是這一版讀不懂 */
   SCHEMA_REJECTED = "SCHEMA_REJECTED",
+  /**
+   * Info: (20260907 - Emily) 請求本身失敗(網路、伺服器暫時不可用)—— 有沒有紀錄都還不知道。
+   * review 低-2:這是第四種失敗,原本沒有標籤;hook 的 catch 用它,而不是把上一個標記留著。
+   */
+  LOAD_FAILED = "LOAD_FAILED",
 }
 
 /**
@@ -57,6 +62,8 @@ export const describeInventoryLoadReason = (
       return "盤查狀態已加密,目前的金鑰解不開";
     case InventoryLoadReasonEnum.SCHEMA_REJECTED:
       return "盤查狀態存在,但不符合目前版本的儲存格式";
+    case InventoryLoadReasonEnum.LOAD_FAILED:
+      return "盤查狀態暫時無法載入(網路或伺服器),尚未確認內容";
     default:
       return "";
   }
@@ -72,7 +79,14 @@ export const describeInventoryLoadReason = (
 export const buildInventoryUnreadableFact = (
   reason: InventoryLoadReasonEnum,
 ): IContextFact => ({
-  label: "盤查狀態:存在但目前讀不出來",
+  /*
+   * Info: (20260907 - Emily) review 低-3:「存在」只能在真的讀到紀錄時說。
+   * LOAD_FAILED 連有沒有紀錄都不知道,label 不得宣稱存在。
+   */
+  label:
+    reason === InventoryLoadReasonEnum.LOAD_FAILED
+      ? "盤查狀態:目前無法載入"
+      : "盤查狀態:存在但目前讀不出來",
   value: describeInventoryLoadReason(reason),
   source: "盤查狀態載入結果(不是帳本內容)",
 });
@@ -87,7 +101,11 @@ export const buildInventoryUnreadableFact = (
 export const describeUnreadableInventoryStep = (
   reason: InventoryLoadReasonEnum,
 ): string =>
-  `盤查狀態存在但目前讀不出來(${describeInventoryLoadReason(reason)});請向使用者說明這件事,不要宣稱帳本沒有資料,也不要引導重新設定公司名稱、年度或邊界 —— 那會覆蓋原本的資料`;
+  `${
+    reason === InventoryLoadReasonEnum.LOAD_FAILED
+      ? "盤查狀態目前無法載入,有沒有既有資料尚未確認"
+      : "盤查狀態存在但目前讀不出來"
+  }(${describeInventoryLoadReason(reason)});請向使用者說明這件事,不要宣稱帳本沒有資料,也不要引導重新設定公司名稱、年度或邊界 —— 那會覆蓋原本的資料`;
 
 /**
  * Info: (20260904 - Emily) 這一版的盤查狀態**存不進去** —— 有欄位不符合儲存格式。

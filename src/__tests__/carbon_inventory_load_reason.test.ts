@@ -144,11 +144,26 @@ describe("讀不出來時該說什麼(純函式,hook 只接線)", () => {
     InventoryLoadReasonEnum.SCHEMA_REJECTED,
   ];
 
-  it("三種原因各有說法,而且說法互不相同(分不開就等於沒分)", () => {
-    const texts = reasons.map(describeInventoryLoadReason);
+  it("四種原因各有說法,而且說法互不相同(分不開就等於沒分)", () => {
+    const all = [...reasons, InventoryLoadReasonEnum.LOAD_FAILED];
+    const texts = all.map(describeInventoryLoadReason);
     expect(texts.every((text) => text.length > 0)).toBe(true);
-    expect(new Set(texts).size).toBe(3);
+    expect(new Set(texts).size).toBe(4);
     expect(describeInventoryLoadReason(InventoryLoadReasonEnum.OK)).toBe("");
+  });
+
+  it("LOAD_FAILED 不得宣稱「存在」—— 連有沒有紀錄都還不知道(review 低-3 的原則)", () => {
+    const fact = buildInventoryUnreadableFact(
+      InventoryLoadReasonEnum.LOAD_FAILED,
+    );
+    expect(fact.label).not.toContain("存在");
+    expect(
+      describeUnreadableInventoryStep(InventoryLoadReasonEnum.LOAD_FAILED),
+    ).toContain("尚未確認");
+    // 其他三種真的讀到紀錄,才可以說存在
+    reasons.forEach((reason) => {
+      expect(buildInventoryUnreadableFact(reason).label).toContain("存在");
+    });
   });
 
   it("事實包那一筆:不帶排放數字、來源明說不是帳本內容", () => {
@@ -163,7 +178,7 @@ describe("讀不出來時該說什麼(純函式,hook 只接線)", () => {
   it("currentStep 那一句同時做到三件事:說資料在、禁止說沒資料、禁止引導重設", () => {
     reasons.forEach((reason) => {
       const step = describeUnreadableInventoryStep(reason);
-      expect(step).toContain("存在");
+      expect(step).toContain("存在但目前讀不出來");
       expect(step).toContain("不要宣稱帳本沒有資料");
       expect(step).toContain("不要引導重新設定");
       expect(step).toContain(describeInventoryLoadReason(reason));
@@ -203,5 +218,20 @@ describe("hook 接線(源碼掃描;node 環境無法渲染 hook)", () => {
 
   it("讀出來之後清掉標記(否則解鎖後仍被當成讀不出來)", () => {
     expect(hook).toMatch(/markInventoryUnreadable\(chatChannel, null\);/);
+  });
+
+  it("請求失敗(第四種)標 LOAD_FAILED,而不是沿用上一個標記(review 低-2)", () => {
+    expect(hook).toMatch(
+      /failed to load inventory state[\s\S]{0,600}?markInventoryUnreadable\(\s*chatChannel,\s*InventoryLoadReasonEnum\.LOAD_FAILED,?\s*\)/,
+    );
+  });
+
+  it("解鎖前不標 LOCKED:那時連有沒有紀錄都不知道(review 低-3)", () => {
+    const earlyReturn = hook.indexOf(
+      "if (!isBookBound && (!isUnlocked || !master)) return;",
+    );
+    expect(earlyReturn).toBeGreaterThan(0);
+    const before = hook.slice(Math.max(0, earlyReturn - 1200), earlyReturn);
+    expect(before).not.toMatch(/markInventoryUnreadable\([^)]*LOCKED/);
   });
 });

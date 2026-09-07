@@ -146,6 +146,8 @@ export const carbonChatbot = {
     "암호화되어 있고 현재 키로는 열 수 없습니다",
   inventory_unreadable_reason_schema_rejected:
     "현재 버전의 저장 형식과 맞지 않습니다",
+  inventory_unreadable_reason_load_failed:
+    "현재 불러올 수 없습니다(네트워크 또는 서버). 내용은 아직 확인되지 않았습니다",
   inventory_unsavable:
     "산정 데이터의 이 버전은 저장되지 않았습니다. 저장 형식에 맞지 않는 필드가 있습니다. 화면에 보이는 내용은 아직 남아 있지만, 이 탭을 닫거나 새로 고치면 사라집니다. 저희 쪽 문제이니 알려주시면 감사합니다.",
   save_local_quota:

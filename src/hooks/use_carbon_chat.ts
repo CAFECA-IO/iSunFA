@@ -1575,17 +1575,13 @@ export const useCarbonChat = () => {
     const master = masterKeyRef.current;
     // Info: (20260716 - Tzuhan) #52 帳本會話明文模式免金鑰(同報告還原)
     const isBookBound = Boolean(sessionAccess[chatChannel]?.accountBookId);
-    if (!isBookBound && (!isUnlocked || !master)) {
-      /*
-       * Info: (20260907 - Emily) 個人房未解鎖:還沒去讀,但已知讀不到(#6779)。
-       * 記成 LOCKED 而不是什麼都不記 —— 解鎖後這個 effect 會重跑並清掉它。
-       * 已 settled 的房不再覆寫(那是解鎖後又鎖回去的情形,狀態已在記憶體裡)。
-       */
-      if (!inventoryLoadSettledRef.current.has(chatChannel)) {
-        markInventoryUnreadable(chatChannel, InventoryLoadReasonEnum.LOCKED);
-      }
-      return;
-    }
+    /*
+     * Info: (20260907 - Emily) 個人房未解鎖:還沒去讀,**不標記**(review 低-3)。
+     * 第一版在這裡標 LOCKED,但此時連伺服器上有沒有紀錄都不知道,事實包那筆
+     * 「狀態存在但讀不出來」對一間全新的空房是假的。沒解鎖就沒有帳本事實,
+     * 本來就是這樣;LOCKED 留給真的走到 loader、看到 envelope 卻沒金鑰那條路。
+     */
+    if (!isBookBound && (!isUnlocked || !master)) return;
     if (
       inventoryLoadSettledRef.current.has(chatChannel) ||
       inventoryLoadAttemptedRef.current.has(chatChannel)
@@ -1636,6 +1632,15 @@ export const useCarbonChat = () => {
       .catch((error) => {
         // Info: (20260716 - Tzuhan) 還原失敗不設版本 → 凍結該 channel 的狀態自動保存，防空狀態蓋庫
         console.error("[carbon-chat] failed to load inventory state:", error);
+        /*
+         * Info: (20260907 - Emily) 第四種失敗要有自己的標籤(review 低-2):網路或伺服器掛了,
+         * 有沒有紀錄都不知道。不標的話 persona 會照空狀態 onboarding;標成別的原因會說錯。
+         * 下次進房會重試(attempted 在下面移除),成功就清掉。
+         */
+        markInventoryUnreadable(
+          chatChannel,
+          InventoryLoadReasonEnum.LOAD_FAILED,
+        );
         /**
          * Info: (20260806 - Tzuhan) 從 attempted 移除,**不**加進 settled ——
          * 這是「沒有結論」而非「結論是失敗」:網路抖動、伺服器暫時不可用都走這條,

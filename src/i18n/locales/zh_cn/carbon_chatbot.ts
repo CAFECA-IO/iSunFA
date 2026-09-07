@@ -136,6 +136,8 @@ export const carbonChatbot = {
   inventory_unreadable_reason_locked: "已加密,尚未解锁密钥",
   inventory_unreadable_reason_decrypt_failed: "已加密,目前的密钥解不开",
   inventory_unreadable_reason_schema_rejected: "不符合当前版本的存储格式",
+  inventory_unreadable_reason_load_failed:
+    "暂时无法加载(网络或服务器),尚未确认内容",
   inventory_unsavable:
     "盘查数据这一版没有保存成功:其中有字段不符合存储格式。内容还在画面上,但关闭或刷新这个分页之后这一版就不在了。这是系统的问题,请回报给我们。",
   save_local_quota: "本机暂存空间已满,离线备份未更新(云端已保存)。",
