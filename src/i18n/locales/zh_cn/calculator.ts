@@ -312,6 +312,7 @@ export const calculator = {
     reset: "重置",
     re_send: "重新发送薪资单",
     send_disabled_unsaved: "请先储存薪资记录，才能寄出薪资单",
+    send_disabled_unlinked: "这张试算已解除员工关联，请重新选择员工",
     send_disabled_no_email: "这位员工的资料里没有电子邮件，请先到员工列表补上",
     send_disabled_employee_gone: "这位员工已从名单移除，无法寄出薪资单",
     send_disabled_loading: "正在确认员工名单…",

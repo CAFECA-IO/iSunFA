@@ -160,12 +160,15 @@ describe("寄送與名單對「沒有信箱」的定義一致", () => {
    * 顯示「可以寄」、在另一頁顯示「未填寫」。
    */
   it("薪資紀錄頁用的是 hasNoEmail，不是自己寫一次 trim", () => {
-    const recordsPage = stripComments(
-      read("components/salary_calculator/salary_records_page_body.tsx"),
-    );
+    /**
+     * Info: (20260905 - Luphia) 判斷搬到 `resolveSendTarget` 了（#6775），
+     * 而它是**兩頁共用**的 —— 所以「一致」現在比原本更強：
+     * 不再是「兩頁各自都記得用 hasNoEmail」，而是「只有一個地方在判斷」。
+     */
+    const sendTarget = stripComments(read("lib/utils/salary_send_target.ts"));
 
-    expect(recordsPage).toContain("hasNoEmail(");
-    expect(recordsPage).not.toContain('email.trim() === ""');
+    expect(sendTarget).toContain("hasNoEmail(");
+    expect(sendTarget).not.toContain('email.trim() === ""');
   });
 });
 
