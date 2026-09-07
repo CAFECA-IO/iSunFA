@@ -767,6 +767,41 @@ describe("listEmployees 帶出薪資紀錄缺漏", () => {
   });
 
   /**
+   * Info: (20260907 - Julian) **回填的月份不得被下限藏起來**（review 阻擋-1）。
+   *
+   * 薪資紀錄的年月是使用者自己選的，沒有綁在建帳日之後 ——「九月建帳、
+   * 把今年 1–8 月補進來」是導入時的正常路徑。只看建帳日當下限的話，
+   * 這一段裡漏建的那個月會回空陣列，完全不標示。
+   *
+   * 這一條與 `salary_coverage.tz.test.ts` 的分工：那邊驗判斷本身，
+   * 這邊驗 service 真的把整份 `existing` 傳下去了 —— 只傳「建帳日之後」
+   * 那幾筆的話，逐月判斷再對也救不回來。
+   */
+  it("導入時回填到建帳日之前的月份，其中漏建的仍然標得出來", async () => {
+    employees.seed(
+      BOOK,
+      employeeOf({ hireDate: Math.floor(Date.UTC(2020, 0, 1) / 1000) }),
+    );
+    accountBooks.createdAtByBook.set(
+      BOOK,
+      new Date("2026-09-01T00:00:00.000Z"),
+    );
+    // Info: (20260907 - Julian) 回填了今年 1–8 月，唯獨 6 月漏了
+    records.coveredByBook.set(
+      BOOK,
+      [1, 2, 3, 4, 5, 7, 8].map((month) => ({
+        employeeId: EMPLOYEE_ID,
+        year: 2026,
+        month,
+      })),
+    );
+
+    const [employee] = await service.listEmployees(BOOK);
+
+    expect(employee.missingPeriods).toEqual([{ year: 2026, month: 6 }]);
+  });
+
+  /**
    * Info: (20260907 - Julian) 讀不到帳本時退回只看到職日，不是整個不下結論。
    *
    * 帳本讀不到多半代表 id 錯或已刪 —— 那時名單本來也會是空的。
