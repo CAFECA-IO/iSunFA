@@ -121,26 +121,46 @@ export const canViewAccountBook = async (
 };
 
 /**
- * Info: (20260907 - Emily) 附件 cid 的讀取裁決(#6748;一次收 #6625 / #6613):
- * **只有上傳者本人**能經 /import 或聊天附件把那個 cid 的檔取回來。
+ * Info: (20260907 - Emily) 附件 cid 的讀取裁決(#6748;一次收 #6625 / #6613)。
  *
- * cid 是 Laria 的 metadata hash,由內容決定、可被猜中或轉貼;在此之前
- * 讀取端一律照單取回 —— 知道 cid 就等於拿到檔。
+ * cid 是 Laria 的 metadata hash,由內容決定、可被猜中或轉貼;在此之前讀取端一律
+ * 照單取回 —— 知道 cid 就等於拿到檔。
  *
- * 為什麼是「上傳者本人」而不是「同帳本成員」:附件的生命週期是同一個人
- * 在同一個瀏覽器裡「選檔上傳 → 送出 / 匯入」,重載後的重試也是同一個人;
- * 目前沒有任何流程需要 B 讀 A 上傳的 cid。放寬要等有那個流程時再放,
- * 而且要以帳本角色裁決,不是在這裡猜。
+ * ## 誰能讀
  *
- * 「查無擁有者」一律拒絕,包含本功能上線前上傳的舊 cid:那些 cid 沒有紀錄,
- * 系統無法證明是誰的。代價是上線前尚未完成的待匯入紀錄要重傳檔案
- * (前端本來就有「cid 取不回就退回直傳」那條路),寫進部署清單。
- * 若改成「查無即放行」,所有舊 cid 永遠留在門外,這道門對它們等於不存在。
+ * 1. **上傳者本人**,永遠可以。
+ * 2. **同一個帳本的接續者**(review 中-1,owner 拍板 20260907):待匯入紀錄連同 cid
+ *    是每個 chatroom 一筆、帳本會話的成員拿得到那張卡(#6714 / #6723 做「接著匯入」
+ *    時刻意撐過重載與切房的);B 在 A 的卡上按「接著匯入」會帶 A 的 cid 打 /import。
+ *    第一版寫「沒有任何流程需要 B 讀 A 上傳的 cid」—— 那句是錯的,那個流程這幾週
+ *    才做起來。放寬的條件三個都要成立:請求綁了帳本、呼叫者對它有 EDIT(/import 上一道
+ *    guard 已算過,直接沿用)、**且 cid 的擁有者也是該帳本成員** —— 最後這條擋掉
+ *    「B 拿 A 的 cid 到別的帳本用」。
+ * 3. 其他一律拒絕,包含查無擁有者(上線前上傳的舊 cid:系統無法證明是誰的)。
+ *    代價是上線前尚未完成的待匯入紀錄要重傳(前端本來就有直傳退路),寫進部署清單。
+ *    若改成「查無即放行」,所有舊 cid 永遠留在門外,這道門對它們等於不存在。
+ *
+ * 聊天附件那端**不帶 scope**(只認本人):訊息是個人的、E2EE,沒有「接續」語意。
  */
+export interface IAttachmentReadScope {
+  /** 請求所綁的帳本(個人會話為 null → 只認本人) */
+  accountBookId: string | null;
+  /** 呼叫者對該帳本是否具編輯權(由 resolveCarbonAccess 算出,不在這裡重算) */
+  callerCanEdit: boolean;
+}
+
 export const canReadAttachmentCid = async (
   userAddress: string,
   cid: string,
+  scope?: IAttachmentReadScope,
 ): Promise<boolean> => {
   const owner = await carbonAttachmentOwnerRepo.findOwnerAddress(cid);
-  return owner !== null && isSameAddress(owner, userAddress);
+  if (owner === null) return false;
+  if (isSameAddress(owner, userAddress)) return true;
+  if (!scope?.accountBookId || !scope.callerCanEdit) return false;
+  const ownerRole = await accountBookRepo.getMemberRoleByAddress(
+    scope.accountBookId,
+    owner,
+  );
+  return ownerRole !== null;
 };

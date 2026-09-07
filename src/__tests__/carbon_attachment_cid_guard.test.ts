@@ -12,6 +12,8 @@ import { NextRequest } from "next/server";
 import { POST as importRoute } from "@/app/api/v1/chat/carbon/import/route";
 import { POST as chatRoute } from "@/app/api/v1/chat/carbon/route";
 import { carbonAttachmentOwnerRepo } from "@/repositories/carbon_attachment_owner.repo";
+import { chatroomRepo } from "@/repositories/chatroom.repo";
+import { accountBookRepo } from "@/repositories/account_book.repo";
 import { storageService } from "@/services/storage.service";
 import { chatroomService } from "@/services/chatroom.service";
 import { canReadAttachmentCid } from "@/services/carbon_access.guard";
@@ -40,12 +42,10 @@ jest.mock("@/repositories/carbon_attachment_owner.repo", () => ({
   },
 }));
 jest.mock("@/repositories/chatroom.repo", () => ({
-  chatroomRepo: {
-    findAccountBookIdByChannel: jest.fn(async () => null),
-  },
+  chatroomRepo: { findAccountBookIdByChannel: jest.fn() },
 }));
 jest.mock("@/repositories/account_book.repo", () => ({
-  accountBookRepo: { getMemberRoleByAddress: jest.fn(async () => null) },
+  accountBookRepo: { getMemberRoleByAddress: jest.fn() },
 }));
 jest.mock("@/lib/auth/dewt", () => ({
   getIdentityFromDeWT: jest.fn(async () => ({
@@ -120,15 +120,26 @@ const mockFindOwner =
 const mockRecover = storageService.recoverLaria as unknown as ReturnType<
   typeof jest.fn
 >;
+const mockFindBook =
+  chatroomRepo.findAccountBookIdByChannel as unknown as ReturnType<
+    typeof jest.fn<() => Promise<string | null>>
+  >;
+const mockRole =
+  accountBookRepo.getMemberRoleByAddress as unknown as ReturnType<
+    typeof jest.fn<(bookId: string, address: string) => Promise<string | null>>
+  >;
 const mockRecordUserMessage =
   chatroomService.recordUserMessage as unknown as ReturnType<typeof jest.fn>;
 
 const CALLER = "0xAAA";
 const PERMISSION_DENIED = "AU000005";
 
-const callImport = async (cid: string): Promise<{ errorCode: string }> => {
+const callImport = async (
+  cid: string,
+  channel: string = buildCarbonChatChannel(CALLER, "s1"),
+): Promise<{ errorCode: string }> => {
   const form = new FormData();
-  form.set("channel", buildCarbonChatChannel(CALLER, "s1"));
+  form.set("channel", channel);
   form.set("cid", cid);
   form.set("fileName", "report.pdf");
   form.set("mimeType", "application/pdf");
@@ -170,6 +181,11 @@ beforeEach(() => {
   mockFindOwner.mockReset();
   mockRecover.mockClear();
   mockRecordUserMessage.mockClear();
+  // Info: (20260907 - Emily) 預設是個人會話:沒有帳本、沒有角色 → 只認本人那條路
+  mockFindBook.mockReset();
+  mockFindBook.mockResolvedValue(null);
+  mockRole.mockReset();
+  mockRole.mockResolvedValue(null);
 });
 
 describe("canReadAttachmentCid:只有上傳者本人", () => {
@@ -213,6 +229,66 @@ describe("/import 的 cid 歸屬(#6748)", () => {
     const body = await callImport("cid-mine");
     expect(body.errorCode).not.toBe(PERMISSION_DENIED);
     expect(mockRecover).toHaveBeenCalledWith("cid-mine");
+  });
+});
+
+describe("同帳本接續匯入(#6748 中-1,owner 拍板 (b))", () => {
+  /**
+   * Info: (20260907 - Emily) 待匯入卡是每個 chatroom 一筆、帳本成員拿得到;B 在 A 的卡上
+   * 按「接著匯入」會帶 A 的 cid 打 /import。第一版只認本人會把這條產品流程擋掉一半,
+   * 而 B 看到的是一個沒有理由的「權限不足」—— B 明明是 EDITOR。
+   *
+   * 放寬的三個條件缺一不可,下面每條各拿掉一個。
+   */
+  const BOOK = "book-1";
+  const A_CHANNEL = buildCarbonChatChannel("0xAAAA", "s-of-a");
+
+  it("B 是帳本 EDITOR、cid 擁有者 A 也是成員 → 放行(接續 A 的匯入)", async () => {
+    mockFindBook.mockResolvedValue(BOOK);
+    mockRole.mockImplementation(async (_book, address) =>
+      address.toLowerCase() === "0xaaa" || address.toLowerCase() === "0xaaaa"
+        ? "EDITOR"
+        : null,
+    );
+    mockFindOwner.mockResolvedValue("0xaaaa");
+    const body = await callImport("cid-of-a", A_CHANNEL);
+    expect(body.errorCode).not.toBe(PERMISSION_DENIED);
+    expect(mockRecover).toHaveBeenCalledWith("cid-of-a");
+  });
+
+  it("cid 擁有者不是該帳本成員 → 拒絕(擋「B 拿 A 的 cid 到別的帳本用」)", async () => {
+    mockFindBook.mockResolvedValue(BOOK);
+    mockRole.mockImplementation(async (_book, address) =>
+      address.toLowerCase() === "0xaaa" ? "EDITOR" : null,
+    );
+    mockFindOwner.mockResolvedValue("0xaaaa");
+    const body = await callImport("cid-of-a", A_CHANNEL);
+    expect(body.errorCode).toBe(PERMISSION_DENIED);
+    expect(mockRecover).not.toHaveBeenCalled();
+  });
+
+  it("個人會話(沒綁帳本)→ 仍只認本人", async () => {
+    mockFindBook.mockResolvedValue(null);
+    mockFindOwner.mockResolvedValue("0xaaaa");
+    const body = await callImport("cid-of-a");
+    expect(body.errorCode).toBe(PERMISSION_DENIED);
+  });
+
+  it("裁決函式:scope 缺 callerCanEdit 也不放行(不在這裡重算權限,但也不能被空 scope 繞過)", async () => {
+    mockFindOwner.mockResolvedValue("0xaaaa");
+    mockRole.mockResolvedValue("EDITOR");
+    expect(
+      await canReadAttachmentCid("0xAAA", "cid-of-a", {
+        accountBookId: BOOK,
+        callerCanEdit: false,
+      }),
+    ).toBe(false);
+    expect(
+      await canReadAttachmentCid("0xAAA", "cid-of-a", {
+        accountBookId: BOOK,
+        callerCanEdit: true,
+      }),
+    ).toBe(true);
   });
 });
 
