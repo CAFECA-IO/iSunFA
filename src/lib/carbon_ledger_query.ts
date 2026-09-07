@@ -5,8 +5,10 @@
 // Info: (20260825 - Emily) LLM 的回答裡不得出現本模組沒給的數字 —— 出口守門(第三層)憑此集合攔截。
 //
 // Info: (20260825 - Emily) 三條產品鐵律在這一層的落點:
-// Info: (20260825 - Emily) 1. 數字不憑空捏造 —— 數值只從 ledger 欄位取,總計/小計讀既存欄位不重算
+// Info: (20260825 - Emily) 1. 數字不憑空捏造 —— 數值只從 ledger 欄位取,總計讀既存欄位不重算
 // Info: (20260825 - Emily)    (summarizeLedgerEntries 是唯一累加實作;這裡連 add 都盡量不做)。
+// Info: (20260907 - Emily)    例外:**維度小計**(廠址、ISO 類別)不是既存欄位,得在查詢層以同一個
+// Info: (20260907 - Emily)    MoneyUtil 加總,且每一個都必須由「加回總量」的不變式測試釘住(#6778 review 低-1)。
 // Info: (20260825 - Emily) 2. 異常只來自列舉過的偵測器 —— queryAnomalies 只讀既存的決定性裁決
 // Info: (20260825 - Emily)    (匯入阻擋/pending/articulation 的 violations 與 warnings/年度標註),
 // Info: (20260825 - Emily)    不發明新的「疑點」;新偵測器要先開票、定義證據鏈、進這個列舉。
