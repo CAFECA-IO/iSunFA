@@ -355,6 +355,8 @@ export const calculator = {
     re_send: "Resend Pay Slip",
     send_disabled_unsaved:
       "Save the salary record first, then you can send the pay slip",
+    send_disabled_unlinked:
+      "This calculation is no longer linked to an employee. Please select one again.",
     send_disabled_no_email:
       "This employee has no email address — add one in the employee list first",
     send_disabled_employee_gone:

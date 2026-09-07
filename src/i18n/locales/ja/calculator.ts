@@ -342,6 +342,8 @@ export const calculator = {
     reset: "リセット",
     re_send: "給与明細を再送信",
     send_disabled_unsaved: "給与記録を保存すると給与明細を送信できます",
+    send_disabled_unlinked:
+      "この試算は従業員との紐付けが解除されています。従業員を選び直してください",
     send_disabled_no_email:
       "この従業員にはメールアドレスがありません。先に従業員一覧で追加してください",
     send_disabled_employee_gone:

@@ -341,6 +341,8 @@ export const calculator = {
     re_send: "급여 명세서 재발송",
     send_disabled_unsaved:
       "급여 기록을 먼저 저장해야 급여명세서를 보낼 수 있습니다",
+    send_disabled_unlinked:
+      "이 계산은 직원 연결이 해제되었습니다. 직원을 다시 선택하세요",
     send_disabled_no_email:
       "이 직원에게 이메일 주소가 없습니다. 먼저 직원 목록에서 추가해 주세요",
     send_disabled_employee_gone:
