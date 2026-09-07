@@ -277,7 +277,16 @@ describe("計算機頁的寄出按鈕", () => {
    */
   it("沒存過就寄不出去", () => {
     expect(source).toContain("send_disabled_unsaved");
-    expect(source).toMatch(/if \(!savedRecord\) return/);
+    /**
+     * Info: (20260907 - Julian) 釘的是「這道守門與它的理由連在一起」，
+     * 不是那一行長什麼樣：守門移到 `sendTarget` 的 IIFE 裡之後
+     * prettier 會把 `return` 折到下一行，而行為一個字都沒有變。
+     * 原本的 `/if \(!savedRecord\) return/` 會因為換行而紅 ——
+     * 那是掃描測試在量排版，不是在量行為。
+     */
+    expect(source).toMatch(
+      /if \(!savedRecord\)[\s\S]{0,80}?send_disabled_unsaved/,
+    );
   });
 
   /**
@@ -291,6 +300,34 @@ describe("計算機頁的寄出按鈕", () => {
   it("沒有信箱也寄不出去 —— 判斷走共用的 resolveSendTarget", () => {
     expect(source).toContain("resolveSendTarget(");
     expect(source).not.toMatch(/employeeEmail\.trim\(\)\s*===\s*""/);
+  });
+
+  /**
+   * Info: (20260907 - Julian) 問的是**這一筆紀錄的員工**，不是畫面上還連著誰。
+   *
+   * 端點只吃 `record_id`，收件人由伺服器從那一筆紀錄推導（計畫書 §3.1／D3）。
+   * 拿 `selectedEmployeeId` 去問，等於用「下一次要存給誰」回答
+   * 「這一筆要寄給誰」—— 而 `changeEmployeeName()` 一改姓名就把前者清成 `null`，
+   * 後者卻沒有變。反面斷言在這裡是必要的：退回讀 `selectedEmployeeId`
+   * 之後「有呼叫 resolveSendTarget」照樣成立，上面那一條不會紅。
+   */
+  it("寄給誰是問這一筆紀錄的員工，不是問畫面上的連結", () => {
+    expect(source).toMatch(/resolveSendTarget\(\s*savedRecord\.employee\.id/);
+    expect(source).not.toMatch(/resolveSendTarget\(\s*selectedEmployeeId/);
+  });
+
+  /**
+   * Info: (20260907 - Julian) 擋門與**顯示**同源。
+   *
+   * `sending_pay_slip_modal` 檔頭寫著它存在的唯一理由：讓人在按下去之前
+   * 看清楚薪資單會寄到哪（員工檔的 email 沒有驗證流程，打錯一個字就寄給陌生人）。
+   * 那個畫面若讀 context 的 `employeeEmail` 副本，而擋門讀即時名單，
+   * 就會出現「按鈕說寄得出去、確認畫面說這個人沒有信箱」，
+   * 或更糟的「秀舊地址、寄新地址」—— 兩種都讓那一格失去用途。
+   */
+  it("確認彈窗顯示的收件信箱來自同一次判斷", () => {
+    expect(source).toContain('employeeEmail={sendTarget.email ?? ""}');
+    expect(source).not.toContain("employeeEmail={employeeEmail}");
   });
 
   it("寄出專屬的兩種原因各有各的文案", () => {
