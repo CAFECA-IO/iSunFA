@@ -19,6 +19,7 @@ import {
   type ISalarySendTarget,
 } from "@/lib/utils/salary_send_target";
 import {
+  DEFAULT_EMPLOYEE_LEAVE,
   diffEmployeeProfile,
   IProfileDiffEntry,
 } from "@/lib/utils/salary_employee_profile";
