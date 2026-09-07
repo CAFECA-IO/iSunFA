@@ -267,8 +267,35 @@ describe("留職停薪的編輯入口", () => {
     expect(actionModal).toContain("leave_start_date");
     expect(actionModal).toContain("leave_end_date");
     expect(actionModal).toContain("patchLeave({");
-    // Info: (20260905 - Luphia) 少了這一行，畫面填得進去但送出的 body 沒有它們
-    expect(actionModal).toMatch(/\.\.\.leave,/);
+    /**
+     * Info: (20260907 - Julian) 少了這個，畫面填得進去但送出的 body 沒有它們。
+     *
+     * 原本釘的是 `/\.\.\.leave,/`（就地展開）。組裝搬到
+     * `buildEmployeeWriteInput` 之後改釘「leave 有被交給它」——
+     * 守的是同一件事，而「交出去之後會發生什麼」由
+     * `salary_employee_profile.test.ts` 逐條驗（§1.11 的分工）。
+     */
+    expect(actionModal).toContain("buildEmployeeWriteInput({");
+    expect(actionModal).toMatch(
+      /buildEmployeeWriteInput\(\{[\s\S]{0,120}?leave,/,
+    );
+  });
+
+  /**
+   * Info: (20260907 - Julian) 留停的 state **只能收窄後放進來**（review #6777 阻擋）。
+   *
+   * `data ?? DEFAULT_EMPLOYEE_LEAVE` 在型別上合法（`ISalaryCalculatorEmployee`
+   * 繼承 `ISalaryEmployeeLeave`），而 runtime 它握著整個員工物件 ——
+   * 送出時會把使用者剛改好的到職日、扶養人數、投保狀態全部還原。
+   *
+   * 這是一條反面斷言：退回去之後，上面每一條與純函式那一整組都照樣綠，
+   * 只有這一條會紅。
+   */
+  it("留停的 state 只放那兩欄，不是整個員工物件", () => {
+    expect(actionModal).toContain("pickEmployeeLeave(data)");
+    expect(actionModal).not.toMatch(
+      /useState<ISalaryEmployeeLeave>\(\s*data \?\?/,
+    );
   });
 
   /**

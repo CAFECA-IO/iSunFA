@@ -6,10 +6,12 @@ import {
   ISalaryEmployeeProfile,
 } from "@/interfaces/salary_record";
 import {
+  buildEmployeeWriteInput,
   DEFAULT_EMPLOYEE_LEAVE,
   DEFAULT_EMPLOYEE_PROFILE,
   EMPLOYMENT_TYPE_KEYS,
   employmentTypeI18nKey,
+  pickEmployeeLeave,
   fromDateInputValue,
   toDateInputValue,
 } from "@/lib/utils/salary_employee_profile";
@@ -161,8 +163,21 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
    * 編輯時取這個人現在的值、新增時是「沒有留停」—— 與 `baseProfile` 同一條理由：
    * 寫入契約整組必填，少帶一欄就是把現有的留停區間清掉。
    */
+  /**
+   * Info: (20260907 - Julian) **只取那兩欄**，不是把整個員工物件放進來
+   *（review #6777 阻擋）。
+   *
+   * 原本寫的是 `data ?? DEFAULT_EMPLOYEE_LEAVE` —— 型別上完全合法
+   *（`ISalaryCalculatorEmployee` 繼承 `ISalaryEmployeeLeave`，指派給變數時
+   * 不做多餘屬性檢查），而 runtime 它握著的是**整個員工**，包含打開視窗
+   * 那一刻的十五個常態屬性。
+   *
+   * 送出時 `...leave` 排在 `...profile` 之後，於是使用者剛改好的到職日、
+   * 扶養人數、投保狀態全部被還原 —— 視窗關了、沒有錯誤、什麼都沒變。
+   * 詳見 `buildEmployeeWriteInput` 的檔頭。
+   */
   const [leave, setLeave] = useState<ISalaryEmployeeLeave>(
-    data ?? DEFAULT_EMPLOYEE_LEAVE,
+    data === null ? DEFAULT_EMPLOYEE_LEAVE : pickEmployeeLeave(data),
   );
 
   const patchLeave = (patch: Partial<ISalaryEmployeeLeave>) =>
@@ -334,15 +349,26 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
        *
        * 兩個金額走各自的 `AmountInput`，所以擺在 `...profile` 之後覆蓋掉它。
        */
-      await submitHandler({
-        ...profile,
-        ...leave,
-        name: nameInput.trim(),
-        number: numberInput.trim(),
-        email: emailInput.trim() || undefined,
-        baseSalary: baseSalaryInput,
-        mealAllowance: mealAllowanceInput,
-      });
+      await submitHandler(
+        /**
+         * Info: (20260907 - Julian) 組裝收到 `buildEmployeeWriteInput`
+         *（review #6777 阻擋）。
+         *
+         * 原本是就地展開 `{ ...profile, ...leave, ... }`。搬出去的理由不是
+         * 好看：本專案不 render React，**留在這裡的組裝沒有任何測試守得住**
+         *（缺陷存在時全套 5,983 條全綠）。搬到純函式之後，「leave 夾帶了
+         * 整個員工物件也不得蓋掉 profile」才寫得成一條會紅的斷言。
+         */
+        buildEmployeeWriteInput({
+          profile,
+          leave,
+          name: nameInput.trim(),
+          number: numberInput.trim(),
+          email: emailInput.trim() || undefined,
+          baseSalary: baseSalaryInput,
+          mealAllowance: mealAllowanceInput,
+        }),
+      );
       modalVisibleHandler();
     } catch (error) {
       /**

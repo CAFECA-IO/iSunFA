@@ -125,7 +125,7 @@ export const calculator = {
     missing_email_banner: "{{count}} 位员工没有电子邮件，寄不出薪资单",
     only_missing_email: "只看这几位",
     missing_records_badge: "缺 {{count}} 个月",
-    missing_records_more: "{{periods}} 等 {{count}} 个月",
+    missing_records_more: "{{periods}}，另有 {{count}} 个月",
     missing_records_banner: "{{count}} 位员工有月份没有工资单记录",
     only_missing_records: "只看这几位",
     missing_hire_date_banner:
