@@ -1,5 +1,9 @@
 import { describe, it, expect } from "@jest/globals";
 import {
+  FRAMEWORK_ALIGNMENT_PHRASE,
+  FRAMEWORK_DISCLAIMER_PHRASE,
+} from "@/constants/carbon_report_framework";
+import {
   annotateTable,
   buildCarbonReportHtml,
   displayWidth,
@@ -354,5 +358,84 @@ describe("buildCarbonReportHtml 的識別欄位", () => {
       html.indexOf("</section>"),
     );
     expect(meta).toContain('<dl class="doc-identity">');
+  });
+});
+
+describe("揭露框架的聲明行(#6688-C)", () => {
+  /**
+   * Info: (20260904 - Emily) 這一組是紙面配對的**主守衛**。
+   *
+   * 分流表條 3(印了對齊卻缺免責)在 PDF 出口已翻成 BLOCK,而它只在配對壞掉時才叫 ——
+   * 也就是說它是這裡的下游。上游要有測試釘住「兩行一起、順序不變、緊鄰」,
+   * 否則配對壞掉的第一個症狀會是一份被擋住的 PDF,而不是一條紅測試。
+   *
+   * 字串取自常數而不是寫字面值:印出的與驗收比對的必須是同一份來源,
+   * 而寫字面值也會讓這個檔案被 outline 掃描判定為「宣告 IFRS」。
+   */
+  const shell = {
+    brand: "b",
+    internalDocument: "i",
+    systemReport: "s",
+    issuedAt: "d",
+    footerTitle: "f",
+    footerText: "t",
+  };
+
+  it("兩句一起印、順序不變、而且緊鄰", () => {
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      claims: [FRAMEWORK_ALIGNMENT_PHRASE, FRAMEWORK_DISCLAIMER_PHRASE],
+    });
+    const block = html.slice(
+      html.indexOf('<section class="doc-claims">'),
+      html.indexOf("</section>", html.indexOf('<section class="doc-claims">')),
+    );
+    expect(block).toContain(FRAMEWORK_ALIGNMENT_PHRASE);
+    expect(block).toContain(FRAMEWORK_DISCLAIMER_PHRASE);
+    expect(block.indexOf(FRAMEWORK_ALIGNMENT_PHRASE)).toBeLessThan(
+      block.indexOf(FRAMEWORK_DISCLAIMER_PHRASE),
+    );
+    // Info: (20260904 - Emily) 之間只能有段落標籤 —— 中間插任何內容就不是一組了
+    const between = block.slice(
+      block.indexOf(FRAMEWORK_ALIGNMENT_PHRASE) +
+        FRAMEWORK_ALIGNMENT_PHRASE.length,
+      block.indexOf(FRAMEWORK_DISCLAIMER_PHRASE),
+    );
+    expect(between).toBe("</p><p>");
+  });
+
+  it("沒有聲明行時整區不印(空陣列與省略都算)", () => {
+    /**
+     * Info: (20260904 - Emily) 比對元素不比對字串:`.doc-claims` 的樣式一直在
+     * `<style>` 裡,拿整份 HTML 找 "doc-claims" 會永遠命中(識別欄位那條的同一個坑)。
+     */
+    expect(buildCarbonReportHtml("## 一節\n\n內容。", shell)).not.toContain(
+      '<section class="doc-claims">',
+    );
+    expect(
+      buildCarbonReportHtml("## 一節\n\n內容。", { ...shell, claims: [] }),
+    ).not.toContain('<section class="doc-claims">');
+  });
+
+  it("聲明行在文件外殼的 meta 區裡,不是另外一頁", () => {
+    // Info: (20260904 - Emily) 與識別欄位同一個判準:不做整頁封面
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      claims: [FRAMEWORK_ALIGNMENT_PHRASE, FRAMEWORK_DISCLAIMER_PHRASE],
+    });
+    const meta = html.slice(
+      html.indexOf('<section class="doc-shell-meta">'),
+      html.lastIndexOf("</section>"),
+    );
+    expect(meta).toContain('<section class="doc-claims">');
+  });
+
+  it("逸出:聲明行也走 escapeHtml(來源是常數,但這一層不假設)", () => {
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      claims: ['<img src=x onerror="alert(1)">'],
+    });
+    expect(html).not.toContain("<img src=x");
+    expect(html).toContain("&lt;img");
   });
 });

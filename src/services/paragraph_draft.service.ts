@@ -18,6 +18,10 @@ import {
 } from "@/constants/llm";
 import { ApiError, API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
+  auditReplyQuantities,
+  shouldRunReplyGate,
+} from "@/lib/carbon_reply_gate";
+import {
   CARBON_REPORT_OUTLINE,
   ICarbonReportSection,
 } from "@/constants/carbon_report_outline";
@@ -49,6 +53,14 @@ const DRAFT_RESPONSE_SCHEMA: Schema = {
   },
   required: ["content", "citedFacts"],
 };
+
+/**
+ * Info: (20260904 - Emily) 「被守門攔下」要能與「生成失敗」分開處置(#6745)。
+ * 形狀沿用 helpers 的 isQuotaApiError / isTimeoutApiError:認錯誤碼,不認訊息字串。
+ */
+export const isDraftQuantityGateError = (error: unknown): boolean =>
+  error instanceof ApiError &&
+  error.code === API_ERRORS.VA_DRAFT_QUANTITY_UNSOURCED.code;
 
 export class ParagraphDraftService {
   // Info: (20260714 - Tzuhan) ChatService 延遲建立(避免 import 階段因缺 API Key 拋錯),測試時可注入 mock
@@ -132,13 +144,77 @@ export class ParagraphDraftService {
       );
     }
 
+    const content = parsed.data.content.trim();
+    this.gateQuantities(section.id, content, input);
+
     return {
       paragraphId: section.id,
       code: section.code,
       title: `${section.code} ${section.title}`,
-      content: parsed.data.content.trim(),
+      content,
       citedFacts: parsed.data.citedFacts,
     };
+  }
+
+  /**
+   * Info: (20260904 - Emily) 產物守門的**單一咽喉**(#6745;PR #6716 round-3 阻擋 3 的完整版)。
+   *
+   * ## 為什麼在這裡而不是三個呼叫端各接一段
+   *
+   * 這支是守門後方的**另一次 LLM 呼叫**,產物 `content` 寫進報告段落、最終匯出成
+   * 正式盤查報告書。它編一個帶排放單位的數字,就是合規文件裡一個無法溯源的排放量 ——
+   * 對話那層守門攔得再嚴,這裡漏一次就全部白攔。
+   *
+   * 2026-09-04 盤點三個入口:`/chat/carbon` 的 readyParagraphId 路徑在 route 裡自己接了
+   * 一段守門;`/chat/carbon/draft`(目錄的「AI 撰寫」鈕,也是前者被攔後**官方指定的重試路**)
+   * 與附件管線**零檢查** —— 主入口攔下的東西,重試一次就從沒門的路進來。
+   * 三處各貼一段會有三份會各自漂移的判準;放在生成本體,呼叫端想繞都繞不掉。
+   *
+   * ## 同一把尺
+   *
+   * 直接重用 `auditReplyQuantities`(對話回覆的 Y 地板),零新邏輯:
+   * 帶排放單位的數字 ∈ 事實包 ∪ 使用者說過的數字。上崗條件同 `shouldRunReplyGate`:
+   * 呼叫端沒帶事實包(undefined)就跳過、帶了空陣列**照跑**。
+   * 所以 `/draft` 的前端要補「把該房帳本事實包帶上」—— 不補,這道門對它永遠是跳過。
+   *
+   * ## 修訂模式的合法集合多一個來源
+   *
+   * `existingContent` 裡**既有**的數字算合法:修訂不該因原文本來就有的數字被攔 ——
+   * 那些數字是上一輪已經過過門的產物,或使用者自己寫的。
+   *
+   * ## 攔下就拋,不降級成空內容
+   *
+   * 拋具名 ApiError(`VA_DRAFT_QUANTITY_UNSOURCED`),各呼叫端自行決定降級語意。
+   * 不回一份「刪掉數字的草稿」:那等於系統替使用者改寫了一段合規文件,而且看起來像正常產出。
+   * log 帶 paragraphId 與違規數字 —— 數字是模型編的,不是使用者的內容。
+   */
+  private gateQuantities(
+    paragraphId: string,
+    content: string,
+    input: IParagraphDraftInput,
+  ): void {
+    if (!shouldRunReplyGate(input.contextFacts)) return;
+    const allowedTexts = [
+      ...input.conversationContext
+        .filter((message) => message.role === ChatRoleEnum.USER)
+        .map((message) => message.text),
+      ...(input.existingContent ? [input.existingContent] : []),
+    ];
+    const gate = auditReplyQuantities(
+      content,
+      input.contextFacts,
+      allowedTexts,
+    );
+    if (gate.ok) return;
+    logger.warn("[ParagraphDraftService] draft quantities unsourced", {
+      paragraphId,
+      violations: gate.violations,
+    });
+    throw new ApiError(
+      API_ERRORS.VA_DRAFT_QUANTITY_UNSOURCED.code,
+      `${API_ERRORS.VA_DRAFT_QUANTITY_UNSOURCED.message} [${gate.violations.join(", ")}]`,
+      API_ERRORS.VA_DRAFT_QUANTITY_UNSOURCED.status,
+    );
   }
 
   private buildPrompt(

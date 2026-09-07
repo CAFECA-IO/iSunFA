@@ -10,7 +10,10 @@ import {
   LlmTaskKeyEnum,
 } from "@/constants/llm";
 import { logger } from "@/lib/utils/logger";
-import { ParagraphDraftService } from "@/services/paragraph_draft.service";
+import {
+  ParagraphDraftService,
+  isDraftQuantityGateError,
+} from "@/services/paragraph_draft.service";
 import { storageService, StorageService } from "@/services/storage.service";
 import { IAttachment, IActivityRecord } from "@/types/carbon_chatbot.types";
 import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
@@ -115,6 +118,16 @@ interface IPipelineInput {
   attachments: IAttachment[];
   conversationContext: IParagraphDraftInput["conversationContext"];
   language?: string;
+  /**
+   * Info: (20260904 - Emily) 該房的帳本事實包(#6745)。
+   *
+   * 這條管線原本只帶萃取事實 `allFacts` 進草稿 —— 而萃取事實是附件裡的數字,
+   * 不含帳本。於是附件路徑生出來的段落若引用帳本的量,守門會把它當成編造;
+   * 反過來不帶事實包(undefined)守門就跳過。兩個方向都不對,所以帳本事實包要一起帶,
+   * 由 route 傳(帳本是 E2EE 的,伺服端只拿得到前端解密後決定性組出的這一包)。
+   * 省略 = 舊呼叫端,行為不變。
+   */
+  ledgerFacts?: IContextFact[];
   // Info: (20260730 - Tzuhan) 逐段推播回呼:整條管線耗時遠超 gateway 的 60s 讀取逾時(實測約 87s),
   // Info: (20260730 - Tzuhan) 結果不能只靠 HTTP 回應遞送。萃取完成、每段草稿完成時各推一次,
   // Info: (20260730 - Tzuhan) 使用者在連線被切斷前就已看到內容。回呼失敗絕不中斷管線(推播是加值,不是前提)。
@@ -308,7 +321,8 @@ ${OUTLINE_CATALOG}
         const draft = await this.getDraftService().generateParagraphDraft({
           paragraphId,
           conversationContext: input.conversationContext,
-          contextFacts: allFacts,
+          // Info: (20260904 - Emily) 萃取事實 ∪ 帳本事實:守門的合法集合兩邊都要有(#6745)
+          contextFacts: [...allFacts, ...(input.ledgerFacts ?? [])],
           language: input.language,
         });
         drafts.push(draft);
@@ -317,6 +331,14 @@ ${OUTLINE_CATALOG}
           input.onDraft?.(draft, drafts.length, targetIds.length),
         );
       } catch (error) {
+        if (isDraftQuantityGateError(error)) {
+          // Info: (20260904 - Emily) 被守門攔下不是生成失敗(#6745):warn、跳過該段、標記降級
+          logger.warn(
+            `[AttachmentExtractionService] draft gate blocked ${paragraphId}`,
+          );
+          degraded = true;
+          continue;
+        }
         // Info: (20260714 - Emily) 單段生成失敗僅跳過該段並標記降級，其餘段落照常產出
         logger.error(
           `[AttachmentExtractionService] draft failed for ${paragraphId}: ${JSON.stringify(error)}`,
