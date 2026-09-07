@@ -130,6 +130,8 @@ export const calculator = {
     no_hire_date: "未填寫",
     filter_missing_email: "顯示沒有電子郵件",
     filter_missing_hire_date: "顯示沒有到職日",
+    missing_hire_date_banner:
+      "{{count}} 位員工沒有到職日，補上之後才看得出他們缺哪幾個月的薪資單",
     filter_missing_records: "顯示缺少薪資單紀錄",
   },
   result: {

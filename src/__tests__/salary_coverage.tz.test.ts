@@ -32,6 +32,15 @@ const base = {
   resignDate: null,
   leaveStartDate: null,
   leaveEndDate: null,
+  /**
+   * Info: (20260907 - Julian) `null` = 沒有帳本下限，讓其他維度單獨測得到。
+   *
+   * 生產環境不會是 null（`AccountBook.createdAt` 是 `@default(now())`），
+   * 所以下限本身另有一組用真實值的測試（見「起算下限：帳本引入使用的月份」）。
+   * 這裡放 null 是為了讓「到職日 → 上個月」「留停扣除」那些判斷不被下限夾住
+   * 而變得測不到 —— 而不是因為它是常見的值。
+   */
+  bookCreatedAt: null,
   nowMs: NOW,
 };
 
@@ -250,6 +259,114 @@ describe("三種「本來就不該有」要扣掉", () => {
   });
 });
 
+/**
+ * Info: (20260907 - Julian) 起算的下限：帳本引入使用的月份（產品決策 20260907）。
+ *
+ * ## 這一組守的是什麼
+ *
+ * 一位 2015 年到職的同仁，在一本 2026 年才建立的帳裡，只要有人替他補上
+ * 到職日就會被算成缺一百三十幾個月 —— 而那些月份的薪水發生在這個系統之外，
+ * 那份清單一個都補不了。使用者對一個補不完的清單只會學會忽略它，
+ * 連同真正該補的那一個月一起。
+ *
+ * ## 為什麼不是「帳本最早的一筆薪資紀錄」
+ *
+ * 那個會**藏起真實的缺漏**：一本 2025 全年都忘了建的帳，起點會落在 2026，
+ * 於是 2025 整年靜靜消失。帳本的建立時間不會有這個問題 ——
+ * 帳本不存在的月份是**不可能**有薪資單，不是「可能有但我們沒看到」。
+ */
+describe("起算下限：帳本引入使用的月份", () => {
+  it("到職日遠早於帳本 → 只從帳本建立的那個月起算", () => {
+    const missing = missingSalaryPeriods({
+      ...base,
+      hireDate: utc(2015, 3, 10),
+      bookCreatedAt: utc(2026, 6, 18),
+      existing: [],
+    });
+
+    // Info: (20260907 - Julian) 2026/06、07、08（NOW 是 2026/09/05，終點是上個月）
+    expect(missing).toEqual(periodsOf([2026, 6], [2026, 7], [2026, 8]));
+  });
+
+  /**
+   * Info: (20260907 - Julian) 帳本建立的**當月照算**，與到職月同一條規則：
+   * 那個月這本帳已經存在，建得出薪資單。用「下個月才算」的話，
+   * 一本月初建立的帳會有一整個月的缺漏永遠不被標示 —— 那是漏報。
+   */
+  it("帳本建立當月照算，不是從下個月開始", () => {
+    const missing = missingSalaryPeriods({
+      ...base,
+      hireDate: utc(2020, 1, 1),
+      bookCreatedAt: utc(2026, 8, 31),
+      existing: [],
+    });
+
+    expect(missing).toEqual(periodsOf([2026, 8]));
+  });
+
+  /**
+   * Info: (20260907 - Julian) 反方向：帳本比到職日早時，下限不得把新人往前拉。
+   * 取的是兩者中**較晚**的那一個，不是無條件用帳本。
+   */
+  it("帳本早於到職日 → 以到職日為準", () => {
+    const missing = missingSalaryPeriods({
+      ...base,
+      hireDate: utc(2026, 7, 1),
+      bookCreatedAt: utc(2024, 1, 1),
+      existing: [],
+    });
+
+    expect(missing).toEqual(periodsOf([2026, 7], [2026, 8]));
+  });
+
+  it("帳本比上個月還晚建立 → 沒有任何月份該有紀錄", () => {
+    expect(
+      missingSalaryPeriods({
+        ...base,
+        hireDate: utc(2020, 1, 1),
+        bookCreatedAt: utc(2026, 9, 1),
+        existing: [],
+      }),
+    ).toEqual([]);
+  });
+
+  /**
+   * Info: (20260907 - Julian) 讀不到帳本時退回只看到職日，**不猜一個下限**。
+   * 猜錯的方向會是漏報：下限猜得太晚，該補的月份就不會被標示。
+   */
+  it("沒有帳本下限時，行為與加上這道下限之前相同", () => {
+    const missing = missingSalaryPeriods({
+      ...base,
+      hireDate: utc(2026, 6, 1),
+      bookCreatedAt: null,
+      existing: [],
+    });
+
+    expect(missing).toEqual(periodsOf([2026, 6], [2026, 7], [2026, 8]));
+  });
+
+  /**
+   * Info: (20260907 - Julian) 下限只夾**起點**，不影響離職與留停的扣除。
+   * 三者疊在一起時各自仍然生效 —— 少驗這一條，把下限寫成「先算完再截掉前面」
+   * 也會通過，而那樣留停的扣除會落在錯的位置上。
+   */
+  it("下限與離職、留停同時生效", () => {
+    const missing = missingSalaryPeriods({
+      ...base,
+      hireDate: utc(2015, 1, 1),
+      bookCreatedAt: utc(2026, 3, 5),
+      // Info: (20260907 - Julian) 5/1 起留停、6/1 復職 → 五月整月扣掉
+      leaveStartDate: utc(2026, 5, 1),
+      leaveEndDate: utc(2026, 6, 1),
+      resignDate: utc(2026, 7, 20),
+      existing: periodsOf([2026, 4]),
+    });
+
+    // Info: (20260907 - Julian) 3 月（4 月有紀錄、5 月留停）、6 月、7 月（離職當月照算）
+    expect(missing).toEqual(periodsOf([2026, 3], [2026, 6], [2026, 7]));
+  });
+});
+
 describe("上限", () => {
   /**
    * Info: (20260905 - Luphia) 超過上限**回空**，不是回一個截斷的清單。
@@ -317,6 +434,27 @@ describe("上限", () => {
       missingSalaryPeriods({
         ...base,
         hireDate: start.getTime() / 1000,
+        existing: [],
+      }),
+    ).toEqual([]);
+  });
+
+  /**
+   * Info: (20260907 - Julian) 加上帳本下限之後，上限守的**主詞換了**。
+   *
+   * 生產環境的 `AccountBook.createdAt` 是 `@default(now())`，所以離譜的到職日
+   * 會先被下限夾住 —— 上面那幾條走的是 `bookCreatedAt: null` 的路。
+   * 真正還會讓範圍爆掉的是「帳本的建立時間本身很早」（種子資料、匯入），
+   * 而那條路也必須不下結論，不是吐出一份幾百個月的清單。
+   *
+   * 少了這一條，上限就只剩一個測得到但生產環境走不到的分支在守它。
+   */
+  it("帳本建立時間離譜地早 → 一樣不下結論", () => {
+    expect(
+      missingSalaryPeriods({
+        ...base,
+        hireDate: utc(1900, 1, 1),
+        bookCreatedAt: utc(1900, 1, 1),
         existing: [],
       }),
     ).toEqual([]);

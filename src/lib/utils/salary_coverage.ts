@@ -13,8 +13,14 @@ import { SALARY_COVERAGE_MAX_SCAN_MONTHS } from "@/constants/salary_coverage";
  *
  * ## 範圍的兩端各有理由
  *
- * - **起點是到職日**：不是帳本最早的紀錄，也不是今年一月。用後兩者的話，
- *   一位這個月才報到的新人會被算成缺前面每一個月。
+ * - **起點是「到職日」與「帳本引入使用的月份」兩者中較晚的那一個**：
+ *   到職日決定這個人從哪個月開始有薪水，帳本的起用月份決定這個系統
+ *   從哪個月開始有可能存在薪資單。少了後者，一位 2015 年到職的同仁
+ *   在一本 2026 年才建立的帳裡會被算成缺一百三十幾個月 —— 而那些月份的
+ *   薪資單本來就不在這個系統裡，也永遠不會有（產品決策 20260907）。
+ *   不用「帳本最早的一筆薪資紀錄」當起點：那會在**真的整段忘記建**的時候
+ *   把缺漏藏起來（一本 2025 全年漏建的帳，起點會落在 2026），
+ *   而那是漏報的方向，比誤報糟得多。
  * - **終點是上個月**：當月的薪資單本來就還沒到該建的時候。用「這個月」的話，
  *   每一位員工在每個月的月初都會被標成缺漏 —— 一個每月固定誤報一次的提示，
  *   使用者很快就會學會忽略它。
@@ -43,6 +49,18 @@ export interface ISalaryPeriod {
 export interface ISalaryCoverageInput {
   /** Info: (20260905 - Luphia) epoch 秒；沒有到職日就算不出範圍（見下方早退） */
   hireDate: number | null;
+  /**
+   * Info: (20260907 - Julian) 帳本引入使用的時間，epoch 秒 —— 起算的下限。
+   *
+   * 今天的來源是 `AccountBook.createdAt`：帳本還不存在的月份不可能有薪資單，
+   * 所以這個下限**不會藏起任何真實的缺漏**（與「帳本最早的一筆紀錄」不同，
+   * 那個會）。若日後要精準對齊「我們從 X 年 X 月開始用薪資功能」，
+   * 換掉這一格的來源就好，這支函式不必改。
+   *
+   * `null` = 沒有下限（讀不到帳本）。那時退回只看到職日 —— 不下結論比
+   * 猜一個下限好，而猜錯的方向會是漏報。
+   */
+  bookCreatedAt: number | null;
   resignDate: number | null;
   leaveStartDate: number | null;
   leaveEndDate: number | null;
@@ -97,7 +115,23 @@ export const missingSalaryPeriods = (
    */
   if (input.hireDate === null) return [];
 
-  const start = ordinalOf(input.hireDate);
+  /**
+   * Info: (20260907 - Julian) 起點取「到職日」與「帳本引入使用」兩者中**較晚**的。
+   *
+   * 兩個下限問的是不同的事，而缺漏必須同時越過兩道才算數：
+   *
+   * - 到職日之前他還沒來上班 —— 那幾個月**不該**有薪資單
+   * - 帳本建立之前這個系統還不存在 —— 那幾個月**不可能**有薪資單
+   *
+   * 第二道少了的話，中途導入的帳本會在有人補上到職日的那一刻冒出上百個月，
+   * 而那份清單一個都補不了（那些月份的薪水發生在這個系統之外）。
+   * 一個沒有人做得完的待辦清單，使用者只會學會忽略它，
+   * 連同真正該補的那一個月一起（檢查清單 §1.10：會亂叫的驗收沒有人會再看它）。
+   */
+  const start =
+    input.bookCreatedAt === null
+      ? ordinalOf(input.hireDate)
+      : Math.max(ordinalOf(input.hireDate), ordinalOf(input.bookCreatedAt));
 
   // Info: (20260905 - Luphia) 終點是上個月，且不早於起點（當月到職的人回空）
   const lastMonth = ordinalOf(Math.floor(input.nowMs / 1000)) - 1;
@@ -120,6 +154,12 @@ export const missingSalaryPeriods = (
    * 而員工列表會對名單上每一位都呼叫一次。超過上限就不下結論
    *（回空），而不是回一個截斷的清單 —— 截斷的清單會讓畫面說
    * 「缺這 120 個月」，那句話既沒用也不對。
+   *
+   * Info: (20260907 - Julian) 加上帳本的下限之後，這一道在生產環境**幾乎碰不到**：
+   * `AccountBook.createdAt` 是 `@default(now())`，離譜的到職日會先被下限夾住。
+   * 留著是因為它現在守的是另一件事 —— 種子資料或匯入把 `createdAt` 寫成很早的
+   * 日期時，這裡仍然不會吐出一份幾百個月的清單。判準跟著換了主詞，
+   * 所以測試也跟著換（見 `salary_coverage.tz.test.ts` 的「上限」那一組）。
    */
   if (end - start + 1 > SALARY_COVERAGE_MAX_SCAN_MONTHS) return [];
 

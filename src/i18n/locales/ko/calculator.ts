@@ -130,6 +130,8 @@ export const calculator = {
     no_hire_date: "미입력",
     filter_missing_email: "이메일 없음",
     filter_missing_hire_date: "입사일 없음",
+    missing_hire_date_banner:
+      "{{count}}명의 직원에게 입사일이 없습니다. 입력하면 어느 달의 급여명세서가 누락되었는지 확인할 수 있습니다",
     filter_missing_records: "급여명세서 누락",
   },
   result: {

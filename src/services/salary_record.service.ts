@@ -23,6 +23,7 @@ import {
   ISalaryRecordRepository,
   salaryRecordRepo,
 } from "@/repositories/salary_record.repo";
+import { accountBookRepo } from "@/repositories/account_book.repo";
 import {
   mapServiceError,
   resolveAccountBookMembership,
@@ -93,17 +94,36 @@ const toWholeAmount = (value: number): bigint => {
   return BigInt(value);
 };
 
+/**
+ * Info: (20260907 - Julian) 這支 service 對帳本只需要一件事：它何時建立。
+ *
+ * 宣告一個窄埠而不是注入整個 `IAccountBookRepository`（七支方法）——
+ * 後者會讓每一個測試替身多背六支用不到的方法，而那正是替身開始
+ * 「替程式回答問題」的起點（檢查清單 §1.8）。
+ * `AccountBookRepository` 在結構上就滿足這個介面，不必額外接線。
+ */
+export interface IAccountBookCreatedAtReader {
+  getCreatedAt(accountBookId: string): Promise<Date | null>;
+}
+
 export class SalaryRecordService {
   constructor(
     private readonly employees: ISalaryCalculatorEmployeeRepository,
     private readonly records: ISalaryRecordRepository,
+    private readonly accountBooks: IAccountBookCreatedAtReader,
   ) {}
 
   /**
    * Info: (20260905 - Luphia) 名單，並帶上每個人缺哪幾個月（#6774）。
    *
-   * 兩支查詢並行：名單一支、整本帳的年月分佈一支。**不逐位員工問** ——
-   * 一百位員工的帳本那樣會打一百次 DB，而這一頁是進去就會載入的。
+   * 三支查詢並行：名單一支、整本帳的年月分佈一支、帳本的建立時間一支。
+   * **不逐位員工問** —— 一百位員工的帳本那樣會打一百次 DB，
+   * 而這一頁是進去就會載入的。
+   *
+   * Info: (20260907 - Julian) 第三支是起算的下限（產品決策 20260907）。
+   * 帳本引入使用之前的月份不可能有薪資單，所以不列進缺漏 ——
+   * 少了它，中途導入的帳本會在有人補上到職日的那一刻冒出上百個月，
+   * 而那份清單一個都補不了。它與名單、分佈並行，不多一次往返。
    *
    * 完整度算不出來時（沒有到職日、範圍超過上限）回空陣列，畫面就不標示。
    * 「不知道」與「完整」對使用者的處置相同，而猜一個起點會讓舊資料
@@ -112,9 +132,10 @@ export class SalaryRecordService {
   public async listEmployees(
     accountBookId: string,
   ): Promise<ISalaryCalculatorEmployee[]> {
-    const [employees, covered] = await Promise.all([
+    const [employees, covered, bookCreatedAt] = await Promise.all([
       this.employees.listEmployees(accountBookId),
       this.records.listCoveredPeriods(accountBookId),
+      this.accountBooks.getCreatedAt(accountBookId),
     ]);
 
     const byEmployee = new Map<string, ISalaryPeriod[]>();
@@ -130,6 +151,15 @@ export class SalaryRecordService {
       ...employee,
       missingPeriods: missingSalaryPeriods({
         hireDate: employee.hireDate,
+        /**
+         * Info: (20260907 - Julian) 秒，與其他日期同單位。
+         * 讀不到帳本時給 `null` = 沒有下限（退回只看到職日）——
+         * 不猜一個下限，因為猜錯的方向會是漏報。
+         */
+        bookCreatedAt:
+          bookCreatedAt === null
+            ? null
+            : Math.floor(bookCreatedAt.getTime() / 1000),
         resignDate: employee.resignDate,
         leaveStartDate: employee.leaveStartDate,
         leaveEndDate: employee.leaveEndDate,
@@ -318,4 +348,5 @@ export class SalaryRecordService {
 export const salaryRecordService = new SalaryRecordService(
   salaryCalculatorEmployeeRepo,
   salaryRecordRepo,
+  accountBookRepo,
 );

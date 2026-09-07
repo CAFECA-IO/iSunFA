@@ -131,6 +131,8 @@ export const calculator = {
     no_hire_date: "未入力",
     filter_missing_email: "メールアドレスなし",
     filter_missing_hire_date: "入社日なし",
+    missing_hire_date_banner:
+      "{{count}} 名の従業員に入社日がありません。入力すると、どの月の給与明細が不足しているか確認できます",
     filter_missing_records: "給与明細の未作成あり",
   },
   result: {

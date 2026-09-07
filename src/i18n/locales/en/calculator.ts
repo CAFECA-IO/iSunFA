@@ -132,6 +132,14 @@ export const calculator = {
     no_hire_date: "Not set",
     filter_missing_email: "No email address",
     filter_missing_hire_date: "No hire date",
+    /**
+     * Info: (20260907 - Julian) 這一句在 UI 重構時被從五個語系刪掉了，
+     * 而 `employee_list_issue_filters.tsx` 仍然在讀它 ——
+     * 畫面上會直接顯示 `calculator.employee_list.missing_hire_date_banner`
+     * 這串原始鍵。原文照 `7ebdc4a33` 還原（`i18n_keys.test.ts` 抓到的）。
+     */
+    missing_hire_date_banner:
+      "{{count}} employee(s) have no hire date — coverage cannot be checked for them until it is filled in",
     filter_missing_records: "Missing pay slip records",
   },
   result: {

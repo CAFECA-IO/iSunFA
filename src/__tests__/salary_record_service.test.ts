@@ -29,7 +29,10 @@ import {
   DEFAULT_EMPLOYEE_PROFILE,
 } from "@/lib/utils/salary_employee_profile";
 import { ISalaryRecordRepository } from "@/repositories/salary_record.repo";
-import { SalaryRecordService } from "@/services/salary_record.service";
+import {
+  IAccountBookCreatedAtReader,
+  SalaryRecordService,
+} from "@/services/salary_record.service";
 import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
 
 /**
@@ -309,15 +312,42 @@ class FakeRecordRepo implements ISalaryRecordRepository {
   }
 }
 
+/**
+ * Info: (20260907 - Julian) 帳本的建立時間 —— 完整度起算的下限。
+ *
+ * 有狀態的替身：`getCreatedAt` 要真的照 `accountBookId` 回答，而且要數
+ * 被呼叫幾次。回一個寫死的值會讓「有沒有傳對帳本」與「有沒有變成
+ * 一人一次查詢」兩條都測不到（檢查清單 §1.8：被 mock 的那支要照實做事）。
+ */
+class FakeAccountBookRepo implements IAccountBookCreatedAtReader {
+  public createdAtByBook = new Map<string, Date>();
+  public createdAtCalls = 0;
+
+  public async getCreatedAt(accountBookId: string): Promise<Date | null> {
+    this.createdAtCalls += 1;
+    return this.createdAtByBook.get(accountBookId) ?? null;
+  }
+}
+
 let employees: FakeEmployeeRepo;
 let records: FakeRecordRepo;
+let accountBooks: FakeAccountBookRepo;
 let service: SalaryRecordService;
 
 beforeEach(() => {
   employees = new FakeEmployeeRepo();
   records = new FakeRecordRepo();
+  accountBooks = new FakeAccountBookRepo();
+  /**
+   * Info: (20260907 - Julian) 預設一本 2020 年就建立的帳。
+   *
+   * 下限比其他測試用的到職日都早，所以它們的期望值不受影響 ——
+   * 而這也是真實的形狀：帳本先存在，人才進來。下限自己的判準在
+   * 「起算下限」那一組，以及 `salary_coverage.tz.test.ts`。
+   */
+  accountBooks.createdAtByBook.set(BOOK, new Date("2020-01-01T00:00:00.000Z"));
   employees.seed(BOOK, employeeOf());
-  service = new SalaryRecordService(employees, records);
+  service = new SalaryRecordService(employees, records, accountBooks);
 });
 
 describe("儲存薪資紀錄", () => {
@@ -710,5 +740,70 @@ describe("listEmployees 帶出薪資紀錄缺漏", () => {
     const [employee] = await service.listEmployees(BOOK);
 
     expect(employee.missingPeriods).toEqual([]);
+  });
+
+  /**
+   * Info: (20260907 - Julian) 起算的下限**真的傳下去了**（產品決策 20260907）。
+   *
+   * 逐月的判斷由 `salary_coverage.tz.test.ts` 守；這一條守的是編排 ——
+   * service 有沒有去問帳本、問到的值有沒有換成秒、有沒有傳進去。
+   * 少了它，把 `bookCreatedAt` 寫死成 `null` 也會全綠，而症狀是
+   * 中途導入的帳本一補上到職日就冒出上百個月（§1.7：測到零件、沒測到接線）。
+   */
+  it("帳本引入使用之前的月份不算缺漏", async () => {
+    employees.seed(
+      BOOK,
+      employeeOf({ hireDate: Math.floor(Date.UTC(2015, 2, 10) / 1000) }),
+    );
+    accountBooks.createdAtByBook.set(
+      BOOK,
+      new Date("2026-08-20T00:00:00.000Z"),
+    );
+
+    const [employee] = await service.listEmployees(BOOK);
+
+    // Info: (20260907 - Julian) 2015 年到職，但這本帳 2026/08 才建立
+    expect(employee.missingPeriods).toEqual([{ year: 2026, month: 8 }]);
+  });
+
+  /**
+   * Info: (20260907 - Julian) 讀不到帳本時退回只看到職日，不是整個不下結論。
+   *
+   * 帳本讀不到多半代表 id 錯或已刪 —— 那時名單本來也會是空的。
+   * 但這一格若寫成「讀不到就回空」，一次暫時的查詢失敗會讓整頁的
+   * 缺漏標示靜靜消失，而畫面看起來完全正常。
+   */
+  it("讀不到帳本的建立時間時，仍以到職日算得出來", async () => {
+    employees.seed(BOOK, employeeOf({ hireDate: HIRE_2026_06 }));
+    accountBooks.createdAtByBook.clear();
+
+    const [employee] = await service.listEmployees(BOOK);
+
+    expect(employee.missingPeriods).toEqual([
+      { year: 2026, month: 6 },
+      { year: 2026, month: 7 },
+      { year: 2026, month: 8 },
+    ]);
+  });
+
+  /**
+   * Info: (20260907 - Julian) 帳本的建立時間也是**整份名單問一次**。
+   *
+   * 與紀錄分佈同一個理由：放進 `Promise.all` 之外、或搬進 `map` 裡，
+   * 一百位員工就是一百次往返，而小帳本上完全看不出來。
+   */
+  it("整份名單只問一次帳本的建立時間", async () => {
+    employees.seed(BOOK, employeeOf({ id: OTHER_EMPLOYEE_ID, number: "A002" }));
+    employees.seed(
+      BOOK,
+      employeeOf({
+        id: "33333333-3333-4333-8333-333333333333",
+        number: "A003",
+      }),
+    );
+
+    await service.listEmployees(BOOK);
+
+    expect(accountBooks.createdAtCalls).toBe(1);
   });
 });
