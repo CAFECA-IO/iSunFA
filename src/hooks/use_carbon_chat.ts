@@ -112,6 +112,9 @@ import {
   discardPendingImport as deletePendingImportRecord,
 } from "@/lib/carbon_pending_import_storage";
 import {
+  InventoryLoadReasonEnum,
+  buildInventoryUnreadableFact,
+  describeUnreadableInventoryStep,
   isInventoryStateUnsavableError,
   loadInventoryState,
   saveInventoryState,
@@ -679,6 +682,43 @@ export const useCarbonChat = () => {
     Record<string, ICarbonInventoryState>
   >({});
   /**
+   * Info: (20260907 - Emily) 該房的盤查狀態**存在但讀不出來**時的原因(#6779)。
+   *
+   * 原本這個情形只有一行 `console.error`,然後對話照常:persona 拿到的是空狀態,
+   * 走「無事實 → onboarding」那條路,問使用者公司名與年度;而 versionRef 記的是真實版本,
+   * 使用者一回答,下一次 autosave 就用正確的樂觀鎖版本把那筆讀不出來但真實存在的紀錄蓋掉。
+   * 舊註解寫「保留真實版本,不以空狀態覆蓋」—— 它擋的是**自動**存空狀態,擋不住被 onboarding
+   * 引導後的存檔。
+   *
+   * 三個消費端都要知道這件事:persona(currentStep 改口、事實包多一筆)、autosave(拒絕)、
+   * UI(通知)。用 state 供 render 與 request 組裝,同步一份 ref 給 autosave 的計時器讀
+   * (計時器閉包裡讀 state 會是舊的)。
+   */
+  const [inventoryUnreadable, setInventoryUnreadable] = useState<
+    Record<string, InventoryLoadReasonEnum>
+  >({});
+  const inventoryUnreadableRef = useRef<Map<string, InventoryLoadReasonEnum>>(
+    new Map(),
+  );
+  const markInventoryUnreadable = useCallback(
+    (channel: string, reason: InventoryLoadReasonEnum | null) => {
+      const current = inventoryUnreadableRef.current.get(channel) ?? null;
+      if (current === reason) return;
+      if (reason === null) inventoryUnreadableRef.current.delete(channel);
+      else inventoryUnreadableRef.current.set(channel, reason);
+      setInventoryUnreadable((prev) => {
+        if (reason === null) {
+          if (!(channel in prev)) return prev;
+          const next = { ...prev };
+          delete next[channel];
+          return next;
+        }
+        return { ...prev, [channel]: reason };
+      });
+    },
+    [],
+  );
+  /**
    * Info: (20260904 - Emily) 該房的帳本事實包,**唯一**的組包點(#6745)。
    *
    * 原本只有對話路徑組(#6707 第二層),草稿與修訂兩條 `/draft` 路各自不帶或帶不全,
@@ -687,8 +727,17 @@ export const useCarbonChat = () => {
    * 帳本空時回空陣列 —— 守門對空陣列**照跑**(那正是編造最沒阻力的一格),不補、不造。
    */
   const buildChannelLedgerFacts = useCallback(
-    (channel: string): IContextFact[] =>
-      buildLedgerFactBundle(
+    (channel: string): IContextFact[] => {
+      /**
+       * Info: (20260907 - Emily) 狀態存在但讀不出來時,事實包**只有這一筆**(#6779)。
+       *
+       * 空陣列會讓 persona 走「帳本沒有資料 → 引導匯入/設定」那條,而那正是資料
+       * 被覆蓋的第一步。這一筆讓模型有東西可說、而且說的是對的事:資料在,讀不出來。
+       * 不帶任何排放數字,守門照跑。
+       */
+      const unreadable = inventoryUnreadable[channel];
+      if (unreadable) return [buildInventoryUnreadableFact(unreadable)];
+      return buildLedgerFactBundle(
         inventoryStates[channel]?.computedLedger,
         // Info: (20260825 - Emily) 勾稽阻擋紀錄一併注入:「帳本為什麼是空的」也是可問的事實
         inventoryStates[channel]?.ledgerImportBlocks,
@@ -696,8 +745,9 @@ export const useCarbonChat = () => {
         inventoryStates[channel]?.ledgerByYear,
         // Info: (20260828 - Emily) 年度標註不完整:列舉制第五個偵測器(round-2 追加回饋)
         inventoryStates[channel]?.ledgerYearWarning,
-      ),
-    [inventoryStates],
+      );
+    },
+    [inventoryStates, inventoryUnreadable],
   );
   const inventoryVersionsRef = useRef<Map<string, number>>(new Map());
   /**
@@ -1525,7 +1575,17 @@ export const useCarbonChat = () => {
     const master = masterKeyRef.current;
     // Info: (20260716 - Tzuhan) #52 帳本會話明文模式免金鑰(同報告還原)
     const isBookBound = Boolean(sessionAccess[chatChannel]?.accountBookId);
-    if (!isBookBound && (!isUnlocked || !master)) return;
+    if (!isBookBound && (!isUnlocked || !master)) {
+      /*
+       * Info: (20260907 - Emily) 個人房未解鎖:還沒去讀,但已知讀不到(#6779)。
+       * 記成 LOCKED 而不是什麼都不記 —— 解鎖後這個 effect 會重跑並清掉它。
+       * 已 settled 的房不再覆寫(那是解鎖後又鎖回去的情形,狀態已在記憶體裡)。
+       */
+      if (!inventoryLoadSettledRef.current.has(chatChannel)) {
+        markInventoryUnreadable(chatChannel, InventoryLoadReasonEnum.LOCKED);
+      }
+      return;
+    }
     if (
       inventoryLoadSettledRef.current.has(chatChannel) ||
       inventoryLoadAttemptedRef.current.has(chatChannel)
@@ -1544,13 +1604,31 @@ export const useCarbonChat = () => {
         inventoryLoadSettledRef.current.add(chatChannel);
         inventoryVersionsRef.current.set(chatChannel, loaded?.version ?? 0);
         if (loaded && !loaded.state) {
-          // Info: (20260716 - Tzuhan) 記錄存在但不可讀: 保留真實版本，不以空狀態覆蓋
+          /**
+           * Info: (20260907 - Emily) 記錄存在但不可讀(#6779):三件事,缺一都會讓資料被蓋掉。
+           * 1. 記下原因 → persona 改口、事實包改送「讀不出來」那一筆、autosave 拒絕
+           * 2. 通知使用者:不要重新設定公司與年度
+           * 3. 仍保留真實版本(原本就有)—— 那是為了將來讀得出來時能接著存
+           */
           console.error(
             "[carbon-chat] inventory state exists but is unreadable:",
-            chatChannel,
+            { channel: chatChannel, reason: loaded.reason },
+          );
+          markInventoryUnreadable(chatChannel, loaded.reason);
+          setDraftNotice(
+            {
+              type: "error",
+              text: t("carbon_chatbot.inventory_unreadable", {
+                reason: t(
+                  `carbon_chatbot.inventory_unreadable_reason_${loaded.reason.toLowerCase()}`,
+                )!,
+              })!,
+            },
+            activeSessionId,
           );
           return;
         }
+        markInventoryUnreadable(chatChannel, null);
         if (!loaded?.state) return;
         const restored = loaded.state;
         setInventoryStates((prev) => ({ ...prev, [chatChannel]: restored }));
@@ -1565,7 +1643,15 @@ export const useCarbonChat = () => {
          */
         inventoryLoadAttemptedRef.current.delete(chatChannel);
       });
-  }, [isUnlocked, chatChannel, sessionAccess]);
+  }, [
+    isUnlocked,
+    chatChannel,
+    sessionAccess,
+    markInventoryUnreadable,
+    setDraftNotice,
+    t,
+    activeSessionId,
+  ]);
 
   /**
    * Info: (20260806 - Tzuhan) 切至 session 時自 DB 還原待匯入的解析結果(三態協定同報告草稿)。
@@ -1802,6 +1888,18 @@ export const useCarbonChat = () => {
      */
     if (!inventoryLoadSettledRef.current.has(chatChannel)) return undefined;
     if (!inventoryVersionsRef.current.has(chatChannel)) return undefined;
+    /**
+     * Info: (20260907 - Emily) 讀不出來的房**不存**(#6779)。
+     *
+     * 上面兩道閘門擋的是「還沒讀到」;這一道擋的是「讀到了但讀不懂」——
+     * 那時 settled 與 version 都齊了,原本會照存,而存進去的是使用者被 onboarding
+     * 引導後從零填的狀態。庫裡那筆真實紀錄從此消失,而且是以正確的樂觀鎖版本消失的。
+     * 拒絕存檔的代價是這間房在讀出來之前所有變更都只在記憶體裡 —— 通知已在載入時說過。
+     */
+    if (inventoryUnreadableRef.current.has(chatChannel)) {
+      setSaveStatus("error");
+      return undefined;
+    }
     const master = masterKeyRef.current;
     const bookId = sessionAccess[chatChannel]?.accountBookId ?? null;
     /**
@@ -6507,11 +6605,21 @@ export const useCarbonChat = () => {
             body: JSON.stringify({
               history: currentHistory,
               // Info: (20260716 - Tzuhan) #6518:currentStep 改餵狀態機真值(跳段指引仍優先)
-              currentStep:
-                activeSession.currentStep ||
-                describeInventoryStep(
-                  inventoryStates[chatChannel] ?? createEmptyInventoryState(),
-                ),
+              /**
+               * Info: (20260907 - Emily) 狀態讀不出來時 currentStep 改口(#6779)。
+               *
+               * persona 是照 currentStep 決定要不要引導 onboarding 的;送一個空狀態的描述
+               * 過去,它就會問公司名與年度 —— 而那正是資料被覆蓋的第一步。
+               * 這裡用明文告訴它:資料在、讀不出來、不要引導重設。
+               */
+              currentStep: inventoryUnreadable[chatChannel]
+                ? describeUnreadableInventoryStep(
+                    inventoryUnreadable[chatChannel],
+                  )
+                : activeSession.currentStep ||
+                  describeInventoryStep(
+                    inventoryStates[chatChannel] ?? createEmptyInventoryState(),
+                  ),
               language,
               channel: chatChannel,
               recipientPublicKey: masterKey.extendedPublicKey,
@@ -6683,6 +6791,7 @@ export const useCarbonChat = () => {
       insertChartIntoParagraph,
       setDraftNotice,
       inventoryStates,
+      inventoryUnreadable,
       buildChannelLedgerFacts,
     ],
   );

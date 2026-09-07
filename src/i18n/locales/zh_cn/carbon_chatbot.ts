@@ -131,6 +131,11 @@ export const carbonChatbot = {
   save_blocked_framework_claim:
     "报告里出现「本公司符合 {{name}}」这类主体合规宣告,这一版没有保存到云端 —— 那句话不得出现在送出的报告上。内容仍在本机,移除该语句后会自动重新保存;叙述文件结构的架构对齐声明不受影响。",
   // Info: (20260904 - Emily) 盘查状态存不进去(open/73):每次都会失败同一次,而且没有本机备份
+  inventory_unreadable:
+    "这个对话的盘查数据存在,但目前读不出来({{reason}})。在读出来之前不会保存任何变更,也请不要重新设置公司与年度 —— 那会覆盖原本的数据。",
+  inventory_unreadable_reason_locked: "已加密,尚未解锁密钥",
+  inventory_unreadable_reason_decrypt_failed: "已加密,目前的密钥解不开",
+  inventory_unreadable_reason_schema_rejected: "不符合当前版本的存储格式",
   inventory_unsavable:
     "盘查数据这一版没有保存成功:其中有字段不符合存储格式。内容还在画面上,但关闭或刷新这个分页之后这一版就不在了。这是系统的问题,请回报给我们。",
   save_local_quota: "本机暂存空间已满,离线备份未更新(云端已保存)。",

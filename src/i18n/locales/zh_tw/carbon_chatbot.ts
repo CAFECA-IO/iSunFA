@@ -148,6 +148,16 @@ export const carbonChatbot = {
    * 那個下一輪就過了,這個每次都會失敗同一次,而盤查狀態**沒有本機備份**。
    * 文案要說出代價(關掉分頁就沒了),但**不指示動作** —— 可逆的出路今天不存在。
    */
+  /**
+   * Info: (20260907 - Emily) 盤查狀態存在但讀不出來(#6779)。與 inventory_unsavable 是一對:
+   * 那條說「這一版存不進去」,這條說「上一版讀不回來」。共同點是**內容沒有消失**,
+   * 所以文案的重點是叫人不要當成空的重做 —— 那才是資料真正消失的那一步。
+   */
+  inventory_unreadable:
+    "這個對話的盤查資料存在,但目前讀不出來({{reason}})。在讀出來之前不會保存任何變更,也請不要重新設定公司與年度 —— 那會覆蓋原本的資料。",
+  inventory_unreadable_reason_locked: "已加密,尚未解鎖金鑰",
+  inventory_unreadable_reason_decrypt_failed: "已加密,目前的金鑰解不開",
+  inventory_unreadable_reason_schema_rejected: "不符合目前版本的儲存格式",
   inventory_unsavable:
     "盤查資料這一版沒有保存成功:其中有欄位不符合儲存格式。內容還在畫面上,但關閉或重新整理這個分頁之後這一版就不在了。這是系統的問題,請回報給我們。",
   save_local_quota: "本機暫存空間已滿,離線備份未更新(雲端已保存)。",

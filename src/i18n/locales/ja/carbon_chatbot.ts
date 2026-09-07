@@ -138,6 +138,14 @@ export const carbonChatbot = {
   save_blocked_framework_claim:
     "報告書に「当社は {{name}} に準拠している」といった主体レベルの適合宣言があるため、この版はクラウドに保存していません。その一文は提出する報告書に出てはいけません。内容はこの端末に残っています。該当の文を削除すれば自動的に保存されます（文書構成についての記述は対象外です）。",
   // Info: (20260904 - Emily) 一時的な失敗ではない:毎回同じように失敗し、ローカルのバックアップもない
+  inventory_unreadable:
+    "この会話のインベントリデータは存在しますが、現在読み取れません({{reason}})。読み取れるまで変更は保存されません。会社名や年度を再入力しないでください。既存のデータを上書きしてしまいます。",
+  inventory_unreadable_reason_locked:
+    "暗号化されており、鍵がまだ解除されていません",
+  inventory_unreadable_reason_decrypt_failed:
+    "暗号化されており、現在の鍵では復号できません",
+  inventory_unreadable_reason_schema_rejected:
+    "現在のバージョンの保存形式に合いません",
   inventory_unsavable:
     "インベントリデータのこの版は保存されていません。保存形式に合わないフィールドがあります。表示されている内容はまだ画面上にありますが、このタブを閉じる・再読み込みすると失われます。こちらの不具合です。ご報告いただけると助かります。",
   save_local_quota:

@@ -138,6 +138,14 @@ export const carbonChatbot = {
   save_blocked_framework_claim:
     "보고서에 \u2018당사는 {{name}}을 준수한다\u2019와 같은 주체 차원의 적합 선언이 있어 이 버전은 클라우드에 저장하지 않았습니다. 그 문장은 외부로 보내는 보고서에 있어서는 안 됩니다. 작업 내용은 이 기기에 남아 있으며, 문장을 삭제하면 다시 저장됩니다. 문서 구조에 관한 서술은 대상이 아닙니다.",
   // Info: (20260904 - Emily) 일시적인 실패가 아니다: 매번 같은 방식으로 실패하며 로컬 백업도 없다
+  inventory_unreadable:
+    "이 대화의 산정 데이터는 존재하지만 현재 읽을 수 없습니다({{reason}}). 읽어올 때까지 어떤 변경도 저장되지 않으며, 회사명과 연도를 다시 입력하지 마세요. 기존 데이터를 덮어쓰게 됩니다.",
+  inventory_unreadable_reason_locked:
+    "암호화되어 있고 키가 아직 잠금 해제되지 않았습니다",
+  inventory_unreadable_reason_decrypt_failed:
+    "암호화되어 있고 현재 키로는 열 수 없습니다",
+  inventory_unreadable_reason_schema_rejected:
+    "현재 버전의 저장 형식과 맞지 않습니다",
   inventory_unsavable:
     "산정 데이터의 이 버전은 저장되지 않았습니다. 저장 형식에 맞지 않는 필드가 있습니다. 화면에 보이는 내용은 아직 남아 있지만, 이 탭을 닫거나 새로 고치면 사라집니다. 저희 쪽 문제이니 알려주시면 감사합니다.",
   save_local_quota:
