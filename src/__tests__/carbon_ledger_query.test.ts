@@ -7,6 +7,7 @@ import {
   queryTotal,
   queryTopEmitters,
   querySiteSubtotals,
+  queryIsoCategorySubtotals,
   queryAnomalies,
   queryYearOverYear,
   toContextFacts,
@@ -15,6 +16,7 @@ import {
   LEDGER_FACT_BUNDLE_MAX,
 } from "@/lib/carbon_ledger_query";
 import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
+import { MoneyUtil } from "@/lib/utils/money";
 import {
   EmissionBasisEnum,
   LedgerProvenanceEnum,
@@ -82,7 +84,7 @@ describe("queryTotal", () => {
     expect(result.facts[0].value).toBe("999 kgCO2e");
     expect(result.facts[0].source).toContain("2 筆分錄");
     expect(result.facts[1]).toEqual({
-      label: "SCOPE_2_INDIRECT 小計",
+      label: "能源間接溫室氣體排放 (範疇二) [SCOPE_2_INDIRECT] 小計",
       value: "999 kgCO2e",
       source: "帳本範疇小計欄",
       // Info: (20260827 - Emily) 排放量本體另以結構標記,供出口守門裁決(見 IContextFact.emissionsKg)
@@ -142,8 +144,12 @@ describe("queryTopEmitters", () => {
     const ledger = ledgerOf([importedEntry({ activityKey: "a", co2eKg: "5" })]);
     const result = queryTopEmitters(ledger, 1);
     if (!result.ok) throw new Error("should be ok");
+    /*
+     * Info: (20260907 - Emily) #6778 起溯源字串多帶 ISO 類別:
+     * 前五大是使用者最常追問「這筆屬於哪一類」的地方,而類別就在同一筆分錄上。
+     */
     expect(result.facts[0].source).toBe(
-      "原文照錄 表3.8 (1) 總公司 2.1 外購電力",
+      "原文照錄 表3.8 (1) 總公司 2.1 外購電力(類別二)",
     );
   });
 
@@ -221,6 +227,152 @@ describe("querySiteSubtotals", () => {
       LedgerRefusalReasonEnum.DIMENSION_ABSENT,
     );
     expect(result.refusal.missing).toContain("廠址");
+  });
+});
+
+describe("queryIsoCategorySubtotals(#6778)", () => {
+  /**
+   * Info: (20260907 - Emily) 這一組的中心判準只有一條:
+   * **「類別三」與「範疇三」必須同時在事實包裡,而且值不同。**
+   *
+   * ISO 類別三只有運輸;GHG 範疇三是 ISO 類別三+四+五+六。
+   * 事實包原本只有範疇小計 —— 使用者問「ISO 14064 類別三多少」時,
+   * 守規矩的模型拒答、不守規矩的拿範疇三充當答案。
+   * 兩者值相同的測資驗不出這件事,所以下面的帳本刻意讓它們差開。
+   */
+  const transportEntry = importedEntry({
+    activityKey: "transport",
+    co2eKg: "3",
+    scopeCategory: GhgProtocolCategory.SCOPE_3_CAT_4,
+    sourceName: "(1) 總公司 上游運輸",
+    importedOrigin: {
+      site: "(1) 總公司",
+      isoCategory: Iso14064Category.CATEGORY_3,
+      subCategory: "3.1 上游運輸",
+      tableNo: "3.8",
+    },
+  });
+  const productEntry = importedEntry({
+    activityKey: "product",
+    co2eKg: "4",
+    scopeCategory: GhgProtocolCategory.SCOPE_3_CAT_1,
+    sourceName: "(1) 總公司 外購原料",
+    importedOrigin: {
+      site: "(1) 總公司",
+      isoCategory: Iso14064Category.CATEGORY_4,
+      subCategory: "4.1 外購原料",
+      tableNo: "3.8",
+    },
+  });
+
+  it("類別三與範疇三同時存在,而且值不同(類別三 3 ≠ 範疇三 7)", () => {
+    const ledger = ledgerOf([transportEntry, productEntry], {
+      // Info: (20260907 - Emily) 範疇小計是既存欄位(summarizeLedgerEntries 寫入),此處比照其輸出
+      scopeSubtotals: { SCOPE_3_CAT_4: "7" },
+      totalCo2eKg: "7",
+    });
+    const bundle = buildLedgerFactBundle(ledger);
+    const byLabel = new Map(bundle.map((fact) => [fact.label, fact.value]));
+
+    const isoThree = [...byLabel.entries()].find(([label]) =>
+      label.startsWith("類別三"),
+    );
+    const scopeThree = [...byLabel.entries()].find(([label]) =>
+      label.includes("[SCOPE_3_CAT_4]"),
+    );
+    expect(isoThree?.[1]).toBe("3 kgCO2e");
+    expect(scopeThree?.[1]).toBe("7 kgCO2e");
+    expect(isoThree?.[1]).not.toBe(scopeThree?.[1]);
+  });
+
+  it("各類別小計 + 未標註 = 帳本總量(加法與 summarizeLedgerEntries 一致的不變式)", () => {
+    /**
+     * Info: (20260907 - Emily) 這一條是「在查詢層加總」這個決定的代價擔保。
+     * 類別小計不是既存欄位(見該函式的註解),所以這裡確實做了加法;
+     * 只要它與寫入 totalCo2eKg 的那份實作不一致,這一條就紅。
+     */
+    const voucherEntry = importedEntry({
+      activityKey: "voucher",
+      co2eKg: "1.5",
+      provenance: undefined,
+      importedOrigin: undefined,
+    });
+    const ledger = ledgerOf([transportEntry, productEntry, voucherEntry], {
+      totalCo2eKg: "8.5",
+    });
+    const result = queryIsoCategorySubtotals(ledger);
+    if (!result.ok) throw new Error("should be ok");
+    const sum = result.facts.reduce(
+      (acc, fact) => MoneyUtil.add(acc, fact.emissionsKg![0]),
+      "0",
+    );
+    expect(sum).toBe(ledger.totalCo2eKg);
+  });
+
+  it("憑證來源(無 isoCategory)自成一桶,不併進任何類別", () => {
+    const voucherEntry = importedEntry({
+      activityKey: "voucher",
+      co2eKg: "1.5",
+      provenance: undefined,
+      importedOrigin: undefined,
+    });
+    const result = queryIsoCategorySubtotals(
+      ledgerOf([transportEntry, voucherEntry], { totalCo2eKg: "4.5" }),
+    );
+    if (!result.ok) throw new Error("should be ok");
+    const labels = result.facts.map((fact) => fact.label);
+    expect(labels).toEqual([
+      "類別三 排放小計(ISO 14064-1)",
+      "未標註 ISO 類別 排放小計",
+    ]);
+    const isoThree = result.facts[0];
+    expect(isoThree.value).toBe("3 kgCO2e");
+    expect(result.facts[1].source).toContain("無原文類別");
+  });
+
+  it("輸出順序照類別編號,不照分錄出現順序(同一份帳本兩次問答不得換順序)", () => {
+    const ledger = ledgerOf([productEntry, transportEntry], {
+      totalCo2eKg: "7",
+    });
+    const result = queryIsoCategorySubtotals(ledger);
+    if (!result.ok) throw new Error("should be ok");
+    expect(result.facts.map((fact) => fact.label)).toEqual([
+      "類別三 排放小計(ISO 14064-1)",
+      "類別四 排放小計(ISO 14064-1)",
+    ]);
+  });
+
+  it("帳本只有憑證分錄 → 拒答說明是維度缺席,並指出還有範疇可用", () => {
+    const computedOnly = ledgerOf([
+      importedEntry({
+        activityKey: "voucher",
+        co2eKg: "5",
+        provenance: undefined,
+        importedOrigin: undefined,
+      }),
+    ]);
+    const result = queryIsoCategorySubtotals(computedOnly);
+    if (result.ok) throw new Error("should refuse");
+    expect(result.refusal.reason).toBe(
+      LedgerRefusalReasonEnum.DIMENSION_ABSENT,
+    );
+    expect(result.refusal.missing).toContain("ISO 14064 類別");
+    expect(result.refusal.missing).toContain("範疇");
+  });
+
+  it("帳本空 → 與其他查詢同一個拒答理由", () => {
+    const result = queryIsoCategorySubtotals(undefined);
+    if (result.ok) throw new Error("should refuse");
+    expect(result.refusal.reason).toBe(LedgerRefusalReasonEnum.LEDGER_EMPTY);
+  });
+
+  it("前五大排放源的溯源字串帶類別(問「這筆屬於哪一類」不必再查一次)", () => {
+    const result = queryTopEmitters(
+      ledgerOf([transportEntry], { totalCo2eKg: "3" }),
+      1,
+    );
+    if (!result.ok) throw new Error("should be ok");
+    expect(result.facts[0].source).toContain("類別三");
   });
 });
 

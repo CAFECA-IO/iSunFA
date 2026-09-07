@@ -14,6 +14,8 @@
 
 import { MoneyUtil } from "@/lib/utils/money";
 import { isImportedEntry } from "@/lib/carbon_table38.ledger";
+import { GhgCategoryDetails, IsoCategoryDetails } from "@/constants/esg";
+import type { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
 import type {
   IComputedLedger,
   IComputedLedgerEntry,
@@ -67,12 +69,148 @@ const hasEntries = (
   ledger !== undefined && ledger.entries.length > 0;
 
 /**
+ * Info: (20260907 - Emily) ISO 14064-1 類別的短標籤(「類別三」)。
+ *
+ * `IsoCategoryDetails[...].nameZh` 是「類別三:運輸之間接溫室氣體排放」——
+ * 全稱進事實值會讓每一筆 label 長到讀不動,而**代碼(CATEGORY_3)不能直接給 LLM**:
+ * 使用者問的是「類別三」,兩者對不上就等於沒有這筆事實。取冒號前那一段,
+ * 不自己維護第二份中文對照表(那會與 esg.ts 漂移)。
+ */
+const isoCategoryLabel = (category: Iso14064Category): string =>
+  IsoCategoryDetails[category].nameZh.split(/[:\uff1a]/)[0];
+
+/**
+ * Info: (20260907 - Emily) 範疇小計的標籤原本是**原始 enum 鍵**(`SCOPE_2_INDIRECT 小計`)。
+ *
+ * 那一串會原樣進 persona 的事實清單(`chat.service.ts` 逐筆印 `label = value`),
+ * 而使用者問的是「範疇二」。同一份帳本裡 `SCOPE_3_CAT_4` 這種鍵更不可能對上任何問法 ——
+ * 模型要嘛答不出來,要嘛自己猜對照,而猜錯是靜默的。
+ *
+ * 改成 esg.ts 既有的中文名並**保留原鍵**(`能源間接溫室氣體排放 (範疇二) [SCOPE_2_INDIRECT] 小計`):
+ * 中文供問答比對,原鍵供查核者對回帳本欄位 —— 兩個讀者都要顧到,而不是二選一。
+ * 中文名不在本檔維護(那會與 esg.ts 漂移)。
+ */
+const scopeLabel = (scope: string): string => {
+  const detail = GhgCategoryDetails[scope as GhgProtocolCategory];
+  return detail ? `${detail.nameZh} [${scope}]` : scope;
+};
+
+/** Info: (20260907 - Emily) 沒有 isoCategory 的分錄(憑證/計算來源)的桶名 */
+const UNCATEGORIZED_LABEL = "未標註 ISO 類別";
+
+/**
+ * Info: (20260907 - Emily) ISO 14064-1 類別小計(#6778)。
+ *
+ * ## 為什麼非有不可
+ *
+ * 事實包原本只有 `scopeSubtotals`(GHG Protocol 的**範疇**)。使用者問
+ * 「ISO 14064 類別三的排放量」時,清單裡沒有這個維度 ——
+ * 守規矩的模型只能拒答,不守規矩的會拿「範疇三 小計」充當答案,而那是錯的:
+ *
+ *     ISO 類別三 = 運輸之間接排放
+ *     GHG 範疇三 = ISO 類別三 + 四 + 五 + 六
+ *
+ * 兩者在有類別四(組織使用產品)的報告上差距很大,而報告本身是照類別編的
+ * (表 38 的每一列都帶類別)。分錄上一直有 `importedOrigin.isoCategory`,
+ * 只是從來沒有人把它加總或印出來。
+ *
+ * ## 為什麼在查詢層加總,而不是加一個帳本欄位
+ *
+ * 本檔檔頭的規則是「小計讀既存欄位,不重算」,而既存欄位裡沒有類別小計。
+ * 兩條路:
+ *
+ * 1. 加進 `summarizeLedgerEntries`(唯一累加實作)→ 帳本多一個欄位 →
+ *    型別、`ComputedLedgerSchema`、寫路徑守門、**以及所有已存的舊帳本**都要跟著動;
+ *    舊帳本沒有那個欄位,還是得有一條回算路徑 —— 等於兩份實作都要寫。
+ * 2. 在查詢層以 `MoneyUtil` 加總(與 `querySiteSubtotals` 同一個做法,廠址小計
+ *    也不是既存欄位)→ 不動儲存格式、不必遷移、舊帳本立刻就有這個維度。
+ *
+ * 取 2。代價是這裡確實做了加法,所以用**同一個 MoneyUtil**(不是原生浮點),
+ * 並由測試釘住不變式:**各類別小計 + 未標註 = 帳本總量**。加法只要與
+ * `summarizeLedgerEntries` 不一致,那條就會紅。
+ *
+ * ## 未標註類別的分錄自成一桶,不併進任何類別
+ *
+ * 憑證與活動數據算出來的分錄沒有 `isoCategory`。把它們塞進「類別一」
+ * 是替使用者的盤查邊界做決定;省略不提則會讓各類別小計加不回總量,
+ * 而那正是查核者第一個會做的檢查。所以明說「未標註」,數字自己說話。
+ *
+ * `esg.ts` 有一張 `GhgToIsoMapping`(範疇 → 類別)看起來可以拿來推導。**這裡不用**:
+ * 它現有的兩個呼叫端(`esg_detail_modal.tsx` / `esg_table_section.tsx`)都是
+ * 使用者選了範疇之後的**預填值,使用者可以改** —— 那是人在迴圈裡的建議,
+ * 不是可申報的歸類。把它靜默套用在事實包上,會讓一個推導出來的數字與
+ * 原文照錄的數字混在同一筆小計裡,而查核者看不出差別。
+ * 憑證那條線的類別歸屬要等匯入線穩定後另外量(owner 20260907 指示的順序)。
+ */
+export const queryIsoCategorySubtotals = (
+  ledger: IComputedLedger | undefined,
+): ILedgerQueryResult => {
+  if (!hasEntries(ledger)) {
+    return refuse(
+      LedgerRefusalReasonEnum.LEDGER_EMPTY,
+      "帳本中沒有任何排放分錄:請先匯入盤查報告,或完成活動數據與係數計算",
+    );
+  }
+  const categorized = ledger.entries.filter(
+    (entry) => entry.importedOrigin !== undefined,
+  );
+  if (categorized.length === 0) {
+    return refuse(
+      LedgerRefusalReasonEnum.DIMENSION_ABSENT,
+      "帳本中沒有帶 ISO 14064 類別的分錄(類別來自匯入的原文表格):目前無法按類別拆分,只能按 GHG Protocol 範疇",
+    );
+  }
+  /*
+   * Info: (20260907 - Emily) 以 enum 的宣告順序輸出(類別一→六),不是以出現順序:
+   * 同一份帳本兩次問答不得換順序,而使用者是照類別編號讀的。
+   */
+  const subtotals = new Map<Iso14064Category, string>();
+  const tableNos = new Set<string>();
+  categorized.forEach((entry) => {
+    const category = entry.importedOrigin!.isoCategory;
+    tableNos.add(entry.importedOrigin!.tableNo);
+    subtotals.set(
+      category,
+      MoneyUtil.add(subtotals.get(category) ?? "0", entry.co2eKg),
+    );
+  });
+  const ordered = (
+    Object.keys(IsoCategoryDetails) as Iso14064Category[]
+  ).filter((category) => subtotals.has(category));
+  const facts: ILedgerFact[] = ordered.map((category) => {
+    const subtotal = subtotals.get(category)!;
+    return {
+      label: `${isoCategoryLabel(category)} 排放小計(ISO 14064-1)`,
+      value: `${subtotal} kgCO2e`,
+      source: `原文照錄 表${[...tableNos].join("、")} 分錄按 ISO 類別加總(MoneyUtil)`,
+      emissionsKg: [subtotal],
+    };
+  });
+  const uncategorized = ledger.entries.filter(
+    (entry) => entry.importedOrigin === undefined,
+  );
+  if (uncategorized.length > 0) {
+    const subtotal = uncategorized.reduce(
+      (acc, entry) => MoneyUtil.add(acc, entry.co2eKg),
+      "0",
+    );
+    facts.push({
+      label: `${UNCATEGORIZED_LABEL} 排放小計`,
+      value: `${subtotal} kgCO2e`,
+      source: `本系統計算的分錄加總(${uncategorized.length} 筆,無原文類別)`,
+      emissionsKg: [subtotal],
+    });
+  }
+  return { ok: true, facts };
+};
+
+/**
  * Info: (20260825 - Emily) 分錄的溯源字串。匯入項有 importedOrigin(表號+廠址+子代碼),
  * 憑證項退回 sourceName + activityKey —— 兩種來源都必須說得出「這個數字從哪來」。
  */
 const traceOf = (entry: IComputedLedgerEntry): string =>
   entry.importedOrigin
-    ? `原文照錄 表${entry.importedOrigin.tableNo} ${entry.importedOrigin.site} ${entry.importedOrigin.subCategory}`
+    ? `原文照錄 表${entry.importedOrigin.tableNo} ${entry.importedOrigin.site} ${entry.importedOrigin.subCategory}(${isoCategoryLabel(entry.importedOrigin.isoCategory)})`
     : `本系統計算 ${entry.sourceName}(${entry.activityKey})`;
 
 /**
@@ -97,7 +235,7 @@ export const queryTotal = (
       emissionsKg: [ledger.totalCo2eKg],
     },
     ...Object.entries(ledger.scopeSubtotals).map(([scope, subtotal]) => ({
-      label: `${scope} 小計`,
+      label: `${scopeLabel(scope)} 小計`,
       value: `${subtotal} kgCO2e`,
       source: "帳本範疇小計欄",
       emissionsKg: [subtotal],
@@ -542,6 +680,12 @@ export const buildLedgerFactBundle = (
 ): IContextFact[] => {
   const core = [
     ...toContextFacts(queryTotal(ledger)),
+    /*
+     * Info: (20260907 - Emily) 類別小計與範疇小計**並列**(#6778):兩個維度都印,
+     * 不挑一個。使用者的報告是照 ISO 類別編的、而系統的小計欄是 GHG 範疇,
+     * 只給一邊就等於要模型自己換算 —— 那是它最會出錯的地方(類別三 ≠ 範疇三)。
+     */
+    ...toContextFacts(queryIsoCategorySubtotals(ledger)),
     ...toContextFacts(querySiteSubtotals(ledger)),
     ...toContextFacts(queryTopEmitters(ledger, LEDGER_FACT_TOP_EMITTERS)),
     ...yearComparisonUnavailableFact(ledgerByYear, ledger),
