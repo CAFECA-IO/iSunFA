@@ -4,6 +4,8 @@
 // Info: (20260716 - Tzuhan) 未綁定(舊個人會話)沿用前綴裁決 — 雙軌相容,零資料遷移
 
 import { chatroomRepo } from "@/repositories/chatroom.repo";
+import { carbonAttachmentOwnerRepo } from "@/repositories/carbon_attachment_owner.repo";
+import { isSameAddress } from "@/lib/team/address_identity";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { isCarbonChatChannelOwnedBy } from "@/constants/carbon_chatbot";
 
@@ -116,4 +118,29 @@ export const canViewAccountBook = async (
     userAddress,
   );
   return role !== null;
+};
+
+/**
+ * Info: (20260907 - Emily) 附件 cid 的讀取裁決(#6748;一次收 #6625 / #6613):
+ * **只有上傳者本人**能經 /import 或聊天附件把那個 cid 的檔取回來。
+ *
+ * cid 是 Laria 的 metadata hash,由內容決定、可被猜中或轉貼;在此之前
+ * 讀取端一律照單取回 —— 知道 cid 就等於拿到檔。
+ *
+ * 為什麼是「上傳者本人」而不是「同帳本成員」:附件的生命週期是同一個人
+ * 在同一個瀏覽器裡「選檔上傳 → 送出 / 匯入」,重載後的重試也是同一個人;
+ * 目前沒有任何流程需要 B 讀 A 上傳的 cid。放寬要等有那個流程時再放,
+ * 而且要以帳本角色裁決,不是在這裡猜。
+ *
+ * 「查無擁有者」一律拒絕,包含本功能上線前上傳的舊 cid:那些 cid 沒有紀錄,
+ * 系統無法證明是誰的。代價是上線前尚未完成的待匯入紀錄要重傳檔案
+ * (前端本來就有「cid 取不回就退回直傳」那條路),寫進部署清單。
+ * 若改成「查無即放行」,所有舊 cid 永遠留在門外,這道門對它們等於不存在。
+ */
+export const canReadAttachmentCid = async (
+  userAddress: string,
+  cid: string,
+): Promise<boolean> => {
+  const owner = await carbonAttachmentOwnerRepo.findOwnerAddress(cid);
+  return owner !== null && isSameAddress(owner, userAddress);
 };
