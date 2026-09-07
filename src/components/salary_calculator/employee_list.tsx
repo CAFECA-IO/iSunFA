@@ -2,17 +2,7 @@
 
 import { ChangeEvent, FC, useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
-import {
-  CalendarX,
-  Hash,
-  Mail,
-  Pencil,
-  Plus,
-  Search,
-  Trash,
-  User,
-  X,
-} from "lucide-react";
+import { Hash, Mail, Pencil, Plus, Search, Trash, User, X } from "lucide-react";
 import { numberWithCommas } from "@/lib/utils/common";
 import { useSalaryEmployees } from "@/hooks/use_salary_employees";
 import { ISalaryCalculatorEmployee } from "@/interfaces/salary_record";
@@ -21,11 +11,13 @@ import {
   countMissingHireDate,
   countMissingRecords,
   filterEmployees,
-  formatMissingPeriods,
-  hasMissingPeriods,
   hasNoEmail,
 } from "@/lib/utils/salary_employee_filter";
+import CoverageAlert from "@/components/salary_calculator/coverage_alert";
 import EmployeeActionModal from "@/components/salary_calculator/employee_action_modal";
+import EmployeeListFilters from "@/components/salary_calculator/employee_list_filters";
+import EmployeeListNotices from "@/components/salary_calculator/employee_list_notices";
+import EmployeeListTable from "@/components/salary_calculator/employee_list_table";
 import RemoveEmployeeModal from "@/components/salary_calculator/remove_employee_modal";
 
 export const iconBtnStyle =
@@ -71,24 +63,6 @@ const EmployeeRow: FC<{
 }) => {
   const { t } = useTranslation();
   const missingEmail = hasNoEmail(employee);
-
-  /**
-   * Info: (20260905 - Luphia) 缺薪資單的標示（#6774）。
-   *
-   * 與缺信箱的那一格並排，但兩者說的不是同一件事：缺信箱是「寄不出去」，
-   * 缺薪資單是「根本沒有那個月的東西」。同一個人可能只中其中一個。
-   *
-   * `title` 帶的是月份清單而不是只有數字 —— 使用者接下來要做的是
-   * 「回計算機把那幾個月補起來」，只知道「缺 3 個月」還得自己去對。
-   */
-  const missing = formatMissingPeriods(employee.missingPeriods);
-  const missingTitle =
-    missing.restCount > 0
-      ? t("calculator.employee_list.missing_records_more", {
-          periods: missing.text,
-          count: missing.restCount,
-        })
-      : missing.text;
 
   const emailCell = missingEmail ? (
     /**
@@ -138,18 +112,13 @@ const EmployeeRow: FC<{
        *
        * 與信箱欄不同：挑人彈窗裡看到「這個人缺六月」正是最有用的時機 ——
        * 使用者當下就在挑人算薪水，補的路就在他手上。
+       *
+       * Info: (20260907 - Julian) 月份清單原本掛在 `title` 上，20260907 換成
+       * `CoverageAlert`（自繪的 div + portal）。原生 tooltip 有兩個治不了的
+       * 問題：瀏覽器自己的延遲規則會讓它整段跳過不顯示，而純文字的折行
+       * 會斷在頓號後面 —— 讀起來像一句被切斷的話而不是一份清單。
        */}
-      {hasMissingPeriods(employee) && (
-        <span
-          title={missingTitle}
-          className="flex shrink-0 items-center gap-[4px] rounded-md bg-amber-50 px-[6px] py-[2px] text-sm font-medium text-amber-600"
-        >
-          <CalendarX size={14} className="shrink-0" />
-          {t("calculator.employee_list.missing_records_badge", {
-            count: employee.missingPeriods.length,
-          })}
-        </span>
-      )}
+      <CoverageAlert missingPeriods={employee.missingPeriods} display="badge" />
       <span
         title={t("calculator.employee_list.base_salary")}
         className="text-text-neutral-secondary group-hover:text-text-neutral-primary w-[90px] text-right text-sm font-semibold"
@@ -285,6 +254,47 @@ const EmployeeList: FC<IEmployeeListProps> = ({
     </button>
   );
 
+  // Info: (20260905 - Luphia) 條件都要清，否則按了還是篩不到（#6774）
+  const clearFilters = () => {
+    clearKeyword();
+    setOnlyMissingEmail(false);
+    setOnlyMissingRecords(false);
+    setOnlyMissingHireDate(false);
+  };
+
+  // Info: (20260901 - Julian) 一位員工都沒有：給一條建立第一位的路，而不只是「無資料」
+  const emptyState = (
+    <div className="flex flex-col items-center gap-[14px] px-[24px] py-[8px] text-center">
+      <User size={28} className="text-text-brand-primary-lv1 shrink-0" />
+      <p className="text-text-neutral-primary font-bold">
+        {t("calculator.employee_list.empty_title")}
+      </p>
+      <p className="text-text-neutral-secondary max-w-sm text-sm leading-relaxed">
+        {t("calculator.employee_list.empty_desc")}
+      </p>
+      {addEmployeeBtn}
+    </div>
+  );
+
+  // Info: (20260901 - Julian) 有員工但篩不到：留一條清除條件的路，不要看起來像資料掉了
+  const noResultState = (
+    <div className="flex flex-col items-center gap-[10px] px-[24px] py-[8px] text-center">
+      <Search size={24} className="text-text-neutral-tertiary" />
+      <p className="text-text-neutral-primary text-sm font-semibold">
+        {keyword.trim() === ""
+          ? t("calculator.employee_list.no_filter_result")
+          : t("calculator.employee_list.no_search_result", { keyword })}
+      </p>
+      <button
+        type="button"
+        onClick={clearFilters}
+        className="text-text-brand-primary-lv1 text-sm font-semibold underline"
+      >
+        {t("calculator.employee_list.clear_search")}
+      </button>
+    </div>
+  );
+
   const displayedEmployeesList = (() => {
     if (isLoading) {
       return (
@@ -302,47 +312,11 @@ const EmployeeList: FC<IEmployeeListProps> = ({
       );
     }
 
-    // Info: (20260901 - Julian) 一位員工都沒有：給一條建立第一位的路，而不只是「無資料」
-    if (employees.length === 0) {
-      return (
-        <div className="flex flex-col items-center gap-[14px] px-[24px] py-[40px] text-center">
-          <User size={28} className="text-text-brand-primary-lv1 shrink-0" />
-          <p className="text-text-neutral-primary font-bold">
-            {t("calculator.employee_list.empty_title")}
-          </p>
-          <p className="text-text-neutral-secondary text-sm leading-relaxed">
-            {t("calculator.employee_list.empty_desc")}
-          </p>
-          {addEmployeeBtn}
-        </div>
-      );
-    }
+    if (employees.length === 0)
+      return <div className="py-[32px]">{emptyState}</div>;
 
-    // Info: (20260901 - Julian) 有員工但篩不到：留一條清除條件的路，不要看起來像資料掉了
     if (filteredEmployees.length === 0) {
-      return (
-        <div className="flex flex-col items-center gap-[10px] px-[24px] py-[40px] text-center">
-          <Search size={24} className="text-text-neutral-tertiary" />
-          <p className="text-text-neutral-primary text-sm font-semibold">
-            {keyword.trim() === ""
-              ? t("calculator.employee_list.no_filter_result")
-              : t("calculator.employee_list.no_search_result", { keyword })}
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              clearKeyword();
-              setOnlyMissingEmail(false);
-              // Info: (20260905 - Luphia) 條件都要清，否則按了還是篩不到（#6774）
-              setOnlyMissingRecords(false);
-              setOnlyMissingHireDate(false);
-            }}
-            className="text-text-brand-primary-lv1 text-sm font-semibold underline"
-          >
-            {t("calculator.employee_list.clear_search")}
-          </button>
-        </div>
-      );
+      return <div className="py-[32px]">{noResultState}</div>;
     }
 
     return filteredEmployees.map((employee) => (
@@ -358,6 +332,99 @@ const EmployeeList: FC<IEmployeeListProps> = ({
   })();
 
   const hasAnyEmployee = !isLoading && !hasError && employees.length > 0;
+
+  const editModals = (
+    <>
+      {/* Info: (20260901 - Julian) 新增／編輯員工 */}
+      {editing !== null && (
+        <EmployeeActionModal
+          type={editing === "add" ? "add" : "edit"}
+          data={editing === "add" ? null : editing}
+          modalVisibleHandler={() => setEditing(null)}
+          submitHandler={submitEmployeeHandler}
+        />
+      )}
+
+      {/* Info: (20260901 - Julian) 移除員工確認 */}
+      {employeeToRemove && (
+        <RemoveEmployeeModal
+          employee={employeeToRemove}
+          closeHandler={() => setEmployeeToRemove(null)}
+          removeHandler={() => removeEmployee(employeeToRemove.id)}
+        />
+      )}
+    </>
+  );
+
+  /**
+   * Info: (20260907 - Julian) 整頁版：篩選列與列表是**兩張卡片**。
+   *
+   * 原本三塊（搜尋、三條提示、清單）塞在同一張卡片裡，讓「條件」與「結果」
+   * 看起來是同一件東西 —— 而使用者改條件時第一個要找的就是那條邊界。
+   * 列表換成全庫共用的 `DataTable`，順帶補上原本沒有的表頭
+   * （使用者看不出中間那一格是信箱還是別的什麼）。
+   *
+   * 彈窗版一個像素都沒動 —— 560px 放不下六欄的表格，而那裡一列是一個選項、
+   * 不是一筆資料。兩邊共用的是狀態與行為，不是版面。
+   */
+  if (withEmail) {
+    return (
+      <>
+        <div className="flex flex-col gap-4">
+          <EmployeeListFilters
+            keyword={keyword}
+            onKeywordChange={changeKeyword}
+            onKeywordClear={clearKeyword}
+            shownCount={filteredEmployees.length}
+            totalCount={employees.length}
+            addEmployeeBtn={addEmployeeBtn}
+          />
+
+          {/**
+           * Info: (20260907 - Julian) 三條提示是**獨立的一塊**，不在篩選卡片裡。
+           *
+           * 上一版把它們當成 `EmployeeListFilters` 的 children 塞進那張卡片，
+           * 結果篩選列與三條提示又長回一整塊白色區域 —— 拆元件拆了，
+           * 版面沒拆。三者的關係是「條件 → 這份名單有什麼問題 → 結果」，
+           * 三段各自有邊界才讀得出那是三件事。
+           */}
+          {hasAnyEmployee && (
+            <EmployeeListNotices
+              missingEmailCount={missingEmailCount}
+              missingHireDateCount={missingHireDateCount}
+              missingRecordsCount={missingRecordsCount}
+              onlyMissingEmail={onlyMissingEmail}
+              onlyMissingHireDate={onlyMissingHireDate}
+              onlyMissingRecords={onlyMissingRecords}
+              toggleMissingEmail={() => setOnlyMissingEmail((prev) => !prev)}
+              toggleMissingHireDate={() =>
+                setOnlyMissingHireDate((prev) => !prev)
+              }
+              toggleMissingRecords={() =>
+                setOnlyMissingRecords((prev) => !prev)
+              }
+            />
+          )}
+
+          {hasError ? (
+            <div className="rounded-xl border border-gray-200 bg-white px-4 py-16 text-center text-sm text-rose-600 shadow-sm">
+              {t("calculator.employee_list.load_failed")}
+            </div>
+          ) : (
+            <EmployeeListTable
+              employees={filteredEmployees}
+              isLoading={isLoading}
+              editHandler={(employee) => setEditing(employee)}
+              removeHandler={(employee) => setEmployeeToRemove(employee)}
+              emptyState={employees.length === 0 ? emptyState : noResultState}
+            />
+          )}
+        </div>
+
+        {editModals}
+      </>
+    );
+  }
 
   return (
     <>
@@ -388,100 +455,6 @@ const EmployeeList: FC<IEmployeeListProps> = ({
             )}
           </div>
           {addEmployeeBtn}
-        </div>
-      )}
-
-      {/**
-       * Info: (20260904 - Julian) 缺信箱的提示：**整頁版才有**。
-       *
-       * 這是這一頁補回來的主要理由。寄薪資單靠 email，沒填的人寄不出去，
-       * 而在此之前唯一看得出「誰沒填」的方法是逐一點開編輯 ——
-       * 五十個人就是五十次。
-       *
-       * 有數字就給得起「只看這幾位」，因為使用者接下來要做的正是逐一補完。
-       * 彈窗不顯示這一條：那裡的任務是挑一個人出來算薪水，
-       * 信箱齊不齊全在那個當下不是他要處理的事。
-       */}
-      {withEmail && hasAnyEmployee && missingEmailCount > 0 && (
-        <div className="mx-[24px] mb-[16px] flex shrink-0 flex-col gap-[8px] rounded-lg border border-amber-200 bg-amber-50 px-[16px] py-[10px] md:flex-row md:items-center">
-          <p className="flex-1 text-sm font-medium text-amber-800">
-            {t("calculator.employee_list.missing_email_banner", {
-              count: missingEmailCount,
-            })}
-          </p>
-          <button
-            type="button"
-            onClick={() => setOnlyMissingEmail((prev) => !prev)}
-            className="shrink-0 text-sm font-semibold text-amber-800 underline underline-offset-2 hover:text-amber-900"
-          >
-            {onlyMissingEmail
-              ? t("calculator.employee_list.show_all")
-              : t("calculator.employee_list.only_missing_email")}
-          </button>
-        </div>
-      )}
-
-      {/**
-       * Info: (20260906 - Luphia) 沒有到職日的提示（#6774）。**整頁版才有。**
-       *
-       * ## 為什麼這一條非有不可
-       *
-       * 完整度是從到職日往後推的，沒有到職日就算不出來 —— 而算不出來時
-       * 這一頁**什麼都不顯示**，與「大家都很完整」長得一模一樣。
-       *
-       * `hire_date` 是 20260902 才加的可空欄位、沒有回填，所以既有帳本的
-       * 員工全部是空的。少了這一條，功能上線那天使用者打開這一頁看到一片
-       * 空白，結論會是「這功能沒做」或「我們資料很完整」—— 兩個都不對。
-       *
-       * 「不知道就不要說」是對的，但要補上另外半句：**說出為什麼不知道**。
-       *
-       * ## 排在缺薪資單那條的上面
-       *
-       * 兩者是一前一後不是兩種看法：這些人補完到職日之後，才可能出現在
-       * 下面那一條裡。順序反過來的話，使用者會先去處理一份還不完整的名單。
-       */}
-      {withEmail && hasAnyEmployee && missingHireDateCount > 0 && (
-        <div className="mx-[24px] mb-[16px] flex shrink-0 flex-col gap-[8px] rounded-lg border border-sky-200 bg-sky-50 px-[16px] py-[10px] md:flex-row md:items-center">
-          <p className="flex-1 text-sm font-medium text-sky-800">
-            {t("calculator.employee_list.missing_hire_date_banner", {
-              count: missingHireDateCount,
-            })}
-          </p>
-          <button
-            type="button"
-            onClick={() => setOnlyMissingHireDate((prev) => !prev)}
-            className="shrink-0 text-sm font-semibold text-sky-800 underline underline-offset-2 hover:text-sky-900"
-          >
-            {onlyMissingHireDate
-              ? t("calculator.employee_list.show_all")
-              : t("calculator.employee_list.only_missing_hire_date")}
-          </button>
-        </div>
-      )}
-
-      {/**
-       * Info: (20260905 - Luphia) 薪資紀錄缺漏的提示（#6774）。**整頁版才有。**
-       *
-       * 與缺信箱的橫幅分開兩條，不是併成一句「N 位員工資料不完整」——
-       * 兩者要做的事不同：缺信箱是回頭編輯員工，缺薪資單是回計算機補那幾個月。
-       * 併成一句的話，使用者點進去才發現不是自己以為的那件事。
-       */}
-      {withEmail && hasAnyEmployee && missingRecordsCount > 0 && (
-        <div className="mx-[24px] mb-[16px] flex shrink-0 flex-col gap-[8px] rounded-lg border border-amber-200 bg-amber-50 px-[16px] py-[10px] md:flex-row md:items-center">
-          <p className="flex-1 text-sm font-medium text-amber-800">
-            {t("calculator.employee_list.missing_records_banner", {
-              count: missingRecordsCount,
-            })}
-          </p>
-          <button
-            type="button"
-            onClick={() => setOnlyMissingRecords((prev) => !prev)}
-            className="shrink-0 text-sm font-semibold text-amber-800 underline underline-offset-2 hover:text-amber-900"
-          >
-            {onlyMissingRecords
-              ? t("calculator.employee_list.show_all")
-              : t("calculator.employee_list.only_missing_records")}
-          </button>
         </div>
       )}
 

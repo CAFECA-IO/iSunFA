@@ -135,6 +135,7 @@ export const calculator = {
     only_missing_hire_date: "この従業員のみ表示",
     show_all: "すべて表示",
     no_filter_result: "条件に一致する従業員がいません",
+    missing_records_rest: "他 {{count}} か月分",
   },
   result: {
     base_salary_with_tax: "基本給（課税対象）",

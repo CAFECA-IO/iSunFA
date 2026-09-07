@@ -133,6 +133,7 @@ export const calculator = {
     only_missing_hire_date: "只看這幾位",
     show_all: "顯示全部員工",
     no_filter_result: "沒有符合目前條件的員工",
+    missing_records_rest: "另有 {{count}} 個月",
   },
   result: {
     base_salary_with_tax: "本薪（應稅）",

@@ -94,9 +94,10 @@ export const filterEmployees = <T extends IEmployeeLike>(
  * 超過掃描上限），而兩者對畫面的處置一樣：不標示。理由見
  * `missingSalaryPeriods`：不知道就不要說。
  */
-export const hasMissingPeriods = (
-  employee: Pick<ISalaryCalculatorEmployee, "missingPeriods">,
-): boolean => employee.missingPeriods.length > 0;
+export const hasMissingPeriods = (employee: {
+  // Info: (20260907 - Julian) 收 readonly：呼叫端有的是 prop（唯讀），不是 state
+  missingPeriods: readonly { year: number; month: number }[];
+}): boolean => employee.missingPeriods.length > 0;
 
 export const countMissingRecords = (
   employees: readonly IEmployeeLike[],
@@ -114,16 +115,36 @@ export const countMissingRecords = (
  */
 export const MISSING_PERIOD_PREVIEW_LIMIT = 6;
 
+/**
+ * Info: (20260907 - Julian) 「要顯示哪幾個月、還剩幾個」——**選取**與**排版**分開。
+ *
+ * `formatMissingPeriods` 原本兩件事一起做：截斷 + 串成一行字。
+ * 20260907 提示框改成格狀排版（原生 `title` 只吃純文字，折行還會斷在頓號後面），
+ * 需要的是**陣列**而不是字串；而截斷規則兩邊必須一致 ——
+ * 各自 `slice` 一次的話，一邊說「還有 3 個月」另一邊列出 7 格是遲早的事。
+ *
+ * 順序沿用 `missingPeriods` 的由舊到新，取的是**最舊的幾個**。
+ * 那是既有行為，這次搬家不順手改掉它。
+ */
+export const previewMissingPeriods = (
+  periods: readonly { year: number; month: number }[],
+  limit: number = MISSING_PERIOD_PREVIEW_LIMIT,
+): { shown: { year: number; month: number }[]; restCount: number } => {
+  const shown = periods.slice(0, limit);
+
+  return { shown: [...shown], restCount: periods.length - shown.length };
+};
+
 export const formatMissingPeriods = (
   periods: readonly { year: number; month: number }[],
   limit: number = MISSING_PERIOD_PREVIEW_LIMIT,
 ): { text: string; restCount: number } => {
-  const shown = periods.slice(0, limit);
+  const { shown, restCount } = previewMissingPeriods(periods, limit);
   const text = shown
     .map(({ year, month }) => `${year}/${month.toString().padStart(2, "0")}`)
     .join("、");
 
-  return { text, restCount: periods.length - shown.length };
+  return { text, restCount };
 };
 
 /**

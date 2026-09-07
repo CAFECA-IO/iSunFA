@@ -137,6 +137,7 @@ export const calculator = {
     only_missing_hire_date: "Show only these",
     show_all: "Show all employees",
     no_filter_result: "No employee matches the current filter",
+    missing_records_rest: "{{count}} more months",
   },
   result: {
     base_salary_with_tax: "Base Salary (Taxable)",

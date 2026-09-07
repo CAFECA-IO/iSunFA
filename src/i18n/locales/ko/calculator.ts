@@ -135,6 +135,7 @@ export const calculator = {
     only_missing_hire_date: "이 직원만 보기",
     show_all: "전체 보기",
     no_filter_result: "조건에 맞는 직원이 없습니다",
+    missing_records_rest: "그 외 {{count}}개월",
   },
   result: {
     base_salary_with_tax: "기본급(과세 대상)",

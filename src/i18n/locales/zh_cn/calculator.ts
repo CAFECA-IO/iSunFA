@@ -133,6 +133,7 @@ export const calculator = {
     only_missing_hire_date: "只看这几位",
     show_all: "显示全部员工",
     no_filter_result: "没有符合目前条件的员工",
+    missing_records_rest: "另有 {{count}} 个月",
   },
   result: {
     base_salary_with_tax: "基本工资（应税）",

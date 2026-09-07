@@ -167,11 +167,31 @@ describe("薪資紀錄缺漏的標示", () => {
   const listComponent = stripComments(
     read("components/salary_calculator/employee_list.tsx"),
   );
+  /**
+   * Info: (20260907 - Julian) 20260907 把整頁版拆成三個元件之後，
+   * 這一組原本全部斷言在 `employee_list.tsx` 的判準跟著搬家：
+   * 標示進了 `coverage_alert.tsx`、三條提示進了 `employee_list_notices.tsx`、
+   * 表格進了 `employee_list_table.tsx`。
+   *
+   * **守的東西一條都沒有放寬** —— 只是換了指向的檔案，
+   * 並補上兩條原本不存在的（提示框不得退回原生 `title`、兩種 variant 都要有標示）。
+   */
+  const alertComponent = stripComments(
+    read("components/salary_calculator/coverage_alert.tsx"),
+  );
+  const noticesComponent = stripComments(
+    read("components/salary_calculator/employee_list_notices.tsx"),
+  );
+  const tableComponent = stripComments(
+    read("components/salary_calculator/employee_list_table.tsx"),
+  );
 
   it("列上的標示來自共用的純函式，不是元件自己數陣列", () => {
-    expect(listComponent).toContain("hasMissingPeriods(employee)");
-    expect(listComponent).toContain("formatMissingPeriods(");
-    expect(listComponent).toContain("missing_records_badge");
+    expect(alertComponent).toContain("hasMissingPeriods({ missingPeriods })");
+    expect(alertComponent).toContain("previewMissingPeriods(missingPeriods)");
+    expect(alertComponent).toContain("missing_records_badge");
+    // Info: (20260907 - Julian) 自己 slice 一次的話，「另有 N 個月」與格子裡的數量會對不起來
+    expect(alertComponent).not.toMatch(/missingPeriods\.slice\(/);
   });
 
   /**
@@ -184,20 +204,119 @@ describe("薪資紀錄缺漏的標示", () => {
     /**
      * Info: (20260905 - Luphia) 看的是那一行**之前**的字，不是之後。
      *
-     * 守門長在左邊（`{withEmail && hasMissingPeriods(...)`），
-     * 從 `hasMissingPeriods` 往後切的話那個 `withEmail` 剛好被切掉 ——
+     * 守門長在左邊（`{withEmail && <CoverageAlert ...`），
+     * 從標示往後切的話那個 `withEmail` 剛好被切掉 ——
      * 判準會對「加上 withEmail」這個改動完全無感。
+     *
+     * Info: (20260907 - Julian) 彈窗那一列現在渲染 `<CoverageAlert display="badge">`，
+     * 判準改看它，語意不變。
      */
-    const at = listComponent.indexOf("hasMissingPeriods(employee)");
+    const at = listComponent.indexOf("<CoverageAlert");
     expect(at).toBeGreaterThan(-1);
     expect(listComponent.slice(Math.max(0, at - 120), at)).not.toContain(
       "withEmail",
     );
   });
 
+  /**
+   * Info: (20260907 - Julian) **兩種 variant 都看得到標示。**
+   *
+   * 上一條守的是「彈窗那一列沒有被 withEmail 擋掉」；這一條守另一半 ——
+   * 整頁版換成 `DataTable` 之後，標示是表格的第一欄，
+   * 而那個欄位定義在另一個檔案裡。少了這一條，把 alert 欄從
+   * `employee_list_table.tsx` 拿掉不會有任何測試變紅。
+   */
+  it("整頁版的表格也有標示，而且在第一欄", () => {
+    expect(tableComponent).toContain("<CoverageAlert");
+    // Info: (20260907 - Julian) 姓名是第一欄，而標示與姓名同一格
+    expect(tableComponent).toMatch(/const columns:[\s\S]{0,200}?key: "name"/);
+    expect(tableComponent).toMatch(
+      /key: "name"[\s\S]{0,900}?<CoverageAlert[\s\S]{0,300}?employee\.name/,
+    );
+  });
+
+  /**
+   * Info: (20260907 - Julian) 標示**不得自成一欄**。
+   *
+   * 初版是獨立的第一欄，用 `className: "w-10 !px-3"` 壓窄 —— 而
+   * `IDataTableColumn.className` **只套到 `<th>`**（`data_table.tsx:92`），
+   * `<td>` 的 `px-6` 是寫死的（同檔 192 行）。表頭以為自己 40px 寬、
+   * 內容格是 24+18+24，欄寬由內容格決定，畫面上就多出一段空白，
+   * 而沒有缺漏的那幾列整格是空的。
+   *
+   * 這一條在有人「為了乾淨」把它拆回獨立欄位時轉紅。要拆的話，
+   * 得先讓 `data_table.tsx` 的 `<td>` 也吃 `col.className`。
+   */
+  it("標示不是獨立欄位（DataTable 的 td 不吃 col.className）", () => {
+    expect(tableComponent).not.toMatch(/key: "alert"/);
+    expect(tableComponent).not.toMatch(/className: "w-10/);
+  });
+
+  /**
+   * Info: (20260907 - Julian) 固定寬度的空位，讓每一列的姓名起點對齊。
+   *
+   * 少了它，有圖示的那幾列姓名會被推右邊 —— 一份五個人的名單裡
+   * 只有一個人有警示，那一列就成了唯一沒對齊的那行。
+   */
+  it("沒有警示的列也佔同樣寬度，姓名才對齊", () => {
+    expect(tableComponent).toMatch(/w-5 shrink-0/);
+  });
+
   it("提示裡帶的是月份清單，不只是一個數字", () => {
-    expect(listComponent).toContain("missing_records_more");
-    expect(listComponent).toMatch(/title=\{missingTitle\}/);
+    expect(alertComponent).toContain("shown.map(");
+    expect(alertComponent).toContain("calculator.records.pay_period_value");
+    expect(alertComponent).toContain("missing_records_rest");
+  });
+
+  /**
+   * Info: (20260907 - Julian) **提示框不可以退回原生 `title`。**
+   *
+   * 初版把月份塞進 `title="2026/07、2026/06、…"`，實測回報兩件事：
+   * 常常整段跳過不顯示（瀏覽器自己的延遲與「同一次 hover 只顯示一次」規則），
+   * 以及讀不動 —— `title` 只能是純文字，折行由瀏覽器決定，斷在頓號後面，
+   * 看起來像一句被切斷的話而不是一份清單。
+   *
+   * 這一條在有人「順手簡化成 title」的時候轉紅。
+   */
+  it("提示框是自己畫的 div，不是原生 title", () => {
+    expect(alertComponent).toContain('role="tooltip"');
+    expect(alertComponent).not.toMatch(/title=\{/);
+  });
+
+  /**
+   * Info: (20260907 - Julian) 用 portal 掛到 body。
+   *
+   * 整頁版的列表是 `DataTable`：外層 `overflow-hidden` 的卡片、
+   * 內層 `overflow-x-auto` 的捲動容器，兩者都會裁切絕對定位的子元素，
+   * 而最後一列的提示框正好被裁掉 —— 那就是回報中的「卡住顯示不出來」。
+   */
+  it("提示框以 portal 掛在 body 上，不受表格裁切", () => {
+    expect(alertComponent).toContain("createPortal(tooltip, document.body)");
+    expect(alertComponent).toContain('typeof document !== "undefined"');
+    expect(alertComponent).toMatch(/className="[^"]*\bfixed\b/);
+  });
+
+  /**
+   * Info: (20260907 - Julian) 捲動時要收起來 —— 提示框是 `fixed`，
+   * 觸發器會跟著列表捲走，不收的話它會留在原地指著另一個人那一列。
+   * `capture` 是因為捲的是表格自己的容器，而 scroll 事件不冒泡。
+   */
+  it("捲動與改變視窗大小時收起提示框", () => {
+    expect(alertComponent).toMatch(/addEventListener\("scroll", close, true\)/);
+    expect(alertComponent).toMatch(/addEventListener\("resize", close\)/);
+    expect(alertComponent).toMatch(
+      /removeEventListener\("scroll", close, true\)/,
+    );
+  });
+
+  /**
+   * Info: (20260907 - Julian) 觸發器是 `<button>`：提示框是這份資訊唯一的入口，
+   * 而鍵盤使用者到不了一個 span。`onFocus` 要與 `onMouseEnter` 成對出現。
+   */
+  it("鍵盤也叫得出提示框", () => {
+    expect(alertComponent).toContain("onFocus={open}");
+    expect(alertComponent).toContain("onBlur={close}");
+    expect(alertComponent).toMatch(/<button\s+type="button"/);
   });
 
   /**
@@ -206,9 +325,22 @@ describe("薪資紀錄缺漏的標示", () => {
    */
   it("整頁版有橫幅與只看這幾位", () => {
     expect(listComponent).toContain("countMissingRecords(employees)");
-    expect(listComponent).toContain("missing_records_banner");
-    expect(listComponent).toContain("only_missing_records");
     expect(listComponent).toContain("setOnlyMissingRecords");
+    expect(noticesComponent).toContain("missing_records_banner");
+    expect(noticesComponent).toContain("only_missing_records");
+    /**
+     * Info: (20260907 - Julian) 提示只在整頁版渲染 —— 彈窗的任務是挑一個人
+     * 出來算薪水，整份名單的完整度在那個當下不是他要處理的事。
+     *
+     * 判準是「只出現一次，而且在 `if (withEmail)` 之後」而不是字元距離：
+     * 距離會隨著 props 增減而變，寫死一個窗口的話這條測試遲早在一次
+     * 無關的改動後紅掉，然後被人放寬。
+     */
+    const guardAt = listComponent.indexOf("if (withEmail) {");
+    const noticesAt = listComponent.indexOf("<EmployeeListNotices");
+    expect(guardAt).toBeGreaterThan(-1);
+    expect(noticesAt).toBeGreaterThan(guardAt);
+    expect(listComponent.split("<EmployeeListNotices").length - 1).toBe(1);
   });
 
   /**
@@ -234,9 +366,9 @@ describe("薪資紀錄缺漏的標示", () => {
    */
   it("沒有到職日的人數有講出來，而且給得起篩選", () => {
     expect(listComponent).toContain("countMissingHireDate(employees)");
-    expect(listComponent).toContain("missing_hire_date_banner");
-    expect(listComponent).toContain("only_missing_hire_date");
     expect(listComponent).toContain("setOnlyMissingHireDate");
+    expect(noticesComponent).toContain("missing_hire_date_banner");
+    expect(noticesComponent).toContain("only_missing_hire_date");
   });
 
   /**
@@ -246,9 +378,12 @@ describe("薪資紀錄缺漏的標示", () => {
    * 缺薪資單那一條裡。顛倒的話，使用者會先去處理一份還不完整的名單。
    */
   it("到職日的提示排在缺薪資單的提示之前", () => {
-    expect(listComponent.indexOf("missing_hire_date_banner")).toBeLessThan(
-      listComponent.indexOf("missing_records_banner"),
-    );
+    const hireAt = noticesComponent.indexOf("missing_hire_date_banner");
+    const recordsAt = noticesComponent.indexOf("missing_records_banner");
+
+    expect(hireAt).toBeGreaterThan(-1);
+    expect(recordsAt).toBeGreaterThan(-1);
+    expect(hireAt).toBeLessThan(recordsAt);
   });
 });
 
@@ -258,6 +393,97 @@ describe("薪資紀錄缺漏的標示", () => {
  * 沒有入口的話那兩欄永遠是 null，扣除留停的分支等於不存在 ——
  * 而純函式那一側會一直是綠的。
  */
+describe("整頁版的版面：條件、提示、結果是三塊", () => {
+  const listComponent = stripComments(
+    read("components/salary_calculator/employee_list.tsx"),
+  );
+  const filters = stripComments(
+    read("components/salary_calculator/employee_list_filters.tsx"),
+  );
+  const tableComponent = stripComments(
+    read("components/salary_calculator/employee_list_table.tsx"),
+  );
+  const pageBody = stripComments(
+    read("components/salary_calculator/employee_list_page_body.tsx"),
+  );
+
+  /**
+   * Info: (20260907 - Julian) **三條提示不得回到篩選卡片裡。**
+   *
+   * 20260907 實測回報「還是一整塊」：元件確實拆成三個檔案了，但提示是
+   * 當 children 塞進 `EmployeeListFilters`，於是畫面上篩選列與三條提示
+   * 仍然共用同一張白色卡片 —— 拆了元件、沒拆版面。
+   *
+   * 三者的關係是「條件 → 這份名單有什麼問題 → 結果」，各自有邊界
+   * 才讀得出那是三件事。這一條把它釘住，而不是靠肉眼在截圖上比對。
+   */
+  it("三條提示是獨立的一塊，不在篩選卡片裡", () => {
+    expect(filters).not.toContain("notices");
+    expect(filters).not.toContain("Notices");
+    expect(listComponent).toMatch(
+      /<EmployeeListFilters[\s\S]{0,800}?\/>[\s\S]{0,300}?<EmployeeListNotices/,
+    );
+  });
+
+  /**
+   * Info: (20260907 - Julian) 三塊各自渲染一次，順序是條件 → 提示 → 結果。
+   *
+   * 順序寫在同一個 return 裡，所以判準看的是出現次序。
+   */
+  it("篩選、提示、表格依序各出現一次", () => {
+    ["<EmployeeListFilters", "<EmployeeListNotices", "<EmployeeListTable"].map(
+      (tag) => expect(listComponent.split(tag).length - 1).toBe(1),
+    );
+
+    expect(listComponent.indexOf("<EmployeeListFilters")).toBeLessThan(
+      listComponent.indexOf("<EmployeeListNotices"),
+    );
+    expect(listComponent.indexOf("<EmployeeListNotices")).toBeLessThan(
+      listComponent.indexOf("<EmployeeListTable"),
+    );
+  });
+
+  /**
+   * Info: (20260907 - Julian) 列表走全庫共用的 `DataTable`。
+   *
+   * 表頭、hover、空狀態、載入中、橫向捲動都在那裡（16 個列表頁在用）。
+   * 手刻一份的話，這一頁會慢慢與其他列表長得不一樣，而每次只差一點點。
+   * 原本的整頁版沒有表頭 —— 使用者看不出中間那一格是信箱還是別的什麼。
+   */
+  it("列表用共用的 DataTable，而且每一欄都有標題", () => {
+    expect(tableComponent).toContain('from "@/components/common/data_table"');
+    ["name", "number", "email", "baseSalary", "actions"].map((key) =>
+      expect(tableComponent).toContain(`key: "${key}"`),
+    );
+    expect(tableComponent).toContain("calculator.employee_list.name");
+    expect(tableComponent).toContain("calculator.employee_list.number");
+    expect(tableComponent).toContain("calculator.employee_list.email");
+    expect(tableComponent).toContain("calculator.employee_list.base_salary");
+    expect(tableComponent).toContain("common.actions");
+  });
+
+  /**
+   * Info: (20260907 - Julian) `DataTable` 自帶卡片外框，外面不能再包一層 ——
+   * 那會變成卡片裡的卡片：邊框疊兩道、內距加倍。
+   */
+  it("頁面外框不再包一層卡片", () => {
+    expect(pageBody).not.toContain("rounded-xl border border-gray-200");
+  });
+
+  /**
+   * Info: (20260907 - Julian) 空狀態分兩種：一位員工都沒有（給一條建立第一位
+   * 的路），與有員工但篩不到（給一條清除條件的路）。共用一句的話，
+   * 正在搜尋的人會以為資料掉了。
+   */
+  it("空狀態分成「還沒有員工」與「篩不到」", () => {
+    expect(listComponent).toMatch(
+      /emptyState=\{employees\.length === 0 \? emptyState : noResultState\}/,
+    );
+    expect(listComponent).toContain("empty_title");
+    expect(listComponent).toContain("no_filter_result");
+  });
+});
+
 describe("留職停薪的編輯入口", () => {
   const actionModal = stripComments(
     read("components/salary_calculator/employee_action_modal.tsx"),
