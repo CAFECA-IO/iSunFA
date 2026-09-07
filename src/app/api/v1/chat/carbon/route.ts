@@ -13,6 +13,7 @@ import {
 } from "@/services/chat.service";
 import { chatroomService } from "@/services/chatroom.service";
 import { AttachmentExtractionService } from "@/services/attachment_extraction.service";
+import { isDraftQuantityGateError } from "@/services/paragraph_draft.service";
 import { ParagraphDraftService } from "@/services/paragraph_draft.service";
 import {
   CARBON_CHAT_PURPOSE,
@@ -36,10 +37,6 @@ import {
   IParagraphDraft,
   IContextFact,
 } from "@/interfaces/carbon_paragraph_draft";
-import {
-  shouldRunReplyGate,
-  auditReplyQuantities,
-} from "@/lib/carbon_reply_gate";
 import type { IEciesEnvelope } from "@/lib/chatroom_ecies";
 
 // Info: (20260708 - Tzuhan) Carbon Chatbot Framework
@@ -286,6 +283,8 @@ export async function POST(request: NextRequest) {
             attachments,
             conversationContext,
             language,
+            // Info: (20260904 - Emily) #6745:附件路徑的草稿也要拿得到帳本事實包,守門的合法集合才完整
+            ledgerFacts,
             // Info: (20260730 - Tzuhan) 萃取是整條管線最長的單一步驟,結束時先報進度免得畫面像卡死
             onExtracted: canPublish
               ? async (sectionCount) => {
@@ -338,38 +337,33 @@ export async function POST(request: NextRequest) {
           contextFacts: ledgerFacts,
         });
         /**
-         * Info: (20260826 - Emily) 出口守門補到守門後方的生成(review 阻擋 3 的後半):
-         * 對話回覆過了守門,不代表這裡**另一次 LLM 呼叫**的產物也乾淨 ——
-         * 草稿寫進報告,是比對話更嚴重的落地面。同一把尺:
-         * 帶排放單位的數字 ∈ 事實包 ∪ 使用者說過的數字;上崗條件同 shouldRunReplyGate。
-         * 攔下時草稿不落地、標記降級(使用者可用目錄的 AI 撰寫鈕重試),對話不中斷。
+         * Info: (20260826 - Emily) 出口守門補到守門後方的生成(review 阻擋 3 的後半)。
+         *
+         * Info: (20260904 - Emily) #6745:守門**搬進了 `generateParagraphDraft` 本體**
+         * (單一咽喉,三個入口共用),這裡不再自己接一段 —— 攔下時服務拋
+         * `VA_DRAFT_QUANTITY_UNSOURCED`,由下方 catch 認出來標降級。
+         * 原本 route 自己接的那段是三個入口裡唯一有門的,另外兩個零檢查;
+         * 三處各貼一段會有三份會各自漂移的判準。語意不變:攔下 → 草稿不落地、
+         * `degraded = true`、對話不中斷(使用者可用目錄的 AI 撰寫鈕重試 ——
+         * 而那條路現在**也有門了**)。
          */
-        const draftGate = shouldRunReplyGate(ledgerFacts)
-          ? auditReplyQuantities(
-              draft.content,
-              ledgerFacts,
-              history
-                .filter((item) => item.role === "user")
-                .map((item) => item.text),
-            )
-          : { ok: true, violations: [] as string[] };
-        if (!draftGate.ok) {
+        drafts.push(draft);
+        // Info: (20260730 - Tzuhan) 對話蒐集完成的段落同樣完成即推
+        await publishDraftProgress(draft, drafts.length, drafts.length);
+      } catch (draftError) {
+        if (isDraftQuantityGateError(draftError)) {
+          // Info: (20260904 - Emily) 被守門攔下不是「生成失敗」:warn 不 error,重試同一個 prompt 大概率再編一次
           logger.warn("carbon draft gate blocked", {
             paragraphId: readyParagraphId,
-            violations: draftGate.violations,
           });
           degraded = true;
         } else {
-          drafts.push(draft);
-          // Info: (20260730 - Tzuhan) 對話蒐集完成的段落同樣完成即推
-          await publishDraftProgress(draft, drafts.length, drafts.length);
+          // Info: (20260714 - Tzuhan) 草稿失敗不阻斷對話，僅標記降級(用戶可用目錄的 AI 撰寫鈕重試)
+          logger.error(
+            `[API] /chat/carbon ready-paragraph draft failed: ${JSON.stringify(draftError)}`,
+          );
+          degraded = true;
         }
-      } catch (draftError) {
-        // Info: (20260714 - Tzuhan) 草稿失敗不阻斷對話，僅標記降級(用戶可用目錄的 AI 撰寫鈕重試)
-        logger.error(
-          `[API] /chat/carbon ready-paragraph draft failed: ${JSON.stringify(draftError)}`,
-        );
-        degraded = true;
       }
     }
 

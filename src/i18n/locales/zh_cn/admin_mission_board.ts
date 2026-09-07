@@ -71,6 +71,11 @@ export const adminMissionBoard = {
       prepared_by: "编制单位",
       verified_by: "核查单位",
       issued_on: "更新日期",
+      framework_label: "披露框架",
+      framework_inventory_only: "仅出盘查报告书",
+      framework_ifrs: "包成 {{name}} 架构",
+      framework_hint:
+        "选了之后,草稿会依 {{name}} 的架构撰写。那是关于文件结构的陈述,不是企业层级的合规声明 —— 后者无论适用时程都不得出现在报告上",
       unfilled: "未填写",
       name_suffix: "温室气体盘查报告书",
       hint: "核查单位无法从报告内容推导，需人工填写",

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
 import { CARBON_CHAT_AI_CONTEXT_SIZE } from "@/constants/carbon_chatbot";
 import { ChatRoleEnum } from "@/types/carbon_chatbot.types";
+import { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
 
 // Info: (20260714 - Tzuhan) 段落 id 白名單:僅接受標準大綱內的段落,杜絕捏造的段落編號
 const OUTLINE_PARAGRAPH_IDS = new Set(CARBON_REPORT_OUTLINE.map((s) => s.id));
@@ -37,6 +38,16 @@ export const CarbonParagraphDraftRequestSchema = z.object({
   // Info: (20260716 - Tzuhan) #55 修訂模式:兩者皆有 = 修訂既有段落(僅依指示與事實修改,其餘保留原文)
   existingContent: z.string().min(1).max(20_000).optional(),
   instruction: z.string().min(1).max(2_000).optional(),
+  /**
+   * Info: (20260903 - Emily) 揭露框架(#6688-A)。省略 = INVENTORY_ONLY,
+   * 與 `IParagraphDraftInput.framework` 的預設同一個立場:
+   * API 邊界向後相容(既有呼叫端不帶),服務層一進門就收斂成明確的 enum。
+   *
+   * route 是 `service.generateParagraphDraft(parsed.data)` —— 整包交出去,
+   * 所以這一行就是接線的全部;**沒有這一行,前端傳了也會被 schema 剝掉**
+   * (與 `CarbonInventoryStateSchema` 那次是同一個機制)。
+   */
+  framework: z.nativeEnum(CarbonDisclosureFrameworkEnum).optional(),
   /**
    * Info: (20260814 - Luphia) 計費上下文（設計書 §5.5）：
    * channel 供後端推導計費帳本，clientMessageId 讓重試不重複扣點。
