@@ -1,11 +1,12 @@
 "use client";
 
 import { FC, ReactNode } from "react";
-import { Mail, Pencil, Trash } from "lucide-react";
+import { CalendarPlus, Mail, Pencil, Trash } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { numberWithCommas } from "@/lib/utils/common";
 import { ISalaryCalculatorEmployee } from "@/interfaces/salary_record";
-import { hasNoEmail } from "@/lib/utils/salary_employee_filter";
+import { hasNoEmail, hasNoHireDate } from "@/lib/utils/salary_employee_filter";
+import { toDateInputValue } from "@/lib/utils/salary_employee_profile";
 import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import CoverageAlert from "@/components/salary_calculator/coverage_alert";
 
@@ -125,6 +126,43 @@ const EmployeeListTable: FC<IEmployeeListTableProps> = ({
           </button>
         ) : (
           <span className="text-gray-600">{employee.email}</span>
+        ),
+    },
+    {
+      key: "hireDate",
+      label: t("calculator.employee_list.hire_date"),
+      /**
+       * Info: (20260907 - Julian) 到職日排在信箱之後、本薪之前。
+       *
+       * 兩個「填了沒」的欄位（信箱、到職日）相鄰，而它們正是上面兩個勾選
+       * filter 在問的事 —— 勾了之後眼睛要落在同一區，不必左右跳。
+       *
+       * 這一欄同時把「沒有到職日」這件事從一個抽象的人數變成看得見的空格。
+       * 在此之前那個提示得自己解釋為什麼重要，因為畫面上沒有任何地方
+       * 顯示到職日。
+       *
+       * 走 `toDateInputValue` 而不是 `timestampToString`：到職日在這個模組
+       * 一律 UTC 錨定（寫入是 `${value}T00:00:00.000Z`），用本地時區格式化
+       * 會讓負偏移時區的使用者看到前一天。
+       */
+      render: (employee) =>
+        hasNoHireDate(employee) ? (
+          /**
+           * Info: (20260907 - Julian) 沒填就是補上的入口，同信箱那一格的處置。
+           * `-ml-[6px]` 抵銷按鈕的左內距，讓文字與上下列的日期對齊。
+           */
+          <button
+            type="button"
+            onClick={() => editHandler(employee)}
+            className="-ml-[6px] inline-flex items-center gap-[4px] rounded-md px-[6px] py-[2px] font-medium text-sky-600 transition-colors hover:bg-sky-50"
+          >
+            <CalendarPlus size={14} className="shrink-0" />
+            {t("calculator.employee_list.no_hire_date")}
+          </button>
+        ) : (
+          <span className="font-mono text-xs text-gray-600">
+            {toDateInputValue(employee.hireDate)}
+          </span>
         ),
     },
     {

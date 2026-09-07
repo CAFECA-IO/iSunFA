@@ -179,8 +179,8 @@ describe("薪資紀錄缺漏的標示", () => {
   const alertComponent = stripComments(
     read("components/salary_calculator/coverage_alert.tsx"),
   );
-  const noticesComponent = stripComments(
-    read("components/salary_calculator/employee_list_notices.tsx"),
+  const issueFiltersComponent = stripComments(
+    read("components/salary_calculator/employee_list_issue_filters.tsx"),
   );
   const tableComponent = stripComments(
     read("components/salary_calculator/employee_list_table.tsx"),
@@ -323,24 +323,33 @@ describe("薪資紀錄缺漏的標示", () => {
    * Info: (20260905 - Luphia) 橫幅與「只看這幾位」是一組：有數字就給得起
    * 篩選，因為使用者接下來要做的正是逐一補完。
    */
-  it("整頁版有橫幅與只看這幾位", () => {
+  it("整頁版有勾選 filter 與人數", () => {
     expect(listComponent).toContain("countMissingRecords(employees)");
     expect(listComponent).toContain("setOnlyMissingRecords");
-    expect(noticesComponent).toContain("missing_records_banner");
-    expect(noticesComponent).toContain("only_missing_records");
+    expect(issueFiltersComponent).toContain("filter_missing_records");
     /**
-     * Info: (20260907 - Julian) 提示只在整頁版渲染 —— 彈窗的任務是挑一個人
-     * 出來算薪水，整份名單的完整度在那個當下不是他要處理的事。
+     * Info: (20260907 - Julian) **人數一定要留著。**
+     *
+     * 20260907 從橫幅改成勾選時，人數是唯一不能丟的東西 ——
+     * 特別是「沒有到職日」：完整度算不出來時畫面什麼都不顯示，
+     * 與「大家都很完整」長得一模一樣，人數是那半句「說出為什麼不知道」。
+     */
+    expect(issueFiltersComponent).toContain("count={missingRecordsCount}");
+    expect(issueFiltersComponent).toContain("count={missingEmailCount}");
+    expect(issueFiltersComponent).toContain("count={missingHireDateCount}");
+    /**
+     * Info: (20260907 - Julian) 勾選 filter 只在整頁版渲染 —— 彈窗的任務是
+     * 挑一個人出來算薪水，整份名單有哪些問題在那個當下不是他要處理的事。
      *
      * 判準是「只出現一次，而且在 `if (withEmail)` 之後」而不是字元距離：
      * 距離會隨著 props 增減而變，寫死一個窗口的話這條測試遲早在一次
      * 無關的改動後紅掉，然後被人放寬。
      */
     const guardAt = listComponent.indexOf("if (withEmail) {");
-    const noticesAt = listComponent.indexOf("<EmployeeListNotices");
+    const filtersAt = listComponent.indexOf("<EmployeeListIssueFilters");
     expect(guardAt).toBeGreaterThan(-1);
-    expect(noticesAt).toBeGreaterThan(guardAt);
-    expect(listComponent.split("<EmployeeListNotices").length - 1).toBe(1);
+    expect(filtersAt).toBeGreaterThan(guardAt);
+    expect(listComponent.split("<EmployeeListIssueFilters").length - 1).toBe(1);
   });
 
   /**
@@ -367,8 +376,13 @@ describe("薪資紀錄缺漏的標示", () => {
   it("沒有到職日的人數有講出來，而且給得起篩選", () => {
     expect(listComponent).toContain("countMissingHireDate(employees)");
     expect(listComponent).toContain("setOnlyMissingHireDate");
-    expect(noticesComponent).toContain("missing_hire_date_banner");
-    expect(noticesComponent).toContain("only_missing_hire_date");
+    expect(issueFiltersComponent).toContain("filter_missing_hire_date");
+    /**
+     * Info: (20260907 - Julian) 「沒有到職日」的那句說明改掛在 `title` 上，
+     * 但**不能消失**：另外兩個勾選的後果從標籤就看得出來
+     * （沒信箱＝寄不出、缺薪資單＝要補算），而這一個的後果是看不見的。
+     */
+    expect(issueFiltersComponent).toContain("missing_hire_date_banner");
   });
 
   /**
@@ -377,13 +391,39 @@ describe("薪資紀錄缺漏的標示", () => {
    * 兩者是一前一後不是兩種看法 —— 沒有到職日的人補完之後，才可能出現在
    * 缺薪資單那一條裡。顛倒的話，使用者會先去處理一份還不完整的名單。
    */
-  it("到職日的提示排在缺薪資單的提示之前", () => {
-    const hireAt = noticesComponent.indexOf("missing_hire_date_banner");
-    const recordsAt = noticesComponent.indexOf("missing_records_banner");
+  it("到職日的勾選排在缺薪資單之前", () => {
+    const hireAt = issueFiltersComponent.indexOf("filter_missing_hire_date");
+    const recordsAt = issueFiltersComponent.indexOf("filter_missing_records");
 
     expect(hireAt).toBeGreaterThan(-1);
     expect(recordsAt).toBeGreaterThan(-1);
     expect(hireAt).toBeLessThan(recordsAt);
+  });
+
+  /**
+   * Info: (20260907 - Julian) 人數為 0 時勾選框**停用而不是消失**。
+   *
+   * 消失的話這一列會隨資料跳動；而「0」本身是有意義的答案
+   * （這個面向沒問題），不是沒有答案。停用則讓使用者不會按出一份空名單。
+   */
+  it("人數為 0 時勾選框停用，不是整條消失", () => {
+    expect(issueFiltersComponent).toMatch(/const isEmpty = count === 0;/);
+    expect(issueFiltersComponent).toContain("disabled={isEmpty}");
+  });
+
+  /**
+   * Info: (20260907 - Julian) 三個勾選，不是一個「只看有問題的」。
+   *
+   * 三者要做的事完全不同：回頭編輯員工、補一個欄位、回計算機補算。
+   * 併成一個的話，使用者勾了才發現名單裡混著三種毫不相干的待辦。
+   */
+  it("三種問題是三個獨立的勾選", () => {
+    [
+      "filter_missing_email",
+      "filter_missing_hire_date",
+      "filter_missing_records",
+    ].map((key) => expect(issueFiltersComponent).toContain(key));
+    expect(issueFiltersComponent.split("<IssueToggle").length - 1).toBe(3);
   });
 });
 
@@ -393,7 +433,7 @@ describe("薪資紀錄缺漏的標示", () => {
  * 沒有入口的話那兩欄永遠是 null，扣除留停的分支等於不存在 ——
  * 而純函式那一側會一直是綠的。
  */
-describe("整頁版的版面：條件、提示、結果是三塊", () => {
+describe("整頁版的版面：條件與結果兩塊", () => {
   const listComponent = stripComments(
     read("components/salary_calculator/employee_list.tsx"),
   );
@@ -408,37 +448,32 @@ describe("整頁版的版面：條件、提示、結果是三塊", () => {
   );
 
   /**
-   * Info: (20260907 - Julian) **三條提示不得回到篩選卡片裡。**
+   * Info: (20260907 - Julian) 勾選 filter **在篩選卡片裡**。
    *
-   * 20260907 實測回報「還是一整塊」：元件確實拆成三個檔案了，但提示是
-   * 當 children 塞進 `EmployeeListFilters`，於是畫面上篩選列與三條提示
-   * 仍然共用同一張白色卡片 —— 拆了元件、沒拆版面。
+   * 這條判準當天改過方向，理由記在這裡免得看起來像反覆：
+   * 早一版它們是三條橫幅，刻意拉出去當獨立的一塊 —— 橫幅是通知，
+   * 不是條件，混進篩選卡片會讓那張卡片變成什麼都放的抽屜。
+   * 改成勾選之後它們**就是**條件，收進來才對；一個「只看缺信箱」的勾選
+   * 放在篩選卡片外面，會讓它看起來與搜尋是兩種不同的東西。
    *
-   * 三者的關係是「條件 → 這份名單有什麼問題 → 結果」，各自有邊界
-   * 才讀得出那是三件事。這一條把它釘住，而不是靠肉眼在截圖上比對。
+   * 所以整頁版是兩塊（條件、結果），而勾選是條件那一塊的一部分。
    */
-  it("三條提示是獨立的一塊，不在篩選卡片裡", () => {
-    expect(filters).not.toContain("notices");
-    expect(filters).not.toContain("Notices");
+  it("勾選 filter 在篩選卡片裡，整頁版是兩塊", () => {
+    expect(filters).toContain("issueFilters");
     expect(listComponent).toMatch(
-      /<EmployeeListFilters[\s\S]{0,800}?\/>[\s\S]{0,300}?<EmployeeListNotices/,
+      /<EmployeeListFilters[\s\S]{0,1200}?issueFilters=\{/,
     );
   });
 
   /**
-   * Info: (20260907 - Julian) 三塊各自渲染一次，順序是條件 → 提示 → 結果。
-   *
-   * 順序寫在同一個 return 裡，所以判準看的是出現次序。
+   * Info: (20260907 - Julian) 兩塊各自渲染一次，順序是條件 → 結果。
    */
-  it("篩選、提示、表格依序各出現一次", () => {
-    ["<EmployeeListFilters", "<EmployeeListNotices", "<EmployeeListTable"].map(
-      (tag) => expect(listComponent.split(tag).length - 1).toBe(1),
+  it("篩選與表格依序各出現一次", () => {
+    ["<EmployeeListFilters", "<EmployeeListTable"].map((tag) =>
+      expect(listComponent.split(tag).length - 1).toBe(1),
     );
 
     expect(listComponent.indexOf("<EmployeeListFilters")).toBeLessThan(
-      listComponent.indexOf("<EmployeeListNotices"),
-    );
-    expect(listComponent.indexOf("<EmployeeListNotices")).toBeLessThan(
       listComponent.indexOf("<EmployeeListTable"),
     );
   });
@@ -452,14 +487,29 @@ describe("整頁版的版面：條件、提示、結果是三塊", () => {
    */
   it("列表用共用的 DataTable，而且每一欄都有標題", () => {
     expect(tableComponent).toContain('from "@/components/common/data_table"');
-    ["name", "number", "email", "baseSalary", "actions"].map((key) =>
-      expect(tableComponent).toContain(`key: "${key}"`),
+    ["name", "number", "email", "hireDate", "baseSalary", "actions"].map(
+      (key) => expect(tableComponent).toContain(`key: "${key}"`),
     );
     expect(tableComponent).toContain("calculator.employee_list.name");
     expect(tableComponent).toContain("calculator.employee_list.number");
     expect(tableComponent).toContain("calculator.employee_list.email");
+    expect(tableComponent).toContain("calculator.employee_list.hire_date");
     expect(tableComponent).toContain("calculator.employee_list.base_salary");
     expect(tableComponent).toContain("common.actions");
+  });
+
+  /**
+   * Info: (20260907 - Julian) 到職日走 `toDateInputValue`，不是 `timestampToString`。
+   *
+   * 到職日在這個模組一律 UTC 錨定（寫入是 `T00:00:00.000Z`），
+   * 用本地時區格式化會讓負偏移時區的使用者看到**前一天** ——
+   * 而那個錯誤在 UTC 與 UTC+08:00 的開發機上看不出來。
+   */
+  it("到職日以 UTC 格式化，沒填則給補上的入口", () => {
+    expect(tableComponent).toContain("toDateInputValue(employee.hireDate)");
+    expect(tableComponent).not.toContain("timestampToString");
+    expect(tableComponent).toContain("hasNoHireDate(employee)");
+    expect(tableComponent).toContain("calculator.employee_list.no_hire_date");
   });
 
   /**

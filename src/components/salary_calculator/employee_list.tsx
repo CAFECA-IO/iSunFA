@@ -16,7 +16,7 @@ import {
 import CoverageAlert from "@/components/salary_calculator/coverage_alert";
 import EmployeeActionModal from "@/components/salary_calculator/employee_action_modal";
 import EmployeeListFilters from "@/components/salary_calculator/employee_list_filters";
-import EmployeeListNotices from "@/components/salary_calculator/employee_list_notices";
+import EmployeeListIssueFilters from "@/components/salary_calculator/employee_list_issue_filters";
 import EmployeeListTable from "@/components/salary_calculator/employee_list_table";
 import RemoveEmployeeModal from "@/components/salary_calculator/remove_employee_modal";
 
@@ -378,33 +378,38 @@ const EmployeeList: FC<IEmployeeListProps> = ({
             shownCount={filteredEmployees.length}
             totalCount={employees.length}
             addEmployeeBtn={addEmployeeBtn}
+            /**
+             * Info: (20260907 - Julian) 三個勾選 filter **進篩選卡片**。
+             *
+             * 20260907 前一版刻意把它們拉出去當獨立的一塊，理由是「條件、
+             * 提示、結果是三件事」—— 那個判斷對當時的形狀是對的：橫幅是
+             * 通知，不是條件。改成勾選之後它們就是條件，家在篩選區裡；
+             * 拉在外面反而讓「搜尋」與「只看缺信箱」看起來是兩種不同的東西。
+             *
+             * 所以整頁版現在是**兩塊**（條件、結果），不是三塊。
+             */
+            issueFilters={
+              hasAnyEmployee ? (
+                <EmployeeListIssueFilters
+                  missingEmailCount={missingEmailCount}
+                  missingHireDateCount={missingHireDateCount}
+                  missingRecordsCount={missingRecordsCount}
+                  onlyMissingEmail={onlyMissingEmail}
+                  onlyMissingHireDate={onlyMissingHireDate}
+                  onlyMissingRecords={onlyMissingRecords}
+                  toggleMissingEmail={() =>
+                    setOnlyMissingEmail((prev) => !prev)
+                  }
+                  toggleMissingHireDate={() =>
+                    setOnlyMissingHireDate((prev) => !prev)
+                  }
+                  toggleMissingRecords={() =>
+                    setOnlyMissingRecords((prev) => !prev)
+                  }
+                />
+              ) : null
+            }
           />
-
-          {/**
-           * Info: (20260907 - Julian) 三條提示是**獨立的一塊**，不在篩選卡片裡。
-           *
-           * 上一版把它們當成 `EmployeeListFilters` 的 children 塞進那張卡片，
-           * 結果篩選列與三條提示又長回一整塊白色區域 —— 拆元件拆了，
-           * 版面沒拆。三者的關係是「條件 → 這份名單有什麼問題 → 結果」，
-           * 三段各自有邊界才讀得出那是三件事。
-           */}
-          {hasAnyEmployee && (
-            <EmployeeListNotices
-              missingEmailCount={missingEmailCount}
-              missingHireDateCount={missingHireDateCount}
-              missingRecordsCount={missingRecordsCount}
-              onlyMissingEmail={onlyMissingEmail}
-              onlyMissingHireDate={onlyMissingHireDate}
-              onlyMissingRecords={onlyMissingRecords}
-              toggleMissingEmail={() => setOnlyMissingEmail((prev) => !prev)}
-              toggleMissingHireDate={() =>
-                setOnlyMissingHireDate((prev) => !prev)
-              }
-              toggleMissingRecords={() =>
-                setOnlyMissingRecords((prev) => !prev)
-              }
-            />
-          )}
 
           {hasError ? (
             <div className="rounded-xl border border-gray-200 bg-white px-4 py-16 text-center text-sm text-rose-600 shadow-sm">

@@ -123,19 +123,15 @@ export const calculator = {
     remove_employee_content: "本当に従業員リストから {{name}} を削除しますか？",
     remove_employee_submit_btn: "はい、削除します。",
     no_email: "未入力",
-    missing_email_banner:
-      "{{count}} 名のメールアドレスが未入力です。給与明細を送信できません",
-    only_missing_email: "該当者のみ表示",
     missing_records_badge: "{{count}} か月分なし",
     missing_records_more: "{{periods}} ほか {{count}} か月",
-    missing_records_banner: "{{count}} 名の従業員に給与明細のない月があります",
-    only_missing_records: "この従業員のみ表示",
-    missing_hire_date_banner:
-      "{{count}} 名の従業員に入社日がありません。入力すると、どの月の給与明細が不足しているか確認できます",
-    only_missing_hire_date: "この従業員のみ表示",
     show_all: "すべて表示",
     no_filter_result: "条件に一致する従業員がいません",
     missing_records_rest: "他 {{count}} か月分",
+    no_hire_date: "未入力",
+    filter_missing_email: "メールアドレスなし",
+    filter_missing_hire_date: "入社日なし",
+    filter_missing_records: "給与明細の未作成あり",
   },
   result: {
     base_salary_with_tax: "基本給（課税対象）",

@@ -124,20 +124,15 @@ export const calculator = {
       "Are you sure you want to remove {{name}} from the employee list?",
     remove_employee_submit_btn: "Yes, Remove Employee",
     no_email: "Not set",
-    missing_email_banner:
-      "{{count}} employees have no email address — their pay slips cannot be sent",
-    only_missing_email: "Show only these",
     missing_records_badge: "{{count}} month(s) missing",
     missing_records_more: "{{periods}} and {{count}} more month(s)",
-    missing_records_banner:
-      "{{count}} employee(s) have months with no pay slip on record",
-    only_missing_records: "Show only these",
-    missing_hire_date_banner:
-      "{{count}} employee(s) have no hire date — coverage cannot be checked for them until it is filled in",
-    only_missing_hire_date: "Show only these",
     show_all: "Show all employees",
     no_filter_result: "No employee matches the current filter",
     missing_records_rest: "{{count}} more months",
+    no_hire_date: "Not set",
+    filter_missing_email: "No email address",
+    filter_missing_hire_date: "No hire date",
+    filter_missing_records: "Missing pay slip records",
   },
   result: {
     base_salary_with_tax: "Base Salary (Taxable)",

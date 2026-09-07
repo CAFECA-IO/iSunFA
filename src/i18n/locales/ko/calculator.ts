@@ -122,20 +122,15 @@ export const calculator = {
     remove_employee_content: "직원 목록에서 {{name}} 님을 삭제하시겠습니까?",
     remove_employee_submit_btn: "네, 직원을 삭제합니다.",
     no_email: "미입력",
-    missing_email_banner:
-      "{{count}}명의 이메일이 비어 있어 급여명세서를 보낼 수 없습니다",
-    only_missing_email: "해당 직원만 보기",
     missing_records_badge: "{{count}}개월 누락",
     missing_records_more: "{{periods}} 외 {{count}}개월",
-    missing_records_banner:
-      "{{count}}명의 직원에게 급여명세서가 없는 달이 있습니다",
-    only_missing_records: "이 직원만 보기",
-    missing_hire_date_banner:
-      "{{count}}명의 직원에게 입사일이 없습니다. 입력하면 어느 달의 급여명세서가 누락되었는지 확인할 수 있습니다",
-    only_missing_hire_date: "이 직원만 보기",
     show_all: "전체 보기",
     no_filter_result: "조건에 맞는 직원이 없습니다",
     missing_records_rest: "그 외 {{count}}개월",
+    no_hire_date: "미입력",
+    filter_missing_email: "이메일 없음",
+    filter_missing_hire_date: "입사일 없음",
+    filter_missing_records: "급여명세서 누락",
   },
   result: {
     base_salary_with_tax: "기본급(과세 대상)",
