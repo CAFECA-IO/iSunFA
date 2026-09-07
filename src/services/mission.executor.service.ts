@@ -7,6 +7,10 @@ import { CurrencyCode } from "@/constants/exchange_rate";
 import { VoucherPipelineOrchestrator } from "@/services/voucher.pipeline.orchestrator";
 import { skillRegistry } from "@/skills";
 import { IMissionDefinition } from "@/lib/worker/mission.generator";
+import {
+  buildCoefficientDictionary,
+  parseGlobalCoefficientSnapshot,
+} from "@/lib/worker/coefficient_snapshot";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
 import { Schema } from "@google/generative-ai";
@@ -517,11 +521,22 @@ export async function processNext() {
           const bookCurrency = (ab.currency as string) || CurrencyCode.TWD;
           const bookCountry = (ab.country as string) || CountryCode.TW;
 
+          /**
+           * Info: (20260907 - Luphia) 係數字典來自 mission 快照（發包端嵌入、
+           * 隨 IPFS 過界），本節點不查資料庫（PR #6650 收尾）。與 esg_parsing
+           * 選 coefficientId 用的是同一份合併結果——`buildCoefficientDictionary`
+           * 是唯一的合併實作。
+           */
+          const coefficientDictionary = buildCoefficientDictionary(
+            parseGlobalCoefficientSnapshot(missionData),
+          );
+
           resultObj.dbSyncPayload =
             await VoucherPipelineOrchestrator.processDbSyncPayload(
               resultObj.dbSyncPayload as Record<string, unknown>,
               bookCurrency,
               bookCountry,
+              coefficientDictionary,
             );
         }
 

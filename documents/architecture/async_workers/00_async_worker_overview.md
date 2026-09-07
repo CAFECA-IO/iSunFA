@@ -121,8 +121,8 @@ graph TD
 
 系統劃下了一道不可踰越的安全鴻溝：**`MissionExecutor` (與其他所有負責 Web3 / AI 運算的外部節點) 絕對沒有存取主系統 PostgreSQL 資料庫的權限。**
 
-> ⚠️ **實作與本節不符（2026-08-12，Luphia）**：行程已於此日拆成「外部運算節點」（`npm run worker:compute`）與「內部維運節點」（`npm run worker:ops`），但**運算節點目前仍有兩處真實的資料庫查詢**，都是為了取排放係數字典：`voucher.pipeline.orchestrator` 的 `getCoefficientById()` 與 `skills/document/esg_parsing` 的 `getAllGlobalCoefficients()`。
-> 也就是說本節這句「絕對沒有權限」目前是**目標而非事實**。`src/__tests__/worker_node_isolation.test.ts` 以匯入圖掃描把這兩條清單化：新增任何耦合會讓測試變紅，已知的兩條是明示例外。解法與取捨見 **[已知缺陷](../../engineering_guidelines/known_issues/executor_settings_isolation.md)**。
+> ✅ **本節自 2026-09-07 起是受測試守護的事實**（Luphia）：行程於 2026-08-12 拆成「外部運算節點」（`npm run worker:compute`）與「內部維運節點」（`npm run worker:ops`）；拆分後僅剩的兩處資料庫查詢（排放係數字典：`voucher.pipeline.orchestrator` 的 `getCoefficientById()`、`skills/document/esg_parsing` 的 `getAllGlobalCoefficients()`）已於 2026-09-07 移除——字典由 **MissionIssuer**（維運側、有 DB）在發包時嵌進 `mission.json` 的 `prerequisiteData.globalCoefficients`，隨既有的 IPFS 通道過界，運算側以 `lib/worker/coefficient_snapshot`（零 prisma 純模組）讀取。**係數凍結於發包時點**：與資金託管同一時點，同一份 mission 永遠以同一套係數計算（審計可重放）。
+> `src/__tests__/worker_node_isolation.test.ts` 掃執行期匯入圖，斷言運算節點的 prisma 匯入點為**空集合**——新增任何耦合會讓測試變紅，而正確修法是走 mission 快照或維運節點，不是把清單加長。決策脈絡見 **[已知缺陷](../../engineering_guidelines/known_issues/executor_settings_isolation.md)**。
 
 - **物理隔離**：它們無法連線 DB，更無法直接寫入、修改或刪除任何帳本資料。
 - **單向提議**：它們的輸出 (`result.md`) 僅是一份「提議載荷 (Payload)」，必須經過上鏈 (`MissionCommitor`)、查帳核准 (`IssueValidator`)，最終由具備寫庫權限的內部節點 `MissionRecorder` 負責抄寫回資料庫。

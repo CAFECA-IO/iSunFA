@@ -57,22 +57,28 @@ Executor 以 `new ChatService(apiKey, { allowSystemSettings: false })` 明示不
 
 分類依據是逐一驗證過的執行期匯入圖，不是文件敘述。過程中發現五條「幽靈耦合」：那些檔案只用到 `document_parser_db_sync` 的**型別**卻寫成值匯入，於是把 `document_sync.repo → lib/prisma` 整條拉進運算節點的模組圖，已改為 `import type`。`chat.service` 對 `system_setting.service` 的匯入也改為動態（只有真的要查設定時才載入）。
 
-### 拆分後仍存在的耦合：排放係數字典
+### 拆分後仍存在的耦合：排放係數字典（✅ 已於 2026-09-07 解決）
 
-運算節點還有**兩處真實的資料庫查詢**，主題相同：
+運算節點曾有**兩處真實的資料庫查詢**，主題相同：
 
-1. `voucher.pipeline.orchestrator` → `EmissionFactorRepo.getCoefficientById()`（第 124、173 行；`mission.executor.service:521` 會走到）
-2. `skills/document/esg_parsing` → `EmissionFactorRepo.getAllGlobalCoefficients()`（第 166 行；經 `skills/index.ts` 被 Executor 取用）
+1. `voucher.pipeline.orchestrator` → `EmissionFactorRepo.getCoefficientById()`（`mission.executor.service` 的洗淨步驟會走到）
+2. `skills/document/esg_parsing` → `EmissionFactorRepo.getAllGlobalCoefficients()`（經 `skills/index.ts` 被 Executor 取用）
 
-所以 `00_async_worker_overview.md` 那句「絕對沒有存取主資料庫的權限」目前是**目標而非事實**，而且不是匯入寫法的意外 —— 是兩次真正的查詢。三條可能的出路：
+當時列了三條出路：
 
-| 出路                                | 代價                                                                     |
-| ----------------------------------- | ------------------------------------------------------------------------ |
-| Planner 預先把係數解析進 mission 檔 | 運算節點真正零資料庫；但係數在任務排入時就凍結，跨日的長任務可能用到舊值 |
-| 維運節點提供係數查詢 API            | 維持隔離（跨界改成 HTTP，符合單向模型）；多一條內部端點與其認證          |
-| 給運算節點唯讀的係數表權限          | 最省事；但「沒有資料庫可達性」這個前提消失，而那正是防提示詞注入的基礎   |
+| 出路                                          | 代價                                                                     |
+| --------------------------------------------- | ------------------------------------------------------------------------ |
+| **發包端預先把係數解析進 mission 檔（採用）** | 運算節點真正零資料庫；係數在任務排入時凍結，跨日長任務用的是排入當下的值 |
+| 維運節點提供係數查詢 API                      | 維持隔離（跨界改成 HTTP，符合單向模型）；多一條內部端點與其認證          |
+| 給運算節點唯讀的係數表權限                    | 最省事；但「沒有資料庫可達性」這個前提消失，而那正是防提示詞注入的基礎   |
 
-`src/__tests__/worker_node_isolation.test.ts` 以集合比對把這兩條清單化 —— **新增任何一條耦合都會變紅**，已知的兩條不會讓測試長期紅著。第一版寫成「只找第一條路徑」時漏掉了 `esg_parsing` 那條，改成蒐集全部可達的匯入點才現形。
+**選了第一條（2026-09-07，Luphia），而且不是妥協**，理由有三：
+
+1. **架構鎖死了通道**：本文件與 overview 的 shared-nothing 原則下，跨界通道只有 IPFS 與區塊鏈——「維運節點提供 API」違反單向模型（運算側反向呼叫可信網段），「唯讀權限」直接取消前提。原案寫「Planner 預先解析」，但 Planner 在運算側、自己就沒有 DB——實作上是 **MissionIssuer**（`issue.service`，維運側）在發包時嵌入 `prerequisiteData.globalCoefficients`，走 mission.json 既有的 IPFS 通道（`prerequisiteData.coefficients` 早已這樣載租戶自訂係數）。
+2. **凍結是特性不是代價**：資金在發包同一時點託管（Escrow），同一份 mission 永遠以同一套係數計算——審計的可重放性正好要求這件事。係數字典是年度性參照資料，「跨日長任務用到舊值」的正確語意本來就是「用排入當下的值」。
+3. **兩個消費端合併語意不變**：運算側的讀取端收斂在 `lib/worker/coefficient_snapshot`（零 prisma 純模組），合併順序（靜態先、快照蓋過）與先前 `getAllGlobalCoefficients` + 手工合併、`getCoefficientById` 的「靜態先、DB 後」逐字等價。快照缺席（通道上線前的舊 mission）落回靜態字典，不拋錯。
+
+`src/__tests__/worker_node_isolation.test.ts` 的已知耦合清單自此為**空集合**——新增任何一條耦合都會變紅，而正確修法是走 mission 快照或維運節點。（歷史教訓保留：第一版掃描寫成「只找第一條路徑」時漏掉了 `esg_parsing` 那條，改成蒐集全部可達的匯入點才現形。）
 
 ### 尚未處理
 

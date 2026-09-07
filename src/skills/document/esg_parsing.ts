@@ -6,10 +6,15 @@ import { SchemaType, Schema } from "@google/generative-ai";
 import { EsgGenerationSource, EsgFallbackCategory } from "@/constants/enums";
 import { MeasurementUnit } from "@/constants/enums";
 import { FIAT_CURRENCIES } from "@/constants/country";
-import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
-import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
-import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
-import { prisma } from "@/lib/prisma";
+/**
+ * Info: (20260907 - Luphia) 不再匯入 `EmissionFactorRepo` 與 `lib/prisma`：
+ * 本檔在外部運算節點的匯入圖裡，那兩個匯入正是拆分後僅剩的 DB 耦合之一
+ *（`worker_node_isolation.test.ts` 掃匯入圖釘住）。字典見下方快照模組。
+ */
+import {
+  buildCoefficientDictionary,
+  parseGlobalCoefficientSnapshot,
+} from "@/lib/worker/coefficient_snapshot";
 import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
 import { LLM_WORKER_TIMEOUT_MS } from "@/constants/llm";
 
@@ -161,33 +166,23 @@ export class EsgParsingSkill implements ITaskSkill {
         parsed1.fallbackCategory || "",
       ];
 
-      // Info: (20260522 - Tzuhan) Fetch dynamic coefficients from DB (including our Mock EEIOs)
       /**
-       * ToDo: (20260812 - Luphia) 外部運算節點不該連得到主資料庫,這裡是兩處例外之一。
+       * Info: (20260907 - Luphia) 字典改讀 **mission 快照**，不再查資料庫
+       *（PR #6650 收尾，原 ToDo 兩處之一）。
        *
-       * 本檔經 `skills/index.ts` 被 `MissionExecutor` 取用,而這一行是真正的資料庫查詢。
-       * `async_workers/00_async_worker_overview.md` 那句「絕對沒有存取主資料庫的權限」
-       * 因此目前是目標而非事實 —— 而那道隔離是防提示詞注入的基礎。
-       *
-       * 另一處在 `voucher.pipeline.orchestrator`（`getCoefficientById`）,
-       * 兩者主題相同:管線需要資料庫裡的排放係數字典。三條出路與代價見
-       * `documents/engineering_guidelines/known_issues/executor_settings_isolation.md`。
+       * 本檔經 `skills/index.ts` 被 `MissionExecutor` 取用，而外部運算節點依
+       * `async_workers/00_async_worker_overview.md` 不得存取主資料庫——那道
+       * 隔離是防提示詞注入的基礎。全球係數由發包端（`issue.service`，有 DB）
+       * 在發包時嵌進 `prerequisiteData.globalCoefficients` 隨 IPFS 過界；
+       * 合併順序（靜態先、快照蓋過）與先前的「DB takes precedence」逐字相同，
+       * 收斂在 `buildCoefficientDictionary`。快照缺席（通道上線前的舊 mission）
+       * 時以靜態字典繼續，不拋錯。
        */
-      const dbCoefficients =
-        await EmissionFactorRepo.getAllGlobalCoefficients(prisma);
-
-      // Info: (20260522 - Tzuhan) Combine static and DB coefficients, deduplicating by ID (DB takes precedence)
-      const combinedCoefficientsMap = new Map();
-      [...ALL_COEFFICIENTS, ...MOCK_EEIO_COEFFICIENTS].forEach((c) =>
-        combinedCoefficientsMap.set(c.id, c),
+      const combinedCoefficients = Array.from(
+        buildCoefficientDictionary(
+          parseGlobalCoefficientSnapshot(mission.data),
+        ).values(),
       );
-      dbCoefficients.forEach((c) =>
-        combinedCoefficientsMap.set(c.id, {
-          ...c,
-          emissionFactor: c.emissionFactor.toString(),
-        }),
-      );
-      const combinedCoefficients = Array.from(combinedCoefficientsMap.values());
 
       const isServiceCategory = [
         EsgFallbackCategory.IT_AND_TELECOM,

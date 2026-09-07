@@ -17,31 +17,24 @@ import path from "path";
  * 那些檔案只用到 `document_parser_db_sync` 的型別，卻寫成值匯入，於是把
  * `document_sync.repo → lib/prisma` 整條拉進圖裡。改成 `import type` 之後就沒了。
  *
- * 剩下的一條是**真的**：見 `KNOWN_DB_COUPLING`。
+ * Info: (20260907 - Luphia) 最後兩條**真的**耦合（排放係數字典）已於本輪清空：
+ * 字典由發包端（`issue.service`，維運側）在發包時嵌進 mission.json 的
+ * `prerequisiteData.globalCoefficients`，隨 IPFS 過界，運算側以
+ * `lib/worker/coefficient_snapshot`（零 prisma 的純模組）讀取——
+ * `esg_parsing` 與 `voucher.pipeline.orchestrator` 都不再匯入
+ * `EmissionFactorRepo`。**文件那句「絕對沒有存取主資料庫的權限」自此是
+ * 由本測試守著的事實**：清單空了，而且只能一直是空的。
  */
 const ROOT = process.cwd();
 
 /**
- * Info: (20260812 - Luphia) 已知且**尚未解決**的耦合，逐條列出而不是整體放行。
+ * Info: (20260907 - Luphia) 已知耦合清單：**空**，而且要一直是空的。
  *
- * 兩條都是真的（不是匯入寫法的意外），而且是**同一個主題**:
- * mission 管線需要資料庫裡的**排放係數字典**。
- *
- * 1. `voucher.pipeline.orchestrator` → `EmissionFactorRepo.getCoefficientById()`
- *    （第 124、173 行；`mission.executor.service:521` 會走到）
- * 2. `skills/document/esg_parsing` → `EmissionFactorRepo.getAllGlobalCoefficients()`
- *    （第 166 行；經 `skills/index.ts` 被 Executor 取用）
- *
- * 也就是說**文件那句「MissionExecutor 絕對沒有存取主資料庫的權限」目前不成立**。
- * 解法與取捨見 `known_issues/executor_settings_isolation.md`。
- *
- * 這個清單的意義是「新增的耦合會變紅，已知的不會讓測試長期紅著」——
- * 長期紅的測試等於沒有測試。
+ * 保留清單機制而不是把斷言改寫成 `toEqual([])` 的字面值，是為了讓「有人想
+ * 加一條耦合」必須動到**這個常數**——它上面這段註解就是那時要讀的東西：
+ * 新的 DB 需求走 mission 快照（發包端嵌入）或維運節點，不走匯入。
  */
-const KNOWN_DB_COUPLING = [
-  "src/repositories/emission_factor.repo.ts",
-  "src/skills/document/esg_parsing.ts",
-];
+const KNOWN_DB_COUPLING: string[] = [];
 
 const resolveModule = (spec: string): string | null => {
   if (!spec.startsWith("@/")) return null;
@@ -101,13 +94,12 @@ const stripComments = (source: string): string =>
 
 describe("worker node isolation", () => {
   /**
-   * Info: (20260812 - Luphia) 外部運算節點的圖裡只允許那一條已知耦合。
-   *
-   * 斷言的是**第一步**:從入口走到 prisma 的路徑上，第二個節點必須是清單裡的檔案。
-   * 這樣新增一條完全不同的耦合會變紅，而已知那條不會讓測試長期紅著
-   * （長期紅的測試等於沒有測試）。
+   * Info: (20260907 - Luphia) 外部運算節點的匯入圖裡**沒有任何** prisma 匯入點
+   *（原「已知清單」在係數字典改走 mission 快照後歸零）。
+   * 任何新增的耦合都會在這裡現形——修法不是把它加進清單，
+   * 是走發包端嵌入（見 `lib/worker/coefficient_snapshot` 檔頭）或搬去維運節點。
    */
-  it("should not grow new database coupling in the compute node", () => {
+  it("should keep the compute node free of database coupling", () => {
     expect(
       prismaImportersFrom(path.join(ROOT, "scripts/run_compute_node.ts")),
     ).toEqual(KNOWN_DB_COUPLING);

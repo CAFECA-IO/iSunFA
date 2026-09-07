@@ -169,7 +169,11 @@ const GRANDFATHERED_PRISMA_IMPORTERS: readonly string[] = [
   join("src", "services", "allocation.engine.service.ts"),
   join("src", "services", "cron", "amortization.worker.service.ts"),
   join("src", "services", "cron", "fx_revaluation.worker.service.ts"),
-  join("src", "skills", "document", "esg_parsing.ts"),
+  /**
+   * Info: (20260907 - Luphia) `skills/document/esg_parsing.ts` 自本日移出清單：
+   * 係數字典改讀 mission 快照（PR #6650，發包端嵌入、隨 IPFS 過界），
+   * 它不再匯入 `lib/prisma`——清單只能變短，這一格就是變短的證據。
+   */
 ];
 
 /**

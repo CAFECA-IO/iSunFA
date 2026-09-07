@@ -6,6 +6,8 @@ import { VoucherLinesParsingSkill } from "@/skills/document/voucher_lines_parsin
 import { EsgParsingSkill } from "@/skills/document/esg_parsing";
 import { ChatService } from "@/services/chat.service";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
+import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
+import { serializeGlobalCoefficients } from "@/lib/worker/coefficient_snapshot";
 import { config } from "dotenv";
 import sharp from "sharp";
 import { Role } from "@/constants/role";
@@ -221,11 +223,22 @@ export const runPhase2ReceiptAnalysis = async (
       },
     };
 
+    /**
+     * Info: (20260907 - Luphia) 準確率測試的 mission 要自嵌係數快照（PR #6650）：
+     * `esg_parsing` 不再查資料庫，字典改讀 `prerequisiteData.globalCoefficients`
+     * ——本腳本跑在伺服器側、有 DB，照發包端（issue.service）同一個形狀嵌入，
+     * 否則這裡量到的準確率少了 DB 係數那一半，與生產管線對不上。
+     */
     const mission: IPseudoMission = {
       id: `mission-${voucherNumber}`,
       data: {
         companyId: stockId,
         name: `E2E Test Mission ${voucherNumber}`,
+        prerequisiteData: {
+          globalCoefficients: serializeGlobalCoefficients(
+            await EmissionFactorRepo.getAllGlobalCoefficients(),
+          ),
+        },
       },
     };
 
