@@ -1,14 +1,61 @@
+// Info: (20260814 - Luphia) 登入過期的集中通報：由 AuthProvider 註冊處理函式
+const UNAUTHORIZED_STATUS = 401;
+
+type UnauthorizedHandler = () => void;
+let unauthorizedHandler: UnauthorizedHandler | null = null;
+
+/**
+ * Info: (20260814 - Luphia) 註冊 401 處理函式（回傳解除註冊）。
+ * 刻意只允許一個處理函式：這是應用層唯一的「你被登出了」出口，
+ * 多個訂閱者會讓提示重複跳出。
+ */
+export function onUnauthorized(handler: UnauthorizedHandler): () => void {
+  unauthorizedHandler = handler;
+  return () => {
+    if (unauthorizedHandler === handler) unauthorizedHandler = null;
+  };
+}
+
+function notifyUnauthorized(): void {
+  unauthorizedHandler?.();
+}
+
 export class ApiError extends Error {
   public status: number;
   public data: unknown;
+  /**
+   * Info: (20260904 - Emily) 429 的 `Retry-After` 表頭(秒),沒有就是 undefined(#6744)。
+   *
+   * 伺服端限流器把退避秒數**只放在表頭**(`enforceRateLimit` 的 jsonFail 不帶 payload),
+   * 而這裡原本只保留 body —— 於是用戶端知道自己被限流,卻不知道要等多久,
+   * 只能猜或立刻重撞。有了它,匯入的驅動器才能真的 honor 伺服端算好的那個數字。
+   */
+  public retryAfterSeconds?: number;
 
-  constructor(message: string, status: number, data?: unknown) {
+  constructor(
+    message: string,
+    status: number,
+    data?: unknown,
+    retryAfterSeconds?: number,
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.data = data;
+    this.retryAfterSeconds = retryAfterSeconds;
   }
 }
+
+/**
+ * Info: (20260904 - Emily) 解析 `Retry-After`。只收「秒數」那種寫法;
+ * HTTP 也允許 HTTP-date,但我們的限流器只發秒數(`rate_limiter.ts`),
+ * 收到解析不了的值就當沒有 —— 不猜。
+ */
+const parseRetryAfterSeconds = (header: string | null): number | undefined => {
+  if (header === null) return undefined;
+  const seconds = Number.parseInt(header, 10);
+  return Number.isFinite(seconds) && seconds >= 0 ? seconds : undefined;
+};
 
 interface IRequestOptions extends RequestInit {
   query?: Record<string, string | number | boolean | undefined>;
@@ -87,11 +134,21 @@ export async function request<T = unknown>(
     const data = (await response.json().catch(() => ({}))) as unknown;
 
     if (!response.ok) {
+      /**
+       * Info: (20260814 - Luphia) 401 一律往上通報一次（設計書：登入過期的可見性）。
+       *
+       * 過期本身不可避免，真正的問題是它**無聲**：每個呼叫端各自 catch，
+       * 於是「登入過期」在畫面上一律退化成「你沒有資料」——團隊選單變成空的、
+       * 按鈕靜靜停用、點了沒反應，而使用者完全不知道自己已經被登出。
+       * 這裡集中通報，由 AuthProvider 統一清狀態並提示重新登入。
+       */
+      if (response.status === UNAUTHORIZED_STATUS) notifyUnauthorized();
       const errorData = data as { message?: string } | undefined;
       throw new ApiError(
         errorData?.message || response.statusText || "Request failed",
         response.status,
         data,
+        parseRetryAfterSeconds(response.headers.get("Retry-After")),
       );
     }
 
@@ -136,4 +193,87 @@ export async function requestEnvelope<T = unknown>(
 ): Promise<T | null> {
   const envelope = await request<IEnvelopeLike<T>>(url, options);
   return unwrapEnvelope(envelope);
+}
+
+export interface IDownloadedFile {
+  blob: Blob;
+  /** Info: (20260813 - Julian) 取自 `Content-Disposition`；伺服器沒給時為 null */
+  filename: string | null;
+}
+
+/**
+ * Info: (20260813 - Julian) 下載檔案型端點（`fileOk`）。
+ *
+ * ## 為什麼不能用 `request()`
+ *
+ * `request()` 一律 `response.json()`，而這些端點回的是 CSV／PDF ——
+ * 解析必然失敗，然後被 `.catch(() => ({}))` 吞成一個空物件，
+ * 呼叫端拿到「成功但沒有內容」。那是最難查的一種失敗。
+ *
+ * ## 檔名以伺服器為準
+ *
+ * 檔名由伺服器決定（點名單的檔名帶產出時刻），前端只是照抄。
+ * 兩邊各組一次，遲早會出現「下載下來的檔名與稽核紀錄裡的對不起來」。
+ */
+export async function requestFile(
+  url: string,
+  options: IRequestOptions = {},
+): Promise<IDownloadedFile> {
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("dewt") : null;
+
+  const { query, headers = {}, ...rest } = options;
+  let finalUrl = url;
+  if (query) {
+    const queryString = Object.entries(query)
+      .filter(([, value]) => value !== undefined)
+      .map(
+        ([key, value]) =>
+          `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
+      )
+      .join("&");
+    if (queryString) finalUrl += `?${queryString}`;
+  }
+
+  const response = await fetch(finalUrl, {
+    ...rest,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(options.body instanceof FormData
+        ? {}
+        : { "Content-Type": "application/json" }),
+      ...(headers as Record<string, string>),
+    },
+  });
+
+  if (!response.ok) {
+    /**
+     * Info: (20260813 - Julian) 失敗時伺服器回的是 JSON 信封（`jsonFail`），不是檔案。
+     * 讀出來組成 `ApiError`，讓呼叫端的錯誤處理與其他端點一致。
+     */
+    const data = (await response.json().catch(() => ({}))) as
+      | { message?: string }
+      | undefined;
+    throw new ApiError(
+      data?.message || response.statusText || "Download failed",
+      response.status,
+      data,
+    );
+  }
+
+  return {
+    blob: await response.blob(),
+    filename: parseContentDispositionFilename(
+      response.headers.get("Content-Disposition"),
+    ),
+  };
+}
+
+// Info: (20260813 - Julian) 只解析 `filename="..."`，這是本專案 `fileOk` 唯一產生的形式
+export function parseContentDispositionFilename(
+  header: string | null,
+): string | null {
+  if (!header) return null;
+  const matched = /filename="([^"]+)"/.exec(header);
+  return matched ? matched[1] : null;
 }

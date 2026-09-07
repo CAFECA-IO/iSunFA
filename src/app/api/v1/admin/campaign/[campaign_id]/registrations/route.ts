@@ -1,4 +1,5 @@
 import { campaignRepo } from "@/repositories/campaign.repo";
+import { parsePositiveInt } from "@/lib/utils/pagination";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
@@ -15,8 +16,13 @@ export async function GET(
     }
 
     const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "15", 10);
+    const page = parsePositiveInt(searchParams.get("page"), {
+      fallback: 1,
+    });
+    const limit = parsePositiveInt(searchParams.get("limit"), {
+      fallback: 15,
+      max: 100,
+    });
     const skip = (page - 1) * limit;
 
     const { campaign_id: campaignId } = await params;

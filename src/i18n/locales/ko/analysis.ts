@@ -126,7 +126,7 @@ export const analysis = {
     carbon_health_check: "탄소 건전성 진단",
     net_zero_emissions: "탄소중립 (Net-Zero)",
     ai_consulting: "AI 컨설팅",
-    journal_upload: "분개장 업로드",
+    journal_correction: "분개장 수정",
     certificate_analysis: "증빙 분석",
     transportation_carbon_footprint: "운송 탄소 발자국",
   },

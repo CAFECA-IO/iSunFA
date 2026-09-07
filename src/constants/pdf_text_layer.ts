@@ -53,3 +53,40 @@ export const PDF_TEXT_PAGE_SLICE_PADDING = 1;
  * 寧可多花 token 也不能讓「內容其實存在卻沒被看到」變成靜默的資料遺失。
  */
 export const PDF_TEXT_PAGE_SLICE_MIN_CHARS = 200;
+
+/**
+ * Info: (20260814 - Emily) 「大圖」的門檻：長邊達到幾 px
+ * (`data/issue_drafts/open/25_image_only_sections.md`)。
+ *
+ * 兩個實測資料點：
+ * - 高興昌那份 p6 的組織架構圖是 **1050×1417** —— 那一節的內容全在裡面
+ * - 排版用的圖示與小裝飾在 400×300 以下
+ *
+ * 取 600：A4 在常見的嵌入解析度下，半頁高約落在這個量級 ——
+ * 一張撐得起一整節內容的圖不會比半頁小。
+ *
+ * ⚠️ 只有一份真實樣本，這個值需要第二份報告來校準。
+ * `extractPdfPageImagery` 會把每頁量到的尺寸記進 log，就是為了讓下一份報告能對答案。
+ *
+ * 註：`pdf-parse` 的 `getImage()` **自己會先濾掉小圖**（實測 120×48 與 60×60 不回報、
+ * 400×300 回報），而且濾的是內在尺寸不是排版尺寸。所以這裡看到的數字已經過一層底線，
+ * 本門檻是在那之上再收一次。
+ */
+export const PDF_PAGE_LARGE_IMAGE_MIN_LONG_EDGE_PX = 600;
+
+/**
+ * Info: (20260814 - Emily) 最多允許多少**比例**的頁面走視覺模型。
+ *
+ * 用比例而不是絕對頁數：64 頁挑 3 頁（4.7%）與 300 頁挑 20 頁（6.7%）是同一種情況，
+ * 絕對上限會把後者誤判成「整份都是圖」。
+ *
+ * 超過就一頁都不挑，交由 `assessPdfTextLayer` 判成 VISION 走整份 ——
+ * 逐頁各送一次會比整份送還貴，而且拼不回完整上下文。
+ */
+export const PDF_PAGE_IMAGE_MAX_VISION_SHARE = 0.15;
+
+/**
+ * Info: (20260814 - Emily) 比例算出來不足這個數時的下限。
+ * 短報告（例如 10 頁）乘以比例只有 1.5 頁，而「兩頁的內容在圖裡」在短報告裡很正常。
+ */
+export const PDF_PAGE_IMAGE_MIN_VISION_PAGES = 3;

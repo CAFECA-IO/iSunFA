@@ -53,6 +53,10 @@ export const adminMissionBoard = {
     toast_draft_saved: "초안이 수동으로 저장되었습니다",
     toast_report_inserted: "보고서가 성공적으로 생성 및 삽입되었습니다!",
     toast_share_link_failed: "공유 링크 생성에 실패했습니다",
+    toast_toc_pages_missing:
+      "보고서를 다운로드했지만 목차에 페이지 번호가 입력되지 않았습니다",
+    toast_charts_missing:
+      "보고서를 다운로드했지만 일부 도표를 그리지 못했습니다",
     edit_markdown: "마크다운 편집",
     preview_pdf: "PDF 미리보기",
     download_pdf: "PDF 다운로드",
@@ -64,6 +68,21 @@ export const adminMissionBoard = {
     brand: "iSunFA 스마트 회계",
     internal_document: "내부 문서",
     system_report: "시스템 보고서",
+    report_identity: {
+      title: "검증 식별 정보",
+      inventory_year: "산정 연도",
+      prepared_by: "작성 부서",
+      verified_by: "검증 기관",
+      issued_on: "갱신일",
+      framework_label: "공시 프레임워크",
+      framework_inventory_only: "산정 보고서만",
+      framework_ifrs: "{{name}} 구조로 구성",
+      framework_hint:
+        "선택하면 초안이 {{name}} 구조에 맞춰 작성됩니다. 이는 문서 구조에 관한 진술이며 기업 수준의 준수 선언이 아닙니다 \u2014 후자는 적용 시기와 무관하게 보고서에 나타날 수 없습니다",
+      unfilled: "미기입",
+      name_suffix: "온실가스 배출량 산정 보고서",
+      hint: "검증 기관은 보고서 내용에서 도출할 수 없어 직접 입력해야 합니다",
+    },
     footer_title: "AI로 탄소 회계를 재구성하다",
     footer_text:
       "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.",

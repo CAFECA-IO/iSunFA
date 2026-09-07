@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FC } from 'react';
+import { useState, FC } from "react";
 
 import { useTranslation } from "@/i18n/i18n_context";
 import { useCalculatorCtx } from "@/contexts/calculator_context";

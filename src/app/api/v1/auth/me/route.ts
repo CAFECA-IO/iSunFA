@@ -7,6 +7,8 @@ import { MODULES } from "@/constants/modules";
 import { publicClient } from "@/lib/viem_public";
 import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
 import { formatUnits } from "viem";
+import { getUserPlan, type IUserPlanSnapshot } from "@/services/plan.service";
+import { TEAM_PLAN } from "@/constants/subscription_quota";
 
 export async function GET(request: NextRequest) {
   try {
@@ -76,6 +78,37 @@ export async function GET(request: NextRequest) {
      */
     const custody = await resolveCustodyType(user.id);
 
+    /**
+     * Info: (20260819 - Luphia) 方案集中於 `plan.service`（route 只呼叫與回傳）。
+     *
+     * 這支端點原本一個 plan 欄位都沒回，於是前端 `user.plan` 永遠 undefined、
+     * 徽章與方案頁一律 fallback 成免費版——付了訂閱費、DB 也寫進去了，
+     * 畫面卻還說你是免費版。
+     *
+     * Info: (20260821 - Luphia) **純 DB、零 RPC**（產品裁定 20260821）：付款完成
+     * 即視為會員卡有效，鑄卡狀態與方案顯示無關。先前這裡讀鏈上卡片並回
+     * `planSource`——那條路徑已整個移除，`planSource` 欄位隨之取消
+     * （沒有第二個來源，就沒有「來源」要說明）。
+     *
+     * 查不到不讓登入壞掉：這支是前端所有畫面的前置條件（`refreshAuth` 拿不到
+     * payload 就等於未登入）。方案只是徽章上的一行字，退成免費版顯示並留 log。
+     */
+    let planSnapshot: IUserPlanSnapshot = {
+      plan: TEAM_PLAN.FREE,
+      ownedPlans: [],
+    };
+    try {
+      planSnapshot = await getUserPlan({
+        userId: user.id,
+        nowSec: Math.floor(Date.now() / 1000),
+      });
+    } catch (err) {
+      console.warn(
+        `[API] /auth/me failed to resolve plan for ${user.id}:`,
+        err,
+      );
+    }
+
     return jsonOk({
       ...user,
       custody,
@@ -84,6 +117,8 @@ export async function GET(request: NextRequest) {
       isAdmin: user.role === "ADMIN",
       identityAddress: user.identityAddress,
       pendingCredits,
+      plan: planSnapshot.plan,
+      ownedPlans: planSnapshot.ownedPlans,
     });
   } catch (error) {
     console.error(

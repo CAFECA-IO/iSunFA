@@ -27,6 +27,7 @@ export const calculator = {
     tax_residency_status: "세무 거주 상태",
     residency_option_taiwan: "대만 거주자",
     residency_option_non_taiwan: "비 대만 거주자",
+    date_from_employee: "직원 정보에서",
     industry_category: "업종",
     year: "연도",
     month: "월",
@@ -67,11 +68,26 @@ export const calculator = {
     voluntary_pension_contribution: "자발적 연금 기여",
   },
   employee_list: {
+    issue_name_required: "「신원」에서 직원 이름을 입력하세요",
+    issue_number_required: "「신원」에서 사번을 입력하세요",
+    issue_base_salary_required: "「급여」에서 기본급을 입력하세요",
+    section_identity: "신원",
+    section_pay: "급여",
+    section_insurance: "보험·퇴직연금",
+    section_other: "기타",
+    other_allowance_taxable: "기타 수당（과세）",
+    other_allowance_tax_free: "기타 수당（비과세）",
+    other_allowance_hint:
+      "매월 고정으로 지급되는 수당을 입력하세요. 당월 일회성 상여는 계산기에서 입력합니다 — 여기에 넣으면 다음 달에도 따라옵니다.",
+    voluntary_pension_rate: "퇴직연금 자율 부담률",
+    employment_type: "고용 형태",
+    hire_date: "입사일",
+    resign_date: "퇴사일",
+    date_order_error: "퇴사일은 입사일보다 이를 수 없습니다",
     main_title: "직원 목록",
     name: "직원 이름",
     number: "사원 번호",
     email: "이메일",
-    action: "작업",
     search_placeholder: "직원 검색",
     add_employee: "새 직원 추가",
     edit_employee: "직원 편집",
@@ -79,9 +95,32 @@ export const calculator = {
     number_placeholder: "사원 번호를 입력하세요",
     email_placeholder: "직원 이메일을 입력하세요",
     email_valid: "유효한 이메일 주소를 입력하세요",
-    no_data: "직원 데이터 없음",
     add_success_toast: "직원이 추가되었습니다",
     edit_success_toast: "직원 데이터가 업데이트되었습니다",
+    base_salary: "기본급",
+    total_count: "직원 {{count}}명",
+    filtered_count: "{{count}} / {{total}}명",
+    empty_title: "이 장부에는 아직 직원이 없습니다",
+    empty_desc:
+      "직원을 등록하면 계산기에 기본급과 식대를 바로 불러올 수 있고, 계산 결과를 급여 기록으로 저장할 수 있습니다.",
+    no_search_result: "「{{keyword}}」와 일치하는 직원이 없습니다",
+    clear_search: "검색 지우기",
+    load_failed: "직원 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    save_failed: "저장하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    remove_failed: "삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    number_taken: "이 사번은 다른 직원이 사용 중입니다",
+    save_changes: "변경 사항 저장",
+    remove_employee_records_kept:
+      "이 직원의 저장된 급여 기록은 그대로 남아 나중에도 볼 수 있습니다. 직원 목록과 계산기 선택 항목에만 표시되지 않습니다.",
+    remove_employee_title: "직원 삭제",
+    remove_employee_content: "직원 목록에서 {{name}} 님을 삭제하시겠습니까?",
+    remove_employee_submit_btn: "네, 직원을 삭제합니다.",
+    no_email: "미입력",
+    missing_email_banner:
+      "{{count}}명의 이메일이 비어 있어 급여명세서를 보낼 수 없습니다",
+    only_missing_email: "해당 직원만 보기",
+    show_all: "전체 보기",
+    no_filter_result: "조건에 맞는 직원이 없습니다",
   },
   result: {
     base_salary_with_tax: "기본급(과세 대상)",
@@ -144,10 +183,18 @@ export const calculator = {
     content_2: "→",
     content_bold_2: " {{employeeName}} 님에게",
     email: "이메일",
-    email_placeholder: "직원의 이메일을 입력하세요",
-    invalid_email_hint:
-      "이메일 형식이 올바르지 않습니다. 다시 한 번 확인해 주세요.",
     submit: "급여 명세서 발송",
+    email_from_profile: "직원 데이터에서",
+    email_missing: "등록된 이메일 주소가 없습니다",
+    sending: "보내는 중...",
+    error_no_email:
+      "이 직원에게 등록된 이메일 주소가 없습니다. 먼저 직원 목록에서 추가해 주세요.",
+    error_not_configured:
+      "메일 발송이 아직 설정되지 않았습니다. 시스템 관리자에게 문의하세요.",
+    error_font_missing:
+      "서버에 중국어 글꼴이 없어 급여명세서를 만들 수 없습니다. 시스템 관리자에게 문의하세요.",
+    error_generic:
+      "급여명세서를 보내지 못했습니다. 잠시 후 다시 시도해 주세요.",
   },
   my_pay_slip: {
     main_title: "내 급여 명세서",
@@ -163,12 +210,132 @@ export const calculator = {
     pay_slip: "급여 명세서",
     sent_on: "발송일",
     all: "모두",
+    employee: "직원",
+    sent_by: "보낸 사람",
+    unknown_sender: "이름 없음",
+    sent_empty: "이 장부에서 아직 급여명세서를 보낸 적이 없습니다",
+    sent_load_failed:
+      "발송 기록을 불러오지 못했습니다. 새로 고침 후 다시 시도해 주세요",
+  },
+  // Info: (20260831 - Julian) 공개 버전에서 장부 버전으로 가는 입구
+  // Info: (20260831 - Julian) 계산기 Step 1의 직원 연결 상태
+  employee_link: {
+    linked_hint: "직원과 연결됨 — 기본급과 식대를 불러왔습니다",
+    unlink: "연결 해제",
+  },
+  // Info: (20260831 - Julian) 계산기 페이지에서 바로 저장, 그리고 두 가지 예외
+  save_record: {
+    profile_diff_title: "직원 정보도 함께 업데이트할까요？",
+    profile_diff_content:
+      "계산기 설정이 「{{name}}」님의 직원 정보와 다릅니다. 차이는 다음과 같습니다：",
+    profile_diff_hint:
+      "이번 급여 기록은 어느 쪽을 선택해도 계산기의 값으로 저장됩니다. 여기서 묻는 것은 직원 정보도 바꿀지 여부뿐입니다. 「이번만 저장」을 선택하면 직원 정보는 그대로 유지됩니다.",
+    profile_diff_update_btn: "직원 정보 업데이트 후 저장",
+    profile_diff_skip_btn: "이번만 저장",
+    profile_diff_failed: "업데이트하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    profile_value_on: "있음",
+    profile_value_off: "없음",
+    profile_value_none: "미설정",
+    save: "급여 기록 저장",
+    saving: "저장 중…",
+    saved: "{{name}}의 {{year}}년 {{month}}월 급여 기록으로 저장했습니다",
+    view_record: "보기",
+    save_failed: "저장하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    overwrite_title: "기존 급여 기록을 덮어쓸까요?",
+    overwrite_content:
+      "{{name}}의 {{year}}년 {{month}}월에는 이미 기록이 있습니다(실수령 {{amount}}원). 저장하면 덮어쓰며 이전 숫자는 남지 않습니다.",
+    overwrite_submit: "덮어쓰고 저장",
+    unlinked_title: "이번 계산은 누구의 기록인가요?",
+    unlinked_content: "이 계산은 아직 직원에게 연결되지 않았습니다.",
+    create_and_save: "「{{name}}」 추가하고 저장",
+    create_and_save_hint: "계산기의 이름, 사번을, 기본급으로 직원을 만듭니다",
+    pick_from_list: "직원 목록에서 선택",
+    pick_from_list_hint: "이번 계산은 선택한 직원에 연결됩니다",
+    save_to_existing: "{{name}} 에게 저장하기",
+    save_to_existing_hint:
+      "이 사번의 기존 직원을 사용하고 새로 만들지 않습니다",
+    unlinked_conflict_content:
+      "사번 {{number}} 은(는) 이미 「{{existingName}}」의 사번입니다. 이 사번으로는 새 직원을 만들 수 없습니다.",
+    edit_number: "사번 수정하기",
+    edit_number_hint:
+      "「{{name}}」의 사번이 다르다면 1단계로 돌아가 수정합니다",
+    fill_number: "사번 입력하기",
+    fill_number_hint: "사번은 필수입니다. 1단계로 돌아가 입력합니다.",
+  },
+  // Info: (20260831 - Julian) 급여 기록 조회
+  records: {
+    main_title: "급여 기록",
+    pay_period: "지급 기간",
+    pay_period_value: "{{year}}년 {{month}}월",
+    employee: "직원",
+    net_pay: "실수령액",
+    taxable: "원천징수 금액",
+    action: "발송/보기/재계산/삭제",
+    view: "급여명세서 보기",
+    load_back: "계산기로 불러오기",
+    delete: "삭제",
+    all_employees: "전체 직원",
+    total_count: "총 {{count}}건",
+    empty_title: "아직 급여 기록이 없습니다",
+    empty_desc: "계산을 마친 뒤 「급여 기록 저장」을 누르면 여기에 표시됩니다.",
+    load_failed: "급여 기록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    search_placeholder: "직원 이름 또는 사번으로 검색",
+    clear_search: "검색어 지우기",
+    no_result_title: "조건에 맞는 급여 기록이 없습니다",
+    period: "지급 기간",
+    all_periods: "전체 기간",
+    no_result_desc: "검색어·직원·지급 기간을 바꿔 다시 시도해 보세요.",
+    delete_title: "급여 기록 삭제",
+    delete_content:
+      "「{{name}}」님의 {{year}}년 {{month}}월 급여 기록을 삭제하시겠습니까?",
+    delete_irreversible:
+      "급여 기록은 소프트 삭제되지 않습니다. 삭제하면 복구할 수 없으며 다른 곳에서도 되찾을 수 없습니다.",
+    delete_submit_btn: "삭제",
+    delete_failed: "삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    view_failed:
+      "급여명세서를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    load_back_failed:
+      "계산기로 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    employee_list_failed:
+      "직원 명단을 불러오지 못했습니다. 이 상태에서는 계산기로 불러와도 직원과 연결할 수 없습니다.",
+    load_back_unlinked:
+      "이 직원은 명단에 없습니다. 이름과 사번은 이 기록에서 채웠지만 직원 연결은 만들어지지 않았습니다 — 저장할 때 대상을 다시 확인합니다.",
+    delivery_status: "발송 상태",
+    not_sent: "미발송",
+    select_page: "이 페이지의 모든 행 선택",
+    select_row: "이 기록 선택",
+    selected_count: "{{count}}건 선택됨",
+    export_csv: "CSV 내보내기",
+    export_too_many:
+      "한 번에 최대 {{max}}건까지 내보낼 수 있습니다. 선택을 줄여 주세요",
+    export_failed: "내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+  },
+  account_book_entry: {
+    title: "이번 계산을 저장할까요?",
+    hint_save:
+      "장부 버전에서는 급여 기록을 저장하고 직원 목록을 관리할 수 있습니다.",
+    hint_select:
+      "먼저 장부를 선택해야 하며, 데이터는 해당 장부 아래에 저장됩니다.",
+    hint_no_carry:
+      "여기에 입력한 내용은 넘어가지 않으므로 장부 버전에서 다시 입력해야 합니다.",
+    button: "장부 버전 계산기로 이동",
   },
   button: {
+    disabled_hint:
+      "네 단계를 모두 마쳐야 급여명세서를 내려받거나 저장할 수 있습니다",
     download: "PNG 로 다운로드",
     send: "급여 명세서 발송",
     reset: "초기화",
     re_send: "급여 명세서 재발송",
+    send_disabled_unsaved:
+      "급여 기록을 먼저 저장해야 급여명세서를 보낼 수 있습니다",
+    send_disabled_unlinked:
+      "이 계산은 직원 연결이 해제되었습니다. 직원을 다시 선택하세요",
+    send_disabled_no_email:
+      "이 직원에게 이메일 주소가 없습니다. 먼저 직원 목록에서 추가해 주세요",
+    send_disabled_employee_gone:
+      "이 직원은 목록에서 삭제되어 급여명세서를 보낼 수 없습니다",
+    send_disabled_loading: "직원 목록을 확인하는 중...",
   },
   message: {
     name_error_title: "직원 이름 미입력",
@@ -176,9 +343,6 @@ export const calculator = {
     salary_error_title: "급여 입력 오류",
     salary_error_content:
       "기본급(과세) + 식대(비과세) + 기타 수당(과세) + 기타 수당(비과세) 합계는 최저 임금 이상이어야 합니다.",
-    remove_employee_title: "직원 삭제",
-    remove_employee_content: "직원 목록에서 {{name}} 님을 삭제하시겠습니까?",
-    remove_employee_submit_btn: "네, 직원을 삭제합니다.",
     re_send_pay_slip_title: "급여 명세서 재발송",
     re_send_pay_slip_content_1: "이미",
     re_send_pay_slip_content_bold_1: " {{month}} 급여 명세서",

@@ -26,5 +26,6 @@ export const generatePaymentOrderSchema = z.object({
   baseCredits: z.union([z.number(), z.string()]).optional(),
   bonusCredits: z.union([z.number(), z.string()]).optional(),
   items: z.array(z.any()).optional(),
-  data: z.record(z.any()).optional(),
+  // Info: (20260813 - Julian) zod v4 的 z.record 需要 key 與 value 兩個 schema；其餘 validators 皆已是兩參數寫法
+  data: z.record(z.string(), z.any()).optional(),
 });

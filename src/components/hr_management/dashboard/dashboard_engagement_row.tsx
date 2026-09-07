@@ -73,12 +73,14 @@ const DashboardEngagementRow: FC<IDashboardEngagementRowProps> = ({
           renderRow(
             item,
             /**
-             * Info: (20260810 - Julian) 只顯示月日，切掉年份。
-             * 出生年就是年齡，而這張卡是要讓同事送祝福，不需要知道歲數；
-             * 儀表板在辦公室螢幕上常常是開著的。
+             * Info: (20260812 - Julian) 壽星的 `eventDate` 本來就只有 `MM-DD`。
+             *
+             * 原本是拿完整生日再 `slice(5)` 切掉年份 —— 現在年份根本不會
+             * 進到前端（ADR 018 §7：生日改帶 `birthMonthDay` 衍生值），
+             * 再切一次會把月份也切掉。
              */
             t("hr_management.dashboard.birthday_on", {
-              date: item.eventDate.slice(5),
+              date: item.eventDate,
             }),
           ),
         )}

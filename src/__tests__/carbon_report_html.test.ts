@@ -1,5 +1,9 @@
 import { describe, it, expect } from "@jest/globals";
 import {
+  FRAMEWORK_ALIGNMENT_PHRASE,
+  FRAMEWORK_DISCLAIMER_PHRASE,
+} from "@/constants/carbon_report_framework";
+import {
   annotateTable,
   buildCarbonReportHtml,
   displayWidth,
@@ -193,5 +197,245 @@ describe("buildCarbonReportHtml", () => {
     const html = buildCarbonReportHtml("```html\n<!-- keep -->\n<br>\n```\n");
     expect(html).toContain("&lt;!-- keep --&gt;");
     expect(html).toContain("&lt;br&gt;");
+  });
+});
+
+/**
+ * Info: (20260812 - Emily) 目錄項目的文字被二次逸出(PR review 第 1 點)。
+ *
+ * `collectHeadings` 讀的是 marked 產出的 HTML(已逸出),`tocSection` 再逸出一次
+ * 就成了 `&amp;amp;`。而同一份文字也是頁碼比對用的 needle,
+ * PDF 文字層裡是 `&` —— 永遠對不上,那一條會留白,
+ * 而留白的語意是「這一節不在文件裡」。
+ */
+describe("目錄項目的逸出", () => {
+  const shell = {
+    brand: "b",
+    internalDocument: "i",
+    systemReport: "s",
+    issuedAt: "d",
+    footerTitle: "f",
+    footerText: "t",
+    tocTitle: "目錄",
+  };
+
+  /**
+   * Info: (20260812 - Emily) 樣本從 `#` 換成 `##`。
+   *
+   * 文件級 H1 現在會被 `stripLeadingDocumentTitle` 剝掉（報告名稱改走
+   * `shell.title`，見 `issue_drafts/open/24`），所以拿 `#` 當樣本的話
+   * 這條測的會是「被剝掉的東西沒進目錄」而不是逸出本身。
+   * 換成 `##` —— 那也是報告實際會出現的層級（`buildSectionHeadingByTitle`
+   * 產出的是 `###`，章標題是 `##`），不變式沒變，只是樣本選對。
+   */
+  it("should escape the heading text exactly once", () => {
+    const html = buildCarbonReportHtml("## 排放 & 移除 < >\n\n內文\n", shell);
+    const text = /<span class="toc-text">([^<]*)<\/span>/.exec(html)?.[1];
+
+    expect(text).toBe("排放 &amp; 移除 &lt; &gt;");
+    expect(text).not.toContain("&amp;amp;");
+  });
+});
+
+/**
+ * Info: (20260812 - Emily) 轉換之間的互相干擾。
+ *
+ * 這些是**跨轉換**的案例,而每一支工具自己的測試只餵自己構造的理想輸入 ——
+ * 這批 bug 的形狀全部是「A 的輸出被 B 誤判」,所以驗收必須走完整條管線。
+ */
+describe("buildCarbonReportHtml transform ordering", () => {
+  /**
+   * Info: (20260812 - Emily) timeline → 表格是「內容搬家」:
+   * 搬出圍籬的算式沒有被逸出過。若逸出先跑,那些星號就裸露在 prose 裡被
+   * marked 當成強調吃掉 —— `2*300*4` 變成 `23004`,三個數字合併成一個。
+   */
+  it("should keep multiplication signs that come out of a timeline fence", () => {
+    const html = buildCarbonReportHtml(
+      ["```mermaid", "timeline", "  2020 : 產能 2*300*4 噸", "```"].join("\n"),
+    );
+
+    expect(html).toContain("2*300*4");
+    expect(html).not.toContain("<em>300</em>");
+  });
+
+  // Info: (20260812 - Emily) 圍籬外的算式本來就該受保護,一起釘住避免修法只顧一邊
+  it("should keep multiplication signs written in prose", () => {
+    const html = buildCarbonReportHtml("排放量 = 0.6*200*248 公噸");
+
+    expect(html).toContain("0.6*200*248");
+    expect(html).not.toContain("<em>200</em>");
+  });
+});
+
+/**
+ * Info: (20260814 - Emily) 查證用的識別欄位（issue 24）。
+ *
+ * 這一區的存在理由是「查證單位無法從內容推導」，所以它必須是外殼的一部分，
+ * 而且**沒填的欄位也要印出來** —— 藏起來的話「不適用」與「忘了填」同形。
+ */
+describe("buildCarbonReportHtml 的識別欄位", () => {
+  const shell = {
+    brand: "陽光智能碳會計",
+    internalDocument: "內部文件",
+    systemReport: "系統報告",
+    issuedAt: "2026/8/14",
+    footerTitle: "用人工智能重塑碳會計",
+    footerText: "© 2026 iSunFA.",
+  };
+
+  it("should print every field it is given, in the order given", () => {
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      title: "高興昌鋼鐵股份有限公司 2023 溫室氣體盤查報告書",
+      identity: [
+        { label: "盤查年度", value: "2023" },
+        { label: "製作單位", value: "溫室氣體盤查推行委員會" },
+        { label: "查證單位", value: "亞瑞仕國際驗證股份有限公司" },
+        { label: "更新日期", value: "2026-08-14" },
+      ],
+    });
+
+    const labels = [...html.matchAll(/<dt>([^<]+)<\/dt>/g)].map((m) => m[1]);
+    expect(labels).toEqual(["盤查年度", "製作單位", "查證單位", "更新日期"]);
+    expect(html).toContain("<dd>亞瑞仕國際驗證股份有限公司</dd>");
+  });
+
+  it("should still print a field whose value is a placeholder", () => {
+    // Info: (20260814 - Emily) 這是本區最重要的一條:空著但看得見,才會有人去填
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      identity: [
+        { label: "查證單位", value: "未填寫" },
+        { label: "更新日期", value: "未填寫" },
+      ],
+    });
+
+    expect(html).toContain("<dt>查證單位</dt><dd>未填寫</dd>");
+    expect([...html.matchAll(/<dt>/g)]).toHaveLength(2);
+  });
+
+  it("should omit the block entirely when identity is absent or empty", () => {
+    // Info: (20260814 - Emily) 公開分享頁那種場合不需要識別資訊
+    const absent = buildCarbonReportHtml("## 一節\n\n內容。", shell);
+    const empty = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      identity: [],
+    });
+
+    /**
+     * Info: (20260814 - Emily) 比對元素而不是字串:`.doc-identity` 的樣式一直在
+     * `<style>` 裡（樣式表是靜態的），拿整份 HTML 找 "doc-identity" 會永遠命中。
+     */
+    expect(absent).not.toContain('<dl class="doc-identity">');
+    expect(empty).not.toContain('<dl class="doc-identity">');
+  });
+
+  it("should escape the values, they come from user input", () => {
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      identity: [
+        { label: "查證單位", value: '<img src=x onerror="alert(1)">' },
+      ],
+    });
+
+    expect(html).not.toContain("<img src=x");
+    expect(html).toContain("&lt;img src=x");
+  });
+
+  it("should sit inside the meta banner rather than on a page of its own", () => {
+    /**
+     * Info: (20260814 - Emily) 票上已判定不做整頁封面:導覽由目錄涵蓋、
+     * 識別由橫幅涵蓋,再加一頁是多一頁不是多一份資訊。
+     * 所以這一區必須在 doc-shell-meta 裡面,而且不能帶 break-after。
+     */
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      identity: [{ label: "盤查年度", value: "2023" }],
+    });
+
+    const meta = html.slice(
+      html.indexOf('<section class="doc-shell-meta">'),
+      html.indexOf("</section>"),
+    );
+    expect(meta).toContain('<dl class="doc-identity">');
+  });
+});
+
+describe("揭露框架的聲明行(#6688-C)", () => {
+  /**
+   * Info: (20260904 - Emily) 這一組是紙面配對的**主守衛**。
+   *
+   * 分流表條 3(印了對齊卻缺免責)在 PDF 出口已翻成 BLOCK,而它只在配對壞掉時才叫 ——
+   * 也就是說它是這裡的下游。上游要有測試釘住「兩行一起、順序不變、緊鄰」,
+   * 否則配對壞掉的第一個症狀會是一份被擋住的 PDF,而不是一條紅測試。
+   *
+   * 字串取自常數而不是寫字面值:印出的與驗收比對的必須是同一份來源,
+   * 而寫字面值也會讓這個檔案被 outline 掃描判定為「宣告 IFRS」。
+   */
+  const shell = {
+    brand: "b",
+    internalDocument: "i",
+    systemReport: "s",
+    issuedAt: "d",
+    footerTitle: "f",
+    footerText: "t",
+  };
+
+  it("兩句一起印、順序不變、而且緊鄰", () => {
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      claims: [FRAMEWORK_ALIGNMENT_PHRASE, FRAMEWORK_DISCLAIMER_PHRASE],
+    });
+    const block = html.slice(
+      html.indexOf('<section class="doc-claims">'),
+      html.indexOf("</section>", html.indexOf('<section class="doc-claims">')),
+    );
+    expect(block).toContain(FRAMEWORK_ALIGNMENT_PHRASE);
+    expect(block).toContain(FRAMEWORK_DISCLAIMER_PHRASE);
+    expect(block.indexOf(FRAMEWORK_ALIGNMENT_PHRASE)).toBeLessThan(
+      block.indexOf(FRAMEWORK_DISCLAIMER_PHRASE),
+    );
+    // Info: (20260904 - Emily) 之間只能有段落標籤 —— 中間插任何內容就不是一組了
+    const between = block.slice(
+      block.indexOf(FRAMEWORK_ALIGNMENT_PHRASE) +
+        FRAMEWORK_ALIGNMENT_PHRASE.length,
+      block.indexOf(FRAMEWORK_DISCLAIMER_PHRASE),
+    );
+    expect(between).toBe("</p><p>");
+  });
+
+  it("沒有聲明行時整區不印(空陣列與省略都算)", () => {
+    /**
+     * Info: (20260904 - Emily) 比對元素不比對字串:`.doc-claims` 的樣式一直在
+     * `<style>` 裡,拿整份 HTML 找 "doc-claims" 會永遠命中(識別欄位那條的同一個坑)。
+     */
+    expect(buildCarbonReportHtml("## 一節\n\n內容。", shell)).not.toContain(
+      '<section class="doc-claims">',
+    );
+    expect(
+      buildCarbonReportHtml("## 一節\n\n內容。", { ...shell, claims: [] }),
+    ).not.toContain('<section class="doc-claims">');
+  });
+
+  it("聲明行在文件外殼的 meta 區裡,不是另外一頁", () => {
+    // Info: (20260904 - Emily) 與識別欄位同一個判準:不做整頁封面
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      claims: [FRAMEWORK_ALIGNMENT_PHRASE, FRAMEWORK_DISCLAIMER_PHRASE],
+    });
+    const meta = html.slice(
+      html.indexOf('<section class="doc-shell-meta">'),
+      html.lastIndexOf("</section>"),
+    );
+    expect(meta).toContain('<section class="doc-claims">');
+  });
+
+  it("逸出:聲明行也走 escapeHtml(來源是常數,但這一層不假設)", () => {
+    const html = buildCarbonReportHtml("## 一節\n\n內容。", {
+      ...shell,
+      claims: ['<img src=x onerror="alert(1)">'],
+    });
+    expect(html).not.toContain("<img src=x");
+    expect(html).toContain("&lt;img");
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, FC } from 'react';
+import { useState, useEffect, FC } from "react";
 
 import { useTranslation } from "@/i18n/i18n_context";
 import CalculatorHeader from "@/components/salary_calculator/calculator_header";

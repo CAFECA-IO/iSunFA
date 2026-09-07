@@ -1,24 +1,54 @@
-'use client';
+"use client";
 
-import { useState, createContext, useContext, Dispatch, SetStateAction, ReactNode } from 'react';
+import {
+  useState,
+  createContext,
+  useContext,
+  Dispatch,
+  SetStateAction,
+  ReactNode,
+} from "react";
+import { CalcTab, PayrollDaysBase } from "@/constants/salary_calculator";
+import {
+  ISalaryCalculatorEmployee,
+  ISalaryEmployeeProfile,
+} from "@/interfaces/salary_record";
+import {
+  composeJoinLeaveDates,
+  deriveJoinLeave,
+} from "@/lib/utils/salary_employee_profile";
+import {
+  fromPensionRatePercent,
+  toPensionRatePercent,
+} from "@/lib/utils/salary_pension_rate";
+import {
+  fromCalculatorOptions,
+  toCalculatorOptions,
+} from "@/lib/utils/salary_calculator_snapshot";
 
-import { MONTHS, MonthType } from '@/constants/month';
+import { MONTHS, MonthType } from "@/constants/month";
 import {
   ISalaryCalculatorUI,
   EmploymentType,
   TaxResidencyStatus,
   IndustryCategoryItem,
   ISalaryCalculatorOptions,
-} from '@/interfaces/salary_calculator';
-import { salaryCalculator, getMinimumWage } from '@/lib/utils/salary_calculator';
-import { INDUSTRY_CATEGORY_OPTIONS } from '@/constants/industry_category';
+} from "@/interfaces/salary_calculator";
+import {
+  salaryCalculator,
+  getMinimumWage,
+} from "@/lib/utils/salary_calculator";
+import {
+  DEFAULT_INDUSTRY_CODE,
+  industryCategoryOf,
+} from "@/constants/industry_category";
 
 type TabStep = {
   step: number;
   completed: boolean;
 };
 
-const defaultEmployeeName = '王小明';
+const defaultEmployeeName = "王小明";
 
 const defaultTabSteps: TabStep[] = [
   { step: 1, completed: true }, // Info: (20250714 - Julian) 由第一步開始，所以第一步永遠為已完成
@@ -27,15 +57,18 @@ const defaultTabSteps: TabStep[] = [
   { step: 4, completed: false },
 ];
 
-const defaultIndustryCategory: IndustryCategoryItem = INDUSTRY_CATEGORY_OPTIONS.sort(
-  (a, b) => a.CODE - b.CODE
-).find((item) => item.CODE === 42)!; // Info: (20251113 - Julian) 預設為「42 電腦程式設計、諮詢及相關服務業、資訊服務業」
+// Info: (20260902 - Julian) 預設行業別的來源收斂到 constants，不再在這裡寫死 42
+const defaultIndustryCategory: IndustryCategoryItem = industryCategoryOf(
+  DEFAULT_INDUSTRY_CODE,
+);
 
 interface ICalculatorContext {
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
   currentStep: number;
   completeSteps: TabStep[]; // Info: (20250710 - Julian) 已完成的步驟
   switchStep: (step: number) => void;
+  activeTab: CalcTab; // Info: (20260901 - Julian) 手機版目前顯示哪一個分頁（表單／結果）
+  switchTab: (tab: CalcTab) => void;
   resetFormHandler: () => void;
   salaryCalculatorResult: ISalaryCalculatorUI;
 
@@ -43,6 +76,24 @@ interface ICalculatorContext {
   yearOptions: string[];
   monthOptions: MonthType[];
   payrollDaysBaseOptions: string[];
+
+  /**
+   * Info: (20260831 - Julian) 這次試算對應到員工名單裡的哪一位。
+   *
+   * null = 沒有連結（姓名是手打的）。它決定按下「儲存薪資紀錄」時存到誰身上 ——
+   * 薪資紀錄必須掛在一個 employeeId 底下，沒有連結就存不了。
+   */
+  selectedEmployeeId: string | null;
+  linkEmployee: (employee: ISalaryCalculatorEmployee) => void;
+  unlinkEmployee: () => void;
+  applyRecordEmployee: (employee: { name: string; number: string }) => void;
+
+  // Info: (20260831 - Julian) 把存下來的薪資紀錄載回計算機（薪資紀錄頁的「載回計算機」）
+  loadFromSnapshot: (input: ISalaryCalculatorOptions) => void;
+
+  // Info: (20260831 - Julian) 目前表單對應的引擎輸入。儲存薪資紀錄時要把它整份存下來
+  getSalaryCalculatorOptions: () => ISalaryCalculatorOptions;
+  getEmployeeProfile: () => ISalaryEmployeeProfile;
 
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state 和 functions
   employeeName: string;
@@ -146,7 +197,9 @@ export interface ICalculatorProvider {
   children: ReactNode;
 }
 
-export const CalculatorContext = createContext<ICalculatorContext | undefined>(undefined);
+export const CalculatorContext = createContext<ICalculatorContext | undefined>(
+  undefined,
+);
 
 export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250714 - Julian) 計算機的表單選項
@@ -157,7 +210,10 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
 
   // Info: (20250714 - Julian) 年份選項：今年起往後推到 2025 年
   const yearGap = thisYear - 2025 + 1;
-  const yearOptions = Array.from({ length: yearGap }, (_, i) => `${i + 2025}`).reverse();
+  const yearOptions = Array.from(
+    { length: yearGap },
+    (_, i) => `${i + 2025}`,
+  ).reverse();
 
   // Info: (20250714 - Julian) 月份選項：只顯示 1 月到現在的月份
   const monthOptions = MONTHS.slice(0, thisMonth);
@@ -166,29 +222,45 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const defaultMonth = monthOptions[monthOptions.length - 1];
 
   // Info: (20250806 - Julian) 基準天數選項：1. 固定 30 天、2. 實際天數
-  const payrollDaysBaseOptions = ['FIXED', 'ACTUAL'];
+  const payrollDaysBaseOptions = [
+    PayrollDaysBase.FIXED,
+    PayrollDaysBase.ACTUAL,
+  ];
 
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [completeSteps, setCompleteSteps] = useState<TabStep[]>(defaultTabSteps);
+  const [completeSteps, setCompleteSteps] =
+    useState<TabStep[]>(defaultTabSteps);
+  const [activeTab, setActiveTab] = useState<CalcTab>(CalcTab.CALCULATOR);
 
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state
   const [employeeName, setEmployeeName] = useState<string>(defaultEmployeeName);
-  const [employeeNumber, setEmployeeNumber] = useState<string>('');
-  const [employmentType, setEmploymentType] = useState<EmploymentType>(EmploymentType.FULL_TIME);
-  const [taxResidencyStatus, setTaxResidencyStatus] = useState<TaxResidencyStatus>(
-    TaxResidencyStatus.TAIWAN
+  const [employeeNumber, setEmployeeNumber] = useState<string>("");
+  const [employmentType, setEmploymentType] = useState<EmploymentType>(
+    EmploymentType.FULL_TIME,
   );
+  const [taxResidencyStatus, setTaxResidencyStatus] =
+    useState<TaxResidencyStatus>(TaxResidencyStatus.TAIWAN);
   const [industryCategory, setIndustryCategory] =
     useState<IndustryCategoryItem>(defaultIndustryCategory);
-  const [employeeEmail, setEmployeeEmail] = useState<string>('');
+  const [employeeEmail, setEmployeeEmail] = useState<string>("");
   const [selectedYear, setSelectedYear] = useState<string>(yearOptions[0]);
   const [selectedMonth, setSelectedMonth] = useState<MonthType>(defaultMonth);
-  const [payrollDaysBase, setPayrollDaysBase] = useState<string>(payrollDaysBaseOptions[0]); // Info: (20250710 - Julian) 基準天數選項
-  const [isJoined, setIsJoined] = useState<boolean>(false);
-  const [dayOfJoining, setDayOfJoining] = useState<string>('01'); // Info: (20250709 - Julian) 入職日期
-  const [isLeft, setIsLeft] = useState<boolean>(false);
-  const [dayOfLeaving, setDayOfLeaving] = useState<string>('01'); // Info: (20250709 - Julian) 離職日期
+  const [payrollDaysBase, setPayrollDaysBase] = useState<string>(
+    payrollDaysBaseOptions[0],
+  ); // Info: (20250710 - Julian) 基準天數選項
+  /**
+   * Info: (20260902 - Julian) 到職／離職日的**單一來源**：完整日期（Unix 秒），不是「當月第幾號」。
+   *
+   * 原本是四個 state（`isJoined` + `dayOfJoining` + `isLeft` + `dayOfLeaving`），
+   * 而那四個是純 UI 狀態、沒有來源 —— 使用者換一個月份它們原封不動，
+   * 於是**八月中途到職的人切到九月照樣被算成九月中途到職**，九月的薪水少算半個月。
+   *
+   * 改成存真實日期之後，那四個變成推導值（見下方 `joinLeave`），切月份時答案自己會對。
+   * 員工檔上存的也是同一種東西，兩邊不必再轉一次語意。
+   */
+  const [hireDate, setHireDate] = useState<number | null>(null);
+  const [resignDate, setResignDate] = useState<number | null>(null);
 
   // Info: (20251002 - Julian) 取得當前年份的最低基本薪資
   const defaultBasicSalary = getMinimumWage(parseInt(selectedYear));
@@ -196,25 +268,37 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250711 - Julian) 是否有姓名錯誤
   const [isNameError, setIsNameError] = useState<boolean>(false);
 
+  // Info: (20260831 - Julian) 連結到員工名單的哪一筆（null = 手打姓名，未連結）
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(
+    null,
+  );
+
   // Info: (20250709 - Julian) Step 2: 基本薪資相關 state
   const [baseSalary, setBaseSalary] = useState<number>(defaultBasicSalary);
   const [mealAllowance, setMealAllowance] = useState<number>(0);
   const [otherAllowanceWithTax, setOtherAllowanceWithTax] = useState<number>(0);
-  const [otherAllowanceWithoutTax, setOtherAllowanceWithoutTax] = useState<number>(0);
+  const [otherAllowanceWithoutTax, setOtherAllowanceWithoutTax] =
+    useState<number>(0);
 
   // Info: (20250709 - Julian) Step 3: 工作時數相關 state
-  const [oneAndOneThirdsHoursForNonTax, setOneAndOneThirdsHoursForNonTax] = useState<number>(0);
-  const [oneAndTwoThirdsHoursForNonTax, setOneAndTwoThirdsHoursForNonTax] = useState<number>(0);
+  const [oneAndOneThirdsHoursForNonTax, setOneAndOneThirdsHoursForNonTax] =
+    useState<number>(0);
+  const [oneAndTwoThirdsHoursForNonTax, setOneAndTwoThirdsHoursForNonTax] =
+    useState<number>(0);
   const [twoHoursForNonTax, setTwoHoursForNonTax] = useState<number>(0);
-  const [twoAndOneThirdsHoursForNonTax, setTwoAndOneThirdsHoursForNonTax] = useState<number>(0);
-  const [twoAndTwoThirdsHoursForNonTax, setTwoAndTwoThirdsHoursForNonTax] = useState<number>(0);
-  // const [totalNonTaxableHours, setTotalNonTaxableHours] = useState<number>(0);
-  const [oneAndOneThirdHoursForTaxable, setOneAndOneThirdsHoursForTaxable] = useState<number>(0);
-  const [oneAndTwoThirdsHoursForTaxable, setOneAndTwoThirdsHoursForTaxable] = useState<number>(0);
+  const [twoAndOneThirdsHoursForNonTax, setTwoAndOneThirdsHoursForNonTax] =
+    useState<number>(0);
+  const [twoAndTwoThirdsHoursForNonTax, setTwoAndTwoThirdsHoursForNonTax] =
+    useState<number>(0);
+  const [oneAndOneThirdHoursForTaxable, setOneAndOneThirdsHoursForTaxable] =
+    useState<number>(0);
+  const [oneAndTwoThirdsHoursForTaxable, setOneAndTwoThirdsHoursForTaxable] =
+    useState<number>(0);
   const [twoHoursForTaxable, setTwoHoursForTaxable] = useState<number>(0);
-  const [twoAndOneThirdsHoursForTaxable, setTwoAndOneThirdsHoursForTaxable] = useState<number>(0);
-  const [twoAndTwoThirdsHoursForTaxable, setTwoAndTwoThirdsHoursForTaxable] = useState<number>(0);
-  // const [totalTaxableHours, setTotalTaxableHours] = useState<number>(0);
+  const [twoAndOneThirdsHoursForTaxable, setTwoAndOneThirdsHoursForTaxable] =
+    useState<number>(0);
+  const [twoAndTwoThirdsHoursForTaxable, setTwoAndTwoThirdsHoursForTaxable] =
+    useState<number>(0);
   const [sickLeaveHours, setSickLeaveHours] = useState<number>(0);
   const [personalLeaveHours, setPersonalLeaveHours] = useState<number>(0);
   const [leavePayoutHours, setLeavePayoutHours] = useState<number>(0);
@@ -227,41 +311,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [nhiBackPremium, setNhiBackPremium] = useState<number>(0);
   const [secondGenNhiTax, setSecondGenNhiTax] = useState<number>(0);
   const [otherAdjustments, setOtherAdjustments] = useState<number>(0);
-  const [voluntaryPensionContribution, setVoluntaryPensionContribution] = useState<number>(0);
-
-  // useEffect(() => {
-  //   // Info: (20250710 - Julian) 計算總免稅加班時數
-  //   const totalHours =
-  //     oneAndOneThirdsHoursForNonTax +
-  //     oneAndTwoThirdsHoursForNonTax +
-  //     twoHoursForNonTax +
-  //     twoAndOneThirdsHoursForNonTax +
-  //     twoAndTwoThirdsHoursForNonTax;
-  //   setTotalNonTaxableHours(totalHours);
-  // }, [
-  //   oneAndOneThirdsHoursForNonTax,
-  //   oneAndTwoThirdsHoursForNonTax,
-  //   twoHoursForNonTax,
-  //   twoAndOneThirdsHoursForNonTax,
-  //   twoAndTwoThirdsHoursForNonTax,
-  // ]);
-
-  // useEffect(() => {
-  //   // Info: (20250710 - Julian) 計算總應稅加班時數
-  //   const totalHours =
-  //     oneAndOneThirdHoursForTaxable +
-  //     oneAndTwoThirdsHoursForTaxable +
-  //     twoHoursForTaxable +
-  //     twoAndOneThirdsHoursForTaxable +
-  //     twoAndTwoThirdsHoursForTaxable;
-  //   setTotalTaxableHours(totalHours);
-  // }, [
-  //   oneAndOneThirdHoursForTaxable,
-  //   oneAndTwoThirdsHoursForTaxable,
-  //   twoHoursForTaxable,
-  //   twoAndOneThirdsHoursForTaxable,
-  //   twoAndTwoThirdsHoursForTaxable,
-  // ]);
+  const [voluntaryPensionContribution, setVoluntaryPensionContribution] =
+    useState<number>(0);
 
   // Info: (20250710 - Julian) 直接計算總時數，不要用 useEffect，避免二次渲染
   const totalNonTaxableHours =
@@ -279,67 +330,110 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     twoAndTwoThirdsHoursForTaxable;
 
   // Info: (20260224 - Julian) 整理薪資計算參數
-  const getSalaryCalculatorOptions = (): ISalaryCalculatorOptions => {
-    const yearInt = parseInt(selectedYear, 10);
-    const monthIndex = MONTHS.findIndex((month) => month.name === selectedMonth.name) + 1; // Info: (20250728 - Julian) index 從 0 開始，所以要加 1
+  /**
+   * Info: (20260831 - Julian) 表單狀態 → 引擎輸入。
+   *
+   * 對應關係搬到 `src/lib/utils/salary_calculator_snapshot.ts`：它與反方向的
+   * `fromCalculatorOptions` 必須成對維護，而留在這裡的話只有 render React 才測得到
+   * （本專案的測試不 render React）。
+   */
+  // Info: (20260902 - Julian) 當下選定的期間，到離職日的推導與組合都以它為準
+  const selectedPeriod = {
+    year: parseInt(selectedYear, 10),
+    month: MONTHS.findIndex((item) => item.name === selectedMonth.name) + 1,
+  };
 
-    const employeeStartStr = `${yearInt}-${monthIndex.toString().padStart(2, '0')}-${dayOfJoining}`;
-    const employeeStartTimestamp = new Date(employeeStartStr).getTime() / 1000;
-    const employeeStartDate = isJoined ? employeeStartTimestamp : undefined;
+  /**
+   * Info: (20260902 - Julian) 由完整日期推導出「這個月有沒有中途到職／離職，第幾號」。
+   *
+   * 引擎只關心這個月，所以這四個值是**畫面與引擎共用的推導結果**，不是 state。
+   * 留成 state 的話，切月份時它們不會自己更新 —— 那正是原本的缺陷。
+   */
+  const joinLeave = deriveJoinLeave({ hireDate, resignDate }, selectedPeriod);
+  const { isJoined, dayOfJoining, isLeft, dayOfLeaving } = joinLeave;
 
-    const employeeEndStr = `${yearInt}-${monthIndex.toString().padStart(2, '0')}-${dayOfLeaving}`;
-    const employeeEndTimestamp = new Date(employeeEndStr).getTime() / 1000;
-    const employeeEndDate = isLeft ? employeeEndTimestamp : undefined;
+  /**
+   * Info: (20260902 - Julian) 計算機當下的值 → 員工檔的常態屬性。
+   *
+   * 給兩條路用：「直接新增員工」（使用者剛把欄位填好，要帶的是當下的值，
+   * 不是預設值 —— 否則建出來的檔是空的，下個月選他反而把設定洗掉），
+   * 以及儲存前的差異偵測（產品決策 D2）。
+   *
+   * **只取 15 個常態欄位。** 加班、請假、溢扣那 16 個不在這裡 ——
+   * 分類表在 `lib/utils/salary_employee_profile.ts`，理由在 schema 註解上。
+   *
+   * 到職／離職日走 `composeJoinLeaveDates`：計算機那四個欄位是
+   * 「這個月第幾號」，員工檔要的是完整日期，年月取自當下選定的期間。
+   */
+  const getEmployeeProfile = (): ISalaryEmployeeProfile => ({
+    baseSalary,
+    mealAllowance,
+    otherAllowanceTaxable: otherAllowanceWithTax,
+    otherAllowanceTaxFree: otherAllowanceWithoutTax,
+    industryCode: industryCategory.CODE,
+    isForeignWorker: taxResidencyStatus === TaxResidencyStatus.NON_TAIWAN,
+    // Info: (20260902 - Julian) 存鍵不存顯示字串，所以要反查 —— enum 的值才是畫面上那串
+    employmentType:
+      Object.keys(EmploymentType).find(
+        (key) =>
+          EmploymentType[key as keyof typeof EmploymentType] === employmentType,
+      ) ?? "FULL_TIME",
+    baseSalary30Days: payrollDaysBase === PayrollDaysBase.FIXED,
+    isLaborInsured: isLaborInsurance,
+    isHealthInsured: isNHI,
+    isPensionInsured: isLaborPension,
+    dependentsCount: numberOfDependents,
+    // Info: (20260902 - Julian) UI 是小數費率、落地是百分點整數
+    voluntaryPensionRate: toPensionRatePercent(voluntaryPensionContribution),
+    /**
+     * Info: (20260902 - Julian) 直接帶日期，**不從畫面上那四個推導值反推回去**。
+     *
+     * 反推的話會踩到一個很難查的坑：員工的到職日是 8/15，使用者切到九月試算，
+     * 推導出來的 `isJoined` 是 false（正確），反推回去就變成 `hireDate: null`
+     * —— 而這個值會被拿去比對差異、甚至回寫員工檔，於是「算了一次九月的薪水」
+     * 就把那個人的到職日洗掉了。日期是 state，這裡原樣交出去。
+     */
+    hireDate,
+    resignDate,
+  });
 
-    // Info: (20250728 - Julian) 計算加班費（應稅）
-    const overTimeHoursTaxable133 = oneAndOneThirdHoursForTaxable;
-    const overTimeHoursTaxable166 = oneAndTwoThirdsHoursForTaxable;
-    const overTimeHoursTaxable200 = twoHoursForTaxable;
-    const overTimeHoursTaxable233 = twoAndOneThirdsHoursForTaxable;
-    const overTimeHoursTaxable266 = twoAndTwoThirdsHoursForTaxable;
-
-    // Info: (20250728 - Julian) 計算加班費（免稅）
-    const overTimeHoursTaxFree133 = oneAndOneThirdsHoursForNonTax;
-    const overTimeHoursTaxFree166 = oneAndTwoThirdsHoursForNonTax;
-    const overTimeHoursTaxFree200 = twoHoursForNonTax;
-    const overTimeHoursTaxFree233 = twoAndOneThirdsHoursForNonTax;
-    const overTimeHoursTaxFree266 = twoAndTwoThirdsHoursForNonTax;
-
-    return {
-      year: yearInt,
-      month: monthIndex,
-      job: industryCategory.CODE, // Info: (20251113 - Julian) 行業別代碼
-      foreignWorker: taxResidencyStatus === TaxResidencyStatus.NON_TAIWAN, // Info: (20251113 - Julian) 是否為外籍員工
-      employeeStartDate, // Info: (20250822 - Julian) 員工入職日期
-      employeeEndDate, // Info: (20250822 - Julian) 員工離職日期
-      baseSalaryTaxable: baseSalary, // Info: (20250728 - Julian) 當月應稅基本工資
-      baseSalaryTaxFree: mealAllowance, // Info: (20250728 - Julian) 當月免稅基本工資（伙食津貼）
-      otherAllowancesTaxable: otherAllowanceWithTax, // Info: (20250728 - Julian) 當月應稅其他津貼
-      otherAllowancesTaxFree: otherAllowanceWithoutTax, // Info: (20250728 - Julian) 當月免稅其他津貼
-      overTimeHoursTaxable133, // Info: (20250728 - Julian) 當月 133% 加班費（應稅）
-      overTimeHoursTaxable166, // Info: (20250728 - Julian) 當月 166% 加班費（應稅）
-      overTimeHoursTaxable200, // Info: (20250728 - Julian) 當月 200% 加班費（應稅）
-      overTimeHoursTaxable233, // Info: (20250728 - Julian) 當月 233% 加班費（應稅）
-      overTimeHoursTaxable266, // Info: (20250728 - Julian) 當月 266% 加班費（應稅）
-      overTimeHoursTaxFree133, // Info: (20250728 - Julian) 當月 133% 加班費（免稅）
-      overTimeHoursTaxFree166, // Info: (20250728 - Julian) 當月 166% 加班費（免稅）
-      overTimeHoursTaxFree200, // Info: (20250728 - Julian) 當月 200% 加班費（免稅）
-      overTimeHoursTaxFree233, // Info: (20250728 - Julian) 當月 233% 加班費（免稅）
-      overTimeHoursTaxFree266, // Info: (20250728 - Julian) 當月 266% 加班費（免稅）
-      vacationToPayHours: leavePayoutHours, // Info: (20250819 - Julian) 休假換算成薪資的時數
-      sickLeaveHours, // Info: (20250728 - Julian) 當月病假時數
-      personalLeaveHours, // Info: (20250728 - Julian) 當月事假時數
-      isLaborInsuranceEnrolled: isLaborInsurance, // Info: (20250819 - Julian) 是否投保勞保
-      isHealthInsuranceEnrolled: isNHI, // Info: (20250819 - Julian) 是否投保健保
-      isPensionInsuranceEnrolled: isLaborPension, // Info: (20250819 - Julian) 是否投保勞退
-      employeeBurdenHealthInsurancePremiums: nhiBackPremium, // Info: (20250728 - Julian) 健保加保費用
-      employeeBurdenSecondGenerationHealthInsurancePremiums: secondGenNhiTax, // Info: (20250728 - Julian) 二代健保費用
-      employeeBurdenOtherOverflowDeductions: otherAdjustments, // Info: (20250728 - Julian) 其他溢扣／補收
-      employeeBurdenPensionInsurance: voluntaryPensionContribution, // Info: (20250728 - Julian) 勞退自提金額
-      dependentsCount: numberOfDependents, // Info: (20250819 - Julian) 扶養人數
-      baseSalary30Days: payrollDaysBase === 'FIXED', // Info: (20250819 - Julian) 基準天數選項：是否以 30 天計算
-    }
-  }
+  const getSalaryCalculatorOptions = (): ISalaryCalculatorOptions =>
+    toCalculatorOptions({
+      selectedYear,
+      selectedMonth,
+      industryCategory,
+      taxResidencyStatus,
+      isJoined,
+      dayOfJoining,
+      isLeft,
+      dayOfLeaving,
+      payrollDaysBase,
+      baseSalary,
+      mealAllowance,
+      otherAllowanceWithTax,
+      otherAllowanceWithoutTax,
+      oneAndOneThirdHoursForTaxable,
+      oneAndTwoThirdsHoursForTaxable,
+      twoHoursForTaxable,
+      twoAndOneThirdsHoursForTaxable,
+      twoAndTwoThirdsHoursForTaxable,
+      oneAndOneThirdsHoursForNonTax,
+      oneAndTwoThirdsHoursForNonTax,
+      twoHoursForNonTax,
+      twoAndOneThirdsHoursForNonTax,
+      twoAndTwoThirdsHoursForNonTax,
+      leavePayoutHours,
+      sickLeaveHours,
+      personalLeaveHours,
+      isLaborInsurance,
+      isNHI,
+      isLaborPension,
+      nhiBackPremium,
+      secondGenNhiTax,
+      otherAdjustments,
+      voluntaryPensionContribution,
+      numberOfDependents,
+    });
 
   // Info: (20250728 - Julian) 計算結果
   // ToDo: (20250728 - Julian) 計算邏輯須搬到 lib
@@ -370,14 +464,16 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
           result.employeeBurdenSecondGenerationHealthInsurancePremiums,
         leaveDeductionTaxable: result.leaveDeductionTaxable,
         leaveDeductionTaxFree: result.leaveDeductionTaxFree,
-        otherDeductionsOrAdjustments: result.employeeBurdenOtherOverflowDeductions,
+        otherDeductionsOrAdjustments:
+          result.employeeBurdenOtherOverflowDeductions,
         totalEmployeeBurden: result.totalEmployeeBurden,
       },
       insuredSalary: {
         healthInsuranceSalaryBracket: result.healthInsuranceLevel,
         laborInsuranceSalaryBracket: result.laborInsuranceLevel,
         employmentInsuranceSalaryBracket: result.employmentInsuranceLevel,
-        occupationalInjuryInsuranceSalaryBracket: result.occupationalDisasterInsuranceLevel,
+        occupationalInjuryInsuranceSalaryBracket:
+          result.occupationalDisasterInsuranceLevel,
         laborPensionSalaryBracket: result.pensionInsuranceLevel,
         occupationalInjuryIndustryRate: result.occupationalDisasterIndustryRate,
         insuredSalary: result.insuredSalary,
@@ -394,8 +490,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     };
 
     return formattedResult;
-  }
-
+  };
 
   // Info: (20250709 - Julian) 切換步驟
   const switchStep = (step: number) => {
@@ -412,22 +507,23 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setCurrentStep(targetStep);
   };
 
+  const switchTab = (tab: CalcTab) => setActiveTab(tab);
+
   // Info: (20250709 - Julian) 重置表單
   const resetFormHandler = () => {
     // Info: (20250710 - Julian) 清空 input 欄位
     setEmployeeName(defaultEmployeeName);
     setEmploymentType(EmploymentType.FULL_TIME);
-    setEmployeeNumber('');
+    setEmployeeNumber("");
     setTaxResidencyStatus(TaxResidencyStatus.TAIWAN);
     setIndustryCategory(defaultIndustryCategory);
-    setEmployeeEmail('');
+    setEmployeeEmail("");
     setSelectedYear(yearOptions[0]);
     setSelectedMonth(defaultMonth);
     setPayrollDaysBase(payrollDaysBaseOptions[0]);
-    setIsJoined(false);
-    setIsLeft(false);
-    setDayOfJoining('01');
-    setDayOfLeaving('01');
+    // Info: (20260902 - Julian) 重置＝沒有到職／離職日
+    setHireDate(null);
+    setResignDate(null);
     setBaseSalary(defaultBasicSalary);
     setMealAllowance(0);
     setOtherAllowanceWithTax(0);
@@ -438,13 +534,11 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setTwoHoursForNonTax(0);
     setTwoAndOneThirdsHoursForNonTax(0);
     setTwoAndTwoThirdsHoursForNonTax(0);
-    // setTotalNonTaxableHours(0);
     setOneAndOneThirdsHoursForTaxable(0);
     setOneAndTwoThirdsHoursForTaxable(0);
     setTwoHoursForTaxable(0);
     setTwoAndOneThirdsHoursForTaxable(0);
     setTwoAndTwoThirdsHoursForTaxable(0);
-    // setTotalTaxableHours(0);
     setSickLeaveHours(0);
     setPersonalLeaveHours(0);
     setLeavePayoutHours(0);
@@ -456,18 +550,187 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setOtherAdjustments(0);
     setVoluntaryPensionContribution(0);
     setNumberOfDependents(0);
+    // Info: (20260831 - Julian) 重置也要解除員工連結，否則下一筆試算會掛到上一個人身上
+    setSelectedEmployeeId(null);
     // Info: (20250710 - Julian) 重置計算機狀態
-    // setSalaryCalculatorResult(defaultSalaryCalculatorResult);
-    // Info: (20250710 - Julian) 重置步驟狀態
     setCompleteSteps(defaultTabSteps);
     setCurrentStep(1);
     setIsNameError(false);
   };
 
+  /**
+   * Info: (20260902 - Julian) 把員工檔上的 15 個常態屬性灌進計算機。
+   *
+   * ## 覆蓋，不是「只填空白」（產品決策 D3）
+   *
+   * 「選好員工姓名後就能自動匯入資料」最直覺的解釋就是覆蓋。
+   * 「只填空白」聽起來貼心，但「0 算不算空白」沒有好答案 ——
+   * 本薪 0 是空白、扶養人數 0 是真的填了 0，兩者在型別上一模一樣。
+   *
+   * ## 當月變動的 16 個欄位不會被動到
+   *
+   * 加班時數、請假時數、健保補收、二代健保、其他溢扣不在員工檔上，
+   * 所以「全部覆蓋」不等於「整張表單重置」—— 使用者剛打的加班時數還在。
+   * 分類表在 `lib/utils/salary_employee_profile.ts`。
+   */
+  const applyEmployeeProfile = (profile: ISalaryEmployeeProfile) => {
+    setBaseSalary(profile.baseSalary);
+    setMealAllowance(profile.mealAllowance);
+    setOtherAllowanceWithTax(profile.otherAllowanceTaxable);
+    setOtherAllowanceWithoutTax(profile.otherAllowanceTaxFree);
+    setIndustryCategory(industryCategoryOf(profile.industryCode));
+    setTaxResidencyStatus(
+      profile.isForeignWorker
+        ? TaxResidencyStatus.NON_TAIWAN
+        : TaxResidencyStatus.TAIWAN,
+    );
+    // Info: (20260902 - Julian) 落地存的是 enum 的鍵，畫面上的 state 存的是值
+    setEmploymentType(
+      EmploymentType[profile.employmentType as keyof typeof EmploymentType] ??
+        EmploymentType.FULL_TIME,
+    );
+    setPayrollDaysBase(
+      profile.baseSalary30Days ? PayrollDaysBase.FIXED : PayrollDaysBase.ACTUAL,
+    );
+    setIsLaborInsurance(profile.isLaborInsured);
+    setIsNHI(profile.isHealthInsured);
+    setIsLaborPension(profile.isPensionInsured);
+    setNumberOfDependents(profile.dependentsCount);
+    // Info: (20260902 - Julian) 落地是百分點整數，畫面上是小數費率
+    setVoluntaryPensionContribution(
+      fromPensionRatePercent(profile.voluntaryPensionRate),
+    );
+    // Info: (20260902 - Julian) 日期原樣帶進來，「這個月第幾號」由 joinLeave 推導
+    setHireDate(profile.hireDate);
+    setResignDate(profile.resignDate);
+  };
+
+  /**
+   * Info: (20260831 - Julian) 從員工名單選一位，把他的資料帶進計算機。
+   *
+   * 除了灌欄位還要記住 id —— 那才是「按下儲存會存到誰身上」的答案。
+   * 姓名走 setEmployeeName 而不是 changeEmployeeName：後者會把連結清掉。
+   */
+  const linkEmployee = (employee: ISalaryCalculatorEmployee) => {
+    setEmployeeName(employee.name);
+    setIsNameError(employee.name === "");
+    setEmployeeNumber(employee.number);
+    setEmployeeEmail(employee.email);
+    applyEmployeeProfile(employee);
+    setSelectedEmployeeId(employee.id);
+  };
+
+  /**
+   * Info: (20260831 - Julian) 只解除連結，**不清空姓名／編號／Email**。
+   *
+   * 這一支的呼叫端是 Step 1 那顆「解除連結」—— 使用者要的是「這次不要存到他身上」，
+   * 不是「把我剛剛看到的資料清掉」。清空會讓畫面在按下去的瞬間整片變空。
+   *
+   * 因此「載回一筆紀錄，但名單裡找不到那個人」不能只呼叫這一支：
+   * 那樣連結是斷了，姓名／編號／Email 卻還留著**上一個人**的。
+   * 那條路要走 `applyRecordEmployee()`。
+   */
+  const unlinkEmployee = () => setSelectedEmployeeId(null);
+
+  /**
+   * Info: (20260901 - Julian) 依一筆薪資紀錄補寫「這筆屬於誰」，但**不建立連結**。
+   *
+   * ## 為什麼需要這一支
+   *
+   * `loadFromSnapshot` 刻意不動姓名／編號／Email 與員工連結（見下方註解）——
+   * 那四樣由呼叫端依紀錄上的員工另外設定。而「名單裡找不到這個人」那條路
+   * （員工已被軟刪、或名單那支 GET 失敗）沒有可以 `linkEmployee` 的對象，
+   * 只呼叫 `unlinkEmployee()` 的話：覆寫是擋住了，但畫面上仍是**上一個人**的姓名
+   * —— 沒有連結過任何人時甚至是預設的「王小明」。
+   *
+   * 後果不只是看起來怪：`salary_result_section` 的薪資單預覽與
+   * PNG 下載檔名 `${employeeName}_${date}.png` 都讀 `employeeName`，
+   * 於是印出來的是**錯的人配上這一筆真實的薪資數字**，而薪資單是對外憑據。
+   * 儲存時的「直接新增員工」也用 `employeeName`，會把李四的資料建成一個叫張三的員工。
+   *
+   * ## Email 為什麼是清空而不是保留
+   *
+   * 薪資紀錄的回應只有 `name` 與 `number`，沒有 Email（`ISalaryRecordSummary`）。
+   * 留著上一個人的 Email 比空著危險得多 —— 那一欄的用途是把薪資單寄出去。
+   *
+   * 連結一律留 `null`：這裡拿到的是紀錄上的員工，而不是名單上的員工，
+   * 「要存給誰」交給儲存流程的例外 B 對話框依編號再問一次。
+   */
+  const applyRecordEmployee = (employee: { name: string; number: string }) => {
+    setEmployeeName(employee.name);
+    setIsNameError(employee.name === "");
+    setEmployeeNumber(employee.number);
+    setEmployeeEmail("");
+    setSelectedEmployeeId(null);
+  };
+
+  /**
+   * Info: (20260831 - Julian) 把一筆薪資紀錄的輸入快照載回計算機。
+   *
+   * 只還原「算出這個結果需要的輸入」，不動姓名／編號／Email 與員工連結：
+   * 那四樣是「這筆紀錄屬於誰」，由呼叫端依紀錄上的員工另外設定。
+   */
+  const loadFromSnapshot = (input: ISalaryCalculatorOptions) => {
+    const form = fromCalculatorOptions(input, defaultMonth);
+
+    setSelectedYear(form.selectedYear);
+    setSelectedMonth(form.selectedMonth);
+    setIndustryCategory(form.industryCategory);
+    setTaxResidencyStatus(form.taxResidencyStatus);
+    /**
+     * Info: (20260902 - Julian) 快照裡的 `employeeStartDate` / `employeeEndDate` 本來就是
+     * 完整時間戳（寫入時由那筆紀錄的年月組成），直接還原成日期，不必再繞一次「第幾號」。
+     */
+    setHireDate(input.employeeStartDate ?? null);
+    setResignDate(input.employeeEndDate ?? null);
+    setPayrollDaysBase(form.payrollDaysBase);
+
+    setBaseSalary(form.baseSalary);
+    setMealAllowance(form.mealAllowance);
+    setOtherAllowanceWithTax(form.otherAllowanceWithTax);
+    setOtherAllowanceWithoutTax(form.otherAllowanceWithoutTax);
+
+    setOneAndOneThirdsHoursForTaxable(form.oneAndOneThirdHoursForTaxable);
+    setOneAndTwoThirdsHoursForTaxable(form.oneAndTwoThirdsHoursForTaxable);
+    setTwoHoursForTaxable(form.twoHoursForTaxable);
+    setTwoAndOneThirdsHoursForTaxable(form.twoAndOneThirdsHoursForTaxable);
+    setTwoAndTwoThirdsHoursForTaxable(form.twoAndTwoThirdsHoursForTaxable);
+    setOneAndOneThirdsHoursForNonTax(form.oneAndOneThirdsHoursForNonTax);
+    setOneAndTwoThirdsHoursForNonTax(form.oneAndTwoThirdsHoursForNonTax);
+    setTwoHoursForNonTax(form.twoHoursForNonTax);
+    setTwoAndOneThirdsHoursForNonTax(form.twoAndOneThirdsHoursForNonTax);
+    setTwoAndTwoThirdsHoursForNonTax(form.twoAndTwoThirdsHoursForNonTax);
+    setLeavePayoutHours(form.leavePayoutHours);
+    setSickLeaveHours(form.sickLeaveHours);
+    setPersonalLeaveHours(form.personalLeaveHours);
+
+    setIsLaborInsurance(form.isLaborInsurance);
+    setIsNHI(form.isNHI);
+    setIsLaborPension(form.isLaborPension);
+    setNhiBackPremium(form.nhiBackPremium);
+    setSecondGenNhiTax(form.secondGenNhiTax);
+    setOtherAdjustments(form.otherAdjustments);
+    setVoluntaryPensionContribution(form.voluntaryPensionContribution);
+    setNumberOfDependents(form.numberOfDependents);
+
+    // Info: (20260831 - Julian) 載回來的紀錄已經填完四步，直接跳到最後一步
+    setCompleteSteps(
+      defaultTabSteps.map((step) => ({ ...step, completed: true })),
+    );
+    setCurrentStep(4);
+  };
+
   // Info: (20250709 - Julian) =========== 基本資訊相關 state 和 functions ===========
   const changeEmployeeName = (name: string) => {
     setEmployeeName(name);
-    setIsNameError(name === ''); // Info: (20250711 - Julian) 如果未填姓名則顯示錯誤
+    setIsNameError(name === ""); // Info: (20250711 - Julian) 如果未填姓名則顯示錯誤
+    /**
+     * Info: (20260831 - Julian) 手動改姓名就解除員工連結。
+     *
+     * 不解除的話會出現「畫面上寫著李佳蓉，存進去卻掛在王小明底下」——
+     * 那是一筆看起來正常、但掛錯人的薪資紀錄，事後很難發現。
+     */
+    setSelectedEmployeeId(null);
   };
   const changeEmploymentType = (type: EmploymentType) => {
     setEmploymentType(type);
@@ -493,14 +756,45 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const changePayrollDaysBase = (base: string) => {
     setPayrollDaysBase(base);
   };
+  /**
+   * Info: (20260902 - Julian) 畫面上改「第幾號」→ 用當下選定的年月組成完整日期。
+   *
+   * 這四支只在**未連結員工**時會被呼叫：連結之後那兩格是唯讀的，
+   * 日期的來源是員工檔（見 `basic_info_form`）。公開版沒有員工檔，所以照舊可編輯。
+   */
   const changeJoinedDay = (day: string) => {
-    setDayOfJoining(day);
+    setHireDate(
+      composeJoinLeaveDates(
+        { ...joinLeave, isJoined: true, dayOfJoining: day },
+        selectedPeriod,
+      ).hireDate,
+    );
   };
   const changeLeavingDay = (day: string) => {
-    setDayOfLeaving(day);
+    setResignDate(
+      composeJoinLeaveDates(
+        { ...joinLeave, isLeft: true, dayOfLeaving: day },
+        selectedPeriod,
+      ).resignDate,
+    );
   };
-  const toggleJoined = () => setIsJoined((prev) => !prev);
-  const toggleLeft = () => setIsLeft((prev) => !prev);
+  // Info: (20260902 - Julian) 關掉＝沒有這個日期（null），不是「留著日期但不算」
+  const toggleJoined = () =>
+    setHireDate(
+      isJoined
+        ? null
+        : composeJoinLeaveDates(
+            { ...joinLeave, isJoined: true },
+            selectedPeriod,
+          ).hireDate,
+    );
+  const toggleLeft = () =>
+    setResignDate(
+      isLeft
+        ? null
+        : composeJoinLeaveDates({ ...joinLeave, isLeft: true }, selectedPeriod)
+            .resignDate,
+    );
 
   // Info: (20250710 - Julian) =========== 其他相關 state 和 functions ===========
   const toggleLaborInsurance = () => setIsLaborInsurance((prev) => !prev);
@@ -510,145 +804,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setVoluntaryPensionContribution(contribution);
   };
 
-  // const value = useMemo(
-  //   () => ({
-  //     yearOptions,
-  //     monthOptions,
-  //     payrollDaysBaseOptions,
-  //     currentStep,
-  //     completeSteps,
-  //     salaryCalculatorResult,
-  //     switchStep,
-  //     resetFormHandler,
-  //     employeeName,
-  //     changeEmployeeName,
-  //     employeeNumber,
-  //     changeEmployeeNumber,
-  //     employmentType,
-  //     changeEmploymentType,
-  //     taxResidencyStatus,
-  //     changeTaxResidencyStatus,
-  //     industryCategory,
-  //     changeIndustryCategory,
-  //     employeeEmail,
-  //     changeEmployeeEmail,
-  //     selectedYear,
-  //     changeSelectedYear,
-  //     selectedMonth,
-  //     changeSelectedMonth,
-  //     payrollDaysBase,
-  //     changePayrollDaysBase,
-  //     isJoined,
-  //     toggleJoined,
-  //     dayOfJoining,
-  //     changeJoinedDay,
-  //     isLeft,
-  //     toggleLeft,
-  //     dayOfLeaving,
-  //     changeLeavingDay,
-  //     baseSalary,
-  //     setBaseSalary,
-  //     mealAllowance,
-  //     setMealAllowance,
-  //     otherAllowanceWithTax,
-  //     setOtherAllowanceWithTax,
-  //     otherAllowanceWithoutTax,
-  //     setOtherAllowanceWithoutTax,
-  //     isNameError,
-  //     setIsNameError,
-  //     oneAndOneThirdsHoursForNonTax,
-  //     setOneAndOneThirdsHoursForNonTax,
-  //     oneAndTwoThirdsHoursForNonTax,
-  //     setOneAndTwoThirdsHoursForNonTax,
-  //     twoHoursForNonTax,
-  //     setTwoHoursForNonTax,
-  //     twoAndOneThirdsHoursForNonTax,
-  //     setTwoAndOneThirdsHoursForNonTax,
-  //     twoAndTwoThirdsHoursForNonTax,
-  //     setTwoAndTwoThirdsHoursForNonTax,
-  //     totalNonTaxableHours,
-  //     oneAndOneThirdHoursForTaxable,
-  //     setOneAndOneThirdsHoursForTaxable,
-  //     oneAndTwoThirdsHoursForTaxable,
-  //     setOneAndTwoThirdsHoursForTaxable,
-  //     twoHoursForTaxable,
-  //     setTwoHoursForTaxable,
-  //     twoAndOneThirdsHoursForTaxable,
-  //     setTwoAndOneThirdsHoursForTaxable,
-  //     twoAndTwoThirdsHoursForTaxable,
-  //     setTwoAndTwoThirdsHoursForTaxable,
-  //     totalTaxableHours,
-  //     sickLeaveHours,
-  //     setSickLeaveHours,
-  //     personalLeaveHours,
-  //     setPersonalLeaveHours,
-  //     leavePayoutHours,
-  //     setLeavePayoutHours,
-  //     isLaborInsurance,
-  //     toggleLaborInsurance,
-  //     isNHI,
-  //     toggleNHI,
-  //     isLaborPension,
-  //     toggleLaborPension,
-  //     numberOfDependents,
-  //     setNumberOfDependents,
-  //     nhiBackPremium,
-  //     setNhiBackPremium,
-  //     secondGenNhiTax,
-  //     setSecondGenNhiTax,
-  //     otherAdjustments,
-  //     setOtherAdjustments,
-  //     voluntaryPensionContribution,
-  //     changeVoluntaryPensionContribution,
-  //   }),
-  //   [
-  //     yearOptions,
-  //     monthOptions,
-  //     payrollDaysBaseOptions,
-  //     currentStep,
-  //     completeSteps,
-  //     salaryCalculatorResult,
-  //     employeeName,
-  //     employeeNumber,
-  //     employeeEmail,
-  //     selectedYear,
-  //     selectedMonth,
-  //     payrollDaysBase,
-  //     isJoined,
-  //     dayOfJoining,
-  //     isLeft,
-  //     dayOfLeaving,
-  //     baseSalary,
-  //     mealAllowance,
-  //     otherAllowanceWithTax,
-  //     otherAllowanceWithoutTax,
-  //     isNameError,
-  //     oneAndOneThirdsHoursForNonTax,
-  //     oneAndTwoThirdsHoursForNonTax,
-  //     twoHoursForNonTax,
-  //     twoAndOneThirdsHoursForNonTax,
-  //     twoAndTwoThirdsHoursForNonTax,
-  //     totalNonTaxableHours,
-  //     oneAndOneThirdHoursForTaxable,
-  //     oneAndTwoThirdsHoursForTaxable,
-  //     twoHoursForTaxable,
-  //     twoAndOneThirdsHoursForTaxable,
-  //     twoAndTwoThirdsHoursForTaxable,
-  //     totalTaxableHours,
-  //     sickLeaveHours,
-  //     personalLeaveHours,
-  //     leavePayoutHours,
-  //     isLaborInsurance,
-  //     isNHI,
-  //     isLaborPension,
-  //     numberOfDependents,
-  //     nhiBackPremium,
-  //     secondGenNhiTax,
-  //     otherAdjustments,
-  //     voluntaryPensionContribution,
-  //   ]
-  // );
-
   const value = {
     yearOptions,
     monthOptions,
@@ -657,7 +812,16 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     completeSteps,
     salaryCalculatorResult: getSalaryCalculatorResult(),
     switchStep,
+    activeTab,
+    switchTab,
     resetFormHandler,
+    selectedEmployeeId,
+    linkEmployee,
+    unlinkEmployee,
+    applyRecordEmployee,
+    loadFromSnapshot,
+    getSalaryCalculatorOptions,
+    getEmployeeProfile,
     employeeName,
     changeEmployeeName,
     employeeNumber,
@@ -738,15 +902,21 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setOtherAdjustments,
     voluntaryPensionContribution,
     changeVoluntaryPensionContribution,
-  }
+  };
 
-  return <CalculatorContext.Provider value={value}>{children}</CalculatorContext.Provider>;
+  return (
+    <CalculatorContext.Provider value={value}>
+      {children}
+    </CalculatorContext.Provider>
+  );
 };
 
 export const useCalculatorCtx = () => {
   const context = useContext(CalculatorContext);
   if (context === undefined) {
-    throw new Error('useCalculatorCtx must be used within a CalculatorProvider');
+    throw new Error(
+      "useCalculatorCtx must be used within a CalculatorProvider",
+    );
   }
   return context;
 };

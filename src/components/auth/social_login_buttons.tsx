@@ -22,6 +22,14 @@ interface ISocialLoginButtonsProps {
   returnTo?: string;
   onError?: (message: string) => void;
   disabled?: boolean;
+  /**
+   * Info: (20260813 - Julian) 是否畫上方那條「或使用以下方式繼續」分隔線。
+   *
+   * 預設 `true`：這個元件原本永遠是**次要**登入方式，分隔線是它與上方 passkey
+   * 按鈕之間的界線。當它是畫面上的主要入口時（例如出勤閘門），
+   * 那條線上面什麼都沒有，讀起來像少了一段東西。
+   */
+  showDivider?: boolean;
 }
 
 function GoogleMark() {
@@ -61,6 +69,7 @@ export default function SocialLoginButtons({
   returnTo = undefined,
   onError = undefined,
   disabled = false,
+  showDivider = true,
 }: ISocialLoginButtonsProps) {
   const { t } = useTranslation();
   const [providers, setProviders] = useState<AuthProvider[]>([]);
@@ -112,16 +121,21 @@ export default function SocialLoginButtons({
 
   return (
     <div className="space-y-3">
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center" aria-hidden="true">
-          <div className="w-full border-t border-gray-200" />
+      {showDivider && (
+        <div className="relative">
+          <div
+            className="absolute inset-0 flex items-center"
+            aria-hidden="true"
+          >
+            <div className="w-full border-t border-gray-200" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="bg-white px-3 text-gray-500">
+              {t("auth_modal.or_continue_with")}
+            </span>
+          </div>
         </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="bg-white px-3 text-gray-500">
-            {t("auth_modal.or_continue_with")}
-          </span>
-        </div>
-      </div>
+      )}
 
       {originMismatch && (
         <p className="rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">

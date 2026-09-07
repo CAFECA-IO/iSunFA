@@ -2,6 +2,7 @@ import {
   createCipheriv,
   createDecipheriv,
   createHash,
+  createHmac,
   randomBytes,
   scryptSync,
 } from "crypto";
@@ -47,6 +48,21 @@ export const VAULT_KEY_VERSION = 1;
 export enum VaultPurpose {
   CUSTODIAL_KEY = "custodial-key",
   SYSTEM_SETTING = "system-setting",
+  /**
+   * Info: (20260812 - Luphia) 託管帳號的 PRF 替身（見 ADR 016 補充）。
+   *
+   * 刻意**不**沿用 CUSTODIAL_KEY:那把子金鑰保護的是可以動用資金的簽章私鑰,
+   * 這裡要的是一個決定性的加密秘密。共用同一把會讓「解開對話」與「動用資金」
+   * 落在同一個信任邊界內 —— 而它們的外洩後果完全不同。
+   */
+  CUSTODIAL_PRF = "custodial-prf",
+  /**
+   * Info: (20260817 - Luphia) 費思長期記憶的欄位級加密（規範 §6.2）。
+   *
+   * 獨立的子金鑰：記憶是使用者的對話偏好，與簽章私鑰、系統設定的外洩後果都不同，
+   * 共用一把會把三種資產綁進同一個信任邊界。
+   */
+  FAITH_MEMORY = "faith-memory",
 }
 
 export interface ISealedSecret {
@@ -93,12 +109,27 @@ function getSubKey(purpose: VaultPurpose): Buffer {
   return key;
 }
 
+/**
+ * Info: (20260818 - Luphia) `aad`：把密文綁在**它該屬於的那一列**上（第三輪 C-5）。
+ *
+ * GCM 的 authTag 保證「密文沒被竄改」，但不保證「這份密文屬於這一列」。
+ * 沒有 AAD 時，有 DB 寫入權的人可以把 A 的四個欄位整組複製到 B 的列上，
+ * B 下次讀取就解出 A 的明文——而 authTag 完全不會察覺，因為密文本身是完整的。
+ *
+ * 對費思記憶而言那代表 A 的對話偏好會被注入 B 的 prompt。
+ *
+ * **選填**是刻意的：既有的託管金鑰與系統設定密文是在沒有 AAD 的情況下封裝的，
+ * 加上必填參數會讓它們全部解不開。呼叫端要不要綁、綁什麼，由該資料的
+ * 作用範圍決定（記憶綁 `userId:teamId`）。
+ */
 export function sealSecret(
   plaintext: string,
   purpose: VaultPurpose,
+  aad?: string,
 ): ISealedSecret {
   const iv = randomBytes(IV_LENGTH);
   const cipher = createCipheriv(ALGORITHM, getSubKey(purpose), iv);
+  if (aad) cipher.setAAD(Buffer.from(aad, "utf8"));
 
   const ciphertext = Buffer.concat([
     cipher.update(plaintext, "utf8"),
@@ -113,15 +144,21 @@ export function sealSecret(
   };
 }
 
+/**
+ * Info: (20260818 - Luphia) `aad` 必須與封裝時**完全一致**，否則 `final()` 會丟錯。
+ * 那正是這道防護的作用：把密文搬到別人的列上，解開時就會失敗。
+ */
 export function openSecret(
   sealed: ISealedSecret,
   purpose: VaultPurpose,
+  aad?: string,
 ): string {
   const decipher = createDecipheriv(
     ALGORITHM,
     getSubKey(purpose),
     Buffer.from(sealed.iv, "base64"),
   );
+  if (aad) decipher.setAAD(Buffer.from(aad, "utf8"));
   decipher.setAuthTag(Buffer.from(sealed.authTag, "base64"));
 
   // Info: (20260809 - Luphia) authTag 不符時 final() 會 throw，等同偵測到密文被竄改
@@ -129,6 +166,31 @@ export function openSecret(
     decipher.update(Buffer.from(sealed.ciphertext, "base64")),
     decipher.final(),
   ]).toString("utf8");
+}
+
+/**
+ * Info: (20260812 - Luphia) 從某個用途的子金鑰派生一段**決定性**秘密。
+ *
+ * `sealSecret` 每次的 IV 都不同,拿它當「同樣的輸入要得到同樣的輸出」用不了;
+ * 這支用 HMAC 取代,同一把主密鑰 + 同一個 purpose + 同一份 info 永遠得到同一個 32 bytes。
+ *
+ * `getSubKey` 仍然不外露 —— 呼叫端拿到的是派生結果,不是子金鑰本身,
+ * 因此無法用它去解別的東西。
+ *
+ * Info: (20260812 - Luphia) `info` 收 `Buffer` 而不只是字串（PR review P-3）。
+ *
+ * 綁字串的話,呼叫端只能餵「某個值的字串表示」;而當那個值本來是 bytes
+ * (例如 base64 的 salt),派生結果就對**編碼方式**敏感 ——
+ * base64 → base64url、去掉 padding、trim,任何一個看起來無害的改動都會換掉秘密。
+ * 收 Buffer 讓呼叫端可以綁 bytes 本身,與另一條路徑（WebAuthn PRF 吃的就是 bytes）
+ * 依賴同一件事。
+ */
+export function derivePurposeSecret(
+  purpose: VaultPurpose,
+  info: string | Buffer,
+): Buffer {
+  const material = typeof info === "string" ? Buffer.from(info, "utf8") : info;
+  return createHmac("sha256", getSubKey(purpose)).update(material).digest();
 }
 
 // Info: (20260809 - Luphia) 供健康檢查／設定頁判斷主密鑰是否就緒，不外露密鑰內容

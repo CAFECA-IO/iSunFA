@@ -54,6 +54,10 @@ export const adminMissionBoard = {
     toast_draft_saved: "下書きが手動で保存されました",
     toast_report_inserted: "レポートの生成と挿入が成功しました！",
     toast_share_link_failed: "共有リンクの生成に失敗しました",
+    toast_toc_pages_missing:
+      "レポートをダウンロードしましたが、目次にページ番号が入りませんでした",
+    toast_charts_missing:
+      "レポートをダウンロードしましたが、一部の図を描画できませんでした",
     edit_markdown: "マークダウンを編集",
     preview_pdf: "PDFをプレビュー",
     download_pdf: "PDF をダウンロード",
@@ -65,6 +69,21 @@ export const adminMissionBoard = {
     brand: "iSunFAスマート会計",
     internal_document: "内部文書",
     system_report: "システムレポート",
+    report_identity: {
+      title: "検証識別情報",
+      inventory_year: "算定年度",
+      prepared_by: "作成部署",
+      verified_by: "検証機関",
+      issued_on: "更新日",
+      framework_label: "開示フレームワーク",
+      framework_inventory_only: "算定報告書のみ",
+      framework_ifrs: "{{name}} の構成に合わせる",
+      framework_hint:
+        "選択すると、草案は {{name}} の構成に沿って作成されます。これは文書構成に関する記述であり、企業レベルの準拠宣言ではありません \u2014 後者は適用時期にかかわらず報告書に記載できません",
+      unfilled: "未記入",
+      name_suffix: "温室効果ガス算定報告書",
+      hint: "検証機関は報告内容から導出できないため、手入力が必要です",
+    },
     footer_title: "AIによる炭素会計の再構築",
     footer_text:
       "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.",

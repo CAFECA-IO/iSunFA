@@ -125,7 +125,7 @@ export const analysis = {
     carbon_health_check: "Carbon Health Check",
     net_zero_emissions: "Net Zero Emissions",
     ai_consulting: "AI Consultation",
-    journal_upload: "Journal Entry Creation",
+    journal_correction: "Journal Correction",
     certificate_analysis: "Certificate Analysis",
     transportation_carbon_footprint: "Transportation Carbon Footprint",
   },

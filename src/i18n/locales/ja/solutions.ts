@@ -31,7 +31,7 @@ export const solutions = {
   deliverables_subtitle:
     "単なるレポートではなく、企業の脱炭素化を導くナビゲーションマップです。",
   iso_report: "組織炭素排出量調査レポート",
-  iso_report_desc: "IFRS S1/S2基準に準拠した組織的な炭素排出量調査報告書。",
+  iso_report_desc: "ISO 14064-1に準拠した組織的な炭素排出量調査報告書。",
   inventory: "温室効果ガス排出インベントリ",
   inventory_desc:
     "すべての排出源とデータ履歴を詳細に記録し、継続的な追跡を容易にします。",

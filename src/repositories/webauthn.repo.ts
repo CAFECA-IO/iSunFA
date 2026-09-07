@@ -1,10 +1,12 @@
 import { User, Prisma, Role } from "@/generated";
 import { prisma } from "@/lib/prisma";
 import { IUser } from "@/interfaces/user";
+import { addressLookupForms } from "@/lib/team/address_identity";
 
 export interface IWebAuthnRepository {
   findUserByCredentialId(credentialId: string): Promise<IUser | null>;
   findUserByAddress(address: string): Promise<IUser | null>;
+  findUserByAnyAddressForm(address: string): Promise<IUser | null>;
   findUserById(id: string): Promise<IUser | null>;
   findUsersByIds(ids: string[]): Promise<User[]>;
   findUserByName(name: string): Promise<User | null>;
@@ -77,6 +79,33 @@ class WebAuthnRepository implements IWebAuthnRepository {
   public async findUserByAddress(address: string): Promise<IUser | null> {
     const user = await prisma.user.findUnique({
       where: { address },
+    });
+
+    if (!user) return null;
+
+    return this.transformUserToIUser(user);
+  }
+
+  /**
+   * Info: (20260826 - Julian) 位址來自**使用者輸入**時用這一支（review 1.2）。
+   *
+   * `findUserByAddress` 走 `findUnique`，也就是精確比對，而 `User.address`
+   * 有兩種形狀共存（viem 對合約回傳一律 EIP-55 checksum，`setup.service.ts`
+   * 建的是全小寫）。三十多個呼叫端傳的是 `sessionUser.address`（本來就出自
+   * 這張表，精確比對成立），因此不動那一支；只有拿使用者貼進來的字串去查的
+   * 地方需要這一支。
+   *
+   * 邀請端的失效是會計層級的：查不到人 → 「已經是團隊成員」那道檢查
+   * **靜默失效** → 對已經在團隊裡的人重複發邀請、重複扣席次費。
+   */
+  public async findUserByAnyAddressForm(
+    address: string,
+  ): Promise<IUser | null> {
+    const forms = addressLookupForms(address);
+    if (forms.length === 0) return null;
+
+    const user = await prisma.user.findFirst({
+      where: { address: { in: forms } },
     });
 
     if (!user) return null;

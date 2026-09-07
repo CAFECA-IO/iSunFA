@@ -10,7 +10,7 @@ import {
   ReactNode,
 } from "react";
 
-import { request } from "@/lib/utils/request";
+import { onUnauthorized, request } from "@/lib/utils/request";
 import { publicClient } from "@/lib/viem_public";
 import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
 import { formatUnits } from "viem";
@@ -21,6 +21,14 @@ interface IAuthUser {
   name: string | null;
   role: string | null;
   plan?: string;
+  /**
+   * Info: (20260819 - Luphia) 這個人**擁有**的每個團隊的有效方案（`/auth/me` 提供）。
+   *
+   * 方案頁的「目前方案」標記需要的是「是否全部一致」而不是最高
+   * （見 `lib/subscription/user_plan`）：那個標記會停用購買鈕，
+   * 照最高標會讓同時擁有免費團隊與團隊版團隊的人再也買不了團隊版。
+   */
+  ownedPlans?: string[];
   credits?: string;
   pendingCredits?: string;
   isAdmin?: boolean;
@@ -37,6 +45,13 @@ interface IAuthUser {
 }
 
 interface IAuthContextType {
+  /**
+   * Info: (20260814 - Luphia) 登入是否剛剛過期（收到 401）。
+   * 有這個旗標，畫面才說得出「你被登出了」——否則過期只會表現成
+   * 「資料突然變空、按鈕突然不能按」，使用者會以為是系統壞了。
+   */
+  sessionExpired: boolean;
+  dismissSessionExpired: () => void;
   user: IAuthUser | null;
   loading: boolean;
   refreshAuth: () => Promise<void>;
@@ -49,6 +64,12 @@ const AuthContext = createContext<IAuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<IAuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  const dismissSessionExpired = useCallback(() => {
+    setSessionExpired(false);
+  }, []);
 
   const refreshAuth = useCallback(async () => {
     const token = localStorage.getItem("dewt");
@@ -111,6 +132,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setUser(null);
         localStorage.removeItem("dewt");
+        // Info: (20260814 - Luphia) 原本就帶著 token 卻拿不到身分＝過期，不是「本來就沒登入」
+        setSessionExpired(true);
       }
     } catch (error) {
       console.error(
@@ -120,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
       setUser(null);
       localStorage.removeItem("dewt");
+      setSessionExpired(true);
     } finally {
       setLoading(false);
     }
@@ -128,6 +152,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     refreshAuth();
   }, [refreshAuth]);
+
+  /**
+   * Info: (20260814 - Luphia) 任何 API 收到 401 都在這裡收斂：清掉身分並標記過期。
+   *
+   * 不清身分的話，畫面會繼續以「已登入」的樣子運作（顯示餘額、開付款視窗），
+   * 但每一支 API 都會失敗——那比直接說「請重新登入」難懂得多。
+   */
+  useEffect(() => {
+    return onUnauthorized(() => {
+      localStorage.removeItem("dewt");
+      setUser(null);
+      setSessionExpired(true);
+    });
+  }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem("dewt");
@@ -148,9 +186,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       refreshAuth,
       logout,
+      sessionExpired,
+      dismissSessionExpired,
       updateLocalCredits,
     }),
-    [user, loading, refreshAuth, logout, updateLocalCredits],
+    [
+      user,
+      loading,
+      refreshAuth,
+      logout,
+      updateLocalCredits,
+      sessionExpired,
+      dismissSessionExpired,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

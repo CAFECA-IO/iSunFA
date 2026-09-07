@@ -53,6 +53,10 @@ export const adminMissionBoard = {
     toast_draft_saved: "Draft saved manually",
     toast_report_inserted: "Report generated and inserted successfully!",
     toast_share_link_failed: "Failed to generate share link",
+    toast_toc_pages_missing:
+      "Report downloaded, but the table of contents has no page numbers",
+    toast_charts_missing:
+      "Report downloaded, but some charts could not be drawn",
     edit_markdown: "Edit Markdown",
     preview_pdf: "Preview PDF",
     download_pdf: "Download PDF",
@@ -64,6 +68,21 @@ export const adminMissionBoard = {
     brand: "iSunFA Smart Accounting",
     internal_document: "Internal Document",
     system_report: "System Report",
+    report_identity: {
+      title: "Verification details",
+      inventory_year: "Inventory year",
+      prepared_by: "Prepared by",
+      verified_by: "Verified by",
+      issued_on: "Last updated",
+      framework_label: "Disclosure framework",
+      framework_inventory_only: "Inventory report only",
+      framework_ifrs: "Structured to {{name}}",
+      framework_hint:
+        "Drafts will then be written to the {{name}} structure. That is a statement about document structure, not an entity-level compliance claim \u2014 the latter must never appear in the report, whatever the phase-in date",
+      unfilled: "Not filled in",
+      name_suffix: "GHG Inventory Report",
+      hint: "The verifier cannot be derived from the report content and must be entered",
+    },
     footer_title: "Reinventing Carbon Accounting with AI",
     footer_text:
       "© {{year}} iSunFA. All rights reserved. Generated securely via iSunFA Admin Portal.",

@@ -2,6 +2,7 @@
 // Info: (20260730 - Tzuhan) 「節點文字必須能在原文找到」是這張圖能出現在審計文件裡的唯一理由。
 import { describe, it, expect } from "@jest/globals";
 import {
+  CARBON_DIAGRAM_DEFAULT_LABELS,
   buildCarbonDiagramBlock,
   findDiagramTemplateForParagraph,
   hasCarbonDiagramBlock,
@@ -12,8 +13,18 @@ import {
 } from "@/lib/carbon_report_diagram.builder";
 import {
   CarbonDiagramTemplateEnum,
+  CarbonDiagramRendererEnum,
   CARBON_DIAGRAM_TEMPLATES,
+  DIAGRAM_CAP_EXCEEDED_PHRASE,
+  DIAGRAM_DEGRADED_TO_TABLE_PHRASE,
+  HIERARCHY_NO_VALUE,
+  HIERARCHY_TABLE_HEADERS,
+  MILESTONE_TABLE_HEADERS,
 } from "@/constants/carbon_report_diagrams";
+import {
+  CARBON_DIAGRAM_LLM_MAX_NODES,
+  CarbonDiagramNodesLlmOutputSchema,
+} from "@/validators/carbon_inventory";
 import { detectChartType } from "@/lib/utils/mermaid_helpers";
 import { MermaidChartType } from "@/constants/mermaid_chart";
 
@@ -384,19 +395,29 @@ const MILESTONE_SOURCE = `1966年01月 公司創立於高雄市,資本額新台�
 const BOUNDARY_SOURCE = `1.5.1盤查範圍:本次盤查組織邊界採用控制權法,邊界設定以「高興昌鋼鐵股份有限公司
 總公司、高興昌鋼鐵股份有限公司 台北分公司、高興昌鋼鐵股份有限公司 屏東分公司」為盤查範圍`;
 
-describe("時間軸模板(timeline renderer)", () => {
+describe("里程碑模板(TIMELINE renderer,產出表格)", () => {
+  /**
+   * Info: (20260811 - Emily) 里程碑改為表格(issue_drafts/open/20 第 2 張票)。
+   *
+   * mermaid timeline 一個時間點一欄、欄寬固定,15 條中文沿革的 SVG 內在寬度 3,559px,
+   * 排到橫式頁寬要縮到 28%、事件字級 4.5px(正文 14px)。表格是 688px 不縮放、11.3px。
+   * 下面這些不變式與時間軸版完全相同 —— 換的是呈現形式,不是規則。
+   */
   const nodes: ICarbonDiagramNode[] = [
     { label: "公司創立於高雄市", parent: "1966年01月" },
     { label: "榮獲經濟部中央標準局鍍鋅鋼管正字標記", parent: "1968年06月" },
     { label: "榮獲經濟部中央標準局黑鋼管正字標記", parent: "1968年11月" },
   ];
 
+  const rowsOf = (block: string): string[] =>
+    block.split("\n").filter((line) => line.startsWith("| "));
+
   /**
    * Info: (20260803 - Tzuhan) 實測產出過這一列:`未標註時間 : 1966年01月 : 1968年06月 : …`
-   * —— 模型把**時間標籤本身**當成無時間的事件再回傳一次,等於把時間軸自己列了兩遍。
-   * 這些是軸的複本而非事件,不可渲染。timeline 沒有層級,丟掉它們不會捏造結構。
+   * —— 模型把**時間標籤本身**當成無時間的事件再回傳一次,等於把里程碑自己列了兩遍。
+   * 這些是時間欄的複本而非事件,不可渲染。里程碑沒有層級,丟掉它們不會捏造結構。
    */
-  it("時間標籤被當成事件回傳時不渲染(軸的複本,不是事件)", () => {
+  it("時間標籤被當成事件回傳時不渲染(時間欄的複本,不是事件)", () => {
     const withAxisDuplicates: ICarbonDiagramNode[] = [
       ...nodes,
       { label: "1966年01月" },
@@ -410,7 +431,7 @@ describe("時間軸模板(timeline renderer)", () => {
     );
     expect(block).not.toContain("未標註時間");
     // Info: (20260803 - Tzuhan) 真實事件仍在,且仍掛在自己的時間標籤下
-    expect(block).toContain("1966年01月 : 公司創立於高雄市");
+    expect(block).toContain("| 1966年01月 | 公司創立於高雄市 |");
   });
 
   it("真正沒有時間標籤的事件仍保留(不猜時間也不丟事件)", () => {
@@ -419,22 +440,23 @@ describe("時間軸模板(timeline renderer)", () => {
       [...nodes, { label: "公司股票正式掛牌上市" }],
       MILESTONE_SOURCE,
     );
-    expect(block).toContain("未標註時間 : 公司股票正式掛牌上市");
+    expect(block).toContain("| 未標註時間 | 公司股票正式掛牌上市 |");
   });
 
-  it("產出 mermaid timeline,而非 flowchart", () => {
+  it("產出 markdown 表格,而非 mermaid 圖", () => {
     const block = buildCarbonDiagramBlock(
       CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
       nodes,
       MILESTONE_SOURCE,
     );
-    expect(block).toContain("```mermaid");
-    expect(block).toContain("timeline");
+    expect(block).not.toContain("```mermaid");
     expect(block).not.toContain("flowchart");
-    expect(block).toContain("1966年01月 : 公司創立於高雄市");
+    expect(block).toContain("| 時間 | 事件 |");
+    expect(block).toContain("| --- | --- |");
+    expect(block).toContain("| 1966年01月 | 公司創立於高雄市 |");
   });
 
-  it("同一時間標籤的多個事件併為一列", () => {
+  it("同一時間標籤的多個事件各佔一列,時間只寫在第一列", () => {
     const block = buildCarbonDiagramBlock(
       CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
       [
@@ -444,11 +466,21 @@ describe("時間軸模板(timeline renderer)", () => {
       ],
       MILESTONE_SOURCE,
     );
-    const row = block.split("\n").find((line) => line.includes("1968年06月"))!;
-    expect(row.split(" : ")).toHaveLength(3);
+    /**
+     * Info: (20260811 - Emily) 續列的時間欄留空 —— 與原文照錄表格的縱向合併慣例一致,
+     * 也讓 annotateTable 把欄寬讓給事件欄(把時間逐列重複正是 20 第 3 張票在修的事)。
+     */
+    expect(block).toContain(
+      "| 1968年06月 | 榮獲經濟部中央標準局鍍鋅鋼管正字標記 |",
+    );
+    expect(block).toContain("|  | 榮獲經濟部中央標準局黑鋼管正字標記 |");
+    // Info: (20260811 - Emily) 兩個事件兩列,不是併成一列
+    expect(
+      rowsOf(block).filter((row) => row.includes("正字標記")),
+    ).toHaveLength(2);
   });
 
-  it("時間標籤不必自己也是節點(timeline 的 parent 語意與樹不同)", () => {
+  it("時間標籤不必自己也是節點(里程碑的 parent 語意與樹不同)", () => {
     const result = validateDiagramNodes(
       CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
       nodes,
@@ -468,32 +500,33 @@ describe("時間軸模板(timeline renderer)", () => {
     expect(result.offendingLabels).toEqual(["1965年12月"]);
   });
 
-  it("沒有時間標籤的事件不丟棄,歸入未標註時間", () => {
-    const block = buildCarbonDiagramBlock(
-      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
-      [...nodes, { label: "公司股票正式掛牌上市" }],
-      MILESTONE_SOURCE,
-    );
-    expect(block).toContain("未標註時間 : 公司股票正式掛牌上市");
-  });
-
-  it("事件文字內的冒號換掉,避免撐破 timeline 的分隔語法", () => {
+  /**
+   * Info: (20260811 - Emily) 要逸出的字元換了。
+   *
+   * timeline 用冒號分隔時間與事件,所以原本必須把事件文字裡的冒號換成連字號。
+   * 表格用 `|` 分隔儲存格 —— 現在要逸出的是直線,而冒號沒有語意可以留原樣。
+   * 原文「品管分等檢驗甲等」那類帶冒號的句子因此不再被改寫。
+   */
+  it("事件文字內的直線逸出,冒號保持原樣", () => {
     const source =
-      "1966年01月 資本額:捌拾萬元 公司創立於高雄市 1968年06月 榮獲正字標記 1988年12月 掛牌上市";
+      "1966年01月 資本額:捌拾萬元 公司創立於高雄市 1968年06月 榮獲正字標記|甲等 1988年12月 掛牌上市";
     const block = buildCarbonDiagramBlock(
       CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
       [
         { label: "資本額:捌拾萬元", parent: "1966年01月" },
         { label: "公司創立於高雄市", parent: "1966年01月" },
-        { label: "榮獲正字標記", parent: "1968年06月" },
+        { label: "榮獲正字標記|甲等", parent: "1968年06月" },
       ],
       source,
     );
-    const row = block.split("\n").find((line) => line.includes("1966年01月"))!;
-    // Info: (20260730 - Tzuhan) 該時間點有兩個事件,故為「時間 : 事件 : 事件」三段;
-    // Info: (20260730 - Tzuhan) 重點是原本事件文字裡的冒號已換成連字號,不會多切出一段
-    expect(row.split(" : ")).toHaveLength(3);
-    expect(row).toContain("資本額-捌拾萬元");
+    // Info: (20260811 - Emily) 冒號原樣保留
+    expect(block).toContain("| 1966年01月 | 資本額:捌拾萬元 |");
+    // Info: (20260811 - Emily) 直線逸出,不會多切出一欄
+    expect(block).toContain("| 1968年06月 | 榮獲正字標記\\|甲等 |");
+    rowsOf(block).forEach((row) => {
+      // Info: (20260811 - Emily) 每一列都是「時間 | 事件」兩欄(逸出的直線不算欄位邊界)
+      expect(row.replace(/\\\|/g, "").split("|")).toHaveLength(4);
+    });
   });
 });
 
@@ -684,7 +717,31 @@ describe("時間軸的最少事件數(實測回歸)", () => {
 // Info: (20260730 - Tzuhan) 回 UNKNOWN 就直接顯示 "Mermaid Syntax Error"。實測 timeline 因未列入型別清單而全數被擋,
 // Info: (20260730 - Tzuhan) 圖從未有機會渲染 —— 產生器測到底也測不出這個缺口,故在此把兩端接起來。
 describe("產出的圖表可被前端型別偵測接受", () => {
-  it("timeline 區塊被辨識為 TIMELINE,而非 UNKNOWN", () => {
+  /**
+   * Info: (20260811 - Emily) 里程碑改成表格之後,這一條拆成兩件事。
+   *
+   * 原本它同時測了兩件:「里程碑模板會產出 mermaid」與「detectChartType 認得 timeline」。
+   * 前者已經不成立(改表格了),但後者仍要留著 —— 那是 20260730 實測過的缺口:
+   * timeline 未列入型別清單時全數被擋,圖從未有機會渲染。
+   * 使用者手動寫的 timeline、或其他模板日後改回圖表,都還會走到那條路。
+   * 所以改成直接對一段 timeline 語法斷言,不再經由里程碑產生器。
+   */
+  it("timeline 語法被辨識為 TIMELINE,而非 UNKNOWN", () => {
+    const block = [
+      "```mermaid",
+      "timeline",
+      "    1966年01月 : 公司創立於高雄市",
+      "    1968年06月 : 榮獲經濟部中央標準局鍍鋅鋼管正字標記",
+      "```",
+    ].join("\n");
+
+    const chart = extractMermaidChart(block);
+
+    expect(chart).not.toBe("");
+    expect(detectChartType(chart)).toBe(MermaidChartType.TIMELINE);
+  });
+
+  it("里程碑區塊不再是 mermaid 圖(改為表格,見上方里程碑模板)", () => {
     const block = buildCarbonDiagramBlock(
       CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
       [
@@ -694,9 +751,9 @@ describe("產出的圖表可被前端型別偵測接受", () => {
       ],
       MILESTONE_SOURCE,
     );
-    const chart = extractMermaidChart(block);
-    expect(chart).not.toBe("");
-    expect(detectChartType(chart)).toBe(MermaidChartType.TIMELINE);
+
+    expect(extractMermaidChart(block)).toBe("");
+    expect(block).toContain("| 時間 | 事件 |");
   });
 
   it("flowchart 區塊被辨識為 FLOWCHART", () => {
@@ -708,5 +765,621 @@ describe("產出的圖表可被前端型別偵測接受", () => {
     expect(detectChartType(extractMermaidChart(block))).toBe(
       MermaidChartType.FLOWCHART,
     );
+  });
+});
+
+/**
+ * Info: (20260814 - Emily) 節點數上限（issue 34）。
+ *
+ * 這一組守的是一件比「有沒有畫出圖」更重要的事：**不畫的時候要說對原因**。
+ * 「節點太多」與「節點無法回溯原文」是完全不同的兩件事 ——
+ * 前者是版面容不下、內容可信；後者是懷疑模型編造。對一份送查證的文件，
+ * 說錯會把讀者導向錯誤的結論。
+ */
+describe("節點數上限與不畫的原因", () => {
+  /**
+   * Info: (20260814 - Emily) 高興昌那份 1.4 節的真實規模：
+   * 1 個根 + 4 位幹部 + 11 個部門委員 = 16 個節點。
+   * 上限是 12 的時候它畫不完，而模型被 prompt 要求「超過請只保留最上層與次層」，
+   * 於是交回 12 個、圖看起來完整，而品管部／鋼管廠／冷軋廠／屏南廠四個部門不見了。
+   */
+  const COMMITTEE_UNITS = [
+    "人事部",
+    "會計部",
+    "總務部",
+    "工安部",
+    "採購部",
+    "業務部",
+    "生管部",
+    "品管部",
+    "鋼管廠",
+    "冷軋廠",
+    "屏南廠",
+  ];
+  const committeeNodes = (): ICarbonDiagramNode[] => [
+    { label: "溫室氣體盤查推行委員會" },
+    { label: "主任委員", parent: "溫室氣體盤查推行委員會" },
+    { label: "副主任委員", parent: "溫室氣體盤查推行委員會" },
+    { label: "管理代表", parent: "溫室氣體盤查推行委員會" },
+    { label: "執行秘書", parent: "溫室氣體盤查推行委員會" },
+    ...COMMITTEE_UNITS.map((unit) => ({
+      label: unit,
+      parent: "溫室氣體盤查推行委員會",
+    })),
+  ];
+  const committeeSource = [
+    "溫室氣體盤查推行委員會",
+    "主任委員",
+    "副主任委員",
+    "管理代表",
+    "執行秘書",
+    ...COMMITTEE_UNITS,
+  ].join(" ");
+
+  it("16 個節點的委員會要畫得完（上限 12 時畫不完，四個部門會不見）", () => {
+    expect(committeeNodes()).toHaveLength(16);
+
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      committeeNodes(),
+      committeeSource,
+    );
+
+    expect(result.isValid).toBe(true);
+  });
+
+  it("每一個部門都要出現在圖裡，一個都不能少", () => {
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      committeeNodes(),
+      committeeSource,
+    );
+    const chart = extractMermaidChart(block);
+
+    // Info: (20260814 - Emily) 本檔最重要的一條:少一個部門的圖看起來是對的
+    COMMITTEE_UNITS.forEach((unit) => expect(chart).toContain(unit));
+  });
+
+  it("超過上限時要說「幾個超過幾個」，而不是說節點無法回溯原文", () => {
+    const max = CARBON_DIAGRAM_TEMPLATES.GOVERNANCE_TREE.maxNodes;
+    const nodes: ICarbonDiagramNode[] = Array.from(
+      { length: max + 3 },
+      (unused, index) => ({ label: `單位${index}` }),
+    );
+    const source = nodes.map((node) => node.label).join(" ");
+
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      nodes,
+      source,
+    );
+
+    expect(block).toContain(String(max + 3));
+    expect(block).toContain(String(max));
+    // Info: (20260814 - Emily) 這些節點全部通過原文回溯 —— 不可以說它們無法回溯
+    expect(block).not.toContain("無法回溯");
+  });
+
+  it("超過上限仍回報實際節點數，供判斷是差一點還是差很多", () => {
+    const max = CARBON_DIAGRAM_TEMPLATES.GOVERNANCE_TREE.maxNodes;
+    const nodes: ICarbonDiagramNode[] = Array.from(
+      { length: max + 1 },
+      (unused, index) => ({ label: `單位${index}` }),
+    );
+
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      nodes,
+      nodes.map((node) => node.label).join(" "),
+    );
+
+    expect(result.reason).toBe(DiagramRejectReasonEnum.TOO_MANY_NODES);
+    expect(result.nodeCount).toBe(max + 1);
+    expect(result.maxNodes).toBe(max);
+  });
+
+  it("節點無法回溯原文時仍然說「無法回溯」，不與數量問題混用", () => {
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      [{ label: "原文裡沒有這個單位" }, { label: "也沒有這個" }],
+      "本節原文完全沒有提到上面那兩個名稱",
+    );
+
+    expect(block).toContain("無法回溯");
+  });
+});
+
+/**
+ * Info: (20260814 - Emily) 沿革時間軸的上限（issue 34 的回歸）。
+ *
+ * 這一組守的是一個**我自己造成的回歸**：移除 prompt 的「超過請只保留最上層與次層」
+ * 之後，模型照實回報 31 個節點，而上限是 30 —— 那張沿革表就整張不畫了。
+ * 之前它畫得出來，是因為模型先幫我們截到 30。
+ */
+describe("沿革時間軸的節點上限（實測回歸）", () => {
+  const milestoneNodes = (count: number): ICarbonDiagramNode[] =>
+    Array.from({ length: count }, (unused, index) => ({
+      label: `事件${index}`,
+      parent: `${1966 + index} 年 01 月`,
+    }));
+  const milestoneSource = (count: number): string =>
+    milestoneNodes(count)
+      .map((node) => `${node.parent} ${node.label}`)
+      .join(" ");
+
+  it("31 條里程碑要畫得出來（上限 30 時整張不畫）", () => {
+    // Info: (20260814 - Emily) 實測那份沿革有 28 條，模型回 31 個節點
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      milestoneNodes(31),
+      milestoneSource(31),
+    );
+
+    expect(result.isValid).toBe(true);
+  });
+
+  it("超過上限時說的是「太多」而不是「素材不足」", () => {
+    /**
+     * Info: (20260814 - Emily) 實測那份報告印出的是「(本節內容不足以繪製結構圖)」，
+     * 而那一節有 28 條里程碑 —— 與事實完全相反。
+     * 真正的成因是 LLM 輸出 schema 的 60 先攔到，把 31 個變成 0 個，
+     * 於是走了 `no_nodes` 那條分支。本條釘住 builder 這一端的正確行為。
+     */
+    const max = CARBON_DIAGRAM_TEMPLATES.MILESTONE_TIMELINE.maxNodes;
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      milestoneNodes(max + 1),
+      milestoneSource(max + 1),
+    );
+
+    expect(block).not.toContain("內容不足");
+    expect(block).toContain(String(max + 1));
+    expect(block).toContain(String(max));
+  });
+
+  /**
+   * Info: (20260817 - Emily) 兩道閘門的職責分工（PR review A2 重寫）。
+   *
+   * schema 想擋「模型失控」，builder 想擋「畫不下」。schema 的上限若沒有明顯高過
+   * builder 的最寬上限，它就會先攔到本該由 builder 說明的情況 —— 而它攔下來的
+   * 結果是 0 個節點，訊息因此變成「素材不足」，與事實相反（08-14 那個回歸）。
+   *
+   * ## 這一段為什麼重寫
+   *
+   * 原本這裡只有一條測試，而它自己寫了 `const SCHEMA_MAX_NODES = 150`，
+   * 於是它比較的是「40 < 150」而 150 是它自己寫的常數 ——
+   * **它不可能為了它存在的理由而失敗**。review 實測把 validator 的
+   * `.max(150)` 改回 `.max(60)`（造成 08-14 回歸的那個值），全套仍然 53 passed。
+   *
+   * 所以改成餵真的節點給真的 schema，斷言它的**行為**：
+   * 「builder 的最寬上限 +1 個節點，schema 要放過」——
+   * 那正是 08-14 現場發生的事（31 個節點該由 builder 說「超過 30」）。
+   */
+  describe("LLM 輸出 schema 與 builder 的職責分工", () => {
+    const widest = Math.max(
+      ...Object.values(CARBON_DIAGRAM_TEMPLATES).map(
+        (template) => template.maxNodes,
+      ),
+    );
+
+    // Info: (20260817 - Emily) schema 只看數量與字數，label 內容在這裡無關（原文複驗是 builder 的事）
+    const nodes = (count: number): { label: string }[] =>
+      Array.from({ length: count }, (_unused, index) => ({
+        label: `節點${index + 1}`,
+      }));
+
+    it("最寬模板上限 +1 個節點，schema 必須放過（讓 builder 去說「超過幾個」）", () => {
+      const parsed = CarbonDiagramNodesLlmOutputSchema.safeParse({
+        nodes: nodes(widest + 1),
+      });
+
+      expect(parsed.success).toBe(true);
+    });
+
+    /**
+     * Info: (20260817 - Emily) 上一條若只是「schema 上限比 builder 大一點」也會綠，
+     * 所以再釘一條餘裕：模型回到最寬上限的兩倍時仍然要放過。
+     * 08-14 的 60 正好落在 40 與 80 之間 —— 這條會抓到它。
+     */
+    it("最寬模板上限的兩倍，schema 仍然要放過", () => {
+      const parsed = CarbonDiagramNodesLlmOutputSchema.safeParse({
+        nodes: nodes(widest * 2),
+      });
+
+      expect(parsed.success).toBe(true);
+    });
+
+    // Info: (20260817 - Emily) 另一邊也要守：schema 仍然是「模型完全跑掉」的閘門，不是拿掉上限
+    it("模型回幾百個節點時，schema 要拒絕", () => {
+      const parsed = CarbonDiagramNodesLlmOutputSchema.safeParse({
+        nodes: nodes(500),
+      });
+
+      expect(parsed.success).toBe(false);
+    });
+
+    /**
+     * Info: (20260817 - Emily) 上面三條釘特定數量的行為，這一條釘「兩個上限的關係」。
+     *
+     * 它量的是 schema **實際**放過幾個，不是讀 `CARBON_DIAGRAM_LLM_MAX_NODES`。
+     * 差別在於：有人把 `.max(CARBON_DIAGRAM_LLM_MAX_NODES)` 改成字面值（例如
+     * `.max(60)`）的時候，讀常數的版本仍然是綠的 —— 那正是這一段原本的毛病。
+     */
+    const measureSchemaLimit = (): number => {
+      let limit = 0;
+      for (
+        let count = 1;
+        count <= CARBON_DIAGRAM_LLM_MAX_NODES * 4;
+        count += 1
+      ) {
+        if (
+          !CarbonDiagramNodesLlmOutputSchema.safeParse({ nodes: nodes(count) })
+            .success
+        ) {
+          break;
+        }
+        limit = count;
+      }
+      return limit;
+    };
+
+    it("schema 實際放過的節點數明顯高過所有模板的上限", () => {
+      const limit = measureSchemaLimit();
+
+      expect(limit).toBe(CARBON_DIAGRAM_LLM_MAX_NODES);
+      expect(widest).toBeLessThan(limit);
+      // Info: (20260817 - Emily) 要「明顯」高過，不是差一點 —— 差一點就是 08-14 那個 bug
+      expect(limit).toBeGreaterThanOrEqual(widest * 2);
+    });
+  });
+});
+
+/**
+ * Info: (20260818 - Emily) 超過繪製上限要**退化成表格**,不是整張消失
+ * （`data/issue_drafts/open/48_diagram_silent_failure.md`,上線阻擋 B3）。
+ *
+ * ## 為什麼這是上線阻擋
+ *
+ * 08-17 實測那一趟,兩節的結構圖都整張消失:`ch1-1` 的沿革 62 個項目（上限 40）、
+ * `ch1-4` 的委員會 21 個（上限 20）。說明文字是對的（它說「畫不下」而不是
+ * 08-14 那句反話「內容不足」）,但 62 條沿革與 21 位委員在紙上一個都不剩。
+ *
+ * 而上限本身猜不準:同一份原文兩趟給 17 和 21、67 和 62。
+ * 把 20 改成 25 只是把同一個問題推到下一次 —— 所以修的是**處置**而不是數字。
+ *
+ * ## 判準是「補而不丟」,所以斷言的是「每一個節點都在紙上」
+ *
+ * 只斷言「輸出非空」不夠:印一行「已改以表格呈現」也非空,而內容照樣不見了。
+ * 這裡逐一比對每個 label 都出現在輸出裡。
+ */
+describe("超過繪製上限時退化成表格", () => {
+  const flowchartTemplates = Object.values(CarbonDiagramTemplateEnum).filter(
+    (templateId) =>
+      CARBON_DIAGRAM_TEMPLATES[templateId].renderer !==
+      CarbonDiagramRendererEnum.TIMELINE,
+  );
+
+  // Info: (20260818 - Emily) 一條鏈:每個節點的父節點是前一個,層級因此是 1、2、3…
+  const chainNodes = (count: number): ICarbonDiagramNode[] =>
+    Array.from({ length: count }, (unused, index) => ({
+      label: `單位${index}`,
+      parent: index === 0 ? undefined : `單位${index - 1}`,
+    }));
+  const chainSource = (count: number): string =>
+    chainNodes(count)
+      .map((node) => node.label)
+      .join("、");
+
+  // Info: (20260818 - Emily) 時間軸的 fixture（與上方那組同形,這裡自己一份以免跨 describe 相依）
+  const milestoneNodesFixture = (count: number): ICarbonDiagramNode[] =>
+    Array.from({ length: count }, (unused, index) => ({
+      label: `事件${index}`,
+      parent: `${1966 + index} 年 01 月`,
+    }));
+  const milestoneSourceFixture = (count: number): string =>
+    milestoneNodesFixture(count)
+      .map((node) => `${node.parent} ${node.label}`)
+      .join(" ");
+
+  it.each(flowchartTemplates)(
+    "%s 超過上限時輸出非空,而且每一個項目都在紙上",
+    (templateId) => {
+      const max = CARBON_DIAGRAM_TEMPLATES[templateId].maxNodes;
+      const nodes = chainNodes(max + 1);
+      const block = buildCarbonDiagramBlock(
+        templateId,
+        nodes,
+        chainSource(max + 1),
+      );
+
+      expect(block).toContain("| --- |");
+      nodes.forEach((node) => expect(block).toContain(node.label));
+    },
+  );
+
+  it("退化表帶著層級與上層項目兩欄,樹的形狀不會在表裡消失", () => {
+    const max = CARBON_DIAGRAM_TEMPLATES.GOVERNANCE_TREE.maxNodes;
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      chainNodes(max + 1),
+      chainSource(max + 1),
+    );
+
+    expect(block).toContain(HIERARCHY_TABLE_HEADERS.level);
+    expect(block).toContain(HIERARCHY_TABLE_HEADERS.item);
+    expect(block).toContain(HIERARCHY_TABLE_HEADERS.parent);
+    // Info: (20260818 - Emily) 鏈的第二個節點:層級 2、上層是第一個
+    expect(block).toContain("| 2 | 單位1 | 單位0 |");
+  });
+
+  it("說明改口說「改以表格呈現」,不再說「未繪製」", () => {
+    const max = CARBON_DIAGRAM_TEMPLATES.GOVERNANCE_TREE.maxNodes;
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      chainNodes(max + 1),
+      chainSource(max + 1),
+    );
+
+    expect(block).toContain("改以表格呈現");
+    expect(block).not.toContain("未繪製");
+    // Info: (20260818 - Emily) 幾個超過幾個仍然要說 —— 那是判斷上限該不該調的依據
+    expect(block).toContain(String(max + 1));
+    expect(block).toContain(String(max));
+  });
+
+  it("時間軸超過上限時退化成里程碑表,表頭與正常路徑同一組", () => {
+    const max = CARBON_DIAGRAM_TEMPLATES.MILESTONE_TIMELINE.maxNodes;
+    const nodes = milestoneNodesFixture(max + 1);
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.MILESTONE_TIMELINE,
+      nodes,
+      milestoneSourceFixture(max + 1),
+    );
+
+    expect(block).toContain(MILESTONE_TABLE_HEADERS.period);
+    expect(block).toContain(MILESTONE_TABLE_HEADERS.event);
+    nodes.forEach((node) => expect(block).toContain(node.label));
+  });
+
+  /**
+   * Info: (20260818 - Emily) 退化**不得**繞過信任檢查 —— 這三條是這一段的核心。
+   *
+   * 原本 `TOO_MANY_NODES` 是第二道檢查,排在原文回溯之前。在「超過上限就不畫」的
+   * 年代那沒有差別,兩條路都是不畫;改成退化之後順序就承重了 ——
+   * 一批模型編出來的節點只要數量夠多,就會繞過回溯檢查、以表格印進一份查證文件。
+   *
+   * 把 `isOverflowing` 的判定移回 `validateDiagramNodes` 開頭會讓這三條紅。
+   */
+  it("節點編造時報「無法回溯」,不得因為數量多就退化成表格", () => {
+    const max = CARBON_DIAGRAM_TEMPLATES.GOVERNANCE_TREE.maxNodes;
+    const nodes = chainNodes(max + 1);
+    const validation = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      nodes,
+      // Info: (20260818 - Emily) 原文只有第一個節點,其餘都是模型編的
+      "單位0",
+    );
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      nodes,
+      "單位0",
+    );
+
+    expect(validation.reason).toBe(DiagramRejectReasonEnum.LABEL_NOT_IN_SOURCE);
+    expect(block).not.toContain("| --- |");
+    expect(block).toContain("無法回溯");
+  });
+
+  it("父節點指向圖外時報「未知父節點」,不得退化成表格", () => {
+    const max = CARBON_DIAGRAM_TEMPLATES.GOVERNANCE_TREE.maxNodes;
+    const nodes = chainNodes(max + 1);
+    nodes[1] = { label: "單位1", parent: "圖外的單位" };
+    const source = `${chainSource(max + 1)}、圖外的單位`;
+
+    expect(
+      validateDiagramNodes(
+        CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+        nodes,
+        source,
+      ).reason,
+    ).toBe(DiagramRejectReasonEnum.UNKNOWN_PARENT);
+    expect(
+      buildCarbonDiagramBlock(
+        CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+        nodes,
+        source,
+      ),
+    ).not.toContain("| --- |");
+  });
+
+  it("層級成環時報「環狀」,不得退化成表格", () => {
+    const max = CARBON_DIAGRAM_TEMPLATES.GOVERNANCE_TREE.maxNodes;
+    const nodes = chainNodes(max + 1);
+    nodes[0] = { label: "單位0", parent: `單位${max}` };
+    const source = chainSource(max + 1);
+
+    expect(
+      validateDiagramNodes(
+        CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+        nodes,
+        source,
+      ).reason,
+    ).toBe(DiagramRejectReasonEnum.CYCLIC);
+    expect(
+      buildCarbonDiagramBlock(
+        CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+        nodes,
+        source,
+      ),
+    ).not.toContain("| --- |");
+  });
+});
+
+/**
+ * Info: (20260818 - Emily) 退化表的補強:上面那一組守「有沒有退化」與「不該退化的不准退化」,
+ * 這一組守**退化出來的東西對不對**。
+ *
+ * 兩者要分開:一張印出來但少了三個節點、或層級全是 1 的表,
+ * 在上面那一組眼裡是成功的 —— 而它就是另一種形式的丟。
+ */
+describe("退化表的內容完整性", () => {
+  const TREE_MAX = CARBON_DIAGRAM_TEMPLATES.GOVERNANCE_TREE.maxNodes;
+
+  const overCapTree = (
+    over = 1,
+  ): { nodes: ICarbonDiagramNode[]; source: string } => {
+    const units = Array.from(
+      { length: TREE_MAX + over - 1 },
+      (unused, index) => `第${index}部門`,
+    );
+    return {
+      nodes: [
+        { label: "溫室氣體盤查推行委員會" },
+        ...units.map((unit) => ({
+          label: unit,
+          parent: "溫室氣體盤查推行委員會",
+        })),
+      ],
+      source: ["溫室氣體盤查推行委員會", ...units].join(" "),
+    };
+  };
+
+  const tableRows = (block: string): string[] =>
+    block
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith("|"));
+
+  /**
+   * Info: (20260818 - Emily) **本組最重要的一條。** 既有的
+   * 「每一個部門都要出現在圖裡,一個都不能少」驗的是**沒超過上限**時的圖;
+   * 超過上限時原本一個都不會出現,而那正是這張票。
+   */
+  it("每一個節點都出現在退化表裡,一個都不能少", () => {
+    const { nodes, source } = overCapTree(5);
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      nodes,
+      source,
+    );
+
+    nodes.forEach((node) => expect(block).toContain(node.label));
+    // Info: (20260818 - Emily) 表頭 + 分隔列 + 每個節點各一列
+    expect(tableRows(block)).toHaveLength(nodes.length + 2);
+  });
+
+  it("層級欄印出真的深度:根為 1、其子為 2", () => {
+    const { nodes, source } = overCapTree();
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      nodes,
+      source,
+    );
+
+    expect(block).toContain(
+      `| 1 | 溫室氣體盤查推行委員會 | ${HIERARCHY_NO_VALUE} |`,
+    );
+    expect(block).toContain("| 2 | 第0部門 | 溫室氣體盤查推行委員會 |");
+  });
+
+  /**
+   * Info: (20260818 - Emily) 深度優先不是排版偏好:子項目緊接在自己的上層之後,
+   * 讀者才還原得出原本那張圖。照模型交回來的順序印不保證做得到,
+   * 而「上層項目」那一欄只說得出一層 —— 兩層以上要靠列的順序。
+   */
+  it("深度優先:孫節點緊接在自己的上層之後,而不是照輸入順序", () => {
+    const fillers = Array.from(
+      {
+        length: CARBON_DIAGRAM_TEMPLATES.QUANTIFICATION_FLOW.maxNodes - 4,
+      },
+      (unused, index) => ({ label: `庚${index}`, parent: "甲總部" }),
+    );
+    const nodes: ICarbonDiagramNode[] = [
+      { label: "甲總部" },
+      { label: "戊據點", parent: "甲總部" },
+      { label: "乙工廠", parent: "甲總部" },
+      { label: "丁課別", parent: "丙產線" },
+      { label: "丙產線", parent: "乙工廠" },
+      ...fillers,
+    ];
+    const source = nodes.map((node) => node.label).join(" ");
+
+    const rows = tableRows(
+      buildCarbonDiagramBlock(
+        CarbonDiagramTemplateEnum.QUANTIFICATION_FLOW,
+        nodes,
+        source,
+      ),
+    );
+    const at = (label: string): number =>
+      rows.findIndex((row) => row.includes(`| ${label} |`));
+
+    expect(at("丙產線")).toBeGreaterThan(at("乙工廠"));
+    expect(at("丁課別")).toBe(at("丙產線") + 1);
+  });
+
+  /**
+   * Info: (20260818 - Emily) 沒有空儲存格 —— 與 `MILESTONE_EMPTY_EVENT` 同一個陷阱:
+   * 「第一格有內容、其餘皆空」是 `carbon_report_html` 的 `isGroupRow` 判準,
+   * 那會把一個資料點渲染成橫跨整表的章節標題。
+   */
+  it("退化表沒有空儲存格(否則會被讀成章節分隔列)", () => {
+    const { nodes, source } = overCapTree();
+    const block = buildCarbonDiagramBlock(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      nodes,
+      source,
+    );
+
+    const withEmptyCell = tableRows(block)
+      .slice(2)
+      .filter((row) =>
+        row
+          .split("|")
+          .slice(1, -1)
+          .some((cell) => cell.trim() === ""),
+      );
+    expect(withEmptyCell).toEqual([]);
+  });
+
+  /**
+   * Info: (20260818 - Emily) route 端用 `isValid` 當 `isDrawn`,並在 false 時記一筆
+   * `carbon diagram rejected`(含 nodeCount)—— 那筆 log 是我們知道上限被打到的唯一途徑。
+   * 退化成功不該讓它消失:**印得出東西與畫得出圖是兩件事。**
+   */
+  it("退化之後仍回報 isValid: false 與實際節點數(那筆 log 不能消失)", () => {
+    const { nodes, source } = overCapTree(3);
+    const result = validateDiagramNodes(
+      CarbonDiagramTemplateEnum.GOVERNANCE_TREE,
+      nodes,
+      source,
+    );
+
+    expect(result.isValid).toBe(false);
+    expect(result.reason).toBe(DiagramRejectReasonEnum.TOO_MANY_NODES);
+    expect(result.nodeCount).toBe(TREE_MAX + 3);
+    expect(result.maxNodes).toBe(TREE_MAX);
+  });
+
+  /**
+   * Info: (20260818 - Emily) 驗收腳本(`scripts/uat_carbon_report.ts`)靠「上限片語…退化片語」
+   * 這個形狀分辨「退化成功」與「整張消失」,而它 import 的是同一組常數。
+   *
+   * 這一條守的是那個形狀:兩個片語要同時在同一句說明裡、退化片語在後,
+   * 而且中間不得出現右括號(腳本的 `[^)）]*` 靠這件事不跨過兩句說明)。
+   * 契約的兩端,產生端先攔。
+   */
+  it("說明文字的形狀符合驗收腳本的判準", () => {
+    const note = (CARBON_DIAGRAM_DEFAULT_LABELS.tooMany ?? "")
+      .replace("{{count}}", "62")
+      .replace("{{max}}", "40");
+
+    const capAt = note.indexOf(DIAGRAM_CAP_EXCEEDED_PHRASE);
+    const degradedAt = note.indexOf(DIAGRAM_DEGRADED_TO_TABLE_PHRASE);
+
+    expect(capAt).toBeGreaterThanOrEqual(0);
+    expect(degradedAt).toBeGreaterThan(capAt);
+    expect(note.slice(capAt, degradedAt)).not.toMatch(/[)）]/);
+    expect(note).not.toContain("未繪製");
   });
 });

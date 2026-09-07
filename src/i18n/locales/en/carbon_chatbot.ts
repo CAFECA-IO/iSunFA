@@ -4,11 +4,22 @@ export const carbonChatbot = {
   // Info: (20260730 - Tzuhan) 未解鎖時的報告區文案:不可讓大綱骨架看起來像已載入的空報告
   report_locked_hint:
     "This report is end-to-end encrypted with your device key. Verify once to unlock and load it.",
+  report_locked_hint_custodial:
+    "The report is stored encrypted. You signed in with a third-party account, so the key is held by the platform; complete one verification to unlock and load this report.",
   unlock_button: "Start encrypted chat",
   unlock_hint:
     "To protect your inventory data, this chat is end-to-end encrypted with your device's secure key. Click start and complete one verification to unlock and receive the AI greeting.",
+  // Info: (20260812 - Luphia) Custodial (third-party login) accounts need a different promise than the passkey one
+  unlock_hint_custodial:
+    'To protect your inventory data, this chat is stored encrypted. You signed in with a third-party account, so the encryption key is held by the platform (the same as your wallet) — meaning the platform is technically able to decrypt it. If you need "only you can decrypt" protection, use a passkey account instead. Click start to unlock and receive the AI greeting.',
+  custody_loading:
+    "Checking how your account key is held. The encrypted chat will be available in a moment.",
+  key_source_mismatch:
+    "This conversation was encrypted under a different key custody (for example, content created before you registered a passkey), so the current key cannot open it. Contact ops to migrate the key — retrying will not help.",
   device_unsupported:
     "Your device or browser does not support the secure key feature (WebAuthn PRF) required for encryption, so encrypted chat is unavailable. Please use a supported environment, such as Chrome on Android or a PRF-capable security key.",
+  unlock_failed:
+    "Could not unlock the encryption key, so the chat has not started. Try again; if it keeps failing, reload the page or contact ops (details are in the browser console).",
   subtitle: "Your personal Enterprise Carbon Accountant",
   recent_chats: "Recent Chats",
   today: "Today",
@@ -77,6 +88,10 @@ export const carbonChatbot = {
   system_error:
     "[System Error] Sorry, there was a problem connecting to the Carbon Accountant service. Please try again later.",
   system_unavailable: "Sorry, the system is currently unavailable to respond.",
+  team_quota_exceeded:
+    "Your team has run out of both AI quota and allocated credits. Wait for the quota to reset, or buy credits / upgrade your plan.",
+  session_not_bound:
+    "This inventory session is not bound to an account book, so quota cannot be applied. Pick the account book it belongs to in the session settings first.",
   ai_quota_exceeded:
     "[AI quota reached] Too many requests in a short time; please wait a minute and try again.",
   ai_timeout: "[AI timeout] The request took too long; please try again.",
@@ -119,6 +134,12 @@ export const carbonChatbot = {
     "The latest changes were not saved to the cloud: the draft was updated in another tab or device. Reload to get the latest version, then reapply your edit.",
   save_failed_too_large:
     "The latest changes were not saved to the cloud: this draft exceeds the per-report size limit. Remove some verbatim source tables, or import in smaller parts.",
+  // Info: (20260904 - Emily) A refusal, not a failure: retrying changes nothing until the sentence goes
+  save_blocked_framework_claim:
+    "The report claims the company complies with {{name}}, so this version was not saved to the cloud \u2014 that sentence must never appear in a report you send out. Your work is still on this device; remove the sentence and it will save again. A statement about the document\u2019s structure is still allowed.",
+  // Info: (20260904 - Emily) Not a transient failure: every autosave will fail the same way, and there is no local backup
+  inventory_unsavable:
+    "This version of the inventory data was not saved: one of its fields does not fit the storage format. What you see is still on screen, but closing or reloading this tab loses it. This is a fault on our side \u2014 please report it.",
   save_local_quota:
     "Local storage is full, so the offline backup was not updated (the cloud copy was saved).",
   save_local_quota_only:
@@ -169,6 +190,14 @@ export const carbonChatbot = {
     "Parsed result saved for {{name}} — {{count}} section(s), not yet written into the report",
   import_pending_open: "Review and import",
   import_pending_discard: "Discard",
+  import_inventory_year: "Inventory year",
+  import_inventory_year_placeholder: "2024",
+  import_inventory_year_hint:
+    "The inventory year of this report. Used to tell which ledger entries belong to which year across imports",
+  import_inventory_year_required:
+    "This import includes the emissions total table — enter the inventory year of this report",
+  import_inventory_year_invalid:
+    "Enter a four-digit inventory year (1990 through next year). A year outside that range makes the ledger unreadable on the next load",
   import_reset_note:
     "Verification resets for imported paragraphs; {{activities}} activity records will be re-reconciled",
   import_apply: "Import selected ({{count}})",
@@ -177,6 +206,50 @@ export const carbonChatbot = {
     "\u300c{{name}}\u300d is still being parsed. Running two imports at once makes both slower by competing for the same quota \u2014 please wait for this one to finish, or reload and try again.",
   import_parsing_chapter:
     "Parsing \u300c{{name}}\u300d chapter by chapter ({{current}}/{{total}} done, {{inFlight}} in progress); a full report takes a few minutes\u2026",
+  import_requires_book:
+    "This session is not bound to an account book yet, so a full report cannot be imported (chapter-by-chapter import is billed against the book's quota). Please choose a book in the session settings and try again.",
+  // Info: (20260828 - Julian) Same as zh_tw: two known defects in this copy, not yet fixed (plan §4)
+  import_paused_chapters:
+    "You ran out of credits, so these chapters have not been parsed yet: {{chapters}}. Once you have credits again you can carry on from here — the finished parts will not be redone.",
+  // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
+  import_interrupted_chapters:
+    "The last import did not finish. These chapters have not been parsed yet: {{chapters}}. You can continue from here — what is already done will not run again, and will not be charged again.",
+  // Info: (20260901 - Luphia) 「可能」不是贅字（review #6726 中-2）：BUSY 也可能是自己的分頁崩潰後租約未過期
+  import_job_busy:
+    "This import may be running in another tab or on another device, or the last run did not end cleanly — in that case you can retry in at most {{minutes}} minutes. Running it twice would charge you twice.",
+  // Info: (20260901 - Luphia) 三個終局判決各說各的話（review #6726 阻-1）
+  import_job_cancelled:
+    "This import has been cancelled. It will not resume and no more credits will be charged. To start over, upload the file again.",
+  import_job_completed_already:
+    "This import is already complete — there is nothing left to resume.",
+  import_job_forbidden: "This account does not have access to this import.",
+  // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
+  import_auto_resuming:
+    "Credits are back. Continuing with the remaining chapters — what is already done will not run again.",
+  // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）：伺服器算好的出路與重置時間
+  import_paused_reset_hint:
+    "Your quota resets in {{countdown}} ({{resetAt}}). You can continue the import then.",
+  import_paused_reset_ready:
+    "Your quota has reset. You can continue the import now.",
+  import_paused_over_window_limit:
+    "This report needs more credits in one go than your plan allows in a single window — waiting for the reset will not help. Use your personal credits or upgrade your plan.",
+  import_paused_ways_title: "What you can do:",
+  import_paused_option_wait_reset:
+    "Wait for the quota to reset (time shown above)",
+  import_paused_option_use_allocation:
+    "Use the credits your team admin allocated to you",
+  import_paused_option_use_personal: "Use the credits in your own wallet",
+  import_paused_option_upgrade: "Upgrade your plan for a higher quota",
+  // Info: (20260827 - Luphia) 伺服器說「可以繼續了」與「不做了」（issue #6714）
+  import_paused_resumable:
+    "Your quota is back. These chapters have not been parsed yet: {{chapters}}. You can continue now — what is already done will not run again.",
+  import_cancel_paused: "Give up on the rest",
+  import_cancelled:
+    "Gave up on the chapters that were not parsed. What is already done is still here and can still be applied.",
+  import_cancel_failed: "Could not give up on it. Please try again later.",
+  import_resume_needs_file:
+    "Carrying on needs the original file, and it is no longer in this browser after a reload or on another device. Please upload the same report again — the finished chapters will not be redone.",
+  import_resume_paused: "Carry on",
   import_failed_chapters:
     "These chapters failed to parse and can be re-imported later: {{chapters}}",
   import_retry_failed: "Retry failed chapters",
@@ -273,6 +346,10 @@ export const carbonChatbot = {
   chart_imported_sankey_excluded: "Not shown (NA/NS or zero)",
   chart_imported_sankey_no_ledger:
     'The report was imported but the ledger holds no usable data, so the emission flow cannot be drawn. Table 3.8 (GHG emissions by company) is the only source for the Sankey diagram and the system data table, and it was not obtained this time. Check whether Chapter 3 parsed successfully; if it is listed as failed, re-import it via "Retry failed chapters" on the preview card, and check the server log for whether the table was dropped and why.',
+  chart_imported_sankey_blocked_ledger:
+    "Table 3.8 was obtained, but reconciliation failed, so the data was frozen at the gate and not written to the ledger (half-written data would make every chart wrong in a convincing way). The blocking reasons are listed below; fix the corresponding table in the source or re-import Chapter 3, and the charts will be generated automatically.",
+  chart_partial_import_blocked:
+    "⚠ This chart covers only the part that was written to the ledger: another table in this import failed reconciliation and was not recorded, so the totals and shares shown here are not the full company picture. The blocking reasons are listed below; fix the corresponding table in the source or re-import, and the charts will be recalculated automatically.",
   chart_imported_sankey_collapsed:
     "Too many nodes — reduced to one layer (company → scope)",
   chart_imported_top_items_title:
@@ -283,6 +360,8 @@ export const carbonChatbot = {
     "Per-site subtotals (tCO2e/year, share of company total)",
   chart_imported_sankey_ghg_mapping:
     "Sub-code to GHG Protocol category mapping",
+  chart_imported_sankey_iso_mapping:
+    "The classification layer in this figure is labelled by GHG Protocol scopes. Mapping to ISO 14064-1: Scope 1 = Category 1, Scope 2 = Category 2, Scope 3 = Categories 3 to 6. The narrative of this report follows the ISO 14064-1 categories; both refer to the same set of emission sources.",
   chart_imported_sankey_below_threshold: "Too small to plot (tCO2e/yr)",
   chart_imported_sankey_organization: "Whole company",
   book_bind_pending_unlock:

@@ -7,6 +7,7 @@ import {
   hasCarbonChartBlocks,
   refreshCarbonChartBlocks,
   collapsePassThroughNodes,
+  CARBON_CHART_DEFAULT_LABELS,
 } from "@/lib/carbon_report_chart.builder";
 import {
   CarbonChartTemplateEnum,
@@ -15,6 +16,7 @@ import {
 } from "@/constants/carbon_report_charts";
 import { ArticulationStatusEnum } from "@/constants/carbon_articulation";
 import { GhgProtocolCategory } from "@/constants/esg";
+import { LedgerProvenanceEnum } from "@/constants/imported_quantity";
 import { IComputedLedger } from "@/types/carbon_chatbot.types";
 
 const buildLedger = (
@@ -46,6 +48,76 @@ const buildLedger = (
   totalCo2eKg: "1240000",
   computedAt: "2026-07-20T00:00:00.000Z",
   ...overrides,
+});
+
+/**
+ * Info: (20260828 - Emily) 部分入帳時圖照畫,但要說出「這不是全貌」
+ * (PR #6725 round-2 低-1 的第二半)。
+ *
+ * 實際情境:一份報告兩個段落各自產生分錄,一個勾稽通過、一個被擋 ——
+ * 走的是 apply 分支(帳本非空),於是圖照畫、數字照印,
+ * 而被擋那半在紙上完全不存在。讀者看到一張自我一致的桑基圖,
+ * 無從得知總量少了一塊 —— 「半套資料入帳會讓每張圖都錯得很像對的」。
+ */
+describe("有阻擋紀錄時的圖旁附註(round-2 低-1 第二半)", () => {
+  const blocks = [
+    { reason: "表3.8 有 6 列無法解析(差額 12,345 kgCO2e)" },
+  ] as const;
+
+  it("帳本非空時是**附註**,不是取代:圖仍然在,附註也在", () => {
+    const block = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      buildLedger(),
+      CARBON_CHART_DEFAULT_LABELS,
+      undefined,
+      blocks,
+    );
+    expect(block).toContain("```mermaid");
+    expect(block).toContain('"SCOPE_2_INDIRECT" : 1235000');
+    expect(block).toContain("不是全公司全貌");
+    expect(block).toContain("表3.8 有 6 列無法解析");
+  });
+
+  it("附註排在圖之後(先給圖,再說它缺了什麼)", () => {
+    const block = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      buildLedger(),
+      CARBON_CHART_DEFAULT_LABELS,
+      undefined,
+      blocks,
+    );
+    expect(block.indexOf("```mermaid")).toBeLessThan(
+      block.indexOf("不是全公司全貌"),
+    );
+  });
+
+  it("明細表與桑基圖同樣附註(不是只有一種模板)", () => {
+    const table = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.SOURCE_TABLE,
+      buildLedger(),
+      CARBON_CHART_DEFAULT_LABELS,
+      undefined,
+      blocks,
+    );
+    expect(table).toContain("| 外購電力 |");
+    expect(table).toContain("不是全公司全貌");
+  });
+
+  it("沒有阻擋紀錄時一個字都不多(逐字與原本相同)", () => {
+    const plain = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      buildLedger(),
+    );
+    const withEmpty = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.SCOPE_PIE,
+      buildLedger(),
+      CARBON_CHART_DEFAULT_LABELS,
+      undefined,
+      [],
+    );
+    expect(withEmpty).toBe(plain);
+    expect(plain).not.toContain("不是全公司全貌");
+  });
 });
 
 describe("buildCarbonChartBlock", () => {
@@ -504,5 +576,55 @@ describe("insertCarbonChartBlock / refreshCarbonChartBlocks", () => {
     const refreshed = refreshCarbonChartBlocks(content, violated);
     expect(refreshed).not.toContain("```mermaid");
     expect(refreshed).toContain("凍結");
+  });
+});
+
+/**
+ * Info: (20260819 - Emily) `open/53`:圖上標範疇制、敘述用類別制,而紙上沒有一句話說
+ * 它們是同一批排放源。真修要改分組鍵(多個 GHG 類別對到同一個 ISO 類別),
+ * 08-19 先把對照說出來 —— 隱藏的分類判斷等於沒有依據。
+ *
+ * 兩條測試都是必要的,而且第二條才是重點:
+ * 加說明的那次改動**不可以**讓桑基圖本身消失。這一週已經有過
+ * 「修一件事、另一件安靜地不見」的先例(圖表超上限整張不畫),
+ * 所以判準要同時釘住「說明在」與「圖還在」。
+ */
+describe("IMPORTED_EMISSION_SANKEY 的範疇↔類別對照（open/53）", () => {
+  const importedLedger = () =>
+    buildLedger({
+      entries: [
+        {
+          ...buildLedger().entries[0],
+          provenance: LedgerProvenanceEnum.IMPORTED,
+        },
+      ],
+    });
+
+  it("圖下方有範疇↔類別的對照說明", () => {
+    const block = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY,
+      importedLedger(),
+    );
+
+    expect(CARBON_CHART_DEFAULT_LABELS.importedSankeyIsoMapping).toBeDefined();
+    expect(block).toContain(
+      CARBON_CHART_DEFAULT_LABELS.importedSankeyIsoMapping as string,
+    );
+  });
+
+  it("加了說明之後桑基圖本身還在", () => {
+    const block = buildCarbonChartBlock(
+      CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY,
+      importedLedger(),
+    );
+
+    expect(block).toContain("sankey-beta");
+    expect(block).toContain("```mermaid");
+    // Info: (20260819 - Emily) 說明是圖**之後**的一行,不是取代圖
+    expect(block.indexOf("sankey-beta")).toBeLessThan(
+      block.indexOf(
+        CARBON_CHART_DEFAULT_LABELS.importedSankeyIsoMapping as string,
+      ),
+    );
   });
 });

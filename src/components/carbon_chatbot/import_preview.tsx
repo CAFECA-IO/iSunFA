@@ -11,8 +11,19 @@ import {
   Loader2,
   Clock,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
+import type { ICreditPauseDetail } from "@/constants/carbon_chatbot";
+import { JOB_STATUS } from "@/constants/resumable_job";
+import CreditPauseWays from "@/components/carbon_chatbot/credit_pause_ways";
+// Info: (20260902 - Emily) 表號取自產帳本的那支純函式,不在這裡再寫一份字串
+import { LEDGER_SOURCE_TABLE_NO } from "@/lib/carbon_table38.pipeline";
+/**
+ * Info: (20260903 - Luphia) 年度的裁決與萃取端**同一支**(review)。
+ * 各寫一份就是兩個會分岔的判準,而分岔的症狀是「畫面收下了、儲存讀不回來」。
+ */
+import { normalizeInventoryYear } from "@/lib/utils/inventory_year";
 
 export interface IPendingImportItem {
   paragraphId: string;
@@ -47,13 +58,60 @@ export interface IPendingImport {
   unmapped: string[];
   // Info: (20260716 - Tzuhan) 匯入的活動數據筆數(顯示用;實際合併於確認時執行)
   activityCount: number;
+  /**
+   * Info: (20260902 - Emily) 這份報告的盤查年度(issue_drafts/open/69)。
+   *
+   * 語意是「**這份報告**是哪一年」,與 `ICarbonInventoryState.year`
+   *(「**這個房間**在談哪一年」,write-once)是兩件事。在這張票之前帳本的年度
+   * 取自後者,於是同一間房匯入兩份不同年度的報告會拿到同一個值,
+   * 跨年度換鍋與年間比較全部空轉。
+   *
+   * 初值是萃取的預填(抽不到就 undefined),最終值由使用者在本卡確認。
+   */
+  inventoryYear?: number;
   // Info: (20260717 - Tzuhan) 逐章解析失敗的章節(id 供重試呼叫、title 供顯示;空陣列 = 全部成功)
   failedChapters: { id: string; title: string }[];
+  /**
+   * Info: (20260825 - Luphia) 因為點數用完而**還沒做**的章（issue #6713）。
+   *
+   * 與 `failedChapters` 是兩件不同的事，畫面也要分開說：
+   * 失敗的章是「試過、壞了」，這些章是「一步都沒試」——伺服端在呼叫 LLM 之前
+   * 就因為點數不足擋下，一點都沒扣。把它們混進 failedChapters 會讓使用者
+   * 以為檔案有問題（那正是修正前的行為）。
+   */
+  pausedChapters?: { id: string; title: string }[];
+  /**
+   * Info: (20260825 - Luphia) 接續要跑的**工作單元**（份粒度，review #6717 阻擋-1）：
+   * `buildImportUnits` 會把節數多的章切成兩份，而點數用完時很可能是
+   * 「一份做完、另一份撞牆」。以章接續會把做完的那一份再跑一次，
+   * 而訊息裡明寫「已完成的部分不會重跑」。
+   */
+  pausedUnits?: {
+    chapterId: string;
+    sectionIds: string[];
+    partIndex: number;
+    partTotal: number;
+  }[];
+  // Info: (20260825 - Luphia) 暫停原因（JOB_PAUSE_REASON）；null／undefined＝沒有暫停
+  pauseReason?: string | null;
+  /**
+   * Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）：
+   * 重置時間與伺服器算好的出路。缺席時只說原因、不說出路——
+   * 那比顯示一個空的出路清單好。
+   */
+  pauseDetail?: ICreditPauseDetail | null;
 }
 
 export interface IImportPreviewProps {
   pendingImport: IPendingImport;
   onToggleItem: (paragraphId: string) => void;
+  /**
+   * Info: (20260902 - Emily) 盤查年度的確認(issue_drafts/open/69)。
+   *
+   * 與 `onToggleItem` 同樣把值寫回 pending 而不是留在本元件的 state:
+   * 這張卡有「稍後再說」這條路,值留在元件裡等於關卡就丟。
+   */
+  onChangeInventoryYear: (year: number | undefined) => void;
   onApply: () => void;
   onDiscard: () => void;
   /**
@@ -65,6 +123,31 @@ export interface IImportPreviewProps {
   onDefer?: () => void;
   // Info: (20260717 - Tzuhan) 只重跑失敗章節並合併進本預覽(檔案由 hook 暫存,無需重選)
   onRetryFailed?: () => void;
+  /**
+   * Info: (20260825 - Luphia) 「接著匯入」：只跑點數用完時還沒做的那幾份
+   *（issue #6713）。與重試失敗分成兩顆按鈕——兩者跑的東西不同，
+   * 而且失敗那顆按下去會真的重送，這顆在點數還沒補上時會再撞一次牆。
+   */
+  onResumePaused?: () => void;
+  /**
+   * Info: (20260827 - Luphia) 伺服器眼中的任務狀態（issue #6714）。
+   *
+   * 掃描行程每 5 分鐘會把「暫停中而且現在夠了」翻成 RESUMABLE——那是一個明確的
+   * 時點。畫面不讀它的話，那次改動對使用者完全是隱形的：他看到的還是
+   * 「點數已用完」，得自己按下去試才知道額度已經回來了。
+   */
+  jobStatus?: string | null;
+  /**
+   * Info: (20260901 - Luphia) 倒數歸零時往上通報（review #6726 中-3）：
+   * 這張卡自己沒有 `refreshImportJob`，只把 CreditPauseWays 的時點傳出去，
+   * 問什麼由持有那支函式的頁面決定。
+   */
+  onCountdownExpired?: () => void;
+  /**
+   * Info: (20260827 - Luphia) 放棄還沒解析的章節（issue #6714）。
+   * 只放棄未完成的部分——已解析的內容留著，那是已經付過錢的東西。
+   */
+  onCancelPaused?: () => void;
   /**
    * Info: (20260806 - Tzuhan) 重試進行中。
    *
@@ -82,15 +165,71 @@ export interface IImportPreviewProps {
 export function ImportPreview({
   pendingImport,
   onToggleItem,
+  onChangeInventoryYear,
   onApply,
   onDiscard,
   onDefer = undefined,
   onRetryFailed = undefined,
+  onResumePaused = undefined,
+  jobStatus = null,
+  onCountdownExpired = undefined,
+  onCancelPaused = undefined,
   isRetrying = false,
   retryNotice = null,
 }: IImportPreviewProps) {
   const { t } = useTranslation();
   const checkedCount = pendingImport.items.filter((i) => i.checked).length;
+  /**
+   * Info: (20260902 - Emily) 年度的編輯緩衝(issue_drafts/open/69)。
+   *
+   * 直接把 `pendingImport.inventoryYear`(number)當受控值不行:打第一個字
+   * 「2」不是合法年度,值會變 undefined,輸入框當場被清成空的,使用者根本打不完。
+   * 所以文字留在這裡、**只有裁決成功的數字往上送**。
+   */
+  const [yearText, setYearText] = useState<string>(
+    () => pendingImport.inventoryYear?.toString() ?? "",
+  );
+  /**
+   * Info: (20260902 - Emily) 萃取的預填晚到時才補（重試合併後才拿到年度）——
+   * 但**框裡已經有字就不動它**。這是 #6730 review 第二輪那條「歸還與指令要分開」
+   * 的同一個形狀:晚到的預填是建議,不是指令,不該蓋掉使用者手上打的字。
+   */
+  useEffect(() => {
+    const prefill = pendingImport.inventoryYear;
+    if (prefill === undefined) return;
+    setYearText((current) =>
+      current.trim().length > 0 ? current : String(prefill),
+    );
+  }, [pendingImport.inventoryYear]);
+  /**
+   * Info: (20260902 - Emily) 年度只在「這次匯入真的會產生帳本分錄」時是必填。
+   *
+   * 判準用表號而不是「有沒有表格」:帳本只由 `LEDGER_SOURCE_TABLE_NO` 產生
+   *(見 buildImportedLedger),別的表格入不了帳,年度對它們沒有作用。
+   * 一律必填會讓純文字章節的匯入被一個與它無關的欄位擋住 —— 那是新的缺陷,
+   * 不是更嚴格的把關。
+   */
+  const ledgerBearingChecked = pendingImport.items.some(
+    (item) =>
+      item.checked &&
+      (item.sourceTables ?? []).some(
+        (table) => table.tableNo === LEDGER_SOURCE_TABLE_NO,
+      ),
+  );
+  const yearMissing =
+    ledgerBearingChecked && pendingImport.inventoryYear === undefined;
+  /**
+   * Info: (20260903 - Luphia) 「填了但裁決不收」要與「沒填」分開說(review)。
+   *
+   * 框裡有字而上面拿到的是 `undefined`,就是這一格 —— 打到一半(`202`)、
+   * 或四位數但超出範圍(`1024`)。兩者都不該靜默:使用者看到 Apply 是灰的
+   * 卻不知道為什麼,只會再打一次同樣的東西。
+   *
+   * 這一格**不擋送出**:年度非必填時填錯不該連純文字章節都匯不進去,
+   * 但紅字要在。必填那格由 `yearMissing` 擋。
+   */
+  const yearRejected =
+    yearText.trim().length > 0 && pendingImport.inventoryYear === undefined;
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/30 p-4">
@@ -178,6 +317,96 @@ export function ImportPreview({
             </div>
           )}
 
+          {/**
+           * Info: (20260825 - Luphia) 點數用完而**還沒解析**的章（issue #6713）。
+           *
+           * 與上面那塊「解析失敗」分開，因為兩者是不同的事實、也是不同的處置：
+           * 失敗的章試過而壞了（重試可能成功），這些章一步都沒試——
+           * 重試一百次也一樣，要先補點數。混成同一塊會讓使用者回去改檔案。
+           *
+           * 這一塊在此之前**不存在**：訊息（五語言）告訴使用者「可以從這裡接著
+           * 匯入」，而畫面上沒有那個動作，唯一走得到的路是整份重新匯入
+           *（已解析的章再解析一次、再收一次點數，正好是那句承諾的反面）。
+           */}
+          {(pendingImport.pausedChapters ?? []).length > 0 && (
+            <div className="rounded-xl bg-blue-50 p-3 text-[11px] font-bold text-blue-700">
+              <div className="flex items-center gap-1.5">
+                <AlertTriangle size={12} className="shrink-0" />
+                <span className="min-w-0 flex-1">
+                  {/**
+                   * Info: (20260827 - Luphia) 兩種停法兩句話（issue #6723）。
+                   *
+                   * 有暫停原因＝點數用完，那句話要說「去補點數」。沒有原因＝
+                   * 上一趟被中斷（關分頁、切走、當掉），那時說「點數已用完」
+                   * 是在說謊，而使用者會跑去買他根本不需要的點數。
+                   */}
+                  {t(
+                    !pendingImport.pauseReason
+                      ? "carbon_chatbot.import_interrupted_chapters"
+                      : jobStatus === JOB_STATUS.RESUMABLE
+                        ? "carbon_chatbot.import_paused_resumable"
+                        : "carbon_chatbot.import_paused_chapters",
+                    {
+                      chapters: (pendingImport.pausedChapters ?? [])
+                        .map((chapter) => chapter.title)
+                        .join("、"),
+                    },
+                  )}
+                </span>
+                {onResumePaused && (
+                  <button
+                    type="button"
+                    onClick={onResumePaused}
+                    disabled={isRetrying}
+                    className="flex shrink-0 items-center gap-1 rounded-full bg-white px-2.5 py-1 font-bold text-blue-700 ring-1 ring-blue-200 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-white"
+                  >
+                    {isRetrying ? (
+                      <Loader2 size={11} className="animate-spin" />
+                    ) : (
+                      <RotateCcw size={11} />
+                    )}
+                    {t(
+                      isRetrying
+                        ? "carbon_chatbot.import_retrying"
+                        : "carbon_chatbot.import_resume_paused",
+                    )}
+                  </button>
+                )}
+                {/**
+                 * Info: (20260827 - Luphia) 「不做了」（issue #6714）。
+                 *
+                 * 沒有這顆的話，一份不想做完的匯入會一直掛在「未完成」裡，
+                 * 而旁邊那顆「接著匯入」會一直邀請使用者去花錢。
+                 */}
+                {onCancelPaused && (
+                  <button
+                    type="button"
+                    onClick={onCancelPaused}
+                    disabled={isRetrying}
+                    className="shrink-0 rounded-full px-2 py-1 font-bold text-blue-500 underline transition-colors hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {t("carbon_chatbot.import_cancel_paused")}
+                  </button>
+                )}
+              </div>
+              {/**
+               * Info: (20260827 - Luphia) 出路與重置時間（issue #6714）。
+               *
+               * 只在**點數用完**那種暫停顯示：中斷（關分頁、切走）不需要補點數，
+               * 使用者只要按「接著匯入」——那時擺一組導購按鈕是在叫他去買
+               * 他不需要的東西。
+               */}
+              {pendingImport.pauseReason &&
+                pendingImport.pauseDetail &&
+                jobStatus !== JOB_STATUS.RESUMABLE && (
+                  <CreditPauseWays
+                    detail={pendingImport.pauseDetail}
+                    onCountdownExpired={onCountdownExpired}
+                  />
+                )}
+            </div>
+          )}
+
           {/* Info: (20260806 - Tzuhan) 重試中的進度:與輸入列同一份提示,但顯示在 modal **內**。
               輸入列在本 modal(z-[90])後面,重試時使用者看得到的只有這裡。 */}
           {isRetrying && (
@@ -206,6 +435,54 @@ export function ImportPreview({
               ))}
             </div>
           )}
+        </div>
+
+        {/* Info: (20260902 - Emily) 盤查年度:抽到當預填、抽不到要求填(issue_drafts/open/69) */}
+        <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 px-5 py-3">
+          <label
+            htmlFor="carbon-import-inventory-year"
+            className="text-xs font-bold text-gray-500"
+          >
+            {t("carbon_chatbot.import_inventory_year")}
+          </label>
+          <input
+            id="carbon-import-inventory-year"
+            type="text"
+            inputMode="numeric"
+            value={yearText}
+            onChange={(e) => {
+              setYearText(e.target.value);
+              /**
+               * Info: (20260902 - Emily) 只有裁決收下的年度才往上送,其餘一律 undefined
+               * —— 「打到一半」與「沒填」在這裡必須是同一個結果,否則帳本會拿到 `20`。
+               *
+               * Info: (20260903 - Luphia) 裁決改用 `normalizeInventoryYear`(review):
+               * 原本這裡自己寫了一個**沒有範圍**的四位數判斷,而下游每一道都有範圍
+               *(萃取端 1990..明年、兩支儲存 schema 1990..2100)——
+               * 唯一沒有範圍的那一道正是產出生效值的這一道(萃取只是預填)。
+               * 實測 `1024`(`2024` 的手滑)會一路寫進帳本並存檔成功,
+               * 然後在下次載入時讓整份盤查狀態被 fail-fast 丟棄。
+               * 現在畫面與儲存讀同一支裁決:畫面收下的集合是儲存讀得回的子集。
+               */
+              onChangeInventoryYear(normalizeInventoryYear(e.target.value));
+            }}
+            placeholder={t("carbon_chatbot.import_inventory_year_placeholder")}
+            className={`w-24 rounded-lg border px-2 py-1 text-sm ${
+              yearMissing || yearRejected
+                ? "border-red-300 bg-red-50 text-red-700"
+                : "border-gray-200 text-gray-700"
+            }`}
+          />
+          <span
+            className={`text-[11px] ${yearMissing || yearRejected ? "text-red-500" : "text-gray-400"}`}
+          >
+            {/* Info: (20260903 - Luphia) 三態:填了不合理 → 必填但沒填 → 一般說明(review) */}
+            {yearRejected
+              ? t("carbon_chatbot.import_inventory_year_invalid")
+              : yearMissing
+                ? t("carbon_chatbot.import_inventory_year_required")
+                : t("carbon_chatbot.import_inventory_year_hint")}
+          </span>
         </div>
 
         <div className="flex items-center justify-between gap-2 border-t border-gray-100 px-5 py-3">
@@ -238,7 +515,7 @@ export function ImportPreview({
             <button
               type="button"
               onClick={onApply}
-              disabled={checkedCount === 0}
+              disabled={checkedCount === 0 || yearMissing}
               className="flex items-center gap-1.5 rounded-full bg-[#ff5a00] px-4 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#e04f00] disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               <Check size={14} />

@@ -14,6 +14,7 @@ import { bundlerService } from "@/services/bundler.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { CURRENCY_UNIT, REWARD_AMOUNTS } from "@/constants/price";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
+import { confirmTransaction } from "@/lib/chain/confirm_transaction";
 
 // Info: (20260126 - Luphia) 回傳結果型別
 type ActionResponse = {
@@ -79,7 +80,7 @@ export async function mintToAddress(
       value: requiredISC,
     });
 
-    await publicClient.waitForTransactionReceipt({ hash: tx });
+    await confirmTransaction(tx);
 
     return { success: true, message: `鑄造交易已確認: ${tx}`, data: { tx } };
   } catch (error) {
@@ -160,7 +161,7 @@ export async function registerUser(
         functionName: "updateKYC",
         args: [validUserAddress, 1], // Info: (20260412 - Luphia) LEVEL_1
       });
-      await publicClient.waitForTransactionReceipt({ hash: tx });
+      await confirmTransaction(tx);
       console.log(`[RegisterUser] Registration confirmed: ${tx}`);
     }
 
@@ -263,7 +264,7 @@ export async function forcedTransfer(
       args: [validFrom, validTo, amountBigInt],
     });
 
-    await publicClient.waitForTransactionReceipt({ hash: tx });
+    await confirmTransaction(tx);
     return { success: true, message: `強制轉帳成功: ${tx}`, data: { tx } };
   } catch (error) {
     console.error("強制轉帳失敗:", error);
@@ -304,7 +305,7 @@ export async function burn(
       args: [validFrom, amountBigInt],
     });
 
-    await publicClient.waitForTransactionReceipt({ hash: tx });
+    await confirmTransaction(tx);
     return { success: true, message: `銷毀交易已確認: ${tx}`, data: { tx } };
   } catch (error) {
     console.error("銷毀失敗:", error);
@@ -360,7 +361,7 @@ async function toggleFreeze(
       args: [validTarget, amountBigInt],
     });
 
-    await publicClient.waitForTransactionReceipt({ hash: tx });
+    await confirmTransaction(tx);
     return {
       success: true,
       message: `${isFreeze ? "凍結" : "解凍"}交易已確認: ${tx}`,
@@ -406,7 +407,7 @@ async function togglePause(
       args: [],
     });
 
-    await publicClient.waitForTransactionReceipt({ hash: tx });
+    await confirmTransaction(tx);
     return {
       success: true,
       message: `系統已${isPause ? "暫停" : "恢復"}: ${tx}`,

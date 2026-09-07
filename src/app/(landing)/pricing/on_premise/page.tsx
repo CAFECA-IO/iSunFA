@@ -1,4 +1,5 @@
 import PricingContainer from "@/components/pricing/pricing_container";
+import { listPlans } from "@/services/plan.service";
 import OnPremiseContent from "@/app/(landing)/pricing/on_premise/on_premise_content";
 import { Metadata } from "next";
 
@@ -15,9 +16,9 @@ export const metadata: Metadata = {
   ],
 };
 
-export default function OnPremisePricingPage() {
+export default async function OnPremisePricingPage() {
   return (
-    <PricingContainer activeTab="on_premise">
+    <PricingContainer activeTab="on_premise" plans={await listPlans()}>
       <OnPremiseContent />
     </PricingContainer>
   );

@@ -19,6 +19,13 @@ import { teamLedgerAnchorRepo } from "@/repositories/team_ledger_anchor.repo";
  * Info: (20260807 - Luphia) 團隊錢包守護行程（設計書 §3 / §9 P4、ADR 015）。
  * 1. 守恆勾稽：Σ(PURCHASE + ADJUST + CONSUME + REFUND) = 池餘額 + Σ 分配餘額，
  *    違反即凍結錢包並告警——絕不讓髒帳繼續流動（財務恆等式防護，同 A = L + E）。
+ *
+ *    `ALLOCATE` / `REVOKE` 不列入左側，因為它們只在池與分配之間搬動（淨額為零）。
+ *    Info: (20260818 - Luphia) 分配改為鑄到成員自己的鏈上錢包之後（ADR 015 修訂），
+ *    價值是**離開**帳本，因此 `allocate()` 會另寫一筆負的 `ADJUST` 讓左側同步減少。
+ *    這個排除清單本身沒有變——變的是 `allocate()` 要自己把出帳記在左側。
+ *    2026-08-18 之前的分配沒有那一筆，差額以 `scripts/repair_wallet_conservation.ts`
+ *    一次性補平。
  * 2. merkle 錨定（C 案 Phase 1）：勾稽通過後對「昨日」（UTC+8 日界）的全域 Ledger
  *    增量計算 merkle root，鏈式累積後寫入 LedgerAnchor 合約；
  *    錨定失敗不阻斷錢包營運，狀態留 FAILED 由下一輪重試。
@@ -41,9 +48,22 @@ export interface IConservationAuditResult {
   frozen: string[];
 }
 
-export async function runWalletConservationAudit(): Promise<IConservationAuditResult> {
+export interface IConservationAuditOptions {
+  /**
+   * Info: (20260818 - Luphia) 只勾稽這個團隊（預設全域）。
+   *
+   * 這支會**凍結**它掃到的每一個違反者，所以「範圍」不是效能考量而是安全考量：
+   * 修復腳本的重驗與對真資料庫的 e2e 都必須限定在自己那一團，
+   * 否則一次執行就會凍掉同一個資料庫裡的真實團隊。
+   */
+  teamId?: string;
+}
+
+export async function runWalletConservationAudit(
+  options: IConservationAuditOptions = {},
+): Promise<IConservationAuditResult> {
   const [wallets, allocationSums, ledgerSums] = await Promise.all([
-    teamWalletRepo.listAllWallets(),
+    teamWalletRepo.listAllWallets(options.teamId),
     teamWalletRepo.sumAllocationsByTeam(),
     teamWalletRepo.sumLedgerByWalletAndType(),
   ]);

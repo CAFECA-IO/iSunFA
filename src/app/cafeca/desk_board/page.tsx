@@ -68,9 +68,18 @@ export default function CafecaDeskBoard() {
         <div className="relative z-10 flex w-full max-w-4xl flex-col items-center gap-8 select-text">
           {/* Info: (20260604 - Luphia) Logo enlarged 4x (Standard logo is h-8, enlarged 4x is h-32) */}
           <div className="flex items-center justify-center p-4">
+            {/**
+             * Info: (20260831 - Luphia) `448 / 128` 而不是 `500 / 128`
+             *（review #6731 二輪高-1）。
+             *
+             * SVG 的內建比例是 224/64 = 3.5，而 `h-32`（128px）的實際寬度是
+             * 128 × 3.5 = **448**。宣告 500 只會讓版位在載入前多預留 52px，
+             * 載入後縮回去——一次可見的跳動。屬性只決定載入前的預留框，
+             * 載入後一律以內建比例為準（詳見 `header/brand_logo.tsx` 的註解）。
+             */}
             <BrandLogoImage
               className="h-32 w-auto"
-              width={500}
+              width={448}
               height={128}
               alt="iSunFA Logo"
             />

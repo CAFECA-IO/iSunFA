@@ -21,6 +21,7 @@ import {
   PointIssueModal,
   IUserTarget,
 } from "@/components/admin/user/point_issue_modal";
+import { TeamPointIssueModal } from "@/components/admin/user/team_point_issue_modal";
 import { useTranslation } from "@/i18n/i18n_context";
 import { Role } from "@/constants/role";
 import { IBlockchainDashboardData } from "@/services/admin.blockchain.service";
@@ -158,6 +159,17 @@ export default function MemberAdminPage() {
     fetchUsers();
     fetchBlockchainData();
   }, [fetchUsers, fetchBlockchainData]);
+
+  /**
+   * Info: (20260813 - Luphia) 發放點數給團隊：與發放給個人是兩件事
+   * （團隊點數入離鏈錢包、個人點數是鏈上 mint），因此各自一個入口與 modal。
+   */
+  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+  /**
+   * Info: (20260813 - Luphia) 自用戶列開啟時把該用戶帶進 modal：清單只列他所屬的團隊。
+   * 全域入口（頁首按鈕）維持 null，走搜尋模式。
+   */
+  const [teamScopedUser, setTeamScopedUser] = useState<IUser | null>(null);
 
   const openIssueModal = (user: IUser) => {
     setSelectedUser({
@@ -310,17 +322,35 @@ export default function MemberAdminPage() {
         align: "right",
         sortable: false,
         render: (user) => (
-          <button
-            type="button"
-            aria-label={t("admin_member.page.issue_points_btn")}
-            onClick={() => openIssueModal(user)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-50 px-4 py-2 font-medium text-orange-600 transition hover:bg-orange-100"
-          >
-            <Coins className="h-4 w-4" />
-            <span className="hidden lg:inline">
-              {t("admin_member.page.issue_points_btn")}
-            </span>
-          </button>
+          <div className="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              aria-label={t("admin_member.page.issue_points_btn")}
+              onClick={() => openIssueModal(user)}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-50 px-4 py-2 font-medium text-orange-600 transition hover:bg-orange-100"
+            >
+              <Coins className="h-4 w-4" />
+              <span className="hidden lg:inline">
+                {t("admin_member.page.issue_points_btn")}
+              </span>
+            </button>
+            {/**
+             * Info: (20260813 - Luphia) 從用戶出發的團隊發放入口：
+             * 兩千多個團隊、名稱多為「<email>'s Team」且大量撞名，
+             * 靠團隊名搜尋幾乎找不到人；從用戶點進去只會列出他所屬的團隊。
+             */}
+            <button
+              type="button"
+              aria-label={t("admin_member.page.issue_team_points_btn")}
+              onClick={() => {
+                setTeamScopedUser(user);
+                setIsTeamModalOpen(true);
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-50 px-3 py-2 font-medium text-gray-600 transition hover:bg-gray-100"
+            >
+              <Users className="h-4 w-4" />
+            </button>
+          </div>
         ),
       },
     ],
@@ -354,6 +384,18 @@ export default function MemberAdminPage() {
                   className="block w-full rounded-xl border border-gray-200 bg-white py-2 pr-3 pl-9 text-sm text-gray-500 transition-all focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none"
                 />
               </form>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setTeamScopedUser(null);
+                  setIsTeamModalOpen(true);
+                }}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-semibold text-orange-700 transition hover:bg-orange-100"
+              >
+                <Users className="h-4 w-4 shrink-0" />
+                {t("admin_member.page.issue_team_points_btn")}
+              </button>
 
               {/* Info: (20260416 - Luphia) 庫存 ICP 數量顯示 */}
               <div className="flex shrink-0 items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white py-1.5 pr-2 pl-3 shadow-sm">
@@ -400,6 +442,13 @@ export default function MemberAdminPage() {
           emptyStateText={t("admin_member.page.no_users")}
         />
       </div>
+
+      <TeamPointIssueModal
+        isOpen={isTeamModalOpen}
+        onClose={() => setIsTeamModalOpen(false)}
+        onSuccess={fetchBlockchainData}
+        scopedUser={teamScopedUser}
+      />
 
       <PointIssueModal
         isOpen={isModalOpen}

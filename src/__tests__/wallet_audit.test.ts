@@ -64,7 +64,18 @@ function mockBalancedState() {
   asMock(teamWalletRepo.sumAllocationsByTeam).mockResolvedValue([
     { teamId: "team-1", total: BigInt(47) },
   ]);
-  // Info: (20260807 - Luphia) 700(購) - 3(耗) = 697 = 650(池) + 47(分配)；ALLOCATE 不列入左側
+  /**
+   * Info: (20260807 - Luphia) 700(購) - 3(耗) = 697 = 650(池) + 47(分配)；ALLOCATE 不列入左側
+   *
+   * Info: (20260818 - Luphia) ⚠️ 這份 fixture 是「舊制」的形狀：`ALLOCATE` 50 的同時
+   * 有 47 的**分配餘額**。分配改為鑄到成員鏈上錢包之後，真實資料裡那個分配餘額是 **0**，
+   * 於是恆等式右側少了分配金額而左側不動——每分配一次就違反守恆一次。
+   *
+   * 這支測試全綠而缺陷上線，原因就在這裡：它餵的是一份**真實資料裡不可能出現**的狀態
+   * （checklist §1.4）。修法是 `allocate()` 另寫一筆負的 `ADJUST`，而能證明那件事的
+   * 只有對真資料庫的 e2e（`wallet_conservation.e2e.test.ts`）——這裡的 repo 是 mock 的，
+   * 它永遠不會告訴你 `allocate()` 實際寫了什麼。
+   */
   asMock(teamWalletRepo.sumLedgerByWalletAndType).mockResolvedValue([
     { teamWalletId: "wallet-1", entryType: "PURCHASE", total: BigInt(700) },
     { teamWalletId: "wallet-1", entryType: "CONSUME", total: BigInt(-3) },
@@ -93,6 +104,21 @@ describe("runWalletConservationAudit", () => {
     expect(result.violations).toBe(1);
     expect(result.frozen).toEqual(["wallet-1"]);
     expect(teamWalletRepo.freezeWallet).toHaveBeenCalledWith("wallet-1");
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 範圍限定會傳到 repo（`--team` 與 e2e 都靠它）。
+   *
+   * 這支勾稽會**凍結**它掃到的每一個違反者，所以「只勾稽這一團」不是效能選項而是
+   * 安全需求：修復腳本的重驗與對真資料庫的 e2e 若掃全域，一次執行就會凍掉同一個
+   * 資料庫裡的真實團隊。
+   */
+  it("passes the team scope through to the repository", async () => {
+    await runWalletConservationAudit({ teamId: "team-1" });
+    expect(teamWalletRepo.listAllWallets).toHaveBeenCalledWith("team-1");
+
+    await runWalletConservationAudit();
+    expect(teamWalletRepo.listAllWallets).toHaveBeenLastCalledWith(undefined);
   });
 
   it("does not re-freeze an already frozen wallet", async () => {

@@ -4,11 +4,22 @@ export const carbonChatbot = {
   // Info: (20260730 - Tzuhan) 未解鎖時的報告區文案:不可讓大綱骨架看起來像已載入的空報告
   report_locked_hint:
     "보고서는 기기 키로 종단간 암호화되어 있습니다. 한 번 인증하면 해제되어 불러옵니다.",
+  report_locked_hint_custodial:
+    "보고서는 암호화되어 저장됩니다. 제3자 계정으로 로그인하셨기 때문에 키는 플랫폼이 보관합니다. 한 번 인증하면 잠금이 해제되고 이 보고서가 로드됩니다.",
   unlock_button: "암호화 대화 시작",
   unlock_hint:
     "점검 내용을 보호하기 위해 이 대화는 기기의 보안 키로 종단 간 암호화됩니다. 시작을 클릭하고 인증을 한 번 완료하면 잠금이 해제되고 AI 인사를 받습니다.",
+  // Info: (20260812 - Luphia) 수탁 계정(제3자 로그인) 전용 안내. passkey와 같은 보장을 쓸 수 없다
+  unlock_hint_custodial:
+    "인벤토리 데이터를 보호하기 위해 이 대화는 암호화되어 저장됩니다. 제3자 계정으로 로그인하셨기 때문에 암호화 키는 플랫폼이 보관합니다(지갑과 동일). 따라서 기술적으로 플랫폼이 복호화할 수 있습니다. '본인만 복호화 가능'한 보호가 필요하면 passkey 계정을 사용하세요. 시작을 클릭하면 잠금이 해제되고 AI 인사를 받습니다.",
+  custody_loading:
+    "계정 키 보관 방식을 확인하고 있습니다. 잠시 후 암호화된 대화를 시작할 수 있습니다.",
+  key_source_mismatch:
+    "이 대화는 다른 키 보관 방식으로 암호화되었습니다(예: passkey 등록 전에 만든 내용). 따라서 현재 키로는 열 수 없습니다. 키 이전을 위해 운영팀에 문의하세요. 다시 시도해도 해결되지 않습니다.",
   device_unsupported:
     "사용 중인 기기 또는 브라우저가 암호화에 필요한 보안 키 기능(WebAuthn PRF)을 지원하지 않아 암호화 채팅을 사용할 수 없습니다. Android의 Chrome 또는 PRF를 지원하는 보안 키 등 지원되는 환경을 사용해 주세요.",
+  unlock_failed:
+    "암호화 키 잠금 해제에 실패하여 대화가 시작되지 않았습니다. 다시 시도해 주세요. 계속 실패하면 페이지를 새로 고치거나 운영팀에 문의하세요(자세한 원인은 브라우저 콘솔에 기록됩니다).",
   subtitle: "귀하만의 기업 탄소 회계사",
   recent_chats: "최근 대화",
   today: "오늘",
@@ -76,6 +87,10 @@ export const carbonChatbot = {
   system_error:
     "[시스템 오류] 죄송합니다. 탄소 회계사 서비스에 연결하는 중 문제가 발생했습니다. 나중에 다시 시도해 주세요.",
   system_unavailable: "죄송합니다. 현재 시스템이 응답할 수 없습니다.",
+  team_quota_exceeded:
+    "팀의 AI 한도와 배정 크레딧을 모두 사용했습니다. 한도가 초기화될 때까지 기다리거나 크레딧을 추가 구매하거나 플랜을 업그레이드해 주세요.",
+  session_not_bound:
+    "이 산정 세션은 장부에 연결되어 있지 않아 한도를 계산할 수 없습니다. 세션 설정에서 소속 장부를 먼저 선택해 주세요.",
   ai_quota_exceeded:
     "[AI 사용량 한도 도달] 짧은 시간에 요청이 많았습니다. 1분 후 다시 시도해 주세요.",
   ai_timeout:
@@ -119,6 +134,12 @@ export const carbonChatbot = {
     "최신 변경 사항이 클라우드에 저장되지 않았습니다: 다른 탭 또는 기기에서 초안이 업데이트되었습니다. 새로고침해 최신 버전을 받은 뒤 다시 수정해 주세요.",
   save_failed_too_large:
     "최신 변경 사항이 클라우드에 저장되지 않았습니다: 초안 하나의 용량 상한을 초과했습니다. 원문 표 일부를 제거하거나 나누어 가져오기 해 주세요.",
+  // Info: (20260904 - Emily) 실패가 아니라 거부: 그 문장을 지울 때까지 재시도는 의미가 없다
+  save_blocked_framework_claim:
+    "보고서에 \u2018당사는 {{name}}을 준수한다\u2019와 같은 주체 차원의 적합 선언이 있어 이 버전은 클라우드에 저장하지 않았습니다. 그 문장은 외부로 보내는 보고서에 있어서는 안 됩니다. 작업 내용은 이 기기에 남아 있으며, 문장을 삭제하면 다시 저장됩니다. 문서 구조에 관한 서술은 대상이 아닙니다.",
+  // Info: (20260904 - Emily) 일시적인 실패가 아니다: 매번 같은 방식으로 실패하며 로컬 백업도 없다
+  inventory_unsavable:
+    "산정 데이터의 이 버전은 저장되지 않았습니다. 저장 형식에 맞지 않는 필드가 있습니다. 화면에 보이는 내용은 아직 남아 있지만, 이 탭을 닫거나 새로 고치면 사라집니다. 저희 쪽 문제이니 알려주시면 감사합니다.",
   save_local_quota:
     "로컬 저장 공간이 부족해 오프라인 백업을 갱신하지 못했습니다(클라우드 저장은 완료).",
   save_local_quota_only:
@@ -168,6 +189,14 @@ export const carbonChatbot = {
     "가져오기 대기 중인 분석 결과를 저장했습니다: {{name}} ({{count}}개 절, 보고서에 미기록)",
   import_pending_open: "확인하고 가져오기",
   import_pending_discard: "버리기",
+  import_inventory_year: "산정 연도",
+  import_inventory_year_placeholder: "2024",
+  import_inventory_year_hint:
+    "이 보고서의 산정 연도(서기). 연도가 다른 가져오기에서 어느 분개가 어느 연도에 속하는지 구분하는 데 사용됩니다",
+  import_inventory_year_required:
+    "이번 가져오기에는 배출 총량표가 포함됩니다. 이 보고서의 산정 연도를 입력하세요",
+  import_inventory_year_invalid:
+    "산정 연도는 서기 네 자리(1990년~내년)로 입력하세요. 범위를 벗어난 연도는 다음 로드 시 원장을 복원할 수 없게 만듭니다",
   import_reset_note:
     "가져온 단락의 검증 상태는 초기화됩니다. 활동 데이터 {{activities}}건은 재대사됩니다",
   import_apply: "선택 항목 가져오기({{count}})",
@@ -176,6 +205,48 @@ export const carbonChatbot = {
     "「{{name}}」을(를) 아직 분석 중입니다. 두 건을 동시에 실행하면 같은 할당량을 두고 경쟁해 양쪽 모두 느려집니다. 완료를 기다리거나 새로고침 후 다시 시도해 주세요.",
   import_parsing_chapter:
     "「{{name}}」 장별 분석 중({{current}}/{{total}} 완료, {{inFlight}}개 장 처리 중). 전체 보고서는 몇 분 걸립니다…",
+  import_requires_book:
+    "이 세션은 아직 장부에 연결되지 않아 보고서 전체를 가져올 수 없습니다(장별 가져오기는 장부의 사용량으로 과금됩니다). 세션 설정에서 장부를 선택한 뒤 다시 시도해 주세요.",
+  // Info: (20260828 - Julian) zh_tw와 동일: 이 문구에는 알려진 오류가 2개 있음 (계획 §4, 미수정)
+  import_paused_chapters:
+    "크레딧이 모두 소진되어 다음 장은 아직 분석하지 않았습니다: {{chapters}}. 크레딧을 채우면 여기서 이어서 가져올 수 있습니다(완료된 부분은 다시 실행되지 않습니다).",
+  // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
+  import_interrupted_chapters:
+    "지난번 가져오기가 끝나지 않았습니다. 다음 장은 아직 분석되지 않았습니다: {{chapters}}. 여기서 이어서 진행할 수 있으며, 이미 완료된 부분은 다시 실행되지 않고 포인트도 다시 차감되지 않습니다.",
+  // Info: (20260901 - Luphia) 「可能」不是贅字（review #6726 中-2）：BUSY 也可能是自己的分頁崩潰後租約未過期
+  import_job_busy:
+    "이 가져오기는 다른 탭 또는 다른 기기에서 실행 중일 수 있습니다. 또는 지난 실행이 정상적으로 끝나지 않았을 수도 있으며, 그 경우 최대 {{minutes}}분 후 다시 시도할 수 있습니다. 두 번 실행하면 포인트도 두 번 차감됩니다.",
+  // Info: (20260901 - Luphia) 三個終局判決各說各的話（review #6726 阻-1）
+  import_job_cancelled:
+    "이 가져오기는 취소되었습니다. 재개되지 않으며 포인트도 더 이상 차감되지 않습니다. 다시 시작하려면 파일을 다시 업로드하세요.",
+  import_job_completed_already:
+    "이 가져오기는 이미 완료되었습니다. 재개할 내용이 없습니다.",
+  import_job_forbidden: "이 계정에는 이 가져오기에 대한 권한이 없습니다.",
+  // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
+  import_auto_resuming:
+    "포인트가 충전되었습니다. 남은 장을 이어서 가져오는 중입니다. 이미 완료된 부분은 다시 실행되지 않습니다.",
+  // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）：伺服器算好的出路與重置時間
+  import_paused_reset_hint:
+    "사용량이 {{countdown}} 후({{resetAt}})에 초기화됩니다. 그때 가져오기를 이어서 진행할 수 있습니다.",
+  import_paused_reset_ready:
+    "사용량이 초기화되었습니다. 지금 가져오기를 이어서 진행할 수 있습니다.",
+  import_paused_over_window_limit:
+    "이 보고서는 한 번에 필요한 포인트가 요금제의 단일 구간 한도를 초과합니다 — 초기화를 기다려도 완료되지 않습니다. 개인 포인트를 사용하거나 요금제를 업그레이드하세요.",
+  import_paused_ways_title: "다음으로 할 수 있는 것:",
+  import_paused_option_wait_reset: "사용량 초기화를 기다리기(시간은 위에 표시)",
+  import_paused_option_use_allocation: "팀 관리자가 배분한 포인트 사용",
+  import_paused_option_use_personal: "내 지갑의 포인트 사용",
+  import_paused_option_upgrade: "요금제를 업그레이드해 한도 늘리기",
+  // Info: (20260827 - Luphia) 伺服器說「可以繼續了」與「不做了」（issue #6714）
+  import_paused_resumable:
+    "사용량이 돌아왔습니다. 다음 장은 아직 분석되지 않았습니다: {{chapters}}. 지금 이어서 진행할 수 있으며, 이미 완료된 부분은 다시 실행되지 않습니다.",
+  import_cancel_paused: "나머지는 그만두기",
+  import_cancelled:
+    "분석되지 않은 장을 그만두었습니다. 이미 완료된 부분은 남아 있으며 그대로 적용할 수 있습니다.",
+  import_cancel_failed: "그만두지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  import_resume_needs_file:
+    "이어서 가져오려면 원본 파일이 필요하지만, 새로 고침하거나 다른 기기에서는 파일이 브라우저에 남아 있지 않습니다. 같은 보고서를 다시 업로드해 주세요(완료된 장은 다시 실행되지 않습니다).",
+  import_resume_paused: "이어서 가져오기",
   import_failed_chapters:
     "다음 장은 분석에 실패했습니다. 나중에 다시 가져오기로 보완할 수 있습니다: {{chapters}}",
   import_retry_failed: "실패한 장 재시도",
@@ -270,6 +341,10 @@ export const carbonChatbot = {
   chart_imported_sankey_excluded: "그래프에 없는 항목(NA/NS 또는 0)",
   chart_imported_sankey_no_ledger:
     "보고서는 가져왔지만 원장에 사용할 수 있는 데이터가 없어 배출 흐름도를 그릴 수 없습니다. 생키 다이어그램과 시스템 집계표의 유일한 출처는 표3.8(회사별 온실가스 배출량)이며 이번에는 가져오지 못했습니다. 제3장이 정상적으로 분석되었는지 확인해 주세요. 분석 실패로 표시된 경우 미리보기 카드의 「실패한 장 재시도」로 다시 가져오고, 서버 로그에서 해당 표가 폐기된 이유를 확인해 주세요.",
+  chart_imported_sankey_blocked_ledger:
+    "표3.8은 가져왔지만 대사(勾稽)를 통과하지 못해 데이터가 입구에서 동결되어 원장에 기록되지 않았습니다(불완전한 데이터를 기장하면 모든 차트가 그럴듯하게 틀립니다). 차단 사유는 아래에 나열되어 있습니다. 원문의 해당 표를 수정하거나 제3장을 다시 가져오면 차트가 자동으로 생성됩니다.",
+  chart_partial_import_blocked:
+    "⚠ 이 차트는 원장에 기록된 부분만 포함합니다: 이번 가져오기에서 다른 표가 대사를 통과하지 못해 기록되지 않았으므로, 차트의 총량과 비중은 전사 전체가 아닙니다. 차단 사유는 아래에 나열되어 있습니다. 원문의 해당 표를 수정하거나 다시 가져오면 차트가 자동으로 재계산됩니다.",
   chart_imported_sankey_collapsed:
     "노드가 너무 많아 1개 층으로 축소했습니다 (전사 → 스코프)",
   chart_imported_top_items_title:
@@ -278,6 +353,8 @@ export const carbonChatbot = {
   // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層(屏東佔 97%,同圖畫不出比重);廠址改列小計
   chart_imported_sankey_site_totals: "사업장별 소계 (tCO2e/년, 전사 대비 비중)",
   chart_imported_sankey_ghg_mapping: "하위 코드와 GHG Protocol 범주 대조",
+  chart_imported_sankey_iso_mapping:
+    "그림의 분류 계층은 GHG 프로토콜 스코프로 표시되어 있습니다. ISO 14064-1 대응: 스코프1＝범주1, 스코프2＝범주2, 스코프3＝범주3~6. 본 보고서의 서술은 ISO 14064-1 범주 체계를 따르며, 양쪽은 동일한 배출원을 가리킵니다.",
   chart_imported_sankey_below_threshold: "비중이 작아 미표시(tCO2e/년)",
   chart_imported_sankey_organization: "전사",
   book_bind_pending_unlock:

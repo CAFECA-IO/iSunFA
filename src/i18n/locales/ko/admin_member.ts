@@ -19,6 +19,7 @@ export const adminMember = {
     unnamed_user: "이름 없는 사용자",
     refresh_balance_aria: "잔액 새로고침",
     issue_points_btn: "포인트 지급",
+    issue_team_points_btn: "팀에 크레딧 지급",
     role_super_admin: "최고 관리자",
     role_admin: "관리자",
     role_user: "일반 사용자",
@@ -26,6 +27,21 @@ export const adminMember = {
     mint: "발행",
   },
 
+  modal_issue_team: {
+    title: "팀에 크레딧 지급",
+    description:
+      "팀 크레딧은 오프체인 원장입니다. 팀 지갑의 미배정 풀로 바로 입금되며, 팀 관리자가 구성원에게 배정합니다(개인에게 지급하는 온체인 크레딧과 다릅니다).",
+    search_placeholder: "팀 이름 또는 소유자로 검색",
+    scoped_hint: "'{{user}}'이(가) 속한 팀만 표시합니다",
+    no_result: "일치하는 팀이 없습니다",
+    confirm_target: "지급 대상: {{team}}",
+    target_team: "대상 팀",
+    select_team: "팀 선택",
+    team_summary: "구성원 {{members}}명 · 미배정 잔액 {{balance}} 크레딧",
+    success_msg: "팀 지갑으로 입금되었습니다",
+    err_no_team: "지급할 팀을 먼저 선택하세요",
+    err_load_teams: "팀 목록을 불러오지 못했습니다",
+  },
   modal_issue: {
     title: "시스템 포인트 지급",
     target_user: "대상 사용자",
@@ -37,6 +53,7 @@ export const adminMember = {
     err_msg: "지급 실패",
     processing: "처리 중...",
     issued: "지급 완료",
+    cancel_btn: "취소",
     confirm_btn: "지급 확인",
   },
 };

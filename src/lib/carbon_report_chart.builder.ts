@@ -32,6 +32,24 @@ import {
 import { IComputedLedger } from "@/types/carbon_chatbot.types";
 
 // Info: (20260720 - Tzuhan) 圖表文案(由呼叫端以 i18n 注入;佔位/凍結沿用 #23 表格文案語意)
+/**
+ * Info: (20260820 - Emily) 為什麼有三個欄位是必填而其餘是選填。
+ *
+ * 選填 + `if (labels.x)` + 呼叫端是完整物件字面值（沒有 spread 預設值）
+ * = 加了新文案卻忘了接 i18n 時**紙上什麼都不印，而且沒有任何錯誤**。
+ * 這個坑在本檔與 `use_carbon_chat.ts` 的註解裡記過三次
+ * （20260805、20260806、20260819），第三次是 08-19 兩趟驗收全紅。
+ *
+ * 註解防不住它，型別可以：`importedSankeyTitle`、`importedSankeyIsoMapping`、
+ * `importedTopItemsTitle` 這三個是**紙上一定要有的文字**，改成必填之後，
+ * 呼叫端漏接會在 `tsc --noEmit` 就紅（#6671 已把它放進 `npm test`）。
+ *
+ * 驗收方式：在本型別加一個新的必填欄位而不動 `use_carbon_chat.ts`，
+ * `tsc` 必須報 TS2741。
+ *
+ * 其餘欄位維持選填是刻意的 —— 它們是「有就印、沒有就略過」的補充說明
+ * （廠址小計、低於門檻、期間未標註…），缺了不會讓讀者看不到主要內容。
+ */
 export interface ICarbonChartLabels {
   pieTitle: string;
   barTitle: string;
@@ -52,7 +70,7 @@ export interface ICarbonChartLabels {
    * Info: (20260803 - Tzuhan) 匯入桑基圖的標題。**必須帶基準與單位** ——
    * 一張沒有單位的流量圖,讀者無從判斷 8332 是公噸還是公斤,差一千倍。
    */
-  importedSankeyTitle?: string;
+  importedSankeyTitle: string;
   /** Info: (20260803 - Tzuhan) 圖下方「未畫出的項目」說明抬頭 */
   importedSankeyExcluded?: string;
   /**
@@ -67,6 +85,24 @@ export interface ICarbonChartLabels {
    * 指錯方向的提示比沒有提示更貴:它讓人把時間花在不會有結果的地方。
    */
   importedSankeyNoLedger?: string;
+  /**
+   * Info: (20260825 - Emily) #6667:「取得了表3.8 但勾稽被擋」的說明抬頭。
+   * 與 importedSankeyNoLedger 是兩件事:「沒拿到表」vs「拿到了但數字對不上,
+   * 凍結在門口」—— 後者印前者的文案,使用者會去重匯一章根本沒壞的內容。
+   * 具體被擋的理由(幾列無法解析、差額多少)由呼叫端隨阻擋紀錄帶入,逐條列出。
+   */
+  importedSankeyBlockedLedger?: string;
+  /**
+   * Info: (20260828 - Emily) 「部分入帳」的圖旁附註(PR #6725 round-2 低-1 第二半)。
+   *
+   * 與 importedSankeyBlockedLedger 是不同情境:那句是**取代圖**(帳本整本空,
+   * 沒有圖可畫);這句是**附在圖旁**(一份報告兩個段落,一個成功一個被擋 ——
+   * 成功那半的圖仍然有意義,但它不是全貌)。
+   *
+   * 沒有這一句時的實際後果:圖照畫、數字照印,而被擋的那半在紙上完全不存在;
+   * 讀者看到一張自我一致的桑基圖,無從得知總量少了一塊。
+   */
+  partialImportBlocked?: string;
   /** Info: (20260803 - Tzuhan) 節點過多而降層時的說明 */
   importedSankeyCollapsed?: string;
   /**
@@ -74,8 +110,27 @@ export interface ICarbonChartLabels {
    * 那個映射是 1:1 所以不畫成一層,但它是一個分類判斷,必須說出來。
    */
   importedSankeyGhgMapping?: string;
+  /**
+   * Info: (20260819 - Emily) 範疇制與 ISO 類別制的對照說明(`open/53`)。
+   *
+   * 圖上的分類層印的是 GHG Protocol 的範疇一/二/三,而本報告的敘述採 ISO 14064-1
+   * 類別一~六 —— 兩邊各自都對,中間對不上,而**紙上沒有一句話說它們是同一批排放源**。
+   * 08-19 量到:一份宣告依 ISO 14064-1 編製的報告裡,「範疇」出現 77 次,
+   * 其中至少 72 次是系統自己印上去的(客戶原文全文只有 5 次)。
+   *
+   * 與上面 `importedSankeyGhgMapping` 同一個理由:隱藏的分類判斷等於沒有依據,
+   * 查核者無法質疑他看不到的東西。所以不是把「範疇」藏起來,是把對照說出來。
+   *
+   * 這是固定文字而不是交給模型寫的原因:模型不知道系統圖表印了什麼標籤,
+   * 叫它寫這一句就是叫它猜;而固定文字驗得起來(驗收腳本可以要求它與「範疇」同時出現)。
+   *
+   * 真修是把圖表改成類別制(`open/53`),但那要改**分組鍵**不只是換標籤 ——
+   * 多個 GHG 類別對到同一個 ISO 類別(Cat 1/2/3/5/8 → 類別四),
+   * 只換標籤會得到好幾列「類別四」各自小計,比現在更糟。
+   */
+  importedSankeyIsoMapping: string;
   /** Info: (20260806 - Tzuhan) 排放去向圖的標題(前 N 大 + 其他) */
-  importedTopItemsTitle?: string;
+  importedTopItemsTitle: string;
   /**
    * Info: (20260806 - Tzuhan) 「其他」節點名。**它是一個真的節點**,不是丟掉 ——
    * 沒進前 N 名的流量仍然畫在圖上,廠址的流出才等於流入。
@@ -126,9 +181,15 @@ export const CARBON_CHART_DEFAULT_LABELS: ICarbonChartLabels = {
   importedSankeyExcluded: "未畫出的項目(NA/NS 或為零)",
   importedSankeyNoLedger:
     "本報告已匯入,但帳本沒有任何可用數據,因此畫不出排放流向圖。桑基圖與系統數據表格的唯一來源是表3.8(各公司溫室氣體排放量),本次未取得該表。請確認第三章是否解析成功;若該章列為解析失敗,請以預覽卡的「重試失敗章節」重新匯入,並在伺服端日誌查看該表是否被丟棄及其原因。",
+  importedSankeyBlockedLedger:
+    "本報告已取得表3.8,但勾稽未通過,數據凍結在門口、未寫入帳本(半套資料入帳會讓每張圖都錯得很像對的)。被擋的原因如下;修正原文對應表格或重新匯入第三章後,圖表將自動生成。",
+  partialImportBlocked:
+    "⚠ 本圖只含成功入帳的部分:本次匯入另有表格被勾稽擋下、未寫入帳本,因此圖中的總量與占比不是全公司全貌。被擋的原因如下;修正原文對應表格或重新匯入後,圖表將自動重算。",
   importedSankeyCollapsed: "節點過多,已降為一層(全公司 → 範疇)",
   importedSankeySiteTotals: "各廠址小計(公噸 CO2e/年,占全公司比)",
   importedSankeyGhgMapping: "子代碼與 GHG Protocol 類別的對照",
+  importedSankeyIsoMapping:
+    "圖上的分類層依 GHG Protocol 範疇標示;對照 ISO 14064-1 為:範疇一=類別一、範疇二=類別二、範疇三=類別三至類別六。本報告敘述採 ISO 14064-1 類別制,兩者指同一批排放源。",
   importedTopItemsTitle:
     "排放去向:全公司 → 前九大排放項目與其他(原文照錄,所在地基準,公噸 CO2e/年)",
   importedSankeyOther: "其他",
@@ -691,6 +752,13 @@ const buildImportedSankey = (
         lines.push(`- ${subCategory} → ${ghgCategory}`);
       });
   }
+  /**
+   * Info: (20260819 - Emily) 對照說明不綁 `ghgBySubCategory` 是否為空 ——
+   * 圖上的範疇標籤在任何情況下都印得出來,說明就得跟著在。
+   */
+  if (labels.importedSankeyIsoMapping) {
+    lines.push("", `> _${labels.importedSankeyIsoMapping}_`);
+  }
   return lines.join("\n");
 };
 
@@ -851,9 +919,36 @@ export const buildCarbonChartBlock = (
   ledger: IComputedLedger | undefined,
   labels: ICarbonChartLabels = CARBON_CHART_DEFAULT_LABELS,
   tableLabels: ICarbonDataTableLabels = CARBON_DATA_TABLE_DEFAULT_LABELS,
+  /**
+   * Info: (20260825 - Emily) #6667:勾稽阻擋紀錄(state.ledgerImportBlocks)。
+   * 有值且帳本為空時,空帳本的原因是「表拿到了但被擋」——
+   * 要印被擋的理由,不是「未取得該表」。
+   *
+   * Info: (20260828 - Emily) 帳本**非空**時也要用(round-2 低-1 第二半):
+   * 部分成功部分被擋是常態(一份報告多個段落),那時圖有意義但不是全貌 ——
+   * 附註在圖旁(見 blockedNote),不取代圖。
+   */
+  importBlocks?: readonly { reason: string }[],
 ): string => {
   const wrap = (body: string): string =>
     `${buildChartAnchorStart(templateId)}\n\n${body}\n\n${buildChartAnchorEnd(templateId)}`;
+  /**
+   * Info: (20260828 - Emily) 有阻擋紀錄就要說 —— 帳本非空時是**附註**不是取代
+   * (PR #6725 round-2 低-1 第二半)。呼叫端已改為無條件收集阻擋紀錄,
+   * 但只改收集看不到:部分成功時走的是下面的 switch,
+   * 而 switch 原本一個字都不提被擋的那半。
+   */
+  const blockedNote = (): string => {
+    if (!importBlocks || importBlocks.length === 0) return "";
+    const heading =
+      labels.partialImportBlocked ??
+      CARBON_CHART_DEFAULT_LABELS.partialImportBlocked;
+    const reasons = importBlocks
+      .map((block) => `> _- ${block.reason}_`)
+      .join("\n");
+    return `\n\n> _${heading}_\n${reasons}`;
+  };
+  const wrapChart = (body: string): string => wrap(`${body}${blockedNote()}`);
 
   if (ledger?.articulation?.status === ArticulationStatusEnum.VIOLATED) {
     return wrap(`> ${labels.frozen}`);
@@ -868,6 +963,15 @@ export const buildCarbonChartBlock = (
       templateId === CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY ||
       templateId === CarbonChartTemplateEnum.IMPORTED_TOP_ITEMS_SANKEY
     ) {
+      // Info: (20260825 - Emily) #6667:「沒拿到表」與「拿到了但勾稽被擋」分開說(見參數註解)
+      if (importBlocks && importBlocks.length > 0) {
+        const reasons = importBlocks
+          .map((block) => `> _- ${block.reason}_`)
+          .join("\n");
+        return wrap(
+          `> _${labels.importedSankeyBlockedLedger ?? CARBON_CHART_DEFAULT_LABELS.importedSankeyBlockedLedger}_\n${reasons}`,
+        );
+      }
       return wrap(
         `> _${labels.importedSankeyNoLedger ?? labels.insufficient}_`,
       );
@@ -877,19 +981,19 @@ export const buildCarbonChartBlock = (
 
   switch (templateId) {
     case CarbonChartTemplateEnum.SCOPE_PIE:
-      return wrap(buildScopePie(ledger, labels));
+      return wrapChart(buildScopePie(ledger, labels));
     case CarbonChartTemplateEnum.SCOPE_BAR:
-      return wrap(buildScopeBar(ledger, labels));
+      return wrapChart(buildScopeBar(ledger, labels));
     case CarbonChartTemplateEnum.EMISSION_SANKEY:
-      return wrap(buildEmissionSankey(ledger, labels));
+      return wrapChart(buildEmissionSankey(ledger, labels));
     case CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY:
-      return wrap(buildImportedSankey(ledger, labels));
+      return wrapChart(buildImportedSankey(ledger, labels));
     case CarbonChartTemplateEnum.IMPORTED_TOP_ITEMS_SANKEY:
-      return wrap(buildImportedTopItemsSankey(ledger, labels));
+      return wrapChart(buildImportedTopItemsSankey(ledger, labels));
     case CarbonChartTemplateEnum.SOURCE_TABLE:
     default:
       // Info: (20260720 - Tzuhan) 明細表復用 #23 產生器(去其外層錨點,改包本模板錨點避免雙重替換)
-      return wrap(
+      return wrapChart(
         buildCarbonDataTable(ledger, tableLabels)
           .split("\n")
           .filter((line) => !line.startsWith("<!-- carbon-data-table"))

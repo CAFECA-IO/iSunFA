@@ -1,4 +1,8 @@
 export const authModal = {
+  // Info: (20260814 - Luphia) 登入過期的全域提示（401 集中通報）
+  session_expired: "登入已過期",
+  session_expired_hint:
+    "為了保護你的帳戶，登入狀態會定期失效。請重新登入後再繼續操作。",
   welcome_back: "歡迎回來",
   create_account: "建立帳號",
   login_tab: "登入",

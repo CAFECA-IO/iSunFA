@@ -175,3 +175,43 @@ export const DEFAULT_FAITH_BILLING: IFaithBillingSetting = {
  */
 export const FAITH_PROMPT_OVERHEAD_TOKENS = 600;
 export const FAITH_INPUT_CHARS_PER_TOKEN = 3;
+
+/**
+ * Info: (20260817 - Luphia) 任務短期記憶的上界（條款 §3.7「所有方案皆具備」）。
+ *
+ * 對話前文由 client 傳上來（費思不寫 DB，聊天室訊息又是端對端加密，
+ * server 讀不到前文），因此必須有一個硬上界——它同時是 prompt 長度的上界
+ * 與預扣估算的依據。沒有上界的話，呼叫端送多長的歷史就扣多少點，
+ * 而預扣是「成本上界」這個不變式會直接失效。
+ *
+ * 10 輪 / 4,000 字元約當 1,333 tokens，以 1 點 = 1,000 tokens 計，
+ * 最多讓每則訊息多扣約 2 點。
+ */
+export const FAITH_HISTORY_MAX_TURNS = 10;
+export const FAITH_HISTORY_MAX_CHARS = 4000;
+
+/**
+ * Info: (20260812 - Luphia) 費思個人化記憶於「付費訂閱終止後」保留天數的**預設值**。
+ *
+ * 正式值為系統設定，保存於 DB（`SystemSettingKey.FAITH_MEMORY_RETENTION_DAYS`，同 ADR 017
+ * 的簽章式設定），可由後台調整、不需重啟；本常數僅在查無設定值或值不合法時作為 fail-safe。
+ * 讀取一律經 `resolveFaithMemoryRetentionDays()`，嚴禁在別處直接引用本常數當生效值。
+ *
+ * ⚠️ 這個數字同時是**對外承諾**：服務條款 §3.7、《隱私權政策》§5 與方案頁文案均載明 90 天。
+ * 後台調整設定時必須同步修訂該三處文字，否則條款所述期間與系統實際行為不符。
+ *
+ * ToDo: (20260812 - Luphia) 記憶儲存與到期刪除機制尚未實作（費思目前為無記憶 one-shot），
+ * 須於 v0.13.0 釋出前完成。規範與驗收條件見
+ * documents/architecture/ai_and_analytics/faith_personal_memory.md（§1 承諾對照表、§9 Release Gate）；
+ * 其中 §5 記載一項必改點：記憶注入會抬高 input tokens，預扣估算須加計注入上界，
+ * 否則 hold 不再是成本上界。未完成前不得對外宣稱此權益。
+ */
+export const DEFAULT_FAITH_MEMORY_RETENTION_DAYS = 90;
+
+/**
+ * Info: (20260812 - Luphia) 保留天數的合法區間（fail-safe 判斷用）。
+ * 上界 3,650 天（10 年）不是法規數字，而是「打錯一個零」的防線：
+ * 設定值若被誤填成 90000，記憶就等於永不刪除，而那是條款明文承諾要刪的。
+ */
+export const FAITH_MEMORY_RETENTION_DAYS_MIN = 1;
+export const FAITH_MEMORY_RETENTION_DAYS_MAX = 3650;

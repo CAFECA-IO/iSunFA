@@ -27,6 +27,7 @@ export const calculator = {
     tax_residency_status: "税務居住状況",
     residency_option_taiwan: "台湾居住者",
     residency_option_non_taiwan: "非台湾居住者",
+    date_from_employee: "従業員データより",
     industry_category: "業種",
     year: "年度",
     month: "月",
@@ -67,11 +68,26 @@ export const calculator = {
     voluntary_pension_contribution: "任意労働年金拠出",
   },
   employee_list: {
+    issue_name_required: "「基本情報」で従業員名を入力してください",
+    issue_number_required: "「基本情報」で従業員番号を入力してください",
+    issue_base_salary_required: "「給与」で基本給を入力してください",
+    section_identity: "基本情報",
+    section_pay: "給与",
+    section_insurance: "社会保険・年金",
+    section_other: "その他",
+    other_allowance_taxable: "その他手当（課税）",
+    other_allowance_tax_free: "その他手当（非課税）",
+    other_allowance_hint:
+      "毎月固定の手当を入力してください。当月限りの賞与は計算機側で入力します —— ここに入れると翌月も引き継がれます。",
+    voluntary_pension_rate: "年金の自己拠出率",
+    employment_type: "雇用形態",
+    hire_date: "入社日",
+    resign_date: "退職日",
+    date_order_error: "退職日は入社日より前にはできません",
     main_title: "従業員リスト",
     name: "従業員名",
     number: "従業員番号",
     email: "Eメール",
-    action: "操作",
     search_placeholder: "従業員を検索",
     add_employee: "新規従業員追加",
     edit_employee: "従業員編集",
@@ -79,9 +95,33 @@ export const calculator = {
     number_placeholder: "従業員番号を入力してください",
     email_placeholder: "従業員のEメールを入力してください",
     email_valid: "有効なEメールアドレスを入力してください",
-    no_data: "従業員データがありません",
     add_success_toast: "従業員が追加されました",
     edit_success_toast: "従業員データが更新されました",
+    base_salary: "基本給",
+    total_count: "従業員 {{count}} 名",
+    filtered_count: "{{count}} / {{total}} 名",
+    empty_title: "この帳簿にはまだ従業員がいません",
+    empty_desc:
+      "従業員を登録すると、計算機に基本給と食事手当を引き継げるようになり、計算結果を給与記録として保存できます。",
+    no_search_result: "「{{keyword}}」に一致する従業員はいません",
+    clear_search: "検索をクリア",
+    load_failed:
+      "従業員リストを読み込めませんでした。しばらくしてからお試しください。",
+    save_failed: "保存できませんでした。しばらくしてからお試しください。",
+    remove_failed: "削除できませんでした。しばらくしてからお試しください。",
+    number_taken: "この従業員番号は他の従業員が使用しています",
+    save_changes: "変更を保存",
+    remove_employee_records_kept:
+      "この従業員の保存済みの給与記録は残り、後からでも参照できます。従業員リストと計算機の選択肢に表示されなくなるだけです。",
+    remove_employee_title: "従業員の削除",
+    remove_employee_content: "本当に従業員リストから {{name}} を削除しますか？",
+    remove_employee_submit_btn: "はい、削除します。",
+    no_email: "未入力",
+    missing_email_banner:
+      "{{count}} 名のメールアドレスが未入力です。給与明細を送信できません",
+    only_missing_email: "該当者のみ表示",
+    show_all: "すべて表示",
+    no_filter_result: "条件に一致する従業員がいません",
   },
   result: {
     base_salary_with_tax: "基本給（課税対象）",
@@ -144,10 +184,18 @@ export const calculator = {
     content_2: "を",
     content_bold_2: " {{employeeName}} ",
     email: "Eメール",
-    email_placeholder: "従業員のEメールを入力してください",
-    invalid_email_hint:
-      "Eメールの形式が正しくありません。もう一度ご確認ください。",
     submit: "給与明細を送信",
+    email_from_profile: "従業員データより",
+    email_missing: "メールアドレスが未登録です",
+    sending: "送信中...",
+    error_no_email:
+      "この従業員にはメールアドレスが登録されていません。先に従業員一覧で追加してください。",
+    error_not_configured:
+      "メール送信がまだ設定されていません。システム管理者にご連絡ください。",
+    error_font_missing:
+      "サーバーに中国語フォントがないため、給与明細を生成できません。システム管理者にご連絡ください。",
+    error_generic:
+      "給与明細を送信できませんでした。しばらくしてからもう一度お試しください。",
   },
   my_pay_slip: {
     main_title: "私の給与明細",
@@ -163,12 +211,132 @@ export const calculator = {
     pay_slip: "給与明細",
     sent_on: "送信日",
     all: "すべて",
+    employee: "従業員",
+    sent_by: "送信者",
+    unknown_sender: "名前なし",
+    sent_empty: "この帳簿からはまだ給与明細が送信されていません",
+    sent_load_failed:
+      "送信履歴を読み込めませんでした。再読み込みしてお試しください",
+  },
+  // Info: (20260831 - Julian) 公開版から帳簿版への導線
+  // Info: (20260831 - Julian) 計算機の Step 1 における従業員の紐付け状態
+  employee_link: {
+    linked_hint: "従業員と紐付け済み。基本給と食事手当を引き継ぎました",
+    unlink: "紐付けを解除",
+  },
+  // Info: (20260831 - Julian) 計算機ページからの保存と、2 つの例外
+  save_record: {
+    profile_diff_title: "従業員データも更新しますか？",
+    profile_diff_content:
+      "計算機の設定が「{{name}}」さんの従業員データと異なります。差分は以下のとおりです：",
+    profile_diff_hint:
+      "今回の給与記録はどちらを選んでも計算機の値で保存されます。ここで聞いているのは従業員データも変更するかどうかだけです。「今回だけ保存」を選ぶと従業員データはそのままです。",
+    profile_diff_update_btn: "従業員データを更新して保存",
+    profile_diff_skip_btn: "今回だけ保存",
+    profile_diff_failed:
+      "更新できませんでした。しばらくしてからお試しください。",
+    profile_value_on: "あり",
+    profile_value_off: "なし",
+    profile_value_none: "未設定",
+    save: "給与記録を保存",
+    saving: "保存中…",
+    saved: "{{name}} の {{year}} 年 {{month}} 月の給与記録として保存しました",
+    view_record: "表示",
+    save_failed: "保存できませんでした。しばらくしてからお試しください。",
+    overwrite_title: "既存の給与記録を上書きしますか？",
+    overwrite_content:
+      "{{name}} の {{year}} 年 {{month}} 月にはすでに記録があります（手取り {{amount}} 元）。保存すると上書きされ、以前の数値は残りません。",
+    overwrite_submit: "上書きして保存",
+    unlinked_title: "この試算は誰の記録ですか？",
+    unlinked_content: "この試算はまだ従業員に紐づいていません。",
+    create_and_save: "「{{name}}」を追加して保存",
+    create_and_save_hint:
+      "計算機の氏名・従業員番号・基本給から従業員を作成します",
+    pick_from_list: "従業員リストから選ぶ",
+    pick_from_list_hint: "この試算は選んだ従業員に紐付け直されます",
+    save_to_existing: "{{name}} に保存する",
+    save_to_existing_hint: "この番号の既存の従業員を使い、新規作成はしません",
+    unlinked_conflict_content:
+      "従業員番号 {{number}} はすでに「{{existingName}}」のものです。この番号で新しい従業員は作成できません。",
+    edit_number: "従業員番号を修正する",
+    edit_number_hint:
+      "「{{name}}」の番号が別のものなら、ステップ 1 に戻って直します",
+    fill_number: "従業員番号を入力する",
+    fill_number_hint: "従業員番号は必須です。ステップ 1 に戻って入力します。",
+  },
+  // Info: (20260831 - Julian) 給与記録の閲覧
+  records: {
+    main_title: "給与記録",
+    pay_period: "支給対象期間",
+    pay_period_value: "{{year}} 年 {{month}} 月",
+    employee: "従業員",
+    net_pay: "手取り額",
+    taxable: "源泉徴収票の金額",
+    action: "送信/表示/再計算/削除",
+    view: "給与明細を表示",
+    load_back: "計算機に読み込む",
+    delete: "削除",
+    all_employees: "すべての従業員",
+    total_count: "全 {{count}} 件",
+    empty_title: "給与記録はまだありません",
+    empty_desc: "計算後に「給与記録を保存」を押すと、ここに表示されます。",
+    load_failed:
+      "給与記録を読み込めませんでした。しばらくしてからお試しください。",
+    search_placeholder: "従業員名または従業員番号で検索",
+    clear_search: "検索条件をクリア",
+    no_result_title: "条件に一致する給与記録がありません",
+    period: "対象期間",
+    all_periods: "すべての期間",
+    no_result_desc: "キーワード・従業員・対象期間を変えてお試しください。",
+    delete_title: "給与記録の削除",
+    delete_content:
+      "「{{name}}」さんの {{year}} 年 {{month}} 月の給与記録を削除しますか？",
+    delete_irreversible:
+      "給与記録は論理削除ではありません。削除すると復元できず、他の場所からも取り戻せません。",
+    delete_submit_btn: "削除する",
+    delete_failed: "削除できませんでした。しばらくしてからお試しください。",
+    view_failed:
+      "給与明細を読み込めませんでした。しばらくしてからお試しください。",
+    load_back_failed:
+      "計算機に読み込めませんでした。しばらくしてからお試しください。",
+    employee_list_failed:
+      "従業員名簿を読み込めませんでした。この状態では計算機に読み込んでも従業員と紐づけできません。",
+    load_back_unlinked:
+      "この従業員は名簿にありません。氏名と従業員番号はこの記録から入力しましたが、従業員との紐づけは行われていません —— 保存時に対象をもう一度確認します。",
+    delivery_status: "送信状況",
+    not_sent: "未送信",
+    select_page: "このページの全行を選択",
+    select_row: "この記録を選択",
+    selected_count: "{{count}} 件を選択中",
+    export_csv: "CSV をエクスポート",
+    export_too_many:
+      "1 回のエクスポートは最大 {{max}} 件です。選択を減らしてください",
+    export_failed:
+      "エクスポートに失敗しました。しばらくしてからお試しください。",
+  },
+  account_book_entry: {
+    title: "この試算を保存しますか？",
+    hint_save: "帳簿版では給与記録の保存と従業員リストの管理ができます。",
+    hint_select: "先に帳簿を選びます。データはその帳簿の下に保存されます。",
+    hint_no_carry:
+      "ここで入力した内容は引き継がれません。帳簿版で入力し直してください。",
+    button: "帳簿版の計算機へ",
   },
   button: {
+    disabled_hint:
+      "4 つのステップをすべて終えると、ダウンロードと保存ができます",
     download: "PNG としてダウンロード",
     send: "給与明細を送信",
     reset: "リセット",
     re_send: "給与明細を再送信",
+    send_disabled_unsaved: "給与記録を保存すると給与明細を送信できます",
+    send_disabled_unlinked:
+      "この試算は従業員との紐付けが解除されています。従業員を選び直してください",
+    send_disabled_no_email:
+      "この従業員にはメールアドレスがありません。先に従業員一覧で追加してください",
+    send_disabled_employee_gone:
+      "この従業員は一覧から削除されているため、給与明細を送信できません",
+    send_disabled_loading: "従業員一覧を確認しています...",
   },
   message: {
     name_error_title: "従業員名が未入力です",
@@ -176,9 +344,6 @@ export const calculator = {
     salary_error_title: "給与入力エラー",
     salary_error_content:
       "基本給（課税）＋ 食事手当（非課税）＋ その他の手当（課税）＋ その他の手当（非課税）は最低賃金以上である必要があります。",
-    remove_employee_title: "従業員の削除",
-    remove_employee_content: "本当に従業員リストから {{name}} を削除しますか？",
-    remove_employee_submit_btn: "はい、削除します。",
     re_send_pay_slip_title: "給与明細の再送信",
     re_send_pay_slip_content_1: "すでに",
     re_send_pay_slip_content_bold_1: " {{month}} の給与明細",

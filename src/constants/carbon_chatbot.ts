@@ -20,6 +20,38 @@ export const buildCarbonChatChannel = (
   sessionId: string,
 ): string => `${CARBON_CHAT_CHANNEL_PREFIX}-${address}-${sessionId}`;
 
+/**
+ * Info: (20260828 - Julian) 反函式：從頻道切回 `{ address, sessionId }`。
+ *
+ * 存在的理由是通知要深連結到**單一會話**：書籤只存 `resourceKey`，
+ * 而那個字串裡就有 sessionId（見 `resumable_job_resume_landing_and_copy.md` §2）。
+ *
+ * 放在 `buildCarbonChatChannel` 旁邊而不是解析的那一端（通知服務），
+ * 有兩個理由：格式改了兩支要一起改，放在一起才看得見；
+ * 而且 round-trip（`parse(build(a, s))`）只有在同一個檔案裡才釘得住。
+ *
+ * 切在**第一個** `-`：位址是 hex（不含 `-`），sessionId 則可能含
+ * （使用者的會話 id 不保證是 `2025` 那種）。用 `lastIndexOf` 反過來切，
+ * 遇到帶 `-` 的 sessionId 就會靜靜地切錯 —— 而切錯的結果是一條
+ * 「看起來有反應」的深連結，導到別人的會話或不存在的會話。
+ */
+export const parseCarbonChatChannel = (
+  channel: string,
+): { address: string; sessionId: string } | null => {
+  const prefix = `${CARBON_CHAT_CHANNEL_PREFIX}-`;
+  if (!channel.startsWith(prefix)) return null;
+
+  const rest = channel.slice(prefix.length);
+  const separator = rest.indexOf("-");
+  if (separator <= 0) return null;
+
+  const address = rest.slice(0, separator);
+  const sessionId = rest.slice(separator + 1);
+  if (sessionId === "") return null;
+
+  return { address, sessionId };
+};
+
 // Info: (20260715 - Luphia) 位址為 hex，EIP-55 checksum 僅差在大小寫；兩端統一轉小寫比對，避免 checksum 格式差異誤拒合法擁有者
 export const isCarbonChatChannelOwnedBy = (
   channel: string,
@@ -626,6 +658,34 @@ const IMPORT_SUMMARY_TEMPLATES: Record<
  * 重載後對話裡沒有任何痕跡,而那幾分鐘的 LLM 呼叫也白燒了。
  * 訊息入庫(E2EE)+ 待匯入結果入庫,兩者一起才讓「稍後再決定」真的可行。
  */
+/**
+ * Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）。
+ *
+ * 伺服器的 402 回應早就把這些算好了（`options`、雙視窗的 `resetAt`、
+ * 以及「這一筆本身就超過視窗上限」的旗標），而前端在此之前**一個欄位都沒有讀**
+ * ——畫面只說「點數用完」，沒說去哪裡補。
+ *
+ * 刻意只留三個欄位，不存整份 payload：
+ *
+ * - `resetAt` 與 `exceedsWindowLimit` 是**決定要說哪句話**的依據，非有不可。
+ * - 額度的 `limit` / `used` 沒有留：那兩個數字在重新整理之後就過時了，
+ *   而顯示一個過時的儀表比不顯示更糟——使用者會據此判斷還能不能跑。
+ */
+export interface ICreditPauseDetail {
+  /**
+   * Info: (20260827 - Luphia) 被擋下的那個視窗的重置時間（epoch 秒）。
+   * null 表示「等重置不會有幫助」（需要付款那種，或超過視窗上限）。
+   */
+  resetAt: number | null;
+  // Info: (20260827 - Luphia) QUOTA_EXCEEDED_OPTION 的值；伺服器算好的出路，前端不重算
+  options: string[];
+  /**
+   * Info: (20260827 - Luphia) 這一筆需要的點數高於整個視窗的上限。
+   * 這種情況**等重置永遠不會好**，倒數與「等一下再來」都是謊話。
+   */
+  exceedsWindowLimit: boolean;
+}
+
 export interface ICarbonImportParsedSummary {
   fileName: string;
   /** Info: (20260806 - Tzuhan) 待確認的逐字段落數 */
@@ -635,6 +695,15 @@ export interface ICarbonImportParsedSummary {
   /** Info: (20260806 - Tzuhan) 一併解析出的活動數據筆數(尚未入帳) */
   activityCount: number;
   failedChapters: string[];
+  /**
+   * Info: (20260825 - Luphia) 因為**點數用完**而還沒解析的章（issue #6713）。
+   *
+   * 與 `failedChapters` 分成兩個欄位、在訊息裡也分成兩句話：
+   * 失敗的章是「試過、壞了」（可重試），這些章是「一步都沒試」——
+   * 伺服端在呼叫 LLM 之前就因點數不足擋下，一點都沒扣。
+   * 混成一句會讓使用者回去改檔案，而真正要做的是補點數。
+   */
+  pausedChapters?: string[];
 }
 
 const IMPORT_PARSED_TEMPLATES: Record<
@@ -648,6 +717,9 @@ const IMPORT_PARSED_TEMPLATES: Record<
       s.failedChapters.length > 0
         ? `以下章節解析失敗,可在預覽卡重試:${s.failedChapters.join("、")}。`
         : "",
+      (s.pausedChapters ?? []).length > 0
+        ? `點數已用完,以下章節還沒開始解析:${(s.pausedChapters ?? []).join("、")}。額度重置、加購點數或升級方案之後,可以從這裡接著匯入(已完成的部分不會重跑)。`
+        : "",
       "解析結果已保存,尚未寫入報告 —— 你可以現在檢視並匯入,也可以稍後回到這個對話再決定。",
     ]
       .filter(Boolean)
@@ -658,6 +730,9 @@ const IMPORT_PARSED_TEMPLATES: Record<
       `待确认 ${s.pendingCount} 节逐字内容、${s.draftedCount} 节 AI 草稿,另有 ${s.activityCount} 笔活动数据。`,
       s.failedChapters.length > 0
         ? `以下章节解析失败,可在预览卡重试:${s.failedChapters.join("、")}。`
+        : "",
+      (s.pausedChapters ?? []).length > 0
+        ? `点数已用完,以下章节还没开始解析:${(s.pausedChapters ?? []).join("、")}。额度重置、加购点数或升级方案之后,可以从这里接着导入(已完成的部分不会重跑)。`
         : "",
       "解析结果已保存,尚未写入报告 —— 你可以现在查看并导入,也可以稍后回到这个对话再决定。",
     ]
@@ -670,6 +745,9 @@ const IMPORT_PARSED_TEMPLATES: Record<
       s.failedChapters.length > 0
         ? `These chapters failed to parse and can be retried from the preview card: ${s.failedChapters.join(", ")}.`
         : "",
+      (s.pausedChapters ?? []).length > 0
+        ? `You ran out of credits, so these chapters have not been parsed yet: ${(s.pausedChapters ?? []).join(", ")}. Once your quota resets, or you buy credits or upgrade your plan, you can carry on from here — the finished parts will not be redone.`
+        : "",
       "The parsed result is saved but not yet written into the report — review and import it now, or come back to this conversation later.",
     ]
       .filter(Boolean)
@@ -681,6 +759,9 @@ const IMPORT_PARSED_TEMPLATES: Record<
       s.failedChapters.length > 0
         ? `次の章は解析に失敗しました。プレビューから再試行できます：${s.failedChapters.join("、")}。`
         : "",
+      (s.pausedChapters ?? []).length > 0
+        ? `クレジットが不足したため、次の章はまだ解析していません：${(s.pausedChapters ?? []).join("、")}。利用枠のリセット、クレジットの追加購入、またはプランのアップグレード後に、ここから続けてインポートできます（完了した部分は再実行されません）。`
+        : "",
       "解析結果は保存済みですが、報告書にはまだ書き込まれていません。今すぐ確認してインポートするか、後でこの会話に戻って決めることもできます。",
     ]
       .filter(Boolean)
@@ -691,6 +772,9 @@ const IMPORT_PARSED_TEMPLATES: Record<
       `원문 ${s.pendingCount}개 절과 AI 초안 ${s.draftedCount}개 절이 확인을 기다리고 있으며, 활동 데이터는 ${s.activityCount}건입니다.`,
       s.failedChapters.length > 0
         ? `다음 장은 분석에 실패했습니다. 미리보기에서 다시 시도할 수 있습니다: ${s.failedChapters.join(", ")}.`
+        : "",
+      (s.pausedChapters ?? []).length > 0
+        ? `크레딧이 모두 소진되어 다음 장은 아직 분석하지 않았습니다: ${(s.pausedChapters ?? []).join(", ")}. 사용량이 초기화되거나 크레딧을 추가 구매하거나 요금제를 업그레이드하면 여기서 이어서 가져올 수 있습니다(완료된 부분은 다시 실행되지 않습니다).`
         : "",
       "분석 결과는 저장되었지만 아직 보고서에 기록되지 않았습니다 — 지금 확인해 가져오거나, 나중에 이 대화로 돌아와 결정할 수 있습니다.",
     ]
@@ -737,3 +821,21 @@ export const buildImportSummaryNotice = (
     "\n",
   );
 };
+
+/**
+ * Info: (20260903 - Luphia) 盤查年度的界（review 收斂:原本硬編在五處 schema 與服務層）。
+ *
+ * 兩個界的語意不同,不可互換:
+ * - `INVENTORY_YEAR_MIN`:盤查報告不會早於這一年。輸入與儲存共用同一個下限。
+ * - `INVENTORY_YEAR_STORAGE_MAX`:**儲存格式**的上限。schema 不隨時間收窄 ——
+ *   否則今天存得下的紀錄會在某一年忽然讀不出來,而讀路徑是 fail-fast 丟棄整份狀態。
+ *   輸入端另外收窄到「今年 + 1」(見 `normalizeInventoryYear`),那是裁決不是格式。
+ *
+ * 不變式:**輸入端能產出的年度集合必須是儲存端能讀回的子集。**
+ * 反過來的後果實測過:年度 0 或 9999 存得進去(寫路徑不過 schema)、
+ * 下次 `CarbonInventoryStateSchema.safeParse` 失敗、`loadInventoryState` 回 null,
+ * **整份盤查狀態(帳本、活動數據、待補項)被丟棄**,而當下畫面毫無異狀。
+ * 守這條不變式的是 `carbon_inventory_state_persistence.test.ts` 的往返測試。
+ */
+export const INVENTORY_YEAR_MIN = 1990;
+export const INVENTORY_YEAR_STORAGE_MAX = 2100;

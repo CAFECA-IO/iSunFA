@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { MIN_WORK_HOURS, MAX_LEAVE_HOURS } from "@/constants/salary_calculator";

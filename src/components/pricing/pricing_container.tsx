@@ -8,24 +8,31 @@ import { MoneyUtil } from "@/lib/utils/money";
 import { CREDIT_PLANS } from "@/config/credit_plans";
 import { PaymentStep } from "@/interfaces/payment";
 import { PendingBillingIntervalType } from "@/types/pricing";
-import {
-  SUBSCRIPTION_PLAN_CREDITS,
-  SUBSCRIPTION_PLAN_PRICE,
-} from "@/constants/price";
+import type { IPlanCatalogEntry } from "@/services/plan.service";
 
 import ConfirmModal from "@/components/common/confirm_modal";
 import AuthModal from "@/components/auth/auth_modal";
 import PaymentModal from "@/components/pricing/payment_modal";
+import { usePurchaseTarget } from "@/hooks/use_purchase_target";
 
 import { PricingProvider } from "@/contexts/pricing_context";
 
 interface IPricingContainerProps {
   activeTab: "subscription" | "credits" | "on_premise" | "solutions";
+  /**
+   * Info: (20260819 - Luphia) 方案目錄由 server 端的 `plan.service` 傳入（集中化 20260819）。
+   *
+   * 這個容器原本自己 import 價格常數來算揭露金額。價格與「有哪些方案」只能有一個來源：
+   * 兩份讀法的代價不是重複，是**畫面顯示的金額與 server 計算的金額可以不一樣**，
+   * 而使用者只會在帳單上發現。
+   */
+  plans: IPlanCatalogEntry[];
   children: ReactNode;
 }
 
 export default function PricingContainer({
   activeTab,
+  plans,
   children,
 }: IPricingContainerProps) {
   const { t } = useTranslation();
@@ -60,6 +67,38 @@ export default function PricingContainer({
   const [pendingBillingInterval, setPendingBillingInterval] =
     useState<PendingBillingIntervalType>();
   const [pendingDetails, setPendingDetails] = useState<string[] | undefined>();
+  /**
+   * Info: (20260814 - Luphia) 點數包 id：團隊購點端點以 creditPlanId 建單（設計書 §6.1），
+   * 不是自己算金額——價格由後端的 credit_plans 決定，前端算一份只會有機會算錯。
+   */
+  const [pendingCreditPlanId, setPendingCreditPlanId] = useState<string>("");
+
+  /**
+   * Info: (20260814 - Luphia) 訂閱 / 購點的歸屬對象（設計書 §6.1、§7）：
+   * 訂閱一定屬於某個團隊（額度掛在 TeamSubscription 上），點數則可個人或團隊。
+   * 選定團隊後由 hook 改走 team-scoped 端點建單，訂單才帶得到 teamId。
+   */
+  const purchaseTarget = usePurchaseTarget({
+    planId: pendingPlanId,
+    billingInterval: pendingBillingInterval,
+    creditPlanId: pendingCreditPlanId,
+    // Info: (20260814 - Luphia) 方案卡上的價格是**單一席次**的單價（規範 P2）
+    unitPrice: Number(pendingAmount) || undefined,
+  });
+
+  /**
+   * Info: (20260814 - Luphia) 訂閱選定團隊後，付款畫面顯示的是「席次 × 單價」的總額。
+   * 沿用方案卡的單價會讓五人團隊看到 840、卡卻被扣 4,200——價目與實收不一致
+   * 是最不能出現在結帳畫面上的東西。實收金額仍由 server 依當下人數計算。
+   */
+  const effectiveAmount =
+    purchaseTarget.seatAmount !== null
+      ? String(purchaseTarget.seatAmount)
+      : pendingAmount;
+  const effectiveDisplayPrice =
+    purchaseTarget.seatAmount !== null
+      ? `NT$ ${purchaseTarget.seatAmount.toLocaleString()}`
+      : pendingDisplayPrice;
 
   const onSelectSubscription = (
     planKey: string,
@@ -70,21 +109,36 @@ export default function PricingContainer({
       setAuthModalOpen(true);
       return;
     }
-    const amount =
-      SUBSCRIPTION_PLAN_PRICE[planKey as keyof typeof SUBSCRIPTION_PLAN_PRICE][
-        billingInterval === "month" ? "monthly" : "yearly"
-      ].toString();
-    const credits =
-      SUBSCRIPTION_PLAN_CREDITS[
-        planKey as keyof typeof SUBSCRIPTION_PLAN_CREDITS
-      ].toString();
-
+    const plan = plans.find((entry) => entry.id === planKey);
+    /**
+     * Info: (20260819 - Luphia) 目錄裡沒有這個方案就**不開付款畫面**。
+     *
+     * 先前的寫法是 `SUBSCRIPTION_PLAN_PRICE[planKey as keyof ...]`——那個 `as`
+     * 讓未知的 planKey 在型別上看起來合法，執行時取到 undefined 再 `[...]`
+     * 直接丟 TypeError（畫面卡住、沒有任何訊息）。價格揭露寧可不開，不能猜。
+     */
+    if (!plan) {
+      console.warn(`[Pricing] unknown planKey: ${planKey}`);
+      return;
+    }
+    const amount = (
+      billingInterval === "month" ? plan.monthlyPrice : plan.yearlyPrice
+    ).toString();
+    /**
+     * Info: (20260815 - Luphia) 訂閱不帶點數（PR #6652 第二輪 D）。
+     *
+     * `SUBSCRIPTION_PLAN_CREDITS` 是**對外承諾的保守值**，只用於方案頁把額度換算成
+     * 「每月最多諮詢 N 個問題」（見 constants/price.ts 的說明）。先前把它灌進 modal
+     * 的 credits state，靠 modal 內三道 `isTeamSubscription` 判斷才不會顯示出來——
+     * 不變式應該放在資料來源，而不是散在呈現層的三個條件裡。
+     */
     setPendingAmount(amount);
-    setPendingCredits(credits);
-    setPendingBaseCredits(credits);
+    setPendingCredits("0");
+    setPendingBaseCredits("0");
     setPendingBonusCredits("0");
     setPendingDisplayPrice(`NT$ ${Number(amount).toLocaleString()}`);
     setPendingTitle(title);
+    setPendingCreditPlanId("");
     setPendingPlanId(planKey);
     setPendingBillingInterval(billingInterval);
     setPendingDetails(undefined);
@@ -110,6 +164,7 @@ export default function PricingContainer({
     setPendingBonusCredits("0");
     setPendingDisplayPrice(`NT$ ${amount.toLocaleString()}`);
     setPendingTitle(title);
+    setPendingCreditPlanId("");
     setPendingPlanId(planId);
     setPendingBillingInterval(interval);
     setPendingDetails(details);
@@ -137,6 +192,7 @@ export default function PricingContainer({
     setPendingBonusCredits((bonus > 0 ? bonus : 0).toString());
     setPendingDisplayPrice(displayPrice);
     setPendingTitle(t("pricing.credits.title"));
+    setPendingCreditPlanId(plan.id);
     setPendingPlanId("");
     setPendingBillingInterval(undefined);
     setPendingDetails(undefined);
@@ -284,16 +340,19 @@ export default function PricingContainer({
           onClose={() => setPaymentModalOpen(false)}
           onSuccess={() => {}}
           initialStep={modalInitialStep}
-          amount={pendingAmount}
+          amount={effectiveAmount}
           credits={pendingCredits}
           baseCredits={pendingBaseCredits}
           bonusCredits={pendingBonusCredits}
-          displayPrice={pendingDisplayPrice}
+          displayPrice={effectiveDisplayPrice}
           orderId={pendingOrderId}
           title={pendingTitle}
           planId={pendingPlanId}
           billingInterval={pendingBillingInterval}
           details={pendingDetails}
+          targetSelector={purchaseTarget.targetNode}
+          orderCreator={purchaseTarget.orderCreator}
+          purchaseBlockingMessage={purchaseTarget.blockingMessage}
         />
         <ConfirmModal
           isOpen={confirmModal.isOpen}

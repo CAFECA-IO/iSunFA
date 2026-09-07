@@ -1,5 +1,6 @@
 import { useTranslation } from "@/i18n/i18n_context";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
 import { StepCard } from "@/components/admin/setup/step_card";
 import { IStepProps, StepStatus } from "@/components/admin/setup/setup_types";
@@ -20,6 +21,7 @@ export function SetupFinalizeEnv({
   onReset,
 }: IStepProps) {
   const { t } = useTranslation();
+  const router = useRouter();
 
   const [status, setStatus] = useState<StepStatus>(StepStatus.IDLE);
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -117,7 +119,11 @@ export function SetupFinalizeEnv({
       const res = await verifyAndFinalizeConfig(authentication);
       if (res.success) {
         setStatus(StepStatus.SUCCESS);
-        window.location.href = "/admin/reboot";
+        /**
+         * Info: (20260814 - Luphia) 此時伺服器**尚未**重啟（重啟由 /admin/reboot 頁發動），
+         * 因此走 client 導航即可，不需要整頁重載。
+         */
+        router.push("/admin/reboot");
       } else {
         setStatus(StepStatus.ERROR);
         setErrorMessage(`${t("admin_setup.step8.err_finalize")}${res.error}`);

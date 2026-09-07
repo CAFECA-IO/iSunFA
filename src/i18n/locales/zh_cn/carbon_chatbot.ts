@@ -4,11 +4,21 @@ export const carbonChatbot = {
   // Info: (20260730 - Tzuhan) 未解鎖時的報告區文案:不可讓大綱骨架看起來像已載入的空報告
   report_locked_hint:
     "报告内容以设备密钥端对端加密。完成一次验证即可解锁并载入这份报告。",
+  report_locked_hint_custodial:
+    "报告内容加密后储存。您以第三方账号登录，加密密钥由平台代管，完成一次验证即可解锁并载入这份报告。",
   unlock_button: "开始加密对话",
   unlock_hint:
     "为保护您的盘查内容，本对话将以设备的安全密钥进行端到端加密。点击开始并完成一次验证即可解锁并取得 AI 招呼。",
+  // Info: (20260812 - Luphia) 托管账号（第三方登录）专用的解锁说明，不可沿用上面那句
+  unlock_hint_custodial:
+    "为保护您的盘查内容，本对话将加密后储存。您以第三方账号登录，加密密钥由平台代管（与您的钱包相同），因此平台在技术上具备解密能力；若需要「仅您本人可解密」的保护等级，请改用 passkey 账号。点击开始即可解锁并取得 AI 招呼。",
+  custody_loading: "正在确认您的账号密钥保管方式，稍候即可开始加密对话。",
+  key_source_mismatch:
+    "这份对话是以另一种密钥保管方式加密的（例如您在绑定 passkey 之前建立的内容），因此无法用目前的密钥解开。请联系运维协助完成密钥移转 —— 重试不会有帮助。",
   device_unsupported:
     "您的设备或浏览器不支持加密所需的安全密钥功能（WebAuthn PRF），暂时无法使用加密对话。建议改用支持的环境，例如 Android 上的 Chrome，或支持 PRF 的实体安全密钥。",
+  unlock_failed:
+    "解锁加密密钥失败，对话尚未开始。请再按一次；若持续失败，请刷新页面或联系运维（详细原因已记录在浏览器控制台）。",
   subtitle: "您专属的企业碳会计师 (Carbon Accountant)",
   recent_chats: "最新对话",
   today: "今日",
@@ -74,6 +84,10 @@ export const carbonChatbot = {
   restore_session: "还原此对话",
   system_error: "【系统错误】抱歉，连线到碳会计师服务时发生问题，请稍后再试。",
   system_unavailable: "抱歉，系统目前无法回应。",
+  team_quota_exceeded:
+    "团队的 AI 额度与分配点数都已用完，请等待额度重置，或加购点数／升级方案后再试。",
+  session_not_bound:
+    "此盘查会话尚未绑定账本，无法计算额度。请先于会话设置中选择要归属的账本。",
   ai_quota_exceeded:
     "【AI 额度已达上限】短时间内请求过多，请稍候一分钟后再试。",
   rate_limited: "【操作过于频繁】已达使用频率上限，请稍候片刻再试。",
@@ -113,6 +127,12 @@ export const carbonChatbot = {
     "报告最新的变更没有保存到云端：草稿已被其他标签页或设备更新。请刷新页面获取最新版本后再改一次。",
   save_failed_too_large:
     "报告最新的变更没有保存到云端：内容已超过单份草稿的上限。请先移除部分原文表格或改以分次导入。",
+  // Info: (20260904 - Emily) 纸面合规宣告挡下云端保存(#6688-B):这不是失败而是拒绝,重试不会变
+  save_blocked_framework_claim:
+    "报告里出现「本公司符合 {{name}}」这类主体合规宣告,这一版没有保存到云端 —— 那句话不得出现在送出的报告上。内容仍在本机,移除该语句后会自动重新保存;叙述文件结构的架构对齐声明不受影响。",
+  // Info: (20260904 - Emily) 盘查状态存不进去(open/73):每次都会失败同一次,而且没有本机备份
+  inventory_unsavable:
+    "盘查数据这一版没有保存成功:其中有字段不符合存储格式。内容还在画面上,但关闭或刷新这个分页之后这一版就不在了。这是系统的问题,请回报给我们。",
   save_local_quota: "本机暂存空间已满,离线备份未更新(云端已保存)。",
   save_local_quota_only:
     "本机暂存空间已满,而这一版尚未能保存至云端 —— 请勿关闭标签页,先解锁或刷新后再试。",
@@ -156,6 +176,14 @@ export const carbonChatbot = {
     "已保存待导入的解析结果:{{name}}(共 {{count}} 节,尚未写入报告)",
   import_pending_open: "查看并导入",
   import_pending_discard: "舍弃",
+  import_inventory_year: "盘查年度",
+  import_inventory_year_placeholder: "2024",
+  import_inventory_year_hint:
+    "这份报告的盘查年度(公元)。跨年度导入时用它分辨哪些分录属于哪一年",
+  import_inventory_year_required:
+    "这次导入含排放总量表,请填写这份报告的盘查年度",
+  import_inventory_year_invalid:
+    "请填公元四位数的盘查年度(1990 年至明年);超出范围的年度会让账本下次加载时读不回来",
   import_reset_note:
     "导入段落的核对状态将重置;{{activities}} 笔活动数据将入账并重新核对",
   import_apply: "导入勾选({{count}})",
@@ -164,6 +192,45 @@ export const carbonChatbot = {
     "「{{name}}」还在解析中。同时跑两份会互相抢额度、两边都变慢,请等这一份跑完或刷新后再试。",
   import_parsing_chapter:
     "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,{{inFlight}} 章解析中),完整报告约需数分钟…",
+  import_requires_book:
+    "这个会话还没绑定账本,无法导入整份报告(逐章导入需要以账本的额度计费)。请先在会话设置选择账本,再重新导入。",
+  // Info: (20260828 - Julian) 同 zh_tw：这句话有两个已知的错，尚未修（见计划 §4）
+  import_paused_chapters:
+    "点数已用完,以下章节还没开始解析:{{chapters}}。补上点数后可以从这里接着导入,已完成的部分不会重跑。",
+  // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
+  import_interrupted_chapters:
+    "上一次导入没有跑完,以下章节还没解析:{{chapters}}。可以从这里接着导入,已完成的部分不会重跑、也不会再扣点数。",
+  // Info: (20260901 - Luphia) 「可能」不是贅字（review #6726 中-2）：BUSY 也可能是自己的分頁崩潰後租約未過期
+  import_job_busy:
+    "这份导入可能正在另一个标签页或设备上跑,也可能上一次没有正常结束——后者最多 {{minutes}} 分钟后就能再试。同时跑两次会重复扣点数。",
+  // Info: (20260901 - Luphia) 三個終局判決各說各的話（review #6726 阻-1）
+  import_job_cancelled:
+    "这份导入已经取消,不会继续、也不会再扣点数。要重新开始,请再上传一次文件。",
+  import_job_completed_already: "这份导入已经完成了,没有需要继续的部分。",
+  import_job_forbidden: "这个账号没有这份导入的权限。",
+  // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
+  import_auto_resuming:
+    "点数已补上,正在接着把剩下的章导入。已完成的部分不会重跑。",
+  // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）：伺服器算好的出路與重置時間
+  import_paused_reset_hint:
+    "额度将于 {{countdown}} 后({{resetAt}})重置,届时可以接着导入。",
+  import_paused_reset_ready: "额度已经重置,现在可以接着导入了。",
+  import_paused_over_window_limit:
+    "这份报告单次需要的点数,高于方案在单一时段的额度上限——等待重置也无法完成。请改用个人点数或升级方案。",
+  import_paused_ways_title: "接下来可以:",
+  import_paused_option_wait_reset: "等额度重置(上面有时间)",
+  import_paused_option_use_allocation: "用团队管理者分配给你的点数",
+  import_paused_option_use_personal: "用你自己钱包里的点数",
+  import_paused_option_upgrade: "升级方案,拿到更高的额度",
+  // Info: (20260827 - Luphia) 伺服器說「可以繼續了」與「不做了」（issue #6714）
+  import_paused_resumable:
+    "额度已经回来了,以下章节还没解析:{{chapters}}。现在可以接着导入,已完成的部分不会重跑。",
+  import_cancel_paused: "不做了",
+  import_cancelled: "已经放弃还没解析的章节。已完成的部分还留着,仍然可以套用。",
+  import_cancel_failed: "放弃失败,请稍后再试。",
+  import_resume_needs_file:
+    "接着导入需要原本那份文件,而它在刷新或换设备之后就不在浏览器里了。请重新上传同一份报告——已完成的章节不会重跑。",
+  import_resume_paused: "接着导入",
   import_failed_chapters: "以下章节解析失败,可稍后重新导入补齐:{{chapters}}",
   import_retry_failed: "重试失败章节",
   import_retrying: "重试中…",
@@ -251,6 +318,10 @@ export const carbonChatbot = {
   chart_imported_sankey_excluded: "未画出的项目（NA/NS 或为零）",
   chart_imported_sankey_no_ledger:
     "本报告已导入，但账本没有任何可用数据，因此画不出排放流向图。桑基图与系统数据表格的唯一来源是表3.8（各公司温室气体排放量），本次未取得该表。请确认第三章是否解析成功；若该章列为解析失败，请以预览卡的「重试失败章节」重新导入，并在服务端日志查看该表是否被丢弃及其原因。",
+  chart_imported_sankey_blocked_ledger:
+    "本报告已取得表3.8，但勾稽未通过，数据冻结在门口、未写入账本（半套数据入账会让每张图都错得很像对的）。被挡的原因列于下方；修正原文对应表格或重新导入第三章后，图表将自动生成。",
+  chart_partial_import_blocked:
+    "⚠ 本图只含成功入账的部分：本次导入另有表格被勾稽挡下、未写入账本，因此图中的总量与占比不是全公司全貌。被挡的原因如下；修正原文对应表格或重新导入后，图表将自动重算。",
   chart_imported_sankey_collapsed: "节点过多,已降为一层(全公司 → 范畴)",
   chart_imported_top_items_title:
     "排放去向：全公司 → 前九大排放项目与其他（原文照录，所在地基准，公吨 CO2e/年）",
@@ -258,6 +329,8 @@ export const carbonChatbot = {
   // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層(屏東佔 97%,同圖畫不出比重);廠址改列小計
   chart_imported_sankey_site_totals: "各厂址小计(公吨 CO2e/年,占全公司比)",
   chart_imported_sankey_ghg_mapping: "子代码与 GHG Protocol 类别的对照",
+  chart_imported_sankey_iso_mapping:
+    "图上的分类层依 GHG Protocol 范畴标示；对照 ISO 14064-1 为：范畴一＝类别一、范畴二＝类别二、范畴三＝类别三至类别六。本报告叙述采 ISO 14064-1 类别制，两者指同一批排放源。",
   chart_imported_sankey_below_threshold: "占比过小未画出（公吨 CO2e/年）",
   chart_imported_sankey_organization: "全公司",
   book_bind_pending_unlock:

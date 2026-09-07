@@ -67,6 +67,11 @@ export interface IBuildImportedLedgerInput {
   sourceTables: ICarbonSourceTable[];
   basis?: EmissionBasisEnum;
   labels?: IDisclosureLabels;
+  /**
+   * Info: (20260827 - Emily) 這份報告的盤查年度(PR #6725 review R1)。
+   * 寫進每一筆 importedOrigin.year,讓合併能分辨「同年覆蓋」與「換年換鍋」。
+   */
+  year?: number;
 }
 
 /**
@@ -139,6 +144,7 @@ export function buildImportedLedger(
   const { entries, blockedReason } = toLedgerEntries(parsed, reconciliation, {
     tableNo: table38.tableNo,
     basis,
+    year: input.year,
   });
 
   return {

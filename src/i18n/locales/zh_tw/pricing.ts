@@ -2,17 +2,44 @@ export const pricing = {
   free_cost: "免費",
   title: "雲端服務訂閱方案",
   subtitle: "根據團隊規模選擇最合適的方案",
+  // Info: (20260814 - Luphia) 付費方案以席次計價，單位標明每席
+  per_seat_monthly: "席 / 月",
+  per_seat_yearly: "席 / 年",
   monthly: "月繳",
   yearly: "年繳",
   save_percent: "省下 17%",
   // Info: (20260807 - Luphia) 費思費率標註（設計書 §5.3 定價揭露），數字由 API 插值、嚴禁寫死
   faith_agent: "費思人工智能代理人",
+  /**
+   * Info: (20260812 - Luphia) 費思個人化記憶文案（服務條款 §3.7、隱私權政策 §5）。
+   * 保留天數由 FAITH_MEMORY_RETENTION_DAYS 插值，不寫死數字，避免與條款不一致。
+   */
+  faith_agent_free_tooltip: "具備任務短期記憶",
+  faith_agent_memory: "費思人工智能代理人（專屬記憶）",
+  faith_agent_memory_tooltip: "具備任務短期記憶、長期記憶與回饋學習機制",
+  faith_memory_note_title: "關於費思的專屬記憶",
+  faith_memory_note:
+    "費思的記憶分兩層：任務短期記憶讓它在同一項任務進行中記得前後文，所有方案皆具備；長期記憶與回饋學習機制則為雲端版的團隊版與企業版專屬——每位成員各自擁有一個獨立的費思人工智能代理人，會記錄您在對話中給予的回饋與偏好（例如慣用的會計科目、報表呈現方式、回答的詳細程度），隨著使用逐漸記住您的需求，讓回答越來越貼近您的工作方式；這些記憶只用於改善您個人的使用體驗，不會與其他成員或其他客戶共用，也不會用於訓練共享的 AI 模型。",
+  faith_memory_note_retention:
+    "若您停止訂閱，我們會保留這份記憶 {{days}} 天，期間內恢復訂閱即可延續；{{days}} 天屆滿後，我們會刪除費思對您的記憶資訊，以保障您的隱私。您也可以不必等待期滿，隨時要求我們刪除。免費版不提供專屬記憶。詳見服務條款第 3.7 條與隱私權政策第 5 條。",
+  /**
+   * Info: (20260812 - Luphia) 席次計費文案（服務條款 §3.1 / §3.6，規範
+   * documents/architecture/team_seat_billing_and_email_invitation.md）。
+   * 價格數字為「每席」單價，不是團隊總額。
+   */
+  price_multiply_note: "此為每位成員的費用，應付金額需乘上團隊成員數量",
+  seat_billing_note_title: "關於席次計費",
+  seat_billing_note:
+    "團隊版與企業版依席次計費：一位團隊成員佔一席，應付金額 = 席次數 × 每席費用。上方標示的價格為每席單價，實際金額於您選定團隊後計算，並在付款前顯示「席次數 × 每席費用 = 應付總額」。免費版不收席次費用。",
+  seat_billing_note_change:
+    "計費週期中邀請新成員時，該席次自邀請寄出時起佔用，並依當期剩餘天數比例補收該席費用（尾數捨去，計算結果為零者免收）；邀請經拒絕、撤回或逾期即釋出席次。成員退出或被移出團隊時，當期不予退費，並自下一計費週期起以新席次數計費。詳見服務條款第 3.1 條與第 3.6 條。",
   currency_prefix: "NT$ ",
 
   cta: "立即開始",
   features: "功能特色",
   per_key: " / 鑰匙",
   select_plan: "選擇方案",
+  extend_plan: "延長方案",
   current_plan: "目前方案",
   coming_soon_title: "聯絡我們",
   coming_soon_prefix: "我們已獲選為",
@@ -48,7 +75,6 @@ export const pricing = {
       name: "免費版",
       desc: "適合個人使用者",
       features: {
-        fido: "1 組 FIDO2 金鑰",
         vouchers: "每月 {{amount}} 份會計憑證",
         vouchers_overage_tooltip: "每份 {{price}} 點數",
         logistics: "每月 {{amount}} 筆物流碳足跡",
@@ -61,8 +87,11 @@ export const pricing = {
       name: "免費版",
       desc: "適合個人使用者",
       features: {
+        // Info: (20260815 - Luphia) 免費版人數上限（條款 §3.1 指向此標示）
+        member_limit: "團隊人數不限",
+        member_limit_tooltip:
+          "免費版的額度為**全團隊共用一份**（不隨人數增加），因此不限成員人數；需要每位成員各自擁有額度請升級為團隊版或企業版。",
         storage: "儲存空間 {{gb}} GB",
-        fido: "1 組 FIDO2 金鑰",
         consults: "每月最多諮詢 {{amount}} 個問題",
         consults_tooltip: "每個問題 {{price}} 點數",
         vouchers: "每月最多分析 {{amount}} 份會計憑證",
@@ -78,8 +107,6 @@ export const pricing = {
       desc: "適合成長中的團隊",
       features: {
         storage: "儲存空間 {{gb}} GB",
-        fido: "無限 FIDO2 金鑰",
-        fido_tooltip: "根據 fido2 金鑰數量收取訂閱費",
         quota_multiple: "Tokens 額度為免費版的 {{multiple}} 倍",
         consults: "每月最多諮詢 {{amount}} 個問題",
         consults_tooltip: "每個問題 {{price}} 點數",
@@ -98,8 +125,6 @@ export const pricing = {
       desc: "適合大型機構與事務所",
       features: {
         storage: "儲存空間 {{gb}} GB",
-        fido: "無限 FIDO2 金鑰",
-        fido_tooltip: "根據 fido2 金鑰數量收取訂閱費",
         quota_multiple: "Tokens 額度為團隊版的 {{multiple}} 倍",
         consults: "每月最多諮詢 {{amount}} 個問題",
         consults_tooltip: "每個問題 {{price}} 點數",
@@ -114,8 +139,7 @@ export const pricing = {
         migration: "資料移轉服務",
         migration_tooltip: "根據資料年份與筆數額外收費",
         custom_tools: "客製化功能模組",
-        custom_tools_tooltip:
-          "針對需求客製化開發功能，需額外收取開發費用，功能上線後可獲得分潤",
+        custom_tools_tooltip: "針對需求客製化開發功能，需額外收取開發費用",
       },
     },
   },
@@ -193,6 +217,13 @@ export const pricing = {
       },
     },
     payment_modal: {
+      scheduled_title: "變更已排程",
+      scheduled_body:
+        "本次變更不需付款，將於 {{date}} 起改為{{plan}}；在那之前你的方案與額度維持不變。",
+      scheduled_expire_body:
+        "已取消自動續訂，本次不需付款。當期方案與額度維持到 {{date}}，屆時未再付款即轉為免費版；在那之前你可以隨時恢復自動續訂。",
+      scheduled_resumed_body:
+        "已維持目前方案並恢復自動續訂，本次不需付款。當期不受影響，期末將照原方案續訂。",
       success_title: "購買成功",
       error_title: "購買失敗",
       original_credits: "原有點數",
@@ -218,7 +249,14 @@ export const pricing = {
       use_saved_card: "使用已綁定的信用卡",
       bind_new_card: "綁定新信用卡",
       agree_tos: "我同意服務條款與退款政策",
-      subscription_reset_note: "點數有效時間為 30 日，需在時效內使用完畢",
+      // Info: (20260814 - Luphia) 訂閱買到的是額度視窗，不是錢包點數（設計書 §7 履行只寫 TeamSubscription）
+      subscription_quota_note:
+        "訂閱期間依方案額度使用；額度每 5 小時與每週自動重置，不累積至下一期，也不會轉為點數。",
+      amount_changed_title: "金額已更新",
+      amount_changed_hint:
+        "您停留期間團隊人數有變動。畫面原本顯示 {{shown}}，實際應付為 {{actual}}。尚未扣款，確認後才會付款。",
+      amount_changed_confirm: "確認並以新金額付款",
+      subscription_activated: "方案已啟用，每位成員的額度即刻生效。",
       selected_modules: "已選模組",
     },
     tracking: {

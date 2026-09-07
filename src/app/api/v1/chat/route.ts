@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { jsonOk, jsonFail, jsonFailWithPayload } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
+import { enforceRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { faithChatSchema } from "@/validators";
 import { ChatService } from "@/services/chat.service";
@@ -13,25 +13,35 @@ import { QuotaExceededError } from "@/services/spend.service";
  * Info: (20260807 - Luphia) 費思對話（設計書 §5.3）。route 為純端口：
  * 驗證 → 認證 → 限流 → 呼叫 service → 回應映射；
  * 計費業務流程（預扣—結算）收斂於 faith_chat.service。
- * 試用路徑（未登入或未帶 teamId）：不扣點，server-side 限流（FAITH_GUEST bucket）。
+ * 試用路徑（未登入或未帶帳本）：不扣點，server-side 限流（FAITH_GUEST bucket）。
+ *
+ * Info: (20260812 - Luphia) 計費情境由 accountBookId 決定（設計書 §5.3「使用前提」）：
+ * 費思僅在選定帳本後可用，扣費團隊由 service 以 AccountBook.teamId 推導並驗權。
  */
 export async function POST(request: NextRequest) {
   try {
     const parsed = faithChatSchema.safeParse(await request.json());
     if (!parsed.success) return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
-    const { message, tags, file, mimeType, teamId, clientMessageId } =
-      parsed.data;
+    const {
+      message,
+      tags,
+      file,
+      mimeType,
+      accountBookId,
+      clientMessageId,
+      history,
+    } = parsed.data;
 
     const authHeader = request.headers.get("Authorization");
     const user = await getIdentityFromDeWT(authHeader);
 
-    if (!user || !teamId) {
+    if (!user || !accountBookId) {
       // Info: (20260807 - Luphia) 訪客試用：以 address 或來源 IP 限流，不進計費管線
       const identity =
         user?.address ??
         request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
         "unknown";
-      const limited = enforceCarbonRateLimit(
+      const limited = enforceRateLimit(
         identity,
         RateLimitBucketEnum.FAITH_GUEST,
       );
@@ -49,12 +59,14 @@ export async function POST(request: NextRequest) {
 
     const result = await runFaithBilledChat({
       userId: user.id,
-      teamId,
+      accountBookId,
       message,
       tags,
       file,
       mimeType,
       clientMessageId,
+      // Info: (20260817 - Luphia) 任務短期記憶（第一輪 C-2）：service 會截到上界後才注入
+      history,
       nowSec: Math.floor(Date.now() / 1000),
     });
     return jsonOk(result);

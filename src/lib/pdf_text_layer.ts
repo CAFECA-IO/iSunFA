@@ -18,7 +18,15 @@ import {
   PDF_TEXT_PAGE_MARKER_PATTERN,
   PDF_TEXT_PAGE_SLICE_MIN_CHARS,
   PDF_TEXT_PAGE_SLICE_PADDING,
+  PDF_PAGE_IMAGE_MAX_VISION_SHARE,
+  PDF_PAGE_IMAGE_MIN_VISION_PAGES,
+  PDF_PAGE_LARGE_IMAGE_MIN_LONG_EDGE_PX,
 } from "@/constants/pdf_text_layer";
+import {
+  selectImageOnlyPages,
+  type IPdfPageImagery,
+  type ISelectedImagePages,
+} from "@/lib/utils/pdf_page_imagery";
 
 export interface IPdfTextLayerQuality {
   chars: number;
@@ -201,21 +209,46 @@ export interface IPageSliceResult {
 export function slicePagesForRange(
   text: string,
   fromPage: number,
-  toPage: number,
+  /**
+   * Info: (20260817 - Emily) `null` = 沒有上界,取到文末
+   * (`data/issue_drafts/open/42_page_slice_falls_back.md`)。
+   *
+   * `carbon_page_slice.ts` 早就寫著「未知即不帶上界,後端送到文末」,
+   * 但這支原本要求 `toPage` 是有限數,而 route 更進一步要求它非 null ——
+   * 於是那條路實際上是**整份送**,連 `fromPage` 之前的頁一起。
+   *
+   * 08-17 實測 14 次呼叫:5 次切成功、**7 次走這條**、2 次完全沒索引。
+   * 那 7 次全都**有**索引(ch5=59、ch7/ch8/ch9=60、ch11=62),
+   * 只是後段章節擠在同一頁,`resolveUnitPageRange` 因此只回下界。
+   * 換句話說:浪費的 9 次裡有 7 次的成因是這一行,不是索引不全。
+   * 每次多花約 41.7k token,合計約 29 萬。
+   */
+  toPage: number | null,
 ): IPageSliceResult {
   const pages = splitTextByPages(text);
   if (pages.length <= 1) {
     return { text, range: null, fellBack: true };
   }
-  if (!Number.isFinite(fromPage) || !Number.isFinite(toPage)) {
+  if (!Number.isFinite(fromPage)) {
+    return { text, range: null, fellBack: true };
+  }
+  if (toPage !== null && !Number.isFinite(toPage)) {
     return { text, range: null, fellBack: true };
   }
 
   const from = Math.max(1, Math.floor(fromPage) - PDF_TEXT_PAGE_SLICE_PADDING);
-  const to = Math.min(
-    pages.length,
-    Math.ceil(toPage) + PDF_TEXT_PAGE_SLICE_PADDING,
-  );
+  /**
+   * Info: (20260817 - Emily) 沒有上界時取到文末。
+   *
+   * 這**不是**新的資料遺失風險:`from` 的推導與有上界那條路完全一樣,
+   * 而上界取文末是最寬的可能值 —— 比現在整份送少的只有 `from` 之前那幾頁,
+   * 而依大綱單調性,本單元各節的內容不可能起始於本單元第一節的起始頁之前。
+   * 那正是有上界那條路**已經接受**的同一類風險。
+   */
+  const to =
+    toPage === null
+      ? pages.length
+      : Math.min(pages.length, Math.ceil(toPage) + PDF_TEXT_PAGE_SLICE_PADDING);
   if (from > to) {
     return { text, range: null, fellBack: true };
   }
@@ -230,4 +263,88 @@ export function slicePagesForRange(
     return { text, range: null, fellBack: true };
   }
   return { text: sliced, range: { from, to }, fellBack: false };
+}
+
+/**
+ * Info: (20260814 - Emily) 薄 IO 包裝：逐頁量嵌入圖片的尺寸
+ * (`data/issue_drafts/open/25_image_only_sections.md`)。
+ *
+ * 與 `extractPdfTextLayer` 同一個分層：這裡只負責把數字取出來，
+ * 「哪幾頁要送視覺模型」的判準在 `selectImageOnlyPages`（純函式、可單測）。
+ *
+ * 失敗回 null 而不是丟例外：拿不到圖片資訊時**應該維持現行行為**（整份走純文字），
+ * 而不是讓整個匯入失敗 —— 這支是補完整性的，不是必要路徑。
+ * 但一定要記 log：靜默地少看幾張圖正是這張票要修的那件事。
+ */
+export async function extractPdfPageImagery(
+  buffer: Buffer,
+): Promise<IPdfPageImagery[] | null> {
+  try {
+    const { PDFParse } = await import("pdf-parse");
+    const parser = new PDFParse({ data: new Uint8Array(buffer) });
+    try {
+      const result = await parser.getImage();
+      return (result.pages ?? []).map((page) => ({
+        page: page.pageNumber,
+        chars: 0,
+        images: (page.images ?? []).map((image) => ({
+          widthPx: image.width,
+          heightPx: image.height,
+        })),
+      }));
+    } finally {
+      await parser.destroy();
+    }
+  } catch (error) {
+    logger.warn(
+      `[PdfTextLayer] page imagery unavailable (bytes=${buffer.length}): ${describeError(error)}`,
+    );
+    return null;
+  }
+}
+
+/**
+ * Info: (20260814 - Emily) 挑出「內容只住在圖片裡」的頁，並把量到的東西記下來。
+ *
+ * 上限用比例算（見 `PDF_PAGE_IMAGE_MAX_VISION_SHARE`），短報告有下限保護。
+ * 三種結果都要記 log 且**分得開**：
+ * 挑到了幾頁、一頁都沒命中、命中太多所以放棄 —— 混在一起就看不出是判準失效還是文件真的沒圖。
+ */
+export function planImageOnlyPages(
+  imagery: readonly IPdfPageImagery[],
+  totalPages: number,
+): ISelectedImagePages {
+  const maxPages = Math.max(
+    PDF_PAGE_IMAGE_MIN_VISION_PAGES,
+    Math.ceil(totalPages * PDF_PAGE_IMAGE_MAX_VISION_SHARE),
+  );
+  const selected = selectImageOnlyPages({
+    pages: imagery,
+    minLongEdgePx: PDF_PAGE_LARGE_IMAGE_MIN_LONG_EDGE_PX,
+    maxPages,
+  });
+
+  if (selected.exceededLimit) {
+    logger.warn("[PdfTextLayer] too many image pages, keeping text-only", {
+      matched: selected.matchedCount,
+      maxPages,
+      totalPages,
+    });
+  } else if (selected.pages.length > 0) {
+    logger.info("[PdfTextLayer] pages whose content lives in images", {
+      pages: selected.pages,
+      totalPages,
+      /*
+       * Info: (20260814 - Emily) 把尺寸也記下來：門檻目前只有一份真實樣本
+       * (1050x1417) 校準過，下一份報告要靠這行對答案。
+       */
+      sizes: imagery
+        .filter((page) => selected.pages.includes(page.page))
+        .map((page) => ({
+          page: page.page,
+          images: page.images.map((i) => `${i.widthPx}x${i.heightPx}`),
+        })),
+    });
+  }
+  return selected;
 }

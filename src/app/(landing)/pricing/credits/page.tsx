@@ -1,4 +1,5 @@
 import PricingContainer from "@/components/pricing/pricing_container";
+import { listPlans } from "@/services/plan.service";
 import CreditsContent from "@/app/(landing)/pricing/credits/credits_content";
 import { Metadata } from "next";
 
@@ -9,9 +10,9 @@ export const metadata: Metadata = {
   keywords: ["iSunFA 點數", "AI 額度加購", "會計自動化點數", "碳盤查工具點數"],
 };
 
-export default function CreditsPricingPage() {
+export default async function CreditsPricingPage() {
   return (
-    <PricingContainer activeTab="credits">
+    <PricingContainer activeTab="credits" plans={await listPlans()}>
       <CreditsContent />
     </PricingContainer>
   );

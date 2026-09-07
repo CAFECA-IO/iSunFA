@@ -1,0 +1,350 @@
+import { randomUUID } from "crypto";
+import { Employee, WorkLocation } from "@/generated";
+import {
+  DEMO_MAX_ACCURACY_METERS,
+  DEMO_TIME_ZONE,
+  DEMO_WORK_DATE_TOLERANCE_MINUTES,
+  PunchType,
+  PunchVerification,
+} from "@/constants/attendance";
+import { HrPiiTable } from "@/constants/hr_pii";
+import { AppError } from "@/lib/utils/error";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { logger } from "@/lib/utils/logger";
+import { encryptPii } from "@/lib/hr_pii_crypto";
+import { deriveShiftPatternKind } from "@/lib/attendance_rules";
+import { isOnSite } from "@/lib/attendance_presence";
+import { findNearestGeofence, IGeofenceMatch } from "@/lib/attendance_geofence";
+import { toShiftWindow } from "@/lib/attendance_schedule_view";
+import {
+  minutesFromWorkDateStart,
+  previousIsoDate,
+  resolveWorkDate,
+  toZonedParts,
+} from "@/lib/utils/attendance_time";
+import {
+  IOutOfFencePayload,
+  IPunchRequest,
+  ITodayStatus,
+  IWorkLocationSummary,
+} from "@/interfaces/attendance";
+import {
+  attendancePunchRepo,
+  IAttendancePunchRepository,
+} from "@/repositories/attendance_punch.repo";
+import {
+  attendanceScheduleRepo,
+  IAttendanceScheduleRepository,
+} from "@/repositories/attendance_schedule.repo";
+import {
+  IWorkLocationRepository,
+  workLocationRepo,
+} from "@/repositories/work_location.repo";
+
+/**
+ * Info: (20260813 - Julian) 打卡主流程。到班的定義是「人在登記的地點」——
+ * 座標未落入任何圍欄的打卡不會寫進資料庫，直接回 403（護欄 G4）。
+ * 「拒絕」只適用於圍欄判定本身：精度不足（G3）拒收但訊息是「請重試」，
+ * 不得比照瞬移偵測等啟發式一律拒絕，否則會出現「人在現場卻打不了卡」。
+ */
+
+export class OutOfFenceError extends AppError {
+  constructor(public readonly detail: IOutOfFencePayload) {
+    super(API_ERRORS.FO_PUNCH_OUT_OF_FENCE);
+    this.name = "OutOfFenceError";
+  }
+}
+
+export class AttendancePunchService {
+  constructor(
+    private readonly punches: IAttendancePunchRepository,
+    private readonly locations: IWorkLocationRepository,
+    private readonly schedule: IAttendanceScheduleRepository,
+    private readonly timeZone: string = DEMO_TIME_ZONE,
+  ) {}
+
+  public async listLocations(
+    accountBookId: string,
+  ): Promise<IWorkLocationSummary[]> {
+    const locations = await this.locations.findByAccountBook(accountBookId);
+    return locations.map((location) => ({
+      id: location.id,
+      code: location.code,
+      name: location.name,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      radiusMeters: location.radiusMeters,
+    }));
+  }
+
+  /**
+   * Info: (20260813 - Julian) 打卡。
+   *
+   * 時間由這裡產生（護欄 G1）：`punchedAt` 絕不接受任何 client 傳入值——
+   * 竄改打卡時間是本系統價值最高的攻擊。
+   */
+  public async punch(
+    employee: Employee,
+    request: IPunchRequest,
+  ): Promise<ITodayStatus> {
+    const punchedAt = new Date();
+    const accountBookId = employee.accountBookId;
+
+    const candidates = await this.locations.findByAccountBook(accountBookId);
+    if (candidates.length === 0) {
+      // Info: (20260813 - Julian) 帳本還沒設定任何打卡地點：是設定問題，不是位置問題
+      throw new AppError(API_ERRORS.NF_WORK_LOCATION);
+    }
+
+    this.assertAcceptableAccuracy(request.accuracyMeters);
+
+    const nearest = findNearestGeofence(
+      request.latitude,
+      request.longitude,
+      candidates,
+    );
+    this.assertInsideFence(nearest, employee, request.accuracyMeters);
+
+    const match = nearest as IGeofenceMatch;
+    const { workDate, minuteOfDay } = await this.resolvePunchWorkDate(
+      employee,
+      punchedAt,
+    );
+
+    const existing = await this.punches.findByEmployeeAndWorkDate(
+      accountBookId,
+      employee.id,
+      workDate,
+    );
+    this.assertPunchableState(request.punchType, existing);
+
+    // Info: (20260813 - Julian) id 先產生，因為它是加密 AAD 的一部分，加密必須在 insert 之前完成（ADR 018 §3）
+    const id = randomUUID();
+    const latitude = encryptPii(String(request.latitude), {
+      table: HrPiiTable.ATTENDANCE_PUNCH,
+      field: "latitudeCipher",
+      recordId: id,
+    });
+    const longitude = encryptPii(String(request.longitude), {
+      table: HrPiiTable.ATTENDANCE_PUNCH,
+      field: "longitudeCipher",
+      recordId: id,
+    });
+
+    await this.punches.create({
+      id,
+      accountBookId,
+      employeeId: employee.id,
+      punchType: request.punchType,
+      verification: PunchVerification.GPS,
+      punchedAt,
+      workDate,
+      workLocationId: match.location.id,
+      latitudeCipher: latitude.cipher,
+      longitudeCipher: longitude.cipher,
+      accuracyMeters: request.accuracyMeters ?? null,
+      distanceMeters: match.distanceMeters,
+      piiAlgorithm: latitude.algorithm,
+      piiKeyVersion: latitude.keyVersion,
+    });
+
+    // Info: (20260814 - Julian) 同樣不寫距離（見 assertInsideFence 的說明）：工區是公司地點，距離是個人位置
+    logger.info(
+      `[attendance] ${employee.employeeNo} ${request.punchType} at ${match.location.name}, workDate=${workDate}, minute=${minuteOfDay}`,
+    );
+
+    return this.buildTodayStatus(employee, workDate);
+  }
+
+  // Info: (20260813 - Julian) 今日狀態（A2）。無打卡也要回，前端據此顯示班別與按鈕
+  public async getTodayStatus(employee: Employee): Promise<ITodayStatus> {
+    const { workDate } = await this.resolvePunchWorkDate(employee, new Date());
+    return this.buildTodayStatus(employee, workDate);
+  }
+
+  /**
+   * Info: (20260813 - Julian) 護欄 G3：定位精度不足即拒收，擋的是「用 IP 粗定位假裝 GPS」。
+   * 精度未回報時放行——部分裝置不提供這個值，一律擋會讓「打不了卡」變成裝置問題。
+   */
+  private assertAcceptableAccuracy(accuracyMeters?: number): void {
+    if (accuracyMeters === undefined) return;
+    if (accuracyMeters > DEMO_MAX_ACCURACY_METERS) {
+      throw new AppError(API_ERRORS.VA_PUNCH_LOW_ACCURACY);
+    }
+  }
+
+  /**
+   * Info: (20260813 - Julian) 護欄 G4：圍欄外一律拒絕。
+   * 丟具名的 `OutOfFenceError`（而非純 `AppError`）讓 route 把最近地點與距離
+   * 一併回給前端（`jsonFailWithPayload`），方便使用者判斷自己離現場多遠。
+   */
+  private assertInsideFence(
+    nearest: IGeofenceMatch | null,
+    employee: Employee,
+    accuracyMeters?: number,
+  ): void {
+    if (nearest && nearest.inside) return;
+    if (!nearest) throw new AppError(API_ERRORS.NF_WORK_LOCATION);
+
+    /**
+     * Info: (20260814 - Julian) 誤差只影響**訊息**，不影響放行。
+     *
+     * 前端的 `isDefinitelyOutside` 會扣掉誤差才 disable 按鈕，於是
+     * `半徑 < 距離 ≤ 半徑 + 誤差` 這一段是「按得下去、但伺服器必拒」。
+     * 那一段照實說是「你不在工區」會冤枉真的站在圈內的人 ——
+     * demo 把半徑縮到 60–80 公尺之後，這一段會很容易命中。
+     */
+    const margin = accuracyMeters && accuracyMeters > 0 ? accuracyMeters : 0;
+    const withinAccuracyMargin =
+      nearest.distanceMeters - margin <= nearest.location.radiusMeters;
+
+    /**
+     * Info: (20260814 - Julian) 日誌**不寫距離**。座標雖然加密入庫，但「某工號某時刻
+     * 在某工區外 340 公尺」是等效的位置資訊（一個圓），累積起來就是行蹤 ——
+     * 而應用日誌不在 ADR 018 §3 的防護矩陣涵蓋範圍內。
+     * 這裡只留「哪個工區、是不是誤差範圍內」，夠診斷、不構成軌跡。
+     * 使用者本人仍會在 403 的 payload 裡拿到精確距離（那是他自己的資料）。
+     *
+     * ToDo: (20260814 - Julian) 日誌的個資紅線目前只靠註解。ADR 018 應補一節
+     * 「哪些推導值等同個資、不得寫進日誌」，並納入防護矩陣。
+     */
+    logger.warn(
+      `[attendance] ${employee.employeeNo} punch rejected at ${nearest.location.name}${withinAccuracyMargin ? " (within accuracy margin)" : ""}`,
+    );
+    throw new OutOfFenceError({
+      nearestLocationName: nearest.location.name,
+      distanceMeters: nearest.distanceMeters,
+      radiusMeters: nearest.location.radiusMeters,
+      withinAccuracyMargin,
+    });
+  }
+
+  /**
+   * Info: (20260813 - Julian) 狀態機：不能重複上班、不能未上班先下班；一天內多次進出（外出洽公）合法。
+   *
+   * `existing` 的 `punchType` 刻意寫成 `string` 而非 `PunchType`：Prisma 回字面量聯集，
+   * `@/constants/attendance` 是 TS enum，enum 是名義型別、無法反向賦值，用 `string` 接才能兩邊互通。
+   *
+   * Info: (20260817 - Luphia) 「在不在現場」一律問 `isOnSite`，不在這裡自己數卡 ——
+   * 原本的 `上班卡數 > 下班卡數` 是同一個問題的第二個答案，而它與現場名單所用的
+   * 時序判斷在 `[IN, IN, OUT]` 上結論相反（檢查清單 §2.1）。
+   *
+   * ToDo: (20260817 - Luphia) 這裡仍然是「先查後改」：查到寫入之間沒有鎖，
+   * 而 `AttendancePunch` 是 append-only、沒有可用的唯一鍵（一天多次進出是合法的），
+   * 所以兩台裝置同時送同一種卡仍會寫進兩筆。收斂判斷點只讓**後果**一致，沒有消除競態。
+   * 真正的解法是把狀態檢查與寫入放進同一個 serializable 交易，或另存一張
+   * 「當前工作階段」表由它的唯一鍵擋 —— 兩者都屬正式版範圍（母計畫 §12.3）。
+   * 限流（`ATTENDANCE_PUNCH`，5/min）把這件事的可觸發次數壓到很低，但那是緩解不是修復。
+   */
+  private assertPunchableState(
+    punchType: PunchType,
+    existing: { punchType: string; punchedAt: Date }[],
+  ): void {
+    const onSite = isOnSite(existing, (punch) => punch.punchedAt.getTime());
+
+    if (punchType === PunchType.CLOCK_IN && onSite) {
+      throw new AppError(API_ERRORS.VA_PUNCH_INVALID_STATE);
+    }
+    if (punchType === PunchType.CLOCK_OUT && !onSite) {
+      throw new AppError(API_ERRORS.VA_PUNCH_INVALID_STATE);
+    }
+  }
+
+  // Info: (20260813 - Julian) 候選只取「當地今日」與「當地昨日」——跨日班最多只會跨一天
+  private async resolvePunchWorkDate(
+    employee: Employee,
+    punchedAt: Date,
+  ): Promise<{ workDate: string; minuteOfDay: number }> {
+    const today = toZonedParts(punchedAt, this.timeZone).isoDate;
+    const workDates = [today, previousIsoDate(today)];
+
+    const days = await this.schedule.findShiftDays(
+      employee.accountBookId,
+      employee.id,
+      workDates,
+    );
+
+    return resolveWorkDate({
+      punchedAt,
+      timeZone: this.timeZone,
+      toleranceMinutes: DEMO_WORK_DATE_TOLERANCE_MINUTES,
+      candidates: workDates.map((workDate) => {
+        const day = days.find((item) => item.workDate === workDate);
+        return { workDate, shift: day ? toShiftWindow(day) : null };
+      }),
+    });
+  }
+
+  private async buildTodayStatus(
+    employee: Employee,
+    workDate: string,
+  ): Promise<ITodayStatus> {
+    const [days, punches, locations] = await Promise.all([
+      this.schedule.findShiftDays(employee.accountBookId, employee.id, [
+        workDate,
+      ]),
+      this.punches.findByEmployeeAndWorkDate(
+        employee.accountBookId,
+        employee.id,
+        workDate,
+      ),
+      this.locations.findByAccountBook(employee.accountBookId),
+    ]);
+
+    const day = days[0];
+    const shift = day ? toShiftWindow(day) : null;
+
+    const toMinute = (date: Date): number =>
+      minutesFromWorkDateStart(date, workDate, this.timeZone);
+
+    const ins = punches.filter(
+      (punch) => punch.punchType === PunchType.CLOCK_IN,
+    );
+    const outs = punches.filter(
+      (punch) => punch.punchType === PunchType.CLOCK_OUT,
+    );
+    const lastPunch = punches[punches.length - 1];
+
+    return {
+      employeeId: employee.id,
+      employeeNo: employee.employeeNo,
+      name: employee.name,
+      workDate,
+      shift,
+      shiftName: day?.shiftPattern?.name ?? null,
+      shiftKind: shift ? deriveShiftPatternKind(shift) : null,
+      // Info: (20260817 - Luphia) 與 `assertPunchableState`、現場名單同一個判斷點
+      onSite: isOnSite(punches, (punch) => punch.punchedAt.getTime()),
+      firstInMinute:
+        ins.length > 0
+          ? Math.min(...ins.map((p) => toMinute(p.punchedAt)))
+          : null,
+      lastOutMinute:
+        outs.length > 0
+          ? Math.max(...outs.map((p) => toMinute(p.punchedAt)))
+          : null,
+      workLocationName: this.nameOfLocation(
+        locations,
+        lastPunch?.workLocationId,
+      ),
+      // Info: (20260813 - Julian) 前端秒錶的校時基準，見 `ITodayStatus.serverNowIso`
+      serverNowIso: new Date().toISOString(),
+    };
+  }
+
+  private nameOfLocation(
+    locations: WorkLocation[],
+    workLocationId?: string,
+  ): string | null {
+    if (!workLocationId) return null;
+    return (
+      locations.find((location) => location.id === workLocationId)?.name ?? null
+    );
+  }
+}
+
+export const attendancePunchService = new AttendancePunchService(
+  attendancePunchRepo,
+  workLocationRepo,
+  attendanceScheduleRepo,
+);

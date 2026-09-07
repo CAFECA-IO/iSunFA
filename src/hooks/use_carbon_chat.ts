@@ -15,6 +15,7 @@ import {
   IActivityRecord,
   IComputedLedger,
   IComputedLedgerEntry,
+  ILedgerImportBlock,
   IReportCategory,
   IReportParagraph,
   IReportData,
@@ -36,9 +37,21 @@ import {
   type IImportedLedgerResult,
 } from "@/lib/carbon_table38.pipeline";
 import { isImportedEntry } from "@/lib/carbon_table38.ledger";
-import { mergeImportedLedgerEntries } from "@/lib/carbon_ledger_totals";
+/**
+ * Info: (20260903 - Luphia) 年度的兩個判斷都在 lib(review):hook 裡的判斷
+ * 在這個 repo 測不到(node 環境無 jsdom),抽出去才守得住。
+ */
+import {
+  isStorableInventoryYear,
+  resolveIdentityYearPrefill,
+} from "@/lib/utils/inventory_year";
+import {
+  buildYearSnapshot,
+  detectUndatedImportedEntries,
+  resolveIncomingYear,
+  mergeImportedLedgerEntries,
+} from "@/lib/carbon_ledger_totals";
 import type { ICarbonSourceTable } from "@/lib/carbon_source_table.builder";
-import { CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH } from "@/constants/carbon_source_tables";
 import {
   buildCarbonChartBlock,
   insertCarbonChartBlock,
@@ -70,6 +83,7 @@ import {
 } from "@/interfaces/carbon_paragraph_draft";
 import { IPendingRevision } from "@/components/carbon_chatbot/revision_preview";
 import { IPendingImport } from "@/components/carbon_chatbot/import_preview";
+import { buildPendingImportRecord } from "@/lib/carbon_pending_import_record";
 import {
   createDefaultSessions,
   createChatSession,
@@ -83,11 +97,22 @@ import {
   stockRecordDedupeKey,
 } from "@/lib/carbon_inventory";
 import {
+  CarbonDisclosureFrameworkEnum,
+  FRAMEWORK_DISCLOSURE_LABEL,
+} from "@/constants/carbon_report_framework";
+import {
+  CarbonFrameworkClaimExitEnum,
+  composeReportDraftPaperText,
+  gateFrameworkClaims,
+} from "@/lib/utils/carbon_framework_claim_gate";
+import { buildLedgerFactBundle } from "@/lib/carbon_ledger_query";
+import {
   loadPendingImport as fetchPendingImportRecord,
   savePendingImport as putPendingImportRecord,
   discardPendingImport as deletePendingImportRecord,
 } from "@/lib/carbon_pending_import_storage";
 import {
+  isInventoryStateUnsavableError,
   loadInventoryState,
   saveInventoryState,
 } from "@/lib/carbon_inventory_storage";
@@ -102,6 +127,7 @@ import {
   loadLocalDraftBackup,
 } from "@/lib/carbon_report_draft_storage";
 import { useTranslation } from "@/i18n/i18n_context";
+import { useOrderTransaction } from "@/hooks/use_order_transaction";
 import {
   ChatroomConnectionStateEnum,
   subscribeChatroom,
@@ -115,6 +141,8 @@ import {
 } from "@/lib/chatroom_ecies";
 import {
   ensureMasterKey,
+  ChatroomKeySourceMismatchError,
+  ChatroomCustodyUnknownError,
   prefetchOwnKeyRecord,
 } from "@/lib/chatroom_key_manager";
 import { request, requestEnvelope } from "@/lib/utils/request";
@@ -129,12 +157,18 @@ import {
   nextOutlineSectionId,
   resolveUnitPageRange,
   validatePageIndex,
+  type IImportUnit,
 } from "@/lib/carbon_page_slice";
 import {
   getApiErrorCode,
+  parsePersonalPaymentRequired,
   isGatewayTimeoutError,
   isQuotaApiError,
+  resolveCreditPauseReason,
+  summarisePausedUnits,
   isRateLimitedApiError,
+  describeImportFailure,
+  rateLimitBackoffMs,
   isTimeoutApiError,
   splitReportMarkdownSections,
   alignReportSections,
@@ -142,9 +176,30 @@ import {
   reduceDraftNotice,
   sortSessionsByRecency,
   appendImportSource,
+  extractCreditPauseDetail,
+  foldImportChunks,
+  resolveJobClaimDenial,
   type ICarbonImportSource,
+  type IImportCheckpoint,
 } from "@/hooks/use_carbon_chat.helpers";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import type { ICreditPauseDetail } from "@/constants/carbon_chatbot";
+import type { IJobView } from "@/interfaces/resumable_job";
+import { CREDIT_EVENT } from "@/constants/credit_events";
+import { publishCreditEvent, subscribeCreditEvents } from "@/lib/credit_events";
+import {
+  JOB_CLAIM_DENIAL,
+  JOB_CLAIM_INTENT,
+  JOB_CLAIM_TTL_MS,
+  JOB_PAUSE_REASON,
+  JOB_TYPE,
+  type JobClaimDenial,
+  type JobClaimIntent,
+  type JobPauseReason,
+} from "@/constants/resumable_job";
+import { HTTP_METHOD } from "@/constants/http";
+import { runResumableJob, STEP_OUTCOME } from "@/lib/jobs/resumable_job";
+import { minIntervalMsFor, RateLimitBucketEnum } from "@/constants/rate_limit";
 import { useAuth } from "@/contexts/auth_context";
 import {
   DEFAULT_SESSION_ID,
@@ -152,7 +207,6 @@ import {
   buildCarbonChatChannel,
   CarbonImportReconciliationStateEnum,
   CarbonImportNoticeKindEnum,
-  CARBON_PENDING_IMPORT_STORAGE_VERSION,
   CARBON_CHAT_REPLY_TIMEOUT_MS,
   CARBON_CHAT_REPLY_TIMEOUT_WITH_ATTACHMENTS_MS,
   CARBON_IMPORT_SINGLE_CALL_MAX_BYTES,
@@ -172,6 +226,7 @@ import {
   CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS,
   CARBON_DRAFT_NOTICE_DISMISS_MS,
 } from "@/constants/carbon_chatbot";
+import type { ICarbonReportIdentity } from "@/lib/utils/carbon_report_identity";
 
 // Info: (20260714 - Tzuhan) 報告草稿保存狀態(工具列顯示;null = 尚無變更;error = 保存失敗/版本衝突)
 // Info: (20260716 - Tzuhan) #50 新增 local:未解鎖/未還原前內容僅落本機安全快取,解鎖後自動推入 DB
@@ -214,20 +269,83 @@ const resolveSession = (
   sessionId: string,
 ): IChatSession | null => sessions[sessionId] ?? null;
 
+/**
+ * Info: (20260901 - Luphia) 判決對應的話（review #6726 阻-1）。
+ *
+ * 已取消 ≠ 已完成 ≠ 有人在跑——這正是錯誤碼分成三個的理由，一句
+ * `import_job_busy` 蓋在三種判決上會讓使用者對著錯的原因等待。
+ * 查表而不是 switch：認不出的判決種類在編譯期就會被 `Record` 擋下。
+ */
+const JOB_CLAIM_DENIAL_TEXT_KEY: Record<JobClaimDenial, string> = {
+  [JOB_CLAIM_DENIAL.BUSY]: "carbon_chatbot.import_job_busy",
+  [JOB_CLAIM_DENIAL.CANCELLED]: "carbon_chatbot.import_job_cancelled",
+  [JOB_CLAIM_DENIAL.COMPLETED]: "carbon_chatbot.import_job_completed_already",
+  [JOB_CLAIM_DENIAL.FORBIDDEN]: "carbon_chatbot.import_job_forbidden",
+};
+
 export const useCarbonChat = () => {
   const { t, language } = useTranslation();
+  /**
+   * Info: (20260813 - Luphia) 無帳本會話改扣個人鏈上點數（設計書 §5.5）：
+   * 後端先建單並回 402，這裡付掉那張單後以相同冪等鍵重送。
+   * 託管帳號的簽章由伺服器代行，passkey 帳號提示裝置簽章一次。
+   */
+  const { payExistingOrder } = useOrderTransaction();
   const { user } = useAuth();
   const [sessionsData, setSessionsData] = useState<
     Record<string, IChatSession>
   >(() => createDefaultSessions());
   const [activeSessionId, setActiveSessionId] =
     useState<string>(DEFAULT_SESSION_ID);
-  const [inputValue, setInputValue] = useState<string>("");
+  /**
+   * Info: (20260827 - Emily) 輸入文字**不再住在這裡**(#6718)。
+   *
+   * 頁面整棵樹都消費這個 hook,所以文字放在這裡等於「每個按鍵重渲染整頁」——
+   * 訊息列表 + 報告預覽(實測 59 頁、19 張表)+ 所有 mermaid 圖都跟著重畫。
+   * 文字現在住在 `ChatInput`;這裡只保留**外部對輸入框下的指令**:
+   * 預填(跳段指引)與清空(切房、送出後)。
+   *
+   * 以 nonce 而非值來傳遞:清空的值是空字串,而使用者自己刪空也是空字串 ——
+   * 用值比對分不出「外部要求清空」與「剛好刪空」,後者會被每次 render 覆寫回去。
+   * nonce 只在真的下指令時 +1,所以 state 變動次數 = 指令次數(不是按鍵次數)。
+   */
+  const [inputPrefill, setInputPrefill] = useState<{
+    value: string;
+    nonce: number;
+    mode: "set" | "restore";
+  }>({ value: "", nonce: 0, mode: "set" });
+
+  /**
+   * Info: (20260831 - Emily) 兩種語意,分開講(PR #6730 review 第二輪)。
+   *
+   * - `set`(預設):**指令** —— 切房清空、跳段預填、送出後清空。該覆寫框裡的東西。
+   * - `restore`:**歸還** —— 送不出去,把那句話還給使用者。
+   *   框裡已經有字就沒有什麼要還的(見 ChatInput 的 effect)。
+   *
+   * 為什麼歸還要與指令分開:歧義的來源是「hook 不知道框裡現在有沒有字」,
+   * 而那個資訊只有元件有。與其在 hook 這邊加一個「金鑰準備中」的鎖去
+   * 讓那個狀態不出現(鎖的失效模式是輸入框永久打不了字,比它要修的缺陷嚴重),
+   * 不如讓歸還本身變成不歧義的 —— 資訊留在有它的那一端判斷。
+   */
+  const commandInput = useCallback(
+    (value: string, mode: "set" | "restore" = "set") => {
+      setInputPrefill((prev) => ({ value, nonce: prev.nonce + 1, mode }));
+    },
+    [],
+  );
   // Info: (20260714 - Tzuhan) 等待 AI 回覆的 session 集合(per-session 隔離: 舊房等待中不影響新房輸入與指示)
   const [busySessionIds, setBusySessionIds] = useState<Set<string>>(new Set());
   const [isError, setIsError] = useState<boolean>(false);
   // Info: (20260712 - Luphia) 是否已於進入時完成一次手勢解鎖（PRF）；未解鎖前不呼叫 AI、不顯示對話
   const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
+
+  /**
+   * Info: (20260812 - Luphia) 解鎖失敗的原因，給鎖定畫面顯示。
+   *
+   * 不用 `isError`：那個布林值同時被送訊息、載入歷史等路徑使用，
+   * 而鎖定畫面需要的是「為什麼解不開」這句話本身 —— 共用一個布林值說不出原因。
+   */
+  const [unlockError, setUnlockError] = useState<string | null>(null);
   // Info: (20260716 - Tzuhan) render 期不可讀 ref(react-hooks/refs):金鑰以 state 快照對外暴露(解鎖時設定)
   const [unlockedMasterKey, setUnlockedMasterKey] =
     useState<IChatroomMasterKey | null>(null);
@@ -391,6 +509,40 @@ export const useCarbonChat = () => {
   );
 
   /**
+   * Info: (20260902 - Emily) 預覽卡上確認的盤查年度(issue_drafts/open/69)。
+   *
+   * 寫回 pending 而不是另存一份 state:它要跟著待匯入紀錄一起入庫
+   *(「稍後再說」與重載之後仍在),而 pending 已經是那份紀錄的唯一真值來源。
+   * 這裡只寫記憶體;落地由 persistPendingImport 那條既有的路負責。
+   */
+  const setPendingInventoryYear = useCallback(
+    (year: number | undefined) => {
+      /**
+       * Info: (20260903 - Luphia) 範圍外一律不收(review)。
+       *
+       * 擋在**寫入點**而不是只擋在畫面上:這裡是 `pendingImport.inventoryYear`
+       * 的唯一寫入者,而範圍外的年度會一路寫進 `importedOrigin.year`、存檔成功
+       *(寫路徑不過 schema),然後在下次載入時讓 `CarbonInventoryStateSchema`
+       * 的 `safeParse` 失敗 —— `loadInventoryState` 是 fail-fast 丟棄,
+       * **整份盤查狀態(帳本、活動數據、待補項)一起消失**,而存的當下毫無異狀。
+       *
+       * 最日常的觸發是打錯一個字:`1024`(`2024` 的手滑)是四位數字、
+       * 通過畫面上的「有沒有填」檢查,而它比下限小。
+       */
+      const accepted = isStorableInventoryYear(year) ? year : undefined;
+      setPendingImportBySession((prev) => {
+        const current = prev[activeSessionId];
+        if (!current || current.inventoryYear === accepted) return prev;
+        return {
+          ...prev,
+          [activeSessionId]: { ...current, inventoryYear: accepted },
+        };
+      });
+    },
+    [activeSessionId],
+  );
+
+  /**
    * Info: (20260806 - Tzuhan) 預覽卡收起的會話(「稍後再說」)。
    *
    * 待匯入結果與**要不要現在看**是兩件事:內容一直在(已入庫),
@@ -490,6 +642,35 @@ export const useCarbonChat = () => {
   const lastImportSourceRef = useRef<ICarbonImportSource | null>(null);
   // Info: (20260804 - Tzuhan) 進行中的匯入檔名(null 即無);用檔名而非布林,提示才說得出擋的是誰
   const importInFlightRef = useRef<string | null>(null);
+  /**
+   * Info: (20260827 - Luphia) 同一件事的可渲染版本（issue #6723）。
+   *
+   * `importInFlightRef` 是 ref，改它不會重新渲染，所以掛不上 `beforeunload`
+   * 的生命週期。兩者必須同進同退——只更新一邊就會變成「提示常駐」或「提示不出現」。
+   */
+  const [importRunning, setImportRunning] = useState<boolean>(false);
+
+  /**
+   * Info: (20260827 - Luphia) 匯入中離開頁面要先問一聲（issue #6723）。
+   *
+   * 檢查點已經讓「做完的份」撐得過中斷，但離開的代價還是具體的：正在跑的那一份
+   * 沒有結果就會重跑（那一次的點數收不回來），而原始檔案只在記憶體裡——
+   * 回來之後得重新上傳同一份報告才接得下去。
+   *
+   * 只在跑的時候掛、跑完立刻卸下。常駐一個 `beforeunload` 會讓使用者在任何時候
+   * 離開都被問一次，那種提示很快就會被無視（見 `team/allocation_modal.tsx`）。
+   * `preventDefault()` 與 `returnValue` 都設是為了跨瀏覽器。
+   */
+  useEffect(() => {
+    if (!importRunning) return undefined;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+      return "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [importRunning]);
   // Info: (20260730 - Tzuhan) 首次匯入取得的頁碼索引:重試失敗章節時沿用,不重問(索引不會變,重問等於再燒一次全文輸入)
   const lastPageIndexRef = useRef<Map<string, number> | undefined>(undefined);
 
@@ -497,6 +678,27 @@ export const useCarbonChat = () => {
   const [inventoryStates, setInventoryStates] = useState<
     Record<string, ICarbonInventoryState>
   >({});
+  /**
+   * Info: (20260904 - Emily) 該房的帳本事實包,**唯一**的組包點(#6745)。
+   *
+   * 原本只有對話路徑組(#6707 第二層),草稿與修訂兩條 `/draft` 路各自不帶或帶不全,
+   * 於是服務層的守門對它們是「呼叫端沒帶 → 跳過」。三條會生成文字的路現在共用這一支:
+   * 帳本是 E2EE 的、伺服端讀不到,事實只能在這裡(解密後的狀態)決定性組出。
+   * 帳本空時回空陣列 —— 守門對空陣列**照跑**(那正是編造最沒阻力的一格),不補、不造。
+   */
+  const buildChannelLedgerFacts = useCallback(
+    (channel: string): IContextFact[] =>
+      buildLedgerFactBundle(
+        inventoryStates[channel]?.computedLedger,
+        // Info: (20260825 - Emily) 勾稽阻擋紀錄一併注入:「帳本為什麼是空的」也是可問的事實
+        inventoryStates[channel]?.ledgerImportBlocks,
+        // Info: (20260825 - Emily) #6719 年度快照:滿兩年時年間比較事實隨包注入
+        inventoryStates[channel]?.ledgerByYear,
+        // Info: (20260828 - Emily) 年度標註不完整:列舉制第五個偵測器(round-2 追加回饋)
+        inventoryStates[channel]?.ledgerYearWarning,
+      ),
+    [inventoryStates],
+  );
   const inventoryVersionsRef = useRef<Map<string, number>>(new Map());
   /**
    * Info: (20260806 - Tzuhan) 還原的「試過」與「成功」拆成兩個集合
@@ -558,13 +760,21 @@ export const useCarbonChat = () => {
 
   // Info: (20260712 - Luphia) 用戶主金鑰：經 WebAuthn PRF 解包/註冊後持久化；xpub 供後端加密、xprv 供本地解密
   const masterKeyRef = useRef<IChatroomMasterKey | null>(null);
+  /**
+   * Info: (20260812 - Luphia) 帶上 custody:託管帳號（第三方登入）沒有 passkey,
+   * PRF 秘密改向 API 索取（見 `requestPrfSecret`）。
+   *
+   * 不帶的話 `navigator.credentials.get()` 會開出一個永遠不會成功的 passkey 對話框,
+   * 使用者關掉它拿到 `NotAllowedError`,再被下面的 catch 翻譯成「您的裝置不支援」——
+   * 而裝置沒問題,是帳號沒有 passkey。
+   */
   const ensureMasterKeyCached =
     useCallback(async (): Promise<IChatroomMasterKey> => {
       if (!masterKeyRef.current) {
-        masterKeyRef.current = await ensureMasterKey();
+        masterKeyRef.current = await ensureMasterKey(user?.custody);
       }
       return masterKeyRef.current;
-    }, []);
+    }, [user?.custody]);
 
   // Info: (20260714 - Tzuhan) 等待中回覆的 channel 集合: 回覆若於 fetch 期間就送達，不再啟動逾時計時器(per-channel)
   const pendingReplyChannelsRef = useRef<Set<string>>(new Set());
@@ -665,6 +875,19 @@ export const useCarbonChat = () => {
   // Info: (20260714 - Tzuhan) sessions 以 DB Chatroom 為 single source of truth(換裝置/清瀏覽器不再出現殭屍房間)
   // Info: (20260714 - Tzuhan) 標題衍生自密文首訊(server 讀不到),localStorage 索引降級為標題快取
   const sessionsIndexLoadedRef = useRef<boolean>(false);
+  /**
+   * Info: (20260828 - Julian) 清單**問完了沒有**——與 `sessionsIndexLoadedRef` 不同。
+   *
+   * 那支 ref 是「請求發過了」的去重旗標，在 `request()` 之前就設成 true。
+   * 中間那段時間 `sessionsData` 裡只有預設會話，**非空但不完整** ——
+   * 而「非空」正是通知深連結原本用來判斷「清單載好了」的依據，
+   * 於是它在清單補齊之前就判定「查無此會話」而放棄
+   *（見 `resumable_job_resume_landing_and_copy.md` §6.1）。
+   *
+   * 任何「這個 id 不存在」的判斷都要等這個旗標，失敗也要等 ——
+   * 失敗時清單就是不會再補了，繼續等只會變成永遠不動作。
+   */
+  const [sessionsIndexSettled, setSessionsIndexSettled] = useState(false);
   useEffect(() => {
     if (!user?.address || sessionsIndexLoadedRef.current) return;
     sessionsIndexLoadedRef.current = true;
@@ -728,7 +951,9 @@ export const useCarbonChat = () => {
       .catch((error) => {
         // Info: (20260714 - Tzuhan) 列表載入失敗不阻斷(仍可用預設 session 對話)
         console.error("[carbon-chat] failed to load sessions:", error);
-      });
+      })
+      // Info: (20260828 - Julian) 成功或失敗都算「問完了」，理由見旗標的說明
+      .finally(() => setSessionsIndexSettled(true));
   }, [user?.address, t]);
 
   // Info: (20260716 - Tzuhan) #52 載入可綁定帳本(失敗不阻斷:僅影響新增對話的帳本選單)
@@ -872,6 +1097,11 @@ export const useCarbonChat = () => {
        * (見 switchSession 的註解)。會話已經不存在,留著那一鍵就沒有任何人能套用它。
        */
       setPendingImportFor(sessionId, null);
+      /**
+       * Info: (20260811 - Emily) 提示同理:會話消失才是該清的時機(#6624)。
+       * 切房不清之後,這一鍵沒有別的清除點 —— 留著就是一筆永遠沒人讀的殘留。
+       */
+      setDraftNotice(null, sessionId);
       // Info: (20260730 - Tzuhan) 封存的若是當前會話,切到其餘任一會話;全空則建新的(畫面不可留在已封存的會話上)
       setActiveSessionId((current) => {
         if (current !== sessionId) return current;
@@ -882,7 +1112,7 @@ export const useCarbonChat = () => {
       });
       return true;
     },
-    [user?.address, sessionsData, setPendingImportFor],
+    [user?.address, sessionsData, setPendingImportFor, setDraftNotice],
   );
 
   // Info: (20260716 - Tzuhan) #52 綁定會話至帳本(POST sessions);成功後記入存取中繼資料
@@ -935,6 +1165,8 @@ export const useCarbonChat = () => {
               ? t("carbon_chatbot.book_bind_denied")
               : t("carbon_chatbot.book_bind_failed"),
         });
+        // Info: (20260811 - Emily) 一次性事件的提示要自己消失,不能靠切房順手清掉(#6624)
+        dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS);
       }
     },
     [t, setDraftNotice, dismissDraftNoticeAfter],
@@ -1036,6 +1268,87 @@ export const useCarbonChat = () => {
   }, [isUnlocked, chatChannel, activeSessionId, sessionAccess]);
 
   /**
+   * Info: (20260904 - Emily) 存檔出口的宣告守門(#6688-B 後半)。
+   *
+   * 接在 `flushReportDraftSave` 的入口:那是所有段落寫入(AI 草稿、修訂、匯入、
+   * 手動編輯)最後匯流成一次 PUT 的地方,所以一個判斷蓋住全部路徑。
+   *
+   * ## 三個設計問題,量過之後的答案
+   *
+   * **一、爆炸半徑:整份,而且這是唯一可得的粒度。** `saveReportDraft` 一次送一整份
+   * `reportData` 並帶樂觀鎖版本 —— 產品裡沒有「單段存檔」這件事。所以擋的單位只能是整份。
+   *
+   * **二、擋雲端存檔不會毀掉使用者的成果,所以本地備份不擋。** 自動保存那個 effect 在
+   * 進入任何雲端 guard **之前**就無條件 `saveLocalDraftBackup`,而還原時
+   * `preferBackup = localBackup.draftVersion >= loaded.version` 會優先取本機。
+   * 也就是被擋之後那一版仍然在本機、重載仍讀得回來 —— 代價是「沒上雲、不跨裝置」,
+   * 不是「消失」。反過來把本地備份也擋掉才是唯一真正破壞性的選項
+   *(那一版哪裡都不存在),而本機快取**不是紙面**,擋它換不到任何東西。
+   *
+   * **三、`saveStatus` 不需要新狀態。** 既有的 `"local"` 語意正是
+   * 「僅暫存本機、未上雲」,而那正是被擋之後的真實狀態 —— 為它新增一個狀態
+   * 會讓工具列多一種要解釋的顏色,而它要表達的事既有的那個已經表達了。
+   * 原因走 `draftNotice`:照 #6624 立的分工,**事件走通知、持續的那面走 saveStatus**。
+   * 通知照既有失敗路徑一樣自動消失 —— 不自動消失的版本要求「存檔成功時清掉通知」,
+   * 而今天的成功路徑只 `setSaveStatus("saved")`、不清通知,那一版會在使用者改好之後留著。
+   */
+  const blockedByFrameworkClaim = useCallback(
+    (
+      pending: IReportData | undefined,
+      channel: string,
+      sessionId: string,
+    ): boolean => {
+      /**
+       * Info: (20260906 - Luphia) 收「**要寫出去的那一版**」,不自己讀 ref
+       *(review 阻-2)。
+       *
+       * 原本是進迴圈前讀一次 ref 查一次,而下面那個迴圈的設計是
+       * 「存完之後如果發現又改了,就把最新的再存一次」——
+       * 於是第二輪之後寫上雲端的是**守門沒看過的版本**。
+       *
+       * 觸發不需要任何巧合:自動存檔要加密再送雲端,那幾秒內繼續打字是常態。
+       * 第一輪存乾淨版本、通過;第二輪把含宣告的版本送上去,而畫面照樣顯示
+       * 「已儲存」——沒有通知、沒有 log。條 4 在這個出口是 BLOCK,理由是
+       * 「主體合規宣告永遠禁止上紙」,而那個 BLOCK 在一個常見時序下被繞過。
+       *
+       * 改成由呼叫端把「這一輪要寫什麼」交進來,判斷就跟著那個選擇走。
+       */
+      if (!pending) return false;
+      /*
+       * Info: (20260904 - Emily) 四個槽怎麼取、為什麼,住在 `composeReportDraftPaperText`
+       * (純函式,各有一條測試)。這一層只有接線 —— hook 逼不出行為測試,
+       * 所以判準不留在這裡。
+       */
+      const { blocked, warned } = gateFrameworkClaims(
+        composeReportDraftPaperText(pending),
+        CarbonFrameworkClaimExitEnum.DRAFT_SAVE,
+      );
+      if (warned.length > 0) {
+        // Info: (20260904 - Emily) 只記規則與筆數,不記片段 —— 那是使用者的報告內容
+        console.warn("[carbon-chat] framework claim warnings on save", {
+          channel,
+          rules: warned.map((finding) => finding.rule),
+          counts: warned.map((finding) => finding.matches.length),
+        });
+      }
+      if (blocked.length === 0) return false;
+      setSaveStatus("local");
+      setDraftNotice(
+        {
+          type: "error",
+          text: t("carbon_chatbot.save_blocked_framework_claim", {
+            name: FRAMEWORK_DISCLOSURE_LABEL,
+          })!,
+        },
+        sessionId,
+      );
+      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, sessionId);
+      return true;
+    },
+    [t, setDraftNotice, dismissDraftNoticeAfter],
+  );
+
+  /**
    * Info: (20260807 - Emily) 送出一輪雲端保存,直到送出去的就是當下最新的那一份。
    *
    * 兩件事被綁在一起,因為它們是同一個不變式的兩半:
@@ -1054,11 +1367,38 @@ export const useCarbonChat = () => {
       accountBookId: string | null,
     ): Promise<void> => {
       if (savingChannelsRef.current.has(channel)) return;
+      /*
+       * Info: (20260906 - Luphia) 前置檢查留著只為了「不要先閃一下 saving 再變 local」——
+       * 真正把洞補起來的是下面迴圈裡那一次(review 阻-2)。
+       */
+      if (
+        blockedByFrameworkClaim(
+          latestReportDataRef.current.get(channel),
+          channel,
+          sessionId,
+        )
+      ) {
+        return;
+      }
       savingChannelsRef.current.add(channel);
       setSaveStatus("saving");
       try {
         let inflight = latestReportDataRef.current.get(channel);
+        /*
+         * Info: (20260906 - Luphia) 被擋而中止時**不得**落到下面的
+         * `setSaveStatus("saved")` —— 守門已經把它設成 "local"(僅暫存本機)。
+         */
+        let blockedMidway = false;
         while (inflight) {
+          /*
+           * Info: (20260906 - Luphia) **每一輪都審**(review 阻-2)。
+           * 這個迴圈會把「存檔期間又改出來的最新版」再送一次,
+           * 而那一版沒有經過進迴圈前那次檢查。判斷要跟著「這一輪要寫什麼」走。
+           */
+          if (blockedByFrameworkClaim(inflight, channel, sessionId)) {
+            blockedMidway = true;
+            break;
+          }
           const expectedVersion = draftVersionsRef.current.get(channel) ?? 0;
           // Info: (20260716 - Tzuhan) #52 帳本會話走明文保存(模型 A);個人會話維持 E2EE
           const newVersion = await saveReportDraft(
@@ -1083,7 +1423,7 @@ export const useCarbonChat = () => {
           if (latest === inflight) break;
           inflight = latest;
         }
-        setSaveStatus("saved");
+        if (!blockedMidway) setSaveStatus("saved");
       } catch (error) {
         /**
          * Info: (20260807 - Emily) 保存失敗必須說得出**是哪一種**失敗,而不是共用一個小圖示。
@@ -1105,11 +1445,13 @@ export const useCarbonChat = () => {
         }
         setSaveStatus("error");
         setDraftNotice({ type: "error", text: noticeText }, sessionId);
+        // Info: (20260811 - Emily) 同上:保存失敗是事件不是狀態,持續的那面是 saveStatus(#6624)
+        dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, sessionId);
       } finally {
         savingChannelsRef.current.delete(channel);
       }
     },
-    [t, setDraftNotice, dismissDraftNoticeAfter],
+    [t, setDraftNotice, dismissDraftNoticeAfter, blockedByFrameworkClaim],
   );
 
   // Info: (20260714 - Tzuhan) 報告草稿 debounce 自動保存(前端加密 → PUT)；還原完成前不保存，避免空骨架覆蓋既有草稿
@@ -1351,7 +1693,18 @@ export const useCarbonChat = () => {
   useEffect(() => {
     computedLedgerRef.current = activeInventoryState?.computedLedger;
   }, [activeInventoryState?.computedLedger]);
-
+  /**
+   * Info: (20260825 - Emily) #6667:勾稽阻擋紀錄的同步鏡像(與 computedLedgerRef 同一個理由:
+   * 建表發生在 setState 生效之前,當下要同步讀得到)。圖表建置憑它把
+   * 「未取得該表」與「取得了但勾稽被擋」說成兩件事 —— 印錯原因的提示,
+   * 會讓使用者去重匯一章根本沒壞的內容。
+   */
+  const ledgerImportBlocksRef = useRef<ILedgerImportBlock[] | undefined>(
+    undefined,
+  );
+  useEffect(() => {
+    ledgerImportBlocksRef.current = activeInventoryState?.ledgerImportBlocks;
+  }, [activeInventoryState?.ledgerImportBlocks]);
   // Info: (20260720 - Tzuhan) #51 圖表文案(i18n;數值本身一律引擎產出,與語言無關)
   const chartLabels: ICarbonChartLabels = useMemo(
     () => ({
@@ -1372,6 +1725,16 @@ export const useCarbonChat = () => {
       importedSankeyNoLedger: t(
         "carbon_chatbot.chart_imported_sankey_no_ledger",
       ),
+      // Info: (20260825 - Emily) #6667:「拿到了表但勾稽被擋」與「沒拿到表」分開說
+      importedSankeyBlockedLedger: t(
+        "carbon_chatbot.chart_imported_sankey_blocked_ledger",
+      ),
+      /**
+       * Info: (20260828 - Emily) 部分入帳的圖旁附註(round-2 低-1 第二半)。
+       * ⚠ 必接 i18n:`chartLabels` 是完整字面值、沒有 spread 預設值,
+       * builder 加了文案而這裡沒接 = 紙上什麼都不會印(見本檔 20260819 那則註解)。
+       */
+      partialImportBlocked: t("carbon_chatbot.chart_partial_import_blocked"),
       importedSankeyCollapsed: t(
         "carbon_chatbot.chart_imported_sankey_collapsed",
       ),
@@ -1380,6 +1743,19 @@ export const useCarbonChat = () => {
       importedSankeyOther: t("carbon_chatbot.chart_imported_sankey_other"),
       importedSankeyGhgMapping: t(
         "carbon_chatbot.chart_imported_sankey_ghg_mapping",
+      ),
+
+      /**
+       * Info: (20260819 - Emily) `open/53` 的範疇↔類別對照說明。
+       *
+       * ⚠ 這一行必須接 i18n。本檔 20260806 那則註解記著同一個坑:
+       * 「文案當時只改了 default 沒改 i18n,而這個 hook 會用 i18n 覆蓋 default」——
+       * `chartLabels` 是完整的物件字面值,沒有 spread `CARBON_CHART_DEFAULT_LABELS`,
+       * 所以 builder 加了新的預設文案而這裡沒接,結果是**紙上什麼都不會印**。
+       * 08-19 兩趟驗收就是這樣紅的。
+       */
+      importedSankeyIsoMapping: t(
+        "carbon_chatbot.chart_imported_sankey_iso_mapping",
       ),
       /**
        * Info: (20260806 - Tzuhan) 這兩個先前漏接 i18n,只吃得到 CARBON_CHART_DEFAULT_LABELS 的
@@ -1474,12 +1850,34 @@ export const useCarbonChat = () => {
               "[carbon-chat] inventory version conflict:",
               chatChannel,
             );
-          } else {
-            console.error(
-              "[carbon-chat] failed to save inventory state:",
-              error,
-            );
+            return;
           }
+          /**
+           * Info: (20260904 - Emily) 「這一版存不進去」必須說得出來(open/73)。
+           *
+           * 與版本衝突的處置相反:衝突是暫時的、下一輪 autosave 就過了;
+           * 這一條是**狀態本身不符合儲存格式**,每一次 autosave 都會失敗同一次,
+           * 而盤查狀態**沒有本機備份** —— 使用者不知道的話,那些活動數據與帳本
+           * 會在關掉分頁的那一刻消失,而畫面上一切正常。
+           *
+           * 原本這裡只有 `console.error`,而看得到 console 的人不是在做盤查的那個人。
+           * 只記欄位路徑不記值:載荷是使用者的盤查資料。
+           */
+          if (isInventoryStateUnsavableError(error)) {
+            console.error("[carbon-chat] inventory state unsavable:", {
+              channel: chatChannel,
+              paths: error.paths,
+            });
+            setDraftNotice(
+              {
+                type: "error",
+                text: t("carbon_chatbot.inventory_unsavable")!,
+              },
+              activeSessionId,
+            );
+            return;
+          }
+          console.error("[carbon-chat] failed to save inventory state:", error);
         });
     }, CARBON_REPORT_AUTOSAVE_DEBOUNCE_MS);
     return () => {
@@ -1487,7 +1885,21 @@ export const useCarbonChat = () => {
         clearTimeout(inventoryAutosaveTimerRef.current);
       }
     };
-  }, [activeInventoryState, chatChannel, isUnlocked, sessionAccess]);
+    /*
+     * Info: (20260904 - Emily) 依賴多了 `t` / `setDraftNotice` / `activeSessionId`:
+     * 上面那個 catch 分支要組通知。與 #6730 review R2 同一個判斷 —— 補依賴而不是
+     * 改讀 ref:這個 effect 的重跑成本是一次 debounce 計時器的重設,而 ref 會讓
+     * 通知落在切換 session 之前的那一則上。
+     */
+  }, [
+    activeInventoryState,
+    chatChannel,
+    isUnlocked,
+    sessionAccess,
+    t,
+    setDraftNotice,
+    activeSessionId,
+  ]);
 
   // Info: (20260716 - Tzuhan) #6519 決定論 CO2e 計算:活動集合變更時呼叫 /calculate,結果掛回 state
   // Info: (20260716 - Tzuhan) 簽章 guard 防迴圈:applyComputedLedger 只回填係數不改活動鍵,簽章不變不重算
@@ -1539,6 +1951,36 @@ export const useCarbonChat = () => {
       });
   }, [activeInventoryState, chatChannel]);
 
+  /**
+   * Info: (20260903 - Emily) 揭露框架的選擇(#6688-A)。
+   *
+   * 寫進盤查狀態而不是另存一份:它要隨 state 一起 E2EE 入庫
+   *(完成判準是「選 IFRS 後**重載**仍是 IFRS」),而 state 已經是那份紀錄的
+   * 唯一真值來源。這裡只寫記憶體,落地由既有的 autosave 那條路負責 ——
+   * 所以「無實質變化不換參考」這個守門要照 applyInventoryExtraction 的先例做,
+   * 否則每次點同一個選項都會觸發一次無意義的存檔。
+   *
+   * channel 在呼叫當下綁定(與 applyInventoryExtraction 同一個理由):
+   * 在途的請求不該把選擇寫進切換後的那一間房。
+   */
+  const setDisclosureFramework = useCallback(
+    (framework: CarbonDisclosureFrameworkEnum) => {
+      const channel = buildCarbonChatChannel(
+        user?.address ?? "anonymous",
+        activeSessionId,
+      );
+      setInventoryStates((prev) => {
+        const base = prev[channel] ?? createEmptyInventoryState();
+        if (base.disclosureFramework === framework) return prev;
+        return {
+          ...prev,
+          [channel]: { ...base, disclosureFramework: framework },
+        };
+      });
+    },
+    [user?.address, activeSessionId],
+  );
+
   // Info: (20260716 - Tzuhan) #6518 合併萃取結果進狀態帳本(去重/推進由 lib/carbon_inventory 決定性裁決)
   // Info: (20260716 - Tzuhan) 閉包綁定建立當下的 channel: 在途回覆寫回原房
   const applyInventoryExtraction = useCallback(
@@ -1583,14 +2025,85 @@ export const useCarbonChat = () => {
       );
       setInventoryStates((prev) => {
         const base = prev[channel] ?? createEmptyInventoryState();
+        const merged = mergeImportedLedgerEntries(base.computedLedger, entries);
+        /**
+         * Info: (20260828 - Emily) 年度標註不完整的警示(PR #6725 round-2 追加回饋)。
+         *
+         * 與 merge 吃同一份輸入(base + entries),所以「被留下來的無年度分錄」
+         * 這個判斷與實際入帳結果必然一致 —— 兩邊各算一次就會不一致。
+         * 每次匯入無條件覆寫:這次沒有無年度分錄就寫回 undefined
+         * (警示描述的狀態已不存在,與 ledgerImportBlocks 清除同一個立場)。
+         */
+        const yearWarning = detectUndatedImportedEntries(
+          base.computedLedger,
+          entries,
+        );
+        // Info: (20260902 - Emily) 快照鍵與規則 3 用同一個年度(issue_drafts/open/69)
+        const incomingYear = resolveIncomingYear(entries);
         return {
           ...prev,
           [channel]: {
             ...base,
-            computedLedger: mergeImportedLedgerEntries(
-              base.computedLedger,
-              entries,
-            ),
+            computedLedger: merged,
+            /**
+             * Info: (20260825 - Emily) #6719 年度快照:報告有盤查年度才存
+             *(沒有年度的帳本存進去只會製造假比較)。
+             * 同年度重匯覆蓋該年,與同鍵覆蓋語義一致。
+             *
+             * Info: (20260827 - Emily) 快照存**那份報告的分錄**,不是累積後的帳本
+             * (PR #6725 review R1 第二項)。存累積結果會讓「2023 的快照」
+             * 含有 2024 匯入的東西 —— 年間比較於是拿自己跟自己比,
+             * 而那正是這個欄位存在的理由被抵銷掉的方式。
+             * 小計與總計走同一支 summarizeLedgerEntries(不另外累加)。
+             *
+             * Info: (20260902 - Emily) 鍵改用**這批分錄自己的年度**
+             *(issue_drafts/open/69),不再用 `base.year`。
+             * `base.year` 是房間層、write-once,兩份不同年度的報告會存進同一個鍵 ——
+             * 這個 Record 於是永遠只有一個鍵,而年間比較需要兩個。
+             * 與規則 3 的剔除、年度警示共用 `resolveIncomingYear`:三處若各自
+             * 判年度,就會出現「剔除了 2023、快照卻存到 2024」這種帳面正常的錯鍋。
+             */
+            ...(incomingYear !== undefined
+              ? {
+                  ledgerByYear: {
+                    ...base.ledgerByYear,
+                    [incomingYear]: buildYearSnapshot(entries),
+                  },
+                }
+              : {}),
+            // Info: (20260825 - Emily) 成功入帳即清除阻擋紀錄:紀錄描述的狀態已不存在
+            ledgerImportBlocks: undefined,
+            ledgerYearWarning: yearWarning ?? undefined,
+          },
+        };
+      });
+      // Info: (20260825 - Emily) #6667:ref 同步清除(理由見 ledgerImportBlocksRef 宣告處)
+      ledgerImportBlocksRef.current = undefined;
+    },
+    [user?.address, activeSessionId],
+  );
+
+  /**
+   * Info: (20260825 - Emily) 勾稽阻擋紀錄寫進 channel 狀態(#6707「對帳差異」偵測器)。
+   * 原本只有 console.warn —— 資訊死在開發者工具裡,查詢層看不到,
+   * 使用者問「有沒有異常」時系統說不出「表3.8 被擋,因為 6 列解析失敗」。
+   * 與 applyImportedLedgerEntries 同一把 channel 推導,同一份 E2EE state。
+   */
+  const recordLedgerImportBlocks = useCallback(
+    (blocks: ILedgerImportBlock[]) => {
+      if (blocks.length === 0) return;
+      const channel = buildCarbonChatChannel(
+        user?.address ?? "anonymous",
+        activeSessionId,
+      );
+      setInventoryStates((prev) => {
+        const base = prev[channel] ?? createEmptyInventoryState();
+        return {
+          ...prev,
+          [channel]: {
+            ...base,
+            ledgerImportBlocks: blocks,
+            updatedAt: new Date().toISOString(),
           },
         };
       });
@@ -1624,13 +2137,34 @@ export const useCarbonChat = () => {
           payload: { content: string; citedFacts: string[] } | null;
         }>("/api/v1/chat/carbon/draft", {
           method: "POST",
+          /**
+           * Info: (20260814 - Luphia) 計費上下文（設計書 §5.5）：
+           * channel 供後端推導計費帳本，clientMessageId 讓重試不重複扣點。
+           */
           body: JSON.stringify({
             paragraphId,
             conversationContext: [],
-            contextFacts: facts,
+            /**
+             * Info: (20260904 - Emily) #6745:那則訊息的事實 ∪ 該房帳本事實包。
+             * 原本只帶前者 —— 修訂稿引用帳本的量會被守門當成編造,而帳本才是
+             * 排放量的唯一合法來源。這裡的事實包是用戶端自報:這道門防的是
+             * **LLM 編造**,不是惡意用戶端(那個人本來就能直接改段落文字),
+             * 別把它當成授權邊界。
+             */
+            contextFacts: [...facts, ...buildChannelLedgerFacts(chatChannel)],
             language,
             existingContent: paragraph.content,
             instruction,
+            /**
+             * Info: (20260903 - Emily) 揭露框架跟著請求走(#6688-A)。
+             *
+             * 兩個 /draft 呼叫端都要帶:修訂與生成走的是同一個服務,
+             * 而 `carbonFrameworkView` 決定角色句與 guidance ——
+             * 只帶其中一個,會出現「生成是 IFRS 版、修訂又回到盤查版」。
+             */
+            framework: activeInventoryState?.disclosureFramework,
+            channel: chatChannel,
+            clientMessageId: crypto.randomUUID(),
           }),
         });
         setDraftNotice(null);
@@ -1658,6 +2192,20 @@ export const useCarbonChat = () => {
       t,
       setDraftNotice,
       dismissDraftNoticeAfter,
+      /**
+       * Info: (20260903 - Emily) 揭露框架進 deps 而不是另做一個 ref 鏡像(#6688-A)。
+       *
+       * eslint 這條警告是真的缺陷(#6730 review 第二輪那次的同一個形狀:
+       * 讀了 state 卻沒進 deps → 陳舊閉包 → 送出去的是使用者選之前的值)。
+       * 這裡選「加 deps」而不是 ref:這個值只在使用者動選單時變,而這兩個
+       * callback 本來就依賴 `sessionsData` / `activeSession`,那些變得比它頻繁得多,
+       * 所以重建次數實際上沒有增加。ref 會多一個要同步的真值來源,
+       * 而它要解的問題(在同一輪 render 的 setState updater 裡讀值)這裡不存在。
+       */
+      activeInventoryState?.disclosureFramework,
+      // Info: (20260814 - Luphia) 計費上下文所需：channel 決定這筆消費記到哪個帳本
+      chatChannel,
+      buildChannelLedgerFacts,
     ],
   );
 
@@ -1681,12 +2229,31 @@ export const useCarbonChat = () => {
       setActiveParagraphId(null);
       setHighlightedParagraphId(null);
       setFocusedMessageId(null);
-      setInputValue("");
+      // Info: (20260827 - Emily) #6718:切房清空輸入框(文字在 ChatInput,經 nonce 下指令)
+      commandInput("");
       setPendingAttachments([]);
       setAttachmentError(null);
       setSaveStatus(null);
       setIsError(false);
-      setDraftNotice(null);
+      /**
+       * Info: (20260811 - Emily) 這裡刻意**不再清除** draftNotice(#6624)。
+       *
+       * 這一行是 per-session 之前留下的:當時提示只有一格,「切房就清掉」本身就是隔離機制。
+       * 改成一房一格之後(20260806),隔離已由 `draftNoticeBySession[activeSessionId]` 完成,
+       * 這一行剩下的作用只有刪除 —— 而且刪的是**正要離開的那一房**:
+       * 省略 sessionId 的 `setDraftNotice` 讀 `activeSessionIdRef`,該 ref 由 effect 同步,
+       * 上一行的 `setActiveSessionId` 要到 commit 後才反映到 ref。
+       * 於是「A 房匯入中 → 切到 B 房」把 A 房的進度從 map 裡刪掉,
+       * 切回 A 房畫面是空的,要等下一次進度事件(可能好幾分鐘)才重新有字 ——
+       * 那正是 #6624 描述的「不會立刻出現」。
+       *
+       * 與下方 pendingImportBySession(20260805 - Luphia)同一個故事:
+       * 那次改了預覽卡,提示這一份漏了。
+       *
+       * 「匯入已結束才切回不得殘留假的進行中訊息」由匯入端保證:
+       * 每一條終止路徑都以 originSessionId 明確收尾
+       * (成功 `notify(null)`;失敗 `notify(error)` + `dismissDraftNoticeAfter`)。
+       */
       setPendingRevision(null);
       /**
        * Info: (20260805 - Luphia) 這裡刻意**不動** pendingImportBySession。
@@ -1701,7 +2268,7 @@ export const useCarbonChat = () => {
        */
       pendingDraftParagraphIdRef.current = null;
     },
-    [setDraftNotice],
+    [commandInput],
   );
 
   // Info: (20260716 - Tzuhan) 對話改名:設自訂旗標(首訊衍生不再覆蓋);sessions 索引 effect 自動持久化
@@ -1731,6 +2298,37 @@ export const useCarbonChat = () => {
           [activeSessionId]: {
             ...session,
             reportData: { ...session.reportData, documentName: trimmed },
+          },
+        };
+      });
+    },
+    [activeSessionId],
+  );
+
+  /**
+   * Info: (20260814 - Emily) 查證識別欄位逐格寫回
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * 收 patch 而不是整包:四個輸入框各自 onChange,整包覆蓋的話
+   * 連續改兩格時後寫的那次會拿著舊的 state 蓋掉前一次（React 的更新是非同步的）。
+   *
+   * 不 trim、不驗格式:這幾格的內容要逐字印在查證文件上,而
+   * 「2023」與「2023 年度」都是合法的寫法。空字串照存 —— 使用者清空一格
+   * 就是要清空它,不是要退回上一個值（列印端會印「未填寫」,見 buildIdentityRows）。
+   */
+  const updateReportIdentity = useCallback(
+    (patch: ICarbonReportIdentity) => {
+      setSessionsData((prev) => {
+        const session = prev[activeSessionId];
+        if (!session?.reportData) return prev;
+        return {
+          ...prev,
+          [activeSessionId]: {
+            ...session,
+            reportData: {
+              ...session.reportData,
+              identity: { ...session.reportData.identity, ...patch },
+            },
           },
         };
       });
@@ -1780,6 +2378,9 @@ export const useCarbonChat = () => {
       const formData = new FormData();
       appendImportSource(formData, source);
       formData.append("language", language);
+      // Info: (20260813 - Luphia) 計費上下文（設計書 §5.5）：帳本由 channel 推導，冪等鍵防重試重複扣點
+      formData.append("channel", chatChannel);
+      formData.append("clientMessageId", crypto.randomUUID());
       formData.append("mode", CarbonReportImportModeEnum.INDEX);
       try {
         // Info: (20260807 - Emily) 端點走保活式串流,失敗在信封裡:requestEnvelope 轉回拋出,
@@ -1808,6 +2409,18 @@ export const useCarbonChat = () => {
         console.info("[carbon-chat] page index", {
           resolved: index.size,
           total: CARBON_REPORT_OUTLINE.length,
+          /**
+           * Info: (20260817 - Emily) 缺了**哪幾節**,不只缺幾節
+           * (`data/issue_drafts/open/42_page_slice_falls_back.md`)。
+           *
+           * 原本只印 `resolved: 21, total: 33` —— 看得到「12 節沒索引」,
+           * 看不出是哪 12 節,於是也推不出哪些工作單元會退回送全文。
+           * 而退回與否是這一趟成本的分水嶺(實測 14 次有 8 次退回、
+           * 每次多花約 41.6k token)。
+           */
+          missing: CARBON_REPORT_OUTLINE.filter(
+            (section) => !index.has(section.id),
+          ).map((section) => section.id),
           isValid: validation.isValid,
           reason: validation.reason,
           offending: validation.offending,
@@ -1823,7 +2436,7 @@ export const useCarbonChat = () => {
         return new Map();
       }
     },
-    [language],
+    [chatChannel, language],
   );
 
   /**
@@ -1841,6 +2454,26 @@ export const useCarbonChat = () => {
       extractActivities: boolean,
       pageIndex: Map<string, number> | undefined,
       notify: (notice: IDraftNotice | null) => void,
+      /**
+       * Info: (20260825 - Luphia) 接續時直接指定要跑的**工作單元**（issue #6713）。
+       *
+       * 粒度是單元而不是章：`buildImportUnits` 會把節數多的章切成兩份
+       *（實測 11 章 → 14 個單元，ch1/ch3/ch9 各兩份），而點數用完時
+       * 很可能是「一份做完、另一份撞牆」。以章接續會把做完的那一份再跑一次，
+       * 而訊息裡明寫「已完成的部分不會重跑」。
+       */
+      resumeUnits?: IImportUnit[],
+      /**
+       * Info: (20260827 - Luphia) 每做完一份就回報一次檢查點（issue #6723）。
+       *
+       * 先前成果**只在整段跑完之後才落地**：14 份要跑 7～14 分鐘，這段時間內
+       * 關掉分頁、切走頁面、或任何一次非暫停的拋錯，已經扣過點的份全部白費，
+       * 下次從第 1 份重扣（單次預扣估算約 677 點）。
+       *
+       * 「暫停」那條路一直是對的，因為它是**正常結束**——迴圈自己跳出來，
+       * 後面的落地照跑。壞的是其他每一種中斷方式，而測試全都只走前者。
+       */
+      onCheckpoint?: (checkpoint: IImportCheckpoint) => void,
     ) => {
       interface IImportChunkPayload {
         segments: {
@@ -1853,21 +2486,46 @@ export const useCarbonChat = () => {
         }[];
         unmapped: string[];
         activities?: IActivityRecord[];
+        /**
+         * Info: (20260902 - Emily) 這份報告的盤查年度(issue_drafts/open/69)。
+         *
+         * **這裡不宣告就等於沒有**:與上面 sourceTables 同一個坑 ——
+         * API 一直有回,而逐章合併只搬它認得的欄位,
+         * 漏宣告的欄位會被靜默丟棄,畫面上毫無異狀。
+         * 只有第一次呼叫(extractActivities)會帶,其餘章節是 undefined。
+         */
+        inventoryYear?: number;
       }
       /**
        * Info: (20260805 - Tzuhan) 把章切成「單次呼叫跑得完」的工作單元。
        * ch1(7 節)、ch3(6 節)、ch9(5 節)會各切成兩份;
        * 節數少的章維持一份,行為與先前相同。
        */
-      const units = buildImportUnits(
-        CARBON_REPORT_OUTLINE,
-        chapters.map((chapter) => chapter.id),
-      );
+      const units =
+        resumeUnits ??
+        buildImportUnits(
+          CARBON_REPORT_OUTLINE,
+          chapters.map((chapter) => chapter.id),
+        );
       const results: (IImportChunkPayload | null)[] = new Array(
         units.length,
       ).fill(null);
-      const failed: { id: string; title: string }[] = [];
-      let nextIndex = 0;
+      /**
+       * Info: (20260825 - Luphia) 控制流交給共用驅動器 `runResumableJob`
+       *（issue #6712 / #6713）。
+       *
+       * 它負責三件這裡曾經手寫、而且寫錯粒度的事：撞牆就停掉整趟、
+       * 把「還沒做」與「做壞了」分成兩份清單、以**有沒有結果**判斷剩餘
+       *（不是「索引之後」——併發下另一條 worker 可能正跑在更前面的索引上）。
+       *
+       * 先前這裡的 `settledChapterIds` 是以**章**為鍵的正向標記，
+       * 於是「一份做完、另一份撞牆」時整章被當成處理過：那一章既不在暫停名單、
+       * 也不在失敗名單，而合併出來的內容少了一半的節，沒有任何訊息提過。
+       * `failed` 那邊「任一份壞掉就整章列入」是安全的，同樣的手法用在正向標記上
+       * 語意剛好翻過來（review #6717 阻擋-1）。
+       */
+      // Info: (20260827 - Luphia) 第一次撞牆時 402 帶的出路與重置時間（issue #6714）
+      let pauseDetail: ICreditPauseDetail | null = null;
       let completedCount = 0;
       /**
        * Info: (20260804 - Tzuhan) 正在跑的章數。只報「已完成 0/11」會讓開頭那段
@@ -1891,20 +2549,64 @@ export const useCarbonChat = () => {
       };
       reportProgress();
 
-      // Info: (20260717 - Tzuhan) worker 以遞迴取號(每 worker 同時只跑一章;深度上限 = 章節數 11,無堆疊風險)
-      const processNext = async (): Promise<void> => {
-        const index = nextIndex;
-        nextIndex += 1;
-        if (index >= units.length) return;
-        const unit = units[index];
-        const chapter = chapters.find((item) => item.id === unit.chapterId);
-        // Info: (20260807 - Emily) 取不到章就接著取下一個,不要白白少一個 worker
-        if (!chapter) return processNext();
+      /**
+       * Info: (20260825 - Luphia) 章的顯示資訊。接續時 `chapters` 只帶要重跑的那幾章，
+       * 而單元可能屬於別章，因此一律回退到大綱的章名——回一個 id 當標題
+       * 會讓使用者在清單裡看到 `ch3` 這種東西。
+       */
+      const resolveChapterOf = (chapterId: string) =>
+        chapters.find((item) => item.id === chapterId) ??
+        CARBON_REPORT_CHAPTERS.find((item) => item.id === chapterId) ?? {
+          id: chapterId,
+          title: chapterId,
+        };
+
+      /**
+       * Info: (20260827 - Luphia) 目前為止的成果（issue #6723）。
+       *
+       * 剩餘是以**有沒有結果**算的，與驅動器同一個判準——正在跑的那一份還沒有
+       * 結果，因此會被算進剩餘。那是安全的方向：下一次檢查點就會把它補上，
+       * 而反過來（樂觀地算成做完）會讓一份真的沒做的內容永久消失。
+       */
+      const buildCheckpoint = (): IImportCheckpoint => {
+        const folded = foldImportChunks(results);
+        const notSettled = units.filter(
+          (_unit, index) => results[index] === null,
+        );
+        const { pausedUnits, pausedChapters } = summarisePausedUnits({
+          remainingUnits: notSettled,
+          // Info: (20260827 - Luphia) 跑到一半還不知道哪些是真的壞掉，一律算剩餘
+          failedChapterIds: [],
+          resolveTitle: (chapterId) => resolveChapterOf(chapterId).title,
+        });
+        return {
+          ...folded,
+          remainingUnits: pausedUnits,
+          pausedChapters,
+          totalUnits: units.length,
+        };
+      };
+
+      /**
+       * Info: (20260825 - Luphia) 單一工作單元的送出（驅動器逐步呼叫）。
+       *
+       * 「暫停就停掉整趟」「剩餘怎麼算」都由驅動器負責，這裡只管做一件事：
+       * 把這一份送出去、把結果放進 `results[index]`。
+       */
+      // Info: (20260904 - Emily) 份 → 失敗原因;印 log 時查表(理由見 runUnit 的 catch)
+      const failureReasons = new Map<string, string>();
+      const unitKeyOf = (unit: IImportUnit): string =>
+        `${unit.chapterId}#${unit.partIndex}/${unit.partTotal}`;
+      const runUnit = async (unit: IImportUnit, index: number) => {
+        const chapter = resolveChapterOf(unit.chapterId);
         inFlightCount += 1;
         reportProgress();
         const formData = new FormData();
         appendImportSource(formData, source);
         formData.append("language", language);
+        // Info: (20260813 - Luphia) 計費上下文（設計書 §5.5）：帳本由 channel 推導，冪等鍵防重試重複扣點
+        formData.append("channel", chatChannel);
+        formData.append("clientMessageId", crypto.randomUUID());
         formData.append("chapterId", chapter.id);
         // Info: (20260730 - Tzuhan) 活動數據只在「排放章」那次呼叫萃取(避免 11 章重複入帳)。
         // Info: (20260730 - Tzuhan) 原本掛在 index === 0 也就是第一章「組織與治理概況」,但用電量、油耗
@@ -1955,8 +2657,18 @@ export const useCarbonChat = () => {
           chapterId: chapter.id,
           part: `${unit.partIndex}/${unit.partTotal}`,
           sections: unit.sectionIds,
+          sectionsMissingIndex: unit.sectionIds.filter(
+            (id) => !pageIndex?.get(id),
+          ),
           fromPage: range?.fromPage ?? "(full text)",
-          toPage: range?.toPage ?? "(to end)",
+          /**
+           * Info: (20260817 - Emily) `"(to end)"` 現在是實話了。
+           *
+           * 08-17 之前伺服端要求上下界皆非 null 才切片,只有下界時整份送 ——
+           * 那時這個字面是假的,而實測 14 次呼叫有 7 次走這條(`open/42`)。
+           * Fix 1 之後「只有下界」會真的切到文末,字面與行為一致。
+           */
+          toPage: range ? (range.toPage ?? "(to end)") : "(full text)",
         });
         if (range) {
           formData.append("fromPage", String(range.fromPage));
@@ -1965,91 +2677,178 @@ export const useCarbonChat = () => {
           }
         }
         try {
-          // Info: (20260806 - Tzuhan) 信封裡的失敗轉回拋出:下面的 catch(記進 failed、供重試)照舊
+          // Info: (20260806 - Tzuhan) 信封裡的失敗轉回拋出:驅動器據此分類(暫停/失敗)
           results[index] = await requestEnvelope<IImportChunkPayload>(
             "/api/v1/chat/carbon/import",
             { method: "POST", body: formData },
           );
-        } catch (chunkError) {
-          console.error(
-            "[carbon-chat] import chapter failed:",
-            chapter.id,
-            `part ${unit.partIndex}/${unit.partTotal}`,
-            chunkError,
-          );
+        } catch (error) {
           /**
-           * Info: (20260805 - Tzuhan) 以章去重:同一章切成多份時可能失敗兩次,
-           * 而重試的粒度是章 —— 列兩次會讓使用者以為有兩章壞掉。
-           * 重試整章比重試單一份安全:份與份之間的邊界本來就有重疊。
+           * Info: (20260904 - Emily) 把失敗原因留下來再往上拋(#6746)。
+           * 這裡是這一趟裡**唯一**同時拿得到「哪一份」與「什麼錯」的地方:
+           * 驅動器只傳遞分類結果,`outcome.failed` 回來時錯誤已經不在了。
            */
-          if (!failed.some((item) => item.id === chapter.id)) {
-            failed.push(chapter);
-          }
+          failureReasons.set(unitKeyOf(unit), describeImportFailure(error));
+          throw error;
+        } finally {
+          /**
+           * Info: (20260825 - Luphia) 進度一定要放行（成功、失敗、暫停都算走過一步）：
+           * 放在 finally 而不是各分支各寫一次，漏掉任何一條都會讓
+           * 「N 章解析中」的數字永遠減不回來。
+           */
+          completedCount += 1;
+          inFlightCount -= 1;
+          reportProgress();
+          /**
+           * Info: (20260827 - Luphia) 落地也在 finally（issue #6723）：
+           * 失敗與暫停同樣改變了「還剩哪些」，只在成功時存會讓剩餘清單
+           * 落後於事實。呼叫端負責不阻斷主流程。
+           */
+          onCheckpoint?.(buildCheckpoint());
         }
-        completedCount += 1;
-        inFlightCount -= 1;
-        reportProgress();
-        await processNext();
       };
-      // Info: (20260717 - Tzuhan) 並行度 2:11 章耗時約減半;仍留限流餘裕(LLM bucket 12/min)
-      await Promise.all([processNext(), processNext()]);
 
-      const segmentsById = new Map<
-        string,
-        { title: string; parts: string[]; sourceTables: ICarbonSourceTable[] }
-      >();
-      const unmapped: string[] = [];
-      let activities: IActivityRecord[] = [];
-      results.forEach((chunk) => {
-        if (!chunk) return;
-        chunk.segments.forEach((segment) => {
-          const bucket = segmentsById.get(segment.paragraphId) ?? {
-            title: segment.title,
-            parts: [],
-            sourceTables: [],
-          };
-          bucket.parts.push(segment.content);
+      /**
+       * Info: (20260825 - Luphia) 併發度 2：11 章耗時約減半，仍留限流餘裕
+       *（LLM bucket 12/min）。停手與剩餘的判斷由驅動器負責（見上方說明）。
+       */
+      const llmStartIntervalMs = minIntervalMsFor(RateLimitBucketEnum.LLM);
+      const outcome = await runResumableJob<IImportUnit, void>({
+        steps: units,
+        runStep: runUnit,
+        /**
+         * Info: (20260825 - Luphia) 「做不了」與「做壞了」的分界只有這一句
+         *（issue #6713）：點數用完是前者——那一份一步都沒跑、一點都沒扣。
+         */
+        classify: (error) => {
+          const pauseReason = resolveCreditPauseReason(error);
+          if (pauseReason !== null) {
+            /**
+             * Info: (20260827 - Luphia) 順手把「接下來能做什麼」留下來
+             *（issue #6714）。伺服器的 402 早就算好了出路與重置時間，
+             * 而這裡是這一趟裡**唯一**碰得到那個回應的地方——不在這裡取，
+             * 之後就再也拿不到了（驅動器只傳遞分類結果，不傳遞錯誤本身）。
+             *
+             * 第一次撞牆的那份留著就好：後面每一份都被同一面牆擋下，
+             * 內容一樣，而覆寫會讓 resetAt 一直往後跳幾毫秒。
+             */
+            if (pauseDetail === null) {
+              pauseDetail = extractCreditPauseDetail(error);
+            }
+            return { kind: STEP_OUTCOME.PAUSE, reason: pauseReason };
+          }
           /**
-           * Info: (20260803 - Tzuhan) 表格隨敘述一起累積。以表號去重:
-           * 同一節的內容可能被切成多段回來,同一張表因此可能重複出現,
-           * 而重複的表在報告上是兩張一樣的表 —— 讀者無從判斷哪張才是原文。
+           * Info: (20260904 - Emily) 429 是「稍後再試」,不是「做壞了」(#6744)。
+           *
+           * 原本這裡把限流歸進 FAIL:章節被列成「解析失敗」,而重試按鈕把全部失敗章
+           * **一次再送** —— 撞第二次。而 `isRateLimitedApiError` 這支早就存在、
+           * 在對話那端用著,匯入的分類器沒有用它。
+           *
+           * 退避秒數拿伺服端算好的 `Retry-After`;退回值是一個發出間隔,
+           * 不另外寫一個秒數。
            */
-          (segment.sourceTables ?? []).forEach((table) => {
-            if (
-              bucket.sourceTables.some((kept) => kept.tableNo === table.tableNo)
-            )
-              return;
-            if (
-              bucket.sourceTables.length >=
-              CARBON_SOURCE_TABLE_MAX_PER_PARAGRAPH
-            )
-              return;
-            bucket.sourceTables.push(table);
-          });
-          segmentsById.set(segment.paragraphId, bucket);
-        });
-        unmapped.push(...chunk.unmapped);
-        if (chunk.activities && chunk.activities.length > 0) {
-          activities = chunk.activities;
-        }
+          if (isRateLimitedApiError(error)) {
+            return {
+              kind: STEP_OUTCOME.RETRY,
+              afterMs: rateLimitBackoffMs(error, llmStartIntervalMs),
+            };
+          }
+          return { kind: STEP_OUTCOME.FAIL };
+        },
+        /**
+         * Info: (20260904 - Emily) 三次而不是預設的一次:退避之後再撞的情境是
+         * 「同一分鐘裡對話那端也在用同一個 bucket」,一次重試接不住。
+         * 三次仍然接不住就是真的擋住了,那時列成失敗是對的。
+         * 這個上限只影響 RETRY,而本分類器唯一會回 RETRY 的就是 429。
+         */
+        maxRetriesPerStep: 3,
+        concurrency: 2,
+        /**
+         * Info: (20260904 - Emily) 發出間隔從限流規則推出(單一來源),
+         * 讓一趟匯入自己排隊跑完 —— 慢,但一定完成(票上的驗收條款)。
+         * `concurrency: 2` 留著:它限的是同時在飛的數量,與這裡限的速率是兩件事。
+         */
+        minStartIntervalMs: llmStartIntervalMs,
       });
 
+      const pausedBy = outcome.pausedBy;
+      /**
+       * Info: (20260805 - Tzuhan) 以章去重:同一章切成多份時可能失敗兩次,
+       * 而重試的粒度是章 —— 列兩次會讓使用者以為有兩章壞掉。
+       * 重試整章比重試單一份安全:份與份之間的邊界本來就有重疊。
+       */
+      const failed: { id: string; title: string }[] = [];
+      outcome.failed.forEach((unit) => {
+        if (failed.some((item) => item.id === unit.chapterId)) return;
+        failed.push(resolveChapterOf(unit.chapterId));
+      });
+      outcome.failed.forEach((unit) => {
+        /**
+         * Info: (20260904 - Emily) 帶原因(#6746):原本只印 chapterId 與 part,
+         * 整份 log 看得到「ch5 失敗」看不到「因為訂閱額度用完」。
+         * `reason` 是 errorCode 或錯誤名稱,不是整個 error 物件(body 可能含使用者內容)。
+         */
+        console.error(
+          "[carbon-chat] import chapter failed:",
+          unit.chapterId,
+          `part ${unit.partIndex}/${unit.partTotal}`,
+          `reason=${failureReasons.get(unitKeyOf(unit)) ?? "unknown"}`,
+        );
+      });
+      if (pausedBy) {
+        console.info(
+          "[carbon-chat] import paused by credits:",
+          pausedBy,
+          `remaining units: ${outcome.remaining.length}`,
+        );
+      }
+
+      const folded = foldImportChunks(results);
+
+      /**
+       * Info: (20260825 - Luphia) 「還沒做」的**工作單元**——粒度是份，不是章
+       *（review #6717 阻擋-1）。
+       *
+       * 驅動器以「有沒有結果」判斷剩餘，因此「一份做完、另一份撞牆」的章
+       * 會有一份留在這裡。先前這裡以章為單位、且用正向標記，
+       * 那種章會被整個排除——內容少一半而沒有任何訊息提過。
+       *
+       * 已經在 `failed` 的章要排除：同一章同時出現在「解析失敗」與
+       * 「還沒開始解析」兩句話裡是自相矛盾的，而使用者無從判斷該信哪一句。
+       * 失敗優先（它有重試入口，且那條路會把整章重跑）。
+       */
+      const { pausedUnits: remainingUnits, pausedChapters } =
+        summarisePausedUnits({
+          remainingUnits: outcome.remaining,
+          failedChapterIds: failed.map((chapter) => chapter.id),
+          resolveTitle: (chapterId) => resolveChapterOf(chapterId).title,
+        });
+
       return {
-        segments: Array.from(segmentsById.entries()).map(
-          ([paragraphId, bucket]) => ({
-            paragraphId,
-            title: bucket.title,
-            content: bucket.parts.join("\n\n").trim(),
-            sourceTables: bucket.sourceTables,
-          }),
-        ),
-        unmapped,
-        activities,
+        segments: folded.segments,
+        unmapped: folded.unmapped,
+        activities: folded.activities,
+        /**
+         * Info: (20260903 - Luphia) 年度隨摺疊結果走(rebase 到 develop 時解衝突)。
+         *
+         * develop 把這段 inline 迴圈抽成 `foldImportChunks`,而「第一個抽到的為準」
+         * 那條規則因此要住在 helper 裡 —— 留在這裡就等於沒有摺疊,
+         * 而它的失效方式正是 #6743 修掉的那一個:年度回到未知 → 規則 3 不成立 → 孤兒列照留。
+         */
+        inventoryYear: folded.inventoryYear,
         failed,
+        pausedBy,
+        // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）
+        pauseDetail,
+        // Info: (20260825 - Luphia) 接續用（份粒度）與顯示用（章）各一份
+        remainingUnits,
+        pausedChapters,
+        // Info: (20260825 - Luphia) 書籤的分母：這一趟總共有幾份
+        totalUnits: units.length,
       };
     },
     // Info: (20260806 - Tzuhan) 進度回報改由呼叫端注入 notify,此處不再依賴 setDraftNotice
-    [language, t],
+    [chatChannel, language, t],
   );
 
   // Info: (20260727 - Tzuhan) #57 草稿補齊執行器:對「原樣匯入後仍空白」的段落,依同一份上傳文件請 LLM 撰寫草稿。
@@ -2087,6 +2886,9 @@ export const useCarbonChat = () => {
         const formData = new FormData();
         appendImportSource(formData, source);
         formData.append("language", language);
+        // Info: (20260813 - Luphia) 計費上下文（設計書 §5.5）：帳本由 channel 推導，冪等鍵防重試重複扣點
+        formData.append("channel", chatChannel);
+        formData.append("clientMessageId", crypto.randomUUID());
         formData.append("mode", CarbonReportImportModeEnum.DRAFT);
         formData.append("sectionIds", JSON.stringify(batches[index]));
         try {
@@ -2111,7 +2913,7 @@ export const useCarbonChat = () => {
       return drafted;
     },
     // Info: (20260806 - Tzuhan) 同上:進度回報由呼叫端注入
-    [language, t],
+    [chatChannel, language, t],
   );
 
   /**
@@ -2156,30 +2958,23 @@ export const useCarbonChat = () => {
       const run = async (): Promise<void> => {
         try {
           const version = pendingImportVersionsRef.current.get(channel) ?? 0;
+          /**
+           * Info: (20260828 - Julian) 形狀抽成純函式（`buildPendingImportRecord`）。
+           *
+           * 原本這裡是一個逐欄位手寫的物件字面量，而它漏掉了 #6713 加的三個
+           * 斷點欄位 —— 存出去的紀錄因此在重載後失去「哪幾章還沒跑」，
+           * 接續按鈕整個消失。抽出去是為了那件事測得到（純函式、不碰時鐘）。
+           */
           const nextVersion = await putPendingImportRecord(
             channel,
             master,
-            {
-              storageVersion: CARBON_PENDING_IMPORT_STORAGE_VERSION,
-              savedAt: new Date().toISOString(),
-              source: {
-                cid: source?.cid ?? null,
-                fileName: source?.fileName ?? pending.fileName,
-                mimeType: source?.mimeType ?? "",
-              },
-              pending: {
-                fileName: pending.fileName,
-                originSessionId: pending.originSessionId,
-                originSessionTitle: pending.originSessionTitle,
-                items: pending.items,
-                unmapped: pending.unmapped,
-                activityCount: pending.activityCount,
-                failedChapters: pending.failedChapters ?? [],
-              },
+            buildPendingImportRecord({
+              pending,
+              source,
               activities,
-              // Info: (20260806 - Tzuhan) Map 無法 JSON 序列化,存成 entry 陣列
-              pageIndex: pageIndex ? Array.from(pageIndex.entries()) : [],
-            },
+              pageIndex,
+              savedAt: new Date().toISOString(),
+            }),
             version,
             bookId,
           );
@@ -2234,6 +3029,243 @@ export const useCarbonChat = () => {
    * 沒有金鑰時不發請求:聊天訊息一律 E2EE,而缺金鑰的請求必定失敗
    * (先前那個 500 就是拿 `0x…` 位址當 xpub 加密炸開的)。
    */
+  /**
+   * Info: (20260825 - Luphia) 把斷點寫進伺服器的**書籤**（issue #6712）。
+   *
+   * 與 `persistPendingImport` 是兩件事，兩者都要：
+   *
+   * - 待匯入結果（那支）存的是**內容**，個人會話是端到端加密的，
+   *   而它只有這個聊天室看得到。
+   * - 書籤（這支）存的是**步驟 id 與計數**，伺服器讀得懂，因此掃描行程
+   *   才能在額度回來時把任務翻成「可以繼續」，而不必解開任何內容。
+   *
+   * 失敗不阻斷主流程：書籤是輔助（畫面上的暫停清單來自待匯入結果），
+   * 掉了最多是「晚點才被通知可以繼續」。但**不靜默**——沒有它就等於
+   * 那個使用者永遠不會被自動通知，而那件事查不出來。
+   */
+  /**
+   * Info: (20260901 - Luphia) 書籤 PUT 走 per-channel 佇列（review #6726 中-1）。
+   *
+   * 驅動器 `concurrency = 2`，而檢查點在每一份的 `finally` 都寫一次書籤
+   *（`pauseReason: null` → 伺服器記 RUNNING）；暫停的收尾另外寫一次
+   *（`PAUSED`）。沒有佇列時這是**兩個沒有排序保證的 PUT**——檢查點那筆
+   * 後到的話，書籤停在 RUNNING：`scanResumableJobs` 只掃 PAUSED，這一筆
+   * **永遠翻不成 RESUMABLE**（「額度回來自動翻牌」對它失效），而且租約
+   * 未過期前使用者自己按「接著匯入」只會拿到 BUSY。
+   *
+   * 佇列與 `persistPendingImport` 的同一套（呼叫順序＝落地順序）：收尾在
+   * 迴圈結束後才呼叫，必然排在所有檢查點之後，於是 PAUSED 一定最後落地。
+   * 用**自己的**佇列而不是共用 `persistPendingQueueRef`：兩者的失敗互不
+   * 相干，串在一起只是讓書籤等內容加密（每次數百 ms）陪跑。
+   */
+  const bookmarkQueueRef = useRef<Map<string, Promise<void>>>(new Map());
+
+  const saveImportJobBookmark = useCallback(
+    async (params: {
+      pauseReason: string | null;
+      totalUnits: number;
+      completedUnits: number;
+      failedUnits: number;
+      remainingUnits: IImportUnit[];
+      nextStepInputChars?: number;
+    }): Promise<void> => {
+      const run = async () => {
+        try {
+          await request("/api/v1/user/job/bookmark", {
+            method: HTTP_METHOD.PUT,
+            body: JSON.stringify({
+              type: JOB_TYPE.CARBON_REPORT_IMPORT,
+              resourceKey: chatChannel,
+              pauseReason: params.pauseReason,
+              totalSteps: params.totalUnits,
+              completedSteps: params.completedUnits,
+              failedSteps: params.failedUnits,
+              /**
+               * Info: (20260825 - Luphia) 步驟 id 是「章#第幾份」——粒度必須是份。
+               * 存章 id 就會把「一份做完、另一份撞牆」那個缺陷寫進資料庫
+               *（review #6717 阻擋-1）。
+               */
+              remainingStepIds: params.remainingUnits.map(
+                (unit) => `${unit.chapterId}#${unit.partIndex}`,
+              ),
+              nextStepInputChars: params.nextStepInputChars,
+            }),
+          });
+        } catch (error) {
+          console.error("[carbon-chat] job bookmark failed:", error);
+        }
+      };
+
+      // Info: (20260901 - Luphia) 接到同一 channel 的佇列尾端；previous 已 catch 過，鏈不會斷（機制同 persistPendingImport）
+      const previous =
+        bookmarkQueueRef.current.get(chatChannel) ?? Promise.resolve();
+      const task = previous.then(run);
+      bookmarkQueueRef.current.set(chatChannel, task);
+      await task;
+    },
+    [chatChannel],
+  );
+
+  /**
+   * Info: (20260827 - Luphia) 換一把執行許可（issue #6721）。
+   *
+   * 要防的事：同一個帳號開兩個分頁（很常見——第一個看起來卡住了才開第二個），
+   * 補點數之後兩邊都跳出「可以繼續」，兩邊都按下去 → 同一批份送兩次 →
+   * **點數扣兩次**（一份 2MB 的 PDF 單次預扣估算約 677 點）。
+   *
+   * Info: (20260901 - Luphia) 回**判決**而不是布林（review #6726 阻-1）。
+   *
+   * 舊版註解說「回 false 只有一種意思」——那句話讓 catch 把
+   * `TW_JOB_CANCELLED`／`TW_JOB_ALREADY_COMPLETED`／403 全部當成
+   * 「鎖自己壞掉」放行：伺服器明確說「不要跑」的判決被吞掉，剩下那幾份
+   * 照送、**點數照扣**——高-1 只修了伺服器那一半，這裡是另一半。
+   * 判斷本體在 `resolveJobClaimDenial`（純函式，有自己的單元測試）；
+   * 只有它回 `null`（網路斷、伺服器自己壞掉）才放行——這把鎖是為了省錢，
+   * 不是為了在它自己壞掉的時候把功能一起關掉。那個取捨的代價是「鎖掛掉時
+   * 可能重複扣一次」，而反過來的代價是「鎖掛掉時誰都不能匯入」，後者更糟。
+   */
+  const claimImportJob = useCallback(
+    async (intent: JobClaimIntent): Promise<JobClaimDenial | null> => {
+      try {
+        await request("/api/v1/user/job/claim", {
+          method: HTTP_METHOD.POST,
+          body: JSON.stringify({
+            type: JOB_TYPE.CARBON_REPORT_IMPORT,
+            resourceKey: chatChannel,
+            intent,
+          }),
+        });
+        return null;
+      } catch (error) {
+        const denial = resolveJobClaimDenial(error);
+        if (denial) return denial;
+        console.error("[carbon-chat] job claim failed, proceeding:", error);
+        return null;
+      }
+    },
+    [chatChannel],
+  );
+
+  /**
+   * Info: (20260827 - Luphia) 伺服器眼中的這份匯入（issue #6714）。
+   *
+   * 畫面在此之前只讀得到客戶端自己那份暫存，於是有兩件事說不出來：
+   *
+   * 1. **「額度已經回來了」**。掃描行程（每 5 分鐘）會把暫停中而且現在夠了的任務
+   *    翻成 RESUMABLE——那是一個明確的時點，而畫面不讀它的話，那次改動對使用者
+   *    完全是隱形的：他看到的還是「點數已用完」，得自己按下去試才知道。
+   * 2. **任務 id**。取消需要它，而客戶端手上只有頻道。
+   *
+   * 只挑屬於**當前聊天室**的那一筆：`GET /user/job` 回的是這個人所有未完成的
+   * 任務，而別的聊天室那幾筆在這張卡上沒有意義（那需要另一個入口，見設計書 §9）。
+   */
+  const [importJob, setImportJob] = useState<IJobView | null>(null);
+
+  const refreshImportJob = useCallback(async () => {
+    try {
+      const res = await request<{ payload: { jobs: IJobView[] } | null }>(
+        "/api/v1/user/job",
+      );
+      const jobs = res?.payload?.jobs ?? [];
+      setImportJob(
+        jobs.find(
+          (job) =>
+            job.resourceKey === chatChannel &&
+            job.type === JOB_TYPE.CARBON_REPORT_IMPORT,
+        ) ?? null,
+      );
+    } catch (error) {
+      /**
+       * Info: (20260827 - Luphia) 失敗不阻斷任何事：這一支只讓畫面多說一句話，
+       * 而暫停清單、「接著匯入」按鈕、以及接續本身都不依賴它。
+       */
+      console.error("[carbon-chat] refresh job failed:", error);
+    }
+  }, [chatChannel]);
+
+  /**
+   * Info: (20260827 - Luphia) 進到這個聊天室就問一次伺服器（issue #6714）。
+   *
+   * 這是「換裝置之後看得到狀態」的那一半：內容由加密暫存帶過來，而**狀態**
+   * （是不是已經可以繼續了）只有伺服器知道。
+   */
+  useEffect(() => {
+    void refreshImportJob();
+  }, [refreshImportJob]);
+
+  /**
+   * Info: (20260827 - Luphia) 放棄還沒做的那幾份（issue #6714）。
+   *
+   * **只放棄未完成的部分**：已經解析完的內容留著（那是已經付過錢的東西），
+   * 使用者仍然可以套用它。在此之前 `cancelJob()` 是一個沒有路由的 export，
+   * 也就是說一份不想做完的匯入會一直掛著，而那顆「接著匯入」會一直邀請他花錢。
+   */
+  const cancelImportJob = useCallback(async () => {
+    const jobId = importJob?.id;
+    if (!jobId || !pendingImport) return;
+    try {
+      await request(`/api/v1/user/job/${jobId}/cancel`, {
+        method: HTTP_METHOD.POST,
+      });
+    } catch (error) {
+      console.error("[carbon-chat] cancel job failed:", error);
+      setDraftNotice(
+        { type: "error", text: t("carbon_chatbot.import_cancel_failed") },
+        activeSessionId,
+      );
+      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, activeSessionId);
+      return;
+    }
+    /**
+     * Info: (20260827 - Luphia) 清掉暫停狀態，**保留 items**：那些章已經解析完、
+     * 也已經扣過點。連內容一起清掉才是真的造成損失。
+     */
+    const cleared: IPendingImport = {
+      ...pendingImport,
+      pausedChapters: [],
+      pausedUnits: [],
+      pauseReason: null,
+      pauseDetail: null,
+    };
+    setPendingImportFor(activeSessionId, cleared);
+    void persistPendingImport(
+      activeSessionId,
+      cleared,
+      lastImportSourceRef.current,
+      importActivitiesRef.current,
+      lastPageIndexRef.current,
+    );
+    setImportJob(null);
+    /**
+     * Info: (20260828 - Luphia) 告訴其他分頁「這個任務不做了」（review #6726 高-1）。
+     *
+     * 那顆「接著匯入」在別的分頁上是用客戶端狀態判斷要不要顯示的——沒有這則
+     * 廣播，它會一直留在那裡邀請使用者去花他剛剛才說不要花的點數。
+     * 帶上 `resourceKey`：不帶的話，這個聊天室的取消會把別的聊天室的暫停
+     * 清單一起清掉。
+     */
+    publishCreditEvent({
+      type: CREDIT_EVENT.JOB_CANCELLED,
+      resourceKey: chatChannel,
+    });
+    setDraftNotice(
+      { type: "info", text: t("carbon_chatbot.import_cancelled") },
+      activeSessionId,
+    );
+    dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, activeSessionId);
+  }, [
+    importJob,
+    pendingImport,
+    activeSessionId,
+    // Info: (20260828 - Luphia) 取消的廣播要帶這一間聊天室的 resourceKey
+    chatChannel,
+    setPendingImportFor,
+    persistPendingImport,
+    setDraftNotice,
+    dismissDraftNoticeAfter,
+    t,
+  ]);
+
   const postImportParsedNotice = useCallback(
     async (sessionId: string, pending: IPendingImport): Promise<void> => {
       const recipientPublicKey = masterKeyRef.current?.extendedPublicKey;
@@ -2259,6 +3291,14 @@ export const useCarbonChat = () => {
             draftedCount: pending.items.filter((item) => item.isDraft).length,
             activityCount: pending.activityCount,
             failedChapters: (pending.failedChapters ?? []).map(
+              (chapter) => chapter.title,
+            ),
+            /**
+             * Info: (20260825 - Luphia) 點數用完而未解析的章（issue #6713）。
+             * 與 failedChapters 分開送：對話裡是兩句話，
+             * 一句說「試過壞了」，一句說「還沒試、去補點數」。
+             */
+            pausedChapters: (pending.pausedChapters ?? []).map(
               (chapter) => chapter.title,
             ),
             language,
@@ -2292,9 +3332,12 @@ export const useCarbonChat = () => {
             name: importInFlightRef.current,
           }),
         });
+        // Info: (20260811 - Emily) 同上(#6624)
+        dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS);
         return;
       }
       importInFlightRef.current = file.name;
+      setImportRunning(true);
       /**
        * Info: (20260803 - Tzuhan) 釘住發起匯入的會話(階段二)。
        * 匯入會跑好幾分鐘且不因切房而停 —— 沿用「當前會話」的話,中途切房後
@@ -2303,6 +3346,70 @@ export const useCarbonChat = () => {
       const originSessionId = activeSessionId;
       const notify = (notice: IDraftNotice | null) =>
         setDraftNotice(notice, originSessionId);
+      /**
+       * Info: (20260826 - Luphia) 逐章匯入需要**已綁定帳本**（review #6717 二輪第 2 條）。
+       *
+       * 未綁帳本的會話走的是個人點數：每一次呼叫都先回 402 帶一張待付訂單，
+       * 付掉之後以同一把鍵重送才會放行（見 `handleSendMessage`）。聊天與草稿
+       * 各只有一次呼叫，那條路可行；而逐章匯入是 **14 次**呼叫——那會變成
+       * 14 筆訂單與 14 次簽章，那不是任何人設計過的流程。
+       *
+       * 在此之前這條路的實際行為是：第一章就 402 → 暫停 →「點數已用完」→
+       * 按「接著匯入」再撞一次 → **永久死路**，而訊息說的原因也是錯的
+       *（不是點數用完，是這個會話沒有帳本可扣）。修正後在**送出之前**就說清楚，
+       * 一次呼叫都不發、一毛都不花——連附件上傳都不做。
+       *
+       * 小檔的單發匯入不受限：那條路只有一次呼叫，因此走「付掉待付訂單再重送」
+       * 那條既有流程（與聊天、草稿同一套；20260826 補上，先前這裡的註解聲稱
+       * 它已經存在——那是錯的）。
+       */
+      const willChunk =
+        file.type === PDF_MIME_TYPE ||
+        file.size >= CARBON_IMPORT_SINGLE_CALL_MAX_BYTES;
+      if (willChunk && !sessionAccess[chatChannel]?.accountBookId) {
+        notify({
+          type: "error",
+          text: t("carbon_chatbot.import_requires_book"),
+        });
+        dismissDraftNoticeAfter(
+          CARBON_DRAFT_NOTICE_DISMISS_MS,
+          originSessionId,
+        );
+        importInFlightRef.current = null;
+        setImportRunning(false);
+        return;
+      }
+
+      /**
+       * Info: (20260827 - Luphia) 先換一把執行許可（issue #6721）。
+       *
+       * 位置刻意在**附件上傳之前**：擋下來的時候一個 byte 都不該傳、一毛都不該花。
+       * 兩個分頁各自從第一份開始匯入同一個聊天室的話，兩份帳都要付。
+       */
+      /**
+       * Info: (20260901 - Luphia) 判決逐字上畫面（review #6726 阻-1）：
+       * 新開時伺服器對「已取消／已完成」回的是放行（重新匯入本來就會覆寫
+       * 舊書籤），所以這裡實際會出現的判決是 BUSY 或 FORBIDDEN——
+       * 但處置統一走查表，將來 service 改判也不會落回吞掉。
+       */
+      const startDenial = await claimImportJob(JOB_CLAIM_INTENT.START);
+      if (startDenial) {
+        notify({
+          type: "error",
+          // Info: (20260901 - Luphia) minutes 綁 TTL 常數：租期改了文案跟著對（中-2）
+          text: t(JOB_CLAIM_DENIAL_TEXT_KEY[startDenial], {
+            minutes: JOB_CLAIM_TTL_MS / 60_000,
+          }),
+        });
+        dismissDraftNoticeAfter(
+          CARBON_DRAFT_NOTICE_DISMISS_MS,
+          originSessionId,
+        );
+        importInFlightRef.current = null;
+        setImportRunning(false);
+        return;
+      }
+
       /**
        * Info: (20260806 - Tzuhan) 先把檔案存進 Laria 拿 cid,之後每次呼叫只帶 cid。
        *
@@ -2317,6 +3424,7 @@ export const useCarbonChat = () => {
         type: "loading",
         text: t("carbon_chatbot.import_uploading", { name: file.name }),
       });
+
       let importCid: string | null = null;
       try {
         const uploadForm = new FormData();
@@ -2344,6 +3452,7 @@ export const useCarbonChat = () => {
       const useChunked =
         file.type === PDF_MIME_TYPE ||
         file.size >= CARBON_IMPORT_SINGLE_CALL_MAX_BYTES;
+
       const chapters = useChunked
         ? CARBON_REPORT_CHAPTERS.map((chapter) => ({
             id: chapter.id,
@@ -2356,8 +3465,89 @@ export const useCarbonChat = () => {
           segments: { paragraphId: string; title: string; content: string }[];
           unmapped: string[];
           activities: IActivityRecord[];
+          // Info: (20260902 - Emily) 盤查年度的預填(issue_drafts/open/69);抽不到就是 undefined
+          inventoryYear?: number;
         };
         let failedChapters: { id: string; title: string }[] = [];
+        // Info: (20260825 - Luphia) 點數用完而還沒做的章（issue #6713）；與 failed 分開
+        let pausedChapters: { id: string; title: string }[] = [];
+        /**
+         * Info: (20260825 - Luphia) 接續要用的**工作單元**（份粒度，review #6717 阻擋-1）：
+         * 一章可能被切成兩份，而只有沒跑完的那一份需要重跑。
+         */
+        let pausedUnits: IImportUnit[] = [];
+        let pauseReason: JobPauseReason | null = null;
+        // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）
+        let pauseDetail: ICreditPauseDetail | null = null;
+        /**
+         * Info: (20260825 - Luphia) 書籤的分母是**單元數**（11 章 → 14 份）：
+         * 用章數當分母會讓「已完成 4／11」與實際做過的份數對不起來。
+         */
+        let importUnitTotal = 0;
+
+        /**
+         * Info: (20260827 - Luphia) 提到迴圈之前（issue #6723）：中途的檢查點也要
+         * 算 `hasExisting`。原本在迴圈之後才算，於是檢查點只能猜——猜錯的方向是
+         * 「這一段沒有既有內容」，而那會讓套用時少一次覆蓋提醒。
+         */
+        const paragraphs =
+          sessionsData[activeSessionId]?.reportData?.paragraphs ?? [];
+        const existingIds = new Set(
+          paragraphs.filter((p) => p.content).map((p) => p.id),
+        );
+
+        /**
+         * Info: (20260827 - Luphia) 每做完一份就落地一次（issue #6723）。
+         *
+         * **不動畫面狀態**（不呼叫 `setPendingImportFor`）：預覽在匯入還在跑的時候
+         * 跳出來只會讓人以為做完了。這支的唯一責任是「撐過中斷」，不是報進度——
+         * 進度由 `reportProgress` 負責。
+         *
+         * `pauseReason` 是 null：這不是暫停，是「還沒跑完」。書籤的狀態因此是
+         * RUNNING 而不是 PAUSED（見 `saveJobBookmark` 的狀態推導），掃描行程
+         * 不會去碰它——它本來就不該被翻成「可以繼續」，因為沒人在等額度。
+         */
+        const persistCheckpoint = (checkpoint: IImportCheckpoint) => {
+          const snapshot: IPendingImport = {
+            fileName: file.name,
+            originSessionId: activeSessionId,
+            originSessionTitle:
+              sessionsData[activeSessionId]?.title ?? activeSessionId,
+            items: checkpoint.segments.map((segment) => ({
+              ...segment,
+              hasExisting: existingIds.has(segment.paragraphId),
+              checked: true,
+            })),
+            unmapped: checkpoint.unmapped,
+            activityCount: checkpoint.activities.length,
+            failedChapters: [],
+            pausedChapters: checkpoint.pausedChapters,
+            pausedUnits: checkpoint.remainingUnits,
+            pauseReason: null,
+            /**
+             * Info: (20260827 - Luphia) 中斷不是暫停，沒有出路可談（issue #6723）：
+             * 使用者不需要補點數，他只要按「接著匯入」。留一份出路清單在這裡
+             * 會讓畫面叫他去買他不需要的點數。
+             */
+            pauseDetail: null,
+          };
+          void persistPendingImport(
+            originSessionId,
+            snapshot,
+            importSource,
+            checkpoint.activities,
+            lastPageIndexRef.current,
+          );
+          void saveImportJobBookmark({
+            pauseReason: null,
+            totalUnits: checkpoint.totalUnits,
+            completedUnits:
+              checkpoint.totalUnits - checkpoint.remainingUnits.length,
+            failedUnits: 0,
+            remainingUnits: checkpoint.remainingUnits,
+            nextStepInputChars: file.size,
+          });
+        };
 
         if (useChunked) {
           // Info: (20260730 - Tzuhan) 兩階段:先問頁碼索引(一次、輸出極小),再逐章只送對應頁。
@@ -2375,9 +3565,16 @@ export const useCarbonChat = () => {
             true,
             pageIndex,
             notify,
+            undefined,
+            persistCheckpoint,
           );
           payload = result;
           failedChapters = result.failed;
+          pausedChapters = result.pausedChapters;
+          pausedUnits = result.remainingUnits;
+          pauseReason = result.pausedBy;
+          pauseDetail = result.pauseDetail;
+          importUnitTotal = result.totalUnits;
         } else {
           // Info: (20260717 - Tzuhan) 小型文字檔:單發全綱呼叫
           notify({
@@ -2387,16 +3584,53 @@ export const useCarbonChat = () => {
           const formData = new FormData();
           appendImportSource(formData, importSource);
           formData.append("language", language);
-          const chunk = await requestEnvelope<{
-            segments: {
-              paragraphId: string;
-              title: string;
-              content: string;
-              sourceTables?: ICarbonSourceTable[];
-            }[];
-            unmapped: string[];
-            activities: IActivityRecord[];
-          }>("/api/v1/chat/carbon/import", { method: "POST", body: formData });
+          // Info: (20260813 - Luphia) 計費上下文（設計書 §5.5）：帳本由 channel 推導，冪等鍵防重試重複扣點
+          formData.append("channel", chatChannel);
+          formData.append("clientMessageId", crypto.randomUUID());
+          const postSingleCall = () =>
+            requestEnvelope<{
+              segments: {
+                paragraphId: string;
+                title: string;
+                content: string;
+                sourceTables?: ICarbonSourceTable[];
+              }[];
+              unmapped: string[];
+              activities: IActivityRecord[];
+              inventoryYear?: number;
+            }>("/api/v1/chat/carbon/import", {
+              method: "POST",
+              body: formData,
+            });
+
+          /**
+           * Info: (20260826 - Luphia) 未綁帳本的會話：付掉待付訂單再重送
+           *（與聊天、草稿同一套，設計書 §5.5）。
+           *
+           * 這一段先前**不存在**，而上面那道帳本前置檢查的註解卻寫著
+           * 「小檔的單發匯入不受限：待付款重送在下方照常運作」——那句話是錯的。
+           * 逐章匯入擋掉的理由是「14 次呼叫就是 14 筆訂單」，而單發只有一次，
+           * 所以它本來就該走這條路；缺了它，未綁帳本的小檔匯入會落到外層 catch，
+           * 顯示「點數已用完」——訊息看起來合理，而真正的原因是這個會話沒有
+           * 帳本可扣，補多少點數都不會變。
+           *
+           * `clientMessageId` 已經寫進 `formData`，重送同一個物件就是同一把
+           * 冪等鍵——不會變成「付了一張、又建一張」（草稿路徑踩過那個坑）。
+           */
+          let chunk: Awaited<ReturnType<typeof postSingleCall>>;
+          try {
+            chunk = await postSingleCall();
+          } catch (error) {
+            const pendingPayment = parsePersonalPaymentRequired(error);
+            if (!pendingPayment) throw error;
+            const paid = await payExistingOrder(
+              pendingPayment.orderId,
+              pendingPayment.cost,
+              () => {},
+            );
+            if (!paid) throw error;
+            chunk = await postSingleCall();
+          }
           /**
            * Info: (20260806 - Tzuhan) 信封裡的失敗轉回拋出。
            * 這一支特別要緊:原本 `?? { segments: [] … }` 會把失敗變成「空匯入」,
@@ -2411,7 +3645,17 @@ export const useCarbonChat = () => {
         }
 
         notify(null);
-        if (payload.segments.length === 0 && failedChapters.length === 0) {
+        /**
+         * Info: (20260825 - Luphia) 暫停也算「有事情發生」（issue #6713）：
+         * 第一章就把點數用完時 segments 與 failed 都是空的，而原本會落到
+         * 「檔案裡找不到可匯入的內容」——使用者會回去改檔案，
+         * 而真正的原因是點數不足。
+         */
+        if (
+          payload.segments.length === 0 &&
+          failedChapters.length === 0 &&
+          pauseReason === null
+        ) {
           notify({
             type: "error",
             text: t("carbon_chatbot.import_empty"),
@@ -2422,12 +3666,6 @@ export const useCarbonChat = () => {
           );
           return;
         }
-        const paragraphs =
-          sessionsData[activeSessionId]?.reportData?.paragraphs ?? [];
-        const existingIds = new Set(
-          paragraphs.filter((p) => p.content).map((p) => p.id),
-        );
-
         // Info: (20260727 - Tzuhan) #57 完成全部小節:原樣匯入 + 既有內容之外仍空白的段落,
         // Info: (20260727 - Tzuhan) 依同一份文件補 AI 草稿(預覽中標記,與逐字原文區隔;人工確認才寫入)
         const importedIds = new Set(
@@ -2442,7 +3680,12 @@ export const useCarbonChat = () => {
           title: string;
           content: string;
         }[] = [];
-        if (missingSectionIds.length > 0) {
+        /**
+         * Info: (20260825 - Luphia) 已經暫停就**不跑草稿補齊**（issue #6713）：
+         * 補齊同樣要花點數，這時送出去必然再撞一次同一面牆，
+         * 而它的失敗會落到「補齊失敗」那條文案——又一則與真相無關的訊息。
+         */
+        if (missingSectionIds.length > 0 && pauseReason === null) {
           draftedSegments = await runGapFillSections(
             importSource,
             missingSectionIds,
@@ -2475,9 +3718,43 @@ export const useCarbonChat = () => {
           ],
           unmapped: payload.unmapped,
           activityCount: payload.activities.length,
+          /**
+           * Info: (20260902 - Emily) 萃取到的盤查年度只當**預填**(issue_drafts/open/69):
+           * 抽不到就是 undefined,預覽卡會要求使用者填(而不是拿房間層的年度頂替)。
+           */
+          inventoryYear: payload.inventoryYear,
           failedChapters,
+          /**
+           * Info: (20260825 - Luphia) 暫停的斷點跟著解析結果一起存（issue #6713）：
+           * 這份 blob 本來就會落地（個人會話是端到端加密），因此重新整理頁面
+           * 之後「停在哪裡」還在，不需要另一張表也不需要把內容交給伺服器。
+           */
+          pausedChapters,
+          // Info: (20260825 - Luphia) 接續的斷點（份粒度）；顯示用的是上面那份
+          pausedUnits,
+          pauseReason,
+          pauseDetail,
         };
         setPendingImportFor(originSessionId, parsedPending);
+        /**
+         * Info: (20260828 - Julian) 新的解析結果要**取消收起**（實機發現）。
+         *
+         * `deferredPreviewSessions` 記的是「使用者把那張卡收起來了」，
+         * 但它只以 session 為鍵 —— 於是那個旗標會沾到**下一份**解析結果上。
+         *
+         * 而它幾乎一定是開著的：重載時的還原一律以收起狀態進來
+         *（見 `pendingImport` 的還原段），所以任何「這個會話以前匯入過」的情形，
+         * 重新整理之後再匯入一份，卡片就再也不會自己打開 ——
+         * 使用者按下匯入、等了幾分鐘、畫面上什麼都沒有。
+         *
+         * 收起的是**那一張卡**，不是這個會話往後的每一張。
+         */
+        setDeferredPreviewSessions((prev) => {
+          if (!prev[originSessionId]) return prev;
+          const rest = { ...prev };
+          delete rest[originSessionId];
+          return rest;
+        });
         /**
          * Info: (20260806 - Tzuhan) 解析結果落地(DB)+ 對話留痕,兩件事都不阻斷主流程。
          *
@@ -2493,11 +3770,43 @@ export const useCarbonChat = () => {
           lastPageIndexRef.current,
         );
         void postImportParsedNotice(originSessionId, parsedPending);
+        /**
+         * Info: (20260825 - Luphia) 書籤讓伺服器知道「這個人有一份匯入停著」，
+         * 額度回來時掃描行程才翻得動它（issue #6712 / #6714）。
+         */
+        void saveImportJobBookmark({
+          pauseReason,
+          totalUnits: importUnitTotal,
+          completedUnits: importUnitTotal - pausedUnits.length,
+          failedUnits: failedChapters.length,
+          remainingUnits: pausedUnits,
+          /**
+           * Info: (20260826 - Luphia) 用**原始 File** 的大小，不是 `importSource.file`
+           *（自我 review 第五輪）：附件上傳成功就會有 cid，而那時
+           * `importSource.file` 被刻意設為 null 讓瀏覽器回收大檔——也就是
+           * **常態路徑**拿不到大小。少了它，書籤的 `nextStepCost` 是 null，
+           * 掃描行程只能把任務算進 `unknown`，於是整套「額度回來就翻成可以繼續」
+           * 在常態路徑上是死的。
+           */
+          nextStepInputChars: file.size,
+        });
       } catch (error) {
         console.error("[carbon-chat] report import failed:", error);
+        /**
+         * Info: (20260826 - Luphia) 這條 catch 也會接到**點數用完**
+         *（自我 review 第五輪）。
+         *
+         * 逐章路徑的暫停由驅動器接住，不會走到這裡；但**小型文字檔是單發呼叫**
+         * ——一次請求就是整份匯入，402 直接拋到這裡，而這裡說的是
+         * 「匯入失敗」。同一份檔案改天點數夠了就會成功，而那句話會讓使用者
+         * 去改檔案。單發沒有「剩餘章節」可談，所以只要把原因說對就夠了。
+         */
         notify({
           type: "error",
-          text: t("carbon_chatbot.import_failed"),
+          text:
+            resolveCreditPauseReason(error) !== null
+              ? t("carbon_chatbot.team_quota_exceeded")
+              : t("carbon_chatbot.import_failed"),
         });
         dismissDraftNoticeAfter(
           CARBON_DRAFT_NOTICE_DISMISS_MS,
@@ -2506,13 +3815,17 @@ export const useCarbonChat = () => {
       } finally {
         // Info: (20260804 - Tzuhan) 成功、失敗、拋錯都要放行,否則一次失敗就再也匯入不了
         importInFlightRef.current = null;
+        setImportRunning(false);
       }
     },
     [
+      chatChannel,
       sessionsData,
       activeSessionId,
       language,
       t,
+      // Info: (20260827 - Luphia) 執行許可（issue #6721）
+      claimImportJob,
       runImportChapters,
       runGapFillSections,
       fetchSectionPageIndex,
@@ -2521,6 +3834,11 @@ export const useCarbonChat = () => {
       setPendingImportFor,
       persistPendingImport,
       postImportParsedNotice,
+      saveImportJobBookmark,
+      // Info: (20260826 - Luphia) 逐章匯入的帳本前置檢查（review #6717 二輪第 2 條）
+      sessionAccess,
+      // Info: (20260826 - Luphia) 單發匯入的待付款重送（未綁帳本的會話）
+      payExistingOrder,
     ],
   );
 
@@ -2554,10 +3872,17 @@ export const useCarbonChat = () => {
       setDraftNotice(notice, originSessionId);
     try {
       // Info: (20260730 - Tzuhan) 重試沿用首次的頁碼索引:重問一次索引等於再燒一次全文輸入,而索引不會變
+      /**
+       * Info: (20260826 - Luphia) 重試也要抽活動數據（與接續同一個理由）。
+       *
+       * 萃取只對證據章（`ch3`）生效，而重試的觸發是「那一章真的解析失敗」——
+       * 若失敗的正是 ch3，傳 `false` 就等於重試成功了但活動數據仍是 0 筆，
+       * `computedLedger` 空、所有數據圖表畫不出來，而畫面上沒有任何跡象。
+       */
       const result = await runImportChapters(
         source,
         failed,
-        false,
+        failed.some((chapter) => chapter.id === CARBON_EVIDENCE_CHAPTER_ID),
         lastPageIndexRef.current,
         notify,
       );
@@ -2594,11 +3919,60 @@ export const useCarbonChat = () => {
           checked: existing?.checked ?? true,
         });
       });
+      /**
+       * Info: (20260826 - Luphia) 重試也可能**撞到點數用完**（自我 review 第五輪）。
+       *
+       * 先前這裡是 `failedChapters: result.failed`（整批取代）而完全忽略
+       * `result.pausedBy`。於是「額度已經見底時按重試」會：
+       *
+       * - `result.failed` 是空的（暫停不進 failed，那是對的）
+       * - 取代之後 `failedChapters` 變成空 → 那幾章從畫面上**整批消失**
+       * - 而暫停清單沒有被更新 → 也不在那裡
+       *
+       * 使用者因此同時失去資訊與重試入口，而畫面上什麼都沒說。
+       * 暫停的章要接回暫停清單，沒被處理到的失敗章要留著。
+       */
+      /**
+       * Info: (20260826 - Luphia) 抽到的活動數據累加回暫存（與接續同一條線）：
+       * `importActivitiesRef` 是套用時真正會被讀的那一份。
+       */
+      importActivitiesRef.current = [
+        ...importActivitiesRef.current,
+        ...result.activities,
+      ];
+      const retriedIds = new Set(failed.map((chapter) => chapter.id));
       const merged: IPendingImport = {
         ...current,
         items: Array.from(itemByParagraph.values()),
         unmapped: [...current.unmapped, ...result.unmapped],
-        failedChapters: result.failed,
+        activityCount: importActivitiesRef.current.length,
+        // Info: (20260826 - Luphia) 只換這次重試過的那幾章，其餘原樣留著
+        failedChapters: [
+          ...current.failedChapters.filter(
+            (chapter) => !retriedIds.has(chapter.id),
+          ),
+          ...result.failed,
+        ],
+        pausedChapters: [
+          ...(current.pausedChapters ?? []).filter(
+            (chapter) => !retriedIds.has(chapter.id),
+          ),
+          ...result.pausedChapters,
+        ],
+        pausedUnits: [
+          ...(current.pausedUnits ?? []).filter(
+            (unit) => !retriedIds.has(unit.chapterId),
+          ),
+          ...result.remainingUnits,
+        ],
+        // Info: (20260826 - Luphia) 這一趟撞牆就記下原因；沒撞就沿用原本的狀態
+        pauseReason: result.pausedBy ?? current.pauseReason ?? null,
+        /**
+         * Info: (20260827 - Luphia) 出路也跟著更新（issue #6714）：這一趟撞牆的
+         * 402 是**比較新**的一份，重置時間可能已經往前推。沒撞牆就沿用舊的
+         * ——沿用一份過時的 resetAt 比沒有好，倒數歸零時卡片會自己改口。
+         */
+        pauseDetail: result.pauseDetail ?? current.pauseDetail ?? null,
       };
       setPendingImportFor(originSessionId, merged);
       void persistPendingImport(
@@ -2608,6 +3982,32 @@ export const useCarbonChat = () => {
         importActivitiesRef.current,
         lastPageIndexRef.current,
       );
+      /**
+       * Info: (20260826 - Luphia) 書籤要跟著更新（自我 review 第五輪）。
+       *
+       * 先前只有主流程寫書籤，於是重試或接續之後伺服器仍以為那份匯入
+       * 停在原地：掃描行程每 5 分鐘照樣評估一次已經跑完的任務，
+       * 而 `GET /user/job` 會回報一個實際上已完成的「未完成任務」。
+       */
+      /**
+       * Info: (20260826 - Luphia) 分母是**總份數**，不是剩餘份數（review #6717 二輪低-1）。
+       *
+       * 先前 `totalUnits` 寫成剩餘份數、`completedUnits` 恆為 0，於是
+       * `GET /user/job` 一接上畫面就會顯示 0/N，而 N 還會隨著每次重試變小。
+       * 總數用「這份匯入原本切成幾份」（存在書籤裡的話會更好，但目前
+       * 由暫存的章數推導已足夠——重試不改變總份數）。
+       */
+      const retryTotalUnits = Math.max(
+        merged.pausedUnits?.length ?? 0,
+        current.pausedUnits?.length ?? 0,
+      );
+      void saveImportJobBookmark({
+        pauseReason: merged.pauseReason ?? null,
+        totalUnits: retryTotalUnits,
+        completedUnits: retryTotalUnits - (merged.pausedUnits?.length ?? 0),
+        failedUnits: merged.failedChapters.length,
+        remainingUnits: merged.pausedUnits ?? [],
+      });
     } catch (error) {
       // Info: (20260806 - Tzuhan) 原本沒有 catch:重試整批拋錯時提示會卡在 loading 不散
       console.error("[carbon-chat] retry failed chapters failed:", error);
@@ -2626,8 +4026,324 @@ export const useCarbonChat = () => {
     isRetryingImport,
     setPendingImportFor,
     persistPendingImport,
+    saveImportJobBookmark,
     t,
   ]);
+
+  /**
+   * Info: (20260825 - Luphia) 「接著匯入」：只跑點數用完時還沒做的那幾份
+   *（issue #6713 / review #6717 高-1）。
+   *
+   * 與「重試失敗章節」是兩件事，因此是兩顆按鈕：失敗的章試過而壞了，
+   * 這些章一步都沒試。而**接續的粒度是份不是章**——`buildImportUnits`
+   * 會把節數多的章切成兩份，以章接續會把已經做完的那一份再跑一次、
+   * 再收一次點數，正好是訊息裡「已完成的部分不會重跑」的反面。
+   *
+   * 點數還沒補上時按下去會再撞一次牆：那時結果仍是暫停，清單原封不動，
+   * 而使用者看到的訊息仍然是「點數已用完」——沒有一則訊息會變成別的意思。
+   */
+  const resumePausedImportChapters = useCallback(async () => {
+    const source = lastImportSourceRef.current;
+    const units = pendingImport?.pausedUnits ?? [];
+    if (units.length === 0 || !pendingImport) return;
+    /**
+     * Info: (20260826 - Luphia) **換裝置／重載之後原始檔案不在了**（自我 review 第六輪）。
+     *
+     * 暫停清單跟著帳號走（存在 `CarbonPendingImport`，會話層級），但
+     * `lastImportSourceRef` 只在記憶體：換瀏覽器、換裝置、或單純重新整理之後
+     * 使用者看得到清單與按鈕，而 `source` 是 null。先前這裡與其他前置條件
+     * 一起 `return`——按鈕按下去**毫無反應、沒有任何訊息**，而那是最難自救的
+     * 一種失敗（使用者無從判斷是壞了還是自己沒按到）。
+     *
+     * 說出來而不是靜靜返回：接續需要原始檔案（伺服端只收 cid 或檔案本體，
+     * 而 cid 也存在那個 ref 裡）。請使用者重新上傳同一份檔案——已完成的章
+     * 仍然不會重跑，因為要跑的是 `pausedUnits`。
+     */
+    if (!source) {
+      setDraftNotice(
+        {
+          type: "error",
+          text: t("carbon_chatbot.import_resume_needs_file"),
+        },
+        activeSessionId,
+      );
+      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, activeSessionId);
+      return;
+    }
+    // Info: (20260806 - Tzuhan) 進行中不得再次發射（理由同 retryFailedImportChapters）
+    if (isRetryingImport) return;
+
+    /**
+     * Info: (20260827 - Luphia) 先換一把執行許可（issue #6721）。
+     *
+     * 這是這把鎖最要緊的一個入口：`isRetryingImport` 只擋得住**同一個分頁**，
+     * 而暫停之後「開第二個分頁」正是使用者最常做的事（第一個看起來卡住了）。
+     * 補點數之後兩邊都跳出「可以繼續」，兩邊都按下去 → 同一批份送兩次。
+     */
+    const resumeDenial = await claimImportJob(JOB_CLAIM_INTENT.RESUME);
+    if (resumeDenial) {
+      setDraftNotice(
+        {
+          type: "error",
+          // Info: (20260901 - Luphia) minutes 綁 TTL 常數：租期改了文案跟著對（中-2）
+          text: t(JOB_CLAIM_DENIAL_TEXT_KEY[resumeDenial], {
+            minutes: JOB_CLAIM_TTL_MS / 60_000,
+          }),
+        },
+        activeSessionId,
+      );
+      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, activeSessionId);
+      /**
+       * Info: (20260901 - Luphia) BUSY 以外的判決是**終局的**（已取消／已完成／
+       * 不是你的）——伺服器眼中的狀態已經與這張卡上的按鈕分岔了，刷新一次。
+       *
+       * Info: (20260901 - Luphia) 但**光刷新不會讓按鈕消失**（自我 review 自-1，
+       * §1.14——第一版的註解宣稱「刷新讓卡片改口」，那是過度宣稱）：
+       * 「接著匯入」由 `pendingImport.pausedChapters` 驅動，而
+       * `GET /user/job` 只回未完成的任務（`listOpenByUser`），終局的那筆
+       * **根本不在回應裡**。同裝置的取消由 JOB_CANCELLED 廣播的 handler 清
+       * 暫停狀態；**跨裝置**沒有廣播，唯一知道判決的時點就是這裡——所以
+       * 這裡做同一件事（與 `onJobCancelledElsewhereRef` 同語意：清暫停、留內容）。
+       *
+       * Info: (20260902 - Luphia) 清狀態的條件是「終局」而不是只有 CANCELLED
+       *（review #6726 二輪低-1）：自-1 的推理對 COMPLETED 一字不差成立——
+       * 分頁 A 跑完、分頁 B 還留著暫停清單，按下去永遠報「已完成」。
+       * FORBIDDEN 一起清也是安全的：那本來就不是你的任務。設計書 §7c 的
+       * 「已完成 → 收起按鈕」自此對客戶端也是實話。
+       */
+      if (resumeDenial !== JOB_CLAIM_DENIAL.BUSY) {
+        void refreshImportJob();
+        if (pendingImport) {
+          setPendingImportFor(activeSessionId, {
+            ...pendingImport,
+            pausedChapters: [],
+            pausedUnits: [],
+            pauseReason: null,
+            pauseDetail: null,
+          });
+          setImportJob(null);
+        }
+      }
+      return;
+    }
+    setIsRetryingImport(true);
+
+    const originSessionId = activeSessionId;
+    const notify = (notice: IDraftNotice | null) =>
+      setDraftNotice(notice, originSessionId);
+    try {
+      // Info: (20260730 - Tzuhan) 沿用首次的頁碼索引：重問一次等於再燒一次全文輸入，而索引不會變
+      /**
+       * Info: (20260826 - Luphia) 接續時**要抽活動數據**（review #6717 二輪中-1）。
+       *
+       * 萃取只對證據章（`ch3`）生效，而 ch3 在 11 章裡排第 3、又是被切成兩份的
+       * 三章之一——「點數在它之前用完」是常態而不是邊緣情形。先前接續傳 `false`，
+       * 於是補上點數之後那一章的活動數據**一筆都不會有**，`computedLedger` 是空的，
+       * 所有數據圖表都畫不出來，而畫面上沒有任何跡象。使用者唯一的補救是整份
+       * 重新匯入——正好是這個 PR 要消滅的那件事。
+       */
+      const result = await runImportChapters(
+        source,
+        pendingImport.pausedChapters ?? [],
+        units.some((unit) => unit.chapterId === CARBON_EVIDENCE_CHAPTER_ID),
+        lastPageIndexRef.current,
+        notify,
+        units,
+      );
+      notify(null);
+      // Info: (20260807 - Emily) 保存不能寫在 setState 的 updater 裡（見 retryFailedImportChapters）
+      const current = pendingImportBySessionRef.current[originSessionId];
+      if (!current) return;
+      const itemByParagraph = new Map(
+        current.items.map((item) => [item.paragraphId, item]),
+      );
+      result.segments.forEach((segment) => {
+        const existing = itemByParagraph.get(segment.paragraphId);
+        itemByParagraph.set(segment.paragraphId, {
+          paragraphId: segment.paragraphId,
+          title: segment.title,
+          content: segment.content,
+          hasExisting: existing?.hasExisting ?? false,
+          checked: existing?.checked ?? true,
+        });
+      });
+      /**
+       * Info: (20260825 - Luphia) 三個欄位一起換：這一趟可能又暫停（點數還是不夠）、
+       * 可能跑完（清空）、也可能有章真的壞掉。只換其中一個會讓畫面同時顯示
+       * 舊的暫停清單與新的結果。
+       */
+      /**
+       * Info: (20260826 - Luphia) 抽到的活動數據要**併回暫存**（review #6717 二輪中-1）。
+       *
+       * 旗標打開了但結果沒接回來的話，等於沒抽——`importActivitiesRef` 是套用時
+       * 真正會被讀的那一份，而 `activityCount` 是畫面上的數字。累加而不是覆蓋：
+       * 首次匯入可能已經抽到一部分（證據章被切成兩份，其中一份先跑完）。
+       */
+      importActivitiesRef.current = [
+        ...importActivitiesRef.current,
+        ...result.activities,
+      ];
+      const merged: IPendingImport = {
+        ...current,
+        items: Array.from(itemByParagraph.values()),
+        unmapped: [...current.unmapped, ...result.unmapped],
+        activityCount: importActivitiesRef.current.length,
+        failedChapters: [...current.failedChapters, ...result.failed].filter(
+          (chapter, index, list) =>
+            list.findIndex((item) => item.id === chapter.id) === index,
+        ),
+        pausedChapters: result.pausedChapters,
+        pausedUnits: result.remainingUnits,
+        pauseReason: result.pausedBy,
+        // Info: (20260827 - Luphia) 出路也跟著更新（理由同 retryFailedImportChapters）
+        pauseDetail: result.pauseDetail ?? current.pauseDetail ?? null,
+      };
+      setPendingImportFor(originSessionId, merged);
+      void persistPendingImport(
+        originSessionId,
+        merged,
+        lastImportSourceRef.current,
+        importActivitiesRef.current,
+        lastPageIndexRef.current,
+      );
+      // Info: (20260826 - Luphia) 書籤跟著更新（理由同 retryFailedImportChapters）
+      void saveImportJobBookmark({
+        pauseReason: result.pausedBy,
+        totalUnits: units.length,
+        completedUnits: units.length - result.remainingUnits.length,
+        failedUnits: result.failed.length,
+        remainingUnits: result.remainingUnits,
+      });
+    } catch (error) {
+      console.error("[carbon-chat] resume paused chapters failed:", error);
+      notify({ type: "error", text: t("carbon_chatbot.import_failed") });
+      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, originSessionId);
+    } finally {
+      setIsRetryingImport(false);
+    }
+  }, [
+    pendingImport,
+    runImportChapters,
+    activeSessionId,
+    setDraftNotice,
+    dismissDraftNoticeAfter,
+    isRetryingImport,
+    setPendingImportFor,
+    persistPendingImport,
+    saveImportJobBookmark,
+    t,
+    // Info: (20260827 - Luphia) 執行許可（issue #6721）
+    claimImportJob,
+    // Info: (20260901 - Luphia) 終局判決讓卡片改口（review #6726 阻-1）
+    refreshImportJob,
+  ]);
+
+  /**
+   * Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）。
+   *
+   * 暫停時畫面上的兩條出路（加購點數、升級方案）都是 `target="_blank"`
+   * 開新分頁，所以**付款一定發生在另一個分頁**。付完錢的人回到這一頁時，
+   * 這一頁對剛剛發生的事一無所知——他得自己再按一次「接著匯入」，
+   * 而他剛剛就是為了那件事付的錢。
+   *
+   * 三道閘門，一道都不能少：
+   *
+   * 1. **這份匯入真的在等點數**：`pauseReason` 必須是「點數用完」。需要簽章付款的
+   *    那種（`PAYMENT_REQUIRED`）不在這裡處理——那條路要使用者本人簽名。
+   * 2. **這一頁沒有在跑**：`isRetryingImport`。
+   * 3. **伺服器同意**：接續本身會先換一把執行許可（issue #6721）。廣播只是
+   *    一個提示，不是授權——同源的任何頁面都寫得進那個頻道。
+   *
+   * 刻意**不**在這裡先問一次「餘額夠不夠」：真正的判斷發生在執行時的扣款，
+   * 而多一次檢查就會有「檢查說夠、扣款說不夠」兩個答案（見
+   * `startJobResume` 的註解）。萬一還是不夠，匯入會再次暫停並說對原因，
+   * 而那一次撞牆在呼叫 LLM 之前就被擋下，一點都不會扣。
+   */
+  const autoResumeAfterPaymentRef = useRef<(() => void) | null>(null);
+  /**
+   * Info: (20260828 - Luphia) 別的分頁取消了這份匯入（review #6726 高-1）。
+   *
+   * 只清掉**暫停狀態**，`items` 原封不動——那些章已經解析完、也已經扣過點，
+   * 連內容一起清掉才是真的造成損失（與 `cancelImportJob` 同一個立場）。
+   *
+   * 不落地：發起取消的那個分頁已經寫過一次了，這裡再寫一次只會多一次
+   * 樂觀鎖衝突。這一支的責任只有「把那顆會花錢的按鈕收起來」。
+   */
+  const onJobCancelledElsewhereRef = useRef<
+    ((resourceKey?: string) => void) | null
+  >(null);
+  useEffect(() => {
+    onJobCancelledElsewhereRef.current = (resourceKey) => {
+      // Info: (20260828 - Luphia) 別的聊天室的取消不該動到這一間
+      if (resourceKey !== chatChannel) return;
+      if (!pendingImport) return;
+      if ((pendingImport.pausedUnits ?? []).length === 0) return;
+      setPendingImportFor(activeSessionId, {
+        ...pendingImport,
+        pausedChapters: [],
+        pausedUnits: [],
+        pauseReason: null,
+        pauseDetail: null,
+      });
+      setImportJob(null);
+    };
+  }, [chatChannel, pendingImport, activeSessionId, setPendingImportFor]);
+
+  // Info: (20260827 - Luphia) 理由同下：訂閱只掛一次，會變的東西放 ref
+  const refreshImportJobRef = useRef<(() => Promise<void>) | null>(null);
+  useEffect(() => {
+    refreshImportJobRef.current = refreshImportJob;
+  }, [refreshImportJob]);
+  useEffect(() => {
+    autoResumeAfterPaymentRef.current = () => {
+      if (isRetryingImport) return;
+      const paused = pendingImport?.pausedUnits ?? [];
+      if (paused.length === 0) return;
+      if (pendingImport?.pauseReason !== JOB_PAUSE_REASON.CREDITS_EXHAUSTED) {
+        return;
+      }
+      /**
+       * Info: (20260827 - Luphia) 先說一句話再開跑：畫面自己動起來而沒有任何
+       * 說明，比不動更難理解——使用者剛從另一個分頁回來，不會知道是誰按了什麼。
+       */
+      setDraftNotice(
+        { type: "info", text: t("carbon_chatbot.import_auto_resuming") },
+        activeSessionId,
+      );
+      void resumePausedImportChapters();
+    };
+  }, [
+    isRetryingImport,
+    pendingImport,
+    resumePausedImportChapters,
+    setDraftNotice,
+    activeSessionId,
+    t,
+  ]);
+
+  /**
+   * Info: (20260827 - Luphia) 訂閱只掛一次（空依賴）：依賴放 `pendingImport`
+   * 之類的東西會讓它在每次解析結果變動時重新訂閱，而重新訂閱之間的那個瞬間
+   * 收不到訊息——付款完成的廣播只有一則，錯過就沒有了。
+   * 真正會變的東西放在上面那個 ref 裡。
+   */
+  useEffect(
+    () =>
+      subscribeCreditEvents((event) => {
+        if (event.type === CREDIT_EVENT.JOB_CANCELLED) {
+          onJobCancelledElsewhereRef.current?.(event.resourceKey);
+          return;
+        }
+        if (event.type !== CREDIT_EVENT.PAYMENT_SUCCEEDED) return;
+        /**
+         * Info: (20260827 - Luphia) 狀態也刷新一次：即使這一頁沒有暫停中的匯入
+         *（例如暫停的是別的聊天室），伺服器眼中的狀態已經變了。
+         */
+        void refreshImportJobRef.current?.();
+        autoResumeAfterPaymentRef.current?.();
+      }),
+    [],
+  );
 
   const toggleImportItem = useCallback(
     (paragraphId: string) => {
@@ -2694,7 +4410,17 @@ export const useCarbonChat = () => {
             isDrawn: boolean;
           }>("/api/v1/chat/carbon/diagram", {
             method: "POST",
-            body: JSON.stringify({ paragraphId, content, language }),
+            /**
+             * Info: (20260813 - Luphia) 計費上下文（設計書 §5.5）：
+             * channel 供後端推導計費帳本，clientMessageId 讓退避重試不重複扣點。
+             */
+            body: JSON.stringify({
+              paragraphId,
+              content,
+              language,
+              channel: chatChannel,
+              clientMessageId: crypto.randomUUID(),
+            }),
           });
           /**
            * Info: (20260806 - Tzuhan) 端點走保活式串流(繞開閘道 60 秒的閒置逾時),
@@ -2764,7 +4490,7 @@ export const useCarbonChat = () => {
         await attempt();
       }
     },
-    [sessionsData, activeSessionId, language],
+    [chatChannel, sessionsData, activeSessionId, language],
   );
 
   const applyPendingImport = useCallback(() => {
@@ -2785,10 +4511,51 @@ export const useCarbonChat = () => {
           name: pendingImport.originSessionTitle,
         }),
       });
+      // Info: (20260811 - Emily) 同上(#6624)
+      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS);
       return;
     }
     const selected = pendingImport.items.filter((item) => item.checked);
     if (selected.length === 0) return;
+    /**
+     * Info: (20260903 - Luphia) 報告識別的盤查年度**空的時候**用確認值預填(review)。
+     *
+     * 為什麼是兩個欄位:識別那格是自由文字、逐字印在報告第一頁
+     *(`carbon_report_title.ts` 讀它組標題;「2023 年度」這種寫法要原樣留著),
+     * 這裡的 `inventoryYear` 是數字、決定跨年度合併時哪些分錄被剔除。
+     * 兩件事,所以不合併成一個欄位。
+     *
+     * 但同一個事實不該問使用者兩次而且允許兩個答案 —— 識別那格是空的就預填,
+     * **單向、不覆蓋已經填的字**(形狀與預覽卡的晚到預填一致:預填是建議不是指令)。
+     */
+    if (pendingImport.inventoryYear !== undefined) {
+      /**
+       * Info: (20260903 - Luphia) 在 updater 裡讀「現在是空的嗎」而不是讀渲染時的
+       * 快照:這個判斷決定要不要動使用者要印出去的字,讀舊值就可能蓋掉他剛填的內容。
+       */
+      setSessionsData((prev) => {
+        const session = prev[activeSessionId];
+        if (!session?.reportData) return prev;
+        const prefill = resolveIdentityYearPrefill(
+          session.reportData.identity?.inventoryYear,
+          pendingImport.inventoryYear,
+        );
+        if (prefill === undefined) return prev;
+        return {
+          ...prev,
+          [activeSessionId]: {
+            ...session,
+            reportData: {
+              ...session.reportData,
+              identity: {
+                ...session.reportData.identity,
+                inventoryYear: prefill,
+              },
+            },
+          },
+        };
+      });
+    }
     /**
      * Info: (20260806 - Tzuhan) 釘住套用當下的會話。
      * 上面剛確認 `pendingImport.originSessionId === activeSessionId`,所以此刻兩者相同 ——
@@ -2835,7 +4602,21 @@ export const useCarbonChat = () => {
     selected.forEach((item) => {
       const tables = sourceTablesById.get(item.paragraphId) ?? [];
       if (tables.length === 0) return;
-      const result = buildImportedLedger({ sourceTables: tables });
+      /**
+       * Info: (20260827 - Emily) 年度隨分錄走(PR #6725 review R1):
+       * 沒有年度的匯入項在跨年度合併時無從分辨,會留下孤兒列被算進總量。
+       *
+       * Info: (20260902 - Emily) 年度取自**這份報告**在預覽卡上被確認的值
+       *(issue_drafts/open/69),不再取自房間層的 `state.year`。
+       * 那個欄位是「這個房間在談哪一年」且 write-once,同一間房匯入兩份不同年度的
+       * 報告會拿到同一個值 —— `entryYear === incomingYear` 恆成立,不剔除,
+       * 孤兒列照留,而跨年度換鍋、`ledgerByYear` 快照、年間比較三個機制一起空轉。
+       * 沒確認就不帶(預覽卡在有排放總量表時已擋住送出),合併端退回舊行為。
+       */
+      const result = buildImportedLedger({
+        sourceTables: tables,
+        year: pendingImport.inventoryYear,
+      });
       if (result.disclosure === null) return;
       importedLedgerById.set(item.paragraphId, result);
     });
@@ -2947,29 +4728,44 @@ export const useCarbonChat = () => {
     if (activities.length > 0) {
       applyInventoryExtraction({ activities });
     }
-    if (importedEntries.length > 0) {
-      applyImportedLedgerEntries(importedEntries);
-    } else {
-      /**
-       * Info: (20260803 - Tzuhan) 有表卻沒入帳時要留痕跡:對帳說明已寫在報告裡,
-       * 但開發時看 log 才分得出「沒有表3.8」與「有表3.8 但勾稽沒過」。
-       */
-      const blocked = Array.from(importedLedgerById.entries()).filter(
+    /**
+     * Info: (20260827 - Emily) 阻擋紀錄**無條件收集**(PR #6725 round-2 低-1)。
+     *
+     * 原本它在 `else` 裡 —— 也就是「完全沒有任何分錄入帳」才收。
+     * 一份報告若有兩個段落各自產生分錄、其中一個勾稽被擋另一個成功,
+     * 就會走 apply 分支,而被擋那半**一筆紀錄都不留**:
+     * 帳本只有成功的一半,畫面上卻沒有任何地方提過另一半被擋 ——
+     * 圖表於是用半套資料畫出一張桑基圖,而本 PR 新增的那句文案自己在警告這件事
+     * (「半套資料入帳會讓每張圖都錯得很像對的」)。
+     */
+    const blocks = Array.from(importedLedgerById.entries())
+      .filter(
         ([, result]) =>
           result.blockedReason !== null || result.missingLedgerTable,
-      );
-      if (blocked.length > 0) {
-        console.warn(
-          "[carbon-chat] imported ledger blocked",
-          blocked.map(([paragraphId, result]) => ({
-            paragraphId,
-            // Info: (20260804 - Tzuhan) 「該有表3.8 卻沒拿到」與「有表但勾稽沒過」是兩件事
-            reason: result.missingLedgerTable
-              ? `缺少 ${LEDGER_SOURCE_TABLE_NO}(同節有全公司總量表,疑似被頁碼切片切掉)`
-              : result.blockedReason,
-          })),
-        );
-      }
+      )
+      .map(([paragraphId, result]) => ({
+        paragraphId,
+        // Info: (20260804 - Tzuhan) 「該有表3.8 卻沒拿到」與「有表但勾稽沒過」是兩件事
+        reason: result.missingLedgerTable
+          ? `缺少 ${LEDGER_SOURCE_TABLE_NO}(同節有全公司總量表,疑似被頁碼切片切掉)`
+          : (result.blockedReason ?? "未知原因"),
+        blockedAt: new Date().toISOString(),
+      }));
+    if (importedEntries.length > 0) {
+      applyImportedLedgerEntries(importedEntries);
+    }
+    if (blocks.length > 0) {
+      console.warn("[carbon-chat] imported ledger blocked", blocks);
+      /**
+       * Info: (20260825 - Emily) #6707:留進 channel 狀態,讓「有沒有異常」問得到答案。
+       * Info: (20260827 - Emily) 順序有意義(round-2 低-1):
+       * `applyImportedLedgerEntries` 成功入帳時會清掉阻擋紀錄
+       * (「紀錄描述的狀態已不存在」),而部分成功部分被擋時那句話只對成功那半成立 ——
+       * 所以這次的紀錄要在 apply **之後**寫回去,兩個 setState 依序生效,後者為準。
+       */
+      recordLedgerImportBlocks(blocks);
+      // Info: (20260825 - Emily) #6667:ref 同步更新 —— 本輪稍後的建表就要用,等不到下一輪 render
+      ledgerImportBlocksRef.current = blocks;
     }
     importActivitiesRef.current = [];
     /**
@@ -3104,8 +4900,10 @@ export const useCarbonChat = () => {
     dataTableLabels,
     generateParagraphDiagram,
     applyImportedLedgerEntries,
+    recordLedgerImportBlocks,
     t,
     setDraftNotice,
+    dismissDraftNoticeAfter,
     setPendingImportFor,
     // Info: (20260805 - Tzuhan) 匯入摘要訊息用到:頻道由 address 組出,文案語言由此決定
     user?.address,
@@ -3201,6 +4999,24 @@ export const useCarbonChat = () => {
         activeInventoryState?.computedLedger,
         chartLabels,
         dataTableLabels,
+        /**
+         * Info: (20260825 - Emily) #6667:被擋時說被擋的原因,不說「未取得該表」。
+         *
+         * Info: (20260831 - Emily) 讀 **ref** 不讀 state(PR #6725 review R2)。
+         *
+         * 原本讀 `activeInventoryState?.ledgerImportBlocks`,而它不在這個
+         * useCallback 的 dep 陣列裡(eslint 一直在報 exhaustive-deps)——
+         * 那不是型別噪音,是真的失效路徑:被擋時 `computedLedger` **依定義不變**
+         * (整批凍結在門口、沒寫進帳本),於是五個 dep 一個都沒變、閉包不重建,
+         * 讀到的是舊的 `undefined` → 插圖印「未取得該表」,
+         * 把使用者送去重匯一個根本沒壞的章節。
+         *
+         * 另外兩個呼叫端(3.6 桑基圖、跳段插圖)早就用 `ledgerImportBlocksRef.current`,
+         * 理由寫在 ref 的宣告處:本輪 setState 還沒生效,ref 才是同步的權威。
+         * 三條路徑有兩條是對的,就這一條讀 state —— 改成一致,順帶消掉那條 warning
+         * (ref 不需要進 dep 陣列,因為它的身分不變)。
+         */
+        ledgerImportBlocksRef.current,
       );
       setSessionsData((prev) => {
         const session = prev[activeSessionId];
@@ -3293,6 +5109,8 @@ export const useCarbonChat = () => {
             ledgerNow,
             chartLabels,
             dataTableLabels,
+            // Info: (20260825 - Emily) #6667:ref 而非 state —— 本輪 setState 還沒生效
+            ledgerImportBlocksRef.current,
           ),
         );
       }
@@ -3518,6 +5336,8 @@ export const useCarbonChat = () => {
             ledger,
             chartLabels,
             dataTableLabels,
+            // Info: (20260825 - Emily) #6667:同上,ref 是同步的權威
+            ledgerImportBlocksRef.current,
           ),
         ),
       target.content,
@@ -3799,13 +5619,14 @@ export const useCarbonChat = () => {
         return { ...prev, [activeSessionId]: updatedSession };
       });
 
-      setInputValue(
+      // Info: (20260827 - Emily) #6718:跳段預填(同上,經 nonce 下指令)
+      commandInput(
         t("carbon_chatbot.jump_prompt", {
           section: `${section.code} ${section.title}`,
         }),
       );
     },
-    [activeSessionId, t],
+    [activeSessionId, commandInput, t],
   );
 
   // Info: (20260714 - Tzuhan) 反向連動: 點報告段落 → 捲動至最近一則關聯訊息並閃爍；無關聯訊息則 fallback 為跳段引導
@@ -3892,17 +5713,61 @@ export const useCarbonChat = () => {
           .slice(-CARBON_CHAT_AI_CONTEXT_SIZE)
           .map((msg) => ({ role: msg.sender, text: msg.text }));
 
-        const res = await request<{ payload: IParagraphDraft | null }>(
-          "/api/v1/chat/carbon/draft",
-          {
-            method: "POST",
-            body: JSON.stringify({
-              paragraphId,
-              conversationContext,
-              language,
-            }),
-          },
-        );
+        /**
+         * Info: (20260825 - Luphia) 冪等鍵在**重送之間必須相同**（issue #6713 延伸）。
+         *
+         * 無帳本會話會先回 402 帶一張待付訂單，付掉之後以同一把鍵重送才會放行。
+         * 先前這個值是 inline 產生的，一旦加上重送就會變成「付了一張、又建一張」
+         *（聊天路徑的註解早就警告過這件事，草稿路徑漏了）。
+         */
+        const clientMessageId = crypto.randomUUID();
+        const requestDraft = () =>
+          request<{ payload: IParagraphDraft | null }>(
+            "/api/v1/chat/carbon/draft",
+            {
+              method: "POST",
+              // Info: (20260814 - Luphia) 計費上下文（設計書 §5.5），同段落修訂
+              body: JSON.stringify({
+                paragraphId,
+                conversationContext,
+                /**
+                 * Info: (20260904 - Emily) #6745:這條路原本**不帶事實包**,於是服務層的守門
+                 * 對它永遠是「呼叫端沒帶 → 跳過」—— 而它正是主入口攔下之後官方指定的重試路。
+                 * 不補這一行,守門搬進服務等於沒搬。
+                 */
+                contextFacts: buildChannelLedgerFacts(chatChannel),
+                language,
+                // Info: (20260903 - Emily) 揭露框架跟著請求走(#6688-A;理由見修訂路徑那一處)
+                framework: activeInventoryState?.disclosureFramework,
+                channel: chatChannel,
+                clientMessageId,
+              }),
+            },
+          );
+
+        /**
+         * Info: (20260825 - Luphia) 無帳本會話的待付款流程，與聊天路徑同一套
+         *（設計書 §5.5）：付掉那張單後以相同冪等鍵重送即可放行。
+         *
+         * 草稿路徑原本沒有這一段，於是同一個使用者在同一個會話裡，
+         * 送訊息會自動付款繼續、按「生成草稿」卻只看到「草稿生成失敗」——
+         * 而兩者花的是同一份點數。付款失敗（取消簽章、餘額不足）原樣拋出，
+         * 交由下方既有的錯誤處理顯示。
+         */
+        let res: Awaited<ReturnType<typeof requestDraft>>;
+        try {
+          res = await requestDraft();
+        } catch (error) {
+          const pendingPayment = parsePersonalPaymentRequired(error);
+          if (!pendingPayment) throw error;
+          const paid = await payExistingOrder(
+            pendingPayment.orderId,
+            pendingPayment.cost,
+            () => {},
+          );
+          if (!paid) throw error;
+          res = await requestDraft();
+        }
         const draft = res.payload;
         if (!draft) throw new Error("Empty draft payload");
 
@@ -3917,7 +5782,20 @@ export const useCarbonChat = () => {
         let noticeText = t("carbon_chatbot.draft_failed", {
           section: `${section.code} ${section.title}`,
         });
-        if (isQuotaApiError(error)) {
+        /**
+         * Info: (20260825 - Luphia) **使用者的點數用完**要先問（issue #6713 延伸）。
+         *
+         * 這裡原本只認 `isQuotaApiError`——那是 **LLM 供應商**的配額，
+         * 與使用者的錢無關。點數用完會落到「草稿生成失敗」，而使用者會以為
+         * 是這一節的內容有問題，重試一百次也一樣。這與匯入迴圈那個缺陷同一類，
+         * 只是出口不同（那邊是「章節解析失敗」）。
+         *
+         * 需要個人付款的那種上面已經付掉並重送過；走到這裡代表付款也失敗了
+         *（取消簽章、餘額不足），那時「點數不足」仍是最準確的說法。
+         */
+        if (resolveCreditPauseReason(error) !== null) {
+          noticeText = t("carbon_chatbot.team_quota_exceeded");
+        } else if (isQuotaApiError(error)) {
           noticeText = t("carbon_chatbot.ai_quota_exceeded");
         } else if (isTimeoutApiError(error)) {
           noticeText = t("carbon_chatbot.ai_timeout");
@@ -3939,6 +5817,22 @@ export const useCarbonChat = () => {
       t,
       applyDraftToReport,
       jumpToReportParagraph,
+      /**
+       * Info: (20260903 - Emily) 揭露框架進 deps 而不是另做一個 ref 鏡像(#6688-A)。
+       *
+       * eslint 這條警告是真的缺陷(#6730 review 第二輪那次的同一個形狀:
+       * 讀了 state 卻沒進 deps → 陳舊閉包 → 送出去的是使用者選之前的值)。
+       * 這裡選「加 deps」而不是 ref:這個值只在使用者動選單時變,而這兩個
+       * callback 本來就依賴 `sessionsData` / `activeSession`,那些變得比它頻繁得多,
+       * 所以重建次數實際上沒有增加。ref 會多一個要同步的真值來源,
+       * 而它要解的問題(在同一輪 render 的 setState updater 裡讀值)這裡不存在。
+       */
+      activeInventoryState?.disclosureFramework,
+      // Info: (20260814 - Luphia) 計費上下文所需：channel 決定這筆消費記到哪個帳本
+      chatChannel,
+      // Info: (20260825 - Luphia) 無帳本會話的待付款流程（與聊天路徑同一套）
+      payExistingOrder,
+      buildChannelLedgerFacts,
     ],
   );
 
@@ -4369,13 +6263,36 @@ export const useCarbonChat = () => {
   /**
    * Info: (20260806 - Tzuhan) `overrideText` 供「後續建議」按鈕直接送出既定的一句話。
    *
-   * 為什麼不是 setInputValue 之後再送:setState 要到下一輪 render 才生效,
-   * 此刻讀 `inputValue` 拿到的還是空字串 —— 按鈕會變成「按了沒反應」。
+   * 為什麼不是「先把文字寫進輸入框、再送出」:那需要跨一輪 render
+   * (setState 要到下一輪才生效),此刻讀回來的還是舊值 —— 按鈕會變成「按了沒反應」。
    * 讓文字從參數進來,送出的內容就與按鈕上的字完全一致。
+   *
+   * Info: (20260831 - Emily) 原文以 `setInputValue` / `inputValue` 當論據,
+   * 而 #6718 之後這個 hook 裡兩個符號都不存在了(PR #6730 review 低-1)——
+   * 推理仍然成立,但拿被刪掉的符號舉例會讓讀者 grep 不到,
+   * 然後分不出「註解過時」與「程式壞了」。已改成用行為描述。
    */
   const handleSendMessage = useCallback(
     async (overrideText?: string) => {
-      const outgoingText = overrideText ?? inputValue;
+      /**
+       * Info: (20260825 - Emily) 型別硬化:呼叫端若誤傳非字串(如把本函式直接綁 onClick,
+       * MouseEvent 進到 overrideText),`??` 擋不住 —— 事件物件不是 nullish,
+       * `.trim` 直接炸,而且是 unhandledRejection(按鈕壞了卻沒有紅字)。
+       *
+       * Info: (20260827 - Emily) #6718:文字一律由呼叫端帶進來
+       * (ChatInput 送出時上交、後續建議按鈕帶按鈕上的字)。
+       * hook 這裡不再有 `inputValue` 可退 —— 非字串時**退成空字串**,
+       * 下面「無文字且無就緒附件即不送」的既有 guard 會擋掉,
+       * 也就是錯誤呼叫降級成「不送出」而不是拿到 MouseEvent 去 `.trim`。
+       *
+       * Info: (20260831 - Emily) 這裡原本是**兩段結論相反的 docblock**
+       * (舊的寫「非字串一律退回輸入框內容 → 降級成正常送出」,而且排在前面先被讀到),
+       * 08-27 那輪只 append 了新的、沒刪舊的(PR #6730 review 低-1)。
+       * 已刪。後果不是美觀問題:讀到舊結論的人會去找「退回輸入框內容」那條退路,
+       * 找不到之後可能把它「修回來」—— 而現在 hook 沒有輸入框內容可退,
+       * 唯一的修回形狀是重新持有文字 state,那等於把 #6718 整個推翻。
+       */
+      const outgoingText = typeof overrideText === "string" ? overrideText : "";
       const readyAttachments = pendingAttachments.filter(
         (a) => a.status === PendingAttachmentStatusEnum.READY,
       );
@@ -4388,7 +6305,44 @@ export const useCarbonChat = () => {
       try {
         masterKey = await ensureMasterKeyCached();
       } catch (keyError) {
+        /**
+         * Info: (20260831 - Emily) 送不出去就把字**還給使用者**(PR #6730 review 中-1)。
+         *
+         * #6718 把清空搬進 ChatInput(文字的所有者),而清空發生在
+         * `onSendMessage` 之前 —— 對成功路徑是對的(等 async 完成才清,
+         * 使用者會看到自己的字停在框裡好幾秒),但金鑰這兩條早退在清空之後,
+         * 於是使用者打完的一句話直接消失,要重打。
+         *
+         * develop 上不是這樣:舊的 `setInputValue("")` 位置在所有早退之後,
+         * 金鑰失敗時字留在框裡 —— 這個保護是本 PR 弄掉的,所以本 PR 補回來。
+         *
+         * 最日常的觸發是**取消生物辨識提示**(按錯手指、誤觸、想先確認別的事),
+         * 不是罕見的裝置問題。
+         *
+         * 還原走既有的 `commandInput` 通道(nonce +1 → 元件的 effect 覆寫回去),
+         * 不需要回傳值、不必改 prop 介面。
+         * 非輸入框發起的送出(後續建議按鈕、跳段自動送出)失敗時,
+         * 那句話會被放進輸入框 —— 那是刻意的:比靜默丟掉使用者的動作好,
+         * 而且再按一次就送得出去。
+         *
+         * Info: (20260831 - Emily) 為什麼帶 `"restore"`(review 第二輪):
+         * `isLoading` 是 `isTyping`,而 `markSessionBusy(true)` 在金鑰步驟**之後** ——
+         * 金鑰那段時間輸入框沒有被 disabled,使用者可能已經在框裡打了新的字。
+         * 無條件覆寫會蓋掉它,而那是另一種形狀的「字消失」。
+         *
+         * `restore` 的語意讓這件事**不可能**發生:框裡有字就不還
+         * (那句話的去處由使用者決定,不是由我們搶回來)。
+         * 不用「金鑰準備中」旗標去讓那個狀態消失 —— 鎖的失效模式
+         * (任一路徑忘了清 → 輸入框永久打不了字,而使用者看不出原因)
+         * 比它要修的缺陷嚴重,而且 `ensureMasterKeyCached` 另有一個呼叫端。
+         *
+         * Info: (20260903 - Luphia) 原文接著寫「剩下的那半需要鎖」(成功路徑的
+         * `commandInput("")` 必須清)—— 前提對(hook 分不出框裡是誰的字),
+         * 結論不成立:那一行本來就不該清(理由見下方送出成功處的註解)。
+         * 拿掉它之後這條路徑沒有殘留問題,也不需要鎖。
+         */
         if (keyError instanceof ChatroomUnsupportedDeviceError) {
+          commandInput(outgoingText, "restore");
           appendMessageLocally(
             {
               id: crypto.randomUUID(),
@@ -4399,6 +6353,7 @@ export const useCarbonChat = () => {
           );
           return;
         }
+        commandInput(outgoingText, "restore");
         console.error(
           "[carbon-chat] failed to prepare encryption key:",
           keyError,
@@ -4451,7 +6406,34 @@ export const useCarbonChat = () => {
         return { ...prev, [activeSessionId]: updatedSession };
       });
 
-      setInputValue("");
+      /**
+       * Info: (20260903 - Luphia) 送出成功後**刻意不清空輸入框**(review 阻-1/阻-2)。
+       *
+       * 這裡原本是無條件的 `commandInput("")`,理由寫「為了非輸入框發起的送出
+       *(後續建議按鈕、跳段後自動送出)」—— 那個理由有兩個問題:
+       *
+       * 1. **「跳段後自動送出」不存在**(阻-2)。跳段那支 callback 只做
+       *    `commandInput(t("carbon_chatbot.jump_prompt", …))` 預填,而
+       *    `handleSendMessage` 在這個 hook 內**沒有任何呼叫端**(只有宣告與導出)。
+       *    多出來的那條路徑讓這一行看起來服務兩個對象、因此比實際更必要。
+       * 2. 剩下那個真的對象(後續建議按鈕)**不該清**(阻-1)。那顆按鈕走
+       *    `onClick={() => onSendFollowUp(prompt)}`,繞過元件的 submit,
+       *    所以框裡的字還在 —— 而框裡那些字是使用者自己打的草稿,
+       *    與他點的建議無關。清掉它就是刪掉使用者的東西,而且**不需要任何時間窗**:
+       *    打半句話 → 點一下 chip → 草稿消失。
+       *
+       * 那正是本 PR 標題那件事(歸還與指令分開)的同一類缺陷,只是換了一條路徑。
+       *
+       * 為什麼不改成「只清掉我送出去的那句」:那需要第三個 mode,而清空這件事
+       * 在這條路徑上本來就沒有正當理由 —— 讓 `commandInput` 收斂成
+       * 「指令(set)／歸還(restore)」兩種語意,比多長一種好。
+       *
+       * 元件自己的 submit 仍然清(它是文字的所有者,而且只清它剛送出去的那份),
+       * 所以「打字送出後框裡是空的」這個體驗沒有變。
+       *
+       * 連帶讓 `issue_drafts/open/67`(「成功路徑需要一個金鑰準備中的鎖」)不再必要:
+       * 那張票的前提是「`commandInput("")` 必須清」,而它不必。
+       */
       setPendingAttachments([]);
       setAttachmentError(null);
       markSessionBusy(activeSessionId, true);
@@ -4490,40 +6472,87 @@ export const useCarbonChat = () => {
           });
         }
 
-        const data = await request<{
-          success: boolean;
-          message: string;
-          payload: {
-            drafts?: IParagraphDraft[];
-            envelopes?: IEciesEnvelope[];
-            extraction?: IInventoryExtraction | null;
-            attachmentActivities?: IActivityRecord[];
-            revisionParagraphId?: string | null;
-            chartRequest?: {
-              templateId: CarbonChartTemplateEnum;
-              paragraphId: string;
+        /**
+         * Info: (20260813 - Luphia) 冪等鍵在重試間必須相同（設計書 §5.5）：
+         * 無帳本會話會先收到待付款 402，付款後以同一把鍵重送才找得回那張已付訂單；
+         * 每次重新產生就會變成「付了一張、又建一張」。
+         */
+        const clientMessageId = crypto.randomUUID();
+        /**
+         * Info: (20260825 - Emily) #6707 帳本事實包(第二層):每則訊息隨行注入。
+         * 帳本是 E2EE 的、伺服端讀不到,事實只能在這裡(解密後的狀態)決定性組出;
+         * LLM 回答數據問題的數字只能來自這一包(persona 端把「清單之外不得有數字」說死)。
+         * 帳本空時為空陣列 —— persona 對「無事實」另有明確拒答指令,這裡不補、不造。
+         */
+        // Info: (20260904 - Emily) #6745:三條會生成文字的路(對話、草稿、修訂)共用同一支組包
+        const ledgerFacts = buildChannelLedgerFacts(chatChannel);
+        const sendChatRequest = () =>
+          request<{
+            success: boolean;
+            message: string;
+            payload: {
+              drafts?: IParagraphDraft[];
+              envelopes?: IEciesEnvelope[];
+              extraction?: IInventoryExtraction | null;
+              attachmentActivities?: IActivityRecord[];
+              revisionParagraphId?: string | null;
+              chartRequest?: {
+                templateId: CarbonChartTemplateEnum;
+                paragraphId: string;
+              } | null;
+              attachmentFacts?: IContextFact[];
             } | null;
-            attachmentFacts?: IContextFact[];
-          } | null;
-        }>("/api/v1/chat/carbon", {
-          method: "POST",
-          body: JSON.stringify({
-            history: currentHistory,
-            // Info: (20260716 - Tzuhan) #6518:currentStep 改餵狀態機真值(跳段指引仍優先)
-            currentStep:
-              activeSession.currentStep ||
-              describeInventoryStep(
-                inventoryStates[chatChannel] ?? createEmptyInventoryState(),
-              ),
-            language,
-            channel: chatChannel,
-            recipientPublicKey: masterKey.extendedPublicKey,
-            // Info: (20260714 - Tzuhan) 附件只帶 metadata+cid(檔案已在 Laria)；請求 body 維持輕量
-            ...(attachmentsMeta.length > 0
-              ? { attachments: attachmentsMeta }
-              : {}),
-          }),
-        });
+          }>("/api/v1/chat/carbon", {
+            method: "POST",
+            body: JSON.stringify({
+              history: currentHistory,
+              // Info: (20260716 - Tzuhan) #6518:currentStep 改餵狀態機真值(跳段指引仍優先)
+              currentStep:
+                activeSession.currentStep ||
+                describeInventoryStep(
+                  inventoryStates[chatChannel] ?? createEmptyInventoryState(),
+                ),
+              language,
+              channel: chatChannel,
+              recipientPublicKey: masterKey.extendedPublicKey,
+              /**
+               * Info: (20260813 - Luphia) 計費冪等鍵（設計書 §5.5）：
+               * 同一則訊息重送（重試、雙擊）不重複扣點。
+               */
+              clientMessageId,
+              /**
+               * Info: (20260825 - Emily) #6707 帳本事實包(組包邏輯見上方 ledgerFacts 的註解)。
+               * **空陣列也要送**(review 阻擋項):伺服端憑 [] 與 undefined 區分
+               * 「碳盤查對話、帳本空」(守門照跑)與「呼叫端沒帶事實包」(守門跳過)。
+               * 原本空包不帶欄位,守門在最需要它的狀態(只剩指令、編造最沒阻力)被關掉。
+               */
+              ledgerFacts,
+              // Info: (20260714 - Tzuhan) 附件只帶 metadata+cid(檔案已在 Laria)；請求 body 維持輕量
+              ...(attachmentsMeta.length > 0
+                ? { attachments: attachmentsMeta }
+                : {}),
+            }),
+          });
+
+        /**
+         * Info: (20260813 - Luphia) 無帳本會話：後端先回待付款 402 帶訂單，
+         * 付掉那張單後以**相同冪等鍵**重送即可放行（設計書 §5.5）。
+         * 付款失敗（用戶取消簽章、餘額不足）就原樣拋出，交由既有錯誤處理顯示。
+         */
+        let data: Awaited<ReturnType<typeof sendChatRequest>>;
+        try {
+          data = await sendChatRequest();
+        } catch (error) {
+          const pendingPayment = parsePersonalPaymentRequired(error);
+          if (!pendingPayment) throw error;
+          const paid = await payExistingOrder(
+            pendingPayment.orderId,
+            pendingPayment.cost,
+            () => {},
+          );
+          if (!paid) throw error;
+          data = await sendChatRequest();
+        }
 
         if (!data.success) {
           throw new Error(data.message || "AI API returned an error");
@@ -4603,7 +6632,20 @@ export const useCarbonChat = () => {
         setIsError(true);
         // Info: (20260716 - Tzuhan) 額度/逾時/限流分別給專屬文案(#6515/#6516)，其餘為一般系統錯誤
         let errorText = t("carbon_chatbot.system_error");
-        if (isQuotaApiError(error)) {
+        /**
+         * Info: (20260813 - Luphia) 兩種「額度」錯誤要分開講（設計書 §5.5）：
+         * IS_LLM_QUOTA_EXCEEDED 是供應商端的模型額度（稍候重試會好），
+         * TW_QUOTA_EXCEEDED 是團隊訂閱額度與分配點數同時見底（重試永遠不會好，
+         * 要等重置或加購）。混為一談會讓用戶一直重試一件不可能成功的事。
+         */
+        const apiErrorCode = getApiErrorCode(error);
+        if (apiErrorCode === API_ERRORS.TW_QUOTA_EXCEEDED.code) {
+          errorText = t("carbon_chatbot.team_quota_exceeded");
+        } else if (
+          apiErrorCode === API_ERRORS.VA_CARBON_SESSION_NOT_BOUND.code
+        ) {
+          errorText = t("carbon_chatbot.session_not_bound");
+        } else if (isQuotaApiError(error)) {
           errorText = t("carbon_chatbot.ai_quota_exceeded");
         } else if (isTimeoutApiError(error)) {
           errorText = t("carbon_chatbot.ai_timeout");
@@ -4621,7 +6663,8 @@ export const useCarbonChat = () => {
       }
     },
     [
-      inputValue,
+      payExistingOrder,
+      commandInput,
       isLoading,
       pendingAttachments,
       activeSession,
@@ -4636,10 +6679,11 @@ export const useCarbonChat = () => {
       ensureMasterKeyCached,
       markSessionBusy,
       applyInventoryExtraction,
-      inventoryStates,
       requestParagraphRevision,
       insertChartIntoParagraph,
       setDraftNotice,
+      inventoryStates,
+      buildChannelLedgerFacts,
     ],
   );
 
@@ -4664,31 +6708,57 @@ export const useCarbonChat = () => {
   const initializeChat = useCallback(async () => {
     if (isUnlocked) return;
 
+    /**
+     * Info: (20260812 - Luphia) 解鎖失敗要在**還鎖著的畫面上**說出來。
+     *
+     * 原本兩條失敗路徑都是 `appendMessageLocally()`,而那則訊息會被畫進聊天區 ——
+     * 解鎖失敗時聊天區還鎖著,所以訊息一則都看不到。使用者的體驗是
+     * 「點了開始加密對話,完全沒有任何反應」,而 console 裡其實有錯誤。
+     *
+     * 改成把原因寫進 `unlockError`,由鎖定畫面渲染在按鈕旁邊。
+     * 重按一次會先清掉它,所以那句訊息不會停在上一次失敗的狀態。
+     */
+    setUnlockError(null);
+
     try {
       // Info: (20260714 - Tzuhan) 解鎖後主金鑰存於 masterKeyRef，歷史載入/招呼詞由 channel 載入 effect 接手
       await ensureMasterKeyCached();
     } catch (keyError) {
+      console.error("[carbon-chat] failed to unlock encryption key:", keyError);
       if (keyError instanceof ChatroomUnsupportedDeviceError) {
-        appendMessageLocally(
-          {
-            id: crypto.randomUUID(),
-            sender: ChatRoleEnum.AI,
-            text: t("carbon_chatbot.device_unsupported"),
-          },
-          0,
-        );
+        setUnlockError(t("carbon_chatbot.device_unsupported"));
         return;
       }
-      console.error("[carbon-chat] failed to unlock encryption key:", keyError);
+      /**
+       * Info: (20260812 - Luphia) 來源不符要說成它本來的樣子（PR review P-1）。
+       *
+       * 這一列是用另一種金鑰包裝的（最可能是補綁 passkey 之後託管金鑰列被廢除）,
+       * 解不開不是「失敗」而是「需要先做金鑰移轉」。共用 unlock_failed 會讓人
+       * 一直重按一件永遠不會成功的事。
+       */
+      if (keyError instanceof ChatroomKeySourceMismatchError) {
+        setUnlockError(t("carbon_chatbot.key_source_mismatch"));
+        return;
+      }
+      // Info: (20260812 - Luphia) custody 還沒載入（按鈕本該是 disabled，這是第二層）
+      if (keyError instanceof ChatroomCustodyUnknownError) {
+        setUnlockError(t("carbon_chatbot.custody_loading"));
+        return;
+      }
+      /**
+       * Info: (20260812 - Luphia) 限流用專屬文案，不得顯示為一般系統錯誤。
+       *
+       * `rate_limiting_guideline.md` 第 3 條明文要求這件事，而 `carbon_chatbot.rate_limited`
+       * 早就存在（送訊息與載入歷史那兩條路徑都已經在用）。解鎖路徑原本接不上，
+       * 因為 `requestPrfSecret` 用原生 fetch 拋 `AppError`，
+       * 而 `isRateLimitedApiError()` 要求 `RequestApiError` —— 已在該處改掉。
+       */
+      if (isRateLimitedApiError(keyError)) {
+        setUnlockError(t("carbon_chatbot.rate_limited"));
+        return;
+      }
       setIsError(true);
-      appendMessageLocally(
-        {
-          id: crypto.randomUUID(),
-          sender: ChatRoleEnum.AI,
-          text: t("carbon_chatbot.system_error"),
-        },
-        0,
-      );
+      setUnlockError(t("carbon_chatbot.unlock_failed"));
       return;
     }
 
@@ -4696,7 +6766,7 @@ export const useCarbonChat = () => {
     setUnlockedMasterKey(masterKeyRef.current);
     setIsError(false);
     // Info: (20260714 - Tzuhan) 歷史載入與招呼詞改由 channel 載入 effect 統一處理(切換 session 亦適用)
-  }, [isUnlocked, ensureMasterKeyCached, appendMessageLocally, t]);
+  }, [isUnlocked, ensureMasterKeyCached, t]);
 
   // Info: (20260712 - Luphia) 空 chatroom → 請後端做前置作業產生招呼詞並加密發佈；由訂閱端解密後顯示
   const requestGreeting = useCallback(
@@ -4779,6 +6849,8 @@ export const useCarbonChat = () => {
 
   return {
     sessionsList: sortedSessionsList,
+    // Info: (20260828 - Julian) 給深連結用：清單問完了沒有（非空 ≠ 完整）
+    sessionsIndexSettled,
     activeSession,
     activeSessionId,
     // Info: (20260714 - Tzuhan) 對外的切換入口為 switchSession(重置跨室暫態 UI)，沿用原名稱以維持呼叫端不變
@@ -4788,14 +6860,15 @@ export const useCarbonChat = () => {
     // Info: (20260716 - Tzuhan) 命名:對話改名 + 報告檔名改名
     renameSession,
     renameReportDocument,
-    inputValue,
-    setInputValue,
+    updateReportIdentity,
+    inputPrefill,
     isTyping,
     isLoading,
     isError,
     // Info: (20260805 - Tzuhan) 推播連線狀態(壞掉必須看得見,見上方 effect)
     connectionState,
     isUnlocked,
+    unlockError,
     initializeChat,
     hasMoreHistory,
     isLoadingHistory,
@@ -4836,10 +6909,14 @@ export const useCarbonChat = () => {
     pendingRevision,
     applyPendingRevision,
     discardPendingRevision,
+    // Info: (20260903 - Emily) #6688-A 揭露框架的選擇入口
+    setDisclosureFramework,
     // Info: (20260716 - Tzuhan) #56 報告匯入(逐段勾選確認)
     pendingImport,
     importReportFile,
     toggleImportItem,
+    // Info: (20260902 - Emily) 預覽卡上確認盤查年度(issue_drafts/open/69)
+    setPendingInventoryYear,
     applyPendingImport,
     discardPendingImport,
     /**
@@ -4856,6 +6933,14 @@ export const useCarbonChat = () => {
     // Info: (20260730 - Tzuhan) 手動產生結構圖(治理架構/範疇對應/量化流程);無對應模板的段落呼叫即 no-op
     generateParagraphDiagram,
     retryFailedImportChapters,
+    // Info: (20260825 - Luphia) 「接著匯入」：只跑點數用完時還沒做的那幾份（issue #6713）
+    resumePausedImportChapters,
+    // Info: (20260827 - Luphia) 伺服器眼中的狀態與取消（issue #6714）
+    importJobStatus: importJob?.status ?? null,
+    canCancelImportJob: Boolean(importJob),
+    cancelImportJob,
+    // Info: (20260901 - Luphia) 倒數歸零時畫面自己再問一次伺服器（review #6726 中-3）
+    refreshImportJob,
     // Info: (20260806 - Tzuhan) 重試中:預覽卡據此禁用按鈕並顯示進度(「正在跑」必須看得見)
     isRetryingImport,
     // Info: (20260716 - Tzuhan) #56 匯入導流(聊天附件疑似整份報告)

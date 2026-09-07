@@ -1,0 +1,279 @@
+import { describe, it, expect, afterAll, beforeEach } from "@jest/globals";
+import type { jest as JestType } from "@jest/globals";
+declare const jest: typeof JestType;
+import { faithMemoryRepo } from "@/repositories/faith_memory.repo";
+import { FAITH_MEMORY_DELETION_REASON } from "@/constants/faith_memory";
+import { prisma } from "@/lib/prisma";
+
+/**
+ * Info: (20260818 - Luphia) 排定刪除必須記下「是誰排的」（PR #6652 第三輪 C-8）。
+ *
+ * 保留期對帳每 6 小時跑一次，對仍在訂閱的團隊呼叫 `clearExpiry`。
+ * 少了 `expiryReason` 的條件，它會把**任何來源**排定的期限一起清掉——
+ * 包含未來的帳戶終止寬限期。結果是：團隊只要持續付費，
+ * 那個期限每輪被清一次，到期刪除永遠不會發生。
+ *
+ * 條款 §3.7 寫的是「以較早屆至者為準」，而那句話要成立，
+ * 各來源排定的期限就必須彼此獨立。
+ */
+
+jest.mock("@/lib/prisma", () => ({
+  prisma: {
+    faithMemory: {
+      updateMany: jest.fn(async () => ({ count: 0 })),
+      findUnique: jest.fn(async () => null),
+      findMany: jest.fn(async () => []),
+    },
+  },
+}));
+
+const updateMany = prisma.faithMemory.updateMany as unknown as ReturnType<
+  typeof jest.fn
+>;
+const findUnique = prisma.faithMemory.findUnique as unknown as ReturnType<
+  typeof jest.fn
+>;
+const findMany = prisma.faithMemory.findMany as unknown as ReturnType<
+  typeof jest.fn
+>;
+
+const EXPIRES_AT = new Date(1_760_000_000_000);
+
+/**
+ * Info: (20260818 - Luphia) 自己備好主密鑰（CI 沒有 `.env`，見 checklist §1.3）。
+ * 這一檔有一組測試會真的走解密路徑。
+ */
+const TEST_MASTER_KEY = "c".repeat(64);
+const ORIGINAL_MASTER_KEY = process.env.SECRET_VAULT_MASTER_KEY;
+
+beforeEach(() => {
+  process.env.SECRET_VAULT_MASTER_KEY = TEST_MASTER_KEY;
+  jest.clearAllMocks();
+  updateMany.mockResolvedValue({ count: 0 });
+  findUnique.mockResolvedValue(null);
+  findMany.mockResolvedValue([]);
+});
+
+afterAll(() => {
+  if (ORIGINAL_MASTER_KEY === undefined) {
+    delete process.env.SECRET_VAULT_MASTER_KEY;
+  } else {
+    process.env.SECRET_VAULT_MASTER_KEY = ORIGINAL_MASTER_KEY;
+  }
+});
+
+function argsOf(call: number) {
+  return updateMany.mock.calls[call][0] as {
+    where: Record<string, unknown>;
+    data: Record<string, unknown>;
+  };
+}
+
+describe("setExpiry", () => {
+  it("寫入期限時一併記下來源", async () => {
+    await faithMemoryRepo.setExpiry(
+      "t1",
+      EXPIRES_AT,
+      FAITH_MEMORY_DELETION_REASON.RETENTION_EXPIRED,
+    );
+
+    expect(argsOf(0).data).toEqual({
+      expiresAt: EXPIRES_AT,
+      expiryReason: FAITH_MEMORY_DELETION_REASON.RETENTION_EXPIRED,
+    });
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 只排給還沒有期限的列。
+   * 覆寫既有期限會把「較早屆至」往後推，而那個方向是對使用者不利的：
+   * 該刪的資料被延後刪除。
+   */
+  it("不覆寫已排定的期限", async () => {
+    await faithMemoryRepo.setExpiry(
+      "t1",
+      EXPIRES_AT,
+      FAITH_MEMORY_DELETION_REASON.RETENTION_EXPIRED,
+    );
+
+    expect(argsOf(0).where).toEqual({ teamId: "t1", expiresAt: null });
+  });
+});
+
+describe("clearExpiry", () => {
+  /**
+   * Info: (20260818 - Luphia) 本檔最重要的一條：只清**自己排的那一種**。
+   * 少了 reason 條件，對帳會清掉別的來源排定的刪除，那份記憶就再也不會到期。
+   */
+  it("只清同一個來源排定的期限", async () => {
+    await faithMemoryRepo.clearExpiry(
+      "t1",
+      FAITH_MEMORY_DELETION_REASON.RETENTION_EXPIRED,
+    );
+
+    expect(argsOf(0).where).toEqual({
+      teamId: "t1",
+      expiresAt: { not: null },
+      expiryReason: FAITH_MEMORY_DELETION_REASON.RETENTION_EXPIRED,
+    });
+  });
+
+  // Info: (20260818 - Luphia) 取消時 reason 也要清掉，否則下一次排定會留著舊的來源
+  it("一併清掉來源標記", async () => {
+    await faithMemoryRepo.clearExpiry(
+      "t1",
+      FAITH_MEMORY_DELETION_REASON.RETENTION_EXPIRED,
+    );
+
+    expect(argsOf(0).data).toEqual({ expiresAt: null, expiryReason: null });
+  });
+
+  it("回傳實際受影響的列數", async () => {
+    updateMany.mockResolvedValue({ count: 3 });
+
+    expect(
+      await faithMemoryRepo.clearExpiry(
+        "t1",
+        FAITH_MEMORY_DELETION_REASON.RETENTION_EXPIRED,
+      ),
+    ).toBe(3);
+  });
+});
+
+describe("deleteByScope", () => {
+  // Info: (20260818 - Luphia) 查無記憶不是錯誤：多數成員從來沒有累積過記憶
+  it("查無記憶時回 false 且不刪任何東西", async () => {
+    findUnique.mockResolvedValue(null);
+
+    expect(
+      await faithMemoryRepo.deleteByScope(
+        "u1",
+        "t1",
+        FAITH_MEMORY_DELETION_REASON.MEMBER_REMOVED,
+      ),
+    ).toBe(false);
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 只讀 id 與筆數——刪除不需要看見任何一個字。
+   * 這是規範 §6.1「不提供單邊查詢」在刪除路徑上的具體要求。
+   */
+  it("查詢時不讀密文", async () => {
+    await faithMemoryRepo.deleteByScope(
+      "u1",
+      "t1",
+      FAITH_MEMORY_DELETION_REASON.MEMBER_REMOVED,
+    );
+
+    const args = findUnique.mock.calls[0][0] as {
+      select: Record<string, unknown>;
+    };
+    expect(args.select).toEqual({ id: true, itemCount: true });
+  });
+});
+
+/**
+ * Info: (20260818 - Luphia) 到期清單的查詢條件（第五輪 C-2 / C-3）。
+ *
+ * 這支是刪除路徑的入口，而它的兩個性質都會**安靜地**出問題：
+ * 沒有排序時某些列可能整輪排不進 `take`（starvation，且重現不出來）；
+ * 不能排除已失敗的列時，同一批毒資料會被反覆撈回來。
+ */
+describe("listExpired", () => {
+  it("以最久到期優先排序，並以 id 打破平手", async () => {
+    await faithMemoryRepo.listExpired(EXPIRES_AT, 500);
+
+    const args = findMany.mock.calls[0][0] as { orderBy: unknown };
+    expect(args.orderBy).toEqual([{ expiresAt: "asc" }, { id: "asc" }]);
+  });
+
+  it("沒有游標時不加多餘的條件", async () => {
+    await faithMemoryRepo.listExpired(EXPIRES_AT, 500);
+
+    const args = findMany.mock.calls[0][0] as {
+      where: Record<string, unknown>;
+    };
+    expect(args.where).toEqual({ expiresAt: { lte: EXPIRES_AT } });
+  });
+
+  /**
+   * Info: (20260818 - Luphia) 游標條件要**兩個分支都在**（第六輪第 6 條）。
+   *
+   * 只比 `expiresAt` 會跳過同一毫秒的其他列（漏刪）；只比 `id` 則與排序不一致
+   * （可能重複或倒退）。這也是為什麼不用會膨脹的 `NOT IN`：
+   * 資料庫整體故障時那個清單會長到上萬個參數。
+   */
+  it("有游標時以 (expiresAt, id) 的全序往前推進", async () => {
+    const after = { expiresAt: new Date(1_700_000_000_000), id: "row-1" };
+
+    await faithMemoryRepo.listExpired(EXPIRES_AT, 500, after);
+
+    const args = findMany.mock.calls[0][0] as {
+      where: Record<string, unknown>;
+    };
+    expect(args.where).toEqual({
+      expiresAt: { lte: EXPIRES_AT },
+      OR: [
+        { expiresAt: { gt: after.expiresAt } },
+        { expiresAt: after.expiresAt, id: { gt: after.id } },
+      ],
+    });
+  });
+
+  // Info: (20260818 - Luphia) 刪除不需要看見內容：只取識別欄位、筆數與游標需要的期限
+  it("不讀密文", async () => {
+    await faithMemoryRepo.listExpired(EXPIRES_AT, 500);
+
+    const args = findMany.mock.calls[0][0] as {
+      select: Record<string, unknown>;
+    };
+    expect(args.select).toEqual({
+      id: true,
+      userId: true,
+      teamId: true,
+      itemCount: true,
+      expiresAt: true,
+    });
+  });
+});
+
+/**
+ * Info: (20260818 - Luphia) 解不開的密文要**誠實回報**（第五輪 T-5）。
+ *
+ * 這個性質先前只有 e2e 守著（`faith_memory_aad_backfill`），而 e2e 已被移出
+ * `npm test`（第五輪 C-4）。於是把 repo 的 catch 改回 `return { items: [] }`
+ * ——也就是安靜覆寫那個原始缺陷——三條相關的單元測試全綠，因為它們把 repo
+ * 整包 mock 掉了（checklist §1.2 的形狀）。
+ *
+ * 這裡用真的 repo：prisma 回一列壞掉的密文，斷言 `unreadable` 與 `lostItemCount`。
+ */
+describe("get 對解不開的密文", () => {
+  const brokenRow = {
+    itemsCipher: "not-a-valid-ciphertext",
+    itemsIv: "0".repeat(24),
+    itemsTag: "0".repeat(32),
+    keyVersion: 1,
+    itemCount: 7,
+    expiresAt: null,
+  };
+
+  it("回報 unreadable 並帶出筆數，而不是假裝沒有記憶", async () => {
+    findUnique.mockResolvedValue(brokenRow);
+
+    const record = await faithMemoryRepo.get("u1", "t1");
+
+    expect(record?.items).toEqual([]);
+    /**
+     * Info: (20260818 - Luphia) 這兩個欄位是「覆寫時寫稽核」的唯一依據：
+     * 少了它們，service 會把解不開的列當成「還沒有記憶」而安靜蓋掉。
+     */
+    expect(record?.unreadable).toBe(true);
+    expect(record?.lostItemCount).toBe(7);
+  });
+
+  // Info: (20260818 - Luphia) 對照組：查無資料回 null，不是「解不開」
+  it("查無資料時回 null", async () => {
+    findUnique.mockResolvedValue(null);
+
+    expect(await faithMemoryRepo.get("u1", "t1")).toBeNull();
+  });
+});

@@ -6,6 +6,7 @@ import type {
 } from "@passwordless-id/webauthn/dist/esm/types";
 import { ApiCode } from "@/lib/utils/status";
 import { AppError } from "@/lib/utils/error";
+import { ApiError as RequestApiError } from "@/lib/utils/request";
 import { WalletCustodyType } from "@/constants/auth_provider";
 import { fido2ClientService } from "@/lib/auth/fido2_client";
 import { UserOperationJson } from "@/validators";
@@ -41,6 +42,16 @@ interface ICustodialSignResponse {
   message?: string;
   errorCode?: string;
   payload: { assertion: AuthenticationJSON; userOp?: UserOperationJson } | null;
+}
+
+// Info: (20260812 - Luphia) base64 → ArrayBuffer；PRF 的兩條路徑都要回同一種型別給呼叫端
+function base64ToArrayBuffer(value: string): ArrayBuffer {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes.buffer;
 }
 
 async function postCustodialSign(
@@ -91,6 +102,94 @@ export async function requestAssertion(
     challengeToken: params.challengeToken,
   });
   return assertion;
+}
+
+/**
+ * Info: (20260812 - Luphia) 取得端到端加密用的 PRF 秘密，不管帳號是哪一種。
+ *
+ * 與 `requestAssertion()` 同一個道理,只是對象從「簽章」換成「PRF 輸出」:
+ * - passkey 帳號:行為完全不變,仍由驗證器以 WebAuthn PRF 擴充派生。
+ * - 託管帳號:改呼叫 `/api/v1/auth/custodial/prf`,由伺服器以保險庫主密鑰派生。
+ *
+ * 為什麼一定要統一到這裡:`getPrfSecret()` 原本直接呼叫 `navigator.credentials.get()`,
+ * 而託管帳號沒有 passkey —— 那個對話框開得起來但永遠不會成功,
+ * 使用者關掉它得到的是 `NotAllowedError`,再被上層翻譯成「您的裝置不支援」。
+ * 裝置沒問題,是帳號沒有 passkey。ADR 016 對 `startLogin` 寫過同一句警告,
+ * 它對 PRF 一字不改地成立。
+ *
+ * **兩條路徑的隱私保證不同,呼叫端必須知道**:passkey 路徑的秘密只存在於使用者的
+ * 驗證器裡,伺服器連解密的能力都沒有;託管路徑由伺服器派生,伺服器**有**那個能力。
+ * 這與託管錢包本來的信任模型一致（平台已持有其簽章私鑰），但介面文案不得混用
+ * 同一句保證（見 carbon_chatbot 的 unlock 提示）。
+ */
+export async function requestPrfSecret(params: {
+  // Info: (20260812 - Luphia) base64 的 salt；兩條路徑用同一份，才能保證同一個包裝解得開
+  prfSaltBase64: string;
+  /**
+   * Info: (20260812 - Luphia) 來自 /auth/me 的 custody。
+   *
+   * 與 `requestAssertion` 不同,這裡**沒有預設值**（PR review P-2）:那邊猜錯只是一次
+   * 簽章失敗,這邊猜錯會拿到一把錯的包裝金鑰 —— 把託管帳號當成 passkey 就是開出一個
+   * 永遠不會成功的系統對話框,正是這批修正要消滅的 bug。未知時拋錯,不猜。
+   */
+  custody?: string;
+  // Info: (20260812 - Luphia) passkey 路徑的實作由呼叫端注入，避免這支把 WebAuthn 細節一起拖進來
+  derivePasskeySecret: () => Promise<ArrayBuffer>;
+}): Promise<ArrayBuffer> {
+  if (params.custody === undefined) {
+    throw new AppError({
+      code: "AU000021",
+      message:
+        "account custody is not loaded yet; refusing to guess a key source",
+      status: ApiCode.VALIDATION_ERROR,
+    });
+  }
+
+  if (params.custody !== WalletCustodyType.CUSTODIAL) {
+    return params.derivePasskeySecret();
+  }
+
+  const response = await fetch("/api/v1/auth/custodial/prf", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("dewt")}`,
+    },
+    body: JSON.stringify({ prfSalt: params.prfSaltBase64 }),
+  });
+
+  const data = (await response.json()) as {
+    code: ApiCode | string;
+    message?: string;
+    errorCode?: string;
+    payload: { prfSecret: string } | null;
+  };
+
+  if (data.code !== ApiCode.SUCCESS || !data.payload?.prfSecret) {
+    /**
+     * Info: (20260812 - Luphia) 失敗改拋 `RequestApiError`,不是 `AppError`
+     * （PR review：限流無法被分類）。
+     *
+     * `isRateLimitedApiError()` 的第一個判斷是 `error instanceof RequestApiError`,
+     * 而這支用原生 `fetch` 拋 `AppError` —— 於是撞到限流時**分類接不起來**,
+     * 使用者拿到的是通用的「解鎖失敗」。而 `rate_limiting_guideline.md` 第 3 條
+     * 明文「前端以專屬文案提示（`carbon_chatbot.rate_limited`）,
+     * 不得顯示為一般系統錯誤」。
+     *
+     * 一併把整個信封放進 `data`:那三支既有的型別守衛
+     * (`isRateLimitedApiError` / `isQuotaApiError` / `isTimeoutApiError`)
+     * 讀的都是 `data.errorCode`,而不是 HTTP 狀態 —— 那是刻意的,
+     * 因為限流回應目前實際是 HTTP 500 + Retry-After
+     * (見同一份規範開頭的已知缺陷),狀態碼分不出來。
+     */
+    throw new RequestApiError(
+      data.message || "Custodial PRF derivation failed",
+      response.status,
+      data,
+    );
+  }
+
+  return base64ToArrayBuffer(data.payload.prfSecret);
 }
 
 export interface IOrderPaymentAssertionParams {

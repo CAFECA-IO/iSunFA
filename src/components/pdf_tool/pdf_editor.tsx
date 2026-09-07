@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import {
+  AlertTriangle,
   Check,
   Download,
   Edit3,
@@ -43,6 +44,7 @@ import {
   createColorSafeComputedStyle,
 } from "@/lib/utils/pdf_color_safety";
 import {
+  isFrameworkComplianceClaimError,
   isPdfFontUnavailableError,
   requestCarbonReportPdf,
   saveBlobAs,
@@ -52,6 +54,11 @@ import {
   CARBON_PDF_FOOTER_TITLE,
   CarbonPdfExportModeEnum,
 } from "@/constants/carbon_pdf";
+// Info: (20260903 - Emily) 揭露層的顯示名稱從常數來,不抄進語系檔(見該常數的註解)
+import {
+  FRAMEWORK_DISCLOSURE_LABEL,
+  type CarbonDisclosureFrameworkEnum,
+} from "@/constants/carbon_report_framework";
 
 // Info: (20260604 - Julian) 定義預設 md 內容與 storage key
 const DEFAULT_CONTENT =
@@ -324,7 +331,31 @@ const renderSegmentedPdf = async (
 enum ToastType {
   SUCCESS = "success",
   ERROR = "error",
+  /**
+   * Info: (20260812 - Emily) 「成功了,但少了一塊」——**降級**,不是失敗。
+   *
+   * 需要第三種而不是沿用 ERROR:下載其實成功了,檔案就在使用者的硬碟上。
+   * 用紅色的 X 會讓人以為沒抽到檔而再點一次下載(而重印一份 53 頁的報告
+   * 要再跑一次 Chrome 與 mermaid),然後拿到同一份東西。
+   *
+   * 也不能沿用 SUCCESS:那條路徑不出任何提示,而這裡要說的正是
+   * 「這份查證文件缺了目錄頁碼／缺了幾張圖」—— 不說的話它看起來是完整的。
+   */
+  WARNING = "warning",
 }
+
+/**
+ * Info: (20260812 - Emily) toast 的底色。
+ *
+ * 用查表而不是巢狀三元:原本是「SUCCESS ? 綠 : 紅」的二元式,加第三種時
+ * 巢狀三元會在 className 的樣板字串裡再長一層,而那裡本來就不好讀。
+ * 加第四種狀態時這張表只要多一列。
+ */
+const TOAST_TONE: Readonly<Record<ToastType, string>> = {
+  [ToastType.SUCCESS]: "bg-emerald-500",
+  [ToastType.WARNING]: "bg-amber-500",
+  [ToastType.ERROR]: "bg-red-500",
+};
 
 interface IPdfEditorProps {
   setErrorModal: React.Dispatch<
@@ -334,6 +365,31 @@ interface IPdfEditorProps {
     }>
   >;
   layout?: "split" | "toggle";
+  /**
+   * Info: (20260812 - Emily) 印在文件第一頁的報告名稱
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * 走**文件外殼**而不是內容裡的 H1：報告名稱是文件的中繼資料，
+   * 而 ADR 014 要求 `content` 逐字照抄原文。留在內容裡的話使用者可以在
+   * 編輯器裡把它刪掉，然後那份文件就沒有名稱了，而沒有人會發現。
+   *
+   * 空字串或省略即**不印**——沒有名稱是一眼看得出來的缺漏，
+   * 而一個猜出來的名稱印在查證文件的封面上會被當成事實。
+   */
+  reportTitle?: string;
+  /**
+   * Info: (20260814 - Emily) 查證識別欄位，印在第一頁橫幅裡（issue 24）。
+   *
+   * 已經是 label/value 的成品而不是原始資料:文案與「沒填印什麼」都由
+   * 呼叫端決定（`buildIdentityRows`），這個元件不知道使用者的語言。
+   * 與 `shell` 那組文案同一個立場。
+   */
+  identityRows?: ReadonlyArray<{ label: string; value: string }>;
+  /**
+   * Info: (20260904 - Emily) 揭露框架(#6688-C)。**只往伺服端送 enum**,
+   * 聲明行由伺服端導出 —— 這個元件不知道也不該知道那兩句話長什麼樣。
+   */
+  disclosureFramework?: CarbonDisclosureFrameworkEnum;
   isEmbedded?: boolean;
   value?: string;
   onChange?: (val: string) => void;
@@ -359,11 +415,30 @@ interface IPdfEditorProps {
    * 光柵化產出的點陣圖不能搜尋、不能複製任何一個排放量數字。
    */
   serverPrint?: boolean;
+  /**
+   * Info: (20260810 - Emily) 轉傳給 MarkdownContent:把段落內的換行還原成硬斷行。
+   * 與 serverPrint 一樣是 opt-in —— 只有碳盤查報告的原文行結構被量過。
+   */
+  /**
+   * Info: (20260812 - Emily) 渲染時剝掉內容開頭那行文件級 H1
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * 只有碳盤查報告要開:既有草稿的第一行是 `# <會話名>`，而報告名稱已經改走
+   * `reportTitle`（文件外殼）。**選用而非預設** —— `MarkdownContent` 跑在 21 個
+   * 使用端上，一支只對碳報告成立的轉換不該無條件套給全部人（`#6644`）。
+   */
+  stripDocumentTitle?: boolean;
+  // Info: (20260820 - Emily) 與 stripDocumentTitle 同層的轉發旗標，碳報告專用（見 MarkdownContent）
+  stripEchoedHeadings?: boolean;
+  restoreSourceLineBreaks?: boolean;
 }
 
 export default function PdfEditor({
   setErrorModal,
   layout = "split",
+  reportTitle = "",
+  identityRows = undefined,
+  disclosureFramework = undefined,
   isEmbedded = false,
   value = undefined,
   onChange = undefined,
@@ -374,6 +449,9 @@ export default function PdfEditor({
   onBeforeDownload = undefined,
   splitBreakpoint = "md",
   serverPrint = false,
+  stripDocumentTitle = false,
+  stripEchoedHeadings = false,
+  restoreSourceLineBreaks = false,
 }: IPdfEditorProps) {
   const { t } = useTranslation();
 
@@ -665,13 +743,80 @@ export default function PdfEditor({
       markdown: markdownContext,
       fileName,
       title: CARBON_PDF_FOOTER_TITLE,
+      /**
+       * Info: (20260811 - Emily) 下載的 PDF 補上預覽那組頁首／頁尾。
+       *
+       * 文案從這裡帶上去而不是在伺服端另寫一份:這幾個字就是下方版型用的同一組
+       * i18n key,同一份文件的頁首若有兩處來源,遲早一邊改一邊沒改。
+       * 日期也在此格式化 —— 伺服端不知道使用者的地區設定。
+       */
+      /*
+       * Info: (20260904 - Emily) #6688-C:框架送 enum,聲明行由伺服端導出後印在外殼上。
+       * 這裡不組那兩句字串 —— 印出的與驗收比對的必須是同一份常數。
+       */
+      framework: disclosureFramework,
+      shell: {
+        brand: t("admin_mission_board.pdf_editor.brand")!,
+        internalDocument: t(
+          "admin_mission_board.pdf_editor.internal_document",
+        )!,
+        systemReport: t("admin_mission_board.pdf_editor.system_report")!,
+        issuedAt: new Date().toLocaleDateString().replace(/-/g, "/"),
+        footerTitle: t("admin_mission_board.pdf_editor.footer_title")!,
+        footerText: t("admin_mission_board.pdf_editor.footer_text", {
+          year: new Date().getFullYear(),
+        })!,
+        /**
+         * Info: (20260812 - Emily) 目錄抬頭沿用側欄那顆按鈕的字，
+         * 兩處指的是同一份東西，各寫一份遲早會不一致。
+         */
+        tocTitle: t("carbon_chatbot.outline_title")!,
+        /*
+         * Info: (20260812 - Emily) 報告名稱。省略時 carbon_report_html 不印
+         * 那個 <h1 class="doc-title">，第一頁就只有品牌橫幅與目錄。
+         */
+        title: reportTitle || undefined,
+        /**
+         * Info: (20260814 - Emily) 一項都沒有就整區不印(公開分享頁那種場合)；
+         * 有的話一律四列,包含沒填的 —— 藏起來的話「不適用」與「忘了填」同形。
+         */
+        identity:
+          identityRows && identityRows.length > 0 ? identityRows : undefined,
+      },
     });
     saveBlobAs(result.blob, fileName);
-    if (result.chartsFailed > 0) {
-      console.warn(
-        "[PdfEditor] some charts could not be drawn:",
-        result.chartsFailed,
+    /**
+     * Info: (20260812 - Emily) 降級要說出來,不能只進 console。
+     *
+     * 這兩種降級都不會讓下載失敗,產出的是一份**看起來完整**的查證文件 ——
+     * 目錄每一條都留白、或少了幾張圖。原本只有 `console.warn`,
+     * 而看得到 console 的人不是拿這份文件去送查證的人。
+     *
+     * 目錄優先於圖表:沒有頁碼的目錄讓整份文件無法被引用,
+     * 而少一張圖時內容仍在該節的原文裡(見 carbon_report_diagram.builder 的
+     * `unverifiable` 文案)。兩者同時發生時說比較嚴重的那一個。
+     */
+    if (result.tocMissing > 0) {
+      showToast(
+        t("admin_mission_board.pdf_editor.toast_toc_pages_missing")!,
+        ToastType.WARNING,
       );
+    } else if (result.chartsFailed > 0) {
+      showToast(
+        t("admin_mission_board.pdf_editor.toast_charts_missing")!,
+        ToastType.WARNING,
+      );
+    }
+    /*
+     * Info: (20260812 - Emily) log 保留:toast 只有 3 秒,而這兩個數字
+     * 是事後追「那份下載為什麼缺頁碼」唯一的線索。
+     */
+    if (result.tocMissing > 0 || result.chartsFailed > 0) {
+      console.warn("[PdfEditor] report downloaded with gaps:", {
+        tocFilled: result.tocFilled,
+        tocMissing: result.tocMissing,
+        chartsFailed: result.chartsFailed,
+      });
     }
     return true;
   };
@@ -820,12 +965,23 @@ export default function PdfEditor({
          * 字型缺失重試一萬次都一樣,唯一的解法是由維運安裝字型。那條分類原本在
          * 這個 catch 裡消失,使用者看到的是一句與成因無關的「下載失敗」。
          */
-        message: isPdfFontUnavailableError(error)
-          ? t("common.error.pdf_font_unavailable")!
-          : error instanceof PdfBlankOutputError ||
-              error instanceof PdfNotLaidOutError
-            ? t("common.error.pdf_blank_output")!
-            : t("common.error.download_failed")!,
+        /**
+         * Info: (20260903 - Emily) 紙面合規宣告被擋也要說得出是被擋(#6688-B)。
+         *
+         * 同一條標準:伺服端把它與通用列印失敗分成兩個錯誤碼,因為處置相反 ——
+         * 這一條重試一萬次都一樣,唯一的解法是把那句宣告從報告裡拿掉。
+         * 排在字型之前沒有語意,兩者互斥;順序只是照著錯誤碼加上來的時間。
+         */
+        message: isFrameworkComplianceClaimError(error)
+          ? t("common.error.pdf_framework_claim", {
+              name: FRAMEWORK_DISCLOSURE_LABEL,
+            })!
+          : isPdfFontUnavailableError(error)
+            ? t("common.error.pdf_font_unavailable")!
+            : error instanceof PdfBlankOutputError ||
+                error instanceof PdfNotLaidOutError
+              ? t("common.error.pdf_blank_output")!
+              : t("common.error.download_failed")!,
       });
     } finally {
       setIsGenerating(false);
@@ -837,16 +993,17 @@ export default function PdfEditor({
       className={`relative flex flex-col overflow-hidden bg-white shadow-sm ${isEmbedded ? "h-full w-full rounded-none border-0" : "h-[800px] rounded-2xl border border-gray-200"}`}
     >
       {/* Info: (20260605 - Julian) Toast 訊息 */}
+      {/* Info: (20260812 - Emily) 三種狀態各自有色與圖示,WARNING 的理由見 ToastType */}
       {toastMessage && (
         <div
-          className={`fixed top-24 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg px-6 py-3 shadow-lg transition-all ${
-            toastMessage.type === ToastType.SUCCESS
-              ? "bg-emerald-500 text-white"
-              : "bg-red-500 text-white"
+          className={`fixed top-24 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-lg px-6 py-3 text-white shadow-lg transition-all ${
+            TOAST_TONE[toastMessage.type]
           }`}
         >
           {toastMessage.type === ToastType.SUCCESS ? (
             <Check size={20} />
+          ) : toastMessage.type === ToastType.WARNING ? (
+            <AlertTriangle size={20} />
           ) : (
             <XIcon size={20} />
           )}
@@ -1030,6 +1187,9 @@ export default function PdfEditor({
                         setMarkdownContext(val);
                       }}
                       theme="light"
+                      stripDocumentTitle={stripDocumentTitle}
+                      stripEchoedHeadings={stripEchoedHeadings}
+                      restoreSourceLineBreaks={restoreSourceLineBreaks}
                     />
                   </div>
                 </div>

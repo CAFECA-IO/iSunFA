@@ -4,11 +4,30 @@ export const carbonChatbot = {
   // Info: (20260730 - Tzuhan) 未解鎖時的報告區文案:不可讓大綱骨架看起來像已載入的空報告
   report_locked_hint:
     "報告內容以裝置金鑰端對端加密。完成一次驗證即可解鎖並載入這份報告。",
+  report_locked_hint_custodial:
+    "報告內容加密後儲存。您以第三方帳號登入，加密金鑰由平台代管，完成一次驗證即可解鎖並載入這份報告。",
   unlock_button: "開始加密對話",
   unlock_hint:
     "為保護您的盤查內容，本對話將以裝置的安全金鑰進行端對端加密。點擊開始並完成一次驗證即可解鎖並取得 AI 招呼。",
+  /**
+   * Info: (20260812 - Luphia) 託管帳號（第三方登入）專用的解鎖說明。
+   * 不能沿用上面那句 —— 那些帳號的金鑰由伺服器派生，說「以裝置的安全金鑰」既不準確，
+   * 也隱含了一個它們沒有的保證。差異必須在使用者按下解鎖之前就講清楚。
+   */
+  unlock_hint_custodial:
+    "為保護您的盤查內容，本對話將加密後儲存。您以第三方帳號登入，加密金鑰由平台代管（與您的錢包相同），因此平台在技術上具備解密能力；若需要「僅您本人可解密」的保護等級，請改用 passkey 帳號。點擊開始即可解鎖並取得 AI 招呼。",
+  /**
+   * Info: (20260812 - Luphia) custody 尚未載入時的中性說明（PR review P-2）。
+   * 這個時刻不知道該給哪一種保證，所以一種都不給 —— 給錯的那一種比不給更糟。
+   */
+  custody_loading: "正在確認您的帳號金鑰保管方式，稍候即可開始加密對話。",
+  // Info: (20260812 - Luphia) 這一列由另一種金鑰包裝，解不開不是「失敗」而是「需要移轉」
+  key_source_mismatch:
+    "這份對話是以另一種金鑰保管方式加密的（例如您在綁定 passkey 之前建立的內容），因此無法用目前的金鑰解開。請聯繫維運協助完成金鑰移轉 —— 重試不會有幫助。",
   device_unsupported:
     "您的裝置或瀏覽器不支援加密所需的安全金鑰功能（WebAuthn PRF），暫時無法使用加密對話。建議改用支援的環境，例如 Android 上的 Chrome，或支援 PRF 的實體安全金鑰。",
+  unlock_failed:
+    "解鎖加密金鑰失敗，對話尚未開始。請再按一次；若持續失敗，請重新整理頁面或聯繫維運（詳細原因已記錄在瀏覽器主控台）。",
   subtitle: "您專屬的企業碳會計師 (Carbon Accountant)",
   recent_chats: "最新對話",
   today: "今日",
@@ -74,6 +93,10 @@ export const carbonChatbot = {
   restore_session: "還原此對話",
   system_error: "【系統錯誤】抱歉，連線到碳會計師服務時發生問題，請稍後再試。",
   system_unavailable: "抱歉，系統目前無法回應。",
+  team_quota_exceeded:
+    "團隊的 AI 額度與分配點數都已用完，請等待額度重置，或加購點數／升級方案後再試。",
+  session_not_bound:
+    "此盤查會話尚未綁定帳本，無法計算額度。請先於會話設定中選擇要歸屬的帳本。",
   ai_quota_exceeded:
     "【AI 額度已達上限】短時間內請求過多，請稍候一分鐘後再試。",
   rate_limited: "【操作過於頻繁】已達使用頻率上限，請稍候片刻再試。",
@@ -113,6 +136,20 @@ export const carbonChatbot = {
     "報告最新的變更沒有保存到雲端：草稿已被其他分頁或裝置更新。請重整頁面取得最新版本後再改一次。",
   save_failed_too_large:
     "報告最新的變更沒有保存到雲端：內容已超過單份草稿的上限。請先移除部分原文表格或改以分次匯入。",
+  /**
+   * Info: (20260904 - Emily) 紙面合規宣告擋下雲端保存(#6688-B)。與上面幾條的差別是
+   * 它**不是失敗而是拒絕**:重試不會變,唯一的解法是把那句話從報告裡拿掉。
+   * 內容仍在本機(自動保存那條路在守門之前就寫了本機備份),所以文案要說出這件事。
+   */
+  save_blocked_framework_claim:
+    "報告裡出現「本公司符合 {{name}}」這類主體合規宣告,這一版沒有保存到雲端 —— 那句話不得出現在送出的報告上。內容仍在本機,移除該語句後會自動重新保存;敘述文件結構的架構對齊聲明不受影響。",
+  /**
+   * Info: (20260904 - Emily) 盤查狀態存不進去(open/73)。與版本衝突的處置相反:
+   * 那個下一輪就過了,這個每次都會失敗同一次,而盤查狀態**沒有本機備份**。
+   * 文案要說出代價(關掉分頁就沒了),但**不指示動作** —— 可逆的出路今天不存在。
+   */
+  inventory_unsavable:
+    "盤查資料這一版沒有保存成功:其中有欄位不符合儲存格式。內容還在畫面上,但關閉或重新整理這個分頁之後這一版就不在了。這是系統的問題,請回報給我們。",
   save_local_quota: "本機暫存空間已滿,離線備份未更新(雲端已保存)。",
   save_local_quota_only:
     "本機暫存空間已滿,而這一版尚未能保存至雲端 —— 請勿關閉分頁,先解鎖或重整後再試。",
@@ -156,6 +193,14 @@ export const carbonChatbot = {
     "已保存待匯入的解析結果:{{name}}(共 {{count}} 節,尚未寫入報告)",
   import_pending_open: "檢視並匯入",
   import_pending_discard: "捨棄",
+  import_inventory_year: "盤查年度",
+  import_inventory_year_placeholder: "2024",
+  import_inventory_year_hint:
+    "這份報告的盤查年度(西元)。跨年度匯入時用它分辨哪些分錄屬於哪一年",
+  import_inventory_year_required:
+    "這次匯入含排放總量表,請填寫這份報告的盤查年度",
+  import_inventory_year_invalid:
+    "請填西元四位數的盤查年度(1990 年至明年);超出範圍的年度會讓帳本下次載入時讀不回來",
   import_reset_note:
     "匯入段落的查核狀態將重置;{{activities}} 筆活動數據將入帳並重新勾稽",
   import_apply: "匯入勾選({{count}})",
@@ -164,6 +209,61 @@ export const carbonChatbot = {
     "「{{name}}」還在解析中。同時跑兩份會互相搶額度、兩邊都變慢,請等這一份跑完或重新整理後再試。",
   import_parsing_chapter:
     "「{{name}}」逐章解析中(已完成 {{current}}/{{total}} 章,{{inFlight}} 章解析中),完整報告約需數分鐘…",
+  import_requires_book:
+    "這個會話還沒綁定帳本,無法匯入整份報告(逐章匯入需要以帳本的額度計費)。請先在會話設定選擇帳本,再重新匯入。",
+  /**
+   * Info: (20260828 - Julian) **這句話有兩個已知的錯，尚未修**
+   *（計劃 `resumable_job_resume_landing_and_copy.md` §4）。
+   *
+   * 1.「補上點數後」指向一條**不存在的出路**：翻面的判準只看訂閱方案的視窗額度，
+   *    加購的點數改變不了裡面任何一個數（見 `resumable_job_resume_notification.md`
+   *    §6.2）。實測時我們照這句話去加購，白等了一輪。
+   * 2. 沒有說**要等到哪一天**。402 的 payload 已經算好了兩個視窗的 `resetAt`，
+   *    也標了 `exceedsWindowLimit`（等重置永遠不會好的那種），丟掉它的是前端
+   *    `resolveCreditPauseReason()`。
+   *
+   * 要拆成三句：5 小時視窗卡住／週視窗卡住／單筆超過上限（只給升級）。五語系一起。
+   */
+  import_paused_chapters:
+    "點數已用完,以下章節還沒開始解析:{{chapters}}。補上點數後可以從這裡接著匯入,已完成的部分不會重跑。",
+  // Info: (20260827 - Luphia) 中斷（關分頁／切走／當掉）不是點數用完（issue #6723）
+  import_interrupted_chapters:
+    "上一次匯入沒有跑完,以下章節還沒解析:{{chapters}}。可以從這裡接著匯入,已完成的部分不會重跑、也不會再扣點數。",
+  /**
+   * Info: (20260901 - Luphia) 「可能」不是贅字（review #6726 中-2）：BUSY 也可能
+   * 是自己的分頁崩潰後租約還沒過期——那時沒有任何地方在跑，說死「正在執行中」
+   * 是一句不實的話。{{minutes}} 綁 JOB_CLAIM_TTL_MS，租期改了文案跟著對。
+   */
+  import_job_busy:
+    "這份匯入可能正在另一個分頁或裝置上跑,也可能上一次沒有正常結束——後者最多 {{minutes}} 分鐘後就能再試。同時跑兩次會重複扣點數。",
+  // Info: (20260901 - Luphia) 三個終局判決各說各的話（review #6726 阻-1）：已取消 ≠ 已完成 ≠ 沒有權限
+  import_job_cancelled:
+    "這份匯入已經取消,不會接續、也不會再扣點數。要重新開始,請再上傳一次檔案。",
+  import_job_completed_already: "這份匯入已經完成了,沒有需要接續的部分。",
+  import_job_forbidden: "這個帳號沒有這份匯入的權限。",
+  // Info: (20260827 - Luphia) 付款完成後自動接續（issue #6714）：畫面自己動起來要先說一句話
+  import_auto_resuming:
+    "點數已補上,正在接著把剩下的章匯入。已完成的部分不會重跑。",
+  // Info: (20260827 - Luphia) 暫停時「接下來能做什麼」（issue #6714）：伺服器算好的出路與重置時間
+  import_paused_reset_hint:
+    "額度將於 {{countdown}} 後({{resetAt}})重置,屆時可以接著匯入。",
+  import_paused_reset_ready: "額度已經重置,現在可以接著匯入了。",
+  import_paused_over_window_limit:
+    "這份報告單次需要的點數,高於方案在單一時段的額度上限——等待重置也無法完成。請改用個人點數或升級方案。",
+  import_paused_ways_title: "接下來可以:",
+  import_paused_option_wait_reset: "等額度重置(上面有時間)",
+  import_paused_option_use_allocation: "用團隊管理者分配給你的點數",
+  import_paused_option_use_personal: "用你自己錢包裡的點數",
+  import_paused_option_upgrade: "升級方案,拿到更高的額度",
+  // Info: (20260827 - Luphia) 伺服器說「可以繼續了」與「不做了」（issue #6714）
+  import_paused_resumable:
+    "額度已經回來了,以下章節還沒解析:{{chapters}}。現在可以接著匯入,已完成的部分不會重跑。",
+  import_cancel_paused: "不做了",
+  import_cancelled: "已經放棄還沒解析的章節。已完成的部分還留著,仍然可以套用。",
+  import_cancel_failed: "放棄失敗,請稍後再試。",
+  import_resume_needs_file:
+    "接著匯入需要原本那份檔案,而它在重新整理或換裝置之後就不在瀏覽器裡了。請重新上傳同一份報告——已完成的章節不會重跑。",
+  import_resume_paused: "接著匯入",
   import_failed_chapters: "以下章節解析失敗,可稍後重新匯入補齊:{{chapters}}",
   import_retry_failed: "重試失敗章節",
   import_retrying: "重試中…",
@@ -251,6 +351,10 @@ export const carbonChatbot = {
   chart_imported_sankey_excluded: "未畫出的項目（NA/NS 或為零）",
   chart_imported_sankey_no_ledger:
     "本報告已匯入，但帳本沒有任何可用數據，因此畫不出排放流向圖。桑基圖與系統數據表格的唯一來源是表3.8（各公司溫室氣體排放量），本次未取得該表。請確認第三章是否解析成功；若該章列為解析失敗，請以預覽卡的「重試失敗章節」重新匯入，並在伺服端日誌查看該表是否被丟棄及其原因。",
+  chart_imported_sankey_blocked_ledger:
+    "本報告已取得表3.8，但勾稽未通過，數據凍結在門口、未寫入帳本（半套資料入帳會讓每張圖都錯得很像對的）。被擋的原因列於下方；修正原文對應表格或重新匯入第三章後，圖表將自動生成。",
+  chart_partial_import_blocked:
+    "⚠ 本圖只含成功入帳的部分：本次匯入另有表格被勾稽擋下、未寫入帳本，因此圖中的總量與占比不是全公司全貌。被擋的原因如下；修正原文對應表格或重新匯入後，圖表將自動重算。",
   chart_imported_sankey_collapsed: "節點過多,已降為一層(全公司 → 範疇)",
   chart_imported_top_items_title:
     "排放去向：全公司 → 前九大排放項目與其他（原文照錄，所在地基準，公噸 CO2e/年）",
@@ -258,6 +362,8 @@ export const carbonChatbot = {
   // Info: (20260807 - Tzuhan) 分類圖抽掉廠址層(屏東佔 97%,同圖畫不出比重);廠址改列小計
   chart_imported_sankey_site_totals: "各廠址小計(公噸 CO2e/年,占全公司比)",
   chart_imported_sankey_ghg_mapping: "子代碼與 GHG Protocol 類別的對照",
+  chart_imported_sankey_iso_mapping:
+    "圖上的分類層依 GHG Protocol 範疇標示；對照 ISO 14064-1 為：範疇一＝類別一、範疇二＝類別二、範疇三＝類別三至類別六。本報告敘述採 ISO 14064-1 類別制，兩者指同一批排放源。",
   chart_imported_sankey_below_threshold: "占比過小未畫出（公噸 CO2e/年）",
   chart_imported_sankey_organization: "全公司",
   book_bind_pending_unlock:

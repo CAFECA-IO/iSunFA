@@ -1,4 +1,5 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { parseOptionalPositiveInt } from "@/lib/utils/pagination";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
@@ -126,12 +127,8 @@ export async function GET(
     const keyWord = searchParams.get("keyWord");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
-    const page = searchParams.get("page")
-      ? parseInt(searchParams.get("page")!)
-      : undefined;
-    const pageSize = searchParams.get("pageSize")
-      ? parseInt(searchParams.get("pageSize")!)
-      : undefined;
+    const page = parseOptionalPositiveInt(searchParams.get("page"));
+    const pageSize = parseOptionalPositiveInt(searchParams.get("pageSize"));
     const type = searchParams.get("type");
     const hideDeleted = searchParams.get("hideDeleted") === "true";
     const sorting =

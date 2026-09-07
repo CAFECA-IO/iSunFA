@@ -1,4 +1,5 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { parsePositiveInt } from "@/lib/utils/pagination";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Role } from "@/constants/role";
@@ -20,8 +21,13 @@ export async function GET(request: NextRequest) {
     const tab =
       (searchParams.get("tab") as "orders" | "points" | "credit_cards") ||
       "orders";
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const page = parsePositiveInt(searchParams.get("page"), {
+      fallback: 1,
+    });
+    const limit = parsePositiveInt(searchParams.get("limit"), {
+      fallback: 20,
+      max: 100,
+    });
 
     const stats = await adminBillingService.getGlobalBillingStats(
       startDate,

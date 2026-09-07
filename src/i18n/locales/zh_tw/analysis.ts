@@ -123,7 +123,7 @@ export const analysis = {
     carbon_health_check: "碳健檢",
     net_zero_emissions: "淨零碳排",
     ai_consulting: "AI 諮詢",
-    journal_upload: "日記帳建檔",
+    journal_correction: "日記帳修正",
     certificate_analysis: "憑證分析",
     transportation_carbon_footprint: "物流碳足跡",
   },

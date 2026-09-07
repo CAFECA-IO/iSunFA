@@ -19,6 +19,7 @@ export const adminMember = {
     unnamed_user: "Unnamed User",
     refresh_balance_aria: "Refresh balance",
     issue_points_btn: "Issue Points",
+    issue_team_points_btn: "Issue to team",
     role_super_admin: "Super Admin",
     role_admin: "Admin",
     role_user: "User",
@@ -26,6 +27,21 @@ export const adminMember = {
     mint: "Mint",
   },
 
+  modal_issue_team: {
+    title: "Issue credits to a team",
+    description:
+      "Team credits live in an off-chain ledger: they go straight into the team wallet's unallocated pool, and the team's managers allocate them to members. This differs from issuing on-chain credits to an individual.",
+    search_placeholder: "Search by team name or owner",
+    scoped_hint: "Showing only the teams {{user}} belongs to",
+    no_result: "No matching team",
+    confirm_target: "Issuing to: {{team}}",
+    target_team: "Target team",
+    select_team: "Select a team",
+    team_summary: "{{members}} members · {{balance}} credits unallocated",
+    success_msg: "Credited to the team wallet",
+    err_no_team: "Choose the team to issue to first",
+    err_load_teams: "Could not load the team list",
+  },
   modal_issue: {
     title: "Issue System Points",
     target_user: "Target User",
@@ -37,6 +53,7 @@ export const adminMember = {
     err_msg: "Issuance failed",
     processing: "Processing...",
     issued: "Issued",
+    cancel_btn: "Cancel",
     confirm_btn: "Confirm Issue",
   },
 };

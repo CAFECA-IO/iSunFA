@@ -7,12 +7,13 @@ import DepartmentOrgChart from "@/components/hr_management/department_org_chart"
 import DepartmentTree from "@/components/hr_management/department_tree";
 import JobTitleTable from "@/components/hr_management/job_title_table";
 import {
-  ORGANIZATION_TAB_I18N_KEY,
-  ORGANIZATION_TABS,
-  ORGANIZATION_VIEW_MODE_I18N_KEY,
-  ORGANIZATION_VIEW_MODES,
+  HR_PENDING_ACTION_CLASS,
   OrganizationTab,
   OrganizationViewMode,
+  ORGANIZATION_TABS,
+  ORGANIZATION_TAB_I18N_KEY,
+  ORGANIZATION_VIEW_MODES,
+  ORGANIZATION_VIEW_MODE_I18N_KEY,
 } from "@/constants/hr_management";
 import { MOCK_HR_EMPLOYEES } from "@/constants/mock_hr_employees";
 import {
@@ -156,7 +157,9 @@ const OrganizationPageBody: FC = () => {
           {/* ToDo: (20260810 - Julian) 部門與職稱的新增 API 完成後接上 Modal */}
           <button
             type="button"
-            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-700"
+            title={t("hr_management.value.feature_pending")}
+            disabled
+            className={`inline-flex shrink-0 items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-700 ${HR_PENDING_ACTION_CLASS}`}
           >
             <Plus className="size-4 shrink-0" />
             {activeTab === OrganizationTab.DEPARTMENT

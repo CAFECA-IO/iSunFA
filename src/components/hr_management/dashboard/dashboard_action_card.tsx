@@ -2,7 +2,10 @@
 
 import { FC, ReactNode } from "react";
 import { LucideIcon } from "lucide-react";
-import { DASHBOARD_LIST_LIMIT } from "@/constants/hr_management";
+import {
+  DASHBOARD_LIST_LIMIT,
+  HR_PENDING_ACTION_CLASS,
+} from "@/constants/hr_management";
 import { useTranslation } from "@/i18n/i18n_context";
 
 interface IDashboardActionCardProps {
@@ -69,7 +72,9 @@ const DashboardActionCard: FC<IDashboardActionCardProps> = ({
             // ToDo: (20260810 - Julian) 對應的清單頁完成後改為 Link
             <button
               type="button"
-              className="border-t border-gray-100 px-4 py-2.5 text-xs font-semibold text-orange-600 transition hover:bg-orange-50"
+              title={t("hr_management.value.feature_pending")}
+              disabled
+              className={`border-t border-gray-100 px-4 py-2.5 text-xs font-semibold text-orange-600 transition hover:bg-orange-50 ${HR_PENDING_ACTION_CLASS}`}
             >
               {t("hr_management.dashboard.view_all", { count: total })}
             </button>

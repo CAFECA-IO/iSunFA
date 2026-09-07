@@ -8,6 +8,7 @@ import {
 } from "@/lib/wallet/admin_wallet";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { MoneyUtil } from "@/lib/utils/money";
+import { confirmTransaction } from "@/lib/chain/confirm_transaction";
 
 const MEMBERSHIP_ABI = parseAbi([
   "function registerUser(address user) external",
@@ -63,7 +64,7 @@ export async function registerUserViaMembership(
     });
 
     const tx = await walletClient.writeContract(request);
-    await publicClient.waitForTransactionReceipt({ hash: tx });
+    await confirmTransaction(tx);
 
     return {
       success: true,
@@ -113,7 +114,7 @@ export async function issuePurchasedPointsToMember(
     });
 
     const tx = await walletClient!.writeContract(request);
-    await publicClient.waitForTransactionReceipt({ hash: tx });
+    await confirmTransaction(tx);
     return tx;
   };
 
@@ -254,7 +255,7 @@ export async function fundMembershipSystem(
       value: parsedAmount,
     });
 
-    await publicClient.waitForTransactionReceipt({ hash });
+    await confirmTransaction(hash);
 
     return {
       success: true,

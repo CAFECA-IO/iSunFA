@@ -14,6 +14,7 @@ export * from "@/validators/carbon_import_notice";
 export * from "@/validators/carbon_report_storage";
 export * from "@/validators/carbon_inventory";
 export * from "@/validators/carbon_pending_import";
+export * from "@/validators/resumable_job";
 export * from "@/validators/ledger";
 export * from "@/validators/report";
 export * from "@/validators/carbon_report_pdf";
@@ -21,3 +22,16 @@ export * from "@/validators/logistics_report_pdf";
 export * from "@/validators/carbon_source_table";
 export * from "@/validators/team_wallet";
 export * from "@/validators/faith_chat";
+export * from "@/validators/team_invitation";
+// Info: (20260813 - Julian) 簽到系統
+export * from "@/validators/attendance";
+export * from "@/validators/leave";
+// Info: (20260817 - Julian) 假勤模組
+export * from "@/validators/leave_request";
+export * from "@/validators/leave_approval_rule";
+export * from "@/validators/leave_balance";
+export * from "@/validators/leave_policy";
+// Info: (20260818 - Julian) 加班模組（L24–L30）
+export * from "@/validators/overtime";
+// Info: (20260831 - Julian) 薪資計算機（員工名單與薪資紀錄）
+export * from "@/validators/salary_record";

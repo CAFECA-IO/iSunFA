@@ -121,3 +121,12 @@ export const CARBON_PDF_EXPORT_MODE: CarbonPdfExportModeEnum =
  * 能說明它的狀態 —— 每一頁都要說得出自己是什麼。
  */
 export const CARBON_PDF_FOOTER_TITLE = "iSunFA 溫室氣體盤查報告書（草稿）";
+
+/**
+ * Info: (20260812 - Emily) 目錄頁判定:一頁同時出現幾個標題才算「還在目錄裡」。
+ *
+ * 這是個門檻不是真理 —— 內容頁通常只出現自己那一個標題,目錄頁會出現一整批。
+ * 單獨用它在短報告上會失效(條目總數本來就低於門檻),所以
+ * `countLeadingTocPages` 另外用「目錄標題只出現在目錄第一頁」補那個洞。
+ */
+export const CARBON_TOC_PAGE_HEADING_HITS = 5;

@@ -1,6 +1,7 @@
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
-import { revokeAllocationOnMemberRemoval } from "@/services/team_wallet.service";
+import { writeOffAllocationOnMemberRemoval } from "@/services/team_wallet.service";
+import { deleteFaithMemoryOnMemberRemoval } from "@/services/faith_memory.service";
 import { stringToHex } from "viem";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
@@ -9,6 +10,7 @@ import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
 import { bundlerService } from "@/services/bundler.service";
 import { CONTRACT_ADDRESSES } from "@/config/contracts";
+import { isTeamManagerRole } from "@/constants/team";
 
 export async function PATCH(
   request: NextRequest,
@@ -32,7 +34,8 @@ export async function PATCH(
     const body = await request.json();
     const { role, authentication } = body;
 
-    if (!role || !["OWNER", "ADMIN", "EDITOR", "VIEWER"].includes(role)) {
+    // Info: (20260819 - Luphia) 團隊 ADMIN 已取消（產品決定 20260819）
+    if (!role || !["OWNER", "EDITOR", "VIEWER"].includes(role)) {
       return jsonFail(API_ERRORS.AUTH_INVALID_ROLE);
     }
 
@@ -172,17 +175,14 @@ export async function DELETE(
     // Info: (20260325 - Tzuhan) Permission check
     // Info: (20260325 - Tzuhan) 1. You can delete yourself (leaving the team)
     // Info: (20260325 - Tzuhan) 2. OWNER can delete ANY user inside the team
-    // Info: (20260325 - Tzuhan) 3. ADMIN can only delete MEMBER users inside the team
-    if (!isSelfDelete) {
-      if (operator.role === "EDITOR" || operator.role === "VIEWER") {
-        return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
-      }
-      if (
-        operator.role === "ADMIN" &&
-        (targetMember.role === "OWNER" || targetMember.role === "ADMIN")
-      ) {
-        return jsonFail(API_ERRORS.FO_ADMIN_CANNOT_REMOVE_OTHER_A);
-      }
+    /**
+     * Info: (20260819 - Luphia) 團隊 ADMIN 已取消（產品決定 20260819）：
+     * 原本第 3 條「ADMIN 只能移除一般成員、不得移除 OWNER 或其他 ADMIN」
+     * 隨之消失——非 OWNER 一律不得移除他人，最後一位 OWNER 的保護在下方。
+     * 錯誤碼 `FO_ADMIN_CANNOT_REMOVE_OTHER_A` 因此不再由這條路徑產生。
+     */
+    if (!isSelfDelete && !isTeamManagerRole(operator.role)) {
+      return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
     // Info: (20260325 - Tzuhan) If removing an OWNER, ensure it is not the last OWNER
@@ -197,14 +197,32 @@ export async function DELETE(
     }
 
     /**
-     * Info: (20260807 - Luphia) 成員移除前先全額收回其團隊分配點數（設計書 §6.2）。
+     * Info: (20260818 - Luphia) 成員移除前**沖銷**其團隊分配餘額（產品決定 20260818）。
+     *
+     * 沖銷＝分配歸零但**不回池**：點數早已鑄進成員自己的鏈上錢包，收不回來
+     * （合約沒有可由平台呼叫的 burn）。加回池會讓團隊得以再分配同一筆價值。
+     *
      * 錢包凍結時丟錯中止移除（守恆優先）；冪等鍵綁 memberId，重試安全。
      */
-    await revokeAllocationOnMemberRemoval({
+    await writeOffAllocationOnMemberRemoval({
       teamId,
       targetUserId: targetMember.userId,
       operatorUserId: sessionUser.id,
       memberId,
+    });
+
+    /**
+     * Info: (20260818 - Luphia) 一併刪除他在這個團隊的費思記憶（第三輪 C-8）。
+     *
+     * 不刪的話會永久留存：團隊仍在訂閱，於是保留期對帳每 6 小時把 `expiresAt`
+     * 清成 null，到期刪除永遠不會發生——一份沒有主人的偏好資料。
+     *
+     * 放在移除**之前**：移除成功後才刪會多一個「成員沒了、記憶還在」的窗口，
+     * 而這支永不拋錯，所以不會因此擋住移除。
+     */
+    await deleteFaithMemoryOnMemberRemoval({
+      userId: targetMember.userId,
+      teamId,
     });
 
     const deletedMember = await teamRepo.deleteTeamMember(memberId);

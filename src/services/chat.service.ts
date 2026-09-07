@@ -31,8 +31,19 @@ import { GhgProtocolCategory } from "@/constants/esg";
 import { MeasurementUnit } from "@/constants/enums";
 import { CarbonChartTemplateEnum } from "@/constants/carbon_report_charts";
 import { IInventoryExtraction } from "@/types/carbon_chatbot.types";
+import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
+import { applyReplyGate, type ClaimExtractor } from "@/lib/carbon_reply_gate";
 import { logger } from "@/lib/utils/logger";
+import { recordLlmUsage } from "@/lib/llm/usage_scope";
 import { SystemSettingKey } from "@/constants/system_setting";
+/**
+ * Info: (20260907 - Luphia) `systemSettingService` 刻意**不**在此靜態匯入
+ *（review #6650：幽靈耦合清除）：靜態 import 會把
+ * `system_setting.repo → lib/prisma` 整條拉進外部運算節點的模組圖，而
+ * `lib/prisma` 載入時就建連線池。真的要查設定時在 `ensureClient()` 內
+ * 動態載入（見該處註解）。`IFaithHistoryTurn` 是純型別，沒有執行期邊。
+ */
+import type { IFaithHistoryTurn } from "@/lib/faith_memory/short_term";
 
 // Info: (20260714 - Tzuhan) 結構化聊天回覆: readyParagraphId 已通過白名單裁決(非法/none 一律為 null)
 // Info: (20260716 - Tzuhan) #6518:extraction 為已裁決的事實萃取(壞欄位逐筆丟棄),null = 本輪無可萃取
@@ -47,10 +58,47 @@ export interface ICarbonChatStructuredReply {
     templateId: CarbonChartTemplateEnum;
     paragraphId: string;
   } | null;
+  /**
+   * Info: (20260813 - Luphia) 碳盤查計費（設計書 §5.5）的結算依據：SDK 回報的 token 用量。
+   * 與費思同一套「預扣—結算」，故此處必須把用量原封帶出，不在服務層自行估算。
+   * SDK 未回報時為 null，呼叫端據此收斂為最低扣點而非憑空推估。
+   */
+  usage: ILlmUsage | null;
 }
 
 // Info: (20260714 - Tzuhan) readyParagraphId 的無段落標記(LLM enum 選項之一)
 const NO_READY_PARAGRAPH = "none";
+
+/**
+ * Info: (20260826 - Emily) #6707 守門 X 主力的萃取 schema(round-3 建議方向):
+ * LLM 只回答「這則回覆裡有哪些排放量斷言」,value/unit 原樣照抄 ——
+ * 對錯的裁決權在 TS(carbon_reply_gate.adjudicateExtractedClaims)。
+ * 與 readyParagraphId 同一個模式:LLM 列舉、TS 白名單裁決,永不採信 LLM 的判斷。
+ */
+const EMISSION_CLAIM_EXTRACTION_SCHEMA: Schema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    claims: {
+      type: SchemaType.ARRAY,
+      description: "回覆中所有帶排放單位的數字斷言;沒有時回空陣列",
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          value: {
+            type: SchemaType.STRING,
+            description: "數字原樣照抄(含千分位),嚴禁換算、加總或改寫",
+          },
+          unit: {
+            type: SchemaType.STRING,
+            description: "排放單位原樣照抄(如 公噸 CO2e、kgCO2e、噸)",
+          },
+        },
+        required: ["value", "unit"],
+      },
+    },
+  },
+  required: ["claims"],
+};
 
 // Info: (20260714 - Tzuhan) 判斷 LLM 錯誤是否為額度耗盡(429/RESOURCE_EXHAUSTED)，供呼叫端回專屬錯誤碼
 export const isLlmQuotaError = (error: unknown): boolean => {
@@ -260,6 +308,27 @@ export interface ILlmUsage {
   totalTokens: number;
 }
 
+/**
+ * Info: (20260813 - Luphia) 自 SDK 回應取出用量摘要；缺欄位一律以 0 補齊
+ * （計費側會把 0 收斂為最低 1 點，絕不憑空放大）。
+ */
+export function toLlmUsage(
+  usageMetadata:
+    | {
+        promptTokenCount?: number;
+        candidatesTokenCount?: number;
+        totalTokenCount?: number;
+      }
+    | undefined,
+): ILlmUsage | null {
+  if (!usageMetadata) return null;
+  return {
+    inputTokens: usageMetadata.promptTokenCount ?? 0,
+    outputTokens: usageMetadata.candidatesTokenCount ?? 0,
+    totalTokens: usageMetadata.totalTokenCount ?? 0,
+  };
+}
+
 export interface IChatGenerationOptions {
   modelName?: string;
   temperature?: number;
@@ -388,9 +457,8 @@ export class ChatService {
      * (`explicitApiKey`、`!allowSystemSettings`)保證那條路在運算節點上走不到,
      * 因此 prisma 不會進它的圖 —— `worker_node_isolation.test.ts` 掃匯入圖釘住這件事。
      */
-    const { systemSettingService } = await import(
-      "@/services/system_setting.service"
-    );
+    const { systemSettingService } =
+      await import("@/services/system_setting.service");
 
     const [settingKey, settingModel] = await Promise.all([
       systemSettingService.get(SystemSettingKey.GEMINI_API_KEY),
@@ -484,6 +552,16 @@ export class ChatService {
 
     try {
       const result = await race();
+      /**
+       * Info: (20260813 - Luphia) 用量一律回報給捕捉範圍（設計書 §5.5），與 taskKey 無關：
+       * taskKey 決定「要不要寫 log」，計費則不能挑呼叫點——漏一個就是一次不計費的用量。
+       * 不在捕捉範圍內時 recordLlmUsage 是 no-op，executor 與既有呼叫端零影響。
+       */
+      recordLlmUsage({
+        inputTokens: result.response.usageMetadata?.promptTokenCount ?? 0,
+        outputTokens: result.response.usageMetadata?.candidatesTokenCount ?? 0,
+        totalTokens: result.response.usageMetadata?.totalTokenCount ?? 0,
+      });
       if (taskKey) {
         const usage = result.response.usageMetadata;
         logger.info("llm sync usage", {
@@ -637,6 +715,17 @@ export class ChatService {
     mimeType?: string,
     // Info: (20260809 - Luphia) 成本上界源自 DB 的費思計費設定，由 service 層注入
     maxOutputTokens?: number,
+    /**
+     * Info: (20260817 - Luphia) 任務短期記憶：同一段對話的前文（第一輪 C-2）。
+     * 在此之前費思是 one-shot——方案頁與條款都寫著「所有方案皆具備任務短期記憶」，
+     * 而這個函式從來沒有收過任何歷史參數。
+     */
+    history: IFaithHistoryTurn[] = [],
+    /**
+     * Info: (20260817 - Luphia) 長期記憶區塊（第一輪 C-1）。
+     * 已由 `renderMemoryForPrompt` 截到字元預算內，此處直接注入。
+     */
+    memory = "",
   ): Promise<{ text: string; usage: ILlmUsage }> {
     const skill = new DirectChatSkill();
     return skill.executeWithUsage(
@@ -646,6 +735,8 @@ export class ChatService {
       mimeType,
       this,
       maxOutputTokens,
+      history,
+      memory,
     );
   }
 
@@ -655,12 +746,30 @@ export class ChatService {
   private buildCarbonPersonaInstruction(
     currentStep?: string,
     language?: string,
+    ledgerFacts?: IContextFact[],
   ): string {
     const langInstruction = language ? `\n請務必使用 ${language} 回覆。` : "";
     const outlineCatalog = CARBON_REPORT_OUTLINE.map(
       (s) => `${s.id}: ${s.code} ${s.title}`,
     ).join("\n");
-    return `你是一個專業的碳會計師 (Carbon Accountant)。你的任務是引導用戶進行溫室氣體盤查。請一步步問問題，引導用戶回答，並在適當的時機請用戶上傳相關資料（如BOM表、能源帳單等）。請保持專業、友善，且每次對話只問一個核心問題以免用戶混淆。${currentStep ? `\n當前盤查流程節點：【${currentStep}】。請根據此階段的目標來引導對話。` : ""}
+    /**
+     * Info: (20260825 - Emily) #6707 帳本事實機制(第二層)。
+     * 事實由前端 buildLedgerFactBundle 從勾稽後帳本決定性取出(帳本 E2EE,伺服端讀不到),
+     * 這裡只負責兩件事:把清單放進人設、把「清單之外不得有數字」說死。
+     * **沒有事實也要有指令**:缺這段時 LLM 對數據問題會用常識補答 —— 那正是鐵律一要擋的。
+     */
+    const ledgerFactBlock =
+      ledgerFacts && ledgerFacts.length > 0
+        ? `\n【帳本事實機制】以下是系統從勾稽後帳本決定性取出的事實清單,為你回答數據問題的**唯一合法數字來源**:
+${ledgerFacts.map((fact) => `- ${fact.label} = ${fact.value}(來源:${fact.source})`).join("\n")}
+- 回答任何數據問題,數字只能**原樣引用**清單中的 value,並帶出該筆的來源讓使用者可追溯。
+- 清單裡沒有的數據 → 明確回答「帳本中沒有這項資料」並說明缺什麼;嚴禁用常識、行業平均或任何推算補答。
+- 嚴禁對清單數字做任何計算(加總、比例、換算、排名之外的推導)——清單給什麼,你說什麼。
+- 使用者問「是否異常/有沒有問題」→ 只能引用清單中的待補項/勾稽擋下/缺口/警示/年間比較事實;一條都沒有時,回答「系統列舉的偵測器(匯入勾稽、待補、質量守恆、合理性、年間比較)本輪未觸發」,不得自行發明疑點,也不得宣稱「絕無問題」。
+- 使用者問「跟去年比/歷年趨勢」→ 清單中一定有以「年間」開頭的事實:可能是逐筆疑點(量級跳動/排放源新增或消失),也可能是「年間比較:各排放源皆未跨門檻」或「年間比較:無法進行」這類結論。**照清單原文轉述**,三種都不要改寫成另一種;不要自行指示使用者去做任何動作(包括「再匯一份報告」);嚴禁自行推估任何年度的數字。
+- 引用占比時只能使用清單中已算好的百分比,嚴禁自行計算任何比例。`
+        : `\n【帳本事實機制】目前帳本沒有可引用的事實(尚未匯入報告,或計算尚未完成)。使用者問到任何數據(排放量、佔比、排名、是否異常)時,明確回答帳本中沒有資料並引導完成匯入或計算;嚴禁編造或用常識估算任何數字。引導使用者提供數據時用欄位名稱(如「請提供年度用電度數」),不要以帶排放單位的數字舉例 —— 系統出口守門會攔下任何無法溯源的排放量數字。`;
+    return `你是一個專業的碳會計師 (Carbon Accountant)。你的任務是引導用戶進行溫室氣體盤查。請一步步問問題，引導用戶回答，並在適當的時機請用戶上傳相關資料（如BOM表、能源帳單等）。請保持專業、友善，且每次對話只問一個核心問題以免用戶混淆。${currentStep ? `\n當前盤查流程節點：【${currentStep}】。請根據此階段的目標來引導對話。` : ""}${ledgerFactBlock}
 【報告寫入機制】你的回覆一律為 JSON:reply 填對話內容；readyParagraphId 依下列規則填寫:
 - 用戶已提供當前段落所需的關鍵資訊，或明確同意/確認你彙整的內容時 → 填該段落的 id(只能從下方清單挑選)
 - 資訊尚未齊全、仍在追問時 → 填 "${NO_READY_PARAGRAPH}"
@@ -735,6 +844,41 @@ ${outlineCatalog}${langInstruction}`;
   }
 
   /**
+   * Info: (20260826 - Emily) 守門 X 主力的萃取器(#6707 round-3):
+   * 用本 service 自己的 LLM 通道做結構化萃取(temperature 0 + responseSchema),
+   * 回傳形狀在此驗過才交給守門 —— 萃取器輸出不合形狀時拋錯,
+   * 由守門的降級路徑接手(退 Y 地板+留痕),不讓壞輸出被當成「沒有斷言」。
+   */
+  private buildEmissionClaimExtractor(): ClaimExtractor {
+    return async (reply) => {
+      const raw = await this.generateContent(
+        [
+          {
+            text: `你是字串萃取器,不是稽核者。列出下面回覆中所有「排放量斷言」:帶排放單位(公噸 CO2e、kgCO2e、tCO2e、公噸、噸、公斤 CO2e 等)的數字。value 與 unit 都原樣照抄(含千分位),嚴禁換算、加總或判斷對錯。章節號、年份、金額、頁碼、百分比等非排放量數字不要列;沒有排放量斷言就回空的 claims。\n【回覆內容】\n${reply}`,
+          },
+        ],
+        {
+          temperature: 0,
+          responseSchema: EMISSION_CLAIM_EXTRACTION_SCHEMA,
+          timeoutMs: LLM_SYNC_TIMEOUT_MS,
+        },
+      );
+      const parsed: unknown = JSON.parse(raw);
+      const claims = (parsed as { claims?: unknown }).claims;
+      if (!Array.isArray(claims)) {
+        throw new Error("emission claim extractor output has no claims array");
+      }
+      return claims.flatMap((item) => {
+        const candidate = item as { value?: unknown; unit?: unknown };
+        return typeof candidate.value === "string" &&
+          typeof candidate.unit === "string"
+          ? [{ value: candidate.value, unit: candidate.unit }]
+          : [];
+      });
+    };
+  }
+
+  /**
    * Info: (20260714 - Tzuhan) 碳會計師結構化回覆
    * 對話內容 + 段落完成訊號(碳盤查對 Gemini 的唯一對話路徑)
    * 解決「無限訪談迴圈」：AI 判斷段落資訊已齊全時回報 readyParagraphId
@@ -745,6 +889,8 @@ ${outlineCatalog}${langInstruction}`;
     currentStep?: string,
     language?: string,
     taskKey: LlmTaskKeyEnum = LlmTaskKeyEnum.CARBON_CHAT,
+    // Info: (20260825 - Emily) #6707 帳本事實包(見 buildCarbonPersonaInstruction 的註解)
+    ledgerFacts?: IContextFact[],
   ): Promise<ICarbonChatStructuredReply> {
     const genAI = await this.ensureClient();
     const model = genAI.getGenerativeModel({
@@ -752,6 +898,7 @@ ${outlineCatalog}${langInstruction}`;
       systemInstruction: this.buildCarbonPersonaInstruction(
         currentStep,
         language,
+        ledgerFacts,
       ),
       generationConfig: {
         responseMimeType: "application/json",
@@ -764,6 +911,17 @@ ${outlineCatalog}${langInstruction}`;
       parts: [{ text: msg.text }],
     }));
 
+    /**
+     * Info: (20260826 - Emily) #6707 出口守門的合法集合第二來源:使用者自己說過的數字
+     * (AI 覆述使用者的話做對照是正當的,攔掉它會禁止糾錯)。
+     * 只收 user 輪次:收 model 輪次會讓漏網數字下一輪洗白成合法。
+     * 守門本體與上崗規則都在 carbon_reply_gate.ts(applyReplyGate/shouldRunReplyGate),
+     * 這裡只負責「兩條回覆路都呼叫」—— 該接線由掃描測試釘住。
+     */
+    const gateUserTexts = history
+      .filter((message) => message.role === "user")
+      .map((message) => message.text);
+
     // Info: (20260716 - Tzuhan) 同步聊天路徑，45秒逾時 + 用量記錄(#6515)
     const response = await this.invokeGuarded(
       () => model.generateContent({ contents }),
@@ -774,6 +932,8 @@ ${outlineCatalog}${langInstruction}`;
       },
     );
     const raw = response.response.text();
+    // Info: (20260813 - Luphia) 用量與解析結果無關：即使 JSON 解析失敗降級，這一輪的 tokens 一樣付了
+    const usage = toLlmUsage(response.response.usageMetadata);
 
     // Info: (20260714 - Tzuhan) 永不直接採信 LLM 輸出，JSON + Zod 護欄；解析失敗降級為純文字回覆(不中斷對話)
     try {
@@ -811,21 +971,34 @@ ${outlineCatalog}${langInstruction}`;
               paragraphId: chartCandidate.paragraphId as string,
             }
           : null;
-      return {
-        reply: parsed.reply,
-        readyParagraphId: isValidParagraph ? parsed.readyParagraphId : null,
-        extraction,
-        revisionParagraphId,
-        chartRequest,
-      };
+      // Info: (20260825 - Emily) #6707 出口守門:結構化與降級兩條路都要過(見 carbon_reply_gate.ts)
+      return applyReplyGate(
+        {
+          reply: parsed.reply,
+          readyParagraphId: isValidParagraph ? parsed.readyParagraphId : null,
+          extraction,
+          revisionParagraphId,
+          chartRequest,
+          usage,
+        },
+        ledgerFacts,
+        gateUserTexts,
+        this.buildEmissionClaimExtractor(),
+      );
     } catch {
-      return {
-        reply: raw,
-        readyParagraphId: null,
-        extraction: null,
-        revisionParagraphId: null,
-        chartRequest: null,
-      };
+      return applyReplyGate(
+        {
+          reply: raw,
+          readyParagraphId: null,
+          extraction: null,
+          revisionParagraphId: null,
+          chartRequest: null,
+          usage,
+        },
+        ledgerFacts,
+        gateUserTexts,
+        this.buildEmissionClaimExtractor(),
+      );
     }
   }
 

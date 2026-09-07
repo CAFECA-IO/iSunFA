@@ -263,7 +263,32 @@ export function parseTable38(markdown: string): IParsedTable38 {
     // Info: (20260803 - Tzuhan) 廠址總計列:帶基準字樣,取該列唯一的數值
     const basis = detectBasis(cells);
     if (basis !== null) {
-      const total = cells.map(parseTonne).find((value) => value !== null);
+      /**
+       * Info: (20260824 - Emily) 數字黏在標籤格尾巴的形狀(run C/E 實測)。
+       *
+       * 同一列模型有兩種輸出:
+       *     | …所在地基準 (公噸 CO2e/年) | | 201.465 | |   ← 乾淨格(run B/F,解析成功)
+       *     | …所在地基準 (公噸 CO2e/年) 201.465 | | | |   ← 黏在標籤尾(run C/E)
+       *
+       * 黏住的解不出乾淨數字 → 6 列(3 廠址 × 2 基準)全進 unparsedRows →
+       * siteTotals 空 → 第三層勾稽「Σ廠址總計 = 0」對上表3.6 的 8332.581 → 不入帳
+       * → 帳本空 → 桑基圖與數據表格全滅。**四趟成敗與這個形狀完全對上**
+       * (E 的 對帳逐字引用列_排除 = 6、F = 0),而 201.465+9.1982+8121.918
+       * = 8332.5812 ≈ 表3.6 —— 數字一直是對的,只是被黏住。
+       *
+       * 救援刻意收窄:只在**含基準字樣的那一格**抽尾端數字,而且只在
+       * 整列找不到任何乾淨數字時才試 —— 亂抽別格的數字會把占比或年份
+       * 當成排放量,那比不入帳嚴重。抽不到照舊進 unparsedRows(缺漏明示)。
+       */
+      const cleanTotal = cells.map(parseTonne).find((value) => value !== null);
+      const fusedTotal =
+        cleanTotal ??
+        cells
+          .filter((cell) => detectBasis([cell]) !== null)
+          .map((cell) => /([0-9][0-9,]*(?:\.[0-9]+)?)\s*$/.exec(cell)?.[1])
+          .map((raw) => (raw === undefined ? null : parseTonne(raw)))
+          .find((value) => value !== null);
+      const total = fusedTotal;
       if (total && currentSite.length > 0) {
         siteTotals.push({ site: currentSite, basis, tonneCo2e: total });
       } else {

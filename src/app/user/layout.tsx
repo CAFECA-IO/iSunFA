@@ -1,18 +1,18 @@
 "use client";
 
 import { ReactNode } from "react";
-import { usePathname } from "next/navigation";
 
 import AuthGuard from "@/components/auth/auth_guard";
 import UserHeader from "@/components/user/user_header";
 import UserFooter from "@/components/user/user_footer";
-import FaithAgent from "@/components/user/faith_agent";
 
+/**
+ * Info: (20260812 - Luphia) 費思（FaithAgent）已移至帳本 layout
+ * （src/app/user/account_book/[account_book_id]/layout.tsx，設計書 §5.3「使用前提」）：
+ * 選定帳本後才能使用，故此處不再全域掛載。原本為碳盤查頁避免雙浮動鈕而寫的
+ * pathname 判斷隨之移除——碳盤查頁不在帳本路由下，天生就不會出現費思。
+ */
 export default function UserLayout({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  // Info: (20260714 - Emily) 碳盤查頁已有專屬的碳會計師浮動聊天(CarbonChatWidget),隱藏通用 FaithAgent 避免雙浮動鈕並存
-  const hideFaithAgent = pathname?.startsWith("/user/carbon_chatbot");
-
   return (
     <AuthGuard>
       <div className="flex min-h-screen flex-col bg-gray-50">
@@ -22,7 +22,6 @@ export default function UserLayout({ children }: { children: ReactNode }) {
             {children}
           </main>
         </div>
-        {!hideFaithAgent && <FaithAgent />}
         <UserFooter />
       </div>
     </AuthGuard>

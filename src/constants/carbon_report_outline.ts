@@ -1,5 +1,41 @@
-// Info: (20260713 - Tzuhan) 碳盤查報告書標準章節大綱(IFRS S1/S2 對齊),共 11 章 33 段
+// Info: (20260713 - Tzuhan) 碳盤查報告書標準章節大綱,共 11 章 33 段
+// Info: (20260819 - Emily) 這份檔案的 guidance 是 **ISO 14064-1 版**,是目前的預設。
+// Info: (20260819 - Emily) IFRS S1/S2 揭露版在 `carbon_report_outline_ifrs.ts`,節 id 一一對應。
+// Info: (20260819 - Emily) 兩套並存不是二選一:ISO 14064-1 是盤查/查證標準,
+// Info: (20260819 - Emily) IFRS S1/S2 是法規強制的揭露框架(金管會分梯適用),層次不同。
+// Info: (20260819 - Emily) 08-18 的註解寫「錯位在 guidance,已逐條改為 ISO」—— 那句話的前提
+// Info: (20260819 - Emily) 在 08-19 被推翻:33 節與老闆整理的原文一一對應,
+// Info: (20260819 - Emily) 「聲明符合 IFRS S1/S2」是設計而不是缺陷。改動與理由見
+// Info: (20260819 - Emily) `data/issue_drafts/open/54_report_framework_selection_and_compliance_claim.md`
+// Info: (20260819 - Emily) (`open/44` 僅保留分類法接線那一半)。
+// Info: (20260819 - Emily) title 是切節錨點(`buildSectionHeading`),兩套共用,不得因框架不同而改。
+// Info: (20260818 - Emily) guidance 是注入 prompt 的東西 —— 它寫錯標準,產出的報告就宣告錯的標準。
+// Info: (20260818 - Emily) 不變式測試在 `src/__tests__/carbon_report_outline.test.ts`,不要靠人眼複查。
 // Info: (20260713 - Tzuhan) guidance 為各段落的撰寫目標,供 AI 引導對話時注入 prompt;isDataDriven 標記數據段落(數字必須來自後端決定論管線,LLM 只排版不算數)
+
+/**
+ * Info: (20260818 - Emily) 本報告對外承諾的標準 —— **唯一來源**
+ * (2026-08-17 決議,見 `data/scratch/CARBON_LAUNCH_GATE.md` 第五節「對外先承諾 ISO 14064-1」)。
+ *
+ * ## 為什麼要一個常數
+ *
+ * 08-18 修 `open/44` 時只改了本檔的 guidance,而同一句宣告在系統裡有**三個地方**:
+ *
+ * 1. 本檔的 guidance(注入每一節的撰寫目標)
+ * 2. `paragraph_draft.service.ts` 的角色句(注入**每一次**草稿呼叫,位置在 guidance 之上)
+ * 3. `i18n/locales/<語系>/solutions.ts` 的 `iso_report_desc`(官網對外的產品說明,五個語系)
+ *
+ * 只改第 1 個的話,模型看到的是「這是一份 IFRS S1/S2 對齊的報告」+「請依 ISO 14064-1 寫」
+ * 兩句互相矛盾的指示,而框架句在前;官網則繼續用 IFRS 的名義賣一份 ISO 的報告。
+ *
+ * 這正是這一週反覆出現的形狀:**兩邊各自自洽,中間對不上。**
+ * i18n 那五份是純字串檔、拿不到常數,所以由測試把三端綁在一起
+ * (`src/__tests__/carbon_report_outline.test.ts` 的「對外宣告的標準」那一組)。
+ */
+export const CARBON_REPORT_STANDARD = "ISO 14064-1";
+
+/** Info: (20260818 - Emily) 查證準則(第九章與參考文獻引用);與上面同一個理由,一處寫死 */
+export const CARBON_VERIFICATION_STANDARD = "ISO 14064-3";
 
 export interface ICarbonReportChapter {
   id: string;
@@ -38,7 +74,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "第一章",
     title: "組織與治理概況(導論)",
     guidance:
-      "闡述組織如何將氣候變遷視為董事會層級的重大財務風險與機會,並聲明報告編寫符合 IFRS S1/S2 與相應量化標準。",
+      "闡述組織進行溫室氣體盤查的目的、範圍與最高管理階層的承諾,並明確聲明「本報告書依據 ISO 14064-1:2018 編製」。符合性聲明是 ISO 14064-1 的必載項目,不得以其他準則名稱代替。",
     isDataDriven: false,
   },
   {
@@ -47,7 +83,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "1.1",
     title: "公司簡介與財務報告邊界",
     guidance:
-      "填寫公司基礎營運資訊,並說明與財務報表申報主體(Reporting Entity)的一致性。",
+      "填寫公司基礎營運資訊:法人名稱、營運據點、產業別、主要產品與活動,並說明本報告的報告組織範圍與其法人身分一致。",
     isDataDriven: false,
   },
   {
@@ -56,7 +92,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "1.2",
     title: "報告目的與主要使用者",
     guidance:
-      "明確定義報告旨在提供給股東、投資人與債權人等財務市場參與者,作為評估企業核心價值的依據。",
+      "明確定義報告的目的與預期使用者:內部管理階層、第三方查證機構,以及依規定取得本報告的外部關係人,並說明報告的預期用途(供查證、供管理決策與減量規劃參考)。",
     isDataDriven: false,
   },
   {
@@ -74,7 +110,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "1.4",
     title: "氣候治理架構與職責",
     guidance:
-      "IFRS S2 核心:詳細揭露董事會對氣候風險的監督機制(如何聽取報告、頻率、納入決策),以及管理階層(如永續長、推行委員會)如何執行溫室氣體日常控管。",
+      "揭露溫室氣體盤查的責任與職權:最高管理階層如何監督(聽取報告的方式與頻率、如何納入決策),以及推行委員會或專責單位如何執行日常盤查作業與內部控管。",
     isDataDriven: false,
   },
   {
@@ -83,7 +119,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "1.5",
     title: "組織邊界設定方法",
     guidance:
-      "依據 IFRS S2 規定,說明組織邊界如何與財務合併報表對齊(採用控制權法或股權比例法),並明確交代若有投資聯屬公司或合資企業時的範疇界定。",
+      "依據 ISO 14064-1:2018,說明組織邊界所採用的合併方法(控制權法之財務控制或營運控制,或股權比例法),並逐一交代投資聯屬公司、合資企業的納入或排除。所選方法必須明示,且全報告一致採用。",
     isDataDriven: false,
   },
   {
@@ -92,7 +128,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "1.6",
     title: "報告涵蓋期間與重大財務連結",
     guidance:
-      "明訂報告時間必須與財務報表期間一致(通常為會計年度)。揭露資訊的發布必須與財務報告同步。",
+      "明訂報告涵蓋的盤查期間(起訖日,通常為一個完整年度),並說明與前一年度盤查結果的銜接方式。",
     isDataDriven: false,
   },
   {
@@ -101,7 +137,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "第二章",
     title: "報告邊界(導論)",
     guidance:
-      "說明如何將氣候風險與商業策略結合,據以界定價值鏈中應納入盤查的重大碳排放項目。",
+      "說明報告邊界的設定邏輯:組織邊界與報告邊界的關係、如何鑑別應納入的間接排放(含上游與下游),以及顯著性判定所依據的準則。",
     isDataDriven: false,
   },
   {
@@ -119,7 +155,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "2.2",
     title: "溫室氣體排放源鑑別",
     guidance:
-      "跨越全價值鏈(包含上游供應鏈、營運本體、下游產品生命週期)進行系統化排放源鑑別。",
+      "跨越全價值鏈(包含上游供應鏈、營運本體、下游產品生命週期)進行系統化的排放源與移除量鑑別,並說明顯著性判定準則。經鑑別但未納入量化的排放源,必須逐項列出並敘明排除理由 —— ISO 14064-1 要求排除項與其理由可追溯,沉默的排除等於沒有盤查。",
     isDataDriven: false,
   },
   {
@@ -128,7 +164,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "2.3",
     title: "排放範疇與類別劃分",
     guidance:
-      "IFRS S2 指標要求:依據 GHG Protocol 嚴格區分為範疇一(直接排放)、範疇二(能源間接排放)與範疇三(價值鏈間接排放,包含 15 項子類別)。",
+      "依據 ISO 14064-1:2018 第 5.2.4 節,將排放源劃分為六大類別:類別一(直接溫室氣體排放與移除)、類別二(輸入能源之間接溫室氣體排放)、類別三(運輸之間接溫室氣體排放)、類別四(組織使用產品之間接溫室氣體排放)、類別五(使用組織產品之間接溫室氣體排放)、類別六(其他來源之間接溫室氣體排放)。照抄原文的類別與子類別代碼(如 1.1、2.1、3.1),不要改寫成其他準則的範疇制。",
     isDataDriven: false,
   },
   {
@@ -137,7 +173,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "3.1",
     title: "溫室氣體排放量計算說明(含導論)",
     guidance:
-      "聲明本章數據為企業氣候風險量化之基礎,用以評估碳定價或法規轉型帶來的潛在財務衝擊。列出完整排放源矩陣圖,盤點並確認所有活動均涵蓋京都議定書之七大溫室氣體(CO2, CH4, N2O, HFCs, PFCs, SF6, NF3)。",
+      "說明本章排放量的量化基礎、涵蓋範圍與資料來源層級。列出完整排放源矩陣圖,盤點並確認所有活動均涵蓋京都議定書之七大溫室氣體(CO2, CH4, N2O, HFCs, PFCs, SF6, NF3)。",
     isDataDriven: false,
   },
   {
@@ -155,7 +191,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "3.3",
     title: "量化方法學與 GWP 基礎",
     guidance:
-      "說明核心計算算式,並載明遵循 IFRS S2 規定,統一採用 IPCC 最新公告之全球暖化潛勢值(GWP,如 AR6)進行 CO2e 的當量轉換。",
+      "說明核心計算算式,並依 ISO 14064-1:2018 載明所採用的全球暖化潛勢值(GWP)版本與來源(如 IPCC AR6),據以進行 CO2e 當量轉換。GWP 值與其來源是必載項目 —— 只寫「依 IPCC」而未指明版本不符合要求。",
     isDataDriven: false,
   },
   {
@@ -164,7 +200,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "3.4",
     title: "各類排放量計算細節與推理",
     guidance:
-      "完整公開各範疇(包含範疇二的所在地/市場基準、範疇三的供應鏈運輸、售出產品使用階段等)的算式邏輯、生質碳單獨報告說明及重大假設。",
+      "完整公開各類別(包含類別二的所在地基準與市場基準、類別三的上下游運輸、類別五的售出產品使用階段等)的算式邏輯與重大假設。生物源(生質碳)的排放與移除量必須與化石源分開列示,不得併入總量 —— 那是 ISO 14064-1 明訂要分列的一項。",
     isDataDriven: true,
   },
   {
@@ -173,7 +209,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "3.5",
     title: "量化方法與變更說明",
     guidance:
-      "維持 IFRS S1 的可比性原則,詳細說明本年度是否有任何計算方法、係數或估算技術的變更與背後原因。",
+      "維持年度間的可比性,詳細說明本年度計算方法、排放係數或估算技術是否有變更、變更的原因,以及是否觸發基準年重新計算。",
     isDataDriven: false,
   },
   {
@@ -182,7 +218,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "3.6",
     title: "溫室氣體排放總量匯總表",
     guidance:
-      "以結構化表格呈現絕對排放量(Absolute Emissions)與碳排放強度(Emissions Intensity,如每單位營收碳排、每噸產品碳排),並明確區分範疇一、二、三之數據。",
+      "以結構化表格呈現絕對排放量(Absolute Emissions)與排放強度(Emissions Intensity,如每單位營收碳排、每噸產品碳排),並逐一分列類別一至類別六的排放量,以及七大溫室氣體(CO2、CH4、N2O、HFCs、PFCs、SF6、NF3)各自的公噸 CO2e。ISO 14064-1 要求逐一分列而不是只給總量;移除量(removals)若有,與排放量分列。",
     isDataDriven: true,
   },
   {
@@ -208,7 +244,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "4.2",
     title: "估算不確定性與情境風險分析",
     guidance:
-      "定量評估:針對範疇一與範疇二數據,計算統計學上的不確定性(提供 95% 信賴區間上限與下限),評估量測誤差。定性評估:針對範疇三等高度依賴估算或外部第三方提供之數據,進行品質等級定性評分,並揭露估算方法的假設前提與重大不確定性來源。",
+      "定量評估:針對類別一與類別二等以實際量測為主的數據,計算統計學上的不確定性(提供 95% 信賴區間上限與下限),評估量測誤差。定性評估:針對類別三至類別六等高度依賴估算或外部第三方提供之數據,進行品質等級定性評分,並揭露估算方法的假設前提與重大不確定性來源。",
     isDataDriven: true,
   },
   {
@@ -217,7 +253,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "第五章",
     title: "溫室氣體減量措施及內部績效追蹤",
     guidance:
-      "轉型計畫(Transition Plan):說明公司如何透過營運優化或低碳投資來實現減碳,並說明所需的財務資源預算規劃。減量目標(Targets):揭露企業設定的氣候目標(如 2030 減碳 50%、2050 淨零),寫明是絕對目標或強度目標、是否通過科學基礎減量目標(SBTi)驗證、以及碳權(Carbon Offsets)預計使用的比例。",
+      "說明節約能源與溫室氣體排放的減量具體措施,以及內部績效追蹤的做法:原文列出的承諾事項、短期/中期/長期的減量或節能目標(照原文的數值與期程照實寫,例如年節電率),以及環境管理方案與後續環境監督與量測的安排。只寫原文有的,原文沒有的不要補也不要放佔位符。",
     isDataDriven: false,
   },
   {
@@ -226,7 +262,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "第六章",
     title: "溫室氣體資訊管理及盤查作業",
     guidance:
-      "說明企業如何鑑別實體風險(如極端氣候導致斷電、淹水)與轉型風險(如碳稅、低碳市場轉型),並說明如何將範疇三的價值鏈盤查結果作為減碳決策的依據。",
+      "說明溫室氣體資訊的管理與盤查作業:年度盤查的時程與分工、數據蒐集與彙整的程序、內部覆核點,以及資訊系統如何確保數據的完整性與可追溯性。",
     isDataDriven: false,
   },
   {
@@ -235,7 +271,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "第七章",
     title: "溫室氣體內部查證及定期審查",
     guidance:
-      "詳細揭露企業如何運用氣候情境分析(Climate Scenario Analysis)(例如在 1.5°C 或 2°C 以上的情境下)來測試企業商業模式與策略的彈性,並由管理階層定期審查因應。",
+      "說明內部查證的安排:由誰執行、查核的範圍與抽樣方式、發現事項的處理與追蹤,以及管理階層定期審查盤查結果與改善措施的機制。",
     isDataDriven: false,
   },
   {
@@ -244,7 +280,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "第八章",
     title: "溫室氣體盤查資訊管理及記錄保存",
     guidance:
-      "說明碳管理如何與財務會計檔案、內部控制流程實質整合,並規範相關憑證(如水電費單據、生產報表、合約)的數位化與法定保存年限。",
+      "說明盤查資訊與紀錄如何與公司既有的文件管理及內部控制流程整合,並規範相關憑證(如水電費單據、生產報表、合約)的數位化與法定保存年限。",
     isDataDriven: false,
   },
   {
@@ -253,7 +289,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "第九章",
     title: "查證(導論)",
     guidance:
-      "說明為滿足財務市場與法規對於永續資訊「可信度」的要求,所安排的第三方獨立確信作業。",
+      "說明為提高盤查資訊的可信度、並符合查證要求所安排的第三方獨立查證作業。",
     isDataDriven: false,
   },
   {
@@ -262,7 +298,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "9.1",
     title: "確信/查證範圍",
     guidance:
-      "界定外部查證機構查驗的邊界,是否與本報告書及財務合併報表邊界完全重疊。",
+      "界定外部查證機構查驗的邊界,以及該邊界是否與本報告書的組織邊界及報告邊界完全重疊;若不重疊,逐項敘明差異。",
     isDataDriven: false,
   },
   {
@@ -271,7 +307,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "9.2",
     title: "確信/查證遵循準則",
     guidance:
-      "寫明第三方機構執行稽核時所遵循的國際通用的確信準則(如 ISAE 3410 溫室氣體聲明之確信業務、ISO 14064-3)。",
+      "寫明第三方機構執行查證時所遵循的準則(如 ISO 14064-3:2019 溫室氣體聲明之查證與確信、ISAE 3410 溫室氣體聲明之確信業務),並依原文照實填寫,不要預設。",
     isDataDriven: false,
   },
   {
@@ -280,7 +316,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "9.3",
     title: "實質性門檻",
     guidance:
-      "界定外部查證容許的量化誤差門檻(如 5%),並揭露對財務投資人決策具有重大影響的「定性重大性」標準。",
+      "界定外部查證容許的量化誤差門檻(如 5%),並說明定性重大性的判定標準 —— 哪些性質的錯誤、遺漏或分類錯置視為重大。",
     isDataDriven: false,
   },
   {
@@ -289,7 +325,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "9.4",
     title: "確信/查證保證等級",
     guidance:
-      "明確載明確信級別。通常依照國際潮流或法規要求,範疇一、二採「合理確信(Reasonable Assurance)」,範疇三採「有限確信(Limited Assurance)」。",
+      "明確載明保證等級與其理由。若不同類別採不同等級,逐一列明各類別對應的等級(合理保證 Reasonable Assurance / 有限保證 Limited Assurance)。不要預設任何等級 —— 依原文照實填寫,原文沒寫就不要編。",
     isDataDriven: false,
   },
   {
@@ -306,7 +342,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "10.1",
     title: "財務報導之呈現格式",
     guidance:
-      "說明本碳盤查報告如何與年報、永續報告或財務報告書進行跨內容的相互索引,確保資訊透明且便於投資人查閱。",
+      "說明本報告書的編排與呈現格式,以及與公司其他對外文件相互索引的方式,確保讀者可追溯到原始資料。",
     isDataDriven: false,
   },
   {
@@ -315,7 +351,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "10.2",
     title: "資訊公開與傳播途徑",
     guidance:
-      "明列報告在公開資訊觀測站、公司官網、或是提交至國際評比平台(如 CDP)的取得管道與利害關係人諮詢窗口。",
+      "明列報告的公開途徑與取得管道(如公司官網、依規定公開之平台),以及利害關係人的諮詢窗口。",
     isDataDriven: false,
   },
   {
@@ -324,7 +360,7 @@ export const CARBON_REPORT_OUTLINE: ICarbonReportSection[] = [
     code: "第十一章",
     title: "參考文獻",
     guidance:
-      "詳細條列編寫此報告所應用的所有外部方法學(如 IFRS S2 準則文本、GHG Protocol 企業標準)、各國政府或國際能源署(IEA)公告的最新電力排碳係數與產業統計技術參數庫。",
+      "詳細條列編寫此報告所應用的準則與方法學(如 ISO 14064-1:2018 溫室氣體盤查與報告、ISO 14064-3:2019 溫室氣體聲明之查證與確信),以及各國政府或國際能源署(IEA)公告的電力排碳係數與產業統計參數庫,並註明版本與年度。",
     isDataDriven: false,
   },
 ];

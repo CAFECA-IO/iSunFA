@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { parseOptionalPositiveInt } from "@/lib/utils/pagination";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { IThread } from "@/interfaces/ai_consulting";
@@ -16,12 +17,8 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const tagsParams = searchParams.get("tags")?.split(",") ?? [];
-    const page = searchParams.get("pageNumber")
-      ? parseInt(searchParams.get("pageNumber")!)
-      : undefined;
-    const pageSize = searchParams.get("pageSize")
-      ? parseInt(searchParams.get("pageSize")!)
-      : undefined;
+    const page = parseOptionalPositiveInt(searchParams.get("pageNumber"));
+    const pageSize = parseOptionalPositiveInt(searchParams.get("pageSize"));
     const sortOption = searchParams.get("sort");
 
     // Info: (20260212 - Julian) 取得所有討論串

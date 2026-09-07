@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
+import { isTeamManagerRole } from "@/constants/team";
 
 // Info: (20260325 - Tzuhan) Rename a team
 export async function PATCH(
@@ -26,7 +27,7 @@ export async function PATCH(
     }
 
     const member = await teamRepo.getTeamMember(sessionUser.id, teamId);
-    if (!member || (member.role !== "OWNER" && member.role !== "ADMIN")) {
+    if (!isTeamManagerRole(member?.role)) {
       return jsonFail(API_ERRORS.FO_PERMISSION_DENIED_ONLY_OWN);
     }
 

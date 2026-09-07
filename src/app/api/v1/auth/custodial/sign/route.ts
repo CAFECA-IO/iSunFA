@@ -4,7 +4,7 @@ import { AppError } from "@/lib/utils/error";
 import { logger } from "@/lib/utils/logger";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
+import { enforceRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { custodialSignSchema } from "@/validators";
 import { custodialSigningService } from "@/services/custodial_signing.service";
@@ -40,10 +40,7 @@ export async function POST(request: NextRequest) {
      * 這支端點產出的是可直接送 bundler 的資金授權，無限呼叫等於讓
      * 「偷到一枚 DeWT 就批次囤簽章」變成零成本；撞到上限會留下 warn log。
      */
-    const limited = enforceCarbonRateLimit(
-      user.id,
-      RateLimitBucketEnum.SIGNING,
-    );
+    const limited = enforceRateLimit(user.id, RateLimitBucketEnum.SIGNING);
     if (limited) return limited;
 
     const body = await request.json();

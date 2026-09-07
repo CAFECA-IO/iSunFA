@@ -14,11 +14,7 @@ import { useTranslation } from "@/i18n/i18n_context";
 import LegalModal from "@/components/common/legal_modal";
 import { useAuth } from "@/contexts/auth_context";
 import { useRouter, usePathname } from "next/navigation";
-import {
-  fido2ClientService,
-  getLoginOptions,
-  verifyLogin,
-} from "@/lib/auth/fido2_client";
+import { loginWithPasskey } from "@/lib/auth/passkey_login";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { AppError } from "@/lib/utils/error";
 
@@ -127,25 +123,11 @@ export default function AuthModal({
     setError(null);
     setLoginStep("FETCHING_CHALLENGE");
     try {
-      // Info: (20260116 - Tzuhan)  1. 取得 Stateless Challenge
-      const { challenge, token } = await getLoginOptions();
-
-      // Info: (20260105 - Tzuhan) 2. 喚起 Passkey
-      setLoginStep("AUTHENTICATING");
-      const authentication = await fido2ClientService.startLogin({
-        challenge: challenge,
-        userVerification: "required",
-        timeout: 60000,
-        // Info: (20260105 - Tzuhan) 不傳 allowCredentials，啟用探索模式
-      });
-
-      // Info: (20260105 - Tzuhan) 3. 驗證並登入
-      setLoginStep("VERIFYING");
-      const payload = await verifyLogin(token!, authentication);
-
-      // Info: (20260105 - Tzuhan) 4. 成功
-      localStorage.setItem("dewt", payload.dewt);
-      localStorage.setItem("user_address", payload.user.address);
+      /**
+       * Info: (20260813 - Julian) 登入儀式與 DeWT 寫入都在 `loginWithPasskey` 裡。
+       * 出勤閘門用的是同一支 —— 兩邊只有「登入之後做什麼」不同。
+       */
+      const payload = await loginWithPasskey(setLoginStep);
 
       const handleRedirect = () => {
         if (onSuccess) onSuccess();

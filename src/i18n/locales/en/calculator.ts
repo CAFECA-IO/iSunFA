@@ -27,6 +27,7 @@ export const calculator = {
     tax_residency_status: "Tax Residency Status",
     residency_option_taiwan: "Taiwan Resident",
     residency_option_non_taiwan: "Non-Taiwan Resident",
+    date_from_employee: "From employee record",
     industry_category: "Industry Category",
     year: "Year",
     month: "Month",
@@ -67,11 +68,26 @@ export const calculator = {
     voluntary_pension_contribution: "Voluntary Pension Contribution",
   },
   employee_list: {
+    issue_name_required: "Enter the employee name under Identity",
+    issue_number_required: "Enter the employee number under Identity",
+    issue_base_salary_required: "Enter the base salary under Pay",
+    section_identity: "Identity",
+    section_pay: "Pay",
+    section_insurance: "Insurance & pension",
+    section_other: "Other",
+    other_allowance_taxable: "Other allowance (taxable)",
+    other_allowance_tax_free: "Other allowance (tax-free)",
+    other_allowance_hint:
+      "This is the recurring monthly allowance. Enter one-off bonuses in the calculator instead — anything set here carries over to next month.",
+    voluntary_pension_rate: "Voluntary pension contribution",
+    employment_type: "Employment type",
+    hire_date: "Hire date",
+    resign_date: "Resignation date",
+    date_order_error: "Resignation date cannot be earlier than the hire date",
     main_title: "Employee List",
     name: "Employee Name",
     number: "Employee Number",
     email: "Email",
-    action: "Action",
     search_placeholder: "Search Employee",
     add_employee: "Add New Employee",
     edit_employee: "Edit Employee",
@@ -79,9 +95,33 @@ export const calculator = {
     number_placeholder: "Please enter employee number",
     email_placeholder: "Please enter employee email",
     email_valid: "Please enter a valid email address",
-    no_data: "No employee found",
     add_success_toast: "Employee added successfully",
     edit_success_toast: "Employee data updated successfully",
+    base_salary: "Base salary",
+    total_count: "{{count}} employees",
+    filtered_count: "{{count}} of {{total}} employees",
+    empty_title: "No employees in this account book yet",
+    empty_desc:
+      "Once an employee exists, the calculator can fill in their base salary and meal allowance, and results can be saved as payroll records.",
+    no_search_result: 'No employee matches "{{keyword}}"',
+    clear_search: "Clear search",
+    load_failed: "Could not load the employee list. Please try again later.",
+    save_failed: "Could not save. Please try again later.",
+    remove_failed: "Could not remove. Please try again later.",
+    number_taken: "That employee number is already used by another employee",
+    save_changes: "Save changes",
+    remove_employee_records_kept:
+      "Payroll records already saved for this employee are kept and stay viewable — they will just no longer appear in the employee list or the calculator picker.",
+    remove_employee_title: "Remove Employee",
+    remove_employee_content:
+      "Are you sure you want to remove {{name}} from the employee list?",
+    remove_employee_submit_btn: "Yes, Remove Employee",
+    no_email: "Not set",
+    missing_email_banner:
+      "{{count}} employees have no email address — their pay slips cannot be sent",
+    only_missing_email: "Show only these",
+    show_all: "Show all employees",
+    no_filter_result: "No employee matches the current filter",
   },
   result: {
     base_salary_with_tax: "Base Salary (Taxable)",
@@ -148,9 +188,17 @@ export const calculator = {
     content_2: "to",
     content_bold_2: " {{employeeName}} ?",
     email: "Email",
-    email_placeholder: "Please enter employee email",
-    invalid_email_hint: "Invalid email format, please check again.",
     submit: "Send Pay Slip",
+    email_from_profile: "From employee profile",
+    email_missing: "No email address on file",
+    sending: "Sending...",
+    error_no_email:
+      "This employee has no email address. Add one in the employee list first.",
+    error_not_configured:
+      "Email delivery is not set up yet. Please contact your system administrator.",
+    error_font_missing:
+      "The server is missing Chinese fonts, so the pay slip cannot be generated. Please contact your system administrator.",
+    error_generic: "Could not send the pay slip. Please try again in a moment.",
   },
   my_pay_slip: {
     main_title: "My Pay Slip",
@@ -166,12 +214,135 @@ export const calculator = {
     pay_slip: "Pay Slip",
     sent_on: "Sent On",
     all: "All",
+    employee: "Employee",
+    sent_by: "Sent by",
+    unknown_sender: "Unnamed",
+    sent_empty: "No pay slip has been sent from this account book yet",
+    sent_load_failed:
+      "Could not load the delivery history. Please refresh and try again",
+  },
+  // Info: (20260831 - Julian) Entry point from the public calculator to the account book one
+  // Info: (20260831 - Julian) The employee link shown in Step 1 of the calculator
+  employee_link: {
+    linked_hint:
+      "Linked to an employee — base salary and meal allowance filled in",
+    unlink: "Unlink",
+  },
+  // Info: (20260831 - Julian) Saving from the calculator page, plus its two exceptions
+  save_record: {
+    profile_diff_title: "Update the employee record too?",
+    profile_diff_content:
+      'The calculator settings differ from the employee record for "{{name}}". Here is what changed:',
+    profile_diff_hint:
+      'This payroll record is saved with the calculator values either way. The question is only whether the employee record should change as well. Choose "Save this one only" to leave it untouched.',
+    profile_diff_update_btn: "Update employee and save",
+    profile_diff_skip_btn: "Save this one only",
+    profile_diff_failed:
+      "Could not update the employee. Please try again later.",
+    profile_value_on: "Yes",
+    profile_value_off: "No",
+    profile_value_none: "Not set",
+    save: "Save payroll record",
+    saving: "Saving…",
+    saved: "Saved as {{name}}'s payroll record for {{month}}/{{year}}",
+    view_record: "View",
+    save_failed: "Could not save. Please try again later.",
+    overwrite_title: "Overwrite the existing payroll record?",
+    overwrite_content:
+      "{{name}} already has a record for {{month}}/{{year}} (net pay {{amount}}). Saving replaces it and the old figures are not kept.",
+    overwrite_submit: "Overwrite and save",
+    unlinked_title: "Who is this calculation for?",
+    unlinked_content: "This calculation isn't linked to an employee yet.",
+    create_and_save: 'Add "{{name}}" and save',
+    create_and_save_hint:
+      "Creates the employee from the name, employee number and base salary on the calculator",
+    pick_from_list: "Pick from the employee list",
+    pick_from_list_hint: "This calculation will link to the employee you pick",
+    save_to_existing: "Save to {{name}} instead",
+    save_to_existing_hint:
+      "Uses the employee this number already belongs to, without creating a new one",
+    unlinked_conflict_content:
+      "Employee number {{number}} already belongs to \u201c{{existingName}}\u201d. It cannot be used for a new employee.",
+    edit_number: "Fix the employee number",
+    edit_number_hint:
+      "Takes you back to step 1 if \u201c{{name}}\u201d should have a different number",
+    fill_number: "Fill in the employee number",
+    fill_number_hint:
+      "An employee number is required. Takes you back to step 1 to add one.",
+  },
+  // Info: (20260831 - Julian) Payroll records
+  records: {
+    main_title: "Payroll records",
+    pay_period: "Pay period",
+    pay_period_value: "{{month}}/{{year}}",
+    employee: "Employee",
+    net_pay: "Net pay",
+    taxable: "Withholding statement",
+    action: "Send/View/Recalculate/Delete",
+    view: "View payslip",
+    load_back: "Load into calculator",
+    delete: "Delete",
+    all_employees: "All employees",
+    total_count: "{{count}} records",
+    empty_title: "No payroll records yet",
+    empty_desc:
+      'Finish a calculation and press "Save payroll record" — it will show up here.',
+    load_failed: "Could not load payroll records. Please try again later.",
+    search_placeholder: "Search by employee name or number",
+    clear_search: "Clear search",
+    no_result_title: "No payroll records match these filters",
+    period: "Period",
+    all_periods: "All periods",
+    no_result_desc: "Try a different keyword, employee or pay period.",
+    delete_title: "Delete payroll record",
+    delete_content:
+      'Delete the {{month}}/{{year}} payroll record for "{{name}}"?',
+    delete_irreversible:
+      "Payroll records are not soft-deleted. Once removed, this record cannot be restored or recovered from anywhere else.",
+    delete_submit_btn: "Delete",
+    delete_failed: "Could not delete the record. Please try again later.",
+    view_failed: "Could not load the payslip. Please try again later.",
+    load_back_failed:
+      "Could not load this record into the calculator. Please try again later.",
+    employee_list_failed:
+      "Could not load the employee list. Loading a record into the calculator cannot link it to an employee right now.",
+    load_back_unlinked:
+      "This employee is no longer on the list. The name and number were filled in from this record, but no employee link was made — you will be asked who to save it for.",
+    delivery_status: "Delivery",
+    not_sent: "Not sent",
+    select_page: "Select all rows on this page",
+    select_row: "Select this record",
+    selected_count: "{{count}} selected",
+    export_csv: "Export CSV",
+    export_too_many: "At most {{max}} records per export — deselect some first",
+    export_failed: "Export failed. Please try again in a moment.",
+  },
+  account_book_entry: {
+    title: "Want to keep this calculation?",
+    hint_save:
+      "The account book version saves payroll records and manages your employee list.",
+    hint_select:
+      "You pick an account book first; the data is stored under that book.",
+    hint_no_carry:
+      "What you entered here will not carry over — you will need to enter it again.",
+    button: "Go to the account book calculator",
   },
   button: {
+    disabled_hint:
+      "Finish all four steps before downloading or saving the payslip",
     download: "Download as PNG",
     send: "Send Pay Slip",
     reset: "Reset",
     re_send: "Resend Pay Slip",
+    send_disabled_unsaved:
+      "Save the salary record first, then you can send the pay slip",
+    send_disabled_unlinked:
+      "This calculation is no longer linked to an employee. Please select one again.",
+    send_disabled_no_email:
+      "This employee has no email address — add one in the employee list first",
+    send_disabled_employee_gone:
+      "This employee is no longer on the list — the pay slip cannot be sent",
+    send_disabled_loading: "Checking the employee list...",
   },
   message: {
     name_error_title: "Employee’s Name is not Filled",
@@ -180,10 +351,6 @@ export const calculator = {
     salary_error_title: "Base Salary is not Filled",
     salary_error_content:
       "Base Salary must be greater than or equal to the minimum wage.",
-    remove_employee_title: "Remove Employee",
-    remove_employee_content:
-      "Are you sure you want to remove {{name}} from the employee list?",
-    remove_employee_submit_btn: "Yes, Remove Employee",
     re_send_pay_slip_title: "Resend Pay Slip",
     re_send_pay_slip_content_1: "You have already sent",
     re_send_pay_slip_content_bold_1: " {{month}} 's pay slip",

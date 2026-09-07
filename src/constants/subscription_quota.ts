@@ -17,6 +17,35 @@ export const WEEK_SEC = 7 * 24 * 60 * 60;
  */
 export const WEEK_ANCHOR_EPOCH_SEC = 1767542400;
 
+/**
+ * Info: (20260812 - Luphia) 雙視窗識別碼（402 payload 的 `exceeded`）。
+ * 原先以字面字串散落於 spend.service 與前端判斷，違反 CLAUDE.md §3「拒絕魔法字串」，
+ * 收斂至此作為唯一來源；前端據此決定倒數要讀哪一個視窗的 resetAt。
+ */
+export const QUOTA_WINDOW = {
+  PER_5H: "PER_5H",
+  PER_WEEK: "PER_WEEK",
+} as const;
+
+export type QuotaWindow = (typeof QUOTA_WINDOW)[keyof typeof QUOTA_WINDOW];
+
+/**
+ * Info: (20260812 - Luphia) 額度用罄時 402 payload 揭露的出路（設計書 §5 三條出路）。
+ */
+export const QUOTA_EXCEEDED_OPTION = {
+  WAIT_RESET: "WAIT_RESET",
+  USE_ALLOCATION: "USE_ALLOCATION",
+  USE_PERSONAL_WALLET: "USE_PERSONAL_WALLET",
+  /**
+   * Info: (20260815 - Luphia) 單筆金額超過整個視窗上限時的出路（PR #6652 第二輪 C-5）：
+   * 等重置永遠不會有幫助，只能改用個人點數或升級方案。
+   */
+  UPGRADE_PLAN: "UPGRADE_PLAN",
+} as const;
+
+export type QuotaExceededOption =
+  (typeof QUOTA_EXCEEDED_OPTION)[keyof typeof QUOTA_EXCEEDED_OPTION];
+
 // Info: (20260807 - Luphia) 訂閱方案僅適用團隊三階（PLAN.PERSONAL 不參與團隊訂閱）
 export const TEAM_PLAN = {
   FREE: PLAN.FREE,
@@ -25,6 +54,28 @@ export const TEAM_PLAN = {
 } as const;
 
 export type TeamPlanId = (typeof TEAM_PLAN)[keyof typeof TEAM_PLAN];
+
+/**
+ * Info: (20260820 - Luphia) 方案的高低次序。數字只用於比較，不代表價格或額度倍數
+ *（那些是 DB 系統設定，不可從這裡推導）。
+ *
+ * 存在的理由是「這次變更是升級還是降級」必須有**唯一**的判準：兩者的生效時點不同
+ *（升級立即、降級於當期屆滿），而判準若散在服務層各寫一次，遲早有一條路徑
+ * 讓降級立即生效——那正好違反退款政策 §2.1。
+ */
+export const PLAN_RANK: Record<TeamPlanId, number> = {
+  [TEAM_PLAN.FREE]: 0,
+  [TEAM_PLAN.TEAM]: 1,
+  [TEAM_PLAN.BUSINESS]: 2,
+};
+
+/**
+ * Info: (20260820 - Luphia) 由 `from` 換到 `to` 是不是降級（純比較，無副作用）。
+ * 同方案不算降級（那是重複購買或改計費週期，另循升級路徑）。
+ */
+export function isPlanDowngrade(from: TeamPlanId, to: TeamPlanId): boolean {
+  return PLAN_RANK[to] < PLAN_RANK[from];
+}
 
 export interface ISubscriptionQuota {
   per5h: number;
@@ -49,6 +100,46 @@ export const DEFAULT_SUBSCRIPTION_QUOTA_BY_PLAN: Record<
   [TEAM_PLAN.TEAM]: { per5h: 100, perWeek: 750 },
   [TEAM_PLAN.BUSINESS]: { per5h: 1000, perWeek: 7500 },
 };
+
+/**
+ * Info: (20260819 - Luphia) 免費版人數上限已移除（產品決定 20260819）。
+ *
+ * 原本這裡有 `DEFAULT_FREE_PLAN_MAX_MEMBERS`（預設 1，僅擁有者本人）。上限存在的
+ * 理由不是人數，是**免費額度逐成員各一份**——20 人的免費團隊就是每週 800 點的
+ * 模型用量、月費零。同一輪把免費方案的額度改成**全隊共用一份**（見 `spendCredits`
+ * 與 `sumTeamWindowUsageInTx`），加人不再產生額度，上限、它的兩道防線
+ * （邀請端／接受端）、系統設定鍵與方案頁的標示因此一併移除。
+ *
+ * 付費方案不變：人數仍由「席次 × 單價」自然封頂，額度仍是一人一池。
+ */
+
+/**
+ * Info: (20260819 - Luphia) 邀請量的兩道團隊層上限（產品決定 20260819）。
+ *
+ * 免費版人數上限移除之後，寄信量失去所有界線：免費團隊不收席次費，而每一封
+ * email 邀請都是真的寄出去的信。付費團隊有「席次費」當煞車，免費團隊沒有。
+ *
+ * 兩道分工不同，缺一不可：
+ *
+ * - **同時未接受數**（`PENDING_INVITE`）：擋「一次撒出幾百封」。它也順帶封住
+ *   席次佔用——未失效的 PENDING 邀請本來就佔席次。
+ * - **每日寄送數**（`INVITE_DAILY`）：擋「撤回再邀、撤回再邀」的迴圈。
+ *   只看同時未接受數的話，那個迴圈可以無限寄信而同時數永遠是 1。
+ *
+ * 正式值為系統設定（可後台調整），此為查無設定列時的 fail-safe 預設。
+ * 數字取「正常團隊碰不到、濫用會撞上」：一次擴編二十人已經是大動作，
+ * 而一天五十封信不是任何正常團隊的行為。
+ */
+/**
+ * Info: (20260819 - Luphia) 邀請寄送的冷卻秒數（產品決定 20260819）。
+ *
+ * 與「每分鐘 10 封」的限流分工不同：限流擋的是狂點（一瞬間打很多次），
+ * 冷卻擋的是**穩定地一直寄**——後者在限流眼中看起來完全正常。
+ */
+export const DEFAULT_TEAM_INVITE_COOLDOWN_SECONDS = 60;
+
+export const DEFAULT_TEAM_PENDING_INVITE_LIMIT = 20;
+export const DEFAULT_TEAM_INVITE_DAILY_LIMIT = 50;
 
 export const TEAM_SUBSCRIPTION_STATUS = {
   ACTIVE: "ACTIVE",
@@ -86,11 +177,38 @@ export const TEAM_WALLET_ENTRY_TYPE = {
 export type TeamWalletEntryType =
   (typeof TEAM_WALLET_ENTRY_TYPE)[keyof typeof TEAM_WALLET_ENTRY_TYPE];
 
+/**
+ * Info: (20260818 - Luphia) 分配的「價值離開離鏈帳本」那一筆負 ADJUST 的標記。
+ *
+ * 分配改為鑄到成員自己的鏈上錢包之後（ADR 015 修訂），池減少但沒有任何分配列承接，
+ * 因此每筆 ALLOCATE 都要配一筆負的 ADJUST，否則守恆勾稽會判為違反並凍結錢包
+ * （見 `teamWalletRepo.allocate`）。
+ *
+ * 冪等鍵前綴讓那一筆與原分錄成對、可查、也不會與 `allocate-failed:` 的補償撞鍵；
+ * `featureCode` 讓帳本畫面與修復腳本認得出它是哪一種 ADJUST。
+ */
+export const ALLOCATE_OFFCHAIN_EXIT_PREFIX = "allocate-offchain-exit:";
+export const ALLOCATE_OFFCHAIN_EXIT_FEATURE_CODE = "allocate-offchain-exit";
+
+/**
+ * Info: (20260818 - Luphia) 守恆差額的一次性修復分錄標記（`scripts/repair_wallet_conservation.ts`）。
+ *
+ * 修復在 2026-08-18 修法之前累積的差額：那些 ALLOCATE 沒有配對的負 ADJUST，
+ * 而帳本 append-only，所以補一筆而不是回頭改。每個錢包只補一次。
+ */
+export const CONSERVATION_REPAIR_PREFIX = "conservation-repair:";
+export const CONSERVATION_REPAIR_FEATURE_CODE = "conservation-repair";
+
 // Info: (20260807 - Luphia) 扣費管線的扣款來源（設計書 §5 三層順序）
 export const SPEND_SOURCE = {
   SUBSCRIPTION_QUOTA: "SUBSCRIPTION_QUOTA",
   TEAM_ALLOCATION: "TEAM_ALLOCATION",
   PERSONAL_WALLET: "PERSONAL_WALLET",
+  /**
+   * Info: (20260813 - Luphia) 拆帳（設計書 §5.4）：同一筆消費同時扣了訂閱額度與分配點數。
+   * 額度剩餘不足全額時不再整筆改扣錢包，而是「額度用光、差額扣錢包」，故需要第四種來源。
+   */
+  MIXED: "MIXED",
 } as const;
 
 export type SpendSource = (typeof SPEND_SOURCE)[keyof typeof SPEND_SOURCE];
@@ -100,12 +218,40 @@ export const BILLABLE_FEATURE_CODE = {
   FAITH_CHAT: "FAITH_CHAT",
   AI_ANALYSIS: "AI_ANALYSIS",
   CARBON_CHAT: "CARBON_CHAT",
+  // Info: (20260813 - Luphia) 物流碳足跡查詢：以專屬代碼記帳，才分得出與對話類的用量
+  LOGISTICS_CARBON: "LOGISTICS_CARBON",
   // Info: (20260807 - Luphia) 團隊解散歸零分錄專用（設計書 §6.3），非可消費功能
   TEAM_DISSOLVED: "TEAM_DISSOLVED",
 } as const;
 
 export type BillableFeatureCode =
   (typeof BILLABLE_FEATURE_CODE)[keyof typeof BILLABLE_FEATURE_CODE];
+
+/**
+ * Info: (20260813 - Luphia) 扣款來源的優先順序（設計書 §5.4）。
+ *
+ * 預設 QUOTA_FIRST：訂閱額度會週期性重置歸零，錢包點數是買來的資產，
+ * 先用會過期的那一份對用戶有利。
+ */
+export const SPEND_PRIORITY = {
+  QUOTA_FIRST: "QUOTA_FIRST",
+  ALLOCATION_FIRST: "ALLOCATION_FIRST",
+} as const;
+
+export type SpendPriority =
+  (typeof SPEND_PRIORITY)[keyof typeof SPEND_PRIORITY];
+
+/**
+ * Info: (20260814 - Luphia) 逐功能的扣款順序（`FEATURE_SPEND_PRIORITY` / `resolveSpendPriority`）
+ * 已於 2026-08-14 移除（PR #6652 第二輪 A-1）。
+ *
+ * 它排序的是「訂閱額度」與「團隊分配給成員的離鏈點數」。分配改為鑄到成員自己的錢包後，
+ * 第二層變成**成員的個人資產**，而順序就固定了：一律先用團隊買的額度，
+ * 不足才動用他自己的點數——先花成員的錢再用團隊額度，沒有任何情境說得通。
+ *
+ * 純函式 `splitSpend` 仍保留 priority 參數（已有單測涵蓋），供日後真的出現
+ * 兩個對等來源時使用。
+ */
 
 // Info: (20260807 - Luphia) 訂閱計費週期（對齊既有 Order.data.billingInterval 慣例）
 export const BILLING_INTERVAL = {
@@ -115,6 +261,30 @@ export const BILLING_INTERVAL = {
 
 export type BillingInterval =
   (typeof BILLING_INTERVAL)[keyof typeof BILLING_INTERVAL];
+
+/**
+ * Info: (20260821 - Luphia) 一個計費週期的天數（月繳 30／年繳 365）。
+ *
+ * 原本只在 `applyTeamSubscriptionInTx` 裡有一份三元式；期中加人的比例補收
+ * 也需要它（分母是**一期**的長度，不是 `periodEnd − periodStart`——展延之後
+ * 那個跨距可能是好幾期，用跨距當分母會把補收金額除以期數，review #6687
+ * 二輪高-1）。兩處必須是同一份數字。
+ */
+export const BILLING_INTERVAL_DAYS: Record<BillingInterval, number> = {
+  [BILLING_INTERVAL.MONTH]: 30,
+  [BILLING_INTERVAL.YEAR]: 365,
+};
+
+/**
+ * Info: (20260821 - Luphia) 展延購買的時間閘門（產品裁定 20260821，review #6687
+ * 二輪阻擋-1）：**當期剩餘 30 天內才能購買延長／換方案**。
+ *
+ * 展延語意（新期自當期屆滿日累加）維持不變，但沒有閘門時它對「換方案」是
+ * 一個漏洞：年繳團隊版第 1 天買月繳企業版 → 剩餘 364 天全部免費升級企業版
+ * 再加一個月，約四折。閘門把「免費升級的剩餘天數」上限壓到 30 天，
+ * 也讓任何時點的訂閱跨距不超過「一期 + 30 天」（席次補收上限 2 倍因此夠用）。
+ */
+export const SUBSCRIPTION_EXTENSION_WINDOW_DAYS = 30;
 
 // Info: (20260807 - Luphia) 分配 API 的操作方向（設計書 §6.2）
 export const ALLOCATION_DIRECTION = {

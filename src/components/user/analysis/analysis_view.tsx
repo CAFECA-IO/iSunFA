@@ -10,10 +10,8 @@ import SuccessNotification from "@/components/common/success_notification";
 import HistorySection from "@/components/user/analysis/history_section";
 import CompanySearchInput from "@/components/common/company_search_input";
 import { getAnalysisCost, IAnalysisParams } from "@/lib/analysis/pricing";
-import {
-  useOrderTransaction,
-  IOrderPayload,
-} from "@/hooks/use_order_transaction";
+import { IOrderPayload } from "@/hooks/use_order_transaction";
+import { useAnalysisPayment } from "@/hooks/use_analysis_payment";
 import { getPeriodDateRange } from "@/lib/analysis/period";
 import {
   INTERNAL_CATEGORIES,
@@ -39,7 +37,16 @@ const SEASONS = ["S1", "S2", "S3", "S4"];
 const MONTHS = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
 const WEEKS = Array.from({ length: 53 }, (_, i) => `W${i + 1}`);
 
-type TabType = "internal" | "external" | "history";
+/**
+ * Info: (20260827 - Julian) 分頁名只有這一份。
+ *
+ * 原本它以裸字串出現在三處（初始化的白名單、按鈕的 map、型別），
+ * 漏改一處就是一個永遠切不過去的分頁 —— 同一個坑
+ * `constants/logistics.ts` 的註解已經記過一次。
+ */
+const ANALYSIS_TABS = ["internal", "external", "history"] as const;
+type TabType = (typeof ANALYSIS_TABS)[number];
+const DEFAULT_TAB: TabType = "internal";
 
 export default function AnalysisView() {
   const { t } = useTranslation();
@@ -48,13 +55,46 @@ export default function AnalysisView() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  // Info: (20260419 - Luphia) 狀態管理
-  const [activeTab, setActiveTab] = useState<TabType>(() => {
-    const tabParam = searchParams.get("tab") as TabType;
-    return ["internal", "external", "history"].includes(tabParam)
-      ? tabParam
-      : "internal";
-  });
+  /**
+   * Info: (20260827 - Julian) 分頁的事實來源是**網址**，不是 state。
+   *
+   * 原本 `activeTab` 是 state，只在 `useState` 的 initializer 讀一次網址，
+   * 而那個 initializer 每次掛載只跑一次；另一支 effect 則在兩者不同時
+   * 把**網址**改成 state 的值。同步是單向的 state → URL，沒有回程。
+   *
+   * 於是「人已經在 /analysis 且停在別的分頁時，點一個 `?tab=history` 的連結」
+   * 會壞掉：pathname 相同、只有 query 變，Next 不會卸載重掛這個元件，
+   * initializer 不重跑，`activeTab` 仍是舊值 —— 網址先跳成 history，
+   * 同步 effect 立刻把它改回去。使用者看到網址列抖一下，而那個連結
+   * **完全沒有作用**（鈴鐺的分析完成通知就是這樣打不開歷史清單的）。
+   *
+   * 改成由網址導出之後沒有第二份真相，也就沒有誰覆寫誰的問題，
+   * 而且分頁連結天生可分享、可重新整理。無法辨識的值一律回落 ——
+   * 網址是使用者可編輯的輸入，不可信。
+   */
+  const tabParam = searchParams.get("tab");
+  const activeTab: TabType = (ANALYSIS_TABS as readonly string[]).includes(
+    tabParam ?? "",
+  )
+    ? (tabParam as TabType)
+    : DEFAULT_TAB;
+
+  /**
+   * Info: (20260827 - Julian) 切分頁用 `push` 而不是 `replace`。
+   *
+   * `replace` 會把分頁切換蓋在同一筆歷史上，於是按「上一頁」直接離開
+   * `/analysis`，而不是回到前一個分頁。
+   * `transportation_carbon_footprint_calculator/page.tsx` 的註解記著
+   * 他們踩過同一個坑並改成了 `push`。
+   */
+  const setActiveTab = useCallback(
+    (tab: TabType) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("tab", tab);
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
 
   const [category, setCategory] = useState<string>(INTERNAL_CATEGORIES[0]);
   const [periodType, setPeriodType] = useState<string>(PERIOD_TYPES[2]);
@@ -95,14 +135,18 @@ export default function AnalysisView() {
   } | null>(null);
   const [taxIdInput, setTaxIdInput] = useState("");
 
+  // Info: (20260813 - Luphia) 統一付款入口（設計書 §5.6）：團隊額度 / 個人點數兩種來源
   const {
     workflowStatus,
     txHash,
-    resetTransaction,
-    executeOrderTransaction,
+    reset: resetPayment,
+    pay,
     errorMessage,
     setErrorMessage,
-  } = useOrderTransaction();
+    paymentSourceNode,
+    paysWithTeamQuota,
+    teamAvailableCredits,
+  } = useAnalysisPayment();
 
   // Info: (20260419 - Luphia) 衍生變數 (Derived States)
   const currentCategories =
@@ -149,16 +193,6 @@ export default function AnalysisView() {
 
   // Info: (20260419 - Luphia) 副作用 (Effects)
 
-  // Info: (20260419 - Luphia) URL Tab 同步
-  useEffect(() => {
-    const currentTabParam = searchParams.get("tab");
-    if (currentTabParam !== activeTab) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("tab", activeTab);
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    }
-  }, [activeTab, pathname, router, searchParams]);
-
   // Info: (20260419 - Luphia) 切換 Tab 時重置分類
   useEffect(() => {
     setCategory(currentCategories[0]);
@@ -202,7 +236,7 @@ export default function AnalysisView() {
   // Info: (20260419 - Luphia) 處理函式 (Handlers)
   const handleGenerate = () => {
     setUiState((prev) => ({ ...prev, isPaymentModalOpen: true }));
-    resetTransaction();
+    resetPayment();
   };
 
   const handleAnalysisWorkflow = async () => {
@@ -260,20 +294,16 @@ export default function AnalysisView() {
       items: payloadItems,
     };
 
-    const success = await executeOrderTransaction(
-      payload,
-      finalCost,
-      async () => {
-        setTimeout(() => {
-          setUiState((prev) => ({
-            ...prev,
-            isPaymentModalOpen: false,
-            showSuccessNotification: true,
-          }));
-          setActiveTab("history");
-        }, 2000);
-      },
-    );
+    const success = await pay(payload, finalCost, async () => {
+      setTimeout(() => {
+        setUiState((prev) => ({
+          ...prev,
+          isPaymentModalOpen: false,
+          showSuccessNotification: true,
+        }));
+        setActiveTab("history");
+      }, 2000);
+    });
 
     if (!success && errorMessage === "Payment or Analysis failed") {
       setErrorMessage(t("auth_modal.failed"));
@@ -635,7 +665,7 @@ export default function AnalysisView() {
           {/* Info: (20260419 - Luphia) Tabs */}
           <div className="mb-4 flex justify-center lg:mb-8">
             <div className="grid w-full grid-cols-3 justify-between rounded-lg bg-gray-100 p-1 lg:w-fit">
-              {(["internal", "external", "history"] as TabType[]).map((tab) => (
+              {ANALYSIS_TABS.map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -948,7 +978,7 @@ export default function AnalysisView() {
                 workflowStatus === "error" ||
                 workflowStatus === "payment_success"
               )
-                resetTransaction();
+                resetPayment();
               setUiState((prev) => ({ ...prev, isPaymentModalOpen: false }));
             }}
             onConfirm={handleAnalysisWorkflow}
@@ -992,31 +1022,40 @@ export default function AnalysisView() {
               },
             ]}
             extraContent={
-              isInternalCompanyAnalysis ? (
-                <div className="mt-4 space-y-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                  <h4 className="text-sm font-bold text-gray-900">
-                    {t("analysis.addons_title")}
-                  </h4>
-                  <div className="space-y-2">
-                    {renderAddonsCheckbox(
-                      "bookkeeper",
-                      "analysis.addon_bookkeeper",
-                      ANALYSIS_ADDON_COSTS.BOOKKEEPER,
-                    )}
-                    {renderAddonsCheckbox(
-                      "cpa",
-                      "analysis.addon_cpa",
-                      ANALYSIS_ADDON_COSTS.CPA,
-                    )}
-                    {renderAddonsCheckbox(
-                      "thirdParty",
-                      "analysis.addon_third_party",
-                      ANALYSIS_ADDON_COSTS.THIRD_PARTY,
-                    )}
+              /**
+               * Info: (20260813 - Luphia) 付款來源選擇器與既有的加購項目併存：
+               * 這支 modal 原本就有 extraContent，兩者疊在同一個插槽而非互相取代。
+               */
+              <>
+                {paymentSourceNode}
+                {isInternalCompanyAnalysis ? (
+                  <div className="mt-4 space-y-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                    <h4 className="text-sm font-bold text-gray-900">
+                      {t("analysis.addons_title")}
+                    </h4>
+                    <div className="space-y-2">
+                      {renderAddonsCheckbox(
+                        "bookkeeper",
+                        "analysis.addon_bookkeeper",
+                        ANALYSIS_ADDON_COSTS.BOOKKEEPER,
+                      )}
+                      {renderAddonsCheckbox(
+                        "cpa",
+                        "analysis.addon_cpa",
+                        ANALYSIS_ADDON_COSTS.CPA,
+                      )}
+                      {renderAddonsCheckbox(
+                        "thirdParty",
+                        "analysis.addon_third_party",
+                        ANALYSIS_ADDON_COSTS.THIRD_PARTY,
+                      )}
+                    </div>
                   </div>
-                </div>
-              ) : undefined
+                ) : null}
+              </>
             }
+            paidByTeamQuota={paysWithTeamQuota}
+            teamAvailableCredits={teamAvailableCredits}
             isLoading={uiState.isLoading}
             status={workflowStatus}
             errorMessage={errorMessage}

@@ -1,9 +1,7 @@
-import { FC } from 'react';
+import { FC } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { CircleCheck } from "lucide-react";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
-// import { useModalContext } from '@/contexts/modal_context';
-// import { MessageType } from '@/interfaces/message_modal';
 import { getMinimumWage } from "@/lib/utils/salary_calculator";
 
 const StepTabs: FC = () => {
@@ -28,8 +26,10 @@ const StepTabs: FC = () => {
     selectedYear,
   } = useCalculatorCtx();
 
-  // ToDo: (20260224 - Julian) =========== 這裡要實作 Modal
-  // const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
+  /**
+   * ToDo: (20260224 - Julian) 姓名／薪資的錯誤還沒有訊息 Modal，目前只在欄位上標紅。
+   * 原本的實作依賴 `src/contexts/modal_context`，那個模組已經不存在，要另尋做法。
+   */
 
   // Info: (20251002 - Julian) 取得當前年份的最低基本薪資
   const thisYear = parseInt(selectedYear);
@@ -61,14 +61,6 @@ const StepTabs: FC = () => {
           if (employeeName === "") {
             // Info: (20250714 - Julian) 如果姓名有錯誤，則不允許切換到下一步，且顯示錯誤訊息
             setIsNameError(true);
-            // messageModalDataHandler({
-            //   messageType: MessageType.ERROR,
-            //   title: t('calculator:MESSAGE.NAME_ERROR_TITLE'),
-            //   content: t('calculator:MESSAGE.NAME_ERROR_CONTENT'),
-            //   submitBtnStr: t('common:COMMON.CLOSE'),
-            //   submitBtnFunction: messageModalVisibilityHandler,
-            // });
-            // messageModalVisibilityHandler();
             return;
           }
           // Info: (20250714 - Julian) 如果姓名正確，則切換到下一步
@@ -117,7 +109,7 @@ const StepTabs: FC = () => {
   });
 
   return (
-    <div className="grid min-w-[350px] grid-cols-2 gap-3 md:grid-cols-4">
+    <div className="grid grid-cols-4 gap-2 md:min-w-[350px] md:gap-3">
       {tabs}
     </div>
   );

@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { logger } from "@/lib/utils/logger";
 import { describeError } from "@/lib/utils/error_message";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
+import { enforceRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
@@ -13,6 +13,7 @@ import {
 } from "@/services/chat.service";
 import { chatroomService } from "@/services/chatroom.service";
 import { AttachmentExtractionService } from "@/services/attachment_extraction.service";
+import { isDraftQuantityGateError } from "@/services/paragraph_draft.service";
 import { ParagraphDraftService } from "@/services/paragraph_draft.service";
 import {
   CARBON_CHAT_PURPOSE,
@@ -23,7 +24,10 @@ import {
   buildDraftProgressNotice,
   isCarbonChatChannelOwnedBy,
 } from "@/constants/carbon_chatbot";
+import { randomUUID } from "crypto";
 import { CarbonChatRequestSchema } from "@/validators";
+import { runBilledCarbonTask } from "@/services/carbon_billing.service";
+import { toBillingFailureResponse } from "@/lib/utils/billing_response";
 import {
   ChatRoleEnum,
   IAttachment,
@@ -48,7 +52,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Info: (20260716 - Tzuhan) 限流(#6516):DeWT 驗證後、業務邏輯前 Fail Fast
-  const limited = enforceCarbonRateLimit(
+  const limited = enforceRateLimit(
     sessionUser.address,
     RateLimitBucketEnum.LLM,
   );
@@ -74,6 +78,10 @@ export async function POST(request: NextRequest) {
     recipientPublicKey,
     init,
     attachments,
+    clientMessageId,
+    // Info: (20260825 - Emily) #6707 帳本事實包:前端決定性組出(帳本 E2EE,伺服端讀不到),
+    // Info: (20260825 - Emily) 經 Zod 上限驗證後原樣進 persona —— 本路由不加工、不補算
+    ledgerFacts,
   } = parsed.data;
 
   // Info: (20260714 - Tzuhan) 頻道所有權裁決: 只允許讀寫自己 address 前綴的頻道，防跨用戶寫入
@@ -159,17 +167,36 @@ export async function POST(request: NextRequest) {
     // Info: (20260714 - Tzuhan) 結構化回覆: 對話內容 + 段落完成訊號(readyParagraphId 已經白名單裁決)
     // Info: (20260716 - Tzuhan) #6518:extraction 為已裁決的事實萃取，回帶前端合併進盤查狀態帳本
     // Info: (20260720 - Tzuhan) #51 chartRequest 為已裁決的圖表請求(雙 enum 白名單),透傳前端由模板產圖
+    /**
+     * Info: (20260813 - Luphia) 碳盤查對話計費（設計書 §5.5）：與費思同一套預扣—結算。
+     * 額度不足時 runBilledCarbonTask 內的 spendCredits 會上拋 402，**LLM 不會被呼叫**。
+     * 無帳本的舊個人會話不計費（該處留 log），行為與此前一致。
+     */
+    const billedChat = await runBilledCarbonTask({
+      userId: sessionUser.id,
+      channel,
+      idempotencyKey: clientMessageId
+        ? `carbon-chat:${sessionUser.id}:${clientMessageId}`
+        : `carbon-chat:${randomUUID()}`,
+      inputChars: historyForAi.reduce((sum, item) => sum + item.text.length, 0),
+      hasAttachment: attachmentNames.length > 0,
+      nowSec: Math.floor(Date.now() / 1000),
+      run: () =>
+        chatService.generateCarbonChatbotStructuredResponse(
+          historyForAi,
+          currentStep,
+          language,
+          undefined,
+          ledgerFacts,
+        ),
+    });
     const {
       reply,
       readyParagraphId,
       extraction,
       revisionParagraphId,
       chartRequest,
-    } = await chatService.generateCarbonChatbotStructuredResponse(
-      historyForAi,
-      currentStep,
-      language,
-    );
+    } = billedChat.result;
 
     const conversationContext = history
       .slice(-CARBON_CHAT_AI_CONTEXT_SIZE)
@@ -231,29 +258,54 @@ export async function POST(request: NextRequest) {
     // Info: (20260714 - Tzuhan) 管線經 recoverLaria 取回內容 → 萃取 → 白名單裁決 → 生成草稿(graceful fallback)
     if (attachments && attachments.length > 0) {
       const pipeline = new AttachmentExtractionService();
-      const result = await pipeline.runAttachmentToParagraphPipeline({
-        attachments,
-        conversationContext,
-        language,
-        // Info: (20260730 - Tzuhan) 萃取是整條管線最長的單一步驟,結束時先報進度免得畫面像卡死
-        onExtracted: canPublish
-          ? async (sectionCount) => {
-              envelopes.push(
-                await chatroomService.recordAndPublishAiReply({
-                  channel: publishChannel,
-                  recipientPublicKey: publishKey,
-                  text: buildAttachmentExtractedNotice(
-                    language,
-                    attachments.length,
-                    sectionCount,
-                  ),
-                  purpose: CARBON_CHAT_PURPOSE,
-                }),
-              );
-            }
-          : undefined,
-        onDraft: canPublish ? publishDraftProgress : undefined,
+      /**
+       * Info: (20260813 - Luphia) 附件萃取→段落草稿另計一筆（設計書 §5.5）：
+       * 這條管線是 fan-out（萃取 1 次 + 每段草稿各 1 次，實測單次約 87 秒），
+       * 成本遠高於純對話，與對話共用一把鍵會讓兩者的用量混在同一筆無法分辨。
+       * 預扣以附件位元組數估算——這條路徑的輸入量來自檔案，不是訊息長度。
+       */
+      // Info: (20260813 - Luphia) metadata 的 size 是字串；非數字一律當 0，估算寧可低估不高估
+      const attachmentBytes = attachments.reduce((sum, item) => {
+        const size = Number(item.size);
+        return sum + (Number.isFinite(size) && size > 0 ? size : 0);
+      }, 0);
+      const billedPipeline = await runBilledCarbonTask({
+        userId: sessionUser.id,
+        channel,
+        idempotencyKey: clientMessageId
+          ? `carbon-attachment:${sessionUser.id}:${clientMessageId}`
+          : `carbon-attachment:${randomUUID()}`,
+        inputChars: attachmentBytes,
+        hasAttachment: true,
+        nowSec: Math.floor(Date.now() / 1000),
+        run: () =>
+          pipeline.runAttachmentToParagraphPipeline({
+            attachments,
+            conversationContext,
+            language,
+            // Info: (20260904 - Emily) #6745:附件路徑的草稿也要拿得到帳本事實包,守門的合法集合才完整
+            ledgerFacts,
+            // Info: (20260730 - Tzuhan) 萃取是整條管線最長的單一步驟,結束時先報進度免得畫面像卡死
+            onExtracted: canPublish
+              ? async (sectionCount) => {
+                  envelopes.push(
+                    await chatroomService.recordAndPublishAiReply({
+                      channel: publishChannel,
+                      recipientPublicKey: publishKey,
+                      text: buildAttachmentExtractedNotice(
+                        language,
+                        attachments.length,
+                        sectionCount,
+                      ),
+                      purpose: CARBON_CHAT_PURPOSE,
+                    }),
+                  );
+                }
+              : undefined,
+            onDraft: canPublish ? publishDraftProgress : undefined,
+          }),
       });
+      const result = billedPipeline.result;
       drafts = result.drafts;
       degraded = result.degraded;
       attachmentActivities = result.activities;
@@ -277,16 +329,41 @@ export async function POST(request: NextRequest) {
             { role: ChatRoleEnum.AI, text: reply },
           ],
           language,
+          /**
+           * Info: (20260826 - Emily) #6707 帳本事實包一路帶到草稿(review 阻擋 3 的前半):
+           * 這條路徑原本不帶事實 —— 草稿的 LLM 呼叫比對話回覆更下游、
+           * 寫的字直接進報告,卻是唯一一段拿不到合法數字清單的生成。
+           */
+          contextFacts: ledgerFacts,
         });
+        /**
+         * Info: (20260826 - Emily) 出口守門補到守門後方的生成(review 阻擋 3 的後半)。
+         *
+         * Info: (20260904 - Emily) #6745:守門**搬進了 `generateParagraphDraft` 本體**
+         * (單一咽喉,三個入口共用),這裡不再自己接一段 —— 攔下時服務拋
+         * `VA_DRAFT_QUANTITY_UNSOURCED`,由下方 catch 認出來標降級。
+         * 原本 route 自己接的那段是三個入口裡唯一有門的,另外兩個零檢查;
+         * 三處各貼一段會有三份會各自漂移的判準。語意不變:攔下 → 草稿不落地、
+         * `degraded = true`、對話不中斷(使用者可用目錄的 AI 撰寫鈕重試 ——
+         * 而那條路現在**也有門了**)。
+         */
         drafts.push(draft);
         // Info: (20260730 - Tzuhan) 對話蒐集完成的段落同樣完成即推
         await publishDraftProgress(draft, drafts.length, drafts.length);
       } catch (draftError) {
-        // Info: (20260714 - Tzuhan) 草稿失敗不阻斷對話，僅標記降級(用戶可用目錄的 AI 撰寫鈕重試)
-        logger.error(
-          `[API] /chat/carbon ready-paragraph draft failed: ${JSON.stringify(draftError)}`,
-        );
-        degraded = true;
+        if (isDraftQuantityGateError(draftError)) {
+          // Info: (20260904 - Emily) 被守門攔下不是「生成失敗」:warn 不 error,重試同一個 prompt 大概率再編一次
+          logger.warn("carbon draft gate blocked", {
+            paragraphId: readyParagraphId,
+          });
+          degraded = true;
+        } else {
+          // Info: (20260714 - Tzuhan) 草稿失敗不阻斷對話，僅標記降級(用戶可用目錄的 AI 撰寫鈕重試)
+          logger.error(
+            `[API] /chat/carbon ready-paragraph draft failed: ${JSON.stringify(draftError)}`,
+          );
+          degraded = true;
+        }
       }
     }
 
@@ -347,6 +424,13 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logger.error(`[API] /chat/carbon error: ${describeError(error)}`);
+    /**
+     * Info: (20260813 - Luphia) 兩種計費錯誤都要帶 payload（設計書 §5.5）：
+     * 團隊額度用罄回雙視窗 resetAt，無帳本會話回待付訂單的 orderId——
+     * 少了 payload，前端只能顯示一句錯誤，用戶無從知道下一步該做什麼。
+     */
+    const billingFailure = toBillingFailureResponse(error);
+    if (billingFailure) return billingFailure;
     // Info: (20260714 - Tzuhan) 額度耗盡回專屬錯誤碼，前端提示稍候重試(與一般系統錯誤區分)
     if (isLlmQuotaError(error)) {
       return jsonFail(API_ERRORS.IS_LLM_QUOTA_EXCEEDED);

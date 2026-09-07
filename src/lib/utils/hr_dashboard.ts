@@ -237,24 +237,29 @@ export function buildDashboardData(
     })
     .sort((a, b) => b.eventDate.localeCompare(a.eventDate));
 
-  // Info: (20260810 - Julian) 本月壽星，依日期由小到大
+  /**
+   * Info: (20260812 - Julian) 本月壽星，依日期由小到大。
+   *
+   * 讀的是 `birthMonthDay`（`MM-DD`）而不是完整生日 —— 生日是 Tier 2 個資，
+   * 而壽星清單需要的只有月與日（ADR 018 §7 已知取捨第 1 點）。
+   */
+  const currentMonthDay = String(today.getMonth() + 1).padStart(2, "0");
   const birthdays: IEngagementItem[] = headcountEmployees
     .flatMap((employee) => {
-      if (!employee.birthday) return [];
-      const birthday = parseIsoDate(employee.birthday);
-      if (birthday.getMonth() !== today.getMonth()) return [];
+      if (!employee.birthMonthDay) return [];
+      if (employee.birthMonthDay.slice(0, 2) !== currentMonthDay) return [];
       return [
         {
           employeeId: employee.id,
           employeeName: employee.name,
           departmentName: employee.departmentName,
           jobTitle: employee.jobTitle,
-          eventDate: employee.birthday,
+          eventDate: employee.birthMonthDay,
           anniversaryYears: null,
         },
       ];
     })
-    .sort((a, b) => a.eventDate.slice(8).localeCompare(b.eventDate.slice(8)));
+    .sort((a, b) => a.eventDate.localeCompare(b.eventDate));
 
   // Info: (20260810 - Julian) 本月工作週年，未滿一年不算
   const anniversaries: IEngagementItem[] = headcountEmployees
@@ -317,10 +322,9 @@ export function buildDashboardData(
   const tenureYears = headcountEmployees.map((employee) =>
     differenceInFullYears(parseIsoDate(employee.hireDate), today),
   );
+  // Info: (20260812 - Julian) 年齡由 DTO 直接帶進來，前端不再持有完整生日
   const ages = headcountEmployees.flatMap((employee) =>
-    employee.birthday
-      ? [differenceInFullYears(parseIsoDate(employee.birthday), today)]
-      : [],
+    employee.age === null ? [] : [employee.age],
   );
 
   return {

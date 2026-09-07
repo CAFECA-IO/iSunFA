@@ -16,11 +16,26 @@ import { ZodError } from "zod";
 import { describeError } from "@/lib/utils/error_message";
 import {
   assessPdfTextLayer,
+  extractPdfPageImagery,
   extractPdfTextLayer,
+  planImageOnlyPages,
   slicePagesForRange,
   PDF_TEXT_LAYER_REASON,
 } from "@/lib/pdf_text_layer";
 import { PdfTextLayerDecisionEnum } from "@/constants/pdf_text_layer";
+import {
+  ensureTableDivider,
+  trimRowsToDividerWidth,
+} from "@/lib/utils/markdown_table_divider";
+import {
+  CONTINUATION_LINES_NOTEWORTHY,
+  joinWrappedTableRows,
+} from "@/lib/utils/markdown_table_rows";
+import { extractPagesAsPdf } from "@/lib/utils/pdf_page_extract";
+import {
+  narrowVisionPagesToRange,
+  type IVisionPages,
+} from "@/lib/utils/pdf_vision_scope";
 import { CARBON_ATTACHMENT_EXTRACTION_MAX_BYTES } from "@/constants/carbon_chatbot";
 import {
   LLM_REPORT_IMPORT_TIMEOUT_MS,
@@ -49,6 +64,16 @@ import {
   validateSourceTables,
   type ICarbonSourceTable,
 } from "@/lib/carbon_source_table.builder";
+import {
+  replaceOfficeSymbolChars,
+  unmappedPrivateUseChars,
+} from "@/lib/utils/office_symbol_chars";
+import { padTableHeaderToWidest } from "@/lib/utils/markdown_table_columns";
+/**
+ * Info: (20260903 - Luphia) 年度的裁決搬到 lib(review):萃取端與預覽卡
+ * 必須用同一支,而元件不得 import service。見 inventory_year.ts 的註解。
+ */
+import { normalizeInventoryYear } from "@/lib/utils/inventory_year";
 import { logger } from "@/lib/utils/logger";
 import { IActivityRecord } from "@/types/carbon_chatbot.types";
 
@@ -71,6 +96,18 @@ export interface IReportImportResult {
   unmapped: string[];
   // Info: (20260716 - Tzuhan) 報告中的活動數據(已裁決):進帳本後由 /calculate 重新勾稽
   activities: IActivityRecord[];
+  /**
+   * Info: (20260902 - Emily) 這份報告的盤查年度,**只當預填**(issue_drafts/open/69)。
+   *
+   * 它是「這份報告是哪一年」,不是「這個房間在談哪一年」。前者隨報告走、
+   * 一間房可以有兩個;後者是 `ICarbonInventoryState.year`,write-once。
+   * 在這張票之前帳本的年度取自後者,於是同一間房匯入兩份不同年度的報告會拿到
+   * 同一個年度值 —— 跨年度換鍋、`ledgerByYear` 快照、年間比較三個機制一起空轉。
+   *
+   * 抽不到就是 `undefined`,不猜:歸屬抽錯比抽不到嚴重,錯的年度會靜默改變
+   * 哪些分錄被剔除。最終生效的年度一律是使用者在預覽卡上確認過的那個值。
+   */
+  inventoryYear?: number;
 }
 
 /**
@@ -167,6 +204,21 @@ const buildImportResponseSchema = (
         required: ["scopeCategory", "sourceName", "quantity", "unit"],
       },
     };
+    /**
+     * Info: (20260902 - Emily) 盤查年度與 activities 同掛在第一次呼叫
+     * (issue_drafts/open/69):逐章匯入會呼叫十一次,十一次各回一個年度
+     * 只會讓「以哪一個為準」變成新的裁決題,而報告的盤查年度全份只有一個。
+     *
+     * 型別是 STRING 不是 NUMBER:模型抽到的是封面上的字樣,而封面寫法不一
+     * (民國/西元/「盤查年度」/「報導期間」)。要它先照抄再由我們裁決,
+     * 比要它回一個數字然後我們無從分辨它是抄的還是算的要好。
+     */
+    properties.inventoryYear = {
+      type: SchemaType.STRING,
+      description:
+        "這份報告的盤查年度,西元四位數(如 2024)。原文若寫民國年(如 民國113年)請換算為西元。" +
+        "報導期間跨兩個年度時填**盤查年度**那一個;報告沒有明確寫出盤查年度就回空字串,嚴禁推測。",
+    };
   }
   return {
     type: SchemaType.OBJECT,
@@ -247,12 +299,81 @@ const buildPageIndexResponseSchema = (
 const SECTION_BY_ID = new Map(CARBON_REPORT_OUTLINE.map((s) => [s.id, s]));
 
 // Info: (20260716 - Tzuhan) 匯入來源:文字類直接入 prompt;pdf 走 inlineData
+/**
+ * Info: (20260814 - Emily) 這次呼叫要附帶哪些圖。
+ *
+ * 收成一支函式而不是在兩個呼叫點各寫一次三元式：那兩處原本就是同一份邏輯的複本，
+ * 而這次要加的是第三種情況（純文字 + 只附幾頁）。複本會讓它只被加在其中一處，
+ * 那正是本專案這幾天反覆踩到的「只改了一端」。
+ */
+const buildLlmImageParts = (
+  source: IReportImportSource,
+): Array<{ data: string; mimeType: string }> | undefined => {
+  if (!source.isText) {
+    return [{ data: source.data, mimeType: source.mimeType }];
+  }
+  if (source.visionPages) {
+    return [
+      { data: source.visionPages.data, mimeType: source.visionPages.mimeType },
+    ];
+  }
+  return undefined;
+};
+
+/**
+ * Info: (20260814 - Emily) 附帶頁面的說明句。
+ *
+ * 沒有這句的話模型收到的是「一份文字 + 幾張沒頭沒尾的圖」，
+ * 不知道那幾張圖屬於哪一節，也不知道為什麼文字裡找不到對應內容。
+ * 明講頁碼：文字層帶著 `-- p.N/總頁 --` 標記，模型可以據此把圖對回原文位置。
+ */
+/**
+ * Info: (20260825 - Emily) #6708 之後的版本。原版結尾寫「無法辨識就照既有規則標示,
+ * 不要臆造」—— 但沒有給「怎麼寫『讀不出』」的具體格式,於是 08-24 run G 實測:
+ * 模型讀不動架構圖下排的直式小字(16 名組員),就從第一章沿革撈了三個真人名、
+ * 再用同姓氏編了九個「協理」,湊出一份結構完整、成員大半不實的委員名單 ——
+ * 送第三方查證的文件印著捏造的真人名字。
+ *
+ * 修法是把「讀不出」變成一條**有明確輸出格式的合法出路**,並把兩條逃生門封死:
+ * 禁止從文件其他章節撈人名補進圖的轉錄、禁止依姓氏/職稱慣例生成人名。
+ * 驗收:重匯高興昌 → §1.4 無「呂麗」開頭人名;不可辨識時出現「無法逐一辨識」字樣。
+ */
+const buildImagePagesInstruction = (source: IReportImportSource): string => {
+  if (!source.visionPages) return "";
+  return `\n\n【附帶頁面影像】
+另附原文第 ${source.visionPages.pages.join("、")} 頁的頁面影像。
+這幾頁的內容**主要以圖片呈現**，文字層幾乎抽不到字 ——
+文字少不代表那一節沒有內容，請直接讀圖，把其中的文字（姓名、職稱、地址、
+組織層級關係等）逐字抄進對應段落，與讀原文文字時的照錄要求相同。
+【影像轉錄的鐵律】抄得出來的才寫；一個字都不得補。
+- 影像中的姓名、職稱、數字**只能逐字抄自該影像本身**。嚴禁從文件其他章節
+  （如公司沿革、負責人欄位）撈人名補進來，嚴禁依姓氏或職稱慣例生成任何名字 ——
+  寫出影像裡沒有的真人名字，比留白嚴重得多。
+- 影像局部無法辨識（字太小、直式排版、解析度不足）時，寫出可辨識的部分，
+  其餘用這個格式明說：「（本圖另有約 N 名人員／若干欄位，字跡無法逐一辨識，
+  見原文第 X 頁）」。數量估不出來就寫「若干」。
+- 整張圖都無法辨識時，該段寫：「（本節內容為圖片，無法辨識文字，見原文第 X 頁）」。
+寧可留白並註明，不可補全。`;
+};
+
 export interface IReportImportSource {
   name: string;
   mimeType: string;
   // Info: (20260716 - Tzuhan) base64(pdf)或 UTF-8 純文字(md/plain,由 route 解碼)
   data: string;
   isText: boolean;
+  /**
+   * Info: (20260814 - Emily) 「內容只住在圖片裡」的那幾頁，抽成一份小 PDF
+   * (`data/issue_drafts/open/25_image_only_sections.md`)。
+   *
+   * 只有走純文字路徑時才會有值。實測高興昌那份 64 頁的 p6/p7/p8
+   * （組織架構圖、三個廠址地圖）正文只有 0/146/369 字元，內容全在像素裡，
+   * 而整份走純文字所以從沒被看過。
+   *
+   * 與 `data` 併送而不是取代它：那幾頁的**上下文**仍在文字層裡，
+   * 只送圖的話模型不知道它屬於哪一節。
+   */
+  visionPages?: IVisionPages;
 }
 
 /**
@@ -414,10 +535,26 @@ export class ReportImportService {
     if (input.cacheKey) {
       const cached = sourceDecisionCache.get(input.cacheKey);
       if (cached) {
-        // Info: (20260806 - Tzuhan) 命中也記一行:少了這行就分不清「沒重算」與「沒跑到」
+        /**
+         * Info: (20260806 - Tzuhan) 命中也記一行:少了這行就分不清「沒重算」與「沒跑到」
+         *
+         * Info: (20260814 - Emily) 同一個判準要往下推一層
+         * (`data/issue_drafts/open/29_source_decision_cache_vision_pages.md`)。
+         *
+         * 影像頁的規劃整段住在未命中的分支裡，命中時不會執行也不會記 log。
+         * 08-14 兩趟匯入一趟活動數據 28/28、一趟 0/0，而只印 fileName 與 cacheKey
+         * 的話兩種解釋都說得通：快取帶著影像頁而模型這次沒抽到，
+         * 或快取是影像頁功能上線前寫進去的舊物件、根本沒有 `visionPages`。
+         *
+         * 所以命中時要把「這次到底送了什麼」印出來，而不只是「命中了」。
+         */
         logger.info("report import source decision (cached)", {
           fileName: input.name,
           cacheKey: input.cacheKey,
+          isText: cached.isText,
+          visionPages: cached.visionPages
+            ? [...cached.visionPages.pages]
+            : null,
         });
         return { ...cached, name: input.name, mimeType: input.mimeType };
       }
@@ -446,7 +583,37 @@ export class ReportImportService {
      * 而它換掉的是每次呼叫都重跑一遍文字層抽取。
      */
     if (extracted && assessment?.decision === PdfTextLayerDecisionEnum.TEXT) {
-      const resolved = { ...base, data: extracted.text, isText: true };
+      /**
+       * Info: (20260814 - Emily) 文字層乾淨 ≠ 內容完整
+       * (`data/issue_drafts/open/25_image_only_sections.md`)。
+       *
+       * 逐頁找出「內容只住在圖片裡」的那幾頁，抽成一份小 PDF 一起送。
+       * 拿不到圖片資訊時維持現行行為（整份純文字）—— 這支是補完整性的，
+       * 不該讓匯入失敗；但 `extractPdfPageImagery` 會記 log，不靜默。
+       */
+      const imagery = await extractPdfPageImagery(input.buffer);
+      const planned = imagery
+        ? planImageOnlyPages(imagery, extracted.pages)
+        : null;
+      const imagePages =
+        planned && planned.pages.length > 0
+          ? await extractPagesAsPdf(input.buffer, planned.pages)
+          : null;
+
+      const resolved: IReportImportSource = {
+        ...base,
+        data: extracted.text,
+        isText: true,
+        ...(imagePages
+          ? {
+              visionPages: {
+                data: Buffer.from(imagePages.bytes).toString("base64"),
+                mimeType: input.mimeType,
+                pages: imagePages.extracted,
+              },
+            }
+          : {}),
+      };
       if (input.cacheKey) rememberSourceDecision(input.cacheKey, resolved);
       return resolved;
     }
@@ -468,22 +635,66 @@ export class ReportImportService {
    * 切片本身是純函數(slicePagesForRange),此處只負責記錄實際生效範圍與退回情況 ——
    * 成本與品質的分水嶺必須看得到,否則無從判斷索引是否可靠。
    */
-  scopeSourceToPages(
+  async scopeSourceToPages(
     source: IReportImportSource,
     fromPage: number,
-    toPage: number,
-  ): IReportImportSource {
+    // Info: (20260817 - Emily) null = 沒有上界,取到文末(見 slicePagesForRange 的註解)
+    toPage: number | null,
+    /**
+     * Info: (20260817 - Emily) 這次切的是哪一章／哪幾節。
+     *
+     * 原本這行只印 `fileName`,於是 `fellBack: true` **無法歸屬到節** ——
+     * 一趟 14 次呼叫裡有 8 次退回送全文,而看 log 的人分不出是哪 8 次,
+     * 也就推不出成因(索引缺項?切出來太短?)。
+     */
+    scope?: string,
+  ): Promise<IReportImportSource> {
     if (!source.isText) return source;
     const slice = slicePagesForRange(source.data, fromPage, toPage);
     logger.info("report import page slice", {
       fileName: source.name,
+      scope: scope ?? "(unknown)",
       requested: { fromPage, toPage },
       applied: slice.range,
       fellBack: slice.fellBack,
       chars: slice.text.length,
       originalChars: source.data.length,
     });
-    return { ...source, data: slice.text };
+
+    const { visionPages, ...rest } = source;
+    const scoped: IReportImportSource = { ...rest, data: slice.text };
+    if (!visionPages) return scoped;
+
+    /**
+     * Info: (20260814 - Emily) 影像也要跟著裁,原本只裁文字
+     * (`data/issue_drafts/open/25_image_only_sections.md` 的後續)。
+     *
+     * 原本 `return { ...source, data: slice.text }` 把 `visionPages` 原封不動帶過去,
+     * 於是一份 64 頁的報告在 14 次逐章呼叫裡**重送同一份 p6/p7/p8 影像 14 次**,
+     * 包括文字範圍是 p38–47 的那一次 —— 而 `buildImagePagesInstruction` 會對模型說
+     * 「另附原文第 6、7、8 頁的頁面影像」,那是一句與本次範圍矛盾的指示。
+     *
+     * 2026-08-14 實測:15 次呼叫、input 約 41 萬 token,每一次的
+     * `source decision (cached)` 都印著 `visionPages:[6,7,8]`。
+     */
+    const narrowed = await narrowVisionPagesToRange(visionPages, slice.range);
+    if (narrowed.decision !== "kept") {
+      /**
+       * Info: (20260814 - Emily) 裁掉也要記一行:少了它,「這一章不需要看圖」
+       * 與「該附圖但裁不動」在現場分不出來 —— 與 `source decision (cached)`
+       * 補印 visionPages 同一個判準(`open/29`)。
+       */
+      logger.info("report import vision pages scoped", {
+        fileName: source.name,
+        applied: slice.range,
+        decision: narrowed.decision,
+        had: [...narrowed.had],
+        kept: [...(narrowed.visionPages?.pages ?? [])],
+      });
+    }
+    return narrowed.visionPages
+      ? { ...scoped, visionPages: narrowed.visionPages }
+      : scoped;
   }
 
   /**
@@ -621,7 +832,7 @@ ${source.data}`;
 【對應規則】
 1. content 逐字照抄原文,嚴禁改寫、摘要、翻譯或補充任何文字。
 2. paragraphId 只能從下方大綱挑選;對不上任何段落的內容放入 unmapped(同樣原樣照抄)。
-3. ${withActivities ? "activities:報告中的活動數據(用電量、油耗等),quantity 原樣照抄為字串,嚴禁換算;單位對不上列舉就整筆省略。" : "本次呼叫不需要萃取活動數據。"}
+3. ${withActivities ? "activities:報告中的活動數據(用電量、油耗等),quantity 原樣照抄為字串,嚴禁換算;單位對不上列舉就整筆省略。inventoryYear:這份報告的盤查年度,西元四位數(原文寫民國年請換算;報導期間跨兩年時填盤查年度那一個);**報告沒有明確寫出就回空字串,嚴禁推測**。" : "本次呼叫不需要萃取活動數據,也不需要回報盤查年度。"}
 4. 語言:${language ?? "zh-TW"}(僅影響你對標題語意的理解,內容一律照抄)。${scopeRule}
 
 【表格規則】
@@ -632,9 +843,20 @@ T3. **「NA」「NS」「-」等非數值標記必須原樣保留,嚴禁改成 0
 T4. 跨頁的同一張表合併為一張,sourcePages 給起訖兩頁;不同表號絕不合併。
 T5. tableNo 照抄原文表號(如「表3.8」);找不到表號的表格整張省略,不要自己編號。
 T6. 只收錄真正是表格的內容;條列式文字不要當成表格。
+T7. **每一列的欄數必須與表頭一致。** markdown 沒有跨欄/跨列,原文的合併儲存格要照下面兩條轉寫;
+    欄數對不上時多出來的欄會被整個丟掉(連內容一起),而且不會有任何錯誤。
+T8. **兩層表頭**(父標題橫跨數欄、子標題在下一列):表頭列寫父標題,父標題所涵蓋的每一欄各佔一格
+    (第二格起留空),下一列再寫子標題。例:
+      | 設施/活動 | 溫室氣體源 | 可能產生溫室氣體種類 | | | | | | | 備註 |
+      | | | CO2 | CH4 | N2O | HFCs | PFCs | NF3 | SF6 | (類別) |
+    —— 不要把父標題那一列寫成 4 欄了事,那會讓後面六欄的資料全部消失。
+T9. **跨欄的分隔列**(整列只有一個置中標題,如「類別二:輸入能源的間接溫室氣體排放量」)
+    獨立成一列:第一格寫該標題,同列其餘儲存格全部留空。
+    不要把它填進它所涵蓋的每一列的第一欄,也不要因此把原本的第一欄擠到第二欄去。
+    **縱向合併的儲存格**只在該範圍的第一列寫值,其餘列的該格留空,不要逐列重複。
 
 【標準大綱】
-${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
+${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
 
     const scopeLabel = options?.sectionIds
       ? options.sectionIds.join(",")
@@ -645,9 +867,7 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
         () =>
           this.getChatService().generateRawWithImages(
             prompt,
-            source.isText
-              ? undefined
-              : [{ data: source.data, mimeType: source.mimeType }],
+            buildLlmImageParts(source),
             true,
             buildImportResponseSchema(scopedSections, withActivities),
             {
@@ -723,13 +943,48 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
         accepted: validSegments.length,
       });
     }
+    /**
+     * Info: (20260811 - Emily) Word 私有區符號要在落地前換成真的 Unicode
+     * (issue_drafts/open/20 第 1 張票)。
+     *
+     * 原文的項目符號是 Wingdings 的實心圓,Word 存成 PDF 時寫的是私有使用區
+     * 的 U+F06C;抽取文字層時那個碼位原樣進來,而私有區沒有任何字型有字形 ——
+     * 預覽與 PDF 都是一個空心方框。實測那份 UAT 報告 57 個。
+     *
+     * 修在匯入落地這一層:預覽與下載的 PDF 讀同一份內容,修在渲染層只會讓兩邊分歧。
+     * 換不掉的私有區字元記 log —— 每一個都會在報告上留一個方框,不能靜默通過。
+     */
+    const normalizeSymbols = (text: string, paragraphId: string): string => {
+      const stray = unmappedPrivateUseChars(text);
+      if (stray.length > 0) {
+        /**
+         * Info: (20260812 - Emily) 訊息不再斷言「每一個都會是方框」。
+         *
+         * 掃描範圍是整個 BMP 私有區(U+E000–U+F8FF),而 Big5 造字區與 HKSCS 的
+         * 罕用漢字(人名用字)也落在裡面 —— 在繁中報告裡不算罕見,而它們在
+         * 裝好字型的環境是**正常顯示**的。原訊息會讓維運把那些當成缺陷去追。
+         * 真正需要處理的是 Word 符號字型的 U+F020–U+F0FF 區段。
+         */
+        logger.warn("[ReportImportService] unmapped private-use chars", {
+          note: "U+F020–U+F0FF 多為 Word 符號字型；其餘可能是造字區漢字，裝好字型即正常",
+          paragraphId,
+          chars: stray.map(
+            (char) =>
+              `U+${char.codePointAt(0)?.toString(16).toUpperCase() ?? "?"}`,
+          ),
+        });
+      }
+      return replaceOfficeSymbolChars(text);
+    };
+
     validSegments.forEach((segment) => {
+      const content = normalizeSymbols(segment.content, segment.paragraphId);
       if (!scopedIds.has(segment.paragraphId)) {
-        unmapped.push(segment.content);
+        unmapped.push(content);
         return;
       }
       const bucket = contentById.get(segment.paragraphId) ?? [];
-      bucket.push(segment.content);
+      bucket.push(content);
       contentById.set(segment.paragraphId, bucket);
 
       /**
@@ -762,7 +1017,12 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
           });
           return;
         }
-        accepted.push(table.data);
+        // Info: (20260811 - Emily) 表格儲存格裡也可能有私有區符號,同樣換掉
+        accepted.push({
+          ...table.data,
+          markdown: normalizeSymbols(table.data.markdown, segment.paragraphId),
+          caption: normalizeSymbols(table.data.caption, segment.paragraphId),
+        });
       });
       if (accepted.length > 0) tablesById.set(segment.paragraphId, accepted);
     });
@@ -781,7 +1041,174 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
          * 這與 Zod 層「壞一張丟一張」的原則自相矛盾 —— 同一件事在兩層用不同比例,
          * 是我設計上的不一致。統一為逐張:一張不合格只丟那一張。
          */
-        const shaped = candidates.filter((table) => {
+        /**
+         * Info: (20260814 - Emily) 缺分隔列的表先補一條，再交給裁決
+         * (`data/issue_drafts/open/47_source_table_dropped.md`)。
+         *
+         * 2026-08-14 匯入實測：表3.1／3.2／3.4／4.1 被 `not_a_table` 整張丟掉，
+         * 而表3.1 與表3.4 **被內文引用** —— 產出的報告留著「如表 3.1，…」
+         * 指向一張不存在的表。
+         *
+         * 那些表的內容其實是好的：表3.1 的表頭已經是 10 欄、子標題也對位，
+         * 匯入 prompt 的兩層表頭要求生效了，缺的只有一條 `| --- |` ——
+         * 而模型不寫它其實合理：兩層表頭的分隔列該放哪一列之後，GFM 本身沒有答案。
+         *
+         * **順序必須在裁決之前**：`validateSourceTables` 認的就是分隔列，
+         * 排在它之後等於補了也沒用。同理也在 `padTableHeaderToWidest` 之前 ——
+         * 表被丟掉的話補欄根本沒機會執行。
+         */
+        /**
+         * Info: (20260814 - Emily) 先把被折斷的列接回一行
+         * (`data/issue_drafts/open/47_source_table_dropped.md`)。
+         *
+         * 模型會把一格的內容折成多行輸出（原文那幾張表的表頭是窄欄多行排版），
+         * 於是一列佔了三四行、每一行都不是完整的 `| ... |`。2026-08-14 的匯入實測，
+         * 表4.4／4.5／4.8 就是這樣整張消失的，其中表4.8 的 `lineCount` 是 1017。
+         *
+         * **必須排在 `ensureTableDivider` 之前**：補分隔列的判準是「連續多列欄數一致」，
+         * 而一列被切成三行之後每一行的 `|` 數量都不一樣，那個判準對它不成立。
+         * 順序是：接回列的邊界 → 補分隔列 → 補欄 → 才裁決。
+         *
+         * ⚠️ 這個缺陷是**偶發**的：同一份原檔、同一個 commit，08-14 一趟丟三張表、
+         * 另一趟零張。所以「重新匯入一次沒有 dropped」不構成驗證通過，
+         * 要連續兩趟才算。
+         */
+        /**
+         * Info: (20260820 - Emily) 收割用:把**每一張**候選表的原始 markdown 記出來,
+         * 不只被丟掉的那些。
+         *
+         * 原本只有 `source table dropped` 帶 `full`,於是一趟 40 分鐘的匯入只能拿到
+         * 1–2 種形狀,而這個缺陷偶發(08-20 三趟分別丟 0 / 表3.4 / 表4.4+表4.8)。
+         * 修法因此變成「跑一趟看到一種形狀、修一種、再跑一趟」——
+         * 原檔 19 張表,那個迴圈可以跑好幾週。
+         *
+         * 開了這個旗標,一趟就拿到 19 張的真實長相,收割進
+         * `src/__tests__/fixtures/source_tables/` 之後每次改動 0.3 秒跑完所有形狀。
+         *
+         * 預設關閉:payload 動輒數 KB,19 張就是上百 KB,不該進正常的 log。
+         */
+        if (process.env.CARBON_DUMP_SOURCE_TABLES === "1") {
+          candidates.forEach((table) => {
+            logger.warn("[ReportImportService] source table candidate", {
+              paragraphId,
+              tableNo: table.tableNo,
+              caption: table.caption.slice(0, 40),
+              lineCount: table.markdown.split("\n").length,
+              full: table.markdown,
+            });
+          });
+        }
+
+        const rejoined = candidates.map((table) => {
+          const fix = joinWrappedTableRows(table.markdown);
+          /*
+           * Info: (20260821 - Emily) 一列都沒接但**有被第 6 條護欄拒絕**的情況要記出來。
+           * 原本這裡直接 return,於是「因為會吞掉別的列所以整段不接」變成無痕 ——
+           * 那張表接下來被丟掉,而 log 只會說 not_a_table,說不出真正的原因。
+           */
+          if (
+            fix.joined === 0 &&
+            fix.refusedTooWide + fix.refusedLooksLikeRow > 0
+          ) {
+            logger.warn("[ReportImportService] source table rows refused", {
+              paragraphId,
+              tableNo: table.tableNo,
+              caption: table.caption.slice(0, 40),
+              refusedTooWide: fix.refusedTooWide,
+              refusedLooksLikeRow: fix.refusedLooksLikeRow,
+            });
+          }
+          if (fix.joined === 0) return table;
+          /*
+           * Info: (20260820 - Emily) 續行數一併記出來。08-20 把上限從 4 放寬到 32,
+           * 而放寬不能是靜默的:用掉幾個續行是「原文長得不標準」的強度指標,
+           * 累積起來要回頭改匯入 prompt,不是讓這支函式永遠替 prompt 擦屁股。
+           */
+          logger.warn("[ReportImportService] source table rows rejoined", {
+            paragraphId,
+            tableNo: table.tableNo,
+            caption: table.caption.slice(0, 40),
+            rows: fix.joined,
+            maxContinuations: fix.maxContinuations,
+            noteworthy: fix.maxContinuations > CONTINUATION_LINES_NOTEWORTHY,
+            /*
+             * Info: (20260821 - Emily) 被第 6 條護欄拒絕的列數(接完比同段最寬完整列還寬,
+             * 代表吞掉了別的列)。非 0 代表原文混用了前導管線 —— 那張表接下來會被驗證器
+             * 擋掉,而這個數字是唯一說得出「為什麼沒接」的地方。
+             */
+            refusedTooWide: fix.refusedTooWide,
+            /*
+             * Info: (20260821 - Emily) 第 7 條護欄擋下的列數(續行本身就是一列)。
+             * 與 refusedTooWide 分開記:前者是「寬度累加超過表寬」,
+             * 後者是「這個續行補上管線就是合法列」—— 兩條抓的不是同一件事,
+             * 而且 refusedTooWide 的餘裕實測是 0,它一旦非 0 就是那個脆弱情況到了。
+             */
+            refusedLooksLikeRow: fix.refusedLooksLikeRow,
+          });
+          return { ...table, markdown: fix.markdown };
+        });
+
+        const repaired = rejoined.map((table) => {
+          const fix = ensureTableDivider(table.markdown);
+          if (!fix.inserted) {
+            /**
+             * Info: (20260819 - Emily) 沒補的兩種情況要分得開。
+             *
+             * `skipped` 有值 = 找到了一致列但它上面還有表格列,補進去會讓整張表
+             * 印成原始 markdown(`open/47` 第三種形狀,08-19 run2 實測)。
+             * 這一張接下來會被 `validateSourceTables` 擋掉,而那是刻意的 ——
+             * 一個看得見的失敗勝過一片管線。所以要記出來,否則它就變成
+             * 「表格莫名少一張」而沒有原因。
+             */
+            if (fix.skipped) {
+              logger.warn(
+                "[ReportImportService] source table divider skipped",
+                {
+                  paragraphId,
+                  tableNo: table.tableNo,
+                  caption: table.caption.slice(0, 40),
+                  reason: fix.skipped,
+                },
+              );
+            }
+            return table;
+          }
+          /*
+           * Info: (20260814 - Emily) 補了要記出來：這是「原文長得不標準」的訊號，
+           * 累積起來要回頭改 prompt，而不是永遠靠讀取端補。
+           */
+          logger.warn("[ReportImportService] source table divider inserted", {
+            paragraphId,
+            tableNo: table.tableNo,
+            caption: table.caption.slice(0, 40),
+          });
+          return { ...table, markdown: fix.markdown };
+        });
+
+        /**
+         * Info: (20260820 - Emily) 超寬列裁到分隔列的欄數
+         * (`data/issue_drafts/open/47_source_table_dropped.md` 的第四種形狀)。
+         *
+         * 08-20 run C：`表3.4` 的第一列是 547 格、只有 5 格有字，分隔列與 14 列
+         * 資料全是 6 格。GFM 因此整張不渲染 —— 渲染不變式把它改成明示丟表，
+         * 紙上乾淨了，但內文還引用著那張表。只裁空白格，一格有字就不裁。
+         *
+         * **必須排在 `validateSourceTables` 之前**：裁完才對得上分隔列，
+         * 排在裁決之後等於裁了也沒用。
+         */
+        const trimmedRows = repaired.map((table) => {
+          const fix = trimRowsToDividerWidth(table.markdown);
+          if (fix.trimmed === 0) return table;
+          logger.warn("[ReportImportService] source table rows trimmed", {
+            paragraphId,
+            tableNo: table.tableNo,
+            caption: table.caption.slice(0, 40),
+            rows: fix.trimmed,
+          });
+          return { ...table, markdown: fix.markdown };
+        });
+
+        const shaped = trimmedRows.filter((table) => {
           const check = validateSourceTables([table]);
           if (!check.isValid) {
             /**
@@ -803,24 +1230,77 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
                 .slice(0, 3)
                 .map((line) => line.slice(0, 120)),
               lineCount: table.markdown.split("\n").length,
+              /**
+               * Info: (20260817 - Emily) 被拒的**完整** markdown（上限 2000 字）。
+               *
+               * 08-17 那趟丟了 表2.1（三次）與 表2.2，`head[0]` 看起來是
+               * 「整張表擠成一行、列與列之間用相鄰的 `||` 分隔」——
+               * 但 `| a || b |` 在 GFM 裡是合法的空儲存格，
+               * 光憑一行被截斷到 120 字的開頭**設計不出安全的分割規則**：
+               * 那會變成又一次對著一份樣本調門檻。
+               *
+               * 修這一族之前需要的是可重現的輸入，不是更多推測。
+               * 這一欄就是為了讓下一趟直接把它交出來，
+               * 然後寫成單元測試的 fixture（`open/47`）。
+               *
+               * 2000 字是折衷：`lineCount` 曾經出現 1017（表4.8 那次），
+               * 但那是被折斷成多行；擠成一行的情況整張通常在 2000 字內。
+               * 截斷了也看得出來 —— `fullLength` 會比 `full` 長。
+               */
+              full: table.markdown.slice(0, 2000),
+              fullLength: table.markdown.length,
             });
           }
           return check.isValid;
         });
+        /**
+         * Info: (20260811 - Emily) 表頭比資料列窄的表要先把欄數補齊
+         * (issue_drafts/open/19 第 3 張票)。
+         *
+         * GFM 會把超出表頭欄數的儲存格**靜默丟棄**。原文的兩層表頭
+         * (父標題橫跨數欄、子標題在下一列)在 markdown 沒有 colspan 可用,
+         * 模型只能把父標題那列寫成較少的欄 —— 於是表3.1 宣告 4 欄、資料列有 10 欄,
+         * 七種溫室氣體裡的五種連同「(類別)」欄一起消失,而且沒有任何錯誤訊息。
+         *
+         * 實測那份 UAT 報告:4 張表共 261 個非空儲存格就這樣不見了。
+         * 補欄只在表頭尾端加空欄,不動任何一格既有內容;多出來的格全是空的
+         * (行尾多打一個 `|`)時不補,免得憑空多一條空欄。
+         *
+         * 修在匯入落地這一層而不是渲染層:預覽與下載的 PDF 讀的是同一份 markdown,
+         * 修在渲染層只會讓兩邊再度分歧。
+         */
+        const widened = shaped.map((table) => {
+          const fix = padTableHeaderToWidest(table.markdown);
+          if (fix.recoveredCells === 0) return table;
+          logger.warn("[ReportImportService] source table header widened", {
+            paragraphId,
+            tableNo: table.tableNo,
+            headerColumns: fix.headerColumns,
+            widestColumns: fix.widestColumns,
+            recoveredCells: fix.recoveredCells,
+            /**
+             * Info: (20260812 - Emily) 第二層表頭:那種表的欄位標籤與資料欄
+             * 不對應,而補欄不修那件事(見 markdown_table_columns 檔頭)。
+             * 需要人工對照原文,所以要記得出來。
+             */
+            hasSecondHeaderLevel: fix.hasSecondHeaderLevel,
+          });
+          return { ...table, markdown: fix.markdown };
+        });
         // Info: (20260802 - Tzuhan) 逐張過關後仍要驗數量上限(單張檢查看不到總數)
-        const withinLimit = validateSourceTables(shaped);
+        const withinLimit = validateSourceTables(widened);
         if (!withinLimit.isValid) {
           logger.warn("[ReportImportService] source tables dropped", {
             paragraphId,
             reason: withinLimit.reason ?? null,
-            count: shaped.length,
+            count: widened.length,
           });
         }
         return {
           paragraphId,
           title: section ? `${section.code} ${section.title}` : paragraphId,
           content: parts.join("\n\n").trim(),
-          sourceTables: withinLimit.isValid ? shaped : [],
+          sourceTables: withinLimit.isValid ? widened : [],
         };
       },
     );
@@ -839,7 +1319,13 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
       if (record.success) return [{ ...record.data, source: source.name }];
       const rejected = item as Record<string, unknown>;
       logger.warn("[ReportImportService] activity record rejected", {
-        name: String(rejected?.name ?? "").slice(0, 40),
+        /**
+         * Info: (20260817 - Emily) 欄位名是 `sourceName` 不是 `name`
+         * (`src/validators/carbon_inventory.ts` 的 `CarbonActivityRecordShape`)。
+         * 原本印 `rejected?.name`,於是這一欄**永遠是空字串** ——
+         * 這行 log 存在的唯一理由就是說出「被拒的是哪一筆」,而它從來沒說出來過。
+         */
+        sourceName: String(rejected?.sourceName ?? "").slice(0, 40),
         unit: String(rejected?.unit ?? "").slice(0, 20),
         quantity: String(rejected?.quantity ?? "").slice(0, 20),
         issues: record.error.issues
@@ -849,14 +1335,48 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
       });
       return [];
     });
-    if (withActivities) {
-      logger.info("[ReportImportService] activity extraction result", {
-        received: rawActivities.length,
-        accepted: activities.length,
+    /**
+     * Info: (20260817 - Emily) 這行必須**無條件印**,而且要帶得出成因
+     * (`data/issue_drafts/open/46_activity_data_traceability.md`)。
+     *
+     * 原本 `received: 0` 把四種完全不同的上游狀態塌成同一個數字:
+     *
+     *   (a) 模型根本沒回 `activities` 這個鍵 —— 合法,因為 responseSchema 的
+     *       `required` 沒列它,外層 Zod 也是 `.optional()`,而 `?? []` 把
+     *       「缺鍵」與「空陣列」在上面那一行永久抹平
+     *   (b) 模型回 `activities: []`
+     *   (c) 這次呼叫其實沒帶 `withActivities` —— 原本的 `if` 守衛讓這行**根本不印**,
+     *       而驗收腳本對「零筆匹配」算出來也是 0/0:
+     *       「這行從沒印過」與「印了 0」在現場是同一句話
+     *   (d) 回超過 50 筆 → 外層整批 throw → 該單元 500(這個看 `issues`)
+     *
+     * `received: 0` 只證明了不是「回了但逐筆被擋掉」那一種。
+     * 加上 `withActivities` / `hasKey` / `rawSample` 之後,四種就分得開了。
+     */
+    logger.info("[ReportImportService] activity extraction result", {
+      withActivities,
+      scope: options?.sectionIds?.join(",") ?? options?.chapterId ?? "all",
+      hasKey: Object.prototype.hasOwnProperty.call(parsed, "activities"),
+      received: rawActivities.length,
+      accepted: activities.length,
+      rawSample: JSON.stringify(parsed.activities ?? null).slice(0, 200),
+    });
+
+    /**
+     * Info: (20260902 - Emily) 盤查年度的裁決結果留痕(issue_drafts/open/69)。
+     *
+     * 與 activities 的被拒紀錄同一個理由:預覽卡上年度是空的時候,現場要分得開
+     * 「模型回了空字串」與「模型回了東西但被裁決退掉」—— 後者才需要回頭看
+     * 封面寫法是不是我們沒涵蓋到的形狀。只在模型真的回了非空字串時印。
+     */
+    const inventoryYear = normalizeInventoryYear(parsed.inventoryYear);
+    if ((parsed.inventoryYear ?? "").trim().length > 0) {
+      logger.info("[ReportImportService] inventory year adjudicated", {
+        raw: String(parsed.inventoryYear).slice(0, 40),
+        accepted: inventoryYear ?? null,
       });
     }
-
-    return { segments, unmapped, activities };
+    return { segments, unmapped, activities, inventoryYear };
   }
 
   /**
@@ -898,15 +1418,13 @@ ${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\
 7. 報告原文完全沒有相關資訊的段落,仍需輸出草稿:以撰寫目標為骨架、全部關鍵資訊以「(待補: 說明)」佔位。
 
 【待撰寫段落】
-${buildOutlineCatalog(scopedSections)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
+${buildOutlineCatalog(scopedSections)}${buildImagePagesInstruction(source)}${source.isText ? `\n\n【報告原文】\n${source.data}` : ""}`;
 
     let raw: string;
     try {
       raw = await this.getChatService().generateRawWithImages(
         prompt,
-        source.isText
-          ? undefined
-          : [{ data: source.data, mimeType: source.mimeType }],
+        buildLlmImageParts(source),
         true,
         buildGapFillResponseSchema(scopedSections),
         {

@@ -1,3 +1,5 @@
+import { MonthType } from "@/constants/month";
+
 export type RowItem = {
   label: string;
   value: number;
@@ -116,11 +118,60 @@ export const defaultSalaryCalculatorResult: ISalaryCalculatorUI = {
   totalSalaryTaxable: 0,
 };
 
+/**
+ * Info: (20260831 - Julian) 計算機表單的完整輸入狀態。
+ *
+ * 這是 `calculator_context` 裡那 34 個 input state 的純資料形式。抽出來的理由是
+ * 「表單狀態 ↔ 引擎輸入」的來回轉換要能單獨測 —— 那段對應寫在 context 裡的時候，
+ * 只有 render 一個 React 元件才驗得到，而本專案的測試不 render React。
+ *
+ * 轉換函式在 `src/lib/utils/salary_calculator_snapshot.ts`。
+ */
+export interface ISalaryCalculatorFormState {
+  selectedYear: string;
+  selectedMonth: MonthType;
+  industryCategory: IndustryCategoryItem;
+  taxResidencyStatus: TaxResidencyStatus;
+  isJoined: boolean;
+  dayOfJoining: string;
+  isLeft: boolean;
+  dayOfLeaving: string;
+  payrollDaysBase: string;
+
+  baseSalary: number;
+  mealAllowance: number;
+  otherAllowanceWithTax: number;
+  otherAllowanceWithoutTax: number;
+
+  oneAndOneThirdHoursForTaxable: number;
+  oneAndTwoThirdsHoursForTaxable: number;
+  twoHoursForTaxable: number;
+  twoAndOneThirdsHoursForTaxable: number;
+  twoAndTwoThirdsHoursForTaxable: number;
+  oneAndOneThirdsHoursForNonTax: number;
+  oneAndTwoThirdsHoursForNonTax: number;
+  twoHoursForNonTax: number;
+  twoAndOneThirdsHoursForNonTax: number;
+  twoAndTwoThirdsHoursForNonTax: number;
+  leavePayoutHours: number;
+  sickLeaveHours: number;
+  personalLeaveHours: number;
+
+  isLaborInsurance: boolean;
+  isNHI: boolean;
+  isLaborPension: boolean;
+  nhiBackPremium: number;
+  secondGenNhiTax: number;
+  otherAdjustments: number;
+  voluntaryPensionContribution: number;
+  numberOfDependents: number;
+}
+
 interface ISalaryCalculatorOptions {
   year: number; // Info: (20250727 - Luphia) 計薪年度
   month: number; // Info: (20250727 - Luphia) 計薪月份
   foreignWorker?: boolean; // Info: (20250727 - Luphia) 外籍員工或課稅年度內在中華民國境內居住不滿31天
-  job?: number; // Info: (20250727 - Luphia) 行業別代碼，預設 41 電腦程式設計、諮詢及相關服務業、資訊服務業
+  job?: number; // Info: (20260902 - Julian) 行業別代碼，預設 DEFAULT_INDUSTRY_CODE＝42「電腦程式設計、諮詢及相關服務業、資訊服務業」（原註解寫 41，與三處實作皆不符）
   employeeStartDate?: number; // Info: (20250727 - Luphia) 員工入職日期
   employeeEndDate?: number; // Info: (20250727 - Luphia) 員工離職日期
   baseSalaryTaxable: number; // Info: (20250727 - Luphia) 當月應稅基本工資（本薪）

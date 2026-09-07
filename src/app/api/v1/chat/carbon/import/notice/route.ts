@@ -11,7 +11,7 @@
 import { NextRequest } from "next/server";
 import { logger } from "@/lib/utils/logger";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
+import { enforceRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
   }
 
-  const limited = enforceCarbonRateLimit(
+  const limited = enforceRateLimit(
     sessionUser.address,
     RateLimitBucketEnum.SAVE,
   );
@@ -76,6 +76,8 @@ export async function POST(request: NextRequest) {
             draftedCount: parsed.data.draftedCount,
             activityCount: parsed.data.activityCount,
             failedChapters: parsed.data.failedChapters,
+            // Info: (20260825 - Luphia) 點數用完而未解析的章（issue #6713）
+            pausedChapters: parsed.data.pausedChapters,
           })
         : buildImportSummaryNotice(language, {
             fileName: parsed.data.fileName,

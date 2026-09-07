@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import PaymentConfirmModal from "@/components/common/payment_confirm_modal";
 import { uploadFile, fileToBase64 } from "@/lib/file_operator";
-import { useOrderTransaction } from "@/hooks/use_order_transaction";
+import { useAnalysisPayment } from "@/hooks/use_analysis_payment";
 import { getAnalysisCost } from "@/lib/analysis/pricing";
 
 import {
@@ -45,13 +45,17 @@ export default function JournalUploadView({
 
   const [isUploading, setIsUploading] = useState<boolean>(false);
 
+  // Info: (20260813 - Luphia) 統一付款入口（設計書 §5.6）：團隊額度 / 個人點數兩種來源
   const {
     workflowStatus,
     errorMessage,
     txHash,
-    resetTransaction,
-    executeOrderTransaction,
-  } = useOrderTransaction();
+    reset: resetPayment,
+    pay,
+    paymentSourceNode,
+    paysWithTeamQuota,
+    teamAvailableCredits,
+  } = useAnalysisPayment();
 
   const {
     isAnalyzing,
@@ -61,7 +65,7 @@ export default function JournalUploadView({
     handleAnalyzeAll,
   } = useJournalAnalysis({
     accountBookId,
-    executeOrderTransaction,
+    executeOrderTransaction: pay,
     itemName: "AI Journal OCR scan (Upload)",
     onComplete: onUploadComplete,
   });
@@ -206,7 +210,7 @@ export default function JournalUploadView({
         {uploadedFiles.length === 0 && !isUploading && (
           <button
             type="button"
-            className="absolute inset-0 z-10 h-full w-full cursor-pointer rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="absolute inset-0 z-10 h-full w-full cursor-pointer rounded-2xl focus:ring-2 focus:ring-orange-500 focus:outline-none"
             onClick={triggerFileInput}
             aria-label="Upload multiple files"
           />
@@ -349,13 +353,16 @@ export default function JournalUploadView({
       </div>
 
       <PaymentConfirmModal
+        extraContent={paymentSourceNode}
+        paidByTeamQuota={paysWithTeamQuota}
+        teamAvailableCredits={teamAvailableCredits}
         isOpen={showConfirmModal}
         onClose={() => {
           if (
             workflowStatus === "error" ||
             workflowStatus === "payment_success"
           ) {
-            resetTransaction();
+            resetPayment();
             setShowConfirmModal(false);
           } else if (workflowStatus === "idle") {
             setShowConfirmModal(false);

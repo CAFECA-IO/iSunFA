@@ -26,7 +26,17 @@ export function RebootCountdown({
       if (onComplete) {
         onComplete();
       } else {
-        window.location.href = "/";
+        /**
+         * Info: (20260814 - Luphia) 這裡刻意**不用** router：後端剛剛被重啟，
+         * 而重啟的目的正是讓新的 .env 生效。client 導航會沿用重啟前的 JS bundle
+         * 與 RSC 快取，且可能在伺服器還沒起來時打進去、卡在載入中。
+         * 整份文件重新載入才會拿到新的 build 與新的設定，失敗時也是瀏覽器的
+         * 標準錯誤頁而不是一個停住的 SPA。
+         *
+         * 用 origin 組出絕對網址（而非字面上的 "/"）以表明這是刻意的文件級導航：
+         * `no-location-assign-relative-destination` 針對的是「內部相對路徑該交給 router」。
+         */
+        window.location.assign(new URL("/", window.location.origin).toString());
       }
       return;
     }

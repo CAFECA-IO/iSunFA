@@ -2,6 +2,7 @@
 // Info: (20260708 - Tzuhan) Define enterprise-grade types and enums for the Carbon Chatbot domain.
 
 import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
+import { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
 import {
   EmissionBasisEnum,
   LedgerProvenanceEnum,
@@ -15,6 +16,7 @@ import {
   ArticulationViolationReasonEnum,
   ArticulationWarningReasonEnum,
 } from "@/constants/carbon_articulation";
+import type { ICarbonReportIdentity } from "@/lib/utils/carbon_report_identity";
 
 export enum ChatRoleEnum {
   USER = "user",
@@ -111,6 +113,32 @@ export interface IReportProgressStats {
 
 export interface IReportData {
   documentName: string;
+  /**
+   * Info: (20260812 - Emily) 報告名稱 —— 印在文件第一頁的那個
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * **與 `documentName` 是兩件事**:那個是下載的檔名（帶副檔名，預設
+   * `Carbon_Report_Draft_<id>.pdf`），這個是文件本身的名稱。
+   * 一份要送第三方查證的報告，封面不能印檔名。
+   *
+   * 是選填的:`undefined` 代表**使用者還沒命名**，而不是「名稱是空的」——
+   * 兩者要分得開，否則沒辦法決定要不要退回既有草稿烤進去的那個舊標題
+   * （見 `resolveReportName`）。
+   */
+  reportName?: string;
+  /**
+   * Info: (20260814 - Emily) 查證用的四個識別欄位
+   * (`data/issue_drafts/open/24_report_identity_fields.md`)。
+   *
+   * 盤查年度／製作單位／查證單位／更新日期。與 `reportName` 一樣是**文件的中繼資料**
+   * 而不是內容 —— ADR 014 要求 `content` 逐字照抄原文，這四項是我們加上去的，
+   * 不能住在那裡面。
+   *
+   * 為什麼不從內容抽:查證單位原文裡根本沒有；盤查年度雖然 2.1 節寫了涵蓋期間，
+   * 但抽錯的代價是**封面印錯年度**，而那會被查證單位當成事實。
+   * 更新日期現在印的是「下載當下」，需要的是定稿日 —— 兩者不是同一件事。
+   */
+  identity?: ICarbonReportIdentity;
   /**
    * Info: (20260716 - Tzuhan) 報告全文的權威來源(使用者所見即所存,零改動保證):
    * 存在時預覽直接渲染本欄,不重組大綱骨架;paragraphs 降為 derived view(進度/chip/查核)。
@@ -269,6 +297,18 @@ export interface IComputedLedgerEntry {
     isoCategory: Iso14064Category;
     subCategory: string;
     tableNo: string;
+    /**
+     * Info: (20260827 - Emily) 這筆分錄屬於哪一個盤查年度(PR #6725 review R1)。
+     *
+     * 為什麼非有不可:去重鍵 `imported:{basis}:{site}:{subCategory}` **不含年度**,
+     * 所以跨年度再匯一份報告時,只有前一年有的排放源(關廠、廠址改名、
+     * ISO 子類別編號改版)會變成**孤兒列留在帳本裡並被算進總量** ——
+     * reviewer 實測虛增 28.6%,而每一筆孤兒列都有合法溯源(表3.8+廠址+子類別),
+     * 單看帳本挑不出來。有了年度,合併才能分辨「同年覆蓋」與「換年換鍋」。
+     *
+     * 無值 = 該份報告沒有可萃取的盤查年度(視為與當前帳本同年度,維持舊行為)。
+     */
+    year?: number;
   };
   /**
    * Info: (20260806 - Tzuhan) 交易日期(Unix 秒),自 `IActivityRecord.tradingTimestamp` 帶過。
@@ -326,9 +366,78 @@ export interface ICarbonInventoryState {
   stockRecords?: IMaterialStockRecord[];
   // Info: (20260716 - Tzuhan) #6519 決定論引擎的計算總表(隨 state E2EE 入庫)
   computedLedger?: IComputedLedger;
+  /**
+   * Info: (20260825 - Emily) 匯入表格被勾稽擋下的紀錄(#6707「對帳差異」偵測器的資料源)。
+   *
+   * 原本這個資訊死在前端 console.warn:使用者問「有沒有異常」,
+   * 系統只答得出「帳本沒資料」,說不出「表3.8 有 6 列解析失敗被擋」——
+   * 帳本為空的**原因**正是最該浮出的疑點。隨 state E2EE 入庫;
+   * 下一次匯入成功入帳即清空(見 applyImportedLedgerEntries)。
+   */
+  ledgerImportBlocks?: ILedgerImportBlock[];
+  /**
+   * Info: (20260825 - Emily) 帳本年度快照(#6719):鍵為**那份報告的**盤查年度。
+   *
+   * 年間量級跳動偵測器需要「兩個年度的帳本」——年度維度不必等外部資料庫,
+   * 匯入第二份**帶不同年度**的報告就長出來了。
+   *
+   * Info: (20260902 - Emily) 鍵的來源在 `issue_drafts/open/69` 修好了。
+   * 在那之前鍵是 `state.year` —— 房間層級、write-once
+   * (`carbon_inventory.ts` 的 `state.year ?? extraction.year`),而匯入路徑
+   * 完全不帶年度進來,所以同一間房匯兩份報告會拿到**同一個年度值**:
+   * 這個 Record 永遠只有一個鍵,規則 3 的跨年度換鍋也永遠不觸發。
+   * 現在年度來自那份報告本身(萃取預填 + 匯入預覽卡確認),
+   * 快照鍵、規則 3 的剔除與年度警示三者共用 `resolveIncomingYear`。
+   * 同年度重匯 = 覆蓋該年(與 activityKey 同鍵覆蓋的語義一致)。
+   * `computedLedger` 維持「當前」語義不動 —— 既有消費端(桑基/對帳/事實包)零改動。
+   */
+  ledgerByYear?: Record<number, IComputedLedger>;
+  /**
+   * Info: (20260828 - Emily) 年度標註不完整的警示(PR #6725 round-2 追加回饋)。
+   *
+   * 住在 state 不住 ledger,照 ledgerImportBlocks 的先例 ——
+   * 它描述的是「這次匯入與既有帳本的年度關係」,不是帳本自身的一筆資料;
+   * 而且塞進 `computedLedger.pending` 會冒用「活動數據待補」的語意
+   * (label 變「待補項」、待補計數被污染),那正是 queryAnomalies
+   * 列舉制註解禁止的「從既有桶子偷渡偵測器」。
+   * 每次匯入成功入帳時以 detectUndatedImportedEntries 的結果覆寫(含清空)。
+   */
+  ledgerYearWarning?: ILedgerYearWarning;
+  /**
+   * Info: (20260903 - Emily) 揭露框架(#6688-A):使用者可以選的只有**揭露層**。
+   *
+   * 「ISO 14064-1 還是 GHG Protocol」在頂層是分類錯誤而不是選項 ——
+   * 計算層(GHG Protocol)與查證層(ISO 14064-1/-3)是骨幹,
+   * 這個欄位只決定「要不要把報告包成 IFRS S1/S2 的架構」。
+   * 理由見 `constants/carbon_report_framework.ts` 的檔頭。
+   *
+   * 省略 = `INVENTORY_ONLY`(現行行為,只出盤查報告書、不印任何揭露框架字樣)。
+   * 隨 state E2EE 入庫,所以**同時在 `CarbonInventoryStateSchema` 裡宣告** ——
+   * 少了那一行,重載後這個選擇就消失(見那個檔案 08-07 與 09-03 兩段註解)。
+   */
+  disclosureFramework?: CarbonDisclosureFrameworkEnum;
   notes?: string[];
   updatedAt: string;
   version: number;
+}
+
+/**
+ * Info: (20260828 - Emily) 「年度標註不完整」訊號(queryAnomalies 列舉制的第五個偵測器)。
+ *
+ * 定義在 types 而不是 carbon_ledger_totals:偵測器的產物要同時被
+ * 查詢層(carbon_ledger_query)與 state 讀到,型別放在 lib 會讓
+ * types → lib → types 繞一圈。判斷邏輯仍在 detectUndatedImportedEntries。
+ */
+export interface ILedgerYearWarning {
+  incomingYear: number;
+  undatedCount: number;
+}
+
+// Info: (20260825 - Emily) 單筆勾稽阻擋紀錄:reason 沿用匯入端組好的字句(含差額/列數,即證據鏈)
+export interface ILedgerImportBlock {
+  paragraphId: string;
+  reason: string;
+  blockedAt: string;
 }
 
 export interface IChatSession {

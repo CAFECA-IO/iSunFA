@@ -2,6 +2,10 @@ import { describe, it, expect } from "@jest/globals";
 import { readFileSync } from "fs";
 import { join } from "path";
 import * as HrConstants from "@/constants/hr_management";
+import * as AttendanceConstants from "@/constants/attendance";
+import * as LeaveConstants from "@/constants/leave";
+import * as LeavePolicyConstants from "@/constants/leave_policy";
+import * as OvertimeConstants from "@/constants/overtime";
 
 /**
  * Info: (20260811 - Julian) 把「前端 enum 鏡像與 Prisma schema 同步」這件事機械化。
@@ -67,6 +71,20 @@ const SCHEMA_ENUMS = parseSchemaEnums(
   stripComments(readFileSync(SCHEMA_PATH, "utf8")),
 );
 
+/**
+ * Info: (20260813 - Julian) 納入覆蓋率檢查的常數模組。
+ *
+ * 新增一個帶 enum 的常數檔時**必須登記在這裡** —— 否則它的 enum 不會被任何一條
+ * 檢查看到，而「忘了同步」會從「忘了改鏡像」退化成「忘了寫測試」。
+ */
+const CONSTANT_MODULES: Record<string, Record<string, unknown>> = {
+  "hr_management.ts": HrConstants,
+  "attendance.ts": AttendanceConstants,
+  "leave.ts": LeaveConstants,
+  "leave_policy.ts": LeavePolicyConstants,
+  "overtime.ts": OvertimeConstants,
+};
+
 // Info: (20260811 - Julian) 需與 Prisma schema 保持一致的鏡像。新增鏡像時必須在此登記
 const MIRRORED: Record<string, Record<string, string>> = {
   EmployeeStatus: HrConstants.EmployeeStatus,
@@ -74,6 +92,48 @@ const MIRRORED: Record<string, Record<string, string>> = {
   ProcessTaskStatus: HrConstants.ProcessTaskStatus,
   DocumentCategory: HrConstants.DocumentCategory,
   ProbationResult: HrConstants.ProbationResult,
+  ResignationType: HrConstants.ResignationType,
+  // Info: (20260818 - Julian) HR 職能（第三條角色軸線，見 ADR 023 §8.3）
+  EmployeeHrFunction: HrConstants.EmployeeHrFunction,
+
+  // Info: (20260813 - Julian) 簽到系統
+  PunchType: AttendanceConstants.PunchType,
+  PunchVerification: AttendanceConstants.PunchVerification,
+  WorkDayType: AttendanceConstants.WorkDayType,
+
+  /**
+   * Info: (20260813 - Julian) 假勤
+   *
+   * Info: (20260817 - Julian) `LeaveType` 已於本次移除。依 ADR 021，假別是**資料**
+   * 而不是型別 —— 它降級為 `LeavePolicy.code` 的 seed 初始列（`LEAVE_POLICY_CODE`）。
+   * 那不是字串 enum（值是中文代碼常數而非鍵名），所以它不屬於這裡，
+   * 而是由 `leave_seed_integrity.test.ts`（T23）驗證其與 seed 的一致性
+   * —— 該檔在 review B8 之前並不存在，現已補上，逐一比對十三個代號。
+   */
+  LeaveRequestStatus: LeaveConstants.LeaveRequestStatus,
+  LeaveRecallStatus: LeaveConstants.LeaveRecallStatus,
+
+  // Info: (20260817 - Julian) 假別規則與額度帳（假勤計畫書 §5.1）
+  LeaveAccrualMethod: LeavePolicyConstants.LeaveAccrualMethod,
+  LeaveCycleBasis: LeavePolicyConstants.LeaveCycleBasis,
+  LeaveUnitBasis: LeavePolicyConstants.LeaveUnitBasis,
+  LeaveRoundingMode: LeavePolicyConstants.LeaveRoundingMode,
+  LeaveQuotaMode: LeavePolicyConstants.LeaveQuotaMode,
+  LeaveProofRequirement: LeavePolicyConstants.LeaveProofRequirement,
+  LeaveGrantSource: LeavePolicyConstants.LeaveGrantSource,
+  LeaveLedgerEntryType: LeavePolicyConstants.LeaveLedgerEntryType,
+  LeaveApprovalNodeKind: LeavePolicyConstants.LeaveApprovalNodeKind,
+  LeaveApprovalStepStatus: LeavePolicyConstants.LeaveApprovalStepStatus,
+  LeaveDaySegment: LeavePolicyConstants.LeaveDaySegment,
+  LeaveCashOutReason: LeavePolicyConstants.LeaveCashOutReason,
+  LeaveConcurrencyAction: LeavePolicyConstants.LeaveConcurrencyAction,
+
+  // Info: (20260817 - Julian) 加班（假勤計畫書 §5.1）
+  OvertimeFilingType: OvertimeConstants.OvertimeFilingType,
+  OvertimeCompensationMode: OvertimeConstants.OvertimeCompensationMode,
+  OvertimeEvidenceBasis: OvertimeConstants.OvertimeEvidenceBasis,
+  OvertimePremiumTier: OvertimeConstants.OvertimePremiumTier,
+  OvertimeRequestStatus: OvertimeConstants.OvertimeRequestStatus,
 };
 
 /**
@@ -89,7 +149,141 @@ const UI_ONLY = [
   "OrganizationTab",
   "OrganizationViewMode",
   "StructureDimension",
+
+  /**
+   * Info: (20260812 - Julian) 純畫面控制項：分頁、檢視模式、快速篩選。
+   * 它們決定「現在顯示哪一區」，不會被寫進任何一張表。
+   */
+  "MovementTab",
+  "MovementViewMode",
+  "OffboardingListMode",
+  "OffboardingModalTab",
+  "OnboardingQuickFilter",
+
+  /**
+   * Info: (20260812 - Julian) 發起報到的範本與三個自動化開關。
+   *
+   * 兩者都只決定「建立當下要產生哪幾筆任務」。被存下來的是產生的**結果**
+   * （`OnboardingTask.templateKey`），不是產生它的規則 ——
+   * 把規則也存一份，就會出現「範本說有 7 項、任務只有 5 筆」的第二種真相。
+   *
+   * ToDo: (20260812 - Julian) 範本改成由 HR 自行維護（範本表 + 明細表）之後，
+   * `OnboardingTemplateKey` 會變成那張表的一列，屆時它就不屬於這裡了。
+   */
+  "OnboardingTemplateKey",
+  "OnboardingTrigger",
+  "OffboardingTemplateKey",
+
+  /**
+   * Info: (20260812 - Julian) 由任務狀態推導出來的顯示狀態，不是被儲存的欄位。
+   *
+   * 例如 `MovementStage` 是看板欄位（由關鍵日期推得）、`MovementAlertLevel`
+   * 是紅黃綠三色（由「離職日剩幾天 + 帳號停權做了沒」推得）。
+   * 把推導結果存回 DB，就會出現「存的燈號與任務現況不一致」的第三種真相 ——
+   * 與 ADR 019 移除 `ProcessTaskType` 是同一個理由。
+   */
+  "ChecklistState",
+  "MovementStage",
+  "MovementAlertLevel",
+  "MovementAlertReason",
+  "HandoverItemState",
+  "CertificateState",
+
+  /**
+   * Info: (20260812 - Julian) schema 目前沒有對應欄位，但**應該要有** ——
+   * 這四個各自在 `hr_management.ts` 有一條 ToDo 列管。
+   *
+   * 補進 schema 的那一天，它們必須從這裡搬到 `MIRRORED`；
+   * 忘了搬的話，下面「should register every enum that exists on both sides」
+   * 會在名稱兩邊同時存在時直接擋下來，不需要有人記得這件事。
+   */
+  "HandoverCategory",
+  "ProbationMilestone",
+  "ProbationScoreItem",
+  "ResignationReason",
+
+  /**
+   * Info: (20260813 - Julian) 簽到系統的衍生值與計算值。
+   *
+   * `ShiftPatternKind` 是**刻意**沒有 schema 對應物的那一種：固定班表就是
+   * 「窗＝核心」的彈性班表，型別由 ShiftPattern 那六個欄位的值決定，
+   * 存一個判別欄位唯一能做的事就是說謊（同 `ProcessTaskType` 的處置）。
+   * 它不會搬到 MIRRORED。
+   *
+   * ToDo: (20260813 - Julian) 其餘三個是暫時的：demo 版不落地判定結果與現場狀態
+   * （改為讀取時即時計算），所以 schema 沒有對應 enum。正式版補上
+   * `AttendanceDailyResult` / `AttendanceException` / `AttendancePresence` 之後，
+   * 它們必須從這裡搬到 MIRRORED —— 忘了搬的話，下面
+   * 「should register every enum that exists on both sides」會直接擋下來。
+   */
+  "ShiftPatternKind",
+
+  /**
+   * Info: (20260813 - Julian) `AttendanceDayPhase` 與 `ShiftPatternKind` 同一類：
+   * 它是「現在」與班別窗的比較結果，隨時間自己改變。
+   * 存下來的那一刻就已經過期，因此不會搬到 MIRRORED。
+   */
+  "AttendanceDayPhase",
+
+  /**
+   * Info: (20260814 - Julian) `GeolocationStatus` 與 `AuthProviderStatus` 是瀏覽器當下的
+   * 環境狀態（有沒有拿到座標、伺服器有沒有設好 OAuth），每次開頁重新偵測。
+   * 存進 schema 的那一刻就已經過期，因此不會搬到 MIRRORED。
+   */
+  "GeolocationStatus",
+  "AuthProviderStatus",
+
+  /**
+   * Info: (20260814 - Julian) `LeaveRecallResolutionOutcome` 是一次寫入的結局，
+   * 不是被儲存的欄位——結果本身已經記在 `LeaveRecall.status` 上。
+   * 它不會搬到 MIRRORED。
+   */
+  "LeaveRecallResolutionOutcome",
+
+  /**
+   * Info: (20260813 - Julian) `AttendanceCellTone` 是純顯示語意：
+   * 「一格只有一個顏色，而一天可以有多種異常」這個限制下，
+   * 挑哪一種代表這一天是排版決定，不是判定結果 —— 它不會有 schema 對應物。
+   */
+  "AttendanceCellTone",
+
+  "AttendanceDayStatus",
+  "AttendanceExceptionType",
+  "PresenceStatus",
+
+  /**
+   * Info: (20260813 - Julian) `LeaveRecallDecision` 是請求 DTO 的欄位，不是被儲存的值。
+   *
+   * 存下來的是回應**之後**的狀態（`LeaveRecallStatus.ACCEPTED` / `DECLINED`）。
+   * 把「他按了哪個鍵」與「結果是什麼」都存一份，就是第二種真相。
+   */
+  "LeaveRecallDecision",
+
+  /**
+   * Info: (20260817 - Julian) `LeaveBalanceHealth` 是三色燈號，由「剩餘額度 ÷ 距到期天數」
+   * 當場算出來的顯示語意；`OvertimeExceptionType` 是把 `evaluateOvertimeLimits`
+   * 的超限結果翻成畫面上的一列。兩者都是**推導結果**，與 `MovementAlertLevel` 同類：
+   * 存回 DB 唯一能做的事就是在額度變動後說謊。它們不會搬到 MIRRORED。
+   */
+  "LeaveBalanceHealth",
+  "OvertimeExceptionType",
 ];
+
+/**
+ * Info: (20260817 - Julian) 依命名慣例排除常數表。
+ *
+ * `LEAVE_POLICY_CODE` 是 `{ ANNUAL: "ANNUAL", ... }` —— 它滿足 key === value，
+ * 於是被下面的 `isStringEnum` 判成鏡像，但它不是：依 ADR 021，假別是**資料**，
+ * 這份常數是 `LevePolicy.code` 的 seed 初始列，schema 那邊沒有、也不該有對應 enum。
+ *
+ * 判準取名稱而不是再加一張登記表：Prisma 的 enum 名一律 PascalCase，
+ * 帶底線的 SCREAMING_SNAKE 匯出**在型別上不可能**是任何 Prisma enum 的鏡像。
+ * 反過來說，這條規則不會放過任何真正該登記的東西 —— 它只擋掉不可能的那一類。
+ *
+ * 它與 seed 的一致性由 `leave_seed_integrity.test.ts`（T23）負責，不在本檔的職責內
+ * —— 該檔在 review B8 之前並不存在，現已補上。
+ */
+const isConstantTableName = (name: string): boolean => name.includes("_");
 
 /**
  * Info: (20260811 - Julian) 判斷一個 export 是不是 TS 字串 enum：每個值都等於它的鍵。
@@ -108,6 +302,20 @@ const isStringEnum = (value: unknown): value is Record<string, string> => {
     entries.every(([key, item]) => typeof item === "string" && key === item)
   );
 };
+
+/**
+ * Info: (20260813 - Julian) 所有常數模組匯出的字串 enum 名稱（聯集）。
+ *
+ * 兩個方向的覆蓋率檢查共用它 —— 各寫一份就會出現「一邊掃了新模組、
+ * 另一邊沒掃」這種只有在特定組合下才顯現的縫。
+ */
+const exportedEnumNames = (): string[] =>
+  Object.values(CONSTANT_MODULES).flatMap((constants) =>
+    Object.entries(constants)
+      .filter(([name]) => !isConstantTableName(name))
+      .filter(([, value]) => isStringEnum(value))
+      .map(([name]) => name),
+  );
 
 describe("HR enum mirrors", () => {
   /**
@@ -149,16 +357,16 @@ describe("HR enum mirrors", () => {
   });
 
   /**
-   * Info: (20260811 - Julian) 覆蓋率方向一：hr_management.ts 新增了 enum 卻沒登記。
+   * Info: (20260811 - Julian) 覆蓋率方向一：常數模組新增了 enum 卻沒登記。
    * 沒有這條，「忘了同步」就只是從「忘了改鏡像」變成「忘了寫測試」。
+   *
+   * Info: (20260813 - Julian) 改為掃 `CONSTANT_MODULES` 的聯集而不是單一檔案：
+   * 簽到系統的 enum 住在 `attendance.ts`，只掃 hr_management.ts 會漏掉整個模組。
    */
-  it("should account for every string enum exported by hr_management.ts", () => {
-    const exported = Object.entries(HrConstants)
-      .filter(([, value]) => isStringEnum(value))
-      .map(([name]) => name)
-      .sort();
-
-    expect(exported).toEqual([...Object.keys(MIRRORED), ...UI_ONLY].sort());
+  it("should account for every string enum exported by the constants modules", () => {
+    expect([...exportedEnumNames()].sort()).toEqual(
+      [...Object.keys(MIRRORED), ...UI_ONLY].sort(),
+    );
   });
 
   /**
@@ -168,8 +376,9 @@ describe("HR enum mirrors", () => {
    * 這條改用名稱比對，不管值長什麼樣都會抓到。兩條合起來才沒有縫。
    */
   it("should register every enum that exists on both sides", () => {
+    const exported = exportedEnumNames();
     const unregistered = Object.keys(SCHEMA_ENUMS)
-      .filter((name) => name in HrConstants)
+      .filter((name) => exported.includes(name))
       .filter((name) => !(name in MIRRORED) && !UI_ONLY.includes(name))
       .sort();
 

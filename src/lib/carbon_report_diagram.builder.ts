@@ -4,13 +4,18 @@
 // Info: (20260730 - Tzuhan) LLM 只回結構化欄位,mermaid 由本模組組出,且每個節點文字都要能在原文找到才畫。
 
 import {
-  CarbonDiagramRendererEnum,
-  CarbonDiagramTemplateEnum,
-  CARBON_DIAGRAM_TEMPLATES,
   CARBON_DIAGRAM_MAX_LABEL_CHARS,
   CARBON_DIAGRAM_MAX_OVERLONG_SHARE,
   CARBON_DIAGRAM_MIN_NODES,
+  CARBON_DIAGRAM_TEMPLATES,
   CARBON_TIMELINE_MIN_DATED_EVENTS,
+  CarbonDiagramRendererEnum,
+  CarbonDiagramTemplateEnum,
+  DIAGRAM_CAP_EXCEEDED_PHRASE,
+  DIAGRAM_DEGRADED_TO_TABLE_PHRASE,
+  HIERARCHY_NO_VALUE,
+  HIERARCHY_TABLE_HEADERS,
+  MILESTONE_TABLE_HEADERS,
   buildDiagramAnchorEnd,
   buildDiagramAnchorStart,
 } from "@/constants/carbon_report_diagrams";
@@ -32,12 +37,32 @@ export interface ICarbonDiagramLabels {
    * 略過而不說等於靜默少了原文的一條 —— 這個專案一貫的做法是「沒畫出來的必須說出來」。
    */
   skippedTooLong?: string;
+  /**
+   * Info: (20260814 - Emily) 節點數超過上限時的說明
+   * (`data/issue_drafts/open/34_diagram_overflow_clips_nodes.md`)。
+   *
+   * 原本 `TOO_MANY_NODES` 與「無法回溯原文」共用 `unverifiable` 那句文案,
+   * 而那句話說的是「節點是模型編的」—— 對這個情況是**錯的**:
+   * 節點全部通過原文回溯,只是數量超過版面能承受的。
+   * 讀的人看到「無法回溯」會以為系統在防幻覺,而實際上是它畫不下。
+   *
+   * `{{count}}` 與 `{{max}}` 由本檔代入。
+   */
+  tooMany?: string;
 }
 
 export const CARBON_DIAGRAM_DEFAULT_LABELS: ICarbonDiagramLabels = {
   unverifiable: "(圖表節點無法回溯至本節原文,已略過不繪製)",
   insufficient: "(本節內容不足以繪製結構圖)",
   skippedTooLong: "以下項目文字過長,未畫進圖中(內容仍在本節原文)",
+  /**
+   * Info: (20260818 - Emily) 文案從「未繪製」改成「改以表格呈現」
+   * （`data/issue_drafts/open/48_diagram_silent_failure.md`）。
+   *
+   * 08-14 這句話本身已經是對的（它說的是「畫不下」而不是「內容不足」）,
+   * 但**說得對與東西還在是兩件事**。說明是最低標,退化才是補而不丟。
+   */
+  tooMany: `(本節的結構共 {{count}} 個項目,${DIAGRAM_CAP_EXCEEDED_PHRASE} {{max}} 個,${DIAGRAM_DEGRADED_TO_TABLE_PHRASE})`,
 };
 
 export enum DiagramRejectReasonEnum {
@@ -66,6 +91,15 @@ export interface IDiagramValidation {
    * 而它們的處置正好相反 —— 一個要整張作廢,一個只是少畫一項並說出來。
    */
   skippedLabels?: string[];
+  /**
+   * Info: (20260814 - Emily) 超過上限時的實際節點數與上限,供文案代入
+   * (`data/issue_drafts/open/34_diagram_overflow_clips_nodes.md`)。
+   *
+   * 只說「節點太多」而不說幾個,讀的人沒辦法判斷是差一點還是差很多 ——
+   * 差一點值得放寬上限,差很多代表這一節本來就不該畫成圖。
+   */
+  nodeCount?: number;
+  maxNodes?: number;
 }
 
 /**
@@ -124,9 +158,33 @@ export function validateDiagramNodes(
     return { isValid: false, reason: DiagramRejectReasonEnum.NO_NODES };
   }
   const template = CARBON_DIAGRAM_TEMPLATES[templateId];
-  if (nodes.length > template.maxNodes) {
-    return { isValid: false, reason: DiagramRejectReasonEnum.TOO_MANY_NODES };
-  }
+
+  /**
+   * Info: (20260818 - Emily) 超過上限的判定移到**所有信任與結構檢查之後**
+   * （`data/issue_drafts/open/48_diagram_silent_failure.md`）。
+   *
+   * 原本它是第二道檢查,排在原文回溯之前。那在「超過上限就不畫」的年代沒有差別 ——
+   * 兩條路都是不畫。但 08-18 起超過上限會**退化成表格**,而表格會印在紙上,
+   * 於是順序變成承重的:排在回溯之前的話,一批模型編出來的節點只要數量夠多,
+   * 就會繞過回溯檢查、以表格的形式印進一份要送查證的文件。
+   *
+   * 本檔第一行寫的「節點文字必須能在原文找到是這張圖能出現在審計文件裡的唯一理由」
+   * 對表格同樣成立 —— 換一種呈現不會讓沒有出處的字變得可信。
+   *
+   * 同理排在 `UNKNOWN_PARENT` 與 `CYCLIC` 之後:退化表有一欄「上層項目」,
+   * 而父節點的文字只由「它自己也是一個節點」保證有出處。父節點指向圖外時,
+   * 那一欄會印出沒有驗過的字串。
+   */
+  const overflow = (
+    extra: Partial<IDiagramValidation> = {},
+  ): IDiagramValidation => ({
+    isValid: false,
+    reason: DiagramRejectReasonEnum.TOO_MANY_NODES,
+    nodeCount: nodes.length,
+    maxNodes: template.maxNodes,
+    ...extra,
+  });
+  const isOverflowing = nodes.length > template.maxNodes;
 
   /**
    * Info: (20260806 - Tzuhan) 原文回溯先驗,長度後驗 —— **順序是這段邏輯的關鍵。**
@@ -227,6 +285,9 @@ export function validateDiagramNodes(
         reason: DiagramRejectReasonEnum.TOO_FEW_DATED_EVENTS,
       };
     }
+    // Info: (20260818 - Emily) 到這裡 timeline 的節點都驗過了,超過上限交給退化表
+    if (isOverflowing) return overflow({ skippedLabels });
+
     // Info: (20260806 - Tzuhan) 過長者不畫但要說出來(見上方 skippedLabels 的理由)
     return skippedLabels.length > 0
       ? { isValid: true, skippedLabels }
@@ -272,6 +333,9 @@ export function validateDiagramNodes(
     }
   }
 
+  // Info: (20260818 - Emily) 一切都驗過了,只剩「畫不下」—— 那是退化的入口,不是否決
+  if (isOverflowing) return overflow();
+
   return { isValid: true };
 }
 
@@ -285,16 +349,47 @@ const TIMELINE_UNDATED_LABEL = "未標註時間";
 const escapeLabel = (label: string): string =>
   label.trim().replace(/"/g, "").replace(/\s+/g, " ");
 
-// Info: (20260730 - Tzuhan) timeline 以冒號分隔時間與事件,label 內的冒號必須換掉否則整列語意錯位
-const escapeTimelineLabel = (label: string): string =>
-  escapeLabel(label).replace(/[:：]/g, "-");
+/**
+ * Info: (20260811 - Emily) 里程碑改成表格之後,要換掉的不再是冒號而是**直線**。
+ * timeline 用冒號分隔時間與事件,表格用 `|` 分隔儲存格 ——
+ * 事件文字裡的 `|` 若不逸出會多切出一欄,整列跟著錯位。
+ * 冒號在表格裡沒有語意,不必再動它(原文的「品管分等檢驗甲等」帶冒號的句子因此保持原樣)。
+ */
+const escapeTableCell = (label: string): string =>
+  escapeLabel(label).replace(/\|/g, "\\|");
 
 /**
- * Info: (20260730 - Tzuhan) mermaid timeline:`時間標籤 : 事件 : 事件`。
- * 同一時間標籤的多個事件併為一列,無時間標籤者集中於「未標註時間」之後——
- * 不猜時間、也不丟掉事件。時間順序沿用模型回傳的順序(原文本身即依時序書寫)。
+ * Info: (20260811 - Emily) 里程碑改為**表格**而不是 mermaid timeline
+ * (data/issue_drafts/open/20 第 2 張票)。
+ *
+ * mermaid 的 timeline 是「一個時間點一欄」,欄寬固定,而中文事件說明約 20 字。
+ * 實測高興昌那份的 15 條沿革:SVG 內在寬度 3,559px,排到橫式頁寬 993px 是**縮到 28%**,
+ * 事件字級 4.5px —— 正文是 14px。使用者看到的「字疊在一起」是文字在那個尺寸下溢出各自的方塊。
+ *
+ * 量過三種做法:
+ *   現況一條軸    3559px → 28%   4.5px
+ *   拆成三段      最差 1744px → 57%   9.1px
+ *   表格          688px  → 不縮放     11.3px(與其他表格同級)
+ * 拆段要到不縮放得拆成五張圖,15 條沿革拆五張圖不合理。
+ * mermaid timeline 也沒有交錯排列的選項:同一時間點的事件只會在那一欄往下疊。
+ *
+ * 客戶原始報告這一段本來就是條列敘述而不是圖表,表格同時更接近原文。
+ *
+ * 同一時間點的多個事件各佔一列,時間只寫在該段的第一列 ——
+ * 與原文照錄表格的縱向合併慣例一致(見 carbon_source_table 的 T9),
+ * 也讓 annotateTable 的欄寬判斷把寬度讓給事件欄。
+ *
+ * 註:template 的 renderer 仍叫 TIMELINE。那個列舉標的是「這個模板要呈現時序」,
+ * 不是「一定要用 mermaid 畫成軸」;呈現方式改變不需要改模板的語意。
  */
-function buildTimeline(nodes: ICarbonDiagramNode[]): string {
+/*
+ * Info: (20260812 - Emily) 不再收 labels。
+ *
+ * 表頭移到 `MILESTONE_TABLE_HEADERS`（唯一來源）之後這個參數就沒有用了 ——
+ * 而它是本檔私有函式、只有一個呼叫端，留著一個「傳進來但不看」的參數
+ * 會讓下一個人以為里程碑表還有 i18n 的餘地。沒有，兩端得吃同一組。
+ */
+function buildMilestoneTable(nodes: ICarbonDiagramNode[]): string {
   const eventsByPeriod = new Map<string, string[]>();
   const undated: string[] = [];
   /**
@@ -303,43 +398,156 @@ function buildTimeline(nodes: ICarbonDiagramNode[]): string {
    * `未標註時間 : 1966年01月 : 1968年06月 : …` —— 那是把時間軸自己再列一次。
    *
    * 本檔開頭寫過「不丟壞節點、只留好節點」,理由是少了中間層會呈現原文不存在的層級。
-   * 那條理由對 timeline 不成立:時間軸沒有層級,丟掉一個與軸重複的項目
-   * 不可能捏造出結構。這裡丟掉的不是事件,是軸的複本。
+   * 那條理由對里程碑不成立:它沒有層級,丟掉一個與時間欄重複的項目
+   * 不可能捏造出結構。這裡丟掉的不是事件,是時間欄的複本。
    */
   const periods = new Set(
     nodes
       .map((node) => node.parent)
       .filter((parent): parent is string => parent !== undefined)
-      .map(escapeTimelineLabel),
+      .map(escapeTableCell),
   );
   nodes.forEach((node) => {
-    const label = escapeTimelineLabel(node.label);
+    const label = escapeTableCell(node.label);
     if (node.parent === undefined) {
-      // Info: (20260803 - Tzuhan) 無時間標籤且文字本身就是某個時間標籤 → 軸的複本,不是事件
+      // Info: (20260803 - Tzuhan) 無時間標籤且文字本身就是某個時間標籤 → 複本,不是事件
       if (periods.has(label)) return;
       undated.push(label);
       return;
     }
-    const period = escapeTimelineLabel(node.parent);
+    const period = escapeTableCell(node.parent);
     const bucket = eventsByPeriod.get(period) ?? [];
     bucket.push(label);
     eventsByPeriod.set(period, bucket);
   });
 
-  const rows = Array.from(eventsByPeriod.entries()).map(
-    ([period, events]) => `    ${period} : ${events.join(" : ")}`,
-  );
+  const rows: string[] = [];
+  eventsByPeriod.forEach((events, period) => {
+    events.forEach((event, index) => {
+      // Info: (20260811 - Emily) 時間只寫在該段第一列,續列留空(縱向合併的表達方式)
+      rows.push(`| ${index === 0 ? period : ""} | ${event} |`);
+    });
+  });
   // Info: (20260730 - Tzuhan) 沒有時間標籤的事件不丟棄,列於末尾並明示其未標註時間
-  if (undated.length > 0) {
-    rows.push(`    ${TIMELINE_UNDATED_LABEL} : ${undated.join(" : ")}`);
-  }
-  return ["```mermaid", "timeline", ...rows, "```"].join("\n");
+  undated.forEach((event, index) => {
+    rows.push(`| ${index === 0 ? TIMELINE_UNDATED_LABEL : ""} | ${event} |`);
+  });
+
+  /**
+   * Info: (20260812 - Emily) 表頭取自 MILESTONE_TABLE_HEADERS（唯一來源）。
+   * 原本是 `labels.milestonePeriodHeader ?? "時間"` —— 可覆寫,而讀取端的
+   * timeline 轉換是純文字函式拿不到 labels,覆寫會讓同一份報告出現兩種表頭。
+   */
+  return [
+    `| ${MILESTONE_TABLE_HEADERS.period} | ${MILESTONE_TABLE_HEADERS.event} |`,
+    "| --- | --- |",
+    ...rows,
+  ].join("\n");
+}
+
+/**
+ * Info: (20260818 - Emily) 結構退化表:超過繪製上限時改用它,而不是把內容丟掉
+ * （`data/issue_drafts/open/48_diagram_silent_failure.md`）。
+ *
+ * 三欄:層級 / 項目 / 上層項目。層級與上層項目兩欄一起把樹的形狀表達完整 ——
+ * 只給項目清單的話,「品管部隸屬於哪一位副主任委員」這件原文有的資訊會不見,
+ * 那就變成另一種形式的丟。
+ *
+ * 排列用深度優先（根節點依原順序,子節點依原順序），讓表讀起來像那棵樹。
+ * 最後一段的 `remaining` 是保險:任何沒被走訪到的節點一律補在表尾。
+ * 走訪邏輯若有 bug,後果應該是「順序不好看」而不是「少一列」——
+ * 這一整張票的判準就是補而不丟,實作自己也要守它。
+ */
+function buildHierarchyTable(nodes: ICarbonDiagramNode[]): string {
+  const childrenOf = new Map<string, ICarbonDiagramNode[]>();
+  const roots: ICarbonDiagramNode[] = [];
+  const known = new Set(nodes.map((node) => node.label));
+  nodes.forEach((node) => {
+    const parent = node.parent;
+    if (parent === undefined || !known.has(parent)) {
+      roots.push(node);
+      return;
+    }
+    const bucket = childrenOf.get(parent) ?? [];
+    bucket.push(node);
+    childrenOf.set(parent, bucket);
+  });
+
+  const rows: string[] = [];
+  const visited = new Set<string>();
+  const walk = (node: ICarbonDiagramNode, level: number): void => {
+    if (visited.has(node.label)) return;
+    visited.add(node.label);
+    /**
+     * Info: (20260818 - Emily) 根節點的上層欄印破折號而不是留白 ——
+     * 空儲存格會被 `carbon_report_html` 的 `isGroupRow` 讀成章節分隔列
+     * （見 `HIERARCHY_NO_VALUE` 的理由）。
+     */
+    const parent =
+      node.parent !== undefined && known.has(node.parent)
+        ? escapeTableCell(node.parent)
+        : HIERARCHY_NO_VALUE;
+    rows.push(`| ${level} | ${escapeTableCell(node.label)} | ${parent} |`);
+    (childrenOf.get(node.label) ?? []).forEach((child) =>
+      walk(child, level + 1),
+    );
+  };
+  roots.forEach((root) => walk(root, 1));
+
+  // Info: (20260818 - Emily) 保險:走訪沒碰到的一律補在表尾,寧可順序難看也不能少一列
+  const remaining = nodes.filter((node) => !visited.has(node.label));
+  remaining.forEach((node) => {
+    visited.add(node.label);
+    rows.push(
+      `| ${HIERARCHY_NO_VALUE} | ${escapeTableCell(node.label)} | ${escapeTableCell(node.parent ?? HIERARCHY_NO_VALUE)} |`,
+    );
+  });
+
+  return [
+    `| ${HIERARCHY_TABLE_HEADERS.level} | ${HIERARCHY_TABLE_HEADERS.item} | ${HIERARCHY_TABLE_HEADERS.parent} |`,
+    "| --- | --- | --- |",
+    ...rows,
+  ].join("\n");
 }
 
 /**
  * Info: (20260730 - Tzuhan) 產出結構圖區塊(錨點包夾,與數據圖表同一套替換機制)。
  * 驗證未過時不畫圖,但輸出說明文字——沉默地少一張圖,查核者不會知道發生過什麼。
  */
+/**
+ * Info: (20260814 - Emily) 不畫的原因要說對,而不只是「說了」
+ * (`data/issue_drafts/open/34_diagram_overflow_clips_nodes.md`)。
+ *
+ * 原本只分兩路:素材不足用 `insufficient`,其餘一律 `unverifiable`。
+ * 於是「節點太多」會印成「節點無法回溯至本節原文」—— 那句話說的是模型編造,
+ * 而這個情況恰恰相反:每個節點都通過了原文回溯,只是畫不下。
+ *
+ * 對一份要送查證的文件,這兩句話的差別很大:一句是「系統攔下了不可信的內容」,
+ * 另一句是「內容可信但版面容不下」。前者讓人懷疑資料,後者讓人去看正文。
+ * 說錯的代價不是措辭問題,是把讀者導向錯誤的結論。
+ */
+function rejectionNote(
+  validation: IDiagramValidation,
+  labels: ICarbonDiagramLabels,
+): string {
+  if (
+    validation.reason === DiagramRejectReasonEnum.NO_NODES ||
+    validation.reason === DiagramRejectReasonEnum.TOO_FEW_DATED_EVENTS ||
+    validation.reason === DiagramRejectReasonEnum.TOO_FEW_NODES
+  ) {
+    return labels.insufficient;
+  }
+  if (
+    validation.reason === DiagramRejectReasonEnum.TOO_MANY_NODES &&
+    labels.tooMany
+  ) {
+    return labels.tooMany
+      .replace("{{count}}", String(validation.nodeCount ?? 0))
+      .replace("{{max}}", String(validation.maxNodes ?? 0));
+  }
+  return labels.unverifiable;
+}
+
 export function buildCarbonDiagramBlock(
   templateId: CarbonDiagramTemplateEnum,
   nodes: ICarbonDiagramNode[],
@@ -350,16 +558,48 @@ export function buildCarbonDiagramBlock(
     `${buildDiagramAnchorStart(templateId)}\n\n${body}\n\n${buildDiagramAnchorEnd(templateId)}`;
 
   const validation = validateDiagramNodes(templateId, nodes, sourceText);
+
+  /**
+   * Info: (20260818 - Emily) 超過上限**不是**否決,是換一種呈現
+   * （`data/issue_drafts/open/48_diagram_silent_failure.md`,上線阻擋 B3）。
+   *
+   * 08-17 實測那一趟,兩節的結構圖都整張消失:
+   * `ch1-1` 的沿革 62 個項目（上限 40）、`ch1-4` 的委員會 21 個（上限 20）。
+   * 說明文字是對的,但 62 條沿革與 21 位委員在紙上一個都不剩 ——
+   * 而那些內容全部通過了原文回溯,是可信的。
+   *
+   * 走到這裡的 `TOO_MANY_NODES` 已經過了回溯、長度、父節點與環的檢查
+   * （見 `validateDiagramNodes` 裡那段順序說明）,所以印成表格是安全的。
+   * 表格本來就是這份報告的主要載體（實測 19 張）,讀者不會不習慣。
+   */
+  if (
+    !validation.isValid &&
+    validation.reason === DiagramRejectReasonEnum.TOO_MANY_NODES
+  ) {
+    const skippedOverflow = new Set(validation.skippedLabels ?? []);
+    const kept =
+      skippedOverflow.size > 0
+        ? nodes.filter((node) => !skippedOverflow.has(node.label))
+        : nodes;
+    const table =
+      CARBON_DIAGRAM_TEMPLATES[templateId].renderer ===
+      CarbonDiagramRendererEnum.TIMELINE
+        ? buildMilestoneTable(kept)
+        : buildHierarchyTable(kept);
+    const parts = [`> _${rejectionNote(validation, labels)}_`, "", table];
+    if (skippedOverflow.size > 0 && labels.skippedTooLong) {
+      parts.push(
+        "",
+        `**${labels.skippedTooLong}**`,
+        "",
+        ...Array.from(skippedOverflow).map((label) => `- ${label}`),
+      );
+    }
+    return wrap(parts.join("\n"));
+  }
+
   if (!validation.isValid) {
-    return wrap(
-      `> _${
-        validation.reason === DiagramRejectReasonEnum.NO_NODES ||
-        validation.reason === DiagramRejectReasonEnum.TOO_FEW_DATED_EVENTS ||
-        validation.reason === DiagramRejectReasonEnum.TOO_FEW_NODES
-          ? labels.insufficient
-          : labels.unverifiable
-      }_`,
-    );
+    return wrap(`> _${rejectionNote(validation, labels)}_`);
   }
 
   /**
@@ -382,7 +622,7 @@ export function buildCarbonDiagramBlock(
 
   const template = CARBON_DIAGRAM_TEMPLATES[templateId];
   if (template.renderer === CarbonDiagramRendererEnum.TIMELINE) {
-    return wrap(noteSkipped(buildTimeline(drawn)));
+    return wrap(noteSkipped(buildMilestoneTable(drawn)));
   }
 
   /**

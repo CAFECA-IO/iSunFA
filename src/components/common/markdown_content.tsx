@@ -13,9 +13,13 @@ import {
 } from "@/constants/carbon_evidence";
 import { useState, useEffect } from "react";
 import { downloadFile } from "@/lib/file_operator";
-import { stripMarkdownComments } from "@/lib/utils/markdown_comment";
-import { stripHtmlLineBreaksOutsideFences } from "@/lib/utils/markdown_line_break";
 import dynamic from "next/dynamic";
+import { escapeArithmeticEmphasis } from "@/lib/utils/markdown_arithmetic_safety";
+import { restoreLineStructure } from "@/lib/utils/markdown_line_structure";
+import { splitInlineListItems } from "@/lib/utils/markdown_list_structure";
+import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_table";
+import { padAllTableHeaders } from "@/lib/utils/markdown_table_columns";
+import { prepareCarbonMarkdown } from "@/lib/utils/carbon_markdown_prepare";
 
 // Info: (20260720 - Tzuhan) #54 證據鏈元件動態載入:含 RecordTabModal 依賴鏈,不拖累一般 markdown 渲染
 const EvidenceChain = dynamic(
@@ -101,6 +105,32 @@ export type MarkdownContentVariant = "document" | "compact";
 
 interface IMarkdownContentProps {
   content: string;
+  /**
+   * Info: (20260810 - Emily) 把段落內的換行還原成硬斷行(碳盤查報告專用)。
+   *
+   * 用 opt-in 而不是預設:這個元件同時服務文件工具、任務板與公開分享頁,
+   * 那些內容的斷行慣例未經量測。碳報告的原文行結構有量過(見
+   * markdown_line_structure 的說明),其他使用端沒有,不該替它們決定。
+   */
+  /**
+   * Info: (20260812 - Emily) 剝掉內容開頭那行文件級 H1（碳盤查報告專用）。
+   *
+   * 既有草稿的第一行是 `# <會話名>`（使用者第一則訊息截斷 24 字），
+   * 而報告名稱已經改走文件外殼。**不動儲存的內容**，只在渲染時拿掉那一行 ——
+   * 與 timeline、私有區符號同一層的讀取端補救。
+   */
+  stripDocumentTitle?: boolean;
+  /**
+   * Info: (20260820 - Emily) 剝掉「標頭後緊接一行完全同文」的那一行（碳盤查報告專用）。
+   *
+   * 成因是碳報告組稿端一律由 `p.title` 產生標頭，而 `content` 的第一行有時
+   * 就是那個標題。用 opt-in 而不是預設，理由與 `restoreSourceLineBreaks` 相同
+   * （#6644）：在別的使用端，「標頭後緊接同文一行」可能是內容而不是重複，
+   * 剝掉會是**靜默的內容遺失** ——
+   * `"## 注意事項\n注意事項\n\n請攜帶證件"` → `"## 注意事項\n\n請攜帶證件"`。
+   */
+  stripEchoedHeadings?: boolean;
+  restoreSourceLineBreaks?: boolean;
   theme?: "dark" | "light";
   variant?: MarkdownContentVariant;
   onContentChange?: (newContent: string) => void;
@@ -108,6 +138,9 @@ interface IMarkdownContentProps {
 
 const MarkdownContent: FC<IMarkdownContentProps> = ({
   content,
+  stripDocumentTitle = false,
+  stripEchoedHeadings = false,
+  restoreSourceLineBreaks = false,
   theme = "dark",
   variant = "document",
   onContentChange = () => {},
@@ -173,8 +206,72 @@ const MarkdownContent: FC<IMarkdownContentProps> = ({
    * 與註解剝除一樣:僅影響顯示,存下來的原文一字不改。
    */
   const displayContent = useMemo(
-    () => stripHtmlLineBreaksOutsideFences(stripMarkdownComments(content)),
-    [content],
+    /**
+     * Info: (20260810 - Emily) 一併轉義算式裡的星號 —— 否則預覽與下載的 PDF
+     * 會顯示不同的數字,而那正是這幾天一直在追的那種分歧。
+     */
+    () => {
+      /**
+       * Info: (20260811 - Emily) timeline → 表格也要在預覽做,否則預覽是圖、下載是表格
+       * —— 兩端分歧正是這幾天追的多數問題的形狀(issue_drafts/open/20 第 2 張票)。
+       */
+      /**
+       * Info: (20260811 - Emily) 私有區符號兩端都換:匯入端只影響新匯入的報告,
+       * 既有草稿裡存著的 U+F06C 要在讀取時換掉才看得到 ——
+       * 只改一端會讓預覽是方框、下載是圓點,或者反過來。
+       */
+      /**
+       * Info: (20260812 - Emily) `escapeArithmeticEmphasis` 必須是最後一道
+       * (與 carbon_report_html 同一條規則,那裡有完整說明)。
+       *
+       * timeline → 表格是「內容搬家」:搬出圍籬的算式沒有被逸出過,
+       * 若逸出先跑,搬家之後那些 `*` 就裸露在 prose 裡被 marked 吃掉。
+       */
+      /**
+       * Info: (20260812 - Emily) 表頭補欄兩端都套。
+       * 匯入端只影響新匯入的報告 —— 既有草稿的表頭已經是窄的,
+       * 那 261 個被 GFM 丟掉的儲存格要在讀取時補才救得回來。
+       */
+      /*
+       * Info: (20260812 - Emily) 先剝文件級 H1，再跑其餘轉換 ——
+       * 剝除只看「第一個非空行是不是單一個 #」，放在前面才不會被其他轉換
+       * 插進來的內容擋住第一行。
+       */
+      /**
+       * Info: (20260820 - Emily) 前置轉換改走共用函式（PR review A2）。
+       *
+       * 原本這裡與 `buildCarbonReportHtml` 各排一串，靠兩則註解宣稱
+       * 「順序完全一致」—— 而 `stripLeadingDocumentTitle` 兩邊位置不同，
+       * 「HTML 註解在 H1 之前」的輸入在兩端產出不同結果（本端漏剝報告名稱）。
+       * 順序現在寫在 `prepareCarbonMarkdown` 裡。
+       */
+      const normalized = padAllTableHeaders(
+        convertTimelineBlocksToTables(
+          prepareCarbonMarkdown(content, {
+            stripDocumentTitle,
+            stripEchoedHeadings,
+          }).markdown,
+        ),
+      );
+      /*
+       * Info: (20260814 - Emily) 先補回換行，再把換行標成硬斷行
+       * (`data/issue_drafts/open/26_import_uat.md` 的觀察項)。
+       *
+       * `restoreLineStructure` 只能還原「來源已經有的」換行；而 08-14 新匯入件
+       * 幾乎沒有輸出那些換行（`●` 獨立成行從 54 個掉到 3 個），
+       * 所以要先有 `splitInlineListItems` 把換行補回來，它才有東西可以標。
+       * 反過來的順序沒有意義。
+       *
+       * 掛在 `restoreSourceLineBreaks` 這個開關下面而不是無條件套用：
+       * 兩支解的是同一件事的兩半，而這個元件跑在 21 個使用端上
+       * —— 一支只對碳報告成立的轉換不該無條件套給全部人（#6644）。
+       */
+      const structured = restoreSourceLineBreaks
+        ? restoreLineStructure(splitInlineListItems(normalized).markdown)
+        : normalized;
+      return escapeArithmeticEmphasis(structured);
+    },
+    [content, restoreSourceLineBreaks, stripDocumentTitle, stripEchoedHeadings],
   );
 
   const components = useMemo(

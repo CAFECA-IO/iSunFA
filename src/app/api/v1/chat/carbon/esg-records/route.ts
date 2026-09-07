@@ -6,7 +6,7 @@ import { NextRequest } from "next/server";
 import { logger } from "@/lib/utils/logger";
 import { describeError } from "@/lib/utils/error_message";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
+import { enforceRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
-    const limited = enforceCarbonRateLimit(
+    const limited = enforceRateLimit(
       sessionUser.address,
       RateLimitBucketEnum.READ,
     );

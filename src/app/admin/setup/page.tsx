@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { useTranslation } from "@/i18n/i18n_context";
 import { SetupVerifyEngine } from "@/components/admin/setup/verify_engine_step";
@@ -81,6 +82,7 @@ export default function SetupWizardPage() {
   const [resetKey, setResetKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     getEnvSignatureStatus()
@@ -90,7 +92,11 @@ export default function SetupWizardPage() {
           setEnvData(res.envData);
 
           if (res.status === "COMPLETE") {
-            window.location.href = "/admin/reboot";
+            /**
+             * Info: (20260814 - Luphia) 用 replace 而非 push：設定已完成時本頁只是個轉接站，
+             * 留在歷史裡會讓「上一頁」把人彈回來又立刻被送走。
+             */
+            router.replace("/admin/reboot");
           } else if (
             res.status === "SIGNATURE_MISMATCH" ||
             (res.status === "MISSING_KEYS" &&
@@ -155,7 +161,8 @@ export default function SetupWizardPage() {
         setIsLoading(false);
         setError(err.message || "Unknown error");
       });
-  }, []);
+    // Info: (20260814 - Luphia) router 由 Next 保證穩定，列入依賴只為滿足 lint，不會重跑檢查
+  }, [router]);
 
   const handleNext = (callerId: number) => {
     setStep((s) => {

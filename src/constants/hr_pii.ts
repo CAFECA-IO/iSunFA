@@ -64,11 +64,32 @@ export const HR_PII_FIELD_TIER = {
   birthdayCipher: PiiTier.CONFIDENTIAL,
   addressCipher: PiiTier.CONFIDENTIAL,
   phoneCipher: PiiTier.CONFIDENTIAL,
+  /**
+   * Info: (20260812 - Julian) 個人信箱與公司信箱 (`email`) 分級不同。
+   * 公司信箱是 Tier 3：它是複合唯一鍵成員、全公司通訊錄都看得到；
+   * 個人信箱是跟著人走的識別碼，離職後仍然有效。
+   */
+  personalEmailCipher: PiiTier.CONFIDENTIAL,
   // Info: (20260811 - Julian) BankAccount
   accountNumberCipher: PiiTier.RESTRICTED,
   accountHolderCipher: PiiTier.RESTRICTED,
   // Info: (20260811 - Julian) EmergencyContact
   altPhoneCipher: PiiTier.CONFIDENTIAL,
+  /**
+   * Info: (20260817 - Julian) LeaveRequest —— 請假事由。
+   * AAD 綁定 `LeaveRequest:{id}:reasonCipher:{keyVersion}`，因此 `LeaveRequest.id`
+   * 必須由應用層 `randomUUID()` 產生（同 AttendancePunch 的處置）。
+   */
+  reasonCipher: PiiTier.CONFIDENTIAL,
+  /**
+   * Info: (20260813 - Julian) AttendancePunch —— 打卡當下的座標。行蹤資料，
+   * 敏感度不低於通訊地址：住址是靜態的一個點，座標序列是動態的行蹤。
+   *
+   * 分級理由、緩解手段與尚未解決的保存期限問題見
+   * ADR 018 的「補充決策（2026-08-14 review）」，不要只依賴這裡的摘要。
+   */
+  latitudeCipher: PiiTier.CONFIDENTIAL,
+  longitudeCipher: PiiTier.CONFIDENTIAL,
 } as const satisfies Record<string, PiiTier>;
 
 export type HrPiiCipherField = keyof typeof HR_PII_FIELD_TIER;
@@ -85,4 +106,15 @@ export enum HrPiiTable {
   DEPENDENT = "Dependent",
   BANK_ACCOUNT = "BankAccount",
   EMERGENCY_CONTACT = "EmergencyContact",
+  // Info: (20260813 - Julian) 簽到系統的打卡紀錄，持有加密的經緯度
+  ATTENDANCE_PUNCH = "AttendancePunch",
+  /**
+   * Info: (20260817 - Julian) 假單的請假事由。病名、家屬狀況、司法事由都寫在這裡，
+   * 敏感度與 `EmergencyContact.altPhoneCipher` 同級（ADR 018 Tier 2）。
+   *
+   * 假別本身（`leavePolicyId`）**不加密** —— 它是行事曆與統計的查詢維度，
+   * 加密後兩者都查不了。改以可見範圍控管（假勤計畫書 §9.2）：
+   * 同部門同事只看得到「已排休」。取捨同 `Employee.email`「為複合唯一鍵成員，不加密」。
+   */
+  LEAVE_REQUEST = "LeaveRequest",
 }

@@ -17,6 +17,15 @@ import {
   getModuleI18nKey,
 } from "@/constants/modules";
 import { useAuth } from "@/contexts/auth_context";
+/**
+ * Info: (20260819 - Luphia) 徽章的 fallback 用 `PLAN.FREE`，不是字面的 "personal"。
+ *
+ * `/auth/me` 現在會回實際方案（`getUserPlanSnapshot`），fallback 只在「還沒載到」
+ * 時出現。原本寫死 "personal"，而那個 i18n 鍵的文案雖然也是「免費版」，
+ * 卻是**另一個方案代號**（PLAN.PERSONAL 不參與團隊訂閱）——改方案文案時
+ * 只會有人改到 free 那一份，於是徽章顯示的是一個沒有人維護的字串。
+ */
+import { PLAN } from "@/constants/plans";
 import { useTranslation } from "@/i18n/i18n_context";
 import LoginButton from "@/components/common/login_button";
 import { useParams } from "next/navigation";
@@ -24,6 +33,7 @@ import { request } from "@/lib/utils/request";
 import { IApiResponse } from "@/lib/utils/response";
 import { IAccountBook } from "@/interfaces/account_book";
 import QrCodeModal from "@/components/common/qr_code_modal";
+import NotificationBell from "@/components/header/notification_bell";
 
 export default function UserActions() {
   const { user, logout, refreshAuth } = useAuth();
@@ -80,7 +90,24 @@ export default function UserActions() {
   }, [accountBookId]);
 
   if (!user) {
-    return <LoginButton />;
+    /**
+     * Info: (20260831 - Luphia) `shrink-0` 在這裡，不在共用元件裡（review #6726 高-1）。
+     *
+     * header 右側那一排在手機上擠不下，而中文每個字之間都是合法斷點——沒有這道
+     * 約束，flex 會把按鈕壓到一個字寬，`rounded-full` 於是變成一個圓，
+     * 「登入」兩字上下疊著。英文不會有這個症狀（"Login" 是一個不可斷的詞），
+     * 所以只看英文介面檢查不出來。
+     *
+     * 但這是 **header 的**需求：`LoginButton` 有 7 個使用端，其中幾個傳的是
+     * 長標籤（"Please login to generate the analysis report"），對它們而言
+     * `shrink-0` 會把換行換成溢出——實測在 256px 寬的容器裡溢出 73px。
+     * 約束留在有那個約束的那一端。
+     */
+    return (
+      <div className="shrink-0">
+        <LoginButton />
+      </div>
+    );
   }
 
   const accountBookPath = `/user/account_book/${accountBookId}`;
@@ -229,6 +256,8 @@ export default function UserActions() {
 
   return (
     <div className="flex items-center gap-x-4">
+      {/* Info: (20260821 - Luphia) 小鈴鐺：待辦與工作完成通知（ADR 021 補充） */}
+      <NotificationBell />
       {accountBook && (
         <div className="hidden flex-col md:flex">
           <p className="text-text-muted text-[10px]">
@@ -323,7 +352,7 @@ export default function UserActions() {
                     {/* Info: (20260423 - Julian) Desktop right info */}
                     <div className="hidden shrink-0 text-right md:block">
                       <div className="bg-brand-soft text-brand-on-soft ring-brand/30 mb-1 inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset">
-                        {t(`pricing.plans.${user.plan || "personal"}.name`)}
+                        {t(`pricing.plans.${user.plan || PLAN.FREE}.name`)}
                       </div>
                       <p className="text-text-muted text-xs">
                         {t("header.credits")}:{" "}
@@ -349,7 +378,7 @@ export default function UserActions() {
                   {/* Info: (20260423 - Julian) Mobile right info */}
                   <div className="mt-2 flex items-center justify-between md:hidden">
                     <div className="bg-brand-soft text-brand-on-soft ring-brand/30 inline-flex items-center rounded-md px-2 py-1 text-[10px] font-medium ring-1 ring-inset">
-                      {t(`pricing.plans.${user.plan || "personal"}.name`)}
+                      {t(`pricing.plans.${user.plan || PLAN.FREE}.name`)}
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       {accountBook && (

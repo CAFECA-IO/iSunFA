@@ -1,4 +1,5 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { parsePositiveInt } from "@/lib/utils/pagination";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { accountBookRepo } from "@/repositories/account_book.repo";
@@ -36,8 +37,13 @@ export async function GET(
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const page = parsePositiveInt(searchParams.get("page"), {
+      fallback: 1,
+    });
+    const limit = parsePositiveInt(searchParams.get("limit"), {
+      fallback: 20,
+      max: 100,
+    });
 
     const keyword = searchParams.get("keyword");
     const actionType = searchParams.get("actionType") as AuditLogAction;

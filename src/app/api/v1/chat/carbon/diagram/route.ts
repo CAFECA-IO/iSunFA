@@ -4,9 +4,12 @@
 // Info: (20260806 - Tzuhan) LLM 那一段改走保活式串流(見下方註解與 @/lib/utils/streaming_response)。
 
 import { NextRequest } from "next/server";
+import { randomUUID } from "crypto";
 import { logger } from "@/lib/utils/logger";
+import { runBilledCarbonTask } from "@/services/carbon_billing.service";
+import { toBillingFailureEnvelope } from "@/lib/utils/billing_response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { enforceCarbonRateLimit } from "@/lib/rate_limiter";
+import { enforceRateLimit } from "@/lib/rate_limiter";
 import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { ok, fail, jsonFail } from "@/lib/utils/response";
 import { streamingJson } from "@/lib/utils/streaming_response";
@@ -29,7 +32,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Info: (20260730 - Tzuhan) LLM bucket:與 chat/draft/import 共用額度(同為推論呼叫)
-  const limited = enforceCarbonRateLimit(
+  const limited = enforceRateLimit(
     sessionUser.address,
     RateLimitBucketEnum.LLM,
   );
@@ -46,7 +49,8 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
   }
-  const { paragraphId, content, language } = parsed.data;
+  const { paragraphId, content, language, channel, clientMessageId } =
+    parsed.data;
 
   // Info: (20260730 - Tzuhan) 要畫哪張圖由段落 id 決定,不由請求端指定 —— 前端無從要求非白名單的圖
   const templateId = findDiagramTemplateForParagraph(paragraphId);
@@ -74,11 +78,23 @@ export async function POST(request: NextRequest) {
     async () => {
       try {
         const service = new CarbonDiagramService();
-        const nodes = await service.extractDiagramNodes(
-          templateId,
-          content,
-          language,
-        );
+        /**
+         * Info: (20260813 - Luphia) 結構圖萃取計費（設計書 §5.5）：單張圖最長 90 秒推理，
+         * 且此端點不寫入任何資料——失敗即整段白燒，因此更需要先確定額度付得起。
+         * 預扣以段落內容長度估算。
+         */
+        const billed = await runBilledCarbonTask({
+          userId: sessionUser.id,
+          channel,
+          idempotencyKey: clientMessageId
+            ? `carbon-diagram:${sessionUser.id}:${clientMessageId}`
+            : `carbon-diagram:${randomUUID()}`,
+          inputChars: content.length,
+          hasAttachment: false,
+          nowSec: Math.floor(Date.now() / 1000),
+          run: () => service.extractDiagramNodes(templateId, content, language),
+        });
+        const nodes = billed.result;
         const validation = validateDiagramNodes(templateId, nodes, content);
         if (!validation.isValid) {
           // Info: (20260730 - Tzuhan) 記錄被拒的節點文字:模型在哪裡越界必須留下痕跡,否則無從調整提示詞
@@ -100,6 +116,9 @@ export async function POST(request: NextRequest) {
           rejectReason: validation.reason ?? null,
         });
       } catch (error) {
+        // Info: (20260813 - Luphia) 計費失敗要帶 payload（額度 resetAt / 待付 orderId），見 §5.5
+        const billingFailure = toBillingFailureEnvelope(error);
+        if (billingFailure) return billingFailure;
         if (error instanceof ApiError) {
           return fail({
             code: error.code,

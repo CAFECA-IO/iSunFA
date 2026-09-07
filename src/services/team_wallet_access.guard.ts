@@ -1,5 +1,5 @@
 import { TeamMember } from "@/generated";
-import { TeamRole } from "@/constants/team";
+import { isTeamManagerRole } from "@/constants/team";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { teamRepo } from "@/repositories/team.repo";
 
@@ -9,11 +9,6 @@ import { teamRepo } from "@/repositories/team.repo";
  * - 查看錢包 / 消耗額度：任何有效成員
  * - 購點 / 分配 / 收回 / 看 Ledger：OWNER 或 ADMIN
  */
-
-const WALLET_MANAGER_ROLES: readonly TeamRole[] = [
-  TeamRole.OWNER,
-  TeamRole.ADMIN,
-];
 
 export async function assertTeamMember(
   userId: string,
@@ -35,7 +30,7 @@ export async function assertWalletManager(
   teamId: string,
 ): Promise<TeamMember> {
   const member = await assertTeamMember(userId, teamId);
-  if (!WALLET_MANAGER_ROLES.includes(member.role as TeamRole)) {
+  if (!isTeamManagerRole(member.role)) {
     throw new ApiError(
       API_ERRORS.TW_WALLET_FORBIDDEN.code,
       API_ERRORS.TW_WALLET_FORBIDDEN.message,
@@ -46,5 +41,5 @@ export async function assertWalletManager(
 }
 
 export function isWalletManager(member: TeamMember): boolean {
-  return WALLET_MANAGER_ROLES.includes(member.role as TeamRole);
+  return isTeamManagerRole(member.role);
 }

@@ -1,4 +1,8 @@
 export const authModal = {
+  // Info: (20260814 - Luphia) 登入過期的全域提示（401 集中通報）
+  session_expired: "로그인이 만료되었습니다",
+  session_expired_hint:
+    "계정 보호를 위해 로그인 상태는 주기적으로 만료됩니다. 다시 로그인한 뒤 계속하세요.",
   welcome_back: "다시 오신 것을 환영합니다",
   create_account: "계정 생성",
   login_tab: "로그인",

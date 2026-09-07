@@ -1,0 +1,77 @@
+import { NextRequest } from "next/server";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { AppError } from "@/lib/utils/error";
+import { jsonOk, jsonFail } from "@/lib/utils/response";
+import { logger } from "@/lib/utils/logger";
+import { getIdentityFromDeWT } from "@/lib/auth/dewt";
+import { RateLimitBucketEnum } from "@/constants/rate_limit";
+import { enforceRateLimit } from "@/lib/rate_limiter";
+import { leaveBalanceQuerySchema } from "@/validators";
+import { DEMO_TIME_ZONE } from "@/constants/attendance";
+import { toZonedParts } from "@/lib/utils/attendance_time";
+import { attendanceIdentityService } from "@/services/attendance_identity.service";
+import { leaveBalanceService } from "@/services/leave_balance.service";
+
+/**
+ * Info: (20260817 - Julian) L7：各假別餘額。
+ * GET /api/v1/user/account_book/[account_book_id]/hr/leave/balance[?employeeId=&asOfDate=]
+ *
+ * 未指定 `employeeId` 即為自己。
+ *
+ * Info: (20260819 - Julian) 查他人的授權在 service（`assertMayViewLeaveBalanceOf`）：
+ * 本人／管得到他的主管／`HR_ADMIN`。四個額度端點共用同一個答案。
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ account_book_id: string }> },
+) {
+  try {
+    const authHeader = request.headers.get("Authorization");
+    const sessionUser = await getIdentityFromDeWT(authHeader);
+    if (!sessionUser) return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
+
+    // Info: (20260818 - Julian) DeWT 驗證之後、業務邏輯之前（限流規範 §2）
+    const limited = enforceRateLimit(
+      sessionUser.address,
+      RateLimitBucketEnum.READ,
+    );
+    if (limited) return limited;
+
+    const { searchParams } = new URL(request.url);
+    const parsed = leaveBalanceQuerySchema.safeParse({
+      employeeId: searchParams.get("employeeId") ?? undefined,
+      asOfDate: searchParams.get("asOfDate") ?? undefined,
+    });
+    if (!parsed.success) return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
+
+    const { account_book_id: accountBookId } = await params;
+    const actor = await attendanceIdentityService.resolveEmployee(
+      sessionUser,
+      accountBookId,
+    );
+
+    return jsonOk(
+      await leaveBalanceService.list({
+        actorEmployeeId: actor.id,
+        accountBookId,
+        employeeId: parsed.data.employeeId ?? actor.id,
+        // Info: (20260817 - Julian) 「今天」用當地日曆日，不是 UTC
+        asOfDate:
+          parsed.data.asOfDate ??
+          toZonedParts(new Date(), DEMO_TIME_ZONE).isoDate,
+      }),
+    );
+  } catch (error) {
+    if (error instanceof AppError) {
+      return jsonFail({
+        code: error.apiCode,
+        message: error.message,
+        status: error.code,
+      });
+    }
+    logger.error("[API] leave balance list failed", {
+      message: (error as Error).message,
+    });
+    return jsonFail(API_ERRORS.IS_DB_FAILED);
+  }
+}

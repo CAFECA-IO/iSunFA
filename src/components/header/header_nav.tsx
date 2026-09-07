@@ -12,6 +12,8 @@ import {
   Transition,
 } from "@headlessui/react";
 import { PUBLIC_MODULES, getModuleI18nKey } from "@/constants/modules";
+import LanguageSelector from "@/components/header/language_selector";
+import ThemeToggle from "@/components/header/theme_toggle";
 
 export default function HeaderNav() {
   const { t } = useTranslation();
@@ -82,20 +84,36 @@ export default function HeaderNav() {
                 >
                   <X size={24} />
                 </button>
-                {NAV_ITEMS.map((item) => (
-                  <MenuItem key={item.label}>
-                    {() => (
-                      <Link
-                        href={item.href}
-                        onClick={close}
-                        className="border-border-default text-text-secondary hover:text-brand flex items-center justify-center gap-4 border-b px-6 py-4 text-sm leading-6 whitespace-normal transition-colors last:border-none"
-                      >
-                        <item.icon size={14} className="shrink-0" />
-                        <span>{item.label}</span>
-                      </Link>
-                    )}
-                  </MenuItem>
-                ))}
+                <div className="h-full overflow-y-auto pb-10">
+                  {NAV_ITEMS.map((item) => (
+                    <MenuItem key={item.label}>
+                      {() => (
+                        <Link
+                          href={item.href}
+                          onClick={close}
+                          className="border-border-default text-text-secondary hover:text-brand flex items-center justify-center gap-4 border-b px-6 py-4 text-sm leading-6 whitespace-normal transition-colors last:border-none"
+                        >
+                          <item.icon size={14} className="shrink-0" />
+                          <span>{item.label}</span>
+                        </Link>
+                      )}
+                    </MenuItem>
+                  ))}
+
+                  {/* Info: (20260825 - Julian) 深淺模式與語言在 xl 以下收進這裡 */}
+                  <div className="border-border-default flex items-center justify-between gap-4 border-b px-6 py-4">
+                    <span className="text-text-secondary text-sm leading-6">
+                      {t("header.appearance")}
+                    </span>
+                    <ThemeToggle />
+                  </div>
+                  <div className="flex flex-col gap-3 px-6 py-4">
+                    <span className="text-text-secondary text-sm leading-6">
+                      {t("header.language")}
+                    </span>
+                    <LanguageSelector variant="inline" />
+                  </div>
+                </div>
               </MenuItems>
             </Transition>
           </>

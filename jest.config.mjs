@@ -20,8 +20,22 @@ const config = {
    * 在測試檔裡改 `process.env.TZ` 已經太晚 —— 完整理由見 scripts/jest_tz.mjs。
    *
    * 覆寫這個欄位就會蓋掉 jest 預設值，所以 `/node_modules/` 必須一併列回來。
+   *
+   * Info: (20260818 - Luphia) `*.e2e.test.ts` 也排除（PR #6652 第五輪 C-4）。
+   *
+   * 那些測試會**真的建立與刪除** User / Team / TeamMember / FaithMemory。先前
+   * 它們跟著 `npm test` 一起跑，唯一的防線是「`NODE_ENV === "production"` 就
+   * throw」——而開發者把 `DATABASE_URL` 指到共用或 staging 資料庫、
+   * 而 `NODE_ENV` 不是 `production`（多數情況）時，那道閘完全不會觸發。
+   *
+   * 改為以 `npm run test:e2e` 明確執行；CI 於 `npm run test` 之後另跑一步，
+   * 覆蓋率不變，但「跑不跑得到別人的資料庫」變成一個要自己打的指令。
    */
-  testPathIgnorePatterns: ['/node_modules/', '\\.tz\\.test\\.ts$'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '\\.tz\\.test\\.ts$',
+    '\\.e2e\\.test\\.ts$',
+  ],
   moduleNameMapper: {
     // Info: (20260510 - Tzuhan) Handle module aliases (this will be automatically configured for you soon)
     '^@/(.*)$': '<rootDir>/src/$1',
