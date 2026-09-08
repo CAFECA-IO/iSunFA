@@ -413,6 +413,9 @@ export const calculator = {
     send_disabled_loading: "従業員一覧を確認しています...",
   },
   message: {
+    send_pay_slip_success_title: "給与明細を送信しました",
+    send_pay_slip_success_content:
+      "{{month}} の給与明細を {{name}}（{{email}}）に送信しました。",
     name_error_title: "従業員名が未入力です",
     name_error_content: "次のステップに進む前に、従業員名を入力してください",
     salary_error_title: "給与入力エラー",

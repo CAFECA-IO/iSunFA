@@ -423,6 +423,9 @@ export const calculator = {
     send_disabled_loading: "Checking the employee list...",
   },
   message: {
+    send_pay_slip_success_title: "Pay slip sent",
+    send_pay_slip_success_content:
+      "The {{month}} pay slip was sent to {{name}} ({{email}}).",
     name_error_title: "Employee’s Name is not Filled",
     name_error_content:
       "You need to enter the employee’s name before you go to next step",

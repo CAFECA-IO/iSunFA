@@ -254,6 +254,14 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
           recordId={recordId}
           monthName={monthWithI18n}
           sentToName={sentTo ?? lastSent.recipientEmail}
+          /**
+           * Info: (20260908 - Julian) 用 `displayedEmployeeName`，不是可選的 `employeeName`。
+           *
+           * 「我的薪資單」那條路徑不傳 `employeeName`（它從 `user?.name` 來）——
+           * 傳原始 prop 會讓吐司寫成「已寄給 undefined」。
+           * 同一個理由已經在 `downloadPng` 的檔名上踩過一次（見該處註解）。
+           */
+          employeeName={displayedEmployeeName}
           modalVisibleHandler={modalVisibleHandler}
           onResent={onResent}
         />

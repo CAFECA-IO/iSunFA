@@ -412,6 +412,9 @@ export const calculator = {
     send_disabled_loading: "직원 목록을 확인하는 중...",
   },
   message: {
+    send_pay_slip_success_title: "급여명세서를 보냈습니다",
+    send_pay_slip_success_content:
+      "{{month}} 급여명세서를 {{name}}({{email}})에게 보냈습니다.",
     name_error_title: "직원 이름 미입력",
     name_error_content: "다음 단계로 이동하기 전에 직원 이름을 입력해 주세요.",
     salary_error_title: "급여 입력 오류",

@@ -948,6 +948,7 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
             month: sending.month,
           })}
           sentToName={sending.lastSentTo ?? "-"}
+          employeeName={sending.employee.name}
           modalVisibleHandler={() => setSending(null)}
           onResent={() => {
             setSending(null);

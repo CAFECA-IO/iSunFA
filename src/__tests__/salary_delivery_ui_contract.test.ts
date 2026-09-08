@@ -180,12 +180,43 @@ describe("重寄彈窗：不再是假的", () => {
   });
 
   /**
-   * Info: (20260904 - Julian) 成功狀態綁在後端真的回了一列上（`sent`），
-   * 不是一個自己翻的布林 —— 上一版的 `resendSuccess` 是後者。
+   * Info: (20260908 - Julian) 成功綁在**後端真的回了一列**上，不是自己翻的布林。
+   *
+   * ## 這一條的位置變了，守的東西沒變
+   *
+   * 20260904 的版本釘的是 `else if (sent)` —— 那時候成功是這個彈窗的一種
+   * 顯示狀態，而它由 hook 的 `sent`（後端回來的那一列）決定。
+   *
+   * 20260908 成功改成「發吐司 ＋ 關窗」，彈窗不再有成功狀態，
+   * 於是 `sent` 不再被讀 —— 那條斷言跟著紅了，而它要守的事一點都沒變：
+   * **判斷成功的依據必須是 `deliver()` 的回傳值。**
+   *
+   * 所以改釘 `const delivered = await deliver(...)` 加上
+   * 「用 `delivered` 決定要不要通知」。上一版真正的缺陷
+   * （`resendSuccess` 那種自己翻的旗標）在新形狀下同樣會被抓到。
    */
-  it("成功畫面看的是後端回來的那一列，不是自己翻的旗標", () => {
+  it("成功的依據是 deliver() 的回傳值，不是自己翻的旗標", () => {
     expect(source).not.toContain("resendSuccess");
-    expect(source).toMatch(/else if \(sent\)/);
+    expect(source).toMatch(/const delivered = await deliver\(recordId\)/);
+    expect(source).toMatch(/if \(!delivered\) return;/);
+  });
+
+  /**
+   * Info: (20260908 - Julian) 成功之後**發吐司並關窗**，不是留在彈窗裡。
+   *
+   * 實測撞到的缺陷：第一次寄出的吐司做好之後，已經寄過一次的紀錄會走重寄
+   * 這一條（`lastSentAt !== null`），而它沒有發吐司 ——
+   * 使用者以為吐司整個沒生效。
+   *
+   * 順序上通知在關窗之前，理由與寄出彈窗相同（見 `pay_slip_sent_toast.test.ts`）。
+   */
+  it("重寄成功也發吐司，而且在關窗之前", () => {
+    const notify = source.indexOf("notifySent(");
+    const close = source.indexOf("modalVisibleHandler();");
+
+    expect(notify).toBeGreaterThanOrEqual(0);
+    expect(close).toBeGreaterThan(notify);
+    expect(source).toContain("isResend: true");
   });
 });
 

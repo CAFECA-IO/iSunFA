@@ -390,6 +390,9 @@ export const calculator = {
     send_disabled_loading: "正在确认员工名单…",
   },
   message: {
+    send_pay_slip_success_title: "薪资单已寄出",
+    send_pay_slip_success_content:
+      "{{month}} 的薪资单已寄给 {{name}}（{{email}}）。",
     name_error_title: "未填写员工姓名",
     name_error_content: "请在前往下一步之前输入员工姓名",
     salary_error_title: "薪资输入有误",

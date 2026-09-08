@@ -1,12 +1,14 @@
 "use client";
 
 import { FC } from "react";
-import { AlertTriangle, Loader2, Lock, Mail, X } from "lucide-react";
+import { AlertTriangle, Lock, Mail, X } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
   DELIVERY_FAILURE_I18N_KEY,
   useSalaryPaySlipDelivery,
 } from "@/hooks/use_salary_pay_slip_delivery";
+import { usePaySlipToast } from "@/contexts/pay_slip_toast_context";
+import SendingAnimation from "@/components/salary_calculator/sending_animation";
 
 interface ISendingPaySlipModalProps {
   accountBookId: string;
@@ -55,6 +57,7 @@ const SendingPaySlipModal: FC<ISendingPaySlipModalProps> = ({
   const { t } = useTranslation();
   const { isSending, failure, deliver } =
     useSalaryPaySlipDelivery(accountBookId);
+  const { notifySent } = usePaySlipToast();
 
   const hasEmail = employeeEmail.trim() !== "";
 
@@ -62,6 +65,22 @@ const SendingPaySlipModal: FC<ISendingPaySlipModalProps> = ({
     const delivered = await deliver(recordId);
     // Info: (20260904 - Julian) 失敗就留在原地顯示原因，不關掉 —— 關掉等於把錯誤藏起來
     if (!delivered) return;
+
+    /**
+     * Info: (20260908 - Julian) 成功之後發吐司通知，**在關掉彈窗之前**。
+     *
+     * 在這之前成功路徑只有「呼叫 onSent、關掉自己」，兩個動作都不留痕跡 ——
+     * 使用者看到的是視窗消失，然後什麼都沒有。實測回饋就是這件事。
+     *
+     * 通知由**彈窗自己**發，不是交給三個呼叫端各發一次：
+     * 姓名、信箱、月份此刻都在手上，而 provider 掛在
+     * `SalaryCalculatorShell`（彈窗之外），所以它不會隨著這個彈窗卸載。
+     *
+     * 順序上先通知再關窗：反過來的話這個元件已經在卸載途中，
+     * 而「卸載中的元件呼叫父層 setState」不是一件值得依賴的事。
+     */
+    notifySent({ employeeName, employeeEmail, monthLabel });
+
     onSent?.();
     modalVisibleHandler();
   };
@@ -85,59 +104,81 @@ const SendingPaySlipModal: FC<ISendingPaySlipModalProps> = ({
         </div>
 
         {/* Info: (20250723 - Julian) Modal Content */}
-        <div className="flex flex-col gap-2.5 px-5 py-2">
-          <p className="text-card-text-secondary text-sm font-normal">
-            {t("calculator.sending_pay_slip_modal.content_1")}
-            <span className="font-semibold">
-              {t("calculator.sending_pay_slip_modal.content_bold_1", {
-                month: monthLabel,
-              })}
-            </span>
-            {t("calculator.sending_pay_slip_modal.content_2")}
-            <span className="font-semibold">
-              {t("calculator.sending_pay_slip_modal.content_bold_2", {
-                employeeName,
-              })}
-            </span>
-          </p>
-
-          {/**
-           * Info: (20260904 - Julian) 收件信箱：唯讀、放大、獨立一行。
-           * 這是使用者在按下去之前唯一能發現「這個信箱打錯了」的機會。
-           */}
-          <div className="border-input-stroke-input bg-input-surface-input-disable flex flex-col gap-1 rounded-lg border px-3 py-2.5">
-            <div className="text-input-text-input-placeholder flex items-center gap-2 text-xs font-medium">
-              <Mail size={14} />
-              <span>{t("calculator.sending_pay_slip_modal.email")}</span>
-              <span className="text-text-neutral-tertiary ml-auto flex items-center gap-1">
-                <Lock size={12} />
-                {t("calculator.sending_pay_slip_modal.email_from_profile")}
-              </span>
-            </div>
-            <p className="text-text-neutral-primary font-mono text-base font-semibold break-all">
-              {hasEmail
-                ? employeeEmail
-                : t("calculator.sending_pay_slip_modal.email_missing")}
+        {/**
+         * Info: (20260908 - Julian) 寄送中把整塊內容換成動畫，不是在按鈕裡塞一個小轉圈。
+         *
+         * 原本的載入指示是按鈕內的 16px `Loader2` —— 它與「已停用的按鈕」
+         * 幾乎分不出來，而寄一封薪資單要等 SMTP 來回，那段時間畫面上
+         * 唯一的變化是一個小圖示在轉。
+         *
+         * 換掉的是**信箱確認區**：那一段的用途是「按下去之前再看一次寄到哪」，
+         * 而此刻已經按下去了，它不再需要被看見。留著它並在上方疊一個動畫
+         * 會讓彈窗長高、內容跳動。
+         *
+         * 形狀與 `ResendingPaySlipModal` 對齊（它一直是「載入時換掉內容」）。
+         */}
+        {isSending ? (
+          <div className="flex flex-col items-center gap-1 px-5 py-4">
+            <SendingAnimation size={160} />
+            <p className="text-card-text-secondary text-sm font-medium">
+              {t("calculator.sending_pay_slip_modal.sending")}
             </p>
           </div>
+        ) : (
+          <div className="flex flex-col gap-2.5 px-5 py-2">
+            <p className="text-card-text-secondary text-sm font-normal">
+              {t("calculator.sending_pay_slip_modal.content_1")}
+              <span className="font-semibold">
+                {t("calculator.sending_pay_slip_modal.content_bold_1", {
+                  month: monthLabel,
+                })}
+              </span>
+              {t("calculator.sending_pay_slip_modal.content_2")}
+              <span className="font-semibold">
+                {t("calculator.sending_pay_slip_modal.content_bold_2", {
+                  employeeName,
+                })}
+              </span>
+            </p>
 
-          {/**
-           * Info: (20260904 - Julian) 三種失敗的處置完全不同（改員工資料／找管理員／裝字型），
-           * 所以訊息也要不同。收斂成一句「請稍後再試」的話，
-           * 前兩種的使用者會一直重試一件永遠不會成功的事。
-           */}
-          {failure && (
-            <div className="flex items-start gap-2 rounded-lg bg-rose-50 px-3 py-2.5 ring-1 ring-rose-200">
-              <AlertTriangle
-                size={16}
-                className="mt-0.5 shrink-0 text-rose-600"
-              />
-              <p className="text-sm font-medium text-rose-700">
-                {t(DELIVERY_FAILURE_I18N_KEY[failure])}
+            {/**
+             * Info: (20260904 - Julian) 收件信箱：唯讀、放大、獨立一行。
+             * 這是使用者在按下去之前唯一能發現「這個信箱打錯了」的機會。
+             */}
+            <div className="border-input-stroke-input bg-input-surface-input-disable flex flex-col gap-1 rounded-lg border px-3 py-2.5">
+              <div className="text-input-text-input-placeholder flex items-center gap-2 text-xs font-medium">
+                <Mail size={14} />
+                <span>{t("calculator.sending_pay_slip_modal.email")}</span>
+                <span className="text-text-neutral-tertiary ml-auto flex items-center gap-1">
+                  <Lock size={12} />
+                  {t("calculator.sending_pay_slip_modal.email_from_profile")}
+                </span>
+              </div>
+              <p className="text-text-neutral-primary font-mono text-base font-semibold break-all">
+                {hasEmail
+                  ? employeeEmail
+                  : t("calculator.sending_pay_slip_modal.email_missing")}
               </p>
             </div>
-          )}
-        </div>
+
+            {/**
+             * Info: (20260904 - Julian) 三種失敗的處置完全不同（改員工資料／找管理員／裝字型），
+             * 所以訊息也要不同。收斂成一句「請稍後再試」的話，
+             * 前兩種的使用者會一直重試一件永遠不會成功的事。
+             */}
+            {failure && (
+              <div className="flex items-start gap-2 rounded-lg bg-rose-50 px-3 py-2.5 ring-1 ring-rose-200">
+                <AlertTriangle
+                  size={16}
+                  className="mt-0.5 shrink-0 text-rose-600"
+                />
+                <p className="text-sm font-medium text-rose-700">
+                  {t(DELIVERY_FAILURE_I18N_KEY[failure])}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Info: (20250723 - Julian) Buttons */}
         <div className="grid grid-cols-2 gap-3 px-5 py-4">
@@ -155,10 +196,15 @@ const SendingPaySlipModal: FC<ISendingPaySlipModalProps> = ({
             disabled={!hasEmail || isSending}
             onClick={sendPaySlip}
           >
+            {/**
+             * Info: (20260908 - Julian) 按鈕裡不再放小轉圈。
+             *
+             * 動畫就在它上方 40px 處，兩個載入指示同時轉只是噪音；
+             * 而按鈕本身已經 disabled 並改了文字。
+             */}
             {isSending
               ? t("calculator.sending_pay_slip_modal.sending")
               : t("calculator.sending_pay_slip_modal.submit")}
-            {isSending && <Loader2 size={16} className="animate-spin" />}
           </button>
         </div>
       </div>
