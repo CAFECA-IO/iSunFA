@@ -123,8 +123,6 @@ export const calculator = {
     remove_employee_submit_btn: "是的，移除员工。",
     no_email: "未填写",
     missing_records_badge: "缺 {{count}} 个月",
-    missing_records_more: "{{periods}}，另有 {{count}} 个月",
-    show_all: "显示全部员工",
     no_filter_result: "没有符合目前条件的员工",
     missing_records_rest: "另有 {{count}} 个月",
     no_hire_date: "未填写",

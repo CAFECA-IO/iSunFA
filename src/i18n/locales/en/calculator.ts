@@ -125,8 +125,6 @@ export const calculator = {
     remove_employee_submit_btn: "Yes, Remove Employee",
     no_email: "Not set",
     missing_records_badge: "{{count}} month(s) missing",
-    missing_records_more: "{{periods}} and {{count}} more month(s)",
-    show_all: "Show all employees",
     no_filter_result: "No employee matches the current filter",
     missing_records_rest: "{{count}} more months",
     no_hire_date: "Not set",

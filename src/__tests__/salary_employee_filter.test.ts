@@ -4,7 +4,7 @@ import {
   countMissingHireDate,
   countMissingRecords,
   filterEmployees,
-  formatMissingPeriods,
+  previewMissingPeriods,
   hasMissingPeriods,
   hasNoEmail,
   hasNoHireDate,
@@ -289,53 +289,82 @@ describe("只看缺薪資單", () => {
   });
 });
 
-describe("formatMissingPeriods", () => {
-  it("年份不省略，月份補零", () => {
-    expect(
-      formatMissingPeriods([
-        { year: 2025, month: 11 },
-        { year: 2026, month: 3 },
-      ]),
-    ).toEqual({ text: "2025/11、2026/03", restCount: 0 });
-  });
+/**
+ * Info: (20260908 - Luphia) 截斷規則（review 應修-2）。
+ *
+ * 這一組原本測的是 `formatMissingPeriods` —— 截斷 + 串成一行字。提示框改成
+ * 格狀排版之後，排版那半段搬進元件，而那支函式就沒有呼叫端了：五條測試
+ * 仍然全綠，守的卻是一條沒有人走的路。函式已刪，判準改綁在真正在用的
+ * `previewMissingPeriods` 上。
+ *
+ * 年份不省略那一條也跟著搬家 —— 格式化現在由 `pay_period_value` 這個
+ * i18n 樣板負責（五語系各自決定 `2026/03` 還是 `2026年3月`），所以
+ * 「年份不能省」在這裡已經不是這支函式管得到的事，改由元件的契約測試釘住。
+ */
+describe("previewMissingPeriods", () => {
+  // Info: (20260908 - Luphia) 這一檔沒有 tz 那邊的 `periodsOf`，就地給一個
+  const periodsOf = (...pairs: [number, number][]): ISalaryPeriod[] =>
+    pairs.map(([year, month]) => ({ year, month }));
 
-  /**
-   * Info: (20260905 - Luphia) 缺漏經常跨年（去年 11 月到職、今年才開始建）。
-   * 省略年份的話 `11、03` 讀起來像今年的兩個月。
-   */
-  it("跨年的兩個月不會被誤讀成同一年", () => {
-    const { text } = formatMissingPeriods([
-      { year: 2025, month: 12 },
-      { year: 2026, month: 1 },
-    ]);
-    expect(text).toContain("2025/12");
-    expect(text).toContain("2026/01");
+  const monthsOf = (count: number): ISalaryPeriod[] =>
+    Array.from({ length: count }, (unused, index) => ({
+      year: 2026,
+      month: index + 1,
+    }));
+
+  it("沒超過上限就原樣回來，restCount 是 0", () => {
+    const two = periodsOf([2025, 11], [2026, 3]);
+
+    expect(previewMissingPeriods(two)).toEqual({
+      shown: two,
+      restCount: 0,
+    });
   });
 
   /**
    * Info: (20260905 - Luphia) 超過上限就截斷並回報剩幾個。
-   * 一個到職三年沒建過薪資單的人有 36 個月份，那串字會把整列擠爆。
+   * 一個到職三年沒建過薪資單的人有 36 個月份，全部列出來會蓋掉半個畫面。
    */
   it("超過上限時截斷，並算出剩下幾個", () => {
-    const many = Array.from({ length: 10 }, (unused, index) => ({
-      year: 2026,
-      month: index + 1,
-    }));
-    const { text, restCount } = formatMissingPeriods(many);
-    expect(text.split("、")).toHaveLength(6);
+    const { shown, restCount } = previewMissingPeriods(monthsOf(10));
+
+    expect(shown).toHaveLength(6);
     expect(restCount).toBe(4);
   });
 
-  it("剛好等於上限時不算截斷", () => {
-    const six = Array.from({ length: 6 }, (unused, index) => ({
-      year: 2026,
-      month: index + 1,
-    }));
-    expect(formatMissingPeriods(six).restCount).toBe(0);
+  /**
+   * Info: (20260908 - Luphia) **兩個數字必須加得起來。**
+   *
+   * 提示框上方寫「缺 10 個月」、格子裡列 6 個、下方寫「另有 N 個月」——
+   * 這三處讀的是同一份資料，而使用者會拿它們互相對照。
+   * `restCount` 算錯（例如寫成 `limit - shown.length`）時，
+   * 上面那兩條仍然會過，只有這一條會紅。
+   */
+  it("列出的數量加上剩下的，等於總數", () => {
+    for (const total of [0, 1, 5, 6, 7, 40]) {
+      const { shown, restCount } = previewMissingPeriods(monthsOf(total));
+
+      expect(shown.length + restCount).toBe(total);
+    }
   });
 
-  it("空陣列給空字串", () => {
-    expect(formatMissingPeriods([])).toEqual({ text: "", restCount: 0 });
+  it("剛好等於上限時不算截斷", () => {
+    expect(previewMissingPeriods(monthsOf(6)).restCount).toBe(0);
+  });
+
+  it("空陣列回空", () => {
+    expect(previewMissingPeriods([])).toEqual({ shown: [], restCount: 0 });
+  });
+
+  /**
+   * Info: (20260908 - Luphia) 不就地修改傳進來的陣列 —— 呼叫端拿的是
+   * hook 的 state，`slice` 之後又回傳同一個參考的話，元件那一側
+   * 對它做任何事都會改到名單本身。
+   */
+  it("回傳新陣列，不是傳進來的那一個", () => {
+    const periods = periodsOf([2026, 1], [2026, 2]);
+
+    expect(previewMissingPeriods(periods).shown).not.toBe(periods);
   });
 });
 

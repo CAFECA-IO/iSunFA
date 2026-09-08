@@ -123,8 +123,6 @@ export const calculator = {
     remove_employee_submit_btn: "네, 직원을 삭제합니다.",
     no_email: "미입력",
     missing_records_badge: "{{count}}개월 누락",
-    missing_records_more: "{{periods}} 외 {{count}}개월",
-    show_all: "전체 보기",
     no_filter_result: "조건에 맞는 직원이 없습니다",
     missing_records_rest: "그 외 {{count}}개월",
     no_hire_date: "미입력",

@@ -331,10 +331,10 @@ describe("起算下限：帳本引入使用的月份", () => {
   });
 
   /**
-   * Info: (20260907 - Julian) 讀不到帳本時退回只看到職日，**不猜一個下限**。
-   * 猜錯的方向會是漏報：下限猜得太晚，該補的月份就不會被標示。
+   * Info: (20260907 - Julian) 讀不到帳本時退回只看到職日與既有紀錄，
+   * **不猜一個下限**。猜錯的方向會是漏報：下限猜得太晚，該補的月份就不會被標示。
    */
-  it("沒有帳本下限時，行為與加上這道下限之前相同", () => {
+  it("沒有帳本下限、也沒有任何紀錄時，行為與加上這道下限之前相同", () => {
     const missing = missingSalaryPeriods({
       ...base,
       hireDate: utc(2026, 6, 1),
@@ -343,6 +343,43 @@ describe("起算下限：帳本引入使用的月份", () => {
     });
 
     expect(missing).toEqual(periodsOf([2026, 6], [2026, 7], [2026, 8]));
+  });
+
+  /**
+   * Info: (20260908 - Luphia) 讀不到帳本時，**既有紀錄仍然是下限**（review 應修-1）。
+   *
+   * `dataStart` 的第一個分支寫的是 `bookOrdinal === null ? earliestCovered`，
+   * 而上面那一條帶的是 `existing: []` —— 空陣列時 `earliestCovered` 本來就是
+   * `null`，兩種寫法答案相同。也就是那個 `earliestCovered` 從來沒有被驗過：
+   * 把它改成 `null`（等於「讀不到帳本就完全沒有下限」），全套仍然是綠的。
+   *
+   * 這條路只在帳本查不到時走得到（`getCreatedAt` 回 null），屬防禦路徑 ——
+   * 但它被寫成一個**有意義的退路**，那就該有判準。少了它的後果是誤報：
+   * 下面這位同仁多出來的 2015–2019 那五十幾個月，發生在這個系統之外，
+   * 一張都補不了，而一份補不完的清單會讓人連真正該補的那一個月一起忽略。
+   */
+  it("讀不到帳本時，最早一筆紀錄仍然把起點夾住", () => {
+    const withBook = missingSalaryPeriods({
+      ...base,
+      hireDate: utc(2015, 3, 1),
+      bookCreatedAt: utc(2026, 1, 1),
+      existing: periodsOf([2020, 1]),
+    });
+
+    const withoutBook = missingSalaryPeriods({
+      ...base,
+      hireDate: utc(2015, 3, 1),
+      bookCreatedAt: null,
+      existing: periodsOf([2020, 1]),
+    });
+
+    /**
+     * Info: (20260908 - Luphia) 起點是 2020/01（最早一筆紀錄），不是 2015/03。
+     * 兩者的差距是 58 個月 —— 判準寫成「兩邊相等」而不是只釘一個長度，
+     * 因為要說的正是「少了帳本這個候選，答案不該變」。
+     */
+    expect(withoutBook).toEqual(withBook);
+    expect(withoutBook[0]).toEqual({ year: 2020, month: 2 });
   });
 
   /**

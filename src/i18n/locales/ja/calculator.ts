@@ -124,8 +124,6 @@ export const calculator = {
     remove_employee_submit_btn: "はい、削除します。",
     no_email: "未入力",
     missing_records_badge: "{{count}} か月分なし",
-    missing_records_more: "{{periods}} ほか {{count}} か月",
-    show_all: "すべて表示",
     no_filter_result: "条件に一致する従業員がいません",
     missing_records_rest: "他 {{count}} か月分",
     no_hire_date: "未入力",

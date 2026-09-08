@@ -106,22 +106,23 @@ export const countMissingRecords = (
 /**
  * Info: (20260905 - Luphia) 缺漏的月份 → 一行字（#6774）。
  *
- * `2026/03、2026/06` 這個形狀：年份不能省，因為缺漏經常跨年
- *（去年 11 月到職、今年才開始建薪資單）。
- *
- * 超過 `limit` 個就截斷並回報剩幾個 —— 一個到職三年沒建過薪資單的人
- * 會有 36 個月份，那串字會把整列擠爆。截斷的是**顯示**不是判斷，
- * 所以與 `missingSalaryPeriods` 的「超過上限就回空」不衝突。
+ * 超過這個數量就截斷並回報剩幾個 —— 一個到職三年沒建過薪資單的人會有
+ * 36 個月份，提示框全部列出來會蓋掉半個畫面。截斷的是**顯示**不是判斷，
+ * 所以與 `missingSalaryPeriods` 的「超過上限就回空」不衝突：
+ * 那邊回空是「算不出來」，這邊截斷之後仍然說得出總數（`restCount`）。
  */
 export const MISSING_PERIOD_PREVIEW_LIMIT = 6;
 
 /**
  * Info: (20260907 - Julian) 「要顯示哪幾個月、還剩幾個」——**選取**與**排版**分開。
  *
- * `formatMissingPeriods` 原本兩件事一起做：截斷 + 串成一行字。
- * 20260907 提示框改成格狀排版（原生 `title` 只吃純文字，折行還會斷在頓號後面），
- * 需要的是**陣列**而不是字串；而截斷規則兩邊必須一致 ——
- * 各自 `slice` 一次的話，一邊說「還有 3 個月」另一邊列出 7 格是遲早的事。
+ * 初版是 `formatMissingPeriods`，截斷與「串成一行字」一起做。20260907 提示框
+ * 改成格狀排版（原生 `title` 只吃純文字，折行還會斷在頓號後面），需要的是
+ * **陣列**而不是字串，於是選取獨立出來，排版留給元件。
+ *
+ * Info: (20260908 - Luphia) 那支只做排版的舊函式已經刪掉（review 應修-2）——
+ * 改版之後它沒有任何呼叫端，只剩自己的測試，而那讓覆蓋率替一條沒有人走的路
+ * 背書。截斷規則現在只有這一份，兩邊對不起來的風險也就不存在了。
  *
  * 順序沿用 `missingPeriods` 的由舊到新，取的是**最舊的幾個**。
  * 那是既有行為，這次搬家不順手改掉它。
@@ -133,18 +134,6 @@ export const previewMissingPeriods = (
   const shown = periods.slice(0, limit);
 
   return { shown: [...shown], restCount: periods.length - shown.length };
-};
-
-export const formatMissingPeriods = (
-  periods: readonly { year: number; month: number }[],
-  limit: number = MISSING_PERIOD_PREVIEW_LIMIT,
-): { text: string; restCount: number } => {
-  const { shown, restCount } = previewMissingPeriods(periods, limit);
-  const text = shown
-    .map(({ year, month }) => `${year}/${month.toString().padStart(2, "0")}`)
-    .join("、");
-
-  return { text, restCount };
 };
 
 /**

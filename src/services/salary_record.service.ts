@@ -153,8 +153,14 @@ export class SalaryRecordService {
         hireDate: employee.hireDate,
         /**
          * Info: (20260907 - Julian) 秒，與其他日期同單位。
-         * 讀不到帳本時給 `null` = 沒有下限（退回只看到職日）——
-         * 不猜一個下限，因為猜錯的方向會是漏報。
+         *
+         * 讀不到帳本時給 `null` = **少掉這個候選**，不是「沒有下限」——
+         * 那時下限退回這位員工最早一筆紀錄（見 `missingSalaryPeriods`
+         * 的 `dataStart`）。不猜一個下限，因為猜錯的方向會是漏報。
+         *
+         * Info: (20260908 - Luphia) 原本這裡寫「退回只看到職日」，與純函式那一側
+         * 的說明不一致（review 應修-1）—— 程式做的是後者，而照這句話去改
+         * 會讓有回填紀錄的舊員工多出一大段補不了的月份。
          */
         bookCreatedAt:
           bookCreatedAt === null
