@@ -32,16 +32,14 @@ import { useTranslation } from "@/i18n/i18n_context";
 
 const IssueToggle: FC<{
   label: string;
-  hint?: string;
   count: number;
   checked: boolean;
   onChange: () => void;
-}> = ({ label, hint = undefined, count, checked, onChange }) => {
+}> = ({ label, count, checked, onChange }) => {
   const isEmpty = count === 0;
 
   return (
     <label
-      title={hint}
       className={`flex items-center gap-2 text-sm ${
         isEmpty
           ? "cursor-default text-gray-400"
@@ -105,35 +103,59 @@ const EmployeeListIssueFilters: FC<IEmployeeListIssueFiltersProps> = ({
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col gap-2 border-t border-gray-100 pt-3 md:flex-row md:flex-wrap md:items-center md:gap-5">
-      <IssueToggle
-        label={t("calculator.employee_list.filter_missing_email")}
-        count={missingEmailCount}
-        checked={onlyMissingEmail}
-        onChange={toggleMissingEmail}
-      />
-      <IssueToggle
-        label={t("calculator.employee_list.filter_missing_hire_date")}
-        /**
-         * Info: (20260907 - Julian) 只有這一個帶說明。
-         *
-         * 另外兩個的後果從標籤就看得出來（沒信箱＝寄不出、缺薪資單＝要補算），
-         * 而「沒有到職日」的後果是**看不見的**：完整度算不出來，
-         * 於是那幾個人在薪資單那一欄永遠是乾淨的。那句話要留著。
-         */
-        hint={t("calculator.employee_list.missing_hire_date_banner", {
-          count: missingHireDateCount,
-        })}
-        count={missingHireDateCount}
-        checked={onlyMissingHireDate}
-        onChange={toggleMissingHireDate}
-      />
-      <IssueToggle
-        label={t("calculator.employee_list.filter_missing_records")}
-        count={missingRecordsCount}
-        checked={onlyMissingRecords}
-        onChange={toggleMissingRecords}
-      />
+    <div className="flex flex-col gap-2 border-t border-gray-100 pt-3">
+      <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:gap-5">
+        <IssueToggle
+          label={t("calculator.employee_list.filter_missing_email")}
+          count={missingEmailCount}
+          checked={onlyMissingEmail}
+          onChange={toggleMissingEmail}
+        />
+        <IssueToggle
+          label={t("calculator.employee_list.filter_missing_hire_date")}
+          count={missingHireDateCount}
+          checked={onlyMissingHireDate}
+          onChange={toggleMissingHireDate}
+        />
+        <IssueToggle
+          label={t("calculator.employee_list.filter_missing_records")}
+          count={missingRecordsCount}
+          checked={onlyMissingRecords}
+          onChange={toggleMissingRecords}
+        />
+      </div>
+
+      {/**
+       * Info: (20260908 - Luphia) 「沒有到職日」的後果，**寫在畫面上**（review 應修-3）。
+       *
+       * ## 為什麼只有這一個帶說明
+       *
+       * 另外兩個的後果從標籤就看得出來（沒信箱＝寄不出、缺薪資單＝要補算），
+       * 而這一個的後果是**看不見的**：完整度是從到職日往後推的，沒有到職日
+       * 就算不出來，於是那幾個人在「缺少薪資單紀錄」那一格永遠是乾淨的。
+       *
+       * 具體會怎麼被誤讀：一本三十人的帳，全員沒有到職日、其中三人的六月
+       * 漏建。畫面上「缺少薪資單紀錄」是一個**停用的勾選框加一個明確的 0**，
+       * 而停用在這裡表達的是「這個面向沒問題」—— 但真相是「算不出來」。
+       * 這一行就是把「30」與「0」連起來的那句話。
+       *
+       * ## 為什麼不是 `title`
+       *
+       * 初版把它掛在 `<label title={hint}>` 上。同一次改版的 `coverage_alert.tsx`
+       * 才剛論證過原生 `title` 不能用（出不來、讀不動），而那兩條對這句
+       * 三十個字的說明同樣成立。更關鍵的是它**在觸控裝置上根本不出現**，
+       * 而 `title` 掛在 label（非互動元素）上、也沒有 `aria-describedby`，
+       * 所以鍵盤與螢幕閱讀器同樣讀不到。
+       *
+       * 人數為 0 時不顯示：那時沒有人需要補，這句話只是雜訊。
+       */}
+      {missingHireDateCount > 0 && (
+        <p className="text-xs text-gray-500">
+          {t("calculator.employee_list.missing_hire_date_banner", {
+            count: missingHireDateCount,
+          })}
+        </p>
+      )}
     </div>
   );
 };

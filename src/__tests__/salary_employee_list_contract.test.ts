@@ -378,11 +378,32 @@ describe("薪資紀錄缺漏的標示", () => {
     expect(listComponent).toContain("setOnlyMissingHireDate");
     expect(issueFiltersComponent).toContain("filter_missing_hire_date");
     /**
-     * Info: (20260907 - Julian) 「沒有到職日」的那句說明改掛在 `title` 上，
-     * 但**不能消失**：另外兩個勾選的後果從標籤就看得出來
-     * （沒信箱＝寄不出、缺薪資單＝要補算），而這一個的後果是看不見的。
+     * Info: (20260907 - Julian) 「沒有到職日」的那句說明**不能消失**：
+     * 另外兩個勾選的後果從標籤就看得出來（沒信箱＝寄不出、缺薪資單＝要補算），
+     * 而這一個的後果是看不見的。
      */
     expect(issueFiltersComponent).toContain("missing_hire_date_banner");
+  });
+
+  /**
+   * Info: (20260908 - Luphia) 那句說明要**渲染在畫面上**，不是塞進 `title`
+   *（review 應修-3）。
+   *
+   * 初版把它掛在 `<label title={hint}>`。而同一次改版的 `coverage_alert.tsx`
+   * 才剛論證過原生 `title` 不能用（出不來、讀不動），更關鍵的是它在觸控裝置
+   * 上根本不出現，掛在 label 上也不會被螢幕閱讀器讀到。
+   *
+   * 「有這個 i18n 鍵」擋不住這件事 —— 上一條就是那樣寫的，而它在
+   * `title` 那一版是綠的。這一條問的是**它被渲染成什麼**。
+   */
+  it("沒有到職日的說明是畫面上的一行字，不是 title", () => {
+    expect(issueFiltersComponent).not.toContain("title={hint}");
+    expect(issueFiltersComponent).not.toContain("hint?:");
+
+    // Info: (20260908 - Luphia) 由人數守門：0 的時候沒有人需要補，那句話只是雜訊
+    expect(issueFiltersComponent).toMatch(
+      /\{missingHireDateCount > 0 && \([\s\S]{0,300}?missing_hire_date_banner/,
+    );
   });
 
   /**
