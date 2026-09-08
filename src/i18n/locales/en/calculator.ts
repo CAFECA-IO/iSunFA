@@ -84,6 +84,13 @@ export const calculator = {
     hire_date: "Hire date",
     resign_date: "Resignation date",
     date_order_error: "Resignation date cannot be earlier than the hire date",
+    leave_start_date: "Leave start date",
+    leave_end_date: "Return-to-work date",
+    leave_hint:
+      "Leave without pay: months fully inside this range are not expected to have a pay slip. Enter the first day of leave and the first day back at work — those two months still count, because the employee worked part of them. Leave the return date empty if they have not returned yet.",
+    leave_order_error:
+      "Return-to-work date cannot be earlier than the leave start date",
+    leave_start_required: "Enter the leave start date as well",
     main_title: "Employee List",
     name: "Employee Name",
     number: "Employee Number",
@@ -117,11 +124,21 @@ export const calculator = {
       "Are you sure you want to remove {{name}} from the employee list?",
     remove_employee_submit_btn: "Yes, Remove Employee",
     no_email: "Not set",
-    missing_email_banner:
-      "{{count}} employees have no email address — their pay slips cannot be sent",
-    only_missing_email: "Show only these",
-    show_all: "Show all employees",
+    missing_records_badge: "{{count}} month(s) missing",
     no_filter_result: "No employee matches the current filter",
+    missing_records_rest: "{{count}} more months",
+    no_hire_date: "Not set",
+    filter_missing_email: "No email address",
+    filter_missing_hire_date: "No hire date",
+    /**
+     * Info: (20260907 - Julian) 這一句在 UI 重構時被從五個語系刪掉了，
+     * 而 `employee_list_issue_filters.tsx` 仍然在讀它 ——
+     * 畫面上會直接顯示 `calculator.employee_list.missing_hire_date_banner`
+     * 這串原始鍵。原文照 `7ebdc4a33` 還原（`i18n_keys.test.ts` 抓到的）。
+     */
+    missing_hire_date_banner:
+      "{{count}} employee(s) have no hire date — coverage cannot be checked for them until it is filled in",
+    filter_missing_records: "Missing pay slip records",
   },
   result: {
     base_salary_with_tax: "Base Salary (Taxable)",

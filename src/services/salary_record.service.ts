@@ -1,4 +1,8 @@
 import { AppError } from "@/lib/utils/error";
+import {
+  missingSalaryPeriods,
+  type ISalaryPeriod,
+} from "@/lib/utils/salary_coverage";
 import { buildSalaryRecordCsv } from "@/lib/utils/salary_record_csv";
 import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
@@ -19,6 +23,7 @@ import {
   ISalaryRecordRepository,
   salaryRecordRepo,
 } from "@/repositories/salary_record.repo";
+import { accountBookRepo } from "@/repositories/account_book.repo";
 import {
   mapServiceError,
   resolveAccountBookMembership,
@@ -89,16 +94,85 @@ const toWholeAmount = (value: number): bigint => {
   return BigInt(value);
 };
 
+/**
+ * Info: (20260907 - Julian) 這支 service 對帳本只需要一件事：它何時建立。
+ *
+ * 宣告一個窄埠而不是注入整個 `IAccountBookRepository`（七支方法）——
+ * 後者會讓每一個測試替身多背六支用不到的方法，而那正是替身開始
+ * 「替程式回答問題」的起點（檢查清單 §1.8）。
+ * `AccountBookRepository` 在結構上就滿足這個介面，不必額外接線。
+ */
+export interface IAccountBookCreatedAtReader {
+  getCreatedAt(accountBookId: string): Promise<Date | null>;
+}
+
 export class SalaryRecordService {
   constructor(
     private readonly employees: ISalaryCalculatorEmployeeRepository,
     private readonly records: ISalaryRecordRepository,
+    private readonly accountBooks: IAccountBookCreatedAtReader,
   ) {}
 
+  /**
+   * Info: (20260905 - Luphia) 名單，並帶上每個人缺哪幾個月（#6774）。
+   *
+   * 三支查詢並行：名單一支、整本帳的年月分佈一支、帳本的建立時間一支。
+   * **不逐位員工問** —— 一百位員工的帳本那樣會打一百次 DB，
+   * 而這一頁是進去就會載入的。
+   *
+   * Info: (20260907 - Julian) 第三支是起算的下限（產品決策 20260907）。
+   * 帳本引入使用之前的月份不可能有薪資單，所以不列進缺漏 ——
+   * 少了它，中途導入的帳本會在有人補上到職日的那一刻冒出上百個月，
+   * 而那份清單一個都補不了。它與名單、分佈並行，不多一次往返。
+   *
+   * 完整度算不出來時（沒有到職日、範圍超過上限）回空陣列，畫面就不標示。
+   * 「不知道」與「完整」對使用者的處置相同，而猜一個起點會讓舊資料
+   * 全部被標成缺一大片。
+   */
   public async listEmployees(
     accountBookId: string,
   ): Promise<ISalaryCalculatorEmployee[]> {
-    return this.employees.listEmployees(accountBookId);
+    const [employees, covered, bookCreatedAt] = await Promise.all([
+      this.employees.listEmployees(accountBookId),
+      this.records.listCoveredPeriods(accountBookId),
+      this.accountBooks.getCreatedAt(accountBookId),
+    ]);
+
+    const byEmployee = new Map<string, ISalaryPeriod[]>();
+    for (const row of covered) {
+      const list = byEmployee.get(row.employeeId) ?? [];
+      list.push({ year: row.year, month: row.month });
+      byEmployee.set(row.employeeId, list);
+    }
+
+    const nowMs = Date.now();
+
+    return employees.map((employee) => ({
+      ...employee,
+      missingPeriods: missingSalaryPeriods({
+        hireDate: employee.hireDate,
+        /**
+         * Info: (20260907 - Julian) 秒，與其他日期同單位。
+         *
+         * 讀不到帳本時給 `null` = **少掉這個候選**，不是「沒有下限」——
+         * 那時下限退回這位員工最早一筆紀錄（見 `missingSalaryPeriods`
+         * 的 `dataStart`）。不猜一個下限，因為猜錯的方向會是漏報。
+         *
+         * Info: (20260908 - Luphia) 原本這裡寫「退回只看到職日」，與純函式那一側
+         * 的說明不一致（review 應修-1）—— 程式做的是後者，而照這句話去改
+         * 會讓有回填紀錄的舊員工多出一大段補不了的月份。
+         */
+        bookCreatedAt:
+          bookCreatedAt === null
+            ? null
+            : Math.floor(bookCreatedAt.getTime() / 1000),
+        resignDate: employee.resignDate,
+        leaveStartDate: employee.leaveStartDate,
+        leaveEndDate: employee.leaveEndDate,
+        existing: byEmployee.get(employee.id) ?? [],
+        nowMs,
+      }),
+    }));
   }
 
   public async createEmployee({
@@ -280,4 +354,5 @@ export class SalaryRecordService {
 export const salaryRecordService = new SalaryRecordService(
   salaryCalculatorEmployeeRepo,
   salaryRecordRepo,
+  accountBookRepo,
 );

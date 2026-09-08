@@ -4575,6 +4575,40 @@ model SalaryCalculatorEmployee {
   hireDate   DateTime? @map("hire_date")
   resignDate DateTime? @map("resign_date")
 
+  /**
+   * Info: (20260905 - Luphia) 留職停薪的起訖（#6774）。
+   *
+   * ## 為什麼是**日期區間**而不是一個狀態欄位
+   *
+   * 薪資紀錄完整度要回答的是「**8 月**該不該有薪資單」。一個
+   * 「目前留職停薪中」的布林或 enum 答不了那個問題 —— 它只說得出現在，
+   * 而使用者問的是過去某一個月。HR 模組的 `EmployeeStatus.LEAVE_WITHOUT_PAY`
+   * 正是那種形狀，所以不能直接借用。
+   *
+   * 存區間之後，「那個月在不在區間內」是一個純計算，不需要任何額外的歷史表。
+   *
+   * ## 已知限度：一個人只記得住一段
+   *
+   * 兩次留職停薪（生了第二胎、或中間復職過）只會留下最後一段，
+   * 而較早那一段的月份會被算成「缺少薪資單」。
+   *
+   * 接受它的理由是**誤報的方向與代價**：漏記一段會讓那幾個月被標成缺漏，
+   * 使用者看到的是一個他知道不必理會的提示；而反過來（把該補的月份藏起來）
+   * 才是真正會讓人少領到錢的方向。多段留職停薪需要一張
+   * `SalaryEmployeeLeavePeriod`，那是另一次改動 —— 但這一欄的語意
+   * （「不該有薪資單的期間」）到那時仍然成立，不必回頭改寫。
+   *
+   * ## 為什麼不接 HR 的 `Employee`
+   *
+   * 薪資計算機的員工檔刻意與 HR 分離（見本 model 檔頭）：那張表的
+   * `employeeNo` / `gender` / `hireDate` 必填、PII 一律走 AES-256-GCM。
+   * 為了一個試算工具背上那整套，換來的不是嚴謹，是沒有人願意建員工。
+   *
+   * `leaveEndDate` 可空 = 還沒復職（迄今仍在留職停薪）。
+   */
+  leaveStartDate DateTime? @map("leave_start_date")
+  leaveEndDate   DateTime? @map("leave_end_date")
+
   // Info: (20260831 - Julian) 隸屬的帳本 (租戶 Root Node)
   accountBookId String      @map("account_book_id")
   accountBook   AccountBook @relation(fields: [accountBookId], references: [id])

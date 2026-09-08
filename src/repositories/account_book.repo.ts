@@ -21,6 +21,7 @@ export interface IAccountBookRepository {
   ): Promise<AccountBook>;
   softDelete(accountBookId: string): Promise<AccountBook>;
   hasAssociatedEsgData(userId: string, enterpriseId: string): Promise<boolean>;
+  getCreatedAt(accountBookId: string): Promise<Date | null>;
 }
 
 export class AccountBookRepository {
@@ -178,6 +179,25 @@ export class AccountBookRepository {
       : 0;
 
     return esgRecordsCount > 0;
+  }
+
+  /**
+   * Info: (20260907 - Julian) 這本帳是什麼時候建立的 —— 只取那一格。
+   *
+   * 薪資紀錄完整度用它當起算的下限（`missingSalaryPeriods` 的 `bookCreatedAt`）：
+   * 帳本還不存在的月份不可能有薪資單。`select` 只要 `createdAt`，
+   * 因為呼叫端要的就是那一格，而 `AccountBook` 整列有二十幾欄。
+   *
+   * 查不到回 `null`（帳本被刪、或 id 不存在）。呼叫端據此退回「沒有下限」——
+   * 那時員工名單本來也會是空的。
+   */
+  async getCreatedAt(accountBookId: string): Promise<Date | null> {
+    const found = await prisma.accountBook.findUnique({
+      where: { id: accountBookId },
+      select: { createdAt: true },
+    });
+
+    return found?.createdAt ?? null;
   }
 }
 

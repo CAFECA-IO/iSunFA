@@ -84,6 +84,12 @@ export const calculator = {
     hire_date: "入社日",
     resign_date: "退職日",
     date_order_error: "退職日は入社日より前にはできません",
+    leave_start_date: "休職開始日",
+    leave_end_date: "復職日",
+    leave_hint:
+      "休職：この期間にすべて含まれる月は給与明細の欠落として扱いません。開始日は休職初日、復職日は出社を再開する初日を入力してください —— この 2 か月は勤務日があるため計上されます。まだ復職していない場合は空欄のままにしてください。",
+    leave_order_error: "復職日は休職開始日より前にはできません",
+    leave_start_required: "休職開始日も入力してください",
     main_title: "従業員リスト",
     name: "従業員名",
     number: "従業員番号",
@@ -117,11 +123,15 @@ export const calculator = {
     remove_employee_content: "本当に従業員リストから {{name}} を削除しますか？",
     remove_employee_submit_btn: "はい、削除します。",
     no_email: "未入力",
-    missing_email_banner:
-      "{{count}} 名のメールアドレスが未入力です。給与明細を送信できません",
-    only_missing_email: "該当者のみ表示",
-    show_all: "すべて表示",
+    missing_records_badge: "{{count}} か月分なし",
     no_filter_result: "条件に一致する従業員がいません",
+    missing_records_rest: "他 {{count}} か月分",
+    no_hire_date: "未入力",
+    filter_missing_email: "メールアドレスなし",
+    filter_missing_hire_date: "入社日なし",
+    missing_hire_date_banner:
+      "{{count}} 名の従業員に入社日がありません。入力すると、どの月の給与明細が不足しているか確認できます",
+    filter_missing_records: "給与明細の未作成あり",
   },
   result: {
     base_salary_with_tax: "基本給（課税対象）",

@@ -187,6 +187,9 @@ const employeeProfileBody = {
   voluntaryPensionRate: 6,
   hireDate: null,
   resignDate: null,
+  // Info: (20260905 - Luphia) 留職停薪也是寫入契約的一部分（#6774）
+  leaveStartDate: null,
+  leaveEndDate: null,
 };
 
 const employeeBody = {
