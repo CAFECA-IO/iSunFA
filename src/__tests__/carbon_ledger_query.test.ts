@@ -18,6 +18,11 @@ import {
 import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
 import { MoneyUtil } from "@/lib/utils/money";
 import {
+  collectAllowedNumbers,
+  adjudicateQuantityClaims,
+  extractQuantityClaims,
+} from "@/lib/carbon_reply_gate";
+import {
   EmissionBasisEnum,
   LedgerProvenanceEnum,
 } from "@/constants/imported_quantity";
@@ -840,6 +845,73 @@ describe("年間比較的三種狀態各有可觀測值(review R4)", () => {
     );
     // Info: (20260831 - Emily) 逾上限那句仍在(據實申報沒有被這次排序改掉)
     expect(bundle[bundle.length - 1].label).toBe("異常事實逾上限");
+  });
+});
+
+describe("toContextFacts 帶著 emissionsKg 過接縫(9/08 實測漏了 12 天)", () => {
+  /**
+   * Info: (20260908 - Emily) 查詞層每一筆排放量事實都填了 `emissionsKg`,出口守門也照它裁決,
+   * 但這個 mapper 手抄三個欄位、漏了第四個 —— 於是事實包送出去的每一筆都沒有它:
+   * round-5 的洗白防線沒關上、kg↔公噸換算沒有材料、當日新做的一致判定與指紋全部失效。
+   * 這一組是**接縫**測試:從 bundle 一路餵到守門,不各自用夾具。
+   */
+  const seamLedger = () =>
+    ledgerOf(
+      [
+        importedEntry({
+          activityKey: "a",
+          co2eKg: "227898.6",
+          convertedQuantity: "1000",
+          convertedUnit: "立方公尺",
+        }),
+      ],
+      {
+        scopeSubtotals: { SCOPE_1_DIRECT: "227898.6" },
+        totalCo2eKg: "227898.6",
+      },
+    );
+
+  it("bundle 裡每一筆排放量事實都還帶著 emissionsKg", () => {
+    const bundle = buildLedgerFactBundle(seamLedger());
+    const emissionFacts = bundle.filter(
+      (fact) => /kgCO2e$/.test(fact.value) || /kgCO2e\(/.test(fact.value),
+    );
+    expect(emissionFacts.length).toBeGreaterThan(0);
+    emissionFacts.forEach((fact) =>
+      expect(fact.emissionsKg?.length ?? 0).toBeGreaterThan(0),
+    );
+  });
+
+  it("守門拿 bundle 能做 kg↔公噸換算:「227.8986 公噸」合法", () => {
+    const allowed = collectAllowedNumbers(
+      buildLedgerFactBundle(seamLedger()),
+      [],
+    );
+    expect(allowed.emissionKg.has("227898.6")).toBe(true);
+    expect(
+      adjudicateQuantityClaims(
+        extractQuantityClaims("總量 227.8986 公噸 CO2e"),
+        allowed,
+      ),
+    ).toEqual([]);
+  });
+
+  it("守門拿 bundle 不放行活動數據當排放量:「1000 kgCO2e」被攔(round-5 的防線真的關上)", () => {
+    /**
+     * Info: (20260908 - Emily) 前五大那筆的 value 是「227898.6 kgCO2e(1000 立方公尺,占…)」。
+     * 沒有 emissionsKg 時 1000 會進 equality;有了它,只有 227898.6 進去。
+     */
+    const allowed = collectAllowedNumbers(
+      buildLedgerFactBundle(seamLedger()),
+      [],
+    );
+    expect(allowed.equality.has("1000")).toBe(false);
+    expect(
+      adjudicateQuantityClaims(
+        extractQuantityClaims("排放 1000 kgCO2e"),
+        allowed,
+      ),
+    ).toHaveLength(1);
   });
 });
 

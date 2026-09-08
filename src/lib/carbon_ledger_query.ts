@@ -440,15 +440,28 @@ export const queryAnomalies = (
 /**
  * Info: (20260825 - Emily) 把查詢結果攤平成 IContextFact,給注入層(第二層)餵 LLM。
  * 拒答不產生 facts —— 拒答句由敘事端用 refusal.missing 組,不讓 LLM 有機會填空。
+ *
+ * Info: (20260908 - Emily) **`emissionsKg` 一定要帶過去。** 這一行漏了 12 天。
+ *
+ * 20260827 為了 PR #6716 round-5 的阻擋項(活動數據與占比不得替排放量背書)在
+ * `ILedgerFact` 與 `IContextFact` 都加了 `emissionsKg`,查詢層每一筆排放量事實也都填了,
+ * 出口守門也照它裁決 —— 但這個 mapper 沒有跟著改,於是**事實包送出去的每一筆都沒有它**。
+ * 9/08 實測:`buildLedgerFactBundle` 回 4 筆、帶 emissionsKg 的 0 筆、
+ * 守門的 `emissionKg` 集合大小 0。
+ *
+ * 後果有兩層,都是靜默的:
+ * 1. 守門退回「value 裡每個數字都合法」—— round-5 修的洗白路徑(排放 1 公噸被 1000 立方公尺
+ *    洗白)在聊天路徑上**從來沒有關上**。
+ * 2. kg↔公噸換算沒有材料:模型只要寫「227.8986 公噸」就會被攔,所以它學會了只吐 kg 原值 ——
+ *    owner 9/08 看到的「683966.6 kgCO2e」滿版數字,一部分是這裡逼出來的。
+ *    同日的 `carbon_report_facts` / `carbon_report_freshness` 也都靠這個欄位判「一致」,
+ *    沒有它,報告印公噸的每一節都會被判成與帳本不一致、且永遠不會被標過期。
+ *
+ * 這是 #6725 / #6788 那個形狀(型別有、傳遞端沒有)的又一個實例,只是這次不是 schema
+ * 而是手寫的 mapper。修法是不再逐欄位手抄:整筆展開,型別相容由 TS 保證。
  */
 export const toContextFacts = (result: ILedgerQueryResult): IContextFact[] =>
-  result.ok
-    ? result.facts.map((fact) => ({
-        label: fact.label,
-        value: fact.value,
-        source: fact.source,
-      }))
-    : [];
+  result.ok ? result.facts.map((fact) => ({ ...fact })) : [];
 
 /**
  * Info: (20260825 - Emily) 年間量級跳動的門檻:×3 或 ÷3(#6707 的年間偵測器)。
