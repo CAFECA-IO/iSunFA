@@ -7,8 +7,10 @@
 // Info: (20260825 - Emily) 三條產品鐵律在這一層的落點:
 // Info: (20260825 - Emily) 1. 數字不憑空捏造 —— 數值只從 ledger 欄位取,總計讀既存欄位不重算
 // Info: (20260825 - Emily)    (summarizeLedgerEntries 是唯一累加實作;這裡連 add 都盡量不做)。
-// Info: (20260907 - Emily)    例外:**維度小計**(廠址、ISO 類別)不是既存欄位,得在查詢層以同一個
+// Info: (20260907 - Emily)    例外:**維度小計**(廠址、ISO 類別、範疇合計)不是既存欄位,得在查詢層以同一個
 // Info: (20260907 - Emily)    MoneyUtil 加總,且每一個都必須由「加回總量」的不變式測試釘住(#6778 review 低-1)。
+// Info: (20260908 - Emily) 4. 事實的 label / source **只放人話** —— enum 鍵、內部 slug、實作細節(MoneyUtil)
+// Info: (20260908 - Emily)    一個都不進 LLM。查核者的追溯另有路(帳本自己存著鍵)。由 carbon_fact_wording 掃描釘住。
 // Info: (20260825 - Emily) 2. 異常只來自列舉過的偵測器 —— queryAnomalies 只讀既存的決定性裁決
 // Info: (20260825 - Emily)    (匯入阻擋/pending/articulation 的 violations 與 warnings/年度標註),
 // Info: (20260825 - Emily)    不發明新的「疑點」;新偵測器要先開票、定義證據鏈、進這個列舉。
@@ -16,7 +18,11 @@
 
 import { MoneyUtil } from "@/lib/utils/money";
 import { isImportedEntry } from "@/lib/carbon_table38.ledger";
-import { GhgCategoryDetails, IsoCategoryDetails } from "@/constants/esg";
+import {
+  EsgScope,
+  GhgCategoryDetails,
+  IsoCategoryDetails,
+} from "@/constants/esg";
 import type { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
 import type {
   IComputedLedger,
@@ -88,14 +94,65 @@ const isoCategoryLabel = (category: Iso14064Category): string =>
  * 而使用者問的是「範疇二」。同一份帳本裡 `SCOPE_3_CAT_4` 這種鍵更不可能對上任何問法 ——
  * 模型要嘛答不出來,要嘛自己猜對照,而猜錯是靜默的。
  *
- * 改成 esg.ts 既有的中文名並**保留原鍵**(`能源間接溫室氣體排放 (範疇二) [SCOPE_2_INDIRECT] 小計`):
- * 中文供問答比對,原鍵供查核者對回帳本欄位 —— 兩個讀者都要顧到,而不是二選一。
+ * Info: (20260908 - Emily) 9/07 那一版把 enum 鍵**保留在方括號裡**(「原鍵供查核者對回帳本欄位」)。
+ * owner 9/08 實測後判定不該出現,而那個判斷是對的:`label` 是 persona 逐筆印給
+ * **使用者**看的字串,查核者的追溯另有路(帳本自己存著鍵、報告的表 3.8 帶著表號),
+ * 把識別碼塞進人話等於讓每個使用者付查核者的成本。**事實的 label / source 只放人話**,
+ * 識別碼一個都不送進 LLM —— 用 `carbon_fact_wording.test.ts` 的掃描釘住,
+ * 不靠 persona 規則叫它「別印方括號」(那種規則遲早被繞過,而繞過是靜默的)。
+ *
+ * 範疇三的 GHG 類別(`SCOPE_3_CAT_n`)中文名不帶範疇字樣(「購買的商品與服務」),
+ * 單獨印出來使用者不知道它屬於範疇三,所以前面補「範疇三:」。
+ * **刻意不寫「類別 n」**:那是 GHG Protocol 的 category,與 ISO 14064-1 的「類別」同字不同義,
+ * 而這兩套術語的混淆正是 #6778 的起點。
  * 中文名不在本檔維護(那會與 esg.ts 漂移)。
  */
 const scopeLabel = (scope: string): string => {
   const detail = GhgCategoryDetails[scope as GhgProtocolCategory];
-  return detail ? `${detail.nameZh} [${scope}]` : scope;
+  if (!detail) return scope;
+  return detail.scope === EsgScope.SCOPE_3
+    ? `範疇三:${detail.nameZh}`
+    : detail.nameZh;
 };
+
+/**
+ * Info: (20260908 - Emily) 範疇合計的標籤,**把兩套術語的對照寫在 label 上**(#6778 第三半)。
+ *
+ * owner 9/08 實測:問「範疇三的排放量」,帳本的 `scopeSubtotals` 是按 GHG 類別存的
+ * (`SCOPE_3_CAT_1`…),沒有一格叫「範疇三合計」;模型守規矩不自己加,只能把六個零件攤出來。
+ * 這是 #6778 前半(缺 ISO 類別小計)的同形:**使用者會問的彙總層級,事實包裡沒有那一格。**
+ *
+ * 對照寫在 label 上是刻意的:模型的語意配對本來就強,缺的只是一座橋讓它知道
+ * 「範疇三」與「類別三+四+五+六」是同一批東西。橋寫在事實上,比另外做意圖分類便宜,
+ * 而且可測。對照本身是 ISO 14064-1:2018 與 GHG Protocol 的標準對應,不是本專案的判斷。
+ * 不寫阿拉伯數字(不寫「Scope 3」):label 不進守門的合法集合,但模型會照抄 label,
+ * 一個裸露的 3 出現在排放單位旁邊就是一筆假主張。
+ */
+const SCOPE_ROLLUP_LABEL: Record<EsgScope, string> = {
+  [EsgScope.SCOPE_1]:
+    "範疇一合計(GHG Protocol 直接排放;對應 ISO 14064-1 類別一)",
+  [EsgScope.SCOPE_2]:
+    "範疇二合計(GHG Protocol 能源間接排放;對應 ISO 14064-1 類別二)",
+  [EsgScope.SCOPE_3]:
+    "範疇三合計(GHG Protocol 其他間接排放;對應 ISO 14064-1 類別三、四、五、六)",
+};
+const SCOPE_ROLLUP_ORDER: EsgScope[] = [
+  EsgScope.SCOPE_1,
+  EsgScope.SCOPE_2,
+  EsgScope.SCOPE_3,
+];
+
+/**
+ * Info: (20260908 - Emily) 表號的人話寫法。
+ *
+ * `importedOrigin.tableNo` 經 `normalizeSourceTableNo` 之後**已經帶「表」**(「表3.8」),
+ * 而這裡原本再串一個「表」—— owner 9/08 截圖裡的「表表3.8」就是這麼來的。
+ * 測試夾具用的是不帶「表」的「3.8」,所以兩種寫法都要收,不假設上游一定正規化過。
+ */
+const tableRef = (tableNo: string): string =>
+  tableNo.startsWith("表") ? tableNo : `表${tableNo}`;
+const tableRefs = (tableNos: Iterable<string>): string =>
+  [...new Set([...tableNos].map(tableRef))].join("、");
 
 /** Info: (20260907 - Emily) 沒有 isoCategory 的分錄(憑證/計算來源)的桶名 */
 const UNCATEGORIZED_LABEL = "未標註 ISO 類別";
@@ -184,7 +241,7 @@ export const queryIsoCategorySubtotals = (
     return {
       label: `${isoCategoryLabel(category)} 排放小計(ISO 14064-1)`,
       value: `${subtotal} kgCO2e`,
-      source: `原文照錄 表${[...tableNos].join("、")} 分錄按 ISO 類別加總(MoneyUtil)`,
+      source: `原文照錄 ${tableRefs(tableNos)} 分錄按 ISO 類別加總`,
       emissionsKg: [subtotal],
     };
   });
@@ -208,12 +265,14 @@ export const queryIsoCategorySubtotals = (
 
 /**
  * Info: (20260825 - Emily) 分錄的溯源字串。匯入項有 importedOrigin(表號+廠址+子代碼),
- * 憑證項退回 sourceName + activityKey —— 兩種來源都必須說得出「這個數字從哪來」。
+ * 憑證項退回 sourceName —— 兩種來源都必須說得出「這個數字從哪來」。
+ * Info: (20260908 - Emily) 原本憑證項還帶 `(activityKey)`:那是內部 slug,使用者看不懂也
+ * 不能拿它做任何事。所有事實字串一律只放人話(見 scopeLabel 的說明)。
  */
 const traceOf = (entry: IComputedLedgerEntry): string =>
   entry.importedOrigin
-    ? `原文照錄 表${entry.importedOrigin.tableNo} ${entry.importedOrigin.site} ${entry.importedOrigin.subCategory}(${isoCategoryLabel(entry.importedOrigin.isoCategory)})`
-    : `本系統計算 ${entry.sourceName}(${entry.activityKey})`;
+    ? `原文照錄 ${tableRef(entry.importedOrigin.tableNo)} ${entry.importedOrigin.site} ${entry.importedOrigin.subCategory}(${isoCategoryLabel(entry.importedOrigin.isoCategory)})`
+    : `本系統計算 ${entry.sourceName}`;
 
 /**
  * Info: (20260825 - Emily) 全公司總量與範疇小計。
@@ -229,6 +288,46 @@ export const queryTotal = (
       "帳本中沒有任何排放分錄:請先匯入盤查報告,或完成活動數據與係數計算",
     );
   }
+  /*
+   * Info: (20260908 - Emily) 範疇合計(#6778 第三半):`scopeSubtotals` 的鍵是 GHG 類別
+   * (`SCOPE_3_CAT_n`),同一範疇底下可能有很多筆;合計在查詢層以 MoneyUtil 加總,
+   * 與類別小計、廠址小計同一個例外、同一條不變式:**三個範疇合計相加 = 帳本總計欄**。
+   * 範疇一、二各只有一個鍵,合計就等於那一筆 —— 仍然印成「合計」那一筆(帶術語對照),
+   * 原本那筆不重印:同一個數字印兩次,模型會以為是兩件事。
+   * 範疇三合計印在它的各類別之前:先給答案,再給組成。
+   */
+  const rollups = new Map<EsgScope, string>();
+  const byScope = new Map<EsgScope, [string, string][]>();
+  Object.entries(ledger.scopeSubtotals).forEach(([key, subtotal]) => {
+    const scope = GhgCategoryDetails[key as GhgProtocolCategory]?.scope;
+    if (!scope) return;
+    rollups.set(scope, MoneyUtil.add(rollups.get(scope) ?? "0", subtotal));
+    byScope.set(scope, [...(byScope.get(scope) ?? []), [key, subtotal]]);
+  });
+  const scopeFacts: ILedgerFact[] = SCOPE_ROLLUP_ORDER.filter((scope) =>
+    rollups.has(scope),
+  ).flatMap((scope) => {
+    const members = byScope.get(scope) ?? [];
+    const rollup: ILedgerFact = {
+      label: SCOPE_ROLLUP_LABEL[scope],
+      value: `${rollups.get(scope)} kgCO2e`,
+      source:
+        members.length === 1
+          ? "帳本範疇小計欄"
+          : `帳本範疇小計欄按範疇加總(${members.length} 個 GHG 類別)`,
+      emissionsKg: [rollups.get(scope)!],
+    };
+    if (members.length === 1) return [rollup];
+    return [
+      rollup,
+      ...members.map(([key, subtotal]) => ({
+        label: `${scopeLabel(key)} 小計`,
+        value: `${subtotal} kgCO2e`,
+        source: "帳本範疇小計欄",
+        emissionsKg: [subtotal],
+      })),
+    ];
+  });
   const facts: ILedgerFact[] = [
     {
       label: "全公司總排放量",
@@ -236,12 +335,7 @@ export const queryTotal = (
       source: `帳本總計欄(${ledger.entries.length} 筆分錄,計算於 ${ledger.computedAt})`,
       emissionsKg: [ledger.totalCo2eKg],
     },
-    ...Object.entries(ledger.scopeSubtotals).map(([scope, subtotal]) => ({
-      label: `${scopeLabel(scope)} 小計`,
-      value: `${subtotal} kgCO2e`,
-      source: "帳本範疇小計欄",
-      emissionsKg: [subtotal],
-    })),
+    ...scopeFacts,
   ];
   return { ok: true, facts };
 };
@@ -332,7 +426,7 @@ export const querySiteSubtotals = (
   const facts = [...subtotals.entries()].map(([site, subtotal]) => ({
     label: `${site} 排放小計`,
     value: `${subtotal} kgCO2e`,
-    source: `原文照錄 表${[...tableNos].join("、")} 分錄加總(MoneyUtil)`,
+    source: `原文照錄 ${tableRefs(tableNos)} 分錄加總`,
     emissionsKg: [subtotal],
   }));
   return { ok: true, facts };
@@ -421,17 +515,17 @@ export const queryAnomalies = (
     ...ledger.pending.map((item) => ({
       label: `待補項:${item.sourceName}`,
       value: item.reason,
-      source: `帳本待補清單(${item.activityKey})`,
+      source: "帳本待補清單",
     })),
     ...(ledger.articulation?.violations ?? []).map((violation) => ({
       label: `質量守恆缺口:${violation.materialName}`,
       value: `期初+採購-期末=${violation.expectedConsumption} ${violation.unit},帳上消耗=${violation.actualConsumption} ${violation.unit},缺口=${violation.gap} ${violation.unit}`,
-      source: "帳本質量守恆勾稽(articulation)",
+      source: "帳本質量守恆勾稽",
     })),
     ...(ledger.articulation?.warnings ?? []).map((warning) => ({
       label: `合理性警示:${warning.sourceName}`,
       value: `數量 ${warning.quantity} ${warning.unit},超出物理量級邊界(上限 ${warning.plausibleMax} ${warning.unit})`,
-      source: `帳本合理性警示(${warning.activityKey})`,
+      source: "帳本合理性警示",
     })),
   ];
   return { ok: true, facts };

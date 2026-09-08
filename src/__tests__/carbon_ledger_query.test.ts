@@ -88,12 +88,87 @@ describe("queryTotal", () => {
     if (!result.ok) throw new Error("should be ok");
     expect(result.facts[0].value).toBe("999 kgCO2e");
     expect(result.facts[0].source).toContain("2 筆分錄");
+    /*
+     * Info: (20260908 - Emily) 範疇二只有一個 GHG 類別鍵 → 只印「範疇二合計」那一筆,
+     * 不再印 `[SCOPE_2_INDIRECT] 小計`:enum 鍵不進人話(owner 9/08 判定),
+     * 而同一個數字印兩筆會讓模型以為是兩件事。label 帶兩套術語的對照。
+     */
     expect(result.facts[1]).toEqual({
-      label: "能源間接溫室氣體排放 (範疇二) [SCOPE_2_INDIRECT] 小計",
+      label: "範疇二合計(GHG Protocol 能源間接排放;對應 ISO 14064-1 類別二)",
       value: "999 kgCO2e",
       source: "帳本範疇小計欄",
       // Info: (20260827 - Emily) 排放量本體另以結構標記,供出口守門裁決(見 IContextFact.emissionsKg)
       emissionsKg: ["999"],
+    });
+    expect(result.facts).toHaveLength(2);
+  });
+
+  describe("範疇合計(#6778 第三半:owner 9/08 問「範疇三」答不出單一數字)", () => {
+    const scope3Ledger = () =>
+      ledgerOf([importedEntry({ activityKey: "a", co2eKg: "1" })], {
+        scopeSubtotals: {
+          SCOPE_1_DIRECT: "100",
+          SCOPE_3_CAT_1: "683966.6",
+          SCOPE_3_CAT_4: "176821.1",
+          SCOPE_3_CAT_9: "927457.5",
+        },
+        totalCo2eKg: "1788345.2",
+      });
+
+    it("範疇三合計 = 各 GHG 類別小計以 MoneyUtil 加總,且排在它的組成之前", () => {
+      const result = queryTotal(scope3Ledger());
+      if (!result.ok) throw new Error("should be ok");
+      const labels = result.facts.map((fact) => fact.label);
+      const rollupIndex = labels.findIndex((label) =>
+        label.startsWith("範疇三合計"),
+      );
+      expect(rollupIndex).toBeGreaterThan(-1);
+      expect(result.facts[rollupIndex].value).toBe("1788245.2 kgCO2e");
+      expect(result.facts[rollupIndex].emissionsKg).toEqual(["1788245.2"]);
+      expect(result.facts[rollupIndex].source).toContain("3 個 GHG 類別");
+      // Info: (20260908 - Emily) 先給答案,再給組成
+      expect(labels[rollupIndex + 1]).toBe("範疇三:購買的商品與服務 小計");
+    });
+
+    it("★ 三個範疇合計相加 = 帳本總計欄(在查詢層加總的代價擔保)", () => {
+      const result = queryTotal(scope3Ledger());
+      if (!result.ok) throw new Error("should be ok");
+      const sum = result.facts
+        .filter((fact) => /^範疇[一二三]合計/.test(fact.label))
+        .reduce((acc, fact) => MoneyUtil.add(acc, fact.emissionsKg![0]), "0");
+      expect(sum).toBe("1788345.2");
+    });
+
+    it("label 上寫著兩套術語的對照,但不含阿拉伯數字", () => {
+      /**
+       * Info: (20260908 - Emily) 對照是橋(範疇三 ↔ 類別三、四、五、六);不寫「Scope 3」——
+       * label 不進守門的合法集合,但模型會照抄 label,一個裸露的 3 落在排放單位旁就是假主張。
+       */
+      const result = queryTotal(scope3Ledger());
+      if (!result.ok) throw new Error("should be ok");
+      const rollups = result.facts.filter((fact) =>
+        /^範疇[一二三]合計/.test(fact.label),
+      );
+      expect(rollups).toHaveLength(2);
+      rollups.forEach((fact) => {
+        expect(fact.label).toMatch(/ISO 14064-1 類別/);
+        expect(fact.label.replace(/14064-1/, "")).not.toMatch(/[0-9]/);
+      });
+      expect(rollups[1].label).toContain("類別三、四、五、六");
+    });
+
+    it("範疇三的各類別前面補「範疇三:」,而且不寫「類別 n」(與 ISO 的「類別」同字不同義)", () => {
+      const result = queryTotal(scope3Ledger());
+      if (!result.ok) throw new Error("should be ok");
+      const members = result.facts.filter((fact) =>
+        fact.label.startsWith("範疇三:"),
+      );
+      expect(members.map((fact) => fact.label)).toEqual([
+        "範疇三:購買的商品與服務 小計",
+        "範疇三:上游運輸與配送 小計",
+        "範疇三:下游運輸與配送 小計",
+      ]);
+      members.forEach((fact) => expect(fact.label).not.toMatch(/類別 ?[0-9]/));
     });
   });
 
@@ -205,16 +280,46 @@ describe("querySiteSubtotals", () => {
       {
         label: "(1) 總公司 排放小計",
         value: "0.3 kgCO2e",
-        source: "原文照錄 表3.8 分錄加總(MoneyUtil)",
+        source: "原文照錄 表3.8 分錄加總",
         emissionsKg: ["0.3"],
       },
       {
         label: "(2) 台北分公司 排放小計",
         value: "7 kgCO2e",
-        source: "原文照錄 表3.8 分錄加總(MoneyUtil)",
+        source: "原文照錄 表3.8 分錄加總",
         emissionsKg: ["7"],
       },
     ]);
+  });
+
+  it("tableNo 已帶「表」(上游正規化後的實際值)時不得印成「表表3.8」", () => {
+    /**
+     * Info: (20260908 - Emily) `normalizeSourceTableNo` 的輸出是「表3.8」,而查詢層原本再串一個「表」。
+     * owner 9/08 的截圖裡「原文照錄 表表3.8 分錄按 ISO 類別加總(MoneyUtil)」就是這兩個 bug 疊在一起。
+     * 夾具預設用「3.8」是歷史包袱,所以這裡特別用實際值。
+     */
+    const ledger = ledgerOf([
+      importedEntry({
+        activityKey: "a",
+        co2eKg: "1",
+        importedOrigin: {
+          site: "(1) 總公司",
+          isoCategory: Iso14064Category.CATEGORY_2,
+          subCategory: "2.1 外購電力",
+          tableNo: "表3.8",
+        },
+      }),
+    ]);
+    const sites = querySiteSubtotals(ledger);
+    const iso = queryIsoCategorySubtotals(ledger);
+    const top = queryTopEmitters(ledger, 1);
+    [sites, iso, top].forEach((result) => {
+      if (!result.ok) throw new Error("should be ok");
+      result.facts.forEach((fact) => {
+        expect(fact.source).toContain("表3.8");
+        expect(fact.source).not.toContain("表表");
+      });
+    });
   });
 
   it("帳本只有憑證分錄(無廠址維度)→ 拒答說明是維度缺席,不是排放量為零", () => {
@@ -283,7 +388,7 @@ describe("queryIsoCategorySubtotals(#6778)", () => {
       label.startsWith("類別三"),
     );
     const scopeThree = [...byLabel.entries()].find(([label]) =>
-      label.includes("[SCOPE_3_CAT_4]"),
+      label.startsWith("範疇三合計"),
     );
     expect(isoThree?.[1]).toBe("3 kgCO2e");
     expect(scopeThree?.[1]).toBe("7 kgCO2e");
