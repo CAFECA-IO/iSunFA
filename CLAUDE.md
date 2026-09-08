@@ -55,14 +55,24 @@
 - Service 層要攔截並包裝錯誤，不讓原始 Prisma 錯誤（如 Unique Constraint 代碼）直接噴到前端。
 - 背景 Worker 重試達上限（如 3 個 `failed_*.md`）必須建立 `giveup.md` 或進死信佇列 (DLQ)，避免無窮迴圈耗盡資源。
 
-## 7. AI / LLM 協作邊界
+## 7. AI 代理的暫存輸出一律落在 `data/`
+
+- 代理產生的**非交付物**（補丁腳本、commit message 草稿、PR 描述、review 筆記、
+  一次性的分析檔）一律寫進 `data/`（例如 `data/Claude outputs/`）。
+  `.gitignore` 已經有 `/data/`，所以那裡的東西不會進版控。
+- **不要寫進 repo 根目錄或 `scripts/`。** 那兩個地方在版控裡，
+  一個沒清掉的 `p7.py` 會出現在別人的 `git status` 上，
+  而下一個人得先判斷它是不是誰正在做的東西。
+- 真正的交付物（原始碼、測試、`documents/`）當然照原位放。
+
+## 8. AI / LLM 協作邊界
 
 - LLM 只當「視力極佳的字串萃取器」：負責語意理解與非結構化轉結構化。
 - **嚴禁 LLM 算數學、做邏輯判斷、當事實資料庫**。所有計算與判斷收斂到 TypeScript 確定性規則引擎。
 - 資料萃取任務 Temperature = 0；用 Schema `enum` / `responseSchema` 約束輸出，禁止自由格式 + Regex 硬抓。
 - 永遠不直接採信 LLM 數值，必須與後端護欄交叉驗證（借貸平衡、物理質量守恆）。
 
-## 8. 關鍵領域模型（勿混淆）
+## 9. 關鍵領域模型（勿混淆）
 
 - **`Company`**：唯讀公開資料字典（從 TWSE 爬取），只供「向外看」的爬蟲 / Benchmark。**嚴禁**掛任何內部業務資料。
 - **`AccountBook`**：系統真正的租戶帳本，所有 `Journal` / `Voucher` / `EsgRecord` 等都必須透過 `accountBookId` 綁定於此，是業務的 Root Node。

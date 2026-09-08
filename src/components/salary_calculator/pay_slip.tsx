@@ -33,27 +33,10 @@ const PaySlip: FC<IPaySlipProps> = ({
   /**
    * Info: (20260907 - Julian) 遮住薪資單上的數值。
    *
-   * ## 這是「有人站在我後面」，不是遮蔽敏感資料
-   *
-   * 數字仍然在 DOM 裡，只是被 CSS 模糊掉 —— 選取得到、開發者工具也看得到。
-   * 它要解決的是「在辦公室打開薪資單，隔壁同事剛好走過來」，
-   * 不是把資料藏起來不讓這個使用者看見（他本來就有權限看，
-   * 授權在伺服器那一側，不在這顆按鈕上）。
-   *
-   * ## 狀態放在元件裡面
-   *
-   * 兩個呼叫端（計算機結果區、預覽彈窗）各自持有一份，這是對的：
-   * 那是兩個獨立的畫面，在其中一個遮起來不代表另一個也要遮。
-   * 而且它不需要跨頁保留 —— 重新打開時應該是看得見的，
-   * 預設遮住會讓人以為資料沒算出來。
-   *
-   * ## 下載與寄送不受影響
-   *
-   * 下載的 PNG 一律是清楚的（`pay_slip_download.ts` 會在截圖期間
-   * 把根元素上的標記拔掉），寄出的 PDF 由伺服器另外產生、根本不經過這裡。
-   * 遮住的是這個畫面，不是這份薪資單 —— 否則會寄出一張看不懂的薪資單給員工。
+   * 但下載與寄送不受影響，因為 pay_slip_download.ts 會在截圖期間把根元素上的標記拔掉，
+   * 而寄出的 PDF 由伺服器另外產生、根本不經過這裡。
    */
-  const [isHidden, setIsHidden] = useState<boolean>(false);
+  const [isHidden, setIsHidden] = useState<boolean>(true);
 
   const showingName = employeeName !== "" ? employeeName : "-";
   const showingNumber = employeeNumber !== "" ? employeeNumber : "-";
