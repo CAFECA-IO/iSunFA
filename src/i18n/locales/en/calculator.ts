@@ -162,6 +162,8 @@ export const calculator = {
     total_employer_cost: "Total Employer Cost",
     reported: "Reported",
     paid: "Paid",
+    hide_values: "Hide amounts",
+    show_values: "Show amounts",
   },
   warnings: {
     title: "Warning Message",

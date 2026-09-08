@@ -157,6 +157,8 @@ export const calculator = {
     total_employer_cost: "公司總負擔",
     reported: "扣繳憑單金額",
     paid: "實際發放金額",
+    hide_values: "隱藏金額",
+    show_values: "顯示金額",
   },
   warnings: {
     title: "警示訊息",

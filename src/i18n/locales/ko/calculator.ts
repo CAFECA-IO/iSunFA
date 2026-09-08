@@ -158,6 +158,8 @@ export const calculator = {
     total_employer_cost: "회사 총 부담금",
     reported: "원천징수 신고 금액",
     paid: "실제 지급 금액",
+    hide_values: "금액 숨기기",
+    show_values: "금액 표시",
   },
   warnings: {
     title: "경고 메시지",

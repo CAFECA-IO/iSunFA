@@ -159,6 +159,8 @@ export const calculator = {
     total_employer_cost: "会社総負担額",
     reported: "源泉徴収額",
     paid: "実支給額",
+    hide_values: "金額を隠す",
+    show_values: "金額を表示",
   },
   warnings: {
     title: "警告メッセージ",

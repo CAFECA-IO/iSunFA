@@ -3357,6 +3357,30 @@ body {
   transition: none !important;
 }
 
+/**
+ * Info: (20260907 - Julian) 薪資單的「隱藏數值」。
+ *
+ * 根元素帶上 `data-values-hidden` 之後，所有標了 `data-payslip-amount`
+ * 的後代都會被模糊掉。用**模糊**而不是換成「•••」有兩個理由：
+ *
+ * 1. 版面不動。換字串會讓每一格的寬度變一次，整張單子在切換時抖一下；
+ *    模糊之後欄位寬度完全不變。
+ * 2. 看得出「這裡本來有一個數字」。這是遮擋，不是沒有資料 ——
+ *    而空白或「---」讀起來像後者。
+ *
+ * `user-select: none` 是順手的：模糊之後還能反白複製出原文，
+ * 那會讓「遮起來」這件事在肩膀後面那個人拿到滑鼠時失效。
+ * 但這只是遮擋不是保護 —— 數字仍在 DOM 裡，開發者工具看得到，
+ * 真正的授權在伺服器那一側。
+ *
+ * 不寫在 `@layer utilities` 裡：它不是一個給人套用的 utility，
+ * 而是兩個 data 屬性之間的一條關係，只有薪資單會用到。
+ */
+[data-values-hidden="true"] [data-payslip-amount] {
+  filter: blur(6px);
+  user-select: none;
+}
+
 input[type="color" i]::-webkit-color-swatch,
 input[type="color" i]::-moz-color-swatch {
   border: 0px;

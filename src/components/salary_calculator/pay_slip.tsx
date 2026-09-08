@@ -1,4 +1,7 @@
-import { FC } from "react";
+"use client";
+
+import { FC, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 // import Image from 'next/image';
 import { useTranslation } from "@/i18n/i18n_context";
 import ResultBlock from "@/components/salary_calculator/result_block";
@@ -12,17 +15,7 @@ interface IPaySlipProps {
   selectedYear: string;
   resultData: ISalaryCalculatorUI;
   className?: string;
-  /**
-   * Info: (20260901 - Julian) 薪資單自己要不要長得像一張卡片。
-   *
-   * `card`（預設）：計算機頁面上它是獨立的一塊，要圓角、外框與陰影。
-   * `plain`：外層已經是一張卡片了（例如 `view_pay_slip_modal` 的彈窗），
-   * 再套一層框會變成卡中卡，看起來像兩個不相干的區塊被硬湊在一起。
-   *
-   * 做成 prop 而不是讓呼叫端用 `className` 蓋掉：Tailwind 同權重的 class
-   * 誰贏取決於產生順序，不是字串裡的先後 —— 用 `border-0 shadow-none` 去蓋
-   * 能不能生效是碰運氣的。
-   */
+  // Info: (20260901 - Julian) 決定薪資單有沒有卡片外框
   variant?: "card" | "plain";
 }
 
@@ -36,6 +29,31 @@ const PaySlip: FC<IPaySlipProps> = ({
   variant = "card",
 }) => {
   const { t } = useTranslation();
+
+  /**
+   * Info: (20260907 - Julian) 遮住薪資單上的數值。
+   *
+   * ## 這是「有人站在我後面」，不是遮蔽敏感資料
+   *
+   * 數字仍然在 DOM 裡，只是被 CSS 模糊掉 —— 選取得到、開發者工具也看得到。
+   * 它要解決的是「在辦公室打開薪資單，隔壁同事剛好走過來」，
+   * 不是把資料藏起來不讓這個使用者看見（他本來就有權限看，
+   * 授權在伺服器那一側，不在這顆按鈕上）。
+   *
+   * ## 狀態放在元件裡面
+   *
+   * 兩個呼叫端（計算機結果區、預覽彈窗）各自持有一份，這是對的：
+   * 那是兩個獨立的畫面，在其中一個遮起來不代表另一個也要遮。
+   * 而且它不需要跨頁保留 —— 重新打開時應該是看得見的，
+   * 預設遮住會讓人以為資料沒算出來。
+   *
+   * ## 下載與寄送不受影響
+   *
+   * 下載的 PNG 一律是清楚的（`pay_slip_download.ts` 會在截圖期間
+   * 把根元素上的標記拔掉），寄出的 PDF 由伺服器另外產生、根本不經過這裡。
+   * 遮住的是這個畫面，不是這份薪資單 —— 否則會寄出一張看不懂的薪資單給員工。
+   */
+  const [isHidden, setIsHidden] = useState<boolean>(false);
 
   const showingName = employeeName !== "" ? employeeName : "-";
   const showingNumber = employeeNumber !== "" ? employeeNumber : "-";
@@ -240,6 +258,8 @@ const PaySlip: FC<IPaySlipProps> = ({
   return (
     <div
       id="payslip-download"
+      // Info: (20260907 - Julian) 只在遮住時出現 —— 截圖前由 downloadNodeAsPng 拔掉
+      data-values-hidden={isHidden ? "true" : undefined}
       className={`relative flex flex-col gap-6 bg-white ${
         variant === "card"
           ? "overflow-hidden rounded-2xl border border-gray-200 p-6 shadow-xl"
@@ -270,11 +290,39 @@ const PaySlip: FC<IPaySlipProps> = ({
           <p>NT ${numberWithCommas(totalSalary)}</p>
         </div> */}
         <div className="flex flex-col gap-2">
+          {/**
+           * Info: (20260907 - Julian) 切換鈕放在兩個大數字的上面、靠右。
+           *
+           * 那兩個是整張薪資單最先被看到的東西，按鈕在它們正上方，
+           * 手要遮的時候不必找。不用絕對定位：`variant="plain"` 的呼叫端
+           * 自己加外距（`view_pay_slip_modal` 給的是 `px-[40px] py-[24px]`），
+           * 絕對定位會貼到那層外距之外。
+           *
+           * `data-capture-exclude` 讓它不會出現在下載的 PNG 裡 ——
+           * 那張圖是要給員工看的，上面不該有一顆操作鈕。
+           */}
+          <div className="flex justify-end">
+            <button
+              type="button"
+              data-capture-exclude="true"
+              onClick={() => setIsHidden((prev) => !prev)}
+              aria-pressed={isHidden}
+              className="text-text-neutral-tertiary hover:text-text-neutral-primary flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-gray-100"
+            >
+              {isHidden ? <EyeOff size={16} /> : <Eye size={16} />}
+              {isHidden
+                ? t("calculator.result.show_values")
+                : t("calculator.result.hide_values")}
+            </button>
+          </div>
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase">
               {t("calculator.result.reported")}
             </p>
-            <div className="text-text-brand-primary-lv2 text-2xl font-bold">
+            <div
+              data-payslip-amount
+              className="text-text-brand-primary-lv2 text-2xl font-bold"
+            >
               {numberWithCommas(totalSalaryTaxable)}{" "}
               <span className="text-text-neutral-tertiary text-base font-semibold">
                 NTD
@@ -285,7 +333,10 @@ const PaySlip: FC<IPaySlipProps> = ({
             <p className="text-xs font-semibold uppercase">
               {t("calculator.result.paid")}
             </p>
-            <div className="text-text-brand-primary-lv2 text-2xl font-bold">
+            <div
+              data-payslip-amount
+              className="text-text-brand-primary-lv2 text-2xl font-bold"
+            >
               {numberWithCommas(totalPayment)}{" "}
               <span className="text-text-neutral-tertiary text-base font-semibold">
                 NTD
