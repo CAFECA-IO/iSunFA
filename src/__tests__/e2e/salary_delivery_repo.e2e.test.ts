@@ -113,12 +113,14 @@ beforeAll(async () => {
   }
 
   const employee = await salaryCalculatorEmployeeRepo.createEmployee({
+    change: changeCtx(),
     accountBookId: BOOK_ID,
     input: employeeInput("E2E-D001", ORIGINAL_EMAIL),
   });
   employeeId = employee.id;
 
   const otherEmployee = await salaryCalculatorEmployeeRepo.createEmployee({
+    change: changeCtx(),
     accountBookId: OTHER_BOOK_ID,
     input: employeeInput("E2E-D001", `other.${ORIGINAL_EMAIL}`),
   });
@@ -167,6 +169,21 @@ afterAll(async () => {
   await prisma.user.deleteMany({ where: { id: userId } });
   // Info: (20260904 - Julian) 不關連線 jest 會抱怨有未結束的非同步操作
   await prisma.$disconnect();
+});
+
+/**
+ * Info: (20260908 - Julian) 員工檔寫入一律要帶「誰改的、何時生效」（計劃書 §4）。
+ *
+ * 這是**必填**參數而不是選填：忘記傳是編譯錯誤，不是一列少了 userId 的異動紀錄。
+ * 這一批呼叫端因此都被迫補上它 —— 那正是型別該做的事。
+ *
+ * 寫成函式而不是常數：`changedByUserId` 在 e2e 裡要等 `beforeAll` 建好 user
+ * 才有值，模組載入時取一次會永遠是空字串（而外鍵會在執行期才抱怨）。
+ */
+const changeCtx = () => ({
+  changedByUserId: userId,
+  effectiveYear: 2026,
+  effectiveMonth: 9,
 });
 
 describe("成功與失敗都真的落地", () => {
@@ -425,6 +442,7 @@ describe("recipientEmail 是快照，不是 join", () => {
 
     const changedEmail = `changed.${ORIGINAL_EMAIL}`;
     await salaryCalculatorEmployeeRepo.updateEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       employeeId,
       input: employeeInput("E2E-D001", changedEmail),

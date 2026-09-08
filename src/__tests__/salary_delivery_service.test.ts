@@ -87,6 +87,16 @@ const recordOf = (
   year: 2026,
   month: 9,
   employee: { id: EMPLOYEE_ID, name: "王小明", number: "A001" },
+  /**
+   * Info: (20260908 - Julian) 本薪與「這個月生效的本薪異動」（計劃書 §15）。
+   *
+   * 預設 `null` = 這個月沒有調薪。要測有調薪的案例時由 overrides 帶進來 ——
+   * 預設就給一筆的話，每一條案例都會意外帶著一個 `+1,000`。
+   */
+  baseSalary: 30000,
+  // Info: (20260908 - Julian) 預設沒有前一筆可比（計劃書 §16）；要測差額的案例由 overrides 帶
+  baseSalaryDelta: null,
+  baseSalaryChange: null,
   totalPayment: 41234,
   totalSalaryTaxable: 32000,
   totalEmployerCost: 45678,
@@ -134,6 +144,16 @@ class FakeEmployeeRepo implements ISalaryCalculatorEmployeeRepository {
   }
 
   async softDeleteEmployee(): Promise<boolean> {
+    throw new Error("not used in these tests");
+  }
+
+  /**
+   * Info: (20260908 - Julian) 這一支測試不碰調薪歷程 —— 丟例外而不是回空的。
+   *
+   * 回 `{ rows: [], totalCount: 0 }` 也能編譯過，但那會讓「寄薪資單的流程
+   * 意外去讀了異動紀錄」變成一件靜靜通過的事。替身該在被誤用時大聲叫。
+   */
+  async listProfileChanges(): Promise<never> {
     throw new Error("not used in these tests");
   }
 

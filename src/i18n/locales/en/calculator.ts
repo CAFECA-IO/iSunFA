@@ -84,6 +84,56 @@ export const calculator = {
     hire_date: "Hire date",
     resign_date: "Resignation date",
     date_order_error: "Resignation date cannot be earlier than the hire date",
+    effective_month: "Effective from",
+    effective_month_hint:
+      "This is the payroll month the change applies from, not today's date. Change it when recording a past adjustment or one that starts later.",
+    change_reason: "Reason",
+    change_reason_placeholder:
+      "e.g. annual review, promotion, insurance bracket",
+    field_labels: {
+      baseSalary: "Base salary",
+      mealAllowance: "Meal allowance",
+      otherAllowanceTaxable: "Other allowance (taxable)",
+      otherAllowanceTaxFree: "Other allowance (tax-free)",
+      isForeignWorker: "Non-resident",
+      baseSalary30Days: "Fixed 30-day month",
+      isLaborInsured: "Labor insurance",
+      isHealthInsured: "Health insurance",
+      isPensionInsured: "Pension",
+      industryCode: "Industry",
+      dependentsCount: "Dependents",
+      voluntaryPensionRate: "Voluntary pension rate",
+      hireDate: "Hire date",
+      resignDate: "Resignation date",
+      name: "Name",
+      number: "Employee no.",
+      email: "Email",
+      employmentType: "Employment type",
+    },
+    field_true: "Yes",
+    field_false: "No",
+    action_create: "Created",
+    action_update: "Changed",
+    action_delete: "Removed",
+    timing_backdated: "Recorded late",
+    timing_scheduled: "Scheduled ahead",
+    history_title: "Salary change history",
+    history_loading: "Loading…",
+    history_load_failed:
+      "Could not load the change history. Please try again later.",
+    history_load_more: "Load older entries",
+    history_empty: "No salary changes recorded for this employee yet",
+    history_empty_filtered:
+      "No changes recorded for the selected fields. Try selecting more.",
+    history_field_filter: "Show changes to these fields only",
+    history_since:
+      "This history starts on {{date}}. Changes made before then were not recorded — for earlier terms, see the inputs on each month's payroll record.",
+    history_no_record_yet:
+      "No salary changes have been recorded for this employee since this feature shipped. For earlier terms, see the inputs on each month's payroll record.",
+    history_count: "Showing {{shown}} of {{total}}",
+    recorded_by: "Recorded by {{name}} on {{at}}",
+    unknown_user: "Unknown user",
+    history: "History",
     main_title: "Employee List",
     name: "Employee Name",
     number: "Employee Number",
@@ -232,6 +282,10 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) Saving from the calculator page, plus its two exceptions
   save_record: {
+    profile_diff_reason:
+      "Reason (optional; recorded only when the employee is updated)",
+    profile_diff_reason_placeholder:
+      "e.g. annual review, promotion, insurance bracket",
     profile_diff_title: "Update the employee record too?",
     profile_diff_content:
       'The calculator settings differ from the employee record for "{{name}}". Here is what changed:',
@@ -274,6 +328,21 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) Payroll records
   records: {
+    base_salary_delta_inline: "{{sign}}{{amount}} vs month {{month}}",
+    base_salary_delta_title: "Base salary change in {{year}}-{{month}}",
+    base_salary_delta_vs: "compared with {{year}}-{{month}}",
+    base_salary_no_change_record:
+      "This month's base salary differs from the previous record, but there is no matching change on the employee's profile. Edit the employee from the employee list and set the effective month to {{year}}-{{month}}.",
+    base_salary: "Base salary",
+    base_salary_change_aria:
+      "View the base salary change for {{year}}-{{month}}",
+    base_salary_change_title: "Base salary change effective {{year}}-{{month}}",
+    base_salary_change_count:
+      "{{count}} base salary changes took effect this month; the figure above is the net change.",
+    base_salary_change_recorded: "Recorded",
+    base_salary_change_full_history: "View full salary history",
+    base_salary_mismatch:
+      "This month's payroll was calculated with a base salary of {{used}}, which does not match the {{changed}} recorded by the change. If this payroll should use the new figure, recalculate and save it again.",
     main_title: "Payroll records",
     pay_period: "Pay period",
     pay_period_value: "{{month}}/{{year}}",

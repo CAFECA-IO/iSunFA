@@ -1,10 +1,17 @@
 import { AppError } from "@/lib/utils/error";
+import {
+  ISalaryEmployeeProfileSnapshot,
+  profileChangesFor,
+} from "@/lib/utils/salary_profile_diff";
 import { buildSalaryRecordCsv } from "@/lib/utils/salary_record_csv";
 import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
   ISalaryCalculatorEmployee,
   ISalaryCalculatorEmployeeWriteInput,
+  ISalaryProfileChangeContext,
+  ISalaryProfileChangePageResult,
+  ISalaryProfileChangeQueryOptions,
   ISalaryRecordDetail,
   ISalaryRecordPageResult,
   ISalaryRecordQueryOptions,
@@ -101,15 +108,28 @@ export class SalaryRecordService {
     return this.employees.listEmployees(accountBookId);
   }
 
+  /**
+   * Info: (20260908 - Julian) 三支寫入方法都轉傳 `change`（誰改的、何時生效、為什麼）。
+   *
+   * 服務層只是轉傳，**不在這裡組 change** —— `changedByUserId` 只有 route
+   * 拿得到（來自 DeWT），而生效月份的補值需要一個時鐘。
+   * 兩者都在 route 那一層決定，服務層碰它只會多一個可以不一致的地方。
+   */
   public async createEmployee({
     accountBookId,
     input,
+    change,
   }: {
     accountBookId: string;
     input: ISalaryCalculatorEmployeeWriteInput;
+    change: ISalaryProfileChangeContext;
   }): Promise<ISalaryCalculatorEmployee> {
     try {
-      return await this.employees.createEmployee({ accountBookId, input });
+      return await this.employees.createEmployee({
+        accountBookId,
+        input,
+        change,
+      });
     } catch (error) {
       if (error instanceof SalaryEmployeeNumberTakenError) {
         throw new AppError(API_ERRORS.CF_SALARY_EMPLOYEE_NUMBER_TAKEN);
@@ -122,16 +142,19 @@ export class SalaryRecordService {
     accountBookId,
     employeeId,
     input,
+    change,
   }: {
     accountBookId: string;
     employeeId: string;
     input: ISalaryCalculatorEmployeeWriteInput;
+    change: ISalaryProfileChangeContext;
   }): Promise<ISalaryCalculatorEmployee> {
     try {
       const updated = await this.employees.updateEmployee({
         accountBookId,
         employeeId,
         input,
+        change,
       });
       if (!updated) {
         throw new AppError(API_ERRORS.NF_SALARY_CALCULATOR_EMPLOYEE);
@@ -148,17 +171,73 @@ export class SalaryRecordService {
   public async deleteEmployee({
     accountBookId,
     employeeId,
+    change,
   }: {
     accountBookId: string;
     employeeId: string;
+    change: ISalaryProfileChangeContext;
   }): Promise<void> {
     const deleted = await this.employees.softDeleteEmployee({
       accountBookId,
       employeeId,
+      change,
     });
     if (!deleted) {
       throw new AppError(API_ERRORS.NF_SALARY_CALCULATOR_EMPLOYEE);
     }
+  }
+
+  /**
+   * Info: (20260908 - Julian) 某位員工的調薪歷程。
+   *
+   * 計劃書：`documents/architecture/salary_profile_change_history_plan.md` §6
+   *
+   * repository 回的是原始列（前後快照還是 Json），**diff 在這裡算** ——
+   * 不丟給前端，因為「哪些欄位算變動、金額怎麼正規化」的規則只能有一份實作，
+   * 而它必須在有測試的那一側（`salary_profile_diff.ts`）。
+   * 丟給前端的話，日後多一個呼叫端就多一份規則。
+   */
+  public async listProfileChanges({
+    accountBookId,
+    employeeId,
+    fields,
+    page,
+    pageSize,
+  }: ISalaryProfileChangeQueryOptions): Promise<ISalaryProfileChangePageResult> {
+    const { rows, totalCount, recordedSince } =
+      await this.employees.listProfileChanges({
+        accountBookId,
+        employeeId,
+        fields,
+        page,
+        pageSize,
+      });
+
+    return {
+      data: rows.map((row) => ({
+        id: row.id,
+        action: row.action as "CREATE" | "UPDATE" | "DELETE",
+        effectiveYear: row.effectiveYear,
+        effectiveMonth: row.effectiveMonth,
+        // Info: (20260908 - Julian) Unix 秒，沿用本模組的前端時間戳慣例
+        recordedAt: Math.floor(row.recordedAt.getTime() / 1000),
+        reason: row.reason,
+        changedBy: row.changedBy,
+        changes: profileChangesFor(
+          row.action,
+          row.beforeSnapshot as ISalaryEmployeeProfileSnapshot | null,
+          row.afterSnapshot as ISalaryEmployeeProfileSnapshot | null,
+        ),
+      })),
+      page,
+      pageSize,
+      totalCount,
+      totalPages: Math.max(1, Math.ceil(totalCount / pageSize)),
+      recordedSince:
+        recordedSince === null
+          ? null
+          : Math.floor(recordedSince.getTime() / 1000),
+    };
   }
 
   public async listRecords(

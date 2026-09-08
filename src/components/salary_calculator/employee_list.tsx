@@ -2,10 +2,23 @@
 
 import { ChangeEvent, FC, useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { Hash, Mail, Pencil, Plus, Search, Trash, User, X } from "lucide-react";
+import {
+  Hash,
+  History,
+  Mail,
+  Pencil,
+  Plus,
+  Search,
+  Trash,
+  User,
+  X,
+} from "lucide-react";
 import { numberWithCommas } from "@/lib/utils/common";
 import { useSalaryEmployees } from "@/hooks/use_salary_employees";
-import { ISalaryCalculatorEmployee } from "@/interfaces/salary_record";
+import {
+  ISalaryCalculatorEmployee,
+  ISalaryProfileChangeRequest,
+} from "@/interfaces/salary_record";
 import {
   countMissingEmail,
   filterEmployees,
@@ -13,6 +26,7 @@ import {
 } from "@/lib/utils/salary_employee_filter";
 import EmployeeActionModal from "@/components/salary_calculator/employee_action_modal";
 import RemoveEmployeeModal from "@/components/salary_calculator/remove_employee_modal";
+import EmployeeHistoryModal from "@/components/salary_calculator/employee_history_modal";
 
 export const iconBtnStyle =
   "flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-md transition-colors hover:bg-surface-hover";
@@ -48,12 +62,14 @@ const EmployeeRow: FC<{
   pickHandler?: () => void;
   editHandler: () => void;
   removeHandler: () => void;
+  historyHandler: () => void;
 }> = ({
   employee,
   withEmail,
   pickHandler = undefined,
   editHandler,
   removeHandler,
+  historyHandler,
 }) => {
   const { t } = useTranslation();
   const missingEmail = hasNoEmail(employee);
@@ -135,6 +151,23 @@ const EmployeeRow: FC<{
       )}
 
       <div className="flex items-center gap-[4px] pr-[8px] md:pr-[16px]">
+        {/**
+         * Info: (20260908 - Julian) 「異動紀錄」放在編輯**之前**。
+         *
+         * 這兩顆按鈕的關係是有順序的：要調薪的人多半想先看看上次是什麼時候、
+         * 從多少調到多少。放在編輯之後的話，那個順序得靠使用者自己想到。
+         *
+         * 用 `History` 而不是 `Clock`：後者在這個 icon 集合裡讀起來像
+         * 「工時」或「排程」，而這一列旁邊就有工時相關的東西。
+         */}
+        <button
+          type="button"
+          aria-label={`${employee.name} ${t("calculator.employee_list.history_title")}`}
+          onClick={historyHandler}
+          className={`text-text-neutral-secondary ${iconBtnStyle}`}
+        >
+          <History size={16} />
+        </button>
         <button
           type="button"
           aria-label={`${employee.name} ${t("calculator.employee_list.edit_employee")}`}
@@ -190,6 +223,15 @@ const EmployeeList: FC<IEmployeeListProps> = ({
   const [editing, setEditing] = useState<
     ISalaryCalculatorEmployee | "add" | null
   >(null);
+  /**
+   * Info: (20260908 - Julian) 正在看誰的歷程。`null` = 沒有打開。
+   *
+   * 存整個員工物件而不只是 id：彈窗標題要顯示姓名與編號，
+   * 而只存 id 的話彈窗得自己去名單裡找 —— 那份名單可能正在重新載入。
+   */
+  const [employeeForHistory, setEmployeeForHistory] =
+    useState<ISalaryCalculatorEmployee | null>(null);
+
   const [employeeToRemove, setEmployeeToRemove] =
     useState<ISalaryCalculatorEmployee | null>(null);
 
@@ -210,11 +252,19 @@ const EmployeeList: FC<IEmployeeListProps> = ({
     setKeyword(e.target.value);
   const clearKeyword = () => setKeyword("");
 
-  const submitEmployeeHandler =
+  /**
+   * Info: (20260908 - Julian) 彈窗送出時把「本次異動」一起轉下去（計劃書 §4）。
+   *
+   * 新增那一側也收得到這個參數，但彈窗在新增模式不顯示那個欄位，
+   * 所以它會是彈窗的預設值（當月）—— 與伺服器的補值一致，不衝突。
+   */
+  const submitEmployeeHandler = (
+    input: Parameters<typeof createEmployee>[0],
+    change: ISalaryProfileChangeRequest,
+  ) =>
     editing !== null && editing !== "add"
-      ? (input: Parameters<typeof createEmployee>[0]) =>
-          updateEmployee(editing.id, input)
-      : createEmployee;
+      ? updateEmployee(editing.id, input, change)
+      : createEmployee(input, change);
 
   const addEmployeeBtn = (
     <button
@@ -292,6 +342,7 @@ const EmployeeList: FC<IEmployeeListProps> = ({
         pickHandler={onPick ? () => onPick(employee) : undefined}
         editHandler={() => setEditing(employee)}
         removeHandler={() => setEmployeeToRemove(employee)}
+        historyHandler={() => setEmployeeForHistory(employee)}
       />
     ));
   })();
@@ -389,6 +440,15 @@ const EmployeeList: FC<IEmployeeListProps> = ({
           data={editing === "add" ? null : editing}
           modalVisibleHandler={() => setEditing(null)}
           submitHandler={submitEmployeeHandler}
+        />
+      )}
+
+      {/* Info: (20260908 - Julian) 調薪歷程 */}
+      {employeeForHistory && (
+        <EmployeeHistoryModal
+          accountBookId={accountBookId}
+          employee={employeeForHistory}
+          modalVisibleHandler={() => setEmployeeForHistory(null)}
         />
       )}
 

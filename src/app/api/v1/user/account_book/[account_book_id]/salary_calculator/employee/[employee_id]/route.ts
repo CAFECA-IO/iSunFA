@@ -13,7 +13,9 @@ import {
 } from "@/services/salary_record.service";
 import {
   salaryCalculatorEmployeeWriteSchema,
+  salaryProfileChangeSchema,
   toSalaryCalculatorEmployeeWriteInput,
+  toSalaryProfileChangeContext,
 } from "@/validators";
 
 /**
@@ -53,11 +55,27 @@ export async function PUT(
       SalaryAccess.WRITE,
     );
 
+    /**
+     * Info: (20260908 - Julian) 異動 context 與員工檔分開驗（計劃書 §4）。
+     *
+     * **這是生效月份真正要被帶上來的那條路徑** —— 調薪就是編輯員工。
+     * 前端沒帶時補當期，而那對補登與預先輸入是錯的（計劃書 §4.1），
+     * 所以補值是相容性的保險，不是預期路徑。
+     */
+    const parsedChange = salaryProfileChangeSchema.safeParse(body);
+    if (!parsedChange.success)
+      return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
+
     return jsonOk(
       await salaryRecordService.updateEmployee({
         accountBookId,
         employeeId,
         input: toSalaryCalculatorEmployeeWriteInput(parsed.data),
+        change: toSalaryProfileChangeContext(
+          parsedChange.data,
+          sessionUser.id,
+          new Date(),
+        ),
       }),
     );
   } catch (error) {
@@ -108,7 +126,18 @@ export async function DELETE(
       SalaryAccess.WRITE,
     );
 
-    await salaryRecordService.deleteEmployee({ accountBookId, employeeId });
+    /**
+     * Info: (20260908 - Julian) 移除也留一列異動紀錄（`action = DELETE`）。
+     *
+     * DELETE 沒有 request body，所以生效月份一律是當期 —— 這是對的：
+     * 「這個人從名單上移除」就是在按下去的那一刻發生的。
+     * 真正的離職生效月是員工檔上的 `resignDate`，不是這一欄。
+     */
+    await salaryRecordService.deleteEmployee({
+      accountBookId,
+      employeeId,
+      change: toSalaryProfileChangeContext({}, sessionUser.id, new Date()),
+    });
 
     return jsonOk({ id: employeeId });
   } catch (error) {

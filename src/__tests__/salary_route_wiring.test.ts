@@ -69,6 +69,7 @@ import {
 } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/record/[record_id]/deliver/route";
 import { GET as deliveryList } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/delivery/route";
 import { POST as recordExport } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/record/export/route";
+import { GET as profileChangeList } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/employee/[employee_id]/history/route";
 
 jest.mock("@/lib/auth/dewt", () => ({ getIdentityFromDeWT: jest.fn() }));
 /**
@@ -94,6 +95,7 @@ jest.mock("@/services/salary_record.service", () => ({
     saveRecord: jest.fn(),
     deleteRecord: jest.fn(),
     exportRecordsCsv: jest.fn(),
+    listProfileChanges: jest.fn(),
   },
 }));
 
@@ -131,6 +133,8 @@ const serviceMocks = {
     salaryPaySlipDeliveryService.listByAccountBook as unknown as IAnyMock,
   deliveryHistory:
     salaryPaySlipDeliveryService.listByRecord as unknown as IAnyMock,
+  profileChangeList:
+    salaryRecordService.listProfileChanges as unknown as IAnyMock,
 };
 
 const BOOK = "book-1";
@@ -467,6 +471,23 @@ const ENDPOINTS: IEndpointCase[] = [
    * **看紀錄不會**。它與「看薪資紀錄清單」是同一類動作，
    * 沿用同一個層級與同一個限流桶。
    */
+  /**
+   * Info: (20260908 - Julian) 第十三支：某位員工的調薪歷程。
+   *
+   * `access` 是 `READ`，與員工清單同一個層級 —— 20260908 的決策是
+   * 外部觀眾拿到的是匯出檔案而不是帳號（薪資異動紀錄計劃書 §6.3），
+   * 所以看得到員工清單的人就看得到他的歷程，那兩件事的知情範圍本來就一樣。
+   */
+  {
+    label: "GET employee/:id/history（調薪歷程）",
+    key: "profile-change-list",
+    source: "GET employee/[employee_id]/history/route.ts",
+    access: SalaryAccess.READ,
+    bucket: RateLimitBucketEnum.READ,
+    service: serviceMocks.profileChangeList,
+    run: (address) =>
+      profileChangeList(get(address), { params: employeeParams() }),
+  },
   {
     label: "GET delivery（寄送歷史）",
     key: "delivery-list",
@@ -551,12 +572,21 @@ beforeEach(() => {
 });
 
 describe("身分閘：沒有 token 就到不了業務邏輯", () => {
-  it("端點表涵蓋了全部十二支端點（表短了，下面三條就會靜靜地少驗幾支）", () => {
-    expect(ENDPOINTS).toHaveLength(12);
-    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.label)).size).toBe(12);
-    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.key)).size).toBe(12);
+  it("端點表涵蓋了全部十三支端點（表短了，下面三條就會靜靜地少驗幾支）", () => {
+    expect(ENDPOINTS).toHaveLength(13);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.label)).size).toBe(13);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.key)).size).toBe(13);
+    /**
+     * Info: (20260908 - Julian) 每一支端點有**自己的** service 替身。
+     *
+     * 三個數字相等，也就是 label、key、service 都沒有重複。
+     * service 那一條最重要：兩支端點共用同一個替身時，
+     * 其中一支的「service 沒有被呼叫」斷言會被另一支的呼叫污染 ——
+     * 而污染的方向是**變綠**，因為每個案例都先 `mockReset()`，
+     * 於是先跑的那一支把後跑的那一支的證據洗掉。
+     */
     expect(new Set(ENDPOINTS.map((endpoint) => endpoint.service)).size).toBe(
-      12,
+      13,
     );
   });
 

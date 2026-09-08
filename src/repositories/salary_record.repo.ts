@@ -1,4 +1,9 @@
-import { Prisma, SalaryCalculatorEmployee, SalaryRecord } from "@/generated";
+import {
+  Prisma,
+  SalaryCalculatorEmployee,
+  SalaryProfileChangeAction,
+  SalaryRecord,
+} from "@/generated";
 import { prisma } from "@/lib/prisma";
 import { SALARY_DELIVERY_STATUS } from "@/constants/salary_delivery";
 import { MoneyUtil } from "@/lib/utils/money";
@@ -11,6 +16,8 @@ import {
   ISalaryRecordPageResult,
   ISalaryRecordQueryOptions,
   ISalaryRecordSummary,
+  ISalaryBaseSalaryChange,
+  ISalaryBaseSalaryDelta,
 } from "@/interfaces/salary_record";
 
 /**
@@ -130,6 +137,36 @@ const toSummary = (row: SalaryRecordWithEmployee): ISalaryRecordSummary => ({
     name: row.employee.name,
     number: row.employee.number ?? "",
   },
+  /**
+   * Info: (20260908 - Julian) 這個月試算用的本薪 —— 引擎的 `baseSalaryTaxable`。
+   *
+   * 引擎把本薪與伙食費分成「應稅／免稅」兩欄（`calculator_context` 的
+   * `baseSalaryWithTax` / `mealAllowanceWithoutTax` 對應的就是這兩個），
+   * 所以本薪是前者。整份快照本來就已經在記憶體裡，多讀一個欄位不多一次查詢。
+   */
+  /**
+   * Info: (20260908 - Julian) 讀純量欄位，**不從 Json 解析**。
+   *
+   * 兩者理當一致（`upsertRecord` 從同一份 input 取值），而讀純量的理由是
+   * 「這一欄的唯一讀法只有一種」。
+   *
+   * 刻意**不做**「純量是 0 就退回讀 Json」的保險：那會讓忘記跑回填腳本
+   * 這件事被永久遮住，而遮住的代價是兩份實作與一個沒人知道還在的分支。
+   * 沒回填的列會顯示本薪 0 —— 大聲、看得見、查得出來。
+   */
+  baseSalary: toAmount(row.baseSalary),
+
+  /**
+   * Info: (20260908 - Julian) 由 `attachBaseSalaryChanges` 補上（需要第二次查詢）。
+   *
+   * 這裡先給 `null` 而不是把整個 mapper 改成 async：異動要一次撈整頁
+   * （N+1 查詢會讓 20 筆變成 21 次往返），所以它是列表組完之後的一步。
+   * **三個回傳 summary 的路徑都必須呼叫它** —— 漏掉的那一支會永遠是 `null`，
+   * 而 `null` 的意思是「這個月沒有調薪」，不是「我忘了查」。
+   */
+  baseSalaryDelta: null,
+  baseSalaryChange: null,
+
   totalPayment: toAmount(row.totalPayment),
   totalSalaryTaxable: toAmount(row.totalSalaryTaxable),
   totalEmployerCost: toAmount(row.totalEmployerCost),
@@ -149,7 +186,225 @@ const toDetail = (row: SalaryRecordWithEmployee): ISalaryRecordDetail => ({
   result: fromJsonSnapshot<ISalaryCalculatorUI>(row.resultSnapshot),
 });
 
+/**
+ * Info: (20260908 - Julian) 把 (年, 月) 壓成一個可比較的整數。
+ *
+ * 直接比 `year` 再比 `month` 的寫法在每個呼叫點都要寫兩層條件，
+ * 而寫錯的方向是「跨年的比較反了」—— 2025-12 與 2026-01 誰在前，
+ * 只有跨年那一次會錯，而測試資料多半在同一年裡。
+ */
+const periodIndex = (year: number, month: number): number => year * 12 + month;
+
+/**
+ * Info: (20260908 - Julian) 快照裡的本薪。異動表存的是員工檔的形狀（`baseSalary`），
+ * 不是引擎的形狀（`baseSalaryTaxable`）—— 兩邊名字不同是既有的分歧，不在這裡收斂。
+ */
+const snapshotBaseSalary = (snapshot: unknown): number => {
+  const value = (snapshot as { baseSalary?: unknown } | null)?.baseSalary;
+  return typeof value === "number" ? value : 0;
+};
+
 export class SalaryRecordRepository implements ISalaryRecordRepository {
+  /**
+   * Info: (20260908 - Julian) 把「這個月生效的本薪異動」補到一批 summary 上。
+   *
+   * 計劃書 §15。
+   *
+   * ## 一次撈整批，不是逐筆查
+   *
+   * 逐筆查是 N+1：一頁 20 筆就是 21 次往返。這裡用整批的
+   * `(employeeId, effectiveYear, effectiveMonth)` 組成一個 `OR`，一次查完。
+   * 頁面大小上限是 100，所以 `OR` 最多 100 個子句 —— 那在 Postgres 上不是問題。
+   *
+   * ## 只認 `UPDATE`，**不認 `CREATE`**
+   *
+   * 建檔的 `changedFields` 是全部欄位、`before` 是 null。算進來的話，
+   * 新員工的第一筆薪資紀錄會顯示 `+29,000` —— 而那讀起來像一次巨額調薪，
+   * 實際上只是「這個人被建立了」。建檔不是調薪。
+   *
+   * ## 同一個月多筆異動時取淨變動
+   *
+   * `before` 取最早那筆的前值、`after` 取最晚那筆的後值，並回報 `count`。
+   * 只取其中一筆的話，「29,000 → 31,000 → 30,000」會顯示成 `+2,000` 或
+   * `-1,000`，兩個都不是這個月實際發生的事（淨變動是 `+1,000`）。
+   * 而 `count` 讓畫面說得出「本月有 2 筆」—— 沒有它，淨變動會被讀成一次調整。
+   */
+  private async attachBaseSalaryChanges(
+    accountBookId: string,
+    summaries: ISalaryRecordSummary[],
+  ): Promise<ISalaryRecordSummary[]> {
+    if (summaries.length === 0) return summaries;
+
+    const keyOf = (employeeId: string, year: number, month: number): string =>
+      `${employeeId}|${year}|${month}`;
+
+    // Info: (20260908 - Julian) 同一個 (人, 年, 月) 在一頁裡只會有一筆紀錄（唯一鍵），但去重不花錢
+    const wanted = new Map<
+      string,
+      { employeeId: string; year: number; month: number }
+    >();
+    for (const summary of summaries) {
+      wanted.set(keyOf(summary.employee.id, summary.year, summary.month), {
+        employeeId: summary.employee.id,
+        year: summary.year,
+        month: summary.month,
+      });
+    }
+
+    const rows = await prisma.salaryEmployeeProfileChange.findMany({
+      // Info: (20260908 - Julian) 租戶過濾永遠是 where 的第一個 key
+      where: {
+        accountBookId,
+        action: SalaryProfileChangeAction.UPDATE,
+        changedFields: { has: "baseSalary" },
+        OR: [...wanted.values()].map((key) => ({
+          employeeId: key.employeeId,
+          effectiveYear: key.year,
+          effectiveMonth: key.month,
+        })),
+      },
+      // Info: (20260908 - Julian) 由舊到新 —— 下面取「第一筆的前值、最後一筆的後值」靠這個順序
+      orderBy: { recordedAt: "asc" },
+      include: { changedBy: { select: { id: true, name: true } } },
+    });
+
+    const byKey = new Map<string, ISalaryBaseSalaryChange>();
+    for (const row of rows) {
+      const key = keyOf(row.employeeId, row.effectiveYear, row.effectiveMonth);
+      const existing = byKey.get(key);
+      const after = snapshotBaseSalary(row.afterSnapshot);
+
+      byKey.set(key, {
+        before: existing
+          ? existing.before
+          : snapshotBaseSalary(row.beforeSnapshot),
+        after,
+        delta:
+          after -
+          (existing ? existing.before : snapshotBaseSalary(row.beforeSnapshot)),
+        count: (existing?.count ?? 0) + 1,
+        // Info: (20260908 - Julian) 歸因取**最後**一筆：那是這個月最終的決定
+        reason: row.reason,
+        changedBy: row.changedBy,
+        recordedAt: toUnixSeconds(row.recordedAt),
+      });
+    }
+
+    return summaries.map((summary) => ({
+      ...summary,
+      baseSalaryChange:
+        byKey.get(keyOf(summary.employee.id, summary.year, summary.month)) ??
+        null,
+    }));
+  }
+
+  /**
+   * Info: (20260908 - Julian) 把「本薪較上一筆多／少多少」補到一批 summary 上。
+   *
+   * 計劃書 §16。
+   *
+   * ## 為什麼不能只用當前這一頁的資料算
+   *
+   * 列表是按 (年, 月) 跨員工排序的。一頁 20 筆、三十位員工的話，
+   * 一頁連一個月都放不完 —— 於是**沒有任何員工的上一筆會在同一頁**。
+   * 就算放得下，每一頁的最後一列也永遠沒有前一筆。
+   * 頁內計算會在小資料量下「看起來對」，而那是最糟的一種對。
+   *
+   * ## 所以另外查，而且只查三個純量欄位
+   *
+   * 本薪原本只在 `inputSnapshot` 這個 Json 裡，而 Json 取不出單一欄位 ——
+   * 要拿上一筆的本薪就得撈回那些員工所有紀錄的完整快照（一本三年三十人的帳
+   * 約一千列、每列兩 KB）。這是 `SalaryRecord.baseSalary` 這個純量欄位
+   * 存在的唯一理由。
+   *
+   * ## 上界：不撈比這一頁最新那筆更新的紀錄
+   *
+   * 我們要的是「每一列的前一筆」，所以任何比這一頁最新期間**更新**的紀錄
+   * 都用不到。加這個條件不影響正確性，只是不白撈 ——
+   * 而一本用了很多年的帳，那個「白撈」會隨時間線性成長。
+   */
+  private async attachBaseSalaryDeltas(
+    accountBookId: string,
+    summaries: ISalaryRecordSummary[],
+  ): Promise<ISalaryRecordSummary[]> {
+    if (summaries.length === 0) return summaries;
+
+    const employeeIds = [
+      ...new Set(summaries.map((summary) => summary.employee.id)),
+    ];
+    const newest = Math.max(
+      ...summaries.map((summary) => periodIndex(summary.year, summary.month)),
+    );
+    const newestYear = Math.floor((newest - 1) / 12);
+    const newestMonth = newest - newestYear * 12;
+
+    const rows = await prisma.salaryRecord.findMany({
+      // Info: (20260908 - Julian) 租戶過濾永遠是 where 的第一個 key
+      where: {
+        accountBookId,
+        employeeId: { in: employeeIds },
+        OR: [
+          { year: { lt: newestYear } },
+          { year: newestYear, month: { lte: newestMonth } },
+        ],
+      },
+      select: { employeeId: true, year: true, month: true, baseSalary: true },
+    });
+
+    /**
+     * Info: (20260908 - Julian) 每位員工一條「新到舊」的期間清單。
+     *
+     * 在記憶體裡排序而不是交給資料庫的 `orderBy`：反正整批都要讀進來，
+     * 而排序條件是壓成整數之後的單一鍵（見 `periodIndex`）——
+     * 交給資料庫得寫成兩層 `orderBy`，而那個寫法在跨年時容易寫反。
+     */
+    const byEmployee = new Map<
+      string,
+      { period: number; year: number; month: number; baseSalary: number }[]
+    >();
+    for (const row of rows) {
+      const list = byEmployee.get(row.employeeId) ?? [];
+      list.push({
+        period: periodIndex(row.year, row.month),
+        year: row.year,
+        month: row.month,
+        baseSalary: toAmount(row.baseSalary),
+      });
+      byEmployee.set(row.employeeId, list);
+    }
+    for (const list of byEmployee.values()) {
+      list.sort((a, b) => b.period - a.period);
+    }
+
+    return summaries.map((summary) => {
+      const list = byEmployee.get(summary.employee.id) ?? [];
+      const current = periodIndex(summary.year, summary.month);
+
+      /**
+       * Info: (20260908 - Julian) 「前一筆」＝期間**嚴格小於**這一筆的第一個。
+       *
+       * 用 `<` 而不是 `<=`：自己不能當自己的前一筆。
+       * 而「第一個」在新到舊的清單上就是最接近的那一個 ——
+       * 不是「上個月」，是**上一筆存在的紀錄**。八月沒存的話它就是七月，
+       * 而那個事實由 `previousYear` / `previousMonth` 帶到畫面上。
+       */
+      const previous = list.find((entry) => entry.period < current);
+
+      if (previous === undefined) {
+        return { ...summary, baseSalaryDelta: null };
+      }
+
+      const delta: ISalaryBaseSalaryDelta = {
+        previousYear: previous.year,
+        previousMonth: previous.month,
+        previous: previous.baseSalary,
+        delta: summary.baseSalary - previous.baseSalary,
+      };
+
+      return { ...summary, baseSalaryDelta: delta };
+    });
+  }
+
   // Info: (20260831 - Julian) 租戶過濾永遠是 where 的第一個 key
   private buildWhereClause(
     options: ISalaryRecordQueryOptions,
@@ -214,6 +469,18 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
       totalSalaryTaxable,
       totalEmployerCost,
       calculatorVersion,
+
+      /**
+       * Info: (20260908 - Julian) 本薪的純量投影，**從同一份 `input` 取值**。
+       *
+       * 不由呼叫端另外傳一個 `baseSalary` 參數：那會讓「純量欄位」與
+       * 「Json 裡的那一欄」變成兩份可以分岔的事實，而分岔的症狀是
+       * 列表上的本薪與點開薪資單看到的本薪不一樣 —— 沒有任何錯誤訊息。
+       *
+       * 這裡取值、上面 `toJsonSnapshot(input)` 也是同一個 `input`，
+       * 所以它們不可能不一致。
+       */
+      baseSalary: BigInt(Math.round(input.baseSalaryTaxable ?? 0)),
     };
 
     const row = await prisma.salaryRecord.upsert({
@@ -275,7 +542,13 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
     ]);
 
     return {
-      data: rows.map(toSummary),
+      data: await this.attachBaseSalaryChanges(
+        options.accountBookId,
+        await this.attachBaseSalaryDeltas(
+          options.accountBookId,
+          rows.map(toSummary),
+        ),
+      ),
       page: options.page,
       pageSize: options.pageSize,
       totalCount,
@@ -298,7 +571,18 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
       orderBy: [{ year: "desc" }, { month: "desc" }, { createdAt: "desc" }],
     });
 
-    return rows.map(toDetail);
+    /**
+     * Info: (20260908 - Julian) 匯出走這一支，所以它也要帶本薪異動。
+     *
+     * 少了這一行，匯出的 CSV 會每一列都是「沒有調薪」—— 而那不是空白，
+     * 是**錯的值**：`null` 的意思是「這個月沒有調薪」。
+     */
+    const withChanges = await this.attachBaseSalaryChanges(
+      accountBookId,
+      await this.attachBaseSalaryDeltas(accountBookId, rows.map(toDetail)),
+    );
+
+    return withChanges as ISalaryRecordDetail[];
   }
 
   public async getRecordById(

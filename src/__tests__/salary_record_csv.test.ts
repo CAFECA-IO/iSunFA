@@ -10,7 +10,10 @@ import {
   ISalaryCalculatorUI,
 } from "@/interfaces/salary_calculator";
 import { ISalaryRecordDetail } from "@/interfaces/salary_record";
-import { PAY_SLIP_FIELD_LABELS } from "@/constants/pay_slip_labels";
+import {
+  PAY_SLIP_CSV_IDENTITY_LABELS,
+  PAY_SLIP_FIELD_LABELS,
+} from "@/constants/pay_slip_labels";
 import { calculator as zhTw } from "@/i18n/locales/zh_tw/calculator";
 
 /**
@@ -35,6 +38,16 @@ const recordOf = (
   year: 2026,
   month: 9,
   employee: { id: "e1", name: "王小明", number: "A001" },
+  /**
+   * Info: (20260908 - Julian) 本薪與「這個月生效的本薪異動」（計劃書 §15）。
+   *
+   * 預設 `null` = 這個月沒有調薪。要測有調薪的案例時由 overrides 帶進來 ——
+   * 預設就給一筆的話，每一條案例都會意外帶著一個 `+1,000`。
+   */
+  baseSalary: 30000,
+  // Info: (20260908 - Julian) 預設沒有前一筆可比（計劃書 §16）；要測差額的案例由 overrides 帶
+  baseSalaryDelta: null,
+  baseSalaryChange: null,
   totalPayment: 41234,
   totalSalaryTaxable: 32000,
   totalEmployerCost: 45678,
@@ -316,5 +329,163 @@ describe("欄位名與薪資單、與畫面字典一致", () => {
     const [header] = rowsOf(buildSalaryRecordCsv([]));
 
     expect(new Set(header).size).toBe(header.length);
+  });
+});
+
+describe("本薪與它的變動（計劃書 §18）", () => {
+  const ID = PAY_SLIP_CSV_IDENTITY_LABELS;
+
+  const columnIndex = (label: string): number => {
+    const [header] = rowsOf(buildSalaryRecordCsv([recordOf()]));
+    const index = header.indexOf(label);
+    // Info: (20260908 - Julian) 找不到就直接失敗，不要讓後面用 -1 去取值
+    expect(index).toBeGreaterThanOrEqual(0);
+    return index;
+  };
+
+  const changeOf = (patch = {}) => ({
+    before: 54000,
+    after: 44000,
+    delta: -10000,
+    count: 1,
+    reason: "年度調整",
+    changedBy: { id: "user-7", name: "會計小林" },
+    recordedAt: Math.floor(
+      new Date("2026-08-28T01:00:00.000Z").getTime() / 1000,
+    ),
+    ...patch,
+  });
+
+  const deltaOf = (patch = {}) => ({
+    previousYear: 2026,
+    previousMonth: 8,
+    previous: 54000,
+    delta: -10000,
+    ...patch,
+  });
+
+  /**
+   * Info: (20260908 - Julian) **這一條是這一組的重點。**
+   *
+   * `FORMULA_TRIGGER` 包含 `-`（試算表會把 `-` 開頭的欄位當公式），
+   * 而「本薪較上一筆差額」是這份 CSV 第一個可能為負的欄位。
+   *
+   * 中和之後 `-10000` 會變成 `'-10000` —— 在 Excel 裡那是一格**文字**：
+   * 整欄加總不起來、排序變成字典序。而檔案打得開、看起來完全正常，
+   * 只有拿去算的人會發現，而他多半會以為是自己的公式寫錯。
+   *
+   * 在 20260908 之前所有金額都非負，所以這個坑一直沒有出現。
+   */
+  it("減薪的差額是數字，沒有被中和成文字", () => {
+    const index = columnIndex(ID.baseSalaryDelta);
+    const [, row] = rowsOf(
+      buildSalaryRecordCsv([recordOf({ baseSalaryDelta: deltaOf() })]),
+    );
+
+    expect(row[index]).toBe("-10000");
+    expect(row[index].startsWith("'")).toBe(false);
+  });
+
+  /**
+   * Info: (20260908 - Julian) 放寬 `-` 不能連帶放寬公式注入。
+   *
+   * 這一條是上一條的配對：`numeric` 是 opt-out，預設仍然中和，
+   * 所以使用者輸入的欄位（姓名、異動原因）照樣被擋。
+   * 沒有它的話，「把 `-` 放行」很容易在下一次重構時變成「整列都放行」。
+   */
+  it("使用者輸入的欄位仍然被中和（姓名與異動原因）", () => {
+    const nameIndex = columnIndex(ID.employeeName);
+    const reasonIndex = columnIndex(ID.profileChangeReason);
+
+    const [, row] = rowsOf(
+      buildSalaryRecordCsv([
+        recordOf({
+          employee: { id: "e-1", name: "=1+1", number: "A001" },
+          baseSalaryChange: changeOf({ reason: "=HYPERLINK(1)" }),
+        }),
+      ]),
+    );
+
+    expect(row[nameIndex]).toBe("'=1+1");
+    expect(row[reasonIndex]).toBe("'=HYPERLINK(1)");
+  });
+
+  it("有異動紀錄時，兩組欄位都填上", () => {
+    const [, row] = rowsOf(
+      buildSalaryRecordCsv([
+        recordOf({
+          baseSalary: 44000,
+          baseSalaryDelta: deltaOf(),
+          baseSalaryChange: changeOf(),
+        }),
+      ]),
+    );
+    const at = (label: string) => row[columnIndex(label)];
+
+    expect(at(ID.baseSalarySetting)).toBe("44000");
+    expect(at(ID.baseSalaryPrevPeriod)).toBe("2026-08");
+    expect(at(ID.baseSalaryDelta)).toBe("-10000");
+    expect(at(ID.profileChangeBefore)).toBe("54000");
+    expect(at(ID.profileChangeAfter)).toBe("44000");
+    expect(at(ID.profileChangeReason)).toBe("年度調整");
+    expect(at(ID.profileChangeBy)).toBe("會計小林");
+    expect(at(ID.profileChangeAt)).toBe("2026-08-28");
+  });
+
+  /**
+   * Info: (20260908 - Julian) **差額有值、異動欄位空著** —— 這是最常見的一列。
+   *
+   * 在計算機上改了本薪、選了「只存這一次」的話，員工檔沒被改、
+   * 沒有異動紀錄，但兩個月的本薪確實不同。
+   *
+   * 兩組欄位因此不能合併：合併的話，收到 CSV 的人會把
+   * 「沒有異動紀錄」讀成「沒有調薪」。
+   */
+  it("只有差額、沒有異動紀錄時，異動那五欄留空而差額仍有值", () => {
+    const [, row] = rowsOf(
+      buildSalaryRecordCsv([
+        recordOf({ baseSalaryDelta: deltaOf(), baseSalaryChange: null }),
+      ]),
+    );
+    const at = (label: string) => row[columnIndex(label)];
+
+    expect(at(ID.baseSalaryDelta)).toBe("-10000");
+    expect(at(ID.profileChangeBefore)).toBe("");
+    expect(at(ID.profileChangeAfter)).toBe("");
+    expect(at(ID.profileChangeReason)).toBe("");
+    expect(at(ID.profileChangeBy)).toBe("");
+    expect(at(ID.profileChangeAt)).toBe("");
+  });
+
+  /**
+   * Info: (20260908 - Julian) 沒有值一律留**空字串**，不是「0」也不是「無」。
+   *
+   * 「0」會被加總 —— 一份把「最早那一筆」算成「差額 0」的報表，
+   * 在統計調薪幅度時會把分母算大。「無」會讓那一欄變成混合型別，排不了序。
+   */
+  it("最早的一筆（沒有上一筆）差額欄留空，不是 0", () => {
+    const index = columnIndex(ID.baseSalaryDelta);
+    const [, row] = rowsOf(
+      buildSalaryRecordCsv([recordOf({ baseSalaryDelta: null })]),
+    );
+
+    expect(row[index]).toBe("");
+  });
+
+  /**
+   * Info: (20260908 - Julian) 「月本薪（設定）」與「本薪（應稅）」是**兩欄**。
+   *
+   * 前者是這個人這個月的本薪設定，後者是實際計入的金額 ——
+   * 月中到職的人那兩個數字不一樣，而那個差異正是對帳要看的。
+   * 合成一欄的話，比例計算過的金額會被當成他的月薪。
+   */
+  it("月本薪（設定）與本薪（應稅）各自一欄", () => {
+    const [header] = rowsOf(buildSalaryRecordCsv([recordOf()]));
+
+    expect(header).toContain(ID.baseSalarySetting);
+    expect(header).toContain(PAY_SLIP_FIELD_LABELS.baseSalaryWithTax);
+    expect(ID.baseSalarySetting).not.toBe(
+      PAY_SLIP_FIELD_LABELS.baseSalaryWithTax,
+    );
   });
 });

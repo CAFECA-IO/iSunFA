@@ -84,6 +84,55 @@ export const calculator = {
     hire_date: "입사일",
     resign_date: "퇴사일",
     date_order_error: "퇴사일은 입사일보다 이를 수 없습니다",
+    effective_month: "적용 시작 월",
+    effective_month_hint:
+      "오늘 날짜가 아니라 이 변경이 「어느 월 급여부터 적용되는지」를 입력합니다. 과거 내역을 등록하거나 나중에 시작되는 변경이라면 실제 적용 월로 바꿔 주세요.",
+    change_reason: "변경 사유",
+    change_reason_placeholder: "예: 연봉 조정, 승진, 보험 등급 변경",
+    field_labels: {
+      baseSalary: "기본급",
+      mealAllowance: "식대",
+      otherAllowanceTaxable: "기타 수당(과세)",
+      otherAllowanceTaxFree: "기타 수당(비과세)",
+      isForeignWorker: "비거주자",
+      baseSalary30Days: "30일 고정 계산",
+      isLaborInsured: "산재보험",
+      isHealthInsured: "건강보험",
+      isPensionInsured: "퇴직연금",
+      industryCode: "업종",
+      dependentsCount: "부양가족 수",
+      voluntaryPensionRate: "본인 부담률",
+      hireDate: "입사일",
+      resignDate: "퇴사일",
+      name: "이름",
+      number: "사번",
+      email: "이메일",
+      employmentType: "고용 형태",
+    },
+    field_true: "예",
+    field_false: "아니오",
+    action_create: "등록",
+    action_update: "변경",
+    action_delete: "삭제",
+    timing_backdated: "소급 등록",
+    timing_scheduled: "사전 설정",
+    history_title: "급여 변경 이력",
+    history_loading: "불러오는 중…",
+    history_load_failed:
+      "변경 이력을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    history_load_more: "이전 이력 불러오기",
+    history_empty: "이 직원의 급여 조건 변경 기록이 아직 없습니다",
+    history_empty_filtered:
+      "선택한 항목에 변경 기록이 없습니다. 항목을 더 선택해 보세요.",
+    history_field_filter: "이 항목의 변경만 표시",
+    history_since:
+      "이 이력은 {{date}}부터입니다. 그 이전의 변경은 기록되지 않았습니다 —— 이전 조건은 각 월 「급여 기록」의 입력 내용을 확인하세요.",
+    history_no_record_yet:
+      "이 기능이 도입된 이후 이 직원의 급여 조건 변경이 기록된 적이 없습니다. 이전 조건은 각 월 「급여 기록」의 입력 내용을 확인하세요.",
+    history_count: "{{total}}건 중 {{shown}}건 표시",
+    recorded_by: "{{name}}이(가) {{at}}에 기록",
+    unknown_user: "알 수 없는 사용자",
+    history: "변경 이력",
     main_title: "직원 목록",
     name: "직원 이름",
     number: "사원 번호",
@@ -227,6 +276,8 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) 계산기 페이지에서 바로 저장, 그리고 두 가지 예외
   save_record: {
+    profile_diff_reason: "변경 사유(선택, 직원 정보를 업데이트할 때만 기록)",
+    profile_diff_reason_placeholder: "예: 연봉 조정, 승진, 보험 등급 변경",
     profile_diff_title: "직원 정보도 함께 업데이트할까요？",
     profile_diff_content:
       "계산기 설정이 「{{name}}」님의 직원 정보와 다릅니다. 차이는 다음과 같습니다：",
@@ -266,6 +317,20 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) 급여 기록 조회
   records: {
+    base_salary_delta_inline: "{{month}}월 대비 {{sign}}{{amount}}",
+    base_salary_delta_title: "{{year}}년 {{month}}월의 기본급 변동",
+    base_salary_delta_vs: "{{year}}년 {{month}}월과 비교",
+    base_salary_no_change_record:
+      "이번 달 기본급이 이전 기록과 다르지만 대응하는 직원 정보 변경 기록이 없습니다. 직원 목록에서 수정한 뒤 적용 시작 월을 {{year}}년 {{month}}월로 설정해 주세요.",
+    base_salary: "기본급",
+    base_salary_change_aria: "{{year}}년 {{month}}월의 기본급 변경 보기",
+    base_salary_change_title: "{{year}}년 {{month}}월부터의 기본급 변경",
+    base_salary_change_count:
+      "이번 달에 기본급 변경이 {{count}}건 있었습니다. 위 숫자는 순변동입니다.",
+    base_salary_change_recorded: "기록",
+    base_salary_change_full_history: "전체 급여 변경 이력 보기",
+    base_salary_mismatch:
+      "이번 달 급여는 기본급 {{used}}(으)로 계산되었으며, 변경 후 값 {{changed}}과 일치하지 않습니다. 이 급여에 새 기본급을 적용해야 한다면 다시 계산하여 저장하세요.",
     main_title: "급여 기록",
     pay_period: "지급 기간",
     pay_period_value: "{{year}}년 {{month}}월",

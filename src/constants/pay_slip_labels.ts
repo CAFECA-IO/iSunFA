@@ -76,6 +76,33 @@ export const PAY_SLIP_CSV_IDENTITY_LABELS = {
   period: "期間",
   employeeName: "員工姓名",
   employeeNumber: "員工編號",
+  /**
+   * Info: (20260908 - Julian) 本薪與它的變動（薪資異動紀錄計劃書 §18）。
+   *
+   * ## 為什麼是兩組，而不是一組
+   *
+   * - `baseSalaryPrevPeriod` / `baseSalaryDelta`：**較上一筆紀錄**。一律有
+   *   （只要有更早的紀錄），由紀錄本身算出來。
+   * - `profileChange*`：**員工檔的異動紀錄**。有的時候才有，能說出誰改的、為什麼。
+   *
+   * 兩者可以同時存在、也可以只有前者（在計算機上改了本薪、選了「只存這一次」）。
+   * 合成一組的話，收到 CSV 的人會把「沒有異動紀錄」讀成「沒有調薪」。
+   *
+   * ## 標題必須自己說得完
+   *
+   * CSV 沒有地方放說明文字（加一行前言會讓試算表的表頭解析錯位）。
+   * 所以「員工檔本薪異動…」這幾個字要自己交代來源 ——
+   * 收到檔案的人手上沒有這個系統，也不會來問。
+   */
+  baseSalarySetting: "月本薪（設定）",
+  baseSalaryPrevPeriod: "本薪較上一筆期間",
+  baseSalaryDelta: "本薪較上一筆差額",
+  profileChangeBefore: "員工檔本薪異動前",
+  profileChangeAfter: "員工檔本薪異動後",
+  profileChangeReason: "員工檔本薪異動原因",
+  profileChangeBy: "員工檔本薪異動記錄者",
+  profileChangeAt: "員工檔本薪異動記錄日",
+
   calculatorVersion: "計算版本",
   lastSentAt: "薪資單寄出日",
   lastSentTo: "寄送信箱",

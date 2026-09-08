@@ -32,19 +32,36 @@ const SCHEMA = fs.readFileSync(
 const stripComments = (text: string): string =>
   text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
+/**
+ * Info: (20260908 - Julian) 把連續空白收成一個，**對齊由 `prisma format` 決定，不由這裡釘住**。
+ *
+ * 這一段是 20260908 加的，起因是一次真實的假紅：那天在
+ * `SalaryCalculatorEmployee` 上加了一個反向關聯欄位 `profileChanges`，
+ * `prisma format` 因此把整個宣告群組重新對齊（欄名變寬 → 每一行多了空格），
+ * 而本檔用的是**逐字**比對 —— 於是
+ * `deletedAt DateTime? @map("deleted_at")` 這條斷言紅了，
+ * 儘管 soft delete 這件事一個字都沒改。
+ *
+ * 那種紅是最糟的一種：它指向一個沒有壞掉的地方，
+ * 而修它的最快方式是把新的空白數字貼進斷言 —— 下一個人加欄位時再紅一次。
+ *
+ * 本檔的意圖（見檔頭）是釘「改了就是行為改變」的宣告。空白不是那種東西。
+ */
+const collapseSpaces = (text: string): string => text.replace(/ {2,}/g, " ");
+
 const modelBlock = (name: string): string => {
   const start = SCHEMA.indexOf(`model ${name} {`);
   expect(start).toBeGreaterThanOrEqual(0);
   const end = SCHEMA.indexOf("\n}", start);
   expect(end).toBeGreaterThan(start);
-  return stripComments(SCHEMA.slice(start, end));
+  return collapseSpaces(stripComments(SCHEMA.slice(start, end)));
 };
 
 describe("SalaryCalculatorEmployee", () => {
   const block = modelBlock("SalaryCalculatorEmployee");
 
   it("金額是 BigInt 不是 Int：財務金額禁用原生整數型別（precision guideline §1）", () => {
-    expect(block).toContain('baseSalary    BigInt @map("base_salary")');
+    expect(block).toContain('baseSalary BigInt @map("base_salary")');
     expect(block).toContain("mealAllowance BigInt");
   });
 
@@ -75,9 +92,7 @@ describe("SalaryCalculatorEmployee", () => {
   });
 
   it("掛在帳本之下，且有帳本索引", () => {
-    expect(block).toContain(
-      'accountBookId String      @map("account_book_id")',
-    );
+    expect(block).toContain('accountBookId String @map("account_book_id")');
     expect(block).toContain("@@index([accountBookId])");
   });
 
@@ -148,7 +163,9 @@ describe("SalaryCalculatorEmployee", () => {
    * 資料庫給 42、計算機顯示另一個 —— 而兩邊都不會報錯。
    */
   it("行業別的 schema 預設值等於 DEFAULT_INDUSTRY_CODE", () => {
-    expect(block).toContain(`industryCode Int @default(${DEFAULT_INDUSTRY_CODE})`);
+    expect(block).toContain(
+      `industryCode Int @default(${DEFAULT_INDUSTRY_CODE})`,
+    );
   });
 
   it("與 HR 員工檔的接點是可空的，且正式員工檔被刪時只斷開不連坐", () => {
@@ -169,17 +186,17 @@ describe("SalaryRecord", () => {
   });
 
   it("抽出來對帳的三個金額都是 BigInt", () => {
-    expect(block).toContain('totalPayment       BigInt @map("total_payment")');
+    expect(block).toContain('totalPayment BigInt @map("total_payment")');
     expect(block).toContain(
       'totalSalaryTaxable BigInt @map("total_salary_taxable")',
     );
     expect(block).toContain(
-      'totalEmployerCost  BigInt @map("total_employer_cost")',
+      'totalEmployerCost BigInt @map("total_employer_cost")',
     );
   });
 
   it("兩個快照是 Json，且沒有預設值：沒有快照的薪資紀錄沒有意義", () => {
-    expect(block).toContain('inputSnapshot  Json @map("input_snapshot")');
+    expect(block).toContain('inputSnapshot Json @map("input_snapshot")');
     expect(block).toContain('resultSnapshot Json @map("result_snapshot")');
     expect(block).not.toMatch(/Snapshot\s+Json\s+@default/);
   });

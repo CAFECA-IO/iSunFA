@@ -485,9 +485,42 @@ describe("薪資紀錄列表的寄出狀態", () => {
      */
     expect(repo).not.toContain("include: { employee: true }");
 
-    const includes = repo.match(/include:\s*[^,\n]+/g) ?? [];
-    expect(includes.length).toBeGreaterThan(2);
-    includes.forEach((site) => expect(site).toContain("RECORD_INCLUDE"));
+    /**
+     * Info: (20260908 - Julian) **這道護欄真正的位置是型別，不是這個掃描。**
+     *
+     * ## 兩次假紅之後的結論
+     *
+     * 這一條原本掃「檔案裡每一個 `include:` 都要是 `RECORD_INCLUDE`」，
+     * 20260908 一天內紅了兩次，兩次都與寄送關聯無關：
+     *
+     * 1. repository 多了一次對**別張表**的查詢（異動表），它帶著自己的 include
+     * 2. 又多了一次**只取純量欄位**的投影查詢（`select:`，算本薪差額用），
+     *    它根本不需要 include
+     *
+     * 改成數量對拍之後第二次仍然紅 —— 因為投影查詢也是一次
+     * `prisma.salaryRecord.findMany`。那種紅指向沒有壞掉的地方，
+     * 而最快的修法都是錯的（把投影塞進 `RECORD_INCLUDE`，或刪掉這條測試）。
+     *
+     * ## 型別已經守住它了
+     *
+     * `toSummary` / `toDetail` 的參數型別是 `SalaryRecordWithEmployee`，
+     * 它**要求** `employee` 與 `paySlipDeliveries`。少了 include 的查詢回來的列
+     * 沒有那兩個屬性，交給 mapper 就是編譯錯誤。
+     *
+     * 實測（20260908）：把 `listRecordsByIds` 的 `include: RECORD_INCLUDE` 拿掉，
+     * `tsc` 直接報
+     * 「missing the following properties … employee, paySlipDeliveries」。
+     *
+     * ## 所以這裡只釘型別守不住的那一半
+     *
+     * 型別唯一擋不住的是**有人把型別本身放寬**（把 `paySlipDeliveries` 改成選填、
+     * 或把 mapper 的參數改成 `SalaryRecord`）。那是這條斷言的工作。
+     */
+    expect(repo).toMatch(
+      /paySlipDeliveries: \{ createdAt: Date; recipientEmail: string \}\[\];/,
+    );
+    expect(repo).toContain("const toSummary = (row: SalaryRecordWithEmployee)");
+    expect(repo).toContain("const toDetail = (row: SalaryRecordWithEmployee)");
   });
 
   it("只有成功的那一次算「已寄出」", () => {

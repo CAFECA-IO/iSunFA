@@ -11,6 +11,7 @@ import {
   ISalaryCalculatorEmployeeWriteInput,
   ISalaryRecordDetail,
   ISalaryRecordPageResult,
+  ISalaryProfileChangeRow,
   ISalaryRecordQueryOptions,
 } from "@/interfaces/salary_record";
 import {
@@ -182,6 +183,37 @@ class FakeEmployeeRepo implements ISalaryCalculatorEmployeeRepository {
   }) {
     return this.rows.delete(`${accountBookId}|${employeeId}`);
   }
+
+  /**
+   * Info: (20260908 - Julian) 調薪歷程：假 repo 持有一份可以塞的列。
+   *
+   * 服務層對這一支做的事是「把原始列的兩份快照算成逐欄差異」，
+   * 所以替身只要回得了列就夠 —— 差異本身由 `salary_profile_diff.ts` 負責，
+   * 而它有自己的測試。這裡刻意不模擬篩選與分頁：
+   * 那兩件事在 repository（SQL），不在服務層。
+   */
+  public profileChangeRows: ISalaryProfileChangeRow[] = [];
+
+  public profileChangeQueries: unknown[] = [];
+
+  public async listProfileChanges(params: {
+    accountBookId: string;
+    employeeId: string;
+    fields?: string[];
+    page: number;
+    pageSize: number;
+  }) {
+    this.profileChangeQueries.push(params);
+    return {
+      rows: this.profileChangeRows,
+      totalCount: this.profileChangeRows.length,
+      recordedSince:
+        this.profileChangeRows.length === 0
+          ? null
+          : this.profileChangeRows[this.profileChangeRows.length - 1]
+              .recordedAt,
+    };
+  }
 }
 
 class FakeRecordRepo implements ISalaryRecordRepository {
@@ -210,6 +242,16 @@ class FakeRecordRepo implements ISalaryRecordRepository {
       year: params.year,
       month: params.month,
       employee: { id: params.employeeId, name: "王小明", number: "A001" },
+      /**
+       * Info: (20260908 - Julian) 本薪與「這個月生效的本薪異動」（計劃書 §15）。
+       *
+       * 預設 `null` = 這個月沒有調薪。要測有調薪的案例時由 overrides 帶進來 ——
+       * 預設就給一筆的話，每一條案例都會意外帶著一個 `+1,000`。
+       */
+      baseSalary: 30000,
+      // Info: (20260908 - Julian) 假 repo 不模擬跨列比較（那是 SQL 的事，計劃書 §16）
+      baseSalaryDelta: null,
+      baseSalaryChange: null,
       totalPayment: Number(params.totalPayment),
       totalSalaryTaxable: Number(params.totalSalaryTaxable),
       totalEmployerCost: Number(params.totalEmployerCost),
@@ -284,6 +326,21 @@ beforeEach(() => {
   records = new FakeRecordRepo();
   employees.seed(BOOK, employeeOf());
   service = new SalaryRecordService(employees, records);
+});
+
+/**
+ * Info: (20260908 - Julian) 員工檔寫入一律要帶「誰改的、何時生效」（計劃書 §4）。
+ *
+ * 這是**必填**參數而不是選填：忘記傳是編譯錯誤，不是一列少了 userId 的異動紀錄。
+ * 這一批呼叫端因此都被迫補上它 —— 那正是型別該做的事。
+ *
+ * 寫成函式而不是常數：`changedByUserId` 在 e2e 裡要等 `beforeAll` 建好 user
+ * 才有值，模組載入時取一次會永遠是空字串（而外鍵會在執行期才抱怨）。
+ */
+const changeCtx = () => ({
+  changedByUserId: "user-1",
+  effectiveYear: 2026,
+  effectiveMonth: 9,
 });
 
 describe("儲存薪資紀錄", () => {
@@ -483,6 +540,7 @@ describe("員工名單", () => {
     await expectAppError(
       () =>
         service.createEmployee({
+          change: changeCtx(),
           accountBookId: BOOK,
           input: employeeWriteInputOf(),
         }),
@@ -494,6 +552,7 @@ describe("員工名單", () => {
     await expectAppError(
       () =>
         service.updateEmployee({
+          change: changeCtx(),
           accountBookId: OTHER_BOOK,
           employeeId: EMPLOYEE_ID,
           input: employeeWriteInputOf({ number: "A002" }),
@@ -506,6 +565,7 @@ describe("員工名單", () => {
     await expectAppError(
       () =>
         service.deleteEmployee({
+          change: changeCtx(),
           accountBookId: OTHER_BOOK,
           employeeId: EMPLOYEE_ID,
         }),
@@ -522,5 +582,148 @@ describe("員工名單", () => {
 
     expect(list).toHaveLength(1);
     expect(list[0].name).toBe("王小明");
+  });
+});
+
+describe("調薪歷程：服務層把原始列算成逐欄差異", () => {
+  const snapshotOf = (patch: Record<string, unknown> = {}) => ({
+    ...DEFAULT_EMPLOYEE_PROFILE,
+    name: "王小明",
+    number: "A001",
+    email: "ming@example.com",
+    baseSalary: 40000,
+    mealAllowance: 2400,
+    ...patch,
+  });
+
+  const rowOf = (
+    patch: Partial<ISalaryProfileChangeRow> = {},
+  ): ISalaryProfileChangeRow => ({
+    id: "chg-1",
+    action: "UPDATE",
+    beforeSnapshot: snapshotOf(),
+    afterSnapshot: snapshotOf({ baseSalary: 45000 }),
+    changedFields: ["baseSalary"],
+    effectiveYear: 2026,
+    effectiveMonth: 10,
+    reason: "年度調薪",
+    recordedAt: new Date("2026-09-28T02:30:00.000Z"),
+    changedBy: { id: "user-7", name: "會計小林" },
+    ...patch,
+  });
+
+  /**
+   * Info: (20260908 - Julian) **diff 在服務層算，不丟給前端。**
+   *
+   * repository 回的是兩份 Json 快照。若服務層只是原封不動轉出去，
+   * 「哪些欄位算變動、金額怎麼正規化」的規則就會落到每一個呼叫端 ——
+   * 而那個規則已經有實作與測試（`salary_profile_diff.ts`）。
+   * 這一條釘住服務層真的用了它。
+   */
+  it("UPDATE 列算出逐欄的前後值", async () => {
+    employees.profileChangeRows = [rowOf()];
+
+    const result = await service.listProfileChanges({
+      accountBookId: BOOK,
+      employeeId: EMPLOYEE_ID,
+      page: 1,
+      pageSize: 20,
+    });
+
+    expect(result.data[0].changes).toEqual([
+      { field: "baseSalary", before: 40000, after: 45000 },
+    ]);
+  });
+
+  /**
+   * Info: (20260908 - Julian) 時間一律轉成 Unix 秒（本模組的前端慣例）。
+   *
+   * 直接把 `Date` 交出去的話，它會在 JSON 序列化時變成 ISO 字串 ——
+   * 而前端其他地方拿到的都是秒。混用的症狀是某一頁的時間顯示成
+   * `Invalid Date`，而那一頁通常不是改動它的人在看的那一頁。
+   */
+  it("recordedAt 轉成 Unix 秒", async () => {
+    employees.profileChangeRows = [rowOf()];
+
+    const result = await service.listProfileChanges({
+      accountBookId: BOOK,
+      employeeId: EMPLOYEE_ID,
+      page: 1,
+      pageSize: 20,
+    });
+
+    expect(result.data[0].recordedAt).toBe(
+      Math.floor(new Date("2026-09-28T02:30:00.000Z").getTime() / 1000),
+    );
+    expect(result.recordedSince).toBe(result.data[0].recordedAt);
+  });
+
+  it("生效期間、原因、誰改的都照原樣帶出", async () => {
+    employees.profileChangeRows = [rowOf()];
+
+    const result = await service.listProfileChanges({
+      accountBookId: BOOK,
+      employeeId: EMPLOYEE_ID,
+      page: 1,
+      pageSize: 20,
+    });
+
+    expect(result.data[0].effectiveYear).toBe(2026);
+    expect(result.data[0].effectiveMonth).toBe(10);
+    expect(result.data[0].reason).toBe("年度調薪");
+    expect(result.data[0].changedBy).toEqual({
+      id: "user-7",
+      name: "會計小林",
+    });
+  });
+
+  /**
+   * Info: (20260908 - Julian) 篩選與分頁條件要真的往下傳。
+   *
+   * 服務層對這兩者只做轉傳，而「轉傳」最常見的壞法是漏掉其中一個 ——
+   * 症狀是使用者勾了欄位卻沒有變化，或翻頁永遠停在第一頁。
+   * 兩者都不會有錯誤訊息。
+   */
+  it("fields 與分頁條件原樣交給 repository", async () => {
+    employees.profileChangeRows = [];
+
+    await service.listProfileChanges({
+      accountBookId: BOOK,
+      employeeId: EMPLOYEE_ID,
+      fields: ["baseSalary", "isLaborInsured"],
+      page: 3,
+      pageSize: 50,
+    });
+
+    expect(employees.profileChangeQueries).toEqual([
+      {
+        accountBookId: BOOK,
+        employeeId: EMPLOYEE_ID,
+        fields: ["baseSalary", "isLaborInsured"],
+        page: 3,
+        pageSize: 50,
+      },
+    ]);
+  });
+
+  /**
+   * Info: (20260908 - Julian) 一列都沒有時，`totalPages` 是 1 而不是 0。
+   *
+   * 「共 0 頁」會讓分頁元件算出「第 1 頁 / 共 0 頁」這種讀不通的狀態，
+   * 而空清單本身就是一頁 —— 那一頁上面寫著「還沒有任何紀錄」。
+   */
+  it("沒有任何紀錄時 totalPages 是 1，recordedSince 是 null", async () => {
+    employees.profileChangeRows = [];
+
+    const result = await service.listProfileChanges({
+      accountBookId: BOOK,
+      employeeId: EMPLOYEE_ID,
+      page: 1,
+      pageSize: 20,
+    });
+
+    expect(result.data).toEqual([]);
+    expect(result.totalPages).toBe(1);
+    expect(result.recordedSince).toBeNull();
   });
 });

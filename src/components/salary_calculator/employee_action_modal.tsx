@@ -21,6 +21,7 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
   ISalaryCalculatorEmployee,
   ISalaryCalculatorEmployeeWriteInput,
+  ISalaryProfileChangeRequest,
 } from "@/interfaces/salary_record";
 import AmountInput from "@/components/salary_calculator/amount_input";
 import { User, X, Plus, Check, Loader2 } from "lucide-react";
@@ -100,8 +101,16 @@ interface IEmployeeActionModalProps {
   type: "add" | "edit";
   data: ISalaryCalculatorEmployee | null;
   modalVisibleHandler: () => void;
-  // Info: (20260831 - Julian) 由呼叫端決定要打 POST 還是 PUT；失敗時 reject，讓這裡顯示訊息
-  submitHandler: (input: ISalaryCalculatorEmployeeWriteInput) => Promise<void>;
+  /**
+   * Info: (20260831 - Julian) 由呼叫端決定要打 POST 還是 PUT；失敗時 reject，讓這裡顯示訊息
+   *
+   * Info: (20260908 - Julian) 第二個參數是這次異動的生效月份與原因（計劃書 §4）。
+   * 它與員工檔分開傳，因為它描述的是「這次修改」而不是「這個人」。
+   */
+  submitHandler: (
+    input: ISalaryCalculatorEmployeeWriteInput,
+    change: ISalaryProfileChangeRequest,
+  ) => Promise<void>;
 }
 
 const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
@@ -166,6 +175,27 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
         ...prev,
         [field]: typeof next === "function" ? next(prev[field]) : next,
       }));
+  /**
+   * Info: (20260908 - Julian) 這次異動從哪一個月起生效，`YYYY-MM`。
+   *
+   * ## 為什麼是 `input[type="month"]` 而不是兩個下拉
+   *
+   * 一個原生控件、一個值、不必維護年份選項清單，而且行動裝置上會拿到
+   * 系統的月份選擇器。兩個下拉要自己決定「年份列到哪一年」——
+   * 而那個範圍猜錯的方向是**使用者選不到他要的月份**（補登去年的調薪）。
+   *
+   * ## 為什麼預設當月
+   *
+   * 絕大多數調薪是「從這個月開始」。預設當月讓常見情況零操作，
+   * 而補登與預先輸入的人會主動去改它 —— 那正是這個欄位存在的理由。
+   */
+  const [effectiveMonthInput, setEffectiveMonthInput] = useState<string>(() => {
+    const now = new Date();
+    const month = `${now.getMonth() + 1}`.padStart(2, "0");
+    return `${now.getFullYear()}-${month}`;
+  });
+  const [reasonInput, setReasonInput] = useState<string>("");
+
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string>("");
 
@@ -278,14 +308,33 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
        *
        * 兩個金額走各自的 `AmountInput`，所以擺在 `...profile` 之後覆蓋掉它。
        */
-      await submitHandler({
-        ...profile,
-        name: nameInput.trim(),
-        number: numberInput.trim(),
-        email: emailInput.trim() || undefined,
-        baseSalary: baseSalaryInput,
-        mealAllowance: mealAllowanceInput,
-      });
+      /**
+       * Info: (20260908 - Julian) `YYYY-MM` → 年、月兩個數字。
+       *
+       * 不做防禦性的 fallback：`input[type="month"]` 在值不合法時給空字串，
+       * 而空字串會讓 `Number()` 變成 `NaN` —— 那會被伺服器的 zod 擋下來（400）。
+       * 自己補一個「看起來合理」的月份，等於把一個看得見的錯誤
+       * 換成一列記錯生效月的異動紀錄。
+       */
+      const [effectiveYear, effectiveMonth] = effectiveMonthInput
+        .split("-")
+        .map(Number);
+
+      await submitHandler(
+        {
+          ...profile,
+          name: nameInput.trim(),
+          number: numberInput.trim(),
+          email: emailInput.trim() || undefined,
+          baseSalary: baseSalaryInput,
+          mealAllowance: mealAllowanceInput,
+        },
+        {
+          effectiveYear,
+          effectiveMonth,
+          reason: reasonInput.trim() || undefined,
+        },
+      );
       modalVisibleHandler();
     } catch (error) {
       /**
@@ -668,6 +717,60 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
          * 使用者得逐頁點過去找那個紅點，而在手機上四個分頁不一定同時看得到。
          * 送出中不顯示（那時按鈕本來就該是灰的，不是使用者的問題）。
          */}
+        {/**
+         * Info: (20260908 - Julian) 「本次異動」——生效月份與原因（計劃書 §4.1）。
+         *
+         * ## 為什麼在footer上方，不在四個分頁裡面
+         *
+         * 那四個分頁描述的是**這個人**（身分、薪資、投保、其他），
+         * 這一段描述的是**這次修改**。放進任何一個分頁都會讓它看起來像
+         * 員工檔的一個屬性，而它不是：同一位員工會有很多次異動，
+         * 每一次有自己的生效月與原因。
+         *
+         * ## 為什麼新增時不顯示
+         *
+         * 建檔沒有「從哪個月開始」的問題 —— 那個人的第一筆條件就是他的起點。
+         * 多問一次只會讓新增員工這件事變麻煩，而答案永遠是同一個。
+         * 建檔那一列的生效月由伺服器補當期（POST route）。
+         */}
+        {!isAdd && (
+          <div className="border-stroke-neutral-quaternary flex flex-col gap-[8px] border-t px-[20px] py-[12px] md:px-[40px]">
+            <div className="flex flex-col gap-[8px] md:flex-row md:items-end md:gap-[16px]">
+              <div className="flex flex-1 flex-col gap-[6px]">
+                <FieldLabel
+                  text={t("calculator.employee_list.effective_month")}
+                  required
+                />
+                <input
+                  type="month"
+                  value={effectiveMonthInput}
+                  onChange={(e) => setEffectiveMonthInput(e.target.value)}
+                  disabled={isSubmitting}
+                  className="border-stroke-neutral-quaternary text-text-neutral-primary h-[44px] rounded-xl border px-[12px] text-sm outline-none focus:border-orange-600"
+                />
+              </div>
+              <div className="flex flex-[2] flex-col gap-[6px]">
+                <FieldLabel
+                  text={t("calculator.employee_list.change_reason")}
+                />
+                <input
+                  type="text"
+                  value={reasonInput}
+                  maxLength={200}
+                  placeholder={t(
+                    "calculator.employee_list.change_reason_placeholder",
+                  )}
+                  onChange={(e) => setReasonInput(e.target.value)}
+                  disabled={isSubmitting}
+                  className="border-stroke-neutral-quaternary text-text-neutral-primary placeholder:text-text-neutral-tertiary h-[44px] rounded-xl border px-[12px] text-sm outline-none focus:border-orange-600"
+                />
+              </div>
+            </div>
+            <p className="text-text-neutral-tertiary text-xs leading-relaxed">
+              {t("calculator.employee_list.effective_month_hint")}
+            </p>
+          </div>
+        )}
         {blockingReason !== null && !isSubmitting && (
           <p className="text-text-neutral-tertiary border-stroke-neutral-quaternary border-t px-[20px] py-[4px] text-xs md:px-[40px]">
             {blockingReason}

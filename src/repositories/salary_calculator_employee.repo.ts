@@ -1,11 +1,22 @@
-import { Prisma, SalaryCalculatorEmployee } from "@/generated";
+import {
+  Prisma,
+  SalaryCalculatorEmployee,
+  SalaryProfileChangeAction,
+} from "@/generated";
 import { prisma } from "@/lib/prisma";
 import { MoneyUtil } from "@/lib/utils/money";
 import {
   ISalaryCalculatorEmployee,
   ISalaryCalculatorEmployeeWriteInput,
   ISalaryEmployeeProfile,
+  ISalaryProfileChangeContext,
+  ISalaryProfileChangeRow,
 } from "@/interfaces/salary_record";
+import {
+  changedFieldsOf,
+  ISalaryEmployeeProfileSnapshot,
+  SALARY_PROFILE_FIELDS,
+} from "@/lib/utils/salary_profile_diff";
 import {
   activeNumberFor,
   assertActiveNumberPairing,
@@ -26,20 +37,49 @@ export interface ISalaryCalculatorEmployeeRepository {
     accountBookId: string,
     employeeId: string,
   ): Promise<ISalaryCalculatorEmployee | null>;
+  /**
+   * Info: (20260908 - Julian) 三支寫入方法都收 `change`（誰改的、何時生效、為什麼）。
+   *
+   * 收在**介面**上而不是讓 repository 自己去拿，是因為 `changedByUserId`
+   * 只有 route 那一層知道（來自 DeWT），而 repository 拿不到 request。
+   * 讓它變成必填參數，等於讓「這次修改是誰做的」成為寫入員工檔的前提 ——
+   * 忘記傳是**編譯錯誤**，不是一列少了 userId 的異動紀錄。
+   */
   createEmployee(params: {
     accountBookId: string;
     input: ISalaryCalculatorEmployeeWriteInput;
+    change: ISalaryProfileChangeContext;
   }): Promise<ISalaryCalculatorEmployee>;
   updateEmployee(params: {
     accountBookId: string;
     employeeId: string;
     input: ISalaryCalculatorEmployeeWriteInput;
+    change: ISalaryProfileChangeContext;
   }): Promise<ISalaryCalculatorEmployee | null>;
   /** Info: (20260831 - Julian) soft delete。回 false 表示那一列不存在（或已被刪） */
   softDeleteEmployee(params: {
     accountBookId: string;
     employeeId: string;
+    change: ISalaryProfileChangeContext;
   }): Promise<boolean>;
+  /**
+   * Info: (20260908 - Julian) 某位員工的薪資條件異動軌跡，**新的在前**。
+   *
+   * 讀的是 `salary_employee_profile_change`（與寫入同一張表，所以放在同一支
+   * repository）。回傳的是**原始列**：前後快照仍是 Json，diff 由服務層算 ——
+   * 「哪些欄位算變動」的規則只能有一份實作，而它在 `salary_profile_diff.ts`。
+   */
+  listProfileChanges(params: {
+    accountBookId: string;
+    employeeId: string;
+    fields?: string[];
+    page: number;
+    pageSize: number;
+  }): Promise<{
+    rows: ISalaryProfileChangeRow[];
+    totalCount: number;
+    recordedSince: Date | null;
+  }>;
 }
 
 /**
@@ -131,6 +171,92 @@ const toWriteData = (input: ISalaryCalculatorEmployeeWriteInput) => ({
   resignDate: toDateOrNull(input.resignDate),
 });
 
+/**
+ * Info: (20260908 - Julian) 員工列 → 異動紀錄的快照。
+ *
+ * 刻意走 `toFrontendFormat` 再把 `id` 拿掉，而不是另寫一份轉換：
+ * 快照必須與 API 回傳的形狀**逐欄一致**（BigInt → number、Date → Unix 秒、
+ * email 的 null 打平成空字串），否則差異會把「格式不同」誤判成「值變了」。
+ * 另寫一份轉換就是預約那個誤判。
+ */
+const toSnapshot = (
+  row: SalaryCalculatorEmployee,
+): ISalaryEmployeeProfileSnapshot => {
+  const formatted = toFrontendFormat(row);
+  /**
+   * Info: (20260908 - Julian) 逐一列舉而不是解構掉 `id`。
+   *
+   * `const { id: _id, ...rest }` 讀起來更短，但 eslint 會抓那個沒用到的變數，
+   * 而繞過它的寫法（`// eslint-disable`）等於在這裡放一個不會再被檢查的角落。
+   * 這裡真正想表達的是「快照的欄位就是 `ISalaryEmployeeProfileSnapshot` 那一組」，
+   * 而回傳型別已經在編譯期保證了這件事：多一欄或少一欄都不會過。
+   */
+  return {
+    name: formatted.name,
+    number: formatted.number,
+    email: formatted.email,
+    baseSalary: formatted.baseSalary,
+    mealAllowance: formatted.mealAllowance,
+    otherAllowanceTaxable: formatted.otherAllowanceTaxable,
+    otherAllowanceTaxFree: formatted.otherAllowanceTaxFree,
+    industryCode: formatted.industryCode,
+    isForeignWorker: formatted.isForeignWorker,
+    employmentType: formatted.employmentType,
+    baseSalary30Days: formatted.baseSalary30Days,
+    isLaborInsured: formatted.isLaborInsured,
+    isHealthInsured: formatted.isHealthInsured,
+    isPensionInsured: formatted.isPensionInsured,
+    dependentsCount: formatted.dependentsCount,
+    voluntaryPensionRate: formatted.voluntaryPensionRate,
+    hireDate: formatted.hireDate,
+    resignDate: formatted.resignDate,
+  };
+};
+
+/**
+ * Info: (20260908 - Julian) 追加一列異動紀錄。**只在交易裡呼叫。**
+ *
+ * 計劃書 §5.1。三個要求各自對應一個真實的失敗模式：
+ *
+ * 1. **在 repository，不在 service。** 員工檔的寫入有三個入口（新增、編輯、
+ *    soft delete，其中新增還有計算機的「直接新增員工」那條路徑）。
+ *    放在 service 就是三個地方各記一次，而漏掉其中一個**不會有任何症狀** ——
+ *    直到有人發現某條路徑改的薪資沒留痕。
+ * 2. **在同一個交易裡。** 分兩次寫，中間失敗就會出現「檔改了、沒有紀錄」
+ *    或「有紀錄、檔沒改」。前者是靜默的資料遺失，後者是假的歷史。
+ * 3. **`before` 必須來自資料庫當下那一列**，不能用前端送來的舊值 ——
+ *    那份可能已經過期（別人剛改過），也可能被偽造。
+ *
+ * `changedFields` 一律由 `changedFieldsOf()` 產生，不手組（計劃書 §3.3）。
+ */
+const appendProfileChange = async (
+  tx: Prisma.TransactionClient,
+  params: {
+    accountBookId: string;
+    employeeId: string;
+    action: SalaryProfileChangeAction;
+    before: ISalaryEmployeeProfileSnapshot | null;
+    after: ISalaryEmployeeProfileSnapshot | null;
+    changedFields: string[];
+    change: ISalaryProfileChangeContext;
+  },
+): Promise<void> => {
+  await tx.salaryEmployeeProfileChange.create({
+    data: {
+      accountBookId: params.accountBookId,
+      employeeId: params.employeeId,
+      action: params.action,
+      beforeSnapshot: params.before ?? Prisma.DbNull,
+      afterSnapshot: params.after ?? Prisma.DbNull,
+      changedFields: params.changedFields,
+      effectiveYear: params.change.effectiveYear,
+      effectiveMonth: params.change.effectiveMonth,
+      reason: params.change.reason ?? null,
+      changedByUserId: params.change.changedByUserId,
+    },
+  });
+};
+
 const toFrontendFormat = (
   row: SalaryCalculatorEmployee,
 ): ISalaryCalculatorEmployee => ({
@@ -189,9 +315,11 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
   public async createEmployee({
     accountBookId,
     input,
+    change,
   }: {
     accountBookId: string;
     input: ISalaryCalculatorEmployeeWriteInput;
+    change: ISalaryProfileChangeContext;
   }): Promise<ISalaryCalculatorEmployee> {
     const data: Prisma.SalaryCalculatorEmployeeUncheckedCreateInput = {
       accountBookId,
@@ -209,7 +337,29 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
     });
 
     try {
-      const row = await prisma.salaryCalculatorEmployee.create({ data });
+      /**
+       * Info: (20260908 - Julian) 建檔與它的異動紀錄在同一個交易裡（計劃書 §5.1）。
+       *
+       * `changedFields` 給的是**全部欄位**，不是空陣列 —— 建檔時每一欄都是
+       * 「從無到有」，而讀取端的欄位篩選（「只看本薪的變動」）應該要撈到
+       * 這一列：一個人的第一筆本薪也是他薪資歷程的一部分。
+       */
+      const row = await prisma.$transaction(async (tx) => {
+        const created = await tx.salaryCalculatorEmployee.create({ data });
+
+        await appendProfileChange(tx, {
+          accountBookId,
+          employeeId: created.id,
+          action: SalaryProfileChangeAction.CREATE,
+          before: null,
+          after: toSnapshot(created),
+          changedFields: [...SALARY_PROFILE_FIELDS],
+          change,
+        });
+
+        return created;
+      });
+
       return toFrontendFormat(row);
     } catch (error) {
       if (isUniqueViolation(error)) {
@@ -223,10 +373,12 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
     accountBookId,
     employeeId,
     input,
+    change,
   }: {
     accountBookId: string;
     employeeId: string;
     input: ISalaryCalculatorEmployeeWriteInput;
+    change: ISalaryProfileChangeContext;
   }): Promise<ISalaryCalculatorEmployee | null> {
     /**
      * Info: (20260901 - Luphia) 先組 `data`，再拿**它**餵斷言（review 異常 2）。
@@ -266,18 +418,70 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
 
     try {
       /**
-       * Info: (20260831 - Julian) 用 `updateMany` 而不是 `update`：
-       * `update` 的 where 只吃唯一鍵，帳本 id 進不去，會退化成「先用 id 查、再比對帳本」。
-       * 這裡要的是「這一列同時屬於這個帳本才更新」，一個查詢就要能表達完。
+       * Info: (20260908 - Julian) 讀舊值 → 更新 → 追加異動，三件事一個交易。
+       *
+       * ## `before` 為什麼要多讀一次資料庫
+       *
+       * 前端手上有它載入時抓的舊值，拿它省一次查詢很誘人。**不可以** ——
+       * 那份可能已經過期（別人剛改過），也可能被偽造。
+       * 異動紀錄的 `before` 是稽核證據，只能來自資料庫當下那一列（計劃書 §5.1）。
+       *
+       * ## `after` 也重讀，而不是拿 `data` 當結果
+       *
+       * `data` 是「我們要求寫成什麼」，重讀拿到的是「資料庫實際變成什麼」。
+       * 兩者理當一致，但差異若存在，稽核紀錄要記後者。
+       * 順帶讓 `@updatedAt` 這類由資料庫產生的值也進得了快照。
+       *
+       * ## 讀寫都走 `tx`，不走全域 `prisma`
+       *
+       * 原本這裡回傳 `this.getActiveEmployeeById(...)`，那一支用的是全域 client ——
+       * 在交易中間呼叫它會走另一條連線，讀到的可能是交易外的舊狀態。
        */
-      const result = await prisma.salaryCalculatorEmployee.updateMany({
-        where: { accountBookId, id: employeeId, deletedAt: null },
-        data,
+      return await prisma.$transaction(async (tx) => {
+        const before = await tx.salaryCalculatorEmployee.findFirst({
+          where: { accountBookId, id: employeeId, deletedAt: null },
+        });
+
+        if (!before) return null;
+
+        const result = await tx.salaryCalculatorEmployee.updateMany({
+          where: { accountBookId, id: employeeId, deletedAt: null },
+          data,
+        });
+
+        if (result.count === 0) return null;
+
+        const after = await tx.salaryCalculatorEmployee.findFirst({
+          where: { accountBookId, id: employeeId, deletedAt: null },
+        });
+
+        if (!after) return null;
+
+        const beforeSnapshot = toSnapshot(before);
+        const afterSnapshot = toSnapshot(after);
+        const changedFields = changedFieldsOf(beforeSnapshot, afterSnapshot);
+
+        /**
+         * Info: (20260908 - Julian) **沒有實際變動就不寫列**（計劃書 §5.2）。
+         *
+         * 使用者打開彈窗、什麼都沒改就按儲存，是很常見的操作。
+         * 每一次都留一列的話，歷程會被無意義的列淹沒 ——
+         * 而淹沒的後果是真正的調薪找不到。
+         */
+        if (changedFields.length > 0) {
+          await appendProfileChange(tx, {
+            accountBookId,
+            employeeId,
+            action: SalaryProfileChangeAction.UPDATE,
+            before: beforeSnapshot,
+            after: afterSnapshot,
+            changedFields,
+            change,
+          });
+        }
+
+        return toFrontendFormat(after);
       });
-
-      if (result.count === 0) return null;
-
-      return await this.getActiveEmployeeById(accountBookId, employeeId);
     } catch (error) {
       if (isUniqueViolation(error)) {
         throw new SalaryEmployeeNumberTakenError(input.number);
@@ -289,9 +493,11 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
   public async softDeleteEmployee({
     accountBookId,
     employeeId,
+    change,
   }: {
     accountBookId: string;
     employeeId: string;
+    change: ISalaryProfileChangeContext;
   }): Promise<boolean> {
     const deletedAt = new Date();
 
@@ -323,12 +529,132 @@ export class SalaryCalculatorEmployeeRepository implements ISalaryCalculatorEmpl
       deletedAt: data.deletedAt,
     });
 
-    const result = await prisma.salaryCalculatorEmployee.updateMany({
-      where: { accountBookId, id: employeeId, deletedAt: null },
-      data,
-    });
+    /**
+     * Info: (20260908 - Julian) 移除也是一次異動，同一個交易裡留一列。
+     *
+     * `after` 為 null（這個人不在名單上了），`changedFields` 為空陣列 ——
+     * 移除不是某個欄位的變動，它由 `action` 表達。
+     *
+     * **讀取端的欄位篩選必須一律保留 DELETE 列**，否則使用者篩「本薪」時，
+     * 「這個人被移除了」這件事會消失，而歷程的最後一列不見比錯還糟。
+     * 那一半由 PR B 的服務層負責。
+     */
+    return await prisma.$transaction(async (tx) => {
+      const before = await tx.salaryCalculatorEmployee.findFirst({
+        where: { accountBookId, id: employeeId, deletedAt: null },
+      });
 
-    return result.count > 0;
+      if (!before) return false;
+
+      const result = await tx.salaryCalculatorEmployee.updateMany({
+        where: { accountBookId, id: employeeId, deletedAt: null },
+        data,
+      });
+
+      if (result.count === 0) return false;
+
+      await appendProfileChange(tx, {
+        accountBookId,
+        employeeId,
+        action: SalaryProfileChangeAction.DELETE,
+        before: toSnapshot(before),
+        after: null,
+        changedFields: [],
+        change,
+      });
+
+      return true;
+    });
+  }
+
+  public async listProfileChanges({
+    accountBookId,
+    employeeId,
+    fields,
+    page,
+    pageSize,
+  }: {
+    accountBookId: string;
+    employeeId: string;
+    fields?: string[];
+    page: number;
+    pageSize: number;
+  }): Promise<{
+    rows: ISalaryProfileChangeRow[];
+    totalCount: number;
+    recordedSince: Date | null;
+  }> {
+    /**
+     * Info: (20260908 - Julian) 欄位篩選：命中其中一個就算，而 `DELETE` 一律保留。
+     *
+     * 移除不是某個欄位的變動（它的 `changedFields` 是空陣列），
+     * 所以純用 `hasSome` 會把它濾掉 —— 而使用者篩「本薪」時，
+     * 若連「這個人被移除了」都消失，歷程的最後一列不見比錯還糟。
+     *
+     * 建檔（`CREATE`）不必特別處理：它的 `changedFields` 是全部欄位，
+     * 任何篩選都命中。
+     */
+    const fieldFilter =
+      fields && fields.length > 0
+        ? {
+            OR: [
+              { changedFields: { hasSome: fields } },
+              { action: SalaryProfileChangeAction.DELETE },
+            ],
+          }
+        : {};
+
+    const where = { accountBookId, employeeId, ...fieldFilter };
+
+    /**
+     * Info: (20260908 - Julian) 排序用 `recordedAt`，**不是生效期間**。
+     *
+     * 這是稽核軌跡，它自己的順序就是被寫下來的順序。改用生效期間排序的話，
+     * 一筆 4/20 補登的「4 月起生效」會被插回 4 月的位置 ——
+     * 而「這筆是後來才補的」正是稽核最需要看見的那件事，排序一動就藏起來了。
+     *
+     * 畫面兩個時間都顯示，所以讀者仍然看得出生效順序。
+     */
+    const [rows, totalCount, earliest] = await Promise.all([
+      prisma.salaryEmployeeProfileChange.findMany({
+        where,
+        orderBy: { recordedAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: { changedBy: { select: { id: true, name: true } } },
+      }),
+      prisma.salaryEmployeeProfileChange.count({ where }),
+      /**
+       * Info: (20260908 - Julian) 最早一列**不套欄位篩選**。
+       *
+       * 它回答的是「這位員工從什麼時候開始被記錄」，那個答案不該隨著
+       * 使用者當下篩了哪些欄位而改變 —— 套了篩選的話，
+       * 篩「本薪」會讓起始日跳到第一次調薪那天，而畫面上那句
+       * 「本紀錄自 X 起」就變成一句錯的話。
+       */
+      prisma.salaryEmployeeProfileChange.findFirst({
+        where: { accountBookId, employeeId },
+        orderBy: { recordedAt: "asc" },
+        select: { recordedAt: true },
+      }),
+    ]);
+
+    return {
+      rows: rows.map((row) => ({
+        id: row.id,
+        action: row.action,
+        beforeSnapshot: row.beforeSnapshot,
+        afterSnapshot: row.afterSnapshot,
+        changedFields: row.changedFields,
+        effectiveYear: row.effectiveYear,
+        effectiveMonth: row.effectiveMonth,
+        reason: row.reason,
+        recordedAt: row.recordedAt,
+        changedBy: row.changedBy,
+      })),
+      totalCount,
+      recordedSince: earliest?.recordedAt ?? null,
+    };
   }
 }
 

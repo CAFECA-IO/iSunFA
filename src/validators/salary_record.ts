@@ -12,6 +12,7 @@ import {
 import { EMPLOYMENT_TYPE_KEYS } from "@/lib/utils/salary_employee_profile";
 import {
   ISalaryCalculatorEmployeeWriteInput,
+  ISalaryProfileChangeContext,
   ISalaryRecordWriteInput,
 } from "@/interfaces/salary_record";
 import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
@@ -330,3 +331,98 @@ export const toSalaryRecordWriteInput = (
 export const toSalaryCalculatorEmployeeWriteInput = (
   payload: ISalaryCalculatorEmployeeWritePayload,
 ): ISalaryCalculatorEmployeeWriteInput => payload;
+
+/**
+ * Info: (20260908 - Julian) 一次員工檔寫入的異動資訊（生效月份與原因）。
+ *
+ * 計劃書：`documents/architecture/salary_profile_change_history_plan.md` §4
+ *
+ * ## 為什麼與 `salaryCalculatorEmployeeWriteSchema` 分開
+ *
+ * 那份是「員工現在是什麼樣子」，這一份是「這次修改這件事」。
+ * 合成一份的話，生效月份會變成員工檔的一個屬性 —— 而它不是：
+ * 同一位員工會有很多次異動，每一次有自己的生效月與原因。
+ *
+ * ## 三個欄位都是選填
+ *
+ * 舊版前端、以及計算機的「直接新增員工」那條路徑不會帶它們。
+ * 缺漏時由 `toSalaryProfileChangeContext` 補上當期（見該函式）——
+ * 讓它必填會讓那兩個既有入口在上線當天直接 400。
+ */
+/**
+ * Info: (20260908 - Julian) 調薪歷程的查詢參數。
+ *
+ * ## 為什麼沒有期間範圍（from / to）
+ *
+ * 一位員工幾年下來的異動是**數十列**的量級，畫面一次載得完、翻頁也不痛。
+ * 而 `(effectiveYear, effectiveMonth)` 的範圍比較在 Prisma 上要展開成
+ * 四個 OR 子句（或另外加一個可排序的複合欄位）—— 那個複雜度換到的是
+ * 一個沒有人抱怨過的篩選。
+ *
+ * 需要它的是匯出（PR E，外部觀眾要「某段期間的異動」），
+ * 到那時候再決定要不要加欄位，而不是現在先猜。
+ *
+ * ## `fields` 為什麼是逗號分隔的字串
+ *
+ * query string 沒有陣列，而 `?fields=a&fields=b` 與 `?fields[]=a` 兩種寫法
+ * 在不同的代理與框架下解析不一致。逗號分隔只有一種讀法。
+ * 值域不在這裡驗 —— 認不得的欄位名在服務層自然篩不到任何列，
+ * 而回 400 會讓「前端多送一個新欄位」變成整頁壞掉。
+ */
+export const salaryProfileChangeQuerySchema = z.object({
+  page: z.number().int().positive().optional(),
+  pageSize: z.number().int().positive().max(100).optional(),
+  fields: z.string().trim().max(500).optional(),
+});
+
+export type ISalaryProfileChangeQueryPayload = z.infer<
+  typeof salaryProfileChangeQuerySchema
+>;
+
+export const salaryProfileChangeSchema = z.object({
+  effectiveYear: z
+    .number()
+    .int()
+    .min(SALARY_RECORD_MIN_YEAR)
+    .max(2100)
+    .optional(),
+  effectiveMonth: z.number().int().min(1).max(12).optional(),
+  reason: z.string().trim().max(200).optional(),
+});
+
+export type ISalaryProfileChangePayload = z.infer<
+  typeof salaryProfileChangeSchema
+>;
+
+/**
+ * Info: (20260908 - Julian) Payload → 交給 service 的異動 context。
+ *
+ * ## `changedByUserId` 從參數進來，不從 payload
+ *
+ * 它由 route 從 DeWT 取（`sessionUser.id`）。**不收前端傳入** ——
+ * 收的話，異動紀錄的「誰」就是可以偽造的，而那是這張表唯一不能妥協的欄位。
+ * 型別上把它放在第二個參數，是讓「不可能不小心從 body 讀到它」成立。
+ *
+ * ## `now` 沒有預設值
+ *
+ * 生效月份缺漏時補當期，而「當期」需要一個時鐘。
+ * 刻意不給預設 `new Date()`：一個藏在驗證層裡的時鐘，會讓
+ * 「12/31 23:59 存的那一筆算哪個月」這種問題測不出來。
+ * 由 route 顯式傳入，測試就餵得進固定時間。
+ *
+ * ## 補的是當期，而這是有損的
+ *
+ * 補登（4/20 才輸入 4 月起生效）與預先輸入（3/28 輸入 5 月起生效）
+ * 都會被補成錯的月份。所以前端**應該**帶這兩個欄位 —— 補值是相容性的
+ * 保險，不是預期路徑（計劃書 §4.1）。
+ */
+export const toSalaryProfileChangeContext = (
+  payload: ISalaryProfileChangePayload,
+  changedByUserId: string,
+  now: Date,
+): ISalaryProfileChangeContext => ({
+  changedByUserId,
+  effectiveYear: payload.effectiveYear ?? now.getFullYear(),
+  effectiveMonth: payload.effectiveMonth ?? now.getMonth() + 1,
+  reason: payload.reason,
+});

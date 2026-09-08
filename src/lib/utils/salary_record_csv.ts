@@ -35,15 +35,31 @@ const FORMULA_TRIGGER = /^[=+\-@\t\r]/;
  * 對調的話 `=1+1,x` 會變成 `"=1+1,x"`，引號跑到最前面，
  * 單引號就補不到真正的開頭，中和完全失效而檔案看起來一切正常。
  */
-const escapeField = (value: string): string => {
-  const neutralized = FORMULA_TRIGGER.test(value) ? `'${value}` : value;
+const escapeField = (value: string, numeric = false): string => {
+  /**
+   * Info: (20260908 - Julian) `numeric` 的欄位不中和。
+   *
+   * ## 為什麼需要這個出口
+   *
+   * `FORMULA_TRIGGER` 包含 `-`，而 20260908 加入的「本薪較上一筆差額」
+   * 是這份 CSV 第一個**可能為負**的欄位。減薪的 `-10000` 會被補成
+   * `'-10000` —— 在 Excel 裡那是一格**文字**，於是整欄加總不起來、
+   * 排序也是字典序。而檔案看起來完全正常。
+   *
+   * 在這之前所有金額都非負，所以這個坑一直沒有出現。
+   *
+   * ## 為什麼是 opt-out 而不是 opt-in
+   *
+   * 預設仍然中和。反過來（只對「使用者輸入的欄位」中和）需要正確標記
+   * 每一個文字欄位，而標錯一個的後果是公式注入回來了。
+   * 預設安全、明確標記例外，標錯的後果就只是「一個數字變成文字」。
+   */
+  const neutralized =
+    !numeric && FORMULA_TRIGGER.test(value) ? `'${value}` : value;
   return /[",\n\r]/.test(neutralized)
     ? `"${neutralized.replace(/"/g, '""')}"`
     : neutralized;
 };
-
-const toRow = (fields: readonly string[]): string =>
-  fields.map(escapeField).join(",");
 
 /**
  * Info: (20260904 - Julian) 金額一律輸出**不含千分位的整數字串**。
@@ -90,6 +106,8 @@ const ID = PAY_SLIP_CSV_IDENTITY_LABELS;
 const COLUMNS: readonly {
   label: string;
   value: (record: ISalaryRecordDetail) => string;
+  // Info: (20260908 - Julian) 可能為負的數值欄位；見 `escapeField` 的 `numeric`
+  numeric?: true;
 }[] = [
   { label: ID.period, value: (r) => period(r.year, r.month) },
   { label: ID.employeeName, value: (r) => r.employee.name },
@@ -245,6 +263,60 @@ const COLUMNS: readonly {
   { label: L.reported, value: (r) => amount(r.result.totalSalaryTaxable) },
   { label: L.paid, value: (r) => amount(r.result.totalPayment) },
 
+  /**
+   * Info: (20260908 - Julian) 本薪與它的變動（計劃書 §18）。
+   *
+   * `月本薪（設定）` 與上面的 `本薪（應稅）` **不是同一件事**，兩個都留：
+   * 前者是這個人這個月的本薪設定，後者是實際計入的金額 ——
+   * 月中到職的人那兩個數字不一樣，而那個差異正是對帳要看的。
+   *
+   * 沒有值時一律留空字串，不填「無」或「0」：
+   * 「0」會被加總，而「無」會讓那一欄變成不能排序的混合型別。
+   */
+  { label: ID.baseSalarySetting, value: (r) => amount(r.baseSalary) },
+  {
+    label: ID.baseSalaryPrevPeriod,
+    value: (r) =>
+      r.baseSalaryDelta === null
+        ? ""
+        : period(
+            r.baseSalaryDelta.previousYear,
+            r.baseSalaryDelta.previousMonth,
+          ),
+  },
+  {
+    label: ID.baseSalaryDelta,
+    // Info: (20260908 - Julian) 唯一可能為負的欄位 —— 見 `escapeField` 的 `numeric`
+    numeric: true,
+    value: (r) =>
+      r.baseSalaryDelta === null ? "" : amount(r.baseSalaryDelta.delta),
+  },
+  {
+    label: ID.profileChangeBefore,
+    value: (r) =>
+      r.baseSalaryChange === null ? "" : amount(r.baseSalaryChange.before),
+  },
+  {
+    label: ID.profileChangeAfter,
+    value: (r) =>
+      r.baseSalaryChange === null ? "" : amount(r.baseSalaryChange.after),
+  },
+  {
+    label: ID.profileChangeReason,
+    value: (r) => r.baseSalaryChange?.reason ?? "",
+  },
+  {
+    label: ID.profileChangeBy,
+    value: (r) => r.baseSalaryChange?.changedBy.name ?? "",
+  },
+  {
+    label: ID.profileChangeAt,
+    value: (r) =>
+      r.baseSalaryChange === null
+        ? ""
+        : sentDate(r.baseSalaryChange.recordedAt),
+  },
+
   { label: ID.calculatorVersion, value: (r) => r.calculatorVersion },
   { label: ID.lastSentAt, value: (r) => sentDate(r.lastSentAt) },
   { label: ID.lastSentTo, value: (r) => r.lastSentTo ?? "" },
@@ -256,10 +328,20 @@ export const SALARY_CSV_COLUMN_COUNT = COLUMNS.length;
 export const buildSalaryRecordCsv = (
   records: readonly ISalaryRecordDetail[],
 ): string => {
+  /**
+   * Info: (20260908 - Julian) 逐欄 escape，因為現在**每一欄的規則不一樣**了
+   * （`numeric` 的不中和公式）。原本的 `toRow(strings)` 把整列當同一種處理，
+   * 而那在有例外欄位之後就是錯的。
+   *
+   * 表頭一律走預設（中和）—— 標題是我們自己寫的常數，不會觸發，
+   * 但沒有理由給它一個例外。
+   */
   const lines = [
-    toRow(COLUMNS.map((column) => column.label)),
+    COLUMNS.map((column) => escapeField(column.label)).join(","),
     ...records.map((record) =>
-      toRow(COLUMNS.map((column) => column.value(record))),
+      COLUMNS.map((column) =>
+        escapeField(column.value(record), column.numeric === true),
+      ).join(","),
     ),
   ];
 

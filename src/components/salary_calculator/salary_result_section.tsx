@@ -231,17 +231,40 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     await proceedSaveFor(selectedEmployeeId);
   };
 
-  // Info: (20260902 - Julian) 「更新員工檔並儲存」：先 PUT 員工，再走原本的儲存流程
-  const updateProfileAndSaveHandler = async () => {
+  /**
+   * Info: (20260902 - Julian) 「更新員工檔並儲存」：先 PUT 員工，再走原本的儲存流程
+   *
+   * Info: (20260908 - Julian) `reason` 由差異彈窗的輸入欄帶進來（計劃書 §17）。
+   *
+   * 它是選填的：舊的呼叫端不傳也編譯得過，而後端在 `reason` 缺漏時寫 null。
+   * 做成必填會把「使用者不想解釋」變成一件做不到的事 ——
+   * 而強迫填寫的結果是「調薪」「.」這種沒有資訊的字串。
+   */
+  const updateProfileAndSaveHandler = async (reason?: string) => {
     if (pendingProfileDiff === null) return;
 
     const { employee } = pendingProfileDiff;
-    await updateEmployee(employee.id, {
-      ...getEmployeeProfile(),
-      name: employee.name,
-      number: employee.number,
-      email: employee.email || undefined,
-    });
+    /**
+     * Info: (20260908 - Julian) 生效月份帶**計算機當下選的年月**，不讓伺服器補當期。
+     *
+     * 這顆按鈕的語意是「把這次算薪水用的設定寫回員工檔」，
+     * 而那次算的就是 `selectedYear` / `selectedMonth` 那個月。
+     * 12 月在跑 11 月的薪資是常態，補當期會把那筆調薪記成 12 月生效（計劃書 §4）。
+     */
+    await updateEmployee(
+      employee.id,
+      {
+        ...getEmployeeProfile(),
+        name: employee.name,
+        number: employee.number,
+        email: employee.email || undefined,
+      },
+      {
+        effectiveYear: selectedYearNumber,
+        effectiveMonth: selectedMonthNumber,
+        reason,
+      },
+    );
 
     setPendingProfileDiff(null);
     await proceedSaveFor(employee.id);
@@ -344,12 +367,19 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
        * 只帶姓名與兩個金額的話，建出來的檔其餘欄位全是 schema 的 `@default` ——
        * 下個月選這個人，那些預設值會覆蓋掉他今天設好的東西，而且完全靜默。
        */
-      await createEmployee({
-        ...getEmployeeProfile(),
-        name: employeeName.trim(),
-        number: employeeNumber.trim(),
-        email: employeeEmail.trim() || undefined,
-      });
+      await createEmployee(
+        {
+          ...getEmployeeProfile(),
+          name: employeeName.trim(),
+          number: employeeNumber.trim(),
+          email: employeeEmail.trim() || undefined,
+        },
+        // Info: (20260908 - Julian) 建檔的生效月份＝這次算薪水的那個月，理由同上
+        {
+          effectiveYear: selectedYearNumber,
+          effectiveMonth: selectedMonthNumber,
+        },
+      );
 
       const refreshed = await reload();
       // Info: (20260831 - Julian) 用編號找回剛建立的那一筆 —— 它是帳本內唯一的那一欄

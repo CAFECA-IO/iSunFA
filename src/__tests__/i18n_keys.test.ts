@@ -1,3 +1,4 @@
+import { SALARY_PROFILE_FIELDS } from "@/lib/utils/salary_profile_diff";
 import { describe, it, expect } from "@jest/globals";
 import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
@@ -103,8 +104,9 @@ const LANGUAGES = ["en", "ja", "ko", "zh_cn", "zh_tw"] as const;
 // Info: (20260901 - Julian) `hr_management|calculator` —— 由上表組出來，不會兩邊不同步
 const NAMESPACE_ALTERNATION = Object.keys(NAMESPACES).join("|");
 
-const dictionariesOf = (path: string): Record<string, Record<string, unknown>> =>
-  NAMESPACES[path.split(".")[0]];
+const dictionariesOf = (
+  path: string,
+): Record<string, Record<string, unknown>> => NAMESPACES[path.split(".")[0]];
 
 /**
  * Info: (20260817 - Luphia) 動態組出來的鍵：掃描器看得到樣板但看不到值域，
@@ -146,6 +148,18 @@ const DYNAMIC_KEY_EXPANSIONS: Record<string, string[]> = {
    * 收斂成一支函式之前，三個呼叫端各自組一次、變數名各不相同，
    * 而掃描器認字面，於是同一組值域要登記三筆。
    */
+  /**
+   * Info: (20260908 - Julian) 調薪歷程的欄位標籤（`employee_history_modal.tsx`）。
+   *
+   * 值域是 `SALARY_PROFILE_FIELDS` —— 也就是 `ISalaryCalculatorEmployee`
+   * 去掉 `id` 的每一個欄位。綁在那個常數上而不是手抄一份：
+   * 新增員工檔欄位時，這裡會自動要求對應的文案存在，
+   * 而漏掉的那一欄在畫面上會顯示成 i18n 路徑本身。
+   */
+  "calculator.employee_list.field_labels.${field}": SALARY_PROFILE_FIELDS.map(
+    (field) => `calculator.employee_list.field_labels.${field}`,
+  ),
+
   "calculator.basic_info_form.${key.toLowerCase()}": Object.keys(
     EmploymentType,
   ).map((key) => `calculator.basic_info_form.${key.toLowerCase()}`),

@@ -41,8 +41,19 @@ import { DEFAULT_EMPLOYEE_PROFILE } from "@/lib/utils/salary_employee_profile";
  * 形狀比照 `resumable_job_read_scope.test.ts`。
  */
 
-jest.mock("@/lib/prisma", () => ({
-  prisma: {
+/**
+ * Info: (20260908 - Julian) `$transaction` 把回呼餵**同一組替身**，不是另一組。
+ *
+ * 員工檔的三支寫入自 20260908 起在交易裡同時追加一列異動紀錄
+ * （`salary_employee_profile_change`，計劃書 §5.1），所以 repository 拿到的是
+ * `tx` 而不是全域 client。若這裡給 `tx` 另一組 `jest.fn`，
+ * 本檔的每一條斷言都會讀到一個從沒被呼叫過的替身 —— **全部靜靜地空過**，
+ * 而空過的測試看起來和通過一模一樣。
+ *
+ * 所以先組出 `client`，再讓 `$transaction` 把它自己交回去。
+ */
+jest.mock("@/lib/prisma", () => {
+  const client = {
     salaryCalculatorEmployee: {
       findMany: jest.fn(async () => []),
       findFirst: jest.fn(async () => null),
@@ -61,8 +72,23 @@ jest.mock("@/lib/prisma", () => ({
       findMany: jest.fn(async () => []),
       create: jest.fn(async () => null),
     },
-  },
-}));
+    salaryEmployeeProfileChange: {
+      create: jest.fn(async () => null),
+      findMany: jest.fn(async () => []),
+      findFirst: jest.fn(async () => null),
+      count: jest.fn(async () => 0),
+    },
+  };
+
+  return {
+    prisma: {
+      ...client,
+      $transaction: jest.fn(
+        async (run: (tx: typeof client) => Promise<unknown>) => run(client),
+      ),
+    },
+  };
+});
 
 /**
  * Info: (20260901 - Luphia) 替身的回傳型別故意放寬。
@@ -94,6 +120,18 @@ const recordUpsert = prisma.salaryRecord.upsert as unknown as Mock;
 const deliveryFindMany = prisma.salaryPaySlipDelivery
   .findMany as unknown as Mock;
 const deliveryCreate = prisma.salaryPaySlipDelivery.create as unknown as Mock;
+/**
+ * Info: (20260908 - Julian) 異動表的讀取替身。
+ *
+ * 沒有把它們接進租戶斷言的話，`listProfileChanges` 這一支會**空過** ——
+ * 驅動器呼叫得到它，但檢查的替身清單裡沒有它交出去的查詢，
+ * 於是「帶了 accountBookId 嗎」這個問題根本沒有被問。
+ */
+const changeFindMany = prisma.salaryEmployeeProfileChange
+  .findMany as unknown as Mock;
+const changeFindFirst = prisma.salaryEmployeeProfileChange
+  .findFirst as unknown as Mock;
+const changeCount = prisma.salaryEmployeeProfileChange.count as unknown as Mock;
 
 const BOOK = "book-1";
 const OTHER_EMPLOYEE = "employee-9";
@@ -136,6 +174,47 @@ const whereOf = (mock: Mock, call = 0): Record<string, unknown> =>
  * 只補到「mapper 走得完」為止 —— 這一檔驗的是**交給資料庫的參數**，
  * 回傳值只是為了讓呼叫不炸在無關的地方。
  */
+/**
+ * Info: (20260908 - Julian) 一列存活中的員工。
+ *
+ * 20260908 起 `updateEmployee` / `softDeleteEmployee` 會**先讀舊值**
+ * （異動紀錄的 `before` 只能來自資料庫當下那一列，計劃書 §5.1），
+ * 所以 `findFirst` 回 null 時 repository 會在寫入之前就返回 ——
+ * 而本檔多數斷言的對象是「交給資料庫的 `where` 與 `data`」，
+ * 讀不到舊值就等於那些斷言全部空過。
+ *
+ * 因此 `beforeEach` 把 `findFirst` 的預設值設成這一列。
+ * 需要「查無此人」的測試（跨帳本的守門）自己覆寫成 null ——
+ * 那是刻意的例外，寫在測試裡看得見。
+ */
+const employeeRowFixture = () => ({
+  id: OTHER_EMPLOYEE,
+  name: "王小明",
+  number: "A012",
+  email: null,
+  activeNumber: "A012",
+  accountBookId: BOOK,
+  employeeId: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  deletedAt: null,
+  baseSalary: 40000n,
+  mealAllowance: 2400n,
+  otherAllowanceTaxable: 1500n,
+  otherAllowanceTaxFree: 300n,
+  industryCode: 41,
+  isForeignWorker: true,
+  employmentType: "PART_TIME",
+  baseSalary30Days: false,
+  isLaborInsured: false,
+  isHealthInsured: false,
+  isPensionInsured: false,
+  dependentsCount: 3,
+  voluntaryPensionRate: 6,
+  hireDate: new Date("2026-08-15T00:00:00.000Z"),
+  resignDate: null,
+});
+
 const salaryRowFixture = () => ({
   id: "r-1",
   year: 2026,
@@ -144,6 +223,8 @@ const salaryRowFixture = () => ({
   employeeId: "e-9",
   createdByUserId: "u-1",
   calculatorVersion: "v1",
+  // Info: (20260908 - Julian) 本薪的純量欄位（計劃書 §16）；`toSummary` 直接讀它
+  baseSalary: BigInt(30000),
   totalPayment: BigInt(0),
   totalSalaryTaxable: BigInt(0),
   totalEmployerCost: BigInt(0),
@@ -169,7 +250,7 @@ const deliveryRowFixture = () => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
-  employeeFindFirst.mockResolvedValue(null);
+  employeeFindFirst.mockResolvedValue(employeeRowFixture());
   employeeFindMany.mockResolvedValue([]);
   employeeUpdateMany.mockResolvedValue({ count: 1 });
   recordFindFirst.mockResolvedValue(null);
@@ -246,6 +327,14 @@ const LIFECYCLE: Record<
   softDeleteEmployee: "ACTIVE_ONLY",
   // Info: (20260905 - Luphia) 建立時那一列還不存在，沒有 deletedAt 可濾
   createEmployee: "NO_SOFT_DELETE",
+  /**
+   * Info: (20260908 - Julian) 讀的是 `salary_employee_profile_change`，那張表沒有 `deletedAt`。
+   *
+   * 值得寫一句的是它**刻意不濾員工的軟刪除**：已移除的員工照樣查得到歷程。
+   * 「刪掉員工，他的調薪歷程也一起消失」會讓稽核軌跡可以用刪除來規避 ——
+   * 而那正是這張表要防的事（薪資異動紀錄計劃書 §5.3）。
+   */
+  listProfileChanges: "NO_SOFT_DELETE",
   upsertRecord: "NO_SOFT_DELETE",
   listRecords: "NO_SOFT_DELETE",
   listRecordsByIds: "NO_SOFT_DELETE",
@@ -325,6 +414,21 @@ const arrowMethodsOf = (relativePath: string): string[] => {
 };
 
 const ALL_METHODS = REPO_FILES.flatMap(publicMethodsOf).sort();
+
+/**
+ * Info: (20260908 - Julian) 員工檔寫入一律要帶「誰改的、何時生效」（計劃書 §4）。
+ *
+ * 這是**必填**參數而不是選填：忘記傳是編譯錯誤，不是一列少了 userId 的異動紀錄。
+ * 這一批呼叫端因此都被迫補上它 —— 那正是型別該做的事。
+ *
+ * 寫成函式而不是常數：`changedByUserId` 在 e2e 裡要等 `beforeAll` 建好 user
+ * 才有值，模組載入時取一次會永遠是空字串（而外鍵會在執行期才抱怨）。
+ */
+const changeCtx = () => ({
+  changedByUserId: "user-1",
+  effectiveYear: 2026,
+  effectiveMonth: 9,
+});
 
 describe("覆蓋率本身：每一支方法都要被分類過", () => {
   /**
@@ -414,12 +518,14 @@ describe("租戶隔離：每一支交給資料庫的條件都帶帳本", () => {
         return;
       case "createEmployee":
         await salaryCalculatorEmployeeRepo.createEmployee({
+          change: changeCtx(),
           accountBookId: BOOK,
           input: employeeInput,
         });
         return;
       case "updateEmployee":
         await salaryCalculatorEmployeeRepo.updateEmployee({
+          change: changeCtx(),
           accountBookId: BOOK,
           employeeId: "e-9",
           input: employeeInput,
@@ -427,8 +533,17 @@ describe("租戶隔離：每一支交給資料庫的條件都帶帳本", () => {
         return;
       case "softDeleteEmployee":
         await salaryCalculatorEmployeeRepo.softDeleteEmployee({
+          change: changeCtx(),
           accountBookId: BOOK,
           employeeId: "e-9",
+        });
+        return;
+      case "listProfileChanges":
+        await salaryCalculatorEmployeeRepo.listProfileChanges({
+          accountBookId: BOOK,
+          employeeId: "e-9",
+          page: 1,
+          pageSize: 20,
         });
         return;
       case "listRecords":
@@ -490,6 +605,18 @@ describe("租戶隔離：每一支交給資料庫的條件都帶帳本", () => {
       recordGroupBy,
       recordDeleteMany,
       deliveryFindMany,
+      /**
+       * Info: (20260908 - Julian) 異動表的三支讀取也要進這個清單。
+       *
+       * 少了它們，`listProfileChanges` 這一支會**空過** —— 驅動器呼叫得到它，
+       * 但檢查的替身裡沒有它交出去的查詢，於是
+       * 「帶了 accountBookId 嗎」這個問題根本沒有被問。
+       * 那正是下面 `everyCall.length > 0` 這條哨兵存在的理由：
+       * 它把「沒有被問」與「問了而通過」分開。
+       */
+      changeFindMany,
+      changeFindFirst,
+      changeCount,
     ].flatMap((mock) => mock.mock.calls.map((args) => args[0]));
 
     expect(everyCall.length).toBeGreaterThan(0);
@@ -570,6 +697,7 @@ describe("生命週期：ACTIVE_ONLY 的方法真的濾掉軟刪除", () => {
         break;
       case "updateEmployee":
         await salaryCalculatorEmployeeRepo.updateEmployee({
+          change: changeCtx(),
           accountBookId: BOOK,
           employeeId: "e-9",
           input: employeeInputOf(),
@@ -577,6 +705,7 @@ describe("生命週期：ACTIVE_ONLY 的方法真的濾掉軟刪除", () => {
         break;
       case "softDeleteEmployee":
         await salaryCalculatorEmployeeRepo.softDeleteEmployee({
+          change: changeCtx(),
           accountBookId: BOOK,
           employeeId: "e-9",
         });
@@ -636,6 +765,7 @@ describe("薪資 repository 的租戶隔離", () => {
 
   it("updateEmployee 帶 accountBookId 與 deletedAt", async () => {
     await salaryCalculatorEmployeeRepo.updateEmployee({
+      change: changeCtx(),
       accountBookId: BOOK,
       employeeId: OTHER_EMPLOYEE,
       input: employeeInputOf(),
@@ -650,6 +780,7 @@ describe("薪資 repository 的租戶隔離", () => {
 
   it("softDeleteEmployee 帶 accountBookId 與 deletedAt", async () => {
     await salaryCalculatorEmployeeRepo.softDeleteEmployee({
+      change: changeCtx(),
       accountBookId: BOOK,
       employeeId: OTHER_EMPLOYEE,
     });
@@ -714,6 +845,7 @@ describe("薪資 repository 的租戶隔離", () => {
 describe("軟刪除讓出 activeNumber", () => {
   it("data 同時寫 deletedAt 與 activeNumber: null", async () => {
     await salaryCalculatorEmployeeRepo.softDeleteEmployee({
+      change: changeCtx(),
       accountBookId: BOOK,
       employeeId: OTHER_EMPLOYEE,
     });
@@ -733,6 +865,7 @@ describe("軟刪除讓出 activeNumber", () => {
    */
   it("更新存活員工時 activeNumber 等於 number", async () => {
     await salaryCalculatorEmployeeRepo.updateEmployee({
+      change: changeCtx(),
       accountBookId: BOOK,
       employeeId: OTHER_EMPLOYEE,
       input: employeeInputOf(),
@@ -812,6 +945,7 @@ describe("員工的常態屬性交給資料庫", () => {
 
   it("updateEmployee 把 15 欄一起交出去", async () => {
     await salaryCalculatorEmployeeRepo.updateEmployee({
+      change: changeCtx(),
       accountBookId: BOOK,
       employeeId: OTHER_EMPLOYEE,
       input: employeeInputOf(CHANGED),
@@ -827,35 +961,10 @@ describe("員工的常態屬性交給資料庫", () => {
      * 而那個錯誤與這一條要驗的事無關。這裡只需要它不炸，
      * 斷言的對象仍然是**傳進去的參數**。
      */
-    employeeCreate.mockResolvedValueOnce({
-      id: OTHER_EMPLOYEE,
-      name: "王小明",
-      number: "A012",
-      email: null,
-      activeNumber: "A012",
-      accountBookId: BOOK,
-      employeeId: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      deletedAt: null,
-      baseSalary: 40000n,
-      mealAllowance: 2400n,
-      otherAllowanceTaxable: 1500n,
-      otherAllowanceTaxFree: 300n,
-      industryCode: 41,
-      isForeignWorker: true,
-      employmentType: "PART_TIME",
-      baseSalary30Days: false,
-      isLaborInsured: false,
-      isHealthInsured: false,
-      isPensionInsured: false,
-      dependentsCount: 3,
-      voluntaryPensionRate: 6,
-      hireDate: new Date("2026-08-15T00:00:00.000Z"),
-      resignDate: null,
-    });
+    employeeCreate.mockResolvedValueOnce(employeeRowFixture());
 
     await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK,
       input: employeeInputOf(CHANGED),
     });

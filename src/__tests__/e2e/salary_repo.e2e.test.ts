@@ -123,7 +123,9 @@ beforeAll(async () => {
   });
   userId = user.id;
 
-  const team = await prisma.team.create({ data: { name: `e2e-salary-${STAMP}` } });
+  const team = await prisma.team.create({
+    data: { name: `e2e-salary-${STAMP}` },
+  });
   teamId = team.id;
 
   for (const id of [BOOK_ID, OTHER_BOOK_ID]) {
@@ -164,10 +166,26 @@ afterAll(async () => {
  * `hireDate` 存進去讀回來差一天（時區）、以及 13 個新欄位裡有人漏接一欄
  * （`toProfile` 與 `toWriteData` 是手寫的兩張對照表）。
  */
+/**
+ * Info: (20260908 - Julian) 員工檔寫入一律要帶「誰改的、何時生效」（計劃書 §4）。
+ *
+ * 這是**必填**參數而不是選填：忘記傳是編譯錯誤，不是一列少了 userId 的異動紀錄。
+ * 這一批呼叫端因此都被迫補上它 —— 那正是型別該做的事。
+ *
+ * 寫成函式而不是常數：`changedByUserId` 在 e2e 裡要等 `beforeAll` 建好 user
+ * 才有值，模組載入時取一次會永遠是空字串（而外鍵會在執行期才抱怨）。
+ */
+const changeCtx = () => ({
+  changedByUserId: userId,
+  effectiveYear: 2026,
+  effectiveMonth: 9,
+});
+
 describe("員工檔的常態屬性存得進去也讀得回來", () => {
   it("15 欄全部原樣回來，一欄不漏", async () => {
     const number = `${EMPLOYEE_INPUT.number}-PF1`;
     const created = await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       input: { ...EMPLOYEE_INPUT, number },
     });
@@ -213,8 +231,13 @@ describe("員工檔的常態屬性存得進去也讀得回來", () => {
    */
   it("自提勞退費率存 6 讀回來還是 6", async () => {
     const created = await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
-      input: { ...EMPLOYEE_INPUT, number: `${EMPLOYEE_INPUT.number}-PF2`, voluntaryPensionRate: 6 },
+      input: {
+        ...EMPLOYEE_INPUT,
+        number: `${EMPLOYEE_INPUT.number}-PF2`,
+        voluntaryPensionRate: 6,
+      },
     });
 
     const raw = await prisma.salaryCalculatorEmployee.findUniqueOrThrow({
@@ -233,6 +256,7 @@ describe("員工檔的常態屬性存得進去也讀得回來", () => {
    */
   it("到職日來回不差一天", async () => {
     const created = await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       input: { ...EMPLOYEE_INPUT, number: `${EMPLOYEE_INPUT.number}-PF3` },
     });
@@ -248,11 +272,13 @@ describe("員工檔的常態屬性存得進去也讀得回來", () => {
   it("更新會把 15 欄一起改掉，不是只改到金額", async () => {
     const number = `${EMPLOYEE_INPUT.number}-PF4`;
     const created = await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       input: { ...EMPLOYEE_INPUT, number },
     });
 
     const updated = await salaryCalculatorEmployeeRepo.updateEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       employeeId: created.id,
       input: {
@@ -320,6 +346,7 @@ describe("員工檔的常態屬性存得進去也讀得回來", () => {
 describe("員工名單：租戶過濾與軟刪除過濾", () => {
   it("另一本帳的員工，用對的 id 也讀不到、改不動、刪不掉", async () => {
     const mine = await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       input: { ...EMPLOYEE_INPUT, number: `${EMPLOYEE_INPUT.number}-X1` },
     });
@@ -330,11 +357,15 @@ describe("員工名單：租戶過濾與軟刪除過濾", () => {
      * 真 repo 靠的是 `where` 裡的 `accountBookId`，而那一行可以被刪掉。
      */
     expect(
-      await salaryCalculatorEmployeeRepo.getActiveEmployeeById(OTHER_BOOK_ID, mine.id),
+      await salaryCalculatorEmployeeRepo.getActiveEmployeeById(
+        OTHER_BOOK_ID,
+        mine.id,
+      ),
     ).toBeNull();
 
     expect(
       await salaryCalculatorEmployeeRepo.updateEmployee({
+        change: changeCtx(),
         accountBookId: OTHER_BOOK_ID,
         employeeId: mine.id,
         input: { ...EMPLOYEE_INPUT, name: "被別本帳改掉了" },
@@ -343,6 +374,7 @@ describe("員工名單：租戶過濾與軟刪除過濾", () => {
 
     expect(
       await salaryCalculatorEmployeeRepo.softDeleteEmployee({
+        change: changeCtx(),
         accountBookId: OTHER_BOOK_ID,
         employeeId: mine.id,
       }),
@@ -368,19 +400,24 @@ describe("員工名單：租戶過濾與軟刪除過濾", () => {
    */
   it("軟刪之後：列還在，但查不到也列不出來", async () => {
     const employee = await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       input: { ...EMPLOYEE_INPUT, number: `${EMPLOYEE_INPUT.number}-X2` },
     });
 
     expect(
       await salaryCalculatorEmployeeRepo.softDeleteEmployee({
+        change: changeCtx(),
         accountBookId: BOOK_ID,
         employeeId: employee.id,
       }),
     ).toBe(true);
 
     expect(
-      await salaryCalculatorEmployeeRepo.getActiveEmployeeById(BOOK_ID, employee.id),
+      await salaryCalculatorEmployeeRepo.getActiveEmployeeById(
+        BOOK_ID,
+        employee.id,
+      ),
     ).toBeNull();
 
     const listed = await salaryCalculatorEmployeeRepo.listEmployees(BOOK_ID);
@@ -399,16 +436,19 @@ describe("員工名單：租戶過濾與軟刪除過濾", () => {
 
   it("已軟刪的員工不能再被更新或重複刪除", async () => {
     const employee = await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       input: { ...EMPLOYEE_INPUT, number: `${EMPLOYEE_INPUT.number}-X3` },
     });
     await salaryCalculatorEmployeeRepo.softDeleteEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       employeeId: employee.id,
     });
 
     expect(
       await salaryCalculatorEmployeeRepo.updateEmployee({
+        change: changeCtx(),
         accountBookId: BOOK_ID,
         employeeId: employee.id,
         input: { ...EMPLOYEE_INPUT, name: "復活" },
@@ -417,6 +457,7 @@ describe("員工名單：租戶過濾與軟刪除過濾", () => {
 
     expect(
       await salaryCalculatorEmployeeRepo.softDeleteEmployee({
+        change: changeCtx(),
         accountBookId: BOOK_ID,
         employeeId: employee.id,
       }),
@@ -428,12 +469,14 @@ describe("員工編號的唯一性走 activeNumber 部分唯一索引", () => {
   it("同一本帳的存活員工不能撞號", async () => {
     const number = `${EMPLOYEE_INPUT.number}-U1`;
     await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       input: { ...EMPLOYEE_INPUT, number },
     });
 
     await expect(
       salaryCalculatorEmployeeRepo.createEmployee({
+        change: changeCtx(),
         accountBookId: BOOK_ID,
         input: { ...EMPLOYEE_INPUT, name: "撞號的人", number },
       }),
@@ -451,15 +494,18 @@ describe("員工編號的唯一性走 activeNumber 部分唯一索引", () => {
   it("軟刪之後同一個編號可以重新加入，且兩列並存", async () => {
     const number = `${EMPLOYEE_INPUT.number}-U2`;
     const first = await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       input: { ...EMPLOYEE_INPUT, number },
     });
     await salaryCalculatorEmployeeRepo.softDeleteEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       employeeId: first.id,
     });
 
     const second = await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       input: { ...EMPLOYEE_INPUT, name: "同編號回鍋", number },
     });
@@ -479,11 +525,13 @@ describe("員工編號的唯一性走 activeNumber 部分唯一索引", () => {
   it("不同帳本可以用同一個編號", async () => {
     const number = `${EMPLOYEE_INPUT.number}-U3`;
     await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       input: { ...EMPLOYEE_INPUT, number },
     });
 
     const other = await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: OTHER_BOOK_ID,
       input: { ...EMPLOYEE_INPUT, number },
     });
@@ -495,6 +543,7 @@ describe("員工編號的唯一性走 activeNumber 部分唯一索引", () => {
 describe("薪資紀錄：租戶過濾、覆寫與分頁", () => {
   it("另一本帳的紀錄，用對的 id 也讀不到、刪不掉", async () => {
     const employee = await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       input: { ...EMPLOYEE_INPUT, number: `${EMPLOYEE_INPUT.number}-R1` },
     });
@@ -536,6 +585,7 @@ describe("薪資紀錄：租戶過濾、覆寫與分頁", () => {
    */
   it("同一個 (帳本, 員工, 年, 月) 重存是覆寫，不是新增一列", async () => {
     const employee = await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       input: { ...EMPLOYEE_INPUT, number: `${EMPLOYEE_INPUT.number}-R2` },
     });
@@ -559,13 +609,19 @@ describe("薪資紀錄：租戶過濾、覆寫與分頁", () => {
     expect(second.totalPayment).toBe(55300);
 
     const rows = await prisma.salaryRecord.count({
-      where: { accountBookId: BOOK_ID, employeeId: employee.id, year: 2026, month: 2 },
+      where: {
+        accountBookId: BOOK_ID,
+        employeeId: employee.id,
+        year: 2026,
+        month: 2,
+      },
     });
     expect(rows).toBe(1);
   });
 
   it("覆寫不改 createdByUserId（那一欄記的是來源，不是最後動它的人）", async () => {
     const employee = await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       input: { ...EMPLOYEE_INPUT, number: `${EMPLOYEE_INPUT.number}-R3` },
     });
@@ -613,6 +669,7 @@ describe("薪資紀錄：租戶過濾、覆寫與分頁", () => {
    */
   it("分頁：每頁 2 筆，第 2 頁與第 1 頁不重疊，總數與頁數正確", async () => {
     const employee = await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: OTHER_BOOK_ID,
       input: { ...EMPLOYEE_INPUT, number: `${EMPLOYEE_INPUT.number}-P1` },
     });
@@ -665,6 +722,7 @@ describe("薪資紀錄：租戶過濾、覆寫與分頁", () => {
 
   it("關鍵字比對員工姓名與編號，且不會跨帳本", async () => {
     const employee = await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       input: {
         ...EMPLOYEE_INPUT,
@@ -709,6 +767,7 @@ describe("薪資紀錄：租戶過濾、覆寫與分頁", () => {
 
   it("刪除：本帳刪得掉，而且刪完就查不到", async () => {
     const employee = await salaryCalculatorEmployeeRepo.createEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       input: { ...EMPLOYEE_INPUT, number: `${EMPLOYEE_INPUT.number}-D1` },
     });
