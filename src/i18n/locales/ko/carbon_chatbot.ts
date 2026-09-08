@@ -67,6 +67,14 @@ export const carbonChatbot = {
   origin_ai_draft: "AI 초안",
   origin_imported_short: "원문",
   origin_ai_draft_short: "초안",
+  // Info: (20260908 - Emily) 帳本改了之後的過期標示(#6786;理由見 zh_tw)
+  freshness_stale_short: "갱신 필요",
+  freshness_stale_hint:
+    "이 절이 인용한 탄소 장부 수치가 변경되었습니다. 내용이 최신이 아닐 수 있으니 오른쪽 AI 작성 버튼으로 갱신하세요.",
+  freshness_stale_count: "{{count}}개 절 갱신 필요",
+  freshness_stale_list:
+    "장부가 갱신되어 다음 절이 인용한 수치가 바뀌었습니다: {{codes}}. 여기를 누르면 목차가 열리고 절별로 갱신할 수 있습니다.",
+  freshness_update_section: "최신 장부로 이 절 갱신",
   // Info: (20260806 - Tzuhan) 匯入前先上傳取 cid:14 次呼叫共用一份儲存,文案要說出「為何要等」
   import_uploading:
     "{{name}}을(를) 보안 저장소에 저장 중입니다(이후 각 장 분석은 서버가 가져오며 파일을 매번 다시 올리지 않습니다)…",

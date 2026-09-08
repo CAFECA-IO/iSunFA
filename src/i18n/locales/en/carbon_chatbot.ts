@@ -68,6 +68,14 @@ export const carbonChatbot = {
   origin_ai_draft: "AI draft",
   origin_imported_short: "source",
   origin_ai_draft_short: "draft",
+  // Info: (20260908 - Emily) 帳本改了之後的過期標示(#6786;理由見 zh_tw)
+  freshness_stale_short: "outdated",
+  freshness_stale_hint:
+    "The ledger figures this section cites have changed, so its content may be out of date. Use the AI draft button to refresh it.",
+  freshness_stale_count: "{{count}} to refresh",
+  freshness_stale_list:
+    "The ledger has changed and these sections cite figures that moved: {{codes}}. Click to open the outline and refresh them one by one.",
+  freshness_update_section: "Rewrite this section from the current ledger",
   // Info: (20260806 - Tzuhan) 匯入前先上傳取 cid:14 次呼叫共用一份儲存,文案要說出「為何要等」
   import_uploading:
     "Uploading {{name}} to secure storage — the parsing that follows reads it from there instead of resending the file each time…",

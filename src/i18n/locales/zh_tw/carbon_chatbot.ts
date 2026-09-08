@@ -74,6 +74,19 @@ export const carbonChatbot = {
   origin_ai_draft: "AI 草稿",
   origin_imported_short: "原文",
   origin_ai_draft_short: "草稿",
+  /**
+   * Info: (20260908 - Emily) 帳本改了之後的過期標示(#6786)。
+   *
+   * 文案刻意說「引用的數字變了」而不是「內容過期」:過期的不是敘述本身,
+   * 是它依據的那幾個值 —— 而更新要不要按是使用者的決定(花點數、且會覆蓋手改過的字)。
+   */
+  freshness_stale_short: "待更新",
+  freshness_stale_hint:
+    "這一節引用的帳本數字已變更，內容可能不是最新的；要更新請按右邊的 AI 撰寫。",
+  freshness_stale_count: "{{count}} 節待更新",
+  freshness_stale_list:
+    "帳本已更新，這幾節引用的數字變了：{{codes}}。點此開啟目錄逐節更新。",
+  freshness_update_section: "依最新帳本更新這一節",
   // Info: (20260806 - Tzuhan) 匯入前先上傳取 cid:14 次呼叫共用一份儲存,文案要說出「為何要等」
   import_uploading:
     "正在將 {{name}} 存入安全儲存(後續每章解析改由伺服端取回,不再重複上傳整份檔案)…",

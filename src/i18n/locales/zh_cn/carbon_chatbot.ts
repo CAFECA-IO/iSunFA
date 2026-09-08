@@ -65,6 +65,14 @@ export const carbonChatbot = {
   origin_ai_draft: "AI 草稿",
   origin_imported_short: "原文",
   origin_ai_draft_short: "草稿",
+  // Info: (20260908 - Emily) 帳本改了之後的過期標示(#6786;理由見 zh_tw)
+  freshness_stale_short: "待更新",
+  freshness_stale_hint:
+    "本节引用的碳帐本数字已变更，内容可能不是最新的；要更新请按右边的 AI 撰写。",
+  freshness_stale_count: "{{count}} 节待更新",
+  freshness_stale_list:
+    "碳帐本已更新，这几节引用的数字变了：{{codes}}。点此打开目录逐节更新。",
+  freshness_update_section: "按最新碳帐本更新本节",
   // Info: (20260806 - Tzuhan) 匯入前先上傳取 cid:14 次呼叫共用一份儲存,文案要說出「為何要等」
   import_uploading:
     "正在将 {{name}} 存入安全存储(后续每章解析改由服务端取回,不再重复上传整份文件)…",

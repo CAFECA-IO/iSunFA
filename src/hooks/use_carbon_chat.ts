@@ -111,6 +111,11 @@ import {
 } from "@/lib/carbon_ledger_query";
 import { buildReportFacts } from "@/lib/carbon_report_facts";
 import {
+  buildParagraphFingerprint,
+  summarizeReportFreshness,
+  type IReportFreshnessSummary,
+} from "@/lib/carbon_report_freshness";
+import {
   loadPendingImport as fetchPendingImportRecord,
   savePendingImport as putPendingImportRecord,
   discardPendingImport as deletePendingImportRecord,
@@ -5234,6 +5239,22 @@ export const useCarbonChat = () => {
         content = `${content}\n\n${buildEvidenceChainBlock(boundBookId)}`;
       }
 
+      /**
+       * Info: (20260908 - Emily) 打帳本指紋(#6786):這一節是依據哪一版帳本寫的。
+       *
+       * 用**最終的** `content`(表格、桑基圖、證據鏈都注入之後)而不是 `draft.content`:
+       * 注入的表格裡就是帳本的數字。少算它們等於少認一批依賴,於是**數據段落**
+       * 改了帳本也不會被標過期 —— 而數據段落正是最需要標的那些。
+       *
+       * 帳本讀不到時 `buildParagraphFingerprint` 回 undefined(不偽造比對基準),
+       * 那一節的狀態就是「不知道」而不是「最新」。
+       */
+      const ledgerFingerprint = buildParagraphFingerprint({
+        content,
+        ledgerFacts: buildChannelLedgerFacts(chatChannel),
+        ledgerComputedAt: ledgerNow?.computedAt,
+      });
+
       setSessionsData((prev) => {
         const session = prev[activeSessionId];
         const reportData = session?.reportData;
@@ -5250,6 +5271,8 @@ export const useCarbonChat = () => {
             isVerified: false,
             // Info: (20260730 - Tzuhan) 本路徑為 AI 撰寫草稿(對話蒐集/目錄的 AI 撰寫鈕),標記來源以與逐字匯入區分
             origin: ParagraphOriginEnum.AI_DRAFT,
+            // Info: (20260908 - Emily) 帳本指紋(#6786):見上方 buildParagraphFingerprint 那一段
+            ledgerFingerprint,
           };
         });
 
@@ -5276,7 +5299,15 @@ export const useCarbonChat = () => {
         };
       });
     },
-    [activeSessionId, dataTableLabels, chartLabels, sessionAccess, chatChannel],
+    [
+      activeSessionId,
+      dataTableLabels,
+      chartLabels,
+      sessionAccess,
+      chatChannel,
+      // Info: (20260908 - Emily) 指紋要當下的事實包(#6786);chatChannel 已在上面
+      buildChannelLedgerFacts,
+    ],
   );
 
   /**
@@ -5708,6 +5739,30 @@ export const useCarbonChat = () => {
       draftedCount,
     };
   }, [activeSession]);
+
+  /**
+   * Info: (20260908 - Emily) 這份報告有幾節過期了(#6786)。
+   *
+   * 與 `reportStats` 分開:那個算的是「寫完了幾節」,這個算的是「寫完的那幾節還算不算數」。
+   * 兩個都由段落推導,但依據不同 —— 併成一個回傳值會讓工具列那兩塊互相牽動。
+   *
+   * 帳本事實走 `buildChannelLedgerFacts`(唯一的組包點),所以「AI 能引用什麼」與
+   * 「指紋比對什麼」是同一份事實,不會分岔。
+   */
+  const reportFreshness: IReportFreshnessSummary = useMemo(
+    () =>
+      summarizeReportFreshness({
+        paragraphs: activeSession?.reportData?.paragraphs,
+        ledgerFacts: buildChannelLedgerFacts(chatChannel),
+        ledgerComputedAt: activeInventoryState?.computedLedger?.computedAt,
+      }),
+    [
+      activeSession,
+      buildChannelLedgerFacts,
+      chatChannel,
+      activeInventoryState?.computedLedger?.computedAt,
+    ],
+  );
 
   // Info: (20260713 - Tzuhan) 跳段(vibe 模式): 標記進行中段落、將該段撰寫指引寫入 currentStep 供 AI 引導、預填對話輸入
   const jumpToParagraph = useCallback(
@@ -7026,6 +7081,8 @@ export const useCarbonChat = () => {
     addAttachments,
     removeAttachment,
     reportStats,
+    // Info: (20260908 - Emily) 過期盤點(#6786):工具列的「N 節過期」與目錄的逐節標記
+    reportFreshness,
     // Info: (20260716 - Tzuhan) #52 帳本清單與當前會話存取資訊(唯讀切換/新增對話選單)
     accountBooks,
     activeSessionAccess: sessionAccess[chatChannel] ?? {

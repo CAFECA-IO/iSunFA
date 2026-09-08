@@ -67,6 +67,14 @@ export const carbonChatbot = {
   origin_ai_draft: "AI 下書き",
   origin_imported_short: "原文",
   origin_ai_draft_short: "下書き",
+  // Info: (20260908 - Emily) 帳本改了之後的過期標示(#6786;理由見 zh_tw)
+  freshness_stale_short: "要更新",
+  freshness_stale_hint:
+    "この節が引用している台帳の数値が変更されました。内容が最新でない可能性があります。更新するには右の AI 作成ボタンを押してください。",
+  freshness_stale_count: "{{count}} 節が要更新",
+  freshness_stale_list:
+    "台帳が更新され、次の節が引用する数値が変わりました：{{codes}}。ここをクリックすると目次が開き、節ごとに更新できます。",
+  freshness_update_section: "最新の台帳でこの節を更新",
   // Info: (20260806 - Tzuhan) 匯入前先上傳取 cid:14 次呼叫共用一份儲存,文案要說出「為何要等」
   import_uploading:
     "{{name}} を安全なストレージへ保存中(以降の各章の解析はサーバー側で取得し、ファイルを毎回再送しません)…",
