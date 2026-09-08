@@ -8,6 +8,7 @@ import {
   ParagraphOriginEnum,
 } from "@/constants/carbon_chatbot";
 import { CARBON_REPORT_IDENTITY_FIELDS } from "@/lib/utils/carbon_report_identity";
+import { PARAGRAPH_FINGERPRINT_MAX_FACTS } from "@/lib/carbon_report_freshness";
 
 const ReportCategorySchema = z.object({
   id: z.string(),
@@ -15,6 +16,29 @@ const ReportCategorySchema = z.object({
   description: z.string(),
   // Info: (20260720 - Tzuhan) #23 改字串化 Decimal;coerce 相容既有草稿的 number(0)不 Fail Fast 丟棄
   emissions: z.coerce.string().max(60),
+});
+
+/**
+ * Info: (20260908 - Emily) 段落的帳本指紋(#6786)。
+ *
+ * 選填:這張票之前生成的段落沒有這個欄位,**不得 Fail Fast 丟棄整份報告** ——
+ * 那些節的狀態是「不知道」而不是「最新」,由 `assessParagraphFreshness` 判。
+ *
+ * 筆數上限引 `PARAGRAPH_FINGERPRINT_MAX_FACTS`(= 事實包本身的上限):
+ * 指紋是事實包的子集,所以這不是另外猜的數字。手寫第二個數字的話,
+ * 分岔的症狀會是「產得出來但存不下來」—— 這份 schema 上禮拜才因為那個形狀
+ * 掉過 `reportName` / `identity`(#6788)。
+ */
+const ParagraphLedgerFingerprintSchema = z.object({
+  ledgerComputedAt: z.string().min(1).max(50),
+  facts: z
+    .array(
+      z.object({
+        label: z.string().min(1).max(200),
+        value: z.string().max(200),
+      }),
+    )
+    .max(PARAGRAPH_FINGERPRINT_MAX_FACTS),
 });
 
 const ReportParagraphSchema = z.object({
@@ -28,6 +52,8 @@ const ReportParagraphSchema = z.object({
   isDataDriven: z.boolean(),
   // Info: (20260730 - Tzuhan) 內容來源:選填,舊草稿無此欄不得 Fail Fast 丟棄整份報告
   origin: z.nativeEnum(ParagraphOriginEnum).optional(),
+  // Info: (20260908 - Emily) 帳本指紋(#6786):見上方 ParagraphLedgerFingerprintSchema
+  ledgerFingerprint: ParagraphLedgerFingerprintSchema.optional(),
 });
 
 /**

@@ -85,6 +85,40 @@ export interface IReportParagraph {
   isDataDriven: boolean;
   // Info: (20260730 - Tzuhan) 內容來源:逐字匯入 / AI 草稿 / 人工編輯。舊草稿無此欄,視為未知不計入任一分項
   origin?: ParagraphOriginEnum;
+  /**
+   * Info: (20260908 - Emily) 這一節是依據哪一版帳本寫的(#6786)。
+   *
+   * 帳本改了之後,有指紋才能判斷這一節該不該重寫 —— 而且是**只有引用到的值變了**
+   * 才算過期(理由見 `assessParagraphFreshness`)。
+   */
+  ledgerFingerprint?: IParagraphLedgerFingerprint;
+}
+
+/**
+ * Info: (20260908 - Emily) 指紋裡的一筆:這一節引用到的帳本事實,以 label 認人、以 value 比對。
+ *
+ * **刻意不存 `source`**(#6786 票面草稿寫的是「值 + 來源」,實作時改掉了):
+ * 帳本事實的 source 字串裡就寫著 `計算於 ${ledger.computedAt}`
+ * (見 `carbon_ledger_query` 總計欄那一筆)—— 存了它,每一次重算都會讓每一節的
+ * 指紋對不上,於是 33 節全部標成過期,而那等於沒有標示。
+ */
+export interface IParagraphFactImprint {
+  label: string;
+  value: string;
+}
+
+/**
+ * Info: (20260908 - Emily) 段落的帳本指紋:生成當時的帳本戳記 + 這一節實際引用到的事實(#6786)。
+ *
+ * 存在**段落上**(隨報告草稿一起 E2EE 存),不存在帳本上 —— 帳本是會被整份取代的
+ * (重新匯入、重新計算都換掉整個 `computedLedger`),掛在那裡的指紋會跟著蒸發。
+ *
+ * 選填:這張票之前生成的段落沒有指紋,那些節的狀態是「不知道」而不是「最新」
+ * (見 `ParagraphFreshnessEnum`)。
+ */
+export interface IParagraphLedgerFingerprint {
+  ledgerComputedAt: string;
+  facts: IParagraphFactImprint[];
 }
 
 /**
