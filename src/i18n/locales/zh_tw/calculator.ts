@@ -300,6 +300,14 @@ export const calculator = {
     export_too_many: "一次最多匯出 {{max}} 筆，請先取消一些選取",
     export_failed: "匯出失敗，請稍後再試一次。",
   },
+  access: {
+    checking: "確認權限中…",
+    check_failed: "無法確認您在這本帳的權限，請稍後再試",
+    denied_title: "這本帳的薪資功能未對您開放",
+    denied_desc:
+      "薪資計算機、薪資紀錄與員工列表只開放給帳本的擁有者與編輯者。您在這本帳是唯讀成員，因此看不到這一區。需要使用的話，請向帳本擁有者調整您的角色。",
+    denied_public_link: "改用公開版薪資計算機",
+  },
   account_book_entry: {
     title: "想把這次的試算存起來嗎？",
     hint_save: "帳本版可以儲存薪資紀錄、管理員工列表。",

@@ -300,6 +300,14 @@ export const calculator = {
     export_too_many: "一次最多导出 {{max}} 笔，请先取消一些选取",
     export_failed: "导出失败，请稍后再试一次。",
   },
+  access: {
+    checking: "确认权限中…",
+    check_failed: "无法确认您在这本账本的权限，请稍后再试",
+    denied_title: "这本账本的薪资功能未对您开放",
+    denied_desc:
+      "薪资计算器、薪资记录与员工列表只开放给账本的拥有者与编辑者。您在这本账本是只读成员，因此看不到这一区。需要使用的话，请向账本拥有者调整您的角色。",
+    denied_public_link: "改用公开版薪资计算器",
+  },
   account_book_entry: {
     title: "想把这次的试算保存下来吗？",
     hint_save: "账本版可以保存薪资记录、管理员工列表。",

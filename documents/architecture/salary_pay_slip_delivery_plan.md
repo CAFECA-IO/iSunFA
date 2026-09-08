@@ -8,20 +8,20 @@
 
 ## 0. 既有基礎設施（已逐一確認，不是假設）
 
-| 東西 | 位置 | 狀態 |
-|---|---|---|
-| `nodemailer` | `package.json` `^9.0.5` + `@types/nodemailer` | ✅ 已安裝 |
-| 寄信入口 | `src/services/mail.service.ts`（96 行） | ✅ `sendMail({to, subject, html, text})` |
-| SMTP 設定 | DB 系統設定（ADR 017）：`SMTP_HOST/PORT/USER/PASSWORD/FROM` | ✅ 後台可調、不需重啟 |
-| 未設定的處置 | `MailNotConfiguredError`，**明確失敗不靜靜略過** | ✅ 現成的正確行為 |
-| 既有消費者 | **只有一個**：`team_invitation.service.ts` | ⚠️ 見 §3.4 |
-| **附件支援** | `IMailMessage` 只有 `to/subject/html/text` | ❌ **要擴充** |
-| 伺服器端 PDF | `pdf_browser.ts`（共用 Chrome 實例）＋ `pdf_font_guard.ts`（CJK fail fast） | ✅ 兩個既有使用者（碳盤查、物流報告） |
-| 寄送紀錄 model | 無 | ❌ **要新增** |
-| 郵件錯誤碼 | `TW000018` 未設定 / `TW000019` 邀請信寄送失敗 | ✅ 可比照 |
-| 限流前例 | `TEAM_INVITE_SEND`（10/分、100/日） | ✅ 可比照 |
-| 現有寄送 UI | `sending_pay_slip_modal.tsx` 是 `console.log` stub | ❌ 要接真 API |
-| 「已寄出」分頁 | `my_pay_slip_page_body.tsx` 讀 `dummySentData` | ❌ 要接真資料 |
+| 東西           | 位置                                                                        | 狀態                                     |
+| -------------- | --------------------------------------------------------------------------- | ---------------------------------------- |
+| `nodemailer`   | `package.json` `^9.0.5` + `@types/nodemailer`                               | ✅ 已安裝                                |
+| 寄信入口       | `src/services/mail.service.ts`（96 行）                                     | ✅ `sendMail({to, subject, html, text})` |
+| SMTP 設定      | DB 系統設定（ADR 017）：`SMTP_HOST/PORT/USER/PASSWORD/FROM`                 | ✅ 後台可調、不需重啟                    |
+| 未設定的處置   | `MailNotConfiguredError`，**明確失敗不靜靜略過**                            | ✅ 現成的正確行為                        |
+| 既有消費者     | **只有一個**：`team_invitation.service.ts`                                  | ⚠️ 見 §3.4                               |
+| **附件支援**   | `IMailMessage` 只有 `to/subject/html/text`                                  | ❌ **要擴充**                            |
+| 伺服器端 PDF   | `pdf_browser.ts`（共用 Chrome 實例）＋ `pdf_font_guard.ts`（CJK fail fast） | ✅ 兩個既有使用者（碳盤查、物流報告）    |
+| 寄送紀錄 model | 無                                                                          | ❌ **要新增**                            |
+| 郵件錯誤碼     | `TW000018` 未設定 / `TW000019` 邀請信寄送失敗                               | ✅ 可比照                                |
+| 限流前例       | `TEAM_INVITE_SEND`（10/分、100/日）                                         | ✅ 可比照                                |
+| 現有寄送 UI    | `sending_pay_slip_modal.tsx` 是 `console.log` stub                          | ❌ 要接真 API                            |
+| 「已寄出」分頁 | `my_pay_slip_page_body.tsx` 讀 `dummySentData`                              | ❌ 要接真資料                            |
 
 **關於 `mail.service` 的 log**：它刻意只記收件者與主旨、不記內文（邀請信帶一次性 token）。
 本功能會讓這個決定更重要 —— 薪資單的內容絕不能進 log，附件更不能。
@@ -30,11 +30,11 @@
 
 ## 1. 三個已拍板的決策
 
-| # | 問題 | 決定 |
-|---|---|---|
-| **D1** | 信件形式 | **PDF 附件**。信件本文只寫「您的 X 月薪資單」，金額全在附件裡 |
+| #      | 問題     | 決定                                                                                           |
+| ------ | -------- | ---------------------------------------------------------------------------------------------- |
+| **D1** | 信件形式 | **PDF 附件**。信件本文只寫「您的 X 月薪資單」，金額全在附件裡                                  |
 | **D2** | 寄送紀錄 | **落地一張 `SalaryPaySlipDelivery`**，本次範圍內。同時解決重寄文案、已寄出分頁、稽核軌跡三件事 |
-| **D3** | 收件信箱 | **固定用員工檔上的 `email`**，寄送前顯示但不可改；沒填 email 的員工直接擋下並指向員工列表 |
+| **D3** | 收件信箱 | **固定用員工檔上的 `email`**，寄送前顯示但不可改；沒填 email 的員工直接擋下並指向員工列表      |
 
 D3 與「到離職日唯讀」是同一個原則：**這個欄位的來源是員工檔，改它要去改員工檔。**
 允許當場修改的話，薪資單可以被寄到任意地址，而改掉的那一次不會留在員工檔上 ——
@@ -235,13 +235,13 @@ export interface IMailMessage {
 
 ### 6.1 寄送入口
 
-| 位置 | 變更 |
-|---|---|
-| `salary_result_section.tsx` | 「寄出薪資單」按鈕：公開版維持隱藏，帳本版且**已儲存**才啟用（沒有 `record_id` 就無從寄起） |
-| `sending_pay_slip_modal.tsx` | 移除 `console.log` stub，接真 API。收件信箱**唯讀顯示**（D3），旁邊標「來自員工資料」 |
-| `view_pay_slip_modal.tsx` | 薪資紀錄頁的預覽彈窗加「寄送」；已寄過的顯示 `ResendingPaySlipModal` |
-| `resending_pay_slip_modal.tsx` | 「您已經將 X 月的薪資單寄送給 Y」改由最近一筆 delivery 提供，不再是寫死的文案 |
-| `my_pay_slip_page_body.tsx` | 「已寄出」分頁改讀真 API，`dummySentData` 移除 |
+| 位置                           | 變更                                                                                        |
+| ------------------------------ | ------------------------------------------------------------------------------------------- |
+| `salary_result_section.tsx`    | 「寄出薪資單」按鈕：公開版維持隱藏，帳本版且**已儲存**才啟用（沒有 `record_id` 就無從寄起） |
+| `sending_pay_slip_modal.tsx`   | 移除 `console.log` stub，接真 API。收件信箱**唯讀顯示**（D3），旁邊標「來自員工資料」       |
+| `view_pay_slip_modal.tsx`      | 薪資紀錄頁的預覽彈窗加「寄送」；已寄過的顯示 `ResendingPaySlipModal`                        |
+| `resending_pay_slip_modal.tsx` | 「您已經將 X 月的薪資單寄送給 Y」改由最近一筆 delivery 提供，不再是寫死的文案               |
+| `my_pay_slip_page_body.tsx`    | 「已寄出」分頁改讀真 API，`dummySentData` 移除                                              |
 
 ### 6.2 沒有信箱的員工
 
@@ -259,13 +259,13 @@ API 回應帶 `sentBy.name`。加一個欄位就要同時決定誰看得到它�
 
 ## 7. 錯誤碼
 
-| 代碼 | 情境 |
-|---|---|
-| `NF_SALARY_RECORD` | 既有，紀錄不存在或不屬於這本帳 |
-| `VA_SALARY_EMPLOYEE_NO_EMAIL`（`VA000084`，新增） | 員工檔沒有信箱。**400 不是 500** —— 這是資料狀態，不是故障 |
-| `TW_MAIL_NOT_CONFIGURED` | 既有 `TW000018` |
-| `TW_SALARY_PAY_SLIP_MAIL_FAILED`（`TW000034`，新增） | SMTP 或 PDF 失敗 |
-| `IS_PDF_FONT_UNAVAILABLE` | 既有（`pdf_font_guard` 丟的），伺服器缺 CJK 字型 |
+| 代碼                                                 | 情境                                                       |
+| ---------------------------------------------------- | ---------------------------------------------------------- |
+| `NF_SALARY_RECORD`                                   | 既有，紀錄不存在或不屬於這本帳                             |
+| `VA_SALARY_EMPLOYEE_NO_EMAIL`（`VA000084`，新增）    | 員工檔沒有信箱。**400 不是 500** —— 這是資料狀態，不是故障 |
+| `TW_MAIL_NOT_CONFIGURED`                             | 既有 `TW000018`                                            |
+| `TW_SALARY_PAY_SLIP_MAIL_FAILED`（`TW000034`，新增） | SMTP 或 PDF 失敗                                           |
+| `IS_PDF_FONT_UNAVAILABLE`                            | 既有（`pdf_font_guard` 丟的），伺服器缺 CJK 字型           |
 
 > **實作修正（20260904）**：上表有三處與計畫原文不同。
 >
@@ -284,14 +284,14 @@ API 回應帶 `sentBy.name`。加一個欄位就要同時決定誰看得到它�
 
 ## 8. 測試計畫
 
-| 測試檔 | 型別 | 釘住什麼 |
-|---|---|---|
-| `salary_pay_slip_html.test.ts` | 純函式 | HTML 產生：金額千分位、期間、**姓名的 HTML 逃逸**（員工姓名由使用者輸入，直接插進 HTML 等於把信件版面交給對方）、免稅與應稅分項齊全 |
-| `salary_delivery_service.test.ts` | service（手寫假 repo） | 沒有 email 回 422 而非 500；PDF 失敗與 SMTP 失敗都**落地 FAILED 再丟錯**；`MailNotConfiguredError` **不**落地；`recipientEmail` 存的是當下的值不是 join |
-| `salary_route_wiring.test.ts` | route（擴充） | 第九支端點：401、`SalaryAccess.WRITE`、限流 429 成對。`ENDPOINTS` 表與目錄走訪對拍，忘了登記就紅 |
-| `salary_delivery_repo.e2e.test.ts` | e2e（真 DB） | 租戶過濾、失敗列真的落地、`recipientEmail` 快照在員工改信箱之後**不跟著變** |
-| `mail_attachments.test.ts` | 純函式 | `sendMail` 把 `attachments` 原樣交給 transporter；**沒有附件時不送出該欄位**（nodemailer 對空陣列與 undefined 的處理不同）；log 不含附件檔名 |
-| `salary_pdf_font_guard.test.ts` | 掃描 | `salary_pay_slip_pdf.service.ts` 真的呼叫了 `assertCjkRenderable` —— §4.2 那個缺陷完全靜默，只有掃描守得住 |
+| 測試檔                             | 型別                   | 釘住什麼                                                                                                                                                |
+| ---------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `salary_pay_slip_html.test.ts`     | 純函式                 | HTML 產生：金額千分位、期間、**姓名的 HTML 逃逸**（員工姓名由使用者輸入，直接插進 HTML 等於把信件版面交給對方）、免稅與應稅分項齊全                     |
+| `salary_delivery_service.test.ts`  | service（手寫假 repo） | 沒有 email 回 422 而非 500；PDF 失敗與 SMTP 失敗都**落地 FAILED 再丟錯**；`MailNotConfiguredError` **不**落地；`recipientEmail` 存的是當下的值不是 join |
+| `salary_route_wiring.test.ts`      | route（擴充）          | 第九支端點：401、`SalaryAccess.WRITE`、限流 429 成對。`ENDPOINTS` 表與目錄走訪對拍，忘了登記就紅                                                        |
+| `salary_delivery_repo.e2e.test.ts` | e2e（真 DB）           | 租戶過濾、失敗列真的落地、`recipientEmail` 快照在員工改信箱之後**不跟著變**                                                                             |
+| `mail_attachments.test.ts`         | 純函式                 | `sendMail` 把 `attachments` 原樣交給 transporter；**沒有附件時不送出該欄位**（nodemailer 對空陣列與 undefined 的處理不同）；log 不含附件檔名            |
+| `salary_pdf_font_guard.test.ts`    | 掃描                   | `salary_pay_slip_pdf.service.ts` 真的呼叫了 `assertCjkRenderable` —— §4.2 那個缺陷完全靜默，只有掃描守得住                                              |
 
 **必跑的 mutation**：
 
@@ -304,11 +304,11 @@ API 回應帶 `sentBy.name`。加一個欄位就要同時決定誰看得到它�
 
 ## 9. PR 切法
 
-| PR | 內容 | 可獨立 merge |
-|---|---|---|
-| **A：能力層** | `mail.service` 支援附件 + `pay_slip_html.ts` + `salary_pay_slip_pdf.service.ts` + 其測試 | ✅ 沒有入口，行為零變化 |
-| **B：資料層與端點** | `SalaryPaySlipDelivery` schema + repo + service + 第九支端點 + 錯誤碼 + e2e | 依賴 A |
-| **C：前端** | 四個彈窗接真 API、已寄出分頁接真資料、`dummySentData` 移除 | 依賴 B |
+| PR                  | 內容                                                                                     | 可獨立 merge            |
+| ------------------- | ---------------------------------------------------------------------------------------- | ----------------------- |
+| **A：能力層**       | `mail.service` 支援附件 + `pay_slip_html.ts` + `salary_pay_slip_pdf.service.ts` + 其測試 | ✅ 沒有入口，行為零變化 |
+| **B：資料層與端點** | `SalaryPaySlipDelivery` schema + repo + service + 第九支端點 + 錯誤碼 + e2e              | 依賴 A                  |
+| **C：前端**         | 四個彈窗接真 API、已寄出分頁接真資料、`dummySentData` 移除                               | 依賴 B                  |
 
 A 可以先驗證「這台伺服器產得出中文 PDF」——**那是整個功能最大的環境風險**，
 而它與資料模型無關，值得先單獨落地確認。
@@ -342,6 +342,111 @@ A 可以先驗證「這台伺服器產得出中文 PDF」——**那是整個功
 6. **`dummyReceivedData`（已收到分頁）本次不動。** 員工不是本站使用者，
    「收到的薪資單」要成立需要先有員工登入的概念 —— 那是比本功能大得多的題目。
    本次只讓「已寄出」那一半接上真資料，並在文件裡註明另一半仍是假資料。
+
+7. **前端的「隱藏金額」是視覺遮擋，不是權限（20260908 記錄）。**
+
+   薪資單上有一顆 `Eye` / `EyeOff` 可以把金額模糊掉
+   （`pay_slip.tsx` 的 `data-values-hidden` ＋ `globals.css` 的一條規則）。
+   實測時有人問：開發者工具打得開，這算不算風險？
+
+   **就這個用途而言不算。** 打得開 DevTools 的那個人，正是伺服器已經授權
+   看這些數字的人 —— 資料之所以在他的瀏覽器裡，是因為
+   `assertSalaryAccountBookAccess(..., SalaryAccess.READ)` 放行了。
+   那顆按鈕要擋的是**站在他後面那個人**，而那個人沒有他的鍵盤。
+
+   更根本的一句話：**送到瀏覽器的資料，就不可能對這個瀏覽器保密。**
+   換成把數字改寫成「•••」、或乾脆不 render，DOM 是乾淨了，
+   但 Network 分頁裡那份 JSON 原封不動。所以「blur 會不會被破解」
+   是錯的問法 —— 任何前端遮罩都會，差別只在多按幾下，而多按幾下不是安全性。
+   唯一叫保密的是「伺服器根本不送」，那是授權，不是 UI。
+
+   **真正要防的是這個機制日後被當成存取控制用。** 具體的長相是：
+
+   > 「帳本成員只能看自己的薪資」→ 把所有人的列都 render 出來、
+   > 別人的用 `data-values-hidden` 遮掉
+
+   那一刻它就從遮擋變成假的權限控制，而且**畫面行為完全正確**，
+   不會有任何測試轉紅 —— 直到有人打開 DevTools。
+
+   **規則：`data-values-hidden` 只得用於「同一個有權限的人，暫時不想被旁人看到」。
+   任何「某些角色不該看到某些數字」的需求，一律在伺服器解決（回應就不帶那些欄位），
+   不得用前端遮罩實作。** 這一條與本節第 1 點的資料分級是同一個決策的兩面。
+
+8. **帳本版薪資計算機收斂為 `OWNER + EDITOR`，`VIEWER` 一律擋下（20260908 產品決策）。**
+
+   十三支端點的讀與寫都開給 `OWNER` 與 `EDITOR`，`VIEWER` 全部 403。
+   改動只發生在 `SALARY_ACCESS_ROLES` 一個常數 —— 20260901 建立那張表時
+   寫下的「屆時改的是下面這一行，不是八支 route」在這裡兌現。
+
+   **相對 20260901 真正變動的只有一件事：`VIEWER` 不再讀得到。**
+   當時 `READ` 開給三個角色，也就是說任何被邀請進團隊當 `VIEWER` 的帳號
+   （外部顧問、實習生、暫時協助對帳的人）看得到全公司每一位員工的本薪、
+   實發金額與投保級距。寫入那一半 20260901 已經收掉，讀取這一半是現在收的。
+
+   **考慮過但沒有採用：收到 `OWNER` 一人。** 理由是這個模組的使用者本來就
+   不只有老闆 —— 它刻意不用 `resolveEmployee`、服務的是帳本的團隊成員
+   （老闆、會計、記帳士），而被邀請進來記帳的會計通常是 `EDITOR`。
+   收到一人會把模組原本要服務的人擋在門外，換來的安全性卻有限：
+   `EDITOR` 本來就動得了這本帳的傳票與憑證，薪資不是它唯一碰得到的敏感資料。
+   真正該擋的是「唯讀成員」這個類別。
+
+   **附帶的護欄變更**：`salary_access_guard.test.ts` 原本用「同一個角色，
+   只換 `access` 就換答案」來證明 `access` 真的被傳下去。兩張表內容相同之後
+   （今天都是 `[OWNER, EDITOR]`），沒有任何角色分得開兩個層級，
+   那條測試就算 `access` 被寫死也會綠 —— 缺陷還在，症狀消失了。
+   已改成直接斷言「交給角色表的是傳進來的那個 `access`」，
+   並驗證原本記載的 mutation（把層級寫死成 `READ`）仍然轉紅。
+   **只要兩張表內容一致，這道護欄就不能退回行為式的寫法。**
+
+9. **`VIEWER` 在前端被擋在整區之外，而不是「能看、按鈕停用」（20260908）。**
+
+   §10.8 收掉伺服器那一半之後，`VIEWER` 仍然點得進帳本版薪資計算機 ——
+   三個頁面各自發請求、各自吃到 403，畫面顯示
+   「員工列表載入失敗，請稍後再試」。**那句話是錯的**：沒有壞掉，是他不該進來。
+   讓人以為系統故障，會換來一張查不出原因的客服單。
+
+   **考慮過但沒有採用：「員工列表可以瀏覽，只把操作鈕停用」。**
+   那在多數列表頁是好設計，但**這一頁不是通訊錄，是一張薪資表** ——
+   `ISalaryCalculatorEmployee` 繼承 `ISalaryEmployeeProfile`，
+   帶著 `baseSalary`、`mealAllowance`、加給與投保級距，
+   而 `employee_list.tsx` 直接把本薪 render 在列上。
+   「能瀏覽」等於把 §10.8 要收掉的那批數字換一頁給他看。
+   要做到「看得到名單、看不到金額」，就得在伺服器回一個不帶金額的 DTO
+   （前端藏欄位是本節第 7 點明文禁止的假權限），成本遠大於收益。
+
+   而這一區的四個頁面沒有一樣是 `VIEWER` 用得到的：計算機、薪資紀錄、
+   員工列表都要 `SalaryAccess`；「我的薪資單」的「已寄出」是帳本的寄件備份，
+   「已收到」仍是 `dummyReceivedData`（第 6 點）。**沒有東西可用的時候，
+   正確的動作是不要讓他進來。**
+
+   **實作**：`SalaryAccessGate` 掛在 `salary_calculator/layout.tsx`，
+   理由與 `CalculatorProvider` 提到那一層相同 —— 該層不隨頁面切換重新掛載，
+   所以「我在這本帳是什麼角色」只問一次、四個頁面共用；掛在各頁會問四次，
+   而且**漏掉其中一頁不會有任何症狀**，直到有人直接輸入那頁的網址。
+
+   角色取自 `GET /user/account_book/:id` 回應裡的 `userRole`
+   （`account_book.service.ts` 從 `TeamMember.role` 帶出來的）。
+   它早就在那裡、帳本選擇頁已經在顯示它，所以這次沒有新增欄位或端點。
+   判斷本身呼叫 `isSalaryAccessAllowed`，**前端不另列一份角色清單** ——
+   兩份清單遲早分岔，而分岔的症狀是「畫面讓你進去、伺服器擋你」。
+
+   **一律 fail closed**：只有 `allowed` 這一個狀態 render `children`。
+   載入中、問不到帳本、角色缺漏或不在表上，全部不放行，差別只有畫面上那句話。
+   「抓不到帳本」刻意走 `error` 而非 `denied` —— 說「您的角色無權檢視」
+   是在斷言一件我們不知道的事：那種情況下我們連他是不是團隊成員都沒問到。
+
+   被擋下來的畫面留一條通往公開版 `/salary_calculator` 的路。
+   公開版不需要任何角色、功能一樣完整，只是不碰這本帳的資料 ——
+   被擋下來的人想做的事，那裡多半做得到。死路會變成客服單。
+
+   **這一層擋的是誤解，不是存取。** 安全邊界仍然只有伺服器那十三支
+   `assertSalaryAccountBookAccess`；`salary_access_gate.test.ts` 即使全紅，
+   也沒有任何資料外洩。
+
+   **仍未做**：帳本選擇頁（`/user/account_book?uri_query=/salary_calculator`）
+   仍然把每一本帳都列出來，包含使用者只是 `VIEWER` 的那些 —— 選下去才會撞到這道閘。
+   那一頁已經有 `ab.userRole` 可用，補起來不難，但它是跨模組的共用頁面，
+   留給下一次。
 
 ---
 
@@ -389,14 +494,14 @@ A 可以先驗證「這台伺服器產得出中文 PDF」——**那是整個功
 
 ### 11.4 §10 各項風險的現況
 
-| | 現況 |
-|---|---|
-| 10.1 薪資資料分級決策 | **仍未拍板。** ADR 018 未涵蓋薪資，而這是薪資資料第一次離開組織邊界。明文 PDF 經明文 SMTP 寄出目前仍是一個尚未被授權的動作 —— 建議上線與那個決策綁在一起 |
-| 10.2 收件人無法驗證 | 已做計畫所說的緩解：寄送前的確認彈窗用等寬字、獨立一行放大顯示完整信箱。**擋不掉員工檔上本來就打錯** |
-| 10.3 附件不加密 | 本次未做，維持登記 |
-| 10.4 同步寄送的時間成本 | 開發機實測可完成（20260904）。**但 serverless 逾時仍未驗證** —— dev server 沒有那個限制，這一項要到部署環境才問得出答案 |
-| 10.5 批次寄送 | 不在範圍，未做 |
-| 10.6 已收到分頁 | 維持假資料，`pay_slip.ts` 與頁面註解都寫明了，並有測試釘住「它還是假的」 |
+|                         | 現況                                                                                                                                                     |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 10.1 薪資資料分級決策   | **仍未拍板。** ADR 018 未涵蓋薪資，而這是薪資資料第一次離開組織邊界。明文 PDF 經明文 SMTP 寄出目前仍是一個尚未被授權的動作 —— 建議上線與那個決策綁在一起 |
+| 10.2 收件人無法驗證     | 已做計畫所說的緩解：寄送前的確認彈窗用等寬字、獨立一行放大顯示完整信箱。**擋不掉員工檔上本來就打錯**                                                     |
+| 10.3 附件不加密         | 本次未做，維持登記                                                                                                                                       |
+| 10.4 同步寄送的時間成本 | 開發機實測可完成（20260904）。**但 serverless 逾時仍未驗證** —— dev server 沒有那個限制，這一項要到部署環境才問得出答案                                  |
+| 10.5 批次寄送           | 不在範圍，未做                                                                                                                                           |
+| 10.6 已收到分頁         | 維持假資料，`pay_slip.ts` 與頁面註解都寫明了，並有測試釘住「它還是假的」                                                                                 |
 
 ### 11.5 端到端實測（20260904）
 

@@ -319,6 +319,15 @@ export const calculator = {
     export_too_many: "At most {{max}} records per export — deselect some first",
     export_failed: "Export failed. Please try again in a moment.",
   },
+  access: {
+    checking: "Checking your permissions…",
+    check_failed:
+      "We could not check your role in this account book. Please try again later.",
+    denied_title: "Payroll is not available to you in this account book",
+    denied_desc:
+      "The calculator, payroll records and employee list are open to the account book's owners and editors. Your role here is view-only, so this section is hidden. Ask an owner to change your role if you need access.",
+    denied_public_link: "Use the public salary calculator instead",
+  },
   account_book_entry: {
     title: "Want to keep this calculation?",
     hint_save:
