@@ -105,7 +105,11 @@ import {
   composeReportDraftPaperText,
   gateFrameworkClaims,
 } from "@/lib/utils/carbon_framework_claim_gate";
-import { buildLedgerFactBundle } from "@/lib/carbon_ledger_query";
+import {
+  buildLedgerFactBundle,
+  LEDGER_FACT_BUNDLE_MAX,
+} from "@/lib/carbon_ledger_query";
+import { buildReportFacts } from "@/lib/carbon_report_facts";
 import {
   loadPendingImport as fetchPendingImportRecord,
   savePendingImport as putPendingImportRecord,
@@ -6588,7 +6592,34 @@ export const useCarbonChat = () => {
          * 帳本空時為空陣列 —— persona 對「無事實」另有明確拒答指令,這裡不補、不造。
          */
         // Info: (20260904 - Emily) #6745:三條會生成文字的路(對話、草稿、修訂)共用同一支組包
-        const ledgerFacts = buildChannelLedgerFacts(chatChannel);
+        const channelLedgerFacts = buildChannelLedgerFacts(chatChannel);
+        /**
+         * Info: (20260908 - Emily) #6778 後半:報告本體的數值主張也隨行注入 ——
+         * **只在對話這條路**,不進 `/draft` 的兩條。
+         *
+         * 要修的失敗:這個請求原本只送 `history + currentStep + ledgerFacts`,
+         * 報告本體不在裡面。使用者問「報告第 3.2 節寫的類別三是多少」時,模型手上
+         * 沒有那個數字 —— 守規矩就拒答,不守規矩就從帳本挑一個看起來像的。
+         * 匯入的報告尤其如此:那些數字是原文照錄的,帳本可能沒有對應的格。
+         *
+         * **為什麼草稿與修訂那兩條不帶**:那兩條是在**生成**報告的文字,而守門的
+         * 合法集合會跟著事實包一起放寬。帶了之後,3.1 節裡一個 AI 編出來的數字
+         * 就成了 3.2 節的合法引用來源 —— 報告替自己的下一句背書,而守門看不出來。
+         * 問答這條路不生成報告內容,沒有這個回饋圈。
+         *
+         * 預算給帳本事實包**之外**的餘額:帳本那半是排放量的唯一合法來源,
+         * 不能被報告原文擠掉。
+         */
+        const reportFacts = buildReportFacts({
+          paragraphs: activeSession.reportData?.paragraphs,
+          rawMarkdown: activeSession.reportData?.rawMarkdown,
+          ledgerFacts: channelLedgerFacts,
+          budget: Math.max(
+            LEDGER_FACT_BUNDLE_MAX - channelLedgerFacts.length,
+            0,
+          ),
+        });
+        const ledgerFacts = [...channelLedgerFacts, ...reportFacts];
         const sendChatRequest = () =>
           request<{
             success: boolean;
