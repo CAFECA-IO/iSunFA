@@ -17,6 +17,7 @@ import {
   buildChartAnchorStart,
   CarbonChartTemplateEnum,
 } from "@/constants/carbon_report_charts";
+import { CARBON_REPORT_IDENTITY_FIELDS } from "@/lib/utils/carbon_report_identity";
 
 const CHART_BLOCK = [
   buildChartAnchorStart(CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY),
@@ -45,6 +46,63 @@ const buildReportData = (chartContent: string) => ({
     },
   ],
   rawMarkdown: `### 3.6 排放量結果分析\n\n${chartContent}\n`,
+});
+
+/**
+ * Info: (20260908 - Emily) 封面的中繼資料也要往返(#6725 的同形第三次)。
+ *
+ * `reportName` 與 `identity`(印在 PDF 第一頁:盤查年度、製作單位、查證單位、更新日期)
+ * 在型別上從 20260812 / 20260814 就有,而 schema 沒有 —— 存得進去、載入被剝掉、
+ * 下一次存檔把剝掉的版本寫回雲端。使用者的症狀是「四列全變未填寫、第一頁沒有標題」,
+ * 而他只會覺得「我不是填過了嗎」。
+ *
+ * 判準用**往返等價**而不是欄位清單比對(#6725 的教訓):
+ * 清單比對會在下一個人加第五個識別欄位時繼續綠著。
+ */
+describe("封面中繼資料的往返(reportName / identity)", () => {
+  const identity = Object.fromEntries(
+    CARBON_REPORT_IDENTITY_FIELDS.map((field) => [field, `${field}-值`]),
+  );
+  const original = {
+    ...buildReportData("內容"),
+    reportName: "高興昌 2024 年度溫室氣體盤查報告",
+    identity,
+  };
+
+  it("存進去讀回來,兩個欄位一字不差", () => {
+    const restored = CarbonReportDataSchema.safeParse(
+      JSON.parse(JSON.stringify(original)),
+    );
+    expect(restored.success).toBe(true);
+    if (!restored.success) return;
+    expect(restored.data.reportName).toBe(original.reportName);
+    expect(restored.data.identity).toEqual(identity);
+  });
+
+  it("識別欄位的鍵由常數推導 —— 加了第五個欄位這條會跟著要求它", () => {
+    /*
+     * Info: (20260908 - Emily) schema 手寫第二份鍵清單就會與列印順序那張常數分岔,
+     * 而分岔的症狀是「印得出來但存不下來」。這一條釘住兩邊同源。
+     */
+    const restored = CarbonReportDataSchema.safeParse(
+      JSON.parse(JSON.stringify(original)),
+    );
+    if (!restored.success) throw new Error("should parse");
+    expect(Object.keys(restored.data.identity ?? {}).sort()).toEqual(
+      [...CARBON_REPORT_IDENTITY_FIELDS].sort(),
+    );
+  });
+
+  it("沒填的欄位不必存在,舊草稿不得被整份丟棄", () => {
+    const legacy = buildReportData("內容");
+    const restored = CarbonReportDataSchema.safeParse(
+      JSON.parse(JSON.stringify(legacy)),
+    );
+    expect(restored.success).toBe(true);
+    if (!restored.success) return;
+    expect(restored.data.reportName).toBeUndefined();
+    expect(restored.data.identity).toBeUndefined();
+  });
 });
 
 describe("carbon report draft persistence", () => {
