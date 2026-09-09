@@ -14,8 +14,13 @@ import {
   buildLedgerFactBundle,
   LedgerRefusalReasonEnum,
   LEDGER_FACT_BUNDLE_MAX,
+  LEDGER_FACT_SITES_MAX,
 } from "@/lib/carbon_ledger_query";
-import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
+import {
+  GhgProtocolCategory,
+  Iso14064Category,
+  GhgCategoryDetails,
+} from "@/constants/esg";
 import { MoneyUtil } from "@/lib/utils/money";
 import {
   collectAllowedNumbers,
@@ -276,18 +281,23 @@ describe("querySiteSubtotals", () => {
     ]);
     const result = querySiteSubtotals(ledger);
     if (!result.ok) throw new Error("should be ok");
+    /*
+     * Info: (20260909 - Emily) 排序由「插入順序」改成「排放量由大到小」(#6783 review 低-2):
+     * 廠址小計是 core 裡唯一沒有上界的一組,要裁就得先知道哪幾個最大。
+     * 所以台北分公司(7)排在總公司(0.3)之前。
+     */
     expect(result.facts).toEqual([
-      {
-        label: "(1) 總公司 排放小計",
-        value: "0.3 kgCO2e",
-        source: "原文照錄 表3.8 分錄加總",
-        emissionsKg: ["0.3"],
-      },
       {
         label: "(2) 台北分公司 排放小計",
         value: "7 kgCO2e",
         source: "原文照錄 表3.8 分錄加總",
         emissionsKg: ["7"],
+      },
+      {
+        label: "(1) 總公司 排放小計",
+        value: "0.3 kgCO2e",
+        source: "原文照錄 表3.8 分錄加總",
+        emissionsKg: ["0.3"],
       },
     ]);
   });
@@ -319,6 +329,90 @@ describe("querySiteSubtotals", () => {
         expect(fact.source).toContain("表3.8");
         expect(fact.source).not.toContain("表表");
       });
+    });
+  });
+
+  describe("廠址數量的上界(#6783 review 低-2)", () => {
+    const manySites = (count: number) =>
+      ledgerOf(
+        Array.from({ length: count }, (_, index) =>
+          importedEntry({
+            activityKey: `k${index}`,
+            // Info: (20260909 - Emily) 遞增,所以「前 12 大」是可預測的那 12 個
+            co2eKg: String(index + 1),
+            importedOrigin: {
+              site: `(${index}) 廠址${index}`,
+              isoCategory: Iso14064Category.CATEGORY_1,
+              subCategory: "1.1 柴油",
+              tableNo: "3.8",
+            },
+          }),
+        ),
+        {
+          totalCo2eKg: MoneyUtil.sum(
+            Array.from({ length: count }, (_, index) => String(index + 1)),
+          ),
+        },
+      );
+
+    it(`不超過 ${LEDGER_FACT_SITES_MAX} 個廠址時全部列出,沒有「另有」那一筆`, () => {
+      const result = querySiteSubtotals(manySites(LEDGER_FACT_SITES_MAX));
+      if (!result.ok) throw new Error("should be ok");
+      expect(result.facts).toHaveLength(LEDGER_FACT_SITES_MAX);
+      expect(result.facts.some((fact) => fact.label.startsWith("另有"))).toBe(
+        false,
+      );
+    });
+
+    it("超過時只列前 N 大,其餘併成一筆,總筆數固定", () => {
+      const result = querySiteSubtotals(manySites(40));
+      if (!result.ok) throw new Error("should be ok");
+      expect(result.facts).toHaveLength(LEDGER_FACT_SITES_MAX + 1);
+      // Info: (20260909 - Emily) 遞增排放 → 最大的是最後一個廠址
+      expect(result.facts[0].label).toBe("(39) 廠址39 排放小計");
+      expect(result.facts[LEDGER_FACT_SITES_MAX].label).toBe(
+        `另有 ${40 - LEDGER_FACT_SITES_MAX} 個廠址 排放小計`,
+      );
+    });
+
+    it("列出的 + 另有的 = 全部廠址小計之和(省略不提會讓查核者加不回總量)", () => {
+      const ledger = manySites(40);
+      const result = querySiteSubtotals(ledger);
+      if (!result.ok) throw new Error("should be ok");
+      const sum = result.facts.reduce(
+        (acc, fact) => MoneyUtil.add(acc, fact.emissionsKg![0]),
+        "0",
+      );
+      expect(sum).toBe(ledger.totalCo2eKg);
+    });
+
+    it("同額廠址以名稱決勝(決定性:同一份帳本兩次問答不得換順序)", () => {
+      const tie = ledgerOf(
+        ["丙廠", "甲廠", "乙廠"].map((site, index) =>
+          importedEntry({
+            activityKey: `k${index}`,
+            co2eKg: "5",
+            importedOrigin: {
+              site,
+              isoCategory: Iso14064Category.CATEGORY_1,
+              subCategory: "1.1 柴油",
+              tableNo: "3.8",
+            },
+          }),
+        ),
+        { totalCo2eKg: "15" },
+      );
+      const first = querySiteSubtotals(tie);
+      const second = querySiteSubtotals(tie);
+      if (!first.ok || !second.ok) throw new Error("should be ok");
+      expect(first.facts.map((fact) => fact.label)).toEqual(
+        second.facts.map((fact) => fact.label),
+      );
+      expect(first.facts.map((fact) => fact.label)).toEqual([
+        "丙廠 排放小計",
+        "乙廠 排放小計",
+        "甲廠 排放小計",
+      ]);
     });
   });
 
@@ -395,23 +489,64 @@ describe("queryIsoCategorySubtotals(#6778)", () => {
     expect(isoThree?.[1]).not.toBe(scopeThree?.[1]);
   });
 
-  it("各類別小計 + 未標註 = 帳本總量(加法與 summarizeLedgerEntries 一致的不變式)", () => {
+  it("各類別小計 + 未標註 = 帳本總量,而且是 MoneyUtil 的加法不是浮點的(#6783 低-1)", () => {
     /**
      * Info: (20260907 - Emily) 這一條是「在查詢層加總」這個決定的代價擔保。
      * 類別小計不是既存欄位(見該函式的註解),所以這裡確實做了加法;
      * 只要它與寫入 totalCo2eKg 的那份實作不一致,這一條就紅。
+     *
+     * Info: (20260909 - Emily) 夾具改成**浮點會裂**的真實量級(#6783 review 低-1)。
+     *
+     * 原本餵的是 `3` / `4` / `1.5` —— 全都是二進位可精確表示的值,於是把
+     * `MoneyUtil.add` 換成原生浮點加法,這一條(以及全部 55 條)照樣全綠,
+     * 而函式註解卻寫著「加法只要與 summarizeLedgerEntries 不一致,那條就會紅」。
+     * 檔頭「數字縮小以便肉眼驗算」的代價,正好是唯一驗不出精度缺陷的那一組數字(§1.4)。
+     *
+     * 現在用表 38 的真實量級,而且**同一個類別放兩筆** —— 單筆與 `"0"` 相加不會裂,
+     * 裂的是累加:
+     *
+     *     647726.8 + 330645.9 → 浮點 978372.7000000001 / 正確 978372.7
+     *     408705.1 + 418371.3 → 浮點 827076.3999999999 / 正確 827076.4
+     *
+     * 兩個累加器(類別的 Map、未標註那桶的 reduce)各拿一組,任一支退回浮點都會紅。
      */
-    const voucherEntry = importedEntry({
-      activityKey: "voucher",
-      co2eKg: "1.5",
-      provenance: undefined,
-      importedOrigin: undefined,
-    });
-    const ledger = ledgerOf([transportEntry, productEntry, voucherEntry], {
-      totalCo2eKg: "8.5",
-    });
+    const inCategory = (key: string, co2eKg: string) =>
+      importedEntry({
+        activityKey: key,
+        co2eKg,
+        scopeCategory: GhgProtocolCategory.SCOPE_3_CAT_4,
+        importedOrigin: {
+          site: "(1) 總公司",
+          isoCategory: Iso14064Category.CATEGORY_3,
+          subCategory: "3.1 上游運輸",
+          tableNo: "3.8",
+        },
+      });
+    const voucher = (key: string, co2eKg: string) =>
+      importedEntry({
+        activityKey: key,
+        co2eKg,
+        provenance: undefined,
+        importedOrigin: undefined,
+      });
+    const ledger = ledgerOf(
+      [
+        inCategory("t1", "647726.8"),
+        inCategory("t2", "330645.9"),
+        voucher("v1", "408705.1"),
+        voucher("v2", "418371.3"),
+      ],
+      { totalCo2eKg: "1805449.1" },
+    );
     const result = queryIsoCategorySubtotals(ledger);
     if (!result.ok) throw new Error("should be ok");
+    // Info: (20260909 - Emily) 印出去的值本身就要對 —— 它同時是守門的合法數字
+    expect(result.facts[0].value).toBe("978372.7 kgCO2e");
+    expect(result.facts[0].emissionsKg).toEqual(["978372.7"]);
+    const uncategorized = result.facts.find((fact) =>
+      fact.label.startsWith("未標註 ISO 類別"),
+    );
+    expect(uncategorized?.emissionsKg).toEqual(["827076.4"]);
     const sum = result.facts.reduce(
       (acc, fact) => MoneyUtil.add(acc, fact.emissionsKg![0]),
       "0",
@@ -694,6 +829,126 @@ describe("buildLedgerFactBundle(標準事實包)", () => {
       fact.label.startsWith("待補項"),
     ).length;
     expect(overflow.value).toBe(`另有 ${120 - kept} 條異常事實未列出`);
+  });
+
+  it("最壞情況下整包仍不超過上限,而且疑點還留得住位置(#6783 review 低-2)", () => {
+    /**
+     * Info: (20260909 - Emily) 這一條守的是「`core` 有上界」這件事本身。
+     *
+     * 裁剪(`budget`)只裁 `anomalies`,所以 `core` 一旦沒有上界,廠址一多就會
+     * 先把疑點全部擠掉,再往上整包超過 `LEDGER_FACT_BUNDLE_MAX` —— 而 validator 的
+     * `ledgerFacts` 是 `.max(80)`,**整個聊天請求被 schema 打回**,那間帳本的
+     * 每一則訊息都失敗。修正前實測:80 個廠址 → 90 筆。
+     *
+     * 這裡刻意把每一個維度都推到最大:17 個 GHG 類別鍵(範疇全滿)、六個 ISO 類別
+     * 加未標註、80 個廠址、一大堆待補項。
+     */
+    const sites = 80;
+    const isoCategories = [
+      Iso14064Category.CATEGORY_1,
+      Iso14064Category.CATEGORY_2,
+      Iso14064Category.CATEGORY_3,
+      Iso14064Category.CATEGORY_4,
+      Iso14064Category.CATEGORY_5,
+      Iso14064Category.CATEGORY_6,
+    ];
+    const entries = [
+      ...Array.from({ length: sites }, (_, index) =>
+        importedEntry({
+          activityKey: `k${index}`,
+          co2eKg: String(index + 1),
+          importedOrigin: {
+            site: `(${index}) 廠址${index}`,
+            isoCategory: isoCategories[index % isoCategories.length],
+            subCategory: "1.1 柴油",
+            tableNo: "3.8",
+          },
+        }),
+      ),
+      // Info: (20260909 - Emily) 未標註那一桶也要有東西,否則 ISO 只有 6 筆
+      importedEntry({
+        activityKey: "voucher",
+        co2eKg: "1",
+        provenance: undefined,
+        importedOrigin: undefined,
+      }),
+    ];
+    const allScopeKeys = Object.keys(GhgCategoryDetails);
+    const ledger = ledgerOf(entries, {
+      scopeSubtotals: Object.fromEntries(
+        allScopeKeys.map((key) => [key, "1"]),
+      ) as IComputedLedger["scopeSubtotals"],
+      pending: Array.from({ length: 200 }, (_, i) => ({
+        activityKey: `p${i}`,
+        sourceName: `來源${i}`,
+        reason: "無對應係數",
+      })),
+    });
+    const bundle = buildLedgerFactBundle(ledger, undefined, {
+      2024: ledger,
+    });
+    expect(bundle.length).toBeLessThanOrEqual(LEDGER_FACT_BUNDLE_MAX);
+    /*
+     * Info: (20260909 - Emily) 上界成立不夠 —— 還要證明疑點沒有被 core 擠光,
+     * 否則「不超過上限」可以靠把疑點全部丟掉來達成(那正是修正前的行為)。
+     */
+    const anomalies = bundle.filter((fact) => fact.label.startsWith("待補項"));
+    expect(anomalies.length).toBeGreaterThanOrEqual(20);
+    expect(bundle[bundle.length - 1].label).toBe("異常事實逾上限");
+  });
+});
+
+describe("維度拆不出來時要說出來,而不是沉默(#6783 review 低-3)", () => {
+  /**
+   * Info: (20260909 - Emily) 拒答經 `toContextFacts` 一律不產生事實,於是
+   * 「這本帳沒有這個維度」在清單裡是沉默的 —— 而沉默無法區分「查過」與「沒查」。
+   * 對 ISO 類別特別危險:模型可能拿「範疇三合計」充當「類別三」,而那個數字是
+   * 合法的、守門看不出錯(守門裁決數字,不裁決標籤)。
+   */
+  const voucherOnly = () =>
+    ledgerOf(
+      [
+        importedEntry({
+          activityKey: "voucher",
+          co2eKg: "5",
+          provenance: undefined,
+          importedOrigin: undefined,
+        }),
+      ],
+      { totalCo2eKg: "5" },
+    );
+
+  it("帳本只有憑證分錄 → 事實包裡有「ISO 14064-1 類別拆分:無法進行」", () => {
+    const bundle = buildLedgerFactBundle(voucherOnly());
+    const fact = bundle.find((item) =>
+      item.label.startsWith("ISO 14064-1 類別拆分"),
+    );
+    expect(fact).toBeDefined();
+    expect(fact!.value).toContain("沒有帶 ISO 14064 類別的分錄");
+    // Info: (20260909 - Emily) 它不是排放數字,不得成為守門的合法來源
+    expect(fact!.emissionsKg).toBeUndefined();
+  });
+
+  it("廠址維度缺席也要說(同一個缺口的另一半)", () => {
+    const bundle = buildLedgerFactBundle(voucherOnly());
+    const fact = bundle.find((item) => item.label.startsWith("廠址拆分"));
+    expect(fact).toBeDefined();
+    expect(fact!.value).toContain("廠址");
+    expect(fact!.emissionsKg).toBeUndefined();
+  });
+
+  it("維度真的有的時候不送那一筆(有小計就不該再說「無法進行」)", () => {
+    const bundle = buildLedgerFactBundle(
+      ledgerOf([importedEntry({ activityKey: "a", co2eKg: "1" })]),
+    );
+    expect(bundle.some((item) => item.label.includes("拆分:無法進行"))).toBe(
+      false,
+    );
+  });
+
+  it("帳本整本是空的時候不送:那時每個查詢都拒答,persona 走無事實分支", () => {
+    expect(buildLedgerFactBundle(undefined)).toEqual([]);
+    expect(buildLedgerFactBundle(ledgerOf([]))).toEqual([]);
   });
 });
 
