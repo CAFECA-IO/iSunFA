@@ -20,7 +20,7 @@ import {
 import { CARBON_REPORT_IDENTITY_FIELDS } from "@/lib/utils/carbon_report_identity";
 import {
   buildParagraphFingerprint,
-  PARAGRAPH_FINGERPRINT_MAX_FACTS,
+  PARAGRAPH_FINGERPRINT_MAX_CLAIMS,
 } from "@/lib/carbon_report_freshness";
 
 const CHART_BLOCK = [
@@ -152,9 +152,7 @@ describe("段落帳本指紋的往返(ledgerFingerprint)", () => {
     expect(restored.data.paragraphs?.[0].ledgerFingerprint).toEqual(
       fingerprint,
     );
-    expect(fingerprint?.facts).toEqual([
-      { label: "全公司總排放量", value: "227898.6 kgCO2e" },
-    ]);
+    expect(fingerprint?.claims).toEqual([{ value: "227.8986", unit: "公噸" }]);
   });
 
   it("沒有指紋的舊段落不得被整份丟棄(那些節是「不知道」而不是壞資料)", () => {
@@ -167,11 +165,10 @@ describe("段落帳本指紋的往返(ledgerFingerprint)", () => {
     expect(restored.data.paragraphs?.[0].ledgerFingerprint).toBeUndefined();
   });
 
-  it("指紋筆數上限與事實包上限同源 —— 剛好在上限之內要收得下", () => {
+  it("指紋主張數上限與常數同源 —— 剛好在上限之內要收得下", () => {
     /*
      * Info: (20260908 - Emily) 這一條防的是「產得出來但存不下來」:
-     * 指紋是事實包的子集,所以事實包滿載時的指紋也必須通得過 schema。
-     * schema 手寫一個更小的數字就會在滿載時靜默丟掉整份報告。
+     * 上限由常數決定,schema 引同一個常數;手寫一個更小的數字就會在滿載時靜默丟掉整份報告。
      */
     const base = buildReportData("內容");
     const full = {
@@ -180,12 +177,9 @@ describe("段落帳本指紋的往返(ledgerFingerprint)", () => {
         ...paragraph,
         ledgerFingerprint: {
           ledgerComputedAt: "2026-09-01T00:00:00.000Z",
-          facts: Array.from(
-            { length: PARAGRAPH_FINGERPRINT_MAX_FACTS },
-            (_, index) => ({
-              label: `事實 ${index}`,
-              value: `${index}.5 kgCO2e`,
-            }),
+          claims: Array.from(
+            { length: PARAGRAPH_FINGERPRINT_MAX_CLAIMS },
+            (_, index) => ({ value: `${index}.5`, unit: "kg" }),
           ),
         },
       })),

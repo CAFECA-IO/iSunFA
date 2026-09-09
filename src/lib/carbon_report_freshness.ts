@@ -8,8 +8,8 @@ import {
   extractQuantityClaims,
   collectAllowedNumbers,
   adjudicateQuantityClaims,
+  isTonneScaleUnit,
 } from "@/lib/carbon_reply_gate";
-import { LEDGER_FACT_BUNDLE_MAX } from "@/lib/carbon_ledger_query";
 import type {
   IReportParagraph,
   IParagraphFactImprint,
@@ -20,8 +20,8 @@ import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
 /**
  * Info: (20260908 - Emily) 一節相對於帳本的新舊。三態而不是布林 —— 理由是第三個。
  *
- * - `FRESH`:有指紋,而且它依據的值到現在都沒變
- * - `STALE`:有指紋,而且它依據的某個值變了(或那筆事實不見了)
+ * - `FRESH`:有指紋,而且它依據的數字到現在都還是帳本主張的
+ * - `STALE`:有指紋,而且它依據的某個數字帳本不再主張了
  * - `UNKNOWN`:**沒有指紋**(這張票之前生成的段落),或帳本此刻讀不到
  *
  * 為什麼一定要 `UNKNOWN`:把「不知道」併進 `FRESH` 等於對使用者宣稱這一節是最新的,
@@ -35,48 +35,71 @@ export enum ParagraphFreshnessEnum {
 }
 
 /**
- * Info: (20260908 - Emily) 指紋筆數的上界 = 事實包本身的上界。
+ * Info: (20260909 - Emily) 「這段文字是依據哪一份事實寫的」—— 在**請求送出時**拍下(#6789 review 中-1)。
  *
- * 指紋是事實包的**子集**,所以這不是另外猜的一個數字,而是由構造保證不會超過的那個數字
- * (有測試釘住)。刻意不另設更小的上限:更小的上限會需要截斷,而截斷後的指紋
- * 會少認一個依賴 → 該過期的節不標過期,是**靜默的漏報**。
+ * 指紋不能在回應落地時才拿當下的事實包蓋。`/draft` 請求送出到草稿回來之間是 LLM 生成的
+ * 秒到分鐘,而「匯入 → 自動草稿」這種長流程裡帳本正好會在這個窗內改變(`use_carbon_chat`
+ * 07-22 那段註解寫的就是這個流程)。落地時蓋當下的帳本,會發生:文字引用的是舊值 F₀、
+ * 指紋記的戳記卻是新帳本 T₁ → `assessParagraphFreshness` 走 FRESH 短路;
+ * 而舊值對不上新事實包 → 不被記為依據 → 之後怎麼變都不會 STALE。
+ * **一節引用舊數字的段落被永久標成最新,比沒有標示更糟 —— 使用者會信它。**
+ *
+ * 所以請求送出時就把事實包與帳本戳記拍下來,跟著請求一起走,落地時用它蓋。
+ * 若落地時帳本已變、且依據的數字變了,那一節**立刻**是 STALE —— 那是真相。
  */
-export const PARAGRAPH_FINGERPRINT_MAX_FACTS = LEDGER_FACT_BUNDLE_MAX;
+export interface ILedgerFactSnapshot {
+  facts: IContextFact[];
+  ledgerComputedAt: string | undefined;
+}
 
 /**
- * Info: (20260908 - Emily) 這一節引用了哪些帳本事實。
- *
- * 判定借**既有的**出口守門三件套:`extractQuantityClaims` 抽這一節的排放量主張,
- * 再對每一筆事實單獨組合法集合問「這個主張能不能由這一筆事實支持」。
- * 不自己寫第二套比對 —— 那會讓「守門認可的引用」與「指紋認定的引用」分岔。
- *
- * 借它還附帶兩個正確性:
- * 1. **kg↔公噸換算**:報告紙上印 `227.8986 公噸`、帳本存 `227898.6 kg`,是同一個值。
- *    自己寫字串比對會把這個最常見的情形判成「沒引用」,於是那一節永遠不會標過期。
- * 2. **只認排放量主張**:`extractQuantityClaims` 要求數字與排放單位相鄰(≤10 字),
- *    所以 `2024 年`、`第 3 章`、`共 12 筆` 這些數字不會被當成引用 ——
- *    否則一節裡隨便一個 `1` 就會把它綁上一堆與它無關的事實(過度歸因 → 假過期)。
+ * Info: (20260909 - Emily) 一節指紋裡主張數的上界。實務上一節敘述十幾個;給到 400 是為了**不截斷**
+ * (截斷 = 少認依賴 = 該過期的節不標,靜默漏報),同時擋住把整張表塞進敘述的異常輸入。
+ * 與 zod schema 同源(schema 引這個常數)。
  */
-export const collectQuotedFacts = (
+export const PARAGRAPH_FINGERPRINT_MAX_CLAIMS = 400;
+
+/**
+ * Info: (20260909 - Emily) 單位只存兩種尺度。`extractQuantityClaims` 給的是窗內配對到的原文串接
+ * (「公噸 CO2e」、「kgCO2e kgCO2e」),裁決只看它是不是公噸級;存原文會讓同一個主張長出多個變體。
+ */
+export const TONNE_UNIT = "公噸";
+export const KG_UNIT = "kg";
+const canonicalUnit = (unit: string): string =>
+  isTonneScaleUnit(unit) ? TONNE_UNIT : KG_UNIT;
+
+const claimId = (claim: IParagraphFactImprint): string =>
+  `${claim.value} ${claim.unit}`;
+
+/**
+ * Info: (20260909 - Emily) 這一節的敘述裡,哪些排放量主張**當初是帳本說的**(#6786 review 阻-1 的修法)。
+ *
+ * 借**既有的**出口守門三件套:`extractQuantityClaims` 抽主張(數字要與排放單位相鄰,所以
+ * `2024 年`、`第 3 章` 不算),`collectAllowedNumbers` 組合法集合,`adjudicateQuantityClaims`
+ * 判每一個主張通不通過。通過的就是這一節對帳本的依據 —— 不通過的(原文照錄的既有報告數字、
+ * 尚未勾稽的敘述)不是依據,不進指紋。
+ *
+ * 不記「哪筆事實」:事實的 label 是人話會改(review 中-2),value 夾著排名與占比會隨整本帳本變
+ * (review 阻-1)。記主張本身,裁決時重新過守門,兩個問題一起消失。
+ * kg↔公噸換算跟著守門一起借到:報告寫 `227.8986 公噸`、帳本存 `227898.6 kg` 是同一個依據。
+ */
+export const collectSatisfiedClaims = (
   content: string,
   ledgerFacts: ReadonlyArray<IContextFact>,
 ): IParagraphFactImprint[] => {
   const claims = extractQuantityClaims(content);
   if (claims.length === 0) return [];
+  const allowed = collectAllowedNumbers([...ledgerFacts], []);
   const seen = new Set<string>();
-  const quoted: IParagraphFactImprint[] = [];
-  ledgerFacts.forEach((fact) => {
-    if (seen.has(fact.label)) return;
-    const allowed = collectAllowedNumbers([fact], []);
-    if (allowed.equality.size === 0 && allowed.emissionKg.size === 0) return;
-    const isQuoted = claims.some(
-      (claim) => adjudicateQuantityClaims([claim], allowed).length === 0,
-    );
-    if (!isQuoted) return;
-    seen.add(fact.label);
-    quoted.push({ label: fact.label, value: fact.value });
+  const satisfied: IParagraphFactImprint[] = [];
+  claims.forEach((claim) => {
+    const imprint = { value: claim.value, unit: canonicalUnit(claim.unit) };
+    if (seen.has(claimId(imprint))) return;
+    if (adjudicateQuantityClaims([claim], allowed).length > 0) return;
+    seen.add(claimId(imprint));
+    satisfied.push(imprint);
   });
-  return quoted;
+  return satisfied.slice(0, PARAGRAPH_FINGERPRINT_MAX_CLAIMS);
 };
 
 /**
@@ -85,7 +108,7 @@ export const collectQuotedFacts = (
  * 沒有帳本戳記(帳本還沒載入、或這個會話還沒有帳本)→ 回 `undefined`:
  * 打一個沒有戳記的指紋等於偽造一個比對基準,之後每一次比對都會說「變了」。
  *
- * 引用不到任何事實的節(前言、方法論說明)→ 指紋的 `facts` 是**空陣列**,
+ * 一個帳本數字都沒引用的節(前言、方法論說明)→ 指紋的 `claims` 是**空陣列**,
  * 而那是有意義的:它不依賴帳本任何值,所以它永遠不會過期。
  * 空陣列與 `undefined`(沒有指紋)是兩件事。
  */
@@ -97,19 +120,40 @@ export const buildParagraphFingerprint = (input: {
   if (!input.ledgerComputedAt) return undefined;
   return {
     ledgerComputedAt: input.ledgerComputedAt,
-    facts: collectQuotedFacts(input.content, input.ledgerFacts),
+    claims: collectSatisfiedClaims(input.content, input.ledgerFacts),
   };
 };
+
+/**
+ * Info: (20260909 - Emily) 用**請求時拍下的**快照蓋指紋(中-1 的落地形式)。
+ * 沒有快照(歷史回填、這張票之前的路徑)→ 不打指紋 → 那一節是「不知道」,
+ * 而不是拿當下帳本偽造一個「最新」。
+ */
+export const fingerprintFromSnapshot = (
+  content: string,
+  snapshot: ILedgerFactSnapshot | undefined,
+): IParagraphLedgerFingerprint | undefined =>
+  snapshot
+    ? buildParagraphFingerprint({
+        content,
+        ledgerFacts: snapshot.facts,
+        ledgerComputedAt: snapshot.ledgerComputedAt,
+      })
+    : undefined;
 
 /**
  * Info: (20260908 - Emily) 一節過期了沒有 —— 兩個條件都要成立。
  *
  * 1. 帳本戳記變了,**而且**
- * 2. 這一節引用到的某個值也變了(或那筆事實不見了)
+ * 2. 這一節當初通過守門的某個主張,對現在的事實包**不再通過**
  *
  * 第二條是這張票的重點。少了它,任何一次重算(改了別的廠址、補了一筆與這節無關的活動數據)
  * 都會把 33 節全部標成過期 —— 而 33 節全紅的畫面,使用者第二次看到就會直接忽略它,
  * 於是真正該重寫的那一節也跟著被忽略。**假警報比沒有標示更糟**。
+ *
+ * Info: (20260909 - Emily) 第二條的實作是**重新過一次守門**,不是比對事實字串(review 阻-1):
+ * 替另一個廠補資料 → 總量變、占比變、排名重排,但這一節引用的 1000 kgCO2e 還在帳本裡 →
+ * 主張仍通過 → FRESH。這一節引用的總量從 227898.6 變成 300000 → 主張不再通過 → STALE。
  *
  * 帳本此刻讀不到(`ledgerComputedAt` 為 undefined)一律回 `UNKNOWN`:
  * 「還在載入」與「帳本被清空」在這一層分不開,而把載入中判成過期會讓報告一打開就閃一次滿江紅。
@@ -125,13 +169,12 @@ export const assessParagraphFreshness = (input: {
   if (fingerprint.ledgerComputedAt === ledgerComputedAt) {
     return ParagraphFreshnessEnum.FRESH;
   }
-  const current = new Map(
-    ledgerFacts.map((fact) => [fact.label, fact.value] as const),
-  );
-  const changed = fingerprint.facts.some(
-    (imprint) => current.get(imprint.label) !== imprint.value,
-  );
-  return changed ? ParagraphFreshnessEnum.STALE : ParagraphFreshnessEnum.FRESH;
+  if (fingerprint.claims.length === 0) return ParagraphFreshnessEnum.FRESH;
+  const allowed = collectAllowedNumbers([...ledgerFacts], []);
+  const broken = adjudicateQuantityClaims(fingerprint.claims, allowed);
+  return broken.length > 0
+    ? ParagraphFreshnessEnum.STALE
+    : ParagraphFreshnessEnum.FRESH;
 };
 
 /** Info: (20260908 - Emily) 工具列要顯示的那個數字,以及點開之後列出哪幾節 */

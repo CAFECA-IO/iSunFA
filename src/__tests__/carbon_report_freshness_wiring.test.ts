@@ -74,38 +74,69 @@ describe("剝註解不得吞掉程式碼", () => {
   });
 });
 
-describe("寫入段落時打指紋", () => {
-  it("applyDraftToReport 打指紋,而且寫進段落", () => {
+describe("寫入段落時打指紋(用請求時的快照、打在敘述上;#6789 review 中-1 / 阻-1)", () => {
+  const applyBody = () => {
     const start = hook.indexOf("const applyDraftToReport");
     const end = hook.indexOf("const lastLedgerStampRef");
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
-    const body = hook.slice(start, end);
-    expect(body).toMatch(/buildParagraphFingerprint\(\{/);
+    return hook.slice(start, end);
+  };
+
+  it("applyDraftToReport 從 options.factSnapshot 蓋指紋,而且寫進段落", () => {
+    const body = applyBody();
+    expect(body).toMatch(
+      /fingerprintFromSnapshot\(\s*narrative,\s*options\?\.factSnapshot,?\s*\)/,
+    );
     expect(body).toMatch(/ledgerFingerprint,/);
   });
 
-  it("指紋用最終的 content,不是 draft.content", () => {
+  it("指紋不再拿落地當下的帳本或事實包(那會產生假 FRESH)", () => {
     /**
-     * Info: (20260908 - Emily) 最終 content 是表格、桑基圖、證據鏈都注入之後的版本,
-     * 而注入的表格裡就是帳本的數字。用 `draft.content` 會少認一批依賴,
-     * 於是**數據段落**改了帳本也不會被標過期 —— 而數據段落正是最需要標的那些。
+     * Info: (20260909 - Emily) review 中-1:`/draft` 送出到回來之間帳本可能已變;
+     * 落地時拿 `ledgerNow` / 當下事實包蓋,會把一節引用舊數字的段落永久標成最新。
+     * 這一條釘住 applyDraftToReport 裡**沒有**用當下帳本組指紋 —— 表格注入照舊用 ledgerNow。
      */
-    const start = hook.indexOf("const ledgerFingerprint =");
-    const body = hook.slice(start, start + 300);
-    expect(body).toMatch(/content,/);
-    expect(body).not.toMatch(/draft\.content/);
+    const body = applyBody();
+    expect(body).not.toMatch(/buildParagraphFingerprint\(/);
+    expect(body).not.toMatch(/buildChannelLedgerFacts\(/);
+    expect(body).not.toMatch(/ledgerComputedAt:\s*ledgerNow/);
   });
 
-  it("指紋用同一個組包點的事實包(不自己組第二份事實)", () => {
+  it("指紋打在敘述(narrative)上,不打在注入表格之後的 content(review 阻-1 的另一半)", () => {
     /**
-     * Info: (20260908 - Emily) `buildChannelLedgerFacts` 是事實包**唯一**的組包點(#6745)。
-     * 指紋若自己組,「AI 能引用什麼」與「指紋比對什麼」就會分岔,
-     * 而分岔的症狀是「AI 引用了一個數字,那個數字變了卻沒有標過期」。
+     * Info: (20260909 - Emily) 表格與桑基圖由 `lastLedgerStampRef` 那個 effect 在每次重算時決定性重注入,
+     * 永遠是最新的、不存在過期;把它們的數字算進指紋,任何一次重算都會讓每個數據段落 STALE。
+     * 會過期的只有 AI 寫的敘述。9/08 那一版寫反了(「用最終 content」),這條釘住改正後的方向。
      */
-    const start = hook.indexOf("const ledgerFingerprint =");
-    const body = hook.slice(start, start + 300);
-    expect(body).toMatch(/buildChannelLedgerFacts\(chatChannel\)/);
+    const body = applyBody();
+    expect(body).toMatch(/const narrative = section\.isDataDriven/);
+    expect(body).not.toMatch(/fingerprintFromSnapshot\(\s*content,/);
+    expect(body).not.toMatch(/fingerprintFromSnapshot\(\s*draft\.content/);
+  });
+
+  it("三條會生成文字的路都在送出前拍快照,並在落地時交給 applyDraftToReport / 套用修訂", () => {
+    const gen = hook.slice(hook.indexOf("const generateParagraphDraft"));
+    const snapAt = gen.indexOf(
+      "const factSnapshot = snapshotChannelFacts(chatChannel);",
+    );
+    const requestAt = gen.indexOf("const requestDraft = ()");
+    expect(snapAt).toBeGreaterThan(-1);
+    expect(snapAt).toBeLessThan(requestAt);
+    expect(gen).toContain("applyDraftToReport(draft, { factSnapshot });");
+    expect(hook).toMatch(
+      /chatFactSnapshotRef\.current\.set\(\s*chatChannel,\s*snapshotChannelFacts\(chatChannel\),?\s*\)/,
+    );
+    expect(hook).toContain("chatFactSnapshotRef.current.get(chatChannel)");
+    expect(hook).toContain("factSnapshot: revisionSnapshot,");
+    expect(hook).toContain("fingerprintFromSnapshot(revised, factSnapshot)");
+  });
+
+  it("快照與 LLM 事實包出自同一個組包點", () => {
+    const snap = hook.slice(
+      hook.indexOf("const snapshotChannelFacts = useCallback("),
+    );
+    expect(snap.slice(0, 600)).toContain("buildChannelLedgerFacts(channel)");
   });
 
   it("reportFreshness 也走同一個組包點", () => {

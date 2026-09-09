@@ -143,7 +143,7 @@ export const buildReportSectionFacts = (
         value: `${claim.value} ${claim.unit}`.trim(),
         source: isMatched
           ? `報告草稿第 ${section.code} 節原文(與帳本事實的數值一致)`
-          : `報告草稿第 ${section.code} 節原文(**帳本事實裡沒有這個數值**;可能是原文照錄的既有報告數字,也可能是尚未勾稽的敘述)`,
+          : `報告草稿第 ${section.code} 節原文(帳本事實裡沒有這個數值;可能是原文照錄的既有報告數字,也可能是尚未勾稽的敘述)`,
       };
       (isMatched ? matched : unmatched).push(fact);
     });

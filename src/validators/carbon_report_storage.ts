@@ -8,7 +8,7 @@ import {
   ParagraphOriginEnum,
 } from "@/constants/carbon_chatbot";
 import { CARBON_REPORT_IDENTITY_FIELDS } from "@/lib/utils/carbon_report_identity";
-import { PARAGRAPH_FINGERPRINT_MAX_FACTS } from "@/lib/carbon_report_freshness";
+import { PARAGRAPH_FINGERPRINT_MAX_CLAIMS } from "@/lib/carbon_report_freshness";
 
 const ReportCategorySchema = z.object({
   id: z.string(),
@@ -24,21 +24,21 @@ const ReportCategorySchema = z.object({
  * 選填:這張票之前生成的段落沒有這個欄位,**不得 Fail Fast 丟棄整份報告** ——
  * 那些節的狀態是「不知道」而不是「最新」,由 `assessParagraphFreshness` 判。
  *
- * 筆數上限引 `PARAGRAPH_FINGERPRINT_MAX_FACTS`(= 事實包本身的上限):
- * 指紋是事實包的子集,所以這不是另外猜的數字。手寫第二個數字的話,
- * 分岔的症狀會是「產得出來但存不下來」—— 這份 schema 上禮拜才因為那個形狀
- * 掉過 `reportName` / `identity`(#6788)。
+ * Info: (20260909 - Emily) 記的是這一節自己的主張(數字 + 單位),不是事實(理由見
+ * `IParagraphFactImprint`)。筆數上限引 `PARAGRAPH_FINGERPRINT_MAX_CLAIMS`:一節敘述裡的
+ * 排放量斷言數,實務上十幾個;上限給到 400 是為了不截斷(截斷 = 少認依賴 = 靜默漏報),
+ * 同時擋住把整張表塞進敘述的異常輸入。
  */
 const ParagraphLedgerFingerprintSchema = z.object({
   ledgerComputedAt: z.string().min(1).max(50),
-  facts: z
+  claims: z
     .array(
       z.object({
-        label: z.string().min(1).max(200),
-        value: z.string().max(200),
+        value: z.string().min(1).max(40),
+        unit: z.string().max(20),
       }),
     )
-    .max(PARAGRAPH_FINGERPRINT_MAX_FACTS),
+    .max(PARAGRAPH_FINGERPRINT_MAX_CLAIMS),
 });
 
 const ReportParagraphSchema = z.object({

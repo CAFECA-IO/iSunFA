@@ -76,8 +76,20 @@ describe("三個入口都帶事實包(帶了門才會開)", () => {
         // Info: (20260908 - Emily) body 緊接在 URL 之後;取足夠長的窗以涵蓋整個 body
         const body = tail.slice(0, 1500);
         expect(body).toContain("contextFacts:");
-        expect(body).toContain("buildChannelLedgerFacts(chatChannel)");
+        /**
+         * Info: (20260909 - Emily) #6789 review 中-1 之後,body 帶的是**送出前拍下的快照**
+         * (`snapshotChannelFacts(chatChannel)`)—— 與落地時蓋指紋的是同一份。
+         * 快照本身仍出自唯一的組包點(`buildChannelLedgerFacts`),見下一條。
+         */
+        expect(body).toMatch(/(factSnapshot|revisionSnapshot)\.facts/);
       });
+    // Info: (20260909 - Emily) 兩個快照都由同一支 snapshotChannelFacts 拍
+    expect(hook).toContain(
+      "const factSnapshot = snapshotChannelFacts(chatChannel);",
+    );
+    expect(hook).toContain(
+      "const revisionSnapshot = snapshotChannelFacts(chatChannel);",
+    );
   });
 
   it("入口 3:附件管線把帳本事實包併進萃取事實", () => {

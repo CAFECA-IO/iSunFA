@@ -226,6 +226,54 @@ describe("hook 接線(源碼掃描;node 環境無法渲染 hook)", () => {
     );
   });
 
+  it("請求失敗要有自己的通知,不套「資料存在」那句,也不能沒有(#6779 review 後續)", () => {
+    /**
+     * Info: (20260909 - Emily) 原本 catch 不發通知 —— 網路掛掉時使用者看到「什麼都沒發生」,
+     * 那正是 #6779 要消滅的靜默;而 `inventory_unreadable` 模板說「資料存在」,網路掛掉時
+     * 我們並不知道存不存在,套它是說錯。
+     */
+    const catchBlock = hook.slice(
+      hook.indexOf("failed to load inventory state"),
+      hook.indexOf("inventoryLoadAttemptedRef.current.delete(chatChannel)"),
+    );
+    expect(catchBlock).toMatch(/t\("carbon_chatbot\.inventory_load_failed"\)/);
+    expect(catchBlock).not.toMatch(/carbon_chatbot\.inventory_unreadable"/);
+  });
+
+  it("LOAD_FAILED 的 reason 鍵是死鍵,五語系都不得再有;專屬通知五語系都要有", () => {
+    /**
+     * Info: (20260909 - Emily) `inventory_unreadable_reason_load_failed` 只能經 `.then` 那條路的
+     * 模板字串到達,而 `.then` 裡的 reason 不可能是 LOAD_FAILED —— 是一個沒做完的決定留下的痕跡。
+     */
+    ["zh_tw", "zh_cn", "en", "ja", "ko"].forEach((locale) => {
+      const source = fs.readFileSync(
+        path.join(
+          process.cwd(),
+          `src/i18n/locales/${locale}/carbon_chatbot.ts`,
+        ),
+        "utf-8",
+      );
+      expect(source).not.toContain("inventory_unreadable_reason_load_failed");
+      expect(source).toContain("inventory_load_failed:");
+    });
+  });
+
+  it("「那會覆蓋原本的資料」已不成立(autosave 拒絕之後),persona 與通知都改說「不會被保存」", () => {
+    const storage = fs.readFileSync(
+      path.join(process.cwd(), "src/lib/carbon_inventory_storage.ts"),
+      "utf-8",
+    );
+    expect(storage).not.toContain("那會覆蓋原本的資料");
+    expect(
+      describeUnreadableInventoryStep(InventoryLoadReasonEnum.LOCKED),
+    ).toContain("不會被保存");
+    const zhTw = fs.readFileSync(
+      path.join(process.cwd(), "src/i18n/locales/zh_tw/carbon_chatbot.ts"),
+      "utf-8",
+    );
+    expect(zhTw).not.toContain("那會覆蓋原本的資料");
+  });
+
   it("解鎖前不標 LOCKED:那時連有沒有紀錄都不知道(review 低-3)", () => {
     const earlyReturn = hook.indexOf(
       "if (!isBookBound && (!isUnlocked || !master)) return;",

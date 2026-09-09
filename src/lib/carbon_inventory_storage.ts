@@ -105,7 +105,7 @@ export const describeUnreadableInventoryStep = (
     reason === InventoryLoadReasonEnum.LOAD_FAILED
       ? "盤查狀態目前無法載入,有沒有既有資料尚未確認"
       : "盤查狀態存在但目前讀不出來"
-  }(${describeInventoryLoadReason(reason)});請向使用者說明這件事,不要宣稱帳本沒有資料,也不要引導重新設定公司名稱、年度或邊界 —— 那會覆蓋原本的資料`;
+  }(${describeInventoryLoadReason(reason)});請向使用者說明這件事,不要宣稱帳本沒有資料,也不要引導重新設定公司名稱、年度或邊界 —— 在讀出來之前那些變更不會被保存`;
 
 /**
  * Info: (20260904 - Emily) 這一版的盤查狀態**存不進去** —— 有欄位不符合儲存格式。

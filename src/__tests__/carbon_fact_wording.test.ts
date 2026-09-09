@@ -13,8 +13,10 @@ import { ArticulationStatusEnum } from "@/constants/carbon_articulation";
 import type {
   IComputedLedger,
   IComputedLedgerEntry,
+  IReportParagraph,
 } from "@/types/carbon_chatbot.types";
 import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
+import { buildReportFacts } from "@/lib/carbon_report_facts";
 
 /**
  * Info: (20260908 - Emily) 事實的 label / source **只放人話**(owner 9/08 實測後判定)。
@@ -142,6 +144,8 @@ const FORBIDDEN: RegExp[] = [
   /articulation/i,
   /activityKey/,
   /表表/,
+  // Info: (20260909 - Emily) #6789 review 低:markdown 粗體符號進了送 LLM 的字串,模型會照抄
+  /\*\*/,
   /pending_lpg_key|warn_water_key|voucher_diesel_stationary|imp_transport_hq|imp_goods_hq/,
 ];
 
@@ -207,6 +211,36 @@ describe("事實包的 label / source 只放人話", () => {
         { year: 2024, ledger: current },
       ),
     );
+    expect(facts.length).toBeGreaterThan(0);
+    const offenders = allStrings(facts).filter((text) =>
+      FORBIDDEN.some((pattern) => pattern.test(text)),
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  it("報告本體的事實(carbon_report_facts)同樣乾淨 —— 不一致那筆不得夾 markdown 粗體", () => {
+    /**
+     * Info: (20260909 - Emily) #6789 review 低:「**帳本事實裡沒有這個數值**」的星號進了送 LLM 的字串,
+     * 模型會照抄,回覆裡多一對星號。報告事實走另一支模組,所以這裡單獨餵。
+     */
+    const paragraphs: IReportParagraph[] = [
+      {
+        id: "p-3.2",
+        chapterId: "ch3",
+        code: "3.2",
+        title: "3.2 排放量計算",
+        content: "本節寫的總量為 999.999 公噸 CO2e(帳本裡沒有這個數)。",
+        isCompleted: true,
+        isVerified: false,
+        isDataDriven: true,
+      },
+    ];
+    const facts = buildReportFacts({
+      paragraphs,
+      rawMarkdown: undefined,
+      ledgerFacts: bundle,
+      budget: 10,
+    });
     expect(facts.length).toBeGreaterThan(0);
     const offenders = allStrings(facts).filter((text) =>
       FORBIDDEN.some((pattern) => pattern.test(text)),

@@ -167,12 +167,13 @@ export const carbonChatbot = {
    * 所以文案的重點是叫人不要當成空的重做 —— 那才是資料真正消失的那一步。
    */
   inventory_unreadable:
-    "這個對話的盤查資料存在,但目前讀不出來({{reason}})。在讀出來之前不會保存任何變更,也請不要重新設定公司與年度 —— 那會覆蓋原本的資料。",
+    "這個對話的盤查資料存在,但目前讀不出來({{reason}})。在讀出來之前不會保存任何變更,也請不要重新設定公司與年度 —— 那些變更不會被保存。",
   inventory_unreadable_reason_locked: "已加密,尚未解鎖金鑰",
   inventory_unreadable_reason_decrypt_failed: "已加密,目前的金鑰解不開",
   inventory_unreadable_reason_schema_rejected: "不符合目前版本的儲存格式",
-  inventory_unreadable_reason_load_failed:
-    "暫時無法載入(網路或伺服器),尚未確認內容",
+  // Info: (20260909 - Emily) 載入失敗(網路/伺服器)的專屬通知(#6779 review 後續):不套「資料存在」那句
+  inventory_load_failed:
+    "這個對話的盤查資料目前無法載入(網路或伺服器問題),有沒有既有資料尚未確認。載入成功前不會保存任何變更;重新進入這個對話會再試一次。",
   inventory_unsavable:
     "盤查資料這一版沒有保存成功:其中有欄位不符合儲存格式。內容還在畫面上,但關閉或重新整理這個分頁之後這一版就不在了。這是系統的問題,請回報給我們。",
   save_local_quota: "本機暫存空間已滿,離線備份未更新(雲端已保存)。",

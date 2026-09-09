@@ -317,6 +317,14 @@ export const shiftDecimalString = (value: string, digits: number): string => {
 const TONNE_SCALE = /公噸|^噸$|噸\s?CO2e|tCO2e|TONNE/i;
 
 /**
+ * Info: (20260909 - Emily) 單位文字是不是公噸級。
+ * 供段落指紋把 `extractQuantityClaims` 抽到的單位(窗內配對到的原文串接,如「公噸 CO2e」、
+ * 「kgCO2e kgCO2e」)正規化成兩種尺度之一 —— 裁決只看尺度,存原文只會讓同一個主張長出多個變體。
+ */
+export const isTonneScaleUnit = (unit: string): boolean =>
+  TONNE_SCALE.test(unit);
+
+/**
  * Info: (20260826 - Emily) 裁決(TS 端,決定性,Y 與 X 共用):字串等值,
  * 或同值異單位的決定性換算(公噸級 ×1000 → kg 級;kg 級 ÷1000 → 公噸級)。
  * 事實包的排放量一律是 kg 寫法,而盤查報告與 persona 慣用公噸 ——
