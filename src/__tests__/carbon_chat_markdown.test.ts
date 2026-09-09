@@ -30,8 +30,9 @@ const read = (relativePath: string): string =>
  */
 const stripComments = (source: string): string =>
   source
-    .replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, "")
-    .replace(/\/\*[\s\S]*?\*\//g, "")
+    // Info: (20260908 - Emily) 惰性量詞會吞掉程式碼,見 carbon_report_freshness_wiring 的說明(#6786)
+    .replace(/\{\s*\/\*(?:(?!\*\/)[\s\S])*\*\/\s*\}/g, "")
+    .replace(/\/\*(?:(?!\*\/)[\s\S])*\*\//g, "")
     .replace(/^\s*\/\/.*$/gm, "");
 
 const aiBubble = stripComments(

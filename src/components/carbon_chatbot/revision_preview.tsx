@@ -2,6 +2,7 @@
 // Info: (20260716 - Tzuhan) 原文/修訂並列供人工確認 — AI 動既有內容必須過人工 gate(與草稿填空白段落不同)
 // Info: (20260716 - Tzuhan) #56 報告匯入共用本卡(逐段確認),樣式沿用聊天視窗白卡系
 
+import type { ILedgerFactSnapshot } from "@/lib/carbon_report_freshness";
 import { useMemo } from "react";
 import { FileDiff, Check, X } from "lucide-react";
 import { diffLines, DiffLineTypeEnum } from "@/lib/line_diff";
@@ -15,6 +16,11 @@ export interface IPendingRevision {
   revised: string;
   // Info: (20260716 - Tzuhan) 修訂引用的事實(零捏造溯源,可為空)
   citedFacts: string[];
+  /**
+   * Info: (20260909 - Emily) 請求送出時拍下的事實快照(#6789 review 中-1):套用修訂時以它蓋段落指紋。
+   * 選填:這張票之前開出的修訂卡沒有它 → 套用後那一節是「不知道」,不偽造「最新」。
+   */
+  factSnapshot?: ILedgerFactSnapshot;
 }
 
 export interface IRevisionPreviewProps {

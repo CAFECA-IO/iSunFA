@@ -68,6 +68,14 @@ export const carbonChatbot = {
   origin_ai_draft: "AI draft",
   origin_imported_short: "source",
   origin_ai_draft_short: "draft",
+  // Info: (20260908 - Emily) 帳本改了之後的過期標示(#6786;理由見 zh_tw)
+  freshness_stale_short: "outdated",
+  freshness_stale_hint:
+    "The ledger figures this section cites have changed, so its content may be out of date. Use the AI draft button to refresh it.",
+  freshness_stale_count: "{{count}} to refresh",
+  freshness_stale_list:
+    "The ledger has changed and these sections cite figures that moved: {{codes}}. Click to open the outline and refresh them one by one.",
+  freshness_update_section: "Rewrite this section from the current ledger",
   // Info: (20260806 - Tzuhan) 匯入前先上傳取 cid:14 次呼叫共用一份儲存,文案要說出「為何要等」
   import_uploading:
     "Uploading {{name}} to secure storage — the parsing that follows reads it from there instead of resending the file each time…",
@@ -139,15 +147,16 @@ export const carbonChatbot = {
     "The report claims the company complies with {{name}}, so this version was not saved to the cloud \u2014 that sentence must never appear in a report you send out. Your work is still on this device; remove the sentence and it will save again. A statement about the document\u2019s structure is still allowed.",
   // Info: (20260904 - Emily) Not a transient failure: every autosave will fail the same way, and there is no local backup
   inventory_unreadable:
-    "The inventory data for this conversation exists but cannot be read right now ({{reason}}). Nothing will be saved until it loads, and please do not re-enter the company or year — that would overwrite the existing data.",
+    "The inventory data for this conversation exists but cannot be read right now ({{reason}}). Nothing will be saved until it loads, and please do not re-enter the company or year — those changes would not be saved.",
   inventory_unreadable_reason_locked:
     "encrypted and the key is not unlocked yet",
   inventory_unreadable_reason_decrypt_failed:
     "encrypted and the current key cannot open it",
   inventory_unreadable_reason_schema_rejected:
     "does not match the current storage format",
-  inventory_unreadable_reason_load_failed:
-    "could not be loaded right now (network or server); nothing has been confirmed yet",
+  // Info: (20260909 - Emily) 載入失敗(網路/伺服器)的專屬通知(#6779 review 後續):不套「資料存在」那句
+  inventory_load_failed:
+    "The inventory data for this conversation could not be loaded (network or server problem); whether existing data is present is not yet confirmed. Nothing will be saved until it loads; re-entering this conversation will retry.",
   inventory_unsavable:
     "This version of the inventory data was not saved: one of its fields does not fit the storage format. What you see is still on screen, but closing or reloading this tab loses it. This is a fault on our side \u2014 please report it.",
   save_local_quota:

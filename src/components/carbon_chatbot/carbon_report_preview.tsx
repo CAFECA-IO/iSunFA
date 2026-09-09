@@ -33,6 +33,7 @@ import {
   stripLeadingDocumentTitle,
 } from "@/lib/utils/carbon_report_title";
 import { CarbonDataBadgeStateEnum } from "@/lib/carbon_report_table.builder";
+import type { IReportFreshnessSummary } from "@/lib/carbon_report_freshness";
 import { ReportToolbar } from "@/components/carbon_chatbot/report_toolbar";
 import { ReportIdentityFields } from "@/components/carbon_chatbot/report_identity_fields";
 import { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
@@ -51,6 +52,11 @@ interface ICarbonReportPreviewProps {
   // Info: (20260714 - Tzuhan) AI 段落草稿生成(透傳給 OutlineDrawer → OutlineTree)
   draftingParagraphId?: string | null;
   onGenerateDraft?: (paragraphId: string) => void;
+  /**
+   * Info: (20260908 - Emily) 過期盤點(#6786):工具列顯示節數、目錄逐節標記。
+   * 這一層只透傳 —— 裁決在 `carbon_report_freshness`,組包在 hook。
+   */
+  freshness?: IReportFreshnessSummary;
   // Info: (20260730 - Tzuhan) 產生結構圖(透傳至 OutlineTree;僅有對應模板的段落顯示按鈕)
   onGenerateDiagram?: (paragraphId: string) => void;
   // Info: (20260714 - Tzuhan) 對話↔報告雙向連動:短暫高亮的段落與「點報告段落 → 回跳對話訊息」callback
@@ -154,6 +160,7 @@ export default function CarbonReportPreview({
   onToggleVerified = () => {},
   draftingParagraphId = null,
   onGenerateDraft = undefined,
+  freshness = undefined,
   onGenerateDiagram = undefined,
   highlightedParagraphId = null,
   onParagraphHeadingClick = undefined,
@@ -396,6 +403,8 @@ export default function CarbonReportPreview({
           }
           identityMissing={missingIdentityFields(identity).length}
           isIdentityOpen={isIdentityOpen}
+          staleCount={freshness?.staleCount}
+          staleCodes={freshness?.staleCodes}
         />
       )}
       {/* Info: (20260814 - Emily) 面板貼在工具列下方而不是做成 modal:
@@ -434,6 +443,7 @@ export default function CarbonReportPreview({
             onGenerateDraft={onGenerateDraft}
             onGenerateDiagram={onGenerateDiagram}
             dataBadgeState={dataBadgeState}
+            staleParagraphIds={freshness?.staleParagraphIds}
           />
         )}
 

@@ -12,6 +12,7 @@ import {
   FileUp,
   Pencil,
   ShieldCheck,
+  RefreshCw,
 } from "lucide-react";
 import { IReportProgressStats } from "@/types/carbon_chatbot.types";
 import { ReportSaveStatus } from "@/hooks/use_carbon_chat";
@@ -48,6 +49,15 @@ interface IReportToolbarProps {
   /** Info: (20260814 - Emily) 還沒填幾項;0 即不顯示紅點 */
   identityMissing?: number;
   isIdentityOpen?: boolean;
+  /**
+   * Info: (20260908 - Emily) 帳本改了之後有幾節過期(#6786)。
+   *
+   * 與 `stats` 是兩件事:那個算「寫完了幾節」,這個算「寫完的那幾節還算不算數」。
+   * 0 即整塊不出現 —— 常態是 0,常駐一塊寫著「0 節過期」的膠囊只是佔掉那一列的寬度。
+   */
+  staleCount?: number;
+  /** Info: (20260908 - Emily) 過期的節號(3.2 這種),照報告順序;放在 tooltip 裡 */
+  staleCodes?: string[];
 }
 
 export function ReportToolbar({
@@ -65,6 +75,8 @@ export function ReportToolbar({
   onToggleIdentity = undefined,
   identityMissing = 0,
   isIdentityOpen = false,
+  staleCount = 0,
+  staleCodes = [],
 }: IReportToolbarProps) {
   const { t } = useTranslation();
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -147,6 +159,22 @@ export function ReportToolbar({
           {identityMissing > 0 && (
             <span className="text-[#ff5a00]">{identityMissing}</span>
           )}
+        </button>
+      )}
+      {/* Info: (20260908 - Emily) 過期節數(#6786)。點擊開目錄 —— 逐節的標記在那裡,
+          工具列這一列塞不進 33 節的清單;節號放 tooltip,不必開抽屜也看得到是哪幾節。
+          只標示、不自動重寫:重寫花點數,而且會覆蓋使用者手改過的字。 */}
+      {staleCount > 0 && (
+        <button
+          type="button"
+          onClick={onToggleDrawer}
+          title={t("carbon_chatbot.freshness_stale_list", {
+            codes: staleCodes.join("、"),
+          })}
+          className="flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 transition-colors hover:bg-amber-100"
+        >
+          <RefreshCw size={11} />
+          {t("carbon_chatbot.freshness_stale_count", { count: staleCount })}
         </button>
       )}
       {status && (

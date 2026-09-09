@@ -305,6 +305,8 @@ export default function CarbonChatbotPage() {
     attachImportCandidate,
     dismissImportCandidate,
     generateParagraphDraft,
+    // Info: (20260908 - Emily) 過期盤點(#6786)
+    reportFreshness,
     generateParagraphDiagram,
     archiveSession,
     fetchArchivedSessions,
@@ -405,6 +407,7 @@ export default function CarbonChatbotPage() {
             onToggleVerified={toggleParagraphVerified}
             draftingParagraphId={draftingParagraphId}
             onGenerateDraft={generateParagraphDraft}
+            freshness={reportFreshness}
             onGenerateDiagram={generateParagraphDiagram}
             highlightedParagraphId={highlightedParagraphId}
             onParagraphHeadingClick={handleParagraphHeadingClick}
