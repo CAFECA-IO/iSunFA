@@ -38,6 +38,8 @@ const BASE: ISalaryEmployeeProfileSnapshot = {
   isPensionInsured: true,
   dependentsCount: 0,
   voluntaryPensionRate: 0,
+  leaveStartDate: null,
+  leaveEndDate: null,
   hireDate: 1_767_225_600,
   resignDate: null,
 };
@@ -217,11 +219,41 @@ describe("實作方式", () => {
    * 手列一遍欄位的話，新增員工檔欄位時快照會靜靜地不含它 ——
    * 那一欄的變動從此不被記錄，而且沒有任何東西會紅。
    * 綁在 `Omit<...>` 上，新欄位會自動進來，而分類表會編譯失敗。
+   *
+   * Info: (20260909 - Julian) 20260909 併入 #6774 時放寬了「減掉什麼」。
+   *
+   * 原本釘死 `"id"` 這一個字串，而併入之後必須再減掉 `missingPeriods`
+   * （下一條解釋為什麼）。釘死字面值會讓每一次合法的排除都變成一次假紅，
+   * 而假紅的代價是下一個人改這裡時先去改測試 —— 那時真正的護欄也一起沒了。
+   *
+   * 要守的其實只有一句話：**這個型別是從 `ISalaryCalculatorEmployee` 減出來的，
+   * 不是手列的。** 減了幾個欄位不是重點，重點是「新增欄位會自動進來」。
    */
-  it("快照型別綁在 ISalaryCalculatorEmployee 上，不是手列欄位", () => {
+  it("快照型別從 ISalaryCalculatorEmployee 減出來，不是手列欄位", () => {
     expect(source).toMatch(
-      /ISalaryEmployeeProfileSnapshot = Omit<\s*ISalaryCalculatorEmployee,\s*"id"\s*>/,
+      /ISalaryEmployeeProfileSnapshot = Omit<\s*ISalaryCalculatorEmployee,/,
     );
+    // Info: (20260909 - Julian) 手列欄位的長相：`= { baseSalary: number; ... }`
+    expect(source).not.toMatch(/ISalaryEmployeeProfileSnapshot = \{/);
+  });
+
+  /**
+   * Info: (20260909 - Julian) **`missingPeriods` 不得進快照。**
+   *
+   * 它是每次查詢當場算出來的（缺哪幾個月的薪資單），不是員工檔上的資料。
+   * 混進來的話有兩個後果，而兩個都不會有錯誤訊息：
+   *
+   * 1. 別人補了一張薪資單 → 這個人的 `missingPeriods` 變了 →
+   *    下一次任何寫入都會記成一筆「薪資異動」，而使用者什麼都沒改。
+   * 2. 快照這一組欄位不再全部是純量，而 `diffProfileSnapshot` 用的是 `!==`
+   *    —— 兩個內容相同的陣列永遠不相等，於是**每一次寫入都產生一列假紀錄**。
+   *
+   * 這條線的判準是：**存在資料庫那一列上的欄位才進快照，衍生的不進。**
+   * 而它守不住的話，異動紀錄會被雜訊淹掉 —— 稽核用的表最怕的正是這個。
+   */
+  it("衍生欄位 missingPeriods 被排除在快照之外", () => {
+    expect(source).toMatch(/Omit<[\s\S]{0,120}?"missingPeriods"/);
+    expect(SALARY_PROFILE_FIELDS).not.toContain("missingPeriods");
   });
 
   it("欄位清單來自分類表，差異不從資料的 key 取", () => {

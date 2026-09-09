@@ -3,16 +3,30 @@ import { ISalaryCalculatorEmployee } from "@/interfaces/salary_record";
 /**
  * Info: (20260908 - Julian) 員工檔的完整快照 —— 異動紀錄前後值的形狀。
  *
- * 刻意用 `Omit<ISalaryCalculatorEmployee, "id">` 而不是自己列一遍欄位：
+ * 從 `ISalaryCalculatorEmployee` 減出來，而不是自己列一遍欄位：
  * 新增一個員工檔欄位時，快照會**自動**包含它，而 §1 的分類表
  * （`SALARY_PROFILE_FIELD_VISIBILITY`）會因為少一個 key 而編譯失敗。
  * 自己列一遍的話，新欄位會靜靜地不被記錄 —— 而那是拿不回來的資料。
+ *
+ * ## 減掉的兩個，理由不同
+ *
+ * - `id`：快照是「這個人當時是什麼樣子」，不是「這是誰」。
+ *   員工是誰由異動列自己的 `employeeId` 說。
+ * - `missingPeriods`（20260909 併入 #6774 時加的）：**它不是員工檔上的資料，
+ *   是每次查詢當場算出來的**（見 `ISalaryCalculatorEmployee` 的註解）。
+ *   記進快照會有兩個後果：一是它會被算成一次「異動」——
+ *   而使用者從頭到尾沒改任何東西，只是有人補了一張薪資單；
+ *   二是這一組欄位不再全部是純量，`diffProfileSnapshot` 的 `!==`
+ *   對陣列永遠成立，於是**每一次寫入都會產生一列假的異動紀錄**。
+ *   （Prisma 那一側也擋：Json 欄位的輸入型別吃不下 `ISalaryPeriod[]`。）
+ *
+ * 判準因此是：**存在資料庫那一列上的欄位才進快照，衍生出來的不進。**
  *
  * 計劃書：`documents/architecture/salary_profile_change_history_plan.md`
  */
 export type ISalaryEmployeeProfileSnapshot = Omit<
   ISalaryCalculatorEmployee,
-  "id"
+  "id" | "missingPeriods"
 >;
 
 export type SalaryProfileField = keyof ISalaryEmployeeProfileSnapshot;
@@ -73,6 +87,18 @@ export const SALARY_PROFILE_FIELD_VISIBILITY: Record<
   resignDate: true,
 
   /**
+   * Info: (20260909 - Julian) 留職停薪的起訖（#6774 併入時分類）。**預設顯示。**
+   *
+   * 它與到職／離職日同一類：決定這幾個月**該不該有薪資單**，
+   * 而那正是勞檢會問的第二個問題（「這幾個月為什麼沒有投保紀錄」）。
+   * 它也是唯一會讓「缺薪資單」變成合理狀態的欄位 ——
+   * 一段被悄悄改掉的留停區間，會讓已經解釋過的缺漏重新變成問題，
+   * 或反過來把真的缺漏藏起來。
+   */
+  leaveStartDate: true,
+  leaveEndDate: true,
+
+  /**
    * Info: (20260908 - Julian) 以下預設隱藏 —— 記錄但不吵。
    *
    * `name` / `number` 的變動絕大多數是打錯字的更正；`email` 是薪資單的收件地址
@@ -106,8 +132,9 @@ export const isDefaultVisibleProfileField = (
  *
  * ## 為什麼用 `!==` 而不是深比較
  *
- * 這 18 欄全部是純量（number / boolean / string / null）——
- * `ISalaryEmployeeProfileSnapshot` 的型別保證了這件事。
+ * 這一組欄位全部是純量（number / boolean / string / null）——
+ * `ISalaryEmployeeProfileSnapshot` 的型別保證了這件事，而它之所以保證得了，
+ * 是因為衍生欄位（如 `missingPeriods` 那個陣列）已經在型別那一層被減掉。
  * 引入深比較只會讓「哪天有人塞了一個物件進來」從編譯錯誤變成執行期行為。
  *
  * `null` 與 `0` 在這裡必須分得開：`resignDate: null`（還在職）

@@ -104,6 +104,8 @@ export const calculator = {
       voluntaryPensionRate: "自己拠出率",
       hireDate: "入社日",
       resignDate: "退職日",
+      leaveStartDate: "休職開始日",
+      leaveEndDate: "復職日",
       name: "氏名",
       number: "従業員番号",
       email: "メールアドレス",
@@ -133,6 +135,12 @@ export const calculator = {
     recorded_by: "{{name}} が {{at}} に記録",
     unknown_user: "不明なユーザー",
     history: "変更履歴",
+    leave_start_date: "休職開始日",
+    leave_end_date: "復職日",
+    leave_hint:
+      "休職：この期間にすべて含まれる月は給与明細の欠落として扱いません。開始日は休職初日、復職日は出社を再開する初日を入力してください —— この 2 か月は勤務日があるため計上されます。まだ復職していない場合は空欄のままにしてください。",
+    leave_order_error: "復職日は休職開始日より前にはできません",
+    leave_start_required: "休職開始日も入力してください",
     main_title: "従業員リスト",
     name: "従業員名",
     number: "従業員番号",
@@ -166,11 +174,15 @@ export const calculator = {
     remove_employee_content: "本当に従業員リストから {{name}} を削除しますか？",
     remove_employee_submit_btn: "はい、削除します。",
     no_email: "未入力",
-    missing_email_banner:
-      "{{count}} 名のメールアドレスが未入力です。給与明細を送信できません",
-    only_missing_email: "該当者のみ表示",
-    show_all: "すべて表示",
+    missing_records_badge: "{{count}} か月分なし",
     no_filter_result: "条件に一致する従業員がいません",
+    missing_records_rest: "他 {{count}} か月分",
+    no_hire_date: "未入力",
+    filter_missing_email: "メールアドレスなし",
+    filter_missing_hire_date: "入社日なし",
+    missing_hire_date_banner:
+      "{{count}} 名の従業員に入社日がありません。入力すると、どの月の給与明細が不足しているか確認できます",
+    filter_missing_records: "給与明細の未作成あり",
   },
   result: {
     base_salary_with_tax: "基本給（課税対象）",
@@ -406,6 +418,8 @@ export const calculator = {
     reset: "リセット",
     re_send: "給与明細を再送信",
     send_disabled_unsaved: "給与記録を保存すると給与明細を送信できます",
+    send_disabled_unlinked:
+      "この試算は従業員との紐付けが解除されています。従業員を選び直してください",
     send_disabled_no_email:
       "この従業員にはメールアドレスがありません。先に従業員一覧で追加してください",
     send_disabled_employee_gone:

@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach } from "@jest/globals";
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from "@jest/globals";
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS, IErrorDef } from "@/lib/utils/error_dictionary";
 import {
@@ -18,9 +25,15 @@ import {
   ISalaryCalculatorEmployeeRepository,
   SalaryEmployeeNumberTakenError,
 } from "@/repositories/salary_calculator_employee.repo";
-import { DEFAULT_EMPLOYEE_PROFILE } from "@/lib/utils/salary_employee_profile";
+import {
+  DEFAULT_EMPLOYEE_LEAVE,
+  DEFAULT_EMPLOYEE_PROFILE,
+} from "@/lib/utils/salary_employee_profile";
 import { ISalaryRecordRepository } from "@/repositories/salary_record.repo";
-import { SalaryRecordService } from "@/services/salary_record.service";
+import {
+  IAccountBookCreatedAtReader,
+  SalaryRecordService,
+} from "@/services/salary_record.service";
 import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
 
 /**
@@ -49,6 +62,9 @@ const employeeOf = (
   // Info: (20260902 - Julian) 常態屬性整組必填；這一支測的是 service 的編排，用預設值即可。
   // 放在最前面，下面幾行才蓋得掉它的 baseSalary / mealAllowance
   ...DEFAULT_EMPLOYEE_PROFILE,
+  ...DEFAULT_EMPLOYEE_LEAVE,
+  // Info: (20260905 - Luphia) 完整度預設「沒有缺漏」；要驗警示的案例自己覆蓋（#6774）
+  missingPeriods: [],
   id: EMPLOYEE_ID,
   name: "王小明",
   number: "A001",
@@ -67,6 +83,7 @@ const employeeWriteInputOf = (
   overrides: Partial<ISalaryCalculatorEmployeeWriteInput> = {},
 ): ISalaryCalculatorEmployeeWriteInput => ({
   ...DEFAULT_EMPLOYEE_PROFILE,
+  ...DEFAULT_EMPLOYEE_LEAVE,
   name: "李小華",
   number: "A001",
   email: "hua@example.com",
@@ -217,6 +234,26 @@ class FakeEmployeeRepo implements ISalaryCalculatorEmployeeRepository {
 }
 
 class FakeRecordRepo implements ISalaryRecordRepository {
+  /**
+   * Info: (20260905 - Luphia) 已有薪資紀錄的年月分佈，依帳本分開放（#6774）。
+   *
+   * 依帳本分開不是為了完整 —— 它是判準本身：service 若忘了把 `accountBookId`
+   * 傳下去，別的帳本的紀錄會被算成這個人的，缺漏就這樣消失。
+   */
+  public readonly coveredByBook = new Map<
+    string,
+    { employeeId: string; year: number; month: number }[]
+  >();
+
+  public coveredCalls = 0;
+
+  public async listCoveredPeriods(
+    accountBookId: string,
+  ): Promise<{ employeeId: string; year: number; month: number }[]> {
+    this.coveredCalls += 1;
+    return this.coveredByBook.get(accountBookId) ?? [];
+  }
+
   // Info: (20260831 - Julian) 模擬 @@unique([accountBookId, employeeId, year, month])
   public readonly rows = new Map<string, ISalaryRecordDetail>();
 
@@ -317,15 +354,42 @@ class FakeRecordRepo implements ISalaryRecordRepository {
   }
 }
 
+/**
+ * Info: (20260907 - Julian) 帳本的建立時間 —— 完整度起算的下限。
+ *
+ * 有狀態的替身：`getCreatedAt` 要真的照 `accountBookId` 回答，而且要數
+ * 被呼叫幾次。回一個寫死的值會讓「有沒有傳對帳本」與「有沒有變成
+ * 一人一次查詢」兩條都測不到（檢查清單 §1.8：被 mock 的那支要照實做事）。
+ */
+class FakeAccountBookRepo implements IAccountBookCreatedAtReader {
+  public createdAtByBook = new Map<string, Date>();
+  public createdAtCalls = 0;
+
+  public async getCreatedAt(accountBookId: string): Promise<Date | null> {
+    this.createdAtCalls += 1;
+    return this.createdAtByBook.get(accountBookId) ?? null;
+  }
+}
+
 let employees: FakeEmployeeRepo;
 let records: FakeRecordRepo;
+let accountBooks: FakeAccountBookRepo;
 let service: SalaryRecordService;
 
 beforeEach(() => {
   employees = new FakeEmployeeRepo();
   records = new FakeRecordRepo();
+  accountBooks = new FakeAccountBookRepo();
+  /**
+   * Info: (20260907 - Julian) 預設一本 2020 年就建立的帳。
+   *
+   * 下限比其他測試用的到職日都早，所以它們的期望值不受影響 ——
+   * 而這也是真實的形狀：帳本先存在，人才進來。下限自己的判準在
+   * 「起算下限」那一組，以及 `salary_coverage.tz.test.ts`。
+   */
+  accountBooks.createdAtByBook.set(BOOK, new Date("2020-01-01T00:00:00.000Z"));
   employees.seed(BOOK, employeeOf());
-  service = new SalaryRecordService(employees, records);
+  service = new SalaryRecordService(employees, records, accountBooks);
 });
 
 /**
@@ -725,5 +789,259 @@ describe("調薪歷程：服務層把原始列算成逐欄差異", () => {
     expect(result.data).toEqual([]);
     expect(result.totalPages).toBe(1);
     expect(result.recordedSince).toBeNull();
+  });
+});
+
+/**
+ * Info: (20260905 - Luphia) 名單上的「缺哪幾個月」（#6774）。
+ *
+ * 逐月的判斷本身由 `salary_coverage.tz.test.ts` 守（那裡連時區都釘住了）。
+ * 這一支守的是**編排**：算出來的東西有沒有掛到對的人身上、
+ * 帳本有沒有傳下去、以及有沒有變成一人一次查詢。
+ */
+describe("listEmployees 帶出薪資紀錄缺漏", () => {
+  const OTHER_EMPLOYEE_ID = "22222222-2222-4222-8222-222222222222";
+
+  // Info: (20260905 - Luphia) 2026-09-15。掃描範圍的終點是「上個月」，所以是到 8 月為止
+  const NOW = new Date("2026-09-15T00:00:00.000Z");
+  // Info: (20260905 - Luphia) 2026-06-01 UTC。到職日一律以 UTC 午夜落地
+  const HIRE_2026_06 = Math.floor(Date.UTC(2026, 5, 1) / 1000);
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(NOW);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("有到職日、只建了其中幾個月 → 列出漏掉的那些", async () => {
+    employees.seed(BOOK, employeeOf({ hireDate: HIRE_2026_06 }));
+    records.coveredByBook.set(BOOK, [
+      { employeeId: EMPLOYEE_ID, year: 2026, month: 6 },
+      { employeeId: EMPLOYEE_ID, year: 2026, month: 8 },
+    ]);
+
+    const [employee] = await service.listEmployees(BOOK);
+
+    expect(employee.missingPeriods).toEqual([{ year: 2026, month: 7 }]);
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 掛錯人是這段編排最容易出的錯：分組的 key 打錯、
+   * 或忘了分組直接把整本帳的紀錄丟給每一位。症狀是「明明建了的人被標成缺漏」，
+   * 而使用者會去補一張已經存在的薪資單。
+   */
+  it("紀錄掛在對的人身上 —— 別人的紀錄不算自己的", async () => {
+    employees.seed(BOOK, employeeOf({ hireDate: HIRE_2026_06 }));
+    employees.seed(
+      BOOK,
+      employeeOf({
+        id: OTHER_EMPLOYEE_ID,
+        name: "李小美",
+        number: "A002",
+        hireDate: HIRE_2026_06,
+      }),
+    );
+    // Info: (20260905 - Luphia) 6–8 月全部建在王小明身上，李小美一張都沒有
+    records.coveredByBook.set(
+      BOOK,
+      [6, 7, 8].map((month) => ({
+        employeeId: EMPLOYEE_ID,
+        year: 2026,
+        month,
+      })),
+    );
+
+    const list = await service.listEmployees(BOOK);
+    const ming = list.find((employee) => employee.id === EMPLOYEE_ID);
+    const mei = list.find((employee) => employee.id === OTHER_EMPLOYEE_ID);
+
+    expect(ming?.missingPeriods).toEqual([]);
+    expect(mei?.missingPeriods).toEqual([
+      { year: 2026, month: 6 },
+      { year: 2026, month: 7 },
+      { year: 2026, month: 8 },
+    ]);
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 別的帳本的紀錄不得算進來。
+   *
+   * uuid 撞號在現實裡不會發生，但「忘了把 accountBookId 傳下去」會 ——
+   * 那時查到的是整個資料庫的分佈，而缺漏會靜靜地消失。
+   */
+  it("只看本帳本的紀錄", async () => {
+    employees.seed(BOOK, employeeOf({ hireDate: HIRE_2026_06 }));
+    records.coveredByBook.set(
+      OTHER_BOOK,
+      [6, 7, 8].map((month) => ({
+        employeeId: EMPLOYEE_ID,
+        year: 2026,
+        month,
+      })),
+    );
+
+    const [employee] = await service.listEmployees(BOOK);
+
+    expect(employee.missingPeriods).toHaveLength(3);
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 一次查詢，不是一人一次。
+   *
+   * 逐位員工問在小帳本上完全看不出來 —— 五個人、五次查詢，畫面照樣秒開。
+   * 一百位員工的帳本才會炸，而那時已經上線了。
+   */
+  it("整份名單只查一次紀錄分佈", async () => {
+    employees.seed(BOOK, employeeOf({ hireDate: HIRE_2026_06 }));
+    employees.seed(BOOK, employeeOf({ id: OTHER_EMPLOYEE_ID, number: "A002" }));
+    employees.seed(
+      BOOK,
+      employeeOf({
+        id: "33333333-3333-4333-8333-333333333333",
+        number: "A003",
+      }),
+    );
+
+    await service.listEmployees(BOOK);
+
+    expect(records.coveredCalls).toBe(1);
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 留職停薪的月份不算缺漏。
+   *
+   * 這一條驗的是 service 有沒有把留停那兩欄傳下去 —— 漏傳的話
+   * `missingSalaryPeriods` 拿到的是 undefined，型別上會擋，
+   * 但傳成 `null`（例如寫死）不會，而留停中的人會每個月被標成缺漏。
+   */
+  it("留職停薪期間不算缺漏", async () => {
+    employees.seed(
+      BOOK,
+      employeeOf({
+        hireDate: HIRE_2026_06,
+        // Info: (20260905 - Luphia) 7 月留停、8 月仍未復職
+        leaveStartDate: Math.floor(Date.UTC(2026, 6, 1) / 1000),
+        leaveEndDate: null,
+      }),
+    );
+    records.coveredByBook.set(BOOK, [
+      { employeeId: EMPLOYEE_ID, year: 2026, month: 6 },
+    ]);
+
+    const [employee] = await service.listEmployees(BOOK);
+
+    expect(employee.missingPeriods).toEqual([]);
+  });
+
+  // Info: (20260905 - Luphia) 沒有到職日 = 算不出範圍。不猜，也不標示
+  it("沒有到職日就不下結論", async () => {
+    employees.seed(BOOK, employeeOf({ hireDate: null }));
+
+    const [employee] = await service.listEmployees(BOOK);
+
+    expect(employee.missingPeriods).toEqual([]);
+  });
+
+  /**
+   * Info: (20260907 - Julian) 起算的下限**真的傳下去了**（產品決策 20260907）。
+   *
+   * 逐月的判斷由 `salary_coverage.tz.test.ts` 守；這一條守的是編排 ——
+   * service 有沒有去問帳本、問到的值有沒有換成秒、有沒有傳進去。
+   * 少了它，把 `bookCreatedAt` 寫死成 `null` 也會全綠，而症狀是
+   * 中途導入的帳本一補上到職日就冒出上百個月（§1.7：測到零件、沒測到接線）。
+   */
+  it("帳本引入使用之前的月份不算缺漏", async () => {
+    employees.seed(
+      BOOK,
+      employeeOf({ hireDate: Math.floor(Date.UTC(2015, 2, 10) / 1000) }),
+    );
+    accountBooks.createdAtByBook.set(
+      BOOK,
+      new Date("2026-08-20T00:00:00.000Z"),
+    );
+
+    const [employee] = await service.listEmployees(BOOK);
+
+    // Info: (20260907 - Julian) 2015 年到職，但這本帳 2026/08 才建立
+    expect(employee.missingPeriods).toEqual([{ year: 2026, month: 8 }]);
+  });
+
+  /**
+   * Info: (20260907 - Julian) **回填的月份不得被下限藏起來**（review 阻擋-1）。
+   *
+   * 薪資紀錄的年月是使用者自己選的，沒有綁在建帳日之後 ——「九月建帳、
+   * 把今年 1–8 月補進來」是導入時的正常路徑。只看建帳日當下限的話，
+   * 這一段裡漏建的那個月會回空陣列，完全不標示。
+   *
+   * 這一條與 `salary_coverage.tz.test.ts` 的分工：那邊驗判斷本身，
+   * 這邊驗 service 真的把整份 `existing` 傳下去了 —— 只傳「建帳日之後」
+   * 那幾筆的話，逐月判斷再對也救不回來。
+   */
+  it("導入時回填到建帳日之前的月份，其中漏建的仍然標得出來", async () => {
+    employees.seed(
+      BOOK,
+      employeeOf({ hireDate: Math.floor(Date.UTC(2020, 0, 1) / 1000) }),
+    );
+    accountBooks.createdAtByBook.set(
+      BOOK,
+      new Date("2026-09-01T00:00:00.000Z"),
+    );
+    // Info: (20260907 - Julian) 回填了今年 1–8 月，唯獨 6 月漏了
+    records.coveredByBook.set(
+      BOOK,
+      [1, 2, 3, 4, 5, 7, 8].map((month) => ({
+        employeeId: EMPLOYEE_ID,
+        year: 2026,
+        month,
+      })),
+    );
+
+    const [employee] = await service.listEmployees(BOOK);
+
+    expect(employee.missingPeriods).toEqual([{ year: 2026, month: 6 }]);
+  });
+
+  /**
+   * Info: (20260907 - Julian) 讀不到帳本時退回只看到職日，不是整個不下結論。
+   *
+   * 帳本讀不到多半代表 id 錯或已刪 —— 那時名單本來也會是空的。
+   * 但這一格若寫成「讀不到就回空」，一次暫時的查詢失敗會讓整頁的
+   * 缺漏標示靜靜消失，而畫面看起來完全正常。
+   */
+  it("讀不到帳本的建立時間時，仍以到職日算得出來", async () => {
+    employees.seed(BOOK, employeeOf({ hireDate: HIRE_2026_06 }));
+    accountBooks.createdAtByBook.clear();
+
+    const [employee] = await service.listEmployees(BOOK);
+
+    expect(employee.missingPeriods).toEqual([
+      { year: 2026, month: 6 },
+      { year: 2026, month: 7 },
+      { year: 2026, month: 8 },
+    ]);
+  });
+
+  /**
+   * Info: (20260907 - Julian) 帳本的建立時間也是**整份名單問一次**。
+   *
+   * 與紀錄分佈同一個理由：放進 `Promise.all` 之外、或搬進 `map` 裡，
+   * 一百位員工就是一百次往返，而小帳本上完全看不出來。
+   */
+  it("整份名單只問一次帳本的建立時間", async () => {
+    employees.seed(BOOK, employeeOf({ id: OTHER_EMPLOYEE_ID, number: "A002" }));
+    employees.seed(
+      BOOK,
+      employeeOf({
+        id: "33333333-3333-4333-8333-333333333333",
+        number: "A003",
+      }),
+    );
+
+    await service.listEmployees(BOOK);
+
+    expect(accountBooks.createdAtCalls).toBe(1);
   });
 });

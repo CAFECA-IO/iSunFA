@@ -87,6 +87,9 @@ const EMPLOYEE_INPUT = {
   voluntaryPensionRate: 6,
   hireDate: HIRE_DATE,
   resignDate: null,
+  // Info: (20260905 - Luphia) 留職停薪也是寫入契約的一部分（#6774）
+  leaveStartDate: null,
+  leaveEndDate: null,
 };
 
 const optionsFor = (year: number, month: number): ISalaryCalculatorOptions => ({
@@ -163,8 +166,8 @@ afterAll(async () => {
  * 這一支守的是**真的存進去、真的讀得回來**，而那是前兩者都碰不到的一段。
  *
  * 三個具體風險：`voluntaryPensionRate` 被當成金額寫成 BigInt（RangeError 或靜靜變 0）、
- * `hireDate` 存進去讀回來差一天（時區）、以及 13 個新欄位裡有人漏接一欄
- * （`toProfile` 與 `toWriteData` 是手寫的兩張對照表）。
+ * `hireDate` 存進去讀回來差一天（時區）、以及那些欄位裡有人漏接一欄
+ * （`toProfile` / `toLeave` 與 `toWriteData` 是手寫的對照表）。
  */
 /**
  * Info: (20260908 - Julian) 員工檔寫入一律要帶「誰改的、何時生效」（計劃書 §4）。
@@ -182,7 +185,7 @@ const changeCtx = () => ({
 });
 
 describe("員工檔的常態屬性存得進去也讀得回來", () => {
-  it("15 欄全部原樣回來，一欄不漏", async () => {
+  it("17 欄全部原樣回來，一欄不漏", async () => {
     const number = `${EMPLOYEE_INPUT.number}-PF1`;
     const created = await salaryCalculatorEmployeeRepo.createEmployee({
       change: changeCtx(),
@@ -206,6 +209,9 @@ describe("員工檔的常態屬性存得進去也讀得回來", () => {
       voluntaryPensionRate: 6,
       hireDate: HIRE_DATE,
       resignDate: null,
+      // Info: (20260905 - Luphia) 留職停薪走的是另一張對照表（`toLeave`），漏接是獨立的事（#6774）
+      leaveStartDate: null,
+      leaveEndDate: null,
     };
 
     expect(created).toMatchObject(expected);
@@ -221,6 +227,44 @@ describe("員工檔的常態屬性存得進去也讀得回來", () => {
       await salaryCalculatorEmployeeRepo.listEmployees(BOOK_ID)
     ).filter((row) => row.id === created.id);
     expect(listed).toMatchObject(expected);
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 留職停薪的日期來回（#6774）。
+   *
+   * 與到職日同一類風險（Prisma 的 `DateTime` 轉換差一天），但走的是
+   * 另一張手寫對照表 —— `toProfile` 沒漏不代表 `toLeave` 沒漏。
+   *
+   * 順便釘住「還沒復職」：`leaveEndDate` 為 null 是**合法且常見**的狀態，
+   * 不是「沒有留停」。存成 1970 或被當成必填都會讓完整度警示算錯。
+   */
+  it("留職停薪的起訖來回不差一天，未復職留 null", async () => {
+    const leaveStart = Date.parse("2026-10-01T00:00:00.000Z") / 1000;
+    const created = await salaryCalculatorEmployeeRepo.createEmployee({
+      accountBookId: BOOK_ID,
+      input: {
+        ...EMPLOYEE_INPUT,
+        number: `${EMPLOYEE_INPUT.number}-LV1`,
+        leaveStartDate: leaveStart,
+        leaveEndDate: null,
+      },
+      change: changeCtx(),
+    });
+
+    expect(created.leaveStartDate).toBe(leaveStart);
+    expect(created.leaveEndDate).toBeNull();
+
+    const raw = await prisma.salaryCalculatorEmployee.findUniqueOrThrow({
+      where: { id: created.id },
+    });
+    expect(raw.leaveStartDate?.toISOString()).toBe("2026-10-01T00:00:00.000Z");
+    expect(raw.leaveEndDate).toBeNull();
+
+    const reloaded = await salaryCalculatorEmployeeRepo.getActiveEmployeeById(
+      BOOK_ID,
+      created.id,
+    );
+    expect(reloaded?.leaveStartDate).toBe(leaveStart);
   });
 
   /**
@@ -799,5 +843,90 @@ describe("薪資紀錄：租戶過濾、覆寫與分頁", () => {
         recordId: record.id,
       }),
     ).toBe(false);
+  });
+});
+
+/**
+ * Info: (20260905 - Luphia) 完整度警示要的年月分佈（#6774）。
+ *
+ * 這一支是 `groupBy` —— 它與 `findMany` 不同：`by` 少列一個欄位、
+ * 或 `where` 掉了帳本，回來的形狀仍然合法，只是**答案錯了**。
+ * 純函式那一側（`salary_coverage.tz.test.ts`）看不到這一段，
+ * service 的替身（`salary_record_service.test.ts`）也只回它被餵的東西。
+ */
+describe("listCoveredPeriods：整本帳的年月分佈", () => {
+  it("同一人同一個月只回一列，跨員工分得開", async () => {
+    const a = await salaryCalculatorEmployeeRepo.createEmployee({
+      accountBookId: BOOK_ID,
+      input: { ...EMPLOYEE_INPUT, number: `${EMPLOYEE_INPUT.number}-CV1` },
+      change: changeCtx(),
+    });
+    const b = await salaryCalculatorEmployeeRepo.createEmployee({
+      accountBookId: BOOK_ID,
+      input: { ...EMPLOYEE_INPUT, number: `${EMPLOYEE_INPUT.number}-CV2` },
+      change: changeCtx(),
+    });
+
+    await saveRecord({
+      accountBookId: BOOK_ID,
+      employeeId: a.id,
+      year: 2026,
+      month: 3,
+      totalPayment: 41000n,
+    });
+    // Info: (20260905 - Luphia) 同一格覆寫一次：`upsert` 之後仍然只該有一列
+    await saveRecord({
+      accountBookId: BOOK_ID,
+      employeeId: a.id,
+      year: 2026,
+      month: 3,
+      totalPayment: 42000n,
+    });
+    await saveRecord({
+      accountBookId: BOOK_ID,
+      employeeId: b.id,
+      year: 2026,
+      month: 4,
+      totalPayment: 41000n,
+    });
+
+    const covered = await salaryRecordRepo.listCoveredPeriods(BOOK_ID);
+    const mine = covered.filter((row) => [a.id, b.id].includes(row.employeeId));
+
+    expect(mine).toHaveLength(2);
+    expect(mine).toContainEqual({ employeeId: a.id, year: 2026, month: 3 });
+    expect(mine).toContainEqual({ employeeId: b.id, year: 2026, month: 4 });
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 別的帳本的紀錄不得算進來。
+   *
+   * `where` 掉了帳本的話，另一本帳裡同一個月的紀錄會把這裡的缺漏補平 ——
+   * 而畫面上那個月看起來就是「已經建好了」。
+   */
+  it("只回本帳本的分佈", async () => {
+    const mine = await salaryCalculatorEmployeeRepo.createEmployee({
+      accountBookId: BOOK_ID,
+      input: { ...EMPLOYEE_INPUT, number: `${EMPLOYEE_INPUT.number}-CV3` },
+      change: changeCtx(),
+    });
+    const theirs = await salaryCalculatorEmployeeRepo.createEmployee({
+      accountBookId: OTHER_BOOK_ID,
+      input: { ...EMPLOYEE_INPUT, number: `${EMPLOYEE_INPUT.number}-CV4` },
+      change: changeCtx(),
+    });
+
+    await saveRecord({
+      accountBookId: OTHER_BOOK_ID,
+      employeeId: theirs.id,
+      year: 2026,
+      month: 5,
+      totalPayment: 41000n,
+    });
+
+    const covered = await salaryRecordRepo.listCoveredPeriods(BOOK_ID);
+
+    expect(covered.map((row) => row.employeeId)).not.toContain(theirs.id);
+    expect(covered.map((row) => row.employeeId)).not.toContain(mine.id);
   });
 });

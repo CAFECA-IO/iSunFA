@@ -156,6 +156,25 @@ describe("SalaryCalculatorEmployee", () => {
   });
 
   /**
+   * Info: (20260905 - Luphia) 留職停薪的起訖同理，而**後果更嚴重**（#6774）。
+   *
+   * 到職日被 `@default(now())` 洗掉的症狀是「薪水算錯」—— 錯得看得見。
+   * 留停起日被洗掉的症狀是**功能整個靜音**：全體員工變成「今天起留停」，
+   * 於是每一個人的每一個月都被扣掉，完整度警示對誰都不報，
+   * 而畫面看起來完全正常（沒有標示 = 沒有缺漏）。
+   *
+   * `checklist §1.12` 的那一句正是這件事：「一個完全合法、只是錯的值」
+   * 比 NULL 危險 —— `now()` 對 `DateTime?` 完全合法，`db push` 會過，
+   * 型別會過，全套測試也會過。這一條是唯一問得到的地方。
+   */
+  it("留職停薪起訖可空，且不得有預設值", () => {
+    expect(block).toMatch(/leaveStartDate\s+DateTime\?/);
+    expect(block).toMatch(/leaveEndDate\s+DateTime\?/);
+    expect(block).not.toMatch(/leaveStartDate\s+DateTime\?[^\n]*@default/);
+    expect(block).not.toMatch(/leaveEndDate\s+DateTime\?[^\n]*@default/);
+  });
+
+  /**
    * Info: (20260902 - Julian) schema 的 `@default(42)` 與 TS 常數必須是同一個值。
    *
    * Prisma 的 `@default` 沒辦法引用 TS 常數，所以這是**唯一**能讓兩邊

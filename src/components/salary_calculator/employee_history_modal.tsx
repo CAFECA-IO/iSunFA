@@ -55,6 +55,9 @@ const FIELD_KIND: Record<
   voluntaryPensionRate: "percent",
   hireDate: "date",
   resignDate: "date",
+  // Info: (20260909 - Julian) 留職停薪起訖（#6774）；與到職日同樣是 UTC 午夜的日期
+  leaveStartDate: "date",
+  leaveEndDate: "date",
   name: "text",
   number: "text",
   email: "text",

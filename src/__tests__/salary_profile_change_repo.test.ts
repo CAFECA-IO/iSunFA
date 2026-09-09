@@ -115,6 +115,9 @@ const rowFixture = (patch: Record<string, unknown> = {}) => ({
   voluntaryPensionRate: 0,
   hireDate: new Date("2026-01-01T00:00:00.000Z"),
   resignDate: null,
+  // Info: (20260909 - Julian) 留職停薪（#6774）；資料庫列這一側是 Date
+  leaveStartDate: null,
+  leaveEndDate: null,
   ...patch,
 });
 
@@ -142,6 +145,9 @@ const inputOf = (
   isPensionInsured: true,
   dependentsCount: 0,
   voluntaryPensionRate: 0,
+  // Info: (20260909 - Julian) 寫入輸入這一側是 Unix 秒／null（#6774）
+  leaveStartDate: null,
+  leaveEndDate: null,
   hireDate: 1_767_225_600,
   resignDate: null,
   ...patch,
