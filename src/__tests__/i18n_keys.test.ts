@@ -395,3 +395,157 @@ describe("排班月曆的日型別縮寫", () => {
     expect(new Set(labels).size).toBe(labels.length);
   });
 });
+
+/**
+ * Info: (20260909 - Julian) **五個語系的鍵齊不齊**（review B3）。
+ *
+ * ## 為什麼上面那一組守不到這件事
+ *
+ * 上面那組問的是：「程式碼裡以字面值寫出來的每一個 `t("ns.key")`，
+ * 五個語系都查得到嗎」。掃描根是整個 `src`，涵蓋範圍已經夠寬 ——
+ * 但它是**從程式碼出發**的。
+ *
+ * 於是有一整類缺陷落在它外面：**只有 zh_tw 有、其他語系沒有的鍵**，
+ * 只要它沒有被字面值引用（用變數組出來的鍵、`Record<X, i18nKey>` 查表、
+ * 或剛加進字典還沒接上畫面），上面那組就永遠是綠的。
+ *
+ * 這正是檢查清單 §1.11 說的「掃描測試只回答有沒有接線」：
+ * 接線問到了，**字典本身齊不齊**沒有問到。
+ *
+ * ## 這一組從另一端問
+ *
+ * 拿 `zh_tw` 當基準（它是這個專案的母語，新字串一定先寫在那裡），
+ * 逐一比對另外四個語系。與上面那組是**兩個方向**，不是同一件事問兩次：
+ *
+ * | | 從哪裡出發 | 抓得到什麼 |
+ * | --- | --- | --- |
+ * | 上面那組 | 程式碼的 `t("...")` | 用了但字典沒有 → 畫面顯示鍵名 |
+ * | 這一組 | zh_tw 字典 | 字典有但別的語系沒有 → 那個語系顯示鍵名 |
+ *
+ * ## 為什麼掃全部 76 個命名空間，而不是沿用上面的 `NAMESPACES`
+ *
+ * 那張表是「受守護的命名空間」，逐一加入是刻意的（加一個就要把該模組的壞鍵補齊）。
+ * 但**鍵齊不齊**沒有那個成本 —— 它不要求任何人去改程式碼，只要求翻譯補齊。
+ * 所以這一組直接讀 `zh_tw` 目錄，新增一個命名空間檔就自動被守住，
+ * 不需要有人記得回來加一列。
+ *
+ * 20260909 實測：76 個命名空間、zh_tw 共 5,266 鍵，四個語系**零缺口**。
+ * 也就是說這條測試建立的當下是綠的 —— 它守的是**日後**別再掉。
+ */
+describe("五個語系的鍵齊不齊", () => {
+  const LOCALES_DIR = join(SRC_DIR, "i18n", "locales");
+  const OTHERS = LANGUAGES.filter((lang) => lang !== "zh_tw");
+
+  const namespaces = readdirSync(join(LOCALES_DIR, "zh_tw"))
+    .filter((file) => file.endsWith(".ts"))
+    .map((file) => file.replace(/\.ts$/, ""));
+
+  /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
+  const dictionaryOf = (lang: string, namespace: string): any => {
+    const loaded = require(join(LOCALES_DIR, lang, namespace));
+    // Info: (20260909 - Julian) 每個檔案只 export 一個字典物件，名稱與檔名不一定相同
+    return loaded[Object.keys(loaded)[0]];
+  };
+
+  const flatten = (value: any, prefix = ""): string[] => {
+    if (!value || typeof value !== "object" || Array.isArray(value))
+      return [prefix];
+    return Object.entries(value).flatMap(([key, child]) =>
+      flatten(child, prefix ? `${prefix}.${key}` : key),
+    );
+  };
+
+  it("掃到了命名空間（否則整組空過）", () => {
+    expect(namespaces.length).toBeGreaterThan(50);
+  });
+
+  /**
+   * Info: (20260909 - Julian) 一個語系一條，而不是全部併成一條。
+   *
+   * 併成一條的話，失敗訊息只說「有 37 個鍵不齊」；分開之後
+   * 紅的那一行直接說是哪一個語系，而補翻譯的人多半只負責其中一種。
+   */
+  it.each(OTHERS)("%s 沒有比 zh_tw 少任何一個鍵", (lang) => {
+    const missing: string[] = [];
+
+    namespaces.forEach((namespace) => {
+      let theirs: Set<string>;
+      try {
+        theirs = new Set(flatten(dictionaryOf(lang, namespace)));
+      } catch {
+        // Info: (20260909 - Julian) 整個檔案不存在 —— 那是「全缺」，不是 0 缺
+        missing.push(`${namespace}（整個命名空間缺檔）`);
+        return;
+      }
+      flatten(dictionaryOf("zh_tw", namespace)).forEach((key) => {
+        if (!theirs.has(key)) missing.push(`${namespace}.${key}`);
+      });
+    });
+
+    expect(missing).toEqual([]);
+  });
+
+  /**
+   * Info: (20260909 - Julian) 反方向：某個語系**多**出來的鍵。**這一條是棘輪，不是門檻。**
+   *
+   * 多出來的鍵不會讓畫面壞掉，所以它不該擋任何人的 PR。但它是一個訊號：
+   * 那一格的中文被刪掉了而翻譯沒跟著刪，或有人直接改了英文字典而沒回頭補中文。
+   * 兩者都會讓字典長出沒人在用的死鍵，而下一個人不敢刪 ——
+   * 因為看不出它是死的還是漏的。
+   *
+   * ## 為什麼是數字而不是 `toEqual([])`
+   *
+   * 20260909 建立這一條時，四個語系合計**已經多出 61 個鍵**，全部在
+   * `esg_verify` / `cookie_consent` / `pricing` 三個與當時那個 PR 無關的命名空間。
+   * 要求當下清乾淨，等於讓一條護欄的落地綁架三個別人的模組 ——
+   * 那通常的結果是這條測試根本不會被寫。
+   *
+   * 所以記下當下的數字，並且**只能往下**。新長出來的死鍵會立刻紅；
+   * 有人順手清掉幾個，這裡的數字也要跟著調小（下面那條測試會逼他調）。
+   *
+   * 這是 `salary_repo_scope.test.ts` 的 `TENANT_EXEMPT_MAX` 同一個手法：
+   * 既有的債看得見、有上限、而且不會再長大。
+   */
+  const EXTRA_KEY_BUDGET: Record<string, number> = {
+    en: 2,
+    ja: 16,
+    ko: 18,
+    zh_cn: 17,
+  };
+
+  const extraKeysOf = (lang: string): string[] => {
+    const extra: string[] = [];
+
+    namespaces.forEach((namespace) => {
+      let theirs: string[];
+      try {
+        theirs = flatten(dictionaryOf(lang, namespace));
+      } catch {
+        return;
+      }
+      const ours = new Set(flatten(dictionaryOf("zh_tw", namespace)));
+      theirs.forEach((key) => {
+        if (!ours.has(key)) extra.push(`${namespace}.${key}`);
+      });
+    });
+
+    return extra;
+  };
+
+  it.each(OTHERS)("%s 的多餘鍵沒有變多", (lang) => {
+    expect(extraKeysOf(lang).length).toBeLessThanOrEqual(
+      EXTRA_KEY_BUDGET[lang],
+    );
+  });
+
+  /**
+   * Info: (20260909 - Julian) 棘輪要轉得動，也要**轉不回去**。
+   *
+   * 少了這一條，上面那個 `<=` 會讓「清掉 10 個死鍵」之後預算仍然停在舊數字，
+   * 於是日後再長出 10 個也不會紅 —— 棘輪就變成了一個很寬的門檻。
+   * 這一條逼清理的人順手把數字改小。
+   */
+  it.each(OTHERS)("%s 的預算沒有虛胖（清乾淨了就要調小）", (lang) => {
+    expect(extraKeysOf(lang).length).toBe(EXTRA_KEY_BUDGET[lang]);
+  });
+});

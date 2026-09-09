@@ -82,23 +82,12 @@ export async function GET(
       SalaryAccess.READ,
     );
 
-    /**
-     * Info: (20260908 - Julian) `fields` 是逗號分隔的欄位名。
-     *
-     * 空字串會切出 `[""]` —— 那會變成「篩一個叫空字串的欄位」，
-     * 也就是一列都撈不到，而使用者看到的是「這個人沒有任何異動」。
-     * 過濾掉空元素之後，空字串與沒帶這個參數是同一件事。
-     */
-    const fields = (parsed.data.fields ?? "")
-      .split(",")
-      .map((field) => field.trim())
-      .filter((field) => field !== "");
-
     return jsonOk(
       await salaryRecordService.listProfileChanges({
         accountBookId,
         employeeId,
-        fields,
+        // Info: (20260909 - Julian) 逗號切割在 zod 的 transform 裡（CLAUDE.md §1）
+        fields: parsed.data.fields,
         page: parsed.data.page ?? 1,
         pageSize: parsed.data.pageSize ?? 20,
       }),

@@ -77,9 +77,24 @@ export const SALARY_ACCESS_ROLES: Record<SalaryAccess, readonly TeamRole[]> = {
  * 萬一還有殘留的 `ADMIN` 列，它不在任何一張清單裡 —— 一律擋下，
  * 而不是靠型別假裝它不存在。
  */
+/**
+ * Info: (20260909 - Julian) 回傳型別是 `role is string`，不是 `boolean`。
+ *
+ * 呼叫端拿到 true 的時候，`role` 必然是非空字串（它得等於清單裡的某一個值）——
+ * 而那個推論原本只存在於讀程式碼的人腦中：`use_salary_access.ts` 因此寫了
+ * `role: role as string` 來說服編譯器。**斷言不受型別保護**，
+ * 哪天這裡改成 `role == null` 也回 true，那個 `as` 會安靜地繼續成立。
+ *
+ * 寫成型別謂詞之後，那個推論由編譯器承擔，呼叫端不需要任何斷言。
+ *
+ * 內部也不再把 `role` 斷言成 `TeamRole`（那是對**值**說謊：傳進來的字串
+ * 未必是合法角色，正是這支函式要判斷的事）。改成把**清單**放寬成
+ * `readonly string[]` —— 放寬集合是安全的，收窄值不是。
+ */
 export function isSalaryAccessAllowed(
   role: string | null | undefined,
   access: SalaryAccess,
-): boolean {
-  return SALARY_ACCESS_ROLES[access].includes(role as TeamRole);
+): role is string {
+  if (role === null || role === undefined) return false;
+  return (SALARY_ACCESS_ROLES[access] as readonly string[]).includes(role);
 }

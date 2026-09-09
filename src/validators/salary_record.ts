@@ -415,7 +415,34 @@ export const toSalaryCalculatorEmployeeWriteInput = (
 export const salaryProfileChangeQuerySchema = z.object({
   page: z.number().int().positive().optional(),
   pageSize: z.number().int().positive().max(100).optional(),
-  fields: z.string().trim().max(500).optional(),
+  /**
+   * Info: (20260909 - Julian) 逗號分隔的欄位名，在**驗證層**就切成陣列。
+   *
+   * 上一版切在 route 裡。那不是業務邏輯（所以放 route 沒有錯得離譜），
+   * 但它是**解析**，而 CLAUDE.md §1 給 route 的分工是「接收 → 驗證 → 呼叫」——
+   * 解析屬於驗證那一格。放這裡還有一個實際的好處：
+   * `fields` 的型別從此是 `string[]` 而不是「可能帶逗號的字串」，
+   * 下一個呼叫端不會有機會忘記切。
+   *
+   * `.max(500)` 在 `.transform()` 之前：先驗原始字串的長度，
+   * 再把它切開。反過來的話上限會變成「切完之後某一段的長度」，
+   * 而那擋不住「一萬個逗號」這種輸入。
+   *
+   * 過濾空元素是必要的，不是防禦性的：空字串 `"".split(",")` 會得到 `[""]`，
+   * 也就是「篩一個叫空字串的欄位」—— 一列都撈不到，而使用者看到的是
+   * 「這個人沒有任何異動」。濾掉之後，空字串與沒帶這個參數是同一件事。
+   */
+  fields: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .transform((value) =>
+      (value ?? "")
+        .split(",")
+        .map((field) => field.trim())
+        .filter((field) => field !== ""),
+    ),
 });
 
 export type ISalaryProfileChangeQueryPayload = z.infer<

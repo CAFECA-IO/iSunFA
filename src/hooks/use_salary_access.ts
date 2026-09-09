@@ -49,8 +49,9 @@ export type SalaryAccessStatus =
 export function toSalaryAccessStatus(
   role: string | null | undefined,
 ): SalaryAccessStatus {
+  // Info: (20260909 - Julian) 不需要 `as string`：`isSalaryAccessAllowed` 是型別謂詞
   if (isSalaryAccessAllowed(role, SalaryAccess.READ)) {
-    return { state: "allowed", role: role as string };
+    return { state: "allowed", role };
   }
   return { state: "denied", role: role ?? null };
 }

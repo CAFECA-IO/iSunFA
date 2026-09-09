@@ -251,10 +251,10 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
    * `-1,000`，兩個都不是這個月實際發生的事（淨變動是 `+1,000`）。
    * 而 `count` 讓畫面說得出「本月有 2 筆」—— 沒有它，淨變動會被讀成一次調整。
    */
-  private async attachBaseSalaryChanges(
+  private async attachBaseSalaryChanges<T extends ISalaryRecordSummary>(
     accountBookId: string,
-    summaries: ISalaryRecordSummary[],
-  ): Promise<ISalaryRecordSummary[]> {
+    summaries: T[],
+  ): Promise<T[]> {
     if (summaries.length === 0) return summaries;
 
     const keyOf = (employeeId: string, year: number, month: number): string =>
@@ -345,10 +345,10 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
    * 都用不到。加這個條件不影響正確性，只是不白撈 ——
    * 而一本用了很多年的帳，那個「白撈」會隨時間線性成長。
    */
-  private async attachBaseSalaryDeltas(
+  private async attachBaseSalaryDeltas<T extends ISalaryRecordSummary>(
     accountBookId: string,
-    summaries: ISalaryRecordSummary[],
-  ): Promise<ISalaryRecordSummary[]> {
+    summaries: T[],
+  ): Promise<T[]> {
     if (summaries.length === 0) return summaries;
 
     const employeeIds = [
@@ -658,12 +658,24 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
      * 少了這一行，匯出的 CSV 會每一列都是「沒有調薪」—— 而那不是空白，
      * 是**錯的值**：`null` 的意思是「這個月沒有調薪」。
      */
-    const withChanges = await this.attachBaseSalaryChanges(
+    /**
+     * Info: (20260909 - Julian) 兩支 `attach*` 是泛型的，所以這裡不需要向下轉型。
+     *
+     * 上一版寫的是 `return withChanges as ISalaryRecordDetail[]` ——
+     * 那兩支當時宣告成收 / 回 `ISalaryRecordSummary[]`，於是 `input` 與 `result`
+     * 在型別上就消失了，只能靠 `as` 斷言它們還在。
+     *
+     * 那個斷言今天成立（兩支都用 spread 保留原欄位），但它成立與否**不再被型別守著**
+     * —— 哪天有人在 `attach*` 裡改成重建物件而不是 spread，編譯照樣過，
+     * 而匯出的 CSV 會少掉整份快照。
+     *
+     * 改成 `<T extends ISalaryRecordSummary>` 之後，「進去什麼型別、出來什麼型別」
+     * 由編譯器保證，這裡就不需要任何斷言。
+     */
+    return this.attachBaseSalaryChanges(
       accountBookId,
       await this.attachBaseSalaryDeltas(accountBookId, rows.map(toDetail)),
     );
-
-    return withChanges as ISalaryRecordDetail[];
   }
 
   public async getRecordById(
