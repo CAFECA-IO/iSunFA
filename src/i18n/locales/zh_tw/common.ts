@@ -30,7 +30,7 @@ export const common = {
     pdf_framework_claim:
       "報告紙面上出現「本公司符合 {{name}}」這類主體合規宣告,已在匯出前停止 —— 那份 PDF 一旦產出就會離開系統。請移除該語句後再匯出;敘述文件結構的架構對齊聲明不受影響。",
     pdf_download_needs_preview:
-      "請先切換到「預覽 PDF」再下載 —— 下載的內容就是預覽所見",
+      "請先切換到「預覽 PDF」再下載 —— 下載的 PDF 與預覽內容相同(另加目錄與頁碼)",
     default: "系統錯誤，請稍後再試",
   },
   refresh: "重新整理",

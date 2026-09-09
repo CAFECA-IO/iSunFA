@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   AlertTriangle,
   Check,
@@ -26,6 +26,11 @@ import { AiReportModal } from "@/components/pdf_tool/ai_report_modal";
 import EditPanel from "@/components/pdf_tool/edit_panel";
 import { PdfToolViewMode, PDF_PRINT_STYLE } from "@/constants/pdf_tool";
 import { THEME_STATIC_LIGHT_CLASS } from "@/constants/theme";
+import {
+  buildCarbonReportShell,
+  toPdfRequestShell,
+  CARBON_REPORT_SHELL_VENDOR,
+} from "@/lib/utils/carbon_report_shell";
 import { safeStorage } from "@/lib/utils/storage";
 import {
   PDF_EXPORT_JPEG_QUALITY,
@@ -387,7 +392,9 @@ interface IPdfEditorProps {
   identityRows?: ReadonlyArray<{ label: string; value: string }>;
   /**
    * Info: (20260904 - Emily) 揭露框架(#6688-C)。**只往伺服端送 enum**,
-   * 聲明行由伺服端導出 —— 這個元件不知道也不該知道那兩句話長什麼樣。
+   * 聲明行由伺服端導出並審過才印。
+   * Info: (20260909 - Emily) 預覽也要讓使用者看到那兩句(#6761):同樣經 `carbonFrameworkView`
+   * 從同一份常數導,不手寫第二份 —— 見 `buildCarbonReportShell`。
    */
   disclosureFramework?: CarbonDisclosureFrameworkEnum;
   isEmbedded?: boolean;
@@ -722,6 +729,25 @@ export default function PdfEditor({
   };
 
   /**
+   * Info: (20260909 - Emily) 文件外殼的**唯一**資料來源(#6761):預覽渲染它、下載送它。
+   *
+   * 原本兩份:下方 `downloadViaServer` 的 `shell` 物件、與 JSX 裡各自再 `t()` 一次的頁首頁尾 ——
+   * 而且下載那份多了報告名稱、識別欄位、聲明行,預覽三塊都沒有。
+   * 收成一個 memo 之後,JSX 只准從這裡讀(有掃描測試釘住 JSX 裡不再直接叫 `t("admin_mission_board.pdf_editor.*")`)。
+   */
+  const shell = useMemo(
+    () =>
+      buildCarbonReportShell({
+        t,
+        now: new Date(),
+        reportTitle,
+        identityRows,
+        framework: disclosureFramework,
+      }),
+    [t, reportTitle, identityRows, disclosureFramework],
+  );
+
+  /**
    * Info: (20260810 - Emily) 伺服端向量列印
    * (data/issue_drafts/inventory_table_import/17)。
    *
@@ -755,34 +781,11 @@ export default function PdfEditor({
        * 這裡不組那兩句字串 —— 印出的與驗收比對的必須是同一份常數。
        */
       framework: disclosureFramework,
-      shell: {
-        brand: t("admin_mission_board.pdf_editor.brand")!,
-        internalDocument: t(
-          "admin_mission_board.pdf_editor.internal_document",
-        )!,
-        systemReport: t("admin_mission_board.pdf_editor.system_report")!,
-        issuedAt: new Date().toLocaleDateString().replace(/-/g, "/"),
-        footerTitle: t("admin_mission_board.pdf_editor.footer_title")!,
-        footerText: t("admin_mission_board.pdf_editor.footer_text", {
-          year: new Date().getFullYear(),
-        })!,
-        /**
-         * Info: (20260812 - Emily) 目錄抬頭沿用側欄那顆按鈕的字，
-         * 兩處指的是同一份東西，各寫一份遲早會不一致。
-         */
-        tocTitle: t("carbon_chatbot.outline_title")!,
-        /*
-         * Info: (20260812 - Emily) 報告名稱。省略時 carbon_report_html 不印
-         * 那個 <h1 class="doc-title">，第一頁就只有品牌橫幅與目錄。
-         */
-        title: reportTitle || undefined,
-        /**
-         * Info: (20260814 - Emily) 一項都沒有就整區不印(公開分享頁那種場合)；
-         * 有的話一律四列,包含沒填的 —— 藏起來的話「不適用」與「忘了填」同形。
-         */
-        identity:
-          identityRows && identityRows.length > 0 ? identityRows : undefined,
-      },
+      /**
+       * Info: (20260909 - Emily) 與預覽渲染的是**同一個** shell 物件(#6761),只去掉聲明行 ——
+       * 伺服端會從 framework 用同一份常數再導一次並審過(見 toPdfRequestShell)。
+       */
+      shell: toPdfRequestShell(shell),
     });
     saveBlobAs(result.blob, fileName);
     /**
@@ -1153,26 +1156,54 @@ export default function PdfEditor({
                       className="h-7 w-auto"
                     />
                     <span className="inline-block border-l border-[#4b5563] pl-3">
-                      {t("admin_mission_board.pdf_editor.brand")!}
+                      {shell.brand}
                     </span>
                   </div>
                   <span className="inline-flex items-center rounded-full bg-[#3b82f6]/10 px-3 py-1 text-center text-xs font-medium text-[#60a5fa] ring-1 ring-[#60a5fa]/30 ring-inset">
-                    {t("admin_mission_board.pdf_editor.internal_document")!}
+                    {shell.internalDocument}
                   </span>
                 </div>
 
                 <div className="flex-1 p-6 sm:p-10">
                   <div className="mb-6 flex flex-col gap-2 border-b border-[#f3f4f6] pb-6">
                     <div className="inline-block w-fit rounded bg-[#ffedd5] px-2 py-1 text-xs leading-none font-bold text-[#c2410c]">
-                      {t("admin_mission_board.pdf_editor.system_report")!}
+                      {shell.systemReport}
                     </div>
                     <p className="flex items-center gap-2 text-sm text-[#6b7280]">
-                      iSunFA Enterprise Solutions
+                      {CARBON_REPORT_SHELL_VENDOR}
                       <span className="text-[#d1d5db]">•</span>
-                      <span>
-                        {new Date().toLocaleDateString().replace(/-/g, "/")}
-                      </span>
+                      <span>{shell.issuedAt}</span>
                     </p>
+                    {/* Info: (20260909 - Emily) 以下三塊與伺服端 shellHeader 同序、同源(#6761):
+                        報告名稱 → 四列識別欄位 → 揭露聲明行。下載的第一頁有的,預覽也要有。 */}
+                    {shell.title && (
+                      <h1 className="mt-2 text-xl font-bold text-[#111827]">
+                        {shell.title}
+                      </h1>
+                    )}
+                    {shell.identity && shell.identity.length > 0 && (
+                      <dl className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
+                        {shell.identity.map((field) => (
+                          <div key={field.label}>
+                            <dt className="text-xs text-[#6b7280]">
+                              {field.label}
+                            </dt>
+                            <dd className="font-semibold text-[#0f172a]">
+                              {field.value}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
+                    {shell.claims.length > 0 && (
+                      <section className="mt-2 text-xs leading-relaxed text-[#4b5563]">
+                        {shell.claims.map((line) => (
+                          <p key={line} className="mb-1">
+                            {line}
+                          </p>
+                        ))}
+                      </section>
+                    )}
                   </div>
 
                   {/* Info: (20260426 - Luphia) Markdown Content */}
@@ -1197,12 +1228,10 @@ export default function PdfEditor({
                 {/* Info: (20260426 - Luphia) iSunFA Footer */}
                 <div className="rounded-b-xl border-t border-[#ffedd5] bg-[#fff7ed] px-6 py-8 text-center">
                   <h3 className="mb-2 text-lg font-bold text-[#111827]">
-                    {t("admin_mission_board.pdf_editor.footer_title")!}
+                    {shell.footerTitle}
                   </h3>
                   <p className="mx-auto max-w-lg text-sm text-[#4b5563]">
-                    {t("admin_mission_board.pdf_editor.footer_text", {
-                      year: new Date().getFullYear(),
-                    })}
+                    {shell.footerText}
                   </p>
                 </div>
               </div>

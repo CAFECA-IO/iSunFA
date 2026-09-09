@@ -7,6 +7,7 @@ import { convertTimelineBlocksToTables } from "@/lib/utils/markdown_timeline_tab
 import { replaceOfficeSymbolChars } from "@/lib/utils/office_symbol_chars";
 import { padAllTableHeaders } from "@/lib/utils/markdown_table_columns";
 import { prepareCarbonMarkdown } from "@/lib/utils/carbon_markdown_prepare";
+import { CARBON_REPORT_SHELL_VENDOR } from "@/lib/utils/carbon_report_shell";
 import {
   CARBON_PDF_CHART_MAX_HEIGHT_MM,
   CARBON_PDF_FONT_STACK,
@@ -488,7 +489,8 @@ export interface ICarbonReportShell {
   tocTitle?: string;
 }
 
-const SHELL_VENDOR = "iSunFA Enterprise Solutions";
+// Info: (20260909 - Emily) 與預覽同一個常數(#6761):兩端各寫一份字面值就是兩份來源
+const SHELL_VENDOR = CARBON_REPORT_SHELL_VENDOR;
 
 /**
  * Info: (20260812 - Emily) 下載的報告要有可點的目錄，而且每一條要標頁碼
