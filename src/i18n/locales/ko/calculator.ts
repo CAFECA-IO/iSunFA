@@ -84,6 +84,12 @@ export const calculator = {
     hire_date: "입사일",
     resign_date: "퇴사일",
     date_order_error: "퇴사일은 입사일보다 이를 수 없습니다",
+    leave_start_date: "휴직 시작일",
+    leave_end_date: "복직일",
+    leave_hint:
+      "휴직: 이 기간에 온전히 포함되는 달은 급여명세서 누락으로 보지 않습니다. 시작일은 휴직 첫날, 복직일은 다시 출근하는 첫날을 입력하세요 —— 이 두 달은 근무일이 있으므로 포함됩니다. 아직 복직하지 않았다면 비워 두세요.",
+    leave_order_error: "복직일은 휴직 시작일보다 이를 수 없습니다",
+    leave_start_required: "휴직 시작일도 입력하세요",
     main_title: "직원 목록",
     name: "직원 이름",
     number: "사원 번호",
@@ -116,11 +122,15 @@ export const calculator = {
     remove_employee_content: "직원 목록에서 {{name}} 님을 삭제하시겠습니까?",
     remove_employee_submit_btn: "네, 직원을 삭제합니다.",
     no_email: "미입력",
-    missing_email_banner:
-      "{{count}}명의 이메일이 비어 있어 급여명세서를 보낼 수 없습니다",
-    only_missing_email: "해당 직원만 보기",
-    show_all: "전체 보기",
+    missing_records_badge: "{{count}}개월 누락",
     no_filter_result: "조건에 맞는 직원이 없습니다",
+    missing_records_rest: "그 외 {{count}}개월",
+    no_hire_date: "미입력",
+    filter_missing_email: "이메일 없음",
+    filter_missing_hire_date: "입사일 없음",
+    missing_hire_date_banner:
+      "{{count}}명의 직원에게 입사일이 없습니다. 입력하면 어느 달의 급여명세서가 누락되었는지 확인할 수 있습니다",
+    filter_missing_records: "급여명세서 누락",
   },
   result: {
     base_salary_with_tax: "기본급(과세 대상)",
@@ -329,6 +339,8 @@ export const calculator = {
     re_send: "급여 명세서 재발송",
     send_disabled_unsaved:
       "급여 기록을 먼저 저장해야 급여명세서를 보낼 수 있습니다",
+    send_disabled_unlinked:
+      "이 계산은 직원 연결이 해제되었습니다. 직원을 다시 선택하세요",
     send_disabled_no_email:
       "이 직원에게 이메일 주소가 없습니다. 먼저 직원 목록에서 추가해 주세요",
     send_disabled_employee_gone:

@@ -15,6 +15,11 @@ import {
 import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { useSalaryEmployees } from "@/hooks/use_salary_employees";
 import {
+  resolveSendTarget,
+  type ISalarySendTarget,
+} from "@/lib/utils/salary_send_target";
+import {
+  DEFAULT_EMPLOYEE_LEAVE,
   diffEmployeeProfile,
   IProfileDiffEntry,
 } from "@/lib/utils/salary_employee_profile";
@@ -79,8 +84,21 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
   const bookId = accountBookId ?? "";
   const { isSaving, savedRecord, hasError, findExisting, save, clearSaved } =
     useSalaryRecordSave(bookId);
-  const { employees, createEmployee, updateEmployee, reload } =
-    useSalaryEmployees(accountBookId);
+  const {
+    employees,
+    createEmployee,
+    updateEmployee,
+    reload,
+    /**
+     * Info: (20260905 - Luphia) 名單狀態要拿進來（#6775）。
+     *
+     * 寄送判斷改讀即時名單之後，就必須分得出「名單還沒問完」與
+     * 「這個人真的沒信箱」—— 少了這兩個旗標，名單載入中的那一瞬間
+     * 每個人都會被說成「沒有電子郵件」。
+     */
+    isLoading: isEmployeesLoading,
+    hasError: hasEmployeesError,
+  } = useSalaryEmployees(accountBookId);
 
   /**
    * Info: (20260901 - Julian) 待確認覆蓋的那一筆，連「要存給誰」一起記。
@@ -236,8 +254,17 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     if (pendingProfileDiff === null) return;
 
     const { employee } = pendingProfileDiff;
+    /**
+     * Info: (20260905 - Luphia) 留停兩欄**原樣帶回**（#6774）。
+     *
+     * 計算機沒有這兩格，而寫入契約是整組必填 —— 帶 `DEFAULT_EMPLOYEE_LEAVE`
+     * 會在使用者按「更新員工檔並儲存」時把已登記的留停區間清成 null，
+     * 而畫面上什麼都不會說。
+     */
     await updateEmployee(employee.id, {
       ...getEmployeeProfile(),
+      leaveStartDate: employee.leaveStartDate,
+      leaveEndDate: employee.leaveEndDate,
       name: employee.name,
       number: employee.number,
       email: employee.email || undefined,
@@ -346,6 +373,8 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
        */
       await createEmployee({
         ...getEmployeeProfile(),
+        // Info: (20260905 - Luphia) 新建的人沒有留停紀錄（#6774）；要登記走員工列表的編輯
+        ...DEFAULT_EMPLOYEE_LEAVE,
         name: employeeName.trim(),
         number: employeeNumber.trim(),
         email: employeeEmail.trim() || undefined,
@@ -449,12 +478,57 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
    * 只差三個字的句子（「才能寄出薪資單」／「才能下載或儲存薪資單」），
    * 講的是同一個成因、同一個下一步。原因相同時，一句就夠。
    */
-  const sendDisabledReason = (() => {
-    if (!savedRecord) return "calculator.button.send_disabled_unsaved";
-    if (employeeEmail.trim() === "")
-      return "calculator.button.send_disabled_no_email";
-    return null;
+  /**
+   * Info: (20260905 - Luphia) 改讀**即時名單**，不再讀 context 的副本（#6775）。
+   *
+   * 原本是 `employeeEmail.trim() === ""`，而 `employeeEmail` 是
+   * `linkEmployee()` 在選人那一刻抄下的值 —— 使用者接著在挑人彈窗裡
+   * 補上信箱（那個彈窗同時是員工管理入口）、存檔、回來按寄出，
+   * 看到的還是「請先到員工列表補上」，而那正是他剛做完的事。
+   *
+   * `calculator_context.tsx` 沒有任何 effect 會重新同步那份副本，
+   * 而 `linkEmployee()` 只在重新點選員工時執行 —— 所以那個狀態
+   * 會一直卡著，直到他碰巧再選一次。
+   *
+   * 現在與薪資紀錄頁讀同一支 `resolveSendTarget`，兩頁不會再分岔。
+   */
+  /**
+   * Info: (20260907 - Julian) 主詞改成**這一筆紀錄的員工**，不是畫面上還連著誰。
+   *
+   * ## 為什麼不是 `selectedEmployeeId`
+   *
+   * 寄出的是 `savedRecord.id`，而後端只吃 `record_id`：收件人由伺服器
+   * 從那一筆紀錄的員工檔推導（計畫書 §3.1／D3）。畫面上的員工連結是
+   * 「下一次按儲存要存給誰」的答案，與「這一筆已經存下來的紀錄屬於誰」
+   * 是兩個問題 —— 兩者一旦分岔，前者就會替後者回答錯的話。
+   *
+   * 分岔是常態不是意外：`changeEmployeeName()` 只要動到姓名欄就把連結清成
+   * `null`（那是刻意的，免得畫面寫甲、存到乙身上），而 `savedRecord` 不跟著清。
+   * 於是「存完之後把姓名的錯字改回來」這個再普通不過的動作，會讓一筆
+   * 完好的紀錄寄不出去，而畫面叫他「重新選擇員工」—— 照做的話
+   * `linkEmployee()` 會把 15 個常態欄位全部覆寫回員工檔上的值，
+   * 剛剛調好的東西一起消失。他為了寄一封信，得先弄壞手上的試算。
+   *
+   * 改讀 `savedRecord.employee.id` 之後，這一格的答案與伺服器實際會做的事
+   * 對齊：紀錄存下來的那一刻，「寄給誰」就定了。
+   *
+   * ## 順帶把 `email` 一起帶出來
+   *
+   * 見下方 `SendingPaySlipModal` 的 `employeeEmail`。擋門與顯示必須同源，
+   * 否則會出現「按鈕說寄得出去、確認畫面說這個人沒有信箱」。
+   */
+  const sendTarget: ISalarySendTarget = (() => {
+    if (!savedRecord)
+      return { blockedReason: "calculator.button.send_disabled_unsaved" };
+
+    return resolveSendTarget(savedRecord.employee.id, {
+      employees,
+      isLoading: isEmployeesLoading,
+      hasError: hasEmployeesError,
+    });
   })();
+
+  const sendDisabledReason = sendTarget.blockedReason ?? null;
 
   // Info: (20260904 - Julian) 按鈕的停用條件仍然包含「沒填完」，只是那件事由共用的提示來講
   const sendDisabled = btnDisabled || sendDisabledReason !== null;
@@ -597,7 +671,20 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
           /* Info: (20260904 - Julian) 寄的是剛存下來的那一筆，不是畫面上的數字 */
           recordId={savedRecord.id}
           employeeName={savedRecord.employee.name}
-          employeeEmail={employeeEmail}
+          /**
+           * Info: (20260907 - Julian) 顯示的收件信箱與擋門**同一個來源**。
+           *
+           * 原本這裡是 context 的 `employeeEmail`（`linkEmployee()` 抄下的副本），
+           * 而擋門在 #6775 之後已經改讀即時名單 —— 兩者從此分岔：
+           * 使用者在挑人彈窗裡補上信箱、存檔、按寄出，按鈕開了（擋門讀到新值），
+           * 確認畫面卻寫著「尚未填寫電子郵件」（顯示讀到舊副本）。
+           * 反方向更糟：改掉打錯的信箱之後，這裡秀的仍是**舊地址**，
+           * 而伺服器寄去的是新地址 —— 這個彈窗存在的唯一理由就是讓人
+           * 在按下去之前看清楚會寄到哪（本檔檔頭「信箱為什麼放大顯示」）。
+           *
+           * `sendTarget.email` 有值是按鈕可按的前提，`?? ""` 只是型別上的收尾。
+           */
+          employeeEmail={sendTarget.email ?? ""}
           monthLabel={t(
             `date.month_name.${selectedMonth.name.toLowerCase().slice(0, 3)}`,
           )}

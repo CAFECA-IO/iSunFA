@@ -1,11 +1,17 @@
 "use client";
 
 import { useState, FC, ChangeEvent } from "react";
-import { ISalaryEmployeeProfile } from "@/interfaces/salary_record";
 import {
+  ISalaryEmployeeLeave,
+  ISalaryEmployeeProfile,
+} from "@/interfaces/salary_record";
+import {
+  buildEmployeeWriteInput,
+  DEFAULT_EMPLOYEE_LEAVE,
   DEFAULT_EMPLOYEE_PROFILE,
   EMPLOYMENT_TYPE_KEYS,
   employmentTypeI18nKey,
+  pickEmployeeLeave,
   fromDateInputValue,
   toDateInputValue,
 } from "@/lib/utils/salary_employee_profile";
@@ -147,6 +153,36 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
    */
   const [profile, setProfile] = useState<ISalaryEmployeeProfile>(baseProfile);
 
+  /**
+   * Info: (20260905 - Luphia) 留職停薪的起訖，與 profile 分開一個 state（#6774）。
+   *
+   * 分開不是為了好看：`ISalaryEmployeeProfile` 是「選了員工就匯入計算機」的
+   * 那一組，把留停併進去會讓 `salary_employee_profile.test.ts` 的對拍測試變紅
+   *（計算機表單沒有這兩格）。型別仍是一個 interface，加欄位時這裡照樣編譯失敗。
+   *
+   * 編輯時取這個人現在的值、新增時是「沒有留停」—— 與 `baseProfile` 同一條理由：
+   * 寫入契約整組必填，少帶一欄就是把現有的留停區間清掉。
+   */
+  /**
+   * Info: (20260907 - Julian) **只取那兩欄**，不是把整個員工物件放進來
+   *（review #6777 阻擋）。
+   *
+   * 原本寫的是 `data ?? DEFAULT_EMPLOYEE_LEAVE` —— 型別上完全合法
+   *（`ISalaryCalculatorEmployee` 繼承 `ISalaryEmployeeLeave`，指派給變數時
+   * 不做多餘屬性檢查），而 runtime 它握著的是**整個員工**，包含打開視窗
+   * 那一刻的十五個常態屬性。
+   *
+   * 送出時 `...leave` 排在 `...profile` 之後，於是使用者剛改好的到職日、
+   * 扶養人數、投保狀態全部被還原 —— 視窗關了、沒有錯誤、什麼都沒變。
+   * 詳見 `buildEmployeeWriteInput` 的檔頭。
+   */
+  const [leave, setLeave] = useState<ISalaryEmployeeLeave>(
+    data === null ? DEFAULT_EMPLOYEE_LEAVE : pickEmployeeLeave(data),
+  );
+
+  const patchLeave = (patch: Partial<ISalaryEmployeeLeave>) =>
+    setLeave((prev) => ({ ...prev, ...patch }));
+
   // Info: (20260902 - Julian) 一律從「身分」開起：新增時那是唯一非填不可的一頁
   const [activeTab, setActiveTab] = useState<TabKey>("identity");
 
@@ -183,6 +219,25 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
     profile.hireDate !== null &&
     profile.resignDate !== null &&
     profile.resignDate < profile.hireDate;
+
+  /**
+   * Info: (20260905 - Luphia) 留停的兩種填錯，兩條後端都有 `.refine` 在守（#6774）。
+   *
+   * 在這裡先擋是為了指出是哪一格 —— 後端擋下來時使用者看到的是一句
+   * 通用的儲存失敗，而畫面上有八個日期格。
+   */
+  const isLeaveOrderInvalid =
+    leave.leaveStartDate !== null &&
+    leave.leaveEndDate !== null &&
+    leave.leaveEndDate < leave.leaveStartDate;
+
+  /**
+   * Info: (20260905 - Luphia) 只填復職日不會報錯，它只是**不起作用**：
+   * 完整度警示看 `leaveStartDate === null` 就整段跳過。使用者以為登記好了，
+   * 而那幾個月照樣被標成缺薪資單。
+   */
+  const isLeaveStartMissing =
+    leave.leaveStartDate === null && leave.leaveEndDate !== null;
 
   /**
    * Info: (20260902 - Julian) 每一個擋住送出的問題，連同它住在哪一個分頁。
@@ -235,6 +290,22 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
           },
         ]
       : []),
+    ...(isLeaveOrderInvalid
+      ? [
+          {
+            tab: "other" as TabKey,
+            message: t("calculator.employee_list.leave_order_error"),
+          },
+        ]
+      : []),
+    ...(isLeaveStartMissing
+      ? [
+          {
+            tab: "other" as TabKey,
+            message: t("calculator.employee_list.leave_start_required"),
+          },
+        ]
+      : []),
   ];
 
   const tabIssues = new Set(issues.map((issue) => issue.tab));
@@ -278,14 +349,26 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
        *
        * 兩個金額走各自的 `AmountInput`，所以擺在 `...profile` 之後覆蓋掉它。
        */
-      await submitHandler({
-        ...profile,
-        name: nameInput.trim(),
-        number: numberInput.trim(),
-        email: emailInput.trim() || undefined,
-        baseSalary: baseSalaryInput,
-        mealAllowance: mealAllowanceInput,
-      });
+      await submitHandler(
+        /**
+         * Info: (20260907 - Julian) 組裝收到 `buildEmployeeWriteInput`
+         *（review #6777 阻擋）。
+         *
+         * 原本是就地展開 `{ ...profile, ...leave, ... }`。搬出去的理由不是
+         * 好看：本專案不 render React，**留在這裡的組裝沒有任何測試守得住**
+         *（缺陷存在時全套 5,983 條全綠）。搬到純函式之後，「leave 夾帶了
+         * 整個員工物件也不得蓋掉 profile」才寫得成一條會紅的斷言。
+         */
+        buildEmployeeWriteInput({
+          profile,
+          leave,
+          name: nameInput.trim(),
+          number: numberInput.trim(),
+          email: emailInput.trim() || undefined,
+          baseSalary: baseSalaryInput,
+          mealAllowance: mealAllowanceInput,
+        }),
+      );
       modalVisibleHandler();
     } catch (error) {
       /**
@@ -657,6 +740,58 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
             {isDateOrderInvalid && (
               <p className="text-text-state-error text-sm font-medium">
                 {t("calculator.employee_list.date_order_error")}
+              </p>
+            )}
+            {/**
+             * Info: (20260905 - Luphia) 留職停薪的起訖（#6774）。
+             *
+             * 放在到離職日的正下方：它們是同一類事實（這個人哪段時間在職），
+             * 而且完整度警示要同時看這四格才算得出「這個月該不該有薪資單」。
+             */}
+            <div className="flex flex-col gap-[8px]">
+              <FieldLabel
+                text={t("calculator.employee_list.leave_start_date")}
+              />
+              <input
+                type="date"
+                aria-label={t("calculator.employee_list.leave_start_date")}
+                value={toDateInputValue(leave.leaveStartDate)}
+                onChange={(e) =>
+                  patchLeave({
+                    leaveStartDate: fromDateInputValue(e.target.value),
+                  })
+                }
+                className="border-input-stroke-input w-full rounded-lg border bg-transparent px-[12px] py-[10px] outline-none"
+              />
+            </div>
+            <div className="flex flex-col gap-[8px]">
+              <FieldLabel text={t("calculator.employee_list.leave_end_date")} />
+              <input
+                type="date"
+                aria-label={t("calculator.employee_list.leave_end_date")}
+                value={toDateInputValue(leave.leaveEndDate)}
+                // Info: (20260905 - Luphia) 復職日不得早於留停起日，後端也有一條 refine 在守
+                min={toDateInputValue(leave.leaveStartDate) || undefined}
+                onChange={(e) =>
+                  patchLeave({
+                    leaveEndDate: fromDateInputValue(e.target.value),
+                  })
+                }
+                className="border-input-stroke-input w-full rounded-lg border bg-transparent px-[12px] py-[10px] outline-none"
+              />
+            </div>
+            {/* Info: (20260905 - Luphia) 留停未填復職日 = 還沒復職，是合法狀態，不是錯誤 */}
+            <p className="text-text-neutral-tertiary text-xs">
+              {t("calculator.employee_list.leave_hint")}
+            </p>
+            {isLeaveOrderInvalid && (
+              <p className="text-text-state-error text-sm font-medium">
+                {t("calculator.employee_list.leave_order_error")}
+              </p>
+            )}
+            {isLeaveStartMissing && (
+              <p className="text-text-state-error text-sm font-medium">
+                {t("calculator.employee_list.leave_start_required")}
               </p>
             )}
           </div>
