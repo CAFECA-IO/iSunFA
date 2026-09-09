@@ -256,6 +256,8 @@ export const calculator = {
     error_generic: "薪資單寄送失敗，請稍後再試一次。",
   },
   my_pay_slip: {
+    record_deleted:
+      "這筆薪資紀錄已被刪除，看不到內容了。寄送紀錄仍然保留在這份清單上。",
     main_title: "我的薪資單",
     tab_received: "我收到的薪資單",
     tab_sent: "我寄出的薪資單",

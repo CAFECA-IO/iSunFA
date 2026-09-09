@@ -413,16 +413,24 @@ export class SalaryRecordService {
     };
   }
 
+  /**
+   * Info: (20260909 - Julian) 刪除是軟刪除，而且會留下 AuditLog（repository 那一層做）。
+   *
+   * `userId` 由 route 從 DeWT 取，**不收 body** —— 收的話「誰刪的」就可以偽造。
+   */
   public async deleteRecord({
     accountBookId,
     recordId,
+    userId,
   }: {
     accountBookId: string;
     recordId: string;
+    userId: string;
   }): Promise<void> {
     const deleted = await this.records.deleteRecord({
       accountBookId,
       recordId,
+      deletedByUserId: userId,
     });
     if (!deleted) {
       throw new AppError(API_ERRORS.NF_SALARY_RECORD);

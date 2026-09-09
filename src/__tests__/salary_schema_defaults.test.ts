@@ -229,8 +229,23 @@ describe("SalaryRecord", () => {
     );
   });
 
-  it("不做 soft delete：刪掉就是刪掉，改動軌跡走 AuditLog", () => {
-    expect(block).not.toContain("deletedAt");
+  /**
+   * Info: (20260909 - Julian) **這一條在 20260909 反過來了。**
+   *
+   * 原本釘的是 `expect(block).not.toContain("deletedAt")`，理由是
+   * 「刪掉就是刪掉，沒有『刪了還要看得到』的情境」。
+   *
+   * 客戶確認勞檢調閱的是**工資清冊**，而清冊就是從這張表產生的（CSV 匯出）。
+   * 勞基法 §23 II 要求它保存五年 —— 那就是那個情境，而且是法定的。
+   * 硬刪讓保存義務可以用一顆按鈕規避，而且原本完全不留痕跡。
+   *
+   * 釘住它的理由與員工那張表相同：軟刪除是一個**一個字就能被改掉**的設計
+   *（把 `deletedAt` 拿掉、`updateMany` 換回 `deleteMany`），而改掉之後
+   * 畫面行為一模一樣 —— 使用者按刪除，那一筆就不見了。
+   * 差別只在資料還在不在，而那要等到勞檢來要資料時才會發現。
+   */
+  it("做 soft delete：工資清冊有五年保存義務", () => {
+    expect(block).toContain('deletedAt DateTime? @map("deleted_at")');
   });
 
   /**

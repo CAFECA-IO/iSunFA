@@ -264,6 +264,8 @@ export const calculator = {
       "給与明細を送信できませんでした。しばらくしてからもう一度お試しください。",
   },
   my_pay_slip: {
+    record_deleted:
+      "この給与記録は削除されているため、内容を表示できません。送信履歴はこの一覧に残ります。",
     main_title: "私の給与明細",
     tab_received: "受信した給与明細",
     tab_sent: "送信した給与明細",

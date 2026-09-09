@@ -256,6 +256,8 @@ export const calculator = {
     error_generic: "薪资单寄送失败，请稍后再试一次。",
   },
   my_pay_slip: {
+    record_deleted:
+      "这笔薪资记录已被删除，看不到内容了。寄送记录仍然保留在这份清单上。",
     main_title: "我的薪资单",
     tab_received: "我收到的薪资单",
     tab_sent: "我发送的薪资单",

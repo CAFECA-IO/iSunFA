@@ -5,6 +5,7 @@ import {
   SalaryRecord,
 } from "@/generated";
 import { prisma } from "@/lib/prisma";
+import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
 import { SALARY_DELIVERY_STATUS } from "@/constants/salary_delivery";
 import { MoneyUtil } from "@/lib/utils/money";
 import {
@@ -62,9 +63,17 @@ export interface ISalaryRecordRepository {
     recordId: string,
   ): Promise<ISalaryRecordDetail | null>;
   /** Info: (20260831 - Julian) 回 false 表示那一列不存在（或不屬於這個帳本） */
+  /**
+   * Info: (20260909 - Julian) 軟刪除一筆薪資紀錄，並在**同一個交易**裡寫下 AuditLog。
+   *
+   * `deletedByUserId` 由 route 從 DeWT 取，**不收前端傳入** —— 收的話，
+   * 「誰刪的」就是可以偽造的，而那是這條軌跡唯一不能妥協的欄位
+   *（同 `ISalaryProfileChangeContext.changedByUserId` 的理由）。
+   */
   deleteRecord(params: {
     accountBookId: string;
     recordId: string;
+    deletedByUserId: string;
   }): Promise<boolean>;
 }
 
@@ -355,6 +364,8 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
       // Info: (20260908 - Julian) 租戶過濾永遠是 where 的第一個 key
       where: {
         accountBookId,
+        // Info: (20260909 - Julian) 已刪的紀錄不得當成「上一筆」——那個月的清冊已經沒有它了
+        deletedAt: null,
         employeeId: { in: employeeIds },
         OR: [
           { year: { lt: newestYear } },
@@ -424,6 +435,15 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
   ): Prisma.SalaryRecordWhereInput {
     const where: Prisma.SalaryRecordWhereInput = {
       accountBookId: options.accountBookId,
+      /**
+       * Info: (20260909 - Julian) 已軟刪除的不出現在清單、總數與「已存在嗎」的判斷裡。
+       *
+       * 第三項最容易被忽略：計算機儲存前會用同一組條件問「這個月已經有紀錄了嗎」
+       *（`use_salary_record_save.ts` 的 `findExisting`）。少了這一行，
+       * 使用者刪掉八月之後重新儲存八月，畫面會問他「要覆寫嗎」——
+       * 而他剛剛才親手刪掉那一筆。
+       */
+      deletedAt: null,
     };
 
     // Info: (20260831 - Julian) 逐一判斷而不是整包展開：Prisma 會靜默忽略 undefined 條件
@@ -518,8 +538,22 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
         month,
         ...snapshot,
       },
-      // Info: (20260831 - Julian) 覆寫時不改 createdByUserId：那一欄記的是這筆紀錄的來源，不是最後動它的人
-      update: snapshot,
+      /**
+       * Info: (20260831 - Julian) 覆寫時不改 createdByUserId：
+       * 那一欄記的是這筆紀錄的來源，不是最後動它的人。
+       *
+       * Info: (20260909 - Julian) `deletedAt: null` —— 重存一個被刪掉的月份會**復活**那一列。
+       *
+       * 這是軟刪除之後唯一需要特別處理的地方，也是為什麼這張表不需要
+       * `SalaryCalculatorEmployee` 那套 `activeNumber`：複合唯一鍵確實被
+       * 已刪的列佔住，而 upsert 走的正是那個鍵，於是它自然落進 update 分支。
+       *
+       * 少了這一行的症狀最惡劣：使用者刪掉八月、重新儲存八月，
+       * API 回 200、畫面顯示「已儲存」，而那一列仍然是 `deletedAt != null` ——
+       * **清單上看不到、匯出裡沒有、完整度警示說它缺漏**。
+       * 沒有任何錯誤訊息，而使用者確信自己存過了。
+       */
+      update: { ...snapshot, deletedAt: null },
       include: RECORD_INCLUDE,
     });
 
@@ -549,7 +583,8 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
        */
       prisma.salaryRecord.groupBy({
         by: ["year", "month"],
-        where: { accountBookId: options.accountBookId },
+        // Info: (20260909 - Julian) 只剩已刪紀錄的月份不該還留在期間選單裡（選了會得到空清單）
+        where: { accountBookId: options.accountBookId, deletedAt: null },
         orderBy: [{ year: "desc" }, { month: "desc" }],
       }),
     ]);
@@ -585,7 +620,14 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
   ): Promise<{ employeeId: string; year: number; month: number }[]> {
     const rows = await prisma.salaryRecord.groupBy({
       by: ["employeeId", "year", "month"],
-      where: { accountBookId },
+      /**
+       * Info: (20260909 - Julian) 已刪的月份**重新算成缺漏**，而那是正確的。
+       *
+       * 這一支回答的是「哪些月份已經有薪資紀錄」。紀錄被刪掉之後，
+       * 那個月的清冊上就沒有那一列了 —— 完整度警示應該重新把它標出來。
+       * 少了這一行，刪除會在畫面上留下一個「已完成」的空殼。
+       */
+      where: { accountBookId, deletedAt: null },
     });
 
     return rows.map((row) => ({
@@ -604,7 +646,8 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
 
     const rows = await prisma.salaryRecord.findMany({
       // Info: (20260904 - Julian) 租戶過濾永遠是 where 的第一個 key
-      where: { accountBookId, id: { in: [...recordIds] } },
+      // Info: (20260909 - Julian) 匯出已刪的紀錄等於刪除沒有效果 —— 而匯出的正是工資清冊
+      where: { accountBookId, deletedAt: null, id: { in: [...recordIds] } },
       include: RECORD_INCLUDE,
       orderBy: [{ year: "desc" }, { month: "desc" }, { createdAt: "desc" }],
     });
@@ -628,26 +671,78 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
     recordId: string,
   ): Promise<ISalaryRecordDetail | null> {
     const row = await prisma.salaryRecord.findFirst({
-      where: { accountBookId, id: recordId },
+      /**
+       * Info: (20260909 - Julian) 已刪的查不到 —— 檢視與**寄送**都走這一支。
+       *
+       * 寄送那一條特別要緊：`salary_pay_slip_delivery.service` 先用它取紀錄，
+       * 少了 `deletedAt: null` 就等於「已經刪掉的薪資單還寄得出去」。
+       *
+       * 代價是「已寄出」分頁上那些指向已刪紀錄的列點下去會拿到 404 ——
+       * 那些列**刻意保留**（寄送軌跡是證據，見 schema 的註解），
+       * 由畫面說明「這筆薪資紀錄已被刪除」。
+       */
+      where: { accountBookId, deletedAt: null, id: recordId },
       include: RECORD_INCLUDE,
     });
 
     return row ? toDetail(row) : null;
   }
 
+  /**
+   * Info: (20260909 - Julian) 軟刪除 ＋ 在**同一個交易**裡寫下 AuditLog。
+   *
+   * ## 為什麼是軟刪除
+   *
+   * 這一列就是**工資清冊**的那一列，而勞基法 §23 II 要求工資清冊保存五年。
+   * 硬刪等於讓保存義務可以用一顆按鈕規避。完整脈絡見 schema 上
+   * `deletedAt` 的註解與 `salary_record_module_plan.md` §3.2 的更正。
+   *
+   * ## 為什麼 AuditLog 寫在 repository、而且在同一個交易裡
+   *
+   * 與 `appendProfileChange` 同一條理由：
+   *
+   * 1. **在 repository** —— 放 service 的話，日後多一條刪除路徑（批次刪、
+   *    帳本清空）就是各記一次，而漏掉的那一條沒有任何症狀。
+   * 2. **同一個交易** —— 分兩次寫，中間失敗會產生「刪了但沒紀錄」
+   *    （軌跡憑空消失）或「有紀錄但沒刪」（假的軌跡）。前者正是這次要修的東西。
+   *
+   * ## 為什麼用 `updateMany` 而不是 `update`
+   *
+   * `update` 的 where 只吃唯一鍵，帶不了 `accountBookId` ——
+   * 而租戶條件永遠是第一個 key。`deletedAt: null` 一併帶著：
+   * 重複刪除同一筆會 `count === 0`，於是 service 回 404 而不是靜靜地
+   * 再寫一筆 AuditLog。
+   */
   public async deleteRecord({
     accountBookId,
     recordId,
+    deletedByUserId,
   }: {
     accountBookId: string;
     recordId: string;
+    deletedByUserId: string;
   }): Promise<boolean> {
-    // Info: (20260831 - Julian) deleteMany 才吃得下帳本條件（同 updateMany 的理由）
-    const result = await prisma.salaryRecord.deleteMany({
-      where: { accountBookId, id: recordId },
-    });
+    return prisma.$transaction(async (tx) => {
+      const result = await tx.salaryRecord.updateMany({
+        where: { accountBookId, deletedAt: null, id: recordId },
+        data: { deletedAt: new Date() },
+      });
 
-    return result.count > 0;
+      // Info: (20260909 - Julian) 沒刪到就不留軌跡 —— 不存在或已經刪過了
+      if (result.count === 0) return false;
+
+      await tx.auditLog.create({
+        data: {
+          accountBookId,
+          userId: deletedByUserId,
+          dataType: AuditLogDataType.SALARY_RECORD,
+          dataId: recordId,
+          action: AuditLogAction.DELETE,
+        },
+      });
+
+      return true;
+    });
   }
 }
 

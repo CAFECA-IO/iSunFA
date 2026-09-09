@@ -949,6 +949,9 @@ enum AuditLogDataType {
   // Info: (20260811 - Julian) 人事敏感個資的存取軌跡；dataId 一律填所屬 Employee.id，
   // Info: (20260811 - Julian) 讓「誰在何時看了誰的身分證／銀行帳號」可以用單一員工當軸線查回來
   EMPLOYEE_PII
+  // Info: (20260909 - Julian) 薪資紀錄（工資清冊）的刪除軌跡；dataId 填 SalaryRecord.id。
+  // Info: (20260909 - Julian) 勞基法 §23 II 要求工資清冊保存五年，而刪除是唯一會讓它消失的動作
+  SALARY_RECORD
 }
 
 enum AuditLogAction {
@@ -3438,6 +3441,8 @@ model LeavePolicy {
    * /**
    * /**
    * /**
+   * /**
+   * /**
    * Info: (20260817 - Julian) 給薪比例（工資照給 = 1、折半發給 = 0.5、不給工資 = 0）。
    * 本模組不算金額，此欄位供薪資模組與畫面提示使用。
    * **Nullable 且無預設值**：產假的工資取決於年資（受僱六個月以上照給、
@@ -4410,33 +4415,24 @@ model SalaryCalculatorEmployee {
 
   /**
    * Info: (20260905 - Luphia) 留職停薪的起訖（#6774）。
-   *
    * ## 為什麼是**日期區間**而不是一個狀態欄位
-   *
    * 薪資紀錄完整度要回答的是「**8 月**該不該有薪資單」。一個
    * 「目前留職停薪中」的布林或 enum 答不了那個問題 —— 它只說得出現在，
    * 而使用者問的是過去某一個月。HR 模組的 `EmployeeStatus.LEAVE_WITHOUT_PAY`
    * 正是那種形狀，所以不能直接借用。
-   *
    * 存區間之後，「那個月在不在區間內」是一個純計算，不需要任何額外的歷史表。
-   *
    * ## 已知限度：一個人只記得住一段
-   *
    * 兩次留職停薪（生了第二胎、或中間復職過）只會留下最後一段，
    * 而較早那一段的月份會被算成「缺少薪資單」。
-   *
    * 接受它的理由是**誤報的方向與代價**：漏記一段會讓那幾個月被標成缺漏，
    * 使用者看到的是一個他知道不必理會的提示；而反過來（把該補的月份藏起來）
    * 才是真正會讓人少領到錢的方向。多段留職停薪需要一張
    * `SalaryEmployeeLeavePeriod`，那是另一次改動 —— 但這一欄的語意
    * （「不該有薪資單的期間」）到那時仍然成立，不必回頭改寫。
-   *
    * ## 為什麼不接 HR 的 `Employee`
-   *
    * 薪資計算機的員工檔刻意與 HR 分離（見本 model 檔頭）：那張表的
    * `employeeNo` / `gender` / `hireDate` 必填、PII 一律走 AES-256-GCM。
    * 為了一個試算工具背上那整套，換來的不是嚴謹，是沒有人願意建員工。
-   *
    * `leaveEndDate` 可空 = 還沒復職（迄今仍在留職停薪）。
    */
   leaveStartDate DateTime? @map("leave_start_date")
@@ -4543,7 +4539,36 @@ model SalaryRecord {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  // Info: (20260904 - Julian) 這一筆的寄送事件（成功與失敗都留一列）
+  /**
+   * Info: (20260909 - Julian) 軟刪除。**20260909 從硬刪改過來，理由是法定保存義務。**
+   * ## 為什麼原本是硬刪，以及那個理由怎麼被推翻的
+   * `salary_record_module_plan.md` §3.2 原本寫著「紀錄是這個月算出來的薪資，
+   * 刪掉就是刪掉，沒有『刪了還要看得到』的情境」。
+   * 20260909 客戶確認：勞檢調閱的是**工資清冊**，而清冊就是從這張表產生的
+   * （CSV 匯出）。勞基法 §23 II 要求工資清冊**保存五年** ——
+   * 那就是那個情境，而且是法定的。硬刪等於讓保存義務可以用一顆按鈕規避，
+   * 而且不留痕跡（本模組原本沒有任何 AuditLog 列）。
+   * ## 為什麼不需要 `activeXxx` 那一套
+   * `SalaryCalculatorEmployee` 為了軟刪除多開了 `activeNumber`：
+   * 沒有它的話，被刪掉的員工會永久佔住那個編號。
+   * 這裡不必。下面的 `@@unique([accountBookId, employeeId, year, month])`
+   * 確實會被已刪的那一列佔住，但 `upsertRecord` 走的正是這個複合鍵 ——
+   * 它的 update 分支把 `deletedAt` 設回 null，也就是「刪掉八月、重新存八月」
+   * 會**復活**那一列。而那正是使用者要的行為：那個月又有紀錄了。
+   * 刪除這件事本身留在 AuditLog 上，不會因為復活而消失。
+   * ## 讀取端一律要濾
+   * `salary_repo_scope.test.ts` 的 `LIFECYCLE` 表逐支釘住哪些方法必須帶
+   * `deletedAt: null`。漏一支的症狀是「刪掉的紀錄又出現在清單／匯出裡」——
+   * 而使用者會以為刪除沒生效。
+   */
+  deletedAt DateTime? @map("deleted_at")
+
+  /**
+   * Info: (20260904 - Julian) 這一筆的寄送事件（成功與失敗都留一列）。
+   * Info: (20260909 - Julian) 改成軟刪除之後，`onDelete: Cascade` 不再會被觸發 ——
+   * 刪除薪資紀錄不再讓它的寄送軌跡消失。計畫書 §2.1 記下的那個張力
+   * （「薪資資料曾經嘗試離開組織要留得下來」與硬刪之間的矛盾）到此解掉。
+   */
   paySlipDeliveries SalaryPaySlipDelivery[]
 
   @@unique([accountBookId, employeeId, year, month])
@@ -4576,14 +4601,17 @@ model SalaryPaySlipDelivery {
 
   /**
    * Info: (20260904 - Julian) 寄的是哪一筆薪資紀錄。
-   * `onDelete: Cascade` 是配合 `SalaryRecord` 的硬刪（它刻意不做 soft delete）：
-   * 不串接的話，刪一筆已寄過的薪資紀錄會撞上外鍵而失敗 ——
-   * 也就是既有的 DELETE 端點會在「寄過的紀錄」上壞掉。
-   * **代價要講明：刪掉薪資紀錄，它的寄送軌跡會跟著消失。**
-   * 那與 §2.1「薪資資料曾經嘗試離開組織要留得下來」是有張力的。
-   * 本次接受它，理由是薪資紀錄本來就沒有「刪了還看得到」的設計，
-   * 而讓寄送紀錄單獨活下來會產生一堆指不到紀錄的孤兒列。
-   * 真要保留跨刪除的軌跡，該做的是 `AuditLog`，不是把這張表變成半個歷史表。
+   * `onDelete: Cascade` 原本是配合 `SalaryRecord` 的硬刪：不串接的話，
+   * 刪一筆已寄過的薪資紀錄會撞上外鍵而失敗。代價是
+   * **刪掉薪資紀錄，它的寄送軌跡會跟著消失** —— 而那與計畫書 §2.1
+   * 「薪資資料曾經嘗試離開組織要留得下來」有明白的張力，當時記下來但接受了。
+   * Info: (20260909 - Julian) **那個張力解掉了。** `SalaryRecord` 改成軟刪除
+   * （工資清冊有五年保存義務，見該欄位的註解），資料庫層的 DELETE 不再發生，
+   * 於是這條 cascade 也不再被觸發 —— 寄送軌跡自然留了下來。
+   * `Cascade` 留著不改：它守的是「萬一日後真的有人硬刪一列」時不要撞外鍵，
+   * 而那條路徑現在只剩手動 SQL 與資料修補腳本。改成 `Restrict` 會讓那些
+   * 場合變成一個要人工處理的錯誤，但也讓「繞過應用層的硬刪」變得更難 ——
+   * 值得日後一併重新評估，本次不動。
    */
   salaryRecordId String       @map("salary_record_id")
   salaryRecord   SalaryRecord @relation(fields: [salaryRecordId], references: [id], onDelete: Cascade)

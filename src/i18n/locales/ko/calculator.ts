@@ -263,6 +263,8 @@ export const calculator = {
       "급여명세서를 보내지 못했습니다. 잠시 후 다시 시도해 주세요.",
   },
   my_pay_slip: {
+    record_deleted:
+      "이 급여 기록은 삭제되어 내용을 볼 수 없습니다. 발송 기록은 이 목록에 남아 있습니다.",
     main_title: "내 급여 명세서",
     tab_received: "내가 받은 명세서",
     tab_sent: "내가 보낸 명세서",

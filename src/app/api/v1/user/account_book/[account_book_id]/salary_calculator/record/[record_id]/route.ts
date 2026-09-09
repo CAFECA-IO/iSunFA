@@ -96,7 +96,12 @@ export async function DELETE(
       SalaryAccess.WRITE,
     );
 
-    await salaryRecordService.deleteRecord({ accountBookId, recordId });
+    await salaryRecordService.deleteRecord({
+      accountBookId,
+      recordId,
+      // Info: (20260909 - Julian) 「誰刪的」只能來自 DeWT，不能來自 body
+      userId: sessionUser.id,
+    });
 
     return jsonOk({ id: recordId });
   } catch (error) {

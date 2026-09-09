@@ -607,6 +607,7 @@ describe("薪資紀錄：租戶過濾、覆寫與分頁", () => {
       await salaryRecordRepo.deleteRecord({
         accountBookId: OTHER_BOOK_ID,
         recordId: record.id,
+        deletedByUserId: "u-1",
       }),
     ).toBe(false);
 
@@ -827,6 +828,7 @@ describe("薪資紀錄：租戶過濾、覆寫與分頁", () => {
       await salaryRecordRepo.deleteRecord({
         accountBookId: BOOK_ID,
         recordId: record.id,
+        deletedByUserId: "u-1",
       }),
     ).toBe(true);
     expect(await salaryRecordRepo.getRecordById(BOOK_ID, record.id)).toBeNull();
@@ -841,6 +843,7 @@ describe("薪資紀錄：租戶過濾、覆寫與分頁", () => {
       await salaryRecordRepo.deleteRecord({
         accountBookId: BOOK_ID,
         recordId: record.id,
+        deletedByUserId: "u-1",
       }),
     ).toBe(false);
   });

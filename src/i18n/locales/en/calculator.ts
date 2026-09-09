@@ -275,6 +275,8 @@ export const calculator = {
     error_generic: "Could not send the pay slip. Please try again in a moment.",
   },
   my_pay_slip: {
+    record_deleted:
+      "This salary record has been deleted, so its contents are no longer available. The delivery record stays on this list.",
     main_title: "My Pay Slip",
     tab_received: "Pay Slip I Received",
     tab_sent: "Pay Slip I Sent",

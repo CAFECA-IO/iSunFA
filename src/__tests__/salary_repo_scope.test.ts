@@ -69,7 +69,13 @@ jest.mock("@/lib/prisma", () => {
       count: jest.fn(async () => 0),
       groupBy: jest.fn(async () => []),
       upsert: jest.fn(async () => null),
+      // Info: (20260909 - Julian) 軟刪除走 updateMany；deleteMany 留著是為了下面那條「不得硬刪」
+      updateMany: jest.fn(async () => ({ count: 1 })),
       deleteMany: jest.fn(async () => ({ count: 1 })),
+    },
+    // Info: (20260909 - Julian) 刪除薪資紀錄會在同一個交易裡寫一列（工資清冊的保存軌跡）
+    auditLog: {
+      create: jest.fn(async () => null),
     },
     salaryPaySlipDelivery: {
       findMany: jest.fn(async () => []),
@@ -120,6 +126,8 @@ const recordCount = prisma.salaryRecord.count as unknown as Mock;
 const recordDeleteMany = prisma.salaryRecord.deleteMany as unknown as Mock;
 const recordGroupBy = prisma.salaryRecord.groupBy as unknown as Mock;
 const recordUpsert = prisma.salaryRecord.upsert as unknown as Mock;
+const recordUpdateMany = prisma.salaryRecord.updateMany as unknown as Mock;
+const auditLogCreate = prisma.auditLog.create as unknown as Mock;
 const deliveryFindMany = prisma.salaryPaySlipDelivery
   .findMany as unknown as Mock;
 const deliveryCreate = prisma.salaryPaySlipDelivery.create as unknown as Mock;
@@ -271,6 +279,7 @@ beforeEach(() => {
   recordFindMany.mockResolvedValue([]);
   recordCount.mockResolvedValue(0);
   recordDeleteMany.mockResolvedValue({ count: 1 });
+  recordUpdateMany.mockResolvedValue({ count: 1 });
   recordGroupBy.mockResolvedValue([]);
   /**
    * Info: (20260905 - Luphia) 替身要回得了 mapper 走得完的列（§1.8）。
@@ -326,8 +335,17 @@ const REPO_FILES = [
  *
  * `ACTIVE_ONLY` 的方法必須在 `where` 帶 `deletedAt: null`。
  * `ANY_STATE` 是刻意要看到全部（歷史清單之類），必須寫明理由。
- * 只有 `SalaryCalculatorEmployee` 有軟刪除；另外兩張表沒有 `deletedAt`，
- * 所以標 `NO_SOFT_DELETE`。
+ * 沒有 `deletedAt` 的表標 `NO_SOFT_DELETE`。
+ *
+ * Info: (20260909 - Julian) **`SalaryRecord` 20260909 起也有軟刪除。**
+ *
+ * 它原本是硬刪，理由是「刪掉就是刪掉」。客戶確認勞檢調閱的是**工資清冊**，
+ * 而清冊就是從這張表產生的 —— 勞基法 §23 II 要求保存五年。
+ * 於是它底下五支讀取路徑一起從 `NO_SOFT_DELETE` 變成 `ACTIVE_ONLY`。
+ *
+ * 這一批重新分類正是這張表存在的理由：改成軟刪除的當下，
+ * 「哪些查詢要濾」不是一個可以憑印象回答的問題 ——
+ * 漏掉的那一支不會有任何症狀，它只是安靜地讓已刪的紀錄繼續出現。
  */
 const LIFECYCLE: Record<
   string,
@@ -349,20 +367,45 @@ const LIFECYCLE: Record<
    * 而那正是這張表要防的事（薪資異動紀錄計劃書 §5.3）。
    */
   listProfileChanges: "NO_SOFT_DELETE",
+  /**
+   * Info: (20260909 - Julian) 寫入路徑，而且**刻意會復活已刪的那一列**。
+   *
+   * `where` 是複合唯一鍵（`accountBookId_employeeId_year_month`），
+   * 帶不了 `deletedAt` —— 它不是那個鍵的一部分。而那正好是對的：
+   * 使用者刪掉八月、重新儲存八月，該得到的結果是「那個月又有紀錄了」，
+   * 而不是撞上唯一鍵。復活由 update 分支的 `deletedAt: null` 完成，
+   * 由下面「upsertRecord 復活已刪的那一列」那一條釘住。
+   */
   upsertRecord: "NO_SOFT_DELETE",
-  listRecords: "NO_SOFT_DELETE",
-  listRecordsByIds: "NO_SOFT_DELETE",
-  getRecordById: "NO_SOFT_DELETE",
+  // Info: (20260909 - Julian) 清單、總數、期間選單、以及「這個月已經有紀錄了嗎」都走它
+  listRecords: "ACTIVE_ONLY",
+  // Info: (20260909 - Julian) 匯出的正是工資清冊 —— 匯出已刪的等於刪除沒有效果
+  listRecordsByIds: "ACTIVE_ONLY",
+  /**
+   * Info: (20260909 - Julian) 檢視與**寄送**都走這一支。
+   *
+   * 寄送那一條特別要緊：少了 `deletedAt: null`，已經刪掉的薪資單還寄得出去。
+   */
+  getRecordById: "ACTIVE_ONLY",
   /**
    * Info: (20260905 - Luphia) 完整度警示要的年月分佈（#6774）。
    *
-   * `SalaryRecord` 沒有 `deletedAt`（刪除是真的刪），所以是 `NO_SOFT_DELETE`。
-   * 值得一提的是**員工**那一側有軟刪除，但這一支查的是薪資紀錄 ——
+   * Info: (20260909 - Julian) 改成 `ACTIVE_ONLY`：**已刪的月份要重新算成缺漏。**
+   * 這一支回答的是「哪些月份已經有薪資紀錄」，而紀錄被刪掉之後清冊上
+   * 就沒有那一列了。少了這個過濾，刪除會在畫面上留下一個「已完成」的空殼。
+   *
+   * 值得一提的是**員工**那一側也有軟刪除，但這一支查的是薪資紀錄 ——
    * 已刪除員工的紀錄仍然回得來，而呼叫端拿的名單只有存活中的人，
    * 對不上的那些自然被忽略。
    */
-  listCoveredPeriods: "NO_SOFT_DELETE",
-  deleteRecord: "NO_SOFT_DELETE",
+  listCoveredPeriods: "ACTIVE_ONLY",
+  /**
+   * Info: (20260909 - Julian) 軟刪除本身也帶 `deletedAt: null`。
+   *
+   * 不是為了「看不看得到」，是為了**冪等**：重複刪同一筆會 `count === 0`，
+   * 於是 service 回 404，而不是靜靜地再寫一列 AuditLog。
+   */
+  deleteRecord: "ACTIVE_ONLY",
   createDelivery: "NO_SOFT_DELETE",
   listByRecord: "NO_SOFT_DELETE",
   listByAccountBook: "NO_SOFT_DELETE",
@@ -589,6 +632,7 @@ describe("租戶隔離：每一支交給資料庫的條件都帶帳本", () => {
         await salaryRecordRepo.deleteRecord({
           accountBookId: BOOK,
           recordId: RECORD,
+          deletedByUserId: "u-1",
         });
         return;
       case "listByRecord":
@@ -630,6 +674,8 @@ describe("租戶隔離：每一支交給資料庫的條件都帶帳本", () => {
       recordCount,
       recordGroupBy,
       recordDeleteMany,
+      // Info: (20260909 - Julian) 軟刪除走 updateMany —— 它也要被問「帶了帳本嗎」
+      recordUpdateMany,
       deliveryFindMany,
       /**
        * Info: (20260908 - Julian) 異動表的三支讀取也要進這個清單。
@@ -736,6 +782,30 @@ describe("生命週期：ACTIVE_ONLY 的方法真的濾掉軟刪除", () => {
           employeeId: "e-9",
         });
         break;
+      // Info: (20260909 - Julian) SalaryRecord 20260909 起也有軟刪除（工資清冊保存五年）
+      case "listRecords":
+        await salaryRecordRepo.listRecords({
+          accountBookId: BOOK,
+          page: 1,
+          pageSize: 20,
+        });
+        break;
+      case "listRecordsByIds":
+        await salaryRecordRepo.listRecordsByIds(BOOK, ["r-1"]);
+        break;
+      case "getRecordById":
+        await salaryRecordRepo.getRecordById(BOOK, RECORD);
+        break;
+      case "listCoveredPeriods":
+        await salaryRecordRepo.listCoveredPeriods(BOOK);
+        break;
+      case "deleteRecord":
+        await salaryRecordRepo.deleteRecord({
+          accountBookId: BOOK,
+          recordId: RECORD,
+          deletedByUserId: "u-1",
+        });
+        break;
       default:
         throw new Error(`未接線的方法：${name}`);
     }
@@ -744,6 +814,11 @@ describe("生命週期：ACTIVE_ONLY 的方法真的濾掉軟刪除", () => {
       employeeFindFirst,
       employeeFindMany,
       employeeUpdateMany,
+      recordFindFirst,
+      recordFindMany,
+      recordCount,
+      recordGroupBy,
+      recordUpdateMany,
     ].flatMap((mock) => mock.mock.calls.map((args) => args[0]));
 
     expect(everyCall.length).toBeGreaterThan(0);
@@ -818,11 +893,18 @@ describe("薪資 repository 的租戶隔離", () => {
     });
   });
 
-  it("getRecordById 帶 accountBookId", async () => {
+  it("getRecordById 帶 accountBookId 與 deletedAt", async () => {
     await salaryRecordRepo.getRecordById(BOOK, RECORD);
 
     expect(whereOf(recordFindFirst)).toEqual({
       accountBookId: BOOK,
+      /**
+       * Info: (20260909 - Julian) 檢視與**寄送**都走這一支。
+       *
+       * 少了 `deletedAt: null`，已經刪掉的薪資單還寄得出去 ——
+       * 而寄出去就收不回來了。
+       */
+      deletedAt: null,
       id: RECORD,
     });
   });
@@ -831,9 +913,10 @@ describe("薪資 repository 的租戶隔離", () => {
     await salaryRecordRepo.deleteRecord({
       accountBookId: BOOK,
       recordId: RECORD,
+      deletedByUserId: "u-1",
     });
 
-    expect(whereOf(recordDeleteMany)).toMatchObject({
+    expect(whereOf(recordUpdateMany)).toMatchObject({
       accountBookId: BOOK,
       id: RECORD,
     });
@@ -1006,5 +1089,177 @@ describe("員工的常態屬性交給資料庫", () => {
     });
 
     expectProfileIn(argOf(employeeCreate).data as Record<string, unknown>);
+  });
+});
+
+/**
+ * Info: (20260909 - Julian) 薪資紀錄的軟刪除與它的 AuditLog（工資清冊保存五年）。
+ *
+ * 上面兩組守的是**形狀**（有沒有帶帳本、有沒有濾 `deletedAt`）。
+ * 這一組守的是**行為** —— 那些形狀對了也可能錯的事：
+ *
+ * - 真的硬刪了（`deleteMany` 還在，只是多了一支沒人呼叫的 `updateMany`）
+ * - 刪了但沒留軌跡（兩個寫入沒有在同一個交易裡，或根本沒寫）
+ * - 沒刪到卻留了軌跡（重複刪除產生假的第二筆）
+ * - 重存一個被刪掉的月份，那一列沒有復活
+ *
+ * 四種的共同點是**畫面完全正常**：使用者按刪除，那一筆就不見了。
+ */
+describe("軟刪除的行為", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    recordUpdateMany.mockResolvedValue({ count: 1 });
+  });
+
+  /**
+   * Info: (20260909 - Julian) **這張表不得再出現真刪。**
+   *
+   * `deleteMany` 的替身還在（而且會回 `count: 1`），所以「改回硬刪」
+   * 不會有任何執行期錯誤 —— 只有這一條會紅。
+   */
+  it("刪除走 updateMany，完全不碰 deleteMany", async () => {
+    await salaryRecordRepo.deleteRecord({
+      accountBookId: BOOK,
+      recordId: RECORD,
+      deletedByUserId: "u-1",
+    });
+
+    expect(recordUpdateMany.mock.calls.length).toBe(1);
+    expect(recordDeleteMany.mock.calls.length).toBe(0);
+  });
+
+  it("寫的是 deletedAt 的時間戳，不是布林旗標", () => {
+    return salaryRecordRepo
+      .deleteRecord({
+        accountBookId: BOOK,
+        recordId: RECORD,
+        deletedByUserId: "u-1",
+      })
+      .then(() => {
+        const data = argOf(recordUpdateMany).data as Record<string, unknown>;
+
+        expect(data.deletedAt).toBeInstanceOf(Date);
+      });
+  });
+
+  /**
+   * Info: (20260909 - Julian) **AuditLog 是這次改動的另一半，不是附加品。**
+   *
+   * 軟刪除讓資料留下來，AuditLog 回答「誰在什麼時候刪的」。
+   * 只做前者的話，五年後有人問「這個月的清冊為什麼是空的」，
+   * 答得出「它被刪了」但答不出是誰 —— 而勞檢問的正是後者。
+   *
+   * `dataId` 填 `SalaryRecord.id`：查詢的軸線是「這一筆紀錄發生過什麼事」。
+   */
+  it("刪除時留下一列 AuditLog，帶帳本、操作者、紀錄 id", async () => {
+    await salaryRecordRepo.deleteRecord({
+      accountBookId: BOOK,
+      recordId: RECORD,
+      deletedByUserId: "u-7",
+    });
+
+    const data = argOf(auditLogCreate).data as Record<string, unknown>;
+
+    expect(data.accountBookId).toBe(BOOK);
+    expect(data.userId).toBe("u-7");
+    expect(data.dataId).toBe(RECORD);
+    expect(data.dataType).toBe("SALARY_RECORD");
+    expect(data.action).toBe("DELETE");
+  });
+
+  /**
+   * Info: (20260909 - Julian) 兩個寫入必須在**同一個交易**裡。
+   *
+   * 分兩次寫的兩種失敗都是靜默的：中間失敗會留下「刪了但沒軌跡」
+   *（正是這次要修的東西）或「有軌跡但沒刪」（假的歷史）。
+   *
+   * 替身的 `$transaction` 把同一個 client 交回去，所以「有沒有包在裡面」
+   * 只能由呼叫次數判斷 —— 那正是這一條在問的。
+   */
+  it("軟刪除與 AuditLog 在同一個交易裡", async () => {
+    await salaryRecordRepo.deleteRecord({
+      accountBookId: BOOK,
+      recordId: RECORD,
+      deletedByUserId: "u-1",
+    });
+
+    expect((prisma.$transaction as unknown as Mock).mock.calls.length).toBe(1);
+  });
+
+  /**
+   * Info: (20260909 - Julian) **沒刪到就不留軌跡。**
+   *
+   * `where` 帶著 `deletedAt: null`，所以重複刪同一筆會 `count === 0`。
+   * 那時仍然寫 AuditLog 的話，一筆紀錄會累積出好幾列「被刪除」——
+   * 而稽核讀到的是「這筆被刪了三次」，那不是發生過的事。
+   */
+  it("沒有刪到任何一列時回 false，而且不寫 AuditLog", async () => {
+    recordUpdateMany.mockResolvedValue({ count: 0 });
+
+    const deleted = await salaryRecordRepo.deleteRecord({
+      accountBookId: BOOK,
+      recordId: RECORD,
+      deletedByUserId: "u-1",
+    });
+
+    expect(deleted).toBe(false);
+    expect(auditLogCreate.mock.calls.length).toBe(0);
+  });
+
+  /**
+   * Info: (20260909 - Julian) **重存一個被刪掉的月份要復活那一列。**
+   *
+   * 複合唯一鍵（帳本, 員工, 年, 月）會被已刪的那一列永久佔住，
+   * 而 `upsert` 走的正是那個鍵 —— 於是它落進 update 分支。
+   * 少了 `deletedAt: null` 的症狀最惡劣：API 回 200、畫面顯示「已儲存」，
+   * 而那一列仍然是已刪除的 —— **清單看不到、匯出沒有、完整度警示說它缺漏**，
+   * 而使用者確信自己存過了。
+   *
+   * 這也是為什麼這張表不需要 `SalaryCalculatorEmployee` 那套 `activeNumber`。
+   */
+  it("upsertRecord 的 update 分支把 deletedAt 設回 null", async () => {
+    await salaryRecordRepo.upsertRecord({
+      accountBookId: BOOK,
+      employeeId: "e-9",
+      createdByUserId: "u-1",
+      year: 2026,
+      month: 8,
+      input: {} as never,
+      result: {} as never,
+      calculatorVersion: "v1",
+      totalPayment: BigInt(0),
+      totalSalaryTaxable: BigInt(0),
+      totalEmployerCost: BigInt(0),
+    });
+
+    const update = argOf(recordUpsert).update as Record<string, unknown>;
+
+    expect(update.deletedAt).toBeNull();
+  });
+
+  /**
+   * Info: (20260909 - Julian) 但 `create` 分支不得帶 `deletedAt`。
+   *
+   * 帶了也不會錯（`null` 本來就是預設），但那會讓「新建的列可能不是存活的」
+   * 變成一個需要讀實作才能排除的疑問。
+   */
+  it("upsertRecord 的 create 分支不碰 deletedAt", async () => {
+    await salaryRecordRepo.upsertRecord({
+      accountBookId: BOOK,
+      employeeId: "e-9",
+      createdByUserId: "u-1",
+      year: 2026,
+      month: 8,
+      input: {} as never,
+      result: {} as never,
+      calculatorVersion: "v1",
+      totalPayment: BigInt(0),
+      totalSalaryTaxable: BigInt(0),
+      totalEmployerCost: BigInt(0),
+    });
+
+    const create = argOf(recordUpsert).create as Record<string, unknown>;
+
+    expect(create).not.toHaveProperty("deletedAt");
   });
 });

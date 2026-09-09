@@ -331,6 +331,28 @@ model SalaryRecord {
 而覆寫（D3）本來就會蓋掉舊值。若日後需要改動軌跡，走 `AuditLog`
 （`prisma/schema.prisma:902`）而不是在這張表堆版本 —— 這與 D3 的「唯一，重存即覆寫」是同一個決定。
 
+> **20260909 更正：上面那句「沒有『刪了還要看得到』的情境」已經不成立。**
+>
+> 客戶確認勞檢調閱的是**工資清冊**，而清冊是從這張表產生的（CSV 匯出）。
+> 勞基法 §23 II 要求工資清冊**保存五年** —— 那就是那個情境，而且是法定的。
+>
+> 改動前：`deleteRecord` 硬刪（`prisma.salaryRecord.deleteMany`），
+> `SalaryPaySlipDelivery` cascade 一起消失，而本模組沒有任何 AuditLog 列。
+> 按一次刪除，那個月的清冊連同它的寄送軌跡永久消失，沒有痕跡。
+>
+> 對照組就在隔壁：`SalaryCalculatorEmployee` 做 soft delete，理由寫的是
+> 「薪資紀錄是對外憑據，員工被刪不能讓歷史一起消失」——
+> 同一條推理套在紀錄本身上更成立。
+>
+> **20260909 已改：`deletedAt` ＋ 刪除時在同一個交易裡寫 AuditLog
+> （`AuditLogDataType.SALARY_RECORD`）。** 兩件事分別回答「資料還在嗎」
+> 與「是誰刪的」，缺一不可。`upsertRecord` 的 update 分支把 `deletedAt`
+> 設回 null，所以重存一個被刪掉的月份會復活那一列 ——
+> 這也是為什麼這張表不需要員工表那套 `activeNumber`。
+>
+> 完整脈絡與四個實作決定見 `salary_pay_slip_delivery_plan.md` §7；
+> 讀取端逐支的分類在 `salary_repo_scope.test.ts` 的 `LIFECYCLE` 表。
+
 ### 3.3 落地時的 fail fast（CLAUDE.md §6）
 
 抽成 `BigInt` 的三個金額，在 service 轉型前必須斷言為整數：

@@ -534,6 +534,7 @@ describe("讀取與刪除薪資紀錄", () => {
         service.deleteRecord({
           accountBookId: OTHER_BOOK,
           recordId: saved.id,
+          userId: "u-1",
         }),
       API_ERRORS.NF_SALARY_RECORD,
     );
@@ -542,7 +543,12 @@ describe("讀取與刪除薪資紀錄", () => {
 
   it("刪除不存在的紀錄回 404 而不是靜默成功", async () => {
     await expectAppError(
-      () => service.deleteRecord({ accountBookId: BOOK, recordId: "nope" }),
+      () =>
+        service.deleteRecord({
+          accountBookId: BOOK,
+          recordId: "nope",
+          userId: "u-1",
+        }),
       API_ERRORS.NF_SALARY_RECORD,
     );
   });
