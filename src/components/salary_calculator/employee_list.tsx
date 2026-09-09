@@ -105,7 +105,20 @@ const EmployeeRow: FC<{
     </span>
   );
 
-  const content = (
+  /**
+   * Info: (20260909 - Julian) 這一段是**選人按鈕的內容**，所以裡面不得有互動元素。
+   *
+   * `variant="modal"` 時整格是一顆 `<button onClick={pickHandler}>`（見下面的
+   * return）。任何放進這裡的按鈕都會巢狀在它裡面 —— 那是 HTML 不允許的結構，
+   * 而且點下去會冒泡到 `pickHandler`。
+   *
+   * `{emailCell}` 是唯一的例外，而它是安全的：那一格在缺信箱時是一顆按鈕，
+   * 但它被 `withEmail` 擋著，而彈窗版傳的是 `withEmail={false}`
+   * （由 `salary_employee_list_contract.test.ts` 釘住）。
+   *
+   * 徽章與本薪在 `trailingContent`，不在這裡 —— 理由寫在那一段。
+   */
+  const pickableContent = (
     <>
       <User
         size={16}
@@ -123,6 +136,31 @@ const EmployeeRow: FC<{
           {emailCell}
         </span>
       )}
+    </>
+  );
+
+  /**
+   * Info: (20260909 - Julian) 徽章與本薪在選人按鈕**外面**，這是刻意的。
+   *
+   * `CoverageAlert` 的觸發器是一顆 `<button>`（理由見該檔），而彈窗版的列
+   * 整格也是一顆 `<button>` —— 放在一起就是巢狀按鈕，兩個症狀：
+   *
+   * 1. HTML 剖析器遇到內層 `<button>` 會隱式關掉外層，於是伺服器那棵樹與
+   *    客戶端那棵樹不同 —— React 報 hydration error。
+   * 2. 更要緊：徽章沒有 `onClick`，但點擊會冒泡到 `pickHandler` ——
+   *    使用者點「缺 1 個月」想看缺哪幾個月，結果選走了那位員工、彈窗關掉。
+   *
+   * 為什麼不把徽章整塊搬到最後面（最省事的做法）：它夾在信箱欄與本薪欄之間，
+   * 搬出去會跑到本薪後面，欄位順序就變了。拆成兩段可以保住順序。
+   *
+   * 代價：**本薪那一格不再能點來選人**。點擊區從整列縮到姓名、編號、信箱那段。
+   *
+   * 間距是重新分配的，不是重寫的 —— 原本一個 `cellStyle` 的
+   * `px-[12px] md:px-[24px]` 拆成列按鈕的 `pl-*` ＋ 這裡的 `pr-*`，
+   * 中間兩個 `gap-[8px]` 由列按鈕的 `pr-[8px]` 與這裡的 `gap-[8px]` 接手。
+   */
+  const trailingContent = (
+    <>
       {/**
        * Info: (20260905 - Luphia) 缺薪資單的標記（#6774）。**兩種 variant 都顯示。**
        *
@@ -144,8 +182,14 @@ const EmployeeRow: FC<{
     </>
   );
 
+  // Info: (20260909 - Julian) 右內距是 8px 而不是 12/24：它接手了原本
+  // 「編號 → 徽章」那個 flex gap（徽章現在在這顆按鈕外面）
   const cellStyle =
-    "flex flex-1 items-center gap-[8px] px-[12px] py-[12px] text-left md:px-[24px]";
+    "flex flex-1 items-center gap-[8px] py-[12px] pl-[12px] pr-[8px] text-left md:pl-[24px]";
+
+  // Info: (20260909 - Julian) 右內距接手原本 cellStyle 的 `px-*` 右半（本薪 → 操作鈕）
+  const trailingStyle =
+    "flex items-center gap-[8px] py-[12px] pr-[12px] md:pr-[24px]";
 
   return (
     <div className="group hover:bg-surface-brand-primary-soft flex items-center">
@@ -162,11 +206,17 @@ const EmployeeRow: FC<{
        */}
       {pickHandler ? (
         <button type="button" onClick={pickHandler} className={cellStyle}>
-          {content}
+          {pickableContent}
         </button>
       ) : (
-        <div className={cellStyle}>{content}</div>
+        <div className={cellStyle}>{pickableContent}</div>
       )}
+
+      {/**
+       * Info: (20260909 - Julian) 一律是 `div`，兩種 variant 都一樣 ——
+       * 這一段永遠不在按鈕裡面（見 `trailingContent` 的註解）。
+       */}
+      <div className={trailingStyle}>{trailingContent}</div>
 
       <div className="flex items-center gap-[4px] pr-[8px] md:pr-[16px]">
         {/**
