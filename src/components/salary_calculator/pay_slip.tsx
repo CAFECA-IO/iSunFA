@@ -5,6 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 // import Image from 'next/image';
 import { useTranslation } from "@/i18n/i18n_context";
 import ResultBlock from "@/components/salary_calculator/result_block";
+import MaskedAmount from "@/components/salary_calculator/masked_amount";
 import { numberWithCommas } from "@/lib/utils/common";
 import { ISalaryCalculatorUI, RowItem } from "@/interfaces/salary_calculator";
 
@@ -17,6 +18,22 @@ interface IPaySlipProps {
   className?: string;
   // Info: (20260901 - Julian) 決定薪資單有沒有卡片外框
   variant?: "card" | "plain";
+  /**
+   * Info: (20260909 - Julian) 這張薪資單要不要能遮住數值。**預設不能。**
+   *
+   * 遮罩是給「別人的薪資單」用的 —— 也就是薪資紀錄檢視
+   * （`view_pay_slip_modal`）。在辦公室裡幫別人算薪水的人一天會打開好幾個人的
+   * 紀錄，每一次打開都是一次曝光，而他不會每一次都記得在有人走過來之前按下那顆鈕。
+   *
+   * **計算機那一頁不遮**：那裡的數字是使用者自己在同一個畫面上方剛剛輸入的，
+   * 遮下面那份等於遮他自己的輸入 —— 而輸入欄位就在旁邊，什麼也沒擋到，
+   * 只是讓他每次算完都要多按一下才看得到結果。
+   *
+   * 預設 `false` 而不是 `true`：新的呼叫端如果忘了想這件事，
+   * 得到的是「沒有遮罩」這個看得見的結果，而不是「遮了但不該遮」那個
+   * 要按一下才發現的結果。
+   */
+  maskable?: boolean;
 }
 
 const PaySlip: FC<IPaySlipProps> = ({
@@ -27,16 +44,31 @@ const PaySlip: FC<IPaySlipProps> = ({
   resultData,
   className = "",
   variant = "card",
+  maskable = false,
 }) => {
   const { t } = useTranslation();
 
   /**
-   * Info: (20260907 - Julian) 遮住薪資單上的數值。
+   * Info: (20260907 - Julian) 遮住薪資單上的數值。**預設遮住**（商業決策）。
    *
-   * 但下載與寄送不受影響，因為 pay_slip_download.ts 會在截圖期間把根元素上的標記拔掉，
-   * 而寄出的 PDF 由伺服器另外產生、根本不經過這裡。
+   * 兩種預設值的失敗方向不對稱：預設看得見的失敗是「別人的薪資被第三人看到」
+   * （不可回復）；預設遮住的失敗是「使用者以為算壞了」
+   * （按一下就解決，而且只困惑一次）。完整取捨見
+   * `salary_pay_slip_delivery_plan.md` §7。
+   *
+   * 但下載與寄送不受影響：`pay_slip_download.ts` 會在截圖期間把根元素上的標記
+   * 拔掉，而寄出的 PDF 由伺服器另外產生、根本不經過這裡。
    */
   const [isHidden, setIsHidden] = useState<boolean>(true);
+
+  /**
+   * Info: (20260909 - Julian) 真正生效的遮罩狀態 —— `maskable` 是總開關。
+   *
+   * 分成兩個而不是把 `maskable` 直接當成初始值：後者會讓計算機那一頁
+   * 多出一顆能按、按了也真的會遮的鈕，而那一頁根本不需要遮
+   * （見 `maskable` 的註解）。這裡是「這張單子不支援遮罩」，不是「預設沒遮」。
+   */
+  const isMasked = maskable && isHidden;
 
   const showingName = employeeName !== "" ? employeeName : "-";
   const showingNumber = employeeNumber !== "" ? employeeNumber : "-";
@@ -242,7 +274,7 @@ const PaySlip: FC<IPaySlipProps> = ({
     <div
       id="payslip-download"
       // Info: (20260907 - Julian) 只在遮住時出現 —— 截圖前由 downloadNodeAsPng 拔掉
-      data-values-hidden={isHidden ? "true" : undefined}
+      data-values-hidden={isMasked ? "true" : undefined}
       className={`relative flex flex-col gap-6 bg-white ${
         variant === "card"
           ? "overflow-hidden rounded-2xl border border-gray-200 p-6 shadow-xl"
@@ -283,30 +315,32 @@ const PaySlip: FC<IPaySlipProps> = ({
            *
            * `data-capture-exclude` 讓它不會出現在下載的 PNG 裡 ——
            * 那張圖是要給員工看的，上面不該有一顆操作鈕。
+           *
+           * Info: (20260909 - Julian) 不支援遮罩的呼叫端（計算機）整顆不 render。
+           * 留一顆按了沒有效果的鈕，比沒有這顆鈕更糟 —— 使用者會以為遮罩壞了。
            */}
-          <div className="flex justify-end">
-            <button
-              type="button"
-              data-capture-exclude="true"
-              onClick={() => setIsHidden((prev) => !prev)}
-              aria-pressed={isHidden}
-              className="text-text-neutral-tertiary hover:text-text-neutral-primary flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-gray-100"
-            >
-              {isHidden ? <EyeOff size={16} /> : <Eye size={16} />}
-              {isHidden
-                ? t("calculator.result.show_values")
-                : t("calculator.result.hide_values")}
-            </button>
-          </div>
+          {maskable && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                data-capture-exclude="true"
+                onClick={() => setIsHidden((prev) => !prev)}
+                aria-pressed={isHidden}
+                className="text-text-neutral-tertiary hover:text-text-neutral-primary flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-gray-100"
+              >
+                {isHidden ? <EyeOff size={16} /> : <Eye size={16} />}
+                {isHidden
+                  ? t("calculator.result.show_values")
+                  : t("calculator.result.hide_values")}
+              </button>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase">
               {t("calculator.result.reported")}
             </p>
-            <div
-              data-payslip-amount
-              className="text-text-brand-primary-lv2 text-2xl font-bold"
-            >
-              {numberWithCommas(totalSalaryTaxable)}{" "}
+            <div className="text-text-brand-primary-lv2 text-2xl font-bold">
+              <MaskedAmount value={numberWithCommas(totalSalaryTaxable)} />{" "}
               <span className="text-text-neutral-tertiary text-base font-semibold">
                 NTD
               </span>
@@ -316,11 +350,8 @@ const PaySlip: FC<IPaySlipProps> = ({
             <p className="text-xs font-semibold uppercase">
               {t("calculator.result.paid")}
             </p>
-            <div
-              data-payslip-amount
-              className="text-text-brand-primary-lv2 text-2xl font-bold"
-            >
-              {numberWithCommas(totalPayment)}{" "}
+            <div className="text-text-brand-primary-lv2 text-2xl font-bold">
+              <MaskedAmount value={numberWithCommas(totalPayment)} />{" "}
               <span className="text-text-neutral-tertiary text-base font-semibold">
                 NTD
               </span>

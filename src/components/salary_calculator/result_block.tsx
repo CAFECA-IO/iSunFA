@@ -1,4 +1,5 @@
 import { FC } from "react";
+import MaskedAmount from "@/components/salary_calculator/masked_amount";
 import { numberWithCommas } from "@/lib/utils/common";
 import { RowItem } from "@/interfaces/salary_calculator";
 
@@ -8,16 +9,18 @@ interface IResultBlockProps {
 }
 
 /**
- * Info: (20260907 - Julian) `data-payslip-amount` 是「這一格是數值」的標記。
+ * Info: (20260909 - Julian) 每一格數值都走 `MaskedAmount`，不自己寫遮罩。
  *
- * 薪資單上的顯示／隱藏切換靠它：根元素帶上 `data-values-hidden` 之後，
- * `globals.css` 的一條規則會把所有帶這個標記的後代模糊掉。
+ * 顯示／隱藏切換的機制是：根元素帶上 `data-values-hidden` 之後，
+ * `globals.css` 的規則會把所有 `data-payslip-real` 換成 `data-payslip-mask`
+ * （也就是 `***`）。`MaskedAmount` 是那組屬性唯一的產地。
  *
- * 為什麼用一個屬性 + 一條 CSS，而不是把 `isHidden` 一路傳下來、
- * 在每個元素上掛 `blur-sm`：下載 PNG 時要拿到**沒有模糊**的畫面，
- * 而拔掉根元素上的一個屬性是一次 DOM 操作、確定性的；
- * 逐一改幾十個元素的 class（或改 React state 再等重繪）都不是。
- * 見 `pay_slip_download.ts`。
+ * 為什麼用屬性 + CSS，而不是把 `isHidden` 一路傳下來、在每個元素上判斷：
+ * 下載 PNG 時要拿到**沒有遮罩**的畫面，而拔掉根元素上的一個屬性是一次
+ * 同步、確定的 DOM 操作；改 React state 再等重繪不是。見 `pay_slip_download.ts`。
+ *
+ * 這也是為什麼真數字要留在 DOM 裡（只是 `display: none`）而不是不 render ——
+ * 理由完整寫在 `masked_amount.tsx`。
  */
 const ResultBlock: FC<IResultBlockProps> = ({ backgroundColor, rowItems }) => {
   // Info: (20250708 - Julian) 項目總計：取出 rowItems 的最後一個項目
@@ -25,12 +28,11 @@ const ResultBlock: FC<IResultBlockProps> = ({ backgroundColor, rowItems }) => {
   const displayTotalRowItem = totalItem && (
     <div className="flex items-center justify-between">
       <p className="text-text-neutral-secondary text-xs">{totalItem.label}</p>
-      <p
-        data-payslip-amount
+      <MaskedAmount
+        prefix="NT $"
+        value={numberWithCommas(totalItem.value)}
         className="text-text-neutral-primary text-lg font-bold"
-      >
-        NT ${numberWithCommas(totalItem.value)}
-      </p>
+      />
     </div>
   );
 
@@ -49,9 +51,16 @@ const ResultBlock: FC<IResultBlockProps> = ({ backgroundColor, rowItems }) => {
         item.label.toLocaleLowerCase().includes("total") ||
         item.label.toLocaleLowerCase().includes("總");
 
+      /**
+       * Info: (20260909 - Julian) 前綴與數值分開 —— 前綴不進遮罩。
+       *
+       * 遮住時讀作 `NT ***` 而不是 `***`：看得出這一格是一筆金額，
+       * 而不是一格沒有資料。百分比沒有前綴（`12.34%` 整串就是那個值）。
+       */
+      const valuePrefix = isPercentage ? null : "NT ";
       const formattedValue = isPercentage
         ? `${(item.value * 100).toFixed(2)}%`
-        : `NT ${numberWithCommas(item.value)}`;
+        : numberWithCommas(item.value);
 
       return (
         <div
@@ -59,7 +68,7 @@ const ResultBlock: FC<IResultBlockProps> = ({ backgroundColor, rowItems }) => {
           className={`flex items-center justify-between ${isBold ? "font-bold" : "font-normal"}`}
         >
           <p>{item.label}:</p>
-          <p data-payslip-amount>{formattedValue}</p>
+          <MaskedAmount prefix={valuePrefix} value={formattedValue} />
         </div>
       );
     });

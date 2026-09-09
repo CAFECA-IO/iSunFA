@@ -176,6 +176,14 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
             resultData={paySlipData}
             variant="plain"
             className="shrink-0 px-[40px] py-[24px]"
+            /**
+             * Info: (20260909 - Julian) 只有這裡開啟遮罩。
+             *
+             * 這是「別人的薪資單」—— 在辦公室裡幫別人算薪水的人一天會打開
+             * 好幾個人的紀錄，每一次打開都是一次曝光。計算機那一頁不開：
+             * 那裡的數字是使用者自己剛剛輸入的（見 `pay_slip.tsx` 的 `maskable`）。
+             */
+            maskable
           />
           {isSentRecord && (
             <div className="flex shrink-0 items-center gap-[8px] px-[40px] text-sm">
