@@ -37,7 +37,7 @@ const recordOf = (
   id: RECORD_ID,
   year: 2026,
   month: 9,
-  employee: { id: "e1", name: "王小明", number: "A001" },
+  employee: { id: "e1", name: "王小明", number: "A001", hireDate: null },
   /**
    * Info: (20260908 - Julian) 本薪與「這個月生效的本薪異動」（計劃書 §15）。
    *
@@ -210,6 +210,7 @@ describe("CSV 的注入與跳脫", () => {
           id: "e1",
           name: `${trigger}HYPERLINK("x")`,
           number: "A001",
+          hireDate: null,
         },
       }),
     ]);
@@ -220,7 +221,9 @@ describe("CSV 的注入與跳脫", () => {
 
   it("TAB 與 CR 開頭同樣被中和", () => {
     const csv = buildSalaryRecordCsv([
-      recordOf({ employee: { id: "e1", name: "\t=1+1", number: "A001" } }),
+      recordOf({
+        employee: { id: "e1", name: "\t=1+1", number: "A001", hireDate: null },
+      }),
     ]);
 
     expect(csv).toContain("'\t=1+1");
@@ -233,7 +236,9 @@ describe("CSV 的注入與跳脫", () => {
    */
   it("同時需要中和與加引號時，單引號在引號**裡面**", () => {
     const csv = buildSalaryRecordCsv([
-      recordOf({ employee: { id: "e1", name: "=1+1,x", number: "A001" } }),
+      recordOf({
+        employee: { id: "e1", name: "=1+1,x", number: "A001", hireDate: null },
+      }),
     ]);
 
     expect(csv).toContain(`"'=1+1,x"`);
@@ -243,7 +248,14 @@ describe("CSV 的注入與跳脫", () => {
   it("含逗號的姓名整欄加引號，不會讓後面每一格錯位", () => {
     const [, row] = rowsOf(
       buildSalaryRecordCsv([
-        recordOf({ employee: { id: "e1", name: "王, 小明", number: "A001" } }),
+        recordOf({
+          employee: {
+            id: "e1",
+            name: "王, 小明",
+            number: "A001",
+            hireDate: null,
+          },
+        }),
       ]),
     );
 
@@ -254,7 +266,14 @@ describe("CSV 的注入與跳脫", () => {
   it("含雙引號的姓名把引號加倍", () => {
     const [, row] = rowsOf(
       buildSalaryRecordCsv([
-        recordOf({ employee: { id: "e1", name: '王"小明', number: "A001" } }),
+        recordOf({
+          employee: {
+            id: "e1",
+            name: '王"小明',
+            number: "A001",
+            hireDate: null,
+          },
+        }),
       ]),
     );
 
@@ -264,7 +283,14 @@ describe("CSV 的注入與跳脫", () => {
   it("含換行的姓名不會把一列拆成兩列", () => {
     const rows = rowsOf(
       buildSalaryRecordCsv([
-        recordOf({ employee: { id: "e1", name: "王\n小明", number: "A001" } }),
+        recordOf({
+          employee: {
+            id: "e1",
+            name: "王\n小明",
+            number: "A001",
+            hireDate: null,
+          },
+        }),
       ]),
     );
 
@@ -400,7 +426,7 @@ describe("本薪與它的變動（計劃書 §18）", () => {
     const [, row] = rowsOf(
       buildSalaryRecordCsv([
         recordOf({
-          employee: { id: "e-1", name: "=1+1", number: "A001" },
+          employee: { id: "e-1", name: "=1+1", number: "A001", hireDate: null },
           baseSalaryChange: changeOf({ reason: "=HYPERLINK(1)" }),
         }),
       ]),

@@ -29,6 +29,7 @@ import {
   setPagePicked,
   togglePick,
 } from "@/lib/utils/salary_export_selection";
+import { paySlipMetaOf } from "@/lib/utils/pay_slip_meta";
 import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
 import { saveDownloadedFile } from "@/lib/utils/download_file";
 import {
@@ -663,7 +664,7 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
             title={t("calculator.records.load_back")}
             onClick={() => loadBackHandler(record)}
             disabled={isEmployeesLoading || hasEmployeesError}
-            className={`${iconBtnStyle} text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent`}
+            className={`${iconBtnStyle} text-gray-400 enabled:hover:bg-gray-100 enabled:hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40`}
           >
             <RotateCcw className="size-4" />
           </button>
@@ -967,6 +968,11 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
           employeeEmail={viewingSendTarget.email}
           sendBlockedReason={viewingSendTarget.blockedReason}
           onResent={() => setViewing(null)}
+          /**
+           * Info: (20260909 - Julian) 兩個來源刻意不同（見 `pay_slip_meta.ts`）：
+           * 到職日是員工檔現值，投保狀態是**這筆紀錄當時**的 input 快照。
+           */
+          meta={paySlipMetaOf(viewing.employee.hireDate, viewing.input)}
         />
       )}
 

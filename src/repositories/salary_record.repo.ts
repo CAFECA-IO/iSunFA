@@ -139,6 +139,16 @@ const toSummary = (row: SalaryRecordWithEmployee): ISalaryRecordSummary => ({
     id: row.employee.id,
     name: row.employee.name,
     number: row.employee.number ?? "",
+    /**
+     * Info: (20260909 - Julian) 到職日 → Unix 秒（薪資單表頭要印）。
+     *
+     * `RECORD_INCLUDE` 本來就是 `employee: true`，整列已經在記憶體裡 ——
+     * 多讀一個欄位不多一次查詢。
+     */
+    hireDate:
+      row.employee.hireDate === null
+        ? null
+        : Math.floor(row.employee.hireDate.getTime() / 1000),
   },
   /**
    * Info: (20260908 - Julian) 這個月試算用的本薪 —— 引擎的 `baseSalaryTaxable`。

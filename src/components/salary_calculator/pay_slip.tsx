@@ -6,6 +6,12 @@ import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import ResultBlock from "@/components/salary_calculator/result_block";
 import MaskedAmount from "@/components/salary_calculator/masked_amount";
+import {
+  formatPaySlipDate,
+  PAY_SLIP_INSURED_FIELDS,
+  type IPaySlipMeta,
+  type PaySlipInsuredField,
+} from "@/lib/utils/pay_slip_meta";
 import { numberWithCommas } from "@/lib/utils/common";
 import { ISalaryCalculatorUI, RowItem } from "@/interfaces/salary_calculator";
 
@@ -34,7 +40,33 @@ interface IPaySlipProps {
    * 要按一下才發現的結果。
    */
   maskable?: boolean;
+  /**
+   * Info: (20260909 - Julian) 到職日與投保狀態。**不給就整個不顯示。**
+   *
+   * 可選是因為「我的薪資單」那條路徑手上只有計算結果，沒有員工檔 ——
+   * 給它一個永遠寫著「到職日：-」的欄位，比沒有這個欄位更糟。
+   *
+   * 代價是「呼叫端忘了傳」不會有任何症狀。守法是
+   * `salary_pay_slip_meta.test.ts` 釘住兩個真正該有的呼叫端
+   * （薪資紀錄檢視與計算機）都傳了。
+   */
+  meta?: IPaySlipMeta;
 }
+
+/**
+ * Info: (20260909 - Julian) 三種投保的文案，沿用計算機表單上的同一組 key。
+ *
+ * 另外開一組 `calculator.result.*` 的話，同一件事在畫面上會有兩種說法 ——
+ * 而使用者是先在計算機勾了「勞保」，再到薪資單上看它。
+ *
+ * 型別是 `Record<PaySlipInsuredField, string>`：日後多一種保險，
+ * 這裡少一個鍵就編譯失敗。
+ */
+const INSURED_LABEL_KEY: Record<PaySlipInsuredField, string> = {
+  isLaborInsured: "calculator.others_form.option_labor_insurance",
+  isHealthInsured: "calculator.others_form.option_nhi",
+  isPensionInsured: "calculator.others_form.option_labor_pension",
+};
 
 const PaySlip: FC<IPaySlipProps> = ({
   employeeName,
@@ -45,6 +77,7 @@ const PaySlip: FC<IPaySlipProps> = ({
   className = "",
   variant = "card",
   maskable = false,
+  meta = undefined,
 }) => {
   const { t } = useTranslation();
 
@@ -270,6 +303,25 @@ const PaySlip: FC<IPaySlipProps> = ({
     },
   ];
 
+  /**
+   * Info: (20260909 - Julian) 投保狀態排在級距**前面**（`statusItems` 就是那個位置）。
+   *
+   * 未投保時級距是 0，而「勞保投保級距 0」讀起來像資料漏了，
+   * 不像「這個人沒有投保」。先講狀態，下面那幾個 0 才有解釋。
+   *
+   * 走 `PAY_SLIP_INSURED_FIELDS` 而不是自己列三行：寄出的
+   * `pay_slip_html.ts` 也 map 同一份清單 —— 日後多一種保險，
+   * 不可能只落在畫面或只落在信件其中一邊。
+   */
+  const insuredStatusItems = meta
+    ? PAY_SLIP_INSURED_FIELDS.map((field) => ({
+        label: t(INSURED_LABEL_KEY[field]),
+        value: meta[field]
+          ? t("calculator.result.insured_yes")
+          : t("calculator.result.insured_no"),
+      }))
+    : [];
+
   return (
     <div
       id="payslip-download"
@@ -298,6 +350,21 @@ const PaySlip: FC<IPaySlipProps> = ({
           <p className="text-text-neutral-primary hidden text-xs font-medium lg:block">
             {showingNumber}
           </p>
+          {/**
+           * Info: (20260909 - Julian) 到職日放在身分那一區，不在投保區塊。
+           *
+           * 它回答的是「這個人是誰」而不是「這個月怎麼算的」——
+           * 勞檢對照投保申報表時看的也是這一區。
+           *
+           * 沒有 `hidden lg:block`：編號在手機版被搬到姓名旁邊，
+           * 而到職日沒有那個並排的位置，兩種尺寸都留在這裡。
+           */}
+          {meta && (
+            <p className="text-text-neutral-tertiary text-xs font-medium">
+              {t("calculator.result.hire_date")}:{" "}
+              {formatPaySlipDate(meta.hireDate)}
+            </p>
+          )}
         </div>
         {/* Info: (20250708 - Julian) 薪資合計 */}
         {/* <div className="flex items-end justify-end gap-[8px] text-[28px] font-bold text-text-brand-primary-lv2">
@@ -375,6 +442,7 @@ const PaySlip: FC<IPaySlipProps> = ({
         <ResultBlock
           backgroundColor="bg-sky-100"
           rowItems={insuredSalaryRowItems}
+          statusItems={insuredStatusItems}
         />
         {/* Info: (20250708 - Julian) 雇主總負擔 */}
         <ResultBlock

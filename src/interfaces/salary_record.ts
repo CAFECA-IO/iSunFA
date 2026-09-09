@@ -270,6 +270,20 @@ export interface ISalaryRecordSummary {
     id: string;
     name: string;
     number: string;
+    /**
+     * Info: (20260909 - Julian) 到職日（Unix 秒）—— 薪資單表頭要印它。
+     *
+     * **這是員工檔的現值，不是這筆紀錄的快照**，而那是刻意的：
+     * 到職日是「這個人」的事實，不是「這個月」的事實，只有一個正確答案。
+     * 被更正過（打錯字、補登）的話，舊薪資單上該顯示的是更正後那個值。
+     *
+     * 而「誰在什麼時候改了它」另有去處：它是調薪歷程裡預設顯示的欄位之一
+     * （`SALARY_PROFILE_FIELD_VISIBILITY.hireDate === true`），不會沒有痕跡。
+     *
+     * 對照組是同一張薪資單上的**投保狀態** —— 那一個是月別事實，
+     * 讀的是這筆紀錄的 input 快照。理由寫在 `pay_slip_meta.ts`。
+     */
+    hireDate: number | null;
   };
   /**
    * Info: (20260908 - Julian) 這個月**試算時用的**本薪。

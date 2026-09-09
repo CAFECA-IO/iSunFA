@@ -1,3 +1,5 @@
+import type { PaySlipInsuredField } from "@/lib/utils/pay_slip_meta";
+
 /**
  * Info: (20260904 - Julian) 薪資單欄位的中文名稱。**伺服端產物共用這一份。**
  *
@@ -65,6 +67,32 @@ export const PAY_SLIP_FIELD_LABELS = {
   reported: "扣繳憑單金額",
   paid: "實際發放金額",
 } as const;
+
+/**
+ * Info: (20260909 - Julian) 表頭那幾格「不是金額」的標籤（到職日與投保狀態）。
+ *
+ * 與上面那張表分開：那一張的鍵對應 `ISalaryCalculatorUI` 的欄位，
+ * 混進來會讓「這張表就是計算結果的每一欄」不再成立 ——
+ * 而 CSV 匯出正是靠那件事逐欄走過去的。
+ */
+export const PAY_SLIP_META_LABELS = {
+  hireDate: "到職日",
+  insuredYes: "投保",
+  insuredNo: "未投保",
+} as const;
+
+/**
+ * Info: (20260909 - Julian) 三種投保的中文名。**型別綁在共用的欄位清單上。**
+ *
+ * `Record<PaySlipInsuredField, string>` —— 日後多一種保險，
+ * 這裡少一個鍵就編譯失敗。少了它的話，新增的那一種會在畫面上有、
+ * 在寄出的薪資單上沒有（或反過來），而兩邊各自看都正常。
+ */
+export const PAY_SLIP_INSURED_LABELS: Record<PaySlipInsuredField, string> = {
+  isLaborInsured: "勞保",
+  isHealthInsured: "健保",
+  isPensionInsured: "勞退",
+};
 
 /**
  * Info: (20260904 - Julian) CSV 專屬的身分欄位 —— PDF 上沒有。

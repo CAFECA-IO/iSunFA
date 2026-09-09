@@ -278,7 +278,12 @@ class FakeRecordRepo implements ISalaryRecordRepository {
       id: key,
       year: params.year,
       month: params.month,
-      employee: { id: params.employeeId, name: "王小明", number: "A001" },
+      employee: {
+        id: params.employeeId,
+        name: "王小明",
+        number: "A001",
+        hireDate: null,
+      },
       /**
        * Info: (20260908 - Julian) 本薪與「這個月生效的本薪異動」（計劃書 §15）。
        *

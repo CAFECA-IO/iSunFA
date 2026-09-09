@@ -6,6 +6,17 @@ import { RowItem } from "@/interfaces/salary_calculator";
 interface IResultBlockProps {
   backgroundColor: string;
   rowItems: RowItem[];
+  /**
+   * Info: (20260909 - Julian) 不是金額的列（今天只有投保狀態），排在數值之前。
+   *
+   * 與 `rowItems` 分開而不是把 `RowItem.value` 放寬成 `number | string`：
+   * 放寬之後每一個消費端都要各自判斷「這一格是數字還是字」，
+   * 而 `MaskedAmount` 的遮罩、千分位、百分比全都建立在「它是數字」上。
+   *
+   * 這些列**不遮**：遮的是金額，而「有沒有投保」不是金額。
+   * 把它遮掉只會讓一張看不出投保狀態的薪資單，卻擋不住任何實質資訊。
+   */
+  statusItems?: { label: string; value: string }[];
 }
 
 /**
@@ -22,7 +33,11 @@ interface IResultBlockProps {
  * 這也是為什麼真數字要留在 DOM 裡（只是 `display: none`）而不是不 render ——
  * 理由完整寫在 `masked_amount.tsx`。
  */
-const ResultBlock: FC<IResultBlockProps> = ({ backgroundColor, rowItems }) => {
+const ResultBlock: FC<IResultBlockProps> = ({
+  backgroundColor,
+  rowItems,
+  statusItems = [],
+}) => {
   // Info: (20250708 - Julian) 項目總計：取出 rowItems 的最後一個項目
   const totalItem = rowItems.slice(-1)[0];
   const displayTotalRowItem = totalItem && (
@@ -79,6 +94,15 @@ const ResultBlock: FC<IResultBlockProps> = ({ backgroundColor, rowItems }) => {
     >
       {/* Info: (20250708 - Julian) 項目 */}
       <div className="text-text-neutral-secondary flex flex-1 flex-col gap-2.5 text-xs font-medium">
+        {statusItems.map((item) => (
+          <div
+            key={item.label}
+            className="flex items-center justify-between font-normal"
+          >
+            <p>{item.label}:</p>
+            <p>{item.value}</p>
+          </div>
+        ))}
         {displayRowItems}
       </div>
       {/* Info: (20250708 - Julian) 分界線 */}

@@ -92,7 +92,7 @@ const recordOf = (
   id: RECORD_ID,
   year: 2026,
   month: 9,
-  employee: { id: EMPLOYEE_ID, name: "王小明", number: "A001" },
+  employee: { id: EMPLOYEE_ID, name: "王小明", number: "A001", hireDate: null },
   /**
    * Info: (20260908 - Julian) 本薪與「這個月生效的本薪異動」（計劃書 §15）。
    *

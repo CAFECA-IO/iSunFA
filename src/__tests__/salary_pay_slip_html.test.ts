@@ -1,5 +1,6 @@
 import { describe, it, expect } from "@jest/globals";
 import { buildPaySlipHtml } from "@/lib/utils/pay_slip_html";
+import type { IPaySlipMeta } from "@/lib/utils/pay_slip_meta";
 import {
   defaultSalaryCalculatorResult,
   type ISalaryCalculatorUI,
@@ -56,6 +57,18 @@ const makeResult = (
     defaultSalaryCalculatorResult.totalSalaryTaxable,
 });
 
+/**
+ * Info: (20260909 - Julian) 預設是「有到職日、三種都投保」——
+ * 也就是最常見的那一種員工。要測其他組合的由 `overrides.meta` 帶進來。
+ */
+const DEFAULT_META: IPaySlipMeta = {
+  // Info: (20260909 - Julian) 2026-08-10 UTC 午夜；到職日一律以 UTC 落地
+  hireDate: Math.floor(Date.UTC(2026, 7, 10) / 1000),
+  isLaborInsured: true,
+  isHealthInsured: true,
+  isPensionInsured: true,
+};
+
 const buildWith = (
   overrides: Partial<{
     employeeName: string;
@@ -63,6 +76,7 @@ const buildWith = (
     year: number;
     month: number;
     result: ISalaryCalculatorUI;
+    meta: IPaySlipMeta;
   }> = {},
 ) =>
   buildPaySlipHtml({
@@ -71,6 +85,7 @@ const buildWith = (
     year: 2026,
     month: 9,
     result: makeResult(),
+    meta: DEFAULT_META,
     ...overrides,
   });
 

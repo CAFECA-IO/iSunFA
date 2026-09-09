@@ -60,7 +60,7 @@ const recordRow = (patch: Record<string, unknown> = {}) => ({
   id: "rec-1",
   year: 2026,
   month: 9,
-  employee: { id: EMPLOYEE, name: "王小明", number: "A001" },
+  employee: { id: EMPLOYEE, name: "王小明", number: "A001", hireDate: null },
   // Info: (20260908 - Julian) 本薪的純量欄位（計劃書 §16）；`toSummary` 直接讀它
   baseSalary: 30000n,
   totalPayment: 41234n,
@@ -415,7 +415,12 @@ describe("查詢的形狀", () => {
       recordRow({
         id: "rec-3",
         month: 9,
-        employee: { id: "employee-2", name: "李小華", number: "A002" },
+        employee: {
+          id: "employee-2",
+          name: "李小華",
+          number: "A002",
+          hireDate: null,
+        },
       }),
     ]);
 

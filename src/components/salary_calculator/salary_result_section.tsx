@@ -32,6 +32,7 @@ import {
   EMPLOYEE_NUMBER_INPUT_ID,
 } from "@/constants/salary_calculator";
 import { downloadNodeAsPng } from "@/lib/utils/pay_slip_download";
+import { paySlipMetaOf } from "@/lib/utils/pay_slip_meta";
 import {
   ISalaryCalculatorEmployee,
   ISalaryRecordSummary,
@@ -369,6 +370,24 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     input.select();
   }, [isFocusingNumber]);
 
+  /**
+   * Info: (20260909 - Julian) 薪資單上的到職日與投保狀態。
+   *
+   * 到職日取**已連結員工檔的現值**（與伺服器產生的 PDF 同一個來源），
+   * 沒有連結員工時是 null —— 公開試算沒有員工檔，那一格會顯示 `-`，
+   * 而那是誠實的：這一次試算確實不屬於任何一個人。
+   *
+   * 投保狀態取**計算機當下的輸入**（`getSalaryCalculatorOptions()`），
+   * 不是員工檔：使用者可能剛在這一頁把勞保取消掉還沒儲存，
+   * 而下面那張薪資單上的金額已經是照取消之後算的。讀員工檔會讓
+   * 「狀態」與「金額」在同一張單子上互相矛盾。
+   */
+  const paySlipMeta = paySlipMetaOf(
+    employees.find((employee) => employee.id === selectedEmployeeId)
+      ?.hireDate ?? null,
+    getSalaryCalculatorOptions(),
+  );
+
   const confirmOverwriteHandler = async () => {
     if (pendingOverwrite === null) return;
     await saveRecordFor(pendingOverwrite.employeeId);
@@ -585,6 +604,7 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
               selectedYear={selectedYear}
               resultData={salaryCalculatorResult}
               variant="plain"
+              meta={paySlipMeta}
             />
           </div>
         </div>

@@ -239,7 +239,14 @@ const salaryRowFixture = () => ({
   resultSnapshot: {},
   createdAt: new Date(0),
   updatedAt: new Date(0),
-  employee: { id: "e-9", name: "王小明", number: "A012", email: null },
+  employee: {
+    id: "e-9",
+    name: "王小明",
+    number: "A012",
+    email: null,
+    // Info: (20260909 - Julian) 薪資單表頭要印到職日；`toSummary` 會讀這一欄
+    hireDate: null,
+  },
   // Info: (20260905 - Luphia) `toSummary` 會讀這個關聯算「最近一次寄出」
   paySlipDeliveries: [],
 });
