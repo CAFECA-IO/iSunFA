@@ -19,6 +19,7 @@ import { chatroomService } from "@/services/chatroom.service";
 import { canReadAttachmentCid } from "@/services/carbon_access.guard";
 import { AttachmentSecurityService } from "@/services/attachment_security.service";
 import { buildCarbonChatChannel } from "@/constants/carbon_chatbot";
+import { addressLookupForms } from "@/lib/team/address_identity";
 import { VirusScanStatusEnum } from "@/lib/virus_scanner";
 import type { IVirusScanner } from "@/lib/virus_scanner";
 import type { StorageService } from "@/services/storage.service";
@@ -188,6 +189,28 @@ beforeEach(() => {
   mockRole.mockResolvedValue(null);
 });
 
+/**
+ * Info: (20260909 - Emily) 帳本成員表的替身(#6783 review 阻-1)。
+ *
+ * 原本這裡是 `address.toLowerCase() === "0xaaa"` —— 那比真實的
+ * `getMemberRoleByAddress` **寬鬆**:它查的是 `User.address`,而 Postgres 的
+ * `=` / `IN` 大小寫敏感(schema 沒有 citext)。於是「拿正規化後的小寫位址去比
+ * checksum 形狀的 `User.address`」這個缺陷對這一檔是隱形的(§1.8 / §1.12)。
+ *
+ * 這個替身模擬的是 repo **修好之後**的語意:兩種寫法都撈。真正把「大小寫要撈兩種」
+ * 釘住的是 `account_book_member_role_address_case.test.ts`(那一檔 mock 的是
+ * `prisma`,斷言交給資料庫的條件)—— repo 若退回精確比對,紅的是那一檔,不是這一檔。
+ * 這裡只保證:替身不會比被它取代的東西寬鬆。
+ */
+const memberTable =
+  (roles: Record<string, string>) =>
+  async (_book: string, address: string): Promise<string | null> => {
+    const found = addressLookupForms(address)
+      .map((form) => roles[form])
+      .find((role) => role !== undefined);
+    return found ?? null;
+  };
+
 describe("canReadAttachmentCid:只有上傳者本人", () => {
   it("擁有者相同(大小寫不同也算同一人)→ 可讀", async () => {
     mockFindOwner.mockResolvedValue("0xaaa");
@@ -245,10 +268,8 @@ describe("同帳本接續匯入(#6748 中-1,owner 拍板 (b))", () => {
 
   it("B 是帳本 EDITOR、cid 擁有者 A 也是成員 → 放行(接續 A 的匯入)", async () => {
     mockFindBook.mockResolvedValue(BOOK);
-    mockRole.mockImplementation(async (_book, address) =>
-      address.toLowerCase() === "0xaaa" || address.toLowerCase() === "0xaaaa"
-        ? "EDITOR"
-        : null,
+    mockRole.mockImplementation(
+      memberTable({ "0xaaa": "EDITOR", "0xaaaa": "EDITOR" }),
     );
     mockFindOwner.mockResolvedValue("0xaaaa");
     const body = await callImport("cid-of-a", A_CHANNEL);
@@ -258,13 +279,39 @@ describe("同帳本接續匯入(#6748 中-1,owner 拍板 (b))", () => {
 
   it("cid 擁有者不是該帳本成員 → 拒絕(擋「B 拿 A 的 cid 到別的帳本用」)", async () => {
     mockFindBook.mockResolvedValue(BOOK);
-    mockRole.mockImplementation(async (_book, address) =>
-      address.toLowerCase() === "0xaaa" ? "EDITOR" : null,
-    );
+    mockRole.mockImplementation(memberTable({ "0xaaa": "EDITOR" }));
     mockFindOwner.mockResolvedValue("0xaaaa");
     const body = await callImport("cid-of-a", A_CHANNEL);
     expect(body.errorCode).toBe(PERMISSION_DENIED);
     expect(mockRecover).not.toHaveBeenCalled();
+  });
+
+  it("A 的 User.address 是 checksum、owner 表存的是小寫 → 仍放行(#6783 阻-1 的場景)", async () => {
+    /**
+     * Info: (20260909 - Emily) 這是真實世界最常見的那一組:A 走鏈上那條路建帳號,
+     * `User.address` 是 EIP-55 checksum;`recordOwner` 存進去的是正規化後的全小寫。
+     * 兩個值是同一個位址的兩種寫法,而中間隔著一支查詢。
+     *
+     * 這一條靠的是 `getMemberRoleByAddress` 會撈兩種寫法 —— 那件事由
+     * `account_book_member_role_address_case.test.ts` 直接對 `prisma` 釘住。
+     */
+    const A_CHECKSUM = "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B";
+    const A_LOWER = "0xab5801a7d398351b8be11c439e05c5b3259aec9b";
+    const B_CHECKSUM = "0xdD2FD4581271e230360230F9337D5c0430Bf44C0";
+    mockFindBook.mockResolvedValue(BOOK);
+    // Info: (20260909 - Emily) 成員表以 User.address 實際存的寫法為鍵(A 是 checksum)
+    mockRole.mockImplementation(
+      memberTable({ [A_CHECKSUM]: "EDITOR", [B_CHECKSUM]: "EDITOR" }),
+    );
+    mockFindOwner.mockResolvedValue(A_LOWER);
+    expect(
+      await canReadAttachmentCid(B_CHECKSUM, "cid-of-a", {
+        accountBookId: BOOK,
+        callerCanEdit: true,
+      }),
+    ).toBe(true);
+    // Info: (20260909 - Emily) 傳給查詢的仍是 owner 表那個小寫值,轉換不在裁決層做
+    expect(mockRole).toHaveBeenCalledWith(BOOK, A_LOWER);
   });
 
   it("個人會話(沒綁帳本)→ 仍只認本人", async () => {
@@ -276,7 +323,7 @@ describe("同帳本接續匯入(#6748 中-1,owner 拍板 (b))", () => {
 
   it("裁決函式:scope 缺 callerCanEdit 也不放行(不在這裡重算權限,但也不能被空 scope 繞過)", async () => {
     mockFindOwner.mockResolvedValue("0xaaaa");
-    mockRole.mockResolvedValue("EDITOR");
+    mockRole.mockImplementation(memberTable({ "0xaaaa": "EDITOR" }));
     expect(
       await canReadAttachmentCid("0xAAA", "cid-of-a", {
         accountBookId: BOOK,

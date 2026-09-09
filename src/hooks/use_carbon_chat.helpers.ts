@@ -234,6 +234,73 @@ export const appendImportSource = (
 };
 
 /**
+ * Info: (20260909 - Emily) 重試／接續失敗之後,要說「稍後再試」還是「請重新上傳」
+ * (#6783 review 中-1)。
+ *
+ * 兩處 catch(`retryFailedImportChapters` / `resumePausedImportChapters`)原本都是
+ * 同一句 `import_failed`:「【匯入失敗】報告解析發生問題,請稍後再試。」
+ * 而有一種失敗**稍後再試永遠不會成功**:
+ *
+ * cid 歸屬裁決上線(#6748)之後,上線前上傳的 cid 沒有擁有者紀錄,一律回 `AU000005`,
+ * 而那筆紀錄永遠不會補上(Laria 的 metadata hash 由內容決定,沒有紀錄能事後證明誰是誰)。
+ * 待匯入紀錄裡存的正是那個 cid,重載之後 `file` 是 null(有 cid 就不留 File 參考,
+ * 讓瀏覽器早點回收大檔)—— 於是那顆按鈕會一直失敗,而畫面一直說「稍後再試」。
+ *
+ * 抽成純函式而不寫在 hook 裡:這是判斷(說哪一句、要不要丟掉那個 cid),hook 只該接線。
+ */
+export enum ImportRetryFailureEnum {
+  /** 沒有素材了 —— 再按幾次都不會好,要使用者重新上傳同一份檔案 */
+  NEEDS_FILE = "NEEDS_FILE",
+  /** 其他失敗:網路、伺服器、解析 —— 稍後再試可能會好 */
+  RETRYABLE = "RETRYABLE",
+}
+
+export const IMPORT_RETRY_FAILURE_TEXT_KEY: Record<
+  ImportRetryFailureEnum,
+  string
+> = {
+  [ImportRetryFailureEnum.NEEDS_FILE]:
+    "carbon_chatbot.import_resume_needs_file",
+  [ImportRetryFailureEnum.RETRYABLE]: "carbon_chatbot.import_failed",
+};
+
+/**
+ * Info: (20260909 - Emily) `AU000005` 而且這次送的是 cid → 那個 cid 不必再留。
+ *
+ * 丟掉之後 `appendImportSource` 會走 `file` 那條退路;連 `file` 也沒有時它會在
+ * **發請求之前**就拋(見上面),不會再送一個註定被拒的請求、也不會再扣一次點數。
+ */
+export const shouldDropDeniedImportCid = (
+  errorCode: string | null,
+  source: ICarbonImportSource | null,
+): boolean =>
+  errorCode === API_ERRORS.AUTH_PERMISSION_DENIED.code &&
+  (source?.cid ?? null) !== null;
+
+export const classifyImportRetryFailure = (
+  errorCode: string | null,
+  source: ICarbonImportSource | null,
+): ImportRetryFailureEnum => {
+  /*
+   * Info: (20260909 - Emily) 兩者都沒有:`appendImportSource` 會拋,而那不是「稍後再試」。
+   * 這條也接住「上一次因為 AU000005 把 cid 丟掉了,而本機沒有檔案」的下一次。
+   */
+  if (!source?.cid && !source?.file) return ImportRetryFailureEnum.NEEDS_FILE;
+  if (shouldDropDeniedImportCid(errorCode, source)) {
+    /*
+     * Info: (20260909 - Emily) cid 被拒而本機還留著檔案時仍算可重試 ——
+     * 丟掉 cid 之後直傳那條路是通的。目前這個組合不會出現
+     * (`file: importCid ? null : file`,兩者互斥),但判準寫的是「還有沒有素材」,
+     * 不是「現在剛好是哪一種」。
+     */
+    return source.file
+      ? ImportRetryFailureEnum.RETRYABLE
+      : ImportRetryFailureEnum.NEEDS_FILE;
+  }
+  return ImportRetryFailureEnum.RETRYABLE;
+};
+
+/**
  * Info: (20260806 - Tzuhan) 會話清單排序:最近有動作的在最上面。
  *
  * 原本清單是 `Object.values(sessionsData)` 的**插入順序** —— 沒有排序。
