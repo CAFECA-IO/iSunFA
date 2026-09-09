@@ -12,7 +12,9 @@ import {
 import { ISalaryRecordDetail } from "@/interfaces/salary_record";
 import {
   PAY_SLIP_CSV_IDENTITY_LABELS,
+  PAY_SLIP_CSV_INSURED_STATUS_LABELS,
   PAY_SLIP_FIELD_LABELS,
+  PAY_SLIP_META_LABELS,
 } from "@/constants/pay_slip_labels";
 import { calculator as zhTw } from "@/i18n/locales/zh_tw/calculator";
 
@@ -513,5 +515,172 @@ describe("本薪與它的變動（計劃書 §18）", () => {
     expect(ID.baseSalarySetting).not.toBe(
       PAY_SLIP_FIELD_LABELS.baseSalaryWithTax,
     );
+  });
+});
+
+/**
+ * Info: (20260909 - Julian) 到職日與投保狀態（客戶場景 §6）。
+ *
+ * 這份 CSV 是本系統的**工資清冊** —— 勞檢拿它對出勤紀錄，
+ * 而對著清冊問的頭兩個問題就是「這個人什麼時候到職」與「有沒有投保」。
+ * 20260909 之前這兩件事只在薪資單上，清冊裡沒有。
+ */
+describe("到職日", () => {
+  const headerIndex = (csv: string, label: string): number =>
+    rowsOf(csv)[0].indexOf(label);
+
+  const cell = (csv: string, label: string): string =>
+    rowsOf(csv)[1][headerIndex(csv, label)];
+
+  it("有到職日時輸出 YYYY-MM-DD", () => {
+    const csv = buildSalaryRecordCsv([
+      recordOf({
+        employee: {
+          id: "e1",
+          name: "王小明",
+          number: "A001",
+          hireDate: Math.floor(Date.UTC(2026, 7, 10) / 1000),
+        },
+      }),
+    ]);
+
+    expect(cell(csv, PAY_SLIP_META_LABELS.hireDate)).toBe("2026-08-10");
+  });
+
+  /**
+   * Info: (20260909 - Julian) **沒有到職日時是空字串，不是「-」。**
+   *
+   * 兩個理由，各自獨立：
+   *
+   * 1. 一欄裡混著日期與佔位字串，在試算表裡是排不了序的混合型別
+   *    （同一份檔案的 `sentDate` 為了這件事已經回空字串）。
+   * 2. `-` 是公式起始字元 —— `escapeField` 會把它中和成 `'-`，
+   *    於是那一格在 Excel 裡顯示成 `'-`，看起來像資料壞了。
+   *
+   * 薪資單上則印「-」（給人看的，空白讀起來像漏了）。這個差異是刻意的，
+   * 所以兩邊共用的是日期算法而不是空值的處置。
+   */
+  it("沒有到職日時是空字串，不是「-」也不是被中和的 「\'-」", () => {
+    const csv = buildSalaryRecordCsv([recordOf()]);
+
+    expect(cell(csv, PAY_SLIP_META_LABELS.hireDate)).toBe("");
+    expect(csv).not.toContain("'-");
+  });
+
+  /**
+   * Info: (20260909 - Julian) 排在身分那一段，不在最後面。
+   *
+   * 排最後的話，勞檢要看到職日得先橫向捲過四十幾個金額欄。
+   */
+  it("排在員工編號之後", () => {
+    const csv = buildSalaryRecordCsv([recordOf()]);
+    const header = rowsOf(csv)[0];
+
+    expect(header.indexOf(PAY_SLIP_META_LABELS.hireDate)).toBe(
+      header.indexOf(PAY_SLIP_CSV_IDENTITY_LABELS.employeeNumber) + 1,
+    );
+  });
+});
+
+describe("投保狀態", () => {
+  const optionsWith = (
+    patch: Partial<ISalaryCalculatorOptions>,
+  ): ISalaryCalculatorOptions =>
+    ({
+      year: 2026,
+      month: 9,
+      baseSalaryTaxable: 0,
+      baseSalaryTaxFree: 0,
+      ...patch,
+    }) as ISalaryCalculatorOptions;
+
+  const cellsOf = (input: ISalaryCalculatorOptions): string[] => {
+    const csv = buildSalaryRecordCsv([recordOf({ input })]);
+    const [header, row] = rowsOf(csv);
+
+    return (
+      ["isLaborInsured", "isHealthInsured", "isPensionInsured"] as const
+    ).map(
+      (field) => row[header.indexOf(PAY_SLIP_CSV_INSURED_STATUS_LABELS[field])],
+    );
+  };
+
+  /**
+   * Info: (20260909 - Julian) 三種各一欄，狀態各自獨立。
+   *
+   * 合成一欄「已投保」的話，「勞保有、健保沒有」這種常見情況就說不出來 ——
+   * 而那正是勞檢會追的那一種。
+   */
+  it("三欄各自對應各自的保險，不會接錯", () => {
+    expect(
+      cellsOf(
+        optionsWith({
+          isLaborInsuranceEnrolled: true,
+          isHealthInsuranceEnrolled: false,
+          isPensionInsuranceEnrolled: true,
+        }),
+      ),
+    ).toEqual([
+      PAY_SLIP_META_LABELS.insuredYes,
+      PAY_SLIP_META_LABELS.insuredNo,
+      PAY_SLIP_META_LABELS.insuredYes,
+    ]);
+  });
+
+  /**
+   * Info: (20260909 - Julian) 讀的是**這筆紀錄的快照**，不是員工檔現值。
+   *
+   * 這份清冊一次匯出很多人很多月。讀員工檔的話，去年十月那一列會寫著
+   * 今天的投保狀態 —— 而同一列右邊的勞保費是照當時算的，
+   * 一列之內自相矛盾，而且是勞檢最會追問的那一種矛盾。
+   */
+  it("值來自紀錄的 input 快照", () => {
+    const [labor] = cellsOf(optionsWith({ isLaborInsuranceEnrolled: false }));
+
+    expect(labor).toBe(PAY_SLIP_META_LABELS.insuredNo);
+  });
+
+  it("快照缺這幾格時讀成未投保", () => {
+    expect(cellsOf(optionsWith({}))).toEqual([
+      PAY_SLIP_META_LABELS.insuredNo,
+      PAY_SLIP_META_LABELS.insuredNo,
+      PAY_SLIP_META_LABELS.insuredNo,
+    ]);
+  });
+
+  /**
+   * Info: (20260909 - Julian) 排在級距前面，與薪資單同一個順序。
+   *
+   * 未投保時級距是 0，而「勞保投保級距 0」讀起來像資料漏了。
+   */
+  it("三欄排在投保級距之前", () => {
+    const header = rowsOf(buildSalaryRecordCsv([recordOf()]))[0];
+
+    expect(
+      header.indexOf(PAY_SLIP_CSV_INSURED_STATUS_LABELS.isLaborInsured),
+    ).toBeLessThan(
+      header.indexOf(PAY_SLIP_FIELD_LABELS.healthInsuranceSalaryBracket),
+    );
+  });
+
+  /**
+   * Info: (20260909 - Julian) **欄名加長是例外，值不加長。**
+   *
+   * 欄名之所以是「勞保投保狀態」而不是薪資單上的「勞保」：CSV 沒有區塊標題，
+   * 一個叫「勞保」的欄夾在「自行負擔勞保費」與「勞保投保級距」中間，
+   * 讀的人分不出它是什麼（同 `PAY_SLIP_CSV_IDENTITY_LABELS` 的理由）。
+   *
+   * 但**值**用的是同一組字。使用者會把 CSV 與 PDF 並排看 ——
+   * 一邊寫「投保」另一邊寫「是」，他得先確認那是不是同一件事。
+   */
+  it("值與薪資單同字，欄名才是 CSV 專屬的", () => {
+    const csv = buildSalaryRecordCsv([
+      recordOf({ input: optionsWith({ isLaborInsuranceEnrolled: true }) }),
+    ]);
+
+    expect(csv).toContain(PAY_SLIP_META_LABELS.insuredYes);
+    expect(csv).toContain(PAY_SLIP_CSV_INSURED_STATUS_LABELS.isLaborInsured);
+    // Info: (20260909 - Julian) 薪資單上那個短欄名不得單獨成為一欄
+    expect(rowsOf(csv)[0]).not.toContain("勞保");
   });
 });

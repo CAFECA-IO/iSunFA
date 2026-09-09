@@ -114,7 +114,7 @@ export const paySlipMetaOf = (
 });
 
 /**
- * Info: (20260909 - Julian) 到職日的顯示字串，**一律以 UTC 讀**。
+ * Info: (20260909 - Julian) 一個日期 → `YYYY-MM-DD`，**一律以 UTC 讀**。
  *
  * 那個值在資料庫裡是「某一天的午夜 UTC」（見 `SalaryCalculatorEmployee.hireDate`
  * 的註解），也就是日期而不是時刻。用 `getMonth()` 這類本地方法讀的話，
@@ -122,16 +122,35 @@ export const paySlipMetaOf = (
  * 而這是要交給勞檢看的到職日，差一天就是差一天的年資。
  * 本模組有一整組 `*.tz.test.ts` 在守這一類缺陷。
  *
- * 用 `YYYY/MM/DD` 而不是薪資單表頭那種 `Aug. 2026`：這一格會被拿去與
- * 勞保投保申報表逐字比對，數字格式沒有歧義。
+ * ## 為什麼是 ISO 而不是 `2026/08/10`
+ *
+ * 同一個日期會出現在薪資單（給人看）與 CSV（進試算表）兩個地方，
+ * 而 CSV 那一側已經有一個日期欄（`lastSentAt`）用的是 `YYYY-MM-DD`。
+ * 一份檔案裡兩種日期格式，除了難看之外還有實害：其中一種可能被
+ * 試算表當成文字匯入，於是那一欄排不了序。
+ *
+ * 反過來讓 CSV 遷就薪資單也不行 —— 那要改一個既有欄位的輸出格式，
+ * 而已經有人在用那份檔案。**新的欄位遷就舊的**，這是便宜的那一邊。
  */
-export const formatPaySlipDate = (seconds: number | null): string => {
-  if (seconds === null) return "-";
-
+export const formatIsoDateUtc = (seconds: number): string => {
   const date = new Date(seconds * 1000);
   const year = date.getUTCFullYear();
   const month = `${date.getUTCMonth() + 1}`.padStart(2, "0");
   const day = `${date.getUTCDate()}`.padStart(2, "0");
 
-  return `${year}/${month}/${day}`;
+  return `${year}-${month}-${day}`;
 };
+
+/**
+ * Info: (20260909 - Julian) 薪資單上的到職日 —— 沒有的時候印「-」。
+ *
+ * **CSV 不能用這一支**：`-` 是試算表的公式起始字元之一，
+ * 會被 `escapeField` 補成 `'-`；而且一欄裡混著日期與 `-`
+ * 會讓那一欄變成排不了序的混合型別（`salary_record_csv.ts` 的
+ * `sentDate` 為了同一個理由回空字串）。
+ *
+ * 空值的處置是**兩個消費端各自的決定**，日期本身的算法才是共用的 ——
+ * 所以拆成兩支，而不是加一個 `blank` 參數。
+ */
+export const formatPaySlipDate = (seconds: number | null): string =>
+  seconds === null ? "-" : formatIsoDateUtc(seconds);

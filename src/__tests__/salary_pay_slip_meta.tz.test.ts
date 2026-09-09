@@ -31,7 +31,7 @@ describe("到職日的顯示（America/New_York）", () => {
   });
 
   it("月中的到職日不退一天", () => {
-    expect(formatPaySlipDate(utcSeconds(2026, 8, 10))).toBe("2026/08/10");
+    expect(formatPaySlipDate(utcSeconds(2026, 8, 10))).toBe("2026-08-10");
   });
 
   /**
@@ -41,7 +41,7 @@ describe("到職日的顯示（America/New_York）", () => {
    * 它與勞保投保申報表對不起來，而使用者會以為是投保申報錯了。
    */
   it("月初的到職日不退成上個月", () => {
-    expect(formatPaySlipDate(utcSeconds(2026, 8, 1))).toBe("2026/08/01");
+    expect(formatPaySlipDate(utcSeconds(2026, 8, 1))).toBe("2026-08-01");
   });
 
   /**
@@ -49,12 +49,12 @@ describe("到職日的顯示（America/New_York）", () => {
    * 而年資是按年算的。
    */
   it("元旦到職不退成去年", () => {
-    expect(formatPaySlipDate(utcSeconds(2026, 1, 1))).toBe("2026/01/01");
+    expect(formatPaySlipDate(utcSeconds(2026, 1, 1))).toBe("2026-01-01");
   });
 
   // Info: (20260909 - Julian) 美東夏令時間的兩個切換點，偏移量在此改變
   it("夏令時間起訖日附近仍然是同一天", () => {
-    expect(formatPaySlipDate(utcSeconds(2026, 3, 8))).toBe("2026/03/08");
-    expect(formatPaySlipDate(utcSeconds(2026, 11, 1))).toBe("2026/11/01");
+    expect(formatPaySlipDate(utcSeconds(2026, 3, 8))).toBe("2026-03-08");
+    expect(formatPaySlipDate(utcSeconds(2026, 11, 1))).toBe("2026-11-01");
   });
 });

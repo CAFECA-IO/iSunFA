@@ -95,6 +95,26 @@ export const PAY_SLIP_INSURED_LABELS: Record<PaySlipInsuredField, string> = {
 };
 
 /**
+ * Info: (20260909 - Julian) CSV 版的投保狀態欄名 —— 比薪資單上那三個字長。
+ *
+ * 這是上面 `PAY_SLIP_CSV_IDENTITY_LABELS` 那條理由的延伸：薪資單上那三行
+ * 在「投保級距與費率」這個區塊標題底下，前後文說得出它們是什麼；
+ * CSV 沒有區塊，一個叫「勞保」的欄夾在「自行負擔勞保費」與「勞保投保級距」
+ * 中間，讀的人分不出它是第三個金額還是別的東西。
+ *
+ * 也就是說：**欄位名與 PDF 逐字相同是原則，而「CSV 的每一欄要自己說得清楚」
+ * 是它的例外**，兩者都寫在本檔的檔頭。這三欄套用例外。
+ */
+export const PAY_SLIP_CSV_INSURED_STATUS_LABELS: Record<
+  PaySlipInsuredField,
+  string
+> = {
+  isLaborInsured: "勞保投保狀態",
+  isHealthInsured: "健保投保狀態",
+  isPensionInsured: "勞退投保狀態",
+};
+
+/**
  * Info: (20260904 - Julian) CSV 專屬的身分欄位 —— PDF 上沒有。
  *
  * 一份 PDF 是一個人的一個月，姓名與期間寫在表頭；CSV 是很多人很多月混在一起，

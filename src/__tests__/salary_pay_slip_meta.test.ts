@@ -97,12 +97,12 @@ describe("formatPaySlipDate", () => {
    * Info: (20260909 - Julian) 補零：`2026/8/1` 與 `2026/08/01` 在逐字比對時
    * 是兩個字串，而這一格會被拿去與勞保投保申報表對。
    */
-  it("年月日補零，格式是 YYYY/MM/DD", () => {
+  it("年月日補零，格式是 YYYY-MM-DD", () => {
     expect(formatPaySlipDate(Math.floor(Date.UTC(2026, 0, 5) / 1000))).toBe(
-      "2026/01/05",
+      "2026-01-05",
     );
     expect(formatPaySlipDate(Math.floor(Date.UTC(2026, 7, 10) / 1000))).toBe(
-      "2026/08/10",
+      "2026-08-10",
     );
   });
 });
@@ -280,10 +280,10 @@ describe("寄出的薪資單真的印出這兩格", () => {
       meta: paySlipMetaOf(hireDate, insured),
     });
 
-  it("到職日印成 YYYY/MM/DD", () => {
+  it("到職日印成 YYYY-MM-DD", () => {
     const html = htmlWith(Math.floor(Date.UTC(2026, 7, 10) / 1000), {});
 
-    expect(html).toContain("到職日：2026/08/10");
+    expect(html).toContain("到職日：2026-08-10");
   });
 
   it("沒有到職日時印「-」，不是空白也不是 1970", () => {

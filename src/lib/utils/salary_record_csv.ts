@@ -1,8 +1,15 @@
 import { ISalaryRecordDetail } from "@/interfaces/salary_record";
 import {
   PAY_SLIP_CSV_IDENTITY_LABELS,
+  PAY_SLIP_CSV_INSURED_STATUS_LABELS,
   PAY_SLIP_FIELD_LABELS,
+  PAY_SLIP_META_LABELS,
 } from "@/constants/pay_slip_labels";
+import {
+  formatIsoDateUtc,
+  paySlipMetaOf,
+  PAY_SLIP_INSURED_FIELDS,
+} from "@/lib/utils/pay_slip_meta";
 
 /**
  * Info: (20260904 - Julian) 薪資紀錄的 CSV 匯出（純函式）。
@@ -97,6 +104,34 @@ const L = PAY_SLIP_FIELD_LABELS;
 const ID = PAY_SLIP_CSV_IDENTITY_LABELS;
 
 /**
+ * Info: (20260909 - Julian) 到職日。**沒有的時候是空字串，不是「-」。**
+ *
+ * 與同一份檔案裡的 `sentDate` 同一個判斷：填一個佔位字串會讓那一欄
+ * 變成排不了序的混合型別。而 `-` 更糟 —— 它是公式起始字元，
+ * 會被 `escapeField` 補成 `'-`。
+ *
+ * 薪資單上則印「-」（那是給人看的，空白讀起來像漏了）。
+ * 兩邊共用的是日期算法（`formatIsoDateUtc`），不是空值的處置。
+ */
+const hireDate = (unixSeconds: number | null): string =>
+  unixSeconds === null ? "" : formatIsoDateUtc(unixSeconds);
+
+/**
+ * Info: (20260909 - Julian) 投保狀態的三欄，走與薪資單同一份欄位清單。
+ *
+ * 值也用同一組字（`投保` / `未投保`）：欄名為了自我描述而加長了
+ *（見 `PAY_SLIP_CSV_INSURED_STATUS_LABELS`），但**值不加長** ——
+ * 使用者會把 CSV 與 PDF 並排看，兩邊的值不同字就得先確認是不是同一件事。
+ */
+const INSURED_STATUS_COLUMNS = PAY_SLIP_INSURED_FIELDS.map((field) => ({
+  label: PAY_SLIP_CSV_INSURED_STATUS_LABELS[field],
+  value: (record: ISalaryRecordDetail): string =>
+    paySlipMetaOf(null, record.input)[field]
+      ? PAY_SLIP_META_LABELS.insuredYes
+      : PAY_SLIP_META_LABELS.insuredNo,
+}));
+
+/**
  * Info: (20260904 - Julian) 欄位順序＝表頭順序＝每一列的順序，由這一張表決定。
  *
  * 寫成「標題 + 取值」成對，而不是兩份各自維護的陣列：分成兩份的話，
@@ -112,6 +147,16 @@ const COLUMNS: readonly {
   { label: ID.period, value: (r) => period(r.year, r.month) },
   { label: ID.employeeName, value: (r) => r.employee.name },
   { label: ID.employeeNumber, value: (r) => r.employee.number },
+  /**
+   * Info: (20260909 - Julian) 到職日排在身分那一段的最後（客戶場景 §6）。
+   *
+   * 勞檢對著工資清冊問的第一個問題就是「這個人什麼時候到職」——
+   * 排在最後面的話，他得先橫向捲過四十幾個金額欄。
+   */
+  {
+    label: PAY_SLIP_META_LABELS.hireDate,
+    value: (r) => hireDate(r.employee.hireDate),
+  },
 
   {
     label: L.baseSalaryWithTax,
@@ -195,6 +240,14 @@ const COLUMNS: readonly {
     label: L.totalEmployeeBurden,
     value: (r) => amount(r.result.employeeContribution.totalEmployeeBurden),
   },
+
+  /**
+   * Info: (20260909 - Julian) 投保狀態排在級距**前面**，與薪資單同一個順序。
+   *
+   * 未投保時級距是 0，而「勞保投保級距 0」讀起來像資料漏了，
+   * 不像「這個人沒有投保」。先講狀態，右邊那幾個 0 才有解釋。
+   */
+  ...INSURED_STATUS_COLUMNS,
 
   {
     label: L.healthInsuranceSalaryBracket,
