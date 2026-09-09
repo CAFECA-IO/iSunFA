@@ -124,6 +124,56 @@ export const CARBON_INVENTORY_STEP_ORDER: CarbonInventoryStep[] = [
 // Info: (20260712 - Luphia) 結構化狀態 schema 版本（便於未來遷移）
 export const CARBON_INVENTORY_STATE_VERSION = 1;
 
+/**
+ * Info: (20260909 - Emily) 帳本事實單筆 `value` 的字元上限(#6760)。
+ *
+ * 原本是 `carbon_chat.ts` 與 `carbon_paragraph_draft.ts` 各寫一個 `max(500)` 字面值。
+ * 收成常數是因為下面那個上界要**引用它**:勾稽阻擋紀錄的 `reason` 會一字不改地
+ * 變成一筆事實的 `value`(`queryAnomalies`),所以 reason 的上界不能大於這裡 ——
+ * 大了,那次聊天請求會被伺服端 schema 打回,而使用者只看到「回覆失敗」。
+ */
+export const LEDGER_FACT_VALUE_MAX_LENGTH = 500;
+
+/**
+ * Info: (20260909 - Emily) 勾稽阻擋紀錄(`ledgerImportBlocks`)的儲存上界(#6760)。
+ *
+ * ## 先量、再定(open/73 的立場)
+ *
+ * 寫入端 `toLedgerEntries` 的 `blockedReason` 是 `parts.join(";")`:一段「N 列無法解析」
+ * 加上每一條沒過的勾稽(`${subject} 差額 …(原文 … vs 加總 …)`),筆數隨廠址 × 類別成長。
+ * 用 `carbon_table38.test.ts` 的四份真實版面、把每個數字都改掉讓每一層都失敗來量:
+ *
+ * | 版面 | 廠址 | 勾稽條數 | 全部失敗時 reason 長度 | 單段最長 |
+ * |---|---|---|---|---|
+ * | TABLE_38 (高興昌) | 4 | 21 | 1163 | 60 |
+ * | LAYOUT_B | 3 | 16 | 726 | 57 |
+ * | LAYOUT_C | 4 | 21 | 1110 | 62 |
+ * | LAYOUT_D | 3 | 16 | 621 | 62 |
+ *
+ * 所以「無上界」是真的:四廠址的報告全錯一次就 1163 字,早就超過事實 `value` 的 500。
+ * 這代表在這張票之前,一次大面積勾稽失敗之後的**每一則聊天**都會被伺服端打回
+ * (reason 直接進事實 `value`)—— 持久化只是它的第二個症狀。
+ *
+ * ## 定在哪裡
+ *
+ * - `reason` 上界 = 事實 `value` 上界(500)。單段最長 62,500 字放得下前七、八條差額;
+ *   多的**整段**捨去,末尾加一段看得見的「另有 N 項未列出」—— 截在段與段之間,
+ *   不會留下半句「差額 27.8」這種看起來像數字的東西。
+ * - 陣列上界 64:一筆對應一節(`paragraphId` 是大綱 id,唯一),大綱 44 節,
+ *   給到 64 是為了大綱長一點也不會有「存得進去、載不回來」的那一天;
+ *   測試釘住 `>= CARBON_REPORT_OUTLINE.length`。
+ * - 截斷放在**唯一的寫入者** `recordLedgerImportBlocks`,而不是 schema 端 `.max()` 直接拒 ——
+ *   寫路徑存 `JSON.stringify(state)`,超界的一次存進去,下一次載入**整份盤查狀態**被丟棄
+ *   (PR #6725 review 阻-2 那個形狀)。schema 的 `.max()` 只是第二道,
+ *   由不變式測試「寫入端能產出的紀錄,儲存端一定讀得回來」保證它永遠不會是第一道。
+ */
+export const LEDGER_IMPORT_BLOCK_REASON_MAX_LENGTH =
+  LEDGER_FACT_VALUE_MAX_LENGTH;
+export const LEDGER_IMPORT_BLOCKS_MAX = 64;
+export const LEDGER_IMPORT_BLOCK_PARAGRAPH_ID_MAX_LENGTH = 50;
+/** Info: (20260909 - Emily) ISO 時間字串;與 state 的 `updatedAt: max(50)` 同一個尺度 */
+export const LEDGER_IMPORT_BLOCK_TIMESTAMP_MAX_LENGTH = 50;
+
 // Info: (20260713 - Tzuhan) 行動版斷點判斷(對齊 Tailwind xl = 1280px):< xl 時目錄/報告採獨占畫面呈現
 export const MOBILE_MEDIA_QUERY = "(max-width: 1279px)";
 

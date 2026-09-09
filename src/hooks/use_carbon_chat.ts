@@ -109,6 +109,7 @@ import {
   buildLedgerFactBundle,
   LEDGER_FACT_BUNDLE_MAX,
 } from "@/lib/carbon_ledger_query";
+import { boundLedgerImportBlocks } from "@/lib/carbon_ledger_import_blocks";
 import { buildReportFacts } from "@/lib/carbon_report_facts";
 import {
   fingerprintFromSnapshot,
@@ -2242,10 +2243,17 @@ export const useCarbonChat = () => {
    * 原本只有 console.warn —— 資訊死在開發者工具裡,查詢層看不到,
    * 使用者問「有沒有異常」時系統說不出「表3.8 被擋,因為 6 列解析失敗」。
    * 與 applyImportedLedgerEntries 同一把 channel 推導,同一份 E2EE state。
+   *
+   * Info: (20260909 - Emily) #6760:這裡是**唯一的寫入者**,所以儲存界在這裡收
+   * (`boundLedgerImportBlocks`),不在 schema 端拒 —— 寫路徑不過 schema,
+   * 超界的一次存進去會讓下一次載入丟掉整份盤查狀態。回傳收過界的那份,
+   * 呼叫端要拿它去寫 `ledgerImportBlocksRef`:兩處必須是同一份資料,
+   * 否則 ref 那條路仍會把 1163 字的 reason 餵進事實包、被伺服端 schema 打回。
    */
   const recordLedgerImportBlocks = useCallback(
-    (blocks: ILedgerImportBlock[]) => {
-      if (blocks.length === 0) return;
+    (blocks: ILedgerImportBlock[]): ILedgerImportBlock[] => {
+      if (blocks.length === 0) return [];
+      const bounded = boundLedgerImportBlocks(blocks);
       const channel = buildCarbonChatChannel(
         user?.address ?? "anonymous",
         activeSessionId,
@@ -2256,11 +2264,12 @@ export const useCarbonChat = () => {
           ...prev,
           [channel]: {
             ...base,
-            ledgerImportBlocks: blocks,
+            ledgerImportBlocks: bounded,
             updatedAt: new Date().toISOString(),
           },
         };
       });
+      return bounded;
     },
     [user?.address, activeSessionId],
   );
@@ -4920,9 +4929,10 @@ export const useCarbonChat = () => {
        * (「紀錄描述的狀態已不存在」),而部分成功部分被擋時那句話只對成功那半成立 ——
        * 所以這次的紀錄要在 apply **之後**寫回去,兩個 setState 依序生效,後者為準。
        */
-      recordLedgerImportBlocks(blocks);
+      const recordedBlocks = recordLedgerImportBlocks(blocks);
       // Info: (20260825 - Emily) #6667:ref 同步更新 —— 本輪稍後的建表就要用,等不到下一輪 render
-      ledgerImportBlocksRef.current = blocks;
+      // Info: (20260909 - Emily) #6760:寫 ref 的是**收過界的那份**,與 state 裡的同一份
+      ledgerImportBlocksRef.current = recordedBlocks;
     }
     importActivitiesRef.current = [];
     /**

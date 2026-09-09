@@ -13,6 +13,10 @@ import {
   CarbonInventoryStep,
   INVENTORY_YEAR_MIN,
   INVENTORY_YEAR_STORAGE_MAX,
+  LEDGER_IMPORT_BLOCK_PARAGRAPH_ID_MAX_LENGTH,
+  LEDGER_IMPORT_BLOCK_REASON_MAX_LENGTH,
+  LEDGER_IMPORT_BLOCK_TIMESTAMP_MAX_LENGTH,
+  LEDGER_IMPORT_BLOCKS_MAX,
 } from "@/constants/carbon_chatbot";
 import { CARBON_CALCULATE_MAX_ACTIVITIES } from "@/constants/carbon_calculation";
 import {
@@ -322,25 +326,34 @@ export const CarbonInventoryStateSchema = z.object({
    * 所以這一行與型別那一行是同一個工作,不是兩件事。
    */
   disclosureFramework: z.nativeEnum(CarbonDisclosureFrameworkEnum).optional(),
-  /*
-   * Info: (20260904 - Emily) `ledgerImportBlocks` **刻意不在這裡宣告**,理由見
-   * `data/scratch/issue_drafts/open/73_ledger_import_blocks_bound.md`。
+  /**
+   * Info: (20260909 - Emily) 匯入表格被勾稽擋下的紀錄(#6707 的資料源;持久化是 #6760)。
    *
-   * 這個欄位(#6707)確實少了持久化 —— 型別有、schema 沒有,所以重載之後
-   * 「帳本為空的原因」說不出來。但它的寫入端 `blockedReason` 是
-   * `checks.filter(未通過).map(...).join(";")`,而 `checks` 的筆數隨報告的
-   * 廠址 × 類別數成長、`subject` 是客戶報告裡的自由字串 —— **寫入端的值域無上界**。
+   * 09-04 到 09-09 之間這個欄位**刻意不宣告**:型別有、schema 沒有,所以重載之後
+   * 「帳本為什麼是空的」說不出來 —— 但寫入端 `blockedReason` 的值域當時沒量過,
+   * 而猜一個上界比不宣告更糟:寫路徑存 `JSON.stringify(state)`(不過 schema),
+   * 超界的那一次存得進去,**下一次載入整份盤查狀態一起被丟棄**
+   * (PR #6725 review 阻-2 那個形狀)。
    *
-   * 給它一個猜的上界(本檔一度寫過 `reason: max(500)`)比不宣告更糟:
-   * 寫路徑是 `JSON.stringify(state)`(不過 schema),讀路徑是
-   * `parsed.success ? parsed.data : null` —— 超界的那一次存得進去、
-   * **下一次載入整份盤查狀態(帳本、活動數據、待補項)一起被丟棄**。
-   * 這正是 PR #6725 review 阻-2 抓到的同一個形狀(年度 `1024` 手滑毀整份 state)。
-   *
-   * 所以先量寫入端能產出多長、再決定是截斷還是放寬,而截斷要放在唯一的寫入者
-   *(`recordLedgerImportBlocks`)並配一條「寫入端能產出的,儲存端一定讀得回來」
-   * 的不變式測試。量完之前不宣告 —— 與分流表那四格的立場一致。
+   * 現在量過了(表在 `LEDGER_IMPORT_BLOCKS_MAX` 的註解:四廠址全錯一次 1163 字),
+   * 截斷放在唯一的寫入者 `recordLedgerImportBlocks`(`boundLedgerImportBlocks`),
+   * 這裡的 `.max()` 是第二道。兩道之間的關係由不變式測試釘住:
+   * **寫入端能產出的每一筆,過完這個 schema 一定讀得回來** ——
+   * 所以這裡的上界一旦想調小,先去改截斷那一端,測試會告訴你順序反了。
    */
+  ledgerImportBlocks: z
+    .array(
+      z.object({
+        paragraphId: z
+          .string()
+          .min(1)
+          .max(LEDGER_IMPORT_BLOCK_PARAGRAPH_ID_MAX_LENGTH),
+        reason: z.string().min(1).max(LEDGER_IMPORT_BLOCK_REASON_MAX_LENGTH),
+        blockedAt: z.string().max(LEDGER_IMPORT_BLOCK_TIMESTAMP_MAX_LENGTH),
+      }),
+    )
+    .max(LEDGER_IMPORT_BLOCKS_MAX)
+    .optional(),
   notes: z.array(z.string().max(500)).optional(),
   updatedAt: z.string().max(50),
   version: z.number().int().min(0),
