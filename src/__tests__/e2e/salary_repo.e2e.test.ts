@@ -21,7 +21,7 @@ import { salaryRecordRepo } from "@/repositories/salary_record.repo";
  * 與真 repository 的 `where` 子句一點關係都沒有。實測：把
  *
  *   1. `getRecordById` 的 `where` 拿掉 `accountBookId`
- *   2. `deleteRecord` 的 `deleteMany` 拿掉 `accountBookId`
+ *   2. `deleteRecord` 的 `updateMany` 拿掉 `accountBookId`（20260909 起是軟刪除）
  *   3. `listRecords` 的 where builder 拿掉 `accountBookId`
  *   4. `listRecords` 拿掉 `skip` / `take`
  *   5. `getActiveEmployeeById` / `listEmployees` 拿掉 `deletedAt: null`
@@ -147,6 +147,24 @@ beforeAll(async () => {
 
 afterAll(async () => {
   const books = { accountBookId: { in: [BOOK_ID, OTHER_BOOK_ID] } };
+  /**
+   * Info: (20260909 - Julian) 刪除順序＝外鍵的反向拓樸序，**兩張表是後來加的**。
+   *
+   * CI 首次跑 `npm run test:e2e` 時這裡炸在
+   * `salary_employee_profile_change_employee_id_fkey` —— 那張表是
+   * 20260908 的調薪歷程加的，而它刻意用 `Restrict`（不是 `Cascade`）：
+   * 「刪掉員工，他的調薪歷程也一起消失」會讓稽核軌跡可以用刪除來規避。
+   * 應用層對員工是**軟刪除**，所以正式路徑從來不會撞到這條外鍵 ——
+   * 只有測試收尾這種真刪會，而那正是它沒被發現的原因
+   *（這兩支 e2e 在 CI 接上之前沒有人跑過）。
+   *
+   * `auditLog` 同理：20260909 起刪除薪資紀錄會寫一列，而它同時指向
+   * `accountBook` 與 `user` —— 少了這一行，下面兩個 deleteMany 會接著炸。
+   *
+   * 一律以帳本為範圍，不 truncate：這兩支 e2e 跑在共用的資料庫上。
+   */
+  await prisma.auditLog.deleteMany({ where: books });
+  await prisma.salaryEmployeeProfileChange.deleteMany({ where: books });
   await prisma.salaryRecord.deleteMany({ where: books });
   await prisma.salaryCalculatorEmployee.deleteMany({ where: books });
   await prisma.accountBook.deleteMany({
@@ -607,7 +625,7 @@ describe("薪資紀錄：租戶過濾、覆寫與分頁", () => {
       await salaryRecordRepo.deleteRecord({
         accountBookId: OTHER_BOOK_ID,
         recordId: record.id,
-        deletedByUserId: "u-1",
+        deletedByUserId: userId,
       }),
     ).toBe(false);
 
@@ -828,24 +846,65 @@ describe("薪資紀錄：租戶過濾、覆寫與分頁", () => {
       await salaryRecordRepo.deleteRecord({
         accountBookId: BOOK_ID,
         recordId: record.id,
-        deletedByUserId: "u-1",
+        deletedByUserId: userId,
       }),
     ).toBe(true);
     expect(await salaryRecordRepo.getRecordById(BOOK_ID, record.id)).toBeNull();
 
-    // Info: (20260901 - Julian) 薪資紀錄是硬刪，不是軟刪 —— 那一列真的不見了
-    expect(
-      await prisma.salaryRecord.findUnique({ where: { id: record.id } }),
-    ).toBeNull();
+    /**
+     * Info: (20260909 - Julian) **這一條 20260909 反過來了：改成軟刪除。**
+     *
+     * 原本斷言「那一列真的不見了」。薪資紀錄就是**工資清冊**的那一列，
+     * 而勞基法 §23 II 要求工資清冊保存五年 —— 硬刪讓保存義務可以用
+     * 一顆按鈕規避。完整脈絡見 `salary_pay_slip_delivery_plan.md` §7。
+     *
+     * 成對斷言：`getRecordById` 看不到（應用層的行為），
+     * 而 `findUnique` 看得到且 `deletedAt` 有值（資料還在）。
+     * 只驗前者的話，把 `deletedAt` 改成真刪也一樣綠。
+     */
+    const softDeleted = await prisma.salaryRecord.findUnique({
+      where: { id: record.id },
+    });
+    expect(softDeleted).not.toBeNull();
+    expect(softDeleted?.deletedAt).toBeInstanceOf(Date);
+
+    /**
+     * Info: (20260909 - Julian) 刪除留下一列 AuditLog（工資清冊的保存軌跡）。
+     *
+     * 這一條在 e2e 才問得到：`salary_repo_scope.test.ts` 用替身驗
+     * 「有沒有呼叫」，而真資料庫多驗兩件事 —— 那一列寫得進去
+     * （`userId` / `accountBookId` 兩條外鍵都成立），而且 `dataType`
+     * 是資料庫認得的列舉值。假的 `userId` 在替身那邊完全看不出來。
+     */
+    const logs = await prisma.auditLog.findMany({
+      where: { accountBookId: BOOK_ID, dataId: record.id },
+    });
+    expect(logs).toHaveLength(1);
+    expect(logs[0].action).toBe("DELETE");
+    expect(logs[0].dataType).toBe("SALARY_RECORD");
+    expect(logs[0].userId).toBe(userId);
 
     // Info: (20260901 - Julian) 刪第二次回 false，不是丟例外
     expect(
       await salaryRecordRepo.deleteRecord({
         accountBookId: BOOK_ID,
         recordId: record.id,
-        deletedByUserId: "u-1",
+        deletedByUserId: userId,
       }),
     ).toBe(false);
+
+    /**
+     * Info: (20260909 - Julian) 而且**沒有留下第二列軌跡**。
+     *
+     * `where` 帶著 `deletedAt: null`，所以第二次 `count === 0`。
+     * 少了那個過濾的話這裡會有兩列 —— 稽核讀到的是「這筆被刪了兩次」，
+     * 而那不是發生過的事。
+     */
+    expect(
+      await prisma.auditLog.count({
+        where: { accountBookId: BOOK_ID, dataId: record.id },
+      }),
+    ).toBe(1);
   });
 });
 
