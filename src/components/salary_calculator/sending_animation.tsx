@@ -26,8 +26,10 @@ interface ISendingAnimationProps {
  * 走 `<img>` 的話那份 style 留在 SVG 自己的文件裡，撞不到任何東西。
  * 順帶也不進 JS bundle（那個檔含 C2PA 出處後設資料，11 KB）。
  *
- * 這個 repo 已經用 `<img>` 載 `public/` 的 SVG（`brand_logo_image.tsx`、
- * `report_layout.tsx`），所以這也是既有做法。
+ * 全 repo 唯一另一個手寫 `<img>` 的地方是 `common/file_preview.tsx`
+ * （`brand_logo_image.tsx` / `report_layout.tsx` / `brand_logo.tsx` 用的都是
+ * `next/image` 的 `<Image>` —— 它們註解裡提到的 `<img>` 指的是產出的 DOM，
+ * 不是自己寫的標籤）。
  *
  * ## 為什麼不是 `next/image`
  *
@@ -36,8 +38,9 @@ interface ISendingAnimationProps {
  * 只在寄送中的那幾秒出現，而且 SVG 沒有 `next/image` 能做的那種最佳化
  * （縮圖、格式轉換），它還需要 `images.dangerouslyAllowSVG` 才載得動。
  *
- * 刻意**不加** `eslint-disable` 註解：上面那兩個既有的 `<img>` 用法也沒有加，
- * 只有這裡加會讓「這個 repo 對這條規則的態度」多出第二種答案。
+ * **加 `eslint-disable`**，因為 `file_preview.tsx` 那個唯一的先例就是這樣寫的 ——
+ * 這條規則在本 repo 的處置是「用註解說明為什麼，不是留一個 warning 在那裡」。
+ * 加了之後 `npx eslint src` 是 0 error / 0 warning。
  *
  * ## 為什麼 `alt=""`
  *
@@ -55,6 +58,7 @@ interface ISendingAnimationProps {
  * 兩處各判斷一次，遲早只有一處被改到。
  */
 const SendingAnimation: FC<ISendingAnimationProps> = ({ size = 160 }) => (
+  // eslint-disable-next-line @next/next/no-img-element
   <img
     src="/anim/mailbox-animation.svg"
     alt=""
