@@ -11,6 +11,7 @@ import {
 } from "@/lib/virus_scanner";
 import { storageService, StorageService } from "@/services/storage.service";
 import { userStorageUsageRepo } from "@/repositories/user_storage_usage.repo";
+import { carbonAttachmentOwnerRepo } from "@/repositories/carbon_attachment_owner.repo";
 import { CARBON_STORAGE_QUOTA_BYTES } from "@/constants/carbon_chatbot";
 
 export interface IAttachmentUploadInput {
@@ -23,6 +24,7 @@ export interface IAttachmentUploadResult {
 }
 
 type IUsageRepo = typeof userStorageUsageRepo;
+type IOwnerRepo = typeof carbonAttachmentOwnerRepo;
 
 export class AttachmentSecurityService {
   private readonly scanner: IVirusScanner;
@@ -31,15 +33,19 @@ export class AttachmentSecurityService {
 
   private readonly usageRepo: IUsageRepo;
 
+  private readonly ownerRepo: IOwnerRepo;
+
   // Info: (20260716 - Emily) 依賴全部可注入: 單元測試不需 ClamAV/Laria/DB
   constructor(deps?: {
     scanner?: IVirusScanner;
     storage?: StorageService;
     usageRepo?: IUsageRepo;
+    ownerRepo?: IOwnerRepo;
   }) {
     this.scanner = deps?.scanner ?? createVirusScanner();
     this.storage = deps?.storage ?? storageService;
     this.usageRepo = deps?.usageRepo ?? userStorageUsageRepo;
+    this.ownerRepo = deps?.ownerRepo ?? carbonAttachmentOwnerRepo;
   }
 
   /**
@@ -92,6 +98,15 @@ export class AttachmentSecurityService {
 
     const cid = await this.storage.uploadLaria(file);
 
+    /**
+     * Info: (20260907 - Emily) 歸屬先記、用量後記(#6748)。
+     *
+     * 兩筆都在上傳成功之後,但順序有理由:歸屬紀錄是**讀取端的授權依據**,
+     * 沒有它這個 cid 誰都取不回來(讀取端對「查無擁有者」一律拒絕);
+     * 用量只是配額計數。若中間掛掉,寧可少記一筆用量,不要留下一個
+     * 上傳者自己也讀不回來的 cid。
+     */
+    await this.ownerRepo.recordOwner(cid, address);
     // Info: (20260716 - Emily) 記帳於上傳成功後(失敗不計量)；硬刪除歸還配額由 issue 30 承接
     await this.usageRepo.addUsedBytes(address, BigInt(file.size));
 

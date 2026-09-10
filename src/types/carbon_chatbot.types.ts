@@ -85,6 +85,52 @@ export interface IReportParagraph {
   isDataDriven: boolean;
   // Info: (20260730 - Tzuhan) 內容來源:逐字匯入 / AI 草稿 / 人工編輯。舊草稿無此欄,視為未知不計入任一分項
   origin?: ParagraphOriginEnum;
+  /**
+   * Info: (20260908 - Emily) 這一節是依據哪一版帳本寫的(#6786)。
+   *
+   * 帳本改了之後,有指紋才能判斷這一節該不該重寫 —— 而且是**只有引用到的值變了**
+   * 才算過期(理由見 `assessParagraphFreshness`)。
+   */
+  ledgerFingerprint?: IParagraphLedgerFingerprint;
+}
+
+/**
+ * Info: (20260909 - Emily) 指紋裡的一筆:這一節**當初通過守門**的一個排放量主張(數字 + 單位原文)。
+ *
+ * ## 為什麼記主張,不記事實
+ *
+ * 9/08 那一版記的是「引用到的事實」的 label + value(#6789 review 中-2:label 是人話,
+ * 不能當身分;review 阻-1:value 裡夾著排名、占比這些**整本帳本的衍生資訊**——
+ * 替另一個廠補一筆活動數據,總量變、占比變、排名重排,而這一節引用的那個數字一個字都沒動,
+ * 卻被判成過期。實測:33 節裡引用過前五大或廠址小計的,全部變黃)。
+ *
+ * 改記**這一節自己的主張**:從敘述抽出的排放量斷言裡,當初被事實包滿足的那些。
+ * 裁決時不比對任何字串,而是**重新過一次守門**:這些主張對現在的事實包還通得過嗎?
+ * 通不過 → 這一節依據的數字不再被帳本主張 → 過期。排名、占比、文案、語系怎麼改都不影響。
+ * 「一致」與「過期」從此是同一支裁決(`adjudicateQuantityClaims`)的兩個用法,不會分岔。
+ *
+ * **刻意不存 `source`、不存 `label`、不存 `key`**:指紋不需要知道事實叫什麼,只需要知道
+ * 這一節說了哪些數字、以及那些數字當初是不是帳本說的。
+ */
+export interface IParagraphFactImprint {
+  /** Info: (20260909 - Emily) 數字原文(可含千分位;守門裁決時會正規化) */
+  value: string;
+  /** Info: (20260909 - Emily) 尺度,兩種之一:「公噸」或「kg」(見 carbon_report_freshness 的 canonicalUnit),供 kg↔公噸換算 */
+  unit: string;
+}
+
+/**
+ * Info: (20260908 - Emily) 段落的帳本指紋:生成當時的帳本戳記 + 這一節當初通過守門的主張(#6786)。
+ *
+ * 存在**段落上**(隨報告草稿一起 E2EE 存),不存在帳本上 —— 帳本是會被整份取代的
+ * (重新匯入、重新計算都換掉整個 `computedLedger`),掛在那裡的指紋會跟著蒸發。
+ *
+ * 選填:這張票之前生成的段落沒有指紋,那些節的狀態是「不知道」而不是「最新」
+ * (見 `ParagraphFreshnessEnum`)。
+ */
+export interface IParagraphLedgerFingerprint {
+  ledgerComputedAt: string;
+  claims: IParagraphFactImprint[];
 }
 
 /**

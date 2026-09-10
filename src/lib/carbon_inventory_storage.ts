@@ -12,6 +12,7 @@ import {
 } from "@/lib/chatroom_ecies";
 import { request } from "@/lib/utils/request";
 import { CarbonInventoryStateSchema } from "@/validators";
+import type { IContextFact } from "@/interfaces/carbon_paragraph_draft";
 
 export interface ILoadedInventoryState {
   // Info: (20260716 - Tzuhan) null = 存在但無法解密/驗證(版本仍有效，禁止以版本 0 覆蓋)
@@ -20,7 +21,91 @@ export interface ILoadedInventoryState {
   // Info: (20260716 - Tzuhan) #52 存取中繼資料(語意同報告草稿)
   canEdit: boolean;
   accountBookId: string | null;
+  /**
+   * Info: (20260907 - Emily) `state` 為 null 時**為什麼**是 null(#6779)。
+   *
+   * 三種失敗原本回同一個 null,呼叫端分不出「金鑰沒解鎖」「解不開」「格式被拒」,
+   * 只能一律當成「這間房沒有資料」—— 而 persona 對「沒有資料」的反應是重新 onboarding,
+   * 使用者一回答,下一次存檔就把那筆讀不出來但真實存在的紀錄蓋掉。
+   * 原因說得出來,呼叫端才擋得住那一步。
+   */
+  reason: InventoryLoadReasonEnum;
 }
+
+export enum InventoryLoadReasonEnum {
+  /** 讀到了 */
+  OK = "OK",
+  /** 記錄是加密的,而呼叫端沒有金鑰(尚未解鎖)—— 解鎖後再讀就會好 */
+  LOCKED = "LOCKED",
+  /** 有金鑰但解不開(金鑰不對、或密文損毀)—— 再讀一百次也一樣 */
+  DECRYPT_FAILED = "DECRYPT_FAILED",
+  /** 解開了但不符合儲存格式(寫路徑守門上線前留下的、或未來欄位)—— 資料在,只是這一版讀不懂 */
+  SCHEMA_REJECTED = "SCHEMA_REJECTED",
+  /**
+   * Info: (20260907 - Emily) 請求本身失敗(網路、伺服器暫時不可用)—— 有沒有紀錄都還不知道。
+   * review 低-2:這是第四種失敗,原本沒有標籤;hook 的 catch 用它,而不是把上一個標記留著。
+   */
+  LOAD_FAILED = "LOAD_FAILED",
+}
+
+/**
+ * Info: (20260907 - Emily) 三種失敗都不是「沒有資料」。這一句給 persona 與 UI 共用,
+ * 讓「讀不出來」與「真的空」在字面上就分得開。
+ */
+export const describeInventoryLoadReason = (
+  reason: InventoryLoadReasonEnum,
+): string => {
+  switch (reason) {
+    case InventoryLoadReasonEnum.LOCKED:
+      return "盤查狀態已加密,尚未解鎖金鑰";
+    case InventoryLoadReasonEnum.DECRYPT_FAILED:
+      return "盤查狀態已加密,目前的金鑰解不開";
+    case InventoryLoadReasonEnum.SCHEMA_REJECTED:
+      return "盤查狀態存在,但不符合目前版本的儲存格式";
+    case InventoryLoadReasonEnum.LOAD_FAILED:
+      return "盤查狀態暫時無法載入(網路或伺服器),尚未確認內容";
+    default:
+      return "";
+  }
+};
+
+/**
+ * Info: (20260907 - Emily) 讀不出來時給對話的那一筆「事實」(#6779)。
+ *
+ * 抽成純函式而不寫在 hook 裡:這是判斷(說什麼、不說什麼),hook 只該接線。
+ * 不帶 `emissionsKg` —— 它不是排放數字,出口守門不該把它當合法來源。
+ * `source` 明說「不是帳本內容」:persona 會逐字轉述來源,讀者要分得出這一筆與帳本事實的差別。
+ */
+export const buildInventoryUnreadableFact = (
+  reason: InventoryLoadReasonEnum,
+): IContextFact => ({
+  /*
+   * Info: (20260907 - Emily) review 低-3:「存在」只能在真的讀到紀錄時說。
+   * LOAD_FAILED 連有沒有紀錄都不知道,label 不得宣稱存在。
+   */
+  label:
+    reason === InventoryLoadReasonEnum.LOAD_FAILED
+      ? "盤查狀態:目前無法載入"
+      : "盤查狀態:存在但目前讀不出來",
+  value: describeInventoryLoadReason(reason),
+  source: "盤查狀態載入結果(不是帳本內容)",
+});
+
+/**
+ * Info: (20260907 - Emily) 讀不出來時送給 persona 的 currentStep(#6779)。
+ *
+ * persona 照 currentStep 決定要不要引導 onboarding。送空狀態的描述過去,它就會問
+ * 公司名與年度 —— 那正是資料被覆蓋的第一步。這一句要同時做到三件事:
+ * 說明資料在、禁止宣稱沒有資料、禁止引導重設。缺一都會退回舊行為。
+ */
+export const describeUnreadableInventoryStep = (
+  reason: InventoryLoadReasonEnum,
+): string =>
+  `${
+    reason === InventoryLoadReasonEnum.LOAD_FAILED
+      ? "盤查狀態目前無法載入,有沒有既有資料尚未確認"
+      : "盤查狀態存在但目前讀不出來"
+  }(${describeInventoryLoadReason(reason)});請向使用者說明這件事,不要宣稱帳本沒有資料,也不要引導重新設定公司名稱、年度或邊界 —— 在讀出來之前那些變更不會被保存`;
 
 /**
  * Info: (20260904 - Emily) 這一版的盤查狀態**存不進去** —— 有欄位不符合儲存格式。
@@ -69,27 +154,61 @@ export const loadInventoryState = async (
   const access = res.payload?.access ?? { canEdit: true, accountBookId: null };
   if (!record) return null;
 
-  try {
-    let plaintext: string;
-    if (record.plainContent !== null) {
-      plaintext = record.plainContent;
-    } else if (record.envelope && masterKey) {
+  const unreadable = (reason: InventoryLoadReasonEnum) => ({
+    state: null,
+    version: record.version,
+    reason,
+    ...access,
+  });
+
+  let plaintext: string;
+  if (record.plainContent !== null) {
+    plaintext = record.plainContent;
+  } else if (record.envelope && masterKey) {
+    try {
       plaintext = await eciesDecrypt(
         masterKey.extendedPrivateKey,
         record.envelope,
       );
-    } else {
-      return { state: null, version: record.version, ...access };
+    } catch {
+      return unreadable(InventoryLoadReasonEnum.DECRYPT_FAILED);
     }
-    const parsed = CarbonInventoryStateSchema.safeParse(JSON.parse(plaintext));
-    return {
-      state: parsed.success ? parsed.data : null,
-      version: record.version,
-      ...access,
-    };
-  } catch {
-    return { state: null, version: record.version, ...access };
+  } else {
+    return unreadable(InventoryLoadReasonEnum.LOCKED);
   }
+
+  let json: unknown;
+  try {
+    json = JSON.parse(plaintext);
+  } catch {
+    /*
+     * Info: (20260907 - Emily) 解開了卻不是 JSON:與 schema 不符同一類 ——
+     * 資料在、這一版讀不懂;不是金鑰問題。
+     */
+    return unreadable(InventoryLoadReasonEnum.SCHEMA_REJECTED);
+  }
+  const parsed = CarbonInventoryStateSchema.safeParse(json);
+  if (!parsed.success) {
+    /*
+     * Info: (20260907 - Emily) 只記欄位路徑與錯誤碼,不記值(載荷是使用者的盤查資料)。
+     * 原本這裡什麼都不記 —— 格式被拒是最需要人看一眼的那種失敗,
+     * 因為它代表某一版寫進去的東西這一版讀不回來。
+     */
+    console.error("[carbon-inventory] stored state rejected by schema:", {
+      channel,
+      version: record.version,
+      paths: parsed.error.issues
+        .slice(0, 10)
+        .map((issue) => `${issue.path.join(".") || "(root)"}:${issue.code}`),
+    });
+    return unreadable(InventoryLoadReasonEnum.SCHEMA_REJECTED);
+  }
+  return {
+    state: parsed.data,
+    version: record.version,
+    reason: InventoryLoadReasonEnum.OK,
+    ...access,
+  };
 };
 
 // Info: (20260716 - Tzuhan) 保存: 明文序列化 → xpub 加密 → PUT(樂觀鎖)；回傳新版本

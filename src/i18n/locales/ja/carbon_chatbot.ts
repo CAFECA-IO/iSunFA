@@ -67,6 +67,14 @@ export const carbonChatbot = {
   origin_ai_draft: "AI 下書き",
   origin_imported_short: "原文",
   origin_ai_draft_short: "下書き",
+  // Info: (20260908 - Emily) 帳本改了之後的過期標示(#6786;理由見 zh_tw)
+  freshness_stale_short: "要更新",
+  freshness_stale_hint:
+    "この節が引用している台帳の数値が変更されました。内容が最新でない可能性があります。更新するには右の AI 作成ボタンを押してください。",
+  freshness_stale_count: "{{count}} 節が要更新",
+  freshness_stale_list:
+    "台帳が更新され、次の節が引用する数値が変わりました：{{codes}}。ここをクリックすると目次が開き、節ごとに更新できます。",
+  freshness_update_section: "最新の台帳でこの節を更新",
   // Info: (20260806 - Tzuhan) 匯入前先上傳取 cid:14 次呼叫共用一份儲存,文案要說出「為何要等」
   import_uploading:
     "{{name}} を安全なストレージへ保存中(以降の各章の解析はサーバー側で取得し、ファイルを毎回再送しません)…",
@@ -138,6 +146,17 @@ export const carbonChatbot = {
   save_blocked_framework_claim:
     "報告書に「当社は {{name}} に準拠している」といった主体レベルの適合宣言があるため、この版はクラウドに保存していません。その一文は提出する報告書に出てはいけません。内容はこの端末に残っています。該当の文を削除すれば自動的に保存されます（文書構成についての記述は対象外です）。",
   // Info: (20260904 - Emily) 一時的な失敗ではない:毎回同じように失敗し、ローカルのバックアップもない
+  inventory_unreadable:
+    "この会話のインベントリデータは存在しますが、現在読み取れません({{reason}})。読み取れるまで変更は保存されません。会社名や年度を再入力しないでください。その変更は保存されません。",
+  inventory_unreadable_reason_locked:
+    "暗号化されており、鍵がまだ解除されていません",
+  inventory_unreadable_reason_decrypt_failed:
+    "暗号化されており、現在の鍵では復号できません",
+  inventory_unreadable_reason_schema_rejected:
+    "現在のバージョンの保存形式に合いません",
+  // Info: (20260909 - Emily) 載入失敗(網路/伺服器)的專屬通知(#6779 review 後續):不套「資料存在」那句
+  inventory_load_failed:
+    "この会話のインベントリデータを現在読み込めません(ネットワークまたはサーバーの問題)。既存データの有無はまだ確認できていません。読み込めるまで変更は保存されません。この会話を再度開くと再試行します。",
   inventory_unsavable:
     "インベントリデータのこの版は保存されていません。保存形式に合わないフィールドがあります。表示されている内容はまだ画面上にありますが、このタブを閉じる・再読み込みすると失われます。こちらの不具合です。ご報告いただけると助かります。",
   save_local_quota:

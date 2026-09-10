@@ -57,14 +57,39 @@ describe("三個入口都帶事實包(帶了門才會開)", () => {
   it("入口 2:/draft 的兩個呼叫端都帶帳本事實包,而且用同一支組包", () => {
     /**
      * Info: (20260904 - Emily) 兩個 body:生成(原本什麼都不帶)與修訂(原本只帶那則訊息的事實)。
-     * 數「/api/v1/chat/carbon/draft」出現幾次、再數 buildChannelLedgerFacts 在 body 裡幾次 ——
-     * 兩者要對得上,否則有一條路沒帶。
+     *
+     * Info: (20260908 - Emily) 判準從「全檔數 buildChannelLedgerFacts 幾次 = 3」改成
+     * **逐個呼叫端看它自己的 body**(#6786)。
+     *
+     * 原本那個數字是個代理指標,而它會在**正確的**改動上壞掉:#6786 讓段落指紋與
+     * 過期盤點也走同一支組包點(那正是這條測試想鼓勵的事 —— 事實只有一個來源),
+     * 於是次數變成 5、測試變紅。代理指標壞在正確改動上的代價不是紅一次,
+     * 是下一個人學會「把數字改大就好」—— 那時它連真的漏接也擋不住了。
+     * 現在問的是這條測試真正在意的事:每一個 /draft 呼叫端的 body 裡有沒有那份事實包。
      */
     const draftCalls = hook.split('"/api/v1/chat/carbon/draft"').length - 1;
     expect(draftCalls).toBe(2);
-    const wired = hook.split("buildChannelLedgerFacts(chatChannel)").length - 1;
-    // Info: (20260904 - Emily) 兩個 /draft body + 對話路徑 = 3
-    expect(wired).toBe(3);
+    hook
+      .split('"/api/v1/chat/carbon/draft"')
+      .slice(1)
+      .forEach((tail) => {
+        // Info: (20260908 - Emily) body 緊接在 URL 之後;取足夠長的窗以涵蓋整個 body
+        const body = tail.slice(0, 1500);
+        expect(body).toContain("contextFacts:");
+        /**
+         * Info: (20260909 - Emily) #6789 review 中-1 之後,body 帶的是**送出前拍下的快照**
+         * (`snapshotChannelFacts(chatChannel)`)—— 與落地時蓋指紋的是同一份。
+         * 快照本身仍出自唯一的組包點(`buildChannelLedgerFacts`),見下一條。
+         */
+        expect(body).toMatch(/(factSnapshot|revisionSnapshot)\.facts/);
+      });
+    // Info: (20260909 - Emily) 兩個快照都由同一支 snapshotChannelFacts 拍
+    expect(hook).toContain(
+      "const factSnapshot = snapshotChannelFacts(chatChannel);",
+    );
+    expect(hook).toContain(
+      "const revisionSnapshot = snapshotChannelFacts(chatChannel);",
+    );
   });
 
   it("入口 3:附件管線把帳本事實包併進萃取事實", () => {

@@ -1919,6 +1919,21 @@ model UserStorageUsage {
   @@map("user_storage_usage")
 }
 
+// Info: (20260907 - Emily) 附件 cid 的擁有者(#6748):上傳成功即記一筆,讀取端據此裁決。
+// Info: (20260907 - Emily) 在此之前 cid 沒有任何歸屬紀錄 —— 用量表只記位元組數,不記哪個 cid 是誰的,
+// Info: (20260907 - Emily) 於是「知道別人的 cid」等於「能經 /import 或聊天附件把那份檔取回來」。
+// Info: (20260907 - Emily) address 以 canonicalizeAddressForKey 正規化後存入(全小寫,一個位址只有一種寫法)。
+// Info: (20260909 - Emily) 拿這一欄去查 User.address 時**必須**走 addressLookupForms(#6783 review 阻-1):
+// Info: (20260909 - Emily) User.address 有小寫與 EIP-55 checksum 兩種形狀共存,精確比對會查不到 checksum 那一半。
+model CarbonAttachmentOwner {
+  cid       String   @id
+  address   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([address])
+  @@map("carbon_attachment_owner")
+}
+
 /**
  * Info: (20260811 - Julian) ========== 人事模組個資保護等級（本區塊 13 張表的預設值）==========
  * ## 決策

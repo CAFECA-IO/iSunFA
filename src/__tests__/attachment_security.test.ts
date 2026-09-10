@@ -87,7 +87,20 @@ const buildDeps = (overrides?: {
       .fn<(address: string, deltaBytes: bigint) => Promise<void>>()
       .mockResolvedValue(undefined),
   };
-  return { scanner, storage, usageRepo };
+  /*
+   * Info: (20260907 - Emily) #6748:上傳成功後多記一筆擁有者。這裡注入替身,
+   * 讓既有的 16 條測試不必碰 DB;「有沒有記、記在哪個順序」由
+   * carbon_attachment_cid_guard.test.ts 守。
+   */
+  const ownerRepo = {
+    recordOwner: jest
+      .fn<(cid: string, address: string) => Promise<void>>()
+      .mockResolvedValue(undefined),
+    findOwnerAddress: jest
+      .fn<(cid: string) => Promise<string | null>>()
+      .mockResolvedValue(null),
+  };
+  return { scanner, storage, usageRepo, ownerRepo };
 };
 
 describe("AttachmentSecurityService", () => {
