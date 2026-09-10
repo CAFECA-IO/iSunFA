@@ -2,17 +2,37 @@
 
 import { ChangeEvent, FC, useState } from "react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { Hash, Mail, Pencil, Plus, Search, Trash, User, X } from "lucide-react";
+import {
+  Hash,
+  History,
+  Mail,
+  Pencil,
+  Plus,
+  Search,
+  Trash,
+  User,
+  X,
+} from "lucide-react";
 import { numberWithCommas } from "@/lib/utils/common";
 import { useSalaryEmployees } from "@/hooks/use_salary_employees";
-import { ISalaryCalculatorEmployee } from "@/interfaces/salary_record";
+import {
+  ISalaryCalculatorEmployee,
+  ISalaryProfileChangeRequest,
+} from "@/interfaces/salary_record";
 import {
   countMissingEmail,
+  countMissingHireDate,
+  countMissingRecords,
   filterEmployees,
   hasNoEmail,
 } from "@/lib/utils/salary_employee_filter";
+import CoverageAlert from "@/components/salary_calculator/coverage_alert";
 import EmployeeActionModal from "@/components/salary_calculator/employee_action_modal";
+import EmployeeListFilters from "@/components/salary_calculator/employee_list_filters";
+import EmployeeListIssueFilters from "@/components/salary_calculator/employee_list_issue_filters";
+import EmployeeListTable from "@/components/salary_calculator/employee_list_table";
 import RemoveEmployeeModal from "@/components/salary_calculator/remove_employee_modal";
+import EmployeeHistoryModal from "@/components/salary_calculator/employee_history_modal";
 
 export const iconBtnStyle =
   "flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-md transition-colors hover:bg-surface-hover";
@@ -48,12 +68,14 @@ const EmployeeRow: FC<{
   pickHandler?: () => void;
   editHandler: () => void;
   removeHandler: () => void;
+  historyHandler: () => void;
 }> = ({
   employee,
   withEmail,
   pickHandler = undefined,
   editHandler,
   removeHandler,
+  historyHandler,
 }) => {
   const { t } = useTranslation();
   const missingEmail = hasNoEmail(employee);
@@ -83,7 +105,20 @@ const EmployeeRow: FC<{
     </span>
   );
 
-  const content = (
+  /**
+   * Info: (20260909 - Julian) 這一段是**選人按鈕的內容**，所以裡面不得有互動元素。
+   *
+   * `variant="modal"` 時整格是一顆 `<button onClick={pickHandler}>`（見下面的
+   * return）。任何放進這裡的按鈕都會巢狀在它裡面 —— 那是 HTML 不允許的結構，
+   * 而且點下去會冒泡到 `pickHandler`。
+   *
+   * `{emailCell}` 是唯一的例外，而它是安全的：那一格在缺信箱時是一顆按鈕，
+   * 但它被 `withEmail` 擋著，而彈窗版傳的是 `withEmail={false}`
+   * （由 `salary_employee_list_contract.test.ts` 釘住）。
+   *
+   * 徽章與本薪在 `trailingContent`，不在這裡 —— 理由寫在那一段。
+   */
+  const pickableContent = (
     <>
       <User
         size={16}
@@ -101,6 +136,43 @@ const EmployeeRow: FC<{
           {emailCell}
         </span>
       )}
+    </>
+  );
+
+  /**
+   * Info: (20260909 - Julian) 徽章與本薪在選人按鈕**外面**，這是刻意的。
+   *
+   * `CoverageAlert` 的觸發器是一顆 `<button>`（理由見該檔），而彈窗版的列
+   * 整格也是一顆 `<button>` —— 放在一起就是巢狀按鈕，兩個症狀：
+   *
+   * 1. HTML 剖析器遇到內層 `<button>` 會隱式關掉外層，於是伺服器那棵樹與
+   *    客戶端那棵樹不同 —— React 報 hydration error。
+   * 2. 更要緊：徽章沒有 `onClick`，但點擊會冒泡到 `pickHandler` ——
+   *    使用者點「缺 1 個月」想看缺哪幾個月，結果選走了那位員工、彈窗關掉。
+   *
+   * 為什麼不把徽章整塊搬到最後面（最省事的做法）：它夾在信箱欄與本薪欄之間，
+   * 搬出去會跑到本薪後面，欄位順序就變了。拆成兩段可以保住順序。
+   *
+   * 代價：**本薪那一格不再能點來選人**。點擊區從整列縮到姓名、編號、信箱那段。
+   *
+   * 間距是重新分配的，不是重寫的 —— 原本一個 `cellStyle` 的
+   * `px-[12px] md:px-[24px]` 拆成列按鈕的 `pl-*` ＋ 這裡的 `pr-*`，
+   * 中間兩個 `gap-[8px]` 由列按鈕的 `pr-[8px]` 與這裡的 `gap-[8px]` 接手。
+   */
+  const trailingContent = (
+    <>
+      {/**
+       * Info: (20260905 - Luphia) 缺薪資單的標記（#6774）。**兩種 variant 都顯示。**
+       *
+       * 與信箱欄不同：挑人彈窗裡看到「這個人缺六月」正是最有用的時機 ——
+       * 使用者當下就在挑人算薪水，補的路就在他手上。
+       *
+       * Info: (20260907 - Julian) 月份清單原本掛在 `title` 上，20260907 換成
+       * `CoverageAlert`（自繪的 div + portal）。原生 tooltip 有兩個治不了的
+       * 問題：瀏覽器自己的延遲規則會讓它整段跳過不顯示，而純文字的折行
+       * 會斷在頓號後面 —— 讀起來像一句被切斷的話而不是一份清單。
+       */}
+      <CoverageAlert missingPeriods={employee.missingPeriods} display="badge" />
       <span
         title={t("calculator.employee_list.base_salary")}
         className="text-text-neutral-secondary group-hover:text-text-neutral-primary w-[90px] text-right text-sm font-semibold"
@@ -110,8 +182,14 @@ const EmployeeRow: FC<{
     </>
   );
 
+  // Info: (20260909 - Julian) 右內距是 8px 而不是 12/24：它接手了原本
+  // 「編號 → 徽章」那個 flex gap（徽章現在在這顆按鈕外面）
   const cellStyle =
-    "flex flex-1 items-center gap-[8px] px-[12px] py-[12px] text-left md:px-[24px]";
+    "flex flex-1 items-center gap-[8px] py-[12px] pl-[12px] pr-[8px] text-left md:pl-[24px]";
+
+  // Info: (20260909 - Julian) 右內距接手原本 cellStyle 的 `px-*` 右半（本薪 → 操作鈕）
+  const trailingStyle =
+    "flex items-center gap-[8px] py-[12px] pr-[12px] md:pr-[24px]";
 
   return (
     <div className="group hover:bg-surface-brand-primary-soft flex items-center">
@@ -128,13 +206,36 @@ const EmployeeRow: FC<{
        */}
       {pickHandler ? (
         <button type="button" onClick={pickHandler} className={cellStyle}>
-          {content}
+          {pickableContent}
         </button>
       ) : (
-        <div className={cellStyle}>{content}</div>
+        <div className={cellStyle}>{pickableContent}</div>
       )}
 
+      {/**
+       * Info: (20260909 - Julian) 一律是 `div`，兩種 variant 都一樣 ——
+       * 這一段永遠不在按鈕裡面（見 `trailingContent` 的註解）。
+       */}
+      <div className={trailingStyle}>{trailingContent}</div>
+
       <div className="flex items-center gap-[4px] pr-[8px] md:pr-[16px]">
+        {/**
+         * Info: (20260908 - Julian) 「異動紀錄」放在編輯**之前**。
+         *
+         * 這兩顆按鈕的關係是有順序的：要調薪的人多半想先看看上次是什麼時候、
+         * 從多少調到多少。放在編輯之後的話，那個順序得靠使用者自己想到。
+         *
+         * 用 `History` 而不是 `Clock`：後者在這個 icon 集合裡讀起來像
+         * 「工時」或「排程」，而這一列旁邊就有工時相關的東西。
+         */}
+        <button
+          type="button"
+          aria-label={`${employee.name} ${t("calculator.employee_list.history_title")}`}
+          onClick={historyHandler}
+          className={`text-text-neutral-secondary ${iconBtnStyle}`}
+        >
+          <History size={16} />
+        </button>
         <button
           type="button"
           aria-label={`${employee.name} ${t("calculator.employee_list.edit_employee")}`}
@@ -177,6 +278,11 @@ const EmployeeList: FC<IEmployeeListProps> = ({
 
   const [keyword, setKeyword] = useState<string>("");
   const [onlyMissingEmail, setOnlyMissingEmail] = useState<boolean>(false);
+  // Info: (20260905 - Luphia) 只看有薪資單缺漏的人（#6774）。與上面那個各自獨立
+  const [onlyMissingRecords, setOnlyMissingRecords] = useState<boolean>(false);
+  // Info: (20260906 - Luphia) 只看沒有到職日的人 —— 上游的問題，見下方橫幅
+  const [onlyMissingHireDate, setOnlyMissingHireDate] =
+    useState<boolean>(false);
   const {
     employees,
     isLoading,
@@ -190,6 +296,15 @@ const EmployeeList: FC<IEmployeeListProps> = ({
   const [editing, setEditing] = useState<
     ISalaryCalculatorEmployee | "add" | null
   >(null);
+  /**
+   * Info: (20260908 - Julian) 正在看誰的歷程。`null` = 沒有打開。
+   *
+   * 存整個員工物件而不只是 id：彈窗標題要顯示姓名與編號，
+   * 而只存 id 的話彈窗得自己去名單裡找 —— 那份名單可能正在重新載入。
+   */
+  const [employeeForHistory, setEmployeeForHistory] =
+    useState<ISalaryCalculatorEmployee | null>(null);
+
   const [employeeToRemove, setEmployeeToRemove] =
     useState<ISalaryCalculatorEmployee | null>(null);
 
@@ -203,18 +318,30 @@ const EmployeeList: FC<IEmployeeListProps> = ({
   const filteredEmployees = filterEmployees(employees, {
     keyword,
     onlyMissingEmail,
+    onlyMissingRecords,
+    onlyMissingHireDate,
   });
   const missingEmailCount = countMissingEmail(employees);
+  const missingRecordsCount = countMissingRecords(employees);
+  const missingHireDateCount = countMissingHireDate(employees);
 
   const changeKeyword = (e: ChangeEvent<HTMLInputElement>) =>
     setKeyword(e.target.value);
   const clearKeyword = () => setKeyword("");
 
-  const submitEmployeeHandler =
+  /**
+   * Info: (20260908 - Julian) 彈窗送出時把「本次異動」一起轉下去（計劃書 §4）。
+   *
+   * 新增那一側也收得到這個參數，但彈窗在新增模式不顯示那個欄位，
+   * 所以它會是彈窗的預設值（當月）—— 與伺服器的補值一致，不衝突。
+   */
+  const submitEmployeeHandler = (
+    input: Parameters<typeof createEmployee>[0],
+    change: ISalaryProfileChangeRequest,
+  ) =>
     editing !== null && editing !== "add"
-      ? (input: Parameters<typeof createEmployee>[0]) =>
-          updateEmployee(editing.id, input)
-      : createEmployee;
+      ? updateEmployee(editing.id, input, change)
+      : createEmployee(input, change);
 
   const addEmployeeBtn = (
     <button
@@ -225,6 +352,47 @@ const EmployeeList: FC<IEmployeeListProps> = ({
       <Plus size={16} />
       {t("calculator.employee_list.add_employee")}
     </button>
+  );
+
+  // Info: (20260905 - Luphia) 條件都要清，否則按了還是篩不到（#6774）
+  const clearFilters = () => {
+    clearKeyword();
+    setOnlyMissingEmail(false);
+    setOnlyMissingRecords(false);
+    setOnlyMissingHireDate(false);
+  };
+
+  // Info: (20260901 - Julian) 一位員工都沒有：給一條建立第一位的路，而不只是「無資料」
+  const emptyState = (
+    <div className="flex flex-col items-center gap-[14px] px-[24px] py-[8px] text-center">
+      <User size={28} className="text-text-brand-primary-lv1 shrink-0" />
+      <p className="text-text-neutral-primary font-bold">
+        {t("calculator.employee_list.empty_title")}
+      </p>
+      <p className="text-text-neutral-secondary max-w-sm text-sm leading-relaxed">
+        {t("calculator.employee_list.empty_desc")}
+      </p>
+      {addEmployeeBtn}
+    </div>
+  );
+
+  // Info: (20260901 - Julian) 有員工但篩不到：留一條清除條件的路，不要看起來像資料掉了
+  const noResultState = (
+    <div className="flex flex-col items-center gap-[10px] px-[24px] py-[8px] text-center">
+      <Search size={24} className="text-text-neutral-tertiary" />
+      <p className="text-text-neutral-primary text-sm font-semibold">
+        {keyword.trim() === ""
+          ? t("calculator.employee_list.no_filter_result")
+          : t("calculator.employee_list.no_search_result", { keyword })}
+      </p>
+      <button
+        type="button"
+        onClick={clearFilters}
+        className="text-text-brand-primary-lv1 text-sm font-semibold underline"
+      >
+        {t("calculator.employee_list.clear_search")}
+      </button>
+    </div>
   );
 
   const displayedEmployeesList = (() => {
@@ -244,44 +412,11 @@ const EmployeeList: FC<IEmployeeListProps> = ({
       );
     }
 
-    // Info: (20260901 - Julian) 一位員工都沒有：給一條建立第一位的路，而不只是「無資料」
-    if (employees.length === 0) {
-      return (
-        <div className="flex flex-col items-center gap-[14px] px-[24px] py-[40px] text-center">
-          <User size={28} className="text-text-brand-primary-lv1 shrink-0" />
-          <p className="text-text-neutral-primary font-bold">
-            {t("calculator.employee_list.empty_title")}
-          </p>
-          <p className="text-text-neutral-secondary text-sm leading-relaxed">
-            {t("calculator.employee_list.empty_desc")}
-          </p>
-          {addEmployeeBtn}
-        </div>
-      );
-    }
+    if (employees.length === 0)
+      return <div className="py-[32px]">{emptyState}</div>;
 
-    // Info: (20260901 - Julian) 有員工但篩不到：留一條清除條件的路，不要看起來像資料掉了
     if (filteredEmployees.length === 0) {
-      return (
-        <div className="flex flex-col items-center gap-[10px] px-[24px] py-[40px] text-center">
-          <Search size={24} className="text-text-neutral-tertiary" />
-          <p className="text-text-neutral-primary text-sm font-semibold">
-            {keyword.trim() === ""
-              ? t("calculator.employee_list.no_filter_result")
-              : t("calculator.employee_list.no_search_result", { keyword })}
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              clearKeyword();
-              setOnlyMissingEmail(false);
-            }}
-            className="text-text-brand-primary-lv1 text-sm font-semibold underline"
-          >
-            {t("calculator.employee_list.clear_search")}
-          </button>
-        </div>
-      );
+      return <div className="py-[32px]">{noResultState}</div>;
     }
 
     return filteredEmployees.map((employee) => (
@@ -292,11 +427,110 @@ const EmployeeList: FC<IEmployeeListProps> = ({
         pickHandler={onPick ? () => onPick(employee) : undefined}
         editHandler={() => setEditing(employee)}
         removeHandler={() => setEmployeeToRemove(employee)}
+        historyHandler={() => setEmployeeForHistory(employee)}
       />
     ));
   })();
 
   const hasAnyEmployee = !isLoading && !hasError && employees.length > 0;
+
+  const editModals = (
+    <>
+      {/* Info: (20260901 - Julian) 新增／編輯員工 */}
+      {editing !== null && (
+        <EmployeeActionModal
+          type={editing === "add" ? "add" : "edit"}
+          data={editing === "add" ? null : editing}
+          modalVisibleHandler={() => setEditing(null)}
+          submitHandler={submitEmployeeHandler}
+        />
+      )}
+
+      {/* Info: (20260901 - Julian) 移除員工確認 */}
+      {employeeToRemove && (
+        <RemoveEmployeeModal
+          employee={employeeToRemove}
+          closeHandler={() => setEmployeeToRemove(null)}
+          removeHandler={() => removeEmployee(employeeToRemove.id)}
+        />
+      )}
+    </>
+  );
+
+  /**
+   * Info: (20260907 - Julian) 整頁版：篩選列與列表是**兩張卡片**。
+   *
+   * 原本三塊（搜尋、三條提示、清單）塞在同一張卡片裡，讓「條件」與「結果」
+   * 看起來是同一件東西 —— 而使用者改條件時第一個要找的就是那條邊界。
+   * 列表換成全庫共用的 `DataTable`，順帶補上原本沒有的表頭
+   * （使用者看不出中間那一格是信箱還是別的什麼）。
+   *
+   * 彈窗版一個像素都沒動 —— 560px 放不下六欄的表格，而那裡一列是一個選項、
+   * 不是一筆資料。兩邊共用的是狀態與行為，不是版面。
+   */
+  if (withEmail) {
+    return (
+      <>
+        <div className="flex flex-col gap-4">
+          <EmployeeListFilters
+            keyword={keyword}
+            onKeywordChange={changeKeyword}
+            onKeywordClear={clearKeyword}
+            shownCount={filteredEmployees.length}
+            totalCount={employees.length}
+            addEmployeeBtn={addEmployeeBtn}
+            /**
+             * Info: (20260907 - Julian) 三個勾選 filter **進篩選卡片**。
+             *
+             * 20260907 前一版刻意把它們拉出去當獨立的一塊，理由是「條件、
+             * 提示、結果是三件事」—— 那個判斷對當時的形狀是對的：橫幅是
+             * 通知，不是條件。改成勾選之後它們就是條件，家在篩選區裡；
+             * 拉在外面反而讓「搜尋」與「只看缺信箱」看起來是兩種不同的東西。
+             *
+             * 所以整頁版現在是**兩塊**（條件、結果），不是三塊。
+             */
+            issueFilters={
+              hasAnyEmployee ? (
+                <EmployeeListIssueFilters
+                  missingEmailCount={missingEmailCount}
+                  missingHireDateCount={missingHireDateCount}
+                  missingRecordsCount={missingRecordsCount}
+                  onlyMissingEmail={onlyMissingEmail}
+                  onlyMissingHireDate={onlyMissingHireDate}
+                  onlyMissingRecords={onlyMissingRecords}
+                  toggleMissingEmail={() =>
+                    setOnlyMissingEmail((prev) => !prev)
+                  }
+                  toggleMissingHireDate={() =>
+                    setOnlyMissingHireDate((prev) => !prev)
+                  }
+                  toggleMissingRecords={() =>
+                    setOnlyMissingRecords((prev) => !prev)
+                  }
+                />
+              ) : null
+            }
+          />
+
+          {hasError ? (
+            <div className="rounded-xl border border-gray-200 bg-white px-4 py-16 text-center text-sm text-rose-600 shadow-sm">
+              {t("calculator.employee_list.load_failed")}
+            </div>
+          ) : (
+            <EmployeeListTable
+              employees={filteredEmployees}
+              isLoading={isLoading}
+              editHandler={(employee) => setEditing(employee)}
+              removeHandler={(employee) => setEmployeeToRemove(employee)}
+              emptyState={employees.length === 0 ? emptyState : noResultState}
+            />
+          )}
+        </div>
+
+        {editModals}
+      </>
+    );
+  }
 
   return (
     <>
@@ -330,36 +564,6 @@ const EmployeeList: FC<IEmployeeListProps> = ({
         </div>
       )}
 
-      {/**
-       * Info: (20260904 - Julian) 缺信箱的提示：**整頁版才有**。
-       *
-       * 這是這一頁補回來的主要理由。寄薪資單靠 email，沒填的人寄不出去，
-       * 而在此之前唯一看得出「誰沒填」的方法是逐一點開編輯 ——
-       * 五十個人就是五十次。
-       *
-       * 有數字就給得起「只看這幾位」，因為使用者接下來要做的正是逐一補完。
-       * 彈窗不顯示這一條：那裡的任務是挑一個人出來算薪水，
-       * 信箱齊不齊全在那個當下不是他要處理的事。
-       */}
-      {withEmail && hasAnyEmployee && missingEmailCount > 0 && (
-        <div className="mx-[24px] mb-[16px] flex shrink-0 flex-col gap-[8px] rounded-lg border border-amber-200 bg-amber-50 px-[16px] py-[10px] md:flex-row md:items-center">
-          <p className="flex-1 text-sm font-medium text-amber-800">
-            {t("calculator.employee_list.missing_email_banner", {
-              count: missingEmailCount,
-            })}
-          </p>
-          <button
-            type="button"
-            onClick={() => setOnlyMissingEmail((prev) => !prev)}
-            className="shrink-0 text-sm font-semibold text-amber-800 underline underline-offset-2 hover:text-amber-900"
-          >
-            {onlyMissingEmail
-              ? t("calculator.employee_list.show_all")
-              : t("calculator.employee_list.only_missing_email")}
-          </button>
-        </div>
-      )}
-
       {/* Info: (20250711 - Julian) Employee list content */}
       <div
         className={`divide-stroke-neutral-quaternary flex min-h-0 flex-1 flex-col divide-y ${
@@ -389,6 +593,15 @@ const EmployeeList: FC<IEmployeeListProps> = ({
           data={editing === "add" ? null : editing}
           modalVisibleHandler={() => setEditing(null)}
           submitHandler={submitEmployeeHandler}
+        />
+      )}
+
+      {/* Info: (20260908 - Julian) 調薪歷程 */}
+      {employeeForHistory && (
+        <EmployeeHistoryModal
+          accountBookId={accountBookId}
+          employee={employeeForHistory}
+          modalVisibleHandler={() => setEmployeeForHistory(null)}
         />
       )}
 

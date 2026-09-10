@@ -36,14 +36,17 @@ const EmployeeListPageBody: FC<IEmployeeListPageBodyProps> = ({
         </h1>
 
         {/**
-         * Info: (20260904 - Julian) 卡片外框與薪資紀錄頁同一套
-         * （`rounded-xl border border-gray-200 bg-white shadow-sm`），
-         * 但列的內部沿用彈窗原本的樣式權杖 —— 這次是把程式碼搬到共用的位置，
-         * 不是順手重畫一遍列表。兩件事混在同一個改動裡，出問題時分不出是哪一件。
+         * Info: (20260907 - Julian) 這裡**不包卡片外框**。
+         *
+         * 20260904 的版本把整個 `EmployeeList` 包在一張
+         * `rounded-xl border bg-white` 裡 —— 那是 v1 版面的遺留：
+         * 當時整頁版渲染的是一條裸清單，需要有人給它外框。
+         *
+         * 20260907 整頁版自己畫三塊（篩選卡片、提示、`DataTable` 自帶卡片），
+         * 外面再包一層就變成卡片裡的卡片：邊框疊兩道、內距加倍，
+         * 而畫面上看起來就是「三塊又黏回一整塊」—— 那正是實測回報的症狀。
          */}
-        <div className="flex flex-col rounded-xl border border-gray-200 bg-white pt-[16px] shadow-sm">
-          <EmployeeList accountBookId={accountBookId} variant="page" />
-        </div>
+        <EmployeeList accountBookId={accountBookId} variant="page" />
       </div>
     </SalaryCalculatorShell>
   );

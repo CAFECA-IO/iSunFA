@@ -10,7 +10,12 @@ import {
   ISalaryCalculatorUI,
 } from "@/interfaces/salary_calculator";
 import { ISalaryRecordDetail } from "@/interfaces/salary_record";
-import { PAY_SLIP_FIELD_LABELS } from "@/constants/pay_slip_labels";
+import {
+  PAY_SLIP_CSV_IDENTITY_LABELS,
+  PAY_SLIP_CSV_INSURED_STATUS_LABELS,
+  PAY_SLIP_FIELD_LABELS,
+  PAY_SLIP_META_LABELS,
+} from "@/constants/pay_slip_labels";
 import { calculator as zhTw } from "@/i18n/locales/zh_tw/calculator";
 
 /**
@@ -34,7 +39,17 @@ const recordOf = (
   id: RECORD_ID,
   year: 2026,
   month: 9,
-  employee: { id: "e1", name: "王小明", number: "A001" },
+  employee: { id: "e1", name: "王小明", number: "A001", hireDate: null },
+  /**
+   * Info: (20260908 - Julian) 本薪與「這個月生效的本薪異動」（計劃書 §15）。
+   *
+   * 預設 `null` = 這個月沒有調薪。要測有調薪的案例時由 overrides 帶進來 ——
+   * 預設就給一筆的話，每一條案例都會意外帶著一個 `+1,000`。
+   */
+  baseSalary: 30000,
+  // Info: (20260908 - Julian) 預設沒有前一筆可比（計劃書 §16）；要測差額的案例由 overrides 帶
+  baseSalaryDelta: null,
+  baseSalaryChange: null,
   totalPayment: 41234,
   totalSalaryTaxable: 32000,
   totalEmployerCost: 45678,
@@ -197,6 +212,7 @@ describe("CSV 的注入與跳脫", () => {
           id: "e1",
           name: `${trigger}HYPERLINK("x")`,
           number: "A001",
+          hireDate: null,
         },
       }),
     ]);
@@ -207,7 +223,9 @@ describe("CSV 的注入與跳脫", () => {
 
   it("TAB 與 CR 開頭同樣被中和", () => {
     const csv = buildSalaryRecordCsv([
-      recordOf({ employee: { id: "e1", name: "\t=1+1", number: "A001" } }),
+      recordOf({
+        employee: { id: "e1", name: "\t=1+1", number: "A001", hireDate: null },
+      }),
     ]);
 
     expect(csv).toContain("'\t=1+1");
@@ -220,7 +238,9 @@ describe("CSV 的注入與跳脫", () => {
    */
   it("同時需要中和與加引號時，單引號在引號**裡面**", () => {
     const csv = buildSalaryRecordCsv([
-      recordOf({ employee: { id: "e1", name: "=1+1,x", number: "A001" } }),
+      recordOf({
+        employee: { id: "e1", name: "=1+1,x", number: "A001", hireDate: null },
+      }),
     ]);
 
     expect(csv).toContain(`"'=1+1,x"`);
@@ -230,7 +250,14 @@ describe("CSV 的注入與跳脫", () => {
   it("含逗號的姓名整欄加引號，不會讓後面每一格錯位", () => {
     const [, row] = rowsOf(
       buildSalaryRecordCsv([
-        recordOf({ employee: { id: "e1", name: "王, 小明", number: "A001" } }),
+        recordOf({
+          employee: {
+            id: "e1",
+            name: "王, 小明",
+            number: "A001",
+            hireDate: null,
+          },
+        }),
       ]),
     );
 
@@ -241,7 +268,14 @@ describe("CSV 的注入與跳脫", () => {
   it("含雙引號的姓名把引號加倍", () => {
     const [, row] = rowsOf(
       buildSalaryRecordCsv([
-        recordOf({ employee: { id: "e1", name: '王"小明', number: "A001" } }),
+        recordOf({
+          employee: {
+            id: "e1",
+            name: '王"小明',
+            number: "A001",
+            hireDate: null,
+          },
+        }),
       ]),
     );
 
@@ -251,7 +285,14 @@ describe("CSV 的注入與跳脫", () => {
   it("含換行的姓名不會把一列拆成兩列", () => {
     const rows = rowsOf(
       buildSalaryRecordCsv([
-        recordOf({ employee: { id: "e1", name: "王\n小明", number: "A001" } }),
+        recordOf({
+          employee: {
+            id: "e1",
+            name: "王\n小明",
+            number: "A001",
+            hireDate: null,
+          },
+        }),
       ]),
     );
 
@@ -316,5 +357,360 @@ describe("欄位名與薪資單、與畫面字典一致", () => {
     const [header] = rowsOf(buildSalaryRecordCsv([]));
 
     expect(new Set(header).size).toBe(header.length);
+  });
+});
+
+describe("本薪與它的變動（計劃書 §18）", () => {
+  const ID = PAY_SLIP_CSV_IDENTITY_LABELS;
+
+  const columnIndex = (label: string): number => {
+    const [header] = rowsOf(buildSalaryRecordCsv([recordOf()]));
+    const index = header.indexOf(label);
+    // Info: (20260908 - Julian) 找不到就直接失敗，不要讓後面用 -1 去取值
+    expect(index).toBeGreaterThanOrEqual(0);
+    return index;
+  };
+
+  const changeOf = (patch = {}) => ({
+    before: 54000,
+    after: 44000,
+    delta: -10000,
+    count: 1,
+    reason: "年度調整",
+    changedBy: { id: "user-7", name: "會計小林" },
+    recordedAt: Math.floor(
+      new Date("2026-08-28T01:00:00.000Z").getTime() / 1000,
+    ),
+    ...patch,
+  });
+
+  const deltaOf = (patch = {}) => ({
+    previousYear: 2026,
+    previousMonth: 8,
+    previous: 54000,
+    delta: -10000,
+    ...patch,
+  });
+
+  /**
+   * Info: (20260908 - Julian) **這一條是這一組的重點。**
+   *
+   * `FORMULA_TRIGGER` 包含 `-`（試算表會把 `-` 開頭的欄位當公式），
+   * 而「本薪較上一筆差額」是這份 CSV 第一個可能為負的欄位。
+   *
+   * 中和之後 `-10000` 會變成 `'-10000` —— 在 Excel 裡那是一格**文字**：
+   * 整欄加總不起來、排序變成字典序。而檔案打得開、看起來完全正常，
+   * 只有拿去算的人會發現，而他多半會以為是自己的公式寫錯。
+   *
+   * 在 20260908 之前所有金額都非負，所以這個坑一直沒有出現。
+   */
+  it("減薪的差額是數字，沒有被中和成文字", () => {
+    const index = columnIndex(ID.baseSalaryDelta);
+    const [, row] = rowsOf(
+      buildSalaryRecordCsv([recordOf({ baseSalaryDelta: deltaOf() })]),
+    );
+
+    expect(row[index]).toBe("-10000");
+    expect(row[index].startsWith("'")).toBe(false);
+  });
+
+  /**
+   * Info: (20260908 - Julian) 放寬 `-` 不能連帶放寬公式注入。
+   *
+   * 這一條是上一條的配對：`numeric` 是 opt-out，預設仍然中和，
+   * 所以使用者輸入的欄位（姓名、異動原因）照樣被擋。
+   * 沒有它的話，「把 `-` 放行」很容易在下一次重構時變成「整列都放行」。
+   */
+  it("使用者輸入的欄位仍然被中和（姓名與異動原因）", () => {
+    const nameIndex = columnIndex(ID.employeeName);
+    const reasonIndex = columnIndex(ID.profileChangeReason);
+
+    const [, row] = rowsOf(
+      buildSalaryRecordCsv([
+        recordOf({
+          employee: { id: "e-1", name: "=1+1", number: "A001", hireDate: null },
+          baseSalaryChange: changeOf({ reason: "=HYPERLINK(1)" }),
+        }),
+      ]),
+    );
+
+    expect(row[nameIndex]).toBe("'=1+1");
+    expect(row[reasonIndex]).toBe("'=HYPERLINK(1)");
+  });
+
+  it("有異動紀錄時，兩組欄位都填上", () => {
+    const [, row] = rowsOf(
+      buildSalaryRecordCsv([
+        recordOf({
+          baseSalary: 44000,
+          baseSalaryDelta: deltaOf(),
+          baseSalaryChange: changeOf(),
+        }),
+      ]),
+    );
+    const at = (label: string) => row[columnIndex(label)];
+
+    expect(at(ID.baseSalarySetting)).toBe("44000");
+    expect(at(ID.baseSalaryPrevPeriod)).toBe("2026-08");
+    expect(at(ID.baseSalaryDelta)).toBe("-10000");
+    expect(at(ID.profileChangeBefore)).toBe("54000");
+    expect(at(ID.profileChangeAfter)).toBe("44000");
+    expect(at(ID.profileChangeReason)).toBe("年度調整");
+    expect(at(ID.profileChangeBy)).toBe("會計小林");
+    expect(at(ID.profileChangeAt)).toBe("2026-08-28");
+  });
+
+  /**
+   * Info: (20260910 - Luphia) **建檔那一列的「異動前」留白，不是 0**（review 建-1）。
+   *
+   * `appendProfileChange` 在 `CREATE` 時帶 `before: null` —— 一個人的第一筆
+   * 本薪不是從 0 調上來的。而這一欄進的是**工資清冊**：寫 0 等於在勞檢
+   * 調閱的檔案裡宣稱他先前的本薪是 0。
+   *
+   * 「異動後」照樣要有值 —— 留白的只該是我們真的沒有的那一格。
+   */
+  it("建檔那一列：異動前留白，異動後仍有值", () => {
+    const [, row] = rowsOf(
+      buildSalaryRecordCsv([
+        recordOf({
+          baseSalary: 44000,
+          baseSalaryChange: changeOf({
+            before: null,
+            after: 44000,
+            delta: null,
+            reason: "到職建檔",
+          }),
+        }),
+      ]),
+    );
+    const at = (label: string) => row[columnIndex(label)];
+
+    expect(at(ID.profileChangeBefore)).toBe("");
+    expect(at(ID.profileChangeAfter)).toBe("44000");
+    expect(at(ID.profileChangeReason)).toBe("到職建檔");
+  });
+
+  /**
+   * Info: (20260908 - Julian) **差額有值、異動欄位空著** —— 這是最常見的一列。
+   *
+   * 在計算機上改了本薪、選了「只存這一次」的話，員工檔沒被改、
+   * 沒有異動紀錄，但兩個月的本薪確實不同。
+   *
+   * 兩組欄位因此不能合併：合併的話，收到 CSV 的人會把
+   * 「沒有異動紀錄」讀成「沒有調薪」。
+   */
+  it("只有差額、沒有異動紀錄時，異動那五欄留空而差額仍有值", () => {
+    const [, row] = rowsOf(
+      buildSalaryRecordCsv([
+        recordOf({ baseSalaryDelta: deltaOf(), baseSalaryChange: null }),
+      ]),
+    );
+    const at = (label: string) => row[columnIndex(label)];
+
+    expect(at(ID.baseSalaryDelta)).toBe("-10000");
+    expect(at(ID.profileChangeBefore)).toBe("");
+    expect(at(ID.profileChangeAfter)).toBe("");
+    expect(at(ID.profileChangeReason)).toBe("");
+    expect(at(ID.profileChangeBy)).toBe("");
+    expect(at(ID.profileChangeAt)).toBe("");
+  });
+
+  /**
+   * Info: (20260908 - Julian) 沒有值一律留**空字串**，不是「0」也不是「無」。
+   *
+   * 「0」會被加總 —— 一份把「最早那一筆」算成「差額 0」的報表，
+   * 在統計調薪幅度時會把分母算大。「無」會讓那一欄變成混合型別，排不了序。
+   */
+  it("最早的一筆（沒有上一筆）差額欄留空，不是 0", () => {
+    const index = columnIndex(ID.baseSalaryDelta);
+    const [, row] = rowsOf(
+      buildSalaryRecordCsv([recordOf({ baseSalaryDelta: null })]),
+    );
+
+    expect(row[index]).toBe("");
+  });
+
+  /**
+   * Info: (20260908 - Julian) 「月本薪（設定）」與「本薪（應稅）」是**兩欄**。
+   *
+   * 前者是這個人這個月的本薪設定，後者是實際計入的金額 ——
+   * 月中到職的人那兩個數字不一樣，而那個差異正是對帳要看的。
+   * 合成一欄的話，比例計算過的金額會被當成他的月薪。
+   */
+  it("月本薪（設定）與本薪（應稅）各自一欄", () => {
+    const [header] = rowsOf(buildSalaryRecordCsv([recordOf()]));
+
+    expect(header).toContain(ID.baseSalarySetting);
+    expect(header).toContain(PAY_SLIP_FIELD_LABELS.baseSalaryWithTax);
+    expect(ID.baseSalarySetting).not.toBe(
+      PAY_SLIP_FIELD_LABELS.baseSalaryWithTax,
+    );
+  });
+});
+
+/**
+ * Info: (20260909 - Julian) 到職日與投保狀態（客戶場景 §6）。
+ *
+ * 這份 CSV 是本系統的**工資清冊** —— 勞檢拿它對出勤紀錄，
+ * 而對著清冊問的頭兩個問題就是「這個人什麼時候到職」與「有沒有投保」。
+ * 20260909 之前這兩件事只在薪資單上，清冊裡沒有。
+ */
+describe("到職日", () => {
+  const headerIndex = (csv: string, label: string): number =>
+    rowsOf(csv)[0].indexOf(label);
+
+  const cell = (csv: string, label: string): string =>
+    rowsOf(csv)[1][headerIndex(csv, label)];
+
+  it("有到職日時輸出 YYYY-MM-DD", () => {
+    const csv = buildSalaryRecordCsv([
+      recordOf({
+        employee: {
+          id: "e1",
+          name: "王小明",
+          number: "A001",
+          hireDate: Math.floor(Date.UTC(2026, 7, 10) / 1000),
+        },
+      }),
+    ]);
+
+    expect(cell(csv, PAY_SLIP_META_LABELS.hireDate)).toBe("2026-08-10");
+  });
+
+  /**
+   * Info: (20260909 - Julian) **沒有到職日時是空字串，不是「-」。**
+   *
+   * 兩個理由，各自獨立：
+   *
+   * 1. 一欄裡混著日期與佔位字串，在試算表裡是排不了序的混合型別
+   *    （同一份檔案的 `sentDate` 為了這件事已經回空字串）。
+   * 2. `-` 是公式起始字元 —— `escapeField` 會把它中和成 `'-`，
+   *    於是那一格在 Excel 裡顯示成 `'-`，看起來像資料壞了。
+   *
+   * 薪資單上則印「-」（給人看的，空白讀起來像漏了）。這個差異是刻意的，
+   * 所以兩邊共用的是日期算法而不是空值的處置。
+   */
+  it("沒有到職日時是空字串，不是「-」也不是被中和的 「\'-」", () => {
+    const csv = buildSalaryRecordCsv([recordOf()]);
+
+    expect(cell(csv, PAY_SLIP_META_LABELS.hireDate)).toBe("");
+    expect(csv).not.toContain("'-");
+  });
+
+  /**
+   * Info: (20260909 - Julian) 排在身分那一段，不在最後面。
+   *
+   * 排最後的話，勞檢要看到職日得先橫向捲過四十幾個金額欄。
+   */
+  it("排在員工編號之後", () => {
+    const csv = buildSalaryRecordCsv([recordOf()]);
+    const header = rowsOf(csv)[0];
+
+    expect(header.indexOf(PAY_SLIP_META_LABELS.hireDate)).toBe(
+      header.indexOf(PAY_SLIP_CSV_IDENTITY_LABELS.employeeNumber) + 1,
+    );
+  });
+});
+
+describe("投保狀態", () => {
+  const optionsWith = (
+    patch: Partial<ISalaryCalculatorOptions>,
+  ): ISalaryCalculatorOptions =>
+    ({
+      year: 2026,
+      month: 9,
+      baseSalaryTaxable: 0,
+      baseSalaryTaxFree: 0,
+      ...patch,
+    }) as ISalaryCalculatorOptions;
+
+  const cellsOf = (input: ISalaryCalculatorOptions): string[] => {
+    const csv = buildSalaryRecordCsv([recordOf({ input })]);
+    const [header, row] = rowsOf(csv);
+
+    return (
+      ["isLaborInsured", "isHealthInsured", "isPensionInsured"] as const
+    ).map(
+      (field) => row[header.indexOf(PAY_SLIP_CSV_INSURED_STATUS_LABELS[field])],
+    );
+  };
+
+  /**
+   * Info: (20260909 - Julian) 三種各一欄，狀態各自獨立。
+   *
+   * 合成一欄「已投保」的話，「勞保有、健保沒有」這種常見情況就說不出來 ——
+   * 而那正是勞檢會追的那一種。
+   */
+  it("三欄各自對應各自的保險，不會接錯", () => {
+    expect(
+      cellsOf(
+        optionsWith({
+          isLaborInsuranceEnrolled: true,
+          isHealthInsuranceEnrolled: false,
+          isPensionInsuranceEnrolled: true,
+        }),
+      ),
+    ).toEqual([
+      PAY_SLIP_META_LABELS.insuredYes,
+      PAY_SLIP_META_LABELS.insuredNo,
+      PAY_SLIP_META_LABELS.insuredYes,
+    ]);
+  });
+
+  /**
+   * Info: (20260909 - Julian) 讀的是**這筆紀錄的快照**，不是員工檔現值。
+   *
+   * 這份清冊一次匯出很多人很多月。讀員工檔的話，去年十月那一列會寫著
+   * 今天的投保狀態 —— 而同一列右邊的勞保費是照當時算的，
+   * 一列之內自相矛盾，而且是勞檢最會追問的那一種矛盾。
+   */
+  it("值來自紀錄的 input 快照", () => {
+    const [labor] = cellsOf(optionsWith({ isLaborInsuranceEnrolled: false }));
+
+    expect(labor).toBe(PAY_SLIP_META_LABELS.insuredNo);
+  });
+
+  it("快照缺這幾格時讀成未投保", () => {
+    expect(cellsOf(optionsWith({}))).toEqual([
+      PAY_SLIP_META_LABELS.insuredNo,
+      PAY_SLIP_META_LABELS.insuredNo,
+      PAY_SLIP_META_LABELS.insuredNo,
+    ]);
+  });
+
+  /**
+   * Info: (20260909 - Julian) 排在級距前面，與薪資單同一個順序。
+   *
+   * 未投保時級距是 0，而「勞保投保級距 0」讀起來像資料漏了。
+   */
+  it("三欄排在投保級距之前", () => {
+    const header = rowsOf(buildSalaryRecordCsv([recordOf()]))[0];
+
+    expect(
+      header.indexOf(PAY_SLIP_CSV_INSURED_STATUS_LABELS.isLaborInsured),
+    ).toBeLessThan(
+      header.indexOf(PAY_SLIP_FIELD_LABELS.healthInsuranceSalaryBracket),
+    );
+  });
+
+  /**
+   * Info: (20260909 - Julian) **欄名加長是例外，值不加長。**
+   *
+   * 欄名之所以是「勞保投保狀態」而不是薪資單上的「勞保」：CSV 沒有區塊標題，
+   * 一個叫「勞保」的欄夾在「自行負擔勞保費」與「勞保投保級距」中間，
+   * 讀的人分不出它是什麼（同 `PAY_SLIP_CSV_IDENTITY_LABELS` 的理由）。
+   *
+   * 但**值**用的是同一組字。使用者會把 CSV 與 PDF 並排看 ——
+   * 一邊寫「投保」另一邊寫「是」，他得先確認那是不是同一件事。
+   */
+  it("值與薪資單同字，欄名才是 CSV 專屬的", () => {
+    const csv = buildSalaryRecordCsv([
+      recordOf({ input: optionsWith({ isLaborInsuranceEnrolled: true }) }),
+    ]);
+
+    expect(csv).toContain(PAY_SLIP_META_LABELS.insuredYes);
+    expect(csv).toContain(PAY_SLIP_CSV_INSURED_STATUS_LABELS.isLaborInsured);
+    // Info: (20260909 - Julian) 薪資單上那個短欄名不得單獨成為一欄
+    expect(rowsOf(csv)[0]).not.toContain("勞保");
   });
 });

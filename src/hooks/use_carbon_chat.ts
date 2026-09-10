@@ -175,6 +175,9 @@ import {
 } from "@/lib/carbon_page_slice";
 import {
   getApiErrorCode,
+  classifyImportRetryFailure,
+  shouldDropDeniedImportCid,
+  IMPORT_RETRY_FAILURE_TEXT_KEY,
   parsePersonalPaymentRequired,
   isGatewayTimeoutError,
   isQuotaApiError,
@@ -4009,6 +4012,45 @@ export const useCarbonChat = () => {
   );
 
   // Info: (20260717 - Tzuhan) #56 只重跑失敗章節,結果合併進現有預覽(檔案取自暫存 ref)
+  /**
+   * Info: (20260909 - Emily) 重試／接續失敗時的共用出口(#6783 review 中-1)。
+   *
+   * 兩處 catch 原本都是同一句「【匯入失敗】…請稍後再試」,而 cid 被拒那一種
+   * **稍後再試永遠不會成功**(見 `classifyImportRetryFailure` 的說明)。
+   * 於是使用者對著一顆永遠失敗的按鈕,而畫面一直叫他再試一次。
+   *
+   * 三件事:說對的那一句、把失效的 cid 從待匯入紀錄裡丟掉(否則下一次還是撞同一道門、
+   * 還要再扣一次點數)、並把丟掉之後的紀錄存回去(重載後才不會又帶著那個死 cid 回來)。
+   */
+  const reportImportRetryFailure = useCallback(
+    (error: unknown, originSessionId: string) => {
+      const errorCode = getApiErrorCode(error);
+      const source = lastImportSourceRef.current;
+      const failure = classifyImportRetryFailure(errorCode, source);
+      setDraftNotice(
+        {
+          type: "error",
+          text: t(IMPORT_RETRY_FAILURE_TEXT_KEY[failure])!,
+        },
+        originSessionId,
+      );
+      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, originSessionId);
+      if (!shouldDropDeniedImportCid(errorCode, source) || !source) return;
+      const withoutCid: ICarbonImportSource = { ...source, cid: null };
+      lastImportSourceRef.current = withoutCid;
+      const pending = pendingImportBySessionRef.current[originSessionId];
+      if (!pending) return;
+      void persistPendingImport(
+        originSessionId,
+        pending,
+        withoutCid,
+        importActivitiesRef.current,
+        lastPageIndexRef.current,
+      );
+    },
+    [setDraftNotice, dismissDraftNoticeAfter, t, persistPendingImport],
+  );
+
   const retryFailedImportChapters = useCallback(async () => {
     const source = lastImportSourceRef.current;
     const failed = pendingImport?.failedChapters ?? [];
@@ -4177,8 +4219,8 @@ export const useCarbonChat = () => {
     } catch (error) {
       // Info: (20260806 - Tzuhan) 原本沒有 catch:重試整批拋錯時提示會卡在 loading 不散
       console.error("[carbon-chat] retry failed chapters failed:", error);
-      notify({ type: "error", text: t("carbon_chatbot.import_failed") });
-      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, originSessionId);
+      // Info: (20260909 - Emily) cid 被拒時要說「請重新上傳」而不是「稍後再試」(#6783 中-1)
+      reportImportRetryFailure(error, originSessionId);
     } finally {
       // Info: (20260806 - Tzuhan) 成功或失敗都要放行,否則一次失敗就再也重試不了
       setIsRetryingImport(false);
@@ -4188,12 +4230,12 @@ export const useCarbonChat = () => {
     runImportChapters,
     activeSessionId,
     setDraftNotice,
-    dismissDraftNoticeAfter,
     isRetryingImport,
     setPendingImportFor,
     persistPendingImport,
     saveImportJobBookmark,
-    t,
+    // Info: (20260909 - Emily) 失敗出口（#6783 review 中-1）；提示文案與自動消失都在它裡面
+    reportImportRetryFailure,
   ]);
 
   /**
@@ -4382,8 +4424,8 @@ export const useCarbonChat = () => {
       });
     } catch (error) {
       console.error("[carbon-chat] resume paused chapters failed:", error);
-      notify({ type: "error", text: t("carbon_chatbot.import_failed") });
-      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, originSessionId);
+      // Info: (20260909 - Emily) 理由同 retryFailedImportChapters(#6783 中-1)
+      reportImportRetryFailure(error, originSessionId);
     } finally {
       setIsRetryingImport(false);
     }
@@ -4402,6 +4444,8 @@ export const useCarbonChat = () => {
     claimImportJob,
     // Info: (20260901 - Luphia) 終局判決讓卡片改口（review #6726 阻-1）
     refreshImportJob,
+    // Info: (20260909 - Emily) 失敗出口（#6783 review 中-1）
+    reportImportRetryFailure,
   ]);
 
   /**

@@ -1,3 +1,5 @@
+import type { PaySlipInsuredField } from "@/lib/utils/pay_slip_meta";
+
 /**
  * Info: (20260904 - Julian) 薪資單欄位的中文名稱。**伺服端產物共用這一份。**
  *
@@ -67,6 +69,52 @@ export const PAY_SLIP_FIELD_LABELS = {
 } as const;
 
 /**
+ * Info: (20260909 - Julian) 表頭那幾格「不是金額」的標籤（到職日與投保狀態）。
+ *
+ * 與上面那張表分開：那一張的鍵對應 `ISalaryCalculatorUI` 的欄位，
+ * 混進來會讓「這張表就是計算結果的每一欄」不再成立 ——
+ * 而 CSV 匯出正是靠那件事逐欄走過去的。
+ */
+export const PAY_SLIP_META_LABELS = {
+  hireDate: "到職日",
+  insuredYes: "投保",
+  insuredNo: "未投保",
+} as const;
+
+/**
+ * Info: (20260909 - Julian) 三種投保的中文名。**型別綁在共用的欄位清單上。**
+ *
+ * `Record<PaySlipInsuredField, string>` —— 日後多一種保險，
+ * 這裡少一個鍵就編譯失敗。少了它的話，新增的那一種會在畫面上有、
+ * 在寄出的薪資單上沒有（或反過來），而兩邊各自看都正常。
+ */
+export const PAY_SLIP_INSURED_LABELS: Record<PaySlipInsuredField, string> = {
+  isLaborInsured: "勞保",
+  isHealthInsured: "健保",
+  isPensionInsured: "勞退",
+};
+
+/**
+ * Info: (20260909 - Julian) CSV 版的投保狀態欄名 —— 比薪資單上那三個字長。
+ *
+ * 這是上面 `PAY_SLIP_CSV_IDENTITY_LABELS` 那條理由的延伸：薪資單上那三行
+ * 在「投保級距與費率」這個區塊標題底下，前後文說得出它們是什麼；
+ * CSV 沒有區塊，一個叫「勞保」的欄夾在「自行負擔勞保費」與「勞保投保級距」
+ * 中間，讀的人分不出它是第三個金額還是別的東西。
+ *
+ * 也就是說：**欄位名與 PDF 逐字相同是原則，而「CSV 的每一欄要自己說得清楚」
+ * 是它的例外**，兩者都寫在本檔的檔頭。這三欄套用例外。
+ */
+export const PAY_SLIP_CSV_INSURED_STATUS_LABELS: Record<
+  PaySlipInsuredField,
+  string
+> = {
+  isLaborInsured: "勞保投保狀態",
+  isHealthInsured: "健保投保狀態",
+  isPensionInsured: "勞退投保狀態",
+};
+
+/**
  * Info: (20260904 - Julian) CSV 專屬的身分欄位 —— PDF 上沒有。
  *
  * 一份 PDF 是一個人的一個月，姓名與期間寫在表頭；CSV 是很多人很多月混在一起，
@@ -76,6 +124,33 @@ export const PAY_SLIP_CSV_IDENTITY_LABELS = {
   period: "期間",
   employeeName: "員工姓名",
   employeeNumber: "員工編號",
+  /**
+   * Info: (20260908 - Julian) 本薪與它的變動（薪資異動紀錄計劃書 §18）。
+   *
+   * ## 為什麼是兩組，而不是一組
+   *
+   * - `baseSalaryPrevPeriod` / `baseSalaryDelta`：**較上一筆紀錄**。一律有
+   *   （只要有更早的紀錄），由紀錄本身算出來。
+   * - `profileChange*`：**員工檔的異動紀錄**。有的時候才有，能說出誰改的、為什麼。
+   *
+   * 兩者可以同時存在、也可以只有前者（在計算機上改了本薪、選了「只存這一次」）。
+   * 合成一組的話，收到 CSV 的人會把「沒有異動紀錄」讀成「沒有調薪」。
+   *
+   * ## 標題必須自己說得完
+   *
+   * CSV 沒有地方放說明文字（加一行前言會讓試算表的表頭解析錯位）。
+   * 所以「員工檔本薪異動…」這幾個字要自己交代來源 ——
+   * 收到檔案的人手上沒有這個系統，也不會來問。
+   */
+  baseSalarySetting: "月本薪（設定）",
+  baseSalaryPrevPeriod: "本薪較上一筆期間",
+  baseSalaryDelta: "本薪較上一筆差額",
+  profileChangeBefore: "員工檔本薪異動前",
+  profileChangeAfter: "員工檔本薪異動後",
+  profileChangeReason: "員工檔本薪異動原因",
+  profileChangeBy: "員工檔本薪異動記錄者",
+  profileChangeAt: "員工檔本薪異動記錄日",
+
   calculatorVersion: "計算版本",
   lastSentAt: "薪資單寄出日",
   lastSentTo: "寄送信箱",

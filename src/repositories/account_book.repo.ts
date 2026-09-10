@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma, AccountBook, TeamMember, Team } from "@/generated";
+import { addressLookupForms } from "@/lib/team/address_identity";
 
 export interface IAccountBookRepository {
   create(data: Prisma.AccountBookCreateInput): Promise<AccountBook>;
@@ -21,6 +22,7 @@ export interface IAccountBookRepository {
   ): Promise<AccountBook>;
   softDelete(accountBookId: string): Promise<AccountBook>;
   hasAssociatedEsgData(userId: string, enterpriseId: string): Promise<boolean>;
+  getCreatedAt(accountBookId: string): Promise<Date | null>;
 }
 
 export class AccountBookRepository {
@@ -82,11 +84,25 @@ export class AccountBookRepository {
   /**
    * Info: (20260716 - Tzuhan) #52 取得使用者於帳本所屬團隊的角色(非成員回 null)
    * 供碳盤查報告權限裁決:VIEWER 可閱覽、EDITOR 以上可編輯
+   *
+   * Info: (20260909 - Emily) 位址比對走 `addressLookupForms`,不是精確比對(#6783 review 阻-1)。
+   *
+   * `User.address` 有兩種形狀共存 —— viem 對合約回傳一律 EIP-55 checksum,
+   * `setup.service.ts` 建的使用者是全小寫(見 `address_identity.ts` 檔頭)。原本這裡是
+   * `address: userAddress` 精確比對,只有在「傳進來的位址與存進去的是同一份」時才成立。
+   *
+   * 它成立了三個呼叫端(都傳 session 位址,與 `User.address` 同源同形狀),然後在第四個
+   * 呼叫端破掉:`canReadAttachmentCid` 傳的是 `CarbonAttachmentOwner.address`,那一欄是
+   * **正規化後的小寫**。於是 checksum 形狀的擁有者一律查不到 → 「同帳本接續者可讀」
+   * (#6748 review 中-1)對那些使用者從第一天就不生效,而失敗長得跟合法拒絕一模一樣。
+   *
+   * `in` 而不是 `mode: "insensitive"`:後者走 ILIKE,吃不到 `User.address` 的索引。
+   * 撈出來是超集,但兩種形狀都是同一個位址,不需要再收斂。
    */
   async getMemberRoleByAddress(accountBookId: string, userAddress: string) {
     const member = await prisma.teamMember.findFirst({
       where: {
-        user: { address: userAddress },
+        user: { address: { in: addressLookupForms(userAddress) } },
         team: {
           accountBooks: { some: { id: accountBookId, deletedAt: null } },
         },
@@ -178,6 +194,25 @@ export class AccountBookRepository {
       : 0;
 
     return esgRecordsCount > 0;
+  }
+
+  /**
+   * Info: (20260907 - Julian) 這本帳是什麼時候建立的 —— 只取那一格。
+   *
+   * 薪資紀錄完整度用它當起算的下限（`missingSalaryPeriods` 的 `bookCreatedAt`）：
+   * 帳本還不存在的月份不可能有薪資單。`select` 只要 `createdAt`，
+   * 因為呼叫端要的就是那一格，而 `AccountBook` 整列有二十幾欄。
+   *
+   * 查不到回 `null`（帳本被刪、或 id 不存在）。呼叫端據此退回「沒有下限」——
+   * 那時員工名單本來也會是空的。
+   */
+  async getCreatedAt(accountBookId: string): Promise<Date | null> {
+    const found = await prisma.accountBook.findUnique({
+      where: { id: accountBookId },
+      select: { createdAt: true },
+    });
+
+    return found?.createdAt ?? null;
   }
 }
 

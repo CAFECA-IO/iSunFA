@@ -84,6 +84,65 @@ export const calculator = {
     hire_date: "Hire date",
     resign_date: "Resignation date",
     date_order_error: "Resignation date cannot be earlier than the hire date",
+    effective_month: "Effective from",
+    effective_month_hint:
+      "This is the payroll month the change applies from, not today's date. Change it when recording a past adjustment or one that starts later.",
+    change_reason: "Reason",
+    change_reason_placeholder:
+      "e.g. annual review, promotion, insurance bracket",
+    field_labels: {
+      baseSalary: "Base salary",
+      mealAllowance: "Meal allowance",
+      otherAllowanceTaxable: "Other allowance (taxable)",
+      otherAllowanceTaxFree: "Other allowance (tax-free)",
+      isForeignWorker: "Non-resident",
+      baseSalary30Days: "Fixed 30-day month",
+      isLaborInsured: "Labor insurance",
+      isHealthInsured: "Health insurance",
+      isPensionInsured: "Pension",
+      industryCode: "Industry",
+      dependentsCount: "Dependents",
+      voluntaryPensionRate: "Voluntary pension rate",
+      hireDate: "Hire date",
+      resignDate: "Resignation date",
+      leaveStartDate: "Leave of absence start",
+      leaveEndDate: "Return-to-work date",
+      name: "Name",
+      number: "Employee no.",
+      email: "Email",
+      employmentType: "Employment type",
+    },
+    field_true: "Yes",
+    field_false: "No",
+    action_create: "Created",
+    action_update: "Changed",
+    action_delete: "Removed",
+    timing_backdated: "Recorded late",
+    timing_scheduled: "Scheduled ahead",
+    history_title: "Salary change history",
+    history_loading: "Loading…",
+    history_load_failed:
+      "Could not load the change history. Please try again later.",
+    history_load_more: "Load older entries",
+    history_empty: "No salary changes recorded for this employee yet",
+    history_empty_filtered:
+      "No changes recorded for the selected fields. Try selecting more.",
+    history_field_filter: "Show changes to these fields only",
+    history_since:
+      "This history starts on {{date}}. Changes made before then were not recorded — for earlier terms, see the inputs on each month's payroll record.",
+    history_no_record_yet:
+      "No salary changes have been recorded for this employee since this feature shipped. For earlier terms, see the inputs on each month's payroll record.",
+    history_count: "Showing {{shown}} of {{total}}",
+    recorded_by: "Recorded by {{name}} on {{at}}",
+    unknown_user: "Unknown user",
+    history: "History",
+    leave_start_date: "Leave start date",
+    leave_end_date: "Return-to-work date",
+    leave_hint:
+      "Leave without pay: months fully inside this range are not expected to have a pay slip. Enter the first day of leave and the first day back at work — those two months still count, because the employee worked part of them. Leave the return date empty if they have not returned yet.",
+    leave_order_error:
+      "Return-to-work date cannot be earlier than the leave start date",
+    leave_start_required: "Enter the leave start date as well",
     main_title: "Employee List",
     name: "Employee Name",
     number: "Employee Number",
@@ -117,11 +176,21 @@ export const calculator = {
       "Are you sure you want to remove {{name}} from the employee list?",
     remove_employee_submit_btn: "Yes, Remove Employee",
     no_email: "Not set",
-    missing_email_banner:
-      "{{count}} employees have no email address — their pay slips cannot be sent",
-    only_missing_email: "Show only these",
-    show_all: "Show all employees",
+    missing_records_badge: "{{count}} month(s) missing",
     no_filter_result: "No employee matches the current filter",
+    missing_records_rest: "{{count}} more months",
+    no_hire_date: "Not set",
+    filter_missing_email: "No email address",
+    filter_missing_hire_date: "No hire date",
+    /**
+     * Info: (20260907 - Julian) 這一句在 UI 重構時被從五個語系刪掉了，
+     * 而 `employee_list_issue_filters.tsx` 仍然在讀它 ——
+     * 畫面上會直接顯示 `calculator.employee_list.missing_hire_date_banner`
+     * 這串原始鍵。原文照 `7ebdc4a33` 還原（`i18n_keys.test.ts` 抓到的）。
+     */
+    missing_hire_date_banner:
+      "{{count}} employee(s) have no hire date — coverage cannot be checked for them until it is filled in",
+    filter_missing_records: "Missing pay slip records",
   },
   result: {
     base_salary_with_tax: "Base Salary (Taxable)",
@@ -161,7 +230,12 @@ export const calculator = {
     monthly_pay: "Monthly Pay",
     total_employer_cost: "Total Employer Cost",
     reported: "Reported",
+    hire_date: "Hire date",
+    insured_yes: "Enrolled",
+    insured_no: "Not enrolled",
     paid: "Paid",
+    hide_values: "Hide amounts",
+    show_values: "Show amounts",
   },
   warnings: {
     title: "Warning Message",
@@ -201,6 +275,8 @@ export const calculator = {
     error_generic: "Could not send the pay slip. Please try again in a moment.",
   },
   my_pay_slip: {
+    record_deleted:
+      "This salary record has been deleted, so its contents are no longer available. The delivery record stays on this list.",
     main_title: "My Pay Slip",
     tab_received: "Pay Slip I Received",
     tab_sent: "Pay Slip I Sent",
@@ -230,6 +306,10 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) Saving from the calculator page, plus its two exceptions
   save_record: {
+    profile_diff_reason:
+      "Reason (optional; recorded only when the employee is updated)",
+    profile_diff_reason_placeholder:
+      "e.g. annual review, promotion, insurance bracket",
     profile_diff_title: "Update the employee record too?",
     profile_diff_content:
       'The calculator settings differ from the employee record for "{{name}}". Here is what changed:',
@@ -272,6 +352,21 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) Payroll records
   records: {
+    base_salary_delta_inline: "{{sign}}{{amount}} vs month {{month}}",
+    base_salary_delta_title: "Base salary change in {{year}}-{{month}}",
+    base_salary_delta_vs: "compared with {{year}}-{{month}}",
+    base_salary_no_change_record:
+      "This month's base salary differs from the previous record, but there is no matching change on the employee's profile. Edit the employee from the employee list and set the effective month to {{year}}-{{month}}.",
+    base_salary: "Base salary",
+    base_salary_change_aria:
+      "View the base salary change for {{year}}-{{month}}",
+    base_salary_change_title: "Base salary change effective {{year}}-{{month}}",
+    base_salary_change_count:
+      "{{count}} base salary changes took effect this month; the figure above is the net change.",
+    base_salary_change_recorded: "Recorded",
+    base_salary_change_full_history: "View full salary history",
+    base_salary_mismatch:
+      "This month's payroll was calculated with a base salary of {{used}}, which does not match the {{changed}} recorded by the change. If this payroll should use the new figure, recalculate and save it again.",
     main_title: "Payroll records",
     pay_period: "Pay period",
     pay_period_value: "{{month}}/{{year}}",
@@ -317,6 +412,15 @@ export const calculator = {
     export_too_many: "At most {{max}} records per export — deselect some first",
     export_failed: "Export failed. Please try again in a moment.",
   },
+  access: {
+    checking: "Checking your permissions…",
+    check_failed:
+      "We could not check your role in this account book. Please try again later.",
+    denied_title: "Payroll is not available to you in this account book",
+    denied_desc:
+      "The calculator, payroll records and employee list are open to the account book's owners and editors. Your role here is view-only, so this section is hidden. Ask an owner to change your role if you need access.",
+    denied_public_link: "Use the public salary calculator instead",
+  },
   account_book_entry: {
     title: "Want to keep this calculation?",
     hint_save:
@@ -336,6 +440,8 @@ export const calculator = {
     re_send: "Resend Pay Slip",
     send_disabled_unsaved:
       "Save the salary record first, then you can send the pay slip",
+    send_disabled_unlinked:
+      "This calculation is no longer linked to an employee. Please select one again.",
     send_disabled_no_email:
       "This employee has no email address — add one in the employee list first",
     send_disabled_employee_gone:
@@ -343,6 +449,9 @@ export const calculator = {
     send_disabled_loading: "Checking the employee list...",
   },
   message: {
+    send_pay_slip_success_title: "Pay slip sent",
+    send_pay_slip_success_content:
+      "The {{month}} pay slip was sent to {{name}} ({{email}}).",
     name_error_title: "Employee’s Name is not Filled",
     name_error_content:
       "You need to enter the employee’s name before you go to next step",

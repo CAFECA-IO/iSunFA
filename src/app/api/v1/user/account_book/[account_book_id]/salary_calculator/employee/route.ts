@@ -13,7 +13,9 @@ import {
 } from "@/services/salary_record.service";
 import {
   salaryCalculatorEmployeeWriteSchema,
+  salaryProfileChangeSchema,
   toSalaryCalculatorEmployeeWriteInput,
+  toSalaryProfileChangeContext,
 } from "@/validators";
 
 /**
@@ -97,10 +99,28 @@ export async function POST(
       SalaryAccess.WRITE,
     );
 
+    /**
+     * Info: (20260908 - Julian) 異動 context 與員工檔分開驗（計劃書 §4）。
+     *
+     * `changedByUserId` 從 `sessionUser` 來，**不從 body 讀** ——
+     * 讀 body 的話，異動紀錄的「誰」就是可以偽造的。
+     *
+     * 生效月份缺漏時補當期。建檔時前端通常不會問這件事（新人的第一筆
+     * 就是他到職時的條件），所以這條路徑主要靠補值。
+     */
+    const parsedChange = salaryProfileChangeSchema.safeParse(body);
+    if (!parsedChange.success)
+      return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
+
     return jsonOk(
       await salaryRecordService.createEmployee({
         accountBookId,
         input: toSalaryCalculatorEmployeeWriteInput(parsed.data),
+        change: toSalaryProfileChangeContext(
+          parsedChange.data,
+          sessionUser.id,
+          new Date(),
+        ),
       }),
     );
   } catch (error) {

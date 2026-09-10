@@ -1,6 +1,10 @@
 import { EmploymentType } from "@/interfaces/salary_calculator";
 import { DEFAULT_INDUSTRY_CODE } from "@/constants/industry_category";
-import { ISalaryEmployeeProfile } from "@/interfaces/salary_record";
+import {
+  ISalaryCalculatorEmployeeWriteInput,
+  ISalaryEmployeeLeave,
+  ISalaryEmployeeProfile,
+} from "@/interfaces/salary_record";
 
 /**
  * Info: (20260902 - Julian) 員工檔常態屬性的分類表、到離職日推導與差異偵測。
@@ -242,6 +246,99 @@ export const DEFAULT_EMPLOYEE_PROFILE: ISalaryEmployeeProfile = {
   hireDate: null,
   resignDate: null,
 };
+
+/**
+ * Info: (20260905 - Luphia) 新增員工時的留職停薪初值：沒有（#6774）。
+ *
+ * 與 `DEFAULT_EMPLOYEE_PROFILE` 分開一個常數，不是併進去 —— 併進去
+ * `ISalaryEmployeeProfile` 就得多兩欄，而那個型別是「自動匯入計算機」的契約
+ *（見 `EMPLOYEE_PROFILE_FIELDS` 上方）。
+ *
+ * 兩欄都是 null 而不是 0：0 在 Unix 秒是 1970-01-01，那會被當成
+ * 「1970 年開始留停、至今未復職」，於是這個人每一個月都不算缺漏。
+ */
+export const DEFAULT_EMPLOYEE_LEAVE: ISalaryEmployeeLeave = {
+  leaveStartDate: null,
+  leaveEndDate: null,
+};
+
+/**
+ * Info: (20260907 - Julian) 只取留停那兩欄，**其餘一律丟掉**（review #6777 阻擋）。
+ *
+ * ## 為什麼需要這一支
+ *
+ * `ISalaryCalculatorEmployee` 繼承 `ISalaryEmployeeLeave`，所以整個員工物件
+ * 在型別上就是一個合法的 `ISalaryEmployeeLeave` —— 指派給變數時 TypeScript
+ * **不做多餘屬性檢查**，於是「只想帶兩欄」與「帶了整個員工」在編譯期
+ * 長得一模一樣，差別只在 runtime 展開時多出來的那十幾個鍵。
+ *
+ * 那個差別會吃掉使用者剛改好的資料：見 `buildEmployeeWriteInput`。
+ * 把「收窄」變成一次明確的呼叫，那個差別就從隱形變成看得見。
+ */
+export const pickEmployeeLeave = (
+  source: ISalaryEmployeeLeave,
+): ISalaryEmployeeLeave => ({
+  leaveStartDate: source.leaveStartDate,
+  leaveEndDate: source.leaveEndDate,
+});
+
+/**
+ * Info: (20260907 - Julian) 組出「寫回員工檔」的 payload（review #6777 阻擋）。
+ *
+ * ## 修的是什麼
+ *
+ * 員工編輯視窗原本直接在 JSX 裡組：
+ *
+ * ```ts
+ * const [profile] = useState<ISalaryEmployeeProfile>(data ?? DEFAULT_EMPLOYEE_PROFILE);
+ * const [leave]   = useState<ISalaryEmployeeLeave>(data ?? DEFAULT_EMPLOYEE_LEAVE);
+ * submitHandler({ ...profile, ...leave, name, number, email, baseSalary, mealAllowance });
+ * ```
+ *
+ * 兩個 state 的初值是**同一個物件**（那位員工）。使用者改了任何一格常態屬性，
+ * `setProfile` 產生新物件、`leave` 仍然握著原本那一整個員工 —— 而它排在
+ * `...profile` 後面。於是十五個欄位全部被還原成打開視窗時的值：
+ *
+ * 1. 員工列表的橫幅說「N 位員工沒有到職日，補上之後才看得出缺哪幾個月」
+ * 2. 使用者點進去填了到職日、按儲存 —— 視窗關了、沒有錯誤
+ * 3. 橫幅原封不動。再點開，那一格還是空的
+ *
+ * 到職日、扶養人數、投保狀態、自提比例都走同一條路。**這一版之前不會發生**：
+ * 那時只有 `...profile`。
+ *
+ * ## 為什麼收成一支純函式，而不是只把 state 的初值改掉
+ *
+ * 只改初值也修得掉，但修完之後**沒有任何一條測試會因為改回去而變紅** ——
+ * 本專案不 render React，元件裡的組裝只能靠掃描字串守，而缺陷的形狀
+ * （兩個 state 指向同一個物件）掃不出來。全套 5,983 條測試在缺陷存在時
+ * 是全綠的，正是檢查清單 §1.11 說的「掃描測到了接線，沒測到答案」。
+ *
+ * 收成純函式之後，「夾帶了整個員工物件的 leave 不得蓋掉 profile」
+ * 變成一條看得懂也跑得動的斷言。
+ *
+ * ## 順序仍然有意義
+ *
+ * `pickEmployeeLeave` 排在 `...profile` 之後：`profile` 可能夾帶著打開視窗
+ * 當下的留停舊值，要讓使用者剛編輯過的那一份覆蓋它。兩個金額走各自的
+ * `AmountInput`，所以擺在最後覆蓋 profile 上的同名欄位（原本就是這樣）。
+ */
+export const buildEmployeeWriteInput = (parts: {
+  profile: ISalaryEmployeeProfile;
+  leave: ISalaryEmployeeLeave;
+  name: string;
+  number: string;
+  email?: string;
+  baseSalary: number;
+  mealAllowance: number;
+}): ISalaryCalculatorEmployeeWriteInput => ({
+  ...parts.profile,
+  ...pickEmployeeLeave(parts.leave),
+  name: parts.name,
+  number: parts.number,
+  email: parts.email,
+  baseSalary: parts.baseSalary,
+  mealAllowance: parts.mealAllowance,
+});
 
 /**
  * Info: (20260902 - Julian) Unix 秒 ↔ `<input type="date">` 的 `YYYY-MM-DD`。

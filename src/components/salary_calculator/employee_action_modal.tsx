@@ -1,11 +1,17 @@
 "use client";
 
 import { useState, FC, ChangeEvent } from "react";
-import { ISalaryEmployeeProfile } from "@/interfaces/salary_record";
 import {
+  ISalaryEmployeeLeave,
+  ISalaryEmployeeProfile,
+} from "@/interfaces/salary_record";
+import {
+  buildEmployeeWriteInput,
+  DEFAULT_EMPLOYEE_LEAVE,
   DEFAULT_EMPLOYEE_PROFILE,
   EMPLOYMENT_TYPE_KEYS,
   employmentTypeI18nKey,
+  pickEmployeeLeave,
   fromDateInputValue,
   toDateInputValue,
 } from "@/lib/utils/salary_employee_profile";
@@ -21,6 +27,7 @@ import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import {
   ISalaryCalculatorEmployee,
   ISalaryCalculatorEmployeeWriteInput,
+  ISalaryProfileChangeRequest,
 } from "@/interfaces/salary_record";
 import AmountInput from "@/components/salary_calculator/amount_input";
 import { User, X, Plus, Check, Loader2 } from "lucide-react";
@@ -100,8 +107,16 @@ interface IEmployeeActionModalProps {
   type: "add" | "edit";
   data: ISalaryCalculatorEmployee | null;
   modalVisibleHandler: () => void;
-  // Info: (20260831 - Julian) 由呼叫端決定要打 POST 還是 PUT；失敗時 reject，讓這裡顯示訊息
-  submitHandler: (input: ISalaryCalculatorEmployeeWriteInput) => Promise<void>;
+  /**
+   * Info: (20260831 - Julian) 由呼叫端決定要打 POST 還是 PUT；失敗時 reject，讓這裡顯示訊息
+   *
+   * Info: (20260908 - Julian) 第二個參數是這次異動的生效月份與原因（計劃書 §4）。
+   * 它與員工檔分開傳，因為它描述的是「這次修改」而不是「這個人」。
+   */
+  submitHandler: (
+    input: ISalaryCalculatorEmployeeWriteInput,
+    change: ISalaryProfileChangeRequest,
+  ) => Promise<void>;
 }
 
 const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
@@ -147,6 +162,36 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
    */
   const [profile, setProfile] = useState<ISalaryEmployeeProfile>(baseProfile);
 
+  /**
+   * Info: (20260905 - Luphia) 留職停薪的起訖，與 profile 分開一個 state（#6774）。
+   *
+   * 分開不是為了好看：`ISalaryEmployeeProfile` 是「選了員工就匯入計算機」的
+   * 那一組，把留停併進去會讓 `salary_employee_profile.test.ts` 的對拍測試變紅
+   *（計算機表單沒有這兩格）。型別仍是一個 interface，加欄位時這裡照樣編譯失敗。
+   *
+   * 編輯時取這個人現在的值、新增時是「沒有留停」—— 與 `baseProfile` 同一條理由：
+   * 寫入契約整組必填，少帶一欄就是把現有的留停區間清掉。
+   */
+  /**
+   * Info: (20260907 - Julian) **只取那兩欄**，不是把整個員工物件放進來
+   *（review #6777 阻擋）。
+   *
+   * 原本寫的是 `data ?? DEFAULT_EMPLOYEE_LEAVE` —— 型別上完全合法
+   *（`ISalaryCalculatorEmployee` 繼承 `ISalaryEmployeeLeave`，指派給變數時
+   * 不做多餘屬性檢查），而 runtime 它握著的是**整個員工**，包含打開視窗
+   * 那一刻的十五個常態屬性。
+   *
+   * 送出時 `...leave` 排在 `...profile` 之後，於是使用者剛改好的到職日、
+   * 扶養人數、投保狀態全部被還原 —— 視窗關了、沒有錯誤、什麼都沒變。
+   * 詳見 `buildEmployeeWriteInput` 的檔頭。
+   */
+  const [leave, setLeave] = useState<ISalaryEmployeeLeave>(
+    data === null ? DEFAULT_EMPLOYEE_LEAVE : pickEmployeeLeave(data),
+  );
+
+  const patchLeave = (patch: Partial<ISalaryEmployeeLeave>) =>
+    setLeave((prev) => ({ ...prev, ...patch }));
+
   // Info: (20260902 - Julian) 一律從「身分」開起：新增時那是唯一非填不可的一頁
   const [activeTab, setActiveTab] = useState<TabKey>("identity");
 
@@ -166,6 +211,27 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
         ...prev,
         [field]: typeof next === "function" ? next(prev[field]) : next,
       }));
+  /**
+   * Info: (20260908 - Julian) 這次異動從哪一個月起生效，`YYYY-MM`。
+   *
+   * ## 為什麼是 `input[type="month"]` 而不是兩個下拉
+   *
+   * 一個原生控件、一個值、不必維護年份選項清單，而且行動裝置上會拿到
+   * 系統的月份選擇器。兩個下拉要自己決定「年份列到哪一年」——
+   * 而那個範圍猜錯的方向是**使用者選不到他要的月份**（補登去年的調薪）。
+   *
+   * ## 為什麼預設當月
+   *
+   * 絕大多數調薪是「從這個月開始」。預設當月讓常見情況零操作，
+   * 而補登與預先輸入的人會主動去改它 —— 那正是這個欄位存在的理由。
+   */
+  const [effectiveMonthInput, setEffectiveMonthInput] = useState<string>(() => {
+    const now = new Date();
+    const month = `${now.getMonth() + 1}`.padStart(2, "0");
+    return `${now.getFullYear()}-${month}`;
+  });
+  const [reasonInput, setReasonInput] = useState<string>("");
+
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string>("");
 
@@ -183,6 +249,25 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
     profile.hireDate !== null &&
     profile.resignDate !== null &&
     profile.resignDate < profile.hireDate;
+
+  /**
+   * Info: (20260905 - Luphia) 留停的兩種填錯，兩條後端都有 `.refine` 在守（#6774）。
+   *
+   * 在這裡先擋是為了指出是哪一格 —— 後端擋下來時使用者看到的是一句
+   * 通用的儲存失敗，而畫面上有八個日期格。
+   */
+  const isLeaveOrderInvalid =
+    leave.leaveStartDate !== null &&
+    leave.leaveEndDate !== null &&
+    leave.leaveEndDate < leave.leaveStartDate;
+
+  /**
+   * Info: (20260905 - Luphia) 只填復職日不會報錯，它只是**不起作用**：
+   * 完整度警示看 `leaveStartDate === null` 就整段跳過。使用者以為登記好了，
+   * 而那幾個月照樣被標成缺薪資單。
+   */
+  const isLeaveStartMissing =
+    leave.leaveStartDate === null && leave.leaveEndDate !== null;
 
   /**
    * Info: (20260902 - Julian) 每一個擋住送出的問題，連同它住在哪一個分頁。
@@ -235,6 +320,22 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
           },
         ]
       : []),
+    ...(isLeaveOrderInvalid
+      ? [
+          {
+            tab: "other" as TabKey,
+            message: t("calculator.employee_list.leave_order_error"),
+          },
+        ]
+      : []),
+    ...(isLeaveStartMissing
+      ? [
+          {
+            tab: "other" as TabKey,
+            message: t("calculator.employee_list.leave_start_required"),
+          },
+        ]
+      : []),
   ];
 
   const tabIssues = new Set(issues.map((issue) => issue.tab));
@@ -278,14 +379,43 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
        *
        * 兩個金額走各自的 `AmountInput`，所以擺在 `...profile` 之後覆蓋掉它。
        */
-      await submitHandler({
-        ...profile,
-        name: nameInput.trim(),
-        number: numberInput.trim(),
-        email: emailInput.trim() || undefined,
-        baseSalary: baseSalaryInput,
-        mealAllowance: mealAllowanceInput,
-      });
+      /**
+       * Info: (20260908 - Julian) `YYYY-MM` → 年、月兩個數字。
+       *
+       * 不做防禦性的 fallback：`input[type="month"]` 在值不合法時給空字串，
+       * 而空字串會讓 `Number()` 變成 `NaN` —— 那會被伺服器的 zod 擋下來（400）。
+       * 自己補一個「看起來合理」的月份，等於把一個看得見的錯誤
+       * 換成一列記錯生效月的異動紀錄。
+       */
+      const [effectiveYear, effectiveMonth] = effectiveMonthInput
+        .split("-")
+        .map(Number);
+
+      await submitHandler(
+        /**
+         * Info: (20260907 - Julian) 組裝收到 `buildEmployeeWriteInput`
+         *（review #6777 阻擋）。
+         *
+         * 原本是就地展開 `{ ...profile, ...leave, ... }`。搬出去的理由不是
+         * 好看：本專案不 render React，**留在這裡的組裝沒有任何測試守得住**
+         *（缺陷存在時全套 5,983 條全綠）。搬到純函式之後，「leave 夾帶了
+         * 整個員工物件也不得蓋掉 profile」才寫得成一條會紅的斷言。
+         */
+        buildEmployeeWriteInput({
+          profile,
+          leave,
+          name: nameInput.trim(),
+          number: numberInput.trim(),
+          email: emailInput.trim() || undefined,
+          baseSalary: baseSalaryInput,
+          mealAllowance: mealAllowanceInput,
+        }),
+        {
+          effectiveYear,
+          effectiveMonth,
+          reason: reasonInput.trim() || undefined,
+        },
+      );
       modalVisibleHandler();
     } catch (error) {
       /**
@@ -659,6 +789,58 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
                 {t("calculator.employee_list.date_order_error")}
               </p>
             )}
+            {/**
+             * Info: (20260905 - Luphia) 留職停薪的起訖（#6774）。
+             *
+             * 放在到離職日的正下方：它們是同一類事實（這個人哪段時間在職），
+             * 而且完整度警示要同時看這四格才算得出「這個月該不該有薪資單」。
+             */}
+            <div className="flex flex-col gap-[8px]">
+              <FieldLabel
+                text={t("calculator.employee_list.leave_start_date")}
+              />
+              <input
+                type="date"
+                aria-label={t("calculator.employee_list.leave_start_date")}
+                value={toDateInputValue(leave.leaveStartDate)}
+                onChange={(e) =>
+                  patchLeave({
+                    leaveStartDate: fromDateInputValue(e.target.value),
+                  })
+                }
+                className="border-input-stroke-input w-full rounded-lg border bg-transparent px-[12px] py-[10px] outline-none"
+              />
+            </div>
+            <div className="flex flex-col gap-[8px]">
+              <FieldLabel text={t("calculator.employee_list.leave_end_date")} />
+              <input
+                type="date"
+                aria-label={t("calculator.employee_list.leave_end_date")}
+                value={toDateInputValue(leave.leaveEndDate)}
+                // Info: (20260905 - Luphia) 復職日不得早於留停起日，後端也有一條 refine 在守
+                min={toDateInputValue(leave.leaveStartDate) || undefined}
+                onChange={(e) =>
+                  patchLeave({
+                    leaveEndDate: fromDateInputValue(e.target.value),
+                  })
+                }
+                className="border-input-stroke-input w-full rounded-lg border bg-transparent px-[12px] py-[10px] outline-none"
+              />
+            </div>
+            {/* Info: (20260905 - Luphia) 留停未填復職日 = 還沒復職，是合法狀態，不是錯誤 */}
+            <p className="text-text-neutral-tertiary text-xs">
+              {t("calculator.employee_list.leave_hint")}
+            </p>
+            {isLeaveOrderInvalid && (
+              <p className="text-text-state-error text-sm font-medium">
+                {t("calculator.employee_list.leave_order_error")}
+              </p>
+            )}
+            {isLeaveStartMissing && (
+              <p className="text-text-state-error text-sm font-medium">
+                {t("calculator.employee_list.leave_start_required")}
+              </p>
+            )}
           </div>
         </div>
         {/**
@@ -668,6 +850,60 @@ const EmployeeActionModal: FC<IEmployeeActionModalProps> = ({
          * 使用者得逐頁點過去找那個紅點，而在手機上四個分頁不一定同時看得到。
          * 送出中不顯示（那時按鈕本來就該是灰的，不是使用者的問題）。
          */}
+        {/**
+         * Info: (20260908 - Julian) 「本次異動」——生效月份與原因（計劃書 §4.1）。
+         *
+         * ## 為什麼在footer上方，不在四個分頁裡面
+         *
+         * 那四個分頁描述的是**這個人**（身分、薪資、投保、其他），
+         * 這一段描述的是**這次修改**。放進任何一個分頁都會讓它看起來像
+         * 員工檔的一個屬性，而它不是：同一位員工會有很多次異動，
+         * 每一次有自己的生效月與原因。
+         *
+         * ## 為什麼新增時不顯示
+         *
+         * 建檔沒有「從哪個月開始」的問題 —— 那個人的第一筆條件就是他的起點。
+         * 多問一次只會讓新增員工這件事變麻煩，而答案永遠是同一個。
+         * 建檔那一列的生效月由伺服器補當期（POST route）。
+         */}
+        {!isAdd && (
+          <div className="border-stroke-neutral-quaternary flex flex-col gap-[8px] border-t px-[20px] py-[12px] md:px-[40px]">
+            <div className="flex flex-col gap-[8px] md:flex-row md:items-end md:gap-[16px]">
+              <div className="flex flex-1 flex-col gap-[6px]">
+                <FieldLabel
+                  text={t("calculator.employee_list.effective_month")}
+                  required
+                />
+                <input
+                  type="month"
+                  value={effectiveMonthInput}
+                  onChange={(e) => setEffectiveMonthInput(e.target.value)}
+                  disabled={isSubmitting}
+                  className="border-stroke-neutral-quaternary text-text-neutral-primary h-[44px] rounded-xl border px-[12px] text-sm outline-none focus:border-orange-600"
+                />
+              </div>
+              <div className="flex flex-[2] flex-col gap-[6px]">
+                <FieldLabel
+                  text={t("calculator.employee_list.change_reason")}
+                />
+                <input
+                  type="text"
+                  value={reasonInput}
+                  maxLength={200}
+                  placeholder={t(
+                    "calculator.employee_list.change_reason_placeholder",
+                  )}
+                  onChange={(e) => setReasonInput(e.target.value)}
+                  disabled={isSubmitting}
+                  className="border-stroke-neutral-quaternary text-text-neutral-primary placeholder:text-text-neutral-tertiary h-[44px] rounded-xl border px-[12px] text-sm outline-none focus:border-orange-600"
+                />
+              </div>
+            </div>
+            <p className="text-text-neutral-tertiary text-xs leading-relaxed">
+              {t("calculator.employee_list.effective_month_hint")}
+            </p>
+          </div>
+        )}
         {blockingReason !== null && !isSubmitting && (
           <p className="text-text-neutral-tertiary border-stroke-neutral-quaternary border-t px-[20px] py-[4px] text-xs md:px-[40px]">
             {blockingReason}

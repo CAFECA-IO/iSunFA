@@ -84,6 +84,63 @@ export const calculator = {
     hire_date: "입사일",
     resign_date: "퇴사일",
     date_order_error: "퇴사일은 입사일보다 이를 수 없습니다",
+    effective_month: "적용 시작 월",
+    effective_month_hint:
+      "오늘 날짜가 아니라 이 변경이 「어느 월 급여부터 적용되는지」를 입력합니다. 과거 내역을 등록하거나 나중에 시작되는 변경이라면 실제 적용 월로 바꿔 주세요.",
+    change_reason: "변경 사유",
+    change_reason_placeholder: "예: 연봉 조정, 승진, 보험 등급 변경",
+    field_labels: {
+      baseSalary: "기본급",
+      mealAllowance: "식대",
+      otherAllowanceTaxable: "기타 수당(과세)",
+      otherAllowanceTaxFree: "기타 수당(비과세)",
+      isForeignWorker: "비거주자",
+      baseSalary30Days: "30일 고정 계산",
+      isLaborInsured: "산재보험",
+      isHealthInsured: "건강보험",
+      isPensionInsured: "퇴직연금",
+      industryCode: "업종",
+      dependentsCount: "부양가족 수",
+      voluntaryPensionRate: "본인 부담률",
+      hireDate: "입사일",
+      resignDate: "퇴사일",
+      leaveStartDate: "휴직 시작일",
+      leaveEndDate: "복직일",
+      name: "이름",
+      number: "사번",
+      email: "이메일",
+      employmentType: "고용 형태",
+    },
+    field_true: "예",
+    field_false: "아니오",
+    action_create: "등록",
+    action_update: "변경",
+    action_delete: "삭제",
+    timing_backdated: "소급 등록",
+    timing_scheduled: "사전 설정",
+    history_title: "급여 변경 이력",
+    history_loading: "불러오는 중…",
+    history_load_failed:
+      "변경 이력을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    history_load_more: "이전 이력 불러오기",
+    history_empty: "이 직원의 급여 조건 변경 기록이 아직 없습니다",
+    history_empty_filtered:
+      "선택한 항목에 변경 기록이 없습니다. 항목을 더 선택해 보세요.",
+    history_field_filter: "이 항목의 변경만 표시",
+    history_since:
+      "이 이력은 {{date}}부터입니다. 그 이전의 변경은 기록되지 않았습니다 —— 이전 조건은 각 월 「급여 기록」의 입력 내용을 확인하세요.",
+    history_no_record_yet:
+      "이 기능이 도입된 이후 이 직원의 급여 조건 변경이 기록된 적이 없습니다. 이전 조건은 각 월 「급여 기록」의 입력 내용을 확인하세요.",
+    history_count: "{{total}}건 중 {{shown}}건 표시",
+    recorded_by: "{{name}}이(가) {{at}}에 기록",
+    unknown_user: "알 수 없는 사용자",
+    history: "변경 이력",
+    leave_start_date: "휴직 시작일",
+    leave_end_date: "복직일",
+    leave_hint:
+      "휴직: 이 기간에 온전히 포함되는 달은 급여명세서 누락으로 보지 않습니다. 시작일은 휴직 첫날, 복직일은 다시 출근하는 첫날을 입력하세요 —— 이 두 달은 근무일이 있으므로 포함됩니다. 아직 복직하지 않았다면 비워 두세요.",
+    leave_order_error: "복직일은 휴직 시작일보다 이를 수 없습니다",
+    leave_start_required: "휴직 시작일도 입력하세요",
     main_title: "직원 목록",
     name: "직원 이름",
     number: "사원 번호",
@@ -116,11 +173,15 @@ export const calculator = {
     remove_employee_content: "직원 목록에서 {{name}} 님을 삭제하시겠습니까?",
     remove_employee_submit_btn: "네, 직원을 삭제합니다.",
     no_email: "미입력",
-    missing_email_banner:
-      "{{count}}명의 이메일이 비어 있어 급여명세서를 보낼 수 없습니다",
-    only_missing_email: "해당 직원만 보기",
-    show_all: "전체 보기",
+    missing_records_badge: "{{count}}개월 누락",
     no_filter_result: "조건에 맞는 직원이 없습니다",
+    missing_records_rest: "그 외 {{count}}개월",
+    no_hire_date: "미입력",
+    filter_missing_email: "이메일 없음",
+    filter_missing_hire_date: "입사일 없음",
+    missing_hire_date_banner:
+      "{{count}}명의 직원에게 입사일이 없습니다. 입력하면 어느 달의 급여명세서가 누락되었는지 확인할 수 있습니다",
+    filter_missing_records: "급여명세서 누락",
   },
   result: {
     base_salary_with_tax: "기본급(과세 대상)",
@@ -157,7 +218,12 @@ export const calculator = {
     monthly_pay: "이달의 급여",
     total_employer_cost: "회사 총 부담금",
     reported: "원천징수 신고 금액",
+    hire_date: "입사일",
+    insured_yes: "가입",
+    insured_no: "미가입",
     paid: "실제 지급 금액",
+    hide_values: "금액 숨기기",
+    show_values: "금액 표시",
   },
   warnings: {
     title: "경고 메시지",
@@ -197,6 +263,8 @@ export const calculator = {
       "급여명세서를 보내지 못했습니다. 잠시 후 다시 시도해 주세요.",
   },
   my_pay_slip: {
+    record_deleted:
+      "이 급여 기록은 삭제되어 내용을 볼 수 없습니다. 발송 기록은 이 목록에 남아 있습니다.",
     main_title: "내 급여 명세서",
     tab_received: "내가 받은 명세서",
     tab_sent: "내가 보낸 명세서",
@@ -225,6 +293,8 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) 계산기 페이지에서 바로 저장, 그리고 두 가지 예외
   save_record: {
+    profile_diff_reason: "변경 사유(선택, 직원 정보를 업데이트할 때만 기록)",
+    profile_diff_reason_placeholder: "예: 연봉 조정, 승진, 보험 등급 변경",
     profile_diff_title: "직원 정보도 함께 업데이트할까요？",
     profile_diff_content:
       "계산기 설정이 「{{name}}」님의 직원 정보와 다릅니다. 차이는 다음과 같습니다：",
@@ -264,6 +334,20 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) 급여 기록 조회
   records: {
+    base_salary_delta_inline: "{{month}}월 대비 {{sign}}{{amount}}",
+    base_salary_delta_title: "{{year}}년 {{month}}월의 기본급 변동",
+    base_salary_delta_vs: "{{year}}년 {{month}}월과 비교",
+    base_salary_no_change_record:
+      "이번 달 기본급이 이전 기록과 다르지만 대응하는 직원 정보 변경 기록이 없습니다. 직원 목록에서 수정한 뒤 적용 시작 월을 {{year}}년 {{month}}월로 설정해 주세요.",
+    base_salary: "기본급",
+    base_salary_change_aria: "{{year}}년 {{month}}월의 기본급 변경 보기",
+    base_salary_change_title: "{{year}}년 {{month}}월부터의 기본급 변경",
+    base_salary_change_count:
+      "이번 달에 기본급 변경이 {{count}}건 있었습니다. 위 숫자는 순변동입니다.",
+    base_salary_change_recorded: "기록",
+    base_salary_change_full_history: "전체 급여 변경 이력 보기",
+    base_salary_mismatch:
+      "이번 달 급여는 기본급 {{used}}(으)로 계산되었으며, 변경 후 값 {{changed}}과 일치하지 않습니다. 이 급여에 새 기본급을 적용해야 한다면 다시 계산하여 저장하세요.",
     main_title: "급여 기록",
     pay_period: "지급 기간",
     pay_period_value: "{{year}}년 {{month}}월",
@@ -310,6 +394,15 @@ export const calculator = {
       "한 번에 최대 {{max}}건까지 내보낼 수 있습니다. 선택을 줄여 주세요",
     export_failed: "내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.",
   },
+  access: {
+    checking: "권한을 확인하는 중…",
+    check_failed:
+      "이 장부에서의 권한을 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    denied_title: "이 장부의 급여 기능은 이용할 수 없습니다",
+    denied_desc:
+      "급여 계산기, 급여 기록, 직원 목록은 장부의 소유자와 편집자에게만 열려 있습니다. 이 장부에서 회원님의 역할은 읽기 전용이므로 이 영역은 표시되지 않습니다. 사용이 필요하면 소유자에게 역할 변경을 요청하세요.",
+    denied_public_link: "공개 급여 계산기 사용하기",
+  },
   account_book_entry: {
     title: "이번 계산을 저장할까요?",
     hint_save:
@@ -329,6 +422,8 @@ export const calculator = {
     re_send: "급여 명세서 재발송",
     send_disabled_unsaved:
       "급여 기록을 먼저 저장해야 급여명세서를 보낼 수 있습니다",
+    send_disabled_unlinked:
+      "이 계산은 직원 연결이 해제되었습니다. 직원을 다시 선택하세요",
     send_disabled_no_email:
       "이 직원에게 이메일 주소가 없습니다. 먼저 직원 목록에서 추가해 주세요",
     send_disabled_employee_gone:
@@ -336,6 +431,9 @@ export const calculator = {
     send_disabled_loading: "직원 목록을 확인하는 중...",
   },
   message: {
+    send_pay_slip_success_title: "급여명세서를 보냈습니다",
+    send_pay_slip_success_content:
+      "{{month}} 급여명세서를 {{name}}({{email}})에게 보냈습니다.",
     name_error_title: "직원 이름 미입력",
     name_error_content: "다음 단계로 이동하기 전에 직원 이름을 입력해 주세요.",
     salary_error_title: "급여 입력 오류",

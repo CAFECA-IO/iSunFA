@@ -423,12 +423,41 @@ export const querySiteSubtotals = (
       MoneyUtil.add(subtotals.get(site) ?? "0", entry.co2eKg),
     );
   });
-  const facts = [...subtotals.entries()].map(([site, subtotal]) => ({
+  /*
+   * Info: (20260909 - Emily) 排放量由大到小,同額以廠址名排(#6783 review 低-2)。
+   *
+   * 原本是 Map 的插入順序 —— 也就是「哪個廠址的分錄先出現」,沒有意義而且
+   * 一旦要裁就會裁掉任意的幾個(可能正是最大的那幾個)。排序方式與
+   * `queryTopEmitters` 同一個慣例:Decimal 比大小、名稱當決勝鍵(決定性)。
+   */
+  const ranked = [...subtotals.entries()].sort(([siteA, a], [siteB, b]) => {
+    const byAmount = MoneyUtil.toDecimal(b).comparedTo(MoneyUtil.toDecimal(a));
+    if (byAmount !== 0) return byAmount;
+    return siteA < siteB ? -1 : 1;
+  });
+  const listed = ranked.slice(0, LEDGER_FACT_SITES_MAX);
+  const rest = ranked.slice(LEDGER_FACT_SITES_MAX);
+  const facts: ILedgerFact[] = listed.map(([site, subtotal]) => ({
     label: `${site} 排放小計`,
     value: `${subtotal} kgCO2e`,
     source: `原文照錄 ${tableRefs(tableNos)} 分錄加總`,
     emissionsKg: [subtotal],
   }));
+  /**
+   * Info: (20260909 - Emily) 超過上限的廠址併成一筆「另有 N 個」(#6783 review 低-2)。
+   *
+   * 省略不提會讓各廠址小計加不回匯入分錄的總量,而那正是查核者第一個會做的檢查
+   * (與「未標註 ISO 類別」那一桶同一把尺)。所以說出來,數字自己說話。
+   */
+  if (rest.length > 0) {
+    const remainder = MoneyUtil.sum(rest.map(([, subtotal]) => subtotal));
+    facts.push({
+      label: `另有 ${rest.length} 個廠址 排放小計`,
+      value: `${remainder} kgCO2e`,
+      source: `原文照錄 ${tableRefs(tableNos)} 分錄加總(排放量前 ${LEDGER_FACT_SITES_MAX} 大之外的 ${rest.length} 個廠址合計)`,
+      emissionsKg: [remainder],
+    });
+  }
   return { ok: true, facts };
 };
 
@@ -707,6 +736,31 @@ export const queryYearOverYear = (
 export const LEDGER_FACT_BUNDLE_MAX = 80;
 /** Info: (20260825 - Emily) 「最高的碳排是什麼」要答得出前幾名,固定取 5:決定性,不隨帳本大小變 */
 export const LEDGER_FACT_TOP_EMITTERS = 5;
+/**
+ * Info: (20260909 - Emily) 廠址小計的上限(#6783 review 低-2)。
+ *
+ * 這是 `core` 裡**唯一沒有上界**的那一組 —— 一個廠址一筆。而事實包的裁剪
+ * (`buildLedgerFactBundle` 的 `budget`)只裁 `anomalies`,於是廠址一多,
+ * 先是把疑點全部擠掉,再往上就整包超過 `LEDGER_FACT_BUNDLE_MAX`,
+ * 而 validator 的 `ledgerFacts` 是 `.max(80)` —— **整個聊天請求被 schema 打回**,
+ * 那間帳本的每一則訊息都失敗。不是降級,是全失敗。實測 80 個廠址 → 90 筆。
+ *
+ * 有了這個上界,`core` 的最大筆數算得出來:
+ *
+ *     1  全公司總量
+ *   + 20 範疇(3 個範疇合計 + 最多 17 個 GHG 類別鍵)
+ *   + 7  ISO 類別(6 個類別 + 未標註)
+ *   + 13 廠址(上限 12 + 「另有 N 個」那一筆)
+ *   + 5  前五大
+ *   + 1  年間比較無法進行
+ *   = 47
+ *
+ * 「維度無法拆分」那兩筆不進最大值:它們與對應的小計互斥(有小計就不會有那一筆)。
+ * 於是疑點至少還有 `80 - 47 - 1 = 32` 個位置,而超出的部分仍由「異常事實逾上限」
+ * 那一筆誠實交代。上限本身由測試釘住(見 `carbon_ledger_query.test.ts` 的
+ * 「事實包在最壞情況下仍不超過上限」)。
+ */
+export const LEDGER_FACT_SITES_MAX = 12;
 
 /**
  * Info: (20260825 - Emily) 標準事實包(#6707 第二層的輸入):每一則聊天請求隨行注入。
@@ -781,12 +835,63 @@ const yearComparisonUnavailableFact = (
   ];
 };
 
+/**
+ * Info: (20260909 - Emily) 某個維度拆不出來時的**說明**(#6783 review 低-3)。
+ *
+ * 與 `yearComparisonUnavailableFact` 是同一個缺口的同一種修法:拒答經
+ * `toContextFacts` 一律不產生事實,於是「這本帳沒有這個維度」在清單裡是沉默的,
+ * 而**沉默無法區分「查過」與「沒查」** —— 對 LLM 尤其危險:
+ *
+ *   使用者問「ISO 類別三排多少」→ 清單裡沒有類別維度,也沒有一句話說它不存在
+ *   → 守規矩的模型拒答;不守規矩的拿「範疇三合計」充當答案,而那是錯的
+ *     (ISO 類別三只有運輸,GHG 範疇三 = 類別三+四+五+六)
+ *
+ * 而這種替代**騙得過出口守門**:守門裁決的是數字,而範疇三那個數字是合法的,
+ * 錯的是標籤。所以要在事實層面就說清楚。
+ *
+ * 拒答的 `missing` 本來就是寫給人看的一句話(「帳本中沒有帶 ISO 14064 類別的分錄
+ * (類別來自匯入的原文表格):目前無法按類別拆分,只能按 GHG Protocol 範疇」),
+ * 這裡直接用它 —— 不另寫第二份文案,那會與拒答漂移。
+ *
+ * 三個邊界:
+ * - **只處理 `DIMENSION_ABSENT`**。另一個拒答理由 `LEDGER_EMPTY` 只在帳本一筆分錄
+ *   都沒有時出現,那時每個查詢都拒答、persona 走「無事實」分支,多這幾筆只會讓
+ *   空帳本的畫面更吵(同 `yearComparisonUnavailableFact` 的判斷)。
+ *   所以這裡**只有這一道 guard**:原本還多寫了一個 `!hasEntries(ledger)`,而
+ *   `LEDGER_EMPTY` 本來就等價於它 —— 兩道互相遮蔽,任一道拿掉測試都照綠
+ *   (實跑確認過)。留一道測得出來的,而不是兩道測不出來的。
+ * - 進 core 不進 anomalies:它不是疑點,也不該被上限裁掉。
+ * - **不帶 `emissionsKg`**:它不是排放數字,出口守門不該把它當合法來源。
+ */
+const dimensionUnavailableFact = (
+  dimension: string,
+  result: ILedgerQueryResult,
+): IContextFact[] => {
+  if (result.ok) return [];
+  if (result.refusal.reason !== LedgerRefusalReasonEnum.DIMENSION_ABSENT) {
+    return [];
+  }
+  return [
+    {
+      label: `${dimension}拆分:無法進行`,
+      value: result.refusal.missing,
+      source: "帳本維度盤點(不是排放數字)",
+    },
+  ];
+};
+
 export const buildLedgerFactBundle = (
   ledger: IComputedLedger | undefined,
   importBlocks?: ILedgerImportBlock[],
   ledgerByYear?: Record<number, IComputedLedger>,
   yearWarning?: ILedgerYearWarning,
 ): IContextFact[] => {
+  /*
+   * Info: (20260909 - Emily) 兩個維度的查詢各跑一次,結果同時餵給「小計」與
+   * 「拆不出來的說明」(#6783 review 低-3):同一個結果的兩面,不重複查詢。
+   */
+  const isoResult = queryIsoCategorySubtotals(ledger);
+  const siteResult = querySiteSubtotals(ledger);
   const core = [
     ...toContextFacts(queryTotal(ledger)),
     /*
@@ -794,9 +899,11 @@ export const buildLedgerFactBundle = (
      * 不挑一個。使用者的報告是照 ISO 類別編的、而系統的小計欄是 GHG 範疇,
      * 只給一邊就等於要模型自己換算 —— 那是它最會出錯的地方(類別三 ≠ 範疇三)。
      */
-    ...toContextFacts(queryIsoCategorySubtotals(ledger)),
-    ...toContextFacts(querySiteSubtotals(ledger)),
+    ...toContextFacts(isoResult),
+    ...toContextFacts(siteResult),
     ...toContextFacts(queryTopEmitters(ledger, LEDGER_FACT_TOP_EMITTERS)),
+    ...dimensionUnavailableFact("ISO 14064-1 類別", isoResult),
+    ...dimensionUnavailableFact("廠址", siteResult),
     ...yearComparisonUnavailableFact(ledgerByYear, ledger),
   ];
   /**
