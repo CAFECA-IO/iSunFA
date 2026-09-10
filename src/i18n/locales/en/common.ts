@@ -31,7 +31,7 @@ export const common = {
     pdf_framework_claim:
       "The report text claims the company complies with {{name}}. The export was stopped, because a PDF leaves the system for good once it exists. Remove that sentence and export again \u2014 a statement about the document\u2019s structure is still allowed.",
     pdf_download_needs_preview:
-      "Switch to PDF preview before downloading — the download is exactly what the preview shows",
+      "Switch to PDF preview before downloading — the PDF has the same content as the preview, plus a table of contents and page numbers",
     default: "System error, please try again later",
   },
   refresh: "Refresh",

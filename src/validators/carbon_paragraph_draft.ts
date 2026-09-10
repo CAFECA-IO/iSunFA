@@ -2,7 +2,10 @@
 
 import { z } from "zod";
 import { CARBON_REPORT_OUTLINE } from "@/constants/carbon_report_outline";
-import { CARBON_CHAT_AI_CONTEXT_SIZE } from "@/constants/carbon_chatbot";
+import {
+  CARBON_CHAT_AI_CONTEXT_SIZE,
+  LEDGER_FACT_VALUE_MAX_LENGTH,
+} from "@/constants/carbon_chatbot";
 import { ChatRoleEnum } from "@/types/carbon_chatbot.types";
 import { CarbonDisclosureFrameworkEnum } from "@/constants/carbon_report_framework";
 
@@ -28,7 +31,7 @@ export const CarbonParagraphDraftRequestSchema = z.object({
     .array(
       z.object({
         label: z.string().min(1).max(200),
-        value: z.string().min(1).max(500),
+        value: z.string().min(1).max(LEDGER_FACT_VALUE_MAX_LENGTH),
         source: z.string().max(200).optional(),
       }),
     )
