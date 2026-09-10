@@ -279,15 +279,43 @@ const salaryCalculator = (
   // Info: (20250814 - Luphia) 是否使用 30 日制計算薪資
   const isUsing30DaysSystem = options.baseSalary30Days ?? false;
 
-  // Info: (20250814 - Luphia) 取得記錄月份總日數
+  /**
+   * Info: (20250814 - Luphia) 取得記錄月份總日數。
+   *
+   * Info: (20260910 - Luphia) 這一行**維持本地時間，而且是對的**（#6798）。
+   *
+   * `new Date(year, month, 0)` 是拿兩個整數建出「上個月的最後一天」，
+   * 不是在讀一個時間戳 —— 任何時區建出來的日數都相同。
+   * 下面那兩行才是要改的：它們讀的是資料庫存的 UTC 午夜。
+   */
   const realDaysInMonth = new Date(year, month, 0).getDate();
-  // Info: (20250814 - Luphia) 取得員工記薪起始日
+
+  /**
+   * Info: (20250814 - Luphia) 取得員工記薪起始日／結束日。
+   *
+   * Info: (20260910 - Luphia) **`getUTCDate()`，不是 `getDate()`**（#6798）。
+   *
+   * 這兩個時間戳是 UTC 午夜：`salary_calculator_snapshot.ts` 的 `toTimestamp`
+   * 組的是 `new Date("2026-08-01")`，裸 ISO 日期字串由 JS 當成 UTC 解析。
+   * 用本地時間讀回來，在 UTC 以西的時區會退一天 —— 而**月初到職是最糟的**：
+   *
+   *     存的是      2026-08-01T00:00:00.000Z
+   *     getUTCDate()  → 1
+   *     getDate()     → 31   （America/New_York）
+   *
+   * 也就是 8/1 到職被算成 8/31 到職，那個月的薪水從整月變成一天。
+   * 這不是顯示問題，是**金額**。
+   *
+   * 反方向的映射一直都是對的（`salary_calculator_snapshot.ts` 的 `toDayString`
+   * 用的就是 `getUTCDate()`）—— 兩個方向互相矛盾，而在台灣（UTC+8）讀 UTC 午夜
+   * 會得到同一天，所以現有使用者永遠看不到差別。判準因此只能靠釘住時區的
+   * 那一輪：`salary_calculator.tz.test.ts`。
+   */
   const employeeStartDate = options.employeeStartDate
-    ? new Date(options.employeeStartDate * 1000).getDate()
+    ? new Date(options.employeeStartDate * 1000).getUTCDate()
     : 1;
-  // Info: (20250814 - Luphia) 取得員工記薪結束日
   const employeeEndDateRaw = options.employeeEndDate
-    ? new Date(options.employeeEndDate * 1000).getDate()
+    ? new Date(options.employeeEndDate * 1000).getUTCDate()
     : realDaysInMonth;
   const employeeEndDate =
     employeeEndDateRaw > realDaysInMonth ||
