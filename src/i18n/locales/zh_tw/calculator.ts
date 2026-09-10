@@ -84,6 +84,55 @@ export const calculator = {
     hire_date: "到職日",
     resign_date: "離職日",
     date_order_error: "離職日不得早於到職日",
+    effective_month: "生效月份",
+    effective_month_hint:
+      "填的是這次調整「從哪一個月的薪資開始適用」，不是今天的日期。補登或預先調整時請改成實際生效的月份。",
+    change_reason: "異動原因",
+    change_reason_placeholder: "例如：年度調薪、升遷、投保級距調整",
+    field_labels: {
+      baseSalary: "本薪",
+      mealAllowance: "伙食費",
+      otherAllowanceTaxable: "其他加給（應稅）",
+      otherAllowanceTaxFree: "其他加給（免稅）",
+      isForeignWorker: "非本國居住者",
+      baseSalary30Days: "固定 30 天計薪",
+      isLaborInsured: "勞保",
+      isHealthInsured: "健保",
+      isPensionInsured: "勞退",
+      industryCode: "行業別",
+      dependentsCount: "扶養人數",
+      voluntaryPensionRate: "自提勞退比例",
+      hireDate: "到職日",
+      resignDate: "離職日",
+      leaveStartDate: "留職停薪起日",
+      leaveEndDate: "復職日",
+      name: "員工姓名",
+      number: "員工編號",
+      email: "電子郵件",
+      employmentType: "僱用型態",
+    },
+    field_true: "是",
+    field_false: "否",
+    action_create: "建檔",
+    action_update: "調整",
+    action_delete: "移除",
+    timing_backdated: "補登",
+    timing_scheduled: "預先設定",
+    history_title: "薪資異動紀錄",
+    history_loading: "載入中…",
+    history_load_failed: "異動紀錄載入失敗，請稍後再試",
+    history_load_more: "載入更早的紀錄",
+    history_empty: "這位員工還沒有任何薪資條件變動",
+    history_empty_filtered: "目前勾選的欄位沒有任何變動紀錄，試試多勾幾個欄位",
+    history_field_filter: "只看這些欄位的變動",
+    history_since:
+      "本紀錄自 {{date}} 起。此日之前的調整未被記錄——更早的薪資條件請查閱各月「薪資紀錄」的輸入內容。",
+    history_no_record_yet:
+      "這位員工自本功能上線後尚未有任何薪資條件變動。更早的薪資條件請查閱各月「薪資紀錄」的輸入內容。",
+    history_count: "顯示 {{shown}} / {{total}} 筆",
+    recorded_by: "由 {{name}} 於 {{at}} 記錄",
+    unknown_user: "未知使用者",
+    history: "異動紀錄",
     leave_start_date: "留職停薪起日",
     leave_end_date: "復職日",
     leave_hint:
@@ -167,7 +216,12 @@ export const calculator = {
     monthly_pay: "本月薪資",
     total_employer_cost: "公司總負擔",
     reported: "扣繳憑單金額",
+    hire_date: "到職日",
+    insured_yes: "投保",
+    insured_no: "未投保",
     paid: "實際發放金額",
+    hide_values: "隱藏金額",
+    show_values: "顯示金額",
   },
   warnings: {
     title: "警示訊息",
@@ -202,6 +256,8 @@ export const calculator = {
     error_generic: "薪資單寄送失敗，請稍後再試一次。",
   },
   my_pay_slip: {
+    record_deleted:
+      "這筆薪資紀錄已被刪除，看不到內容了。寄送紀錄仍然保留在這份清單上。",
     main_title: "我的薪資單",
     tab_received: "我收到的薪資單",
     tab_sent: "我寄出的薪資單",
@@ -229,11 +285,13 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) 計算機頁的直接儲存與兩個例外
   save_record: {
+    profile_diff_reason: "異動原因（選填，只在更新員工資料時記錄）",
+    profile_diff_reason_placeholder: "例如：年度調薪、升遷、投保級距調整",
     profile_diff_title: "順便更新員工資料嗎？",
     profile_diff_content:
       "計算機上的設定與「{{name}}」的員工資料不一樣。以下是差異：",
     profile_diff_hint:
-      "這次的薪資紀錄一定會照計算機上的值儲存，這裡問的只是要不要把員工資料也一起改掉。選「只存這一次」的話，員工資料維持原樣。",
+      "這次的薪資紀錄一定會照計算機上的值儲存，這裡問的只是要不要把員工資料也一起改掉。選「只存這一次」的話，員工資料維持原樣，而這次的調整**不會留下異動紀錄**（薪資紀錄上仍然看得到金額的變化，但看不到是誰改的、為什麼）。",
     profile_diff_update_btn: "更新員工資料並儲存",
     profile_diff_skip_btn: "只存這一次",
     profile_diff_failed: "更新失敗，請稍後再試",
@@ -266,6 +324,20 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) 薪資紀錄查閱
   records: {
+    base_salary_delta_inline: "較 {{month}} 月 {{sign}}{{amount}}",
+    base_salary_delta_title: "{{year}} 年 {{month}} 月的本薪變動",
+    base_salary_delta_vs: "較 {{year}} 年 {{month}} 月",
+    base_salary_no_change_record:
+      "這個月的本薪與上一筆不同，但沒有對應的員工資料異動紀錄。請到員工列表編輯，並把生效月份設為 {{year}} 年 {{month}} 月。",
+    base_salary: "本薪",
+    base_salary_change_aria: "查看 {{year}} 年 {{month}} 月的本薪異動",
+    base_salary_change_title: "{{year}} 年 {{month}} 月起的本薪異動",
+    base_salary_change_count:
+      "本月共有 {{count}} 筆本薪異動，上方顯示的是淨變動。",
+    base_salary_change_recorded: "記錄",
+    base_salary_change_full_history: "查看完整調薪歷程",
+    base_salary_mismatch:
+      "這個月的薪資是用本薪 {{used}} 試算的，與異動後的 {{changed}} 不一致。若這筆薪資應該套用新的本薪，請重新試算並儲存。",
     main_title: "薪資紀錄",
     pay_period: "給付期間",
     pay_period_value: "{{year}} 年 {{month}} 月",
@@ -309,6 +381,14 @@ export const calculator = {
     export_too_many: "一次最多匯出 {{max}} 筆，請先取消一些選取",
     export_failed: "匯出失敗，請稍後再試一次。",
   },
+  access: {
+    checking: "確認權限中…",
+    check_failed: "無法確認您在這本帳的權限，請稍後再試",
+    denied_title: "這本帳的薪資功能未對您開放",
+    denied_desc:
+      "薪資計算機、薪資紀錄與員工列表只開放給帳本的擁有者與編輯者。您在這本帳是唯讀成員，因此看不到這一區。需要使用的話，請向帳本擁有者調整您的角色。",
+    denied_public_link: "改用公開版薪資計算機",
+  },
   account_book_entry: {
     title: "想把這次的試算存起來嗎？",
     hint_save: "帳本版可以儲存薪資紀錄、管理員工列表。",
@@ -329,6 +409,9 @@ export const calculator = {
     send_disabled_loading: "正在確認員工名單…",
   },
   message: {
+    send_pay_slip_success_title: "薪資單已寄出",
+    send_pay_slip_success_content:
+      "{{month}} 的薪資單已寄給 {{name}}（{{email}}）。",
     name_error_title: "員工姓名未填寫",
     name_error_content: "請在前往下一步之前輸入員工姓名",
     salary_error_title: "薪資輸入有誤",

@@ -4,9 +4,18 @@
 > 撰寫：20260831 - Julian
 > 涵蓋 PR 1（資料層與後端骨架）與 PR 4 的「員工編號成為身分鍵」schema 調整。
 > API 端點（PR 2）、路由拆分（PR 3）與 PR 5（移除員工列表頁、薪資紀錄的篩選與視覺、
-> 預覽薪資單修復）**都不改 schema** —— 所以這份檢查表到今天仍然是完整的，
-> 不需要因為那些 PR 而補步驟。
+> 預覽薪資單修復）**都不改 schema**，不需要因為那些 PR 而補步驟。
 > 但**版號 bump 每個 PR 都要做**（`code_review_checklist §6.2`）。
+>
+> **20260909 追記：這份檢查表在 §1.4 之前是不完整的。**
+> 上面那句話原本接著寫「所以這份檢查表到今天仍然是完整的」——
+> 那是 PR 5 當時的事實，而 `feature/enhance_employee_calculator_ui`
+> 改了四處 schema、其中一處需要回填，那句話因此變成假的而沒有人動它。
+> 這正是 `code_review_checklist §6`（文件與程式碼的一致性）那條原則的情況 ——
+> 「**當事實與條文衝突時，改條文**」。而這裡要改的條文有個額外的性質：
+> **一份逐 PR 累積的文件，「還是完整的」這種斷言會隨時間自己過期。**
+> 所以這一版把那句話改成敘述當時的範圍，不再宣稱現在的完整性 ——
+> 新的 schema 變更請比照 §1.4 往下加一節。
 
 ---
 
@@ -274,6 +283,110 @@ PR 4 改成用 **員工編號**。差異：
   萬一資料庫裡還有殘留的 `ADMIN` 列，它讀寫都會被擋 —— 這是刻意的
   （表外一律擋，不是一律放行），但上線前值得先查一次還有沒有這種列。
 
+## 1.4 PR D–G：調薪歷程、本薪純量欄、薪資紀錄軟刪除（20260908–09）
+
+`feature/enhance_employee_calculator_ui` 一共動了 **4 處** schema。
+前三處是新增，第四處是既有 enum 加一個值：
+
+| #   | 變更                                                                         | 型別／預設           | 需要回填 |
+| --- | ---------------------------------------------------------------------------- | -------------------- | -------- |
+| 1   | 新表 `salary_employee_profile_change` ＋ 新 enum `SalaryProfileChangeAction` | —                    | 不需要   |
+| 2   | `salary_record.base_salary_snapshot`                                         | `BigInt @default(0)` | **需要** |
+| 3   | `salary_record.deleted_at`                                                   | `DateTime?`（可空）  | 不需要   |
+| 4   | `AuditLogDataType` 加 `SALARY_RECORD`                                        | 既有 enum 加值       | 不需要   |
+
+另外在 `user`、`account_book`、`salary_calculator_employee` 三個 model 加了
+反向關聯宣告 —— 與 §1 同理，那是 Prisma 層的宣告，**不產生任何 DB 欄位**。
+
+### 1.4.1 `base_salary_snapshot` 的 `@default(0)` 是**錯的值**，不是空值
+
+這一欄是 `input_snapshot.baseSalaryTaxable` 的純量投影，讓薪資紀錄列表算得出
+「這個月的本薪較上一筆多／少多少」。
+
+給 `@default(0)` 的唯一理由是**讓 `db push` 過得去**：本專案沒有
+`prisma/migrations/`，新增一個必填且無預設的欄位會讓既有的列直接 push 失敗
+（與 §1.2.1「不得給 `@default`」是同一類的取捨，但結論相反 ——
+那兩欄可空，這一欄不能）。
+
+**而 `0` 會被讀進計算。** `attachBaseSalaryDeltas` 算的是
+
+    delta = 這一筆.baseSalary - 前一筆.baseSalary
+
+所以不跑回填的症狀分兩個階段，**而第一個階段看起來是好的**：
+
+| 什麼時候                         | 畫面上                                                                                                                              |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **剛上線，還沒有人存新紀錄**     | 舊列全是 `0`，於是每一列都是 `0 - 0 = ±0`，最舊的那一列顯示「無前一筆」。**完全看不出異常** —— 它看起來就是「這本帳從來沒有人調薪」 |
+| **有人存了上線後第一筆**         | 那一筆是真值、它的前一筆是 `0`，於是顯示「較上一筆 **+現值**」（本薪 44,000 的人顯示「較 8 月 +44,000」），看起來是一次巨額調薪     |
+| 同一位員工有了第二筆上線後的紀錄 | 那一筆之後又正確了 —— 錯的數字只留在交界那一筆上，而且不會自己消失                                                                  |
+
+**三個階段都沒有錯誤訊息**，API 回 200，tsc 與測試全綠。
+
+> ⚠️ **所以這一項不能靠「上線後看一眼畫面」驗收。** 上線當天畫面是乾淨的，
+> 假調薪要等到下一次發薪才長出來 —— 那時候已經不會有人聯想到部署少跑一步。
+> 檢查方式只能是 SQL，見 §5。
+
+順帶記一下**不會**發生的方向：「較上一筆 −現值」產生不出來。
+要得到負值得有「這一筆是 0、前一筆是真值」，而 0 只出現在舊列、舊列永遠比較舊，
+`upsertRecord` 又每次都寫真值 —— 所以缺 `0` 的那一邊必然是前一筆，差額只會是正的。
+
+這是 `code_review_checklist §1.12` 點名的形狀：**合法但錯的預設值**。
+它與「欄位不存在」不同，後者會噴錯，前者不會。
+
+### 1.4.2 `deleted_at`：薪資紀錄從硬刪改成軟刪除
+
+`salary_record` 原本刻意不做 soft delete（`salary_record_module_plan.md` §3.2）。
+20260909 客戶確認**勞檢調閱的是工資清冊**，而清冊就是從這張表產生的（CSV 匯出），
+勞基法 §23 II 要求它保存五年 —— 硬刪等於讓保存義務可以用一顆按鈕規避。
+
+- **不需要回填**：既有的列 `deleted_at` 為 `null`，語意就是「存活中」。
+- **不需要 `activeXxx`**：`@@unique([account_book_id, employee_id, year, month])`
+  會被已刪的那一列佔住，但 `upsertRecord` 走的正是這個複合鍵 —— 它的 update
+  分支把 `deleted_at` 設回 `null`，也就是「刪掉八月、重新存八月」會**復活**那一列。
+  這與 §1.1 的 `active_number` 是兩種不同情況：員工編號由使用者輸入、可能換人使用，
+  年月是系統決定的座標、只會是同一筆。
+- **附帶影響**：`salary_pay_slip_delivery` 的 `onDelete: Cascade` 不再會被觸發，
+  於是「刪掉薪資紀錄，寄送軌跡跟著消失」這件事沒有了 ——
+  §7 回退那一節提到的刪除順序限制仍然成立（那是手動刪 model 的情況）。
+
+### 1.4.3 `AuditLogDataType` 加值：這是既有 enum，會影響既有資料嗎
+
+不會。PostgreSQL 的 enum 加值是相容操作，既有的 `audit_log` 列不受影響。
+`dataId` 填 `SalaryRecord.id`，只在**刪除**時寫一列
+（不記建立與覆寫 —— 那些的軌跡本來就在紀錄自己身上，每次儲存都寫一筆會把這張表沖爆）。
+
+## 2.3 回填：`base_salary_snapshot`（20260909 新增，**必跑**）
+
+這是這個模組**第一個需要回填的欄位** —— §2 那兩種情況都是「不需要回填」，
+所以請不要沿用那一節的結論。
+
+```bash
+# 先看要動幾列，不寫入
+npx tsx scripts/backfill_salary_record_base_salary.ts --dry-run
+
+# 確認數字合理再跑
+npx tsx scripts/backfill_salary_record_base_salary.ts
+```
+
+- **冪等**：只碰 `base_salary_snapshot = 0` 的列，重複跑不會有副作用。
+- **跑完會印 `scanned / updated / skipped`。** `skipped` 不是 0 的話它會把那些
+  `id` 列出來 —— 那代表那幾列的 `input_snapshot` 裡沒有
+  `baseSalaryTaxable`（很舊的紀錄或手動塞的測試資料），需要人看一眼。
+- **這支腳本就是這次改動的 migration 紀錄**，刻意留在版控裡。
+  它的退場條件寫在檔頭：等到「不可能還有 `base_salary_snapshot = 0` 的正式列」
+  之後才能刪。
+
+**順序做錯的症狀。** 三種裡只有第一種是安靜的 ——
+而安靜的那一種剛好是最可能發生的那一種（少做一步，不是做錯一步）：
+
+| 做錯什麼                                   | 會不會噴錯 | 症狀                                                                                                                                              |
+| ------------------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **完全沒跑回填**                           | **不會**   | 上線當天畫面乾淨（每一列 `±0`）；下一次發薪存進去的那一筆會顯示「較上一筆 +現值」，看起來是一次巨額調薪。全程 API 回 200、測試全綠（詳見 §1.4.1） |
+| 先跑回填再 `db push`（client 已 generate） | 會         | Postgres 噴 `column "base_salary_snapshot" does not exist`，一列都沒寫進去                                                                        |
+| `db push` 了但沒 `generate`                | 會         | 腳本自己就是 TypeScript，`prisma.salaryRecord.update` 那一行 tsc 就過不了                                                                         |
+
+換句話說：**後兩種會自己攔住你，第一種不會。** 檢查方式在 §5。
+
 ## 3. 部署步驟
 
 ```bash
@@ -282,7 +395,19 @@ npx prisma db push
 
 # 2. 型別改了一定要重新產 client
 npx prisma generate
+
+# 3. 回填 base_salary_snapshot（20260909 起必跑，見 §2.3）
+npx tsx scripts/backfill_salary_record_base_salary.ts --dry-run
+npx tsx scripts/backfill_salary_record_base_salary.ts
 ```
+
+> ⚠️ **三步的順序不可調換，而且第 3 步沒跑不會有任何錯誤訊息。**
+> 逐一的症狀列在 §2.3 那張表裡。
+
+> ⚠️ **不要跑 `npx prisma format`。** 它會刪掉 `schema.prisma` 裡所有文件註解的
+> 空 `*` 行（20260909 那次一口氣刪了 194 行、diff 膨脹成 697 行），
+> 並重排與當次 PR 無關的 model —— 而那是全 repo 衝突面最高的檔案。
+> 這段警告也寫在 `schema.prisma` 的檔頭。
 
 **順序做錯的症狀**：先 `generate` 後 `push` —— client 有型別、資料庫沒有表，
 第一次儲存薪資紀錄會噴 `relation "salary_record" does not exist`，
@@ -310,6 +435,21 @@ PR B（薪資單寄送）另外新增四個，同樣都有 fallback —— 見 *
 只更新其中一份的話，讀這一節的人會以為薪資模組只有兩個 env。
 
 ## 5. 上線前的阻擋項
+
+- [ ] **確認 `base_salary_snapshot` 的回填真的跑過**（20260909 新增，見 §2.3）。
+
+      這一條需要人工確認，而且**只能用 SQL 確認**。理由寫在 §1.4.1：
+      沒跑回填是唯一不會噴錯的做錯方式，而且它上線當天連畫面都是乾淨的 ——
+      錯的數字要等到下一次發薪才出現，那時候沒有人會聯想到部署少跑一步。
+
+      ```sql
+      -- 回填後應該只剩下腳本印出來的那幾列（inputSnapshot 取不到 baseSalaryTaxable），
+      -- 以及本薪本來就是 0 的員工（少見但合法：只領津貼的部分工時）
+      select count(*) from salary_record where base_salary_snapshot = 0;
+      ```
+
+      數字對不上腳本結尾那行 `skipped=N` 的話，**先不要上線** ——
+      對不上的意思是「有列沒被掃到」，而那些列會在畫面上顯示成一次巨額調薪。
 
 - [ ] **替薪資欄位補一段資料分級決策**（計劃書 §13 第 1 點）。
 
@@ -351,19 +491,34 @@ PR B（薪資單寄送）另外新增四個，同樣都有 fallback —— 見 *
 npx prisma generate     # 沒跑這一步，下面的 tsc 會找不到 prisma.salaryRecord
 npx tsc --noEmit
 npm run test
+npm run test:tz         # `npm run test` 已經含這一步；單獨列是因為 20260908 起
+                        # 有到職日等日期欄位，UTC 以外的時區跑過才算數
 npm run test:no-dotenv
+npm run test:e2e        # 真資料庫；20260909 起薪資那兩支才第一次真的跑得起來
 npm run version         # 版號 bump（code_review_checklist §6.2）
 ```
 
 ## 7. 回退
 
-**三張表**（`salary_calculator_employee`、`salary_record`、`salary_pay_slip_delivery`）
-都沒有任何既有功能依賴，回退就是把 schema 的三個 model 與反向關聯刪掉，
+**四張表**（`salary_calculator_employee`、`salary_record`、
+`salary_pay_slip_delivery`、`salary_employee_profile_change`）
+都沒有任何既有功能依賴，回退就是把 schema 的四個 model 與反向關聯刪掉，
 重跑 `db push`。資料會一併消失 —— 若當時已經有正式薪資紀錄，先匯出。
 
-**順序有一個限制**：`salary_pay_slip_delivery` 以 `onDelete: Cascade` 指向
-`salary_record`，所以要刪的話它必須**先**走。反過來會撞外鍵。
+> Info: (20260909 - Julian) 回退到 §1.4 之前的話，另外兩處也要拆：
+> `salary_record` 的 `base_salary_snapshot` 與 `deleted_at`。
+> **`deleted_at` 拆掉之前要先確認沒有任何已軟刪除的列** ——
+> 直接刪欄位會讓那些列重新出現在清單與匯出裡，而那是使用者以為已經刪掉的紀錄。
+> `AuditLogDataType` 的 `SALARY_RECORD` 可以留著（多一個沒人用的 enum 值無害），
+> 硬要拆的話得先清掉引用它的 `audit_log` 列，否則 `db push` 會被擋。
+
+**順序有兩個限制**：`salary_pay_slip_delivery` 以 `onDelete: Cascade` 指向
+`salary_record`，所以要刪的話它必須**先**走；而
+`salary_employee_profile_change` 以 `Restrict`（預設）指向
+`salary_calculator_employee`，所以它也必須排在員工表之前。
+反過來都會撞外鍵。
 
 只回退 PR B（保留薪資紀錄、拿掉寄送功能）也是可以的：刪掉
 `SalaryPaySlipDelivery` 這一個 model 與三處反向關聯即可，
-`salary_record` 那兩張表不受影響。
+另外三張表（`salary_calculator_employee`、`salary_record`、
+`salary_employee_profile_change`）都不受影響。

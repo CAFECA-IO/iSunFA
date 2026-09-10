@@ -32,6 +32,7 @@ import {
   EMPLOYEE_NUMBER_INPUT_ID,
 } from "@/constants/salary_calculator";
 import { downloadNodeAsPng } from "@/lib/utils/pay_slip_download";
+import { paySlipMetaOf } from "@/lib/utils/pay_slip_meta";
 import {
   ISalaryCalculatorEmployee,
   ISalaryRecordSummary,
@@ -249,26 +250,48 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     await proceedSaveFor(selectedEmployeeId);
   };
 
-  // Info: (20260902 - Julian) 「更新員工檔並儲存」：先 PUT 員工，再走原本的儲存流程
-  const updateProfileAndSaveHandler = async () => {
+  /**
+   * Info: (20260902 - Julian) 「更新員工檔並儲存」：先 PUT 員工，再走原本的儲存流程
+   *
+   * Info: (20260908 - Julian) `reason` 由差異彈窗的輸入欄帶進來（計劃書 §17）。
+   *
+   * 它是選填的：舊的呼叫端不傳也編譯得過，而後端在 `reason` 缺漏時寫 null。
+   * 做成必填會把「使用者不想解釋」變成一件做不到的事 ——
+   * 而強迫填寫的結果是「調薪」「.」這種沒有資訊的字串。
+   */
+  const updateProfileAndSaveHandler = async (reason?: string) => {
     if (pendingProfileDiff === null) return;
 
     const { employee } = pendingProfileDiff;
     /**
+     * Info: (20260908 - Julian) 生效月份帶**計算機當下選的年月**，不讓伺服器補當期。
+     *
+     * 這顆按鈕的語意是「把這次算薪水用的設定寫回員工檔」，
+     * 而那次算的就是 `selectedYear` / `selectedMonth` 那個月。
+     * 12 月在跑 11 月的薪資是常態，補當期會把那筆調薪記成 12 月生效（計劃書 §4）。
+     *
      * Info: (20260905 - Luphia) 留停兩欄**原樣帶回**（#6774）。
      *
      * 計算機沒有這兩格，而寫入契約是整組必填 —— 帶 `DEFAULT_EMPLOYEE_LEAVE`
      * 會在使用者按「更新員工檔並儲存」時把已登記的留停區間清成 null，
      * 而畫面上什麼都不會說。
      */
-    await updateEmployee(employee.id, {
-      ...getEmployeeProfile(),
-      leaveStartDate: employee.leaveStartDate,
-      leaveEndDate: employee.leaveEndDate,
-      name: employee.name,
-      number: employee.number,
-      email: employee.email || undefined,
-    });
+    await updateEmployee(
+      employee.id,
+      {
+        ...getEmployeeProfile(),
+        leaveStartDate: employee.leaveStartDate,
+        leaveEndDate: employee.leaveEndDate,
+        name: employee.name,
+        number: employee.number,
+        email: employee.email || undefined,
+      },
+      {
+        effectiveYear: selectedYearNumber,
+        effectiveMonth: selectedMonthNumber,
+        reason,
+      },
+    );
 
     setPendingProfileDiff(null);
     await proceedSaveFor(employee.id);
@@ -347,6 +370,24 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     input.select();
   }, [isFocusingNumber]);
 
+  /**
+   * Info: (20260909 - Julian) 薪資單上的到職日與投保狀態。
+   *
+   * 到職日取**已連結員工檔的現值**（與伺服器產生的 PDF 同一個來源），
+   * 沒有連結員工時是 null —— 公開試算沒有員工檔，那一格會顯示 `-`，
+   * 而那是誠實的：這一次試算確實不屬於任何一個人。
+   *
+   * 投保狀態取**計算機當下的輸入**（`getSalaryCalculatorOptions()`），
+   * 不是員工檔：使用者可能剛在這一頁把勞保取消掉還沒儲存，
+   * 而下面那張薪資單上的金額已經是照取消之後算的。讀員工檔會讓
+   * 「狀態」與「金額」在同一張單子上互相矛盾。
+   */
+  const paySlipMeta = paySlipMetaOf(
+    employees.find((employee) => employee.id === selectedEmployeeId)
+      ?.hireDate ?? null,
+    getSalaryCalculatorOptions(),
+  );
+
   const confirmOverwriteHandler = async () => {
     if (pendingOverwrite === null) return;
     await saveRecordFor(pendingOverwrite.employeeId);
@@ -371,14 +412,21 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
        * 只帶姓名與兩個金額的話，建出來的檔其餘欄位全是 schema 的 `@default` ——
        * 下個月選這個人，那些預設值會覆蓋掉他今天設好的東西，而且完全靜默。
        */
-      await createEmployee({
-        ...getEmployeeProfile(),
-        // Info: (20260905 - Luphia) 新建的人沒有留停紀錄（#6774）；要登記走員工列表的編輯
-        ...DEFAULT_EMPLOYEE_LEAVE,
-        name: employeeName.trim(),
-        number: employeeNumber.trim(),
-        email: employeeEmail.trim() || undefined,
-      });
+      await createEmployee(
+        {
+          ...getEmployeeProfile(),
+          // Info: (20260905 - Luphia) 新建的人沒有留停紀錄（#6774）；要登記走員工列表的編輯
+          ...DEFAULT_EMPLOYEE_LEAVE,
+          name: employeeName.trim(),
+          number: employeeNumber.trim(),
+          email: employeeEmail.trim() || undefined,
+        },
+        // Info: (20260908 - Julian) 建檔的生效月份＝這次算薪水的那個月，理由同上
+        {
+          effectiveYear: selectedYearNumber,
+          effectiveMonth: selectedMonthNumber,
+        },
+      );
 
       const refreshed = await reload();
       // Info: (20260831 - Julian) 用編號找回剛建立的那一筆 —— 它是帳本內唯一的那一欄
@@ -556,6 +604,7 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
               selectedYear={selectedYear}
               resultData={salaryCalculatorResult}
               variant="plain"
+              meta={paySlipMeta}
             />
           </div>
         </div>

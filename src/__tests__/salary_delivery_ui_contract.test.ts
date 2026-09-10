@@ -188,12 +188,43 @@ describe("重寄彈窗：不再是假的", () => {
   });
 
   /**
-   * Info: (20260904 - Julian) 成功狀態綁在後端真的回了一列上（`sent`），
-   * 不是一個自己翻的布林 —— 上一版的 `resendSuccess` 是後者。
+   * Info: (20260908 - Julian) 成功綁在**後端真的回了一列**上，不是自己翻的布林。
+   *
+   * ## 這一條的位置變了，守的東西沒變
+   *
+   * 20260904 的版本釘的是 `else if (sent)` —— 那時候成功是這個彈窗的一種
+   * 顯示狀態，而它由 hook 的 `sent`（後端回來的那一列）決定。
+   *
+   * 20260908 成功改成「發吐司 ＋ 關窗」，彈窗不再有成功狀態，
+   * 於是 `sent` 不再被讀 —— 那條斷言跟著紅了，而它要守的事一點都沒變：
+   * **判斷成功的依據必須是 `deliver()` 的回傳值。**
+   *
+   * 所以改釘 `const delivered = await deliver(...)` 加上
+   * 「用 `delivered` 決定要不要通知」。上一版真正的缺陷
+   * （`resendSuccess` 那種自己翻的旗標）在新形狀下同樣會被抓到。
    */
-  it("成功畫面看的是後端回來的那一列，不是自己翻的旗標", () => {
+  it("成功的依據是 deliver() 的回傳值，不是自己翻的旗標", () => {
     expect(source).not.toContain("resendSuccess");
-    expect(source).toMatch(/else if \(sent\)/);
+    expect(source).toMatch(/const delivered = await deliver\(recordId\)/);
+    expect(source).toMatch(/if \(!delivered\) return;/);
+  });
+
+  /**
+   * Info: (20260908 - Julian) 成功之後**發吐司並關窗**，不是留在彈窗裡。
+   *
+   * 實測撞到的缺陷：第一次寄出的吐司做好之後，已經寄過一次的紀錄會走重寄
+   * 這一條（`lastSentAt !== null`），而它沒有發吐司 ——
+   * 使用者以為吐司整個沒生效。
+   *
+   * 順序上通知在關窗之前，理由與寄出彈窗相同（見 `pay_slip_sent_toast.test.ts`）。
+   */
+  it("重寄成功也發吐司，而且在關窗之前", () => {
+    const notify = source.indexOf("notifySent(");
+    const close = source.indexOf("modalVisibleHandler();");
+
+    expect(notify).toBeGreaterThanOrEqual(0);
+    expect(close).toBeGreaterThan(notify);
+    expect(source).toContain("isResend: true");
   });
 });
 
@@ -558,9 +589,42 @@ describe("薪資紀錄列表的寄出狀態", () => {
      */
     expect(repo).not.toContain("include: { employee: true }");
 
-    const includes = repo.match(/include:\s*[^,\n]+/g) ?? [];
-    expect(includes.length).toBeGreaterThan(2);
-    includes.forEach((site) => expect(site).toContain("RECORD_INCLUDE"));
+    /**
+     * Info: (20260908 - Julian) **這道護欄真正的位置是型別，不是這個掃描。**
+     *
+     * ## 兩次假紅之後的結論
+     *
+     * 這一條原本掃「檔案裡每一個 `include:` 都要是 `RECORD_INCLUDE`」，
+     * 20260908 一天內紅了兩次，兩次都與寄送關聯無關：
+     *
+     * 1. repository 多了一次對**別張表**的查詢（異動表），它帶著自己的 include
+     * 2. 又多了一次**只取純量欄位**的投影查詢（`select:`，算本薪差額用），
+     *    它根本不需要 include
+     *
+     * 改成數量對拍之後第二次仍然紅 —— 因為投影查詢也是一次
+     * `prisma.salaryRecord.findMany`。那種紅指向沒有壞掉的地方，
+     * 而最快的修法都是錯的（把投影塞進 `RECORD_INCLUDE`，或刪掉這條測試）。
+     *
+     * ## 型別已經守住它了
+     *
+     * `toSummary` / `toDetail` 的參數型別是 `SalaryRecordWithEmployee`，
+     * 它**要求** `employee` 與 `paySlipDeliveries`。少了 include 的查詢回來的列
+     * 沒有那兩個屬性，交給 mapper 就是編譯錯誤。
+     *
+     * 實測（20260908）：把 `listRecordsByIds` 的 `include: RECORD_INCLUDE` 拿掉，
+     * `tsc` 直接報
+     * 「missing the following properties … employee, paySlipDeliveries」。
+     *
+     * ## 所以這裡只釘型別守不住的那一半
+     *
+     * 型別唯一擋不住的是**有人把型別本身放寬**（把 `paySlipDeliveries` 改成選填、
+     * 或把 mapper 的參數改成 `SalaryRecord`）。那是這條斷言的工作。
+     */
+    expect(repo).toMatch(
+      /paySlipDeliveries: \{ createdAt: Date; recipientEmail: string \}\[\];/,
+    );
+    expect(repo).toContain("const toSummary = (row: SalaryRecordWithEmployee)");
+    expect(repo).toContain("const toDetail = (row: SalaryRecordWithEmployee)");
   });
 
   it("只有成功的那一次算「已寄出」", () => {

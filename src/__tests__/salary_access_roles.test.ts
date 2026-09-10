@@ -19,6 +19,10 @@ import {
  * 判準寫成表而不是散在八支 route 的 `if`：`role !== "OWNER" && role !== "EDITOR"`
  * 抄八次就是八次拼錯的機會，而拼錯的方向是放寬（checklist §4.3）。
  *
+ * Info: (20260908 - Julian) 20260908 起讀取也收成 `OWNER + EDITOR`
+ * （`VIEWER` 不再讀得到）。那次改動只動了 `SALARY_ACCESS_ROLES` 一個常數、
+ * 沒有碰任何一支 route —— 這張表的價值就是在那一刻兌現的。
+ *
  * ## 為什麼是純函式測試而不是打 route
  *
  * 「這道閘有沒有接上去」由 `salary_route_wiring.test.ts` 守（它真的 import handler、
@@ -30,32 +34,76 @@ import {
 const ALL_ROLES = Object.values(TeamRole);
 
 describe("薪資模組的角色矩陣", () => {
-  it("三個角色都可以讀（讀取範圍維持現狀，見計劃書 §13 待拍板）", () => {
-    for (const role of ALL_ROLES) {
-      expect(isSalaryAccessAllowed(role, SalaryAccess.READ)).toBe(true);
-    }
-  });
-
-  it("VIEWER 不能寫 —— 這是這次要修掉的缺陷本身", () => {
-    expect(isSalaryAccessAllowed(TeamRole.VIEWER, SalaryAccess.WRITE)).toBe(
-      false,
+  /**
+   * Info: (20260908 - Julian) 讀與寫都是 `OWNER + EDITOR`，擋的是 `VIEWER`。
+   *
+   * 這是 20260901 留下的「讀取範圍尚未拍板」的答案。當時 `VIEWER` 也讀得到，
+   * 而那意味著任何被邀請進團隊的唯讀成員（外部顧問、實習生、暫時來對帳的人）
+   * 看得到全公司每一位員工的本薪、實發金額與投保級距。
+   */
+  it("OWNER 與 EDITOR 讀得到", () => {
+    expect(isSalaryAccessAllowed(TeamRole.OWNER, SalaryAccess.READ)).toBe(true);
+    expect(isSalaryAccessAllowed(TeamRole.EDITOR, SalaryAccess.READ)).toBe(
+      true,
     );
   });
 
-  /**
-   * Info: (20260901 - Julian) EDITOR 必須寫得了。
-   *
-   * 這個模組的使用者是老闆、會計、記帳士，而被邀請進來記帳的會計通常是
-   * `EDITOR` 不是 `OWNER`。把寫入收到 `OWNER` 一人會把模組原本要服務的人
-   * 擋在門外 —— 這一條就是那個過度收緊的護欄。
-   */
-  it("OWNER 與 EDITOR 可以寫", () => {
+  it("OWNER 與 EDITOR 寫得了", () => {
     expect(isSalaryAccessAllowed(TeamRole.OWNER, SalaryAccess.WRITE)).toBe(
       true,
     );
     expect(isSalaryAccessAllowed(TeamRole.EDITOR, SalaryAccess.WRITE)).toBe(
       true,
     );
+  });
+
+  /**
+   * Info: (20260908 - Julian) **`VIEWER` 兩種層級都不准 —— 這是這次收掉的東西。**
+   *
+   * 寫入那一半是 20260901 修掉的缺陷（唯讀成員能硬刪任何一筆薪資紀錄）；
+   * 讀取這一半是 20260908 才收的。兩條放在一起，是因為「唯讀成員不該碰薪資」
+   * 是同一個判斷的兩面，日後要放寬也應該一起想過。
+   */
+  it("VIEWER 兩種層級都不准", () => {
+    expect(isSalaryAccessAllowed(TeamRole.VIEWER, SalaryAccess.READ)).toBe(
+      false,
+    );
+    expect(isSalaryAccessAllowed(TeamRole.VIEWER, SalaryAccess.WRITE)).toBe(
+      false,
+    );
+  });
+
+  /**
+   * Info: (20260908 - Julian) 逐一走過 `TeamRole` 的每一個值，而不是手寫
+   * 「VIEWER 不准」。
+   *
+   * 手寫清單只守得住今天存在的角色 —— 日後新增一個 `ACCOUNTANT`
+   * 而忘了想清楚它該不該看薪資時，手寫版不會紅，這一條會。
+   * 放寬是要出現在 diff 上的動作，不是預設值。
+   */
+  it("清單以外的角色一律不准", () => {
+    const allowed: readonly TeamRole[] = [TeamRole.OWNER, TeamRole.EDITOR];
+    const others = ALL_ROLES.filter((role) => !allowed.includes(role));
+
+    expect(others.length).toBeGreaterThan(0);
+    for (const role of others) {
+      expect(isSalaryAccessAllowed(role, SalaryAccess.READ)).toBe(false);
+      expect(isSalaryAccessAllowed(role, SalaryAccess.WRITE)).toBe(false);
+    }
+  });
+
+  /**
+   * Info: (20260908 - Julian) 兩張表今天內容一樣，但**不合併**。
+   *
+   * 它們回答的是兩個問題（看得到 vs 改得動）。合併成一個常數的話，
+   * 日後要放寬讀取或收緊寫入都得先拆回來，而拆的時候十三支 route
+   * 的分級資訊已經不見了。這一條釘住「兩個 key 都還在」。
+   */
+  it("READ 與 WRITE 仍是兩張獨立的表", () => {
+    expect(Object.keys(SALARY_ACCESS_ROLES).sort()).toEqual([
+      SalaryAccess.READ,
+      SalaryAccess.WRITE,
+    ]);
   });
 
   /**

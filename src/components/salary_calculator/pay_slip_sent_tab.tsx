@@ -118,6 +118,7 @@ const SentTab: FC<{
   const {
     record,
     isLoading: isLoadingRecord,
+    hasError: recordUnavailable,
     load,
     clear,
   } = useSalaryRecordDetail(accountBookId);
@@ -214,6 +215,34 @@ const SentTab: FC<{
       {current && isLoadingRecord && (
         <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
           <Loader2 size={32} className="animate-spin text-white" />
+        </div>
+      )}
+
+      {/**
+       * Info: (20260909 - Julian) 紀錄已被刪除時說一句話，不要按了沒反應。
+       *
+       * 這一列**刻意留在清單上** —— 寄送軌跡是「這份薪資單曾經離開組織」的證據，
+       * 不該因為紀錄被刪就消失（計畫書 §2.1；`SalaryRecord` 20260909 改軟刪之後
+       * 它才真的留得下來）。但薪資單的內容走 `getRecordById`，
+       * 而那一支只認存活中的紀錄（已刪的還寄得出去會是更糟的事）。
+       *
+       * 於是這裡必然有一個「列在、內容不在」的狀態。上一版沒有處理它：
+       * 點下去 loading 轉一下就結束，什麼都沒發生 —— 而使用者會再點兩次。
+       */}
+      {current && recordUnavailable && (
+        <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 p-4">
+          <div className="flex w-full max-w-sm flex-col items-center gap-4 rounded-lg bg-white p-6 text-center">
+            <p className="text-text-neutral-primary text-sm font-medium">
+              {t("calculator.my_pay_slip.record_deleted")}
+            </p>
+            <button
+              type="button"
+              onClick={closeModal}
+              className="bg-button-surface-strong-secondary hover:bg-button-surface-strong-secondary-hover rounded-xs px-4 py-2 text-sm font-medium text-white"
+            >
+              {t("common.close")}
+            </button>
+          </div>
         </div>
       )}
 

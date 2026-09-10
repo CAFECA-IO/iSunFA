@@ -1,7 +1,16 @@
 import { PDF_FONT_STACK } from "@/constants/pdf_font";
 import { ISalaryCalculatorUI } from "@/interfaces/salary_calculator";
 import { numberWithCommas } from "@/lib/utils/common";
-import { PAY_SLIP_FIELD_LABELS } from "@/constants/pay_slip_labels";
+import {
+  PAY_SLIP_FIELD_LABELS,
+  PAY_SLIP_INSURED_LABELS,
+  PAY_SLIP_META_LABELS,
+} from "@/constants/pay_slip_labels";
+import {
+  formatPaySlipDate,
+  PAY_SLIP_INSURED_FIELDS,
+  type IPaySlipMeta,
+} from "@/lib/utils/pay_slip_meta";
 
 /**
  * Info: (20260902 - Julian) 薪資單的列印用 HTML（純函式）。
@@ -61,6 +70,14 @@ export interface IPaySlipHtmlInput {
   year: number;
   month: number;
   result: ISalaryCalculatorUI;
+  /**
+   * Info: (20260909 - Julian) 到職日與投保狀態。**必填，不給預設值。**
+   *
+   * 做成可選的話，忘了傳的呼叫端會產出一張少了兩格的薪資單，
+   * 而它看起來完全正常 —— 沒有人會發現，直到勞檢問起。
+   * 唯一的呼叫端是 `salary_pay_slip_delivery.service`，它兩份資料都拿得到。
+   */
+  meta: IPaySlipMeta;
 }
 
 /**
@@ -207,7 +224,24 @@ export const buildPaySlipHtml = (input: IPaySlipHtmlInput): string => {
     },
   ];
 
+  /**
+   * Info: (20260909 - Julian) 投保狀態排在級距**前面**。
+   *
+   * 未投保時級距是 0，而「勞保投保級距 0」讀起來像資料漏了，
+   * 不像「這個人沒有投保」。先講狀態，下面那幾個 0 才有解釋。
+   *
+   * 走 `PAY_SLIP_INSURED_FIELDS` 而不是自己列三行：畫面版的 `pay_slip.tsx`
+   * 也 map 同一份清單，日後多一種保險不可能只落在一邊。
+   */
+  const insuredStatusRows = PAY_SLIP_INSURED_FIELDS.map((field) => ({
+    label: PAY_SLIP_INSURED_LABELS[field],
+    value: input.meta[field]
+      ? PAY_SLIP_META_LABELS.insuredYes
+      : PAY_SLIP_META_LABELS.insuredNo,
+  }));
+
   const insuredRows = [
+    ...insuredStatusRows,
     {
       label: LABELS.healthInsuranceSalaryBracket,
       value: formatAmount(insuredSalary.healthInsuranceSalaryBracket),
@@ -314,6 +348,8 @@ export const buildPaySlipHtml = (input: IPaySlipHtmlInput): string => {
       <p class="period">${period}</p>
       <p class="name">${escapeHtml(input.employeeName)}</p>
       <p class="number">${escapeHtml(input.employeeNumber)}</p>
+      <!-- Info: (20260909 - Julian) 到職日：勞檢問的第一個問題，放在身分那一區 -->
+      <p class="number">${PAY_SLIP_META_LABELS.hireDate}：${formatPaySlipDate(input.meta.hireDate)}</p>
       <table class="totals">
         <tbody>
           <tr>

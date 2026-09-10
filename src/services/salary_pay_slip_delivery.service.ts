@@ -25,6 +25,7 @@ import {
   ISalaryPaySlipPdf,
   SalaryPaySlipPdfService,
 } from "@/services/salary_pay_slip_pdf.service";
+import { paySlipMetaOf } from "@/lib/utils/pay_slip_meta";
 import { IPaySlipHtmlInput } from "@/lib/utils/pay_slip_html";
 import { buildPaySlipMail } from "@/lib/utils/pay_slip_mail";
 import {
@@ -155,6 +156,14 @@ export class SalaryPaySlipDeliveryService {
         year: record.year,
         month: record.month,
         result: record.result,
+        /**
+         * Info: (20260909 - Julian) 兩個來源刻意不同 —— 完整理由在 `pay_slip_meta.ts`。
+         *
+         * 到職日取**員工檔現值**（人的事實，只有一個正確答案）；
+         * 投保狀態取**這筆紀錄的 input 快照**（月別事實 —— 八月有保、
+         * 九月退保是正常的，而這張單子上的勞保費是照當時的狀態算出來的）。
+         */
+        meta: paySlipMetaOf(employee.hireDate, record.input),
       });
 
       await this.mailer.send({

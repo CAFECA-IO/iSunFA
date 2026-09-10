@@ -84,6 +84,57 @@ export const calculator = {
     hire_date: "入社日",
     resign_date: "退職日",
     date_order_error: "退職日は入社日より前にはできません",
+    effective_month: "適用開始月",
+    effective_month_hint:
+      "本日の日付ではなく、この変更が「どの月の給与から適用されるか」を入力します。過去分の登録や将来の変更の場合は実際の適用月に変更してください。",
+    change_reason: "変更理由",
+    change_reason_placeholder: "例：定期昇給、昇進、保険等級の変更",
+    field_labels: {
+      baseSalary: "基本給",
+      mealAllowance: "食事手当",
+      otherAllowanceTaxable: "その他手当（課税）",
+      otherAllowanceTaxFree: "その他手当（非課税）",
+      isForeignWorker: "非居住者",
+      baseSalary30Days: "30 日固定計算",
+      isLaborInsured: "労災保険",
+      isHealthInsured: "健康保険",
+      isPensionInsured: "退職金",
+      industryCode: "業種",
+      dependentsCount: "扶養人数",
+      voluntaryPensionRate: "自己拠出率",
+      hireDate: "入社日",
+      resignDate: "退職日",
+      leaveStartDate: "休職開始日",
+      leaveEndDate: "復職日",
+      name: "氏名",
+      number: "従業員番号",
+      email: "メールアドレス",
+      employmentType: "雇用形態",
+    },
+    field_true: "はい",
+    field_false: "いいえ",
+    action_create: "登録",
+    action_update: "変更",
+    action_delete: "削除",
+    timing_backdated: "遡って登録",
+    timing_scheduled: "事前設定",
+    history_title: "給与変更履歴",
+    history_loading: "読み込み中…",
+    history_load_failed:
+      "変更履歴を読み込めませんでした。しばらくしてからお試しください。",
+    history_load_more: "以前の履歴を読み込む",
+    history_empty: "この従業員の給与条件の変更はまだ記録されていません",
+    history_empty_filtered:
+      "選択した項目に変更の記録がありません。項目を追加してお試しください。",
+    history_field_filter: "この項目の変更のみ表示",
+    history_since:
+      "この履歴は {{date}} からです。それ以前の変更は記録されていません —— 以前の条件は各月の「給与記録」の入力内容をご確認ください。",
+    history_no_record_yet:
+      "この機能の提供開始以降、この従業員の給与条件の変更は記録されていません。以前の条件は各月の「給与記録」の入力内容をご確認ください。",
+    history_count: "{{total}} 件中 {{shown}} 件を表示",
+    recorded_by: "{{name}} が {{at}} に記録",
+    unknown_user: "不明なユーザー",
+    history: "変更履歴",
     leave_start_date: "休職開始日",
     leave_end_date: "復職日",
     leave_hint:
@@ -168,7 +219,12 @@ export const calculator = {
     monthly_pay: "今月の給与",
     total_employer_cost: "会社総負担額",
     reported: "源泉徴収額",
+    hire_date: "入社日",
+    insured_yes: "加入",
+    insured_no: "未加入",
     paid: "実支給額",
+    hide_values: "金額を隠す",
+    show_values: "金額を表示",
   },
   warnings: {
     title: "警告メッセージ",
@@ -208,6 +264,8 @@ export const calculator = {
       "給与明細を送信できませんでした。しばらくしてからもう一度お試しください。",
   },
   my_pay_slip: {
+    record_deleted:
+      "この給与記録は削除されているため、内容を表示できません。送信履歴はこの一覧に残ります。",
     main_title: "私の給与明細",
     tab_received: "受信した給与明細",
     tab_sent: "送信した給与明細",
@@ -236,6 +294,8 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) 計算機ページからの保存と、2 つの例外
   save_record: {
+    profile_diff_reason: "変更理由（任意・従業員情報を更新した場合のみ記録）",
+    profile_diff_reason_placeholder: "例：定期昇給、昇進、保険等級の変更",
     profile_diff_title: "従業員データも更新しますか？",
     profile_diff_content:
       "計算機の設定が「{{name}}」さんの従業員データと異なります。差分は以下のとおりです：",
@@ -276,6 +336,20 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) 給与記録の閲覧
   records: {
+    base_salary_delta_inline: "{{month}} 月比 {{sign}}{{amount}}",
+    base_salary_delta_title: "{{year}} 年 {{month}} 月の基本給の変動",
+    base_salary_delta_vs: "{{year}} 年 {{month}} 月との比較",
+    base_salary_no_change_record:
+      "今月の基本給は前回の記録と異なりますが、対応する従業員情報の変更履歴がありません。従業員リストから編集し、適用開始月を {{year}} 年 {{month}} 月に設定してください。",
+    base_salary: "基本給",
+    base_salary_change_aria: "{{year}} 年 {{month}} 月の基本給変更を表示",
+    base_salary_change_title: "{{year}} 年 {{month}} 月からの基本給変更",
+    base_salary_change_count:
+      "当月は基本給の変更が {{count}} 件あります。上の数値は差引後の変動です。",
+    base_salary_change_recorded: "記録",
+    base_salary_change_full_history: "給与変更履歴をすべて表示",
+    base_salary_mismatch:
+      "当月の給与は基本給 {{used}} で計算されており、変更後の {{changed}} と一致しません。この給与に新しい基本給を適用すべき場合は、再計算して保存してください。",
     main_title: "給与記録",
     pay_period: "支給対象期間",
     pay_period_value: "{{year}} 年 {{month}} 月",
@@ -324,6 +398,15 @@ export const calculator = {
     export_failed:
       "エクスポートに失敗しました。しばらくしてからお試しください。",
   },
+  access: {
+    checking: "権限を確認しています…",
+    check_failed:
+      "この帳簿での権限を確認できませんでした。しばらくしてからお試しください。",
+    denied_title: "この帳簿の給与機能はご利用いただけません",
+    denied_desc:
+      "給与計算機・給与記録・従業員リストは、帳簿のオーナーと編集者のみが利用できます。あなたはこの帳簿では閲覧のみのメンバーのため、このセクションは表示されません。利用が必要な場合はオーナーに権限の変更を依頼してください。",
+    denied_public_link: "公開版の給与計算機を使う",
+  },
   account_book_entry: {
     title: "この試算を保存しますか？",
     hint_save: "帳簿版では給与記録の保存と従業員リストの管理ができます。",
@@ -349,6 +432,9 @@ export const calculator = {
     send_disabled_loading: "従業員一覧を確認しています...",
   },
   message: {
+    send_pay_slip_success_title: "給与明細を送信しました",
+    send_pay_slip_success_content:
+      "{{month}} の給与明細を {{name}}（{{email}}）に送信しました。",
     name_error_title: "従業員名が未入力です",
     name_error_content: "次のステップに進む前に、従業員名を入力してください",
     salary_error_title: "給与入力エラー",

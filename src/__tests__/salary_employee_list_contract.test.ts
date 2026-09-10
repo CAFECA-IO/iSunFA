@@ -310,6 +310,53 @@ describe("薪資紀錄缺漏的標示", () => {
   });
 
   /**
+   * Info: (20260909 - Julian) 選人按鈕裡不得有互動元素（巢狀 `<button>`）。
+   *
+   * 20260909 修的缺陷：彈窗版的列整格是 `<button onClick={pickHandler}>`，
+   * 而 `CoverageAlert` 的觸發器也是 `<button>`，於是它巢狀在裡面。
+   * 兩個症狀，**都不會有錯誤訊息以外的線索**：
+   *
+   * 1. 剖析器遇到內層 `<button>` 會隱式關掉外層，伺服器與客戶端兩棵樹不同
+   *    —— React 只在 console 報 hydration error，畫面看起來是好的。
+   * 2. 徽章沒有 `onClick`，但點擊冒泡到 `pickHandler`：使用者點「缺 N 個月」
+   *    想看清單，結果選走了那位員工、彈窗關掉。
+   *
+   * 為什麼守的是「按鈕內容那一段沒有互動元素」而不是「徽章在某個位置」：
+   * 位置會隨版面調整而變，而**不得巢狀**才是那條不變式。下一個往列上加東西的人
+   * （再一顆小按鈕、一個連結）踩的是同一個坑。
+   *
+   * `{emailCell}` 是引用而不是字面的 `<button>`，所以掃不到它 —— 那是對的：
+   * 它被 `withEmail` 擋著，而彈窗版傳 `withEmail={false}`（上面那條測試守著）。
+   */
+  it("選人按鈕的內容裡沒有互動元素", () => {
+    const at = listComponent.indexOf("const pickableContent = (");
+    expect(at).toBeGreaterThan(-1);
+
+    // Info: (20260909 - Julian) 切到下一個 `const ` 宣告為止，就是這一段的範圍
+    const rest = listComponent.slice(at + "const pickableContent = (".length);
+    const end = rest.indexOf("\n  const ");
+    const block = end === -1 ? rest : rest.slice(0, end);
+
+    expect(block).not.toContain("<button");
+    expect(block).not.toContain("<a ");
+    expect(block).not.toContain("<CoverageAlert");
+  });
+
+  /**
+   * Info: (20260909 - Julian) 反過來也要守：徽章確實還在列上（只是搬到按鈕外面）。
+   *
+   * 少了這一條，「把 CoverageAlert 從 employee_list.tsx 整個刪掉」會讓上面那條
+   * 測試變綠 —— 一條護欄不該可以用「把東西拿掉」來滿足。
+   */
+  it("徽章仍然在列上，而且在選人按鈕外面", () => {
+    expect(listComponent).toContain("const trailingContent = (");
+    const at = listComponent.indexOf("const trailingContent = (");
+    const rest = listComponent.slice(at);
+    expect(rest).toContain("<CoverageAlert");
+    expect(listComponent).toContain("<div className={trailingStyle}>");
+  });
+
+  /**
    * Info: (20260907 - Julian) 觸發器是 `<button>`：提示框是這份資訊唯一的入口，
    * 而鍵盤使用者到不了一個 span。`onFocus` 要與 `onMouseEnter` 成對出現。
    */

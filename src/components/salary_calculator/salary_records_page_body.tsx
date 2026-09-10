@@ -21,12 +21,15 @@ import {
   type ISalarySendTarget,
 } from "@/lib/utils/salary_send_target";
 import { numberWithCommas, timestampToString } from "@/lib/utils/common";
+import BaseSalaryChangeModal from "@/components/salary_calculator/base_salary_change_modal";
+import EmployeeHistoryModal from "@/components/salary_calculator/employee_history_modal";
 import {
   isPageAllPicked,
   isPagePartiallyPicked,
   setPagePicked,
   togglePick,
 } from "@/lib/utils/salary_export_selection";
+import { paySlipMetaOf } from "@/lib/utils/pay_slip_meta";
 import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
 import { saveDownloadedFile } from "@/lib/utils/download_file";
 import {
@@ -398,6 +401,23 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
    * 一旦 memo 沒跟著更新，刪除之後就會用舊條件重抓 —— 畫面回到上一組篩選結果，
    * 而且完全靜默。五個物件每次重建的成本，遠低於維護這串依賴。
    */
+  /**
+   * Info: (20260908 - Julian) 正在看哪一筆的本薪異動詳情。`null` = 沒有打開。
+   *
+   * 存整個 summary 而不只是 id：彈窗要顯示年月、姓名，以及**這個月試算用的本薪**
+   * （用來比對異動後的值是否一致）。只存 id 的話彈窗得回頭在清單裡找，
+   * 而那份清單可能正在重新載入。
+   */
+  const [changeForRecord, setChangeForRecord] =
+    useState<ISalaryRecordSummary | null>(null);
+
+  // Info: (20260908 - Julian) 從詳情再往下看整條歷程時，換成這一個
+  const [historyFor, setHistoryFor] = useState<{
+    id: string;
+    name: string;
+    number: string;
+  } | null>(null);
+
   const columns: IDataTableColumn<ISalaryRecordSummary>[] = [
     {
       key: "pick",
@@ -459,6 +479,79 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
               {record.employee.number}
             </span>
           )}
+        </div>
+      ),
+    },
+    {
+      /**
+       * Info: (20260908 - Julian) 本薪，以及「這個月起調了多少」（計劃書 §15）。
+       *
+       * ## 為什麼差額標在本薪，不標在實發金額
+       *
+       * 實發金額會因為加班、請假、健保補收而動 —— 一個加了班的月份會顯示
+       * `+8,200`，而使用者會把它讀成調薪。**誤導比沒有更糟。**
+       * 本薪只有「這個月用了不同的本薪」才會動。
+       *
+       * ## 差額為 0 時不顯示
+       *
+       * 兩個月本薪一樣是常態（多數人多數月份沒調薪），而每一列都掛一個
+       * `較 8 月 +0` 會把真正有變動的那幾列淹掉。
+       *
+       * ## 為什麼放在實發金額左邊
+       *
+       * 讀的順序是「這個人、他的本薪（有沒有調）、他實際領多少」。
+       * 放在實發右邊的話，差額會緊貼著一個它不屬於的數字。
+       */
+      key: "baseSalary",
+      label: t("calculator.records.base_salary"),
+      align: "right",
+      render: (record) => (
+        <div className="flex flex-col items-end gap-[2px]">
+          <span className="text-gray-700">
+            {numberWithCommas(record.baseSalary)}
+          </span>
+          {/**
+           * Info: (20260908 - Julian) 差額的條件是 `baseSalaryDelta`，**不是** `baseSalaryChange`。
+           *
+           * 20260908 的第一版掛在 `baseSalaryChange` 上（員工檔的異動紀錄），
+           * 而實測撞到的就是這件事：在計算機上改了本薪、選「只存這一次」的話
+           * 沒有異動紀錄 —— 於是畫面上兩個月差一萬，卻什麼都不顯示。
+           *
+           * 差額改由紀錄本身算（一律有），異動紀錄降級成點開後的「為什麼」。
+           */}
+          {record.baseSalaryDelta !== null &&
+            record.baseSalaryDelta.delta !== 0 && (
+              <button
+                type="button"
+                aria-label={t("calculator.records.base_salary_change_aria", {
+                  year: record.year,
+                  month: record.month,
+                })}
+                onClick={(e) => {
+                  /**
+                   * Info: (20260908 - Julian) 擋掉冒泡 —— 整列本身是可點的（開薪資單）。
+                   *
+                   * 少了這一行，點差額會同時打開薪資單與這個彈窗，
+                   * 而使用者看到的是「點一下跳出兩個東西」。
+                   */
+                  e.stopPropagation();
+                  setChangeForRecord(record);
+                }}
+                className={`rounded px-[6px] text-xs font-semibold ${
+                  record.baseSalaryDelta.delta > 0
+                    ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-200"
+                    : "bg-rose-50 text-rose-700 hover:bg-rose-200"
+                }`}
+              >
+                {t("calculator.records.base_salary_delta_inline", {
+                  month: record.baseSalaryDelta.previousMonth,
+                  sign: record.baseSalaryDelta.delta > 0 ? "+" : "−",
+                  amount: numberWithCommas(
+                    Math.abs(record.baseSalaryDelta.delta),
+                  ),
+                })}
+              </button>
+            )}
         </div>
       ),
     },
@@ -571,7 +664,7 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
             title={t("calculator.records.load_back")}
             onClick={() => loadBackHandler(record)}
             disabled={isEmployeesLoading || hasEmployeesError}
-            className={`${iconBtnStyle} text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent`}
+            className={`${iconBtnStyle} text-gray-400 enabled:hover:bg-gray-100 enabled:hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40`}
           >
             <RotateCcw className="size-4" />
           </button>
@@ -853,6 +946,7 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
             month: sending.month,
           })}
           sentToName={sending.lastSentTo ?? "-"}
+          employeeName={sending.employee.name}
           modalVisibleHandler={() => setSending(null)}
           onResent={() => {
             setSending(null);
@@ -874,6 +968,37 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
           employeeEmail={viewingSendTarget.email}
           sendBlockedReason={viewingSendTarget.blockedReason}
           onResent={() => setViewing(null)}
+          /**
+           * Info: (20260909 - Julian) 兩個來源刻意不同（見 `pay_slip_meta.ts`）：
+           * 到職日是員工檔現值，投保狀態是**這筆紀錄當時**的 input 快照。
+           */
+          meta={paySlipMetaOf(viewing.employee.hireDate, viewing.input)}
+        />
+      )}
+
+      {/**
+       * Info: (20260908 - Julian) 本薪異動的詳情，以及從它再往下看的整條歷程。
+       *
+       * 兩個彈窗不同時出現：從詳情按「查看完整調薪歷程」時，詳情先關掉。
+       * 同時開兩層的話，關掉上層之後使用者會撞回下層 ——
+       * 而他以為自己按的是「關閉」。
+       */}
+      {changeForRecord !== null && (
+        <BaseSalaryChangeModal
+          record={changeForRecord}
+          closeHandler={() => setChangeForRecord(null)}
+          fullHistoryHandler={() => {
+            setHistoryFor(changeForRecord.employee);
+            setChangeForRecord(null);
+          }}
+        />
+      )}
+
+      {historyFor !== null && (
+        <EmployeeHistoryModal
+          accountBookId={accountBookId}
+          employee={historyFor}
+          modalVisibleHandler={() => setHistoryFor(null)}
         />
       )}
     </SalaryCalculatorShell>

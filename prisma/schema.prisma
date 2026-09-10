@@ -1,3 +1,19 @@
+/**
+ * Info: (20260909 - Julian) **不要對這個檔跑 `npx prisma format`。**
+ *
+ * 它會把所有文件註解（`/**` 開頭的那種）裡的空 `*` 行刪掉（20260909 那次是 194 行，
+ * 橫跨 TeamMember / TeamInvitation 等與當時的 PR 完全無關的 model），
+ * 並重排整檔的欄位對齊。後果有兩層：
+ *
+ * 1. 這裡的註解是資產（例如 `TeamMember` 那段「兩個時鐘差 19ms」的事故紀錄），
+ *    段落結構被壓成一整坨是可讀性的實質退化。
+ * 2. 這是全 repo 衝突面最高的共用檔。一個七百行的格式化 diff 會讓任何併行分支的
+ *    rebase 變成人工重解，而重解時很容易把別人的欄位吃掉 ——
+ *    檢查清單 §6.1 記載的 NF000017 撞號就是這個形狀。
+ *
+ * 新增欄位時**沿用該區塊既有的對齊寬度**手動排版即可。
+ * `prisma db push`、`prisma generate`、`prisma validate` 都不會改動這個檔案，照跑無妨。
+ */
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated"
@@ -77,6 +93,8 @@ model User {
   createdSalaryRecords  SalaryRecord[]
   // Info: (20260904 - Julian) 按下「寄出薪資單」的人
   sentPaySlipDeliveries SalaryPaySlipDelivery[]
+  // Info: (20260908 - Julian) 改動過員工薪資條件的人（調薪歷程）
+  salaryProfileChanges  SalaryEmployeeProfileChange[]
 
   @@index([address])
   @@map("user")
@@ -959,6 +977,7 @@ model AccountBook {
   salaryCalculatorEmployees SalaryCalculatorEmployee[]
   salaryRecords             SalaryRecord[]
   salaryPaySlipDeliveries   SalaryPaySlipDelivery[]
+  salaryProfileChanges      SalaryEmployeeProfileChange[]
 
   @@map("account_book")
 }
@@ -971,6 +990,9 @@ enum AuditLogDataType {
   // Info: (20260811 - Julian) 人事敏感個資的存取軌跡；dataId 一律填所屬 Employee.id，
   // Info: (20260811 - Julian) 讓「誰在何時看了誰的身分證／銀行帳號」可以用單一員工當軸線查回來
   EMPLOYEE_PII
+  // Info: (20260909 - Julian) 薪資紀錄（工資清冊）的刪除軌跡；dataId 填 SalaryRecord.id
+  // Info: (20260909 - Julian) 勞基法 §23 II 要求工資清冊保存五年，而刪除是唯一會讓它消失的動作
+  SALARY_RECORD
 }
 
 enum AuditLogAction {
@@ -4639,6 +4661,14 @@ model SalaryCalculatorEmployee {
   // Info: (20260831 - Julian) 這張表用 soft delete（與 Department / JobTitle / Employee 相反）：薪資紀錄是對外憑據，員工被刪不能讓歷史一起消失
   deletedAt DateTime? @map("deleted_at")
 
+  /**
+   * Info: (20260908 - Julian) 這個人的薪資條件異動軌跡（計劃書 §3）。
+   *
+   * 員工是 soft delete，所以這條關聯在移除之後仍然成立 ——
+   * 「刪掉員工，他的調薪歷程也一起消失」會讓稽核軌跡可以用刪除來規避。
+   */
+  profileChanges SalaryEmployeeProfileChange[]
+
   @@unique([accountBookId, activeNumber])
   @@index([accountBookId])
   @@map("salary_calculator_employee")
@@ -4677,6 +4707,40 @@ model SalaryRecord {
   totalEmployerCost  BigInt @map("total_employer_cost")
 
   /**
+   * Info: (20260908 - Julian) 這個月試算用的**本薪**，從 `inputSnapshot.baseSalaryTaxable`
+   * 抽出來的純量欄位。加入上面那三欄的行列，理由相同：需要跨列比較。
+   *
+   * ## 為什麼非得抽出來
+   *
+   * 薪資紀錄列表要顯示「這個月的本薪較上一筆多／少多少」，而「上一筆」通常不在
+   * 當前那一頁（一頁 20 筆、三十位員工的話，一頁連一個月都放不完，於是
+   * **沒有任何員工的上一筆會在同一頁**），所以必須另外查。
+   *
+   * 而本薪原本只存在 Json 裡 —— Json 沒辦法只取一個欄位，要拿到上一筆的本薪
+   * 就得把那些員工**所有**紀錄的完整快照撈回來：一本三年、三十人的帳大約一千列、
+   * 每列兩 KB 的 Json，也就是每次翻頁多傳兩 MB。抽成純量之後那個查詢只回三個小欄位。
+   *
+   * ## 與 Json 的關係：Json 仍然是真相
+   *
+   * 這一欄是 `inputSnapshot.baseSalaryTaxable` 的**投影**，不是第二份事實。
+   * 寫入時由 `upsertRecord` 從同一份 snapshot 取值（不由呼叫端另外傳），
+   * 所以兩者不可能分岔 —— `salary_repo_scope.test.ts` 釘住那件事。
+   *
+   * ## `@default(0)` 是為了 push 得過，而 0 是**錯的值**
+   *
+   * 本專案沒有 `prisma/migrations/`，schema 走 `db push`：新增一個必填且無預設的
+   * 欄位會讓既有的列直接 push 失敗，所以給 `0`。
+   *
+   * **但 `0` 不是「空值」，是一個會被讀進計算的錯值** —— 一筆本薪為 0 的紀錄
+   * 會讓下一個月顯示「較上月 +44,000」。既有列**必須**回填：
+   *
+   *     npx tsx scripts/backfill_salary_record_base_salary.ts
+   *
+   * 那支腳本就是這次改動的 migration 紀錄，刻意留在版控裡。
+   */
+  baseSalary         BigInt @default(0) @map("base_salary_snapshot")
+
+  /**
    * Info: (20260831 - Julian) 產生這筆紀錄時的級距表年度與引擎修訂號
    * （`SALARY_CALCULATOR_VERSION`）。法規年度更新之後，這一欄是
    * 「這張薪資單當初是用哪一版算出來的」唯一的依據。
@@ -4696,7 +4760,40 @@ model SalaryRecord {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  /**
+   * Info: (20260909 - Julian) 軟刪除。**20260909 從硬刪改過來，理由是法定保存義務。**
+   *
+   * ## 原本的理由怎麼被推翻的
+   *
+   * `salary_record_module_plan.md` §3.2 原本寫著「紀錄是這個月算出來的薪資，
+   * 刪掉就是刪掉，沒有『刪了還要看得到』的情境」。
+   *
+   * 20260909 客戶確認：勞檢調閱的是**工資清冊**，而清冊就是從這張表產生的
+   * （CSV 匯出）。勞基法 §23 II 要求工資清冊**保存五年** —— 那就是那個情境，
+   * 而且是法定的。硬刪等於讓保存義務可以用一顆按鈕規避，而且不留痕跡
+   * （本模組原本沒有任何 AuditLog 列）。
+   *
+   * ## 為什麼不需要 `activeXxx` 那一套
+   *
+   * `SalaryCalculatorEmployee` 為了軟刪除多開了 `activeNumber`：沒有它的話，
+   * 被刪掉的員工會永久佔住那個編號。
+   *
+   * 這裡不必。下面的 `@@unique([accountBookId, employeeId, year, month])`
+   * 確實會被已刪的那一列佔住，但 `upsertRecord` 走的正是這個複合鍵 ——
+   * 它的 update 分支把 `deletedAt` 設回 null，也就是「刪掉八月、重新存八月」
+   * 會**復活**那一列。而那正是使用者要的行為：那個月又有紀錄了。
+   * 刪除這件事本身留在 AuditLog 上，不會因為復活而消失。
+   *
+   * ## 讀取端一律要濾
+   *
+   * `salary_repo_scope.test.ts` 的 `LIFECYCLE` 表逐支釘住哪些方法必須帶
+   * `deletedAt: null`。漏一支的症狀是「刪掉的紀錄又出現在清單／匯出裡」——
+   * 而使用者會以為刪除沒生效。
+   */
+  deletedAt DateTime? @map("deleted_at")
+
   // Info: (20260904 - Julian) 這一筆的寄送事件（成功與失敗都留一列）
+  // Info: (20260909 - Julian) 改軟刪除之後 onDelete: Cascade 不再被觸發：刪紀錄不再讓寄送軌跡消失
   paySlipDeliveries SalaryPaySlipDelivery[]
 
   @@unique([accountBookId, employeeId, year, month])
@@ -4746,6 +4843,14 @@ model SalaryPaySlipDelivery {
    * 本次接受它，理由是薪資紀錄本來就沒有「刪了還看得到」的設計，
    * 而讓寄送紀錄單獨活下來會產生一堆指不到紀錄的孤兒列。
    * 真要保留跨刪除的軌跡，該做的是 `AuditLog`，不是把這張表變成半個歷史表。
+   *
+   * Info: (20260909 - Julian) **上面那個張力解掉了。** `SalaryRecord` 改成軟刪除
+   * （工資清冊有五年保存義務，見該欄位的註解），資料庫層的 DELETE 不再發生，
+   * 於是這條 cascade 也不再被觸發 —— 寄送軌跡自然留了下來。
+   *
+   * `Cascade` 留著不改：它守的是「萬一日後真的有人硬刪一列」時不要撞外鍵，
+   * 而那條路徑現在只剩手動 SQL 與資料修補腳本。改成 `Restrict` 值得日後
+   * 一併重新評估，本次不動。
    */
   salaryRecordId String       @map("salary_record_id")
   salaryRecord   SalaryRecord @relation(fields: [salaryRecordId], references: [id], onDelete: Cascade)
@@ -4787,4 +4892,84 @@ model SalaryPaySlipDelivery {
   @@index([accountBookId])
   @@index([salaryRecordId])
   @@map("salary_pay_slip_delivery")
+}
+
+/**
+ * Info: (20260908 - Julian) 員工薪資條件的異動軌跡（調薪歷程）。
+ *
+ * 計劃書：`documents/architecture/salary_profile_change_history_plan.md`
+ *
+ * ## 為什麼要一張新表，而不是從薪資紀錄推導
+ *
+ * `SalaryRecord.inputSnapshot` 記的是「發薪時用了什麼值」，不是「調整這件事」。
+ * 拿它推導有三個洞：紀錄可以覆寫（推導出來的歷史是可變的）、只覆蓋有存過
+ * 薪資單的月份、而且答不出「是誰改的」。
+ *
+ * ## 只增不改，在型別上就成立
+ *
+ * 沒有 `updatedAt`、沒有 `deletedAt` —— 這張表的每一列都是「發生過的事」，
+ * 而發生過的事不會被修改也不會消失。要更正只能再追加一列。
+ *
+ * ## 兩個時間刻意分開
+ *
+ * `recordedAt` 是「什麼時候被記下來」，`effectiveYear` / `effectiveMonth` 是
+ * 「從哪個月的薪資開始適用」。12 月在跑 11 月的薪資是常態，用寫入時間當生效月
+ * 會把那一筆調薪記成 12 月生效（計劃書 §4）。
+ */
+model SalaryEmployeeProfileChange {
+  id String @id @default(uuid())
+
+  // Info: (20260908 - Julian) 租戶鍵。一律是每個 where 的第一個 key
+  accountBookId String      @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  employeeId String                   @map("employee_id")
+  employee   SalaryCalculatorEmployee @relation(fields: [employeeId], references: [id])
+
+  action SalaryProfileChangeAction @map("action")
+
+  /**
+   * Info: (20260908 - Julian) 異動前後的完整快照，兩者皆可空。
+   *
+   * 建檔沒有 before，移除沒有 after。存整份而不是只存變動的欄位：
+   * 日後要回答「他 3 月的時候投保狀態是什麼」時，只有整份答得出來。
+   */
+  beforeSnapshot Json? @map("before_snapshot")
+  afterSnapshot  Json? @map("after_snapshot")
+
+  /**
+   * Info: (20260908 - Julian) 這一次真正變動的欄位名，由 `changedFieldsOf()` 產生。
+   *
+   * 它是**索引**不是真相：真相是上面兩份快照。存它是為了讓
+   * 「只看本薪的變動」這種查詢不必把每一列的 Json 拉回來比對。
+   */
+  changedFields String[] @map("changed_fields")
+
+  /**
+   * Info: (20260908 - Julian) 從哪一個月的薪資開始適用（見檔頭「兩個時間刻意分開」）。
+   */
+  effectiveYear  Int @map("effective_year")
+  effectiveMonth Int @map("effective_month")
+
+  // Info: (20260908 - Julian) 使用者填的原因（調薪、升遷、投保級距調整⋯⋯），可空
+  reason String? @db.Text
+
+  // Info: (20260908 - Julian) 誰改的。伺服器從 DeWT 取，不收前端傳入
+  changedByUserId String @map("changed_by_user_id")
+  changedBy       User   @relation(fields: [changedByUserId], references: [id])
+
+  // Info: (20260908 - Julian) 何時寫下這一列（伺服器時鐘）。不可編輯
+  recordedAt DateTime @default(now()) @map("recorded_at")
+
+  @@index([accountBookId])
+  // Info: (20260908 - Julian) 主要查詢：某位員工的歷程，新的在前
+  @@index([accountBookId, employeeId, recordedAt])
+  @@map("salary_employee_profile_change")
+}
+
+// Info: (20260908 - Julian) 員工檔的三條寫入路徑，一條一個值
+enum SalaryProfileChangeAction {
+  CREATE
+  UPDATE
+  DELETE
 }

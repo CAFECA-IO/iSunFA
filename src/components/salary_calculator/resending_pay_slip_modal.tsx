@@ -3,11 +3,13 @@
 import { FC } from "react";
 
 import { useTranslation } from "@/i18n/i18n_context";
-import { AlertTriangle, CheckCircle2, Loader2, X } from "lucide-react";
+import { AlertTriangle, X } from "lucide-react";
 import {
   DELIVERY_FAILURE_I18N_KEY,
   useSalaryPaySlipDelivery,
 } from "@/hooks/use_salary_pay_slip_delivery";
+import SendingAnimation from "@/components/salary_calculator/sending_animation";
+import { usePaySlipToast } from "@/contexts/pay_slip_toast_context";
 
 interface IResendingPaySlipModalProps {
   accountBookId: string;
@@ -16,6 +18,13 @@ interface IResendingPaySlipModalProps {
   monthName: string;
   /** Info: (20260904 - Julian) 上一次寄到哪 —— 由最近一筆 delivery 提供，不是寫死的文案 */
   sentToName: string;
+  /**
+   * Info: (20260908 - Julian) 成功吐司要用的員工姓名。
+   *
+   * 這個彈窗原本不需要它（確認畫面只講「上次寄給誰」），
+   * 而吐司要說的是「這次寄給誰」—— 那是姓名 ＋ 信箱。
+   */
+  employeeName: string;
   modalVisibleHandler: () => void;
   onResent?: () => void;
 }
@@ -46,45 +55,60 @@ const ResendingPaySlipModal: FC<IResendingPaySlipModalProps> = ({
   recordId,
   monthName,
   sentToName,
+  employeeName,
   modalVisibleHandler,
   onResent = undefined,
 }) => {
   const { t } = useTranslation();
-  const { isSending, failure, sent, deliver } =
+  const { isSending, failure, deliver } =
     useSalaryPaySlipDelivery(accountBookId);
+  const { notifySent } = usePaySlipToast();
 
   const resendPaySlip = async () => {
     const delivered = await deliver(recordId);
-    if (delivered) onResent?.();
+    if (!delivered) return;
+
+    /**
+     * Info: (20260908 - Julian) 成功改成吐司 ＋ 關窗，不再用彈窗內的成功畫面。
+     *
+     * ## 為什麼改
+     *
+     * 20260908 為第一次寄出加了吐司之後，同一個動作在兩條路徑上有兩種回饋。
+     * 而實測時撞到的正是這件事：**已經寄過一次的紀錄會走這一條**
+     * （`lastSentAt !== null` 的那個分支），於是使用者以為吐司沒有生效。
+     *
+     * ## 原本的理由已經不成立
+     *
+     * 那時候寫的是「不去重建那個已經不存在的全域 modal context，
+     * 讓成功留在使用者按下按鈕的那個框裡」。現在通知不需要重建任何東西 ——
+     * `PaySlipToastProvider` 掛在 `SalaryCalculatorShell` 上，
+     * 而吐司比彈窗內的成功畫面多兩件事：它在彈窗關掉之後還在，
+     * 而且它說得出**這次寄到哪個信箱**（重寄最常見的原因就是上次寄錯）。
+     */
+    notifySent({
+      employeeName,
+      employeeEmail: sentToName,
+      monthLabel: monthName,
+      isResend: true,
+    });
+
+    onResent?.();
+    modalVisibleHandler();
   };
 
+  /**
+   * Info: (20260908 - Julian) 與寄出彈窗用**同一個**動畫（`SendingAnimation`）。
+   *
+   * 重寄與第一次寄出是同一件事（同一支端點、同一段等待），
+   * 兩邊各用一種載入指示只會讓使用者以為發生了不同的事。
+   */
   const loadingContent = (
-    <div className="flex flex-1 items-center justify-center py-8">
-      <Loader2 size={32} className="animate-spin text-orange-600" />
+    <div className="flex flex-1 flex-col items-center justify-center gap-1 py-6">
+      <SendingAnimation size={160} />
+      <p className="text-card-text-secondary text-sm font-medium">
+        {t("calculator.sending_pay_slip_modal.sending")}
+      </p>
     </div>
-  );
-
-  const successContent = (
-    <>
-      <div className="flex flex-col items-center gap-3 px-5 py-6">
-        <CheckCircle2 size={40} className="text-emerald-600" />
-        <p className="text-card-text-primary text-base font-bold">
-          {t("calculator.message.re_send_pay_slip_success_title")}
-        </p>
-        <p className="text-card-text-secondary text-center text-sm">
-          {t("calculator.message.re_send_pay_slip_success_content")}
-        </p>
-      </div>
-      <div className="px-5 py-4">
-        <button
-          type="button"
-          className="flex h-11 w-full items-center justify-center rounded-xl bg-orange-600 text-sm font-bold text-white transition-colors hover:bg-orange-700"
-          onClick={modalVisibleHandler}
-        >
-          {t("common.close")}
-        </button>
-      </div>
-    </>
   );
 
   const confirmContent = (
@@ -140,9 +164,13 @@ const ResendingPaySlipModal: FC<IResendingPaySlipModalProps> = ({
    * `sent` 只在真的落地一列之後才有值，所以「顯示成功」與「後端寫了一列」
    * 是同一件事，不是兩個各自為政的旗標（上一版的 `resendSuccess` 是後者）。
    */
-  let modalContent = confirmContent;
-  if (isSending) modalContent = loadingContent;
-  else if (sent) modalContent = successContent;
+  /**
+   * Info: (20260908 - Julian) 只有兩種內容了：確認與寄送中。
+   *
+   * 成功不再是這個彈窗的一種狀態 —— 成功的時候它已經關掉了，
+   * 而使用者看到的是吐司（見 `resendPaySlip`）。
+   */
+  const modalContent = isSending ? loadingContent : confirmContent;
 
   return (
     <div className="font-barlow fixed inset-0 z-70 flex items-center justify-center bg-black/50">

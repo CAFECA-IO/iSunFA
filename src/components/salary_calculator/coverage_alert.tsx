@@ -190,8 +190,22 @@ const CoverageAlert: FC<ICoverageAlertProps> = ({
        * Info: (20260907 - Julian) 觸發器是 `<button>` 而不是 `<span>`。
        *
        * 它是這份資訊唯一的入口，而鍵盤使用者到不了一個 span ——
-       * `onFocus` 掛在按鈕上才進得了 tab 順序。按下去不做事
-       * （提示框是唯一的行為），所以沒有 onClick。
+       * `onFocus` 掛在按鈕上才進得了 tab 順序。
+       *
+       * Info: (20260909 - Julian) 這裡沒有 `onClick`，但**不要因此當它是惰性的**。
+       *
+       * 上一版的註解寫「按下去不做事（提示框是唯一的行為）」—— 那句話只在
+       * 沒有可點擊祖先的時候成立。`employee_list.tsx` 的列在挑人彈窗裡整格是
+       * 一顆 `<button onClick={pickHandler}>`，這顆按鈕曾經就巢狀在它裡面：
+       *
+       * - 巢狀 `<button>` 是 HTML 不允許的結構，剖析器會隱式關掉外層 ——
+       *   伺服器與客戶端兩棵樹不同，React 報 hydration error。
+       * - 沒有 `onClick` 不等於點了沒事：點擊照樣冒泡到祖先的 handler。
+       *   使用者點「缺 N 個月」想看清單，結果選走了那位員工。
+       *
+       * 所以這顆按鈕的使用條件是：**不得放進任何可點擊的祖先裡。**
+       * 已知的兩個使用點都符合 —— `employee_list.tsx` 把它放在列按鈕的兄弟
+       * 節點上，`employee_list_table.tsx` 放在 `DataTable` 的 `<td>` 裡。
        */}
       <button
         type="button"
