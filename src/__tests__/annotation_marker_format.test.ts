@@ -273,9 +273,29 @@ describe("全庫掃描 vs 基準線(逐行、雙向嚴格)", () => {
       const [file, kind, ...text] = key.split("::");
       return `  ${file}  [${kind}]  ${text.join("::")}`;
     };
+    /**
+     * Info: (20260910 - Emily) 訊息要分得出兩種「新出現」(#6794 review 阻-2)。
+     *
+     * 這條規則第一次上線就踩到了:基準線在 09-09 的 develop 上擷取,而合併時
+     * develop 已經多了 47 個 commit,其中兩則不合規的 eslint-disable 對基準線
+     * 就是「新出現」—— 但不是這一輪寫的。原本的訊息只說「修標記,不是改基準線」,
+     * 那會把踩到的人導向錯的結論(以為是自己寫壞的),而**替別人的程式碼補一個
+     * 「Deprecated: remove eslint-disable」等於寫下一個不存在的意圖**。
+     *
+     * 掃描器分不出作者,所以訊息不猜 —— 把兩種情形與各自的處置都說出來,
+     * 讓讀的人用 `git log` 自己判。天花板那一條仍然擋得住大量洗進基準線。
+     */
     const message = [
       added.length > 0
-        ? `新出現的不合規標記(修標記,不是改基準線):\n${added.map(describeKey).join("\n")}`
+        ? [
+            "不在基準線裡的不合規標記:",
+            ...added.map(describeKey),
+            "",
+            "  這一輪自己寫的 → **修標記**,不要重建基準線。",
+            "  基準線擷取之後由別處併入的(git log 那一行看得出來)→ 以「既有」身分",
+            "  加進 fixtures/annotation_marker_baseline.json,並把下面那條天花板一起加,",
+            "  在 PR 說明寫一行為什麼。不要替別人的程式碼補一個他沒有的意圖。",
+          ].join("\n")
         : "",
       removed.length > 0
         ? `基準線裡這些行已經不存在(把它們從 fixtures/annotation_marker_baseline.json 刪掉):\n${removed.map(describeKey).join("\n")}`
@@ -294,10 +314,23 @@ describe("全庫掃描 vs 基準線(逐行、雙向嚴格)", () => {
     /**
      * Info: (20260909 - Emily) 09-09 建立時 82 則(51 寫壞 + 31 eslint-disable 沒標記)。
      * 這個數字是天花板:有人把新寫壞的標記用 ANNOTATION_BASELINE_WRITE 洗進基準線,這一條會紅。
+     *
+     * Info: (20260910 - Emily) 84:同步 develop 時多兩則(#6794 review 阻-2)。
+     *
+     * 兩則都是基準線擷取(09-09)之後由別的 PR 併入 develop 的,不是這一輪寫的:
+     *
+     *   src/__tests__/i18n_keys.test.ts            檔案級 eslint-disable(動態 require 語系字典)
+     *   src/components/salary_calculator/…/sending_animation.tsx  next-line 無標記(<img> 渲染動畫 SVG)
+     *
+     * 為什麼進基準線而不是修:那兩處的 disable 都是**刻意的永久選擇**(前者是測試裡
+     * 動態 require,後者是 next/image 不適合動畫 SVG),而規範允許的標記只有
+     * `ToDo` 與 `Deprecated` —— 兩個都在宣告「這是暫時的、將來會拿掉」。
+     * 替別人的程式碼補一個他沒有的意圖,是拿一句不實的註解換一個綠燈(§1.14)。
+     * 該補的是規範裡缺的第三種(「刻意且永久」),那要文件 owner 決定,已在 #6763 留言。
      */
     const baseline = JSON.parse(
       fs.readFileSync(BASELINE_PATH, "utf-8"),
     ) as string[];
-    expect(baseline.length).toBeLessThanOrEqual(82);
+    expect(baseline.length).toBeLessThanOrEqual(84);
   });
 });

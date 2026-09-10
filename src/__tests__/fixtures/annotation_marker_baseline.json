@@ -1,5 +1,6 @@
 [
   "scripts/run_service.ts::ESLINT_DISABLE_UNMARKED::// eslint-disable-next-line @typescript-eslint/no-explicit-any",
+  "src/__tests__/i18n_keys.test.ts::ESLINT_DISABLE_FORBIDDEN_FORM::/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */",
   "src/__tests__/payment_fulfillment_visibility.test.ts::ESLINT_DISABLE_UNMARKED::// eslint-disable-next-line @typescript-eslint/no-require-imports",
   "src/__tests__/payment_fulfillment_visibility.test.ts::ESLINT_DISABLE_UNMARKED::// eslint-disable-next-line @typescript-eslint/no-require-imports",
   "src/__tests__/payment_fulfillment_visibility.test.ts::ESLINT_DISABLE_UNMARKED::// eslint-disable-next-line @typescript-eslint/no-require-imports",
@@ -39,6 +40,7 @@
   "src/components/common/file_preview.tsx::ESLINT_DISABLE_UNMARKED::// eslint-disable-next-line jsx-a11y/media-has-caption",
   "src/components/common/legal_modal.tsx::ESLINT_DISABLE_UNMARKED::{/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}",
   "src/components/pricing/kyc_modal.tsx::MALFORMED_MARKER::// Todo: (20260129 - Tzuhan) Photo upload is skipped as per requirement \"現在都可以不用傳\"",
+  "src/components/salary_calculator/sending_animation.tsx::ESLINT_DISABLE_UNMARKED::// eslint-disable-next-line @next/next/no-img-element",
   "src/components/user/dashboard/ghg_emissions_card.tsx::ESLINT_DISABLE_UNMARKED::// eslint-disable-next-line @typescript-eslint/no-explicit-any",
   "src/components/user/dashboard/ghg_emissions_card.tsx::ESLINT_DISABLE_UNMARKED::// eslint-disable-next-line @typescript-eslint/no-explicit-any",
   "src/components/user/dashboard/ghg_emissions_card.tsx::ESLINT_DISABLE_UNMARKED::{/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}",
