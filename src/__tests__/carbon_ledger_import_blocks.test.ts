@@ -94,14 +94,9 @@ describe("量測:寫入端的值域確實超過儲存端(這是截斷存在的�
     const reason = worstCaseReason("TABLE_38");
     expect(reason.length).toBeGreaterThan(LEDGER_FACT_VALUE_MAX_LENGTH);
     /**
-     * Info: (20260909 - Emily) 這一條是反例:**沒有收界**的紀錄,儲存端拒、事實包也拒。
-     * 它證明的是順序 —— 若把 schema 的 `.max()` 放寬到讓這條過,截斷就沒有第二道了。
+     * Info: (20260909 - Emily) 這一條是反例:**沒有收界**的紀錄,事實包會拒 ——
+     * 那正是「大面積勾稽失敗之後每一則聊天都被伺服端打回」的機制。
      */
-    const unbounded = CarbonInventoryStateSchema.safeParse({
-      ...baseState,
-      ledgerImportBlocks: [blockOf(reason)],
-    });
-    expect(unbounded.success).toBe(false);
     const fact = queryAnomalies(undefined, [blockOf(reason)]);
     expect(fact.ok).toBe(true);
     if (fact.ok) {
@@ -109,6 +104,59 @@ describe("量測:寫入端的值域確實超過儲存端(這是截斷存在的�
         false,
       );
     }
+  });
+
+  it("未收界的紀錄:儲存端**收下並收界**,不是整份拒(#6794 review 阻-1)", () => {
+    /**
+     * Info: (20260910 - Emily) 這一條取代了原本斷言「儲存端拒」的那半句,而那半句
+     * 描述的正是缺陷本身。
+     *
+     * 09-04 到 09-09 之間 `ledgerImportBlocks` 型別有、schema 沒有,而 zod 剝掉
+     * 未宣告鍵之後 `safeParse` 是**成功**的、存檔又存 `JSON.stringify(state)` 原件 ——
+     * 所以那段時間每一次大面積勾稽失敗都在雲端留下一筆 1000 字以上的 reason。
+     * 若這裡宣告 `.max()`,那些使用者下一次開房就是 `SCHEMA_REJECTED`:
+     * 帳本、活動數據、待補項、年度快照全部讀不回來,而盤查狀態沒有本機備份。
+     *
+     * 所以載入端**收界而不拒**:載得回來、而且回來的已在界內 ——
+     * 下一次存檔寫回收好界的版本,舊資料自己痊癒,不需要 migration。
+     */
+    const reason = worstCaseReason("TABLE_38");
+    const stored = CarbonInventoryStateSchema.safeParse({
+      ...baseState,
+      ledgerImportBlocks: [blockOf(reason)],
+    });
+    expect(stored.success).toBe(true);
+    if (!stored.success) return;
+    const loaded = stored.data.ledgerImportBlocks ?? [];
+    expect(loaded).toHaveLength(1);
+    // Info: (20260910 - Emily) 載回來的已在界內,而且是「整段捨去」那種收界(看得見少了幾條)
+    expect(loaded[0].reason.length).toBeLessThanOrEqual(
+      LEDGER_IMPORT_BLOCK_REASON_MAX_LENGTH,
+    );
+    expect(loaded[0].reason).toContain("項未列出");
+    expect(loaded[0].reason).toBe(boundLedgerImportReason(reason));
+    /*
+     * Info: (20260910 - Emily) 而且它同時把 #6760 的第一個症狀對舊資料關上:
+     * 載回來的那一筆過事實 schema 是通的(只在寫入端截斷的話,舊資料這條路不生效)。
+     */
+    const fact = queryAnomalies(undefined, [loaded[0]]);
+    expect(fact.ok).toBe(true);
+    if (fact.ok) {
+      expect(CarbonLedgerFactSchema.safeParse(fact.facts[0]).success).toBe(
+        true,
+      );
+    }
+  });
+
+  it("界內的紀錄原樣載回(收界不動已經合規的資料)", () => {
+    const reason = "(1) 總公司 / CATEGORY_2 差額 143.4858";
+    const stored = CarbonInventoryStateSchema.safeParse({
+      ...baseState,
+      ledgerImportBlocks: [blockOf(reason)],
+    });
+    expect(stored.success).toBe(true);
+    if (!stored.success) return;
+    expect(stored.data.ledgerImportBlocks?.[0].reason).toBe(reason);
   });
 
   it("截斷用的分隔字元就是寫入端接段落用的那一個(改一邊必改另一邊)", () => {

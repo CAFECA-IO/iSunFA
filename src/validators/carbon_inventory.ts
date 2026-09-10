@@ -14,10 +14,10 @@ import {
   INVENTORY_YEAR_MIN,
   INVENTORY_YEAR_STORAGE_MAX,
   LEDGER_IMPORT_BLOCK_PARAGRAPH_ID_MAX_LENGTH,
-  LEDGER_IMPORT_BLOCK_REASON_MAX_LENGTH,
   LEDGER_IMPORT_BLOCK_TIMESTAMP_MAX_LENGTH,
   LEDGER_IMPORT_BLOCKS_MAX,
 } from "@/constants/carbon_chatbot";
+import { boundLedgerImportReason } from "@/lib/carbon_ledger_import_blocks";
 import { CARBON_CALCULATE_MAX_ACTIVITIES } from "@/constants/carbon_calculation";
 import {
   CARBON_ARTICULATION_MAX_STOCK_RECORDS,
@@ -336,10 +336,27 @@ export const CarbonInventoryStateSchema = z.object({
    * (PR #6725 review 阻-2 那個形狀)。
    *
    * 現在量過了(表在 `LEDGER_IMPORT_BLOCKS_MAX` 的註解:四廠址全錯一次 1163 字),
-   * 截斷放在唯一的寫入者 `recordLedgerImportBlocks`(`boundLedgerImportBlocks`),
-   * 這裡的 `.max()` 是第二道。兩道之間的關係由不變式測試釘住:
-   * **寫入端能產出的每一筆,過完這個 schema 一定讀得回來** ——
-   * 所以這裡的上界一旦想調小,先去改截斷那一端,測試會告訴你順序反了。
+   * 截斷放在唯一的寫入者 `recordLedgerImportBlocks`(`boundLedgerImportBlocks`)。
+   *
+   * ## `reason` 為什麼是 `transform` 而不是 `.max()`(#6794 review 阻-1)
+   *
+   * 因為**上線前已經存進雲端的紀錄就是未收界的**,而 `.max()` 會把它們整份拒掉。
+   *
+   * 這個欄位在 09-04 到 09-09 之間型別有、schema 沒有 —— 而 zod 剝掉未宣告鍵之後
+   * `safeParse` 是**成功**的,存檔又存 `JSON.stringify(state)`(原件,不是 `parsed.data`,
+   * 理由見 `carbon_inventory_storage.ts` 那段註解)。所以那段時間每一次大面積勾稽失敗
+   * 都在雲端留下一筆 1000 字以上的 `reason`。一旦這裡宣告 `.max(500)`,
+   * 那些使用者下一次開房就是 `SCHEMA_REJECTED` → 帳本、活動數據、待補項、年度快照
+   * 全部讀不回來,而盤查狀態**沒有本機備份**,沒有任何副本可以救。
+   *
+   * 宣告這個鍵的目的是讓它**撐過往返**(#6760),不是把它當守門 —— 守門在寫入端。
+   * 所以這裡收界而不拒:舊紀錄載得回來、而且載回來就已經在界內,
+   * 下一次存檔寫回的是收好界的版本,自己痊癒,不需要任何 migration。
+   * 附帶把 #6760 的第一個症狀(reason 進事實 `value` 超過 500 → 每一則聊天被伺服端打回)
+   * 對**舊資料**也一起關上 —— 只在寫入端截斷的話,舊資料那條路是不生效的。
+   *
+   * `paragraphId` / `blockedAt` 保留 `.max()`:它們的值域由來源決定(大綱 id、ISO 字串),
+   * 不存在「上線前存了超界值」這回事,那兩道第二關是真的第二關。
    */
   ledgerImportBlocks: z
     .array(
@@ -348,7 +365,15 @@ export const CarbonInventoryStateSchema = z.object({
           .string()
           .min(1)
           .max(LEDGER_IMPORT_BLOCK_PARAGRAPH_ID_MAX_LENGTH),
-        reason: z.string().min(1).max(LEDGER_IMPORT_BLOCK_REASON_MAX_LENGTH),
+        /*
+         * Info: (20260910 - Emily) 包一層而不是直接傳函式:`boundLedgerImportReason`
+         * 的第二個參數是上界(供測試傳小值),而 zod 的 transform 第二個參數是
+         * `RefinementCtx` —— 直接傳會把 ctx 當成上界。
+         */
+        reason: z
+          .string()
+          .min(1)
+          .transform((raw) => boundLedgerImportReason(raw)),
         blockedAt: z.string().max(LEDGER_IMPORT_BLOCK_TIMESTAMP_MAX_LENGTH),
       }),
     )
