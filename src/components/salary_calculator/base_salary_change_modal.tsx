@@ -55,10 +55,21 @@ const BaseSalaryChangeModal: FC<IBaseSalaryChangeModalProps> = ({
     change === null
       ? ""
       : (() => {
+          /**
+           * Info: (20260910 - Luphia) **一律 UTC**（20260910 產品決策）。
+           *
+           * 原本讀本地時間。這裡渲染的是**只有日期**的字串，而資料庫存的
+           * 是 UTC —— 在 UTC 以西的時區，2026-04-01T02:00Z 會被印成 03-31，
+           * 也就是那筆調薪在畫面上「發生在另一天」，跨月時還會是另一個月。
+           *
+           * 這與 `salary_employee_profile.ts` 的 `toDateInputValue` 是同一條規則
+           *（那裡明文寫著 `toLocaleDateString()` 會少一天），也與姊妹視窗
+           * `employee_history_modal.tsx` 的日期格式化一致。
+           */
           const at = new Date(change.recordedAt * 1000);
-          const month = `${at.getMonth() + 1}`.padStart(2, "0");
-          const day = `${at.getDate()}`.padStart(2, "0");
-          return `${at.getFullYear()}-${month}-${day}`;
+          const month = `${at.getUTCMonth() + 1}`.padStart(2, "0");
+          const day = `${at.getUTCDate()}`.padStart(2, "0");
+          return `${at.getUTCFullYear()}-${month}-${day}`;
         })();
 
   /**

@@ -3,7 +3,7 @@
 import { FC, useState } from "react";
 import { ArrowRight, History, Loader2, X } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
-import { toOrdinal } from "@/lib/utils/salary_coverage";
+import { profileChangeTiming } from "@/lib/utils/salary_profile_change_timing";
 import { numberWithCommas } from "@/lib/utils/common";
 import { useSalaryProfileChanges } from "@/hooks/use_salary_profile_changes";
 import { ISalaryProfileChange } from "@/interfaces/salary_record";
@@ -83,13 +83,25 @@ const formatDateUtc = (unixSeconds: number): string => {
   return `${date.getUTCFullYear()}-${month}-${day}`;
 };
 
+/**
+ * Info: (20260910 - Luphia) 記錄時刻，**一律 UTC**（20260910 產品決策）。
+ *
+ * 上面那個 `formatDate` 早就是 UTC 了，而這一支原本讀本地時間 —— 兩者
+ * 渲染的是同一批時間戳，混用的後果不只是不一致，是**自相矛盾**：
+ *
+ *     台北使用者在 2026-04-01 07:00 記錄（= 2026-03-31 23:00 UTC），生效四月
+ *     判斷（UTC）→ 三月記的、四月生效 → 標「預先排定」
+ *     顯示（本地）→「記錄於 2026-04-01 07:00」
+ *
+ * 畫面於是同時說「四月記的」與「預先排定」。改成 UTC 之後兩邊講同一件事。
+ */
 const formatInstant = (unixSeconds: number): string => {
   const date = new Date(unixSeconds * 1000);
-  const month = `${date.getMonth() + 1}`.padStart(2, "0");
-  const day = `${date.getDate()}`.padStart(2, "0");
-  const hour = `${date.getHours()}`.padStart(2, "0");
-  const minute = `${date.getMinutes()}`.padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day} ${hour}:${minute}`;
+  const month = `${date.getUTCMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getUTCDate()}`.padStart(2, "0");
+  const hour = `${date.getUTCHours()}`.padStart(2, "0");
+  const minute = `${date.getUTCMinutes()}`.padStart(2, "0");
+  return `${date.getUTCFullYear()}-${month}-${day} ${hour}:${minute}`;
 };
 
 const EmployeeHistoryModal: FC<IEmployeeHistoryModalProps> = ({
@@ -166,28 +178,22 @@ const EmployeeHistoryModal: FC<IEmployeeHistoryModalProps> = ({
    * 兩個日期並排時，讀者通常只看第一個。
    */
   const timingHintOf = (change: ISalaryProfileChange): string | null => {
-    const recorded = new Date(change.recordedAt * 1000);
-    const recordedYear = recorded.getFullYear();
-    const recordedMonth = recorded.getMonth() + 1;
-
     /**
-     * Info: (20260910 - Luphia) 走共用的 `toOrdinal`（review 建-2）。
+     * Info: (20260910 - Luphia) 判斷走 `profileChangeTiming`，這裡只挑文案。
      *
-     * 這裡原本自己寫 `year * 12 + month` —— 全站第三份手寫的年月序數，
-     * 而 `salary_coverage.ts` 那一份是 `year * 12 + (month - 1)`。
-     * 三份各自都自洽，但同一個年月會算出差 1 的值，型別都是 `number`。
+     * 原本在這裡自己算，而且用 `getFullYear()` / `getMonth()`（**本地時間**）
+     * 讀 `recordedAt` 再去跟 `effectiveYear` / `effectiveMonth`（存成整數的
+     * 日曆年月）比 —— 在 UTC 以西的時區，月初那幾個小時記的異動會整個月
+     * 退一格，於是「回溯登記」與「預先排定」這兩個意義相反的標籤會翻面。
+     *
+     * 抽出去的理由不是好看：本專案不 render React，留在這裡的話那個錯誤
+     * 只能靠手動點過，而它只在月初月底的幾個小時、特定時區才出現
+     *（`salary_profile_change_timing.tz.test.ts` 釘住它）。
      */
-    const effectiveIndex = toOrdinal({
-      year: change.effectiveYear,
-      month: change.effectiveMonth,
-    });
-    const recordedIndex = toOrdinal({
-      year: recordedYear,
-      month: recordedMonth,
-    });
+    const timing = profileChangeTiming(change);
 
-    if (effectiveIndex === recordedIndex) return null;
-    return effectiveIndex < recordedIndex
+    if (timing === null) return null;
+    return timing === "backdated"
       ? t("calculator.employee_list.timing_backdated")
       : t("calculator.employee_list.timing_scheduled");
   };

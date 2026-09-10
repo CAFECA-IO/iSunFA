@@ -577,3 +577,57 @@ describe("年月序數只有一份定義", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+/**
+ * Info: (20260910 - Luphia) 時間戳一律用 UTC 讀（20260910 產品決策：資料庫存 UTC）。
+ *
+ * 這一組是掃描，因為它問的是「有沒有人又自己算了一次」—— 而那個錯誤的形狀
+ * 是**兩份實作並存**，行為測試看不到它（兩邊各自都通過自己的測試，正是它
+ * 能存在的原因）。判斷本身的判準在 `salary_profile_change_timing.tz.test.ts`，
+ * 那裡釘住 `America/New_York`。
+ *
+ * 20260910 清點時，薪資模組裡從 epoch 秒建出來的 `Date` 有三處用本地 getter 讀：
+ * 兩個彈窗的日期渲染，以及調薪的「回溯／預先」判斷。前兩者讓同一筆異動在
+ * 畫面上顯示成另一天，後者讓兩個意義相反的標籤翻面。
+ */
+describe("薪資模組的時間戳一律 UTC 讀", () => {
+  const FILES = [
+    "src/components/salary_calculator/employee_history_modal.tsx",
+    "src/components/salary_calculator/base_salary_change_modal.tsx",
+    "src/lib/utils/salary_profile_change_timing.ts",
+  ];
+
+  const stripComments = (source: string): string =>
+    source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^[ \t]*\/\/[^\n]*/gm, "");
+
+  it.each(FILES)("%s 沒有用本地時間讀 epoch 秒", (path) => {
+    const source = stripComments(
+      readFileSync(join(process.cwd(), path), "utf8"),
+    );
+
+    /**
+     * Info: (20260910 - Luphia) 只認**不帶 UTC** 的那幾支 getter。
+     * `getUTCFullYear` 等含有相同字尾，所以要用 `get` 緊接大寫字母來排除它們。
+     */
+    expect(source).not.toMatch(/\.get(FullYear|Month|Date|Hours|Minutes)\(\)/);
+  });
+
+  /**
+   * Info: (20260910 - Luphia) 判斷抽出去了，元件不得自己再算一次（§1.11 的反面）。
+   *
+   * 正面（元件真的呼叫了它）與反面（元件裡沒有留一份）要成對 ——
+   * 只有正面的話，下一個人「順手」把判斷搬回 JSX 時沒有人會知道。
+   */
+  it("回溯／預先的判斷只住在純函式裡", () => {
+    const modal = readFileSync(
+      join(
+        process.cwd(),
+        "src/components/salary_calculator/employee_history_modal.tsx",
+      ),
+      "utf8",
+    );
+
+    expect(modal).toContain("profileChangeTiming(change)");
+    expect(stripComments(modal)).not.toMatch(/effectiveYear\s*\*\s*12/);
+  });
+});
