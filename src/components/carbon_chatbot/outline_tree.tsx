@@ -34,6 +34,15 @@ interface IOutlineTreeProps {
   onGenerateDiagram?: (paragraphId: string) => void;
   // Info: (20260720 - Tzuhan) #23 數據段落勾稽三態(已勾稽 ✓/守恆違反 ⚠/數據不足),由 ledger 決定性裁決
   dataBadgeState?: CarbonDataBadgeStateEnum;
+  /**
+   * Info: (20260908 - Emily) 帳本改了、而且這幾節引用的值也變了(#6786)。
+   *
+   * 只標示,**不自動重寫** —— 重寫花點數,而且會覆蓋使用者手改過的字。
+   * 重寫走的是右邊那顆既有的「AI 撰寫」鈕(同一條 `/draft` 路),
+   * 過期時只換提示文案與顏色,不另加一顆按鈕:兩顆長得一樣、做同一件事的按鈕
+   * 只會讓人猜哪一顆才是「更新」。
+   */
+  staleParagraphIds?: string[];
 }
 
 const statusIcon = (paragraph: IReportParagraph, isActive: boolean) => {
@@ -79,8 +88,11 @@ export function OutlineTree({
   onGenerateDraft = undefined,
   onGenerateDiagram = undefined,
   dataBadgeState = CarbonDataBadgeStateEnum.INSUFFICIENT,
+  staleParagraphIds = [],
 }: IOutlineTreeProps) {
   const { t } = useTranslation();
+  // Info: (20260908 - Emily) 逐節查表(#6786):陣列進 props、集合在元件內組,呼叫端不必知道實作
+  const staleIds = new Set(staleParagraphIds);
   /**
    * Info: (20260720 - Tzuhan) #23 徽章樣式:teal=已勾稽、red=守恆違反、gray=數據不足
    * Info: (20260804 - Tzuhan) 新增 amber=含原文照錄。與 teal 分色的理由與分態相同:
@@ -184,6 +196,15 @@ export function OutlineTree({
                         {/* Info: (20260730 - Tzuhan) 來源徽章:AI 草稿(含「待補」佔位)與逐字照抄原文必須分辨得出來, */}
                         {/* Info: (20260730 - Tzuhan) 否則查核者無從判斷哪幾節需要回原文核對、哪幾節需要自己補資訊 */}
                         {originBadge(p, t)}
+                        {/* Info: (20260908 - Emily) 過期標記(#6786):帳本改了且這一節引用的值變了 */}
+                        {staleIds.has(p.id) && (
+                          <span
+                            title={t("carbon_chatbot.freshness_stale_hint")}
+                            className="shrink-0 rounded bg-amber-50 px-1 text-[10px] font-medium text-amber-700"
+                          >
+                            {t("carbon_chatbot.freshness_stale_short")}
+                          </span>
+                        )}
                       </button>
 
                       {/* Info: (20260730 - Tzuhan) 產生結構圖:僅該段有對應模板且已有內容時出現(圖的素材是敘述本身) */}
@@ -209,14 +230,19 @@ export function OutlineTree({
                           title={
                             draftingParagraphId === p.id
                               ? t("carbon_chatbot.draft_generating")
-                              : t("carbon_chatbot.draft_generate")
+                              : staleIds.has(p.id)
+                                ? // Info: (20260908 - Emily) 過期節的一鍵更新(#6786):同一條 /draft 路,只是換說法
+                                  t("carbon_chatbot.freshness_update_section")
+                                : t("carbon_chatbot.draft_generate")
                           }
                           className={`shrink-0 rounded p-0.5 transition-colors ${
                             draftingParagraphId === p.id
                               ? "text-[#ff5a00]"
                               : draftingParagraphId
                                 ? "cursor-not-allowed text-gray-200"
-                                : "text-gray-300 hover:bg-orange-50 hover:text-[#ff5a00]"
+                                : staleIds.has(p.id)
+                                  ? "text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                                  : "text-gray-300 hover:bg-orange-50 hover:text-[#ff5a00]"
                           }`}
                         >
                           {draftingParagraphId === p.id ? (

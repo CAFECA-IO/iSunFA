@@ -12,6 +12,7 @@ import {
   isLlmTimeoutError,
 } from "@/services/chat.service";
 import { chatroomService } from "@/services/chatroom.service";
+import { canReadAttachmentCid } from "@/services/carbon_access.guard";
 import { AttachmentExtractionService } from "@/services/attachment_extraction.service";
 import { isDraftQuantityGateError } from "@/services/paragraph_draft.service";
 import { ParagraphDraftService } from "@/services/paragraph_draft.service";
@@ -87,6 +88,26 @@ export async function POST(request: NextRequest) {
   // Info: (20260714 - Tzuhan) 頻道所有權裁決: 只允許讀寫自己 address 前綴的頻道，防跨用戶寫入
   if (channel && !isCarbonChatChannelOwnedBy(channel, sessionUser.address)) {
     return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
+  }
+
+  /**
+   * Info: (20260907 - Emily) 附件 cid 的歸屬裁決(#6748)。
+   *
+   * 附件管線拿使用者送來的 cid 直接 `recoverLaria`,與 /import 是同一個缺口
+   * (見 canReadAttachmentCid 的註解)。放在**訊息入庫之前**:一則帶著別人 cid 的
+   * 訊息不該先寫進 DB 再被拒 —— 那會留下一筆指向別人檔案的 metadata。
+   * 逐個檢查、任一不通過整則拒絕;不做「過濾掉不合法的那幾個再繼續」,
+   * 那會讓使用者以為附件都送出去了。
+   */
+  if (attachments && attachments.length > 0) {
+    const ownership = await Promise.all(
+      attachments.map((item) =>
+        canReadAttachmentCid(sessionUser.address, item.cid),
+      ),
+    );
+    if (ownership.some((allowed) => !allowed)) {
+      return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
+    }
   }
 
   try {

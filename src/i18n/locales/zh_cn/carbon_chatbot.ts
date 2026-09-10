@@ -65,6 +65,14 @@ export const carbonChatbot = {
   origin_ai_draft: "AI 草稿",
   origin_imported_short: "原文",
   origin_ai_draft_short: "草稿",
+  // Info: (20260908 - Emily) 帳本改了之後的過期標示(#6786;理由見 zh_tw)
+  freshness_stale_short: "待更新",
+  freshness_stale_hint:
+    "本节引用的碳帐本数字已变更，内容可能不是最新的；要更新请按右边的 AI 撰写。",
+  freshness_stale_count: "{{count}} 节待更新",
+  freshness_stale_list:
+    "碳帐本已更新，这几节引用的数字变了：{{codes}}。点此打开目录逐节更新。",
+  freshness_update_section: "按最新碳帐本更新本节",
   // Info: (20260806 - Tzuhan) 匯入前先上傳取 cid:14 次呼叫共用一份儲存,文案要說出「為何要等」
   import_uploading:
     "正在将 {{name}} 存入安全存储(后续每章解析改由服务端取回,不再重复上传整份文件)…",
@@ -131,6 +139,14 @@ export const carbonChatbot = {
   save_blocked_framework_claim:
     "报告里出现「本公司符合 {{name}}」这类主体合规宣告,这一版没有保存到云端 —— 那句话不得出现在送出的报告上。内容仍在本机,移除该语句后会自动重新保存;叙述文件结构的架构对齐声明不受影响。",
   // Info: (20260904 - Emily) 盘查状态存不进去(open/73):每次都会失败同一次,而且没有本机备份
+  inventory_unreadable:
+    "这个对话的盘查数据存在,但目前读不出来({{reason}})。在读出来之前不会保存任何变更,也请不要重新设置公司与年度 —— 那些变更不会被保存。",
+  inventory_unreadable_reason_locked: "已加密,尚未解锁密钥",
+  inventory_unreadable_reason_decrypt_failed: "已加密,目前的密钥解不开",
+  inventory_unreadable_reason_schema_rejected: "不符合当前版本的存储格式",
+  // Info: (20260909 - Emily) 載入失敗(網路/伺服器)的專屬通知(#6779 review 後續):不套「資料存在」那句
+  inventory_load_failed:
+    "这个对话的盘查数据目前无法加载(网络或服务器问题),有没有既有数据尚未确认。加载成功前不会保存任何变更;重新进入这个对话会再试一次。",
   inventory_unsavable:
     "盘查数据这一版没有保存成功:其中有字段不符合存储格式。内容还在画面上,但关闭或刷新这个分页之后这一版就不在了。这是系统的问题,请回报给我们。",
   save_local_quota: "本机暂存空间已满,离线备份未更新(云端已保存)。",

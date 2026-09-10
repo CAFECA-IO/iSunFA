@@ -22,6 +22,8 @@ interface IOutlineDrawerProps {
   onGenerateDiagram?: (paragraphId: string) => void;
   // Info: (20260720 - Tzuhan) #23 數據段落勾稽三態(透傳給 OutlineTree)
   dataBadgeState?: CarbonDataBadgeStateEnum;
+  // Info: (20260908 - Emily) 過期節(#6786;透傳給 OutlineTree)
+  staleParagraphIds?: string[];
 }
 
 export function OutlineDrawer({
@@ -34,6 +36,7 @@ export function OutlineDrawer({
   onGenerateDraft = undefined,
   onGenerateDiagram = undefined,
   dataBadgeState = undefined,
+  staleParagraphIds = [],
 }: IOutlineDrawerProps) {
   const { t } = useTranslation();
 
@@ -58,6 +61,7 @@ export function OutlineDrawer({
         paragraphs={paragraphs}
         activeParagraphId={activeParagraphId}
         onJump={onJump}
+        staleParagraphIds={staleParagraphIds}
         onToggleVerified={onToggleVerified}
         draftingParagraphId={draftingParagraphId}
         onGenerateDraft={onGenerateDraft}
