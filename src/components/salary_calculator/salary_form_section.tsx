@@ -9,6 +9,7 @@ import OthersForm from "@/components/salary_calculator/others_form";
 import { useCalculatorCtx } from "@/contexts/calculator_context";
 import { useTranslation } from "@/i18n/i18n_context";
 import { getMinimumWage } from "@/lib/utils/salary_calculator";
+import { MAX_OVERWORK_HOURS } from "@/constants/salary_calculator";
 
 interface ISalaryFormSectionProps {
   // Info: (20260831 - Julian) 傳給 BasicInfoForm 決定要不要顯示「員工列表」入口（計劃書 §2.4）
@@ -28,7 +29,16 @@ const SalaryFormSection: FC<ISalaryFormSectionProps> = ({ accountBookId }) => {
 
   const minimumWage = getMinimumWage(parseInt(selectedYear));
   const isSalaryBelowMinimum = baseSalary + mealAllowance < minimumWage;
-  const isOvertimeExceeded = totalTaxableHours + totalNonTaxableHours > 46;
+  /**
+   * Info: (20260909 - Julian) 比的是**免稅＋應稅的合計**，而且用 `>` 不是 `>=`。
+   *
+   * 勞基法 §32 II 管的是總延長工時，不是分別管兩個稅別 ——
+   * 30 小時免稅加 30 小時應稅是 60 小時，超標，而兩個數字各自都沒到 46。
+   * 而「不得超過四十六小時」表示 46 本身合法，所以擋門是 `> MAX`。
+   * （`work_hours_form.tsx` 那兩個分區提示用 `>= MAX`，那是提醒不是禁止。）
+   */
+  const isOvertimeExceeded =
+    totalTaxableHours + totalNonTaxableHours > MAX_OVERWORK_HOURS;
 
   const showWarning = isSalaryBelowMinimum || isOvertimeExceeded;
 

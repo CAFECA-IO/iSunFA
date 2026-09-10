@@ -10,6 +10,7 @@ import SendingPaySlipModal from "@/components/salary_calculator/sending_pay_slip
 import { useSalaryRecordDeliveries } from "@/hooks/use_salary_pay_slip_delivery";
 import { useAuth } from "@/contexts/auth_context";
 import { ISalaryCalculatorUI } from "@/interfaces/salary_calculator";
+import type { IPaySlipMeta } from "@/lib/utils/pay_slip_meta";
 import { timestampToString } from "@/lib/utils/common";
 import { downloadNodeAsPng } from "@/lib/utils/pay_slip_download";
 
@@ -57,6 +58,14 @@ interface IViewPaySlipModal {
    * 兩者的下一步完全不同：一個是去補信箱，一個是那個人已經不在了。
    */
   sendBlockedReason?: string;
+  /**
+   * Info: (20260909 - Julian) 到職日與投保狀態，由呼叫端組好傳進來。
+   *
+   * 不在這裡組：投保狀態要讀那筆紀錄的 `input` 快照，而這個彈窗收到的
+   * 是 `paySlipData`（只有計算結果）。「我的薪資單」那條路徑兩者都沒有，
+   * 所以是可選的 —— 不給就不顯示那幾格。
+   */
+  meta?: IPaySlipMeta;
 }
 
 const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
@@ -73,6 +82,7 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
   onResent = undefined,
   employeeEmail = undefined,
   sendBlockedReason = undefined,
+  meta = undefined,
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -176,6 +186,15 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
             resultData={paySlipData}
             variant="plain"
             className="shrink-0 px-[40px] py-[24px]"
+            /**
+             * Info: (20260909 - Julian) 只有這裡開啟遮罩。
+             *
+             * 這是「別人的薪資單」—— 在辦公室裡幫別人算薪水的人一天會打開
+             * 好幾個人的紀錄，每一次打開都是一次曝光。計算機那一頁不開：
+             * 那裡的數字是使用者自己剛剛輸入的（見 `pay_slip.tsx` 的 `maskable`）。
+             */
+            maskable
+            meta={meta}
           />
           {isSentRecord && (
             <div className="flex shrink-0 items-center gap-[8px] px-[40px] text-sm">
@@ -254,6 +273,14 @@ const ViewPaySlipModal: FC<IViewPaySlipModal> = ({
           recordId={recordId}
           monthName={monthWithI18n}
           sentToName={sentTo ?? lastSent.recipientEmail}
+          /**
+           * Info: (20260908 - Julian) 用 `displayedEmployeeName`，不是可選的 `employeeName`。
+           *
+           * 「我的薪資單」那條路徑不傳 `employeeName`（它從 `user?.name` 來）——
+           * 傳原始 prop 會讓吐司寫成「已寄給 undefined」。
+           * 同一個理由已經在 `downloadPng` 的檔名上踩過一次（見該處註解）。
+           */
+          employeeName={displayedEmployeeName}
           modalVisibleHandler={modalVisibleHandler}
           onResent={onResent}
         />

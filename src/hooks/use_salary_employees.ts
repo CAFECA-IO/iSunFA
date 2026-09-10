@@ -9,6 +9,7 @@ import {
 import {
   ISalaryCalculatorEmployee,
   ISalaryCalculatorEmployeeWriteInput,
+  ISalaryProfileChangeRequest,
 } from "@/interfaces/salary_record";
 
 /**
@@ -82,11 +83,26 @@ export function useSalaryEmployees(accountBookId: string | null) {
     return accountBookId;
   }, [accountBookId]);
 
+  /**
+   * Info: (20260908 - Julian) `change` 是**選填**的（生效月份、原因）。
+   *
+   * 缺漏時伺服器補當期。做成選填而不是必填，是因為呼叫端有三個，
+   * 而其中兩個（計算機的「更新員工檔並儲存」與「直接新增員工」）
+   * 在 20260908 之前就存在 —— 必填會讓它們在上線當天編譯失敗，
+   * 而它們要傳的值不是「使用者填的生效月」而是「計算機當下選的年月」，
+   * 那是另一回事，值得各自想過。
+   *
+   * 代價要記著：補當期對補登與預先輸入是錯的（計劃書 §4.1），
+   * 所以**編輯員工那條路徑一定要帶**。
+   */
   const createEmployee = useCallback(
-    async (input: ISalaryCalculatorEmployeeWriteInput) => {
+    async (
+      input: ISalaryCalculatorEmployeeWriteInput,
+      change?: ISalaryProfileChangeRequest,
+    ) => {
       await request(salaryCalculatorApiOf(requireBook()).EMPLOYEE, {
         method: "POST",
-        body: JSON.stringify(input),
+        body: JSON.stringify({ ...input, ...change }),
       });
       await reload();
     },
@@ -94,10 +110,14 @@ export function useSalaryEmployees(accountBookId: string | null) {
   );
 
   const updateEmployee = useCallback(
-    async (employeeId: string, input: ISalaryCalculatorEmployeeWriteInput) => {
+    async (
+      employeeId: string,
+      input: ISalaryCalculatorEmployeeWriteInput,
+      change?: ISalaryProfileChangeRequest,
+    ) => {
       await request(salaryEmployeeItemApi(requireBook(), employeeId), {
         method: "PUT",
-        body: JSON.stringify(input),
+        body: JSON.stringify({ ...input, ...change }),
       });
       await reload();
     },

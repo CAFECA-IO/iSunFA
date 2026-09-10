@@ -89,7 +89,21 @@ export interface ISalaryCoverageInput {
  * 用它而不是 `Date` 做逐月推進：`new Date(y, m + 1, 1)` 在跨年與月底
  * （1/31 加一個月）都有陷阱，而這裡只需要「第幾個月」這個序數。
  */
-const toOrdinal = (period: ISalaryPeriod): number =>
+/**
+ * Info: (20260910 - Luphia) **全站唯一的年月序數**（review 建-2）。
+ *
+ * 匯出而不是各自寫一份：`salary_record.repo.ts` 原本另有一支 `periodIndex`
+ * 寫成 `year * 12 + month`（沒有 `- 1`）。兩者各自都對 —— 都是單調遞增、
+ * 拿來排序與比較都成立 —— 但**同一個年月會算出差 1 的兩個值**，
+ * 而它們的型別都是 `number`。
+ *
+ * 今天沒有交換所以沒出事。哪天有人把其中一邊的值傳給另一邊，
+ * 型別不會有意見，症狀是「差額比對整整差一個月」：九月那一列會去跟
+ * 十月比。那種錯誤在單一模組裡看不出來，因為兩邊各自都自洽。
+ *
+ * 收斂成一份之後，那個可能性就不存在了。
+ */
+export const toOrdinal = (period: ISalaryPeriod): number =>
   period.year * 12 + (period.month - 1);
 
 const fromOrdinal = (ordinal: number): ISalaryPeriod => ({

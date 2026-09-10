@@ -116,12 +116,14 @@ beforeAll(async () => {
   }
 
   const employee = await salaryCalculatorEmployeeRepo.createEmployee({
+    change: changeCtx(),
     accountBookId: BOOK_ID,
     input: employeeInput("E2E-D001", ORIGINAL_EMAIL),
   });
   employeeId = employee.id;
 
   const otherEmployee = await salaryCalculatorEmployeeRepo.createEmployee({
+    change: changeCtx(),
     accountBookId: OTHER_BOOK_ID,
     input: employeeInput("E2E-D001", `other.${ORIGINAL_EMAIL}`),
   });
@@ -160,6 +162,24 @@ beforeAll(async () => {
 
 afterAll(async () => {
   const books = { accountBookId: { in: [BOOK_ID, OTHER_BOOK_ID] } };
+  /**
+   * Info: (20260909 - Julian) 刪除順序＝外鍵的反向拓樸序，**兩張表是後來加的**。
+   *
+   * CI 首次跑 `npm run test:e2e` 時這裡炸在
+   * `salary_employee_profile_change_employee_id_fkey` —— 那張表是
+   * 20260908 的調薪歷程加的，而它刻意用 `Restrict`（不是 `Cascade`）：
+   * 「刪掉員工，他的調薪歷程也一起消失」會讓稽核軌跡可以用刪除來規避。
+   * 應用層對員工是**軟刪除**，所以正式路徑從來不會撞到這條外鍵 ——
+   * 只有測試收尾這種真刪會，而那正是它沒被發現的原因
+   *（這兩支 e2e 在 CI 接上之前沒有人跑過）。
+   *
+   * `auditLog` 同理：20260909 起刪除薪資紀錄會寫一列，而它同時指向
+   * `accountBook` 與 `user` —— 少了這一行，下面兩個 deleteMany 會接著炸。
+   *
+   * 一律以帳本為範圍，不 truncate：這兩支 e2e 跑在共用的資料庫上。
+   */
+  await prisma.auditLog.deleteMany({ where: books });
+  await prisma.salaryEmployeeProfileChange.deleteMany({ where: books });
   await prisma.salaryPaySlipDelivery.deleteMany({ where: books });
   await prisma.salaryRecord.deleteMany({ where: books });
   await prisma.salaryCalculatorEmployee.deleteMany({ where: books });
@@ -170,6 +190,21 @@ afterAll(async () => {
   await prisma.user.deleteMany({ where: { id: userId } });
   // Info: (20260904 - Julian) 不關連線 jest 會抱怨有未結束的非同步操作
   await prisma.$disconnect();
+});
+
+/**
+ * Info: (20260908 - Julian) 員工檔寫入一律要帶「誰改的、何時生效」（計劃書 §4）。
+ *
+ * 這是**必填**參數而不是選填：忘記傳是編譯錯誤，不是一列少了 userId 的異動紀錄。
+ * 這一批呼叫端因此都被迫補上它 —— 那正是型別該做的事。
+ *
+ * 寫成函式而不是常數：`changedByUserId` 在 e2e 裡要等 `beforeAll` 建好 user
+ * 才有值，模組載入時取一次會永遠是空字串（而外鍵會在執行期才抱怨）。
+ */
+const changeCtx = () => ({
+  changedByUserId: userId,
+  effectiveYear: 2026,
+  effectiveMonth: 9,
 });
 
 describe("成功與失敗都真的落地", () => {
@@ -428,6 +463,7 @@ describe("recipientEmail 是快照，不是 join", () => {
 
     const changedEmail = `changed.${ORIGINAL_EMAIL}`;
     await salaryCalculatorEmployeeRepo.updateEmployee({
+      change: changeCtx(),
       accountBookId: BOOK_ID,
       employeeId,
       input: employeeInput("E2E-D001", changedEmail),

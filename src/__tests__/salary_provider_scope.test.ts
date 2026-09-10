@@ -80,8 +80,22 @@ describe("帳本版薪資計算機的 CalculatorProvider 掛在 layout", () => {
     expect(layout).toContain(
       'import { CalculatorProvider } from "@/contexts/calculator_context"',
     );
-    // Info: (20260901 - Julian) 光 import 不算數，要真的包住 children
-    expect(layout).toMatch(/<CalculatorProvider>\s*\{children\}/);
+    /**
+     * Info: (20260908 - Julian) 光 import 不算數，要真的**包住** children。
+     *
+     * 原本比對的是 `<CalculatorProvider>` 緊接著 `{children}`。
+     * 20260908 在兩者之間插進了 `SalaryAccessGate`（角色閘，見計畫書 §10.9），
+     * 於是這一條紅了 —— 但它要守的東西一點都沒變：
+     * 四個頁面共用同一顆 provider，靠的是 provider 在 layout 這一層而且罩住整棵子樹，
+     * 不是它與 `{children}` 相鄰。
+     *
+     * 所以放寬成「開標籤 … children … 收標籤」。這仍然擋得住真正的缺陷
+     * （provider 只包住某一段、或根本沒包 children），
+     * 而不會在下一次有人往中間再插一層時假紅。
+     */
+    expect(layout).toMatch(
+      /<CalculatorProvider>[\s\S]*\{children\}[\s\S]*<\/CalculatorProvider>/,
+    );
   });
 
   it.each(PAGES)(

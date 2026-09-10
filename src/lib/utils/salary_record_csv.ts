@@ -1,8 +1,15 @@
 import { ISalaryRecordDetail } from "@/interfaces/salary_record";
 import {
   PAY_SLIP_CSV_IDENTITY_LABELS,
+  PAY_SLIP_CSV_INSURED_STATUS_LABELS,
   PAY_SLIP_FIELD_LABELS,
+  PAY_SLIP_META_LABELS,
 } from "@/constants/pay_slip_labels";
+import {
+  formatIsoDateUtc,
+  paySlipMetaOf,
+  PAY_SLIP_INSURED_FIELDS,
+} from "@/lib/utils/pay_slip_meta";
 
 /**
  * Info: (20260904 - Julian) 薪資紀錄的 CSV 匯出（純函式）。
@@ -35,15 +42,31 @@ const FORMULA_TRIGGER = /^[=+\-@\t\r]/;
  * 對調的話 `=1+1,x` 會變成 `"=1+1,x"`，引號跑到最前面，
  * 單引號就補不到真正的開頭，中和完全失效而檔案看起來一切正常。
  */
-const escapeField = (value: string): string => {
-  const neutralized = FORMULA_TRIGGER.test(value) ? `'${value}` : value;
+const escapeField = (value: string, numeric = false): string => {
+  /**
+   * Info: (20260908 - Julian) `numeric` 的欄位不中和。
+   *
+   * ## 為什麼需要這個出口
+   *
+   * `FORMULA_TRIGGER` 包含 `-`，而 20260908 加入的「本薪較上一筆差額」
+   * 是這份 CSV 第一個**可能為負**的欄位。減薪的 `-10000` 會被補成
+   * `'-10000` —— 在 Excel 裡那是一格**文字**，於是整欄加總不起來、
+   * 排序也是字典序。而檔案看起來完全正常。
+   *
+   * 在這之前所有金額都非負，所以這個坑一直沒有出現。
+   *
+   * ## 為什麼是 opt-out 而不是 opt-in
+   *
+   * 預設仍然中和。反過來（只對「使用者輸入的欄位」中和）需要正確標記
+   * 每一個文字欄位，而標錯一個的後果是公式注入回來了。
+   * 預設安全、明確標記例外，標錯的後果就只是「一個數字變成文字」。
+   */
+  const neutralized =
+    !numeric && FORMULA_TRIGGER.test(value) ? `'${value}` : value;
   return /[",\n\r]/.test(neutralized)
     ? `"${neutralized.replace(/"/g, '""')}"`
     : neutralized;
 };
-
-const toRow = (fields: readonly string[]): string =>
-  fields.map(escapeField).join(",");
 
 /**
  * Info: (20260904 - Julian) 金額一律輸出**不含千分位的整數字串**。
@@ -81,6 +104,34 @@ const L = PAY_SLIP_FIELD_LABELS;
 const ID = PAY_SLIP_CSV_IDENTITY_LABELS;
 
 /**
+ * Info: (20260909 - Julian) 到職日。**沒有的時候是空字串，不是「-」。**
+ *
+ * 與同一份檔案裡的 `sentDate` 同一個判斷：填一個佔位字串會讓那一欄
+ * 變成排不了序的混合型別。而 `-` 更糟 —— 它是公式起始字元，
+ * 會被 `escapeField` 補成 `'-`。
+ *
+ * 薪資單上則印「-」（那是給人看的，空白讀起來像漏了）。
+ * 兩邊共用的是日期算法（`formatIsoDateUtc`），不是空值的處置。
+ */
+const hireDate = (unixSeconds: number | null): string =>
+  unixSeconds === null ? "" : formatIsoDateUtc(unixSeconds);
+
+/**
+ * Info: (20260909 - Julian) 投保狀態的三欄，走與薪資單同一份欄位清單。
+ *
+ * 值也用同一組字（`投保` / `未投保`）：欄名為了自我描述而加長了
+ *（見 `PAY_SLIP_CSV_INSURED_STATUS_LABELS`），但**值不加長** ——
+ * 使用者會把 CSV 與 PDF 並排看，兩邊的值不同字就得先確認是不是同一件事。
+ */
+const INSURED_STATUS_COLUMNS = PAY_SLIP_INSURED_FIELDS.map((field) => ({
+  label: PAY_SLIP_CSV_INSURED_STATUS_LABELS[field],
+  value: (record: ISalaryRecordDetail): string =>
+    paySlipMetaOf(null, record.input)[field]
+      ? PAY_SLIP_META_LABELS.insuredYes
+      : PAY_SLIP_META_LABELS.insuredNo,
+}));
+
+/**
  * Info: (20260904 - Julian) 欄位順序＝表頭順序＝每一列的順序，由這一張表決定。
  *
  * 寫成「標題 + 取值」成對，而不是兩份各自維護的陣列：分成兩份的話，
@@ -90,10 +141,22 @@ const ID = PAY_SLIP_CSV_IDENTITY_LABELS;
 const COLUMNS: readonly {
   label: string;
   value: (record: ISalaryRecordDetail) => string;
+  // Info: (20260908 - Julian) 可能為負的數值欄位；見 `escapeField` 的 `numeric`
+  numeric?: true;
 }[] = [
   { label: ID.period, value: (r) => period(r.year, r.month) },
   { label: ID.employeeName, value: (r) => r.employee.name },
   { label: ID.employeeNumber, value: (r) => r.employee.number },
+  /**
+   * Info: (20260909 - Julian) 到職日排在身分那一段的最後（客戶場景 §6）。
+   *
+   * 勞檢對著工資清冊問的第一個問題就是「這個人什麼時候到職」——
+   * 排在最後面的話，他得先橫向捲過四十幾個金額欄。
+   */
+  {
+    label: PAY_SLIP_META_LABELS.hireDate,
+    value: (r) => hireDate(r.employee.hireDate),
+  },
 
   {
     label: L.baseSalaryWithTax,
@@ -178,6 +241,14 @@ const COLUMNS: readonly {
     value: (r) => amount(r.result.employeeContribution.totalEmployeeBurden),
   },
 
+  /**
+   * Info: (20260909 - Julian) 投保狀態排在級距**前面**，與薪資單同一個順序。
+   *
+   * 未投保時級距是 0，而「勞保投保級距 0」讀起來像資料漏了，
+   * 不像「這個人沒有投保」。先講狀態，右邊那幾個 0 才有解釋。
+   */
+  ...INSURED_STATUS_COLUMNS,
+
   {
     label: L.healthInsuranceSalaryBracket,
     value: (r) => amount(r.result.insuredSalary.healthInsuranceSalaryBracket),
@@ -245,6 +316,72 @@ const COLUMNS: readonly {
   { label: L.reported, value: (r) => amount(r.result.totalSalaryTaxable) },
   { label: L.paid, value: (r) => amount(r.result.totalPayment) },
 
+  /**
+   * Info: (20260908 - Julian) 本薪與它的變動（計劃書 §18）。
+   *
+   * `月本薪（設定）` 與上面的 `本薪（應稅）` **不是同一件事**，兩個都留：
+   * 前者是這個人這個月的本薪設定，後者是實際計入的金額 ——
+   * 月中到職的人那兩個數字不一樣，而那個差異正是對帳要看的。
+   *
+   * 沒有值時一律留空字串，不填「無」或「0」：
+   * 「0」會被加總，而「無」會讓那一欄變成不能排序的混合型別。
+   */
+  { label: ID.baseSalarySetting, value: (r) => amount(r.baseSalary) },
+  {
+    label: ID.baseSalaryPrevPeriod,
+    value: (r) =>
+      r.baseSalaryDelta === null
+        ? ""
+        : period(
+            r.baseSalaryDelta.previousYear,
+            r.baseSalaryDelta.previousMonth,
+          ),
+  },
+  {
+    label: ID.baseSalaryDelta,
+    // Info: (20260908 - Julian) 唯一可能為負的欄位 —— 見 `escapeField` 的 `numeric`
+    numeric: true,
+    value: (r) =>
+      r.baseSalaryDelta === null ? "" : amount(r.baseSalaryDelta.delta),
+  },
+  {
+    /**
+     * Info: (20260910 - Luphia) `before` 為 null 時留白，**不寫 0**（review 建-1）。
+     *
+     * 建檔那一列沒有「之前」。這一欄進的是**工資清冊** —— 寫 0 等於在勞檢
+     * 調閱的檔案裡宣稱這個人先前的本薪是 0，而他從來沒有 0 過。
+     * 留白與「這一筆沒有對應的異動紀錄」同一種表示：我們沒有這個值。
+     */
+    label: ID.profileChangeBefore,
+    value: (r) =>
+      r.baseSalaryChange === null || r.baseSalaryChange.before === null
+        ? ""
+        : amount(r.baseSalaryChange.before),
+  },
+  {
+    // Info: (20260910 - Luphia) 同上；`after` 在「刪除員工」那一列是 null
+    label: ID.profileChangeAfter,
+    value: (r) =>
+      r.baseSalaryChange === null || r.baseSalaryChange.after === null
+        ? ""
+        : amount(r.baseSalaryChange.after),
+  },
+  {
+    label: ID.profileChangeReason,
+    value: (r) => r.baseSalaryChange?.reason ?? "",
+  },
+  {
+    label: ID.profileChangeBy,
+    value: (r) => r.baseSalaryChange?.changedBy.name ?? "",
+  },
+  {
+    label: ID.profileChangeAt,
+    value: (r) =>
+      r.baseSalaryChange === null
+        ? ""
+        : sentDate(r.baseSalaryChange.recordedAt),
+  },
+
   { label: ID.calculatorVersion, value: (r) => r.calculatorVersion },
   { label: ID.lastSentAt, value: (r) => sentDate(r.lastSentAt) },
   { label: ID.lastSentTo, value: (r) => r.lastSentTo ?? "" },
@@ -256,10 +393,20 @@ export const SALARY_CSV_COLUMN_COUNT = COLUMNS.length;
 export const buildSalaryRecordCsv = (
   records: readonly ISalaryRecordDetail[],
 ): string => {
+  /**
+   * Info: (20260908 - Julian) 逐欄 escape，因為現在**每一欄的規則不一樣**了
+   * （`numeric` 的不中和公式）。原本的 `toRow(strings)` 把整列當同一種處理，
+   * 而那在有例外欄位之後就是錯的。
+   *
+   * 表頭一律走預設（中和）—— 標題是我們自己寫的常數，不會觸發，
+   * 但沒有理由給它一個例外。
+   */
   const lines = [
-    toRow(COLUMNS.map((column) => column.label)),
+    COLUMNS.map((column) => escapeField(column.label)).join(","),
     ...records.map((record) =>
-      toRow(COLUMNS.map((column) => column.value(record))),
+      COLUMNS.map((column) =>
+        escapeField(column.value(record), column.numeric === true),
+      ).join(","),
     ),
   ];
 

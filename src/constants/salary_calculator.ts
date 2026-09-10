@@ -4,6 +4,22 @@ export const MAX_MEAL_ALLOWANCE = 3000;
 
 // Info: (20250714 - Julian) ============= 工作時數相關常數 =============
 export const MIN_WORK_HOURS = 0;
+
+/**
+ * Info: (20260909 - Julian) 每月延長工時上限，法源是勞基法 §32 II。
+ *
+ * 「一個月不得超過四十六小時」—— 所以 **46 本身是合法的**，47 才不是。
+ * 兩種比較在程式裡分工不同，不是筆誤：
+ *
+ * - `salary_form_section.tsx` 的擋門用 `> MAX`：46 小時不該被擋。
+ *   而且它比的是**免稅＋應稅的合計** —— 法定上限管的是總延長工時，
+ *   不是分別管兩個稅別。
+ * - `work_hours_form.tsx` 的分區提示用 `>= MAX`：單一稅別自己就打到上限時
+ *   先把數字變紅，那是提醒不是禁止。
+ *
+ * 20260909 之前這三處都寫死 `46`，改這個常數不會改變任何行為 ——
+ * 由 `salary_overtime_cap_contract.test.ts` 釘住。
+ */
 export const MAX_OVERWORK_HOURS = 46;
 export const MAX_LEAVE_HOURS = 200;
 
