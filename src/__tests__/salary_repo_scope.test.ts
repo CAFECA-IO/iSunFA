@@ -446,8 +446,27 @@ const TENANT_EXEMPT_MAX = 0;
  * 而它一旦出現，下面那條「掃描根沒有掃到空氣」不會紅 —— 所以另有一條
  * 反面斷言釘住「檔案裡不得出現那種寫法」。
  */
+/**
+ * Info: (20260910 - Luphia) 縮排兩格＋識別字＋`(` —— 也就是 class 成員的深度。
+ *
+ * Info: (20260910 - Luphia) **結尾不得是 `;`**（20260910 的假警報）。
+ *
+ * `periodIndex` 改成呼叫共用的 `toOrdinal` 之後，prettier 把它折成：
+ *
+ *     const periodIndex = (year: number, month: number): number =>
+ *       toOrdinal({ year, month });
+ *
+ * 第二行剛好是「兩格縮排 + 識別字 + `(`」，於是 `toOrdinal` 被當成一支
+ * 未分類的 repository 方法，兩條判準同時轉紅並指著一個不存在的問題。
+ *
+ * 這正是 §1.10 說的那種失效：**驗收自己的 bug 會很有說服力地指向產品。**
+ * 而它的代價不是多花時間 —— 是下一個人學會忽略這兩條。
+ *
+ * 分辨的方法很簡單：方法**定義**那一行不會以 `;` 結尾（後面接的是
+ * 參數列、`{` 或回傳型別），而一個獨立成行的**呼叫**一定會。
+ */
 const PUBLIC_METHOD_PATTERN =
-  /^ {2}(?:public\s+)?(?:async\s+)?([A-Za-z0-9_]+)\s*(?:<[^>]*>)?\s*\(/gm;
+  /^ {2}(?:public\s+)?(?:async\s+)?([A-Za-z0-9_]+)\s*(?:<[^>]*>)?\s*\((?![^\n]*\);\s*$)/gm;
 
 /** Info: (20260905 - Luphia) 這條 regex 認不得的寫法，出現了要當場擋下來 */
 const ARROW_METHOD_PATTERN =

@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
+import { readFileSync, readdirSync } from "fs";
+import { join } from "path";
 import { prisma } from "@/lib/prisma";
 import { salaryRecordRepo } from "@/repositories/salary_record.repo";
 
@@ -371,6 +373,61 @@ describe("這個月生效的本薪異動", () => {
     // Info: (20260908 - Julian) 歸因取最後一筆：那是這個月最終的決定
     expect(change?.reason).toBe("改回來");
   });
+
+  /**
+   * Info: (20260910 - Luphia) 建檔那一列沒有「之前」——**回 `null`，不是 0**
+   *（review 建-1）。
+   *
+   * `appendProfileChange` 在 `CREATE` 時帶的是 `before: null`，所以每一位員工的
+   * 第一筆異動都會走到這條路。初版把它算成 0，於是：
+   *
+   * - 畫面說「本薪 0 → 44,000」，而他從來沒有 0 過
+   * - 更要緊的是 `salary_record_csv.ts` 把 `before` 寫進**工資清冊**的
+   *   「本薪異動前」欄 —— 勞檢調閱的檔案裡會出現那個 0
+   *
+   * `delta` 一併回 `null`：少了任何一端，那個減法沒有意義，而 0 會被讀成
+   * 「沒有調整」。
+   */
+  it("建檔那一列：before 與 delta 都是 null，不是 0", async () => {
+    changeFindMany.mockResolvedValue([
+      changeRow({
+        id: "chg-create",
+        beforeSnapshot: null,
+        afterSnapshot: { baseSalary: 44000 },
+        recordedAt: new Date("2026-08-01T00:00:00.000Z"),
+        reason: "到職建檔",
+      }),
+    ]);
+
+    const change = (await listOnce()).data[0].baseSalaryChange;
+
+    expect(change?.before).toBeNull();
+    expect(change?.delta).toBeNull();
+    expect(change?.after).toBe(44000);
+  });
+
+  /**
+   * Info: (20260910 - Luphia) 快照缺欄位時同樣回 `null`。
+   *
+   * 這張表是 append-only 的 Json 欄，寫進去的形狀不會再被校正 ——
+   * 哪天欄名漂移，這裡回 0 會讓歷史憑空多出一筆「從 0 調上來」的調薪。
+   */
+  it("快照讀不到本薪時回 null", async () => {
+    changeFindMany.mockResolvedValue([
+      changeRow({
+        id: "chg-odd",
+        beforeSnapshot: { somethingElse: 1 },
+        afterSnapshot: { baseSalary: 44000 },
+        recordedAt: new Date("2026-08-01T00:00:00.000Z"),
+        reason: "形狀不對的舊列",
+      }),
+    ]);
+
+    const change = (await listOnce()).data[0].baseSalaryChange;
+
+    expect(change?.before).toBeNull();
+    expect(change?.delta).toBeNull();
+  });
 });
 
 describe("查詢的形狀", () => {
@@ -452,5 +509,71 @@ describe("查詢的形狀", () => {
     await listOnce();
 
     expect(changeFindMany.mock.calls.length).toBe(0);
+  });
+});
+
+/**
+ * Info: (20260910 - Luphia) 薪資模組只能有**一份**年月序數（review 建-2）。
+ *
+ * 這條規則存在的理由不是整潔。20260910 清點時，同一個功能裡有**三份**
+ * 手寫的 `year * 12 + month`：
+ *
+ * - `salary_coverage.ts` 的 `toOrdinal`：`year * 12 + (month - 1)`
+ * - `salary_record.repo.ts` 的 `periodIndex`：`year * 12 + month`
+ * - `employee_history_modal.tsx` 的 `effectiveIndex` / `recordedIndex`：同上
+ *
+ * 三份各自都對 —— 都單調遞增，拿來排序與比較都成立，所以三邊的測試都是綠的。
+ * 但**同一個年月會算出差 1 的兩種值，而型別都是 `number`**。哪天有人把
+ * 一邊的值傳給另一邊，編譯器不會有意見，症狀是「差額比對整整差一個月」：
+ * 九月那一列去跟十月比，而畫面上一切正常。
+ *
+ * 這是掃描測試合理的用法（§1.12 的同一類）：那個錯誤的形狀是「兩份定義並存」，
+ * 而行為測試看不到它 —— 兩份各自都通過自己的測試，正是它能存在的原因。
+ *
+ * 掃描根是整個薪資模組，不是被改的那幾個檔（§1.1）。
+ */
+describe("年月序數只有一份定義", () => {
+  const SALARY_DIRS = [
+    "src/lib/utils",
+    "src/repositories",
+    "src/services",
+    "src/components/salary_calculator",
+  ];
+
+  // Info: (20260910 - Luphia) 唯一允許自己算的地方 —— `toOrdinal` 與 `ordinalOf` 住在這裡
+  const HOME = "src/lib/utils/salary_coverage.ts";
+
+  const stripComments = (source: string): string =>
+    source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^[ \t]*\/\/[^\n]*/gm, "");
+
+  const salaryFiles = (): string[] =>
+    SALARY_DIRS.flatMap((dir) => {
+      const full = join(process.cwd(), dir);
+
+      return readdirSync(full, { withFileTypes: true })
+        .filter((entry) => entry.isFile() && /\.tsx?$/.test(entry.name))
+        .map((entry) => `${dir}/${entry.name}`)
+        .filter(
+          (path) =>
+            path.includes("salary") || dir.endsWith("salary_calculator"),
+        );
+    });
+
+  it("掃得到檔案（掃描根沒有掃到空氣）", () => {
+    expect(salaryFiles().length).toBeGreaterThan(10);
+  });
+
+  it("除了 salary_coverage.ts，沒有人自己寫 year * 12", () => {
+    const offenders = salaryFiles().filter((path) => {
+      if (path === HOME) return false;
+      const source = stripComments(
+        readFileSync(join(process.cwd(), path), "utf8"),
+      );
+
+      // Info: (20260910 - Luphia) 只認「絕對序數」；`(y2 - y1) * 12` 那種月份差不算
+      return /(?<!-\s?\w{0,20})[Yy]ear\s*\*\s*12\s*\+/.test(source);
+    });
+
+    expect(offenders).toEqual([]);
   });
 });

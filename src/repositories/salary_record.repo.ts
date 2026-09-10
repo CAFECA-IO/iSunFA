@@ -5,6 +5,7 @@ import {
   SalaryRecord,
 } from "@/generated";
 import { prisma } from "@/lib/prisma";
+import { toOrdinal } from "@/lib/utils/salary_coverage";
 import { AuditLogAction, AuditLogDataType } from "@/constants/audit_log";
 import { SALARY_DELIVERY_STATUS } from "@/constants/salary_delivery";
 import { MoneyUtil } from "@/lib/utils/money";
@@ -215,15 +216,36 @@ const toDetail = (row: SalaryRecordWithEmployee): ISalaryRecordDetail => ({
  * 而寫錯的方向是「跨年的比較反了」—— 2025-12 與 2026-01 誰在前，
  * 只有跨年那一次會錯，而測試資料多半在同一年裡。
  */
-const periodIndex = (year: number, month: number): number => year * 12 + month;
+/**
+ * Info: (20260910 - Luphia) 年月壓成單一整數，走**共用的**那一支（review 建-2）。
+ *
+ * 這裡原本自己寫 `year * 12 + month`，而 `salary_coverage.ts` 的 `toOrdinal`
+ * 是 `year * 12 + (month - 1)` —— 兩份都對，但同一個年月的值差 1，
+ * 而型別都是 `number`。收斂成一份，交換就不會出錯。
+ */
+const periodIndex = (year: number, month: number): number =>
+  toOrdinal({ year, month });
 
 /**
  * Info: (20260908 - Julian) 快照裡的本薪。異動表存的是員工檔的形狀（`baseSalary`），
  * 不是引擎的形狀（`baseSalaryTaxable`）—— 兩邊名字不同是既有的分歧，不在這裡收斂。
+ *
+ * Info: (20260910 - Luphia) **讀不到就回 `null`，不要回 0**（review 建-1）。
+ *
+ * 初版是 `typeof value === "number" ? value : 0`。而 `beforeSnapshot` 在
+ * `CREATE` 那一列**本來就是 null**（建檔時沒有「之前」），於是每一位員工的
+ * 第一筆異動都會被算成「本薪 0 → 44,000」。
+ *
+ * 那不是畫面上的小瑕疵：`salary_record_csv.ts` 把 `before` 直接寫進
+ * **工資清冊**的「本薪異動前」欄，也就是勞檢調閱的那份檔案會出現一列
+ * 宣稱這個人先前的本薪是 0 —— 而他從來沒有 0 過。
+ *
+ * 這與這支 PR 對 `base_salary_snapshot @default(0)` 的態度是同一條：
+ * **0 是一個合法但錯的值，而「沒有」要用 null 表達。**
  */
-const snapshotBaseSalary = (snapshot: unknown): number => {
+const snapshotBaseSalary = (snapshot: unknown): number | null => {
   const value = (snapshot as { baseSalary?: unknown } | null)?.baseSalary;
-  return typeof value === "number" ? value : 0;
+  return typeof value === "number" ? value : null;
 };
 
 export class SalaryRecordRepository implements ISalaryRecordRepository {
@@ -296,14 +318,21 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
       const existing = byKey.get(key);
       const after = snapshotBaseSalary(row.afterSnapshot);
 
+      /**
+       * Info: (20260910 - Luphia) 同月多筆時取**最早那筆的前值**（沿用既有語意），
+       * 而它可能是 `null` —— 建檔那一列沒有「之前」。
+       *
+       * `delta` 因此也可能算不出來：少了任何一端，那個減法就沒有意義。
+       * 回 0 會讓畫面與 CSV 說出「沒有調整」，而真相是「這是第一筆」。
+       */
+      const before = existing
+        ? existing.before
+        : snapshotBaseSalary(row.beforeSnapshot);
+
       byKey.set(key, {
-        before: existing
-          ? existing.before
-          : snapshotBaseSalary(row.beforeSnapshot),
+        before,
         after,
-        delta:
-          after -
-          (existing ? existing.before : snapshotBaseSalary(row.beforeSnapshot)),
+        delta: before === null || after === null ? null : after - before,
         count: (existing?.count ?? 0) + 1,
         // Info: (20260908 - Julian) 歸因取**最後**一筆：那是這個月最終的決定
         reason: row.reason,

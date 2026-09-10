@@ -72,7 +72,18 @@ const BaseSalaryChangeModal: FC<IBaseSalaryChangeModalProps> = ({
    * 但它們不一致這件事**只有並排時看得出來**。
    * 不擋、不自動修，只說出來 —— 要不要重算是使用者的判斷。
    */
-  const mismatched = change !== null && record.baseSalary !== change.after;
+  /**
+   * Info: (20260910 - Luphia) `after` 為 null 時不比對（review 建-1）。
+   *
+   * 「刪除員工」那一列沒有「之後」，而 `record.baseSalary !== null` 恆為真 ——
+   * 不擋的話那句警告會對每一筆這種紀錄跳出來，內容還是「與 null 不符」。
+   */
+  const mismatchedAfter =
+    change !== null &&
+    change.after !== null &&
+    record.baseSalary !== change.after
+      ? change.after
+      : null;
 
   return (
     <div className="font-barlow fixed inset-0 z-70 flex items-center justify-center bg-black/50 p-[16px]">
@@ -194,7 +205,7 @@ const BaseSalaryChangeModal: FC<IBaseSalaryChangeModalProps> = ({
           </>
         )}
 
-        {mismatched && change !== null && (
+        {mismatchedAfter !== null && (
           <div className="flex gap-[8px] rounded-lg bg-amber-50 p-[12px]">
             <AlertTriangle
               size={16}
@@ -203,7 +214,7 @@ const BaseSalaryChangeModal: FC<IBaseSalaryChangeModalProps> = ({
             <p className="text-xs leading-relaxed text-amber-900">
               {t("calculator.records.base_salary_mismatch", {
                 used: numberWithCommas(record.baseSalary),
-                changed: numberWithCommas(change.after),
+                changed: numberWithCommas(mismatchedAfter),
               })}
             </p>
           </div>

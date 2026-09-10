@@ -461,6 +461,36 @@ describe("本薪與它的變動（計劃書 §18）", () => {
   });
 
   /**
+   * Info: (20260910 - Luphia) **建檔那一列的「異動前」留白，不是 0**（review 建-1）。
+   *
+   * `appendProfileChange` 在 `CREATE` 時帶 `before: null` —— 一個人的第一筆
+   * 本薪不是從 0 調上來的。而這一欄進的是**工資清冊**：寫 0 等於在勞檢
+   * 調閱的檔案裡宣稱他先前的本薪是 0。
+   *
+   * 「異動後」照樣要有值 —— 留白的只該是我們真的沒有的那一格。
+   */
+  it("建檔那一列：異動前留白，異動後仍有值", () => {
+    const [, row] = rowsOf(
+      buildSalaryRecordCsv([
+        recordOf({
+          baseSalary: 44000,
+          baseSalaryChange: changeOf({
+            before: null,
+            after: 44000,
+            delta: null,
+            reason: "到職建檔",
+          }),
+        }),
+      ]),
+    );
+    const at = (label: string) => row[columnIndex(label)];
+
+    expect(at(ID.profileChangeBefore)).toBe("");
+    expect(at(ID.profileChangeAfter)).toBe("44000");
+    expect(at(ID.profileChangeReason)).toBe("到職建檔");
+  });
+
+  /**
    * Info: (20260908 - Julian) **差額有值、異動欄位空著** —— 這是最常見的一列。
    *
    * 在計算機上改了本薪、選了「只存這一次」的話，員工檔沒被改、

@@ -345,14 +345,26 @@ const COLUMNS: readonly {
       r.baseSalaryDelta === null ? "" : amount(r.baseSalaryDelta.delta),
   },
   {
+    /**
+     * Info: (20260910 - Luphia) `before` 為 null 時留白，**不寫 0**（review 建-1）。
+     *
+     * 建檔那一列沒有「之前」。這一欄進的是**工資清冊** —— 寫 0 等於在勞檢
+     * 調閱的檔案裡宣稱這個人先前的本薪是 0，而他從來沒有 0 過。
+     * 留白與「這一筆沒有對應的異動紀錄」同一種表示：我們沒有這個值。
+     */
     label: ID.profileChangeBefore,
     value: (r) =>
-      r.baseSalaryChange === null ? "" : amount(r.baseSalaryChange.before),
+      r.baseSalaryChange === null || r.baseSalaryChange.before === null
+        ? ""
+        : amount(r.baseSalaryChange.before),
   },
   {
+    // Info: (20260910 - Luphia) 同上；`after` 在「刪除員工」那一列是 null
     label: ID.profileChangeAfter,
     value: (r) =>
-      r.baseSalaryChange === null ? "" : amount(r.baseSalaryChange.after),
+      r.baseSalaryChange === null || r.baseSalaryChange.after === null
+        ? ""
+        : amount(r.baseSalaryChange.after),
   },
   {
     label: ID.profileChangeReason,

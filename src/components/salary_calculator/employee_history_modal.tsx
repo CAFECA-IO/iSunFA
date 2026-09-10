@@ -3,6 +3,7 @@
 import { FC, useState } from "react";
 import { ArrowRight, History, Loader2, X } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
+import { toOrdinal } from "@/lib/utils/salary_coverage";
 import { numberWithCommas } from "@/lib/utils/common";
 import { useSalaryProfileChanges } from "@/hooks/use_salary_profile_changes";
 import { ISalaryProfileChange } from "@/interfaces/salary_record";
@@ -169,8 +170,21 @@ const EmployeeHistoryModal: FC<IEmployeeHistoryModalProps> = ({
     const recordedYear = recorded.getFullYear();
     const recordedMonth = recorded.getMonth() + 1;
 
-    const effectiveIndex = change.effectiveYear * 12 + change.effectiveMonth;
-    const recordedIndex = recordedYear * 12 + recordedMonth;
+    /**
+     * Info: (20260910 - Luphia) 走共用的 `toOrdinal`（review 建-2）。
+     *
+     * 這裡原本自己寫 `year * 12 + month` —— 全站第三份手寫的年月序數，
+     * 而 `salary_coverage.ts` 那一份是 `year * 12 + (month - 1)`。
+     * 三份各自都自洽，但同一個年月會算出差 1 的值，型別都是 `number`。
+     */
+    const effectiveIndex = toOrdinal({
+      year: change.effectiveYear,
+      month: change.effectiveMonth,
+    });
+    const recordedIndex = toOrdinal({
+      year: recordedYear,
+      month: recordedMonth,
+    });
 
     if (effectiveIndex === recordedIndex) return null;
     return effectiveIndex < recordedIndex

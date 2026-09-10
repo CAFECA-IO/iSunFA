@@ -242,10 +242,22 @@ export interface ISalaryBaseSalaryDelta {
  * 所以這裡問的是「有沒有一筆異動是這個月生效的」，不是去比對相鄰紀錄。
  */
 export interface ISalaryBaseSalaryChange {
-  before: number;
-  after: number;
-  /** Info: (20260908 - Julian) `after - before`，可能是負的（減薪） */
-  delta: number;
+  /**
+   * Info: (20260910 - Luphia) 調整前的本薪。**`null` = 沒有「之前」**（review 建-1）。
+   *
+   * 建檔那一列（`SalaryProfileChangeAction.CREATE`）的 `beforeSnapshot` 是 null ——
+   * 一個人的第一筆本薪不是從 0 調上來的，他從來沒有 0 過。
+   * 用 0 代替的話，工資清冊（CSV）會出現一列宣稱他先前的本薪是 0。
+   */
+  before: number | null;
+  after: number | null;
+  /**
+   * Info: (20260908 - Julian) `after - before`，可能是負的（減薪）。
+   *
+   * Info: (20260910 - Luphia) 任一端是 `null` 時算不出來，也回 `null` ——
+   * 回 0 會被讀成「沒有調整」，而真相是「這是第一筆」。
+   */
+  delta: number | null;
 
   /**
    * Info: (20260908 - Julian) 同一個月生效的本薪異動筆數。
