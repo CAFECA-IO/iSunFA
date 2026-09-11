@@ -23,6 +23,16 @@ updates:
     # Info: (20260801 - Luphia) 該套件的 peer 宣告為 "maplibre-gl": ">=4.0.0"（無上界），不會擋下 v6,
     # Info: (20260801 - Luphia) 但 v6 會讓 _onCameraEvent 讀到 undefined 的 transform,fitBounds 必定崩潰。
     # Info: (20260801 - Luphia) 待該套件明確宣告支援 v6 後再解除此限制。
+    # Info: (20260911 - Luphia) dotenv-expand 鎖在 v13:v1000 起 `.env` 的值會做命令替換。
+    # Info: (20260911 - Luphia) v1000 把 dotenvx 的功能打包進來(入口檔 2.6KB → 136KB,多出 execSync),
+    # Info: (20260911 - Luphia) 於是任何值裡的 $(...) 都會被當 shell 命令執行 —— 雙引號擋不住。
+    # Info: (20260911 - Luphia) 本專案三處展開(src/lib/prisma.ts、prisma.config.ts、scripts/executor_worker.ts)
+    # Info: (20260911 - Luphia) 分別落在伺服器啟動、每一次 prisma 指令與 worker 啟動,
+    # Info: (20260911 - Luphia) 而秘密保管地是資料庫、.env 只放環境差異 —— 拿不到好處,卻換來一條命令執行路徑。
+    # Info: (20260911 - Luphia) 另一個後果不需要攻擊者:含 $( 的密碼會被靜默改寫,症狀是「密碼填對了卻連不上」。
+    # Info: (20260911 - Luphia) 要解除此限制,先處理那三處展開與部署精靈寫入的值(見 PR #6603 的 review)。
     ignore:
       - dependency-name: "maplibre-gl"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "dotenv-expand"
         update-types: ["version-update:semver-major"]
