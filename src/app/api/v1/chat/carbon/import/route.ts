@@ -19,7 +19,9 @@ import { describeError } from "@/lib/utils/error_message";
 import { ReportImportService } from "@/services/report_import.service";
 import {
   resolveCarbonAccess,
+  canReadAttachmentCid,
   CarbonAccessLevelEnum,
+  type IAttachmentReadScope,
 } from "@/services/carbon_access.guard";
 import { storageService } from "@/services/storage.service";
 import {
@@ -105,6 +107,7 @@ export async function POST(request: NextRequest) {
      * 由 runBilledCarbonTask 走個人鏈上點數那條路(產品拍板 20260813)。
      * 這裡不替它決定要不要有帳本,只確認「宣稱的帳本你有權動」。
      */
+    let attachmentScope: IAttachmentReadScope | undefined;
     if (channel) {
       const access = await resolveCarbonAccess(
         sessionUser.address,
@@ -114,6 +117,11 @@ export async function POST(request: NextRequest) {
       if (!access.allowed) {
         return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
       }
+      // Info: (20260907 - Emily) 給下面 cid 裁決用的帳本範圍(#6748 中-1):同帳本成員可接續彼此的匯入
+      attachmentScope = {
+        accountBookId: access.accountBookId,
+        callerCanEdit: access.canEdit,
+      };
     }
     const clientMessageIdRaw = formData.get("clientMessageId");
     const clientMessageId =
@@ -196,13 +204,24 @@ export async function POST(request: NextRequest) {
      * 仍保留 `file` 一路:cid 尚未上傳成功時前端會退回直傳,
      * 而「上傳失敗就整個匯入不能做」是不必要的脆弱。
      *
-     * Info: (20260904 - Emily) 上面那道 guard 只裁決 `channel`(帳本額度的歸屬),
-     * **沒有**裁決 `cid`:知道別人的 cid 就能經 `recoverLaria` 把那份檔案取回來,
-     * 那一半是 #6748,不在這支 PR 的範圍。留這句是因為讀到這裡的人
-     * 很容易以為「匯入端點已經有授權了」。
+     * Info: (20260904 - Emily) 上面那道 guard 只裁決 `channel`(帳本額度的歸屬)。
+     * Info: (20260907 - Emily) `cid` 的歸屬由下面 `canReadAttachmentCid` 裁決(#6748):
+     * 兩道門守的是兩件不同的事 —— 前者「你有沒有權用這個帳本的額度」,
+     * 後者「這份檔是不是你(或你帳本裡的人)上傳的」。少任何一道都繞得過去。
      */
     const cidRaw = formData.get("cid");
     const cid = typeof cidRaw === "string" && cidRaw.length > 0 ? cidRaw : null;
+    if (
+      cid &&
+      !(await canReadAttachmentCid(sessionUser.address, cid, attachmentScope))
+    ) {
+      /**
+       * Info: (20260907 - Emily) 擋在 `recoverLaria` 之前,也擋在任何檔名/型別驗證之前:
+       * 拒絕不需要先讀檔,而讀檔正是要防的事。回 AUTH_PERMISSION_DENIED
+       * 而非「查無此檔」—— 對不是擁有者的人,cid 存不存在本身就不該透露。
+       */
+      return jsonFail(API_ERRORS.AUTH_PERMISSION_DENIED);
+    }
     const fileNameRaw = formData.get("fileName");
     const mimeTypeRaw = formData.get("mimeType");
 

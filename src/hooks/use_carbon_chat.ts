@@ -105,13 +105,27 @@ import {
   composeReportDraftPaperText,
   gateFrameworkClaims,
 } from "@/lib/utils/carbon_framework_claim_gate";
-import { buildLedgerFactBundle } from "@/lib/carbon_ledger_query";
+import {
+  buildLedgerFactBundle,
+  LEDGER_FACT_BUNDLE_MAX,
+} from "@/lib/carbon_ledger_query";
+import { boundLedgerImportBlocks } from "@/lib/carbon_ledger_import_blocks";
+import { buildReportFacts } from "@/lib/carbon_report_facts";
+import {
+  fingerprintFromSnapshot,
+  summarizeReportFreshness,
+  type IReportFreshnessSummary,
+  type ILedgerFactSnapshot,
+} from "@/lib/carbon_report_freshness";
 import {
   loadPendingImport as fetchPendingImportRecord,
   savePendingImport as putPendingImportRecord,
   discardPendingImport as deletePendingImportRecord,
 } from "@/lib/carbon_pending_import_storage";
 import {
+  InventoryLoadReasonEnum,
+  buildInventoryUnreadableFact,
+  describeUnreadableInventoryStep,
   isInventoryStateUnsavableError,
   loadInventoryState,
   saveInventoryState,
@@ -161,6 +175,9 @@ import {
 } from "@/lib/carbon_page_slice";
 import {
   getApiErrorCode,
+  classifyImportRetryFailure,
+  shouldDropDeniedImportCid,
+  IMPORT_RETRY_FAILURE_TEXT_KEY,
   parsePersonalPaymentRequired,
   isGatewayTimeoutError,
   isQuotaApiError,
@@ -679,6 +696,43 @@ export const useCarbonChat = () => {
     Record<string, ICarbonInventoryState>
   >({});
   /**
+   * Info: (20260907 - Emily) 該房的盤查狀態**存在但讀不出來**時的原因(#6779)。
+   *
+   * 原本這個情形只有一行 `console.error`,然後對話照常:persona 拿到的是空狀態,
+   * 走「無事實 → onboarding」那條路,問使用者公司名與年度;而 versionRef 記的是真實版本,
+   * 使用者一回答,下一次 autosave 就用正確的樂觀鎖版本把那筆讀不出來但真實存在的紀錄蓋掉。
+   * 舊註解寫「保留真實版本,不以空狀態覆蓋」—— 它擋的是**自動**存空狀態,擋不住被 onboarding
+   * 引導後的存檔。
+   *
+   * 三個消費端都要知道這件事:persona(currentStep 改口、事實包多一筆)、autosave(拒絕)、
+   * UI(通知)。用 state 供 render 與 request 組裝,同步一份 ref 給 autosave 的計時器讀
+   * (計時器閉包裡讀 state 會是舊的)。
+   */
+  const [inventoryUnreadable, setInventoryUnreadable] = useState<
+    Record<string, InventoryLoadReasonEnum>
+  >({});
+  const inventoryUnreadableRef = useRef<Map<string, InventoryLoadReasonEnum>>(
+    new Map(),
+  );
+  const markInventoryUnreadable = useCallback(
+    (channel: string, reason: InventoryLoadReasonEnum | null) => {
+      const current = inventoryUnreadableRef.current.get(channel) ?? null;
+      if (current === reason) return;
+      if (reason === null) inventoryUnreadableRef.current.delete(channel);
+      else inventoryUnreadableRef.current.set(channel, reason);
+      setInventoryUnreadable((prev) => {
+        if (reason === null) {
+          if (!(channel in prev)) return prev;
+          const next = { ...prev };
+          delete next[channel];
+          return next;
+        }
+        return { ...prev, [channel]: reason };
+      });
+    },
+    [],
+  );
+  /**
    * Info: (20260904 - Emily) 該房的帳本事實包,**唯一**的組包點(#6745)。
    *
    * 原本只有對話路徑組(#6707 第二層),草稿與修訂兩條 `/draft` 路各自不帶或帶不全,
@@ -687,8 +741,17 @@ export const useCarbonChat = () => {
    * 帳本空時回空陣列 —— 守門對空陣列**照跑**(那正是編造最沒阻力的一格),不補、不造。
    */
   const buildChannelLedgerFacts = useCallback(
-    (channel: string): IContextFact[] =>
-      buildLedgerFactBundle(
+    (channel: string): IContextFact[] => {
+      /**
+       * Info: (20260907 - Emily) 狀態存在但讀不出來時,事實包**只有這一筆**(#6779)。
+       *
+       * 空陣列會讓 persona 走「帳本沒有資料 → 引導匯入/設定」那條,而那正是資料
+       * 被覆蓋的第一步。這一筆讓模型有東西可說、而且說的是對的事:資料在,讀不出來。
+       * 不帶任何排放數字,守門照跑。
+       */
+      const unreadable = inventoryUnreadable[channel];
+      if (unreadable) return [buildInventoryUnreadableFact(unreadable)];
+      return buildLedgerFactBundle(
         inventoryStates[channel]?.computedLedger,
         // Info: (20260825 - Emily) 勾稽阻擋紀錄一併注入:「帳本為什麼是空的」也是可問的事實
         inventoryStates[channel]?.ledgerImportBlocks,
@@ -696,8 +759,33 @@ export const useCarbonChat = () => {
         inventoryStates[channel]?.ledgerByYear,
         // Info: (20260828 - Emily) 年度標註不完整:列舉制第五個偵測器(round-2 追加回饋)
         inventoryStates[channel]?.ledgerYearWarning,
-      ),
-    [inventoryStates],
+      );
+    },
+    [inventoryStates, inventoryUnreadable],
+  );
+  /**
+   * Info: (20260909 - Emily) 請求送出時拍下「這段文字將依據哪份事實寫」(#6789 review 中-1)。
+   * 三條會生成段落文字的路(對話、`/draft` 生成、`/draft` 修訂)在**送出前**各拍一份,
+   * 跟著請求走,落地時用它蓋指紋 —— 不拿落地當下的帳本蓋(理由見 ILedgerFactSnapshot)。
+   */
+  const snapshotChannelFacts = useCallback(
+    (channel: string): ILedgerFactSnapshot => ({
+      // Info: (20260909 - Emily) 狀態讀不出來時事實包只有那一筆「讀不出來」,沒有戳記 → 不會打指紋
+      facts: inventoryUnreadable[channel]
+        ? []
+        : buildChannelLedgerFacts(channel),
+      ledgerComputedAt: inventoryStates[channel]?.computedLedger?.computedAt,
+    }),
+    [buildChannelLedgerFacts, inventoryStates, inventoryUnreadable],
+  );
+  /**
+   * Info: (20260909 - Emily) 對話路的草稿是**回覆帶回來的**(envelopes / 訂閱),請求送出時
+   * 還不知道會產出哪一節,所以以 channel 為鍵記住「這一房最近一次送出時的事實」。
+   * 界:同一房兩則訊息同時在飛時,後送的會蓋掉前送的快照 —— 那時前一則的草稿會拿到
+   * 後一則的事實。兩則之間帳本又剛好變了才會出錯;比落地時蓋當下帳本(每次都錯)窄得多。
+   */
+  const chatFactSnapshotRef = useRef<Map<string, ILedgerFactSnapshot>>(
+    new Map(),
   );
   const inventoryVersionsRef = useRef<Map<string, number>>(new Map());
   /**
@@ -1525,6 +1613,12 @@ export const useCarbonChat = () => {
     const master = masterKeyRef.current;
     // Info: (20260716 - Tzuhan) #52 帳本會話明文模式免金鑰(同報告還原)
     const isBookBound = Boolean(sessionAccess[chatChannel]?.accountBookId);
+    /*
+     * Info: (20260907 - Emily) 個人房未解鎖:還沒去讀,**不標記**(review 低-3)。
+     * 第一版在這裡標 LOCKED,但此時連伺服器上有沒有紀錄都不知道,事實包那筆
+     * 「狀態存在但讀不出來」對一間全新的空房是假的。沒解鎖就沒有帳本事實,
+     * 本來就是這樣;LOCKED 留給真的走到 loader、看到 envelope 卻沒金鑰那條路。
+     */
     if (!isBookBound && (!isUnlocked || !master)) return;
     if (
       inventoryLoadSettledRef.current.has(chatChannel) ||
@@ -1544,13 +1638,31 @@ export const useCarbonChat = () => {
         inventoryLoadSettledRef.current.add(chatChannel);
         inventoryVersionsRef.current.set(chatChannel, loaded?.version ?? 0);
         if (loaded && !loaded.state) {
-          // Info: (20260716 - Tzuhan) 記錄存在但不可讀: 保留真實版本，不以空狀態覆蓋
+          /**
+           * Info: (20260907 - Emily) 記錄存在但不可讀(#6779):三件事,缺一都會讓資料被蓋掉。
+           * 1. 記下原因 → persona 改口、事實包改送「讀不出來」那一筆、autosave 拒絕
+           * 2. 通知使用者:不要重新設定公司與年度
+           * 3. 仍保留真實版本(原本就有)—— 那是為了將來讀得出來時能接著存
+           */
           console.error(
             "[carbon-chat] inventory state exists but is unreadable:",
-            chatChannel,
+            { channel: chatChannel, reason: loaded.reason },
+          );
+          markInventoryUnreadable(chatChannel, loaded.reason);
+          setDraftNotice(
+            {
+              type: "error",
+              text: t("carbon_chatbot.inventory_unreadable", {
+                reason: t(
+                  `carbon_chatbot.inventory_unreadable_reason_${loaded.reason.toLowerCase()}`,
+                )!,
+              })!,
+            },
+            activeSessionId,
           );
           return;
         }
+        markInventoryUnreadable(chatChannel, null);
         if (!loaded?.state) return;
         const restored = loaded.state;
         setInventoryStates((prev) => ({ ...prev, [chatChannel]: restored }));
@@ -1558,6 +1670,32 @@ export const useCarbonChat = () => {
       .catch((error) => {
         // Info: (20260716 - Tzuhan) 還原失敗不設版本 → 凍結該 channel 的狀態自動保存，防空狀態蓋庫
         console.error("[carbon-chat] failed to load inventory state:", error);
+        /*
+         * Info: (20260907 - Emily) 第四種失敗要有自己的標籤(review 低-2):網路或伺服器掛了,
+         * 有沒有紀錄都不知道。不標的話 persona 會照空狀態 onboarding;標成別的原因會說錯。
+         * 下次進房會重試(attempted 在下面移除),成功就清掉。
+         */
+        markInventoryUnreadable(
+          chatChannel,
+          InventoryLoadReasonEnum.LOAD_FAILED,
+        );
+        /**
+         * Info: (20260909 - Emily) 這一格要有**自己的**通知(#6779 review 後續)。
+         *
+         * 原本 catch 不發通知,而 `inventory_unreadable` 那則模板說的是「資料存在」——
+         * 網路掛掉時我們不知道存不存在,套那句是說錯;不發則是 #6779 要消滅的靜默
+         * (使用者看到「什麼都沒發生」)。所以另給一句:載入失敗、有沒有資料尚未確認、
+         * 載入成功前不會保存、重新進房會再試。五語系原本為 LOAD_FAILED 加的
+         * `inventory_unreadable_reason_load_failed` 是死鍵(只能經 `.then` 的模板到達,
+         * 而 `.then` 裡不可能是 LOAD_FAILED)—— 一併拿掉。
+         */
+        setDraftNotice(
+          {
+            type: "error",
+            text: t("carbon_chatbot.inventory_load_failed")!,
+          },
+          activeSessionId,
+        );
         /**
          * Info: (20260806 - Tzuhan) 從 attempted 移除,**不**加進 settled ——
          * 這是「沒有結論」而非「結論是失敗」:網路抖動、伺服器暫時不可用都走這條,
@@ -1565,7 +1703,15 @@ export const useCarbonChat = () => {
          */
         inventoryLoadAttemptedRef.current.delete(chatChannel);
       });
-  }, [isUnlocked, chatChannel, sessionAccess]);
+  }, [
+    isUnlocked,
+    chatChannel,
+    sessionAccess,
+    markInventoryUnreadable,
+    setDraftNotice,
+    t,
+    activeSessionId,
+  ]);
 
   /**
    * Info: (20260806 - Tzuhan) 切至 session 時自 DB 還原待匯入的解析結果(三態協定同報告草稿)。
@@ -1802,6 +1948,18 @@ export const useCarbonChat = () => {
      */
     if (!inventoryLoadSettledRef.current.has(chatChannel)) return undefined;
     if (!inventoryVersionsRef.current.has(chatChannel)) return undefined;
+    /**
+     * Info: (20260907 - Emily) 讀不出來的房**不存**(#6779)。
+     *
+     * 上面兩道閘門擋的是「還沒讀到」;這一道擋的是「讀到了但讀不懂」——
+     * 那時 settled 與 version 都齊了,原本會照存,而存進去的是使用者被 onboarding
+     * 引導後從零填的狀態。庫裡那筆真實紀錄從此消失,而且是以正確的樂觀鎖版本消失的。
+     * 拒絕存檔的代價是這間房在讀出來之前所有變更都只在記憶體裡 —— 通知已在載入時說過。
+     */
+    if (inventoryUnreadableRef.current.has(chatChannel)) {
+      setSaveStatus("error");
+      return undefined;
+    }
     const master = masterKeyRef.current;
     const bookId = sessionAccess[chatChannel]?.accountBookId ?? null;
     /**
@@ -2088,10 +2246,17 @@ export const useCarbonChat = () => {
    * 原本只有 console.warn —— 資訊死在開發者工具裡,查詢層看不到,
    * 使用者問「有沒有異常」時系統說不出「表3.8 被擋,因為 6 列解析失敗」。
    * 與 applyImportedLedgerEntries 同一把 channel 推導,同一份 E2EE state。
+   *
+   * Info: (20260909 - Emily) #6760:這裡是**唯一的寫入者**,所以儲存界在這裡收
+   * (`boundLedgerImportBlocks`),不在 schema 端拒 —— 寫路徑不過 schema,
+   * 超界的一次存進去會讓下一次載入丟掉整份盤查狀態。回傳收過界的那份,
+   * 呼叫端要拿它去寫 `ledgerImportBlocksRef`:兩處必須是同一份資料,
+   * 否則 ref 那條路仍會把 1163 字的 reason 餵進事實包、被伺服端 schema 打回。
    */
   const recordLedgerImportBlocks = useCallback(
-    (blocks: ILedgerImportBlock[]) => {
-      if (blocks.length === 0) return;
+    (blocks: ILedgerImportBlock[]): ILedgerImportBlock[] => {
+      if (blocks.length === 0) return [];
+      const bounded = boundLedgerImportBlocks(blocks);
       const channel = buildCarbonChatChannel(
         user?.address ?? "anonymous",
         activeSessionId,
@@ -2102,11 +2267,12 @@ export const useCarbonChat = () => {
           ...prev,
           [channel]: {
             ...base,
-            ledgerImportBlocks: blocks,
+            ledgerImportBlocks: bounded,
             updatedAt: new Date().toISOString(),
           },
         };
       });
+      return bounded;
     },
     [user?.address, activeSessionId],
   );
@@ -2132,6 +2298,8 @@ export const useCarbonChat = () => {
           section: paragraph.title,
         }),
       });
+      // Info: (20260909 - Emily) 送出前拍快照(#6789 review 中-1);套用修訂時以它蓋指紋
+      const revisionSnapshot = snapshotChannelFacts(chatChannel);
       try {
         const res = await request<{
           payload: { content: string; citedFacts: string[] } | null;
@@ -2151,7 +2319,7 @@ export const useCarbonChat = () => {
              * **LLM 編造**,不是惡意用戶端(那個人本來就能直接改段落文字),
              * 別把它當成授權邊界。
              */
-            contextFacts: [...facts, ...buildChannelLedgerFacts(chatChannel)],
+            contextFacts: [...facts, ...revisionSnapshot.facts],
             language,
             existingContent: paragraph.content,
             instruction,
@@ -2175,6 +2343,7 @@ export const useCarbonChat = () => {
           original: paragraph.content,
           revised: res.payload.content,
           citedFacts: res.payload.citedFacts ?? [],
+          factSnapshot: revisionSnapshot,
         });
       } catch (error) {
         console.error("[carbon-chat] paragraph revision failed:", error);
@@ -2205,7 +2374,7 @@ export const useCarbonChat = () => {
       activeInventoryState?.disclosureFramework,
       // Info: (20260814 - Luphia) 計費上下文所需：channel 決定這筆消費記到哪個帳本
       chatChannel,
-      buildChannelLedgerFacts,
+      snapshotChannelFacts,
     ],
   );
 
@@ -3843,6 +4012,45 @@ export const useCarbonChat = () => {
   );
 
   // Info: (20260717 - Tzuhan) #56 只重跑失敗章節,結果合併進現有預覽(檔案取自暫存 ref)
+  /**
+   * Info: (20260909 - Emily) 重試／接續失敗時的共用出口(#6783 review 中-1)。
+   *
+   * 兩處 catch 原本都是同一句「【匯入失敗】…請稍後再試」,而 cid 被拒那一種
+   * **稍後再試永遠不會成功**(見 `classifyImportRetryFailure` 的說明)。
+   * 於是使用者對著一顆永遠失敗的按鈕,而畫面一直叫他再試一次。
+   *
+   * 三件事:說對的那一句、把失效的 cid 從待匯入紀錄裡丟掉(否則下一次還是撞同一道門、
+   * 還要再扣一次點數)、並把丟掉之後的紀錄存回去(重載後才不會又帶著那個死 cid 回來)。
+   */
+  const reportImportRetryFailure = useCallback(
+    (error: unknown, originSessionId: string) => {
+      const errorCode = getApiErrorCode(error);
+      const source = lastImportSourceRef.current;
+      const failure = classifyImportRetryFailure(errorCode, source);
+      setDraftNotice(
+        {
+          type: "error",
+          text: t(IMPORT_RETRY_FAILURE_TEXT_KEY[failure])!,
+        },
+        originSessionId,
+      );
+      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, originSessionId);
+      if (!shouldDropDeniedImportCid(errorCode, source) || !source) return;
+      const withoutCid: ICarbonImportSource = { ...source, cid: null };
+      lastImportSourceRef.current = withoutCid;
+      const pending = pendingImportBySessionRef.current[originSessionId];
+      if (!pending) return;
+      void persistPendingImport(
+        originSessionId,
+        pending,
+        withoutCid,
+        importActivitiesRef.current,
+        lastPageIndexRef.current,
+      );
+    },
+    [setDraftNotice, dismissDraftNoticeAfter, t, persistPendingImport],
+  );
+
   const retryFailedImportChapters = useCallback(async () => {
     const source = lastImportSourceRef.current;
     const failed = pendingImport?.failedChapters ?? [];
@@ -4011,8 +4219,8 @@ export const useCarbonChat = () => {
     } catch (error) {
       // Info: (20260806 - Tzuhan) 原本沒有 catch:重試整批拋錯時提示會卡在 loading 不散
       console.error("[carbon-chat] retry failed chapters failed:", error);
-      notify({ type: "error", text: t("carbon_chatbot.import_failed") });
-      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, originSessionId);
+      // Info: (20260909 - Emily) cid 被拒時要說「請重新上傳」而不是「稍後再試」(#6783 中-1)
+      reportImportRetryFailure(error, originSessionId);
     } finally {
       // Info: (20260806 - Tzuhan) 成功或失敗都要放行,否則一次失敗就再也重試不了
       setIsRetryingImport(false);
@@ -4022,12 +4230,12 @@ export const useCarbonChat = () => {
     runImportChapters,
     activeSessionId,
     setDraftNotice,
-    dismissDraftNoticeAfter,
     isRetryingImport,
     setPendingImportFor,
     persistPendingImport,
     saveImportJobBookmark,
-    t,
+    // Info: (20260909 - Emily) 失敗出口（#6783 review 中-1）；提示文案與自動消失都在它裡面
+    reportImportRetryFailure,
   ]);
 
   /**
@@ -4216,8 +4424,8 @@ export const useCarbonChat = () => {
       });
     } catch (error) {
       console.error("[carbon-chat] resume paused chapters failed:", error);
-      notify({ type: "error", text: t("carbon_chatbot.import_failed") });
-      dismissDraftNoticeAfter(CARBON_DRAFT_NOTICE_DISMISS_MS, originSessionId);
+      // Info: (20260909 - Emily) 理由同 retryFailedImportChapters(#6783 中-1)
+      reportImportRetryFailure(error, originSessionId);
     } finally {
       setIsRetryingImport(false);
     }
@@ -4236,6 +4444,8 @@ export const useCarbonChat = () => {
     claimImportJob,
     // Info: (20260901 - Luphia) 終局判決讓卡片改口（review #6726 阻-1）
     refreshImportJob,
+    // Info: (20260909 - Emily) 失敗出口（#6783 review 中-1）
+    reportImportRetryFailure,
   ]);
 
   /**
@@ -4763,9 +4973,10 @@ export const useCarbonChat = () => {
        * (「紀錄描述的狀態已不存在」),而部分成功部分被擋時那句話只對成功那半成立 ——
        * 所以這次的紀錄要在 apply **之後**寫回去,兩個 setState 依序生效,後者為準。
        */
-      recordLedgerImportBlocks(blocks);
+      const recordedBlocks = recordLedgerImportBlocks(blocks);
       // Info: (20260825 - Emily) #6667:ref 同步更新 —— 本輪稍後的建表就要用,等不到下一輪 render
-      ledgerImportBlocksRef.current = blocks;
+      // Info: (20260909 - Emily) #6760:寫 ref 的是**收過界的那份**,與 state 裡的同一份
+      ledgerImportBlocksRef.current = recordedBlocks;
     }
     importActivitiesRef.current = [];
     /**
@@ -4947,7 +5158,9 @@ export const useCarbonChat = () => {
   // Info: (20260716 - Tzuhan) #55 套用修訂:寫入段落(取消查核)並高亮;人工 gate 的唯一落地點
   const applyPendingRevision = useCallback(() => {
     if (!pendingRevision) return;
-    const { paragraphId, revised } = pendingRevision;
+    const { paragraphId, revised, factSnapshot } = pendingRevision;
+    // Info: (20260909 - Emily) 修訂稿也是 AI 依據某份事實寫的:用請求時的快照蓋指紋(#6789 review 中-1)
+    const ledgerFingerprint = fingerprintFromSnapshot(revised, factSnapshot);
     setSessionsData((prev) => {
       const session = prev[activeSessionId];
       if (!session?.reportData?.paragraphs) return prev;
@@ -4972,7 +5185,12 @@ export const useCarbonChat = () => {
             rawMarkdown: nextRaw,
             paragraphs: session.reportData.paragraphs.map((p) =>
               p.id === paragraphId
-                ? { ...p, content: revised, isVerified: false }
+                ? {
+                    ...p,
+                    content: revised,
+                    isVerified: false,
+                    ledgerFingerprint,
+                  }
                 : p,
             ),
           },
@@ -5075,7 +5293,10 @@ export const useCarbonChat = () => {
   // Info: (20260720 - Tzuhan) #23 數據段落組裝制:LLM 只留敘述(夾帶表格一律丟棄),
   // Info: (20260720 - Tzuhan) 表格由 TS 從 computedLedger 決定性產出注入(守恆違反 → 凍結告警取代)
   const applyDraftToReport = useCallback(
-    (draft: IParagraphDraft, options?: { onlyIfEmpty?: boolean }) => {
+    (
+      draft: IParagraphDraft,
+      options?: { onlyIfEmpty?: boolean; factSnapshot?: ILedgerFactSnapshot },
+    ) => {
       const section = CARBON_REPORT_OUTLINE.find(
         (s) => s.id === draft.paragraphId,
       );
@@ -5084,12 +5305,19 @@ export const useCarbonChat = () => {
       // Info: (20260722 - Tzuhan) UAT:讀 ref 取當下 ledger(匯入→自動草稿的長流程中,
       // Info: (20260722 - Tzuhan) closure 捕獲的舊空 ledger 會讓表格印佔位、桑基圖被跳過)
       const ledgerNow = computedLedgerRef.current;
+      /**
+       * Info: (20260909 - Emily) `narrative` 是 AI 寫的敘述本身(模型自產的表格已剝掉);
+       * 指紋打在它上面,不打在注入表格之後的 `content`(理由見下方)。
+       */
+      const narrative = section.isDataDriven
+        ? stripLlmTables(draft.content)
+        : draft.content;
       let content = section.isDataDriven
         ? injectDataTable(
-            stripLlmTables(draft.content),
+            narrative,
             buildCarbonDataTable(ledgerNow, dataTableLabels),
           )
-        : draft.content;
+        : narrative;
 
       // Info: (20260721 - Tzuhan) UAT:排放總量匯總段自動附掛碳流量桑基圖(憑證→排放源→Scope);
       // Info: (20260721 - Tzuhan) mermaid 原始碼進 Markdown 輸入區,PDF 預覽同步渲染;重算連動自動重繪
@@ -5127,6 +5355,26 @@ export const useCarbonChat = () => {
         content = `${content}\n\n${buildEvidenceChainBlock(boundBookId)}`;
       }
 
+      /**
+       * Info: (20260908 - Emily) 打帳本指紋(#6786):這一節是依據哪一版帳本寫的。
+       *
+       * Info: (20260909 - Emily) 打在 `narrative`(敘述),**不**打在注入表格之後的 `content`。
+       * 9/08 那一版打在最終 content 上,理由是「注入的表格裡就是帳本的數字,少算它們等於少認依賴」——
+       * 那是錯的:表格與桑基圖由下方 `lastLedgerStampRef` 那個 effect 在每次重算時**決定性重注入**,
+       * 它們永遠是最新的,不存在「過期」;把它們的數字算進指紋,任何一次重算都會讓每個數據段落
+       * 變成 STALE(表格數字變了),而那正是 #6786 review 阻-1 說的假警報。
+       * 會過期的只有 AI 寫的敘述 —— 指紋只記它。
+       *
+       * Info: (20260909 - Emily) 事實與戳記用**請求送出時拍下的快照**,不用 `ledgerNow`
+       * (#6789 review 中-1)。`ledgerNow` 是落地當下的帳本,表格要用它(表格要最新);
+       * 但敘述是依據送出時的事實寫的 —— 用落地帳本蓋指紋,會在「匯入 → 自動草稿」的窗內
+       * 把一節引用舊數字的段落永久標成最新。沒有快照(歷史回填)→ 不打指紋 → 「不知道」。
+       */
+      const ledgerFingerprint = fingerprintFromSnapshot(
+        narrative,
+        options?.factSnapshot,
+      );
+
       setSessionsData((prev) => {
         const session = prev[activeSessionId];
         const reportData = session?.reportData;
@@ -5143,6 +5391,8 @@ export const useCarbonChat = () => {
             isVerified: false,
             // Info: (20260730 - Tzuhan) 本路徑為 AI 撰寫草稿(對話蒐集/目錄的 AI 撰寫鈕),標記來源以與逐字匯入區分
             origin: ParagraphOriginEnum.AI_DRAFT,
+            // Info: (20260908 - Emily) 帳本指紋(#6786):見上方 buildParagraphFingerprint 那一段
+            ledgerFingerprint,
           };
         });
 
@@ -5602,6 +5852,30 @@ export const useCarbonChat = () => {
     };
   }, [activeSession]);
 
+  /**
+   * Info: (20260908 - Emily) 這份報告有幾節過期了(#6786)。
+   *
+   * 與 `reportStats` 分開:那個算的是「寫完了幾節」,這個算的是「寫完的那幾節還算不算數」。
+   * 兩個都由段落推導,但依據不同 —— 併成一個回傳值會讓工具列那兩塊互相牽動。
+   *
+   * 帳本事實走 `buildChannelLedgerFacts`(唯一的組包點),所以「AI 能引用什麼」與
+   * 「指紋比對什麼」是同一份事實,不會分岔。
+   */
+  const reportFreshness: IReportFreshnessSummary = useMemo(
+    () =>
+      summarizeReportFreshness({
+        paragraphs: activeSession?.reportData?.paragraphs,
+        ledgerFacts: buildChannelLedgerFacts(chatChannel),
+        ledgerComputedAt: activeInventoryState?.computedLedger?.computedAt,
+      }),
+    [
+      activeSession,
+      buildChannelLedgerFacts,
+      chatChannel,
+      activeInventoryState?.computedLedger?.computedAt,
+    ],
+  );
+
   // Info: (20260713 - Tzuhan) 跳段(vibe 模式): 標記進行中段落、將該段撰寫指引寫入 currentStep 供 AI 引導、預填對話輸入
   const jumpToParagraph = useCallback(
     (paragraphId: string) => {
@@ -5678,14 +5952,23 @@ export const useCarbonChat = () => {
           !processedDraftMessageIdsRef.current.has(message.id)
         ) {
           processedDraftMessageIdsRef.current.add(message.id);
-          drafts.forEach((draft) => applyDraftToReport(draft));
+          // Info: (20260909 - Emily) 對話路的草稿用送出時拍的快照蓋指紋(#6789 review 中-1)
+          const factSnapshot = chatFactSnapshotRef.current.get(chatChannel);
+          drafts.forEach((draft) =>
+            applyDraftToReport(draft, { factSnapshot }),
+          );
           jumpToReportParagraph(drafts[0].paragraphId);
         }
       } catch {
         // Info: (20260712 - Luphia) 解密失敗代表非本用戶/非本金鑰的訊息（如惡意跨訂閱），直接忽略
       }
     },
-    [appendMessageLocally, applyDraftToReport, jumpToReportParagraph],
+    [
+      appendMessageLocally,
+      applyDraftToReport,
+      jumpToReportParagraph,
+      chatChannel,
+    ],
   );
 
   // Info: (20260714 - Tzuhan) 段落草稿生成: 呼叫 draft API 由 AI 撰寫敘述，成功後寫入 reportData 並標記完成(查核歸零重簽)
@@ -5721,6 +6004,8 @@ export const useCarbonChat = () => {
          *（聊天路徑的註解早就警告過這件事，草稿路徑漏了）。
          */
         const clientMessageId = crypto.randomUUID();
+        // Info: (20260909 - Emily) 送出前拍下事實快照(#6789 review 中-1):body 與落地時的指紋用同一份
+        const factSnapshot = snapshotChannelFacts(chatChannel);
         const requestDraft = () =>
           request<{ payload: IParagraphDraft | null }>(
             "/api/v1/chat/carbon/draft",
@@ -5735,7 +6020,7 @@ export const useCarbonChat = () => {
                  * 對它永遠是「呼叫端沒帶 → 跳過」—— 而它正是主入口攔下之後官方指定的重試路。
                  * 不補這一行,守門搬進服務等於沒搬。
                  */
-                contextFacts: buildChannelLedgerFacts(chatChannel),
+                contextFacts: factSnapshot.facts,
                 language,
                 // Info: (20260903 - Emily) 揭露框架跟著請求走(#6688-A;理由見修訂路徑那一處)
                 framework: activeInventoryState?.disclosureFramework,
@@ -5771,7 +6056,7 @@ export const useCarbonChat = () => {
         const draft = res.payload;
         if (!draft) throw new Error("Empty draft payload");
 
-        applyDraftToReport(draft);
+        applyDraftToReport(draft, { factSnapshot });
         // Info: (20260714 - Tzuhan) 草稿寫入後即時高亮該段，demo 觀眾可見「對話 → 報告」的即時性
         jumpToReportParagraph(draft.paragraphId);
         setDraftNotice(null);
@@ -5832,7 +6117,7 @@ export const useCarbonChat = () => {
       chatChannel,
       // Info: (20260825 - Luphia) 無帳本會話的待付款流程（與聊天路徑同一套）
       payExistingOrder,
-      buildChannelLedgerFacts,
+      snapshotChannelFacts,
     ],
   );
 
@@ -6485,7 +6770,42 @@ export const useCarbonChat = () => {
          * 帳本空時為空陣列 —— persona 對「無事實」另有明確拒答指令,這裡不補、不造。
          */
         // Info: (20260904 - Emily) #6745:三條會生成文字的路(對話、草稿、修訂)共用同一支組包
-        const ledgerFacts = buildChannelLedgerFacts(chatChannel);
+        /**
+         * Info: (20260909 - Emily) 送出前拍快照(#6789 review 中-1):回覆帶回來的草稿以它蓋指紋。
+         * 送 LLM 的仍是同一份去掉 key。
+         */
+        chatFactSnapshotRef.current.set(
+          chatChannel,
+          snapshotChannelFacts(chatChannel),
+        );
+        const channelLedgerFacts = buildChannelLedgerFacts(chatChannel);
+        /**
+         * Info: (20260908 - Emily) #6778 後半:報告本體的數值主張也隨行注入 ——
+         * **只在對話這條路**,不進 `/draft` 的兩條。
+         *
+         * 要修的失敗:這個請求原本只送 `history + currentStep + ledgerFacts`,
+         * 報告本體不在裡面。使用者問「報告第 3.2 節寫的類別三是多少」時,模型手上
+         * 沒有那個數字 —— 守規矩就拒答,不守規矩就從帳本挑一個看起來像的。
+         * 匯入的報告尤其如此:那些數字是原文照錄的,帳本可能沒有對應的格。
+         *
+         * **為什麼草稿與修訂那兩條不帶**:那兩條是在**生成**報告的文字,而守門的
+         * 合法集合會跟著事實包一起放寬。帶了之後,3.1 節裡一個 AI 編出來的數字
+         * 就成了 3.2 節的合法引用來源 —— 報告替自己的下一句背書,而守門看不出來。
+         * 問答這條路不生成報告內容,沒有這個回饋圈。
+         *
+         * 預算給帳本事實包**之外**的餘額:帳本那半是排放量的唯一合法來源,
+         * 不能被報告原文擠掉。
+         */
+        const reportFacts = buildReportFacts({
+          paragraphs: activeSession.reportData?.paragraphs,
+          rawMarkdown: activeSession.reportData?.rawMarkdown,
+          ledgerFacts: channelLedgerFacts,
+          budget: Math.max(
+            LEDGER_FACT_BUNDLE_MAX - channelLedgerFacts.length,
+            0,
+          ),
+        });
+        const ledgerFacts = [...channelLedgerFacts, ...reportFacts];
         const sendChatRequest = () =>
           request<{
             success: boolean;
@@ -6507,11 +6827,21 @@ export const useCarbonChat = () => {
             body: JSON.stringify({
               history: currentHistory,
               // Info: (20260716 - Tzuhan) #6518:currentStep 改餵狀態機真值(跳段指引仍優先)
-              currentStep:
-                activeSession.currentStep ||
-                describeInventoryStep(
-                  inventoryStates[chatChannel] ?? createEmptyInventoryState(),
-                ),
+              /**
+               * Info: (20260907 - Emily) 狀態讀不出來時 currentStep 改口(#6779)。
+               *
+               * persona 是照 currentStep 決定要不要引導 onboarding 的;送一個空狀態的描述
+               * 過去,它就會問公司名與年度 —— 而那正是資料被覆蓋的第一步。
+               * 這裡用明文告訴它:資料在、讀不出來、不要引導重設。
+               */
+              currentStep: inventoryUnreadable[chatChannel]
+                ? describeUnreadableInventoryStep(
+                    inventoryUnreadable[chatChannel],
+                  )
+                : activeSession.currentStep ||
+                  describeInventoryStep(
+                    inventoryStates[chatChannel] ?? createEmptyInventoryState(),
+                  ),
               language,
               channel: chatChannel,
               recipientPublicKey: masterKey.extendedPublicKey,
@@ -6683,7 +7013,9 @@ export const useCarbonChat = () => {
       insertChartIntoParagraph,
       setDraftNotice,
       inventoryStates,
+      inventoryUnreadable,
       buildChannelLedgerFacts,
+      snapshotChannelFacts,
     ],
   );
 
@@ -6881,6 +7213,8 @@ export const useCarbonChat = () => {
     addAttachments,
     removeAttachment,
     reportStats,
+    // Info: (20260908 - Emily) 過期盤點(#6786):工具列的「N 節過期」與目錄的逐節標記
+    reportFreshness,
     // Info: (20260716 - Tzuhan) #52 帳本清單與當前會話存取資訊(唯讀切換/新增對話選單)
     accountBooks,
     activeSessionAccess: sessionAccess[chatChannel] ?? {

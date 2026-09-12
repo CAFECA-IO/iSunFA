@@ -1,9 +1,15 @@
 import { describe, it, expect } from "@jest/globals";
 import {
   countMissingEmail,
+  countMissingHireDate,
+  countMissingRecords,
   filterEmployees,
+  previewMissingPeriods,
+  hasMissingPeriods,
   hasNoEmail,
+  hasNoHireDate,
 } from "@/lib/utils/salary_employee_filter";
+import { ISalaryPeriod } from "@/lib/utils/salary_coverage";
 
 /**
  * Info: (20260904 - Julian) 員工名單的過濾與「誰缺信箱」。
@@ -13,24 +19,50 @@ import {
  * 本專案的測試不 render React，所以它們抽成純函式才守得住。
  */
 
+interface IRosterEntry {
+  name: string;
+  number: string;
+  email: string;
+  missingPeriods: ISalaryPeriod[];
+  hireDate: number | null;
+}
+
+// Info: (20260906 - Luphia) 2026-03-01 UTC。有沒有值才是重點，是哪一天不影響這一檔
+const HIRE_DATE = Math.floor(Date.UTC(2026, 2, 1) / 1000);
+
 const employee = (
   name: string,
   number: string,
   email: string,
-): { name: string; number: string; email: string } => ({
+  // Info: (20260905 - Luphia) 預設沒有缺漏；要驗警示的名單自己帶（#6774）
+  missingPeriods: ISalaryPeriod[] = [],
+  // Info: (20260906 - Luphia) 預設**有**到職日；沒有到職日是要另外指定的例外
+  hireDate: number | null = HIRE_DATE,
+): IRosterEntry => ({
   name,
   number,
   email,
+  missingPeriods,
+  hireDate,
 });
 
 const ROSTER = [
-  employee("王小明", "A001", "ming@example.com"),
-  employee("Lin Ada", "A002", ""),
-  employee("陳大文", "B010", "   "),
-  employee("李小美", "b011", "mei@example.com"),
+  employee("王小明", "A001", "ming@example.com", [{ year: 2026, month: 6 }]),
+  // Info: (20260906 - Luphia) 舊資料的形狀：到職日是空的（那一欄 20260902 才加）
+  employee("Lin Ada", "A002", "", [], null),
+  employee("陳大文", "B010", "   ", [
+    { year: 2025, month: 11 },
+    { year: 2026, month: 1 },
+  ]),
+  employee("李小美", "b011", "mei@example.com", [], null),
 ];
 
-const NO_FILTER = { keyword: "", onlyMissingEmail: false };
+const NO_FILTER = {
+  keyword: "",
+  onlyMissingEmail: false,
+  onlyMissingRecords: false,
+  onlyMissingHireDate: false,
+};
 
 describe("hasNoEmail", () => {
   it("空字串算沒有信箱", () => {
@@ -130,7 +162,7 @@ describe("關鍵字過濾", () => {
 describe("只看缺信箱", () => {
   it("只留下缺信箱的那些", () => {
     const result = filterEmployees(ROSTER, {
-      keyword: "",
+      ...NO_FILTER,
       onlyMissingEmail: true,
     });
     expect(result.map((e) => e.number)).toEqual(["A002", "B010"]);
@@ -144,6 +176,7 @@ describe("只看缺信箱", () => {
    */
   it("與關鍵字同時生效", () => {
     const result = filterEmployees(ROSTER, {
+      ...NO_FILTER,
       keyword: "陳",
       onlyMissingEmail: true,
     });
@@ -152,7 +185,11 @@ describe("只看缺信箱", () => {
 
   it("關鍵字命中但信箱已填，就不留", () => {
     expect(
-      filterEmployees(ROSTER, { keyword: "王小明", onlyMissingEmail: true }),
+      filterEmployees(ROSTER, {
+        ...NO_FILTER,
+        keyword: "王小明",
+        onlyMissingEmail: true,
+      }),
     ).toHaveLength(0);
   });
 });
@@ -164,7 +201,7 @@ describe("回傳的形狀", () => {
    */
   it("不就地修改傳進來的陣列", () => {
     const roster = [...ROSTER];
-    filterEmployees(roster, { keyword: "王", onlyMissingEmail: false });
+    filterEmployees(roster, { ...NO_FILTER, keyword: "王" });
     expect(roster).toHaveLength(4);
   });
 
@@ -176,5 +213,236 @@ describe("回傳的形狀", () => {
       "B010",
       "b011",
     ]);
+  });
+});
+
+/**
+ * Info: (20260905 - Luphia) 薪資紀錄缺漏的標示與過濾（#6774）。
+ *
+ * 這一組回答的是與缺信箱**不同**的問題：缺信箱是「寄不出去」（按下寄送
+ * 當場失敗，看得見），缺薪資單是「什麼都沒發生」—— 直到那位員工來問
+ * 為什麼六月沒領到錢。
+ */
+describe("hasMissingPeriods", () => {
+  it("有缺漏就是有", () => {
+    expect(
+      hasMissingPeriods({ missingPeriods: [{ year: 2026, month: 6 }] }),
+    ).toBe(true);
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 空陣列同時是「完整」與「算不出來」（沒有到職日、
+   * 超過掃描上限）。兩者都不標示 —— 不知道就不要說，而一個假的缺漏提示
+   * 會讓使用者去補一張本來就不該有的薪資單。
+   */
+  it("空陣列不標示", () => {
+    expect(hasMissingPeriods({ missingPeriods: [] })).toBe(false);
+  });
+});
+
+describe("countMissingRecords", () => {
+  it("數的是**人數**，不是缺漏的月份數", () => {
+    // Info: (20260905 - Luphia) 名單上共 3 個缺漏月份，但分佈在 2 個人身上
+    expect(countMissingRecords(ROSTER)).toBe(2);
+  });
+
+  it("全部完整就是 0", () => {
+    expect(countMissingRecords([ROSTER[1], ROSTER[3]])).toBe(0);
+  });
+
+  it("空名單是 0", () => {
+    expect(countMissingRecords([])).toBe(0);
+  });
+});
+
+describe("只看缺薪資單", () => {
+  it("只留下有缺漏的那些", () => {
+    const result = filterEmployees(ROSTER, {
+      ...NO_FILTER,
+      onlyMissingRecords: true,
+    });
+    expect(result.map((e) => e.number)).toEqual(["A001", "B010"]);
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 與「只看缺信箱」是**且**，不是擇一。
+   *
+   * 兩個都打開時剩下的是「既收不到、也沒東西可收」的那幾位 ——
+   * 那正是最該先處理的人。寫成擇一的話，打開第二個會讓第一個靜靜失效。
+   */
+  it("與只看缺信箱同時生效", () => {
+    const result = filterEmployees(ROSTER, {
+      ...NO_FILTER,
+      onlyMissingEmail: true,
+      onlyMissingRecords: true,
+    });
+    expect(result.map((e) => e.number)).toEqual(["B010"]);
+  });
+
+  it("與關鍵字同時生效", () => {
+    const result = filterEmployees(ROSTER, {
+      ...NO_FILTER,
+      keyword: "王",
+      onlyMissingRecords: true,
+    });
+    expect(result.map((e) => e.number)).toEqual(["A001"]);
+  });
+});
+
+/**
+ * Info: (20260908 - Luphia) 截斷規則（review 應修-2）。
+ *
+ * 這一組原本測的是 `formatMissingPeriods` —— 截斷 + 串成一行字。提示框改成
+ * 格狀排版之後，排版那半段搬進元件，而那支函式就沒有呼叫端了：五條測試
+ * 仍然全綠，守的卻是一條沒有人走的路。函式已刪，判準改綁在真正在用的
+ * `previewMissingPeriods` 上。
+ *
+ * 年份不省略那一條也跟著搬家 —— 格式化現在由 `pay_period_value` 這個
+ * i18n 樣板負責（五語系各自決定 `2026/03` 還是 `2026年3月`），所以
+ * 「年份不能省」在這裡已經不是這支函式管得到的事，改由元件的契約測試釘住。
+ */
+describe("previewMissingPeriods", () => {
+  // Info: (20260908 - Luphia) 這一檔沒有 tz 那邊的 `periodsOf`，就地給一個
+  const periodsOf = (...pairs: [number, number][]): ISalaryPeriod[] =>
+    pairs.map(([year, month]) => ({ year, month }));
+
+  const monthsOf = (count: number): ISalaryPeriod[] =>
+    Array.from({ length: count }, (unused, index) => ({
+      year: 2026,
+      month: index + 1,
+    }));
+
+  it("沒超過上限就原樣回來，restCount 是 0", () => {
+    const two = periodsOf([2025, 11], [2026, 3]);
+
+    expect(previewMissingPeriods(two)).toEqual({
+      shown: two,
+      restCount: 0,
+    });
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 超過上限就截斷並回報剩幾個。
+   * 一個到職三年沒建過薪資單的人有 36 個月份，全部列出來會蓋掉半個畫面。
+   */
+  it("超過上限時截斷，並算出剩下幾個", () => {
+    const { shown, restCount } = previewMissingPeriods(monthsOf(10));
+
+    expect(shown).toHaveLength(6);
+    expect(restCount).toBe(4);
+  });
+
+  /**
+   * Info: (20260908 - Luphia) **兩個數字必須加得起來。**
+   *
+   * 提示框上方寫「缺 10 個月」、格子裡列 6 個、下方寫「另有 N 個月」——
+   * 這三處讀的是同一份資料，而使用者會拿它們互相對照。
+   * `restCount` 算錯（例如寫成 `limit - shown.length`）時，
+   * 上面那兩條仍然會過，只有這一條會紅。
+   */
+  it("列出的數量加上剩下的，等於總數", () => {
+    for (const total of [0, 1, 5, 6, 7, 40]) {
+      const { shown, restCount } = previewMissingPeriods(monthsOf(total));
+
+      expect(shown.length + restCount).toBe(total);
+    }
+  });
+
+  it("剛好等於上限時不算截斷", () => {
+    expect(previewMissingPeriods(monthsOf(6)).restCount).toBe(0);
+  });
+
+  it("空陣列回空", () => {
+    expect(previewMissingPeriods([])).toEqual({ shown: [], restCount: 0 });
+  });
+
+  /**
+   * Info: (20260908 - Luphia) 不就地修改傳進來的陣列 —— 呼叫端拿的是
+   * hook 的 state，`slice` 之後又回傳同一個參考的話，元件那一側
+   * 對它做任何事都會改到名單本身。
+   */
+  it("回傳新陣列，不是傳進來的那一個", () => {
+    const periods = periodsOf([2026, 1], [2026, 2]);
+
+    expect(previewMissingPeriods(periods).shown).not.toBe(periods);
+  });
+});
+
+/**
+ * Info: (20260906 - Luphia) 「沒有到職日」是**上游**的問題（#6774）。
+ *
+ * 沒有到職日就算不出完整度，而算不出來時 `missingPeriods` 是空陣列 ——
+ * 與「真的沒有缺漏」長得一模一樣。`hire_date` 是 20260902 才加的可空欄位、
+ * 沒有回填腳本，所以既有帳本的員工全部是 null：這個功能上線那天，
+ * 畫面上會是一片空白，而使用者的結論會是「這功能沒做」或「我們資料很完整」。
+ */
+describe("hasNoHireDate", () => {
+  it("null 就是沒有", () => {
+    expect(hasNoHireDate({ hireDate: null })).toBe(true);
+  });
+
+  /**
+   * Info: (20260906 - Luphia) **0 不算沒有。**
+   *
+   * 0 在 Unix 秒是 1970-01-01 —— 那是一個（離譜但）確實存在的日期，
+   * 與「這一欄沒有值」是兩件事。寫成 `!employee.hireDate` 會把兩者
+   * 判成同一種，而那個人會被歸到「請補到職日」，補了也還是那樣。
+   */
+  it("0 是 1970-01-01，不是「沒有」", () => {
+    expect(hasNoHireDate({ hireDate: 0 })).toBe(false);
+  });
+
+  it("有值就是有", () => {
+    expect(hasNoHireDate({ hireDate: HIRE_DATE })).toBe(false);
+  });
+});
+
+describe("countMissingHireDate", () => {
+  it("數出沒有到職日的人數", () => {
+    expect(countMissingHireDate(ROSTER)).toBe(2);
+  });
+
+  it("全部都有就是 0", () => {
+    expect(countMissingHireDate([ROSTER[0], ROSTER[2]])).toBe(0);
+  });
+
+  it("空名單是 0", () => {
+    expect(countMissingHireDate([])).toBe(0);
+  });
+});
+
+describe("只看沒有到職日", () => {
+  it("只留下沒有到職日的那些", () => {
+    const result = filterEmployees(ROSTER, {
+      ...NO_FILTER,
+      onlyMissingHireDate: true,
+    });
+    expect(result.map((e) => e.number)).toEqual(["A002", "b011"]);
+  });
+
+  /**
+   * Info: (20260906 - Luphia) 與「只看缺薪資單」是**且**，而兩者的交集
+   * 恆為空 —— 沒有到職日的人算不出缺漏，所以永遠不會有 `missingPeriods`。
+   *
+   * 這一條把那件事寫下來：交集為空不是巧合，是「算不出來就不下結論」
+   * 這個選擇的直接後果。兩個篩選是一前一後，不是兩種看法。
+   */
+  it("與只看缺薪資單同時打開會是空的 —— 兩者本來就不重疊", () => {
+    expect(
+      filterEmployees(ROSTER, {
+        ...NO_FILTER,
+        onlyMissingRecords: true,
+        onlyMissingHireDate: true,
+      }),
+    ).toEqual([]);
+  });
+
+  it("與關鍵字同時生效", () => {
+    const result = filterEmployees(ROSTER, {
+      ...NO_FILTER,
+      keyword: "Ada",
+      onlyMissingHireDate: true,
+    });
+    expect(result.map((e) => e.number)).toEqual(["A002"]);
   });
 });

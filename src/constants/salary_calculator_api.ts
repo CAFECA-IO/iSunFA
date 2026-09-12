@@ -22,6 +22,17 @@ export const salaryEmployeeItemApi = (
   employeeId: string,
 ): string => `${salaryCalculatorApiOf(accountBookId).EMPLOYEE}/${employeeId}`;
 
+/**
+ * Info: (20260908 - Julian) 某位員工的薪資條件異動軌跡（調薪歷程）。
+ *
+ * 掛在員工底下而不是另開一層：查詢的對象就是那一位員工，
+ * 而它與員工列表共用同一組租戶與授權判斷。
+ */
+export const salaryEmployeeHistoryApi = (
+  accountBookId: string,
+  employeeId: string,
+): string => `${salaryEmployeeItemApi(accountBookId, employeeId)}/history`;
+
 export const salaryRecordItemApi = (
   accountBookId: string,
   recordId: string,

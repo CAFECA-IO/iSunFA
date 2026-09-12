@@ -12,6 +12,7 @@ import {
 import { EMPLOYMENT_TYPE_KEYS } from "@/lib/utils/salary_employee_profile";
 import {
   ISalaryCalculatorEmployeeWriteInput,
+  ISalaryProfileChangeContext,
   ISalaryRecordWriteInput,
 } from "@/interfaces/salary_record";
 import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
@@ -126,12 +127,25 @@ const employeeProfileShape = {
   resignDate: timestampSchema,
 };
 
+/**
+ * Info: (20260905 - Luphia) 留職停薪的起訖（#6774）。
+ *
+ * 與 profile 分開一組，理由見 `ISalaryEmployeeLeave`：它不是計算機的輸入。
+ * 一樣整組必填 —— 可選的話，「編輯員工」少帶這兩欄就會把留停紀錄清成 null，
+ * 而那是靜默的（畫面上留停區間就這樣不見了，下個月那幾個月變成缺漏）。
+ */
+const employeeLeaveShape = {
+  leaveStartDate: timestampSchema,
+  leaveEndDate: timestampSchema,
+};
+
 export const salaryCalculatorEmployeeWriteSchema = z
   .object({
     name: z.string().trim().min(1).max(100),
     number: z.string().trim().min(1).max(50),
     email: z.string().email().max(254).optional(),
     ...employeeProfileShape,
+    ...employeeLeaveShape,
   })
   /**
    * Info: (20260902 - Julian) 離職日不得早於到職日。
@@ -146,6 +160,36 @@ export const salaryCalculatorEmployeeWriteSchema = z
       data.resignDate === null ||
       data.resignDate >= data.hireDate,
     { message: "離職日不得早於到職日", path: ["resignDate"] },
+  )
+  /**
+   * Info: (20260905 - Luphia) 復職日不得早於留停起日（#6774）。
+   *
+   * 順序反了的話 `missingSalaryPeriods` 的區間是空的 —— 留停那幾個月不會被扣掉，
+   * 於是每一個月都被標成「缺薪資單」。誤報的提示比沒有提示更糟：
+   * 使用者會拿它去補一張本來就不該有的薪資單。
+   *
+   * `leaveStartDate` 為 null 而 `leaveEndDate` 有值不在這裡擋 —— 見下一條。
+   */
+  .refine(
+    (data) =>
+      data.leaveStartDate === null ||
+      data.leaveEndDate === null ||
+      data.leaveEndDate >= data.leaveStartDate,
+    { message: "復職日不得早於留職停薪起日", path: ["leaveEndDate"] },
+  )
+  /**
+   * Info: (20260905 - Luphia) 有復職日就必須有留停起日。
+   *
+   * 只填復職日是一個沒有意義的狀態，但它**不會報錯**：
+   * `missingSalaryPeriods` 看 `leaveStartDate === null` 就整段跳過，
+   * 那個復職日於是靜靜地不起作用。使用者以為登記好了。
+   */
+  .refine(
+    (data) => data.leaveEndDate === null || data.leaveStartDate !== null,
+    {
+      message: "有復職日就必須填留職停薪起日",
+      path: ["leaveStartDate"],
+    },
   );
 
 /**
@@ -330,3 +374,125 @@ export const toSalaryRecordWriteInput = (
 export const toSalaryCalculatorEmployeeWriteInput = (
   payload: ISalaryCalculatorEmployeeWritePayload,
 ): ISalaryCalculatorEmployeeWriteInput => payload;
+
+/**
+ * Info: (20260908 - Julian) 一次員工檔寫入的異動資訊（生效月份與原因）。
+ *
+ * 計劃書：`documents/architecture/salary_profile_change_history_plan.md` §4
+ *
+ * ## 為什麼與 `salaryCalculatorEmployeeWriteSchema` 分開
+ *
+ * 那份是「員工現在是什麼樣子」，這一份是「這次修改這件事」。
+ * 合成一份的話，生效月份會變成員工檔的一個屬性 —— 而它不是：
+ * 同一位員工會有很多次異動，每一次有自己的生效月與原因。
+ *
+ * ## 三個欄位都是選填
+ *
+ * 舊版前端、以及計算機的「直接新增員工」那條路徑不會帶它們。
+ * 缺漏時由 `toSalaryProfileChangeContext` 補上當期（見該函式）——
+ * 讓它必填會讓那兩個既有入口在上線當天直接 400。
+ */
+/**
+ * Info: (20260908 - Julian) 調薪歷程的查詢參數。
+ *
+ * ## 為什麼沒有期間範圍（from / to）
+ *
+ * 一位員工幾年下來的異動是**數十列**的量級，畫面一次載得完、翻頁也不痛。
+ * 而 `(effectiveYear, effectiveMonth)` 的範圍比較在 Prisma 上要展開成
+ * 四個 OR 子句（或另外加一個可排序的複合欄位）—— 那個複雜度換到的是
+ * 一個沒有人抱怨過的篩選。
+ *
+ * 需要它的是匯出（PR E，外部觀眾要「某段期間的異動」），
+ * 到那時候再決定要不要加欄位，而不是現在先猜。
+ *
+ * ## `fields` 為什麼是逗號分隔的字串
+ *
+ * query string 沒有陣列，而 `?fields=a&fields=b` 與 `?fields[]=a` 兩種寫法
+ * 在不同的代理與框架下解析不一致。逗號分隔只有一種讀法。
+ * 值域不在這裡驗 —— 認不得的欄位名在服務層自然篩不到任何列，
+ * 而回 400 會讓「前端多送一個新欄位」變成整頁壞掉。
+ */
+export const salaryProfileChangeQuerySchema = z.object({
+  page: z.number().int().positive().optional(),
+  pageSize: z.number().int().positive().max(100).optional(),
+  /**
+   * Info: (20260909 - Julian) 逗號分隔的欄位名，在**驗證層**就切成陣列。
+   *
+   * 上一版切在 route 裡。那不是業務邏輯（所以放 route 沒有錯得離譜），
+   * 但它是**解析**，而 CLAUDE.md §1 給 route 的分工是「接收 → 驗證 → 呼叫」——
+   * 解析屬於驗證那一格。放這裡還有一個實際的好處：
+   * `fields` 的型別從此是 `string[]` 而不是「可能帶逗號的字串」，
+   * 下一個呼叫端不會有機會忘記切。
+   *
+   * `.max(500)` 在 `.transform()` 之前：先驗原始字串的長度，
+   * 再把它切開。反過來的話上限會變成「切完之後某一段的長度」，
+   * 而那擋不住「一萬個逗號」這種輸入。
+   *
+   * 過濾空元素是必要的，不是防禦性的：空字串 `"".split(",")` 會得到 `[""]`，
+   * 也就是「篩一個叫空字串的欄位」—— 一列都撈不到，而使用者看到的是
+   * 「這個人沒有任何異動」。濾掉之後，空字串與沒帶這個參數是同一件事。
+   */
+  fields: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .transform((value) =>
+      (value ?? "")
+        .split(",")
+        .map((field) => field.trim())
+        .filter((field) => field !== ""),
+    ),
+});
+
+export type ISalaryProfileChangeQueryPayload = z.infer<
+  typeof salaryProfileChangeQuerySchema
+>;
+
+export const salaryProfileChangeSchema = z.object({
+  effectiveYear: z
+    .number()
+    .int()
+    .min(SALARY_RECORD_MIN_YEAR)
+    .max(2100)
+    .optional(),
+  effectiveMonth: z.number().int().min(1).max(12).optional(),
+  reason: z.string().trim().max(200).optional(),
+});
+
+export type ISalaryProfileChangePayload = z.infer<
+  typeof salaryProfileChangeSchema
+>;
+
+/**
+ * Info: (20260908 - Julian) Payload → 交給 service 的異動 context。
+ *
+ * ## `changedByUserId` 從參數進來，不從 payload
+ *
+ * 它由 route 從 DeWT 取（`sessionUser.id`）。**不收前端傳入** ——
+ * 收的話，異動紀錄的「誰」就是可以偽造的，而那是這張表唯一不能妥協的欄位。
+ * 型別上把它放在第二個參數，是讓「不可能不小心從 body 讀到它」成立。
+ *
+ * ## `now` 沒有預設值
+ *
+ * 生效月份缺漏時補當期，而「當期」需要一個時鐘。
+ * 刻意不給預設 `new Date()`：一個藏在驗證層裡的時鐘，會讓
+ * 「12/31 23:59 存的那一筆算哪個月」這種問題測不出來。
+ * 由 route 顯式傳入，測試就餵得進固定時間。
+ *
+ * ## 補的是當期，而這是有損的
+ *
+ * 補登（4/20 才輸入 4 月起生效）與預先輸入（3/28 輸入 5 月起生效）
+ * 都會被補成錯的月份。所以前端**應該**帶這兩個欄位 —— 補值是相容性的
+ * 保險，不是預期路徑（計劃書 §4.1）。
+ */
+export const toSalaryProfileChangeContext = (
+  payload: ISalaryProfileChangePayload,
+  changedByUserId: string,
+  now: Date,
+): ISalaryProfileChangeContext => ({
+  changedByUserId,
+  effectiveYear: payload.effectiveYear ?? now.getFullYear(),
+  effectiveMonth: payload.effectiveMonth ?? now.getMonth() + 1,
+  reason: payload.reason,
+});

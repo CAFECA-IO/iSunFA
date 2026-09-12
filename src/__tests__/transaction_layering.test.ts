@@ -146,6 +146,14 @@ const GRANDFATHERED_PRISMA_IMPORTERS: readonly string[] = [
   join("scripts", "backfill_invite_email_match.ts"),
   join("scripts", "backfill_pending_invite_key.ts"),
   join("scripts", "backfill_remove_team_admin.ts"),
+  /**
+   * Info: (20260908 - Julian) `SalaryRecord.baseSalary` 的回填（薪資異動紀錄計劃書 §16）。
+   *
+   * 本專案沒有 `prisma/migrations/`，所以這支腳本就是那次 schema 改動的
+   * migration 紀錄 —— 它必須直接讀寫資料庫（從 Json 抽值寫進新的純量欄位），
+   * 走 repository 反而做不到。
+   */
+  join("scripts", "backfill_salary_record_base_salary.ts"),
   join("scripts", "backfill_subscription_seats.ts"),
   join("scripts", "bootstrap_hr_admin.ts"),
   join("scripts", "diagnose_wallet_conservation.ts"),

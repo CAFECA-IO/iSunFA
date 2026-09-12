@@ -22,7 +22,10 @@ import {
   SALARY_DELIVERY_STATUS,
   truncateFailureReason,
 } from "@/constants/salary_delivery";
-import { DEFAULT_EMPLOYEE_PROFILE } from "@/lib/utils/salary_employee_profile";
+import {
+  DEFAULT_EMPLOYEE_LEAVE,
+  DEFAULT_EMPLOYEE_PROFILE,
+} from "@/lib/utils/salary_employee_profile";
 import type { ISalaryCalculatorEmployeeRepository } from "@/repositories/salary_calculator_employee.repo";
 import type { ISalaryRecordRepository } from "@/repositories/salary_record.repo";
 import type { ISalaryPaySlipDeliveryRepository } from "@/repositories/salary_pay_slip_delivery.repo";
@@ -73,6 +76,9 @@ const employeeOf = (
   overrides: Partial<ISalaryCalculatorEmployee> = {},
 ): ISalaryCalculatorEmployee => ({
   ...DEFAULT_EMPLOYEE_PROFILE,
+  ...DEFAULT_EMPLOYEE_LEAVE,
+  // Info: (20260905 - Luphia) 完整度預設「沒有缺漏」；要驗警示的案例自己覆蓋（#6774）
+  missingPeriods: [],
   id: EMPLOYEE_ID,
   name: "王小明",
   number: "A001",
@@ -86,7 +92,17 @@ const recordOf = (
   id: RECORD_ID,
   year: 2026,
   month: 9,
-  employee: { id: EMPLOYEE_ID, name: "王小明", number: "A001" },
+  employee: { id: EMPLOYEE_ID, name: "王小明", number: "A001", hireDate: null },
+  /**
+   * Info: (20260908 - Julian) 本薪與「這個月生效的本薪異動」（計劃書 §15）。
+   *
+   * 預設 `null` = 這個月沒有調薪。要測有調薪的案例時由 overrides 帶進來 ——
+   * 預設就給一筆的話，每一條案例都會意外帶著一個 `+1,000`。
+   */
+  baseSalary: 30000,
+  // Info: (20260908 - Julian) 預設沒有前一筆可比（計劃書 §16）；要測差額的案例由 overrides 帶
+  baseSalaryDelta: null,
+  baseSalaryChange: null,
   totalPayment: 41234,
   totalSalaryTaxable: 32000,
   totalEmployerCost: 45678,
@@ -137,6 +153,16 @@ class FakeEmployeeRepo implements ISalaryCalculatorEmployeeRepository {
     throw new Error("not used in these tests");
   }
 
+  /**
+   * Info: (20260908 - Julian) 這一支測試不碰調薪歷程 —— 丟例外而不是回空的。
+   *
+   * 回 `{ rows: [], totalCount: 0 }` 也能編譯過，但那會讓「寄薪資單的流程
+   * 意外去讀了異動紀錄」變成一件靜靜通過的事。替身該在被誤用時大聲叫。
+   */
+  async listProfileChanges(): Promise<never> {
+    throw new Error("not used in these tests");
+  }
+
   public setEmail(email: string): void {
     const key = `${BOOK}:${EMPLOYEE_ID}`;
     const existing = this.rows.get(key);
@@ -145,6 +171,13 @@ class FakeEmployeeRepo implements ISalaryCalculatorEmployeeRepository {
 }
 
 class FakeRecordRepo implements ISalaryRecordRepository {
+  // Info: (20260905 - Luphia) 替身要跟上介面（#6774）；本檔不驗完整度，回空即可
+  public async listCoveredPeriods(): Promise<
+    { employeeId: string; year: number; month: number }[]
+  > {
+    return [];
+  }
+
   constructor(private readonly rows: Map<string, ISalaryRecordDetail>) {}
 
   async upsertRecord(): Promise<ISalaryRecordDetail> {

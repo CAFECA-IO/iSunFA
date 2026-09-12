@@ -7,6 +7,8 @@ import {
   CARBON_REPORT_DRAFT_STORAGE_VERSION,
   ParagraphOriginEnum,
 } from "@/constants/carbon_chatbot";
+import { CARBON_REPORT_IDENTITY_FIELDS } from "@/lib/utils/carbon_report_identity";
+import { PARAGRAPH_FINGERPRINT_MAX_CLAIMS } from "@/lib/carbon_report_freshness";
 
 const ReportCategorySchema = z.object({
   id: z.string(),
@@ -14,6 +16,29 @@ const ReportCategorySchema = z.object({
   description: z.string(),
   // Info: (20260720 - Tzuhan) #23 改字串化 Decimal;coerce 相容既有草稿的 number(0)不 Fail Fast 丟棄
   emissions: z.coerce.string().max(60),
+});
+
+/**
+ * Info: (20260908 - Emily) 段落的帳本指紋(#6786)。
+ *
+ * 選填:這張票之前生成的段落沒有這個欄位,**不得 Fail Fast 丟棄整份報告** ——
+ * 那些節的狀態是「不知道」而不是「最新」,由 `assessParagraphFreshness` 判。
+ *
+ * Info: (20260909 - Emily) 記的是這一節自己的主張(數字 + 單位),不是事實(理由見
+ * `IParagraphFactImprint`)。筆數上限引 `PARAGRAPH_FINGERPRINT_MAX_CLAIMS`:一節敘述裡的
+ * 排放量斷言數,實務上十幾個;上限給到 400 是為了不截斷(截斷 = 少認依賴 = 靜默漏報),
+ * 同時擋住把整張表塞進敘述的異常輸入。
+ */
+const ParagraphLedgerFingerprintSchema = z.object({
+  ledgerComputedAt: z.string().min(1).max(50),
+  claims: z
+    .array(
+      z.object({
+        value: z.string().min(1).max(40),
+        unit: z.string().max(20),
+      }),
+    )
+    .max(PARAGRAPH_FINGERPRINT_MAX_CLAIMS),
 });
 
 const ReportParagraphSchema = z.object({
@@ -27,11 +52,51 @@ const ReportParagraphSchema = z.object({
   isDataDriven: z.boolean(),
   // Info: (20260730 - Tzuhan) 內容來源:選填,舊草稿無此欄不得 Fail Fast 丟棄整份報告
   origin: z.nativeEnum(ParagraphOriginEnum).optional(),
+  // Info: (20260908 - Emily) 帳本指紋(#6786):見上方 ParagraphLedgerFingerprintSchema
+  ledgerFingerprint: ParagraphLedgerFingerprintSchema.optional(),
 });
+
+/**
+ * Info: (20260908 - Emily) 文件中繼資料:報告名稱與四列識別欄位。
+ *
+ * ## 為什麼補這一段(#6725 的同形第三次)
+ *
+ * `IReportData` 從 20260812 / 20260814 起就有 `reportName` 與 `identity`
+ * (印在 PDF 第一頁的封面資訊:盤查年度、製作單位、查證單位、更新日期),
+ * 而這份 schema **沒有** —— 於是:
+ *
+ *     存:JSON.stringify(reportData)          ← 寫路徑不驗,兩個欄位存得進去
+ *     載:CarbonReportDataSchema.safeParse()   ← zod 預設剝掉未宣告的鍵
+ *
+ * 使用者填的封面資訊在重載之後消失,而**下一次存檔會把剝掉的版本寫回雲端** ——
+ * 從此永久消失。畫面上的症狀是四列識別欄位全變「未填寫」、第一頁沒有報告名稱,
+ * 而使用者只會覺得「我不是填過了嗎」。實測(9/08):
+ * `safeParse` 成功、`parsed.data` 的鍵只剩六個,兩個欄位都不在。
+ *
+ * 欄位鍵**由常數推導**(`CARBON_REPORT_IDENTITY_FIELDS`),不手寫第二份清單:
+ * 那張常數的順序就是列印順序,兩邊分岔的話會是「印得出來但存不下來」的下一個坑。
+ *
+ * 長度上限:識別欄位是使用者自填的短字串(單位名、日期),`reportName` 是文件標題。
+ * 兩者都給明確上限 —— 不設限的字串欄位在 E2EE 草稿裡等於讓單一欄位撐爆整份密文。
+ */
+const ReportIdentitySchema = z.object(
+  Object.fromEntries(
+    CARBON_REPORT_IDENTITY_FIELDS.map((field) => [
+      field,
+      z.string().max(200).optional(),
+    ]),
+  ) as Record<
+    (typeof CARBON_REPORT_IDENTITY_FIELDS)[number],
+    z.ZodOptional<z.ZodString>
+  >,
+);
 
 // Info: (20260714 - Tzuhan) IReportData 的結構驗證:前端解密草稿密文後、寫入狀態前的護欄
 export const CarbonReportDataSchema = z.object({
   documentName: z.string(),
+  // Info: (20260908 - Emily) 見上方 ReportIdentitySchema 的說明:型別有、schema 沒有 = 載入時被剝掉
+  reportName: z.string().max(300).optional(),
+  identity: ReportIdentitySchema.optional(),
   title: z.string(),
   section: z.string(),
   categories: z.array(ReportCategorySchema),

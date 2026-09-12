@@ -19,12 +19,27 @@ import { ISalaryCalculatorEmployee } from "@/interfaces/salary_record";
  */
 type IEmployeeLike = Pick<
   ISalaryCalculatorEmployee,
-  "name" | "number" | "email"
+  "name" | "number" | "email" | "missingPeriods" | "hireDate"
 >;
 
 export interface IEmployeeListFilter {
   keyword: string;
   onlyMissingEmail: boolean;
+  /**
+   * Info: (20260905 - Luphia) 只看有薪資單缺漏的人（#6774）。
+   *
+   * 與 `onlyMissingEmail` 各自獨立、可以同時打開：兩個問題不同
+   *（收不到 vs 沒有東西可收），而「兩個都有問題的那幾位」正是最該先處理的。
+   */
+  onlyMissingRecords: boolean;
+  /**
+   * Info: (20260906 - Luphia) 只看沒有到職日的人（#6774）。
+   *
+   * 與上面兩個一樣獨立、可以同時打開 —— 但這一個問的是**上游**的問題：
+   * 沒有到職日就算不出完整度，所以那些人永遠不會出現在
+   * `onlyMissingRecords` 的結果裡。兩者不是互相取代，是一前一後。
+   */
+  onlyMissingHireDate: boolean;
 }
 
 /**
@@ -50,12 +65,19 @@ export const countMissingEmail = (
 
 export const filterEmployees = <T extends IEmployeeLike>(
   employees: readonly T[],
-  { keyword, onlyMissingEmail }: IEmployeeListFilter,
+  {
+    keyword,
+    onlyMissingEmail,
+    onlyMissingRecords,
+    onlyMissingHireDate,
+  }: IEmployeeListFilter,
 ): T[] => {
   const trimmed = keyword.trim().toLowerCase();
 
   return employees.filter((employee) => {
     if (onlyMissingEmail && !hasNoEmail(employee)) return false;
+    if (onlyMissingRecords && !hasMissingPeriods(employee)) return false;
+    if (onlyMissingHireDate && !hasNoHireDate(employee)) return false;
     if (trimmed === "") return true;
 
     return (
@@ -64,3 +86,75 @@ export const filterEmployees = <T extends IEmployeeLike>(
     );
   });
 };
+
+/**
+ * Info: (20260905 - Luphia) 這位員工有沒有月份漏掉薪資單（#6774）。
+ *
+ * 判斷只看陣列長度 —— 空陣列同時代表「完整」與「算不出來」（沒有到職日、
+ * 超過掃描上限），而兩者對畫面的處置一樣：不標示。理由見
+ * `missingSalaryPeriods`：不知道就不要說。
+ */
+export const hasMissingPeriods = (employee: {
+  // Info: (20260907 - Julian) 收 readonly：呼叫端有的是 prop（唯讀），不是 state
+  missingPeriods: readonly { year: number; month: number }[];
+}): boolean => employee.missingPeriods.length > 0;
+
+export const countMissingRecords = (
+  employees: readonly IEmployeeLike[],
+): number => employees.filter(hasMissingPeriods).length;
+
+/**
+ * Info: (20260905 - Luphia) 缺漏的月份 → 一行字（#6774）。
+ *
+ * 超過這個數量就截斷並回報剩幾個 —— 一個到職三年沒建過薪資單的人會有
+ * 36 個月份，提示框全部列出來會蓋掉半個畫面。截斷的是**顯示**不是判斷，
+ * 所以與 `missingSalaryPeriods` 的「超過上限就回空」不衝突：
+ * 那邊回空是「算不出來」，這邊截斷之後仍然說得出總數（`restCount`）。
+ */
+export const MISSING_PERIOD_PREVIEW_LIMIT = 6;
+
+/**
+ * Info: (20260907 - Julian) 「要顯示哪幾個月、還剩幾個」——**選取**與**排版**分開。
+ *
+ * 初版是 `formatMissingPeriods`，截斷與「串成一行字」一起做。20260907 提示框
+ * 改成格狀排版（原生 `title` 只吃純文字，折行還會斷在頓號後面），需要的是
+ * **陣列**而不是字串，於是選取獨立出來，排版留給元件。
+ *
+ * Info: (20260908 - Luphia) 那支只做排版的舊函式已經刪掉（review 應修-2）——
+ * 改版之後它沒有任何呼叫端，只剩自己的測試，而那讓覆蓋率替一條沒有人走的路
+ * 背書。截斷規則現在只有這一份，兩邊對不起來的風險也就不存在了。
+ *
+ * 順序沿用 `missingPeriods` 的由舊到新，取的是**最舊的幾個**。
+ * 那是既有行為，這次搬家不順手改掉它。
+ */
+export const previewMissingPeriods = (
+  periods: readonly { year: number; month: number }[],
+  limit: number = MISSING_PERIOD_PREVIEW_LIMIT,
+): { shown: { year: number; month: number }[]; restCount: number } => {
+  const shown = periods.slice(0, limit);
+
+  return { shown: [...shown], restCount: periods.length - shown.length };
+};
+
+/**
+ * Info: (20260906 - Luphia) 這位員工有沒有到職日（#6774）。
+ *
+ * ## 為什麼要單獨數這個
+ *
+ * 完整度是從到職日往後推的，沒有到職日就**算不出來**，而算不出來時
+ * `missingPeriods` 是空陣列 —— 與「真的沒有缺漏」長得一模一樣。
+ *
+ * `hire_date` 是 20260902 才加上的可空欄位、沒有回填腳本，所以既有帳本
+ * 的員工全部是 null。這個功能上線那天，畫面上會是一片空白，而使用者的
+ * 結論會是「這功能沒做」或「我們資料很完整」—— 兩個都不對。
+ *
+ * 「不知道就不要說」是對的，但少了另外半句：**告訴他為什麼不知道**。
+ * 這一支就是那半句話的資料來源。
+ */
+export const hasNoHireDate = (
+  employee: Pick<ISalaryCalculatorEmployee, "hireDate">,
+): boolean => employee.hireDate === null;
+
+export const countMissingHireDate = (
+  employees: readonly IEmployeeLike[],
+): number => employees.filter(hasNoHireDate).length;

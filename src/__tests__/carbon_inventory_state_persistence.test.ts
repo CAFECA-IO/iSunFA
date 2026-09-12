@@ -118,6 +118,19 @@ const fullState = {
   computedLedger: ledger,
   ledgerByYear: { 2023: ledger },
   ledgerYearWarning: { incomingYear: 2024, undatedCount: 3 },
+  /**
+   * Info: (20260909 - Emily) #6760 之前這個鍵刻意不在 schema 裡(見 open/73 與
+   * `carbon_disclosure_framework_entry.test.ts` 那條反向斷言的歷史)。
+   * 現在寫入端有界了,它進到往返的那份完整狀態裡 —— 少了它,重載後
+   * 「帳本為什麼是空的」說不出來,而那正是異常查詢最該浮出的疑點。
+   */
+  ledgerImportBlocks: [
+    {
+      paragraphId: "3.8",
+      reason: "5 列無法解析;(1) 總公司 差額 4(原文 18.8494 vs 加總 22.8494)",
+      blockedAt: "2026-09-03T00:00:00.000Z",
+    },
+  ],
   notes: [],
   updatedAt: "2026-09-03T00:00:00.000Z",
   version: 1,
@@ -168,6 +181,11 @@ describe("盤查狀態的往返:序列化 → schema → 必須一模一樣", ()
       incomingYear: 2024,
       undatedCount: 3,
     });
+  });
+
+  it("勾稽阻擋紀錄倖存(#6760;它只在匯入被擋時寫入,載入路徑不重算)", () => {
+    const back = roundTrip(fullState) as typeof fullState;
+    expect(back.ledgerImportBlocks).toEqual(fullState.ledgerImportBlocks);
   });
 
   it("舊紀錄(沒有這些新鍵)仍然讀得出來", () => {

@@ -13,7 +13,11 @@ import {
   CarbonInventoryStep,
   INVENTORY_YEAR_MIN,
   INVENTORY_YEAR_STORAGE_MAX,
+  LEDGER_IMPORT_BLOCK_PARAGRAPH_ID_MAX_LENGTH,
+  LEDGER_IMPORT_BLOCK_TIMESTAMP_MAX_LENGTH,
+  LEDGER_IMPORT_BLOCKS_MAX,
 } from "@/constants/carbon_chatbot";
+import { boundLedgerImportReason } from "@/lib/carbon_ledger_import_blocks";
 import { CARBON_CALCULATE_MAX_ACTIVITIES } from "@/constants/carbon_calculation";
 import {
   CARBON_ARTICULATION_MAX_STOCK_RECORDS,
@@ -322,25 +326,59 @@ export const CarbonInventoryStateSchema = z.object({
    * 所以這一行與型別那一行是同一個工作,不是兩件事。
    */
   disclosureFramework: z.nativeEnum(CarbonDisclosureFrameworkEnum).optional(),
-  /*
-   * Info: (20260904 - Emily) `ledgerImportBlocks` **刻意不在這裡宣告**,理由見
-   * `data/scratch/issue_drafts/open/73_ledger_import_blocks_bound.md`。
+  /**
+   * Info: (20260909 - Emily) 匯入表格被勾稽擋下的紀錄(#6707 的資料源;持久化是 #6760)。
    *
-   * 這個欄位(#6707)確實少了持久化 —— 型別有、schema 沒有,所以重載之後
-   * 「帳本為空的原因」說不出來。但它的寫入端 `blockedReason` 是
-   * `checks.filter(未通過).map(...).join(";")`,而 `checks` 的筆數隨報告的
-   * 廠址 × 類別數成長、`subject` 是客戶報告裡的自由字串 —— **寫入端的值域無上界**。
+   * 09-04 到 09-09 之間這個欄位**刻意不宣告**:型別有、schema 沒有,所以重載之後
+   * 「帳本為什麼是空的」說不出來 —— 但寫入端 `blockedReason` 的值域當時沒量過,
+   * 而猜一個上界比不宣告更糟:寫路徑存 `JSON.stringify(state)`(不過 schema),
+   * 超界的那一次存得進去,**下一次載入整份盤查狀態一起被丟棄**
+   * (PR #6725 review 阻-2 那個形狀)。
    *
-   * 給它一個猜的上界(本檔一度寫過 `reason: max(500)`)比不宣告更糟:
-   * 寫路徑是 `JSON.stringify(state)`(不過 schema),讀路徑是
-   * `parsed.success ? parsed.data : null` —— 超界的那一次存得進去、
-   * **下一次載入整份盤查狀態(帳本、活動數據、待補項)一起被丟棄**。
-   * 這正是 PR #6725 review 阻-2 抓到的同一個形狀(年度 `1024` 手滑毀整份 state)。
+   * 現在量過了(表在 `LEDGER_IMPORT_BLOCKS_MAX` 的註解:四廠址全錯一次 1163 字),
+   * 截斷放在唯一的寫入者 `recordLedgerImportBlocks`(`boundLedgerImportBlocks`)。
    *
-   * 所以先量寫入端能產出多長、再決定是截斷還是放寬,而截斷要放在唯一的寫入者
-   *(`recordLedgerImportBlocks`)並配一條「寫入端能產出的,儲存端一定讀得回來」
-   * 的不變式測試。量完之前不宣告 —— 與分流表那四格的立場一致。
+   * ## `reason` 為什麼是 `transform` 而不是 `.max()`(#6794 review 阻-1)
+   *
+   * 因為**上線前已經存進雲端的紀錄就是未收界的**,而 `.max()` 會把它們整份拒掉。
+   *
+   * 這個欄位在 09-04 到 09-09 之間型別有、schema 沒有 —— 而 zod 剝掉未宣告鍵之後
+   * `safeParse` 是**成功**的,存檔又存 `JSON.stringify(state)`(原件,不是 `parsed.data`,
+   * 理由見 `carbon_inventory_storage.ts` 那段註解)。所以那段時間每一次大面積勾稽失敗
+   * 都在雲端留下一筆 1000 字以上的 `reason`。一旦這裡宣告 `.max(500)`,
+   * 那些使用者下一次開房就是 `SCHEMA_REJECTED` → 帳本、活動數據、待補項、年度快照
+   * 全部讀不回來,而盤查狀態**沒有本機備份**,沒有任何副本可以救。
+   *
+   * 宣告這個鍵的目的是讓它**撐過往返**(#6760),不是把它當守門 —— 守門在寫入端。
+   * 所以這裡收界而不拒:舊紀錄載得回來、而且載回來就已經在界內,
+   * 下一次存檔寫回的是收好界的版本,自己痊癒,不需要任何 migration。
+   * 附帶把 #6760 的第一個症狀(reason 進事實 `value` 超過 500 → 每一則聊天被伺服端打回)
+   * 對**舊資料**也一起關上 —— 只在寫入端截斷的話,舊資料那條路是不生效的。
+   *
+   * `paragraphId` / `blockedAt` 保留 `.max()`:它們的值域由來源決定(大綱 id、ISO 字串),
+   * 不存在「上線前存了超界值」這回事,那兩道第二關是真的第二關。
    */
+  ledgerImportBlocks: z
+    .array(
+      z.object({
+        paragraphId: z
+          .string()
+          .min(1)
+          .max(LEDGER_IMPORT_BLOCK_PARAGRAPH_ID_MAX_LENGTH),
+        /*
+         * Info: (20260910 - Emily) 包一層而不是直接傳函式:`boundLedgerImportReason`
+         * 的第二個參數是上界(供測試傳小值),而 zod 的 transform 第二個參數是
+         * `RefinementCtx` —— 直接傳會把 ctx 當成上界。
+         */
+        reason: z
+          .string()
+          .min(1)
+          .transform((raw) => boundLedgerImportReason(raw)),
+        blockedAt: z.string().max(LEDGER_IMPORT_BLOCK_TIMESTAMP_MAX_LENGTH),
+      }),
+    )
+    .max(LEDGER_IMPORT_BLOCKS_MAX)
+    .optional(),
   notes: z.array(z.string().max(500)).optional(),
   updatedAt: z.string().max(50),
   version: z.number().int().min(0),

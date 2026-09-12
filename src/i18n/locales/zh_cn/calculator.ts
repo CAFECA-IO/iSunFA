@@ -84,6 +84,61 @@ export const calculator = {
     hire_date: "到职日",
     resign_date: "离职日",
     date_order_error: "离职日不得早于到职日",
+    effective_month: "生效月份",
+    effective_month_hint:
+      "填的是这次调整「从哪一个月的薪资开始适用」，不是今天的日期。补登或预先调整时请改成实际生效的月份。",
+    change_reason: "异动原因",
+    change_reason_placeholder: "例如：年度调薪、升迁、投保级距调整",
+    field_labels: {
+      baseSalary: "本薪",
+      mealAllowance: "伙食费",
+      otherAllowanceTaxable: "其他加给（应税）",
+      otherAllowanceTaxFree: "其他加给（免税）",
+      isForeignWorker: "非本国居住者",
+      baseSalary30Days: "固定 30 天计薪",
+      isLaborInsured: "劳保",
+      isHealthInsured: "健保",
+      isPensionInsured: "劳退",
+      industryCode: "行业别",
+      dependentsCount: "扶养人数",
+      voluntaryPensionRate: "自提劳退比例",
+      hireDate: "到职日",
+      resignDate: "离职日",
+      leaveStartDate: "留职停薪起日",
+      leaveEndDate: "复职日",
+      name: "员工姓名",
+      number: "员工编号",
+      email: "电子邮件",
+      employmentType: "雇用型态",
+    },
+    field_true: "是",
+    field_false: "否",
+    action_create: "建档",
+    action_update: "调整",
+    action_delete: "移除",
+    timing_backdated: "补登",
+    timing_scheduled: "预先设定",
+    history_title: "薪资异动纪录",
+    history_loading: "载入中…",
+    history_load_failed: "异动纪录载入失败，请稍后再试",
+    history_load_more: "载入更早的纪录",
+    history_empty: "这位员工还没有任何薪资条件变动",
+    history_empty_filtered: "目前勾选的栏位没有任何变动纪录，试试多勾几个栏位",
+    history_field_filter: "只看这些栏位的变动",
+    history_since:
+      "本纪录自 {{date}} 起。此日之前的调整未被记录——更早的薪资条件请查阅各月「薪资记录」的输入内容。",
+    history_no_record_yet:
+      "这位员工自本功能上线后尚未有任何薪资条件变动。更早的薪资条件请查阅各月「薪资记录」的输入内容。",
+    history_count: "显示 {{shown}} / {{total}} 笔",
+    recorded_by: "由 {{name}} 于 {{at}} 记录",
+    unknown_user: "未知使用者",
+    history: "异动纪录",
+    leave_start_date: "停薪留职起日",
+    leave_end_date: "复职日",
+    leave_hint:
+      "停薪留职：完整落在这段区间里的月份不会被算成缺工资单。起日填停薪第一天、复职日填回来上班的第一天 —— 这两个月仍会计入，因为那个月有上班日。尚未复职就留空。",
+    leave_order_error: "复职日不得早于停薪留职起日",
+    leave_start_required: "请一并填写停薪留职起日",
     main_title: "员工列表",
     name: "员工姓名",
     number: "员工编号",
@@ -116,10 +171,15 @@ export const calculator = {
     remove_employee_content: "您确定要从员工列表中移除 {{name}} 吗？",
     remove_employee_submit_btn: "是的，移除员工。",
     no_email: "未填写",
-    missing_email_banner: "{{count}} 位员工没有电子邮件，寄不出薪资单",
-    only_missing_email: "只看这几位",
-    show_all: "显示全部员工",
+    missing_records_badge: "缺 {{count}} 个月",
     no_filter_result: "没有符合目前条件的员工",
+    missing_records_rest: "另有 {{count}} 个月",
+    no_hire_date: "未填写",
+    filter_missing_email: "显示没有电子邮件",
+    filter_missing_hire_date: "显示没有到职日",
+    missing_hire_date_banner:
+      "{{count}} 位员工没有到职日，补上之后才看得出他们缺哪几个月的工资单",
+    filter_missing_records: "显示缺少薪资单纪录",
   },
   result: {
     base_salary_with_tax: "基本工资（应税）",
@@ -156,7 +216,12 @@ export const calculator = {
     monthly_pay: "本月实发薪资",
     total_employer_cost: "公司总负担",
     reported: "扣缴凭单金额",
+    hire_date: "到职日",
+    insured_yes: "投保",
+    insured_no: "未投保",
     paid: "实际发放金额",
+    hide_values: "隐藏金额",
+    show_values: "显示金额",
   },
   warnings: {
     title: "警示信息",
@@ -191,6 +256,8 @@ export const calculator = {
     error_generic: "薪资单寄送失败，请稍后再试一次。",
   },
   my_pay_slip: {
+    record_deleted:
+      "这笔薪资记录已被删除，看不到内容了。寄送记录仍然保留在这份清单上。",
     main_title: "我的薪资单",
     tab_received: "我收到的薪资单",
     tab_sent: "我发送的薪资单",
@@ -218,11 +285,13 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) 计算器页的直接保存与两个例外
   save_record: {
+    profile_diff_reason: "异动原因（选填，只在更新员工资料时记录）",
+    profile_diff_reason_placeholder: "例如：年度调薪、升迁、投保级距调整",
     profile_diff_title: "顺便更新员工资料吗？",
     profile_diff_content:
       "计算器上的设置与「{{name}}」的员工资料不一样。以下是差异：",
     profile_diff_hint:
-      "这次的薪资记录一定会照计算器上的值保存，这里问的只是要不要把员工资料也一起改掉。选「只存这一次」的话，员工资料维持原样。",
+      "这次的薪资记录一定会照计算器上的值保存，这里问的只是要不要把员工资料也一起改掉。选「只存这一次」的话，员工资料维持原样，而这次的调整**不会留下异动记录**（薪资记录上仍然看得到金额的变化，但看不到是谁改的、为什么）。",
     profile_diff_update_btn: "更新员工资料并保存",
     profile_diff_skip_btn: "只存这一次",
     profile_diff_failed: "更新失败，请稍后再试",
@@ -255,6 +324,20 @@ export const calculator = {
   },
   // Info: (20260831 - Julian) 薪资记录查阅
   records: {
+    base_salary_delta_inline: "较 {{month}} 月 {{sign}}{{amount}}",
+    base_salary_delta_title: "{{year}} 年 {{month}} 月的本薪变动",
+    base_salary_delta_vs: "较 {{year}} 年 {{month}} 月",
+    base_salary_no_change_record:
+      "这个月的本薪与上一笔不同，但没有对应的员工资料异动记录。请到员工列表编辑，并把生效月份设为 {{year}} 年 {{month}} 月。",
+    base_salary: "本薪",
+    base_salary_change_aria: "查看 {{year}} 年 {{month}} 月的本薪异动",
+    base_salary_change_title: "{{year}} 年 {{month}} 月起的本薪异动",
+    base_salary_change_count:
+      "本月共有 {{count}} 笔本薪异动，上方显示的是净变动。",
+    base_salary_change_recorded: "记录",
+    base_salary_change_full_history: "查看完整调薪历程",
+    base_salary_mismatch:
+      "这个月的薪资是用本薪 {{used}} 试算的，与异动后的 {{changed}} 不一致。若这笔薪资应该套用新的本薪，请重新试算并保存。",
     main_title: "薪资记录",
     pay_period: "给付期间",
     pay_period_value: "{{year}} 年 {{month}} 月",
@@ -298,6 +381,14 @@ export const calculator = {
     export_too_many: "一次最多导出 {{max}} 笔，请先取消一些选取",
     export_failed: "导出失败，请稍后再试一次。",
   },
+  access: {
+    checking: "确认权限中…",
+    check_failed: "无法确认您在这本账本的权限，请稍后再试",
+    denied_title: "这本账本的薪资功能未对您开放",
+    denied_desc:
+      "薪资计算器、薪资记录与员工列表只开放给账本的拥有者与编辑者。您在这本账本是只读成员，因此看不到这一区。需要使用的话，请向账本拥有者调整您的角色。",
+    denied_public_link: "改用公开版薪资计算器",
+  },
   account_book_entry: {
     title: "想把这次的试算保存下来吗？",
     hint_save: "账本版可以保存薪资记录、管理员工列表。",
@@ -318,6 +409,9 @@ export const calculator = {
     send_disabled_loading: "正在确认员工名单…",
   },
   message: {
+    send_pay_slip_success_title: "薪资单已寄出",
+    send_pay_slip_success_content:
+      "{{month}} 的薪资单已寄给 {{name}}（{{email}}）。",
     name_error_title: "未填写员工姓名",
     name_error_content: "请在前往下一步之前输入员工姓名",
     salary_error_title: "薪资输入有误",

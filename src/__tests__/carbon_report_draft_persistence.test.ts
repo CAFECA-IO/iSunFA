@@ -17,6 +17,11 @@ import {
   buildChartAnchorStart,
   CarbonChartTemplateEnum,
 } from "@/constants/carbon_report_charts";
+import { CARBON_REPORT_IDENTITY_FIELDS } from "@/lib/utils/carbon_report_identity";
+import {
+  buildParagraphFingerprint,
+  PARAGRAPH_FINGERPRINT_MAX_CLAIMS,
+} from "@/lib/carbon_report_freshness";
 
 const CHART_BLOCK = [
   buildChartAnchorStart(CarbonChartTemplateEnum.IMPORTED_EMISSION_SANKEY),
@@ -45,6 +50,145 @@ const buildReportData = (chartContent: string) => ({
     },
   ],
   rawMarkdown: `### 3.6 排放量結果分析\n\n${chartContent}\n`,
+});
+
+/**
+ * Info: (20260908 - Emily) 封面的中繼資料也要往返(#6725 的同形第三次)。
+ *
+ * `reportName` 與 `identity`(印在 PDF 第一頁:盤查年度、製作單位、查證單位、更新日期)
+ * 在型別上從 20260812 / 20260814 就有,而 schema 沒有 —— 存得進去、載入被剝掉、
+ * 下一次存檔把剝掉的版本寫回雲端。使用者的症狀是「四列全變未填寫、第一頁沒有標題」,
+ * 而他只會覺得「我不是填過了嗎」。
+ *
+ * 判準用**往返等價**而不是欄位清單比對(#6725 的教訓):
+ * 清單比對會在下一個人加第五個識別欄位時繼續綠著。
+ */
+describe("封面中繼資料的往返(reportName / identity)", () => {
+  const identity = Object.fromEntries(
+    CARBON_REPORT_IDENTITY_FIELDS.map((field) => [field, `${field}-值`]),
+  );
+  const original = {
+    ...buildReportData("內容"),
+    reportName: "高興昌 2024 年度溫室氣體盤查報告",
+    identity,
+  };
+
+  it("存進去讀回來,兩個欄位一字不差", () => {
+    const restored = CarbonReportDataSchema.safeParse(
+      JSON.parse(JSON.stringify(original)),
+    );
+    expect(restored.success).toBe(true);
+    if (!restored.success) return;
+    expect(restored.data.reportName).toBe(original.reportName);
+    expect(restored.data.identity).toEqual(identity);
+  });
+
+  it("識別欄位的鍵由常數推導 —— 加了第五個欄位這條會跟著要求它", () => {
+    /*
+     * Info: (20260908 - Emily) schema 手寫第二份鍵清單就會與列印順序那張常數分岔,
+     * 而分岔的症狀是「印得出來但存不下來」。這一條釘住兩邊同源。
+     */
+    const restored = CarbonReportDataSchema.safeParse(
+      JSON.parse(JSON.stringify(original)),
+    );
+    if (!restored.success) throw new Error("should parse");
+    expect(Object.keys(restored.data.identity ?? {}).sort()).toEqual(
+      [...CARBON_REPORT_IDENTITY_FIELDS].sort(),
+    );
+  });
+
+  it("沒填的欄位不必存在,舊草稿不得被整份丟棄", () => {
+    const legacy = buildReportData("內容");
+    const restored = CarbonReportDataSchema.safeParse(
+      JSON.parse(JSON.stringify(legacy)),
+    );
+    expect(restored.success).toBe(true);
+    if (!restored.success) return;
+    expect(restored.data.reportName).toBeUndefined();
+    expect(restored.data.identity).toBeUndefined();
+  });
+});
+
+/**
+ * Info: (20260908 - Emily) 段落的帳本指紋也要往返(#6786)。
+ *
+ * 這是 #6788 那個缺陷的**第一次預防性應用**:欄位加在型別上的同一輪就加進 schema,
+ * 並用往返把它釘住。不這樣做的話症狀會是「指紋打得上、重載就沒了」——
+ * 而沒有指紋的段落一律是「不知道」,於是過期標記在重載後永遠消失,
+ * 使用者看到的是「標記會自己不見」。
+ */
+describe("段落帳本指紋的往返(ledgerFingerprint)", () => {
+  const fingerprint = buildParagraphFingerprint({
+    content: "本年度總排放量為 227.8986 公噸 CO2e。",
+    ledgerFacts: [
+      {
+        label: "全公司總排放量",
+        value: "227898.6 kgCO2e",
+        source: "帳本總計欄(3 筆分錄,計算於 2026-09-01T00:00:00.000Z)",
+        emissionsKg: ["227898.6"],
+      },
+    ],
+    ledgerComputedAt: "2026-09-01T00:00:00.000Z",
+  });
+
+  const withFingerprint = () => {
+    const base = buildReportData("本年度總排放量為 227.8986 公噸 CO2e。");
+    return {
+      ...base,
+      paragraphs: base.paragraphs.map((paragraph) => ({
+        ...paragraph,
+        ledgerFingerprint: fingerprint,
+      })),
+    };
+  };
+
+  it("存進去讀回來,指紋一字不差(戳記與引用事實都在)", () => {
+    const original = withFingerprint();
+    const restored = CarbonReportDataSchema.safeParse(
+      JSON.parse(JSON.stringify(original)),
+    );
+    expect(restored.success).toBe(true);
+    if (!restored.success) return;
+    expect(restored.data.paragraphs?.[0].ledgerFingerprint).toEqual(
+      fingerprint,
+    );
+    expect(fingerprint?.claims).toEqual([{ value: "227.8986", unit: "公噸" }]);
+  });
+
+  it("沒有指紋的舊段落不得被整份丟棄(那些節是「不知道」而不是壞資料)", () => {
+    const legacy = buildReportData("內容");
+    const restored = CarbonReportDataSchema.safeParse(
+      JSON.parse(JSON.stringify(legacy)),
+    );
+    expect(restored.success).toBe(true);
+    if (!restored.success) return;
+    expect(restored.data.paragraphs?.[0].ledgerFingerprint).toBeUndefined();
+  });
+
+  it("指紋主張數上限與常數同源 —— 剛好在上限之內要收得下", () => {
+    /*
+     * Info: (20260908 - Emily) 這一條防的是「產得出來但存不下來」:
+     * 上限由常數決定,schema 引同一個常數;手寫一個更小的數字就會在滿載時靜默丟掉整份報告。
+     */
+    const base = buildReportData("內容");
+    const full = {
+      ...base,
+      paragraphs: base.paragraphs.map((paragraph) => ({
+        ...paragraph,
+        ledgerFingerprint: {
+          ledgerComputedAt: "2026-09-01T00:00:00.000Z",
+          claims: Array.from(
+            { length: PARAGRAPH_FINGERPRINT_MAX_CLAIMS },
+            (_, index) => ({ value: `${index}.5`, unit: "kg" }),
+          ),
+        },
+      })),
+    };
+    expect(
+      CarbonReportDataSchema.safeParse(JSON.parse(JSON.stringify(full)))
+        .success,
+    ).toBe(true);
+  });
 });
 
 describe("carbon report draft persistence", () => {

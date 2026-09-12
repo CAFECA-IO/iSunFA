@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   CARBON_CHAT_ALLOWED_ATTACHMENT_MIME_TYPES,
   CARBON_CHAT_MAX_ATTACHMENTS_PER_MESSAGE,
+  LEDGER_FACT_VALUE_MAX_LENGTH,
 } from "@/constants/carbon_chatbot";
 
 export const CarbonChatAttachmentSchema = z.object({
@@ -26,7 +27,7 @@ export type CarbonChatAttachmentPayload = z.infer<
  */
 export const CarbonLedgerFactSchema = z.object({
   label: z.string().min(1).max(200),
-  value: z.string().min(1).max(500),
+  value: z.string().min(1).max(LEDGER_FACT_VALUE_MAX_LENGTH),
   source: z.string().min(1).max(300),
   /**
    * Info: (20260827 - Emily) 本筆的排放量數值(kg 級),出口守門的裁決集合只認這些

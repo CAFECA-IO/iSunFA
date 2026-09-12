@@ -12,34 +12,54 @@ export enum SalaryAccess {
 }
 
 /**
- * Info: (20260901 - Julian) 哪些角色可以做什麼。**這是本模組唯一的角色清單。**
+ * Info: (20260908 - Julian) 哪些角色可以做什麼。**這是本模組唯一的角色清單。**
  *
- * ## 為什麼要有這一層
+ * ## 現況：讀與寫都是 `OWNER + EDITOR`，擋的是 `VIEWER`（20260908 產品決策）
  *
- * 原本八支端點只掛 `assertAccountBookMember`，而它只驗「帳本存在 + 是團隊成員」，
- * 三個角色一視同仁。也就是說任何被邀請進團隊當 `VIEWER` 的帳號
- * （外部顧問、實習生、暫時協助對帳的人）登入後就能新增／修改／軟刪除員工、
- * 儲存、覆寫、**硬刪除**任何一筆薪資紀錄 —— 而這是本 repo 最敏感的一類資料。
+ * 帳本版薪資計算機的每一支端點 —— 看員工名單、看薪資紀錄、看薪資單、
+ * 員工 CRUD、儲存／刪除紀錄、匯出 CSV、寄薪資單 —— 開給 `OWNER` 與 `EDITOR`，
+ * `VIEWER` 一律 403。
  *
- * ## 為什麼寫入是 `OWNER + EDITOR` 而不是只有 `OWNER`
+ * 這是 20260901 留下的「讀取範圍尚未拍板」的答案。當時的註解寫著
+ * 「屆時改的是下面這一行，不是八支 route」—— 而這次確實只改了這兩行。
+ * 判準集中成一張表的價值就在這裡：調整權限是改一個常數，
+ * 不是去十三支 route 逐一確認有沒有漏掉。
  *
- * 這個模組的使用者刻意不是 HR 員工檔上的人，而是帳本的**團隊成員**
- * （老闆、會計、記帳士）—— 那正是它不用 `resolveEmployee` 的理由（見上方檔頭）。
- * 被邀請進來記帳的會計通常是 `EDITOR` 不是 `OWNER`，把寫入收到 `OWNER` 一人
- * 會把這個模組原本要服務的人擋在門外。`TEAM_MANAGER_ROLES`（＝動錢、動成員的
- * 管理職，目前只有 `OWNER`）是另一個問題的答案，不是這個問題的。
+ * ## 相對 20260901 真正變動的只有一件事：`VIEWER` 不再讀得到
  *
- * 要擋的是 `VIEWER`：唯讀成員不該寫任何薪資資料。
+ * 20260901 的狀態是 `READ` 開給三個角色、`WRITE` 開給 `OWNER + EDITOR`。
+ * 也就是說任何被邀請進團隊當 `VIEWER` 的帳號（外部顧問、實習生、
+ * 暫時協助對帳的人）看得到全公司每一位員工的本薪、實發金額與投保級距。
+ * 那是這次要收掉的東西。
  *
- * ## 讀取範圍尚未拍板
+ * ## 為什麼不是只給 `OWNER`
  *
- * 目前讀取維持「任何團隊成員都可以」—— 與這次改動前的行為相同，不是一個新決定。
- * 「`VIEWER` 到底該不該看得到全公司的本薪與實發金額」與計劃書 §13 的
- * 薪資資料分級是同一個決策的兩面，上線前要一起拍板；屆時改的是下面這一行，
- * 不是八支 route。
+ * 曾經考慮過收到 `OWNER` 一人，理由是薪資是本 repo 最敏感的一類資料。
+ * 沒有這麼做，是因為**這個模組的使用者本來就不只有老闆**：它刻意不用
+ * `resolveEmployee`、服務的是帳本的團隊成員（老闆、會計、記帳士），
+ * 而被邀請進來記帳的會計通常是 `EDITOR` 不是 `OWNER`。收到一人會把
+ * 模組原本要服務的人擋在門外，而換來的安全性有限 —— `EDITOR` 本來就
+ * 動得了這本帳的傳票與憑證，薪資不是它唯一碰得到的敏感資料。
+ *
+ * `TEAM_MANAGER_ROLES`（＝動錢、動成員的管理職，目前只有 `OWNER`）
+ * 是另一個問題的答案，不是這個問題的。
+ *
+ * ## 為什麼兩個層級的清單一樣，卻不合併成一個
+ *
+ * `READ` 與 `WRITE` 今天恰好都是 `[OWNER, EDITOR]`，但它們回答的是兩個問題
+ * （看得到 vs 改得動）。合併成一個常數的話，日後要把讀取放寬、
+ * 或把寫入再收緊，就得先把它拆回來 —— 而拆的時候十三支 route 的分級資訊
+ * 已經不見了。保持兩張表，調整時只動其中一張。
+ *
+ * ## 副作用：`access` 參數有沒有被用到，行為上看不出來
+ *
+ * 兩張表內容相同時，沒有任何角色能讓兩個層級給出不同答案 ——
+ * 於是「把層級寫死成 `READ`」這個缺陷在行為上是隱形的。
+ * 那道護欄改由 `salary_access_guard.test.ts` 直接斷言
+ * 「交給角色表的是傳進來的那個 `access`」，見該檔。
  */
 export const SALARY_ACCESS_ROLES: Record<SalaryAccess, readonly TeamRole[]> = {
-  [SalaryAccess.READ]: [TeamRole.OWNER, TeamRole.EDITOR, TeamRole.VIEWER],
+  [SalaryAccess.READ]: [TeamRole.OWNER, TeamRole.EDITOR],
   [SalaryAccess.WRITE]: [TeamRole.OWNER, TeamRole.EDITOR],
 };
 
@@ -57,9 +77,24 @@ export const SALARY_ACCESS_ROLES: Record<SalaryAccess, readonly TeamRole[]> = {
  * 萬一還有殘留的 `ADMIN` 列，它不在任何一張清單裡 —— 一律擋下，
  * 而不是靠型別假裝它不存在。
  */
+/**
+ * Info: (20260909 - Julian) 回傳型別是 `role is string`，不是 `boolean`。
+ *
+ * 呼叫端拿到 true 的時候，`role` 必然是非空字串（它得等於清單裡的某一個值）——
+ * 而那個推論原本只存在於讀程式碼的人腦中：`use_salary_access.ts` 因此寫了
+ * `role: role as string` 來說服編譯器。**斷言不受型別保護**，
+ * 哪天這裡改成 `role == null` 也回 true，那個 `as` 會安靜地繼續成立。
+ *
+ * 寫成型別謂詞之後，那個推論由編譯器承擔，呼叫端不需要任何斷言。
+ *
+ * 內部也不再把 `role` 斷言成 `TeamRole`（那是對**值**說謊：傳進來的字串
+ * 未必是合法角色，正是這支函式要判斷的事）。改成把**清單**放寬成
+ * `readonly string[]` —— 放寬集合是安全的，收窄值不是。
+ */
 export function isSalaryAccessAllowed(
   role: string | null | undefined,
   access: SalaryAccess,
-): boolean {
-  return SALARY_ACCESS_ROLES[access].includes(role as TeamRole);
+): role is string {
+  if (role === null || role === undefined) return false;
+  return (SALARY_ACCESS_ROLES[access] as readonly string[]).includes(role);
 }

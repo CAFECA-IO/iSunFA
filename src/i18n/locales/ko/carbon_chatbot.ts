@@ -67,6 +67,14 @@ export const carbonChatbot = {
   origin_ai_draft: "AI 초안",
   origin_imported_short: "원문",
   origin_ai_draft_short: "초안",
+  // Info: (20260908 - Emily) 帳本改了之後的過期標示(#6786;理由見 zh_tw)
+  freshness_stale_short: "갱신 필요",
+  freshness_stale_hint:
+    "이 절이 인용한 탄소 장부 수치가 변경되었습니다. 내용이 최신이 아닐 수 있으니 오른쪽 AI 작성 버튼으로 갱신하세요.",
+  freshness_stale_count: "{{count}}개 절 갱신 필요",
+  freshness_stale_list:
+    "장부가 갱신되어 다음 절이 인용한 수치가 바뀌었습니다: {{codes}}. 여기를 누르면 목차가 열리고 절별로 갱신할 수 있습니다.",
+  freshness_update_section: "최신 장부로 이 절 갱신",
   // Info: (20260806 - Tzuhan) 匯入前先上傳取 cid:14 次呼叫共用一份儲存,文案要說出「為何要等」
   import_uploading:
     "{{name}}을(를) 보안 저장소에 저장 중입니다(이후 각 장 분석은 서버가 가져오며 파일을 매번 다시 올리지 않습니다)…",
@@ -138,6 +146,17 @@ export const carbonChatbot = {
   save_blocked_framework_claim:
     "보고서에 \u2018당사는 {{name}}을 준수한다\u2019와 같은 주체 차원의 적합 선언이 있어 이 버전은 클라우드에 저장하지 않았습니다. 그 문장은 외부로 보내는 보고서에 있어서는 안 됩니다. 작업 내용은 이 기기에 남아 있으며, 문장을 삭제하면 다시 저장됩니다. 문서 구조에 관한 서술은 대상이 아닙니다.",
   // Info: (20260904 - Emily) 일시적인 실패가 아니다: 매번 같은 방식으로 실패하며 로컬 백업도 없다
+  inventory_unreadable:
+    "이 대화의 산정 데이터는 존재하지만 현재 읽을 수 없습니다({{reason}}). 읽어올 때까지 어떤 변경도 저장되지 않으며, 회사명과 연도를 다시 입력하지 마세요. 그 변경은 저장되지 않습니다.",
+  inventory_unreadable_reason_locked:
+    "암호화되어 있고 키가 아직 잠금 해제되지 않았습니다",
+  inventory_unreadable_reason_decrypt_failed:
+    "암호화되어 있고 현재 키로는 열 수 없습니다",
+  inventory_unreadable_reason_schema_rejected:
+    "현재 버전의 저장 형식과 맞지 않습니다",
+  // Info: (20260909 - Emily) 載入失敗(網路/伺服器)的專屬通知(#6779 review 後續):不套「資料存在」那句
+  inventory_load_failed:
+    "이 대화의 산정 데이터를 현재 불러올 수 없습니다(네트워크 또는 서버 문제). 기존 데이터가 있는지는 아직 확인되지 않았습니다. 불러오기 전까지 어떤 변경도 저장되지 않으며, 이 대화에 다시 들어오면 다시 시도합니다.",
   inventory_unsavable:
     "산정 데이터의 이 버전은 저장되지 않았습니다. 저장 형식에 맞지 않는 필드가 있습니다. 화면에 보이는 내용은 아직 남아 있지만, 이 탭을 닫거나 새로 고치면 사라집니다. 저희 쪽 문제이니 알려주시면 감사합니다.",
   save_local_quota:

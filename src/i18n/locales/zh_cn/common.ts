@@ -30,7 +30,7 @@ export const common = {
     pdf_framework_claim:
       "报告纸面上出现「本公司符合 {{name}}」这类主体合规宣告,已在导出前停止 —— 那份 PDF 一旦产出就会离开系统。请移除该语句后再导出;叙述文件结构的架构对齐声明不受影响。",
     pdf_download_needs_preview:
-      "请先切换到「预览 PDF」再下载 —— 下载的内容就是预览所见",
+      "请先切换到「预览 PDF」再下载 —— 下载的 PDF 与预览内容相同(另加目录与页码)",
     default: "系统错误，请稍后再试",
   },
   refresh: "重新整理",

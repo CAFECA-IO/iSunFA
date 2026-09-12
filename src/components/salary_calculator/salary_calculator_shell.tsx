@@ -2,6 +2,7 @@
 
 import { FC, ReactNode } from "react";
 import CalculatorHeader from "@/components/salary_calculator/calculator_header";
+import { PaySlipToastProvider } from "@/contexts/pay_slip_toast_context";
 import AccountBookCalculatorNav from "@/components/salary_calculator/account_book_calculator_nav";
 
 interface ISalaryCalculatorShellProps {
@@ -42,18 +43,30 @@ const SalaryCalculatorShell: FC<ISalaryCalculatorShellProps> = ({
      * 順帶把兩個頁面之間的切換也放進來。
      */
     return (
-      <div className="flex w-full flex-col gap-[24px]">
-        <AccountBookCalculatorNav accountBookId={accountBookId} />
-        {children}
-      </div>
+      <PaySlipToastProvider>
+        <div className="flex w-full flex-col gap-[24px]">
+          <AccountBookCalculatorNav accountBookId={accountBookId} />
+          {children}
+        </div>
+      </PaySlipToastProvider>
     );
   }
 
+  /**
+   * Info: (20260908 - Julian) 公開版也包 provider。
+   *
+   * 公開版寄不出薪資單（沒有帳本、沒有紀錄），所以那個吐司永遠不會出現 ——
+   * 但兩個分支都包住，`SalaryCalculatorShell` 之內就恆有 provider，
+   * 而 `usePaySlipToast()` 的「沒有 provider 就丟例外」也才是一句真話。
+   * 只包帳本版的話，那個例外會變成「看你在哪一版」。
+   */
   return (
-    <main className="min-h-screen overflow-x-hidden bg-white">
-      <CalculatorHeader />
-      {children}
-    </main>
+    <PaySlipToastProvider>
+      <main className="min-h-screen overflow-x-hidden bg-white">
+        <CalculatorHeader />
+        {children}
+      </main>
+    </PaySlipToastProvider>
   );
 };
 

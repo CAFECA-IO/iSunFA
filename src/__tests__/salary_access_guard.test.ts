@@ -6,7 +6,7 @@ declare const jest: typeof JestType;
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { TeamRole } from "@/constants/team";
-import { SalaryAccess } from "@/constants/salary_access";
+import { isSalaryAccessAllowed, SalaryAccess } from "@/constants/salary_access";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { teamRepo } from "@/repositories/team.repo";
 import { assertSalaryAccountBookAccess } from "@/services/salary_record.service";
@@ -47,6 +47,35 @@ import { assertSalaryAccountBookAccess } from "@/services/salary_record.service"
  * `declare const jest` 的理由同 `salary_route_wiring.test.ts`：
  * `next/jest`(SWC) 只提升全域 `jest` 的 `jest.mock`。
  */
+
+/**
+ * Info: (20260908 - Julian) `isSalaryAccessAllowed` 包一層 spy，**行為仍是真的**。
+ *
+ * 檔頭寫著「替身只落在外部世界」，這裡沒有違反它：`jest.requireActual` 拿到的是
+ * 真的實作，spy 只記下被呼叫時的參數，判斷仍由真的角色表做。
+ *
+ * 為什麼需要它 —— 20260908 起 `READ` 與 `WRITE` 的角色清單都是 `[OWNER]`，
+ * 於是檔頭那個 mutation
+ *
+ * ```diff
+ * - if (!isSalaryAccessAllowed(member.role, access)) {
+ * + if (!isSalaryAccessAllowed(member.role, SalaryAccess.READ)) {
+ * ```
+ *
+ * **在行為上再也看不出來**：沒有任何角色能讓兩個層級給出不同答案。
+ * 原本那條「同一個 VIEWER 只換 access 就換答案」因此失效。
+ * 護欄不能跟著沒有 —— 改成直接問「交給角色表的是不是傳進來的那個 access」。
+ */
+jest.mock("@/constants/salary_access", () => {
+  const actual = jest.requireActual(
+    "@/constants/salary_access",
+  ) as typeof import("@/constants/salary_access");
+
+  return {
+    ...actual,
+    isSalaryAccessAllowed: jest.fn(actual.isSalaryAccessAllowed),
+  };
+});
 
 jest.mock("@/repositories/account_book.repo", () => ({
   accountBookRepo: { getAccountBookById: jest.fn() },
@@ -96,7 +125,8 @@ const MATRIX: ReadonlyArray<{
   { role: TeamRole.OWNER, access: SalaryAccess.WRITE, allowed: true },
   { role: TeamRole.EDITOR, access: SalaryAccess.READ, allowed: true },
   { role: TeamRole.EDITOR, access: SalaryAccess.WRITE, allowed: true },
-  { role: TeamRole.VIEWER, access: SalaryAccess.READ, allowed: true },
+  // Info: (20260908 - Julian) VIEWER 讀取也收掉了（見 salary_access.ts）
+  { role: TeamRole.VIEWER, access: SalaryAccess.READ, allowed: false },
   // Info: (20260901 - Julian) 這一格就是這次要修掉的缺陷：唯讀成員不得寫入
   { role: TeamRole.VIEWER, access: SalaryAccess.WRITE, allowed: false },
   // Info: (20260901 - Julian) 20260819 已停用，資料庫可能還有殘列 —— 表外一律擋
@@ -147,22 +177,34 @@ describe("assertSalaryAccountBookAccess 的角色 × 層級矩陣", () => {
   );
 
   /**
-   * Info: (20260901 - Julian) 把層級寫死（例如永遠檢查 READ）就會踩到這一條。
+   * Info: (20260908 - Julian) 把層級寫死（例如永遠檢查 READ）就會踩到這一條。
    *
-   * 上面的矩陣已經涵蓋它，但那八格分散在八個案例裡，紅起來看不出共同原因。
-   * 這一條把「同一個人、只換 access，答案必須不同」單獨拉出來 ——
-   * 缺陷的形狀是「`access` 這個參數根本沒被用到」，而這是它唯一的症狀。
+   * ## 這條測試的形狀為什麼變了
+   *
+   * 20260901 的版本是「同一個 `VIEWER`，只換 `access` 就換答案」——
+   * 那時 `READ` 開給三個角色、`WRITE` 只給兩個，所以行為看得出差別。
+   *
+   * 20260908 兩張表都收成 `[OWNER]` 之後，**沒有任何角色能讓兩個層級
+   * 給出不同答案**，那條測試就算 `access` 被寫死也會綠。
+   * 缺陷還在（把層級寫死＝每支端點都只要求 READ），只是症狀消失了。
+   *
+   * 所以改成直接問那顆螺絲：交給角色表的，是不是**傳進來的**那個 `access`。
+   * 這比原本的寫法更貼近缺陷本身 —— 原本是從外部行為反推，
+   * 而外部行為會隨設定改變；參數有沒有被傳下去不會。
    */
-  it("同一個 VIEWER，只換 access 就換答案（證明 access 真的被用到）", async () => {
-    getTeamMemberMock.mockResolvedValue(asMember(TeamRole.VIEWER));
+  it("交給角色表的是傳進來的 access，不是寫死的層級", async () => {
+    getTeamMemberMock.mockResolvedValue(asMember(TeamRole.OWNER));
+    const allowed = isSalaryAccessAllowed as unknown as ReturnType<
+      typeof jest.fn
+    >;
 
-    await expect(
-      assertSalaryAccountBookAccess(BOOK_ID, USER_ID, SalaryAccess.READ),
-    ).resolves.toBeUndefined();
+    allowed.mockClear();
+    await assertSalaryAccountBookAccess(BOOK_ID, USER_ID, SalaryAccess.WRITE);
+    expect(allowed).toHaveBeenCalledWith(TeamRole.OWNER, SalaryAccess.WRITE);
 
-    await expect(
-      assertSalaryAccountBookAccess(BOOK_ID, USER_ID, SalaryAccess.WRITE),
-    ).rejects.toBeInstanceOf(AppError);
+    allowed.mockClear();
+    await assertSalaryAccountBookAccess(BOOK_ID, USER_ID, SalaryAccess.READ);
+    expect(allowed).toHaveBeenCalledWith(TeamRole.OWNER, SalaryAccess.READ);
   });
 });
 

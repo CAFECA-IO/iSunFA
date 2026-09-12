@@ -4,10 +4,13 @@ import { ISalaryEmployeeProfile } from "@/interfaces/salary_record";
 import { readFileSync } from "fs";
 import { join } from "path";
 import {
+  buildEmployeeWriteInput,
+  DEFAULT_EMPLOYEE_LEAVE,
   DEFAULT_EMPLOYEE_PROFILE,
   diffEmployeeProfile,
   EMPLOYEE_PROFILE_KEYS,
   EMPLOYMENT_TYPE_KEYS,
+  pickEmployeeLeave,
   PROFILE_FIELD_I18N_KEY,
 } from "@/lib/utils/salary_employee_profile";
 
@@ -360,7 +363,17 @@ describe("15 個欄位在三條路徑上都沒有被漏掉", () => {
       "employee_action_modal.tsx",
     );
 
-    expect(modal).toContain("...profile,");
+    /**
+     * Info: (20260907 - Julian) 組裝搬到 `buildEmployeeWriteInput` 了
+     *（review #6777 阻擋），所以「整組」這件事拆成兩段釘：
+     * 元件把整個 `profile` 交出去，而那支函式整組展開它。
+     * 兩段都在，「逐欄列舉」就仍然進不來。
+     */
+    expect(modal).toMatch(/buildEmployeeWriteInput\(\{[\s\S]{0,80}?profile,/);
+    expect(readSource("lib", "utils", "salary_employee_profile.ts")).toContain(
+      "...parts.profile,",
+    );
+
     // Info: (20260902 - Julian) 新增時的初值來自 DEFAULT，編輯時來自 data
     expect(modal).toContain("data ?? DEFAULT_EMPLOYEE_PROFILE");
   });
@@ -488,5 +501,127 @@ describe("員工表單的分頁與必填提示不會各說各話", () => {
         `activeTab === "${tab}" ? "flex flex-col gap-[16px]" : "hidden"`,
       );
     }
+  });
+});
+
+/**
+ * Info: (20260907 - Julian) 寫回員工檔的 payload 組裝（review #6777 阻擋）。
+ *
+ * ## 這一組守的缺陷
+ *
+ * 員工編輯視窗的兩個 state（`profile` 與 `leave`）初值都是**同一個員工物件**。
+ * `ISalaryCalculatorEmployee` 繼承 `ISalaryEmployeeLeave`，所以那個指派在
+ * 型別上完全合法，而 runtime 的 `leave` 握著整整十幾個鍵。
+ *
+ * 送出時 `...leave` 排在 `...profile` 之後 —— 使用者剛填好的到職日
+ * 於是被還原成打開視窗時的 `null`：橫幅叫他去補到職日，他補了，
+ * 儲存成功，橫幅原封不動。
+ *
+ * 這個缺陷對「掃描原始碼」的測試是**隱形的**（§1.11）：字串全都在，
+ * 壞的是兩個 state 指向同一個物件。所以判準要落在組裝本身。
+ */
+describe("buildEmployeeWriteInput", () => {
+  const storedEmployee = {
+    ...DEFAULT_EMPLOYEE_PROFILE,
+    ...DEFAULT_EMPLOYEE_LEAVE,
+    id: "e-1",
+    name: "王小明",
+    number: "A012",
+    email: "wang@example.com",
+    missingPeriods: [],
+  };
+
+  /**
+   * Info: (20260907 - Julian) **缺陷的直接複現。**
+   *
+   * `leave` 傳的是整個員工物件（那正是修好之前 state 裡的東西），
+   * 而 `profile` 是使用者改過的那一份。到職日必須是使用者填的那一個。
+   *
+   * 把 `pickEmployeeLeave` 從 `buildEmployeeWriteInput` 裡拿掉，這一條會紅。
+   */
+  it("leave 夾帶整個員工物件時，也不得蓋掉 profile 上剛改好的值", () => {
+    const edited: ISalaryEmployeeProfile = {
+      ...DEFAULT_EMPLOYEE_PROFILE,
+      hireDate: 1740787200,
+      dependentsCount: 2,
+      isLaborInsured: false,
+    };
+
+    const input = buildEmployeeWriteInput({
+      profile: edited,
+      leave: storedEmployee,
+      name: "王小明",
+      number: "A012",
+      email: "wang@example.com",
+      baseSalary: 30000,
+      mealAllowance: 2400,
+    });
+
+    expect(input.hireDate).toBe(1740787200);
+    expect(input.dependentsCount).toBe(2);
+    expect(input.isLaborInsured).toBe(false);
+  });
+
+  /**
+   * Info: (20260907 - Julian) 反方向也要對：留停那兩欄取的是**編輯後**的值，
+   * 不是 profile 上夾帶的舊值。順序寫反就會退回「登記了留停卻存不進去」。
+   */
+  it("留停兩欄取的是編輯後的值，不是 profile 夾帶的舊值", () => {
+    /**
+     * Info: (20260907 - Julian) 用變數而不是就地寫物件字面：`profile` 在元件裡
+     * 拿到的正是整個員工物件（TypeScript 對變數不做多餘屬性檢查），
+     * 就地寫字面會被編譯器擋下來，那就測不到真正會發生的形狀。
+     */
+    const staleProfile = {
+      ...storedEmployee,
+      leaveStartDate: null,
+      leaveEndDate: null,
+    };
+
+    const input = buildEmployeeWriteInput({
+      profile: staleProfile,
+      leave: { leaveStartDate: 1754006400, leaveEndDate: null },
+      name: "王小明",
+      number: "A012",
+      email: undefined,
+      baseSalary: 30000,
+      mealAllowance: 0,
+    });
+
+    expect(input.leaveStartDate).toBe(1754006400);
+    expect(input.leaveEndDate).toBeNull();
+  });
+
+  // Info: (20260907 - Julian) 兩個金額走各自的 AmountInput，必須蓋過 profile 上的值
+  it("兩個金額由呼叫端覆蓋 profile", () => {
+    const input = buildEmployeeWriteInput({
+      profile: { ...DEFAULT_EMPLOYEE_PROFILE, baseSalary: 1, mealAllowance: 2 },
+      leave: DEFAULT_EMPLOYEE_LEAVE,
+      name: "王小明",
+      number: "A012",
+      email: undefined,
+      baseSalary: 45000,
+      mealAllowance: 2400,
+    });
+
+    expect(input.baseSalary).toBe(45000);
+    expect(input.mealAllowance).toBe(2400);
+  });
+});
+
+describe("pickEmployeeLeave", () => {
+  it("只留下留停兩欄，員工物件的其他鍵一個都不帶", () => {
+    const picked = pickEmployeeLeave({
+      ...DEFAULT_EMPLOYEE_PROFILE,
+      leaveStartDate: 1754006400,
+      leaveEndDate: 1764547200,
+    });
+
+    expect(Object.keys(picked).sort()).toEqual([
+      "leaveEndDate",
+      "leaveStartDate",
+    ]);
+    expect(picked.leaveStartDate).toBe(1754006400);
+    expect(picked.leaveEndDate).toBe(1764547200);
   });
 });

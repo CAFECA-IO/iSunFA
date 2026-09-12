@@ -169,6 +169,9 @@ describe("salaryCalculatorEmployeeWriteSchema：身分鍵是編號不是 Email",
     voluntaryPensionRate: 0,
     hireDate: null,
     resignDate: null,
+    // Info: (20260905 - Luphia) 留職停薪也是寫入契約的一部分（#6774）
+    leaveStartDate: null,
+    leaveEndDate: null,
   };
 
   it("基準線通過", () => {
@@ -351,6 +354,66 @@ describe("salaryCalculatorEmployeeWriteSchema：身分鍵是編號不是 Email",
         resignDate: stamp,
       }).success,
     ).toBe(true);
+  });
+
+  /**
+   * Info: (20260905 - Luphia) 留職停薪的兩條守門（#6774）。
+   *
+   * 兩種填錯都**不會報錯**，只會讓完整度警示算錯：
+   * 順序反了 → 留停區間是空的，那幾個月被標成缺薪資單；
+   * 只填復職日 → 整段被跳過，等於什麼都沒登記。
+   */
+  it("復職日不得早於留停起日，相等可以", () => {
+    const leaveStartDate = Date.parse("2026-03-01T00:00:00.000Z") / 1000;
+
+    expect(
+      salaryCalculatorEmployeeWriteSchema.safeParse({
+        ...VALID_EMPLOYEE,
+        leaveStartDate,
+        leaveEndDate: leaveStartDate - 86400,
+      }).success,
+    ).toBe(false);
+
+    expect(
+      salaryCalculatorEmployeeWriteSchema.safeParse({
+        ...VALID_EMPLOYEE,
+        leaveStartDate,
+        leaveEndDate: leaveStartDate,
+      }).success,
+    ).toBe(true);
+  });
+
+  // Info: (20260905 - Luphia) 留停中、還沒復職 —— 這是最常見的狀態，必須合法
+  it("只填留停起日合法（還沒復職）", () => {
+    expect(
+      salaryCalculatorEmployeeWriteSchema.safeParse({
+        ...VALID_EMPLOYEE,
+        leaveStartDate: Date.parse("2026-03-01T00:00:00.000Z") / 1000,
+      }).success,
+    ).toBe(true);
+  });
+
+  it("只填復職日就擋下來，並指回起日那一格", () => {
+    const result = salaryCalculatorEmployeeWriteSchema.safeParse({
+      ...VALID_EMPLOYEE,
+      leaveEndDate: Date.parse("2026-05-01T00:00:00.000Z") / 1000,
+    });
+
+    expect(result.success).toBe(false);
+    // Info: (20260905 - Luphia) 指回哪一格會直接變成畫面上的錯誤訊息位置
+    expect(
+      result.success ? [] : result.error.issues.map((issue) => issue.path[0]),
+    ).toContain("leaveStartDate");
+  });
+
+  // Info: (20260905 - Luphia) 兩欄都省略不算合法：整組必填，少帶就會把已登記的留停清掉
+  it("留停兩欄不得省略", () => {
+    const withoutLeave = { ...VALID_EMPLOYEE } as Record<string, unknown>;
+    delete withoutLeave.leaveStartDate;
+
+    expect(
+      salaryCalculatorEmployeeWriteSchema.safeParse(withoutLeave).success,
+    ).toBe(false);
   });
 });
 

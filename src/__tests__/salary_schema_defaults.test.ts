@@ -32,19 +32,36 @@ const SCHEMA = fs.readFileSync(
 const stripComments = (text: string): string =>
   text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
+/**
+ * Info: (20260908 - Julian) 把連續空白收成一個，**對齊由 `prisma format` 決定，不由這裡釘住**。
+ *
+ * 這一段是 20260908 加的，起因是一次真實的假紅：那天在
+ * `SalaryCalculatorEmployee` 上加了一個反向關聯欄位 `profileChanges`，
+ * `prisma format` 因此把整個宣告群組重新對齊（欄名變寬 → 每一行多了空格），
+ * 而本檔用的是**逐字**比對 —— 於是
+ * `deletedAt DateTime? @map("deleted_at")` 這條斷言紅了，
+ * 儘管 soft delete 這件事一個字都沒改。
+ *
+ * 那種紅是最糟的一種：它指向一個沒有壞掉的地方，
+ * 而修它的最快方式是把新的空白數字貼進斷言 —— 下一個人加欄位時再紅一次。
+ *
+ * 本檔的意圖（見檔頭）是釘「改了就是行為改變」的宣告。空白不是那種東西。
+ */
+const collapseSpaces = (text: string): string => text.replace(/ {2,}/g, " ");
+
 const modelBlock = (name: string): string => {
   const start = SCHEMA.indexOf(`model ${name} {`);
   expect(start).toBeGreaterThanOrEqual(0);
   const end = SCHEMA.indexOf("\n}", start);
   expect(end).toBeGreaterThan(start);
-  return stripComments(SCHEMA.slice(start, end));
+  return collapseSpaces(stripComments(SCHEMA.slice(start, end)));
 };
 
 describe("SalaryCalculatorEmployee", () => {
   const block = modelBlock("SalaryCalculatorEmployee");
 
   it("金額是 BigInt 不是 Int：財務金額禁用原生整數型別（precision guideline §1）", () => {
-    expect(block).toContain('baseSalary    BigInt @map("base_salary")');
+    expect(block).toContain('baseSalary BigInt @map("base_salary")');
     expect(block).toContain("mealAllowance BigInt");
   });
 
@@ -75,9 +92,7 @@ describe("SalaryCalculatorEmployee", () => {
   });
 
   it("掛在帳本之下，且有帳本索引", () => {
-    expect(block).toContain(
-      'accountBookId String      @map("account_book_id")',
-    );
+    expect(block).toContain('accountBookId String @map("account_book_id")');
     expect(block).toContain("@@index([accountBookId])");
   });
 
@@ -141,6 +156,25 @@ describe("SalaryCalculatorEmployee", () => {
   });
 
   /**
+   * Info: (20260905 - Luphia) 留職停薪的起訖同理，而**後果更嚴重**（#6774）。
+   *
+   * 到職日被 `@default(now())` 洗掉的症狀是「薪水算錯」—— 錯得看得見。
+   * 留停起日被洗掉的症狀是**功能整個靜音**：全體員工變成「今天起留停」，
+   * 於是每一個人的每一個月都被扣掉，完整度警示對誰都不報，
+   * 而畫面看起來完全正常（沒有標示 = 沒有缺漏）。
+   *
+   * `checklist §1.12` 的那一句正是這件事：「一個完全合法、只是錯的值」
+   * 比 NULL 危險 —— `now()` 對 `DateTime?` 完全合法，`db push` 會過，
+   * 型別會過，全套測試也會過。這一條是唯一問得到的地方。
+   */
+  it("留職停薪起訖可空，且不得有預設值", () => {
+    expect(block).toMatch(/leaveStartDate\s+DateTime\?/);
+    expect(block).toMatch(/leaveEndDate\s+DateTime\?/);
+    expect(block).not.toMatch(/leaveStartDate\s+DateTime\?[^\n]*@default/);
+    expect(block).not.toMatch(/leaveEndDate\s+DateTime\?[^\n]*@default/);
+  });
+
+  /**
    * Info: (20260902 - Julian) schema 的 `@default(42)` 與 TS 常數必須是同一個值。
    *
    * Prisma 的 `@default` 沒辦法引用 TS 常數，所以這是**唯一**能讓兩邊
@@ -171,17 +205,17 @@ describe("SalaryRecord", () => {
   });
 
   it("抽出來對帳的三個金額都是 BigInt", () => {
-    expect(block).toContain('totalPayment       BigInt @map("total_payment")');
+    expect(block).toContain('totalPayment BigInt @map("total_payment")');
     expect(block).toContain(
       'totalSalaryTaxable BigInt @map("total_salary_taxable")',
     );
     expect(block).toContain(
-      'totalEmployerCost  BigInt @map("total_employer_cost")',
+      'totalEmployerCost BigInt @map("total_employer_cost")',
     );
   });
 
   it("兩個快照是 Json，且沒有預設值：沒有快照的薪資紀錄沒有意義", () => {
-    expect(block).toContain('inputSnapshot  Json @map("input_snapshot")');
+    expect(block).toContain('inputSnapshot Json @map("input_snapshot")');
     expect(block).toContain('resultSnapshot Json @map("result_snapshot")');
     expect(block).not.toMatch(/Snapshot\s+Json\s+@default/);
   });
@@ -195,8 +229,23 @@ describe("SalaryRecord", () => {
     );
   });
 
-  it("不做 soft delete：刪掉就是刪掉，改動軌跡走 AuditLog", () => {
-    expect(block).not.toContain("deletedAt");
+  /**
+   * Info: (20260909 - Julian) **這一條在 20260909 反過來了。**
+   *
+   * 原本釘的是 `expect(block).not.toContain("deletedAt")`，理由是
+   * 「刪掉就是刪掉，沒有『刪了還要看得到』的情境」。
+   *
+   * 客戶確認勞檢調閱的是**工資清冊**，而清冊就是從這張表產生的（CSV 匯出）。
+   * 勞基法 §23 II 要求它保存五年 —— 那就是那個情境，而且是法定的。
+   * 硬刪讓保存義務可以用一顆按鈕規避，而且原本完全不留痕跡。
+   *
+   * 釘住它的理由與員工那張表相同：軟刪除是一個**一個字就能被改掉**的設計
+   *（把 `deletedAt` 拿掉、`updateMany` 換回 `deleteMany`），而改掉之後
+   * 畫面行為一模一樣 —— 使用者按刪除，那一筆就不見了。
+   * 差別只在資料還在不在，而那要等到勞檢來要資料時才會發現。
+   */
+  it("做 soft delete：工資清冊有五年保存義務", () => {
+    expect(block).toContain('deletedAt DateTime? @map("deleted_at")');
   });
 
   /**

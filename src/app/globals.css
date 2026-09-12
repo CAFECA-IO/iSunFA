@@ -2921,6 +2921,22 @@
       );
     }
 
+    .hover\:text-amber-700:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-amber-700)
+      );
+    }
+
+    .hover\:text-rose-700:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-rose-700)
+      );
+    }
+
     .hover\:text-amber-900:hover {
       color: color-mix(
         in oklab,
@@ -3034,6 +3050,15 @@
         in oklab,
         white var(--t-hue-text-lift),
         var(--color-sky-700)
+      );
+    }
+
+    /* Info: (20260906 - Luphia) 員工列表「沒有到職日」提示的連結（#6774） */
+    .hover\:text-sky-900:hover {
+      color: color-mix(
+        in oklab,
+        white var(--t-hue-text-lift),
+        var(--color-sky-900)
       );
     }
 
@@ -3355,6 +3380,55 @@ body {
 .theme-switching *::before,
 .theme-switching *::after {
   transition: none !important;
+}
+
+/**
+ * Info: (20260909 - Julian) 薪資單的「隱藏數值」—— 用星號，而且真數字留在 DOM 裡。
+ *
+ * 一格數值由 `MaskedAmount` 渲染成**兩份並存**的內容：真數字（`data-payslip-real`）
+ * 與遮罩（`data-payslip-mask`）。下面三條規則做的事只有一件：二選一顯示。
+ * 根元素帶上 `data-values-hidden` 時對調。
+ *
+ * ## 為什麼是 `display` 而不是把數字換掉
+ *
+ * `pay_slip_download.ts` 截圖前會同步拔掉根元素的 `data-values-hidden`、
+ * `finally` 補回去。它成立的唯一前提是**真數字永遠在 DOM 裡**，只是被遮著 ——
+ * 若改成在 React 裡 `{isHidden ? "***" : value}`，真數字根本沒被 render，
+ * 拔掉屬性也變不出來，下載到的會是一張整片星號的薪資單。
+ *
+ * ## 20260909：這裡從 blur 換成星號，推翻了 20260907 的決定
+ *
+ * 原本用模糊，寫下的理由有兩條：
+ *
+ * 1. **版面不動** —— 換字串會讓每一格的寬度變一次，切換時整張單子抖一下。
+ * 2. 看得出「這裡本來有一個數字」，而空白讀起來像沒有資料。
+ *
+ * 第 1 條沒有被推翻，是被取捨掉的：**切換時欄寬確實會變一次，這是已知代價。**
+ * 換掉它的理由是模糊的語意不夠明確 —— 一片糊在低解析度螢幕、投影、
+ * 或截圖轉貼之後看起來像畫面故障或字太小，而星號在任何情況下都只讀作
+ * 「這裡被刻意遮住了」。第 2 條則是照顧到的：星號本身就在說那件事。
+ *
+ * 順帶解決一個小缺陷：模糊過的字反白仍然複製得到原文，所以前一版還得補一條
+ * `user-select: none`。`display: none` 的文字選不到也複製不到，那條就不需要了。
+ *
+ * ## 這只是遮擋，不是保護
+ *
+ * 數字仍在 DOM 裡，開發者工具看得到，Network 分頁裡那份 JSON 更是原封不動。
+ * 真正的授權在伺服器那一側 —— 見 `salary_pay_slip_delivery_plan.md` §7。
+ *
+ * 不寫在 `@layer utilities` 裡：它不是一個給人套用的 utility，
+ * 而是幾個 data 屬性之間的一組關係，只有薪資單會用到。
+ */
+[data-payslip-mask] {
+  display: none;
+}
+
+[data-values-hidden="true"] [data-payslip-real] {
+  display: none;
+}
+
+[data-values-hidden="true"] [data-payslip-mask] {
+  display: inline;
 }
 
 input[type="color" i]::-webkit-color-swatch,

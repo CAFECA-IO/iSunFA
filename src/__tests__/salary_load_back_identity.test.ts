@@ -3,7 +3,10 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { ISalaryCalculatorEmployee } from "@/interfaces/salary_record";
 import { resolveLoadBackIdentity } from "@/lib/utils/salary_load_back";
-import { DEFAULT_EMPLOYEE_PROFILE } from "@/lib/utils/salary_employee_profile";
+import {
+  DEFAULT_EMPLOYEE_LEAVE,
+  DEFAULT_EMPLOYEE_PROFILE,
+} from "@/lib/utils/salary_employee_profile";
 
 /**
  * Info: (20260901 - Julian) 「載回計算機」時這筆紀錄屬於誰。
@@ -35,6 +38,9 @@ const employeeOf = (
 ): ISalaryCalculatorEmployee => ({
   // Info: (20260902 - Julian) 常態屬性整組必填；放最前面，下面幾行才蓋得掉它
   ...DEFAULT_EMPLOYEE_PROFILE,
+  ...DEFAULT_EMPLOYEE_LEAVE,
+  // Info: (20260905 - Luphia) 完整度預設「沒有缺漏」；要驗警示的案例自己覆蓋（#6774）
+  missingPeriods: [],
   id: "emp-1",
   name: "張三",
   number: "A001",
