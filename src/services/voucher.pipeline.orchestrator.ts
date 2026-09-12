@@ -1,10 +1,27 @@
-import { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
+/**
+ * Info: (20260812 - Luphia) `import type` —— 這支只用到型別。
+ *
+ * 寫成值匯入的話，`document_parser_db_sync → document_sync.repo → lib/prisma`
+ * 整條會被拉進外部運算節點的模組圖（Executor 呼叫本檔的 processDbSyncPayload），
+ * 而那個節點依 async_workers/00_async_worker_overview.md 不該連得到資料庫。
+ * 型別在編譯後就消失，執行期本來就沒有這個依賴 —— 只是原本的寫法沒說出來。
+ */
+import type { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
 import { CountryCode, NonEmissiveTransactionType } from "@/constants/enums";
 import { TaxStrategyService } from "@/services/tax.strategy.service";
 import { fxInterceptorService } from "@/services/fx.interceptor.service";
 import { MoneyUtil } from "@/lib/utils/money";
 import { AccountingEngineService } from "@/services/accounting.engine.service";
-import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
+/**
+ * Info: (20260907 - Luphia) 不再匯入 `EmissionFactorRepo`：本檔在外部運算
+ * 節點的匯入圖裡（Executor 的洗淨步驟），那個匯入正是拆分後僅剩的 DB 耦合
+ * 之一。係數字典改由呼叫端以 mission 快照提供；`coefficient_snapshot` 是
+ * 刻意零 prisma 的純模組，值匯入不會把資料庫拉進圖（隔離測試釘住）。
+ */
+import {
+  buildCoefficientDictionary,
+  type ISnapshotCoefficient,
+} from "@/lib/worker/coefficient_snapshot";
 import { EsgCalculatorService } from "@/services/esg.calculator.service";
 import { EsgActivityTypeKey } from "@/constants/esg_activity_type";
 import {
@@ -18,10 +35,19 @@ export class VoucherPipelineOrchestrator {
    * Orchestrates the entire processing of a dbSyncPayload object, including Early Normalization,
    * Cut-off event splitting, and Deterministic Pipeline Execution (FX & Tax).
    */
+  /**
+   * Info: (20260907 - Luphia) `coefficientDictionary` 由呼叫端提供（PR #6650
+   * 收尾，原 ToDo 兩處之一）：本函式跑在外部運算節點（`mission.executor.service`
+   * 的洗淨步驟），不得查資料庫。字典來自 mission 快照（發包端嵌入、隨 IPFS
+   * 過界，見 `lib/worker/coefficient_snapshot`），與 esg_parsing 選出
+   * `coefficientId` 用的是**同一份**——查得到是由建構保證的，不是巧合。
+   * 查不到（字典撞不到 id）維持原行為：跳過校正與計算，不拋錯。
+   */
   public static async processDbSyncPayload(
     originalPayload: Record<string, unknown>,
     bookCurrency: string,
     bookCountry: string,
+    coefficientDictionary: Map<string, ISnapshotCoefficient>,
   ): Promise<Record<string, unknown>> {
     const newDbSyncPayload: Record<string, unknown> = {};
 
@@ -60,7 +86,12 @@ export class VoucherPipelineOrchestrator {
       // Info: (20260527 - Tzuhan) 2. 決定論管線 (攔截器與換匯邏輯)
       const washedResults = await Promise.all(
         splitResults.map((res) =>
-          this.executePipeline(res, bookCurrency, bookCountry),
+          this.executePipeline(
+            res,
+            bookCurrency,
+            bookCountry,
+            coefficientDictionary,
+          ),
         ),
       );
 
@@ -81,6 +112,16 @@ export class VoucherPipelineOrchestrator {
     originalPayload: IAggregatedDocumentResult,
     bookCurrency: string,
     countryCode: string = "TW",
+    /**
+     * Info: (20260907 - Luphia) 係數字典由 processDbSyncPayload 傳下來（見該
+     * 函式檔頭）。預設值是**靜態字典**而不是空 Map：直呼本函式的呼叫端
+     *（測試、種子腳本）在改動前走的是 `getCoefficientById` 的「靜態先」
+     * 分支——空 Map 會讓它們連靜態係數都查不到，靜默跳過校正與計算。
+     */
+    coefficientDictionary: Map<
+      string,
+      ISnapshotCoefficient
+    > = buildCoefficientDictionary([]),
   ): Promise<IAggregatedDocumentResult> {
     // Info: (20260526 - Tzuhan) 深度複製以避免污染原始資料
     let fileResult = JSON.parse(
@@ -113,9 +154,8 @@ export class VoucherPipelineOrchestrator {
 
     // Info: (20260526 - Tzuhan) 2. ESG 稅額自動校正 (ESG Tax Auto-Correction)
     if (fileResult.esg && fileResult.esg.coefficientId) {
-      const coef = await EmissionFactorRepo.getCoefficientById(
-        fileResult.esg.coefficientId,
-      );
+      // Info: (20260907 - Luphia) 改查 mission 快照字典，不再查資料庫（見函式檔頭）
+      const coef = coefficientDictionary.get(fileResult.esg.coefficientId);
 
       if (coef) {
         const isEEIO = coef.id.startsWith("eeio");
@@ -162,9 +202,8 @@ export class VoucherPipelineOrchestrator {
 
     // Info: (20260526 - Tzuhan) 4. 決定性 ESG 碳排運算 (使用換匯後的金額)
     if (fileResult.esg && fileResult.esg.coefficientId) {
-      const coef = await EmissionFactorRepo.getCoefficientById(
-        fileResult.esg.coefficientId,
-      );
+      // Info: (20260907 - Luphia) 同上：mission 快照字典（見函式檔頭）
+      const coef = coefficientDictionary.get(fileResult.esg.coefficientId);
       if (coef) {
         const convertedEsgAmount = fileResult.esg!.amount;
 

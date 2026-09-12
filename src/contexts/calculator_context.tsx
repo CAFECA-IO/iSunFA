@@ -58,8 +58,9 @@ const defaultTabSteps: TabStep[] = [
 ];
 
 // Info: (20260902 - Julian) 預設行業別的來源收斂到 constants，不再在這裡寫死 42
-const defaultIndustryCategory: IndustryCategoryItem =
-  industryCategoryOf(DEFAULT_INDUSTRY_CODE);
+const defaultIndustryCategory: IndustryCategoryItem = industryCategoryOf(
+  DEFAULT_INDUSTRY_CODE,
+);
 
 interface ICalculatorContext {
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions

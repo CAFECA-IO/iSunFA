@@ -46,19 +46,31 @@ describe("到職日落在選定的年月裡", () => {
    * 月份也跟著退，於是 `isJoined` 直接變 false。
    */
   it("8/1 到職，在八月是中途到職的第 01 天", () => {
-    expect(deriveJoinLeave({ hireDate: at("2026-08-01"), resignDate: null }, AUG_2026))
-      .toMatchObject({ isJoined: true, dayOfJoining: "01" });
+    expect(
+      deriveJoinLeave(
+        { hireDate: at("2026-08-01"), resignDate: null },
+        AUG_2026,
+      ),
+    ).toMatchObject({ isJoined: true, dayOfJoining: "01" });
   });
 
   it("8/15 到職，日是 15", () => {
-    expect(deriveJoinLeave({ hireDate: at("2026-08-15"), resignDate: null }, AUG_2026))
-      .toMatchObject({ isJoined: true, dayOfJoining: "15" });
+    expect(
+      deriveJoinLeave(
+        { hireDate: at("2026-08-15"), resignDate: null },
+        AUG_2026,
+      ),
+    ).toMatchObject({ isJoined: true, dayOfJoining: "15" });
   });
 
   // Info: (20260902 - Julian) 月底那一天在 UTC 以東的時區會被讀成下個月的 1 號
   it("8/31 到職，日是 31", () => {
-    expect(deriveJoinLeave({ hireDate: at("2026-08-31"), resignDate: null }, AUG_2026))
-      .toMatchObject({ isJoined: true, dayOfJoining: "31" });
+    expect(
+      deriveJoinLeave(
+        { hireDate: at("2026-08-31"), resignDate: null },
+        AUG_2026,
+      ),
+    ).toMatchObject({ isJoined: true, dayOfJoining: "31" });
   });
 
   it("日一律補零成兩位數（計算機的下拉選項是 '01' 不是 '1'）", () => {
@@ -80,19 +92,27 @@ describe("到職日不在選定的年月裡", () => {
    */
   it("8/15 到職，切到九月就不再是中途到職", () => {
     expect(
-      deriveJoinLeave({ hireDate: at("2026-08-15"), resignDate: null }, { year: 2026, month: 9 }),
+      deriveJoinLeave(
+        { hireDate: at("2026-08-15"), resignDate: null },
+        { year: 2026, month: 9 },
+      ),
     ).toMatchObject({ isJoined: false, dayOfJoining: "01" });
   });
 
   it("同月不同年也不算（2025-08 ≠ 2026-08）", () => {
     expect(
-      deriveJoinLeave({ hireDate: at("2025-08-15"), resignDate: null }, AUG_2026),
+      deriveJoinLeave(
+        { hireDate: at("2025-08-15"), resignDate: null },
+        AUG_2026,
+      ),
     ).toMatchObject({ isJoined: false });
   });
 
   // Info: (20260902 - Julian) 沒有到職日 → 回預設的 "01"，不是 undefined（會讓下拉變非受控元件）
   it("沒有到職日時回 false 與 '01'", () => {
-    expect(deriveJoinLeave({ hireDate: null, resignDate: null }, AUG_2026)).toEqual({
+    expect(
+      deriveJoinLeave({ hireDate: null, resignDate: null }, AUG_2026),
+    ).toEqual({
       isJoined: false,
       dayOfJoining: "01",
       isLeft: false,
@@ -103,8 +123,12 @@ describe("到職日不在選定的年月裡", () => {
 
 describe("離職日走同一條路", () => {
   it("8/20 離職，在八月是 20", () => {
-    expect(deriveJoinLeave({ hireDate: null, resignDate: at("2026-08-20") }, AUG_2026))
-      .toMatchObject({ isLeft: true, dayOfLeaving: "20" });
+    expect(
+      deriveJoinLeave(
+        { hireDate: null, resignDate: at("2026-08-20") },
+        AUG_2026,
+      ),
+    ).toMatchObject({ isLeft: true, dayOfLeaving: "20" });
   });
 
   it("到職與離職同一個月時兩邊都成立", () => {
@@ -152,17 +176,25 @@ describe("完整日期 ↔ 「這個月第幾號」的來回", () => {
    * 來回一趟必須回到原點，否則症狀是「改了一次日期就跳掉一天」——
    * 而那在 UTC 與 UTC+8 都看不出來。
    */
-  it.each(["01", "15", "28", "31"])("八月 %s 號組成日期再推導回來一致", (day) => {
-    const composed = composeJoinLeaveDates(
-      { isJoined: true, dayOfJoining: day, isLeft: false, dayOfLeaving: "01" },
-      AUG_2026,
-    );
+  it.each(["01", "15", "28", "31"])(
+    "八月 %s 號組成日期再推導回來一致",
+    (day) => {
+      const composed = composeJoinLeaveDates(
+        {
+          isJoined: true,
+          dayOfJoining: day,
+          isLeft: false,
+          dayOfLeaving: "01",
+        },
+        AUG_2026,
+      );
 
-    expect(deriveJoinLeave(composed, AUG_2026)).toMatchObject({
-      isJoined: true,
-      dayOfJoining: day,
-    });
-  });
+      expect(deriveJoinLeave(composed, AUG_2026)).toMatchObject({
+        isJoined: true,
+        dayOfJoining: day,
+      });
+    },
+  );
 
   /**
    * Info: (20260902 - Julian) 日超過該月天數時夾到最後一天，不是滾到下個月。
@@ -198,7 +230,12 @@ describe("完整日期 ↔ 「這個月第幾號」的來回", () => {
   it("沒有勾選時組出來是 null", () => {
     expect(
       composeJoinLeaveDates(
-        { isJoined: false, dayOfJoining: "15", isLeft: false, dayOfLeaving: "20" },
+        {
+          isJoined: false,
+          dayOfJoining: "15",
+          isLeft: false,
+          dayOfLeaving: "20",
+        },
         AUG_2026,
       ),
     ).toEqual({ hireDate: null, resignDate: null });

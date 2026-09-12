@@ -20,6 +20,8 @@ import { ORDER_STATUS } from "@/constants/status";
 import { analysisRepo } from "@/repositories/analysis.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
+import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
+import { serializeGlobalCoefficients } from "@/lib/worker/coefficient_snapshot";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import type { Analysis } from "@/generated";
 
@@ -279,6 +281,23 @@ export async function processNext() {
                 missionData.prerequisiteData = {};
               missionData.prerequisiteData.coefficients =
                 tenantCustomCoefficients;
+              /**
+               * Info: (20260907 - Luphia) 全球係數字典的任務快照（PR #6650 收尾）。
+               *
+               * 外部運算節點不得存取主資料庫，而 mission 管線要用這份字典
+               *（esg_parsing 的比對、orchestrator 的稅額校正與碳排計算）。
+               * 跨界通道只有 IPFS——所以由**這裡**（發包端，有 DB）在發包時
+               * 嵌入，運算側以 `lib/worker/coefficient_snapshot` 讀取。
+               *
+               * 係數凍結於發包時點：與資金託管同一時點，同一份 mission 永遠
+               * 以同一套係數計算（審計可重放）。`emissionFactor` 轉字串——
+               * Decimal 進 JSON 變 number 會踩浮點（CLAUDE.md §2）。
+               * 係數是公開參照資料，不在下方「隱私剝除」的範圍。
+               */
+              missionData.prerequisiteData.globalCoefficients =
+                serializeGlobalCoefficients(
+                  await EmissionFactorRepo.getAllGlobalCoefficients(),
+                );
             }
           } catch (e) {
             console.warn(

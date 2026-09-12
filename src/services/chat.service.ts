@@ -36,7 +36,13 @@ import { applyReplyGate, type ClaimExtractor } from "@/lib/carbon_reply_gate";
 import { logger } from "@/lib/utils/logger";
 import { recordLlmUsage } from "@/lib/llm/usage_scope";
 import { SystemSettingKey } from "@/constants/system_setting";
-import { systemSettingService } from "@/services/system_setting.service";
+/**
+ * Info: (20260907 - Luphia) `systemSettingService` 刻意**不**在此靜態匯入
+ *（review #6650：幽靈耦合清除）：靜態 import 會把
+ * `system_setting.repo → lib/prisma` 整條拉進外部運算節點的模組圖，而
+ * `lib/prisma` 載入時就建連線池。真的要查設定時在 `ensureClient()` 內
+ * 動態載入（見該處註解）。`IFaithHistoryTurn` 是純型別，沒有執行期邊。
+ */
 import type { IFaithHistoryTurn } from "@/lib/faith_memory/short_term";
 
 // Info: (20260714 - Tzuhan) 結構化聊天回覆: readyParagraphId 已通過白名單裁決(非法/none 一律為 null)
@@ -436,6 +442,23 @@ export class ChatService {
         `${LLM_KEY_MISSING_ERROR_MARKER}: no LLM API key in this node's environment (this node must not read system settings)`,
       );
     }
+
+    /**
+     * Info: (20260812 - Luphia) 動態載入,讓外部運算節點的**匯入圖**裡沒有 prisma。
+     *
+     * 靜態 import 的話,`chat.service → system_setting.service →
+     * system_setting.repo → lib/prisma` 這條鍊會把資料庫用戶端拉進
+     * 外部運算節點的模組圖 —— 而 `lib/prisma` 在載入時就會以
+     * `process.env.DATABASE_URL` 建一個連線池。那個節點依
+     * `async_workers/00_async_worker_overview.md` 不該連得到資料庫,
+     * 於是「沒有權限」就只剩紀律:連線池在那裡,只是剛好沒人用。
+     *
+     * 改成動態之後,只有真的要查設定時才載入。上面兩個早退
+     * (`explicitApiKey`、`!allowSystemSettings`)保證那條路在運算節點上走不到,
+     * 因此 prisma 不會進它的圖 —— `worker_node_isolation.test.ts` 掃匯入圖釘住這件事。
+     */
+    const { systemSettingService } =
+      await import("@/services/system_setting.service");
 
     const [settingKey, settingModel] = await Promise.all([
       systemSettingService.get(SystemSettingKey.GEMINI_API_KEY),

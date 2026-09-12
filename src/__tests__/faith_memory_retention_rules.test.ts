@@ -122,8 +122,15 @@ describe("條款承諾的三個支點", () => {
   });
 
   it("保留期守護行程有註冊進 worker", () => {
-    const worker = read("scripts", "run_worker.ts");
+    /**
+     * Info: (20260907 - Luphia) 入口從 `run_worker.ts` 改為 `run_ops_node.ts`
+     *（PR #6650：worker 拆成運算／維運兩節點，這支寫庫、歸維運側）。
+     * `startServiceLoop` 多了節點名參數，pattern 跟著容納。
+     */
+    const worker = read("scripts", "run_ops_node.ts");
     expect(worker).toMatch(/runFaithMemoryRetention/);
-    expect(worker).toMatch(/startServiceLoop\(\s*\n?\s*"FaithMemoryRetention"/);
+    expect(worker).toMatch(
+      /startServiceLoop\(\s*\n?\s*NODE_NAME,\s*\n?\s*"FaithMemoryRetention"/,
+    );
   });
 });

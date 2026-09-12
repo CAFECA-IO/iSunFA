@@ -19,7 +19,9 @@ import {
   MeasurementUnit,
 } from "@/constants/enums";
 import { verifyDimensionalConsistency } from "@/constants/dimension";
-import { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
+// Info: (20260812 - Luphia) `import type` —— 只用到型別；值匯入會把 document_sync.repo → lib/prisma
+// Info: (20260812 - Luphia) 拉進外部運算節點的模組圖（見 voucher.pipeline.orchestrator 的說明）
+import type { ISyncDocumentResultParams } from "@/skills/utils/document_parser_db_sync";
 import { ACCOUNTS, IAccount } from "@/constants/accounts";
 import { ReconciliationService } from "@/services/reconciliation.service";
 import { MoneyUtil } from "@/lib/utils/money";
