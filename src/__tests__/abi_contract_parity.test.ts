@@ -52,40 +52,19 @@ const NO_LOCAL_SOURCE = ["ENTRY_POINT"];
 /**
  * Info: (20260818 - Luphia) 已知落差：ABI 宣告了、合約沒有。每一條都要寫清楚
  * 「實際上有的是什麼」，否則下一個人會再一次以為那個能力存在。
+ *
+ * **目前是空的**——16 條落差已於同日從 ABI 刪除（`CREDIT_POINT` 13、`SCW` 的
+ * `isValidSignature`、`SCW_FACTORY` 的公司帳戶 2 條，另加 `CompanyCreated` 事件）。
+ * 刪掉哪些、為什麼，記在 `src/config/contracts.ts` 各該 ABI 的註解裡。
+ *
+ * 機制保留而不是拿掉：它是**登記**用的，不是「目前有落差」的證明。合約先寫好、ABI
+ * 先進 repo 這種正當的暫時落差，做法是登記在這裡並寫清楚實際上有的是什麼，
+ * 不是把斷言刪掉。
  */
-const KNOWN_GAPS: Record<string, Record<string, string>> = {
-  CREDIT_POINT: {
-    mint: "實際上是 collateralizedMint(address, uint256) payable，鑄造必須提供等比例 ISC 抵押；token.service 的 mint() 呼叫的正是那一支，這條宣告沒有人用",
-    burn: "只有 burnAndUnlock(uint256)，燒的是 msg.sender 自己的餘額。平台無法單方面銷毀成員錢包裡的代幣——而那正是扣費第二層當初走錯的路（見 lib/quota/personal_chain_credits.ts 的更正段）",
-    forcedTransfer:
-      "ERC-3643 樣板的宣告，CreditPoint（ERC20 + AccessControl）沒有實作。token.service 的 forcedTransfer() 以自己的 inline ABI 呼叫它，那支必定 revert——但全 repo 沒有任何呼叫端",
-    freezePartialTokens:
-      "ERC-3643 的部分凍結，CreditPoint 沒有凍結機制，未實作、未使用",
-    unfreezePartialTokens:
-      "解除部分凍結，沒有凍結機制就沒有這支，未實作、未使用",
-    setAddressFrozen: "ERC-3643 的整戶凍結，未實作、未使用",
-    isFrozen: "凍結狀態查詢，沒有凍結機制就沒有這支，未實作、未使用",
-    getFrozenTokens: "凍結數量查詢，未實作、未使用",
-    pause: "CreditPoint 沒有繼承 Pausable，未實作、未使用",
-    unpause: "同 pause，沒有 Pausable 就沒有這支，未實作、未使用",
-    paused: "同 pause，未實作、未使用",
-    compliance: "ERC-3643 的合規模組介面，本專案以 kycRegistry 取代，未實作",
-    identityRegistry:
-      "舊名。合約的公開變數是 kycRegistry；token.service 讀取時以 try/catch 退到這個舊名，是刻意的相容處理",
-  },
-  SCW: {
-    isValidSignature:
-      "Fido2Account 沒有實作 ERC-1271（合約裡與繼承鏈裡都沒有這支），未被呼叫",
-  },
-  SCW_FACTORY: {
-    createCompanyAccount:
-      "部署的 factory 只有個人帳戶（createAccount / getAddress / getAccountByCredentialId），公司帳戶尚未上鏈，未被呼叫",
-    getCompanyAddress: "同 createCompanyAccount，公司帳戶尚未上鏈，未被呼叫",
-  },
-};
+const KNOWN_GAPS: Record<string, Record<string, string>> = {};
 
 /**
- * Info: (20260818 - Luphia) 收集合約**與其繼承鏈**的函式名稱。
+ * Info: (20260818 - Luphia) 收集合約**與其繼承鏈**的函式（或 event）名稱。
  *
  * 一定要走繼承鏈：`CreditPoint is ERC20, AccessControl`，`balanceOf` / `transfer` /
  * `decimals` 都來自 vendored 的 OpenZeppelin（`contracts/lib/@openzeppelin/`），
@@ -94,8 +73,9 @@ const KNOWN_GAPS: Record<string, Record<string, string>> = {
  * 也收 `public` 狀態變數：Solidity 會為它們產生同名的 getter（例如
  * `kycRegistry`、`collateralRate`），那些在 ABI 裡看起來就是函式。
  */
-function collectFunctionNames(
+function collectNames(
   solPath: string,
+  kind: "function" | "event",
   seen = new Set<string>(),
   found = new Set<string>(),
 ): Set<string> {
@@ -103,26 +83,36 @@ function collectFunctionNames(
   if (seen.has(absolute) || !existsSync(absolute)) return found;
   seen.add(absolute);
 
-  // Info: (20260818 - Luphia) 先去掉行註解，免得被註解掉的函式簽章算進來
+  // Info: (20260818 - Luphia) 先去掉行註解，免得被註解掉的簽章算進來
   const source = readFileSync(absolute, "utf8").replace(/\/\/[^\n]*/g, "");
 
-  for (const match of source.matchAll(/function\s+([A-Za-z_]\w*)\s*\(/g)) {
-    found.add(match[1]);
-  }
   for (const match of source.matchAll(
-    /^\s*[\w.[\]]+(?:\s+\w+)?\s+public\s+(?:constant\s+|immutable\s+)?([A-Za-z_]\w*)\s*[;=]/gm,
+    new RegExp(`${kind}\\s+([A-Za-z_]\\w*)\\s*\\(`, "g"),
   )) {
     found.add(match[1]);
+  }
+
+  /**
+   * Info: (20260818 - Luphia) `public` 狀態變數會產生同名 getter（`kycRegistry`、
+   * `collateralRate`），在 ABI 裡看起來就是函式。event 沒有這回事。
+   */
+  if (kind === "function") {
+    for (const match of source.matchAll(
+      /^\s*[\w.[\]]+(?:\s+\w+)?\s+public\s+(?:constant\s+|immutable\s+)?([A-Za-z_]\w*)\s*[;=]/gm,
+    )) {
+      found.add(match[1]);
+    }
   }
 
   for (const match of source.matchAll(
     /import\s*(?:\{[^}]*\}\s*from\s*)?["']([^"']+)["']/g,
   )) {
     const target = match[1];
-    collectFunctionNames(
+    collectNames(
       target.startsWith(".")
         ? resolve(dirname(absolute), target)
         : join(CONTRACTS_DIR, target),
+      kind,
       seen,
       found,
     );
@@ -130,6 +120,9 @@ function collectFunctionNames(
 
   return found;
 }
+
+const collectFunctionNames = (solPath: string): Set<string> =>
+  collectNames(solPath, "function");
 
 function declaredFunctionNames(abi: Abi): string[] {
   return abi
@@ -186,27 +179,48 @@ describe("ABI 宣告與部署合約的一致性", () => {
     },
   );
 
-  /**
-   * Info: (20260818 - Luphia) 清單只能變短：登記的落差若其實存在，就必須從清單移除。
-   *
-   * 這條的用途是**合約補上函式的那一天**。上面那條 `toEqual` 已經涵蓋了同一件事，
-   * 但失敗訊息只會顯示兩個陣列不同；這裡逐名比對，紅的時候直接指出是哪一支。
-   */
-  it.each(
-    Object.entries(KNOWN_GAPS).flatMap(([abiKey, gaps]) =>
-      Object.keys(gaps).map((name) => [abiKey, name] as const),
-    ),
-  )("%s.%s 仍然不存在於合約（存在了就該從清單移除）", (abiKey, name) => {
-    const actual = collectFunctionNames(
-      join(CONTRACTS_DIR, ABI_SOURCES[abiKey]),
-    );
+  it.each(Object.keys(ABI_SOURCES))(
+    "%s：宣告的 event 都存在於合約（含繼承）",
+    (abiKey) => {
+      const actual = collectNames(
+        join(CONTRACTS_DIR, ABI_SOURCES[abiKey]),
+        "event",
+      );
+      const declared = ABIS[abiKey as keyof typeof ABIS]
+        .filter((item) => item.type === "event")
+        .map((item) => item.name);
 
-    expect(actual.has(name)).toBe(false);
+      expect(declared.filter((name) => !actual.has(name))).toEqual([]);
+    },
+  );
+
+  /**
+   * Info: (20260818 - Luphia) 以下三條守 `KNOWN_GAPS` 的紀律。目前清單是空的，
+   * 所以它們現在等於「清單維持空的」——用 `it` 迴圈而不是 `it.each`，
+   * 因為 `it.each([])` 在 Jest 會直接丟錯。
+   *
+   * 清單只能變短：登記的落差若其實存在，就必須從清單移除。上面那條 `toEqual`
+   * 已經涵蓋同一件事，但失敗訊息只顯示兩個陣列不同；這裡逐名比對，紅的時候
+   * 直接指出是哪一支。
+   */
+  it("登記的落差仍然不存在於合約（存在了就該從清單移除）", () => {
+    for (const [abiKey, gaps] of Object.entries(KNOWN_GAPS)) {
+      const actual = collectFunctionNames(
+        join(CONTRACTS_DIR, ABI_SOURCES[abiKey]),
+      );
+
+      for (const name of Object.keys(gaps)) {
+        expect({ abiKey, name, existsInContract: actual.has(name) }).toEqual({
+          abiKey,
+          name,
+          existsInContract: false,
+        });
+      }
+    }
   });
 
-  it.each(Object.keys(KNOWN_GAPS))(
-    "%s：登記的落差都真的出現在 ABI 裡（不留腐爛條目）",
-    (abiKey) => {
+  it("登記的落差都真的出現在 ABI 裡（不留腐爛條目）", () => {
+    for (const abiKey of Object.keys(KNOWN_GAPS)) {
       const declared = declaredFunctionNames(
         ABIS[abiKey as keyof typeof ABIS] as Abi,
       );
@@ -214,8 +228,8 @@ describe("ABI 宣告與部署合約的一致性", () => {
       for (const name of registeredGaps(abiKey)) {
         expect(declared).toContain(name);
       }
-    },
-  );
+    }
+  });
 
   it("每條登記的落差都寫了「實際上有的是什麼」", () => {
     for (const [abiKey, gaps] of Object.entries(KNOWN_GAPS)) {
