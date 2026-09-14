@@ -197,15 +197,26 @@ describe("接線（進入點與呼叫端）", () => {
   });
 
   /**
-   * Info: (20260914 - Luphia) executor_worker 的旗標是字面值（它的 import 走
-   * 相對路徑且在旗標之後）——這裡釘住字面值與常數**同一份**。
+   * Info: (20260914 - Luphia) executor_worker 三件都要在（review 二輪中-1）：
+   * 旗標、抹除、缺檔退出。第一版只釘了旗標與退出，抹除漏在這支——而它由
+   * `run_executor` 以 `env: { ...process.env }` spawn，是繼承 shell 最完整的那個。
+   * 旗標改由常數設定（同一份真值），抹除要在 `dotenv.config` 之前。
    */
-  it("executor_worker：旗標字面值與常數一致、缺檔退出", () => {
+  it("executor_worker：旗標用常數、抹信任根在載 .env.worker 之前、缺檔退出", () => {
     const entry = read("scripts/executor_worker.ts");
     expect(entry).toContain(
-      `process.env.${WORKER_NODE_ROLE_ENV} = "${WORKER_NODE_ROLE.COMPUTE}";`,
+      "process.env[WORKER_NODE_ROLE_ENV] = WORKER_NODE_ROLE.COMPUTE;",
     );
+    const scrubAt = entry.indexOf("scrubForbiddenComputeEnv(process.env)");
+    const loadAt = entry.indexOf("dotenv.config({ path: workerEnv })");
+    expect(scrubAt).toBeGreaterThan(-1);
+    expect(loadAt).toBeGreaterThan(scrubAt);
     expect(entry).toContain("process.exit(1);");
+  });
+
+  it("run_executor 以完整 env spawn（抹除因此必須在子行程內做）", () => {
+    const runner = read("scripts/run_executor.ts");
+    expect(runner).toContain("env: { ...process.env }");
   });
 
   it("getPriorityEnvConfig 第三順位 fallback 到 .env.worker（阻-1）", () => {

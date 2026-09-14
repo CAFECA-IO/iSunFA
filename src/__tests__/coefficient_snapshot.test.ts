@@ -2,12 +2,14 @@ import { describe, it, expect } from "@jest/globals";
 import { readFileSync } from "fs";
 import { join } from "path";
 import {
+  assertSnapshotWithinBudget,
   buildCoefficientDictionary,
   parseGlobalCoefficientSnapshot,
   parseTenantCoefficientSnapshot,
   serializeGlobalCoefficients,
   type ISnapshotCoefficient,
 } from "@/lib/worker/coefficient_snapshot";
+import { MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES } from "@/constants/worker_node";
 import { VoucherPipelineOrchestrator } from "@/services/voucher.pipeline.orchestrator";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { LEGACY_STANDARD_COEFFICIENT_CATEGORY } from "@/constants/esg";
@@ -131,6 +133,36 @@ describe("buildCoefficientDictionary：靜態 < 全球快照 < 租戶（資料�
     );
     expect(dictionary.get("shared-id")?.name).toBe("TENANT");
     expect(dictionary.get("tenant-only")).toBeDefined();
+  });
+});
+
+describe("assertSnapshotWithinBudget：每份 mission 都背的體積要有上界（review 二輪中-2）", () => {
+  it("在預算內回傳位元組數（與 JSON 上傳同源）", () => {
+    const snapshot = [wireCoefficient()];
+    expect(assertSnapshotWithinBudget(snapshot)).toBe(
+      Buffer.byteLength(JSON.stringify(snapshot), "utf8"),
+    );
+  });
+
+  /**
+   * Info: (20260914 - Luphia) 超過就拋、不裁切：靜默裁掉一半字典比拒發更糟
+   *（§2.1 的形狀）。用小預算注入，不必造出 1 MB 的陣列。
+   */
+  it("超過預算拋錯，訊息帶位元組數與筆數", () => {
+    const snapshot = [wireCoefficient(), wireCoefficient({ id: "snap-2" })];
+    expect(() => assertSnapshotWithinBudget(snapshot, 10)).toThrow(
+      /over the 10-byte budget/,
+    );
+    expect(() => assertSnapshotWithinBudget(snapshot, 10)).toThrow(/2 rows/);
+  });
+
+  it("預設預算是 1 MB，且現況靜態字典在預算內（留約 3 倍成長）", () => {
+    expect(MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES).toBe(1024 * 1024);
+    const staticOnly = Array.from(buildCoefficientDictionary([]).values());
+    const bytes = assertSnapshotWithinBudget(staticOnly);
+    expect(bytes).toBeLessThan(
+      MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES / 2,
+    );
   });
 });
 
@@ -318,6 +350,12 @@ describe("接線（§1.7：零件對了還要裝上去）", () => {
     expect(
       issuer.match(/EmissionFactorRepo\.getAllGlobalCoefficients\(\)/g),
     ).toHaveLength(1);
+    // Info: (20260914 - Luphia) 體積守門在序列化之後、Promise.all 之前（review 二輪中-2）
+    const budgetAt = issuer.indexOf(
+      "assertSnapshotWithinBudget(globalCoefficientSnapshot)",
+    );
+    expect(budgetAt).toBeGreaterThan(fetchAt);
+    expect(budgetAt).toBeLessThan(promiseAllAt);
   });
 
   it("esg_parsing 讀 mission 快照，不再匯入 repo 或 prisma", () => {

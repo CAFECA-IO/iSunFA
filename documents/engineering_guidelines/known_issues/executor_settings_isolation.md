@@ -90,6 +90,15 @@ Executor 以 `new ChatService(apiKey, { allowSystemSettings: false })` 明示不
 - `issue.recorder` 讀 `MISSION_DIR/<folder>/execution_log.json` 取 token 計數，那段在 `try {} catch {}` 內。拆成兩個節點（不共用磁碟）之後這個檔案讀不到，token 計數會落回結果載荷裡的值。**盡力而為的行為不變，但數字來源會變** —— 若要精確計數，需由運算節點把 log 併入結果載荷。
 - ✅（2026-09-14 已解，PR #6650 review 需修-6）`issue.recorder` 原本靠讀 `MISSION_DIR/<folder>/giveup.md` 知道任務放棄——那是 closer 在**運算節點**磁碟上寫的，跨機部署後永遠讀不到，而 recorder 是全站唯一寫訂單終態的地方：訂單會永久卡 EXECUTING／PAID、沒有 DLQ。這條比上一條嚴重（承重而非 best-effort），當時漏記。現改為：檔案只當同機部署的快路徑，讀不到就從鏈上以**同一支判準**（`lib/worker/mission_board_verdict.isTaskGivenUp`：最新提交被拒且累計 ≥ `MISSION_GIVE_UP_REJECTION_THRESHOLD`）重推——closer 與 recorder 共用那支純函式與 ABI，兩邊不可能各寫一個 3。鏈讀失敗視為「尚無判決」（多等一輪）而非「已放棄」。
 
+## 部署檢查（2026-09-14，PR #6650 review 二輪低-1）
+
+拆成兩個節點之後，有三個設定缺席**不會有錯誤、只有靜默停擺**，部署或搬機後逐一核對：
+
+- [ ] **維運節點**的系統 `.env` 有 `NEXT_PUBLIC_MISSION_BOARD_ADDRESS` 與 `NEXT_PUBLIC_RPC_URL`：recorder 靠鏈上判準把被放棄的任務收成訂單終態，位址缺席時它只會每輪印一行 error，訂單永遠留在 EXECUTING／PAID。
+- [ ] **運算節點**的 `.env.worker` 帶齊 `.env.worker.example` 的五個鍵（`GEMINI_API_KEY`／`MODEL`／`MISSION_DIR`／`NEXT_PUBLIC_RPC_URL`／`NEXT_PUBLIC_MISSION_BOARD_ADDRESS`）：缺檔會 exit(1)，但缺**鍵**不會——planner 對 undefined 位址每 10 秒拋錯、任務不被領取。
+- [ ] 運算節點的 shell 環境沒有 `DATABASE_URL`／`SECRET_VAULT_MASTER_KEY`／`DEWT_PRIVATE_KEY_PEM`／`SUPER_ADMIN_*`：進入點會抹掉並印 error，那一行出現就代表部署環境帶了不該帶的東西。
+- [ ] 發包端 log 的「Global coefficient snapshot: N rows, B bytes per mission」：B 超過 `MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES`（1 MB）發包會被拒，接近時先縮字典。
+
 ## 拆分前的狀況（保留作為脈絡）
 
 `scripts/run_worker.ts` 在**同一個行程**裡跑 12 個迴圈，其中至少五個必須存取主資料庫：

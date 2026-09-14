@@ -48,3 +48,17 @@ export const COMPUTE_NODE_FORBIDDEN_ENV_PREFIXES = ["SUPER_ADMIN_"] as const;
  * 兩處各寫一個 3 的話遲早分岔——而分岔的症狀是訂單永久卡住。
  */
 export const MISSION_GIVE_UP_REJECTION_THRESHOLD = 3;
+
+/**
+ * Info: (20260914 - Luphia) 每份 mission.json 內全球係數快照的體積上界（review 二輪中-2）。
+ *
+ * 量過的數字（以 `serializeGlobalCoefficients` 同一支序列化）：靜態字典 1,337 筆
+ * → **359 KB**（單筆約 275 bytes）；開發機 DB 的全球係數 1,371 列，線上只會更大
+ *（admin 匯入＋自訂）。快照隨**每一份** mission 上傳 IPFS：200 張憑證的訂單
+ * ≈ 70 MB。第一版註解寫「多帶一份沒有代價」——那是錯的，代價是乘以 N。
+ *
+ * 1 MB 約是現況的 3 倍：留成長空間，但字典失控（匯入腳本重複跑、欄位膨脹）時
+ * 在**發包端**就大聲拒發，而不是每份 mission 靜默多背幾 MB。超過時該做的是
+ * 縮字典或改成按需篩選（設計取捨，見 issue.service 的註解），不是調大這個數字。
+ */
+export const MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES = 1024 * 1024;

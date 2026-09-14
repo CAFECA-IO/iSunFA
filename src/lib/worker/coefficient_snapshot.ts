@@ -1,6 +1,7 @@
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
 import { LEGACY_STANDARD_COEFFICIENT_CATEGORY } from "@/constants/esg";
+import { MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES } from "@/constants/worker_node";
 
 /**
  * Info: (20260907 - Luphia) 排放係數字典的**任務快照**（PR #6650 的收尾）。
@@ -167,4 +168,27 @@ export const buildCoefficientDictionary = (
   snapshot.forEach((c) => dictionary.set(c.id, c));
   tenantSnapshot.forEach((c) => dictionary.set(c.id, c));
   return dictionary;
+};
+
+/**
+ * Info: (20260914 - Luphia) 快照體積守門（review 二輪中-2）：回傳位元組數，超過
+ * `MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES` 就**拋錯**——「多的是組包端的
+ * bug，打回比靜默裁切好」（`CarbonLedgerFactSchema.max(8)` 的同一個立場）。
+ * 量的是真的線上形狀（`JSON.stringify` 後的 UTF-8 長度），與上傳 IPFS 的位元組
+ * 同源；發包端在序列化之後、進 `Promise.all` 之前呼叫一次。
+ */
+export const assertSnapshotWithinBudget = (
+  snapshot: ISnapshotCoefficient[],
+  maxBytes: number = MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES,
+): number => {
+  const bytes = Buffer.byteLength(JSON.stringify(snapshot), "utf8");
+  if (bytes > maxBytes) {
+    throw new Error(
+      `[coefficient_snapshot] global coefficient snapshot is ${bytes} bytes ` +
+        `(${snapshot.length} rows), over the ${maxBytes}-byte budget. It is embedded in ` +
+        "every mission.json and uploaded once per mission — shrink the dictionary or " +
+        "filter it per mission instead of raising the budget.",
+    );
+  }
+  return bytes;
 };

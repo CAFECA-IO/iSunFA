@@ -56,8 +56,26 @@ const runtimeDependencies = (source: string): string[] => {
     if (match[1]) continue;
     specs.push(match[3]);
   }
+  /**
+   * Info: (20260914 - Luphia) 側效匯入（`import "@/x"`，沒有 `from`）也是執行期邊
+   *（review 二輪，TzuHan 點出偵測形式單向）：它一樣會讓模組頂層執行。
+   */
+  for (const match of source.matchAll(/^\s*import\s+"(@\/[^"]+)";?/gm)) {
+    specs.push(match[1]);
+  }
   return specs;
 };
+
+/**
+ * Info: (20260914 - Luphia) 「這個檔案有沒有 prisma 邊」改用**同一份**依賴解析結果
+ * 判斷，不再另寫一條只認 `import { prisma } from` 的正則（review 二輪）。
+ * 原本的正則對 `import prisma from`、`export { prisma } from`、`import "@/lib/prisma"`
+ * 都是綠的——現況 115 處剛好全是具名大括號形式，那是巧合成立不是結構成立
+ *（checklist §1.15 的形狀：掃描根對了，偵測器卻是單向的）。
+ */
+const PRISMA_MODULE = "@/lib/prisma";
+const importsPrisma = (source: string): boolean =>
+  runtimeDependencies(source).includes(PRISMA_MODULE);
 
 /**
  * Info: (20260812 - Luphia) 蒐集**所有**可達的 prisma 匯入點，不是只找第一條路徑。
@@ -74,7 +92,7 @@ const prismaImportersFrom = (entry: string): string[] => {
     seen.add(file);
 
     const source = fs.readFileSync(file, "utf8");
-    if (/^\s*import\s+\{[^}]*\}\s+from\s+"@\/lib\/prisma"/m.test(source)) {
+    if (importsPrisma(source)) {
       found.add(path.relative(ROOT, file));
     }
 

@@ -726,8 +726,15 @@ export class IssueRecorderService {
       gaveUp = true;
     } catch {
       if (!params.mbAddress) {
-        console.warn(
-          "[MissionRecorder] MissionBoard address not configured; cannot derive give-up verdict from chain.",
+        /**
+         * Info: (20260914 - Luphia) error 而非 warn（review 二輪低-1）：這是全站
+         * 唯一寫訂單終態的地方，`NEXT_PUBLIC_MISSION_BOARD_ADDRESS` 沒設等於
+         * 「被放棄的訂單永遠不會收尾」，一個沒人讀的 warn 撐不住這個後果。
+         * 對應的部署檢查項見 known_issues/executor_settings_isolation.md。
+         */
+        console.error(
+          "[MissionRecorder] NEXT_PUBLIC_MISSION_BOARD_ADDRESS is not configured on the ops node: " +
+            "given-up tasks can never reach a terminal order status. Fix the deployment.",
         );
         return false;
       }

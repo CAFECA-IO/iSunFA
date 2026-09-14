@@ -21,7 +21,10 @@ import { analysisRepo } from "@/repositories/analysis.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
-import { serializeGlobalCoefficients } from "@/lib/worker/coefficient_snapshot";
+import {
+  assertSnapshotWithinBudget,
+  serializeGlobalCoefficients,
+} from "@/lib/worker/coefficient_snapshot";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import type { Analysis } from "@/generated";
 
@@ -216,9 +219,14 @@ export async function processNext() {
      * `lib/worker/coefficient_snapshot` 讀取。
      *
      * 放在 `Promise.all` 之前而不是每個 item 內：200 張憑證的訂單原本是 200 次
-     * 無過濾 `findMany`。序列化也只做一次——同一份物件被 200 個 mission.json
-     * 引用，JSON.stringify 各自展開，IPFS 上仍是 200 份，那是通道的形狀，
-     * 不是查詢的問題。
+     * 無過濾 `findMany`。序列化也只做一次。
+     *
+     * **代價要寫清楚**（review 二輪中-2；第一版寫「多帶一份沒有代價」，錯）：
+     * 以同一支序列化器量，靜態字典 1,337 筆 → 359 KB，開發機 DB 全球係數 1,371
+     * 列（線上更大）。快照隨**每一份** mission 上傳 IPFS——200 張憑證的訂單
+     * ≈ 70 MB。查詢省成一次，上傳仍是 N 次、每次同一份。下方以位元組上界守門，
+     * 超過即拒發；「只嵌該 mission 需要的那些」是進一步的設計取捨（篩錯就退化成
+     * 靜默少算），這裡刻意不做。
      *
      * 係數凍結於發包時點：與資金託管同一時點，同一份 mission 永遠以同一套
      * 係數計算（審計可重放）。`emissionFactor` 轉字串（CLAUDE.md §2）。
@@ -226,6 +234,10 @@ export async function processNext() {
      */
     const globalCoefficientSnapshot = serializeGlobalCoefficients(
       await EmissionFactorRepo.getAllGlobalCoefficients(),
+    );
+    const snapshotBytes = assertSnapshotWithinBudget(globalCoefficientSnapshot);
+    console.log(
+      `[MissionIssuer] Global coefficient snapshot: ${globalCoefficientSnapshot.length} rows, ${snapshotBytes} bytes per mission`,
     );
 
     const preparedItems = await Promise.all(
