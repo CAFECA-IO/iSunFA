@@ -7,7 +7,10 @@ import {
   missingSalaryPeriods,
   type ISalaryPeriod,
 } from "@/lib/utils/salary_coverage";
-import { buildSalaryRecordCsv } from "@/lib/utils/salary_record_csv";
+import {
+  buildSalaryRecordCsv,
+  salaryRegisterFilename,
+} from "@/lib/utils/salary_record_csv";
 import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { accountBookCompanyProfileService } from "@/services/account_book_company_profile.service";
@@ -410,7 +413,12 @@ export class SalaryRecordService {
   }: {
     accountBookId: string;
     recordIds: readonly string[];
-  }): Promise<{ csv: string; exported: number; requested: number }> {
+  }): Promise<{
+    csv: string;
+    filename: string;
+    exported: number;
+    requested: number;
+  }> {
     if (recordIds.length > SALARY_EXPORT_MAX_RECORDS) {
       throw new AppError(API_ERRORS.VA_SALARY_EXPORT_TOO_MANY);
     }
@@ -419,8 +427,30 @@ export class SalaryRecordService {
     const unique = [...new Set(recordIds)];
     const records = await this.records.listRecordsByIds(accountBookId, unique);
 
+    /**
+     * Info: (20260914 - Julian) 清冊的前言取公司設定的**現值**，不是逐筆快照。
+     *
+     * 與薪資單相反，而那是刻意的：薪資單是一份對**某個期間**的證明，
+     * 所以抬頭要定格在產生當下（`entityNameSnapshot`）；
+     * 工資清冊是「**這家公司**置備的帳冊」，署名的是置備的人 ——
+     * 即使裡面收錄的是改名之前的紀錄，置備它的仍然是現在這家公司。
+     *
+     * 沒設定就不印前言（`buildPreamble` 自己會判斷），不擋匯出。
+     */
+    const profile =
+      await accountBookCompanyProfileService.getProfile(accountBookId);
+    const company = profile.isConfigured
+      ? {
+          entityName: profile.entityName,
+          taxId: profile.taxId,
+          responsiblePerson: profile.responsiblePerson,
+          address: profile.address,
+        }
+      : null;
+
     return {
-      csv: buildSalaryRecordCsv(records),
+      csv: buildSalaryRecordCsv(records, company),
+      filename: salaryRegisterFilename(records, company),
       exported: records.length,
       requested: unique.length,
     };

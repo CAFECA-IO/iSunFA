@@ -720,6 +720,7 @@ describe("租戶隔離：每一支交給資料庫的條件都帶帳本", () => {
       case "upsertProfile":
         await accountBookCompanyProfileRepo.upsertProfile({
           accountBookId: BOOK,
+          changedByUserId: "u-1",
           profile: {
             entityName: "測試股份有限公司",
             taxId: null,
@@ -1360,5 +1361,101 @@ describe("軟刪除的行為", () => {
     const create = argOf(recordUpsert).create as Record<string, unknown>;
 
     expect(create).not.toHaveProperty("deletedAt");
+  });
+});
+
+/**
+ * Info: (20260914 - Julian) 公司設定的變更軌跡（P4 §5.4）。
+ *
+ * 這張表是**整份覆寫、沒有逐欄歷程** —— 與薪資紀錄不同，
+ * 它身上沒有 `createdByUserId`、沒有調薪歷程那種旁證。
+ * 軌跡不寫的話，「是誰把特休年度制度從曆年制改成週年制的」
+ * 查不回來，而那一改會讓每一位員工的年度終結日整個移位（細則 §24 II）。
+ */
+describe("公司設定的 AuditLog", () => {
+  const saveProfile = (changedByUserId: string) =>
+    accountBookCompanyProfileRepo.upsertProfile({
+      accountBookId: BOOK,
+      changedByUserId,
+      profile: {
+        entityName: "測試股份有限公司",
+        taxId: null,
+        responsiblePerson: null,
+        address: null,
+        leaveYearScheme: null,
+        leaveYearStartMonth: null,
+        leaveYearStartDay: null,
+      },
+    });
+
+  /**
+   * Info: (20260914 - Julian) `dataId` 填**帳本 id**，不是那一列的 uuid。
+   *
+   * 稽核頁的關鍵字查的就是 `dataId`。填那一列自己的 uuid 的話，
+   * 這些軌跡在畫面上誰都查不到 —— 而「查不到」與「沒有軌跡」
+   * 對使用者來說是同一件事，且不會有任何錯誤訊息。
+   */
+  it("寫下誰在哪一本帳改的，dataId 是帳本 id", async () => {
+    await saveProfile("u-42");
+
+    const data = argOf(auditLogCreate).data as Record<string, unknown>;
+
+    expect(data.accountBookId).toBe(BOOK);
+    expect(data.userId).toBe("u-42");
+    expect(data.dataId).toBe(BOOK);
+    expect(data.dataType).toBe("ACCOUNT_BOOK_COMPANY_PROFILE");
+  });
+
+  /**
+   * Info: (20260914 - Julian) 第一次設定是 `CREATE`，之後是 `UPDATE`。
+   *
+   * 兩條一起寫：只驗其中一邊的話，「永遠記 UPDATE」或「永遠記 CREATE」
+   * 各有一條測試會綠。而一份全是 `CREATE` 的軌跡讀起來像這本帳
+   * 被重新設定過十次，那不是發生過的事。
+   */
+  it("這本帳還沒有設定過時記 CREATE", async () => {
+    profileFindUnique.mockResolvedValue(null);
+
+    await saveProfile("u-1");
+
+    expect((argOf(auditLogCreate).data as Record<string, unknown>).action).toBe(
+      "CREATE",
+    );
+  });
+
+  it("已經設定過時記 UPDATE", async () => {
+    profileFindUnique.mockResolvedValue({ id: "cp-1" });
+
+    await saveProfile("u-1");
+
+    expect((argOf(auditLogCreate).data as Record<string, unknown>).action).toBe(
+      "UPDATE",
+    );
+  });
+
+  /**
+   * Info: (20260914 - Julian) 兩個寫入必須在**同一個交易**裡（同 `deleteRecord`）。
+   *
+   * 分兩次寫的兩種失敗都是靜默的：中間失敗會留下「改了但沒軌跡」
+   * 或「有軌跡但沒改」。替身的 `$transaction` 把同一個 client 交回去，
+   * 所以「有沒有包在裡面」只能由呼叫次數判斷。
+   */
+  it("設定寫入與 AuditLog 在同一個交易裡", async () => {
+    await saveProfile("u-1");
+
+    expect((prisma.$transaction as unknown as Mock).mock.calls.length).toBe(1);
+  });
+
+  /**
+   * Info: (20260914 - Julian) 分辨用的那一次查詢也要帶租戶鍵。
+   *
+   * 它是 `findUnique({ where: { accountBookId } })`，而 `accountBookId`
+   * 是 unique 欄位 —— 少了它這一支根本查不動，但**寫死成別的鍵**
+   * （例如改用 `id`）會讓分辨失準而不報錯。
+   */
+  it("分辨 CREATE / UPDATE 的那一查也走 accountBookId", async () => {
+    await saveProfile("u-1");
+
+    expect(whereOf(profileFindUnique).accountBookId).toBe(BOOK);
   });
 });

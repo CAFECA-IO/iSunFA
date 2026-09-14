@@ -95,6 +95,11 @@ export const calculator = {
     saving: "저장 중…",
     saved: "저장되었습니다",
     save_failed: "저장하지 못했습니다. 다시 시도해 주세요",
+    leave_title: "저장하지 않고 이동할까요?",
+    leave_content:
+      "저장하지 않은 변경 사항이 있습니다. 이 페이지를 떠나면 변경 사항이 사라집니다.",
+    leave_discard: "저장하지 않고 이동",
+    leave_stay: "이 페이지에 머무르기",
     load_failed: "불러오지 못했습니다. 새로고침해 주세요",
     read_only: "장부 소유자만 회사 설정을 변경할 수 있습니다",
   },
@@ -424,6 +429,11 @@ export const calculator = {
     export_too_many:
       "한 번에 최대 {{max}}건까지 내보낼 수 있습니다. 선택을 줄여 주세요",
     export_failed: "내보내기에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+    company_profile_hint_title: "이 장부에는 아직 회사 설정이 없습니다",
+    company_profile_hint_body:
+      "사업장 이름을 입력하면 급여명세서와 임금대장에 머리글이 들어갑니다. 설정하지 않아도 계산과 내보내기는 막히지 않으며, 대장에 머리글이 없을 뿐입니다.",
+    company_profile_hint_action: "회사 설정으로 이동",
+    company_profile_hint_dismiss: "안내 닫기",
   },
   access: {
     checking: "권한을 확인하는 중…",

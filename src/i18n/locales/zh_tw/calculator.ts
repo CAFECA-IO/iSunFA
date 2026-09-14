@@ -95,6 +95,10 @@ export const calculator = {
     saving: "儲存中…",
     saved: "已儲存",
     save_failed: "儲存失敗，請稍後再試",
+    leave_title: "尚未儲存，確定要離開嗎？",
+    leave_content: "這一頁有尚未儲存的變更。離開之後這些變更就沒有了。",
+    leave_discard: "不儲存並離開",
+    leave_stay: "留在此頁",
     load_failed: "讀取失敗，請重新整理",
     read_only: "只有帳本擁有者可以修改公司設定",
   },
@@ -411,6 +415,11 @@ export const calculator = {
     export_csv: "匯出 CSV",
     export_too_many: "一次最多匯出 {{max}} 筆，請先取消一些選取",
     export_failed: "匯出失敗，請稍後再試一次。",
+    company_profile_hint_title: "這本帳還沒有公司設定",
+    company_profile_hint_body:
+      "補上公司名稱之後，薪資單與工資清冊會帶上抬頭。沒有抬頭不影響計算，也不會擋下匯出，只是清冊上沒有署名。",
+    company_profile_hint_action: "前往公司設定",
+    company_profile_hint_dismiss: "關閉提示",
   },
   access: {
     checking: "確認權限中…",

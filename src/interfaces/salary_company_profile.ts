@@ -36,6 +36,18 @@ export interface IAccountBookCompanyProfile {
 }
 
 /**
+ * Info: (20260914 - Julian) 工資清冊前言要用到的那幾格。
+ *
+ * 型別窄成這四個而不是收整個 profile：清冊的前言不該碰到
+ * `leaveYearScheme` —— 那一格與「這份清冊是誰家的」無關，
+ * 而收整包會讓「它是不是也印了別的東西」變成要讀實作才知道。
+ */
+export type ISalaryRegisterCompany = Pick<
+  IAccountBookCompanyProfile,
+  "entityName" | "taxId" | "responsiblePerson" | "address"
+>;
+
+/**
  * Info: (20260914 - Julian) 還沒設定過的帳本回這個，而不是 `null`。
  *
  * 回 `null` 的話，每一個呼叫端都要自己決定「沒設定」長什麼樣子 ——

@@ -17,6 +17,12 @@ import {
   SCHEME_LABEL_KEY,
 } from "@/constants/salary_company_profile";
 import SalaryCalculatorShell from "@/components/salary_calculator/salary_calculator_shell";
+import LeaveWithoutSavingModal from "@/components/salary_calculator/leave_without_saving_modal";
+import { useUnsavedChangesGuard } from "@/hooks/use_unsaved_changes_guard";
+import {
+  companyProfileFormToPayload,
+  isCompanyProfileDirty,
+} from "@/lib/utils/company_profile_form";
 
 interface ICompanySettingPageBodyProps {
   accountBookId: string;
@@ -86,6 +92,40 @@ const CompanySettingPageBody: FC<ICompanySettingPageBodyProps> = ({
   const isCustom = scheme === LeaveYearScheme.CUSTOM;
 
   /**
+   * Info: (20260914 - Julian) 表單現在的值，收成一份給正規化用。
+   *
+   * 「送出去的那一份」與「有沒有改過」都是從這裡算出來的 ——
+   * 各讀一次那七個 state 的話，兩邊的正規化規則會慢慢走鐘，
+   * 而其中一種走法的症狀是**離開時不問，改的東西直接消失**
+   * （理由寫在 `company_profile_form.ts`）。
+   */
+  const form = {
+    entityName,
+    taxId,
+    responsiblePerson,
+    address,
+    scheme,
+    startMonth,
+    startDay,
+  };
+
+  /**
+   * Info: (20260914 - Julian) 有沒有未儲存的變更，比對的是最後一次載入／儲存的那一份。
+   *
+   * `profile` 在儲存成功之後會被回應覆寫（`useCompanyProfile.saveProfile`），
+   * 而那份回應會經由上面的 effect 灌回表單 —— 所以存完就自動乾淨了，
+   * 不需要另外記一個「剛存過」的旗標。
+   *
+   * 讀取中或讀失敗時一律當作乾淨：那時候 `profile` 是 `EMPTY`，
+   * 拿它去比會把「還沒載回來」誤判成「使用者清空了公司名稱」，
+   * 於是一進頁面就被攔住。
+   */
+  const isDirty =
+    !isLoading && !loadFailed && isCompanyProfileDirty(form, profile);
+
+  const { pendingHref, leave, stay } = useUnsavedChangesGuard(isDirty);
+
+  /**
    * Info: (20260914 - Julian) 送不出去的三種情況，判準與後端 zod 同形。
    *
    * 前端擋是為了讓使用者當下就知道，**不是**為了取代後端驗證 ——
@@ -101,17 +141,8 @@ const CompanySettingPageBody: FC<ICompanySettingPageBodyProps> = ({
     setSaveFailed(false);
     setJustSaved(false);
     try {
-      await saveProfile({
-        entityName: entityName.trim(),
-        taxId: taxId.trim() === "" ? null : taxId.trim(),
-        responsiblePerson:
-          responsiblePerson.trim() === "" ? null : responsiblePerson.trim(),
-        address: address.trim() === "" ? null : address.trim(),
-        leaveYearScheme: scheme,
-        // Info: (20260914 - Julian) 非約定年度時一律清成 null（後端也會擋）
-        leaveYearStartMonth: isCustom ? Number(startMonth) : null,
-        leaveYearStartDay: isCustom ? Number(startDay) : null,
-      });
+      // Info: (20260914 - Julian) 與「有沒有改過」共用同一支正規化，不再自己拼一份
+      await saveProfile(companyProfileFormToPayload(form));
       setJustSaved(true);
     } catch {
       setSaveFailed(true);
@@ -399,6 +430,17 @@ const CompanySettingPageBody: FC<ICompanySettingPageBodyProps> = ({
           </button>
         </div>
       </div>
+
+      {/**
+       * Info: (20260914 - Julian) 被攔下來的那一次站內導航。
+       *
+       * 重新整理／關分頁走的是瀏覽器自己的對話框（`beforeunload`），
+       * 不經過這裡。上一頁／下一頁**攔不住**，理由在
+       * `lib/utils/unsaved_navigation.ts` 的檔頭。
+       */}
+      {pendingHref !== null && (
+        <LeaveWithoutSavingModal stayHandler={stay} leaveHandler={leave} />
+      )}
     </SalaryCalculatorShell>
   );
 };

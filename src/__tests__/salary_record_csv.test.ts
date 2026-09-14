@@ -1,6 +1,7 @@
 import { describe, it, expect } from "@jest/globals";
 import {
   buildSalaryRecordCsv,
+  salaryRegisterFilename,
   SALARY_CSV_COLUMN_COUNT,
 } from "@/lib/utils/salary_record_csv";
 import { parseCsvLine } from "@/lib/utils/csv";
@@ -11,6 +12,7 @@ import {
 } from "@/interfaces/salary_calculator";
 import { ISalaryRecordDetail } from "@/interfaces/salary_record";
 import {
+  CSV_PREAMBLE_LABELS,
   PAY_SLIP_CSV_IDENTITY_LABELS,
   PAY_SLIP_CSV_INSURED_STATUS_LABELS,
   PAY_SLIP_FIELD_LABELS,
@@ -67,6 +69,13 @@ const recordOf = (
 // Info: (20260904 - Julian) 拆掉 BOM 與結尾換行，回傳每一列的欄位陣列
 const rowsOf = (csv: string): string[][] =>
   csv.replace(/^﻿/, "").trimEnd().split("\r\n").map(parseCsvLine);
+
+const COMPANY = {
+  entityName: "測試股份有限公司",
+  taxId: "12345678",
+  responsiblePerson: "王大明",
+  address: "台北市信義區信義路五段 7 號",
+};
 
 describe("CSV 的結構", () => {
   it("第一列是表頭，之後一筆紀錄一列", () => {
@@ -713,5 +722,156 @@ describe("投保狀態", () => {
     expect(csv).toContain(PAY_SLIP_CSV_INSURED_STATUS_LABELS.isLaborInsured);
     // Info: (20260909 - Julian) 薪資單上那個短欄名不得單獨成為一欄
     expect(rowsOf(csv)[0]).not.toContain("勞保");
+  });
+});
+
+/**
+ * Info: (20260914 - Julian) 工資清冊的表頭前言。
+ *
+ * 依據是臺北市勞動局的工資清冊範本（表頭 `____公司　工資清冊　__年__月份`），
+ * **不是條文** —— 勞基法 §23 II 對清冊只要求金額那三項。
+ * 詳見 `documents/architecture/salary_wage_register_compliance_review.md`。
+ */
+describe("工資清冊的表頭前言", () => {
+  /**
+   * Info: (20260914 - Julian) 沒設定公司就**整段不印**，而不是印一份沒有署名的前言。
+   *
+   * 這一條同時保住了既有行為：20260914 之前所有的匯出都沒有前言，
+   * 而「第一列是欄名」是既有測試與使用者的共同假設。
+   * 少了這一條，把前言改成「永遠印、沒值就留空」會讓每一份沒設定公司的
+   * 清冊都多出五列空白，而上面那些既有測試會全部紅在莫名其妙的地方。
+   */
+  it("沒有公司設定時完全沒有前言，第一列就是欄名", () => {
+    const rows = rowsOf(buildSalaryRecordCsv([recordOf()], null));
+
+    expect(rows[0][0]).toBe(PAY_SLIP_CSV_IDENTITY_LABELS.period);
+  });
+
+  it("有公司設定時，前言在最前面、空一列之後才是欄名", () => {
+    const rows = rowsOf(buildSalaryRecordCsv([recordOf()], COMPANY));
+
+    expect(rows[0]).toEqual([
+      CSV_PREAMBLE_LABELS.entityName,
+      COMPANY.entityName,
+    ]);
+    const blank = rows.findIndex((row) => row.join("") === "");
+    expect(blank).toBeGreaterThan(0);
+    expect(rows[blank + 1][0]).toBe(PAY_SLIP_CSV_IDENTITY_LABELS.period);
+  });
+
+  /**
+   * Info: (20260914 - Julian) 沒填的那幾格**整列不印**，不是印一個空值。
+   *
+   * 印成「統一編號,」會看起來像那一格漏填；整列不印，讀的人知道
+   * 這份清冊只提供了列出來的那些。
+   */
+  it("沒填的欄位整列不印", () => {
+    const rows = rowsOf(
+      buildSalaryRecordCsv([recordOf()], {
+        ...COMPANY,
+        taxId: null,
+        responsiblePerson: null,
+        address: null,
+      }),
+    );
+    const labels = rows.map((row) => row[0]);
+
+    expect(labels).toContain(CSV_PREAMBLE_LABELS.entityName);
+    expect(labels).not.toContain(CSV_PREAMBLE_LABELS.taxId);
+    expect(labels).not.toContain(CSV_PREAMBLE_LABELS.address);
+  });
+
+  /**
+   * Info: (20260914 - Julian) **公司名稱是使用者輸入，而這是拿 Excel 開的檔案。**
+   *
+   * 一個以 `=` 開頭的公司名就是公式注入，而檔案看起來完全正常 ——
+   * 資料列早就有這道中和（`escapeField`），前言不能是例外。
+   * 少了這一條，前言改成自己拼字串（不走 `escapeField`）不會有任何紅燈。
+   */
+  it("前言的值走公式中和，與資料列同一套", () => {
+    const csv = buildSalaryRecordCsv([recordOf()], {
+      ...COMPANY,
+      entityName: "=cmd|'/c calc'!A1",
+    });
+
+    expect(csv).toContain("'=cmd");
+  });
+
+  it("含逗號與引號的地址會被正確跳脫", () => {
+    const rows = rowsOf(
+      buildSalaryRecordCsv([recordOf()], { ...COMPANY, address: 'A"B,C' }),
+    );
+    const address = rows.find((row) => row[0] === CSV_PREAMBLE_LABELS.address);
+
+    expect(address?.[1]).toBe('A"B,C');
+  });
+
+  /**
+   * Info: (20260914 - Julian) 範本假設「一張表一個月」，本系統的匯出不是。
+   *
+   * 匯出是照勾選的紀錄走的，可以跨月 —— 硬寫一個年月就是假的。
+   * 跨月時寫成範圍，讀的人看得出來這份不是單月清冊。
+   */
+  it("單月就印那個月", () => {
+    const rows = rowsOf(
+      buildSalaryRecordCsv(
+        [
+          recordOf({ year: 2026, month: 8 }),
+          recordOf({ year: 2026, month: 8 }),
+        ],
+        COMPANY,
+      ),
+    );
+    const period = rows.find((row) => row[0] === CSV_PREAMBLE_LABELS.period);
+
+    expect(period?.[1]).toBe("2026-08");
+  });
+
+  it("跨月印成範圍，取最早與最晚", () => {
+    const rows = rowsOf(
+      buildSalaryRecordCsv(
+        [
+          recordOf({ year: 2026, month: 9 }),
+          recordOf({ year: 2026, month: 7 }),
+          recordOf({ year: 2026, month: 8 }),
+        ],
+        COMPANY,
+      ),
+    );
+    const period = rows.find((row) => row[0] === CSV_PREAMBLE_LABELS.period);
+
+    expect(period?.[1]).toBe("2026-07 ～ 2026-09");
+  });
+});
+
+describe("工資清冊的下載檔名", () => {
+  it("帶公司名與期間", () => {
+    expect(
+      salaryRegisterFilename([recordOf({ year: 2026, month: 8 })], COMPANY),
+    ).toBe("測試股份有限公司_工資清冊_2026-08.csv");
+  });
+
+  it("跨月的範圍用底線接，不留全形波浪號", () => {
+    expect(
+      salaryRegisterFilename(
+        [
+          recordOf({ year: 2026, month: 7 }),
+          recordOf({ year: 2026, month: 9 }),
+        ],
+        COMPANY,
+      ),
+    ).toBe("測試股份有限公司_工資清冊_2026-07_2026-09.csv");
+  });
+
+  /**
+   * Info: (20260914 - Julian) 沒設定公司就退回時間戳檔名。
+   *
+   * 那個名字難看但不會撞號。硬塞一個「未命名公司」只是把問題寫進檔名，
+   * 而收到檔案的人分不出那是真的公司名還是佔位字串。
+   */
+  it("沒有公司設定時退回時間戳檔名", () => {
+    expect(salaryRegisterFilename([recordOf()], null)).toMatch(
+      /^salary-records-\d{4}-\d{2}-\d{2}T/,
+    );
   });
 });

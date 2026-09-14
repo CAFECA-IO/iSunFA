@@ -95,6 +95,11 @@ export const calculator = {
     saving: "保存中…",
     saved: "保存しました",
     save_failed: "保存できませんでした。後ほどお試しください",
+    leave_title: "保存せずに移動しますか？",
+    leave_content:
+      "保存していない変更があります。このページを離れると変更は破棄されます。",
+    leave_discard: "破棄して移動",
+    leave_stay: "このページに留まる",
     load_failed: "読み込めませんでした。再読み込みしてください",
     read_only: "会社設定を変更できるのは帳簿の所有者のみです",
   },
@@ -428,6 +433,11 @@ export const calculator = {
       "1 回のエクスポートは最大 {{max}} 件です。選択を減らしてください",
     export_failed:
       "エクスポートに失敗しました。しばらくしてからお試しください。",
+    company_profile_hint_title: "この帳簿にはまだ会社設定がありません",
+    company_profile_hint_body:
+      "事業所名を登録すると、給与明細と賃金台帳に表題が入ります。未設定でも計算や書き出しは止まりません。台帳に表題が付かないだけです。",
+    company_profile_hint_action: "会社設定へ",
+    company_profile_hint_dismiss: "この案内を閉じる",
   },
   access: {
     checking: "権限を確認しています…",

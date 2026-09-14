@@ -97,6 +97,11 @@ export const calculator = {
     saving: "Saving…",
     saved: "Saved",
     save_failed: "Could not save. Please try again.",
+    leave_title: "Leave without saving?",
+    leave_content:
+      "You have changes that have not been saved. Leaving this page discards them.",
+    leave_discard: "Leave and discard",
+    leave_stay: "Stay on this page",
     load_failed: "Could not load. Please refresh.",
     read_only: "Only the account book owner can change company settings",
   },
@@ -444,6 +449,11 @@ export const calculator = {
     export_csv: "Export CSV",
     export_too_many: "At most {{max}} records per export — deselect some first",
     export_failed: "Export failed. Please try again in a moment.",
+    company_profile_hint_title: "This account book has no company profile yet",
+    company_profile_hint_body:
+      "Add your entity name and pay slips and the wage register will carry a heading. Nothing is blocked without it — the register simply exports without one.",
+    company_profile_hint_action: "Go to company settings",
+    company_profile_hint_dismiss: "Dismiss this hint",
   },
   access: {
     checking: "Checking your permissions…",

@@ -107,15 +107,24 @@ export async function PUT(
       SalaryAccess.SETTINGS_WRITE,
     );
 
-    const parsed = AccountBookCompanyProfileSchema.safeParse(
-      await request.json(),
-    );
+    /**
+     * Info: (20260914 - Julian) `.catch(() => null)` 不能省（同 record/export）。
+     *
+     * `request.json()` 對壞掉的 JSON 會**丟例外**，而那個例外會掉進下面的
+     * catch 變成 `IS_DB_FAILED`（500）—— 資料庫一點事都沒有。
+     * 送壞 JSON 是使用者做得到的事，它該是 400。
+     * 既有的 wiring 測試送的是「合法 JSON、形狀不對」，所以照不到這一條。
+     */
+    const body = await request.json().catch(() => null);
+    const parsed = AccountBookCompanyProfileSchema.safeParse(body);
     if (!parsed.success) return jsonFail(API_ERRORS.VA_INVALID_INPUT_DATA);
 
     return jsonOk(
       await accountBookCompanyProfileService.saveProfile({
         accountBookId,
         profile: parsed.data,
+        // Info: (20260914 - Julian) 改的人取自 DeWT，不收 body —— 收的話軌跡可以偽造
+        userId: sessionUser.id,
       }),
     );
   } catch (error) {

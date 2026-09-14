@@ -269,11 +269,38 @@ export async function requestFile(
   };
 }
 
-// Info: (20260813 - Julian) 只解析 `filename="..."`，這是本專案 `fileOk` 唯一產生的形式
+/**
+ * Info: (20260813 - Julian) 從 `Content-Disposition` 取出伺服器指定的檔名。
+ *
+ * Info: (20260914 - Julian) **`filename*` 優先**，取不到才退回 `filename="..."`。
+ *
+ * 這一段原本只解析 `filename="..."`，註解寫著「這是本專案 `fileOk` 唯一產生的
+ * 形式」—— 那句話在 20260914 變成假的：工資清冊要帶中文公司抬頭，
+ * 於是 `fileOk` 改成 RFC 6266 的兩種並存（見 `response.ts`）。
+ *
+ * 兩種並存時 `filename=` 那一份是給讀不懂 `filename*` 的舊客戶端的**退路**，
+ * 非 ASCII 字元在那裡一律被換成 `_`。只讀它的話，
+ * `測試股份有限公司_工資清冊_2026-08.csv` 會在使用者的下載資料夾裡
+ * 變成一整排底線 —— 伺服器送對了，是這一行讀錯了。
+ *
+ * 解碼失敗（`decodeURIComponent` 對半截的 `%` 會丟）時當作沒有 `filename*`，
+ * 退回 ASCII 那一份：一個難看但可用的檔名，好過整個下載炸掉。
+ */
 export function parseContentDispositionFilename(
   header: string | null,
 ): string | null {
   if (!header) return null;
+
+  // Info: (20260914 - Julian) RFC 5987 的形式：`filename*=UTF-8''%E6%B8%AC%E8%A9%A6.csv`
+  const extended = /filename\*=(?:UTF-8|utf-8)''([^;]+)/.exec(header);
+  if (extended) {
+    try {
+      return decodeURIComponent(extended[1].trim());
+    } catch {
+      // Info: (20260914 - Julian) 壞掉的百分號編碼：往下用 ASCII 退路，不要讓下載失敗
+    }
+  }
+
   const matched = /filename="([^"]+)"/.exec(header);
   return matched ? matched[1] : null;
 }

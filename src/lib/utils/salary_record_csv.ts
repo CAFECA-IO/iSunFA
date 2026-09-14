@@ -4,7 +4,9 @@ import {
   PAY_SLIP_CSV_INSURED_STATUS_LABELS,
   PAY_SLIP_FIELD_LABELS,
   PAY_SLIP_META_LABELS,
+  CSV_PREAMBLE_LABELS,
 } from "@/constants/pay_slip_labels";
+import { ISalaryRegisterCompany } from "@/interfaces/salary_company_profile";
 import {
   formatIsoDateUtc,
   paySlipMetaOf,
@@ -398,8 +400,111 @@ const COLUMNS: readonly {
 // Info: (20260904 - Julian) 匯出的欄位數，供測試對拍（手寫的期望值不從這裡推導）
 export const SALARY_CSV_COLUMN_COUNT = COLUMNS.length;
 
+/**
+ * Info: (20260914 - Julian) 清冊涵蓋的期間：單月就是那個月，跨月就是範圍。
+ *
+ * 勞動局範本的表頭是「__年__月份」—— **它假設一張表只有一個月**。
+ * 本系統的匯出是照勾選的紀錄走的，可以跨月，所以不能硬寫一個年月：
+ * 寫了就是假的。跨月時寫成範圍，讀的人看得出來這份不是單月清冊。
+ */
+const periodRangeOf = (records: readonly ISalaryRecordDetail[]): string => {
+  if (records.length === 0) return "";
+
+  const periods = records.map((record) => period(record.year, record.month));
+  const sorted = [...new Set(periods)].sort();
+
+  return sorted.length === 1
+    ? sorted[0]
+    : `${sorted[0]} ～ ${sorted[sorted.length - 1]}`;
+};
+
+/**
+ * Info: (20260914 - Julian) 表頭前言：這份清冊是**誰家的、哪一段期間**的。
+ *
+ * ## 依據
+ *
+ * 臺北市勞動局工資清冊範本的表頭：`____公司　工資清冊　__年__月份`。
+ * 依據是**主管機關的格式**，不是條文 —— 勞基法 §23 II 對清冊只要求
+ * 「發放工資、工資各項目計算方式明細、工資總額」三項，全是金額。
+ * 所以少了前言不違法，但交到勞檢手上的清冊沒有署名不合用。
+ *
+ * ## 代價：Excel 的「以第一列為標題」會失效
+ *
+ * 前言佔掉開頭幾列，開檔時要自己指定標題列。這是接受的代價 ——
+ * 反過來（把公司資訊做成每一列重複的欄位）會讓清冊多出四欄重複值，
+ * 而範本把它放在表頭正是因為它對每一列都一樣。
+ *
+ * ## 沒設定的欄位整列不印
+ *
+ * 印成「統一編號,」空值會看起來像那一格漏填；整列不印，讀的人知道
+ * 這份清冊只提供了列出來的那些。公司名稱沒設定時整段前言都不印 ——
+ * 一份只有期間、沒有署名的前言不比沒有前言好。
+ *
+ * ## 值一律走 `escapeField`
+ *
+ * 公司名稱與地址是**使用者輸入**，而這是要用 Excel 開的檔案 ——
+ * 一個以 `=` 開頭的公司名就是公式注入。與資料列同一套中和規則，
+ * 沒有例外（`numeric` 那個出口只給金額欄）。
+ */
+const buildPreamble = (
+  records: readonly ISalaryRecordDetail[],
+  company: ISalaryRegisterCompany | null,
+): string[] => {
+  if (company === null || company.entityName.trim() === "") return [];
+
+  const rows: [string, string][] = [
+    [CSV_PREAMBLE_LABELS.entityName, company.entityName],
+  ];
+  if (company.taxId) rows.push([CSV_PREAMBLE_LABELS.taxId, company.taxId]);
+  if (company.responsiblePerson) {
+    rows.push([
+      CSV_PREAMBLE_LABELS.responsiblePerson,
+      company.responsiblePerson,
+    ]);
+  }
+  if (company.address) {
+    rows.push([CSV_PREAMBLE_LABELS.address, company.address]);
+  }
+  rows.push([CSV_PREAMBLE_LABELS.period, periodRangeOf(records)]);
+
+  return [
+    ...rows.map(([label, value]) =>
+      [escapeField(label), escapeField(value)].join(","),
+    ),
+    // Info: (20260914 - Julian) 空行把前言與表頭分開，讀的人一眼看得出哪一列是標題
+    "",
+  ];
+};
+
+/**
+ * Info: (20260914 - Julian) 下載檔名：`{公司名稱}_工資清冊_{期間}.csv`。
+ *
+ * 公司名稱放進檔名，是因為勞檢要的常常不只一家、不只一個月 ——
+ * 收到三個 `salary-records-2026-09-14T10-30-00.csv` 的人分不出誰是誰。
+ *
+ * 沒設定公司名稱時退回原本的時間戳檔名：那個名字難看但不會撞號，
+ * 而硬塞一個「未命名公司」只是把問題寫進檔名。
+ *
+ * **不在這裡做檔名的字元清理** —— 那是 `fileOk` 的事（它要處理的是
+ * HTTP header 的規則，不是這一層的）。這裡只負責組出人看得懂的名字。
+ */
+export const salaryRegisterFilename = (
+  records: readonly ISalaryRecordDetail[],
+  company: ISalaryRegisterCompany | null,
+): string => {
+  const name = company?.entityName.trim() ?? "";
+  if (name === "") {
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    return `salary-records-${stamp}.csv`;
+  }
+
+  const range = periodRangeOf(records).replace(/\s*～\s*/, "_");
+  return `${name}_${CSV_PREAMBLE_LABELS.title}_${range}.csv`;
+};
+
 export const buildSalaryRecordCsv = (
   records: readonly ISalaryRecordDetail[],
+  company: ISalaryRegisterCompany | null = null,
 ): string => {
   /**
    * Info: (20260908 - Julian) 逐欄 escape，因為現在**每一欄的規則不一樣**了
@@ -410,6 +515,7 @@ export const buildSalaryRecordCsv = (
    * 但沒有理由給它一個例外。
    */
   const lines = [
+    ...buildPreamble(records, company),
     COLUMNS.map((column) => escapeField(column.label)).join(","),
     ...records.map((record) =>
       COLUMNS.map((column) =>

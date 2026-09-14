@@ -75,6 +75,26 @@ export const PAY_SLIP_FIELD_LABELS = {
  * 混進來會讓「這張表就是計算結果的每一欄」不再成立 ——
  * 而 CSV 匯出正是靠那件事逐欄走過去的。
  */
+/**
+ * Info: (20260914 - Julian) 工資清冊 CSV 的**表頭前言**欄名。
+ *
+ * 與下面那兩張分開：那些是薪資單上的欄位，這幾個只出現在清冊的前言，
+ * 而且它們是 `key,value` 兩欄的左欄，不是資料表的欄名。
+ * 混在一起會讓「這張表就是計算結果的每一欄」不再成立 ——
+ * 而 CSV 的資料列正是靠那件事逐欄走過去的。
+ *
+ * 用詞跟著臺北市勞動局的工資清冊範本
+ * （見 `salary_wage_register_compliance_review.md`）。
+ */
+export const CSV_PREAMBLE_LABELS = {
+  entityName: "公司名稱",
+  taxId: "統一編號",
+  responsiblePerson: "負責人",
+  address: "公司地址",
+  period: "工資給付期間",
+  title: "工資清冊",
+} as const;
+
 export const PAY_SLIP_META_LABELS = {
   hireDate: "到職日",
   insuredYes: "投保",

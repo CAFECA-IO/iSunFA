@@ -9,19 +9,36 @@ import { LeaveYearScheme } from "@/generated";
  */
 
 /**
- * Info: (20260914 - Julian) 空字串與「沒填」是同一件事，都存成 `null`。
+ * Info: (20260914 - Julian) 「沒填」有三種送法，三種都要收，而且都存成 `null`。
  *
- * 表單清空一個可空欄位送出來的是 `""`，而資料庫裡「沒填」是 `null`。
- * 不正規化的話，同一個「沒填」會有兩種表示 —— 而下一個人寫
+ * | 送進來的 | 從哪裡來 |
+ * | --- | --- |
+ * | `null` | **表單**：`useCompanyProfile` 與設定頁把空欄位正規化成 `null` 才送出 |
+ * | `""` | 直接送表單原值的呼叫端 |
+ * | 不給這個鍵 | 只想設公司名稱的呼叫端 |
+ *
+ * 三種都收斂成 `null`：同一個「沒填」有兩種表示的話，下一個人寫
  * `taxId ?? "—"` 的時候，空字串會穿過 `??` 顯示成一格空白。
+ *
+ * Info: (20260914 - Julian) **`.nullish()` 不是 `.optional()`** —— 這一字之差是 issue。
+ *
+ * 原本寫 `.optional()`，它收 `string | undefined` 而**不收 `null`**。
+ * 而這一頁的資料流每一圈都會產生 `null`：GET 回 `address: null` →
+ * 表單顯示成 `""` → 送出時正規化回 `null` → **400**。
+ * 也就是說，只要三個可空欄位裡有任何一格是空的，這張表單就存不進去 ——
+ * 而畫面上只會說「儲存失敗」。
+ *
+ * 三個可空欄位剛好全都填滿時會成功，所以開發時很容易整輪都沒踩到。
  */
 const optionalText = (max: number) =>
   z
     .string()
     .trim()
     .max(max)
-    .optional()
-    .transform((value) => (value === undefined || value === "" ? null : value));
+    .nullish()
+    .transform((value) =>
+      value === undefined || value === null || value === "" ? null : value,
+    );
 
 export const AccountBookCompanyProfileSchema = z
   .object({

@@ -33,11 +33,25 @@ export const accountBookCompanyProfileService = {
       : { ...profile, isConfigured: true };
   },
 
+  /**
+   * Info: (20260914 - Julian) `userId` 由 route 從 DeWT 取，**不收 body**。
+   *
+   * 收 body 的話「是誰改的」就可以偽造 —— 而這份軌跡存在的理由正是
+   * 回答那個問題（同 `deleteRecord` 的處置）。
+   *
+   * 軌跡本身寫在 repository 的同一個交易裡，不在這一層：
+   * 理由寫在 `account_book_company_profile.repo.ts` 的檔頭。
+   */
   async saveProfile(params: {
     accountBookId: string;
     profile: IAccountBookCompanyProfile;
+    userId: string;
   }): Promise<IAccountBookCompanyProfileView> {
-    const saved = await accountBookCompanyProfileRepo.upsertProfile(params);
+    const saved = await accountBookCompanyProfileRepo.upsertProfile({
+      accountBookId: params.accountBookId,
+      profile: params.profile,
+      changedByUserId: params.userId,
+    });
 
     return { ...saved, isConfigured: true };
   },

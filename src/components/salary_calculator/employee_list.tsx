@@ -124,10 +124,10 @@ const EmployeeRow: FC<{
         size={16}
         className="text-text-neutral-tertiary group-hover:text-text-neutral-primary shrink-0"
       />
-      <p className="text-text-neutral-secondary group-hover:text-text-neutral-primary flex-1 font-medium">
+      <p className="text-text-neutral-secondary group-hover:text-text-neutral-primary font-medium">
         {employee.name}
       </p>
-      <span className="text-text-neutral-tertiary group-hover:text-text-neutral-primary flex items-center gap-[6px] text-sm font-medium">
+      <span className="text-text-neutral-tertiary group-hover:text-text-neutral-primary flex flex-1 items-center gap-[6px] text-sm font-medium">
         <Hash size={14} className="shrink-0" />
         {employee.number}
       </span>

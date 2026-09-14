@@ -94,6 +94,10 @@ export const calculator = {
     saving: "保存中…",
     saved: "已保存",
     save_failed: "保存失败，请稍后再试",
+    leave_title: "尚未保存，确定要离开吗？",
+    leave_content: "这一页有尚未保存的变更。离开之后这些变更就没有了。",
+    leave_discard: "不保存并离开",
+    leave_stay: "留在此页",
     load_failed: "读取失败，请刷新页面",
     read_only: "只有账本拥有者可以修改公司设置",
   },
@@ -410,6 +414,11 @@ export const calculator = {
     export_csv: "导出 CSV",
     export_too_many: "一次最多导出 {{max}} 笔，请先取消一些选取",
     export_failed: "导出失败，请稍后再试一次。",
+    company_profile_hint_title: "这本账还没有公司设置",
+    company_profile_hint_body:
+      "补上公司名称之后，工资单与工资清册会带上抬头。没有抬头不影响计算，也不会挡下导出，只是清册上没有署名。",
+    company_profile_hint_action: "前往公司设置",
+    company_profile_hint_dismiss: "关闭提示",
   },
   access: {
     checking: "确认权限中…",

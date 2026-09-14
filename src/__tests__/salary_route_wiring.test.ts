@@ -628,6 +628,29 @@ beforeEach(() => {
     mock.mockReset();
     mock.mockResolvedValue({ ok: true });
   }
+
+  /**
+   * Info: (20260914 - Julian) 匯出這一支的替身不能是上面那個通用的 `{ ok: true }`。
+   *
+   * 它的回傳值**會被 route 解構**（`{ csv, filename, exported, requested }`），
+   * 而 `filename` 一路進到 `fileOk` 的 `Content-Disposition` 組法：
+   * `undefined.replace(...)` 丟 `TypeError` → 被 route 的 catch 接住 → 500。
+   * 症狀出現在限流那條測試灌桶的第一次呼叫（期待 200、收到 500），
+   * 離真正的原因很遠，所以理由寫在這裡而不是那裡。
+   *
+   * 20260914 之前檔名是 route 自己組的字串，service 回什麼形狀都無所謂；
+   * 改成由 service 給檔名（只有它知道公司抬頭與期間）之後，
+   * 這支端點的替身就必須是**真的形狀**。
+   *
+   * 不改成讓 `fileOk` 容忍 `undefined`：檔名缺漏是呼叫端的程式錯誤，
+   * 讓它安靜地變成 `download` 只會把錯誤搬到使用者的下載資料夾裡。
+   */
+  serviceMocks.exportRecords.mockResolvedValue({
+    csv: "期間,員工姓名\r\n2026-08,王小明\r\n",
+    filename: "salary-records-2026-08.csv",
+    exported: 1,
+    requested: 1,
+  });
 });
 
 describe("身分閘：沒有 token 就到不了業務邏輯", () => {
@@ -813,6 +836,56 @@ describe("租戶與操作者只能來自不可偽造的來源", () => {
 
     const [args] = serviceMocks.saveRecord.mock.calls;
     expect((args[0] as { accountBookId: string }).accountBookId).toBe(BOOK);
+  });
+
+  /**
+   * Info: (20260914 - Julian) 公司設定的變更軌跡也是一樣（P4 §5.4）。
+   *
+   * 這一支的 `userId` 唯一的用途就是寫進 `AuditLog` ——
+   * **收 body 的話，那份軌跡可以被它要記錄的人偽造**，
+   * 而一份可以偽造的軌跡比沒有軌跡更糟：它會被當成證據。
+   */
+  it("存公司設定時的 userId 取自 DeWT，不是 request body", async () => {
+    await companyProfileSave(
+      send(
+        "PUT",
+        {
+          entityName: "測試股份有限公司",
+          userId: SPOOFED_USER_ID,
+          accountBookId: OTHER_BOOK,
+        },
+        "0xspoof-profile",
+      ),
+      { params: bookParams() },
+    );
+
+    const [args] = serviceMocks.companyProfileSave.mock.calls;
+    expect((args[0] as { userId: string }).userId).toBe(USER_ID);
+    expect((args[0] as { userId: string }).userId).not.toBe(SPOOFED_USER_ID);
+    expect((args[0] as { accountBookId: string }).accountBookId).toBe(BOOK);
+  });
+
+  /**
+   * Info: (20260914 - Julian) 壞掉的 JSON 是 400，不是 500。
+   *
+   * `request.json()` 對壞掉的 JSON 會丟例外，而那個例外會掉進 route 的
+   * catch 變成 `IS_DB_FAILED` —— 資料庫一點事都沒有，而使用者看到的是
+   * 「系統故障」，於是他會回報一個不存在的故障。
+   *
+   * 上面那組 `runInvalid` 照不到這一條：它送的是**合法 JSON、形狀不對**。
+   */
+  it("公司設定送壞掉的 JSON 回 400，不是 500", async () => {
+    const response = await companyProfileSave(
+      new NextRequest("http://localhost/api", {
+        method: "PUT",
+        headers: withAuth("0xbad-json"),
+        body: "{ this is not json",
+      }),
+      { params: bookParams() },
+    );
+
+    expect(response.status).toBe(httpOf(API_ERRORS.VA_INVALID_INPUT_DATA));
+    expect(serviceMocks.companyProfileSave).not.toHaveBeenCalled();
   });
 
   /**
