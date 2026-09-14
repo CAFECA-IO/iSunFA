@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { loadWorkerEnvConfig } from "@/services/env.service";
+import { DEFAULT_MISSION_DIR } from "@/constants/worker_node";
 import { ChatService } from "@/services/chat.service";
 import { EsgGenerationSource, CountryCode } from "@/constants/enums";
 import { CurrencyCode } from "@/constants/exchange_rate";
@@ -10,6 +11,7 @@ import { IMissionDefinition } from "@/lib/worker/mission.generator";
 import {
   buildCoefficientDictionary,
   parseGlobalCoefficientSnapshot,
+  parseTenantCoefficientSnapshot,
 } from "@/lib/worker/coefficient_snapshot";
 import { ITaskDefinition } from "@/lib/worker/task.generator";
 import { IPseudoTask, IPseudoMission } from "@/skills/types";
@@ -49,7 +51,7 @@ export async function processNext() {
    * 「這個值來自哪個檔案」在這一行就看得出來,不必回頭追進程的啟動流程。
    */
   const nodeEnv = await loadWorkerEnvConfig();
-  const missionDirBase = nodeEnv.MISSION_DIR || "missions";
+  const missionDirBase = nodeEnv.MISSION_DIR || DEFAULT_MISSION_DIR;
   const missionDirPath = path.join(process.cwd(), missionDirBase);
 
   /**
@@ -527,8 +529,13 @@ export async function processNext() {
            * 選 coefficientId 用的是同一份合併結果——`buildCoefficientDictionary`
            * 是唯一的合併實作。
            */
+          /**
+           * Info: (20260914 - Luphia) 租戶自訂係數一併進字典（review 需修-5）：
+           * prompt 把它們餵給模型當候選，模型挑了就要解得到。
+           */
           const coefficientDictionary = buildCoefficientDictionary(
             parseGlobalCoefficientSnapshot(missionData),
+            parseTenantCoefficientSnapshot(missionData),
           );
 
           resultObj.dbSyncPayload =

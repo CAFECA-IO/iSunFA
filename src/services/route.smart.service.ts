@@ -69,7 +69,19 @@ export async function parseSmartInput(
   }
 }
 
-export async function parseMultipleRoutesFromText(text: string): Promise<
+/**
+ * Info: (20260914 - Luphia) `chatService` 可由呼叫端注入（PR #6650 review 阻-3）。
+ *
+ * 這支同時被 web（mileage route、route.service）與**外部運算節點**
+ *（transportation skill）呼叫。自己 `new ChatService()` 等於 `allowSystemSettings`
+ * 預設 `true`——在運算節點上第一次要金鑰就會動態載入 system_setting → prisma，
+ * 正是拆分要消滅的路徑。skill 手上就有 executor 給的
+ * `allowSystemSettings: false` 實例，傳進來即可；web 呼叫端不傳，行為不變。
+ */
+export async function parseMultipleRoutesFromText(
+  text: string,
+  chatService: ChatService = new ChatService(),
+): Promise<
   Array<{
     origin: string;
     dest: string;
@@ -82,7 +94,6 @@ export async function parseMultipleRoutesFromText(text: string): Promise<
   }>
 > {
   try {
-    const chatService = new ChatService();
     const prompt = `
             You are a professional logistics AI assistant.
             Extract all distinct transportation routes from the user's description.

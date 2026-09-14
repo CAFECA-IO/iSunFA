@@ -1,5 +1,6 @@
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
+import { LEGACY_STANDARD_COEFFICIENT_CATEGORY } from "@/constants/esg";
 
 /**
  * Info: (20260907 - Luphia) 排放係數字典的**任務快照**（PR #6650 的收尾）。
@@ -104,13 +105,51 @@ export const parseGlobalCoefficientSnapshot = (
 };
 
 /**
- * Info: (20260907 - Luphia) 合併靜態字典與快照，快照優先——與拆分前
- * `esg_parsing` 的合併順序（DB takes precedence）逐字相同，也與
- * `EmissionFactorRepo.getCoefficientById` 的「靜態先、DB 後」在**單筆查詢**
- * 上等價：id 撞號時兩邊都是後者贏。
+ * Info: (20260914 - Luphia) 租戶自訂係數也要進字典（review 需修-5）。
+ *
+ * `document.generator` 把 `prerequisiteData.coefficients`（租戶自訂）餵進 prompt
+ * 當可選答案，而 `esg_parsing` turn 2 的 `coefficientId` 是自由字串——模型挑了
+ * 租戶係數，只含全球＋靜態的字典就 miss，orchestrator 兩處 `if (coef)` 靜默跳過，
+ * ESG 紀錄寫入時 `emissions` 是空的。改版前 `getCoefficientById` 的 `findUnique`
+ * 沒有 accountBookId 過濾，租戶係數解得到——這裡把那半邊補回來。
+ *
+ * 形狀是 `ICoefficient`（esg.repo 的前端格式：`emissionFactor` 已是字串），
+ * 與全球快照共用同一支型別守衛：讀取端只認一種線上形狀。
+ */
+export const parseTenantCoefficientSnapshot = (
+  missionData: Record<string, unknown>,
+): ISnapshotCoefficient[] => {
+  const prerequisite = missionData.prerequisiteData;
+  if (typeof prerequisite !== "object" || prerequisite === null) return [];
+  const raw = (prerequisite as Record<string, unknown>).coefficients;
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(isSnapshotCoefficient);
+};
+
+/**
+ * Info: (20260914 - Luphia) 合併順序：靜態 < 全球快照 < 租戶——**資料庫的值贏**。
+ *
+ * ## 這是一個行為變更，不是等價改寫（review 需修-4；決定：Luphia，2026-09-14）
+ *
+ * 第一版註解宣稱「與 `getCoefficientById` 的靜態先、DB 後在單筆查詢上等價」，
+ * **那是錯的**：靜態先＝靜態命中就 return、不查 DB＝**靜態贏**。而拆分前兩個
+ * 消費端本來就不一致——`esg_parsing` 的合併是 DB 贏、`orchestrator` 的
+ * `getCoefficientById` 是靜態贏；同一張傳票由前者選 id、後者算數，撞號時
+ * 用的是兩個不同的值。
+ *
+ * 統一成 DB 贏的理由：admin 的 `carbon_emission_database/import` 就是拿
+ * `ALL_COEFFICIENTS` 的保留 id 匯進 DB，`updateGlobal` 允許 admin 改
+ * `emissionFactor`——若靜態贏，admin 修正官方係數對重跑的 mission **無效**，
+ * 那個維護功能就是壞的。代價：撞號 id 的舊 mission 重跑會得到新值；
+ * 但係數已凍結在發包時的 mission.json 裡，同一份 mission 仍然可重放，
+ * 「重跑得到新值」只發生在**重新發包**時，而那正是 admin 修正該生效的時點。
+ *
+ * 租戶排最後：它是最具體的覆寫（per-book），與 esg.repo 依 accountBookId 篩選
+ * 的語意一致。
  */
 export const buildCoefficientDictionary = (
   snapshot: ISnapshotCoefficient[],
+  tenantSnapshot: ISnapshotCoefficient[] = [],
 ): Map<string, ISnapshotCoefficient> => {
   const dictionary = new Map<string, ISnapshotCoefficient>();
   [...ALL_COEFFICIENTS, ...MOCK_EEIO_COEFFICIENTS].forEach((c) => {
@@ -121,10 +160,11 @@ export const buildCoefficientDictionary = (
       unit: c.unit,
       emissionFactor: String(c.emissionFactor),
       source: c.source,
-      category: c.category || "STANDARD",
+      category: c.category || LEGACY_STANDARD_COEFFICIENT_CATEGORY,
       ghgFactors: (c as Record<string, unknown>).ghgFactors,
     });
   });
   snapshot.forEach((c) => dictionary.set(c.id, c));
+  tenantSnapshot.forEach((c) => dictionary.set(c.id, c));
   return dictionary;
 };

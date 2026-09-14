@@ -16,13 +16,23 @@ import fs from "fs";
 const projectRoot = process.cwd();
 const workerEnv = path.join(projectRoot, ".env.worker");
 
+/**
+ * Info: (20260914 - Luphia) 與 `run_compute_node.ts` 同一套邊界（review 阻-3／需修-8）：
+ * 節點角色旗標讓 `lib/prisma` 在任何執行期路徑載到它時 fail fast；缺 `.env.worker`
+ * 直接退出，不讓缺金鑰的 Executor 把付費任務燒成 giveup。
+ * 旗標值與鍵名寫死在這裡而不 import 常數：本檔的 import 走相對路徑且在旗標之後，
+ * 而 worker_node_isolation.test.ts 以字面值釘住兩份一致。
+ */
+process.env.ISUNFA_WORKER_NODE_ROLE = "compute";
+
 if (fs.existsSync(workerEnv)) {
   const loaded = dotenv.config({ path: workerEnv });
   dotenvExpand.expand(loaded);
 } else {
   console.error(
-    `[Executor Worker] No configuration at ${workerEnv}. This node does not fall back to the system .env.`,
+    `[Executor Worker] No configuration at ${workerEnv}. This node does not fall back to the system .env. Exiting.`,
   );
+  process.exit(1);
 }
 
 // Info: (20260521 - Luphia) Import service, ensuring they are resolved using the project root paths

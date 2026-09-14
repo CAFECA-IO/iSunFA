@@ -4,11 +4,13 @@ import { join } from "path";
 import {
   buildCoefficientDictionary,
   parseGlobalCoefficientSnapshot,
+  parseTenantCoefficientSnapshot,
   serializeGlobalCoefficients,
   type ISnapshotCoefficient,
 } from "@/lib/worker/coefficient_snapshot";
 import { VoucherPipelineOrchestrator } from "@/services/voucher.pipeline.orchestrator";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
+import { LEGACY_STANDARD_COEFFICIENT_CATEGORY } from "@/constants/esg";
 import type { IAggregatedDocumentResult } from "@/skills/utils/document_parser_db_sync";
 
 /**
@@ -34,7 +36,7 @@ const wireCoefficient = (
   unit: "TWD",
   emissionFactor: "0.5",
   source: "Test_Source",
-  category: "STANDARD",
+  category: LEGACY_STANDARD_COEFFICIENT_CATEGORY,
   ...over,
 });
 
@@ -88,7 +90,7 @@ describe("parseGlobalCoefficientSnapshot：mission.json 是不可信輸入", () 
   });
 });
 
-describe("buildCoefficientDictionary：合併語意與拆分前逐字相同", () => {
+describe("buildCoefficientDictionary：靜態 < 全球快照 < 租戶（資料庫的值贏）", () => {
   it("靜態字典整套都在（快照缺席＝舊行為的靜態半邊）", () => {
     const dictionary = buildCoefficientDictionary([]);
     ALL_COEFFICIENTS.forEach((c) => {
@@ -97,10 +99,12 @@ describe("buildCoefficientDictionary：合併語意與拆分前逐字相同", ()
   });
 
   /**
-   * Info: (20260907 - Luphia) 快照蓋過靜態（原「DB takes precedence」）。
-   * 這是行為斷言不是計數：id 撞號時值必須是快照那一份。
+   * Info: (20260914 - Luphia) 快照蓋過靜態——**這是行為變更，不是等價改寫**
+   *（review #6650 需修-4；決定：DB 值贏，Luphia 2026-09-14）。拆分前
+   * orchestrator 的 `getCoefficientById` 是靜態贏；統一成 DB 贏是為了讓 admin
+   * 修正官方係數對重新發包的 mission 生效。這條釘的就是那個決定。
    */
-  it("快照與靜態撞 id 時，快照贏", () => {
+  it("快照與靜態撞 id 時，快照贏（DB 值贏的決定）", () => {
     const staticId = ALL_COEFFICIENTS[0].id;
     const dictionary = buildCoefficientDictionary([
       wireCoefficient({ id: staticId, name: "OVERRIDDEN" }),
@@ -111,6 +115,40 @@ describe("buildCoefficientDictionary：合併語意與拆分前逐字相同", ()
   it("快照獨有的 id 查得到", () => {
     const dictionary = buildCoefficientDictionary([wireCoefficient()]);
     expect(dictionary.get("snap-test-1")?.emissionFactor).toBe("0.5");
+  });
+
+  /**
+   * Info: (20260914 - Luphia) 租戶自訂係數（review 需修-5）：prompt 把它們餵給
+   * 模型當候選，模型挑了就要解得到。租戶排最後——per-book 是最具體的覆寫。
+   */
+  it("租戶係數查得到，且撞 id 時蓋過全球快照", () => {
+    const dictionary = buildCoefficientDictionary(
+      [wireCoefficient({ id: "shared-id", name: "GLOBAL" })],
+      [
+        wireCoefficient({ id: "shared-id", name: "TENANT" }),
+        wireCoefficient({ id: "tenant-only" }),
+      ],
+    );
+    expect(dictionary.get("shared-id")?.name).toBe("TENANT");
+    expect(dictionary.get("tenant-only")).toBeDefined();
+  });
+});
+
+describe("parseTenantCoefficientSnapshot：租戶係數走同一支型別守衛", () => {
+  it("讀 prerequisiteData.coefficients，壞形狀逐筆剔除", () => {
+    const parsed = parseTenantCoefficientSnapshot({
+      prerequisiteData: {
+        coefficients: [wireCoefficient({ id: "t-1" }), { id: "junk" }],
+      },
+    });
+    expect(parsed.map((c) => c.id)).toEqual(["t-1"]);
+  });
+
+  it("缺席回空陣列", () => {
+    expect(parseTenantCoefficientSnapshot({})).toEqual([]);
+    expect(parseTenantCoefficientSnapshot({ prerequisiteData: {} })).toEqual(
+      [],
+    );
   });
 });
 
@@ -248,15 +286,38 @@ describe("orchestrator 以快照係數計算（無資料庫的世界）", () => 
 describe("接線（§1.7：零件對了還要裝上去）", () => {
   const read = (rel: string) => readFileSync(join(process.cwd(), rel), "utf8");
 
-  it("發包端在 accountBook 區塊內嵌入全球係數快照", () => {
+  /**
+   * Info: (20260914 - Luphia) 兩個位置斷言（review 阻-2／建議-9）：
+   * 全表查詢在 `Promise.all` **之前**（整張訂單一次），嵌入在 category 判斷
+   * **之前**（每一份 mission 都有，不只 CERTIFICATE_ANALYSIS）。
+   */
+  it("發包端：全表查一次在 Promise.all 之前，嵌入不看 category", () => {
     const issuer = read("src/services/issue.service.ts");
-    expect(issuer).toContain(
-      "missionData.prerequisiteData.globalCoefficients =",
-    );
-    expect(issuer).toContain("serializeGlobalCoefficients(");
-    expect(issuer).toContain(
+    const fetchAt = issuer.indexOf(
       "await EmissionFactorRepo.getAllGlobalCoefficients()",
     );
+    const promiseAllAt = issuer.indexOf(
+      "const preparedItems = await Promise.all(",
+    );
+    const embedAt = issuer.indexOf(
+      "missionData.prerequisiteData.globalCoefficients =",
+    );
+    /**
+     * Info: (20260914 - Luphia) 錨在 accountBook 那一道閘（`accBookId &&`）——
+     * 檔案裡另有兩處 `category === CERTIFICATE_ANALYSIS` 判斷（itemsToProcess 與
+     * analysis 佔位），錨太短會抓到它們、把「嵌入在閘之前」量成相反的結論。
+     */
+    const categoryGateAt = issuer.indexOf(
+      "if (accBookId && category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {",
+    );
+    expect(fetchAt).toBeGreaterThan(-1);
+    expect(promiseAllAt).toBeGreaterThan(fetchAt);
+    expect(embedAt).toBeGreaterThan(promiseAllAt);
+    expect(categoryGateAt).toBeGreaterThan(embedAt);
+    // Info: (20260914 - Luphia) 全表查詢恰好一次
+    expect(
+      issuer.match(/EmissionFactorRepo\.getAllGlobalCoefficients\(\)/g),
+    ).toHaveLength(1);
   });
 
   it("esg_parsing 讀 mission 快照，不再匯入 repo 或 prisma", () => {
@@ -284,6 +345,8 @@ describe("接線（§1.7：零件對了還要裝上去）", () => {
     const executor = read("src/services/mission.executor.service.ts");
     expect(executor).toContain("buildCoefficientDictionary(");
     expect(executor).toContain("parseGlobalCoefficientSnapshot(missionData)");
+    // Info: (20260914 - Luphia) 租戶係數也進字典（需修-5）
+    expect(executor).toContain("parseTenantCoefficientSnapshot(missionData)");
     expect(executor).toContain("coefficientDictionary,");
   });
 

@@ -86,13 +86,30 @@ export async function loadWorkerEnvConfig(): Promise<Record<string, string>> {
   return loadEnvConfig(ENV_WORKER_PATH);
 }
 
-// Info: (20260414 - Luphia) 取得優先的環境變數設定 (先讀取 .env.setup，若無則讀取 .env)
+/**
+ * Info: (20260414 - Luphia) 取得優先的環境變數設定 (先讀取 .env.setup，若無則讀取 .env)
+ *
+ * Info: (20260914 - Luphia) 第三順位 fallback 到 `.env.worker`（PR #6650 review 阻-1）。
+ *
+ * 外部運算節點只有 `.env.worker`，而 planner／commitor／closer 從這支取
+ * `NEXT_PUBLIC_RPC_URL` 與 `NEXT_PUBLIC_MISSION_BOARD_ADDRESS`——先前兩個檔都不在
+ * 時回 `{}`，且**完全不看 `process.env`**，於是 `run_compute_node` 灌進去的值對
+ * 它們是隱形的：planner 每 10 秒對 `undefined` address 拋錯，任務永遠不被領取。
+ * 收斂在這裡而不是逐個 call site 改：三支服務不必知道自己跑在哪種節點。
+ *
+ * 順位刻意放最後：有系統 `.env` 的機器（維運節點、開發機）行為完全不變；
+ * 只有「純運算節點」才會走到這一格。Executor 仍直接讀 `loadWorkerEnvConfig()`
+ *（它**不得**在系統 `.env` 存在時改用它——那是隔離本身），兩者的 MISSION_DIR
+ * 一致性由 `run_compute_node` 啟動時檢查。
+ */
 export async function getPriorityEnvConfig(): Promise<Record<string, string>> {
   const targetPath = fs.existsSync(ENV_SETUP_PATH)
     ? ENV_SETUP_PATH
     : fs.existsSync(ENV_PATH)
       ? ENV_PATH
-      : null;
+      : fs.existsSync(ENV_WORKER_PATH)
+        ? ENV_WORKER_PATH
+        : null;
   if (targetPath) {
     return await loadEnvConfig(targetPath);
   }

@@ -13,6 +13,12 @@ import {
   IAggregatedDocumentResult,
 } from "@/skills/utils/document_parser_db_sync";
 import { getPriorityEnvConfig } from "@/services/env.service";
+import { createPublicClient, http } from "viem";
+import { DEFAULT_MISSION_DIR } from "@/constants/worker_node";
+import {
+  readGiveUpVerdict,
+  viemMissionBoardReader,
+} from "@/lib/worker/mission_board_verdict";
 import type { JSONValue } from "@/validators";
 import { MoneyUtil } from "@/lib/utils/money";
 import { SystemWorkerSource } from "@/constants/enums";
@@ -92,7 +98,12 @@ export class IssueRecorderService {
             taskDir,
             folderName,
             taskId,
-            missionDirBase: setupConfig.MISSION_DIR || "missions",
+            missionDirBase: setupConfig.MISSION_DIR || DEFAULT_MISSION_DIR,
+            // Info: (20260914 - Luphia) 鏈上判準的兩個座標（review 需修-6），與 issue.service 同源
+            rpcUrl: setupConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024",
+            mbAddress: setupConfig.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as
+              | `0x${string}`
+              | undefined,
           });
           if (gaveUp) {
             recordedTask = true;
@@ -216,7 +227,7 @@ export class IssueRecorderService {
             // Info: (20260510 - Luphia) Try reading from missions directory if local execution
             const missionLogPath = path.join(
               process.cwd(),
-              setupConfig.MISSION_DIR || "missions",
+              setupConfig.MISSION_DIR || DEFAULT_MISSION_DIR,
               folderName,
               "execution_log.json",
             );
@@ -688,6 +699,8 @@ export class IssueRecorderService {
     folderName: string;
     taskId: string;
     missionDirBase: string;
+    rpcUrl: string;
+    mbAddress: `0x${string}` | undefined;
   }): Promise<boolean> {
     const giveupPath = path.join(
       process.cwd(),
@@ -695,12 +708,47 @@ export class IssueRecorderService {
       params.folderName,
       "giveup.md",
     );
+    /**
+     * Info: (20260914 - Luphia) `giveup.md` 是 closer 在**運算節點**的磁碟上寫的
+     *（review #6650 需修-6）。兩個節點依 shared-nothing 不共用磁碟，真的分機器
+     * 之後這個檔案在維運節點上永遠不存在——而本方法是全站唯一寫訂單終態的
+     * 地方，訂單會永久卡在 EXECUTING／PAID、沒有 DLQ。
+     *
+     * 所以檔案只當**同機部署的快路徑**；讀不到就走合法的跨界通道——區塊鏈：
+     * 放棄的事實本來就是 closer 從 MissionBoard 推出來的（最新提交被拒且
+     * 累計 ≥ 門檻），這裡用**同一支**判準（`readGiveUpVerdict`）從鏈上重推。
+     * 鏈讀失敗（RPC 斷、位址未設）視為「尚無判決」而不是「已放棄」：
+     * 寬鬆方向會把還在跑的任務標成失敗，那比多等一輪嚴重。
+     */
+    let gaveUp = false;
     try {
       await fs.access(giveupPath);
+      gaveUp = true;
     } catch {
-      // Info: (20260825 - Julian) 沒放棄也沒核可：還在跑，不是本服務的事
-      return false;
+      if (!params.mbAddress) {
+        console.warn(
+          "[MissionRecorder] MissionBoard address not configured; cannot derive give-up verdict from chain.",
+        );
+        return false;
+      }
+      try {
+        const publicClient = createPublicClient({
+          transport: http(params.rpcUrl),
+        });
+        gaveUp = await readGiveUpVerdict(
+          viemMissionBoardReader(publicClient, params.mbAddress),
+          BigInt(params.taskId),
+        );
+      } catch (error) {
+        console.warn(
+          `[MissionRecorder] Failed to read give-up verdict for task ${params.taskId} from chain:`,
+          error,
+        );
+        return false;
+      }
     }
+    // Info: (20260825 - Julian) 沒放棄也沒核可：還在跑，不是本服務的事
+    if (!gaveUp) return false;
 
     const flagFile = path.join(params.taskDir, "recorded.flag");
     try {

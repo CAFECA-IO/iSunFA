@@ -25,7 +25,11 @@
 
 **為什麼不共用系統 `.env`**：那份裡有 `DATABASE_URL`、`SECRET_VAULT_MASTER_KEY`、`SUPER_ADMIN_*`。Executor 處理的是使用者上傳的憑證內容，而它連資料庫都不該連得到 —— 讓它持有信任根，等於把那道隔離的意義抵銷掉。共用一份 `.env` 是「順手」，不是「隔離」。
 
-**找不到 `.env.worker` 時不 fallback 到系統 `.env`**：`run_worker` 會大聲記錄一筆 error 並繼續（不 `process.exit`，理由見下節），Executor 則在真正需要金鑰時失敗。悄悄改用 web 那份會讓隔離在「剛好沒建檔」時失效，而那正是最不容易發現的情形。
+**找不到 `.env.worker` 時不 fallback 到系統 `.env`**：悄悄改用 web 那份會讓隔離在「剛好沒建檔」時失效，而那正是最不容易發現的情形。
+
+**缺檔時的處置於 2026-09-14 改為 fail fast**（PR #6650 review 需修-8）：`run_compute_node` 與 `executor_worker` 找不到 `.env.worker` 直接 `process.exit(1)`。原本的立場「大聲記錄並繼續」是為了不讓**單一任務缺金鑰**停掉不需要 LLM 的任務——那條仍然成立（缺金鑰由需要 LLM 的 skill 在呼叫時失敗）；但**整份設定檔不存在**是另一件事：那代表這台機器沒部署好，續跑的結果是四個迴圈照常啟動、每筆任務在 ChatService 拋錯、累積三次拒絕後 closer 寫 `giveup.md`——付費分析被一個缺檔報銷，而 log 裡只有一行 warn。兩種缺席要走兩條通道（checklist §1.13）。
+
+同一輪另外兩件結構性的收斂：運算節點啟動時**抹掉**繼承自 shell 的信任根鍵（`DATABASE_URL`、`SECRET_VAULT_MASTER_KEY`、`DEWT_PRIVATE_KEY_PEM`、`SUPER_ADMIN_*`；清單在 `constants/worker_node.ts`），「不吃系統 env」從此是程式碼的性質而不是檔案剛好不存在；`getPriorityEnvConfig()` 第三順位 fallback 到 `.env.worker`，讓 planner／commitor／closer 在純運算節點上取得 RPC 與 MissionBoard 位址（review 阻-1：先前它們回 `{}`、對 `undefined` address 每 10 秒拋錯，任務永遠不被領取），並在啟動時檢查兩個來源的 `MISSION_DIR` 一致（review 需修-7）。
 
 Executor 以 `new ChatService(apiKey, { allowSystemSettings: false })` 明示不查設定；`llm_key_resolution.test.ts` 有兩支測試釘住「呼叫次數為 0」與「Executor 確實傳了那個旗標」。
 
@@ -84,6 +88,7 @@ Executor 以 `new ChatService(apiKey, { allowSystemSettings: false })` 明示不
 
 - 其餘 worker 端服務仍透過 `getPriorityEnvConfig()` 讀系統 `.env`（`issue.service`、`issue.validator`、`issue.recorder`、`order.backfill`、`cron/amortization.worker`、`admin.blockchain`）。它們都在**維運**節點上，讀系統 `.env` 是正確的 —— 不需要改。
 - `issue.recorder` 讀 `MISSION_DIR/<folder>/execution_log.json` 取 token 計數，那段在 `try {} catch {}` 內。拆成兩個節點（不共用磁碟）之後這個檔案讀不到，token 計數會落回結果載荷裡的值。**盡力而為的行為不變，但數字來源會變** —— 若要精確計數，需由運算節點把 log 併入結果載荷。
+- ✅（2026-09-14 已解，PR #6650 review 需修-6）`issue.recorder` 原本靠讀 `MISSION_DIR/<folder>/giveup.md` 知道任務放棄——那是 closer 在**運算節點**磁碟上寫的，跨機部署後永遠讀不到，而 recorder 是全站唯一寫訂單終態的地方：訂單會永久卡 EXECUTING／PAID、沒有 DLQ。這條比上一條嚴重（承重而非 best-effort），當時漏記。現改為：檔案只當同機部署的快路徑，讀不到就從鏈上以**同一支判準**（`lib/worker/mission_board_verdict.isTaskGivenUp`：最新提交被拒且累計 ≥ `MISSION_GIVE_UP_REJECTION_THRESHOLD`）重推——closer 與 recorder 共用那支純函式與 ABI，兩邊不可能各寫一個 3。鏈讀失敗視為「尚無判決」（多等一輪）而非「已放棄」。
 
 ## 拆分前的狀況（保留作為脈絡）
 

@@ -206,6 +206,28 @@ export async function processNext() {
       },
     });
 
+    /**
+     * Info: (20260914 - Luphia) 全球係數字典的任務快照，**整張訂單查一次**
+     *（PR #6650 review 阻-2／建議-9）。
+     *
+     * 外部運算節點不得存取主資料庫，而 mission 管線要用這份字典（esg_parsing 的
+     * 比對、orchestrator 的稅額校正與碳排計算）。跨界通道只有 IPFS——由這裡
+     *（發包端，有 DB）嵌進每一份 mission.json，運算側以
+     * `lib/worker/coefficient_snapshot` 讀取。
+     *
+     * 放在 `Promise.all` 之前而不是每個 item 內：200 張憑證的訂單原本是 200 次
+     * 無過濾 `findMany`。序列化也只做一次——同一份物件被 200 個 mission.json
+     * 引用，JSON.stringify 各自展開，IPFS 上仍是 200 份，那是通道的形狀，
+     * 不是查詢的問題。
+     *
+     * 係數凍結於發包時點：與資金託管同一時點，同一份 mission 永遠以同一套
+     * 係數計算（審計可重放）。`emissionFactor` 轉字串（CLAUDE.md §2）。
+     * 係數是公開參照資料，不在下方「隱私剝除」的範圍。
+     */
+    const globalCoefficientSnapshot = serializeGlobalCoefficients(
+      await EmissionFactorRepo.getAllGlobalCoefficients(),
+    );
+
     const preparedItems = await Promise.all(
       itemsToProcess.map(async (item) => {
         let localContextObj: Record<string, unknown> | null = null;
@@ -264,6 +286,18 @@ export async function processNext() {
         delete missionData.orderId;
         delete missionData.cost;
 
+        /**
+         * Info: (20260914 - Luphia) 全球係數快照對**每一份** mission 嵌入，不看
+         * category（review 阻-2）。第一版包在下面 CERTIFICATE_ANALYSIS 的分支裡——
+         * 而 `journal_correction.generator` 與 `document.generator` 都會產
+         * `ESG_PARSING` 任務，journal route 以 `JOURNAL_CORRECTION` 建 PAID 訂單：
+         * 那些任務拿到空快照，字典退化成只剩靜態常數，admin 維護的官方係數
+         * 消失且零 log。字典是公開參照資料，多帶一份沒有代價。
+         */
+        if (!missionData.prerequisiteData) missionData.prerequisiteData = {};
+        missionData.prerequisiteData.globalCoefficients =
+          globalCoefficientSnapshot;
+
         // Info: (20260516 - Luphia) 將 accountBookId 轉換為完整的 accountBook JSON 給 AI 解析器
         const accBookId =
           missionData.accountBookId || missionData.data?.accountBookId;
@@ -277,27 +311,8 @@ export async function processNext() {
               const tenantCustomCoefficients = await esgRepo.getEsgCoefficients(
                 accBook.id,
               );
-              if (!missionData.prerequisiteData)
-                missionData.prerequisiteData = {};
               missionData.prerequisiteData.coefficients =
                 tenantCustomCoefficients;
-              /**
-               * Info: (20260907 - Luphia) 全球係數字典的任務快照（PR #6650 收尾）。
-               *
-               * 外部運算節點不得存取主資料庫，而 mission 管線要用這份字典
-               *（esg_parsing 的比對、orchestrator 的稅額校正與碳排計算）。
-               * 跨界通道只有 IPFS——所以由**這裡**（發包端，有 DB）在發包時
-               * 嵌入，運算側以 `lib/worker/coefficient_snapshot` 讀取。
-               *
-               * 係數凍結於發包時點：與資金託管同一時點，同一份 mission 永遠
-               * 以同一套係數計算（審計可重放）。`emissionFactor` 轉字串——
-               * Decimal 進 JSON 變 number 會踩浮點（CLAUDE.md §2）。
-               * 係數是公開參照資料，不在下方「隱私剝除」的範圍。
-               */
-              missionData.prerequisiteData.globalCoefficients =
-                serializeGlobalCoefficients(
-                  await EmissionFactorRepo.getAllGlobalCoefficients(),
-                );
             }
           } catch (e) {
             console.warn(

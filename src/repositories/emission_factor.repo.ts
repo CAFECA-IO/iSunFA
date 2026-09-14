@@ -2,6 +2,7 @@ import { Prisma } from "@/generated";
 import { prisma } from "@/lib/prisma";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
+import { LEGACY_STANDARD_COEFFICIENT_CATEGORY } from "@/constants/esg";
 
 export class EmissionFactorRepo {
   static async getAllGlobalCoefficients(tx?: Prisma.TransactionClient) {
@@ -36,7 +37,7 @@ export class EmissionFactorRepo {
         unit: staticMatch.unit,
         emissionFactor: staticMatch.emissionFactor,
         source: staticMatch.source,
-        category: staticMatch.category || "STANDARD",
+        category: staticMatch.category || LEGACY_STANDARD_COEFFICIENT_CATEGORY,
         ghgFactors: (staticMatch as Record<string, unknown>).ghgFactors,
       };
     }
@@ -230,7 +231,7 @@ export class EmissionFactorRepo {
         unit: data.unit,
         emissionFactor: factorDecimal,
         source: data.source,
-        category: data.category ?? "STANDARD",
+        category: data.category ?? LEGACY_STANDARD_COEFFICIENT_CATEGORY,
         versionYear: data.versionYear || null,
         isVerified: data.isVerified ?? true,
         userId: data.userId || null,
@@ -308,7 +309,7 @@ export class EmissionFactorRepo {
       unit: c.unit,
       emissionFactor: new Prisma.Decimal(c.emissionFactor.toString()),
       source: c.source,
-      category: c.category || "STANDARD",
+      category: c.category || LEGACY_STANDARD_COEFFICIENT_CATEGORY,
       versionYear: null,
       isVerified: true,
       userId: userId || null,
