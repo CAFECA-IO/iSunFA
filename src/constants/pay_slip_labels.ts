@@ -86,12 +86,19 @@ export const PAY_SLIP_FIELD_LABELS = {
  * 用詞跟著臺北市勞動局的工資清冊範本
  * （見 `salary_wage_register_compliance_review.md`）。
  */
+/**
+ * Info: (20260914 - Julian) 工資清冊表頭用得到的字。
+ *
+ * Info: (20260914 - Julian) 20260914 改成單行標題式之後，
+ * 公司名稱與期間**不再有自己的標籤** —— 它們出現在標題那一行裡
+ * （`小花有限公司　工資清冊　2026-01 ～ 2026-09`），
+ * 形狀照勞動局範本的 `____公司　工資清冊　__年__月份`。
+ * 那一行不需要「公司名稱：」這種前綴，就像一份文件的標題不會寫「標題：」。
+ */
 export const CSV_PREAMBLE_LABELS = {
-  entityName: "公司名稱",
   taxId: "統一編號",
   responsiblePerson: "負責人",
   address: "公司地址",
-  period: "工資給付期間",
   title: "工資清冊",
 } as const;
 

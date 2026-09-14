@@ -732,40 +732,86 @@ describe("投保狀態", () => {
  * **不是條文** —— 勞基法 §23 II 對清冊只要求金額那三項。
  * 詳見 `documents/architecture/salary_wage_register_compliance_review.md`。
  */
-describe("工資清冊的表頭前言", () => {
+describe("工資清冊的表頭", () => {
   /**
-   * Info: (20260914 - Julian) 沒設定公司就**整段不印**，而不是印一份沒有署名的前言。
+   * Info: (20260914 - Julian) 沒設定公司就**整段不印**，而不是印一份沒有署名的表頭。
    *
-   * 這一條同時保住了既有行為：20260914 之前所有的匯出都沒有前言，
+   * 這一條同時保住了既有行為：20260914 之前所有的匯出都沒有表頭，
    * 而「第一列是欄名」是既有測試與使用者的共同假設。
-   * 少了這一條，把前言改成「永遠印、沒值就留空」會讓每一份沒設定公司的
-   * 清冊都多出五列空白，而上面那些既有測試會全部紅在莫名其妙的地方。
    */
-  it("沒有公司設定時完全沒有前言，第一列就是欄名", () => {
+  it("沒有公司設定時完全沒有表頭，第一列就是欄名", () => {
     const rows = rowsOf(buildSalaryRecordCsv([recordOf()], null));
 
     expect(rows[0][0]).toBe(PAY_SLIP_CSV_IDENTITY_LABELS.period);
   });
 
-  it("有公司設定時，前言在最前面、空一列之後才是欄名", () => {
+  /**
+   * Info: (20260914 - Julian) **表頭每一列只有一格**，這是這一組最重要的斷言。
+   *
+   * 第一版做成 `標籤,值` 兩欄，打開來像錯版：值落在 B 欄，
+   * 也就是資料表的「員工姓名」欄 —— 公司名稱把那一欄撐寬，
+   * 而「123」這種統編被 Excel 當成數字靠右對齊。
+   * 幾列各有兩格、其餘五十格空白，讀起來就是一張壞掉的表。
+   *
+   * 只佔 A 欄的話右邊都是空的，文字自然往右溢出 ——
+   * 那是試算表裡「表格上方標題」的標準長相，也是勞動局範本的長相。
+   */
+  it("表頭每一列只佔一格，不會侵入資料表的欄位", () => {
     const rows = rowsOf(buildSalaryRecordCsv([recordOf()], COMPANY));
-
-    expect(rows[0]).toEqual([
-      CSV_PREAMBLE_LABELS.entityName,
-      COMPANY.entityName,
-    ]);
     const blank = rows.findIndex((row) => row.join("") === "");
+
     expect(blank).toBeGreaterThan(0);
-    expect(rows[blank + 1][0]).toBe(PAY_SLIP_CSV_IDENTITY_LABELS.period);
+    for (const row of rows.slice(0, blank)) {
+      expect(row).toHaveLength(1);
+    }
   });
 
   /**
-   * Info: (20260914 - Julian) 沒填的那幾格**整列不印**，不是印一個空值。
-   *
-   * 印成「統一編號,」會看起來像那一格漏填；整列不印，讀的人知道
-   * 這份清冊只提供了列出來的那些。
+   * Info: (20260914 - Julian) 第一行的形狀直接照勞動局範本的
+   * `____公司　工資清冊　__年__月份`，各段以全形空白相接。
    */
-  it("沒填的欄位整列不印", () => {
+  it("第一行是「公司　工資清冊　期間」，空一列之後才是欄名", () => {
+    const rows = rowsOf(
+      buildSalaryRecordCsv([recordOf({ year: 2026, month: 8 })], COMPANY),
+    );
+
+    expect(rows[0][0]).toBe(
+      `${COMPANY.entityName}\u3000${CSV_PREAMBLE_LABELS.title}\u30002026-08`,
+    );
+
+    const blank = rows.findIndex((row) => row.join("") === "");
+    expect(rows[blank + 1][0]).toBe(PAY_SLIP_CSV_IDENTITY_LABELS.period);
+  });
+
+  it("第二行把有填的那幾格接在一起", () => {
+    const rows = rowsOf(buildSalaryRecordCsv([recordOf()], COMPANY));
+
+    expect(rows[1][0]).toBe(
+      `${CSV_PREAMBLE_LABELS.taxId}：${COMPANY.taxId}` +
+        `\u3000\u3000${CSV_PREAMBLE_LABELS.responsiblePerson}：${COMPANY.responsiblePerson}` +
+        `\u3000\u3000${CSV_PREAMBLE_LABELS.address}：${COMPANY.address}`,
+    );
+  });
+
+  /**
+   * Info: (20260914 - Julian) 沒填的那幾格**整項不印**，不是印一個空值。
+   *
+   * 印成「統一編號：」會看起來像那一格漏填。三格都沒填的話連那一行都不印 ——
+   * 一行只有分隔空白的列比沒有那一行更難讀。
+   */
+  it("沒填的欄位整項不印", () => {
+    const rows = rowsOf(
+      buildSalaryRecordCsv([recordOf()], {
+        ...COMPANY,
+        responsiblePerson: null,
+      }),
+    );
+
+    expect(rows[1][0]).toContain(CSV_PREAMBLE_LABELS.taxId);
+    expect(rows[1][0]).not.toContain(CSV_PREAMBLE_LABELS.responsiblePerson);
+  });
+
+  it("三格都沒填時連第二行都不印，表頭只剩標題", () => {
     const rows = rowsOf(
       buildSalaryRecordCsv([recordOf()], {
         ...COMPANY,
@@ -774,21 +820,21 @@ describe("工資清冊的表頭前言", () => {
         address: null,
       }),
     );
-    const labels = rows.map((row) => row[0]);
 
-    expect(labels).toContain(CSV_PREAMBLE_LABELS.entityName);
-    expect(labels).not.toContain(CSV_PREAMBLE_LABELS.taxId);
-    expect(labels).not.toContain(CSV_PREAMBLE_LABELS.address);
+    expect(rows[0][0]).toContain(CSV_PREAMBLE_LABELS.title);
+    expect(rows[1].join("")).toBe("");
+    expect(rows[2][0]).toBe(PAY_SLIP_CSV_IDENTITY_LABELS.period);
   });
 
   /**
    * Info: (20260914 - Julian) **公司名稱是使用者輸入，而這是拿 Excel 開的檔案。**
    *
-   * 一個以 `=` 開頭的公司名就是公式注入，而檔案看起來完全正常 ——
-   * 資料列早就有這道中和（`escapeField`），前言不能是例外。
-   * 少了這一條，前言改成自己拼字串（不走 `escapeField`）不會有任何紅燈。
+   * 一個以 `=` 開頭的公司名就是公式注入，而檔案看起來完全正常。
+   *
+   * 改成單行之後這一條更重要了：公式中和看的是**整格的第一個字元**，
+   * 而公司名稱正好在第一行的開頭。分段 escape 再接起來的話它會躲過中和。
    */
-  it("前言的值走公式中和，與資料列同一套", () => {
+  it("表頭走公式中和，與資料列同一套", () => {
     const csv = buildSalaryRecordCsv([recordOf()], {
       ...COMPANY,
       entityName: "=cmd|'/c calc'!A1",
@@ -797,20 +843,42 @@ describe("工資清冊的表頭前言", () => {
     expect(csv).toContain("'=cmd");
   });
 
+  /**
+   * Info: (20260914 - Julian) 跳脫的單位是**一整格**，不是一格裡的某一段。
+   *
+   * 公司名稱裡有逗號時，分段 escape 再接起來會產生
+   * `"小花, 有限公司"　工資清冊　2026-08` —— 引號跑到一格的中間，
+   * 那不是合法的 CSV。
+   *
+   * **這一條必須比對原始那一行，不能比對 `rowsOf` 的結果。**
+   * `parseCsvLine` 對「引號結束之後還有字」是寬容的，它會把後面接回同一格 ——
+   * 於是解析回來的值與正確版本一模一樣。實測過：先寫成比對解析結果，
+   * 分段 escape 的突變**活了下來**，而這一條是唯一守得住它的。
+   */
+  it("公司名稱含逗號時，整行被包成一格（不是把引號塞在中間）", () => {
+    const csv = buildSalaryRecordCsv([recordOf({ year: 2026, month: 8 })], {
+      ...COMPANY,
+      entityName: "小花, 有限公司",
+    });
+    const firstLine = csv.replace(/^\uFEFF/, "").split("\r\n")[0];
+
+    expect(firstLine).toBe(
+      `"小花, 有限公司\u3000${CSV_PREAMBLE_LABELS.title}\u30002026-08"`,
+    );
+  });
+
   it("含逗號與引號的地址會被正確跳脫", () => {
     const rows = rowsOf(
       buildSalaryRecordCsv([recordOf()], { ...COMPANY, address: 'A"B,C' }),
     );
-    const address = rows.find((row) => row[0] === CSV_PREAMBLE_LABELS.address);
 
-    expect(address?.[1]).toBe('A"B,C');
+    expect(rows[1][0]).toContain('A"B,C');
   });
 
   /**
    * Info: (20260914 - Julian) 範本假設「一張表一個月」，本系統的匯出不是。
    *
    * 匯出是照勾選的紀錄走的，可以跨月 —— 硬寫一個年月就是假的。
-   * 跨月時寫成範圍，讀的人看得出來這份不是單月清冊。
    */
   it("單月就印那個月", () => {
     const rows = rowsOf(
@@ -822,9 +890,9 @@ describe("工資清冊的表頭前言", () => {
         COMPANY,
       ),
     );
-    const period = rows.find((row) => row[0] === CSV_PREAMBLE_LABELS.period);
 
-    expect(period?.[1]).toBe("2026-08");
+    expect(rows[0][0]).toContain("2026-08");
+    expect(rows[0][0]).not.toContain("～");
   });
 
   it("跨月印成範圍，取最早與最晚", () => {
@@ -838,9 +906,8 @@ describe("工資清冊的表頭前言", () => {
         COMPANY,
       ),
     );
-    const period = rows.find((row) => row[0] === CSV_PREAMBLE_LABELS.period);
 
-    expect(period?.[1]).toBe("2026-07 ～ 2026-09");
+    expect(rows[0][0]).toContain("2026-07 ～ 2026-09");
   });
 });
 

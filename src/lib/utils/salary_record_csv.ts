@@ -446,32 +446,73 @@ const periodRangeOf = (records: readonly ISalaryRecordDetail[]): string => {
  * 一個以 `=` 開頭的公司名就是公式注入。與資料列同一套中和規則，
  * 沒有例外（`numeric` 那個出口只給金額欄）。
  */
+// Info: (20260914 - Julian) 全形空白：標題各段之間的分隔，照勞動局範本的排法
+const WIDE_SPACE = "\u3000";
+
 const buildPreamble = (
   records: readonly ISalaryRecordDetail[],
   company: ISalaryRegisterCompany | null,
 ): string[] => {
   if (company === null || company.entityName.trim() === "") return [];
 
-  const rows: [string, string][] = [
-    [CSV_PREAMBLE_LABELS.entityName, company.entityName],
-  ];
-  if (company.taxId) rows.push([CSV_PREAMBLE_LABELS.taxId, company.taxId]);
-  if (company.responsiblePerson) {
-    rows.push([
-      CSV_PREAMBLE_LABELS.responsiblePerson,
-      company.responsiblePerson,
-    ]);
-  }
-  if (company.address) {
-    rows.push([CSV_PREAMBLE_LABELS.address, company.address]);
-  }
-  rows.push([CSV_PREAMBLE_LABELS.period, periodRangeOf(records)]);
+  /**
+   * Info: (20260914 - Julian) 第一行：`{公司}　工資清冊　{期間}`。
+   *
+   * 形狀直接照勞動局範本的表頭 `____公司　工資清冊　__年__月份`。
+   */
+  const title = [
+    company.entityName,
+    CSV_PREAMBLE_LABELS.title,
+    periodRangeOf(records),
+  ]
+    .filter((part) => part !== "")
+    .join(WIDE_SPACE);
+
+  /**
+   * Info: (20260914 - Julian) 第二行：有填的那幾格，沒填的不留位置。
+   *
+   * 印成「統一編號：」空值會看起來像那一格漏填；整項不印，
+   * 讀的人知道這份清冊只提供了列出來的那些。
+   * 三格都沒填就連這一行都不印。
+   */
+  const details = (
+    [
+      [CSV_PREAMBLE_LABELS.taxId, company.taxId],
+      [CSV_PREAMBLE_LABELS.responsiblePerson, company.responsiblePerson],
+      [CSV_PREAMBLE_LABELS.address, company.address],
+    ] as const
+  )
+    .filter(([, value]) => value !== null && value.trim() !== "")
+    .map(([label, value]) => `${label}：${value}`)
+    .join(WIDE_SPACE.repeat(2));
 
   return [
-    ...rows.map(([label, value]) =>
-      [escapeField(label), escapeField(value)].join(","),
-    ),
-    // Info: (20260914 - Julian) 空行把前言與表頭分開，讀的人一眼看得出哪一列是標題
+    ...[title, details]
+      .filter((line) => line !== "")
+      /**
+       * Info: (20260914 - Julian) **每一列只有一格**，而且整行一起 escape。
+       *
+       * ## 為什麼不是 `標籤,值` 的兩欄
+       *
+       * 20260914 的第一版是兩欄，實際打開來像**錯版**：值落在 B 欄，
+       * 也就是資料表的「員工姓名」欄 —— 公司名稱把那一欄撐寬，
+       * 而「123」這種統編被 Excel 當成數字靠右對齊。
+       * 五列各有兩格、其餘五十格空白，讀起來就是一張壞掉的表。
+       *
+       * 只佔 A 欄的話，右邊都是空的，文字自然往右溢出 ——
+       * 那正是試算表裡「表格上方標題」的標準長相，也是勞動局範本的長相。
+       *
+       * ## 為什麼是整行 escape，不是分段 escape 再接起來
+       *
+       * 因為**跳脫的單位是一整格**。公司名稱裡有逗號（`小花, 有限公司`）時，
+       * 分段 escape 只會把那一段包成 `"小花, 有限公司"`，接起來之後
+       * 引號跑到一格的中間 —— 那不是合法的 CSV，讀的程式會把這一列拆錯。
+       *
+       * （公式中和在這裡兩種做法都會生效，因為公司名稱剛好在整行的開頭。
+       * 這一點實測過 —— 別把它當成整行 escape 的理由，真正的理由是上面那個。）
+       */
+      .map((line) => escapeField(line)),
+    // Info: (20260914 - Julian) 空行把表頭與欄名分開，讀的人一眼看得出哪一列是標題列
     "",
   ];
 };
