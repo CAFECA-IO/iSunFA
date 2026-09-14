@@ -278,6 +278,17 @@ export interface ISalaryRecordSummary {
   id: string;
   year: number;
   month: number;
+  /**
+   * Info: (20260914 - Julian) 這筆紀錄產生當下的公司抬頭。**原始快照，未解析。**
+   *
+   * `null` 有兩種來源，這一層不區分：這筆是 20260914（`entity_name_snapshot`
+   * 上線）之前存的，或存的當下公司設定還沒填。兩者都代表
+   * 「當時不知道」，而那個事實回填不出來。
+   *
+   * 消費端要顯示之前必須經過 `resolveEntityName(快照, 現值)` ——
+   * 回退規則只有一份，理由寫在 `pay_slip_meta.ts`。
+   */
+  entityNameSnapshot: string | null;
   employee: {
     id: string;
     name: string;

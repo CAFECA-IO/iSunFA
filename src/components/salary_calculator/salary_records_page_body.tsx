@@ -29,7 +29,8 @@ import {
   setPagePicked,
   togglePick,
 } from "@/lib/utils/salary_export_selection";
-import { paySlipMetaOf } from "@/lib/utils/pay_slip_meta";
+import { paySlipMetaOf, resolveEntityName } from "@/lib/utils/pay_slip_meta";
+import { useCompanyProfile } from "@/hooks/use_company_profile";
 import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
 import { saveDownloadedFile } from "@/lib/utils/download_file";
 import {
@@ -105,6 +106,17 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
     hasError: hasEmployeesError,
     reload: reloadEmployees,
   } = useSalaryEmployees(accountBookId);
+
+  /**
+   * Info: (20260914 - Julian) 抬頭的回退來源；只在紀錄沒有快照時才用得到。
+   *
+   * 20260914（`entity_name_snapshot` 上線）之前存的紀錄一律沒有快照，
+   * 而那個事實回填不出來 —— 現值是唯一拿得到的答案。
+   */
+  const { profile: companyProfile } = useCompanyProfile(accountBookId);
+  const currentEntityName = companyProfile.isConfigured
+    ? companyProfile.entityName
+    : null;
 
   const [page, setPage] = useState<number>(1);
   const [employeeId, setEmployeeId] = useState<string>("");
@@ -969,10 +981,15 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
           sendBlockedReason={viewingSendTarget.blockedReason}
           onResent={() => setViewing(null)}
           /**
-           * Info: (20260909 - Julian) 兩個來源刻意不同（見 `pay_slip_meta.ts`）：
-           * 到職日是員工檔現值，投保狀態是**這筆紀錄當時**的 input 快照。
+           * Info: (20260909 - Julian) 三個來源刻意不同（見 `pay_slip_meta.ts`）：
+           * 到職日是員工檔現值，投保狀態是**這筆紀錄當時**的 input 快照，
+           * 而公司抬頭是這筆的快照、取不到才回退現值。
            */
-          meta={paySlipMetaOf(viewing.employee.hireDate, viewing.input)}
+          meta={paySlipMetaOf(
+            viewing.employee.hireDate,
+            viewing.input,
+            resolveEntityName(viewing.entityNameSnapshot, currentEntityName),
+          )}
         />
       )}
 

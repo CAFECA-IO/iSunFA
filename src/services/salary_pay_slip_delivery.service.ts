@@ -25,7 +25,8 @@ import {
   ISalaryPaySlipPdf,
   SalaryPaySlipPdfService,
 } from "@/services/salary_pay_slip_pdf.service";
-import { paySlipMetaOf } from "@/lib/utils/pay_slip_meta";
+import { paySlipMetaOf, resolveEntityName } from "@/lib/utils/pay_slip_meta";
+import { accountBookCompanyProfileService } from "@/services/account_book_company_profile.service";
 import { IPaySlipHtmlInput } from "@/lib/utils/pay_slip_html";
 import { buildPaySlipMail } from "@/lib/utils/pay_slip_mail";
 import {
@@ -149,6 +150,19 @@ export class SalaryPaySlipDeliveryService {
       throw new AppError(API_ERRORS.VA_SALARY_EMPLOYEE_NO_EMAIL);
     }
 
+    /**
+     * Info: (20260914 - Julian) 抬頭的回退來源：公司設定的**現值**。
+     *
+     * 只在這筆紀錄沒有快照時才用得到（20260914 之前存的紀錄一律沒有）。
+     * 不擋寄送 —— 抬頭不是法定必載（施行細則 §14-1 四款全是金額），
+     * 沒填就是那張單子上不印抬頭，而不是寄不出去。
+     */
+    const companyProfile =
+      await accountBookCompanyProfileService.getProfile(accountBookId);
+    const currentEntityName = companyProfile.isConfigured
+      ? companyProfile.entityName
+      : null;
+
     try {
       const pdf = await this.pdf.generate({
         employeeName: employee.name,
@@ -163,7 +177,12 @@ export class SalaryPaySlipDeliveryService {
          * 投保狀態取**這筆紀錄的 input 快照**（月別事實 —— 八月有保、
          * 九月退保是正常的，而這張單子上的勞保費是照當時的狀態算出來的）。
          */
-        meta: paySlipMetaOf(employee.hireDate, record.input),
+        meta: paySlipMetaOf(
+          employee.hireDate,
+          record.input,
+          // Info: (20260914 - Julian) 抬頭：這筆的快照優先，取不到用現值
+          resolveEntityName(record.entityNameSnapshot, currentEntityName),
+        ),
       });
 
       await this.mailer.send({

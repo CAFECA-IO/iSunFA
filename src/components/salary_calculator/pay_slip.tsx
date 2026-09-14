@@ -338,6 +338,24 @@ const PaySlip: FC<IPaySlipProps> = ({
       <div className="grid grid-cols-1 gap-3 text-gray-900 lg:grid-cols-2">
         {/* Info: (20250708 - Julian) 姓名和日期 */}
         <div className="flex flex-col items-start gap-2">
+          {/**
+           * Info: (20260914 - Julian) 公司抬頭在最上面，而且**沒有標籤**。
+           *
+           * 它在這張紙上的角色是**署名**（誰發的這份明細），不是一格資料 ——
+           * 印成「公司名稱：某某公司」會讓它讀起來像欄位。
+           *
+           * 取不到就整行不印（`meta.entityName` 為 `null`）：
+           * 缺了抬頭該看得出來缺了東西，而一行「—」看起來像那就是答案。
+           *
+           * 這一格**不是**法定必載（施行細則 §14-1 四款全是金額），
+           * 但臺北市勞動局的工資清冊範本表頭就是
+           * `____公司　工資清冊　__年__月份` —— 依據是主管機關的格式。
+           */}
+          {meta?.entityName && (
+            <p className="text-text-neutral-primary text-sm font-semibold lg:text-base">
+              {meta.entityName}
+            </p>
+          )}
           <p className="text-text-brand-primary-lv1 text-xs font-medium lg:text-base lg:font-semibold">
             {formattedDate}
           </p>

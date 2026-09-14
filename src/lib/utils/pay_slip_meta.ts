@@ -40,8 +40,19 @@
  * 它是調薪歷程裡預設顯示的欄位之一
  * （`SALARY_PROFILE_FIELD_VISIBILITY.hireDate === true`），不會沒有痕跡。
  *
- * 三個呼叫端各自的來源由 `salary_pay_slip_meta.test.ts` 釘住 ——
- * 把任一端「統一」掉會有測試轉紅，而紅的訊息會指回這一段。
+ * 各欄位的來源由 `salary_pay_slip_meta.test.ts` 釘住 ——
+ * 把任一個「統一」掉會有測試轉紅，而紅的訊息會指回這一段。
+ *
+ * Info: (20260914 - Julian) **第三種來源：公司抬頭是「期間」事實。**
+ *
+ * | 欄位 | 來源 | 為什麼 |
+ * | --- | --- | --- |
+ * | 投保狀態 | 這筆紀錄的 `input` 快照 | **月別**事實：八月有保、九月退保是正常的 |
+ * | 到職日 | 員工檔**現值** | **人**的事實，只有一個正確答案 |
+ * | 公司抬頭 | 這筆紀錄的快照，取不到才用現值 | **期間**事實（見 `resolveEntityName`） |
+ *
+ * 抬頭與投保狀態同一類（都讀快照），但多了一層回退 ——
+ * 因為它的快照欄位是 20260914 才有的，舊紀錄一律沒有。
  *
  * Info: (20260914 - Julian) 這裡原本掛著一則「雇主名稱尚未加入」的 ToDo，
  * 說它是施行細則 §14-1 六項必載的第一項。**核對條文之後那句話是錯的，已刪除。**
@@ -91,10 +102,48 @@ export type PaySlipInsuredField = (typeof PAY_SLIP_INSURED_FIELDS)[number];
 export interface IPaySlipMeta {
   /** Info: (20260909 - Julian) 到職日，Unix 秒；`null` = 員工檔上沒填 */
   hireDate: number | null;
+  /**
+   * Info: (20260914 - Julian) 公司抬頭，**已經解析過的**（見 `resolveEntityName`）。
+   *
+   * `null` = 這筆紀錄沒有快照、而公司設定也還沒填。那時候整行不印 ——
+   * 印一個「—」會看起來像那就是答案，而缺了抬頭該看得出來缺了東西。
+   */
+  entityName: string | null;
   isLaborInsured: boolean;
   isHealthInsured: boolean;
   isPensionInsured: boolean;
 }
+
+/**
+ * Info: (20260914 - Julian) 抬頭的解析規則：**快照優先，取不到才用現值**。
+ *
+ * 規則只有一行，值錢的是為什麼：
+ *
+ * ## 為什麼快照優先
+ *
+ * 公司在 2027 年改名，2026 年 8 月那張薪資單重印出來該印**當時的名字** ——
+ * 同一份明細上四個金額都是 8 月的，抬頭卻是今天的，讀起來自相矛盾。
+ *
+ * ## 為什麼取不到時回退現值，而不是留白
+ *
+ * `entityNameSnapshot` 是 20260914 才有的欄位，在那之前存的紀錄一律是
+ * `null` —— 那不是「漏填」，是**當時系統根本不知道公司抬頭**，
+ * 而那個事實沒有任何回填腳本補得出來。
+ *
+ * 現值是唯一拿得到的答案。它可能與當時不同（公司改過名），
+ * 但「今天這家公司的名字」仍然比一片空白接近事實。
+ *
+ * ## 為什麼不在這裡補一個「（現值）」之類的標記
+ *
+ * 想過。但薪資單是要交給員工與勞檢看的文件，不是除錯畫面 ——
+ * 在抬頭旁邊加一個括號註記會讓收到的人以為那份文件有問題。
+ * 「這一筆是回退來的」屬於系統的知識，它的去處是這段註解與測試，
+ * 不是列印出來的那張紙。
+ */
+export const resolveEntityName = (
+  snapshot: string | null,
+  current: string | null,
+): string | null => snapshot ?? current;
 
 /**
  * Info: (20260909 - Julian) 引擎輸入裡與投保有關的那三格。
@@ -120,8 +169,10 @@ export interface IPaySlipInsuredInput {
 export const paySlipMetaOf = (
   hireDate: number | null,
   input: IPaySlipInsuredInput,
+  entityName: string | null,
 ): IPaySlipMeta => ({
   hireDate,
+  entityName,
   isLaborInsured: input.isLaborInsuranceEnrolled === true,
   isHealthInsured: input.isHealthInsuranceEnrolled === true,
   isPensionInsured: input.isPensionInsuranceEnrolled === true,

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { salaryCalculatorEmployeeRepo } from "@/repositories/salary_calculator_employee.repo";
 import { salaryRecordRepo } from "@/repositories/salary_record.repo";
 import { salaryPaySlipDeliveryRepo } from "@/repositories/salary_pay_slip_delivery.repo";
+import { accountBookCompanyProfileRepo } from "@/repositories/account_book_company_profile.repo";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { ISalaryCalculatorEmployeeWriteInput } from "@/interfaces/salary_record";
@@ -87,6 +88,11 @@ jest.mock("@/lib/prisma", () => {
       findFirst: jest.fn(async () => null),
       count: jest.fn(async () => 0),
     },
+    // Info: (20260914 - Julian) 帳本公司設定：讀走 findUnique、寫走 upsert，兩支都帶 where
+    accountBookCompanyProfile: {
+      findUnique: jest.fn(async () => null),
+      upsert: jest.fn(async () => null),
+    },
   };
 
   return {
@@ -138,6 +144,10 @@ const deliveryCreate = prisma.salaryPaySlipDelivery.create as unknown as Mock;
  * 驅動器呼叫得到它，但檢查的替身清單裡沒有它交出去的查詢，
  * 於是「帶了 accountBookId 嗎」這個問題根本沒有被問。
  */
+const profileFindUnique = prisma.accountBookCompanyProfile
+  .findUnique as unknown as Mock;
+const profileUpsert = prisma.accountBookCompanyProfile
+  .upsert as unknown as Mock;
 const changeFindMany = prisma.salaryEmployeeProfileChange
   .findMany as unknown as Mock;
 const changeFindFirst = prisma.salaryEmployeeProfileChange
@@ -243,6 +253,8 @@ const salaryRowFixture = () => ({
   totalPayment: BigInt(0),
   totalSalaryTaxable: BigInt(0),
   totalEmployerCost: BigInt(0),
+  // Info: (20260914 - Julian) DB 的欄位名；`toSummary` 讀它，缺了會映射成 undefined
+  entityNameSnapshot: null,
   inputSnapshot: {},
   resultSnapshot: {},
   createdAt: new Date(0),
@@ -270,6 +282,30 @@ const deliveryRowFixture = () => ({
   createdAt: new Date(0),
 });
 
+/**
+ * Info: (20260914 - Julian) 公司設定的列。與上面幾支同一個理由（§1.8）。
+ *
+ * `upsert` 在真實世界**不會回 `null`** —— 它要嘛建、要嘛更新，一定有一列。
+ * 替身回 `null` 的話 `toProfile` 會先炸，而那個 TypeError 與被測行為
+ * （交出去的 `where` 帶不帶帳本）無關。
+ *
+ * `findUnique` 那一支維持回 `null`：那是**真的會發生**的狀態
+ * （這本帳還沒設定過公司資訊），而 `getProfile` 對它有明確處置。
+ */
+const companyProfileRowFixture = () => ({
+  id: "cp-1",
+  accountBookId: BOOK,
+  entityName: "測試股份有限公司",
+  taxId: null,
+  responsiblePerson: null,
+  address: null,
+  leaveYearScheme: null,
+  leaveYearStartMonth: null,
+  leaveYearStartDay: null,
+  createdAt: new Date(0),
+  updatedAt: new Date(0),
+});
+
 beforeEach(() => {
   jest.clearAllMocks();
   employeeFindFirst.mockResolvedValue(employeeRowFixture());
@@ -291,6 +327,8 @@ beforeEach(() => {
   recordUpsert.mockResolvedValue(salaryRowFixture());
   deliveryFindMany.mockResolvedValue([]);
   deliveryCreate.mockResolvedValue(deliveryRowFixture());
+  profileFindUnique.mockResolvedValue(null);
+  profileUpsert.mockResolvedValue(companyProfileRowFixture());
 });
 
 /**
@@ -328,6 +366,7 @@ const REPO_FILES = [
   "src/repositories/salary_record.repo.ts",
   "src/repositories/salary_calculator_employee.repo.ts",
   "src/repositories/salary_pay_slip_delivery.repo.ts",
+  "src/repositories/account_book_company_profile.repo.ts",
 ] as const;
 
 /**
@@ -351,6 +390,15 @@ const LIFECYCLE: Record<
   string,
   "ACTIVE_ONLY" | "ANY_STATE" | "NO_SOFT_DELETE"
 > = {
+  /**
+   * Info: (20260914 - Julian) 公司設定：與帳本 1:1，**沒有 `deletedAt`**。
+   *
+   * 這張表沒有「刪除公司」這個動作，只有改內容 —— 改的軌跡另外由
+   * `AuditLog` 承擔（計劃書 §5.4）。所以兩支都是 `NO_SOFT_DELETE`，
+   * 不是「忘了加濾條件」。
+   */
+  getProfile: "NO_SOFT_DELETE",
+  upsertProfile: "NO_SOFT_DELETE",
   // Info: (20260905 - Luphia) 動作路徑：saveRecord 與寄薪資單都不該認已刪除的員工
   getActiveEmployeeById: "ACTIVE_ONLY",
   // Info: (20260905 - Luphia) 挑人彈窗與名單：選得到的人就是還在的人
@@ -666,6 +714,23 @@ describe("租戶隔離：每一支交給資料庫的條件都帶帳本", () => {
           limit: 20,
         });
         return;
+      case "getProfile":
+        await accountBookCompanyProfileRepo.getProfile(BOOK);
+        return;
+      case "upsertProfile":
+        await accountBookCompanyProfileRepo.upsertProfile({
+          accountBookId: BOOK,
+          profile: {
+            entityName: "測試股份有限公司",
+            taxId: null,
+            responsiblePerson: null,
+            address: null,
+            leaveYearScheme: null,
+            leaveYearStartMonth: null,
+            leaveYearStartDay: null,
+          },
+        });
+        return;
       default:
         throw new Error(`未接線的方法：${name}`);
     }
@@ -708,6 +773,15 @@ describe("租戶隔離：每一支交給資料庫的條件都帶帳本", () => {
       changeFindMany,
       changeFindFirst,
       changeCount,
+      /**
+       * Info: (20260914 - Julian) 公司設定的兩支也要進這個清單。
+       *
+       * `upsert` 進得來是因為它的帳本鍵在 `where` 裡（唯一鍵 upsert），
+       * 與 `upsertRecord`／`createDelivery` 那種「帳本進 `data`」不同 ——
+       * 所以它留在 `WHERE_METHODS` 裡，不在排除清單。
+       */
+      profileFindUnique,
+      profileUpsert,
     ].flatMap((mock) => mock.mock.calls.map((args) => args[0]));
 
     expect(everyCall.length).toBeGreaterThan(0);
@@ -735,6 +809,8 @@ describe("租戶隔離：每一支交給資料庫的條件都帶帳本", () => {
       totalPayment: BigInt(0),
       totalSalaryTaxable: BigInt(0),
       totalEmployerCost: BigInt(0),
+      // Info: (20260914 - Julian) 抬頭快照；測試不驗它，給 null 表示「當時沒設定」
+      entityName: null,
     });
 
     const arg = argOf(recordUpsert);
@@ -1249,6 +1325,8 @@ describe("軟刪除的行為", () => {
       totalPayment: BigInt(0),
       totalSalaryTaxable: BigInt(0),
       totalEmployerCost: BigInt(0),
+      // Info: (20260914 - Julian) 抬頭快照；測試不驗它，給 null 表示「當時沒設定」
+      entityName: null,
     });
 
     const update = argOf(recordUpsert).update as Record<string, unknown>;
@@ -1275,6 +1353,8 @@ describe("軟刪除的行為", () => {
       totalPayment: BigInt(0),
       totalSalaryTaxable: BigInt(0),
       totalEmployerCost: BigInt(0),
+      // Info: (20260914 - Julian) 抬頭快照；測試不驗它，給 null 表示「當時沒設定」
+      entityName: null,
     });
 
     const create = argOf(recordUpsert).create as Record<string, unknown>;

@@ -126,7 +126,15 @@ const hireDate = (unixSeconds: number | null): string =>
 const INSURED_STATUS_COLUMNS = PAY_SLIP_INSURED_FIELDS.map((field) => ({
   label: PAY_SLIP_CSV_INSURED_STATUS_LABELS[field],
   value: (record: ISalaryRecordDetail): string =>
-    paySlipMetaOf(null, record.input)[field]
+    /**
+     * Info: (20260914 - Julian) 第三個參數傳 `null`：抬頭**不是這張表的欄位**。
+     *
+     * 這裡只取投保狀態那三格（`field`），而抬頭在工資清冊上的位置是
+     * **表頭**（`____公司　工資清冊　__年__月份`，勞動局範本），不是每一列。
+     * 每一列重複一次公司名會讓清冊寬度暴增且資訊重複。
+     * 表頭那一段是 P3，見 `salary_company_profile_plan.md`。
+     */
+    paySlipMetaOf(null, record.input, null)[field]
       ? PAY_SLIP_META_LABELS.insuredYes
       : PAY_SLIP_META_LABELS.insuredNo,
 }));

@@ -978,6 +978,7 @@ model AccountBook {
   salaryRecords             SalaryRecord[]
   salaryPaySlipDeliveries   SalaryPaySlipDelivery[]
   salaryProfileChanges      SalaryEmployeeProfileChange[]
+  salaryCompanyProfile      AccountBookCompanyProfile?
 
   @@map("account_book")
 }
@@ -4790,6 +4791,38 @@ model SalaryRecord {
    * `deletedAt: null`。漏一支的症狀是「刪掉的紀錄又出現在清單／匯出裡」——
    * 而使用者會以為刪除沒生效。
    */
+  /**
+   * Info: (20260914 - Julian) 這筆紀錄產生當下的公司抬頭（事業單位名稱）。
+   *
+   * ## 為什麼是快照而不是讀現值
+   *
+   * 公司在 2027 年改名，2026 年 8 月那張薪資單重印出來，該印**當時的名字**。
+   * 同一份明細上四個金額都是 2026 年 8 月的，抬頭卻是今天的，讀起來自相矛盾。
+   *
+   * 這與同一張薪資單上的**到職日**相反 —— 那一個讀員工檔現值，
+   * 因為它是「這個人」的事實、只有一個正確答案；抬頭是「這段期間」的事實。
+   * 三個欄位各自的來源由 `salary_pay_slip_meta.test.ts` 釘住，
+   * 把任一個「統一」掉會有測試轉紅。
+   *
+   * ## 為什麼可空，而且**沒有** `@default`
+   *
+   * `null` 的語意就是事實本身：**那筆紀錄存下來的當時，系統還不知道公司抬頭**
+   * （公司設定頁是 20260914 才有的）。那個事實無法回填 ——
+   * 舊紀錄當時的抬頭已經不可考，沒有任何腳本補得出來。
+   *
+   * 給 `@default("")` 會把「不可考」變成「空字串」，而空字串會安靜地
+   * 印成一行空白的抬頭 —— 那正是 `base_salary_snapshot` 的 `@default(0)`
+   * 踩過的形狀（部署檢查表 §1.4.1）：**合法但錯的值不會噴錯**。
+   *
+   * 讀取端對 `null` 的處置是**明確的降級**：回退到公司設定的現值。
+   * 那是唯一拿得到的答案，而「空白」不是選項。判準寫在 `pay_slip_meta.ts`。
+   *
+   * （計劃書 §4.1 原本打算把它塞進 `inputSnapshot` 以避開 `@default` ——
+   * 而那個顧慮只對必填欄位成立。獨立成欄另外保住了兩件事：
+   * 引擎的輸入型別不必多一個它永遠不讀的欄位，以及這一格查得到。）
+   */
+  entityNameSnapshot String? @map("entity_name_snapshot")
+
   deletedAt DateTime? @map("deleted_at")
 
   // Info: (20260904 - Julian) 這一筆的寄送事件（成功與失敗都留一列）
@@ -4972,4 +5005,96 @@ enum SalaryProfileChangeAction {
   CREATE
   UPDATE
   DELETE
+}
+
+/**
+ * Info: (20260914 - Julian) 帳本的公司設定。與帳本 **1:1**。
+ *
+ * ## 這不是既有的 `Company`
+ *
+ * schema 裡另有一個 `Company`，搜尋一定先撞到它 —— 那張表的主鍵是
+ * **股票代號**、有市場別、關聯到 `ReportDownloadTask`，是**上市櫃公司的
+ * 參考資料**，服務 ESG 報告抓取。它描述「外面那些公司」。
+ * 這張描述的是「使用這個帳本的這家公司」，非上市櫃使用者也有。
+ *
+ * ## 為什麼不是把欄位加在 `AccountBook` 上
+ *
+ * `AccountBook` 是全 repo 共用的 model，衝突面最高（同 `schema.prisma`
+ * 檔頭那段教訓）。而這份資料的生命週期與**帳本**一致、與**薪資模組**不一致：
+ * 報表抬頭、未來的發票都會想要它。獨立一張表，薪資以外的模組也接得上。
+ *
+ * ## 哪一格才是這張表的法定理由
+ *
+ * **是 `leaveYearScheme`，不是公司抬頭。**
+ *
+ * 20260914 核對條文：工資明細（細則 §14-1）四款全是金額、工資清冊
+ * （本法 §23 II）三項也全是金額 —— **兩邊都不要求雇主名稱**。
+ * 抬頭那幾格是實務慣例，沒有條文。
+ *
+ * 而特休年度制度是細則 §24 II 明定由勞雇雙方協商的三選一，
+ * 且它是 §38 V「每年定期以書面通知勞工」算得出「年度終結」是哪一天的前提。
+ * 詳見 `documents/architecture/salary_company_profile_plan.md` §2。
+ */
+model AccountBookCompanyProfile {
+  id String @id @default(uuid())
+
+  // Info: (20260914 - Julian) 租戶鍵。與帳本 1:1，所以是 unique 不是 index
+  accountBookId String      @unique @map("account_book_id")
+  accountBook   AccountBook @relation(fields: [accountBookId], references: [id])
+
+  /**
+   * Info: (20260914 - Julian) 事業單位名稱，會印在薪資單與工資清冊上。
+   *
+   * 收成一格而不是「公司名稱」＋「雇主名稱」兩格：勞基法 §2① 的「雇主」
+   * 是一個涵蓋事業主、負責人、代表事業主處理勞工事務之人的**法律定義**，
+   * 不是一個表單欄位。兩格並排、都必填、長得幾乎一樣，最可能的結果是
+   * 有人在其中一格填了負責人姓名 —— 然後那個人的名字印上每一張薪資單。
+   */
+  entityName String @map("entity_name")
+
+  // Info: (20260914 - Julian) 以下皆可空：沒有任何一格是法定必載
+  taxId             String? @map("tax_id")
+  responsiblePerson String? @map("responsible_person")
+  address           String?
+
+  /**
+   * Info: (20260914 - Julian) 特休年度制度（細則 §24 II 三選一）。
+   *
+   * **刻意可空，而且刻意不給 `@default`。**
+   *
+   * 給 `@default(ANNIVERSARY)` 的話，既有帳本會「看起來已經設定好」
+   * 而其實沒有任何人選過 —— 那正是 `SalaryRecord.baseSalary` 的
+   * `@default(0)` 踩過的形狀（部署檢查表 §1.4.1）：
+   * **合法但錯的值不會噴錯**，它只是安靜地被讀進計算。
+   * 週年制是最常見的，但「最常見」不等於「這家公司選的」，
+   * 而選錯會讓年度終結日整個錯開，§38 V 的通知就發在錯的時間。
+   *
+   * `null` ＝ 還沒選，是一個**看得出來**的狀態：在選定之前不發年度通知。
+   */
+  leaveYearScheme LeaveYearScheme? @map("leave_year_scheme")
+
+  /**
+   * Info: (20260914 - Julian) 只有 `CUSTOM` 用得到；另外兩制算得出來。
+   *
+   * 週年制由各員工的到職日決定（細則 §5：年資自受僱當日起算），
+   * 曆年制固定 1/1 —— 兩者都不需要使用者再填一次，
+   * 而多問一次就多一個填錯、且與制度矛盾的機會。
+   */
+  leaveYearStartMonth Int? @map("leave_year_start_month")
+  leaveYearStartDay   Int? @map("leave_year_start_day")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("account_book_company_profile")
+}
+
+// Info: (20260914 - Julian) 細則 §24 II 的三種特休年度，由勞雇雙方協商
+enum LeaveYearScheme {
+  // Info: (20260914 - Julian) 週年制：勞工受僱當日起，每一週年
+  ANNIVERSARY
+  // Info: (20260914 - Julian) 曆年制：每年 1/1 至 12/31
+  CALENDAR
+  // Info: (20260914 - Julian) 學年度、會計年度或勞雇雙方約定之年度
+  CUSTOM
 }

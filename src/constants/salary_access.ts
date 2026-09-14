@@ -9,6 +9,24 @@ import { TeamRole } from "@/constants/team";
 export enum SalaryAccess {
   READ = "READ",
   WRITE = "WRITE",
+  /**
+   * Info: (20260914 - Julian) 帳本層級的設定，**只有 `OWNER`**。
+   *
+   * 與 `WRITE` 分開，是因為它們回答的不是同一個問題：
+   * `WRITE` 是「改得動這本帳的薪資資料」（記帳士的日常），
+   * `SETTINGS_WRITE` 是「代表這家公司做決定」。
+   *
+   * 這一格管兩件事，兩件都不是記帳人員該自己改的：
+   *
+   * 1. **公司抬頭** —— 決定每一張薪資單與工資清冊上的署名
+   * 2. **特休年度制度** —— 細則 §24 II 明定是**勞雇雙方協商**的結果，
+   *    改了它會讓每一位員工的年度終結日整個移位
+   *
+   * 下面那段「為什麼不是只給 `OWNER`」講的是 `READ` / `WRITE` ——
+   * 那段理由（模組本來就要服務會計與記帳士）在這一格**不適用**：
+   * 記帳士要的是改得動薪資，不是替公司選特休制度。
+   */
+  SETTINGS_WRITE = "SETTINGS_WRITE",
 }
 
 /**
@@ -32,7 +50,11 @@ export enum SalaryAccess {
  * 暫時協助對帳的人）看得到全公司每一位員工的本薪、實發金額與投保級距。
  * 那是這次要收掉的東西。
  *
- * ## 為什麼不是只給 `OWNER`
+ * ## 為什麼 `READ` / `WRITE` 不是只給 `OWNER`
+ *
+ * （20260914 補：這一整段講的是 `READ` 與 `WRITE`。20260914 新增的
+ * `SETTINGS_WRITE` **確實只給 `OWNER`**，理由見那個 enum 值上的註解 ——
+ * 兩者不矛盾：那一格管的是「代表公司做決定」，不是「改得動薪資資料」。）
  *
  * 曾經考慮過收到 `OWNER` 一人，理由是薪資是本 repo 最敏感的一類資料。
  * 沒有這麼做，是因為**這個模組的使用者本來就不只有老闆**：它刻意不用
@@ -44,7 +66,7 @@ export enum SalaryAccess {
  * `TEAM_MANAGER_ROLES`（＝動錢、動成員的管理職，目前只有 `OWNER`）
  * 是另一個問題的答案，不是這個問題的。
  *
- * ## 為什麼兩個層級的清單一樣，卻不合併成一個
+ * ## 為什麼 `READ` 與 `WRITE` 的清單一樣，卻不合併成一個
  *
  * `READ` 與 `WRITE` 今天恰好都是 `[OWNER, EDITOR]`，但它們回答的是兩個問題
  * （看得到 vs 改得動）。合併成一個常數的話，日後要把讀取放寬、
@@ -53,7 +75,9 @@ export enum SalaryAccess {
  *
  * ## 副作用：`access` 參數有沒有被用到，行為上看不出來
  *
- * 兩張表內容相同時，沒有任何角色能讓兩個層級給出不同答案 ——
+ * `READ` 與 `WRITE` 兩張表內容相同時，沒有任何角色能讓它們給出不同答案 ——
+ * （20260914 起 `SETTINGS_WRITE` 與它們不同，所以 `EDITOR` 這個角色
+ * 現在分辨得出層級有沒有被傳對；但那道護欄仍然由測試守，不靠這個巧合）
  * 於是「把層級寫死成 `READ`」這個缺陷在行為上是隱形的。
  * 那道護欄改由 `salary_access_guard.test.ts` 直接斷言
  * 「交給角色表的是傳進來的那個 `access`」，見該檔。
@@ -61,6 +85,8 @@ export enum SalaryAccess {
 export const SALARY_ACCESS_ROLES: Record<SalaryAccess, readonly TeamRole[]> = {
   [SalaryAccess.READ]: [TeamRole.OWNER, TeamRole.EDITOR],
   [SalaryAccess.WRITE]: [TeamRole.OWNER, TeamRole.EDITOR],
+  // Info: (20260914 - Julian) 帳本設定只有 OWNER（理由見 enum 上的註解）
+  [SalaryAccess.SETTINGS_WRITE]: [TeamRole.OWNER],
 };
 
 /**

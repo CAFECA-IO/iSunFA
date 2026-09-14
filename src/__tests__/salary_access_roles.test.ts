@@ -93,17 +93,25 @@ describe("薪資模組的角色矩陣", () => {
   });
 
   /**
-   * Info: (20260908 - Julian) 兩張表今天內容一樣，但**不合併**。
+   * Info: (20260908 - Julian) `READ` 與 `WRITE` 今天內容一樣，但**不合併**。
    *
    * 它們回答的是兩個問題（看得到 vs 改得動）。合併成一個常數的話，
    * 日後要放寬讀取或收緊寫入都得先拆回來，而拆的時候十三支 route
-   * 的分級資訊已經不見了。這一條釘住「兩個 key 都還在」。
+   * 的分級資訊已經不見了。這一條釘住「key 都還在」。
+   *
+   * Info: (20260914 - Julian) 20260914 加入第三張 `SETTINGS_WRITE`（帳本設定，
+   * 只有 `OWNER`）。這一條當時紅了一次 —— 那是**對的紅**：
+   * 這條測試的用途就是「表變了要有人重新想過」，所以是把新的那張納進來，
+   * 不是把判準放寬成「至少有這幾個」。
    */
-  it("READ 與 WRITE 仍是兩張獨立的表", () => {
-    expect(Object.keys(SALARY_ACCESS_ROLES).sort()).toEqual([
-      SalaryAccess.READ,
-      SalaryAccess.WRITE,
-    ]);
+  it("三個層級各是一張獨立的表", () => {
+    expect(Object.keys(SALARY_ACCESS_ROLES).sort()).toEqual(
+      [
+        SalaryAccess.READ,
+        SalaryAccess.SETTINGS_WRITE,
+        SalaryAccess.WRITE,
+      ].sort(),
+    );
   });
 
   /**
@@ -120,9 +128,12 @@ describe("薪資模組的角色矩陣", () => {
     ["小寫的 owner", "owner"],
     ["null", null],
     ["undefined", undefined],
-  ])("表外的角色（%s）讀寫都不准", (_label, role) => {
+  ])("表外的角色（%s）三個層級都不准", (_label, role) => {
     expect(isSalaryAccessAllowed(role, SalaryAccess.READ)).toBe(false);
     expect(isSalaryAccessAllowed(role, SalaryAccess.WRITE)).toBe(false);
+    expect(isSalaryAccessAllowed(role, SalaryAccess.SETTINGS_WRITE)).toBe(
+      false,
+    );
   });
 
   /**
@@ -132,15 +143,41 @@ describe("薪資模組的角色矩陣", () => {
    * 使用者存得進去、下一秒列表就看不到自己剛存的東西。
    * 這一條讓兩張清單不可能各自漂移。
    */
-  it("寫入的角色集合是讀取的子集", () => {
-    for (const role of SALARY_ACCESS_ROLES[SalaryAccess.WRITE]) {
-      expect(SALARY_ACCESS_ROLES[SalaryAccess.READ]).toContain(role);
+  it.each([SalaryAccess.WRITE, SalaryAccess.SETTINGS_WRITE])(
+    "%s 的角色集合是 READ 的子集",
+    (access) => {
+      for (const role of SALARY_ACCESS_ROLES[access]) {
+        expect(SALARY_ACCESS_ROLES[SalaryAccess.READ]).toContain(role);
+      }
+    },
+  );
+
+  /**
+   * Info: (20260914 - Julian) `SETTINGS_WRITE` 必須**嚴格窄於** `WRITE`。
+   *
+   * 上面幾條都滿足的情況下，把 `EDITOR` 加回設定那一列仍然全綠 ——
+   * 而那正是 20260914 把這個層級拆出來要防的事：
+   * 記帳士改得動薪資資料（`WRITE`），但公司抬頭與**特休年度制度**
+   * （細則 §24 II，勞雇雙方協商的結果）不是他該替公司決定的。
+   *
+   * 用「嚴格子集」而不是寫死 `[OWNER]`：日後若真要放寬，
+   * 這一條會逼人來改它，而改它的時候會先讀到上面那段理由。
+   */
+  it("SETTINGS_WRITE 嚴格窄於 WRITE", () => {
+    const settings = SALARY_ACCESS_ROLES[SalaryAccess.SETTINGS_WRITE];
+    const write = SALARY_ACCESS_ROLES[SalaryAccess.WRITE];
+
+    for (const role of settings) {
+      expect(write).toContain(role);
     }
+    expect(settings.length).toBeLessThan(write.length);
   });
 
-  // Info: (20260901 - Julian) 兩張清單都不得為空，否則上面幾條會在測「沒有東西」
-  it("兩張清單都不是空的", () => {
-    expect(SALARY_ACCESS_ROLES[SalaryAccess.READ].length).toBeGreaterThan(0);
-    expect(SALARY_ACCESS_ROLES[SalaryAccess.WRITE].length).toBeGreaterThan(0);
-  });
+  // Info: (20260901 - Julian) 清單都不得為空，否則上面幾條會在測「沒有東西」
+  it.each([SalaryAccess.READ, SalaryAccess.WRITE, SalaryAccess.SETTINGS_WRITE])(
+    "%s 的清單不是空的",
+    (access) => {
+      expect(SALARY_ACCESS_ROLES[access].length).toBeGreaterThan(0);
+    },
+  );
 });

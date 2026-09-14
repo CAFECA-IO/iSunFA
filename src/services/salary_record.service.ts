@@ -10,6 +10,7 @@ import {
 import { buildSalaryRecordCsv } from "@/lib/utils/salary_record_csv";
 import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { accountBookCompanyProfileService } from "@/services/account_book_company_profile.service";
 import {
   ISalaryCalculatorEmployee,
   ISalaryCalculatorEmployeeWriteInput,
@@ -358,9 +359,21 @@ export class SalaryRecordService {
       throw new AppError(API_ERRORS.NF_SALARY_CALCULATOR_EMPLOYEE);
     }
 
+    /**
+     * Info: (20260914 - Julian) 抬頭取**儲存當下**的公司設定，存成快照。
+     *
+     * 還沒設定過就是 `null` —— 不擋儲存。公司抬頭不是法定必載
+     * （施行細則 §14-1 四款全是金額），系統沒有立場因為它沒填就不讓人存薪資。
+     */
+    const companyProfile =
+      await accountBookCompanyProfileService.getProfile(accountBookId);
+
     return this.records.upsertRecord({
       accountBookId,
       employeeId: employee.id,
+      entityName: companyProfile.isConfigured
+        ? companyProfile.entityName
+        : null,
       createdByUserId: userId,
       year: input.year,
       month: input.month,

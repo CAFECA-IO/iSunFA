@@ -271,6 +271,7 @@ class FakeRecordRepo implements ISalaryRecordRepository {
     totalPayment: bigint;
     totalSalaryTaxable: bigint;
     totalEmployerCost: bigint;
+    entityName: string | null;
   }) {
     this.upsertCalls += 1;
     const key = `${params.accountBookId}|${params.employeeId}|${params.year}|${params.month}`;
@@ -278,6 +279,8 @@ class FakeRecordRepo implements ISalaryRecordRepository {
       id: key,
       year: params.year,
       month: params.month,
+      // Info: (20260914 - Julian) 原樣帶回，好讓測試驗得到 service 傳了什麼
+      entityNameSnapshot: params.entityName,
       employee: {
         id: params.employeeId,
         name: "王小明",
