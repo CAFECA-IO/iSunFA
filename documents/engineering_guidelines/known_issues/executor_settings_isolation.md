@@ -31,6 +31,11 @@
 
 同一輪另外兩件結構性的收斂：運算節點啟動時**抹掉**繼承自 shell 的信任根鍵（`DATABASE_URL`、`SECRET_VAULT_MASTER_KEY`、`DEWT_PRIVATE_KEY_PEM`、`SUPER_ADMIN_*`；清單在 `constants/worker_node.ts`），「不吃系統 env」從此是程式碼的性質而不是檔案剛好不存在；`getPriorityEnvConfig()` 第三順位 fallback 到 `.env.worker`，讓 planner／commitor／closer 在純運算節點上取得 RPC 與 MissionBoard 位址（review 阻-1：先前它們回 `{}`、對 `undefined` address 每 10 秒拋錯，任務永遠不被領取），並在啟動時檢查兩個來源的 `MISSION_DIR` 一致（review 需修-7）。
 
+> **2026-09-14 三輪 review 更正（FAITH 阻-3／需修-4／需修-7）**：上一段有兩處在 shipped 的部署形態下不成立，已改。
+>
+> 1. 「第三順位 fallback」從未生效：`ecosystem.config.json` 三個 pm2 app 共用 cwd，系統 `.env` 就在旁邊，planner／commitor／closer 拿到的仍是它。現在 `getPriorityEnvConfig()` 看**節點角色旗標**：compute 只解析 `.env.worker`（`selectPriorityEnvPath`），其餘照舊 `.env.setup` → `.env`，第三順位移除（它還會讓全新機器上的安裝精靈讀到 worker 檔）。副作用：executor 與其餘三支在 compute 角色下解析到同一個檔案，`MISSION_DIR` 一致性檢查沒有對象、已移除。
+> 2. 「啟動時抹除」寫在入口檔的語句裡，而 `package.json` 是 `"type": "module"`——ESM 先求值整個靜態圖再跑那些語句，抹除發生在服務圖載完之後。現在三件事（旗標、抹除、載 `.env.worker`）收進 `lib/worker/compute_node_bootstrap`（副作用模組），兩個入口以**第一個 import** 載入，`worker_node_isolation.test.ts` 釘住這個位置。同一個模組把 fail fast 從「檔案有沒有鍵」改成「必要鍵的**值**非空」（`COMPUTE_NODE_REQUIRED_ENV_KEYS`），且只用 dotenv 一種載入機制——原本另一條「逐鍵寫 `process.env`」會讓檔內空值蓋掉 pm2／shell 給的值。
+
 Executor 以 `new ChatService(apiKey, { allowSystemSettings: false })` 明示不查設定；`llm_key_resolution.test.ts` 有兩支測試釘住「呼叫次數為 0」與「Executor 確實傳了那個旗標」。
 
 ## 連帶的行為差異
@@ -95,9 +100,9 @@ Executor 以 `new ChatService(apiKey, { allowSystemSettings: false })` 明示不
 拆成兩個節點之後，有三個設定缺席**不會有錯誤、只有靜默停擺**，部署或搬機後逐一核對：
 
 - [ ] **維運節點**的系統 `.env` 有 `NEXT_PUBLIC_MISSION_BOARD_ADDRESS` 與 `NEXT_PUBLIC_RPC_URL`：recorder 靠鏈上判準把被放棄的任務收成訂單終態，位址缺席時它只會每輪印一行 error，訂單永遠留在 EXECUTING／PAID。
-- [ ] **運算節點**的 `.env.worker` 帶齊 `.env.worker.example` 的五個鍵（`GEMINI_API_KEY`／`MODEL`／`MISSION_DIR`／`NEXT_PUBLIC_RPC_URL`／`NEXT_PUBLIC_MISSION_BOARD_ADDRESS`）：缺檔會 exit(1)，但缺**鍵**不會——planner 對 undefined 位址每 10 秒拋錯、任務不被領取。
-- [ ] 運算節點的 shell 環境沒有 `DATABASE_URL`／`SECRET_VAULT_MASTER_KEY`／`DEWT_PRIVATE_KEY_PEM`／`SUPER_ADMIN_*`：進入點會抹掉並印 error，那一行出現就代表部署環境帶了不該帶的東西。
-- [ ] 發包端 log 的「Global coefficient snapshot: N rows, B bytes per mission」：B 超過 `MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES`（1 MB）發包會被拒，接近時先縮字典。
+- [ ] **運算節點**的 `.env.worker` 三個必要鍵**有值**（`GEMINI_API_KEY`／`NEXT_PUBLIC_RPC_URL`／`NEXT_PUBLIC_MISSION_BOARD_ADDRESS`，清單在 `COMPUTE_NODE_REQUIRED_ENV_KEYS`）：缺檔或任一值為空都會在啟動時 exit(1)（2026-09-14 三輪 review 後判值不判鍵；`MISSION_DIR`／`MODEL` 有程式碼預設值）。看到 `[ComputeNodeBootstrap] … leaves required keys empty` 就是這一項。
+- [ ] 運算節點的 shell 環境沒有 `DATABASE_URL`／`SECRET_VAULT_MASTER_KEY`／`DEWT_PRIVATE_KEY_PEM`／`SUPER_ADMIN_*`，**`.env.worker` 裡也沒有**（不要把系統 `.env` 整份複製過去）：bootstrap 會抹掉並印 error（兩種來源訊息不同），那一行出現就代表部署環境帶了不該帶的東西。
+- [ ] 發包端 log 的「Global coefficient snapshot: N rows, B bytes per mission」：B 量的是 mission.json 的出貨形狀（indent-2），超過 `MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES`（1 MB）時發包端**每 10 秒印一行 error 並停止發包**、訂單留在 PAID 不動（不燒 gas、不回滾重試；三輪 review 阻-1）——那行 error 要一直叫到有人把字典縮回去。現況靜態字典約 456 KB。
 
 ## 拆分前的狀況（保留作為脈絡）
 

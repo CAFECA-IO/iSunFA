@@ -27,21 +27,19 @@ export class EmissionFactorRepo {
   } | null> {
     if (!id) return null;
 
-    const combinedStatic = [...ALL_COEFFICIENTS, ...MOCK_EEIO_COEFFICIENTS];
-    const staticMatch = combinedStatic.find((c) => c.id === id);
-    if (staticMatch) {
-      return {
-        id: staticMatch.id,
-        name: staticMatch.name,
-        description: staticMatch.description || "",
-        unit: staticMatch.unit,
-        emissionFactor: staticMatch.emissionFactor,
-        source: staticMatch.source,
-        category: staticMatch.category || LEGACY_STANDARD_COEFFICIENT_CATEGORY,
-        ghgFactors: (staticMatch as Record<string, unknown>).ghgFactors,
-      };
-    }
-
+    /**
+     * Info: (20260914 - Luphia) **資料庫的值贏**（PR #6650 review 三輪建議-10）。
+     *
+     * 原本靜態命中就 return，DB 只在靜態沒有時才查——而 mission 管線的字典
+     *（`lib/worker/coefficient_snapshot.buildCoefficientDictionary`）自 9/14 起是
+     * DB 蓋靜態（`esg_parsing` 從一開始就是）。撞號是常態不是邊角：
+     * `carbon_emission_database/import` 拿保留 id 寫 DB，`updateGlobal` 允許 admin
+     * 改 `emissionFactor`。兩套優先序並存的後果是同一個係數 id 在稽核系統裡
+     * 跑出兩個 CO2e：mission 管線用新值、聊天機器人（`carbon_calculation.service`
+     * 經本方法）用舊值，兩邊都不報錯。這裡改成同一個順序：DB 命中（未軟刪）→
+     * 靜態 fallback。軟刪的列落回靜態，與 `getAllGlobalCoefficients` 排除軟刪
+     * 後由靜態補位的行為一致。
+     */
     const client = tx || prisma;
     const dbMatch = await client.coefficient.findUnique({
       where: { id },
@@ -56,6 +54,21 @@ export class EmissionFactorRepo {
         source: dbMatch.source,
         category: dbMatch.category,
         ghgFactors: dbMatch.ghgFactors,
+      };
+    }
+
+    const combinedStatic = [...ALL_COEFFICIENTS, ...MOCK_EEIO_COEFFICIENTS];
+    const staticMatch = combinedStatic.find((c) => c.id === id);
+    if (staticMatch) {
+      return {
+        id: staticMatch.id,
+        name: staticMatch.name,
+        description: staticMatch.description || "",
+        unit: staticMatch.unit,
+        emissionFactor: staticMatch.emissionFactor,
+        source: staticMatch.source,
+        category: staticMatch.category || LEGACY_STANDARD_COEFFICIENT_CATEGORY,
+        ghgFactors: (staticMatch as Record<string, unknown>).ghgFactors,
       };
     }
 

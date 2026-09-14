@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import {
   assertSnapshotWithinBudget,
+  snapshotWireBytes,
   buildCoefficientDictionary,
   parseGlobalCoefficientSnapshot,
   parseTenantCoefficientSnapshot,
@@ -137,9 +138,24 @@ describe("buildCoefficientDictionary：靜態 < 全球快照 < 租戶（資料�
 });
 
 describe("assertSnapshotWithinBudget：每份 mission 都背的體積要有上界（review 二輪中-2）", () => {
-  it("在預算內回傳位元組數（與 JSON 上傳同源）", () => {
+  /**
+   * Info: (20260914 - Luphia) 量的是**出貨形狀**（review 三輪需修-8）：issue.service
+   * 以 indent-2 序列化整份 mission.json，快照巢狀在 `prerequisiteData` 下。
+   * 第二版量 compact 陣列，比實際上傳少 25%。
+   */
+  it("在預算內回傳位元組數，且量的是 indent-2 巢狀形狀而不是 compact", () => {
     const snapshot = [wireCoefficient()];
-    expect(assertSnapshotWithinBudget(snapshot)).toBe(
+    const wire = Buffer.byteLength(
+      JSON.stringify(
+        { prerequisiteData: { globalCoefficients: snapshot } },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+    expect(assertSnapshotWithinBudget(snapshot)).toBe(wire);
+    expect(snapshotWireBytes(snapshot)).toBe(wire);
+    expect(wire).toBeGreaterThan(
       Buffer.byteLength(JSON.stringify(snapshot), "utf8"),
     );
   });
@@ -156,12 +172,15 @@ describe("assertSnapshotWithinBudget：每份 mission 都背的體積要有上�
     expect(() => assertSnapshotWithinBudget(snapshot, 10)).toThrow(/2 rows/);
   });
 
-  it("預設預算是 1 MB，且現況靜態字典在預算內（留約 3 倍成長）", () => {
+  it("預設預算是 1 MB，且現況靜態字典的出貨形狀在預算內（約 2.3 倍成長空間）", () => {
     expect(MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES).toBe(1024 * 1024);
     const staticOnly = Array.from(buildCoefficientDictionary([]).values());
     const bytes = assertSnapshotWithinBudget(staticOnly);
-    expect(bytes).toBeLessThan(
-      MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES / 2,
+    expect(bytes).toBeLessThan(MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES);
+    // Info: (20260914 - Luphia) 上界靈敏度：把預算設成 compact 的位元組數，出貨形狀就該被拒
+    const compact = Buffer.byteLength(JSON.stringify(staticOnly), "utf8");
+    expect(() => assertSnapshotWithinBudget(staticOnly, compact)).toThrow(
+      /over the/,
     );
   });
 });
@@ -312,6 +331,9 @@ describe("orchestrator 以快照係數計算（無資料庫的世界）", () => 
       buildCoefficientDictionary([]),
     );
     expect(result.esg?.emissions).toBeUndefined();
+    // Info: (20260914 - Luphia) 但要留下痕跡（review 三輪需修-5）：aiNote 帶上查不到的 id
+    expect(result.esg?.aiNote).toContain("nobody-has-this-id");
+    expect(result.esg?.aiNote).toContain("不在任務係數字典中");
   });
 });
 
@@ -319,43 +341,65 @@ describe("接線（§1.7：零件對了還要裝上去）", () => {
   const read = (rel: string) => readFileSync(join(process.cwd(), rel), "utf8");
 
   /**
-   * Info: (20260914 - Luphia) 兩個位置斷言（review 阻-2／建議-9）：
-   * 全表查詢在 `Promise.all` **之前**（整張訂單一次），嵌入在 category 判斷
-   * **之前**（每一份 mission 都有，不只 CERTIFICATE_ANALYSIS）。
+   * Info: (20260914 - Luphia) 位置斷言（review 阻-2／建議-9／三輪阻-1／三輪需修-5）：
+   * 全表查詢與體積守門在**鎖定訂單之前**（超過預算不動訂單、不進 mint／approve
+   * 之後那條會回滾成 PAID 重試的路）；全球快照與租戶係數的嵌入都在 category 判斷
+   * **之前**（每一份 mission 都有，不只 CERTIFICATE_ANALYSIS）；租戶查詢也在
+   * `Promise.all` 之前（整張訂單一次）。
    */
-  it("發包端：全表查一次在 Promise.all 之前，嵌入不看 category", () => {
+  it("發包端：守門在鎖單之前，全球與租戶係數的嵌入都不看 category", () => {
     const issuer = read("src/services/issue.service.ts");
     const fetchAt = issuer.indexOf(
       "await EmissionFactorRepo.getAllGlobalCoefficients()",
     );
+    const budgetAt = issuer.indexOf(
+      "assertSnapshotWithinBudget(globalCoefficientSnapshot)",
+    );
+    const lockAt = issuer.indexOf("data: { status: ORDER_STATUS.EXECUTING }");
+    const tenantFetchAt = issuer.indexOf("await esgRepo.getEsgCoefficients(");
     const promiseAllAt = issuer.indexOf(
       "const preparedItems = await Promise.all(",
     );
     const embedAt = issuer.indexOf(
       "missionData.prerequisiteData.globalCoefficients =",
     );
+    const tenantEmbedAt = issuer.indexOf(
+      "missionData.prerequisiteData.coefficients = tenantCoefficients;",
+    );
     /**
-     * Info: (20260914 - Luphia) 錨在 accountBook 那一道閘（`accBookId &&`）——
-     * 檔案裡另有兩處 `category === CERTIFICATE_ANALYSIS` 判斷（itemsToProcess 與
-     * analysis 佔位），錨太短會抓到它們、把「嵌入在閘之前」量成相反的結論。
+     * Info: (20260914 - Luphia) 錨在 accountBook JSON 那一道閘——檔案裡另有兩處
+     * `category === CERTIFICATE_ANALYSIS` 判斷（itemsToProcess 與 analysis 佔位），
+     * 錨太短會抓到它們、把「嵌入在閘之前」量成相反的結論。
      */
     const categoryGateAt = issuer.indexOf(
-      "if (accBookId && category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {",
+      "if (category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {\n            missionData.accountBook = tenantAccountBook;",
     );
     expect(fetchAt).toBeGreaterThan(-1);
-    expect(promiseAllAt).toBeGreaterThan(fetchAt);
+    expect(budgetAt).toBeGreaterThan(fetchAt);
+    expect(lockAt).toBeGreaterThan(budgetAt);
+    expect(tenantFetchAt).toBeGreaterThan(lockAt);
+    expect(promiseAllAt).toBeGreaterThan(tenantFetchAt);
     expect(embedAt).toBeGreaterThan(promiseAllAt);
-    expect(categoryGateAt).toBeGreaterThan(embedAt);
-    // Info: (20260914 - Luphia) 全表查詢恰好一次
+    expect(tenantEmbedAt).toBeGreaterThan(embedAt);
+    expect(categoryGateAt).toBeGreaterThan(tenantEmbedAt);
+    /**
+     * Info: (20260914 - Luphia) 位置斷言看不見**包在外面的條件**：把租戶嵌入重新
+     * 包進 `&& category === CERTIFICATE_ANALYSIS` 時行序不變、上面全綠（突變 M5 抓到
+     * 的洞）。所以釘住守著它的那個 `if` 的本文：只看帳本存在，沒有 category。
+     */
+    expect(issuer).toContain(
+      "if (tenantAccountBook) {\n          missionData.prerequisiteData.coefficients = tenantCoefficients;",
+    );
+    // Info: (20260914 - Luphia) 全表與租戶查詢各恰好一次
     expect(
       issuer.match(/EmissionFactorRepo\.getAllGlobalCoefficients\(\)/g),
     ).toHaveLength(1);
-    // Info: (20260914 - Luphia) 體積守門在序列化之後、Promise.all 之前（review 二輪中-2）
-    const budgetAt = issuer.indexOf(
-      "assertSnapshotWithinBudget(globalCoefficientSnapshot)",
-    );
-    expect(budgetAt).toBeGreaterThan(fetchAt);
-    expect(budgetAt).toBeLessThan(promiseAllAt);
+    expect(issuer.match(/esgRepo\.getEsgCoefficients\(/g)).toHaveLength(1);
+    // Info: (20260914 - Luphia) 超過預算：記 error、return null，不 throw 進訂單的 try
+    const refuseAt = issuer.indexOf("Refusing to issue order");
+    expect(refuseAt).toBeGreaterThan(budgetAt);
+    expect(refuseAt).toBeLessThan(lockAt);
+    expect(issuer.slice(refuseAt, lockAt)).toContain("return null;");
   });
 
   it("esg_parsing 讀 mission 快照，不再匯入 repo 或 prisma", () => {

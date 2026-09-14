@@ -18,6 +18,7 @@ import { DEFAULT_MISSION_DIR } from "@/constants/worker_node";
 import {
   readGiveUpVerdict,
   viemMissionBoardReader,
+  type MissionBoardReader,
 } from "@/lib/worker/mission_board_verdict";
 import type { JSONValue } from "@/validators";
 import { MoneyUtil } from "@/lib/utils/money";
@@ -63,6 +64,28 @@ export class IssueRecorderService {
 
     let recordedTask = false;
 
+    /**
+     * Info: (20260914 - Luphia) 鏈上判準的 reader **一輪共用一個**（review 三輪
+     * 建議-9）：原本每個沒有 `approved.*.md` 的資料夾各建一個 viem client。
+     * `batch: true` 讓同一個 tick 內的多次 `readContract` 合併成 JSON-RPC batch。
+     * 位址缺席時 reader 是 null，`recordGiveUp` 據此記 error（全站唯一寫訂單終態
+     * 的地方，缺了它被放棄的訂單永遠收不了尾）。
+     */
+    const mbAddress = setupConfig.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as
+      | `0x${string}`
+      | undefined;
+    const verdictReader: MissionBoardReader | null = mbAddress
+      ? viemMissionBoardReader(
+          createPublicClient({
+            transport: http(
+              setupConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024",
+              { batch: true },
+            ),
+          }),
+          mbAddress,
+        )
+      : null;
+
     try {
       const folders = await fs.readdir(issueDirPath, { withFileTypes: true });
 
@@ -99,11 +122,7 @@ export class IssueRecorderService {
             folderName,
             taskId,
             missionDirBase: setupConfig.MISSION_DIR || DEFAULT_MISSION_DIR,
-            // Info: (20260914 - Luphia) 鏈上判準的兩個座標（review 需修-6），與 issue.service 同源
-            rpcUrl: setupConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024",
-            mbAddress: setupConfig.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as
-              | `0x${string}`
-              | undefined,
+            verdictReader,
           });
           if (gaveUp) {
             recordedTask = true;
@@ -699,9 +718,21 @@ export class IssueRecorderService {
     folderName: string;
     taskId: string;
     missionDirBase: string;
-    rpcUrl: string;
-    mbAddress: `0x${string}` | undefined;
+    verdictReader: MissionBoardReader | null;
   }): Promise<boolean> {
+    /**
+     * Info: (20260914 - Luphia) 冪等旗標**先查**（review 三輪建議-9）：已記錄過的
+     * 任務不必再問鏈——原本 `recorded.flag` 的檢查在鏈讀之後，每個已收尾的
+     * 資料夾每 tick 仍要兩次 round trip，直到有人清掉 issues 目錄。
+     */
+    const flagFile = path.join(params.taskDir, "recorded.flag");
+    try {
+      await fs.access(flagFile);
+      return false;
+    } catch {
+      /* Info: (20260825 - Julian) proceeding to record the give-up */
+    }
+
     const giveupPath = path.join(
       process.cwd(),
       params.missionDirBase,
@@ -725,7 +756,7 @@ export class IssueRecorderService {
       await fs.access(giveupPath);
       gaveUp = true;
     } catch {
-      if (!params.mbAddress) {
+      if (!params.verdictReader) {
         /**
          * Info: (20260914 - Luphia) error 而非 warn（review 二輪低-1）：這是全站
          * 唯一寫訂單終態的地方，`NEXT_PUBLIC_MISSION_BOARD_ADDRESS` 沒設等於
@@ -739,11 +770,8 @@ export class IssueRecorderService {
         return false;
       }
       try {
-        const publicClient = createPublicClient({
-          transport: http(params.rpcUrl),
-        });
         gaveUp = await readGiveUpVerdict(
-          viemMissionBoardReader(publicClient, params.mbAddress),
+          params.verdictReader,
           BigInt(params.taskId),
         );
       } catch (error) {
@@ -756,14 +784,6 @@ export class IssueRecorderService {
     }
     // Info: (20260825 - Julian) 沒放棄也沒核可：還在跑，不是本服務的事
     if (!gaveUp) return false;
-
-    const flagFile = path.join(params.taskDir, "recorded.flag");
-    try {
-      await fs.access(flagFile);
-      return false;
-    } catch {
-      /* Info: (20260825 - Julian) proceeding to record the give-up */
-    }
 
     let localContextObj: Record<string, string> = {};
     try {

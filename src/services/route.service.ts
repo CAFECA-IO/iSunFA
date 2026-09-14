@@ -5,6 +5,7 @@ import {
   ISmartParseResult,
 } from "@/services/route.smart.service";
 import { parseWaypointsToCoordinates } from "@/services/route.waypoints.service";
+import type { ChatService } from "@/services/chat.service";
 import {
   getNearestPort,
   getNearestAirport,
@@ -196,6 +197,8 @@ export async function calculateLogisticsPlan(
   destLng: number,
   weightKg: string | number = "1000",
   waypointsDesc?: string | Array<{ lat: number; lng: number; name?: string }>,
+  // Info: (20260914 - Luphia) 運算節點注入 executor 的 ChatService（review 三輪阻-2）；web 不傳
+  chatService?: ChatService,
 ): Promise<ILogisticsPlan> {
   try {
     const [exportPort, importPort, exportAirport, importAirport] =
@@ -372,7 +375,7 @@ export async function calculateLogisticsPlan(
     if (waypointsDesc) {
       let wps: Array<{ lat: number; lng: number; name?: string }> = [];
       if (typeof waypointsDesc === "string") {
-        wps = await parseWaypointsToCoordinates(waypointsDesc);
+        wps = await parseWaypointsToCoordinates(waypointsDesc, chatService);
       } else {
         wps = waypointsDesc;
       }
@@ -509,8 +512,10 @@ export async function calculateLogisticsPlanFromText(
   text: string,
   externalWeight?: number | string,
   waypointsDesc?: string | Array<{ lat: number; lng: number; name?: string }>,
+  // Info: (20260914 - Luphia) 同上：skill 走這條時 origin／dest 是字串，兩層 LLM 呼叫都要用注入的實例
+  chatService?: ChatService,
 ): Promise<{ plan: ILogisticsPlan; parsed: ISmartParseResult }> {
-  const parsed = await parseSmartInput(text);
+  const parsed = await parseSmartInput(text, chatService);
 
   if (!parsed.origin || !parsed.dest) {
     throw new Error("Could not resolve origin or destination from text.");
@@ -527,6 +532,7 @@ export async function calculateLogisticsPlanFromText(
     parsed.dest.lng,
     weight,
     waypointsDesc,
+    chatService,
   );
 
   return { plan, parsed };

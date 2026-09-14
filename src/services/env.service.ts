@@ -1,6 +1,10 @@
 import fs from "fs";
 import path from "path";
 import { parse } from "dotenv";
+import {
+  WORKER_NODE_ROLE,
+  WORKER_NODE_ROLE_ENV,
+} from "@/constants/worker_node";
 
 export const ROOT_PATH = process.cwd();
 export const ENV_PATH = path.join(/*turbopackIgnore: true*/ ROOT_PATH, ".env");
@@ -87,29 +91,40 @@ export async function loadWorkerEnvConfig(): Promise<Record<string, string>> {
 }
 
 /**
- * Info: (20260414 - Luphia) 取得優先的環境變數設定 (先讀取 .env.setup，若無則讀取 .env)
+ * Info: (20260914 - Luphia) 決定 `getPriorityEnvConfig()` 讀哪個檔（純函式，`exists`
+ * 由呼叫端注入以便測試）。
  *
- * Info: (20260914 - Luphia) 第三順位 fallback 到 `.env.worker`（PR #6650 review 阻-1）。
+ * - **運算節點**（角色旗標為 compute）：只看 `.env.worker`，沒有就是 `null`。
+ *   不看 `.env.setup`／`.env`——同機部署（`ecosystem.config.json` 三個 app 共用
+ *   cwd）時系統 `.env` 就在旁邊，第一版把 `.env.worker` 放在第三順位，於是
+ *   planner／commitor／closer 在 shipped 的形態下拿到的仍是系統 `.env`，
+ *   `DATABASE_URL`、`SECRET_VAULT_MASTER_KEY` 每 tick 被讀進這個節點的記憶體
+ *  （review 三輪阻-3）。旗標由 `lib/worker/compute_node_bootstrap` 在服務圖載入前設。
+ * - **其餘**（web、維運節點、安裝精靈）：`.env.setup` → `.env`，與 4/14 以來相同。
+ *   第一版的第三順位在這裡也被拿掉：這支有 20 個呼叫端（setup.*、deploy、admin），
+ *   全新機器上若 `.env.worker` 先到位，安裝精靈會改讀低信任的 worker 檔。
  *
- * 外部運算節點只有 `.env.worker`，而 planner／commitor／closer 從這支取
- * `NEXT_PUBLIC_RPC_URL` 與 `NEXT_PUBLIC_MISSION_BOARD_ADDRESS`——先前兩個檔都不在
- * 時回 `{}`，且**完全不看 `process.env`**，於是 `run_compute_node` 灌進去的值對
- * 它們是隱形的：planner 每 10 秒對 `undefined` address 拋錯，任務永遠不被領取。
- * 收斂在這裡而不是逐個 call site 改：三支服務不必知道自己跑在哪種節點。
- *
- * 順位刻意放最後：有系統 `.env` 的機器（維運節點、開發機）行為完全不變；
- * 只有「純運算節點」才會走到這一格。Executor 仍直接讀 `loadWorkerEnvConfig()`
- *（它**不得**在系統 `.env` 存在時改用它——那是隔離本身），兩者的 MISSION_DIR
- * 一致性由 `run_compute_node` 啟動時檢查。
+ * 副作用：executor 讀 `loadWorkerEnvConfig()`、其餘三支讀本函式，在 compute
+ * 角色下解析到**同一個檔案**——「MISSION_DIR 兩個來源一致」不再需要啟動檢查。
  */
+export const selectPriorityEnvPath = (
+  role: string | undefined,
+  exists: (targetPath: string) => boolean,
+): string | null => {
+  if (role === WORKER_NODE_ROLE.COMPUTE) {
+    return exists(ENV_WORKER_PATH) ? ENV_WORKER_PATH : null;
+  }
+  if (exists(ENV_SETUP_PATH)) return ENV_SETUP_PATH;
+  if (exists(ENV_PATH)) return ENV_PATH;
+  return null;
+};
+
+// Info: (20260414 - Luphia) 取得優先的環境變數設定 (先讀取 .env.setup，若無則讀取 .env)
 export async function getPriorityEnvConfig(): Promise<Record<string, string>> {
-  const targetPath = fs.existsSync(ENV_SETUP_PATH)
-    ? ENV_SETUP_PATH
-    : fs.existsSync(ENV_PATH)
-      ? ENV_PATH
-      : fs.existsSync(ENV_WORKER_PATH)
-        ? ENV_WORKER_PATH
-        : null;
+  const targetPath = selectPriorityEnvPath(
+    process.env[WORKER_NODE_ROLE_ENV],
+    fs.existsSync,
+  );
   if (targetPath) {
     return await loadEnvConfig(targetPath);
   }

@@ -124,7 +124,9 @@ graph TD
 > ✅ **本節自 2026-09-07 起是受測試守護的事實**（Luphia）：行程於 2026-08-12 拆成「外部運算節點」（`npm run worker:compute`）與「內部維運節點」（`npm run worker:ops`）；拆分後僅剩的兩處資料庫查詢（排放係數字典：`voucher.pipeline.orchestrator` 的 `getCoefficientById()`、`skills/document/esg_parsing` 的 `getAllGlobalCoefficients()`）已於 2026-09-07 移除——字典由 **MissionIssuer**（維運側、有 DB）在發包時嵌進 `mission.json` 的 `prerequisiteData.globalCoefficients`，隨既有的 IPFS 通道過界，運算側以 `lib/worker/coefficient_snapshot`（零 prisma 純模組）讀取。**係數凍結於發包時點**：與資金託管同一時點，同一份 mission 永遠以同一套係數計算（審計可重放）。
 > 守護分兩層，缺一不可（2026-09-14 補正，PR #6650 review 阻-3——上一版只寫了第一層卻宣稱「受測試守護的事實」，那是過度宣稱）：
 > 1. **靜態匯入圖**：`src/__tests__/worker_node_isolation.test.ts` 斷言運算節點入口可達的 prisma 匯入點為**空集合**。它看不見 `await import()`——實際就有一條執行期路徑（skillRegistry → transportation skill → `route.smart` 自建的 `ChatService` → 動態載入 `system_setting.service` → prisma），掃描全綠而運算節點會在第一個運輸碳足跡任務上開出 DB 連線池。
-> 2. **執行期角色旗標**：運算節點的兩個進入點（`run_compute_node`、`executor_worker`）在載入任何服務前把 `ISUNFA_WORKER_NODE_ROLE=compute` 設進 `process.env`，`lib/prisma` 載入時看到它就**拋錯**（在建池之前）。任何路徑——靜態或動態——載到資料庫用戶端都會在運算節點上大聲失敗，而不是靜默開池。上述那條路徑同時已修：skill 把 executor 給的 `allowSystemSettings: false` 實例傳進 `route.smart`。
+> 2. **執行期角色旗標**：運算節點的兩個進入點（`run_compute_node`、`executor_worker`）在載入任何服務前把 `ISUNFA_WORKER_NODE_ROLE=compute` 設進 `process.env`，`lib/prisma` 載入時看到它就**拋錯**（在建池之前）。任何路徑——靜態或動態——載到資料庫用戶端都會在運算節點上大聲失敗，而不是靜默開池。上述那條路徑同時已修：skill 把 executor 給的 `allowSystemSettings: false` 實例傳進 `route.smart`（三輪 review 補齊另兩條：`parseSmartInput` 與 `parseWaypointsToCoordinates`，經 `route.service` 兩個入口一路注入）。
+>
+> 「在載入任何服務前」的機制（2026-09-14 三輪 review 需修-7 更正）：`package.json` 是 `"type": "module"`，ESM 先求值整個靜態匯入圖再跑進入點自己的語句，所以旗標**不能**寫在進入點檔內——那會在服務圖載完之後才設。旗標、抹除 shell 信任根、載 `.env.worker`、必要值檢查全部在 `lib/worker/compute_node_bootstrap`（副作用模組），兩個進入點以**第一個 import** 載入；`worker_node_isolation.test.ts` 以同一支依賴解析釘住「第一個執行期匯入是它」。同一個旗標也讓 `getPriorityEnvConfig()` 在運算節點上只解析 `.env.worker`——同機部署（三個 pm2 app 共用 cwd）時系統 `.env` 就在旁邊，先前的「第三順位 fallback」在那個形態下從未生效。
 >
 > 新增任何耦合會讓第一層變紅、或在第二層炸開；正確修法是走 mission 快照或維運節點，不是把清單加長或把 import 改成動態。決策脈絡見 **[已知缺陷](../../engineering_guidelines/known_issues/executor_settings_isolation.md)**。
 

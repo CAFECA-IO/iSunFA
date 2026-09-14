@@ -171,17 +171,37 @@ export const buildCoefficientDictionary = (
 };
 
 /**
+ * Info: (20260914 - Luphia) 快照在 mission.json 裡的**出貨形狀**：`issue.service` 以
+ * `JSON.stringify(missionData, null, 2)` 序列化整份，快照巢狀在
+ * `prerequisiteData.globalCoefficients` 之下。量體積要量這個形狀——第二版量的是
+ * compact 陣列（review 三輪需修-8），靜態字典 compact 343,828 bytes、出貨形狀
+ * 456,230 bytes，1.33 倍；量 1 MB 過關的字典實際上傳 1.33 MB。
+ */
+export const snapshotWireBytes = (snapshot: ISnapshotCoefficient[]): number =>
+  Buffer.byteLength(
+    JSON.stringify(
+      { prerequisiteData: { globalCoefficients: snapshot } },
+      null,
+      2,
+    ),
+    "utf8",
+  );
+
+/**
  * Info: (20260914 - Luphia) 快照體積守門（review 二輪中-2）：回傳位元組數，超過
  * `MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES` 就**拋錯**——「多的是組包端的
  * bug，打回比靜默裁切好」（`CarbonLedgerFactSchema.max(8)` 的同一個立場）。
- * 量的是真的線上形狀（`JSON.stringify` 後的 UTF-8 長度），與上傳 IPFS 的位元組
- * 同源；發包端在序列化之後、進 `Promise.all` 之前呼叫一次。
+ * 量的是出貨形狀（`snapshotWireBytes`），與上傳 IPFS 的位元組同源。
+ *
+ * 呼叫位置（review 三輪阻-1）：發包端在**鎖定訂單之前**呼叫，超過就記 error 並
+ * 跳過這一 tick、不動訂單——不能拋在 mint／approve 之後的路徑裡，那裡的 catch
+ * 會把訂單回滾成 PAID 再重試，而字典大小是全域條件，重試永遠不會通過。
  */
 export const assertSnapshotWithinBudget = (
   snapshot: ISnapshotCoefficient[],
   maxBytes: number = MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES,
 ): number => {
-  const bytes = Buffer.byteLength(JSON.stringify(snapshot), "utf8");
+  const bytes = snapshotWireBytes(snapshot);
   if (bytes > maxBytes) {
     throw new Error(
       `[coefficient_snapshot] global coefficient snapshot is ${bytes} bytes ` +

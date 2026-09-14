@@ -83,7 +83,15 @@ export const readGiveUpVerdict = async (
     bigint,
   ];
   const submissionCount = task[6];
-  if (submissionCount === 0n) return false;
+  /**
+   * Info: (20260914 - Luphia) 未達門檻就不讀第二次（review 三輪建議-9）：判準是
+   * 「count ≥ 門檻 且最新一筆被拒」，count 不夠時第二次讀的結果不影響答案。
+   * recorder 每 tick 對每個在途任務問一次，在途任務絕大多數 count 是 0～2，
+   * 這一行省掉近半的鏈讀。`=== 0n` 的舊判斷被它涵蓋。
+   */
+  if (submissionCount < BigInt(MISSION_GIVE_UP_REJECTION_THRESHOLD)) {
+    return false;
+  }
 
   const latest = (await read("taskSubmissions", [
     taskId,

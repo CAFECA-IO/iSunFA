@@ -242,6 +242,21 @@ export class VoucherPipelineOrchestrator {
               fileResult.voucherBase.tradingDate,
             );
         }
+      } else {
+        /**
+         * Info: (20260914 - Luphia) 查不到就要**留下痕跡**（PR #6650 review 三輪需修-5）。
+         * 原本兩處 `if (coef)` 都沒有 else：字典缺這個 id（LLM 給了不存在的 id、
+         * 或發包端沒把租戶係數嵌進來）時 `emissions` 留空、mission 照樣報成功，
+         * 消費端一行 log 都沒有。不在這裡 throw：那會讓一張憑證因一個係數 id
+         * 走進重試→giveup，付費分析被報銷；改成 error log ＋ aiNote，
+         * 讓 reviewer（validator 要求 esg 欄位齊全）與帳本上的人看得到。
+         */
+        console.error(
+          `[Pipeline] ESG coefficientId "${fileResult.esg.coefficientId}" is not in the mission coefficient dictionary (${coefficientDictionary.size} entries); emissions left empty.`,
+        );
+        fileResult.esg!.aiNote =
+          (fileResult.esg!.aiNote || "") +
+          `\n[Pipeline] 係數 ${fileResult.esg.coefficientId} 不在任務係數字典中，未計算碳排。`;
       }
     }
 

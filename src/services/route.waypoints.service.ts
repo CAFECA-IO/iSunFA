@@ -3,15 +3,20 @@
 import { ChatService, isLlmKeyMissingError } from "@/services/chat.service";
 import { AppError } from "@/lib/utils/error";
 
+/**
+ * Info: (20260914 - Luphia) `chatService` 可注入（PR #6650 review 三輪阻-2）：
+ * 運輸 skill 經 `route.service.calculateLogisticsPlan` 在 item 帶字串 waypoints 時
+ * 走到這裡；自建 `new ChatService()` 預設 `allowSystemSettings: true`，在運算節點
+ * 上第一次要金鑰就動態載入 system_setting → prisma → 守門拋錯，被 skill 的
+ * per-item catch 吞掉。web 呼叫端不傳，行為不變。
+ */
 export async function parseWaypointsToCoordinates(
   waypointsDesc: string,
+  chatService: ChatService = new ChatService(),
 ): Promise<Array<{ lat: number; lng: number; name: string }>> {
   if (!waypointsDesc || !waypointsDesc.trim()) return [];
 
   try {
-    /**
-     */
-
     /**
      * Info: (20260812 - Luphia) 不再自行讀 env 並預先擋掉 —— 交給 ChatService 解析。
      * 原本先從環境變數讀金鑰、缺就拋錯,再把它當「明確傳入」送進
@@ -27,8 +32,6 @@ export async function parseWaypointsToCoordinates(
      * Info: (20260812 - Luphia) 原本寫「訊息仍含 GEMINI_API_KEY,字串比對行為不變」,
      * 而那個機制已在同一支 branch 的下一個 commit 換成具名分類 —— 註解沒跟上。
      */
-    const chatService = new ChatService();
-
     const prompt = `
             You are a professional logistics AI assistant.
             The user has provided a list of waypoints (e.g. cities, ports, addresses) separated by commas.

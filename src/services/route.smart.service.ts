@@ -12,11 +12,18 @@ export interface ISmartParseResult {
   weightKg?: number;
 }
 
+/**
+ * Info: (20260914 - Luphia) `chatService` 可注入，理由同下方 `parseMultipleRoutesFromText`
+ *（review 三輪阻-2：第一版只注入了那一支，這支經 `route.service` 的
+ * `calculateLogisticsPlanFromText` 從運輸 skill 一樣走得到——item 的 origin／dest
+ * 是字串就走這條，自建的 ChatService 撞上 `lib/prisma` 守門後被 skill 的 per-item
+ * catch 吞成 `{ error: "Calculation failed" }`，mission 交出零路線卻報成功）。
+ */
 export async function parseSmartInput(
   text: string,
+  chatService: ChatService = new ChatService(),
 ): Promise<ISmartParseResult> {
   try {
-    const chatService = new ChatService();
     const prompt = `
             You are a professional logistics AI assistant.
             Extract the precise logistics routing coordinates and cargo weight from the user's description.
