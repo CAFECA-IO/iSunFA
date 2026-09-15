@@ -168,8 +168,23 @@ const CompanySettingPageBody: FC<ICompanySettingPageBodyProps> = ({
   const isIncomplete =
     entityName.trim() === "" ||
     (isCustom && (startMonth === "" || startDay === ""));
+  /**
+   * Info: (20260915 - Julian) `!isDirty` 不是防呆，是**讓軌跡說真話**（review S4）。
+   *
+   * `upsertProfile` 每一次呼叫都無條件寫一筆 `AuditLog`。沒有這一格的話，
+   * 「打開設定頁、什麼都沒改、按一下儲存確認一下」——很常見的動作——
+   * 就會多一筆 `UPDATE`；連按三次就三筆。
+   *
+   * 而這份軌跡只答得出「誰在什麼時候動過」（沒有 before/after，見
+   * `AuditLogDataType.ACCOUNT_BOOK_COMPANY_PROFILE`）。混進「其實沒改」的
+   * `UPDATE` 之後，真的要查「特休制度是什麼時候被改的」時，
+   * 每一筆都要人工對照才知道是不是雜訊 —— 而那正是軌跡存在的那個問題。
+   *
+   * **儲存失敗時不會被這一格擋住。** `useCompanyProfile.saveProfile` 只在成功時
+   * 覆寫 `profile`，所以失敗之後 `isDirty` 仍然為真，重試按得下去。
+   */
   const isConfirmDisabled =
-    !canEdit || isIncomplete || isSaving || isLoading || loadFailed;
+    !canEdit || !isDirty || isIncomplete || isSaving || isLoading || loadFailed;
 
   const handleSave = async () => {
     setIsSaving(true);

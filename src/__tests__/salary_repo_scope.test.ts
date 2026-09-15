@@ -1369,8 +1369,16 @@ describe("軟刪除的行為", () => {
  *
  * 這張表是**整份覆寫、沒有逐欄歷程** —— 與薪資紀錄不同，
  * 它身上沒有 `createdByUserId`、沒有調薪歷程那種旁證。
- * 軌跡不寫的話，「是誰把特休年度制度從曆年制改成週年制的」
- * 查不回來，而那一改會讓每一位員工的年度終結日整個移位（細則 §24 II）。
+ * 軌跡不寫的話，連「有人動過」都沒有 —— 而改掉特休年度制度會讓
+ * 每一位員工的年度終結日整個移位（細則 §24 II），至少要知道去問誰。
+ *
+ * Info: (20260915 - Julian) **這份軌跡答不出「改成什麼」**（review S3）。
+ *
+ * `AuditLog` 沒有 payload／before／after 欄位，所以它回答的是
+ * 「u-42 在 T 時刻動過這本帳的公司設定」，不是「從曆年制改成週年制」。
+ * 下面「只寫這五個欄位」那一條就是把這個界線釘在斷言上 ——
+ * 日後真的加了 before/after，那一條會紅，而紅的時候該一起更新的是
+ * `AuditLogDataType.ACCOUNT_BOOK_COMPANY_PROFILE` 的註解與計劃書 §5.4。
  */
 describe("公司設定的 AuditLog", () => {
   const saveProfile = (changedByUserId: string) =>
@@ -1404,6 +1412,35 @@ describe("公司設定的 AuditLog", () => {
     expect(data.userId).toBe("u-42");
     expect(data.dataId).toBe(BOOK);
     expect(data.dataType).toBe("ACCOUNT_BOOK_COMPANY_PROFILE");
+  });
+
+  /**
+   * Info: (20260915 - Julian) **這份軌跡的界線，釘在斷言上**（review S3）。
+   *
+   * 寫進去的就是這五個欄位，沒有 payload、沒有 before/after ——
+   * 所以它回答的是「誰在什麼時候動過」，不是「改成什麼」。
+   *
+   * 用 `toEqual` 比對整組鍵名而不是逐個 `toContain`：後者只擋得住「少寫」，
+   * 擋不住「多寫」。而這一條要守的正是**多寫**的那一天 ——
+   * 日後有人加了 before/after，這一條會紅，而紅的時候該一起更新的是
+   * `AuditLogDataType.ACCOUNT_BOOK_COMPANY_PROFILE` 的註解與計劃書 §5.4
+   * （兩處現在都明說「答不出改成什麼」）。
+   *
+   * 少了這一條，那兩處的說明會在某一次擴充之後靜靜地變成過期的保守敘述 ——
+   * 而那是 20260914 那個相反方向的錯誤（註解宣稱它查得出來）的鏡像。
+   */
+  it("只寫這五個欄位：這份軌跡答不出「改成什麼」", async () => {
+    await saveProfile("u-1");
+
+    const data = argOf(auditLogCreate).data as Record<string, unknown>;
+
+    expect(Object.keys(data).sort()).toEqual([
+      "accountBookId",
+      "action",
+      "dataId",
+      "dataType",
+      "userId",
+    ]);
   });
 
   /**

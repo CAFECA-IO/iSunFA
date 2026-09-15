@@ -310,6 +310,23 @@ describe("設定頁真的接上了這道防線", () => {
     expect(page).toContain("!isLoading && !loadFailed");
   });
 
+  /**
+   * Info: (20260915 - Julian) 沒改就不能按儲存（review S4）。
+   *
+   * `upsertProfile` 每一次呼叫都無條件寫一筆 `AuditLog`，而那份軌跡
+   * 沒有 before/after —— 混進「其實沒改」的 `UPDATE` 之後，
+   * 真的要查「特休制度是什麼時候被改的」時，每一筆都要人工對照
+   * 才知道是不是雜訊。「打開頁面、什麼都沒改、按一下確認」是很常見的動作，
+   * 連按三次就三筆。
+   *
+   * 這一條與 `canEdit` 那一條分開驗：它們防的是不同的事
+   * （一個是權限，一個是軌跡的雜訊），而共用一條斷言的話，
+   * 其中一個被拿掉時看不出是哪一個。
+   */
+  it("沒有未儲存的變更時，儲存按鈕停用", () => {
+    expect(page).toMatch(/isConfirmDisabled =[\s\S]{0,80}?!isDirty/);
+  });
+
   it("被攔下來時真的畫出對話框，而且兩顆鈕都接上 guard 交回來的動作", () => {
     expect(page).toContain("pendingHref !== null");
     expect(page).toContain(

@@ -995,7 +995,7 @@ enum AuditLogDataType {
   // Info: (20260909 - Julian) 勞基法 §23 II 要求工資清冊保存五年，而刪除是唯一會讓它消失的動作
   SALARY_RECORD
   // Info: (20260914 - Julian) 帳本公司設定的變更軌跡；dataId 填 AccountBook.id（與帳本 1:1）
-  // Info: (20260914 - Julian) 這張表沒有逐欄歷程，改了就覆寫 —— 不記的話「誰把特休年度制度改掉的」查不回來
+  // Info: (20260915 - Julian) 只答得出「誰在什麼時候動過」，答不出「改成什麼」（AuditLog 沒有 before/after）
   ACCOUNT_BOOK_COMPANY_PROFILE
 }
 
