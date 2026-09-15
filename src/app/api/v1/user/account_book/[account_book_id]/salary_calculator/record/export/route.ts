@@ -61,7 +61,7 @@ export async function POST(
       SalaryAccess.READ,
     );
 
-    const { csv, exported, requested } =
+    const { csv, filename, exported, requested } =
       await salaryRecordService.exportRecordsCsv({
         accountBookId,
         // Info: (20260904 - Julian) 帳本來自路徑，id 來自 body —— repository 以帳本過濾，猜到別人的 id 也讀不到
@@ -86,8 +86,13 @@ export async function POST(
       exported,
     });
 
-    const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-    return fileOk(csv, `salary-records-${stamp}.csv`, "text/csv");
+    /**
+     * Info: (20260914 - Julian) 檔名由 service 組（它才知道公司名與期間）。
+     *
+     * 非 ASCII 的處理在 `fileOk` —— 中文公司名要走 RFC 6266 的
+     * `filename*=UTF-8''...`，而那是 HTTP 層的規則，不是這一支的事。
+     */
+    return fileOk(csv, filename, "text/csv");
   } catch (error) {
     if (error instanceof AppError) {
       return jsonFail({

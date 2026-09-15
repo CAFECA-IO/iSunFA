@@ -67,6 +67,44 @@ export const calculator = {
     other_adjustments: "Other Adjustments (Reimbursement / Extra Deduction)",
     voluntary_pension_contribution: "Voluntary Pension Contribution",
   },
+  // Info: (20260914 - Julian) 帳本的公司設定頁
+  company_setting: {
+    main_title: "Company Settings",
+    section_identity: "Company Information",
+    section_leave_year: "Annual Leave Year",
+    entity_name: "Company Name",
+    entity_name_hint:
+      "The legal entity name. Printed on pay slips and the wage register.",
+    entity_name_placeholder: "Enter the full legal entity name",
+    tax_id: "Tax ID",
+    responsible_person: "Responsible Person",
+    address: "Company Address",
+    leave_year_hint:
+      "Determines when the leave year closes; agreed between employer and employee (LSA Enforcement Rules §24)",
+    leave_year_unset: "Not selected",
+    leave_year_unset_hint:
+      "No annual leave notice is sent until this is chosen",
+    scheme_anniversary: "Anniversary",
+    scheme_anniversary_hint: "Each year from the employee's own hire date",
+    scheme_calendar: "Calendar year",
+    scheme_calendar_hint: "1 January to 31 December",
+    scheme_custom: "Agreed year",
+    scheme_custom_hint: "Academic year, fiscal year, or another agreed period",
+    custom_start: "Year starts on",
+    month_unit: "Month",
+    day_unit: "Day",
+    save: "Save",
+    saving: "Saving…",
+    saved: "Saved",
+    save_failed: "Could not save. Please try again.",
+    leave_title: "Leave without saving?",
+    leave_content:
+      "You have changes that have not been saved. Leaving this page discards them.",
+    leave_discard: "Leave and discard",
+    leave_stay: "Stay on this page",
+    load_failed: "Could not load. Please refresh.",
+    read_only: "Only the account book owner can change company settings",
+  },
   employee_list: {
     issue_name_required: "Enter the employee name under Identity",
     issue_number_required: "Enter the employee number under Identity",
@@ -411,6 +449,11 @@ export const calculator = {
     export_csv: "Export CSV",
     export_too_many: "At most {{max}} records per export — deselect some first",
     export_failed: "Export failed. Please try again in a moment.",
+    company_profile_hint_title: "This account book has no company profile yet",
+    company_profile_hint_body:
+      "Add your entity name and pay slips and the wage register will carry a heading. Nothing is blocked without it — the register simply exports without one.",
+    company_profile_hint_action: "Go to company settings",
+    company_profile_hint_dismiss: "Dismiss this hint",
   },
   access: {
     checking: "Checking your permissions…",

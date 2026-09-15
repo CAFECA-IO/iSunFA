@@ -19,6 +19,10 @@ import {
 import { ATTENDANCE_SUMMARY_COLUMNS } from "@/lib/utils/attendance_result_view";
 import { PayrollDaysBase } from "@/constants/salary_calculator";
 import {
+  LEAVE_YEAR_SCHEMES,
+  SCHEME_LABEL_KEY,
+} from "@/constants/salary_company_profile";
+import {
   EmploymentType,
   TaxResidencyStatus,
 } from "@/interfaces/salary_calculator";
@@ -180,6 +184,26 @@ const DYNAMIC_KEY_EXPANSIONS: Record<string, string[]> = {
     Object.values(PayrollDaysBase).map(
       (option) =>
         `calculator.basic_info_form.payroll_option_${option.toLowerCase()}`,
+    ),
+
+  /**
+   * Info: (20260914 - Julian) 公司設定頁的特休年度三選一（標題與說明各一組）。
+   *
+   * 值域綁在 `LEAVE_YEAR_SCHEMES` 與 `SCHEME_LABEL_KEY` 上而不是手抄 ——
+   * 那兩個常數就是畫面渲染用的同一份，所以「增加一種制度而忘了補文案」
+   * 會在這裡紅，而不是在畫面上顯示成 i18n 路徑本身。
+   *
+   * 兩筆都要登記：元件裡是兩行不同的字面值（`...}` 與 `...}_hint`），
+   * 而掃描器認的是字面。
+   */
+  "calculator.company_setting.${SCHEME_LABEL_KEY[option]}":
+    LEAVE_YEAR_SCHEMES.map(
+      (option) => `calculator.company_setting.${SCHEME_LABEL_KEY[option]}`,
+    ),
+
+  "calculator.company_setting.${SCHEME_LABEL_KEY[option]}_hint":
+    LEAVE_YEAR_SCHEMES.map(
+      (option) => `calculator.company_setting.${SCHEME_LABEL_KEY[option]}_hint`,
     ),
 };
 

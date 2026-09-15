@@ -29,7 +29,8 @@ import {
   setPagePicked,
   togglePick,
 } from "@/lib/utils/salary_export_selection";
-import { paySlipMetaOf } from "@/lib/utils/pay_slip_meta";
+import { paySlipMetaOf, resolveEntityName } from "@/lib/utils/pay_slip_meta";
+import { useCompanyProfile } from "@/hooks/use_company_profile";
 import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
 import { saveDownloadedFile } from "@/lib/utils/download_file";
 import {
@@ -51,6 +52,7 @@ import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import SendingPaySlipModal from "@/components/salary_calculator/sending_pay_slip_modal";
 import ResendingPaySlipModal from "@/components/salary_calculator/resending_pay_slip_modal";
 import SalaryCalculatorShell from "@/components/salary_calculator/salary_calculator_shell";
+import CompanyProfileHint from "@/components/salary_calculator/company_profile_hint";
 import ViewPaySlipModal from "@/components/salary_calculator/view_pay_slip_modal";
 import DeleteRecordModal from "@/components/salary_calculator/delete_record_modal";
 
@@ -105,6 +107,21 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
     hasError: hasEmployeesError,
     reload: reloadEmployees,
   } = useSalaryEmployees(accountBookId);
+
+  /**
+   * Info: (20260914 - Julian) 抬頭的回退來源；只在紀錄沒有快照時才用得到。
+   *
+   * 20260914（`entity_name_snapshot` 上線）之前存的紀錄一律沒有快照，
+   * 而那個事實回填不出來 —— 現值是唯一拿得到的答案。
+   */
+  const {
+    profile: companyProfile,
+    isLoading: isCompanyProfileLoading,
+    loadFailed: companyProfileLoadFailed,
+  } = useCompanyProfile(accountBookId);
+  const currentEntityName = companyProfile.isConfigured
+    ? companyProfile.entityName
+    : null;
 
   const [page, setPage] = useState<number>(1);
   const [employeeId, setEmployeeId] = useState<string>("");
@@ -724,6 +741,19 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
           {t("calculator.records.main_title")}
         </h1>
 
+        {/**
+         * Info: (20260914 - Julian) 沒設定公司的後果在這一頁，所以提示也放這一頁。
+         *
+         * 匯出沒有公司抬頭時不會失敗、也不會有任何訊息 —— 檔案照樣下載，
+         * 只是清冊沒有表頭、檔名退回時間戳。理由與取捨見元件本身。
+         */}
+        <CompanyProfileHint
+          accountBookId={accountBookId}
+          isConfigured={companyProfile.isConfigured}
+          isLoading={isCompanyProfileLoading}
+          loadFailed={companyProfileLoadFailed}
+        />
+
         {/* Info: (20260901 - Julian) 篩選列：桌機一排，手機垂直堆疊 */}
         <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center">
           {/* Info: (20260901 - Julian) 關鍵字：比對員工姓名與編號，由後端過濾（列表是分頁的） */}
@@ -969,10 +999,15 @@ const SalaryRecordsPageBody: FC<ISalaryRecordsPageBodyProps> = ({
           sendBlockedReason={viewingSendTarget.blockedReason}
           onResent={() => setViewing(null)}
           /**
-           * Info: (20260909 - Julian) 兩個來源刻意不同（見 `pay_slip_meta.ts`）：
-           * 到職日是員工檔現值，投保狀態是**這筆紀錄當時**的 input 快照。
+           * Info: (20260909 - Julian) 三個來源刻意不同（見 `pay_slip_meta.ts`）：
+           * 到職日是員工檔現值，投保狀態是**這筆紀錄當時**的 input 快照，
+           * 而公司抬頭是這筆的快照、取不到才回退現值。
            */
-          meta={paySlipMetaOf(viewing.employee.hireDate, viewing.input)}
+          meta={paySlipMetaOf(
+            viewing.employee.hireDate,
+            viewing.input,
+            resolveEntityName(viewing.entityNameSnapshot, currentEntityName),
+          )}
         />
       )}
 

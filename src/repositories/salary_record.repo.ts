@@ -41,6 +41,8 @@ export interface ISalaryRecordRepository {
     totalPayment: bigint;
     totalSalaryTaxable: bigint;
     totalEmployerCost: bigint;
+    // Info: (20260914 - Julian) 存檔當下的公司抬頭；還沒設定過就是 null
+    entityName: string | null;
   }): Promise<ISalaryRecordDetail>;
   listRecords(
     options: ISalaryRecordQueryOptions,
@@ -145,6 +147,8 @@ const toSummary = (row: SalaryRecordWithEmployee): ISalaryRecordSummary => ({
   id: row.id,
   year: row.year,
   month: row.month,
+  // Info: (20260914 - Julian) 原樣交出，回退在消費端（`resolveEntityName`）
+  entityNameSnapshot: row.entityNameSnapshot,
   employee: {
     id: row.employee.id,
     name: row.employee.name,
@@ -511,6 +515,7 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
     totalPayment,
     totalSalaryTaxable,
     totalEmployerCost,
+    entityName,
   }: {
     accountBookId: string;
     employeeId: string;
@@ -523,6 +528,13 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
     totalPayment: bigint;
     totalSalaryTaxable: bigint;
     totalEmployerCost: bigint;
+    /**
+     * Info: (20260914 - Julian) 存檔當下的公司抬頭；還沒設定過就是 `null`。
+     *
+     * 由 service 讀公司設定傳進來，repo 不自己去查 ——
+     * repo 只認一張表，跨表的取值是 service 的事（同這支不自己查員工檔）。
+     */
+    entityName: string | null;
   }): Promise<ISalaryRecordDetail> {
     const snapshot = {
       inputSnapshot: toJsonSnapshot(input),
@@ -543,6 +555,14 @@ export class SalaryRecordRepository implements ISalaryRecordRepository {
        * 所以它們不可能不一致。
        */
       baseSalary: BigInt(Math.round(input.baseSalaryTaxable ?? 0)),
+
+      /**
+       * Info: (20260914 - Julian) 抬頭與金額一起定格。
+       *
+       * 覆寫（同一個月重存）時也會一起更新 —— 那是對的：
+       * 重存代表這一筆重新產生了一次，抬頭該是**重新產生當下**的。
+       */
+      entityNameSnapshot: entityName,
     };
 
     const row = await prisma.salaryRecord.upsert({

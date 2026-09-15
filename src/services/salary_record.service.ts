@@ -7,9 +7,14 @@ import {
   missingSalaryPeriods,
   type ISalaryPeriod,
 } from "@/lib/utils/salary_coverage";
-import { buildSalaryRecordCsv } from "@/lib/utils/salary_record_csv";
+import {
+  buildSalaryRecordCsv,
+  salaryRegisterFilename,
+} from "@/lib/utils/salary_record_csv";
 import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { accountBookCompanyProfileService } from "@/services/account_book_company_profile.service";
+import { IAccountBookCompanyProfileView } from "@/interfaces/salary_company_profile";
 import {
   ISalaryCalculatorEmployee,
   ISalaryCalculatorEmployeeWriteInput,
@@ -113,11 +118,33 @@ export interface IAccountBookCreatedAtReader {
   getCreatedAt(accountBookId: string): Promise<Date | null>;
 }
 
+/**
+ * Info: (20260915 - Julian) 這支 service 只需要公司設定的「讀」（review B2）。
+ *
+ * 收窄成一個方法而不是整個 `accountBookCompanyProfileService`：
+ * 型別上就說清楚薪資紀錄**不會去改**公司設定 ——
+ * 而那正是 `SETTINGS_WRITE` 只給 `OWNER` 的那條線要守的事。
+ */
+export interface IAccountBookCompanyProfileReader {
+  getProfile(accountBookId: string): Promise<IAccountBookCompanyProfileView>;
+}
+
 export class SalaryRecordService {
   constructor(
     private readonly employees: ISalaryCalculatorEmployeeRepository,
     private readonly records: ISalaryRecordRepository,
     private readonly accountBooks: IAccountBookCreatedAtReader,
+    /**
+     * Info: (20260915 - Julian) 注入而不是直接用 import 進來的單例（review B2）。
+     *
+     * 理由與 `LeaveRequestService` 的 `audit` 那一格相同，而那一格是踩過的：
+     * 直接 import 的話，測試只能靠 `jest.mock` 去攔一個模組 ——
+     * 於是「service 有沒有真的去讀公司設定」這件事沒有任何斷言問得到，
+     * 而把它整段拿掉會**全綠**（這正是 B2 指出的形狀）。
+     *
+     * 給預設值，所以既有的三參數呼叫端不受影響。
+     */
+    private readonly companyProfiles: IAccountBookCompanyProfileReader = accountBookCompanyProfileService,
   ) {}
 
   /**
@@ -358,9 +385,20 @@ export class SalaryRecordService {
       throw new AppError(API_ERRORS.NF_SALARY_CALCULATOR_EMPLOYEE);
     }
 
+    /**
+     * Info: (20260914 - Julian) 抬頭取**儲存當下**的公司設定，存成快照。
+     *
+     * 還沒設定過就是 `null` —— 不擋儲存。公司抬頭不是法定必載
+     * （施行細則 §14-1 四款全是金額），系統沒有立場因為它沒填就不讓人存薪資。
+     */
+    const companyProfile = await this.companyProfiles.getProfile(accountBookId);
+
     return this.records.upsertRecord({
       accountBookId,
       employeeId: employee.id,
+      entityName: companyProfile.isConfigured
+        ? companyProfile.entityName
+        : null,
       createdByUserId: userId,
       year: input.year,
       month: input.month,
@@ -397,7 +435,12 @@ export class SalaryRecordService {
   }: {
     accountBookId: string;
     recordIds: readonly string[];
-  }): Promise<{ csv: string; exported: number; requested: number }> {
+  }): Promise<{
+    csv: string;
+    filename: string;
+    exported: number;
+    requested: number;
+  }> {
     if (recordIds.length > SALARY_EXPORT_MAX_RECORDS) {
       throw new AppError(API_ERRORS.VA_SALARY_EXPORT_TOO_MANY);
     }
@@ -406,8 +449,29 @@ export class SalaryRecordService {
     const unique = [...new Set(recordIds)];
     const records = await this.records.listRecordsByIds(accountBookId, unique);
 
+    /**
+     * Info: (20260914 - Julian) 清冊的前言取公司設定的**現值**，不是逐筆快照。
+     *
+     * 與薪資單相反，而那是刻意的：薪資單是一份對**某個期間**的證明，
+     * 所以抬頭要定格在產生當下（`entityNameSnapshot`）；
+     * 工資清冊是「**這家公司**置備的帳冊」，署名的是置備的人 ——
+     * 即使裡面收錄的是改名之前的紀錄，置備它的仍然是現在這家公司。
+     *
+     * 沒設定就不印前言（`buildPreamble` 自己會判斷），不擋匯出。
+     */
+    const profile = await this.companyProfiles.getProfile(accountBookId);
+    const company = profile.isConfigured
+      ? {
+          entityName: profile.entityName,
+          taxId: profile.taxId,
+          responsiblePerson: profile.responsiblePerson,
+          address: profile.address,
+        }
+      : null;
+
     return {
-      csv: buildSalaryRecordCsv(records),
+      csv: buildSalaryRecordCsv(records, company),
+      filename: salaryRegisterFilename(records, company),
       exported: records.length,
       requested: unique.length,
     };

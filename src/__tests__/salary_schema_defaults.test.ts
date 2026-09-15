@@ -268,4 +268,113 @@ describe("SalaryRecord", () => {
   it("列表的主要查詢條件有索引", () => {
     expect(block).toContain("@@index([accountBookId, year, month])");
   });
+
+  /**
+   * Info: (20260915 - Julian) 抬頭快照可空，且**不得有預設值**（review B1）。
+   *
+   * 這一欄是 20260914 才有的，所以在那之前的每一筆紀錄都是 `null` ——
+   * 而 `null` 在這裡的意思是「**當時系統根本不知道公司抬頭**」，
+   * 不是「漏填」。消費端靠 `resolveEntityName(快照, 現值)` 的 `??` 回退現值。
+   *
+   * 給它 `@default("")` 的話：舊紀錄拿到的是**空字串**，而 `??` 對空字串
+   * **不會**觸發回退（`""` 不是 `null`）—— 於是每一張舊薪資單重印出來，
+   * 抬頭是一行空白。而 `salary_pay_slip_meta.test.ts` 裡那條
+   * 「空字串的快照不觸發回退」會**繼續綠**：它測的是函式的行為，
+   * 不是資料從哪裡來。這是唯一問得到「資料從哪裡來」的地方。
+   *
+   * 這正是 `base_salary_snapshot` 的 `@default(0)` 踩過的形狀
+   * （部署檢查表 §1.4.1）：一個完全合法、只是錯的值。
+   */
+  it("抬頭快照可空且沒有預設值：空字串會安靜地印出一行空白抬頭", () => {
+    expect(block).toContain(
+      'entityNameSnapshot String? @map("entity_name_snapshot")',
+    );
+    expect(block).not.toMatch(/entityNameSnapshot\s+String\??[^\n]*@default/);
+  });
+});
+
+/**
+ * Info: (20260915 - Julian) 帳本公司設定（review B1）。
+ *
+ * 這張表上兩個決定是用**散文**寫的 —— schema 註解、介面註解、元件註解、
+ * 計劃書 §8-8 各一份，四處都是說明，零處是斷言。而它們防的那件事
+ * （有人「順手」補一個預設值）改起來只要一行，且改完之後
+ * 畫面、log、型別、既有測試全部正常。
+ *
+ * 不釘 `deletedAt` 的缺席：本檔檔頭寫著「只釘改了就是行為改變的宣告」，
+ * 而單獨在這張表加一個沒有人讀的 `deletedAt` 不改變任何行為。
+ * 軟刪除與否由 `salary_repo_scope.test.ts` 的 `LIFECYCLE` 分類守著。
+ */
+describe("AccountBookCompanyProfile", () => {
+  const block = modelBlock("AccountBookCompanyProfile");
+
+  /**
+   * Info: (20260915 - Julian) **這一條是整組裡後果最大的。**
+   *
+   * 補上 `@default(ANNIVERSARY)` 的動機很自然：「這一欄常常是 null，
+   * 補個最常見的預設比較好用」。而後果是**既有帳本全部看起來已經設定好，
+   * 卻沒有任何人選過** —— §38 V 的年度通知從此以週年制發出去，
+   * 曆年制公司的每一位員工的年度終結日整個錯開。
+   *
+   * 而畫面上、log 上、其他測試上都沒有任何異常：週年制是一個
+   * 完全合法的值。細則 §24 II 明定這是**勞雇雙方協商**的結果，
+   * 系統沒有立場替他們選一個。
+   *
+   * `null` ＝ 還沒選，必須是一個**看得出來**的狀態。
+   */
+  it("特休年度制度可空且沒有預設值：「還沒選」必須看得出來", () => {
+    expect(block).toContain(
+      'leaveYearScheme LeaveYearScheme? @map("leave_year_scheme")',
+    );
+    expect(block).not.toMatch(
+      /leaveYearScheme\s+LeaveYearScheme\??[^\n]*@default/,
+    );
+  });
+
+  /**
+   * Info: (20260915 - Julian) 起算月／日同理，而且它們只有約定年度用得到。
+   *
+   * 給了預設值（例如 `@default(1)`）之後，每一本帳都會帶著一組 1/1 ——
+   * 而讀資料庫的人分不出那是「協商出來的約定年度起日」還是
+   * 「沒人設定過的殘留」。`validators/salary_company_profile.ts` 的
+   * 雙向 `superRefine` 擋的正是這種自相矛盾的組合。
+   */
+  it("特休年度起算月／日可空且沒有預設值", () => {
+    expect(block).toContain(
+      'leaveYearStartMonth Int? @map("leave_year_start_month")',
+    );
+    expect(block).toContain(
+      'leaveYearStartDay Int? @map("leave_year_start_day")',
+    );
+    expect(block).not.toMatch(/leaveYearStart\w+\s+Int\??[^\n]*@default/);
+  });
+
+  /**
+   * Info: (20260915 - Julian) 1:1 的**唯一**落地點就是這個 `@unique`。
+   *
+   * 換成 `@@index([accountBookId])` 的話，一本帳可以有兩列公司設定 ——
+   * 而 `findUnique` 會編譯失敗、`upsert` 的 `where` 也接不上，
+   * 所以看起來「改了會馬上發現」。真正危險的是**兩者並存**
+   * （有人為了查詢加索引卻順手把 `@unique` 拿掉），
+   * 那時 repo 得改成 `findFirst`，而「第二列」會安靜地存在、
+   * 安靜地被忽略 —— 使用者改了設定卻看不到變化。
+   */
+  it("與帳本 1:1：accountBookId 是 unique，不是一般索引", () => {
+    expect(block).toContain(
+      'accountBookId String @unique @map("account_book_id")',
+    );
+    expect(block).not.toContain("@@index([accountBookId])");
+  });
+
+  /**
+   * Info: (20260915 - Julian) 實體表名。**改它等於換一張空表。**
+   *
+   * 本專案沒有 `prisma/migrations/`，schema 走 `prisma db push` ——
+   * 改掉 `@@map` 之後，push 會建一張新的空表，而舊表連同裡面所有
+   * 公司設定留在資料庫裡沒有人讀。症狀是「全部帳本的公司設定一夕消失」，
+   * 而 push 本身不會報任何錯。
+   */
+  it("實體表名固定（沒有 migration，改名等於換一張空表）", () => {
+    expect(block).toContain('@@map("account_book_company_profile")');
+  });
 });

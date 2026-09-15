@@ -41,4 +41,49 @@ export enum AuditLogDataType {
    * —— 同 `READ` 那一條的理由。
    */
   SALARY_RECORD = "SALARY_RECORD",
+  /**
+   * Info: (20260914 - Julian) 帳本公司設定的變更軌跡。`dataId` 填 `AccountBook.id`。
+   *
+   * ## 為什麼 `dataId` 不是那一列自己的 id
+   *
+   * `dataId` 的用途是**查詢的軸線**（同 `EMPLOYEE_PII` 填 `Employee.id` 的理由）。
+   * 這張設定表與帳本 1:1，而那一列的 uuid 在整個系統裡沒有任何地方顯示得出來 ——
+   * 拿它當軸線，等於這些軌跡誰都查不到。帳本 id 才是人找得到的那個號碼。
+   *
+   * 與 `accountBookId` 欄位重複是知道的，代價是一個欄位；
+   * 反過來的代價是這一類軌跡實際上無法被檢索。
+   *
+   * ## 這份軌跡答得出什麼、答不出什麼
+   *
+   * `AuditLog` 這張表只有 `{ dataType, dataId, accountBookId, action, userId,
+   * createdAt }` —— **沒有 payload／before／after 欄位**。所以：
+   *
+   * | 問題 | 答得出來嗎 |
+   * | --- | --- |
+   * | 誰在什麼時候動過這本帳的公司設定 | **可以** |
+   * | 那是第一次設定還是後來修改 | **可以**（`CREATE` / `UPDATE`） |
+   * | **改成什麼、原本是什麼** | **不行** |
+   *
+   * Info: (20260915 - Julian) 20260914 這段原本寫著「不記的話『是誰把特休年度制度
+   * 從曆年制改成週年制的』查不回來」—— **那句話對這張表是假的**：記了也查不出
+   * 「從曆年制改成週年制」，只查得出「有人動過」。
+   * 依 `code_review_checklist §6`「當事實與條文衝突時，改條文」，這裡改的是條文。
+   *
+   * 要逐欄的 before/after 請比照 `SalaryEmployeeProfileChange`（本模組自己在用）——
+   * 那是另一張表、另一種成本。目前不做的判斷寫在
+   * `salary_company_profile_plan.md` §5.4：這一頁是「設一次就不太會再動」的東西，
+   * 而「有人動過」已經足以讓人去問那個人。日後 §38 V 的年度通知落地時再重新決定。
+   *
+   * ## 為什麼這裡記 `CREATE` / `UPDATE`，而 `SALARY_RECORD` 只記 `DELETE`
+   *
+   * 那一條的理由是「建立與覆寫的軌跡本來就在紀錄自己身上」——
+   * `createdByUserId`、`updatedAt`、員工檔的調薪歷程。**這一張連那些都沒有**：
+   * 整份覆寫、沒有逐欄歷程，改完之後舊值就不存在了。
+   * 不記的話連「有人動過」都沒有 —— 而那一改會讓每一位員工的年度終結日
+   * 整個移位（細則 §24 II），至少要知道去問誰。
+   *
+   * 沖爆的疑慮在這裡不成立：一本帳的公司設定是「設一次就不太會再動」的東西，
+   * 不是每天都在寫的薪資紀錄。
+   */
+  ACCOUNT_BOOK_COMPANY_PROFILE = "ACCOUNT_BOOK_COMPANY_PROFILE",
 }

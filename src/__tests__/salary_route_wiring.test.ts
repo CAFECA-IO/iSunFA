@@ -47,6 +47,7 @@ import {
   salaryRecordService,
 } from "@/services/salary_record.service";
 import { salaryPaySlipDeliveryService } from "@/services/salary_pay_slip_delivery.service";
+import { accountBookCompanyProfileService } from "@/services/account_book_company_profile.service";
 import {
   GET as employeeList,
   POST as employeeCreate,
@@ -69,6 +70,10 @@ import {
 } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/record/[record_id]/deliver/route";
 import { GET as deliveryList } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/delivery/route";
 import { POST as recordExport } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/record/export/route";
+import {
+  GET as companyProfileRead,
+  PUT as companyProfileSave,
+} from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/company_profile/route";
 import { GET as profileChangeList } from "@/app/api/v1/user/account_book/[account_book_id]/salary_calculator/employee/[employee_id]/history/route";
 
 jest.mock("@/lib/auth/dewt", () => ({ getIdentityFromDeWT: jest.fn() }));
@@ -76,6 +81,12 @@ jest.mock("@/lib/auth/dewt", () => ({ getIdentityFromDeWT: jest.fn() }));
  * Info: (20260904 - Julian) 寄送走的是另一支 service，但授權閘仍來自
  * `salary_record.service` —— 九支端點共用同一道閘是刻意的（見檔頭第 2 點）。
  */
+jest.mock("@/services/account_book_company_profile.service", () => ({
+  accountBookCompanyProfileService: {
+    getProfile: jest.fn(),
+    saveProfile: jest.fn(),
+  },
+}));
 jest.mock("@/services/salary_pay_slip_delivery.service", () => ({
   salaryPaySlipDeliveryService: {
     deliver: jest.fn(),
@@ -135,6 +146,10 @@ const serviceMocks = {
     salaryPaySlipDeliveryService.listByRecord as unknown as IAnyMock,
   profileChangeList:
     salaryRecordService.listProfileChanges as unknown as IAnyMock,
+  companyProfileRead:
+    accountBookCompanyProfileService.getProfile as unknown as IAnyMock,
+  companyProfileSave:
+    accountBookCompanyProfileService.saveProfile as unknown as IAnyMock,
 };
 
 const BOOK = "book-1";
@@ -528,6 +543,47 @@ const ENDPOINTS: IEndpointCase[] = [
       }),
   },
   /**
+   * Info: (20260914 - Julian) 第十四、十五支：帳本的公司設定。
+   *
+   * **讀是 `READ`、寫是 `SETTINGS_WRITE`** —— 這一組是本模組第一次出現
+   * 讀寫層級不同的端點，而那正是新增第三個層級的理由：
+   * 記帳士（`EDITOR`）看得到公司抬頭與特休年度制度是必要的（薪資單上就印著），
+   * 但改它是**代表公司做決定**，尤其特休年度制度是細則 §24 II 明定
+   * 由勞雇雙方協商的結果。
+   *
+   * 寫沿用 `SALARY_WRITE` 這個桶而不是開新的：它與儲存薪資紀錄同一類
+   * （低頻的表單送出），沒有「批次擷取」那種需要單獨限流的形狀。
+   */
+  {
+    label: "GET company_profile（讀公司設定）",
+    key: "company-profile-read",
+    source: "GET company_profile/route.ts",
+    access: SalaryAccess.READ,
+    bucket: RateLimitBucketEnum.READ,
+    service: serviceMocks.companyProfileRead,
+    run: (address) =>
+      companyProfileRead(get(address), { params: bookParams() }),
+  },
+  {
+    label: "PUT company_profile（存公司設定）",
+    key: "company-profile-save",
+    source: "PUT company_profile/route.ts",
+    access: SalaryAccess.SETTINGS_WRITE,
+    bucket: RateLimitBucketEnum.SALARY_WRITE,
+    service: serviceMocks.companyProfileSave,
+    run: (address) =>
+      companyProfileSave(
+        send("PUT", { entityName: "測試股份有限公司" }, address),
+        {
+          params: bookParams(),
+        },
+      ),
+    runInvalid: (address) =>
+      companyProfileSave(send("PUT", { entityName: "" }, address), {
+        params: bookParams(),
+      }),
+  },
+  /**
    * Info: (20260904 - Julian) 第十一支：某一筆的寄送歷史。
    *
    * 與 `POST` 同一個檔案、同一條路徑，但**層級與桶都不同** ——
@@ -572,13 +628,36 @@ beforeEach(() => {
     mock.mockReset();
     mock.mockResolvedValue({ ok: true });
   }
+
+  /**
+   * Info: (20260914 - Julian) 匯出這一支的替身不能是上面那個通用的 `{ ok: true }`。
+   *
+   * 它的回傳值**會被 route 解構**（`{ csv, filename, exported, requested }`），
+   * 而 `filename` 一路進到 `fileOk` 的 `Content-Disposition` 組法：
+   * `undefined.replace(...)` 丟 `TypeError` → 被 route 的 catch 接住 → 500。
+   * 症狀出現在限流那條測試灌桶的第一次呼叫（期待 200、收到 500），
+   * 離真正的原因很遠，所以理由寫在這裡而不是那裡。
+   *
+   * 20260914 之前檔名是 route 自己組的字串，service 回什麼形狀都無所謂；
+   * 改成由 service 給檔名（只有它知道公司抬頭與期間）之後，
+   * 這支端點的替身就必須是**真的形狀**。
+   *
+   * 不改成讓 `fileOk` 容忍 `undefined`：檔名缺漏是呼叫端的程式錯誤，
+   * 讓它安靜地變成 `download` 只會把錯誤搬到使用者的下載資料夾裡。
+   */
+  serviceMocks.exportRecords.mockResolvedValue({
+    csv: "期間,員工姓名\r\n2026-08,王小明\r\n",
+    filename: "salary-records-2026-08.csv",
+    exported: 1,
+    requested: 1,
+  });
 });
 
 describe("身分閘：沒有 token 就到不了業務邏輯", () => {
   it("端點表涵蓋了全部十三支端點（表短了，下面三條就會靜靜地少驗幾支）", () => {
-    expect(ENDPOINTS).toHaveLength(13);
-    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.label)).size).toBe(13);
-    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.key)).size).toBe(13);
+    expect(ENDPOINTS).toHaveLength(15);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.label)).size).toBe(15);
+    expect(new Set(ENDPOINTS.map((endpoint) => endpoint.key)).size).toBe(15);
     /**
      * Info: (20260908 - Julian) 每一支端點有**自己的** service 替身。
      *
@@ -589,7 +668,7 @@ describe("身分閘：沒有 token 就到不了業務邏輯", () => {
      * 於是先跑的那一支把後跑的那一支的證據洗掉。
      */
     expect(new Set(ENDPOINTS.map((endpoint) => endpoint.service)).size).toBe(
-      13,
+      15,
     );
   });
 
@@ -697,7 +776,7 @@ describe("授權閘：不是這本帳的成員就寫不進去", () => {
     },
   );
 
-  it("寫入端點就是那六支（六讀六寫，換一種分法都要有人重新想過）", () => {
+  it("寫入端點就是那六支（換一種分法都要有人重新想過）", () => {
     const writes = ENDPOINTS.filter(
       (endpoint) => endpoint.access === SalaryAccess.WRITE,
     ).map((endpoint) => endpoint.key);
@@ -719,6 +798,24 @@ describe("授權閘：不是這本帳的成員就寫不進去", () => {
       "record-deliver",
     ]);
   });
+
+  /**
+   * Info: (20260914 - Julian) `SETTINGS_WRITE` 就是那一支，而且**只有**那一支。
+   *
+   * 這一條與上面那條是同一個形狀：層級填錯不會有任何症狀。
+   * 把 `PUT company_profile` 填成 `WRITE` 等於讓記帳士替公司改特休年度制度 ——
+   * 而畫面上、回應上、log 上都看不出差別。
+   *
+   * 反方向也守：把別的端點改成 `SETTINGS_WRITE` 會讓 `EDITOR` 突然被擋在外面，
+   * 那個症狀是「昨天還好好的功能今天 403」，而原因在一個常數裡。
+   */
+  it("SETTINGS_WRITE 就是公司設定那一支", () => {
+    const settings = ENDPOINTS.filter(
+      (endpoint) => endpoint.access === SalaryAccess.SETTINGS_WRITE,
+    ).map((endpoint) => endpoint.key);
+
+    expect(settings).toEqual(["company-profile-save"]);
+  });
 });
 
 describe("租戶與操作者只能來自不可偽造的來源", () => {
@@ -739,6 +836,56 @@ describe("租戶與操作者只能來自不可偽造的來源", () => {
 
     const [args] = serviceMocks.saveRecord.mock.calls;
     expect((args[0] as { accountBookId: string }).accountBookId).toBe(BOOK);
+  });
+
+  /**
+   * Info: (20260914 - Julian) 公司設定的變更軌跡也是一樣（P4 §5.4）。
+   *
+   * 這一支的 `userId` 唯一的用途就是寫進 `AuditLog` ——
+   * **收 body 的話，那份軌跡可以被它要記錄的人偽造**，
+   * 而一份可以偽造的軌跡比沒有軌跡更糟：它會被當成證據。
+   */
+  it("存公司設定時的 userId 取自 DeWT，不是 request body", async () => {
+    await companyProfileSave(
+      send(
+        "PUT",
+        {
+          entityName: "測試股份有限公司",
+          userId: SPOOFED_USER_ID,
+          accountBookId: OTHER_BOOK,
+        },
+        "0xspoof-profile",
+      ),
+      { params: bookParams() },
+    );
+
+    const [args] = serviceMocks.companyProfileSave.mock.calls;
+    expect((args[0] as { userId: string }).userId).toBe(USER_ID);
+    expect((args[0] as { userId: string }).userId).not.toBe(SPOOFED_USER_ID);
+    expect((args[0] as { accountBookId: string }).accountBookId).toBe(BOOK);
+  });
+
+  /**
+   * Info: (20260914 - Julian) 壞掉的 JSON 是 400，不是 500。
+   *
+   * `request.json()` 對壞掉的 JSON 會丟例外，而那個例外會掉進 route 的
+   * catch 變成 `IS_DB_FAILED` —— 資料庫一點事都沒有，而使用者看到的是
+   * 「系統故障」，於是他會回報一個不存在的故障。
+   *
+   * 上面那組 `runInvalid` 照不到這一條：它送的是**合法 JSON、形狀不對**。
+   */
+  it("公司設定送壞掉的 JSON 回 400，不是 500", async () => {
+    const response = await companyProfileSave(
+      new NextRequest("http://localhost/api", {
+        method: "PUT",
+        headers: withAuth("0xbad-json"),
+        body: "{ this is not json",
+      }),
+      { params: bookParams() },
+    );
+
+    expect(response.status).toBe(httpOf(API_ERRORS.VA_INVALID_INPUT_DATA));
+    expect(serviceMocks.companyProfileSave).not.toHaveBeenCalled();
   });
 
   /**
@@ -927,12 +1074,18 @@ describe("驗證：形狀不對就進不了 service", () => {
     },
   );
 
-  it("帶 body 的端點就是那三支（少一支代表有人把驗證拿掉了）", () => {
+  it("帶 body 的端點就是那四支（少一支代表有人把驗證拿掉了）", () => {
     expect(
       ENDPOINTS.filter((endpoint) => endpoint.runInvalid !== undefined).map(
         (endpoint) => endpoint.key,
       ),
-    ).toEqual(["employee-create", "employee-update", "record-save"]);
+    ).toEqual([
+      "employee-create",
+      "employee-update",
+      "record-save",
+      // Info: (20260914 - Julian) 公司設定是 PUT，body 走 zod（第四支）
+      "company-profile-save",
+    ]);
   });
 
   it("驗證失敗時連授權閘都不必打擾（順序：驗證在前）", async () => {

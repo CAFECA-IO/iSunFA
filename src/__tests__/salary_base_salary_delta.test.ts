@@ -68,6 +68,8 @@ const recordRow = (patch: Record<string, unknown> = {}) => ({
   totalPayment: 41234n,
   totalSalaryTaxable: 30000n,
   totalEmployerCost: 45000n,
+  // Info: (20260914 - Julian) DB 的欄位名；`toSummary` 讀它，缺了會映射成 undefined
+  entityNameSnapshot: null,
   calculatorVersion: "2026.1",
   createdAt: new Date("2026-09-05T00:00:00.000Z"),
   updatedAt: new Date("2026-09-05T00:00:00.000Z"),
@@ -155,6 +157,8 @@ describe("本薪讀純量欄位", () => {
       totalPayment: 41234n,
       totalSalaryTaxable: 30000n,
       totalEmployerCost: 45000n,
+      // Info: (20260914 - Julian) 抬頭快照；測試不驗它，給 null 表示「當時沒設定」
+      entityName: null,
     });
 
     const [arg] = recordUpsert.mock.calls[0] as [
