@@ -270,6 +270,22 @@ export async function requestFile(
 }
 
 /**
+ * Info: (20260915 - Julian) 這個錯誤是不是「你沒有權限」（review S1）。
+ *
+ * 呼叫端幾乎都把 `catch` 收成一句「請稍後再試」，而 403 不是暫時性的 ——
+ * 再試一百次也一樣。分不出來的代價是使用者把表單重打一遍才發現，
+ * 而系統從頭到尾沒說過真正的原因。
+ *
+ * 抽成函式而不是讓每個呼叫端自己寫 `error.status === 403`：
+ * 那個判斷要先 narrow 成 `ApiError` 才成立，而漏掉 narrow 的寫法
+ * （`(error as ApiError).status`）對網路錯誤會靜靜地回 `undefined`。
+ */
+export const FORBIDDEN_STATUS = 403;
+
+export const isForbiddenError = (error: unknown): boolean =>
+  error instanceof ApiError && error.status === FORBIDDEN_STATUS;
+
+/**
  * Info: (20260813 - Julian) 從 `Content-Disposition` 取出伺服器指定的檔名。
  *
  * Info: (20260914 - Julian) **`filename*` 優先**，取不到才退回 `filename="..."`。

@@ -7,6 +7,7 @@ import {
   CalendarRange,
   Hash,
   MapPinned,
+  ShieldOff,
   User,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -19,6 +20,9 @@ import {
 import SalaryCalculatorShell from "@/components/salary_calculator/salary_calculator_shell";
 import LeaveWithoutSavingModal from "@/components/salary_calculator/leave_without_saving_modal";
 import { useUnsavedChangesGuard } from "@/hooks/use_unsaved_changes_guard";
+import { useSalaryRole } from "@/contexts/salary_access_context";
+import { isSalaryAccessAllowed, SalaryAccess } from "@/constants/salary_access";
+import { isForbiddenError } from "@/lib/utils/request";
 import {
   companyProfileFormToPayload,
   isCompanyProfileDirty,
@@ -55,6 +59,28 @@ const CompanySettingPageBody: FC<ICompanySettingPageBodyProps> = ({
   accountBookId,
 }) => {
   const { t } = useTranslation();
+
+  /**
+   * Info: (20260915 - Julian) **讀得到不等於改得動**（review S1）。
+   *
+   * 這一區的角色閘只問 `READ`（`OWNER + EDITOR`）—— 記帳士進得來是對的，
+   * 薪資單上就印著公司抬頭，他看得到是必要的。但**改**它是
+   * `SETTINGS_WRITE`（只有 `OWNER`）：那是代表公司做決定，
+   * 尤其特休年度制度是細則 §24 II 明定由勞雇雙方協商的結果。
+   *
+   * 沒有這一行的話，`EDITOR` 看到的是一張完全可用的表單，
+   * 把公司名、統編、負責人、地址、特休制度全部打一遍，按下儲存必定 403，
+   * 而畫面只說「儲存失敗，請稍後再試」—— 那句話是假的，
+   * 再試一百次也一樣，而他打的東西全部丟掉。
+   *
+   * 角色來自 `SalaryAccessGate`（它本來就問過了），判斷交給
+   * `isSalaryAccessAllowed` —— 前端不另寫一份角色清單，
+   * 否則會長出「畫面讓你按、伺服器擋你」的分岔。
+   */
+  const canEdit = isSalaryAccessAllowed(
+    useSalaryRole(),
+    SalaryAccess.SETTINGS_WRITE,
+  );
   const { profile, isLoading, loadFailed, saveProfile } =
     useCompanyProfile(accountBookId);
 
@@ -68,6 +94,14 @@ const CompanySettingPageBody: FC<ICompanySettingPageBodyProps> = ({
 
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveFailed, setSaveFailed] = useState<boolean>(false);
+  /**
+   * Info: (20260915 - Julian) 被伺服器擋下來，與「失敗了再試一次」分開（review S1）。
+   *
+   * 上面那個 `canEdit` 是**畫面**的防線，這一個是**伺服器**回來的事實。
+   * 兩個都要：角色可能在載入之後才被改掉，而那時畫面上的按鈕還是能按的。
+   * 不分開的話，403 會顯示成「請稍後再試」——一句永遠不會成真的話。
+   */
+  const [saveDenied, setSaveDenied] = useState<boolean>(false);
   const [justSaved, setJustSaved] = useState<boolean>(false);
 
   // Info: (20260914 - Julian) 載回來之後灌進表單；`null` 一律顯示為空字串
@@ -134,18 +168,22 @@ const CompanySettingPageBody: FC<ICompanySettingPageBodyProps> = ({
   const isIncomplete =
     entityName.trim() === "" ||
     (isCustom && (startMonth === "" || startDay === ""));
-  const isConfirmDisabled = isIncomplete || isSaving || isLoading || loadFailed;
+  const isConfirmDisabled =
+    !canEdit || isIncomplete || isSaving || isLoading || loadFailed;
 
   const handleSave = async () => {
     setIsSaving(true);
     setSaveFailed(false);
+    setSaveDenied(false);
     setJustSaved(false);
     try {
       // Info: (20260914 - Julian) 與「有沒有改過」共用同一支正規化，不再自己拼一份
       await saveProfile(companyProfileFormToPayload(form));
       setJustSaved(true);
-    } catch {
-      setSaveFailed(true);
+    } catch (error) {
+      // Info: (20260915 - Julian) 403 不是暫時性的，不能說「請稍後再試」
+      if (isForbiddenError(error)) setSaveDenied(true);
+      else setSaveFailed(true);
     } finally {
       setIsSaving(false);
     }
@@ -203,13 +241,21 @@ const CompanySettingPageBody: FC<ICompanySettingPageBodyProps> = ({
         {label}
         {isRequired && <span className="text-red-500">*</span>}
       </label>
+      {/**
+       * Info: (20260915 - Julian) 唯讀用 `readOnly` 而不是 `disabled`（review S1）。
+       *
+       * `disabled` 的欄位在多數瀏覽器裡是**選不起來也複製不了**的，
+       * 而這一頁對 `EDITOR` 的正當用途正是「看公司抬頭是什麼」——
+       * 薪資單上就印著它。`readOnly` 改不動但讀得到、複製得走。
+       */}
       <input
         id={id}
         type="text"
         value={value}
         placeholder={placeholder}
+        readOnly={!canEdit}
         onChange={(event) => onChange(event.target.value)}
-        className={`w-full ${inputStyle}`}
+        className={`w-full ${inputStyle} ${canEdit ? "" : "cursor-not-allowed bg-gray-50 text-gray-500"}`}
       />
       {hint && <p className="text-xs text-gray-400">{hint}</p>}
     </div>
@@ -225,6 +271,22 @@ const CompanySettingPageBody: FC<ICompanySettingPageBodyProps> = ({
         {loadFailed && (
           <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
             {t("calculator.company_setting.load_failed")}
+          </p>
+        )}
+
+        {/**
+         * Info: (20260915 - Julian) 唯讀的理由要說在**打字之前**（review S1）。
+         *
+         * 放在最上面而不是按鈕旁邊：按鈕旁邊的話，使用者是把整張表填完、
+         * 伸手去按的時候才讀到它 —— 那時候該省下的力氣已經花掉了。
+         *
+         * 文案（`read_only`）五個語系在 20260914 就寫好了，只是沒有任何
+         * 地方引用它。這裡把它接上。
+         */}
+        {!canEdit && (
+          <p className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+            <ShieldOff size={16} className="shrink-0" />
+            {t("calculator.company_setting.read_only")}
           </p>
         )}
 
@@ -335,8 +397,9 @@ const CompanySettingPageBody: FC<ICompanySettingPageBodyProps> = ({
                   type="radio"
                   name="leave-year-scheme"
                   checked={scheme === null}
+                  disabled={!canEdit}
                   onChange={() => setScheme(null)}
-                  className="shrink-0 accent-orange-500"
+                  className="shrink-0 accent-orange-500 disabled:cursor-not-allowed"
                 />
                 {t("calculator.company_setting.leave_year_unset")}
               </label>
@@ -356,8 +419,9 @@ const CompanySettingPageBody: FC<ICompanySettingPageBodyProps> = ({
                     type="radio"
                     name="leave-year-scheme"
                     checked={scheme === option}
+                    disabled={!canEdit}
                     onChange={() => setScheme(option)}
-                    className="shrink-0 accent-orange-500"
+                    className="shrink-0 accent-orange-500 disabled:cursor-not-allowed"
                   />
                   {t(`calculator.company_setting.${SCHEME_LABEL_KEY[option]}`)}
                 </label>
@@ -384,8 +448,9 @@ const CompanySettingPageBody: FC<ICompanySettingPageBodyProps> = ({
                 max={12}
                 value={startMonth}
                 aria-label={t("calculator.company_setting.month_unit")}
+                readOnly={!canEdit}
                 onChange={(event) => setStartMonth(event.target.value)}
-                className={`w-20 ${inputStyle}`}
+                className={`w-20 ${inputStyle} ${canEdit ? "" : "cursor-not-allowed bg-gray-50 text-gray-500"}`}
               />
               <span className="text-sm text-gray-500">
                 {t("calculator.company_setting.month_unit")}
@@ -397,8 +462,9 @@ const CompanySettingPageBody: FC<ICompanySettingPageBodyProps> = ({
                 max={31}
                 value={startDay}
                 aria-label={t("calculator.company_setting.day_unit")}
+                readOnly={!canEdit}
                 onChange={(event) => setStartDay(event.target.value)}
-                className={`w-20 ${inputStyle}`}
+                className={`w-20 ${inputStyle} ${canEdit ? "" : "cursor-not-allowed bg-gray-50 text-gray-500"}`}
               />
               <span className="text-sm text-gray-500">
                 {t("calculator.company_setting.day_unit")}
@@ -416,6 +482,17 @@ const CompanySettingPageBody: FC<ICompanySettingPageBodyProps> = ({
           {saveFailed && (
             <span className="text-sm font-medium text-red-600">
               {t("calculator.company_setting.save_failed")}
+            </span>
+          )}
+          {/**
+           * Info: (20260915 - Julian) 伺服器擋下來時說真話，不說「請稍後再試」。
+           *
+           * 走到這裡代表角色在載入之後被改掉了（畫面上的按鈕當時還能按）——
+           * 罕見，但它是唯一會讓使用者重試到放棄的失敗。
+           */}
+          {saveDenied && (
+            <span className="text-sm font-medium text-amber-700">
+              {t("calculator.company_setting.read_only")}
             </span>
           )}
           <button

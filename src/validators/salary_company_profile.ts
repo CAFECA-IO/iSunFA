@@ -76,10 +76,34 @@ export const AccountBookCompanyProfileSchema = z
    */
   .superRefine((value, ctx) => {
     const needsStart = value.leaveYearScheme === LeaveYearScheme.CUSTOM;
-    const hasStart =
-      value.leaveYearStartMonth !== null && value.leaveYearStartDay !== null;
 
-    if (needsStart && !hasStart) {
+    /**
+     * Info: (20260915 - Julian) 兩個方向問的不是同一個問題，所以是兩個判準（review S2）。
+     *
+     * | 方向 | 問的是 | 判準 |
+     * | --- | --- | --- |
+     * | 約定年度 | **兩格都齊了嗎** | `&&` |
+     * | 其他制度 | **有沒有任何一格殘留** | `\|\|` |
+     *
+     * 原本兩邊共用一個 `hasStart`（`&&`），於是反方向只擋得住
+     * 「兩格都有值」—— `{ CALENDAR, month: 3, day: null }` 與
+     * `{ scheme: null, month: 3 }` 都會 parse 成功並存進資料庫。
+     *
+     * 這是檢查清單 §2.5 的形狀：**護欄的涵蓋範圍被用護欄的程式碼描述，
+     * 而不是用輸入空間描述**。寫成 when 子句就會自己喊出反例 ——
+     * 「兩格**都**有值時，非約定年度不得帶起日」，那個「都」不該在那裡。
+     *
+     * 走 UI 到不了（`companyProfileFormToPayload` 在非約定年度時兩格一起
+     * 清成 `null`），所以這是 API 直呼與日後重構的風險。留下的是一筆
+     * 自相矛盾的設定列，而下一個實作 §38 V 年度通知的人會撞到
+     * 「這個月份是幹嘛的」，且分不出那是設定還是殘留。
+     */
+    const hasBothStart =
+      value.leaveYearStartMonth !== null && value.leaveYearStartDay !== null;
+    const hasAnyStart =
+      value.leaveYearStartMonth !== null || value.leaveYearStartDay !== null;
+
+    if (needsStart && !hasBothStart) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["leaveYearStartMonth"],
@@ -87,9 +111,7 @@ export const AccountBookCompanyProfileSchema = z
       });
     }
 
-    if (!needsStart && !hasStart) return;
-
-    if (!needsStart && hasStart) {
+    if (!needsStart && hasAnyStart) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["leaveYearStartMonth"],

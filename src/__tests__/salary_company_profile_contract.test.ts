@@ -161,30 +161,53 @@ describe("該擋的還是要擋", () => {
     ).toBe(false);
   });
 
-  it("選了約定年度卻沒給起日 —— 擋", () => {
+  /**
+   * Info: (20260915 - Julian) 約定年度那一側問的是「**兩格都齊了嗎**」（`&&`）。
+   *
+   * 只給一格也要擋：一個只有月份、沒有日期的約定年度算不出年度終結日，
+   * 而 §38 V 的書面通知就發在那一天。
+   */
+  it.each([
+    ["兩格都沒給", null, null],
+    ["只給了月份", 3, null],
+    ["只給了日期", null, 1],
+  ])("選了約定年度但起日 %s —— 擋", (_label, month, day) => {
     expect(
       AccountBookCompanyProfileSchema.safeParse({
         entityName: "小花有限公司",
         leaveYearScheme: LeaveYearScheme.CUSTOM,
-        leaveYearStartMonth: null,
-        leaveYearStartDay: null,
+        leaveYearStartMonth: month,
+        leaveYearStartDay: day,
       }).success,
     ).toBe(false);
   });
 
   /**
-   * Info: (20260914 - Julian) 反方向也要擋：選了曆年制卻帶著上一次的 3/1。
+   * Info: (20260915 - Julian) 反方向問的是「**有沒有任何一格殘留**」（`||`）—— review S2。
    *
-   * 那組數字不會被用到，但它會留在資料庫裡，而下一個讀它的人
-   * 分不出那是設定還是殘留。
+   * 要防的是：選了約定年度、填了 3/1，再改回曆年制。那組數字不會被用到，
+   * 但它會留在資料庫裡，而下一個讀它的人分不出那是設定還是殘留。
+   *
+   * **`only-month` 與 `only-day` 這兩條是 20260915 補的。**
+   * 原本兩個方向共用一個 `hasStart`（`&&`），於是反方向只擋得住
+   * 「兩格都有值」—— 少了這兩條，把 `||` 改回 `&&` 不會有任何紅燈。
+   *
+   * `scheme: null`（還沒選）那一條也要有：它不是約定年度，
+   * 所以同樣不該帶著起日，而「還沒選卻已經有起算日」是最矛盾的一種。
    */
-  it("非約定年度卻帶著起日 —— 擋", () => {
+  it.each([
+    ["曆年制 ＋ 兩格都有", LeaveYearScheme.CALENDAR, 3, 1],
+    ["曆年制 ＋ 只有月份", LeaveYearScheme.CALENDAR, 3, null],
+    ["曆年制 ＋ 只有日期", LeaveYearScheme.CALENDAR, null, 1],
+    ["週年制 ＋ 只有月份", LeaveYearScheme.ANNIVERSARY, 3, null],
+    ["還沒選 ＋ 只有月份", null, 3, null],
+  ])("%s —— 擋", (_label, scheme, month, day) => {
     expect(
       AccountBookCompanyProfileSchema.safeParse({
         entityName: "小花有限公司",
-        leaveYearScheme: LeaveYearScheme.CALENDAR,
-        leaveYearStartMonth: 3,
-        leaveYearStartDay: 1,
+        leaveYearScheme: scheme,
+        leaveYearStartMonth: month,
+        leaveYearStartDay: day,
       }).success,
     ).toBe(false);
   });
