@@ -539,8 +539,22 @@ export const salaryRegisterFilename = (
     return `salary-records-${stamp}.csv`;
   }
 
+  /**
+   * Info: (20260915 - Julian) 期間是空的時候不要留一條尾巴（review L1）。
+   *
+   * `records` 可能是空的：勾選的 id 一筆都不屬於這本帳時，
+   * `listRecordsByIds` 回空陣列（那是刻意的 —— 猜到別人的 id 也讀不到）。
+   * 那時 `periodRangeOf` 回 `""`，直接接起來會是 `公司_工資清冊_.csv`，
+   * 一條沒有意義的底線尾巴。
+   *
+   * 與表頭第一行同一套處理（那裡也是 `.filter` 掉空的段落），
+   * 所以兩邊對「沒有期間」的長相是一致的。
+   */
   const range = periodRangeOf(records).replace(/\s*～\s*/, "_");
-  return `${name}_${CSV_PREAMBLE_LABELS.title}_${range}.csv`;
+
+  return `${[name, CSV_PREAMBLE_LABELS.title, range]
+    .filter((part) => part !== "")
+    .join("_")}.csv`;
 };
 
 export const buildSalaryRecordCsv = (

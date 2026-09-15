@@ -613,17 +613,38 @@ const totalSalaryTaxFree = … + vacationToPay;   // ← 進免稅
 
 本專案的測試不 render React，護欄走既有的兩條路：
 
-| 測試                                            | 守什麼                                                                          |
-| ----------------------------------------------- | ------------------------------------------------------------------------------- |
-| `salary_route_wiring.test.ts`（擴充）           | 兩支新端點的身分閘、`SalaryAccess`、限流桶                                      |
-| `salary_repo_scope.test.ts`（擴充）             | 新 repo 每支公開方法的租戶過濾與 `LIFECYCLE` 分類                               |
-| `i18n_keys.test.ts`（自動涵蓋）                 | 新命名空間五語系齊備                                                            |
-| `salary_pay_slip_meta.test.ts`（擴充）          | **`entityName` 來源是快照、取不到才回退現值**（§4.1）                           |
-| `salary_company_profile_contract.test.ts`（新） | 抬頭有印在表頭；**`leaveYearScheme` 沒選之前不發年度通知**（§3.3 的預設值陷阱） |
+| 測試                                            | 守什麼                                                         |
+| ----------------------------------------------- | -------------------------------------------------------------- |
+| `salary_route_wiring.test.ts`（擴充）           | 兩支新端點的身分閘、`SalaryAccess`、限流桶                     |
+| `salary_repo_scope.test.ts`（擴充）             | 新 repo 每支公開方法的租戶過濾與 `LIFECYCLE` 分類              |
+| `i18n_keys.test.ts`（自動涵蓋）                 | 新命名空間五語系齊備                                           |
+| `salary_pay_slip_meta.test.ts`（擴充）          | **`entityName` 來源是快照、取不到才回退現值**（§4.1）          |
+| `salary_company_profile_contract.test.ts`（新） | GET 交出來的形狀 PUT 一定收得下；特休年度制度與起日的雙向自洽  |
+| `salary_record_csv.test.ts`（擴充）             | 工資清冊的表頭與檔名（§5.5）                                   |
+| `salary_schema_defaults.test.ts`（擴充）        | 兩個「刻意不給 `@default`」的決定（§3.3、§4.1）                |
+| `unsaved_changes_guard.test.ts`（新）           | 未儲存就離開的判準、正規化與 `beforeunload` 生命週期（§5.4.1） |
+| `company_profile_hint.test.ts`（新）            | 未設定提示的出現判準與關閉旗標（§5.3）                         |
+| `salary_company_setting_access.test.ts`（新）   | `EDITOR` 進得來但改不動（`SETTINGS_WRITE`）                    |
+| `content_disposition.test.ts`（新）             | 中文檔名的送出與讀回**往返**（§5.5）                           |
 
-最後兩條最重要：它們釘住 §4 與 §3.3 兩個決定。既有的三個來源（到職日／
-投保狀態／公司抬頭）各自的來源由 `salary_pay_slip_meta.test.ts` 釘住，
-「統一」掉任一個都會轉紅，而紅的訊息會指回 `pay_slip_meta.ts` 的說明。
+> **20260915 更正（review L3）：上面這一列原本寫的是**
+> 「`salary_company_profile_contract.test.ts` 釘住『抬頭有印在表頭』與
+> 『`leaveYearScheme` 沒選之前不發年度通知』」。**兩句都不對。**
+>
+> - 「抬頭有印在表頭」實際上在 `salary_record_csv.test.ts`。
+> - 「沒選之前不發年度通知」**沒有這條測試，因為沒有這個功能** ——
+>   §38 V 的年度通知不在本計劃範圍（見 §11）。沒有功能就沒有東西可以釘。
+>
+> 這份計劃書是本 PR 交付的文件之一，而它宣稱了不存在的測試。
+> 依 `code_review_checklist §6`：**當事實與條文衝突時，改條文。**
+>
+> 那一條（年度通知在制度沒選之前不得發出）**仍然是對的要求**，
+> 只是它的落地點在 §38 V 那支 issue，不在這裡。留在這裡的話，
+> 下一個人會以為它已經有人守著。
+
+`salary_pay_slip_meta.test.ts` 那一條最重要：既有的三個來源（到職日／
+投保狀態／公司抬頭）各自的來源由它釘住，「統一」掉任一個都會轉紅，
+而紅的訊息會指回 `pay_slip_meta.ts` 的說明。
 
 每一條新斷言照慣例做 mutation 驗紅。
 
@@ -632,6 +653,21 @@ const totalSalaryTaxFree = … + vacationToPay;   // ← 進免稅
 > 6,327 條。實作前要先修好，否則 mutation 驗紅會被跳過。
 
 ---
+
+## 10.1 相依套件：`lucide-react` 從 `^1.7.0` 提到 `^1.45.0`（20260915 補記，review L4）
+
+這一頁與導覽列用的 `BuildingComplex` 圖示是 1.4x 才加進去的。
+
+**實際風險是零，而這一句話存在的理由不是風險。** `^1.7.0` 這個 range 本來就
+會裝到 1.46（caret 允許同一個 major 內的任何版本），而本 repo 的 lockfile 是
+gitignore 的、CI 走 `npm i` —— 也就是說**在提版號之前，大家裝到的其實已經是
+1.4x 了**。提上去只是讓 `package.json` 說的話與實際裝的一致。
+
+寫下來是因為 PR 檢查表有「new Library」這一格：一個沒有被解釋的相依版號變動，
+下一個 reviewer 得自己去查它為什麼動 —— 而那個成本每次都要付一遍。
+
+（`BuildingComplex` 的存在與型別宣告已確認。若日後要把 range 收緊，
+那是另一件事：本 repo 目前所有相依都是 caret。）
 
 ## 11. 本計劃**不**處理
 

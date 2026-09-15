@@ -931,6 +931,19 @@ describe("工資清冊的下載檔名", () => {
   });
 
   /**
+   * Info: (20260915 - Julian) 一筆紀錄都沒有時，檔名不要留一條底線尾巴（review L1）。
+   *
+   * 勾選的 id 一筆都不屬於這本帳時 `records` 是空的（那是刻意的 ——
+   * 猜到別人的 id 也讀不到），`periodRangeOf` 回 `""`。
+   * 直接接起來會是 `測試股份有限公司_工資清冊_.csv`。
+   */
+  it("沒有任何紀錄時，檔名不帶期間也不帶多餘的底線", () => {
+    expect(salaryRegisterFilename([], COMPANY)).toBe(
+      `${COMPANY.entityName}_${CSV_PREAMBLE_LABELS.title}.csv`,
+    );
+  });
+
+  /**
    * Info: (20260914 - Julian) 沒設定公司就退回時間戳檔名。
    *
    * 那個名字難看但不會撞號。硬塞一個「未命名公司」只是把問題寫進檔名，

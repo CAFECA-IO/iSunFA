@@ -6,6 +6,7 @@ import * as AttendanceConstants from "@/constants/attendance";
 import * as LeaveConstants from "@/constants/leave";
 import * as LeavePolicyConstants from "@/constants/leave_policy";
 import * as OvertimeConstants from "@/constants/overtime";
+import * as AuditLogConstants from "@/constants/audit_log";
 
 /**
  * Info: (20260811 - Julian) 把「前端 enum 鏡像與 Prisma schema 同步」這件事機械化。
@@ -83,6 +84,16 @@ const CONSTANT_MODULES: Record<string, Record<string, unknown>> = {
   "leave.ts": LeaveConstants,
   "leave_policy.ts": LeavePolicyConstants,
   "overtime.ts": OvertimeConstants,
+  /**
+   * Info: (20260915 - Julian) 稽核軌跡（review L5）。
+   *
+   * `src/constants/audit_log.ts` 與 `hr_management.ts` 是同一種東西 ——
+   * 手抄的 Prisma enum 鏡像 —— 而它一直沒有登記在這裡。
+   * 20260914 這個 PR 替 `AuditLogDataType` 加了一個值，兩邊都改對了，
+   * 但**那是靠人**：漏抄一邊的症狀是執行期 `undefined` 進了
+   * `prisma.auditLog.create` 的 `dataType`，而 jest 走轉譯不做型別檢查。
+   */
+  "audit_log.ts": AuditLogConstants,
 };
 
 // Info: (20260811 - Julian) 需與 Prisma schema 保持一致的鏡像。新增鏡像時必須在此登記
@@ -134,6 +145,10 @@ const MIRRORED: Record<string, Record<string, string>> = {
   OvertimeEvidenceBasis: OvertimeConstants.OvertimeEvidenceBasis,
   OvertimePremiumTier: OvertimeConstants.OvertimePremiumTier,
   OvertimeRequestStatus: OvertimeConstants.OvertimeRequestStatus,
+
+  // Info: (20260915 - Julian) 稽核軌跡（review L5）
+  AuditLogAction: AuditLogConstants.AuditLogAction,
+  AuditLogDataType: AuditLogConstants.AuditLogDataType,
 };
 
 /**

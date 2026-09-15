@@ -33,6 +33,22 @@ export interface ICompanyProfileForm {
 const trimmedOrNull = (value: string): string | null =>
   value.trim() === "" ? null : value.trim();
 
+/**
+ * Info: (20260915 - Julian) 沒填的數字欄是 `null`，**不是 `0`**（review L2）。
+ *
+ * 原本寫 `Number(form.startMonth)`，而 `Number("") === 0`。
+ * 於是「選了約定年度但月／日留空」送出去的是 `0`／`0`，
+ * 被 `min(1)` 擋下 —— 擋是擋住了，但 `superRefine` 那句
+ * 「custom leave year scheme requires a start month and day」**永遠到不了**，
+ * 使用者看到的是「數字太小」而不是「這兩格要填」。
+ *
+ * 更重要的是前後端對「沒填」要是同一個值：這一頁其他每一個可空欄位
+ * 都收斂成 `null`（`trimmedOrNull`、validator 的 `optionalText`），
+ * 只有這兩格是 `0` —— 而 `0` 是一個合法的數字，不是一個空值。
+ */
+const numberOrNull = (value: string): number | null =>
+  value.trim() === "" ? null : Number(value);
+
 export const companyProfileFormToPayload = (
   form: ICompanyProfileForm,
 ): IAccountBookCompanyProfile => {
@@ -51,8 +67,8 @@ export const companyProfileFormToPayload = (
      * 留著的話會存進一份自相矛盾的設定（後端的 `superRefine` 也會擋，
      * 但那時使用者看到的是「儲存失敗」而不是「那兩格不算數了」）。
      */
-    leaveYearStartMonth: isCustom ? Number(form.startMonth) : null,
-    leaveYearStartDay: isCustom ? Number(form.startDay) : null,
+    leaveYearStartMonth: numberOrNull(isCustom ? form.startMonth : ""),
+    leaveYearStartDay: numberOrNull(isCustom ? form.startDay : ""),
   };
 };
 

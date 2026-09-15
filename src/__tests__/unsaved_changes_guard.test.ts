@@ -205,6 +205,25 @@ describe("有沒有未儲存的變更", () => {
     expect(isCompanyProfileDirty(form, SAVED)).toBe(false);
   });
 
+  /**
+   * Info: (20260915 - Julian) 沒填的數字欄是 `null`，不是 `0`（review L2）。
+   *
+   * `Number("") === 0`，而 `0` 是一個合法的數字不是空值。
+   * 送出 `0` 的話後端 `min(1)` 會擋下，但擋下的訊息是「數字太小」——
+   * `superRefine` 那句「約定年度需要月與日」永遠到不了。
+   */
+  it("選了約定年度但月日留空時送出 null，不是 0", () => {
+    const payload = companyProfileFormToPayload({
+      ...FORM,
+      scheme: LeaveYearScheme.CUSTOM,
+      startMonth: "",
+      startDay: "",
+    });
+
+    expect(payload.leaveYearStartMonth).toBeNull();
+    expect(payload.leaveYearStartDay).toBeNull();
+  });
+
   it("選了約定年度並填了月日 —— 算改過", () => {
     expect(
       isCompanyProfileDirty(
