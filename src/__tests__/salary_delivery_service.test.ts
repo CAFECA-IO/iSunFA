@@ -32,6 +32,11 @@ import type { ISalaryPaySlipDeliveryRepository } from "@/repositories/salary_pay
 import type { ISalaryPaySlipPdf } from "@/services/salary_pay_slip_pdf.service";
 import type { IPaySlipHtmlInput } from "@/lib/utils/pay_slip_html";
 import type { IMailMessage } from "@/services/mail.service";
+import type { IAccountBookCompanyProfileReader } from "@/services/salary_record.service";
+import type {
+  IAccountBookCompanyProfile,
+  IAccountBookCompanyProfileView,
+} from "@/interfaces/salary_company_profile";
 import { MailNotConfiguredError } from "@/services/mail.service";
 import {
   ISalaryMailSender,
@@ -250,6 +255,37 @@ class FakePdf implements ISalaryPaySlipPdfGenerator {
   }
 }
 
+/**
+ * Info: (20260915 - Julian) 假的公司設定讀取器（review B2）。
+ *
+ * 依帳本分開放：service 若忘了把 `accountBookId` 傳下去，
+ * 這裡會回「還沒設定」而不是別本帳的抬頭 —— 而後者會把另一家公司的名字
+ * 印在寄出去的薪資單上。
+ */
+const EMPTY_PROFILE: IAccountBookCompanyProfile = {
+  entityName: "",
+  taxId: null,
+  responsiblePerson: null,
+  address: null,
+  leaveYearScheme: null,
+  leaveYearStartMonth: null,
+  leaveYearStartDay: null,
+};
+
+class FakeCompanyProfileReader implements IAccountBookCompanyProfileReader {
+  public readonly profileByBook = new Map<string, IAccountBookCompanyProfile>();
+
+  public async getProfile(
+    accountBookId: string,
+  ): Promise<IAccountBookCompanyProfileView> {
+    const found = this.profileByBook.get(accountBookId);
+
+    return found === undefined
+      ? { ...EMPTY_PROFILE, isConfigured: false }
+      : { ...found, isConfigured: true };
+  }
+}
+
 class FakeMailer implements ISalaryMailSender {
   public readonly sent: IMailMessage[] = [];
   public failWith: Error | null = null;
@@ -265,6 +301,7 @@ let records: FakeRecordRepo;
 let deliveries: FakeDeliveryRepo;
 let pdf: FakePdf;
 let mailer: FakeMailer;
+let companyProfiles: FakeCompanyProfileReader;
 let service: SalaryPaySlipDeliveryService;
 
 const deliver = (
@@ -285,13 +322,96 @@ beforeEach(() => {
   deliveries = new FakeDeliveryRepo();
   pdf = new FakePdf();
   mailer = new FakeMailer();
+  companyProfiles = new FakeCompanyProfileReader();
+  /**
+   * Info: (20260915 - Julian) 第六個參數不能省（review B2）。
+   *
+   * 省掉會落到預設值 —— 也就是真的 service，它會去打真的資料庫。
+   * 在開發機上通常會通（本機 DB 開著），在 CI 上會爆，
+   * 而爆的是一支與資料庫無關的單元測試。
+   */
   service = new SalaryPaySlipDeliveryService(
     employees,
     records,
     deliveries,
     pdf,
     mailer,
+    companyProfiles,
   );
+});
+
+/**
+ * Info: (20260915 - Julian) 寄出去的那張 PDF 上到底有沒有抬頭（review B2）。
+ *
+ * `resolveEntityName` 自己有 4 條單元測試，但**沒有任何一條問過
+ * 這條路有沒有接上**（檢查清單 §1.7）。把這一段整個拿掉會全綠，
+ * 而症狀是員工收到的薪資單少了署名 —— 沒有人會回報，
+ * 因為收到薪資單的人不知道上面本來該有公司名稱。
+ *
+ * 三條對應 `resolveEntityName` 的三種輸入，但驗的是**組裝後的結果**
+ * （`pdf.calls[0].meta.entityName`），不是那支函式的回傳值。
+ */
+describe("寄出的薪資單上的公司抬頭", () => {
+  const COMPANY: IAccountBookCompanyProfile = {
+    ...EMPTY_PROFILE,
+    entityName: "小花有限公司",
+  };
+
+  /**
+   * Info: (20260915 - Julian) 快照優先 —— 而且**現值必須不同**才驗得出優先。
+   *
+   * 兩邊填同一個名字的話，「一律用現值」也會過。
+   */
+  it("紀錄有快照時用快照，即使公司後來改了名", async () => {
+    records = new FakeRecordRepo(
+      new Map([
+        [
+          `${BOOK}:${RECORD_ID}`,
+          recordOf({ entityNameSnapshot: "小花有限公司（舊名）" }),
+        ],
+      ]),
+    );
+    companyProfiles.profileByBook.set(BOOK, COMPANY);
+    service = new SalaryPaySlipDeliveryService(
+      employees,
+      records,
+      deliveries,
+      pdf,
+      mailer,
+      companyProfiles,
+    );
+
+    await deliver();
+
+    expect(pdf.calls[0].meta.entityName).toBe("小花有限公司（舊名）");
+  });
+
+  /**
+   * Info: (20260915 - Julian) 20260914 之前存的紀錄一律沒有快照 —— 回退現值。
+   *
+   * 這一條是「有沒有去讀公司設定」唯一問得到的地方：
+   * 不讀的話這裡會是 `null`。
+   */
+  it("紀錄沒有快照時回退到公司設定的現值", async () => {
+    companyProfiles.profileByBook.set(BOOK, COMPANY);
+
+    await deliver();
+
+    expect(pdf.calls[0].meta.entityName).toBe("小花有限公司");
+  });
+
+  /**
+   * Info: (20260915 - Julian) 兩邊都沒有就是 `null`，而且**不擋寄送**。
+   *
+   * 抬頭不是法定必載（施行細則 §14-1 四款全是金額），
+   * 沒填就是那張單子上不印抬頭，而不是寄不出去。
+   */
+  it("兩邊都沒有時抬頭是 null，但薪資單照樣寄得出去", async () => {
+    const result = await deliver();
+
+    expect(pdf.calls[0].meta.entityName).toBeNull();
+    expect(result.status).toBe(SALARY_DELIVERY_STATUS.SENT);
+  });
 });
 
 describe("deliver — 成功路徑", () => {

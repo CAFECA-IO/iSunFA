@@ -27,6 +27,7 @@ import {
 } from "@/services/salary_pay_slip_pdf.service";
 import { paySlipMetaOf, resolveEntityName } from "@/lib/utils/pay_slip_meta";
 import { accountBookCompanyProfileService } from "@/services/account_book_company_profile.service";
+import { IAccountBookCompanyProfileReader } from "@/services/salary_record.service";
 import { IPaySlipHtmlInput } from "@/lib/utils/pay_slip_html";
 import { buildPaySlipMail } from "@/lib/utils/pay_slip_mail";
 import {
@@ -96,6 +97,16 @@ export class SalaryPaySlipDeliveryService {
     private readonly deliveries: ISalaryPaySlipDeliveryRepository,
     private readonly pdf: ISalaryPaySlipPdfGenerator,
     private readonly mailer: ISalaryMailSender,
+    /**
+     * Info: (20260915 - Julian) 注入而不是直接用 import 進來的單例（review B2）。
+     *
+     * 理由同 `SalaryRecordService` 的同一格：直接 import 的話，
+     * 「寄出的薪資單上到底有沒有抬頭」沒有任何斷言問得到 ——
+     * 把這整段拿掉會全綠，而症狀是**員工收到的 PDF 少了署名**。
+     *
+     * 給預設值，所以既有的五參數呼叫端不受影響。
+     */
+    private readonly companyProfiles: IAccountBookCompanyProfileReader = accountBookCompanyProfileService,
   ) {}
 
   /**
@@ -157,8 +168,7 @@ export class SalaryPaySlipDeliveryService {
      * 不擋寄送 —— 抬頭不是法定必載（施行細則 §14-1 四款全是金額），
      * 沒填就是那張單子上不印抬頭，而不是寄不出去。
      */
-    const companyProfile =
-      await accountBookCompanyProfileService.getProfile(accountBookId);
+    const companyProfile = await this.companyProfiles.getProfile(accountBookId);
     const currentEntityName = companyProfile.isConfigured
       ? companyProfile.entityName
       : null;
