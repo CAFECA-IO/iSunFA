@@ -1,7 +1,4 @@
-import {
-  HR_PII_MASK_CHAR,
-  HR_PII_MASK_VISIBLE_TAIL,
-} from "@/constants/hr_pii";
+import { HR_PII_MASK_CHAR, HR_PII_MASK_VISIBLE_TAIL } from "@/constants/hr_pii";
 
 /**
  * Info: (20260812 - Julian) Tier 2 個資的顯示遮罩。

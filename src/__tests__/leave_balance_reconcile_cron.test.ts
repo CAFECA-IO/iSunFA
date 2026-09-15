@@ -268,9 +268,12 @@ describe("額度勾稽：它真的會被觸發", () => {
    * 就成了新的單點 —— 有人重構 worker 時刪掉一行，這一整檔照樣全綠。
    *
    * 形狀照抄 `faith_memory_retention_rules.test.ts` 的「有註冊進 worker」。
+   *
+   * Info: (20260907 - Luphia) 入口從 `run_worker.ts` 改為 `run_ops_node.ts`
+   *（PR #6650：worker 拆成運算／維運兩節點，這支寫庫、歸維運側）。
    */
   const worker = readFileSync(
-    join(process.cwd(), "scripts", "run_worker.ts"),
+    join(process.cwd(), "scripts", "run_ops_node.ts"),
     "utf8",
   );
 
@@ -280,7 +283,7 @@ describe("額度勾稽：它真的會被觸發", () => {
 
   it("worker 有為它開一條迴圈", () => {
     expect(worker).toMatch(
-      /startServiceLoop\(\s*\n?\s*"LeaveBalanceReconcile"/,
+      /startServiceLoop\(\s*\n?\s*NODE_NAME,\s*\n?\s*"LeaveBalanceReconcile"/,
     );
   });
 
@@ -303,7 +306,14 @@ describe("額度勾稽：它真的會被觸發", () => {
       worker,
     )?.[1];
 
-    expect(interval).toBe("60 * 60 * 1000");
+    /**
+     * Info: (20260907 - Luphia) ops 節點以 `HOUR_MS` 常數表達間隔（PR #6650）。
+     * 間接一層之後要釘**兩邊**：呼叫點的 token 是 `HOUR_MS`（改成
+     * `24 * HOUR_MS` 這裡紅），且常數定義恰為一小時（改定義那裡紅）——
+     * 少任何一半，「間隔改成每天」都有一條綠的路可走。
+     */
+    expect(interval).toBe("HOUR_MS");
+    expect(worker).toContain("const HOUR_MS = 60 * 60 * 1000;");
   });
 });
 

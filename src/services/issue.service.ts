@@ -20,6 +20,12 @@ import { ORDER_STATUS } from "@/constants/status";
 import { analysisRepo } from "@/repositories/analysis.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
+import { EmissionFactorRepo } from "@/repositories/emission_factor.repo";
+import {
+  assertSnapshotWithinBudget,
+  serializeGlobalCoefficients,
+  type ISnapshotCoefficient,
+} from "@/lib/worker/coefficient_snapshot";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import type { Analysis } from "@/generated";
 
@@ -56,6 +62,50 @@ export async function processNext() {
   }
 
   console.log(`[MissionIssuer] Processing Order ${order.id}...`);
+
+  /**
+   * Info: (20260914 - Luphia) 全球係數字典的任務快照，**整張訂單查一次**，且在
+   * **鎖定訂單之前**（PR #6650 review 阻-2／建議-9／三輪阻-1）。
+   *
+   * 外部運算節點不得存取主資料庫，而 mission 管線要用這份字典（esg_parsing 的
+   * 比對、orchestrator 的稅額校正與碳排計算）。跨界通道只有 IPFS——由這裡
+   *（發包端，有 DB）嵌進每一份 mission.json，運算側以
+   * `lib/worker/coefficient_snapshot` 讀取。
+   *
+   * **代價**（review 二輪中-2；第一版寫「多帶一份沒有代價」，錯）：以出貨形狀量，
+   * 靜態字典 1,337 筆 → 456 KB，開發機 DB 全球係數 1,371 列（線上更大）。快照隨
+   * **每一份** mission 上傳 IPFS——200 張憑證的訂單 ≈ 91 MB。查詢省成一次，
+   * 上傳仍是 N 次、每次同一份。「只嵌該 mission 需要的那些」刻意不做（篩錯就
+   * 退化成靜默少算）。
+   *
+   * **為什麼在 try 之外、鎖之前**（三輪阻-1）：字典大小是**全域**條件。第二版把
+   * 位元組守門放在 mint／approve 之後的 try 裡，超過就拋——catch 把訂單回滾成
+   * PAID 再 rethrow，下一 tick `findFirst` 依 createdAt 撈到同一張、再拋，永遠出
+   * 不來，而且擋在它後面的所有訂單一起停。這裡改成：超過就記 error、**不動訂單**、
+   * 跳過這一 tick。訂單留在 PAID 是刻意的——這不是它的錯，字典縮回去它就會被
+   * 發出；標成 FAILED 等於讓使用者為維運問題付錢。每 10 秒一行 error 是預期的
+   * 噪音：它要一直叫到有人把字典縮回去。
+   *
+   * 係數凍結於發包時點：與資金託管同一時點，同一份 mission 永遠以同一套
+   * 係數計算（審計可重放）。`emissionFactor` 轉字串（CLAUDE.md §2）。
+   * 係數是公開參照資料，不在下方「隱私剝除」的範圍。
+   */
+  let globalCoefficientSnapshot: ISnapshotCoefficient[];
+  try {
+    globalCoefficientSnapshot = serializeGlobalCoefficients(
+      await EmissionFactorRepo.getAllGlobalCoefficients(),
+    );
+    const snapshotBytes = assertSnapshotWithinBudget(globalCoefficientSnapshot);
+    console.log(
+      `[MissionIssuer] Global coefficient snapshot: ${globalCoefficientSnapshot.length} rows, ${snapshotBytes} bytes per mission`,
+    );
+  } catch (e) {
+    console.error(
+      `[MissionIssuer] Refusing to issue order ${order.id} (left in PAID, nothing spent): the global coefficient snapshot cannot be built. Issuing is halted for every order until this is fixed.`,
+      e,
+    );
+    return null;
+  }
 
   try {
     // Info: (20260429 - Luphia) Optimistic lock: set to EXECUTING immediately to prevent double processing in next loop
@@ -204,6 +254,46 @@ export async function processNext() {
       },
     });
 
+    /**
+     * Info: (20260914 - Luphia) 租戶帳本與租戶自訂係數也是**整張訂單查一次**，且
+     * **不看 category**（PR #6650 review 三輪需修-5）。
+     *
+     * 第一版把 `prerequisiteData.coefficients` 留在下方 CERTIFICATE_ANALYSIS 的分支
+     * 裡——而 `journal_correction.generator` 與 `document.generator` 都會產
+     * `ESG_PARSING` 任務：那些 mission 的 `parseTenantCoefficientSnapshot` 回 `[]`，
+     * 租戶自訂的係數 id 在字典裡查不到，orchestrator 的 `if (coef)` 跳過計算，
+     * ESG 紀錄寫入時 `emissions` 是空的、mission 報成功。`accountBookId` 是訂單層級
+     * 的欄位，每個 item 都一樣，原本每 item 查兩次 DB 是浪費。
+     *
+     * `missionData.accountBook`（整份帳本 JSON 給 AI 解析器）**仍只給**
+     * CERTIFICATE_ANALYSIS：那是解析器的輸入，不是係數字典的一部分，其他 category
+     * 不需要它、也不該多帶一份租戶資料上 IPFS。
+     */
+    const accBookId = (orderDataObj.accountBookId ||
+      (orderDataObj.data as Record<string, unknown> | undefined)
+        ?.accountBookId) as string | undefined;
+    let tenantAccountBook: Awaited<
+      ReturnType<typeof accountBookRepo.getAccountBookById>
+    > = null;
+    let tenantCoefficients: Awaited<
+      ReturnType<typeof esgRepo.getEsgCoefficients>
+    > = [];
+    if (accBookId) {
+      try {
+        tenantAccountBook = await accountBookRepo.getAccountBookById(accBookId);
+        if (tenantAccountBook) {
+          tenantCoefficients = await esgRepo.getEsgCoefficients(
+            tenantAccountBook.id,
+          );
+        }
+      } catch (e) {
+        console.warn(
+          `[MissionIssuer] Failed to fetch accountBook ${accBookId}`,
+          e,
+        );
+      }
+    }
+
     const preparedItems = await Promise.all(
       itemsToProcess.map(async (item) => {
         let localContextObj: Record<string, unknown> | null = null;
@@ -262,29 +352,22 @@ export async function processNext() {
         delete missionData.orderId;
         delete missionData.cost;
 
-        // Info: (20260516 - Luphia) 將 accountBookId 轉換為完整的 accountBook JSON 給 AI 解析器
-        const accBookId =
-          missionData.accountBookId || missionData.data?.accountBookId;
-        if (accBookId && category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
-          try {
-            const accBook = await accountBookRepo.getAccountBookById(
-              accBookId as string,
-            );
-            if (accBook) {
-              missionData.accountBook = accBook;
-              const tenantCustomCoefficients = await esgRepo.getEsgCoefficients(
-                accBook.id,
-              );
-              if (!missionData.prerequisiteData)
-                missionData.prerequisiteData = {};
-              missionData.prerequisiteData.coefficients =
-                tenantCustomCoefficients;
-            }
-          } catch (e) {
-            console.warn(
-              `[MissionIssuer] Failed to fetch accountBook ${accBookId}`,
-              e,
-            );
+        /**
+         * Info: (20260914 - Luphia) 全球係數快照與租戶係數對**每一份** mission 嵌入，
+         * 不看 category（review 阻-2／三輪需修-5）。第一版包在 CERTIFICATE_ANALYSIS
+         * 的分支裡——而 `journal_correction.generator` 與 `document.generator` 都會產
+         * `ESG_PARSING` 任務，journal route 以 `JOURNAL_CORRECTION` 建 PAID 訂單：
+         * 那些任務拿到空快照，字典退化成只剩靜態常數，admin 維護的官方係數與
+         * 租戶自訂係數消失且零 log。體積代價見上方 processNext 開頭的註解。
+         */
+        if (!missionData.prerequisiteData) missionData.prerequisiteData = {};
+        missionData.prerequisiteData.globalCoefficients =
+          globalCoefficientSnapshot;
+        if (tenantAccountBook) {
+          missionData.prerequisiteData.coefficients = tenantCoefficients;
+          // Info: (20260516 - Luphia) 將 accountBookId 轉換為完整的 accountBook JSON 給 AI 解析器
+          if (category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS) {
+            missionData.accountBook = tenantAccountBook;
           }
         }
 

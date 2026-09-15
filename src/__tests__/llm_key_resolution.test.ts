@@ -409,6 +409,30 @@ describe("nodes without database access", () => {
   });
 
   /**
+   * Info: (20260812 - Luphia) worker 有自己的設定檔，不吃系統的 `.env`。
+   *
+   * 共用會讓一個處理使用者上傳內容的節點看得到 `DATABASE_URL`、
+   * `SECRET_VAULT_MASTER_KEY`、`SUPER_ADMIN_*` —— 那些它完全不該擁有，
+   * 而持有信任根等於把隔離的意義抵銷掉。
+   *
+   * 斷言原始碼:這個節點只能經 `loadWorkerEnvConfig()` 取設定，
+   * 不得出現讀系統 `.env` / `.env.setup` 的取法（`ENV_PATH`、`ENV_SETUP_PATH`、
+   * `getPriorityEnvConfig`）。
+   */
+  it("should read its own env file and never the system one", () => {
+    const source = fs.readFileSync(
+      path.join(process.cwd(), ENV_ONLY_FILES[0]),
+      "utf8",
+    );
+    const code = source.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "");
+
+    expect(code).toContain("loadWorkerEnvConfig(");
+    expect(code).not.toMatch(/\bENV_PATH\b/);
+    expect(code).not.toMatch(/\bENV_SETUP_PATH\b/);
+    expect(code).not.toMatch(/getPriorityEnvConfig/);
+  });
+
+  /**
    * Info: (20260812 - Luphia) 上面兩支驗的是 ChatService **遵守**旗標，
    * 而不是 Executor **有傳**旗標 —— 實測把那個參數拿掉，上面兩支照樣全綠。
    *

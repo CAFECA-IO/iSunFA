@@ -1,23 +1,24 @@
-import dotenv from "dotenv";
-import dotenvExpand from "dotenv-expand";
-import path from "path";
-import fs from "fs";
-
-// Info: (20260521 - Luphia) Load env variables from the project root .env first
-const projectRoot = process.cwd();
-const srcEnv = path.join(projectRoot, ".env");
-
-if (fs.existsSync(srcEnv)) {
-  const defaultEnv = dotenv.config({ path: srcEnv });
-  dotenvExpand.expand(defaultEnv);
-}
-
-// Info: (20260521 - Luphia) Import service, ensuring they are resolved using the project root paths
-import { processNext as processMissionExecutorNext } from "../src/services/mission.executor.service";
+/**
+ * Info: (20260812 - Luphia) 讀 `.env.worker`，不是系統的 `.env`。
+ *
+ * 這支是外部運算節點的單一 Executor 入口（由 `run_executor.ts` 併發啟動多份），
+ * 與 `run_compute_node.ts` 屬同一類節點，設定來源必須一致 ——
+ * 系統 `.env` 裡有 `DATABASE_URL`、`SECRET_VAULT_MASTER_KEY`、`SUPER_ADMIN_*`，
+ * 一個處理使用者上傳內容的節點不該看得到那些。
+ *
+ * Info: (20260914 - Luphia) 啟動邊界（角色旗標、抹信任根、載 `.env.worker`、缺檔／
+ * 缺值退出）全部在 `@/lib/worker/compute_node_bootstrap`，而且**必須是第一個 import**：
+ * ESM 先求值整個靜態圖再跑本檔的語句，寫在這裡的任何一行都在服務圖載完之後
+ *（review 三輪需修-7——前兩版的註解宣稱「旗標 → 抹除 → 載檔」在圖之前，是錯的，
+ * 5/21 的「先載 `.env` 再 import」也是同一個誤解）。本檔由 `run_executor.ts` 以
+ * `env: { ...process.env }` spawn，完整繼承 shell 的 env，是最需要這道邊界的入口。
+ */
+import "@/lib/worker/compute_node_bootstrap";
+import { processNext as processMissionExecutorNext } from "@/services/mission.executor.service";
 import {
   installWorkerShutdownHandlers,
   isShuttingDown,
-} from "../src/lib/worker/shutdown";
+} from "@/lib/worker/shutdown";
 
 // Info: (20260521 - Luphia) Setup executor using argument ID
 const id = process.argv[2];

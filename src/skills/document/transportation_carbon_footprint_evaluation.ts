@@ -1,5 +1,6 @@
 import { ITaskSkill } from "@/skills/types";
-import { IPseudoTask } from "@/skills/types";
+import { IPseudoTask, IPseudoMission } from "@/skills/types";
+import type { ChatService } from "@/services/chat.service";
 import {
   calculateLogisticsPlan,
   calculateLogisticsPlanFromText,
@@ -18,7 +19,24 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
     required: [],
   };
 
-  async execute(task: IPseudoTask): Promise<string> {
+  /**
+   * Info: (20260914 - Luphia) 收下 executor 給的 `chatService` 並往下傳
+   *（PR #6650 review 阻-3）：那個實例帶 `allowSystemSettings: false`，是這個
+   * 節點「不查資料庫」的結構保證；讓 route.smart 自己 new 一個會繞過它。
+   * `_mission`／`_fullPrompt` 依 ITaskSkill 介面接下但本 skill 不用。
+   *
+   * Info: (20260914 - Luphia) 三條 LLM 路徑**都要**帶（review 三輪阻-2）：
+   * `parseMultipleRoutesFromText`、`calculateLogisticsPlanFromText`（內部
+   * `parseSmartInput`）、`calculateLogisticsPlan`（字串 waypoints 時內部
+   * `parseWaypointsToCoordinates`）。第一版只帶了第一條；後兩條在 CALCULATE_BATCH
+   * 的 per-item catch 裡失敗會被吞成 `{ error: "Calculation failed" }`。
+   */
+  async execute(
+    task: IPseudoTask,
+    _mission?: IPseudoMission,
+    _fullPrompt?: string,
+    chatService?: ChatService,
+  ): Promise<string> {
     const payloadStr = (task.data?.context as string) || "{}";
     let payload: Record<string, unknown> = {};
     try {
@@ -30,7 +48,7 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
     if (action === MILEAGE_ACTION.PARSE_MULTIPLE) {
       const text = payload.text as string;
       if (!text) throw new Error("Missing text for parsing.");
-      const items = await parseMultipleRoutesFromText(text);
+      const items = await parseMultipleRoutesFromText(text, chatService);
       return JSON.stringify(items, null, 2);
     }
 
@@ -67,6 +85,7 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
               Number(item.dest.lng),
               weightKg,
               item.waypoints,
+              chatService,
             );
           } else {
             const originStr =
@@ -82,6 +101,7 @@ export class TransportationCarbonFootprintEvaluationSkill implements ITaskSkill 
               text,
               weightKg,
               item.waypoints,
+              chatService,
             );
             plan = res.plan;
           }

@@ -13,6 +13,17 @@ import {
   IAggregatedDocumentResult,
 } from "@/skills/utils/document_parser_db_sync";
 import { getPriorityEnvConfig } from "@/services/env.service";
+import { createPublicClient, http } from "viem";
+import {
+  DEFAULT_MISSION_DIR,
+  MISSION_VERDICT_READ_CONCURRENCY,
+} from "@/constants/worker_node";
+import { mapWithConcurrency } from "@/lib/worker/concurrency";
+import {
+  readGiveUpVerdict,
+  viemMissionBoardReader,
+  type MissionBoardReader,
+} from "@/lib/worker/mission_board_verdict";
 import type { JSONValue } from "@/validators";
 import { MoneyUtil } from "@/lib/utils/money";
 import { SystemWorkerSource } from "@/constants/enums";
@@ -57,6 +68,38 @@ export class IssueRecorderService {
 
     let recordedTask = false;
 
+    /**
+     * Info: (20260914 - Luphia) 鏈上判準的 reader **一輪共用一個**（review 三輪
+     * 建議-9）：原本每個沒有 `approved.*.md` 的資料夾各建一個 viem client。
+     * 位址缺席時 reader 是 null，下方據此記 error（全站唯一寫訂單終態的地方，
+     * 缺了它被放棄的訂單永遠收不了尾）。
+     *
+     * Info: (20260915 - Luphia) 不用 viem 的 `batch: true`（review 四輪建議-6）：
+     * 判準讀取原本在序列迴圈裡逐一 `await`，批次排程器合不了批；而那個 transport
+     * 會把單次讀取也包成 JSON-RPC batch，拒批的 provider 每次都拋 → 「尚無判決」
+     * → 被放棄的訂單又永遠收不了尾。改成先蒐集候選、再以應用層並行
+     *（`mapWithConcurrency`）讀鏈——不依賴 provider 對 batch 的支援。
+     */
+    const mbAddress = setupConfig.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as
+      | `0x${string}`
+      | undefined;
+    const verdictReader: MissionBoardReader | null = mbAddress
+      ? viemMissionBoardReader(
+          createPublicClient({
+            transport: http(
+              setupConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024",
+            ),
+          }),
+          mbAddress,
+        )
+      : null;
+    const missionDirBase = setupConfig.MISSION_DIR || DEFAULT_MISSION_DIR;
+    const giveUpCandidates: Array<{
+      taskDir: string;
+      folderName: string;
+      taskId: string;
+    }> = [];
+
     try {
       const folders = await fs.readdir(issueDirPath, { withFileTypes: true });
 
@@ -88,15 +131,19 @@ export class IssueRecorderService {
          * 他付了錢、送出分析，然後那件事安靜地消失。
          */
         if (!approvedFile) {
-          const gaveUp = await this.recordGiveUp({
-            taskDir,
-            folderName,
-            taskId,
-            missionDirBase: setupConfig.MISSION_DIR || "missions",
-          });
-          if (gaveUp) {
-            recordedTask = true;
-            break; // Info: (20260825 - Julian) 與成功路徑一致：一輪只處理一筆
+          /**
+           * Info: (20260915 - Luphia) 這裡只做本地便宜檢查、蒐集候選；鏈讀集中在
+           * 迴圈之後並行做（review 四輪建議-6）。`recorded.flag` 先查（三輪建議-9）：
+           * 已收尾的資料夾不必再問鏈。
+           */
+          if (
+            await this.isGiveUpCandidate({
+              taskDir,
+              folderName,
+              missionDirBase,
+            })
+          ) {
+            giveUpCandidates.push({ taskDir, folderName, taskId });
           }
           continue;
         }
@@ -216,7 +263,7 @@ export class IssueRecorderService {
             // Info: (20260510 - Luphia) Try reading from missions directory if local execution
             const missionLogPath = path.join(
               process.cwd(),
-              setupConfig.MISSION_DIR || "missions",
+              setupConfig.MISSION_DIR || DEFAULT_MISSION_DIR,
               folderName,
               "execution_log.json",
             );
@@ -577,6 +624,18 @@ export class IssueRecorderService {
           );
         }
       }
+
+      // Info: (20260915 - Luphia) 成功路徑沒處理到東西時，才輪到放棄路徑（一輪一筆）
+      if (!recordedTask) {
+        const givenUp = await this.resolveFirstGivenUp({
+          candidates: giveUpCandidates,
+          missionDirBase,
+          verdictReader,
+        });
+        if (givenUp) {
+          recordedTask = await this.recordGiveUp(givenUp);
+        }
+      }
     } catch (e) {
       console.log("[MissionRecorder] Invalid ISSUE_DIR or none exists yet.", e);
     }
@@ -662,6 +721,91 @@ export class IssueRecorderService {
   }
 
   /**
+   * Info: (20260915 - Luphia) 本地便宜檢查（review 四輪建議-6 的前半）：`recorded.flag`
+   * 先查（三輪建議-9，已收尾的資料夾不必再問鏈）；`giveup.md` 是同機部署的快路徑，
+   * 存在就直接是候選——但它是 closer 在**運算節點**磁碟上寫的，分機部署後永遠讀不到
+   *（需修-6），所以讀不到不代表沒放棄，只代表要問鏈。回 true 的資料夾進入本輪的
+   * 並行鏈讀。
+   */
+  private async isGiveUpCandidate(params: {
+    taskDir: string;
+    folderName: string;
+    missionDirBase: string;
+  }): Promise<boolean> {
+    try {
+      await fs.access(path.join(params.taskDir, "recorded.flag"));
+      return false;
+    } catch {
+      /* Info: (20260825 - Julian) proceeding to record the give-up */
+    }
+    return true;
+  }
+
+  /**
+   * Info: (20260915 - Luphia) 一輪的鏈上判準**並行**讀（review 四輪建議-6）：先蒐集
+   * 候選，再以 `mapWithConcurrency` 讀鏈，不依賴 provider 對 JSON-RPC batch 的支援。
+   * 同機部署下 `giveup.md` 在就不問鏈。鏈讀失敗（RPC 斷、限流）視為「尚無判決」
+   * 而不是「已放棄」：寬鬆方向會把還在跑的任務標成失敗，那比多等一輪嚴重。
+   * 回傳本輪判定為已放棄的第一筆（與成功路徑一致，一輪只處理一筆）。
+   */
+  private async resolveFirstGivenUp(params: {
+    candidates: Array<{ taskDir: string; folderName: string; taskId: string }>;
+    missionDirBase: string;
+    verdictReader: MissionBoardReader | null;
+  }): Promise<{ taskDir: string; folderName: string; taskId: string } | null> {
+    if (params.candidates.length === 0) return null;
+
+    const verdicts = await mapWithConcurrency(
+      params.candidates,
+      MISSION_VERDICT_READ_CONCURRENCY,
+      async (candidate) => {
+        const giveupPath = path.join(
+          process.cwd(),
+          params.missionDirBase,
+          candidate.folderName,
+          "giveup.md",
+        );
+        try {
+          await fs.access(giveupPath);
+          return true;
+        } catch {
+          /* Info: (20260914 - Luphia) 不在本機磁碟：問鏈 */
+        }
+        if (!params.verdictReader) {
+          /**
+           * Info: (20260914 - Luphia) error 而非 warn（review 二輪低-1）：這是全站
+           * 唯一寫訂單終態的地方，`NEXT_PUBLIC_MISSION_BOARD_ADDRESS` 沒設等於
+           * 「被放棄的訂單永遠不會收尾」，一個沒人讀的 warn 撐不住這個後果。
+           * 對應的部署檢查項見 known_issues/executor_settings_isolation.md。
+           */
+          console.error(
+            "[MissionRecorder] NEXT_PUBLIC_MISSION_BOARD_ADDRESS is not configured on the ops node: " +
+              "given-up tasks can never reach a terminal order status. Fix the deployment.",
+          );
+          return false;
+        }
+        return readGiveUpVerdict(
+          params.verdictReader,
+          BigInt(candidate.taskId),
+        );
+      },
+    );
+
+    for (let i = 0; i < verdicts.length; i += 1) {
+      const verdict = verdicts[i];
+      if (verdict.status === "rejected") {
+        console.warn(
+          `[MissionRecorder] Failed to read give-up verdict for task ${params.candidates[i].taskId} from chain:`,
+          verdict.reason,
+        );
+        continue;
+      }
+      if (verdict.value) return params.candidates[i];
+    }
+    return null;
+  }
+
+  /**
    * Info: (20260825 - Julian) 被放棄的任務也要走到終態（計畫書 D18）。
    *
    * `mission.closer.service.ts` 在上鏈提交被連續拒絕 3 次時寫下 `giveup.md`，
@@ -681,35 +825,17 @@ export class IssueRecorderService {
    * 而真正保證「一張訂單只發一則」的是 `analysis-failed:<orderId>` 這把
    * dedupeKey（永久唯一鍵）。前兩層只是省掉注定撞鍵的往返。
    *
+   * Info: (20260915 - Luphia) 判準（檔案／鏈）已由 `resolveFirstGivenUp` 決定，
+   * 本方法只負責「已放棄的任務」的收尾。
+   *
    * @returns 這一輪有沒有真的處理掉一筆（讓呼叫端決定要不要結束本 tick）
    */
   private async recordGiveUp(params: {
     taskDir: string;
     folderName: string;
     taskId: string;
-    missionDirBase: string;
   }): Promise<boolean> {
-    const giveupPath = path.join(
-      process.cwd(),
-      params.missionDirBase,
-      params.folderName,
-      "giveup.md",
-    );
-    try {
-      await fs.access(giveupPath);
-    } catch {
-      // Info: (20260825 - Julian) 沒放棄也沒核可：還在跑，不是本服務的事
-      return false;
-    }
-
     const flagFile = path.join(params.taskDir, "recorded.flag");
-    try {
-      await fs.access(flagFile);
-      return false;
-    } catch {
-      /* Info: (20260825 - Julian) proceeding to record the give-up */
-    }
-
     let localContextObj: Record<string, string> = {};
     try {
       const contextContent = await fs.readFile(

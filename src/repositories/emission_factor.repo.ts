@@ -2,6 +2,7 @@ import { Prisma } from "@/generated";
 import { prisma } from "@/lib/prisma";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
+import { LEGACY_STANDARD_COEFFICIENT_CATEGORY } from "@/constants/esg";
 
 export class EmissionFactorRepo {
   static async getAllGlobalCoefficients(tx?: Prisma.TransactionClient) {
@@ -26,6 +27,43 @@ export class EmissionFactorRepo {
   } | null> {
     if (!id) return null;
 
+    /**
+     * Info: (20260914 - Luphia) **資料庫的值贏**（PR #6650 review 三輪建議-10）。
+     *
+     * 原本靜態命中就 return，DB 只在靜態沒有時才查——而 mission 管線的字典
+     *（`lib/worker/coefficient_snapshot.buildCoefficientDictionary`）自 9/14 起是
+     * DB 蓋靜態（`esg_parsing` 從一開始就是）。撞號是常態不是邊角：
+     * `carbon_emission_database/import` 拿保留 id 寫 DB，`updateGlobal` 允許 admin
+     * 改 `emissionFactor`。兩套優先序並存的後果是同一個係數 id 在稽核系統裡
+     * 跑出兩個 CO2e：mission 管線用新值、聊天機器人（`carbon_calculation.service`
+     * 經本方法）用舊值，兩邊都不報錯。這裡改成同一個順序：DB 命中（未軟刪）→
+     * 靜態 fallback。軟刪的列落回靜態，與 `getAllGlobalCoefficients` 排除軟刪
+     * 後由靜態補位的行為一致。
+     *
+     * Info: (20260915 - Luphia) **只認全球列**（`accountBookId: null`，四輪 review
+     * 阻-2）。靜態優先的年代，租戶列撞到保留 id 碰不到（靜態先命中）；DB 優先之後
+     * 它會贏——任何一個帳本用保留 id 匯入一列，就靜默重新定義了那個官方係數，
+     * 對**所有其他租戶**生效。與 `getAllGlobalCoefficients` 的 global-only 語意對齊；
+     * 租戶自訂係數走 mission 快照的 `prerequisiteData.coefficients`，不走這支。
+     * `findFirst` 而非 `findUnique`：後者只吃唯一鍵，帶不了過濾條件。
+     */
+    const client = tx || prisma;
+    const dbMatch = await client.coefficient.findFirst({
+      where: { id, accountBookId: null, deletedAt: null },
+    });
+    if (dbMatch) {
+      return {
+        id: dbMatch.id,
+        name: dbMatch.name,
+        description: dbMatch.description || "",
+        unit: dbMatch.unit,
+        emissionFactor: dbMatch.emissionFactor.toString(),
+        source: dbMatch.source,
+        category: dbMatch.category,
+        ghgFactors: dbMatch.ghgFactors,
+      };
+    }
+
     const combinedStatic = [...ALL_COEFFICIENTS, ...MOCK_EEIO_COEFFICIENTS];
     const staticMatch = combinedStatic.find((c) => c.id === id);
     if (staticMatch) {
@@ -36,25 +74,8 @@ export class EmissionFactorRepo {
         unit: staticMatch.unit,
         emissionFactor: staticMatch.emissionFactor,
         source: staticMatch.source,
-        category: staticMatch.category || "STANDARD",
+        category: staticMatch.category || LEGACY_STANDARD_COEFFICIENT_CATEGORY,
         ghgFactors: (staticMatch as Record<string, unknown>).ghgFactors,
-      };
-    }
-
-    const client = tx || prisma;
-    const dbMatch = await client.coefficient.findUnique({
-      where: { id },
-    });
-    if (dbMatch && dbMatch.deletedAt === null) {
-      return {
-        id: dbMatch.id,
-        name: dbMatch.name,
-        description: dbMatch.description || "",
-        unit: dbMatch.unit,
-        emissionFactor: dbMatch.emissionFactor.toString(),
-        source: dbMatch.source,
-        category: dbMatch.category,
-        ghgFactors: dbMatch.ghgFactors,
       };
     }
 
@@ -230,7 +251,7 @@ export class EmissionFactorRepo {
         unit: data.unit,
         emissionFactor: factorDecimal,
         source: data.source,
-        category: data.category ?? "STANDARD",
+        category: data.category ?? LEGACY_STANDARD_COEFFICIENT_CATEGORY,
         versionYear: data.versionYear || null,
         isVerified: data.isVerified ?? true,
         userId: data.userId || null,
@@ -308,7 +329,7 @@ export class EmissionFactorRepo {
       unit: c.unit,
       emissionFactor: new Prisma.Decimal(c.emissionFactor.toString()),
       source: c.source,
-      category: c.category || "STANDARD",
+      category: c.category || LEGACY_STANDARD_COEFFICIENT_CATEGORY,
       versionYear: null,
       isVerified: true,
       userId: userId || null,

@@ -149,7 +149,8 @@ describe("訂閱變更都會標記卡片待同步", () => {
 });
 
 describe("worker 掛上同步迴圈", () => {
-  const worker = read("scripts", "run_worker.ts");
+  // Info: (20260907 - Luphia) 入口改 run_ops_node.ts（PR #6650：寫庫任務歸維運側）
+  const worker = read("scripts", "run_ops_node.ts");
 
   it("註冊 SubscriptionCardSync", () => {
     expect(worker).toMatch(/syncPendingSubscriptionCards/);

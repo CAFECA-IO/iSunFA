@@ -3,6 +3,33 @@ import { PrismaClient, Prisma } from "@/generated";
 import { Pool } from "pg";
 import * as dotenv from "dotenv";
 import * as dotenvExpand from "dotenv-expand";
+import {
+  WORKER_NODE_ROLE,
+  WORKER_NODE_ROLE_ENV,
+} from "@/constants/worker_node";
+
+/**
+ * Info: (20260914 - Luphia) 外部運算節點**不得載入本模組**（PR #6650 review 阻-3）。
+ *
+ * 匯入圖掃描（worker_node_isolation.test.ts）只看得見靜態 import；
+ * `await import()` 走得到的執行期路徑它看不見——實際就有一條：
+ * skillRegistry → transportation skill → route.smart `new ChatService()`（無 flag）
+ * → ensureClient 動態載入 system_setting.service → 這裡建連線池。
+ * 那條路在外部節點上會對 `DATABASE_URL === undefined` 噴 pg 錯誤；在看得到
+ * `.env` 的節點上，則是使用者上傳的內容把 DB 連線池開起來——正是拆分要消滅的。
+ *
+ * 所以在這裡（所有路徑的匱口）依節點角色 fail fast：運算節點的進入點把
+ * `ISUNFA_WORKER_NODE_ROLE=compute` 設進 process.env，任何路徑載到本模組都會
+ * 在建池**之前**拋一句說得出原因的錯，而不是靜默開池。
+ * 這一段必須在 `dotenv.config()` 之前：那一行會把系統 `.env` 讀進 process.env。
+ */
+if (process.env[WORKER_NODE_ROLE_ENV] === WORKER_NODE_ROLE.COMPUTE) {
+  throw new Error(
+    "[lib/prisma] The compute node must never load the database client " +
+      "(async_workers/00_async_worker_overview.md). A runtime path reached " +
+      "lib/prisma — find the caller and route it through the ops node or the mission payload.",
+  );
+}
 
 const env = dotenv.config();
 dotenvExpand.expand(env);
