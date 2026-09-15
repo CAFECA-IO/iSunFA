@@ -24,6 +24,12 @@ import {
   WORKER_NODE_ROLE,
   WORKER_NODE_ROLE_ENV,
 } from "@/constants/worker_node";
+import {
+  parseMultipleRoutesFromText,
+  parseSmartInput,
+} from "@/services/route.smart.service";
+import { parseWaypointsToCoordinates } from "@/services/route.waypoints.service";
+import type { ChatService } from "@/services/chat.service";
 
 /**
  * Info: (20260914 - Luphia) 運算節點邊界的守門（PR #6650 review 阻-1／阻-3／
@@ -128,6 +134,68 @@ describe("getPriorityEnvConfig 依節點角色解析（三輪阻-3）", () => {
       selectPriorityEnvPath(WORKER_NODE_ROLE.OPS, only(ENV_WORKER_PATH)),
     ).toBeNull();
     expect(selectPriorityEnvPath(undefined, only(ENV_WORKER_PATH))).toBeNull();
+  });
+});
+
+/**
+ * Info: (20260915 - Luphia) 注入的**行為**證據（checklist §1.7，自我 review 抓到的缺口）：
+ * 下方接線測試只用字串掃描證明「參數有傳」，而函式內若再 `new ChatService()` 蓋掉
+ * 參數，掃描照綠。這裡真的傳一個替身進去，斷言 LLM 呼叫落在**它**身上、回傳是
+ * 它給的內容解析出來的——替身沒被呼叫就代表函式用了別的實例。
+ * 三支各一條；替身只實作 `generateRaw`（三支只用這一支）。
+ */
+describe("三支解析函式真的使用注入的 chatService（三輪阻-2，行為）", () => {
+  const fakeChat = (reply: string) => {
+    const calls: string[] = [];
+    const chatService = {
+      generateRaw: async (prompt: string) => {
+        calls.push(prompt);
+        return reply;
+      },
+    } as unknown as ChatService;
+    return { chatService, calls };
+  };
+
+  it("parseSmartInput：origin／dest 來自替身的回覆", async () => {
+    const { chatService, calls } = fakeChat(
+      '{"origin":{"lat":25.03,"lng":121.56},"dest":{"lat":35.68,"lng":139.69},"weightKg":500}',
+    );
+    const parsed = await parseSmartInput(
+      "Taipei to Tokyo, 500 kg",
+      chatService,
+    );
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toContain("Taipei to Tokyo, 500 kg");
+    expect(parsed).toEqual({
+      origin: { lat: 25.03, lng: 121.56 },
+      dest: { lat: 35.68, lng: 139.69 },
+      weightKg: 500,
+    });
+  });
+
+  it("parseMultipleRoutesFromText：路線陣列來自替身、含 ```json 圍欄也剝得掉", async () => {
+    const { chatService, calls } = fakeChat(
+      '```json\n[{"origin":"Taipei","dest":"Kaohsiung","weightKg":12}]\n```',
+    );
+    const routes = await parseMultipleRoutesFromText("two cities", chatService);
+    expect(calls).toHaveLength(1);
+    expect(routes).toEqual([
+      { origin: "Taipei", dest: "Kaohsiung", weightKg: 12 },
+    ]);
+  });
+
+  it("parseWaypointsToCoordinates：航點來自替身；空字串不問 LLM", async () => {
+    const { chatService, calls } = fakeChat(
+      '[{"name":"Singapore","lat":1.29,"lng":103.85}]',
+    );
+    expect(await parseWaypointsToCoordinates("   ", chatService)).toEqual([]);
+    expect(calls).toHaveLength(0);
+    const waypoints = await parseWaypointsToCoordinates(
+      "Singapore",
+      chatService,
+    );
+    expect(calls).toHaveLength(1);
+    expect(waypoints).toEqual([{ name: "Singapore", lat: 1.29, lng: 103.85 }]);
   });
 });
 

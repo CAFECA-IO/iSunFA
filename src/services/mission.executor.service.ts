@@ -47,8 +47,10 @@ export async function processNext() {
    * 而不是「env 剛好有值時才成立」的巧合。
    *
    * 也刻意不讀 `process.env` 之外的檔案（`.env.setup` 是精靈暫存區,簽章後會被清空）——
-   * `run_worker` 啟動時已把 `.env.worker` 載進 `process.env`,這裡直接讀檔是為了讓
-   * 「這個值來自哪個檔案」在這一行就看得出來,不必回頭追進程的啟動流程。
+   * `lib/worker/compute_node_bootstrap` 在服務圖載入前已把 `.env.worker` 載進
+   * `process.env`（Info: (20260915 - Luphia) 原寫 `run_worker`，那支自 8/12 起只印
+   * 說明並 exit 1），這裡直接讀檔是為了讓「這個值來自哪個檔案」在這一行就看得出來，
+   * 不必回頭追進程的啟動流程。
    */
   const nodeEnv = await loadWorkerEnvConfig();
   const missionDirBase = nodeEnv.MISSION_DIR || DEFAULT_MISSION_DIR;

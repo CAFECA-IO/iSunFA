@@ -141,6 +141,31 @@ const MIN_COMPUTE_GRAPH_MODULES = 120;
 const stripComments = (source: string): string =>
   source.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "");
 
+/**
+ * Info: (20260915 - Luphia) 運算圖裡 `new ChatService(` 的**上界**（checklist §1.15，
+ * 自我 review 抓到的缺口）。`worker_node_boundary` 釘了三支解析函式的注入形狀
+ *（下界），但第四個 skill 自建一個 `new ChatService()`——預設 `allowSystemSettings:
+ * true`，第一次要金鑰就動態載入 system_setting → prisma → 守門拋錯，被 per-item
+ * catch 吞掉——那三條照綠。這裡走遍運算圖，列出每一處**不是**「可注入預設參數」
+ * 形式的建構，斷言只剩 executor 那一處（它帶 `allowSystemSettings: false`）。
+ * 註解先剝掉：chat.service 與兩支 route 服務的註解裡都寫著這個字串。
+ */
+const INJECTABLE_CHAT_SERVICE_DEFAULT =
+  "chatService: ChatService = new ChatService(),";
+const chatServiceConstructionsFrom = (entry: string): string[] => {
+  const found: string[] = [];
+  for (const rel of scanFrom(entry).visited) {
+    const source = stripComments(fs.readFileSync(path.join(ROOT, rel), "utf8"));
+    // Info: (20260915 - Luphia) 記檔名不記行號：行號隨註解增減漂移，檔名才是身分
+    source.split("\n").forEach((line) => {
+      if (!line.includes("new ChatService(")) return;
+      if (line.trim() === INJECTABLE_CHAT_SERVICE_DEFAULT) return;
+      found.push(rel);
+    });
+  }
+  return found.sort();
+};
+
 describe("worker node isolation", () => {
   /**
    * Info: (20260907 - Luphia) 外部運算節點的匯入圖裡**沒有任何** prisma 匯入點
@@ -222,6 +247,21 @@ describe("worker node isolation", () => {
     expect(
       prismaImportersFrom(path.join(ROOT, "scripts/run_ops_node.ts")).length,
     ).toBeGreaterThan(0);
+  });
+
+  /**
+   * Info: (20260915 - Luphia) 上界：運算圖裡自建 ChatService 的只能是 executor 那一處。
+   * `toEqual` 精確比對——多一處（新 skill 自建）或少一處（executor 改掉了）都紅。
+   * 新增合法的建構點時請一併更新，並說明它為什麼帶 `allowSystemSettings: false`。
+   */
+  it("should construct ChatService only in the executor within the compute graph", () => {
+    ["scripts/run_compute_node.ts", "scripts/executor_worker.ts"].forEach(
+      (entry) => {
+        expect(chatServiceConstructionsFrom(path.join(ROOT, entry))).toEqual([
+          "src/services/mission.executor.service.ts",
+        ]);
+      },
+    );
   });
 
   // Info: (20260812 - Luphia) 節點入口不得互相匯入 —— 拆分若被一行 import 接回去就白拆了
