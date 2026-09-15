@@ -167,14 +167,14 @@ describe("角色閘把角色交給底下的頁面", () => {
   });
 
   /**
-   * Info: (20260915 - Julian) 只有 `allowed` 才有 provider，其餘狀態一律不 render children。
+   * Info: (20260915 - Julian) fail-closed 那一半**不在這裡**，故意的。
    *
-   * 這一條守的是既有的 fail-closed 設計沒有被這次改動鬆掉：
-   * 把 provider 提到整個元件最外層（看起來更「乾淨」）的話，
-   * 載入中與無權限的分支也會被包進去 —— 那本身無害，
-   * 但它會讓「只有 allowed 才 render children」這句話變成要讀實作才知道。
+   * 「`children` 只出現在 allowed 那一支」由 `salary_access_gate.test.ts`
+   * 守著（它本來就是為那件事寫的）。在這裡再寫一次的話，
+   * 同一個不變式會有兩份斷言 —— 而兩份的代價不是多跑一次，
+   * 是**下一次改這個元件時要改兩個地方**，漏掉其中一個就得到一個
+   * 自相矛盾的測試結果。
+   *
+   * 這一支只問這次新增的那件事：角色有沒有被交出去。
    */
-  it("其餘狀態仍然不 render children", () => {
-    expect(gate.match(/\{children\}/g) ?? []).toHaveLength(1);
-  });
 });
