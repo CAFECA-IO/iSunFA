@@ -38,29 +38,50 @@ export const DEFAULT_MISSION_DIR = "missions";
  * 明列而不是「只留白名單」：Node 自己與 tsx 需要 PATH／HOME 之類的鍵，
  * 白名單會把它們一起殺掉。這份清單的判準是「持有它就等於拿到主系統的信任根」。
  * 前綴那一項涵蓋 SUPER_ADMIN_PUB_X／PUB_Y 與日後同族的新鍵。
+ *
+ * Info: (20260915 - Luphia) 四輪 review 建議-10：`.env.example` 出貨的
+ * `POSTGRES_PASSWORD` 一個都不符合原清單——處理使用者上傳內容的節點帶著資料庫
+ * 密碼。補上 `.env.example` 裡所有「運算節點沒有任何用途的祕密」：DB 密碼、SMTP
+ * 密碼、金流 token、OAuth secret、HR PII 欄位金鑰族。清單本身仍是規格（漏了就
+ * 靜默通過），結構性的解法是 ADR 026 P1 的子行程 env 白名單；這裡先把已知的補齊。
  */
 export const COMPUTE_NODE_FORBIDDEN_ENV_KEYS = [
   "DATABASE_URL",
+  "POSTGRES_PASSWORD",
   "SECRET_VAULT_MASTER_KEY",
   "DEWT_PRIVATE_KEY_PEM",
+  "SMTP_PASSWORD",
+  "OEN_ACCESS_TOKEN",
+  "GOOGLE_OAUTH_CLIENT_SECRET",
 ] as const;
 
-export const COMPUTE_NODE_FORBIDDEN_ENV_PREFIXES = ["SUPER_ADMIN_"] as const;
+export const COMPUTE_NODE_FORBIDDEN_ENV_PREFIXES = [
+  "SUPER_ADMIN_",
+  "HR_PII_KEY_",
+] as const;
 
 /**
  * Info: (20260914 - Luphia) 運算節點啟動時**值必須非空**的鍵（review 三輪需修-4）。
  *
  * 第一版的 fail fast 判的是「檔案有沒有鍵」——`.env.worker.example` 五個鍵全是
- * 空值，照文件 `cp` 過去就通過檢查，然後 planner 對空字串位址每 tick 拋錯被吞、
- * executor 拿空金鑰把付費任務燒成 giveup。缺**檔**與缺**值**是同一件事：
- * 這台機器沒部署好，該在啟動時退出，不該在任務上失敗。
+ * 空值，照文件 `cp` 過去就通過檢查，然後 planner 對空字串位址每 tick 拋錯被吞。
+ * 缺**檔**與缺**值**是同一件事：這台機器沒部署好，該在啟動時退出，不該在任務上失敗。
+ *
+ * Info: (20260915 - Luphia) 四輪 review 之後兩處調整（決策記於 ADR 026）：
+ * - `GEMINI_API_KEY` **移出**必要鍵：ADR 026 S1 之後有 `PRECOMPUTED` 任務，
+ *   「不用 LLM 的運算節點」是合法形態；缺金鑰由需要 LLM 的 skill 在呼叫時以
+ *   `LLM_KEY_MISSING` 明確失敗（known_issues 既有的執行期立場），不在啟動期擋。
+ * - `STORAGE_DOMAIN` **加入**（建議-8）：IPFS 是跨節點邊界唯一的合法通道，planner
+ *   的下載與 commitor 的上傳都經它；缺了就每一次都打向空網域，而且 planner 對
+ *   下載失敗不推進 cursor——分機部署的第一個任務就卡死全站。這是唯一「缺了保證
+ *   全滅」的鍵。
  *
  * `MISSION_DIR`／`MODEL` 有程式碼預設值，不在清單內。
  */
 export const COMPUTE_NODE_REQUIRED_ENV_KEYS = [
-  "GEMINI_API_KEY",
   "NEXT_PUBLIC_RPC_URL",
   "NEXT_PUBLIC_MISSION_BOARD_ADDRESS",
+  "STORAGE_DOMAIN",
 ] as const;
 
 /**
@@ -71,6 +92,18 @@ export const COMPUTE_NODE_REQUIRED_ENV_KEYS = [
  * 兩處各寫一個 3 的話遲早分岔——而分岔的症狀是訂單永久卡住。
  */
 export const MISSION_GIVE_UP_REJECTION_THRESHOLD = 3;
+
+/**
+ * Info: (20260915 - Luphia) recorder 對鏈上判準的並行上限（四輪 review 建議-6）。
+ *
+ * 第一版用 viem `http(url, { batch: true })`——但每一筆 verdict 都在序列
+ * `for...of` 裡 `await`，批次排程器手上永遠只有一個 pending call，合不了批；而
+ * 這個 transport 會把**單次**讀取也包成 JSON-RPC batch 陣列，拒批的節點（hosted
+ * provider 常見、geth `--rpc.batch-limit 1`）每次都拋錯 → 被 catch 成「尚無判決」
+ * → 被放棄的訂單又永遠收不了尾。改成**應用層並行**（`mapWithConcurrency`）：不依賴
+ * provider 對 batch 的支援，200 個在途任務 = 20 輪 × 10 條並行，而不是 200 次序列。
+ */
+export const MISSION_VERDICT_READ_CONCURRENCY = 10;
 
 /**
  * Info: (20260914 - Luphia) 每份 mission.json 內全球係數快照的體積上界（review 二輪中-2）。
@@ -87,5 +120,6 @@ export const MISSION_GIVE_UP_REJECTION_THRESHOLD = 3;
  * 1 MB 約是現況的 2.3 倍：留成長空間，但字典失控（匯入腳本重複跑、欄位膨脹）時
  * 在**發包端**就大聲拒發，而不是每份 mission 靜默多背幾 MB。超過時該做的是
  * 縮字典或改成按需篩選（設計取捨，見 issue.service 的註解），不是調大這個數字。
+ * 結構性的解法（字典自成 IPFS 物件、mission 只帶 CID）是 ADR 026 P2。
  */
 export const MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES = 1024 * 1024;

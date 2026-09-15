@@ -1,3 +1,4 @@
+import Decimal from "decimal.js";
 import { ALL_COEFFICIENTS } from "@/constants/true_esg_coefficients";
 import { MOCK_EEIO_COEFFICIENTS } from "@/constants/mock_eeio_coefficients";
 import { LEGACY_STANDARD_COEFFICIENT_CATEGORY } from "@/constants/esg";
@@ -71,6 +72,39 @@ export const serializeGlobalCoefficients = (
     ghgFactors: c.ghgFactors,
   }));
 
+/**
+ * Info: (20260915 - Luphia) 「是有限的十進位數」——係數值的唯一判準（PR #6650
+ * review 四輪需修-5）。第一版只查 `typeof === "string"`，`"0.509 kg"` 通得過，
+ * 進 `MoneyUtil.toDecimal` 的 `catch { return new Decimal(0) }` 變成 0：ESG 紀錄寫
+ * emissions = 0、mission 報成功、全鏈路零錯誤。CLAUDE.md §6 要求違反底層數學的
+ * 輸入在最外層凍結——這裡就是快照的最外層。用 `decimal.js`（零 prisma）而不是
+ * `Prisma.Decimal`：本模組活在運算節點的匯入圖裡。
+ */
+export const isFiniteDecimalString = (value: unknown): value is string => {
+  if (typeof value !== "string" || value.trim() === "") return false;
+  try {
+    return new Decimal(value.trim()).isFinite();
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Info: (20260915 - Luphia) `ghgFactors` 缺席合法；出現時必須是「氣體 → 有限數」
+ * 的純物件（`esg.calculator.service` 以 `String(factor)` 逐氣體乘）。壞值比壞
+ * `emissionFactor` 更糟：算出總量 0 之外還多一份看起來很權威的逐氣體 breakdown。
+ * 接受 `number`（靜態字典的形狀）與十進位字串（過 JSON 的形狀）。
+ */
+export const isValidGhgFactors = (value: unknown): boolean => {
+  if (value === undefined || value === null) return true;
+  if (typeof value !== "object" || Array.isArray(value)) return false;
+  return Object.values(value as Record<string, unknown>).every(
+    (factor) =>
+      (typeof factor === "number" && Number.isFinite(factor)) ||
+      isFiniteDecimalString(factor),
+  );
+};
+
 const isSnapshotCoefficient = (
   value: unknown,
 ): value is ISnapshotCoefficient => {
@@ -81,8 +115,9 @@ const isSnapshotCoefficient = (
     c.id.length > 0 &&
     typeof c.name === "string" &&
     typeof c.unit === "string" &&
-    typeof c.emissionFactor === "string" &&
-    typeof c.source === "string"
+    isFiniteDecimalString(c.emissionFactor) &&
+    typeof c.source === "string" &&
+    isValidGhgFactors(c.ghgFactors)
   );
 };
 

@@ -8,6 +8,8 @@ import {
   parseGlobalCoefficientSnapshot,
   parseTenantCoefficientSnapshot,
   serializeGlobalCoefficients,
+  isFiniteDecimalString,
+  isValidGhgFactors,
   type ISnapshotCoefficient,
 } from "@/lib/worker/coefficient_snapshot";
 import { MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES } from "@/constants/worker_node";
@@ -182,6 +184,64 @@ describe("assertSnapshotWithinBudget：每份 mission 都背的體積要有上�
     expect(() => assertSnapshotWithinBudget(staticOnly, compact)).toThrow(
       /over the/,
     );
+  });
+});
+
+/**
+ * Info: (20260915 - Luphia) 值要是有限十進位數（review 四輪需修-5）：`"0.509 kg"`
+ * 原本通過 `typeof === "string"`，進 `MoneyUtil.toDecimal` 的 catch 變成 0，ESG 紀錄
+ * 寫 emissions = 0 而 mission 報成功。守衛在最外層擋掉，壞的那一筆剔除、其餘保留。
+ */
+describe("係數值守衛：emissionFactor／ghgFactors 必須是有限數（四輪需修-5）", () => {
+  it.each([
+    ["0.509", true],
+    ["  1e-3 ", true],
+    ["-2.5", true],
+    ["0.509 kg", false],
+    ["", false],
+    ["NaN", false],
+    ["Infinity", false],
+    ["abc", false],
+  ])("isFiniteDecimalString(%j) → %s", (value, expected) => {
+    expect(isFiniteDecimalString(value)).toBe(expected);
+  });
+
+  it("非字串一律不是十進位字串（number 也不是——線上形狀是字串）", () => {
+    expect(isFiniteDecimalString(0.5)).toBe(false);
+    expect(isFiniteDecimalString(null)).toBe(false);
+    expect(isFiniteDecimalString(undefined)).toBe(false);
+  });
+
+  it.each([
+    [undefined, true],
+    [null, true],
+    [{ CO2: 1.2, CH4: "0.01" }, true],
+    [{ CO2: "abc" }, false],
+    [{ CO2: Number.NaN }, false],
+    [["1", "2"], false],
+    ["1.2", false],
+  ])("isValidGhgFactors(%j) → %s", (value, expected) => {
+    expect(isValidGhgFactors(value)).toBe(expected);
+  });
+
+  it("parseGlobalCoefficientSnapshot 剔除壞值的那一筆、保留好的", () => {
+    const parsed = parseGlobalCoefficientSnapshot({
+      prerequisiteData: {
+        globalCoefficients: [
+          wireCoefficient({ id: "good" }),
+          wireCoefficient({
+            id: "bad-unit-in-value",
+            emissionFactor: "0.509 kg",
+          }),
+          wireCoefficient({ id: "bad-ghg", ghgFactors: { CO2: "n/a" } }),
+          wireCoefficient({
+            id: "good-ghg",
+            ghgFactors: { CO2: "0.9", CH4: 0.001 },
+          }),
+        ],
+      },
+    });
+    expect(parsed.map((c) => c.id)).toEqual(["good", "good-ghg"]);
   });
 });
 
@@ -402,10 +462,14 @@ describe("接線（§1.7：零件對了還要裝上去）", () => {
     expect(issuer.slice(refuseAt, lockAt)).toContain("return null;");
   });
 
-  it("esg_parsing 讀 mission 快照，不再匯入 repo 或 prisma", () => {
+  it("esg_parsing 讀 mission 快照（全球＋租戶），不再匯入 repo 或 prisma", () => {
     const skill = read("src/skills/document/esg_parsing.ts");
     expect(skill).toContain("buildCoefficientDictionary(");
     expect(skill).toContain("parseGlobalCoefficientSnapshot(mission.data)");
+    // Info: (20260915 - Luphia) 四輪需修-4：候選集要含租戶自訂係數，否則永遠選不到
+    expect(skill).toContain(
+      "parseGlobalCoefficientSnapshot(mission.data),\n          parseTenantCoefficientSnapshot(mission.data),",
+    );
     expect(skill).not.toContain('from "@/repositories/emission_factor.repo"');
     expect(skill).not.toContain('from "@/lib/prisma"');
   });

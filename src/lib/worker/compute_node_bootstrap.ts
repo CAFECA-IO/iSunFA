@@ -62,9 +62,21 @@ if (!fs.existsSync(ENV_WORKER_PATH)) {
   process.exit(1);
 }
 
-dotenvExpand.expand(dotenv.config({ path: ENV_WORKER_PATH }));
+/**
+ * Info: (20260915 - Luphia) **解析檔案，對解析結果做檢查**（review 四輪阻-1）。
+ * 第三版檢查的是合併後的 `process.env`，而消費端（executor 的 `loadWorkerEnvConfig()`、
+ * planner 等的 `getPriorityEnvConfig()`）**重新讀檔**、完全不看 `process.env`——
+ * 於是 shell 有 `NEXT_PUBLIC_RPC_URL` 的機器上，檔案全空值照樣通過守門，然後每個
+ * 消費端拿到空字串。這裡查的是 `dotenv.parse` 的結果：**檔案是唯一真值**，shell
+ * 不是來源。保留 `${VAR}` 展開，`processEnv: {}` 讓展開只看檔內鍵。
+ */
+const workerFile: Record<string, string> =
+  dotenvExpand.expand({
+    parsed: dotenv.parse(fs.readFileSync(ENV_WORKER_PATH, "utf8")),
+    processEnv: {},
+  }).parsed ?? {};
 
-const fileTrustRoots = scrubForbiddenComputeEnv(process.env);
+const fileTrustRoots = scrubForbiddenComputeEnv(workerFile);
 if (fileTrustRoots.length > 0) {
   console.error(
     `${TAG} Removed trust-root keys found in ${ENV_WORKER_PATH}: ${fileTrustRoots.join(", ")}. ` +
@@ -72,7 +84,7 @@ if (fileTrustRoots.length > 0) {
   );
 }
 
-const missing = missingRequiredComputeEnv(process.env);
+const missing = missingRequiredComputeEnv(workerFile);
 if (missing.length > 0) {
   console.error(
     `${TAG} ${ENV_WORKER_PATH} leaves required keys empty: ${missing.join(", ")}. ` +
@@ -81,6 +93,28 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
+/**
+ * Info: (20260915 - Luphia) 檔案值**覆寫** shell 值（review 四輪阻-1 後半）。第三版用
+ * `dotenv.config`（不覆寫既有鍵）等於 shell 贏：一個過期的 `MODEL` 或
+ * `STORAGE_DOMAIN` 會蓋掉檔案，而讀檔的那半邊用的是檔案值，兩邊不一致且雙方都
+ * 不記 log。「不吃系統 env」的意思是 shell 對這些鍵沒有發言權；真的蓋到東西時
+ * 記一行 warn，讓部署缺陷現形。ADR 026 P1 會把消費端收成單一 `getComputeNodeConfig()`，
+ * 那之後這一步就不需要了。
+ */
+const overridden = Object.keys(workerFile).filter(
+  (key) =>
+    process.env[key] !== undefined && process.env[key] !== workerFile[key],
+);
+Object.entries(workerFile).forEach(([key, value]) => {
+  process.env[key] = value;
+});
+if (overridden.length > 0) {
+  console.warn(
+    `${TAG} .env.worker overrides shell values for: ${overridden.join(", ")}. ` +
+      "The shell is not a configuration source for this node — remove those exports.",
+  );
+}
+
 console.log(
-  `${TAG} Loaded ${ENV_WORKER_PATH}; node role = ${WORKER_NODE_ROLE.COMPUTE}`,
+  `${TAG} Loaded ${Object.keys(workerFile).length} keys from ${ENV_WORKER_PATH}; node role = ${WORKER_NODE_ROLE.COMPUTE}`,
 );

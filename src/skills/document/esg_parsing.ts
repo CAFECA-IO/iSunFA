@@ -14,6 +14,7 @@ import { FIAT_CURRENCIES } from "@/constants/country";
 import {
   buildCoefficientDictionary,
   parseGlobalCoefficientSnapshot,
+  parseTenantCoefficientSnapshot,
 } from "@/lib/worker/coefficient_snapshot";
 import { GhgProtocolCategory, Iso14064Category } from "@/constants/esg";
 import { LLM_WORKER_TIMEOUT_MS } from "@/constants/llm";
@@ -177,10 +178,17 @@ export class EsgParsingSkill implements ITaskSkill {
        * 合併順序（靜態先、快照蓋過）與先前的「DB takes precedence」逐字相同，
        * 收斂在 `buildCoefficientDictionary`。快照缺席（通道上線前的舊 mission）
        * 時以靜態字典繼續，不拋錯。
+       *
+       * Info: (20260915 - Luphia) 租戶自訂係數**也進候選**（PR #6650 review 四輪
+       * 需修-4）：這裡是產生 Top 20 候選交給模型挑的地方，第一版只傳全球快照，
+       * 租戶在 ESG 設定裡建的自訂係數永遠不會成為候選、也就永遠選不到——
+       * 發包端（issue.service）與解算端（executor 的 orchestrator 字典）都帶了，
+       * 選取端這一半缺著。三處自此真的是同一份合併結果。
        */
       const combinedCoefficients = Array.from(
         buildCoefficientDictionary(
           parseGlobalCoefficientSnapshot(mission.data),
+          parseTenantCoefficientSnapshot(mission.data),
         ).values(),
       );
 

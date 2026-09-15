@@ -39,12 +39,19 @@ export class EmissionFactorRepo {
      * 經本方法）用舊值，兩邊都不報錯。這裡改成同一個順序：DB 命中（未軟刪）→
      * 靜態 fallback。軟刪的列落回靜態，與 `getAllGlobalCoefficients` 排除軟刪
      * 後由靜態補位的行為一致。
+     *
+     * Info: (20260915 - Luphia) **只認全球列**（`accountBookId: null`，四輪 review
+     * 阻-2）。靜態優先的年代，租戶列撞到保留 id 碰不到（靜態先命中）；DB 優先之後
+     * 它會贏——任何一個帳本用保留 id 匯入一列，就靜默重新定義了那個官方係數，
+     * 對**所有其他租戶**生效。與 `getAllGlobalCoefficients` 的 global-only 語意對齊；
+     * 租戶自訂係數走 mission 快照的 `prerequisiteData.coefficients`，不走這支。
+     * `findFirst` 而非 `findUnique`：後者只吃唯一鍵，帶不了過濾條件。
      */
     const client = tx || prisma;
-    const dbMatch = await client.coefficient.findUnique({
-      where: { id },
+    const dbMatch = await client.coefficient.findFirst({
+      where: { id, accountBookId: null, deletedAt: null },
     });
-    if (dbMatch && dbMatch.deletedAt === null) {
+    if (dbMatch) {
       return {
         id: dbMatch.id,
         name: dbMatch.name,

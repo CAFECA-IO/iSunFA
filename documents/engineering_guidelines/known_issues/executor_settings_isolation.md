@@ -100,9 +100,16 @@ Executor 以 `new ChatService(apiKey, { allowSystemSettings: false })` 明示不
 拆成兩個節點之後，有三個設定缺席**不會有錯誤、只有靜默停擺**，部署或搬機後逐一核對：
 
 - [ ] **維運節點**的系統 `.env` 有 `NEXT_PUBLIC_MISSION_BOARD_ADDRESS` 與 `NEXT_PUBLIC_RPC_URL`：recorder 靠鏈上判準把被放棄的任務收成訂單終態，位址缺席時它只會每輪印一行 error，訂單永遠留在 EXECUTING／PAID。
-- [ ] **運算節點**的 `.env.worker` 三個必要鍵**有值**（`GEMINI_API_KEY`／`NEXT_PUBLIC_RPC_URL`／`NEXT_PUBLIC_MISSION_BOARD_ADDRESS`，清單在 `COMPUTE_NODE_REQUIRED_ENV_KEYS`）：缺檔或任一值為空都會在啟動時 exit(1)（2026-09-14 三輪 review 後判值不判鍵；`MISSION_DIR`／`MODEL` 有程式碼預設值）。看到 `[ComputeNodeBootstrap] … leaves required keys empty` 就是這一項。
+- [ ] **運算節點**的 `.env.worker` 三個必要鍵**有值**（`NEXT_PUBLIC_RPC_URL`／`NEXT_PUBLIC_MISSION_BOARD_ADDRESS`／`STORAGE_DOMAIN`，清單在 `COMPUTE_NODE_REQUIRED_ENV_KEYS`）：缺檔或任一值為空都會在啟動時 exit(1)。檢查的是**檔案的解析結果**，shell 裡 export 的同名變數不算（2026-09-15 四輪 review 阻-1：消費端都是讀檔，查 `process.env` 會被 shell 掩護而放行全空的檔案）；檔內值會覆寫 shell 值並印 warn。`GEMINI_API_KEY` 自 2026-09-15 起**選填**（ADR 026 決策：不用 LLM 的運算節點是合法形態），缺了由需要 LLM 的 skill 以 `LLM_KEY_MISSING` 明確失敗。`MISSION_DIR`／`MODEL` 有程式碼預設值。看到 `[ComputeNodeBootstrap] … leaves required keys empty` 就是這一項。
 - [ ] 運算節點的 shell 環境沒有 `DATABASE_URL`／`SECRET_VAULT_MASTER_KEY`／`DEWT_PRIVATE_KEY_PEM`／`SUPER_ADMIN_*`，**`.env.worker` 裡也沒有**（不要把系統 `.env` 整份複製過去）：bootstrap 會抹掉並印 error（兩種來源訊息不同），那一行出現就代表部署環境帶了不該帶的東西。
 - [ ] 發包端 log 的「Global coefficient snapshot: N rows, B bytes per mission」：B 量的是 mission.json 的出貨形狀（indent-2），超過 `MISSION_GLOBAL_COEFFICIENT_SNAPSHOT_MAX_BYTES`（1 MB）時發包端**每 10 秒印一行 error 並停止發包**、訂單留在 PAID 不動（不燒 gas、不回滾重試；三輪 review 阻-1）——那行 error 要一直叫到有人把字典縮回去。現況靜態字典約 456 KB。
+
+## 未解、已定案走 ADR 026 的兩條（2026-09-15，PR #6650 review 四輪 #3／#7）
+
+這兩條是**需求與架構互相抵銷**的表面症狀，在本 PR 內修不掉；規格調整與分階段落地見 `documents/architecture/decisions/026_node_boundary_contract.md`。
+
+- **#7 攤提 worker 與 recorder 跨節點使用 MISSION_DIR**（ADR 026 S1／S3，P3）：`cron/amortization.worker.service`（維運側）把 `result.md`／`meta.json`／`context.json` 寫進 MISSION_DIR 等運算側 commitor 撿；分機部署後 commitor 看不到，攤提任務永遠 Open、分錄永遠不入帳、零 log。更糟的是 planner 對下載不到的任務（攤提的 `contentCid` 是 keccak hash，不是 IPFS CID）`fs.rm` 後 `break`、不推進 cursor——一張攤提排程會讓全站規劃停擺。**同機部署下**只是抖一下（commitor 10 秒內從共用目錄撿走），也就是功能能動是因為隔離不存在。使用者看到的症狀：付費上傳的憑證永遠「分析中」，沒有失敗通知（recorder 只認 approved 或 giveup）。處置：P3 把攤提改成 `MissionIssuer` 發真的 IPFS mission（`execution.mode = PRECOMPUTED`），MISSION_DIR 私有化由掃描測試守，planner 失敗任務推進 cursor＋退避重試。**分機部署前不得啟用攤提排程**。
+- **#3 係數 id 查不到 → 驗證端拒絕 → 三次 → giveup，且沒有退款**（ADR 026 S5，P4）：orchestrator 對字典缺 id 刻意不 throw（避免一張憑證因一個 id 走進 giveup），但 `issue.validator.service` 對 `emissions` 缺席一律拒絕，三次即 giveup、訂單 FAILED——而全 repo 沒有 giveup 退款路徑。使用者看到的症狀：付費分析收到「分析失敗」通知，已扣點數不退。orchestrator 現在至少留下 `console.error` 與 aiNote 痕跡，但那到不了帳本。處置：P4 的終態結算矩陣（giveup／逾時／取消各成對一個退款動作，平台代簽轉回、退款通知、訂單查詢可見）＋運算側提交前本地違規檢查（不燒 gas）。
 
 ## 拆分前的狀況（保留作為脈絡）
 
