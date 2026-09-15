@@ -4,6 +4,7 @@
 - 日期：2026-09-15
 - 作者：Luphia
 - 關聯：PR #6650（worker 節點拆分）四輪 review；`known_issues/executor_settings_isolation.md`；ADR 017（設定 DB＋簽章）；`async_workers/00_async_worker_overview.md`
+- 落地追蹤：Epic #6810 — P1 #6811（設定契約）、P2 #6812（參照資料 CID）、P3 #6813（Envelope＋私有 MISSION_DIR）、P4 #6814（終態結算）
 
 ## 背景：四個互相抵銷的需求
 
