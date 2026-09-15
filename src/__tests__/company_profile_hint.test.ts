@@ -10,6 +10,8 @@
  */
 
 import { describe, it, expect } from "@jest/globals";
+import { readFileSync } from "fs";
+import { join } from "path";
 import {
   companyProfileHintDismissKeyOf,
   shouldShowCompanyProfileHint,
@@ -82,5 +84,87 @@ describe("關閉旗標的 localStorage 鍵", () => {
     expect(companyProfileHintDismissKeyOf("book-a")).toBe(
       companyProfileHintDismissKeyOf("book-a"),
     );
+  });
+});
+
+/**
+ * Info: (20260915 - Julian) 上一層的接線：薪資紀錄頁有沒有真的畫出這一則（review B3）。
+ *
+ * 上面那組測的是判準與關閉旗標 —— **零件**。
+ * 把 `<CompanyProfileHint />` 從薪資紀錄頁拿掉，那些測試一條都不會紅，
+ * 而沒設定公司的帳本從此永遠不知道自己沒設定。
+ *
+ * 這一則守的本來就是可發現性 —— 所以它自己不可發現的時候，等於不存在。
+ * 做法照 `salary_pay_slip_meta.test.ts`。
+ */
+describe("薪資紀錄頁真的畫出這一則提示", () => {
+  const stripComments = (source: string): string =>
+    source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+
+  const page = stripComments(
+    readFileSync(
+      join(
+        process.cwd(),
+        "src",
+        "components",
+        "salary_calculator",
+        "salary_records_page_body.tsx",
+      ),
+      "utf-8",
+    ),
+  );
+
+  it("元件有被 import 且真的 render", () => {
+    expect(page).toContain(
+      'import CompanyProfileHint from "@/components/salary_calculator/company_profile_hint"',
+    );
+    expect(page).toContain("<CompanyProfileHint");
+  });
+
+  /**
+   * Info: (20260915 - Julian) 取出那一段 JSX 再驗 prop，不是在整頁裡找字串。
+   *
+   * `accountBookId={accountBookId}` 在這一頁還有別的地方會出現
+   * （`<SalaryCalculatorShell>` 就有一個）—— 在整頁裡找的話，
+   * 提示被整段刪掉那一條還是會過，而那正是這一組要抓的突變。
+   */
+  const hintTag = (() => {
+    const start = page.indexOf("<CompanyProfileHint");
+    if (start < 0) return "";
+    return page.slice(start, page.indexOf("/>", start) + 2);
+  })();
+
+  /**
+   * Info: (20260915 - Julian) 四個 prop 都要來自 hook，**不能寫死**。
+   *
+   * 每一個寫死都對應一種說錯話的方式，而四種都不會報錯：
+   *
+   * | 寫死成 | 症狀 |
+   * | --- | --- |
+   * | `isConfigured={false}` | 設定好的帳本被一直告知「還沒設定」 |
+   * | `isLoading={false}` | 每次進頁面閃一下，包含設定好的帳本 |
+   * | `loadFailed={false}` | 讀失敗時**不知道**有沒有設定，卻斷言沒有 —— 使用者會去把資料重打一次 |
+   *
+   * `accountBookId` 則是關閉旗標分帳本的前提（見上面那組）。
+   */
+  it("四個 prop 都接在真的狀態上，沒有一個是寫死的", () => {
+    expect(hintTag).toContain("accountBookId={accountBookId}");
+    expect(hintTag).toContain("isConfigured={companyProfile.isConfigured}");
+    expect(hintTag).toContain("isLoading={isCompanyProfileLoading}");
+    expect(hintTag).toContain("loadFailed={companyProfileLoadFailed}");
+  });
+
+  /**
+   * Info: (20260915 - Julian) **反面釘**（檢查清單 §1.11）。
+   *
+   * 出現的判準抽到 `lib/utils/company_profile_hint.ts` 是為了讓它測得到。
+   * 下一個人在頁面裡多包一層條件（例如
+   * `{!companyProfile.isConfigured && <CompanyProfileHint … />}`）的話，
+   * 判準就有兩份 —— 而頁面裡的那一份沒有任何東西守著，
+   * 兩份不一致時的症狀是「提示在某些情況下不出現」，靜悄悄的。
+   */
+  it("頁面不自己判斷要不要顯示，那是元件的事", () => {
+    expect(page).not.toMatch(/isConfigured\s*&&\s*<CompanyProfileHint/);
+    expect(page).not.toContain("shouldShowCompanyProfileHint");
   });
 });

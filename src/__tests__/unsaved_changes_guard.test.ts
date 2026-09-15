@@ -260,3 +260,80 @@ describe("beforeunload 的掛與卸", () => {
     expect(hook).toMatch(/removeEventListener\("click", intercept, true\)/);
   });
 });
+
+/**
+ * Info: (20260915 - Julian) 上一層的接線：設定頁有沒有真的用上這道防線（review B3）。
+ *
+ * 上面那組掃的是 `use_unsaved_changes_guard.ts` —— **hook 本身**。
+ * hook 寫得再對，設定頁沒有接上去的話這個功能整個不存在，
+ * 而症狀正是這個檔案檔頭列的第一種失效方向：
+ * 改了公司抬頭、點導覽列，那幾個字直接消失，不問一聲 ——
+ * 使用者會以為自己忘了按儲存。
+ *
+ * 做法照 `salary_pay_slip_meta.test.ts`（它掃的是薪資紀錄頁與計算機頁）。
+ */
+describe("設定頁真的接上了這道防線", () => {
+  const stripComments = (source: string): string =>
+    source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+
+  const page = stripComments(
+    readFileSync(
+      join(
+        process.cwd(),
+        "src",
+        "components",
+        "salary_calculator",
+        "company_setting_page_body.tsx",
+      ),
+      "utf-8",
+    ),
+  );
+
+  /**
+   * Info: (20260915 - Julian) 參數必須是**算出來的** `isDirty`，不是常數。
+   *
+   * 換成 `useUnsavedChangesGuard(false)` 的話，hook 的兩個 effect 都不會掛 ——
+   * 而 hook 自己的測試會全綠，因為它們掃的是 hook。
+   */
+  it("把算出來的 isDirty 交給 guard，而不是一個常數", () => {
+    expect(page).toContain("useUnsavedChangesGuard(isDirty)");
+  });
+
+  /**
+   * Info: (20260915 - Julian) `isDirty` 要走共用的比較，而且讀取中／讀失敗時算乾淨。
+   *
+   * 少了前兩個條件的話，`profile` 還是 `EMPTY` 就被拿去比 ——
+   * 一進頁面就被判成「使用者清空了公司名稱」，於是每一次離開都被攔。
+   */
+  it("isDirty 走共用的比較，且讀取中與讀失敗時一律算乾淨", () => {
+    expect(page).toContain("isCompanyProfileDirty(form, profile)");
+    expect(page).toContain("!isLoading && !loadFailed");
+  });
+
+  it("被攔下來時真的畫出對話框，而且兩顆鈕都接上 guard 交回來的動作", () => {
+    expect(page).toContain("pendingHref !== null");
+    expect(page).toContain(
+      "<LeaveWithoutSavingModal stayHandler={stay} leaveHandler={leave} />",
+    );
+  });
+
+  /**
+   * Info: (20260915 - Julian) **反面釘**（檢查清單 §1.11）。
+   *
+   * 判準與正規化抽出去之後，最可能的回歸是下一個人「順手」把它們搬回元件裡 ——
+   * 那時純函式的測試會繼續全綠，而元件裡的那一份沒有任何東西守著。
+   *
+   * 三條各對一種搬法：
+   *
+   * 1. `entityName: entityName.trim()` —— 這**正是** 20260914 之前元件裡的那一行。
+   *    搬回來的話，「送出」與「有沒有改過」會各有一份正規化，而其中一種
+   *    走鐘方向的症狀是**離開時不問、改的東西直接消失**。
+   * 2. 逐欄比對 `profile.` —— 比較搬回元件。
+   * 3. `beforeunload` —— 生命週期搬回元件，而元件不在上面那組掃描的範圍內。
+   */
+  it("正規化、比較與 beforeunload 都不得搬回元件裡", () => {
+    expect(page).not.toMatch(/entityName:\s*entityName\.trim\(\)/);
+    expect(page).not.toMatch(/!==\s*profile\./);
+    expect(page).not.toContain('addEventListener("beforeunload"');
+  });
+});
