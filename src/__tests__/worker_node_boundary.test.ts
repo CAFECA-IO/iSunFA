@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach } from "@jest/globals";
 import { readFileSync } from "fs";
 import { join } from "path";
 import {
+  applyWorkerFileToProcessEnv,
   missingRequiredComputeEnv,
   scrubForbiddenComputeEnv,
 } from "@/lib/worker/node_env";
@@ -121,12 +122,57 @@ describe("必要鍵判值不判鍵（三輪需修-4）", () => {
    * 不用 LLM）；`STORAGE_DOMAIN` 必要（四輪建議-8：唯一跨界通道，缺了第一個任務
    * 就卡死全站）。精確比對——多一個少一個都要有人知道。
    */
-  it("必要鍵是兩個鏈上座標加 IPFS 網域，不含 LLM 金鑰", () => {
+  /**
+   * Info: (20260917 - Luphia) `GEMINI_API_KEY` 加回（五輪 review 阻-3）：移出的前提
+   *（PRECOMPUTED 任務）在 P3 才存在，這個 head 上七支 skill 全要 LLM。精確比對——
+   * 多一個少一個都要有人知道；P3 落地 `execution.mode` 時再改這條。
+   */
+  it("必要鍵是 LLM 金鑰、兩個鏈上座標、IPFS 網域，精確四個", () => {
     expect([...COMPUTE_NODE_REQUIRED_ENV_KEYS]).toEqual([
+      "GEMINI_API_KEY",
       "NEXT_PUBLIC_RPC_URL",
       "NEXT_PUBLIC_MISSION_BOARD_ADDRESS",
       "STORAGE_DOMAIN",
     ]);
+  });
+});
+
+describe("檔案值寫回 process.env：保留鍵跳過、覆寫有回報（五輪需修-5）", () => {
+  it("一般鍵寫入並回報蓋掉的 shell 值；角色旗標跳過且回報", () => {
+    const env: Record<string, string | undefined> = {
+      [WORKER_NODE_ROLE_ENV]: WORKER_NODE_ROLE.COMPUTE,
+      MODEL: "from-shell",
+      PATH: "/usr/bin",
+    };
+    const result = applyWorkerFileToProcessEnv(
+      {
+        MODEL: "from-file",
+        STORAGE_DOMAIN: "http://ipfs",
+        [WORKER_NODE_ROLE_ENV]: WORKER_NODE_ROLE.OPS,
+      },
+      env,
+    );
+    expect(result).toEqual({
+      overridden: ["MODEL"],
+      reserved: [WORKER_NODE_ROLE_ENV],
+    });
+    expect(env[WORKER_NODE_ROLE_ENV]).toBe(WORKER_NODE_ROLE.COMPUTE);
+    expect(env.MODEL).toBe("from-file");
+    expect(env.STORAGE_DOMAIN).toBe("http://ipfs");
+    expect(env.PATH).toBe("/usr/bin");
+  });
+
+  it("值相同不算覆寫；空檔案什麼都不動", () => {
+    const env: Record<string, string | undefined> = { MODEL: "same" };
+    expect(applyWorkerFileToProcessEnv({ MODEL: "same" }, env)).toEqual({
+      overridden: [],
+      reserved: [],
+    });
+    expect(applyWorkerFileToProcessEnv({}, env)).toEqual({
+      overridden: [],
+      reserved: [],
+    });
+    expect(env).toEqual({ MODEL: "same" });
   });
 });
 
@@ -402,9 +448,13 @@ describe("接線（進入點與呼叫端）", () => {
     const parseAt = boot.indexOf(
       'dotenv.parse(fs.readFileSync(ENV_WORKER_PATH, "utf8"))',
     );
-    const rescrubAt = boot.indexOf("scrubForbiddenComputeEnv(workerFile)");
+    const rescrubAt = boot.indexOf(
+      "scrubForbiddenComputeEnv({ ...workerFile })",
+    );
     const missingAt = boot.indexOf("missingRequiredComputeEnv(workerFile)");
-    const writeAt = boot.indexOf("process.env[key] = value;");
+    const writeAt = boot.indexOf(
+      "applyWorkerFileToProcessEnv(workerFile, process.env)",
+    );
     expect(flagAt).toBeGreaterThan(-1);
     expect(scrubAt).toBeGreaterThan(flagAt);
     expect(existsAt).toBeGreaterThan(scrubAt);
@@ -415,8 +465,15 @@ describe("接線（進入點與呼叫端）", () => {
     // Info: (20260915 - Luphia) 檔案是唯一真值：缺值檢查不得看 process.env；展開只看檔內鍵
     expect(boot).not.toContain("missingRequiredComputeEnv(process.env)");
     expect(boot).toContain("processEnv: {},");
-    // Info: (20260914 - Luphia) 缺檔與缺值各自 exit(1)
-    expect(boot.match(/process\.exit\(1\)/g)?.length).toBe(2);
+    /**
+     * Info: (20260917 - Luphia) 缺檔、檔內帶信任根、缺值**各自** exit(1)（五輪阻-1：
+     * 抹記憶體那份對重新讀檔的消費端是裝飾，唯一誠實的處置是不起來）。
+     */
+    expect(boot.match(/process\.exit\(1\)/g)?.length).toBe(3);
+    expect(boot.slice(rescrubAt, missingAt)).toContain("process.exit(1)");
+    // Info: (20260917 - Luphia) 寫回走純函式（保留鍵在那裡跳過），bootstrap 內不得再有裸的寫回迴圈
+    expect(boot).not.toMatch(/process\.env\[key\]\s*=/);
+    expect(boot).toContain("applied.reserved.length > 0");
     // Info: (20260914 - Luphia) 不走 env.service 的解析器、不走 dotenv.config（不覆寫既有鍵＝shell 贏）——註解剝掉再比，註解裡有提到它們
     const bootCode = boot.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "");
     expect(bootCode).not.toContain("loadWorkerEnvConfig");
@@ -561,6 +618,26 @@ describe("接線（進入點與呼叫端）", () => {
     expect(recorder.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "")).not.toContain(
       "batch: true",
     );
+
+    /**
+     * Info: (20260917 - Luphia) 放棄路徑不得被成功路徑餓死（五輪阻-2）：
+     * - `recordedTask = true` 只在 flag 寫完之後（失敗不算「處理了一筆」）；
+     * - 放棄路徑不包在 `if (!recordedTask)` 裡；
+     * - 記錄失敗留 `record_failed_` 痕，達門檻隔離。
+     */
+    const scanCode = recorder
+      .slice(scanAt, recorder.indexOf("private async resolveAnalysisAndOrder("))
+      .replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "");
+    const flagWriteAt = scanCode.indexOf(
+      'await fs.writeFile(flagFile, flagContent, "utf8");',
+    );
+    const recordedTrueAt = scanCode.indexOf("recordedTask = true;");
+    expect(flagWriteAt).toBeGreaterThan(-1);
+    expect(recordedTrueAt).toBeGreaterThan(flagWriteAt);
+    expect(scanCode.match(/recordedTask = true;/g)).toHaveLength(1);
+    expect(scanCode).not.toMatch(/if \(!recordedTask\)\s*\{\s*const givenUp/);
+    expect(scanCode).toContain("record_failed_${Date.now()}.md");
+    expect(scanCode).toContain("MISSION_RECORD_MAX_FAILURES");
     const closer = read("src/services/mission.closer.service.ts");
     expect(closer).toContain("isTaskGivenUp(submissionCount, isRejected)");
     expect(closer).not.toMatch(/submissionCount >= 3n/);

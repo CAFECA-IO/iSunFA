@@ -2,6 +2,7 @@ import {
   COMPUTE_NODE_FORBIDDEN_ENV_KEYS,
   COMPUTE_NODE_FORBIDDEN_ENV_PREFIXES,
   COMPUTE_NODE_REQUIRED_ENV_KEYS,
+  COMPUTE_NODE_RESERVED_ENV_KEYS,
 } from "@/constants/worker_node";
 
 /**
@@ -50,3 +51,34 @@ export const missingRequiredComputeEnv = (
   COMPUTE_NODE_REQUIRED_ENV_KEYS.filter(
     (key) => (env[key] ?? "").trim() === "",
   );
+
+export interface IWorkerFileApplyResult {
+  /** Info: (20260917 - Luphia) 檔案值蓋掉了 shell 既有值的鍵 */
+  overridden: string[];
+  /** Info: (20260917 - Luphia) 檔案裡出現、但屬於進入點宣告而被跳過的鍵 */
+  reserved: string[];
+}
+
+/**
+ * Info: (20260917 - Luphia) 把 `.env.worker` 的解析結果寫進 `process.env`（五輪 review
+ * 需修-5）。檔案值**覆寫** shell 值（shell 不是這個節點的設定來源），但
+ * `COMPUTE_NODE_RESERVED_ENV_KEYS`（節點角色旗標）**跳過**：那是進入點在寫回之前
+ * 設的宣告，檔案不得改寫它。抽成純函式是為了讓「保留鍵真的沒被寫回」有直接的
+ * 行為測試，而不是靠讀 bootstrap 的原始碼。
+ */
+export const applyWorkerFileToProcessEnv = (
+  workerFile: Record<string, string>,
+  env: Record<string, string | undefined>,
+): IWorkerFileApplyResult => {
+  const overridden: string[] = [];
+  const reserved: string[] = [];
+  Object.entries(workerFile).forEach(([key, value]) => {
+    if ((COMPUTE_NODE_RESERVED_ENV_KEYS as readonly string[]).includes(key)) {
+      reserved.push(key);
+      return;
+    }
+    if (env[key] !== undefined && env[key] !== value) overridden.push(key);
+    env[key] = value;
+  });
+  return { overridden: overridden.sort(), reserved: reserved.sort() };
+};

@@ -6,6 +6,7 @@ import {
   WORKER_NODE_ROLE_ENV,
 } from "@/constants/worker_node";
 import {
+  applyWorkerFileToProcessEnv,
   missingRequiredComputeEnv,
   scrubForbiddenComputeEnv,
 } from "@/lib/worker/node_env";
@@ -76,12 +77,20 @@ const workerFile: Record<string, string> =
     processEnv: {},
   }).parsed ?? {};
 
-const fileTrustRoots = scrubForbiddenComputeEnv(workerFile);
+/**
+ * Info: (20260917 - Luphia) 檔案帶信任根 → **退出**，不是抹掉（五輪 review 阻-1）。
+ * 四輪版只抹 bootstrap 自己解析的那份物件，而消費端（executor 的
+ * `loadWorkerEnvConfig()`、planner 等的 `getPriorityEnvConfig()`）重新從磁碟讀檔——
+ * 檔案沒被改寫，那行「Removed …」宣稱了程式沒做的事，維運人員讀成「已處理」而
+ * 節點繼續跑。三種部署缺陷（缺檔、缺值、帶信任根）現在同一種處置：起不來。
+ */
+const fileTrustRoots = scrubForbiddenComputeEnv({ ...workerFile });
 if (fileTrustRoots.length > 0) {
   console.error(
-    `${TAG} Removed trust-root keys found in ${ENV_WORKER_PATH}: ${fileTrustRoots.join(", ")}. ` +
-      "The worker file must hold only the keys in .env.worker.example — do not copy the system .env into it.",
+    `${TAG} ${ENV_WORKER_PATH} contains trust-root keys: ${fileTrustRoots.join(", ")}. ` +
+      "The worker file must hold only the keys in .env.worker.example — do not copy the system .env into it. Exiting.",
   );
+  process.exit(1);
 }
 
 const missing = missingRequiredComputeEnv(workerFile);
@@ -101,16 +110,20 @@ if (missing.length > 0) {
  * 記一行 warn，讓部署缺陷現形。ADR 026 P1 會把消費端收成單一 `getComputeNodeConfig()`，
  * 那之後這一步就不需要了。
  */
-const overridden = Object.keys(workerFile).filter(
-  (key) =>
-    process.env[key] !== undefined && process.env[key] !== workerFile[key],
-);
-Object.entries(workerFile).forEach(([key, value]) => {
-  process.env[key] = value;
-});
-if (overridden.length > 0) {
+/**
+ * Info: (20260917 - Luphia) 寫回時跳過保留鍵（五輪 review 需修-5）：檔案若帶
+ * `ISUNFA_WORKER_NODE_ROLE`，不得蓋掉上面設的 compute 旗標。純函式在 `node_env`。
+ */
+const applied = applyWorkerFileToProcessEnv(workerFile, process.env);
+if (applied.reserved.length > 0) {
+  console.error(
+    `${TAG} ${ENV_WORKER_PATH} tries to set reserved keys: ${applied.reserved.join(", ")}. ` +
+      "The node role is declared by the entry point, not by the worker file — ignored.",
+  );
+}
+if (applied.overridden.length > 0) {
   console.warn(
-    `${TAG} .env.worker overrides shell values for: ${overridden.join(", ")}. ` +
+    `${TAG} .env.worker overrides shell values for: ${applied.overridden.join(", ")}. ` +
       "The shell is not a configuration source for this node — remove those exports.",
   );
 }

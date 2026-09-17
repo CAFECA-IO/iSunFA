@@ -15,6 +15,7 @@ export class EmissionFactorRepo {
   static async getCoefficientById(
     id: string,
     tx?: Prisma.TransactionClient,
+    accountBookId?: string,
   ): Promise<{
     id: string;
     name: string;
@@ -46,10 +47,22 @@ export class EmissionFactorRepo {
      * 對**所有其他租戶**生效。與 `getAllGlobalCoefficients` 的 global-only 語意對齊；
      * 租戶自訂係數走 mission 快照的 `prerequisiteData.coefficients`，不走這支。
      * `findFirst` 而非 `findUnique`：後者只吃唯一鍵，帶不了過濾條件。
+     *
+     * Info: (20260917 - Luphia) `accountBookId` 選填（五輪 review 需修-4）：
+     * `findFallbackCoefficient` 軌道三會回**租戶列**的 id，而呼叫端
+     *（`carbon_calculation.service`）接著拿那個 id 來這裡解——只認全球列時解不出來，
+     * 有自訂係數的帳本反而變成「查無係數」。呼叫端帶上同一個 accountBookId，
+     * 該帳本自己的列就解得到；沒帶就只有全球列。跨帳本的列永遠解不到。
      */
     const client = tx || prisma;
     const dbMatch = await client.coefficient.findFirst({
-      where: { id, accountBookId: null, deletedAt: null },
+      where: {
+        id,
+        deletedAt: null,
+        ...(accountBookId
+          ? { OR: [{ accountBookId: null }, { accountBookId }] }
+          : { accountBookId: null }),
+      },
     });
     if (dbMatch) {
       return {
@@ -124,6 +137,8 @@ export class EmissionFactorRepo {
     if (staticMatches.length > 0) return staticMatches[0].id;
 
     // Info: (20260521 - Tzuhan) 軌道三：常數檔也沒有，檢索資料庫的「用戶自定義係數」或「AI 推測過的係數」(accountBookId)
+    // Info: (20260917 - Luphia) 沒有帳本（chatbot 的個人模型傳空字串）就沒有租戶軌：不拿 "" 去查 accountBookId
+    if (!accountBookId) return null;
     const tenantDbMatches = await client.coefficient.findMany({
       where: {
         AND: [

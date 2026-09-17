@@ -67,22 +67,46 @@ export const COMPUTE_NODE_FORBIDDEN_ENV_PREFIXES = [
  * 空值，照文件 `cp` 過去就通過檢查，然後 planner 對空字串位址每 tick 拋錯被吞。
  * 缺**檔**與缺**值**是同一件事：這台機器沒部署好，該在啟動時退出，不該在任務上失敗。
  *
- * Info: (20260915 - Luphia) 四輪 review 之後兩處調整（決策記於 ADR 026）：
- * - `GEMINI_API_KEY` **移出**必要鍵：ADR 026 S1 之後有 `PRECOMPUTED` 任務，
- *   「不用 LLM 的運算節點」是合法形態；缺金鑰由需要 LLM 的 skill 在呼叫時以
- *   `LLM_KEY_MISSING` 明確失敗（known_issues 既有的執行期立場），不在啟動期擋。
- * - `STORAGE_DOMAIN` **加入**（建議-8）：IPFS 是跨節點邊界唯一的合法通道，planner
- *   的下載與 commitor 的上傳都經它；缺了就每一次都打向空網域，而且 planner 對
- *   下載失敗不推進 cursor——分機部署的第一個任務就卡死全站。這是唯一「缺了保證
- *   全滅」的鍵。
+ * Info: (20260915 - Luphia) 四輪 review 之後加入 `STORAGE_DOMAIN`（建議-8）：IPFS 是
+ * 跨節點邊界唯一的合法通道，planner 的下載與 commitor 的上傳都經它；缺了就每一次
+ * 都打向空網域，而且 planner 對下載失敗不推進 cursor——分機部署的第一個任務就
+ * 卡死全站。這是唯一「缺了保證全滅」的鍵。
+ *
+ * Info: (20260917 - Luphia) `GEMINI_API_KEY` **加回**必要鍵（五輪 review 阻-3）。
+ * 四輪時依 ADR 026 決策 1 把它移出，理由是「S1 之後有 `PRECOMPUTED` 任務，不用 LLM
+ * 的節點是合法形態」——但那個前提在 P3 才存在：這個 head 上 `PRECOMPUTED` 只出現
+ * 在註解裡，七支 skill 全部要 LLM，金鑰留空的節點會照常領任務、每筆失敗、付費
+ * 訂單報銷。拿未來的規則改現在的程式是時序錯誤；等 `execution.mode` 真的存在，
+ * 再改成「節點宣告自己是 PRECOMPUTED-only 時才免除」。
  *
  * `MISSION_DIR`／`MODEL` 有程式碼預設值，不在清單內。
  */
 export const COMPUTE_NODE_REQUIRED_ENV_KEYS = [
+  "GEMINI_API_KEY",
   "NEXT_PUBLIC_RPC_URL",
   "NEXT_PUBLIC_MISSION_BOARD_ADDRESS",
   "STORAGE_DOMAIN",
 ] as const;
+
+/**
+ * Info: (20260917 - Luphia) `.env.worker` **不得**設定、寫回 `process.env` 時要跳過的鍵
+ *（五輪 review 需修-5）。bootstrap 先設角色旗標，再把檔案值寫回 `process.env`——
+ * 若檔案帶著 `ISUNFA_WORKER_NODE_ROLE=ops`（從維運機複製、除錯留下），寫回會把
+ * 旗標蓋掉：`lib/prisma` 守門不觸發、`selectPriorityEnvPath` 退回系統 `.env`，
+ * 處理使用者上傳文件的節點拿到資料庫存取，唯一痕跡是一行成功訊息。
+ * 角色是**進入點**的宣告，不是設定檔的欄位。
+ */
+export const COMPUTE_NODE_RESERVED_ENV_KEYS = [WORKER_NODE_ROLE_ENV] as const;
+
+/**
+ * Info: (20260917 - Luphia) recorder 對同一個 approved 資料夾連續記錄失敗幾次後隔離
+ *（五輪 review 阻-2）。原本 catch 只印 log、不還原旗標：一個每 tick 都拋錯的資料夾
+ *（`0.md` 壞掉、通知撞 unique constraint）會讓 `recordedTask` 每輪為 true，放棄路徑
+ * 永遠餓死。現在失敗寫 `record_failed_<ts>.md`，達門檻即隔離（每 tick 一行 error、
+ * 不再重試）——CLAUDE.md §6 的死信佇列形狀，與 executor 的
+ * `MISSION_MAX_EXECUTION_FAILURES` 同一種語意。
+ */
+export const MISSION_RECORD_MAX_FAILURES = 3;
 
 /**
  * Info: (20260914 - Luphia) 上鏈提交被拒絕幾次算放棄（review 需修-6）。

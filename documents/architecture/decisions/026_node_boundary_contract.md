@@ -88,7 +88,7 @@ export type IComputeNodeConfig = z.infer<typeof ComputeNodeConfigSchema>;
 - `compute_node_bootstrap` 只做：設角色旗標 → 讀 `.env.worker` **解析結果**（`dotenv.parse`，不是 `process.env`）→ schema 驗證（失敗 exit 1，列出欄位與原因）→ 存進單例 `computeNodeConfig`。**不再寫入 `process.env`**：消費端一律 `getComputeNodeConfig()`，planner／commitor／closer／executor 全部改吃它，`getPriorityEnvConfig()` 從運算圖移除（掃描守：運算圖不得匯入 `env.service`）。第四輪 #1「查的與讀的不是同一份」在結構上消失。
 - `.env.worker.example` 由 schema 產生（測試：example 的鍵集合 == schema 的鍵集合），新增設定不會再漏寫文件。
 - 維運節點同形：`OpsNodeConfigSchema`，來源 `.env.setup → .env`（既有順序），bootstrap 設 `ISUNFA_WORKER_NODE_ROLE=ops`。
-- **prisma fail-closed**：`lib/prisma` 只在角色 ∈ {`ops`, `web`} 時建池；未宣告即拋。web 由 Next `instrumentation.ts` 宣告 `web`。第五個節點類型必須正面宣告。
+- **prisma fail-closed——主案改為惰性建池**（2026-09-17，五輪 review 註記）：模組層級 `new Pool()`／`new PrismaClient()` 是「bootstrap 必須是第一個 import」這條脆弱約束的根因，也是 fail-closed 撞上 Next 建置期求值的原因。改成 `getPrisma()`（或 Proxy）首次查詢才建池：建置期匯入什麼都不建，角色檢查移到首次使用——角色 ∈ {`ops`, `web`} 才建，未宣告即拋；web 在請求路徑上宣告。環境全域從「必須先設」變成「用到才問」，第一個-import 的約束可以退場。原案（`instrumentation.ts` 宣告 `web`）保留為備案。
 - **子行程 env 白名單**：`run_executor` 以 `{ ...pickOsPassthrough(process.env), ...serialize(computeNodeConfig) }` spawn，不再 `{ ...process.env }`。封鎖清單降級為保險；第四輪 #10 的 `POSTGRES_PASSWORD` 與任何未來新增的祕密，結構上進不來。
 
 ### S5. 訂單終態結算矩陣
@@ -138,7 +138,7 @@ B2（金鑰撤銷）不在任何階段——它是隔離的定義本身。處置
 
 ## 決策紀錄（2026-09-15，Luphia 拍板）
 
-1. **`GEMINI_API_KEY` 不再是啟動必要鍵**。S1 之後存在 `PRECOMPUTED` 任務，「不用 LLM 的運算節點」是合法形態；缺金鑰由需要 LLM 的 skill 在呼叫時以 `LLM_KEY_MISSING` 明確失敗（S5 的本地重試路徑），不在啟動期擋。P0 已落地：`COMPUTE_NODE_REQUIRED_ENV_KEYS` = `NEXT_PUBLIC_RPC_URL`／`NEXT_PUBLIC_MISSION_BOARD_ADDRESS`／`STORAGE_DOMAIN`。
+1. **`GEMINI_API_KEY` 不再是啟動必要鍵——生效時點是 P3**。S1 之後存在 `PRECOMPUTED` 任務，「不用 LLM 的運算節點」才是合法形態；缺金鑰由需要 LLM 的 skill 在呼叫時以 `LLM_KEY_MISSING` 明確失敗（S5 的本地重試路徑），不在啟動期擋。**更正（2026-09-17，五輪 review 阻-3）**：P0 曾提前移出，但此時 `PRECOMPUTED` 只存在於文件、七支 skill 全要 LLM，金鑰留空的節點會照常領任務、每筆失敗、付費訂單報銷——拿未來的規則改現在的程式是時序錯誤。P0 已加回；P3 落地 `execution.mode` 時改成「節點宣告自己是 PRECOMPUTED-only 時才免除」。
 2. **退款由平台代簽轉回**（個人鏈上付款走金庫代簽 `transfer` 回付款地址；團隊額度走既有 `refundCredits`）。**使用者必須收到退款通知**（`notification.service` 新增 `notifyOrderRefunded`，dedupeKey `order-refunded:<orderId>`），**訂單查詢必須看得到已退款資訊**（`Order` 新增 `refund` 子結構：`refundedAt`／`refundTxHash` 或 `refundLedgerId`／`refundAmount`／`reason`；`GET /order/:id` 與訂單列表回傳它）。開工前依 §5.4 先 grep 產品裡既有的鏈上反向轉帳路徑，缺的才新建。
 3. **`MISSION_PLAN_TIMEOUT` = 24 小時；`MISSION_PLAN_MAX_ATTEMPTS` = 5**（退避 1→2→4→8→16 分鐘）。兩者都是 `src/constants/worker_node.ts` 的常數，並列入部署檢查表。
 4. **先合併 #6650**：修四輪機械項（#1／#2／#4／#5／#6／#8／#10），#3／#7 記 `known_issues/executor_settings_isolation.md` 指向本 ADR；#9（prisma fail-closed）因涉及 web 啟動順序（Next 建置期會求值 `lib/prisma`），併入 P1 與設定契約一起做。合併後以本 ADR 開 epic，P1–P4 各一張 issue。

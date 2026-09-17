@@ -43,8 +43,17 @@ const defaultFactorLookup: IFactorLookup = {
   findFallbackCoefficientId: (keyword) =>
     EmissionFactorRepo.findFallbackCoefficient(keyword, ""),
   // Info: (20260716 - Tzuhan) 上游可能回 number(靜態字典)，於介面邊界一次性字串化，之後 facade 全程字串
+  /**
+   * Info: (20260917 - Luphia) 與上面 `findFallbackCoefficientId` 用**同一個**帳本範圍
+   *（這裡都是 ""＝只有全球）。兩支的範圍若分岔，軌道三回的租戶 id 會在這裡解成 null
+   *（五輪 review 需修-4）；帶帳本的呼叫端要兩邊一起帶。
+   */
   getCoefficientById: async (id) => {
-    const coefficient = await EmissionFactorRepo.getCoefficientById(id);
+    const coefficient = await EmissionFactorRepo.getCoefficientById(
+      id,
+      undefined,
+      "",
+    );
     if (!coefficient) return null;
     return {
       ...coefficient,

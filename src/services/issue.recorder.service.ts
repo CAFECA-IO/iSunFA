@@ -16,6 +16,7 @@ import { getPriorityEnvConfig } from "@/services/env.service";
 import { createPublicClient, http } from "viem";
 import {
   DEFAULT_MISSION_DIR,
+  MISSION_RECORD_MAX_FAILURES,
   MISSION_VERDICT_READ_CONCURRENCY,
 } from "@/constants/worker_node";
 import { mapWithConcurrency } from "@/lib/worker/concurrency";
@@ -161,7 +162,21 @@ export class IssueRecorderService {
           /* Info: (20260426 - Luphia) proceeding to record */
         }
 
-        recordedTask = true;
+        /**
+         * Info: (20260917 - Luphia) 毒資料夾隔離（五輪 review 阻-2）：連續記錄失敗達
+         * `MISSION_RECORD_MAX_FAILURES` 的資料夾不再重試，每 tick 一行 error 讓人看見。
+         * 沒有這道，一個 `0.md` 壞掉的資料夾會每輪拋錯、每輪佔掉「本輪那一筆」。
+         */
+        const recordFailures = files.filter(
+          (f) => f.startsWith("record_failed_") && f.endsWith(".md"),
+        ).length;
+        if (recordFailures >= MISSION_RECORD_MAX_FAILURES) {
+          console.error(
+            `[MissionRecorder] Task ${taskId} failed to record ${recordFailures} times; quarantined (see record_failed_*.md in ${taskDir}). Fix the data and delete the markers to retry.`,
+          );
+          continue;
+        }
+
         console.log(
           `[MissionRecorder] Found approved task to record: Task ID ${taskId}`,
         );
@@ -616,25 +631,44 @@ export class IssueRecorderService {
               : `Recorded at ${new Date().toISOString()}`;
           await fs.writeFile(flagFile, flagContent, "utf8");
 
+          // Info: (20260917 - Luphia) 只有真的記完才算「本輪處理了一筆」（五輪 review 阻-2）
+          recordedTask = true;
           break; // Info: (20260420 - Luphia) process one at a time
         } catch (err) {
           console.error(
             `[MissionRecorder] Error recording Task ID ${taskId}:`,
             err,
           );
+          /**
+           * Info: (20260917 - Luphia) 失敗留痕（五輪 review 阻-2）：原本 catch 只印 log，
+           * 旗標已是 true、迴圈不 break——放棄路徑因此永遠不執行。現在寫
+           * `record_failed_<ts>.md`，達門檻後上方隔離；旗標未設，放棄路徑照常。
+           */
+          await fs
+            .writeFile(
+              path.join(taskDir, `record_failed_${Date.now()}.md`),
+              `Failed at ${new Date().toISOString()}\n${err instanceof Error ? err.stack || err.message : String(err)}\n`,
+              "utf8",
+            )
+            .catch(() => {
+              /* Info: (20260917 - Luphia) 留痕失敗不該蓋掉原始錯誤 */
+            });
         }
       }
 
-      // Info: (20260915 - Luphia) 成功路徑沒處理到東西時，才輪到放棄路徑（一輪一筆）
-      if (!recordedTask) {
-        const givenUp = await this.resolveFirstGivenUp({
-          candidates: giveUpCandidates,
-          missionDirBase,
-          verdictReader,
-        });
-        if (givenUp) {
-          recordedTask = await this.recordGiveUp(givenUp);
-        }
+      /**
+       * Info: (20260917 - Luphia) 放棄路徑**不受**成功路徑影響（五輪 review 阻-2）。
+       * 四輪版寫成 `if (!recordedTask)`：一個每 tick 都拋錯的 approved 資料夾、或
+       * 200 筆 approved 積壓，都會讓已在鏈上被放棄的訂單永遠收不了尾。現在每 tick
+       * 成功路徑最多一筆、放棄路徑最多一筆，互不排隊。
+       */
+      const givenUp = await this.resolveFirstGivenUp({
+        candidates: giveUpCandidates,
+        missionDirBase,
+        verdictReader,
+      });
+      if (givenUp) {
+        recordedTask = (await this.recordGiveUp(givenUp)) || recordedTask;
       }
     } catch (e) {
       console.log("[MissionRecorder] Invalid ISSUE_DIR or none exists yet.", e);

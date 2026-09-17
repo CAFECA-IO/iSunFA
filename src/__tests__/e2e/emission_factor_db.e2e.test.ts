@@ -258,6 +258,37 @@ describe("EmissionFactorRepo Database Operations Test", () => {
         },
       });
       expect(await EmissionFactorRepo.getCoefficientById(tenantId)).toBeNull();
+      /**
+       * Info: (20260917 - Luphia) 但帶著同一個帳本就解得到（五輪 review 需修-4）：
+       * `findFallbackCoefficient` 軌道三會回這種 id，呼叫端要用同一個帳本範圍解它。
+       * 沒有帳本（chatbot 傳 ""）時軌道三不查，所以也不會回一個解不出來的 id。
+       */
+      const scoped = await EmissionFactorRepo.getCoefficientById(
+        tenantId,
+        undefined,
+        bookId,
+      );
+      expect(scoped?.id).toBe(tenantId);
+      expect(scoped?.emissionFactor.toString()).toBe("99.5");
+      expect(
+        await EmissionFactorRepo.getCoefficientById(
+          tenantId,
+          undefined,
+          `${bookId}-other`,
+        ),
+      ).toBeNull();
+      expect(
+        await EmissionFactorRepo.findFallbackCoefficient(
+          "Tenant-only coefficient",
+          "",
+        ),
+      ).toBeNull();
+      expect(
+        await EmissionFactorRepo.findFallbackCoefficient(
+          "Tenant-only coefficient",
+          bookId,
+        ),
+      ).toBe(tenantId);
     } finally {
       await prisma.coefficient.deleteMany({ where: { id: tenantId } });
       await prisma.accountBook.deleteMany({ where: { id: bookId } });
