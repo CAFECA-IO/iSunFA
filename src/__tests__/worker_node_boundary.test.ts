@@ -22,9 +22,18 @@ import {
 import {
   COMPUTE_NODE_REQUIRED_ENV_KEYS,
   MISSION_GIVE_UP_REJECTION_THRESHOLD,
+  MISSION_RECORD_FAILED_MARKER_PREFIX,
+  MISSION_RECORD_GIVE_UP_FAILURES,
+  MISSION_RECORD_MAX_FAILURES,
+  MISSION_RECORD_RETRY_BACKOFF_MS,
   WORKER_NODE_ROLE,
   WORKER_NODE_ROLE_ENV,
 } from "@/constants/worker_node";
+import {
+  parseRecordFailureTimestamps,
+  recordFailureMarkerName,
+  resolveRecordRetryState,
+} from "@/lib/worker/record_retry";
 import {
   parseMultipleRoutesFromText,
   parseSmartInput,
@@ -173,6 +182,72 @@ describe("檔案值寫回 process.env：保留鍵跳過、覆寫有回報（五�
       reserved: [],
     });
     expect(env).toEqual({ MODEL: "same" });
+  });
+});
+
+/**
+ * Info: (20260918 - Luphia) 記錄失敗的三段判準（六輪 review 阻-1／阻-2）：純函式直接測。
+ * 「幾次之後退避、退避多久、幾次之後放棄」是這個修法的全部內容，不能只靠讀原始碎。
+ */
+describe("record_retry：失敗 → 重試／退避／放棄（六輪阻-1／阻-2）", () => {
+  const HOUR = MISSION_RECORD_RETRY_BACKOFF_MS;
+  const now = 10 * HOUR;
+
+  it("未達門檻：照常重試", () => {
+    expect(resolveRecordRetryState([], now)).toBe("RETRY");
+    expect(resolveRecordRetryState([now - 1000, now - 500], now)).toBe("RETRY");
+  });
+
+  it("達門檻且最新失敗未滿退避時間：退避", () => {
+    const fresh = Array.from(
+      { length: MISSION_RECORD_MAX_FAILURES },
+      (_, i) => now - 1000 * (i + 1),
+    );
+    expect(resolveRecordRetryState(fresh, now)).toBe("BACKOFF");
+    expect(resolveRecordRetryState(fresh, now + HOUR - 1001)).toBe("BACKOFF");
+  });
+
+  it("達門檻但最新失敗已滿退避時間：再試一次（暫時性故障自己好起來）", () => {
+    const stale = Array.from(
+      { length: MISSION_RECORD_MAX_FAILURES },
+      (_, i) => now - HOUR - 1000 * (i + 1),
+    );
+    expect(resolveRecordRetryState(stale, now)).toBe("RETRY");
+  });
+
+  it("達放棄門檻：不論新舊都放棄", () => {
+    const many = Array.from(
+      { length: MISSION_RECORD_GIVE_UP_FAILURES },
+      (_, i) => now - 1000 * (i + 1),
+    );
+    expect(resolveRecordRetryState(many, now)).toBe("GIVE_UP");
+    expect(
+      resolveRecordRetryState(
+        many.map((t) => t - 100 * HOUR),
+        now,
+      ),
+    ).toBe("GIVE_UP");
+  });
+
+  it("門檻順序合理：放棄門檻 > 退避門檻 ≥ 1", () => {
+    expect(MISSION_RECORD_GIVE_UP_FAILURES).toBeGreaterThan(
+      MISSION_RECORD_MAX_FAILURES,
+    );
+    expect(MISSION_RECORD_MAX_FAILURES).toBeGreaterThanOrEqual(1);
+  });
+
+  it("標記檔名：寫入端與讀取端同一支命名，壞檔名算一次失敗", () => {
+    const name = recordFailureMarkerName(1700000000000);
+    expect(name).toBe(`${MISSION_RECORD_FAILED_MARKER_PREFIX}1700000000000.md`);
+    expect(
+      parseRecordFailureTimestamps([
+        "approved.1.md",
+        name,
+        recordFailureMarkerName(5),
+        `${MISSION_RECORD_FAILED_MARKER_PREFIX}garbage.md`,
+        "record_never_1.md",
+      ]),
+    ).toEqual([0, 5, 1700000000000]);
   });
 });
 
@@ -469,8 +544,14 @@ describe("接線（進入點與呼叫端）", () => {
      * Info: (20260917 - Luphia) 缺檔、檔內帶信任根、缺值**各自** exit(1)（五輪阻-1：
      * 抹記憶體那份對重新讀檔的消費端是裝飾，唯一誠實的處置是不起來）。
      */
-    expect(boot.match(/process\.exit\(1\)/g)?.length).toBe(3);
+    expect(boot.match(/process\.exit\(1\)/g)?.length).toBe(4);
     expect(boot.slice(rescrubAt, missingAt)).toContain("process.exit(1)");
+    // Info: (20260918 - Luphia) 檔內帶保留鍵（角色旗標）與帶信任根同一處置：退出（六輪建議-7）
+    const reservedAt = boot.indexOf("applied.reserved.length > 0");
+    expect(reservedAt).toBeGreaterThan(writeAt);
+    expect(
+      boot.slice(reservedAt, boot.indexOf("applied.overridden.length > 0")),
+    ).toContain("process.exit(1)");
     // Info: (20260917 - Luphia) 寫回走純函式（保留鍵在那裡跳過），bootstrap 內不得再有裸的寫回迴圈
     expect(boot).not.toMatch(/process\.env\[key\]\s*=/);
     expect(boot).toContain("applied.reserved.length > 0");
@@ -636,8 +717,21 @@ describe("接線（進入點與呼叫端）", () => {
     expect(recordedTrueAt).toBeGreaterThan(flagWriteAt);
     expect(scanCode.match(/recordedTask = true;/g)).toHaveLength(1);
     expect(scanCode).not.toMatch(/if \(!recordedTask\)\s*\{\s*const givenUp/);
-    expect(scanCode).toContain("record_failed_${Date.now()}.md");
-    expect(scanCode).toContain("MISSION_RECORD_MAX_FAILURES");
+    /**
+     * Info: (20260918 - Luphia) 六輪：判準走 `record_retry` 純函式（行為在
+     * `worker_node_boundary` 的 record_retry 區與 `issue_recorder_giveup.test.ts`），
+     * 這裡只釘接線：讀標記、算狀態、寫標記用同一支命名、失敗即 break。
+     */
+    expect(scanCode).toContain("parseRecordFailureTimestamps(files)");
+    // Info: (20260918 - Luphia) prettier 會把長呼叫折行，比對容忽空白
+    expect(scanCode).toMatch(/resolveRecordRetryState\(\s*failureTimestamps,/);
+    expect(scanCode).toContain("recordFailureMarkerName(Date.now())");
+    expect(scanCode).not.toContain('"record_failed_');
+    // Info: (20260918 - Luphia) 兩段式：候選蒐集（approvedQueue.push）在記錄迴圈之前
+    const queuePushAt = scanCode.indexOf("approvedQueue.push(");
+    const recordLoopAt = scanCode.indexOf("of approvedQueue)");
+    expect(queuePushAt).toBeGreaterThan(-1);
+    expect(recordLoopAt).toBeGreaterThan(queuePushAt);
     const closer = read("src/services/mission.closer.service.ts");
     expect(closer).toContain("isTaskGivenUp(submissionCount, isRejected)");
     expect(closer).not.toMatch(/submissionCount >= 3n/);

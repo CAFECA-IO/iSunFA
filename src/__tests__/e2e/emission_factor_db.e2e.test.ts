@@ -296,6 +296,99 @@ describe("EmissionFactorRepo Database Operations Test", () => {
     }
   });
 
+  /**
+   * Info: (20260918 - Luphia) 帶範圍時的優先序（PR #6650 review 六輪建議-10）：
+   * 帳本自己的列**贏過**靜態字典，且只在該帳本範圍內；不帶帳本時看不到它、落回靜態。
+   * 開發機 DB 通常已把靜態 id 匯入成全球列，所以把那一列**暫時**改成 e2e 帳本的租戶列，
+   * finally 還原；沒有那一列就建一列、cleanup 刪掉。
+   */
+  it("should let a tenant row that collides with a static id win only inside its own book", async () => {
+    const staticCoef = ALL_COEFFICIENTS[2];
+    const probeFactor = "54321.5";
+    expect(staticCoef.emissionFactor.toString()).not.toBe(probeFactor);
+    const stamp = Date.now();
+    const team = await prisma.team.create({
+      data: { name: `e2e-coef-scope-${stamp}` },
+    });
+    const bookId = `e2e-book-coef-scope-${stamp}`;
+    await prisma.accountBook.create({
+      data: {
+        id: bookId,
+        name: `E2E 係數範圍測試帳本 ${bookId}`,
+        country: "tw",
+        currency: "TWD",
+        rule: "TW-GAAP",
+        teamId: team.id,
+      },
+    });
+    const existing = await prisma.coefficient.findUnique({
+      where: { id: staticCoef.id },
+    });
+    if (!existing) {
+      await prisma.coefficient.create({
+        data: {
+          id: staticCoef.id,
+          name: staticCoef.name,
+          description: "",
+          unit: staticCoef.unit,
+          emissionFactor: probeFactor,
+          source: "e2e-scope",
+          category: "STANDARD",
+          isVerified: true,
+          accountBookId: bookId,
+        },
+      });
+      createdIds.push(staticCoef.id);
+    } else {
+      await prisma.coefficient.update({
+        where: { id: staticCoef.id },
+        data: {
+          emissionFactor: probeFactor,
+          accountBookId: bookId,
+          deletedAt: null,
+        },
+      });
+    }
+
+    try {
+      const scoped = await EmissionFactorRepo.getCoefficientById(
+        staticCoef.id,
+        undefined,
+        bookId,
+      );
+      expect(scoped!.emissionFactor.toString()).toBe(probeFactor);
+      const unscoped = await EmissionFactorRepo.getCoefficientById(
+        staticCoef.id,
+      );
+      expect(unscoped!.emissionFactor.toString()).toBe(
+        staticCoef.emissionFactor.toString(),
+      );
+      const otherBook = await EmissionFactorRepo.getCoefficientById(
+        staticCoef.id,
+        undefined,
+        `${bookId}-other`,
+      );
+      expect(otherBook!.emissionFactor.toString()).toBe(
+        staticCoef.emissionFactor.toString(),
+      );
+    } finally {
+      if (existing) {
+        await prisma.coefficient.update({
+          where: { id: staticCoef.id },
+          data: {
+            emissionFactor: existing.emissionFactor,
+            accountBookId: existing.accountBookId,
+            deletedAt: existing.deletedAt,
+          },
+        });
+      } else {
+        await prisma.coefficient.deleteMany({ where: { id: staticCoef.id } });
+      }
+      await prisma.accountBook.deleteMany({ where: { id: bookId } });
+      await prisma.team.deleteMany({ where: { id: team.id } });
+    }
+  });
+
   it("should soft-delete global coefficient and exclude it from active lookups", async () => {
     const coef = await EmissionFactorRepo.createGlobal({
       name: "Coef Delete Test",

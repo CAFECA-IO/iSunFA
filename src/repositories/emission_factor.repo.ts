@@ -53,6 +53,12 @@ export class EmissionFactorRepo {
      *（`carbon_calculation.service`）接著拿那個 id 來這裡解——只認全球列時解不出來，
      * 有自訂係數的帳本反而變成「查無係數」。呼叫端帶上同一個 accountBookId，
      * 該帳本自己的列就解得到；沒帶就只有全球列。跨帳本的列永遠解不到。
+     *
+     * Info: (20260918 - Luphia) 帶範圍時的**優先序決定**（六輪 review 建議-10）：
+     * 帳本自己的列**贏過**靜態字典——與 `buildCoefficientDictionary` 的
+     * tenant > global > static 同一順序。`id` 是主鍵，DB 裡不會同時有全球列與租戶列
+     * 撞同一個 id，所以 `OR` 最多回一列；撞到**靜態**保留 id 的租戶列只在該帳本
+     * 範圍內生效、不影響其他帳本（四輪阻-2 的全站污染不會回來）。e2e 釘住這條。
      */
     const client = tx || prisma;
     const dbMatch = await client.coefficient.findFirst({

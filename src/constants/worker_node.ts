@@ -99,14 +99,31 @@ export const COMPUTE_NODE_REQUIRED_ENV_KEYS = [
 export const COMPUTE_NODE_RESERVED_ENV_KEYS = [WORKER_NODE_ROLE_ENV] as const;
 
 /**
- * Info: (20260917 - Luphia) recorder 對同一個 approved 資料夾連續記錄失敗幾次後隔離
+ * Info: (20260917 - Luphia) recorder 對同一個 approved 資料夾記錄失敗的處置
  *（五輪 review 阻-2）。原本 catch 只印 log、不還原旗標：一個每 tick 都拋錯的資料夾
  *（`0.md` 壞掉、通知撞 unique constraint）會讓 `recordedTask` 每輪為 true，放棄路徑
- * 永遠餓死。現在失敗寫 `record_failed_<ts>.md`，達門檻即隔離（每 tick 一行 error、
- * 不再重試）——CLAUDE.md §6 的死信佇列形狀，與 executor 的
- * `MISSION_MAX_EXECUTION_FAILURES` 同一種語意。
+ * 永遠餓死。
+ *
+ * Info: (20260918 - Luphia) 六輪 review 阻-1／阻-2 把「達門檻即永久隔離」改成三段：
+ *
+ * 1. 失敗 < `MISSION_RECORD_MAX_FAILURES`：下一 tick 照常重試。
+ * 2. 失敗 ≥ `MISSION_RECORD_MAX_FAILURES`：**退避**——最新一次失敗距今未滿
+ *    `MISSION_RECORD_RETRY_BACKOFF_MS` 就跳過，滿了再試一次。永久隔離會把一次
+ *    30 秒的 Postgres 重啟（三個 tick）變成整批訂單永久擱淺，而且復原要人 ssh 進
+ *    維運機逐一 `rm`；退避讓暫時性故障自己好起來。成功時把標記全部清掉。
+ * 3. 失敗 ≥ `MISSION_RECORD_GIVE_UP_FAILURES`（跨越 ≥ 7 小時的退避重試）：走既有的
+ *    放棄路徑（`recordGiveUp`）——訂單 FAILED、通知使用者、寫 `recorded.flag`。
+ *    CLAUDE.md §6：重試達上限必須進終態，不能永遠留在 EXECUTING／PAID。
+ *
+ * 每 tick 最多**一個**資料夾嘗試記錄（失敗即 `break`）：失敗來源多半是共用的
+ *（DB 不可用），不 break 會讓一個 tick 在每個資料夾各留一個標記。
+ * 與 executor 的 `MISSION_MAX_EXECUTION_FAILURES` 同一種語意；標記檔名的前綴收在
+ * `MISSION_RECORD_FAILED_MARKER_PREFIX`（六輪建議-9：讀寫兩端不再各寫一次字面值）。
  */
 export const MISSION_RECORD_MAX_FAILURES = 3;
+export const MISSION_RECORD_RETRY_BACKOFF_MS = 60 * 60 * 1000;
+export const MISSION_RECORD_GIVE_UP_FAILURES = 10;
+export const MISSION_RECORD_FAILED_MARKER_PREFIX = "record_failed_";
 
 /**
  * Info: (20260914 - Luphia) 上鏈提交被拒絕幾次算放棄（review 需修-6）。

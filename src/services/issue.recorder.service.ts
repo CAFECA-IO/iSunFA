@@ -16,10 +16,16 @@ import { getPriorityEnvConfig } from "@/services/env.service";
 import { createPublicClient, http } from "viem";
 import {
   DEFAULT_MISSION_DIR,
-  MISSION_RECORD_MAX_FAILURES,
+  MISSION_RECORD_FAILED_MARKER_PREFIX,
+  MISSION_RECORD_RETRY_BACKOFF_MS,
   MISSION_VERDICT_READ_CONCURRENCY,
 } from "@/constants/worker_node";
 import { mapWithConcurrency } from "@/lib/worker/concurrency";
+import {
+  parseRecordFailureTimestamps,
+  recordFailureMarkerName,
+  resolveRecordRetryState,
+} from "@/lib/worker/record_retry";
 import {
   readGiveUpVerdict,
   viemMissionBoardReader,
@@ -104,6 +110,21 @@ export class IssueRecorderService {
     try {
       const folders = await fs.readdir(issueDirPath, { withFileTypes: true });
 
+      /**
+       * Info: (20260918 - Luphia) **兩段式掃描**（六輪 review 需修-3）：第一段只分類、
+       * 不做事——把每個資料夾歸到「待記錄」或「放棄候選」；第二段才對第一個可記錄的
+       * approved 資料夾做記錄。四輪／五輪的版本把候選蒐集與記錄放在同一個迴圈裡，
+       * 第 k 個資料夾記錄成功 `break` 之後，第 k+1…N 個的放棄候選資格根本沒被看到——
+       * 「互不排隊」只在註解裡成立。
+       */
+      const approvedQueue: Array<{
+        taskDir: string;
+        folderName: string;
+        taskId: string;
+        files: string[];
+        approvedFile: string;
+      }> = [];
+
       for (const folder of folders) {
         if (!folder.isDirectory()) continue;
         const folderName = folder.name;
@@ -112,6 +133,9 @@ export class IssueRecorderService {
         const parts = folderName.split("_");
         if (parts.length < 2) continue; // Info: (20260427 - Luphia) Skip invalid formats
         const taskId = parts[parts.length - 1];
+
+        // Info: (20260915 - Luphia) `recorded.flag` 先查（三輪建議-9）：已收尾的資料夾兩條路都不必再看
+        if (!(await this.isGiveUpCandidate({ taskDir }))) continue;
 
         // Info: (20260420 - Luphia) Find approved.*.md files
         const files = await fs.readdir(taskDir);
@@ -132,49 +156,58 @@ export class IssueRecorderService {
          * 他付了錢、送出分析，然後那件事安靜地消失。
          */
         if (!approvedFile) {
-          /**
-           * Info: (20260915 - Luphia) 這裡只做本地便宜檢查、蒐集候選；鏈讀集中在
-           * 迴圈之後並行做（review 四輪建議-6）。`recorded.flag` 先查（三輪建議-9）：
-           * 已收尾的資料夾不必再問鏈。
-           */
-          if (
-            await this.isGiveUpCandidate({
-              taskDir,
-              folderName,
-              missionDirBase,
-            })
-          ) {
-            giveUpCandidates.push({ taskDir, folderName, taskId });
-          }
+          giveUpCandidates.push({ taskDir, folderName, taskId });
           continue;
         }
+        approvedQueue.push({
+          taskDir,
+          folderName,
+          taskId,
+          files,
+          approvedFile,
+        });
+      }
 
+      for (const {
+        taskDir,
+        folderName,
+        taskId,
+        files,
+        approvedFile,
+      } of approvedQueue) {
         // Info: (20260420 - Luphia) Extract subIndex
         const subIndexStr = approvedFile.split(".")[1];
         const resultFile = path.join(taskDir, `${subIndexStr}.md`);
         const flagFile = path.join(taskDir, "recorded.flag");
 
-        try {
-          await fs.access(flagFile);
-          // Info: (20260420 - Luphia) Already recorded to database
-          continue;
-        } catch {
-          /* Info: (20260426 - Luphia) proceeding to record */
-        }
-
         /**
-         * Info: (20260917 - Luphia) 毒資料夾隔離（五輪 review 阻-2）：連續記錄失敗達
-         * `MISSION_RECORD_MAX_FAILURES` 的資料夾不再重試，每 tick 一行 error 讓人看見。
-         * 沒有這道，一個 `0.md` 壞掉的資料夾會每輪拋錯、每輪佔掉「本輪那一筆」。
+         * Info: (20260918 - Luphia) 記錄失敗的三段處置（六輪 review 阻-1／阻-2，判準在
+         * `lib/worker/record_retry`）：未達門檻照常；達門檻**退避**一小時再試（一次
+         * DB 重啟不會把整批訂單永久隔離）；達放棄門檻走 `recordGiveUp` 進終態
+         *（訂單 FAILED、通知、寫旗標）——CLAUDE.md §6：重試達上限必須進終態。
          */
-        const recordFailures = files.filter(
-          (f) => f.startsWith("record_failed_") && f.endsWith(".md"),
-        ).length;
-        if (recordFailures >= MISSION_RECORD_MAX_FAILURES) {
-          console.error(
-            `[MissionRecorder] Task ${taskId} failed to record ${recordFailures} times; quarantined (see record_failed_*.md in ${taskDir}). Fix the data and delete the markers to retry.`,
+        const failureTimestamps = parseRecordFailureTimestamps(files);
+        const retryState = resolveRecordRetryState(
+          failureTimestamps,
+          Date.now(),
+        );
+        if (retryState === "BACKOFF") {
+          console.warn(
+            `[MissionRecorder] Task ${taskId} failed to record ${failureTimestamps.length} times; backing off (retry after ${MISSION_RECORD_RETRY_BACKOFF_MS / 60000} min).`,
           );
           continue;
+        }
+        if (retryState === "GIVE_UP") {
+          console.error(
+            `[MissionRecorder] Task ${taskId} failed to record ${failureTimestamps.length} times; giving up and closing the order as FAILED (see ${MISSION_RECORD_FAILED_MARKER_PREFIX}*.md in ${taskDir}).`,
+          );
+          recordedTask = await this.recordGiveUp({
+            taskDir,
+            folderName,
+            taskId,
+            reason: `record failed ${failureTimestamps.length} times`,
+          });
+          break;
         }
 
         console.log(
@@ -631,6 +664,17 @@ export class IssueRecorderService {
               : `Recorded at ${new Date().toISOString()}`;
           await fs.writeFile(flagFile, flagContent, "utf8");
 
+          // Info: (20260918 - Luphia) 記成功就把失敗標記清掉：計數只算連續失敗，零星故障不跨事件累加
+          await Promise.all(
+            failureTimestamps.map((timestamp) =>
+              fs
+                .unlink(path.join(taskDir, recordFailureMarkerName(timestamp)))
+                .catch(() => {
+                  /* Info: (20260918 - Luphia) 標記清不掉不影響已完成的記錄 */
+                }),
+            ),
+          );
+
           // Info: (20260917 - Luphia) 只有真的記完才算「本輪處理了一筆」（五輪 review 阻-2）
           recordedTask = true;
           break; // Info: (20260420 - Luphia) process one at a time
@@ -642,17 +686,22 @@ export class IssueRecorderService {
           /**
            * Info: (20260917 - Luphia) 失敗留痕（五輪 review 阻-2）：原本 catch 只印 log，
            * 旗標已是 true、迴圈不 break——放棄路徑因此永遠不執行。現在寫
-           * `record_failed_<ts>.md`，達門檻後上方隔離；旗標未設，放棄路徑照常。
+           * `record_failed_<ts>.md`；旗標未設，放棄路徑照常。
+           *
+           * Info: (20260918 - Luphia) 寫完標記就 `break`（六輪 review 阻-1）：失敗來源多半
+           * 是共用的（DB 不可用），繼續跑會讓同一個 tick 在每個資料夾各留一個標記，
+           * 30 秒的 Postgres 重啟 ＝ 三個 tick ＝ 整批達門檻。一 tick 一次嘗試。
            */
           await fs
             .writeFile(
-              path.join(taskDir, `record_failed_${Date.now()}.md`),
+              path.join(taskDir, recordFailureMarkerName(Date.now())),
               `Failed at ${new Date().toISOString()}\n${err instanceof Error ? err.stack || err.message : String(err)}\n`,
               "utf8",
             )
             .catch(() => {
               /* Info: (20260917 - Luphia) 留痕失敗不該蓋掉原始錯誤 */
             });
+          break;
         }
       }
 
@@ -660,7 +709,8 @@ export class IssueRecorderService {
        * Info: (20260917 - Luphia) 放棄路徑**不受**成功路徑影響（五輪 review 阻-2）。
        * 四輪版寫成 `if (!recordedTask)`：一個每 tick 都拋錯的 approved 資料夾、或
        * 200 筆 approved 積壓，都會讓已在鏈上被放棄的訂單永遠收不了尾。現在每 tick
-       * 成功路徑最多一筆、放棄路徑最多一筆，互不排隊。
+       * 成功路徑最多一筆、放棄路徑最多一筆，互不排隊——候選在第一段掃描就蒐集完，
+       * 不受第二段 `break` 的位置影響（六輪需修-3）。
        */
       const givenUp = await this.resolveFirstGivenUp({
         candidates: giveUpCandidates,
@@ -763,8 +813,6 @@ export class IssueRecorderService {
    */
   private async isGiveUpCandidate(params: {
     taskDir: string;
-    folderName: string;
-    missionDirBase: string;
   }): Promise<boolean> {
     try {
       await fs.access(path.join(params.taskDir, "recorded.flag"));
@@ -868,8 +916,11 @@ export class IssueRecorderService {
     taskDir: string;
     folderName: string;
     taskId: string;
+    /** Info: (20260918 - Luphia) 放棄的來源（鏈上判準／記錄失敗達上限），寫進旗標與 log */
+    reason?: string;
   }): Promise<boolean> {
     const flagFile = path.join(params.taskDir, "recorded.flag");
+    const reasonSuffix = params.reason ? ` Reason: ${params.reason}.` : "";
     let localContextObj: Record<string, string> = {};
     try {
       const contextContent = await fs.readFile(
@@ -952,8 +1003,8 @@ export class IssueRecorderService {
       await fs.writeFile(
         flagFile,
         isTerminalOrderStatus(order.status)
-          ? `Recorded give-up at ${new Date().toISOString()}. Order ${order.id} left untouched (already ${order.status}).`
-          : `Recorded give-up at ${new Date().toISOString()}. Order ${order.id} set to FAILED.`,
+          ? `Recorded give-up at ${new Date().toISOString()}. Order ${order.id} left untouched (already ${order.status}).${reasonSuffix}`
+          : `Recorded give-up at ${new Date().toISOString()}. Order ${order.id} set to FAILED.${reasonSuffix}`,
         "utf8",
       );
       return true;

@@ -116,10 +116,17 @@ if (missing.length > 0) {
  */
 const applied = applyWorkerFileToProcessEnv(workerFile, process.env);
 if (applied.reserved.length > 0) {
+  /**
+   * Info: (20260918 - Luphia) 與信任根同一處置：退出（六輪 review 建議-7）。
+   * 檔案裡出現 `ISUNFA_WORKER_NODE_ROLE` 是同一類證據——有人把維運機的設定整份
+   * 複製過來——那份檔案的其餘內容同樣可疑。跳過寫回讓旗標本身安全，但「起不來」
+   * 才是讓人回頭看那份檔案的訊號。
+   */
   console.error(
     `${TAG} ${ENV_WORKER_PATH} tries to set reserved keys: ${applied.reserved.join(", ")}. ` +
-      "The node role is declared by the entry point, not by the worker file — ignored.",
+      "The node role is declared by the entry point, not by the worker file — this file was probably copied from the ops node. Exiting.",
   );
+  process.exit(1);
 }
 if (applied.overridden.length > 0) {
   console.warn(

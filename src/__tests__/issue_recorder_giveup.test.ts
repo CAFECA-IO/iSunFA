@@ -64,14 +64,22 @@ const fsState = {
   existing: new Set<string>(),
   contents: new Map<string, string>(),
   written: new Map<string, string>(),
+  /**
+   * Info: (20260918 - Luphia) 多資料夾情境（六輪 review 阻-1／阻-2／需修-3）：
+   * `folders` 是 ISSUE_DIR 底下的資料夾清單，`filesByDir` 是各資料夾的檔案；
+   * 沒設定的資料夾退回 `taskFiles`（單資料夾的舊案例不必改）。
+   */
+  folders: [FOLDER] as string[],
+  filesByDir: new Map<string, string[]>(),
+  unlinked: [] as string[],
 };
 
 jest.mock("fs/promises", () => ({
   readdir: jest.fn(
     async (target: string, options?: { withFileTypes?: true }) =>
       options?.withFileTypes
-        ? [{ name: FOLDER, isDirectory: () => true }]
-        : fsState.taskFiles,
+        ? fsState.folders.map((name) => ({ name, isDirectory: () => true }))
+        : (fsState.filesByDir.get(target) ?? fsState.taskFiles),
   ),
   access: jest.fn(async (target: string) => {
     if (!fsState.existing.has(target)) {
@@ -85,6 +93,9 @@ jest.mock("fs/promises", () => ({
   }),
   writeFile: jest.fn(async (target: string, content: string) => {
     fsState.written.set(target, content);
+  }),
+  unlink: jest.fn(async (target: string) => {
+    fsState.unlinked.push(target);
   }),
 }));
 
@@ -150,6 +161,16 @@ jest.mock("@/repositories/transaction.repo", () => ({
  */
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
 
+const resetFs = () => {
+  fsState.taskFiles = [];
+  fsState.existing = new Set<string>();
+  fsState.contents = new Map<string, string>();
+  fsState.written = new Map<string, string>();
+  fsState.folders = [FOLDER];
+  fsState.filesByDir = new Map<string, string[]>();
+  fsState.unlinked = [];
+};
+
 function givenTask(options: {
   files?: string[];
   gaveUp?: boolean;
@@ -159,10 +180,8 @@ function givenTask(options: {
   orderData?: Record<string, unknown>;
   contextExtra?: Record<string, unknown>;
 }) {
+  resetFs();
   fsState.taskFiles = options.files ?? [];
-  fsState.existing = new Set<string>();
-  fsState.contents = new Map<string, string>();
-  fsState.written = new Map<string, string>();
 
   if (options.gaveUp) fsState.existing.add(giveupPath);
   if (options.alreadyRecorded) fsState.existing.add(flagPath);
@@ -202,10 +221,8 @@ function givenApprovedTask(
     contextExtra?: Record<string, unknown>;
   } = {},
 ) {
+  resetFs();
   fsState.taskFiles = [APPROVED_FILE];
-  fsState.existing = new Set<string>();
-  fsState.contents = new Map<string, string>();
-  fsState.written = new Map<string, string>();
 
   fsState.contents.set(
     contextPath,
@@ -318,6 +335,220 @@ describe("IssueRecorder：被放棄的任務（D18）", () => {
 
     expect(asMock(notifyAnalysisFailed)).not.toHaveBeenCalled();
     expect(fsState.written.get(flagPath)).toMatch(/no matching order/i);
+  });
+});
+
+/**
+ * Info: (20260918 - Luphia) 記錄失敗的處置與放棄路徑的獨立性（PR #6650 review 六輪
+ * 阻-1／阻-2／需修-3／需修-4）。五輪的守門只有原始碼字串比對，reviewer 列了三個
+ * 全綠的突變；這裡改用本檔既有的替身驅動真的 `processNext()`，看它對檔案系統與
+ * 訂單做了什麼。
+ *
+ * 情境用兩個資料夾：`FOLDER`（approved，記錄會拋錯）與 `GIVEUP_FOLDER`（鏈上已放棄）。
+ */
+describe("IssueRecorder：記錄失敗的退避、放棄與獨立性（六輪）", () => {
+  const GIVEUP_FOLDER = "0xmb_77";
+  const giveupTaskDir = path.join(process.cwd(), ISSUE_DIR, GIVEUP_FOLDER);
+  const giveupFlagPath = path.join(giveupTaskDir, "recorded.flag");
+  const GIVEUP_ORDER_ID = "order-77";
+  const marker = (ts: number) => `record_failed_${ts}.md`;
+  const writtenMarkers = () =>
+    [...fsState.written.keys()].filter((p) =>
+      path.basename(p).startsWith("record_failed_"),
+    );
+
+  /**
+   * Info: (20260918 - Luphia) 兩個資料夾：approved 的那個在 `resolveAnalysisAndOrder` 拋錯
+   *（`orderRepo.findFirst` 對它拒絕），放棄的那個 `giveup.md` 在、訂單 EXECUTING。
+   */
+  const givenPoisonAndGiveUp = (approvedFolderFiles: string[]) => {
+    resetFs();
+    fsState.folders = [FOLDER, GIVEUP_FOLDER];
+    fsState.filesByDir.set(taskDir, approvedFolderFiles);
+    fsState.filesByDir.set(giveupTaskDir, []);
+    fsState.existing.add(
+      path.join(process.cwd(), MISSION_DIR, GIVEUP_FOLDER, "giveup.md"),
+    );
+    fsState.contents.set(contextPath, JSON.stringify({ orderId: ORDER_ID }));
+    fsState.contents.set(
+      path.join(giveupTaskDir, "context.json"),
+      JSON.stringify({ orderId: GIVEUP_ORDER_ID }),
+    );
+    fsState.contents.set(resultPath, JSON.stringify({ summary: "done" }));
+    asMock(orderRepo.findFirst).mockImplementation(
+      async (args: { where: { id: string } }) => {
+        if (args.where.id === ORDER_ID) throw new Error("DB unavailable");
+        return {
+          id: GIVEUP_ORDER_ID,
+          userId: USER_ID,
+          status: ORDER_STATUS.EXECUTING,
+          mission: null,
+          tokens: 0,
+        };
+      },
+    );
+  };
+
+  it("記錄拋錯：留一個標記、不寫旗標，且同一 tick 的放棄路徑照常收尾（阻-2／需修-3）", async () => {
+    givenPoisonAndGiveUp([APPROVED_FILE]);
+
+    await issueRecorderService.processNext();
+
+    expect(writtenMarkers()).toHaveLength(1);
+    expect(fsState.written.has(flagPath)).toBe(false);
+    // Info: (20260918 - Luphia) 放棄路徑沒被餓死：另一張訂單被寫成 FAILED 並通知
+    expect(asMock(orderRepo.update)).toHaveBeenCalledWith({
+      where: { id: GIVEUP_ORDER_ID },
+      data: { status: ORDER_STATUS.FAILED },
+    });
+    expect(asMock(notifyAnalysisFailed)).toHaveBeenCalledTimes(1);
+    expect(fsState.written.has(giveupFlagPath)).toBe(true);
+  });
+
+  /**
+   * Info: (20260918 - Luphia) 阻-1：一次 DB 中斷不得在**每個**資料夾各留一個標記。
+   * 兩個都會拋錯的 approved 資料夾，一個 tick 只能留一個標記。
+   */
+  it("兩個都拋錯的 approved 資料夾：一個 tick 只留一個標記（阻-1）", async () => {
+    const SECOND = "0xmb_88";
+    const secondDir = path.join(process.cwd(), ISSUE_DIR, SECOND);
+    resetFs();
+    fsState.folders = [FOLDER, SECOND];
+    fsState.filesByDir.set(taskDir, [APPROVED_FILE]);
+    fsState.filesByDir.set(secondDir, [APPROVED_FILE]);
+    fsState.contents.set(contextPath, JSON.stringify({ orderId: ORDER_ID }));
+    fsState.contents.set(
+      path.join(secondDir, "context.json"),
+      JSON.stringify({ orderId: "order-88" }),
+    );
+    asMock(orderRepo.findFirst).mockRejectedValue(new Error("DB unavailable"));
+
+    await issueRecorderService.processNext();
+
+    expect(writtenMarkers()).toHaveLength(1);
+    expect(path.dirname(writtenMarkers()[0])).toBe(taskDir);
+  });
+
+  it("達門檻且標記新鮮：退避——不嘗試記錄、不再留標記（阻-1）", async () => {
+    const now = Date.now();
+    givenPoisonAndGiveUp([
+      APPROVED_FILE,
+      marker(now - 1000),
+      marker(now - 2000),
+      marker(now - 3000),
+    ]);
+
+    await issueRecorderService.processNext();
+
+    expect(writtenMarkers()).toHaveLength(0);
+    expect(asMock(orderRepo.findFirst)).not.toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: ORDER_ID } }),
+    );
+    // Info: (20260918 - Luphia) 退避不影響放棄路徑
+    expect(asMock(orderRepo.update)).toHaveBeenCalledWith({
+      where: { id: GIVEUP_ORDER_ID },
+      data: { status: ORDER_STATUS.FAILED },
+    });
+  });
+
+  it("達門檻但標記已過退避時間：再試一次（暫時性故障自己好起來）", async () => {
+    const old = Date.now() - 2 * 60 * 60 * 1000;
+    givenPoisonAndGiveUp([
+      APPROVED_FILE,
+      marker(old - 1000),
+      marker(old - 2000),
+      marker(old - 3000),
+    ]);
+
+    await issueRecorderService.processNext();
+
+    // Info: (20260918 - Luphia) 有嘗試（又失敗、又留一個新標記）
+    expect(writtenMarkers()).toHaveLength(1);
+  });
+
+  it("達放棄門檻：走放棄路徑——訂單 FAILED、通知、寫旗標帶原因（阻-2）", async () => {
+    const now = Date.now();
+    resetFs();
+    fsState.taskFiles = [
+      APPROVED_FILE,
+      ...Array.from({ length: 10 }, (_, i) => marker(now - 1000 * (i + 1))),
+    ];
+    fsState.contents.set(contextPath, JSON.stringify({ orderId: ORDER_ID }));
+    asMock(orderRepo.findFirst).mockResolvedValue({
+      id: ORDER_ID,
+      userId: USER_ID,
+      status: ORDER_STATUS.EXECUTING,
+      mission: null,
+      tokens: 0,
+    });
+
+    await issueRecorderService.processNext();
+
+    expect(asMock(orderRepo.update)).toHaveBeenCalledWith({
+      where: { id: ORDER_ID },
+      data: { status: ORDER_STATUS.FAILED },
+    });
+    expect(asMock(notifyAnalysisFailed)).toHaveBeenCalledTimes(1);
+    expect(fsState.written.get(flagPath)).toMatch(/record failed 10 times/);
+    // Info: (20260918 - Luphia) 沒有再嘗試記錄（analysis 不會被讀）
+    expect(asMock(analysisRepo.updateAnalysisResult)).not.toHaveBeenCalled();
+  });
+
+  it("記錄成功：清掉先前的失敗標記（計數只算連續失敗）", async () => {
+    const now = Date.now();
+    givenApprovedTask({ category: "other_analysis" });
+    fsState.taskFiles = [APPROVED_FILE, marker(now - 1000), marker(now - 2000)];
+
+    await issueRecorderService.processNext();
+
+    expect(fsState.written.has(flagPath)).toBe(true);
+    expect(fsState.unlinked.sort()).toEqual(
+      [
+        path.join(taskDir, marker(now - 1000)),
+        path.join(taskDir, marker(now - 2000)),
+      ].sort(),
+    );
+  });
+
+  /**
+   * Info: (20260918 - Luphia) 需修-3：approved 排在前面且記錄**成功**時，排在後面的
+   * 放棄候選同一 tick 仍要被收尾——候選蒐集在記錄之前完成。
+   */
+  it("第一個資料夾記錄成功，排在後面的放棄資料夾同一 tick 仍收尾（需修-3）", async () => {
+    givenApprovedTask({ category: "other_analysis" });
+    fsState.folders = [FOLDER, GIVEUP_FOLDER];
+    fsState.filesByDir.set(taskDir, [APPROVED_FILE]);
+    fsState.filesByDir.set(giveupTaskDir, []);
+    fsState.existing.add(
+      path.join(process.cwd(), MISSION_DIR, GIVEUP_FOLDER, "giveup.md"),
+    );
+    fsState.contents.set(
+      path.join(giveupTaskDir, "context.json"),
+      JSON.stringify({ orderId: GIVEUP_ORDER_ID }),
+    );
+    const approvedOrder = {
+      id: ORDER_ID,
+      userId: USER_ID,
+      status: ORDER_STATUS.EXECUTING,
+      mission: null,
+      tokens: 0,
+      data: { category: "other_analysis" },
+    };
+    asMock(orderRepo.findFirst).mockImplementation(
+      async (args: { where: { id: string } }) =>
+        args.where.id === GIVEUP_ORDER_ID
+          ? { ...approvedOrder, id: GIVEUP_ORDER_ID }
+          : approvedOrder,
+    );
+
+    await issueRecorderService.processNext();
+
+    expect(asMock(notifyAnalysisCompleted)).toHaveBeenCalledTimes(1);
+    expect(asMock(orderRepo.update)).toHaveBeenCalledWith({
+      where: { id: GIVEUP_ORDER_ID },
+      data: { status: ORDER_STATUS.FAILED },
+    });
+    expect(fsState.written.has(giveupFlagPath)).toBe(true);
   });
 });
 
