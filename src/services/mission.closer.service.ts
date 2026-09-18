@@ -1,13 +1,16 @@
 import fs from "fs/promises";
 import path from "path";
-import { createPublicClient, http, parseAbi, formatEther } from "viem";
+import { createPublicClient, http, formatEther } from "viem";
 import { getPriorityEnvConfig } from "@/services/env.service";
+import { DEFAULT_MISSION_DIR } from "@/constants/worker_node";
+import {
+  MISSION_BOARD_READ_ABI,
+  isTaskGivenUp,
+} from "@/lib/worker/mission_board_verdict";
 import { Decimal } from "decimal.js";
 
-const MB_ABI = parseAbi([
-  "function tasks(uint256) external view returns (address creator, string contentCid, uint256 reward, uint256 createdAt, uint256 updatedAt, uint8 status, uint256 submissionCount)",
-  "function taskSubmissions(uint256, uint256) external view returns (address submitter, string resultCid, uint256 consumedTokens, bool isRejected, uint256 disputeUntil)",
-]);
+// Info: (20260914 - Luphia) ABI 與 recorder 共用同一份（review 需修-6），見 lib/worker/mission_board_verdict
+const MB_ABI = MISSION_BOARD_READ_ABI;
 
 export async function processNext() {
   console.log(
@@ -15,7 +18,7 @@ export async function processNext() {
   );
 
   const setupConfig = await getPriorityEnvConfig();
-  const missionDirBase = setupConfig.MISSION_DIR || "missions";
+  const missionDirBase = setupConfig.MISSION_DIR || DEFAULT_MISSION_DIR;
   const missionDirPath = path.join(process.cwd(), missionDirBase);
 
   const rpcUrl = setupConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
@@ -125,7 +128,12 @@ export async function processNext() {
           const [, , , isRejected] = subData;
 
           if (isRejected) {
-            if (submissionCount >= 3n) {
+            /**
+             * Info: (20260914 - Luphia) 「放棄」的判準抽成純函式與 recorder 共用
+             *（review 需修-6）：維運節點讀不到這裡寫的 `giveup.md`，改從鏈上
+             * 推導同一個結論——兩邊各寫一個 3 就是分岔的起點。
+             */
+            if (isTaskGivenUp(submissionCount, isRejected)) {
               console.log(
                 `[MissionFallbacker] Task ${taskId} was REJECTED ${submissionCount} times! Giving up...`,
               );

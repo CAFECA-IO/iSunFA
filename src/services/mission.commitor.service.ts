@@ -1,4 +1,5 @@
 import { getPriorityEnvConfig } from "@/services/env.service";
+import { DEFAULT_MISSION_DIR } from "@/constants/worker_node";
 import fs from "fs/promises";
 import path from "path";
 import { storageService } from "@/services/storage.service";
@@ -15,7 +16,7 @@ export async function processNext() {
   );
 
   const setupConfig = await getPriorityEnvConfig();
-  const missionDirBase = setupConfig.MISSION_DIR || "missions";
+  const missionDirBase = setupConfig.MISSION_DIR || DEFAULT_MISSION_DIR;
   const missionDirPath = path.join(process.cwd(), missionDirBase);
 
   let submittedTask = false;

@@ -12,11 +12,18 @@ export interface ISmartParseResult {
   weightKg?: number;
 }
 
+/**
+ * Info: (20260914 - Luphia) `chatService` 可注入，理由同下方 `parseMultipleRoutesFromText`
+ *（review 三輪阻-2：第一版只注入了那一支，這支經 `route.service` 的
+ * `calculateLogisticsPlanFromText` 從運輸 skill 一樣走得到——item 的 origin／dest
+ * 是字串就走這條，自建的 ChatService 撞上 `lib/prisma` 守門後被 skill 的 per-item
+ * catch 吞成 `{ error: "Calculation failed" }`，mission 交出零路線卻報成功）。
+ */
 export async function parseSmartInput(
   text: string,
+  chatService: ChatService = new ChatService(),
 ): Promise<ISmartParseResult> {
   try {
-    const chatService = new ChatService();
     const prompt = `
             You are a professional logistics AI assistant.
             Extract the precise logistics routing coordinates and cargo weight from the user's description.
@@ -69,7 +76,19 @@ export async function parseSmartInput(
   }
 }
 
-export async function parseMultipleRoutesFromText(text: string): Promise<
+/**
+ * Info: (20260914 - Luphia) `chatService` 可由呼叫端注入（PR #6650 review 阻-3）。
+ *
+ * 這支同時被 web（mileage route、route.service）與**外部運算節點**
+ *（transportation skill）呼叫。自己 `new ChatService()` 等於 `allowSystemSettings`
+ * 預設 `true`——在運算節點上第一次要金鑰就會動態載入 system_setting → prisma，
+ * 正是拆分要消滅的路徑。skill 手上就有 executor 給的
+ * `allowSystemSettings: false` 實例，傳進來即可；web 呼叫端不傳，行為不變。
+ */
+export async function parseMultipleRoutesFromText(
+  text: string,
+  chatService: ChatService = new ChatService(),
+): Promise<
   Array<{
     origin: string;
     dest: string;
@@ -82,7 +101,6 @@ export async function parseMultipleRoutesFromText(text: string): Promise<
   }>
 > {
   try {
-    const chatService = new ChatService();
     const prompt = `
             You are a professional logistics AI assistant.
             Extract all distinct transportation routes from the user's description.

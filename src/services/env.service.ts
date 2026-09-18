@@ -1,6 +1,10 @@
 import fs from "fs";
 import path from "path";
 import { parse } from "dotenv";
+import {
+  WORKER_NODE_ROLE,
+  WORKER_NODE_ROLE_ENV,
+} from "@/constants/worker_node";
 
 export const ROOT_PATH = process.cwd();
 export const ENV_PATH = path.join(/*turbopackIgnore: true*/ ROOT_PATH, ".env");
@@ -11,6 +15,26 @@ export const ENV_SETUP_PATH = path.join(
 export const ENV_EXAMPLE_PATH = path.join(
   /*turbopackIgnore: true*/ ROOT_PATH,
   ".env.example",
+);
+
+/**
+ * Info: (20260812 - Luphia) worker 節點專屬的設定檔。
+ *
+ * worker 不使用系統的 `.env`,也不讀資料庫 —— 它有自己的一份。三個理由:
+ *
+ * 1. **隔離**:`MissionExecutor` 依 `async_workers/00_async_worker_overview.md`
+ *    沒有主資料庫權限,那道隔離是防提示詞注入的基礎。讓它與 web 節點共用同一份
+ *    `.env`,等於讓它看得到 `DATABASE_URL`、`SECRET_VAULT_MASTER_KEY`、
+ *    `SUPER_ADMIN_*` 這些它完全不該擁有的東西 —— 一個處理使用者上傳內容的節點
+ *    持有信任根,是把隔離的意義抵銷掉。
+ * 2. **最低限度**:worker 只需要它真正用到的鍵（見 `.env.worker.example`）,
+ *    而不是整份 web 設定。
+ * 3. **可獨立部署**:worker 本來就設計成可以放在另一台機器,那時它不會有
+ *    web 節點的 `.env`。給它自己的檔案讓「另一台機器」從特例變成正常情形。
+ */
+export const ENV_WORKER_PATH = path.join(
+  /*turbopackIgnore: true*/ ROOT_PATH,
+  ".env.worker",
 );
 
 /**
@@ -55,13 +79,52 @@ export async function loadEnvConfig(
   return parse(cleanContent);
 }
 
+/**
+ * Info: (20260812 - Luphia) 讀 worker 專屬設定。**不 fallback 到系統 `.env`。**
+ *
+ * 找不到檔案就回空物件 —— 呼叫端據此給出明確的錯誤,而不是悄悄改用 web 的設定。
+ * 「找不到自己的設定就用別人的」正是這條規則要消滅的模糊。
+ */
+export async function loadWorkerEnvConfig(): Promise<Record<string, string>> {
+  if (!fs.existsSync(ENV_WORKER_PATH)) return {};
+  return loadEnvConfig(ENV_WORKER_PATH);
+}
+
+/**
+ * Info: (20260914 - Luphia) 決定 `getPriorityEnvConfig()` 讀哪個檔（純函式，`exists`
+ * 由呼叫端注入以便測試）。
+ *
+ * - **運算節點**（角色旗標為 compute）：只看 `.env.worker`，沒有就是 `null`。
+ *   不看 `.env.setup`／`.env`——同機部署（`ecosystem.config.json` 三個 app 共用
+ *   cwd）時系統 `.env` 就在旁邊，第一版把 `.env.worker` 放在第三順位，於是
+ *   planner／commitor／closer 在 shipped 的形態下拿到的仍是系統 `.env`，
+ *   `DATABASE_URL`、`SECRET_VAULT_MASTER_KEY` 每 tick 被讀進這個節點的記憶體
+ *  （review 三輪阻-3）。旗標由 `lib/worker/compute_node_bootstrap` 在服務圖載入前設。
+ * - **其餘**（web、維運節點、安裝精靈）：`.env.setup` → `.env`，與 4/14 以來相同。
+ *   第一版的第三順位在這裡也被拿掉：這支有 20 個呼叫端（setup.*、deploy、admin），
+ *   全新機器上若 `.env.worker` 先到位，安裝精靈會改讀低信任的 worker 檔。
+ *
+ * 副作用：executor 讀 `loadWorkerEnvConfig()`、其餘三支讀本函式，在 compute
+ * 角色下解析到**同一個檔案**——「MISSION_DIR 兩個來源一致」不再需要啟動檢查。
+ */
+export const selectPriorityEnvPath = (
+  role: string | undefined,
+  exists: (targetPath: string) => boolean,
+): string | null => {
+  if (role === WORKER_NODE_ROLE.COMPUTE) {
+    return exists(ENV_WORKER_PATH) ? ENV_WORKER_PATH : null;
+  }
+  if (exists(ENV_SETUP_PATH)) return ENV_SETUP_PATH;
+  if (exists(ENV_PATH)) return ENV_PATH;
+  return null;
+};
+
 // Info: (20260414 - Luphia) 取得優先的環境變數設定 (先讀取 .env.setup，若無則讀取 .env)
 export async function getPriorityEnvConfig(): Promise<Record<string, string>> {
-  const targetPath = fs.existsSync(ENV_SETUP_PATH)
-    ? ENV_SETUP_PATH
-    : fs.existsSync(ENV_PATH)
-      ? ENV_PATH
-      : null;
+  const targetPath = selectPriorityEnvPath(
+    process.env[WORKER_NODE_ROLE_ENV],
+    fs.existsSync,
+  );
   if (targetPath) {
     return await loadEnvConfig(targetPath);
   }

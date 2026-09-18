@@ -38,20 +38,33 @@ export interface IFactorLookup {
   } | null>;
 }
 
-const defaultFactorLookup: IFactorLookup = {
-  // Info: (20260716 - Tzuhan) chatbot 為個人模型無 accountBookId,傳空字串 → 租戶軌自然落空,官方/靜態軌照常
+/**
+ * Info: (20260918 - Luphia) 帳本範圍**一次綁定**（六輪 review 需修-5）：兩支查詢從同一個
+ * 閉包拿 `accountBookId`，結構上不可能分岔——五輪版是兩支各多一個位置參數，
+ * 呼叫端只要漏帶其中一邊，`findFallbackCoefficient` 軌道三回的租戶 id 就在
+ * `getCoefficientById` 解成 null。帶真帳本的呼叫端用 `createFactorLookup(bookId)`；
+ * chatbot 是個人模型、沒有帳本，用 `""`——租戶軌自然落空，官方／靜態軌照常。
+ */
+export const createFactorLookup = (accountBookId: string): IFactorLookup => ({
   findFallbackCoefficientId: (keyword) =>
-    EmissionFactorRepo.findFallbackCoefficient(keyword, ""),
+    EmissionFactorRepo.findFallbackCoefficient(keyword, accountBookId),
   // Info: (20260716 - Tzuhan) 上游可能回 number(靜態字典)，於介面邊界一次性字串化，之後 facade 全程字串
   getCoefficientById: async (id) => {
-    const coefficient = await EmissionFactorRepo.getCoefficientById(id);
+    const coefficient = await EmissionFactorRepo.getCoefficientById(
+      id,
+      undefined,
+      accountBookId,
+    );
     if (!coefficient) return null;
     return {
       ...coefficient,
       emissionFactor: String(coefficient.emissionFactor),
     };
   },
-};
+});
+
+// Info: (20260716 - Tzuhan) chatbot 為個人模型無 accountBookId,傳空字串 → 租戶軌自然落空,官方/靜態軌照常
+const defaultFactorLookup: IFactorLookup = createFactorLookup("");
 
 // Info: (20260720 - Tzuhan) 數量解析抽至零依賴 lib(#6520 純邏輯呼叫端不得連動 prisma);
 // Info: (20260720 - Tzuhan) re-export 維持既有呼叫端不變

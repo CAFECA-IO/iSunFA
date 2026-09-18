@@ -1,4 +1,5 @@
 import { getPriorityEnvConfig } from "@/services/env.service";
+import { DEFAULT_MISSION_DIR } from "@/constants/worker_node";
 import {
   missionGenerator,
   IMissionParams,
@@ -23,7 +24,7 @@ export async function processNext() {
   const mbAddress =
     setupConfig.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as `0x${string}`;
 
-  const missionDirBase = setupConfig.MISSION_DIR || "missions";
+  const missionDirBase = setupConfig.MISSION_DIR || DEFAULT_MISSION_DIR;
   await fs.mkdir(path.join(process.cwd(), missionDirBase), { recursive: true });
 
   let foundOpenTask = false;

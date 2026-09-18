@@ -450,3 +450,18 @@ export const EsgActivityTypeToIsoMapping: Record<
   INVESTMENTS: Iso14064Category.CATEGORY_5,
   WATER_CONSUMPTION: Iso14064Category.CATEGORY_4,
 };
+
+/**
+ * Info: (20260914 - Luphia) 係數 `category` 欄位的**舊寫法**字面值（PR #6650 review 建議-10）。
+ *
+ * 這個 codebase 有兩套並存：`interfaces/coefficient.ts` 的 `CoefficientCategory.STANDARD`
+ * 是小寫 `"standard"`，而 `emission_factor.repo` 三處（靜態回退、createGlobal 預設、
+ * 匯入）與資料庫既有列寫的是大寫 `"STANDARD"`。目前沒有任何判斷比對這個欄位的
+ * **值**（esg.repo 的 tab 篩選用 accountBookId 判斷），所以兩套並存還沒造成錯誤——
+ * 但那是運氣。
+ *
+ * 這裡先做 CLAUDE.md §3 要求的事：字面值收斂成一個具名常數，四處引用同一份。
+ * **刻意不**改成 enum 的小寫值：那會讓新寫入的列與既有列的值分岔，是行為變更，
+ * 要連資料回填一起做（另立票）。
+ */
+export const LEGACY_STANDARD_COEFFICIENT_CATEGORY = "STANDARD";

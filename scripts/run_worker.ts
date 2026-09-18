@@ -1,155 +1,37 @@
-import { scanPendingTransactions } from "@/services/order.tracker.service";
-import { processNext as processIssueNext } from "@/services/issue.service";
-import { processNext as processMissionPlannerNext } from "@/services/mission.planner.service";
-import { processNext as processMissionExecutorNext } from "@/services/mission.executor.service";
-import { processNext as processMissionCommitorNext } from "@/services/mission.commitor.service";
-import { processNext as processMissionCloserNext } from "@/services/mission.closer.service";
-import { processNext as processIssueValidatorNext } from "@/services/issue.validator.service";
-import { issueRecorderService } from "@/services/issue.recorder.service";
-import { syncExchangeRates } from "@/services/cron/exchange_rate.cron";
-import { processAmortization } from "@/services/cron/amortization.worker.service";
-import { runWalletGuardian } from "@/services/cron/wallet_audit.cron";
-import { expireOverdueTeamSubscriptions } from "@/services/cron/subscription_expiry.cron";
-import { processSubscriptionRenewals } from "@/services/cron/subscription_renewal.cron";
-import { runFaithMemoryRetention } from "@/services/cron/faith_memory_retention.cron";
-import { syncPendingSubscriptionCards } from "@/services/subscription_nft.service";
-import { SUBSCRIPTION_CARD_SYNC_INTERVAL_MS } from "@/constants/subscription_nft";
-import { runLeaveBalanceReconcile } from "@/services/cron/leave_balance_reconcile.cron";
-import { scanResumableJobs } from "@/services/resumable_job.service";
-import { JOB_RESUME_SCAN_INTERVAL_MS } from "@/constants/resumable_job";
-import {
-  installWorkerShutdownHandlers,
-  isShuttingDown,
-} from "@/lib/worker/shutdown";
-
 /**
- * Info: (20260130 - Luphia)
- * Worker script to continuously process pending analysis tasks.
- * Run with: npx tsx scripts/workers.run.ts
- */
-/**
- * Info: (20260811 - Luphia) 停止條件改讀共用的關機旗標（見 lib/worker/shutdown）。
+ * Info: (20260812 - Luphia) 這個入口已拆成兩個節點，本檔只負責**大聲**告知。
  *
- * 原本每個迴圈各自 process.on("SIGINT")，13 個迴圈就掛 13 個 listener——
- * 超過 Node 的預設上限會噴 MaxListenersExceededWarning，而且每個迴圈只能管自己，
- * 沒有地方能在關機時統一釋放 mission 執行鎖。
+ * 拆分理由見 `scripts/run_compute_node.ts` 的檔頭：mission 管線處理使用者上傳的
+ * 內容且不該連資料庫，而 tracker / cron / recorder 的工作就是寫庫。兩者放在同一個
+ * 行程裡，「Executor 沒有資料庫權限」在部署層面就只是一句話。
+ *
+ * ## 為什麼是退出而不是「兩個都跑」
+ *
+ * 讓這支繼續跑兩邊，等於拆分對既有部署完全沒有效果 —— 而那些部署正是隔離最需要
+ * 生效的地方。反過來，讓它只跑其中一半（例如只跑維運）會讓 mission 管線
+ * **靜默停止處理**，那是最糟的一種：沒有錯誤、只有任務不再前進。
+ *
+ * 所以這裡 fail fast：升級後第一次啟動就會看到該改什麼。這是刻意的破壞性變更。
  */
-async function startServiceLoop(
-  name: string,
-  fn: () => Promise<unknown>,
-  intervalMs = 10000,
-) {
-  while (!isShuttingDown()) {
-    try {
-      await fn();
-      await new Promise((resolve) => setTimeout(resolve, intervalMs));
-    } catch (error) {
-      console.error(`[Worker][${name}] Error:`, error);
-      await new Promise((resolve) => setTimeout(resolve, 60000));
-    }
-  }
-}
+const MESSAGE = `
+[Worker] 'npm run worker' has been split into two nodes.
 
-async function runWorker() {
-  // Info: (20260811 - Luphia) 兩段式中斷 + 結束前釋放 mission 執行鎖
-  installWorkerShutdownHandlers("Worker");
+  npm run worker:compute   external compute node — mission pipeline (planner /
+                           executor / commitor / closer). Reads .env.worker only.
+                           Must NOT have database access.
 
-  console.log("[Worker] Starting independent service loops...");
+  npm run worker:ops       internal maintenance node — transaction tracker,
+                           issue pipeline, exchange rate, amortization, wallet
+                           guardian, subscription expiry / renewal. Needs the
+                           database and uses the system .env.
 
-  await Promise.all([
-    startServiceLoop("TransactionTracker", () => scanPendingTransactions()),
-    startServiceLoop("IssueService", () => processIssueNext()),
-    startServiceLoop("MissionPlanner", () => processMissionPlannerNext()),
-    startServiceLoop("MissionExecutor", () => processMissionExecutorNext()),
-    startServiceLoop("MissionCommitor", () => processMissionCommitorNext()),
-    startServiceLoop("MissionCloser", () => processMissionCloserNext()),
-    startServiceLoop("IssueValidator", () => processIssueValidatorNext()),
-    startServiceLoop("IssueRecorder", () => issueRecorderService.processNext()),
-    startServiceLoop(
-      "ExchangeRateSync",
-      () => syncExchangeRates(),
-      8 * 60 * 60 * 1000,
-    ),
-    startServiceLoop(
-      "AmortizationWorker",
-      () => processAmortization(),
-      60 * 60 * 1000,
-    ),
-    // Info: (20260807 - Luphia) 團隊錢包守恆勾稽 + 每日 merkle 錨定（ADR 015 C 案 Phase 1）
-    startServiceLoop(
-      "WalletGuardian",
-      () => runWalletGuardian(),
-      60 * 60 * 1000,
-    ),
-    // Info: (20260807 - Luphia) 訂閱到期降級 / 標記續訂（fail-closed 防線在扣費側即時生效）
-    startServiceLoop(
-      "SubscriptionExpiry",
-      () => expireOverdueTeamSubscriptions(),
-      60 * 60 * 1000,
-    ),
-    // Info: (20260807 - Luphia) autoRenew 自動扣款續訂（逾 3 天寬限期未成即降級 free）
-    startServiceLoop(
-      "SubscriptionRenewal",
-      () => processSubscriptionRenewals(),
-      60 * 60 * 1000,
-    ),
-    /**
-     * Info: (20260817 - Luphia) 費思記憶的 90 天保留與刪除（條款 §3.7、隱私政策 §5）。
-     * 每 6 小時對帳一次即足夠——承諾的粒度是「天」，而它天然冪等、可重入。
-     */
-    startServiceLoop(
-      "FaithMemoryRetention",
-      () => runFaithMemoryRetention(),
-      6 * 60 * 60 * 1000,
-    ),
-    /**
-     * Info: (20260819 - Luphia) 訂閱會員卡（鏈上 NFT）同步。
-     *
-     * 鑄卡不放在付款履行路徑裡：那條路徑在交易內完成，鏈上寫入失敗會讓
-     * 已收款的訂閱回報失敗，成功也要讓使用者多等數秒（見 subscription_nft.service）。
-     * 訂閱一變更就在 DB 留待辦，這裡每分鐘補上。
-     */
-    startServiceLoop(
-      "SubscriptionCardSync",
-      () => syncPendingSubscriptionCards(Date.now()),
-      SUBSCRIPTION_CARD_SYNC_INTERVAL_MS,
-    ),
-    /**
-     * Info: (20260820 - Julian) 額度快取的勾稽（ADR 022 §2.3、review 第 10 輪第 2 條）。
-     *
-     * 每小時一次而不是一天一次：`expiringSoonMinutes` 是相對於「今天」的量，
-     * 日界一過就該重算，而一支一天只跑一次的迴圈沒有辦法保證它落在日界之後。
-     * 重建本身冪等（依帳本重算並覆寫），多跑幾次只是多幾次全表加總。
-     */
-    startServiceLoop(
-      "LeaveBalanceReconcile",
-      () => runLeaveBalanceReconcile(),
-      60 * 60 * 1000,
-    ),
-    /**
-     * Info: (20260825 - Luphia) 暫停中的高耗點任務：額度回來了就翻成「可以繼續」
-     *（issue #6714）。
-     *
-     * 等重置／加購點數／升級方案三條出路最後都收斂成同一句話——現在的餘額
-     * 夠不夠做下一步。因此只有這一支迴圈，而不是三套偵測。
-     *
-     * ToDo: (20260827 - Luphia) 這支目前是「翻牌」而不是「接續」：它把
-     * PAUSED 改成 RESUMABLE，而真正把剩下幾份跑完的是使用者按下「接著匯入」。
-     * 付款完成後自動接續、以及跨裝置從 `GET /user/job` 認領，都還沒接上（issue #6714 續作）。
-     * 這條註解原本聲稱「付款完成的那一頁會直接接續」——那段程式不存在，已改正。
-     */
-    startServiceLoop(
-      "ResumableJobScan",
-      () => scanResumableJobs(Date.now()),
-      JOB_RESUME_SCAN_INTERVAL_MS,
-    ),
-  ]);
+Run both (they are independent processes). ecosystem.config.json already declares
+them as two pm2 apps; if you start the worker by hand, start both.
 
-  console.log("[Worker] Stopped.");
-  process.exit(0);
-}
+Why: documents/architecture/async_workers/00_async_worker_overview.md requires the
+compute node to have no database access — that guarantee only becomes real once the
+database-writing jobs live in a different process.
+`;
 
-runWorker().catch((err) => {
-  console.error("[Worker] Fatal error:", err);
-  process.exit(1);
-});
+console.error(MESSAGE);
+process.exit(1);

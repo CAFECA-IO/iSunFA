@@ -254,5 +254,7 @@ export const DEFAULT_INDUSTRY_CODE = 42;
  */
 export const industryCategoryOf = (code: number): IndustryCategoryItem =>
   INDUSTRY_CATEGORY_OPTIONS.find((item) => item.CODE === code) ??
-  INDUSTRY_CATEGORY_OPTIONS.find((item) => item.CODE === DEFAULT_INDUSTRY_CODE) ??
+  INDUSTRY_CATEGORY_OPTIONS.find(
+    (item) => item.CODE === DEFAULT_INDUSTRY_CODE,
+  ) ??
   INDUSTRY_CATEGORY_OPTIONS[0];

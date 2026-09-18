@@ -1,0 +1,753 @@
+import { describe, it, expect, afterEach } from "@jest/globals";
+import { readFileSync } from "fs";
+import { join } from "path";
+import {
+  applyWorkerFileToProcessEnv,
+  missingRequiredComputeEnv,
+  scrubForbiddenComputeEnv,
+} from "@/lib/worker/node_env";
+import {
+  isTaskGivenUp,
+  readGiveUpVerdict,
+  viemMissionBoardReader,
+  MISSION_BOARD_READ_ABI,
+  type MissionBoardReader,
+} from "@/lib/worker/mission_board_verdict";
+import {
+  ENV_PATH,
+  ENV_SETUP_PATH,
+  ENV_WORKER_PATH,
+  selectPriorityEnvPath,
+} from "@/services/env.service";
+import {
+  COMPUTE_NODE_REQUIRED_ENV_KEYS,
+  MISSION_GIVE_UP_REJECTION_THRESHOLD,
+  MISSION_RECORD_FAILED_MARKER_PREFIX,
+  MISSION_RECORD_GIVE_UP_FAILURES,
+  MISSION_RECORD_MAX_FAILURES,
+  MISSION_RECORD_RETRY_BACKOFF_MS,
+  WORKER_NODE_ROLE,
+  WORKER_NODE_ROLE_ENV,
+} from "@/constants/worker_node";
+import {
+  parseRecordFailureTimestamps,
+  recordFailureMarkerName,
+  resolveRecordRetryState,
+} from "@/lib/worker/record_retry";
+import {
+  parseMultipleRoutesFromText,
+  parseSmartInput,
+} from "@/services/route.smart.service";
+import { parseWaypointsToCoordinates } from "@/services/route.waypoints.service";
+import type { ChatService } from "@/services/chat.service";
+import { mapWithConcurrency } from "@/lib/worker/concurrency";
+
+/**
+ * Info: (20260914 - Luphia) 運算節點邊界的守門（PR #6650 review 阻-1／阻-3／
+ * 需修-6／需修-8，三輪阻-2／阻-3／需修-4／需修-7／建議-9）。
+ *
+ * 判斷全部收斂成純函式直接測（`node_env`、`mission_board_verdict`、
+ * `selectPriorityEnvPath`），進入點只剩「把結果變成 exit(1)」——那一段以掃描
+ * 釘接線（checklist §1.11 的做法欄）。`lib/prisma` 的角色旗標守門是**執行期行為**：
+ * 在隔離的模組空間裡真的載一次，斷言它在建池前拋錯。
+ */
+
+const read = (rel: string) => readFileSync(join(process.cwd(), rel), "utf8");
+
+describe("運算節點抹掉繼承的信任根（需修-8）", () => {
+  it("明列鍵與 SUPER_ADMIN_ 前綴都抹掉，其餘保留", () => {
+    const env: Record<string, string | undefined> = {
+      PATH: "/usr/bin",
+      DATABASE_URL: "postgres://x",
+      SECRET_VAULT_MASTER_KEY: "k",
+      DEWT_PRIVATE_KEY_PEM: "pem",
+      SUPER_ADMIN_PUB_X: "1",
+      SUPER_ADMIN_PUB_Y: "2",
+      // Info: (20260915 - Luphia) 四輪建議-10：.env.example 出貨的其他祕密也要抹
+      POSTGRES_PASSWORD: "pw",
+      SMTP_PASSWORD: "smtp",
+      OEN_ACCESS_TOKEN: "oen",
+      GOOGLE_OAUTH_CLIENT_SECRET: "oauth",
+      HR_PII_KEY_V1: "hr1",
+      HR_PII_KEY_V2: "hr2",
+      GEMINI_API_KEY: "g",
+    };
+    const removed = scrubForbiddenComputeEnv(env);
+    expect(removed).toEqual([
+      "DATABASE_URL",
+      "DEWT_PRIVATE_KEY_PEM",
+      "GOOGLE_OAUTH_CLIENT_SECRET",
+      "HR_PII_KEY_V1",
+      "HR_PII_KEY_V2",
+      "OEN_ACCESS_TOKEN",
+      "POSTGRES_PASSWORD",
+      "SECRET_VAULT_MASTER_KEY",
+      "SMTP_PASSWORD",
+      "SUPER_ADMIN_PUB_X",
+      "SUPER_ADMIN_PUB_Y",
+    ]);
+    expect(Object.keys(env).sort()).toEqual(["GEMINI_API_KEY", "PATH"]);
+  });
+
+  it("沒有可疑鍵時回空清單、不動任何東西", () => {
+    const env: Record<string, string | undefined> = { PATH: "/usr/bin" };
+    expect(scrubForbiddenComputeEnv(env)).toEqual([]);
+    expect(env).toEqual({ PATH: "/usr/bin" });
+  });
+});
+
+describe("必要鍵判值不判鍵（三輪需修-4）", () => {
+  const filled = Object.fromEntries(
+    COMPUTE_NODE_REQUIRED_ENV_KEYS.map((key) => [key, `value-of-${key}`]),
+  );
+
+  it("全部有值 → 沒有缺席", () => {
+    expect(missingRequiredComputeEnv(filled)).toEqual([]);
+  });
+
+  it("鍵在、值空或只有空白 → 算缺席（cp .env.worker.example 的形狀）", () => {
+    expect(
+      missingRequiredComputeEnv({
+        ...filled,
+        NEXT_PUBLIC_RPC_URL: "   ",
+        STORAGE_DOMAIN: "",
+      }),
+    ).toEqual(["NEXT_PUBLIC_RPC_URL", "STORAGE_DOMAIN"]);
+  });
+
+  it("鍵不在 → 缺席", () => {
+    expect(missingRequiredComputeEnv({})).toEqual([
+      ...COMPUTE_NODE_REQUIRED_ENV_KEYS,
+    ]);
+  });
+
+  it("有預設值的鍵不在必要清單裡", () => {
+    expect(COMPUTE_NODE_REQUIRED_ENV_KEYS).not.toContain("MISSION_DIR");
+    expect(COMPUTE_NODE_REQUIRED_ENV_KEYS).not.toContain("MODEL");
+  });
+
+  /**
+   * Info: (20260915 - Luphia) ADR 026 決策：`GEMINI_API_KEY` 選填（PRECOMPUTED 任務
+   * 不用 LLM）；`STORAGE_DOMAIN` 必要（四輪建議-8：唯一跨界通道，缺了第一個任務
+   * 就卡死全站）。精確比對——多一個少一個都要有人知道。
+   */
+  /**
+   * Info: (20260917 - Luphia) `GEMINI_API_KEY` 加回（五輪 review 阻-3）：移出的前提
+   *（PRECOMPUTED 任務）在 P3 才存在，這個 head 上七支 skill 全要 LLM。精確比對——
+   * 多一個少一個都要有人知道；P3 落地 `execution.mode` 時再改這條。
+   */
+  it("必要鍵是 LLM 金鑰、兩個鏈上座標、IPFS 網域，精確四個", () => {
+    expect([...COMPUTE_NODE_REQUIRED_ENV_KEYS]).toEqual([
+      "GEMINI_API_KEY",
+      "NEXT_PUBLIC_RPC_URL",
+      "NEXT_PUBLIC_MISSION_BOARD_ADDRESS",
+      "STORAGE_DOMAIN",
+    ]);
+  });
+});
+
+describe("檔案值寫回 process.env：保留鍵跳過、覆寫有回報（五輪需修-5）", () => {
+  it("一般鍵寫入並回報蓋掉的 shell 值；角色旗標跳過且回報", () => {
+    const env: Record<string, string | undefined> = {
+      [WORKER_NODE_ROLE_ENV]: WORKER_NODE_ROLE.COMPUTE,
+      MODEL: "from-shell",
+      PATH: "/usr/bin",
+    };
+    const result = applyWorkerFileToProcessEnv(
+      {
+        MODEL: "from-file",
+        STORAGE_DOMAIN: "http://ipfs",
+        [WORKER_NODE_ROLE_ENV]: WORKER_NODE_ROLE.OPS,
+      },
+      env,
+    );
+    expect(result).toEqual({
+      overridden: ["MODEL"],
+      reserved: [WORKER_NODE_ROLE_ENV],
+    });
+    expect(env[WORKER_NODE_ROLE_ENV]).toBe(WORKER_NODE_ROLE.COMPUTE);
+    expect(env.MODEL).toBe("from-file");
+    expect(env.STORAGE_DOMAIN).toBe("http://ipfs");
+    expect(env.PATH).toBe("/usr/bin");
+  });
+
+  it("值相同不算覆寫；空檔案什麼都不動", () => {
+    const env: Record<string, string | undefined> = { MODEL: "same" };
+    expect(applyWorkerFileToProcessEnv({ MODEL: "same" }, env)).toEqual({
+      overridden: [],
+      reserved: [],
+    });
+    expect(applyWorkerFileToProcessEnv({}, env)).toEqual({
+      overridden: [],
+      reserved: [],
+    });
+    expect(env).toEqual({ MODEL: "same" });
+  });
+});
+
+/**
+ * Info: (20260918 - Luphia) 記錄失敗的三段判準（六輪 review 阻-1／阻-2）：純函式直接測。
+ * 「幾次之後退避、退避多久、幾次之後放棄」是這個修法的全部內容，不能只靠讀原始碎。
+ */
+describe("record_retry：失敗 → 重試／退避／放棄（六輪阻-1／阻-2）", () => {
+  const HOUR = MISSION_RECORD_RETRY_BACKOFF_MS;
+  const now = 10 * HOUR;
+
+  it("未達門檻：照常重試", () => {
+    expect(resolveRecordRetryState([], now)).toBe("RETRY");
+    expect(resolveRecordRetryState([now - 1000, now - 500], now)).toBe("RETRY");
+  });
+
+  it("達門檻且最新失敗未滿退避時間：退避", () => {
+    const fresh = Array.from(
+      { length: MISSION_RECORD_MAX_FAILURES },
+      (_, i) => now - 1000 * (i + 1),
+    );
+    expect(resolveRecordRetryState(fresh, now)).toBe("BACKOFF");
+    expect(resolveRecordRetryState(fresh, now + HOUR - 1001)).toBe("BACKOFF");
+  });
+
+  it("達門檻但最新失敗已滿退避時間：再試一次（暫時性故障自己好起來）", () => {
+    const stale = Array.from(
+      { length: MISSION_RECORD_MAX_FAILURES },
+      (_, i) => now - HOUR - 1000 * (i + 1),
+    );
+    expect(resolveRecordRetryState(stale, now)).toBe("RETRY");
+  });
+
+  it("達放棄門檻：不論新舊都放棄", () => {
+    const many = Array.from(
+      { length: MISSION_RECORD_GIVE_UP_FAILURES },
+      (_, i) => now - 1000 * (i + 1),
+    );
+    expect(resolveRecordRetryState(many, now)).toBe("GIVE_UP");
+    expect(
+      resolveRecordRetryState(
+        many.map((t) => t - 100 * HOUR),
+        now,
+      ),
+    ).toBe("GIVE_UP");
+  });
+
+  it("門檻順序合理：放棄門檻 > 退避門檻 ≥ 1", () => {
+    expect(MISSION_RECORD_GIVE_UP_FAILURES).toBeGreaterThan(
+      MISSION_RECORD_MAX_FAILURES,
+    );
+    expect(MISSION_RECORD_MAX_FAILURES).toBeGreaterThanOrEqual(1);
+  });
+
+  it("標記檔名：寫入端與讀取端同一支命名，壞檔名算一次失敗", () => {
+    const name = recordFailureMarkerName(1700000000000);
+    expect(name).toBe(`${MISSION_RECORD_FAILED_MARKER_PREFIX}1700000000000.md`);
+    expect(
+      parseRecordFailureTimestamps([
+        "approved.1.md",
+        name,
+        recordFailureMarkerName(5),
+        `${MISSION_RECORD_FAILED_MARKER_PREFIX}garbage.md`,
+        "record_never_1.md",
+      ]),
+    ).toEqual([0, 5, 1700000000000]);
+  });
+});
+
+describe("mapWithConcurrency（四輪建議-6）", () => {
+  it("結果依輸入順序、單筆失敗不影響其他筆", async () => {
+    const results = await mapWithConcurrency([1, 2, 3, 4], 2, async (n) => {
+      if (n === 3) throw new Error("boom");
+      return n * 10;
+    });
+    expect(results).toEqual([
+      { status: "fulfilled", value: 10 },
+      { status: "fulfilled", value: 20 },
+      { status: "rejected", reason: new Error("boom") },
+      { status: "fulfilled", value: 40 },
+    ]);
+  });
+
+  it("同時在飛的數量不超過上限", async () => {
+    let inFlight = 0;
+    let peak = 0;
+    await mapWithConcurrency(
+      Array.from({ length: 9 }, (_, i) => i),
+      3,
+      async () => {
+        inFlight += 1;
+        peak = Math.max(peak, inFlight);
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        inFlight -= 1;
+      },
+    );
+    expect(peak).toBe(3);
+  });
+
+  it("上限 ≤ 0 視為 1（序列），空輸入回空陣列", async () => {
+    let peak = 0;
+    let inFlight = 0;
+    await mapWithConcurrency([1, 2, 3], 0, async () => {
+      inFlight += 1;
+      peak = Math.max(peak, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      inFlight -= 1;
+    });
+    expect(peak).toBe(1);
+    expect(await mapWithConcurrency([], 5, async () => 1)).toEqual([]);
+  });
+});
+
+describe("getPriorityEnvConfig 依節點角色解析（三輪阻-3）", () => {
+  const all = () => true;
+  const only =
+    (...paths: string[]) =>
+    (p: string) =>
+      paths.includes(p);
+
+  it("compute 角色：系統 .env 與 .env.setup 都在，仍只看 .env.worker", () => {
+    expect(selectPriorityEnvPath(WORKER_NODE_ROLE.COMPUTE, all)).toBe(
+      ENV_WORKER_PATH,
+    );
+  });
+
+  it("compute 角色：沒有 .env.worker 就是 null，不落回系統 .env", () => {
+    expect(
+      selectPriorityEnvPath(
+        WORKER_NODE_ROLE.COMPUTE,
+        only(ENV_PATH, ENV_SETUP_PATH),
+      ),
+    ).toBeNull();
+  });
+
+  it("非 compute（web／ops／精靈）：.env.setup → .env，永不讀 .env.worker", () => {
+    expect(selectPriorityEnvPath(undefined, all)).toBe(ENV_SETUP_PATH);
+    expect(
+      selectPriorityEnvPath(undefined, only(ENV_PATH, ENV_WORKER_PATH)),
+    ).toBe(ENV_PATH);
+    expect(
+      selectPriorityEnvPath(WORKER_NODE_ROLE.OPS, only(ENV_WORKER_PATH)),
+    ).toBeNull();
+    expect(selectPriorityEnvPath(undefined, only(ENV_WORKER_PATH))).toBeNull();
+  });
+});
+
+/**
+ * Info: (20260915 - Luphia) 注入的**行為**證據（checklist §1.7，自我 review 抓到的缺口）：
+ * 下方接線測試只用字串掃描證明「參數有傳」，而函式內若再 `new ChatService()` 蓋掉
+ * 參數，掃描照綠。這裡真的傳一個替身進去，斷言 LLM 呼叫落在**它**身上、回傳是
+ * 它給的內容解析出來的——替身沒被呼叫就代表函式用了別的實例。
+ * 三支各一條；替身只實作 `generateRaw`（三支只用這一支）。
+ */
+describe("三支解析函式真的使用注入的 chatService（三輪阻-2，行為）", () => {
+  const fakeChat = (reply: string) => {
+    const calls: string[] = [];
+    const chatService = {
+      generateRaw: async (prompt: string) => {
+        calls.push(prompt);
+        return reply;
+      },
+    } as unknown as ChatService;
+    return { chatService, calls };
+  };
+
+  it("parseSmartInput：origin／dest 來自替身的回覆", async () => {
+    const { chatService, calls } = fakeChat(
+      '{"origin":{"lat":25.03,"lng":121.56},"dest":{"lat":35.68,"lng":139.69},"weightKg":500}',
+    );
+    const parsed = await parseSmartInput(
+      "Taipei to Tokyo, 500 kg",
+      chatService,
+    );
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toContain("Taipei to Tokyo, 500 kg");
+    expect(parsed).toEqual({
+      origin: { lat: 25.03, lng: 121.56 },
+      dest: { lat: 35.68, lng: 139.69 },
+      weightKg: 500,
+    });
+  });
+
+  it("parseMultipleRoutesFromText：路線陣列來自替身、含 ```json 圍欄也剝得掉", async () => {
+    const { chatService, calls } = fakeChat(
+      '```json\n[{"origin":"Taipei","dest":"Kaohsiung","weightKg":12}]\n```',
+    );
+    const routes = await parseMultipleRoutesFromText("two cities", chatService);
+    expect(calls).toHaveLength(1);
+    expect(routes).toEqual([
+      { origin: "Taipei", dest: "Kaohsiung", weightKg: 12 },
+    ]);
+  });
+
+  it("parseWaypointsToCoordinates：航點來自替身；空字串不問 LLM", async () => {
+    const { chatService, calls } = fakeChat(
+      '[{"name":"Singapore","lat":1.29,"lng":103.85}]',
+    );
+    expect(await parseWaypointsToCoordinates("   ", chatService)).toEqual([]);
+    expect(calls).toHaveLength(0);
+    const waypoints = await parseWaypointsToCoordinates(
+      "Singapore",
+      chatService,
+    );
+    expect(calls).toHaveLength(1);
+    expect(waypoints).toEqual([{ name: "Singapore", lat: 1.29, lng: 103.85 }]);
+  });
+});
+
+describe("放棄任務的唯一判準（需修-6）", () => {
+  it.each([
+    [0n, false, false],
+    [2n, true, false],
+    [3n, false, false],
+    [3n, true, true],
+    [7n, true, true],
+  ])(
+    "submissionCount=%s latestRejected=%s → givenUp=%s",
+    (count, rejected, expected) => {
+      expect(isTaskGivenUp(count, rejected)).toBe(expected);
+    },
+  );
+
+  it("門檻常數就是 3（改它要同時改 closer 與 recorder 的預期）", () => {
+    expect(MISSION_GIVE_UP_REJECTION_THRESHOLD).toBe(3);
+  });
+
+  /**
+   * Info: (20260914 - Luphia) 以替身用戶端走完 `readGiveUpVerdict` 的兩次讀鏈：
+   * 第二次讀的是**最後一筆**提交（index = count − 1）。
+   */
+  it("readGiveUpVerdict 讀 tasks 再讀最後一筆提交", async () => {
+    const calls: Array<{ functionName: string; args: readonly bigint[] }> = [];
+    const read: MissionBoardReader = async (functionName, args) => {
+      calls.push({ functionName, args });
+      if (functionName === "tasks") return ["0xc", "cid", 1n, 0n, 0n, 1, 3n];
+      return ["0xs", "rcid", 0n, true, 0n];
+    };
+    expect(await readGiveUpVerdict(read, 42n)).toBe(true);
+    expect(calls).toEqual([
+      { functionName: "tasks", args: [42n] },
+      { functionName: "taskSubmissions", args: [42n, 2n] },
+    ]);
+  });
+
+  /**
+   * Info: (20260914 - Luphia) 未達門檻就不讀第二次（三輪建議-9）：count 0～2 的
+   * 在途任務佔絕大多數，每個都省一次 round trip。
+   */
+  it.each([0n, 1n, 2n])(
+    "submissionCount=%s 未達門檻：只讀一次、恆為未放棄",
+    async (count) => {
+      let reads = 0;
+      const read: MissionBoardReader = async () => {
+        reads += 1;
+        return ["0xc", "cid", 1n, 0n, 0n, 0, count];
+      };
+      expect(await readGiveUpVerdict(read, 1n)).toBe(false);
+      expect(reads).toBe(1);
+    },
+  );
+
+  /**
+   * Info: (20260914 - Luphia) 生產端的包裝把 viem 的 `readContract` 接成 reader：
+   * 兩個 view 函式各帶正確的 address／abi／參數 tuple。這裡的替身只認形狀。
+   */
+  it("viemMissionBoardReader 把兩個 view 函式接成同一份 ABI 的呼叫", async () => {
+    const seen: unknown[] = [];
+    const fakeClient = {
+      readContract: (async (args: unknown) => {
+        seen.push(args);
+        return [];
+      }) as unknown as Parameters<
+        typeof viemMissionBoardReader
+      >[0]["readContract"],
+    };
+    const read = viemMissionBoardReader(fakeClient, "0xabc");
+    await read("tasks", [7n]);
+    await read("taskSubmissions", [7n, 1n]);
+    expect(seen).toEqual([
+      {
+        address: "0xabc",
+        abi: MISSION_BOARD_READ_ABI,
+        functionName: "tasks",
+        args: [7n],
+      },
+      {
+        address: "0xabc",
+        abi: MISSION_BOARD_READ_ABI,
+        functionName: "taskSubmissions",
+        args: [7n, 1n],
+      },
+    ]);
+  });
+});
+
+describe("lib/prisma 的節點角色守門（阻-3，執行期）", () => {
+  const original = process.env[WORKER_NODE_ROLE_ENV];
+  afterEach(() => {
+    if (original === undefined) delete process.env[WORKER_NODE_ROLE_ENV];
+    else process.env[WORKER_NODE_ROLE_ENV] = original;
+  });
+
+  /**
+   * Info: (20260914 - Luphia) 真的在隔離模組空間載一次：旗標為 compute 時
+   * 模組頂層在 `new Pool()` 之前拋錯。這不是掃描——是那條動態路徑在
+   * 運算節點上真正會撞到的行為。
+   */
+  it("旗標為 compute 時載入即拋錯", () => {
+    process.env[WORKER_NODE_ROLE_ENV] = WORKER_NODE_ROLE.COMPUTE;
+    jest.isolateModules(() => {
+      // Info: (20260914 - Luphia) jest.requireActual 而非裸 require：同樣觸發模組頂層執行，且不需 eslint-disable
+      expect(() => {
+        jest.requireActual("@/lib/prisma");
+      }).toThrow(/compute node must never load the database client/);
+    });
+  });
+});
+
+describe("接線（進入點與呼叫端）", () => {
+  /**
+   * Info: (20260914 - Luphia) 啟動邊界收斂在一個副作用模組（三輪需修-7）。
+   * 這裡釘它**做的事與順序**：旗標 → 抹 shell 信任根 → 缺檔退出 → 解析檔案 →
+   * 抹檔內信任根 → 缺值退出 → 檔案值寫進 process.env。「它是入口的第一個 import」由
+   * `worker_node_isolation.test.ts` 用同一支依賴解析釘住。
+   *
+   * Info: (20260915 - Luphia) 四輪阻-1：抹除與缺值檢查的對象是**解析結果**
+   *（`workerFile`），不是 `process.env`——消費端讀檔，查合併後的環境會被 shell 掩護。
+   * 所以這裡釘 `scrubForbiddenComputeEnv(workerFile)`／`missingRequiredComputeEnv(workerFile)`，
+   * 並釘「沒有任何一處對 `process.env` 做缺值檢查」。
+   */
+  it("compute_node_bootstrap：旗標、抹 shell、缺檔退出、解析檔案、抹檔內、缺值退出、寫入，依序", () => {
+    const boot = read("src/lib/worker/compute_node_bootstrap.ts");
+    const flagAt = boot.indexOf(
+      "process.env[WORKER_NODE_ROLE_ENV] = WORKER_NODE_ROLE.COMPUTE;",
+    );
+    const scrubAt = boot.indexOf("scrubForbiddenComputeEnv(process.env)");
+    const existsAt = boot.indexOf("if (!fs.existsSync(ENV_WORKER_PATH))");
+    const parseAt = boot.indexOf(
+      'dotenv.parse(fs.readFileSync(ENV_WORKER_PATH, "utf8"))',
+    );
+    const rescrubAt = boot.indexOf(
+      "scrubForbiddenComputeEnv({ ...workerFile })",
+    );
+    const missingAt = boot.indexOf("missingRequiredComputeEnv(workerFile)");
+    const writeAt = boot.indexOf(
+      "applyWorkerFileToProcessEnv(workerFile, process.env)",
+    );
+    expect(flagAt).toBeGreaterThan(-1);
+    expect(scrubAt).toBeGreaterThan(flagAt);
+    expect(existsAt).toBeGreaterThan(scrubAt);
+    expect(parseAt).toBeGreaterThan(existsAt);
+    expect(rescrubAt).toBeGreaterThan(parseAt);
+    expect(missingAt).toBeGreaterThan(rescrubAt);
+    expect(writeAt).toBeGreaterThan(missingAt);
+    // Info: (20260915 - Luphia) 檔案是唯一真值：缺值檢查不得看 process.env；展開只看檔內鍵
+    expect(boot).not.toContain("missingRequiredComputeEnv(process.env)");
+    expect(boot).toContain("processEnv: {},");
+    /**
+     * Info: (20260917 - Luphia) 缺檔、檔內帶信任根、缺值**各自** exit(1)（五輪阻-1：
+     * 抹記憶體那份對重新讀檔的消費端是裝飾，唯一誠實的處置是不起來）。
+     */
+    expect(boot.match(/process\.exit\(1\)/g)?.length).toBe(4);
+    expect(boot.slice(rescrubAt, missingAt)).toContain("process.exit(1)");
+    // Info: (20260918 - Luphia) 檔內帶保留鍵（角色旗標）與帶信任根同一處置：退出（六輪建議-7）
+    const reservedAt = boot.indexOf("applied.reserved.length > 0");
+    expect(reservedAt).toBeGreaterThan(writeAt);
+    expect(
+      boot.slice(reservedAt, boot.indexOf("applied.overridden.length > 0")),
+    ).toContain("process.exit(1)");
+    // Info: (20260917 - Luphia) 寫回走純函式（保留鍵在那裡跳過），bootstrap 內不得再有裸的寫回迴圈
+    expect(boot).not.toMatch(/process\.env\[key\]\s*=/);
+    expect(boot).toContain("applied.reserved.length > 0");
+    // Info: (20260914 - Luphia) 不走 env.service 的解析器、不走 dotenv.config（不覆寫既有鍵＝shell 贏）——註解剝掉再比，註解裡有提到它們
+    const bootCode = boot.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "");
+    expect(bootCode).not.toContain("loadWorkerEnvConfig");
+    expect(bootCode).not.toContain("dotenv.config(");
+  });
+
+  it("兩個入口不再自己設旗標／載檔——那些只在 bootstrap 裡", () => {
+    ["scripts/run_compute_node.ts", "scripts/executor_worker.ts"].forEach(
+      (entry) => {
+        const source = read(entry);
+        expect(source).toContain(
+          'import "@/lib/worker/compute_node_bootstrap";',
+        );
+        expect(source).not.toContain("WORKER_NODE_ROLE.COMPUTE;");
+        expect(source).not.toContain("dotenv.config(");
+        expect(source).not.toContain("scrubForbiddenComputeEnv(");
+        expect(source).not.toContain("resolveMissionDirMismatch");
+      },
+    );
+  });
+
+  it("run_executor 以完整 env spawn（抹除因此必須在子行程內做）", () => {
+    const runner = read("scripts/run_executor.ts");
+    expect(runner).toContain("env: { ...process.env }");
+  });
+
+  it("getPriorityEnvConfig 走 selectPriorityEnvPath，沒有第二條解析路徑", () => {
+    const env = read("src/services/env.service.ts");
+    const fn = env.slice(
+      env.indexOf("export async function getPriorityEnvConfig"),
+    );
+    expect(fn).toContain(
+      "selectPriorityEnvPath(\n    process.env[WORKER_NODE_ROLE_ENV],\n    fs.existsSync,\n  )",
+    );
+    // Info: (20260914 - Luphia) 第一版的第三順位 fallback（會讓安裝精靈讀到 worker 檔）已移除
+    expect(fn).not.toMatch(/fs\.existsSync\(ENV_WORKER_PATH\)\s*\?/);
+  });
+
+  it(".env.worker.example 帶齊必要鍵與有預設值的鍵", () => {
+    const example = read(".env.worker.example");
+    [
+      ...COMPUTE_NODE_REQUIRED_ENV_KEYS,
+      "GEMINI_API_KEY",
+      "MISSION_DIR",
+      "MODEL",
+    ].forEach((key) => expect(example).toMatch(new RegExp(`^${key}=`, "m")));
+  });
+
+  /**
+   * Info: (20260914 - Luphia) 運輸 skill 的**三條** LLM 路徑都帶 executor 的
+   * ChatService（阻-3／三輪阻-2）：第一版只帶了 `parseMultipleRoutesFromText`。
+   * 三支解析函式都以「可注入、預設自建」的形狀存在；`route.service` 兩個入口
+   * 把它往下穿。
+   */
+  it("route.smart／route.waypoints 三支解析函式都可注入 chatService", () => {
+    const smart = read("src/services/route.smart.service.ts");
+    expect(
+      smart.match(/chatService: ChatService = new ChatService\(\),/g),
+    ).toHaveLength(2);
+    expect(smart).not.toMatch(/^\s*const chatService = new ChatService\(\);/m);
+    const waypoints = read("src/services/route.waypoints.service.ts");
+    expect(waypoints).toContain(
+      "chatService: ChatService = new ChatService(),",
+    );
+    expect(waypoints).not.toMatch(
+      /^\s*const chatService = new ChatService\(\);/m,
+    );
+  });
+
+  /**
+   * Info: (20260914 - Luphia) 只釘 skill 走得到的兩個入口（`calculateLogisticsPlan`、
+   * `calculateLogisticsPlanFromText`）。`calculateMileageFromStrings` 等 web 專用
+   * 函式仍自建 ChatService——它們不在運算節點的呼叫路徑上，web 有 DB。
+   */
+  it("route.service 兩個入口把 chatService 穿到 parseSmartInput 與 parseWaypointsToCoordinates", () => {
+    const route = read("src/services/route.service.ts");
+    const fromTextAt = route.indexOf(
+      "export async function calculateLogisticsPlanFromText(",
+    );
+    const nextFnAt = route.indexOf("export async function", fromTextAt + 1);
+    const fromText = route.slice(fromTextAt, nextFnAt);
+    expect(fromText).toContain("parseSmartInput(text, chatService)");
+    expect(fromText).not.toMatch(/parseSmartInput\(text\)/);
+    // Info: (20260914 - Luphia) FromText 再把它交給 calculateLogisticsPlan（waypoints 那條）
+    expect(fromText).toContain("waypointsDesc,\n    chatService,\n  );");
+    expect(route).toContain(
+      "parseWaypointsToCoordinates(waypointsDesc, chatService)",
+    );
+    expect(route).not.toMatch(/parseWaypointsToCoordinates\(waypointsDesc\)/);
+  });
+
+  it("skill 對三條路徑都傳 chatService", () => {
+    const skill = read(
+      "src/skills/document/transportation_carbon_footprint_evaluation.ts",
+    );
+    expect(skill).toContain("parseMultipleRoutesFromText(text, chatService)");
+    // Info: (20260914 - Luphia) 兩個 calculateLogistics* 呼叫的最後一個參數都是 chatService
+    expect(
+      skill.match(/item\.waypoints,\n\s+chatService,\n\s+\);/g),
+    ).toHaveLength(2);
+  });
+
+  it("recorder 先查 recorded.flag 再讀鏈，reader 一輪共用（需修-6／三輪建議-9）", () => {
+    const recorder = read("src/services/issue.recorder.service.ts");
+    /**
+     * Info: (20260915 - Luphia) 三段各守一件事（四輪建議-6 之後的形狀）：
+     * - 掃描迴圈只做本地便宜檢查（`isGiveUpCandidate` 內查 `recorded.flag`），
+     *   鏈讀集中在迴圈之後的 `resolveFirstGivenUp`——所以 `isGiveUpCandidate({`
+     *   的呼叫在 `resolveFirstGivenUp({` 之前；
+     * - `resolveFirstGivenUp` 以 `mapWithConcurrency` 讀鏈，不用 viem batch
+     *  （序列 await 合不了批、拒批 provider 每次都拋）；
+     * - `recordGiveUp` 本身不再讀鏈、不建 client。
+     */
+    const scanAt = recorder.indexOf("async processNext()");
+    const candidateCallAt = recorder.indexOf("isGiveUpCandidate({", scanAt);
+    const resolveCallAt = recorder.indexOf("resolveFirstGivenUp({", scanAt);
+    expect(candidateCallAt).toBeGreaterThan(scanAt);
+    expect(resolveCallAt).toBeGreaterThan(candidateCallAt);
+
+    const candidateFn = recorder.slice(
+      recorder.indexOf("private async isGiveUpCandidate("),
+      recorder.indexOf("private async resolveFirstGivenUp("),
+    );
+    expect(candidateFn).toContain('"recorded.flag"');
+    expect(candidateFn).not.toContain("readGiveUpVerdict(");
+
+    const resolveFn = recorder.slice(
+      recorder.indexOf("private async resolveFirstGivenUp("),
+      recorder.indexOf("private async recordGiveUp("),
+    );
+    expect(resolveFn).toContain(
+      "mapWithConcurrency(\n      params.candidates,\n      MISSION_VERDICT_READ_CONCURRENCY,",
+    );
+    expect(resolveFn).toContain("readGiveUpVerdict(");
+
+    const recordFn = recorder.slice(
+      recorder.indexOf("private async recordGiveUp("),
+    );
+    expect(recordFn).not.toContain("readGiveUpVerdict(");
+    expect(recordFn).not.toContain("createPublicClient(");
+    // Info: (20260915 - Luphia) 註解裡會提到它——剝掉註解再比
+    expect(recorder.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "")).not.toContain(
+      "batch: true",
+    );
+
+    /**
+     * Info: (20260917 - Luphia) 放棄路徑不得被成功路徑餓死（五輪阻-2）：
+     * - `recordedTask = true` 只在 flag 寫完之後（失敗不算「處理了一筆」）；
+     * - 放棄路徑不包在 `if (!recordedTask)` 裡；
+     * - 記錄失敗留 `record_failed_` 痕，達門檻隔離。
+     */
+    const scanCode = recorder
+      .slice(scanAt, recorder.indexOf("private async resolveAnalysisAndOrder("))
+      .replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "");
+    const flagWriteAt = scanCode.indexOf(
+      'await fs.writeFile(flagFile, flagContent, "utf8");',
+    );
+    const recordedTrueAt = scanCode.indexOf("recordedTask = true;");
+    expect(flagWriteAt).toBeGreaterThan(-1);
+    expect(recordedTrueAt).toBeGreaterThan(flagWriteAt);
+    expect(scanCode.match(/recordedTask = true;/g)).toHaveLength(1);
+    expect(scanCode).not.toMatch(/if \(!recordedTask\)\s*\{\s*const givenUp/);
+    /**
+     * Info: (20260918 - Luphia) 六輪：判準走 `record_retry` 純函式（行為在
+     * `worker_node_boundary` 的 record_retry 區與 `issue_recorder_giveup.test.ts`），
+     * 這裡只釘接線：讀標記、算狀態、寫標記用同一支命名、失敗即 break。
+     */
+    expect(scanCode).toContain("parseRecordFailureTimestamps(files)");
+    // Info: (20260918 - Luphia) prettier 會把長呼叫折行，比對容忽空白
+    expect(scanCode).toMatch(/resolveRecordRetryState\(\s*failureTimestamps,/);
+    expect(scanCode).toContain("recordFailureMarkerName(Date.now())");
+    expect(scanCode).not.toContain('"record_failed_');
+    // Info: (20260918 - Luphia) 兩段式：候選蒐集（approvedQueue.push）在記錄迴圈之前
+    const queuePushAt = scanCode.indexOf("approvedQueue.push(");
+    const recordLoopAt = scanCode.indexOf("of approvedQueue)");
+    expect(queuePushAt).toBeGreaterThan(-1);
+    expect(recordLoopAt).toBeGreaterThan(queuePushAt);
+    const closer = read("src/services/mission.closer.service.ts");
+    expect(closer).toContain("isTaskGivenUp(submissionCount, isRejected)");
+    expect(closer).not.toMatch(/submissionCount >= 3n/);
+  });
+
+  it("MISSION_DIR 預設值只有一個來源（需修-7）", () => {
+    [
+      "src/services/mission.planner.service.ts",
+      "src/services/mission.commitor.service.ts",
+      "src/services/mission.closer.service.ts",
+      "src/services/mission.executor.service.ts",
+      "src/services/issue.recorder.service.ts",
+    ].forEach((file) => {
+      const source = read(file);
+      expect(source).toContain("DEFAULT_MISSION_DIR");
+      expect(source).not.toMatch(/MISSION_DIR \|\| "missions"/);
+    });
+  });
+});
