@@ -1,5 +1,4 @@
 import { p256 } from "@noble/curves/p256";
-import { sha256 } from "@noble/hashes/sha256";
 import crypto from "crypto";
 import { webAuthnService } from "@/services/webauthn.service";
 import { AppError } from "@/lib/utils/error";
@@ -27,7 +26,16 @@ export class RegisterBotService {
     credentialID: string;
   }> {
     // Info: (20260429 - Luphia) 1. 從 seed 推導出 P-256 私鑰與 Credential ID
-    const privKeyBytes = sha256(new TextEncoder().encode(seed));
+    /**
+     * Info: (20260918 - Luphia) 改用 Node `crypto`，不再直接匯入 `@noble/hashes`。
+     * `@noble/hashes` 只是 viem／hardhat 的**間接**依賴，1.x 匯出 `./sha256`、2.x 只剩
+     * `./sha2.js`，沒有一個子路徑兩個大版都成立；CI 以 `npm i` 重新解析到 2.x 時
+     * typecheck 直接紅。Node 的 SHA-256 與 noble 的位元組完全相同
+     * （同一個 seed 下方 `rawIdBytes` 本來就用它算）。
+     */
+    const privKeyBytes = Uint8Array.from(
+      crypto.createHash("sha256").update(seed, "utf8").digest(),
+    );
     const pubKeyBytes = p256.getPublicKey(privKeyBytes, false); // Info: (20260429 - Luphia) false for uncompressed point (0x04)
 
     // Info: (20260429 - Luphia) 取出 X 和 Y 座標

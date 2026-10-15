@@ -1,5 +1,4 @@
 import { Prisma } from "@/generated";
-import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import { orderRepo } from "@/repositories/order.repo";
 
 /**
@@ -12,7 +11,10 @@ import { orderRepo } from "@/repositories/order.repo";
  * 判定（全部成立才補派）：
  * - ANALYSIS、狀態 COMPLETED、`mission` 為空（issue.service 派發時一定會寫入）
  * - signature 的 `verifiedVia` 是 `team_quota`（個人點數付款不受這個 bug 影響）
- * - 不是物流碳足跡：它由試算端點同步算出結果，本來就不走任務管線
+ * - 有 category（派發時要靠它決定任務內容）
+ *
+ * 物流碳足跡也要補派：碳排核算與里程核算付款後都是輪詢分析結果、等任務產出，
+ * 使用者在歷史報告看到「completed」卻沒有結果的，正是這一類（使用者回報 20261015）。
  */
 
 // Info: (20261015 - Luphia) 團隊額度付款寫在 signature 的來源標記（見 team_quota_payment route）
@@ -90,13 +92,6 @@ export function selectRedispatchableOrders(
       continue;
     }
     const category = readCategory(order.data);
-    if (category === ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT) {
-      selection.skipped.push({
-        orderId: order.id,
-        reason: "transportation is calculated synchronously, no task needed",
-      });
-      continue;
-    }
     if (!category) {
       selection.skipped.push({ orderId: order.id, reason: "no category" });
       continue;

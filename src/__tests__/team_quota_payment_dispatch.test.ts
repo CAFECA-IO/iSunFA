@@ -12,7 +12,7 @@ import {
 } from "@/services/order.service";
 import { fulfillPaidAnalysisOrder } from "@/services/analysis_fulfillment.service";
 import { refundCredits, spendCredits } from "@/services/spend.service";
-import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
+import { ORDER_TYPE } from "@/constants/status";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 
 /**
@@ -115,21 +115,18 @@ describe("POST team_quota_payment", () => {
     expect(markOrderPaid).not.toHaveBeenCalled();
   });
 
-  it("物流碳足跡不派任務：維持 COMPLETED，由試算端點同步算出結果", async () => {
+  it("物流碳足跡同樣交給任務派發（前端只輪詢分析結果，沒有同步試算）", async () => {
     asMock(getPendingOrder).mockResolvedValue({
       id: "order-1",
       type: ORDER_TYPE.ANALYSIS,
-      amount: BigInt(-10),
+      amount: BigInt(-5),
       data: { category: ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT },
     });
     const { request, params } = post();
     const response = await POST(request, { params });
 
     expect(response.status).toBe(200);
-    expect(markOrderPaid).not.toHaveBeenCalled();
-    expect(updateOrderStatus).toHaveBeenCalledWith(
-      "order-1",
-      ORDER_STATUS.COMPLETED,
-    );
+    expect(markOrderPaid).toHaveBeenCalledWith("order-1");
+    expect(updateOrderStatus).not.toHaveBeenCalled();
   });
 });

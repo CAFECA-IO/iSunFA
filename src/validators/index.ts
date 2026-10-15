@@ -37,3 +37,5 @@ export * from "@/validators/leave_policy";
 export * from "@/validators/overtime";
 // Info: (20260831 - Julian) 薪資計算機（員工名單與薪資紀錄）
 export * from "@/validators/salary_record";
+// Info: (20261015 - Luphia) 後台點數明細（個人帳本與團隊分配紀錄）
+export * from "@/validators/admin_user_points";
