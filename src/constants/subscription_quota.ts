@@ -191,6 +191,27 @@ export const ALLOCATE_OFFCHAIN_EXIT_PREFIX = "allocate-offchain-exit:";
 export const ALLOCATE_OFFCHAIN_EXIT_FEATURE_CODE = "allocate-offchain-exit";
 
 /**
+ * Info: (20261015 - Luphia) 分配鑄點失敗時的補償分錄前綴（`teamWalletRepo.compensateFailedAllocation`）。
+ * 帶這個前綴、後接原 ALLOCATE 冪等鍵的 ADJUST 存在，就代表那筆分配沒有給到成員。
+ */
+export const ALLOCATE_FAILED_PREFIX = "allocate-failed:";
+
+/**
+ * Info: (20261015 - Luphia) 2026-08-14 舊離鏈分配餘額遷移到成員錢包時寫下的 ADJUST 前綴
+ * （已移除的 `scripts/migrate_allocations_onchain.ts`）。金額為負（池視角），絕對值是給到成員的點數。
+ */
+export const MIGRATE_ALLOCATION_PREFIX = "migrate-allocation:";
+
+// Info: (20261015 - Luphia) 成員實得分配的來源（見 lib/quota/member_allocation）
+export const MEMBER_ALLOCATION_KIND = {
+  ALLOCATE: "ALLOCATE",
+  MIGRATION: "MIGRATION",
+} as const;
+
+export type MemberAllocationKind =
+  (typeof MEMBER_ALLOCATION_KIND)[keyof typeof MEMBER_ALLOCATION_KIND];
+
+/**
  * Info: (20260818 - Luphia) 守恆差額的一次性修復分錄標記（`scripts/repair_wallet_conservation.ts`）。
  *
  * 修復在 2026-08-18 修法之前累積的差額：那些 ALLOCATE 沒有配對的負 ADJUST，

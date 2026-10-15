@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, FormEvent } from "react";
+import Link from "next/link";
 
 import { useTranslation } from "@/i18n/i18n_context";
 import { useAuth } from "@/contexts/auth_context";
@@ -15,6 +16,7 @@ import {
   Book,
   Coins,
   PlusCircle,
+  History,
 } from "lucide-react";
 import { Dialog } from "@headlessui/react";
 import { getLoginOptions } from "@/lib/auth/fido2_client";
@@ -903,6 +905,19 @@ export default function TeamManagementPage() {
                       </div>
                     </div>
                   )}
+
+                {/* Info: (20261015 - Luphia) 點數移轉紀錄入口：流水帳 API 限管理職，入口同判準 */}
+                {isOwnerOrAdmin && (
+                  <div className="mt-6 flex justify-end">
+                    <Link
+                      href={`/user/team/${currentTeam.id}/ledger`}
+                      className="inline-flex items-center text-sm font-medium text-orange-600 transition-colors hover:text-orange-700"
+                    >
+                      <History className="mr-1.5 size-4 shrink-0" />
+                      {t("team_management.ledger.entry")}
+                    </Link>
+                  </div>
+                )}
 
                 {/* Info: (20260809 - Luphia) 團隊錢包與訂閱額度面板：錢包資料由本頁 fetch 傳入，
                     分配操作已移至上方成員卡片 */}

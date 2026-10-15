@@ -3,7 +3,7 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { teamWalletLedgerQuerySchema } from "@/validators";
-import { listTeamWalletLedger } from "@/services/team_wallet.service";
+import { listTeamWalletLedgerByFilter } from "@/services/team_wallet_ledger.service";
 
 /**
  * Info: (20260807 - Luphia) GET /api/v1/user/team/[team_id]/wallet/ledger（設計書 §7）：
@@ -23,12 +23,15 @@ export async function GET(
     const parsed = teamWalletLedgerQuerySchema.safeParse({
       page: searchParams.get("page") ?? undefined,
       pageSize: searchParams.get("pageSize") ?? undefined,
+      type: searchParams.get("type") ?? undefined,
     });
     if (!parsed.success) return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
 
-    const result = await listTeamWalletLedger({
+    // Info: (20261015 - Luphia) 選填 type 篩選（點數移轉紀錄頁）；未帶時委派原本的 listTeamWalletLedger
+    const result = await listTeamWalletLedgerByFilter({
       userId: user.id,
       teamId,
+      filter: parsed.data.type,
       page: parsed.data.page,
       pageSize: parsed.data.pageSize,
     });

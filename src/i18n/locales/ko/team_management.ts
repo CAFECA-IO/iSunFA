@@ -151,4 +151,52 @@ export const teamManagement = {
       "작업에 실패했습니다. 잔액을 확인한 후 다시 시도해 주세요.",
     invalid_amount: "양의 정수를 입력해 주세요.",
   },
+  // Info: (20261015 - Luphia) 팀 포인트 이전 내역 페이지（원장, 관리자 전용）
+  ledger: {
+    entry: "포인트 내역",
+    title: "팀 포인트 이전 내역",
+    description: "팀 지갑의 모든 입출금을 최신순으로 표시합니다.",
+    back: "팀 관리로 돌아가기",
+    load_failed:
+      "포인트 내역을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    retry: "다시 시도",
+    empty: "조건에 맞는 기록이 없습니다.",
+    total: "총 {{total}}건",
+    filter_label: "유형",
+    columns: {
+      time: "시간",
+      type: "유형",
+      amount: "포인트",
+      member: "멤버",
+      feature: "기능",
+      pool_balance: "미배분 풀 잔액",
+    },
+    filters: {
+      ALL: "전체",
+      PURCHASE: "구매",
+      ALLOCATE: "배분／회수",
+      CONSUME: "사용",
+      REFUND: "환급",
+    },
+    types: {
+      PURCHASE: "구매",
+      ALLOCATE: "배분",
+      REVOKE: "회수",
+      CONSUME: "사용",
+      REFUND: "환급",
+      ADJUST: "조정",
+    },
+    features: {
+      FAITH_CHAT: "Faith 대화",
+      AI_ANALYSIS: "AI 분석 보고서",
+      CARBON_CHAT: "탄소 대화",
+      LOGISTICS_CARBON: "물류 탄소발자국 조회",
+      TEAM_DISSOLVED: "팀 해산",
+    },
+    system_adjustment: "시스템 조정",
+    system_adjustment_hint:
+      "원장의 균형을 유지하기 위해 시스템이 자동으로 기록한 분개로, 멤버의 작업이 아닙니다. 풀 잔액이 앞뒤로 이어지도록 표시합니다.",
+    operated_by: "처리자: {{name}}",
+    former_member: "탈퇴한 멤버",
+  },
 };
