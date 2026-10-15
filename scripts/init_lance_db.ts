@@ -3,91 +3,63 @@ import path from "path";
 import dotenv from "dotenv";
 import {
   OBSERVATORY_EMBED_DIMENSION,
+  OBSERVATORY_EMBED_MODEL,
   OBSERVATORY_LANCE_TABLE,
 } from "@/constants/company_observatory";
+import {
+  createLanceTable,
+  ensureObservatoryFtsIndex,
+  inspectLanceTable,
+  MANAGED_LANCE_TABLES,
+} from "@/lib/company_observatory/lance_tables";
 
 dotenv.config();
 
 const dbUri = process.env.LANCEDB_URI || "./.lancedb_data";
-const TABLE_NAME = "company_reports";
-
-/**
- * Info: (20261015 - Luphia) 企業觀測站的切塊表（欄位定義見 src/interfaces/company_observatory.ts 的
- * IObservatoryVectorRow）。與 company_reports 分開：欄位不同，混用會讓舊的匯入腳本寫入失敗。
- * 已存在就跳過，重跑安全。
- */
-async function ensureObservatoryTable(
-  db: lancedb.Connection,
-  tableNames: string[],
-) {
-  if (tableNames.includes(OBSERVATORY_LANCE_TABLE)) {
-    console.log(
-      `ℹ️  [Migration] ${OBSERVATORY_LANCE_TABLE} 資料表已存在，跳過初始化。`,
-    );
-    return;
-  }
-  const seedId = "seed-id";
-  await db.createTable(OBSERVATORY_LANCE_TABLE, [
-    {
-      id: seedId,
-      vector: new Float32Array(OBSERVATORY_EMBED_DIMENSION),
-      text: "DATABASE_SCHEMA_SEED",
-      document_id: "seed",
-      stock_id: "seed",
-      company_name: "SEED",
-      source: "seed",
-      year: 0,
-      source_url: "",
-      page_number: 0,
-      chunk_index: 0,
-      content_hash: "",
-    },
-  ]);
-  const table = await db.openTable(OBSERVATORY_LANCE_TABLE);
-  await table.delete(`id = '${seedId}'`);
-  console.log(`✅ [Migration] ${OBSERVATORY_LANCE_TABLE} 資料表初始化成功！`);
-}
 
 /**
  * Info: (20260612 - Julian) LanceDB 初始化：建立資料表，並加入一筆初始資料
  * Command: npx tsx scripts/init_lance_db.ts
+ *
+ * Info: (20261015 - Luphia) 兩張切塊表（company_reports、company_observatory_chunks）都在這裡建立，
+ * 欄位與建表方式見 src/lib/company_observatory/lance_tables.ts。已存在就跳過，重跑安全；
+ * 企業觀測站表另補上全文索引（舊環境升級時表已存在、但還沒有索引）。
+ *
+ * 表的向量維度與目前嵌入模型不同時（換過模型）這裡不會自動刪表——手動匯入的切塊刪了就得重新匯入，
+ * 只印出提醒，由人執行 scripts/reindex_lance_db.ts。在那之前 AI 諮詢的向量檢索會失敗（已有降級處理），
+ * 企業觀測站的索引會暫停，不會把文件打進死信。
  */
 async function runMigration() {
   console.log("🛠️  [Migration] 開始檢查並初始化 LanceDB...");
 
   try {
-    const absolutePath = path.resolve(dbUri);
-    const db = await lancedb.connect(absolutePath);
-    const tableNames = await db.tableNames();
+    const db = await lancedb.connect(path.resolve(dbUri));
 
-    if (!tableNames.includes(TABLE_NAME)) {
-      console.log(`[Migration] 偵測到 ${TABLE_NAME} 資料表不存在，正在建立...`);
-
-      // Info: (20260612 - Julian) 建立新表時必須給予基礎 Schema 定義與一筆初始範例資料
-      const schemaSeed = [
-        {
-          id: "seed-id",
-          vector: new Float32Array(768), // Info: (20260612 - Julian) 預留給 Ollama 768 維度 Embedding (如 nomic-embed-text)
-          text: "DATABASE_SCHEMA_SEED",
-          reportId: "seed",
-          companyName: "SEED",
-          pageNumber: 0,
-        },
-      ];
-
-      await db.createTable(TABLE_NAME, schemaSeed);
-      console.log(`████████████████████████████████ 100%`);
-      console.log(`✅ [Migration] ${TABLE_NAME} 資料表初始化成功！`);
-
-      // Info: (20260612 - Julian) 建立完 Schema 後，立刻刪除這筆全為 0 的假資料，保持資料庫乾淨，避免污染 RAG 搜尋結果
-      const table = await db.openTable(TABLE_NAME);
-      await table.delete("id = 'seed-id'");
-      console.log(`🧹 [Migration] 已清除初始化用的種子假資料。`);
-    } else {
-      console.log(`ℹ️  [Migration] ${TABLE_NAME} 資料表已存在，跳過初始化。`);
+    for (const name of MANAGED_LANCE_TABLES) {
+      const status = await inspectLanceTable(db, name);
+      if (!status.exists) {
+        await createLanceTable(db, name, "create");
+        console.log(`✅ [Migration] ${name} 資料表初始化成功！`);
+        continue;
+      }
+      if (status.needsRebuild) {
+        console.warn(
+          `⚠️  [Migration] ${name} 的向量維度為 ${status.dimension ?? "（無法讀取）"}，目前嵌入模型 ${OBSERVATORY_EMBED_MODEL} 是 ${OBSERVATORY_EMBED_DIMENSION} 維。` +
+            `請執行 npm run reindex_lance_db 重建資料表並重新索引。`,
+        );
+      } else {
+        console.log(`ℹ️  [Migration] ${name} 資料表已存在，跳過初始化。`);
+      }
+      /**
+       * Info: (20261015 - Luphia) 全文索引與維度無關，舊維度的表也補上：重建之前 AI 諮詢的向量檢索會失敗，
+       * 至少還有全文檢索可用。打不開的殘缺表就跳過。
+       */
+      if (name === OBSERVATORY_LANCE_TABLE && status.dimension !== null) {
+        if (await ensureObservatoryFtsIndex(await db.openTable(name))) {
+          console.log(`✅ [Migration] ${name} 已補上全文索引。`);
+        }
+      }
     }
-
-    await ensureObservatoryTable(db, tableNames);
 
     process.exit(0);
   } catch (error) {

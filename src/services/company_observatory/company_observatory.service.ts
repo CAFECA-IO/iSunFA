@@ -13,6 +13,7 @@ import {
   IObservatoryDownloader,
   IObservatoryHttpClient,
   IObservatoryProcessSummary,
+  IObservatoryReportMetadata,
   IObservatoryTarget,
 } from "@/interfaces/company_observatory";
 import {
@@ -56,6 +57,9 @@ export interface IObservatoryCompany {
   abbreviation: string | null;
   marketType: string;
   taxId: string | null;
+  // Info: (20261015 - Luphia) 證交所產業別代碼與原始資料列；發布到企業觀測站頁面時用來決定產業與資本額級距
+  industry: string | null;
+  metadata: unknown;
 }
 
 export interface IObservatoryCompanyDirectory {
@@ -95,6 +99,17 @@ export interface IObservatoryDocumentInput {
   status: string;
   attemptCount: number;
   indexedHash: string | null;
+}
+
+// Info: (20261015 - Luphia) 去掉未填的欄位再寫進 Json 欄位
+export function toJsonMetadata(
+  metadata: IObservatoryReportMetadata,
+): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [key, value] of Object.entries(metadata)) {
+    if (typeof value === "string" && value !== "") result[key] = value;
+  }
+  return result;
 }
 
 function isObservatorySource(value: string): value is ObservatorySource {
@@ -175,6 +190,7 @@ export function createCompanyObservatoryService(deps: ICompanyObservatoryDeps) {
           sourceUrl: result.sourceUrl,
           title: result.title,
           contentHash,
+          metadata: toJsonMetadata(result.metadata),
           downloadedAt: now,
           attemptCount: 0,
           lastError: null,
@@ -197,6 +213,7 @@ export function createCompanyObservatoryService(deps: ICompanyObservatoryDeps) {
         filePath,
         contentType: result.contentType,
         contentHash,
+        metadata: toJsonMetadata(result.metadata),
         downloadedAt: now,
         attemptCount: 0,
         lastError: null,

@@ -72,6 +72,8 @@ export const esgReportListResponseSchema = z.object({
         name: z.string().nullish(),
         shortName: z.string().nullish(),
         reportingInterval: z.string().nullish(),
+        valiProvider: z.string().nullish(),
+        thirdStd: z.string().nullish(),
         twDocLink: z.string().nullish(),
         twFirstReportDownloadId: z.string().nullish(),
         twEditReportDownloadId: z.string().nullish(),
@@ -127,9 +129,9 @@ export const esgMetricsResponseSchema = z.object({
 export type IEsgMetricsResponse = z.infer<typeof esgMetricsResponseSchema>;
 export type IEsgDeclareItem = z.infer<typeof esgDeclareItemSchema>;
 
-// Info: (20261015 - Luphia) Ollama /api/embeddings 回應
+// Info: (20261015 - Luphia) Ollama /api/embed 回應：每個 input 一個向量（已做 L2 正規化）
 export const ollamaEmbeddingResponseSchema = z.object({
-  embedding: z.array(z.number()).optional(),
+  embeddings: z.array(z.array(z.number())).optional(),
   error: z.string().optional(),
 });
 
@@ -196,3 +198,12 @@ export const observatoryRequeueSchema = z.union([
 ]);
 
 export type IObservatoryRequeueInput = z.infer<typeof observatoryRequeueSchema>;
+
+// Info: (20261015 - Luphia) `ObservatoryDocument.metadata`（Json 欄位）讀回時先過 Schema
+export const observatoryReportMetadataSchema = z.object({
+  period: z.string().optional(),
+  verificationAgency: z.string().optional(),
+  verificationStandards: z.string().optional(),
+  assuranceAgency: z.string().optional(),
+  assuranceStandards: z.string().optional(),
+});

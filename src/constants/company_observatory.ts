@@ -64,6 +64,14 @@ export const OBSERVATORY_FETCH_OUTCOME = {
   NOT_AVAILABLE: "NOT_AVAILABLE",
 } as const;
 
+/**
+ * Info: (20261015 - Luphia) 快照型來源：`year` 是抓取當年，不是報告所屬年度（公司登記資料每年一份快照）。
+ * 依年度過濾切塊時這些來源一律保留——問「台泥 2024 年的董事長」也該看得到最新的登記資料。
+ */
+export const OBSERVATORY_SNAPSHOT_SOURCES: readonly ObservatorySource[] = [
+  OBSERVATORY_SOURCE.GCIS_REGISTRATION,
+];
+
 // Info: (20261015 - Luphia) 報告類型的中文名稱，寫進每個切塊的標頭，讓檢索結果自帶脈絡
 export const OBSERVATORY_SOURCE_LABEL: Record<ObservatorySource, string> = {
   GCIS_REGISTRATION: "公司登記資料",
@@ -197,17 +205,140 @@ export const OBSERVATORY_STORAGE_DIR = path.join(
 
 // Info: (20261015 - Luphia) 獨立於 `company_reports` 的資料表：欄位不同，混用會讓舊的匯入腳本寫入失敗
 export const OBSERVATORY_LANCE_TABLE = "company_observatory_chunks";
-export const OBSERVATORY_EMBED_URL = "http://localhost:11434/api/embeddings";
-export const OBSERVATORY_EMBED_MODEL = "nomic-embed-text";
-export const OBSERVATORY_EMBED_DIMENSION = 768;
+/**
+ * Info: (20261015 - Luphia) 用 /api/embed 而不是舊的 /api/embeddings：前者回傳 L2 正規化後的向量，
+ * LanceDB 預設的 L2 距離排序因此等同餘弦相似度，不會因為切塊長短不同、向量長度不同而偏差。
+ */
+export const OBSERVATORY_EMBED_URL = "http://localhost:11434/api/embed";
+/**
+ * Info: (20261015 - Luphia) 嵌入模型：bge-m3（多語、1024 維）。
+ * 原本的 nomic-embed-text 以英文為主，對中文財報與永續報告書幾乎分不出主題
+ * （評估見 scripts/eval_observatory_retrieval.ts）。企業觀測站與手動匯入的 `company_reports`
+ * 共用這組設定，兩張表的向量才在同一個空間、距離可以比較。
+ * 換模型會改變維度：兩張表都得重建，見 scripts/reindex_lance_db.ts。
+ */
+export const OBSERVATORY_EMBED_MODEL = "bge-m3";
+export const OBSERVATORY_EMBED_DIMENSION = 1024;
 export const OBSERVATORY_EMBED_CONCURRENCY = 5;
 export const OBSERVATORY_CHUNK_SIZE = 800;
 export const OBSERVATORY_CHUNK_OVERLAP = 100;
+/**
+ * Info: (20261015 - Luphia) 混合檢索：向量與全文（BM25）各取這麼多候選，再以倒數排名融合（RRF）合併。
+ * 嵌入模型擅長語意相近、全文檢索擅長「範疇一」「每股盈餘」這類必須字面命中的專有名詞，
+ * 兩者互補；候選取多一點，融合後才有東西可以往前排。
+ */
+export const OBSERVATORY_RETRIEVAL_CANDIDATES = 30;
+// Info: (20261015 - Luphia) RRF 的平滑常數，文獻與各家實作的慣用值；越大越不偏重第一名
+export const OBSERVATORY_RRF_K = 60;
+/**
+ * Info: (20261015 - Luphia) 全文索引以字元二元組（bigram）切詞：中文沒有空白分詞，
+ * 二元組不需要詞典就能讓「範疇一」「營業收入」這類詞以字面命中，英數字也一併適用。
+ */
+export const OBSERVATORY_FTS_NGRAM_LENGTH = 2;
+// Info: (20261015 - Luphia) 檢索方式：線上一律混合；單一路只給評估腳本比較用
+export const OBSERVATORY_SEARCH_MODE = {
+  HYBRID: "hybrid",
+  DENSE: "dense",
+  LEXICAL: "lexical",
+} as const;
+
+export type ObservatorySearchMode =
+  (typeof OBSERVATORY_SEARCH_MODE)[keyof typeof OBSERVATORY_SEARCH_MODE];
+
 export const OBSERVATORY_SEARCH_DEFAULT_LIMIT = 10;
 export const OBSERVATORY_SEARCH_MAX_LIMIT = 50;
 export const OBSERVATORY_LIST_DEFAULT_PAGE_SIZE = 50;
 export const OBSERVATORY_LIST_MAX_PAGE_SIZE = 200;
 export const OBSERVATORY_REQUEUE_MAX_IDS = 500;
+
+// ---------------------------------------------------------------------------
+// Info: (20261015 - Luphia) 發布到企業觀測站頁面（`Report` 表）
+// ---------------------------------------------------------------------------
+
+/**
+ * Info: (20261015 - Luphia) 觀測站文件在 `Report.pdfPath` 上的前綴。
+ * 完整鍵為 `observatory/{stockId}/{year}/{source}`：與文件的唯一鍵一一對應，
+ * 發布可以 upsert（冪等），向量檢索的結果也能直接由欄位組回這個鍵、找到對應的 Report。
+ */
+export const OBSERVATORY_REPORT_PATH_PREFIX = "observatory";
+
+// Info: (20261015 - Luphia) 報告標題的類型字樣；「永續報告書」「財務報告」同時是企業觀測站問題分類的關鍵字
+export const OBSERVATORY_REPORT_TITLE_SUFFIX: Record<
+  ObservatorySource,
+  string
+> = {
+  GCIS_REGISTRATION: "年公司登記資料",
+  MOPS_FINANCIAL_REPORT: "年度財務報告",
+  ESG_REPORT: "年永續報告書",
+  GHG_INVENTORY: "年溫室氣體盤查揭露",
+};
+
+// Info: (20261015 - Luphia) 企業觀測站問題分類（QUERY_KEYWORDS 的鍵）→ 要檢索的來源
+export const OBSERVATORY_SOURCES_BY_REPORT_TYPE: Record<
+  string,
+  readonly ObservatorySource[]
+> = {
+  永續報告書: [OBSERVATORY_SOURCE.ESG_REPORT, OBSERVATORY_SOURCE.GHG_INVENTORY],
+  財務報告: [
+    OBSERVATORY_SOURCE.MOPS_FINANCIAL_REPORT,
+    OBSERVATORY_SOURCE.GCIS_REGISTRATION,
+  ],
+};
+
+// Info: (20261015 - Luphia) `Company.metadata`（證交所／櫃買中心原始資料）裡實收資本額的欄位名
+export const COMPANY_PAID_IN_CAPITAL_KEYS = [
+  "實收資本額",
+  "Paidin.Capital.NTDollars",
+] as const;
+
+// Info: (20261015 - Luphia) MOPS 電子書查詢頁上「會計期間：曆年制」的字樣
+export const MOPS_CALENDAR_YEAR_MARKER = "曆年制";
+
+/**
+ * Info: (20261015 - Luphia) 證交所／櫃買中心的產業別代碼 → 名稱（`Company.industry` 存的是代碼）。
+ */
+export const TWSE_INDUSTRY_NAME: Record<string, string> = {
+  "01": "水泥工業",
+  "02": "食品工業",
+  "03": "塑膠工業",
+  "04": "紡織纖維",
+  "05": "電機機械",
+  "06": "電器電纜",
+  "07": "化學生技醫療",
+  "08": "玻璃陶瓷",
+  "09": "造紙工業",
+  "10": "鋼鐵工業",
+  "11": "橡膠工業",
+  "12": "汽車工業",
+  "13": "電子工業",
+  "14": "建材營造業",
+  "15": "航運業",
+  "16": "觀光餐旅",
+  "17": "金融保險業",
+  "18": "貿易百貨業",
+  "19": "綜合",
+  "20": "其他業",
+  "21": "化學工業",
+  "22": "生技醫療業",
+  "23": "油電燃氣業",
+  "24": "半導體業",
+  "25": "電腦及週邊設備業",
+  "26": "光電業",
+  "27": "通信網路業",
+  "28": "電子零組件業",
+  "29": "電子通路業",
+  "30": "資訊服務業",
+  "31": "其他電子業",
+  "32": "文化創意業",
+  "33": "農業科技業",
+  "34": "電子商務",
+  "35": "綠能環保",
+  "36": "數位雲端",
+  "37": "運動休閒",
+  "38": "居家生活",
+  "80": "管理股票",
+  "91": "存託憑證",
+};
 
 // Info: (20261015 - Luphia) 記在 lastError 的固定原因碼（不是給人看的句子）
 export const OBSERVATORY_REASON = {

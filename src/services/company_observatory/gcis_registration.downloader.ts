@@ -131,6 +131,8 @@ export const gcisRegistrationDownloader: IObservatoryDownloader = {
       title: `${basicList[0].Company_Name || target.companyName} 公司登記資料（${target.year} 年快照）`,
       contentType: OBSERVATORY_CONTENT_TYPE.TEXT,
       body: Buffer.from(text, "utf-8"),
+      // Info: (20261015 - Luphia) 登記資料是現況快照，沒有揭露期間與確信資訊
+      metadata: {},
     };
   },
 };

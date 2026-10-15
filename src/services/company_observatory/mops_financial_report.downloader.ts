@@ -1,5 +1,6 @@
 import {
   MOPS_ANNUAL_SEASON,
+  MOPS_CALENDAR_YEAR_MARKER,
   MOPS_DOC_KIND_FINANCIAL,
   MOPS_DOC_ORIGIN,
   MOPS_DOC_QUERY_URL,
@@ -65,6 +66,19 @@ export function selectAnnualFinancialFile(
     if (found) return found;
   }
   return null;
+}
+
+/**
+ * Info: (20261015 - Luphia) 查詢頁標示「會計期間：曆年制」時，年度報告的期間就是該年 1/1～12/31；
+ * 非曆年制的公司頁面不會出現這個字樣，此時不填期間（不猜它的會計年度從哪天開始）。
+ */
+export function parseMopsAnnualPeriod(
+  html: string,
+  year: number,
+): string | undefined {
+  return html.includes(MOPS_CALENDAR_YEAR_MARKER)
+    ? `${year}/01/01~${year}/12/31`
+    : undefined;
 }
 
 export function parseMopsTransitLink(html: string): string | null {
@@ -166,6 +180,7 @@ export const mopsFinancialReportDownloader: IObservatoryDownloader = {
       title: `${target.companyName} ${target.year} 年度財務報告書（${fileName}）`,
       contentType: OBSERVATORY_CONTENT_TYPE.PDF,
       body: pdf,
+      metadata: { period: parseMopsAnnualPeriod(listHtml, target.year) },
     };
   },
 };

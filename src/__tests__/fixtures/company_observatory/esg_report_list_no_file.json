@@ -7,6 +7,8 @@
       "name": "台灣積體電路製造股份有限公司",
       "shortName": "台積電",
       "reportingInterval": "2024/01/01~2024/12/31",
+      "valiProvider": "立恩威國際驗證股份有限公司（DNV Business Assurance Co. Ltd., DNV）",
+      "thirdStd": "立恩威國際驗證股份有限公司（DNV）依據DNV VeriSustainTM Protocol、GRI 準則、SASB準則、TCFD框架查證本報告。DNV VeriSustainTM Protocol遵循ISO 17029:2019符合性評鑑－確證與查證機構之一般性原則與要求（Conformity Assessment－ General Principles and Requirements for Validation and Verification Bodies），符合公認的永續保證標準與做法，例如ISAE3000、AA1000AS及ISO14016: 2020 環境管理－環境報告確證指引（Environment Management - Guidelines on the Assurance of Environmental Reports）",
       "twDocLink": "https://esg.tsmc.com/zh-Hant/file/public/2024-TSMC-Sustainability-Report-c.pdf",
       "twFirstReportDownloadId": "00000000-0000-0000-0000-000000000000",
       "twEditReportDownloadId": "00000000-0000-0000-0000-000000000000"

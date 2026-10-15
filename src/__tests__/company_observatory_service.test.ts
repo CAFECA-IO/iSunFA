@@ -23,6 +23,7 @@ import type {
   IObservatoryDocumentStore,
 } from "@/services/company_observatory/company_observatory.service";
 import type { IObservatoryVectorStore } from "@/services/company_observatory/company_observatory.indexer.service";
+import type { IObservatoryReportRecord } from "@/lib/company_observatory/report_projection";
 
 // Info: (20261015 - Luphia) 這支測試只用記憶體假物件：不載入 Prisma 與 LanceDB 原生模組
 jest.mock("@/lib/prisma", () => ({ prisma: {} }));
@@ -158,6 +159,8 @@ const COMPANY: IObservatoryCompany = {
   abbreviation: "台積電",
   marketType: "sii",
   taxId: "22099131",
+  industry: "24",
+  metadata: { 實收資本額: "259323700670" },
 };
 
 function scriptedDownloader(
@@ -181,6 +184,7 @@ const textFound = (text: string): IObservatoryFetchResult => ({
   title: "doc",
   contentType: OBSERVATORY_CONTENT_TYPE.TEXT,
   body: Buffer.from(text, "utf-8"),
+  metadata: { period: "2024/01/01~2024/12/31", assuranceAgency: "DNV" },
 });
 
 const notAvailable: IObservatoryFetchResult = {
@@ -232,8 +236,20 @@ async function setup(
     async search() {
       return [];
     },
+    async searchText() {
+      return [];
+    },
+    async optimize() {
+      return undefined;
+    },
   };
   const embedder = { embed: jest.fn(async () => [0.1, 0.2]) };
+  const published = new Map<string, IObservatoryReportRecord>();
+  const reports = {
+    async publish(record: IObservatoryReportRecord) {
+      published.set(record.pdfPath, record);
+    },
+  };
   const companies = {
     listActive: async () => [COMPANY],
     findByStockIds: async (ids: string[]) =>
@@ -258,6 +274,7 @@ async function setup(
       typeof createCompanyObservatoryIndexer
     >[0]["documents"],
     vectors,
+    reports,
     embedder,
     extractPages: async (body: Buffer) => [body.toString("utf-8")],
   });
@@ -270,6 +287,7 @@ async function setup(
     vectorRows,
     vectorWrites,
     embedder,
+    published,
     advance(ms: number) {
       clock = new Date(clock.getTime() + ms);
     },
@@ -323,6 +341,23 @@ describe("company observatory pipeline", () => {
       page_number: 1,
     });
     expect(rows[0].text).toContain(`台積電 (2330) ｜ ${esg.year} 年永續報告書`);
+
+    // Info: (20261015 - Luphia) 每份索引完成的文件都發布成企業觀測站頁面的 Report
+    expect(t.published.size).toBe(7);
+    expect(t.published.get(`observatory/2330/${esg.year}/ESG_REPORT`)).toEqual({
+      companyName: "台灣積體電路製造股份有限公司",
+      title: `${esg.year} 年永續報告書`,
+      reportYear: String(esg.year),
+      period: "2024/01/01~2024/12/31",
+      industry: "半導體業",
+      capital: "100億以上",
+      verificationAgency: "",
+      verificationStandards: "",
+      assuranceAgency: "DNV",
+      assuranceStandards: "",
+      isVerifiedByThirdParty: true,
+      pdfPath: `observatory/2330/${esg.year}/ESG_REPORT`,
+    });
 
     // Info: (20261015 - Luphia) 再跑一輪：沒有到期的文件，什麼都不做
     const again = await t.service.processDownloads();
@@ -473,5 +508,8 @@ describe("company observatory pipeline", () => {
       esg.every((d) => d.status === OBSERVATORY_DOCUMENT_STATUS.DEAD),
     ).toBe(true);
     expect(esg[0].lastError).toBe(OBSERVATORY_REASON.NO_TEXT_LAYER);
+    expect(
+      Array.from(t.published.keys()).some((key) => key.includes("ESG_REPORT")),
+    ).toBe(false);
   });
 });

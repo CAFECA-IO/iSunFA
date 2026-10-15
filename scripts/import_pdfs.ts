@@ -6,28 +6,19 @@ import { lanceDBService } from "@/services/lancedb.service";
 import { ILanceDBRow } from "@/interfaces/lance_db";
 import { prisma } from "@/lib/prisma";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createOllamaEmbedder } from "@/lib/company_observatory/embedder";
 
 dotenv.config();
 
-const OLLAMA_EMBED_URL = "http://localhost:11434/api/embeddings";
-const EMBED_MODEL = "nomic-embed-text";
-
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-// Info: (20260612 - Julian) 輔助函式：呼叫 Ollama 取得 768 維向量
+/**
+ * Info: (20261015 - Luphia) 與企業觀測站共用嵌入器（模型與維度見 OBSERVATORY_EMBED_*），
+ * company_reports 與 company_observatory_chunks 的向量才在同一個空間，AI 諮詢能一起排序。
+ */
+const embedder = createOllamaEmbedder();
 async function getEmbedding(text: string): Promise<number[]> {
-  const response = await fetch(OLLAMA_EMBED_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: EMBED_MODEL, prompt: text }),
-  });
-  const data = await response.json();
-
-  if (data.error) {
-    throw new Error(`Ollama API 錯誤: ${data.error}`);
-  }
-
-  return data.embedding;
+  return embedder.embed(text);
 }
 
 // Info: (20260612 - Julian) 輔助函式：Markdown 文字切塊 (層級遞迴切割法)

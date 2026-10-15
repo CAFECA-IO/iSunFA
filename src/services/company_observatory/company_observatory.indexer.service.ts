@@ -3,6 +3,9 @@ import {
   OBSERVATORY_EMBED_CONCURRENCY,
   OBSERVATORY_INDEX_BATCH,
   OBSERVATORY_REASON,
+  OBSERVATORY_RETRIEVAL_CANDIDATES,
+  OBSERVATORY_SEARCH_MODE,
+  ObservatorySearchMode,
   OBSERVATORY_SOURCES,
   ObservatorySource,
 } from "@/constants/company_observatory";
@@ -19,7 +22,15 @@ import { chunkHeader, chunkPages } from "@/lib/company_observatory/chunking";
 import { ObservatoryInfraUnavailableError } from "@/lib/company_observatory/errors";
 import { nextStateAfterFailure } from "@/lib/company_observatory/retry_policy";
 import { IObservatoryStorage } from "@/lib/company_observatory/storage";
-import { IObservatoryCompanyDirectory } from "@/services/company_observatory/company_observatory.service";
+import {
+  IObservatoryCompany,
+  IObservatoryCompanyDirectory,
+} from "@/services/company_observatory/company_observatory.service";
+import {
+  buildObservatoryReport,
+  IObservatoryReportRecord,
+} from "@/lib/company_observatory/report_projection";
+import { reciprocalRankFusion } from "@/lib/company_observatory/rank_fusion";
 import { runWithConcurrency } from "@/lib/utils/concurrency";
 import { describeError } from "@/lib/utils/error_message";
 
@@ -40,7 +51,7 @@ export type IObservatoryIndexStore = Pick<
 
 export type IObservatoryVectorStore = Pick<
   typeof observatoryVectorRepo,
-  "replaceDocumentChunks" | "search"
+  "replaceDocumentChunks" | "search" | "searchText" | "optimize"
 >;
 
 // Info: (20261015 - Luphia) 依內容型別把檔案轉成逐頁文字；回傳 null 代表抽取失敗（可重試）
@@ -49,8 +60,14 @@ export type IObservatoryPageExtractor = (
   contentType: string,
 ) => Promise<string[] | null>;
 
+// Info: (20261015 - Luphia) 把索引完成的文件發布成企業觀測站頁面的 Report（以 pdfPath upsert，冪等）
+export interface IObservatoryReportPublisher {
+  publish(record: IObservatoryReportRecord): Promise<void>;
+}
+
 export interface ICompanyObservatoryIndexerDeps {
   documents: IObservatoryIndexStore;
+  reports: IObservatoryReportPublisher;
   companies: IObservatoryCompanyDirectory;
   vectors: IObservatoryVectorStore;
   embedder: IObservatoryEmbedder;
@@ -72,6 +89,7 @@ export interface IObservatoryIndexDocument {
   contentType: string | null;
   contentHash: string | null;
   sourceUrl: string | null;
+  metadata: unknown;
 }
 
 export const OBSERVATORY_INDEX_RESULT = {
@@ -104,6 +122,45 @@ export function toSearchHit(
   };
 }
 
+/**
+ * Info: (20261015 - Luphia) 企業觀測站檢索：向量與全文各取候選，以 RRF 合併後取前 limit 筆。
+ * 回傳的 distance 仍是向量距離（只出現在全文結果的切塊為 null），僅供參考，排序以融合名次為準。
+ * `mode` 只給評估腳本比較單一路檢索用（scripts/eval_observatory_retrieval.ts），線上一律混合。
+ */
+export async function searchObservatoryChunks(
+  deps: Pick<ICompanyObservatoryIndexerDeps, "embedder" | "vectors">,
+  params: {
+    query: string;
+    filter: IObservatoryVectorFilter;
+    limit: number;
+    mode?: ObservatorySearchMode;
+  },
+): Promise<IObservatorySearchHit[]> {
+  const mode = params.mode ?? OBSERVATORY_SEARCH_MODE.HYBRID;
+  const candidates = Math.max(params.limit, OBSERVATORY_RETRIEVAL_CANDIDATES);
+  const [dense, lexical] = await Promise.all([
+    mode === OBSERVATORY_SEARCH_MODE.LEXICAL
+      ? []
+      : deps.embedder.embed(params.query).then((vector) =>
+          deps.vectors.search({
+            vector,
+            filter: params.filter,
+            limit: candidates,
+          }),
+        ),
+    mode === OBSERVATORY_SEARCH_MODE.DENSE
+      ? []
+      : deps.vectors.searchText({
+          query: params.query,
+          filter: params.filter,
+          limit: candidates,
+        }),
+  ]);
+  return reciprocalRankFusion([dense, lexical], (row) => row.id)
+    .slice(0, params.limit)
+    .map(toSearchHit);
+}
+
 export function createCompanyObservatoryIndexer(
   deps: ICompanyObservatoryIndexerDeps,
 ) {
@@ -118,8 +175,11 @@ export function createCompanyObservatoryIndexer(
 
   async function indexOne(
     doc: IObservatoryIndexDocument,
-    companyName: string,
+    company: IObservatoryCompany | undefined,
   ): Promise<ObservatoryIndexResult> {
+    const companyName = company
+      ? company.abbreviation || company.name
+      : doc.stockId;
     try {
       if (!isObservatorySource(doc.source)) {
         throw new Error(`unknown source ${doc.source}`);
@@ -167,6 +227,18 @@ export function createCompanyObservatoryIndexer(
       );
 
       await deps.vectors.replaceDocumentChunks(doc.id, rows);
+      // Info: (20261015 - Luphia) 先發布再標 INDEXED：發布失敗時文件留在 DOWNLOADED 重試，頁面不會漏掉它
+      await deps.reports.publish(
+        buildObservatoryReport({
+          stockId: doc.stockId,
+          year: doc.year,
+          source,
+          companyName: company?.name ?? doc.stockId,
+          industryCode: company?.industry ?? null,
+          companyMetadata: company?.metadata ?? null,
+          documentMetadata: doc.metadata,
+        }),
+      );
       const now = deps.now();
       await deps.documents.transition(doc.id, doc.status, {
         status: OBSERVATORY_DOCUMENT_STATUS.INDEXED,
@@ -220,18 +292,13 @@ export function createCompanyObservatoryIndexer(
       const companies = await deps.companies.findByStockIds(
         Array.from(new Set(docs.map((doc) => doc.stockId))),
       );
-      const names = new Map(
-        companies.map((c) => [c.stockId, c.abbreviation || c.name]),
-      );
+      const byStockId = new Map(companies.map((c) => [c.stockId, c]));
 
       for (const doc of docs) {
         if (deps.shouldStop()) break;
         summary.attempted += 1;
         try {
-          const result = await indexOne(
-            doc,
-            names.get(doc.stockId) ?? doc.stockId,
-          );
+          const result = await indexOne(doc, byStockId.get(doc.stockId));
           if (result === OBSERVATORY_INDEX_RESULT.INDEXED) summary.indexed += 1;
           if (result === OBSERVATORY_INDEX_RESULT.FAILED) summary.failed += 1;
           if (result === OBSERVATORY_INDEX_RESULT.DEAD) summary.dead += 1;
@@ -245,21 +312,21 @@ export function createCompanyObservatoryIndexer(
           throw error;
         }
       }
+      if (summary.indexed > 0) {
+        // Info: (20261015 - Luphia) 索引維護失敗不影響已寫入的切塊（檢索會掃描未索引的列），只記 log
+        await deps.vectors.optimize().catch((error: unknown) => {
+          deps.log(`vector table optimize failed: ${describeError(error)}`);
+        });
+      }
       return summary;
     },
 
-    async search(params: {
+    search(params: {
       query: string;
       filter: IObservatoryVectorFilter;
       limit: number;
     }): Promise<IObservatorySearchHit[]> {
-      const vector = await deps.embedder.embed(params.query);
-      const rows = await deps.vectors.search({
-        vector,
-        filter: params.filter,
-        limit: params.limit,
-      });
-      return rows.map(toSearchHit);
+      return searchObservatoryChunks(deps, params);
     },
   };
 }

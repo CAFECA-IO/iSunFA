@@ -166,6 +166,25 @@ export const observatoryDocumentRepo = {
     return result.count;
   },
 
+  /**
+   * Info: (20261015 - Luphia) 向量表重建後（換嵌入模型），把已索引的文件排回「已下載、待索引」。
+   * 原始檔還在本機，worker 只會重新切塊與嵌入，不會重新下載；清掉 indexedHash 表示舊切塊已不存在。
+   */
+  async requeueIndexedForReindex(now: Date): Promise<number> {
+    const result = await prisma.observatoryDocument.updateMany({
+      where: { status: OBSERVATORY_DOCUMENT_STATUS.INDEXED },
+      data: {
+        status: OBSERVATORY_DOCUMENT_STATUS.DOWNLOADED,
+        indexedHash: null,
+        chunkCount: 0,
+        attemptCount: 0,
+        lastError: null,
+        nextAttemptAt: now,
+      },
+    });
+    return result.count;
+  },
+
   countByStatus(status: ObservatoryDocumentStatus): Promise<number> {
     return prisma.observatoryDocument.count({ where: { status } });
   },
