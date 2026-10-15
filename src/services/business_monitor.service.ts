@@ -16,7 +16,10 @@ import {
 } from "@/interfaces/business_monitor";
 import { COMPANY_ALIASES } from "@/constants/company";
 import { IObservatoryVectorFilter } from "@/interfaces/company_observatory";
-import { observatoryVectorRepo } from "@/repositories/observatory_vector.repo";
+import {
+  IObservatoryScoredRow,
+  observatoryVectorRepo,
+} from "@/repositories/observatory_vector.repo";
 import {
   IObservatoryReportPath,
   observatoryReportPath,
@@ -24,8 +27,12 @@ import {
 } from "@/lib/company_observatory/report_projection";
 import {
   buildObservatoryFilter,
+  detectQuestionYears,
   industryNameOfFilter,
 } from "@/lib/company_observatory/business_monitor_bridge";
+import { createOllamaEmbedder } from "@/lib/company_observatory/embedder";
+import { reciprocalRankFusion } from "@/lib/company_observatory/rank_fusion";
+import { OBSERVATORY_RETRIEVAL_CANDIDATES } from "@/constants/company_observatory";
 
 // Info: (20260702 - Julian) 查詢關鍵字
 export const QUERY_KEYWORDS: Record<string, string[]> = {
@@ -35,8 +42,12 @@ export const QUERY_KEYWORDS: Record<string, string[]> = {
 
 // Info: (20260701 - Julian) Ollama 相關參數
 const OLLAMA_HOST = "http://localhost:11434";
-const EMBED_MODEL = "nomic-embed-text";
 const LLM_MODEL = "gemma4:e4b";
+/**
+ * Info: (20261015 - Luphia) 查詢向量與切塊向量必須出自同一個模型，所以共用企業觀測站的嵌入器
+ * （模型見 OBSERVATORY_EMBED_MODEL），不再各自寫死模型名稱。
+ */
+const queryEmbedder = createOllamaEmbedder();
 
 const LANCE_DB_CHAT_LIMIT = 3;
 
@@ -113,7 +124,16 @@ class BusinessMonitorService {
     console.log(`🤖 [AI Chat] 步驟 3：偵測出的年份：`, years);
 
     // Info: (20260701 - Julian) 將用戶問題轉換為向量
-    const queryVector = await this.getQueryEmbedding(question);
+    /**
+     * Info: (20261015 - Luphia) 嵌入服務不可用（Ollama 未啟動、模型還沒 pull）時不讓 AI 諮詢整個失敗：
+     * 略過向量檢索，只用企業觀測站的全文檢索。
+     */
+    const queryVector = await this.getQueryEmbedding(question).catch(
+      (error: unknown) => {
+        console.error("⚠️ [AI Chat] 查詢向量產生失敗，只用全文檢索:", error);
+        return null;
+      },
+    );
 
     // Info: (20260701 - Julian) 到 LanceDB 進行相似度檢索
     /**
@@ -164,7 +184,7 @@ class BusinessMonitorService {
       return { matchedReports: [], context: "" };
     }
 
-    if (table && (!hasFilters || matchedIds.length > 0)) {
+    if (table && queryVector && (!hasFilters || matchedIds.length > 0)) {
       const combinedWhere =
         matchedIds.length > 0
           ? `reportId IN (${matchedIds.map((id) => `'${id}'`).join(", ")})`
@@ -173,19 +193,33 @@ class BusinessMonitorService {
         console.log(`🔍 [AI Chat] 使用過濾條件: ${combinedWhere}`);
       }
       // Info: (20260701 - Julian) 執行向量檢索；無指定公司與類型時不過濾
+      // Info: (20261015 - Luphia) 取較多候選，與企業觀測站的結果一起融合排序後才截成 LANCE_DB_CHAT_LIMIT 筆
       let legacyQuery = table
         .vectorSearch(new Float32Array(queryVector))
-        .limit(LANCE_DB_CHAT_LIMIT);
+        .limit(OBSERVATORY_RETRIEVAL_CANDIDATES);
       if (combinedWhere) legacyQuery = legacyQuery.where(combinedWhere);
-      matchedDocs = (await legacyQuery.toArray()) as unknown as ILanceDBRow[];
+      // Info: (20261015 - Luphia) 換嵌入模型後、表還沒重建前維度對不上會丟錯，只記 log、沿用觀測站的結果
+      matchedDocs = await legacyQuery
+        .toArray()
+        .then((rows) => rows as unknown as ILanceDBRow[])
+        .catch((error: unknown) => {
+          console.error(
+            "⚠️ [AI Chat] company_reports 向量檢索失敗，略過:",
+            error,
+          );
+          return [];
+        });
     }
 
     if (!hasFilters || observatoryPaths.length > 0) {
       matchedDocs = await this.mergeObservatoryDocs(
         matchedDocs,
+        question,
         queryVector,
         observatoryFilter,
       );
+    } else {
+      matchedDocs = matchedDocs.slice(0, LANCE_DB_CHAT_LIMIT);
     }
 
     console.log(`✅ [AI Chat] 最終篩選出 ${matchedDocs.length} 筆資料`);
@@ -270,31 +304,48 @@ class BusinessMonitorService {
   }
 
   /**
-   * Info: (20261015 - Luphia) 併入企業觀測站切塊，與手動匯入的切塊依距離一起取前幾名。
+   * Info: (20261015 - Luphia) 併入企業觀測站切塊，與手動匯入的切塊以倒數排名融合（RRF）一起取前幾名。
    *
-   * 兩張表用同一個嵌入模型（nomic-embed-text），距離可以直接比較。
+   * 三份候選清單：手動匯入表的向量結果、觀測站的向量結果、觀測站的全文（BM25）結果。
+   * RRF 只看名次，向量距離與 BM25 分數尺度不同也能合併；中文專有名詞（範疇一、每股盈餘）
+   * 靠全文檢索字面命中，語意相近但用字不同的段落靠向量檢索補上。
    * 觀測站切塊的 reportId 換成它的 pdfPath，後面「依 reportId 找 Report」的流程就不必區分來源。
-   * 觀測站資料表尚未初始化時只記 log、沿用手動匯入的結果，不讓整個 AI 諮詢失敗。
+   * 觀測站任一路檢索失敗（資料表未初始化、全文索引未建）只記 log、沿用其餘結果，不讓整個 AI 諮詢失敗。
    */
   private async mergeObservatoryDocs(
     legacyDocs: ILanceDBRow[],
-    queryVector: number[],
+    question: string,
+    queryVector: number[] | null,
     filter: IObservatoryVectorFilter,
   ): Promise<ILanceDBRow[]> {
-    let observatoryRows: Awaited<
-      ReturnType<typeof observatoryVectorRepo.search>
-    > = [];
-    try {
-      observatoryRows = await observatoryVectorRepo.search({
-        vector: queryVector,
-        filter,
-        limit: LANCE_DB_CHAT_LIMIT,
-      });
-    } catch (error) {
-      console.error("⚠️ [AI Chat] 企業觀測站向量檢索失敗，略過:", error);
-      return legacyDocs;
-    }
-    const observatoryDocs: ILanceDBRow[] = observatoryRows.map((row) => ({
+    const [denseRows, lexicalRows] = await Promise.all([
+      queryVector
+        ? observatoryVectorRepo
+            .search({
+              vector: queryVector,
+              filter,
+              limit: OBSERVATORY_RETRIEVAL_CANDIDATES,
+            })
+            .catch((error: unknown) => {
+              console.error(
+                "⚠️ [AI Chat] 企業觀測站向量檢索失敗，略過:",
+                error,
+              );
+              return [];
+            })
+        : [],
+      observatoryVectorRepo
+        .searchText({
+          query: question,
+          filter,
+          limit: OBSERVATORY_RETRIEVAL_CANDIDATES,
+        })
+        .catch((error: unknown) => {
+          console.error("⚠️ [AI Chat] 企業觀測站全文檢索失敗，略過:", error);
+          return [];
+        }),
+    ]);
+    const toDoc = (row: IObservatoryScoredRow): ILanceDBRow => ({
       id: row.id,
       vector: new Float32Array(0),
       text: row.text,
@@ -306,14 +357,11 @@ class BusinessMonitorService {
       companyName: row.company_name,
       pageNumber: Number(row.page_number),
       _distance: row._distance,
-    }));
-    return [...legacyDocs, ...observatoryDocs]
-      .sort(
-        (a, b) =>
-          (a._distance ?? Number.POSITIVE_INFINITY) -
-          (b._distance ?? Number.POSITIVE_INFINITY),
-      )
-      .slice(0, LANCE_DB_CHAT_LIMIT);
+    });
+    return reciprocalRankFusion(
+      [legacyDocs, denseRows.map(toDoc), lexicalRows.map(toDoc)],
+      (doc) => doc.id,
+    ).slice(0, LANCE_DB_CHAT_LIMIT);
   }
 
   /**
@@ -806,12 +854,8 @@ ${query}
    * @returns 年份
    */
   private detectYears(question: string): string[] {
-    const lowerQuestion = question.toLowerCase();
-    const match = lowerQuestion.match(/\b(19\d{2}|20\d{2})\b/g);
-    if (match) {
-      return match;
-    }
-    return [];
+    // Info: (20261015 - Luphia) 規則移到 business_monitor_bridge，檢索評估腳本才能用同一套
+    return detectQuestionYears(question);
   }
 
   /**
@@ -820,13 +864,7 @@ ${query}
    * @returns 查詢向量
    */
   private async getQueryEmbedding(text: string): Promise<number[]> {
-    const response = await fetch(`${OLLAMA_HOST}/api/embeddings`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: EMBED_MODEL, prompt: text }),
-    });
-    const data = await response.json();
-    return data.embedding;
+    return queryEmbedder.embed(text);
   }
 
   /**

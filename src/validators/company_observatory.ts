@@ -129,9 +129,9 @@ export const esgMetricsResponseSchema = z.object({
 export type IEsgMetricsResponse = z.infer<typeof esgMetricsResponseSchema>;
 export type IEsgDeclareItem = z.infer<typeof esgDeclareItemSchema>;
 
-// Info: (20261015 - Luphia) Ollama /api/embeddings 回應
+// Info: (20261015 - Luphia) Ollama /api/embed 回應：每個 input 一個向量（已做 L2 正規化）
 export const ollamaEmbeddingResponseSchema = z.object({
-  embedding: z.array(z.number()).optional(),
+  embeddings: z.array(z.array(z.number())).optional(),
   error: z.string().optional(),
 });
 

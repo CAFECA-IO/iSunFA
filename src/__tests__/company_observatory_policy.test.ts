@@ -180,7 +180,7 @@ describe("company observatory LanceDB filter", () => {
         years: [2024, 2025],
       }),
     ).toBe(
-      "stock_id IN ('2330', '1101') AND source IN ('ESG_REPORT') AND year IN (2024, 2025)",
+      "stock_id IN ('2330', '1101') AND source IN ('ESG_REPORT') AND (year IN (2024, 2025) OR source IN ('GCIS_REGISTRATION'))",
     );
     expect(buildObservatoryWhere({ stockIds: [] })).toBeNull();
     expect(buildObservatoryWhere({})).toBeNull();

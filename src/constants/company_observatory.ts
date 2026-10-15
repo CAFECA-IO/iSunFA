@@ -64,6 +64,14 @@ export const OBSERVATORY_FETCH_OUTCOME = {
   NOT_AVAILABLE: "NOT_AVAILABLE",
 } as const;
 
+/**
+ * Info: (20261015 - Luphia) 快照型來源：`year` 是抓取當年，不是報告所屬年度（公司登記資料每年一份快照）。
+ * 依年度過濾切塊時這些來源一律保留——問「台泥 2024 年的董事長」也該看得到最新的登記資料。
+ */
+export const OBSERVATORY_SNAPSHOT_SOURCES: readonly ObservatorySource[] = [
+  OBSERVATORY_SOURCE.GCIS_REGISTRATION,
+];
+
 // Info: (20261015 - Luphia) 報告類型的中文名稱，寫進每個切塊的標頭，讓檢索結果自帶脈絡
 export const OBSERVATORY_SOURCE_LABEL: Record<ObservatorySource, string> = {
   GCIS_REGISTRATION: "公司登記資料",
@@ -197,12 +205,46 @@ export const OBSERVATORY_STORAGE_DIR = path.join(
 
 // Info: (20261015 - Luphia) 獨立於 `company_reports` 的資料表：欄位不同，混用會讓舊的匯入腳本寫入失敗
 export const OBSERVATORY_LANCE_TABLE = "company_observatory_chunks";
-export const OBSERVATORY_EMBED_URL = "http://localhost:11434/api/embeddings";
-export const OBSERVATORY_EMBED_MODEL = "nomic-embed-text";
-export const OBSERVATORY_EMBED_DIMENSION = 768;
+/**
+ * Info: (20261015 - Luphia) 用 /api/embed 而不是舊的 /api/embeddings：前者回傳 L2 正規化後的向量，
+ * LanceDB 預設的 L2 距離排序因此等同餘弦相似度，不會因為切塊長短不同、向量長度不同而偏差。
+ */
+export const OBSERVATORY_EMBED_URL = "http://localhost:11434/api/embed";
+/**
+ * Info: (20261015 - Luphia) 嵌入模型：bge-m3（多語、1024 維）。
+ * 原本的 nomic-embed-text 以英文為主，對中文財報與永續報告書幾乎分不出主題
+ * （評估見 scripts/eval_observatory_retrieval.ts）。企業觀測站與手動匯入的 `company_reports`
+ * 共用這組設定，兩張表的向量才在同一個空間、距離可以比較。
+ * 換模型會改變維度：兩張表都得重建，見 scripts/reindex_lance_db.ts。
+ */
+export const OBSERVATORY_EMBED_MODEL = "bge-m3";
+export const OBSERVATORY_EMBED_DIMENSION = 1024;
 export const OBSERVATORY_EMBED_CONCURRENCY = 5;
 export const OBSERVATORY_CHUNK_SIZE = 800;
 export const OBSERVATORY_CHUNK_OVERLAP = 100;
+/**
+ * Info: (20261015 - Luphia) 混合檢索：向量與全文（BM25）各取這麼多候選，再以倒數排名融合（RRF）合併。
+ * 嵌入模型擅長語意相近、全文檢索擅長「範疇一」「每股盈餘」這類必須字面命中的專有名詞，
+ * 兩者互補；候選取多一點，融合後才有東西可以往前排。
+ */
+export const OBSERVATORY_RETRIEVAL_CANDIDATES = 30;
+// Info: (20261015 - Luphia) RRF 的平滑常數，文獻與各家實作的慣用值；越大越不偏重第一名
+export const OBSERVATORY_RRF_K = 60;
+/**
+ * Info: (20261015 - Luphia) 全文索引以字元二元組（bigram）切詞：中文沒有空白分詞，
+ * 二元組不需要詞典就能讓「範疇一」「營業收入」這類詞以字面命中，英數字也一併適用。
+ */
+export const OBSERVATORY_FTS_NGRAM_LENGTH = 2;
+// Info: (20261015 - Luphia) 檢索方式：線上一律混合；單一路只給評估腳本比較用
+export const OBSERVATORY_SEARCH_MODE = {
+  HYBRID: "hybrid",
+  DENSE: "dense",
+  LEXICAL: "lexical",
+} as const;
+
+export type ObservatorySearchMode =
+  (typeof OBSERVATORY_SEARCH_MODE)[keyof typeof OBSERVATORY_SEARCH_MODE];
+
 export const OBSERVATORY_SEARCH_DEFAULT_LIMIT = 10;
 export const OBSERVATORY_SEARCH_MAX_LIMIT = 50;
 export const OBSERVATORY_LIST_DEFAULT_PAGE_SIZE = 50;

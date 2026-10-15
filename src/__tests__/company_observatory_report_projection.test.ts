@@ -151,7 +151,27 @@ describe("business monitor bridge", () => {
         ["永續報告書"],
         ["2024"],
       ),
-    ).toEqual({ stockIds: ["2330"] });
+    ).toEqual({ stockIds: ["2330"], years: [2024] });
+  });
+
+  it("drops the year filter when the company has no report for that year", () => {
+    const paths = [
+      { stockId: "1101", year: 2024, source: OBSERVATORY_SOURCE.ESG_REPORT },
+      // Info: (20261015 - Luphia) 公司登記快照的年度不算「有那一年的報告」
+      {
+        stockId: "1101",
+        year: 2026,
+        source: OBSERVATORY_SOURCE.GCIS_REGISTRATION,
+      },
+    ];
+    expect(buildObservatoryFilter(true, paths, [], ["2026"])).toEqual({
+      stockIds: ["1101"],
+      years: undefined,
+    });
+    expect(buildObservatoryFilter(true, paths, [], ["2024", "2019"])).toEqual({
+      stockIds: ["1101"],
+      years: [2024],
+    });
   });
 
   it("otherwise filters by report type and year", () => {

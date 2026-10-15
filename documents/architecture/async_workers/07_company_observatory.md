@@ -51,8 +51,12 @@ PENDING ──下載──▶ DOWNLOADED ──索引──▶ INDEXED
 
 - 原始檔：`data/company_observatory/{stockId}/{year}/{source}.{pdf|txt}`（`data/` 已在 .gitignore），DB 只存相對路徑。
 - 向量：LanceDB 資料表 `company_observatory_chunks`（與 `company_reports` 分開），
-  欄位 `id, vector(768), text, document_id, stock_id, company_name, source, year, source_url, page_number, chunk_index, content_hash`。
-  嵌入模型為本機 Ollama `nomic-embed-text`，與既有企業觀測站相同。
+  欄位 `id, vector(1024), text, document_id, stock_id, company_name, source, year, source_url, page_number, chunk_index, content_hash`，
+  `text` 上另有字元二元組（bigram）全文索引。
+- 嵌入模型為本機 Ollama `bge-m3`（多語、1024 維，`OBSERVATORY_EMBED_*`），經 `/api/embed` 取 L2 正規化後的向量；
+  `company_reports`、`scripts/import_pdfs.ts` 與 AI 諮詢的查詢向量共用同一個嵌入器（`src/lib/company_observatory/embedder.ts`）。
+  兩張表的建立與重建邏輯在 `src/lib/company_observatory/lance_tables.ts`。
+- 每輪索引完成後呼叫 `optimize()`，把新寫入的列併進索引；尚未併入的列全文檢索仍會掃描到。
 
 ## 5. 企業觀測站頁面（`/business_monitor`）
 
@@ -64,25 +68,47 @@ PENDING ──下載──▶ DOWNLOADED ──索引──▶ INDEXED
   的實收資本額以 BigInt 比對門檻；揭露期間、確信／查證機構與標準由下載器從來源結構化欄位原樣取出
   （永續報告書：申報紀錄的 `reportingInterval`／`valiProvider`／`thirdStd`；溫室氣體：範疇一的確信機構與標準；
   財報：查詢頁標示「曆年制」才填全年期間）。來源沒有提供的欄位留空字串。
-- AI 諮詢：手動匯入報告的切塊在 `company_reports`，觀測站的切塊在 `company_observatory_chunks`；
-  兩張表各自檢索後依距離合併取前 3 筆。有指定公司時以公司代號過濾，否則依報告類型（`OBSERVATORY_SOURCES_BY_REPORT_TYPE`）與年度過濾。
+- AI 諮詢：手動匯入報告的切塊在 `company_reports`，觀測站的切塊在 `company_observatory_chunks`。
+  混合檢索：`company_reports` 的向量結果、觀測站的向量結果、觀測站的全文（BM25）結果各取 30 筆候選
+  （`OBSERVATORY_RETRIEVAL_CANDIDATES`），以倒數排名融合（RRF，`OBSERVATORY_RRF_K = 60`，`rank_fusion.ts`）合併後取前 3 筆。
+  向量擅長語意相近的段落，全文檢索擅長「範疇一」「每股盈餘」這類必須字面命中的詞，兩者互補。
+- 過濾（`buildObservatoryFilter`）：有指定公司時以公司代號過濾；問題提到的年度若該公司確實有那年的報告，再加上年度過濾
+  （公司登記這類快照型來源 `OBSERVATORY_SNAPSHOT_SOURCES` 不受年度限制）。問到的年度一份報告都沒有時不過濾年度，
+  沿用寬鬆檢索、由 LLM 依中繼資料的年度提醒作答。沒有指定公司時依報告類型（`OBSERVATORY_SOURCES_BY_REPORT_TYPE`）與年度過濾。
 - 公司偵測：除了靜態別名，也比對 `Company.abbreviation`（證交所公布的簡稱）。觀測站報告用的是登記全名
   （「臺灣水泥股份有限公司」），靜態別名寫的是「台灣水泥…」，只靠別名時「台泥」對不上。
 - `company_reports` 打不開（從未匯入或資料夾殘缺）時只記 log，仍會檢索觀測站資料。
-- 已知限制：`nomic-embed-text` 以英文為主，對中文的語意區分弱。實測「台泥 2024 年範疇一排放量」時，
-  溫室氣體揭露的切塊排在第 9 名，而 AI 諮詢只取前 3 名，所以會回答「參考資料未提及」（不會捏造）。
-  改用多語嵌入模型需要同時重建兩張向量表，留待後續處理。
+- 檢索評估：`npx tsx scripts/eval_observatory_retrieval.ts [--mode hybrid|dense|lexical] [--no-year-filter]`，
+  題組在 `scripts/fixtures/observatory_retrieval_eval_cases.json`（1101 台泥 12 題：溫室氣體、永續報告書、財報、公司登記）。
+  正確切塊以「來源 + 年度 + 必含字串」判定，不經 LLM，結果是決定性的。以本機 1101 的 7 份文件（1,473 個切塊）實測：
+
+  | 設定 | hit@1 | hit@3 | hit@5 | MRR@10 |
+  | --- | --- | --- | --- | --- |
+  | 舊：nomic-embed-text 向量、只限公司 | 1/12 | 1/12 | 1/12 | 0.083 |
+  | nomic-embed-text + `search_query:`／`search_document:` 前綴 | 0/12 | 1/12 | 1/12 | 0.028 |
+  | bge-m3 向量、限公司與年度 | 4/12 | 5/12 | 8/12 | 0.433 |
+  | 二元組 BM25、限公司與年度 | 9/12 | 10/12 | 10/12 | 0.788 |
+  | **新：bge-m3 + BM25（RRF）、限公司與年度** | 6/12 | **10/12** | **11/12** | 0.668 |
+
+  只用 BM25 的 hit@1 較高，但遇到用字不同的問題會整個漏掉（「董事長是誰」排到 10 名外）；混合檢索每題都在前 10 名內，
+  AI 諮詢取的前 3 筆命中率與 BM25 相同。nomic 的前綴對中文沒有幫助。舊設定下「台泥 2024 年範疇一排放量」
+  真正含數字的切塊排在第 274 名，新設定排第 1 名。
 - 產業篩選：選單送的是 `SEMICONDUCTOR` 這類鍵，改為對應成「半導體業」後以包含比對（原本直接比對鍵，永遠查不到）。
 
 ## 6. 管理端 API（ADMIN / SUPER_ADMIN）
 
 - `GET /api/v1/admin/company_observatory?stockId=&source=&status=&year=&page=&pageSize=`：各來源 × 狀態筆數與文件清單。
-- `GET /api/v1/admin/company_observatory/search?q=&stockId=&source=&year=&limit=`：依公司／類型／年度過濾的向量檢索。
+- `GET /api/v1/admin/company_observatory/search?q=&stockId=&source=&year=&limit=`：依公司／類型／年度過濾的混合檢索（向量 + 全文，RRF）。
 - `POST /api/v1/admin/company_observatory/requeue`：`{ "ids": [...] }` 或 `{ "allDead": true, "source"?: "..." }`。
 
 ## 7. 部署
 
 1. `npx prisma db push`（新增 `observatory_document` 表）。
 2. `npx tsx scripts/sync_companies.ts`：`Company` 是空的就沒有任何東西可下載。
-3. `npm run initial_lance_db`（建立 `company_observatory_chunks`；`npm run build`／`npm run dev` 也會自動執行，已存在則跳過）。
-4. worker 主機需有 Ollama 並已 `ollama pull nomic-embed-text`；沒有時下載照常進行，索引會暫停等待。
+3. `npm run initial_lance_db`（建立兩張切塊表與全文索引；`npm run build`／`npm run dev` 也會自動執行，已存在則跳過）。
+   表的維度與目前嵌入模型不同時只印提醒、不自動刪表。
+4. worker 主機需有 Ollama 並已 `ollama pull bge-m3`；沒有時下載照常進行，索引會暫停等待。
+5. 從 `nomic-embed-text`（768 維）升級：先 `ollama pull bge-m3`，再執行 `npm run reindex_lance_db`。
+   腳本把已索引的 `ObservatoryDocument` 排回 `DOWNLOADED`（清掉 `indexedHash`），再以 1024 維重建兩張表；
+   worker 讀本機原始檔重新切塊與嵌入，不會重新下載。`company_reports` 重建後是空的，手動匯入的報告要重跑
+   `scripts/import_pdfs.ts`。在重建之前，寫入時的維度檢查會讓索引暫停（不計失敗次數），AI 諮詢的向量檢索失敗則降級為只用全文檢索。

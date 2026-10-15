@@ -32,6 +32,7 @@
     "redispatch_team_quota": "npx tsx scripts/redispatch_team_quota_orders.ts",
     "version": "npx tsx scripts/bump_version.ts",
     "initial_lance_db": "npx tsx scripts/init_lance_db.ts",
+    "reindex_lance_db": "npx tsx scripts/reindex_lance_db.ts",
     "uat:carbon": "npx tsx scripts/uat_carbon_report.ts"
   },
   "dependencies": {

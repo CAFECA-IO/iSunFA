@@ -3,6 +3,9 @@ import {
   OBSERVATORY_EMBED_CONCURRENCY,
   OBSERVATORY_INDEX_BATCH,
   OBSERVATORY_REASON,
+  OBSERVATORY_RETRIEVAL_CANDIDATES,
+  OBSERVATORY_SEARCH_MODE,
+  ObservatorySearchMode,
   OBSERVATORY_SOURCES,
   ObservatorySource,
 } from "@/constants/company_observatory";
@@ -27,6 +30,7 @@ import {
   buildObservatoryReport,
   IObservatoryReportRecord,
 } from "@/lib/company_observatory/report_projection";
+import { reciprocalRankFusion } from "@/lib/company_observatory/rank_fusion";
 import { runWithConcurrency } from "@/lib/utils/concurrency";
 import { describeError } from "@/lib/utils/error_message";
 
@@ -47,7 +51,7 @@ export type IObservatoryIndexStore = Pick<
 
 export type IObservatoryVectorStore = Pick<
   typeof observatoryVectorRepo,
-  "replaceDocumentChunks" | "search"
+  "replaceDocumentChunks" | "search" | "searchText" | "optimize"
 >;
 
 // Info: (20261015 - Luphia) 依內容型別把檔案轉成逐頁文字；回傳 null 代表抽取失敗（可重試）
@@ -116,6 +120,45 @@ export function toSearchHit(
     text: row.text,
     distance: typeof row._distance === "number" ? row._distance : null,
   };
+}
+
+/**
+ * Info: (20261015 - Luphia) 企業觀測站檢索：向量與全文各取候選，以 RRF 合併後取前 limit 筆。
+ * 回傳的 distance 仍是向量距離（只出現在全文結果的切塊為 null），僅供參考，排序以融合名次為準。
+ * `mode` 只給評估腳本比較單一路檢索用（scripts/eval_observatory_retrieval.ts），線上一律混合。
+ */
+export async function searchObservatoryChunks(
+  deps: Pick<ICompanyObservatoryIndexerDeps, "embedder" | "vectors">,
+  params: {
+    query: string;
+    filter: IObservatoryVectorFilter;
+    limit: number;
+    mode?: ObservatorySearchMode;
+  },
+): Promise<IObservatorySearchHit[]> {
+  const mode = params.mode ?? OBSERVATORY_SEARCH_MODE.HYBRID;
+  const candidates = Math.max(params.limit, OBSERVATORY_RETRIEVAL_CANDIDATES);
+  const [dense, lexical] = await Promise.all([
+    mode === OBSERVATORY_SEARCH_MODE.LEXICAL
+      ? []
+      : deps.embedder.embed(params.query).then((vector) =>
+          deps.vectors.search({
+            vector,
+            filter: params.filter,
+            limit: candidates,
+          }),
+        ),
+    mode === OBSERVATORY_SEARCH_MODE.DENSE
+      ? []
+      : deps.vectors.searchText({
+          query: params.query,
+          filter: params.filter,
+          limit: candidates,
+        }),
+  ]);
+  return reciprocalRankFusion([dense, lexical], (row) => row.id)
+    .slice(0, params.limit)
+    .map(toSearchHit);
 }
 
 export function createCompanyObservatoryIndexer(
@@ -269,21 +312,21 @@ export function createCompanyObservatoryIndexer(
           throw error;
         }
       }
+      if (summary.indexed > 0) {
+        // Info: (20261015 - Luphia) 索引維護失敗不影響已寫入的切塊（檢索會掃描未索引的列），只記 log
+        await deps.vectors.optimize().catch((error: unknown) => {
+          deps.log(`vector table optimize failed: ${describeError(error)}`);
+        });
+      }
       return summary;
     },
 
-    async search(params: {
+    search(params: {
       query: string;
       filter: IObservatoryVectorFilter;
       limit: number;
     }): Promise<IObservatorySearchHit[]> {
-      const vector = await deps.embedder.embed(params.query);
-      const rows = await deps.vectors.search({
-        vector,
-        filter: params.filter,
-        limit: params.limit,
-      });
-      return rows.map(toSearchHit);
+      return searchObservatoryChunks(deps, params);
     },
   };
 }

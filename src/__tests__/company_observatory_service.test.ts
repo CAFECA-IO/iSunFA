@@ -236,6 +236,12 @@ async function setup(
     async search() {
       return [];
     },
+    async searchText() {
+      return [];
+    },
+    async optimize() {
+      return undefined;
+    },
   };
   const embedder = { embed: jest.fn(async () => [0.1, 0.2]) };
   const published = new Map<string, IObservatoryReportRecord>();

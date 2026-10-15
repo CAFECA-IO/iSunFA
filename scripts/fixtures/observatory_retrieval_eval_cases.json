@@ -1,0 +1,66 @@
+{
+  "description": "企業觀測站 AI 諮詢的檢索評估題組（1101 台泥）。每題的正確切塊以「來源 + 年度 + 必含字串」決定：切塊同時符合 source、year（有填才比對）且包含 mustContain 的每一個字串，就算命中。答案字串取自已索引的原文，換模型或換切塊方式都不影響判定。",
+  "stockId": "1101",
+  "cases": [
+    {
+      "id": "ghg_scope1_2024",
+      "question": "台泥 2024 年範疇一溫室氣體排放量是多少？",
+      "relevant": [{ "source": "GHG_INVENTORY", "year": 2024, "mustContain": ["39,544,430"] }]
+    },
+    {
+      "id": "ghg_scope2_2025",
+      "question": "台泥 2025 年範疇二溫室氣體排放量是多少？",
+      "relevant": [{ "source": "GHG_INVENTORY", "year": 2025, "mustContain": ["1,536,737"] }]
+    },
+    {
+      "id": "ghg_assurance_2024",
+      "question": "台泥 2024 年的溫室氣體排放數據是由哪一家機構確信的？",
+      "relevant": [{ "source": "GHG_INVENTORY", "year": 2024, "mustContain": ["確信機構：BSI"] }]
+    },
+    {
+      "id": "ghg_target_progress_2025",
+      "question": "台泥 2025 年溫室氣體減量目標的達成情形如何？",
+      "relevant": [{ "year": 2025, "mustContain": ["超額達標108%"] }]
+    },
+    {
+      "id": "esg_hoping_power_scope1_2024",
+      "question": "台泥 2024 年和平電力的範疇一排放量是多少？",
+      "relevant": [{ "source": "ESG_REPORT", "year": 2024, "mustContain": ["和平電力", "6,936,330"] }]
+    },
+    {
+      "id": "esg_employees_2024",
+      "question": "台泥 2024 年全球員工人數有多少人？",
+      "relevant": [{ "source": "ESG_REPORT", "year": 2024, "mustContain": ["13,772"] }]
+    },
+    {
+      "id": "fin_eps_2024",
+      "question": "台泥 2024 年的基本每股盈餘是多少？",
+      "relevant": [{ "source": "MOPS_FINANCIAL_REPORT", "mustContain": ["基本每股盈餘", "1.45"] }]
+    },
+    {
+      "id": "fin_eps_2025",
+      "question": "台泥 2025 年每股盈餘是多少？",
+      "relevant": [{ "source": "MOPS_FINANCIAL_REPORT", "year": 2025, "mustContain": ["基本每股盈餘", "1.60"] }]
+    },
+    {
+      "id": "fin_revenue_2024",
+      "question": "台泥 2024 年合併營業收入是多少？",
+      "relevant": [{ "source": "MOPS_FINANCIAL_REPORT", "mustContain": ["154,606,511"] }]
+    },
+    {
+      "id": "fin_cash_2024",
+      "question": "台泥 2024 年底的現金及約當現金有多少？",
+      "relevant": [{ "source": "MOPS_FINANCIAL_REPORT", "year": 2024, "mustContain": ["六、現金及約當現金"] }]
+    },
+    {
+      "id": "reg_chairman",
+      "question": "台泥的董事長是誰？",
+      "relevant": [{ "source": "GCIS_REGISTRATION", "mustContain": ["董事長｜"] }]
+    },
+    {
+      "id": "reg_paid_in_capital",
+      "question": "台泥的實收資本額是多少？",
+      "relevant": [{ "source": "GCIS_REGISTRATION", "mustContain": ["實收資本額"] }]
+    }
+  ]
+}
