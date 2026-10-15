@@ -50,10 +50,6 @@ describe("selectRedispatchableOrders", () => {
     ],
     ["非 JSON 的舊簽章", { signature: "raw-webauthn-signature" }],
     ["已派發過", { mission: '["12"]' }],
-    [
-      "物流碳足跡（同步試算，不走任務）",
-      { data: { category: ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT } },
-    ],
     ["沒有 category", { data: {} }],
   ] as [string, Partial<IRedispatchCandidate>][])(
     "不補派：%s",
@@ -65,6 +61,15 @@ describe("selectRedispatchableOrders", () => {
       expect(skipped).toHaveLength(1);
     },
   );
+
+  it("物流碳足跡也補派（碳排／里程核算都等任務產出結果）", () => {
+    const { toRedispatch } = selectRedispatchableOrders([
+      candidate({
+        data: { category: ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT },
+      }),
+    ]);
+    expect(toRedispatch).toHaveLength(1);
+  });
 
   it("空的 mission 陣列視為未派發", () => {
     const { toRedispatch } = selectRedispatchableOrders([
