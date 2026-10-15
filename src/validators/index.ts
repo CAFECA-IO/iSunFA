@@ -39,3 +39,5 @@ export * from "@/validators/overtime";
 export * from "@/validators/salary_record";
 // Info: (20261015 - Luphia) 後台點數明細（個人帳本與團隊分配紀錄）
 export * from "@/validators/admin_user_points";
+// Info: (20261015 - Luphia) 企業觀測站（外部報告下載與索引）
+export * from "@/validators/company_observatory";

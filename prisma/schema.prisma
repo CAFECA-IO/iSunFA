@@ -3538,6 +3538,7 @@ model LeavePolicy {
   /**
    * /**
    * /**
+   * /**
    * Info: (20260817 - Julian) 給薪比例（工資照給 = 1、折半發給 = 0.5、不給工資 = 0）。
    * 本模組不算金額，此欄位供薪資模組與畫面提示使用。
    * **Nullable 且無預設值**：產假的工資取決於年資（受僱六個月以上照給、
@@ -4831,4 +4832,40 @@ model WorkerLease {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("worker_lease")
+}
+
+/**
+ * Info: (20261015 - Luphia) 企業觀測站：外部公開報告的下載與索引狀態。
+ * 一列 = 一家公司（`stockId`）在一個來源（`source`）的一個年度（`year`）的一份報告；
+ * `@@unique([stockId, source, year])` 是冪等的根據——規劃迴圈重跑只會撞唯一鍵，不會重複建列。
+ * 刻意不與 `Company` 建立外鍵：`Company` 是唯讀的公開資料字典（CLAUDE.md §9），
+ * 這張表同樣只記錄「向外看」的公開資料，不掛任何租戶（AccountBook）業務資料。
+ * 狀態流見 `OBSERVATORY_DOCUMENT_STATUS`；`contentHash` 對上 `indexedHash` 即代表
+ * 向量索引已是這份內容，重新下載到相同內容時不重建索引。
+ */
+model ObservatoryDocument {
+  id            String    @id @default(uuid())
+  stockId       String    @map("stock_id")
+  source        String // Info: (20261015 - Luphia) OBSERVATORY_SOURCE 常數
+  year          Int
+  status        String    @default("PENDING") // Info: (20261015 - Luphia) OBSERVATORY_DOCUMENT_STATUS 常數
+  title         String?
+  sourceUrl     String?   @map("source_url") @db.Text
+  filePath      String?   @map("file_path")
+  contentType   String?   @map("content_type") // Info: (20261015 - Luphia) OBSERVATORY_CONTENT_TYPE 常數
+  contentHash   String?   @map("content_hash")
+  indexedHash   String?   @map("indexed_hash")
+  chunkCount    Int       @default(0) @map("chunk_count")
+  attemptCount  Int       @default(0) @map("attempt_count")
+  lastError     String?   @map("last_error") @db.Text
+  nextAttemptAt DateTime  @default(now()) @map("next_attempt_at")
+  downloadedAt  DateTime? @map("downloaded_at")
+  indexedAt     DateTime? @map("indexed_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@unique([stockId, source, year])
+  @@index([status, nextAttemptAt])
+  @@index([source, status])
+  @@map("observatory_document")
 }

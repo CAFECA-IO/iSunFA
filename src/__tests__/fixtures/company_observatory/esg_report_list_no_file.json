@@ -1,0 +1,15 @@
+{
+  "count": 1,
+  "success": true,
+  "data": [
+    {
+      "code": "2330",
+      "name": "台灣積體電路製造股份有限公司",
+      "shortName": "台積電",
+      "reportingInterval": "2024/01/01~2024/12/31",
+      "twDocLink": "https://esg.tsmc.com/zh-Hant/file/public/2024-TSMC-Sustainability-Report-c.pdf",
+      "twFirstReportDownloadId": "00000000-0000-0000-0000-000000000000",
+      "twEditReportDownloadId": "00000000-0000-0000-0000-000000000000"
+    }
+  ]
+}

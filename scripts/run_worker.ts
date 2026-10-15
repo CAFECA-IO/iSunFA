@@ -14,7 +14,15 @@ import { processSubscriptionRenewals } from "@/services/cron/subscription_renewa
 import { runFaithMemoryRetention } from "@/services/cron/faith_memory_retention.cron";
 import { runLeaveBalanceReconcile } from "@/services/cron/leave_balance_reconcile.cron";
 import { scanResumableJobs } from "@/services/resumable_job.service";
+import {
+  runCompanyObservatoryCycle,
+  runCompanyObservatoryPlanner,
+} from "@/services/cron/company_observatory.cron";
 import { JOB_RESUME_SCAN_INTERVAL_MS } from "@/constants/resumable_job";
+import {
+  OBSERVATORY_PLAN_INTERVAL_MS,
+  OBSERVATORY_PROCESS_INTERVAL_MS,
+} from "@/constants/company_observatory";
 import {
   installWorkerShutdownHandlers,
   isShuttingDown,
@@ -162,6 +170,20 @@ async function runWorker() {
       "ResumableJobScan",
       () => scanResumableJobs(Date.now()),
       JOB_RESUME_SCAN_INTERVAL_MS,
+    ),
+    /**
+     * Info: (20261015 - Luphia) 企業觀測站：每日補建待下載清單；每 10 分鐘下載與索引一小批。
+     * 對外流量由逐主機限速控制（見 constants/company_observatory），失敗三次進死信。
+     */
+    startServiceLoop(
+      "CompanyObservatoryPlanner",
+      () => runCompanyObservatoryPlanner(),
+      OBSERVATORY_PLAN_INTERVAL_MS,
+    ),
+    startServiceLoop(
+      "CompanyObservatory",
+      () => runCompanyObservatoryCycle(),
+      OBSERVATORY_PROCESS_INTERVAL_MS,
     ),
   ]);
 
