@@ -34,6 +34,7 @@ jest.mock("@/repositories/team_wallet.repo", () => ({
     getWalletByTeamId: jest.fn(),
     getAllocation: jest.fn(),
     listAllocations: jest.fn(),
+    listMemberAllocationLedger: jest.fn(),
     listLedger: jest.fn(),
     allocate: jest.fn(),
     revoke: jest.fn(),
@@ -431,6 +432,27 @@ describe("manageAllocation", () => {
 });
 
 describe("getTeamWalletView", () => {
+  /**
+   * Info: (20261015 - Luphia) 成員分配數改由團隊帳本判定（`resolveMemberAllocationCredits`），
+   * 舊的 TeamWalletAllocation.balance 自分配撥入個人點數後恆為 0，不再讀它。
+   */
+  const ledgerRow = (
+    id: string,
+    entryType: string,
+    amount: number,
+    targetUserId: string | null,
+    txHash: string | null,
+    idempotencyKey: string,
+  ) => ({
+    id,
+    entryType,
+    amount: BigInt(amount),
+    targetUserId,
+    txHash,
+    idempotencyKey,
+    createdAt: new Date("2026-10-01T00:00:00Z"),
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     // Info: (20260819 - Luphia) 團隊 ADMIN 已取消：管理職的代表改用 OWNER
@@ -440,22 +462,42 @@ describe("getTeamWalletView", () => {
       status: "ACTIVE",
       unallocatedBalance: BigInt(650),
     });
-    asMock(teamWalletRepo.getAllocation).mockResolvedValue({
-      balance: BigInt(50),
-    });
-    asMock(teamWalletRepo.listAllocations).mockResolvedValue([
-      { userId: "user-2", balance: BigInt(50), updatedAt: new Date(0) },
+    asMock(teamWalletRepo.listMemberAllocationLedger).mockResolvedValue([
+      ledgerRow("a1", "ALLOCATE", 50, "user-viewer", null, "k1"),
+      ledgerRow(
+        "x1",
+        "ADJUST",
+        -50,
+        "user-viewer",
+        null,
+        "allocate-offchain-exit:k1",
+      ),
+      ledgerRow("a2", "ALLOCATE", 30, "user-2", "0xabc", "k2"),
+      // Info: (20261015 - Luphia) 遷移前的離鏈分配：不算（剩餘已由 migrate-allocation 計入）
+      ledgerRow("a3", "ALLOCATE", 999, "user-2", null, "k3"),
+      ledgerRow(
+        "m1",
+        "ADJUST",
+        -20,
+        "user-2",
+        "0xdef",
+        "migrate-allocation:team-1:user-2",
+      ),
     ]);
   });
 
-  it("shows managers the full allocation table", async () => {
+  it("shows managers the per-member totals the team actually gave out", async () => {
     const view = await getTeamWalletView({
       userId: "user-admin",
       teamId: "team-1",
     });
     expect(view.unallocatedBalance).toBe("650");
-    expect(view.myAllocationBalance).toBe("50");
-    expect(view.allocations).toHaveLength(1);
+    expect(view.myAllocationBalance).toBe("0");
+    expect(
+      Object.fromEntries(
+        (view.allocations ?? []).map((a) => [a.userId, a.balance]),
+      ),
+    ).toEqual({ "user-viewer": "50", "user-2": "50" });
   });
 
   it("hides the pool balance and allocation table from plain members", async () => {
@@ -467,18 +509,18 @@ describe("getTeamWalletView", () => {
     expect(view.unallocatedBalance).toBeUndefined();
     expect(view.allocations).toBeUndefined();
     expect(view.myAllocationBalance).toBe("50");
-    expect(teamWalletRepo.listAllocations).not.toHaveBeenCalled();
   });
 
   it("defaults to zero balances when the wallet does not exist yet", async () => {
     asMock(teamWalletRepo.getWalletByTeamId).mockResolvedValue(null);
-    asMock(teamWalletRepo.getAllocation).mockResolvedValue(null);
+    asMock(teamWalletRepo.listMemberAllocationLedger).mockResolvedValue([]);
     const view = await getTeamWalletView({
       userId: "user-admin",
       teamId: "team-1",
     });
     expect(view.unallocatedBalance).toBe("0");
     expect(view.myAllocationBalance).toBe("0");
+    expect(view.allocations).toEqual([]);
   });
 });
 

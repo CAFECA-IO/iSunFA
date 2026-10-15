@@ -58,10 +58,22 @@ MissionBoard 合約改為 `MissionTask` / `MissionSubmission` 兩張表；帳號
 
 規則全文在 `src/services/point_recovery.service.ts`（純函式 `buildRecoveryPlan`，有逐條單測）。產品拍板（20261015）：
 
-- 入帳：購點（含 `PAID` / `MINT_FAILED`——已收款即視為欠用戶）、後台發放、歷史簽到獎勵、註冊獎勵（無訂單者一律補 100）、活動贈點、團隊分配（未被 `allocate-failed:` 補償者，含鑄點未確認者）、退款（含 `refundOwed` 欠款）。
+- 入帳：購點（含 `PAID` / `MINT_FAILED`——已收款即視為欠用戶）、後台發放、歷史簽到獎勵、註冊獎勵（無訂單者一律補 100）、活動贈點、團隊分配（見下）、退款（含 `refundOwed` 欠款）。
 - 出帳：ICP 負數訂單、狀態 `PAID` / `EXECUTING` / `COMPLETED` / `FAILED`，排除團隊額度支付。
 - 舊的 `PAYING`（鏈上付款在途）：無從確認，**不扣**，並終結為 `PAYMENT_FAILED`。
 - 預設預演；`--commit` 才寫入；`--verify [--fix-cache]` 勾稽快取與帳本。
+
+### 團隊分配的判定（`lib/quota/member_allocation.ts`）
+
+ALLOCATE 分錄橫跨三個時代：08-14 前的離鏈分配（進 `TeamWalletAllocation.balance`）、
+08-14 起鑄到成員錢包（回填 txHash；08-18 起另配 `allocate-offchain-exit:` 負 ADJUST）、
+區塊鏈退役後的 DB 帳本（無 txHash、有 offchain-exit）。
+
+「給到成員」＝（有 txHash 或有 offchain-exit 配對）且沒有 `allocate-failed:` 補償，再加上 `migrate-allocation:` 遷移分錄的絕對值。
+遷移前的離鏈 ALLOCATE **不計**：它剩下的部分已由遷移分錄計入。第一版復原指令把兩者都算（重複入帳），
+現行版本會以 `team-allocate-reversal:<PointLedger.id>` 的反向 ADJUST 撤銷依舊規則寫入的部分。
+
+團隊頁成員卡的「分配點數」用同一支判定，顯示團隊實際給出的累計（不是成員個人餘額）。
 
 ## 5. 任務看板
 

@@ -748,6 +748,28 @@ export class TeamWalletRepository {
     });
   }
 
+  /**
+   * Info: (20261015 - Luphia) 判定「團隊實際給到成員多少點」所需的分錄（ALLOCATE 與 ADJUST）。
+   * 判定規則在 `lib/quota/member_allocation`；舊的 `TeamWalletAllocation.balance` 自 2026-08-14
+   * 分配改撥入成員個人點數後恆為 0，不再代表任何東西。
+   */
+  async listMemberAllocationLedger(
+    teamId: string,
+  ): Promise<TeamWalletLedger[]> {
+    const wallet = await this.getWalletByTeamId(teamId);
+    if (!wallet) return [];
+    // Info: (20261015 - Luphia) 補償分錄的 targetUserId 可能為空，因此整個團隊一起取、判定後再依成員加總
+    return prisma.teamWalletLedger.findMany({
+      where: {
+        teamWalletId: wallet.id,
+        entryType: {
+          in: [TEAM_WALLET_ENTRY_TYPE.ALLOCATE, TEAM_WALLET_ENTRY_TYPE.ADJUST],
+        },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+  }
+
   async listAllocations(teamId: string): Promise<TeamWalletAllocation[]> {
     return prisma.teamWalletAllocation.findMany({
       where: { teamId },

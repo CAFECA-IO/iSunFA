@@ -59,4 +59,7 @@ export const POINT_LEDGER_KEY = {
   campaign: (registrationId: string) => `campaign:${registrationId}`,
   teamAllocation: (teamLedgerId: string) => `team-allocate:${teamLedgerId}`,
   teamMigration: (teamLedgerId: string) => `team-migrate:${teamLedgerId}`,
+  // Info: (20261015 - Luphia) 撤銷依舊規則誤發的團隊分配（遷移前的離鏈分配被重複計入）
+  teamAllocationReversal: (pointLedgerId: string) =>
+    `team-allocate-reversal:${pointLedgerId}`,
 } as const;

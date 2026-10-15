@@ -5,6 +5,7 @@ import {
   summarizePlan,
 } from "@/services/point_recovery.service";
 import type {
+  IRecoveryExistingEntryRow,
   IRecoveryOrderRow,
   IRecoveryTeamLedgerRow,
 } from "@/repositories/point_recovery.repo";
@@ -43,6 +44,7 @@ function plan(
   orders: IRecoveryOrderRow[],
   extra: {
     teamLedger?: IRecoveryTeamLedgerRow[];
+    existing?: IRecoveryExistingEntryRow[];
     users?: string[];
     campaign?: { id: string; userId: string; bonusPoints: number }[];
   } = {},
@@ -58,6 +60,7 @@ function plan(
       campaignName: "c",
     })),
     teamLedger: extra.teamLedger ?? [],
+    existingTeamAllocations: extra.existing ?? [],
   });
 }
 
@@ -221,61 +224,92 @@ describe("buildRecoveryPlan", () => {
     expect(keysOf(p).some((k) => k.includes("reg2"))).toBe(false);
   });
 
-  it("credits team allocations unless compensated, plus migrations", () => {
+  /**
+   * Info: (20261015 - Luphia) 三個時代的 ALLOCATE：
+   * 有 txHash（鑄到錢包）、有 offchain-exit 配對（08-18 起與 DB 帳本時代）要算；
+   * 兩者皆無的是遷移前的離鏈分配，剩餘部分已由 migrate-allocation 計入，**不可再算**。
+   */
+  it("credits only allocations that left the team ledger, plus migrations", () => {
+    const row = (
+      id: string,
+      entryType: string,
+      amount: number,
+      targetUserId: string | null,
+      txHash: string | null,
+      idempotencyKey: string,
+    ) => ({
+      id,
+      entryType,
+      amount: BigInt(amount),
+      targetUserId,
+      txHash,
+      idempotencyKey,
+    });
     const p = plan([], {
       users: [USER, OTHER],
       teamLedger: [
-        {
-          id: "al1",
-          entryType: "ALLOCATE",
-          amount: BigInt(40),
-          targetUserId: USER,
-          txHash: "0x1",
-          idempotencyKey: "k1",
-        },
-        {
-          id: "al2",
-          entryType: "ALLOCATE",
-          amount: BigInt(60),
-          targetUserId: USER,
-          txHash: null,
-          idempotencyKey: "k2",
-        },
-        {
-          id: "cmp",
-          entryType: "ADJUST",
-          amount: BigInt(60),
-          targetUserId: null,
-          txHash: null,
-          idempotencyKey: "allocate-failed:k2",
-        },
-        {
-          id: "al3",
-          entryType: "ALLOCATE",
-          amount: BigInt(15),
-          targetUserId: OTHER,
-          txHash: null,
-          idempotencyKey: "k3",
-        },
-        {
-          id: "mig",
-          entryType: "ADJUST",
-          amount: BigInt(-25),
-          targetUserId: USER,
-          txHash: "0x2",
-          idempotencyKey: "migrate-allocation:t:user-a",
-        },
+        row("minted", "ALLOCATE", 40, USER, "0x1", "k1"),
+        row("failed", "ALLOCATE", 60, USER, "0x9", "k2"),
+        row("cmp", "ADJUST", 60, null, null, "allocate-failed:k2"),
+        row("exited", "ALLOCATE", 15, OTHER, null, "k3"),
+        row("exit", "ADJUST", -15, OTHER, null, "allocate-offchain-exit:k3"),
+        row("premig", "ALLOCATE", 500, USER, null, "k4"),
+        row("mig", "ADJUST", -25, USER, "0x2", "migrate-allocation:t:user-a"),
       ],
     });
     const team = p.entries.filter(
       (e) => e.entryType === POINT_LEDGER_ENTRY_TYPE.TEAM_ALLOCATION,
     );
     expect(team.map((e) => `${e.idempotencyKey}=${e.amount}`)).toEqual([
-      `${POINT_LEDGER_KEY.teamAllocation("al1")}=40`,
-      `${POINT_LEDGER_KEY.teamAllocation("al3")}=15`,
+      `${POINT_LEDGER_KEY.teamAllocation("minted")}=40`,
+      `${POINT_LEDGER_KEY.teamAllocation("exited")}=15`,
       `${POINT_LEDGER_KEY.teamMigration("mig")}=25`,
     ]);
-    expect(p.anomalies.some((a) => a.includes("al3"))).toBe(true);
+  });
+
+  it("reverses team allocations credited under the first (double-counting) rule", () => {
+    const p = plan([], {
+      teamLedger: [
+        {
+          id: "premig",
+          entryType: "ALLOCATE",
+          amount: BigInt(500),
+          targetUserId: USER,
+          txHash: null,
+          idempotencyKey: "k4",
+        },
+        {
+          id: "minted",
+          entryType: "ALLOCATE",
+          amount: BigInt(40),
+          targetUserId: USER,
+          txHash: "0x1",
+          idempotencyKey: "k1",
+        },
+      ],
+      existing: [
+        {
+          id: "pl-1",
+          userId: USER,
+          amount: BigInt(500),
+          sourceRef: "premig",
+          idempotencyKey: POINT_LEDGER_KEY.teamAllocation("premig"),
+        },
+        {
+          id: "pl-2",
+          userId: USER,
+          amount: BigInt(40),
+          sourceRef: "minted",
+          idempotencyKey: POINT_LEDGER_KEY.teamAllocation("minted"),
+        },
+      ],
+    });
+    const reversals = p.entries.filter(
+      (e) => e.entryType === POINT_LEDGER_ENTRY_TYPE.ADJUST,
+    );
+    expect(reversals.map((e) => `${e.idempotencyKey}=${e.amount}`)).toEqual([
+      `${POINT_LEDGER_KEY.teamAllocationReversal("pl-1")}=-500`,
+    ]);
   });
 
   it("drops global-source entries for users outside the filter", () => {

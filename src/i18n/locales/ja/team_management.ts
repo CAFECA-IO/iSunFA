@@ -151,4 +151,52 @@ export const teamManagement = {
     allocation_failed: "操作に失敗しました。残高を確認して再試行してください。",
     invalid_amount: "正の整数を入力してください。",
   },
+  // Info: (20261015 - Luphia) チームポイント移転履歴ページ（台帳、管理者のみ）
+  ledger: {
+    entry: "ポイント履歴",
+    title: "チームポイント移転履歴",
+    description: "チームウォレットのすべての入出金を新しい順に表示します。",
+    back: "チーム管理に戻る",
+    load_failed:
+      "ポイント履歴を読み込めませんでした。しばらくしてから再度お試しください。",
+    retry: "再試行",
+    empty: "条件に一致する記録はありません。",
+    total: "全 {{total}} 件",
+    filter_label: "種類",
+    columns: {
+      time: "日時",
+      type: "種類",
+      amount: "ポイント",
+      member: "メンバー",
+      feature: "機能",
+      pool_balance: "未割当プール残高",
+    },
+    filters: {
+      ALL: "すべて",
+      PURCHASE: "購入",
+      ALLOCATE: "割当／回収",
+      CONSUME: "利用",
+      REFUND: "返還",
+    },
+    types: {
+      PURCHASE: "購入",
+      ALLOCATE: "割当",
+      REVOKE: "回収",
+      CONSUME: "利用",
+      REFUND: "返還",
+      ADJUST: "調整",
+    },
+    features: {
+      FAITH_CHAT: "Faith チャット",
+      AI_ANALYSIS: "AI 分析レポート",
+      CARBON_CHAT: "カーボンチャット",
+      LOGISTICS_CARBON: "物流カーボンフットプリント照会",
+      TEAM_DISSOLVED: "チーム解散",
+    },
+    system_adjustment: "システム調整",
+    system_adjustment_hint:
+      "台帳の整合性を保つためにシステムが自動で記帳した仕訳で、メンバーの操作ではありません。プール残高が前後でつながるよう表示しています。",
+    operated_by: "操作者：{{name}}",
+    former_member: "退出したメンバー",
+  },
 };
