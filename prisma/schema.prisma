@@ -3537,6 +3537,7 @@ model LeavePolicy {
   // Info: (20260817 - Julian) --- 工資與證明 ---
   /**
    * /**
+   * /**
    * Info: (20260817 - Julian) 給薪比例（工資照給 = 1、折半發給 = 0.5、不給工資 = 0）。
    * 本模組不算金額，此欄位供薪資模組與畫面提示使用。
    * **Nullable 且無預設值**：產假的工資取決於年資（受僱六個月以上照給、
@@ -4814,4 +4815,20 @@ enum SalaryProfileChangeAction {
   CREATE
   UPDATE
   DELETE
+}
+
+/**
+ * Info: (20261015 - Luphia) 背景 worker 的租約（同一時間只有一個 worker 在跑迴圈）。
+ * `npm start` 與 `npm run swarm` 都會一併啟動 worker；同一個資料庫上若有兩個 worker 同時跑，
+ * 任務派發（issue.service 先讀 PAID 再改 EXECUTING）會把同一張訂單派兩次、花兩次 token。
+ * 拿到租約的 worker 才執行，其餘待命；持有者以心跳延長 `expiresAt`，
+ * 心跳中斷（行程掛掉、斷電）超過 TTL 後由待命者接手。
+ */
+model WorkerLease {
+  name      String   @id
+  holderId  String   @map("holder_id")
+  expiresAt DateTime @map("expires_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("worker_lease")
 }

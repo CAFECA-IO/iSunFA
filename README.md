@@ -81,10 +81,13 @@
 
 7.  **生產環境構建與運行**
     ```bash
-    npm run build
     npm start
     # 或使用 Swarm 模式端口 (10020)
     npm run swarm
     ```
+    兩者都會先建置，再同時啟動網站與背景 worker（任務派發、分析管線、排程）。
+    同一個資料庫同時只有一個 worker 在跑，其餘待命、在持有者停止後接手，因此 `start` 與 `swarm`
+    並存也不會重複執行任務。只要網站、不要 worker 時用 `npm run start:web`；
+    只跑 worker 用 `npm run worker`。
 ## 聯繫我們
 如果您對 iSunFA 感興趣或有任何疑問，請隨時聯繫我們的[客戶支持團隊](contact@isunfa.com)。我們期待著與您一起開啟更加先進、高效的財務管理體驗，讓您的企業在人工智能時代更上一層樓。
