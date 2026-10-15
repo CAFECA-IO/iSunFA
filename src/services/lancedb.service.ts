@@ -16,13 +16,14 @@ class LanceDBService {
     return this.dbInstance;
   }
 
-  async getTable(): Promise<lancedb.Table> {
+  // Info: (20261015 - Luphia) 可指定資料表名稱（企業觀測站使用獨立的 company_observatory_chunks）
+  async getTable(tableName: string = TABLE_NAME): Promise<lancedb.Table> {
     try {
       const db = await this.connect();
       // Info: (20260612 - Julian) ⚠️不要快取 tableInstance，否則 Next.js 會永遠讀取到舊版 (MVCC 快照) 的資料庫狀態
-      return await db.openTable(TABLE_NAME);
+      return await db.openTable(tableName);
     } catch (error) {
-      console.error(`[LanceDB Service] 無法開啟資料表 ${TABLE_NAME}:`, error);
+      console.error(`[LanceDB Service] 無法開啟資料表 ${tableName}:`, error);
       throw new Error("資料庫尚未初始化，請先執行 npm run db:init");
     }
   }

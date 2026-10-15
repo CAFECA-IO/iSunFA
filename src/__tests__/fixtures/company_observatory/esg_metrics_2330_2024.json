@@ -1,0 +1,520 @@
+{
+  "count": 1,
+  "data": [
+    {
+      "companyName": "台積電",
+      "companyCode": "2330",
+      "year": 2024,
+      "treeModels": [
+        {
+          "category": 0,
+          "categoryString": "環境",
+          "items": [
+            {
+              "year": 2024,
+              "category": 0,
+              "declareItemName": "溫室氣體排放",
+              "declareItemShowName": "溫室氣體排放",
+              "sections": [
+                {
+                  "name": "直接(範疇一)溫室氣體排放量(公噸CO₂e)",
+                  "showName": "直接(範疇一)溫室氣體排放量(公噸CO₂e)",
+                  "controls": [
+                    {
+                      "title": "數據",
+                      "showTitle": "數據",
+                      "value": "1,819,396.2945",
+                      "ctrType": "number",
+                      "imageUrl": null,
+                      "code": "grossScope1GreenhouseGasEmissions",
+                      "parentId": "13205ab8-3d0a-4de0-bff5-63597b1c4260",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    },
+                    {
+                      "title": "資料邊界",
+                      "showTitle": "資料邊界",
+                      "value": "合併財務報表之母子公司",
+                      "ctrType": "checkbox",
+                      "imageUrl": null,
+                      "code": "grossScope1DataBord",
+                      "parentId": "13205ab8-3d0a-4de0-bff5-63597b1c4260",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    },
+                    {
+                      "title": "確信機構",
+                      "showTitle": "確信機構",
+                      "value": "DNV,TSMC Washington, LLC確信機構為AWM",
+                      "ctrType": "checkbox",
+                      "imageUrl": null,
+                      "code": "grossScope1VCIP",
+                      "parentId": "13205ab8-3d0a-4de0-bff5-63597b1c4260",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    },
+                    {
+                      "title": "確信標準",
+                      "showTitle": "確信標準",
+                      "value": "ISO14064-3",
+                      "ctrType": "checkbox",
+                      "imageUrl": null,
+                      "code": "grossScope1VS",
+                      "parentId": "13205ab8-3d0a-4de0-bff5-63597b1c4260",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    },
+                    {
+                      "title": "確信範圍",
+                      "showTitle": "確信範圍",
+                      "value": "母公司,台積公司母公司、台積電（中國）、台積電（南京）、TSMC Washington, LLC、采鈺公司已完成盤查，日本廠預計八月完成",
+                      "ctrType": "checkbox",
+                      "imageUrl": null,
+                      "code": "grossScope1ConfidenceScope",
+                      "parentId": "13205ab8-3d0a-4de0-bff5-63597b1c4260",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    },
+                    {
+                      "title": "確信意見",
+                      "showTitle": "確信意見",
+                      "value": "合理保證等級",
+                      "ctrType": "radio",
+                      "imageUrl": null,
+                      "code": "grossScope1ConfidenceOpinion",
+                      "parentId": "13205ab8-3d0a-4de0-bff5-63597b1c4260",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    }
+                  ],
+                  "comment": "",
+                  "isBlankSection": false
+                },
+                {
+                  "name": "能源間接(範疇二)溫室氣體排放量(公噸CO₂e)",
+                  "showName": "能源間接(範疇二)溫室氣體排放量(公噸CO₂e)",
+                  "controls": [
+                    {
+                      "title": "數據",
+                      "showTitle": "數據",
+                      "value": "10,957,397.0220",
+                      "ctrType": "number",
+                      "imageUrl": null,
+                      "code": "grossScope2GreenhouseGasEmissions",
+                      "parentId": "97599ca0-c222-4d07-a433-8183dadf07fc",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    },
+                    {
+                      "title": "資料邊界",
+                      "showTitle": "資料邊界",
+                      "value": "合併財務報表之母子公司",
+                      "ctrType": "checkbox",
+                      "imageUrl": null,
+                      "code": "grossScope2DataBord",
+                      "parentId": "97599ca0-c222-4d07-a433-8183dadf07fc",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    },
+                    {
+                      "title": "確信機構",
+                      "showTitle": "確信機構",
+                      "value": "DNV,TSMC Washington, LLC確信機構為AWM",
+                      "ctrType": "checkbox",
+                      "imageUrl": null,
+                      "code": "grossScope2VCIP",
+                      "parentId": "97599ca0-c222-4d07-a433-8183dadf07fc",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    },
+                    {
+                      "title": "確信標準",
+                      "showTitle": "確信標準",
+                      "value": "ISO14064-3",
+                      "ctrType": "checkbox",
+                      "imageUrl": null,
+                      "code": "grossScope2VS",
+                      "parentId": "97599ca0-c222-4d07-a433-8183dadf07fc",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    },
+                    {
+                      "title": "確信範圍",
+                      "showTitle": "確信範圍",
+                      "value": "母公司,台積公司母公司、台積電（中國）、台積電（南京）、TSMC Washington, LLC、采鈺公司已完成盤查，日本廠預計八月完成",
+                      "ctrType": "checkbox",
+                      "imageUrl": null,
+                      "code": "grossScope2ConfidenceScope",
+                      "parentId": "97599ca0-c222-4d07-a433-8183dadf07fc",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    },
+                    {
+                      "title": "確信意見",
+                      "showTitle": "確信意見",
+                      "value": "合理保證等級",
+                      "ctrType": "radio",
+                      "imageUrl": null,
+                      "code": "grossScope2ConfidenceOpinion",
+                      "parentId": "97599ca0-c222-4d07-a433-8183dadf07fc",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    }
+                  ],
+                  "comment": "",
+                  "isBlankSection": false
+                },
+                {
+                  "name": "其他間接(範疇三)溫室氣體排放量(公噸CO₂e)",
+                  "showName": "其他間接(範疇三)溫室氣體排放量(公噸CO₂e)",
+                  "controls": [
+                    {
+                      "title": "數據",
+                      "showTitle": "數據",
+                      "value": "8,223,172.7611",
+                      "ctrType": "number",
+                      "imageUrl": null,
+                      "code": "grossScope3GreenhouseGasEmissions",
+                      "parentId": "3080cf2c-7d23-418f-b813-4b519e23f37e",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    },
+                    {
+                      "title": "資料邊界",
+                      "showTitle": "資料邊界",
+                      "value": "母公司,台積公司母公司、台積電（中國）、台積電（南京）、TSMC Washington, LLC及采鈺公司，不含日本廠",
+                      "ctrType": "checkbox",
+                      "imageUrl": null,
+                      "code": "grossScope3DataBord",
+                      "parentId": "3080cf2c-7d23-418f-b813-4b519e23f37e",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    },
+                    {
+                      "title": "確信機構",
+                      "showTitle": "確信機構",
+                      "value": "DNV,TSMC Washington, LLC確信機構為AWM",
+                      "ctrType": "checkbox",
+                      "imageUrl": null,
+                      "code": "grossScope3VCIP",
+                      "parentId": "3080cf2c-7d23-418f-b813-4b519e23f37e",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    },
+                    {
+                      "title": "確信標準",
+                      "showTitle": "確信標準",
+                      "value": "ISO14064-3",
+                      "ctrType": "checkbox",
+                      "imageUrl": null,
+                      "code": "grossScope3VS",
+                      "parentId": "3080cf2c-7d23-418f-b813-4b519e23f37e",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    },
+                    {
+                      "title": "確信範圍",
+                      "showTitle": "確信範圍",
+                      "value": "母公司,台積公司母公司、台積電（中國）、台積電（南京）、TSMC Washington, LLC及采鈺公司，不含日本廠",
+                      "ctrType": "checkbox",
+                      "imageUrl": null,
+                      "code": "grossScope3ConfidenceScope",
+                      "parentId": "3080cf2c-7d23-418f-b813-4b519e23f37e",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    },
+                    {
+                      "title": "確信意見",
+                      "showTitle": "確信意見",
+                      "value": "有限保證等級",
+                      "ctrType": "radio",
+                      "imageUrl": null,
+                      "code": "grossScope3ConfidenceOpinion",
+                      "parentId": "3080cf2c-7d23-418f-b813-4b519e23f37e",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    }
+                  ],
+                  "comment": "",
+                  "isBlankSection": false
+                },
+                {
+                  "name": "範疇三-活動類別",
+                  "showName": "範疇三-活動類別",
+                  "controls": [
+                    {
+                      "title": "活動類別",
+                      "showTitle": "活動類別",
+                      "value": "購買之商品及勞務,與燃料及能源相關活動（未納入範疇1或範疇2）,上游運輸及配送,營運中產生之廢棄物,商務旅行,員工通勤,下游運輸及配送,下游租賃資產",
+                      "ctrType": "checkbox",
+                      "imageUrl": null,
+                      "code": "grossScope3ActivityCategory",
+                      "parentId": "3080cf2c-7d23-418f-b813-4b519e23f37e",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    }
+                  ],
+                  "comment": null,
+                  "isBlankSection": false
+                },
+                {
+                  "name": "溫室氣體排放密集度(公噸CO₂e/百萬元營業額)",
+                  "showName": "溫室氣體排放密集度(公噸CO₂e/百萬元營業額)",
+                  "controls": [
+                    {
+                      "title": "溫室氣體排放密集度(指定申報單位)(公噸CO₂e/百萬元營業額)",
+                      "showTitle": "溫室氣體排放密集度(指定申報單位)(公噸CO₂e/百萬元營業額)",
+                      "value": "4.2698",
+                      "ctrType": "number",
+                      "imageUrl": null,
+                      "code": "emissionIntensityDesignation",
+                      "parentId": "98b6f328-6a66-454f-9321-ac7e7ff72c84",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    },
+                    {
+                      "title": "資料邊界",
+                      "showTitle": "資料邊界",
+                      "value": "範疇一+二",
+                      "ctrType": "radio",
+                      "imageUrl": null,
+                      "code": "greenhouseGasEmissionsIntensityDataBord",
+                      "parentId": "98b6f328-6a66-454f-9321-ac7e7ff72c84",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    }
+                  ],
+                  "comment": "如：以每單位產品、服務或營業額計算",
+                  "isBlankSection": false
+                },
+                {
+                  "name": "溫室氣體減量基準年及其數據、減量目標",
+                  "showName": "溫室氣體減量基準年及其數據、減量目標",
+                  "controls": [
+                    {
+                      "title": "溫室氣體減量基準年及其數據、減量目標",
+                      "showTitle": "溫室氣體減量基準年及其數據、減量目標",
+                      "value": "1. (範疇一+二) 以民國109年為基準年，民國119年單位產品溫室氣體排放量（公噸-二氧化碳當量／十二吋晶圓當量-光罩數）減少30%，且總排放量回到民國109年水準，民國139年淨零排放。\n2. (範疇二) 民國119年再生能源占比達60%，民國129年再生能源占比達100%。",
+                      "ctrType": "textarea",
+                      "imageUrl": null,
+                      "code": null,
+                      "parentId": "5dce96d5-ffea-4ba5-acca-2242349fcfbb",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    }
+                  ],
+                  "comment": "如：以每單位產品、服務或營業額計算",
+                  "isBlankSection": false
+                },
+                {
+                  "name": "溫室氣體減量策略及具體行動計畫",
+                  "showName": "溫室氣體減量策略及具體行動計畫",
+                  "controls": [
+                    {
+                      "title": "溫室氣體減量策略及具體行動計畫",
+                      "showTitle": "溫室氣體減量策略及具體行動計畫",
+                      "value": "1. 強化氣候韌性：擬訂氣候變遷應變與預防措施，降低氣候風險影響。\n2. 推動低碳製造：持續採用最佳技術減少溫室氣體排放，成為產業低碳製造標竿。\n3. 使用再生能源：持續使用再生能源及設置太陽能發電系統，達成100%使用再生能源。\n4. 提升能源使用效率：持續導入節能措施，積極落實節能行動，提高能源使用效率。",
+                      "ctrType": "textarea",
+                      "imageUrl": null,
+                      "code": null,
+                      "parentId": "5dce96d5-ffea-4ba5-acca-2242349fcfbb",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    }
+                  ],
+                  "comment": "如：以每單位產品、服務或營業額計算",
+                  "isBlankSection": false
+                },
+                {
+                  "name": "溫室氣體減量目標達成情形",
+                  "showName": "溫室氣體減量目標達成情形",
+                  "controls": [
+                    {
+                      "title": "溫室氣體減量目標達成情形",
+                      "showTitle": "溫室氣體減量目標達成情形",
+                      "value": "1. (範疇一+二) 民國113年單位產品溫室氣體排放量（公噸-二氧化碳當量／十二吋晶圓當量-光罩數）較民國109年增加19%。\n2. (範疇二) 民國113年再生能源占比達14.1%。",
+                      "ctrType": "textarea",
+                      "imageUrl": null,
+                      "code": null,
+                      "parentId": "5dce96d5-ffea-4ba5-acca-2242349fcfbb",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    }
+                  ],
+                  "comment": "如：以每單位產品、服務或營業額計算",
+                  "isBlankSection": false
+                }
+              ],
+              "companyCode": null
+            },
+            {
+              "year": 2024,
+              "category": 0,
+              "declareItemName": "氣候相關議題管理",
+              "declareItemShowName": "氣候相關議題管理",
+              "sections": [
+                {
+                  "name": "董事會與管理階層對於氣候相關風險與機會之監督及治理",
+                  "showName": "董事會與管理階層對於氣候相關風險與機會之監督及治理",
+                  "controls": [
+                    {
+                      "title": "董事會與管理階層對於氣候相關風險與機會之監督及治理",
+                      "showTitle": "董事會與管理階層對於氣候相關風險與機會之監督及治理",
+                      "value": "1. ESG指導委員會：台積公司氣候變遷管理的最高組織，由董事長擔任主席，ESG委員會主席出任執行秘書，每季審議台積公司氣候變遷策略與目標，並且向董事會報告。\n2. 節能減碳委員會：台積公司執行及管理氣候變遷風險與機會行動的組織，由營運組織的副總經理擔任主席，每季擬定管理方案、檢視執行狀況與討論未來計劃。",
+                      "ctrType": "textarea",
+                      "imageUrl": null,
+                      "code": "climateRelatedOversightGovernance",
+                      "parentId": "0e2c1a5d-cd4f-4e4e-83d4-e830b686193b",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    }
+                  ],
+                  "comment": "",
+                  "isBlankSection": true
+                },
+                {
+                  "name": "辨識之氣候風險與機會如何影響企業之業務、策略及財務(短期、中期、長期)",
+                  "showName": "辨識之氣候風險與機會如何影響企業之業務、策略及財務(短期、中期、長期)",
+                  "controls": [
+                    {
+                      "title": "辨識之氣候風險與機會如何影響企業之業務、策略及財務(短期、中期、長期)",
+                      "showTitle": "辨識之氣候風險與機會如何影響企業之業務、策略及財務(短期、中期、長期)",
+                      "value": "台積公司依據TCFD架構，每二年由ESG委員會成員代表評估相關衝擊及因應措施，鑑別潛在風險與機會。相關內容，請詳見台積公司113年度年報第150頁「氣候變遷風險與機會財務影響分析與因應」表。",
+                      "ctrType": "textarea",
+                      "imageUrl": null,
+                      "code": "climateRelatedBusiness",
+                      "parentId": "52b3254e-c59c-4513-9dfe-8524ad49dc70",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    }
+                  ],
+                  "comment": "",
+                  "isBlankSection": true
+                },
+                {
+                  "name": "極端氣候事件及轉型行動對財務之影響",
+                  "showName": "極端氣候事件及轉型行動對財務之影響",
+                  "controls": [
+                    {
+                      "title": "極端氣候事件及轉型行動對財務之影響",
+                      "showTitle": "極端氣候事件及轉型行動對財務之影響",
+                      "value": "台積公司針對轉型與實體風險與機會進行財務衝擊評估，做為擬定減緩風險及擴大機會的策略參考。相關內容，請詳見台積公司113度年報第150頁「氣候變遷風險與機會財務影響分析與因應」表。",
+                      "ctrType": "textarea",
+                      "imageUrl": null,
+                      "code": "climateRelatedExtreme",
+                      "parentId": "ec6934be-df3e-4040-8c32-d8e067c8ffae",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    }
+                  ],
+                  "comment": "",
+                  "isBlankSection": true
+                },
+                {
+                  "name": "氣候風險之辨識、評估及管理流程如何整合於整體風險管理制度",
+                  "showName": "氣候風險之辨識、評估及管理流程如何整合於整體風險管理制度",
+                  "controls": [
+                    {
+                      "title": "氣候風險之辨識、評估及管理流程如何整合於整體風險管理制度",
+                      "showTitle": "氣候風險之辨識、評估及管理流程如何整合於整體風險管理制度",
+                      "value": "為實踐台積公司ESG願景並創造自身及利害關係人的長期永續價值，台積公司採取風險與商業酬報平衡的管理策略，鑑別並管理執行公司業務策略時面臨的氣候相關風險及機會。相關內容，請詳見台積公司113年度年報第150頁「氣候變遷風險與機會財務影響分析與因應」表。",
+                      "ctrType": "textarea",
+                      "imageUrl": null,
+                      "code": "climateRelatedManagementSystem",
+                      "parentId": "e492d190-842e-453c-9730-3c9dca356312",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    }
+                  ],
+                  "comment": "",
+                  "isBlankSection": true
+                },
+                {
+                  "name": "若使用情境分析評估面對氣候變遷風險之韌性，應說明所使用之情境、參數、假設、分析因子及主要財務影響。",
+                  "showName": "若使用情境分析評估面對氣候變遷風險之韌性，應說明所使用之情境、參數、假設、分析因子及主要財務影響。",
+                  "controls": [
+                    {
+                      "title": "請說明",
+                      "showTitle": "請說明",
+                      "value": "台積公司參考IPCC AR6 SSP 5-8.5極高排放情境進行實體風險分析，並全面檢視各廠區及供應鏈短中長期的潛在風險，除既有的淹水、乾旱、高溫風險，亦增加評估颱風帶來的強風災害、暴雨帶來的土石流與滑坡災害以及海平面上升等風險，同時分析範圍擴大至全球廠區及直接原物料、間接原物料、設備、廠務設施、零配件等五大類關鍵供應鏈。分析結果，乾旱為最顯著的實體風險，主要造成自身生產受缺水影響，導致財務損失與營收下降。",
+                      "ctrType": "textarea",
+                      "imageUrl": null,
+                      "code": "climateRelatedAnalyzeFactorsExplain",
+                      "parentId": "48e66ec0-fbef-4725-a544-690130a230a1",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    }
+                  ],
+                  "comment": "選擇是要說明內容",
+                  "isBlankSection": false
+                },
+                {
+                  "name": "若有因應管理氣候相關風險之轉型計畫，說明該計畫內容，及用於辨識及管理實體風險及轉型風險之指標與目標。",
+                  "showName": "若有因應管理氣候相關風險之轉型計畫，說明該計畫內容，及用於辨識及管理實體風險及轉型風險之指標與目標。",
+                  "controls": [
+                    {
+                      "title": "請說明",
+                      "showTitle": "請說明",
+                      "value": "台積公司依2050淨零轉型計劃路徑積極執行溫室氣體減量作為，以達成民國129年RE100與民國139年淨零排放。過程中持續導入最佳節能減碳技術降碳排，並持續擴大再生能源使用直到RE100，最終擬使用部分碳抵換達到淨零轉型目標。",
+                      "ctrType": "textarea",
+                      "imageUrl": null,
+                      "code": "climateRelatedPlanContentExplain",
+                      "parentId": "c113fc64-d04b-45f8-9500-0e0002267229",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    }
+                  ],
+                  "comment": "選擇是要說明內容",
+                  "isBlankSection": false
+                },
+                {
+                  "name": "若使用內部碳定價作為規劃工具，應說明價格制定基礎。",
+                  "showName": "若使用內部碳定價作為規劃工具，應說明價格制定基礎。",
+                  "controls": [
+                    {
+                      "title": "請說明",
+                      "showTitle": "請說明",
+                      "value": "內部碳定價考量碳稅（費）、法規罰鍰、減碳與綠電成本、碳市場價格。",
+                      "ctrType": "textarea",
+                      "imageUrl": null,
+                      "code": "climateRelatedPriceSettingExplain",
+                      "parentId": "659acc49-9e23-4a0b-bb65-f79628b28693",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    }
+                  ],
+                  "comment": "選擇是要說明內容",
+                  "isBlankSection": false
+                },
+                {
+                  "name": "若有設定氣候相關目標，應說明所涵蓋之活動、溫室氣體排放範疇、規劃期程，每年達成進度等資訊；若使用碳抵換或再生能源憑證(RECs)以達成相關目標，應說明所抵換之減碳額度來源及數量或再生能源憑證(RECs)數量。",
+                  "showName": "若有設定氣候相關目標，應說明所涵蓋之活動、溫室氣體排放範疇、規劃期程，每年達成進度等資訊；若使用碳抵換或再生能源憑證(RECs)以達成相關目標，應說明所抵換之減碳額度來源及數量或再生能源憑證(RECs)數量。",
+                  "controls": [
+                    {
+                      "title": "請說明",
+                      "showTitle": "請說明",
+                      "value": "目標1. 民國119年單位產品溫室氣體排放量（公噸-二氧化碳當量／十二吋晶圓當量-光罩數）減少30%，且總排放量回到民國109年水準，民國139年淨零排放。\n目標2. 民國119年再生能源占比達60%，民國129年再生能源占比達100%。\n達成進度1. 民國113年單位產品溫室氣體排放量（公噸-二氧化碳當量／十二吋晶圓當量-光罩數）增加19%。\n達成進度2. 民國113年再生能源占比達14.1%。",
+                      "ctrType": "textarea",
+                      "imageUrl": null,
+                      "code": "climateRelatedActivityExplain",
+                      "parentId": "dcd54c37-0c24-4881-944a-a7999b6e0ae2",
+                      "isNoChecking": false,
+                      "sasbCode": null
+                    }
+                  ],
+                  "comment": "選擇是要說明內容",
+                  "isBlankSection": false
+                }
+              ],
+              "companyCode": null
+            }
+          ]
+        }
+      ],
+      "files": []
+    }
+  ],
+  "code": 200,
+  "success": true,
+  "message": "執行成功"
+}

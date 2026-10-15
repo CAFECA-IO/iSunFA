@@ -948,6 +948,16 @@ export const API_ERRORS = {
     message: "PDF rendering environment has no CJK font installed",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+  /**
+   * Info: (20261015 - Luphia) 企業觀測站的向量檢索不可用：本機 Ollama 沒開、或 LanceDB 的
+   * `company_observatory_chunks` 尚未初始化。處置是維運啟動服務或跑 `npm run initial_lance_db`，
+   * 與一般的資料庫錯誤分開。
+   */
+  IS_OBSERVATORY_INDEX_UNAVAILABLE: {
+    code: "IS000023",
+    message: "Company observatory vector index is unavailable",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",
     message: "Internal Server Error",
