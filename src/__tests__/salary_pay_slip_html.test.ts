@@ -64,6 +64,7 @@ const makeResult = (
 const DEFAULT_META: IPaySlipMeta = {
   // Info: (20260909 - Julian) 2026-08-10 UTC 午夜；到職日一律以 UTC 落地
   hireDate: Math.floor(Date.UTC(2026, 7, 10) / 1000),
+  entityName: null,
   isLaborInsured: true,
   isHealthInsured: true,
   isPensionInsured: true,

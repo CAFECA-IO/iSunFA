@@ -108,6 +108,28 @@ describe("角色 → 狀態（fail closed）", () => {
   });
 });
 
+/**
+ * Info: (20260915 - Julian) 取出 `allowed` 那一支的內容，不比對它長什麼樣子。
+ *
+ * 原本這一條是逐字比對 `return <>{children}</>;`。20260915 那一支改成
+ * 用 `SalaryAccessProvider` 包住 children（把角色交給底下的頁面，review S1），
+ * 於是這條測試紅了 —— **而它守的那件事一個字都沒變**。
+ *
+ * 那是一次假紅：它指向一個沒有壞掉的地方，而修它最快的方式是把新的字串
+ * 貼進斷言，下一次改包裝再紅一次（`salary_schema_defaults.test.ts`
+ * 20260908 那次的空白對齊是同一種）。
+ *
+ * 所以改成「切出那一支、問 children 在不在裡面」。要守的不變式是
+ * **位置**（children 只在 allowed 那一支），不是那一支的寫法。
+ */
+const allowedBranch = (() => {
+  const marker = 'if (status.state === "allowed") {';
+  const start = gate.indexOf(marker);
+  if (start < 0) return "";
+  const end = gate.indexOf("\n  }", start);
+  return end < 0 ? gate.slice(start) : gate.slice(start, end);
+})();
+
 describe("只有 allowed 才 render 內容", () => {
   /**
    * Info: (20260908 - Julian) 這一條是整支測試的重點。
@@ -116,12 +138,15 @@ describe("只有 allowed 才 render 內容", () => {
    * 或把 `children` 放在最外層再疊一個覆蓋層上去。那種寫法在 OWNER 身上
    * 完全正常，只有 `VIEWER` 會踩到，而 `VIEWER` 通常不是開發的人。
    *
-   * 所以掃的是「`children` 只出現在 allowed 那一支裡」。
+   * 所以掃的是「`children` 只出現在 allowed 那一支裡」：
+   *
+   * - **在那一支裡** —— 搬到最外層的話，切出來的那一段就不含它。
+   * - **只有一處** —— 兩處代表有一條旁路，而旁路多半是為了某個
+   *   「先讓它顯示出來」的除錯改動留下的。
    */
   it("children 只出現在 state === allowed 的分支", () => {
-    expect(gate).toMatch(
-      /if \(status\.state === "allowed"\) \{\s*return <>\{children\}<\/>;\s*\}/,
-    );
+    expect(allowedBranch).not.toBe("");
+    expect(allowedBranch).toContain("{children}");
     expect(gate.match(/\{children\}/g)).toHaveLength(1);
   });
 

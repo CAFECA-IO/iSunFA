@@ -15,6 +15,8 @@ export const salaryCalculatorApiOf = (accountBookId: string) =>
     RECORD: `${salaryCalculatorApiBase(accountBookId)}/record`,
     // Info: (20260904 - Julian) 「已寄出」分頁：整本帳的薪資單寄送歷史
     DELIVERY: `${salaryCalculatorApiBase(accountBookId)}/delivery`,
+    // Info: (20260914 - Julian) 帳本的公司設定（GET 讀 / PUT 整份覆寫）
+    COMPANY_PROFILE: `${salaryCalculatorApiBase(accountBookId)}/company_profile`,
   }) as const;
 
 export const salaryEmployeeItemApi = (

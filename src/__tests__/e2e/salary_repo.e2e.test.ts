@@ -118,6 +118,8 @@ const saveRecord = (params: {
     totalPayment: params.totalPayment,
     totalSalaryTaxable: 36000n,
     totalEmployerCost: 42000n,
+    // Info: (20260914 - Julian) 抬頭快照；測試不驗它，給 null 表示「當時沒設定」
+    entityName: null,
   });
 
 beforeAll(async () => {
@@ -712,6 +714,8 @@ describe("薪資紀錄：租戶過濾、覆寫與分頁", () => {
       totalPayment: 41000n,
       totalSalaryTaxable: 36000n,
       totalEmployerCost: 42000n,
+      // Info: (20260914 - Julian) 抬頭快照；測試不驗它，給 null 表示「當時沒設定」
+      entityName: null,
     });
 
     const raw = await prisma.salaryRecord.findUniqueOrThrow({

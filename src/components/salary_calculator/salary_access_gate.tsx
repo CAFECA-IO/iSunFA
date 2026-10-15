@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Loader2, ShieldOff } from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { useSalaryAccess } from "@/hooks/use_salary_access";
+import { SalaryAccessProvider } from "@/contexts/salary_access_context";
 import { ISUNFA_ROUTE } from "@/constants/url";
 
 interface ISalaryAccessGateProps {
@@ -53,7 +54,16 @@ const SalaryAccessGate: FC<ISalaryAccessGateProps> = ({
   const status = useSalaryAccess(accountBookId);
 
   if (status.state === "allowed") {
-    return <>{children}</>;
+    /**
+     * Info: (20260915 - Julian) 順便把角色交給底下的頁面（review S1）。
+     *
+     * 這一層已經問到角色了。不交出來的話，需要更細層級的頁面
+     * （公司設定的寫是 `SETTINGS_WRITE`，只有 `OWNER`）只能自己再問一次 ——
+     * 而那正是這個閘掛在 layout 上要避免的「問四次」。
+     */
+    return (
+      <SalaryAccessProvider role={status.role}>{children}</SalaryAccessProvider>
+    );
   }
 
   if (status.state === "loading") {

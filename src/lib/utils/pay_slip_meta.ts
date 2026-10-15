@@ -40,23 +40,48 @@
  * 它是調薪歷程裡預設顯示的欄位之一
  * （`SALARY_PROFILE_FIELD_VISIBILITY.hireDate === true`），不會沒有痕跡。
  *
- * 三個呼叫端各自的來源由 `salary_pay_slip_meta.test.ts` 釘住 ——
- * 把任一端「統一」掉會有測試轉紅，而紅的訊息會指回這一段。
+ * 各欄位的來源由 `salary_pay_slip_meta.test.ts` 釘住 ——
+ * 把任一個「統一」掉會有測試轉紅，而紅的訊息會指回這一段。
  *
- * ToDo: (20260909 - Julian) **雇主名稱尚未加入。**
+ * Info: (20260914 - Julian) **第三種來源：公司抬頭是「期間」事實。**
  *
- * 勞基法施行細則 §14-1 的工資明細六項必載是：雇主名稱、勞工姓名、
- * 工資給付期間、工資各項目給付金額、依法扣除項目金額、實際發給金額。
- * 目前薪資單上有後五項，**缺的是第一項**。
+ * | 欄位 | 來源 | 為什麼 |
+ * | --- | --- | --- |
+ * | 投保狀態 | 這筆紀錄的 `input` 快照 | **月別**事實：八月有保、九月退保是正常的 |
+ * | 到職日 | 員工檔**現值** | **人**的事實，只有一個正確答案 |
+ * | 公司抬頭 | 這筆紀錄的快照，取不到才用現值 | **期間**事實（見 `resolveEntityName`） |
  *
- * 沒有一起做的原因是取不到：這一層拿不到「雇主名稱」該用哪一個值 ——
- * 帳本名稱不一定等於公司登記名稱，而工資明細上要的是後者。
- * 待確認資料來源（帳本是否另有公司抬頭欄位）後補上，
- * 補的位置就是本檔的 `IPaySlipMeta` 與兩個消費端的表頭。
+ * 抬頭與投保狀態同一類（都讀快照），但多了一層回退 ——
+ * 因為它的快照欄位是 20260914 才有的，舊紀錄一律沒有。
  *
- * 註：到職日與投保狀態**不在**那六項裡，它們是客戶自己的需求
- * （勞檢實務上會問，但不是明細的法定必載）。也就是說：
- * 這次補的兩格是加分，缺的那一格才是必要條件。
+ * Info: (20260914 - Julian) 這裡原本掛著一則「雇主名稱尚未加入」的 ToDo，
+ * 說它是施行細則 §14-1 六項必載的第一項。**核對條文之後那句話是錯的，已刪除。**
+ *
+ * §14-1 實際上是**四款，全部是金額**：
+ *
+ * > 本法第二十三條所定工資各項目計算方式明細，應包括下列事項：
+ * > 一、勞雇雙方議定之工資總額。
+ * > 二、工資各項目之給付金額。
+ * > 三、依法令規定或勞雇雙方約定，得扣除項目之金額。
+ * > 四、實際發給之金額。
+ *
+ * 雇主名稱、勞工姓名、工資給付期間**都不在裡面**；而薪資單四款都有
+ * （工資總額＝`totalMonthlySalary`，實際發給＝`totalPayment`）。
+ *
+ * 工資清冊那一邊也查了：本法 §23 II 是「發放工資、工資各項目計算方式明細、
+ * 工資總額等事項」，同樣全是金額，同樣沒有要求雇主名稱。
+ *
+ * **所以薪資單在 §14-1 上沒有缺口，#6795 以案由不成立關閉。**
+ * 那則錯誤的敘述另外還有兩份（`salary_record_module_plan.md`、
+ * `salary_pay_slip_delivery_plan.md`），20260914 一併刪除 ——
+ * 三份互相一致，所以彼此看起來像佐證，而它們是同一段文字複製三次。
+ *
+ * 留這一段而不是直接刪乾淨，是因為它已經生出過一輪工作
+ * （`salary_company_profile_plan.md` 就是它的產物）。沒有這段說明，
+ * 下一個人查 §14-1 只會看到「我們沒印雇主名稱」，然後再做一次。
+ *
+ * 到職日與投保狀態同樣不是法定必載 —— 它們是客戶自己的需求
+ * （勞檢實務上會問）。這句話原本就對，只是接在錯的前提後面。
  */
 
 /**
@@ -77,10 +102,48 @@ export type PaySlipInsuredField = (typeof PAY_SLIP_INSURED_FIELDS)[number];
 export interface IPaySlipMeta {
   /** Info: (20260909 - Julian) 到職日，Unix 秒；`null` = 員工檔上沒填 */
   hireDate: number | null;
+  /**
+   * Info: (20260914 - Julian) 公司抬頭，**已經解析過的**（見 `resolveEntityName`）。
+   *
+   * `null` = 這筆紀錄沒有快照、而公司設定也還沒填。那時候整行不印 ——
+   * 印一個「—」會看起來像那就是答案，而缺了抬頭該看得出來缺了東西。
+   */
+  entityName: string | null;
   isLaborInsured: boolean;
   isHealthInsured: boolean;
   isPensionInsured: boolean;
 }
+
+/**
+ * Info: (20260914 - Julian) 抬頭的解析規則：**快照優先，取不到才用現值**。
+ *
+ * 規則只有一行，值錢的是為什麼：
+ *
+ * ## 為什麼快照優先
+ *
+ * 公司在 2027 年改名，2026 年 8 月那張薪資單重印出來該印**當時的名字** ——
+ * 同一份明細上四個金額都是 8 月的，抬頭卻是今天的，讀起來自相矛盾。
+ *
+ * ## 為什麼取不到時回退現值，而不是留白
+ *
+ * `entityNameSnapshot` 是 20260914 才有的欄位，在那之前存的紀錄一律是
+ * `null` —— 那不是「漏填」，是**當時系統根本不知道公司抬頭**，
+ * 而那個事實沒有任何回填腳本補得出來。
+ *
+ * 現值是唯一拿得到的答案。它可能與當時不同（公司改過名），
+ * 但「今天這家公司的名字」仍然比一片空白接近事實。
+ *
+ * ## 為什麼不在這裡補一個「（現值）」之類的標記
+ *
+ * 想過。但薪資單是要交給員工與勞檢看的文件，不是除錯畫面 ——
+ * 在抬頭旁邊加一個括號註記會讓收到的人以為那份文件有問題。
+ * 「這一筆是回退來的」屬於系統的知識，它的去處是這段註解與測試，
+ * 不是列印出來的那張紙。
+ */
+export const resolveEntityName = (
+  snapshot: string | null,
+  current: string | null,
+): string | null => snapshot ?? current;
 
 /**
  * Info: (20260909 - Julian) 引擎輸入裡與投保有關的那三格。
@@ -106,8 +169,10 @@ export interface IPaySlipInsuredInput {
 export const paySlipMetaOf = (
   hireDate: number | null,
   input: IPaySlipInsuredInput,
+  entityName: string | null,
 ): IPaySlipMeta => ({
   hireDate,
+  entityName,
   isLaborInsured: input.isLaborInsuranceEnrolled === true,
   isHealthInsured: input.isHealthInsuranceEnrolled === true,
   isPensionInsured: input.isPensionInsuranceEnrolled === true,

@@ -3,7 +3,13 @@
 import { FC, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, HelpCircle, Users, Wallet } from "lucide-react";
+import {
+  FileText,
+  HelpCircle,
+  Users,
+  Wallet,
+  BuildingComplex,
+} from "lucide-react";
 import { useTranslation } from "@/i18n/i18n_context";
 import { salaryCalculatorUrlOf } from "@/constants/url";
 import MechanismModal from "@/components/salary_calculator/mechanism_modal";
@@ -64,6 +70,18 @@ const AccountBookCalculatorNav: FC<IAccountBookCalculatorNavProps> = ({
         <Link href={urls.EMPLOYEE_LIST} className={styleOf(urls.EMPLOYEE_LIST)}>
           <Users size={16} />
           {t("calculator.employee_list.main_title")}
+        </Link>
+        {/**
+         * Info: (20260914 - Julian) 設定放最後：它不是日常動線的一站，
+         * 而是「設一次就不太會再動」的東西。夾在計算機與薪資紀錄之間，
+         * 每天要用的兩頁反而被它隔開。
+         */}
+        <Link
+          href={urls.COMPANY_SETTING}
+          className={styleOf(urls.COMPANY_SETTING)}
+        >
+          <BuildingComplex size={16} />
+          {t("calculator.company_setting.main_title")}
         </Link>
 
         {/* Info: (20260831 - Julian) 計算說明：帳本版原本沒有入口，這裡補回來 */}

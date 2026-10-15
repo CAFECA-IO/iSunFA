@@ -31,10 +31,16 @@ import {
 } from "@/lib/utils/salary_employee_profile";
 import { ISalaryRecordRepository } from "@/repositories/salary_record.repo";
 import {
+  IAccountBookCompanyProfileReader,
   IAccountBookCreatedAtReader,
   SalaryRecordService,
 } from "@/services/salary_record.service";
+import {
+  IAccountBookCompanyProfile,
+  IAccountBookCompanyProfileView,
+} from "@/interfaces/salary_company_profile";
 import { SALARY_EXPORT_MAX_RECORDS } from "@/constants/salary_export";
+import { PAY_SLIP_CSV_IDENTITY_LABELS } from "@/constants/pay_slip_labels";
 
 /**
  * Info: (20260831 - Julian) 薪資紀錄 service 的編排。
@@ -271,6 +277,7 @@ class FakeRecordRepo implements ISalaryRecordRepository {
     totalPayment: bigint;
     totalSalaryTaxable: bigint;
     totalEmployerCost: bigint;
+    entityName: string | null;
   }) {
     this.upsertCalls += 1;
     const key = `${params.accountBookId}|${params.employeeId}|${params.year}|${params.month}`;
@@ -278,6 +285,8 @@ class FakeRecordRepo implements ISalaryRecordRepository {
       id: key,
       year: params.year,
       month: params.month,
+      // Info: (20260914 - Julian) 原樣帶回，好讓測試驗得到 service 傳了什麼
+      entityNameSnapshot: params.entityName,
       employee: {
         id: params.employeeId,
         name: "王小明",
@@ -376,15 +385,56 @@ class FakeAccountBookRepo implements IAccountBookCreatedAtReader {
   }
 }
 
+/**
+ * Info: (20260915 - Julian) 假的公司設定讀取器（review B2）。
+ *
+ * **依帳本分開放**，理由同 `FakeRecordRepo.coveredByBook`：
+ * service 若忘了把 `accountBookId` 傳下去，這裡會拿到 `undefined`
+ * 而回「還沒設定」—— 於是「抬頭有沒有定格」那幾條會紅，
+ * 而不是安靜地拿到別本帳的抬頭。
+ *
+ * 回的是 `IAccountBookCompanyProfileView`（帶 `isConfigured`）而不是
+ * 只回字串：`isConfigured` 是 service 判斷的依據，替身簡化掉它的話，
+ * 「還沒設定時傳 null」那一條測到的就不是真的那條路（檢查清單 §1.8）。
+ */
+const EMPTY_PROFILE: IAccountBookCompanyProfile = {
+  entityName: "",
+  taxId: null,
+  responsiblePerson: null,
+  address: null,
+  leaveYearScheme: null,
+  leaveYearStartMonth: null,
+  leaveYearStartDay: null,
+};
+
+class FakeCompanyProfileReader implements IAccountBookCompanyProfileReader {
+  public readonly profileByBook = new Map<string, IAccountBookCompanyProfile>();
+
+  public readonly getCalls: string[] = [];
+
+  public async getProfile(
+    accountBookId: string,
+  ): Promise<IAccountBookCompanyProfileView> {
+    this.getCalls.push(accountBookId);
+    const found = this.profileByBook.get(accountBookId);
+
+    return found === undefined
+      ? { ...EMPTY_PROFILE, isConfigured: false }
+      : { ...found, isConfigured: true };
+  }
+}
+
 let employees: FakeEmployeeRepo;
 let records: FakeRecordRepo;
 let accountBooks: FakeAccountBookRepo;
+let companyProfiles: FakeCompanyProfileReader;
 let service: SalaryRecordService;
 
 beforeEach(() => {
   employees = new FakeEmployeeRepo();
   records = new FakeRecordRepo();
   accountBooks = new FakeAccountBookRepo();
+  companyProfiles = new FakeCompanyProfileReader();
   /**
    * Info: (20260907 - Julian) 預設一本 2020 年就建立的帳。
    *
@@ -394,7 +444,19 @@ beforeEach(() => {
    */
   accountBooks.createdAtByBook.set(BOOK, new Date("2020-01-01T00:00:00.000Z"));
   employees.seed(BOOK, employeeOf());
-  service = new SalaryRecordService(employees, records, accountBooks);
+  /**
+   * Info: (20260915 - Julian) 第四個參數不能省（review B2）。
+   *
+   * 省掉的話會落到預設值 —— 也就是**真的** service，它會去打真的資料庫。
+   * 在開發機上那通常會通（本機 DB 開著、回 null），在 CI 上會爆，
+   * 而爆的地方是一支與資料庫無關的單元測試。
+   */
+  service = new SalaryRecordService(
+    employees,
+    records,
+    accountBooks,
+    companyProfiles,
+  );
 });
 
 /**
@@ -605,6 +667,131 @@ describe("匯出的筆數上限", () => {
     });
 
     expect(result.requested).toBe(1);
+  });
+});
+
+/**
+ * Info: (20260915 - Julian) P2／P3 的**接線**（review B2）。
+ *
+ * 上面那些測的是零件：`resolveEntityName` 的回退規則、
+ * `buildSalaryRecordCsv` 的表頭、`salaryRegisterFilename` 的組法。
+ * 零件全綠而**接線斷掉**時，兩個功能會整個消失而沒有任何測試會叫
+ * （檢查清單 §1.7：這支測試有沒有匯入使用者實際走的那條路）。
+ *
+ * 兩條接線的失敗都**在發生的當下看不出來**：
+ *
+ * - 抬頭沒有定格 → 今天印出來是對的（讀取端回退到現值）。
+ *   要等到公司改名那一天，**所有**歷史薪資單的抬頭一起變成新名字 ——
+ *   而快照這一整格存在的理由就是防這件事。
+ * - 清冊沒有表頭 → 檔案照樣下載、照樣打得開，只是沒有署名。
+ *   `CompanyProfileHint` 防的是「使用者沒設定」，防不了接線斷掉。
+ */
+describe("公司抬頭的接線", () => {
+  const COMPANY: IAccountBookCompanyProfile = {
+    ...EMPTY_PROFILE,
+    entityName: "小花有限公司",
+    taxId: "12345678",
+  };
+
+  // Info: (20260915 - Julian) 假 repo 的主鍵組法（見 FakeRecordRepo.upsertRecord）
+  const recordIdOf = (year: number, month: number): string =>
+    `${BOOK}|${EMPLOYEE_ID}|${year}|${month}`;
+
+  /**
+   * Info: (20260915 - Julian) **兩條成對，缺一不可。**
+   *
+   * 只驗「有設定時傳得到」的話，「一律傳現值、不看 isConfigured」會過；
+   * 只驗「沒設定時傳 null」的話，「一律傳 null」（也就是接線整段拿掉）會過
+   *——而後者正是這一組要抓的那個突變。
+   */
+  it("儲存薪資紀錄時，公司設定的現值會被定格成快照", async () => {
+    companyProfiles.profileByBook.set(BOOK, COMPANY);
+
+    await service.saveRecord({
+      accountBookId: BOOK,
+      userId: USER,
+      input: writeInputOf(),
+    });
+
+    expect([...records.rows.values()][0].entityNameSnapshot).toBe(
+      "小花有限公司",
+    );
+  });
+
+  it("還沒設定過公司時快照是 null，而且不擋儲存", async () => {
+    await service.saveRecord({
+      accountBookId: BOOK,
+      userId: USER,
+      input: writeInputOf(),
+    });
+
+    expect(records.rows.size).toBe(1);
+    expect([...records.rows.values()][0].entityNameSnapshot).toBeNull();
+  });
+
+  /**
+   * Info: (20260915 - Julian) 讀的是**路徑上那一本帳**的設定。
+   *
+   * 傳錯帳本的症狀是「抬頭定格成別人家公司的名字」，而那會印在
+   * 薪資單與工資清冊上 —— 對外憑據上寫著另一家公司。
+   */
+  it("讀的是這一本帳的公司設定", async () => {
+    companyProfiles.profileByBook.set(OTHER_BOOK, COMPANY);
+
+    await service.saveRecord({
+      accountBookId: BOOK,
+      userId: USER,
+      input: writeInputOf(),
+    });
+
+    expect(companyProfiles.getCalls).toEqual([BOOK]);
+    expect([...records.rows.values()][0].entityNameSnapshot).toBeNull();
+  });
+
+  /**
+   * Info: (20260915 - Julian) 匯出的兩條也成對。
+   *
+   * 只驗「有設定時印得出來」的話，`buildSalaryRecordCsv(records)`
+   * 少傳第二個參數（預設 `null`）會被下面那條抓到；
+   * 只驗「沒設定時沒有表頭」的話，接線整段拿掉會過。
+   */
+  it("匯出工資清冊時，表頭與檔名都帶公司名", async () => {
+    companyProfiles.profileByBook.set(BOOK, COMPANY);
+    await service.saveRecord({
+      accountBookId: BOOK,
+      userId: USER,
+      input: writeInputOf({ year: 2026, month: 8 }),
+    });
+
+    const result = await service.exportRecordsCsv({
+      accountBookId: BOOK,
+      recordIds: [recordIdOf(2026, 8)],
+    });
+
+    expect(result.csv.replace(/^\uFEFF/, "").split("\r\n")[0]).toContain(
+      "小花有限公司",
+    );
+    expect(result.filename).toBe("小花有限公司_工資清冊_2026-08.csv");
+  });
+
+  it("還沒設定過公司時沒有表頭，第一列就是欄名，檔名退回時間戳", async () => {
+    await service.saveRecord({
+      accountBookId: BOOK,
+      userId: USER,
+      input: writeInputOf({ year: 2026, month: 8 }),
+    });
+
+    const result = await service.exportRecordsCsv({
+      accountBookId: BOOK,
+      recordIds: [recordIdOf(2026, 8)],
+    });
+    const firstLine = result.csv.replace(/^\uFEFF/, "").split("\r\n")[0];
+
+    expect(firstLine).not.toContain("工資清冊");
+    expect(firstLine.startsWith(PAY_SLIP_CSV_IDENTITY_LABELS.period)).toBe(
+      true,
+    );
+    expect(result.filename).toMatch(/^salary-records-\d{4}-\d{2}-\d{2}T/);
   });
 });
 

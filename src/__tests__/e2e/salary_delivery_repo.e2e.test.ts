@@ -141,6 +141,8 @@ beforeAll(async () => {
     totalPayment: 41234n,
     totalSalaryTaxable: 36000n,
     totalEmployerCost: 42000n,
+    // Info: (20260914 - Julian) 抬頭快照；測試不驗它，給 null 表示「當時沒設定」
+    entityName: null,
   });
   recordId = record.id;
 
@@ -156,6 +158,8 @@ beforeAll(async () => {
     totalPayment: 41234n,
     totalSalaryTaxable: 36000n,
     totalEmployerCost: 42000n,
+    // Info: (20260914 - Julian) 抬頭快照；測試不驗它，給 null 表示「當時沒設定」
+    entityName: null,
   });
   otherRecordId = otherRecord.id;
 });
@@ -373,6 +377,8 @@ describe("薪資紀錄帶得出最近一次成功寄送", () => {
       totalPayment: 1n,
       totalSalaryTaxable: 1n,
       totalEmployerCost: 1n,
+      // Info: (20260914 - Julian) 抬頭快照；測試不驗它，給 null 表示「當時沒設定」
+      entityName: null,
     });
 
     expect(fresh.lastSentAt).toBeNull();
@@ -411,6 +417,8 @@ describe("薪資紀錄帶得出最近一次成功寄送", () => {
       totalPayment: 1n,
       totalSalaryTaxable: 1n,
       totalEmployerCost: 1n,
+      // Info: (20260914 - Julian) 抬頭快照；測試不驗它，給 null 表示「當時沒設定」
+      entityName: null,
     });
 
     await salaryPaySlipDeliveryRepo.createDelivery({

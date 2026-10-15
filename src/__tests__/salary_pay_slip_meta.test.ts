@@ -4,6 +4,7 @@ import path from "path";
 import {
   formatPaySlipDate,
   paySlipMetaOf,
+  resolveEntityName,
   PAY_SLIP_INSURED_FIELDS,
 } from "@/lib/utils/pay_slip_meta";
 import { buildPaySlipHtml } from "@/lib/utils/pay_slip_html";
@@ -45,6 +46,7 @@ const recordsPage = stripComments(
 const resultSection = stripComments(
   read("components/salary_calculator/salary_result_section.tsx"),
 );
+const csvSource = stripComments(read("lib/utils/salary_record_csv.ts"));
 const resultBlock = stripComments(
   read("components/salary_calculator/result_block.tsx"),
 );
@@ -61,7 +63,7 @@ describe("paySlipMetaOf", () => {
    * 說「投保」而其實沒保，沒有人會問，直到勞檢。
    */
   it("三個布林缺漏時一律讀成未投保", () => {
-    const meta = paySlipMetaOf(null, {});
+    const meta = paySlipMetaOf(null, {}, null);
 
     expect(meta.isLaborInsured).toBe(false);
     expect(meta.isHealthInsured).toBe(false);
@@ -69,11 +71,15 @@ describe("paySlipMetaOf", () => {
   });
 
   it("三個布林各自對應引擎輸入的那一格，不會接錯", () => {
-    const meta = paySlipMetaOf(null, {
-      isLaborInsuranceEnrolled: true,
-      isHealthInsuranceEnrolled: false,
-      isPensionInsuranceEnrolled: true,
-    });
+    const meta = paySlipMetaOf(
+      null,
+      {
+        isLaborInsuranceEnrolled: true,
+        isHealthInsuranceEnrolled: false,
+        isPensionInsuranceEnrolled: true,
+      },
+      null,
+    );
 
     expect(meta.isLaborInsured).toBe(true);
     expect(meta.isHealthInsured).toBe(false);
@@ -83,8 +89,60 @@ describe("paySlipMetaOf", () => {
   it("到職日原樣帶過去，null 保持 null", () => {
     const hireDate = Math.floor(Date.UTC(2026, 7, 10) / 1000);
 
-    expect(paySlipMetaOf(hireDate, {}).hireDate).toBe(hireDate);
-    expect(paySlipMetaOf(null, {}).hireDate).toBeNull();
+    expect(paySlipMetaOf(hireDate, {}, null).hireDate).toBe(hireDate);
+    expect(paySlipMetaOf(null, {}, null).hireDate).toBeNull();
+  });
+
+  it("抬頭原樣帶過去（解析在呼叫端，不在這裡）", () => {
+    expect(paySlipMetaOf(null, {}, "測試股份有限公司").entityName).toBe(
+      "測試股份有限公司",
+    );
+    expect(paySlipMetaOf(null, {}, null).entityName).toBeNull();
+  });
+});
+
+/**
+ * Info: (20260914 - Julian) 抬頭的解析規則。**守的是一個決定，不是一行 `??`。**
+ *
+ * 規則本身只有一行，而它為什麼是這一行寫在 `resolveEntityName` 的註解裡。
+ * 這裡把那段註解釘成可執行的斷言 —— 註解會過期，測試不會。
+ */
+describe("resolveEntityName", () => {
+  it("有快照就用快照（公司改過名，舊薪資單印當時的名字）", () => {
+    expect(resolveEntityName("舊名股份有限公司", "新名股份有限公司")).toBe(
+      "舊名股份有限公司",
+    );
+  });
+
+  /**
+   * Info: (20260914 - Julian) 這一條是整組裡最容易被「優化」掉的。
+   *
+   * 20260914（`entity_name_snapshot` 上線）之前存的紀錄一律沒有快照，
+   * 而那不是「漏填」—— 是**當時系統根本不知道公司抬頭**，
+   * 沒有任何回填腳本補得出來。現值是唯一拿得到的答案。
+   *
+   * 少了這一條，把回退改成「一律留白」會全綠，而症狀是
+   * 每一張舊薪資單重印出來都少了抬頭。
+   */
+  it("沒有快照就回退現值，不是留白", () => {
+    expect(resolveEntityName(null, "新名股份有限公司")).toBe(
+      "新名股份有限公司",
+    );
+  });
+
+  it("兩邊都沒有就是 null（那張單子不印抬頭）", () => {
+    expect(resolveEntityName(null, null)).toBeNull();
+  });
+
+  /**
+   * Info: (20260914 - Julian) 空字串是**快照**，不是「沒有快照」。
+   *
+   * 用 `??` 而不是 `||` 的差別就在這一格。今天走不到這裡
+   * （zod 的 `min(1)` 擋著空的 `entityName`），但哪天有人放寬那個驗證，
+   * `||` 會讓空字串靜靜地掉進回退、印出一個與存檔當下不同的抬頭。
+   */
+  it("空字串的快照不觸發回退", () => {
+    expect(resolveEntityName("", "新名股份有限公司")).toBe("");
   });
 });
 
@@ -147,7 +205,7 @@ describe("兩個消費端共用同一份投保清單", () => {
   });
 });
 
-describe("兩個欄位的來源刻意不同", () => {
+describe("三個欄位的來源刻意不同", () => {
   /**
    * Info: (20260909 - Julian) **這是這次最容易被「順手統一」掉的決定。**
    *
@@ -155,20 +213,36 @@ describe("兩個欄位的來源刻意不同", () => {
    *   被更正過的話，舊薪資單上該顯示的是更正後那個值。
    * - 投保狀態 → 這筆紀錄的 **input 快照**：它是「這個月」的事實。
    *   八月有保、九月退保是正常的，而那張單子上的勞保費是照當時的狀態算的。
+   * - 公司抬頭 → 這筆紀錄的**快照，取不到才回退現值**（20260914 新增）：
+   *   它是「這段期間」的事實。公司改名之後，舊薪資單該印當時的名字。
    *
-   * 統一到任何一邊都會錯：統一讀員工檔，去年的薪資單會跟著今天的投保狀態變；
-   * 統一讀快照，到職日只有「當月中途到職」的那幾筆才有值
-   * （`toCalculatorOptions` 的 `employeeStartDate` 只在 `isJoined` 時才寫）。
+   * 統一到任何一邊都會錯：統一讀員工檔／現值，去年的薪資單會跟著今天的
+   * 投保狀態與今天的公司名變；統一讀快照，到職日只有「當月中途到職」的
+   * 那幾筆才有值（`toCalculatorOptions` 的 `employeeStartDate` 只在
+   * `isJoined` 時才寫），而抬頭在 20260914 之前的紀錄一律沒有。
+   *
+   * Info: (20260914 - Julian) 判準從「整串字面」改成「各參數位置分別比對」。
+   *
+   * 原本比的是 `paySlipMetaOf(employee.hireDate, record.input)` 一整串 ——
+   * 加第三個參數時它紅了，而那是**對的紅**（來源組合變了要有人重新想過）。
+   * 但整串比對也很脆：換行、改個空白都會紅，而那些與「來源是什麼」無關。
+   * 所以改成逐位置比對，讓它對格式不敏感、對**來源**敏感。
    */
-  it("寄送服務：到職日取員工檔，投保狀態取紀錄快照", () => {
+  it("寄送服務：到職日取員工檔、投保狀態取紀錄快照、抬頭取快照再回退", () => {
+    expect(deliveryService).toMatch(
+      /paySlipMetaOf\(\s*employee\.hireDate,\s*record\.input,/,
+    );
     expect(deliveryService).toContain(
-      "paySlipMetaOf(employee.hireDate, record.input)",
+      "resolveEntityName(record.entityNameSnapshot, currentEntityName)",
     );
   });
 
   it("薪資紀錄檢視：同一組來源", () => {
+    expect(recordsPage).toMatch(
+      /paySlipMetaOf\(\s*viewing\.employee\.hireDate,\s*viewing\.input,/,
+    );
     expect(recordsPage).toContain(
-      "paySlipMetaOf(viewing.employee.hireDate, viewing.input)",
+      "resolveEntityName(viewing.entityNameSnapshot, currentEntityName)",
     );
   });
 
@@ -183,6 +257,31 @@ describe("兩個欄位的來源刻意不同", () => {
     expect(resultSection).toMatch(
       /paySlipMetaOf\([\s\S]{0,200}?getSalaryCalculatorOptions\(\)/,
     );
+  });
+
+  /**
+   * Info: (20260914 - Julian) 計算機那一頁**沒有快照可讀**，所以抬頭一律取現值。
+   *
+   * 那張薪資單還沒存下去 —— 存的那一刻才會定格（`upsertRecord`）。
+   * 這裡若也寫成 `resolveEntityName(...)`，讀的人會以為有快照可回退，
+   * 而那個「快照」永遠是 undefined。
+   */
+  it("計算機：抬頭取公司設定現值，不經過回退", () => {
+    expect(resultSection).toContain(
+      "companyProfile.isConfigured ? companyProfile.entityName : null",
+    );
+    expect(resultSection).not.toContain("resolveEntityName");
+  });
+
+  /**
+   * Info: (20260914 - Julian) CSV 那一支**刻意傳 `null`**：抬頭不是清冊的欄位。
+   *
+   * 它在工資清冊上的位置是**表頭**（勞動局範本
+   * `____公司　工資清冊　__年__月份`），不是每一列重複一次。
+   * 少了這一條，把它改成逐列帶抬頭不會有任何紅燈，而清冊會多出一整欄重複值。
+   */
+  it("CSV：抬頭不進每一列", () => {
+    expect(csvSource).toMatch(/paySlipMetaOf\(null, record\.input, null\)/);
   });
 });
 
@@ -270,6 +369,7 @@ describe("寄出的薪資單真的印出這兩格", () => {
   const htmlWith = (
     hireDate: number | null,
     insured: Parameters<typeof paySlipMetaOf>[1],
+    entityName: string | null = null,
   ): string =>
     buildPaySlipHtml({
       employeeName: "王小明",
@@ -277,7 +377,7 @@ describe("寄出的薪資單真的印出這兩格", () => {
       year: 2026,
       month: 9,
       result: defaultSalaryCalculatorResult,
-      meta: paySlipMetaOf(hireDate, insured),
+      meta: paySlipMetaOf(hireDate, insured, entityName),
     });
 
   it("到職日印成 YYYY-MM-DD", () => {

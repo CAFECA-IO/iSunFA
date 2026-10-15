@@ -323,6 +323,7 @@ export const buildPaySlipHtml = (input: IPaySlipHtmlInput): string => {
   }
   .sheet { padding: 0; }
   .header { border-bottom: 2px solid #ea580c; padding-bottom: 10px; margin-bottom: 16px; }
+  .entity { font-size: 12pt; font-weight: 700; margin: 0 0 4px; }
   .period { color: #ea580c; font-size: 10pt; font-weight: 600; margin: 0 0 4px; }
   .name { font-size: 20pt; font-weight: 700; margin: 0; }
   .number { color: #6b7280; font-size: 9pt; margin: 2px 0 0; }
@@ -345,6 +346,12 @@ export const buildPaySlipHtml = (input: IPaySlipHtmlInput): string => {
 <body>
   <div class="sheet">
     <div class="header">
+      <!-- Info: (20260914 - Julian) 抬頭在最上面、沒有標籤，位置與畫面版一致（既有約定） -->
+      ${
+        input.meta.entityName === null
+          ? ""
+          : `<p class="entity">${escapeHtml(input.meta.entityName)}</p>`
+      }
       <p class="period">${period}</p>
       <p class="name">${escapeHtml(input.employeeName)}</p>
       <p class="number">${escapeHtml(input.employeeNumber)}</p>

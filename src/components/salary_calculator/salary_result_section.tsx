@@ -33,6 +33,7 @@ import {
 } from "@/constants/salary_calculator";
 import { downloadNodeAsPng } from "@/lib/utils/pay_slip_download";
 import { paySlipMetaOf } from "@/lib/utils/pay_slip_meta";
+import { useCompanyProfile } from "@/hooks/use_company_profile";
 import {
   ISalaryCalculatorEmployee,
   ISalaryRecordSummary,
@@ -100,6 +101,7 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
     isLoading: isEmployeesLoading,
     hasError: hasEmployeesError,
   } = useSalaryEmployees(accountBookId);
+  const { profile: companyProfile } = useCompanyProfile(accountBookId);
 
   /**
    * Info: (20260901 - Julian) 待確認覆蓋的那一筆，連「要存給誰」一起記。
@@ -382,10 +384,19 @@ const SalaryResultSection: FC<ISalaryResultSectionProps> = ({
    * 而下面那張薪資單上的金額已經是照取消之後算的。讀員工檔會讓
    * 「狀態」與「金額」在同一張單子上互相矛盾。
    */
+  /**
+   * Info: (20260914 - Julian) 這一頁的薪資單**還沒存**，所以沒有快照可讀 ——
+   * 抬頭一律取公司設定的現值。存下去的那一刻才會定格（`upsertRecord`）。
+   *
+   * 公開試算模式（`accountBookId === null`）沒有公司設定，
+   * `useCompanyProfile` 回 `isConfigured: false`，抬頭就是 `null` ——
+   * 那張單子不印抬頭，而不是印一行空白。
+   */
   const paySlipMeta = paySlipMetaOf(
     employees.find((employee) => employee.id === selectedEmployeeId)
       ?.hireDate ?? null,
     getSalaryCalculatorOptions(),
+    companyProfile.isConfigured ? companyProfile.entityName : null,
   );
 
   const confirmOverwriteHandler = async () => {

@@ -36,4 +36,5 @@ export const salaryCalculatorUrlOf = (accountBookId: string) =>
     PAY_SLIP: `/user/account_book/${accountBookId}/salary_calculator/pay_slip`,
     RECORDS: `/user/account_book/${accountBookId}/salary_calculator/records`,
     EMPLOYEE_LIST: `/user/account_book/${accountBookId}/salary_calculator/employee_list`,
+    COMPANY_SETTING: `/user/account_book/${accountBookId}/salary_calculator/company_setting`,
   }) as const;
