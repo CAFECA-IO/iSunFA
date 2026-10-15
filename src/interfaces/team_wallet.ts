@@ -1,3 +1,4 @@
+import type { TeamAllocationRecordStatus } from "@/constants/admin_user_points";
 import type {
   BillableFeatureCode,
   BillingInterval,
@@ -121,6 +122,11 @@ export interface ILedgerEntryView {
   orderId: string | null;
   featureCode: BillableFeatureCode | null;
   createdAt: number;
+  /**
+   * Info: (20261015 - Luphia) 只在點數移轉紀錄頁的 ALLOCATE 列帶上：這筆分配是否已撥入成員個人點數
+   * （與後台點數明細、點數復原同一條判定；見 lib/quota/admin_user_points）。
+   */
+  memberTransferStatus?: TeamAllocationRecordStatus;
 }
 
 export interface ISpendResult {

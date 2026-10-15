@@ -24,16 +24,21 @@ export async function GET(
       page: searchParams.get("page") ?? undefined,
       pageSize: searchParams.get("pageSize") ?? undefined,
       type: searchParams.get("type") ?? undefined,
+      includeSystem: searchParams.get("includeSystem") ?? undefined,
     });
     if (!parsed.success) return jsonFail(API_ERRORS.VL_SCHEMA_ERROR);
 
-    // Info: (20261015 - Luphia) 選填 type 篩選（點數移轉紀錄頁）；未帶時委派原本的 listTeamWalletLedger
+    /**
+     * Info: (20261015 - Luphia) 選填 type 篩選與 includeSystem（點數移轉紀錄頁）。
+     * 預設不列「分配撥入成員」的系統分錄，改在分配列上標示撥入狀態。
+     */
     const result = await listTeamWalletLedgerByFilter({
       userId: user.id,
       teamId,
       filter: parsed.data.type,
       page: parsed.data.page,
       pageSize: parsed.data.pageSize,
+      includeSystem: parsed.data.includeSystem,
     });
     return jsonOk(result);
   } catch (error) {

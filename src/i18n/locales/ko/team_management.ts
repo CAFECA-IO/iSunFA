@@ -197,6 +197,14 @@ export const teamManagement = {
     system_adjustment_hint:
       "원장의 균형을 유지하기 위해 시스템이 자동으로 기록한 분개로, 멤버의 작업이 아닙니다. 풀 잔액이 앞뒤로 이어지도록 표시합니다.",
     operated_by: "처리자: {{name}}",
+    show_system: "시스템 분개 표시",
+    show_system_hint:
+      "멤버에게 이체된 포인트의 대응 분개는 기본적으로 숨겨집니다. 미할당 풀에는 영향이 없으며 위의 할당 행에 함께 표시됩니다.",
+    transfer: {
+      CREDITED: "{{name}} 님의 개인 포인트로 이체됨",
+      COMPENSATED: "이체 실패, 미할당 풀로 반환됨",
+      PRE_MIGRATION: "이전 방식 할당(2026-08 이전), 잔액은 이전 시 이체됨",
+    },
     former_member: "탈퇴한 멤버",
   },
 };

@@ -17,6 +17,7 @@ import {
   TEAM_WALLET_LEDGER_FILTER_VALUES,
   TEAM_WALLET_LEDGER_LOAD_STATUS,
   TEAM_WALLET_LEDGER_PAGE_SIZE,
+  isShownTransferStatus,
   isSystemAdjustmentEntry,
   type TeamWalletLedgerFilter,
   type TeamWalletLedgerLoadStatus,
@@ -83,6 +84,8 @@ export default function TeamLedgerPage() {
     TEAM_WALLET_LEDGER_FILTER.ALL,
   );
   const [page, setPage] = useState(1);
+  // Info: (20261015 - Luphia) 預設不列「分配撥入成員」的系統分錄，改在分配列上標示撥入狀態
+  const [includeSystem, setIncludeSystem] = useState(false);
   const [ledger, setLedger] = useState<ILedgerPage | null>(null);
   const [status, setStatus] = useState<TeamWalletLedgerLoadStatus>(
     TEAM_WALLET_LEDGER_LOAD_STATUS.LOADING,
@@ -99,6 +102,7 @@ export default function TeamLedgerPage() {
         page: String(page),
         pageSize: String(TEAM_WALLET_LEDGER_PAGE_SIZE),
         type: filter,
+        includeSystem: String(includeSystem),
       });
       const res = await fetch(
         `/api/v1/user/team/${teamId}/wallet/ledger?${query.toString()}`,
@@ -113,7 +117,7 @@ export default function TeamLedgerPage() {
       setLedger(null);
       setStatus(TEAM_WALLET_LEDGER_LOAD_STATUS.ERROR);
     }
-  }, [teamId, page, filter]);
+  }, [teamId, page, filter, includeSystem]);
 
   useEffect(() => {
     fetchLedger();
@@ -210,8 +214,23 @@ export default function TeamLedgerPage() {
                 {t(`team_management.ledger.filters.${value}`)}
               </button>
             ))}
+            <label
+              title={t("team_management.ledger.show_system_hint")}
+              className="ml-auto inline-flex cursor-pointer items-center gap-1.5 text-xs text-gray-500"
+            >
+              <input
+                type="checkbox"
+                checked={includeSystem}
+                onChange={(e) => {
+                  setIncludeSystem(e.target.checked);
+                  setPage(1);
+                }}
+                className="size-3.5 accent-orange-600"
+              />
+              {t("team_management.ledger.show_system")}
+            </label>
             {ledger && status === TEAM_WALLET_LEDGER_LOAD_STATUS.READY && (
-              <span className="ml-auto text-xs text-gray-500">
+              <span className="text-xs text-gray-500">
                 {t("team_management.ledger.total", { total: ledger.total })}
               </span>
             )}
@@ -316,6 +335,23 @@ export default function TeamLedgerPage() {
                                 )}
                               </span>
                             )}
+                            {/* Info: (20261015 - Luphia) 分配列直接說明點數去向，取代原本緊接著的 −N 系統分錄 */}
+                            {entry.memberTransferStatus &&
+                              isShownTransferStatus(
+                                entry.memberTransferStatus,
+                              ) && (
+                                <div className="mt-1 text-xs text-gray-500">
+                                  {t(
+                                    `team_management.ledger.transfer.${entry.memberTransferStatus}`,
+                                    {
+                                      name: nameOf(
+                                        entry.targetUserId ??
+                                          entry.operatorUserId,
+                                      ),
+                                    },
+                                  )}
+                                </div>
+                              )}
                           </td>
                           <td
                             className={`px-3 py-3 text-right font-medium whitespace-nowrap tabular-nums ${
