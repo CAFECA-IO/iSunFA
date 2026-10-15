@@ -3,7 +3,7 @@ import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { AppError } from "@/lib/utils/error";
 import { jsonOk, jsonFail, jsonFailWithPayload } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
+import { ORDER_TYPE } from "@/constants/status";
 import { BILLABLE_FEATURE_CODE } from "@/constants/subscription_quota";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import { teamQuotaPaymentSchema } from "@/validators";
@@ -12,7 +12,6 @@ import {
   getPendingOrder,
   markOrderPaid,
   markOrderPaying,
-  updateOrderStatus,
 } from "@/services/order.service";
 import { resolveOrderSpendCost } from "@/lib/order/order_cost";
 import { fulfillPaidAnalysisOrder } from "@/services/analysis_fulfillment.service";
@@ -120,17 +119,13 @@ export async function POST(
      * Info: (20261015 - Luphia) 付款完成 → PAID，不是 COMPLETED。
      *
      * 原本這裡直接標 COMPLETED，但任務派發（issue.service）只撿 PAID 訂單——
-     * 於是團隊額度付款的分析永遠不會被派成任務，畫面停在「執行中」。個人點數付款
+     * 於是團隊額度付款的分析永遠不會被派成任務，歷史報告卻顯示 completed、沒有結果。個人點數付款
      * （point_payment）一直是標 PAID，由 recorder 在任務完成後才推進到 COMPLETED。
      *
-     * 物流碳足跡例外：它不走任務管線，前端付款後立刻呼叫試算端點同步算出結果。
-     * 標成 PAID 會讓 issue.service 搶先把它派成一個沒人要的任務，因此維持原本的 COMPLETED。
+     * 物流碳足跡（碳排核算、里程核算）也一樣走任務管線：付款後前端只是輪詢
+     * `/api/v1/user/analysis` 等任務產出結果，沒有任何同步試算。
      */
-    if (category === ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT) {
-      await updateOrderStatus(orderId, ORDER_STATUS.COMPLETED);
-    } else {
-      await markOrderPaid(orderId);
-    }
+    await markOrderPaid(orderId);
 
     return jsonOk({
       orderId,
