@@ -465,6 +465,18 @@ export class PaymentRepository {
    * 同一張單併發付款兩次時，扣點有冪等鍵擋著只會扣一次，但履行（產生分析）
    * 沒有——只有搶到這一筆更新的請求才往下履行。回傳是否搶到。
    */
+  /**
+   * Info: (20261015 - Luphia) 履行完成的 PAYING 訂單推進到 PAID，交給任務派發（issue.service 只撿 PAID）。
+   * 條件更新：只動仍在 PAYING 的列，避免覆蓋已被其他流程推進或取消的訂單。
+   */
+  async markPayingOrderPaid(orderId: string): Promise<boolean> {
+    const updated = await prisma.order.updateMany({
+      where: { id: orderId, status: ORDER_STATUS.PAYING },
+      data: { status: ORDER_STATUS.PAID },
+    });
+    return updated.count > 0;
+  }
+
   async markPendingOrderPaid(
     orderId: string,
     signature: string,

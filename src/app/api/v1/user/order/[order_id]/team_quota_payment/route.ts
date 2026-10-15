@@ -10,7 +10,7 @@ import { teamQuotaPaymentSchema } from "@/validators";
 import {
   failOrder,
   getPendingOrder,
-  markOrderCompleted,
+  markOrderPaid,
   markOrderPaying,
 } from "@/services/order.service";
 import { resolveOrderSpendCost } from "@/lib/order/order_cost";
@@ -115,7 +115,15 @@ export async function POST(
       throw fulfillError;
     }
 
-    await markOrderCompleted(orderId);
+    /**
+     * Info: (20261015 - Luphia) 付款完成 → PAID，不是 COMPLETED。
+     *
+     * 原本這裡直接標 COMPLETED，但任務派發（issue.service）只撿 PAID 訂單——
+     * 於是團隊額度付款的分析永遠不會被派成任務，畫面停在「執行中」。個人點數付款
+     * （point_payment）一直是標 PAID，由 recorder 在任務完成後才推進到 COMPLETED；
+     * 兩條付款路徑在這之後走同一條管線。
+     */
+    await markOrderPaid(orderId);
 
     return jsonOk({
       orderId,
