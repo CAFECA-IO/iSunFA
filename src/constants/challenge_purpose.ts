@@ -16,6 +16,25 @@ export enum ChallengePurpose {
   USER_ACTION = "USER_ACTION",
   // Info: (20260811 - Luphia) 管理員操作，權限最高，且明確禁止託管代簽
   ADMIN_ACTION = "ADMIN_ACTION",
+  /**
+   * Info: (20261015 - Luphia) Passkey 註冊（區塊鏈退役後改由伺服器建帳）。
+   * 與 LOGIN 一樣發生在還沒有使用者身分的時候，因此同樣不綁 sub；
+   * 它只承諾「這枚 challenge 是本站在 5 分鐘內為註冊發出的」。
+   */
+  REGISTER = "REGISTER",
+}
+
+/**
+ * Info: (20261015 - Luphia) 不綁 sub 的用途：簽發時還沒有使用者身分可綁。
+ * 其餘用途一律要求 sub 對得上（見 challenge_token.verifyChallengeToken）。
+ */
+export const UNBOUND_CHALLENGE_PURPOSES: readonly ChallengePurpose[] = [
+  ChallengePurpose.LOGIN,
+  ChallengePurpose.REGISTER,
+];
+
+export function isUnboundChallengePurpose(purpose: ChallengePurpose): boolean {
+  return UNBOUND_CHALLENGE_PURPOSES.includes(purpose);
 }
 
 export const CHALLENGE_PURPOSE_VALUES = Object.values(ChallengePurpose);

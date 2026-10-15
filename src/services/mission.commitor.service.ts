@@ -2,12 +2,8 @@ import { getPriorityEnvConfig } from "@/services/env.service";
 import fs from "fs/promises";
 import path from "path";
 import { storageService } from "@/services/storage.service";
-import { getAdminAccount } from "@/lib/wallet/admin_wallet";
-import { createPublicClient, createWalletClient, http, parseAbi } from "viem";
-import { isuncoin } from "@/lib/viem_public";
-const MB_ABI = parseAbi([
-  "function submitResult(uint256 taskId, string calldata resultCid, uint256 consumedTokens) external",
-]);
+import { submitResult } from "@/services/mission_board.service";
+import { parseMissionFolderName } from "@/constants/mission_board";
 
 export async function processNext() {
   console.log(
@@ -25,6 +21,8 @@ export async function processNext() {
 
     for (const folder of folders) {
       if (!folder.isDirectory()) continue;
+      // Info: (20261015 - Luphia) 舊鏈資料夾的 taskId 可能與 DB 流水號同號，送出去會交到別人的任務上
+      if (parseMissionFolderName(folder.name) === null) continue;
       const taskDir = path.join(missionDirPath, folder.name);
       const resultPath = path.join(taskDir, "result.md");
       const submitPath = path.join(taskDir, "submit.md");
@@ -70,7 +68,11 @@ export async function processNext() {
         // Info: (20260420 - Luphia) 1. Read Meta
         const metaStr = await fs.readFile(metaPath, "utf8");
         const metaData = JSON.parse(metaStr);
-        const taskId = BigInt(metaData.taskId);
+        const taskId = Number(metaData.taskId);
+        // Info: (20261015 - Luphia) meta.json 壞掉就別送出，避免拿 NaN 去查任務
+        if (!Number.isSafeInteger(taskId) || taskId < 0) {
+          throw new Error(`Invalid taskId in meta.json: ${metaData.taskId}`);
+        }
 
         // Info: (20260420 - Luphia) 2. Upload result.md to IPFS (Laria)
         const resultStr = await fs.readFile(resultPath, "utf8");
@@ -100,41 +102,26 @@ export async function processNext() {
         }
 
         // Info: (20260420 - Luphia) 3. Submit to MissionBoard
-        const adminAccount = await getAdminAccount();
-        const rpcUrl =
-          setupConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
-        const publicClient = createPublicClient({ transport: http(rpcUrl) });
-        const walletClient = createWalletClient({
-          account: adminAccount,
-          chain: isuncoin,
-          transport: http(rpcUrl),
-        });
-
-        const mbAddress =
-          setupConfig.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as `0x${string}`;
-
         console.log(
           `[MissionCommitor] Submitting result for Task ID: ${taskId} with ${totalConsumedTokens} tokens...`,
         );
-        const { request } = await publicClient.simulateContract({
-          account: adminAccount,
-          address: mbAddress,
-          abi: MB_ABI,
-          functionName: "submitResult",
-          args: [taskId, resultCid, totalConsumedTokens],
+        // Info: (20261015 - Luphia) 任務看板改存 DB：一次寫入即完成，沒有交易雜湊可記
+        const submission = await submitResult({
+          taskId,
+          resultCid,
+          consumedTokens: totalConsumedTokens,
         });
 
-        const txHash = await walletClient.writeContract(request);
-        await publicClient.waitForTransactionReceipt({ hash: txHash });
-
-        console.log(`[MissionCommitor] Commit successful. Tx: ${txHash}`);
+        console.log(
+          `[MissionCommitor] Commit successful. Submission Index: ${submission.subIndex}`,
+        );
 
         // Info: (20260420 - Luphia) 4. Record submit.md
         const submitContent = `# Submission Record
 - Task ID: ${taskId}
 - Result CID: ${resultCid}
 - Consumed Tokens: ${totalConsumedTokens}
-- Transaction Hash: ${txHash}
+- Submission Index: ${submission.subIndex}
 - Submitted At: ${new Date().toISOString()}
 `;
         await fs.writeFile(submitPath, submitContent, "utf8");

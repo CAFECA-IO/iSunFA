@@ -1,11 +1,16 @@
 import { prisma } from "@/lib/prisma";
 import { calculateStatelessAmortizationForMonth } from "@/lib/utils/amortization_math";
 import Decimal from "decimal.js";
-import { keccak256, toUtf8Bytes } from "ethers";
+import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
 import { getPriorityEnvConfig } from "@/services/env.service";
 import { SystemWorkerSource } from "@/constants/enums";
+import {
+  findTaskByContentCid,
+  issueTask,
+} from "@/services/mission_board.service";
+import { missionFolderName } from "@/constants/mission_board";
 
 export async function processAmortization() {
   console.log("[AmortizationWorker] Scanning ACTIVE schedules...");
@@ -42,148 +47,64 @@ export async function processAmortization() {
       continue;
     }
 
-    // Info: (20260526 - Tzuhan) Create Unique Task ID using keccak256
+    /**
+     * Info: (20260526 - Tzuhan) Create Unique Task ID using keccak256
+     * Info: (20261015 - Luphia) 改用 sha256：只需要一個決定性的冪等鍵，不再依賴鏈上的雜湊函式
+     */
     const hashInput = `${schedule.accountBookId}_${yearMonth}_${schedule.assetAccountCode}_${schedule.id}`;
-    const hashHex = keccak256(toUtf8Bytes(hashInput));
+    const hashHex = `0x${crypto.createHash("sha256").update(hashInput, "utf8").digest("hex")}`;
 
-    console.log(
-      `[AmortizationWorker] Creating task on MissionBoard with idempotent hash: ${hashHex}...`,
-    );
     let taskIdStr = "";
 
-    // Info: (20260526 - Tzuhan) Check if we already created it locally (or we can just let blockchain revert)
-    const adminAccount = await import("@/lib/wallet/admin_wallet").then((m) =>
-      m.getAdminAccount(),
-    );
-    const {
-      createPublicClient,
-      createWalletClient,
-      http,
-      parseAbi,
-      decodeEventLog,
-      parseAbiItem,
-    } = await import("viem");
-    const { isuncoin } = await import("@/lib/viem_public");
-
-    const rpcUrl = setupConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
-    const mbAddress =
-      setupConfig.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as `0x${string}`;
-
-    const publicClient = createPublicClient({ transport: http(rpcUrl) });
-    const walletClient = createWalletClient({
-      account: adminAccount,
-      chain: isuncoin,
-      transport: http(rpcUrl),
-    });
-
-    const MB_ABI = parseAbi([
-      "function createTask(string calldata cid, uint256 initialReward) external returns (uint256)",
-      "event TaskCreated(uint256 indexed taskId, address indexed creator, uint256 reward, string contentCid)",
-    ]);
-
+    /**
+     * Info: (20261015 - Luphia) 冪等改由 DB 判斷（取代「送交易 → revert → 掃 30 天事件」的 Healing Mode）。
+     *
+     * 同一個雜湊已有任務：本地 result.md 在就是正常重複，跳過；
+     * 不在就是任務建了但檔案沒寫成（ghost task），沿用同一個 taskId 重建本地檔。
+     */
     try {
-      const { request } = await publicClient.simulateContract({
-        account: adminAccount,
-        address: mbAddress,
-        abi: MB_ABI,
-        functionName: "createTask",
-        args: [hashHex, 0n],
-      });
-
-      const createTx = await walletClient.writeContract(request);
-      const receipt = await publicClient.waitForTransactionReceipt({
-        hash: createTx,
-      });
-
-      for (const log of receipt.logs) {
+      const existingTask = await findTaskByContentCid(hashHex);
+      if (existingTask) {
+        const existingIdStr = existingTask.id.toString();
+        const existingDir = path.join(
+          missionDirPath,
+          missionFolderName(existingTask.id),
+        );
         try {
-          const decoded = decodeEventLog({
-            abi: MB_ABI,
-            data: log.data,
-            topics: log.topics,
-            eventName: "TaskCreated",
-          });
-          if (decoded && decoded.args && "taskId" in decoded.args) {
-            taskIdStr = String(decoded.args.taskId);
-            break;
-          }
-        } catch {}
+          await fs.access(path.join(existingDir, "result.md"));
+          console.log(
+            `[AmortizationWorker] Task ${existingIdStr} already exists for ${hashHex}. Normal duplicate, skipping.`,
+          );
+          continue; // Info: (20260527 - Tzuhan) Pure execution collision, safe to skip
+        } catch {
+          console.log(
+            `[AmortizationWorker] Recovered Ghost Task for taskId: ${existingIdStr}. Rebuilding local payload...`,
+          );
+          taskIdStr = existingIdStr;
+        }
+      } else {
+        console.log(
+          `[AmortizationWorker] Creating task on MissionBoard with idempotent hash: ${hashHex}...`,
+        );
+        // Info: (20261015 - Luphia) 建立者標成攤銷 worker：planner 只規劃平台發的任務，不會去下載這個雜湊
+        const task = await issueTask({
+          contentCid: hashHex,
+          reward: 0n,
+          creator: SystemWorkerSource.AMORTIZATION_WORKER,
+        });
+        taskIdStr = task.id.toString();
       }
     } catch (e) {
-      console.log(
-        `[AmortizationWorker] createTask reverted for ${hashHex}. Likely duplicate (unique constraint). Entering Healing Mode..., Error: ${e}`,
-      );
-
-      // Info: (20260527 - Tzuhan) Healing Mode
-      try {
-        const currentBlock = await publicClient.getBlockNumber();
-        const MAX_BLOCKS = (30n * 24n * 60n * 60n) / 2n; // Info: (20260527 - Tzuhan) Approx 30 days (assuming 2s block time)
-        const fromBlock =
-          currentBlock > MAX_BLOCKS ? currentBlock - MAX_BLOCKS : 0n;
-
-        console.log(
-          `[AmortizationWorker] [Healing Mode] Scanning logs from block ${fromBlock} for ${hashHex}...`,
-        );
-
-        const logs = await publicClient.getLogs({
-          address: mbAddress,
-          event: parseAbiItem(
-            "event TaskCreated(uint256 indexed taskId, address indexed creator, uint256 reward, string contentCid)",
-          ),
-          fromBlock,
-          toBlock: "latest",
-        });
-
-        let recoveredTaskIdStr = "";
-        for (const log of logs) {
-          if (log.args && log.args.contentCid === hashHex) {
-            recoveredTaskIdStr = String(log.args.taskId);
-            break;
-          }
-        }
-
-        if (recoveredTaskIdStr) {
-          const taskDir = path.join(missionDirPath, recoveredTaskIdStr);
-          try {
-            await fs.access(path.join(taskDir, "result.md"));
-            console.log(
-              `[AmortizationWorker] [Healing Mode] Local file exists for ${recoveredTaskIdStr}. Normal duplicate, skipping.`,
-            );
-            continue; // Info: (20260527 - Tzuhan) Pure execution collision, safe to skip
-          } catch {
-            console.log(
-              `[AmortizationWorker] [Healing Mode] Recovered Ghost Task for taskId: ${recoveredTaskIdStr}. Rebuilding local payload...`,
-            );
-            taskIdStr = recoveredTaskIdStr;
-            // Info: (20260527 - Tzuhan) Healing successful, let it proceed down to create the files!
-          }
-        } else {
-          console.log(
-            `[AmortizationWorker] [Healing Mode] Could not find TaskCreated event for ${hashHex}. Giving up.`,
-          );
-          continue;
-        }
-      } catch (healingError) {
-        console.error(
-          `[AmortizationWorker] [Healing Mode] Failed to recover task:`,
-          healingError,
-        );
-        continue;
-      }
-    }
-
-    if (!taskIdStr) {
-      console.log(
-        `[AmortizationWorker] Failed to extract taskId for ${hashHex}.`,
+      console.error(
+        `[AmortizationWorker] Failed to create or look up task for ${hashHex}:`,
+        e,
       );
       continue;
     }
 
-    console.log(
-      `[AmortizationWorker] Task created! Sequential Task ID: ${taskIdStr}`,
-    );
+    console.log(`[AmortizationWorker] Using Task ID: ${taskIdStr}`);
 
-    const taskDir = path.join(missionDirPath, taskIdStr);
+    const taskDir = path.join(missionDirPath, missionFolderName(taskIdStr));
     try {
       await fs.mkdir(taskDir, { recursive: true });
     } catch {

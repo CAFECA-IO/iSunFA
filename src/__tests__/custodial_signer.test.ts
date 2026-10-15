@@ -1,10 +1,8 @@
 import { describe, it, expect } from "@jest/globals";
 import { createHash, createPublicKey, verify as cryptoVerify } from "crypto";
-import { decodeAbiParameters, parseAbiParameters } from "viem";
 import {
-  encodeAssertion,
   generateCustodialKeyPair,
-  signUserOpHash,
+  signChallenge,
 } from "@/lib/auth/custodial_signer";
 import { reconstructKeyFromXY } from "@/lib/auth/crypto_utils";
 
@@ -14,7 +12,18 @@ import { reconstructKeyFromXY } from "@/lib/auth/crypto_utils";
  * 1. authenticatorData[32] 的 User Presence flag (0x01) 有設
  * 2. clientDataJSON 在 challengeIndex 起的字串等於 base64url(userOpHash)
  * 3. 簽章覆蓋 sha256(authenticatorData || sha256(clientDataJSON))
+ *
+ * Info: (20261015 - Luphia) 區塊鏈退役：不再簽 UserOp 雜湊，改直接驗 `signChallenge`。
+ * 這三個條件同樣是後端 verifySignature 對託管 assertion 的要求，因此測試保留。
  */
+
+// Info: (20261015 - Luphia) 以 32 bytes 的 base64url 表示伺服器發出的 challenge
+function signUserOpHash(privateKeyPem: string, hash: `0x${string}`) {
+  return signChallenge(
+    privateKeyPem,
+    Buffer.from(hash.slice(2), "hex").toString("base64url"),
+  );
+}
 
 const USER_OP_HASH =
   "0x1f2e3d4c5b6a798877665544332211ffeeddccbbaa99887766554433221100ff" as const;
@@ -133,23 +142,5 @@ describe("custodial signer", () => {
         crossSignature,
       ),
     ).toBe(false);
-  });
-
-  it("編碼結果可依合約的 abi.decode 順序還原", () => {
-    const keyPair = generateCustodialKeyPair();
-    const assertion = signUserOpHash(keyPair.privateKeyPem, USER_OP_HASH);
-    const encoded = encodeAssertion(assertion);
-
-    const decoded = decodeAbiParameters(
-      parseAbiParameters("bytes, bytes, uint256, uint256, uint256, uint256"),
-      encoded,
-    );
-
-    expect(decoded[0]).toBe(assertion.authenticatorData);
-    expect(decoded[1]).toBe(assertion.clientDataJSON);
-    expect(decoded[2]).toBe(assertion.challengeIndex);
-    expect(decoded[3]).toBe(assertion.typeIndex);
-    expect(decoded[4]).toBe(assertion.r);
-    expect(decoded[5]).toBe(assertion.s);
   });
 });

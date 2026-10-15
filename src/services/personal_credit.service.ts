@@ -1,26 +1,33 @@
 import { createHash } from "crypto";
 import { CURRENCY_UNIT } from "@/constants/price";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
+import { POINT_LEDGER_OUTCOME } from "@/constants/point_ledger";
+import {
+  PERSONAL_CREDIT_CHARGE_KIND,
+  isPostPaymentOrderStatus,
+} from "@/constants/point_payment";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
 import type { IJSONObject } from "@/validators/common";
 import { logger } from "@/lib/utils/logger";
-import { webAuthnRepo } from "@/repositories/webauthn.repo";
-import { issuePurchasedPointsToMember } from "@/services/member.service";
+import { refundPointsForOrder } from "@/services/point_ledger.service";
 
 /**
  * Info: (20260813 - Luphia) 個人點數扣款（設計書 §5.5「無帳本會話」，產品拍板 20260813）。
  *
- * 個人點數只存在鏈上（設計書 §2 事實 2），扣款必須有 WebAuthn 簽章，
- * 因此**無法**在同一次 HTTP 請求內同步完成。這裡的做法是把它變成一個兩段流程：
+ * 扣款必須有持有人的確認（條款 §3.3），因此**無法**在同一次 HTTP 請求內同步完成。
+ * 這裡的做法是把它變成一個兩段流程：
  *
  * 1. 伺服器以冪等鍵建立（或找回）一張待付訂單，回 402 帶 orderId；
- * 2. 前端以既有的 `useOrderTransaction` 完成付款——**託管帳號由伺服器代簽**，
- *    體感就是直接扣；passkey 帳號提示裝置簽章一次；
- * 3. 用戶重送同一則訊息（clientMessageId 不變 → 冪等鍵不變），此時訂單已 COMPLETED，
+ * 2. 前端以既有的 `useOrderTransaction` 完成付款——**託管帳號直接扣**；
+ *    passkey 帳號提示裝置簽章一次；
+ * 3. 用戶重送同一則訊息（clientMessageId 不變 → 冪等鍵不變），此時訂單已付款，
  *    工作即放行執行。
  *
- * 刻意**先收款再服務**：反過來做等於允許賴帳，而鏈上扣不到就沒有任何強制力。
+ * 刻意**先收款再服務**：反過來做等於允許賴帳。
+ *
+ * Info: (20261015 - Luphia) 區塊鏈退役：個人點數改為 DB 帳本，第 2 步改走
+ * `POST /order/[id]/point_payment`（point_payment.service），不再上鏈。
  */
 
 export class PersonalPaymentRequiredError extends ApiError {
@@ -87,7 +94,12 @@ export async function ensurePersonalCreditCharge(
   );
   if (existing) {
     return {
-      paid: existing.status === ORDER_STATUS.COMPLETED,
+      /**
+       * Info: (20261015 - Luphia) 「已付」= 任何付款後狀態，而不只是 COMPLETED。
+       * 付款的結果是 PAID，而這裡原本只認 COMPLETED——使用者付完錢、重送同一則訊息，
+       * 拿到的仍然是「請付款」。判準與付款端同源（`isPostPaymentOrderStatus`）。
+       */
+      paid: isPostPaymentOrderStatus(existing.status),
       orderId: existing.id,
       // Info: (20260813 - Luphia) 訂單金額為負數（消費），對外一律回正數
       cost: Number(-existing.amount),
@@ -95,6 +107,8 @@ export async function ensurePersonalCreditCharge(
   }
 
   const orderData = {
+    // Info: (20261015 - Luphia) 標記為個人扣款訂單：付款後放行任務，而不是產生分析報告
+    chargeKind: PERSONAL_CREDIT_CHARGE_KIND,
     category,
     idempotencyKey,
     amount: (-credits).toString(),
@@ -131,13 +145,16 @@ export async function ensurePersonalCreditCharge(
 /**
  * Info: (20260814 - Luphia) 工作失敗時退還已扣的個人點數。
  *
- * 個人路徑刻意「先收款再服務」（見上），代價是工作失敗時錢已經在鏈上扣掉了。
+ * 個人路徑刻意「先收款再服務」（見上），代價是工作失敗時錢已經扣掉了。
  * 沒有這支補償，逾時或模型錯誤就等於收了錢什麼都沒給——而碳盤查的匯入單章
  * 動輒 5 萬 tokens、結構圖單張推理近一分半，失敗不是理論值。
  *
- * 退款是伺服器代簽的鑄回（與購點發放同一條路），不需要用戶再簽一次。
- * 鑄回失敗不丟錯——此時原始的工作錯誤對用戶更重要——但會在訂單上留下
- * `refundOwed` 與 log，讓它成為一筆**看得見的欠款**而不是靜靜消失。
+ * 退款不需要用戶再簽一次。退回失敗不丟錯——此時原始的工作錯誤對用戶更重要——
+ * 但會在訂單上留下 `refundOwed` 與 log，讓它成為一筆**看得見的欠款**而不是靜靜消失。
+ *
+ * Info: (20261015 - Luphia) 退款改為個人點數帳本的 REFUND 分錄（區塊鏈退役，原本是鑄回）。
+ * 鍵為 `orderRefund(orderId)`，與復原指令共用：同一張訂單無論重試幾次都只退一次。
+ * `data.refundedAt` 照舊蓋上——復原指令以它判斷這張訂單退過款。
  */
 export async function refundPersonalCreditCharge(params: {
   userId: string;
@@ -150,7 +167,7 @@ export async function refundPersonalCreditCharge(params: {
     idempotencyKey,
   );
   // Info: (20260814 - Luphia) 沒付成的訂單本來就沒扣到錢，不需要退
-  if (!order || order.status !== ORDER_STATUS.COMPLETED) {
+  if (!order || !isPostPaymentOrderStatus(order.status)) {
     return { refunded: false, owed: false };
   }
 
@@ -161,36 +178,39 @@ export async function refundPersonalCreditCharge(params: {
   // Info: (20260814 - Luphia) 同一張訂單只退一次：重試會再次走到這裡
   if (data.refundedAt) return { refunded: true, owed: false };
 
-  const credits = Number(-order.amount);
-  if (!Number.isFinite(credits) || credits <= 0) {
+  const credits = -order.amount;
+  if (credits <= BigInt(0)) {
     return { refunded: false, owed: false };
   }
 
-  const user = await webAuthnRepo.findUserById(userId);
-  if (!user?.address) {
-    logger.error("personal credit refund owed: user address missing", {
-      orderId: order.id,
+  let failure: string | null = null;
+  try {
+    const refund = await refundPointsForOrder({
       userId,
+      orderId: order.id,
+      amount: credits,
+      note: "personal credit charge refund",
     });
-    await paymentRepo.updateOrderData(order.id, {
-      ...data,
-      refundOwed: true,
-      refundError: "user address missing",
-    });
-    return { refunded: false, owed: true };
+    if (
+      refund.outcome !== POINT_LEDGER_OUTCOME.OK &&
+      refund.outcome !== POINT_LEDGER_OUTCOME.DUPLICATE
+    ) {
+      failure = `refund ${refund.outcome}`;
+    }
+  } catch (error) {
+    failure = error instanceof Error ? error.message : String(error);
   }
 
-  const mint = await issuePurchasedPointsToMember(user.address, credits);
-  if (!mint.success) {
-    logger.error("personal credit refund owed: mint failed", {
+  if (failure) {
+    logger.error("personal credit refund owed: ledger refund failed", {
       orderId: order.id,
       userId,
-      message: mint.message,
+      message: failure,
     });
     await paymentRepo.updateOrderData(order.id, {
       ...data,
       refundOwed: true,
-      refundError: mint.message ?? "mint failed",
+      refundError: failure,
     });
     return { refunded: false, owed: true };
   }
@@ -200,6 +220,9 @@ export async function refundPersonalCreditCharge(params: {
     refundedAt: new Date().toISOString(),
     refundOwed: false,
   });
-  logger.info("personal credit refunded", { orderId: order.id, credits });
+  logger.info("personal credit refunded", {
+    orderId: order.id,
+    credits: credits.toString(),
+  });
   return { refunded: true, owed: false };
 }

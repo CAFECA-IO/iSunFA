@@ -52,7 +52,6 @@ import { incomeStatementView } from "@/i18n/locales/zh_tw/income_statement_view"
 import { adminSetup } from "@/i18n/locales/zh_tw/admin_setup";
 import { adminSettings } from "@/i18n/locales/zh_tw/admin_settings";
 import { adminMember } from "@/i18n/locales/zh_tw/admin_member";
-import { adminBlockchain } from "@/i18n/locales/zh_tw/admin_blockchain";
 import { adminBilling } from "@/i18n/locales/zh_tw/admin_billing";
 import { adminMissionBoard } from "@/i18n/locales/zh_tw/admin_mission_board";
 import { emissionSources } from "@/i18n/locales/zh_tw/emission_sources";
@@ -135,7 +134,6 @@ export const zhTw = {
   admin_setup: adminSetup,
   admin_settings: adminSettings,
   admin_member: adminMember,
-  admin_blockchain: adminBlockchain,
   admin_billing: adminBilling,
   admin_dashboard: adminDashboard,
   admin_mission_board: adminMissionBoard,

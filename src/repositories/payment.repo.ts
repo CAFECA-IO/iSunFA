@@ -12,6 +12,12 @@ import { CurrencyUnit, CURRENCY_UNIT } from "@/constants/price";
 import { MoneyUtil } from "@/lib/utils/money";
 import { creditPoolInTx } from "@/repositories/team_wallet.repo";
 import { applyTeamSubscriptionInTx } from "@/repositories/team_subscription.repo";
+import { applyPointEntryInTx } from "@/repositories/point_ledger.repo";
+import {
+  POINT_LEDGER_ENTRY_TYPE,
+  POINT_LEDGER_KEY,
+  PointLedgerEntryType,
+} from "@/constants/point_ledger";
 import {
   BILLING_INTERVAL,
   BillingInterval,
@@ -132,8 +138,6 @@ export class PaymentRepository {
     status: string,
     token?: string,
   ) {
-    let shouldMint = false;
-    let creditsToMint = 0;
     let amountPaid = 0n;
 
     await prisma.$transaction(async (tx) => {
@@ -337,8 +341,31 @@ export class PaymentRepository {
             }
             amountPaid = order.amount;
           } else {
-            shouldMint = true;
-            creditsToMint = _creditsToMint;
+            /**
+             * Info: (20261015 - Luphia) 個人購點：在**同一筆交易**內入個人點數帳本並完成訂單
+             * （區塊鏈退役）。原本是交易提交後才回到 route 鑄造鏈上點數，
+             * 中間任何一步失敗都會留下「錢收了、點數沒到」而只有 log 知道。
+             * 冪等鍵與復原指令共用（`orderCredit`），webhook 重送也只入帳一次。
+             */
+            if (_creditsToMint <= 0) {
+              await markFulfillmentFailedInTx(
+                tx,
+                order,
+                "point purchase order missing credits",
+              );
+            } else {
+              await applyPointEntryInTx(tx, {
+                userId: order.userId,
+                amount: BigInt(_creditsToMint),
+                entryType: POINT_LEDGER_ENTRY_TYPE.PURCHASE,
+                idempotencyKey: POINT_LEDGER_KEY.orderCredit(order.id),
+                orderId: order.id,
+              });
+              await tx.order.update({
+                where: { id: order.id },
+                data: { status: ORDER_STATUS.COMPLETED },
+              });
+            }
             amountPaid = order.amount;
           }
         }
@@ -364,7 +391,7 @@ export class PaymentRepository {
       }
     });
 
-    return { shouldMint, creditsToMint, amountPaid };
+    return { amountPaid };
   }
 
   async updateOrderMintFailed(
@@ -395,6 +422,58 @@ export class PaymentRepository {
         ...(transactionHash ? { transactionHash } : {}),
       },
     });
+  }
+
+  /**
+   * Info: (20261015 - Luphia) 建立一張已完成的發點訂單，並在**同一筆交易**內入個人點數帳本
+   * （區塊鏈退役）。後台發放原本是「先鑄造、再建單」：鑄造成功而建單失敗時，
+   * 點數發出去了卻查無紀錄。兩件事綁在一筆交易裡，就只會兩者都有或兩者都沒有。
+   * 冪等鍵為 `orderCredit(order.id)`，與復原指令共用。
+   */
+  async createOrderWithPointCredit(
+    data: Prisma.OrderUncheckedCreateInput & { unit: CurrencyUnit },
+    credit: {
+      userId: string;
+      amount: bigint;
+      entryType: PointLedgerEntryType;
+      note?: string | null;
+    },
+  ): Promise<Order> {
+    if (!Object.values(CURRENCY_UNIT).includes(data.unit)) {
+      throw new Error(
+        `Invalid order unit. Must be one of: ${Object.values(CURRENCY_UNIT).join(", ")}`,
+      );
+    }
+    return prisma.$transaction(async (tx) => {
+      const order = await tx.order.create({ data });
+      await applyPointEntryInTx(tx, {
+        userId: credit.userId,
+        amount: credit.amount,
+        entryType: credit.entryType,
+        idempotencyKey: POINT_LEDGER_KEY.orderCredit(order.id),
+        orderId: order.id,
+        note: credit.note ?? null,
+      });
+      return order;
+    });
+  }
+
+  /**
+   * Info: (20261015 - Luphia) 條件式地把一張 PENDING 訂單標成 PAID（個人點數付款）。
+   *
+   * 以 `WHERE status = PENDING` 的條件更新做為「誰贏得這張訂單」的判準：
+   * 同一張單併發付款兩次時，扣點有冪等鍵擋著只會扣一次，但履行（產生分析）
+   * 沒有——只有搶到這一筆更新的請求才往下履行。回傳是否搶到。
+   */
+  async markPendingOrderPaid(
+    orderId: string,
+    signature: string,
+  ): Promise<boolean> {
+    const updated = await prisma.order.updateMany({
+      where: { id: orderId, status: ORDER_STATUS.PENDING },
+      data: { status: ORDER_STATUS.PAID, signature },
+    });
+    return updated.count > 0;
   }
 
   async createOrder(

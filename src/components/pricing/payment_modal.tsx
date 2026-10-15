@@ -260,7 +260,8 @@ export default function PaymentModal({
             if (tHash) setTxHash(tHash);
 
             setStep(PaymentStep.success);
-            if (tHash) onSuccess(tHash);
+            // Info: (20261015 - Luphia) 個人購點改入 DB 帳本後沒有 txHash（區塊鏈退役），完成即成功
+            onSuccess(tHash ?? "");
             return; // Info: (20260303 - Tzuhan) 成功即終止，不再呼叫 setTimeout
           } else if (
             status === ORDER_STATUS.FAILED ||

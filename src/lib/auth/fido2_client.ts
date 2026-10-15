@@ -10,7 +10,6 @@ import type {
 import { ApiCode } from "@/lib/utils/status";
 import { AppError } from "@/lib/utils/error";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
-import { UserOperationJson } from "@/validators";
 import { fetchWithRetry } from "@/lib/utils/http_client";
 import { ChallengePurpose } from "@/constants/challenge_purpose";
 
@@ -87,10 +86,22 @@ export const fido2ClientService = new Fido2ClientService();
 // --- Info: (20251223 - Tzuhan) 新增：與後端 API 溝通的輔助函式 ---
 
 export async function getRegisterChallenge(): Promise<string> {
+  const { challenge } = await getRegisterOptions();
+  return challenge;
+}
+
+/**
+ * Info: (20261015 - Luphia) 註冊用的 challenge 與 REGISTER 用途 token。
+ * token 交給 `registerPasskey`，讓伺服器確認 challenge 是本站為註冊發出的。
+ */
+export async function getRegisterOptions(): Promise<{
+  challenge: string;
+  token: string;
+}> {
   const res = await fetchWithRetry("/api/v1/auth/options?action=register");
   const data = await res.json();
   if (data.code !== ApiCode.SUCCESS) throw new Error(data.message);
-  return data.payload.challenge;
+  return data.payload;
 }
 
 /**
@@ -185,17 +196,31 @@ export async function parsePasskey(
 }
 
 /**
- * Info: (20251223 - Tzuhan) 呼叫後端 Bundler 發送 UserOp
+ * Info: (20261015 - Luphia) 呼叫後端以 passkey 建立帳號（區塊鏈退役）。
+ * 伺服器驗證註冊、推導位址並寫入 DB；不回 DeWT，登入另走一般 passkey 登入。
  */
-export async function sendUserOpToBundler(
-  userOp: UserOperationJson,
-  entryPointAddress: string,
-) {
-  const res = await fetch("/api/v1/bundler", {
+export async function registerPasskey(params: {
+  registration: RegistrationJSON;
+  challengeToken: string;
+  name: string;
+}): Promise<{ address: string; name: string | null }> {
+  const res = await fetch("/api/v1/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userOp, entryPointAddress }),
+    body: JSON.stringify(params),
   });
 
-  return await res.json();
+  const data = await res.json();
+  if (data.code !== ApiCode.SUCCESS) {
+    throw new AppError({
+      code: typeof data.errorCode === "string" ? data.errorCode : "IS000099",
+      message: data.message || "Registration failed",
+      status:
+        typeof data.code === "number"
+          ? data.code
+          : ApiCode.INTERNAL_SERVER_ERROR,
+    });
+  }
+
+  return data.payload;
 }

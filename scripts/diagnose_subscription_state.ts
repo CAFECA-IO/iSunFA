@@ -7,8 +7,10 @@
  * 2. **履行端**：訂單付了款但 `TeamSubscription` 沒被套用（或已過期／PAST_DUE）。
  *    DB 本身就是免費版——那時候修顯示是白費，該查的是付款履行。
  *
- * 這支把兩者分開：印出每個擁有的團隊的訂閱原值、折算後的有效方案、鏈上卡片狀態，
+ * 這支把兩者分開：印出每個擁有的團隊的訂閱原值、折算後的有效方案，
  * 以及最近的訂閱訂單。**只讀，不寫。**
+ *
+ * Info: (20261015 - Luphia) 鏈上會員卡狀態一欄隨區塊鏈退役移除：付款完成即視為有效，DB 為準。
  *
  * 用法：
  *
@@ -20,7 +22,6 @@ import { teamRepo } from "@/repositories/team.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { TeamRole } from "@/constants/team";
 import { resolveEffectivePlanId } from "@/lib/subscription/plan_rules";
-import { SUBSCRIPTION_CARD_MAX_SYNC_ATTEMPTS } from "@/constants/subscription_nft";
 
 function argValue(flag: string): string | undefined {
   const index = process.argv.indexOf(flag);
@@ -80,16 +81,6 @@ async function main(): Promise<void> {
           `autoRenew=${subscription.autoRenew} seats=${subscription.seats} unitPrice=${subscription.unitPrice}`,
       );
       out(`  有效方案（與扣費側同判準）= ${effective}`);
-      out(
-        `  鏈上卡片: tokenId=${subscription.nftTokenId ?? "—"} ` +
-          `owner=${subscription.nftOwnerAddress ?? "—"} ` +
-          `fingerprint=${subscription.nftFingerprint ?? "—"} ` +
-          `syncedAt=${subscription.nftSyncedAt?.toISOString() ?? "未同步（待辦）"} ` +
-          `attempts=${subscription.nftSyncAttempts}/${SUBSCRIPTION_CARD_MAX_SYNC_ATTEMPTS}`,
-      );
-      if (subscription.nftSyncError) {
-        out(`  最後一次同步錯誤: ${subscription.nftSyncError}`);
-      }
     }
 
     /**

@@ -17,10 +17,10 @@ async function main() {
 
   // Info: (20260430 - Luphia) 1. Register and Login
   console.log(`\n[2] Registering and logging in via registerBotService...`);
-  const { dewt, scwAddress, privKeyHex, credentialID, pubKeyX, pubKeyY } =
+  const { dewt, address, privKeyHex, credentialID } =
     await registerBotService.registerAndLogin(seed, username);
 
-  console.log(`    Bot SCW Address: ${scwAddress}`);
+  console.log(`    Bot Address: ${address}`);
   console.log(`    Bot Private Key: ${privKeyHex.substring(0, 10)}...`);
   console.log(`    DeWT Token: ${dewt.substring(0, 20)}...`);
 
@@ -33,11 +33,8 @@ async function main() {
   const accountBookId = await uploadBotService.uploadVoucher(
     dewt,
     apiUrl,
-    scwAddress,
     privKeyHex,
     credentialID,
-    pubKeyX,
-    pubKeyY,
   );
 
   // Info: (20260430 - Luphia) 4. Generate Reports
@@ -47,11 +44,8 @@ async function main() {
   await analysisBotService.generateAnalysis(
     dewt,
     apiUrl,
-    scwAddress,
     privKeyHex,
     credentialID,
-    pubKeyX,
-    pubKeyY,
     accountBookId,
   );
 

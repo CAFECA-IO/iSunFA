@@ -1,13 +1,23 @@
-import { publicClient } from "@/lib/viem_public";
-import { decodeEventLog, parseAbi, parseEther, formatEther } from "viem";
 import { orderRepo } from "@/repositories/order.repo";
-import { failOrder } from "@/services/order.service";
-import { releasePaymentBlockedJobs } from "@/services/resumable_job.service";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
-import { ABIS } from "@/config/contracts";
 import { BANK_TRANSFER } from "@/constants/price";
+import { releaseDebitOfCancelledOrder } from "@/services/point_payment.service";
+
+/**
+ * Info: (20261015 - Luphia) 訂單追蹤（區塊鏈退役）。
+ *
+ * 原本這支還輪詢 PAYING 訂單的鏈上收據，成功標 PAID、失敗標 PAYMENT_FAILED。
+ * 個人點數付款改為 DB 帳本後，扣點與標 PAID 在付款請求內同步完成
+ * （point_payment.service），不再產生 PAYING；鏈已損毀的舊 PAYING 訂單
+ * 由復原指令（scripts/restore_points_from_db.ts）終結，這裡不碰它們。
+ *
+ * 留下的只有逾時取消：PENDING 超過 30 分鐘的訂單標為 CANCEL。
+ */
 
 let isScanning = false;
+
+// Info: (20261015 - Luphia) PENDING 訂單的逾時門檻
+const STALE_PENDING_MS = 30 * 60 * 1000;
 
 export async function scanPendingTransactions() {
   if (isScanning) {
@@ -19,11 +29,11 @@ export async function scanPendingTransactions() {
 
   try {
     // Info: (20260429 - Luphia) Cancel PENDING orders older than 30 minutes
-    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    const staleBefore = new Date(Date.now() - STALE_PENDING_MS);
     const stalePendingOrders = await orderRepo.findMany({
       where: {
         status: ORDER_STATUS.PENDING,
-        createdAt: { lt: thirtyMinutesAgo },
+        createdAt: { lt: staleBefore },
       },
     });
 
@@ -48,229 +58,30 @@ export async function scanPendingTransactions() {
         continue;
       }
 
-      await orderRepo.update({
-        where: { id: order.id },
-        data: { status: ORDER_STATUS.CANCEL },
-      });
+      // Info: (20261015 - Luphia) 條件式取消：剛好在這一刻被付掉的訂單不會被蓋回 CANCEL
+      const cancelled = await orderRepo.cancelIfPending(order.id);
+      if (!cancelled) continue;
+
+      /**
+       * Info: (20261015 - Luphia) 取消**之後**退回這張單可能已扣的點數（扣點後、標 PAID 前
+       * 被中斷的付款）。順序不能反過來：先退再取消，中間若那個付款請求剛好把訂單標成
+       * PAID，就成了「已付款、點數也退了」。取消成功之後付款端標不了 PAID，
+       * 它自己也會走退點，兩邊共用 `orderRefund` 鍵，只退一次。
+       */
+      const released = await releaseDebitOfCancelledOrder(order);
+      if (!released) {
+        console.error(
+          `[TxTracker] Order ${order.id} cancelled but its point debit was not refunded`,
+        );
+      }
+
       console.log(
         `[TxTracker] Order ${order.id} marked as CANCEL (Pending > 30 mins)`,
       );
       processedCount++;
     }
-
-    // Info: (20260420 - Luphia) Find all orders stuck in PAYING state
-    const pendingOrders = await orderRepo.findMany({
-      where: { status: ORDER_STATUS.PAYING },
-      include: { user: true },
-    });
-
-    for (const order of pendingOrders) {
-      if (!order.transactionHash) {
-        continue; // Info: (20260420 - Luphia) Missing required transaction hash
-      }
-
-      const txHash = order.transactionHash;
-
-      if (order.unit === "TWD") {
-        continue; // Info: (20260420 - Luphia) TWD is handled by Ecpay webhooks, bypass blockchain scan
-      }
-
-      try {
-        // Info: (20260420 - Luphia) Query blockchain for ISC/ICP transaction status
-        const receipt = await publicClient.getTransactionReceipt({
-          hash: txHash as `0x${string}`,
-        });
-
-        if (receipt.status === "success") {
-          if (order.type === ORDER_TYPE.ANALYSIS) {
-            let userOpSuccess = false;
-            for (const log of receipt.logs) {
-              try {
-                const decoded = decodeEventLog({
-                  abi: ABIS.ENTRY_POINT,
-                  data: log.data,
-                  topics: log.topics,
-                });
-                if (decoded.eventName === "UserOperationEvent") {
-                  const args = decoded.args as {
-                    sender: string;
-                    success: boolean;
-                  };
-                  const orderUser = (
-                    order as unknown as { user?: { address: string } | null }
-                  ).user;
-                  if (
-                    orderUser &&
-                    args.sender.toLowerCase() ===
-                      orderUser.address.toLowerCase()
-                  ) {
-                    if (args.success) {
-                      userOpSuccess = true;
-                    }
-                    break;
-                  }
-                }
-              } catch {}
-            }
-
-            if (!userOpSuccess) {
-              await failOrder(order.id, "UserOperation failed on-chain");
-              await orderRepo.update({
-                where: { id: order.id },
-                data: { status: ORDER_STATUS.PAYMENT_FAILED },
-              });
-              console.log(
-                `[TxTracker] Order ${order.id} marked as PAYMENT_FAILED (Tx ${txHash} UserOp failed)`,
-              );
-              processedCount++;
-            } else {
-              await orderRepo.update({
-                where: { id: order.id },
-                data: { status: ORDER_STATUS.PAID },
-              });
-              console.log(
-                `[TxTracker] Order ${order.id} marked as PAID (Tx ${txHash} Success)`,
-              );
-              /**
-               * Info: (20260828 - Julian) 付款到帳 → 釋放卡在「等付款」的可接續任務。
-               *
-               * 這裡只有一行接線，判斷全在 `releasePaymentBlockedJobs` 裡 ——
-               * 這支服務沒有測試檔（它 import `publicClient` 與 `viem`），
-               * 把邏輯放進來等於讓它測不到。接線本身由
-               * `notification_bell_wiring.test.ts` 的掃描釘住。
-               *
-               * Info: (20260831 - Julian) 整包 `order.data` 交下去，不在這裡挑欄位
-               *（review #6732 的 1-A）：「這張訂單是為哪一份任務付的」是業務判斷，
-               * 而這個檔案測不到。這裡只負責把事實遞過去。
-               *
-               * **不擋主流程**：訂單已經標成 PAID 了，這一步失敗不該讓
-               * 整輪追蹤中止 —— 那會讓後面的訂單也停在 PENDING。
-               * 下一次付款或使用者自己回到頁面仍然救得回來。
-               */
-              try {
-                await releasePaymentBlockedJobs({
-                  userId: order.userId,
-                  orderData: order.data,
-                });
-              } catch (error) {
-                console.error(
-                  `[TxTracker] releasePaymentBlockedJobs failed for user ${order.userId}:`,
-                  error,
-                );
-              }
-              processedCount++;
-            }
-          } else {
-            let actualPaid = 0n;
-            for (const log of receipt.logs) {
-              try {
-                const decoded = decodeEventLog({
-                  abi: parseAbi([
-                    "event Transfer(address indexed from, address indexed to, uint256 value)",
-                  ]),
-                  data: log.data,
-                  topics: log.topics,
-                });
-                if (decoded.eventName === "Transfer") {
-                  const msAddress =
-                    process.env.NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS;
-                  if (
-                    msAddress &&
-                    decoded.args.to.toLowerCase() === msAddress.toLowerCase()
-                  ) {
-                    actualPaid = decoded.args.value;
-                    break;
-                  }
-                }
-              } catch {}
-            }
-
-            const expectedPaid = parseEther(
-              (order.amount < 0n ? -order.amount : order.amount).toString(),
-            );
-            console.log(
-              `[TxTracker] Found amount: ${formatEther(actualPaid)} ${order.unit}`,
-            );
-
-            if (actualPaid !== expectedPaid) {
-              await failOrder(order.id, "Payment amounts do not match");
-              await orderRepo.update({
-                where: { id: order.id },
-                data: { status: ORDER_STATUS.PAYMENT_FAILED },
-              });
-              console.log(
-                `[TxTracker] Order ${order.id} marked as PAYMENT_FAILED (Tx ${txHash} amount mismatch)`,
-              );
-              processedCount++;
-            } else {
-              await orderRepo.update({
-                where: { id: order.id },
-                data: { status: ORDER_STATUS.PAID },
-              });
-              console.log(
-                `[TxTracker] Order ${order.id} marked as PAID (Tx ${txHash} Success)`,
-              );
-              /**
-               * Info: (20260828 - Julian) 付款到帳 → 釋放卡在「等付款」的可接續任務。
-               *
-               * 這裡只有一行接線，判斷全在 `releasePaymentBlockedJobs` 裡 ——
-               * 這支服務沒有測試檔（它 import `publicClient` 與 `viem`），
-               * 把邏輯放進來等於讓它測不到。接線本身由
-               * `notification_bell_wiring.test.ts` 的掃描釘住。
-               *
-               * Info: (20260831 - Julian) 整包 `order.data` 交下去，不在這裡挑欄位
-               *（review #6732 的 1-A）：「這張訂單是為哪一份任務付的」是業務判斷，
-               * 而這個檔案測不到。這裡只負責把事實遞過去。
-               *
-               * **不擋主流程**：訂單已經標成 PAID 了，這一步失敗不該讓
-               * 整輪追蹤中止 —— 那會讓後面的訂單也停在 PENDING。
-               * 下一次付款或使用者自己回到頁面仍然救得回來。
-               */
-              try {
-                await releasePaymentBlockedJobs({
-                  userId: order.userId,
-                  orderData: order.data,
-                });
-              } catch (error) {
-                console.error(
-                  `[TxTracker] releasePaymentBlockedJobs failed for user ${order.userId}:`,
-                  error,
-                );
-              }
-              processedCount++;
-            }
-          }
-        } else if (receipt.status === "reverted") {
-          await failOrder(order.id, "UserOp transaction reverted");
-          await orderRepo.update({
-            where: { id: order.id },
-            data: { status: ORDER_STATUS.PAYMENT_FAILED },
-          });
-          console.log(
-            `[TxTracker] Order ${order.id} marked as PAYMENT_FAILED (Tx ${txHash} Reverted)`,
-          );
-          processedCount++;
-        }
-      } catch (e: unknown) {
-        // Info: (20260420 - Luphia) If it throws, it usually means TransactionReceiptNotFoundError. We wait.
-        const errorMsg = e instanceof Error ? e.message : String(e);
-        if (
-          !errorMsg.includes("could not be found") &&
-          !errorMsg.includes("not found") &&
-          !errorMsg.includes("TransactionReceiptNotFound")
-        ) {
-          console.error(
-            `[TxTracker] Error scanning tx ${txHash} for order ${order.id}:`,
-            errorMsg,
-          );
-        }
-      }
-    }
   } catch (error) {
-    console.error(
-      "[TxTracker] Fatal error while scanning transactions:",
-      error,
-    );
+    console.error("[TxTracker] Fatal error while scanning orders:", error);
   } finally {
     isScanning = false;
   }

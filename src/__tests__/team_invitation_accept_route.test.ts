@@ -65,10 +65,6 @@ jest.mock("@/services/webauthn.service", () => ({
   webAuthnService: { verifySignature: jest.fn(async () => true) },
 }));
 
-jest.mock("@/services/bundler.service", () => ({
-  bundlerService: { sendUserOp: jest.fn(async () => undefined) },
-}));
-
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
 
 const NOW = Date.now();

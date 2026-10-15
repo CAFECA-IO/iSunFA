@@ -158,7 +158,6 @@ const GRANDFATHERED_PRISMA_IMPORTERS: readonly string[] = [
   join("scripts", "bootstrap_hr_admin.ts"),
   join("scripts", "diagnose_wallet_conservation.ts"),
   join("scripts", "import_pdfs.ts"),
-  join("scripts", "migrate_allocations_onchain.ts"),
   join("scripts", "reconcile_leave_balances.ts"),
   join("scripts", "repair_wallet_conservation.ts"),
   join("scripts", "seed", "link_employee_user.ts"),
@@ -185,18 +184,17 @@ const GRANDFATHERED_PRISMA_IMPORTERS: readonly string[] = [
  * `scripts/` 之後才需要它（`src` 底下非 repository 的 `$transaction` 是 0，
  * 所以先前這一條不需要白名單）。
  *
- * 三支都是維運腳本，而它們開交易的理由與 service 不同：
+ * 兩支都是維運腳本，而它們開交易的理由與 service 不同：
  * `leave_ledger.ts` 的原話是「這裡全部收 `tx`，不自己開交易：
  * 開交易是**呼叫端**的責任」—— CLI 就是那個呼叫端，
  * 它得先有一個 `tx` 才餵得進 `sumLedgerMinutes` / `sumExpiringSoonMinutes`。
  *
- * 所以這三個名字記的不是「違反」而是「這條規則對 CLI 入口不適用」。
+ * 所以這兩個名字記的不是「違反」而是「這條規則對 CLI 入口不適用」。
  * 仍然列名而不是整個 `scripts/` 放行：新增一支要動這張表，
  * 那一刻才有人會問「它真的是入口嗎」。
  */
 const GRANDFATHERED_TRANSACTION_USERS: readonly string[] = [
   join("scripts", "backfill_remove_team_admin.ts"),
-  join("scripts", "migrate_allocations_onchain.ts"),
   join("scripts", "reconcile_leave_balances.ts"),
 ];
 

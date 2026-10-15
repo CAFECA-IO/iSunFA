@@ -6,8 +6,6 @@ import ConfirmModal from "@/components/common/confirm_modal";
 import { useTranslation } from "@/i18n/i18n_context";
 import { SetupVerifyEngine } from "@/components/admin/setup/verify_engine_step";
 import { SetupStartVerifyNodes } from "@/components/admin/setup/start_verify_nodes_step";
-import { SetupFundWallet } from "@/components/admin/setup/fund_wallet_step";
-import { SetupDeployContracts } from "@/components/admin/setup/deploy_contracts_step";
 import { SetupInitDatabase } from "@/components/admin/setup/init_database_step";
 import { SetupSuperAdmin } from "@/components/admin/setup/super_admin_step";
 import { SetupDomainConfig } from "@/components/admin/setup/domain_config_step";
@@ -20,6 +18,9 @@ import {
 import { getEnvSignatureStatus } from "@/app/admin/setup/_api/config.api";
 import { clearSuperAdminConfig } from "@/app/admin/setup/_api/identity.api";
 import { Settings, Loader2, ServerCrash } from "lucide-react";
+
+// Info: (20261015 - Luphia) 最後一步（.env 簽章）。步驟數隨區塊鏈退役由 8 減為 6
+const FINAL_STEP = 6;
 
 export default function SetupWizardPage() {
   const { t } = useTranslation();
@@ -36,38 +37,31 @@ export default function SetupWizardPage() {
       detail: t("admin_setup.step2.desc"),
       component: SetupStartVerifyNodes,
     },
+    /**
+     * Info: (20261015 - Luphia) 區塊鏈退役：原第 3 步（管理員錢包注資／挖礦）與第 4 步
+     * （部署智能合約）移除，其後步驟往前遞補。i18n 鍵沿用原步驟編號（step5…step8），
+     * 只改 id——鍵名改了，五個語系的字典要跟著搬，沒有換到任何東西。
+     */
     {
       id: 3,
-      title: t("admin_setup.step3.title"),
-      detail: t("admin_setup.step3.desc"),
-      component: SetupFundWallet,
-    },
-    {
-      id: 4,
-      title: t("admin_setup.step4.title"),
-      detail: t("admin_setup.step4.desc"),
-      component: SetupDeployContracts,
-    },
-    {
-      id: 5,
       title: t("admin_setup.step5.title"),
       detail: t("admin_setup.step5.desc"),
       component: SetupInitDatabase,
     },
     {
-      id: 6,
+      id: 4,
       title: t("admin_setup.step6.title"),
       detail: t("admin_setup.step6.desc"),
       component: SetupSuperAdmin,
     },
     {
-      id: 7,
+      id: 5,
       title: t("admin_setup.step7.title"),
       detail: t("admin_setup.step7.desc"),
       component: SetupDomainConfig,
     },
     {
-      id: 8,
+      id: 6,
       title: t("admin_setup.step8.title"),
       detail: t("admin_setup.step8.desc"),
       component: SetupFinalizeEnv,
@@ -103,8 +97,8 @@ export default function SetupWizardPage() {
               res.missingKeys?.length === 1 &&
               res.missingKeys[0] === "SUPER_ADMIN_SIGNATURE")
           ) {
-            setStep(8);
-            setActiveTab(8);
+            setStep(FINAL_STEP);
+            setActiveTab(FINAL_STEP);
             setIsLockedMode(true);
           } else if (
             res.status === "MISSING_KEYS" &&
@@ -115,36 +109,26 @@ export default function SetupWizardPage() {
               POSTGRES_HOST: 2,
               POSTGRES_PORT: 2,
               STORAGE_DOMAIN: 2,
-              NEXT_PUBLIC_RPC_URL: 2,
-              NEXT_PUBLIC_BAIFA_EXPLORER: 2,
-              NEXT_PUBLIC_ISUNCOIN_CHAIN_ID: 2,
               REPORT_OUTPUT_DIR: 2,
               MISSION_DIR: 2,
               ISSUE_DIR: 2,
-              NEXT_PUBLIC_KYC_REGISTRY_ADDRESS: 4,
-              NEXT_PUBLIC_DYNAMIC_MEMBERSHIP_CARD_ADDRESS: 4,
-              NEXT_PUBLIC_CREDIT_POINT_ADDRESS: 4,
-              NEXT_PUBLIC_MEMBERSHIP_SYSTEM_ADDRESS: 4,
-              NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS: 4,
-              NEXT_PUBLIC_SCW_FACTORY_ADDRESS: 4,
-              NEXT_PUBLIC_ENTRY_POINT_ADDRESS: 4,
-              POSTGRES_DB: 5,
-              POSTGRES_USER: 5,
-              POSTGRES_PASSWORD: 5,
-              DATABASE_URL: 5,
-              DEWT_PRIVATE_KEY_PEM: 6,
-              SUPER_ADMIN_CRED_ID: 6,
-              SUPER_ADMIN_PUB_X: 6,
-              SUPER_ADMIN_PUB_Y: 6,
-              NEXT_PUBLIC_APP_URL: 7,
-              NEXT_PUBLIC_GA_MEASUREMENT_ID: 7,
-              GEMINI_API_KEY: 7,
-              OEN_ACCESS_TOKEN: 7,
-              OEN_MERCHANT_ID: 7,
-              MODEL: 7,
-              SUPER_ADMIN_SIGNATURE: 8,
+              POSTGRES_DB: 3,
+              POSTGRES_USER: 3,
+              POSTGRES_PASSWORD: 3,
+              DATABASE_URL: 3,
+              DEWT_PRIVATE_KEY_PEM: 4,
+              SUPER_ADMIN_CRED_ID: 4,
+              SUPER_ADMIN_PUB_X: 4,
+              SUPER_ADMIN_PUB_Y: 4,
+              NEXT_PUBLIC_APP_URL: 5,
+              NEXT_PUBLIC_GA_MEASUREMENT_ID: 5,
+              GEMINI_API_KEY: 5,
+              OEN_ACCESS_TOKEN: 5,
+              OEN_MERCHANT_ID: 5,
+              MODEL: 5,
+              SUPER_ADMIN_SIGNATURE: FINAL_STEP,
             };
-            let minStep = 8;
+            let minStep = FINAL_STEP;
             for (const key of res.missingKeys) {
               const s = KEY_STEP_MAP[key] || 1;
               if (s < minStep) minStep = s;
@@ -178,7 +162,7 @@ export default function SetupWizardPage() {
   };
 
   const handleConfirmReset = () => {
-    if (step === 8) {
+    if (step === FINAL_STEP) {
       clearSuperAdminConfig().catch(console.error);
     }
     setStep(1);

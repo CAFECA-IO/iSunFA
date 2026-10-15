@@ -1,7 +1,6 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { ApiCode } from "@/lib/utils/status";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { accountBookRepo } from "@/repositories/account_book.repo";
 import { fileRepo } from "@/repositories/file.repo";
@@ -13,15 +12,9 @@ import {
   ICreateAuditLogInput,
 } from "@/repositories/audit_log.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import { paymentRepo } from "@/repositories/payment.repo";
-import { ORDER_STATUS } from "@/constants/status";
-import { decodeFunctionData, keccak256, stringToBytes, parseAbi } from "viem";
 import { AppError } from "@/lib/utils/error";
-import { getPendingOrder } from "@/services/order.service";
-import { publicClient } from "@/lib/viem_public";
-import { ABIS } from "@/config/contracts";
-import { webAuthnService } from "@/services/webauthn.service";
+import { getPaidOrder } from "@/services/order.service";
 import {
   IAIAnalysisOrderData,
   IAIAnalysisOrderFile,
@@ -79,123 +72,27 @@ export async function POST(
     }
 
     const orderId = authentication.orderId;
-    const authWithTx = authentication as AuthenticationJSON & {
-      transactionHash?: string;
-    };
-    const txHash = authWithTx.transactionHash;
 
+    /**
+     * Info: (20261015 - Luphia) 付款確認改看訂單狀態（區塊鏈退役）。
+     *
+     * 原本這裡解碼鏈上交易確認綁定，再把 PENDING 標成 PAID 讓 MissionIssuer 接手；
+     * 沒帶 txHash 時「驗訂單 challenge 的簽章就標成 PAID」——一點都沒扣；
+     * 訂單不是 PENDING 時則什麼都不檢查就往下做。現在付款只會經過點數帳本
+     * （point_payment）或團隊額度（team_quota_payment），兩者都在付款當下推進到
+     * 付款後狀態——這裡只認那些狀態，也不再改寫訂單。
+     */
     try {
-      if (txHash) {
-        const tx = await publicClient.getTransaction({
-          hash: txHash as `0x${string}`,
-        });
-        if (!tx) {
-          throw new Error("Transaction not found");
-        }
-
-        let foundUserOp = false;
-        let verifiedHash = false;
-
-        try {
-          const { args } = decodeFunctionData({
-            abi: ABIS.ENTRY_POINT,
-            data: tx.input,
-          });
-          const ops = args[0] as unknown as {
-            sender: string;
-            callData: `0x${string}`;
-          }[];
-
-          for (const op of ops) {
-            if (op.sender.toLowerCase() === sessionUser.address.toLowerCase()) {
-              foundUserOp = true;
-              const executeAbi = parseAbi([
-                "function execute(address, uint256, bytes) external",
-              ]);
-
-              const { args: executeArgs } = decodeFunctionData({
-                abi: executeAbi,
-                data: op.callData,
-              });
-
-              const innerCallData = executeArgs[2];
-
-              const orderHash = keccak256(stringToBytes(orderId));
-              const hashHex = orderHash.slice(2).toLowerCase();
-              if (innerCallData.toLowerCase().endsWith(hashHex)) {
-                verifiedHash = true;
-              }
-              break;
-            }
-          }
-        } catch {
-          throw new Error("Invalid transaction structure");
-        }
-
-        if (!foundUserOp) {
-          throw new Error(
-            "No UserOperation found for this user in the transaction",
-          );
-        }
-        if (!verifiedHash) {
-          throw new Error("Transaction is not bound to this Order ID");
-        }
-
-        /**
-         * Info: (20260418 - Luphia)
-         * Removed synchronous `waitForTransactionReceipt` to prevent 45s API timeout.
-         * We trust the transaction has been dispatched cleanly by blockchain_payment.
-         * The background worker or asynchronous order completion handles failures.
-         * Wait to complete order because multiple AI scans share the same order, so only complete it once if pending!
-         */
-        const existingOrder = await getPendingOrder(orderId, creator.id).catch(
-          () => null,
-        );
-        if (existingOrder && existingOrder.status === "PENDING") {
-          // Info: (20260420 - Luphia) Mark as PAID so MissionIssuer picks it up
-          await paymentRepo.updateOrderStatus(
-            orderId,
-            ORDER_STATUS.PAID,
-            undefined,
-            {
-              transactionHash: txHash,
-            },
-          );
-        }
-      } else {
-        const order = await getPendingOrder(orderId, creator.id).catch(
-          () => null,
-        );
-
-        if (order && order.status === "PENDING") {
-          await webAuthnService.verifySignature(
-            sessionUser.address,
-            authentication,
-            order.challenge,
-          );
-
-          // Info: (20260420 - Luphia) Mark as PAID so MissionIssuer picks it up
-          await paymentRepo.updateOrderStatus(
-            orderId,
-            ORDER_STATUS.PAID,
-            undefined,
-            {
-              signature: JSON.stringify(authentication),
-            },
-          );
-        }
-      }
+      await getPaidOrder(orderId, creator.id);
     } catch (error) {
       if (error instanceof AppError) {
-        return jsonFail(API_ERRORS.IS_UNKNOWN);
+        return jsonFail({
+          code: error.apiCode,
+          message: error.message,
+          status: error.code,
+        });
       }
-      return jsonFail({
-        code: "UN000099",
-        message: String(
-          `Verification failed: ${(error as Error).message}`,
-        ).slice(0, 30),
-        status: ApiCode.UNAUTHORIZED,
-      });
+      return jsonFail(API_ERRORS.IS_UNKNOWN);
     }
 
     const auditLogsToCreate: ICreateAuditLogInput[] = [];

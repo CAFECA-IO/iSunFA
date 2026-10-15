@@ -1,10 +1,4 @@
-import { prepareTransferUserOp } from "@/lib/utils/user_op_builder";
-import {
-  encodeWebAuthnSignature,
-  hexToBase64Url,
-} from "@/lib/auth/crypto_utils";
-import type { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
-import { registerBotService } from "@/services/bot.register.service";
+import { paymentBotService } from "@/services/bot.payment.service";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import { ORDER_TYPE } from "@/constants/status";
 import { ApiCode } from "@/lib/utils/status";
@@ -13,11 +7,8 @@ export class UploadBotService {
   public async uploadVoucher(
     dewt: string,
     apiUrl: string,
-    scwAddress: string,
     privKeyHex: string,
     credentialID: string,
-    pubKeyX: string,
-    pubKeyY: string,
   ): Promise<string> {
     console.log(`\n[Bot:Upload] Starting upload voucher flow...`);
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -105,50 +96,15 @@ export class UploadBotService {
       `[Bot:Upload] Order Created: ${orderId}, Cost: ${cost} Credits`,
     );
 
-    // Info: (20260430 - Luphia)5. Prepare and Sign Payment
-    const prepRes = await prepareTransferUserOp(scwAddress, cost, orderId);
-    if (!prepRes.success || !prepRes.data)
-      throw new Error(`prepareTransferUserOp failed: ${prepRes.message}`);
-    const { userOp, userOpHash } = prepRes.data;
-
-    const challengeBase64 = hexToBase64Url(userOpHash);
-    const privKeyBytes = Buffer.from(privKeyHex, "hex");
-    const authJson = registerBotService.createMockAuthenticationJSON(
-      challengeBase64,
+    // Info: (20261015 - Luphia) 5. 以個人點數付款（DB 帳本，取代鏈上轉帳）
+    await paymentBotService.payOrderWithPoints({
+      dewt,
+      apiUrl,
+      orderId,
       credentialID,
-      privKeyBytes,
-    );
-    const encodedSignature = encodeWebAuthnSignature(
-      authJson as AuthenticationJSON,
-      BigInt(pubKeyX),
-      BigInt(pubKeyY),
-    );
-
-    (authJson as unknown as Record<string, unknown>).orderId = orderId; // Info: (20260430 - Luphia) Include orderId for verification
-
-    const paymentRes = await fetch(
-      `${apiUrl}/api/v1/user/order/${orderId}/blockchain_payment`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${dewt}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userOp: { ...userOp, signature: encodedSignature },
-          signature: encodedSignature,
-          authentication: authJson,
-        }),
-      },
-    );
-    const paymentData = await paymentRes.json();
-    if (!paymentRes.ok || paymentData.code !== ApiCode.SUCCESS)
-      throw new Error(`Payment failed: ${JSON.stringify(paymentData)}`);
-    console.log(
-      `[Bot:Upload] Payment Success! TxHash: ${paymentData.payload?.txHash}`,
-    );
-    const txHash = paymentData.payload?.txHash;
-    (authJson as unknown as Record<string, unknown>).transactionHash = txHash;
+      privKeyHex,
+    });
+    console.log(`[Bot:Upload] Payment Success!`);
 
     // Info: (20260430 - Luphia) 6. Create Voucher via AI Analysis
     const voucherRes = await fetch(
@@ -159,9 +115,13 @@ export class UploadBotService {
           Authorization: `Bearer ${dewt}`,
           "Content-Type": "application/json",
         },
+        /**
+         * Info: (20261015 - Luphia) 付款確認改看訂單狀態，`authentication` 只需帶 orderId。
+         * 端點讀的是 `files` 陣列（原本送單數 `file`，會被擋在 VA_FILE_IS_REQUIRED）。
+         */
         body: JSON.stringify({
-          file: { hash: filePayload.hash, file: { name: filePayload.name } },
-          authentication: authJson,
+          files: [{ hash: filePayload.hash, file: { name: filePayload.name } }],
+          authentication: { orderId },
         }),
       },
     );

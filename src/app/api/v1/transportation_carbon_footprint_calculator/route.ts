@@ -3,8 +3,9 @@ import {
   calculateLogisticsPlanFromText,
 } from "@/services/route.service";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { paymentRepo } from "@/repositories/payment.repo";
 import { ORDER_STATUS } from "@/constants/status";
+import { isPostPaymentOrderStatus } from "@/constants/point_payment";
+import { getOrderById, updateOrderStatus } from "@/services/order.service";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
         });
       }
 
-      const order = await paymentRepo.getOrderById(body.orderId);
+      const order = await getOrderById(body.orderId);
       if (!order || order.userId !== user.id) {
         return jsonFail({
           ...API_ERRORS.VL_MISSING_PARAMS,
@@ -57,11 +58,11 @@ export async function POST(request: Request) {
         });
       }
 
-      if (
-        order.status !== ORDER_STATUS.PAYING &&
-        order.status !== ORDER_STATUS.PAID &&
-        order.status !== ORDER_STATUS.COMPLETED
-      ) {
+      /**
+       * Info: (20261015 - Luphia) 不再接受 PAYING（區塊鏈退役）：那是鏈上付款在途的舊狀態，
+       * 鏈已損毀、無從確認是否真的扣到。付款後狀態的判準與付款端同源。
+       */
+      if (!isPostPaymentOrderStatus(order.status)) {
         return jsonFail({
           ...API_ERRORS.VL_MISSING_PARAMS,
           message: "Order payment is not completed.",
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
 
       // Info: (20260501 - Luphia) Consume the order to prevent reuse
       if (order.status !== ORDER_STATUS.COMPLETED) {
-        await paymentRepo.updateOrderStatus(order.id, ORDER_STATUS.COMPLETED);
+        await updateOrderStatus(order.id, ORDER_STATUS.COMPLETED);
       }
 
       const plan = await calculateLogisticsPlan(

@@ -1,7 +1,5 @@
-import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
-import { publicClient } from "@/lib/viem_public";
-import { burn } from "@/services/token.service";
 import { logger } from "@/lib/utils/logger";
+import { getPointBalance } from "@/services/point_ledger.service";
 
 /**
  * Info: (20260814 - Luphia) 成員個人鏈上點數的讀取與扣款（PR #6652 第二輪 A-1）。
@@ -14,12 +12,12 @@ import { logger } from "@/lib/utils/logger";
  * 而且是在**結算**時一次扣清（不做預扣—退還），所以一次溢出消費最多一筆鏈上交易。
  */
 
-// Info: (20260814 - Luphia) CreditPoint 為 18 位小數的 ERC-20，點數與 wei 的換算集中在這裡
-const CREDIT_DECIMALS = 18;
-
-export function isChainCreditConfigured(): boolean {
-  return Boolean(CONTRACT_ADDRESSES.CREDIT_POINT);
-}
+/**
+ * Info: (20261015 - Luphia) 區塊鏈退役：個人點數改為 DB 帳本（`PointLedger`，
+ * `User.pointBalance` 為其快取），這一層的讀取改讀帳本，平台側 burn 一併移除。
+ * 檔名與函式名保留「chain」是為了不打斷 `spend_second_layer_inert.test.ts`
+ * 釘住的集中標記；它們指的已經是「成員個人點數」，不是鏈上餘額。
+ */
 
 /**
  * Info: (20260818 - Luphia) 這一層**以現在的做法**不可扣款（第三輪，調查 20260818）。
@@ -50,6 +48,10 @@ export function isChainCreditConfigured(): boolean {
  *
  * 也就是說缺的不是鏈上能力，是**這一層沒有接上那條既有路徑**。要恢復請改用它，
  * 不要改合約；連帶會拿到它已經做對的部分（訂單即 DB 分錄、冪等鍵、失敗鑄回退款）。
+ *
+ * Info: (20261015 - Luphia) 區塊鏈退役後那條既有路徑改為 `POST /order/[id]/point_payment`
+ * （DB 帳本扣點；passkey 帳號仍以 USER_ACTION challenge 簽章確認，託管帳號直接扣），
+ * 不再經過 `prepareTransferUserOp` 與 `MEMBERSHIP_SYSTEM`。上面的結論不變。
  *
  * 剩下的是產品決定而非工程限制：團隊路徑是**實耗結算**（跑完才知道金額），訂單路徑
  * 必須**先收款**。無帳本那條的解法是保守預估一次收足、不退差額。
@@ -102,33 +104,20 @@ export function isChainCreditSpendable(): boolean {
 }
 
 /**
- * Info: (20260814 - Luphia) 讀取成員可用的個人點數（無條件捨去到整數點）。
+ * Info: (20260814 - Luphia) 讀取成員可用的個人點數。
  *
  * 讀取失敗一律回 0 而非丟錯：這個值只用來決定「要不要放行」，
- * 讓 RPC 抖動把用戶擋在額度已經用完的畫面前，比少放行一次更糟——
  * 真正的扣款在結算時還會再確認一次。
+ *
+ * Info: (20261015 - Luphia) 改讀 DB 帳本（區塊鏈退役），參數由錢包地址改為 userId。
+ * 帳本以整數點記帳，不再有 18 位小數的換算。
  */
-export async function readChainCredits(address: string): Promise<bigint> {
-  if (!isChainCreditConfigured()) return BigInt(0);
+export async function readChainCredits(userId: string): Promise<bigint> {
   try {
-    const balance = (await publicClient.readContract({
-      address: CONTRACT_ADDRESSES.CREDIT_POINT,
-      abi: ABIS.CREDIT_POINT,
-      functionName: "balanceOf",
-      args: [address as `0x${string}`],
-    })) as bigint;
-    // Info: (20260814 - Luphia) 小數部分不足 1 點的零頭不計入可用量
-    /**
-     * Info: (20260818 - Luphia) 以整數除法換算，不走浮點（第三輪 A-1 附註、CLAUDE.md §2）。
-     *
-     * 原本是 `BigInt(Math.floor(Number(formatUnits(balance, 18))))`——繞了一趟 float。
-     * 目前的點數量級遠低於 2^53 所以不會掉精度，但這是本專案自己立規矩要防的寫法，
-     * 而且它就在金額路徑上。整數除法同樣是「無條件捨去到整點」，且永遠精確。
-     */
-    return balance / BigInt(10) ** BigInt(CREDIT_DECIMALS);
+    return await getPointBalance(userId);
   } catch (error) {
-    logger.error("failed to read chain credits", {
-      address,
+    logger.error("failed to read personal credits", {
+      userId,
       message: error instanceof Error ? error.message : String(error),
     });
     return BigInt(0);
@@ -142,47 +131,30 @@ export interface IChainChargeResult {
 }
 
 /**
- * Info: (20260814 - Luphia) 自成員錢包銷毀點數作為消費扣款。
+ * Info: (20260814 - Luphia) 結算溢出時向成員個人點數收取差額。
  *
- * Info: (20260818 - Luphia) 這支的**前提就是錯的**，留著只為了說明錯在哪（見
- * `isChainCreditSpendable` 的更正段）。它假設「由伺服器代為執行、不需要用戶逐次簽章」
- * 是可以用信任模型變更換來的無縫體驗——但條款 §3.3 承諾的正好相反（扣除需經持有人
- * 簽章確認），而部署的合約也沒有給平台那個權限。
+ * Info: (20260818 - Luphia) 原本的做法是平台側 burn，**前提就是錯的**（見
+ * `isChainCreditSpendable` 的更正段）：條款 §3.3 承諾扣除需經持有人簽章確認，
+ * 而部署的合約也沒有給平台那個權限。
  *
- * 要接第二層請改走 `ensurePersonalCreditCharge()` 那條持有人簽章的路，不要沿用這支。
+ * Info: (20261015 - Luphia) 區塊鏈退役：burn 已移除。改接 DB 帳本扣點需要一把以
+ * 結算冪等鍵推導的 `PointLedger` 鍵（否則結算重試會再扣一次），以及上面那個
+ * 授權問題的產品決定——兩者都還沒有，所以這支即使旗標翻成 true 也只回「未接線」，
+ * 讓結算照舊追補到訂閱額度，而不是悄悄扣錢。
  */
 export async function chargeChainCredits(
-  address: string,
+  userId: string,
   points: bigint,
 ): Promise<IChainChargeResult> {
   if (points <= BigInt(0)) return { charged: false, reason: "non-positive" };
 
-  /**
-   * Info: (20260818 - Luphia) 擋在這裡而不是讓它走到 `burn()`：走到底會送出一筆必定
-   * revert 的交易，而在 `receipt.status` 的檢查補上之前，那筆 revert 還會被回報成成功。
-   */
   if (!isChainCreditSpendable()) {
     return { charged: false, reason: "not-spendable" };
   }
-  if (!isChainCreditConfigured()) {
-    logger.error("credit point address not configured; cannot charge", {
-      address,
-    });
-    return { charged: false, reason: "not-configured" };
-  }
 
-  const balance = await readChainCredits(address);
-  if (balance < points) {
-    return { charged: false, reason: "insufficient" };
-  }
-
-  const result = await burn(
-    CONTRACT_ADDRESSES.CREDIT_POINT,
-    address,
-    Number(points),
-  );
-  if (!result.success) {
-    return { charged: false, reason: result.message ?? "burn failed" };
-  }
-  return { charged: true, txHash: (result.data as { tx?: string })?.tx };
+  logger.error("personal credit settlement charge is not wired", {
+    userId,
+    points: points.toString(),
+  });
+  return { charged: false, reason: "not-wired" };
 }

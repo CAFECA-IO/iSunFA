@@ -426,9 +426,10 @@ export async function spendCredits(
      * `walletBalance`，而那個欄位驅動的是「可改用個人點數繼續」的提示。
      * 顯示一個用不了的餘額，等於叫使用者去按一顆不會有反應的按鈕。
      */
+    // Info: (20261015 - Luphia) 個人點數改讀 DB 帳本（區塊鏈退役），以 userId 讀取
     const chainCredits =
-      spender?.address && isChainCreditSpendable()
-        ? await readChainCredits(spender.address)
+      spender && isChainCreditSpendable()
+        ? await readChainCredits(userId)
         : BigInt(0);
 
     /**
@@ -832,7 +833,7 @@ export async function settleSpend(
         ? await webAuthnRepo.findUserById(userId)
         : null;
       const chainCharge = spender?.address
-        ? await chargeChainCredits(spender.address, shortfall)
+        ? await chargeChainCredits(userId, shortfall)
         : { charged: false, reason: "not-spendable" };
 
       if (chainCharge.charged) {

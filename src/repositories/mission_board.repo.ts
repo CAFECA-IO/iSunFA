@@ -2,6 +2,11 @@ import { prisma } from "@/lib/prisma";
 import { MissionSubmission, MissionTask } from "@/generated";
 import { MISSION_TASK_STATUS } from "@/constants/mission_board";
 
+// Info: (20261015 - Luphia) listTasks 會一併帶出提交紀錄，型別要讓呼叫端看得到
+export type MissionTaskWithSubmissions = MissionTask & {
+  submissions: MissionSubmission[];
+};
+
 /**
  * Info: (20261015 - Luphia) 任務看板 Repository（取代鏈上 MissionBoard 合約）。
  *
@@ -44,10 +49,27 @@ export class MissionBoardRepository {
     });
   }
 
+  // Info: (20261015 - Luphia) 以內容識別碼找任務（amortization worker 用雜湊當 contentCid 做冪等）
+  async findTaskByContentCid(contentCid: string): Promise<MissionTask | null> {
+    return prisma.missionTask.findFirst({
+      where: { contentCid },
+      orderBy: { id: "asc" },
+    });
+  }
+
+  // Info: (20261015 - Luphia) 只取 id，給資料夾 GC 判斷「這個任務還在不在」
+  async listTaskIds(): Promise<number[]> {
+    const rows = await prisma.missionTask.findMany({
+      select: { id: true },
+      orderBy: { id: "asc" },
+    });
+    return rows.map((row) => row.id);
+  }
+
   async listTasks(params: {
     skip?: number;
     take?: number;
-  }): Promise<{ tasks: MissionTask[]; total: number }> {
+  }): Promise<{ tasks: MissionTaskWithSubmissions[]; total: number }> {
     const [tasks, total] = await Promise.all([
       prisma.missionTask.findMany({
         orderBy: { id: "desc" },
@@ -71,7 +93,8 @@ export class MissionBoardRepository {
       const task = await tx.missionTask.findUnique({
         where: { id: params.taskId },
       });
-      if (!task) throw new Error(`MissionBoard: task ${params.taskId} not found`);
+      if (!task)
+        throw new Error(`MissionBoard: task ${params.taskId} not found`);
       if (
         task.status !== MISSION_TASK_STATUS.OPEN &&
         task.status !== MISSION_TASK_STATUS.PENDING_REVIEW
@@ -143,13 +166,47 @@ export class MissionBoardRepository {
     });
   }
 
-  // Info: (20261015 - Luphia) 對應合約 cancelTask：只有 Open 可取消
+  /**
+   * Info: (20261015 - Luphia) 對應合約 cancelTask：只有 Open 且沒有任何提交的任務可取消。
+   *
+   * 合約另有 `submissionCount == 0` 的 require，這裡照搬。目前的狀態機裡
+   * 交件後任務必定離開 Open，所以這條是防線而不是常態分支；
+   * 兩個條件放在同一個 `updateMany` 的 where 裡，檢查與寫入不會被其他請求插隊。
+   */
   async cancelTask(taskId: number): Promise<void> {
     const updated = await prisma.missionTask.updateMany({
-      where: { id: taskId, status: MISSION_TASK_STATUS.OPEN },
+      where: {
+        id: taskId,
+        status: MISSION_TASK_STATUS.OPEN,
+        submissionCount: 0,
+      },
       data: { status: MISSION_TASK_STATUS.CLOSED },
     });
-    if (updated.count === 0) throw new Error("MissionBoard: Not Open");
+    if (updated.count === 0) {
+      throw new Error("MissionBoard: Not Open or has submissions");
+    }
+  }
+
+  /**
+   * Info: (20261015 - Luphia) 對應合約 bumpTask：Open 任務的懸賞加一成。
+   *
+   * 合約要求加碼量 > 0（懸賞太小時整數除法得 0）；照搬，避免出現「按了加碼卻沒變」。
+   */
+  async bumpTask(taskId: number): Promise<MissionTask> {
+    return prisma.$transaction(async (tx) => {
+      const task = await tx.missionTask.findUnique({ where: { id: taskId } });
+      if (!task || task.status !== MISSION_TASK_STATUS.OPEN) {
+        throw new Error("MissionBoard: Task is not open");
+      }
+      const bumpAmount = task.reward / 10n;
+      if (bumpAmount <= 0n) {
+        throw new Error("MissionBoard: Bump amount too small");
+      }
+      return tx.missionTask.update({
+        where: { id: taskId },
+        data: { reward: task.reward + bumpAmount },
+      });
+    });
   }
 
   // Info: (20261015 - Luphia) 對應合約 resolveDispute：Disputed → Closed

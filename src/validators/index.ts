@@ -7,6 +7,8 @@ export * from "@/validators/account_book";
 export * from "@/validators/pdf_editor";
 export * from "@/validators/export";
 export * from "@/validators/order";
+// Info: (20261015 - Luphia) 個人點數付款（區塊鏈退役）
+export * from "@/validators/point_payment";
 export * from "@/validators/carbon_paragraph_draft";
 export * from "@/validators/carbon_chat";
 export * from "@/validators/carbon_attachment_extraction";

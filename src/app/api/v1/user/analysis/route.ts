@@ -1,14 +1,5 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
-import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
-import {
-  decodeFunctionData,
-  keccak256,
-  stringToBytes,
-  parseAbi,
-  decodeEventLog,
-} from "viem";
-
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
@@ -16,17 +7,9 @@ import {
   analysisService,
   IGenerateAnalysisParams,
 } from "@/services/analysis.service";
-import { webAuthnService } from "@/services/webauthn.service";
 import { AppError } from "@/lib/utils/error";
-import {
-  completeOrder,
-  failOrder,
-  getPendingOrder,
-} from "@/services/order.service";
+import { getPaidOrder } from "@/services/order.service";
 import { getPeriodDateRange } from "@/lib/analysis/period";
-import { publicClient } from "@/lib/viem_public";
-import { ABIS } from "@/config/contracts";
-import { paymentRepo } from "@/repositories/payment.repo";
 import { analysisRepo, FullAnalysis } from "@/repositories/analysis.repo";
 import { ORDER_TYPE } from "@/constants/status";
 
@@ -54,192 +37,32 @@ export async function POST(request: NextRequest) {
       files,
     } = body;
 
-    // Info: (20260128 - Luphia) Validate FIDO2 Signature OR Transaction Binding
+    // Info: (20260128 - Luphia) Validate payment binding
     if (!authentication || !authentication.orderId) {
       return jsonFail(API_ERRORS.VL_INVALID_ID);
     }
 
     const orderId = authentication.orderId;
-    const authWithTx = authentication as AuthenticationJSON & {
-      transactionHash?: string;
-    };
-    const txHash = authWithTx.transactionHash;
-
-    try {
-      if (txHash) {
-        // Info: (20260209 - Tzuhan) Verify Transaction Binding
-        console.log(
-          `[Analysis] Verifying transaction binding for Order ${orderId} in Tx ${txHash}`,
-        );
-
-        // Info: (20260209 - Tzuhan) 1. Get Transaction
-        const tx = await publicClient.getTransaction({
-          hash: txHash as `0x${string}`,
-        });
-        if (!tx) {
-          throw new Error("Transaction not found");
-        }
-
-        // Info: (20260209 - Tzuhan) 2. Decode EntryPoint.handleOps
-        let foundUserOp = false;
-        let verifiedHash = false;
-
-        try {
-          const { args } = decodeFunctionData({
-            abi: ABIS.ENTRY_POINT,
-            data: tx.input,
-          });
-          const ops = args[0] as unknown as {
-            sender: string;
-            callData: `0x${string}`;
-          }[];
-
-          // Info: (20260209 - Tzuhan) 3. Find UserOp for this user
-          for (const op of ops) {
-            if (op.sender.toLowerCase() === user.address.toLowerCase()) {
-              foundUserOp = true;
-              // Info: (20260209 - Tzuhan) 4. Decode SCW.execute from callData
-              // Info: (20260209 - Tzuhan) execute(address dest, uint256 value, bytes func)
-              const executeAbi = parseAbi([
-                "function execute(address, uint256, bytes) external",
-              ]);
-
-              const { args: executeArgs } = decodeFunctionData({
-                abi: executeAbi,
-                data: op.callData,
-              });
-
-              const innerCallData = executeArgs[2];
-
-              // Info: (20260209 - Tzuhan) 5. Verify Hash
-              const orderHash = keccak256(stringToBytes(orderId));
-              /**
-               * Info: (20260209 - Tzuhan)
-               * The innerCallData should END with this hash (32 bytes = 64 hex chars)
-               * innerCallData is `0x...`
-               * remove 0x from orderHash
-               */
-              const hashHex = orderHash.slice(2).toLowerCase();
-              if (innerCallData.toLowerCase().endsWith(hashHex)) {
-                verifiedHash = true;
-              } else {
-                console.warn(
-                  `[Analysis] Hash mismatch. Expected end with ${hashHex}, got data ${innerCallData}`,
-                );
-              }
-              break;
-            }
-          }
-        } catch (decodeError) {
-          console.error(
-            "[Analysis] Failed to decode transaction:",
-            decodeError,
-          );
-          throw new Error("Invalid transaction structure");
-        }
-
-        if (!foundUserOp) {
-          throw new Error(
-            "No UserOperation found for this user in the transaction",
-          );
-        }
-        if (!verifiedHash) {
-          throw new Error("Transaction is not bound to this Order ID");
-        }
-
-        // Info: (20260305 - Tzuhan) Check if the UserOperation actually succeeded on-chain
-        const receipt = await publicClient.getTransactionReceipt({
-          hash: txHash as `0x${string}`,
-        });
-        if (!receipt) {
-          throw new Error("Transaction receipt not found");
-        }
-
-        let userOpSuccess = false;
-        for (const log of receipt.logs) {
-          try {
-            const decoded = decodeEventLog({
-              abi: ABIS.ENTRY_POINT,
-              data: log.data,
-              topics: log.topics,
-            });
-            if (decoded.eventName === "UserOperationEvent") {
-              const args = decoded.args as { sender: string; success: boolean };
-              if (args.sender.toLowerCase() === user.address.toLowerCase()) {
-                if (args.success) {
-                  userOpSuccess = true;
-                }
-                break;
-              }
-            }
-          } catch (e) {
-            if (
-              e instanceof Error &&
-              e.name !== "AbiEventSignatureNotFoundError"
-            ) {
-              console.log(
-                "[Info: (20260304 - Tzuhan)] Ignoring log decode error:",
-                e,
-              );
-            }
-          }
-        }
-
-        if (!userOpSuccess) {
-          await failOrder(
-            orderId,
-            "UserOperation failed on-chain (e.g. out of gas or insufficient balance)",
-          );
-          throw new AppError({
-            code: "VL000099",
-            message: "Token transfer failed on-chain",
-            status: ApiCode.VALIDATION_ERROR,
-          });
-        }
-
-        // Info: (20260209 - Tzuhan) Mark order as complete
-        await completeOrder(
-          orderId,
-          JSON.stringify({ verifiedVia: "tx", txHash }),
-          txHash,
-        );
-      } else {
-        // Info: (20260128 - Luphia) Fallback to Signature Verification (Legacy 2-step) or if txHash not provided
-
-        // Info: (20260209 - Tzuhan) 1. Get Pending Order
-        const order = await getPendingOrder(orderId, user.id);
-
-        // Info: (20260209 - Tzuhan) 2. Verify Signature
-        await webAuthnService.verifySignature(
-          user.address,
-          authentication,
-          order.challenge,
-        );
-
-        // Info: (20260209 - Tzuhan) 3. Complete Order
-        await completeOrder(orderId, JSON.stringify(authentication), undefined);
-      }
-    } catch (error) {
-      if (error instanceof AppError) {
-        return jsonFail(API_ERRORS.IS_UNKNOWN);
-      }
-      console.error("Order verification failed:", error);
-      return jsonFail({
-        code: "UN000099",
-        message: String(
-          `Verification failed: ${(error as Error).message}`,
-        ).slice(0, 30),
-        status: ApiCode.UNAUTHORIZED,
-      });
-    }
 
     /**
-     * Info: (20260420 - Tzuhan) [BUGFIX] Frontend uploads FIN_DATA during Order creation.
-     * We MUST fetch the Order from DB to retrieve the payload and pass it to generateAnalysis!
+     * Info: (20261015 - Luphia) 付款確認改看訂單狀態（區塊鏈退役）。
+     *
+     * 原本這裡解碼鏈上交易、確認 UserOp 把點數轉給 MembershipSystem 且綁著這張訂單；
+     * 沒帶 txHash 時則「驗訂單 challenge 的簽章就標成已付」——那條路一點都沒扣。
+     * 現在付款只會經過點數帳本（point_payment）或團隊額度（team_quota_payment），
+     * 兩者都在付款當下把訂單推進到付款後狀態，所以這裡只認那些狀態。
      */
-    const orderData = await paymentRepo.getOrderById(orderId);
-    if (!orderData) {
-      return jsonFail(API_ERRORS.NF_ORDER);
+    try {
+      await getPaidOrder(orderId, user.id);
+    } catch (error) {
+      if (error instanceof AppError) {
+        return jsonFail({
+          code: error.apiCode,
+          message: error.message,
+          status: error.code,
+        });
+      }
+      throw error;
     }
 
     const generateAnalysisParams: IGenerateAnalysisParams = {

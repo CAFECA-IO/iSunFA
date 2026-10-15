@@ -33,17 +33,6 @@ services:
     volumes:
       - storage_data:/root/.ipfs
 
-  blockchain:
-    build:
-      context: ./dockerfiles/blockchain
-    container_name: blockchain
-    restart: always
-    ports:
-      - "${DISCOVERY:-20023}:20023"
-      - "${RPC:-20024}:20024"
-    volumes:
-      - blockchain_data:/root/.isuncoin
-
   osrm:
     build:
       context: ./dockerfiles/osrm
@@ -80,7 +69,6 @@ services:
       CENTRIFUGO_ALLOWED_ORIGINS: "https://isunfa.localhost http://localhost:3000 http://127.0.0.1:3000"
 
 volumes:
-  blockchain_data:
   database_data:
   storage_data:
   faith_data:

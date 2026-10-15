@@ -1,11 +1,10 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { publicClient } from "@/lib/viem";
-import { CONTRACT_ADDRESSES, ABIS } from "@/config/contracts";
-import { formatUnits } from "viem";
 import { Role } from "@/constants/role";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
+import { webAuthnRepo } from "@/repositories/webauthn.repo";
+import { getPointBalance } from "@/services/point_ledger.service";
 
 export async function GET(
   req: Request,
@@ -24,22 +23,15 @@ export async function GET(
       return jsonFail(API_ERRORS.VL_MISSING_PARAMS);
     }
 
-    const { webAuthnRepo } = await import("@/repositories/webauthn.repo");
     const targetUser = await webAuthnRepo.findUserById(userId);
     if (!targetUser) {
       return jsonFail(API_ERRORS.NF_USER);
     }
-    const address = targetUser.address;
 
-    const balance = await publicClient.readContract({
-      address: CONTRACT_ADDRESSES.CREDIT_POINT,
-      abi: ABIS.CREDIT_POINT,
-      functionName: "balanceOf",
-      args: [address as `0x${string}`],
-      blockTag: "pending",
-    });
+    // Info: (20261015 - Luphia) 個人點數改讀 DB 帳本（區塊鏈退役，原本讀 CreditPoint.balanceOf）
+    const balance = await getPointBalance(targetUser.id);
 
-    return jsonOk(formatUnits(balance, 18));
+    return jsonOk(balance.toString());
   } catch (error) {
     return jsonFail({
       code: "IS000099",

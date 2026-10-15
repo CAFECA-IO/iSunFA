@@ -2,7 +2,7 @@ import { campaignRepo } from "@/repositories/campaign.repo";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
-import { issuePurchasedPointsToMember } from "@/services/member.service";
+import { grantCampaignBonus } from "@/services/point_account.service";
 
 export async function POST(req: Request) {
   try {
@@ -56,9 +56,16 @@ export async function POST(req: Request) {
       contactPhone,
     });
 
-    // Info: (20260504 - Luphia) Issue bonus points
+    /**
+     * Info: (20261015 - Luphia) 贈點入個人點數帳本（區塊鏈退役），鍵為 `campaign(registrationId)`。
+     * 入帳失敗不讓報名失敗：報名已寫入，復原指令以同一把鍵依報名紀錄補發（失敗會留 log）。
+     */
     if (campaign.bonusPoints > 0) {
-      await issuePurchasedPointsToMember(user.address, campaign.bonusPoints);
+      await grantCampaignBonus({
+        userId: user.id,
+        registrationId: registration.id,
+        bonusPoints: campaign.bonusPoints,
+      });
     }
 
     // Info: (20260504 - Luphia) Bonus modules will be implemented when module access system is ready

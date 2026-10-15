@@ -5,7 +5,7 @@ import { IOenOrderData } from "@/interfaces/payment";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import { buildOenTransactionPayload } from "@/lib/utils/payment_helpers";
-import { issuePurchasedPointsToMember } from "@/services/member.service";
+import { fulfillPersonalPointPurchase } from "@/services/point_account.service";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
@@ -90,7 +90,7 @@ export async function POST(
      * Info: (20260815 - Luphia) 只有「本來就由用戶互動付款」的訂單能走這條路
      * （PR #6652 第二輪 C-10）。
      *
-     * 改用白名單而非逐一排除：這支端點的結尾是「鑄造個人點數」的 fallback，
+     * 改用白名單而非逐一排除：這支端點的結尾是「發放個人點數」的 fallback，
      * 任何沒被前面分流攔下的型別都會落到那裡——席次補收失敗留下的 PENDING 訂單
      * 就是這樣被使用者拿 orderId 打進來，再刷一次卡、鑄 0 點、席次也不會增加。
      *
@@ -190,7 +190,7 @@ export async function POST(
       );
     }
 
-    // Info: (20260306 - Tzuhan) 扣款成功，開始鑄造代幣
+    // Info: (20260306 - Tzuhan) 扣款成功，開始發放點數
     await paymentRepo.completePaymentTransactionAndOrder(
       paymentTransaction.id,
       order.id,
@@ -256,41 +256,40 @@ export async function POST(
       }
     }
 
-    // Info: (20260306 - Tzuhan) 呼叫鑄造代幣合約
-    const mintResult = await issuePurchasedPointsToMember(
-      user.address,
-      credits,
-    );
+    /**
+     * Info: (20261015 - Luphia) 個人購點：入點數帳本後標記 COMPLETED（區塊鏈退役）。
+     * 原本是鑄造鏈上點數，且**只有拿到 txHash 才**標 COMPLETED——
+     * 帳本沒有交易哈希，完成與否只看入帳結果。
+     */
+    let fulfillment: { completed: boolean; message?: string };
+    try {
+      fulfillment = await fulfillPersonalPointPurchase(order);
+    } catch (fulfillError) {
+      fulfillment = {
+        completed: false,
+        message:
+          fulfillError instanceof Error
+            ? fulfillError.message
+            : String(fulfillError),
+      };
+    }
 
-    // Info: (20260306 - Tzuhan) 鑄造代幣失敗
-    if (!mintResult.success) {
+    if (!fulfillment.completed) {
+      // Info: (20261015 - Luphia) 已扣款未入帳：推進到 MINT_FAILED 並寫下原因，供人工補發
       await paymentRepo.updateOrderMintFailed(
         order.id,
         order.data as object,
         oenData,
-        mintResult.message,
+        `point credit failed: ${fulfillment.message ?? "unknown"}`,
       );
       return jsonFail({
         code: "IS000099",
-        message: String(
-          "Payment succeeded but minting failed: " + mintResult.message,
-        ).slice(0, 30),
+        message: "Payment succeeded but crediting failed",
         status: ApiCode.INTERNAL_SERVER_ERROR,
       });
     }
 
-    // Info: (20260306 - Tzuhan) 全部成功
-    const txHash = (mintResult.data as { tx: string })?.tx;
-
-    if (txHash) {
-      await paymentRepo.updateOrderCompleted(order.id, txHash);
-    }
-
-    return jsonOk({
-      requireBinding: false,
-      success: true,
-      txHash: txHash,
-    });
+    return jsonOk({ requireBinding: false, success: true });
   } catch (error) {
     console.error("Internal Server Error in Checkout:", error);
     return jsonFail(API_ERRORS.IS_UNKNOWN);

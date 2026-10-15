@@ -23,8 +23,6 @@ export const adminMember = {
     role_super_admin: "スーパー管理者",
     role_admin: "管理者",
     role_user: "一般ユーザー",
-    admin_icp_inventory: "システム在庫 ICP",
-    mint: "ミント",
   },
 
   modal_issue_team: {

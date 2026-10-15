@@ -9,7 +9,6 @@ import { AppError } from "@/lib/utils/error";
 import { ApiError as RequestApiError } from "@/lib/utils/request";
 import { WalletCustodyType } from "@/constants/auth_provider";
 import { fido2ClientService } from "@/lib/auth/fido2_client";
-import { UserOperationJson } from "@/validators";
 
 /**
  * Info: (20260810 - Luphia) 取得一份 WebAuthn assertion，不管帳號是哪一種。
@@ -41,7 +40,7 @@ interface ICustodialSignResponse {
   code: ApiCode | string;
   message?: string;
   errorCode?: string;
-  payload: { assertion: AuthenticationJSON; userOp?: UserOperationJson } | null;
+  payload: { assertion: AuthenticationJSON } | null;
 }
 
 // Info: (20260812 - Luphia) base64 → ArrayBuffer；PRF 的兩條路徑都要回同一種型別給呼叫端
@@ -56,7 +55,7 @@ function base64ToArrayBuffer(value: string): ArrayBuffer {
 
 async function postCustodialSign(
   body: Record<string, unknown>,
-): Promise<{ assertion: AuthenticationJSON; userOp?: UserOperationJson }> {
+): Promise<{ assertion: AuthenticationJSON }> {
   const response = await fetch("/api/v1/auth/custodial/sign", {
     method: "POST",
     headers: {
@@ -190,45 +189,4 @@ export async function requestPrfSecret(params: {
   }
 
   return base64ToArrayBuffer(data.payload.prfSecret);
-}
-
-export interface IOrderPaymentAssertionParams {
-  orderId: string;
-  custody?: string;
-  // Info: (20260811 - Luphia) passkey 路徑仍由前端組 UserOp 並簽它的雜湊
-  userOp: UserOperationJson;
-  challenge: string;
-}
-
-/**
- * Info: (20260811 - Luphia) 付款專用：取得 assertion **與實際要送出的那份 UserOp**。
- *
- * 兩條路徑回傳的 userOp 不一定是同一份，這是刻意的：
- * - passkey：使用者以生物辨識授權自己裝置上組出的那份，原樣沿用。
- * - 託管：伺服器不接受呼叫端組好的 UserOp（只驗 sender 擋不住任意 callData），
- *   它依訂單自行組一份、簽它，並把那一份回傳。呼叫端必須提交回傳的這份，
- *   否則簽章對不上雜湊。
- */
-export async function requestOrderPaymentAssertion(
-  params: IOrderPaymentAssertionParams,
-): Promise<{ assertion: AuthenticationJSON; userOp: UserOperationJson }> {
-  if (params.custody !== WalletCustodyType.CUSTODIAL) {
-    const assertion = await fido2ClientService.startLogin({
-      challenge: params.challenge,
-      userVerification: "required",
-      timeout: 60000,
-    });
-    return { assertion, userOp: params.userOp };
-  }
-
-  const result = await postCustodialSign({ orderId: params.orderId });
-  if (!result.userOp) {
-    throw new AppError({
-      code: "IS000099",
-      message: "Custodial signing returned no user operation",
-      status: ApiCode.INTERNAL_SERVER_ERROR,
-    });
-  }
-
-  return { assertion: result.assertion, userOp: result.userOp };
 }

@@ -3,12 +3,10 @@ import { NextRequest } from "next/server";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
 import * as CoreSetupService from "@/services/setup.service";
-import * as BlockchainSetupService from "@/services/setup.blockchain.service";
 import * as StateSetupService from "@/services/setup.state.service";
 import * as AuthSetupService from "@/services/setup.auth.service";
 import * as EnvSetupService from "@/services/setup.env.service";
 import * as DbSetupService from "@/services/setup.db.service";
-import * as DeploySetupService from "@/services/deploy.service";
 import * as SystemSettingSetupService from "@/services/setup.system_setting.service";
 
 const SetupService = {
@@ -16,9 +14,7 @@ const SetupService = {
   ...DbSetupService,
   ...EnvSetupService,
   ...SystemSettingSetupService,
-  ...BlockchainSetupService,
   ...AuthSetupService,
-  ...DeploySetupService,
   ...CoreSetupService,
 };
 import { validateEnv } from "@/validators/env";
@@ -39,13 +35,14 @@ export async function POST(
      * Info: (20260413 - Luphia) 2. Strict Environment Lock: Only allow setup if .env is NOT fully validated
      * We bypass this check ONLY for `isSystemSetupComplete` itself so the frontend can check it securely
      */
+    /**
+     * Info: (20261015 - Luphia) 區塊鏈退役：deployContracts / getDeployProgress /
+     * checkHasExistingContracts / verifyContractDependencies 隨合約部署步驟移除，
+     * 它們原本也在這份豁免清單上——也就是系統初始化完成後仍可被任何人觸發部署。
+     */
     if (
       action !== "isSystemSetupComplete" &&
-      action !== "getSuperAdminTaskStatus" &&
-      action !== "deployContracts" &&
-      action !== "getDeployProgress" &&
-      action !== "checkHasExistingContracts" &&
-      action !== "verifyContractDependencies"
+      action !== "getSuperAdminTaskStatus"
     ) {
       const isComplete = await validateEnv();
       if (isComplete) {

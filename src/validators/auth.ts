@@ -35,12 +35,12 @@ export const custodialSignSchema = z
   .object({
     challenge: z.string().min(1).max(512).optional(),
     challengeToken: z.string().min(1).optional(),
-    orderId: z.string().uuid().optional(),
   })
   // Info: (20260811 - Luphia) strict：多送的欄位一律拒絕，讓「不再接受 userOp」是可驗證的，而不是被靜默忽略
+  // Info: (20261015 - Luphia) 區塊鏈退役：orderId（付款 UserOp）模式已移除，送 orderId 會被 strict 拒絕
   .strict()
-  .refine((value) => Boolean(value.challenge || value.orderId), {
-    message: "Either challenge or orderId is required",
+  .refine((value) => Boolean(value.challenge), {
+    message: "challenge is required",
   });
 
 /**
@@ -64,3 +64,35 @@ export const custodialPrfSchema = z
       .regex(/^[A-Za-z0-9+/]{43}=$/, "prfSalt must be 32 bytes in base64"),
   })
   .strict();
+
+/**
+ * Info: (20261015 - Luphia) Passkey 註冊請求（區塊鏈退役後由伺服器建帳）。
+ *
+ * `registration` 只驗外形（credential id、attestation 與 clientDataJSON 必須是字串），
+ * 內容的真偽交給 `verifyRegistration`（簽章、origin、challenge）；這裡擋的是
+ * 「欄位缺了就直接把 undefined 丟進驗證函式庫」那一類錯誤。
+ * `name` 與 updateProfileSchema 同一個長度上限。
+ */
+export const passkeyRegistrationSchema = z
+  .object({
+    registration: z
+      .object({
+        id: z.string().min(1),
+        rawId: z.string().min(1),
+        type: z.literal("public-key"),
+        response: z
+          .object({
+            attestationObject: z.string().min(1),
+            clientDataJSON: z.string().min(1),
+          })
+          .passthrough(),
+      })
+      .passthrough(),
+    challengeToken: z.string().min(1),
+    name: z.string().trim().min(1).max(100),
+  })
+  .strict();
+
+export type IPasskeyRegistrationBody = z.infer<
+  typeof passkeyRegistrationSchema
+>;

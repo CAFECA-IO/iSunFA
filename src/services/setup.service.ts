@@ -2,8 +2,6 @@ import os from "os";
 import crypto, { generateKeyPairSync } from "crypto";
 import { dockerService } from "@/services/docker.service";
 import { setupRepo } from "@/repositories/setup.repo";
-import { publicClient } from "@/lib/viem_public";
-import { parseAbi, stringToHex } from "viem";
 import {
   ROOT_PATH,
   ENV_PATH,
@@ -12,16 +10,11 @@ import {
   getEnvRawContent,
   saveEnvRawContent,
   existsEnv,
-  getPriorityEnvConfig,
 } from "@/services/env.service";
 import { getDbUrl } from "@/services/setup.db.service";
-import {
-  ensureSmartContractWallet,
-  grantDefaultAdminRoles,
-  revokeDefaultAdminRoles,
-  setAccountKYCLevel,
-} from "@/services/setup.blockchain.service";
 import { setSuperAdminTaskStatus } from "@/services/setup.state.service";
+import { deriveAccountAddress } from "@/lib/auth/account_address";
+import { Role } from "@/constants/role";
 
 // Info: (20260416 - Luphia) Docker Orchestration
 
@@ -97,21 +90,7 @@ export async function startDockerCompose() {
     "OSRM_ROUTER_URL",
     "http://127.0.0.1:20025",
   );
-  setupContent = updateOrAppendEnv(
-    setupContent,
-    "NEXT_PUBLIC_RPC_URL",
-    "http://127.0.0.1:20024",
-  );
-  setupContent = updateOrAppendEnv(
-    setupContent,
-    "NEXT_PUBLIC_BAIFA_EXPLORER",
-    "https://baifa.io",
-  );
-  setupContent = updateOrAppendEnv(
-    setupContent,
-    "NEXT_PUBLIC_ISUNCOIN_CHAIN_ID",
-    "8017",
-  );
+  // Info: (20261015 - Luphia) 區塊鏈退役：不再寫入 RPC / 鏈 ID / 區塊瀏覽器等鏈設定
   setupContent = updateOrAppendEnv(
     setupContent,
     "REPORT_OUTPUT_DIR",
@@ -127,6 +106,19 @@ export async function startDockerCompose() {
 
 // Info: (20260416 - Luphia) Core Administration Pipelines
 
+/**
+ * Info: (20261015 - Luphia) 管理員帳號位址：與一般 passkey 註冊同一條鏈下推導規則
+ * （`deriveAccountAddress`），不再呼叫 SCW_FACTORY.getAddress。
+ * setup 精靈建立的帳號一向以全小寫存放（見 webauthn.repo.findUserByAnyAddressForm），維持不變。
+ */
+function deriveSetupAddress(
+  credentialId: string,
+  pubKeyX: string,
+  pubKeyY: string,
+): string {
+  return deriveAccountAddress({ credentialId, pubKeyX, pubKeyY }).toLowerCase();
+}
+
 export async function createSuperAdminRecord(
   credentialId: string,
   pubKeyX: string,
@@ -139,41 +131,25 @@ export async function createSuperAdminRecord(
   pendingTask?: boolean;
 }> {
   try {
-    const envConfig = await getPriorityEnvConfig();
-    const factoryAddress = (envConfig.NEXT_PUBLIC_SCW_FACTORY_ADDRESS ||
-      process.env.NEXT_PUBLIC_SCW_FACTORY_ADDRESS) as `0x${string}`;
-
-    if (!factoryAddress)
-      return {
-        success: false,
-        error: "NEXT_PUBLIC_SCW_FACTORY_ADDRESS is not set.",
-      };
-
-    const abi = parseAbi([
-      "function getAddress(bytes credentialId, uint256 pubKeyX, uint256 pubKeyY, uint256 salt) view returns (address)",
-    ]);
-    const address = await publicClient.readContract({
-      address: factoryAddress,
-      abi,
-      functionName: "getAddress",
-      args: [
-        stringToHex(credentialId),
-        BigInt(pubKeyX),
-        BigInt(pubKeyY),
-        BigInt(0),
-      ],
-    });
-
     const dbUrl = await getDbUrl();
+    let address = deriveSetupAddress(credentialId, pubKeyX, pubKeyY);
+
     const existingByCred = await setupRepo.findUserByCredentialId(
       dbUrl,
       credentialId,
     );
 
     if (existingByCred) {
-      if (existingByCred.address !== address.toLowerCase()) {
+      /**
+       * Info: (20261015 - Luphia) 同一把金鑰已有帳號（例如重試）：DB 為準，沿用既有位址，
+       * 只確保它是 SUPER_ADMIN。原本這裡會以新算出的位址再 upsert 一列，
+       * 而同一個 credentialId 不能有兩列（unique），那條路徑必然失敗。
+       */
+      address = existingByCred.address;
+      if (existingByCred.role !== Role.SUPER_ADMIN) {
+        await setupRepo.downgradeAllSuperAdminsToUser(dbUrl);
         await setupRepo.upsertSuperAdminByAddress(dbUrl, {
-          address: address.toLowerCase(),
+          address,
           credentialId,
           pubKeyX,
           pubKeyY,
@@ -181,68 +157,30 @@ export async function createSuperAdminRecord(
         });
       }
     } else {
-      const existingByAddr = await setupRepo.findUserByAddress(
-        dbUrl,
-        address.toLowerCase(),
-      );
+      const existingByAddr = await setupRepo.findUserByAddress(dbUrl, address);
       if (!existingByAddr) {
         await setupRepo.downgradeAllSuperAdminsToUser(dbUrl);
         await setupRepo.createUser(dbUrl, {
-          address: address.toLowerCase(),
+          address,
           pubKeyX,
           pubKeyY,
           credentialId,
-          role: "SUPER_ADMIN",
+          role: Role.SUPER_ADMIN,
           name,
         });
       }
     }
 
+    /**
+     * Info: (20261015 - Luphia) 原本這裡會在背景部署 SCW、設定 KYC 等級、授予鏈上管理員角色，
+     * 並以 task status 讓前端輪詢進度。區塊鏈退役後建帳在上面就已完成，
+     * 狀態直接標為完成；回傳 pendingTask: false，前端不再輪詢。
+     */
     await setSuperAdminTaskStatus({
-      done: false,
+      done: true,
       error: null,
-      progress: "Initializing admin wallet...",
+      progress: "Completed",
     });
-
-    const doBlockchainSetup = async () => {
-      try {
-        await setSuperAdminTaskStatus({
-          done: false,
-          error: null,
-          progress: "Deploying SCW (Account Abstraction) Wallet...",
-        });
-        await ensureSmartContractWallet(credentialId, pubKeyX, pubKeyY, name);
-
-        await setSuperAdminTaskStatus({
-          done: false,
-          error: null,
-          progress: "Setting KYC Levels...",
-        });
-        await setAccountKYCLevel(address, 10);
-
-        await setSuperAdminTaskStatus({
-          done: false,
-          error: null,
-          progress: "Granting Admin Role...",
-        });
-        await grantDefaultAdminRoles(address);
-
-        await setSuperAdminTaskStatus({
-          done: true,
-          error: null,
-          progress: "Completed",
-        });
-      } catch (e) {
-        console.error("Error securing contracts:", e);
-        await setSuperAdminTaskStatus({
-          done: true,
-          error: String(e),
-          progress: "Failed",
-        });
-      }
-    };
-
-    void doBlockchainSetup();
 
     const targetEnvPath = existsEnv(ENV_SETUP_PATH) ? ENV_SETUP_PATH : ENV_PATH;
     if (existsEnv(targetEnvPath)) {
@@ -279,7 +217,7 @@ export async function createSuperAdminRecord(
       saveEnvRawContent(targetEnvPath, setupContent);
     }
 
-    return { success: true, address, pendingTask: true };
+    return { success: true, address, pendingTask: false };
   } catch (err: unknown) {
     const errStr = err instanceof Error ? err.message : String(err);
     if (errStr.includes("Authentication failed")) {
@@ -296,58 +234,28 @@ export async function createAdminRecord(
   name: string = "SERVER ADMIN",
 ) {
   try {
-    const envConfig = await getPriorityEnvConfig();
-    const factoryAddress = (envConfig.NEXT_PUBLIC_SCW_FACTORY_ADDRESS ||
-      process.env.NEXT_PUBLIC_SCW_FACTORY_ADDRESS) as `0x${string}`;
-    if (!factoryAddress)
-      return {
-        success: false,
-        error: "NEXT_PUBLIC_SCW_FACTORY_ADDRESS is not set.",
-      };
-
-    const abi = parseAbi([
-      "function getAddress(bytes credentialId, uint256 pubKeyX, uint256 pubKeyY, uint256 salt) view returns (address)",
-    ]);
-    const address = await publicClient.readContract({
-      address: factoryAddress,
-      abi,
-      functionName: "getAddress",
-      args: [
-        stringToHex(credentialId),
-        BigInt(pubKeyX),
-        BigInt(pubKeyY),
-        BigInt(0),
-      ],
-    });
+    const address = deriveSetupAddress(credentialId, pubKeyX, pubKeyY);
 
     const dbUrl = await getDbUrl();
-    const existing = await setupRepo.findUserByAddress(
-      dbUrl,
-      address.toLowerCase(),
-    );
+    const existing = await setupRepo.findUserByAddress(dbUrl, address);
 
     if (!existing) {
       await setupRepo.createUser(dbUrl, {
-        address: address.toLowerCase(),
+        address,
         pubKeyX,
         pubKeyY,
         credentialId,
-        role: "ADMIN",
+        role: Role.ADMIN,
         name,
       });
-    } else if (existing.role === "USER") {
-      await setupRepo.updateUser(dbUrl, address.toLowerCase(), {
-        role: "ADMIN",
+    } else if (existing.role === Role.USER) {
+      await setupRepo.updateUser(dbUrl, address, {
+        role: Role.ADMIN,
         name,
       });
     }
 
-    try {
-      await ensureSmartContractWallet(credentialId, pubKeyX, pubKeyY, name);
-      await grantDefaultAdminRoles(address);
-    } catch (e) {
-      console.error("Error securing contracts with secondary manager:", e);
-    }
+    // Info: (20261015 - Luphia) 原本另有部署 SCW 與授予鏈上管理員角色，隨區塊鏈退役移除
     return { success: true, address };
   } catch (err: unknown) {
     return {
@@ -361,11 +269,7 @@ export async function deleteAdminRecord(address: string) {
   try {
     const dbUrl = await getDbUrl();
     await setupRepo.deleteUserByAddress(dbUrl, address.toLowerCase());
-    try {
-      await revokeDefaultAdminRoles(address);
-    } catch (e) {
-      console.error("Error revoking contracts from secondary manager:", e);
-    }
+    // Info: (20261015 - Luphia) 原本另會撤銷鏈上管理員角色，隨區塊鏈退役移除
     return { success: true };
   } catch (err: unknown) {
     return {

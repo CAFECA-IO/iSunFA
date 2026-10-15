@@ -18,15 +18,13 @@ import { loginWithPasskey } from "@/lib/auth/passkey_login";
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { AppError } from "@/lib/utils/error";
 
-import {
-  registrationService,
-  RegistrationStep,
-} from "@/services/registration.service";
+import { registrationService } from "@/services/registration.service";
 import AuthTransition, { LoginStep } from "@/components/auth/auth_transition";
 import SocialLoginButtons from "@/components/auth/social_login_buttons";
 import RewardScreen from "@/components/auth/reward_screen";
 import CampaignRegistrationFields from "@/components/auth/campaign_registration_fields";
 import { Role } from "@/constants/role";
+import { RegistrationStep } from "@/constants/auth_provider";
 
 interface IAuthModalProps {
   isOpen: boolean;
@@ -54,7 +52,9 @@ export default function AuthModal({
     "terms_of_service" | "privacy_policy" | null
   >(null);
   const [showUnregisteredPrompt, setShowUnregisteredPrompt] = useState(false);
-  const [currentStep, setCurrentStep] = useState<RegistrationStep>("IDLE");
+  const [currentStep, setCurrentStep] = useState<RegistrationStep>(
+    RegistrationStep.IDLE,
+  );
   const [loginStep, setLoginStep] = useState<LoginStep>("IDLE");
 
   // Info: (20260504 - Luphia) Campaign Registration
@@ -262,17 +262,13 @@ export default function AuthModal({
 
       /**
        * Info: (20260504 - Luphia) Phase 2: Fast Auto-Login
-       * Since the backend has Lazy Sync (recoverUserByCredentialId),
-       * we just wait a brief moment for RPC node propagation and trigger login directly.
+       * Info: (20261015 - Luphia) 帳號已在註冊請求內寫入 DB（區塊鏈退役），
+       * 不再需要等 RPC 節點傳播或伺服器 lazy sync，直接接著登入。
        */
-      setCurrentStep("SYNCING");
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
       setMode("login");
       setError(null);
 
       try {
-        console.log("Triggering auto-login via Lazy Sync...");
         await handleLogin();
         return; // Info: (20260504 - Luphia) Success, handled by handleLogin
       } catch {
@@ -293,7 +289,7 @@ export default function AuthModal({
       }
     } finally {
       setLoading(false);
-      setCurrentStep("IDLE");
+      setCurrentStep(RegistrationStep.IDLE);
     }
   };
 

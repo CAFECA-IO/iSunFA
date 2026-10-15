@@ -52,7 +52,6 @@ import { incomeStatementView } from "@/i18n/locales/en/income_statement_view";
 import { adminSetup } from "@/i18n/locales/en/admin_setup";
 import { adminSettings } from "@/i18n/locales/en/admin_settings";
 import { adminMember } from "@/i18n/locales/en/admin_member";
-import { adminBlockchain } from "@/i18n/locales/en/admin_blockchain";
 import { adminMissionBoard } from "@/i18n/locales/en/admin_mission_board";
 import { emissionSources } from "@/i18n/locales/en/emission_sources";
 import { orderManagement } from "@/i18n/locales/en/order_management";
@@ -136,7 +135,6 @@ export const en = {
   admin_setup: adminSetup,
   admin_settings: adminSettings,
   admin_member: adminMember,
-  admin_blockchain: adminBlockchain,
   admin_billing: adminBilling,
   admin_dashboard: adminDashboard,
   admin_mission_board: adminMissionBoard,

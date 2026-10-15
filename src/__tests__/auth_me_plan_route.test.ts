@@ -16,7 +16,7 @@ import {
  *
  * 這一支刻意**不 mock service**：缺陷正是在 route 與訂閱資料之間沒有接線
  * （route 從來沒有回過 plan 欄位），mock 掉中間那層就等於把缺陷本身 mock 掉。
- * 因此只 mock 最外圈的身分驗證、鏈上餘額與 repository，讓
+ * 因此只 mock 最外圈的身分驗證、點數快照與 repository，讓
  * route → service → `resolveEffectivePlanId` 這條路真的跑一次。
  */
 
@@ -33,11 +33,12 @@ jest.mock("@/lib/auth/user_approval", () => ({
   resolveCustodyType: jest.fn(async () => "PASSKEY"),
 }));
 
-// Info: (20260819 - Luphia) 鏈上餘額查詢與方案無關，但不 mock 會真的連 RPC
-jest.mock("@/lib/viem_public", () => ({
-  publicClient: {
-    readContract: jest.fn(async () => BigInt(0)),
-  },
+// Info: (20261015 - Luphia) 點數快照與方案無關，但不 mock 會真的連資料庫（原本是鏈上餘額查詢）
+jest.mock("@/services/point_account.service", () => ({
+  getPointAccountSnapshot: jest.fn(async () => ({
+    credits: "0",
+    isVerified: true,
+  })),
 }));
 
 jest.mock("@/repositories/team.repo", () => ({

@@ -6,6 +6,11 @@ import type { IOrderWithUser } from "@/repositories/payment.repo";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import { WALLET_OP_OUTCOME } from "@/constants/subscription_quota";
 import type { IOenCallbackData } from "@/interfaces/payment";
+import {
+  POINT_LEDGER_ENTRY_TYPE,
+  POINT_LEDGER_KEY,
+} from "@/constants/point_ledger";
+import { applyPointEntryInTx as applyPointEntryInTxImpl } from "@/repositories/point_ledger.repo";
 
 /**
  * Info: (20260814 - Luphia) 「已扣款但無法履行」必須看得見（設計書 §6.1、§7）。
@@ -43,6 +48,11 @@ jest.mock("@/repositories/team_subscription.repo", () => ({
   applyTeamSubscriptionInTx: jest.fn(),
 }));
 
+// Info: (20261015 - Luphia) 個人購點改在同一筆交易內入點數帳本（區塊鏈退役）
+jest.mock("@/repositories/point_ledger.repo", () => ({
+  applyPointEntryInTx: jest.fn(async () => ({ outcome: "OK" })),
+}));
+
 interface ITxMock {
   paymentMethod: {
     findFirst: ReturnType<typeof jest.fn>;
@@ -64,6 +74,10 @@ const { applyTeamSubscriptionInTx } =
   require("@/repositories/team_subscription.repo") as {
     applyTeamSubscriptionInTx: ReturnType<typeof jest.fn>;
   };
+
+const applyPointEntryInTx = applyPointEntryInTxImpl as unknown as ReturnType<
+  typeof jest.fn
+>;
 
 const SUCCESS_BODY = { success: true } as unknown as IOenCallbackData;
 
@@ -95,6 +109,7 @@ describe("payment fulfillment visibility", () => {
     txMock.paymentMethod.findFirst.mockReset();
     creditPoolInTx.mockReset();
     applyTeamSubscriptionInTx.mockReset();
+    applyPointEntryInTx.mockClear();
   });
 
   it("marks a team point order without teamId as unfulfilled", async () => {
@@ -184,5 +199,43 @@ describe("payment fulfillment visibility", () => {
       .map((call) => call[0] as { data?: { status?: string } })
       .filter((arg) => arg.data?.status === ORDER_STATUS.COMPLETED);
     expect(completed).toHaveLength(1);
+  });
+
+  /**
+   * Info: (20261015 - Luphia) 個人購點：收款與入帳在同一筆交易，入帳後 COMPLETED。
+   * 原本交易提交後才回到 route 鑄造鏈上點數，且只有拿到 txHash 才標 COMPLETED。
+   */
+  it("credits a personal point purchase in the same transaction", async () => {
+    const order = buildOrder(ORDER_TYPE.OEN_PAYMENT, { credits: 300 });
+
+    await paymentRepo.processOenPayment(order, SUCCESS_BODY, "SUCCESS");
+
+    expect(applyPointEntryInTx).toHaveBeenCalledWith(
+      txMock,
+      expect.objectContaining({
+        userId: "user-1",
+        amount: BigInt(300),
+        entryType: POINT_LEDGER_ENTRY_TYPE.PURCHASE,
+        idempotencyKey: POINT_LEDGER_KEY.orderCredit("order-1"),
+        orderId: "order-1",
+      }),
+    );
+    const completed = txMock.order.update.mock.calls
+      .map((call) => call[0] as { data?: { status?: string } })
+      .filter((arg) => arg.data?.status === ORDER_STATUS.COMPLETED);
+    expect(completed).toHaveLength(1);
+  });
+
+  it("marks a personal point purchase without credits as unfulfilled", async () => {
+    const order = buildOrder(ORDER_TYPE.OEN_PAYMENT, { credits: 0 });
+
+    await paymentRepo.processOenPayment(order, SUCCESS_BODY, "SUCCESS");
+
+    expect(applyPointEntryInTx).not.toHaveBeenCalled();
+    const failures = failedUpdates();
+    expect(failures).toHaveLength(1);
+    expect(
+      (failures[0].data as { data: { error: string } }).data.error,
+    ).toContain("credits");
   });
 });

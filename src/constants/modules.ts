@@ -1,6 +1,5 @@
 import {
   BookOpen,
-  Blocks,
   Wallet,
   PieChart,
   Landmark,
@@ -86,7 +85,6 @@ export const ADMIN_MODULES: IModuleItem[] = [
   { key: "mission_board", icon: Target, basic: true },
   { key: "order_management", icon: BadgeCheck, basic: true },
   { key: "application_management", icon: ClipboardList, basic: true },
-  { key: "blockchain", icon: Blocks, basic: true },
   { key: "user", icon: Users, basic: true },
   { key: "billing", icon: CreditCard, basic: true },
   { key: "campaign", icon: Trophy, basic: true },
@@ -152,8 +150,6 @@ export function getModuleI18nKey(key: string, isAdminContext: boolean = false) {
       return isAdminContext ? "admin_billing.page.title" : "billing.title";
     case "user":
       return "admin_member.page.title";
-    case "blockchain":
-      return "admin_blockchain.page.title";
     case "mission_board":
       return "admin_mission_board.page.title";
     case "financial_report":

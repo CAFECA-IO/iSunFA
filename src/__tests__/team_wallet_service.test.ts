@@ -18,10 +18,12 @@ import { teamRepo } from "@/repositories/team.repo";
 import { teamWalletRepo } from "@/repositories/team_wallet.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { generatePaymentOrder } from "@/services/order.service";
-import { issuePurchasedPointsToMember } from "@/services/member.service";
-import { burn } from "@/services/token.service";
-import { webAuthnRepo } from "@/repositories/webauthn.repo";
-import { publicClient } from "@/lib/viem_public";
+import { creditPoints } from "@/services/point_ledger.service";
+import {
+  POINT_LEDGER_ENTRY_TYPE,
+  POINT_LEDGER_KEY,
+  POINT_LEDGER_OUTCOME,
+} from "@/constants/point_ledger";
 import type { Order } from "@/generated";
 
 jest.mock("@/repositories/team.repo", () => ({
@@ -37,43 +39,13 @@ jest.mock("@/repositories/team_wallet.repo", () => ({
     revoke: jest.fn(),
     writeOffAllocationForUser: jest.fn(),
     creditPool: jest.fn(),
-    // Info: (20260814 - Luphia) 分配上鏈後新增：回填交易雜湊、鑄造失敗補償、淨分配上限
-    setLedgerTxHash: jest.fn(),
+    // Info: (20260814 - Luphia) 入帳失敗補償
     compensateFailedAllocation: jest.fn(),
-    sumNetAllocatedToMember: jest.fn(),
   },
 }));
-// Info: (20260814 - Luphia) 分配要鑄到成員的鏈上位址，收回要銷毀
-jest.mock("@/repositories/webauthn.repo", () => ({
-  webAuthnRepo: {
-    findUserById: jest.fn(async () => ({ address: "0xmember" })),
-  },
-}));
-jest.mock("@/services/member.service", () => ({
-  issuePurchasedPointsToMember: jest.fn(async () => ({
-    success: true,
-    message: "ok",
-    data: { tx: "0xmint" },
-  })),
-}));
-/**
- * Info: (20260814 - Luphia) 合約位址與鏈上讀取都要替身：CI 沒有
- * NEXT_PUBLIC_CREDIT_POINT_ADDRESS，真實值是 undefined——這正是 CI 抓到的問題
- * （斷言收到 undefined 位址）。同時也讓「成員餘額不足」這條分支可被測。
- */
-jest.mock("@/config/contracts", () => ({
-  CONTRACT_ADDRESSES: { CREDIT_POINT: "0xcreditpoint" },
-  ABIS: { CREDIT_POINT: [] },
-}));
-jest.mock("@/lib/viem_public", () => ({
-  publicClient: { readContract: jest.fn() },
-}));
-jest.mock("@/services/token.service", () => ({
-  burn: jest.fn(async () => ({
-    success: true,
-    message: "ok",
-    data: { tx: "0xburn" },
-  })),
+// Info: (20261015 - Luphia) 分配改入成員的個人點數帳本（區塊鏈退役），不再鑄到鏈上錢包
+jest.mock("@/services/point_ledger.service", () => ({
+  creditPoints: jest.fn(),
 }));
 jest.mock("@/repositories/payment.repo", () => ({
   paymentRepo: { updateOrderCompleted: jest.fn() },
@@ -231,39 +203,22 @@ describe("manageAllocation", () => {
       outcome: WALLET_OP_OUTCOME.OK,
       ledger: { ...LEDGER_ROW, amount: BigInt(-50) },
     });
-    // Info: (20260814 - Luphia) 預設淨分配量足夠，個別測試再覆寫
-    asMock(teamWalletRepo.sumNetAllocatedToMember).mockResolvedValue(
-      BigInt(100),
-    );
     /**
-     * Info: (20260814 - Luphia) 鏈上替身的預設值也要逐案重設：
+     * Info: (20260814 - Luphia) 替身的預設值也要逐案重設：
      * clearAllMocks 不會清掉 mockResolvedValue 設下的實作，
-     * 少了這幾行，某一個測試設的「鑄造失敗」會漏到後面每一個測試。
+     * 少了這幾行，某一個測試設的「入帳失敗」會漏到後面每一個測試。
      */
-    asMock(webAuthnRepo.findUserById).mockResolvedValue({
-      address: "0xmember",
+    asMock(creditPoints).mockResolvedValue({
+      outcome: POINT_LEDGER_OUTCOME.OK,
     });
-    asMock(issuePurchasedPointsToMember).mockResolvedValue({
-      success: true,
-      message: "ok",
-      data: { tx: "0xmint" },
-    });
-    asMock(burn).mockResolvedValue({
-      success: true,
-      message: "ok",
-      data: { tx: "0xburn" },
-    });
-    // Info: (20260814 - Luphia) 鏈上餘額以 18 位小數計；預設 100 點，足夠收回
-    asMock(publicClient.readContract).mockResolvedValue(
-      BigInt(100) * BigInt(10) ** BigInt(18),
-    );
   });
 
   /**
-   * Info: (20260814 - Luphia) 分配＝鑄到成員自己的區塊鏈錢包（ADR 015 修訂，
-   * 產品拍板 20260814）。點數從此是他的個人點數，不再有只能在團隊內花的第二套餘額。
+   * Info: (20260814 - Luphia) 分配＝成員自己的個人點數（ADR 015 修訂，產品拍板 20260814）。
+   * Info: (20261015 - Luphia) 區塊鏈退役：入個人點數帳本，鍵綁 ALLOCATE 分錄的 id，
+   * 與復原指令共用——復原時不會再發一次。
    */
-  it("mints the points into the member's own wallet", async () => {
+  it("credits the points to the member's personal ledger", async () => {
     await manageAllocation({
       teamId: "team-1",
       operatorUserId: "user-admin",
@@ -272,21 +227,24 @@ describe("manageAllocation", () => {
       direction: ALLOCATION_DIRECTION.ALLOCATE,
     });
 
-    expect(issuePurchasedPointsToMember).toHaveBeenCalledWith("0xmember", 50);
-    expect(teamWalletRepo.setLedgerTxHash).toHaveBeenCalledWith(
-      "ledger-1",
-      "0xmint",
+    expect(creditPoints).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: "user-2",
+        amount: BigInt(50),
+        entryType: POINT_LEDGER_ENTRY_TYPE.TEAM_ALLOCATION,
+        idempotencyKey: POINT_LEDGER_KEY.teamAllocation("ledger-1"),
+      }),
     );
+    expect(teamWalletRepo.compensateFailedAllocation).not.toHaveBeenCalled();
   });
 
   /**
-   * Info: (20260814 - Luphia) 鑄造失敗必須把點數退回池：
+   * Info: (20260814 - Luphia) 入帳失敗必須把點數退回池：
    * 池已經扣過了，不補回去就是團隊平白少一筆點數，而且沒有任何流程會發現。
    */
-  it("refunds the pool when the mint fails", async () => {
-    asMock(issuePurchasedPointsToMember).mockResolvedValue({
-      success: false,
-      message: "rpc down",
+  it("refunds the pool when the credit is rejected", async () => {
+    asMock(creditPoints).mockResolvedValue({
+      outcome: POINT_LEDGER_OUTCOME.USER_NOT_FOUND,
     });
 
     await expect(
@@ -304,9 +262,9 @@ describe("manageAllocation", () => {
     );
   });
 
-  // Info: (20260814 - Luphia) 沒有錢包位址就無處可鑄，當場擋下而不是扣了池才發現
-  it("refuses to allocate to a member without a wallet address", async () => {
-    asMock(webAuthnRepo.findUserById).mockResolvedValue({ address: null });
+  // Info: (20261015 - Luphia) 入帳自帶交易：丟錯代表整筆回滾，同樣要補回池
+  it("refunds the pool when the credit throws", async () => {
+    asMock(creditPoints).mockRejectedValue(new Error("db down"));
 
     await expect(
       manageAllocation({
@@ -316,9 +274,29 @@ describe("manageAllocation", () => {
         amount: BigInt(50),
         direction: ALLOCATION_DIRECTION.ALLOCATE,
       }),
-    ).rejects.toMatchObject({ code: "TW000014" });
+    ).rejects.toMatchObject({ code: "TW000009" });
 
-    expect(teamWalletRepo.allocate).not.toHaveBeenCalled();
+    expect(teamWalletRepo.compensateFailedAllocation).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: "db down" }),
+    );
+  });
+
+  // Info: (20261015 - Luphia) 重放（冪等鍵已分配過）不再入帳第二次
+  it("does not credit again on a replayed allocation", async () => {
+    asMock(teamWalletRepo.allocate).mockResolvedValue({
+      outcome: WALLET_OP_OUTCOME.DUPLICATE,
+      ledger: LEDGER_ROW,
+    });
+
+    await manageAllocation({
+      teamId: "team-1",
+      operatorUserId: "user-admin",
+      targetUserId: "user-2",
+      amount: BigInt(50),
+      direction: ALLOCATION_DIRECTION.ALLOCATE,
+    });
+
+    expect(creditPoints).not.toHaveBeenCalled();
   });
 
   /**
@@ -345,10 +323,10 @@ describe("manageAllocation", () => {
   });
 
   /**
-   * Info: (20260818 - Luphia) 擋在動任何餘額之前：走到底會先讀淨分配量、
-   * 再讀鏈上餘額，中間任何一步的錯誤都會蓋掉「已停用」這個真正的原因。
+   * Info: (20260818 - Luphia) 擋在動任何餘額之前：任何一步的錯誤都會蓋掉
+   * 「已停用」這個真正的原因。
    */
-  it("does not touch balances or the chain when revoking", async () => {
+  it("does not touch balances when revoking", async () => {
     await expect(
       manageAllocation({
         teamId: "team-1",
@@ -359,9 +337,8 @@ describe("manageAllocation", () => {
       }),
     ).rejects.toThrow();
 
-    expect(teamWalletRepo.sumNetAllocatedToMember).not.toHaveBeenCalled();
-    expect(burn).not.toHaveBeenCalled();
     expect(teamWalletRepo.revoke).not.toHaveBeenCalled();
+    expect(creditPoints).not.toHaveBeenCalled();
   });
 
   it("fails fast on non-positive amounts", async () => {

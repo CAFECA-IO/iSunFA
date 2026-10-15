@@ -27,12 +27,12 @@ import {
 import { teamRepo } from "@/repositories/team.repo";
 import { teamWalletRepo } from "@/repositories/team_wallet.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
-import { webAuthnRepo } from "@/repositories/webauthn.repo";
-import { issuePurchasedPointsToMember } from "@/services/member.service";
-import { burn } from "@/services/token.service";
-import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
-import { publicClient } from "@/lib/viem_public";
-import { parseEther } from "viem";
+import { creditPoints } from "@/services/point_ledger.service";
+import {
+  POINT_LEDGER_ENTRY_TYPE,
+  POINT_LEDGER_KEY,
+  POINT_LEDGER_OUTCOME,
+} from "@/constants/point_ledger";
 import { logger } from "@/lib/utils/logger";
 
 /**
@@ -251,14 +251,13 @@ export async function manageAllocation(
     const idempotencyKey = params.idempotencyKey ?? randomUUID();
 
     /**
-     * Info: (20260814 - Luphia) 分配 / 收回都要動鏈上餘額（ADR 015 修訂，產品拍板 20260814）：
-     * 分配的點數直接鑄到成員自己的區塊鏈錢包，之後就是他的個人點數，
-     * 在任何情境都能用——不再有「只能在這個團隊裡花」的第二套餘額。
+     * Info: (20260814 - Luphia) 分配的點數直接成為成員自己的個人點數（ADR 015 修訂，
+     * 產品拍板 20260814），在任何情境都能用——不再有「只能在這個團隊裡花」的第二套餘額。
+     *
+     * Info: (20261015 - Luphia) 個人點數改為 DB 帳本（區塊鏈退役）：原本是鑄到成員的
+     * 鏈上錢包，現在是入他的個人點數帳本，冪等鍵綁這一筆 ALLOCATE 分錄的 id
+     * （`teamAllocation`，與復原指令共用）。成員不再需要有鏈上錢包。
      */
-    const target = await webAuthnRepo.findUserById(targetUserId);
-    if (!target?.address) {
-      throw toApiError(API_ERRORS.TW_MEMBER_WALLET_MISSING);
-    }
     const input = {
       teamId,
       targetUserId,
@@ -267,120 +266,58 @@ export async function manageAllocation(
       idempotencyKey,
     };
 
-    if (direction === ALLOCATION_DIRECTION.ALLOCATE) {
-      // Info: (20260814 - Luphia) 先扣池（可條件失敗、可補償），再鑄鏈上點數
-      const result = await teamWalletRepo.allocate(input);
-      if (result.outcome === WALLET_OP_OUTCOME.DUPLICATE && result.ledger) {
-        return toLedgerView(result.ledger);
-      }
-      if (result.outcome !== WALLET_OP_OUTCOME.OK || !result.ledger) {
-        throw toApiError(mapAllocationFailure(direction, result.outcome));
-      }
-
-      const minted = await issuePurchasedPointsToMember(
-        target.address,
-        Number(amount),
-      );
-      if (!minted.success) {
-        /**
-         * Info: (20260814 - Luphia) 鑄造明確失敗：把點數退回池並留下反向分錄。
-         * 不沉默吞掉——池已經扣過了，不補回去就是團隊平白少一筆點數。
-         */
-        await teamWalletRepo.compensateFailedAllocation({
-          teamId,
-          targetUserId,
-          amount,
-          operatorUserId,
-          idempotencyKey,
-          reason: minted.message ?? "mint failed",
-        });
-        logger.error("team allocation mint failed", {
-          teamId,
-          targetUserId,
-          amount: amount.toString(),
-          message: minted.message,
-        });
-        throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
-      }
-
-      const txHash = (minted.data as { tx?: string })?.tx;
-      if (txHash)
-        await teamWalletRepo.setLedgerTxHash(result.ledger.id, txHash);
-      return toLedgerView({ ...result.ledger, txHash: txHash ?? null });
+    // Info: (20260814 - Luphia) 先扣池（可條件失敗、可補償），再入成員個人點數
+    const result = await teamWalletRepo.allocate(input);
+    if (result.outcome === WALLET_OP_OUTCOME.DUPLICATE && result.ledger) {
+      return toLedgerView(result.ledger);
+    }
+    if (result.outcome !== WALLET_OP_OUTCOME.OK || !result.ledger) {
+      throw toApiError(mapAllocationFailure(direction, result.outcome));
     }
 
-    /**
-     * Info: (20260814 - Luphia) 收回＝銷毀成員鏈上點數再回補池，且**以團隊淨分配量為上限**：
-     * 點數進了成員錢包後與他自費購買的混在同一個餘額裡，鏈上分不出來；
-     * 沒有這道上限，團隊就能銷毀成員自己買的點數。
-     * 成員已經花掉的部分收不回來——這是「點數直接給他」的必然結果。
-     */
-    const netAllocated = await teamWalletRepo.sumNetAllocatedToMember(
-      teamId,
-      targetUserId,
-    );
-    if (netAllocated < amount) {
-      throw toApiError(API_ERRORS.TW_ALLOCATION_INSUFFICIENT);
+    let creditFailure: string | null = null;
+    try {
+      const credited = await creditPoints({
+        userId: targetUserId,
+        amount,
+        entryType: POINT_LEDGER_ENTRY_TYPE.TEAM_ALLOCATION,
+        idempotencyKey: POINT_LEDGER_KEY.teamAllocation(result.ledger.id),
+        sourceRef: result.ledger.id,
+      });
+      if (
+        credited.outcome !== POINT_LEDGER_OUTCOME.OK &&
+        credited.outcome !== POINT_LEDGER_OUTCOME.DUPLICATE
+      ) {
+        creditFailure = `credit ${credited.outcome}`;
+      }
+    } catch (error) {
+      // Info: (20261015 - Luphia) 入帳自帶交易：丟錯代表整筆回滾，點數沒有入帳
+      creditFailure = error instanceof Error ? error.message : String(error);
     }
 
-    /**
-     * Info: (20260814 - Luphia) 合約位址未設定就不要往下打：`burn(undefined, ...)` 會在
-     * `getAddress` 內爆掉，然後被包成「分配點數不足」——把設定缺漏講成用戶的餘額問題，
-     * 是最難查的一種錯誤訊息。
-     */
-    if (!CONTRACT_ADDRESSES.CREDIT_POINT) {
-      logger.error("credit point address not configured; cannot revoke", {
+    if (creditFailure) {
+      /**
+       * Info: (20260814 - Luphia) 入帳明確失敗：把點數退回池並留下反向分錄。
+       * 不沉默吞掉——池已經扣過了，不補回去就是團隊平白少一筆點數。
+       */
+      await teamWalletRepo.compensateFailedAllocation({
         teamId,
         targetUserId,
+        amount,
+        operatorUserId,
+        idempotencyKey,
+        reason: creditFailure,
       });
-      throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
-    }
-
-    /**
-     * Info: (20260814 - Luphia) 先讀成員的鏈上餘額再決定錯誤訊息。
-     *
-     * 沒有這一步，「他已經把點數花掉了」與「RPC 掛了」都會表現成同一個失敗，
-     * 而這兩件事的下一步完全不同（前者無解、後者重試就好）。
-     */
-    const onChainBalance = (await publicClient.readContract({
-      address: CONTRACT_ADDRESSES.CREDIT_POINT,
-      abi: ABIS.CREDIT_POINT,
-      functionName: "balanceOf",
-      args: [target.address as `0x${string}`],
-    })) as bigint;
-    if (onChainBalance < parseEther(amount.toString())) {
-      // Info: (20260814 - Luphia) 成員錢包裡已經不夠——多半是已經用掉了，收不回來
-      throw toApiError(API_ERRORS.TW_ALLOCATION_INSUFFICIENT);
-    }
-
-    const burned = await burn(
-      CONTRACT_ADDRESSES.CREDIT_POINT,
-      target.address,
-      Number(amount),
-    );
-    if (!burned.success) {
-      // Info: (20260814 - Luphia) 餘額夠卻銷毀失敗＝鏈上操作異常，不是用戶的餘額問題
-      logger.error("team allocation burn failed", {
+      logger.error("team allocation credit failed", {
         teamId,
         targetUserId,
         amount: amount.toString(),
-        message: burned.message,
+        message: creditFailure,
       });
       throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
     }
 
-    const result = await teamWalletRepo.revoke({
-      ...input,
-      txHash: (burned.data as { tx?: string })?.tx,
-    });
-    if (
-      result.outcome === WALLET_OP_OUTCOME.OK ||
-      result.outcome === WALLET_OP_OUTCOME.DUPLICATE
-    ) {
-      if (!result.ledger) throw toApiError(API_ERRORS.TW_OPERATION_FAILED);
-      return toLedgerView(result.ledger);
-    }
-    throw toApiError(mapAllocationFailure(direction, result.outcome));
+    return toLedgerView(result.ledger);
   });
 }
 

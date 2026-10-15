@@ -38,8 +38,10 @@ import { subscriptionPlanQuotaRepo } from "@/repositories/subscription_plan_quot
  * （卡片是否存在、metadata、持有人）；金流交易只存在 DB，**付款完成即視為
  * 會員卡有效，不論鏈上是否已完成鑄造**。因此任何「鏈上沒有卡 ⇒ 沒有方案」
  * 的推論都是錯的——這一版曾經那樣寫，代價是每期續訂後、卡片換 URI 之前，
- * 付費戶會被顯示成免費版（review #6687 阻擋級）。鏈上讀取只留在 worker
- * （鑄卡前的探針與既有卡認領），請求路徑一次 RPC 都不打。
+ * 付費戶會被顯示成免費版（review #6687 阻擋級）。
+ *
+ * Info: (20261015 - Luphia) 自建鏈退役後，會員卡 NFT 的鑄造與同步 worker 一併移除：
+ * `TeamSubscription` 是方案的唯一真相，方案相關流程不再有任何鏈上讀寫。
  */
 
 export interface IPlanCatalogEntry {

@@ -225,11 +225,6 @@ export async function getTeamSubscriptionView(params: {
         subscription?.pendingPlanId && subscription.currentPeriodEnd
           ? Math.floor(subscription.currentPeriodEnd.getTime() / 1000)
           : null,
-      /**
-       * Info: (20260820 - Luphia) `nftSyncedAt` 為 null＝鏈上那份還沒寫上去。
-       * 沒有訂閱列時為 false：沒有訂閱就沒有卡要同步。
-       */
-      cardSyncPending: subscription ? subscription.nftSyncedAt === null : false,
       quota,
       teamTotals,
       faithTokensPerCredit: billing.tokensPerCredit,

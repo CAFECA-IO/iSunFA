@@ -45,7 +45,7 @@ const ROOT = process.cwd();
  */
 const EXEMPT: Record<string, string> = {
   "hardhat.config.ts":
-    "由 tsconfig.hardhat.json 涵蓋(該檔目前沒有任何 script 在跑,且 scripts/deploy_contract.ts 在其設定下有 viem 型別漂移 —— 屬區塊鏈線,見 #6577 關票留言)",
+    "由 tsconfig.hardhat.json 涵蓋(該檔目前沒有任何 script 在跑;scripts/deploy_contract.ts 已隨區塊鏈退役刪除 —— 屬區塊鏈線,見 #6577 關票留言)",
   dockerfiles:
     "容器內執行的獨立腳本,依賴(systeminformation)裝在映像裡而非本 repo 的 node_modules;納進主 tsconfig 會產生 9 個假錯",
   ignition: "hardhat 部署模組,tsconfig.json 的 exclude 明文排除",

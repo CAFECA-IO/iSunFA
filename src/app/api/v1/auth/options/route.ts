@@ -3,7 +3,6 @@ import { NextRequest } from "next/server";
 import { webAuthnService } from "@/services/webauthn.service";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { AppError } from "@/lib/utils/error";
-import { randomBytes } from "crypto";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import {
   ChallengePurpose,
@@ -22,10 +21,16 @@ export async function GET(request: NextRequest) {
     const action = searchParams.get("action");
     const address = searchParams.get("address");
 
-    // Info: (20260116 - Tzuhan) 1. 處理註冊挑戰碼
+    /**
+     * Info: (20260116 - Tzuhan) 1. 處理註冊挑戰碼
+     * Info: (20261015 - Luphia) 另回一枚 REGISTER 用途的 token，供 POST /auth/register 驗證
+     * challenge 確實出自本站（區塊鏈退役後建帳改在伺服器）。只讀 challenge 的舊呼叫端
+     * （setup 精靈的 parse_passkey 流程）不受影響。
+     */
     if (action === "register") {
-      const challenge = randomBytes(32).toString("base64url");
-      return jsonOk({ challenge });
+      const { challenge, token } =
+        await webAuthnService.generateRegistrationOptions();
+      return jsonOk({ challenge, token });
     }
 
     // Info: (20260116 - Tzuhan) 2. 處理登入挑戰碼

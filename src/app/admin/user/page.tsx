@@ -9,11 +9,9 @@ import {
   UserCircle,
   ShieldAlert,
   ShieldCheck,
-  PlusCircle,
   Search,
   Gem,
 } from "lucide-react";
-import Link from "next/link";
 import AdminPageHeader from "@/components/admin/common/admin_page_header";
 import DataTable, { IDataTableColumn } from "@/components/common/data_table";
 import { request } from "@/lib/utils/request";
@@ -24,9 +22,7 @@ import {
 import { TeamPointIssueModal } from "@/components/admin/user/team_point_issue_modal";
 import { useTranslation } from "@/i18n/i18n_context";
 import { Role } from "@/constants/role";
-import { IBlockchainDashboardData } from "@/services/admin.blockchain.service";
 import { IPagination } from "@/interfaces/admin_billing";
-import { MoneyUtil } from "@/lib/utils/money";
 
 interface IMembershipInfo {
   exp: number;
@@ -69,26 +65,10 @@ export default function MemberAdminPage() {
   const [refreshingBalance, setRefreshingBalance] = useState<string | null>(
     null,
   );
-  const [blockchainData, setBlockchainData] =
-    useState<IBlockchainDashboardData | null>(null);
 
   // Info: (20260416 - Luphia) Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<IUserTarget | null>(null);
-
-  const fetchBlockchainData = useCallback(async () => {
-    try {
-      const res = await request<{
-        success: boolean;
-        payload: IBlockchainDashboardData;
-      }>("/api/v1/admin/blockchain/dashboard");
-      if (res.success && res.payload) {
-        setBlockchainData(res.payload);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, []);
 
   const handleRefreshBalance = useCallback(async (userId: string) => {
     if (!userId) return;
@@ -157,8 +137,7 @@ export default function MemberAdminPage() {
 
   useEffect(() => {
     fetchUsers();
-    fetchBlockchainData();
-  }, [fetchUsers, fetchBlockchainData]);
+  }, [fetchUsers]);
 
   /**
    * Info: (20260813 - Luphia) 發放點數給團隊：與發放給個人是兩件事
@@ -360,7 +339,7 @@ export default function MemberAdminPage() {
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        {/* Info: (20260415 - Luphia) Header & Blockchain Stats */}
+        {/* Info: (20260415 - Luphia) Header */}
         <AdminPageHeader
           icon={Users}
           title={t("admin_member.page.title")!}
@@ -396,34 +375,6 @@ export default function MemberAdminPage() {
                 <Users className="h-4 w-4 shrink-0" />
                 {t("admin_member.page.issue_team_points_btn")}
               </button>
-
-              {/* Info: (20260416 - Luphia) 庫存 ICP 數量顯示 */}
-              <div className="flex shrink-0 items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white py-1.5 pr-2 pl-3 shadow-sm">
-                <div className="flex items-center gap-2">
-                  <Coins className="h-5 w-5 shrink-0 text-emerald-500" />
-                  <div className="flex flex-col">
-                    <span className="truncate text-[9px] leading-none font-bold tracking-wider text-gray-400 uppercase">
-                      {t("admin_member.page.admin_icp_inventory")}
-                    </span>
-                    <span className="mt-0.5 text-sm leading-tight font-bold text-gray-800">
-                      {blockchainData
-                        ? MoneyUtil.formatDynamic(
-                            blockchainData.membershipSystemIcpInventory,
-                            4,
-                          )
-                        : "---"}
-                    </span>
-                  </div>
-                </div>
-                <div className="h-5 w-px shrink-0 bg-gray-200"></div>
-                <Link
-                  href="/admin/blockchain"
-                  className="flex shrink-0 items-center gap-1 rounded bg-orange-50 px-2 py-1.5 text-xs font-bold text-orange-600 transition hover:bg-orange-100"
-                >
-                  <PlusCircle className="h-3.5 w-3.5" />
-                  {t("admin_member.page.mint")}
-                </Link>
-              </div>
             </div>
           }
         />
@@ -446,7 +397,7 @@ export default function MemberAdminPage() {
       <TeamPointIssueModal
         isOpen={isTeamModalOpen}
         onClose={() => setIsTeamModalOpen(false)}
-        onSuccess={fetchBlockchainData}
+        onSuccess={fetchUsers}
         scopedUser={teamScopedUser}
       />
 
@@ -457,7 +408,6 @@ export default function MemberAdminPage() {
         onSuccess={() => {
           if (selectedUser?.id) {
             handleRefreshBalance(selectedUser.id);
-            fetchBlockchainData();
           }
         }}
       />

@@ -28,5 +28,41 @@ export function missionFolderName(taskId: number | bigint | string): string {
   return `${MISSION_DIR_PREFIX}_${taskId.toString()}`;
 }
 
+/**
+ * Info: (20261015 - Luphia) 反解 `missionFolderName`；不是本看板的資料夾回 null。
+ *
+ * 舊鏈留下的 `{合約位址}_{taskId}` 資料夾也會回 null：那些 taskId 指的是已退役的鏈上任務，
+ * 與 DB 流水號可能同號，worker 拿它們去查 DB 會操作到別人的任務。
+ */
+export function parseMissionFolderName(name: string): number | null {
+  const prefix = `${MISSION_DIR_PREFIX}_`;
+  if (!name.startsWith(prefix)) return null;
+  const idPart = name.slice(prefix.length);
+  if (!/^\d+$/.test(idPart)) return null;
+  const id = Number(idPart);
+  return Number.isSafeInteger(id) ? id : null;
+}
+
 // Info: (20261015 - Luphia) 平台自己就是任務的建立者與執行者，不再有鏈上位址
 export const MISSION_PLATFORM_ACTOR = "platform";
+
+/**
+ * Info: (20261015 - Luphia) 任務懸賞的最小單位位數。
+ *
+ * `MissionTask.reward` 沿用合約的 wei 刻度（18 位小數），讓舊資料與畫面換算方式一致；
+ * 懸賞已不涉及任何代幣轉移，只是紀錄「這筆任務當時估的價」。
+ */
+export const MISSION_REWARD_DECIMALS = 18;
+
+// Info: (20261015 - Luphia) 一筆任務最多被拒絕幾次就放棄（closer 寫 giveup.md 的門檻）
+export const MISSION_MAX_REJECTIONS = 3;
+
+// Info: (20261015 - Luphia) 管理後台對任務看板送出的動作
+export const MISSION_ADMIN_ACTION = {
+  CANCEL: "cancel",
+  BUMP: "bump",
+  GC: "gc",
+} as const;
+
+export type MissionAdminAction =
+  (typeof MISSION_ADMIN_ACTION)[keyof typeof MISSION_ADMIN_ACTION];

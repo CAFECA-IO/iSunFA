@@ -18,11 +18,6 @@ import { teamLedgerAnchorRepo } from "@/repositories/team_ledger_anchor.repo";
 jest.mock("@/lib/utils/logger", () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
-jest.mock("@/lib/viem", () => ({
-  // Info: (20260807 - Luphia) 測試環境無 relayer key：驗證「未配置不阻斷營運」的行為
-  walletClient: null,
-  account: null,
-}));
 jest.mock("@/repositories/team_wallet.repo", () => ({
   teamWalletRepo: {
     listAllWallets: jest.fn(),
@@ -36,8 +31,7 @@ jest.mock("@/repositories/team_ledger_anchor.repo", () => ({
     getLatestAnchored: jest.fn(),
     getByDate: jest.fn(),
     upsertPending: jest.fn(),
-    markAnchored: jest.fn(),
-    markFailed: jest.fn(),
+    markSealed: jest.fn(),
     listLedgerForWindow: jest.fn(),
   },
 }));
@@ -45,6 +39,9 @@ jest.mock("@/repositories/team_ledger_anchor.repo", () => ({
 /**
  * Info: (20260807 - Luphia) 錢包守護行程單測（設計書 §3 / §9 P4 驗收）。
  * 驗收：壞帳注入 → 凍結錢包並告警；勾稽通過 → 錨定；違規 → 跳過錨定（壞帳不上鏈）。
+ *
+ * Info: (20261015 - Luphia) 區塊鏈退役：錨定不再送鏈上交易，roots 寫進 DB 後標記 SEALED。
+ * 原本「未配置 relayer 時標 FAILED」那一條改釘「直接封存、不需要任何鏈設定」。
  */
 
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
@@ -210,11 +207,49 @@ describe("runLedgerAnchoring", () => {
     expect(upsert.dayMerkleRoot).toBe(EMPTY_DAY_ROOT);
   });
 
-  it("marks FAILED without throwing when the anchor tx is not configured", async () => {
+  it("seals the computed roots in the DB without any chain transaction", async () => {
     const result = await runLedgerAnchoring(NOW_MS);
-    expect(result.anchored).toBe(false);
-    expect(teamLedgerAnchorRepo.markFailed).toHaveBeenCalledWith("anchor-1");
-    expect(teamLedgerAnchorRepo.markAnchored).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      skipped: false,
+      anchored: true,
+      anchorDate: "2026-08-05T16:00:00.000Z",
+      entryCount: 1,
+    });
+    expect(teamLedgerAnchorRepo.markSealed).toHaveBeenCalledWith("anchor-1");
+  });
+
+  // Info: (20261015 - Luphia) 已在 DB 封存的那一天同樣不重算（與鏈上 ANCHORED 同等對待）
+  it("skips when the day is already sealed", async () => {
+    asMock(teamLedgerAnchorRepo.getByDate).mockResolvedValue({
+      status: "SEALED",
+    } as unknown);
+    const result = await runLedgerAnchoring(NOW_MS);
+    expect(result).toEqual({ skipped: true, anchored: true });
+    expect(teamLedgerAnchorRepo.upsertPending).not.toHaveBeenCalled();
+  });
+
+  // Info: (20261015 - Luphia) 舊的 FAILED 列（鏈不可用時留下的）照常重算並封存
+  it("re-seals a day that previously failed to anchor on-chain", async () => {
+    asMock(teamLedgerAnchorRepo.getByDate).mockResolvedValue({
+      status: "FAILED",
+    } as unknown);
+    await runLedgerAnchoring(NOW_MS);
+    expect(teamLedgerAnchorRepo.upsertPending).toHaveBeenCalled();
+    expect(teamLedgerAnchorRepo.markSealed).toHaveBeenCalledWith("anchor-1");
+  });
+
+  // Info: (20261015 - Luphia) 鏈式累積接續最近一筆可接續列（舊的鏈上 ANCHORED 列也算）
+  it("chains onto the latest anchored or sealed root", async () => {
+    const previousRoot = chainRoot(null, EMPTY_DAY_ROOT);
+    asMock(teamLedgerAnchorRepo.getLatestAnchored).mockResolvedValue({
+      chainedRoot: previousRoot,
+      status: "ANCHORED",
+    } as unknown);
+    asMock(teamLedgerAnchorRepo.listLedgerForWindow).mockResolvedValue([]);
+    await runLedgerAnchoring(NOW_MS);
+    const upsert = asMock(teamLedgerAnchorRepo.upsertPending).mock
+      .calls[0][0] as { chainedRoot: string };
+    expect(upsert.chainedRoot).toBe(chainRoot(previousRoot, EMPTY_DAY_ROOT));
   });
 });
 
@@ -232,7 +267,7 @@ describe("runWalletGuardian", () => {
     expect(teamLedgerAnchorRepo.getByDate).toHaveBeenCalled();
   });
 
-  it("skips anchoring entirely when a violation is found (bad books never go on-chain)", async () => {
+  it("skips anchoring entirely when a violation is found (bad books are never sealed)", async () => {
     asMock(teamWalletRepo.listAllWallets).mockResolvedValue([
       { ...BALANCED_WALLET, unallocatedBalance: BigInt(999) },
     ]);

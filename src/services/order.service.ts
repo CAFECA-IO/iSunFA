@@ -24,6 +24,7 @@ import {
 } from "@/constants/price";
 import { IJSONObject } from "@/validators/common";
 import { orderIssueService } from "@/services/order.issue.service";
+import { isPostPaymentOrderStatus } from "@/constants/point_payment";
 import { Prisma } from "@/generated";
 
 export async function getOrdersByUserId(userId: string, type?: string | null) {
@@ -257,6 +258,37 @@ export async function getPendingOrder(orderId: string, userId: string) {
   }
 
   if (order.status !== ORDER_STATUS.PENDING) {
+    throw new AppError(API_ERRORS.VL_INVALID_ORDER_STATUS);
+  }
+
+  return order;
+}
+
+// Info: (20261015 - Luphia) route 層不得直呼 repository，查單統一經此 service
+export async function getOrderById(orderId: string) {
+  return paymentRepo.getOrderById(orderId);
+}
+
+/**
+ * Info: (20261015 - Luphia) 取得一張**已付款**的訂單（區塊鏈退役）。
+ *
+ * 分析路由原本以「鏈上交易確實轉了點數給 MembershipSystem、且綁著這張訂單」
+ * 來確認付款；鏈退役後付款只會經過兩條路——個人點數帳本（point_payment）
+ * 或團隊額度（team_quota_payment）——兩者都在付款當下把訂單推進到付款後狀態。
+ * 因此「付過了沒」只看訂單狀態，判準與付款端同源（`isPostPaymentOrderStatus`）。
+ */
+export async function getPaidOrder(orderId: string, userId: string) {
+  const order = await paymentRepo.getOrderById(orderId);
+
+  if (!order) {
+    throw new AppError(API_ERRORS.NF_ORDER);
+  }
+
+  if (order.userId !== userId) {
+    throw new AppError(API_ERRORS.AUTH_PERMISSION_DENIED);
+  }
+
+  if (!isPostPaymentOrderStatus(order.status)) {
     throw new AppError(API_ERRORS.VL_INVALID_ORDER_STATUS);
   }
 

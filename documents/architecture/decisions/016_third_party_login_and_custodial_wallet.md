@@ -134,7 +134,10 @@ FCL_WebAuthn.checkSignature(
 
 `challengeToken` 的 payload 原本只有 `{ challenge }`：不綁使用者、不綁用途。於是「一枚有效的 token ＋ 一份對它的簽章」可以授權**任何**需要簽章的操作——用優惠券、發點數、改系統設定都成立。加上託管代簽之後，只要拿到某個託管管理員的 session 就能索取簽章並橫向套用到最高權限操作。
 
-現在 token 同時承諾 `purpose`（`LOGIN` / `USER_ACTION` / `ADMIN_ACTION`）與 `sub`，驗證端必須指名自己預期的用途，`LOGIN` 以外一律比對 `sub`。並且**明確拒絕代簽 `ADMIN_ACTION`**：託管帳號的「同意」只是一張 session cookie，讓它授權最高權限操作等於沒有第二因素。管理員帳號本來就不該是託管型，這條規則讓那個前提變成程式碼而不是口頭約定。
+現在 token 同時承諾 `purpose`（`LOGIN` / `USER_ACTION` / `ADMIN_ACTION`）與 `sub`，驗證端必須指名自己預期的用途，`LOGIN` 以外一律比對 `sub`。
+
+> 補充（20261015，區塊鏈退役）：新增 `REGISTER` 用途，供伺服器端 passkey 註冊（`POST /api/v1/auth/register`）驗證 challenge 出自本站。它與 `LOGIN` 同屬「不綁 `sub`」的用途（`UNBOUND_CHALLENGE_PURPOSES`）——簽發當下還沒有使用者身分。託管帳號的建帳也不再部署 SCW：位址改由 `deriveAccountAddress`（`src/lib/auth/account_address.ts`）以 credentialId 與公鑰鏈下推導。
+並且**明確拒絕代簽 `ADMIN_ACTION`**：託管帳號的「同意」只是一張 session cookie，讓它授權最高權限操作等於沒有第二因素。管理員帳號本來就不該是託管型，這條規則讓那個前提變成程式碼而不是口頭約定。
 
 （順帶修掉一個 100% 失效的 bug：route 層原本漏傳 `challengeToken` 給 service，所有走 `generateChallengeToken()` 的流程對託管帳號必然拋 `AU000021`。刻意在補上 purpose 綁定之後才修它——先修的話等於把一個被 bug 擋住的漏洞打開。）
 
