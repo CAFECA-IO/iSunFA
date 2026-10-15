@@ -14,6 +14,10 @@ export const reportRepo = {
   create(args: Prisma.ReportCreateArgs): Promise<Report> {
     return prisma.report.create(args);
   },
+  // Info: (20261015 - Luphia) 企業觀測站以 pdfPath（observatory/{stockId}/{year}/{source}）冪等發布
+  upsert(args: Prisma.ReportUpsertArgs): Promise<Report> {
+    return prisma.report.upsert(args);
+  },
   /**
    * Info: (20260702 - Julian) 根據篩選條件尋找報告
    * 採寬鬆檢索：若有指定公司，則抓取該公司所有報告；若無指定公司，則按類型與年份篩選。

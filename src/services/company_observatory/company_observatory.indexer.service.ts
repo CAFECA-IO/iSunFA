@@ -19,7 +19,14 @@ import { chunkHeader, chunkPages } from "@/lib/company_observatory/chunking";
 import { ObservatoryInfraUnavailableError } from "@/lib/company_observatory/errors";
 import { nextStateAfterFailure } from "@/lib/company_observatory/retry_policy";
 import { IObservatoryStorage } from "@/lib/company_observatory/storage";
-import { IObservatoryCompanyDirectory } from "@/services/company_observatory/company_observatory.service";
+import {
+  IObservatoryCompany,
+  IObservatoryCompanyDirectory,
+} from "@/services/company_observatory/company_observatory.service";
+import {
+  buildObservatoryReport,
+  IObservatoryReportRecord,
+} from "@/lib/company_observatory/report_projection";
 import { runWithConcurrency } from "@/lib/utils/concurrency";
 import { describeError } from "@/lib/utils/error_message";
 
@@ -49,8 +56,14 @@ export type IObservatoryPageExtractor = (
   contentType: string,
 ) => Promise<string[] | null>;
 
+// Info: (20261015 - Luphia) 把索引完成的文件發布成企業觀測站頁面的 Report（以 pdfPath upsert，冪等）
+export interface IObservatoryReportPublisher {
+  publish(record: IObservatoryReportRecord): Promise<void>;
+}
+
 export interface ICompanyObservatoryIndexerDeps {
   documents: IObservatoryIndexStore;
+  reports: IObservatoryReportPublisher;
   companies: IObservatoryCompanyDirectory;
   vectors: IObservatoryVectorStore;
   embedder: IObservatoryEmbedder;
@@ -72,6 +85,7 @@ export interface IObservatoryIndexDocument {
   contentType: string | null;
   contentHash: string | null;
   sourceUrl: string | null;
+  metadata: unknown;
 }
 
 export const OBSERVATORY_INDEX_RESULT = {
@@ -118,8 +132,11 @@ export function createCompanyObservatoryIndexer(
 
   async function indexOne(
     doc: IObservatoryIndexDocument,
-    companyName: string,
+    company: IObservatoryCompany | undefined,
   ): Promise<ObservatoryIndexResult> {
+    const companyName = company
+      ? company.abbreviation || company.name
+      : doc.stockId;
     try {
       if (!isObservatorySource(doc.source)) {
         throw new Error(`unknown source ${doc.source}`);
@@ -167,6 +184,18 @@ export function createCompanyObservatoryIndexer(
       );
 
       await deps.vectors.replaceDocumentChunks(doc.id, rows);
+      // Info: (20261015 - Luphia) 先發布再標 INDEXED：發布失敗時文件留在 DOWNLOADED 重試，頁面不會漏掉它
+      await deps.reports.publish(
+        buildObservatoryReport({
+          stockId: doc.stockId,
+          year: doc.year,
+          source,
+          companyName: company?.name ?? doc.stockId,
+          industryCode: company?.industry ?? null,
+          companyMetadata: company?.metadata ?? null,
+          documentMetadata: doc.metadata,
+        }),
+      );
       const now = deps.now();
       await deps.documents.transition(doc.id, doc.status, {
         status: OBSERVATORY_DOCUMENT_STATUS.INDEXED,
@@ -220,18 +249,13 @@ export function createCompanyObservatoryIndexer(
       const companies = await deps.companies.findByStockIds(
         Array.from(new Set(docs.map((doc) => doc.stockId))),
       );
-      const names = new Map(
-        companies.map((c) => [c.stockId, c.abbreviation || c.name]),
-      );
+      const byStockId = new Map(companies.map((c) => [c.stockId, c]));
 
       for (const doc of docs) {
         if (deps.shouldStop()) break;
         summary.attempted += 1;
         try {
-          const result = await indexOne(
-            doc,
-            names.get(doc.stockId) ?? doc.stockId,
-          );
+          const result = await indexOne(doc, byStockId.get(doc.stockId));
           if (result === OBSERVATORY_INDEX_RESULT.INDEXED) summary.indexed += 1;
           if (result === OBSERVATORY_INDEX_RESULT.FAILED) summary.failed += 1;
           if (result === OBSERVATORY_INDEX_RESULT.DEAD) summary.dead += 1;

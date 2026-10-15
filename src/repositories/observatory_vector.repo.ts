@@ -25,11 +25,19 @@ export function buildObservatoryWhere(
   filter: IObservatoryVectorFilter,
 ): string | null {
   const clauses: string[] = [];
-  if (filter.stockId) clauses.push(`stock_id = ${quote(filter.stockId)}`);
-  if (filter.source) clauses.push(`source = ${quote(filter.source)}`);
-  if (filter.year !== undefined) {
-    if (!Number.isInteger(filter.year)) throw new Error("year must be integer");
-    clauses.push(`year = ${filter.year}`);
+  const inList = (column: string, values: string[]) =>
+    clauses.push(`${column} IN (${values.map(quote).join(", ")})`);
+  if (filter.stockIds && filter.stockIds.length > 0) {
+    inList("stock_id", filter.stockIds);
+  }
+  if (filter.sources && filter.sources.length > 0) {
+    inList("source", [...filter.sources]);
+  }
+  if (filter.years && filter.years.length > 0) {
+    if (!filter.years.every((year) => Number.isInteger(year))) {
+      throw new Error("year must be integer");
+    }
+    clauses.push(`year IN (${filter.years.join(", ")})`);
   }
   return clauses.length > 0 ? clauses.join(" AND ") : null;
 }

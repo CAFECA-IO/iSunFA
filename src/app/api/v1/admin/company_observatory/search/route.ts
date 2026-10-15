@@ -22,7 +22,11 @@ export async function GET(request: NextRequest) {
     const { q, stockId, source, year, limit } = parsed.data;
     const hits = await searchObservatory({
       query: q,
-      filter: { stockId, source, year },
+      filter: {
+        stockIds: stockId ? [stockId] : undefined,
+        sources: source ? [source] : undefined,
+        years: year !== undefined ? [year] : undefined,
+      },
       limit,
     });
     return jsonOk({ hits });

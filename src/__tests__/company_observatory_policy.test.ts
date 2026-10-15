@@ -175,18 +175,21 @@ describe("company observatory LanceDB filter", () => {
     const buildObservatoryWhere = await loadWhereBuilder();
     expect(
       buildObservatoryWhere({
-        stockId: "2330",
-        source: OBSERVATORY_SOURCE.ESG_REPORT,
-        year: 2024,
+        stockIds: ["2330", "1101"],
+        sources: [OBSERVATORY_SOURCE.ESG_REPORT],
+        years: [2024, 2025],
       }),
-    ).toBe("stock_id = '2330' AND source = 'ESG_REPORT' AND year = 2024");
+    ).toBe(
+      "stock_id IN ('2330', '1101') AND source IN ('ESG_REPORT') AND year IN (2024, 2025)",
+    );
+    expect(buildObservatoryWhere({ stockIds: [] })).toBeNull();
     expect(buildObservatoryWhere({})).toBeNull();
   });
 
   it("refuses values that could break out of the filter", async () => {
     const buildObservatoryWhere = await loadWhereBuilder();
     expect(() =>
-      buildObservatoryWhere({ stockId: "2330' OR '1'='1" }),
+      buildObservatoryWhere({ stockIds: ["2330' OR '1'='1"] }),
     ).toThrow();
     expect(observatoryStockIdSchema.safeParse("2330' OR 1=1").success).toBe(
       false,

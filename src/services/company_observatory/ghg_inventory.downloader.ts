@@ -10,6 +10,7 @@ import {
   IObservatoryDownloader,
   IObservatoryFetchResult,
   IObservatoryHttpClient,
+  IObservatoryReportMetadata,
   IObservatoryTarget,
 } from "@/interfaces/company_observatory";
 import {
@@ -62,6 +63,36 @@ export function selectGhgItems(
 function displayValue(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return "";
   return String(value).trim();
+}
+
+// Info: (20261015 - Luphia) 溫室氣體揭露上的欄位名稱：盤查的第三方查證機構與標準
+const GHG_ASSURER_TITLE = "確信機構";
+const GHG_ASSURANCE_STANDARD_TITLE = "確信標準";
+
+/**
+ * Info: (20261015 - Luphia) 取第一個有填的查證機構與標準（範疇一在最前面），原樣照抄。
+ * 盤查依 ISO 14064-3 是「查證」，因此放在查證欄位，而不是報告書的確信欄位。
+ */
+export function ghgInventoryMetadata(
+  items: IEsgDeclareItem[],
+): IObservatoryReportMetadata {
+  const firstValue = (title: string): string | undefined => {
+    for (const item of items) {
+      for (const section of item.sections ?? []) {
+        for (const control of section.controls ?? []) {
+          const value = displayValue(control.value);
+          if ((control.title ?? control.showTitle) === title && value !== "") {
+            return value;
+          }
+        }
+      }
+    }
+    return undefined;
+  };
+  return {
+    verificationAgency: firstValue(GHG_ASSURER_TITLE),
+    verificationStandards: firstValue(GHG_ASSURANCE_STANDARD_TITLE),
+  };
 }
 
 export function renderGhgInventoryText(
@@ -119,6 +150,7 @@ export const ghgInventoryDownloader: IObservatoryDownloader = {
       title: `${target.companyName} ${target.year} 年溫室氣體盤查揭露`,
       contentType: OBSERVATORY_CONTENT_TYPE.TEXT,
       body: Buffer.from(renderGhgInventoryText(items, header), "utf-8"),
+      metadata: ghgInventoryMetadata(items),
     };
   },
 };

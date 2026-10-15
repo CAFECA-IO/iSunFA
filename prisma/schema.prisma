@@ -3539,6 +3539,7 @@ model LeavePolicy {
    * /**
    * /**
    * /**
+   * /**
    * Info: (20260817 - Julian) 給薪比例（工資照給 = 1、折半發給 = 0.5、不給工資 = 0）。
    * 本模組不算金額，此欄位供薪資模組與畫面提示使用。
    * **Nullable 且無預設值**：產假的工資取決於年資（受僱六個月以上照給、
@@ -4842,6 +4843,8 @@ model WorkerLease {
  * 這張表同樣只記錄「向外看」的公開資料，不掛任何租戶（AccountBook）業務資料。
  * 狀態流見 `OBSERVATORY_DOCUMENT_STATUS`；`contentHash` 對上 `indexedHash` 即代表
  * 向量索引已是這份內容，重新下載到相同內容時不重建索引。
+ * 索引完成後會發布成一筆 `Report`（`pdfPath = observatory/{stockId}/{year}/{source}`），
+ * 企業觀測站頁面的清單、詳情與 AI 諮詢因此讀得到它。
  */
 model ObservatoryDocument {
   id            String    @id @default(uuid())
@@ -4856,6 +4859,8 @@ model ObservatoryDocument {
   contentHash   String?   @map("content_hash")
   indexedHash   String?   @map("indexed_hash")
   chunkCount    Int       @default(0) @map("chunk_count")
+  // Info: (20261015 - Luphia) 來源結構化欄位原樣取出的報告資訊（IObservatoryReportMetadata），發布到 Report 時使用
+  metadata      Json?
   attemptCount  Int       @default(0) @map("attempt_count")
   lastError     String?   @map("last_error") @db.Text
   nextAttemptAt DateTime  @default(now()) @map("next_attempt_at")

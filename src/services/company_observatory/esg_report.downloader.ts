@@ -13,6 +13,7 @@ import {
   IObservatoryDownloader,
   IObservatoryFetchResult,
   IObservatoryHttpClient,
+  IObservatoryReportMetadata,
   IObservatoryTarget,
 } from "@/interfaces/company_observatory";
 import {
@@ -54,16 +55,36 @@ function usableFileId(id: string | null | undefined): string | null {
   return id && id !== ESG_EMPTY_FILE_ID ? id : null;
 }
 
-export function selectEsgReportFileId(
+type IEsgReportRecord = NonNullable<IEsgReportListResponse["data"]>[number];
+
+export function selectEsgReportRecord(
   response: IEsgReportListResponse,
   stockId: string,
+): IEsgReportRecord | null {
+  return (response.data ?? []).find((row) => row.code === stockId) ?? null;
+}
+
+export function selectEsgReportFileId(
+  record: IEsgReportRecord | null,
 ): string | null {
-  const record = (response.data ?? []).find((row) => row.code === stockId);
   if (!record) return null;
   return (
     usableFileId(record.twEditReportDownloadId) ??
     usableFileId(record.twFirstReportDownloadId)
   );
+}
+
+// Info: (20261015 - Luphia) 申報紀錄上的揭露期間與確信／保證機構、標準，原樣照抄
+export function esgReportMetadata(
+  record: IEsgReportRecord | null,
+): IObservatoryReportMetadata {
+  const pick = (value: string | null | undefined) =>
+    value && value.trim() ? value.trim() : undefined;
+  return {
+    period: pick(record?.reportingInterval),
+    assuranceAgency: pick(record?.valiProvider),
+    assuranceStandards: pick(record?.thirdStd),
+  };
 }
 
 export function buildEsgReportFileUrl(fileId: string): string {
@@ -94,7 +115,8 @@ export const esgReportDownloader: IObservatoryDownloader = {
       throw new Error(`ESG report list HTTP ${listRes.status}`);
     }
     const list = esgReportListResponseSchema.parse(parseJsonBody(listRes.body));
-    const fileId = selectEsgReportFileId(list, target.stockId);
+    const record = selectEsgReportRecord(list, target.stockId);
+    const fileId = selectEsgReportFileId(record);
     if (!fileId) {
       return {
         outcome: OBSERVATORY_FETCH_OUTCOME.NOT_AVAILABLE,
@@ -122,6 +144,7 @@ export const esgReportDownloader: IObservatoryDownloader = {
       title: `${target.companyName} ${target.year} 年永續報告書`,
       contentType: OBSERVATORY_CONTENT_TYPE.PDF,
       body: fileRes.body,
+      metadata: esgReportMetadata(record),
     };
   },
 };

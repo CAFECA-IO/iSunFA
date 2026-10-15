@@ -209,6 +209,95 @@ export const OBSERVATORY_LIST_DEFAULT_PAGE_SIZE = 50;
 export const OBSERVATORY_LIST_MAX_PAGE_SIZE = 200;
 export const OBSERVATORY_REQUEUE_MAX_IDS = 500;
 
+// ---------------------------------------------------------------------------
+// Info: (20261015 - Luphia) 發布到企業觀測站頁面（`Report` 表）
+// ---------------------------------------------------------------------------
+
+/**
+ * Info: (20261015 - Luphia) 觀測站文件在 `Report.pdfPath` 上的前綴。
+ * 完整鍵為 `observatory/{stockId}/{year}/{source}`：與文件的唯一鍵一一對應，
+ * 發布可以 upsert（冪等），向量檢索的結果也能直接由欄位組回這個鍵、找到對應的 Report。
+ */
+export const OBSERVATORY_REPORT_PATH_PREFIX = "observatory";
+
+// Info: (20261015 - Luphia) 報告標題的類型字樣；「永續報告書」「財務報告」同時是企業觀測站問題分類的關鍵字
+export const OBSERVATORY_REPORT_TITLE_SUFFIX: Record<
+  ObservatorySource,
+  string
+> = {
+  GCIS_REGISTRATION: "年公司登記資料",
+  MOPS_FINANCIAL_REPORT: "年度財務報告",
+  ESG_REPORT: "年永續報告書",
+  GHG_INVENTORY: "年溫室氣體盤查揭露",
+};
+
+// Info: (20261015 - Luphia) 企業觀測站問題分類（QUERY_KEYWORDS 的鍵）→ 要檢索的來源
+export const OBSERVATORY_SOURCES_BY_REPORT_TYPE: Record<
+  string,
+  readonly ObservatorySource[]
+> = {
+  永續報告書: [OBSERVATORY_SOURCE.ESG_REPORT, OBSERVATORY_SOURCE.GHG_INVENTORY],
+  財務報告: [
+    OBSERVATORY_SOURCE.MOPS_FINANCIAL_REPORT,
+    OBSERVATORY_SOURCE.GCIS_REGISTRATION,
+  ],
+};
+
+// Info: (20261015 - Luphia) `Company.metadata`（證交所／櫃買中心原始資料）裡實收資本額的欄位名
+export const COMPANY_PAID_IN_CAPITAL_KEYS = [
+  "實收資本額",
+  "Paidin.Capital.NTDollars",
+] as const;
+
+// Info: (20261015 - Luphia) MOPS 電子書查詢頁上「會計期間：曆年制」的字樣
+export const MOPS_CALENDAR_YEAR_MARKER = "曆年制";
+
+/**
+ * Info: (20261015 - Luphia) 證交所／櫃買中心的產業別代碼 → 名稱（`Company.industry` 存的是代碼）。
+ */
+export const TWSE_INDUSTRY_NAME: Record<string, string> = {
+  "01": "水泥工業",
+  "02": "食品工業",
+  "03": "塑膠工業",
+  "04": "紡織纖維",
+  "05": "電機機械",
+  "06": "電器電纜",
+  "07": "化學生技醫療",
+  "08": "玻璃陶瓷",
+  "09": "造紙工業",
+  "10": "鋼鐵工業",
+  "11": "橡膠工業",
+  "12": "汽車工業",
+  "13": "電子工業",
+  "14": "建材營造業",
+  "15": "航運業",
+  "16": "觀光餐旅",
+  "17": "金融保險業",
+  "18": "貿易百貨業",
+  "19": "綜合",
+  "20": "其他業",
+  "21": "化學工業",
+  "22": "生技醫療業",
+  "23": "油電燃氣業",
+  "24": "半導體業",
+  "25": "電腦及週邊設備業",
+  "26": "光電業",
+  "27": "通信網路業",
+  "28": "電子零組件業",
+  "29": "電子通路業",
+  "30": "資訊服務業",
+  "31": "其他電子業",
+  "32": "文化創意業",
+  "33": "農業科技業",
+  "34": "電子商務",
+  "35": "綠能環保",
+  "36": "數位雲端",
+  "37": "運動休閒",
+  "38": "居家生活",
+  "80": "管理股票",
+  "91": "存託憑證",
+};
+
 // Info: (20261015 - Luphia) 記在 lastError 的固定原因碼（不是給人看的句子）
 export const OBSERVATORY_REASON = {
   MISSING_TAX_ID: "missing_tax_id",
