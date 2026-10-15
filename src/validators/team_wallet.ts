@@ -4,6 +4,10 @@ import {
   BILLING_INTERVAL,
   TEAM_PLAN,
 } from "@/constants/subscription_quota";
+import {
+  TEAM_WALLET_LEDGER_FILTER,
+  TEAM_WALLET_LEDGER_FILTER_VALUES,
+} from "@/constants/team_wallet_ledger";
 import { bigIntStringSchema } from "@/validators/common";
 
 /**
@@ -29,6 +33,10 @@ export const teamWalletAllocationSchema = z.object({
 export const teamWalletLedgerQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  // Info: (20261015 - Luphia) 點數移轉紀錄頁的類型篩選（選填，未帶即全部）
+  type: z
+    .enum(TEAM_WALLET_LEDGER_FILTER_VALUES)
+    .default(TEAM_WALLET_LEDGER_FILTER.ALL),
 });
 
 // Info: (20260807 - Luphia) 團隊額度付款（POST /order/[order_id]/team_quota_payment）

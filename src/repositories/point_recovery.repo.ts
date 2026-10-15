@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated";
 import { ORDER_STATUS } from "@/constants/status";
 import { TEAM_WALLET_ENTRY_TYPE } from "@/constants/subscription_quota";
+import { POINT_LEDGER_ENTRY_TYPE } from "@/constants/point_ledger";
 
 /**
  * Info: (20261015 - Luphia) 點數復原指令的資料讀寫（見 `services/point_recovery.service.ts`）。
@@ -44,7 +45,35 @@ export interface IRecoveryTeamLedgerRow {
   idempotencyKey: string;
 }
 
+export interface IRecoveryExistingEntryRow {
+  id: string;
+  userId: string;
+  amount: bigint;
+  sourceRef: string | null;
+  idempotencyKey: string;
+}
+
 export class PointRecoveryRepository {
+  // Info: (20261015 - Luphia) 帳本裡既有的團隊分配分錄（撤銷舊規則誤發用）
+  async listExistingTeamAllocationEntries(
+    userId?: string,
+  ): Promise<IRecoveryExistingEntryRow[]> {
+    return prisma.pointLedger.findMany({
+      where: {
+        entryType: POINT_LEDGER_ENTRY_TYPE.TEAM_ALLOCATION,
+        ...(userId ? { userId } : {}),
+      },
+      select: {
+        id: true,
+        userId: true,
+        amount: true,
+        sourceRef: true,
+        idempotencyKey: true,
+      },
+      orderBy: { createdAt: "asc" },
+    });
+  }
+
   async listUsers(userId?: string): Promise<IRecoveryUserRow[]> {
     return prisma.user.findMany({
       where: userId ? { id: userId } : undefined,

@@ -1,3 +1,7 @@
+import {
+  resolveMemberAllocationCredits,
+  sumMemberAllocations,
+} from "@/lib/quota/member_allocation";
 import { randomUUID } from "crypto";
 import { Order, TeamWalletLedger } from "@/generated";
 import { CREDIT_PLANS } from "@/config/credit_plans";
@@ -71,7 +75,7 @@ async function guarded<T>(operation: () => Promise<T>): Promise<T> {
   }
 }
 
-function toLedgerView(ledger: TeamWalletLedger): ILedgerEntryView {
+export function toLedgerView(ledger: TeamWalletLedger): ILedgerEntryView {
   return {
     id: ledger.id,
     entryType: ledger.entryType as TeamWalletEntryType,
@@ -155,6 +159,35 @@ export async function fulfillTeamPointPurchase(order: Order): Promise<void> {
 }
 
 /**
+ * Info: (20261015 - Luphia) 每位成員「這個團隊實際給過他多少點」。
+ *
+ * 原本回的是 `TeamWalletAllocation.balance`——分配自 2026-08-14 起改撥入成員個人點數，
+ * 那張表的餘額遷移時歸零、之後不再增加，所以團隊頁的成員卡永遠顯示 0。
+ * 改由團隊帳本依 `resolveMemberAllocationCredits` 加總（與點數復原指令同一條規則）。
+ * 顯示的是團隊給出的累計，不是成員個人餘額：個人點數含他自己的購點，不該讓團隊管理者看見。
+ */
+async function listMemberAllocationViews(
+  teamId: string,
+): Promise<IAllocationView[]> {
+  const rows = await teamWalletRepo.listMemberAllocationLedger(teamId);
+  const { credits } = resolveMemberAllocationCredits(rows);
+  const totals = sumMemberAllocations(credits);
+  const lastAt = new Map<string, number>();
+  const createdAtById = new Map(rows.map((r) => [r.id, r.createdAt]));
+  for (const credit of credits) {
+    const at = Math.floor(
+      (createdAtById.get(credit.ledgerId)?.getTime() ?? 0) / 1000,
+    );
+    lastAt.set(credit.userId, Math.max(lastAt.get(credit.userId) ?? 0, at));
+  }
+  return [...totals.entries()].map(([memberId, total]) => ({
+    userId: memberId,
+    balance: total.toString(),
+    updatedAt: lastAt.get(memberId) ?? 0,
+  }));
+}
+
+/**
  * Info: (20260809 - Luphia) 錢包視圖（設計書 §7 GET /wallet）：
  * 一般成員僅見自己的分配餘額與錢包狀態；未分配池餘額與全員分配清單為
  * 管理職資訊，僅 OWNER / ADMIN 回傳——後端就不給，非僅前端隱藏（零信任）。
@@ -169,24 +202,20 @@ export async function getTeamWalletView(params: {
     const member = await assertTeamMember(userId, teamId);
 
     const wallet = await teamWalletRepo.getWalletByTeamId(teamId);
-    const allocation = await teamWalletRepo.getAllocation(teamId, userId);
+    const allocations = await listMemberAllocationViews(teamId);
 
     const view: ITeamWalletDetailView = {
       teamId,
       status: (wallet?.status ?? TEAM_WALLET_STATUS.ACTIVE) as TeamWalletStatus,
-      myAllocationBalance: (allocation?.balance ?? BigInt(0)).toString(),
+      myAllocationBalance:
+        allocations.find((a) => a.userId === userId)?.balance ?? "0",
     };
 
     if (isWalletManager(member)) {
       view.unallocatedBalance = (
         wallet?.unallocatedBalance ?? BigInt(0)
       ).toString();
-      const allocations = await teamWalletRepo.listAllocations(teamId);
-      view.allocations = allocations.map((a) => ({
-        userId: a.userId,
-        balance: a.balance.toString(),
-        updatedAt: Math.floor(a.updatedAt.getTime() / 1000),
-      }));
+      view.allocations = allocations;
     }
 
     return view;
@@ -200,12 +229,7 @@ export async function listAllocations(params: {
   const { userId, teamId } = params;
   return guarded(async () => {
     await assertWalletManager(userId, teamId);
-    const allocations = await teamWalletRepo.listAllocations(teamId);
-    return allocations.map((a) => ({
-      userId: a.userId,
-      balance: a.balance.toString(),
-      updatedAt: Math.floor(a.updatedAt.getTime() / 1000),
-    }));
+    return listMemberAllocationViews(teamId);
   });
 }
 
