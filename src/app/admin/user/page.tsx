@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Search,
   Gem,
+  ReceiptText,
 } from "lucide-react";
 import AdminPageHeader from "@/components/admin/common/admin_page_header";
 import DataTable, { IDataTableColumn } from "@/components/common/data_table";
@@ -20,6 +21,8 @@ import {
   IUserTarget,
 } from "@/components/admin/user/point_issue_modal";
 import { TeamPointIssueModal } from "@/components/admin/user/team_point_issue_modal";
+import { UserPointsDetailModal } from "@/components/admin/user/user_points_detail_modal";
+import type { IAdminUserPointsView } from "@/interfaces/admin_user_points";
 import { useTranslation } from "@/i18n/i18n_context";
 import { Role } from "@/constants/role";
 import { IPagination } from "@/interfaces/admin_billing";
@@ -62,6 +65,10 @@ export default function MemberAdminPage() {
   const [memberships, setMemberships] = useState<
     Record<string, IMembershipInfo>
   >({});
+  // Info: (20261015 - Luphia) 各用戶「團隊實際分配給他」的累計（字串，服務端以 BigInt 算好）
+  const [teamAllocated, setTeamAllocated] = useState<Record<string, string>>(
+    {},
+  );
   const [refreshingBalance, setRefreshingBalance] = useState<string | null>(
     null,
   );
@@ -69,6 +76,11 @@ export default function MemberAdminPage() {
   // Info: (20260416 - Luphia) Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<IUserTarget | null>(null);
+
+  // Info: (20261015 - Luphia) 點數明細 modal（個人帳本與團隊分配紀錄）
+  const [pointsDetailUser, setPointsDetailUser] = useState<IUserTarget | null>(
+    null,
+  );
 
   const handleRefreshBalance = useCallback(async (userId: string) => {
     if (!userId) return;
@@ -85,10 +97,24 @@ export default function MemberAdminPage() {
         payload: IMembershipInfo;
       }>(`/api/v1/admin/user/${userId}/membership`);
 
-      const [balanceData, membershipData] = await Promise.all([
+      // Info: (20261015 - Luphia) 3. 團隊分配累計（點數明細端點，帳本只取 1 筆）
+      const resPoints = request<{
+        success: boolean;
+        payload: IAdminUserPointsView | null;
+      }>(`/api/v1/admin/user/${userId}/points`, {
+        query: { page: 1, pageSize: 1 },
+      }).catch(() => null);
+
+      const [balanceData, membershipData, pointsData] = await Promise.all([
         resBalance,
         resMembership,
+        resPoints,
       ]);
+
+      if (pointsData?.success && pointsData.payload) {
+        const total = pointsData.payload.teamAllocated.total;
+        setTeamAllocated((prev) => ({ ...prev, [userId]: total }));
+      }
 
       if (balanceData.success && balanceData.payload !== undefined) {
         setBalances((prev) => ({ ...prev, [userId]: balanceData.payload }));
@@ -246,6 +272,13 @@ export default function MemberAdminPage() {
                 ? balances[user.id].toLocaleString()
                 : "---"}
             </span>
+            {teamAllocated[user.id] && teamAllocated[user.id] !== "0" && (
+              <span className="rounded-full bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700">
+                {t("admin_member.page.team_allocated_hint", {
+                  amount: BigInt(teamAllocated[user.id]).toLocaleString(),
+                })}
+              </span>
+            )}
             <button
               type="button"
               aria-label={t("admin_member.page.refresh_balance_aria")}
@@ -329,11 +362,33 @@ export default function MemberAdminPage() {
             >
               <Users className="h-4 w-4" />
             </button>
+            <button
+              type="button"
+              aria-label={t("admin_member.page.points_detail_btn")}
+              title={t("admin_member.page.points_detail_btn")}
+              onClick={() =>
+                setPointsDetailUser({
+                  id: user.id,
+                  name: user.name,
+                  address: user.address,
+                })
+              }
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-50 px-3 py-2 font-medium text-gray-600 transition hover:bg-gray-100"
+            >
+              <ReceiptText className="h-4 w-4" />
+            </button>
           </div>
         ),
       },
     ],
-    [balances, refreshingBalance, handleRefreshBalance, memberships, t],
+    [
+      balances,
+      teamAllocated,
+      refreshingBalance,
+      handleRefreshBalance,
+      memberships,
+      t,
+    ],
   );
 
   return (
@@ -400,6 +455,16 @@ export default function MemberAdminPage() {
         onSuccess={fetchUsers}
         scopedUser={teamScopedUser}
       />
+
+      {/* Info: (20261015 - Luphia) 以 key 重新掛載：換人或重開都從總覽第一頁開始 */}
+      {pointsDetailUser && (
+        <UserPointsDetailModal
+          key={pointsDetailUser.id}
+          isOpen
+          onClose={() => setPointsDetailUser(null)}
+          targetUser={pointsDetailUser}
+        />
+      )}
 
       <PointIssueModal
         isOpen={isModalOpen}
