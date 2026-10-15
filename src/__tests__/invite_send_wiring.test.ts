@@ -130,15 +130,6 @@ jest.mock("@/repositories/team_subscription.repo", () => ({
   teamSubscriptionRepo: { getByTeamId: jest.fn(async () => null) },
 }));
 
-/**
- * Info: (20260820 - Julian) 方法名是 `sendUserOp`（見 `bundler.service.ts`）。
- * 原本替身給的是 `sendUserOperation`，於是 route 呼叫的那一支是 `undefined`，
- * 真正發生的是一個被內層 try/catch 吞掉的 TypeError——替身等於沒有裝上去。
- */
-jest.mock("@/services/bundler.service", () => ({
-  bundlerService: { sendUserOp: jest.fn(async () => "0xhash") },
-}));
-
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
 
 const PER_MINUTE =

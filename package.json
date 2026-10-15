@@ -8,8 +8,8 @@
   },
   "scripts": {
     "postinstall": "prisma generate",
-    "dev": "npm run initial_wallet && npm run initial_lance_db && prisma generate && npm run lint && next dev",
-    "build": "npm run initial_wallet && npm run initial_lance_db && prisma generate && npm run lint && next build",
+    "dev": "npm run initial_lance_db && prisma generate && npm run lint && next dev",
+    "build": "npm run initial_lance_db && prisma generate && npm run lint && next build",
     "start": "npm run build && next start",
     "seed": "npx tsx scripts/seed/seed.ts",
     "seed_attendance_demo": "npx tsx scripts/seed/seed_attendance_demo.ts",
@@ -27,9 +27,7 @@
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
     "integration_test": "npx tsx scripts/run_integration_test.ts",
     "service": "npx tsx scripts/run_service.ts",
-    "initial_wallet": "npx tsx scripts/initial_wallet.ts",
-    "build_contract": "npx hardhat compile",
-    "deploy_contract": "npx hardhat run scripts/deploy_contract.ts",
+    "restore_points": "npx tsx scripts/restore_points_from_db.ts",
     "version": "npx tsx scripts/bump_version.ts",
     "initial_lance_db": "npx tsx scripts/init_lance_db.ts",
     "uat:carbon": "npx tsx scripts/uat_carbon_report.ts"

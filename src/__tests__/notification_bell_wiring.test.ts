@@ -285,17 +285,28 @@ describe("來源與畫面的接線（掃描）", () => {
    * `ANALYSIS` + `ICP`，見 `personal_credit.service.ts`），所以第二處是加保險；
    * 但「加保險的那一半可以被刪掉而沒人發現」本身就是缺口。
    */
-  it("TxTracker 每一個標 PAID 的分支都接了 releasePaymentBlockedJobs", () => {
-    const tracker = codeOf("src", "services", "order.tracker.service.ts");
-    const paidWrites = tracker.match(/status: ORDER_STATUS\.PAID/g) ?? [];
-    const releases = tracker.match(/releasePaymentBlockedJobs\(\{/g) ?? [];
+  /**
+   * Info: (20261015 - Luphia) 區塊鏈退役：付款不再經過 TxTracker 輪詢收據，
+   * 標 PAID 改在點數付款當下（`point_payment.service` 的 `markPendingOrderPaid`）。
+   * 接線跟著搬過去，以下三條改掃那一支；TxTracker 不再標 PAID。
+   */
+  it("點數付款每一個標 PAID 的地方都接了 releasePaymentBlockedJobs", () => {
+    const payment = codeOf("src", "services", "point_payment.service.ts");
+    const paidWrites = payment.match(/markPendingOrderPaid\(/g) ?? [];
+    const releases = payment.match(/releasePaymentBlockedJobs\(\{/g) ?? [];
 
     expect(paidWrites.length).toBeGreaterThan(0);
     expect(releases.length).toBe(paidWrites.length);
+    expect(payment.indexOf("releasePaymentBlockedJobs({")).toBeGreaterThan(
+      payment.indexOf("markPendingOrderPaid("),
+    );
+
+    const tracker = codeOf("src", "services", "order.tracker.service.ts");
+    expect(tracker).not.toMatch(/ORDER_STATUS\.PAID/);
   });
 
   it("接線包在 try 裡，不擋主流程", () => {
-    const tracker = codeOf("src", "services", "order.tracker.service.ts");
+    const tracker = codeOf("src", "services", "point_payment.service.ts");
 
     /**
      * Info: (20260828 - Julian) 不擋主流程：訂單已經標成 PAID 了，
@@ -318,7 +329,7 @@ describe("來源與畫面的接線（掃描）", () => {
    * 判斷放在服務層（測得到），但「有沒有把判斷需要的事實遞過去」只有這裡看得到。
    */
   it("接線把 order.data 一起交給服務層", () => {
-    const tracker = codeOf("src", "services", "order.tracker.service.ts");
+    const tracker = codeOf("src", "services", "point_payment.service.ts");
     const withOrderData =
       tracker.match(
         /releasePaymentBlockedJobs\(\{[\s\S]{0,120}orderData: order\.data/g,

@@ -1,13 +1,11 @@
 import { jsonOk } from "@/lib/utils/response";
 import { dbRepo } from "@/repositories/db.repo";
-import { publicClient } from "@/lib/viem_public";
 import { SYSTEM_STATUS } from "@/constants/status";
 import { dockerService } from "@/services/docker.service";
 
 export async function GET() {
   const status = {
     database: SYSTEM_STATUS.CHECKING as string,
-    blockchain: SYSTEM_STATUS.CHECKING as string,
     storage: SYSTEM_STATUS.CHECKING as string,
     timestamp: new Date().toISOString(),
   };
@@ -24,15 +22,7 @@ export async function GET() {
     allHealthy = false;
   }
 
-  // Info: (20260419 - Luphia) 2. Check Blockchain
-  try {
-    await publicClient.getBlockNumber();
-    status.blockchain = SYSTEM_STATUS.HEALTHY;
-  } catch (error) {
-    status.blockchain = SYSTEM_STATUS.UNHEALTHY;
-    console.error("[HealthCheck] Blockchain error:", error);
-    allHealthy = false;
-  }
+  // Info: (20261015 - Luphia) 原第 2 項區塊鏈檢查（getBlockNumber）隨區塊鏈退役移除
 
   // Info: (20260419 - Luphia) 3. Check Storage
   const storageDomain = process.env.STORAGE_DOMAIN;
@@ -78,13 +68,7 @@ export async function GET() {
       dockerInfo.status = SYSTEM_STATUS.HEALTHY;
       const containers = await dockerService.getRunningContainers();
       if (containers.success && containers.output) {
-        const VALID_CONTAINERS = [
-          "gateway",
-          "database",
-          "postgres",
-          "storage",
-          "blockchain",
-        ];
+        const VALID_CONTAINERS = ["gateway", "database", "postgres", "storage"];
         const lines = containers.output.split("\n").filter(Boolean);
         if (lines.length > 0) {
           dockerInfo.containers = lines

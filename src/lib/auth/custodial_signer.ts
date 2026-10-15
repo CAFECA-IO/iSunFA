@@ -4,7 +4,7 @@ import {
   generateKeyPairSync,
   sign as cryptoSign,
 } from "crypto";
-import { encodeAbiParameters, parseAbiParameters, type Hex } from "viem";
+import type { Hex } from "viem";
 import { extractXYFromSPKI } from "@/lib/auth/crypto_utils";
 
 /**
@@ -136,23 +136,6 @@ function buildAuthenticatorData(): Buffer {
 }
 
 /**
- * Info: (20260809 - Luphia) 以託管私鑰簽出一份合約可驗證的 WebAuthn assertion。
- * @param privateKeyPem 由 key_vault 解密取得的 PKCS#8 PEM
- * @param userOpHash EntryPoint.getUserOpHash 的結果（32 bytes），即 WebAuthn challenge
- */
-export function signUserOpHash(
-  privateKeyPem: string,
-  userOpHash: Hex,
-): IWebAuthnAssertion {
-  const challengeBytes = Buffer.from(userOpHash.slice(2), "hex");
-  if (challengeBytes.length !== 32) {
-    throw new Error("userOpHash must be 32 bytes");
-  }
-
-  return signChallenge(privateKeyPem, challengeBytes.toString("base64url"));
-}
-
-/**
  * Info: (20260810 - Luphia) 對任意 base64url challenge 簽出 assertion。
  *
  * 系統裡所有 challenge 都是伺服器發的 32 bytes 值（UserOp 雜湊、訂單雜湊、
@@ -215,23 +198,4 @@ export function signChallenge(
     r,
     s,
   };
-}
-
-/**
- * Info: (20260809 - Luphia) 編成 fido2_account.sol abi.decode 的順序：
- * (bytes authenticatorData, bytes clientDataJSON, uint256 challengeIndex, uint256 typeIndex, uint256 r, uint256 s)
- * 與前端 crypto_utils.encodeWebAuthnSignature 對齊。
- */
-export function encodeAssertion(assertion: IWebAuthnAssertion): Hex {
-  return encodeAbiParameters(
-    parseAbiParameters("bytes, bytes, uint256, uint256, uint256, uint256"),
-    [
-      assertion.authenticatorData,
-      assertion.clientDataJSON,
-      assertion.challengeIndex,
-      assertion.typeIndex,
-      assertion.r,
-      assertion.s,
-    ],
-  );
 }

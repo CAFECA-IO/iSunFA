@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { issuePurchasedPointsToMember } from "@/services/member.service";
 import { IOenCallbackData } from "@/interfaces/payment";
 import { PAYMENT_STATUS } from "@/constants/status";
 import { paymentRepo } from "@/repositories/payment.repo";
@@ -64,34 +63,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Order not found" }, { status: 404 });
     }
 
-    const { shouldMint, creditsToMint } = await paymentRepo.processOenPayment(
+    /**
+     * Info: (20261015 - Luphia) 個人購點的入帳已併入 `processOenPayment` 的交易
+     * （區塊鏈退役）：收款、開收據、入點數帳本、訂單 COMPLETED 一次提交。
+     * 原本交易提交後才在這裡鑄造鏈上點數，而且只有拿到 txHash 才標 COMPLETED。
+     */
+    await paymentRepo.processOenPayment(
       order,
       body,
       status,
       token as string | undefined,
     );
-
-    if (shouldMint && creditsToMint > 0 && order.user?.address) {
-      const mintResult = await issuePurchasedPointsToMember(
-        order.user.address,
-        creditsToMint,
-      );
-
-      if (!mintResult.success) {
-        await paymentRepo.updateOrderMintFailed(
-          order.id,
-          order.data as object,
-          body,
-          mintResult.message,
-        );
-        // Info: (20260406 - Luphia) We don't return 500 here because the webhook itself is technically processed successfully up to minting.
-      } else {
-        const txHash = (mintResult.data as { tx: string })?.tx;
-        if (txHash) {
-          await paymentRepo.updateOrderCompleted(order.id, txHash);
-        }
-      }
-    }
 
     return NextResponse.json({ message: "OK" });
   } catch (err) {

@@ -26,7 +26,7 @@ import {
  * Info: (20260807 - Luphia) 團隊額度付款（設計書 §5 / P3）：
  * 分析訂單在訂閱額度或分配點數內扣抵，**免 WebAuthn 簽章、免鏈上交易**；
  * 額度用罄回 402（payload 附雙視窗 resetAt 與三條出路），前端 fallback 到
- * 既有 blockchain_payment 個人錢包簽章流程。冪等鍵 analysis:{orderId}。
+ * 個人點數付款（point_payment，20261015 起取代 blockchain_payment）。冪等鍵 analysis:{orderId}。
  */
 export async function POST(
   request: NextRequest,
@@ -106,7 +106,7 @@ export async function POST(
       JSON.stringify({ verifiedVia: "team_quota", source: spend.source }),
     );
 
-    // Info: (20260807 - Luphia) 3. 履行（與 blockchain_payment 共用）；失敗即退還扣抵
+    // Info: (20260807 - Luphia) 3. 履行（與個人點數付款 point_payment 共用）；失敗即退還扣抵
     let resData: { reportId?: string };
     try {
       resData = await fulfillPaidAnalysisOrder(user.id, orderId, order.data);

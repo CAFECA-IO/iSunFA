@@ -1,6 +1,5 @@
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
-import { stringToHex } from "viem";
 import { jsonOk, jsonFail, jsonFailWithPayload } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { enforceRateLimit } from "@/lib/rate_limiter";
@@ -8,8 +7,6 @@ import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { teamRepo } from "@/repositories/team.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
-import { bundlerService } from "@/services/bundler.service";
-import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { TEAM_INVITATION_STATUS } from "@/constants/status";
 import { getAddress, isAddress } from "viem";
 import { canonicalizeAddressForKey } from "@/lib/team/address_identity";
@@ -179,43 +176,6 @@ export async function POST(
 
     if (existingInvite) {
       return jsonFail(API_ERRORS.VA_AN_INVITATION_IS_ALREADY_PE);
-    }
-
-    // Info: (20260325 - Tzuhan) Fetch team needed for the contract message
-    const team = await teamRepo.getTeamById(teamId);
-    const inviterName = sessionUser.name || sessionUser.address;
-    const inviteeName = targetUser?.name || inviteeAddress;
-    const teamName = team?.name || "Unknown Team";
-    const contractMessage = `契約: ${inviterName} 發起讓 ${inviteeName} 加入 ${teamName} 團隊`;
-
-    /**
-     * Info: (20260325 - Tzuhan) [Option B] Simulate sending a UserOp to the blockchain for "Sending Invite"
-     * Since we don't have the userOpHash signed, we send a dummy signature that will revert, but catch the error.
-     */
-    const dummyUserOp = {
-      sender: sessionUser.address,
-      nonce: BigInt(0),
-      initCode: "0x",
-      callData: stringToHex(contractMessage),
-      callGasLimit: BigInt(50000),
-      verificationGasLimit: BigInt(100000),
-      preVerificationGas: BigInt(21000),
-      maxFeePerGas: BigInt(0),
-      maxPriorityFeePerGas: BigInt(0),
-      paymasterAndData: "0x",
-      signature: "0x",
-    };
-
-    try {
-      await bundlerService.sendUserOp(
-        dummyUserOp,
-        CONTRACT_ADDRESSES.ENTRY_POINT,
-      );
-    } catch (e) {
-      console.info(
-        "[Simulated On-Chain] 'Send Invite' UserOp submission failed as expected for dummy UserOp:",
-        e,
-      );
     }
 
     /**

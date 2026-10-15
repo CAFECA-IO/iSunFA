@@ -4,9 +4,10 @@ import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { resolveCustodyType } from "@/lib/auth/user_approval";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { MODULES } from "@/constants/modules";
-import { publicClient } from "@/lib/viem_public";
-import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
-import { formatUnits } from "viem";
+import {
+  getPointAccountSnapshot,
+  type IPointAccountSnapshot,
+} from "@/services/point_account.service";
 import { getUserPlan, type IUserPlanSnapshot } from "@/services/plan.service";
 import { TEAM_PLAN } from "@/constants/subscription_quota";
 
@@ -21,54 +22,22 @@ export async function GET(request: NextRequest) {
       return jsonFail(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
-    // Info: (20260419 - Luphia) fetch pending balance from blockchain
-    let pendingCredits: string = "0";
+    /**
+     * Info: (20261015 - Luphia) 個人點數改讀 DB 帳本（區塊鏈退役）。
+     *
+     * 原本這裡讀鏈上 pending 餘額，前端再自己讀一次 `balanceOf` 與 `isBlacklisted`。
+     * 現在 `credits` 與 `isVerified` 都由這裡給（定義見 point_account.service）。
+     * 帳本扣點是同步的，沒有「在途」餘額，`pendingCredits` 與 `credits` 相同，
+     * 保留欄位只為相容既有讀取端。
+     *
+     * 查不到不讓登入壞掉（這支是所有畫面的前置條件），但也不假裝有值：
+     * `credits` 缺席時前端顯示的是未知，而不是 0 點。
+     */
+    let pointAccount: IPointAccountSnapshot | null = null;
     try {
-      if (user.address) {
-        const balance = await publicClient.readContract({
-          address: CONTRACT_ADDRESSES.CREDIT_POINT as `0x${string}`,
-          abi: ABIS.CREDIT_POINT,
-          functionName: "balanceOf",
-          args: [user.address as `0x${string}`],
-          blockTag: "pending",
-        });
-        pendingCredits = formatUnits(balance as bigint, 18);
-      }
+      pointAccount = await getPointAccountSnapshot(user.id);
     } catch (err) {
-      console.warn("Failed to fetch pending balance:", err);
-    }
-
-    // ToDo: (20260116 - Luphia) Use Blockchain Data for Plan & Credits
-    // let plan: string = DEFAULT_PLAN;
-    // let credits = 0;
-
-    if (user.identityAddress) {
-      try {
-        // Info: (20260116 - Luphia) Use Blockchain Data for Plan & Credits
-        // Commented out as getPlan/getCredits are not in ABI currently
-        /* 
-        const [chainPlan, chainCredits] = await Promise.all([
-          publicClient.readContract({
-            address: user.identityAddress as Address,
-            abi: ABIS.IDENTITY,
-            functionName: 'getPlan',
-          }),
-          publicClient.readContract({
-            address: user.identityAddress as Address,
-            abi: ABIS.IDENTITY,
-            functionName: 'getCredits',
-          }),
-        ]);
-        plan = chainPlan as string;
-        credits = Number(chainCredits);
-        */
-      } catch (err) {
-        console.warn(
-          "Deprecate: (20260310 - Tzuhan) ",
-          `[API] /auth/me failed to read contract for ${user.identityAddress}:`,
-          err,
-        );
-      }
+      console.warn(`[API] /auth/me failed to read points for ${user.id}:`, err);
     }
 
     /**
@@ -116,7 +85,9 @@ export async function GET(request: NextRequest) {
       modules: MODULES.filter((m) => m.basic).map((m) => m.key),
       isAdmin: user.role === "ADMIN",
       identityAddress: user.identityAddress,
-      pendingCredits,
+      credits: pointAccount?.credits,
+      pendingCredits: pointAccount?.credits,
+      isVerified: pointAccount?.isVerified ?? false,
       plan: planSnapshot.plan,
       ownedPlans: planSnapshot.ownedPlans,
     });

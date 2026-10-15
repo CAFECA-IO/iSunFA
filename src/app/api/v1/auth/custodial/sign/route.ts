@@ -21,10 +21,9 @@ import { custodialSigningService } from "@/services/custodial_signing.service";
  * 不需要為託管帳號開任何繞過邏輯——那才是這個設計比逐一改端點更安全的地方。
  *
  * POST /api/v1/auth/custodial/sign
- * body: { challenge, challengeToken? } 或 { orderId }
+ * body: { challenge, challengeToken? }
  *
- * Info: (20260811 - Luphia) 付款走 orderId，不再接受呼叫端傳入組好的 UserOp。
- * 回應在 orderId 模式下同時帶回伺服器組出的 userOp，呼叫端必須原封提交那一份。
+ * Info: (20261015 - Luphia) 區塊鏈退役：付款用的 orderId 模式已移除（點數付款改走 point_payment）。
  */
 export async function POST(request: NextRequest) {
   try {
@@ -54,10 +53,9 @@ export async function POST(request: NextRequest) {
       challenge: parsed.data.challenge,
       // Info: (20260811 - Luphia) 原本漏傳，導致所有走 challengeToken 的流程對託管帳號必然失敗
       challengeToken: parsed.data.challengeToken,
-      orderId: parsed.data.orderId,
     });
 
-    return jsonOk({ assertion: result.assertion, userOp: result.userOp });
+    return jsonOk({ assertion: result.assertion });
   } catch (error) {
     logger.error("Custodial sign failed", {
       message: (error as Error).message,

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "@jest/globals";
-import { readFileSync, readdirSync } from "fs";
+import { existsSync, readFileSync, readdirSync } from "fs";
 import { join } from "path";
 
 /**
@@ -8,9 +8,11 @@ import { join } from "path";
  * 這一支守的是三件用單元測試看不到、但只要一改就會讓缺陷原封不動回來的事：
  *
  * 1. 前端不再從那個永遠 undefined 的欄位推方案（`user.plan === "personal"`）。
- * 2. 訂閱資料的每一條變更路徑都會把鏈上卡片標成待同步——漏掉任何一條，
- *    那個團隊的卡片就會永久停在舊內容，而且**沒有任何錯誤**。
- * 3. worker 真的有掛上同步迴圈（服務寫好了但沒人呼叫，是最安靜的失敗）。
+ * 2. （已退役）訂閱變更標記鏈上卡片待同步。
+ * 3. （已退役）worker 掛上卡片同步迴圈。
+ *
+ * Info: (20261015 - Luphia) 自建鏈退役後會員卡 NFT 整條移除（付款完成即視為有效，
+ * DB 為準）。第 2、3 條改成反向斷言：卡片同步不得以任何形式回來。
  */
 
 function read(...segments: string[]): string {
@@ -72,7 +74,7 @@ describe("方案顯示的來源", () => {
     /**
      * Info: (20260821 - Luphia) `planSource` 已取消（產品裁定 20260821：方案一律
      * 讀 DB，沒有第二個來源就沒有「來源」要說明）。這條反向斷言擋「改回讀鏈上」
-     * 的重構——與 plan_service_chain 測試裡的 viem 炸彈 mock 是同一道防線的兩半。
+     * 的重構。
      */
     expect(route).not.toMatch(/planSource:/);
   });
@@ -85,90 +87,34 @@ describe("方案顯示的來源", () => {
   });
 });
 
-describe("訂閱變更都會標記卡片待同步", () => {
-  const repo = read("src", "repositories", "team_subscription.repo.ts");
-
-  /**
-   * Info: (20260819 - Luphia) 逐一檢查**每個**會改變卡片內容的寫入路徑。
-   *
-   * 只斷言「檔案裡有 CARD_DIRTY」是不夠的：那在漏掉其中一條路徑時依然是綠的，
-   * 而漏掉的症狀是「那個團隊的卡片永遠停在舊方案」——沒有錯誤、沒有 log。
-   */
-  const MUTATORS = [
-    "applyTeamSubscriptionInTx",
-    "addSeats",
-    "expireOverdue",
-    "markOverdueForRenewal",
-    "downgradeToFree",
-  ];
-
-  /**
-   * Info: (20260820 - Luphia) 以**宣告**定位，不是以名字定位。
-   *
-   * 原本用 `repo.indexOf(name)`，而降級排程那一輪在 `expireOverdue` 的註解裡寫了
-   * 「見 downgradeToFree 的同一段說明」——於是 `downgradeToFree` 的起點落在那句
-   * 註解上，切出來的範圍完全不是那支函式的內容，測試紅在一個與行為無關的地方。
-   * 註解提到別的函式名是很正常的事，所以該修的是定位方式。
-   */
-  function declarationIndex(name: string): number {
-    const match = new RegExp(
-      `(?:export\\s+async\\s+function|async)\\s+${name}\\s*\\(`,
-    ).exec(repo);
-    return match?.index ?? -1;
-  }
-
-  it.each(MUTATORS)("%s 會標記待同步", (mutator) => {
-    const start = declarationIndex(mutator);
-    expect(start).toBeGreaterThan(-1);
-
-    // Info: (20260819 - Luphia) 到下一個 mutator 的宣告或檔尾為止，就是這一支的範圍
-    const nextStarts = MUTATORS.map((other) =>
-      other === mutator ? -1 : declarationIndex(other),
-    ).filter((index) => index > start);
-    const end = nextStarts.length > 0 ? Math.min(...nextStarts) : repo.length;
-
-    expect(repo.slice(start, end)).toMatch(/CARD_DIRTY/);
+/**
+ * Info: (20261015 - Luphia) 會員卡 NFT 同步已隨區塊鏈退役移除。
+ *
+ * 原本這裡逐一檢查每條訂閱寫入路徑都標記 `CARD_DIRTY`、worker 掛上 `SubscriptionCardSync`。
+ * 鏈已損毀，那條同步只會無限失敗；產品裁定付款完成即視為會員卡有效。
+ * 反向釘住：服務檔不存在、worker 不再掛迴圈、repo 不再寫 nftSync 欄位。
+ */
+describe("會員卡同步已退役", () => {
+  it("訂閱卡服務已刪除", () => {
+    expect(
+      existsSync(
+        join(process.cwd(), "src", "services", "subscription_nft.service.ts"),
+      ),
+    ).toBe(false);
   });
 
-  /**
-   * Info: (20260821 - Luphia) 佇列順序新到舊（review #6687 高-3 / 測試背書）。
-   *
-   * repo 在 worker 測試裡整個被 mock，`orderBy` 的語意沒有任何執行期測試
-   * ——asc/desc 反轉時全綠。asc 曾經以「先進先出」之名上線，效果是首次
-   * 上線的整批積壓（`db push` 不動 `updatedAt`，全部都比新付費的人舊）
-   * 排在剛付費的人前面。付費/免費的優先序在 service 端另有排序與測試；
-   * 這裡釘住 repo 給的底序。
-   */
-  it("同步佇列新到舊（updatedAt desc）", () => {
-    const start = repo.indexOf("async listCardSyncCandidates");
-    expect(start).toBeGreaterThan(-1);
-    const scope = repo.slice(start, repo.indexOf("countCardSyncGivenUp"));
+  it("worker 不再掛 SubscriptionCardSync", () => {
+    const worker = codeOf("scripts", "run_worker.ts");
 
-    expect(scope).toContain('orderBy: { updatedAt: "desc" }');
+    expect(worker).not.toMatch(/SubscriptionCardSync/);
+    expect(worker).not.toMatch(/subscription_nft/);
   });
-});
 
-describe("worker 掛上同步迴圈", () => {
-  const worker = read("scripts", "run_worker.ts");
+  it("訂閱 repo 不再標記卡片待同步", () => {
+    const repo = codeOf("src", "repositories", "team_subscription.repo.ts");
 
-  it("註冊 SubscriptionCardSync", () => {
-    expect(worker).toMatch(/syncPendingSubscriptionCards/);
-    expect(worker).toMatch(/SubscriptionCardSync/);
-    expect(worker).toMatch(/SUBSCRIPTION_CARD_SYNC_INTERVAL_MS/);
-  });
-});
-
-describe("鏈上寫入仍走共用確認函式", () => {
-  /**
-   * Info: (20260819 - Luphia) 新的鑄卡路徑需要收據（要讀 Transfer 事件取 tokenId），
-   * 而 `chain_receipt_status.test.ts` 禁止在 lib 之外自己等收據。
-   * 這裡釘住它走的是共用函式的收據版本，而不是繞過那條規則。
-   */
-  it("訂閱卡服務用 confirmTransactionReceipt，不自己等收據", () => {
-    const service = codeOf("src", "services", "subscription_nft.service.ts");
-
-    expect(service).toMatch(/confirmTransactionReceipt/);
-    expect(service).not.toMatch(/waitForTransactionReceipt/);
+    expect(repo).not.toMatch(/CARD_DIRTY/);
+    expect(repo).not.toMatch(/nftSync/);
   });
 });
 

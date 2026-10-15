@@ -22,12 +22,12 @@ import KanbanColumn from "@/components/admin/mission_board/kanban_column";
 import { useMissionBoardDiffEngine } from "@/components/admin/mission_board/use_mission_board_diff_engine";
 import { request } from "@/lib/utils/request";
 import { useAuth } from "@/contexts/auth_context";
-import { getAdminAddressString } from "@/lib/wallet/admin_wallet";
 import { getLoginOptions, fido2ClientService } from "@/lib/auth/fido2_client";
 import { ChallengePurpose } from "@/constants/challenge_purpose";
 import ConfirmModal from "@/components/common/confirm_modal";
 import { MoneyUtil } from "@/lib/utils/money";
 import { CURRENCY_UNIT } from "@/constants/price";
+import { MISSION_ADMIN_ACTION } from "@/constants/mission_board";
 
 export default function AdminMissionBoardPage() {
   const { t } = useTranslation();
@@ -35,9 +35,6 @@ export default function AdminMissionBoardPage() {
 
   // Info: (20260420 - Luphia) Decoupled States
   const [apiTasks, setApiTasks] = useState<ITask[]>([]);
-  const [systemAdminAddress, setSystemAdminAddress] = useState<string | null>(
-    null,
-  );
   const [globalDisplayTasks, setGlobalDisplayTasks] = useState<ITask[]>([]);
   const globalDisplayTasksRef = useRef<ITask[]>([]);
   const globalRobotRef = useRef<IRobotRef>(null);
@@ -67,7 +64,7 @@ export default function AdminMissionBoardPage() {
       }>(`/api/v1/admin/mission_board/gc`, {
         method: "POST",
         body: JSON.stringify({
-          action: "gc",
+          action: MISSION_ADMIN_ACTION.GC,
           fido2Signature: {
             authentication,
             challengeToken: token,
@@ -100,7 +97,7 @@ export default function AdminMissionBoardPage() {
       await request(`/api/v1/admin/mission/${taskId}/actions`, {
         method: "POST",
         body: JSON.stringify({
-          action: "cancel",
+          action: MISSION_ADMIN_ACTION.CANCEL,
           fido2Signature: {
             authentication,
             challengeToken: token,
@@ -127,7 +124,7 @@ export default function AdminMissionBoardPage() {
       await request(`/api/v1/admin/mission/${taskId}/actions`, {
         method: "POST",
         body: JSON.stringify({
-          action: "bump",
+          action: MISSION_ADMIN_ACTION.BUMP,
           fido2Signature: {
             authentication,
             challengeToken: token,
@@ -187,8 +184,6 @@ export default function AdminMissionBoardPage() {
 
   // Info: (20260420 - Luphia) Poll API Engine
   useEffect(() => {
-    getAdminAddressString().then(setSystemAdminAddress).catch(console.error);
-
     let isInitialLoad = true;
     const fetchTasks = async () => {
       try {
@@ -331,7 +326,6 @@ export default function AdminMissionBoardPage() {
               )}
               refObj={openColRef}
               activeTab="global"
-              systemAdminAddress={systemAdminAddress}
               actionLoading={actionLoading}
               expandedTasks={expandedTasks}
               toggleExpand={toggleExpand}
@@ -347,7 +341,6 @@ export default function AdminMissionBoardPage() {
               )}
               refObj={pendingColRef}
               activeTab="global"
-              systemAdminAddress={systemAdminAddress}
               actionLoading={actionLoading}
               expandedTasks={expandedTasks}
               toggleExpand={toggleExpand}
@@ -363,7 +356,6 @@ export default function AdminMissionBoardPage() {
               )}
               refObj={closedColRef}
               activeTab="global"
-              systemAdminAddress={systemAdminAddress}
               actionLoading={actionLoading}
               expandedTasks={expandedTasks}
               toggleExpand={toggleExpand}

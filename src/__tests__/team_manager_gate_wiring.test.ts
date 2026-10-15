@@ -123,10 +123,6 @@ jest.mock("@/services/team_invitation.service", () => {
   };
 });
 
-jest.mock("@/services/bundler.service", () => ({
-  bundlerService: { sendUserOp: jest.fn(async () => "0xhash") },
-}));
-
 const asMock = (fn: unknown) => fn as ReturnType<typeof jest.fn>;
 
 const PARAMS = Promise.resolve({ team_id: "team-1" });

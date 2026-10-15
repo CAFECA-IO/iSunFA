@@ -353,7 +353,7 @@ export function SetupSuperAdmin({
 
   return (
     <StepCard
-      step={6}
+      step={4}
       title={t("admin_setup.step6.title")}
       description={t("admin_setup.step6.desc")}
       isActive={isActive}

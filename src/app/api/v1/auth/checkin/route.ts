@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { checkinRepo } from "@/repositories/checkin.repo";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
-import { registerUserViaMembership } from "@/services/member.service";
+import { grantRegistrationReward } from "@/services/point_account.service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,17 +49,17 @@ export async function GET(request: NextRequest) {
     });
 
     /**
-     * Info: (20260809 - Luphia) 5. 確保鏈上會員註冊（AA 錢包 onboarding 的一環）。
-     * 登入贈點機制已於 20260809 取消（產品決策）：不再檢查餘額、不再 mint
-     * CHECK_IN_REWARD——本端點僅保留登入紀錄（稽核）與註冊確保，
-     * rewardAmount 固定為 0，前端不再彈出獎勵視窗。
+     * Info: (20260809 - Luphia) 5. 確保會員註冊（onboarding 的一環）。
+     * 登入贈點機制已於 20260809 取消（產品決策）：rewardAmount 固定為 0，
+     * 前端不再彈出獎勵視窗。
+     *
+     * Info: (20261015 - Luphia) 註冊獎勵改入個人點數帳本（區塊鏈退役，原本是
+     * MembershipSystem.registerUser）。鍵為 `registration(userId)`，每次登入都呼叫也只發一次。
      */
     try {
-      if (user.address) {
-        await registerUserViaMembership(user.address);
-      }
-    } catch (contractError) {
-      console.warn("Checkin registration blocked or failed: ", contractError);
+      await grantRegistrationReward(user.id);
+    } catch (rewardError) {
+      console.warn("Checkin registration reward failed: ", rewardError);
     }
 
     return jsonOk({

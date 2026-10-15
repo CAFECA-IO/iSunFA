@@ -1,6 +1,3 @@
-import { publicClient } from "@/lib/viem";
-import { parseAbiItem, stringToHex } from "viem";
-import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import type {
   RegistrationJSON,
   AuthenticationJSON,
@@ -26,6 +23,8 @@ import {
   verifyChallengeToken,
 } from "@/lib/auth/challenge_token";
 import { IUser } from "@/interfaces/user";
+import { API_ERRORS } from "@/lib/utils/error_dictionary";
+import { deriveAccountAddress } from "@/lib/auth/account_address";
 
 interface ILoginResult {
   dewt: string;
@@ -42,6 +41,14 @@ interface IParsedPublicKey {
   credentialID: string;
 }
 
+export interface IPasskeyRegistrationResult {
+  address: string;
+  name: string | null;
+}
+
+// Info: (20261015 - Luphia) 使用者未填暱稱時的保底值（與舊版鏈上建帳的預設一致）
+const DEFAULT_PASSKEY_AVATAR_URL = "default_avatar_url";
+
 class WebAuthnService {
   constructor(private readonly repo: IWebAuthnRepository) {}
 
@@ -51,9 +58,7 @@ class WebAuthnService {
     if (!user) {
       throw new AppError({
         code: "NO000099",
-        message: String(
-          "User not found on chain. Please register first.",
-        ).slice(0, 30),
+        message: String("User not found. Please register first.").slice(0, 30),
         status: ApiCode.NOT_FOUND,
       });
     }
@@ -149,67 +154,109 @@ class WebAuthnService {
     };
   }
 
+  /**
+   * Info: (20261015 - Luphia) 區塊鏈退役：DB 是唯一真相，這裡只查 DB。
+   *
+   * 原本 DB 查不到（或 DB 掛掉）時會去鏈上撈 AccountCreated 事件補建使用者（lazy sync），
+   * 甚至在 DB 寫入失敗時回傳一個 id 為 "ephemeral_id" 的臨時物件讓流程繼續。
+   * 鏈已損毀，那條救援路徑只會逾時；而臨時物件會讓下游拿一個不存在的 userId 寫資料。
+   * DB 錯誤現在照實拋出，不偽裝成「查無此人」——後者會把使用者導去重新註冊。
+   * 名稱保留（呼叫端眾多），語意已是單純的查詢。
+   */
   public async ensureUserSynced(address: string): Promise<IUser | null> {
-    // Info: (20260123 - Tzuhan) 加強容錯：如果 DB 壞了，直接回傳 null 讓後續流程決定是否走鏈上
+    return this.repo.findUserByAddress(address);
+  }
+
+  /**
+   * Info: (20261015 - Luphia) Passkey 註冊用的 challenge（綁 REGISTER 用途的短效 token）。
+   * 原本註冊 challenge 是一串不簽章的亂數，由前端原封送回；現在建帳發生在伺服器，
+   * 驗證端必須確認 challenge 真的是本站為註冊發出的。
+   */
+  public async generateRegistrationOptions() {
+    return await generateChallengeToken(ChallengePurpose.REGISTER);
+  }
+
+  /**
+   * Info: (20261015 - Luphia) Passkey 註冊：驗證 → 推導位址 → 寫入 DB（區塊鏈退役）。
+   *
+   * 取代原本「前端預測 SCW 位址 → 二次簽名 → bundler 部署 → 伺服器從鏈上 lazy sync 建帳」。
+   * 位址改由 `deriveAccountAddress` 鏈下決定性推導，不再需要第二次簽名。
+   */
+  public async registerWithPasskey(params: {
+    registration: RegistrationJSON;
+    challengeToken: string;
+    name: string;
+  }): Promise<IPasskeyRegistrationResult> {
+    let expectedChallenge: string;
     try {
-      const user = await this.repo.findUserByAddress(address);
-      if (user) return user;
-    } catch (e) {
-      console.warn("[Sync] DB Unavailable, skipping local cache check.", e);
+      expectedChallenge = await verifyChallengeToken(
+        params.challengeToken,
+        ChallengePurpose.REGISTER,
+      );
+    } catch {
+      throw new AppError(API_ERRORS.AUTH_INVALID_TOKEN);
     }
 
-    console.log(`[Sync] Fetching ${address} from chain...`);
-    try {
-      const logs = await publicClient.getLogs({
-        address: CONTRACT_ADDRESSES.SCW_FACTORY as `0x${string}`,
-        event: parseAbiItem(
-          "event AccountCreated(address indexed scw, uint256 pubKeyX, uint256 pubKeyY, uint256 salt, string credentialId,string name, string imageUrl)",
-        ),
-        args: { scw: address as `0x${string}` },
-        fromBlock: "earliest",
-      });
+    const parsed = await this.parseRegistrationCredential(
+      params.registration,
+      expectedChallenge,
+    );
 
-      if (logs.length === 0) return null;
+    return this.createAccountForKey({
+      credentialId: parsed.credentialID,
+      pubKeyX: parsed.x,
+      pubKeyY: parsed.y,
+      name: params.name,
+    });
+  }
 
-      const { pubKeyX, pubKeyY, credentialId, name, imageUrl } = logs[0].args;
-
-      if (!pubKeyX || !pubKeyY) return null;
-
-      // Info: (20260123 - Tzuhan) 如果 DB 寫入失敗 (連線拒絕)，回傳一個「臨時物件」讓流程繼續
-      try {
-        const user = await this.repo.upsertUser({
-          address: address,
-          pubKeyX: pubKeyX.toString(),
-          pubKeyY: pubKeyY.toString(),
-          credentialId: credentialId,
-          name: name || `User ${address.slice(0, 6)}`,
-          imageUrl: imageUrl,
-        });
-        return user;
-      } catch (dbError) {
-        console.warn(
-          "[Sync] DB Write Failed (Offline Mode). Returning ephemeral user.",
-          dbError,
-        );
-        return {
-          id: "ephemeral_id", // Info: (20260202 - Tzuhan) 臨時 ID
-          address,
-          pubKeyX: pubKeyX.toString(),
-          pubKeyY: pubKeyY.toString(),
-          credentialId: credentialId || "",
-          name: name || `User ${address.slice(0, 6)}`,
-          imageUrl: imageUrl || null,
-          role: "USER",
-          currentChallenge: null,
-          identityAddress: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as IUser;
-      }
-    } catch (error) {
-      console.error("[Sync] Chain fetch failed:", error);
-      return null;
+  /**
+   * Info: (20261015 - Luphia) 以一把**已驗證過**的公鑰建立帳號：推導位址並寫入 DB。
+   *
+   * 不做任何 WebAuthn 驗證——呼叫端必須自己確認金鑰來源：
+   * `registerWithPasskey` 先跑 verifyRegistration；整合測試機器人的金鑰由它自己從 seed 產生。
+   * 刻意不開放任何 API 端點直接呼叫這一支，否則任何人都能替任意公鑰開帳號。
+   *
+   * 同一個 credentialId 只能註冊一次：重複時明確拒絕，而不是靜默覆寫既有帳號的公鑰。
+   */
+  public async createAccountForKey(params: {
+    credentialId: string;
+    pubKeyX: string;
+    pubKeyY: string;
+    name: string;
+  }): Promise<IPasskeyRegistrationResult> {
+    const existing = await this.repo.findUserByCredentialId(
+      params.credentialId,
+    );
+    if (existing) {
+      throw new AppError(API_ERRORS.AUTH_PASSKEY_ALREADY_REGISTERED);
     }
+
+    const address = deriveAccountAddress({
+      credentialId: params.credentialId,
+      pubKeyX: params.pubKeyX,
+      pubKeyY: params.pubKeyY,
+    });
+
+    /**
+     * Info: (20261015 - Luphia) 位址由 credentialId 與公鑰推導，撞到既有位址只可能是
+     * 同一把金鑰（上面已擋）或 160-bit 碰撞；兩者都不可以覆寫別人的帳號。
+     */
+    const occupied = await this.repo.findUserByAddress(address);
+    if (occupied) {
+      throw new AppError(API_ERRORS.AUTH_PASSKEY_ALREADY_REGISTERED);
+    }
+
+    const user = await this.repo.upsertUser({
+      address,
+      pubKeyX: params.pubKeyX,
+      pubKeyY: params.pubKeyY,
+      credentialId: params.credentialId,
+      name: params.name,
+      imageUrl: DEFAULT_PASSKEY_AVATAR_URL,
+    });
+
+    return { address: user.address, name: user.name };
   }
 
   // Info: (20260811 - Luphia) purpose / sub 由呼叫端指定，見 challenge_token
@@ -218,43 +265,6 @@ class WebAuthnService {
     sub?: string,
   ) {
     return await generateChallengeToken(purpose, sub);
-  }
-
-  private async recoverUserByCredentialId(
-    credentialId: string,
-  ): Promise<IUser | null> {
-    try {
-      console.log(
-        `[Recovery] Querying blockchain for Credential ID: ${credentialId}...`,
-      );
-
-      const credentialIdHex = stringToHex(credentialId);
-
-      const scwAddress = (await publicClient.readContract({
-        address: CONTRACT_ADDRESSES.SCW_FACTORY as `0x${string}`,
-        abi: [
-          parseAbiItem(
-            "function getAccountByCredentialId(bytes) view returns (address)",
-          ),
-        ],
-        functionName: "getAccountByCredentialId",
-        args: [credentialIdHex as `0x${string}`],
-      })) as string;
-
-      if (
-        !scwAddress ||
-        scwAddress === "0x0000000000000000000000000000000000000000"
-      ) {
-        console.log("[Recovery] No matching credential ID found on chain.");
-        return null;
-      }
-
-      console.log(`[Recovery] Found user ${scwAddress} on chain. Syncing...`);
-      return await this.ensureUserSynced(scwAddress);
-    } catch (error) {
-      console.error("[Recovery] Failed to recover user:", error);
-      return null;
-    }
   }
 
   // Info: (20260105 - Tzuhan) [核心修改] 處理無地址登入 (Discoverable Login)
@@ -268,25 +278,11 @@ class WebAuthnService {
       ChallengePurpose.LOGIN,
     );
 
-    // Info: (20260123 - Tzuhan) 這裡加上 try-catch，捕捉 DB 連線錯誤
-    let user: IUser | null = null;
-    try {
-      user = await this.repo.findUserByCredentialId(authenticationData.id);
-    } catch (dbError) {
-      console.warn(
-        "[Login] DB Connection Refused (Index Offline). Falling back to Chain Truth.",
-        dbError,
-      );
-      // Info: (20260123 - Tzuhan) user 保持為 null，讓下方的 if (!user) 觸發鏈上救援
-    }
-
-    // Info: (20260123 - Tzuhan) 3. 若 DB 找不到 (或 DB 壞掉)，嘗試從鏈上救援
-    if (!user) {
-      console.log(
-        `[Login] Attempting to recover from chain using Credential ID: ${authenticationData.id}`,
-      );
-      user = await this.recoverUserByCredentialId(authenticationData.id);
-    }
+    /**
+     * Info: (20261015 - Luphia) 只查 DB（區塊鏈退役）。原本 DB 查不到或連線失敗時
+     * 會改去鏈上以 credentialId 救援；DB 錯誤現在照實拋出，不偽裝成「查無此人」。
+     */
+    const user = await this.repo.findUserByCredentialId(authenticationData.id);
 
     if (!user || !user.pubKeyX || !user.pubKeyY) {
       throw new AppError({

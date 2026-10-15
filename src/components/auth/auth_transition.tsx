@@ -1,5 +1,5 @@
 import { useTranslation } from "@/i18n/i18n_context";
-import { RegistrationStep } from "@/services/registration.service";
+import { RegistrationStep } from "@/constants/auth_provider";
 import { Loader2, CheckCircle2 } from "lucide-react";
 
 export type LoginStep =
@@ -22,25 +22,15 @@ export default function AuthTransition({ mode, step }: IAuthTransitionProps) {
     if (mode === "register") {
       const regStep = step as RegistrationStep;
       switch (regStep) {
-        case "FETCHING_CHALLENGE":
+        case RegistrationStep.FETCHING_CHALLENGE:
           return t("registration_steps.fetching_challenge");
-        case "CREATING_PASSKEY":
+        case RegistrationStep.CREATING_PASSKEY:
           return t("registration_steps.creating_passkey");
-        case "PARSING_PASSKEY":
-          return t("registration_steps.parsing_passkey");
-        case "PREDICTING_ADDRESS":
-          return t("registration_steps.predicting_address");
-        case "CALCULATING_HASH":
-          return t("registration_steps.calculating_hash");
-        case "AWAITING_SIGNATURE":
-          return t("registration_steps.awaiting_signature");
-        case "DEPLOYING":
-          return t("registration_steps.deploying");
-        case "SYNCING":
-          return t("registration_steps.syncing");
-        case "SUCCESS":
+        case RegistrationStep.REGISTERING:
+          return t("registration_steps.registering");
+        case RegistrationStep.SUCCESS:
           return t("registration_steps.success");
-        case "FAILED":
+        case RegistrationStep.FAILED:
           return t("registration_steps.failed");
         default:
           return t("registration_steps.processing");

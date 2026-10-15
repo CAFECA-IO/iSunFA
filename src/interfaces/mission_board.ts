@@ -8,9 +8,8 @@ export enum TaskStatus {
 export interface ISubmission {
   submitter: string;
   resultCid: string;
-  consumedTokens: string;
+  consumedTokens: string; // Info: (20261015 - Luphia) 原始 token 數（十進位字串）
   isRejected: boolean;
-  disputeUntil: number;
   subIndex: number; // Info: (20260420 - Luphia) Added to help mapping
 }
 
@@ -18,7 +17,7 @@ export interface ITask {
   taskId: number;
   creator: string;
   contentCid: string;
-  reward: string; // Info: (20260420 - Luphia) in wei / text
+  reward: string; // Info: (20261015 - Luphia) 已由 wei 刻度換算成十進位字串
   createdAt: number;
   updatedAt: number;
   status: TaskStatus;

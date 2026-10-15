@@ -1,13 +1,17 @@
 import fs from "fs/promises";
 import path from "path";
-import { createPublicClient, http, parseAbi, formatEther } from "viem";
 import { getPriorityEnvConfig } from "@/services/env.service";
 import { Decimal } from "decimal.js";
-
-const MB_ABI = parseAbi([
-  "function tasks(uint256) external view returns (address creator, string contentCid, uint256 reward, uint256 createdAt, uint256 updatedAt, uint8 status, uint256 submissionCount)",
-  "function taskSubmissions(uint256, uint256) external view returns (address submitter, string resultCid, uint256 consumedTokens, bool isRejected, uint256 disputeUntil)",
-]);
+import {
+  formatTaskReward,
+  getLatestSubmission,
+  getTask,
+} from "@/services/mission_board.service";
+import {
+  MISSION_MAX_REJECTIONS,
+  MISSION_TASK_STATUS,
+  parseMissionFolderName,
+} from "@/constants/mission_board";
 
 export async function processNext() {
   console.log(
@@ -18,16 +22,6 @@ export async function processNext() {
   const missionDirBase = setupConfig.MISSION_DIR || "missions";
   const missionDirPath = path.join(process.cwd(), missionDirBase);
 
-  const rpcUrl = setupConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
-  const publicClient = createPublicClient({ transport: http(rpcUrl) });
-  const mbAddress =
-    setupConfig.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as `0x${string}`;
-
-  if (!mbAddress) {
-    console.warn("[MissionFallbacker] MissionBoard address not configured.");
-    return;
-  }
-
   let processedAny = false;
 
   try {
@@ -35,6 +29,8 @@ export async function processNext() {
 
     for (const folder of folders) {
       if (!folder.isDirectory()) continue;
+      // Info: (20261015 - Luphia) 舊鏈資料夾的 taskId 可能與 DB 流水號同號，讀到的會是別人的任務狀態
+      if (parseMissionFolderName(folder.name) === null) continue;
       const taskDir = path.join(missionDirPath, folder.name);
       const submitPath = path.join(taskDir, "submit.md");
       const closePath = path.join(taskDir, "close.md");
@@ -65,16 +61,13 @@ export async function processNext() {
       try {
         const metaStr = await fs.readFile(metaPath, "utf8");
         const metaData = JSON.parse(metaStr);
-        const taskId = BigInt(metaData.taskId);
+        const taskId = Number(metaData.taskId);
 
-        const taskData = (await publicClient.readContract({
-          address: mbAddress,
-          abi: MB_ABI,
-          functionName: "tasks",
-          args: [taskId],
-        })) as [string, string, bigint, bigint, bigint, number, bigint];
-
-        const [, , reward, createdAt, , status, submissionCount] = taskData;
+        const task = await getTask(taskId);
+        if (!task) {
+          throw new Error(`Task ${metaData.taskId} not found on MissionBoard`);
+        }
+        const { reward, createdAt, status, submissionCount } = task;
 
         // Info: (20260430 - Luphia) Extract submit info
         const submitStr = await fs.readFile(submitPath, "utf8");
@@ -84,11 +77,11 @@ export async function processNext() {
         const consumedTokens = tokenMatch ? BigInt(tokenMatch[1]) : 0n;
         const submittedAt = dateMatch ? new Date(dateMatch[1]) : new Date();
 
-        if (status === 3) {
+        if (status === MISSION_TASK_STATUS.CLOSED) {
           // Info: (20260430 - Luphia) TaskStatus.Closed -> Approved!
-          const revenueStr = formatEther(reward);
+          const revenueStr = formatTaskReward(reward);
           const revenueDec = new Decimal(revenueStr);
-          const timeSpentMs = submittedAt.getTime() - Number(createdAt) * 1000;
+          const timeSpentMs = submittedAt.getTime() - createdAt.getTime();
           const timeSpentSec = timeSpentMs > 0 ? timeSpentMs / 1000 : 1;
 
           const tokenUnitPrice =
@@ -112,20 +105,13 @@ export async function processNext() {
             `[MissionFallbacker] Task ${taskId} approved. close.md created.`,
           );
           break; // Info: (20260430 - Luphia) process one per tick
-        } else if (submissionCount > 0n) {
+        } else if (submissionCount > 0) {
           // Info: (20260430 - Luphia) Check if latest submission is rejected
-          const latestSubIndex = submissionCount - 1n;
-          const subData = (await publicClient.readContract({
-            address: mbAddress,
-            abi: MB_ABI,
-            functionName: "taskSubmissions",
-            args: [taskId, latestSubIndex],
-          })) as [string, string, bigint, boolean, bigint];
-
-          const [, , , isRejected] = subData;
+          const latestSubmission = await getLatestSubmission(task);
+          const isRejected = latestSubmission?.isRejected ?? false;
 
           if (isRejected) {
-            if (submissionCount >= 3n) {
+            if (submissionCount >= MISSION_MAX_REJECTIONS) {
               console.log(
                 `[MissionFallbacker] Task ${taskId} was REJECTED ${submissionCount} times! Giving up...`,
               );

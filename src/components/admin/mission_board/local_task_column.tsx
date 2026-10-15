@@ -85,8 +85,10 @@ export default function LocalTaskColumn({ title, missions }: IProps) {
           >
             <div className="mb-2 flex items-center justify-between">
               <span className="rounded-md border border-gray-100 bg-gray-50 px-2 py-1 font-mono text-xs text-gray-500">
-                {mission.folderId.substring(0, 8)}..._
-                {mission.folderId.split("_").pop()}
+                {/* Info: (20261015 - Luphia) 新資料夾名稱很短（local_<id>），只有舊鏈的位址前綴才需要截斷 */}
+                {mission.folderId.length > 16
+                  ? `${mission.folderId.substring(0, 8)}..._${mission.folderId.split("_").pop()}`
+                  : mission.folderId}
               </span>
               {mission.status === "executing" && (
                 <span className="flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs font-bold text-blue-600">

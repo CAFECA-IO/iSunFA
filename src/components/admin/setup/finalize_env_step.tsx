@@ -140,7 +140,7 @@ export function SetupFinalizeEnv({
 
   return (
     <StepCard
-      step={8}
+      step={6}
       title={t("admin_setup.step8.title")}
       description={t("admin_setup.step8.desc")}
       isActive={isActive}

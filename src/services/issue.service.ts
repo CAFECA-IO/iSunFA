@@ -4,17 +4,12 @@ import path from "path";
 import { getAnalysisCost, AnalysisCostParams } from "@/lib/analysis/pricing";
 import { storageService } from "@/services/storage.service";
 import { getPriorityEnvConfig } from "@/services/env.service";
-import { getAdminAccount } from "@/lib/wallet/admin_wallet";
 import {
-  createPublicClient,
-  createWalletClient,
-  http,
-  parseAbi,
-  parseEther,
-  formatEther,
-  decodeEventLog,
-} from "viem";
-import { isuncoin } from "@/lib/viem_public";
+  computeTaskReward,
+  formatTaskReward,
+  issueTask,
+} from "@/services/mission_board.service";
+import { missionFolderName } from "@/constants/mission_board";
 import { orderRepo } from "@/repositories/order.repo";
 import { ORDER_STATUS } from "@/constants/status";
 import { analysisRepo } from "@/repositories/analysis.repo";
@@ -22,24 +17,6 @@ import { accountBookRepo } from "@/repositories/account_book.repo";
 import { esgRepo } from "@/repositories/esg.repo";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import type { Analysis } from "@/generated";
-
-// Info: (20260420 - Luphia) ERC20 & MissionBoard ABIs
-const CP_ABI = parseAbi([
-  "function collateralizedMint(address to, uint256 amount) external payable",
-  "function collateralRate() view returns (uint256)",
-  "function approve(address spender, uint256 amount) external returns (bool)",
-  "function allowance(address owner, address spender) view returns (uint256)",
-  "function balanceOf(address owner) view returns (uint256)",
-]);
-
-const MB_ABI = parseAbi([
-  "function createTask(string calldata cid, uint256 initialReward) external returns (uint256)",
-  "function minReward() view returns (uint256)",
-]);
-
-const MB_FULL_ABI = parseAbi([
-  "event TaskCreated(uint256 indexed taskId, address indexed creator, uint256 reward, string contentCid)",
-]);
 
 export async function processNext() {
   console.log("[MissionIssuer] Scanning for PAID orders to issue missions...");
@@ -85,111 +62,18 @@ export async function processNext() {
     const generatedTaskIds: string[] = [];
     const analysisDbPromises: Promise<unknown>[] = [];
 
-    // Info: (20260427 - Luphia) Setup Blockchain Clients
-    const adminAccount = await getAdminAccount();
     const setupConfig = await getPriorityEnvConfig();
-    const rpcUrl = setupConfig.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:20024";
-    const publicClient = createPublicClient({ transport: http(rpcUrl) });
-    const walletClient = createWalletClient({
-      account: adminAccount,
-      chain: isuncoin,
-      transport: http(rpcUrl),
-    });
 
-    const cpAddress =
-      setupConfig.NEXT_PUBLIC_CREDIT_POINT_ADDRESS as `0x${string}`;
-    const mbAddress =
-      setupConfig.NEXT_PUBLIC_MISSION_BOARD_ADDRESS as `0x${string}`;
-
-    if (!cpAddress || !mbAddress) {
-      throw new Error("Missing CP or MB contract addresses in env.");
-    }
-
-    // Info: (20260427 - Luphia) Calculate base reward per task
+    /**
+     * Info: (20261015 - Luphia) 每筆任務的懸賞只做紀錄。
+     *
+     * 鏈上版本在這裡要先鑄 ICP、approve 給 MissionBoard，再被 minReward 墊高；
+     * 任務看板改存 DB 後沒有代幣要轉，那三步一併移除，只留「這筆任務估多少」。
+     */
     const actualParams = (orderDataObj.data ||
       orderDataObj) as unknown as AnalysisCostParams;
     const computedCost = getAnalysisCost(actualParams);
-    let baseRewardBigInt = parseEther(
-      Math.max(0, computedCost / 2 / itemsToProcess.length).toString(),
-    );
-
-    const minRewardWei = await publicClient.readContract({
-      address: mbAddress,
-      abi: MB_ABI,
-      functionName: "minReward",
-    });
-
-    if (baseRewardBigInt < minRewardWei) {
-      console.log(
-        `[MissionIssuer] Reward ${formatEther(baseRewardBigInt)} ICP per task is below minReward ${formatEther(minRewardWei)} ICP, padding it...`,
-      );
-      baseRewardBigInt = minRewardWei;
-    }
-
-    const totalRequiredReward =
-      baseRewardBigInt * BigInt(itemsToProcess.length);
-
-    /**
-     * (20260427 - Luphia) 1: Batch Token Operations
-     * Check balance once for the total amount needed
-     */
-    const currentBalance = (await publicClient.readContract({
-      address: cpAddress,
-      abi: CP_ABI,
-      functionName: "balanceOf",
-      args: [adminAccount.address],
-    })) as bigint;
-
-    if (currentBalance < totalRequiredReward) {
-      const deficit = totalRequiredReward - currentBalance;
-      // Info: (20260427 - Luphia) Mint at least 1000 tokens, or enough to cover the deficit if it's larger
-      const defaultMintAmount = parseEther("1000");
-      const mintAmount =
-        deficit > defaultMintAmount ? deficit : defaultMintAmount;
-
-      const collateralRateWei = (await publicClient.readContract({
-        address: cpAddress,
-        abi: CP_ABI,
-        functionName: "collateralRate",
-      })) as bigint;
-
-      const requiredISC = (mintAmount * collateralRateWei) / BigInt(10 ** 18);
-
-      console.log(
-        `[MissionIssuer] Insufficient balances (has ${formatEther(currentBalance)} ICP, needs ${formatEther(totalRequiredReward)} ICP). Minting ${formatEther(mintAmount)} ICP with ${formatEther(requiredISC)} ISC collateral...`,
-      );
-      const mintTx = await walletClient.writeContract({
-        account: adminAccount,
-        address: cpAddress,
-        abi: CP_ABI,
-        functionName: "collateralizedMint",
-        args: [adminAccount.address, mintAmount],
-        value: requiredISC,
-      });
-      await publicClient.waitForTransactionReceipt({ hash: mintTx });
-    }
-
-    // Info: (20260427 - Luphia) Check and approve allowance once for the total amount needed
-    const currentAllowance = (await publicClient.readContract({
-      address: cpAddress,
-      abi: CP_ABI,
-      functionName: "allowance",
-      args: [adminAccount.address, mbAddress],
-    })) as bigint;
-
-    if (currentAllowance < totalRequiredReward) {
-      console.log(
-        `[MissionIssuer] Approving MissionBoard to spend ${formatEther(totalRequiredReward)} ICP...`,
-      );
-      const approveTx = await walletClient.writeContract({
-        account: adminAccount,
-        address: cpAddress,
-        abi: CP_ABI,
-        functionName: "approve",
-        args: [mbAddress, totalRequiredReward],
-      });
-      await publicClient.waitForTransactionReceipt({ hash: approveTx });
-    }
+    const baseReward = computeTaskReward(computedCost, itemsToProcess.length);
 
     // Info: (20260427 - Luphia) 2: Parallel IPFS Uploads
     console.log(
@@ -334,8 +218,8 @@ export async function processNext() {
     );
 
     /**
-     * (20260427 - Luphia) 3: Sequential Blockchain Execution & Local Files
-     * Contract creations must be sequential to manage nonce properly
+     * Info: (20260427 - Luphia) 3: Sequential task creation & Local Files
+     * Info: (20261015 - Luphia) 依序建立任務，讓 taskId 與 itemsToProcess 的順序一致
      */
     for (const {
       item,
@@ -349,7 +233,14 @@ export async function processNext() {
     } of preparedItems) {
       let taskId = "";
 
-      // Info: (20260525 - Luphia) Check if this task was already successfully created in a previous attempt to achieve idempotence/resume capability.
+      /**
+       * Info: (20260525 - Luphia) Check if this task was already successfully created in a previous attempt to achieve idempotence/resume capability.
+       *
+       * Info: (20261015 - Luphia) 只接續帶 `missionFolder` 標記的紀錄。
+       * 舊鏈發的 taskId 從 0 起算、DB 流水號從 1 起算，同一個數字兩邊都可能存在；
+       * 沒有標記的 `missionTaskId` 指的是已退役的鏈上任務，沿用會把這筆訂單
+       * 接到另一張訂單的 DB 任務上。這種紀錄改為重新建一筆任務。
+       */
       if (
         existingAnalysisObj &&
         existingAnalysisObj.data &&
@@ -361,7 +252,9 @@ export async function processNext() {
         >;
         if (
           typeof existingData.missionTaskId === "string" &&
-          existingData.missionTaskId
+          existingData.missionTaskId &&
+          existingData.missionFolder ===
+            missionFolderName(existingData.missionTaskId)
         ) {
           taskId = existingData.missionTaskId;
           console.log(
@@ -372,44 +265,10 @@ export async function processNext() {
 
       if (!taskId) {
         console.log(
-          `[MissionIssuer] Creating task on MissionBoard with CID ${cid}...`,
+          `[MissionIssuer] Creating task on MissionBoard with CID ${cid} (reward ${formatTaskReward(baseReward)})...`,
         );
-        const { request } = await publicClient.simulateContract({
-          account: adminAccount,
-          address: mbAddress,
-          abi: MB_ABI,
-          functionName: "createTask",
-          args: [cid, baseRewardBigInt],
-        });
-
-        const createTx = await walletClient.writeContract(request);
-        const receipt = await publicClient.waitForTransactionReceipt({
-          hash: createTx,
-        });
-
-        for (const log of receipt.logs) {
-          try {
-            const decoded = decodeEventLog({
-              abi: MB_FULL_ABI,
-              data: log.data,
-              topics: log.topics,
-              eventName: "TaskCreated",
-            });
-            if (decoded && decoded.args && "taskId" in decoded.args) {
-              taskId = String(decoded.args.taskId);
-              break;
-            }
-          } catch {
-            // Info: (20260427 - Luphia) ignore parsing error for other events
-          }
-        }
-
-        if (!taskId) {
-          throw new Error(
-            `Could not find TaskCreated event to extract taskId for CID ${cid}.`,
-          );
-        }
-
+        const task = await issueTask({ contentCid: cid, reward: baseReward });
+        taskId = String(task.id);
         console.log(`[MissionIssuer] Task created! Task ID: ${taskId}`);
       }
 
@@ -418,7 +277,7 @@ export async function processNext() {
       const taskDir = path.join(
         process.cwd(),
         issueDirBase,
-        `${mbAddress}_${taskId}`,
+        missionFolderName(taskId),
       );
       await fs.mkdir(taskDir, { recursive: true });
       await fs.writeFile(
@@ -475,6 +334,7 @@ ${category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS ? "3. CRITICAL: The result
                   ...existingData,
                   missionName: `Analysis-${category}-${item.fileInfo.name}`,
                   missionTaskId: taskId,
+                  missionFolder: missionFolderName(taskId),
                   category: category,
                   cost: (orderDataObj.cost as number) || 0,
                   generatedAt: new Date().toISOString(),
@@ -498,6 +358,7 @@ ${category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS ? "3. CRITICAL: The result
               data: {
                 missionName: `Analysis-${category}-${item.fileInfo.name}`,
                 missionTaskId: taskId,
+                missionFolder: missionFolderName(taskId),
                 category: category,
                 cost: (orderDataObj.cost as number) || 0,
                 generatedAt: new Date().toISOString(),
@@ -527,7 +388,7 @@ ${category === ANALYSIS_CATEGORY.CERTIFICATE_ANALYSIS ? "3. CRITICAL: The result
     });
 
     console.log(
-      `[MissionIssuer] Order ${order.id} transitioned to EXECUTING. NFT Task IDs: ${generatedTaskIds.join(", ")}`,
+      `[MissionIssuer] Order ${order.id} transitioned to EXECUTING. Task IDs: ${generatedTaskIds.join(", ")}`,
     );
     return generatedTaskIds[0];
   } catch (e) {

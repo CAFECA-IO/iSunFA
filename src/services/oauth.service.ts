@@ -207,21 +207,12 @@ export class OAuthService {
   }
 
   /**
-   * Info: (20260809 - Luphia) 首次以第三方身分註冊：先部署託管 SCW，成功後才寫 DB。
-   * 順序刻意如此——鏈上部署失敗時不留下無錢包的殘缺帳號。
+   * Info: (20260809 - Luphia) 首次以第三方身分註冊：先產生託管金鑰與位址，再寫 DB。
    *
-   * Info: (20260811 - Luphia) 這個順序的代價，明講：
-   *
-   * 唯一鍵（provider, providerUserId）的競爭發生在部署之後。同一個 Google 帳號在兩個
-   * 分頁同時首次登入，兩邊會各自部署一個 SCW（各花一次 gas），後到者撞 P2002 改走登入
-   * 路徑，它那把私鑰隨 request 消失——鏈上就留下一個永久無人可控的合約。
-   *
-   * 也就是說我們把「無錢包的殘缺帳號」換成了「無帳號的殘缺錢包」。這個方向是對的
-   * （壞掉的是一份沒人用的合約，而不是使用者的帳號），但它不是沒有代價。
-   *
-   * 要一併解掉的話：SCW 位址是 CREATE2 決定性的，不需要先部署就能算出來，
-   * 因此可以先在 transaction 內以 (provider, providerUserId) 佔位、拿到佔位才部署。
-   * 見 ADR 016 的後續工作。
+   * Info: (20261015 - Luphia) 區塊鏈退役：原本這一步要部署託管 SCW（花 gas、可能失敗），
+   * 並因此有「兩個分頁同時首登 → 各部署一個 SCW → 後到者的私鑰隨 request 消失、
+   * 鏈上留下無人可控的合約」的代價。現在位址是鏈下推導、不碰網路，後到者撞
+   * (provider, providerUserId) 唯一鍵改走登入路徑時，被丟棄的只是一組從未寫進任何地方的金鑰。
    */
   private async registerWithProfile(profile: IOAuthProfile): Promise<IUser> {
     if (!profile.emailVerified) {
@@ -231,10 +222,7 @@ export class OAuthService {
     const displayName =
       profile.displayName ?? profile.email?.split("@")[0] ?? "New User";
 
-    const wallet = await this.custodialWallet.provisionWallet({
-      displayName,
-      imageUrl: profile.avatarUrl ?? DEFAULT_AVATAR_URL,
-    });
+    const wallet = await this.custodialWallet.provisionWallet();
 
     const created = await this.users.createSocialUser({
       address: wallet.address,

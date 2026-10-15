@@ -315,9 +315,22 @@ export type WalletOpOutcome =
 // Info: (20260807 - Luphia) C 案 Phase 1 每日 merkle 錨定狀態（ADR 015）
 export const TEAM_LEDGER_ANCHOR_STATUS = {
   PENDING: "PENDING",
+  // Info: (20261015 - Luphia) 已寫入鏈上 LedgerAnchor 合約（區塊鏈退役前的舊列）
   ANCHORED: "ANCHORED",
+  /**
+   * Info: (20261015 - Luphia) 只在 DB 封存（區塊鏈退役後的新列）：merkle root 與
+   * 鏈式累積 root 照算照存，沒有鏈上交易（txHash 為 null）。仍可由 DB 重算比對，
+   * 用來偵測歷史分錄被改寫；它防不了能同時改寫分錄與這張表的人。
+   */
+  SEALED: "SEALED",
   FAILED: "FAILED",
 } as const;
+
+// Info: (20261015 - Luphia) 可作為下一日鏈式累積起點的狀態（鏈上錨定或 DB 封存皆可）
+export const TEAM_LEDGER_ANCHOR_CHAINABLE_STATUSES: readonly string[] = [
+  TEAM_LEDGER_ANCHOR_STATUS.ANCHORED,
+  TEAM_LEDGER_ANCHOR_STATUS.SEALED,
+];
 
 export type TeamLedgerAnchorStatus =
   (typeof TEAM_LEDGER_ANCHOR_STATUS)[keyof typeof TEAM_LEDGER_ANCHOR_STATUS];

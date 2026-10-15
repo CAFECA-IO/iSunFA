@@ -1,12 +1,9 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { validateAdminFido2 } from "@/lib/auth/admin_validator";
-import { issuePurchasedPointsToMember } from "@/services/member.service";
-import { paymentRepo } from "@/repositories/payment.repo";
+import { issuePointsByAdmin } from "@/services/point_account.service";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { CURRENCY_UNIT } from "@/constants/price";
-import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import { MoneyUtil } from "@/lib/utils/money";
 
 export async function POST(
@@ -23,8 +20,12 @@ export async function POST(
 
     const amount = String(body.amount);
 
+    /**
+     * Info: (20261015 - Luphia) 點數是整數（DB 帳本以 BigInt 記帳，區塊鏈退役）。
+     * 原本鏈上是 18 位小數的 ERC-20，小數點數鑄得出去、訂單卻在 `BigInt(amount)` 炸掉。
+     */
     const amountDec = MoneyUtil.toDecimal(amount);
-    if (amountDec.isNaN() || amountDec.lte(0)) {
+    if (amountDec.isNaN() || amountDec.lte(0) || !amountDec.isInteger()) {
       return jsonFail(API_ERRORS.VA_ISSUE_AMOUNT_MUST_BE_GREATE);
     }
 
@@ -33,27 +34,11 @@ export async function POST(
       return jsonFail(API_ERRORS.NF_USER);
     }
 
-    const result = await issuePurchasedPointsToMember(
-      targetUser.address,
-      amount,
-    );
-    if (!result.success) {
-      return jsonFail({
-        code: "VL000099",
-        message: String(result.message).slice(0, 30),
-        status: ApiCode.VALIDATION_ERROR,
-      });
-    }
-
-    await paymentRepo.createOrder({
-      userId: targetUser.id,
-      type: ORDER_TYPE.ADMIN_ISSUED,
-      amount: BigInt(amount),
-      unit: CURRENCY_UNIT.ICP,
-      status: ORDER_STATUS.COMPLETED,
-      challenge: "admin_distribute",
-      data: { adminIssued: true, issuedBy: adminUser.id },
-      transactionHash: (result.data as { tx: string })?.tx || "",
+    // Info: (20261015 - Luphia) 建單與入帳在同一筆交易（原本是先鑄造、後建單）
+    await issuePointsByAdmin({
+      targetUserId: targetUser.id,
+      amount: BigInt(amountDec.toFixed(0)),
+      adminUserId: adminUser.id,
     });
 
     return jsonOk(null, "Issue success");

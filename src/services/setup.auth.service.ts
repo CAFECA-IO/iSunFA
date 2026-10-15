@@ -12,12 +12,9 @@ import {
   saveEnvRawContent,
   existsEnv,
   updateOrAppendEnv,
-  loadEnvConfig,
   computePredictedFinalEnvString,
 } from "@/services/env.service";
 import { parse } from "dotenv";
-import { publicClient } from "@/lib/viem_public";
-import { parseAbiItem } from "viem";
 import { getDbUrl } from "@/services/setup.db.service";
 import {
   getEnvHashChallenge,
@@ -130,98 +127,10 @@ export async function authorizeSuperAdmin(authentication?: {
       }
     }
 
-    if (authentication && authentication.id) {
-      const factoryAddresses = new Set<`0x${string}`>();
-      if (envConfig.NEXT_PUBLIC_SCW_FACTORY_ADDRESS)
-        factoryAddresses.add(
-          envConfig.NEXT_PUBLIC_SCW_FACTORY_ADDRESS as `0x${string}`,
-        );
-      if (process.env.NEXT_PUBLIC_SCW_FACTORY_ADDRESS)
-        factoryAddresses.add(
-          process.env.NEXT_PUBLIC_SCW_FACTORY_ADDRESS as `0x${string}`,
-        );
-
-      for (const backupPath of [ENV_PATH]) {
-        const backupConfig = await loadEnvConfig(backupPath);
-        if (backupConfig.NEXT_PUBLIC_SCW_FACTORY_ADDRESS) {
-          factoryAddresses.add(
-            backupConfig.NEXT_PUBLIC_SCW_FACTORY_ADDRESS as `0x${string}`,
-          );
-        }
-      }
-
-      for (const factoryAddress of factoryAddresses) {
-        try {
-          const logs = await publicClient.getLogs({
-            address: factoryAddress,
-            event: parseAbiItem(
-              "event AccountCreated(address indexed scw, uint256 pubKeyX, uint256 pubKeyY, uint256 salt, string credentialId, string name, string imageUrl)",
-            ),
-            fromBlock: "earliest",
-          });
-
-          const matchLog = logs.find(
-            (log) => log.args.credentialId === authentication.id,
-          );
-
-          if (matchLog && matchLog.args.pubKeyX && matchLog.args.pubKeyY) {
-            const pubKeyXStr = matchLog.args.pubKeyX.toString();
-            const pubKeyYStr = matchLog.args.pubKeyY.toString();
-
-            let setupContent = getEnvRawContent(targetEnvPath);
-            setupContent = updateOrAppendEnv(
-              setupContent,
-              "SUPER_ADMIN_CRED_ID",
-              authentication.id,
-            );
-            setupContent = updateOrAppendEnv(
-              setupContent,
-              "SUPER_ADMIN_PUB_X",
-              pubKeyXStr,
-            );
-            setupContent = updateOrAppendEnv(
-              setupContent,
-              "SUPER_ADMIN_PUB_Y",
-              pubKeyYStr,
-            );
-
-            if (!setupContent.includes("DEWT_PRIVATE_KEY_PEM")) {
-              const { privateKey } = generateKeyPairSync("ec", {
-                namedCurve: "prime256v1",
-                publicKeyEncoding: { type: "spki", format: "pem" },
-                privateKeyEncoding: { type: "pkcs8", format: "pem" },
-              });
-              setupContent = updateOrAppendEnv(
-                setupContent,
-                "DEWT_PRIVATE_KEY_PEM",
-                `"${privateKey.replace(/\n/g, "\\n")}"`,
-              );
-            }
-
-            saveEnvRawContent(targetEnvPath, setupContent);
-
-            const scw = matchLog.args.scw;
-            if (scw) {
-              await setupRepo.upsertSuperAdminByAddress(dbUrl, {
-                address: scw.toString(),
-                credentialId: authentication.id,
-                pubKeyX: pubKeyXStr,
-                pubKeyY: pubKeyYStr,
-                name: matchLog.args.name || "RECOVERED ADMIN",
-              });
-            }
-
-            return { success: true };
-          }
-        } catch (e) {
-          console.error(
-            `Failed to fetch logs for factory ${factoryAddress}`,
-            e,
-          );
-        }
-      }
-    }
-
+    /**
+     * Info: (20261015 - Luphia) 區塊鏈退役：原本 DB 找不到時會到各個 SCW_FACTORY 撈
+     * AccountCreated 事件，以 credentialId 救回超級管理員。DB 是唯一真相，那條路徑移除。
+     */
     if (
       (!authentication || !authentication.id) &&
       envConfig.SUPER_ADMIN_CRED_ID &&
@@ -232,7 +141,7 @@ export async function authorizeSuperAdmin(authentication?: {
     }
 
     const errorMessage = authentication?.id
-      ? "Passkey not recognized. This credential does not exist in the server's database, backups, or on-chain records. It may have been previously deleted or you selected the wrong one. Please click 'Register New Key' to enroll."
+      ? "Passkey not recognized. This credential does not exist in the server's database. It may have been previously deleted or you selected the wrong one. Please click 'Register New Key' to enroll."
       : "Configuration not found";
     return { success: false, error: errorMessage };
   } catch (err) {

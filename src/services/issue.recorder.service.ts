@@ -17,6 +17,7 @@ import type { JSONValue } from "@/validators";
 import { MoneyUtil } from "@/lib/utils/money";
 import { SystemWorkerSource } from "@/constants/enums";
 import { TransactionRepo } from "@/repositories/transaction.repo";
+import { parseMissionFolderName } from "@/constants/mission_board";
 
 /**
  * Info: (20260827 - Julian) 「這筆任務屬於哪一本帳本」——三處共用（D43 第二步）。
@@ -65,9 +66,16 @@ export class IssueRecorderService {
         const folderName = folder.name;
         const taskDir = path.join(issueDirPath, folderName);
 
-        const parts = folderName.split("_");
-        if (parts.length < 2) continue; // Info: (20260427 - Luphia) Skip invalid formats
-        const taskId = parts[parts.length - 1];
+        /**
+         * Info: (20261015 - Luphia) 資料夾名稱是 `{前綴}_{taskId}`。
+         * 新任務的前綴是 `MISSION_DIR_PREFIX`（見 `missionFolderName`），舊鏈留下的是合約位址；
+         * 兩者都以最後一段 `_` 之後為 taskId。前綴留著，找同訂單的其他任務時要用同一個前綴，
+         * 否則舊鏈的 `0x…_5` 與新的 `local_5` 會被當成同一筆。
+         */
+        const separatorIndex = folderName.lastIndexOf("_");
+        if (separatorIndex <= 0) continue; // Info: (20260427 - Luphia) Skip invalid formats
+        const folderPrefix = folderName.slice(0, separatorIndex);
+        const taskId = folderName.slice(separatorIndex + 1);
 
         // Info: (20260420 - Luphia) Find approved.*.md files
         const files = await fs.readdir(taskDir);
@@ -143,6 +151,7 @@ export class IssueRecorderService {
            */
           const resolved = await this.resolveAnalysisAndOrder(
             taskDir,
+            folderName,
             taskId,
             localContextObj,
           );
@@ -473,8 +482,10 @@ export class IssueRecorderService {
                     for (const tId of taskIds) {
                       if (tId === taskId) continue; // Info: (20260517 - Luphia) Current task is implicitly done
 
-                      const folderEntry = folders.find((f) =>
-                        f.name.endsWith(`_${tId}`),
+                      // Info: (20261015 - Luphia) 同一張訂單的任務必定在同一個看板上：比對完整名稱
+                      const siblingName = `${folderPrefix}_${tId}`;
+                      const folderEntry = folders.find(
+                        (f) => f.name === siblingName,
                       );
                       if (!folderEntry) {
                         allDone = false;
@@ -595,6 +606,7 @@ export class IssueRecorderService {
    */
   private async resolveAnalysisAndOrder(
     taskDir: string,
+    folderName: string,
     taskId: string,
     localContextObj: Record<string, string>,
   ): Promise<{
@@ -639,10 +651,22 @@ export class IssueRecorderService {
           id: orderId,
         },
       });
+    } else if (parseMissionFolderName(folderName) !== null) {
+      /**
+       * Info: (20261015 - Luphia) DB 看板的任務不走 `mission contains` 反查。
+       *
+       * 發單時一律寫 context.json（含 orderId），所以走到這裡的 DB 任務本來就不是訂單發的
+       *（例如攤銷 worker 的內部任務）。而 `Order.mission` 裡還留著舊鏈的 taskId，
+       * 它們與 DB 流水號同號，反查會把這筆配到一張不相干的舊訂單上。
+       */
+      console.warn(
+        `[MissionRecorder] Task ID ${taskId} has no orderId in context.json; skipping legacy order lookup.`,
+      );
     } else {
       // Info: (20260506 - Luphia) Fallback for older missions
       // Info: (20260728 - Tzuhan) 防呆:taskId 為鏈上流水號,本地鏈重置後會重複 —
       // Info: (20260728 - Tzuhan) 多筆匹配時取最新建立者並警告(舊行為 findFirst 無排序,曾誤配舊單)
+      // Info: (20261015 - Luphia) 只剩舊鏈資料夾會走到這裡；新訂單的 mission 存的是 DB id，仍可能同號，所以照舊取最新並警告
       const candidates = await orderRepo.findMany({
         where: {
           mission: { contains: `"${taskId}"` },
@@ -724,6 +748,7 @@ export class IssueRecorderService {
     try {
       const { analysis, order } = await this.resolveAnalysisAndOrder(
         params.taskDir,
+        params.folderName,
         params.taskId,
         localContextObj,
       );

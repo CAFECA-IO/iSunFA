@@ -11,7 +11,7 @@ type TPayloadFile = string | { hash: string; fileName?: string };
 
 /**
  * Info: (20260807 - Luphia) 分析訂單「付款成功後」的統一履行邏輯，
- * 自 blockchain_payment route 抽出（原樣搬移，行為不變），
+ * 自 blockchain_payment route 抽出（原樣搬移，行為不變；該 route 已於 20261015 由 point_payment 取代），
  * 供鏈上簽章付款與團隊額度付款（設計書 §5 第三層 fallback 的反向：額度內免簽章）共用。
  * 含：mission 生成（certificate 逐檔）與 AI 諮詢室討論串檔案關聯。
  */

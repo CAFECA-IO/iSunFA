@@ -8,7 +8,6 @@ interface IKanbanColumnProps {
   columnTasks: ITask[];
   refObj: React.RefObject<HTMLDivElement | null>;
   activeTab: "global" | "my";
-  systemAdminAddress: string | null;
   actionLoading: number | null;
   expandedTasks: number[];
   toggleExpand: (taskId: number) => void;
@@ -23,7 +22,6 @@ export default function KanbanColumn({
   columnTasks,
   refObj,
   activeTab,
-  systemAdminAddress,
   actionLoading,
   expandedTasks,
   toggleExpand,
@@ -59,7 +57,6 @@ export default function KanbanColumn({
               key={task.taskId}
               task={task}
               activeTab={activeTab}
-              systemAdminAddress={systemAdminAddress}
               actionLoading={actionLoading}
               isExpanded={expandedTasks.includes(task.taskId)}
               toggleExpand={toggleExpand}

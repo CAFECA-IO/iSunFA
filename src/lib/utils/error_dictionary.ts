@@ -553,6 +553,12 @@ export const API_ERRORS = {
     message: "Super admin access required",
     status: ApiCode.FORBIDDEN,
   } as IErrorDef,
+  // Info: (20261015 - Luphia) 同一把 passkey（credentialId）只能註冊一個帳號
+  AUTH_PASSKEY_ALREADY_REGISTERED: {
+    code: "AU000022",
+    message: "Passkey already registered",
+    status: ApiCode.CONFLICT,
+  } as IErrorDef,
   CF_SETTING_VERSION_CONFLICT: {
     code: "CF000001",
     message: "Settings changed, please reload",
@@ -1035,6 +1041,17 @@ export const API_ERRORS = {
   TW_PERSONAL_PAYMENT_REQUIRED: {
     code: "TW000021",
     message: "Personal credit payment required",
+    status: ApiCode.PAYMENT_REQUIRED,
+  } as IErrorDef,
+  /**
+   * Info: (20261015 - Luphia) 以個人點數付款時餘額不足（區塊鏈退役，DB 帳本扣點）。
+   *
+   * 原本這件事由 `VL_INSUFFICIENT_PENDING`（讀鏈上 pending 餘額）回報，狀態是 422；
+   * 餘額不足是「付不起」而不是「參數錯」，與團隊額度不足一致給 402。
+   */
+  TW_PERSONAL_POINTS_INSUFFICIENT: {
+    code: "TW000035",
+    message: "Personal credits insufficient",
     status: ApiCode.PAYMENT_REQUIRED,
   } as IErrorDef,
   TW_WALLET_FROZEN: {

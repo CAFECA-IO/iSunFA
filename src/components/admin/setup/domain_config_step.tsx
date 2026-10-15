@@ -155,7 +155,7 @@ export function SetupDomainConfig({
 
   return (
     <StepCard
-      step={7}
+      step={5}
       title={t("admin_setup.step7.title")}
       description={t("admin_setup.step7.desc")}
       isActive={isActive}

@@ -1,12 +1,10 @@
 import { useState, useRef } from "react";
 import { useAuth } from "@/contexts/auth_context";
 import { PaymentStatus } from "@/components/common/payment_confirm_modal";
-import {
-  encodeWebAuthnSignature,
-  hexToBase64Url,
-} from "@/lib/auth/crypto_utils";
-import { prepareTransferUserOp } from "@/lib/utils/user_op_builder";
-import { requestOrderPaymentAssertion } from "@/lib/auth/assertion_client";
+import { requestAssertion } from "@/lib/auth/assertion_client";
+import { getLoginOptions } from "@/lib/auth/fido2_client";
+import { ChallengePurpose } from "@/constants/challenge_purpose";
+import { WalletCustodyType } from "@/constants/auth_provider";
 import { AuthenticationJSON } from "@passwordless-id/webauthn/dist/esm/types";
 import { request } from "@/lib/utils/request";
 import { IOrderParams } from "@/lib/analysis/pricing";
@@ -17,6 +15,17 @@ import { publishCreditEvent } from "@/lib/credit_events";
 export interface IOrderPayload extends IOrderParams {
   type: OrderType;
 }
+
+/**
+ * Info: (20261015 - Luphia) 付款成功後交給呼叫端的資料。
+ * 個人點數改為 DB 帳本（區塊鏈退役）後沒有交易哈希，`transactionHash` 保留為選填
+ * 只為相容既有呼叫端；passkey 帳號另帶回本次確認用的 assertion。
+ */
+export type IOrderPaymentSuccess = {
+  orderId: string;
+  transactionHash?: string;
+  reportId?: string;
+} & Partial<AuthenticationJSON>;
 
 export const useOrderTransaction = () => {
   const [workflowStatus, setWorkflowStatus] = useState<PaymentStatus>("idle");
@@ -37,18 +46,12 @@ export const useOrderTransaction = () => {
   const executeOrderTransaction = async (
     orderPayload: IOrderPayload,
     calculatedCost: number,
-    onPaymentSuccess: (
-      authData: {
-        orderId: string;
-        transactionHash: string;
-        reportId?: string;
-      } & AuthenticationJSON,
-    ) => Promise<void> | void,
+    onPaymentSuccess: (authData: IOrderPaymentSuccess) => Promise<void> | void,
   ) => {
     if (executingFlagRef.current) return false;
     executingFlagRef.current = true;
 
-    if (!user?.address || !user?.pubKeyX || !user?.pubKeyY) {
+    if (!user) {
       setErrorMessage("請重新登入以獲取付款金鑰");
       setWorkflowStatus("error");
       executingFlagRef.current = false;
@@ -58,7 +61,7 @@ export const useOrderTransaction = () => {
     setWorkflowStatus("preparing");
     setErrorMessage("");
 
-    // Info: (2026/04/19) 即時向後端同步已建立的訂單 Pending 點數，避免餘額顯示錯誤
+    // Info: (20261015 - Luphia) 付款前同步一次餘額，避免以過期的點數判斷夠不夠付
     await refreshAuth();
 
     try {
@@ -93,83 +96,55 @@ export const useOrderTransaction = () => {
    * 抽出的理由：碳盤查的無帳本會話由**伺服器**以冪等鍵先建好訂單（設計書 §5.5），
    * 前端只需付那一張，不能再自行建單——另建一張會讓伺服器那張永遠停在待付，
    * 而重送時仍找不到已付訖的訂單。
+   *
+   * Info: (20261015 - Luphia) 改為伺服器端扣個人點數（區塊鏈退役）：
+   * 不再組 UserOp、不再送 bundler，`point_payment` 一次完成扣點與標記 PAID。
+   * - 託管帳號：原本就由伺服器代簽，直接送出。
+   * - passkey 帳號：仍須以帳戶憑證確認（條款 §3.3）——取一枚 USER_ACTION 的
+   *   challengeToken、在裝置上簽它，與用優惠券同一套機制。
    */
   const runPayment = async (
     orderId: string,
     calculatedCost: number,
-    onPaymentSuccess: (
-      authData: {
-        orderId: string;
-        transactionHash: string;
-        reportId?: string;
-      } & AuthenticationJSON,
-    ) => Promise<void> | void,
+    onPaymentSuccess: (authData: IOrderPaymentSuccess) => Promise<void> | void,
   ) => {
-    if (!user?.address || !user?.pubKeyX || !user?.pubKeyY) {
+    if (!user) {
       setErrorMessage("請重新登入以獲取付款金鑰");
       setWorkflowStatus("error");
       return false;
     }
     try {
-      // Info: (20260209 - Tzuhan) 2. 準備轉帳 UserOp
-      const prepRes = await prepareTransferUserOp(
-        user.address,
-        calculatedCost,
-        orderId,
-      );
-      if (!prepRes.success || !prepRes.data) {
-        throw new Error(prepRes.message || "Failed to prepare transfer");
-      }
-      const { userOp: preparedUserOp, userOpHash } = prepRes.data;
+      let fido2Signature:
+        | { authentication: AuthenticationJSON; challengeToken: string }
+        | undefined;
 
-      /**
-       * Info: (20260811 - Luphia) 3. 簽署。
-       *
-       * 託管帳號（第三方登入）沒有 passkey，改由後端以託管金鑰代簽；
-       * 回傳的是一份真正的 WebAuthn assertion，因此後續編碼與後端驗章完全不變。
-       *
-       * 託管路徑送出的是**後端自己依訂單組出來的 UserOp**，不是這裡準備的這份——
-       * 後端不接受呼叫端指定交易內容（見 custodial_wallet.service）。因此下面一律
-       * 使用回傳的 userOp，兩條路徑才都保證「簽的就是送出的」。
-       */
-      setWorkflowStatus("signing_payment");
-      const challengeBase64 = hexToBase64Url(userOpHash);
-      const { assertion: transferAuth, userOp } =
-        await requestOrderPaymentAssertion({
-          orderId,
+      if (user.custody !== WalletCustodyType.CUSTODIAL) {
+        setWorkflowStatus("signing_payment");
+        const { challenge, token } = await getLoginOptions(
+          undefined,
+          ChallengePurpose.USER_ACTION,
+        );
+        if (!token) throw new Error("Failed to obtain a payment challenge");
+        const authentication = await requestAssertion({
+          challenge,
           custody: user.custody,
-          userOp: preparedUserOp,
-          challenge: challengeBase64,
+          challengeToken: token,
         });
+        fido2Signature = { authentication, challengeToken: token };
+      }
 
-      // Info: (20260209 - Tzuhan) 4. 編碼簽名
-      const encodedSignature = encodeWebAuthnSignature(
-        transferAuth,
-        BigInt(user.pubKeyX),
-        BigInt(user.pubKeyY),
-      );
-
-      // Info: (20260417 - Luphia) 5. 提交至背景處理 API
       setWorkflowStatus("submitting_payment");
       const submitRes = await request<{
-        payload: { txHash: string; orderId: string; reportId?: string };
-      }>(`/api/v1/user/order/${orderId}/blockchain_payment`, {
+        payload: { orderId: string; reportId?: string };
+      }>(`/api/v1/user/order/${orderId}/point_payment`, {
         method: "POST",
-        body: JSON.stringify({
-          userOp: { ...userOp, signature: encodedSignature },
-          signature: encodedSignature,
-          authentication: transferAuth,
-        }),
+        body: JSON.stringify(fido2Signature ? { fido2Signature } : {}),
       });
 
       if (!submitRes || !submitRes.payload) {
-        throw new Error("Token transfer dispatch failed");
+        throw new Error("Point payment failed");
       }
 
-      const transactionHash = submitRes.payload.txHash;
-      setTxHash(transactionHash || "");
-
-      // Info: (20260417 - Luphia) 6. 分析請求已在背景產生 (呼叫 callback 處理 UI 刷新)
       setWorkflowStatus("payment_success");
 
       /**
@@ -184,23 +159,19 @@ export const useOrderTransaction = () => {
        */
       publishCreditEvent({ type: CREDIT_EVENT.PAYMENT_SUCCEEDED });
 
-      // Info: (20260419 - Agent) Optimistic UI Update to hide alt-mempool fetch latency
-      if (user?.credits !== undefined) {
+      // Info: (20261015 - Luphia) 扣點已在伺服器同步完成，本地先扣、隨後以 /auth/me 校正
+      if (user.credits !== undefined) {
         updateLocalCredits(String(-calculatedCost));
       }
 
       await onPaymentSuccess({
         orderId,
-        transactionHash,
-        reportId: submitRes.payload?.reportId,
-        ...transferAuth,
+        reportId: submitRes.payload.reportId,
+        ...(fido2Signature?.authentication ?? {}),
       });
 
-      // Info: (20260209 - Tzuhan) 7. Refresh user balance from chain (may take seconds to propagate)
-      // Info: (20260419 - Luphia) Call it in the background instead of awaiting so UI doesn't freeze
-      setTimeout(() => {
-        refreshAuth();
-      }, 5000);
+      // Info: (20261015 - Luphia) 背景校正餘額（帳本扣點是同步的，不必再等鏈上傳播）
+      refreshAuth();
       return true;
     } catch (error) {
       console.error("Analysis/Transaction failed:", error);
@@ -213,24 +184,18 @@ export const useOrderTransaction = () => {
 
   /**
    * Info: (20260813 - Luphia) 付一張**已存在**的訂單（碳盤查無帳本會話，設計書 §5.5）。
-   * 與 executeOrderTransaction 共用同一條付款流程，故託管代簽與 passkey 兩條路徑一致。
+   * 與 executeOrderTransaction 共用同一條付款流程，故託管與 passkey 兩條路徑一致。
    */
   const payExistingOrder = async (
     orderId: string,
     calculatedCost: number,
-    onPaymentSuccess: (
-      authData: {
-        orderId: string;
-        transactionHash: string;
-        reportId?: string;
-      } & AuthenticationJSON,
-    ) => Promise<void> | void,
+    onPaymentSuccess: (authData: IOrderPaymentSuccess) => Promise<void> | void,
   ) => {
     if (executingFlagRef.current) return false;
     executingFlagRef.current = true;
     setWorkflowStatus("preparing");
     setErrorMessage("");
-    // Info: (20260419 - Luphia) 同 executeOrderTransaction：先同步待付點數，避免餘額顯示錯誤
+    // Info: (20260419 - Luphia) 同 executeOrderTransaction：先同步餘額，避免以過期的點數判斷
     await refreshAuth();
     try {
       return await runPayment(orderId, calculatedCost, onPaymentSuccess);

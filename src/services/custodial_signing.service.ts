@@ -15,9 +15,7 @@ import {
 } from "@/repositories/custodial_key.repo";
 import { paymentRepo } from "@/repositories/payment.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
-import { custodialWalletService } from "@/services/custodial_wallet.service";
 import { IUser } from "@/interfaces/user";
-import { UserOperationJson } from "@/validators";
 
 /**
  * Info: (20260810 - Luphia) 託管帳號的簽章服務——前端 fido2ClientService.startLogin() 的替代品。
@@ -29,30 +27,24 @@ import { UserOperationJson } from "@/validators";
  * 一支「你給什麼雜湊我就簽」的端點，等於讓任何拿到 session 的人（例如一次 XSS）
  * 簽出把錢包掏空的 UserOp。因此這裡只簽「伺服器自己發出過」的 challenge：
  *
- * 1. orderId 模式：呼叫端只指名一張自己的未付款訂單，UserOp 的每一個欄位
- *    （收款方、金額、nonce、gas）都由伺服器決定，雜湊自然也是伺服器算的。
- * 2. challenge 模式：必須對得上使用者的 currentChallenge、自己某張未付款訂單的
+ * challenge 必須對得上使用者的 currentChallenge、自己某張未付款訂單的
  *    challenge（且格式須為伺服器產生的 43 字元 base64url），
  *    或一枚由本站簽發、綁定本人、且用途不是管理員操作的 challengeToken。
  *
  * 對不上就拒絕。前端不必為此改變任何行為——這些 challenge 本來就是它手上那一份。
+ *
+ * Info: (20261015 - Luphia) 區塊鏈退役：原本的 orderId 模式（伺服器組出付款 UserOp 並代簽）
+ * 已移除。點數付款改由 `point_payment` 端點以 DB 帳本扣點，託管帳號不需要任何簽章。
  */
 
 export interface ICustodialSignParams {
   user: IUser;
   challenge?: string;
-  // Info: (20260811 - Luphia) 付款流程只給訂單編號，UserOp 由伺服器自行組出
-  orderId?: string;
   challengeToken?: string;
 }
 
 export interface ICustodialSignResult {
   assertion: AuthenticationJSON;
-  /**
-   * Info: (20260811 - Luphia) orderId 模式才有：伺服器實際簽下去的那份 UserOp。
-   * 呼叫端必須原封提交這一份，簽章才對得上——這也是「伺服器決定交易內容」的落實方式。
-   */
-  userOp?: UserOperationJson;
 }
 
 /**
@@ -80,32 +72,16 @@ export class CustodialSigningService {
       throw new AppError(API_ERRORS.AUTH_PERMISSION_DENIED);
     }
 
-    /**
-     * Info: (20260811 - Luphia) 決定要簽的 challenge，兩種來源都不接受呼叫端指定內容。
-     * orderId 模式由錢包服務自行組出 UserOp 並算雜湊；challenge 模式必須對得上
-     * 本站發出過的值。兩者之後走同一條簽章路徑。
-     */
-    let challenge: string;
-    let userOp: UserOperationJson | undefined;
-
-    if (params.orderId) {
-      const built = await custodialWalletService.buildOrderPaymentUserOp(
-        user.id,
-        params.orderId,
-      );
-      challenge = built.challenge;
-      userOp = built.userOp;
-    } else {
-      if (!params.challenge) {
-        throw new AppError(API_ERRORS.VL_MISSING_PARAMS);
-      }
-      challenge = params.challenge;
-      await this.assertChallengeIssuedByUs(
-        user,
-        challenge,
-        params.challengeToken,
-      );
+    // Info: (20261015 - Luphia) 只簽本站發出過的 challenge，不接受呼叫端指定內容
+    if (!params.challenge) {
+      throw new AppError(API_ERRORS.VL_MISSING_PARAMS);
     }
+    const challenge = params.challenge;
+    await this.assertChallengeIssuedByUs(
+      user,
+      challenge,
+      params.challengeToken,
+    );
 
     const record = await this.keyRepo.findByUserId(user.id);
     if (!record) {
@@ -125,25 +101,15 @@ export class CustodialSigningService {
 
     const assertion = signChallenge(privateKeyPem, challenge);
 
-    /**
-     * Info: (20260811 - Luphia) 每一次代簽都留紀錄：這類授權沒有第二因素，紀錄是唯一的事後追查依據。
-     * challenge 在付款模式下只是一個雜湊，光記它事後看不出簽掉了什麼，
-     * 因此連同模式、訂單、實際的收款目標與金額一起記。
-     */
+    // Info: (20260811 - Luphia) 每一次代簽都留紀錄：這類授權沒有第二因素，紀錄是唯一的事後追查依據
     logger.info("Custodial assertion issued", {
       userId: user.id,
       address: user.address,
-      mode: params.orderId ? "ORDER_PAYMENT" : "CHALLENGE",
-      orderId: params.orderId ?? "",
       challenge,
-      sender: userOp?.sender ?? "",
-      nonce: userOp?.nonce ?? "",
-      callData: userOp?.callData ?? "",
     });
 
     return {
       assertion: this.toAuthenticationJSON(record.credentialId, assertion),
-      userOp,
     };
   }
 

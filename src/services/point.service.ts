@@ -1,7 +1,8 @@
 import { paymentRepo } from "@/repositories/payment.repo";
-import { getMemberInfo } from "@/services/member.service";
-import { CURRENCY_UNIT, REWARD_AMOUNTS } from "@/constants/price";
+import { pointLedgerRepo } from "@/repositories/point_ledger.repo";
+import { CURRENCY_UNIT } from "@/constants/price";
 import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
+import { POINT_LEDGER_ENTRY_TYPE } from "@/constants/point_ledger";
 import { campaignRepo } from "@/repositories/campaign.repo";
 
 export class PointService {
@@ -27,7 +28,12 @@ export class PointService {
             createdAt: order.createdAt,
           });
         }
-      } else if (order.type === "CHECKIN_REWARD") {
+      } else if (order.type === ORDER_TYPE.CHECK_IN_REWARD) {
+        /**
+         * Info: (20261015 - Luphia) 原本比對的是字面量 "CHECKIN_REWARD"，而訂單型別是
+         * `CHECK_IN_REWARD`——歷史簽到獎勵從來沒有出現在點數歷程裡，而是落到下方
+         * 「消費」分支，被顯示成一筆服務使用。
+         */
         history.push({
           id: `reward-${order.id}`,
           type: "REWARD",
@@ -37,7 +43,7 @@ export class PointService {
           status: order.status,
           createdAt: order.createdAt,
         });
-      } else if (order.type === "REGISTRATION_REWARD") {
+      } else if (order.type === ORDER_TYPE.REGISTRATION_REWARD) {
         hasRegistrationReward = true;
         history.push({
           id: `reward-${order.id}`,
@@ -66,7 +72,7 @@ export class PointService {
             createdAt: order.createdAt,
           });
         }
-      } else if (order.type !== "OEN_BINDING") {
+      } else if (order.type !== ORDER_TYPE.OEN_BINDING) {
         // Info: (20260409 - Luphia) ANALYSIS, CHAT etc (consumed points)
         if (order.amount !== 0n) {
           const data = order.data as {
@@ -88,27 +94,33 @@ export class PointService {
       }
     }
 
-    if (!hasRegistrationReward && user.address) {
+    /**
+     * Info: (20261015 - Luphia) 註冊獎勵的第二來源改為個人點數帳本（區塊鏈退役）。
+     *
+     * 多數使用者的註冊獎勵沒有訂單列：原本由 MembershipSystem.registerUser 在鏈上鑄造，
+     * 這裡再回頭讀合約的註冊時間補一筆。現在它是一筆 REGISTRATION_REWARD 分錄
+     *（線上流程或復原指令寫入），有訂單列時以訂單為準、不重複顯示。
+     */
+    if (!hasRegistrationReward) {
       try {
-        const memberInfoResp = await getMemberInfo(user.address);
-        if (memberInfoResp.success && memberInfoResp.data) {
-          if (memberInfoResp.data.registrationTime > 0) {
-            history.push({
-              id: `reward-registration-onchain`,
-              type: "REWARD",
-              sourceKey: "billing.point_history.source_registration",
-              fallbackSource: "Registration Reward",
-              amount: REWARD_AMOUNTS.REGISTRATION_REWARD,
-              status: ORDER_STATUS.COMPLETED,
-              createdAt: new Date(memberInfoResp.data.registrationTime),
-            });
-          }
+        const entries = await pointLedgerRepo.listByUser(user.id);
+        const registration = entries.find(
+          (entry) =>
+            entry.entryType === POINT_LEDGER_ENTRY_TYPE.REGISTRATION_REWARD,
+        );
+        if (registration) {
+          history.push({
+            id: `reward-registration-${registration.id}`,
+            type: "REWARD",
+            sourceKey: "billing.point_history.source_registration",
+            fallbackSource: "Registration Reward",
+            amount: registration.amount,
+            status: ORDER_STATUS.COMPLETED,
+            createdAt: registration.createdAt,
+          });
         }
       } catch (e) {
-        console.warn(
-          "Failed to fetch on-chain member info for point history",
-          e,
-        );
+        console.warn("Failed to read point ledger for point history", e);
       }
     }
 

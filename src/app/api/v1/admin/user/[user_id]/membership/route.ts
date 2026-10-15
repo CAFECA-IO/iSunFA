@@ -1,13 +1,12 @@
 import { API_ERRORS } from "@/lib/utils/error_dictionary";
-import Decimal from "decimal.js";
 import { NextRequest } from "next/server";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { Role } from "@/constants/role";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { ApiCode } from "@/lib/utils/status";
-import { getMemberInfo } from "@/services/member.service";
+import { getMembershipExp } from "@/services/point_account.service";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
-import { REWARD_AMOUNTS } from "@/constants/price";
+import { MEMBERSHIP_TIER_ZH } from "@/constants/point_payment";
 
 export async function GET(
   req: NextRequest,
@@ -27,36 +26,16 @@ export async function GET(
       return jsonFail(API_ERRORS.NF_USER);
     }
 
-    const info = await getMemberInfo(targetUser.address);
-    if (!info.success || !info.data) {
-      return jsonFail(API_ERRORS.IS_DB_FAILED);
-    }
-
-    const { registrationTime, totalCheckInRewards, totalPurchasedPoints } =
-      info.data;
-
-    // Info: (20260417 - Luphia) Calculate EXP dynamically from MembershipSystem smart contract rewards & top-ups
-    const registrationExp =
-      registrationTime > 0 ? REWARD_AMOUNTS.REGISTRATION_REWARD : 0;
-    const totalExpDec = new Decimal(registrationExp)
-      .add(totalCheckInRewards)
-      .add(totalPurchasedPoints);
-    const totalExp = totalExpDec.toNumber();
-
-    let mode = "Bronze";
-    let modeZh = "銅卡";
-    if (totalExpDec.gte(2000)) {
-      mode = "Gold";
-      modeZh = "金卡";
-    } else if (totalExpDec.gte(500)) {
-      mode = "Silver";
-      modeZh = "銀卡";
-    }
+    /**
+     * Info: (20261015 - Luphia) EXP 改由個人點數帳本推導（區塊鏈退役）。
+     * 原本讀 MembershipSystem 合約的累計值；定義見 `MEMBERSHIP_EXP_ENTRY_TYPES`。
+     */
+    const { exp, tier } = await getMembershipExp(targetUser.id);
 
     return jsonOk({
-      exp: totalExp,
-      mode: mode,
-      modeZh: modeZh,
+      exp: Number(exp),
+      mode: tier,
+      modeZh: MEMBERSHIP_TIER_ZH[tier],
     });
   } catch (error) {
     return jsonFail({

@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma, TeamLedgerAnchor, TeamWalletLedger } from "@/generated";
-import { TEAM_LEDGER_ANCHOR_STATUS } from "@/constants/subscription_quota";
+import {
+  TEAM_LEDGER_ANCHOR_CHAINABLE_STATUSES,
+  TEAM_LEDGER_ANCHOR_STATUS,
+} from "@/constants/subscription_quota";
 
 /**
  * Info: (20260807 - Luphia) 每日 Ledger 錨定 Repository（ADR 015 C 案 Phase 1）。
@@ -8,9 +11,10 @@ import { TEAM_LEDGER_ANCHOR_STATUS } from "@/constants/subscription_quota";
  * 本層只負責讀當日分錄（穩定排序）與錨定列的狀態流轉。
  */
 export class TeamLedgerAnchorRepository {
+  // Info: (20261015 - Luphia) 最近一筆可接續的錨定列（鏈上 ANCHORED 或 DB SEALED）
   async getLatestAnchored(): Promise<TeamLedgerAnchor | null> {
     return prisma.teamLedgerAnchor.findFirst({
-      where: { status: TEAM_LEDGER_ANCHOR_STATUS.ANCHORED },
+      where: { status: { in: [...TEAM_LEDGER_ANCHOR_CHAINABLE_STATUSES] } },
       orderBy: { anchorDate: "desc" },
     });
   }
@@ -36,17 +40,11 @@ export class TeamLedgerAnchorRepository {
     });
   }
 
-  async markAnchored(id: string, txHash: string): Promise<TeamLedgerAnchor> {
+  // Info: (20261015 - Luphia) 區塊鏈退役：不再寫鏈上交易，roots 只在 DB 封存
+  async markSealed(id: string): Promise<TeamLedgerAnchor> {
     return prisma.teamLedgerAnchor.update({
       where: { id },
-      data: { status: TEAM_LEDGER_ANCHOR_STATUS.ANCHORED, txHash },
-    });
-  }
-
-  async markFailed(id: string): Promise<TeamLedgerAnchor> {
-    return prisma.teamLedgerAnchor.update({
-      where: { id },
-      data: { status: TEAM_LEDGER_ANCHOR_STATUS.FAILED },
+      data: { status: TEAM_LEDGER_ANCHOR_STATUS.SEALED },
     });
   }
 

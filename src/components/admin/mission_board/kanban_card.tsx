@@ -13,7 +13,8 @@ import {
 import { useTranslation } from "@/i18n/i18n_context";
 import { ITask, TaskStatus } from "@/interfaces/mission_board";
 import { formatDate } from "@/lib/utils/date";
-import { parseEther } from "viem";
+import { MoneyUtil } from "@/lib/utils/money";
+import { MISSION_PLATFORM_ACTOR } from "@/constants/mission_board";
 
 export const getWaitTime = (createdAtSecs: number) => {
   const diff = Math.floor(Date.now() / 1000) - createdAtSecs;
@@ -27,7 +28,6 @@ export const getWaitTime = (createdAtSecs: number) => {
 interface IKanbanCardProps {
   task: ITask;
   activeTab: "global" | "my";
-  systemAdminAddress: string | null;
   actionLoading: number | null;
   isExpanded: boolean;
   toggleExpand: (taskId: number) => void;
@@ -40,7 +40,6 @@ interface IKanbanCardProps {
 export default function KanbanCard({
   task,
   activeTab,
-  systemAdminAddress,
   actionLoading,
   isExpanded,
   toggleExpand,
@@ -70,8 +69,12 @@ export default function KanbanCard({
             <div className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-lg border border-gray-100 bg-gray-50 font-mono text-sm font-bold text-gray-500">
               #{task.taskId}
             </div>
-            <div className="truncate rounded border border-gray-200/60 bg-gray-100 px-1.5 py-0.5 font-mono text-[10px] text-gray-500">
-              {task.creator.slice(0, 6)}...{task.creator.slice(-4)}
+            {/* Info: (20261015 - Luphia) 建立者不再是鏈上位址（例如 platform），完整顯示 */}
+            <div
+              className="max-w-[10rem] truncate rounded border border-gray-200/60 bg-gray-100 px-1.5 py-0.5 font-mono text-[10px] text-gray-500"
+              title={task.creator}
+            >
+              {task.creator}
             </div>
           </div>
           <div className="flex items-center gap-1.5 text-[10px] font-medium whitespace-nowrap text-gray-400">
@@ -98,13 +101,17 @@ export default function KanbanCard({
             </div>
           </div>
           {(() => {
+            // Info: (20261015 - Luphia) consumedTokens 已是原始 token 數，不再經過 wei 換算
             const totalTokens = task.submissions.reduce(
-              (sum, sub) => sum + parseEther(sub.consumedTokens.toString()),
+              (sum, sub) => sum + BigInt(sub.consumedTokens),
               0n,
             );
-            const rewardICP = parseEther(task.reward.toString());
-            const tokenPerICP =
-              rewardICP > 0n ? (totalTokens / rewardICP).toString() : "0";
+            const tokenPerICP = MoneyUtil.toDecimal(task.reward).isZero()
+              ? "0"
+              : MoneyUtil.formatDynamic(
+                  MoneyUtil.divide(totalTokens, task.reward),
+                  2,
+                );
 
             return (
               <>
@@ -150,7 +157,7 @@ export default function KanbanCard({
         </div>
 
         {(task._trueStatus ?? task.status) === TaskStatus.Open &&
-          task.creator.toLowerCase() === systemAdminAddress?.toLowerCase() && (
+          task.creator === MISSION_PLATFORM_ACTOR && (
             <div className="mt-2 flex gap-2 border-t border-gray-100/80 pt-3">
               <button
                 onClick={(e) => {
@@ -206,8 +213,11 @@ export default function KanbanCard({
                   className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-1.5 rounded border border-gray-100 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] text-gray-600">
-                      {sub.submitter.slice(0, 6)}...{sub.submitter.slice(-4)}
+                    <div
+                      className="flex max-w-[10rem] items-center gap-1.5 truncate rounded border border-gray-100 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] text-gray-600"
+                      title={sub.submitter}
+                    >
+                      {sub.submitter}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -239,9 +249,7 @@ export default function KanbanCard({
                       Tokens
                     </span>
                     <span className="font-mono font-black text-indigo-600">
-                      {parseEther(
-                        sub.consumedTokens.toString(),
-                      ).toLocaleString()}
+                      {BigInt(sub.consumedTokens).toLocaleString()}
                     </span>
                   </div>
                 </div>

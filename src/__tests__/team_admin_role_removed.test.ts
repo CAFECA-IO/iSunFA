@@ -24,7 +24,6 @@ const PLATFORM_ADMIN_PATHS = [
   "src/app/admin",
   "src/app/api/v1/admin",
   "src/components/admin",
-  "src/services/admin.blockchain.service.ts",
   "src/services/setup.service.ts",
   "src/lib/auth/dewt.ts",
   "src/app/api/v1/auth/me/route.ts",

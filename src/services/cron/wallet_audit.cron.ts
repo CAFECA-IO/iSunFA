@@ -1,9 +1,7 @@
 import type { Hex } from "viem";
 import { logger } from "@/lib/utils/logger";
-import { walletClient } from "@/lib/viem";
-import { ABIS, CONTRACT_ADDRESSES } from "@/config/contracts";
 import {
-  TEAM_LEDGER_ANCHOR_STATUS,
+  TEAM_LEDGER_ANCHOR_CHAINABLE_STATUSES,
   TEAM_WALLET_ENTRY_TYPE,
   TEAM_WALLET_STATUS,
 } from "@/constants/subscription_quota";
@@ -26,9 +24,12 @@ import { teamLedgerAnchorRepo } from "@/repositories/team_ledger_anchor.repo";
  *    這個排除清單本身沒有變——變的是 `allocate()` 要自己把出帳記在左側。
  *    2026-08-18 之前的分配沒有那一筆，差額以 `scripts/repair_wallet_conservation.ts`
  *    一次性補平。
- * 2. merkle 錨定（C 案 Phase 1）：勾稽通過後對「昨日」（UTC+8 日界）的全域 Ledger
- *    增量計算 merkle root，鏈式累積後寫入 LedgerAnchor 合約；
- *    錨定失敗不阻斷錢包營運，狀態留 FAILED 由下一輪重試。
+ * 2. merkle 封存（C 案 Phase 1）：勾稽通過後對「昨日」（UTC+8 日界）的全域 Ledger
+ *    增量計算 merkle root 並鏈式累積，寫進 TeamLedgerAnchor。
+ *
+ * Info: (20261015 - Luphia) 區塊鏈退役：不再呼叫 LedgerAnchor.commitAnchor。
+ * root 照算照存（狀態 SEALED、txHash 為 null）——它仍能讓「事後改寫歷史分錄」
+ * 在重算時現形，只是證據不再有鏈上的第二份。舊的 ANCHORED 列保留，鏈式累積接得上。
  */
 
 // Info: (20260807 - Luphia) 台北固定 UTC+8（無日光節約），日界以此換算
@@ -128,10 +129,12 @@ export async function runLedgerAnchoring(
   const dayKey = todayKeyTaipei - 1;
   const dayStartUtc = new Date(dayKey * DAY_MS - TAIPEI_OFFSET_MS);
   const dayEndUtc = new Date((dayKey + 1) * DAY_MS - TAIPEI_OFFSET_MS);
-  const dayEpochSec = Math.floor(dayStartUtc.getTime() / 1000);
 
   const existing = await teamLedgerAnchorRepo.getByDate(dayStartUtc);
-  if (existing?.status === TEAM_LEDGER_ANCHOR_STATUS.ANCHORED) {
+  if (
+    existing &&
+    TEAM_LEDGER_ANCHOR_CHAINABLE_STATUSES.includes(existing.status)
+  ) {
     return { skipped: true, anchored: true };
   }
 
@@ -166,61 +169,26 @@ export async function runLedgerAnchoring(
     chainedRoot,
   });
 
-  if (!walletClient || !CONTRACT_ADDRESSES.LEDGER_ANCHOR) {
-    // Info: (20260807 - Luphia) 未配置 relayer key 或合約地址：留 FAILED 供部署後重試，不阻斷營運
-    await teamLedgerAnchorRepo.markFailed(row.id);
-    logger.error("ledger anchoring skipped: anchor tx not configured", {
-      anchorDate: dayStartUtc.toISOString(),
-      hasWalletClient: Boolean(walletClient),
-      hasContract: Boolean(CONTRACT_ADDRESSES.LEDGER_ANCHOR),
-    });
-    return {
-      skipped: false,
-      anchored: false,
-      anchorDate: dayStartUtc.toISOString(),
-      entryCount: entries.length,
-    };
-  }
+  // Info: (20261015 - Luphia) 區塊鏈退役：不送鏈上交易，roots 寫進 DB 即為封存完成
+  await teamLedgerAnchorRepo.markSealed(row.id);
+  logger.info("ledger anchor sealed in DB", {
+    anchorDate: dayStartUtc.toISOString(),
+    entryCount: entries.length,
+    dayRoot,
+    chainedRoot,
+  });
 
-  try {
-    const txHash = await walletClient.writeContract({
-      address: CONTRACT_ADDRESSES.LEDGER_ANCHOR,
-      abi: ABIS.LEDGER_ANCHOR,
-      functionName: "commitAnchor",
-      args: [BigInt(dayEpochSec), dayRoot, chainedRoot, BigInt(entries.length)],
-    });
-    await teamLedgerAnchorRepo.markAnchored(row.id, txHash);
-    logger.info("ledger anchoring committed", {
-      anchorDate: dayStartUtc.toISOString(),
-      entryCount: entries.length,
-      dayRoot,
-      chainedRoot,
-      txHash,
-    });
-    return {
-      skipped: false,
-      anchored: true,
-      anchorDate: dayStartUtc.toISOString(),
-      entryCount: entries.length,
-    };
-  } catch (error) {
-    await teamLedgerAnchorRepo.markFailed(row.id);
-    logger.error("ledger anchoring tx failed, will retry next run", {
-      anchorDate: dayStartUtc.toISOString(),
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return {
-      skipped: false,
-      anchored: false,
-      anchorDate: dayStartUtc.toISOString(),
-      entryCount: entries.length,
-    };
-  }
+  return {
+    skipped: false,
+    anchored: true,
+    anchorDate: dayStartUtc.toISOString(),
+    entryCount: entries.length,
+  };
 }
 
 /**
- * Info: (20260807 - Luphia) Worker 進入點：勾稽通過才錨定（壞帳不上鏈），
- * 有違規時凍結錢包並跳過本輪錨定，由人工介入後的下一輪補錨。
+ * Info: (20260807 - Luphia) Worker 進入點：勾稽通過才封存（壞帳不封存），
+ * 有違規時凍結錢包並跳過本輪封存，由人工介入後的下一輪補上。
  */
 export async function runWalletGuardian(): Promise<void> {
   const audit = await runWalletConservationAudit();

@@ -25,22 +25,6 @@ export interface IApplyTeamSubscriptionInput {
 }
 
 /**
- * Info: (20260819 - Luphia) 「這一列的鏈上會員卡需要重新同步」的標記。
- *
- * `nftSyncedAt = null` 就是待辦：worker 只撈 null 的列（見 `listCardSyncCandidates`），
- * 因此它同時是「上次同步時間」與工作佇列。用同一個欄位而不是多加一個布林，
- * 是因為兩者永遠同時改變——分成兩欄只是多一個會不一致的地方。
- *
- * 失敗次數一併歸零：方案改了之後是一件**新的**工作，不該繼承上一份工作的重試額度
- * （否則舊的永久性失敗會讓新訂閱一次都不嘗試）。
- */
-const CARD_DIRTY = {
-  nftSyncedAt: null,
-  nftSyncAttempts: 0,
-  nftSyncError: null,
-} as const;
-
-/**
  * Info: (20260807 - Luphia) 付款成功後套用訂閱（設計書 §7 PUT /subscription 的履行）。
  * 以 TransactionClient 形式導出，供 processOenPayment 在同一筆付款交易內原子套用；
  * 計費週期：月繳 30 天、年繳 365 天，自付款當下起算。
@@ -140,8 +124,6 @@ export async function applyTeamSubscriptionInTx(
       latestOrderId: orderId,
       // Info: (20260821 - Luphia) 週期快照：期中加人的補收分母按這一期買的週期算
       billingInterval,
-      // Info: (20260819 - Luphia) 方案／期間變了，鏈上那張卡就過期了：標記待同步
-      ...CARD_DIRTY,
       /**
        * Info: (20260820 - Luphia) 套用新週期＝排程已經兌現（或被升級取代），清掉它。
        * 留著的話，下一次期末會再降一次——而使用者早就改變主意了。
@@ -202,8 +184,7 @@ export class TeamSubscriptionRepository {
     if (seats <= 0) return;
     await prisma.teamSubscription.update({
       where: { teamId },
-      // Info: (20260819 - Luphia) 席次寫在卡片 metadata 裡，加人之後那張卡要換 URI
-      data: { seats: { increment: seats }, ...CARD_DIRTY },
+      data: { seats: { increment: seats } },
     });
   }
 
@@ -239,8 +220,6 @@ export class TeamSubscriptionRepository {
       data: {
         planId: TEAM_PLAN.FREE,
         status: TEAM_SUBSCRIPTION_STATUS.PAST_DUE,
-        // Info: (20260819 - Luphia) 降級了，鏈上那張卡不能繼續聲稱有效訂閱
-        ...CARD_DIRTY,
         /**
          * Info: (20260820 - Luphia) 這一支就是「降級為 free」的**實現**（排程於此兌現），
          * 因此連同排程一起清掉，並讓單價說實話——免費方案沒有單價。
@@ -266,101 +245,9 @@ export class TeamSubscriptionRepository {
         currentPeriodEnd: { lt: new Date(nowMs) },
         autoRenew: true,
       },
-      // Info: (20260819 - Luphia) 進入寬限期（PAST_DUE）同樣要讓卡片重新對帳一次
-      data: { status: TEAM_SUBSCRIPTION_STATUS.PAST_DUE, ...CARD_DIRTY },
+      data: { status: TEAM_SUBSCRIPTION_STATUS.PAST_DUE },
     });
     return result.count;
-  }
-
-  /**
-   * Info: (20260821 - Luphia) 鑄卡前的**認領**（review #6687 高-1）：
-   * 以 `nftSyncAttempts` 當樂觀鎖。兩個 worker 同時讀到同一列（attempts 相同），
-   * 第一個 updateMany 命中（count=1），第二個的 where 已對不上（count=0）→ 跳過。
-   * 認領同時把 attempts +1：中途崩潰時這一列自然回到佇列，且佔用有代價
-   * （五次崩潰後停手），不會無聲地無限重試。認領後的**乾淨失敗**不再另計
-   * （`recordCardSyncFailure` 的 `countAttempt: false`），每輪恰好燒 1 次。
-   */
-  async claimCardSync(
-    teamId: string,
-    observedAttempts: number,
-  ): Promise<boolean> {
-    const result = await prisma.teamSubscription.updateMany({
-      where: {
-        teamId,
-        nftSyncedAt: null,
-        nftSyncAttempts: observedAttempts,
-      },
-      data: { nftSyncAttempts: { increment: 1 } },
-    });
-    return result.count === 1;
-  }
-
-  /**
-   * Info: (20260819 - Luphia) 待同步鏈上會員卡的訂閱（worker 用）。
-   *
-   * 條件只有兩個：**沒有同步時間**（= 待辦，見 `CARD_DIRTY`）且**還沒放棄**。
-   * 不在這裡判斷「是不是付費方案」——那個判斷要先把 `status` 與
-   * `currentPeriodEnd` 折算成有效方案（`resolveEffectivePlanId`），
-   * 而那是 Service 的事；Repo 多判一次，兩邊遲早分岔。
-   *
-   * Info: (20260821 - Luphia) join 只為了 `deletedAt`（解散的團隊不發卡）。
-   * 團隊**名稱**刻意不帶：metadata 已不含團隊名（review #6687 中-3，
-   * tokenURI 永久留鏈，客戶識別資訊不上鏈）——這裡帶了名字，等於留一個
-   * 「順手寫回 metadata」的入口。
-   */
-  async listCardSyncCandidates(
-    limit: number,
-    maxAttempts: number,
-  ): Promise<(TeamSubscription & { team: { deletedAt: Date | null } })[]> {
-    return prisma.teamSubscription.findMany({
-      where: {
-        nftSyncedAt: null,
-        nftSyncAttempts: { lt: maxAttempts },
-      },
-      include: { team: { select: { deletedAt: true } } },
-      /**
-       * Info: (20260821 - Luphia) 新到舊（review #6687 高-3）。
-       *
-       * 原本是 `asc` 且註解寫「先進先出：新付費的人不該被卡在後面」——效果
-       * **正好相反**：首次上線時所有既有列都待同步，而 `db push` 不動
-       * `updatedAt`，於是剛付費的人（updatedAt 最新）被排到整批積壓的最後面。
-       * 付費/免費的優先序在 service 端排（那需要折算有效方案，Repo 排不了）。
-       */
-      orderBy: { updatedAt: "desc" },
-      take: limit,
-    });
-  }
-
-  /**
-   * Info: (20260821 - Luphia) 已放棄的列本身（`scripts/list_card_sync_giveups.ts`）。
-   *
-   * `countCardSyncGivenUp` 只回數量，而修的人需要知道**是哪些團隊、錯在哪**。
-   * 放在 Repo 而不是讓腳本自己開 Prisma：只有 Repository 碰得到 Prisma
-   *（CLAUDE.md §1），而那條規則有一支掃描測試在守（`transaction_layering.test.ts`）。
-   */
-  async listCardSyncGivenUp(
-    maxAttempts: number,
-  ): Promise<
-    (Pick<
-      TeamSubscription,
-      "teamId" | "planId" | "nftSyncAttempts" | "nftSyncError" | "updatedAt"
-    > & { team: { name: string } | null })[]
-  > {
-    return prisma.teamSubscription.findMany({
-      where: {
-        nftSyncedAt: null,
-        nftSyncAttempts: { gte: maxAttempts },
-      },
-      select: {
-        teamId: true,
-        planId: true,
-        nftSyncAttempts: true,
-        nftSyncError: true,
-        updatedAt: true,
-        team: { select: { name: true } },
-      },
-      orderBy: { updatedAt: "asc" },
-    });
   }
 
   /**
@@ -397,82 +284,6 @@ export class TeamSubscriptionRepository {
     });
   }
 
-  // Info: (20260819 - Luphia) 待同步但已放棄（達重試上限）的列：給診斷與監控用
-  async countCardSyncGivenUp(maxAttempts: number): Promise<number> {
-    return prisma.teamSubscription.count({
-      where: { nftSyncedAt: null, nftSyncAttempts: { gte: maxAttempts } },
-    });
-  }
-
-  /**
-   * Info: (20260819 - Luphia) 仍待同步（尚未放棄）的總數。
-   *
-   * 用來算「本輪沒處理完還剩幾個」。批次有上限，而**被截斷的量必須說出來**——
-   * 只印處理了幾個，會讓「積壓一千個」與「剛好只有二十個」在 log 上長得一樣。
-   */
-  async countCardSyncPending(maxAttempts: number): Promise<number> {
-    return prisma.teamSubscription.count({
-      where: { nftSyncedAt: null, nftSyncAttempts: { lt: maxAttempts } },
-    });
-  }
-
-  /**
-   * Info: (20260819 - Luphia) 同步成功（含「檢查過、不需要動作」）。
-   *
-   * `nftSyncedAt` 一定要寫：它就是佇列，不寫的話這一列每輪都會被撈出來，
-   * 而每輪都會再決策一次——免費方案那種「不需要動作」的列會永久佔著批次額度。
-   *
-   * `tokenId` 以 undefined 表示「不改」：換 URI 的路徑沒有新的 tokenId，
-   * 傳 null 進來會把既有的卡號洗掉，之後就再也對不回那張卡。
-   */
-  async recordCardSynced(params: {
-    teamId: string;
-    tokenId?: string;
-    ownerAddress?: string;
-    fingerprint: string;
-    syncedAt: Date;
-  }): Promise<void> {
-    await prisma.teamSubscription.update({
-      where: { teamId: params.teamId },
-      data: {
-        nftTokenId: params.tokenId,
-        nftOwnerAddress: params.ownerAddress,
-        nftFingerprint: params.fingerprint,
-        nftSyncedAt: params.syncedAt,
-        nftSyncAttempts: 0,
-        nftSyncError: null,
-      },
-    });
-  }
-
-  /**
-   * Info: (20260819 - Luphia) 同步失敗：累加次數並留下原因。
-   *
-   * `nftSyncedAt` 保持 null（仍是待辦），因此下一輪會重試；累加到上限之後
-   * `listCardSyncCandidates` 就不再撈它——那時需要人看 `nftSyncError`。
-   * 訊息截斷到 500 字：鏈上錯誤動輒帶一整包 calldata，整包存進去對診斷沒有幫助。
-   *
-   * Info: (20260821 - Luphia) `countAttempt: false` 只留訊息、不累加：
-   * 認領（`claimCardSync`）已經把這一輪 +1 了，失敗時再 +1 就是一輪燒兩次
-   * ——重試上限 5 實際只剩 2~3 次。每一輪失敗恰好計 1 次，由呼叫端
-   * 依「這輪有沒有認領過」決定（第四輪 self-review）。
-   */
-  async recordCardSyncFailure(
-    teamId: string,
-    message: string,
-    options: { countAttempt?: boolean } = {},
-  ): Promise<void> {
-    await prisma.teamSubscription.update({
-      where: { teamId },
-      data: {
-        ...(options.countAttempt === false
-          ? {}
-          : { nftSyncAttempts: { increment: 1 } }),
-        nftSyncError: message.slice(0, 500),
-      },
-    });
-  }
-
   /**
    * Info: (20260820 - Luphia) 排程一個**期末生效**的方案變更（降轉到較低的付費方案）。
    *
@@ -483,9 +294,6 @@ export class TeamSubscriptionRepository {
    * Info: (20260821 - Luphia) `autoRenew` 參數已移除（產品裁定 20260821）：
    * 這一支現在**只**服務「期末降轉到較低付費方案」，那條路必然維持自動續訂。
    * 「不要再付錢了」不再走排程——那是 `cancelAutoRenew`，見下。
-   *
-   * 刻意**不**標記卡片待同步（`CARD_DIRTY`）：當期的方案與期限一個都沒變，
-   * 鏈上那張卡仍然是對的。要到期末落地時才需要換 URI。
    */
   async schedulePlanChange(params: {
     teamId: string;
@@ -575,7 +383,6 @@ export class TeamSubscriptionRepository {
          * 而免費版的人數上限另有把關（`FREE_PLAN_MAX_MEMBERS`）。
          */
         unitPrice: 0,
-        ...CARD_DIRTY,
         // Info: (20260820 - Luphia) 已經降到底了，排程沒有意義
         pendingPlanId: null,
       },

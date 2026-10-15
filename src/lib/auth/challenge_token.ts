@@ -5,6 +5,7 @@ import { getTokenSecret, TokenSecretPurpose } from "@/lib/auth/token_secret";
 import {
   ChallengePurpose,
   isChallengePurpose,
+  isUnboundChallengePurpose,
 } from "@/constants/challenge_purpose";
 
 /**
@@ -34,7 +35,8 @@ export async function generateChallengeToken(
 ): Promise<IChallengeToken> {
   const challenge = randomBytes(32).toString("base64url");
 
-  if (purpose !== ChallengePurpose.LOGIN && !sub) {
+  // Info: (20261015 - Luphia) LOGIN 與 REGISTER 發生在尚未登入時，其餘用途都必須綁人
+  if (!isUnboundChallengePurpose(purpose) && !sub) {
     throw new Error(`Challenge purpose ${purpose} requires a subject`);
   }
 
@@ -73,7 +75,7 @@ export async function verifyChallengeToken(
      * Info: (20260811 - Luphia) LOGIN 以外一律要求 sub 對得上。
      * 沒有這一步，A 使用者的 token 可以拿去對 B 使用者的資源發動操作。
      */
-    if (expectedPurpose !== ChallengePurpose.LOGIN) {
+    if (!isUnboundChallengePurpose(expectedPurpose)) {
       if (!expectedSub || payload.sub !== expectedSub) {
         throw new Error("Challenge subject mismatch");
       }

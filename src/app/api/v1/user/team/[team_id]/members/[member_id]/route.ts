@@ -2,14 +2,11 @@ import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { NextRequest } from "next/server";
 import { writeOffAllocationOnMemberRemoval } from "@/services/team_wallet.service";
 import { deleteFaithMemoryOnMemberRemoval } from "@/services/faith_memory.service";
-import { stringToHex } from "viem";
 import { jsonOk, jsonFail } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
 import { teamRepo } from "@/repositories/team.repo";
 import { webAuthnRepo } from "@/repositories/webauthn.repo";
 import { webAuthnService } from "@/services/webauthn.service";
-import { bundlerService } from "@/services/bundler.service";
-import { CONTRACT_ADDRESSES } from "@/config/contracts";
 import { isTeamManagerRole } from "@/constants/team";
 
 export async function PATCH(
@@ -78,39 +75,6 @@ export async function PATCH(
     }
 
     const updatedMember = await teamRepo.updateTeamMember(memberId, { role });
-
-    // Info: (20260325 - Tzuhan) simulated on-chain record for role change
-    const team = await teamRepo.getTeamById(teamId);
-    const operatorName = sessionUser.name || sessionUser.address;
-    const targetName = targetMember.userId;
-    const teamName = team?.name || "Unknown Team";
-    const contractMessage = `契約: ${operatorName} 更改了 ${targetName} 在 ${teamName} 團隊的角色為 ${role}`;
-
-    const dummyUserOp = {
-      sender: sessionUser.address,
-      nonce: BigInt(0),
-      initCode: "0x",
-      callData: stringToHex(contractMessage),
-      callGasLimit: BigInt(50000),
-      verificationGasLimit: BigInt(100000),
-      preVerificationGas: BigInt(21000),
-      maxFeePerGas: BigInt(0),
-      maxPriorityFeePerGas: BigInt(0),
-      paymasterAndData: "0x",
-      signature: "0x",
-    };
-
-    try {
-      await bundlerService.sendUserOp(
-        dummyUserOp,
-        CONTRACT_ADDRESSES.ENTRY_POINT,
-      );
-    } catch (e) {
-      console.info(
-        "[Simulated On-Chain] 'Change Role' UserOp submission failed as expected for dummy UserOp:",
-        e,
-      );
-    }
 
     return jsonOk(updatedMember);
   } catch (error) {
@@ -226,39 +190,6 @@ export async function DELETE(
     });
 
     const deletedMember = await teamRepo.deleteTeamMember(memberId);
-
-    // Info: (20260326 - Tzuhan) simulated on-chain record for member deletion
-    const team = await teamRepo.getTeamById(teamId);
-    const operatorName = sessionUser.name || sessionUser.address;
-    const targetName = targetMember.userId;
-    const teamName = team?.name || "Unknown Team";
-    const contractMessage = `契約: ${operatorName} 將 ${targetName} 從 ${teamName} 團隊中移除`;
-
-    const dummyUserOp = {
-      sender: sessionUser.address,
-      nonce: BigInt(0),
-      initCode: "0x",
-      callData: stringToHex(contractMessage),
-      callGasLimit: BigInt(50000),
-      verificationGasLimit: BigInt(100000),
-      preVerificationGas: BigInt(21000),
-      maxFeePerGas: BigInt(0),
-      maxPriorityFeePerGas: BigInt(0),
-      paymasterAndData: "0x",
-      signature: "0x",
-    };
-
-    try {
-      await bundlerService.sendUserOp(
-        dummyUserOp,
-        CONTRACT_ADDRESSES.ENTRY_POINT,
-      );
-    } catch (e) {
-      console.info(
-        "[Simulated On-Chain] 'Delete Member' UserOp submission failed as expected for dummy UserOp:",
-        e,
-      );
-    }
 
     return jsonOk(deletedMember);
   } catch (error) {

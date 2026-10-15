@@ -14,6 +14,7 @@ import { JSONValue } from "@/validators/common";
 import { acquireMissionLock, isMissionLocked } from "@/lib/worker/mission_lock";
 import { MISSION_MAX_EXECUTION_FAILURES } from "@/constants/mission_executor";
 import { LLM_WORKER_TIMEOUT_MS } from "@/constants/llm";
+import { parseMissionFolderName } from "@/constants/mission_board";
 
 /**
  * Info: (20260516 - Luphia) 禁止在此處撰寫工作流程相關邏輯
@@ -91,6 +92,8 @@ export async function processNext() {
 
     for (const folder of folders) {
       if (!folder.isDirectory()) continue;
+      // Info: (20261015 - Luphia) 舊鏈的任務資料夾已無法提交，執行它們只是白花 LLM 費用
+      if (parseMissionFolderName(folder.name) === null) continue;
       const taskDir = path.join(missionDirPath, folder.name);
 
       try {

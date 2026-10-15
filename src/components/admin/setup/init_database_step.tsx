@@ -120,7 +120,7 @@ export function SetupInitDatabase({
 
   return (
     <StepCard
-      step={5}
+      step={3}
       title={t("admin_setup.step5.title")}
       description={t("admin_setup.step5.desc")}
       isActive={isActive}

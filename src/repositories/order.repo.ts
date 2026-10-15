@@ -40,6 +40,19 @@ export class OrderRepository {
     });
   }
 
+  /**
+   * Info: (20261015 - Luphia) 只在訂單仍是 PENDING 時取消（逾時清理用）。
+   * 無條件的 update 會把「讀到 PENDING 之後、寫入之前」剛付掉的訂單蓋回 CANCEL——
+   * 點數付款同步完成之後，那個窗口不再是理論值。回傳是否真的取消了。
+   */
+  async cancelIfPending(id: string): Promise<boolean> {
+    const updated = await prisma.order.updateMany({
+      where: { id, status: ORDER_STATUS.PENDING },
+      data: { status: ORDER_STATUS.CANCEL },
+    });
+    return updated.count > 0;
+  }
+
   async updateOrderData(id: string, data: JSONValue) {
     return prisma.order.update({
       where: { id },
