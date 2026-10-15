@@ -6,6 +6,7 @@ import { isLlmKeyMissingError } from "@/services/chat.service";
 import { SystemSettingKey } from "@/constants/system_setting";
 import { LLM_KEY_MISSING_ERROR_MARKER } from "@/constants/llm";
 import { reportRepo } from "@/repositories/report.repo";
+import { companyRepo } from "@/repositories/company.repo";
 import { lanceDBService } from "@/services/lancedb.service";
 import { ILanceDBRow } from "@/interfaces/lance_db";
 import {
@@ -115,7 +116,17 @@ class BusinessMonitorService {
     const queryVector = await this.getQueryEmbedding(question);
 
     // Info: (20260701 - Julian) 到 LanceDB 進行相似度檢索
-    const table = await lanceDBService.getTable();
+    /**
+     * Info: (20261015 - Luphia) 手動匯入報告的資料表打不開時（從未匯入、或資料夾殘缺）只記 log，
+     * 不讓它擋住企業觀測站的資料；兩張表都沒有結果時，後面自然回「找不到相關數據」。
+     */
+    const table = await lanceDBService.getTable().catch((error: unknown) => {
+      console.error(
+        "⚠️ [AI Chat] company_reports 無法開啟，只檢索企業觀測站:",
+        error,
+      );
+      return null;
+    });
     let matchedDocs: ILanceDBRow[] = [];
 
     // Info: (20260702 - Julian) 建立動態過濾條件 (先從 Repo 篩選符合條件的報告 ID)
@@ -153,7 +164,7 @@ class BusinessMonitorService {
       return { matchedReports: [], context: "" };
     }
 
-    if (!hasFilters || matchedIds.length > 0) {
+    if (table && (!hasFilters || matchedIds.length > 0)) {
       const combinedWhere =
         matchedIds.length > 0
           ? `reportId IN (${matchedIds.map((id) => `'${id}'`).join(", ")})`
@@ -673,6 +684,25 @@ ${query}
           lowercaseQuestion.includes(cleanName.toLowerCase())
         ) {
           detected.add(fullName);
+        }
+      }
+
+      /**
+       * Info: (20261015 - Luphia) 以公開資料字典（Company）的簡稱比對。
+       * 企業觀測站發布的報告用登記全名（如「臺灣水泥股份有限公司」），而靜態別名寫的是「台灣水泥…」，
+       * 「台泥」因此對不上；Company.abbreviation 正是證交所公布的簡稱，直接拿來比對。
+       */
+      const companies = await companyRepo.findMany({
+        where: { name: { in: reports.map((report) => report.companyName) } },
+        select: { name: true, abbreviation: true },
+      });
+      for (const company of companies) {
+        const abbreviation = company.abbreviation?.trim() ?? "";
+        if (
+          abbreviation.length >= 2 &&
+          lowercaseQuestion.includes(abbreviation.toLowerCase())
+        ) {
+          detected.add(company.name);
         }
       }
     } catch (error) {
