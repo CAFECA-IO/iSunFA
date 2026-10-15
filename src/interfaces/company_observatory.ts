@@ -18,12 +18,25 @@ export interface IObservatoryTarget {
   year: number;
 }
 
+/**
+ * Info: (20261015 - Luphia) 從來源的結構化欄位原樣取出的報告資訊，用於企業觀測站頁面的報告卡片。
+ * 只收來源明確提供的值；來源沒給的欄位留空，不推測、不補值。
+ */
+export interface IObservatoryReportMetadata {
+  period?: string;
+  verificationAgency?: string;
+  verificationStandards?: string;
+  assuranceAgency?: string;
+  assuranceStandards?: string;
+}
+
 export interface IObservatoryFetchFound {
   outcome: typeof OBSERVATORY_FETCH_OUTCOME.FOUND;
   sourceUrl: string;
   title: string;
   contentType: ObservatoryContentType;
   body: Buffer;
+  metadata: IObservatoryReportMetadata;
 }
 
 export interface IObservatoryFetchNotAvailable {
@@ -94,10 +107,11 @@ export interface IObservatoryVectorRow {
   content_hash: string;
 }
 
+// Info: (20261015 - Luphia) 各欄位內是 OR、欄位之間是 AND；空陣列或未給視為不限制
 export interface IObservatoryVectorFilter {
-  stockId?: string;
-  source?: ObservatorySource;
-  year?: number;
+  stockIds?: string[];
+  sources?: readonly ObservatorySource[];
+  years?: number[];
 }
 
 export interface IObservatorySearchHit {

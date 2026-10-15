@@ -173,6 +173,8 @@ describe("MOPS financial report downloader", () => {
     if (result.outcome !== OBSERVATORY_FETCH_OUTCOME.FOUND) return;
     expect(result.sourceUrl).toBe(fileUrl);
     expect(result.contentType).toBe(OBSERVATORY_CONTENT_TYPE.PDF);
+    // Info: (20261015 - Luphia) 查詢頁標示「曆年制」，年度報告期間即該年全年
+    expect(result.metadata).toEqual({ period: "2025/01/01~2025/12/31" });
     expect(result.body.equals(FAKE_PDF)).toBe(true);
     // Info: (20261015 - Luphia) 查詢以民國年送出
     expect(calls[0].init?.body).toContain("year=114");
@@ -229,6 +231,9 @@ describe("ESG report downloader", () => {
     expect(result.outcome).toBe(OBSERVATORY_FETCH_OUTCOME.FOUND);
     if (result.outcome !== OBSERVATORY_FETCH_OUTCOME.FOUND) return;
     expect(result.sourceUrl).toBe(fileUrl);
+    expect(result.metadata.period).toBe("2024/01/01~2024/12/31");
+    expect(result.metadata.assuranceAgency).toContain("DNV");
+    expect(result.metadata.assuranceStandards).toContain("VeriSustain");
     expect(JSON.parse(calls[0].init?.body ?? "{}")).toMatchObject({
       marketType: 0,
       year: 2024,
@@ -284,6 +289,10 @@ describe("GHG inventory downloader", () => {
     expect(result.sourceUrl).toBe(
       `${ESG_METRICS_URL}#companyCode=2330&year=2024`,
     );
+    expect(result.metadata).toEqual({
+      verificationAgency: "DNV,TSMC Washington, LLC確信機構為AWM",
+      verificationStandards: "ISO14064-3",
+    });
   });
 
   it("is NOT_AVAILABLE when nothing was declared", async () => {

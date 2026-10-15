@@ -11,6 +11,7 @@ import {
 } from "@/interfaces/company_observatory";
 import { ObservatoryDocument } from "@/generated";
 import { companyRepo } from "@/repositories/company.repo";
+import { reportRepo } from "@/repositories/report.repo";
 import { observatoryDocumentRepo } from "@/repositories/observatory_document.repo";
 import { observatoryVectorRepo } from "@/repositories/observatory_vector.repo";
 import { createObservatoryHttpClient } from "@/lib/company_observatory/http_client";
@@ -29,6 +30,7 @@ import {
 import {
   createCompanyObservatoryIndexer,
   IObservatoryPageExtractor,
+  IObservatoryReportPublisher,
 } from "@/services/company_observatory/company_observatory.indexer.service";
 
 /**
@@ -42,6 +44,8 @@ const COMPANY_SELECT = {
   abbreviation: true,
   marketType: true,
   taxId: true,
+  industry: true,
+  metadata: true,
 } as const;
 
 // Info: (20261015 - Luphia) Company 是唯讀字典：這裡只讀，觀測站不回寫任何欄位（CLAUDE.md §9）
@@ -94,9 +98,21 @@ export function buildCompanyObservatoryService(shouldStop: () => boolean) {
   });
 }
 
+// Info: (20261015 - Luphia) 發布到企業觀測站頁面：以 pdfPath upsert，重跑只會覆寫同一列
+export const reportPublisher: IObservatoryReportPublisher = {
+  async publish(record) {
+    await reportRepo.upsert({
+      where: { pdfPath: record.pdfPath },
+      create: record,
+      update: record,
+    });
+  },
+};
+
 export function buildCompanyObservatoryIndexer(shouldStop: () => boolean) {
   return createCompanyObservatoryIndexer({
     documents: observatoryDocumentRepo,
+    reports: reportPublisher,
     companies: companyDirectory,
     vectors: observatoryVectorRepo,
     embedder,

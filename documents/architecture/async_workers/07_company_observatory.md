@@ -54,14 +54,29 @@ PENDING ──下載──▶ DOWNLOADED ──索引──▶ INDEXED
   欄位 `id, vector(768), text, document_id, stock_id, company_name, source, year, source_url, page_number, chunk_index, content_hash`。
   嵌入模型為本機 Ollama `nomic-embed-text`，與既有企業觀測站相同。
 
-## 5. 管理端 API（ADMIN / SUPER_ADMIN）
+## 5. 企業觀測站頁面（`/business_monitor`）
+
+索引完成的文件會發布成一筆 `Report`，頁面的清單、詳情、篩選與 AI 諮詢因此讀得到它：
+
+- `pdfPath = observatory/{stockId}/{year}/{source}`，以它 upsert，重跑只會覆寫同一列。
+- 欄位來源（`src/lib/company_observatory/report_projection.ts`）：公司全名取自 `Company.name`；
+  產業別由 `Company.industry` 的證交所代碼查表（`TWSE_INDUSTRY_NAME`）；資本額級距由 `Company.metadata`
+  的實收資本額以 BigInt 比對門檻；揭露期間、確信／查證機構與標準由下載器從來源結構化欄位原樣取出
+  （永續報告書：申報紀錄的 `reportingInterval`／`valiProvider`／`thirdStd`；溫室氣體：範疇一的確信機構與標準；
+  財報：查詢頁標示「曆年制」才填全年期間）。來源沒有提供的欄位留空字串。
+- AI 諮詢：手動匯入報告的切塊在 `company_reports`，觀測站的切塊在 `company_observatory_chunks`；
+  兩張表各自檢索後依距離合併取前 3 筆。有指定公司時以公司代號過濾，否則依報告類型（`OBSERVATORY_SOURCES_BY_REPORT_TYPE`）與年度過濾。
+- 產業篩選：選單送的是 `SEMICONDUCTOR` 這類鍵，改為對應成「半導體業」後以包含比對（原本直接比對鍵，永遠查不到）。
+
+## 6. 管理端 API（ADMIN / SUPER_ADMIN）
 
 - `GET /api/v1/admin/company_observatory?stockId=&source=&status=&year=&page=&pageSize=`：各來源 × 狀態筆數與文件清單。
 - `GET /api/v1/admin/company_observatory/search?q=&stockId=&source=&year=&limit=`：依公司／類型／年度過濾的向量檢索。
 - `POST /api/v1/admin/company_observatory/requeue`：`{ "ids": [...] }` 或 `{ "allDead": true, "source"?: "..." }`。
 
-## 6. 部署
+## 7. 部署
 
 1. `npx prisma db push`（新增 `observatory_document` 表）。
-2. `npm run initial_lance_db`（建立 `company_observatory_chunks`；`npm run build`／`npm run dev` 也會自動執行，已存在則跳過）。
-3. worker 主機需有 Ollama 並已 `ollama pull nomic-embed-text`；沒有時下載照常進行，索引會暫停等待。
+2. `npx tsx scripts/sync_companies.ts`：`Company` 是空的就沒有任何東西可下載。
+3. `npm run initial_lance_db`（建立 `company_observatory_chunks`；`npm run build`／`npm run dev` 也會自動執行，已存在則跳過）。
+4. worker 主機需有 Ollama 並已 `ollama pull nomic-embed-text`；沒有時下載照常進行，索引會暫停等待。
