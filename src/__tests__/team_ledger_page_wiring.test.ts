@@ -12,6 +12,8 @@ import { listTeamWalletLedger } from "@/services/team_wallet.service";
 import { listTeamWalletLedgerByFilter } from "@/services/team_wallet_ledger.service";
 import { assertWalletManager } from "@/services/team_wallet_access.guard";
 import { teamWalletLedgerQueryRepo } from "@/repositories/team_wallet_ledger_query.repo";
+import { adminUserPointsRepo } from "@/repositories/admin_user_points.repo";
+import { TEAM_ALLOCATION_RECORD_STATUS } from "@/constants/admin_user_points";
 import {
   ALLOCATE_OFFCHAIN_EXIT_FEATURE_CODE,
   BILLABLE_FEATURE_CODE,
@@ -50,6 +52,12 @@ jest.mock("@/services/team_wallet.service", () => ({
 
 jest.mock("@/services/team_wallet_access.guard", () => ({
   assertWalletManager: jest.fn(async () => ({ role: "OWNER" })),
+}));
+
+jest.mock("@/repositories/admin_user_points.repo", () => ({
+  adminUserPointsRepo: {
+    findExistingIdempotencyKeys: jest.fn(async () => []),
+  },
 }));
 
 jest.mock("@/repositories/team_wallet_ledger_query.repo", () => ({
@@ -127,18 +135,25 @@ describe("頁面接線", () => {
 });
 
 describe("route 接線", () => {
-  it("未帶 type 時以 ALL 委派", async () => {
+  /**
+   * Info: (20261015 - Luphia) 「全部」也走同一支查詢（不再委派 listTeamWalletLedger），
+   * 才能預設濾掉「分配撥入成員」的系統分錄並為分配列帶上撥入狀態。
+   */
+  it("未帶 type 時查全部類型，且預設隱藏撥入成員的系統分錄", async () => {
     const response = await getLedger(req("?page=2&pageSize=10"), TEAM_PARAMS);
     expect(response.status).toBe(200);
-    expect(asMock(listTeamWalletLedger)).toHaveBeenCalledWith({
-      userId: "user-1",
-      teamId: "team-1",
-      page: 2,
-      pageSize: 10,
-    });
     expect(
       asMock(teamWalletLedgerQueryRepo.listLedgerByEntryTypes),
-    ).not.toHaveBeenCalled();
+    ).toHaveBeenCalledWith("team-1", [], 2, 10, true);
+    expect(asMock(listTeamWalletLedger)).not.toHaveBeenCalled();
+  });
+
+  it("includeSystem=true 時列出系統分錄", async () => {
+    const response = await getLedger(req("?includeSystem=true"), TEAM_PARAMS);
+    expect(response.status).toBe(200);
+    expect(
+      asMock(teamWalletLedgerQueryRepo.listLedgerByEntryTypes),
+    ).toHaveBeenCalledWith("team-1", [], 1, 20, false);
   });
 
   it("type=ALLOCATE 走篩選查詢，涵蓋分配與收回", async () => {
@@ -155,6 +170,7 @@ describe("route 接線", () => {
       [TEAM_WALLET_ENTRY_TYPE.ALLOCATE, TEAM_WALLET_ENTRY_TYPE.REVOKE],
       1,
       20,
+      true,
     );
     expect(asMock(listTeamWalletLedger)).not.toHaveBeenCalled();
   });
@@ -241,5 +257,59 @@ describe("系統調整分錄的判定", () => {
         featureCode: ALLOCATE_OFFCHAIN_EXIT_FEATURE_CODE,
       }),
     ).toBe(false);
+  });
+});
+
+/**
+ * Info: (20261015 - Luphia) 分配列要說明點數去向（使用者回報 20261015）：
+ * 原本緊接在 +N 之後的 −N 系統分錄被濾掉，改由分配列自己說「已撥入」。
+ * 判定靠兄弟分錄的鍵，兄弟分錄本身已被濾掉、不在這一頁，因此必須另外查。
+ */
+describe("分配列的撥入狀態", () => {
+  const row = (id: string, idempotencyKey: string, txHash: string | null) => ({
+    id,
+    entryType: TEAM_WALLET_ENTRY_TYPE.ALLOCATE,
+    amount: BigInt(50),
+    targetUserId: "user-2",
+    txHash,
+    idempotencyKey,
+  });
+
+  it("依兄弟分錄標出已撥入、已退回、舊制", async () => {
+    asMock(assertWalletManager).mockResolvedValue({ role: "OWNER" });
+    asMock(teamWalletLedgerQueryRepo.listLedgerByEntryTypes).mockResolvedValue({
+      items: [
+        row("credited", "k1", null),
+        row("failed", "k2", null),
+        row("legacy", "k3", null),
+        {
+          ...row("purchase", "k4", null),
+          entryType: TEAM_WALLET_ENTRY_TYPE.PURCHASE,
+        },
+      ],
+      total: 4,
+    });
+    asMock(adminUserPointsRepo.findExistingIdempotencyKeys).mockResolvedValue([
+      "allocate-offchain-exit:k1",
+      "allocate-offchain-exit:k2",
+      "allocate-failed:k2",
+    ]);
+
+    const { items } = await listTeamWalletLedgerByFilter({
+      userId: "user-1",
+      teamId: "team-1",
+      filter: TEAM_WALLET_LEDGER_FILTER.ALL,
+      page: 1,
+      pageSize: 20,
+    });
+
+    expect(
+      Object.fromEntries(items.map((i) => [i.id, i.memberTransferStatus])),
+    ).toEqual({
+      credited: TEAM_ALLOCATION_RECORD_STATUS.CREDITED,
+      failed: TEAM_ALLOCATION_RECORD_STATUS.COMPENSATED,
+      legacy: TEAM_ALLOCATION_RECORD_STATUS.PRE_MIGRATION,
+      purchase: undefined,
+    });
   });
 });

@@ -194,6 +194,15 @@ export const teamManagement = {
     system_adjustment_hint:
       "A bookkeeping entry written automatically to keep the ledger balanced, not an action by any member. It stays visible so the pool balance reconciles row to row.",
     operated_by: "By {{name}}",
+    show_system: "Show system entries",
+    show_system_hint:
+      "The paired entry that moves allocated points out of the team ledger is hidden by default. It does not change the unallocated pool and is shown as part of the allocation row above.",
+    transfer: {
+      CREDITED: "Credited to {{name}}'s personal points",
+      COMPENSATED: "Transfer failed; returned to the unallocated pool",
+      PRE_MIGRATION:
+        "Legacy allocation (before 2026-08); the remainder was credited during migration",
+    },
     former_member: "Former member",
   },
 };

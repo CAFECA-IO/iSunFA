@@ -6,11 +6,14 @@ import {
 import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import type { ILedgerEntryView } from "@/interfaces/team_wallet";
 import { assertWalletManager } from "@/services/team_wallet_access.guard";
-import {
-  listTeamWalletLedger,
-  toLedgerView,
-} from "@/services/team_wallet.service";
+import { toLedgerView } from "@/services/team_wallet.service";
 import { teamWalletLedgerQueryRepo } from "@/repositories/team_wallet_ledger_query.repo";
+import { adminUserPointsRepo } from "@/repositories/admin_user_points.repo";
+import {
+  allocationSiblingKeys,
+  deriveTeamAllocationStatuses,
+} from "@/lib/quota/admin_user_points";
+import { TEAM_WALLET_ENTRY_TYPE } from "@/constants/subscription_quota";
 
 /**
  * Info: (20261015 - Luphia) 團隊點數移轉紀錄（流水帳）的篩選查詢。
@@ -26,21 +29,50 @@ export async function listTeamWalletLedgerByFilter(params: {
   filter: TeamWalletLedgerFilter;
   page: number;
   pageSize: number;
+  // Info: (20261015 - Luphia) true 時連「分配撥入成員」的系統分錄也列出（預設併入分配列）
+  includeSystem?: boolean;
 }): Promise<{ items: ILedgerEntryView[]; total: number }> {
-  const { userId, teamId, filter, page, pageSize } = params;
-  if (filter === TEAM_WALLET_LEDGER_FILTER.ALL) {
-    return listTeamWalletLedger({ userId, teamId, page, pageSize });
-  }
+  const { userId, teamId, filter, page, pageSize, includeSystem } = params;
   try {
     await assertWalletManager(userId, teamId);
+    const entryTypes =
+      filter === TEAM_WALLET_LEDGER_FILTER.ALL
+        ? []
+        : TEAM_WALLET_LEDGER_FILTER_ENTRY_TYPES[filter];
     const { items, total } =
       await teamWalletLedgerQueryRepo.listLedgerByEntryTypes(
         teamId,
-        TEAM_WALLET_LEDGER_FILTER_ENTRY_TYPES[filter],
+        entryTypes,
         page,
         pageSize,
+        !includeSystem,
       );
-    return { items: items.map(toLedgerView), total };
+
+    /**
+     * Info: (20261015 - Luphia) 每筆 ALLOCATE 帶上「是否已撥入成員個人點數」。
+     * 判定靠兄弟分錄（offchain-exit／allocate-failed）是否存在——它們可能不在這一頁，
+     * 甚至被上面濾掉了，所以依精確的鍵另外查，不依賴這一頁的內容。
+     */
+    const allocations = items.filter(
+      (row) => row.entryType === TEAM_WALLET_ENTRY_TYPE.ALLOCATE,
+    );
+    const siblingKeys = allocations.length
+      ? new Set(
+          await adminUserPointsRepo.findExistingIdempotencyKeys(
+            allocationSiblingKeys(allocations),
+          ),
+        )
+      : new Set<string>();
+    const statuses = deriveTeamAllocationStatuses(allocations, siblingKeys);
+
+    return {
+      items: items.map((row) => {
+        const view = toLedgerView(row);
+        const status = statuses.get(row.id);
+        return status ? { ...view, memberTransferStatus: status } : view;
+      }),
+      total,
+    };
   } catch (error) {
     if (error instanceof ApiError) throw error;
     throw new ApiError(

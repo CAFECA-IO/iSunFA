@@ -4,6 +4,10 @@ import {
   TEAM_WALLET_ENTRY_TYPE,
   type TeamWalletEntryType,
 } from "@/constants/subscription_quota";
+import {
+  TEAM_ALLOCATION_RECORD_STATUS,
+  type TeamAllocationRecordStatus,
+} from "@/constants/admin_user_points";
 
 /**
  * Info: (20261015 - Luphia) 團隊點數移轉紀錄頁（/user/team/[team_id]/ledger）的常數。
@@ -51,7 +55,8 @@ export const TEAM_WALLET_LEDGER_PAGE_SIZE = 20;
  * Info: (20261015 - Luphia) 內部記帳用的 ADJUST 分錄（系統調整）。
  *
  * 分配的「價值離開離鏈帳本」配對分錄與守恆修復分錄都不是任何人做的事，
- * 而是讓守恆恆等式成立的記帳。它們**標示為系統調整而不隱藏**：
+ * 而是讓守恆恆等式成立的記帳。顯示時**標示為系統調整**（前者預設由伺服器端濾掉、
+ * 併入分配列，見 `isShownTransferStatus`；勾選「顯示系統分錄」才列出）：
  * 1. 隱藏會讓分頁失真（一頁少幾筆、總筆數對不上），在前端隱藏尤其如此。
  * 2. 未分配池餘額是逐筆遞延的；藏掉一筆，相鄰兩列的「池餘額」就接不起來，
  *    查帳的人會看到一個說不出來源的落差——這比多看到一列更糟（零捏造原則）。
@@ -71,6 +76,26 @@ export function isSystemAdjustmentEntry(entry: {
     entry.featureCode !== null &&
     SYSTEM_ADJUSTMENT_FEATURE_CODES.includes(entry.featureCode)
   );
+}
+
+/**
+ * Info: (20261015 - Luphia) 分配列上要說明點數去向的撥入狀態（其餘狀態不加註）。
+ *
+ * 「分配撥入成員」的配對 ADJUST（allocate-offchain-exit）預設不列出：它不動未分配池
+ * （池餘額與前一列相同），單獨一列 −N 緊接在 +N 之後，看起來像撥了又收回（使用者回報 20261015）。
+ * 改在分配那一列寫明「已撥入某人的個人點數」；需要逐筆核帳時可勾選「顯示系統分錄」。
+ * 守恆修復（conservation-repair）會動到勾稽，不在此列，照常顯示為系統調整。
+ */
+const SHOWN_TRANSFER_STATUSES: readonly TeamAllocationRecordStatus[] = [
+  TEAM_ALLOCATION_RECORD_STATUS.CREDITED,
+  TEAM_ALLOCATION_RECORD_STATUS.COMPENSATED,
+  TEAM_ALLOCATION_RECORD_STATUS.PRE_MIGRATION,
+];
+
+export function isShownTransferStatus(
+  status: TeamAllocationRecordStatus,
+): boolean {
+  return SHOWN_TRANSFER_STATUSES.includes(status);
 }
 
 // Info: (20261015 - Luphia) 點數移轉紀錄頁的載入狀態（畫面分辨「載入中」與「載入失敗」）

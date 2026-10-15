@@ -197,6 +197,14 @@ export const teamManagement = {
     system_adjustment_hint:
       "台帳の整合性を保つためにシステムが自動で記帳した仕訳で、メンバーの操作ではありません。プール残高が前後でつながるよう表示しています。",
     operated_by: "操作者：{{name}}",
+    show_system: "システム仕訳を表示",
+    show_system_hint:
+      "メンバーへの振替に対応する仕訳は既定で非表示です。未割当プールは変わらず、上の割当行にまとめて表示されます。",
+    transfer: {
+      CREDITED: "{{name}} の個人ポイントに振替済み",
+      COMPENSATED: "振替に失敗し、未割当プールに戻しました",
+      PRE_MIGRATION: "旧方式の割当（2026-08 以前）。残高は移行時に振替済み",
+    },
     former_member: "退出したメンバー",
   },
 };

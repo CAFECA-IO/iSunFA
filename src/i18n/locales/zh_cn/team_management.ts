@@ -187,6 +187,14 @@ export const teamManagement = {
     system_adjustment_hint:
       "系统为维持账本守恒而自动写入的记账分录，不是任何成员的操作；保留显示以让池余额前后衔接。",
     operated_by: "由 {{name}} 操作",
+    show_system: "显示系统分录",
+    show_system_hint:
+      "默认不列出“分配拨入成员”的配对分录：它不动未分配池，只记录点数已离开团队账本，已并入上方分配那一行显示。",
+    transfer: {
+      CREDITED: "已拨入 {{name}} 的个人点数",
+      COMPENSATED: "拨入失败，已退回未分配池",
+      PRE_MIGRATION: "旧制分配（2026-08 前），剩余点数已于迁移时拨入",
+    },
     former_member: "已离开的成员",
   },
 };

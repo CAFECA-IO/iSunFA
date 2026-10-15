@@ -37,6 +37,14 @@ export const teamWalletLedgerQuerySchema = z.object({
   type: z
     .enum(TEAM_WALLET_LEDGER_FILTER_VALUES)
     .default(TEAM_WALLET_LEDGER_FILTER.ALL),
+  /**
+   * Info: (20261015 - Luphia) 是否列出「分配撥入成員」的系統分錄（預設不列，併入分配那一列顯示）。
+   * 以字串列舉而非 z.coerce.boolean：後者會把 "false" 轉成 true。
+   */
+  includeSystem: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
 });
 
 // Info: (20260807 - Luphia) 團隊額度付款（POST /order/[order_id]/team_quota_payment）
