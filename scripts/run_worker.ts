@@ -18,7 +18,16 @@ import { JOB_RESUME_SCAN_INTERVAL_MS } from "@/constants/resumable_job";
 import {
   installWorkerShutdownHandlers,
   isShuttingDown,
+  requestWorkerShutdown,
+  sleepUnlessShuttingDown,
 } from "@/lib/worker/shutdown";
+import { BACKGROUND_WORKER_LEASE } from "@/constants/worker_lease";
+import {
+  createWorkerHolderId,
+  releaseWorkerLease,
+  startWorkerLeaseHeartbeat,
+  waitForWorkerLease,
+} from "@/services/worker_lease.service";
 
 /**
  * Info: (20260130 - Luphia)
@@ -40,10 +49,10 @@ async function startServiceLoop(
   while (!isShuttingDown()) {
     try {
       await fn();
-      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+      await sleepUnlessShuttingDown(intervalMs);
     } catch (error) {
       console.error(`[Worker][${name}] Error:`, error);
-      await new Promise((resolve) => setTimeout(resolve, 60000));
+      await sleepUnlessShuttingDown(60000);
     }
   }
 }
@@ -51,6 +60,31 @@ async function startServiceLoop(
 async function runWorker() {
   // Info: (20260811 - Luphia) 兩段式中斷 + 結束前釋放 mission 執行鎖
   installWorkerShutdownHandlers("Worker");
+
+  /**
+   * Info: (20261015 - Luphia) 先拿 worker 租約（同一個資料庫只有一個 worker 在跑）。
+   * `npm start`、`npm run swarm` 都會連同 worker 一起啟動，pm2 也可能另外跑一個——
+   * 沒拿到的待命，持有者停止後接手。
+   */
+  const holderId = createWorkerHolderId();
+  const log = (message: string) => console.log(`[Worker][Lease] ${message}`);
+  const acquired = await waitForWorkerLease({
+    name: BACKGROUND_WORKER_LEASE,
+    holderId,
+    shouldStop: isShuttingDown,
+    log,
+  });
+  if (!acquired) {
+    console.log("[Worker] Stopped before acquiring the lease.");
+    process.exit(0);
+  }
+  log(`Acquired as ${holderId}.`);
+  const stopHeartbeat = startWorkerLeaseHeartbeat({
+    name: BACKGROUND_WORKER_LEASE,
+    holderId,
+    onLost: requestWorkerShutdown,
+    log,
+  });
 
   console.log("[Worker] Starting independent service loops...");
 
@@ -131,6 +165,11 @@ async function runWorker() {
     ),
   ]);
 
+  stopHeartbeat();
+  await releaseWorkerLease({ name: BACKGROUND_WORKER_LEASE, holderId }).catch(
+    (error: unknown) =>
+      console.error("[Worker] Failed to release lease:", error),
+  );
   console.log("[Worker] Stopped.");
   process.exit(0);
 }

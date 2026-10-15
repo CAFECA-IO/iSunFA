@@ -27,6 +27,42 @@ export function isShuttingDown(): boolean {
   return shuttingDown;
 }
 
+// Info: (20261015 - Luphia) 正在睡眠的迴圈；關機時一起叫醒
+const sleepers = new Set<() => void>();
+
+function wakeSleepers(): void {
+  for (const wake of [...sleepers]) wake();
+}
+
+/**
+ * Info: (20261015 - Luphia) 迴圈之間的等待，關機時提前醒來。
+ *
+ * 原本是 `setTimeout(interval)`：匯率同步一輪睡 8 小時，收到關機訊號後
+ * 要等它睡醒才結束——等不到就被 pm2 強制砍掉，兩段式中斷形同虛設。
+ * 失去 worker 租約時也要能立即收尾（見 worker_lease.service）。
+ */
+export function sleepUnlessShuttingDown(ms: number): Promise<void> {
+  if (shuttingDown) return Promise.resolve();
+  return new Promise((resolve) => {
+    const wake = () => {
+      clearTimeout(timer);
+      sleepers.delete(wake);
+      resolve();
+    };
+    const timer = setTimeout(wake, ms);
+    sleepers.add(wake);
+  });
+}
+
+/**
+ * Info: (20261015 - Luphia) 由程式內部要求結束（例如 worker 租約被接手），
+ * 與第一次收到 SIGTERM 相同：讓迴圈跑完手上這一件事再退出，不強制釋放鎖。
+ */
+export function requestWorkerShutdown(): void {
+  shuttingDown = true;
+  wakeSleepers();
+}
+
 function forceRelease(reason: string): void {
   const count = heldMissionLockCount();
   if (count > 0) {
@@ -45,6 +81,7 @@ export function installWorkerShutdownHandlers(label: string): void {
   const onSignal = (signal: string) => {
     if (!shuttingDown) {
       shuttingDown = true;
+      wakeSleepers();
       console.log(
         `\n[${label}] Received ${signal}. Finishing current work, then stopping. Press again to force.`,
       );
