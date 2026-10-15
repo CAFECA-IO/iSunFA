@@ -3,7 +3,7 @@ import { API_ERRORS, ApiError } from "@/lib/utils/error_dictionary";
 import { AppError } from "@/lib/utils/error";
 import { jsonOk, jsonFail, jsonFailWithPayload } from "@/lib/utils/response";
 import { getIdentityFromDeWT } from "@/lib/auth/dewt";
-import { ORDER_TYPE } from "@/constants/status";
+import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
 import { BILLABLE_FEATURE_CODE } from "@/constants/subscription_quota";
 import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 import { teamQuotaPaymentSchema } from "@/validators";
@@ -12,6 +12,7 @@ import {
   getPendingOrder,
   markOrderPaid,
   markOrderPaying,
+  updateOrderStatus,
 } from "@/services/order.service";
 import { resolveOrderSpendCost } from "@/lib/order/order_cost";
 import { fulfillPaidAnalysisOrder } from "@/services/analysis_fulfillment.service";
@@ -120,10 +121,16 @@ export async function POST(
      *
      * 原本這裡直接標 COMPLETED，但任務派發（issue.service）只撿 PAID 訂單——
      * 於是團隊額度付款的分析永遠不會被派成任務，畫面停在「執行中」。個人點數付款
-     * （point_payment）一直是標 PAID，由 recorder 在任務完成後才推進到 COMPLETED；
-     * 兩條付款路徑在這之後走同一條管線。
+     * （point_payment）一直是標 PAID，由 recorder 在任務完成後才推進到 COMPLETED。
+     *
+     * 物流碳足跡例外：它不走任務管線，前端付款後立刻呼叫試算端點同步算出結果。
+     * 標成 PAID 會讓 issue.service 搶先把它派成一個沒人要的任務，因此維持原本的 COMPLETED。
      */
-    await markOrderPaid(orderId);
+    if (category === ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT) {
+      await updateOrderStatus(orderId, ORDER_STATUS.COMPLETED);
+    } else {
+      await markOrderPaid(orderId);
+    }
 
     return jsonOk({
       orderId,

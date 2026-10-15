@@ -26,6 +26,48 @@ export class OrderRepository {
     return prisma.order.count();
   }
 
+  /**
+   * Info: (20261015 - Luphia) 已完成、但從未派發任務（mission 為空）的團隊額度分析訂單候選。
+   * 只做粗篩（型別、狀態、mission、signature 含 team_quota）；精確判定在
+   * `team_quota_redispatch.service` 的純函式裡，好讓規則可以單測。
+   */
+  async listUndispatchedTeamQuotaCandidates(params: { orderId?: string }) {
+    return prisma.order.findMany({
+      where: {
+        type: ORDER_TYPE.ANALYSIS,
+        status: ORDER_STATUS.COMPLETED,
+        OR: [{ mission: null }, { mission: "" }, { mission: "[]" }],
+        signature: { contains: "team_quota" },
+        ...(params.orderId ? { id: params.orderId } : {}),
+      },
+      select: {
+        id: true,
+        userId: true,
+        data: true,
+        signature: true,
+        mission: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "asc" },
+    });
+  }
+
+  /**
+   * Info: (20261015 - Luphia) 把未派發的已完成訂單送回 PAID，交給 issue.service 派發。
+   * 條件更新：只動仍是 COMPLETED 且 mission 仍為空的列，重跑或與 worker 併發都不會重複派發。
+   */
+  async requeueUndispatchedOrder(orderId: string): Promise<boolean> {
+    const updated = await prisma.order.updateMany({
+      where: {
+        id: orderId,
+        status: ORDER_STATUS.COMPLETED,
+        OR: [{ mission: null }, { mission: "" }, { mission: "[]" }],
+      },
+      data: { status: ORDER_STATUS.PAID },
+    });
+    return updated.count > 0;
+  }
+
   // Info: (20260511 - Julian) 用於 analysis.service 的方法
   async findById(id: string) {
     return prisma.order.findUnique({

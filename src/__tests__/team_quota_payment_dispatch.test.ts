@@ -8,10 +8,12 @@ import {
   getPendingOrder,
   markOrderPaid,
   markOrderPaying,
+  updateOrderStatus,
 } from "@/services/order.service";
 import { fulfillPaidAnalysisOrder } from "@/services/analysis_fulfillment.service";
 import { refundCredits, spendCredits } from "@/services/spend.service";
-import { ORDER_TYPE } from "@/constants/status";
+import { ORDER_STATUS, ORDER_TYPE } from "@/constants/status";
+import { ANALYSIS_CATEGORY } from "@/constants/analysis";
 
 /**
  * Info: (20261015 - Luphia) 團隊額度付款之後，任務必須能被派發（使用者回報 20261015）。
@@ -30,6 +32,7 @@ jest.mock("@/services/order.service", () => ({
   getPendingOrder: jest.fn(),
   markOrderPaid: jest.fn(async () => true),
   markOrderPaying: jest.fn(async () => undefined),
+  updateOrderStatus: jest.fn(async () => undefined),
 }));
 
 jest.mock("@/services/analysis_fulfillment.service", () => ({
@@ -110,5 +113,23 @@ describe("POST team_quota_payment", () => {
       expect.objectContaining({ idempotencyKey: "analysis:order-1" }),
     );
     expect(markOrderPaid).not.toHaveBeenCalled();
+  });
+
+  it("物流碳足跡不派任務：維持 COMPLETED，由試算端點同步算出結果", async () => {
+    asMock(getPendingOrder).mockResolvedValue({
+      id: "order-1",
+      type: ORDER_TYPE.ANALYSIS,
+      amount: BigInt(-10),
+      data: { category: ANALYSIS_CATEGORY.TRANSPORTATION_CARBON_FOOTPRINT },
+    });
+    const { request, params } = post();
+    const response = await POST(request, { params });
+
+    expect(response.status).toBe(200);
+    expect(markOrderPaid).not.toHaveBeenCalled();
+    expect(updateOrderStatus).toHaveBeenCalledWith(
+      "order-1",
+      ORDER_STATUS.COMPLETED,
+    );
   });
 });
