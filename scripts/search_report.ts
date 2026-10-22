@@ -1,4 +1,5 @@
 import { businessMonitorService } from "@/services/business_monitor.service";
+import { buildEvidenceContext } from "@/lib/business_monitor/citations";
 import dotenv from "dotenv";
 
 // Info: (20260702 - Julian) 載入環境變數
@@ -23,8 +24,12 @@ async function main() {
   );
 
   try {
-    const { matchedReports, context } =
+    const { matchedReports, metadataContext, evidence } =
       await businessMonitorService.searchContext(question);
+    // Info: (20261022 - Luphia) 與 AI 諮詢送進提示詞的內容相同：中繼資料 + 編號證據
+    const context = [metadataContext, buildEvidenceContext(evidence)]
+      .filter(Boolean)
+      .join("\n\n");
 
     console.log(`\n==================================================`);
     console.log(`✅ 檢索完成，找到 ${matchedReports.length} 筆相關報告：`);

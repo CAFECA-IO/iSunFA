@@ -1,20 +1,25 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { systemSettingService } from "@/services/system_setting.service";
-import { AppError } from "@/lib/utils/error";
-import { DEFAULT_GEMINI_MODEL } from "@/constants/llm";
-import { isLlmKeyMissingError } from "@/services/chat.service";
-import { SystemSettingKey } from "@/constants/system_setting";
-import { LLM_KEY_MISSING_ERROR_MARKER } from "@/constants/llm";
 import { reportRepo } from "@/repositories/report.repo";
 import { companyRepo } from "@/repositories/company.repo";
+import { observatoryDocumentRepo } from "@/repositories/observatory_document.repo";
 import { lanceDBService } from "@/services/lancedb.service";
+import { runBilledCarbonTask } from "@/services/carbon_billing.service";
 import { ILanceDBRow } from "@/interfaces/lance_db";
 import {
+  IAIChatScope,
   IAIResponse,
   IReport,
-  IReportDownloadTask,
+  IReportFile,
 } from "@/interfaces/business_monitor";
+import { IBusinessMonitorChatScope } from "@/validators";
+import { detectYears } from "@/lib/business_monitor/scope";
 import { COMPANY_ALIASES } from "@/constants/company";
+import { BILLABLE_FEATURE_CODE } from "@/constants/subscription_quota";
+import { BUSINESS_MONITOR_FILE_CONTENT_TYPE } from "@/constants/business_monitor";
+import {
+  BUSINESS_MONITOR_LEGACY_PDF_DIR,
+  OBSERVATORY_CONTENT_TYPE,
+  OBSERVATORY_PDF_SOURCES,
+} from "@/constants/company_observatory";
 import { IObservatoryVectorFilter } from "@/interfaces/company_observatory";
 import {
   IObservatoryScoredRow,
@@ -27,12 +32,23 @@ import {
 } from "@/lib/company_observatory/report_projection";
 import {
   buildObservatoryFilter,
-  detectQuestionYears,
   industryNameOfFilter,
 } from "@/lib/company_observatory/business_monitor_bridge";
 import { createOllamaEmbedder } from "@/lib/company_observatory/embedder";
 import { reciprocalRankFusion } from "@/lib/company_observatory/rank_fusion";
 import { OBSERVATORY_RETRIEVAL_CANDIDATES } from "@/constants/company_observatory";
+import {
+  createFileStorage,
+  IObservatoryStorage,
+} from "@/lib/company_observatory/storage";
+import {
+  buildEvidenceContext,
+  IEvidence,
+  resolveCitations,
+} from "@/lib/business_monitor/citations";
+import { ollamaGenerate } from "@/lib/llm/ollama_generate";
+import { API_ERRORS, ApiError, IErrorDef } from "@/lib/utils/error_dictionary";
+import { logger } from "@/lib/utils/logger";
 
 // Info: (20260702 - Julian) 查詢關鍵字
 export const QUERY_KEYWORDS: Record<string, string[]> = {
@@ -56,10 +72,28 @@ interface IChatResponse {
   total: number;
   totalPages: number;
   aiResponse: IAIResponse;
+  scope: IAIChatScope;
   from: "service" | "LLM";
 }
 
+// Info: (20261022 - Luphia) 錯誤一律以字典定義包裝，不讓原始錯誤噴到前端
+function toApiError(def: IErrorDef): ApiError {
+  return new ApiError(def.code, def.message, def.status);
+}
+
+// Info: (20261022 - Luphia) 下載檔名不能含路徑與保留字元；其餘（含中文）原樣保留
+function safeFileName(name: string): string {
+  return name.replace(/[\\/:*?"<>|\r\n]+/g, "_").trim();
+}
+
 class BusinessMonitorService {
+  // Info: (20261022 - Luphia) 原始檔來源：觀測站下載的檔案與手動匯入的 PDF 各一個根目錄
+  private readonly observatoryStorage: IObservatoryStorage =
+    createFileStorage();
+  private readonly legacyPdfStorage: IObservatoryStorage = createFileStorage(
+    BUSINESS_MONITOR_LEGACY_PDF_DIR,
+  );
+
   // =========================================================================
   // Info: (20260701 - Julian) AI 諮詢 (RAG Chat)
   // =========================================================================
@@ -68,36 +102,65 @@ class BusinessMonitorService {
    * Info: (20260701 - Julian) AI 諮詢
    * @param question 查詢文字
    * @returns AI 回答
+   *
+   * Info: (20261022 - Luphia) 改為登入後扣額度（產品拍板 20261022）。
+   * 檢索（嵌入 + 向量查詢）不計費，先做；檢索不到任何資料就直接回「找不到」，不收費——
+   * 沒有東西可讀時還收錢，等於讓使用者為「我們沒有資料」付費。
+   * 有資料才進 `runBilledCarbonTask`：企業觀測站沒有帳本可綁，走個人點數「先收款、失敗退款」那條，
+   * 冪等鍵由前端的 clientMessageId 組成，402 付款後重送同一則不會重複扣款。
    */
-  async chat(question: string): Promise<IChatResponse> {
+  async chat(params: {
+    userId: string;
+    question: string;
+    clientMessageId: string;
+    scope?: IBusinessMonitorChatScope;
+  }): Promise<IChatResponse> {
+    const { userId, question, clientMessageId } = params;
+
     // Info: (20260702 - Julian) 步驟 1：檢索背景知識
-    const { matchedReports, context } = await this.searchContext(question);
+    const { matchedReports, metadataContext, evidence, scope } =
+      await this.searchContext(question, params.scope);
 
     // Info: (20260701 - Julian) 處理搜尋結果為空的情況
-    if (matchedReports.length === 0) {
+    if (evidence.length === 0) {
       return {
         reports: [],
         total: 0,
         totalPages: 0,
         aiResponse: {
           answer: "抱歉，根據目前的報告資料，無法找到足夠相關的數據。",
-          sourceReportIds: [],
+          citations: [],
         },
+        scope,
         from: "service",
       };
     }
 
+    const context = [metadataContext, buildEvidenceContext(evidence)]
+      .filter(Boolean)
+      .join("\n\n=== 報告書內文段落（回答時以 [編號] 標示出處）===\n\n");
+
     // Info: (20260702 - Julian) 步驟 2：呼叫 LLM 生成回答
-    const answer = await this.generateAnswer(question, context);
+    const billed = await runBilledCarbonTask({
+      userId,
+      channel: undefined,
+      featureCode: BILLABLE_FEATURE_CODE.BUSINESS_MONITOR_CHAT,
+      idempotencyKey: `business-monitor-chat:${userId}:${clientMessageId}`,
+      inputChars: question.length + context.length,
+      hasAttachment: false,
+      nowSec: Math.floor(Date.now() / 1000),
+      run: () => this.generateAnswer(question, context),
+    });
+
+    // Info: (20261022 - Luphia) 步驟 3：比對出處編號，移除對不上的編號
+    const { answer, citations } = resolveCitations(billed.result, evidence);
 
     return {
       reports: matchedReports,
       total: matchedReports.length,
       totalPages: 1,
-      aiResponse: {
-        answer: answer,
-        sourceReportIds: matchedReports.map((r) => r.id),
-      },
+      aiResponse: { answer, citations },
+      scope,
       from: "LLM",
     };
   }
@@ -109,9 +172,18 @@ class BusinessMonitorService {
    */
   async searchContext(
     question: string,
-  ): Promise<{ matchedReports: IReport[]; context: string }> {
+    scope?: IBusinessMonitorChatScope,
+  ): Promise<{
+    matchedReports: IReport[];
+    metadataContext: string;
+    evidence: IEvidence[];
+    scope: IAIChatScope;
+  }> {
     // Info: (20260630 - Julian) 使用 AI 諮詢功能前，先偵測公司名稱
-    const companyNames = await this.detectCompanies(question);
+    // Info: (20261022 - Luphia) 公司頁帶了 stockId 就以它為準，不再從問題裡猜
+    const companyNames = scope?.stockId
+      ? [await this.companyNameOf(scope.stockId)]
+      : await this.detectCompanies(question);
     console.log(`🤖 [AI Chat] 提問：「${question}」`);
     console.log(`🤖 [AI Chat] 步驟 1：偵測出的公司名稱：`, companyNames);
 
@@ -120,7 +192,8 @@ class BusinessMonitorService {
     console.log(`🤖 [AI Chat] 步驟 2：偵測出的報告類型：`, reportTypes);
 
     // Info: (20260702 - Julian) 偵測年份
-    const years = this.detectYears(question);
+    // Info: (20261022 - Luphia) 前端送出前已讓使用者看過、可取消的年度；有帶就照用（空陣列代表不限年度）
+    const years = scope?.years ?? detectYears(question);
     console.log(`🤖 [AI Chat] 步驟 3：偵測出的年份：`, years);
 
     // Info: (20260701 - Julian) 將用戶問題轉換為向量
@@ -173,6 +246,18 @@ class BusinessMonitorService {
       reportTypes,
       years,
     );
+    /**
+     * Info: (20261022 - Luphia) 回報給畫面的是「實際套用」的年度：有指定公司時，問到的年度若該公司
+     * 一份報告都沒有，觀測站檢索不過濾年度（見 buildObservatoryFilter），此時照實顯示「不限年度」，
+     * 而不是沿用使用者要求的年度——範疇標籤寫 2023 卻查了全部年份，就是不實的範疇。
+     */
+    const usedScope: IAIChatScope = {
+      companies: companyNames,
+      years:
+        companyNames.length > 0
+          ? (observatoryFilter.years ?? []).map(String)
+          : years,
+    };
 
     if (
       hasFilters &&
@@ -181,7 +266,12 @@ class BusinessMonitorService {
     ) {
       // Info: (20260702 - Julian) 有設定過濾條件但找不到任何報告，直接回傳空結果
       console.log(`⚠️  [AI Chat] 過濾條件未匹配到任何報告，跳過檢索。`);
-      return { matchedReports: [], context: "" };
+      return {
+        matchedReports: [],
+        metadataContext: "",
+        evidence: [],
+        scope: usedScope,
+      };
     }
 
     if (table && queryVector && (!hasFilters || matchedIds.length > 0)) {
@@ -227,36 +317,44 @@ class BusinessMonitorService {
     // Info: (20260701 - Julian) 在呼叫 LLM 之前，先取得關聯的 PostgreSQL Report 記錄，以便注入 metadata 作為 Context
     const matchedReports: IReport[] = [];
     const seenIds = new Set<number>();
+    /**
+     * Info: (20261022 - Luphia) 每個切塊成為一筆編號證據（[1]、[2]…），帶著頁碼與官方網址。
+     * 找不到對應 Report 的切塊不送進提示詞：它沒有可以點回去的出處，引用了也無從查核。
+     */
+    const evidence: IEvidence[] = [];
 
     for (const doc of matchedDocs) {
       const reportIdVal = doc.reportId;
       if (!reportIdVal) continue;
 
-      let report: IReport | null = null;
-      if (/^\d+$/.test(String(reportIdVal))) {
-        const numericId = parseInt(String(reportIdVal), 10);
-        console.log(`DEBUG: 嘗試使用 ID 查詢: ${numericId}`);
-        report = await reportRepo.findUnique({
-          where: { id: numericId },
-        });
-      } else {
-        console.log(`DEBUG: 嘗試使用 pdfPath 查詢: ${reportIdVal}`);
-        report = await reportRepo.findUnique({
-          where: { pdfPath: String(reportIdVal) },
-        });
-      }
+      const report: IReport | null = /^\d+$/.test(String(reportIdVal))
+        ? await reportRepo.findUnique({
+            where: { id: parseInt(String(reportIdVal), 10) },
+          })
+        : await reportRepo.findUnique({
+            where: { pdfPath: String(reportIdVal) },
+          });
 
-      if (report) {
-        console.log(
-          `DEBUG: 找到 Report: ${report.companyName} (ID: ${report.id})`,
-        );
-        if (!seenIds.has(report.id)) {
-          seenIds.add(report.id);
-          matchedReports.push(report);
-        }
-      } else {
-        console.log(`DEBUG: 找不到 Report，ID/Path: ${reportIdVal}`);
+      if (!report) {
+        logger.warn("business monitor chunk has no report", {
+          reportId: String(reportIdVal),
+        });
+        continue;
       }
+      if (!seenIds.has(report.id)) {
+        seenIds.add(report.id);
+        matchedReports.push(report);
+      }
+      evidence.push({
+        index: evidence.length + 1,
+        report,
+        text: doc.text,
+        pageNumber:
+          doc.pageNumber !== undefined && doc.pageNumber > 0
+            ? doc.pageNumber
+            : null,
+        sourceUrl: doc.sourceUrl || null,
+      });
     }
 
     /**
@@ -291,16 +389,12 @@ class BusinessMonitorService {
       })
       .join("\n\n");
 
-    // Info: (20260701 - Julian) 將搜尋到的 Markdown 文字片段拼接在一起
-    const textContext = matchedDocs.map((doc) => doc.text).join("\n\n---\n\n");
-
-    // Info: (20260701 - Julian) 合併中繼資料與向量內文段落，並加入防溢位保護
-    const context = [reportMetadataContext, textContext]
-      .filter(Boolean)
-      .join("\n\n=== 報告書內文段落 ===\n\n")
-      .slice(0, 3500);
-
-    return { matchedReports, context };
+    return {
+      matchedReports,
+      metadataContext: reportMetadataContext,
+      evidence,
+      scope: usedScope,
+    };
   }
 
   /**
@@ -355,7 +449,11 @@ class BusinessMonitorService {
         source: row.source,
       }),
       companyName: row.company_name,
-      pageNumber: Number(row.page_number),
+      // Info: (20261022 - Luphia) 純文字來源（公司登記、溫室氣體）的「頁碼」不是任何文件的頁碼，不帶出去
+      pageNumber: OBSERVATORY_PDF_SOURCES.includes(row.source)
+        ? Number(row.page_number)
+        : undefined,
+      sourceUrl: row.source_url || undefined,
       _distance: row._distance,
     });
     return reciprocalRankFusion(
@@ -378,6 +476,7 @@ class BusinessMonitorService {
 2. 如果【參考資料】中找不到精確答案，請先說明您已查閱哪些報告書（例如：『我已為您查閱台灣水泥股份有限公司的 2024 年永續報告書，但參考資料中未提及具體資本額數字...』），並提供參考資料中與該主題最相關的內容，切勿憑空捏造。
 3. 如果資料包含表格，請精準解讀表格中的對應欄位。
 4. 不需要開場白（例：根據您提供的【參考資料】...），直接回答問題即可。
+5. 每一個事實或數字後面，標上它出自哪一段參考資料的編號，例如「範疇一排放量為 123 公噸 CO2e [2]」。只能使用參考資料裡出現過的編號，不要自己編號。
 
 【參考資料】：
 ${context}
@@ -385,19 +484,13 @@ ${context}
 【問題】：
 ${question}`;
 
-    const llmResponse = await fetch(`${OLLAMA_HOST}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: LLM_MODEL,
-        prompt: systemPrompt,
-        stream: false,
-      }),
+    // Info: (20261022 - Luphia) 經 ollamaGenerate 呼叫：用量回報給計費範圍；Temperature 0（CLAUDE.md §8）
+    return ollamaGenerate({
+      host: OLLAMA_HOST,
+      model: LLM_MODEL,
+      prompt: systemPrompt,
+      temperature: 0,
     });
-    const llmData = await this.responseToJSON<{ response: string }>(
-      llmResponse,
-    );
-    return llmData.response;
   }
 
   // =========================================================================
@@ -410,166 +503,51 @@ ${question}`;
    * @returns 報告書清單
    */
   async getReports(params: {
-    query?: string;
     company?: string;
     industry?: string;
     year?: string;
     page: number;
     pageSize: number;
   }) {
-    const { query, company, industry, year, page, pageSize } = params;
+    const { company, industry, year, page, pageSize } = params;
 
-    // Info: (20260701 - Julian) 若無 AI 查詢，模擬基本網路延遲
-    const delayMs = query ? 0 : 500;
-    if (delayMs > 0) {
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    /**
+     * Info: (20261022 - Luphia) 移除 `query` 分支（AI 篩選）與模擬的 500ms 延遲。
+     * 那條分支未登入可呼叫、不計費，提示詞還要求 Gemini「利用既有知識」回答永續數據——
+     * 也就是請模型憑記憶給數字（違反零捏造與 CLAUDE.md §8）。前端早已改用 /chat，它沒有呼叫端。
+     */
+    const whereClause: {
+      companyName?: { contains: string };
+      industry?: { contains: string };
+      reportYear?: string;
+    } = {};
+    if (company) {
+      whereClause.companyName = { contains: company };
+    }
+    if (industry) {
+      // Info: (20261015 - Luphia) 篩選送的是 SEMICONDUCTOR 這類鍵，報告存的是「半導體業」這類名稱
+      whereClause.industry = { contains: industryNameOfFilter(industry) };
+    }
+    if (year) {
+      whereClause.reportYear = year;
     }
 
-    if (query) {
-      let aiResponse: IAIResponse | undefined;
-      const allReports = await reportRepo.findMany();
+    const total = await reportRepo.count({ where: whereClause });
+    const totalPages = Math.ceil(total / pageSize);
+    const skip = (page - 1) * pageSize;
 
-      try {
-        /**
-         * Info: (20260812 - Luphia) 金鑰改由 systemSettingService 解析。
-         *
-         * 這是本檔唯一不經過 ChatService 的 LLM 呼叫(自建 GoogleGenerativeAI 並
-         * 指定 responseMimeType),所以不能靠 ChatService 的解析,得自己問。
-         * `get()` 已經處理三種狀態:資料庫可信時以資料庫為準、驗簽失敗時拒絕服務、
-         * 從未用資料庫保管時才讀環境變數 —— 直接讀 env 會跳過前兩者。
-         */
-        const apiKey = await systemSettingService.get(
-          SystemSettingKey.GEMINI_API_KEY,
-        );
-        if (!apiKey) {
-          // Info: (20260812 - Luphia) 與 ChatService 用同一個標記，上層的分類才不會分岔
-          throw new Error(
-            `${LLM_KEY_MISSING_ERROR_MARKER}: no LLM API key is configured for business monitoring`,
-          );
-        }
+    const paginatedReports = await reportRepo.findMany({
+      where: whereClause,
+      skip: skip,
+      take: pageSize,
+      orderBy: { reportYear: "desc" },
+    });
 
-        /**
-         * Info: (20260812 - Luphia) 模型名也接上設定,不再寫死。
-         * 金鑰吃設定而模型不吃,會讓「在 /admin/settings 換模型」對這條路徑無效,
-         * 而那個落差沒有任何跡象。
-         */
-        const modelName =
-          (await systemSettingService.get(SystemSettingKey.LLM_MODEL)) ||
-          DEFAULT_GEMINI_MODEL;
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({
-          model: modelName,
-          generationConfig: {
-            responseMimeType: "application/json",
-          },
-        });
-
-        // Info: (20260701 - Julian) 將真實報告當作參考資料餵給 LLM
-        const contextData = allReports.map((r) => ({
-          id: r.id,
-          company: r.companyName,
-          title: r.title,
-          industry: r.industry,
-        }));
-
-        const prompt = `你是一個企業永續報告觀測助理。請根據使用者問題回答。
-雖然提供的參考資料僅包含報告的 Metadata (無內文)，你可以利用你既有的知識庫來回答使用者關於該企業的具體永續數據 (例如離職率、碳排放、減碳目標等)。
-回答完畢後，請從提供的報告清單中挑出最符合的報告，將其 ID 放入 sourceReportIds 陣列。
-如果使用者的問題完全無關或無法回答，請將 answer 設為「在現有報告中找不到相關解答。」，並讓 sourceReportIds 為空陣列。
-
-參考報告清單：
-${JSON.stringify(contextData, null, 2)}
-
-使用者問題：
-${query}
-
-請嚴格依照此 JSON Schema 格式回傳（不需要 markdown 標記）：
-{
-  "answer": "字串，你的回答",
-  "sourceReportIds": [數字陣列，對應的報告 ID]
-}
-`;
-
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
-        aiResponse = JSON.parse(text) as IAIResponse;
-      } catch (error) {
-        console.error("LLM API 發生錯誤:", error);
-        /**
-         * Info: (20260812 - Luphia) 設定問題不降級成「系統忙線中」。
-         *
-         * 這個 catch 原本把所有東西吞成一句罐頭訊息,包括:
-         * - 缺金鑰(重試一萬次都一樣,要去 /admin/settings 設定)
-         * - `systemSettingService.get()` 在 UNTRUSTED 時拋的 `AppError`
-         *   ——「設定被竄改、系統拒絕服務」變成「忙線中」,而那是最需要
-         *   被維運看到的成因
-         *
-         * 只有「LLM 真的回答失敗」才適合降級成罐頭訊息:那是暫時性的,
-         * 而且使用者除了稍後再試也沒別的可做。
-         */
-        if (error instanceof AppError || isLlmKeyMissingError(error)) {
-          throw error;
-        }
-        aiResponse = {
-          answer: "系統忙線中或未設定正確的 API Key，請稍後再試。",
-          sourceReportIds: [],
-        };
-      }
-
-      // Info: (20260701 - Julian) 收斂為只顯示來源報告
-      const filtered = allReports.filter((r) =>
-        aiResponse?.sourceReportIds.includes(r.id),
-      );
-
-      const total = filtered.length;
-      const totalPages = Math.ceil(total / pageSize);
-      const startIndex = (page - 1) * pageSize;
-      const paginatedReports = filtered.slice(
-        startIndex,
-        startIndex + pageSize,
-      );
-
-      return {
-        reports: paginatedReports,
-        total,
-        totalPages,
-        aiResponse,
-      };
-    } else {
-      // Info: (20260701 - Julian) 只有非 AI 查詢時，才套用 PostgreSQL 常規過濾與分頁邏輯
-      const whereClause: {
-        companyName?: { contains: string };
-        industry?: { contains: string };
-        reportYear?: string;
-      } = {};
-      if (company) {
-        whereClause.companyName = { contains: company };
-      }
-      if (industry) {
-        // Info: (20261015 - Luphia) 篩選送的是 SEMICONDUCTOR 這類鍵，報告存的是「半導體業」這類名稱
-        whereClause.industry = { contains: industryNameOfFilter(industry) };
-      }
-      if (year) {
-        whereClause.reportYear = year;
-      }
-
-      const total = await reportRepo.count({ where: whereClause });
-      const totalPages = Math.ceil(total / pageSize);
-      const skip = (page - 1) * pageSize;
-
-      const paginatedReports = await reportRepo.findMany({
-        where: whereClause,
-        skip: skip,
-        take: pageSize,
-        orderBy: { reportYear: "desc" },
-      });
-
-      return {
-        reports: paginatedReports,
-        total,
-        totalPages,
-      };
-    }
+    return {
+      reports: paginatedReports,
+      total,
+      totalPages,
+    };
   }
 
   // =========================================================================
@@ -613,53 +591,57 @@ ${query}
   }
 
   // =========================================================================
-  // Info: (20260701 - Julian) 🔧模擬報告下載 (SSE Stream)
+  // Info: (20261022 - Luphia) 原始檔下載（取代原本模擬進度的 SSE）
   // =========================================================================
 
   /**
-   * Info: (20260701 - Julian) 模擬報告下載
-   * @param reportId 報告書 ID
-   * @returns ReadableStream
+   * Info: (20261022 - Luphia) 取得報告的原始檔。
+   *
+   * 觀測站報告（pdfPath = observatory/{代號}/{年度}/{來源}）讀 `ObservatoryDocument.filePath`；
+   * 手動匯入的報告讀 `pdfs/` 下的同名檔。檔案不存在或路徑越界一律回「檔案尚未備妥」，
+   * 不把檔案系統錯誤原樣丟出去。
    */
-  downloadReport(reportId: string): ReadableStream {
-    const totalBytes = Math.floor(Math.random() * 20 + 10) * 1024 * 1024; // Info: (20260701 - Julian) 10MB ~ 30MB
-    let downloadedBytes = 0;
-    let status: "downloading" | "completed" = "downloading";
+  async getReportFile(reportId: number): Promise<IReportFile> {
+    const report = await reportRepo.findUnique({ where: { id: reportId } });
+    if (!report) throw toApiError(API_ERRORS.NF_BUSINESS_MONITOR_REPORT);
 
-    return new ReadableStream({
-      async start(controller) {
-        const interval = setInterval(() => {
-          const chunk = Math.floor(Math.random() * 2 + 1) * 1024 * 1024; // Info: (20260701 - Julian) 1MB ~ 3MB
-          downloadedBytes += chunk;
+    const observatoryPath = parseObservatoryReportPath(report.pdfPath);
+    let storage = this.legacyPdfStorage;
+    let relativePath = report.pdfPath;
+    let contentType: IReportFile["contentType"] =
+      BUSINESS_MONITOR_FILE_CONTENT_TYPE.PDF;
 
-          if (downloadedBytes >= totalBytes) {
-            downloadedBytes = totalBytes;
-            status = "completed";
-          }
+    if (observatoryPath) {
+      const doc = await observatoryDocumentRepo.findByKey(observatoryPath);
+      if (!doc?.filePath) {
+        throw toApiError(API_ERRORS.NF_BUSINESS_MONITOR_REPORT_FILE);
+      }
+      storage = this.observatoryStorage;
+      relativePath = doc.filePath;
+      contentType =
+        doc.contentType === OBSERVATORY_CONTENT_TYPE.PDF
+          ? BUSINESS_MONITOR_FILE_CONTENT_TYPE.PDF
+          : BUSINESS_MONITOR_FILE_CONTENT_TYPE.TEXT;
+    }
 
-          const progress = Math.floor((downloadedBytes / totalBytes) * 100);
+    let body: Buffer;
+    try {
+      body = await storage.read(relativePath);
+    } catch (error) {
+      logger.warn("business monitor report file unreadable", {
+        reportId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw toApiError(API_ERRORS.NF_BUSINESS_MONITOR_REPORT_FILE);
+    }
 
-          const data: IReportDownloadTask = {
-            reportId,
-            companyName: "Mock Company Ltd.",
-            reportTitle: "2024 年永續報告書",
-            fileSizeBytes: totalBytes,
-            downloadedBytes,
-            progress,
-            status: status === "completed" ? "completed" : "downloading",
-          };
-
-          controller.enqueue(
-            new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`),
-          );
-
-          if (status === "completed") {
-            clearInterval(interval);
-            controller.close();
-          }
-        }, 500);
-      },
-    });
+    const extension =
+      contentType === BUSINESS_MONITOR_FILE_CONTENT_TYPE.PDF ? "pdf" : "txt";
+    return {
+      body,
+      contentType,
+      fileName: `${safeFileName(`${report.companyName}_${report.title}`)}.${extension}`,
+    };
   }
 
   // =========================================================================
@@ -809,17 +791,14 @@ ${query}
 輸出範例：{"companies": ["亞泥", "台泥"]}`;
 
     try {
-      const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: LLM_MODEL,
-          prompt: prompt,
-          stream: false,
-        }),
+      // Info: (20261022 - Luphia) 在計費範圍之外（檢索階段）呼叫，用量回報為 no-op；以 JSON 模式約束輸出
+      const rawResponse = await ollamaGenerate({
+        host: OLLAMA_HOST,
+        model: LLM_MODEL,
+        prompt,
+        temperature: 0,
+        format: "json",
       });
-      const data = await this.responseToJSON<{ response: string }>(response);
-      const rawResponse = data.response;
       const match = rawResponse.match(/\{.*?\}/s);
       const jsonStr = match ? match[0] : rawResponse;
       const result = JSON.parse(jsonStr);
@@ -848,14 +827,11 @@ ${query}
     return detected;
   }
 
-  /**
-   * Info: (20260702 - Julian) 偵測年份：抓取 19xx、20xx 四位數
-   * @param question 問題
-   * @returns 年份
-   */
-  private detectYears(question: string): string[] {
-    // Info: (20261015 - Luphia) 規則移到 business_monitor_bridge，檢索評估腳本才能用同一套
-    return detectQuestionYears(question);
+  // Info: (20261022 - Luphia) 公司頁的範疇：代號 → 登記全名（觀測站報告以全名發布）
+  private async companyNameOf(stockId: string): Promise<string> {
+    const company = await companyRepo.findUnique({ where: { stockId } });
+    if (!company) throw toApiError(API_ERRORS.NF_BUSINESS_MONITOR_COMPANY);
+    return company.name;
   }
 
   /**
@@ -865,18 +841,6 @@ ${query}
    */
   private async getQueryEmbedding(text: string): Promise<number[]> {
     return queryEmbedder.embed(text);
-  }
-
-  /**
-   * Info: (20260701 - Julian) 將 response 轉換為 JSON
-   * @param response Response 物件
-   * @returns JSON
-   */
-  private async responseToJSON<T = Record<string, unknown>>(
-    response: Response,
-  ): Promise<T> {
-    const text = await response.text();
-    return JSON.parse(text) as T;
   }
 }
 

@@ -191,6 +191,7 @@ export const teamManagement = {
       AI_ANALYSIS: "AI 分析レポート",
       CARBON_CHAT: "カーボンチャット",
       LOGISTICS_CARBON: "物流カーボンフットプリント照会",
+      BUSINESS_MONITOR_CHAT: "企業観測所 AI 相談",
       TEAM_DISSOLVED: "チーム解散",
     },
     system_adjustment: "システム調整",

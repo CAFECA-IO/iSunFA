@@ -23,6 +23,10 @@ import { useEffect, useState } from "react";
 import { IReport, IReportDetailPayload } from "@/interfaces/business_monitor";
 import { request } from "@/lib/utils/request";
 import { useTranslation } from "@/i18n/i18n_context";
+import {
+  DOWNLOAD_FAILURE,
+  useReportDownload,
+} from "@/hooks/use_report_download";
 
 const ReportDetailPageBody = () => {
   const params = useParams<{ report_id: string }>();
@@ -58,20 +62,26 @@ const ReportDetailPageBody = () => {
   const companyReports = payload?.companyReports || [];
   const industryReports = payload?.industryReports || [];
 
+  /**
+   * Info: (20261022 - Luphia) 改為下載真實原始檔（原本產生一份假的 .txt）。
+   * 這一頁沒有 toast，只在失敗時顯示一則提示：檔案尚未備妥與一般失敗分開說明。
+   */
+  const { startDownload } = useReportDownload();
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
   const handleDownload = (targetReport: IReport) => {
-    // Info: (20260610 - Julian) 模擬產生檔案 Blob 並觸發瀏覽器下載
-    const dummyContent = `Mock Report Content for ${targetReport.companyName}\nReport Year: ${targetReport.reportYear}\nPeriod: ${targetReport.period}\nIndustry: ${targetReport.industry}`;
-    const blob = new Blob([dummyContent], {
-      type: "text/plain;charset=utf-8",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${targetReport.companyName}_${targetReport.reportYear}${t("business_monitor.detail.report_file_suffix")}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setDownloadError(null);
+    startDownload(targetReport.id, undefined, (reason) =>
+      setDownloadError(
+        reason === DOWNLOAD_FAILURE.FILE_NOT_READY
+          ? t("business_monitor.reports.item.toast_file_not_ready", {
+              company: targetReport.companyName,
+            })
+          : t("business_monitor.reports.item.toast_download_error", {
+              company: targetReport.companyName,
+            }),
+      ),
+    );
   };
 
   return (
@@ -84,6 +94,16 @@ const ReportDetailPageBody = () => {
           <ChevronLeft size={16} />
           {t("business_monitor.detail.back_to_list")}
         </Link>
+
+        {downloadError && (
+          <p
+            role="alert"
+            className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+          >
+            <AlertCircle size={16} className="shrink-0" />
+            {downloadError}
+          </p>
+        )}
 
         {isLoading ? (
           <div className="flex h-64 w-full items-center justify-center">

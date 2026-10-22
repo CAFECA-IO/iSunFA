@@ -203,6 +203,21 @@ export const OBSERVATORY_STORAGE_DIR = path.join(
   "company_observatory",
 );
 
+/**
+ * Info: (20261022 - Luphia) 下載回來是 PDF 的來源。只有它們的切塊頁碼對應到原始檔的真實頁面；
+ * 公司登記與溫室氣體是渲染出來的純文字，切塊上的「第 1 頁」不是任何文件的頁碼，引用時不顯示。
+ */
+export const OBSERVATORY_PDF_SOURCES: readonly ObservatorySource[] = [
+  OBSERVATORY_SOURCE.MOPS_FINANCIAL_REPORT,
+  OBSERVATORY_SOURCE.ESG_REPORT,
+];
+
+/**
+ * Info: (20261022 - Luphia) 手動匯入報告的 PDF 存放處（`scripts/import_pdfs.ts` 讀的就是這裡），
+ * `Report.pdfPath` 存的是此目錄下的檔名。企業觀測站頁面的原始檔下載由此讀取。
+ */
+export const BUSINESS_MONITOR_LEGACY_PDF_DIR = path.join(process.cwd(), "pdfs");
+
 // Info: (20261015 - Luphia) 獨立於 `company_reports` 的資料表：欄位不同，混用會讓舊的匯入腳本寫入失敗
 export const OBSERVATORY_LANCE_TABLE = "company_observatory_chunks";
 /**
@@ -263,6 +278,9 @@ export const OBSERVATORY_REQUEUE_MAX_IDS = 500;
 export const OBSERVATORY_REPORT_PATH_PREFIX = "observatory";
 
 // Info: (20261015 - Luphia) 報告標題的類型字樣；「永續報告書」「財務報告」同時是企業觀測站問題分類的關鍵字
+// Info: (20261022 - Luphia) 公司登記的報告標題：現況快照，不帶年份；更新時間另由 downloadedAt 標示
+export const OBSERVATORY_REGISTRATION_TITLE = "最新公司登記資料";
+
 export const OBSERVATORY_REPORT_TITLE_SUFFIX: Record<
   ObservatorySource,
   string

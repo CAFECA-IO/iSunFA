@@ -188,6 +188,7 @@ export const teamManagement = {
       AI_ANALYSIS: "AI analysis report",
       CARBON_CHAT: "Carbon chat",
       LOGISTICS_CARBON: "Logistics carbon lookup",
+      BUSINESS_MONITOR_CHAT: "Business monitor AI consultation",
       TEAM_DISSOLVED: "Team dissolved",
     },
     system_adjustment: "System adjustment",

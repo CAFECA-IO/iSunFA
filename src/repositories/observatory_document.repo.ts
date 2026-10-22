@@ -77,6 +77,37 @@ export const observatoryDocumentRepo = {
     });
   },
 
+  // Info: (20261022 - Luphia) 公司頁報告庫：一家公司的所有文件（各來源 × 年度）
+  listByStockId(stockId: string): Promise<ObservatoryDocument[]> {
+    return prisma.observatoryDocument.findMany({
+      where: { stockId },
+      orderBy: [{ year: "desc" }, { source: "asc" }],
+    });
+  },
+
+  // Info: (20261022 - Luphia) 公司清單上的「已有幾份報告」：只算已索引完成（可下載、可被 AI 引用）的
+  async countIndexedByStockIds(
+    stockIds: string[],
+  ): Promise<Map<string, number>> {
+    if (stockIds.length === 0) return new Map();
+    const groups = await prisma.observatoryDocument.groupBy({
+      by: ["stockId"],
+      where: {
+        stockId: { in: stockIds },
+        status: OBSERVATORY_DOCUMENT_STATUS.INDEXED,
+      },
+      _count: { _all: true },
+    });
+    return new Map(groups.map((group) => [group.stockId, group._count._all]));
+  },
+
+  // Info: (20261022 - Luphia) 以唯一鍵（公司代號 × 來源 × 年度）取一份文件；企業觀測站頁面下載原始檔用
+  findByKey(key: IObservatoryPlanRow): Promise<ObservatoryDocument | null> {
+    return prisma.observatoryDocument.findUnique({
+      where: { stockId_source_year: key },
+    });
+  },
+
   async transition(
     id: string,
     fromStatus: string,

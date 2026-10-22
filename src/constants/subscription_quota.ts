@@ -241,6 +241,8 @@ export const BILLABLE_FEATURE_CODE = {
   CARBON_CHAT: "CARBON_CHAT",
   // Info: (20260813 - Luphia) 物流碳足跡查詢：以專屬代碼記帳，才分得出與對話類的用量
   LOGISTICS_CARBON: "LOGISTICS_CARBON",
+  // Info: (20261022 - Luphia) 企業觀測站 AI 諮詢（本機 gemma4）：與碳盤查對話分開記帳，才對得出各自的用量
+  BUSINESS_MONITOR_CHAT: "BUSINESS_MONITOR_CHAT",
   // Info: (20260807 - Luphia) 團隊解散歸零分錄專用（設計書 §6.3），非可消費功能
   TEAM_DISSOLVED: "TEAM_DISSOLVED",
 } as const;

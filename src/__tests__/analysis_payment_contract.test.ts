@@ -23,6 +23,8 @@ const ALLOWED = new Set([
   // Info: (20260813 - Luphia) 碳盤查用的是 payExistingOrder（付一張伺服器已建好的單），
   // Info: (20260813 - Luphia) 不是分析類的「建單並付款」流程，不適用來源選擇
   join("src", "hooks", "use_carbon_chat.ts"),
+  // Info: (20261022 - Luphia) 企業觀測站 AI 諮詢同上：402 帶回伺服器建好的單，以 payExistingOrder 付款後重送
+  join("src", "hooks", "use_business_monitor_chat.ts"),
 ]);
 
 function collectSourceFiles(dir: string): string[] {

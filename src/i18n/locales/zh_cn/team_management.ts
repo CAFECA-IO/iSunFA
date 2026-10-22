@@ -181,6 +181,7 @@ export const teamManagement = {
       AI_ANALYSIS: "AI 分析报告",
       CARBON_CHAT: "碳盘查对话",
       LOGISTICS_CARBON: "物流碳足迹查询",
+      BUSINESS_MONITOR_CHAT: "企业观测站 AI 咨询",
       TEAM_DISSOLVED: "团队解散",
     },
     system_adjustment: "系统调整",

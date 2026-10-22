@@ -6,12 +6,11 @@ import { businessMonitorService } from "@/services/business_monitor.service";
 
 /**
  * Info:(20260630 - Julian) 讀取資料庫報告書清單
- * GET /api/v1/business_monitor/reports?query={query}&company={company}&industry={industry}&year={year}&page={page}&pageSize={pageSize}
+ * GET /api/v1/business_monitor/reports?company={company}&industry={industry}&year={year}&page={page}&pageSize={pageSize}
  */
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
-    const query = searchParams.get("query") || undefined;
     const company = searchParams.get("company") || undefined;
     const industry = searchParams.get("industry") || undefined;
     const year = searchParams.get("year") || undefined;
@@ -24,7 +23,6 @@ export async function GET(req: NextRequest) {
     });
 
     const result = await businessMonitorService.getReports({
-      query,
       company,
       industry,
       year,
