@@ -40,7 +40,7 @@ import { join } from "path";
  * `gap24 → 338` 與真實頁面（dev server 實測）及三輪 reviewer 的獨立容器重現
  * **三方一致**；合併後同一個 rig 只換了結構與常數。
  *
- * CI 的 `node:22-slim` 沒有 Chromium：workflow 已加裝 `chromium` 與
+ * CI 的 `node:24.22.1-bookworm-slim` 沒有 Chromium：workflow 已加裝 `chromium` 與
  * `fonts-noto-cjk`（CJK 字寬是原始缺陷的成因，沒有 CJK 字型量出來的字寬是錯的）。
  * **腳本跑不起來就讓測試失敗**，不 skip——skip 是行程層級的 fail-open。
  */
