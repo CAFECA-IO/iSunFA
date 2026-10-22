@@ -1,0 +1,14 @@
+# Info: (20260821 - Luphia) 只給合約測試用（forge test）。
+# app 的建置與 jest 完全不經過這裡；vendored 的 OZ / AA 函式庫以相對路徑
+# import，因此不需要 remappings。
+#
+# via_ir：V1 factory 的 AccountCreated emit 有 7 個引數，legacy codegen 會
+# stack too deep——這是既有合約的形狀，不是新合約引入的。
+[profile.default]
+src = "contracts"
+test = "contracts/forge_test"
+out = "forge_out"
+cache_path = "forge_cache"
+via_ir = true
+optimizer = true
+optimizer_runs = 200
