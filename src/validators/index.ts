@@ -41,3 +41,6 @@ export * from "@/validators/salary_record";
 export * from "@/validators/admin_user_points";
 // Info: (20261015 - Luphia) 企業觀測站（外部報告下載與索引）
 export * from "@/validators/company_observatory";
+// Info: (20261022 - Luphia) 企業觀測站頁面（AI 諮詢、原始檔下載）與本機 Ollama 回應
+export * from "@/validators/business_monitor";
+export * from "@/validators/ollama";

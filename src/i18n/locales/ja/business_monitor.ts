@@ -1,7 +1,7 @@
 export const businessMonitor = {
   title: "企業観測所",
   subtitle:
-    "台湾の公開企業の財務データを検索し、公式の株主総会年次報告書をダウンロードして、AIアシスタントから詳細な分析を取得します",
+    "上場・店頭企業を検索し、登記情報・財務報告書・サステナビリティ報告書を読み解き、AI に質問できます（回答には出典付き）",
   filter: {
     ai_consult: "AI相談",
     ai_placeholder: "例：鴻海の離職率はどれくらいですか？",
@@ -19,6 +19,8 @@ export const businessMonitor = {
     all_years: "すべての年",
     clear_filters: "検索条件をクリア",
     search_reports: "レポートを検索",
+    ai_billing_hint:
+      "AI 相談はログインが必要で、実際の使用量に応じてポイントを消費します",
   },
   ai_section: {
     title: "AIの回答",
@@ -26,6 +28,19 @@ export const businessMonitor = {
     searching: "AIが文脈を分析し、関連するレポートを検索しています...",
     no_answer:
       "既存のレポートに、ご質問に一致する回答や情報源が見つかりませんでした。",
+    page_number: "{{page}} ページ",
+    official_source: "公式ソース",
+    other_references: "その他の参照箇所：",
+    login_required:
+      "AI 相談にはログインが必要です。回答は使用量に応じてポイントを消費します。",
+    login_to_ask: "ログインして質問する",
+    payment_required:
+      "支払いが完了していないため、質問は送信されませんでした。",
+    llm_unavailable:
+      "AI モデルは現在利用できません。ポイントは消費されていません。後でもう一度お試しください。",
+    quota_exceeded:
+      "ポイントが不足しています。ポイントを追加してから再度お試しください。",
+    chat_failed: "AI 相談に失敗しました。後でもう一度お試しください。",
   },
   reports: {
     total_count: "合計 {{count}} 件のレポートが見つかりました",
@@ -51,6 +66,8 @@ export const businessMonitor = {
         "{{company}} - オリジナルレポートのダウンロードが完了しました",
       toast_download_error:
         "{{company}} - ダウンロードに失敗しました。時間をおいて再度お試しください",
+      toast_file_not_ready:
+        "{{company}} - 原本ファイルはまだダウンロードされていません。後でもう一度お試しください",
     },
   },
   detail: {
@@ -64,5 +81,70 @@ export const businessMonitor = {
     download_report: "レポートをダウンロード",
     report_file_suffix: "サステナビリティレポート",
     year_report: "{{year}} 年サステナビリティレポート",
+  },
+  home: {
+    search_placeholder:
+      "会社名・略称・銘柄コード・統一番号を入力、または質問を入力",
+    ask_ai: "AI に質問",
+    ask_ai_with: "AI に質問：「{{question}}」",
+    search_hint:
+      "会社を選ぶと登記情報とレポートを表示します。質問を入力して Enter で AI に質問",
+    browse_by_industry: "業種から探す",
+    industry_companies: "{{industry}}・{{count}} 社",
+    documents_count: "{{count}} 件のレポート",
+    no_documents: "レポートなし",
+  },
+  scope: {
+    label: "検索範囲",
+    auto_company: "会社を自動判別",
+    no_company: "会社指定なし",
+    all_years: "年度指定なし",
+    year: "{{year}} 年度",
+    remove_year: "{{year}} 年度を外す",
+    used: "今回の参照範囲：{{scope}}",
+  },
+  market: {
+    sii: "上場",
+    otc: "店頭",
+  },
+  company: {
+    back: "企業観測所に戻る",
+    not_found: "この会社は見つかりません",
+    listing_date: "上場日 {{date}}",
+    tax_id: "統一番号 {{taxId}}",
+    registration_title: "会社登記",
+    registration_updated: "最新の登記情報・{{date}} 更新",
+    registration_source: "出典：経済部商業司",
+    registration_empty: "商業司の登記情報はまだ取得していません",
+    directors: "取締役・監査役",
+    directors_expand: "全 {{count}} 名を表示",
+    directors_collapse: "閉じる",
+    director_position: "役職",
+    director_name: "氏名",
+    director_representing: "代表する法人",
+    director_shares: "持株数(株)",
+    library_title: "レポート一覧",
+    library_hint:
+      "データの対象年度ごとに表示：財務報告書は会計年度、サステナビリティと温室効果ガスは開示年度",
+    library_year: "{{year}} 年度",
+    library_empty: "レポートはまだありません",
+    period: "対象期間 {{period}}",
+    retrieved_at: "{{date}} 取得",
+    download: "ダウンロード",
+    ask_title: "この会社について質問",
+    ask_placeholder: "例：{{company}} の主な事業は？",
+    status: {
+      AVAILABLE: "ダウンロード可",
+      PENDING: "取得予定",
+      NOT_PUBLISHED: "未公表",
+      FAILED: "取得失敗",
+    },
+  },
+  sources: {
+    MOPS_FINANCIAL_REPORT: "財務報告書",
+    ESG_REPORT: "サステナビリティ報告書",
+    GHG_INVENTORY: "温室効果ガス開示",
+    GCIS_REGISTRATION: "会社登記情報",
+    MANUAL_IMPORT: "取り込んだレポート",
   },
 };

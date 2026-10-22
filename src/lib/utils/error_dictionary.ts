@@ -958,6 +958,15 @@ export const API_ERRORS = {
     message: "Company observatory vector index is unavailable",
     status: ApiCode.INTERNAL_SERVER_ERROR,
   } as IErrorDef,
+  /**
+   * Info: (20261022 - Luphia) 企業觀測站 AI 諮詢的本機模型（Ollama gemma4）沒有回應或回應格式不符。
+   * 與雲端 LLM 的額度、逾時分開：處置是維運啟動 Ollama 並確認模型已 pull，不是請使用者稍候。
+   */
+  IS_BUSINESS_MONITOR_LLM_UNAVAILABLE: {
+    code: "IS000024",
+    message: "Local AI model for the business monitor is unavailable",
+    status: ApiCode.INTERNAL_SERVER_ERROR,
+  } as IErrorDef,
   IS_UNKNOWN: {
     code: "IS000099",
     message: "Internal Server Error",
@@ -2280,6 +2289,30 @@ export const API_ERRORS = {
   NF_SALARY_RECORD: {
     code: "NF000030",
     message: "Salary record not found in this account book",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  // Info: (20261022 - Luphia) 企業觀測站：報告不存在
+  NF_BUSINESS_MONITOR_REPORT: {
+    code: "NF000031",
+    message: "Report not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  // Info: (20261022 - Luphia) 企業觀測站：公司代號不在公開資料字典（Company）裡
+  NF_BUSINESS_MONITOR_COMPANY: {
+    code: "NF000033",
+    message: "Company not found",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
+  /**
+   * Info: (20261022 - Luphia) 報告存在但原始檔拿不到：觀測站還沒下載完成，或舊報告的 PDF 不在 `pdfs/`。
+   * 與「報告不存在」分開，前端才能說「檔案尚未備妥」而不是「找不到報告」。
+   */
+  NF_BUSINESS_MONITOR_REPORT_FILE: {
+    code: "NF000032",
+    message: "Report file is not available yet",
     status: ApiCode.NOT_FOUND,
   } as IErrorDef,
 

@@ -21,6 +21,10 @@ import { AsyncLocalStorage } from "async_hooks";
  * （背景監控，不在計費情境）——因此這裡說的是「ChatService 的共同入口」，
  * 而不是「全系統唯一入口」。
  *
+ * Info: (20261022 - Luphia) 企業觀測站的 AI 諮詢改為登入後扣額度，本機模型呼叫改經
+ * `ollamaGenerate`（`src/lib/llm/ollama_generate.ts`），它以 Ollama 回報的 token 數呼叫
+ * `recordLlmUsage`——這是 ChatService 之外唯一合法的回報點。
+ *
  * 範圍外呼叫（executor、背景 worker）不受影響：沒有範圍時 record 是 no-op。
  */
 
@@ -36,7 +40,7 @@ const storage = new AsyncLocalStorage<ICapturedLlmUsage>();
 
 /**
  * Info: (20260813 - Luphia) 累加一次 LLM 呼叫的用量；不在捕捉範圍內時為 no-op。
- * 由 ChatService.invokeGuarded 呼叫，其他地方不應直接使用。
+ * 由 ChatService.invokeGuarded 與 ollamaGenerate 呼叫，其他地方不應直接使用。
  */
 export function recordLlmUsage(usage: {
   inputTokens?: number;

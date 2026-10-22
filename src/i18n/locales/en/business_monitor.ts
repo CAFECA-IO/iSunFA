@@ -1,7 +1,7 @@
 export const businessMonitor = {
   title: "Business Monitor",
   subtitle:
-    "Search financial data of Taiwan public companies, download official shareholder reports, and get deep analysis from our AI assistant",
+    "Search listed companies, understand their registration, financial and sustainability reports, and ask AI (answers cite their sources)",
   filter: {
     ai_consult: "AI Consultation",
     ai_placeholder: "e.g., What is Foxconn's turnover rate?",
@@ -19,6 +19,7 @@ export const businessMonitor = {
     all_years: "All Years",
     clear_filters: "Clear Filters",
     search_reports: "Search Reports",
+    ai_billing_hint: "Sign-in required; credits are charged by actual usage",
   },
   ai_section: {
     title: "AI Answer",
@@ -26,6 +27,18 @@ export const businessMonitor = {
     searching: "AI is analyzing semantics and searching for related reports...",
     no_answer:
       "No answers or sources matching your question were found in the existing reports.",
+    page_number: "p. {{page}}",
+    official_source: "Official source",
+    other_references: "Other passages consulted:",
+    login_required:
+      "AI consultation requires sign-in; answers are charged by usage.",
+    login_to_ask: "Sign in to ask",
+    payment_required:
+      "Payment was not completed, so the question was not sent.",
+    llm_unavailable:
+      "The AI model is unavailable right now. No credits were charged; please try again later.",
+    quota_exceeded: "Not enough credits. Please top up and try again.",
+    chat_failed: "AI consultation failed. Please try again later.",
   },
   reports: {
     total_count: "Found {{count}} reports in total",
@@ -51,6 +64,8 @@ export const businessMonitor = {
         "{{company}} - Original report downloaded successfully",
       toast_download_error:
         "{{company}} - Download failed, please try again later",
+      toast_file_not_ready:
+        "{{company}} - The original file is not downloaded yet. Please try again later",
     },
   },
   detail: {
@@ -64,5 +79,70 @@ export const businessMonitor = {
     download_report: "Download Report",
     report_file_suffix: "Sustainability Report",
     year_report: "{{year}} Sustainability Report",
+  },
+  home: {
+    search_placeholder:
+      "Company name, short name, stock code or tax ID, or just ask a question",
+    ask_ai: "Ask AI",
+    ask_ai_with: "Ask AI: “{{question}}”",
+    search_hint:
+      "Pick a company to see its registration and reports; type a question and press Enter to ask AI",
+    browse_by_industry: "Browse by industry",
+    industry_companies: "{{industry}} · {{count}} companies",
+    documents_count: "{{count}} reports",
+    no_documents: "No reports yet",
+  },
+  scope: {
+    label: "Scope",
+    auto_company: "Companies detected automatically",
+    no_company: "No company specified",
+    all_years: "All years",
+    year: "FY{{year}}",
+    remove_year: "Remove FY{{year}}",
+    used: "Searched: {{scope}}",
+  },
+  market: {
+    sii: "TWSE listed",
+    otc: "TPEx listed",
+  },
+  company: {
+    back: "Back to Business Monitor",
+    not_found: "Company not found",
+    listing_date: "Listed {{date}}",
+    tax_id: "Tax ID {{taxId}}",
+    registration_title: "Company registration",
+    registration_updated: "Latest registration · updated {{date}}",
+    registration_source: "Source: MOEA Department of Commerce",
+    registration_empty: "Registration data has not been retrieved yet",
+    directors: "Directors and supervisors",
+    directors_expand: "Show all {{count}}",
+    directors_collapse: "Collapse",
+    director_position: "Position",
+    director_name: "Name",
+    director_representing: "Representing",
+    director_shares: "Shares held",
+    library_title: "Report library",
+    library_hint:
+      "Grouped by the year the data covers: fiscal year for financial reports, disclosure year for sustainability and GHG data",
+    library_year: "FY{{year}}",
+    library_empty: "No reports yet",
+    period: "Period {{period}}",
+    retrieved_at: "Retrieved {{date}}",
+    download: "Download",
+    ask_title: "Ask about this company",
+    ask_placeholder: "e.g. What is {{company}}'s main business?",
+    status: {
+      AVAILABLE: "Available",
+      PENDING: "Scheduled",
+      NOT_PUBLISHED: "Not yet published",
+      FAILED: "Retrieval failed",
+    },
+  },
+  sources: {
+    MOPS_FINANCIAL_REPORT: "Financial report",
+    ESG_REPORT: "Sustainability report",
+    GHG_INVENTORY: "GHG inventory disclosure",
+    GCIS_REGISTRATION: "Company registration",
+    MANUAL_IMPORT: "Imported report",
   },
 };

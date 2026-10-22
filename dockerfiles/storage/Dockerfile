@@ -1,5 +1,5 @@
 FROM ipfs/kubo:v0.40.1 AS ipfs_source
-FROM node:22-bookworm-slim
+FROM node:24.22.1-bookworm-slim
 
 # Info: (20260412 - Luphia) Install git
 RUN apt-get update && apt-get install -y git

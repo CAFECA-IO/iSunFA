@@ -191,6 +191,7 @@ export const teamManagement = {
       AI_ANALYSIS: "AI 분석 보고서",
       CARBON_CHAT: "탄소 대화",
       LOGISTICS_CARBON: "물류 탄소발자국 조회",
+      BUSINESS_MONITOR_CHAT: "기업 관측소 AI 상담",
       TEAM_DISSOLVED: "팀 해산",
     },
     system_adjustment: "시스템 조정",

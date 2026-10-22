@@ -23,7 +23,9 @@ jobs:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
     # Docker Hub image that `container-job` executes in
-    container: node:22-slim
+    # Info: (20261022 - Luphia) Node 24.22.1；鎖 bookworm 讓這次只換 Node，不連帶換掉 Debian 版本
+    # （Chromium 與 CJK 字型的版本會影響 header_layout_320 量到的字寬）
+    container: node:24.22.1-bookworm-slim
     env:
       # Info: (20260901 - Luphia) 只在本 job 生效（review 四輪低-3）：設在 workflow
       # 層級會讓日後新增的 job 一律繼承，而那些 job 不會裝 chromium——症狀是
@@ -52,7 +54,7 @@ jobs:
 
       # Info: (20260901 - Luphia) header 版面測試（header_layout_320.test.ts）要在
       # 真的 Chromium 裡量 320px 的 scrollWidth（review #6731 三輪中-1）。
-      # 本 job 的容器是 node:22-slim 且 PUPPETEER_SKIP_DOWNLOAD=true，原本沒有任何
+      # 本 job 的容器是 node:24.22.1-bookworm-slim 且 PUPPETEER_SKIP_DOWNLOAD=true，原本沒有任何
       # 瀏覽器——沒有這一步，那條測試在 CI 是行程層級的 fail-open。
       # fonts-noto-cjk 不是裝飾：CJK 字寬正是那個缺陷的成因（中文逐字可斷），
       # 沒有 CJK 字型量出來的「登入」寬度是錯的。

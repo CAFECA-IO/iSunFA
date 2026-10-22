@@ -51,6 +51,10 @@ const EXEMPT: Record<string, string> = {
   ignition: "hardhat 部署模組,tsconfig.json 的 exclude 明文排除",
   test: "hardhat 合約測試,tsconfig.json 的 exclude 明文排除",
   artifacts: "hardhat 編譯產物(非手寫程式碼)",
+  // Info: (20261022 - Luphia) 兩者都在 .gitignore 裡：CI 與其他人的 checkout 根本沒有這兩個資料夾
+  ".claude":
+    "本機代理設定與 worktree(整份 repo 的副本,各自有自己的 tsconfig),不進版控",
+  data: "代理的暫存輸出與觀測站下載檔(CLAUDE.md §7),不進版控、不是交付物",
 };
 
 const SKIP_DIRS = new Set([

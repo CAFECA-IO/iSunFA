@@ -10,12 +10,12 @@
 
 ## 1. 資料來源
 
-| 來源 (`OBSERVATORY_SOURCE`) | 實際端點 | 內容 | 年度 | 重新抓取 |
-| --- | --- | --- | --- | --- |
-| `GCIS_REGISTRATION` | `https://data.gcis.nat.gov.tw/od/data/api/5F64D864-61CB-4D0D-8AD9-492047CC1EA6`（基本資料）<br>`https://data.gcis.nat.gov.tw/od/data/api/4E5F7653-1B91-4DDC-99D5-468530FAE396`（董監事），皆以統一編號查詢 | 經濟部商業司公司登記：資本額、代表人、所在地、董監事與持股 | 今年快照 | 每 30 天比對一次 |
-| `MOPS_FINANCIAL_REPORT` | `https://doc.twse.com.tw/server-java/t57sb01`（`mtype=A`，Big5） | 公開資訊觀測站電子書：第四季 IFRSs 合併財報 PDF（`YYYY04_代號_AI1.pdf`，無則個體 `AI3`） | 去年、前年 | 不重抓 |
-| `ESG_REPORT` | `https://esggenplus.twse.com.tw/api/api/MopsSustainReport/data`（清單）<br>`…/MopsSustainReport/data/FileStream?id=`（檔案） | 證交所 ESG 數位平台：永續報告書 PDF（修正版優先） | 去年、前年 | 不重抓 |
-| `GHG_INVENTORY` | `https://esggenplus.twse.com.tw/api/api/mopsEsg/singleCompanyData` | 公開資訊觀測站 ESG 資訊揭露中名稱含「溫室氣體」的項目：範疇一～三、資料邊界、確信機構／標準／意見、減量目標 | 去年、前年 | 不重抓 |
+| 來源 (`OBSERVATORY_SOURCE`) | 實際端點                                                                                                                                                                                                   | 內容                                                                                                        | 年度       | 重新抓取         |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------- | ---------------- |
+| `GCIS_REGISTRATION`         | `https://data.gcis.nat.gov.tw/od/data/api/5F64D864-61CB-4D0D-8AD9-492047CC1EA6`（基本資料）<br>`https://data.gcis.nat.gov.tw/od/data/api/4E5F7653-1B91-4DDC-99D5-468530FAE396`（董監事），皆以統一編號查詢 | 經濟部商業司公司登記：資本額、代表人、所在地、董監事與持股                                                  | 今年快照   | 每 30 天比對一次 |
+| `MOPS_FINANCIAL_REPORT`     | `https://doc.twse.com.tw/server-java/t57sb01`（`mtype=A`，Big5）                                                                                                                                           | 公開資訊觀測站電子書：第四季 IFRSs 合併財報 PDF（`YYYY04_代號_AI1.pdf`，無則個體 `AI3`）                    | 去年、前年 | 不重抓           |
+| `ESG_REPORT`                | `https://esggenplus.twse.com.tw/api/api/MopsSustainReport/data`（清單）<br>`…/MopsSustainReport/data/FileStream?id=`（檔案）                                                                               | 證交所 ESG 數位平台：永續報告書 PDF（修正版優先）                                                           | 去年、前年 | 不重抓           |
+| `GHG_INVENTORY`             | `https://esggenplus.twse.com.tw/api/api/mopsEsg/singleCompanyData`                                                                                                                                         | 公開資訊觀測站 ESG 資訊揭露中名稱含「溫室氣體」的項目：範疇一～三、資料邊界、確信機構／標準／意見、減量目標 | 去年、前年 | 不重抓           |
 
 結構化來源（公司登記、溫室氣體）由下載器以固定格式渲染成「欄位：值」純文字；數值原樣照抄、不換算。
 PDF 以既有的 `extractPdfTextLayer` 抽文字層（不送 OCR、不呼叫 LLM），並移除 CJK 字元間的空白。
@@ -39,10 +39,10 @@ PENDING ──下載──▶ DOWNLOADED ──索引──▶ INDEXED
 
 ## 3. 排程與速率
 
-| 迴圈 | 間隔 | 每輪工作量 |
-| --- | --- | --- |
-| `CompanyObservatoryPlanner` | 每日 | 補建所有追蹤中公司 × 來源 × 年度的 PENDING 列；公司登記逾 30 天排回刷新 |
-| `CompanyObservatory` | 每 10 分鐘 | 每個來源下載 5 份，再索引 5 份 |
+| 迴圈                        | 間隔       | 每輪工作量                                                              |
+| --------------------------- | ---------- | ----------------------------------------------------------------------- |
+| `CompanyObservatoryPlanner` | 每日       | 補建所有追蹤中公司 × 來源 × 年度的 PENDING 列；公司登記逾 30 天排回刷新 |
+| `CompanyObservatory`        | 每 10 分鐘 | 每個來源下載 5 份，再索引 5 份                                          |
 
 逐主機最短請求間隔（`OBSERVATORY_HOST_MIN_INTERVAL_MS`）：GCIS 2 秒、MOPS 電子書 5 秒、ESG 平台 3 秒
 （報告書與溫室氣體共用同一主機與同一個限速器）。worker 租約保證同一個資料庫只有一個 worker 在下載。
@@ -82,17 +82,21 @@ PENDING ──下載──▶ DOWNLOADED ──索引──▶ INDEXED
   題組在 `scripts/fixtures/observatory_retrieval_eval_cases.json`（1101 台泥 12 題：溫室氣體、永續報告書、財報、公司登記）。
   正確切塊以「來源 + 年度 + 必含字串」判定，不經 LLM，結果是決定性的。以本機 1101 的 7 份文件（1,473 個切塊）實測：
 
-  | 設定 | hit@1 | hit@3 | hit@5 | MRR@10 |
-  | --- | --- | --- | --- | --- |
-  | 舊：nomic-embed-text 向量、只限公司 | 1/12 | 1/12 | 1/12 | 0.083 |
-  | nomic-embed-text + `search_query:`／`search_document:` 前綴 | 0/12 | 1/12 | 1/12 | 0.028 |
-  | bge-m3 向量、限公司與年度 | 4/12 | 5/12 | 8/12 | 0.433 |
-  | 二元組 BM25、限公司與年度 | 9/12 | 10/12 | 10/12 | 0.788 |
-  | **新：bge-m3 + BM25（RRF）、限公司與年度** | 6/12 | **10/12** | **11/12** | 0.668 |
+  | 設定                                                        | hit@1 | hit@3     | hit@5     | MRR@10 |
+  | ----------------------------------------------------------- | ----- | --------- | --------- | ------ |
+  | 舊：nomic-embed-text 向量、只限公司                         | 1/12  | 1/12      | 1/12      | 0.083  |
+  | nomic-embed-text + `search_query:`／`search_document:` 前綴 | 0/12  | 1/12      | 1/12      | 0.028  |
+  | bge-m3 向量、限公司與年度                                   | 4/12  | 5/12      | 8/12      | 0.433  |
+  | 二元組 BM25、限公司與年度                                   | 9/12  | 10/12     | 10/12     | 0.788  |
+  | **新：bge-m3 + BM25（RRF）、限公司與年度**                  | 6/12  | **10/12** | **11/12** | 0.668  |
 
   只用 BM25 的 hit@1 較高，但遇到用字不同的問題會整個漏掉（「董事長是誰」排到 10 名外）；混合檢索每題都在前 10 名內，
   AI 諮詢取的前 3 筆命中率與 BM25 相同。nomic 的前綴對中文沒有幫助。舊設定下「台泥 2024 年範疇一排放量」
   真正含數字的切塊排在第 274 名，新設定排第 1 名。
+
+- 原始檔下載（2026-10-22）：`GET /api/v1/business_monitor/reports/{id}/file` 依 `pdfPath` 找回 `ObservatoryDocument.filePath`，
+  直接串流 `data/company_observatory/` 下的檔案；PDF 來源回 `application/pdf`，公司登記與溫室氣體回純文字。
+  AI 諮詢的出處帶切塊的 `page_number`（僅 PDF 來源）與 `source_url`。詳見 [企業觀測站重新規劃](../business_monitor_redesign_plan.md) §10。
 - 產業篩選：選單送的是 `SEMICONDUCTOR` 這類鍵，改為對應成「半導體業」後以包含比對（原本直接比對鍵，永遠查不到）。
 
 ## 6. 管理端 API（ADMIN / SUPER_ADMIN）

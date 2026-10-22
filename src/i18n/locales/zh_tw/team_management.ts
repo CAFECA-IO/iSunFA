@@ -190,6 +190,7 @@ export const teamManagement = {
       AI_ANALYSIS: "AI 分析報告",
       CARBON_CHAT: "碳盤查對話",
       LOGISTICS_CARBON: "物流碳足跡查詢",
+      BUSINESS_MONITOR_CHAT: "企業觀測站 AI 諮詢",
       TEAM_DISSOLVED: "團隊解散",
     },
     system_adjustment: "系統調整",

@@ -1,16 +1,16 @@
-import nextJest from 'next/jest.js'
- 
+import nextJest from "next/jest.js";
+
 const createJestConfig = nextJest({
   // Info: (20260510 - Tzuhan) Provide the path to your Next.js app to load next.config.js and .env files in your test environment
-  dir: './',
-})
- 
+  dir: "./",
+});
+
 // Info: (20260510 - Tzuhan) Add any custom config to be passed to Jest
 /** @type {import('jest').Config} */
 const config = {
   // Info: (20260510 - Tzuhan) Add more setup options before each test is run
   // Info: (20260510 - Tzuhan) setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  testEnvironment: 'node',
+  testEnvironment: "node",
   /**
    * Info: (20260811 - Julian) `*.tz.test.ts` 由 `npm run test:tz`（scripts/jest_tz.mjs）
    * 以固定時區另外跑，因此排除在預設執行之外，避免同一批測試被跑兩次。
@@ -32,13 +32,18 @@ const config = {
    * 覆蓋率不變，但「跑不跑得到別人的資料庫」變成一個要自己打的指令。
    */
   testPathIgnorePatterns: [
-    '/node_modules/',
-    '\\.tz\\.test\\.ts$',
-    '\\.e2e\\.test\\.ts$',
+    "/node_modules/",
+    "\\.tz\\.test\\.ts$",
+    "\\.e2e\\.test\\.ts$",
+    // Info: (20261022 - Luphia) 代理的 worktree 是整份 repo 的副本，裡面的測試以本 repo 的 cwd 執行會互相干擾
+    "<rootDir>/\\.claude/",
+    "<rootDir>/data/",
   ],
+  // Info: (20261022 - Luphia) 同上：worktree 裡的 package.json 會與本 repo 撞名（haste module naming collision）
+  modulePathIgnorePatterns: ["<rootDir>/\\.claude/", "<rootDir>/data/"],
   moduleNameMapper: {
     // Info: (20260510 - Tzuhan) Handle module aliases (this will be automatically configured for you soon)
-    '^@/(.*)$': '<rootDir>/src/$1',
+    "^@/(.*)$": "<rootDir>/src/$1",
     /*
      * Info: (20260810 - Emily) marked 只發佈 ESM（package.json 的 exports 沒有 CJS 入口），
      * 而 jest 預設不轉譯 node_modules —— 直接 import 會炸在
@@ -47,10 +52,10 @@ const config = {
      * 用 moduleNameMapper 而非 transformIgnorePatterns：後者要把整包重新轉譯，
      * 每次跑測試都多花數秒，而我們要的只是換一個入口檔。
      */
-    '^marked$': '<rootDir>/node_modules/marked/lib/marked.umd.js',
+    "^marked$": "<rootDir>/node_modules/marked/lib/marked.umd.js",
   },
-}
- 
+};
+
 /**
  * Info: (20260811 - Luphia) 讓 jest 轉譯 jose。
  *
@@ -70,15 +75,15 @@ const config = {
  * 但症狀是「auth 相關測試又開始 SyntaxError」——會立刻紅，不會變成錯誤的通過。
  */
 export default async () => {
-  const resolved = await createJestConfig(config)()
+  const resolved = await createJestConfig(config)();
 
   resolved.transformIgnorePatterns = (
     resolved.transformIgnorePatterns ?? []
   ).map((pattern) =>
-    pattern.startsWith('/node_modules/(?!')
-      ? pattern.replace('(?!(', '(?!(jose|')
+    pattern.startsWith("/node_modules/(?!")
+      ? pattern.replace("(?!(", "(?!(jose|")
       : pattern,
-  )
+  );
 
-  return resolved
-}
+  return resolved;
+};

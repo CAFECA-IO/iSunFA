@@ -1,6 +1,7 @@
 import {
   OBSERVATORY_CHUNK_OVERLAP,
   OBSERVATORY_CHUNK_SIZE,
+  OBSERVATORY_SOURCE,
   OBSERVATORY_SOURCE_LABEL,
   ObservatorySource,
 } from "@/constants/company_observatory";
@@ -98,5 +99,9 @@ export function chunkHeader(params: {
   pageNumber: number;
 }): string {
   const label = OBSERVATORY_SOURCE_LABEL[params.source];
+  // Info: (20261022 - Luphia) 公司登記是現況快照：不寫抓取年份與頁碼，免得模型把它說成「2026 年度」的資料
+  if (params.source === OBSERVATORY_SOURCE.GCIS_REGISTRATION) {
+    return `### 企業: ${params.companyName} (${params.stockId}) ｜ 最新${label}`;
+  }
   return `### 企業: ${params.companyName} (${params.stockId}) ｜ ${params.year} 年${label} [第 ${params.pageNumber} 頁]`;
 }

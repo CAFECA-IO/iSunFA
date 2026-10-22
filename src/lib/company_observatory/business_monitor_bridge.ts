@@ -5,6 +5,7 @@ import {
 } from "@/constants/company_observatory";
 import { IObservatoryVectorFilter } from "@/interfaces/company_observatory";
 import { IObservatoryReportPath } from "@/lib/company_observatory/report_projection";
+import { detectYears } from "@/lib/business_monitor/scope";
 
 /**
  * Info: (20261015 - Luphia) 企業觀測站頁面（business_monitor.service）讀取觀測站資料時用到的純函數。
@@ -62,6 +63,7 @@ export function buildObservatoryFilter(
 }
 
 // Info: (20260702 - Julian) 偵測年份：抓取 19xx、20xx 四位數（20261015 - Luphia 由 business_monitor.service 移來）
+// Info: (20261022 - Luphia) 改用前後端共用的 detectYears（AI 範疇標籤用同一條規則），檢索評估腳本也跟著一致
 export function detectQuestionYears(question: string): string[] {
-  return question.match(/\b(19\d{2}|20\d{2})\b/g) ?? [];
+  return detectYears(question);
 }

@@ -5,7 +5,9 @@ import {
 import {
   COMPANY_PAID_IN_CAPITAL_KEYS,
   OBSERVATORY_REPORT_PATH_PREFIX,
+  OBSERVATORY_REGISTRATION_TITLE,
   OBSERVATORY_REPORT_TITLE_SUFFIX,
+  OBSERVATORY_SOURCE,
   OBSERVATORY_SOURCES,
   ObservatorySource,
   TWSE_INDUSTRY_NAME,
@@ -124,7 +126,11 @@ export function buildObservatoryReport(
   const assuranceAgency = metadata.assuranceAgency ?? "";
   return {
     companyName: input.companyName,
-    title: `${input.year} ${OBSERVATORY_REPORT_TITLE_SUFFIX[input.source]}`,
+    // Info: (20261022 - Luphia) 公司登記是現況快照，不掛抓取年份（「2026 年公司登記資料」會被讀成 2026 年度的資料）
+    title:
+      input.source === OBSERVATORY_SOURCE.GCIS_REGISTRATION
+        ? OBSERVATORY_REGISTRATION_TITLE
+        : `${input.year} ${OBSERVATORY_REPORT_TITLE_SUFFIX[input.source]}`,
     reportYear: String(input.year),
     period: metadata.period ?? "",
     industry: industryNameOf(input.industryCode),

@@ -5,35 +5,47 @@
  * - 使用 ESLint 專注於程式碼品質、最佳實踐與潛在錯誤
  */
 
-import globals from 'globals';
-import tseslint from 'typescript-eslint';
-import react from 'eslint-plugin-react';
-import reactHooks from 'eslint-plugin-react-hooks';
-import jsxA11y from 'eslint-plugin-jsx-a11y';
-import nextPlugin from '@next/eslint-plugin-next';
-import checkFile from 'eslint-plugin-check-file';
-import prettierConfig from 'eslint-config-prettier';
+import globals from "globals";
+import tseslint from "typescript-eslint";
+import react from "eslint-plugin-react";
+import reactHooks from "eslint-plugin-react-hooks";
+import jsxA11y from "eslint-plugin-jsx-a11y";
+import nextPlugin from "@next/eslint-plugin-next";
+import checkFile from "eslint-plugin-check-file";
+import prettierConfig from "eslint-config-prettier";
 
 // Info: (20251113 - Tzuhan)  --- 抽離出的共用規則 (同時適用於 Next.js 和 Hardhat) ---
 const commonRules = {
-  'import/prefer-default-export': 'off',
-  'no-nested-ternary': 'off',
-  'no-param-reassign': ['error', { props: false }],
-  '@typescript-eslint/naming-convention': [
-    'error',
+  "import/prefer-default-export": "off",
+  "no-nested-ternary": "off",
+  "no-param-reassign": ["error", { props: false }],
+  "@typescript-eslint/naming-convention": [
+    "error",
     // Info: (20251113 - Tzuhan) 一般函式採用 camelCase，react 元件採用 PascalCase
-    { selector: 'function', format: ['camelCase', 'PascalCase'], leadingUnderscore: 'allow' },
-    // Info: (20251113 - Tzuhan) 一般變數採用 camelCase，react 元件採用 PascalCase，常數採用 UPPER_CASE
-    { selector: 'variable', format: ['camelCase', 'PascalCase', 'UPPER_CASE'], leadingUnderscore: 'allow' },
-    // Info: (20251113 - Tzuhan) 類別、型別、介面採用 PascalCase
-    { selector: 'typeLike', format: ['PascalCase'] },
-    // Info: (20251113 - Tzuhan) 介面採用 IPascalCase，名稱強制以 I 開頭
-    { selector: 'interface', format: ['PascalCase'], custom: { regex: '^I[A-Z]', match: true } },
-  ],
-  'check-file/filename-naming-convention': [
-    'error',
     {
-      '**/*.{js,ts,jsx,tsx}': 'SNAKE_CASE',
+      selector: "function",
+      format: ["camelCase", "PascalCase"],
+      leadingUnderscore: "allow",
+    },
+    // Info: (20251113 - Tzuhan) 一般變數採用 camelCase，react 元件採用 PascalCase，常數採用 UPPER_CASE
+    {
+      selector: "variable",
+      format: ["camelCase", "PascalCase", "UPPER_CASE"],
+      leadingUnderscore: "allow",
+    },
+    // Info: (20251113 - Tzuhan) 類別、型別、介面採用 PascalCase
+    { selector: "typeLike", format: ["PascalCase"] },
+    // Info: (20251113 - Tzuhan) 介面採用 IPascalCase，名稱強制以 I 開頭
+    {
+      selector: "interface",
+      format: ["PascalCase"],
+      custom: { regex: "^I[A-Z]", match: true },
+    },
+  ],
+  "check-file/filename-naming-convention": [
+    "error",
+    {
+      "**/*.{js,ts,jsx,tsx}": "SNAKE_CASE",
     },
     {
       ignoreMiddleExtensions: true,
@@ -45,20 +57,24 @@ const tslintConfigs = [
   // Info: (20250918 - Luphia) 全域忽略設定
   {
     ignores: [
-      'coverage',
-      'node_modules',
-      '.next',
-      'dist',
-      'build',
-      'artifacts',
-      'cache',
-      'typechain-types',
-      'eslint.config.mjs',
-      'tailwind.config.ts',
-      'postcss.config.mjs',
-      'jest.*.ts',
-      'src/generated',
-      'src/types',
+      "coverage",
+      "node_modules",
+      ".next",
+      "dist",
+      "build",
+      "artifacts",
+      "cache",
+      "typechain-types",
+      "eslint.config.mjs",
+      "tailwind.config.ts",
+      "postcss.config.mjs",
+      "jest.*.ts",
+      "src/generated",
+      "src/types",
+      // Info: (20261022 - Luphia) 本機產物，不進版控：.claude/ 放代理的 worktree（整份 repo 的副本，
+      // 會讓 typescript-eslint 找到兩個 tsconfig 根目錄而全數解析失敗），data/ 放代理的暫存輸出（CLAUDE.md §7）
+      ".claude",
+      "data",
     ],
   },
 
@@ -68,22 +84,22 @@ const tslintConfigs = [
 
   // Info: (20251113 - Tzuhan) --- CONFIG 1: Next.js / React App (src) ---
   {
-    files: ['src/**/*.{js,mjs,cjs,ts,jsx,tsx}', 'next.config.ts'], // Info: (20251113 - Tzuhan) <-- 鎖定 Next.js 相關檔案
+    files: ["src/**/*.{js,mjs,cjs,ts,jsx,tsx}", "next.config.ts"], // Info: (20251113 - Tzuhan) <-- 鎖定 Next.js 相關檔案
     plugins: {
       react,
-      'react-hooks': reactHooks,
-      'jsx-a11y': jsxA11y,
-      '@next/next': nextPlugin,
+      "react-hooks": reactHooks,
+      "jsx-a11y": jsxA11y,
+      "@next/next": nextPlugin,
       // tailwindcss,
-      'check-file': checkFile,
+      "check-file": checkFile,
     },
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
+        ecmaVersion: "latest",
+        sourceType: "module",
         ecmaFeatures: { jsx: true },
-        project: ['./tsconfig.json'], // Info: (20251113 - Tzuhan) <-- 使用 Next.js 的 tsconfig
+        project: ["./tsconfig.json"], // Info: (20251113 - Tzuhan) <-- 使用 Next.js 的 tsconfig
       },
       globals: {
         ...globals.browser,
@@ -93,8 +109,8 @@ const tslintConfigs = [
     },
     settings: {
       // Info: (20260712 - Luphia) 明確指定 React 版本，避免 eslint-plugin-react 在 ESLint 10 下自動偵測時呼叫已移除的 context.getFilename() 而崩潰
-      react: { version: '19.2.7' },
-      'import/resolver': { typescript: {} },
+      react: { version: "19.2.7" },
+      "import/resolver": { typescript: {} },
     },
     rules: {
       ...commonRules,
@@ -102,22 +118,32 @@ const tslintConfigs = [
       ...reactHooks.configs.recommended.rules,
       ...jsxA11y.configs.recommended.rules,
       ...nextPlugin.configs.recommended.rules,
-      ...nextPlugin.configs['core-web-vitals'].rules,
+      ...nextPlugin.configs["core-web-vitals"].rules,
 
-      'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
-      'react/react-in-jsx-scope': 'off',
-      'react/require-default-props': ['error', { functions: 'defaultArguments' }],
+      "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+      "react/react-in-jsx-scope": "off",
+      "react/require-default-props": [
+        "error",
+        { functions: "defaultArguments" },
+      ],
 
       // ToDo: (20260417 - Luphia) 需修正並取消此設置
-      'react-hooks/set-state-in-effect': 'off',
-      'react-hooks/preserve-manual-memoization': 'off',
-      'react/jsx-props-no-spreading': 'off',
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/preserve-manual-memoization": "off",
+      "react/jsx-props-no-spreading": "off",
 
-      'no-restricted-imports': [
-        'error',
-        { patterns: [{ group: ['./*', '../*'], message: "請使用 '@/' 路徑別名取代相對路徑 '..'" }] },
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["./*", "../*"],
+              message: "請使用 '@/' 路徑別名取代相對路徑 '..'",
+            },
+          ],
+        },
       ],
 
       /**
@@ -131,31 +157,31 @@ const tslintConfigs = [
        * 而漏掉的症狀只有託管使用者會遇到——不會有人在 code review 時發現。
        * 登入與部署精靈本來就沒有 custody 可言，在該檔案內以 eslint-disable-next-line 排除。
        */
-      'no-restricted-syntax': [
-        'error',
+      "no-restricted-syntax": [
+        "error",
         {
           selector:
             "MemberExpression[object.name='fido2ClientService'][property.name='startLogin']",
           message:
-            '需要簽章時請改用 @/lib/auth/assertion_client 的 requestAssertion，否則託管帳號無法完成操作',
+            "需要簽章時請改用 @/lib/auth/assertion_client 的 requestAssertion，否則託管帳號無法完成操作",
         },
       ],
 
-      'jsx-a11y/click-events-have-key-events': 'warn',
-      'jsx-a11y/no-static-element-interactions': 'warn',
-      'jsx-a11y/control-has-associated-label': [
-        'warn',
+      "jsx-a11y/click-events-have-key-events": "warn",
+      "jsx-a11y/no-static-element-interactions": "warn",
+      "jsx-a11y/control-has-associated-label": [
+        "warn",
         {
           ignoreElements: [
-            'audio',
-            'canvas',
-            'embed',
-            'input',
-            'textarea',
-            'tr',
-            'video',
-            'td',
-            'th',
+            "audio",
+            "canvas",
+            "embed",
+            "input",
+            "textarea",
+            "tr",
+            "video",
+            "td",
+            "th",
           ],
         },
       ],
@@ -176,29 +202,34 @@ const tslintConfigs = [
    */
   {
     files: [
-      'src/lib/auth/assertion_client.ts',
-      'src/lib/auth/passkey_login.ts',
-      'src/components/auth/auth_modal.tsx',
-      'src/services/registration.service.ts',
-      'src/components/admin/setup/**/*.{ts,tsx}',
-      'src/app/admin/**/*.{ts,tsx}',
-      'src/components/admin/**/*.{ts,tsx}',
+      "src/lib/auth/assertion_client.ts",
+      "src/lib/auth/passkey_login.ts",
+      "src/components/auth/auth_modal.tsx",
+      "src/services/registration.service.ts",
+      "src/components/admin/setup/**/*.{ts,tsx}",
+      "src/app/admin/**/*.{ts,tsx}",
+      "src/components/admin/**/*.{ts,tsx}",
     ],
     rules: {
-      'no-restricted-syntax': 'off',
+      "no-restricted-syntax": "off",
     },
   },
 
   // Info: (20251113 - Tzuhan) --- CONFIG 2: Hardhat / Node.js Scripts ---
   {
-    files: ['scripts/**/*.ts', 'test/**/*.ts', 'ignition/**/*.ts', 'hardhat.config.ts'], // Info: (20251113 - Tzuhan) <-- 鎖定 Hardhat 相關檔案
+    files: [
+      "scripts/**/*.ts",
+      "test/**/*.ts",
+      "ignition/**/*.ts",
+      "hardhat.config.ts",
+    ], // Info: (20251113 - Tzuhan) <-- 鎖定 Hardhat 相關檔案
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
+        ecmaVersion: "latest",
+        sourceType: "module",
         ecmaFeatures: { jsx: false }, // Info: (20251113 - Tzuhan) Node 腳本不需要 JSX
-        project: ['./tsconfig.hardhat.json'], // Info: (20251113 - Tzuhan) <-- 使用 Hardhat 專用 tsconfig
+        project: ["./tsconfig.hardhat.json"], // Info: (20251113 - Tzuhan) <-- 使用 Hardhat 專用 tsconfig
       },
       globals: {
         ...globals.node, // Info: (20251113 - Tzuhan) 主要是 Node 環境
@@ -207,16 +238,16 @@ const tslintConfigs = [
       },
     },
     settings: {
-      'import/resolver': { typescript: {} },
+      "import/resolver": { typescript: {} },
     },
     plugins: {
-      'check-file': checkFile,
+      "check-file": checkFile,
     },
     rules: {
       ...commonRules,
-      'no-console': 'off', // Info: (20251113 - Tzuhan) 腳本/測試通常允許 console
-      'no-restricted-imports': 'off', // Info: (20251113 - Tzuhan) 關閉 '@/' 路徑限制
-      'import/no-extraneous-dependencies': 'off',
+      "no-console": "off", // Info: (20251113 - Tzuhan) 腳本/測試通常允許 console
+      "no-restricted-imports": "off", // Info: (20251113 - Tzuhan) 關閉 '@/' 路徑限制
+      "import/no-extraneous-dependencies": "off",
     },
   },
 

@@ -1,7 +1,7 @@
 export const businessMonitor = {
   title: "기업 관측소",
   subtitle:
-    "대만 상장 기업의 재무 데이터를 검색하고 공식 주주총회 연례 보고서를 다운로드하며 AI 어시스턴트로부터 심층 분석을 받으세요",
+    "상장·장외 기업을 검색하고 등기 정보, 재무보고서, 지속가능경영보고서를 이해하며 AI에 질문하세요(답변에 출처 포함)",
   filter: {
     ai_consult: "AI 상담",
     ai_placeholder: "예: 폭스콘의 이직률은 얼마인가요?",
@@ -19,6 +19,8 @@ export const businessMonitor = {
     all_years: "모든 연도",
     clear_filters: "검색 조건 초기화",
     search_reports: "보고서 검색",
+    ai_billing_hint:
+      "AI 상담은 로그인이 필요하며 실제 사용량에 따라 포인트가 차감됩니다",
   },
   ai_section: {
     title: "AI 답변",
@@ -26,6 +28,18 @@ export const businessMonitor = {
     searching: "AI가 문맥을 분석하고 관련 보고서를 검색하는 중입니다...",
     no_answer:
       "기존 보고서에서 질문에 일치하는 답변이나 출처를 찾을 수 없습니다.",
+    page_number: "{{page}}쪽",
+    official_source: "공식 출처",
+    other_references: "기타 참고 구절:",
+    login_required:
+      "AI 상담은 로그인이 필요합니다. 답변은 사용량에 따라 포인트가 차감됩니다.",
+    login_to_ask: "로그인 후 질문하기",
+    payment_required: "결제가 완료되지 않아 질문이 전송되지 않았습니다.",
+    llm_unavailable:
+      "현재 AI 모델을 사용할 수 없습니다. 포인트는 차감되지 않았습니다. 잠시 후 다시 시도해 주세요.",
+    quota_exceeded:
+      "포인트가 부족합니다. 포인트를 충전한 후 다시 시도해 주세요.",
+    chat_failed: "AI 상담에 실패했습니다. 잠시 후 다시 시도해 주세요.",
   },
   reports: {
     total_count: "총 {{count}}건의 보고서를 찾았습니다",
@@ -50,6 +64,8 @@ export const businessMonitor = {
       toast_download_success: "{{company}} - 원본 보고서 다운로드 완료",
       toast_download_error:
         "{{company}} - 다운로드 실패. 잠시 후 다시 시도해 주세요",
+      toast_file_not_ready:
+        "{{company}} - 원본 파일이 아직 다운로드되지 않았습니다. 잠시 후 다시 시도해 주세요",
     },
   },
   detail: {
@@ -63,5 +79,70 @@ export const businessMonitor = {
     download_report: "보고서 다운로드",
     report_file_suffix: "지속가능경영보고서",
     year_report: "{{year}} 년 지속가능경영보고서",
+  },
+  home: {
+    search_placeholder:
+      "회사명, 약칭, 종목코드 또는 사업자번호를 입력하거나 바로 질문하세요",
+    ask_ai: "AI에 질문",
+    ask_ai_with: "AI에 질문: “{{question}}”",
+    search_hint:
+      "회사를 선택하면 등기 정보와 보고서를 볼 수 있습니다. 질문을 입력하고 Enter를 누르면 AI에 질문합니다",
+    browse_by_industry: "산업별 보기",
+    industry_companies: "{{industry}}・{{count}}개 회사",
+    documents_count: "보고서 {{count}}건",
+    no_documents: "보고서 없음",
+  },
+  scope: {
+    label: "검색 범위",
+    auto_company: "회사 자동 인식",
+    no_company: "지정된 회사 없음",
+    all_years: "연도 제한 없음",
+    year: "{{year}} 회계연도",
+    remove_year: "{{year}} 회계연도 제거",
+    used: "이번 조회 범위: {{scope}}",
+  },
+  market: {
+    sii: "상장",
+    otc: "장외",
+  },
+  company: {
+    back: "기업 관측소로 돌아가기",
+    not_found: "회사를 찾을 수 없습니다",
+    listing_date: "상장일 {{date}}",
+    tax_id: "사업자번호 {{taxId}}",
+    registration_title: "회사 등기",
+    registration_updated: "최신 등기 정보・{{date}} 업데이트",
+    registration_source: "출처: 경제부 상업사",
+    registration_empty: "상업사 등기 정보를 아직 가져오지 않았습니다",
+    directors: "이사·감사",
+    directors_expand: "전체 {{count}}명 보기",
+    directors_collapse: "접기",
+    director_position: "직책",
+    director_name: "성명",
+    director_representing: "대표 법인",
+    director_shares: "보유 주식 수(주)",
+    library_title: "보고서 목록",
+    library_hint:
+      "데이터 대상 연도별로 묶음: 재무보고서는 회계연도, 지속가능성과 온실가스는 공시 연도",
+    library_year: "{{year}} 회계연도",
+    library_empty: "아직 보고서가 없습니다",
+    period: "대상 기간 {{period}}",
+    retrieved_at: "{{date}} 수집",
+    download: "다운로드",
+    ask_title: "이 회사에 대해 질문하기",
+    ask_placeholder: "예: {{company}}의 주요 사업은 무엇인가요?",
+    status: {
+      AVAILABLE: "다운로드 가능",
+      PENDING: "수집 예정",
+      NOT_PUBLISHED: "아직 공시되지 않음",
+      FAILED: "수집 실패",
+    },
+  },
+  sources: {
+    MOPS_FINANCIAL_REPORT: "재무보고서",
+    ESG_REPORT: "지속가능경영보고서",
+    GHG_INVENTORY: "온실가스 인벤토리 공시",
+    GCIS_REGISTRATION: "회사 등기 정보",
+    MANUAL_IMPORT: "가져온 보고서",
   },
 };
