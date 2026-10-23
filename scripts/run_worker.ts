@@ -15,11 +15,13 @@ import { runFaithMemoryRetention } from "@/services/cron/faith_memory_retention.
 import { runLeaveBalanceReconcile } from "@/services/cron/leave_balance_reconcile.cron";
 import { scanResumableJobs } from "@/services/resumable_job.service";
 import {
+  runCompanyFinancialFactSync,
   runCompanyObservatoryCycle,
   runCompanyObservatoryPlanner,
 } from "@/services/cron/company_observatory.cron";
 import { JOB_RESUME_SCAN_INTERVAL_MS } from "@/constants/resumable_job";
 import {
+  FINANCIAL_SYNC_INTERVAL_MS,
   OBSERVATORY_PLAN_INTERVAL_MS,
   OBSERVATORY_PROCESS_INTERVAL_MS,
 } from "@/constants/company_observatory";
@@ -184,6 +186,12 @@ async function runWorker() {
       "CompanyObservatory",
       () => runCompanyObservatoryCycle(),
       OBSERVATORY_PROCESS_INTERVAL_MS,
+    ),
+    // Info: (20261023 - Luphia) 財務數字每日同步（OpenAPI 只給最新一期，歷史靠每天留下來）
+    startServiceLoop(
+      "CompanyFinancialFacts",
+      () => runCompanyFinancialFactSync(),
+      FINANCIAL_SYNC_INTERVAL_MS,
     ),
   ]);
 

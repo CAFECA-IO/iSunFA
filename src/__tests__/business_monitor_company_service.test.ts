@@ -35,6 +35,9 @@ jest.mock("@/repositories/observatory_document.repo", () => ({
     countIndexedByStockIds: (ids: string[]) => countIndexed(ids),
   },
 }));
+jest.mock("@/repositories/company_financial_fact.repo", () => ({
+  companyFinancialFactRepo: { findByStockId: async () => [] },
+}));
 jest.mock("@/repositories/report.repo", () => ({
   reportRepo: { findMany: (args: unknown) => reportFindMany(args) },
 }));

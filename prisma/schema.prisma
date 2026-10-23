@@ -3540,6 +3540,7 @@ model LeavePolicy {
    * /**
    * /**
    * /**
+   * /**
    * Info: (20260817 - Julian) 給薪比例（工資照給 = 1、折半發給 = 0.5、不給工資 = 0）。
    * 本模組不算金額，此欄位供薪資模組與畫面提示使用。
    * **Nullable 且無預設值**：產假的工資取決於年資（受僱六個月以上照給、
@@ -4873,4 +4874,25 @@ model ObservatoryDocument {
   @@index([status, nextAttemptAt])
   @@index([source, status])
   @@map("observatory_document")
+}
+
+// Info: (20261023 - Luphia) 企業觀測站：證交所／櫃買中心 OpenAPI 的財務數字（一個科目一列）
+// 唯讀公開資料，只掛 stockId，不掛任何 AccountBook（CLAUDE.md §9）。
+// OpenAPI 只提供最新一期，每日同步時把當期寫進來，歷史由此累積。
+model CompanyFinancialFact {
+  stockId    String   @map("stock_id")
+  year       Int // Info: (20261023 - Luphia) 西元年（來源為民國年，+1911）
+  quarter    Int // Info: (20261023 - Luphia) 1～4；損益表數字為年初累計至該季
+  statement  String // Info: (20261023 - Luphia) FINANCIAL_STATEMENT 常數（INCOME / BALANCE）
+  item       String // Info: (20261023 - Luphia) 來源欄位名稱原樣（如「營業收入」「資產總額」）
+  value      Decimal  @db.Decimal(24, 4)
+  unit       String // Info: (20261023 - Luphia) FINANCIAL_UNIT 常數：仟元、元、股
+  form       String // Info: (20261023 - Luphia) 報表格式（一般業 ci、金融業 basi…），不同格式的科目名稱不同
+  reportedAt String   @map("reported_at") // Info: (20261023 - Luphia) 來源的「出表日期」原樣（民國 yyyMMdd）
+  sourceUrl  String   @map("source_url")
+  fetchedAt  DateTime @map("fetched_at")
+
+  @@id([stockId, year, quarter, statement, item])
+  @@index([stockId, statement])
+  @@map("company_financial_fact")
 }

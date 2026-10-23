@@ -39,12 +39,13 @@ PENDING ──下載──▶ DOWNLOADED ──索引──▶ INDEXED
 
 ## 3. 排程與速率
 
-| 迴圈                        | 間隔       | 每輪工作量                                                              |
-| --------------------------- | ---------- | ----------------------------------------------------------------------- |
-| `CompanyObservatoryPlanner` | 每日       | 補建所有追蹤中公司 × 來源 × 年度的 PENDING 列；公司登記逾 30 天排回刷新 |
-| `CompanyObservatory`        | 每 10 分鐘 | 每個來源下載 5 份，再索引 5 份                                          |
+| 迴圈                        | 間隔       | 每輪工作量                                                                         |
+| --------------------------- | ---------- | ---------------------------------------------------------------------------------- |
+| `CompanyObservatoryPlanner` | 每日       | 補建所有追蹤中公司 × 來源 × 年度的 PENDING 列；公司登記逾 30 天排回刷新            |
+| `CompanyObservatory`        | 每 10 分鐘 | 每個來源下載 5 份，再索引 5 份                                                     |
+| `CompanyFinancialFacts`     | 每日       | 抓 24 支財務 OpenAPI，以「公司 × 期別 × 報表」覆寫 `CompanyFinancialFact`（見 §8） |
 
-逐主機最短請求間隔（`OBSERVATORY_HOST_MIN_INTERVAL_MS`）：GCIS 2 秒、MOPS 電子書 5 秒、ESG 平台 3 秒
+逐主機最短請求間隔（`OBSERVATORY_HOST_MIN_INTERVAL_MS`）：GCIS 2 秒、MOPS 電子書 5 秒、ESG 平台 3 秒、證交所與櫃買中心 OpenAPI 各 2 秒
 （報告書與溫室氣體共用同一主機與同一個限速器）。worker 租約保證同一個資料庫只有一個 worker 在下載。
 
 ## 4. 儲存
@@ -108,6 +109,7 @@ PENDING ──下載──▶ DOWNLOADED ──索引──▶ INDEXED
 ## 7. 部署
 
 1. `npx prisma db push`（新增 `observatory_document` 表）。
+   2026-10-23 起另新增 `company_financial_fact` 表，同樣以 `npx prisma db push` 建立（只新增，不動既有表）。
 2. `npx tsx scripts/sync_companies.ts`：`Company` 是空的就沒有任何東西可下載。
 3. `npm run initial_lance_db`（建立兩張切塊表與全文索引；`npm run build`／`npm run dev` 也會自動執行，已存在則跳過）。
    表的維度與目前嵌入模型不同時只印提醒、不自動刪表。
@@ -116,3 +118,27 @@ PENDING ──下載──▶ DOWNLOADED ──索引──▶ INDEXED
    腳本把已索引的 `ObservatoryDocument` 排回 `DOWNLOADED`（清掉 `indexedHash`），再以 1024 維重建兩張表；
    worker 讀本機原始檔重新切塊與嵌入，不會重新下載。`company_reports` 重建後是空的，手動匯入的報告要重跑
    `scripts/import_pdfs.ts`。在重建之前，寫入時的維度檢查會讓索引暫停（不計失敗次數），AI 諮詢的向量檢索失敗則降級為只用全文檢索。
+
+## 8. 財務數字（證交所／櫃買中心 OpenAPI，2026-10-23）
+
+- **來源**：上市 `openapi.twse.com.tw/v1/opendata/t187ap0{6,7}_L_{form}`、上櫃 `www.tpex.org.tw/openapi/v1/mopsfin_t187ap0{6,7}_O_{form}`，
+  `form` 為 ci（一般業）、basi（金融業）、bd（證券期貨業）、fh（金控業）、ins（保險業）、mim（異業），共 24 支（`FINANCIAL_OPENAPI_ENDPOINTS`）。
+  每支一次回傳該市場全部公司的**最新一期**；首次同步實測 1,978 家、66,540 個科目、0 支失敗。
+- **儲存**：`CompanyFinancialFact`，一個科目一列（`@@id([stockId, year, quarter, statement, item])`），值為 `Decimal(24,4)`，
+  科目名稱與出表日期原樣保留。以「公司 × 期別 × 報表」先刪後寫包在同一個交易：重跑冪等、來源重編不殘留，不同期別互不影響——
+  **OpenAPI 不給歷史，歷史靠每日同步累積**。某支端點失敗只記 log，隔天再抓。
+- **來源事實**（20261023 實測）：
+  - 金額單位為仟元（台泥「股本 77,231,817」對上商業司「實收資本額 77,231,817,420 元」）；「（元）」與「每股」開頭的是每股金額，「股數」是股。
+  - 損益表是年初累計至該季（台積電第 2 季營業收入 2.4 兆、EPS 49.33）。
+  - 上櫃端點的中繼欄位混用英文鍵（`SecuritiesCompanyCode`、`Year`、`Season`、`Date`），同一支端點兩種都可能出現。
+  - **金控業（fh）欄位疑似錯位**：富邦金「淨收益」54 億小於「利息淨收益」1,121 億、「稅前損益」小於「稅後淨利」。原值照存，
+    但公司頁不把「淨收益」當營收，淨利率只在科目是「營業收入」時計算。
+- **公司頁**：關鍵科目依各格式的候選名稱取第一個有值的（`FINANCIAL_KEY_ITEM_SOURCES`），顯示來源原本的科目名稱；
+  負債比、淨利率以 `Prisma.Decimal` 計算並寫明公式。不做跨季比較（累計數不能直接相減）。
+
+## 9. 溫室氣體範疇（公司頁，2026-10-23）
+
+- 不另建資料表：讀已下載的 `GHG_INVENTORY` 純文字（`renderGhgInventoryText` 的輸出）取回範疇一～三的數據、資料邊界、確信機構／標準／意見，
+  原樣顯示。溫室氣體文件「不重抓」，既有年度只有這份文字；解析器與渲染器以來回測試綁在一起。
+- 年增減只比較相鄰揭露年度、同範疇、**資料邊界文字完全相同**的數字（`Prisma.Decimal`）；邊界不同就標示不比較——
+  台泥範疇三 2024 只算母公司、2025 涵蓋多家子公司，數字從 1,934 萬降到 246 萬並不是減排。

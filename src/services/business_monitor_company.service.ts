@@ -2,6 +2,7 @@ import { Company, ObservatoryDocument, Prisma } from "@/generated";
 import { companyRepo } from "@/repositories/company.repo";
 import { reportRepo } from "@/repositories/report.repo";
 import { observatoryDocumentRepo } from "@/repositories/observatory_document.repo";
+import { companyFinancialFactRepo } from "@/repositories/company_financial_fact.repo";
 import {
   BUSINESS_MONITOR_DOCUMENT_STATUS,
   BUSINESS_MONITOR_MANUAL_IMPORT_SOURCE,
@@ -23,7 +24,11 @@ import {
   ICompanyLibraryDocument,
   ICompanyLibraryYear,
   ICompanyRegistration,
+  IEmissionYear,
 } from "@/interfaces/business_monitor";
+import { buildFinancialPeriods } from "@/lib/business_monitor/financial_summary";
+import { withEmissionChanges } from "@/lib/business_monitor/emission_summary";
+import { parseGhgInventoryText } from "@/lib/company_observatory/ghg_inventory_text";
 import { IBusinessMonitorCompanyListQuery } from "@/validators";
 import { taiVariantsOf } from "@/lib/business_monitor/scope";
 import {
@@ -149,25 +154,27 @@ class BusinessMonitorCompanyService {
       throw new ApiError(def.code, def.message, def.status);
     }
 
-    const [documents, observatoryReports, manualReports] = await Promise.all([
-      observatoryDocumentRepo.listByStockId(stockId),
-      reportRepo.findMany({
-        where: {
-          pdfPath: {
-            startsWith: `${OBSERVATORY_REPORT_PATH_PREFIX}/${stockId}/`,
+    const [documents, observatoryReports, manualReports, financialFacts] =
+      await Promise.all([
+        observatoryDocumentRepo.listByStockId(stockId),
+        reportRepo.findMany({
+          where: {
+            pdfPath: {
+              startsWith: `${OBSERVATORY_REPORT_PATH_PREFIX}/${stockId}/`,
+            },
           },
-        },
-      }),
-      // Info: (20261022 - Luphia) 手動匯入的舊報告沒有公司代號，只能以登記全名對應
-      reportRepo.findMany({
-        where: {
-          companyName: company.name,
-          NOT: {
-            pdfPath: { startsWith: `${OBSERVATORY_REPORT_PATH_PREFIX}/` },
+        }),
+        // Info: (20261022 - Luphia) 手動匯入的舊報告沒有公司代號，只能以登記全名對應
+        reportRepo.findMany({
+          where: {
+            companyName: company.name,
+            NOT: {
+              pdfPath: { startsWith: `${OBSERVATORY_REPORT_PATH_PREFIX}/` },
+            },
           },
-        },
-      }),
-    ]);
+        }),
+        companyFinancialFactRepo.findByStockId(stockId),
+      ]);
     const reportIdByPath = new Map(
       observatoryReports.map((report) => [report.pdfPath, report.id]),
     );
@@ -237,7 +244,42 @@ class BusinessMonitorCompanyService {
       },
       registration,
       library: groupByYear(libraryDocs),
+      financials: buildFinancialPeriods(financialFacts),
+      emissions: await this.readEmissions(
+        documents.filter(
+          (doc) => doc.source === OBSERVATORY_SOURCE.GHG_INVENTORY,
+        ),
+        reportIdOf,
+      ),
     };
+  }
+
+  /**
+   * Info: (20261023 - Luphia) 各揭露年度的範疇一～三：讀已下載的溫室氣體盤查文字，原樣取出。
+   * 讀不到的年度略過（只記 log），不讓整個公司頁失敗。
+   */
+  private async readEmissions(
+    docs: ObservatoryDocument[],
+    reportIdOf: (doc: ObservatoryDocument) => number | null,
+  ): Promise<IEmissionYear[]> {
+    const years: IEmissionYear[] = [];
+    for (const doc of docs) {
+      if (!doc.filePath) continue;
+      try {
+        const text = (await this.storage.read(doc.filePath)).toString("utf8");
+        const scopes = parseGhgInventoryText(text);
+        if (scopes.length > 0) {
+          years.push({ year: doc.year, reportId: reportIdOf(doc), scopes });
+        }
+      } catch (error) {
+        logger.warn("business monitor emissions unreadable", {
+          stockId: doc.stockId,
+          year: doc.year,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+    return withEmissionChanges(years);
   }
 
   /**

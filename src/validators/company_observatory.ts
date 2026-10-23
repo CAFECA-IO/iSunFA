@@ -207,3 +207,16 @@ export const observatoryReportMetadataSchema = z.object({
   assuranceAgency: z.string().optional(),
   assuranceStandards: z.string().optional(),
 });
+
+/**
+ * Info: (20261023 - Luphia) 證交所／櫃買中心財務 OpenAPI 的回應：物件陣列，鍵是中文科目名（上櫃部分鍵為英文），
+ * 值是字串（空字串代表該格式沒有這個科目）。只確認外形，逐欄的數值檢查在 parseFinancialRows。
+ */
+export const financialOpenApiRowsSchema = z.array(
+  z.record(
+    z.string(),
+    z
+      .union([z.string(), z.number(), z.null()])
+      .transform((value) => (value === null ? "" : String(value).trim())),
+  ),
+);

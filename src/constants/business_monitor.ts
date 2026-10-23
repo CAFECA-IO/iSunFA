@@ -98,3 +98,19 @@ export const BUSINESS_MONITOR_TAI_VARIANTS = ["台", "臺"] as const;
 
 // Info: (20261022 - Luphia) 報告庫裡手動匯入的舊報告：不屬於觀測站任何來源，以此代碼標示
 export const BUSINESS_MONITOR_MANUAL_IMPORT_SOURCE = "MANUAL_IMPORT";
+
+// Info: (20261023 - Luphia) 溫室氣體範疇：依揭露項目名稱裡的「範疇一／二／三」判定
+export const EMISSION_SCOPE = {
+  SCOPE_1: "SCOPE_1",
+  SCOPE_2: "SCOPE_2",
+  SCOPE_3: "SCOPE_3",
+} as const;
+
+export type EmissionScope =
+  (typeof EMISSION_SCOPE)[keyof typeof EMISSION_SCOPE];
+
+export const EMISSION_SCOPE_MARKER: Record<EmissionScope, string> = {
+  SCOPE_1: "範疇一",
+  SCOPE_2: "範疇二",
+  SCOPE_3: "範疇三",
+};

@@ -96,6 +96,25 @@ export const businessMonitor = {
     otc: "上櫃",
   },
   company: {
+    financial_title: "財務數字",
+    financial_source: "來源：證交所／櫃買中心 OpenAPI・出表日期 {{date}}",
+    financial_empty: "尚無財務數字（每日自證交所／櫃買中心同步最新一期）",
+    financial_item: "科目",
+    financial_period: "{{year}} 年第 {{quarter}} 季",
+    financial_cumulative_note:
+      "損益數字為年初累計至該季；不同季別不能直接相比。金額單位為仟元，每股數字單位為元。",
+    ratio_formula:
+      "負債比＝負債總計 ÷ 資產總計；淨利率＝本期淨利 ÷ 營業收入（僅營業收入科目適用）。",
+    ratio: {
+      DEBT_RATIO: "負債比",
+      NET_MARGIN: "淨利率",
+    },
+    emission_title: "溫室氣體排放",
+    emission_source: "來源：公開資訊觀測站 ESG 資訊揭露（依揭露年度）",
+    emission_empty: "尚無溫室氣體揭露資料",
+    emission_change: "較前一年度 {{change}}%",
+    emission_boundary_changed: "資料邊界與前一年度不同，不比較",
+    emission_boundary: "資料邊界：{{boundary}}",
     back: "返回企業觀測站",
     not_found: "找不到這家公司",
     listing_date: "上市櫃日期 {{date}}",
