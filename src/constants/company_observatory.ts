@@ -1,4 +1,9 @@
 import path from "node:path";
+import {
+  FINANCIAL_FORMS,
+  FinancialForm,
+  FinancialStatement,
+} from "@/constants/company_financial";
 
 /**
  * Info: (20261015 - Luphia) 企業觀測站：背景 worker 定期下載上市櫃公司的公開報告，
@@ -136,6 +141,9 @@ export const OBSERVATORY_HOST = {
   GCIS: "data.gcis.nat.gov.tw",
   MOPS_DOC: "doc.twse.com.tw",
   ESG_PLATFORM: "esggenplus.twse.com.tw",
+  // Info: (20261023 - Luphia) 財務數字：證交所與櫃買中心的 OpenAPI
+  TWSE_OPENAPI: "openapi.twse.com.tw",
+  TPEX_OPENAPI: "www.tpex.org.tw",
 } as const;
 
 /**
@@ -147,7 +155,47 @@ export const OBSERVATORY_HOST_MIN_INTERVAL_MS: Record<string, number> = {
   [OBSERVATORY_HOST.GCIS]: 2000,
   [OBSERVATORY_HOST.MOPS_DOC]: 5000,
   [OBSERVATORY_HOST.ESG_PLATFORM]: 3000,
+  [OBSERVATORY_HOST.TWSE_OPENAPI]: 2000,
+  [OBSERVATORY_HOST.TPEX_OPENAPI]: 2000,
 };
+
+/**
+ * Info: (20261023 - Luphia) 財務數字的 OpenAPI 端點：上市（L）、上櫃（O）各 6 種報表格式 ×
+ * 綜合損益表（t187ap06）與資產負債表（t187ap07），共 24 支；每支一次回傳該市場全部公司的最新一期。
+ */
+export interface IFinancialOpenApiEndpoint {
+  url: string;
+  statement: FinancialStatement;
+  form: FinancialForm;
+}
+
+const FINANCIAL_STATEMENT_TABLE: Record<FinancialStatement, string> = {
+  INCOME: "t187ap06",
+  BALANCE: "t187ap07",
+};
+
+export const FINANCIAL_OPENAPI_ENDPOINTS: readonly IFinancialOpenApiEndpoint[] =
+  FINANCIAL_FORMS.flatMap((form) =>
+    (Object.keys(FINANCIAL_STATEMENT_TABLE) as FinancialStatement[]).flatMap(
+      (statement) => [
+        {
+          url: `https://${OBSERVATORY_HOST.TWSE_OPENAPI}/v1/opendata/${FINANCIAL_STATEMENT_TABLE[statement]}_L_${form}`,
+          statement,
+          form,
+        },
+        {
+          url: `https://${OBSERVATORY_HOST.TPEX_OPENAPI}/openapi/v1/mopsfin_${FINANCIAL_STATEMENT_TABLE[statement]}_O_${form}`,
+          statement,
+          form,
+        },
+      ],
+    ),
+  );
+
+// Info: (20261023 - Luphia) 財務數字每日同步一次（來源每日出表；24 支請求，逐主機限速）
+export const FINANCIAL_SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000;
+// Info: (20261023 - Luphia) 寫入時每批筆數（一支端點約 1,000 家 × 20～60 個科目）
+export const FINANCIAL_FACT_WRITE_CHUNK = 5000;
 export const OBSERVATORY_DEFAULT_HOST_MIN_INTERVAL_MS = 3000;
 // Info: (20261015 - Luphia) PDF 動輒數十 MB，逾時放寬；HTTP 層自身的重試次數壓低，失敗交給文件層的退避
 export const OBSERVATORY_HTTP_TIMEOUT_MS = 120 * 1000;

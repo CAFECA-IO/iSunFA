@@ -106,6 +106,26 @@ export const businessMonitor = {
     otc: "TPEx listed",
   },
   company: {
+    financial_title: "Financials",
+    financial_source: "Source: TWSE / TPEx OpenAPI · published {{date}}",
+    financial_empty:
+      "No financial data yet (the latest period is synced daily from TWSE / TPEx)",
+    financial_item: "Item",
+    financial_period: "{{year}} Q{{quarter}}",
+    financial_cumulative_note:
+      "Income statement figures are year-to-date through the quarter; different quarters are not directly comparable. Amounts are in NT$ thousands; per-share figures in NT$.",
+    ratio_formula:
+      "Debt ratio = total liabilities ÷ total assets; net margin = net income ÷ operating revenue (only where the item is operating revenue).",
+    ratio: {
+      DEBT_RATIO: "Debt ratio",
+      NET_MARGIN: "Net margin",
+    },
+    emission_title: "Greenhouse gas emissions",
+    emission_source: "Source: MOPS ESG disclosures (by disclosure year)",
+    emission_empty: "No greenhouse gas disclosures yet",
+    emission_change: "{{change}}% vs prior year",
+    emission_boundary_changed: "Boundary differs from prior year; not compared",
+    emission_boundary: "Boundary: {{boundary}}",
     back: "Back to Business Monitor",
     not_found: "Company not found",
     listing_date: "Listed {{date}}",

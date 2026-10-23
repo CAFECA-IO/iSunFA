@@ -108,6 +108,26 @@ export const businessMonitor = {
     otc: "店頭",
   },
   company: {
+    financial_title: "財務数値",
+    financial_source: "出典：証券取引所／店頭市場 OpenAPI・作成日 {{date}}",
+    financial_empty:
+      "財務数値はまだありません（証券取引所／店頭市場から最新期を毎日同期）",
+    financial_item: "科目",
+    financial_period: "{{year}} 年第 {{quarter}} 四半期",
+    financial_cumulative_note:
+      "損益は期首からその四半期までの累計です。異なる四半期は直接比較できません。金額の単位は千元、1 株当たりの数値は元です。",
+    ratio_formula:
+      "負債比率＝負債合計 ÷ 資産合計；純利益率＝当期純利益 ÷ 営業収入（営業収入の科目がある場合のみ）。",
+    ratio: {
+      DEBT_RATIO: "負債比率",
+      NET_MARGIN: "純利益率",
+    },
+    emission_title: "温室効果ガス排出量",
+    emission_source: "出典：公開資訊観測站 ESG 情報開示（開示年度別）",
+    emission_empty: "温室効果ガスの開示データはまだありません",
+    emission_change: "前年度比 {{change}}%",
+    emission_boundary_changed: "集計範囲が前年度と異なるため比較しません",
+    emission_boundary: "集計範囲：{{boundary}}",
     back: "企業観測所に戻る",
     not_found: "この会社は見つかりません",
     listing_date: "上場日 {{date}}",

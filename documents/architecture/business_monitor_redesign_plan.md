@@ -2,7 +2,7 @@
 
 > **Author**: Luphia ｜ **Last Updated**: 2026-10-22
 > **對象**：`/business_monitor` 頁面、`business_monitor.service`、企業觀測站背景管線（[07_company_observatory.md](async_workers/07_company_observatory.md)）
-> **狀態**：§9 四項決策已定（2026-10-22）；第一期已實作（見 §10）；第二期的首頁與公司頁已實作（見 §11），結構化事實與對話化 AI 尚未開始。
+> **狀態**：§9 四項決策已定（2026-10-22）；第一期已實作（見 §10）；第二期的首頁與公司頁已實作（見 §11）；第三期的財務數字與碳排已實作（見 §12），申報季感知排程、四季財報與對話化 AI 尚未開始。
 
 ---
 
@@ -302,3 +302,23 @@ model CompanyBusinessSummary {        // 年報「營運概況」萃取結果
 - 既有的公司登記 `Report` 列與向量切塊仍是舊標題「2026 年公司登記資料」，下一次內容變動重新索引時才會改成新標題。
 - 報告庫標示的是本系統「取得於」的日期，不是來源的公布日：來源沒提供公布日，不推估。
 - 舊的報告詳情頁 `/business_monitor/[report_id]` 仍保留（外部連結與 sitemap），首頁不再連到它。
+
+---
+
+## 12. 第三期：財務數字與碳排（2026-10-23）
+
+| 項目                                                                        | 位置                                                                                                  |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `CompanyFinancialFact` 資料表（一個科目一列，`Decimal(24,4)`）              | `prisma/schema.prisma`、`company_financial_fact.repo.ts`                                              |
+| 每日同步 24 支 OpenAPI（上市＋上櫃 × 損益表＋資產負債表 × 6 種報表格式）    | `financial_facts.sync.service.ts`、`runCompanyFinancialFactSync`、worker 迴圈 `CompanyFinancialFacts` |
+| 解析：中文／英文中繼鍵、民國年轉西元、單位判定、只收十進位數字              | `src/lib/company_observatory/financial_facts.ts`                                                      |
+| 公司頁「財務數字」：關鍵科目（來源原名）、負債比與淨利率（Decimal，附公式） | `financial_summary.ts`、`financial_card.tsx`                                                          |
+| 公司頁「溫室氣體排放」：範疇一～三、邊界、確信；邊界相同才算年增減          | `ghg_inventory_text.ts`、`emission_summary.ts`、`emission_card.tsx`                                   |
+
+與 §5.2 的差異：
+
+- **沒有建 `CompanyEmissionFact`**：溫室氣體本來就按揭露年度存成文件，直接讀已下載的文字即可，不必再複製一份；
+  第四期的 AI 結構化工具需要時，可以同一個解析器讀取。
+- **財務數字只存 OpenAPI 給的科目**：OpenAPI 是精簡報表（約 20～60 個科目），沒有附註與明細。
+
+尚未做（留在第三期後半）：申報季感知排程、四季財報 PDF、OpenAPI 歷史期別的回補（OpenAPI 無歷史，要回補得改抓 MOPS 彙總報表）。

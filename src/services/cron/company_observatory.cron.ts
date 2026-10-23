@@ -2,9 +2,13 @@ import { logger } from "@/lib/utils/logger";
 import { isShuttingDown } from "@/lib/worker/shutdown";
 import { OBSERVATORY_DOCUMENT_STATUS } from "@/constants/company_observatory";
 import {
+  IFinancialSyncSummary,
   IObservatoryIndexSummary,
   IObservatoryProcessSummary,
 } from "@/interfaces/company_observatory";
+import { createObservatoryHttpClient } from "@/lib/company_observatory/http_client";
+import { companyFinancialFactRepo } from "@/repositories/company_financial_fact.repo";
+import { syncFinancialFacts } from "@/services/company_observatory/financial_facts.sync.service";
 import {
   buildCompanyObservatoryIndexer,
   buildCompanyObservatoryService,
@@ -53,4 +57,24 @@ export async function runCompanyObservatoryCycle(): Promise<{
     );
   }
   return { downloads, index };
+}
+
+/**
+ * Info: (20261023 - Luphia) 財務數字：每日抓一次證交所／櫃買中心 OpenAPI 的最新一期並覆寫。
+ * OpenAPI 不給歷史，這支每天跑才能把每一期留下來；某支端點失敗不影響其他端點。
+ */
+export async function runCompanyFinancialFactSync(): Promise<IFinancialSyncSummary> {
+  const summary = await syncFinancialFacts({
+    http: createObservatoryHttpClient(),
+    writeFacts: (facts) => companyFinancialFactRepo.replacePeriods(facts),
+    now: () => new Date(),
+    shouldStop: isShuttingDown,
+  });
+  logger.info(`[CompanyFinancialFacts] ${JSON.stringify(summary)}`);
+  if (summary.failedEndpoints > 0) {
+    logger.warn(
+      `[CompanyFinancialFacts] ${summary.failedEndpoints}/${summary.endpoints} endpoint(s) failed; will retry on the next daily run`,
+    );
+  }
+  return summary;
 }

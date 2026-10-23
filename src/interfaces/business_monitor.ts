@@ -1,7 +1,12 @@
 import {
   BusinessMonitorDocumentStatus,
   BusinessMonitorFileContentType,
+  EmissionScope,
 } from "@/constants/business_monitor";
+import {
+  FinancialKeyItem,
+  FinancialRatio,
+} from "@/constants/company_financial";
 
 export type DownloadStatus = "idle" | "downloading" | "completed" | "error";
 
@@ -144,6 +149,10 @@ export interface IBusinessMonitorCompanyProfile {
   };
   registration: ICompanyRegistration | null;
   library: ICompanyLibraryYear[];
+  // Info: (20261023 - Luphia) 新的在前；OpenAPI 只給最新一期，歷史由每日同步累積
+  financials: IFinancialPeriod[];
+  // Info: (20261023 - Luphia) 依揭露年度，新的在前
+  emissions: IEmissionYear[];
 }
 
 /**
@@ -153,4 +162,56 @@ export interface IBusinessMonitorCompanyProfile {
 export interface IAIChatScope {
   companies: string[];
   years: string[];
+}
+
+// =========================================================================
+// Info: (20261023 - Luphia) 公司頁的財務數字與碳排
+// =========================================================================
+
+// Info: (20261023 - Luphia) 一個關鍵科目：label 是來源原本的科目名稱，value 是十進位字串（不經過 number）
+export interface IFinancialKeyValue {
+  key: FinancialKeyItem;
+  label: string;
+  value: string;
+  unit: string;
+}
+
+// Info: (20261023 - Luphia) 由 Decimal 算出的比率（百分比，小數第 2 位）；分母為 0 或缺科目時不給
+export interface IFinancialRatioValue {
+  key: FinancialRatio;
+  value: string;
+}
+
+export interface IFinancialPeriod {
+  year: number;
+  // Info: (20261023 - Luphia) 損益表數字是年初累計至這一季
+  quarter: number;
+  // Info: (20261023 - Luphia) 來源的出表日期原樣（民國 yyyMMdd）
+  reportedAt: string;
+  items: IFinancialKeyValue[];
+  ratios: IFinancialRatioValue[];
+}
+
+export interface IEmissionScope {
+  // Info: (20261023 - Luphia) 來源揭露項目名稱原樣（例：直接(範疇一)溫室氣體排放量(公噸CO₂e)）
+  label: string;
+  scope: EmissionScope;
+  value: string;
+  boundary: string;
+  assurer: string;
+  standard: string;
+  opinion: string;
+  /**
+   * Info: (20261023 - Luphia) 與前一個揭露年度同範疇相比的增減（百分比字串，小數第 2 位）。
+   * 只在兩年的資料邊界文字完全相同時計算；邊界不同時為 null 並標示 boundaryChanged，
+   * 免得把「範圍變大」說成「排放增加」。
+   */
+  changePercent: string | null;
+  boundaryChanged: boolean;
+}
+
+export interface IEmissionYear {
+  year: number;
+  reportId: number | null;
+  scopes: IEmissionScope[];
 }

@@ -14,6 +14,8 @@ import { useTranslation } from "@/i18n/i18n_context";
 import { IBusinessMonitorCompanyProfile } from "@/interfaces/business_monitor";
 import { formatAdDate } from "@/lib/business_monitor/format";
 import RegistrationCard from "@/components/business_monitor/registration_card";
+import FinancialCard from "@/components/business_monitor/financial_card";
+import EmissionCard from "@/components/business_monitor/emission_card";
 import ReportLibrary from "@/components/business_monitor/report_library";
 import CompanyAskBox from "@/components/business_monitor/company_ask_box";
 import MonitorToast, {
@@ -120,6 +122,8 @@ const CompanyPageBody: FC = () => {
               onShowToast={showToast}
             />
             <RegistrationCard registration={profile.registration} />
+            <FinancialCard periods={profile.financials} />
+            <EmissionCard emissions={profile.emissions} />
             <ReportLibrary
               library={profile.library}
               companyName={company.name}

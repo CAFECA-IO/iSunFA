@@ -106,6 +106,25 @@ export const businessMonitor = {
     otc: "장외",
   },
   company: {
+    financial_title: "재무 수치",
+    financial_source: "출처: 대만증권거래소／장외시장 OpenAPI・작성일 {{date}}",
+    financial_empty: "아직 재무 수치가 없습니다(매일 최신 분기를 동기화)",
+    financial_item: "항목",
+    financial_period: "{{year}}년 {{quarter}}분기",
+    financial_cumulative_note:
+      "손익 수치는 연초부터 해당 분기까지의 누계입니다. 다른 분기는 직접 비교할 수 없습니다. 금액 단위는 천 대만달러, 주당 수치는 대만달러입니다.",
+    ratio_formula:
+      "부채비율 = 부채총계 ÷ 자산총계; 순이익률 = 당기순이익 ÷ 영업수익(영업수익 항목이 있는 경우만).",
+    ratio: {
+      DEBT_RATIO: "부채비율",
+      NET_MARGIN: "순이익률",
+    },
+    emission_title: "온실가스 배출량",
+    emission_source: "출처: 공개정보관측소 ESG 정보 공시(공시 연도별)",
+    emission_empty: "아직 온실가스 공시 데이터가 없습니다",
+    emission_change: "전년 대비 {{change}}%",
+    emission_boundary_changed: "전년과 데이터 경계가 달라 비교하지 않음",
+    emission_boundary: "데이터 경계: {{boundary}}",
     back: "기업 관측소로 돌아가기",
     not_found: "회사를 찾을 수 없습니다",
     listing_date: "상장일 {{date}}",

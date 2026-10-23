@@ -52,3 +52,11 @@ export function formatIsoDate(iso: string | null): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
+
+// Info: (20261023 - Luphia) 十進位字串加千分位（可含負號與小數，例：-979439 → -979,439；0.38 → 0.38）
+export function formatDecimalString(value: string): string {
+  const match = value.trim().match(/^(-?)(\d+)(\.\d+)?$/);
+  if (!match) return value;
+  const [, sign, integer, fraction = ""] = match;
+  return `${sign}${groupThousands(integer)}${fraction}`;
+}

@@ -1,4 +1,9 @@
 import {
+  FinancialForm,
+  FinancialStatement,
+  FinancialUnit,
+} from "@/constants/company_financial";
+import {
   OBSERVATORY_FETCH_OUTCOME,
   ObservatoryContentType,
   ObservatoryDocumentStatus,
@@ -183,4 +188,27 @@ export interface IObservatoryIndexSummary {
   failed: number;
   dead: number;
   skippedReason: string | null;
+}
+
+// Info: (20261023 - Luphia) 財務 OpenAPI 解析後、寫入 CompanyFinancialFact 前的一筆科目
+export interface IFinancialFactInput {
+  stockId: string;
+  year: number;
+  quarter: number;
+  statement: FinancialStatement;
+  item: string;
+  // Info: (20261023 - Luphia) 字串原樣保留，寫入時才轉 Prisma.Decimal，全程不經過 number
+  value: string;
+  unit: FinancialUnit;
+  form: FinancialForm;
+  reportedAt: string;
+  sourceUrl: string;
+  fetchedAt: Date;
+}
+
+export interface IFinancialSyncSummary {
+  endpoints: number;
+  failedEndpoints: number;
+  companies: number;
+  facts: number;
 }
