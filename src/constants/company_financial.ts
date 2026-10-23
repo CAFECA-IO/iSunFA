@@ -134,8 +134,41 @@ export type FinancialRatio =
 // Info: (20261023 - Luphia) 比率顯示到小數第 2 位（百分比）
 export const FINANCIAL_RATIO_DECIMALS = 2;
 
-// Info: (20261023 - Luphia) 公司頁最多顯示幾期（新的在前）
-export const FINANCIAL_PERIODS_SHOWN = 8;
+// Info: (20261023 - Luphia) 公司頁最多並排幾期同一季（最新一季＋往年同季，新的在前）
+export const FINANCIAL_PERIODS_SHOWN = 4;
 
 // Info: (20261023 - Luphia) 淨利率只在營收科目是「營業收入」時計算：其他格式的「收益／收入」定義不同，算出來不能比
 export const FINANCIAL_NET_MARGIN_REVENUE_LABEL = "營業收入";
+
+// Info: (20261023 - Luphia) 市場別：與 Company.marketType 的值相同
+export const FINANCIAL_MARKET = {
+  LISTED: "sii",
+  OTC: "otc",
+} as const;
+
+export type FinancialMarket =
+  (typeof FINANCIAL_MARKET)[keyof typeof FINANCIAL_MARKET];
+
+// Info: (20261023 - Luphia) 報表格式認不出來時的標記（MOPS 彙總報表較舊的期別表格較少）
+export const FINANCIAL_FORM_UNKNOWN = "unknown";
+
+/**
+ * Info: (20261023 - Luphia) MOPS 彙總報表的表格沒有標示報表格式，以「只有該格式才有的欄位」辨識；
+ * 依序比對，第一個命中的就是。都沒命中標為 unknown，不猜。
+ */
+export const FINANCIAL_FORM_SIGNATURES: readonly {
+  form: FinancialForm;
+  column: string;
+}[] = [
+  { form: "ci", column: "營業毛利（毛損）" },
+  { form: "ci", column: "流動資產" },
+  { form: "fh", column: "淨收益" },
+  { form: "basi", column: "利息以外淨損益" },
+  { form: "bd", column: "支出及費用" },
+  { form: "ins", column: "繼續營業單位稅前純益（純損）" },
+  { form: "mim", column: "支出" },
+];
+
+// Info: (20261023 - Luphia) 歷史回補：往回補幾個年度；每次同步最多發幾支 MOPS 查詢（逐主機限速 5 秒）
+export const FINANCIAL_BACKFILL_YEARS = 3;
+export const FINANCIAL_BACKFILL_REQUESTS_PER_RUN = 12;

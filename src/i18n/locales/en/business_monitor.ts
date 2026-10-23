@@ -113,7 +113,10 @@ export const businessMonitor = {
     financial_item: "Item",
     financial_period: "{{year}} Q{{quarter}}",
     financial_cumulative_note:
-      "Income statement figures are year-to-date through the quarter; different quarters are not directly comparable. Amounts are in NT$ thousands; per-share figures in NT$.",
+      "Income statement figures are year-to-date, so only the same quarter is shown side by side and compared year over year. Amounts are in NT$ thousands; per-share figures in NT$.",
+    financial_yoy: "{{change}}% YoY",
+    financial_period_annual: "FY{{year}}",
+    financial_source_mops: "Source: MOPS summary reports",
     ratio_formula:
       "Debt ratio = total liabilities ÷ total assets; net margin = net income ÷ operating revenue (only where the item is operating revenue).",
     ratio: {
@@ -164,5 +167,8 @@ export const businessMonitor = {
     GHG_INVENTORY: "GHG inventory disclosure",
     GCIS_REGISTRATION: "Company registration",
     MANUAL_IMPORT: "Imported report",
+    MOPS_FINANCIAL_REPORT_Q1: "Q1 financial report",
+    MOPS_FINANCIAL_REPORT_Q2: "Q2 financial report",
+    MOPS_FINANCIAL_REPORT_Q3: "Q3 financial report",
   },
 };

@@ -174,6 +174,11 @@ export interface IFinancialKeyValue {
   label: string;
   value: string;
   unit: string;
+  /**
+   * Info: (20261023 - Luphia) 與去年同期（同一季、年初累計）相比的增減百分比；
+   * 去年同期沒有這個科目、或去年同期的值不是正數時為 null（由負轉正的「百分比」沒有意義）。
+   */
+  changePercent: string | null;
 }
 
 // Info: (20261023 - Luphia) 由 Decimal 算出的比率（百分比，小數第 2 位）；分母為 0 或缺科目時不給

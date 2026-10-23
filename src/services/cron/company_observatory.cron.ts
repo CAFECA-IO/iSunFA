@@ -67,6 +67,7 @@ export async function runCompanyFinancialFactSync(): Promise<IFinancialSyncSumma
   const summary = await syncFinancialFacts({
     http: createObservatoryHttpClient(),
     writeFacts: (facts) => companyFinancialFactRepo.replacePeriods(facts),
+    listPresentPeriods: () => companyFinancialFactRepo.listPresentPeriods(),
     now: () => new Date(),
     shouldStop: isShuttingDown,
   });

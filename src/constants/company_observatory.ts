@@ -1,7 +1,9 @@
 import path from "node:path";
 import {
   FINANCIAL_FORMS,
+  FINANCIAL_MARKET,
   FinancialForm,
+  FinancialMarket,
   FinancialStatement,
 } from "@/constants/company_financial";
 
@@ -19,6 +21,10 @@ export const OBSERVATORY_SOURCE = {
   GCIS_REGISTRATION: "GCIS_REGISTRATION",
   // Info: (20261015 - Luphia) 公開資訊觀測站電子書：年度（第四季）IFRSs 財務報告書 PDF
   MOPS_FINANCIAL_REPORT: "MOPS_FINANCIAL_REPORT",
+  // Info: (20261023 - Luphia) 公開資訊觀測站電子書：第一～三季 IFRSs 財務報告書 PDF（只追蹤今年，第四季即年度報告）
+  MOPS_FINANCIAL_REPORT_Q1: "MOPS_FINANCIAL_REPORT_Q1",
+  MOPS_FINANCIAL_REPORT_Q2: "MOPS_FINANCIAL_REPORT_Q2",
+  MOPS_FINANCIAL_REPORT_Q3: "MOPS_FINANCIAL_REPORT_Q3",
   // Info: (20261015 - Luphia) 證交所 ESG 數位平台：永續報告書 PDF
   ESG_REPORT: "ESG_REPORT",
   // Info: (20261015 - Luphia) 證交所 ESG 數位平台：溫室氣體盤查揭露（範疇一～三、確信機構與標準）
@@ -81,6 +87,9 @@ export const OBSERVATORY_SNAPSHOT_SOURCES: readonly ObservatorySource[] = [
 export const OBSERVATORY_SOURCE_LABEL: Record<ObservatorySource, string> = {
   GCIS_REGISTRATION: "公司登記資料",
   MOPS_FINANCIAL_REPORT: "財務報告",
+  MOPS_FINANCIAL_REPORT_Q1: "第一季財務報告",
+  MOPS_FINANCIAL_REPORT_Q2: "第二季財務報告",
+  MOPS_FINANCIAL_REPORT_Q3: "第三季財務報告",
   ESG_REPORT: "永續報告書",
   GHG_INVENTORY: "溫室氣體盤查",
 };
@@ -109,9 +118,83 @@ export const OBSERVATORY_REFRESH_AFTER_MS: Record<
 > = {
   GCIS_REGISTRATION: 30 * 24 * 60 * 60 * 1000,
   MOPS_FINANCIAL_REPORT: null,
+  MOPS_FINANCIAL_REPORT_Q1: null,
+  MOPS_FINANCIAL_REPORT_Q2: null,
+  MOPS_FINANCIAL_REPORT_Q3: null,
   ESG_REPORT: null,
   GHG_INVENTORY: null,
 };
+
+/**
+ * Info: (20261023 - Luphia) 依法定申報期限決定「查無」之後多久再查（申報季感知排程）。
+ *
+ * 期限取自公開資訊觀測站彙總報表頁的註 1（20261023 實測）：一般業第一季 5/15、第二季 8/14、第三季 11/14、
+ * 年度 3/31；金控業第一季 5/30、第二季 8/31、第三季 11/29；銀行與保險業第二季 8/31。
+ * 不分業別，取各業別最晚的期限，讓視窗涵蓋所有公司。永續報告書（與同平台的溫室氣體揭露）為次年 8/31。
+ *
+ * - 期間還沒結束：不可能有報告，下次查詢排在期間結束後一天。
+ * - 期間結束到期限後 14 天（申報季）：每天查。
+ * - 其餘時間（早已過期限的補件、更正）：每 30 天查一次。
+ * 公司登記不在表內（現況快照，沿用固定的 7 天重查）。
+ */
+export interface IFilingDate {
+  // Info: (20261023 - Luphia) 相對於報告年度的年份位移（年度報告的期限在次年 → 1）
+  yearOffset: number;
+  month: number;
+  day: number;
+}
+
+export interface IFilingSchedule {
+  periodEnd: IFilingDate;
+  deadline: IFilingDate;
+}
+
+export const OBSERVATORY_FILING_SCHEDULE: Partial<
+  Record<ObservatorySource, IFilingSchedule>
+> = {
+  MOPS_FINANCIAL_REPORT: {
+    periodEnd: { yearOffset: 0, month: 12, day: 31 },
+    deadline: { yearOffset: 1, month: 3, day: 31 },
+  },
+  MOPS_FINANCIAL_REPORT_Q1: {
+    periodEnd: { yearOffset: 0, month: 3, day: 31 },
+    deadline: { yearOffset: 0, month: 5, day: 30 },
+  },
+  MOPS_FINANCIAL_REPORT_Q2: {
+    periodEnd: { yearOffset: 0, month: 6, day: 30 },
+    deadline: { yearOffset: 0, month: 8, day: 31 },
+  },
+  MOPS_FINANCIAL_REPORT_Q3: {
+    periodEnd: { yearOffset: 0, month: 9, day: 30 },
+    deadline: { yearOffset: 0, month: 11, day: 29 },
+  },
+  ESG_REPORT: {
+    periodEnd: { yearOffset: 0, month: 12, day: 31 },
+    deadline: { yearOffset: 1, month: 8, day: 31 },
+  },
+  GHG_INVENTORY: {
+    periodEnd: { yearOffset: 0, month: 12, day: 31 },
+    deadline: { yearOffset: 1, month: 8, day: 31 },
+  },
+};
+
+export const OBSERVATORY_FILING_SEASON_RECHECK_MS = 24 * 60 * 60 * 1000;
+export const OBSERVATORY_OFF_SEASON_RECHECK_MS = 30 * 24 * 60 * 60 * 1000;
+export const OBSERVATORY_FILING_GRACE_MS = 14 * 24 * 60 * 60 * 1000;
+
+// Info: (20261023 - Luphia) 只追蹤今年的來源（季報：上一年度的第一～三季由年度報告涵蓋）
+export const OBSERVATORY_CURRENT_YEAR_SOURCES: readonly ObservatorySource[] = [
+  OBSERVATORY_SOURCE.MOPS_FINANCIAL_REPORT_Q1,
+  OBSERVATORY_SOURCE.MOPS_FINANCIAL_REPORT_Q2,
+  OBSERVATORY_SOURCE.MOPS_FINANCIAL_REPORT_Q3,
+];
+
+// Info: (20261023 - Luphia) MOPS 電子書檔名裡的季別（`202501_2330_AI1.pdf` 的 01）
+export const MOPS_SEASON_OF_SOURCE = {
+  MOPS_FINANCIAL_REPORT_Q1: "01",
+  MOPS_FINANCIAL_REPORT_Q2: "02",
+  MOPS_FINANCIAL_REPORT_Q3: "03",
+} as const;
 
 // ---------------------------------------------------------------------------
 // Info: (20261015 - Luphia) 排程
@@ -144,6 +227,8 @@ export const OBSERVATORY_HOST = {
   // Info: (20261023 - Luphia) 財務數字：證交所與櫃買中心的 OpenAPI
   TWSE_OPENAPI: "openapi.twse.com.tw",
   TPEX_OPENAPI: "www.tpex.org.tw",
+  // Info: (20261023 - Luphia) 歷史財務數字回補：公開資訊觀測站彙總報表
+  MOPS_SUMMARY: "mopsov.twse.com.tw",
 } as const;
 
 /**
@@ -151,13 +236,39 @@ export const OBSERVATORY_HOST = {
  * MOPS 電子書在密集查詢時會回「查詢過繁」並暫時封鎖，給最寬的間隔；
  * ESG 平台的報告書與溫室氣體兩個來源共用同一主機，由同一個限速器排隊。
  */
+/**
+ * Info: (20261023 - Luphia) 各來源打的是哪一台主機。限流是主機層級的：MOPS 電子書回「查詢過繁」時，
+ * 年報與第一～三季（四個來源、同一台主機）在這一輪都要停，不能換個來源繼續打。
+ */
+export const OBSERVATORY_SOURCE_HOST: Record<ObservatorySource, string> = {
+  GCIS_REGISTRATION: OBSERVATORY_HOST.GCIS,
+  MOPS_FINANCIAL_REPORT: OBSERVATORY_HOST.MOPS_DOC,
+  MOPS_FINANCIAL_REPORT_Q1: OBSERVATORY_HOST.MOPS_DOC,
+  MOPS_FINANCIAL_REPORT_Q2: OBSERVATORY_HOST.MOPS_DOC,
+  MOPS_FINANCIAL_REPORT_Q3: OBSERVATORY_HOST.MOPS_DOC,
+  ESG_REPORT: OBSERVATORY_HOST.ESG_PLATFORM,
+  GHG_INVENTORY: OBSERVATORY_HOST.ESG_PLATFORM,
+};
+
 export const OBSERVATORY_HOST_MIN_INTERVAL_MS: Record<string, number> = {
   [OBSERVATORY_HOST.GCIS]: 2000,
   [OBSERVATORY_HOST.MOPS_DOC]: 5000,
   [OBSERVATORY_HOST.ESG_PLATFORM]: 3000,
   [OBSERVATORY_HOST.TWSE_OPENAPI]: 2000,
   [OBSERVATORY_HOST.TPEX_OPENAPI]: 2000,
+  [OBSERVATORY_HOST.MOPS_SUMMARY]: 5000,
 };
+
+/**
+ * Info: (20261023 - Luphia) 公開資訊觀測站彙總報表（綜合損益表 t163sb04、資產負債表 t163sb05）：
+ * POST 市場別、民國年、季別，回傳該期全部公司（依報表格式分表）。欄位名稱與 OpenAPI 相同，
+ * 數值帶千分位、空值寫成「--」；查不到時頁面寫「查詢無資料」。
+ */
+export const MOPS_SUMMARY_URL: Record<FinancialStatement, string> = {
+  INCOME: `https://${OBSERVATORY_HOST.MOPS_SUMMARY}/mops/web/ajax_t163sb04`,
+  BALANCE: `https://${OBSERVATORY_HOST.MOPS_SUMMARY}/mops/web/ajax_t163sb05`,
+};
+export const MOPS_SUMMARY_EMPTY_MARKER = "查詢無資料";
 
 /**
  * Info: (20261023 - Luphia) 財務數字的 OpenAPI 端點：上市（L）、上櫃（O）各 6 種報表格式 ×
@@ -167,6 +278,7 @@ export interface IFinancialOpenApiEndpoint {
   url: string;
   statement: FinancialStatement;
   form: FinancialForm;
+  market: FinancialMarket;
 }
 
 const FINANCIAL_STATEMENT_TABLE: Record<FinancialStatement, string> = {
@@ -182,11 +294,13 @@ export const FINANCIAL_OPENAPI_ENDPOINTS: readonly IFinancialOpenApiEndpoint[] =
           url: `https://${OBSERVATORY_HOST.TWSE_OPENAPI}/v1/opendata/${FINANCIAL_STATEMENT_TABLE[statement]}_L_${form}`,
           statement,
           form,
+          market: FINANCIAL_MARKET.LISTED,
         },
         {
           url: `https://${OBSERVATORY_HOST.TPEX_OPENAPI}/openapi/v1/mopsfin_${FINANCIAL_STATEMENT_TABLE[statement]}_O_${form}`,
           statement,
           form,
+          market: FINANCIAL_MARKET.OTC,
         },
       ],
     ),
@@ -257,6 +371,9 @@ export const OBSERVATORY_STORAGE_DIR = path.join(
  */
 export const OBSERVATORY_PDF_SOURCES: readonly ObservatorySource[] = [
   OBSERVATORY_SOURCE.MOPS_FINANCIAL_REPORT,
+  OBSERVATORY_SOURCE.MOPS_FINANCIAL_REPORT_Q1,
+  OBSERVATORY_SOURCE.MOPS_FINANCIAL_REPORT_Q2,
+  OBSERVATORY_SOURCE.MOPS_FINANCIAL_REPORT_Q3,
   OBSERVATORY_SOURCE.ESG_REPORT,
 ];
 
@@ -335,6 +452,9 @@ export const OBSERVATORY_REPORT_TITLE_SUFFIX: Record<
 > = {
   GCIS_REGISTRATION: "年公司登記資料",
   MOPS_FINANCIAL_REPORT: "年度財務報告",
+  MOPS_FINANCIAL_REPORT_Q1: "年第一季財務報告",
+  MOPS_FINANCIAL_REPORT_Q2: "年第二季財務報告",
+  MOPS_FINANCIAL_REPORT_Q3: "年第三季財務報告",
   ESG_REPORT: "年永續報告書",
   GHG_INVENTORY: "年溫室氣體盤查揭露",
 };
@@ -347,6 +467,9 @@ export const OBSERVATORY_SOURCES_BY_REPORT_TYPE: Record<
   永續報告書: [OBSERVATORY_SOURCE.ESG_REPORT, OBSERVATORY_SOURCE.GHG_INVENTORY],
   財務報告: [
     OBSERVATORY_SOURCE.MOPS_FINANCIAL_REPORT,
+    OBSERVATORY_SOURCE.MOPS_FINANCIAL_REPORT_Q1,
+    OBSERVATORY_SOURCE.MOPS_FINANCIAL_REPORT_Q2,
+    OBSERVATORY_SOURCE.MOPS_FINANCIAL_REPORT_Q3,
     OBSERVATORY_SOURCE.GCIS_REGISTRATION,
   ],
 };

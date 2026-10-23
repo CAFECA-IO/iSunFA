@@ -17,6 +17,8 @@ export interface IObservatoryPlanRow {
   stockId: string;
   source: ObservatorySource;
   year: number;
+  // Info: (20261023 - Luphia) 第一次查詢時間（申報季感知）；不給就是立刻
+  nextAttemptAt?: Date;
 }
 
 export const observatoryDocumentRepo = {
@@ -104,7 +106,13 @@ export const observatoryDocumentRepo = {
   // Info: (20261022 - Luphia) 以唯一鍵（公司代號 × 來源 × 年度）取一份文件；企業觀測站頁面下載原始檔用
   findByKey(key: IObservatoryPlanRow): Promise<ObservatoryDocument | null> {
     return prisma.observatoryDocument.findUnique({
-      where: { stockId_source_year: key },
+      where: {
+        stockId_source_year: {
+          stockId: key.stockId,
+          source: key.source,
+          year: key.year,
+        },
+      },
     });
   },
 

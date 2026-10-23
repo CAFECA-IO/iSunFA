@@ -112,7 +112,10 @@ export const businessMonitor = {
     financial_item: "항목",
     financial_period: "{{year}}년 {{quarter}}분기",
     financial_cumulative_note:
-      "손익 수치는 연초부터 해당 분기까지의 누계입니다. 다른 분기는 직접 비교할 수 없습니다. 금액 단위는 천 대만달러, 주당 수치는 대만달러입니다.",
+      "손익 수치는 연초부터의 누계이므로 같은 분기만 나란히 보여 주고 전년 동기 대비를 계산합니다. 금액 단위는 천 대만달러, 주당 수치는 대만달러입니다.",
+    financial_yoy: "전년 동기 대비 {{change}}%",
+    financial_period_annual: "{{year}}년 연간",
+    financial_source_mops: "출처: 공개정보관측소 집계 보고서",
     ratio_formula:
       "부채비율 = 부채총계 ÷ 자산총계; 순이익률 = 당기순이익 ÷ 영업수익(영업수익 항목이 있는 경우만).",
     ratio: {
@@ -163,5 +166,8 @@ export const businessMonitor = {
     GHG_INVENTORY: "온실가스 인벤토리 공시",
     GCIS_REGISTRATION: "회사 등기 정보",
     MANUAL_IMPORT: "가져온 보고서",
+    MOPS_FINANCIAL_REPORT_Q1: "1분기 재무보고서",
+    MOPS_FINANCIAL_REPORT_Q2: "2분기 재무보고서",
+    MOPS_FINANCIAL_REPORT_Q3: "3분기 재무보고서",
   },
 };

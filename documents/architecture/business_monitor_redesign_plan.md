@@ -2,7 +2,7 @@
 
 > **Author**: Luphia ｜ **Last Updated**: 2026-10-22
 > **對象**：`/business_monitor` 頁面、`business_monitor.service`、企業觀測站背景管線（[07_company_observatory.md](async_workers/07_company_observatory.md)）
-> **狀態**：§9 四項決策已定（2026-10-22）；第一期已實作（見 §10）；第二期的首頁與公司頁已實作（見 §11）；第三期的財務數字與碳排已實作（見 §12），申報季感知排程、四季財報與對話化 AI 尚未開始。
+> **狀態**：§9 四項決策已定（2026-10-22）；第一期已實作（見 §10）；第二期的首頁與公司頁已實作（見 §11）；第三期已完成（財務數字與碳排見 §12；申報季排程、四季財報、歷史回補見 §13），對話化 AI（第四期）尚未開始。
 
 ---
 
@@ -321,4 +321,18 @@ model CompanyBusinessSummary {        // 年報「營運概況」萃取結果
   第四期的 AI 結構化工具需要時，可以同一個解析器讀取。
 - **財務數字只存 OpenAPI 給的科目**：OpenAPI 是精簡報表（約 20～60 個科目），沒有附註與明細。
 
-尚未做（留在第三期後半）：申報季感知排程、四季財報 PDF、OpenAPI 歷史期別的回補（OpenAPI 無歷史，要回補得改抓 MOPS 彙總報表）。
+第三期後半見 §13。
+
+---
+
+## 13. 第三期後半：申報季排程、四季財報、歷史回補（2026-10-23）
+
+| 項目                                                                       | 位置                                                                                |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| 依法定申報期限決定重查間隔（期間未結束→結束隔天；申報季→每天；其餘→30 天） | `retry_policy.ts`（`nextRecheckAt`、`firstCheckAt`）、`OBSERVATORY_FILING_SCHEDULE` |
+| 限流改以主機為單位（MOPS 年報與季報同一台主機一起暫停）                    | `OBSERVATORY_SOURCE_HOST`、`company_observatory.service.ts`                         |
+| 第一～三季財報 PDF（只追蹤今年）                                           | `MOPS_FINANCIAL_REPORT_Q1/Q2/Q3`、`createMopsFinancialReportDownloader`             |
+| 歷史財務數字回補（MOPS 彙總報表，近 3 年）                                 | `mops_financial_summary.ts`、`financial_facts.sync.service.ts`                      |
+| 公司頁並排同一季、附年增率                                                 | `financial_summary.ts`、`financial_card.tsx`                                        |
+
+細節與實測見 `async_workers/07_company_observatory.md` §10～§12。

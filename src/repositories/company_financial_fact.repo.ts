@@ -56,6 +56,22 @@ export const companyFinancialFactRepo = {
     return facts.length;
   },
 
+  /**
+   * Info: (20261023 - Luphia) 資料庫裡已經有哪些「年 × 季 × 報表 × 市場」，供歷史回補判斷缺哪幾期。
+   * 鍵的格式與 mops_financial_summary.backfillKey 相同。
+   */
+  async listPresentPeriods(): Promise<Set<string>> {
+    const groups = await prisma.companyFinancialFact.groupBy({
+      by: ["year", "quarter", "statement", "market"],
+    });
+    return new Set(
+      groups.map(
+        (group) =>
+          `${group.year}|${group.quarter}|${group.statement}|${group.market}`,
+      ),
+    );
+  },
+
   findByStockId(stockId: string): Promise<CompanyFinancialFact[]> {
     return prisma.companyFinancialFact.findMany({
       where: { stockId },
