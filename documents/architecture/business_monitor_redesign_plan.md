@@ -343,3 +343,6 @@ model CompanyBusinessSummary {        // 年報「營運概況」萃取結果
 
 產品決定：系統預設隱藏企業觀測站，隱藏時不主動收集企業資料。實作為系統設定 `BUSINESS_MONITOR_ENABLED`（預設 `false`、
 fail closed），關閉時頁面與 API 回 404、導覽不顯示、sitemap 不列、背景三支排程不做任何事。細節見 `async_workers/07_company_observatory.md` §13。
+
+要清空已收集的資料與檔案：先在後台關閉開關，再執行 `npm run purge_company_observatory -- --yes`（不加 `--yes` 只列出會刪除的內容），
+範圍見 `async_workers/07_company_observatory.md` §14。

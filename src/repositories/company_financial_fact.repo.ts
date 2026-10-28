@@ -72,6 +72,16 @@ export const companyFinancialFactRepo = {
     );
   },
 
+  // Info: (20261028 - Luphia) 清空企業觀測站（scripts/purge_company_observatory.ts）
+  countAll(): Promise<number> {
+    return prisma.companyFinancialFact.count();
+  },
+
+  async deleteAll(): Promise<number> {
+    const result = await prisma.companyFinancialFact.deleteMany({});
+    return result.count;
+  },
+
   findByStockId(stockId: string): Promise<CompanyFinancialFact[]> {
     return prisma.companyFinancialFact.findMany({
       where: { stockId },

@@ -198,3 +198,23 @@ PENDING ──下載──▶ DOWNLOADED ──索引──▶ INDEXED
   導覽列與小工具選單不顯示入口（`GET /api/v1/features`；讀回之前與讀取失敗都先隱藏）、sitemap 不列出。
   管理端 `/api/v1/admin/company_observatory/*` 仍可使用（只讀狀態與重排死信，不會觸發收集）。
 - **關閉不會刪資料**：已下載的檔案、切塊與財務數字保留在原處，重新開啟後接續（排程與回補都是冪等的）。
+
+## 14. 清空收集的資料（2026-10-28）
+
+```bash
+npm run purge_company_observatory            # 演練：只列出會刪除的內容與筆數
+npm run purge_company_observatory -- --yes   # 真的刪除（無法復原）
+```
+
+| 清除                                                             | 不動                                                        |
+| ---------------------------------------------------------------- | ----------------------------------------------------------- |
+| `ObservatoryDocument` 全部列（下載狀態）                         | 公司字典 `Company`（其他功能也在用）                        |
+| `data/company_observatory/` 原始檔                               | 手動匯入的報告（`Report` 非 `observatory/` 前綴）與 `pdfs/` |
+| LanceDB `company_observatory_chunks`（重建為空表，保留全文索引） | `company_reports` 向量表                                    |
+| `Report` 中 `pdfPath` 以 `observatory/` 開頭的列                 | 計費與用量紀錄                                              |
+| `CompanyFinancialFact` 全部列                                    |                                                             |
+
+- 開關 `BUSINESS_MONITOR_ENABLED` 開著時拒絕執行：worker 下一輪就會重新規劃、重新下載。請先在後台關閉並簽章。
+- 刪除順序是下載狀態 → 報告 → 財務數字 → 向量切塊 → 原始檔，每一步都可重跑；中途失敗再執行一次即可。
+- 檔案刪除只接受 `OBSERVATORY_STORAGE_DIR` 本身（`inspectStorageRoot`／`removeStorageRoot`），傳入其他路徑直接丟錯。
+- 之後重新開啟開關，worker 會從頭規劃與下載。

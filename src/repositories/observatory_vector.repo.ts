@@ -115,6 +115,16 @@ export const observatoryVectorRepo = {
   },
 
   // Info: (20261015 - Luphia) 合併小檔並把新寫入的列併進向量／全文索引，讓檢索不必一直掃描未索引的尾巴
+  // Info: (20261028 - Luphia) 清空前先數：資料表不存在時回 0（從未建立就沒有東西要清）
+  async countRows(): Promise<number> {
+    try {
+      const table = await lanceDBService.getTable(OBSERVATORY_LANCE_TABLE);
+      return await table.countRows();
+    } catch {
+      return 0;
+    }
+  },
+
   async optimize(): Promise<void> {
     const table = await openTable();
     await table.optimize();

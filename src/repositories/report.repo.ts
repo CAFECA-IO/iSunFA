@@ -14,6 +14,16 @@ export const reportRepo = {
   create(args: Prisma.ReportCreateArgs): Promise<Report> {
     return prisma.report.create(args);
   },
+  // Info: (20261028 - Luphia) 清空企業觀測站發布的報告：只動 pdfPath 以指定前綴開頭的列，手動匯入的報告不受影響
+  countByPdfPathPrefix(prefix: string): Promise<number> {
+    return prisma.report.count({ where: { pdfPath: { startsWith: prefix } } });
+  },
+  async deleteByPdfPathPrefix(prefix: string): Promise<number> {
+    const result = await prisma.report.deleteMany({
+      where: { pdfPath: { startsWith: prefix } },
+    });
+    return result.count;
+  },
   // Info: (20261015 - Luphia) 企業觀測站以 pdfPath（observatory/{stockId}/{year}/{source}）冪等發布
   upsert(args: Prisma.ReportUpsertArgs): Promise<Report> {
     return prisma.report.upsert(args);

@@ -79,6 +79,16 @@ export const observatoryDocumentRepo = {
     });
   },
 
+  // Info: (20261028 - Luphia) 清空企業觀測站（scripts/purge_company_observatory.ts）：先數、再全刪
+  countAll(): Promise<number> {
+    return prisma.observatoryDocument.count();
+  },
+
+  async deleteAll(): Promise<number> {
+    const result = await prisma.observatoryDocument.deleteMany({});
+    return result.count;
+  },
+
   // Info: (20261022 - Luphia) 公司頁報告庫：一家公司的所有文件（各來源 × 年度）
   listByStockId(stockId: string): Promise<ObservatoryDocument[]> {
     return prisma.observatoryDocument.findMany({
