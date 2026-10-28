@@ -12,6 +12,7 @@ import {
   Mail,
   ShieldCheck,
   SlidersHorizontal,
+  ToggleRight,
 } from "lucide-react";
 import AdminPageHeader from "@/components/admin/common/admin_page_header";
 import { useTranslation } from "@/i18n/i18n_context";
@@ -74,6 +75,11 @@ const GROUP_STYLES: Record<
   [SystemSettingGroup.PAYMENT]: { icon: CreditCard, color: "text-emerald-600" },
   // Info: (20260815 - Luphia) 寄信設定（email 邀請）
   [SystemSettingGroup.MAIL]: { icon: Mail, color: "text-sky-600" },
+  // Info: (20261028 - Luphia) 功能開關（企業觀測站等預設關閉的功能）
+  [SystemSettingGroup.FEATURES]: {
+    icon: ToggleRight,
+    color: "text-orange-600",
+  },
 };
 
 interface ITrustState {
@@ -345,33 +351,63 @@ export default function AdminSettingsPage() {
                           {sourceLabel(row.source)}
                         </span>
                       </div>
-                      <input
-                        id={`setting-${row.key}`}
-                        aria-label={row.key}
-                        type={row.isSecret ? "password" : "text"}
-                        value={values[row.key] ?? ""}
-                        onChange={(e) =>
-                          setValues((prev) => ({
-                            ...prev,
-                            [row.key]: e.target.value,
-                          }))
-                        }
-                        /**
-                         * Info: (20260809 - Luphia) 沒有保險庫主密鑰就無法加密秘密值，
-                         * 直接鎖住輸入框，避免管理員填完、簽完 passkey 才在寫入時失敗。
-                         * 非秘密設定不受影響，仍可正常修改。
-                         */
-                        disabled={
-                          isBusy ||
-                          (row.isSecret && trust?.vaultReady === false)
-                        }
-                        className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-gray-900 transition outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500 disabled:bg-slate-50"
-                        placeholder={
-                          SYSTEM_SETTING_DEFINITIONS[row.key].isSecret
-                            ? SECRET_MASK
-                            : (row.fallback ?? "")
-                        }
-                      />
+                      {/* Info: (20261028 - Luphia) 限定選項的設定（功能開關）用下拉選單，不讓人手打「ture」 */}
+                      {SYSTEM_SETTING_DEFINITIONS[row.key].options ? (
+                        <select
+                          id={`setting-${row.key}`}
+                          aria-label={row.key}
+                          value={values[row.key] ?? ""}
+                          onChange={(e) =>
+                            setValues((prev) => ({
+                              ...prev,
+                              [row.key]: e.target.value,
+                            }))
+                          }
+                          disabled={isBusy}
+                          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-gray-900 transition outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500 disabled:bg-slate-50"
+                        >
+                          <option value="">
+                            {t("admin_settings.option_unset", {
+                              value: row.fallback ?? "",
+                            })}
+                          </option>
+                          {SYSTEM_SETTING_DEFINITIONS[row.key].options?.map(
+                            (option) => (
+                              <option key={option} value={option}>
+                                {t(`admin_settings.option.${option}`)}
+                              </option>
+                            ),
+                          )}
+                        </select>
+                      ) : (
+                        <input
+                          id={`setting-${row.key}`}
+                          aria-label={row.key}
+                          type={row.isSecret ? "password" : "text"}
+                          value={values[row.key] ?? ""}
+                          onChange={(e) =>
+                            setValues((prev) => ({
+                              ...prev,
+                              [row.key]: e.target.value,
+                            }))
+                          }
+                          /**
+                           * Info: (20260809 - Luphia) 沒有保險庫主密鑰就無法加密秘密值，
+                           * 直接鎖住輸入框，避免管理員填完、簽完 passkey 才在寫入時失敗。
+                           * 非秘密設定不受影響，仍可正常修改。
+                           */
+                          disabled={
+                            isBusy ||
+                            (row.isSecret && trust?.vaultReady === false)
+                          }
+                          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-gray-900 transition outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500 disabled:bg-slate-50"
+                          placeholder={
+                            SYSTEM_SETTING_DEFINITIONS[row.key].isSecret
+                              ? SECRET_MASK
+                              : (row.fallback ?? "")
+                          }
+                        />
+                      )}
                       {/*
                         Info: (20260811 - Luphia) 只存在於 env 的項目要標示出來。
                         它與「已納入資料庫保管」在畫面上長得一樣（秘密都顯示 ********），

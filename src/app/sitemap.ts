@@ -1,6 +1,11 @@
 import { MetadataRoute } from "next";
+import { isFeatureEnabled } from "@/services/feature_flag.service";
+import { FEATURE_FLAG } from "@/constants/feature_flag";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// Info: (20261028 - Luphia) 依後台開關決定要不要列出企業觀測站，所以每次請求重算，不在建置時定型
+export const dynamic = "force-dynamic";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://isunfa.com";
 
   const routes = [
@@ -136,15 +141,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "daily",
       priority: 0.8,
     },
-    {
-      url: "business_monitor",
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.8,
-    },
   ] as const;
 
-  return routes.map((route) => ({
+  // Info: (20261028 - Luphia) 企業觀測站預設隱藏：關閉時不列入 sitemap，免得搜尋引擎爬到 404
+  const featureRoutes = (await isFeatureEnabled(FEATURE_FLAG.BUSINESS_MONITOR))
+    ? [
+        {
+          url: "business_monitor",
+          lastModified: new Date(),
+          changeFrequency: "daily" as const,
+          priority: 0.8,
+        },
+      ]
+    : [];
+
+  return [...routes, ...featureRoutes].map((route) => ({
     url: `${baseUrl}/${route.url}`.replace(/\/$/, ""),
     lastModified: route.lastModified,
     changeFrequency: route.changeFrequency,

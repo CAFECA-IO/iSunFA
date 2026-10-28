@@ -2299,6 +2299,16 @@ export const API_ERRORS = {
     status: ApiCode.NOT_FOUND,
   } as IErrorDef,
 
+  /**
+   * Info: (20261028 - Luphia) 功能已由後台關閉（企業觀測站預設隱藏）。回 404 而不是 403：
+   * 對外看起來就是沒有這個功能，不透露「有，但沒開」。
+   */
+  NF_FEATURE_DISABLED: {
+    code: "NF000034",
+    message: "This feature is not available",
+    status: ApiCode.NOT_FOUND,
+  } as IErrorDef,
+
   // Info: (20261022 - Luphia) 企業觀測站：公司代號不在公開資料字典（Company）裡
   NF_BUSINESS_MONITOR_COMPANY: {
     code: "NF000033",

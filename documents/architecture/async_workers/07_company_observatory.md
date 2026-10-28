@@ -108,6 +108,10 @@ PENDING ──下載──▶ DOWNLOADED ──索引──▶ INDEXED
 
 ## 7. 部署
 
+0. **企業觀測站預設隱藏（2026-10-28 起）**：系統設定 `BUSINESS_MONITOR_ENABLED`（後台「系統設定 → 功能開關」）
+   未設為「開啟」時，頁面、導覽與 API 都不提供，背景 worker 也不對外抓任何資料。要啟用請由超級管理員在後台改為「開啟」並簽章，
+   10 分鐘內生效（見 §13）。以下步驟在開啟前做好即可。
+
 1. `npx prisma db push`（新增 `observatory_document` 表）。
    2026-10-23 起另新增 `company_financial_fact` 表與其 `market` 欄位，同樣以 `npx prisma db push` 建立（只新增，不動既有表）。
 2. `npx tsx scripts/sync_companies.ts`：`Company` 是空的就沒有任何東西可下載。
@@ -178,3 +182,19 @@ PENDING ──下載──▶ DOWNLOADED ──索引──▶ INDEXED
 - 新增 `market` 欄位（`sii`／`otc`），用來判斷某市場某期是否已回補；舊列是空字串，隔日 OpenAPI 同步覆寫時補上。
 - 彙總報表的金控業數字是自洽的（華南金「淨收益」= 利息淨收益 + 利息以外淨收益），§8 提到的錯位只出現在 OpenAPI。
 - 公司頁改為並排「最新一季與往年同一季」，每個科目附與去年同期的增減（`Prisma.Decimal`；去年同期不是正數時不算）。
+
+## 13. 功能開關：預設隱藏、不收集（2026-10-28）
+
+產品決定：系統預設隱藏企業觀測站，隱藏時不主動收集任何企業資料。
+
+- **開關**：系統設定 `BUSINESS_MONITOR_ENABLED`，只接受 `true`／`false`（設定頁為下拉選單，寫入時 Schema 擋下其他值），
+  保底值 `false`。和其他系統設定一樣存 DB、由超級管理員以 passkey 簽章（ADR 017）。
+- **失效保護（fail closed）**：只有值完全等於 `true` 才算開啟。未設定、資料庫讀不到、設定簽章驗不過（UNTRUSTED）
+  一律視為關閉——開錯的代價是 worker 開始對外抓資料，關錯只是功能暫時看不到。2026-10-28 本機實測：資料庫容器停止時三支排程全部跳過。
+- **背景收集**：`CompanyObservatoryPlanner`、`CompanyObservatory`、`CompanyFinancialFacts` 每次執行前讀開關，關閉就直接返回，
+  不規劃、不下載、不索引、不同步財務數字。規劃與財務同步原本每 24 小時才醒一次，改為每 10 分鐘檢查、到期（24 小時）才做，
+  所以開關改了 10 分鐘內生效；開關狀態改變時記一筆 log。
+- **對外**：關閉時 `/business_monitor` 三個頁面回 404（伺服器元件於渲染前檢查）、7 支 `/api/v1/business_monitor/*` 回 `NF000034`（404）、
+  導覽列與小工具選單不顯示入口（`GET /api/v1/features`；讀回之前與讀取失敗都先隱藏）、sitemap 不列出。
+  管理端 `/api/v1/admin/company_observatory/*` 仍可使用（只讀狀態與重排死信，不會觸發收集）。
+- **關閉不會刪資料**：已下載的檔案、切塊與財務數字保留在原處，重新開啟後接續（排程與回補都是冪等的）。

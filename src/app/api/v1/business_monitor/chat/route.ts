@@ -8,6 +8,8 @@ import { businessMonitorChatSchema } from "@/validators";
 import { businessMonitorService } from "@/services/business_monitor.service";
 import { toBillingFailureResponse } from "@/lib/utils/billing_response";
 import { logger } from "@/lib/utils/logger";
+import { isFeatureEnabled } from "@/services/feature_flag.service";
+import { FEATURE_FLAG } from "@/constants/feature_flag";
 
 /**
  * Info: (20260610 - Julian) AI 諮詢功能
@@ -18,6 +20,10 @@ import { logger } from "@/lib/utils/logger";
  * 額度不足或需個人付款回結構化 402，前端據此付款後以同一個 clientMessageId 重送。
  */
 export const POST = async (request: NextRequest) => {
+  // Info: (20261028 - Luphia) 企業觀測站預設隱藏：後台未開啟時對外就是沒有這支 API
+  if (!(await isFeatureEnabled(FEATURE_FLAG.BUSINESS_MONITOR))) {
+    return jsonFail(API_ERRORS.NF_FEATURE_DISABLED);
+  }
   const sessionUser = await getIdentityFromDeWT(
     request.headers.get("Authorization"),
   );

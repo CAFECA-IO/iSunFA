@@ -308,6 +308,11 @@ export const FINANCIAL_OPENAPI_ENDPOINTS: readonly IFinancialOpenApiEndpoint[] =
 
 // Info: (20261023 - Luphia) 財務數字每日同步一次（來源每日出表；24 支請求，逐主機限速）
 export const FINANCIAL_SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000;
+/**
+ * Info: (20261028 - Luphia) 每日工作（規劃、財務同步）的迴圈多久醒一次，檢查開關與是否到期。
+ * 後台打開或關閉企業觀測站後，最久這麼久就生效。
+ */
+export const OBSERVATORY_SCHEDULE_POLL_MS = 10 * 60 * 1000;
 // Info: (20261023 - Luphia) 寫入時每批筆數（一支端點約 1,000 家 × 20～60 個科目）
 export const FINANCIAL_FACT_WRITE_CHUNK = 5000;
 export const OBSERVATORY_DEFAULT_HOST_MIN_INTERVAL_MS = 3000;

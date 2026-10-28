@@ -6,6 +6,8 @@ import { RateLimitBucketEnum } from "@/constants/rate_limit";
 import { businessMonitorStockIdSchema } from "@/validators";
 import { businessMonitorCompanyService } from "@/services/business_monitor_company.service";
 import { logger } from "@/lib/utils/logger";
+import { isFeatureEnabled } from "@/services/feature_flag.service";
+import { FEATURE_FLAG } from "@/constants/feature_flag";
 
 /**
  * Info: (20261022 - Luphia) 公司頁：基本資料、最新公司登記、依資料年度分組的報告庫
@@ -15,6 +17,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ stock_id: string }> },
 ) {
+  // Info: (20261028 - Luphia) 企業觀測站預設隱藏：後台未開啟時對外就是沒有這支 API
+  if (!(await isFeatureEnabled(FEATURE_FLAG.BUSINESS_MONITOR))) {
+    return jsonFail(API_ERRORS.NF_FEATURE_DISABLED);
+  }
   const identity =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const limited = enforceRateLimit(identity, RateLimitBucketEnum.READ);

@@ -2,7 +2,7 @@
 
 > **Author**: Luphia ｜ **Last Updated**: 2026-10-22
 > **對象**：`/business_monitor` 頁面、`business_monitor.service`、企業觀測站背景管線（[07_company_observatory.md](async_workers/07_company_observatory.md)）
-> **狀態**：§9 四項決策已定（2026-10-22）；第一期已實作（見 §10）；第二期的首頁與公司頁已實作（見 §11）；第三期已完成（財務數字與碳排見 §12；申報季排程、四季財報、歷史回補見 §13），對話化 AI（第四期）尚未開始。
+> **狀態**：**預設隱藏**（2026-10-28：未在後台開啟 `BUSINESS_MONITOR_ENABLED` 時不顯示、不收集，見 §14）。§9 四項決策已定（2026-10-22）；第一期已實作（見 §10）；第二期的首頁與公司頁已實作（見 §11）；第三期已完成（財務數字與碳排見 §12；申報季排程、四季財報、歷史回補見 §13），對話化 AI（第四期）尚未開始。
 
 ---
 
@@ -336,3 +336,10 @@ model CompanyBusinessSummary {        // 年報「營運概況」萃取結果
 | 公司頁並排同一季、附年增率                                                 | `financial_summary.ts`、`financial_card.tsx`                                        |
 
 細節與實測見 `async_workers/07_company_observatory.md` §10～§12。
+
+---
+
+## 14. 預設隱藏（2026-10-28）
+
+產品決定：系統預設隱藏企業觀測站，隱藏時不主動收集企業資料。實作為系統設定 `BUSINESS_MONITOR_ENABLED`（預設 `false`、
+fail closed），關閉時頁面與 API 回 404、導覽不顯示、sitemap 不列、背景三支排程不做任何事。細節見 `async_workers/07_company_observatory.md` §13。

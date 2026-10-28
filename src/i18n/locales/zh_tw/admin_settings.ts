@@ -15,7 +15,15 @@ export const adminSettings = {
     payment: "金流閘道",
     // Info: (20260815 - Luphia) email 邀請的寄信設定
     mail: "寄信（Email 邀請）",
+    // Info: (20261028 - Luphia) 預設關閉的功能（企業觀測站）
+    features: "功能開關",
   },
+  // Info: (20261028 - Luphia) 開關型設定的下拉選項
+  option: {
+    true: "開啟",
+    false: "關閉",
+  },
+  option_unset: "未設定（沿用預設：{{value}}）",
   env_only_hint:
     "此項目目前僅存在於環境變數，尚未納入資料庫保管與簽章；儲存後才會受保護。",
   env_shadowed_hint:

@@ -1,6 +1,14 @@
 import { logger } from "@/lib/utils/logger";
 import { isShuttingDown } from "@/lib/worker/shutdown";
-import { OBSERVATORY_DOCUMENT_STATUS } from "@/constants/company_observatory";
+import {
+  FINANCIAL_SYNC_INTERVAL_MS,
+  OBSERVATORY_DOCUMENT_STATUS,
+  OBSERVATORY_PLAN_INTERVAL_MS,
+} from "@/constants/company_observatory";
+
+// Info: (20261028 - Luphia) 到期判斷用的工作名稱
+const PLANNER_JOB = "CompanyObservatoryPlanner";
+const FINANCIAL_SYNC_JOB = "CompanyFinancialFacts";
 import {
   IFinancialSyncSummary,
   IObservatoryIndexSummary,
@@ -9,6 +17,8 @@ import {
 import { createObservatoryHttpClient } from "@/lib/company_observatory/http_client";
 import { companyFinancialFactRepo } from "@/repositories/company_financial_fact.repo";
 import { syncFinancialFacts } from "@/services/company_observatory/financial_facts.sync.service";
+import { isFeatureEnabled } from "@/services/feature_flag.service";
+import { FEATURE_FLAG } from "@/constants/feature_flag";
 import {
   buildCompanyObservatoryIndexer,
   buildCompanyObservatoryService,
@@ -26,17 +36,55 @@ import {
  * 迴圈被打斷或重跑都只是少做或多檢查一次。關機旗標在每份文件之間檢查，不會中途丟下半份。
  */
 
+/**
+ * Info: (20261028 - Luphia) 企業觀測站預設隱藏；關閉時三支排程都不做任何事，不對外抓資料。
+ * 每次執行前才讀開關（後台改了不必重啟 worker），讀不到一律當作關閉。
+ * 只在開關狀態改變時記一筆 log，免得每 10 分鐘洗一次版。
+ */
+let lastEnabled: boolean | null = null;
+
+export async function isObservatoryCollectionEnabled(): Promise<boolean> {
+  const enabled = await isFeatureEnabled(FEATURE_FLAG.BUSINESS_MONITOR);
+  if (enabled !== lastEnabled) {
+    logger.info(
+      enabled
+        ? "[CompanyObservatory] business monitor enabled; data collection on"
+        : "[CompanyObservatory] business monitor disabled; data collection paused",
+    );
+    lastEnabled = enabled;
+  }
+  return enabled;
+}
+
+/**
+ * Info: (20261028 - Luphia) 每日的工作（規劃、財務同步）改由每 10 分鐘的迴圈呼叫、到期才做：
+ * 迴圈若照舊每 24 小時醒一次，後台打開開關之後最久要等一天才開始收集。
+ * 上次成功的時間只放在記憶體：worker 重啟後會立刻補跑一次，兩者都是冪等的。
+ */
+const lastRunAt = new Map<string, number>();
+
+function isDue(key: string, intervalMs: number): boolean {
+  const last = lastRunAt.get(key);
+  return last === undefined || Date.now() - last >= intervalMs;
+}
+
 export async function runCompanyObservatoryPlanner(): Promise<{
   created: number;
   refreshed: number;
-}> {
-  return buildCompanyObservatoryService(isShuttingDown).planDocuments();
+} | null> {
+  if (!(await isObservatoryCollectionEnabled())) return null;
+  if (!isDue(PLANNER_JOB, OBSERVATORY_PLAN_INTERVAL_MS)) return null;
+  const result =
+    await buildCompanyObservatoryService(isShuttingDown).planDocuments();
+  lastRunAt.set(PLANNER_JOB, Date.now());
+  return result;
 }
 
 export async function runCompanyObservatoryCycle(): Promise<{
   downloads: IObservatoryProcessSummary;
   index: IObservatoryIndexSummary;
-}> {
+} | null> {
+  if (!(await isObservatoryCollectionEnabled())) return null;
   const downloads =
     await buildCompanyObservatoryService(isShuttingDown).processDownloads();
   const index =
@@ -63,7 +111,9 @@ export async function runCompanyObservatoryCycle(): Promise<{
  * Info: (20261023 - Luphia) 財務數字：每日抓一次證交所／櫃買中心 OpenAPI 的最新一期並覆寫。
  * OpenAPI 不給歷史，這支每天跑才能把每一期留下來；某支端點失敗不影響其他端點。
  */
-export async function runCompanyFinancialFactSync(): Promise<IFinancialSyncSummary> {
+export async function runCompanyFinancialFactSync(): Promise<IFinancialSyncSummary | null> {
+  if (!(await isObservatoryCollectionEnabled())) return null;
+  if (!isDue(FINANCIAL_SYNC_JOB, FINANCIAL_SYNC_INTERVAL_MS)) return null;
   const summary = await syncFinancialFacts({
     http: createObservatoryHttpClient(),
     writeFacts: (facts) => companyFinancialFactRepo.replacePeriods(facts),
@@ -71,6 +121,7 @@ export async function runCompanyFinancialFactSync(): Promise<IFinancialSyncSumma
     now: () => new Date(),
     shouldStop: isShuttingDown,
   });
+  lastRunAt.set(FINANCIAL_SYNC_JOB, Date.now());
   logger.info(`[CompanyFinancialFacts] ${JSON.stringify(summary)}`);
   if (summary.failedEndpoints > 0) {
     logger.warn(

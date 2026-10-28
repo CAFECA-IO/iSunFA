@@ -1,5 +1,8 @@
 import z from "zod";
-import { SYSTEM_SETTING_KEYS } from "@/constants/system_setting";
+import {
+  SYSTEM_SETTING_DEFINITIONS,
+  SYSTEM_SETTING_KEYS,
+} from "@/constants/system_setting";
 
 /**
  * Info: (20260809 - Luphia) 系統設定一律以「全量目標狀態」送出，不接受差異更新。
@@ -27,10 +30,21 @@ export const settingValueSchema = z
     { message: "Setting value must not contain control characters" },
   );
 
+/**
+ * Info: (20261028 - Luphia) 有限定選項的設定（功能開關）只接受選項內的值或空字串（空字串＝未設定、用保底值）。
+ */
 const settingValuesShape = SYSTEM_SETTING_KEYS.reduce<
-  Record<string, z.ZodOptional<typeof settingValueSchema>>
+  Record<string, z.ZodOptional<z.ZodType<string>>>
 >((shape, key) => {
-  shape[key] = settingValueSchema.optional();
+  const options = SYSTEM_SETTING_DEFINITIONS[key].options;
+  shape[key] = (
+    options
+      ? settingValueSchema.refine(
+          (value) => value === "" || options.includes(value),
+          { message: `Setting ${key} must be one of: ${options.join(", ")}` },
+        )
+      : settingValueSchema
+  ).optional();
   return shape;
 }, {});
 
