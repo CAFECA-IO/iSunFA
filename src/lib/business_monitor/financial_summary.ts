@@ -18,7 +18,8 @@ import {
  * Info: (20261023 - Luphia) 一家公司的財務科目 → 公司頁的各期關鍵數字與比率。純函數。
  *
  * 計算一律用 Prisma.Decimal（CLAUDE.md §2）；比率只在同一期、同一份來源的科目之間計算，
- * 分母為 0 或缺科目就不給，不補值。不做跨期比較：損益是年初累計，不同季別不可直接相減。
+ * 分母為 0 或缺科目就不給，不補值。損益是年初累計，不同季別不可直接相比，
+ * 所以公司頁只並排「最新一季與往年同一季」，年增率也只在同季之間計算。
  */
 
 export interface IFinancialFactRow {
@@ -62,7 +63,13 @@ function summarizePeriod(rows: IFinancialFactRow[]): IFinancialPeriod {
     const row = byItem.get(`${source.statement}|${label}`) as IFinancialFactRow;
     const value = new Prisma.Decimal(row.value);
     decimals.set(key, value);
-    items.push({ key, label, value: value.toString(), unit: row.unit });
+    items.push({
+      key,
+      label,
+      value: value.toString(),
+      unit: row.unit,
+      changePercent: null,
+    });
   }
 
   const ratios: IFinancialRatioValue[] = [];
@@ -101,6 +108,35 @@ function summarizePeriod(rows: IFinancialFactRow[]): IFinancialPeriod {
   };
 }
 
+// Info: (20261023 - Luphia) 同科目與去年同期相比；去年同期的值必須是正數才算百分比
+function withYearOverYear(
+  current: IFinancialPeriod,
+  previous: IFinancialPeriod | undefined,
+): IFinancialPeriod {
+  if (!previous) return current;
+  return {
+    ...current,
+    items: current.items.map((item) => {
+      const before = previous.items.find((p) => p.key === item.key);
+      if (!before) return item;
+      const then = new Prisma.Decimal(before.value);
+      if (!then.isPositive() || then.isZero()) return item;
+      return {
+        ...item,
+        changePercent: new Prisma.Decimal(item.value)
+          .minus(then)
+          .div(then)
+          .mul(HUNDRED)
+          .toFixed(FINANCIAL_RATIO_DECIMALS),
+      };
+    }),
+  };
+}
+
+/**
+ * Info: (20261023 - Luphia) 公司頁的財務數字：最新一季，加上往年的同一季（新的在前），
+ * 每一期附上與前一年同季的年增率。不同季別的累計數不放在一起。
+ */
 export function buildFinancialPeriods(
   rows: IFinancialFactRow[],
 ): IFinancialPeriod[] {
@@ -111,8 +147,17 @@ export function buildFinancialPeriods(
     list.push(row);
     byPeriod.set(key, list);
   }
-  return Array.from(byPeriod.values())
+  const all = Array.from(byPeriod.values())
     .map(summarizePeriod)
-    .sort((a, b) => b.year - a.year || b.quarter - a.quarter)
+    .sort((a, b) => b.year - a.year || b.quarter - a.quarter);
+  if (all.length === 0) return [];
+  const sameQuarter = all.filter((p) => p.quarter === all[0].quarter);
+  return sameQuarter
+    .map((period) =>
+      withYearOverYear(
+        period,
+        sameQuarter.find((p) => p.year === period.year - 1),
+      ),
+    )
     .slice(0, FINANCIAL_PERIODS_SHOWN);
 }

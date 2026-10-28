@@ -2,7 +2,10 @@
 
 import { FC } from "react";
 import { BarChart3 } from "lucide-react";
-import { IFinancialPeriod } from "@/interfaces/business_monitor";
+import {
+  IFinancialKeyValue,
+  IFinancialPeriod,
+} from "@/interfaces/business_monitor";
 import { FINANCIAL_RATIO } from "@/constants/company_financial";
 import { useTranslation } from "@/i18n/i18n_context";
 import {
@@ -10,16 +13,35 @@ import {
   formatRocDate,
 } from "@/lib/business_monitor/format";
 
-// Info: (20261023 - Luphia) 一次最多並排幾期（新的在左）；更早的期別在資料庫裡，畫面不擠
-const PERIODS_IN_TABLE = 4;
-
 /**
  * Info: (20261023 - Luphia) 財務數字：關鍵科目以來源原本的科目名稱顯示，單位照來源（仟元、元）；
- * 比率由後端以 Decimal 計算，公式寫在下方。損益表是年初累計至該季，不同季別不能直接相比。
+ * 比率由後端以 Decimal 計算，公式寫在下方。損益表是年初累計至該季，所以並排的是
+ * 「最新一季與往年同一季」，年增率也只在同季之間計算（後端算好，這裡只顯示）。
  */
+const ANNUAL_QUARTER = 4;
+
+const ValueCell: FC<{ cell: IFinancialKeyValue | undefined }> = ({ cell }) => {
+  const { t } = useTranslation();
+  if (!cell) return <>—</>;
+  const change = cell.changePercent;
+  return (
+    <div className="flex flex-col items-end">
+      <span>{`${formatDecimalString(cell.value)} ${cell.unit}`}</span>
+      {change !== null && (
+        <span
+          className={`text-xs font-bold ${change.startsWith("-") ? "text-red-600" : "text-emerald-700"}`}
+        >
+          {t("business_monitor.company.financial_yoy", {
+            change: change.startsWith("-") ? change : `+${change}`,
+          })}
+        </span>
+      )}
+    </div>
+  );
+};
 const FinancialCard: FC<{ periods: IFinancialPeriod[] }> = ({ periods }) => {
   const { t } = useTranslation();
-  const shown = periods.slice(0, PERIODS_IN_TABLE);
+  const shown = periods;
   const latest = shown[0];
 
   // Info: (20261023 - Luphia) 各期的科目可能不同（格式變動時），列以出現順序合併
@@ -40,9 +62,11 @@ const FinancialCard: FC<{ periods: IFinancialPeriod[] }> = ({ periods }) => {
         </h2>
         {latest && (
           <p className="text-xs text-slate-500">
-            {t("business_monitor.company.financial_source", {
-              date: formatRocDate(latest.reportedAt),
-            })}
+            {latest.reportedAt
+              ? t("business_monitor.company.financial_source", {
+                  date: formatRocDate(latest.reportedAt),
+                })
+              : t("business_monitor.company.financial_source_mops")}
           </p>
         )}
       </div>
@@ -65,10 +89,17 @@ const FinancialCard: FC<{ periods: IFinancialPeriod[] }> = ({ periods }) => {
                       key={`${period.year}-${period.quarter}`}
                       className="py-1 text-right font-medium"
                     >
-                      {t("business_monitor.company.financial_period", {
-                        year: period.year,
-                        quarter: period.quarter,
-                      })}
+                      {period.quarter === ANNUAL_QUARTER
+                        ? t(
+                            "business_monitor.company.financial_period_annual",
+                            {
+                              year: period.year,
+                            },
+                          )
+                        : t("business_monitor.company.financial_period", {
+                            year: period.year,
+                            quarter: period.quarter,
+                          })}
                     </th>
                   ))}
                 </tr>
@@ -84,9 +115,7 @@ const FinancialCard: FC<{ periods: IFinancialPeriod[] }> = ({ periods }) => {
                           key={`${period.year}-${period.quarter}`}
                           className="py-1.5 text-right font-medium whitespace-nowrap"
                         >
-                          {cell
-                            ? `${formatDecimalString(cell.value)} ${cell.unit}`
-                            : "—"}
+                          <ValueCell cell={cell} />
                         </td>
                       );
                     })}

@@ -36,11 +36,13 @@ const TWSE_INCOME: IFinancialOpenApiEndpoint = {
   url: "https://openapi.twse.com.tw/v1/opendata/t187ap06_L_ci",
   statement: FINANCIAL_STATEMENT.INCOME,
   form: "ci",
+  market: "sii",
 };
 const TPEX_BALANCE: IFinancialOpenApiEndpoint = {
   url: "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap07_O_ci",
   statement: FINANCIAL_STATEMENT.BALANCE,
   form: "ci",
+  market: "otc",
 };
 const NOW = new Date("2026-10-23T00:00:00Z");
 
@@ -141,6 +143,7 @@ describe("FINANCIAL_OPENAPI_ENDPOINTS", () => {
       url: "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap06_O_fh",
       statement: "INCOME",
       form: "fh",
+      market: "otc",
     });
   });
 });
@@ -202,16 +205,25 @@ describe("buildFinancialPeriods", () => {
     expect(zero.ratios).toEqual([]);
   });
 
-  it("orders periods newest first", () => {
+  // Info: (20261023 - Luphia) 損益是年初累計：只並排同一季，年增率也只在同季之間算
+  it("shows the latest quarter with the same quarter of past years", () => {
     const periods = buildFinancialPeriods([
       { ...row("營業收入", "1"), year: 2025, quarter: 4 },
-      row("營業收入", "2"),
+      row("營業收入", "120"),
       { ...row("營業收入", "3"), quarter: 1 },
+      { ...row("營業收入", "100"), year: 2025 },
+      { ...row("營業收入", "-5"), year: 2024 },
     ]);
     expect(periods.map((p) => `${p.year}Q${p.quarter}`)).toEqual([
       "2026Q2",
-      "2026Q1",
-      "2025Q4",
+      "2025Q2",
+      "2024Q2",
+    ]);
+    expect(periods.map((p) => p.items[0].changePercent)).toEqual([
+      "20.00",
+      // Info: (20261023 - Luphia) 去年同期是負數，百分比沒有意義，不算
+      null,
+      null,
     ]);
   });
 });
@@ -224,27 +236,39 @@ describe("syncFinancialFacts", () => {
         request: async (url: string) =>
           url === FINANCIAL_OPENAPI_ENDPOINTS[0].url
             ? { status: 500, body: Buffer.from("") }
-            : {
-                status: 200,
-                body: Buffer.from(
-                  JSON.stringify([
-                    { 公司代號: "1101", 年度: "115", 季別: "2", 營業收入: "1" },
-                  ]),
-                ),
-              },
+            : url.includes("mopsov")
+              ? { status: 200, body: Buffer.from("<html>查詢無資料!</html>") }
+              : {
+                  status: 200,
+                  body: Buffer.from(
+                    JSON.stringify([
+                      {
+                        公司代號: "1101",
+                        年度: "115",
+                        季別: "2",
+                        營業收入: "1",
+                      },
+                    ]),
+                  ),
+                },
       },
       writeFacts: async (facts) => {
         written.push(facts);
         return facts.length;
       },
+      listPresentPeriods: async () => new Set(),
       now: () => NOW,
       shouldStop: () => false,
     });
+    // Info: (20261023 - Luphia) OpenAPI 之後回補 MOPS 彙總報表；「查詢無資料」不寫入、不算失敗
     expect(summary).toEqual({
       endpoints: 24,
       failedEndpoints: 1,
       companies: 1,
       facts: 23,
+      backfillPeriods: 12,
+      backfillFacts: 0,
+      failedBackfills: 0,
     });
     expect(written).toHaveLength(23);
   });
@@ -258,6 +282,7 @@ describe("syncFinancialFacts", () => {
     const summary = await syncFinancialFacts({
       http: { request },
       writeFacts: async () => 0,
+      listPresentPeriods: async () => new Set(),
       now: () => NOW,
       shouldStop: () => ++calls > 2,
     });

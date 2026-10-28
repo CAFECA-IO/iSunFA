@@ -17,6 +17,12 @@ import {
   DEFAULT_TEAM_INVITE_DAILY_LIMIT,
   DEFAULT_TEAM_PENDING_INVITE_LIMIT,
 } from "@/constants/subscription_quota";
+// Info: (20261028 - Luphia) 開關型設定的兩個值；只有完全等於 ON 才算開啟
+export const SYSTEM_SETTING_SWITCH = {
+  ON: "true",
+  OFF: "false",
+} as const;
+
 export enum SystemSettingKey {
   GOOGLE_OAUTH_CLIENT_ID = "GOOGLE_OAUTH_CLIENT_ID",
   GOOGLE_OAUTH_CLIENT_SECRET = "GOOGLE_OAUTH_CLIENT_SECRET",
@@ -84,6 +90,13 @@ export enum SystemSettingKey {
   SMTP_FROM = "SMTP_FROM",
   // Info: (20260815 - Luphia) 邀請連結的站台網址（寄出的信裡要放絕對網址）
   APP_BASE_URL = "APP_BASE_URL",
+  /**
+   * Info: (20261028 - Luphia) 企業觀測站開關（產品決定 20261028：預設隱藏）。
+   *
+   * 關閉時頁面、導覽與 API 都不提供，背景 worker 也不向商業司、公開資訊觀測站、
+   * 證交所／櫃買中心抓任何資料。讀不到或驗不過簽章時一律視為關閉（不收集）。
+   */
+  BUSINESS_MONITOR_ENABLED = "BUSINESS_MONITOR_ENABLED",
 }
 
 // Info: (20260809 - Luphia) 設定分組，供設定頁排版
@@ -93,6 +106,8 @@ export enum SystemSettingGroup {
   PAYMENT = "PAYMENT",
   // Info: (20260815 - Luphia) 寄信（email 邀請）
   MAIL = "MAIL",
+  // Info: (20261028 - Luphia) 功能開關（預設關閉的功能）
+  FEATURES = "FEATURES",
 }
 
 // Info: (20260809 - Luphia) 設定頁的分區順序
@@ -101,6 +116,7 @@ export const SYSTEM_SETTING_GROUP_ORDER: SystemSettingGroup[] = [
   SystemSettingGroup.AI,
   SystemSettingGroup.PAYMENT,
   SystemSettingGroup.MAIL,
+  SystemSettingGroup.FEATURES,
 ];
 
 export interface ISystemSettingDefinition {
@@ -113,6 +129,11 @@ export interface ISystemSettingDefinition {
    * DB 尚未設定時仍讀 env，既有部署不改任何東西也能繼續運作。
    */
   envKey: string;
+  /**
+   * Info: (20261028 - Luphia) 只接受這幾個值（例：功能開關的 "true" / "false"）。
+   * 設定頁改用下拉選單，寫入時也以 Schema 擋下其他值——打錯一個字就等於關閉，而且沒有任何提示。
+   */
+  options?: readonly string[];
 }
 
 export const SYSTEM_SETTING_DEFINITIONS: Record<
@@ -224,6 +245,13 @@ export const SYSTEM_SETTING_DEFINITIONS: Record<
     isSecret: false,
     envKey: "APP_BASE_URL",
   },
+  [SystemSettingKey.BUSINESS_MONITOR_ENABLED]: {
+    key: SystemSettingKey.BUSINESS_MONITOR_ENABLED,
+    group: SystemSettingGroup.FEATURES,
+    isSecret: false,
+    envKey: "BUSINESS_MONITOR_ENABLED",
+    options: [SYSTEM_SETTING_SWITCH.ON, SYSTEM_SETTING_SWITCH.OFF],
+  },
 };
 
 /**
@@ -249,6 +277,8 @@ export const SYSTEM_SETTING_FALLBACKS: Partial<
   [SystemSettingKey.TEAM_INVITE_DAILY_LIMIT]: String(
     DEFAULT_TEAM_INVITE_DAILY_LIMIT,
   ),
+  // Info: (20261028 - Luphia) 企業觀測站預設隱藏，不主動收集企業資料
+  [SystemSettingKey.BUSINESS_MONITOR_ENABLED]: SYSTEM_SETTING_SWITCH.OFF,
 };
 
 export const SYSTEM_SETTING_KEYS = Object.keys(

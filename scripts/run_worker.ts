@@ -21,9 +21,8 @@ import {
 } from "@/services/cron/company_observatory.cron";
 import { JOB_RESUME_SCAN_INTERVAL_MS } from "@/constants/resumable_job";
 import {
-  FINANCIAL_SYNC_INTERVAL_MS,
-  OBSERVATORY_PLAN_INTERVAL_MS,
   OBSERVATORY_PROCESS_INTERVAL_MS,
+  OBSERVATORY_SCHEDULE_POLL_MS,
 } from "@/constants/company_observatory";
 import {
   installWorkerShutdownHandlers,
@@ -176,11 +175,13 @@ async function runWorker() {
     /**
      * Info: (20261015 - Luphia) 企業觀測站：每日補建待下載清單；每 10 分鐘下載與索引一小批。
      * 對外流量由逐主機限速控制（見 constants/company_observatory），失敗三次進死信。
+     * Info: (20261028 - Luphia) 三支都先檢查後台的企業觀測站開關（預設關閉＝不收集）；
+     * 每日工作改為每 10 分鐘檢查、到期才做，開關改了 10 分鐘內生效。
      */
     startServiceLoop(
       "CompanyObservatoryPlanner",
       () => runCompanyObservatoryPlanner(),
-      OBSERVATORY_PLAN_INTERVAL_MS,
+      OBSERVATORY_SCHEDULE_POLL_MS,
     ),
     startServiceLoop(
       "CompanyObservatory",
@@ -191,7 +192,7 @@ async function runWorker() {
     startServiceLoop(
       "CompanyFinancialFacts",
       () => runCompanyFinancialFactSync(),
-      FINANCIAL_SYNC_INTERVAL_MS,
+      OBSERVATORY_SCHEDULE_POLL_MS,
     ),
   ]);
 

@@ -83,6 +83,7 @@ export function parseFinancialRows(
         value,
         unit: financialUnitOf(item),
         form: endpoint.form,
+        market: endpoint.market,
         reportedAt,
         sourceUrl: endpoint.url,
         fetchedAt,

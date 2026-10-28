@@ -34,10 +34,13 @@ import { IApiResponse } from "@/lib/utils/response";
 import { IAccountBook } from "@/interfaces/account_book";
 import QrCodeModal from "@/components/common/qr_code_modal";
 import NotificationBell from "@/components/header/notification_bell";
+import { useFeatureFlags } from "@/hooks/use_feature_flags";
+import { isModuleVisible } from "@/lib/feature_flag";
 
 export default function UserActions() {
   const { user, logout, refreshAuth } = useAuth();
   const { t } = useTranslation();
+  const featureFlags = useFeatureFlags();
   const params = useParams();
 
   const [accountBook, setAccountBook] = useState<IAccountBook | null>(null);
@@ -172,7 +175,10 @@ export default function UserActions() {
 
   // Info: (20260502 - Luphia) 小工具選單
   const renderPublicModulesMenuItems = (close: () => void) => {
-    return PUBLIC_MODULES.map((module) => {
+    // Info: (20261028 - Luphia) 後台關閉的功能（企業觀測站預設關閉）不出現在小工具選單
+    return PUBLIC_MODULES.filter((module) =>
+      isModuleVisible(module.key, featureFlags),
+    ).map((module) => {
       const Icon = module.icon;
       const targetPath = `/${module.key}`;
 

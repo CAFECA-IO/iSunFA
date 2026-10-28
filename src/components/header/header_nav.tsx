@@ -12,14 +12,20 @@ import {
   Transition,
 } from "@headlessui/react";
 import { PUBLIC_MODULES, getModuleI18nKey } from "@/constants/modules";
+import { useFeatureFlags } from "@/hooks/use_feature_flags";
+import { isModuleVisible } from "@/lib/feature_flag";
 import LanguageSelector from "@/components/header/language_selector";
 import ThemeToggle from "@/components/header/theme_toggle";
 
 export default function HeaderNav() {
   const { t } = useTranslation();
+  // Info: (20261028 - Luphia) 後台關閉的功能（企業觀測站預設關閉）不出現在導覽列
+  const featureFlags = useFeatureFlags();
 
   const NAV_ITEMS = [
-    ...PUBLIC_MODULES.filter((module) => module.nav).map((module) => ({
+    ...PUBLIC_MODULES.filter(
+      (module) => module.nav && isModuleVisible(module.key, featureFlags),
+    ).map((module) => ({
       label: t(getModuleI18nKey(module.key)),
       href: `/${module.key}`,
       icon: module.icon,

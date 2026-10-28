@@ -54,3 +54,50 @@ export function createFileStorage(
     },
   };
 }
+
+/**
+ * Info: (20261028 - Luphia) 清空企業觀測站的原始檔（scripts/purge_company_observatory.ts）。
+ *
+ * 只接受 OBSERVATORY_STORAGE_DIR 本身：這是整個資料夾的遞迴刪除，參數若被改成別的路徑（例如 data/），
+ * 會把不屬於觀測站的東西一起刪掉。不是那個資料夾就直接丟錯，不嘗試。
+ */
+function assertObservatoryRoot(root: string): string {
+  const resolved = path.resolve(root);
+  if (resolved !== path.resolve(OBSERVATORY_STORAGE_DIR)) {
+    throw new Error(`refusing to touch a non-observatory folder: ${resolved}`);
+  }
+  return resolved;
+}
+
+export async function inspectStorageRoot(
+  root: string = OBSERVATORY_STORAGE_DIR,
+): Promise<{ files: number; bytes: number }> {
+  const resolved = assertObservatoryRoot(root);
+  let files = 0;
+  let bytes = 0;
+  const walk = async (dir: string): Promise<void> => {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(full);
+      } else if (entry.isFile()) {
+        files += 1;
+        bytes += (await fs.stat(full)).size;
+      }
+    }
+  };
+  try {
+    await walk(resolved);
+  } catch (error) {
+    // Info: (20261028 - Luphia) 資料夾不存在＝從未下載過，沒有東西要清
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+  return { files, bytes };
+}
+
+export async function removeStorageRoot(
+  root: string = OBSERVATORY_STORAGE_DIR,
+): Promise<void> {
+  await fs.rm(assertObservatoryRoot(root), { recursive: true, force: true });
+}

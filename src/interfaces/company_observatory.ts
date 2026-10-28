@@ -1,5 +1,7 @@
 import {
+  FINANCIAL_FORM_UNKNOWN,
   FinancialForm,
+  FinancialMarket,
   FinancialStatement,
   FinancialUnit,
 } from "@/constants/company_financial";
@@ -200,7 +202,9 @@ export interface IFinancialFactInput {
   // Info: (20261023 - Luphia) 字串原樣保留，寫入時才轉 Prisma.Decimal，全程不經過 number
   value: string;
   unit: FinancialUnit;
-  form: FinancialForm;
+  // Info: (20261023 - Luphia) MOPS 彙總報表認不出格式時為 FINANCIAL_FORM_UNKNOWN
+  form: FinancialForm | typeof FINANCIAL_FORM_UNKNOWN;
+  market: FinancialMarket;
   reportedAt: string;
   sourceUrl: string;
   fetchedAt: Date;
@@ -211,4 +215,16 @@ export interface IFinancialSyncSummary {
   failedEndpoints: number;
   companies: number;
   facts: number;
+  // Info: (20261023 - Luphia) MOPS 彙總報表回補：本次查了幾期、寫入幾筆、失敗幾期
+  backfillPeriods: number;
+  backfillFacts: number;
+  failedBackfills: number;
+}
+
+// Info: (20261023 - Luphia) 一個要回補的期別：某市場、某年某季、某張報表
+export interface IFinancialBackfillTarget {
+  year: number;
+  quarter: number;
+  statement: FinancialStatement;
+  market: FinancialMarket;
 }

@@ -16,7 +16,15 @@ export const adminSettings = {
     payment: "決済ゲートウェイ",
     // Info: (20260815 - Luphia) email 邀請的寄信設定
     mail: "メール送信（招待）",
+    // Info: (20261028 - Luphia) 預設關閉的功能（企業觀測站）
+    features: "機能スイッチ",
   },
+  // Info: (20261028 - Luphia) 開關型設定的下拉選項
+  option: {
+    true: "オン",
+    false: "オフ",
+  },
+  option_unset: "未設定（既定値：{{value}}）",
   env_only_hint:
     "この項目は現在環境変数にのみ存在し、データベース保管と署名の対象にはなっていません。保存すると保護対象になります。",
   env_shadowed_hint:

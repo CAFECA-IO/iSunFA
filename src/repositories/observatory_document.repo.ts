@@ -17,6 +17,8 @@ export interface IObservatoryPlanRow {
   stockId: string;
   source: ObservatorySource;
   year: number;
+  // Info: (20261023 - Luphia) 第一次查詢時間（申報季感知）；不給就是立刻
+  nextAttemptAt?: Date;
 }
 
 export const observatoryDocumentRepo = {
@@ -77,6 +79,16 @@ export const observatoryDocumentRepo = {
     });
   },
 
+  // Info: (20261028 - Luphia) 清空企業觀測站（scripts/purge_company_observatory.ts）：先數、再全刪
+  countAll(): Promise<number> {
+    return prisma.observatoryDocument.count();
+  },
+
+  async deleteAll(): Promise<number> {
+    const result = await prisma.observatoryDocument.deleteMany({});
+    return result.count;
+  },
+
   // Info: (20261022 - Luphia) 公司頁報告庫：一家公司的所有文件（各來源 × 年度）
   listByStockId(stockId: string): Promise<ObservatoryDocument[]> {
     return prisma.observatoryDocument.findMany({
@@ -104,7 +116,13 @@ export const observatoryDocumentRepo = {
   // Info: (20261022 - Luphia) 以唯一鍵（公司代號 × 來源 × 年度）取一份文件；企業觀測站頁面下載原始檔用
   findByKey(key: IObservatoryPlanRow): Promise<ObservatoryDocument | null> {
     return prisma.observatoryDocument.findUnique({
-      where: { stockId_source_year: key },
+      where: {
+        stockId_source_year: {
+          stockId: key.stockId,
+          source: key.source,
+          year: key.year,
+        },
+      },
     });
   },
 

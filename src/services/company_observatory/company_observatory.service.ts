@@ -1,4 +1,5 @@
 import {
+  OBSERVATORY_SOURCE_HOST,
   OBSERVATORY_DOCUMENT_STATUS,
   OBSERVATORY_DOWNLOAD_BATCH_PER_SOURCE,
   OBSERVATORY_FETCH_OUTCOME,
@@ -23,6 +24,7 @@ import {
 import { sha256Hex } from "@/lib/company_observatory/content";
 import { ObservatorySourceThrottledError } from "@/lib/company_observatory/errors";
 import {
+  firstCheckAt,
   minTrackedYear,
   nextRecheckAt,
   nextStateAfterFailure,
@@ -138,7 +140,13 @@ export function buildPlanRows(
   for (const company of companies) {
     for (const source of OBSERVATORY_SOURCES) {
       for (const year of targetYearsFor(source, now)) {
-        rows.push({ stockId: company.stockId, source, year });
+        rows.push({
+          stockId: company.stockId,
+          source,
+          year,
+          // Info: (20261023 - Luphia) 期間還沒結束的（如一月建立的第三季）排到期間結束後才查
+          nextAttemptAt: firstCheckAt(now, source, year),
+        });
       }
     }
   }
@@ -160,7 +168,7 @@ export function createCompanyObservatoryService(deps: ICompanyObservatoryDeps) {
       await deps.documents.transition(doc.id, doc.status, {
         status: OBSERVATORY_DOCUMENT_STATUS.NOT_AVAILABLE,
         lastError: OBSERVATORY_REASON.NO_RECORD,
-        nextAttemptAt: nextRecheckAt(now),
+        nextAttemptAt: nextRecheckAt(now, doc.source, doc.year),
       });
       return OBSERVATORY_DOWNLOAD_RESULT.NOT_AVAILABLE;
     }
@@ -177,7 +185,8 @@ export function createCompanyObservatoryService(deps: ICompanyObservatoryDeps) {
           sourceUrl: result.sourceUrl,
           lastError: result.reason,
           attemptCount: 0,
-          nextAttemptAt: nextRecheckAt(now),
+          // Info: (20261023 - Luphia) 依申報季決定下次查詢：申報季每天、期間未結束等到結束、其餘每 30 天
+          nextAttemptAt: nextRecheckAt(now, doc.source, doc.year),
         });
         return OBSERVATORY_DOWNLOAD_RESULT.NOT_AVAILABLE;
       }
@@ -282,8 +291,11 @@ export function createCompanyObservatoryService(deps: ICompanyObservatoryDeps) {
         dead: 0,
         throttledSources: [],
       };
+      // Info: (20261023 - Luphia) 被限流的主機：同一輪內打同一台主機的其他來源也跳過
+      const throttledHosts = new Set<string>();
       for (const source of OBSERVATORY_SOURCES) {
         if (deps.shouldStop()) break;
+        if (throttledHosts.has(OBSERVATORY_SOURCE_HOST[source])) continue;
         const now = deps.now();
         const docs = await deps.documents.findDueForDownload({
           source,
@@ -315,6 +327,7 @@ export function createCompanyObservatoryService(deps: ICompanyObservatoryDeps) {
             if (error instanceof ObservatorySourceThrottledError) {
               deps.log(`${source} throttled; backing off until next round`);
               summary.throttledSources.push(source);
+              throttledHosts.add(OBSERVATORY_SOURCE_HOST[source]);
               break;
             }
             throw error;

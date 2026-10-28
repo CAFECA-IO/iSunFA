@@ -16,7 +16,15 @@ export const adminSettings = {
     payment: "결제 게이트웨이",
     // Info: (20260815 - Luphia) email 邀請的寄信設定
     mail: "메일 발송(초대)",
+    // Info: (20261028 - Luphia) 預設關閉的功能（企業觀測站）
+    features: "기능 스위치",
   },
+  // Info: (20261028 - Luphia) 開關型設定的下拉選項
+  option: {
+    true: "켜기",
+    false: "끄기",
+  },
+  option_unset: "설정 안 함(기본값: {{value}})",
   env_only_hint:
     "이 항목은 현재 환경 변수에만 존재하며 데이터베이스 보관 및 서명 대상이 아닙니다. 저장하면 보호 대상이 됩니다.",
   env_shadowed_hint:

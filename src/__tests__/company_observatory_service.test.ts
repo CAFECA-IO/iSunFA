@@ -86,7 +86,8 @@ function createMemoryDocuments() {
           chunkCount: 0,
           attemptCount: 0,
           lastError: null,
-          nextAttemptAt: new Date(0),
+          // Info: (20261023 - Luphia) 與正式 repo 相同：規劃時給了首次查詢時間就照用
+          nextAttemptAt: row.nextAttemptAt ?? new Date(0),
           downloadedAt: null,
           indexedAt: null,
         });
@@ -306,18 +307,19 @@ describe("company observatory pipeline", () => {
     const t = await setup();
     const first = await t.service.planDocuments();
     // Info: (20261015 - Luphia) 公司登記 1 年 + 三個年度來源各 2 年
-    expect(first.created).toBe(7);
+    // Info: (20261023 - Luphia) + 第一～三季財報各 1 年（只追蹤今年）= 10
+    expect(first.created).toBe(10);
     const second = await t.service.planDocuments();
     expect(second.created).toBe(0);
-    expect(t.documents.docs.size).toBe(7);
+    expect(t.documents.docs.size).toBe(10);
   });
 
   it("downloads, indexes with metadata, and does not repeat either step", async () => {
     const t = await setup();
     await t.service.planDocuments();
     const downloads = await t.service.processDownloads();
-    expect(downloads.downloaded).toBe(7);
-    expect(t.saves).toHaveLength(7);
+    expect(downloads.downloaded).toBe(10);
+    expect(t.saves).toHaveLength(10);
 
     await t.indexer.indexBatch();
     await t.indexer.indexBatch();
@@ -343,7 +345,7 @@ describe("company observatory pipeline", () => {
     expect(rows[0].text).toContain(`台積電 (2330) ｜ ${esg.year} 年永續報告書`);
 
     // Info: (20261015 - Luphia) 每份索引完成的文件都發布成企業觀測站頁面的 Report
-    expect(t.published.size).toBe(7);
+    expect(t.published.size).toBe(10);
     expect(t.published.get(`observatory/2330/${esg.year}/ESG_REPORT`)).toEqual({
       companyName: "台灣積體電路製造股份有限公司",
       title: `${esg.year} 年永續報告書`,
@@ -362,7 +364,7 @@ describe("company observatory pipeline", () => {
     // Info: (20261015 - Luphia) 再跑一輪：沒有到期的文件，什麼都不做
     const again = await t.service.processDownloads();
     expect(again.attempted).toBe(0);
-    expect(t.vectorWrites).toHaveLength(7);
+    expect(t.vectorWrites).toHaveLength(10);
   });
 
   it("refreshes registration data but skips re-indexing when the content is unchanged", async () => {
@@ -378,7 +380,7 @@ describe("company observatory pipeline", () => {
     expect(plan.refreshed).toBe(1);
     const downloads = await t.service.processDownloads();
     expect(downloads.unchanged).toBe(1);
-    expect(t.saves).toHaveLength(7);
+    expect(t.saves).toHaveLength(10);
     await t.indexer.indexBatch();
     expect(t.vectorWrites).toHaveLength(writesBefore);
     expect(t.docOf(OBSERVATORY_SOURCE.GCIS_REGISTRATION)[0].status).toBe(
@@ -424,7 +426,14 @@ describe("company observatory pipeline", () => {
     const calls = t.downloaders.ESG_REPORT.calls;
     await t.service.processDownloads();
     expect(t.downloaders.ESG_REPORT.calls).toBe(calls);
+    /**
+     * Info: (20261023 - Luphia) 申報季感知排程：2026-10-15 時 2024、2025 年度永續報告書的申報季（次年 8/31 + 14 天）
+     * 都已過，改為每 30 天重查；8 天後不查，31 天後才查。
+     */
     t.advance(8 * DAY);
+    await t.service.processDownloads();
+    expect(t.downloaders.ESG_REPORT.calls).toBe(calls);
+    t.advance(23 * DAY);
     await t.service.processDownloads();
     expect(t.downloaders.ESG_REPORT.calls).toBe(calls + 2);
   });
@@ -475,7 +484,9 @@ describe("company observatory pipeline", () => {
     ).toBe(true);
     expect(mops.every((d) => d.attemptCount === 0)).toBe(true);
     // Info: (20261015 - Luphia) 其他來源照常
+    // Info: (20261023 - Luphia) 限流以主機為單位：第一～三季與年報同一台 MOPS 主機，這一輪一起跳過
     expect(summary.downloaded).toBe(5);
+    expect(t.downloaders.MOPS_FINANCIAL_REPORT_Q1.calls).toBe(0);
   });
 
   it("pauses indexing when the embedder is down, without burning attempts", async () => {

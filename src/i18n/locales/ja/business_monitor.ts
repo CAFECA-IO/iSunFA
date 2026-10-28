@@ -115,7 +115,10 @@ export const businessMonitor = {
     financial_item: "科目",
     financial_period: "{{year}} 年第 {{quarter}} 四半期",
     financial_cumulative_note:
-      "損益は期首からその四半期までの累計です。異なる四半期は直接比較できません。金額の単位は千元、1 株当たりの数値は元です。",
+      "損益は期首からの累計のため、同じ四半期だけを並べて前年同期比を計算しています。金額の単位は千元、1 株当たりの数値は元です。",
+    financial_yoy: "前年同期比 {{change}}%",
+    financial_period_annual: "{{year}} 年通期",
+    financial_source_mops: "出典：公開資訊観測站 集計レポート",
     ratio_formula:
       "負債比率＝負債合計 ÷ 資産合計；純利益率＝当期純利益 ÷ 営業収入（営業収入の科目がある場合のみ）。",
     ratio: {
@@ -166,5 +169,8 @@ export const businessMonitor = {
     GHG_INVENTORY: "温室効果ガス開示",
     GCIS_REGISTRATION: "会社登記情報",
     MANUAL_IMPORT: "取り込んだレポート",
+    MOPS_FINANCIAL_REPORT_Q1: "第 1 四半期財務報告書",
+    MOPS_FINANCIAL_REPORT_Q2: "第 2 四半期財務報告書",
+    MOPS_FINANCIAL_REPORT_Q3: "第 3 四半期財務報告書",
   },
 };

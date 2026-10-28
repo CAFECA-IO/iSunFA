@@ -102,7 +102,10 @@ export const businessMonitor = {
     financial_item: "科目",
     financial_period: "{{year}} 年第 {{quarter}} 季",
     financial_cumulative_note:
-      "損益數字為年初累計至該季；不同季別不能直接相比。金額單位為仟元，每股數字單位為元。",
+      "損益數字為年初累計至該季，因此只並排同一季並計算年增率。金額單位為仟元，每股數字單位為元。",
+    financial_yoy: "較去年同期 {{change}}%",
+    financial_period_annual: "{{year}} 年全年",
+    financial_source_mops: "來源：公開資訊觀測站彙總報表",
     ratio_formula:
       "負債比＝負債總計 ÷ 資產總計；淨利率＝本期淨利 ÷ 營業收入（僅營業收入科目適用）。",
     ratio: {
@@ -153,5 +156,8 @@ export const businessMonitor = {
     GHG_INVENTORY: "溫室氣體盤查揭露",
     GCIS_REGISTRATION: "公司登記資料",
     MANUAL_IMPORT: "匯入的報告",
+    MOPS_FINANCIAL_REPORT_Q1: "第一季財務報告",
+    MOPS_FINANCIAL_REPORT_Q2: "第二季財務報告",
+    MOPS_FINANCIAL_REPORT_Q3: "第三季財務報告",
   },
 };

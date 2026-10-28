@@ -3541,6 +3541,7 @@ model LeavePolicy {
    * /**
    * /**
    * /**
+   * /**
    * Info: (20260817 - Julian) 給薪比例（工資照給 = 1、折半發給 = 0.5、不給工資 = 0）。
    * 本模組不算金額，此欄位供薪資模組與畫面提示使用。
    * **Nullable 且無預設值**：產假的工資取決於年資（受僱六個月以上照給、
@@ -4888,11 +4889,13 @@ model CompanyFinancialFact {
   value      Decimal  @db.Decimal(24, 4)
   unit       String // Info: (20261023 - Luphia) FINANCIAL_UNIT 常數：仟元、元、股
   form       String // Info: (20261023 - Luphia) 報表格式（一般業 ci、金融業 basi…），不同格式的科目名稱不同
+  market     String   @default("") // Info: (20261023 - Luphia) FINANCIAL_MARKET 常數（sii 上市、otc 上櫃）；舊列為空字串，隔日同步即補上
   reportedAt String   @map("reported_at") // Info: (20261023 - Luphia) 來源的「出表日期」原樣（民國 yyyMMdd）
   sourceUrl  String   @map("source_url")
   fetchedAt  DateTime @map("fetched_at")
 
   @@id([stockId, year, quarter, statement, item])
   @@index([stockId, statement])
+  @@index([year, quarter, statement, market])
   @@map("company_financial_fact")
 }

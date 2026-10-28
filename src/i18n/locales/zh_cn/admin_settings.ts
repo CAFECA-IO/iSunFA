@@ -15,7 +15,15 @@ export const adminSettings = {
     payment: "支付网关",
     // Info: (20260815 - Luphia) email 邀請的寄信設定
     mail: "寄信（Email 邀请）",
+    // Info: (20261028 - Luphia) 預設關閉的功能（企業觀測站）
+    features: "功能开关",
   },
+  // Info: (20261028 - Luphia) 開關型設定的下拉選項
+  option: {
+    true: "开启",
+    false: "关闭",
+  },
+  option_unset: "未设定（沿用默认：{{value}}）",
   env_only_hint:
     "此项目目前仅存在于环境变量，尚未纳入数据库保管与签章；保存后才会受保护。",
   env_shadowed_hint:
