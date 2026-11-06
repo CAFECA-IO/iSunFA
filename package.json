@@ -71,7 +71,7 @@
     "maplibre-gl": "^5.24.0",
     "marked": "^18.0.9",
     "md-to-pdf": "^5.2.5",
-    "mermaid": "^11.13.0",
+    "mermaid": "^12.2.0",
     "next": "16.4.3",
     "node-cron": "^4.2.1",
     "nodemailer": "^10.0.1",
